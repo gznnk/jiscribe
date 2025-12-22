@@ -1,0 +1,26 @@
+{
+	"name": "@workspace/svg-canvas",
+	"version": "0.0.0",
+	"private": true,
+	"main": "src/index.ts",
+	"types": "src/index.ts",
+	"dependencies": {
+		"@emotion/react": "^11.14.0",
+		"@emotion/styled": "^11.14.1",
+		"@workspace/event-bus": "workspace:*",
+		"@workspace/llm-chat-ui": "workspace:*",
+		"@workspace/llm-client": "workspace:*",
+		"@workspace/markdown": "workspace:*",
+		"@workspace/utility-types": "workspace:*",
+		"@workspace/validation": "workspace:*",
+		"dompurify": "^3.3.1",
+		"openai": "^6.15.0",
+		"react": "^19.2.3"
+	},
+	"devDependencies": {
+		"@types/react": "^19.2.7"
+	},
+	"peerDependencies": {
+		"react": "^19.2.3"
+	}
+}

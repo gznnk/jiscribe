@@ -1,0 +1,1 @@
+export const DISTANCE_FROM_DIAGRAM = 20;
