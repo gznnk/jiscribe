@@ -33,7 +33,6 @@ import { DragGhost } from "../components/auxiliary/DragGhost";
 import { FlashConnectLine } from "../components/auxiliary/FlashConnectLine";
 import { GridBackground } from "../components/auxiliary/GridBackground";
 import { GridPattern } from "../components/auxiliary/GridPattern";
-import { MarkerDefs } from "../components/auxiliary/MarkerDefs";
 import { MiniMap } from "../components/auxiliary/MiniMap";
 import { PointerCaptureElement } from "../components/auxiliary/PointerCaptureElement";
 import { PreviewConnectLine } from "../components/auxiliary/PreviewConnectLine";
@@ -562,8 +561,6 @@ const SvgCanvasComponent = forwardRef<SvgCanvasRef, SvgCanvasProps>(
 									onContextMenu={onContextMenu}
 								>
 									<title>{title}</title>
-									{/* Arrow marker definitions */}
-									<MarkerDefs />
 									{/* Grid pattern definition */}
 									<GridPattern zoom={zoom} baseGridSize={25} color="#f3f4f6" />
 									{/* Grid background */}

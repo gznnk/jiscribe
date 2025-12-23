@@ -1,6 +1,10 @@
 import type React from "react";
 import { memo, useRef } from "react";
 
+import {
+	createEndPointArrowHead,
+	createStartPointArrowHead,
+} from "./PathUtils";
 import { useClick } from "../../../hooks/useClick";
 import { useDrag } from "../../../hooks/useDrag";
 import { useSelect } from "../../../hooks/useSelect";
@@ -8,7 +12,6 @@ import type { PathProps } from "../../../types/props/shapes/PathProps";
 import { mergeProps } from "../../../utils/core/mergeProps";
 import { convertStrokeDashTypeToArray } from "../../../utils/shapes/common/convertStrokeDashTypeToArray";
 import { createPathDValue } from "../../../utils/shapes/path/createPathDValue";
-import { getMarkerUrl } from "../../../utils/shapes/path/getMarkerUrl";
 
 /**
  * Path component
@@ -17,11 +20,6 @@ const PathComponent: React.FC<PathProps> = ({
 	id,
 	x,
 	y,
-	width: _width,
-	height: _height,
-	rotation: _rotation,
-	scaleX: _scaleX,
-	scaleY: _scaleY,
 	stroke = "black",
 	strokeWidth = 1,
 	strokeDashType = "solid",
@@ -92,6 +90,15 @@ const PathComponent: React.FC<PathProps> = ({
 		strokeWidth,
 	);
 
+	// Create path data for arrow heads
+	const pathData = {
+		items,
+		stroke,
+		pathType,
+		startArrowHead,
+		endArrowHead,
+	};
+
 	return (
 		<>
 			{/* Path for drawing */}
@@ -101,8 +108,6 @@ const PathComponent: React.FC<PathProps> = ({
 				stroke={stroke}
 				strokeWidth={strokeWidth}
 				strokeDasharray={strokeDasharray}
-				markerStart={getMarkerUrl(startArrowHead)}
-				markerEnd={getMarkerUrl(endArrowHead)}
 			/>
 			{/* Path for dragging */}
 			<path
@@ -116,6 +121,9 @@ const PathComponent: React.FC<PathProps> = ({
 				ref={dragSvgRef}
 				{...composedProps}
 			/>
+				{/* Arrow heads */}
+			{createStartPointArrowHead(pathData)}
+			{createEndPointArrowHead(pathData)}
 		</>
 	);
 };

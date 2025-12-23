@@ -1,6 +1,7 @@
 import type React from "react";
 import { memo } from "react";
 
+import { createEndPointArrowHead, createStartPointArrowHead } from "./PathUtils";
 import type { PathProps } from "../../../types/props/shapes/PathProps";
 
 /**
@@ -9,8 +10,11 @@ import type { PathProps } from "../../../types/props/shapes/PathProps";
 const PathMinimapComponent: React.FC<PathProps> = ({
 	id,
 	items,
-	stroke,
+	stroke = "black",
 	strokeWidth,
+	pathType,
+	startArrowHead = "None",
+	endArrowHead = "None",
 }) => {
 	// Create the path d attribute directly from items
 	let d = "";
@@ -21,15 +25,29 @@ const PathMinimapComponent: React.FC<PathProps> = ({
 		}
 	}
 
+	// Create path data for arrow heads
+	const pathData = {
+		items,
+		stroke,
+		pathType,
+		startArrowHead,
+		endArrowHead,
+	};
+
 	return (
-		<path
-			id={id}
-			d={d}
-			fill="none"
-			stroke={stroke}
-			strokeWidth={strokeWidth}
-			pointerEvents="none"
-		/>
+		<>
+			<path
+				id={id}
+				d={d}
+				fill="none"
+				stroke={stroke}
+				strokeWidth={strokeWidth}
+				pointerEvents="none"
+			/>
+			{/* Arrow heads */}
+			{createStartPointArrowHead(pathData)}
+			{createEndPointArrowHead(pathData)}
+		</>
 	);
 };
 

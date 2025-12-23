@@ -1,10 +1,13 @@
 import { memo, useEffect, useState } from "react";
 
+import {
+	createEndPointArrowHead,
+	createStartPointArrowHead,
+} from "../../shapes/Path/PathUtils";
 import { FlashGroup } from "./FlashConnectLineStyled";
 import { EVENT_NAME_FLASH_CONNECT_LINE } from "../../../constants/core/EventNames";
 import type { FlashConnectLineEvent } from "../../../types/events/FlashConnectLineEvent";
 import { createPathDValue } from "../../../utils/shapes/path/createPathDValue";
-import { getMarkerUrl } from "../../../utils/shapes/path/getMarkerUrl";
 
 export const FlashConnectLineComponent = () => {
 	const [connectLineList, setConnectLineList] = useState<
@@ -41,22 +44,36 @@ export const FlashConnectLineComponent = () => {
 		};
 	}, []);
 
-	return connectLineList.map((connectLine) => (
-		<FlashGroup
-			$flash={true}
-			key={`${connectLine.data.id}-${connectLine.eventId}`}
-		>
-			<path
-				d={createPathDValue(connectLine.data.items, connectLine.data.pathType)}
-				strokeWidth={connectLine.data.strokeWidth}
-				stroke={connectLine.data.stroke}
-				fill="none"
-				pointerEvents="none"
-				markerStart={getMarkerUrl(connectLine.data.startArrowHead)}
-				markerEnd={getMarkerUrl(connectLine.data.endArrowHead)}
-			/>
-		</FlashGroup>
-	));
+	return connectLineList.map((connectLine) => {
+		const pathData = {
+			items: connectLine.data.items,
+			stroke: connectLine.data.stroke,
+			pathType: connectLine.data.pathType,
+			startArrowHead: connectLine.data.startArrowHead,
+			endArrowHead: connectLine.data.endArrowHead,
+		};
+
+		return (
+			<FlashGroup
+				$flash={true}
+				key={`${connectLine.data.id}-${connectLine.eventId}`}
+			>
+				<path
+					d={createPathDValue(
+						connectLine.data.items,
+						connectLine.data.pathType,
+					)}
+					strokeWidth={connectLine.data.strokeWidth}
+					stroke={connectLine.data.stroke}
+					fill="none"
+					pointerEvents="none"
+				/>
+				{/* Arrow heads */}
+				{createStartPointArrowHead(pathData)}
+				{createEndPointArrowHead(pathData)}
+			</FlashGroup>
+		);
+	});
 };
 
 export const FlashConnectLine = memo(FlashConnectLineComponent);
