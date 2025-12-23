@@ -1,51 +1,70 @@
+import { trimLineEnd } from "./trimLineEnd";
+import { trimLineStart } from "./trimLineStart";
+import type { Point } from "../../../types/core/Point";
 import type { Diagram } from "../../../types/state/core/Diagram";
 
 /**
- * Creates a quadratic Bézier path data value (d attribute) from an array of diagram items.
- * Uses the midpoint between each PathPoint and its neighbors as control points.
+ * Creates a quadratic Bézier SVG path (`d`) from diagram points.
  *
- * @param items - Array of diagram items to create path from
- * @returns SVG path d attribute value with quadratic Bézier curves
+ * Structure:
+ *   [start stub] → [smooth quadratic segments] → [end stub]
+ *
+ * Smoothing:
+ * - Each intermediate point is used as a quadratic control point.
+ * - Each quadratic segment ends at the midpoint to the next point.
+ *
+ * Trimming:
+ * - `startTrim` affects only the start stub direction (P0 → P1).
+ * - `endTrim` affects only the final straight segment.
  */
-export const createBezierDValue = (items: Diagram[]): string => {
-	if (items.length < 2) {
-		return "";
+export const createBezierDValue = (
+	items: Diagram[],
+	startTrim = 0,
+	endTrim = 0,
+): string => {
+	const n = items.length;
+	if (n < 2) return "";
+
+	// --- Two points: a single straight segment
+	if (n === 2) {
+		const p0: Point = { x: items[0].x, y: items[0].y };
+		const p1: Point = { x: items[1].x, y: items[1].y };
+
+		const p0t = trimLineStart(p0, p1, startTrim);
+		const p1t = trimLineEnd(p0t, p1, endTrim);
+
+		return `M ${p0t.x} ${p0t.y} L ${p1t.x} ${p1t.y}`;
 	}
 
-	if (items.length === 2) {
-		// For two points, just create a straight line
-		return `M ${items[0].x} ${items[0].y} L ${items[1].x} ${items[1].y}`;
-	}
+	// --- Start stub (M)
+	const rawStart: Point = { x: items[0].x, y: items[0].y };
+	const startDir: Point = { x: items[1].x, y: items[1].y };
+	const startPoint = trimLineStart(rawStart, startDir, startTrim);
 
-	let d = `M ${items[0].x} ${items[0].y}`;
+	let d = `M ${startPoint.x} ${startPoint.y}`;
 
-	for (let i = 1; i < items.length; i++) {
+	// --- Smooth middle (quadratic segments)
+	let pen: Point = startPoint;
+
+	for (let i = 1; i <= n - 2; i++) {
 		const current = items[i];
 		const next = items[i + 1];
 
-		if (i === items.length - 1) {
-			// Last point - create a straight line from previous to current
-			d += ` L ${current.x} ${current.y}`;
-		} else {
-			// Calculate control point as the current point itself
-			// This creates a quadratic Bézier curve where the current point serves as the control point
-			// and the curve passes through the midpoints between prev-current and current-next
-			const controlX = current.x;
-			const controlY = current.y;
+		const controlX = current.x;
+		const controlY = current.y;
 
-			// Calculate the end point for this curve segment (midpoint to next)
-			const endX = (current.x + next.x) / 2;
-			const endY = (current.y + next.y) / 2;
+		const endX = (current.x + next.x) / 2;
+		const endY = (current.y + next.y) / 2;
 
-			if (i === 1) {
-				// First curve segment: start from first point, control at current, end at midpoint to next
-				d += ` Q ${controlX} ${controlY} ${endX} ${endY}`;
-			} else {
-				// Subsequent curve segments: continue from previous end point
-				d += ` Q ${controlX} ${controlY} ${endX} ${endY}`;
-			}
-		}
+		d += ` Q ${controlX} ${controlY} ${endX} ${endY}`;
+		pen = { x: endX, y: endY };
 	}
+
+	// --- End stub (L)
+	const rawEnd: Point = { x: items[n - 1].x, y: items[n - 1].y };
+	const endPoint = trimLineEnd(pen, rawEnd, endTrim);
+
+	d += ` L ${endPoint.x} ${endPoint.y}`;
 
 	return d;
 };
