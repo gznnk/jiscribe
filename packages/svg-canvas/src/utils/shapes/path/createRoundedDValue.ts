@@ -1,3 +1,6 @@
+import { trimLineEnd } from "./trimLineEnd";
+import { trimLineStart } from "./trimLineStart";
+import type { Point } from "../../../types/core/Point";
 import type { Diagram } from "../../../types/state/core/Diagram";
 
 /**
@@ -6,25 +9,42 @@ import type { Diagram } from "../../../types/state/core/Diagram";
  *
  * @param items - Array of diagram items to create path from
  * @param radius - Corner radius for rounded corners (default: 10)
+ * @param startTrim - Amount to trim from the start of the path (default: 0)
+ * @param endTrim - Amount to trim from the end of the path (default: 0)
  * @returns SVG path d attribute value with rounded corners
  */
 export const createRoundedDValue = (
 	items: Diagram[],
 	radius: number = 10,
+	startTrim = 0,
+	endTrim = 0,
 ): string => {
-	if (items.length < 2) {
+	const n = items.length;
+	if (n < 2) {
 		return "";
 	}
 
-	if (items.length === 2) {
-		// For two points, just create a straight line (no corners to round)
-		return `M ${items[0].x} ${items[0].y} L ${items[1].x} ${items[1].y}`;
+	// --- Two points: a single straight segment
+	if (n === 2) {
+		const p0: Point = { x: items[0].x, y: items[0].y };
+		const p1: Point = { x: items[1].x, y: items[1].y };
+
+		const p0t = trimLineStart(p0, p1, startTrim);
+		const p1t = trimLineEnd(p0t, p1, endTrim);
+
+		return `M ${p0t.x} ${p0t.y} L ${p1t.x} ${p1t.y}`;
 	}
 
-	let d = `M ${items[0].x} ${items[0].y}`;
+	// --- Start point with trim
+	const rawStart: Point = { x: items[0].x, y: items[0].y };
+	const startDir: Point = { x: items[1].x, y: items[1].y };
+	const startPoint = trimLineStart(rawStart, startDir, startTrim);
 
-	for (let i = 1; i < items.length - 1; i++) {
-		const prev = items[i - 1];
+	let d = `M ${startPoint.x} ${startPoint.y}`;
+	let pen: Point = startPoint;
+
+	for (let i = 1; i <= n - 2; i++) {
+		const prev = i === 1 ? startPoint : { x: items[i - 1].x, y: items[i - 1].y };
 		const current = items[i];
 		const next = items[i + 1];
 
@@ -73,11 +93,14 @@ export const createRoundedDValue = (
 		// Add line to arc start, then arc to arc end
 		d += ` L ${arcStart.x} ${arcStart.y}`;
 		d += ` Q ${current.x} ${current.y} ${arcEnd.x} ${arcEnd.y}`;
+		pen = arcEnd;
 	}
 
-	// Add final line to last point
-	const lastPoint = items[items.length - 1];
-	d += ` L ${lastPoint.x} ${lastPoint.y}`;
+	// --- End point with trim
+	const rawEnd: Point = { x: items[n - 1].x, y: items[n - 1].y };
+	const endPoint = trimLineEnd(pen, rawEnd, endTrim);
+
+	d += ` L ${endPoint.x} ${endPoint.y}`;
 
 	return d;
 };
