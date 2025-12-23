@@ -13,8 +13,9 @@ const ConcaveTriangleArrowHeadComponent: React.FC<ArrowHeadComponentProps> = ({
 	y,
 	color,
 	radians,
+	scale,
 }) => {
-	const transform = createSvgTransform(1, 1, radians, x, y);
+	const transform = createSvgTransform(scale, scale, radians, x, y);
 	const size = ARROW_HEAD_SIZE;
 	// Arrow head with tip at (0,0), pointing up when radians=0 - concave inset at 90% from base
 	const points = `0,0 ${size / 2},${-size} 0,${-size * 0.9} ${-size / 2},${-size}`;
@@ -22,6 +23,4 @@ const ConcaveTriangleArrowHeadComponent: React.FC<ArrowHeadComponentProps> = ({
 	return <polygon points={points} fill={color} transform={transform} />;
 };
 
-export const ConcaveTriangleArrowHead = memo(
-	ConcaveTriangleArrowHeadComponent,
-);
+export const ConcaveTriangleArrowHead = memo(ConcaveTriangleArrowHeadComponent);

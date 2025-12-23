@@ -82,7 +82,8 @@ const PathComponent: React.FC<PathProps> = ({
 	const composedProps = mergeProps(dragProps, clickProps, selectProps);
 
 	// Calculate trim values based on arrow head presence
-	const startTrim = startArrowHead && startArrowHead !== "None" ? strokeWidth : 0;
+	const startTrim =
+		startArrowHead && startArrowHead !== "None" ? strokeWidth : 0;
 	const endTrim = endArrowHead && endArrowHead !== "None" ? strokeWidth : 0;
 
 	// Generate polyline d attribute value
@@ -98,10 +99,15 @@ const PathComponent: React.FC<PathProps> = ({
 	const pathData = {
 		items,
 		stroke,
+		strokeWidth,
 		pathType,
 		startArrowHead,
 		endArrowHead,
 	};
+
+	// Create arrow head elements
+	const startArrowHeadElement = createStartPointArrowHead(pathData);
+	const endArrowHeadElement = createEndPointArrowHead(pathData);
 
 	return (
 		<>
@@ -125,9 +131,9 @@ const PathComponent: React.FC<PathProps> = ({
 				ref={dragSvgRef}
 				{...composedProps}
 			/>
-				{/* Arrow heads */}
-			{createStartPointArrowHead(pathData)}
-			{createEndPointArrowHead(pathData)}
+			{/* Arrow heads */}
+			{startArrowHeadElement}
+			{endArrowHeadElement}
 		</>
 	);
 };

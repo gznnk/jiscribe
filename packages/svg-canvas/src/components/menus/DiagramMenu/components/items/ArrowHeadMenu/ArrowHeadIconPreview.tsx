@@ -38,6 +38,7 @@ const ArrowHeadIconPreviewComponent: React.FC<ArrowHeadIconPreviewProps> = ({
 					y={arrowY}
 					color="#333333"
 					radians={arrowRadians}
+					scale={1}
 				/>
 			)}
 		</svg>

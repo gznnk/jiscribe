@@ -1,13 +1,13 @@
 import { memo, useEffect, useState } from "react";
 
-import {
-	createEndPointArrowHead,
-	createStartPointArrowHead,
-} from "../../shapes/Path/PathUtils";
 import { FlashGroup } from "./FlashConnectLineStyled";
 import { EVENT_NAME_FLASH_CONNECT_LINE } from "../../../constants/core/EventNames";
 import type { FlashConnectLineEvent } from "../../../types/events/FlashConnectLineEvent";
 import { createPathDValue } from "../../../utils/shapes/path/createPathDValue";
+import {
+	createEndPointArrowHead,
+	createStartPointArrowHead,
+} from "../../shapes/Path/PathUtils";
 
 export const FlashConnectLineComponent = () => {
 	const [connectLineList, setConnectLineList] = useState<
@@ -48,10 +48,15 @@ export const FlashConnectLineComponent = () => {
 		const pathData = {
 			items: connectLine.data.items,
 			stroke: connectLine.data.stroke,
+			strokeWidth: connectLine.data.strokeWidth,
 			pathType: connectLine.data.pathType,
 			startArrowHead: connectLine.data.startArrowHead,
 			endArrowHead: connectLine.data.endArrowHead,
 		};
+
+		// Create arrow head elements
+		const startArrowHeadElement = createStartPointArrowHead(pathData);
+		const endArrowHeadElement = createEndPointArrowHead(pathData);
 
 		return (
 			<FlashGroup
@@ -69,8 +74,8 @@ export const FlashConnectLineComponent = () => {
 					pointerEvents="none"
 				/>
 				{/* Arrow heads */}
-				{createStartPointArrowHead(pathData)}
-				{createEndPointArrowHead(pathData)}
+				{startArrowHeadElement}
+				{endArrowHeadElement}
 			</FlashGroup>
 		);
 	});

@@ -6,4 +6,5 @@ export type ArrowHeadComponentProps = {
 	y: number;
 	color: string;
 	radians: number;
+	scale: number;
 };

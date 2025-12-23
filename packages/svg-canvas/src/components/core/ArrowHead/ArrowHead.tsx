@@ -19,6 +19,7 @@ type ArrowHeadProps = {
 	y: number;
 	color: string;
 	radians: number;
+	scale: number;
 };
 
 /**
@@ -32,10 +33,11 @@ const ArrowHeadComponent: React.FC<ArrowHeadProps> = ({
 	y,
 	color,
 	radians,
+	scale,
 }) => {
 	if (type === "None") return null;
 
-	const props = { x, y, color, radians };
+	const props = { x, y, color, radians, scale };
 
 	if (type === "FilledTriangle") {
 		return <FilledTriangleArrowHead {...props} />;

@@ -12,7 +12,7 @@ export const ConnectLineDefaultData = CreateDefaultData<ConnectLineData>({
 	properties: {
 		pathType: "Rounded",
 		stroke: "#374151",
-		strokeWidth: 1,
+		strokeWidth: 2,
 		startOwnerId: "",
 		endOwnerId: "",
 		autoRouting: true,

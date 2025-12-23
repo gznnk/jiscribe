@@ -12,6 +12,7 @@ import { ArrowHead } from "../../core/ArrowHead";
 type PathArrowData = {
 	items: Diagram[];
 	stroke: string;
+	strokeWidth?: number;
 	pathType?: PathType;
 	startArrowHead?: ArrowHeadType;
 	endArrowHead?: ArrowHeadType;
@@ -47,6 +48,7 @@ export const createStartPointArrowHead = (
 					x={startPoint.x}
 					y={startPoint.y}
 					radians={startArrowHeadRadians}
+					scale={pathData.strokeWidth || 1}
 				/>
 			);
 		}
@@ -84,6 +86,7 @@ export const createEndPointArrowHead = (
 					x={endPoint.x}
 					y={endPoint.y}
 					radians={endArrowHeadRadians}
+					scale={pathData.strokeWidth || 1}
 				/>
 			);
 		}

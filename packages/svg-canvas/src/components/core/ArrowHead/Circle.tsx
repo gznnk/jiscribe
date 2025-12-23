@@ -13,8 +13,9 @@ const CircleArrowHeadComponent: React.FC<ArrowHeadComponentProps> = ({
 	y,
 	color,
 	radians,
+	scale,
 }) => {
-	const transform = createSvgTransform(1, 1, radians, x, y);
+	const transform = createSvgTransform(scale, scale, radians, x, y);
 	const radius = ARROW_HEAD_SIZE / 2;
 	// Arrow head with tip at (0,0), pointing up when radians=0 - circle center offset by radius
 	const cy = -radius;

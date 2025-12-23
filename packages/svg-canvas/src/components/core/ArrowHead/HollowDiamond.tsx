@@ -13,8 +13,9 @@ const HollowDiamondArrowHeadComponent: React.FC<ArrowHeadComponentProps> = ({
 	y,
 	color,
 	radians,
+	scale,
 }) => {
-	const transform = createSvgTransform(1, 1, radians, x, y);
+	const transform = createSvgTransform(scale, scale, radians, x, y);
 	const size = ARROW_HEAD_SIZE;
 	// Arrow head with tip at (0,0), pointing up when radians=0
 	const points = `0,0 ${size / 2},${-size / 2} 0,${-size} ${-size / 2},${-size / 2}`;
@@ -24,7 +25,7 @@ const HollowDiamondArrowHeadComponent: React.FC<ArrowHeadComponentProps> = ({
 			points={points}
 			fill="white"
 			stroke={color}
-			strokeWidth={1.5}
+			strokeWidth={1}
 			strokeLinejoin="miter"
 			transform={transform}
 		/>
