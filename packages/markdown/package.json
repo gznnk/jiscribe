@@ -4,10 +4,13 @@
 	"private": true,
 	"main": "src/index.ts",
 	"types": "src/index.ts",
+	"scripts": {
+		"typecheck": "tsc --noEmit"
+	},
 	"dependencies": {
 		"dompurify": "catalog:",
-		"highlight.js": "^11.11.1",
-		"katex": "^0.16.27",
+		"highlight.js": "catalog:",
+		"katex": "catalog:",
 		"markdown-it": "^14.1.0",
 		"markdown-it-link-attributes": "^4.0.1"
 	},

@@ -4,10 +4,6 @@ import katex from "katex";
 import MarkdownIt from "markdown-it";
 import linkAttr from "markdown-it-link-attributes";
 
-// CSS imports for external libraries
-import "highlight.js/styles/atom-one-dark.css";
-import "katex/dist/katex.min.css";
-
 /**
  * Normalizes mathematical notation in markdown text.
  * Converts LaTeX-style math delimiters to format compatible with markdown-it.
