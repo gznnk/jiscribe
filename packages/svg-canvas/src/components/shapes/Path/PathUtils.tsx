@@ -36,10 +36,10 @@ export const createStartPointArrowHead = (
 					? pathData.items[pathData.items.length - 1]
 					: pathData.items[1];
 			const startArrowHeadRadians = calcRadians(
-				startPoint.x,
-				startPoint.y,
 				referencePoint.x,
 				referencePoint.y,
+				startPoint.x,
+				startPoint.y,
 			);
 			return (
 				<ArrowHead
@@ -74,10 +74,10 @@ export const createEndPointArrowHead = (
 					? pathData.items[0]
 					: pathData.items[pathData.items.length - 2];
 			const endArrowHeadRadians = calcRadians(
-				endPoint.x,
-				endPoint.y,
 				referencePoint.x,
 				referencePoint.y,
+				endPoint.x,
+				endPoint.y,
 			);
 			return (
 				<ArrowHead

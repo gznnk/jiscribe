@@ -17,8 +17,8 @@ const FilledDiamondArrowHeadComponent: React.FC<ArrowHeadComponentProps> = ({
 }) => {
 	const transform = createSvgTransform(scale, scale, radians, x, y);
 	const size = ARROW_HEAD_SIZE;
-	// Arrow head with tip at (0,0), pointing up when radians=0
-	const points = `0,0 ${size / 2},${-size / 2} 0,${-size} ${-size / 2},${-size / 2}`;
+	// Arrow head with tip at (0,0), pointing right when radians=0
+	const points = `0,0 ${-size / 2},${size / 2} ${-size},0 ${-size / 2},${-size / 2}`;
 
 	return <polygon points={points} fill={color} transform={transform} />;
 };

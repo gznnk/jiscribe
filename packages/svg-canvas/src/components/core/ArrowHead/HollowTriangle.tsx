@@ -16,8 +16,8 @@ const HollowTriangleArrowHeadComponent: React.FC<ArrowHeadComponentProps> = ({
 	scale,
 }) => {
 	const transform = createSvgTransform(scale, scale, radians, x, y);
-	// Arrow head with tip at (0,0), pointing up when radians=0
-	const points = `0,0 ${ARROW_HEAD_SIZE / 2},${-ARROW_HEAD_SIZE} ${-ARROW_HEAD_SIZE / 2},${-ARROW_HEAD_SIZE}`;
+	// Arrow head with tip at (0,0), pointing right when radians=0
+	const points = `0,0 ${-ARROW_HEAD_SIZE},${ARROW_HEAD_SIZE / 2} ${-ARROW_HEAD_SIZE},${-ARROW_HEAD_SIZE / 2}`;
 
 	return (
 		<polygon

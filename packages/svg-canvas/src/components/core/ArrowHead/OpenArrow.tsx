@@ -17,8 +17,8 @@ const OpenArrowArrowHeadComponent: React.FC<ArrowHeadComponentProps> = ({
 }) => {
 	const transform = createSvgTransform(scale, scale, radians, x, y);
 	const size = ARROW_HEAD_SIZE;
-	// Arrow head with tip at (0,0), pointing up when radians=0
-	const points = `${-size / 2},${-size} 0,0 ${size / 2},${-size}`;
+	// Arrow head with tip at (0,0), pointing right when radians=0
+	const points = `${-size},${-size / 2} 0,0 ${-size},${size / 2}`;
 
 	return (
 		<polyline

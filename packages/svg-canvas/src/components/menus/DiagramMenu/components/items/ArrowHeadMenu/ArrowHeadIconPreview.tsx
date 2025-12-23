@@ -21,10 +21,10 @@ const ArrowHeadIconPreviewComponent: React.FC<ArrowHeadIconPreviewProps> = ({
 	const isStart = direction === "start";
 
 	// Determine arrow position and rotation based on direction
-	// Start arrow is on the left (x=2) pointing right (90deg), end arrow is on the right (x=22) pointing left (270deg)
-	const arrowX = isStart ? 0 : 24;
+	// Start arrow is on the left (x=0) pointing left (180deg), end arrow is on the right (x=24) pointing right (0deg)
+	const arrowX = isStart ? 1 : 23;
 	const arrowY = 12;
-	const arrowRadians = isStart ? Math.PI / 2 : (Math.PI * 3) / 2;
+	const arrowRadians = isStart ? Math.PI : 0;
 
 	return (
 		<svg width="24" height="24" viewBox="0 6 24 12">
@@ -38,7 +38,7 @@ const ArrowHeadIconPreviewComponent: React.FC<ArrowHeadIconPreviewProps> = ({
 					y={arrowY}
 					color="#333333"
 					radians={arrowRadians}
-					scale={1}
+					scale={1.5}
 				/>
 			)}
 		</svg>
