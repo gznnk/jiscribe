@@ -1,10 +1,10 @@
-import type { Point } from "electron";
 import type React from "react";
 import { memo, useCallback, useEffect, useRef } from "react";
 
 import { EVENT_NAME_CONNECTION } from "../../../../constants/core/EventNames";
 import { useEventBus } from "../../../../context/EventBusContext";
 import type { Frame } from "../../../../types/core/Frame";
+import type { Point } from "../../../../types/core/Point";
 import type {
 	DiagramChangeData,
 	DiagramChangeEvent,

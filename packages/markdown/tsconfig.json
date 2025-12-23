@@ -1,15 +1,4 @@
 {
-	"compilerOptions": {
-		"target": "ES2023",
-		"lib": ["ES2023", "DOM"],
-		"module": "ESNext",
-		"skipLibCheck": true,
-		"moduleResolution": "bundler",
-		"allowImportingTsExtensions": true,
-		"isolatedModules": true,
-		"moduleDetection": "force",
-		"noEmit": true,
-		"strict": true
-	},
+	"extends": "../../tsconfig.base.json",
 	"include": ["src"]
 }
