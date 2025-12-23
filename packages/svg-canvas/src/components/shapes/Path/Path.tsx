@@ -81,8 +81,12 @@ const PathComponent: React.FC<PathProps> = ({
 	// Compose props for path element
 	const composedProps = mergeProps(dragProps, clickProps, selectProps);
 
+	// Calculate trim values based on arrow head presence
+	const startTrim = startArrowHead && startArrowHead !== "None" ? strokeWidth : 0;
+	const endTrim = endArrowHead && endArrowHead !== "None" ? strokeWidth : 0;
+
 	// Generate polyline d attribute value
-	const d = createPathDValue(items, pathType);
+	const d = createPathDValue(items, pathType, startTrim, endTrim);
 
 	// Convert strokeDashType to strokeDasharray value
 	const strokeDasharray = convertStrokeDashTypeToArray(
