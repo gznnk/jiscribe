@@ -2,13 +2,13 @@ import { OpenAI } from "openai";
 import type React from "react";
 import { memo, useEffect, useRef, useState } from "react";
 
-import { OpenAiKeyManager } from "../../../utils/KeyManager";
 import { RectangleDefaultState } from "../../../constants/state/shapes/RectangleDefaultState";
 import { useAddDiagram } from "../../../hooks/useAddDiagram";
 import { useExecutionChain } from "../../../hooks/useExecutionChain";
 import type { ImageGenNodeProps } from "../../../types/props/nodes/ImageGenNodeProps";
 import { newEventId } from "../../../utils/core/newEventId";
 import { isPlainTextPayload } from "../../../utils/execution/isPlainTextPayload";
+import { OpenAiKeyManager } from "../../../utils/KeyManager";
 import { createImageState } from "../../../utils/shapes/image/createImageState";
 import { IconContainer } from "../../core/IconContainer";
 import { Picture } from "../../icons/Picture";

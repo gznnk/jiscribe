@@ -2,7 +2,6 @@ import { LLMClientFactory, type LLMClient } from "@workspace/llm-client";
 import type React from "react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { OpenAiKeyManager } from "../../../utils/KeyManager";
 import { useEventBus } from "../../../context/EventBusContext";
 import { useClick } from "../../../hooks/useClick";
 import { useDrag } from "../../../hooks/useDrag";
@@ -36,6 +35,7 @@ import type { AiProps } from "../../../types/props/diagrams/AiProps";
 import type { InputState } from "../../../types/state/elements/InputState";
 import { mergeProps } from "../../../utils/core/mergeProps";
 import { newEventId } from "../../../utils/core/newEventId";
+import { OpenAiKeyManager } from "../../../utils/KeyManager";
 import { efficientAffineTransformation } from "../../../utils/math/transform/efficientAffineTransformation";
 import { ProcessIndicator } from "../../auxiliary/ProcessIndicator";
 import { IconContainer } from "../../core/IconContainer";

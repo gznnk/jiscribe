@@ -1,5 +1,5 @@
-import type { Point } from "../../../types/core/Point";
 import { trimLineEnd } from "./trimLineEnd";
+import type { Point } from "../../../types/core/Point";
 
 /**
  * Trims the start point of a line segment by `trim` along its direction.

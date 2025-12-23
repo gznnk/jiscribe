@@ -2,10 +2,6 @@ import type { Message } from "@workspace/llm-chat-ui";
 import { LLMClientFactory, type LLMClient } from "@workspace/llm-client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import {
-	GeminiKeyManager,
-	OpenAiKeyManager,
-} from "../../../../utils/KeyManager";
 import { useEventBus } from "../../../../context/EventBusContext";
 import {
 	circleShapeToolDefinition,
@@ -55,6 +51,10 @@ import {
 	updateDiagramToolDefinition,
 	useUpdateDiagramTool,
 } from "../../../../tools/update_diagram";
+import {
+	GeminiKeyManager,
+	OpenAiKeyManager,
+} from "../../../../utils/KeyManager";
 
 const USE_GEMINI = true;
 

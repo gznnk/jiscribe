@@ -2,7 +2,6 @@ import { LLMClientFactory } from "@workspace/llm-client";
 import type React from "react";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 
-import { OpenAiKeyManager } from "../../../utils/KeyManager";
 import {
 	BACKGROUND_COLOR,
 	BORDER_COLOR,
@@ -20,6 +19,7 @@ import type { HtmlGenNodeProps } from "../../../types/props/nodes/HtmlGenNodePro
 import { getDiagramById } from "../../../utils/core/getDiagramById";
 import { newEventId } from "../../../utils/core/newEventId";
 import { previewHtmlWithConfirm } from "../../../utils/core/previewHtmlWithConfirm";
+import { OpenAiKeyManager } from "../../../utils/KeyManager";
 import { Button } from "../../elements/Button";
 import { Frame } from "../../elements/Frame";
 

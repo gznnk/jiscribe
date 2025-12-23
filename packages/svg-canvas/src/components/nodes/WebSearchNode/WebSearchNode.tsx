@@ -2,12 +2,12 @@ import { OpenAI } from "openai";
 import type React from "react";
 import { memo, useEffect, useRef, useState } from "react";
 
-import { OpenAiKeyManager } from "../../../utils/KeyManager";
 import { RectangleDefaultState } from "../../../constants/state/shapes/RectangleDefaultState";
 import { useExecutionChain } from "../../../hooks/useExecutionChain";
 import type { WebSearchNodeProps } from "../../../types/props/nodes/WebSearchNodeProps";
 import { newEventId } from "../../../utils/core/newEventId";
 import { isPlainTextPayload } from "../../../utils/execution/isPlainTextPayload";
+import { OpenAiKeyManager } from "../../../utils/KeyManager";
 import { IconContainer } from "../../core/IconContainer";
 import { WebSearch } from "../../icons/WebSearch";
 import { Rectangle } from "../../shapes/Rectangle";

@@ -3,8 +3,8 @@ import { LLMClientFactory  } from "@workspace/llm-client";
 import { useMemo } from "react";
 
 import WEB_DESIGN_INSTRUCTIONS from "./prompts/instructions.md?raw";
-import { OpenAiKeyManager } from "../../utils/KeyManager";
 import type { Diagram } from "../../types/state/core/Diagram";
+import { OpenAiKeyManager } from "../../utils/KeyManager";
 import {
 	circleShapeWithHandlerToolDefinition,
 	useAddCircleShapeWithHandlerTool,

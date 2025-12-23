@@ -4,13 +4,13 @@ import { memo, useCallback, useEffect, useRef, useState } from "react";
 // Import other libraries.
 
 // Import components related to SvgCanvas.
-import { OpenAiKeyManager } from "../../../utils/KeyManager";
 import { RectangleDefaultState } from "../../../constants/state/shapes/RectangleDefaultState";
 import { useExecutionChain } from "../../../hooks/useExecutionChain";
 import type { FileDropEvent } from "../../../types/events/FileDropEvent";
 import type { VectorStoreNodeProps } from "../../../types/props/nodes/VectorStoreNodeProps";
 import { newEventId } from "../../../utils/core/newEventId";
 import { isPlainTextPayload } from "../../../utils/execution/isPlainTextPayload";
+import { OpenAiKeyManager } from "../../../utils/KeyManager";
 import { IconContainer } from "../../core/IconContainer";
 import { VectorStore } from "../../icons/VectorStore";
 import { Rectangle } from "../../shapes/Rectangle";
