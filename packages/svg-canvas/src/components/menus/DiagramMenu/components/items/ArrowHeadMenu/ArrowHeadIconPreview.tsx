@@ -21,9 +21,10 @@ const ArrowHeadIconPreviewComponent: React.FC<ArrowHeadIconPreviewProps> = ({
 	const isStart = direction === "start";
 
 	// Determine arrow position and rotation based on direction
-	const arrowX = isStart ? 2 : 22;
+	// Start arrow is on the left (x=2) pointing right (90deg), end arrow is on the right (x=22) pointing left (270deg)
+	const arrowX = isStart ? 0 : 24;
 	const arrowY = 12;
-	const arrowRadians = isStart ? Math.PI : 0;
+	const arrowRadians = isStart ? Math.PI / 2 : (Math.PI * 3) / 2;
 
 	return (
 		<svg width="24" height="24" viewBox="0 6 24 12">
