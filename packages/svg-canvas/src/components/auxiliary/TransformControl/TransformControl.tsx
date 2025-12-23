@@ -1006,14 +1006,14 @@ const TransformControlComponent: React.FC<Props> = ({
 
 	// Get the cursor for each drag point based on the rotation angle.
 	const cursors = {
-		topCenter: getCursorFromAngle(rotation, scaleX, scaleY),
-		rightTop: getCursorFromAngle(rotation + 45, scaleX, scaleY),
-		rightCenter: getCursorFromAngle(rotation + 90, scaleX, scaleY),
-		rightBottom: getCursorFromAngle(rotation + 135, scaleX, scaleY),
-		bottomCenter: getCursorFromAngle(rotation + 180, scaleX, scaleY),
-		leftBottom: getCursorFromAngle(rotation + 225, scaleX, scaleY),
-		leftCenter: getCursorFromAngle(rotation + 270, scaleX, scaleY),
-		leftTop: getCursorFromAngle(rotation + 315, scaleX, scaleY),
+		topCenter: getCursorFromAngle(rotation - 90, scaleX, scaleY),
+		rightTop: getCursorFromAngle(rotation - 45, scaleX, scaleY),
+		rightCenter: getCursorFromAngle(rotation, scaleX, scaleY),
+		rightBottom: getCursorFromAngle(rotation + 45, scaleX, scaleY),
+		bottomCenter: getCursorFromAngle(rotation + 90, scaleX, scaleY),
+		leftBottom: getCursorFromAngle(rotation + 135, scaleX, scaleY),
+		leftCenter: getCursorFromAngle(rotation + 180, scaleX, scaleY),
+		leftTop: getCursorFromAngle(rotation + 225, scaleX, scaleY),
 	};
 
 	return (

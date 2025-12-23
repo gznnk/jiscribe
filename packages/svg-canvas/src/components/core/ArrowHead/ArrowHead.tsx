@@ -37,7 +37,12 @@ const ArrowHeadComponent: React.FC<ArrowHeadProps> = ({
 }) => {
 	if (type === "None") return null;
 
-	const props = { x, y, color, radians, scale };
+	// Adjust radians by +90 degrees (PI/2) to align the ArrowHead components
+	// (which point Down at 0 rotation) with the standard coordinate system (0 = Right).
+	// This results in the arrow pointing opposite to the direction (e.g. 0 input -> Points Left).
+	const adjustedRadians = radians + Math.PI / 2;
+
+	const props = { x, y, color, radians: adjustedRadians, scale };
 
 	if (type === "FilledTriangle") {
 		return <FilledTriangleArrowHead {...props} />;
