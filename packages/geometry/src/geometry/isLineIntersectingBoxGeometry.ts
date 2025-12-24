@@ -1,4 +1,4 @@
-import { segmentsIntersect } from "./segmentsIntersect";
+﻿import { doSegmentsIntersect } from "./doSegmentsIntersect";
 import type { BoxGeometry } from "../types/BoxGeometry";
 import type { Point } from "../types/Point";
 
@@ -34,5 +34,6 @@ export const isLineIntersectingBoxGeometry = (
 		], // Left edge
 	];
 
-	return boxEdges.some(([q1, q2]) => segmentsIntersect(p1, p2, q1, q2, false));
+	return boxEdges.some(([q1, q2]) => doSegmentsIntersect(p1, p2, q1, q2, false));
 };
+

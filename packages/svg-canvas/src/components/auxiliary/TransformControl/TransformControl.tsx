@@ -1,15 +1,15 @@
-import {
+﻿import {
 	calcClosestCircleIntersection,
 	calcRadians,
 	calcRectangleVertices,
 	createLinearX2yFunction,
 	createLinearY2xFunction,
 	degreesToRadians,
-	efficientAffineTransformation,
-	efficientInverseAffineTransformation,
+	calcEfficientAffineTransformation,
+	calcEfficientInverseAffineTransformation,
 	nanToZero,
 	radiansToDegrees,
-	signNonZero,
+	calcSignNonZero,
 } from "@workspace/geometry";
 import type React from "react";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
@@ -104,8 +104,8 @@ const TransformControlComponent: React.FC<Props> = ({
 	const radians = degreesToRadians(rotation);
 	const isSwapped = (rotation + 405) % 180 > 90;
 
-	const affineTransformationOnDrag = (x: number, y: number) =>
-		efficientAffineTransformation(
+	const calcAffineTransformationOnDrag = (x: number, y: number) =>
+		calcEfficientAffineTransformation(
 			x,
 			y,
 			1,
@@ -115,8 +115,8 @@ const TransformControlComponent: React.FC<Props> = ({
 			startFrame.current.y,
 		);
 
-	const inverseAffineTransformationOnDrag = (x: number, y: number) =>
-		efficientInverseAffineTransformation(
+	const calcInverseAffineTransformationOnDrag = (x: number, y: number) =>
+		calcEfficientInverseAffineTransformation(
 			x,
 			y,
 			1,
@@ -158,8 +158,8 @@ const TransformControlComponent: React.FC<Props> = ({
 				y: centerPoint.y,
 				width: Math.abs(newWidth),
 				height: Math.abs(newHeight),
-				scaleX: signNonZero(newWidth),
-				scaleY: signNonZero(newHeight),
+				scaleX: calcSignNonZero(newWidth),
+				scaleY: calcSignNonZero(newHeight),
 				rotation,
 			},
 			cursorX: e.cursorX,
@@ -238,8 +238,8 @@ const TransformControlComponent: React.FC<Props> = ({
 
 		const absWidth = Math.abs(newWidth);
 		const absHeight = Math.abs(newHeight);
-		const widthSign = signNonZero(newWidth);
-		const heightSign = signNonZero(newHeight);
+		const widthSign = calcSignNonZero(newWidth);
+		const heightSign = calcSignNonZero(newHeight);
 
 		// Check if either dimension is below minimum
 		const widthBelowMin = absWidth < minWidth;
@@ -298,8 +298,8 @@ const TransformControlComponent: React.FC<Props> = ({
 		vertices,
 		doKeepProportion,
 		isSwapped,
-		affineTransformationOnDrag,
-		inverseAffineTransformationOnDrag,
+		calcAffineTransformationOnDrag,
+		calcInverseAffineTransformationOnDrag,
 		recordStartFrame,
 		triggerTransform,
 		setResizingByEvent,
@@ -316,8 +316,8 @@ const TransformControlComponent: React.FC<Props> = ({
 	const handleDragLeftTop = useCallback((e: DiagramDragEvent) => {
 		const {
 			doKeepProportion,
-			inverseAffineTransformationOnDrag,
-			affineTransformationOnDrag,
+			calcInverseAffineTransformationOnDrag,
+			calcAffineTransformationOnDrag,
 			recordStartFrame,
 			triggerTransform,
 			setResizingByEvent,
@@ -331,8 +331,11 @@ const TransformControlComponent: React.FC<Props> = ({
 			recordStartFrame();
 		}
 
-		const inversedDragPoint = inverseAffineTransformationOnDrag(e.endX, e.endY);
-		const inversedRightBottom = inverseAffineTransformationOnDrag(
+		const inversedDragPoint = calcInverseAffineTransformationOnDrag(
+			e.endX,
+			e.endY,
+		);
+		const inversedRightBottom = calcInverseAffineTransformationOnDrag(
 			startFrame.current.bottomRightPoint.x,
 			startFrame.current.bottomRightPoint.y,
 		);
@@ -363,7 +366,10 @@ const TransformControlComponent: React.FC<Props> = ({
 		const inversedCenterX = inversedRightBottom.x - nanToZero(newWidth / 2);
 		const inversedCenterY = inversedRightBottom.y - nanToZero(newHeight / 2);
 
-		const center = affineTransformationOnDrag(inversedCenterX, inversedCenterY);
+		const center = calcAffineTransformationOnDrag(
+			inversedCenterX,
+			inversedCenterY,
+		);
 
 		// Pass cursor position to enable auto-scrolling
 		triggerTransform(e, center, newWidth, newHeight);
@@ -383,8 +389,8 @@ const TransformControlComponent: React.FC<Props> = ({
 	const handleDragLeftBottom = useCallback((e: DiagramDragEvent) => {
 		const {
 			doKeepProportion,
-			inverseAffineTransformationOnDrag,
-			affineTransformationOnDrag,
+			calcInverseAffineTransformationOnDrag,
+			calcAffineTransformationOnDrag,
 			recordStartFrame,
 			triggerTransform,
 			setResizingByEvent,
@@ -398,8 +404,11 @@ const TransformControlComponent: React.FC<Props> = ({
 			recordStartFrame();
 		}
 
-		const inversedDragPoint = inverseAffineTransformationOnDrag(e.endX, e.endY);
-		const inversedRightTop = inverseAffineTransformationOnDrag(
+		const inversedDragPoint = calcInverseAffineTransformationOnDrag(
+			e.endX,
+			e.endY,
+		);
+		const inversedRightTop = calcInverseAffineTransformationOnDrag(
 			startFrame.current.topRightPoint.x,
 			startFrame.current.topRightPoint.y,
 		);
@@ -430,7 +439,10 @@ const TransformControlComponent: React.FC<Props> = ({
 		const inversedCenterX = inversedRightTop.x - nanToZero(newWidth / 2);
 		const inversedCenterY = inversedRightTop.y + nanToZero(newHeight / 2);
 
-		const center = affineTransformationOnDrag(inversedCenterX, inversedCenterY);
+		const center = calcAffineTransformationOnDrag(
+			inversedCenterX,
+			inversedCenterY,
+		);
 
 		triggerTransform(e, center, newWidth, newHeight);
 	}, []);
@@ -449,8 +461,8 @@ const TransformControlComponent: React.FC<Props> = ({
 	const handleDragRightTop = useCallback((e: DiagramDragEvent) => {
 		const {
 			doKeepProportion,
-			inverseAffineTransformationOnDrag,
-			affineTransformationOnDrag,
+			calcInverseAffineTransformationOnDrag,
+			calcAffineTransformationOnDrag,
 			recordStartFrame,
 			triggerTransform,
 			setResizingByEvent,
@@ -464,8 +476,11 @@ const TransformControlComponent: React.FC<Props> = ({
 			recordStartFrame();
 		}
 
-		const inversedDragPoint = inverseAffineTransformationOnDrag(e.endX, e.endY);
-		const inversedLeftBottom = inverseAffineTransformationOnDrag(
+		const inversedDragPoint = calcInverseAffineTransformationOnDrag(
+			e.endX,
+			e.endY,
+		);
+		const inversedLeftBottom = calcInverseAffineTransformationOnDrag(
 			startFrame.current.bottomLeftPoint.x,
 			startFrame.current.bottomLeftPoint.y,
 		);
@@ -496,7 +511,10 @@ const TransformControlComponent: React.FC<Props> = ({
 		const inversedCenterX = inversedLeftBottom.x + nanToZero(newWidth / 2);
 		const inversedCenterY = inversedLeftBottom.y - nanToZero(newHeight / 2);
 
-		const center = affineTransformationOnDrag(inversedCenterX, inversedCenterY);
+		const center = calcAffineTransformationOnDrag(
+			inversedCenterX,
+			inversedCenterY,
+		);
 
 		triggerTransform(e, center, newWidth, newHeight);
 	}, []);
@@ -515,8 +533,8 @@ const TransformControlComponent: React.FC<Props> = ({
 	const handleDragRightBottom = useCallback((e: DiagramDragEvent) => {
 		const {
 			doKeepProportion,
-			inverseAffineTransformationOnDrag,
-			affineTransformationOnDrag,
+			calcInverseAffineTransformationOnDrag,
+			calcAffineTransformationOnDrag,
 			recordStartFrame,
 			triggerTransform,
 			setResizingByEvent,
@@ -530,8 +548,11 @@ const TransformControlComponent: React.FC<Props> = ({
 			recordStartFrame();
 		}
 
-		const inversedDragPoint = inverseAffineTransformationOnDrag(e.endX, e.endY);
-		const inversedLeftTop = inverseAffineTransformationOnDrag(
+		const inversedDragPoint = calcInverseAffineTransformationOnDrag(
+			e.endX,
+			e.endY,
+		);
+		const inversedLeftTop = calcInverseAffineTransformationOnDrag(
 			startFrame.current.topLeftPoint.x,
 			startFrame.current.topLeftPoint.y,
 		);
@@ -562,7 +583,10 @@ const TransformControlComponent: React.FC<Props> = ({
 		const inversedCenterX = inversedLeftTop.x + nanToZero(newWidth / 2);
 		const inversedCenterY = inversedLeftTop.y + nanToZero(newHeight / 2);
 
-		const center = affineTransformationOnDrag(inversedCenterX, inversedCenterY);
+		const center = calcAffineTransformationOnDrag(
+			inversedCenterX,
+			inversedCenterY,
+		);
 
 		triggerTransform(e, center, newWidth, newHeight);
 	}, []);
@@ -581,8 +605,8 @@ const TransformControlComponent: React.FC<Props> = ({
 	const handleDragTopCenter = useCallback((e: DiagramDragEvent) => {
 		const {
 			doKeepProportion,
-			inverseAffineTransformationOnDrag,
-			affineTransformationOnDrag,
+			calcInverseAffineTransformationOnDrag,
+			calcAffineTransformationOnDrag,
 			recordStartFrame,
 			triggerTransform,
 			setResizingByEvent,
@@ -596,8 +620,11 @@ const TransformControlComponent: React.FC<Props> = ({
 			recordStartFrame();
 		}
 
-		const inversedDragPoint = inverseAffineTransformationOnDrag(e.endX, e.endY);
-		const inversedBottomCenter = inverseAffineTransformationOnDrag(
+		const inversedDragPoint = calcInverseAffineTransformationOnDrag(
+			e.endX,
+			e.endY,
+		);
+		const inversedBottomCenter = calcInverseAffineTransformationOnDrag(
 			startFrame.current.bottomCenterPoint.x,
 			startFrame.current.bottomCenterPoint.y,
 		);
@@ -628,7 +655,10 @@ const TransformControlComponent: React.FC<Props> = ({
 		const inversedCenterX = inversedBottomCenter.x;
 		const inversedCenterY = inversedBottomCenter.y - nanToZero(newHeight / 2);
 
-		const center = affineTransformationOnDrag(inversedCenterX, inversedCenterY);
+		const center = calcAffineTransformationOnDrag(
+			inversedCenterX,
+			inversedCenterY,
+		);
 
 		triggerTransform(e, center, newWidth, newHeight);
 	}, []);
@@ -652,8 +682,8 @@ const TransformControlComponent: React.FC<Props> = ({
 	const handleDragLeftCenter = useCallback((e: DiagramDragEvent) => {
 		const {
 			doKeepProportion,
-			inverseAffineTransformationOnDrag,
-			affineTransformationOnDrag,
+			calcInverseAffineTransformationOnDrag,
+			calcAffineTransformationOnDrag,
 			recordStartFrame,
 			triggerTransform,
 			setResizingByEvent,
@@ -667,8 +697,11 @@ const TransformControlComponent: React.FC<Props> = ({
 			recordStartFrame();
 		}
 
-		const inversedDragPoint = inverseAffineTransformationOnDrag(e.endX, e.endY);
-		const inversedRightCenter = inverseAffineTransformationOnDrag(
+		const inversedDragPoint = calcInverseAffineTransformationOnDrag(
+			e.endX,
+			e.endY,
+		);
+		const inversedRightCenter = calcInverseAffineTransformationOnDrag(
 			startFrame.current.rightCenterPoint.x,
 			startFrame.current.rightCenterPoint.y,
 		);
@@ -699,7 +732,10 @@ const TransformControlComponent: React.FC<Props> = ({
 		const inversedCenterX = inversedRightCenter.x - nanToZero(newWidth / 2);
 		const inversedCenterY = inversedRightCenter.y;
 
-		const center = affineTransformationOnDrag(inversedCenterX, inversedCenterY);
+		const center = calcAffineTransformationOnDrag(
+			inversedCenterX,
+			inversedCenterY,
+		);
 
 		triggerTransform(e, center, newWidth, newHeight);
 	}, []);
@@ -723,8 +759,8 @@ const TransformControlComponent: React.FC<Props> = ({
 	const handleDragRightCenter = useCallback((e: DiagramDragEvent) => {
 		const {
 			doKeepProportion,
-			inverseAffineTransformationOnDrag,
-			affineTransformationOnDrag,
+			calcInverseAffineTransformationOnDrag,
+			calcAffineTransformationOnDrag,
 			recordStartFrame,
 			triggerTransform,
 			setResizingByEvent,
@@ -738,8 +774,11 @@ const TransformControlComponent: React.FC<Props> = ({
 			recordStartFrame();
 		}
 
-		const inversedDragPoint = inverseAffineTransformationOnDrag(e.endX, e.endY);
-		const inversedLeftCenter = inverseAffineTransformationOnDrag(
+		const inversedDragPoint = calcInverseAffineTransformationOnDrag(
+			e.endX,
+			e.endY,
+		);
+		const inversedLeftCenter = calcInverseAffineTransformationOnDrag(
 			startFrame.current.leftCenterPoint.x,
 			startFrame.current.leftCenterPoint.y,
 		);
@@ -770,7 +809,10 @@ const TransformControlComponent: React.FC<Props> = ({
 		const inversedCenterX = inversedLeftCenter.x + nanToZero(newWidth / 2);
 		const inversedCenterY = inversedLeftCenter.y;
 
-		const center = affineTransformationOnDrag(inversedCenterX, inversedCenterY);
+		const center = calcAffineTransformationOnDrag(
+			inversedCenterX,
+			inversedCenterY,
+		);
 
 		triggerTransform(e, center, newWidth, newHeight);
 	}, []);
@@ -794,8 +836,8 @@ const TransformControlComponent: React.FC<Props> = ({
 	const handleDragBottomCenter = useCallback((e: DiagramDragEvent) => {
 		const {
 			doKeepProportion,
-			inverseAffineTransformationOnDrag,
-			affineTransformationOnDrag,
+			calcInverseAffineTransformationOnDrag,
+			calcAffineTransformationOnDrag,
 			recordStartFrame,
 			triggerTransform,
 			setResizingByEvent,
@@ -809,8 +851,11 @@ const TransformControlComponent: React.FC<Props> = ({
 			recordStartFrame();
 		}
 
-		const inversedDragPoint = inverseAffineTransformationOnDrag(e.endX, e.endY);
-		const inversedTopCenter = inverseAffineTransformationOnDrag(
+		const inversedDragPoint = calcInverseAffineTransformationOnDrag(
+			e.endX,
+			e.endY,
+		);
+		const inversedTopCenter = calcInverseAffineTransformationOnDrag(
 			startFrame.current.topCenterPoint.x,
 			startFrame.current.topCenterPoint.y,
 		);
@@ -841,7 +886,10 @@ const TransformControlComponent: React.FC<Props> = ({
 		const inversedCenterX = inversedTopCenter.x;
 		const inversedCenterY = inversedTopCenter.y + nanToZero(newHeight / 2);
 
-		const center = affineTransformationOnDrag(inversedCenterX, inversedCenterY);
+		const center = calcAffineTransformationOnDrag(
+			inversedCenterX,
+			inversedCenterY,
+		);
 
 		triggerTransform(e, center, newWidth, newHeight);
 	}, []);
@@ -885,7 +933,7 @@ const TransformControlComponent: React.FC<Props> = ({
 	// Rotation
 	// Adjust rotation point margin based on zoom to maintain consistent visual distance
 	const adjustedRotatePointMargin = ROTATE_POINT_MARGIN / zoom;
-	const rotationPoint = efficientAffineTransformation(
+	const rotationPoint = calcEfficientAffineTransformation(
 		width / 2 + adjustedRotatePointMargin,
 		-(height / 2 + adjustedRotatePointMargin),
 		1,

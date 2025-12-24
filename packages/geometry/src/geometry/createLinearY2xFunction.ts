@@ -1,4 +1,4 @@
-import { calculateClosestIntersection } from "./calculateClosestIntersection";
+import { calcClosestIntersection } from "./calcClosestIntersection";
 import type { Point } from "../types/Point";
 
 /**
@@ -19,6 +19,6 @@ export const createLinearY2xFunction = (p1: Point, p2: Point) => {
 		if (!Number.isFinite(a)) {
 			return { x: p1.x, y };
 		}
-		return calculateClosestIntersection(a, b, p1, x, y);
+		return calcClosestIntersection(a, b, p1, x, y);
 	};
 };

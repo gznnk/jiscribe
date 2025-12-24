@@ -1,4 +1,4 @@
-import { calculateEffectiveDimensions } from "@workspace/geometry";
+import { calcEffectiveDimensions } from "@workspace/geometry";
 import { useCallback, useRef } from "react";
 
 import { DiagramRegistry } from "../../../registry";
@@ -83,7 +83,7 @@ export const useOnTransform = (props: SvgCanvasSubHooksProps) => {
 
 				// Apply minWidth and minHeight constraints
 				const { effectiveWidth, effectiveHeight } =
-					calculateEffectiveDimensions(
+					calcEffectiveDimensions(
 						newWidth,
 						newHeight,
 						initialItem.minWidth,

@@ -1,4 +1,4 @@
-import { degreesToRadians , rotatePoint } from "@workspace/geometry";
+﻿import { degreesToRadians , calcRotatedPoint } from "@workspace/geometry";
 import { memo, type ReactElement } from "react";
 
 import { StyledCircle } from "./ProcessIndicatorStyled";
@@ -47,7 +47,7 @@ const calculatePositions = (
 	// Calculate base position (left edge of bottom side)
 	const baseX = centerX - width / 2 + iconSpacing / 2;
 	const baseY = centerY + height / 2 + padding + radius;
-	const baseRotated = rotatePoint(
+	const baseRotated = calcRotatedPoint(
 		baseX,
 		baseY,
 		centerX,
@@ -109,3 +109,4 @@ const ProcessIndicatorComponent = ({
 };
 
 export const ProcessIndicator = memo(ProcessIndicatorComponent);
+

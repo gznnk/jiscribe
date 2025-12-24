@@ -1,5 +1,5 @@
-import { degreesToRadians } from "../common/degreesToRadians";
-import { efficientAffineTransformation } from "../transform/efficientAffineTransformation";
+﻿import { degreesToRadians } from "../common/degreesToRadians";
+import { calcEfficientAffineTransformation } from "../transform/calcEfficientAffineTransformation";
 import type { Box } from "../types/Box";
 import type { Frame } from "../types/Frame";
 import type { Point } from "../types/Point";
@@ -45,7 +45,7 @@ export const calcBoundingBox = (element: Point | Frame): Box => {
 		const radians = degreesToRadians(rotation);
 
 		// Calculate all four corners
-		const topLeft = efficientAffineTransformation(
+		const topLeft = calcEfficientAffineTransformation(
 			-halfWidth,
 			-halfHeight,
 			scaleX,
@@ -55,7 +55,7 @@ export const calcBoundingBox = (element: Point | Frame): Box => {
 			y,
 		);
 
-		const bottomLeft = efficientAffineTransformation(
+		const bottomLeft = calcEfficientAffineTransformation(
 			-halfWidth,
 			halfHeight,
 			scaleX,
@@ -65,7 +65,7 @@ export const calcBoundingBox = (element: Point | Frame): Box => {
 			y,
 		);
 
-		const topRight = efficientAffineTransformation(
+		const topRight = calcEfficientAffineTransformation(
 			halfWidth,
 			-halfHeight,
 			scaleX,
@@ -75,7 +75,7 @@ export const calcBoundingBox = (element: Point | Frame): Box => {
 			y,
 		);
 
-		const bottomRight = efficientAffineTransformation(
+		const bottomRight = calcEfficientAffineTransformation(
 			halfWidth,
 			halfHeight,
 			scaleX,
@@ -106,3 +106,5 @@ export const calcBoundingBox = (element: Point | Frame): Box => {
 		bottom: y + scaledHalfHeight,
 	};
 };
+
+

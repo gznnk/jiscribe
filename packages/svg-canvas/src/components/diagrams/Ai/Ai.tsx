@@ -1,4 +1,4 @@
-import { efficientAffineTransformation } from "@workspace/geometry";
+﻿import { calcEfficientAffineTransformation } from "@workspace/geometry";
 import { LLMClientFactory, type LLMClient } from "@workspace/llm-client";
 import type React from "react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -335,7 +335,7 @@ const AiComponent: React.FC<AiProps> = (props) => {
 
 	// Input position (below avatar, absolute positioning)
 	const inputY = avatarSize / 2 + inputHeight / 2 + 5;
-	const inputCenter = efficientAffineTransformation(
+	const inputCenter = calcEfficientAffineTransformation(
 		-(buttonWidth / 2 + 2.5), // Shift left to make room for button
 		inputY,
 		1, // scaleX fixed at 1
@@ -346,7 +346,7 @@ const AiComponent: React.FC<AiProps> = (props) => {
 	);
 
 	// Send button position (below avatar, right side, absolute positioning)
-	const buttonCenter = efficientAffineTransformation(
+	const buttonCenter = calcEfficientAffineTransformation(
 		bubbleWidth / 2 - buttonWidth / 2,
 		inputY,
 		1, // scaleX fixed at 1
@@ -522,3 +522,4 @@ const AiComponent: React.FC<AiProps> = (props) => {
 };
 
 export const Ai = memo(AiComponent);
+

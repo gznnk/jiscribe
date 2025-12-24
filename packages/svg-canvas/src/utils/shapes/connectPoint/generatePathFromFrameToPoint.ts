@@ -1,4 +1,4 @@
-import { closer , segmentsIntersect } from "@workspace/geometry";
+﻿import { calcCloserNumber , doSegmentsIntersect } from "@workspace/geometry";
 
 import { addMarginToBoxGeometry } from "./addMarginToBoxGeometry";
 import { getLineDirection } from "./getLineDirection";
@@ -106,13 +106,13 @@ export const generatePathFromFrameToPoint = (
 
 	if (startDirection === "up") {
 		// For upward direction: closer edge is top, farther edge is bottom
-		intersectsCloserEdge = segmentsIntersect(
+		intersectsCloserEdge = doSegmentsIntersect(
 			expandedBoundingBox.topLeft,
 			expandedBoundingBox.topRight,
 			secondIntermediatePoint,
 			endPoint,
 		);
-		intersectsFartherEdge = segmentsIntersect(
+		intersectsFartherEdge = doSegmentsIntersect(
 			expandedBoundingBox.bottomLeft,
 			expandedBoundingBox.bottomRight,
 			secondIntermediatePoint,
@@ -121,13 +121,13 @@ export const generatePathFromFrameToPoint = (
 	}
 	if (startDirection === "down") {
 		// For downward direction: closer edge is bottom, farther edge is top
-		intersectsCloserEdge = segmentsIntersect(
+		intersectsCloserEdge = doSegmentsIntersect(
 			expandedBoundingBox.bottomLeft,
 			expandedBoundingBox.bottomRight,
 			secondIntermediatePoint,
 			endPoint,
 		);
-		intersectsFartherEdge = segmentsIntersect(
+		intersectsFartherEdge = doSegmentsIntersect(
 			expandedBoundingBox.topLeft,
 			expandedBoundingBox.topRight,
 			secondIntermediatePoint,
@@ -136,13 +136,13 @@ export const generatePathFromFrameToPoint = (
 	}
 	if (startDirection === "left") {
 		// For leftward direction: closer edge is left, farther edge is right
-		intersectsCloserEdge = segmentsIntersect(
+		intersectsCloserEdge = doSegmentsIntersect(
 			expandedBoundingBox.topLeft,
 			expandedBoundingBox.bottomLeft,
 			secondIntermediatePoint,
 			endPoint,
 		);
-		intersectsFartherEdge = segmentsIntersect(
+		intersectsFartherEdge = doSegmentsIntersect(
 			expandedBoundingBox.topRight,
 			expandedBoundingBox.bottomRight,
 			secondIntermediatePoint,
@@ -151,13 +151,13 @@ export const generatePathFromFrameToPoint = (
 	}
 	if (startDirection === "right") {
 		// For rightward direction: closer edge is right, farther edge is left
-		intersectsCloserEdge = segmentsIntersect(
+		intersectsCloserEdge = doSegmentsIntersect(
 			expandedBoundingBox.topRight,
 			expandedBoundingBox.bottomRight,
 			secondIntermediatePoint,
 			endPoint,
 		);
-		intersectsFartherEdge = segmentsIntersect(
+		intersectsFartherEdge = doSegmentsIntersect(
 			expandedBoundingBox.topLeft,
 			expandedBoundingBox.bottomLeft,
 			secondIntermediatePoint,
@@ -169,13 +169,13 @@ export const generatePathFromFrameToPoint = (
 		// If intersecting with the closer edge, move p3 to the edge of the bounding box
 		// to ensure the path goes around the shape properly
 		if (isVerticalDirection) {
-			secondIntermediatePoint.x = closer(
+			secondIntermediatePoint.x = calcCloserNumber(
 				endX,
 				expandedBoundingBox.left,
 				expandedBoundingBox.right,
 			);
 		} else {
-			secondIntermediatePoint.y = closer(
+			secondIntermediatePoint.y = calcCloserNumber(
 				endY,
 				expandedBoundingBox.top,
 				expandedBoundingBox.bottom,
@@ -200,3 +200,6 @@ export const generatePathFromFrameToPoint = (
 
 	return pathPoints;
 };
+
+
+

@@ -1,4 +1,4 @@
-import { closer , calcRectangleBoundingBoxGeometry , isLineIntersectingBoxGeometry } from "@workspace/geometry";
+import { calcCloserNumber , calcRectangleBoundingBoxGeometry , isLineIntersectingBoxGeometry } from "@workspace/geometry";
 
 import { addMarginToBoxGeometry } from "./addMarginToBoxGeometry";
 import { cleanPath } from "./cleanPath";
@@ -108,22 +108,22 @@ export const generateOptimalFrameToFrameConnection = (
 
 	// Find the closest edge coordinates to the midpoint for each shape
 	// This helps determine optimal intermediate routing points
-	const startCloserX = closer(
+	const startCloserX = calcCloserNumber(
 		secondaryMidX,
 		startFrameBounds.left,
 		startFrameBounds.right,
 	);
-	const startCloserY = closer(
+	const startCloserY = calcCloserNumber(
 		secondaryMidY,
 		startFrameBounds.top,
 		startFrameBounds.bottom,
 	);
-	const endCloserX = closer(
+	const endCloserX = calcCloserNumber(
 		secondaryMidX,
 		endFrameBounds.left,
 		endFrameBounds.right,
 	);
-	const endCloserY = closer(
+	const endCloserY = calcCloserNumber(
 		secondaryMidY,
 		endFrameBounds.top,
 		endFrameBounds.bottom,

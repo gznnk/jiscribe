@@ -1,4 +1,4 @@
-import { degreesToRadians, rotatePoint , isFrame } from "@workspace/geometry";
+﻿import { degreesToRadians, calcRotatedPoint , isFrame } from "@workspace/geometry";
 
 import type { Diagram } from "../../types/state/core/Diagram";
 import { calcUnrotatedItemableBoundingBox } from "../../utils/core/calcUnrotatedItemableBoundingBox";
@@ -67,7 +67,7 @@ export const adjustTargetDiagramSize = (diagram: Diagram): Diagram => {
 
 	// Rotate the new center back to the original coordinate system
 	const rotationRadians = degreesToRadians(diagram.rotation);
-	const rotatedNewCenter = rotatePoint(
+	const rotatedNewCenter = calcRotatedPoint(
 		unrotatedNewCenterX,
 		unrotatedNewCenterY,
 		diagram.x,
@@ -89,3 +89,4 @@ export const adjustTargetDiagramSize = (diagram: Diagram): Diagram => {
 		height: newHeight,
 	} as Diagram;
 };
+

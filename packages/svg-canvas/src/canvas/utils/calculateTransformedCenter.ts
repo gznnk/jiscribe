@@ -1,4 +1,4 @@
-import { degreesToRadians, rotatePoint } from "@workspace/geometry";
+﻿import { degreesToRadians, calcRotatedPoint } from "@workspace/geometry";
 
 type TransformFrame = {
 	x: number;
@@ -37,7 +37,7 @@ export const calculateTransformedCenter = (
 	const groupScaleY = endFrame.height / startFrame.height;
 
 	// Inverse rotate the initial item center to get its position in the start frame's local space
-	const inversedItemCenter = rotatePoint(
+	const inversedItemCenter = calcRotatedPoint(
 		initialItemX,
 		initialItemY,
 		startFrame.x,
@@ -63,7 +63,7 @@ export const calculateTransformedCenter = (
 	};
 
 	// Rotate the new center to match the end frame's rotation
-	newCenter = rotatePoint(
+	newCenter = calcRotatedPoint(
 		newCenter.x,
 		newCenter.y,
 		endFrame.x,
@@ -73,3 +73,4 @@ export const calculateTransformedCenter = (
 
 	return newCenter;
 };
+

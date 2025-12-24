@@ -6,7 +6,7 @@
  * @param minHeight - The minimum height constraint (optional)
  * @returns Object containing effectiveWidth and effectiveHeight
  */
-export const calculateEffectiveDimensions = (
+export const calcEffectiveDimensions = (
 	width: number,
 	height: number,
 	minWidth?: number,

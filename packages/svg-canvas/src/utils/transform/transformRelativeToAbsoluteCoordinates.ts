@@ -1,5 +1,5 @@
-import {
-	affineTransformation,
+﻿import {
+	calcAffineTransformation,
 	degreesToRadians,
 	isFrame,
 } from "@workspace/geometry";
@@ -47,7 +47,7 @@ export const transformRelativeToAbsoluteCoordinates = (
 			const offsetFromCenterY = diagram.y - height / 2;
 
 			// Apply affine transformation to convert frame-relative coordinates to absolute
-			const transformedPosition = affineTransformation(
+			const transformedPosition = calcAffineTransformation(
 				offsetFromCenterX, // offset from frame center x
 				offsetFromCenterY, // offset from frame center y
 				scaleX, // target frame's x scale
@@ -99,3 +99,6 @@ export const transformRelativeToAbsoluteCoordinates = (
 		}
 	});
 };
+
+
+

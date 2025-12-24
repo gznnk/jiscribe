@@ -1,5 +1,5 @@
-import { degreesToRadians } from "../common/degreesToRadians";
-import { efficientAffineTransformation } from "../transform/efficientAffineTransformation";
+﻿import { degreesToRadians } from "../common/degreesToRadians";
+import { calcEfficientAffineTransformation } from "../transform/calcEfficientAffineTransformation";
 import type { Frame } from "../types/Frame";
 import type { RectangleVertices } from "../types/RectangleVertices";
 
@@ -43,7 +43,7 @@ export const calcRectangleVertices = (frame: Frame): RectangleVertices => {
 
 	const radians = degreesToRadians(rotation);
 
-	const topLeftPoint = efficientAffineTransformation(
+	const topLeftPoint = calcEfficientAffineTransformation(
 		-halfWidth,
 		-halfHeight,
 		scaleX,
@@ -53,7 +53,7 @@ export const calcRectangleVertices = (frame: Frame): RectangleVertices => {
 		ty,
 	);
 
-	const bottomLeftPoint = efficientAffineTransformation(
+	const bottomLeftPoint = calcEfficientAffineTransformation(
 		-halfWidth,
 		halfHeight,
 		scaleX,
@@ -63,7 +63,7 @@ export const calcRectangleVertices = (frame: Frame): RectangleVertices => {
 		ty,
 	);
 
-	const topRightPoint = efficientAffineTransformation(
+	const topRightPoint = calcEfficientAffineTransformation(
 		halfWidth,
 		-halfHeight,
 		scaleX,
@@ -73,7 +73,7 @@ export const calcRectangleVertices = (frame: Frame): RectangleVertices => {
 		ty,
 	);
 
-	const bottomRightPoint = efficientAffineTransformation(
+	const bottomRightPoint = calcEfficientAffineTransformation(
 		halfWidth,
 		halfHeight,
 		scaleX,
@@ -83,7 +83,7 @@ export const calcRectangleVertices = (frame: Frame): RectangleVertices => {
 		ty,
 	);
 
-	const topCenterPoint = efficientAffineTransformation(
+	const topCenterPoint = calcEfficientAffineTransformation(
 		0,
 		-halfHeight,
 		scaleX,
@@ -93,7 +93,7 @@ export const calcRectangleVertices = (frame: Frame): RectangleVertices => {
 		ty,
 	);
 
-	const leftCenterPoint = efficientAffineTransformation(
+	const leftCenterPoint = calcEfficientAffineTransformation(
 		-halfWidth,
 		0,
 		scaleX,
@@ -103,7 +103,7 @@ export const calcRectangleVertices = (frame: Frame): RectangleVertices => {
 		ty,
 	);
 
-	const rightCenterPoint = efficientAffineTransformation(
+	const rightCenterPoint = calcEfficientAffineTransformation(
 		halfWidth,
 		0,
 		scaleX,
@@ -113,7 +113,7 @@ export const calcRectangleVertices = (frame: Frame): RectangleVertices => {
 		ty,
 	);
 
-	const bottomCenterPoint = efficientAffineTransformation(
+	const bottomCenterPoint = calcEfficientAffineTransformation(
 		0,
 		halfHeight,
 		scaleX,
@@ -134,3 +134,5 @@ export const calcRectangleVertices = (frame: Frame): RectangleVertices => {
 		bottomCenterPoint,
 	};
 };
+
+

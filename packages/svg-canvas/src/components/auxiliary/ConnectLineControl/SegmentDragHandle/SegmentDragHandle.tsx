@@ -1,4 +1,4 @@
-import { radiansToDegrees , createLinearX2yFunction , createLinearY2xFunction , calcRadians , rotatePoint } from "@workspace/geometry";
+﻿import { radiansToDegrees , createLinearX2yFunction , createLinearY2xFunction , calcRadians , calcRotatedPoint } from "@workspace/geometry";
 import type React from "react";
 import { memo, useCallback, useRef } from "react";
 
@@ -39,8 +39,8 @@ const SegmentDragHandleComponent: React.FC<SegmentDragHandleProps> = ({
 	const midX = (startX + endX) / 2;
 	const midY = (startY + endY) / 2;
 
-	const rotateStartPoint = rotatePoint(startX, startY, midX, midY, Math.PI / 2);
-	const rotateEndPoint = rotatePoint(endX, endY, midX, midY, Math.PI / 2);
+	const rotateStartPoint = calcRotatedPoint(startX, startY, midX, midY, Math.PI / 2);
+	const rotateEndPoint = calcRotatedPoint(endX, endY, midX, midY, Math.PI / 2);
 
 	const radian = calcRadians(
 		rotateStartPoint.x,
@@ -93,3 +93,4 @@ const SegmentDragHandleComponent: React.FC<SegmentDragHandleProps> = ({
 };
 
 export const SegmentDragHandle = memo(SegmentDragHandleComponent);
+

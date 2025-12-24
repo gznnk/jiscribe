@@ -1,6 +1,6 @@
-import {
+﻿import {
 	degreesToRadians,
-	efficientAffineTransformation,
+	calcEfficientAffineTransformation,
 } from "@workspace/geometry";
 import React, { memo } from "react";
 
@@ -50,7 +50,7 @@ const NodeHeaderComponent: React.FC<NodeHeaderProps> = ({
 	const iconSize = height;
 	const iconCenterX = -width / 2 + iconSize / 2;
 	const textWidth = width - iconSize - ICON_TEXT_MARGIN; // Remaining width minus margin ; // Margin from icon
-	const textCenter = efficientAffineTransformation(
+	const textCenter = calcEfficientAffineTransformation(
 		textWidth / 2 - (width / 2 - iconSize - ICON_TEXT_MARGIN),
 		0,
 		scaleX,
@@ -142,3 +142,4 @@ const NodeHeaderComponent: React.FC<NodeHeaderProps> = ({
 };
 
 export const NodeHeader = memo(NodeHeaderComponent);
+

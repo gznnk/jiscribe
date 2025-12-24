@@ -1,4 +1,4 @@
-import { inverseAffineTransformation } from "./inverseAffineTransformation";
+﻿import { calcInverseAffineTransformation } from "./calcInverseAffineTransformation";
 import type { Point } from "../types/Point";
 
 /**
@@ -13,7 +13,7 @@ import type { Point } from "../types/Point";
  * @param ty - Translation distance in y-direction from the original transformation
  * @returns The original point before transformation
  */
-export const efficientInverseAffineTransformation = (
+export const calcEfficientInverseAffineTransformation = (
 	px: number,
 	py: number,
 	sx: number,
@@ -30,5 +30,5 @@ export const efficientInverseAffineTransformation = (
 		};
 	}
 
-	return inverseAffineTransformation(px, py, sx, sy, theta, tx, ty);
+	return calcInverseAffineTransformation(px, py, sx, sy, theta, tx, ty);
 };

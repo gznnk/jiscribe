@@ -9,7 +9,7 @@ import type { Point } from "../types/Point";
  * @param y - Y coordinate to check
  * @returns The closest intersection point
  */
-export const calculateClosestIntersection = (
+export const calcClosestIntersection = (
 	a: number,
 	b: number,
 	p1: Point,

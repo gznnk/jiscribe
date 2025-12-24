@@ -1,6 +1,6 @@
-import {
+﻿import {
 	degreesToRadians,
-	efficientAffineTransformation,
+	calcEfficientAffineTransformation,
 } from "@workspace/geometry";
 import { LLMClientFactory, type LLMClient } from "@workspace/llm-client";
 import type React from "react";
@@ -238,7 +238,7 @@ const LLMNodeComponent: React.FC<LLMNodeProps> = (props) => {
 		[handleExecution],
 	);
 
-	const headerCenter = efficientAffineTransformation(
+	const headerCenter = calcEfficientAffineTransformation(
 		0,
 		-(height / 2 - (HEADER_HEIGHT / 2 + HEADER_MARGIN_TOP)),
 		scaleX,
@@ -312,3 +312,4 @@ const LLMNodeComponent: React.FC<LLMNodeProps> = (props) => {
 };
 
 export const LLMNode = memo(LLMNodeComponent);
+

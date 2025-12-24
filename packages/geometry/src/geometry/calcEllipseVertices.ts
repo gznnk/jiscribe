@@ -1,5 +1,5 @@
-import { degreesToRadians } from "../common/degreesToRadians";
-import { efficientAffineTransformation } from "../transform/efficientAffineTransformation";
+﻿import { degreesToRadians } from "../common/degreesToRadians";
+import { calcEfficientAffineTransformation } from "../transform/calcEfficientAffineTransformation";
 import type { EllipseVertices } from "../types/EllipseVertices";
 import type { Frame } from "../types/Frame";
 
@@ -20,7 +20,7 @@ export const calcEllipseVertices = (frame: Frame): EllipseVertices => {
 
 	const radians = degreesToRadians(rotation);
 
-	const topCenterPoint = efficientAffineTransformation(
+	const topCenterPoint = calcEfficientAffineTransformation(
 		0,
 		-halfHeight,
 		scaleX,
@@ -30,7 +30,7 @@ export const calcEllipseVertices = (frame: Frame): EllipseVertices => {
 		ty,
 	);
 
-	const rightCenterPoint = efficientAffineTransformation(
+	const rightCenterPoint = calcEfficientAffineTransformation(
 		halfWidth,
 		0,
 		scaleX,
@@ -40,7 +40,7 @@ export const calcEllipseVertices = (frame: Frame): EllipseVertices => {
 		ty,
 	);
 
-	const bottomCenterPoint = efficientAffineTransformation(
+	const bottomCenterPoint = calcEfficientAffineTransformation(
 		0,
 		halfHeight,
 		scaleX,
@@ -50,7 +50,7 @@ export const calcEllipseVertices = (frame: Frame): EllipseVertices => {
 		ty,
 	);
 
-	const leftCenterPoint = efficientAffineTransformation(
+	const leftCenterPoint = calcEfficientAffineTransformation(
 		-halfWidth,
 		0,
 		scaleX,
@@ -60,7 +60,7 @@ export const calcEllipseVertices = (frame: Frame): EllipseVertices => {
 		ty,
 	);
 
-	const topLeftPoint = efficientAffineTransformation(
+	const topLeftPoint = calcEfficientAffineTransformation(
 		-halfWidth,
 		-halfHeight,
 		scaleX,
@@ -70,7 +70,7 @@ export const calcEllipseVertices = (frame: Frame): EllipseVertices => {
 		ty,
 	);
 
-	const topRightPoint = efficientAffineTransformation(
+	const topRightPoint = calcEfficientAffineTransformation(
 		halfWidth,
 		-halfHeight,
 		scaleX,
@@ -80,7 +80,7 @@ export const calcEllipseVertices = (frame: Frame): EllipseVertices => {
 		ty,
 	);
 
-	const bottomRightPoint = efficientAffineTransformation(
+	const bottomRightPoint = calcEfficientAffineTransformation(
 		halfWidth,
 		halfHeight,
 		scaleX,
@@ -90,7 +90,7 @@ export const calcEllipseVertices = (frame: Frame): EllipseVertices => {
 		ty,
 	);
 
-	const bottomLeftPoint = efficientAffineTransformation(
+	const bottomLeftPoint = calcEfficientAffineTransformation(
 		-halfWidth,
 		halfHeight,
 		scaleX,
@@ -111,3 +111,5 @@ export const calcEllipseVertices = (frame: Frame): EllipseVertices => {
 		bottomLeftPoint,
 	};
 };
+
+

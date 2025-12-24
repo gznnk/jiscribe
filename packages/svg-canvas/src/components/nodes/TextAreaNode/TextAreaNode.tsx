@@ -1,6 +1,6 @@
-import {
+﻿import {
 	degreesToRadians,
-	efficientAffineTransformation,
+	calcEfficientAffineTransformation,
 } from "@workspace/geometry";
 import type React from "react";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
@@ -202,7 +202,7 @@ const TextAreaNodeComponent: React.FC<TextAreaNodeProps> = (props) => {
 			BUTTON_MARGIN_TOP +
 			BUTTON_MARGIN_BOTTOM);
 
-	const headerCenter = efficientAffineTransformation(
+	const headerCenter = calcEfficientAffineTransformation(
 		0,
 		-(height / 2 - (HEADER_HEIGHT / 2 + HEADER_MARGIN_TOP)),
 		scaleX,
@@ -212,7 +212,7 @@ const TextAreaNodeComponent: React.FC<TextAreaNodeProps> = (props) => {
 		y,
 	);
 
-	const inputCenter = efficientAffineTransformation(
+	const inputCenter = calcEfficientAffineTransformation(
 		0,
 		-(
 			height / 2 -
@@ -318,3 +318,4 @@ const TextAreaNodeComponent: React.FC<TextAreaNodeProps> = (props) => {
 };
 
 export const TextAreaNode = memo(TextAreaNodeComponent);
+

@@ -1,4 +1,4 @@
-import { closerPoint } from "./closerPoint";
+import { calcCloserPoint } from "./calcCloserPoint";
 import type { Point } from "../types/Point";
 
 /**
@@ -33,5 +33,5 @@ export const calcClosestCircleIntersection = (
 	const b = (r * dy) / dist;
 
 	// Return the intersection point closer to the arbitrary point
-	return closerPoint(px, py, cx + a, cy + b, cx - a, cy - b);
+	return calcCloserPoint(px, py, cx + a, cy + b, cx - a, cy - b);
 };

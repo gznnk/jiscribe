@@ -1,4 +1,4 @@
-import type { Point } from "../types/Point";
+﻿import type { Point } from "../types/Point";
 
 /**
  * Applies an affine transformation to a point.
@@ -12,7 +12,7 @@ import type { Point } from "../types/Point";
  * @param ty - Translation distance in y-direction
  * @returns The transformed point
  */
-export const affineTransformation = (
+export const calcAffineTransformation = (
 	px: number,
 	py: number,
 	sx: number,

@@ -1,4 +1,4 @@
-import type React from "react";
+﻿import type React from "react";
 import { memo, useCallback, useRef, useState } from "react";
 
 import type { DragProps } from "../../../hooks/useDrag";
@@ -97,7 +97,7 @@ const RotatePointComponent: React.FC<RotatePointProps> = ({
 					y={y + 4 / zoom}
 					fill="rgba(107, 114, 128, 1)"
 					fontSize={`${adjustedFontSize}px`}
-				>{`${rotation}˚`}</text>
+				>{`${rotation}°`}</text>
 			)}
 		</>
 	);

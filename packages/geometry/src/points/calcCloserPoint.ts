@@ -12,7 +12,7 @@ import type { Point } from "../types/Point";
  * @param by - Y-coordinate of the second comparison point
  * @returns The point (either A or B) that is closer to the reference point
  */
-export const closerPoint = (
+export const calcCloserPoint = (
 	px: number,
 	py: number,
 	ax: number,

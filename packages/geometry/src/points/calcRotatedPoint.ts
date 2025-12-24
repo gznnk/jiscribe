@@ -10,7 +10,7 @@ import type { Point } from "../types/Point";
  * @param theta - Angle of rotation in radians
  * @returns The rotated point
  */
-export const rotatePoint = (
+export const calcRotatedPoint = (
 	px: number,
 	py: number,
 	cx: number,
