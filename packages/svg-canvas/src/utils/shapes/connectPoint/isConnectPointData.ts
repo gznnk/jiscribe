@@ -1,4 +1,4 @@
-import { isString } from "@workspace/validation";
+import { isString } from "@workspace/basic-validators";
 
 import type { ConnectPointData } from "../../../types/data/shapes/ConnectPointData";
 import { isDiagramBaseData } from "../../validation/isDiagramBaseData";

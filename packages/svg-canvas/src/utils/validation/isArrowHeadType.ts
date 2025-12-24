@@ -1,4 +1,4 @@
-import { isEnum } from "@workspace/validation";
+import { isEnum } from "@workspace/basic-validators";
 
 import {
 	ArrowHeadTypes,

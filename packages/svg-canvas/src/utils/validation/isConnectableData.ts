@@ -1,4 +1,4 @@
-import { isArray, isBoolean, isObject } from "@workspace/validation";
+import { isArray, isBoolean, isObject } from "@workspace/basic-validators";
 
 import type { ConnectableData } from "../../types/data/shapes/ConnectableData";
 

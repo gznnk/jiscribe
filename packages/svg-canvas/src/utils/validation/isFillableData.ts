@@ -1,4 +1,4 @@
-import { isCssColor, isObject } from "@workspace/validation";
+import { isCssColor, isObject } from "@workspace/basic-validators";
 
 import type { FillableData } from "../../types/data/core/FillableData";
 

@@ -16,7 +16,7 @@
 		"@workspace/llm-client": "workspace:*",
 		"@workspace/markdown": "workspace:*",
 		"@workspace/utility-types": "workspace:*",
-		"@workspace/validation": "workspace:*",
+		"@workspace/basic-validators": "workspace:*",
 		"dompurify": "catalog:",
 		"openai": "catalog:",
 		"react": "catalog:"

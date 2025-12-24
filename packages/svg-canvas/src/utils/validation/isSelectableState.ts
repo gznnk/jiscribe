@@ -1,4 +1,4 @@
-import { isBoolean, isObject } from "@workspace/validation";
+import { isBoolean, isObject } from "@workspace/basic-validators";
 
 import type { SelectableState } from "../../types/state/core/SelectableState";
 

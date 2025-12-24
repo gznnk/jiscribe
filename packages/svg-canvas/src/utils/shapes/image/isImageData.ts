@@ -1,4 +1,4 @@
-import { isString } from "@workspace/validation";
+import { isString } from "@workspace/basic-validators";
 
 import type { ImageData } from "../../../types/data/shapes/ImageData";
 import { ImageFeatures } from "../../../types/data/shapes/ImageData";

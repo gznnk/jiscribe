@@ -1,4 +1,4 @@
-import { isNumber, isObject, isString } from "@workspace/validation";
+import { isNumber, isObject, isString } from "@workspace/basic-validators";
 
 import type { DiagramBaseData } from "../../types/data/core/DiagramBaseData";
 

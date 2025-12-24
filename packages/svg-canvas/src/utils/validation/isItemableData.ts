@@ -1,4 +1,4 @@
-import { isArray, isObject } from "@workspace/validation";
+import { isArray, isObject } from "@workspace/basic-validators";
 
 import type { ItemableData } from "../../types/data/core/ItemableData";
 

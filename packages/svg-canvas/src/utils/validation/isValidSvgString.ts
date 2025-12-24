@@ -1,4 +1,4 @@
-import { isString } from "@workspace/validation";
+import { isString } from "@workspace/basic-validators";
 
 /**
  * SVG validation utility

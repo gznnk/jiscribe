@@ -1,4 +1,4 @@
-import { isCssColor, isNonNegativeNumber, isObject } from "@workspace/validation";
+import { isCssColor, isNonNegativeNumber, isObject } from "@workspace/basic-validators";
 
 import { isStrokeDashType } from "./isStrokeDashType";
 import type { StrokableData } from "../../types/data/core/StrokableData";

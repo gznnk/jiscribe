@@ -1,4 +1,4 @@
-import { isString } from "@workspace/validation";
+import { isString } from "@workspace/basic-validators";
 
 import type { HtmlPreviewData } from "../../../types/data/shapes/HtmlPreviewData";
 import { HtmlPreviewFeatures } from "../../../types/data/shapes/HtmlPreviewData";

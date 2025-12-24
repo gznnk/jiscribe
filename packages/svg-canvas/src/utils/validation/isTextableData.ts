@@ -1,4 +1,4 @@
-import { isCssColor, isNonNegativeNumber, isObject, isString } from "@workspace/validation";
+import { isCssColor, isNonNegativeNumber, isObject, isString } from "@workspace/basic-validators";
 
 import { isTextableType } from "./isTextableType";
 import { isTextAlign } from "./isTextAlign";

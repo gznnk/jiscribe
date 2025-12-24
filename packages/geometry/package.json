@@ -9,6 +9,6 @@
 	},
 	"dependencies": {
 		"@workspace/utility-types": "workspace:*",
-		"@workspace/validation": "workspace:*"
+		"@workspace/basic-validators": "workspace:*"
 	}
 }

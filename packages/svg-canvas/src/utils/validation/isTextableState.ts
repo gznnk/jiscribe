@@ -1,4 +1,4 @@
-import { isBoolean } from "@workspace/validation";
+import { isBoolean } from "@workspace/basic-validators";
 
 import { isTextableData } from "./isTextableData";
 import type { TextableState } from "../../types/state/core/TextableState";

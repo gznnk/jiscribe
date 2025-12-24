@@ -1,5 +1,5 @@
+import { isBoolean } from "@workspace/basic-validators";
 import { isFrame } from "@workspace/geometry";
-import { isBoolean } from "@workspace/validation";
 
 import type { TransformativeData } from "../../types/data/core/TransformativeData";
 

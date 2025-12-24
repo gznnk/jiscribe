@@ -1,4 +1,4 @@
-import { isObject } from "@workspace/validation";
+import { isObject } from "@workspace/basic-validators";
 
 import { DiagramRegistry } from "../../registry";
 import type { DiagramType } from "../../types/core/DiagramType";

@@ -1,4 +1,4 @@
-import { isNumber, isObject } from "@workspace/validation";
+import { isNumber, isObject } from "@workspace/basic-validators";
 
 import type { OriginableData } from "../../types/data/core/OriginableData";
 

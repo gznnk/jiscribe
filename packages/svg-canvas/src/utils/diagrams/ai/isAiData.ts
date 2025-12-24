@@ -1,4 +1,4 @@
-import { isCssColor, isString } from "@workspace/validation";
+import { isCssColor, isString } from "@workspace/basic-validators";
 
 import type { AiData } from "../../../types/data/diagrams/AiData";
 import { AiFeatures } from "../../../types/data/diagrams/AiData";

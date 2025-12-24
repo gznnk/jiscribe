@@ -1,4 +1,4 @@
-import { isNonNegativeNumber, isNumber, isObject } from "@workspace/validation";
+import { isNonNegativeNumber, isNumber, isObject } from "@workspace/basic-validators";
 
 import type { Frame } from "../types/Frame";
 

@@ -1,4 +1,4 @@
-import { isBoolean, isString } from "@workspace/validation";
+import { isBoolean, isString } from "@workspace/basic-validators";
 
 import type { ConnectLineData } from "../../../types/data/shapes/ConnectLineData";
 import { ConnectLineFeatures } from "../../../types/data/shapes/ConnectLineData";

@@ -1,4 +1,4 @@
-import { isBoolean, isNonNegativeNumber } from "@workspace/validation";
+import { isBoolean, isNonNegativeNumber } from "@workspace/basic-validators";
 
 import { isTransformativeData } from "./isTransformativeData";
 import type { TransformativeState } from "../../types/state/core/TransformativeState";
