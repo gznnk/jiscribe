@@ -9,7 +9,7 @@ import {
 	calcInverseAffineTransformedPoint,
 	nanToZero,
 	radiansToDegrees,
-	calcSignNonZero,
+	calcNonZeroSign,
 } from "@workspace/geometry";
 import type React from "react";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
@@ -158,8 +158,8 @@ const TransformControlComponent: React.FC<Props> = ({
 				y: centerPoint.y,
 				width: Math.abs(newWidth),
 				height: Math.abs(newHeight),
-				scaleX: calcSignNonZero(newWidth),
-				scaleY: calcSignNonZero(newHeight),
+				scaleX: calcNonZeroSign(newWidth),
+				scaleY: calcNonZeroSign(newHeight),
 				rotation,
 			},
 			cursorX: e.cursorX,
@@ -238,8 +238,8 @@ const TransformControlComponent: React.FC<Props> = ({
 
 		const absWidth = Math.abs(newWidth);
 		const absHeight = Math.abs(newHeight);
-		const widthSign = calcSignNonZero(newWidth);
-		const heightSign = calcSignNonZero(newHeight);
+		const widthSign = calcNonZeroSign(newWidth);
+		const heightSign = calcNonZeroSign(newHeight);
 
 		// Check if either dimension is below minimum
 		const widthBelowMin = absWidth < minWidth;
