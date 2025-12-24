@@ -1,6 +1,9 @@
 /**
  * Enum-like type defining all available diagram component types.
  * Categorized into basic shapes and specialized node types.
+ *
+ * Note: This type accepts any string to allow for external extensions,
+ * but provides autocompletion for core types.
  */
 export type DiagramType =
 	// Shapes
@@ -33,4 +36,6 @@ export type DiagramType =
 	| "SvgToDiagramNode"
 	| "TextAreaNode"
 	| "VectorStoreNode"
-	| "WebSearchNode";
+	| "WebSearchNode"
+	// Allow any string
+	| (string & {});
