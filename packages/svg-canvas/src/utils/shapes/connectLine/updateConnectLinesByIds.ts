@@ -1,9 +1,10 @@
+import { isFrame } from "@workspace/geometry";
+
 import type { SvgCanvasState } from "../../../canvas/types/SvgCanvasState";
 import type { Diagram } from "../../../types/state/core/Diagram";
 import type { ConnectLineState } from "../../../types/state/shapes/ConnectLineState";
 import { getDiagramById } from "../../core/getDiagramById";
 import { isConnectableState } from "../../validation/isConnectableState";
-import { isFrame } from "../../validation/isFrame";
 import { newId } from "../common/newId";
 import { generateOptimalFrameToFrameConnection } from "../connectPoint/generateOptimalFrameToFrameConnection";
 import { updateManualConnectLinePath } from "../connectPoint/updateManualConnectLinePath";

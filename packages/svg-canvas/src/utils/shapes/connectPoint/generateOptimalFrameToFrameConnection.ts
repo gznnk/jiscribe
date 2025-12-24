@@ -1,3 +1,5 @@
+import { closer , calcRectangleBoundingBoxGeometry , isLineIntersectingBoxGeometry } from "@workspace/geometry";
+
 import { addMarginToBoxGeometry } from "./addMarginToBoxGeometry";
 import { cleanPath } from "./cleanPath";
 import { generatePathFromFrameToPoint } from "./generatePathFromFrameToPoint";
@@ -7,9 +9,8 @@ import { removeDuplicatePoints } from "./removeDuplicatePoints";
 import { selectOptimalPathFromCandidates } from "./selectOptimalPathFromCandidates";
 import type { Frame } from "../../../types/core/Frame";
 import type { Point } from "../../../types/core/Point";
-import { closer } from "../../math/common/closer";
-import { calcRectangleBoundingBoxGeometry } from "../../math/geometry/calcRectangleBoundingBoxGeometry";
-import { isLineIntersectingBoxGeometry } from "../../math/geometry/isLineIntersectingBoxGeometry";
+
+
 
 /**
  * Adds a candidate point to the collection and generates intersection points

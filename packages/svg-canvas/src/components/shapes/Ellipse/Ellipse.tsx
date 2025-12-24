@@ -1,10 +1,10 @@
+import { degreesToRadians } from "@workspace/geometry";
 import type React from "react";
 import { memo, useRef } from "react";
 
 import { EllipseElement } from "./EllipseStyled";
 import { useBaseShape } from "../../../hooks/useBaseShape";
 import type { EllipseProps } from "../../../types/props/shapes/EllipseProps";
-import { degreesToRadians } from "../../../utils/math/common/degreesToRadians";
 import { convertStrokeDashTypeToArray } from "../../../utils/shapes/common/convertStrokeDashTypeToArray";
 import { createSvgTransform } from "../../../utils/shapes/common/createSvgTransform";
 import { BaseShape } from "../BaseShape";

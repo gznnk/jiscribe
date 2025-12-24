@@ -1,4 +1,5 @@
 import type { JSX } from "@emotion/react/jsx-runtime";
+import { isFrame } from "@workspace/geometry";
 import { useCallback, useMemo, useRef } from "react";
 
 import { ConnectLineControl } from "../../../components/auxiliary/ConnectLineControl";
@@ -7,7 +8,6 @@ import type { DiagramChangeEvent } from "../../../types/events/DiagramChangeEven
 import type { ConnectLineState } from "../../../types/state/shapes/ConnectLineState";
 import { getDiagramById } from "../../../utils/core/getDiagramById";
 import { isConnectLineState } from "../../../utils/validation/isConnectLineState";
-import { isFrame } from "../../../utils/validation/isFrame";
 import { InteractionState } from "../../types/InteractionState";
 import type { SvgCanvasProps } from "../../types/SvgCanvasProps";
 import { getDiagramByPath } from "../../utils/getDiagramByPath";

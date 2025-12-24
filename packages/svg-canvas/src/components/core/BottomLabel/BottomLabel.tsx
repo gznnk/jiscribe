@@ -1,8 +1,8 @@
+import { calcRectangleVertices } from "@workspace/geometry";
 import type React from "react";
 import { memo } from "react";
 
 import { calcBottomLabelPosition } from "./BottomLabelUtils";
-import { calcRectangleVertices } from "../../../utils/math/geometry/calcRectangleVertices";
 
 /**
  * Props for BottomLabel component.

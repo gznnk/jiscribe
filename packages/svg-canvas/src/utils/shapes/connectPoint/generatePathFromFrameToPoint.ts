@@ -1,10 +1,11 @@
+import { closer , segmentsIntersect } from "@workspace/geometry";
+
 import { addMarginToBoxGeometry } from "./addMarginToBoxGeometry";
 import { getLineDirection } from "./getLineDirection";
 import type { BoxGeometry } from "../../../types/core/BoxGeometry";
 import type { Direction } from "../../../types/core/Direction";
 import type { Point } from "../../../types/core/Point";
-import { closer } from "../../math/common/closer";
-import { segmentsIntersect } from "../../math/geometry/segmentsIntersect";
+
 
 /**
  * Generates connection path points from a frame to an arbitrary point.

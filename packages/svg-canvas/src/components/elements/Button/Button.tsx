@@ -1,3 +1,4 @@
+import { degreesToRadians } from "@workspace/geometry";
 import type React from "react";
 import { memo, useRef } from "react";
 
@@ -5,7 +6,6 @@ import { ButtonElement } from "./ButtonStyled";
 import { ButtonDefaultState } from "../../../constants/state/elements/ButtonDefaultState";
 import { useBaseShape } from "../../../hooks/useBaseShape";
 import type { ButtonProps } from "../../../types/props/elements/ButtonProps";
-import { degreesToRadians } from "../../../utils/math/common/degreesToRadians";
 import { convertStrokeDashTypeToArray } from "../../../utils/shapes/common/convertStrokeDashTypeToArray";
 import { createSvgTransform } from "../../../utils/shapes/common/createSvgTransform";
 import { BaseShape } from "../../shapes/BaseShape";

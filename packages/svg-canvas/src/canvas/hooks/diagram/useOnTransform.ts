@@ -1,3 +1,4 @@
+import { calculateEffectiveDimensions } from "@workspace/geometry";
 import { useCallback, useRef } from "react";
 
 import { DiagramRegistry } from "../../../registry";
@@ -6,7 +7,6 @@ import type { EventPhase } from "../../../types/events/EventPhase";
 import type { Diagram } from "../../../types/state/core/Diagram";
 import { calcUnrotatedItemableBoundingBox } from "../../../utils/core/calcUnrotatedItemableBoundingBox";
 import { getSelectedDiagrams } from "../../../utils/core/getSelectedDiagrams";
-import { calculateEffectiveDimensions } from "../../../utils/math/geometry/calculateEffectiveDimensions";
 import { refreshConnectLines } from "../../../utils/shapes/connectLine/refreshConnectLines";
 import { isConnectableState } from "../../../utils/validation/isConnectableState";
 import { isItemableState } from "../../../utils/validation/isItemableState";

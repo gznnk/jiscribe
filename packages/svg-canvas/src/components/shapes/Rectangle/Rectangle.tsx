@@ -1,3 +1,4 @@
+import { degreesToRadians } from "@workspace/geometry";
 import type React from "react";
 import { memo, useRef } from "react";
 
@@ -6,7 +7,6 @@ import { useBaseShape } from "../../../hooks/useBaseShape";
 import { useFileDrop } from "../../../hooks/useFileDrop";
 import type { RectangleProps } from "../../../types/props/shapes/RectangleProps";
 import { mergeProps } from "../../../utils/core/mergeProps";
-import { degreesToRadians } from "../../../utils/math/common/degreesToRadians";
 import { convertStrokeDashTypeToArray } from "../../../utils/shapes/common/convertStrokeDashTypeToArray";
 import { createSvgTransform } from "../../../utils/shapes/common/createSvgTransform";
 import { BaseShape } from "../BaseShape";

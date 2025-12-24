@@ -1,9 +1,9 @@
+import { calcEllipseVertices , isFrame } from "@workspace/geometry";
+
 import type { EllipseVertices } from "../../../types/core/EllipseVertices";
 import type { Diagram } from "../../../types/state/core/Diagram";
 import type { ConnectPointState } from "../../../types/state/shapes/ConnectPointState";
-import { calcEllipseVertices } from "../../math/geometry/calcEllipseVertices";
 import { isConnectableState } from "../../validation/isConnectableState";
-import { isFrame } from "../../validation/isFrame";
 
 /**
  * Calculate the position of the connection points of the ellipse.

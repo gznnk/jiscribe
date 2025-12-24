@@ -1,7 +1,7 @@
+import { degreesToRadians } from "@workspace/geometry";
 import type React from "react";
 import { memo } from "react";
 
-import { degreesToRadians } from "../../../utils/math/common/degreesToRadians";
 
 /**
  * Props for IconContainer component.

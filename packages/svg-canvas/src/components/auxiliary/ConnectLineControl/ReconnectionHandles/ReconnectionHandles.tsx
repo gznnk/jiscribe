@@ -1,3 +1,4 @@
+import { calcRectangleBoundingBoxGeometry } from "@workspace/geometry";
 import type React from "react";
 import { memo, useCallback, useEffect, useRef } from "react";
 
@@ -12,7 +13,6 @@ import type {
 import type { DiagramDragEvent } from "../../../../types/events/DiagramDragEvent";
 import type { Diagram } from "../../../../types/state/core/Diagram";
 import type { DiagramBaseState } from "../../../../types/state/core/DiagramBaseState";
-import { calcRectangleBoundingBoxGeometry } from "../../../../utils/math/geometry/calcRectangleBoundingBoxGeometry";
 import { newId } from "../../../../utils/shapes/common/newId";
 import { generateOptimalFrameToFrameConnection } from "../../../../utils/shapes/connectPoint/generateOptimalFrameToFrameConnection";
 import { generatePathFromFrameToPoint } from "../../../../utils/shapes/connectPoint/generatePathFromFrameToPoint";
@@ -216,9 +216,7 @@ const ReconnectionHandlesComponent: React.FC<ReconnectionHandlesProps> = ({
 								};
 							}),
 							autoRouting: startAutoRouting.current,
-							startOwnerId: isStartPointDrag
-								? connectedOwnerId
-								: startOwnerId,
+							startOwnerId: isStartPointDrag ? connectedOwnerId : startOwnerId,
 							endOwnerId: isStartPointDrag ? endOwnerId : connectedOwnerId,
 						} as DiagramChangeData,
 					});

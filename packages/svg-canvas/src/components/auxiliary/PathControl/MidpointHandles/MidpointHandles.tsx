@@ -1,3 +1,4 @@
+import { calcOrientedFrameFromPoints } from "@workspace/geometry";
 import type React from "react";
 import { memo, useCallback, useRef, useState } from "react";
 
@@ -8,7 +9,6 @@ import type {
 import type { DiagramDragEvent } from "../../../../types/events/DiagramDragEvent";
 import type { Diagram } from "../../../../types/state/core/Diagram";
 import type { PathState } from "../../../../types/state/shapes/PathState";
-import { calcOrientedFrameFromPoints } from "../../../../utils/math/geometry/calcOrientedFrameFromPoints";
 import { newId } from "../../../../utils/shapes/common/newId";
 import { DragPoint } from "../../../core/DragPoint";
 

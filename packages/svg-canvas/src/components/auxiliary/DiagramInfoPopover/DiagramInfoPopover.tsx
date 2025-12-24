@@ -1,3 +1,4 @@
+import { calcBoundingBox , isFrame } from "@workspace/geometry";
 import React, { memo, useRef, useEffect, useState } from "react";
 
 import {
@@ -16,8 +17,6 @@ import {
 } from "../../../constants/styling/auxiliary/DiagramInfoPopoverStyling";
 import type { Diagram } from "../../../types/state/core/Diagram";
 import { getSelectedDiagrams } from "../../../utils/core/getSelectedDiagrams";
-import { calcDiagramBoundingBox } from "../../../utils/math/geometry/calcDiagramBoundingBox";
-import { isFrame } from "../../../utils/validation/isFrame";
 
 const DiagramInfoPopoverComponent = ({
 	canvasProps,
@@ -115,7 +114,7 @@ const calculatePopoverPosition = (
 		return { x: diagram.x, y: diagram.y };
 	}
 
-	const boundingBox = calcDiagramBoundingBox(diagram);
+	const boundingBox = calcBoundingBox(diagram);
 	const popoverWidth = popoverDimensions?.width || MIN_POPOVER_WIDTH;
 	const popoverHeight = popoverDimensions?.height || MIN_POPOVER_HEIGHT;
 

@@ -1,12 +1,9 @@
+import { degreesToRadians , nanToZero , rotatePoint , isFrame , isPoint } from "@workspace/geometry";
+
 import { calcUnrotatedItemableBoundingBox } from "./calcUnrotatedItemableBoundingBox";
 import type { Bounds } from "../../types/core/Bounds";
 import type { Box } from "../../types/core/Box";
 import type { ItemableState } from "../../types/state/core/ItemableState";
-import { degreesToRadians } from "../math/common/degreesToRadians";
-import { nanToZero } from "../math/common/nanToZero";
-import { rotatePoint } from "../math/points/rotatePoint";
-import { isFrame } from "../validation/isFrame";
-import { isPoint } from "../validation/isPoint";
 
 /**
  * Calculates the oriented bounding box of a group shape.

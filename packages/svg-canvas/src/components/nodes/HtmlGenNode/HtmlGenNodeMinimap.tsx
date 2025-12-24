@@ -1,8 +1,8 @@
+import { negativeToZero } from "@workspace/geometry";
 import type React from "react";
 import { memo } from "react";
 
 import type { HtmlGenNodeProps } from "../../../types/props/nodes/HtmlGenNodeProps";
-import { negativeToZero } from "../../../utils/math/common/negativeToZero";
 
 /**
  * HtmlGenNode minimap component - lightweight version without outlines, controls, and labels.

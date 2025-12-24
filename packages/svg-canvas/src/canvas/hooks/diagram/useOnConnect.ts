@@ -1,3 +1,4 @@
+import { calcOrientedFrameFromPoints } from "@workspace/geometry";
 import { useCallback, useRef } from "react";
 
 import { ConnectLineDefaultState } from "../../../constants/state/shapes/ConnectLineDefaultState";
@@ -6,7 +7,6 @@ import type { Diagram } from "../../../types/state/core/Diagram";
 import type { ConnectLineState } from "../../../types/state/shapes/ConnectLineState";
 import type { PathPointState } from "../../../types/state/shapes/PathPointState";
 import { newEventId } from "../../../utils/core/newEventId";
-import { calcOrientedFrameFromPoints } from "../../../utils/math/geometry/calcOrientedFrameFromPoints";
 import { newId } from "../../../utils/shapes/common/newId";
 import { isConnectableState } from "../../../utils/validation/isConnectableState";
 import type { SvgCanvasSubHooksProps } from "../../types/SvgCanvasSubHooksProps";

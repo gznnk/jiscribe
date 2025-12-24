@@ -1,6 +1,6 @@
+import { isFrame } from "@workspace/geometry";
 import { isBoolean } from "@workspace/validation";
 
-import { isFrame } from "./isFrame";
 import type { TransformativeData } from "../../types/data/core/TransformativeData";
 
 /**

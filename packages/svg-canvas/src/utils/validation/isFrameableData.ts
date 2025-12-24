@@ -1,4 +1,5 @@
-import { isFrame } from "./isFrame";
+import { isFrame } from "@workspace/geometry";
+
 import type { FrameableData } from "../../types/data/core/FrameableData";
 
 /**

@@ -1,11 +1,13 @@
+import {
+	degreesToRadians,
+	efficientAffineTransformation,
+} from "@workspace/geometry";
 import React, { memo } from "react";
 
 import { ICON_TEXT_MARGIN } from "./NodeHeaderConstants";
 import { MainContainerGroup, IconBackgroundRect } from "./NodeHeaderStyled";
 import { NodeHeaderDefaultData } from "../../../constants/data/elements/NodeHeaderDefaultData";
 import type { NodeHeaderProps } from "../../../types/props/elements/NodeHeaderProps";
-import { degreesToRadians } from "../../../utils/math/common/degreesToRadians";
-import { efficientAffineTransformation } from "../../../utils/math/transform/efficientAffineTransformation";
 import { createSvgTransform } from "../../../utils/shapes/common/createSvgTransform";
 import { Input } from "../Input";
 

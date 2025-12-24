@@ -1,3 +1,4 @@
+import { calcRectangleVertices , isFrame } from "@workspace/geometry";
 import { type RefObject, useEffect, useMemo, useState } from "react";
 
 import { InteractionState } from "../../../../canvas/types/InteractionState";
@@ -5,8 +6,6 @@ import type { SvgCanvasProps } from "../../../../canvas/types/SvgCanvasProps";
 import { DISTANCE_FROM_DIAGRAM } from "../../../../constants/styling/menus/DiagramMenuStyling";
 import type { RectangleVertices } from "../../../../types/core/RectangleVertices";
 import type { Diagram } from "../../../../types/state/core/Diagram";
-import { calcRectangleVertices } from "../../../../utils/math/geometry/calcRectangleVertices";
-import { isFrame } from "../../../../utils/validation/isFrame";
 
 export type UseDiagramMenuDisplayProps = {
 	canvasProps: SvgCanvasProps;

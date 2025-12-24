@@ -1,3 +1,4 @@
+import { calcBoundingBox } from "@workspace/geometry";
 import { useCallback, useRef } from "react";
 
 import { useClearAllSelection } from "./useClearAllSelection";
@@ -8,7 +9,6 @@ import type { AreaSelectionEvent } from "../../../types/events/AreaSelectionEven
 import type { Diagram } from "../../../types/state/core/Diagram";
 import type { GroupState } from "../../../types/state/shapes/GroupState";
 import { getSelectedDiagrams } from "../../../utils/core/getSelectedDiagrams";
-import { calcDiagramBoundingBox } from "../../../utils/math/geometry/calcDiagramBoundingBox";
 import { isItemableState } from "../../../utils/validation/isItemableState";
 import { isSelectableState } from "../../../utils/validation/isSelectableState";
 import { InteractionState } from "../../types/InteractionState";
@@ -52,7 +52,7 @@ const updateItemsWithOutline = (
 
 		// Use cached bounding box if available, otherwise calculate
 		const itemBounds =
-			cachedBoundingBoxes?.get(item.id) ?? calcDiagramBoundingBox(item);
+			cachedBoundingBoxes?.get(item.id) ?? calcBoundingBox(item);
 
 		// Check if item's bounding box is completely contained within selection rectangle
 		const isInSelection =
@@ -316,7 +316,7 @@ export const useAreaSelection = (props: SvgCanvasSubHooksProps) => {
 
 					applyFunctionRecursively(items, (item) => {
 						if (isSelectableState(item) && item.type !== "ConnectLine") {
-							const boundingBox = calcDiagramBoundingBox(item);
+							const boundingBox = calcBoundingBox(item);
 							cachedBoundingBoxesRef.current.set(item.id, boundingBox);
 						}
 						return item;

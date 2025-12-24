@@ -1,3 +1,7 @@
+import {
+	degreesToRadians,
+	efficientAffineTransformation,
+} from "@workspace/geometry";
 import { LLMClientFactory, type LLMClient } from "@workspace/llm-client";
 import type React from "react";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
@@ -27,8 +31,6 @@ import type { NodeHeaderState } from "../../../types/state/elements/NodeHeaderSt
 import { newEventId } from "../../../utils/core/newEventId";
 import { isPlainTextPayload } from "../../../utils/execution/isPlainTextPayload";
 import { OpenAiKeyManager } from "../../../utils/KeyManager";
-import { degreesToRadians } from "../../../utils/math/common/degreesToRadians";
-import { efficientAffineTransformation } from "../../../utils/math/transform/efficientAffineTransformation";
 import { ProcessIndicator } from "../../auxiliary/ProcessIndicator";
 import { Frame } from "../../elements/Frame";
 import { Input } from "../../elements/Input";

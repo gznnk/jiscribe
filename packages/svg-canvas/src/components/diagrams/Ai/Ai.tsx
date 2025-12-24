@@ -1,3 +1,4 @@
+import { efficientAffineTransformation } from "@workspace/geometry";
 import { LLMClientFactory, type LLMClient } from "@workspace/llm-client";
 import type React from "react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -36,7 +37,6 @@ import type { InputState } from "../../../types/state/elements/InputState";
 import { mergeProps } from "../../../utils/core/mergeProps";
 import { newEventId } from "../../../utils/core/newEventId";
 import { OpenAiKeyManager } from "../../../utils/KeyManager";
-import { efficientAffineTransformation } from "../../../utils/math/transform/efficientAffineTransformation";
 import { ProcessIndicator } from "../../auxiliary/ProcessIndicator";
 import { IconContainer } from "../../core/IconContainer";
 import { Button } from "../../elements/Button";

@@ -1,3 +1,7 @@
+import {
+	degreesToRadians,
+	efficientAffineTransformation,
+} from "@workspace/geometry";
 import type React from "react";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 
@@ -29,8 +33,6 @@ import type { InputState } from "../../../types/state/elements/InputState";
 import type { NodeHeaderState } from "../../../types/state/elements/NodeHeaderState";
 import { newEventId } from "../../../utils/core/newEventId";
 import { isPlainTextPayload } from "../../../utils/execution/isPlainTextPayload";
-import { degreesToRadians } from "../../../utils/math/common/degreesToRadians";
-import { efficientAffineTransformation } from "../../../utils/math/transform/efficientAffineTransformation";
 import { Button } from "../../elements/Button";
 import { Frame } from "../../elements/Frame";
 import { Input } from "../../elements/Input";

@@ -1,10 +1,10 @@
+import { negativeToZero } from "@workspace/geometry";
 import { renderMarkdown } from "@workspace/markdown";
 import type React from "react";
 import { memo, useEffect, useRef } from "react";
 
 import { ForeignObjectElement, Text, TextWrapper } from "./TextableStyled";
 import type { TextableState } from "../../../../types/state/core/TextableState";
-import { negativeToZero } from "../../../../utils/math/common/negativeToZero";
 
 /**
  * Props for rendering editable text inside the SVG shape.

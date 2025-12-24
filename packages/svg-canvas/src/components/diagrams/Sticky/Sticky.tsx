@@ -1,10 +1,10 @@
+import { degreesToRadians } from "@workspace/geometry";
 import type React from "react";
 import { memo, useRef } from "react";
 
 import { STICKY_FOLD_SIZE } from "../../../constants/styling/diagrams/StickyStyleConstants";
 import { useBaseShape } from "../../../hooks/useBaseShape";
 import type { StickyProps } from "../../../types/props/diagrams/StickyProps";
-import { degreesToRadians } from "../../../utils/math/common/degreesToRadians";
 import { createSvgTransform } from "../../../utils/shapes/common/createSvgTransform";
 import { BaseShape } from "../../shapes/BaseShape";
 

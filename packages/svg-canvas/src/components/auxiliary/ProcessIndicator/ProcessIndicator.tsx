@@ -1,3 +1,4 @@
+import { degreesToRadians , rotatePoint } from "@workspace/geometry";
 import { memo, type ReactElement } from "react";
 
 import { StyledCircle } from "./ProcessIndicatorStyled";
@@ -5,8 +6,6 @@ import type {
 	ProcessItem,
 	ProcessStatus,
 } from "../../../types/core/ProcessItem";
-import { degreesToRadians } from "../../../utils/math/common/degreesToRadians";
-import { rotatePoint } from "../../../utils/math/points/rotatePoint";
 
 type ProcessIndicatorProps = {
 	x: number;

@@ -1,3 +1,4 @@
+import { calcOrientedFrameFromPoints , isFrame } from "@workspace/geometry";
 import { useEffect, useRef } from "react";
 
 import { EVENT_NAME_CONNECT_SHAPES } from "../../../constants/core/EventNames";
@@ -15,13 +16,11 @@ import type { EllipseState } from "../../../types/state/shapes/EllipseState";
 import type { PathPointState } from "../../../types/state/shapes/PathPointState";
 import type { RectangleState } from "../../../types/state/shapes/RectangleState";
 import { getDiagramById } from "../../../utils/core/getDiagramById";
-import { calcOrientedFrameFromPoints } from "../../../utils/math/geometry/calcOrientedFrameFromPoints";
 import { newId } from "../../../utils/shapes/common/newId";
 import { generateOptimalFrameToFrameConnection } from "../../../utils/shapes/connectPoint/generateOptimalFrameToFrameConnection";
 import { createEllipseConnectPoint } from "../../../utils/shapes/ellipse/createEllipseConnectPoint";
 import { createRectangleConnectPoint } from "../../../utils/shapes/rectangle/createRectangleConnectPoint";
 import { isConnectableState } from "../../../utils/validation/isConnectableState";
-import { isFrame } from "../../../utils/validation/isFrame";
 import type { SvgCanvasSubHooksProps } from "../../types/SvgCanvasSubHooksProps";
 import { applyFunctionRecursively } from "../../utils/applyFunctionRecursively";
 

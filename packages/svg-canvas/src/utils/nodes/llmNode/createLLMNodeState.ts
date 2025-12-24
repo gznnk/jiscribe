@@ -1,3 +1,5 @@
+import { degreesToRadians , efficientAffineTransformation } from "@workspace/geometry";
+
 import { createLLMNodeInputFrame } from "./createLLMNodeInputFrame";
 import { LLMNodeDefaultState } from "../../../constants/state/nodes/LLMNodeDefaultState";
 import {
@@ -7,8 +9,6 @@ import {
 import type { LLMNodeState } from "../../../types/state/nodes/LLMNodeState";
 import { createInputState } from "../../elements/input/createInputState";
 import { createNodeHeaderState } from "../../elements/nodeHeader/createNodeHeaderState";
-import { degreesToRadians } from "../../math/common/degreesToRadians";
-import { efficientAffineTransformation } from "../../math/transform/efficientAffineTransformation";
 import { newId } from "../../shapes/common/newId";
 import { createRectangleConnectPoint } from "../../shapes/rectangle/createRectangleConnectPoint";
 

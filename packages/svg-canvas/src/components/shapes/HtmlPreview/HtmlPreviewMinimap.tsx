@@ -1,8 +1,8 @@
+import { degreesToRadians } from "@workspace/geometry";
 import type React from "react";
 import { memo } from "react";
 
 import type { HtmlPreviewProps } from "../../../types/props/shapes/HtmlPreviewProps";
-import { degreesToRadians } from "../../../utils/math/common/degreesToRadians";
 import { createSvgTransform } from "../../../utils/shapes/common/createSvgTransform";
 
 /**

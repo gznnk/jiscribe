@@ -1,6 +1,7 @@
+import { isFrame } from "@workspace/geometry";
+
 import type { Frame } from "../../types/core/Frame";
 import type { Diagram } from "../../types/state/core/Diagram";
-import { isFrame } from "../validation/isFrame";
 import { isItemableState } from "../validation/isItemableState";
 import { isSelectableState } from "../validation/isSelectableState";
 

@@ -1,10 +1,10 @@
+import { calcRectangleVertices , isFrame } from "@workspace/geometry";
+
 import type { Frame } from "../../../types/core/Frame";
 import type { RectangleVertices } from "../../../types/core/RectangleVertices";
 import type { Diagram } from "../../../types/state/core/Diagram";
 import type { ConnectPointState } from "../../../types/state/shapes/ConnectPointState";
-import { calcRectangleVertices } from "../../../utils/math/geometry/calcRectangleVertices";
 import { isConnectableState } from "../../validation/isConnectableState";
-import { isFrame } from "../../validation/isFrame";
 
 /**
  * Calculate the position of the connection points of the rectangle.

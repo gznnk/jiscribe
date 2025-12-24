@@ -1,5 +1,4 @@
-import { degreesToRadians } from "../../utils/math/common/degreesToRadians";
-import { rotatePoint } from "../../utils/math/points/rotatePoint";
+import { degreesToRadians, rotatePoint } from "@workspace/geometry";
 
 type TransformFrame = {
 	x: number;

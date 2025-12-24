@@ -1,10 +1,10 @@
+import { degreesToRadians } from "@workspace/geometry";
 import DOMPurify from "dompurify";
 import type React from "react";
 import { memo, useEffect, useRef } from "react";
 
 import { SvgGroupElement } from "./SvgStyled";
 import type { SvgProps } from "../../../types/props/shapes/SvgProps";
-import { degreesToRadians } from "../../../utils/math/common/degreesToRadians";
 import { createSvgTransform } from "../../../utils/shapes/common/createSvgTransform";
 
 /**

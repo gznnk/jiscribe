@@ -1,8 +1,7 @@
+import { degreesToRadians, rotatePoint , isFrame } from "@workspace/geometry";
+
 import type { Diagram } from "../../types/state/core/Diagram";
 import { calcUnrotatedItemableBoundingBox } from "../../utils/core/calcUnrotatedItemableBoundingBox";
-import { degreesToRadians } from "../../utils/math/common/degreesToRadians";
-import { rotatePoint } from "../../utils/math/points/rotatePoint";
-import { isFrame } from "../../utils/validation/isFrame";
 import { isItemableState } from "../../utils/validation/isItemableState";
 
 /**

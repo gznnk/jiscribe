@@ -1,3 +1,16 @@
+import {
+	calcClosestCircleIntersection,
+	calcRadians,
+	calcRectangleVertices,
+	createLinearX2yFunction,
+	createLinearY2xFunction,
+	degreesToRadians,
+	efficientAffineTransformation,
+	efficientInverseAffineTransformation,
+	nanToZero,
+	radiansToDegrees,
+	signNonZero,
+} from "@workspace/geometry";
 import type React from "react";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 
@@ -12,17 +25,6 @@ import type { DiagramTransformEvent } from "../../../types/events/DiagramTransfo
 import type { EventPhase } from "../../../types/events/EventPhase";
 import type { TransformativeState } from "../../../types/state/core/TransformativeState";
 import { newEventId } from "../../../utils/core/newEventId";
-import { degreesToRadians } from "../../../utils/math/common/degreesToRadians";
-import { nanToZero } from "../../../utils/math/common/nanToZero";
-import { radiansToDegrees } from "../../../utils/math/common/radiansToDegrees";
-import { signNonZero } from "../../../utils/math/common/signNonZero";
-import { calcRectangleVertices } from "../../../utils/math/geometry/calcRectangleVertices";
-import { createLinearX2yFunction } from "../../../utils/math/geometry/createLinearX2yFunction";
-import { createLinearY2xFunction } from "../../../utils/math/geometry/createLinearY2xFunction";
-import { calcClosestCircleIntersection } from "../../../utils/math/points/calcClosestCircleIntersection";
-import { calcRadians } from "../../../utils/math/points/calcRadians";
-import { efficientAffineTransformation } from "../../../utils/math/transform/efficientAffineTransformation";
-import { efficientInverseAffineTransformation } from "../../../utils/math/transform/efficientInverseAffineTransformation";
 import { getCursorFromAngle } from "../../../utils/shapes/common/getCursorFromAngle";
 import { BottomLabel } from "../../core/BottomLabel";
 import { DragLine } from "../../core/DragLine";

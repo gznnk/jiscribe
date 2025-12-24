@@ -1,11 +1,11 @@
 import type { JSX } from "@emotion/react/jsx-runtime";
+import { isFrame } from "@workspace/geometry";
 
 import { Outline } from "../../../components/auxiliary/Outline";
 import {
 	collectOutlinedDiagrams,
 	type OutlineData,
 } from "../../../utils/core/collectOutlinedDiagrams";
-import { isFrame } from "../../../utils/validation/isFrame";
 import { isSelectableState } from "../../../utils/validation/isSelectableState";
 import { MULTI_SELECT_GROUP } from "../../SvgCanvasConstants";
 import { InteractionState } from "../../types/InteractionState";

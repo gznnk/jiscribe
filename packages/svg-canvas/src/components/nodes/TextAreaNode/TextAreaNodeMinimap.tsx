@@ -1,8 +1,8 @@
+import { negativeToZero } from "@workspace/geometry";
 import type React from "react";
 import { memo } from "react";
 
 import type { TextAreaNodeProps } from "../../../types/props/nodes/TextAreaNodeProps";
-import { negativeToZero } from "../../../utils/math/common/negativeToZero";
 
 /**
  * TextAreaNode minimap component - lightweight version without outlines, controls, and labels.

@@ -1,9 +1,9 @@
+import { calcRadians } from "@workspace/geometry";
 import type React from "react";
 
 import type { ArrowHeadType } from "../../../types/core/ArrowHeadType";
 import type { PathType } from "../../../types/core/PathType";
 import type { Diagram } from "../../../types/state/core/Diagram";
-import { calcRadians } from "../../../utils/math/points/calcRadians";
 import { ArrowHead } from "../../core/ArrowHead";
 
 /**

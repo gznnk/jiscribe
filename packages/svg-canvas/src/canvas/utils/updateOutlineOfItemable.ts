@@ -1,6 +1,7 @@
+import { isFrame } from "@workspace/geometry";
+
 import type { Diagram } from "../../types/state/core/Diagram";
 import { calcItemableOrientedBox } from "../../utils/core/calcItemableOrientedBox";
-import { isFrame } from "../../utils/validation/isFrame";
 import { isItemableState } from "../../utils/validation/isItemableState";
 
 /**

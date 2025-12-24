@@ -1,3 +1,4 @@
+import { degreesToRadians } from "@workspace/geometry";
 import DOMPurify from "dompurify";
 import { memo, useEffect, useRef } from "react";
 import type React from "react";
@@ -9,7 +10,6 @@ import { useDrag } from "../../../hooks/useDrag";
 import { useSelect } from "../../../hooks/useSelect";
 import type { SvgProps } from "../../../types/props/shapes/SvgProps";
 import { mergeProps } from "../../../utils/core/mergeProps";
-import { degreesToRadians } from "../../../utils/math/common/degreesToRadians";
 import { createSvgTransform } from "../../../utils/shapes/common/createSvgTransform";
 import { isValidSvgString } from "../../../utils/validation/isValidSvgString";
 

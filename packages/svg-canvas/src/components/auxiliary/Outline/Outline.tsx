@@ -1,8 +1,8 @@
+import { degreesToRadians , negativeToZero } from "@workspace/geometry";
 import type React from "react";
 import { memo } from "react";
 
-import { degreesToRadians } from "../../../utils/math/common/degreesToRadians";
-import { negativeToZero } from "../../../utils/math/common/negativeToZero";
+
 import { createSvgTransform } from "../../../utils/shapes/common/createSvgTransform";
 
 /**

@@ -1,3 +1,4 @@
+import { degreesToRadians } from "@workspace/geometry";
 import type React from "react";
 import { memo, useRef } from "react";
 
@@ -7,7 +8,6 @@ import { useDrag } from "../../../hooks/useDrag";
 import { useSelect } from "../../../hooks/useSelect";
 import type { ImageProps } from "../../../types/props/shapes/ImageProps";
 import { mergeProps } from "../../../utils/core/mergeProps";
-import { degreesToRadians } from "../../../utils/math/common/degreesToRadians";
 import { createSvgTransform } from "../../../utils/shapes/common/createSvgTransform";
 
 /**

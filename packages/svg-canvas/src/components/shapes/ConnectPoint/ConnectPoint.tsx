@@ -1,3 +1,4 @@
+import { calcRectangleBoundingBoxGeometry } from "@workspace/geometry";
 import type React from "react";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 
@@ -12,7 +13,6 @@ import type { DiagramDragEvent } from "../../../types/events/DiagramDragEvent";
 import type { DiagramHoverChangeEvent } from "../../../types/events/DiagramHoverChangeEvent";
 import type { EventPhase } from "../../../types/events/EventPhase";
 import type { ConnectPointProps } from "../../../types/props/shapes/ConnectPointProps";
-import { calcRectangleBoundingBoxGeometry } from "../../../utils/math/geometry/calcRectangleBoundingBoxGeometry";
 import { newId } from "../../../utils/shapes/common/newId";
 import { generateOptimalFrameToFrameConnection } from "../../../utils/shapes/connectPoint/generateOptimalFrameToFrameConnection";
 import { generatePathFromFrameToPoint } from "../../../utils/shapes/connectPoint/generatePathFromFrameToPoint";

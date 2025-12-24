@@ -1,10 +1,10 @@
+import { calcRectangleVertices } from "@workspace/geometry";
 import type React from "react";
 import { memo } from "react";
 
 import type { RectangleVertices } from "../../../types/core/RectangleVertices";
 import { calcBottomLabelPosition } from "../BottomLabel";
 import { StyledText } from "./PositionLabelStyled";
-import { calcRectangleVertices } from "../../../utils/math/geometry/calcRectangleVertices";
 
 /**
  * Props for PositionLabel component.

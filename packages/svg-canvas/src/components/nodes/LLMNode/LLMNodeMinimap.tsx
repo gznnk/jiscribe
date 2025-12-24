@@ -1,8 +1,8 @@
+import { negativeToZero } from "@workspace/geometry";
 import type React from "react";
 import { memo } from "react";
 
 import type { LLMNodeProps } from "../../../types/props/nodes/LLMNodeProps";
-import { negativeToZero } from "../../../utils/math/common/negativeToZero";
 
 /**
  * LLMNode minimap component - lightweight version without outlines, controls, and labels.

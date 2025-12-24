@@ -1,3 +1,4 @@
+import { degreesToRadians } from "@workspace/geometry";
 import React, {
 	memo,
 	useMemo,
@@ -44,7 +45,6 @@ import { getSelectedDiagrams } from "../../../utils/core/getSelectedDiagrams";
 import { mergeProps } from "../../../utils/core/mergeProps";
 import { isDiagramPayload } from "../../../utils/execution/isDiagramPayload";
 import { isToolPayload } from "../../../utils/execution/isToolPayload";
-import { degreesToRadians } from "../../../utils/math/common/degreesToRadians";
 import { createSvgTransform } from "../../../utils/shapes/common/createSvgTransform";
 import { isItemableState } from "../../../utils/validation/isItemableState";
 import { ConnectPoints } from "../../shapes/ConnectPoints";
@@ -480,8 +480,7 @@ const CanvasFrameComponent: React.FC<CanvasFrameProps> = ({
 						]);
 					}
 				} else if (isToolPayload(e.payload)) {
-					// TODO: カスタムフック化
-					// Handle tool execution results (e.g., group_shapes, resize_canvas_frame)
+					// TODO: カスタムフック匁E					// Handle tool execution results (e.g., group_shapes, resize_canvas_frame)
 					const toolData = e.payload.data as
 						| {
 								shapeIds: string[];

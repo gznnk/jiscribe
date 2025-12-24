@@ -1,10 +1,10 @@
+import { degreesToRadians } from "@workspace/geometry";
 import type React from "react";
 import { memo, useEffect, useRef } from "react";
 
 import { Input, TextArea } from "./TextEditorStyled";
 import type { TextEditorProps } from "./TextEditorTypes";
 import { newEventId } from "../../../../utils/core/newEventId";
-import { degreesToRadians } from "../../../../utils/math/common/degreesToRadians";
 import { createSvgTransform } from "../../../../utils/shapes/common/createSvgTransform";
 
 /**

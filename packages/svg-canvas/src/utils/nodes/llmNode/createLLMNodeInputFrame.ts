@@ -1,3 +1,5 @@
+import { degreesToRadians , calculateEffectiveDimensions , efficientAffineTransformation } from "@workspace/geometry";
+
 import {
 	BASE_MARGIN,
 	HEADER_HEIGHT,
@@ -5,9 +7,6 @@ import {
 	HEADER_MARGIN_TOP,
 } from "../../../constants/styling/nodes/NodeStyling";
 import type { Frame } from "../../../types/core/Frame";
-import { degreesToRadians } from "../../math/common/degreesToRadians";
-import { calculateEffectiveDimensions } from "../../math/geometry/calculateEffectiveDimensions";
-import { efficientAffineTransformation } from "../../math/transform/efficientAffineTransformation";
 
 /**
  * Creates a Frame state for LLMNode Input component containing x, y, width, height, rotation, scaleX, and scaleY.

@@ -1,7 +1,7 @@
 import type { JSX } from "@emotion/react/jsx-runtime";
+import { isFrame } from "@workspace/geometry";
 
 import { PositionLabel } from "../../../components/core/PositionLabel";
-import { isFrame } from "../../../utils/validation/isFrame";
 import { MULTI_SELECT_GROUP } from "../../SvgCanvasConstants";
 import { InteractionState } from "../../types/InteractionState";
 import type { SvgCanvasProps } from "../../types/SvgCanvasProps";

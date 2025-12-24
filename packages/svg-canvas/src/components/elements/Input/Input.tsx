@@ -1,3 +1,4 @@
+import { degreesToRadians , negativeToZero } from "@workspace/geometry";
 import type React from "react";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 
@@ -11,8 +12,6 @@ import { useText } from "../../../hooks/useText";
 import type { InputProps } from "../../../types/props/elements/InputProps";
 import { mergeProps } from "../../../utils/core/mergeProps";
 import { isPlainTextPayload } from "../../../utils/execution/isPlainTextPayload";
-import { degreesToRadians } from "../../../utils/math/common/degreesToRadians";
-import { negativeToZero } from "../../../utils/math/common/negativeToZero";
 import { convertStrokeDashTypeToArray } from "../../../utils/shapes/common/convertStrokeDashTypeToArray";
 import { createSvgTransform } from "../../../utils/shapes/common/createSvgTransform";
 import { Textable } from "../../core/Textable";

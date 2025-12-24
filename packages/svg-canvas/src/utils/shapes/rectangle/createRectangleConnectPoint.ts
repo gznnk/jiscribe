@@ -1,6 +1,7 @@
+import { calcRectangleVertices } from "@workspace/geometry";
+
 import type { RectangleVertices } from "../../../types/core/RectangleVertices";
 import type { ConnectPointState } from "../../../types/state/shapes/ConnectPointState";
-import { calcRectangleVertices } from "../../../utils/math/geometry/calcRectangleVertices";
 import { newId } from "../../../utils/shapes/common/newId";
 
 /**

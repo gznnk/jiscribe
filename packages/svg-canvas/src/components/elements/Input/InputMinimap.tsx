@@ -1,9 +1,8 @@
+import { nanToZero , negativeToZero } from "@workspace/geometry";
 import type React from "react";
 import { memo } from "react";
 
 import type { InputProps } from "../../../types/props/elements/InputProps";
-import { nanToZero } from "../../../utils/math/common/nanToZero";
-import { negativeToZero } from "../../../utils/math/common/negativeToZero";
 
 /**
  * Input minimap component (simplified version for minimap)

@@ -1,3 +1,5 @@
+import { nanToZero } from "@workspace/geometry";
+
 import { circleElementToDiagram } from "./circleElementToDiagram";
 import { ellipseElementToDiagram } from "./ellipseElementToDiagram";
 import { lineElementToDiagram } from "./lineElementToDiagram";
@@ -5,7 +7,6 @@ import { rectElementToDiagram } from "./rectElementToDiagram";
 import type { Diagram } from "../../../types/state/core/Diagram";
 import type { GroupState } from "../../../types/state/shapes/GroupState";
 import { calcUnrotatedItemableBoundingBox } from "../../core/calcUnrotatedItemableBoundingBox";
-import { nanToZero } from "../../math/common/nanToZero";
 import { newId } from "../common/newId";
 
 /**

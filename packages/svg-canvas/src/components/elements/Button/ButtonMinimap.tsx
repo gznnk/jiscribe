@@ -1,9 +1,9 @@
+import { degreesToRadians } from "@workspace/geometry";
 import type React from "react";
 import { memo } from "react";
 
 import { ButtonElement } from "./ButtonStyled";
 import type { ButtonProps } from "../../../types/props/elements/ButtonProps";
-import { degreesToRadians } from "../../../utils/math/common/degreesToRadians";
 import { createSvgTransform } from "../../../utils/shapes/common/createSvgTransform";
 
 /**

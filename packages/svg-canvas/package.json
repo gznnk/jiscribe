@@ -11,6 +11,7 @@
 		"@emotion/react": "catalog:",
 		"@emotion/styled": "catalog:",
 		"@workspace/event-bus": "workspace:*",
+		"@workspace/geometry": "workspace:*",
 		"@workspace/llm-chat-ui": "workspace:*",
 		"@workspace/llm-client": "workspace:*",
 		"@workspace/markdown": "workspace:*",
