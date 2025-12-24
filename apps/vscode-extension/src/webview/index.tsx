@@ -57,13 +57,17 @@ function App() {
 					try {
 						const parsed = JSON.parse(message.data);
 						console.log("Parsed data:", parsed);
-						setCanvasData(parsed);
+
+						// Extract content if it exists (for the jis.json format)
+						const content = parsed.content || parsed;
+
+						setCanvasData(content);
 						loadCanvasData({
 							id: "vscode-canvas",
-							minX: parsed.minX || 0,
-							minY: parsed.minY || 0,
-							zoom: parsed.zoom || 1,
-							items: parsed.items || parsed.diagrams || [],
+							minX: content.minX || 0,
+							minY: content.minY || 0,
+							zoom: content.zoom || 1,
+							items: content.items || [],
 						});
 						setError("");
 					} catch (err) {
@@ -89,7 +93,8 @@ function App() {
 			console.log("Cleaning up message listener");
 			window.removeEventListener("message", messageHandler);
 		};
-	}, [loadCanvasData]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
 	console.log("Render state:", { canvasData, error });
 
