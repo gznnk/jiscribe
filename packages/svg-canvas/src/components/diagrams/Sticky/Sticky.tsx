@@ -2,7 +2,6 @@ import { degreesToRadians } from "@workspace/geometry";
 import type React from "react";
 import { memo, useRef } from "react";
 
-import { STICKY_FOLD_SIZE } from "../../../constants/styling/diagrams/StickyStyleConstants";
 import { useBaseShape } from "../../../hooks/useBaseShape";
 import type { StickyProps } from "../../../types/props/diagrams/StickyProps";
 import { createSvgTransform } from "../../../utils/shapes/common/createSvgTransform";
@@ -74,7 +73,7 @@ const StickyComponent: React.FC<StickyProps> = ({
 		onHoverChange,
 	});
 
-	// Generate transform attribute
+	// Create transform attribute
 	const transform = createSvgTransform(
 		scaleX,
 		scaleY,
@@ -83,28 +82,30 @@ const StickyComponent: React.FC<StickyProps> = ({
 		y,
 	);
 
-	// Create polygon points for sticky note with folded corner
-	const foldSize = STICKY_FOLD_SIZE;
+	// Create polygon points for simple rectangle
 	const left = -width / 2;
 	const right = width / 2;
 	const top = -height / 2;
 	const bottom = height / 2;
 
+	// Points for the main sticky note polygon
 	const points = [
 		[left, top], // Top-left
 		[right, top], // Top-right
-		[right, bottom - foldSize], // Right side until fold
-		[right - foldSize, bottom], // Fold corner
+		[right, bottom], // Bottom-right
 		[left, bottom], // Bottom-left
 	]
 		.map(([px, py]) => `${px},${py}`)
 		.join(" ");
 
-	// Create fold triangle points for shadow effect
-	const foldTrianglePoints = [
-		[right - foldSize, bottom - foldSize], // Fold inner corner
-		[right, bottom - foldSize], // Right side
-		[right - foldSize, bottom], // Bottom side
+	// Points for the shadow polygon
+	const shadowPoints = [
+		[left, top + 2], // Top-left
+		[right, top + 2], // Top-right
+		[right + 1, top + 30], // Mid-right
+		[right + 3, bottom + 8], // Bottom-right
+		[left - 4, bottom + 8], // Bottom-left
+		[left - 1, top + 30], // Mid-left
 	]
 		.map(([px, py]) => `${px},${py}`)
 		.join(" ");
@@ -147,7 +148,16 @@ const StickyComponent: React.FC<StickyProps> = ({
 			isTransforming={isTransforming}
 			transform={transform}
 		>
-			{/* Main sticky note with folded corner */}
+			{/* Shadow */}
+			<polygon
+				points={shadowPoints}
+				fill="rgba(0,0,0,0.05)"
+				transform={transform}
+				pointerEvents="none"
+				filter="url(#sticky-blur)"
+			/>
+
+			{/* Main sticky note */}
 			<polygon
 				id={id}
 				points={points}
@@ -159,15 +169,6 @@ const StickyComponent: React.FC<StickyProps> = ({
 				transform={transform}
 				ref={svgRef}
 				{...baseShapeProps}
-			/>
-
-			{/* Folded corner shadow */}
-			<polygon
-				points={foldTrianglePoints}
-				fill="rgba(0,0,0,0.1)"
-				stroke="none"
-				transform={transform}
-				pointerEvents="none"
 			/>
 		</BaseShape>
 	);

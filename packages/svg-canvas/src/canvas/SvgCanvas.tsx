@@ -31,6 +31,7 @@ import { AiChatPanel } from "../components/auxiliary/AiChatPanel";
 import { DiagramInfoPopover } from "../components/auxiliary/DiagramInfoPopover";
 import { DragGhost } from "../components/auxiliary/DragGhost";
 import { FlashConnectLine } from "../components/auxiliary/FlashConnectLine";
+import { GlobalDefs } from "../components/auxiliary/GlobalDefs";
 import { GridBackground } from "../components/auxiliary/GridBackground";
 import { GridPattern } from "../components/auxiliary/GridPattern";
 import { MiniMap } from "../components/auxiliary/MiniMap";
@@ -561,6 +562,7 @@ const SvgCanvasComponent = forwardRef<SvgCanvasRef, SvgCanvasProps>(
 									onContextMenu={onContextMenu}
 								>
 									<title>{title}</title>
+									<GlobalDefs />
 									{/* Grid pattern definition */}
 									<GridPattern zoom={zoom} baseGridSize={25} color="#f3f4f6" />
 									{/* Grid background */}
