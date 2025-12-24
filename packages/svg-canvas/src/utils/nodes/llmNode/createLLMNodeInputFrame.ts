@@ -1,4 +1,4 @@
-﻿import { degreesToRadians , calcEffectiveDimensions , calcEfficientAffineTransformation } from "@workspace/geometry";
+import { degreesToRadians , calcDimensionsWithMinSize , calcAffineTransformedPoint } from "@workspace/geometry";
 
 import {
 	BASE_MARGIN,
@@ -44,7 +44,7 @@ export const createLLMNodeInputFrame = ({
 	scaleY?: number;
 }): Frame => {
 	// Calculate effective dimensions using minimums if provided
-	const { effectiveWidth, effectiveHeight } = calcEffectiveDimensions(
+	const { effectiveWidth, effectiveHeight } = calcDimensionsWithMinSize(
 		width,
 		height,
 		minWidth,
@@ -58,7 +58,7 @@ export const createLLMNodeInputFrame = ({
 	const inputWidth = effectiveWidth - BASE_MARGIN * 2;
 
 	// Calculate center position with affine transformation
-	const inputCenter = calcEfficientAffineTransformation(
+	const inputCenter = calcAffineTransformedPoint(
 		0,
 		-(
 			effectiveHeight / 2 -

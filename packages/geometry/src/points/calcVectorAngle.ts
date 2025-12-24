@@ -1,5 +1,5 @@
 /**
- * Calculates the angle between two points in radians.
+ * Calculates the angle between two points (vector angle).
  * Uses standard trigonometry (0 radians = 3 o'clock/Right).
  *
  * @param ox - X-coordinate of the origin point
@@ -8,7 +8,7 @@
  * @param py - Y-coordinate of the target point
  * @returns The angle in radians (-π to π)
  */
-export const calcRadians = (
+export const calcVectorAngle = (
 	ox: number,
 	oy: number,
 	px: number,

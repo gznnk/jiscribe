@@ -1,4 +1,4 @@
-﻿import { degreesToRadians , calcEfficientAffineTransformation } from "@workspace/geometry";
+import { degreesToRadians , calcAffineTransformedPoint } from "@workspace/geometry";
 
 import { createLLMNodeInputFrame } from "./createLLMNodeInputFrame";
 import { LLMNodeDefaultState } from "../../../constants/state/nodes/LLMNodeDefaultState";
@@ -61,7 +61,7 @@ export const createLLMNodeState = ({
 	});
 
 	// Calculate dimensions and positions for child elements
-	const headerCenter = calcEfficientAffineTransformation(
+	const headerCenter = calcAffineTransformedPoint(
 		0,
 		-(height / 2 - (HEADER_HEIGHT / 2 + HEADER_MARGIN_TOP)),
 		scaleX,

@@ -1,4 +1,4 @@
-import { calcRadians } from "@workspace/geometry";
+import { calcVectorAngle } from "@workspace/geometry";
 
 import { getDirection } from "./getDirection";
 import type { Direction } from "../../../types/core/Direction";
@@ -18,5 +18,5 @@ export const getLineDirection = (
 	px: number,
 	py: number,
 ): Direction => {
-	return getDirection(calcRadians(ox, oy, px, py));
+	return getDirection(calcVectorAngle(ox, oy, px, py));
 };

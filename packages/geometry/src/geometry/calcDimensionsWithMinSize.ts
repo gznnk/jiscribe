@@ -1,12 +1,12 @@
 /**
- * Calculates effective dimensions using minimum constraints
+ * Calculates dimensions using minimum constraints.
  * @param width - The base width
  * @param height - The base height
  * @param minWidth - The minimum width constraint (optional)
  * @param minHeight - The minimum height constraint (optional)
  * @returns Object containing effectiveWidth and effectiveHeight
  */
-export const calcEffectiveDimensions = (
+export const calcDimensionsWithMinSize = (
 	width: number,
 	height: number,
 	minWidth?: number,

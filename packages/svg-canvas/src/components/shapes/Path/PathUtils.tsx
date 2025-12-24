@@ -1,4 +1,4 @@
-import { calcRadians } from "@workspace/geometry";
+import { calcVectorAngle } from "@workspace/geometry";
 import type React from "react";
 
 import type { ArrowHeadType } from "../../../types/core/ArrowHeadType";
@@ -35,7 +35,7 @@ export const createStartPointArrowHead = (
 				pathData.pathType === "Straight"
 					? pathData.items[pathData.items.length - 1]
 					: pathData.items[1];
-			const startArrowHeadRadians = calcRadians(
+			const startArrowHeadRadians = calcVectorAngle(
 				referencePoint.x,
 				referencePoint.y,
 				startPoint.x,
@@ -73,7 +73,7 @@ export const createEndPointArrowHead = (
 				pathData.pathType === "Straight"
 					? pathData.items[0]
 					: pathData.items[pathData.items.length - 2];
-			const endArrowHeadRadians = calcRadians(
+			const endArrowHeadRadians = calcVectorAngle(
 				referencePoint.x,
 				referencePoint.y,
 				endPoint.x,

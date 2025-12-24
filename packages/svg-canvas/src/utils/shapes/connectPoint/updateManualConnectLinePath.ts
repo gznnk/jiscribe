@@ -1,4 +1,4 @@
-import { radiansToDegrees , calcRadians } from "@workspace/geometry";
+import { radiansToDegrees , calcVectorAngle } from "@workspace/geometry";
 
 import type { Diagram } from "../../../types/state/core/Diagram";
 import type { ConnectLineState } from "../../../types/state/shapes/ConnectLineState";
@@ -100,7 +100,7 @@ export const updateManualConnectLinePath = (
 		if (idx === 0) return true;
 
 		const prev = originalItems[idx - 1];
-		const radians = calcRadians(prev.x, prev.y, item.x, item.y);
+		const radians = calcVectorAngle(prev.x, prev.y, item.x, item.y);
 		const degrees = radiansToDegrees(radians);
 		return degrees % 90 === 0;
 	});
@@ -143,7 +143,7 @@ export const updateManualConnectLinePath = (
 			const dy = movedPoint.y - movedPointOldData.y;
 
 			// Calculate angle between two points
-			const direction = calcRadians(
+			const direction = calcVectorAngle(
 				movedPointOldData.x,
 				movedPointOldData.y,
 				oldPoint.x,

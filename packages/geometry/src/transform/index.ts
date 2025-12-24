@@ -1,4 +1,2 @@
-﻿export * from "./calcAffineTransformation";
-export * from "./calcEfficientAffineTransformation";
-export * from "./calcEfficientInverseAffineTransformation";
-export * from "./calcInverseAffineTransformation";
+﻿export * from "./calcAffineTransformedPoint";
+export * from "./calcInverseAffineTransformedPoint";

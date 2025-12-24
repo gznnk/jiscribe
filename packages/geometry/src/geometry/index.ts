@@ -5,7 +5,7 @@ export * from "./calcOrientedFrameFromPoints";
 export * from "./calcRectangleBoundingBoxGeometry";
 export * from "./calcRectangleVertices";
 export * from "./calcClosestIntersection";
-export * from "./calcEffectiveDimensions";
+export * from "./calcDimensionsWithMinSize";
 export * from "./createLinearX2yFunction";
 export * from "./createLinearY2xFunction";
 export * from "./isLineIntersectingBoxGeometry";

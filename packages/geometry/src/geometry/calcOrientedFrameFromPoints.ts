@@ -1,7 +1,7 @@
-﻿import { degreesToRadians } from "../common/degreesToRadians";
+import { degreesToRadians } from "../common/degreesToRadians";
 import { nanToZero } from "../common/nanToZero";
-import { calcEfficientAffineTransformation } from "../transform/calcEfficientAffineTransformation";
-import { calcEfficientInverseAffineTransformation } from "../transform/calcEfficientInverseAffineTransformation";
+import { calcAffineTransformedPoint } from "../transform/calcAffineTransformedPoint";
+import { calcInverseAffineTransformedPoint } from "../transform/calcInverseAffineTransformedPoint";
 import type { Frame } from "../types/Frame";
 import type { Point } from "../types/Point";
 
@@ -35,7 +35,7 @@ export const calcOrientedFrameFromPoints = (
 	const radians = degreesToRadians(rotation);
 
 	const inversePoints = points.map((p) =>
-		calcEfficientInverseAffineTransformation(
+		calcInverseAffineTransformedPoint(
 			p.x,
 			p.y,
 			scaleX,
@@ -57,7 +57,7 @@ export const calcOrientedFrameFromPoints = (
 	const inverseCenterX = (inverseLeft + inverseRight) / 2;
 	const inverseCenterY = (inverseTop + inverseBottom) / 2;
 
-	const centerPoint = calcEfficientAffineTransformation(
+	const centerPoint = calcAffineTransformedPoint(
 		inverseCenterX,
 		inverseCenterY,
 		scaleX,
