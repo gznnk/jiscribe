@@ -14,7 +14,7 @@ export const isStrokableData = (data: unknown): data is StrokableData => {
 		isCssColor(data.stroke) &&
 		"strokeWidth" in data &&
 		isNonNegativeNumber(data.strokeWidth) &&
-		"strokeDasharray" in data &&
-		isStrokeDashType(data.strokeDasharray)
+		"strokeDashType" in data &&
+		isStrokeDashType(data.strokeDashType)
 	);
 };
