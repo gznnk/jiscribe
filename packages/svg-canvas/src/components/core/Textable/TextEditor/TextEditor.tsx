@@ -7,14 +7,15 @@ import type { TextEditorProps } from "./TextEditorTypes";
 import { newEventId } from "../../../../utils/core/newEventId";
 import { createSvgTransform } from "../../../../utils/shapes/common/createSvgTransform";
 
+// TODO: ずれるの修正
 /**
  * TextEditor component.
  */
 const TextEditorComponent: React.FC<TextEditorProps> = ({
 	id,
 	text,
-	x,
-	y,
+	cx,
+	cy,
 	width,
 	height,
 	scaleX,
@@ -108,8 +109,8 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		scaleX,
 		scaleY,
 		degreesToRadians(rotation),
-		x,
-		y,
+		cx,
+		cy,
 	);
 
 	// Commom properties for both input and textarea.

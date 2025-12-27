@@ -1,18 +1,16 @@
 import { calcRectangleBoundingBoxGeometry } from "@workspace/geometry";
+import type { Frame, Point } from "@workspace/geometry";
 import type React from "react";
 import { memo, useCallback, useEffect, useRef } from "react";
 
 import { EVENT_NAME_CONNECTION } from "../../../../constants/core/EventNames";
 import { useEventBus } from "../../../../context/EventBusContext";
-import type { Frame } from "../../../../types/core/Frame";
-import type { Point } from "../../../../types/core/Point";
 import type {
 	DiagramChangeData,
 	DiagramChangeEvent,
 } from "../../../../types/events/DiagramChangeEvent";
 import type { DiagramDragEvent } from "../../../../types/events/DiagramDragEvent";
-import type { Diagram } from "../../../../types/state/core/Diagram";
-import type { DiagramBaseState } from "../../../../types/state/core/DiagramBaseState";
+import type { PathPointState } from "../../../../types/state/shapes/PathPointState";
 import { newId } from "../../../../utils/shapes/common/newId";
 import { generateOptimalFrameToFrameConnection } from "../../../../utils/shapes/connectPoint/generateOptimalFrameToFrameConnection";
 import { generatePathFromFrameToPoint } from "../../../../utils/shapes/connectPoint/generatePathFromFrameToPoint";
@@ -25,7 +23,7 @@ import type {
 
 type ReconnectionHandlesProps = {
 	id: string;
-	items: Diagram[];
+	items: PathPointState[];
 	startOwnerId?: string;
 	endOwnerId?: string;
 	startOwnerFrame?: Frame;
@@ -49,7 +47,7 @@ const ReconnectionHandlesComponent: React.FC<ReconnectionHandlesProps> = ({
 	// Get eventBus from context
 	const eventBus = useEventBus();
 	// Store the initial items when dragging starts
-	const startItems = useRef<Diagram[] | null>(null);
+	const startItems = useRef<PathPointState[] | null>(null);
 	// Store the initial autoRouting state when dragging starts
 	const startAutoRouting = useRef<boolean>(false);
 	// Connecting point
@@ -77,7 +75,7 @@ const ReconnectionHandlesComponent: React.FC<ReconnectionHandlesProps> = ({
 
 	const processDrag = useCallback(
 		(
-			oppositePoint: DiagramBaseState,
+			oppositePoint: PathPointState,
 			oppositeOwnerFrame: Frame,
 			isStartPointDrag: boolean,
 			e: DiagramDragEvent,
@@ -99,8 +97,8 @@ const ReconnectionHandlesComponent: React.FC<ReconnectionHandlesProps> = ({
 
 			// Direction of the connect point
 			const direction = getLineDirection(
-				oppositeOwnerFrame.x,
-				oppositeOwnerFrame.y,
+				oppositeOwnerFrame.cx,
+				oppositeOwnerFrame.cy,
 				oppositePoint.x,
 				oppositePoint.y,
 			);

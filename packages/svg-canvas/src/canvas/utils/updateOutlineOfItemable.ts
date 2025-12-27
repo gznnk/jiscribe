@@ -1,7 +1,6 @@
-import { isFrame } from "@workspace/geometry";
-
 import type { Diagram } from "../../types/state/core/Diagram";
 import { calcItemableOrientedBox } from "../../utils/core/calcItemableOrientedBox";
+import { convertDiagramToFrame } from "../../utils/core/convertDiagramToFrame";
 import { isItemableState } from "../../utils/validation/isItemableState";
 
 /**
@@ -13,11 +12,12 @@ import { isItemableState } from "../../utils/validation/isItemableState";
  * @returns {Diagram} - The updated itemable diagram with outline updated.
  */
 export const updateOutlineOfItemable = (itemable: Diagram): Diagram => {
-	if (
-		!isFrame(itemable) ||
-		!isItemableState(itemable) ||
-		itemable.itemableType === "composite"
-	) {
+	if (!isItemableState(itemable) || itemable.itemableType === "composite") {
+		return itemable;
+	}
+
+	const frame = convertDiagramToFrame(itemable);
+	if (!frame) {
 		return itemable;
 	}
 
@@ -54,10 +54,10 @@ export const updateOutlineOfItemable = (itemable: Diagram): Diagram => {
 
 	// Check if bounds changed
 	const boundsChanged =
-		itemable.x !== box.x ||
-		itemable.y !== box.y ||
-		itemable.width !== box.width ||
-		itemable.height !== box.height;
+		frame.cx !== box.x ||
+		frame.cy !== box.y ||
+		frame.width !== box.width ||
+		frame.height !== box.height;
 
 	// If nothing changed, return the original object
 	if (!boundsChanged && !itemsChanged) {

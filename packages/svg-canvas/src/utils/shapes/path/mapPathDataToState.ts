@@ -8,4 +8,4 @@ export const mapPathDataToState =
 	createDataToStateMapper<PathState>(PathDefaultState);
 
 export const pathDataToState = (data: DiagramData): Diagram =>
-	mapPathDataToState(data);
+	mapPathDataToState(data as unknown as PathState);

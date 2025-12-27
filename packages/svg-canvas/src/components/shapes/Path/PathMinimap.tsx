@@ -6,6 +6,7 @@ import {
 	createStartPointArrowHead,
 } from "./PathUtils";
 import type { PathProps } from "../../../types/props/shapes/PathProps";
+import type { PathPointState } from "../../../types/state/shapes/PathPointState";
 
 /**
  * Path minimap component - lightweight version without outlines, controls, and labels.
@@ -19,12 +20,13 @@ const PathMinimapComponent: React.FC<PathProps> = ({
 	startArrowHead = "None",
 	endArrowHead = "None",
 }) => {
+	const points = items as PathPointState[];
 	// Create the path d attribute directly from items
 	let d = "";
-	if (items && items.length > 0) {
-		for (let i = 0; i < items.length; i++) {
-			const item = items[i];
-			d += `${i === 0 ? "M" : "L"} ${item.x} ${item.y} `;
+	if (items && points.length > 0) {
+		for (let i = 0; i < points.length; i++) {
+			const point = points[i];
+			d += `${i === 0 ? "M" : "L"} ${point.x} ${point.y} `;
 		}
 	}
 

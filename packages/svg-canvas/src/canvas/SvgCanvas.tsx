@@ -61,6 +61,7 @@ import { usePathControl } from "./hooks/control/usePathControl";
 import { usePositionLabel } from "./hooks/control/usePositionLabel";
 import { useTransformControl } from "./hooks/control/useTransformControl";
 import { useShortcutKey } from "./hooks/keyboard/useShortcutKey";
+import { drawPoint } from "../utils/debug/drawPoint";
 
 // TODO: 実行する場所を考える
 // Initialize all diagram types when this module is loaded
@@ -539,6 +540,10 @@ const SvgCanvasComponent = forwardRef<SvgCanvasRef, SvgCanvasProps>(
 
 		// Render PositionLabel using custom hook
 		const renderedPositionLabel = usePositionLabel(props);
+
+		// Debug: draw origin point
+		drawPoint("origin", { x: 0, y: 0 }, "red");
+		console.log("Canvas Items:", items);
 
 		return (
 			<EventBusProvider eventBus={eventBus}>

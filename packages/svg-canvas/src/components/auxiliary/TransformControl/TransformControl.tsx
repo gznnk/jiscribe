@@ -1,7 +1,7 @@
 import {
 	calcClosestCircleIntersection,
 	calcVectorAngle,
-	calcRectangleVertices,
+	calcFrameFeaturePoints,
 	createLinearX2yFunction,
 	createLinearY2xFunction,
 	degreesToRadians,
@@ -11,6 +11,7 @@ import {
 	radiansToDegrees,
 	calcNonZeroSign,
 } from "@workspace/geometry";
+import type { Point } from "@workspace/geometry";
 import type React from "react";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 
@@ -18,7 +19,6 @@ import { ROTATE_POINT_MARGIN } from "./TransformControlConstants";
 import { EVENT_NAME_TRANSFORM_CONTROL_CLICK } from "../../../constants/core/EventNames";
 import { useEventBus } from "../../../context/EventBusContext";
 import type { DiagramType } from "../../../types/core/DiagramType";
-import type { Point } from "../../../types/core/Point";
 import type { DiagramClickEvent } from "../../../types/events/DiagramClickEvent";
 import type { DiagramDragEvent } from "../../../types/events/DiagramDragEvent";
 import type { DiagramTransformEvent } from "../../../types/events/DiagramTransformEvent";
@@ -38,6 +38,10 @@ import { RotatePoint } from "../../core/RotatePoint";
 type Props = TransformativeState & {
 	id: string;
 	type: DiagramType;
+	cx: number;
+	cy: number;
+	width: number;
+	height: number;
 	zoom?: number;
 	onTransform?: (e: DiagramTransformEvent) => void;
 };
@@ -48,8 +52,8 @@ type Props = TransformativeState & {
  */
 const TransformControlComponent: React.FC<Props> = ({
 	id,
-	x,
-	y,
+	cx,
+	cy,
 	width,
 	height,
 	minWidth = 0,
@@ -72,17 +76,17 @@ const TransformControlComponent: React.FC<Props> = ({
 	const doKeepProportion = keepProportion || isShiftKeyDown;
 
 	const startFrame = useRef({
-		x,
-		y,
+		cx,
+		cy,
 		width,
 		height,
 		rotation,
 		scaleX,
 		scaleY,
 		aspectRatio: width / height,
-		...calcRectangleVertices({
-			x,
-			y,
+		...calcFrameFeaturePoints({
+			cx,
+			cy,
 			width,
 			height,
 			rotation,
@@ -91,9 +95,9 @@ const TransformControlComponent: React.FC<Props> = ({
 		}),
 	});
 
-	const vertices = calcRectangleVertices({
-		x,
-		y,
+	const featurePoints = calcFrameFeaturePoints({
+		cx,
+		cy,
 		width,
 		height,
 		rotation,
@@ -111,8 +115,8 @@ const TransformControlComponent: React.FC<Props> = ({
 			1,
 			1,
 			radians,
-			startFrame.current.x,
-			startFrame.current.y,
+			startFrame.current.cx,
+			startFrame.current.cy,
 		);
 
 	const calcInverseAffineTransformedPointOnDrag = (x: number, y: number) =>
@@ -122,21 +126,21 @@ const TransformControlComponent: React.FC<Props> = ({
 			1,
 			1,
 			radians,
-			startFrame.current.x,
-			startFrame.current.y,
+			startFrame.current.cx,
+			startFrame.current.cy,
 		);
 
 	const recordStartFrame = () => {
 		startFrame.current = {
-			x,
-			y,
+			cx,
+			cy,
 			width,
 			height,
 			rotation,
 			scaleX,
 			scaleY,
 			aspectRatio: width / height,
-			...vertices,
+			...featurePoints,
 		};
 	};
 
@@ -150,12 +154,10 @@ const TransformControlComponent: React.FC<Props> = ({
 			eventId: e.eventId,
 			eventPhase: e.eventPhase,
 			id,
-			startFrame: {
-				...startFrame.current,
-			},
+			startFrame: startFrame.current,
 			endFrame: {
-				x: centerPoint.x,
-				y: centerPoint.y,
+				cx: centerPoint.x,
+				cy: centerPoint.y,
 				width: Math.abs(newWidth),
 				height: Math.abs(newHeight),
 				scaleX: calcNonZeroSign(newWidth),
@@ -285,8 +287,8 @@ const TransformControlComponent: React.FC<Props> = ({
 	const refBusVal = {
 		// Component properties
 		id,
-		x,
-		y,
+		cx,
+		cy,
 		width,
 		height,
 		rotation,
@@ -295,7 +297,7 @@ const TransformControlComponent: React.FC<Props> = ({
 		zoom,
 		onTransform,
 		// Internal variables and functions
-		vertices,
+		featurePoints,
 		doKeepProportion,
 		isSwapped,
 		calcAffineTransformedPointOnDrag,
@@ -336,8 +338,8 @@ const TransformControlComponent: React.FC<Props> = ({
 			e.endY,
 		);
 		const inversedRightBottom = calcInverseAffineTransformedPointOnDrag(
-			startFrame.current.bottomRightPoint.x,
-			startFrame.current.bottomRightPoint.y,
+			startFrame.current.bottomRight.x,
+			startFrame.current.bottomRight.y,
 		);
 
 		let newWidth = inversedRightBottom.x - inversedDragPoint.x;
@@ -378,8 +380,8 @@ const TransformControlComponent: React.FC<Props> = ({
 	const linearDragFunctionLeftTop = useCallback(
 		(x: number, y: number) =>
 			createLinearY2xFunction(
-				startFrame.current.topLeftPoint,
-				startFrame.current.bottomRightPoint,
+				startFrame.current.topLeft,
+				startFrame.current.bottomRight,
 			)(x, y),
 		[],
 	);
@@ -409,8 +411,8 @@ const TransformControlComponent: React.FC<Props> = ({
 			e.endY,
 		);
 		const inversedRightTop = calcInverseAffineTransformedPointOnDrag(
-			startFrame.current.topRightPoint.x,
-			startFrame.current.topRightPoint.y,
+			startFrame.current.topRight.x,
+			startFrame.current.topRight.y,
 		);
 
 		let newWidth = inversedRightTop.x - inversedDragPoint.x;
@@ -450,8 +452,8 @@ const TransformControlComponent: React.FC<Props> = ({
 	const linearDragFunctionLeftBottom = useCallback(
 		(x: number, y: number) =>
 			createLinearY2xFunction(
-				startFrame.current.topRightPoint,
-				startFrame.current.bottomLeftPoint,
+				startFrame.current.topRight,
+				startFrame.current.bottomLeft,
 			)(x, y),
 		[],
 	);
@@ -481,8 +483,8 @@ const TransformControlComponent: React.FC<Props> = ({
 			e.endY,
 		);
 		const inversedLeftBottom = calcInverseAffineTransformedPointOnDrag(
-			startFrame.current.bottomLeftPoint.x,
-			startFrame.current.bottomLeftPoint.y,
+			startFrame.current.bottomLeft.x,
+			startFrame.current.bottomLeft.y,
 		);
 
 		let newWidth = inversedDragPoint.x - inversedLeftBottom.x;
@@ -522,8 +524,8 @@ const TransformControlComponent: React.FC<Props> = ({
 	const linearDragFunctionRightTop = useCallback(
 		(x: number, y: number) =>
 			createLinearY2xFunction(
-				startFrame.current.topRightPoint,
-				startFrame.current.bottomLeftPoint,
+				startFrame.current.topRight,
+				startFrame.current.bottomLeft,
 			)(x, y),
 		[],
 	);
@@ -553,8 +555,8 @@ const TransformControlComponent: React.FC<Props> = ({
 			e.endY,
 		);
 		const inversedLeftTop = calcInverseAffineTransformedPointOnDrag(
-			startFrame.current.topLeftPoint.x,
-			startFrame.current.topLeftPoint.y,
+			startFrame.current.topLeft.x,
+			startFrame.current.topLeft.y,
 		);
 
 		let newWidth = inversedDragPoint.x - inversedLeftTop.x;
@@ -594,8 +596,8 @@ const TransformControlComponent: React.FC<Props> = ({
 	const linearDragFunctionRightBottom = useCallback(
 		(x: number, y: number) =>
 			createLinearY2xFunction(
-				startFrame.current.bottomRightPoint,
-				startFrame.current.topLeftPoint,
+				startFrame.current.bottomRight,
+				startFrame.current.topLeft,
 			)(x, y),
 		[],
 	);
@@ -625,8 +627,8 @@ const TransformControlComponent: React.FC<Props> = ({
 			e.endY,
 		);
 		const inversedBottomCenter = calcInverseAffineTransformedPointOnDrag(
-			startFrame.current.bottomCenterPoint.x,
-			startFrame.current.bottomCenterPoint.y,
+			startFrame.current.bottomCenter.x,
+			startFrame.current.bottomCenter.y,
 		);
 
 		let newWidth: number;
@@ -667,12 +669,12 @@ const TransformControlComponent: React.FC<Props> = ({
 		(x: number, y: number) =>
 			!refBus.current.isSwapped
 				? createLinearY2xFunction(
-						startFrame.current.bottomCenterPoint,
-						startFrame.current.topCenterPoint,
+						startFrame.current.bottomCenter,
+						startFrame.current.topCenter,
 					)(x, y)
 				: createLinearX2yFunction(
-						startFrame.current.bottomCenterPoint,
-						startFrame.current.topCenterPoint,
+						startFrame.current.bottomCenter,
+						startFrame.current.topCenter,
 					)(x, y),
 		[],
 	);
@@ -702,8 +704,8 @@ const TransformControlComponent: React.FC<Props> = ({
 			e.endY,
 		);
 		const inversedRightCenter = calcInverseAffineTransformedPointOnDrag(
-			startFrame.current.rightCenterPoint.x,
-			startFrame.current.rightCenterPoint.y,
+			startFrame.current.rightCenter.x,
+			startFrame.current.rightCenter.y,
 		);
 
 		let newWidth = inversedRightCenter.x - inversedDragPoint.x;
@@ -744,12 +746,12 @@ const TransformControlComponent: React.FC<Props> = ({
 		(x: number, y: number) =>
 			!refBus.current.isSwapped
 				? createLinearX2yFunction(
-						startFrame.current.leftCenterPoint,
-						startFrame.current.rightCenterPoint,
+						startFrame.current.leftCenter,
+						startFrame.current.rightCenter,
 					)(x, y)
 				: createLinearY2xFunction(
-						startFrame.current.leftCenterPoint,
-						startFrame.current.rightCenterPoint,
+						startFrame.current.leftCenter,
+						startFrame.current.rightCenter,
 					)(x, y),
 		[],
 	);
@@ -779,8 +781,8 @@ const TransformControlComponent: React.FC<Props> = ({
 			e.endY,
 		);
 		const inversedLeftCenter = calcInverseAffineTransformedPointOnDrag(
-			startFrame.current.leftCenterPoint.x,
-			startFrame.current.leftCenterPoint.y,
+			startFrame.current.leftCenter.x,
+			startFrame.current.leftCenter.y,
 		);
 
 		let newWidth = inversedDragPoint.x - inversedLeftCenter.x;
@@ -821,12 +823,12 @@ const TransformControlComponent: React.FC<Props> = ({
 		(x: number, y: number) =>
 			!refBus.current.isSwapped
 				? createLinearX2yFunction(
-						startFrame.current.leftCenterPoint,
-						startFrame.current.rightCenterPoint,
+						startFrame.current.leftCenter,
+						startFrame.current.rightCenter,
 					)(x, y)
 				: createLinearY2xFunction(
-						startFrame.current.leftCenterPoint,
-						startFrame.current.rightCenterPoint,
+						startFrame.current.leftCenter,
+						startFrame.current.rightCenter,
 					)(x, y),
 		[],
 	);
@@ -856,8 +858,8 @@ const TransformControlComponent: React.FC<Props> = ({
 			e.endY,
 		);
 		const inversedTopCenter = calcInverseAffineTransformedPointOnDrag(
-			startFrame.current.topCenterPoint.x,
-			startFrame.current.topCenterPoint.y,
+			startFrame.current.topCenter.x,
+			startFrame.current.topCenter.y,
 		);
 
 		let newWidth: number;
@@ -898,12 +900,12 @@ const TransformControlComponent: React.FC<Props> = ({
 		(x: number, y: number) =>
 			!refBus.current.isSwapped
 				? createLinearY2xFunction(
-						startFrame.current.bottomCenterPoint,
-						startFrame.current.topCenterPoint,
+						startFrame.current.bottomCenter,
+						startFrame.current.topCenter,
 					)(x, y)
 				: createLinearX2yFunction(
-						startFrame.current.bottomCenterPoint,
-						startFrame.current.topCenterPoint,
+						startFrame.current.bottomCenter,
+						startFrame.current.topCenter,
 					)(x, y),
 		[],
 	);
@@ -939,8 +941,8 @@ const TransformControlComponent: React.FC<Props> = ({
 		1,
 		1,
 		radians,
-		x,
-		y,
+		cx,
+		cy,
 	);
 	/**
 	 * Rotation point drag handler
@@ -948,30 +950,30 @@ const TransformControlComponent: React.FC<Props> = ({
 	const handleDragRotationPoint = useCallback((e: DiagramDragEvent) => {
 		const {
 			id,
-			x,
-			y,
+			cx,
+			cy,
 			width,
 			height,
 			scaleX,
 			scaleY,
 			onTransform,
 			rotation,
-			vertices,
+			featurePoints,
 		} = refBus.current;
 
 		if (e.eventPhase === "Started") {
 			setIsRotating(true);
 
 			startFrame.current = {
-				x,
-				y,
+				cx,
+				cy,
 				width,
 				height,
 				rotation,
 				scaleX,
 				scaleY,
 				aspectRatio: width / height,
-				...vertices,
+				...featurePoints,
 			};
 
 			onTransform?.({
@@ -989,8 +991,8 @@ const TransformControlComponent: React.FC<Props> = ({
 			return;
 		}
 
-		const radian = calcVectorAngle(x, y, e.endX, e.endY);
-		const rotatePointRadian = calcVectorAngle(x, y, x + width, y - height);
+		const radian = calcVectorAngle(cx, cy, e.endX, e.endY);
+		const rotatePointRadian = calcVectorAngle(cx, cy, cx + width, cy - height);
 		const newRotation =
 			Math.round(radiansToDegrees(radian - rotatePointRadian) + 360) % 360;
 		const event = {
@@ -1001,8 +1003,8 @@ const TransformControlComponent: React.FC<Props> = ({
 				...startFrame.current,
 			},
 			endFrame: {
-				x,
-				y,
+				cx,
+				cy,
 				width,
 				height,
 				scaleX,
@@ -1019,14 +1021,14 @@ const TransformControlComponent: React.FC<Props> = ({
 	}, []);
 
 	const dragFunctionRotationPoint = useCallback((rx: number, ry: number) => {
-		const { x, y, width, zoom } = refBus.current;
+		const { cx, cy, width, zoom } = refBus.current;
 
 		// Adjust rotation point margin based on zoom to maintain consistent visual distance
 		const adjustedRotatePointMargin = ROTATE_POINT_MARGIN / zoom;
 
 		return calcClosestCircleIntersection(
-			x,
-			y,
+			cx,
+			cy,
 			width / 2 + adjustedRotatePointMargin,
 			rx,
 			ry,
@@ -1073,12 +1075,12 @@ const TransformControlComponent: React.FC<Props> = ({
 					{/* Top DragLine */}
 					<DragLine
 						id={`${id}-topCenter-line`}
-						x={vertices.topCenterPoint.x}
-						y={vertices.topCenterPoint.y}
-						startX={vertices.topLeftPoint.x}
-						startY={vertices.topLeftPoint.y}
-						endX={vertices.topRightPoint.x}
-						endY={vertices.topRightPoint.y}
+						x={featurePoints.topCenter.x}
+						y={featurePoints.topCenter.y}
+						startX={featurePoints.topLeft.x}
+						startY={featurePoints.topLeft.y}
+						endX={featurePoints.topRight.x}
+						endY={featurePoints.topRight.y}
 						cursor={cursors.topCenter}
 						zoom={zoom}
 						onDrag={handleDragTopCenter}
@@ -1088,12 +1090,12 @@ const TransformControlComponent: React.FC<Props> = ({
 					{/* Left DragLine */}
 					<DragLine
 						id={`${id}-leftCenter-line`}
-						x={vertices.leftCenterPoint.x}
-						y={vertices.leftCenterPoint.y}
-						startX={vertices.topLeftPoint.x}
-						startY={vertices.topLeftPoint.y}
-						endX={vertices.bottomLeftPoint.x}
-						endY={vertices.bottomLeftPoint.y}
+						x={featurePoints.leftCenter.x}
+						y={featurePoints.leftCenter.y}
+						startX={featurePoints.topLeft.x}
+						startY={featurePoints.topLeft.y}
+						endX={featurePoints.bottomLeft.x}
+						endY={featurePoints.bottomLeft.y}
 						cursor={cursors.leftCenter}
 						zoom={zoom}
 						onDrag={handleDragLeftCenter}
@@ -1103,12 +1105,12 @@ const TransformControlComponent: React.FC<Props> = ({
 					{/* Right DragLine */}
 					<DragLine
 						id={`${id}-rightCenter-line`}
-						x={vertices.rightCenterPoint.x}
-						y={vertices.rightCenterPoint.y}
-						startX={vertices.topRightPoint.x}
-						startY={vertices.topRightPoint.y}
-						endX={vertices.bottomRightPoint.x}
-						endY={vertices.bottomRightPoint.y}
+						x={featurePoints.rightCenter.x}
+						y={featurePoints.rightCenter.y}
+						startX={featurePoints.topRight.x}
+						startY={featurePoints.topRight.y}
+						endX={featurePoints.bottomRight.x}
+						endY={featurePoints.bottomRight.y}
 						cursor={cursors.rightCenter}
 						zoom={zoom}
 						onDrag={handleDragRightCenter}
@@ -1118,12 +1120,12 @@ const TransformControlComponent: React.FC<Props> = ({
 					{/* Bottom DragLine */}
 					<DragLine
 						id={`${id}-bottomCenter-line`}
-						x={vertices.bottomCenterPoint.x}
-						y={vertices.bottomCenterPoint.y}
-						startX={vertices.bottomLeftPoint.x}
-						startY={vertices.bottomLeftPoint.y}
-						endX={vertices.bottomRightPoint.x}
-						endY={vertices.bottomRightPoint.y}
+						x={featurePoints.bottomCenter.x}
+						y={featurePoints.bottomCenter.y}
+						startX={featurePoints.bottomLeft.x}
+						startY={featurePoints.bottomLeft.y}
+						endX={featurePoints.bottomRight.x}
+						endY={featurePoints.bottomRight.y}
 						cursor={cursors.bottomCenter}
 						zoom={zoom}
 						onDrag={handleDragBottomCenter}
@@ -1133,8 +1135,8 @@ const TransformControlComponent: React.FC<Props> = ({
 					{/* Top left DragPoint */}
 					<DragPoint
 						id={`${id}-topLeft`}
-						x={vertices.topLeftPoint.x}
-						y={vertices.topLeftPoint.y}
+						x={featurePoints.topLeft.x}
+						y={featurePoints.topLeft.y}
 						cursor={cursors.leftTop}
 						zoom={zoom}
 						onDrag={handleDragLeftTop}
@@ -1145,8 +1147,8 @@ const TransformControlComponent: React.FC<Props> = ({
 					{/* Bottom left DragPoint */}
 					<DragPoint
 						id={`${id}-bottomLeft`}
-						x={vertices.bottomLeftPoint.x}
-						y={vertices.bottomLeftPoint.y}
+						x={featurePoints.bottomLeft.x}
+						y={featurePoints.bottomLeft.y}
 						cursor={cursors.leftBottom}
 						zoom={zoom}
 						onDrag={handleDragLeftBottom}
@@ -1157,8 +1159,8 @@ const TransformControlComponent: React.FC<Props> = ({
 					{/* Top right DragPoint */}
 					<DragPoint
 						id={`${id}-topRight`}
-						x={vertices.topRightPoint.x}
-						y={vertices.topRightPoint.y}
+						x={featurePoints.topRight.x}
+						y={featurePoints.topRight.y}
 						cursor={cursors.rightTop}
 						zoom={zoom}
 						onDrag={handleDragRightTop}
@@ -1169,8 +1171,8 @@ const TransformControlComponent: React.FC<Props> = ({
 					{/* Bottom right DragPoint */}
 					<DragPoint
 						id={`${id}-bottomRight`}
-						x={vertices.bottomRightPoint.x}
-						y={vertices.bottomRightPoint.y}
+						x={featurePoints.bottomRight.x}
+						y={featurePoints.bottomRight.y}
 						cursor={cursors.rightBottom}
 						zoom={zoom}
 						onDrag={handleDragRightBottom}
@@ -1181,8 +1183,8 @@ const TransformControlComponent: React.FC<Props> = ({
 					{/* Top center DragPoint */}
 					<DragPoint
 						id={`${id}-topCenter`}
-						x={vertices.topCenterPoint.x}
-						y={vertices.topCenterPoint.y}
+						x={featurePoints.topCenter.x}
+						y={featurePoints.topCenter.y}
 						cursor={cursors.topCenter}
 						zoom={zoom}
 						onDrag={handleDragTopCenter}
@@ -1191,8 +1193,8 @@ const TransformControlComponent: React.FC<Props> = ({
 					{/* Left center DragPoint */}
 					<DragPoint
 						id={`${id}-leftCenter`}
-						x={vertices.leftCenterPoint.x}
-						y={vertices.leftCenterPoint.y}
+						x={featurePoints.leftCenter.x}
+						y={featurePoints.leftCenter.y}
 						cursor={cursors.leftCenter}
 						zoom={zoom}
 						onDrag={handleDragLeftCenter}
@@ -1201,8 +1203,8 @@ const TransformControlComponent: React.FC<Props> = ({
 					{/* Right center DragPoint */}
 					<DragPoint
 						id={`${id}-rightCenter`}
-						x={vertices.rightCenterPoint.x}
-						y={vertices.rightCenterPoint.y}
+						x={featurePoints.rightCenter.x}
+						y={featurePoints.rightCenter.y}
 						cursor={cursors.rightCenter}
 						zoom={zoom}
 						onDrag={handleDragRightCenter}
@@ -1211,8 +1213,8 @@ const TransformControlComponent: React.FC<Props> = ({
 					{/* Bottom center DragPoint */}
 					<DragPoint
 						id={`${id}-bottomCenter`}
-						x={vertices.bottomCenterPoint.x}
-						y={vertices.bottomCenterPoint.y}
+						x={featurePoints.bottomCenter.x}
+						y={featurePoints.bottomCenter.y}
 						cursor={cursors.bottomCenter}
 						zoom={zoom}
 						onDrag={handleDragBottomCenter}
@@ -1235,8 +1237,8 @@ const TransformControlComponent: React.FC<Props> = ({
 			{/* Resizing label. */}
 			{isResizing && (
 				<BottomLabel
-					x={x}
-					y={y}
+					x={cx}
+					y={cy}
 					width={width}
 					height={height}
 					rotation={rotation}

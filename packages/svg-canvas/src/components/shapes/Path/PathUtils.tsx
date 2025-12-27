@@ -1,4 +1,4 @@
-import { calcVectorAngle } from "@workspace/geometry";
+import { calcVectorAngle, isPoint } from "@workspace/geometry";
 import type React from "react";
 
 import type { ArrowHeadType } from "../../../types/core/ArrowHeadType";
@@ -30,11 +30,16 @@ export const createStartPointArrowHead = (
 	if (1 < pathData.items.length) {
 		if (pathData.startArrowHead && pathData.startArrowHead !== "None") {
 			const startPoint = pathData.items[0];
-			// For Straight paths, use the last point; otherwise use the second point
-			const referencePoint =
-				pathData.pathType === "Straight"
-					? pathData.items[pathData.items.length - 1]
-					: pathData.items[1];
+			// For Straight paths, use the second point; otherwise use the last point
+			let referencePoint = pathData.items[pathData.items.length - 1];
+			if (pathData.pathType === "Straight") {
+				referencePoint = pathData.items[1];
+			}
+			// Ensure both points are valid
+			if (!isPoint(startPoint) || !isPoint(referencePoint)) {
+				return undefined;
+			}
+
 			const startArrowHeadRadians = calcVectorAngle(
 				referencePoint.x,
 				referencePoint.y,
@@ -69,10 +74,16 @@ export const createEndPointArrowHead = (
 		if (pathData.endArrowHead && pathData.endArrowHead !== "None") {
 			const endPoint = pathData.items[pathData.items.length - 1];
 			// For Straight paths, use the first point; otherwise use the second-to-last point
-			const referencePoint =
-				pathData.pathType === "Straight"
-					? pathData.items[0]
-					: pathData.items[pathData.items.length - 2];
+			let referencePoint = pathData.items[pathData.items.length - 2];
+			if (pathData.pathType === "Straight") {
+				referencePoint = pathData.items[0];
+			}
+
+			// Ensure both points are valid
+			if (!isPoint(endPoint) || !isPoint(referencePoint)) {
+				return undefined;
+			}
+
 			const endArrowHeadRadians = calcVectorAngle(
 				referencePoint.x,
 				referencePoint.y,

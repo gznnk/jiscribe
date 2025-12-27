@@ -74,6 +74,8 @@ export const PathPointAtlas: PathPointAtlas = {
 	calcConnectPointPosition: dummyImplementation,
 	transformItems: undefined,
 	dataToState: mapPathPointDataToState as DataToStateMapper,
-	stateToData: pathPointStateToData as StateToDataMapper,
+	// TODO: 要精査
+	stateToData: ((state) =>
+		pathPointStateToData(state as PathPointState)) as StateToDataMapper,
 	validateData: isPathPointData as DiagramDataValidator,
 };

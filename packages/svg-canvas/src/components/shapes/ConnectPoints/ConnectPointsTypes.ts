@@ -1,5 +1,6 @@
+import type { Frame } from "@workspace/geometry";
+
 import type { ConnectType } from "../../../types/core/ConnectType";
-import type { Frame } from "../../../types/core/Frame";
 import type { DiagramConnectEvent } from "../../../types/events/DiagramConnectEvent";
 import type { PreviewConnectLineEvent } from "../../../types/events/PreviewConnectLineEvent";
 import type { ConnectPointState } from "../../../types/state/shapes/ConnectPointState";

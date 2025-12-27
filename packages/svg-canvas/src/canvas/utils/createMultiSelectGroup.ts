@@ -23,6 +23,7 @@ export const createMultiSelectGroup = (
 	return {
 		id: MULTI_SELECT_GROUP,
 		type: "Group",
+		geometryType: "rect",
 		x: boundingBox.left + (boundingBox.right - boundingBox.left) / 2,
 		y: boundingBox.top + (boundingBox.bottom - boundingBox.top) / 2,
 		width: boundingBox.right - boundingBox.left,

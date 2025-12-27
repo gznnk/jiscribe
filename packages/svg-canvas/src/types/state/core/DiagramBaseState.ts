@@ -1,3 +1,4 @@
+import type { GeometryType } from "../../core/GeometryType";
 import type { DiagramBaseData } from "../../data/core/DiagramBaseData";
 
 /**
@@ -5,6 +6,7 @@ import type { DiagramBaseData } from "../../data/core/DiagramBaseData";
  * Extends base data with runtime state that should not be persisted.
  */
 export type DiagramBaseState = DiagramBaseData & {
+	geometryType: GeometryType;
 	isTransparent?: boolean;
 	isDragging?: boolean;
 	isInDragTriggeredTree?: boolean;

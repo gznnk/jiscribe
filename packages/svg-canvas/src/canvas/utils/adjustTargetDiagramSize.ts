@@ -1,4 +1,8 @@
-﻿import { degreesToRadians, calcRotatedPoint , isFrame } from "@workspace/geometry";
+﻿import {
+	degreesToRadians,
+	calcRotatedPoint,
+	isFrame,
+} from "@workspace/geometry";
 
 import type { Diagram } from "../../types/state/core/Diagram";
 import { calcUnrotatedItemableBoundingBox } from "../../utils/core/calcUnrotatedItemableBoundingBox";
@@ -26,14 +30,14 @@ export const adjustTargetDiagramSize = (diagram: Diagram): Diagram => {
 	// Step 1: Calculate children bounds in unrotated space
 	const childrenBounds = calcUnrotatedItemableBoundingBox(
 		diagram.items,
-		diagram.x,
-		diagram.y,
+		diagram.cx,
+		diagram.cy,
 		diagram.rotation,
 	);
 
 	// Step 2: Calculate target bounds in unrotated space
-	const targetCenterX = diagram.x;
-	const targetCenterY = diagram.y;
+	const targetCenterX = diagram.cx;
+	const targetCenterY = diagram.cy;
 	const halfWidth = diagram.width / 2;
 	const halfHeight = diagram.height / 2;
 	const targetBounds = {
@@ -70,8 +74,8 @@ export const adjustTargetDiagramSize = (diagram: Diagram): Diagram => {
 	const rotatedNewCenter = calcRotatedPoint(
 		unrotatedNewCenterX,
 		unrotatedNewCenterY,
-		diagram.x,
-		diagram.y,
+		diagram.cx,
+		diagram.cy,
 		rotationRadians,
 	);
 
@@ -83,10 +87,9 @@ export const adjustTargetDiagramSize = (diagram: Diagram): Diagram => {
 	// Return updated diagram with new dimensions
 	return {
 		...diagram,
-		x: newCenterX,
-		y: newCenterY,
+		cx: newCenterX,
+		cy: newCenterY,
 		width: newWidth,
 		height: newHeight,
 	} as Diagram;
 };
-

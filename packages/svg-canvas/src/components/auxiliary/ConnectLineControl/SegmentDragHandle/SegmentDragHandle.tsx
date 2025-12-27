@@ -1,9 +1,9 @@
 import { radiansToDegrees , createLinearX2yFunction , createLinearY2xFunction , calcVectorAngle , calcRotatedPoint } from "@workspace/geometry";
+import type { Point } from "@workspace/geometry";
 import type React from "react";
 import { memo, useCallback, useRef } from "react";
 
 import type { SegmentDragHandleData } from "./SegmentDragHandleTypes";
-import type { Point } from "../../../../types/core/Point";
 import type { DiagramClickEvent } from "../../../../types/events/DiagramClickEvent";
 import type { DiagramDragEvent } from "../../../../types/events/DiagramDragEvent";
 import type { DiagramPointerEvent } from "../../../../types/events/DiagramPointerEvent";

@@ -15,5 +15,8 @@ export const mapDiagramDataToState = (data: DiagramData): Diagram => {
 		return dataToStateMapper(data);
 	}
 	// Fallback: return the item as is if no mapper is found
-	return data as Diagram;
+	return {
+		...data,
+		geometryType: "none",
+	} as Diagram;
 };

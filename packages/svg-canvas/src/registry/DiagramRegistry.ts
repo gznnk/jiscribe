@@ -1,3 +1,5 @@
+import type { Frame } from "@workspace/geometry";
+
 import type {
 	DataToStateMapper,
 	DiagramDataValidator,
@@ -5,7 +7,6 @@ import type {
 	StateToDataMapper,
 } from "./DiagramDefinition";
 import type { DiagramType } from "../types/core/DiagramType";
-import type { Frame } from "../types/core/Frame";
 import type { DiagramMenuConfig } from "../types/menu/DiagramMenuConfig";
 import type { Diagram } from "../types/state/core/Diagram";
 import type { ConnectPointState } from "../types/state/shapes/ConnectPointState";

@@ -5,7 +5,7 @@ import type { CreateDataType } from "../shapes/CreateDataType";
  * Diagram features for WebSearch nodes.
  */
 export const WebSearchNodeFeatures = {
-	frameable: true,
+	geometry: "rect",
 	transformative: true,
 	connectable: true,
 	cornerRoundable: false,

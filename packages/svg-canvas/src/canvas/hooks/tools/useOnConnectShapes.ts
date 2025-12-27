@@ -1,9 +1,9 @@
-import { calcOrientedFrameFromPoints , isFrame } from "@workspace/geometry";
+import { isFrame } from "@workspace/geometry";
+import type { Frame } from "@workspace/geometry";
 import { useEffect, useRef } from "react";
 
 import { EVENT_NAME_CONNECT_SHAPES } from "../../../constants/core/EventNames";
 import { ConnectLineDefaultState } from "../../../constants/state/shapes/ConnectLineDefaultState";
-import type { Frame } from "../../../types/core/Frame";
 import type {
 	AnchorPosition,
 	ConnectShapesEvent,
@@ -163,10 +163,6 @@ export const useOnConnectShapes = (props: SvgCanvasSubHooksProps) => {
 				targetShape as Frame,
 			);
 
-			const frame = calcOrientedFrameFromPoints(
-				points.map((p) => ({ x: p.x, y: p.y })),
-			);
-
 			const newPathPointId = (i: number) => {
 				if (i === 0) return sourceConnectPoint.id;
 				if (i === points.length - 1) return targetConnectPoint.id;
@@ -183,10 +179,6 @@ export const useOnConnectShapes = (props: SvgCanvasSubHooksProps) => {
 			const connectLine: ConnectLineState = {
 				...ConnectLineDefaultState,
 				id: newId(),
-				x: frame.x,
-				y: frame.y,
-				width: frame.width,
-				height: frame.height,
 				items: pathPoints,
 				startOwnerId: sourceShape.id,
 				endOwnerId: targetShape.id,
@@ -270,10 +262,10 @@ const generateConnectPoint = (
 	} else if (shape.type === "Ellipse") {
 		const ellipseShape = shape as EllipseState;
 		generatedPoints = createEllipseConnectPoint({
-			x: ellipseShape.x,
-			y: ellipseShape.y,
-			width: ellipseShape.width,
-			height: ellipseShape.height,
+			cx: ellipseShape.cx,
+			cy: ellipseShape.cy,
+			rx: ellipseShape.rx,
+			ry: ellipseShape.ry,
 			rotation: ellipseShape.rotation,
 			scaleX: ellipseShape.scaleX,
 			scaleY: ellipseShape.scaleY,

@@ -11,4 +11,4 @@ export const mapAiDataToState =
 	createDataToStateMapper<AiState>(AiDefaultState);
 
 export const aiDataToState = (data: DiagramData): Diagram =>
-	mapAiDataToState(data);
+	mapAiDataToState(data as unknown as AiState);

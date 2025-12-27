@@ -9,6 +9,7 @@ import { useClick } from "../../../hooks/useClick";
 import { useDrag } from "../../../hooks/useDrag";
 import { useSelect } from "../../../hooks/useSelect";
 import type { PathProps } from "../../../types/props/shapes/PathProps";
+import type { PathPointState } from "../../../types/state/shapes/PathPointState";
 import { mergeProps } from "../../../utils/core/mergeProps";
 import { convertStrokeDashTypeToArray } from "../../../utils/shapes/common/convertStrokeDashTypeToArray";
 import { createPathDValue } from "../../../utils/shapes/path/createPathDValue";
@@ -18,8 +19,6 @@ import { createPathDValue } from "../../../utils/shapes/path/createPathDValue";
  */
 const PathComponent: React.FC<PathProps> = ({
 	id,
-	x,
-	y,
 	stroke = "black",
 	strokeWidth = 1,
 	strokeDashType = "solid",
@@ -35,6 +34,14 @@ const PathComponent: React.FC<PathProps> = ({
 	onSelect,
 }) => {
 	const dragSvgRef = useRef<SVGPathElement>({} as SVGPathElement);
+
+	let x = 0;
+	let y = 0;
+	const startPoint = items[0] as PathPointState;
+	if (startPoint) {
+		x = startPoint.x;
+		y = startPoint.y;
+	}
 
 	// To avoid frequent handler generation, hold referenced values in useRef
 	const refBusVal = {
@@ -87,7 +94,12 @@ const PathComponent: React.FC<PathProps> = ({
 	const endTrim = endArrowHead && endArrowHead !== "None" ? strokeWidth : 0;
 
 	// Generate polyline d attribute value
-	const d = createPathDValue(items, pathType, startTrim, endTrim);
+	const d = createPathDValue(
+		items as PathPointState[],
+		pathType,
+		startTrim,
+		endTrim,
+	);
 
 	// Convert strokeDashType to strokeDasharray value
 	const strokeDasharray = convertStrokeDashTypeToArray(

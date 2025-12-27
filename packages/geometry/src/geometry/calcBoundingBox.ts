@@ -1,41 +1,21 @@
 import { degreesToRadians } from "../common/degreesToRadians";
 import { calcAffineTransformedPoint } from "../transform/calcAffineTransformedPoint";
-import type { Box } from "../types/Box";
+import type { BoundingBox } from "../types/BoundingBox";
 import type { Frame } from "../types/Frame";
-import type { Point } from "../types/Point";
 
-const isFrame = (element: Point | Frame): element is Frame => {
-	return "width" in element && "height" in element;
-};
-
+// TODO: この関数は calcRectangleBoundingBoxGeometry と似ているので、統合を検討すること
 /**
- * Calculates the bounding box of a geometric element (Point or Frame).
- * Returns the box coordinates representing the element's outer bounds.
- * Note: x and y represent the center coordinates of the element.
+ * Calculates the bounding box of a Frame.
+ * Returns the box coordinates representing the frame's outer bounds.
+ * Note: cx and cy represent the center coordinates of the frame.
  *
- * @param element - The element to calculate bounding box for
+ * @param frame - The frame to calculate bounding box for
  * @returns The bounding box with top, left, right, bottom coordinates
  */
-export const calcBoundingBox = (element: Point | Frame): Box => {
-	const { x, y } = element;
+export const calcBoundingBox = (frame: Frame): BoundingBox => {
+	const { cx: x, cy: y } = frame;
 
-	// For non-shape elements (points, etc.), return a point box
-	if (!isFrame(element)) {
-		return {
-			top: y,
-			left: x,
-			right: x,
-			bottom: y,
-		};
-	}
-
-	const {
-		width,
-		height,
-		rotation = 0,
-		scaleX = 1,
-		scaleY = 1,
-	} = element as Frame;
+	const { width, height, rotation = 0, scaleX = 1, scaleY = 1 } = frame;
 
 	const halfWidth = width / 2;
 	const halfHeight = height / 2;
@@ -106,5 +86,3 @@ export const calcBoundingBox = (element: Point | Frame): Box => {
 		bottom: y + scaledHalfHeight,
 	};
 };
-
-

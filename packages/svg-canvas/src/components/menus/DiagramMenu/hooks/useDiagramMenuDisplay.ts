@@ -1,4 +1,4 @@
-import { calcRectangleVertices , isFrame } from "@workspace/geometry";
+import { calcRectangleVertices } from "@workspace/geometry";
 import { type RefObject, useEffect, useMemo, useState } from "react";
 
 import { InteractionState } from "../../../../canvas/types/InteractionState";
@@ -6,6 +6,7 @@ import type { SvgCanvasProps } from "../../../../canvas/types/SvgCanvasProps";
 import { DISTANCE_FROM_DIAGRAM } from "../../../../constants/styling/menus/DiagramMenuStyling";
 import type { RectangleVertices } from "../../../../types/core/RectangleVertices";
 import type { Diagram } from "../../../../types/state/core/Diagram";
+import { convertDiagramToFrame } from "../../../../utils/core/convertDiagramToFrame";
 
 export type UseDiagramMenuDisplayProps = {
 	canvasProps: SvgCanvasProps;
@@ -88,8 +89,17 @@ export const useDiagramMenuDisplay = (
 
 		if (multiSelectGroup) {
 			({ x, y, width, height, rotation, scaleX, scaleY } = multiSelectGroup);
-		} else if (isFrame(singleSelectedItem)) {
-			({ x, y, width, height, rotation, scaleX, scaleY } = singleSelectedItem);
+		} else if (singleSelectedItem) {
+			const frame = convertDiagramToFrame(singleSelectedItem);
+			if (frame) {
+				x = frame.cx;
+				y = frame.cy;
+				width = frame.width;
+				height = frame.height;
+				rotation = frame.rotation;
+				scaleX = frame.scaleX;
+				scaleY = frame.scaleY;
+			}
 		}
 
 		const vertices = calcRectangleVertices({

@@ -8,4 +8,4 @@ export const mapGroupDataToState =
 	createDataToStateMapper<GroupState>(GroupDefaultState);
 
 export const groupDataToState = (data: DiagramData): Diagram =>
-	mapGroupDataToState(data);
+	mapGroupDataToState(data as unknown as GroupState);

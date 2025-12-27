@@ -1,4 +1,9 @@
-import { calcCloserNumber , calcRectangleBoundingBoxGeometry , isLineIntersectingBoxGeometry } from "@workspace/geometry";
+import {
+	calcCloserNumber,
+	calcRectangleBoundingBoxGeometry,
+	isLineIntersectingBoxGeometry,
+} from "@workspace/geometry";
+import type { Frame, Point } from "@workspace/geometry";
 
 import { addMarginToBoxGeometry } from "./addMarginToBoxGeometry";
 import { cleanPath } from "./cleanPath";
@@ -7,10 +12,6 @@ import { getLineDirection } from "./getLineDirection";
 import { getSecondConnectPoint } from "./getSecondConnectPoint";
 import { removeDuplicatePoints } from "./removeDuplicatePoints";
 import { selectOptimalPathFromCandidates } from "./selectOptimalPathFromCandidates";
-import type { Frame } from "../../../types/core/Frame";
-import type { Point } from "../../../types/core/Point";
-
-
 
 /**
  * Adds a candidate point to the collection and generates intersection points
@@ -71,14 +72,14 @@ export const generateOptimalFrameToFrameConnection = (
 	// Calculate the direction from shape center to connection point
 	// This determines which side of the shape the connection starts/ends
 	const startDirection = getLineDirection(
-		startOwnerFrame.x,
-		startOwnerFrame.y,
+		startOwnerFrame.cx,
+		startOwnerFrame.cy,
 		startX,
 		startY,
 	);
 	const endDirection = getLineDirection(
-		endOwnerFrame.x,
-		endOwnerFrame.y,
+		endOwnerFrame.cx,
+		endOwnerFrame.cy,
 		endX,
 		endY,
 	);

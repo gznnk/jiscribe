@@ -11,8 +11,8 @@ import { ConnectPoints } from "../ConnectPoints";
  */
 const BaseShapeComponent: React.FC<BaseShapeProps> = ({
 	id,
-	x,
-	y,
+	cx,
+	cy,
 	width,
 	height,
 	rotation,
@@ -44,15 +44,15 @@ const BaseShapeComponent: React.FC<BaseShapeProps> = ({
 	// performs comparison processing for each key which is inefficient, so detect Shape differences collectively here
 	const ownerFrame = useMemo(
 		() => ({
-			x,
-			y,
+			cx,
+			cy,
 			width,
 			height,
 			rotation,
 			scaleX,
 			scaleY,
 		}),
-		[x, y, width, height, rotation, scaleX, scaleY],
+		[cx, cy, width, height, rotation, scaleX, scaleY],
 	);
 
 	return (

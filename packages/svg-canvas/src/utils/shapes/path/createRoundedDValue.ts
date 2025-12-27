@@ -1,20 +1,21 @@
+import type { Point } from "@workspace/geometry";
+
 import { trimLineEnd } from "./trimLineEnd";
 import { trimLineStart } from "./trimLineStart";
-import type { Point } from "../../../types/core/Point";
-import type { Diagram } from "../../../types/state/core/Diagram";
+import type { PathPointState } from "../../../types/state/shapes/PathPointState";
 
 /**
- * Creates a rounded path data value (d attribute) from an array of diagram items.
+ * Creates a rounded path data value (d attribute) from an array of path points.
  * Uses straight lines with rounded corners at each junction point.
  *
- * @param items - Array of diagram items to create path from
+ * @param items - Array of path points to create path from
  * @param radius - Corner radius for rounded corners (default: 10)
  * @param startTrim - Amount to trim from the start of the path (default: 0)
  * @param endTrim - Amount to trim from the end of the path (default: 0)
  * @returns SVG path d attribute value with rounded corners
  */
 export const createRoundedDValue = (
-	items: Diagram[],
+	items: PathPointState[],
 	radius: number = 10,
 	startTrim = 0,
 	endTrim = 0,

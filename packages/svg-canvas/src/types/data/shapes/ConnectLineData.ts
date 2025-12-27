@@ -7,7 +7,7 @@ import type { PathType } from "../../core/PathType";
  * Diagram features for ConnectLine shapes.
  */
 export const ConnectLineFeatures = {
-	frameable: true,
+	geometry: "poly",
 	transformative: false,
 	itemable: true,
 	strokable: true,

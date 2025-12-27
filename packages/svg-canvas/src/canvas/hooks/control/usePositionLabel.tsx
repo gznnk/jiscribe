@@ -2,6 +2,7 @@ import type { JSX } from "@emotion/react/jsx-runtime";
 import { isFrame } from "@workspace/geometry";
 
 import { PositionLabel } from "../../../components/core/PositionLabel";
+import { convertDiagramToFrame } from "../../../utils/core/convertDiagramToFrame";
 import { MULTI_SELECT_GROUP } from "../../SvgCanvasConstants";
 import { InteractionState } from "../../types/InteractionState";
 import type { SvgCanvasProps } from "../../types/SvgCanvasProps";
@@ -13,11 +14,13 @@ import { getDiagramByPath } from "../../utils/getDiagramByPath";
  * - multiSelectGroup takes priority if it exists (multiple items selected)
  * - Otherwise, render for the single selected item that is being dragged
  */
-export const usePositionLabel = (
-	props: SvgCanvasProps,
-): JSX.Element | null => {
-	const { interactionState, multiSelectGroup, selectedDiagramPathIndex, items } =
-		props;
+export const usePositionLabel = (props: SvgCanvasProps): JSX.Element | null => {
+	const {
+		interactionState,
+		multiSelectGroup,
+		selectedDiagramPathIndex,
+		items,
+	} = props;
 
 	// Only render PositionLabel during dragging
 	if (interactionState !== InteractionState.Dragging) {
@@ -44,17 +47,21 @@ export const usePositionLabel = (
 	const paths = Array.from(selectedDiagramPathIndex.values());
 	if (paths.length === 1) {
 		const selectedItem = getDiagramByPath(items, paths[0]);
-		if (selectedItem && isFrame(selectedItem)) {
+		if (!selectedItem) {
+			return null;
+		}
+		const selectedFrame = convertDiagramToFrame(selectedItem);
+		if (selectedFrame) {
 			return (
 				<PositionLabel
 					key={`position-label-${selectedItem.id}`}
-					x={selectedItem.x}
-					y={selectedItem.y}
-					width={selectedItem.width}
-					height={selectedItem.height}
-					rotation={selectedItem.rotation}
-					scaleX={selectedItem.scaleX}
-					scaleY={selectedItem.scaleY}
+					x={selectedFrame.cx}
+					y={selectedFrame.cy}
+					width={selectedFrame.width}
+					height={selectedFrame.height}
+					rotation={selectedFrame.rotation}
+					scaleX={selectedFrame.scaleX}
+					scaleY={selectedFrame.scaleY}
 				/>
 			);
 		}

@@ -1,5 +1,6 @@
 import type { ConnectPointData } from "../../../types/data/shapes/ConnectPointData";
 import { DiagramBaseDefaultData } from "../core/DiagramBaseDefaultData";
+import { PointDefaultData } from "../core/PointDefaultData";
 
 /**
  * Default connect point data template.
@@ -7,6 +8,8 @@ import { DiagramBaseDefaultData } from "../core/DiagramBaseDefaultData";
  */
 export const ConnectPointDefaultData = {
 	...DiagramBaseDefaultData,
+	...PointDefaultData,
 	type: "ConnectPoint",
+	geometryType: "point",
 	name: "",
 } as const satisfies ConnectPointData;

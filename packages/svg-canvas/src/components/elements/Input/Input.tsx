@@ -1,4 +1,4 @@
-import { degreesToRadians , negativeToZero } from "@workspace/geometry";
+import { degreesToRadians, negativeToZero } from "@workspace/geometry";
 import type React from "react";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 
@@ -92,8 +92,8 @@ const InputComponent: React.FC<InputProps> = ({
 		isTextEditEnabled,
 		onTextChange,
 		attributes: {
-			x,
-			y,
+			cx: x + width / 2,
+			cy: y + height / 2,
 			width,
 			height,
 			scaleX,
@@ -179,8 +179,8 @@ const InputComponent: React.FC<InputProps> = ({
 	// performs comparison processing for each key which is inefficient, so detect Shape differences collectively here
 	const ownerFrame = useMemo(
 		() => ({
-			x,
-			y,
+			cx: x + width / 2,
+			cy: y + height / 2,
 			width,
 			height,
 			rotation,

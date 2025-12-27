@@ -2,6 +2,7 @@ import { calcRectangleVertices } from "./calcRectangleVertices";
 import type { BoxGeometry } from "../types/BoxGeometry";
 import type { Frame } from "../types/Frame";
 
+// TODO: この関数は calcBoundingBox と似ているので、統合を検討すること
 /**
  * Calculates the bounding box geometry of a rectangle.
  * Takes into account rotation and scaling.
@@ -10,8 +11,18 @@ import type { Frame } from "../types/Frame";
  * @returns The bounding box geometry
  */
 export const calcRectangleBoundingBoxGeometry = (frame: Frame): BoxGeometry => {
+	const { cx, cy, width, height, rotation, scaleX, scaleY } = frame;
+	const rectGeometry = {
+		x: cx - width / 2,
+		y: cy - height / 2,
+		width,
+		height,
+		rotation,
+		scaleX,
+		scaleY,
+	};
 	const { topLeftPoint, bottomLeftPoint, topRightPoint, bottomRightPoint } =
-		calcRectangleVertices(frame);
+		calcRectangleVertices(rectGeometry);
 
 	const left = Math.min(
 		topLeftPoint.x,

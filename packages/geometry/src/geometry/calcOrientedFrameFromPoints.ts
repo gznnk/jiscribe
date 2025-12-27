@@ -5,6 +5,7 @@ import { calcInverseAffineTransformedPoint } from "../transform/calcInverseAffin
 import type { Frame } from "../types/Frame";
 import type { Point } from "../types/Point";
 
+// TODO: いらんかも
 /**
  * Calculates an oriented bounding box for a series of points.
  * This is useful for computing the bounding frame that encompasses all points
@@ -35,15 +36,7 @@ export const calcOrientedFrameFromPoints = (
 	const radians = degreesToRadians(rotation);
 
 	const inversePoints = points.map((p) =>
-		calcInverseAffineTransformedPoint(
-			p.x,
-			p.y,
-			scaleX,
-			scaleY,
-			radians,
-			x,
-			y,
-		),
+		calcInverseAffineTransformedPoint(p.x, p.y, scaleX, scaleY, radians, x, y),
 	);
 
 	const inverseLeft = Math.min(...inversePoints.map((p) => p.x));
@@ -68,8 +61,8 @@ export const calcOrientedFrameFromPoints = (
 	);
 
 	return {
-		x: centerPoint.x,
-		y: centerPoint.y,
+		cx: centerPoint.x,
+		cy: centerPoint.y,
 		width,
 		height,
 		rotation,
@@ -77,5 +70,3 @@ export const calcOrientedFrameFromPoints = (
 		scaleY,
 	};
 };
-
-

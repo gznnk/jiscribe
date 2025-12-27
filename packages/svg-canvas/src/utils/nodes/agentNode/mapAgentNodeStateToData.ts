@@ -8,4 +8,4 @@ export const mapAgentNodeStateToData =
 	createStateToDataMapper<AgentNodeData>(AgentNodeDefaultData);
 
 export const agentNodeStateToData = (state: Diagram): DiagramData =>
-	mapAgentNodeStateToData(state as AgentNodeData);
+	mapAgentNodeStateToData(state as unknown as AgentNodeData);

@@ -1,4 +1,9 @@
-import { degreesToRadians , calcDimensionsWithMinSize , calcAffineTransformedPoint } from "@workspace/geometry";
+import {
+	degreesToRadians,
+	calcDimensionsWithMinSize,
+	calcAffineTransformedPoint,
+} from "@workspace/geometry";
+import type { Frame } from "@workspace/geometry";
 
 import {
 	BASE_MARGIN,
@@ -6,7 +11,6 @@ import {
 	HEADER_MARGIN_BOTTOM,
 	HEADER_MARGIN_TOP,
 } from "../../../constants/styling/nodes/NodeStyling";
-import type { Frame } from "../../../types/core/Frame";
 
 /**
  * Creates a Frame state for LLMNode Input component containing x, y, width, height, rotation, scaleX, and scaleY.
@@ -75,8 +79,8 @@ export const createLLMNodeInputFrame = ({
 	);
 
 	return {
-		x: inputCenter.x,
-		y: inputCenter.y,
+		cx: inputCenter.x,
+		cy: inputCenter.y,
 		width: inputWidth,
 		height: inputHeight,
 		rotation,
@@ -84,7 +88,3 @@ export const createLLMNodeInputFrame = ({
 		scaleY,
 	};
 };
-
-
-
-

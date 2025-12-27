@@ -84,6 +84,10 @@ const ButtonComponent: React.FC<ButtonProps> = ({
 		onHoverChange,
 	});
 
+	// Calculate center coordinates from top-left coordinates
+	const cx = x + width / 2;
+	const cy = y + height / 2;
+
 	// Generate rect transform attribute
 	const transform = createSvgTransform(
 		scaleX,
@@ -97,8 +101,8 @@ const ButtonComponent: React.FC<ButtonProps> = ({
 		<BaseShape
 			id={id}
 			type="Button"
-			x={x}
-			y={y}
+			cx={cx}
+			cy={cy}
 			width={width}
 			height={height}
 			rotation={rotation}

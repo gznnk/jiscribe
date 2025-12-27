@@ -269,9 +269,10 @@ const LLMNodeComponent: React.FC<LLMNodeProps> = (props) => {
 				y={headerCenter.y}
 				width={width - BASE_MARGIN * 2}
 				height={HEADER_HEIGHT}
-				scaleX={scaleX}
-				scaleY={scaleY}
-				rotation={rotation}
+				// TODO: ちゃんと修正
+				// scaleX={scaleX}
+				// scaleY={scaleY}
+				// rotation={rotation}
 				isSelected={isSelected}
 				isAncestorSelected={isAncestorSelected}
 				icon={LLM}
@@ -312,4 +313,3 @@ const LLMNodeComponent: React.FC<LLMNodeProps> = (props) => {
 };
 
 export const LLMNode = memo(LLMNodeComponent);
-

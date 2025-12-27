@@ -1,7 +1,6 @@
-import { degreesToRadians , negativeToZero } from "@workspace/geometry";
+import { degreesToRadians, negativeToZero } from "@workspace/geometry";
 import type React from "react";
 import { memo } from "react";
-
 
 import { createSvgTransform } from "../../../utils/shapes/common/createSvgTransform";
 
@@ -9,8 +8,8 @@ import { createSvgTransform } from "../../../utils/shapes/common/createSvgTransf
  * Props for the Outline component.
  */
 type OutlineProps = {
-	x: number;
-	y: number;
+	cx: number;
+	cy: number;
 	width: number;
 	height: number;
 	rotation: number;
@@ -26,8 +25,8 @@ type OutlineProps = {
  * Can show outline for various states like area selection or when parent group is selected.
  */
 const OutlineComponent: React.FC<OutlineProps> = ({
-	x,
-	y,
+	cx,
+	cy,
 	width,
 	height,
 	rotation,
@@ -54,7 +53,7 @@ const OutlineComponent: React.FC<OutlineProps> = ({
 			strokeWidth={1 / zoom}
 			strokeDasharray={`${4 / zoom},${2 / zoom}`}
 			pointerEvents="none"
-			transform={createSvgTransform(scaleX, scaleY, radians, x, y)}
+			transform={createSvgTransform(scaleX, scaleY, radians, cx, cy)}
 		/>
 	);
 };

@@ -1,11 +1,13 @@
+import type { GeometryType } from "./GeometryType";
+
 /**
  * Unified diagram features configuration.
  * Controls which feature interfaces should be included in the resulting types.
  * Used across data, state, and props type creation.
  */
 export type DiagramFeatures = {
-	/** Frame properties (position, size, rotation, scale) */
-	frameable?: boolean;
+	/** Geometry type: 'rect' (default) or 'ellipse' */
+	geometry?: GeometryType;
 	/** Basic selection capability */
 	selectable?: boolean;
 	/** Position, size, and rotation transformation */

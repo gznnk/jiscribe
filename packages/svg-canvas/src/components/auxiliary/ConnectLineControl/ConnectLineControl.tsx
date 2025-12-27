@@ -1,10 +1,10 @@
+import type { Frame } from "@workspace/geometry";
 import type React from "react";
 import { memo, useCallback, useState } from "react";
 
 import { PathControl, type PathControlProps } from "../PathControl";
 import { ReconnectionHandles } from "./ReconnectionHandles/ReconnectionHandles";
 import { SegmentDragHandles } from "./SegmentDragHandles";
-import type { Frame } from "../../../types/core/Frame";
 import type { DiagramChangeEvent } from "../../../types/events/DiagramChangeEvent";
 
 /**
@@ -25,9 +25,6 @@ export type ConnectLineControlProps = PathControlProps & {
  */
 const ConnectLineControlComponent: React.FC<ConnectLineControlProps> = ({
 	id,
-	rotation,
-	scaleX,
-	scaleY,
 	items,
 	pathType,
 	startOwnerId,
@@ -89,9 +86,6 @@ const ConnectLineControlComponent: React.FC<ConnectLineControlProps> = ({
 			{showSegmentDragHandles && (
 				<SegmentDragHandles
 					id={id}
-					rotation={rotation}
-					scaleX={scaleX}
-					scaleY={scaleY}
 					perpendicularDrag={true}
 					preserveEndpoints={true}
 					items={items}
@@ -103,9 +97,6 @@ const ConnectLineControlComponent: React.FC<ConnectLineControlProps> = ({
 			{showPathControl && (
 				<PathControl
 					id={id}
-					rotation={rotation}
-					scaleX={scaleX}
-					scaleY={scaleY}
 					items={items}
 					pathType={pathType}
 					enableMidpointHandles={false}

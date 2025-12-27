@@ -1,5 +1,11 @@
-﻿import { degreesToRadians , nanToZero , calcRotatedPoint , isFrame } from "@workspace/geometry";
+﻿import {
+	degreesToRadians,
+	nanToZero,
+	calcRotatedPoint,
+	isFrame,
+} from "@workspace/geometry";
 
+import { convertDiagramToFrame } from "./convertDiagramToFrame";
 import type { Diagram } from "../../types/state/core/Diagram";
 
 /**
@@ -17,20 +23,30 @@ export const calcDiagramBoundingBoxInUnrotatedGroup = (
 	groupCenterY: number,
 	groupRotation: number,
 ) => {
+	const frame = convertDiagramToFrame(diagram) ?? {
+		cx: 0,
+		cy: 0,
+		width: 0,
+		height: 0,
+		rotation: 0,
+		scaleX: 1,
+		scaleY: 1,
+	};
+
 	const groupRadians = degreesToRadians(-groupRotation);
 
 	const inversedCenter = calcRotatedPoint(
-		diagram.x,
-		diagram.y,
+		frame.cx,
+		frame.cy,
 		groupCenterX,
 		groupCenterY,
 		groupRadians,
 	);
 
-	if (isFrame(diagram)) {
-		const halfWidth = nanToZero(diagram.width / 2);
-		const halfHeight = nanToZero(diagram.height / 2);
-		const diagramRadians = degreesToRadians(diagram.rotation - groupRotation);
+	if (isFrame(frame)) {
+		const halfWidth = nanToZero(frame.width / 2);
+		const halfHeight = nanToZero(frame.height / 2);
+		const diagramRadians = degreesToRadians(frame.rotation - groupRotation);
 
 		const leftTop = calcRotatedPoint(
 			inversedCenter.x - halfWidth,
@@ -79,4 +95,3 @@ export const calcDiagramBoundingBoxInUnrotatedGroup = (
 		right: inversedCenter.x,
 	};
 };
-

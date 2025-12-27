@@ -318,4 +318,3 @@ const TextAreaNodeComponent: React.FC<TextAreaNodeProps> = (props) => {
 };
 
 export const TextAreaNode = memo(TextAreaNodeComponent);
-

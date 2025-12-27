@@ -1,7 +1,7 @@
 import { MINIMAP_VIEWPORT_MARGIN } from "../../../constants/core/Constants";
 import type { Bounds } from "../../../types/core/Bounds";
 import type { Diagram } from "../../../types/state/core/Diagram";
-import { calcDiagramsBoundingBox } from "../../../utils/diagrams/calcDiagramsBoundingBox";
+import { calcDiagramsBoundingBox } from "../../../utils/geometry/calcDiagramsBoundingBox";
 
 /**
  * Calculate viewport bounds in canvas coordinates based on current view state

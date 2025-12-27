@@ -1,14 +1,14 @@
-import { calcBoundingBox } from "@workspace/geometry";
+import { type BoundingBox } from "@workspace/geometry";
 import { useCallback, useRef } from "react";
 
 import { useClearAllSelection } from "./useClearAllSelection";
 import type { HandleEdgeScrollArgs } from "../../../hooks/useAutoEdgeScroll";
 import { useAutoEdgeScroll } from "../../../hooks/useAutoEdgeScroll";
-import type { Box } from "../../../types/core/Box";
 import type { AreaSelectionEvent } from "../../../types/events/AreaSelectionEvent";
 import type { Diagram } from "../../../types/state/core/Diagram";
 import type { GroupState } from "../../../types/state/shapes/GroupState";
 import { getSelectedDiagrams } from "../../../utils/core/getSelectedDiagrams";
+import { calcDiagramBoundingBox } from "../../../utils/geometry/calcDiagramBoundingBox";
 import { isItemableState } from "../../../utils/validation/isItemableState";
 import { isSelectableState } from "../../../utils/validation/isSelectableState";
 import { InteractionState } from "../../types/InteractionState";
@@ -30,7 +30,7 @@ const updateItemsWithOutline = (
 		endX: number;
 		endY: number;
 	},
-	cachedBoundingBoxes?: Map<string, Box>,
+	cachedBoundingBoxes?: Map<string, BoundingBox>,
 ) => {
 	// Calculate selection bounds in canvas coordinates
 	const minX = Math.min(selectionBounds.startX, selectionBounds.endX);
@@ -52,7 +52,7 @@ const updateItemsWithOutline = (
 
 		// Use cached bounding box if available, otherwise calculate
 		const itemBounds =
-			cachedBoundingBoxes?.get(item.id) ?? calcBoundingBox(item);
+			cachedBoundingBoxes?.get(item.id) ?? calcDiagramBoundingBox(item);
 
 		// Check if item's bounding box is completely contained within selection rectangle
 		const isInSelection =
@@ -107,7 +107,7 @@ export const useAreaSelection = (props: SvgCanvasSubHooksProps) => {
 	const clientPosRef = useRef<{ x: number; y: number } | null>(null);
 
 	// Reference to store cached bounding boxes for area selection
-	const cachedBoundingBoxesRef = useRef<Map<string, Box>>(new Map());
+	const cachedBoundingBoxesRef = useRef<Map<string, BoundingBox>>(new Map());
 
 	// Create references bypass to avoid function creation in every render.
 	const refBusVal = {
@@ -316,7 +316,7 @@ export const useAreaSelection = (props: SvgCanvasSubHooksProps) => {
 
 					applyFunctionRecursively(items, (item) => {
 						if (isSelectableState(item) && item.type !== "ConnectLine") {
-							const boundingBox = calcBoundingBox(item);
+							const boundingBox = calcDiagramBoundingBox(item);
 							cachedBoundingBoxesRef.current.set(item.id, boundingBox);
 						}
 						return item;

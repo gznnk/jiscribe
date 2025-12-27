@@ -73,6 +73,10 @@ const StickyComponent: React.FC<StickyProps> = ({
 		onHoverChange,
 	});
 
+	// Calculate center coordinates from top-left coordinates
+	const cx = x + width / 2;
+	const cy = y + height / 2;
+
 	// Create transform attribute
 	const transform = createSvgTransform(
 		scaleX,
@@ -114,8 +118,8 @@ const StickyComponent: React.FC<StickyProps> = ({
 		<BaseShape
 			id={id}
 			type="Sticky"
-			x={x}
-			y={y}
+			cx={cx}
+			cy={cy}
 			width={width}
 			height={height}
 			minWidth={minWidth}

@@ -1,6 +1,6 @@
 ﻿export * from "./calcBoundingBox";
-export * from "./calcElementsBoundingBox";
 export * from "./calcEllipseVertices";
+export * from "./calcFrameFeaturePoints";
 export * from "./calcOrientedFrameFromPoints";
 export * from "./calcRectangleBoundingBoxGeometry";
 export * from "./calcRectangleVertices";
@@ -10,3 +10,5 @@ export * from "./createLinearX2yFunction";
 export * from "./createLinearY2xFunction";
 export * from "./isLineIntersectingBoxGeometry";
 export * from "./doSegmentsIntersect";
+export * from "./convertRectGeometryToFrame";
+export * from "./convertEllipseGeometryToFrame";

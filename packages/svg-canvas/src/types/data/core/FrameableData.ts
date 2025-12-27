@@ -1,4 +1,4 @@
-import type { Frame } from "../../core/Frame";
+import type { Frame } from "@workspace/geometry";
 
 /**
  * Defines frameable data properties.

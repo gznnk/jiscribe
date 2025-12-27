@@ -1,7 +1,8 @@
-import { radiansToDegrees , calcVectorAngle } from "@workspace/geometry";
+import { radiansToDegrees, calcVectorAngle } from "@workspace/geometry";
 
 import type { Diagram } from "../../../types/state/core/Diagram";
 import type { ConnectLineState } from "../../../types/state/shapes/ConnectLineState";
+import type { PathPointState } from "../../../types/state/shapes/PathPointState";
 import { isConnectableState } from "../../validation/isConnectableState";
 
 /**
@@ -93,7 +94,7 @@ export const updateManualConnectLinePath = (
 	}
 
 	// Use original items for calculations (matches ConnectLine component behavior)
-	const originalItems = originalConnectLine.items;
+	const originalItems = originalConnectLine.items as PathPointState[];
 
 	// Check if all lines are vertical and horizontal only
 	const isVerticalHorizontalLines = originalItems.every((item, idx) => {
@@ -108,7 +109,7 @@ export const updateManualConnectLinePath = (
 	// Function to create new point (exact copy of ConnectLine component logic)
 	const createNewPoint = (
 		movedPoint: typeof startMovedData,
-		oldPoint: Diagram,
+		oldPoint: PathPointState,
 		idx: number,
 	) => {
 		// Move end points along with connection point movement
@@ -177,7 +178,7 @@ export const updateManualConnectLinePath = (
 			newPoint = createNewPoint(endMovedData, newPoint, idx);
 		}
 		return newPoint;
-	}) as Diagram[];
+	}) as PathPointState[];
 
 	// Return updated connect line with moved points
 	return {

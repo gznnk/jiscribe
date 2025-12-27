@@ -1,4 +1,5 @@
-import type { Frame } from "../../../types/core/Frame";
+import type { Frame } from "@workspace/geometry";
+
 import type { Diagram } from "../../../types/state/core/Diagram";
 
 /**

@@ -37,10 +37,12 @@ const VertexHandlesComponent: React.FC<VertexHandlesProps> = ({
 
 	const startItems = useRef<PathPointState[] | null>(null);
 
+	const pathPoints = items as PathPointState[];
+
 	// To avoid frequent handler generation, hold referenced values in useRef
 	const refBusVal = {
 		id,
-		items,
+		pathPoints,
 		onDiagramChange,
 	};
 	const refBus = useRef(refBusVal);
@@ -50,11 +52,11 @@ const VertexHandlesComponent: React.FC<VertexHandlesProps> = ({
 	 * Vertex drag event handler
 	 */
 	const handlePathPointDrag = useCallback((e: DiagramDragEvent) => {
-		const { id, items, onDiagramChange } = refBus.current;
+		const { id, pathPoints, onDiagramChange } = refBus.current;
 
 		if (e.eventPhase === "Started") {
 			setDraggingPathPointId(e.id);
-			startItems.current = items;
+			startItems.current = pathPoints;
 		}
 
 		if (startItems.current === null) return;
@@ -67,7 +69,7 @@ const VertexHandlesComponent: React.FC<VertexHandlesProps> = ({
 				items: startItems.current,
 			} as DiagramChangeData,
 			endDiagram: {
-				items: items.map((item) => {
+				items: pathPoints.map((item) => {
 					if (e.id === item.id) {
 						return {
 							...item,
@@ -89,8 +91,8 @@ const VertexHandlesComponent: React.FC<VertexHandlesProps> = ({
 
 	return (
 		<>
-			{items.map((point, i) => {
-				if (hideEndpoints && (i === 0 || i === items.length - 1)) {
+			{pathPoints.map((point, i) => {
+				if (hideEndpoints && (i === 0 || i === pathPoints.length - 1)) {
 					return null;
 				}
 				return (

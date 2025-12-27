@@ -1,5 +1,5 @@
-
 import type { EventBus } from "@workspace/event-bus";
+import { isRect } from "@workspace/geometry";
 import type { FunctionCallHandler } from "@workspace/llm-client";
 import { useCallback } from "react";
 
@@ -19,6 +19,10 @@ export const useAppendRectangleShapeTool = (
 	return useCallback(
 		(targetId: string, offsetX = 0, offsetY = 0) => {
 			return rectangleShapeWithHandlerTool((diagram) => {
+				if (!isRect(diagram)) {
+					console.error("Diagram is not a rectangle shape. Cannot append.");
+					return;
+				}
 				// Apply offset to the diagram
 				const offsetDiagram = {
 					...diagram,

@@ -54,7 +54,7 @@ export class JiscribeEditorProvider
 		console.log("Sending data to webview:", data.substring(0, 100));
 		panel.webview.postMessage({
 			type: "update",
-			data: data,
+			data,
 		});
 		console.log("Message posted to webview");
 	}

@@ -5,7 +5,7 @@ import type { CreateDataType } from "../shapes/CreateDataType";
  * Diagram features for SvgToDiagram nodes.
  */
 export const SvgToDiagramNodeFeatures = {
-	frameable: true,
+	geometry: "rect",
 	transformative: true,
 	connectable: true,
 	cornerRoundable: false,

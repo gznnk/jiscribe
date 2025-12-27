@@ -1,8 +1,14 @@
-﻿import { degreesToRadians , nanToZero , calcRotatedPoint , isFrame , isPoint } from "@workspace/geometry";
+﻿import {
+	degreesToRadians,
+	nanToZero,
+	calcRotatedPoint,
+	isFrame,
+	isPoint,
+	type BoundingBox,
+} from "@workspace/geometry";
 
 import { calcUnrotatedItemableBoundingBox } from "./calcUnrotatedItemableBoundingBox";
 import type { Bounds } from "../../types/core/Bounds";
-import type { Box } from "../../types/core/Box";
 import type { ItemableState } from "../../types/state/core/ItemableState";
 
 /**
@@ -22,7 +28,7 @@ export const calcItemableOrientedBox = (itemable: ItemableState): Bounds => {
 	const radians = degreesToRadians(rotation);
 
 	// Calculate bounding box without rotation applied
-	let boundingBox: Box;
+	let boundingBox: BoundingBox;
 	if (
 		items.length === 0 ||
 		itemable.itemableType === "composite" ||
@@ -50,7 +56,13 @@ export const calcItemableOrientedBox = (itemable: ItemableState): Bounds => {
 	}
 
 	// Rotate corner points around the group center
-	const leftTop = calcRotatedPoint(boundingBox.left, boundingBox.top, x, y, radians);
+	const leftTop = calcRotatedPoint(
+		boundingBox.left,
+		boundingBox.top,
+		x,
+		y,
+		radians,
+	);
 	const rightBottom = calcRotatedPoint(
 		boundingBox.right,
 		boundingBox.bottom,
@@ -67,4 +79,3 @@ export const calcItemableOrientedBox = (itemable: ItemableState): Bounds => {
 		height: boundingBox.bottom - boundingBox.top,
 	};
 };
-

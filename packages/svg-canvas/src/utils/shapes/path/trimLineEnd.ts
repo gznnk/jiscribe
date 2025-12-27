@@ -1,4 +1,4 @@
-import type { Point } from "../../../types/core/Point";
+import type { Point } from "@workspace/geometry";
 
 /**
  * Trims the end point of a line segment by `trim` along its direction.

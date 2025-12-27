@@ -3,12 +3,12 @@ import { createDValue } from "./createDValue";
 import { createRoundedDValue } from "./createRoundedDValue";
 import { createStraightDValue } from "./createStraightDValue";
 import type { PathType } from "../../../types/core/PathType";
-import type { Diagram } from "../../../types/state/core/Diagram";
+import type { PathPointState } from "../../../types/state/shapes/PathPointState";
 
 /**
- * Creates a path data value (d attribute) from an array of diagram items based on PathType.
+ * Creates a path data value (d attribute) from an array of path points based on PathType.
  *
- * @param items - Array of diagram items to create path from
+ * @param items - Array of path points to create path from
  * @param pathType - Type of path to generate (Straight, Polyline, Curve, or Rounded)
  * @param startTrim - Amount to trim from the start of the path (default: 0)
  * @param endTrim - Amount to trim from the end of the path (default: 0)
@@ -16,7 +16,7 @@ import type { Diagram } from "../../../types/state/core/Diagram";
  * @returns SVG path d attribute value
  */
 export const createPathDValue = (
-	items: Diagram[],
+	items: PathPointState[],
 	pathType: PathType,
 	startTrim = 0,
 	endTrim = 0,

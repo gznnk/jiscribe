@@ -2,9 +2,10 @@
  * Common type definitions for Diagram Atlas system
  * Structured type system used by each diagram's Atlas files
  */
+import type { Frame } from "@workspace/geometry";
+
 import type { DiagramFeatures } from "../types/core/DiagramFeatures";
 import type { DiagramType } from "../types/core/DiagramType";
-import type { Frame } from "../types/core/Frame";
 import type { DiagramData } from "../types/data/core/DiagramData";
 import type { DiagramMenuConfig } from "../types/menu/DiagramMenuConfig";
 import type { Diagram } from "../types/state/core/Diagram";

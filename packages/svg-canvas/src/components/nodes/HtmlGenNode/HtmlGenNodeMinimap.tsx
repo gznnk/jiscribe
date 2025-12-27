@@ -8,7 +8,10 @@ import type { HtmlGenNodeProps } from "../../../types/props/nodes/HtmlGenNodePro
  * HtmlGenNode minimap component - lightweight version without outlines, controls, and labels.
  */
 const HtmlGenNodeMinimapComponent: React.FC<HtmlGenNodeProps> = (props) => {
-	const { x, y, width, height, rotation, scaleX, scaleY } = props;
+	const { x, y, width, height } = props;
+	const rotation = 0;
+	const scaleX = 1;
+	const scaleY = 1;
 
 	return (
 		<g

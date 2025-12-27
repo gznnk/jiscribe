@@ -11,27 +11,27 @@ import { newId } from "../../../utils/shapes/common/newId";
  * @returns An array of connection point data.
  */
 export const createEllipseConnectPoint = ({
-	x,
-	y,
-	width,
-	height,
+	cx,
+	cy,
+	rx,
+	ry,
 	rotation,
 	scaleX,
 	scaleY,
 }: {
-	x: number;
-	y: number;
-	width: number;
-	height: number;
+	cx: number;
+	cy: number;
+	rx: number;
+	ry: number;
 	rotation: number;
 	scaleX: number;
 	scaleY: number;
 }): ConnectPointState[] => {
 	const vertices = calcEllipseVertices({
-		x,
-		y,
-		width,
-		height,
+		cx,
+		cy,
+		rx,
+		ry,
 		rotation,
 		scaleX,
 		scaleY,
@@ -43,6 +43,7 @@ export const createEllipseConnectPoint = ({
 		connectPoints.push({
 			id: newId(),
 			type: "ConnectPoint",
+			geometryType: "point",
 			x: point.x,
 			y: point.y,
 			name: key,

@@ -66,6 +66,7 @@ export const useOnGroupShapes = (props: SvgCanvasSubHooksProps) => {
 				const group: GroupState = {
 					id: event.groupId,
 					type: "Group",
+					geometryType: "rect",
 					name: event.name,
 					description: event.description,
 					x: boundingBox.left + (boundingBox.right - boundingBox.left) / 2,

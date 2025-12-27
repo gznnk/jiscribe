@@ -5,7 +5,7 @@ import type { CreateDataType } from "../shapes/CreateDataType";
  * Diagram features for Frame elements.
  */
 export const FrameFeatures = {
-	frameable: true,
+	geometry: "rect",
 	transformative: true,
 	connectable: true,
 	strokable: true,

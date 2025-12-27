@@ -1,10 +1,10 @@
 ﻿import { calcCloserNumber , doSegmentsIntersect } from "@workspace/geometry";
+import type { Point } from "@workspace/geometry";
 
 import { addMarginToBoxGeometry } from "./addMarginToBoxGeometry";
 import { getLineDirection } from "./getLineDirection";
 import type { BoxGeometry } from "../../../types/core/BoxGeometry";
 import type { Direction } from "../../../types/core/Direction";
-import type { Point } from "../../../types/core/Point";
 
 
 /**

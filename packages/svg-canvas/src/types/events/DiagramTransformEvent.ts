@@ -1,5 +1,6 @@
+import type { Frame } from "@workspace/geometry";
+
 import type { EventPhase } from "./EventPhase";
-import type { Frame } from "../core/Frame";
 /**
  * Event fired during diagram transformation operations such as resizing or rotating.
  * Contains information about the element's shape before and after transformation.

@@ -5,7 +5,7 @@ import type { CreateDataType } from "../shapes/CreateDataType";
  * Diagram features for PageDesign nodes.
  */
 export const PageDesignNodeFeatures = {
-	frameable: true,
+	geometry: "rect",
 	transformative: true,
 	connectable: true,
 	cornerRoundable: false,

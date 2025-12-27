@@ -1,6 +1,8 @@
-
 import type { EventBus } from "@workspace/event-bus";
-import type { FunctionCallHandler, FunctionCallInfo } from "@workspace/llm-client";
+import type {
+	FunctionCallHandler,
+	FunctionCallInfo,
+} from "@workspace/llm-client";
 import { useCallback } from "react";
 
 import { useSvgCanvasState } from "../../context/SvgCanvasStateContext";
@@ -56,8 +58,10 @@ export const useGetShapesInfoTool = (
 
 				const shapeInfo: ShapeInfo = {
 					id: diagramState.id,
-					x: diagramState.x,
-					y: diagramState.y,
+					// x: diagramState.x,
+					// y: diagramState.y,
+					x: 0, // TODO: 要精査
+					y: 0, // TODO: 要精査
 					width: diagramState.width || 0,
 					height: diagramState.height || 0,
 				};

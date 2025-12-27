@@ -1,4 +1,7 @@
-import type { FunctionCallHandler, FunctionCallInfo } from "@workspace/llm-client";
+import type {
+	FunctionCallHandler,
+	FunctionCallInfo,
+} from "@workspace/llm-client";
 import { useCallback } from "react";
 
 import type { Diagram } from "../../types/state/core/Diagram";
@@ -45,8 +48,9 @@ export const useAddCircleShapeWithHandlerTool = (): ((
 				return {
 					id: data.id,
 					type: "Ellipse",
-					width: data.width,
-					height: data.height,
+					// TODO: 要精査
+					// width: data.width,
+					// height: data.height,
 					cx: args.cx,
 					cy: args.cy,
 					r: args.r,

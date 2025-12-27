@@ -142,4 +142,3 @@ const NodeHeaderComponent: React.FC<NodeHeaderProps> = ({
 };
 
 export const NodeHeader = memo(NodeHeaderComponent);
-

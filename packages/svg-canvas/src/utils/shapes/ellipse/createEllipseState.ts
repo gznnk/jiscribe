@@ -6,6 +6,7 @@ import type { VerticalAlign } from "../../../types/core/VerticalAlign";
 import type { EllipseState } from "../../../types/state/shapes/EllipseState";
 import { newId } from "../../../utils/shapes/common/newId";
 
+// TODO: 引数見直し
 /**
  * Creates ellipse state with the specified properties.
  *
@@ -62,10 +63,10 @@ export const createEllipseState = ({
 	// Generate connection points
 	const connectPoints = connectEnabled
 		? createEllipseConnectPoint({
-				x,
-				y,
-				width,
-				height,
+				cx: x + width / 2,
+				cy: y + height / 2,
+				rx: width / 2,
+				ry: height / 2,
 				rotation,
 				scaleX,
 				scaleY,
@@ -75,10 +76,10 @@ export const createEllipseState = ({
 	return {
 		...EllipseDefaultState,
 		id: newId(),
-		x,
-		y,
-		width,
-		height,
+		cx: x,
+		cy: y,
+		rx: width / 2,
+		ry: height / 2,
 		rotation,
 		scaleX,
 		scaleY,
@@ -98,5 +99,6 @@ export const createEllipseState = ({
 		connectPoints,
 		name,
 		description,
+		geometryType: "ellipse",
 	} as EllipseState;
 };

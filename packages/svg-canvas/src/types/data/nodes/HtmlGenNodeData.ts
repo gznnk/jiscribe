@@ -6,7 +6,7 @@ import type { CreateDataType } from "../shapes/CreateDataType";
  * Diagram features for HTML Generation nodes.
  */
 export const HtmlGenNodeFeatures = {
-	frameable: true,
+	geometry: "rect",
 	transformative: false,
 	itemable: false,
 	connectable: true,

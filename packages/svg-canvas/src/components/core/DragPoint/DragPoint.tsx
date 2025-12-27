@@ -1,3 +1,4 @@
+import type { Point } from "@workspace/geometry";
 import type React from "react";
 import { memo, useRef } from "react";
 
@@ -10,7 +11,6 @@ import {
 import { useDrag } from "../../../hooks/useDrag";
 import { useHover } from "../../../hooks/useHover";
 import type { DiagramType } from "../../../types/core/DiagramType";
-import type { Point } from "../../../types/core/Point";
 import type { DiagramDragDropEvent } from "../../../types/events/DiagramDragDropEvent";
 import type { DiagramDragEvent } from "../../../types/events/DiagramDragEvent";
 import type { DiagramHoverChangeEvent } from "../../../types/events/DiagramHoverChangeEvent";

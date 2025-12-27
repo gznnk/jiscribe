@@ -1,4 +1,7 @@
-import { degreesToRadians , calcAffineTransformedPoint } from "@workspace/geometry";
+import {
+	degreesToRadians,
+	calcAffineTransformedPoint,
+} from "@workspace/geometry";
 
 import { createLLMNodeInputFrame } from "./createLLMNodeInputFrame";
 import { LLMNodeDefaultState } from "../../../constants/state/nodes/LLMNodeDefaultState";
@@ -101,8 +104,8 @@ export const createLLMNodeState = ({
 			}),
 			{
 				...createInputState({
-					x: inputFrame.x,
-					y: inputFrame.y,
+					x: inputFrame.cx,
+					y: inputFrame.cy,
 					width: inputFrame.width,
 					height: inputFrame.height,
 					rotation: inputFrame.rotation,
@@ -119,7 +122,3 @@ export const createLLMNodeState = ({
 
 	return state;
 };
-
-
-
-

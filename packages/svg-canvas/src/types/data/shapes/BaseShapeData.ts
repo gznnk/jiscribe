@@ -6,7 +6,7 @@ import type { DiagramFeatures } from "../../core/DiagramFeatures";
  * Includes the common interactive functionality set.
  */
 export const BaseShapeFeatures = {
-	frameable: true,
+	geometry: "none",
 	transformative: true,
 	connectable: true,
 	textable: true,
@@ -17,4 +17,12 @@ export const BaseShapeFeatures = {
  * Data type for base shape.
  * Contains properties for common interactive shape functionality.
  */
-export type BaseShapeData = CreateDataType<typeof BaseShapeFeatures>;
+export type BaseShapeData = CreateDataType<
+	typeof BaseShapeFeatures,
+	{
+		cx: number;
+		cy: number;
+		width: number;
+		height: number;
+	}
+>;

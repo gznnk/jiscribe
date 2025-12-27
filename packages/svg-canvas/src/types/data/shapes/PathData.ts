@@ -7,8 +7,8 @@ import type { PathType } from "../../core/PathType";
  * Diagram features for Path shapes.
  */
 export const PathFeatures = {
-	frameable: true,
-	transformative: true,
+	geometry: "poly",
+	transformative: false,
 	itemable: true,
 	strokable: true,
 	cornerRoundable: false,

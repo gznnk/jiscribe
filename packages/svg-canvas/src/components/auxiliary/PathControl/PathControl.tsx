@@ -13,9 +13,6 @@ import { createDValue } from "../../../utils/shapes/path/createDValue";
  */
 export type PathControlProps = {
 	id: string;
-	rotation: number;
-	scaleX: number;
-	scaleY: number;
 	items: PathPointState[];
 	pathType: PathType;
 	enableMidpointHandles?: boolean;
@@ -30,9 +27,6 @@ export type PathControlProps = {
  */
 const PathControlComponent: React.FC<PathControlProps> = ({
 	id,
-	rotation,
-	scaleX,
-	scaleY,
 	items,
 	pathType,
 	enableMidpointHandles = true,
@@ -48,9 +42,6 @@ const PathControlComponent: React.FC<PathControlProps> = ({
 	const refBusVal = {
 		id,
 		items,
-		rotation,
-		scaleX,
-		scaleY,
 		onDiagramChange,
 	};
 	const refBus = useRef(refBusVal);
@@ -118,9 +109,6 @@ const PathControlComponent: React.FC<PathControlProps> = ({
 			{showMidpointHandles && (
 				<MidpointHandles
 					id={id}
-					rotation={rotation}
-					scaleX={scaleX}
-					scaleY={scaleY}
 					items={items}
 					zoom={zoom}
 					onDiagramChange={handleMidpointDiagramChange}

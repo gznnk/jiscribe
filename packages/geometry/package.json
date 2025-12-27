@@ -11,5 +11,8 @@
 	"dependencies": {
 		"@workspace/utility-types": "workspace:*",
 		"@workspace/basic-validators": "workspace:*"
+	},
+	"devDependencies": {
+		"typescript": "catalog:"
 	}
 }

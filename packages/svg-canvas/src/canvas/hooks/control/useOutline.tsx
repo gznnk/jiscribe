@@ -6,6 +6,7 @@ import {
 	collectOutlinedDiagrams,
 	type OutlineData,
 } from "../../../utils/core/collectOutlinedDiagrams";
+import { convertDiagramToFrame } from "../../../utils/core/convertDiagramToFrame";
 import { isSelectableState } from "../../../utils/validation/isSelectableState";
 import { MULTI_SELECT_GROUP } from "../../SvgCanvasConstants";
 import { InteractionState } from "../../types/InteractionState";
@@ -45,19 +46,21 @@ export const useOutline = (props: SvgCanvasProps): JSX.Element[] => {
 				diagram &&
 				isSelectableState(diagram) &&
 				diagram.showOutline &&
-				!diagram.outlineDisabled &&
-				isFrame(diagram)
+				!diagram.outlineDisabled
 			) {
-				outlinesToRender.push({
-					id: diagram.id,
-					x: diagram.x,
-					y: diagram.y,
-					width: diagram.width,
-					height: diagram.height,
-					rotation: diagram.rotation,
-					scaleX: diagram.scaleX,
-					scaleY: diagram.scaleY,
-				});
+				const frame = convertDiagramToFrame(diagram);
+				if (frame) {
+					outlinesToRender.push({
+						id: diagram.id,
+						cx: frame.cx,
+						cy: frame.cy,
+						width: frame.width,
+						height: frame.height,
+						rotation: frame.rotation,
+						scaleX: frame.scaleX,
+						scaleY: frame.scaleY,
+					});
+				}
 			}
 		}
 	} else {
@@ -74,8 +77,8 @@ export const useOutline = (props: SvgCanvasProps): JSX.Element[] => {
 	) {
 		outlinesToRender.push({
 			id: MULTI_SELECT_GROUP,
-			x: multiSelectGroup.x,
-			y: multiSelectGroup.y,
+			cx: multiSelectGroup.cx,
+			cy: multiSelectGroup.cy,
 			width: multiSelectGroup.width,
 			height: multiSelectGroup.height,
 			rotation: multiSelectGroup.rotation,
@@ -88,8 +91,8 @@ export const useOutline = (props: SvgCanvasProps): JSX.Element[] => {
 	return outlinesToRender.map((outline) => (
 		<Outline
 			key={`outline-${outline.id}`}
-			x={outline.x}
-			y={outline.y}
+			cx={outline.cx}
+			cy={outline.cy}
 			width={outline.width}
 			height={outline.height}
 			rotation={outline.rotation}

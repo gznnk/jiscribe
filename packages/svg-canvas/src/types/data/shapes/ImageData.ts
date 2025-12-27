@@ -5,7 +5,7 @@ import type { DiagramFeatures } from "../../core/DiagramFeatures";
  * Diagram features for Image shapes.
  */
 export const ImageFeatures = {
-	frameable: true,
+	geometry: "rect",
 	transformative: true,
 	cornerRoundable: false,
 	selectable: true,

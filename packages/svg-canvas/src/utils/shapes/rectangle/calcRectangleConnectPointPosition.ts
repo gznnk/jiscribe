@@ -1,6 +1,5 @@
-import { calcRectangleVertices , isFrame } from "@workspace/geometry";
+import { calcRectangleVertices, isRect } from "@workspace/geometry";
 
-import type { Frame } from "../../../types/core/Frame";
 import type { RectangleVertices } from "../../../types/core/RectangleVertices";
 import type { Diagram } from "../../../types/state/core/Diagram";
 import type { ConnectPointState } from "../../../types/state/shapes/ConnectPointState";
@@ -15,11 +14,11 @@ import { isConnectableState } from "../../validation/isConnectableState";
 export const calcRectangleConnectPointPosition = (
 	diagram: Diagram,
 ): ConnectPointState[] => {
-	if (!isFrame(diagram)) return []; // Type guard.
+	if (!isRect(diagram)) return []; // Type guard.
 	if (!isConnectableState(diagram)) return []; // Type guard.
 
 	// Calculate the vertices of the rectangle.
-	const vertices = calcRectangleVertices(diagram as Frame);
+	const vertices = calcRectangleVertices(diagram);
 
 	// Create connection point move data.
 	const newConnectPoints: ConnectPointState[] = [];
@@ -31,6 +30,7 @@ export const calcRectangleConnectPointPosition = (
 		newConnectPoints.push({
 			id: connectPointData.id,
 			type: "ConnectPoint",
+			geometryType: "point",
 			name: connectPointData.name,
 			x: vertex.x,
 			y: vertex.y,

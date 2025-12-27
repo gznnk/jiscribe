@@ -1,7 +1,7 @@
 import { calcManhattanDistance } from "@workspace/geometry";
+import type { Point } from "@workspace/geometry";
 
 import { isStraight } from "./isStraight";
-import type { Point } from "../../../types/core/Point";
 
 export type GridPoint = Point & {
 	score?: number;

@@ -5,4 +5,5 @@ import { SelectableDefaultState } from "../core/SelectableDefaultState";
 export const ConnectPointDefaultState = {
 	...ConnectPointDefaultData,
 	...SelectableDefaultState,
+	geometryType: "point",
 } as const satisfies ConnectPointState;

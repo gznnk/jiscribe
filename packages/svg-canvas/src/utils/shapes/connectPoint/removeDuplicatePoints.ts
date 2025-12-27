@@ -1,4 +1,4 @@
-import type { Point } from "../../../types/core/Point";
+import type { Point } from "@workspace/geometry";
 
 /**
  * Removes duplicate points from a list of points.

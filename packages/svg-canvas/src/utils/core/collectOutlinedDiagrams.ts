@@ -1,6 +1,6 @@
-import { isFrame } from "@workspace/geometry";
+import type { Frame } from "@workspace/geometry";
 
-import type { Frame } from "../../types/core/Frame";
+import { convertDiagramToFrame } from "./convertDiagramToFrame";
 import type { Diagram } from "../../types/state/core/Diagram";
 import { isItemableState } from "../validation/isItemableState";
 import { isSelectableState } from "../validation/isSelectableState";
@@ -23,23 +23,25 @@ export const collectOutlinedDiagrams = (diagrams: Diagram[]): OutlineData[] => {
 	const outlines: OutlineData[] = [];
 
 	for (const diagram of diagrams) {
-		// Check if this diagram has showOutline=true and Frame properties
+		// Check if this diagram has showOutline=true
 		if (
 			isSelectableState(diagram) &&
 			diagram.showOutline &&
-			!diagram.outlineDisabled &&
-			isFrame(diagram)
+			!diagram.outlineDisabled
 		) {
-			outlines.push({
-				id: diagram.id,
-				x: diagram.x,
-				y: diagram.y,
-				width: diagram.width,
-				height: diagram.height,
-				rotation: diagram.rotation,
-				scaleX: diagram.scaleX,
-				scaleY: diagram.scaleY,
-			});
+			const frame = convertDiagramToFrame(diagram);
+			if (frame) {
+				outlines.push({
+					id: diagram.id,
+					cx: frame.cx,
+					cy: frame.cy,
+					width: frame.width,
+					height: frame.height,
+					rotation: frame.rotation,
+					scaleX: frame.scaleX,
+					scaleY: frame.scaleY,
+				});
+			}
 		}
 
 		// Recursively collect from nested items

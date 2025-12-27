@@ -1,6 +1,7 @@
 import { memo } from "react";
 
 import type { PreviewConnectLineProps } from "./PreviewConnectLineTypes";
+import type { PathPointState } from "../../../types/state/shapes/PathPointState";
 import { DragPoint } from "../../core/DragPoint";
 import { Path } from "../../shapes/Path";
 
@@ -19,7 +20,7 @@ const PreviewConnectLineComponent: React.FC<PreviewConnectLineProps> = ({
 	}
 
 	// Get the start point for displaying the connect point circle
-	const startPoint = pathData.items?.[0];
+	const startPoint = pathData.items?.[0] as PathPointState;
 
 	return (
 		<>

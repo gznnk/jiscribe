@@ -5,7 +5,7 @@ import type { CreateDataType } from "../shapes/CreateDataType";
  * Diagram features for Ai diagrams.
  */
 export const AiFeatures = {
-	frameable: true,
+	geometry: "rect",
 	transformative: false,
 	connectable: false,
 	strokable: false,

@@ -1,103 +1,99 @@
 import { degreesToRadians } from "../common/degreesToRadians";
 import { calcAffineTransformedPoint } from "../transform/calcAffineTransformedPoint";
+import type { Ellipse } from "../types/Ellipse";
 import type { EllipseVertices } from "../types/EllipseVertices";
-import type { Frame } from "../types/Frame";
 
 /**
  * Calculates the vertices of an ellipse.
  *
- * @param shape - The shape parameters (position, dimensions, rotation, scale)
+ * @param geometry - The ellipse geometry (center, radii, rotation, scale)
  * @returns The coordinates of the ellipse vertices
  */
-export const calcEllipseVertices = (frame: Frame): EllipseVertices => {
-	const { x, y, width, height, rotation, scaleX, scaleY } = frame;
-
-	const halfWidth = width / 2;
-	const halfHeight = height / 2;
-
-	const tx = x;
-	const ty = y;
+export const calcEllipseVertices = (
+	geometry: Ellipse,
+): EllipseVertices => {
+	const { cx, cy, rx, ry, rotation, scaleX, scaleY } = geometry;
 
 	const radians = degreesToRadians(rotation);
 
 	const topCenterPoint = calcAffineTransformedPoint(
 		0,
-		-halfHeight,
+		-ry,
 		scaleX,
 		scaleY,
 		radians,
-		tx,
-		ty,
+		cx,
+		cy,
 	);
 
 	const rightCenterPoint = calcAffineTransformedPoint(
-		halfWidth,
+		rx,
 		0,
 		scaleX,
 		scaleY,
 		radians,
-		tx,
-		ty,
+		cx,
+		cy,
 	);
 
 	const bottomCenterPoint = calcAffineTransformedPoint(
 		0,
-		halfHeight,
+		ry,
 		scaleX,
 		scaleY,
 		radians,
-		tx,
-		ty,
+		cx,
+		cy,
 	);
 
 	const leftCenterPoint = calcAffineTransformedPoint(
-		-halfWidth,
+		-rx,
 		0,
 		scaleX,
 		scaleY,
 		radians,
-		tx,
-		ty,
+		cx,
+		cy,
 	);
 
 	const topLeftPoint = calcAffineTransformedPoint(
-		-halfWidth,
-		-halfHeight,
+		-rx,
+		-ry,
 		scaleX,
 		scaleY,
 		radians,
-		tx,
-		ty,
+		cx,
+		cy,
 	);
 
 	const topRightPoint = calcAffineTransformedPoint(
-		halfWidth,
-		-halfHeight,
+		rx,
+		-ry,
 		scaleX,
 		scaleY,
 		radians,
-		tx,
-		ty,
+		cx,
+		cy,
 	);
 
 	const bottomRightPoint = calcAffineTransformedPoint(
-		halfWidth,
-		halfHeight,
+		rx,
+		ry,
 		scaleX,
 		scaleY,
 		radians,
-		tx,
-		ty,
+		cx,
+		cy,
 	);
 
 	const bottomLeftPoint = calcAffineTransformedPoint(
-		-halfWidth,
-		halfHeight,
+		-rx,
+		ry,
 		scaleX,
 		scaleY,
 		radians,
-		tx,
-		ty,
+		cx,
+		cy,
 	);
 
 	return {
@@ -111,5 +107,3 @@ export const calcEllipseVertices = (frame: Frame): EllipseVertices => {
 		bottomLeftPoint,
 	};
 };
-
-

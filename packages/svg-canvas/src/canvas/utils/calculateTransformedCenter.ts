@@ -1,15 +1,7 @@
 ﻿import { degreesToRadians, calcRotatedPoint } from "@workspace/geometry";
+import type { Frame, Point } from "@workspace/geometry";
 
-type TransformFrame = {
-	x: number;
-	y: number;
-	width: number;
-	height: number;
-	rotation: number;
-	scaleX: number;
-	scaleY: number;
-};
-
+// TODO: endFrameだけで計算できるのでは？
 /**
  * Calculates the transformed center position of an item within a group transformation.
  *
@@ -29,9 +21,9 @@ type TransformFrame = {
 export const calculateTransformedCenter = (
 	initialItemX: number,
 	initialItemY: number,
-	startFrame: TransformFrame,
-	endFrame: TransformFrame,
-): { x: number; y: number } => {
+	startFrame: Frame,
+	endFrame: Frame,
+): Point => {
 	// Calculate the scale ratios between start and end frames
 	const groupScaleX = endFrame.width / startFrame.width;
 	const groupScaleY = endFrame.height / startFrame.height;
@@ -40,17 +32,21 @@ export const calculateTransformedCenter = (
 	const inversedItemCenter = calcRotatedPoint(
 		initialItemX,
 		initialItemY,
-		startFrame.x,
-		startFrame.y,
+		startFrame.cx,
+		startFrame.cy,
 		degreesToRadians(-startFrame.rotation),
 	);
 
 	// Calculate the offset from the start frame center in the local space,
 	// considering both the start and end frame scales
 	const dx =
-		(inversedItemCenter.x - startFrame.x) * startFrame.scaleX * endFrame.scaleX;
+		(inversedItemCenter.x - startFrame.cx) *
+		startFrame.scaleX *
+		endFrame.scaleX;
 	const dy =
-		(inversedItemCenter.y - startFrame.y) * startFrame.scaleY * endFrame.scaleY;
+		(inversedItemCenter.y - startFrame.cy) *
+		startFrame.scaleY *
+		endFrame.scaleY;
 
 	// Apply the group's scale change to the offset
 	const newDx = dx * groupScaleX;
@@ -58,19 +54,18 @@ export const calculateTransformedCenter = (
 
 	// Calculate the new center position in the end frame's local space
 	let newCenter = {
-		x: endFrame.x + newDx,
-		y: endFrame.y + newDy,
+		x: endFrame.cx + newDx,
+		y: endFrame.cy + newDy,
 	};
 
 	// Rotate the new center to match the end frame's rotation
 	newCenter = calcRotatedPoint(
 		newCenter.x,
 		newCenter.y,
-		endFrame.x,
-		endFrame.y,
+		endFrame.cx,
+		endFrame.cy,
 		degreesToRadians(endFrame.rotation),
 	);
 
 	return newCenter;
 };
-

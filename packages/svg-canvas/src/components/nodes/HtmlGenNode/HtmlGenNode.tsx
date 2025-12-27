@@ -195,6 +195,9 @@ Please generate a complete HTML document that represents or visualizes the diagr
 				{...props}
 				width={width}
 				height={height}
+				rotation={0}
+				scaleX={1}
+				scaleY={1}
 				stroke={BORDER_COLOR}
 				strokeWidth={BORDER_WIDTH}
 				strokeDashType="solid"

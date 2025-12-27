@@ -7,8 +7,8 @@ import type { CreateDataType } from "../shapes/CreateDataType";
  * Diagram features for NodeHeader elements.
  */
 export const NodeHeaderFeatures = {
-	frameable: true,
-	transformative: false,
+	geometry: "rect",
+	transformative: true,
 	connectable: false,
 	strokable: false,
 	fillable: false,

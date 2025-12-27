@@ -1,7 +1,7 @@
+import type { Point } from "@workspace/geometry";
 import type { Prettify } from "@workspace/utility-types";
 
 import type { Dimensions } from "./Dimensions";
-import type { Point } from "./Point";
 
 /**
  * Defines the rectangular bounds of a diagram element.

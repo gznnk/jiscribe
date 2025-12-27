@@ -1,8 +1,6 @@
-import { calcOrientedFrameFromPoints } from "@workspace/geometry";
 import type React from "react";
 import { memo, useCallback, useRef, useState } from "react";
 
-import type { PathPointData } from "../../../../types/data/shapes/PathPointData";
 import type {
 	DiagramChangeData,
 	DiagramChangeEvent,
@@ -10,7 +8,7 @@ import type {
 import type { DiagramClickEvent } from "../../../../types/events/DiagramClickEvent";
 import type { DiagramDragEvent } from "../../../../types/events/DiagramDragEvent";
 import type { DiagramPointerEvent } from "../../../../types/events/DiagramPointerEvent";
-import type { Diagram } from "../../../../types/state/core/Diagram";
+import type { PathPointState } from "../../../../types/state/shapes/PathPointState";
 import type { PathState } from "../../../../types/state/shapes/PathState";
 import { newId } from "../../../../utils/shapes/common/newId";
 import {
@@ -23,12 +21,9 @@ import {
  */
 type SegmentDragHandlesProps = {
 	id: string;
-	rotation: number;
-	scaleX: number;
-	scaleY: number;
 	perpendicularDrag: boolean;
 	preserveEndpoints: boolean;
-	items: Diagram[];
+	items: PathPointState[];
 	zoom?: number;
 	onPointerDown?: (e: DiagramPointerEvent) => void;
 	onClick?: (e: DiagramClickEvent) => void;
@@ -40,9 +35,6 @@ type SegmentDragHandlesProps = {
  */
 const SegmentDragHandlesComponent: React.FC<SegmentDragHandlesProps> = ({
 	id,
-	rotation,
-	scaleX,
-	scaleY,
 	perpendicularDrag,
 	preserveEndpoints,
 	items,
@@ -58,7 +50,7 @@ const SegmentDragHandlesComponent: React.FC<SegmentDragHandlesProps> = ({
 	const startSegment = useRef<SegmentDragHandleData>(undefined);
 
 	// Items of owner Path component at the start of the segment drag.
-	const startItems = useRef<Diagram[]>(items);
+	const startItems = useRef<PathPointState[]>(items);
 
 	// Build segment list: all segments normally, only dragged segment during drag operation.
 	const segmentList: SegmentDragHandleData[] = [];
@@ -85,9 +77,6 @@ const SegmentDragHandlesComponent: React.FC<SegmentDragHandlesProps> = ({
 	const refBusVal = {
 		// Component properties
 		id,
-		rotation,
-		scaleX,
-		scaleY,
 		items,
 		preserveEndpoints,
 		onDiagramChange,
@@ -105,9 +94,6 @@ const SegmentDragHandlesComponent: React.FC<SegmentDragHandlesProps> = ({
 		// Bypass references to avoid function creation in every render.
 		const {
 			id,
-			rotation,
-			scaleX,
-			scaleY,
 			preserveEndpoints,
 			items,
 			onDiagramChange,
@@ -144,9 +130,10 @@ const SegmentDragHandlesComponent: React.FC<SegmentDragHandlesProps> = ({
 					const newItem = {
 						id: newId(),
 						type: "PathPoint",
+						geometryType: "point",
 						x: segment.endX,
 						y: segment.endY,
-					} as PathPointData;
+					} as PathPointState;
 					newItems.splice(newItems.length - 1, 0, newItem);
 					newSegment.endPointId = newItem.id;
 				}
@@ -156,9 +143,10 @@ const SegmentDragHandlesComponent: React.FC<SegmentDragHandlesProps> = ({
 					const newItem = {
 						id: newId(),
 						type: "PathPoint",
+						geometryType: "point",
 						x: segment.startX,
 						y: segment.startY,
-					} as PathPointData;
+					} as PathPointState;
 					newItems.splice(1, 0, newItem);
 					newSegment.startPointId = newItem.id;
 				}
@@ -176,10 +164,10 @@ const SegmentDragHandlesComponent: React.FC<SegmentDragHandlesProps> = ({
 				id,
 				startDiagram: {
 					items: startItems.current,
-				} as PathState,
+				} as DiagramChangeData<PathState>,
 				endDiagram: {
 					items: updatedItems,
-				} as PathState,
+				} as DiagramChangeData<PathState>,
 				minX: e.minX,
 				minY: e.minY,
 			});
@@ -220,14 +208,6 @@ const SegmentDragHandlesComponent: React.FC<SegmentDragHandlesProps> = ({
 		});
 
 		if (e.eventPhase === "Ended") {
-			// Calculate new bounding box from updated points
-			const newFrame = calcOrientedFrameFromPoints(
-				updatedItems.map((p) => ({ x: p.x, y: p.y })),
-				rotation,
-				scaleX,
-				scaleY,
-			);
-
 			// Notify parent component of vertex position changes from segment drag
 			onDiagramChange?.({
 				eventId: e.eventId,
@@ -235,14 +215,10 @@ const SegmentDragHandlesComponent: React.FC<SegmentDragHandlesProps> = ({
 				id,
 				startDiagram: {
 					items: startItems.current,
-				} as PathState,
+				} as DiagramChangeData<PathState>,
 				endDiagram: {
 					items: updatedItems,
-					x: newFrame.x,
-					y: newFrame.y,
-					width: newFrame.width,
-					height: newFrame.height,
-				} as DiagramChangeData,
+				} as DiagramChangeData<PathState>,
 				minX: e.minX,
 				minY: e.minY,
 			});
@@ -256,10 +232,10 @@ const SegmentDragHandlesComponent: React.FC<SegmentDragHandlesProps> = ({
 				id,
 				startDiagram: {
 					items: startItems.current,
-				} as PathState,
+				} as DiagramChangeData<PathState>,
 				endDiagram: {
 					items: updatedItems,
-				} as PathState,
+				} as DiagramChangeData<PathState>,
 				minX: e.minX,
 				minY: e.minY,
 			});

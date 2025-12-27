@@ -1,22 +1,24 @@
 import { degreesToRadians } from "../common/degreesToRadians";
 import { calcAffineTransformedPoint } from "../transform/calcAffineTransformedPoint";
-import type { Frame } from "../types/Frame";
+import type { Rect } from "../types/Rect";
 import type { RectangleVertices } from "../types/RectangleVertices";
 
+// TODO: 要精査・廃止？
 /**
  * Calculates the vertices of a rectangle.
  *
- * @param shape - The shape parameters (position, dimensions, rotation, scale)
+ * @param geometry - The rectangle geometry (top-left, dimensions, rotation, scale)
  * @returns The coordinates of the rectangle vertices
  */
-export const calcRectangleVertices = (frame: Frame): RectangleVertices => {
-	const { x, y, width, height, rotation, scaleX, scaleY } = frame;
+export const calcRectangleVertices = (geometry: Rect): RectangleVertices => {
+	const { x, y, width, height, rotation, scaleX, scaleY } = geometry;
 
 	const halfWidth = width / 2;
 	const halfHeight = height / 2;
 
-	const tx = x;
-	const ty = y;
+	// Calculate center point from top-left
+	const tx = x + halfWidth;
+	const ty = y + halfHeight;
 
 	// No rotation vertices calculation - optimized path when rotation is 0
 	if (rotation === 0) {
@@ -134,5 +136,3 @@ export const calcRectangleVertices = (frame: Frame): RectangleVertices => {
 		bottomCenterPoint,
 	};
 };
-
-

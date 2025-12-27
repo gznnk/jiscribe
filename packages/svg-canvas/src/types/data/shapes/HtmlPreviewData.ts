@@ -5,7 +5,7 @@ import type { DiagramFeatures } from "../../core/DiagramFeatures";
  * Diagram features for HtmlPreview shapes.
  */
 export const HtmlPreviewFeatures = {
-	frameable: true,
+	geometry: "rect",
 	transformative: true,
 	cornerRoundable: false,
 	selectable: true,

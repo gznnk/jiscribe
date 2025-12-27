@@ -1,5 +1,6 @@
+import type { Frame } from "@workspace/geometry";
+
 import type { EventPhase } from "./EventPhase";
-import type { Frame } from "../core/Frame";
 import type { TextableData } from "../data/core/TextableData";
 
 /**

@@ -17,6 +17,7 @@ const createMockDiagram = (
 ): Diagram => ({
 	id,
 	type,
+	geometryType: "rect",
 	x: 0,
 	y: 0,
 	isInDragTriggeredTree,
@@ -36,6 +37,7 @@ const createMockGroup = (
 ): GroupState => ({
 	id,
 	type: "Group",
+	geometryType: "rect",
 	x: 100,
 	y: 100,
 	width: 200,

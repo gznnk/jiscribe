@@ -8,4 +8,4 @@ export const mapConnectLineDataToState =
 	createDataToStateMapper<ConnectLineState>(ConnectLineDefaultState);
 
 export const connectLineDataToState = (data: DiagramData): Diagram =>
-	mapConnectLineDataToState(data);
+	mapConnectLineDataToState(data as unknown as ConnectLineState);

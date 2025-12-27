@@ -4,7 +4,7 @@ import {
 	type SvgCanvasRef,
 	type SvgCanvasData,
 } from "@workspace/svg-canvas";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 
 // VSCode API type

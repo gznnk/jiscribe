@@ -1,4 +1,4 @@
-import type { Frame } from "../../../types/core/Frame";
+import type { Frame } from "@workspace/geometry";
 
 export type ConnectionEventType = "connecting" | "connect" | "disconnect";
 

@@ -30,7 +30,8 @@
 		"vscode:prepublish": "pnpm run build",
 		"build": "node build.mjs",
 		"watch": "node build.mjs --watch",
-		"lint": "eslint ."
+		"lint": "eslint .",
+		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
 		"@workspace/svg-canvas": "workspace:*",

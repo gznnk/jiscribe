@@ -1,6 +1,6 @@
 import type { Prettify } from "@workspace/utility-types";
 
-import type { Box } from "./Box";
+import type { BoundingBox } from "./BoundingBox";
 import type { Point } from "./Point";
 
 /**
@@ -8,7 +8,7 @@ import type { Point } from "./Point";
  * Used for determining boundaries and calculating intersection points with other elements.
  */
 export type BoxGeometry = Prettify<
-	Box & {
+	BoundingBox & {
 		center: Point;
 		topLeft: Point;
 		bottomLeft: Point;

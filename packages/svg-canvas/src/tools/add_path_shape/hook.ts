@@ -1,15 +1,18 @@
-
 import type { EventBus } from "@workspace/event-bus";
-import type { FunctionCallHandler, FunctionCallInfo } from "@workspace/llm-client";
+import type { Point } from "@workspace/geometry";
+import type {
+	FunctionCallHandler,
+	FunctionCallInfo,
+} from "@workspace/llm-client";
 import { useCallback } from "react";
 
 import { useAddDiagramWithBus } from "../../hooks/useAddDiagramWithBus";
 import type { ArrowHeadType } from "../../types/core/ArrowHeadType";
 import type { PathType } from "../../types/core/PathType";
-import type { Point } from "../../types/core/Point";
 import type { StrokeDashType } from "../../types/core/StrokeDashType";
 import { createPathState } from "../../utils/shapes/path/createPathState";
 
+// TODO: バリデータ使う
 // Valid values for validation
 const VALID_STROKE_DASH_TYPES: StrokeDashType[] = ["solid", "dashed", "dotted"];
 const VALID_PATH_TYPES: PathType[] = [
@@ -177,8 +180,6 @@ export const useAddPathShapeTool = (
 				pathType: data.pathType,
 				startArrowHead: data.startArrowHead,
 				endArrowHead: data.endArrowHead,
-				width: data.width,
-				height: data.height,
 			};
 		},
 		[addDiagram],

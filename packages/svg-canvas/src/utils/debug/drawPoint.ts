@@ -1,4 +1,4 @@
-import type { Point } from "../../types/core/Point";
+import type { Point } from "@workspace/geometry";
 
 /**
  * Draws a point for debugging purposes.

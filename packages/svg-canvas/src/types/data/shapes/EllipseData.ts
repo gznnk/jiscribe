@@ -5,7 +5,7 @@ import type { DiagramFeatures } from "../../core/DiagramFeatures";
  * Diagram features for Ellipse shapes.
  */
 export const EllipseFeatures = {
-	frameable: true,
+	geometry: "ellipse",
 	transformative: true,
 	connectable: true,
 	strokable: true,

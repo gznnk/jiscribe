@@ -212,14 +212,15 @@ const processConnectLineForPaste = (
 	const newConnectLine: ConnectLineState = {
 		...connectLine,
 		id: newConnectLineId,
-		x: applyOffset(connectLine.x),
-		y: applyOffset(connectLine.y),
+		// TODO: ちゃんと修正
+		// x: applyOffset(connectLine.x),
+		// y: applyOffset(connectLine.y),
 		startOwnerId: newStartOwnerId,
 		endOwnerId: newEndOwnerId,
 		isSelected: false, // Pasted connection lines are not selected
 		showOutline: false, // Hide outline for pasted connection lines
 		// Update path points (simply apply offset)
-		items: connectLine.items.map((point, index) => {
+		items: (connectLine.items as ConnectPointState[]).map((point, index) => {
 			// Assign new IDs
 			let pointId: string;
 			if (index === 0 || index === connectLine.items.length - 1) {

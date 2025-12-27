@@ -13,12 +13,8 @@ export const isConnectLineState = (obj: unknown): obj is ConnectLineState => {
 		// DiagramBaseData properties
 		"id" in obj &&
 		"type" in obj &&
-		"x" in obj &&
-		"y" in obj &&
 		typeof (obj as ConnectLineState).id === "string" &&
 		typeof (obj as ConnectLineState).type === "string" &&
-		typeof (obj as ConnectLineState).x === "number" &&
-		typeof (obj as ConnectLineState).y === "number" &&
 		// SelectableState properties
 		"isSelected" in obj &&
 		"showOutline" in obj &&

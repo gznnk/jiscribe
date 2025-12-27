@@ -96,8 +96,8 @@ const FrameComponent: React.FC<FrameProps> = ({
 	// performs comparison processing for each key which is inefficient, so detect Shape differences collectively here
 	const ownerFrame = useMemo(
 		() => ({
-			x,
-			y,
+			cx: x + width / 2,
+			cy: y + height / 2,
 			width,
 			height,
 			rotation,

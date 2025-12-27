@@ -1,5 +1,6 @@
 import type { PathPointData } from "../../../types/data/shapes/PathPointData";
 import { DiagramBaseDefaultData } from "../core/DiagramBaseDefaultData";
+import { PointDefaultData } from "../core/PointDefaultData";
 
 /**
  * Default path point data template.
@@ -7,5 +8,7 @@ import { DiagramBaseDefaultData } from "../core/DiagramBaseDefaultData";
  */
 export const PathPointDefaultData = {
 	...DiagramBaseDefaultData,
+	...PointDefaultData,
 	type: "PathPoint",
+	geometryType: "point",
 } as const satisfies PathPointData;

@@ -12,10 +12,10 @@ import { Textable } from "../../core/Textable";
  */
 const EllipseMinimapComponent: React.FC<EllipseProps> = ({
 	id,
-	x,
-	y,
-	width,
-	height,
+	cx,
+	cy,
+	rx,
+	ry,
 	rotation,
 	scaleX,
 	scaleY,
@@ -33,13 +33,16 @@ const EllipseMinimapComponent: React.FC<EllipseProps> = ({
 	isTextEditEnabled = true,
 	isTransparent,
 }) => {
+	const width = rx * 2;
+	const height = ry * 2;
+
 	// Generate ellipse transform attribute
 	const transform = createSvgTransform(
 		scaleX,
 		scaleY,
 		degreesToRadians(rotation),
-		x,
-		y,
+		cx,
+		cy,
 	);
 
 	return (

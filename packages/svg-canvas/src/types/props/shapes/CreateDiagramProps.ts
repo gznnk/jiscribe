@@ -31,7 +31,7 @@ export type CreateDiagramProps<
 	U extends DiagramFeatures,
 	P = object,
 > = Prettify<
-	Omit<T, "type" | "itemableType"> &
+	Omit<T, "type" | "geometryType" | "itemableType"> &
 		DiagramBaseProps &
 		(U["selectable"] extends true ? SelectableProps : object) &
 		(U["transformative"] extends true ? TransformativeProps : object) &

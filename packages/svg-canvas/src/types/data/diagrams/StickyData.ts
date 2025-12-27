@@ -5,7 +5,7 @@ import type { CreateDataType } from "../shapes/CreateDataType";
  * Diagram features for Sticky diagrams.
  */
 export const StickyFeatures = {
-	frameable: true,
+	geometry: "rect",
 	transformative: true,
 	connectable: false,
 	strokable: true,

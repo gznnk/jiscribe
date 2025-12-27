@@ -38,9 +38,11 @@ export const useRedo = (props: SvgCanvasSubHooksProps) => {
 			ret.items = diagramDataListToDiagramList(nextHistory.items);
 
 			// Notify the data change directly (no new history entry needed for redo).
-			onDataChange?.(canvasStateToData(ret));
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			onDataChange?.(canvasStateToData(ret as any));
 
-			return ret;
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			return ret as any;
 		});
 	}, []);
 };

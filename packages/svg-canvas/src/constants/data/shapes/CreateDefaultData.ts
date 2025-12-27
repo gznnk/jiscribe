@@ -2,9 +2,11 @@ import { ConnectableDefaultData } from "./ConnectableDefaultData";
 import type { DiagramFeatures } from "../../../types/core/DiagramFeatures";
 import type { DiagramType } from "../../../types/core/DiagramType";
 import { DiagramBaseDefaultData } from "../core/DiagramBaseDefaultData";
+import { EllipseDefaultData } from "../core/EllipseDefaultData";
 import { FillableDefaultData } from "../core/FillableDefaultData";
-import { FrameableDefaultData } from "../core/FrameableDefaultData";
 import { ItemableDefaultData } from "../core/ItemableDefaultData";
+import { PointDefaultData } from "../core/PointDefaultData";
+import { RectDefaultData } from "../core/RectDefaultData";
 import { StrokableDefaultData } from "../core/StrokableDefaultData";
 import { TextableDefaultData } from "../core/TextableDefaultData";
 import { TransformativeDefaultData } from "../core/TransformativeDefaultData";
@@ -26,7 +28,13 @@ export function CreateDefaultData<T>(config: {
 	// Build default data by combining base data with feature-specific defaults
 	const result = {
 		...DiagramBaseDefaultData,
-		...(options.frameable ? FrameableDefaultData : {}),
+		...(options.geometry === "rect"
+			? RectDefaultData
+			: options.geometry === "ellipse"
+				? EllipseDefaultData
+				: options.geometry === "point"
+					? PointDefaultData
+					: {}),
 		...(options.transformative ? TransformativeDefaultData : {}),
 		...(options.itemable ? ItemableDefaultData : {}),
 		...(options.connectable ? ConnectableDefaultData : {}),

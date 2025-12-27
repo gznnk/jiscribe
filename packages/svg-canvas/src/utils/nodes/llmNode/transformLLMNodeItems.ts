@@ -1,9 +1,10 @@
+import type { Frame } from "@workspace/geometry";
+
 import { createLLMNodeInputFrame } from "./createLLMNodeInputFrame";
 import {
 	MIN_WIDTH,
 	MIN_HEIGHT,
 } from "../../../constants/styling/nodes/LLMNodeStyling";
-import type { Frame } from "../../../types/core/Frame";
 import type { Diagram } from "../../../types/state/core/Diagram";
 
 export const transformLLMNodeItems = (
@@ -22,6 +23,8 @@ export const transformLLMNodeItems = (
 			...input,
 			...createLLMNodeInputFrame({
 				...ownerFrame,
+				x: ownerFrame.cx,
+				y: ownerFrame.cy,
 				minWidth: MIN_WIDTH,
 				minHeight: MIN_HEIGHT,
 			}),

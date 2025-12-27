@@ -7,6 +7,7 @@ describe("isConnectableState", () => {
 	const validConnectPointState: ConnectPointState = {
 		id: "point1",
 		type: "Rectangle",
+		geometryType: "point",
 		x: 0,
 		y: 0,
 		name: "connection-point",
@@ -50,6 +51,7 @@ describe("isConnectableState", () => {
 					{
 						id: "point2",
 						type: "Ellipse",
+						geometryType: "point",
 						x: 10,
 						y: 10,
 						name: "another-point",

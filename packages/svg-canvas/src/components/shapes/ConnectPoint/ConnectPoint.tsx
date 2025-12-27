@@ -1,4 +1,5 @@
 import { calcRectangleBoundingBoxGeometry } from "@workspace/geometry";
+import type { Point } from "@workspace/geometry";
 import type React from "react";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 
@@ -6,13 +7,13 @@ import type { ConnectingPoint, ConnectionEvent } from "./ConnectPointTypes";
 import { EVENT_NAME_CONNECTION } from "../../../constants/core/EventNames";
 import { ConnectLineDefaultState } from "../../../constants/state/shapes/ConnectLineDefaultState";
 import { useEventBus } from "../../../context/EventBusContext";
-import type { Point } from "../../../types/core/Point";
 import type { PathPointData } from "../../../types/data/shapes/PathPointData";
 import type { DiagramDragDropEvent } from "../../../types/events/DiagramDragDropEvent";
 import type { DiagramDragEvent } from "../../../types/events/DiagramDragEvent";
 import type { DiagramHoverChangeEvent } from "../../../types/events/DiagramHoverChangeEvent";
 import type { EventPhase } from "../../../types/events/EventPhase";
 import type { ConnectPointProps } from "../../../types/props/shapes/ConnectPointProps";
+import type { DiagramBaseState } from "../../../types/state/core/DiagramBaseState";
 import { newId } from "../../../utils/shapes/common/newId";
 import { generateOptimalFrameToFrameConnection } from "../../../utils/shapes/connectPoint/generateOptimalFrameToFrameConnection";
 import { generatePathFromFrameToPoint } from "../../../utils/shapes/connectPoint/generatePathFromFrameToPoint";
@@ -45,7 +46,7 @@ const ConnectPointComponent: React.FC<ConnectPointProps> = ({
 	// Bounding box geometry of the connect point's owner
 	const ownerBoundingBoxGeometry = calcRectangleBoundingBoxGeometry(ownerFrame);
 	// Direction of the connect point
-	const direction = getLineDirection(ownerFrame.x, ownerFrame.y, x, y);
+	const direction = getLineDirection(ownerFrame.cx, ownerFrame.cy, x, y);
 
 	/**
 	 * Update connection line coordinates
@@ -102,18 +103,10 @@ const ConnectPointComponent: React.FC<ConnectPointProps> = ({
 			pathData: {
 				...ConnectLineDefaultState,
 				id: `${id}-connecting-path`,
-				x: 0,
-				y: 0,
-				width: 0,
-				height: 0,
-				rotation: 0,
-				scaleX: 1,
-				scaleY: 1,
-				keepProportion: false,
-				rotateEnabled: false,
-				inversionEnabled: false,
-				isTransforming: false,
-				items: newPathPoints,
+				items: newPathPoints.map((p) => ({
+					...p,
+					geometryType: "point",
+				})) as DiagramBaseState[],
 			},
 			minX,
 			minY,

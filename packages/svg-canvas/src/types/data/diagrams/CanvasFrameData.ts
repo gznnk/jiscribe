@@ -5,7 +5,7 @@ import type { CreateDataType } from "../shapes/CreateDataType";
  * Diagram features for CanvasFrame diagrams.
  */
 export const CanvasFrameFeatures = {
-	frameable: true,
+	geometry: "rect",
 	transformative: true,
 	itemable: true,
 	cornerRoundable: false,

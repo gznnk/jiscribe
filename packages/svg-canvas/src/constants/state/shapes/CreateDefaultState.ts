@@ -27,6 +27,7 @@ export function CreateDefaultState<T>(config: {
 	// Build default state by combining base data and state with feature-specific defaults
 	const result = {
 		...DiagramBaseDefaultState,
+		geometryType: options.geometry ?? "none",
 		...(options.selectable ? SelectableDefaultState : {}),
 		...(options.transformative ? TransformativeDefaultState : {}),
 		...(options.itemable ? ItemableDefaultState : {}),

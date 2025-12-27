@@ -1,10 +1,11 @@
+import type { Point } from "@workspace/geometry";
+
 import { trimLineEnd } from "./trimLineEnd";
 import { trimLineStart } from "./trimLineStart";
-import type { Point } from "../../../types/core/Point";
-import type { Diagram } from "../../../types/state/core/Diagram";
+import type { PathPointState } from "../../../types/state/shapes/PathPointState";
 
 /**
- * Creates a quadratic Bézier SVG path (`d`) from diagram points.
+ * Creates a quadratic Bézier SVG path (`d`) from path points.
  *
  * Structure:
  *   [start stub] → [smooth quadratic segments] → [end stub]
@@ -18,7 +19,7 @@ import type { Diagram } from "../../../types/state/core/Diagram";
  * - `endTrim` affects only the final straight segment.
  */
 export const createBezierDValue = (
-	items: Diagram[],
+	items: PathPointState[],
 	startTrim = 0,
 	endTrim = 0,
 ): string => {

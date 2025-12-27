@@ -22,17 +22,6 @@ const ConnectLineMinimapComponent: React.FC<ConnectLineProps> = ({
 	return (
 		<PathMinimap
 			id={id}
-			x={0}
-			y={0}
-			width={0}
-			height={0}
-			rotation={0}
-			scaleX={1}
-			scaleY={1}
-			keepProportion={false}
-			rotateEnabled={false}
-			inversionEnabled={false}
-			isTransforming={false}
 			pathType={pathType}
 			items={items}
 			stroke={stroke}

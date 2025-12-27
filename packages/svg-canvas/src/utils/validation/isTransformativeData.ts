@@ -1,5 +1,4 @@
-import { isBoolean } from "@workspace/basic-validators";
-import { isFrame } from "@workspace/geometry";
+import { isBoolean, isObject } from "@workspace/basic-validators";
 
 import type { TransformativeData } from "../../types/data/core/TransformativeData";
 
@@ -9,8 +8,10 @@ import type { TransformativeData } from "../../types/data/core/TransformativeDat
 export const isTransformativeData = (
 	data: unknown,
 ): data is TransformativeData => {
+	if (!isObject(data)) return false;
 	return (
-		isFrame(data) &&
+		// TODO: 要精査
+		// isFrame(data) &&
 		"keepProportion" in data &&
 		isBoolean(data.keepProportion) &&
 		"rotateEnabled" in data &&

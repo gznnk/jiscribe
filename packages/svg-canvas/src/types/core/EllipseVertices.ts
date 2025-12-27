@@ -1,4 +1,4 @@
-import type { Point } from "./Point";
+import type { Point } from "@workspace/geometry";
 
 /**
  * Defines the coordinates for key points of an ellipse.

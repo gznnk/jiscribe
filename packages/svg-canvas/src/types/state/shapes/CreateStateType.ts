@@ -2,6 +2,7 @@ import type { Prettify } from "@workspace/utility-types";
 
 import type { ConnectableState } from "./ConnectableState";
 import type { DiagramFeatures } from "../../core/DiagramFeatures";
+import type { GeometryType } from "../../core/GeometryType";
 import type { DiagramBaseData } from "../../data/core/DiagramBaseData";
 import type { CornerRoundableState } from "../core/CornerRoundableState";
 import type { DiagramBaseState } from "../core/DiagramBaseState";
@@ -27,8 +28,9 @@ export type CreateStateType<
 	P = object,
 > = Prettify<
 	T &
-		DiagramBaseState &
-		(U["selectable"] extends true ? SelectableState : object) &
+		DiagramBaseState & {
+			geometryType: U["geometry"] extends GeometryType ? U["geometry"] : "none";
+		} & (U["selectable"] extends true ? SelectableState : object) &
 		(U["transformative"] extends true ? TransformativeState : object) &
 		(U["itemable"] extends true ? ItemableState : object) &
 		(U["connectable"] extends true ? ConnectableState : object) &

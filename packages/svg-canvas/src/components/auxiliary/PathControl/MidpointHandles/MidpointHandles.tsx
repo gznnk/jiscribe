@@ -1,4 +1,3 @@
-import { calcOrientedFrameFromPoints } from "@workspace/geometry";
 import type React from "react";
 import { memo, useCallback, useRef, useState } from "react";
 
@@ -8,7 +7,7 @@ import type {
 } from "../../../../types/events/DiagramChangeEvent";
 import type { DiagramDragEvent } from "../../../../types/events/DiagramDragEvent";
 import type { Diagram } from "../../../../types/state/core/Diagram";
-import type { PathState } from "../../../../types/state/shapes/PathState";
+import type { PathPointState } from "../../../../types/state/shapes/PathPointState";
 import { newId } from "../../../../utils/shapes/common/newId";
 import { DragPoint } from "../../../core/DragPoint";
 
@@ -27,9 +26,6 @@ type MidpointHandleData = {
  */
 type MidpointHandlesProps = {
 	id: string;
-	rotation: number;
-	scaleX: number;
-	scaleY: number;
 	items: Diagram[];
 	zoom?: number;
 	onDiagramChange?: (e: DiagramChangeEvent) => void;
@@ -40,9 +36,6 @@ type MidpointHandlesProps = {
  */
 const MidpointHandlesComponent: React.FC<MidpointHandlesProps> = ({
 	id,
-	rotation,
-	scaleX,
-	scaleY,
 	items,
 	zoom,
 	onDiagramChange,
@@ -53,7 +46,9 @@ const MidpointHandlesComponent: React.FC<MidpointHandlesProps> = ({
 	>();
 
 	// Items of owner Path component at the start of the midpoint handle drag.
-	const startItems = useRef<Diagram[]>(items);
+	const startItems = useRef<PathPointState[]>([]);
+
+	const pathPoints = items as PathPointState[];
 
 	// Midpoint handle data list for rendering.
 	const midpointHandleList: MidpointHandleData[] = [];
@@ -62,9 +57,9 @@ const MidpointHandlesComponent: React.FC<MidpointHandlesProps> = ({
 		midpointHandleList.push(draggingMidpointHandle);
 	} else {
 		// When not dragging, render midpoint handles at the midpoint of each vertex pair
-		for (let i = 0; i < items.length - 1; i++) {
-			const item = items[i];
-			const nextItem = items[i + 1];
+		for (let i = 0; i < pathPoints.length - 1; i++) {
+			const item = pathPoints[i];
+			const nextItem = pathPoints[i + 1];
 
 			const x = (item.x + nextItem.x) / 2;
 			const y = (item.y + nextItem.y) / 2;
@@ -81,10 +76,7 @@ const MidpointHandlesComponent: React.FC<MidpointHandlesProps> = ({
 	const refBusVal = {
 		// Properties
 		id,
-		rotation,
-		scaleX,
-		scaleY,
-		items,
+		pathPoints,
 		onDiagramChange,
 		// State variables and functions
 		midpointHandleList,
@@ -96,19 +88,12 @@ const MidpointHandlesComponent: React.FC<MidpointHandlesProps> = ({
 	 * Midpoint handle drag event handler
 	 */
 	const handleMidpointHandleDrag = useCallback((e: DiagramDragEvent) => {
-		const {
-			id,
-			rotation,
-			scaleX,
-			scaleY,
-			items,
-			onDiagramChange,
-			midpointHandleList,
-		} = refBus.current;
+		const { id, pathPoints, onDiagramChange, midpointHandleList } =
+			refBus.current;
 		// Processing at drag start
 		if (e.eventPhase === "Started") {
 			// Store the items of owner Path component at the start of the midpoint handle drag.
-			startItems.current = items;
+			startItems.current = pathPoints;
 
 			// Set the midpoint handle being dragged
 			setDraggingMidpointHandle({
@@ -120,13 +105,14 @@ const MidpointHandlesComponent: React.FC<MidpointHandlesProps> = ({
 
 			// Add a vertex at the same position as the midpoint handle and update the path
 			const idx = midpointHandleList.findIndex((v) => v.id === e.id);
-			const newItems = [...items];
+			const newItems = [...pathPoints];
 			const newItem = {
 				id: e.id,
 				type: "PathPoint",
+				geometryType: "point",
 				x: e.startX,
 				y: e.startY,
-			} as Diagram;
+			} as PathPointState;
 			newItems.splice(idx + 1, 0, newItem);
 
 			// Notify path change
@@ -136,10 +122,10 @@ const MidpointHandlesComponent: React.FC<MidpointHandlesProps> = ({
 				id,
 				startDiagram: {
 					items: startItems.current,
-				} as PathState,
+				} as DiagramChangeData,
 				endDiagram: {
 					items: newItems,
-				} as PathState,
+				} as DiagramChangeData,
 				minX: e.minX,
 				minY: e.minY,
 			});
@@ -162,12 +148,12 @@ const MidpointHandlesComponent: React.FC<MidpointHandlesProps> = ({
 				id,
 				startDiagram: {
 					items: startItems.current,
-				} as PathState,
+				} as DiagramChangeData,
 				endDiagram: {
-					items: items.map((item) =>
+					items: pathPoints.map((item) =>
 						item.id === e.id ? { ...item, x: e.endX, y: e.endY } : item,
 					),
-				} as PathState,
+				} as DiagramChangeData,
 				minX: e.minX,
 				minY: e.minY,
 			});
@@ -179,7 +165,7 @@ const MidpointHandlesComponent: React.FC<MidpointHandlesProps> = ({
 			setDraggingMidpointHandle(undefined);
 
 			// Update items with new vertex
-			const updatedItems = items.map((item) =>
+			const updatedItems = pathPoints.map((item) =>
 				item.id === e.id
 					? {
 							...item,
@@ -190,14 +176,6 @@ const MidpointHandlesComponent: React.FC<MidpointHandlesProps> = ({
 					: item,
 			);
 
-			// Calculate new bounding box from updated points
-			const newFrame = calcOrientedFrameFromPoints(
-				updatedItems.map((p) => ({ x: p.x, y: p.y })),
-				rotation,
-				scaleX,
-				scaleY,
-			);
-
 			// Notify path data change due to midpoint handle drag completion
 			onDiagramChange?.({
 				eventId: e.eventId,
@@ -205,13 +183,9 @@ const MidpointHandlesComponent: React.FC<MidpointHandlesProps> = ({
 				id,
 				startDiagram: {
 					items: startItems.current,
-				} as PathState,
+				} as DiagramChangeData,
 				endDiagram: {
 					items: updatedItems,
-					x: newFrame.x,
-					y: newFrame.y,
-					width: newFrame.width,
-					height: newFrame.height,
 				} as DiagramChangeData,
 				minX: e.minX,
 				minY: e.minY,

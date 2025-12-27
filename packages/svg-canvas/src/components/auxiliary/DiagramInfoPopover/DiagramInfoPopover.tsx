@@ -1,4 +1,4 @@
-import { calcBoundingBox , isFrame } from "@workspace/geometry";
+import { calcBoundingBox } from "@workspace/geometry";
 import React, { memo, useRef, useEffect, useState } from "react";
 
 import {
@@ -16,6 +16,7 @@ import {
 	MIN_POPOVER_WIDTH,
 } from "../../../constants/styling/auxiliary/DiagramInfoPopoverStyling";
 import type { Diagram } from "../../../types/state/core/Diagram";
+import { convertDiagramToFrame } from "../../../utils/core/convertDiagramToFrame";
 import { getSelectedDiagrams } from "../../../utils/core/getSelectedDiagrams";
 
 const DiagramInfoPopoverComponent = ({
@@ -110,11 +111,13 @@ const calculatePopoverPosition = (
 	if (!diagram) {
 		return { x: 0, y: 0 }; // Default position if no diagram
 	}
-	if (!isFrame(diagram)) {
-		return { x: diagram.x, y: diagram.y };
+
+	const frame = convertDiagramToFrame(diagram);
+	if (!frame) {
+		return { x: 0, y: 0 }; // Default position if no frame
 	}
 
-	const boundingBox = calcBoundingBox(diagram);
+	const boundingBox = calcBoundingBox(frame);
 	const popoverWidth = popoverDimensions?.width || MIN_POPOVER_WIDTH;
 	const popoverHeight = popoverDimensions?.height || MIN_POPOVER_HEIGHT;
 
@@ -128,7 +131,7 @@ const calculatePopoverPosition = (
 	}
 
 	// Ensure the popover does not go below the bottom edge of the diagram
-	let popoverY = diagram.y * canvasProps.zoom - popoverHeight / 2;
+	let popoverY = frame.cy * canvasProps.zoom - popoverHeight / 2;
 	const diagramBottomY = boundingBox.bottom * canvasProps.zoom;
 	if (diagramBottomY < popoverY + popoverHeight) {
 		popoverY = diagramBottomY - popoverHeight;

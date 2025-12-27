@@ -5,7 +5,10 @@ import { DiagramRegistry } from "../../../registry";
 import type { DiagramTransformEvent } from "../../../types/events/DiagramTransformEvent";
 import type { EventPhase } from "../../../types/events/EventPhase";
 import type { Diagram } from "../../../types/state/core/Diagram";
+import { applyFrameToDiagram } from "../../../utils/core/applyFrameToDiagram";
+import { applyPointToDiagram } from "../../../utils/core/applyPointToDiagram";
 import { calcUnrotatedItemableBoundingBox } from "../../../utils/core/calcUnrotatedItemableBoundingBox";
+import { convertDiagramToFrame } from "../../../utils/core/convertDiagramToFrame";
 import { getSelectedDiagrams } from "../../../utils/core/getSelectedDiagrams";
 import { refreshConnectLines } from "../../../utils/shapes/connectLine/refreshConnectLines";
 import { isConnectableState } from "../../../utils/validation/isConnectableState";
@@ -66,9 +69,13 @@ export const useOnTransform = (props: SvgCanvasSubHooksProps) => {
 			}
 
 			// Calculate the transformed center position of the item
+			const initialFrame = convertDiagramToFrame(initialItem);
+			if (!initialFrame) {
+				return item;
+			}
 			const newCenter = calculateTransformedCenter(
-				initialItem.x,
-				initialItem.y,
+				initialFrame.cx,
+				initialFrame.cy,
 				event.startFrame,
 				event.endFrame,
 			);
@@ -78,17 +85,16 @@ export const useOnTransform = (props: SvgCanvasSubHooksProps) => {
 				const groupScaleX = event.endFrame.width / event.startFrame.width;
 				const groupScaleY = event.endFrame.height / event.startFrame.height;
 
-				const newWidth = initialItem.width * groupScaleX;
-				const newHeight = initialItem.height * groupScaleY;
+				const newWidth = initialFrame.width * groupScaleX;
+				const newHeight = initialFrame.height * groupScaleY;
 
 				// Apply minWidth and minHeight constraints
-				const { effectiveWidth, effectiveHeight } =
-					calcDimensionsWithMinSize(
-						newWidth,
-						newHeight,
-						initialItem.minWidth,
-						initialItem.minHeight,
-					);
+				const { effectiveWidth, effectiveHeight } = calcDimensionsWithMinSize(
+					newWidth,
+					newHeight,
+					initialItem.minWidth,
+					initialItem.minHeight,
+				);
 
 				const newRotation = calculateTransformedRotation(
 					initialItem,
@@ -105,8 +111,8 @@ export const useOnTransform = (props: SvgCanvasSubHooksProps) => {
 					: Math.abs(event.endFrame.scaleY);
 
 				const newItemFrame = {
-					x: newCenter.x,
-					y: newCenter.y,
+					cx: newCenter.x,
+					cy: newCenter.y,
 					width: effectiveWidth,
 					height: effectiveHeight,
 					rotation: newRotation,
@@ -142,8 +148,7 @@ export const useOnTransform = (props: SvgCanvasSubHooksProps) => {
 				}
 
 				newItem = {
-					...item,
-					...newItemFrame,
+					...applyFrameToDiagram(newItemFrame, item),
 					isTransforming: getIsTransformingState(event.eventPhase),
 					items: newItems,
 				} as Diagram;
@@ -156,11 +161,7 @@ export const useOnTransform = (props: SvgCanvasSubHooksProps) => {
 					transformedConnectables.push(newItem);
 				}
 			} else {
-				newItem = {
-					...item,
-					x: newCenter.x,
-					y: newCenter.y,
-				};
+				newItem = applyPointToDiagram(newCenter, item);
 
 				// Update the connect points of the transformed item.
 				updateDiagramConnectPoints(newItem);
@@ -187,10 +188,7 @@ export const useOnTransform = (props: SvgCanvasSubHooksProps) => {
 			return items.map((item) => {
 				if (item.id === event.id) {
 					// Apply the new shape to the item.
-					let newItem = {
-						...item,
-						...event.endFrame,
-					} as Diagram;
+					let newItem = applyFrameToDiagram(event.endFrame, item) as Diagram;
 
 					// Update isTransforming flag if it's transformative data
 					if (isTransformativeState(newItem)) {
@@ -353,8 +351,8 @@ export const useOnTransform = (props: SvgCanvasSubHooksProps) => {
 					const selectedItems = getSelectedDiagrams(newState.items);
 					const boundingBox = calcUnrotatedItemableBoundingBox(
 						selectedItems,
-						e.endFrame.x,
-						e.endFrame.y,
+						e.endFrame.cx,
+						e.endFrame.cy,
 						e.endFrame.rotation,
 					);
 					newState.multiSelectGroup = {

@@ -43,6 +43,7 @@ export const createRectangleConnectPoint = ({
 		connectPoints.push({
 			id: newId(),
 			type: "ConnectPoint",
+			geometryType: "point",
 			x: point.x,
 			y: point.y,
 			name: key,

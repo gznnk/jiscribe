@@ -1,4 +1,3 @@
-import { calcOrientedFrameFromPoints } from "@workspace/geometry";
 import { useCallback, useRef } from "react";
 
 import { ConnectLineDefaultState } from "../../../constants/state/shapes/ConnectLineDefaultState";
@@ -35,20 +34,13 @@ export const useOnConnect = (props: SvgCanvasSubHooksProps) => {
 			addHistory,
 		} = refBus.current;
 
-		const frame = calcOrientedFrameFromPoints(
-			e.points.map((p: PathPointState) => ({ x: p.x, y: p.y })),
-		);
-
 		const newConnectLine: ConnectLineState = {
 			...ConnectLineDefaultState,
 			id: newId(),
-			x: frame.x,
-			y: frame.y,
-			width: frame.width,
-			height: frame.height,
-			items: e.points.map((p: PathPointState) => ({
+			items: e.points.map((p) => ({
 				...p,
 				type: "PathPoint",
+				geometryType: "point",
 			})) as PathPointState[],
 			startOwnerId: e.startOwnerId,
 			endOwnerId: e.endOwnerId,

@@ -9,13 +9,6 @@ import { Path } from "../Path";
  */
 const ConnectLineComponent: React.FC<ConnectLineProps> = ({
 	id,
-	x,
-	y,
-	width,
-	height,
-	rotation,
-	scaleX,
-	scaleY,
 	stroke = "black",
 	strokeWidth = 1,
 	strokeDashType = "solid",
@@ -33,17 +26,6 @@ const ConnectLineComponent: React.FC<ConnectLineProps> = ({
 	return (
 		<Path
 			id={id}
-			x={x}
-			y={y}
-			width={width}
-			height={height}
-			rotation={rotation}
-			scaleX={scaleX}
-			scaleY={scaleY}
-			keepProportion={false}
-			rotateEnabled={false}
-			inversionEnabled={false}
-			isTransforming={false}
 			stroke={stroke}
 			strokeWidth={strokeWidth}
 			strokeDashType={strokeDashType}
@@ -53,11 +35,11 @@ const ConnectLineComponent: React.FC<ConnectLineProps> = ({
 			showOutline={false}
 			outlineDisabled={true}
 			dragEnabled={false}
+			items={items}
 			pathType={pathType}
 			preserveEndpoints={true}
 			startArrowHead={startArrowHead}
 			endArrowHead={endArrowHead}
-			items={items}
 			onClick={onClick}
 			onSelect={onSelect}
 			onDiagramChange={onDiagramChange}

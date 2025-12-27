@@ -3,6 +3,8 @@ import { useCallback, useRef } from "react";
 import type { DiagramDragEvent } from "../../../types/events/DiagramDragEvent";
 import type { Diagram } from "../../../types/state/core/Diagram";
 import type { GroupState } from "../../../types/state/shapes/GroupState";
+import { applyPointToDiagram } from "../../../utils/core/applyPointToDiagram";
+import { convertDiagramToPoint } from "../../../utils/core/convertDiagramToPoint";
 import { collectConnectedConnectLines } from "../../../utils/shapes/connectLine/collectConnectedConnectLines";
 import { updateConnectLinesByIds } from "../../../utils/shapes/connectLine/updateConnectLinesByIds";
 import { isItemableState } from "../../../utils/validation/isItemableState";
@@ -102,11 +104,18 @@ export const useOnDrag = (props: SvgCanvasSubHooksProps) => {
 				const initialItem = initialItems.get(diagram.id);
 				if (!initialItem) return diagram;
 
+				const initialPoint = convertDiagramToPoint(initialItem);
+				if (!initialPoint) return diagram;
+
 				// Update position and dragging state
 				let newItem = {
-					...diagram,
-					x: initialItem.x + dx,
-					y: initialItem.y + dy,
+					...applyPointToDiagram(
+						{
+							x: initialPoint.x + dx,
+							y: initialPoint.y + dy,
+						},
+						diagram,
+					),
 					isDragging,
 					isInDragTriggeredTree:
 						isDragging && dragTriggeredTreeIds.current.has(diagram.id),

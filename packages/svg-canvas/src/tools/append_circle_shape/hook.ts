@@ -1,5 +1,5 @@
-
 import type { EventBus } from "@workspace/event-bus";
+import { isEllipse } from "@workspace/geometry";
 import type { FunctionCallHandler } from "@workspace/llm-client";
 import { useCallback } from "react";
 
@@ -19,11 +19,15 @@ export const useAppendCircleShapeTool = (
 	return useCallback(
 		(targetId: string, offsetX = 0, offsetY = 0) => {
 			return circleShapeWithHandlerTool((diagram) => {
+				if (!isEllipse(diagram)) {
+					console.error("Diagram is not a circle shape. Cannot append.");
+					return;
+				}
 				// Apply offset to the diagram
 				const offsetDiagram = {
 					...diagram,
-					x: diagram.x + offsetX,
-					y: diagram.y + offsetY,
+					cx: diagram.cx + offsetX,
+					cy: diagram.cy + offsetY,
 				};
 				appendDiagrams(targetId, [offsetDiagram]);
 			});

@@ -1,8 +1,8 @@
+import type { Point } from "@workspace/geometry";
 import { useCallback, useRef } from "react";
 import type { RefObject } from "react";
 
 import { AUTO_SCROLL_INTERVAL_MS } from "../constants/core/Constants";
-import type { Point } from "../types/core/Point";
 import type { SvgViewport } from "../types/core/SvgViewport";
 import { calculateScrollDelta } from "../utils/scroll/calculateScrollDelta";
 import { detectEdgeProximity } from "../utils/scroll/detectEdgeProximity";

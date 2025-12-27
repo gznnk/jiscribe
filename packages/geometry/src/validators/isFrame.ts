@@ -1,11 +1,15 @@
-import { isNonNegativeNumber, isNumber, isObject } from "@workspace/basic-validators";
+import {
+	isNonNegativeNumber,
+	isNumber,
+	isObject,
+} from "@workspace/basic-validators";
 
 import type { Frame } from "../types/Frame";
 
 /**
  * Check if an object is a Frame.
  * Validates all required Frame properties:
- * - Position: x, y (numbers)
+ * - Position: cx, cy (numbers)
  * - Size: width, height (non-negative numbers)
  * - Transform: rotation, scaleX, scaleY (numbers)
  *
@@ -16,10 +20,10 @@ export const isFrame = (obj: unknown): obj is Frame => {
 	if (!isObject(obj)) return false;
 
 	return (
-		"x" in obj &&
-		isNumber(obj.x) &&
-		"y" in obj &&
-		isNumber(obj.y) &&
+		"cx" in obj &&
+		isNumber(obj.cx) &&
+		"cy" in obj &&
+		isNumber(obj.cy) &&
 		"width" in obj &&
 		isNonNegativeNumber(obj.width) &&
 		"height" in obj &&

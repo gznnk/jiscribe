@@ -7,9 +7,8 @@ import { createDataToStateMapper } from "../../core/createDataToStateMapper";
 /**
  * Maps CanvasFrame data to state
  */
-export const mapCanvasFrameDataToState = createDataToStateMapper<CanvasFrameState>(
-	CanvasFrameDefaultState,
-);
+export const mapCanvasFrameDataToState =
+	createDataToStateMapper<CanvasFrameState>(CanvasFrameDefaultState);
 
 export const canvasFrameDataToState = (data: DiagramData): Diagram =>
-	mapCanvasFrameDataToState(data);
+	mapCanvasFrameDataToState(data as unknown as CanvasFrameState);

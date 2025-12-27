@@ -38,8 +38,10 @@ import type { DiagramHoverChangeEvent } from "../../../types/events/DiagramHover
 import type { GroupShapesEvent } from "../../../types/events/GroupShapesEvent";
 import type { CanvasFrameProps } from "../../../types/props/diagrams/CanvasFrameProps";
 import type { Diagram } from "../../../types/state/core/Diagram";
+import { applyPointToDiagram } from "../../../utils/core/applyPointToDiagram";
 import { collectDiagramDataIds } from "../../../utils/core/collectDiagramDataIds";
 import { collectDiagramIds } from "../../../utils/core/collectDiagramIds";
+import { convertDiagramToPoint } from "../../../utils/core/convertDiagramToPoint";
 import { filterDragTriggeredTree } from "../../../utils/core/filterDragTriggeredTree";
 import { getSelectedDiagrams } from "../../../utils/core/getSelectedDiagrams";
 import { mergeProps } from "../../../utils/core/mergeProps";
@@ -383,8 +385,8 @@ const CanvasFrameComponent: React.FC<CanvasFrameProps> = ({
 	// performs comparison processing for each key which is inefficient, so detect Shape differences collectively here
 	const ownerFrame = useMemo(
 		() => ({
-			x,
-			y,
+			cx: x + width / 2,
+			cy: y + height / 2,
 			width,
 			height,
 			rotation,
@@ -471,11 +473,21 @@ const CanvasFrameComponent: React.FC<CanvasFrameProps> = ({
 					// Validate that it's a valid diagram object
 					if (shapeData && shapeData.id && shapeData.type) {
 						// Append the received shape to this CanvasFrame
+						const point = convertDiagramToPoint(shapeData);
+						if (!point) {
+							console.error("Invalid shape data received", shapeData);
+							return;
+						}
+						const diagram = applyPointToDiagram(
+							{
+								x: point.x + originX,
+								y: point.y + originY,
+							},
+							shapeData,
+						);
 						appendDiagrams(id, [
 							{
-								...shapeData,
-								x: shapeData.x + originX,
-								y: shapeData.y + originY,
+								...diagram,
 							},
 						]);
 					}

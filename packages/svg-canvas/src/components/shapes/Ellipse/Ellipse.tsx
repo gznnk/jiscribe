@@ -14,10 +14,10 @@ import { BaseShape } from "../BaseShape";
  */
 const EllipseComponent: React.FC<EllipseProps> = ({
 	id,
-	x,
-	y,
-	width,
-	height,
+	cx,
+	cy,
+	rx,
+	ry,
 	rotation,
 	scaleX,
 	scaleY,
@@ -66,8 +66,8 @@ const EllipseComponent: React.FC<EllipseProps> = ({
 	const baseShapeProps = useBaseShape({
 		id,
 		type: "Ellipse",
-		x,
-		y,
+		x: cx,
+		y: cy,
 		isSelected,
 		isAncestorSelected,
 		isTextEditEnabled,
@@ -86,18 +86,18 @@ const EllipseComponent: React.FC<EllipseProps> = ({
 		scaleX,
 		scaleY,
 		degreesToRadians(rotation),
-		x,
-		y,
+		cx,
+		cy,
 	);
 
 	return (
 		<BaseShape
 			id={id}
 			type="Ellipse"
-			x={x}
-			y={y}
-			width={width}
-			height={height}
+			cx={cx}
+			cy={cy}
+			width={rx * 2}
+			height={ry * 2}
 			rotation={rotation}
 			scaleX={scaleX}
 			scaleY={scaleY}
@@ -132,8 +132,8 @@ const EllipseComponent: React.FC<EllipseProps> = ({
 				id={id}
 				cx={0}
 				cy={0}
-				rx={width / 2}
-				ry={height / 2}
+				rx={rx}
+				ry={ry}
 				fill={fill}
 				stroke={stroke}
 				strokeWidth={strokeWidth}

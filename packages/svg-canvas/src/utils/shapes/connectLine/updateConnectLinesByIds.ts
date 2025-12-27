@@ -102,6 +102,7 @@ export const updateConnectLinesByIds = (
 				id: newId(),
 				name: `cp-${idx}`,
 				type: "PathPoint",
+				geometryType: "point",
 				x: p.x,
 				y: p.y,
 			})) as Diagram[];

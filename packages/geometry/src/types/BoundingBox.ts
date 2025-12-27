@@ -2,7 +2,7 @@
  * Defines the coordinates for the four sides of a rectangular box.
  * Used for positioning and layout calculations.
  */
-export type Box = {
+export type BoundingBox = {
 	top: number;
 	left: number;
 	right: number;

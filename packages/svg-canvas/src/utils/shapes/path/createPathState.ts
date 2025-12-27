@@ -1,9 +1,10 @@
+import type { Point } from "@workspace/geometry";
+
 import { PathDefaultState } from "../../../constants/state/shapes/PathDefaultState";
 import type { ArrowHeadType } from "../../../types/core/ArrowHeadType";
 import type { PathType } from "../../../types/core/PathType";
-import type { Point } from "../../../types/core/Point";
 import type { StrokeDashType } from "../../../types/core/StrokeDashType";
-import type { PathPointData } from "../../../types/data/shapes/PathPointData";
+import type { PathPointState } from "../../../types/state/shapes/PathPointState";
 import type { PathState } from "../../../types/state/shapes/PathState";
 import { newId } from "../../../utils/shapes/common/newId";
 
@@ -35,36 +36,37 @@ export const createPathState = ({
 	items?: Point[];
 }): PathState => {
 	// If items are provided, use them; otherwise create default points
-	const pathPoints: PathPointData[] = items
+	const pathPoints: PathPointState[] = items
 		? items.map(
 				(point) =>
 					({
 						id: newId(),
 						type: "PathPoint",
+						geometryType: "point",
 						x: point.x,
 						y: point.y,
-					}) as PathPointData,
+					}) as PathPointState,
 			)
 		: [
 				{
 					id: newId(),
 					type: "PathPoint",
+					geometryType: "point",
 					x: x - 50,
 					y: y - 50,
-				} as PathPointData,
+				} as PathPointState,
 				{
 					id: newId(),
 					type: "PathPoint",
+					geometryType: "point",
 					x: x + 50,
 					y: y + 50,
-				} as PathPointData,
+				} as PathPointState,
 			];
 
 	return {
 		...PathDefaultState,
 		id: newId(),
-		x,
-		y,
 		stroke,
 		strokeWidth,
 		strokeDashType,

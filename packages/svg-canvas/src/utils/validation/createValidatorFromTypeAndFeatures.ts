@@ -2,7 +2,6 @@ import { isConnectableData } from "./isConnectableData";
 import { isCornerRoundableData } from "./isCornerRoundableData";
 import { isDiagramBaseData } from "./isDiagramBaseData";
 import { isFillableData } from "./isFillableData";
-import { isFrameableData } from "./isFrameableData";
 import { isOriginableData } from "./isOriginableData";
 import { isStrokableData } from "./isStrokableData";
 import { isTextableData } from "./isTextableData";
@@ -20,7 +19,6 @@ export const createValidatorFromTypeAndFeatures =
 		if (data.type !== type) return false;
 
 		// Check all required features
-		if (features.frameable && !isFrameableData(data)) return false;
 		if (features.transformative && !isTransformativeData(data)) return false;
 		if (features.connectable && !isConnectableData(data)) return false;
 		if (features.strokable && !isStrokableData(data)) return false;

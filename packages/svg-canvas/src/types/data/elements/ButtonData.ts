@@ -5,7 +5,7 @@ import type { CreateDataType } from "../shapes/CreateDataType";
  * Diagram features for Button shapes.
  */
 export const ButtonFeatures = {
-	frameable: true,
+	geometry: "rect",
 	transformative: true, // Can be transformed (resize, rotate)
 	connectable: true, // Can connect to other shapes
 	strokable: true, // Has stroke properties

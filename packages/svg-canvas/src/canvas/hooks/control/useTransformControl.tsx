@@ -1,6 +1,7 @@
 import type { JSX } from "@emotion/react/jsx-runtime";
 
 import { TransformControl } from "../../../components/auxiliary/TransformControl";
+import { convertDiagramToFrame } from "../../../utils/core/convertDiagramToFrame";
 import { isTransformativeState } from "../../../utils/validation/isTransformativeState";
 import { MULTI_SELECT_GROUP } from "../../SvgCanvasConstants";
 import { InteractionState } from "../../types/InteractionState";
@@ -32,16 +33,23 @@ export const useTransformControl = (
 
 	// Multi-select case: render TransformControl for the group (always enabled)
 	if (multiSelectGroup && isTransformativeState(multiSelectGroup)) {
-		return (
-			<TransformControl
-				key={`transform-control-${MULTI_SELECT_GROUP}`}
-				{...multiSelectGroup}
-				id={MULTI_SELECT_GROUP}
-				type="Group"
-				zoom={zoom}
-				onTransform={onTransform}
-			/>
-		);
+		const frame = convertDiagramToFrame(multiSelectGroup);
+		if (frame) {
+			return (
+				<TransformControl
+					key={`transform-control-${MULTI_SELECT_GROUP}`}
+					{...frame}
+					id={MULTI_SELECT_GROUP}
+					type="Group"
+					keepProportion={multiSelectGroup.keepProportion}
+					rotateEnabled={multiSelectGroup.rotateEnabled}
+					inversionEnabled={multiSelectGroup.inversionEnabled}
+					isTransforming={multiSelectGroup.isTransforming}
+					zoom={zoom}
+					onTransform={onTransform}
+				/>
+			);
+		}
 	}
 
 	// Single-select case: get the selected item using path index for efficient access
@@ -54,14 +62,23 @@ export const useTransformControl = (
 			!selectedItem.hideTransformControl &&
 			selectedItem.transformEnabled !== false
 		) {
-			return (
-				<TransformControl
-					key={`transform-control-${selectedItem.id}`}
-					{...selectedItem}
-					zoom={zoom}
-					onTransform={onTransform}
-				/>
-			);
+			const frame = convertDiagramToFrame(selectedItem);
+			if (frame) {
+				return (
+					<TransformControl
+						key={`transform-control-${selectedItem.id}`}
+						{...frame}
+						id={selectedItem.id}
+						type={selectedItem.type}
+						keepProportion={selectedItem.keepProportion}
+						rotateEnabled={selectedItem.rotateEnabled}
+						inversionEnabled={selectedItem.inversionEnabled}
+						isTransforming={selectedItem.isTransforming}
+						zoom={zoom}
+						onTransform={onTransform}
+					/>
+				);
+			}
 		}
 	}
 

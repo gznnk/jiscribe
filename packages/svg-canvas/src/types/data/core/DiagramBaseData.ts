@@ -7,8 +7,6 @@ import type { DiagramType } from "../../core/DiagramType";
 export type DiagramBaseData = {
 	id: string;
 	type: DiagramType;
-	x: number;
-	y: number;
 	name?: string;
 	description?: string;
 };

@@ -1,11 +1,12 @@
 import type { JSX } from "@emotion/react/jsx-runtime";
+import type { Frame } from "@workspace/geometry";
 import { isFrame } from "@workspace/geometry";
 import { useCallback, useMemo, useRef } from "react";
 
 import { ConnectLineControl } from "../../../components/auxiliary/ConnectLineControl";
-import type { Frame } from "../../../types/core/Frame";
 import type { DiagramChangeEvent } from "../../../types/events/DiagramChangeEvent";
 import type { ConnectLineState } from "../../../types/state/shapes/ConnectLineState";
+import type { ConnectPointState } from "../../../types/state/shapes/ConnectPointState";
 import { getDiagramById } from "../../../utils/core/getDiagramById";
 import { isConnectLineState } from "../../../utils/validation/isConnectLineState";
 import { InteractionState } from "../../types/InteractionState";
@@ -98,10 +99,7 @@ export const useConnectLineControl = (
 		<ConnectLineControl
 			key={`connect-line-control-${connectLineItem.id}`}
 			id={connectLineItem.id}
-			rotation={connectLineItem.rotation}
-			scaleX={connectLineItem.scaleX}
-			scaleY={connectLineItem.scaleY}
-			items={connectLineItem.items}
+			items={connectLineItem.items as ConnectPointState[]}
 			pathType={connectLineItem.pathType}
 			autoRouting={connectLineItem.autoRouting}
 			startOwnerId={connectLineItem.startOwnerId}

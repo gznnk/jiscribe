@@ -3,4 +3,5 @@ import { DiagramBaseDefaultData } from "../../data/core/DiagramBaseDefaultData";
 
 export const DiagramBaseDefaultState = {
 	...DiagramBaseDefaultData,
+	geometryType: "none",
 } as const satisfies DiagramBaseState;

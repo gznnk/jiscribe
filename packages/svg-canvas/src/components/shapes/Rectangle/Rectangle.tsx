@@ -91,21 +91,25 @@ const RectangleComponent: React.FC<RectangleProps> = ({
 	// Compose props
 	const composedProps = mergeProps(baseShapeProps, fileDropProps);
 
+	// Calculate center coordinates from top-left coordinates
+	const cx = x + width / 2;
+	const cy = y + height / 2;
+
 	// Generate rect transform attribute
 	const transform = createSvgTransform(
 		scaleX,
 		scaleY,
 		degreesToRadians(rotation),
-		x,
-		y,
+		cx,
+		cy,
 	);
 
 	return (
 		<BaseShape
 			id={id}
 			type="Rectangle"
-			x={x}
-			y={y}
+			cx={cx}
+			cy={cy}
 			width={width}
 			height={height}
 			rotation={rotation}

@@ -5,7 +5,7 @@ import type { DiagramFeatures } from "../../core/DiagramFeatures";
  * Diagram features for Rectangle shapes.
  */
 export const RectangleFeatures = {
-	frameable: true,
+	geometry: "rect",
 	transformative: true,
 	connectable: true,
 	strokable: true,
