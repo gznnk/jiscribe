@@ -1,12 +1,12 @@
-import { calcRectangleVertices } from "@workspace/geometry";
+import type { BoundingBox } from "@workspace/geometry";
 import { type RefObject, useEffect, useMemo, useState } from "react";
 
 import { InteractionState } from "../../../../canvas/types/InteractionState";
 import type { SvgCanvasProps } from "../../../../canvas/types/SvgCanvasProps";
 import { DISTANCE_FROM_DIAGRAM } from "../../../../constants/styling/menus/DiagramMenuStyling";
-import type { RectangleVertices } from "../../../../types/core/RectangleVertices";
 import type { Diagram } from "../../../../types/state/core/Diagram";
 import { convertDiagramToFrame } from "../../../../utils/core/convertDiagramToFrame";
+import { calcDiagramBoundingBox } from "../../../../utils/geometry/calcDiagramBoundingBox";
 
 export type UseDiagramMenuDisplayProps = {
 	canvasProps: SvgCanvasProps;
@@ -79,48 +79,28 @@ export const useDiagramMenuDisplay = (
 	// Calculate menu position
 	const menuPosition = useMemo(() => {
 		// Get diagram position and size for menu positioning
-		let x = 0,
-			y = 0,
-			width = 0,
-			height = 0,
-			rotation = 0,
-			scaleX = 1,
-			scaleY = 1;
+		let x = 0;
+		let boundingBox: BoundingBox;
 
 		if (multiSelectGroup) {
-			({ x, y, width, height, rotation, scaleX, scaleY } = multiSelectGroup);
+			({ x } = multiSelectGroup);
+			boundingBox = calcDiagramBoundingBox(multiSelectGroup);
 		} else if (singleSelectedItem) {
 			const frame = convertDiagramToFrame(singleSelectedItem);
 			if (frame) {
 				x = frame.cx;
-				y = frame.cy;
-				width = frame.width;
-				height = frame.height;
-				rotation = frame.rotation;
-				scaleX = frame.scaleX;
-				scaleY = frame.scaleY;
 			}
+			boundingBox = calcDiagramBoundingBox(singleSelectedItem);
+		} else {
+			return { x: 0, y: 0 };
 		}
-
-		const vertices = calcRectangleVertices({
-			x: x * zoom,
-			y: y * zoom,
-			width: width * zoom,
-			height: height * zoom,
-			rotation,
-			scaleX,
-			scaleY,
-		});
 
 		const diagramCenterX = x * zoom;
 		const menuWidth = menuDimensions.width;
 		const menuHeight = menuDimensions.height;
 
 		// Get diagram bottom Y position
-		const diagramBottomY = Object.keys(vertices).reduce((max, key) => {
-			const vertex = vertices[key as keyof RectangleVertices];
-			return Math.max(max, vertex.y);
-		}, Number.NEGATIVE_INFINITY);
+		const diagramBottomY = boundingBox.bottom * zoom;
 
 		// Default position: below the diagram, centered
 		let menuX = diagramCenterX - menuWidth / 2;
@@ -141,10 +121,7 @@ export const useDiagramMenuDisplay = (
 		const viewportBottom = minY + containerHeight;
 		if (menuY + menuHeight > viewportBottom) {
 			// Position above the diagram
-			const diagramTopY = Object.keys(vertices).reduce((min, key) => {
-				const vertex = vertices[key as keyof RectangleVertices];
-				return Math.min(min, vertex.y);
-			}, Number.POSITIVE_INFINITY);
+			const diagramTopY = boundingBox.top * zoom;
 			menuY = diagramTopY - DISTANCE_FROM_DIAGRAM - menuHeight;
 		}
 

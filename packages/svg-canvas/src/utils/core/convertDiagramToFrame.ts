@@ -1,36 +1,29 @@
-import type { Frame } from "@workspace/geometry";
-import { isEllipse, isRect } from "@workspace/geometry";
+import type { Frame, Point } from "@workspace/geometry";
+import {
+	convertEllipseGeometryToFrame,
+	convertPointsToFrame,
+	convertRectGeometryToFrame,
+	isEllipse,
+	isRect,
+} from "@workspace/geometry";
 
+import { convertDiagramToPoint } from "./convertDiagramToPoint";
 import type { Diagram } from "../../types/state/core/Diagram";
+import { isItemableState } from "../validation/isItemableState";
 
 export const convertDiagramToFrame = (diagram: Diagram): Frame | undefined => {
 	if (diagram.geometryType === "rect" && isRect(diagram)) {
-		const cx = diagram.x + diagram.width / 2;
-		const cy = diagram.y + diagram.height / 2;
-		return {
-			cx,
-			cy,
-			width: diagram.width,
-			height: diagram.height,
-			rotation: diagram.rotation ?? 0,
-			scaleX: diagram.scaleX ?? 1,
-			scaleY: diagram.scaleY ?? 1,
-		};
+		return convertRectGeometryToFrame(diagram);
 	}
 	if (diagram.geometryType === "ellipse" && isEllipse(diagram)) {
-		const cx = diagram.cx;
-		const cy = diagram.cy;
-		const width = diagram.rx * 2;
-		const height = diagram.ry * 2;
-		return {
-			cx,
-			cy,
-			width,
-			height,
-			rotation: diagram.rotation ?? 0,
-			scaleX: diagram.scaleX ?? 1,
-			scaleY: diagram.scaleY ?? 1,
-		};
+		return convertEllipseGeometryToFrame(diagram);
+	}
+	// TODO: polyはpointsで持つようにしたい
+	if (diagram.geometryType === "poly" && isItemableState(diagram)) {
+		const points = diagram.items
+			.map(convertDiagramToPoint)
+			.filter((p): p is Point => p !== undefined);
+		return convertPointsToFrame(points);
 	}
 	return undefined;
 };

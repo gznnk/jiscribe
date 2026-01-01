@@ -16,7 +16,7 @@ import { convertDiagramToPoint } from "../core/convertDiagramToPoint";
  */
 export const calcDiagramBoundingBox = (diagram: Diagram): BoundingBox => {
 	// If the diagram is a point, return a point box at its coordinates
-	if (isPoint(diagram)) {
+	if (diagram.geometryType === "point" && isPoint(diagram)) {
 		const point = convertDiagramToPoint(diagram);
 		if (point) {
 			return {

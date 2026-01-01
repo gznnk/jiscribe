@@ -12,3 +12,4 @@ export * from "./isLineIntersectingBoxGeometry";
 export * from "./doSegmentsIntersect";
 export * from "./convertRectGeometryToFrame";
 export * from "./convertEllipseGeometryToFrame";
+export * from "./convertPointsToFrame";

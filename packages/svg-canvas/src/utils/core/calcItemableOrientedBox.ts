@@ -20,7 +20,14 @@ import type { ItemableState } from "../../types/state/core/ItemableState";
  */
 export const calcItemableOrientedBox = (itemable: ItemableState): Bounds => {
 	if (!isPoint(itemable)) {
-		throw new Error("Unsupported itemable state");
+		// throw new Error("Unsupported itemable state");
+		// TODO: ちゃんと対応
+		return {
+			x: 0,
+			y: 0,
+			width: 0,
+			height: 0,
+		};
 	}
 	const { x, y } = itemable;
 	const rotation = isFrame(itemable) ? itemable.rotation : 0;
