@@ -82,8 +82,8 @@ const StickyComponent: React.FC<StickyProps> = ({
 		scaleX,
 		scaleY,
 		degreesToRadians(rotation),
-		x,
-		y,
+		cx,
+		cy,
 	);
 
 	// Create polygon points for simple rectangle

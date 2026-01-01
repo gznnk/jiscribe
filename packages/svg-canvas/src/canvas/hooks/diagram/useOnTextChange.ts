@@ -3,6 +3,9 @@ import { useCallback, useRef } from "react";
 import type { TextEditorState } from "../../../components/core/Textable/TextEditor/TextEditorTypes";
 import type { DiagramTextChangeEvent } from "../../../types/events/DiagramTextChangeEvent";
 import type { Diagram } from "../../../types/state/core/Diagram";
+import type { TextableState } from "../../../types/state/core/TextableState";
+import { convertDiagramToFrame } from "../../../utils/core/convertDiagramToFrame";
+import { isTextableState } from "../../../utils/validation/isTextableState";
 import type { SvgCanvasSubHooksProps } from "../../types/SvgCanvasSubHooksProps";
 import { applyFunctionRecursively } from "../../utils/applyFunctionRecursively";
 import { useAddHistory } from "../history/useAddHistory";
@@ -61,8 +64,22 @@ export const useOnTextChange = (props: SvgCanvasSubHooksProps) => {
 						} as TextEditorState;
 					} else {
 						// If no initial attributes are provided, use the target item's attributes.
+						if (!isTextableState(targetItem)) {
+							return prevState;
+						}
+						const targetFrame = convertDiagramToFrame(targetItem);
+						const targetTextable = targetItem as TextableState;
 						nextState.textEditorState = {
-							...(targetItem as object),
+							id: e.id,
+							...targetFrame,
+							text: targetTextable.text,
+							textType: targetTextable.textType,
+							textAlign: targetTextable.textAlign,
+							verticalAlign: targetTextable.verticalAlign,
+							fontColor: targetTextable.fontColor,
+							fontSize: targetTextable.fontSize,
+							fontFamily: targetTextable.fontFamily,
+							fontWeight: targetTextable.fontWeight,
 							isActive: true,
 						} as TextEditorState;
 					}

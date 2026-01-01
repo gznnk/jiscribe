@@ -20,13 +20,17 @@ const StickyMinimapComponent: React.FC<StickyProps> = ({
 	stroke = "#d4af37",
 	strokeWidth = 1,
 }) => {
+	// Calculate center coordinates from top-left coordinates
+	const cx = x + width / 2;
+	const cy = y + height / 2;
+
 	// Generate transform attribute
 	const transform = createSvgTransform(
 		scaleX,
 		scaleY,
 		degreesToRadians(rotation),
-		x,
-		y,
+		cx,
+		cy,
 	);
 
 	return (
