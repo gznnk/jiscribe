@@ -3,7 +3,6 @@ import { memo, useEffect, useState } from "react";
 import { FlashGroup } from "./FlashConnectLineStyled";
 import { EVENT_NAME_FLASH_CONNECT_LINE } from "../../../constants/core/EventNames";
 import type { FlashConnectLineEvent } from "../../../types/events/FlashConnectLineEvent";
-import type { PathPointState } from "../../../types/state/shapes/PathPointState";
 import { createPathDValue } from "../../../utils/shapes/path/createPathDValue";
 import {
 	createEndPointArrowHead,
@@ -47,7 +46,7 @@ export const FlashConnectLineComponent = () => {
 
 	return connectLineList.map((connectLine) => {
 		const pathData = {
-			items: connectLine.data.items as PathPointState[],
+			points: connectLine.data.points,
 			stroke: connectLine.data.stroke,
 			strokeWidth: connectLine.data.strokeWidth,
 			pathType: connectLine.data.pathType,
@@ -66,7 +65,7 @@ export const FlashConnectLineComponent = () => {
 			>
 				<path
 					d={createPathDValue(
-						connectLine.data.items as PathPointState[],
+						connectLine.data.points,
 						connectLine.data.pathType,
 					)}
 					strokeWidth={connectLine.data.strokeWidth}

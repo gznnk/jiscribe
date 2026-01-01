@@ -6,7 +6,6 @@ import { useCallback, useMemo, useRef } from "react";
 import { ConnectLineControl } from "../../../components/auxiliary/ConnectLineControl";
 import type { DiagramChangeEvent } from "../../../types/events/DiagramChangeEvent";
 import type { ConnectLineState } from "../../../types/state/shapes/ConnectLineState";
-import type { ConnectPointState } from "../../../types/state/shapes/ConnectPointState";
 import { getDiagramById } from "../../../utils/core/getDiagramById";
 import { isConnectLineState } from "../../../utils/validation/isConnectLineState";
 import { InteractionState } from "../../types/InteractionState";
@@ -99,7 +98,7 @@ export const useConnectLineControl = (
 		<ConnectLineControl
 			key={`connect-line-control-${connectLineItem.id}`}
 			id={connectLineItem.id}
-			items={connectLineItem.items as ConnectPointState[]}
+			points={connectLineItem.points}
 			pathType={connectLineItem.pathType}
 			autoRouting={connectLineItem.autoRouting}
 			startOwnerId={connectLineItem.startOwnerId}

@@ -8,7 +8,7 @@ import type { PathPointState } from "../../../types/state/shapes/PathPointState"
 /**
  * Creates a path data value (d attribute) from an array of path points based on PathType.
  *
- * @param items - Array of path points to create path from
+ * @param points - Array of path points to create path from
  * @param pathType - Type of path to generate (Straight, Polyline, Curve, or Rounded)
  * @param startTrim - Amount to trim from the start of the path (default: 0)
  * @param endTrim - Amount to trim from the end of the path (default: 0)
@@ -16,7 +16,7 @@ import type { PathPointState } from "../../../types/state/shapes/PathPointState"
  * @returns SVG path d attribute value
  */
 export const createPathDValue = (
-	items: PathPointState[],
+	points: PathPointState[],
 	pathType: PathType,
 	startTrim = 0,
 	endTrim = 0,
@@ -24,14 +24,14 @@ export const createPathDValue = (
 ): string => {
 	switch (pathType) {
 		case "Straight":
-			return createStraightDValue(items, startTrim, endTrim);
+			return createStraightDValue(points, startTrim, endTrim);
 		case "Polyline":
-			return createDValue(items, startTrim, endTrim);
+			return createDValue(points, startTrim, endTrim);
 		case "Curve":
-			return createBezierDValue(items, startTrim, endTrim);
+			return createBezierDValue(points, startTrim, endTrim);
 		case "Rounded":
-			return createRoundedDValue(items, radius, startTrim, endTrim);
+			return createRoundedDValue(points, radius, startTrim, endTrim);
 		default:
-			return createDValue(items, startTrim, endTrim);
+			return createDValue(points, startTrim, endTrim);
 	}
 };

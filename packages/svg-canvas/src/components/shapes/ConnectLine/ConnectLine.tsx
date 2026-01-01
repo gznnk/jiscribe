@@ -15,13 +15,12 @@ const ConnectLineComponent: React.FC<ConnectLineProps> = ({
 	isSelected = false,
 	isAncestorSelected = false,
 	isRootSelected = false,
-	items = [],
+	points = [],
 	pathType,
 	startArrowHead,
 	endArrowHead,
 	onClick,
 	onSelect,
-	onDiagramChange,
 }) => {
 	return (
 		<Path
@@ -35,14 +34,13 @@ const ConnectLineComponent: React.FC<ConnectLineProps> = ({
 			showOutline={false}
 			outlineDisabled={true}
 			dragEnabled={false}
-			items={items}
+			points={points}
 			pathType={pathType}
 			preserveEndpoints={true}
 			startArrowHead={startArrowHead}
 			endArrowHead={endArrowHead}
 			onClick={onClick}
 			onSelect={onSelect}
-			onDiagramChange={onDiagramChange}
 		/>
 	);
 };

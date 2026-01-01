@@ -13,7 +13,7 @@ import { createDValue } from "../../../utils/shapes/path/createDValue";
  */
 export type PathControlProps = {
 	id: string;
-	items: PathPointState[];
+	points: PathPointState[];
 	pathType: PathType;
 	enableMidpointHandles?: boolean;
 	hideEndpoints?: boolean;
@@ -27,7 +27,7 @@ export type PathControlProps = {
  */
 const PathControlComponent: React.FC<PathControlProps> = ({
 	id,
-	items,
+	points,
 	pathType,
 	enableMidpointHandles = true,
 	hideEndpoints = false,
@@ -41,7 +41,7 @@ const PathControlComponent: React.FC<PathControlProps> = ({
 	// To avoid frequent handler generation, hold referenced values in useRef
 	const refBusVal = {
 		id,
-		items,
+		points,
 		onDiagramChange,
 	};
 	const refBus = useRef(refBusVal);
@@ -97,7 +97,7 @@ const PathControlComponent: React.FC<PathControlProps> = ({
 			{/* Dashed guide lines for Bézier curves */}
 			{showDashedGuideLines && (
 				<path
-					d={createDValue(items)}
+					d={createDValue(points)}
 					fill="none"
 					stroke="rgba(24, 144, 255, 0.8)"
 					strokeWidth={1 / zoom}
@@ -109,7 +109,7 @@ const PathControlComponent: React.FC<PathControlProps> = ({
 			{showMidpointHandles && (
 				<MidpointHandles
 					id={id}
-					items={items}
+					points={points}
 					zoom={zoom}
 					onDiagramChange={handleMidpointDiagramChange}
 				/>
@@ -118,7 +118,7 @@ const PathControlComponent: React.FC<PathControlProps> = ({
 			{showVertexHandles && (
 				<VertexHandles
 					id={id}
-					items={items}
+					points={points}
 					zoom={zoom}
 					hideEndpoints={hideEndpoints}
 					onDiagramChange={handleVertexDiagramChange}

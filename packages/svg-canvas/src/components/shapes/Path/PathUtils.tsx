@@ -10,7 +10,7 @@ import { ArrowHead } from "../../core/ArrowHead";
  * Minimal path data needed for arrow head rendering
  */
 type PathArrowData = {
-	items: Diagram[];
+	points: Diagram[];
 	stroke: string;
 	strokeWidth?: number;
 	pathType?: PathType;
@@ -27,13 +27,13 @@ type PathArrowData = {
 export const createStartPointArrowHead = (
 	pathData: PathArrowData,
 ): React.ReactNode => {
-	if (1 < pathData.items.length) {
+	if (1 < pathData.points.length) {
 		if (pathData.startArrowHead && pathData.startArrowHead !== "None") {
-			const startPoint = pathData.items[0];
+			const startPoint = pathData.points[0];
 			// For Straight paths, use the second point; otherwise use the last point
-			let referencePoint = pathData.items[pathData.items.length - 1];
+			let referencePoint = pathData.points[pathData.points.length - 1];
 			if (pathData.pathType === "Straight") {
-				referencePoint = pathData.items[1];
+				referencePoint = pathData.points[1];
 			}
 			// Ensure both points are valid
 			if (!isPoint(startPoint) || !isPoint(referencePoint)) {
@@ -70,13 +70,13 @@ export const createStartPointArrowHead = (
 export const createEndPointArrowHead = (
 	pathData: PathArrowData,
 ): React.ReactNode => {
-	if (1 < pathData.items.length) {
+	if (1 < pathData.points.length) {
 		if (pathData.endArrowHead && pathData.endArrowHead !== "None") {
-			const endPoint = pathData.items[pathData.items.length - 1];
+			const endPoint = pathData.points[pathData.points.length - 1];
 			// For Straight paths, use the first point; otherwise use the second-to-last point
-			let referencePoint = pathData.items[pathData.items.length - 2];
+			let referencePoint = pathData.points[pathData.points.length - 2];
 			if (pathData.pathType === "Straight") {
-				referencePoint = pathData.items[0];
+				referencePoint = pathData.points[0];
 			}
 
 			// Ensure both points are valid

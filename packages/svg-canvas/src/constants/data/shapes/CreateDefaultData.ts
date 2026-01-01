@@ -6,6 +6,7 @@ import { EllipseDefaultData } from "../core/EllipseDefaultData";
 import { FillableDefaultData } from "../core/FillableDefaultData";
 import { ItemableDefaultData } from "../core/ItemableDefaultData";
 import { PointDefaultData } from "../core/PointDefaultData";
+import { PolyDefaultData } from "../core/PolyDefaultData";
 import { RectDefaultData } from "../core/RectDefaultData";
 import { StrokableDefaultData } from "../core/StrokableDefaultData";
 import { TextableDefaultData } from "../core/TextableDefaultData";
@@ -34,7 +35,9 @@ export function CreateDefaultData<T>(config: {
 				? EllipseDefaultData
 				: options.geometry === "point"
 					? PointDefaultData
-					: {}),
+					: options.geometry === "poly"
+						? PolyDefaultData
+						: {}),
 		...(options.transformative ? TransformativeDefaultData : {}),
 		...(options.itemable ? ItemableDefaultData : {}),
 		...(options.connectable ? ConnectableDefaultData : {}),

@@ -14,7 +14,7 @@ const ConnectLineMinimapComponent: React.FC<ConnectLineProps> = ({
 	strokeDashType = "solid",
 	isAncestorSelected = false,
 	isRootSelected = false,
-	items = [],
+	points = [],
 	pathType,
 	startArrowHead,
 	endArrowHead,
@@ -23,7 +23,7 @@ const ConnectLineMinimapComponent: React.FC<ConnectLineProps> = ({
 		<PathMinimap
 			id={id}
 			pathType={pathType}
-			items={items}
+			points={points}
 			stroke={stroke}
 			strokeWidth={strokeWidth}
 			strokeDashType={strokeDashType}

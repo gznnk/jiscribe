@@ -179,7 +179,7 @@ export const useOnConnectShapes = (props: SvgCanvasSubHooksProps) => {
 			const connectLine: ConnectLineState = {
 				...ConnectLineDefaultState,
 				id: newId(),
-				items: pathPoints,
+				points: pathPoints,
 				startOwnerId: sourceShape.id,
 				endOwnerId: targetShape.id,
 				// Apply custom arrow heads if specified

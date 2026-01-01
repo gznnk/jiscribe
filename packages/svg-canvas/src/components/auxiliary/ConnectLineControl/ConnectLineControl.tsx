@@ -25,7 +25,7 @@ export type ConnectLineControlProps = PathControlProps & {
  */
 const ConnectLineControlComponent: React.FC<ConnectLineControlProps> = ({
 	id,
-	items,
+	points,
 	pathType,
 	startOwnerId,
 	endOwnerId,
@@ -88,7 +88,7 @@ const ConnectLineControlComponent: React.FC<ConnectLineControlProps> = ({
 					id={id}
 					perpendicularDrag={true}
 					preserveEndpoints={true}
-					items={items}
+					points={points}
 					zoom={zoom}
 					onDiagramChange={handleSegmentDiagramChange}
 				/>
@@ -97,7 +97,7 @@ const ConnectLineControlComponent: React.FC<ConnectLineControlProps> = ({
 			{showPathControl && (
 				<PathControl
 					id={id}
-					items={items}
+					points={points}
 					pathType={pathType}
 					enableMidpointHandles={false}
 					hideEndpoints={true}
@@ -109,7 +109,7 @@ const ConnectLineControlComponent: React.FC<ConnectLineControlProps> = ({
 			{showReconnectionHandles && (
 				<ReconnectionHandles
 					id={id}
-					items={items}
+					points={points}
 					startOwnerId={startOwnerId}
 					endOwnerId={endOwnerId}
 					startOwnerFrame={startOwnerFrame}

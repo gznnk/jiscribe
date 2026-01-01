@@ -4,6 +4,7 @@ import type { Diagram } from "../../../types/state/core/Diagram";
 import type { ConnectLineState } from "../../../types/state/shapes/ConnectLineState";
 import type { ConnectPointState } from "../../../types/state/shapes/ConnectPointState";
 import type { GroupState } from "../../../types/state/shapes/GroupState";
+import type { PathPointState } from "../../../types/state/shapes/PathPointState";
 import { getDiagramById } from "../../../utils/core/getDiagramById";
 import { newId } from "../../../utils/shapes/common/newId";
 import { isConnectableState } from "../../../utils/validation/isConnectableState";
@@ -220,10 +221,10 @@ const processConnectLineForPaste = (
 		isSelected: false, // Pasted connection lines are not selected
 		showOutline: false, // Hide outline for pasted connection lines
 		// Update path points (simply apply offset)
-		items: (connectLine.items as ConnectPointState[]).map((point, index) => {
+		points: (connectLine.points as PathPointState[]).map((point, index) => {
 			// Assign new IDs
 			let pointId: string;
-			if (index === 0 || index === connectLine.items.length - 1) {
+			if (index === 0 || index === connectLine.points.length - 1) {
 				// For endpoint points, use ID mapping if available
 				pointId = idMap[point.id] || newId();
 			} else {

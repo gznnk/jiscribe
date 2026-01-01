@@ -9,7 +9,7 @@ import {
 
 import { convertDiagramToPoint } from "./convertDiagramToPoint";
 import type { Diagram } from "../../types/state/core/Diagram";
-import { isItemableState } from "../validation/isItemableState";
+import { isPolyState } from "../validation/isPolyState";
 
 export const convertDiagramToFrame = (diagram: Diagram): Frame | undefined => {
 	if (diagram.geometryType === "rect" && isRect(diagram)) {
@@ -18,9 +18,8 @@ export const convertDiagramToFrame = (diagram: Diagram): Frame | undefined => {
 	if (diagram.geometryType === "ellipse" && isEllipse(diagram)) {
 		return convertEllipseToFrame(diagram);
 	}
-	// TODO: polyはpointsで持つようにしたい
-	if (diagram.geometryType === "poly" && isItemableState(diagram)) {
-		const points = diagram.items
+	if (diagram.geometryType === "poly" && isPolyState(diagram)) {
+		const points = diagram.points
 			.map(convertDiagramToPoint)
 			.filter((p): p is Point => p !== undefined);
 		return convertPointsToFrame(points);

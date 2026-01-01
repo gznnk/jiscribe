@@ -3,6 +3,7 @@ import { isFrame } from "@workspace/geometry";
 import type { SvgCanvasState } from "../../../canvas/types/SvgCanvasState";
 import type { Diagram } from "../../../types/state/core/Diagram";
 import type { ConnectLineState } from "../../../types/state/shapes/ConnectLineState";
+import type { PathPointState } from "../../../types/state/shapes/PathPointState";
 import { getDiagramById } from "../../core/getDiagramById";
 import { isConnectableState } from "../../validation/isConnectableState";
 import { newId } from "../common/newId";
@@ -64,14 +65,14 @@ export const updateConnectLinesByIds = (
 			return item;
 		}
 
-		// Get the start and end point IDs from the ConnectLine's items array
-		const currentItems = connectLine.items;
-		if (currentItems.length < 2) {
+		// Get the start and end point IDs from the ConnectLine's points array
+		const currentPoints = connectLine.points;
+		if (currentPoints.length < 2) {
 			return item;
 		}
 
-		const startPointId = currentItems[0].id;
-		const endPointId = currentItems[currentItems.length - 1].id;
+		const startPointId = currentPoints[0].id;
+		const endPointId = currentPoints[currentPoints.length - 1].id;
 
 		// Find the connect points from the owner shapes using the point IDs
 		const startConnectPoint = startOwnerFrame.connectPoints.find(
@@ -98,23 +99,23 @@ export const updateConnectLinesByIds = (
 			);
 
 			// Create new path point data
-			const newItems = newPath.map((p, idx) => ({
+			const newPoints = newPath.map((p, idx) => ({
 				id: newId(),
 				name: `cp-${idx}`,
 				type: "PathPoint",
 				geometryType: "point",
 				x: p.x,
 				y: p.y,
-			})) as Diagram[];
+			})) as PathPointState[];
 
 			// Maintain IDs of both end points to preserve connection references
-			newItems[0].id = startPointId;
-			newItems[newItems.length - 1].id = endPointId;
+			newPoints[0].id = startPointId;
+			newPoints[newPoints.length - 1].id = endPointId;
 
 			// Return updated connect line with new path
 			return {
 				...connectLine,
-				items: newItems,
+				points: newPoints,
 			} as ConnectLineState;
 		}
 

@@ -23,7 +23,7 @@ export const createPathState = ({
 	pathType = "Polyline",
 	startArrowHead = "None",
 	endArrowHead = "None",
-	items,
+	points,
 }: {
 	x?: number;
 	y?: number;
@@ -33,11 +33,11 @@ export const createPathState = ({
 	pathType?: PathType;
 	startArrowHead?: ArrowHeadType;
 	endArrowHead?: ArrowHeadType;
-	items?: Point[];
+	points?: Point[];
 }): PathState => {
-	// If items are provided, use them; otherwise create default points
-	const pathPoints: PathPointState[] = items
-		? items.map(
+	// If points are provided, use them; otherwise create default points
+	const pathPoints: PathPointState[] = points
+		? points.map(
 				(point) =>
 					({
 						id: newId(),
@@ -73,6 +73,6 @@ export const createPathState = ({
 		pathType,
 		startArrowHead,
 		endArrowHead,
-		items: pathPoints,
+		points: pathPoints,
 	};
 };

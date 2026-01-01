@@ -93,14 +93,14 @@ export const updateManualConnectLinePath = (
 		return null;
 	}
 
-	// Use original items for calculations (matches ConnectLine component behavior)
-	const originalItems = originalConnectLine.items as PathPointState[];
+	// Use original points for calculations (matches ConnectLine component behavior)
+	const originalPoints = originalConnectLine.points as PathPointState[];
 
 	// Check if all lines are vertical and horizontal only
-	const isVerticalHorizontalLines = originalItems.every((item, idx) => {
+	const isVerticalHorizontalLines = originalPoints.every((item, idx) => {
 		if (idx === 0) return true;
 
-		const prev = originalItems[idx - 1];
+		const prev = originalPoints[idx - 1];
 		const radians = calcVectorAngle(prev.x, prev.y, item.x, item.y);
 		const degrees = radiansToDegrees(radians);
 		return degrees % 90 === 0;
@@ -122,13 +122,13 @@ export const updateManualConnectLinePath = (
 		}
 
 		// Check if it's a point adjacent to the moved point
-		const movedPointIdx = originalItems.findIndex(
+		const movedPointIdx = originalPoints.findIndex(
 			(item) => item.id === movedPoint.id,
 		);
 		const isNextPoint =
 			(movedPointIdx === 0 && idx === 1) ||
-			(movedPointIdx === originalItems.length - 1 &&
-				idx === originalItems.length - 2);
+			(movedPointIdx === originalPoints.length - 1 &&
+				idx === originalPoints.length - 2);
 
 		if (isNextPoint) {
 			// If connection lines are not only vertical and horizontal, keep the second point as is
@@ -139,7 +139,7 @@ export const updateManualConnectLinePath = (
 			// For connection lines with only vertical and horizontal lines, move the second point to maintain this constraint
 
 			// Calculate movement amount
-			const movedPointOldData = originalItems[movedPointIdx];
+			const movedPointOldData = originalPoints[movedPointIdx];
 			const dx = movedPoint.x - movedPointOldData.x;
 			const dy = movedPoint.y - movedPointOldData.y;
 
@@ -164,8 +164,8 @@ export const updateManualConnectLinePath = (
 		return oldPoint;
 	};
 
-	// Create new items using the same logic as ConnectLine component
-	const newItems = originalItems.map((item, idx) => {
+	// Create new points using the same logic as ConnectLine component
+	const newPoints = originalPoints.map((item, idx) => {
 		let newPoint = item;
 
 		// Apply start point changes
@@ -183,6 +183,6 @@ export const updateManualConnectLinePath = (
 	// Return updated connect line with moved points
 	return {
 		...connectLine,
-		items: newItems,
+		points: newPoints,
 	} as ConnectLineState;
 };

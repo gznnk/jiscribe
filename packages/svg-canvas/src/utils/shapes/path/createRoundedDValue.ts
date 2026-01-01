@@ -8,27 +8,27 @@ import type { PathPointState } from "../../../types/state/shapes/PathPointState"
  * Creates a rounded path data value (d attribute) from an array of path points.
  * Uses straight lines with rounded corners at each junction point.
  *
- * @param items - Array of path points to create path from
+ * @param points - Array of path points to create path from
  * @param radius - Corner radius for rounded corners (default: 10)
  * @param startTrim - Amount to trim from the start of the path (default: 0)
  * @param endTrim - Amount to trim from the end of the path (default: 0)
  * @returns SVG path d attribute value with rounded corners
  */
 export const createRoundedDValue = (
-	items: PathPointState[],
+	points: PathPointState[],
 	radius: number = 10,
 	startTrim = 0,
 	endTrim = 0,
 ): string => {
-	const n = items.length;
+	const n = points.length;
 	if (n < 2) {
 		return "";
 	}
 
 	// --- Two points: a single straight segment
 	if (n === 2) {
-		const p0: Point = { x: items[0].x, y: items[0].y };
-		const p1: Point = { x: items[1].x, y: items[1].y };
+		const p0: Point = { x: points[0].x, y: points[0].y };
+		const p1: Point = { x: points[1].x, y: points[1].y };
 
 		const p0t = trimLineStart(p0, p1, startTrim);
 		const p1t = trimLineEnd(p0t, p1, endTrim);
@@ -37,17 +37,18 @@ export const createRoundedDValue = (
 	}
 
 	// --- Start point with trim
-	const rawStart: Point = { x: items[0].x, y: items[0].y };
-	const startDir: Point = { x: items[1].x, y: items[1].y };
+	const rawStart: Point = { x: points[0].x, y: points[0].y };
+	const startDir: Point = { x: points[1].x, y: points[1].y };
 	const startPoint = trimLineStart(rawStart, startDir, startTrim);
 
 	let d = `M ${startPoint.x} ${startPoint.y}`;
 	let pen: Point = startPoint;
 
 	for (let i = 1; i <= n - 2; i++) {
-		const prev = i === 1 ? startPoint : { x: items[i - 1].x, y: items[i - 1].y };
-		const current = items[i];
-		const next = items[i + 1];
+		const prev =
+			i === 1 ? startPoint : { x: points[i - 1].x, y: points[i - 1].y };
+		const current = points[i];
+		const next = points[i + 1];
 
 		// Calculate vectors from current point to adjacent points
 		const toPrev = {
@@ -98,7 +99,7 @@ export const createRoundedDValue = (
 	}
 
 	// --- End point with trim
-	const rawEnd: Point = { x: items[n - 1].x, y: items[n - 1].y };
+	const rawEnd: Point = { x: points[n - 1].x, y: points[n - 1].y };
 	const endPoint = trimLineEnd(pen, rawEnd, endTrim);
 
 	d += ` L ${endPoint.x} ${endPoint.y}`;

@@ -3,6 +3,7 @@ import { PathFeatures } from "../../../types/data/shapes/PathData";
 import { createValidatorFromTypeAndFeatures } from "../../validation/createValidatorFromTypeAndFeatures";
 import { isArrowHeadType } from "../../validation/isArrowHeadType";
 import { isPathType } from "../../validation/isPathType";
+import { isPolyData } from "../../validation/isPolyData";
 
 const baseValidator = createValidatorFromTypeAndFeatures("Path", PathFeatures);
 
@@ -14,6 +15,7 @@ const baseValidator = createValidatorFromTypeAndFeatures("Path", PathFeatures);
  */
 export const isPathData = (data: unknown): data is PathData => {
 	if (!baseValidator(data)) return false;
+	if (!isPolyData(data)) return false;
 
 	const pathData = data as PathData;
 

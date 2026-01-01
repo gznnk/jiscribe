@@ -1,5 +1,6 @@
 import type { CreateDiagramProps } from "./CreateDiagramProps";
 import type { ConnectLineFeatures } from "../../data/shapes/ConnectLineData";
+import type { DiagramChangeEvent } from "../../events/DiagramChangeEvent";
 import type { ConnectLineState } from "../../state/shapes/ConnectLineState";
 
 /**
@@ -7,5 +8,8 @@ import type { ConnectLineState } from "../../state/shapes/ConnectLineState";
  */
 export type ConnectLineProps = CreateDiagramProps<
 	ConnectLineState,
-	typeof ConnectLineFeatures
+	typeof ConnectLineFeatures,
+	{
+		onDiagramChange?: (e: DiagramChangeEvent) => void;
+	}
 >;

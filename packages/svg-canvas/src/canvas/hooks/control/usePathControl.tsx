@@ -1,7 +1,6 @@
 import type { JSX } from "@emotion/react/jsx-runtime";
 
 import { PathControl } from "../../../components/auxiliary/PathControl";
-import type { PathPointState } from "../../../types/state/shapes/PathPointState";
 import type { PathState } from "../../../types/state/shapes/PathState";
 import { InteractionState } from "../../types/InteractionState";
 import type { SvgCanvasProps } from "../../types/SvgCanvasProps";
@@ -47,7 +46,7 @@ export const usePathControl = (props: SvgCanvasProps): JSX.Element | null => {
 		<PathControl
 			key={`path-control-${pathItem.id}`}
 			id={pathItem.id}
-			items={pathItem.items as PathPointState[]}
+			points={pathItem.points}
 			pathType={pathItem.pathType}
 			enableMidpointHandles={true}
 			zoom={zoom}

@@ -24,7 +24,7 @@ const PathComponent: React.FC<PathProps> = ({
 	strokeDashType = "solid",
 	isSelected = false,
 	isAncestorSelected = false,
-	items = [],
+	points = [],
 	pathType,
 	startArrowHead = "None",
 	endArrowHead = "None",
@@ -37,7 +37,7 @@ const PathComponent: React.FC<PathProps> = ({
 
 	let x = 0;
 	let y = 0;
-	const startPoint = items[0] as PathPointState;
+	const startPoint = points[0] as PathPointState;
 	if (startPoint) {
 		x = startPoint.x;
 		y = startPoint.y;
@@ -95,7 +95,7 @@ const PathComponent: React.FC<PathProps> = ({
 
 	// Generate polyline d attribute value
 	const d = createPathDValue(
-		items as PathPointState[],
+		points as PathPointState[],
 		pathType,
 		startTrim,
 		endTrim,
@@ -109,7 +109,7 @@ const PathComponent: React.FC<PathProps> = ({
 
 	// Create path data for arrow heads
 	const pathData = {
-		items,
+		points,
 		stroke,
 		strokeWidth,
 		pathType,

@@ -9,7 +9,7 @@ import type { PathType } from "../../core/PathType";
 export const PathFeatures = {
 	geometry: "poly",
 	transformative: false,
-	itemable: true,
+	itemable: false,
 	strokable: true,
 	cornerRoundable: false,
 	selectable: true,

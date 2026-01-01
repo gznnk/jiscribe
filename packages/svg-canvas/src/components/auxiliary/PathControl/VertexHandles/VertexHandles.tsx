@@ -6,7 +6,6 @@ import type {
 	DiagramChangeEvent,
 } from "../../../../types/events/DiagramChangeEvent";
 import type { DiagramDragEvent } from "../../../../types/events/DiagramDragEvent";
-import type { Diagram } from "../../../../types/state/core/Diagram";
 import type { PathPointState } from "../../../../types/state/shapes/PathPointState";
 import { PathPoint } from "../../../shapes/PathPoint";
 
@@ -15,7 +14,7 @@ import { PathPoint } from "../../../shapes/PathPoint";
  */
 type VertexHandlesProps = {
 	id: string;
-	items: Diagram[];
+	points: PathPointState[];
 	zoom: number;
 	hideEndpoints?: boolean;
 	onDiagramChange?: (e: DiagramChangeEvent) => void;
@@ -26,7 +25,7 @@ type VertexHandlesProps = {
  */
 const VertexHandlesComponent: React.FC<VertexHandlesProps> = ({
 	id,
-	items,
+	points,
 	zoom,
 	hideEndpoints = false,
 	onDiagramChange,
@@ -35,14 +34,12 @@ const VertexHandlesComponent: React.FC<VertexHandlesProps> = ({
 		null,
 	);
 
-	const startItems = useRef<PathPointState[] | null>(null);
-
-	const pathPoints = items as PathPointState[];
+	const startPoints = useRef<PathPointState[] | null>(null);
 
 	// To avoid frequent handler generation, hold referenced values in useRef
 	const refBusVal = {
 		id,
-		pathPoints,
+		points,
 		onDiagramChange,
 	};
 	const refBus = useRef(refBusVal);
@@ -52,32 +49,32 @@ const VertexHandlesComponent: React.FC<VertexHandlesProps> = ({
 	 * Vertex drag event handler
 	 */
 	const handlePathPointDrag = useCallback((e: DiagramDragEvent) => {
-		const { id, pathPoints, onDiagramChange } = refBus.current;
+		const { id, points, onDiagramChange } = refBus.current;
 
 		if (e.eventPhase === "Started") {
 			setDraggingPathPointId(e.id);
-			startItems.current = pathPoints;
+			startPoints.current = points;
 		}
 
-		if (startItems.current === null) return;
+		if (startPoints.current === null) return;
 
 		onDiagramChange?.({
 			id,
 			eventId: e.eventId,
 			eventPhase: e.eventPhase,
 			startDiagram: {
-				items: startItems.current,
+				points: startPoints.current,
 			} as DiagramChangeData,
 			endDiagram: {
-				items: pathPoints.map((item) => {
-					if (e.id === item.id) {
+				points: points.map((point) => {
+					if (e.id === point.id) {
 						return {
-							...item,
+							...point,
 							x: e.endX,
 							y: e.endY,
 						};
 					}
-					return item;
+					return point;
 				}),
 			} as DiagramChangeData,
 			minX: e.minX,
@@ -91,8 +88,8 @@ const VertexHandlesComponent: React.FC<VertexHandlesProps> = ({
 
 	return (
 		<>
-			{pathPoints.map((point, i) => {
-				if (hideEndpoints && (i === 0 || i === pathPoints.length - 1)) {
+			{points.map((point, i) => {
+				if (hideEndpoints && (i === 0 || i === points.length - 1)) {
 					return null;
 				}
 				return (

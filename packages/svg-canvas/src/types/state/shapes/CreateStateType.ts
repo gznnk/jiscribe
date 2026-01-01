@@ -8,6 +8,7 @@ import type { CornerRoundableState } from "../core/CornerRoundableState";
 import type { DiagramBaseState } from "../core/DiagramBaseState";
 import type { FillableState } from "../core/FillableState";
 import type { ItemableState } from "../core/ItemableState";
+import type { PolyState } from "../core/PolyState";
 import type { SelectableState } from "../core/SelectableState";
 import type { StrokableState } from "../core/StrokableState";
 import type { TextableState } from "../core/TextableState";
@@ -30,7 +31,8 @@ export type CreateStateType<
 	T &
 		DiagramBaseState & {
 			geometryType: U["geometry"] extends GeometryType ? U["geometry"] : "none";
-		} & (U["selectable"] extends true ? SelectableState : object) &
+		} & (U["geometry"] extends "poly" ? PolyState : object) &
+		(U["selectable"] extends true ? SelectableState : object) &
 		(U["transformative"] extends true ? TransformativeState : object) &
 		(U["itemable"] extends true ? ItemableState : object) &
 		(U["connectable"] extends true ? ConnectableState : object) &

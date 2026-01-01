@@ -23,7 +23,7 @@ import type {
 
 type ReconnectionHandlesProps = {
 	id: string;
-	items: PathPointState[];
+	points: PathPointState[];
 	startOwnerId?: string;
 	endOwnerId?: string;
 	startOwnerFrame?: Frame;
@@ -35,7 +35,7 @@ type ReconnectionHandlesProps = {
 
 const ReconnectionHandlesComponent: React.FC<ReconnectionHandlesProps> = ({
 	id,
-	items,
+	points,
 	startOwnerId,
 	endOwnerId,
 	startOwnerFrame,
@@ -46,21 +46,21 @@ const ReconnectionHandlesComponent: React.FC<ReconnectionHandlesProps> = ({
 }) => {
 	// Get eventBus from context
 	const eventBus = useEventBus();
-	// Store the initial items when dragging starts
-	const startItems = useRef<PathPointState[] | null>(null);
+	// Store the initial points when dragging starts
+	const startPoints = useRef<PathPointState[] | null>(null);
 	// Store the initial autoRouting state when dragging starts
 	const startAutoRouting = useRef<boolean>(false);
 	// Connecting point
 	const connectingPoint = useRef<ConnectingPoint | null>(null);
 
-	const startPoint = items[0];
-	const endPoint = items[items.length - 1];
+	const startPoint = points[0];
+	const endPoint = points[points.length - 1];
 
 	// To avoid frequent handler generation, hold referenced values in useRef
 	const refBusVal = {
 		// Properties
 		id,
-		items,
+		points,
 		startOwnerId,
 		endOwnerId,
 		autoRouting,
@@ -82,7 +82,7 @@ const ReconnectionHandlesComponent: React.FC<ReconnectionHandlesProps> = ({
 		) => {
 			const {
 				id,
-				items,
+				points,
 				startOwnerId,
 				endOwnerId,
 				autoRouting,
@@ -104,7 +104,7 @@ const ReconnectionHandlesComponent: React.FC<ReconnectionHandlesProps> = ({
 			);
 
 			if (e.eventPhase === "Started") {
-				startItems.current = items;
+				startPoints.current = points;
 				startAutoRouting.current = autoRouting;
 			}
 
@@ -143,10 +143,10 @@ const ReconnectionHandlesComponent: React.FC<ReconnectionHandlesProps> = ({
 						eventId: e.eventId,
 						eventPhase: e.eventPhase,
 						startDiagram: {
-							items: startItems.current || [],
+							points: startPoints.current || [],
 						} as DiagramChangeData,
 						endDiagram: {
-							items: newPoints.map((point, index) => {
+							points: newPoints.map((point, index) => {
 								let id = `point-${index}`;
 								if (index === 0) {
 									id = startPoint.id;
@@ -173,10 +173,10 @@ const ReconnectionHandlesComponent: React.FC<ReconnectionHandlesProps> = ({
 						eventId: e.eventId,
 						eventPhase: e.eventPhase,
 						startDiagram: {
-							items: startItems.current || [],
+							points: startPoints.current || [],
 						} as DiagramChangeData,
 						endDiagram: {
-							items: startItems.current || [],
+							points: startPoints.current || [],
 							autoRouting: startAutoRouting.current,
 						} as DiagramChangeData,
 					});
@@ -191,10 +191,10 @@ const ReconnectionHandlesComponent: React.FC<ReconnectionHandlesProps> = ({
 						eventId: e.eventId,
 						eventPhase: e.eventPhase,
 						startDiagram: {
-							items: startItems.current || [],
+							points: startPoints.current || [],
 						} as DiagramChangeData,
 						endDiagram: {
-							items: newPoints.map((point, index) => {
+							points: newPoints.map((point, index) => {
 								const isFirstPoint = index === 0;
 								const isLastPoint = index === newPoints.length - 1;
 
@@ -220,7 +220,7 @@ const ReconnectionHandlesComponent: React.FC<ReconnectionHandlesProps> = ({
 					});
 				}
 
-				startItems.current = null;
+				startPoints.current = null;
 				connectingPoint.current = null;
 			}
 		},

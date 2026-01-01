@@ -9,6 +9,7 @@ import type { FillableData } from "../core/FillableData";
 import type { ItemableData } from "../core/ItemableData";
 import type { OriginableData } from "../core/OriginableData";
 import type { PointData } from "../core/PointData";
+import type { PolyData } from "../core/PolyData";
 import type { RectData } from "../core/RectData";
 import type { StrokableData } from "../core/StrokableData";
 import type { TextableData } from "../core/TextableData";
@@ -24,7 +25,9 @@ type GeometryData<T extends DiagramFeatures> = //
 			? EllipseData
 			: T["geometry"] extends "point"
 				? PointData
-				: object;
+				: T["geometry"] extends "poly"
+					? PolyData
+					: object;
 
 /**
  * Generic type creator for diagram data types.

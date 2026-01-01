@@ -159,7 +159,7 @@ export const useAddPathShapeTool = (
 			const data = createPathState({
 				x: args.x,
 				y: args.y,
-				items: args.points,
+				points: args.points,
 				stroke: args.stroke,
 				strokeWidth: args.strokeWidth,
 				strokeDashType: args.strokeDashType,
@@ -173,7 +173,7 @@ export const useAddPathShapeTool = (
 			return {
 				id: data.id,
 				type: "Path",
-				pointCount: data.items.length,
+				pointCount: data.points.length,
 				stroke: data.stroke,
 				strokeWidth: data.strokeWidth,
 				strokeDashType: data.strokeDashType,

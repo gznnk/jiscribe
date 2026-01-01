@@ -37,7 +37,7 @@ export const useOnConnect = (props: SvgCanvasSubHooksProps) => {
 		const newConnectLine: ConnectLineState = {
 			...ConnectLineDefaultState,
 			id: newId(),
-			items: e.points.map((p) => ({
+			points: e.points.map((p) => ({
 				...p,
 				type: "PathPoint",
 				geometryType: "point",

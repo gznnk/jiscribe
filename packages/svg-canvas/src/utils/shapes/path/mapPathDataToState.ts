@@ -4,8 +4,13 @@ import type { Diagram } from "../../../types/state/core/Diagram";
 import type { PathState } from "../../../types/state/shapes/PathState";
 import { createDataToStateMapper } from "../../core/createDataToStateMapper";
 
-export const mapPathDataToState =
-	createDataToStateMapper<PathState>(PathDefaultState);
+const baseMapper = createDataToStateMapper<PathState>(PathDefaultState);
+
+export const mapPathDataToState = (data: Partial<PathState>): PathState => {
+	const state = baseMapper(data);
+
+	return state;
+};
 
 export const pathDataToState = (data: DiagramData): Diagram =>
 	mapPathDataToState(data as unknown as PathState);

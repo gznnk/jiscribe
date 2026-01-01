@@ -13,7 +13,7 @@ import type { DiagramDragEvent } from "../../../types/events/DiagramDragEvent";
 import type { DiagramHoverChangeEvent } from "../../../types/events/DiagramHoverChangeEvent";
 import type { EventPhase } from "../../../types/events/EventPhase";
 import type { ConnectPointProps } from "../../../types/props/shapes/ConnectPointProps";
-import type { DiagramBaseState } from "../../../types/state/core/DiagramBaseState";
+import type { PathPointState } from "../../../types/state/shapes/PathPointState";
 import { newId } from "../../../utils/shapes/common/newId";
 import { generateOptimalFrameToFrameConnection } from "../../../utils/shapes/connectPoint/generateOptimalFrameToFrameConnection";
 import { generatePathFromFrameToPoint } from "../../../utils/shapes/connectPoint/generatePathFromFrameToPoint";
@@ -103,10 +103,10 @@ const ConnectPointComponent: React.FC<ConnectPointProps> = ({
 			pathData: {
 				...ConnectLineDefaultState,
 				id: `${id}-connecting-path`,
-				items: newPathPoints.map((p) => ({
+				points: newPathPoints.map((p) => ({
 					...p,
 					geometryType: "point",
-				})) as DiagramBaseState[],
+				})) as PathPointState[],
 			},
 			minX,
 			minY,

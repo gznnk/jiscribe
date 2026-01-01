@@ -23,7 +23,7 @@ type SegmentDragHandlesProps = {
 	id: string;
 	perpendicularDrag: boolean;
 	preserveEndpoints: boolean;
-	items: PathPointState[];
+	points: PathPointState[];
 	zoom?: number;
 	onPointerDown?: (e: DiagramPointerEvent) => void;
 	onClick?: (e: DiagramClickEvent) => void;
@@ -37,7 +37,7 @@ const SegmentDragHandlesComponent: React.FC<SegmentDragHandlesProps> = ({
 	id,
 	perpendicularDrag,
 	preserveEndpoints,
-	items,
+	points,
 	zoom,
 	onClick,
 	onDiagramChange,
@@ -49,26 +49,26 @@ const SegmentDragHandlesComponent: React.FC<SegmentDragHandlesProps> = ({
 	// Reference to store the segment being dragged at the start of the drag.
 	const startSegment = useRef<SegmentDragHandleData>(undefined);
 
-	// Items of owner Path component at the start of the segment drag.
-	const startItems = useRef<PathPointState[]>(items);
+	// Points of owner Path component at the start of the segment drag.
+	const startPoints = useRef<PathPointState[]>(points);
 
 	// Build segment list: all segments normally, only dragged segment during drag operation.
 	const segmentList: SegmentDragHandleData[] = [];
 	if (draggingSegment) {
 		segmentList.push(draggingSegment);
 	} else {
-		for (let i = 0; i < items.length - 1; i++) {
-			const item = items[i];
-			const nextItem = items[i + 1];
+		for (let i = 0; i < points.length - 1; i++) {
+			const point = points[i];
+			const nextPoint = points[i + 1];
 
 			segmentList.push({
-				id: `${item.id}-${nextItem.id}`,
-				startX: item.x,
-				startY: item.y,
-				startPointId: item.id,
-				endX: nextItem.x,
-				endY: nextItem.y,
-				endPointId: nextItem.id,
+				id: `${point.id}-${nextPoint.id}`,
+				startX: point.x,
+				startY: point.y,
+				startPointId: point.id,
+				endX: nextPoint.x,
+				endY: nextPoint.y,
+				endPointId: nextPoint.id,
 			});
 		}
 	}
@@ -77,7 +77,7 @@ const SegmentDragHandlesComponent: React.FC<SegmentDragHandlesProps> = ({
 	const refBusVal = {
 		// Component properties
 		id,
-		items,
+		points,
 		preserveEndpoints,
 		onDiagramChange,
 		// Internal variables and functions
@@ -95,7 +95,7 @@ const SegmentDragHandlesComponent: React.FC<SegmentDragHandlesProps> = ({
 		const {
 			id,
 			preserveEndpoints,
-			items,
+			points,
 			onDiagramChange,
 			draggingSegment,
 			segmentList,
@@ -103,8 +103,8 @@ const SegmentDragHandlesComponent: React.FC<SegmentDragHandlesProps> = ({
 
 		// Process the drag start event.
 		if (e.eventPhase === "Started") {
-			// Store the items at the start of the segment drag.
-			startItems.current = items;
+			// Store the points at the start of the segment drag.
+			startPoints.current = points;
 
 			// Find the index of the segment being dragged.
 			const idx = segmentList.findIndex((v) => v.id === e.id);
@@ -118,55 +118,55 @@ const SegmentDragHandlesComponent: React.FC<SegmentDragHandlesProps> = ({
 				...segment,
 			};
 
-			let updatedItems = items;
+			let updatedPoints = points;
 
 			// If endpoints are preserved, add a new vertex when moving end segments.
 			const isBothEndsIdx = idx === 0 || idx === segmentList.length - 1;
 			if (preserveEndpoints && isBothEndsIdx) {
-				const newItems = [...items];
+				const newPoints = [...points];
 
 				// If the segment is the last segment, add a new vertex at the end.
 				if (idx === segmentList.length - 1) {
-					const newItem = {
+					const newPoint = {
 						id: newId(),
 						type: "PathPoint",
 						geometryType: "point",
 						x: segment.endX,
 						y: segment.endY,
 					} as PathPointState;
-					newItems.splice(newItems.length - 1, 0, newItem);
-					newSegment.endPointId = newItem.id;
+					newPoints.splice(newPoints.length - 1, 0, newPoint);
+					newSegment.endPointId = newPoint.id;
 				}
 
 				// If the segment is the first segment, add a new vertex at the start.
 				if (idx === 0) {
-					const newItem = {
+					const newPoint = {
 						id: newId(),
 						type: "PathPoint",
 						geometryType: "point",
 						x: segment.startX,
 						y: segment.startY,
 					} as PathPointState;
-					newItems.splice(1, 0, newItem);
-					newSegment.startPointId = newItem.id;
+					newPoints.splice(1, 0, newPoint);
+					newSegment.startPointId = newPoint.id;
 				}
 
-				updatedItems = newItems;
+				updatedPoints = newPoints;
 			}
 
 			// Track segment for drag updates.
 			setDraggingSegment(newSegment);
 
-			// Notify drag start with potentially updated items.
+			// Notify drag start with potentially updated points.
 			onDiagramChange?.({
 				eventId: e.eventId,
 				eventPhase: e.eventPhase,
 				id,
 				startDiagram: {
-					items: startItems.current,
+					points: startPoints.current,
 				} as DiagramChangeData<PathState>,
 				endDiagram: {
-					items: updatedItems,
+					points: updatedPoints,
 				} as DiagramChangeData<PathState>,
 				minX: e.minX,
 				minY: e.minY,
@@ -196,15 +196,15 @@ const SegmentDragHandlesComponent: React.FC<SegmentDragHandlesProps> = ({
 			endY: newEndY,
 		});
 
-		// Update items with new vertex positions
-		const updatedItems = items.map((item) => {
-			if (item.id === draggingSegment.startPointId) {
-				return { ...item, x: newStartX, y: newStartY };
+		// Update points with new vertex positions
+		const updatedPoints = points.map((point) => {
+			if (point.id === draggingSegment.startPointId) {
+				return { ...point, x: newStartX, y: newStartY };
 			}
-			if (item.id === draggingSegment.endPointId) {
-				return { ...item, x: newEndX, y: newEndY };
+			if (point.id === draggingSegment.endPointId) {
+				return { ...point, x: newEndX, y: newEndY };
 			}
-			return item;
+			return point;
 		});
 
 		if (e.eventPhase === "Ended") {
@@ -214,10 +214,10 @@ const SegmentDragHandlesComponent: React.FC<SegmentDragHandlesProps> = ({
 				eventPhase: e.eventPhase,
 				id,
 				startDiagram: {
-					items: startItems.current,
+					points: startPoints.current,
 				} as DiagramChangeData<PathState>,
 				endDiagram: {
-					items: updatedItems,
+					points: updatedPoints,
 				} as DiagramChangeData<PathState>,
 				minX: e.minX,
 				minY: e.minY,
@@ -231,10 +231,10 @@ const SegmentDragHandlesComponent: React.FC<SegmentDragHandlesProps> = ({
 				eventPhase: e.eventPhase,
 				id,
 				startDiagram: {
-					items: startItems.current,
+					points: startPoints.current,
 				} as DiagramChangeData<PathState>,
 				endDiagram: {
-					items: updatedItems,
+					points: updatedPoints,
 				} as DiagramChangeData<PathState>,
 				minX: e.minX,
 				minY: e.minY,
