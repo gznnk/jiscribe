@@ -10,6 +10,6 @@ export * from "./createLinearX2yFunction";
 export * from "./createLinearY2xFunction";
 export * from "./isLineIntersectingBoxGeometry";
 export * from "./doSegmentsIntersect";
-export * from "./convertRectGeometryToFrame";
-export * from "./convertEllipseGeometryToFrame";
+export * from "./convertRectToFrame";
+export * from "./convertEllipseToFrame";
 export * from "./convertPointsToFrame";

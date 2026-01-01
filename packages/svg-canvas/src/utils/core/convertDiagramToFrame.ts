@@ -1,8 +1,8 @@
 import type { Frame, Point } from "@workspace/geometry";
 import {
-	convertEllipseGeometryToFrame,
+	convertEllipseToFrame,
 	convertPointsToFrame,
-	convertRectGeometryToFrame,
+	convertRectToFrame,
 	isEllipse,
 	isRect,
 } from "@workspace/geometry";
@@ -13,10 +13,10 @@ import { isItemableState } from "../validation/isItemableState";
 
 export const convertDiagramToFrame = (diagram: Diagram): Frame | undefined => {
 	if (diagram.geometryType === "rect" && isRect(diagram)) {
-		return convertRectGeometryToFrame(diagram);
+		return convertRectToFrame(diagram);
 	}
 	if (diagram.geometryType === "ellipse" && isEllipse(diagram)) {
-		return convertEllipseGeometryToFrame(diagram);
+		return convertEllipseToFrame(diagram);
 	}
 	// TODO: polyはpointsで持つようにしたい
 	if (diagram.geometryType === "poly" && isItemableState(diagram)) {

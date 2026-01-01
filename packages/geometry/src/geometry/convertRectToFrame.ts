@@ -7,7 +7,7 @@ import type { Rect } from "../types/Rect";
  * @param geometry - The rectangle geometry
  * @returns The corresponding Frame
  */
-export const convertRectGeometryToFrame = (geometry: Rect): Frame => {
+export const convertRectToFrame = (geometry: Rect): Frame => {
 	const { x, y, width, height, rotation, scaleX, scaleY } = geometry;
 	return {
 		cx: x + width / 2,

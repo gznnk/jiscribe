@@ -7,9 +7,7 @@ import type { Frame } from "../types/Frame";
  * @param geometry - The ellipse geometry
  * @returns The corresponding Frame
  */
-export const convertEllipseGeometryToFrame = (
-	geometry: Ellipse,
-): Frame => {
+export const convertEllipseToFrame = (geometry: Ellipse): Frame => {
 	const { cx, cy, rx, ry, rotation, scaleX, scaleY } = geometry;
 	return {
 		cx,

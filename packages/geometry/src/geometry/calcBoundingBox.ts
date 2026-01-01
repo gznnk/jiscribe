@@ -13,7 +13,7 @@ import type { Frame } from "../types/Frame";
  * @returns The bounding box with top, left, right, bottom coordinates
  */
 export const calcBoundingBox = (frame: Frame): BoundingBox => {
-	const { cx: x, cy: y } = frame;
+	const { cx, cy } = frame;
 
 	const { width, height, rotation = 0, scaleX = 1, scaleY = 1 } = frame;
 
@@ -31,8 +31,8 @@ export const calcBoundingBox = (frame: Frame): BoundingBox => {
 			scaleX,
 			scaleY,
 			radians,
-			x,
-			y,
+			cx,
+			cy,
 		);
 
 		const bottomLeft = calcAffineTransformedPoint(
@@ -41,8 +41,8 @@ export const calcBoundingBox = (frame: Frame): BoundingBox => {
 			scaleX,
 			scaleY,
 			radians,
-			x,
-			y,
+			cx,
+			cy,
 		);
 
 		const topRight = calcAffineTransformedPoint(
@@ -51,8 +51,8 @@ export const calcBoundingBox = (frame: Frame): BoundingBox => {
 			scaleX,
 			scaleY,
 			radians,
-			x,
-			y,
+			cx,
+			cy,
 		);
 
 		const bottomRight = calcAffineTransformedPoint(
@@ -61,8 +61,8 @@ export const calcBoundingBox = (frame: Frame): BoundingBox => {
 			scaleX,
 			scaleY,
 			radians,
-			x,
-			y,
+			cx,
+			cy,
 		);
 
 		// Find min/max values
@@ -75,14 +75,11 @@ export const calcBoundingBox = (frame: Frame): BoundingBox => {
 	}
 
 	// Optimized path for non-rotated elements
-	// Calculate scaled dimensions
-	const scaledHalfWidth = halfWidth * scaleX;
-	const scaledHalfHeight = halfHeight * scaleY;
-
+	// Note: scaleX and scaleY are 1 or -1 (flip only), so dimensions don't change
 	return {
-		top: y - scaledHalfHeight,
-		left: x - scaledHalfWidth,
-		right: x + scaledHalfWidth,
-		bottom: y + scaledHalfHeight,
+		top: cy - halfHeight,
+		left: cx - halfWidth,
+		right: cx + halfWidth,
+		bottom: cy + halfHeight,
 	};
 };
