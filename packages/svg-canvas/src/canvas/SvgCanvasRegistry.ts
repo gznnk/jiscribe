@@ -1,18 +1,5 @@
 import { CanvasFrameAtlas } from "../atlas/diagrams/CanvasFrameAtlas";
 import { StickyAtlas } from "../atlas/diagrams/StickyAtlas";
-import { ButtonAtlas } from "../atlas/elements/ButtonAtlas";
-import { InputAtlas } from "../atlas/elements/InputAtlas";
-import { NodeHeaderAtlas } from "../atlas/elements/NodeHeaderAtlas";
-import { AgentNodeAtlas } from "../atlas/nodes/AgentNodeAtlas";
-import { HtmlGenNodeAtlas } from "../atlas/nodes/HtmlGenNodeAtlas";
-import { HubNodeAtlas } from "../atlas/nodes/HubNodeAtlas";
-import { ImageGenNodeAtlas } from "../atlas/nodes/ImageGenNodeAtlas";
-import { LLMNodeAtlas } from "../atlas/nodes/LLMNodeAtlas";
-import { PageDesignNodeAtlas } from "../atlas/nodes/PageDesignNodeAtlas";
-import { SvgToDiagramNodeAtlas } from "../atlas/nodes/SvgToDiagramNodeAtlas";
-import { TextAreaNodeAtlas } from "../atlas/nodes/TextAreaNodeAtlas";
-import { VectorStoreNodeAtlas } from "../atlas/nodes/VectorStoreNodeAtlas";
-import { WebSearchNodeAtlas } from "../atlas/nodes/WebSearchNodeAtlas";
 import { ConnectLineAtlas } from "../atlas/shapes/ConnectLineAtlas";
 import { EllipseAtlas } from "../atlas/shapes/EllipseAtlas";
 import { GroupAtlas } from "../atlas/shapes/GroupAtlas";
@@ -46,29 +33,8 @@ export const initializeSvgCanvasDiagrams = (): void => {
 	DiagramRegistry.register(SvgAtlas);
 
 	// ============================================================================
-	// Element Atlas Registration
-	// ============================================================================
-	DiagramRegistry.register(ButtonAtlas);
-	DiagramRegistry.register(InputAtlas);
-	DiagramRegistry.register(NodeHeaderAtlas);
-
-	// ============================================================================
 	// Diagram Atlas Registration
 	// ============================================================================
 	DiagramRegistry.register(CanvasFrameAtlas);
 	DiagramRegistry.register(StickyAtlas);
-
-	// ============================================================================
-	// Node Atlas Registration
-	// ============================================================================
-	DiagramRegistry.register(AgentNodeAtlas);
-	DiagramRegistry.register(HtmlGenNodeAtlas);
-	DiagramRegistry.register(HubNodeAtlas);
-	DiagramRegistry.register(ImageGenNodeAtlas);
-	DiagramRegistry.register(LLMNodeAtlas);
-	DiagramRegistry.register(PageDesignNodeAtlas);
-	DiagramRegistry.register(SvgToDiagramNodeAtlas);
-	DiagramRegistry.register(TextAreaNodeAtlas);
-	DiagramRegistry.register(VectorStoreNodeAtlas);
-	DiagramRegistry.register(WebSearchNodeAtlas);
 };

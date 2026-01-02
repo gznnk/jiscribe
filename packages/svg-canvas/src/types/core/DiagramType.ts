@@ -18,24 +18,8 @@ export type DiagramType =
 	| "Rectangle"
 	| "Svg"
 	| "Text"
-	| "Frame"
-	| "Button"
-	| "Input"
-	| "NodeHeader"
 	// Diagrams
-	| "Ai"
 	| "CanvasFrame"
 	| "Sticky"
-	// Nodes
-	| "AgentNode"
-	| "HtmlGenNode"
-	| "HubNode"
-	| "ImageGenNode"
-	| "LLMNode"
-	| "PageDesignNode"
-	| "SvgToDiagramNode"
-	| "TextAreaNode"
-	| "VectorStoreNode"
-	| "WebSearchNode"
 	// Allow any string
 	| (string & {});
