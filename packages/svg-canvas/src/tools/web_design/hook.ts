@@ -21,11 +21,6 @@ import {
 	groupShapesWithHandlerToolDefinition,
 	useGroupShapesWithHandlerTool,
 } from "../group_shapes_with_handler";
-import {
-	resizeCanvasFrameWithHandlerToolDefinition,
-	useResizeCanvasFrameWithHandlerTool,
-	type ResizeCanvasFrameResult,
-} from "../resize_canvas_frame_with_handler";
 
 // TODO: 整理
 type ShapeHandler = (diagram: Diagram) => void;
@@ -36,40 +31,33 @@ type GroupShapesResult = {
 	description?: string;
 };
 type GroupShapesHandler = (result: GroupShapesResult) => void;
-type ResizeCanvasFrameHandler = (result: ResizeCanvasFrameResult) => void;
 
 export const useWebDesignTool = (): ((
 	shapeHandler: ShapeHandler,
 	groupShapesHandler: GroupShapesHandler,
-	resizeCanvasFrameHandler: ResizeCanvasFrameHandler,
 ) => FunctionCallHandler) => {
 	// 各_with_handlerツールを取得
 	const rectangleShapeWithHandlerTool = useAddRectangleShapeWithHandlerTool();
 	const circleShapeWithHandlerTool = useAddCircleShapeWithHandlerTool();
 	const textElementWithHandlerTool = useAddTextElementWithHandlerTool();
 	const groupShapesWithHandlerTool = useGroupShapesWithHandlerTool();
-	const resizeCanvasFrameWithHandlerTool =
-		useResizeCanvasFrameWithHandlerTool();
 
 	// handler本体をuseMemoで生成
 	return useMemo<
 		(
 			shapeHandler: ShapeHandler,
 			groupShapesHandler: GroupShapesHandler,
-			resizeCanvasFrameHandler: ResizeCanvasFrameHandler,
 		) => FunctionCallHandler
 	>(() => {
 		return (
 			shapeHandler: ShapeHandler,
 			groupShapesHandler: GroupShapesHandler,
-			resizeCanvasFrameHandler: ResizeCanvasFrameHandler,
 		) => {
 			const WEB_DESIGN_TOOLS = [
 				rectangleShapeWithHandlerToolDefinition,
 				circleShapeWithHandlerToolDefinition,
 				textElementWithHandlerToolDefinition,
 				groupShapesWithHandlerToolDefinition,
-				resizeCanvasFrameWithHandlerToolDefinition,
 			];
 
 			const functionHandlerMap = {
@@ -77,9 +65,6 @@ export const useWebDesignTool = (): ((
 				add_circle_shape: circleShapeWithHandlerTool(shapeHandler),
 				add_text_element: textElementWithHandlerTool(shapeHandler),
 				group_shapes: groupShapesWithHandlerTool(groupShapesHandler),
-				resize_canvas_frame: resizeCanvasFrameWithHandlerTool(
-					resizeCanvasFrameHandler,
-				),
 			};
 
 			const handler: FunctionCallHandler = async (
@@ -133,6 +118,5 @@ export const useWebDesignTool = (): ((
 		circleShapeWithHandlerTool,
 		textElementWithHandlerTool,
 		groupShapesWithHandlerTool,
-		resizeCanvasFrameWithHandlerTool,
 	]);
 };

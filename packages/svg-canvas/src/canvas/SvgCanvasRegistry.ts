@@ -1,9 +1,7 @@
-import { CanvasFrameAtlas } from "../atlas/diagrams/CanvasFrameAtlas";
 import { StickyAtlas } from "../atlas/diagrams/StickyAtlas";
 import { ConnectLineAtlas } from "../atlas/shapes/ConnectLineAtlas";
 import { EllipseAtlas } from "../atlas/shapes/EllipseAtlas";
 import { GroupAtlas } from "../atlas/shapes/GroupAtlas";
-import { HtmlPreviewAtlas } from "../atlas/shapes/HtmlPreviewAtlas";
 import { ImageAtlas } from "../atlas/shapes/ImageAtlas";
 import { PathAtlas } from "../atlas/shapes/PathAtlas";
 import { PathPointAtlas } from "../atlas/shapes/PathPointAtlas";
@@ -25,7 +23,6 @@ export const initializeSvgCanvasDiagrams = (): void => {
 	DiagramRegistry.register(ConnectLineAtlas);
 	DiagramRegistry.register(EllipseAtlas);
 	DiagramRegistry.register(GroupAtlas);
-	DiagramRegistry.register(HtmlPreviewAtlas);
 	DiagramRegistry.register(ImageAtlas);
 	DiagramRegistry.register(PathAtlas);
 	DiagramRegistry.register(PathPointAtlas);
@@ -35,6 +32,5 @@ export const initializeSvgCanvasDiagrams = (): void => {
 	// ============================================================================
 	// Diagram Atlas Registration
 	// ============================================================================
-	DiagramRegistry.register(CanvasFrameAtlas);
 	DiagramRegistry.register(StickyAtlas);
 };

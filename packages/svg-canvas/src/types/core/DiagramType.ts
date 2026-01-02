@@ -11,7 +11,6 @@ export type DiagramType =
 	| "ConnectPoint"
 	| "Ellipse"
 	| "Group"
-	| "HtmlPreview"
 	| "Image"
 	| "Path"
 	| "PathPoint"
@@ -19,7 +18,7 @@ export type DiagramType =
 	| "Svg"
 	| "Text"
 	// Diagrams
-	| "CanvasFrame"
+	| "Ai"
 	| "Sticky"
 	// Allow any string
 	| (string & {});

@@ -8,10 +8,6 @@ import {
 	useAddCircleShapeTool,
 } from "../../../../tools/add_circle_shape";
 import {
-	htmlPreviewToolDefinition,
-	useAddHtmlPreviewTool,
-} from "../../../../tools/add_html_preview";
-import {
 	markdownShapeToolDefinition,
 	useAddMarkdownShapeTool,
 } from "../../../../tools/add_markdown_shape";
@@ -77,7 +73,6 @@ export const useAiChat = () => {
 	const addTextElement = useAddTextElementTool(eventBus);
 	const addPathShape = useAddPathShapeTool(eventBus);
 	const addSvgShape = useAddSvgShapeTool(eventBus);
-	const addHtmlPreview = useAddHtmlPreviewTool(eventBus);
 	const connectShapes = useConnectShapesTool(eventBus);
 	const groupShapes = useGroupShapesTool(eventBus);
 	const addMarkdownShape = useAddMarkdownShapeTool(eventBus);
@@ -94,7 +89,6 @@ export const useAiChat = () => {
 				textElementToolDefinition,
 				pathShapeToolDefinition,
 				svgShapeToolDefinition,
-				htmlPreviewToolDefinition,
 				connectShapesToolDefinition,
 				groupShapesToolDefinition,
 				markdownShapeToolDefinition,
@@ -108,7 +102,6 @@ export const useAiChat = () => {
 				add_text_element: addTextElement,
 				add_path_shape: addPathShape,
 				add_svg_shape: addSvgShape,
-				add_html_preview: addHtmlPreview,
 				connect_shapes: connectShapes,
 				group_shapes: groupShapes,
 				add_markdown_shape: addMarkdownShape,
@@ -123,7 +116,6 @@ export const useAiChat = () => {
 			addTextElement,
 			addPathShape,
 			addSvgShape,
-			addHtmlPreview,
 			connectShapes,
 			groupShapes,
 			addMarkdownShape,
