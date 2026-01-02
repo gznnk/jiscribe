@@ -1,5 +1,3 @@
-import { isFrame } from "@workspace/geometry";
-import type { Frame } from "@workspace/geometry";
 import { useEffect, useRef } from "react";
 
 import { EVENT_NAME_CONNECT_SHAPES } from "../../../constants/core/EventNames";
@@ -15,6 +13,7 @@ import type { ConnectPointState } from "../../../types/state/shapes/ConnectPoint
 import type { EllipseState } from "../../../types/state/shapes/EllipseState";
 import type { PathPointState } from "../../../types/state/shapes/PathPointState";
 import type { RectangleState } from "../../../types/state/shapes/RectangleState";
+import { convertDiagramToFrame } from "../../../utils/core/convertDiagramToFrame";
 import { getDiagramById } from "../../../utils/core/getDiagramById";
 import { newId } from "../../../utils/shapes/common/newId";
 import { generateOptimalFrameToFrameConnection } from "../../../utils/shapes/connectPoint/generateOptimalFrameToFrameConnection";
@@ -63,8 +62,11 @@ export const useOnConnectShapes = (props: SvgCanvasSubHooksProps) => {
 				return;
 			}
 
-			if (!isFrame(sourceShape) || !isFrame(targetShape)) {
-				console.error("Source or target shape is not a frame.");
+			const sourceFrame = convertDiagramToFrame(sourceShape);
+			const targetFrame = convertDiagramToFrame(targetShape);
+
+			if (!sourceFrame || !targetFrame) {
+				console.error("Source or target shape cannot be converted to a frame.");
 				return;
 			}
 
@@ -157,10 +159,10 @@ export const useOnConnectShapes = (props: SvgCanvasSubHooksProps) => {
 			const points = generateOptimalFrameToFrameConnection(
 				sourceConnectPoint.x,
 				sourceConnectPoint.y,
-				sourceShape as Frame,
+				sourceFrame,
 				targetConnectPoint.x,
 				targetConnectPoint.y,
-				targetShape as Frame,
+				targetFrame,
 			);
 
 			const newPathPointId = (i: number) => {

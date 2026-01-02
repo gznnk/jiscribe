@@ -1,9 +1,8 @@
-import { isFrame } from "@workspace/geometry";
-
 import type { SvgCanvasState } from "../../../canvas/types/SvgCanvasState";
 import type { Diagram } from "../../../types/state/core/Diagram";
 import type { ConnectLineState } from "../../../types/state/shapes/ConnectLineState";
 import type { PathPointState } from "../../../types/state/shapes/PathPointState";
+import { convertDiagramToFrame } from "../../core/convertDiagramToFrame";
 import { getDiagramById } from "../../core/getDiagramById";
 import { isConnectableState } from "../../validation/isConnectableState";
 import { newId } from "../common/newId";
@@ -52,8 +51,12 @@ export const updateConnectLinesByIds = (
 			return item;
 		}
 
-		// Skip if either owner shape is not a Frame
-		if (!isFrame(startOwnerFrame) || !isFrame(endOwnerFrame)) {
+		// Convert owner shapes to Frames
+		const startFrame = convertDiagramToFrame(startOwnerFrame);
+		const endFrame = convertDiagramToFrame(endOwnerFrame);
+
+		// Skip if either owner shape cannot be converted to a Frame
+		if (!startFrame || !endFrame) {
 			return item;
 		}
 
@@ -92,10 +95,10 @@ export const updateConnectLinesByIds = (
 			const newPath = generateOptimalFrameToFrameConnection(
 				startConnectPoint.x,
 				startConnectPoint.y,
-				startOwnerFrame,
+				startFrame,
 				endConnectPoint.x,
 				endConnectPoint.y,
-				endOwnerFrame,
+				endFrame,
 			);
 
 			// Create new path point data

@@ -1,4 +1,4 @@
-import { calcEllipseVertices, isEllipse, isFrame } from "@workspace/geometry";
+import { calcEllipseVertices, isEllipse } from "@workspace/geometry";
 
 import type { EllipseVertices } from "../../../types/core/EllipseVertices";
 import type { Diagram } from "../../../types/state/core/Diagram";
@@ -14,8 +14,7 @@ import { isConnectableState } from "../../validation/isConnectableState";
 export const calcEllipseConnectPointPosition = (
 	diagram: Diagram,
 ): ConnectPointState[] => {
-	if (!isConnectableState(diagram) || !isFrame(diagram) || !isEllipse(diagram))
-		return []; // Type guard.
+	if (!isConnectableState(diagram) || !isEllipse(diagram)) return []; // Type guard.
 
 	// Calculate the vertices of the ellipse.
 	const vertices = calcEllipseVertices(diagram);

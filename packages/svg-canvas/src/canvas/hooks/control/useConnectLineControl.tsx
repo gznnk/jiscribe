@@ -1,11 +1,11 @@
 import type { JSX } from "@emotion/react/jsx-runtime";
 import type { Frame } from "@workspace/geometry";
-import { isFrame } from "@workspace/geometry";
 import { useCallback, useMemo, useRef } from "react";
 
 import { ConnectLineControl } from "../../../components/auxiliary/ConnectLineControl";
 import type { DiagramChangeEvent } from "../../../types/events/DiagramChangeEvent";
 import type { ConnectLineState } from "../../../types/state/shapes/ConnectLineState";
+import { convertDiagramToFrame } from "../../../utils/core/convertDiagramToFrame";
 import { getDiagramById } from "../../../utils/core/getDiagramById";
 import { isConnectLineState } from "../../../utils/validation/isConnectLineState";
 import { InteractionState } from "../../types/InteractionState";
@@ -72,7 +72,7 @@ export const useConnectLineControl = (
 			refBus.current.items,
 			connectLineItem.startOwnerId,
 		);
-		return isFrame(startOwner) ? startOwner : undefined;
+		return startOwner ? convertDiagramToFrame(startOwner) : undefined;
 	}, [connectLineItem?.startOwnerId]);
 
 	const endOwnerFrame = useMemo(() => {
@@ -81,7 +81,7 @@ export const useConnectLineControl = (
 			refBus.current.items,
 			connectLineItem.endOwnerId,
 		);
-		return isFrame(endOwner) ? endOwner : undefined;
+		return endOwner ? convertDiagramToFrame(endOwner) : undefined;
 	}, [connectLineItem?.endOwnerId]);
 
 	// Don't render ConnectLineControl during dragging or when no ConnectLine is selected
