@@ -4,7 +4,7 @@ export * from "./calcFrameFeaturePoints";
 export * from "./calcOrientedFrameFromPoints";
 export * from "./calcFrameBoxFeatures";
 export * from "./calcRectKeyPoints";
-export * from "./calcClosestIntersection";
+export * from "./calcClosestOrthogonalIntersection";
 export * from "./calcDimensionsWithMinSize";
 export * from "./createLinearX2yFunction";
 export * from "./createLinearY2xFunction";
