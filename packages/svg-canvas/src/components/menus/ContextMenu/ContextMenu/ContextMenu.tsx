@@ -5,7 +5,7 @@ import { memo, useEffect, useRef, useState } from "react";
 import { ContextMenuItem } from "../ContextMenuItem";
 import { ContextMenuDiv, ContextMenuDivider } from "./ContextMenuStyled";
 import type { ContextMenuStateMap, ContextMenuType } from "./ContextMenuTypes";
-import type { Dimensions } from "../../../../types/core/Dimensions";
+import type { Dimensions } from "@workspace/geometry";
 
 /**
  * Properties for the ContextMenu component.
