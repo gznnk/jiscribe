@@ -15,12 +15,9 @@
 		"@workspace/basic-validators": "workspace:*",
 		"@workspace/event-bus": "workspace:*",
 		"@workspace/geometry": "workspace:*",
-		"@workspace/llm-chat-ui": "workspace:*",
-		"@workspace/llm-client": "workspace:*",
 		"@workspace/markdown": "workspace:*",
 		"@workspace/utility-types": "workspace:*",
 		"dompurify": "catalog:",
-		"openai": "catalog:",
 		"react": "catalog:"
 	},
 	"devDependencies": {

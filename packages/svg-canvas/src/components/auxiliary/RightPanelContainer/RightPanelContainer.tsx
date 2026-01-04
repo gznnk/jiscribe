@@ -24,7 +24,7 @@ const RightPanelContainerComponent = ({
 
 /**
  * Container component for bottom-right panels.
- * Manages vertical stacking layout for ZoomControls and AiChatPanel.
+ * Manages vertical stacking layout for ZoomControls.
  *
  * @param props - Component properties
  * @returns React component

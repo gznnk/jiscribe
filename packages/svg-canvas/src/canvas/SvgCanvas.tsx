@@ -27,7 +27,6 @@ import {
 	getPreviousZoomLevel,
 	getResetZoomLevel,
 } from "./utils/zoomLevels";
-import { AiChatPanel } from "../components/auxiliary/AiChatPanel";
 import { DiagramInfoPopover } from "../components/auxiliary/DiagramInfoPopover";
 import { DragGhost } from "../components/auxiliary/DragGhost";
 import { FlashConnectLine } from "../components/auxiliary/FlashConnectLine";
@@ -657,7 +656,6 @@ const SvgCanvasComponent = forwardRef<SvgCanvasRef, SvgCanvasProps>(
 									/>
 								</RightPanelContainer>
 								<BottomPanelContainer>
-									<AiChatPanel />
 									<ZoomControls
 										zoom={zoom}
 										onZoomIn={handleZoomIn}

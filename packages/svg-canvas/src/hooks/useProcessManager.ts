@@ -6,7 +6,7 @@ const CLEANUP_DELAY = 4000; // 4 seconds
 
 export const useProcessManager = () => {
 	const [processes, setProcesses] = useState<ProcessItem[]>([]);
-	const timeoutsRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
+	const timeoutsRef = useRef<Map<string, number>>(new Map());
 
 	const addProcess = useCallback((id: string) => {
 		setProcesses((prev) => {
