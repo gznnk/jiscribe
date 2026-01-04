@@ -1,7 +1,7 @@
 import {
-	type Ellipse,
-	type Rect,
-	type Frame,
+	type TransformedEllipse,
+	type TransformedRect,
+	type TransformedFrame,
 	isRect,
 	isEllipse,
 } from "@workspace/geometry";
@@ -9,7 +9,7 @@ import {
 import type { Diagram } from "../../types/state/core/Diagram";
 
 export const applyFrameToDiagram = (
-	frame: Frame,
+	frame: TransformedFrame,
 	diagram: Diagram,
 ): Diagram | undefined => {
 	if (isRect(diagram)) {
@@ -25,7 +25,7 @@ export const applyFrameToDiagram = (
 			rotation: frame.rotation,
 			scaleX: frame.scaleX,
 			scaleY: frame.scaleY,
-		} as Diagram & Rect;
+		} as Diagram & TransformedRect;
 	}
 	if (isEllipse(diagram)) {
 		// For ellipse-based diagrams, calculate rx and ry from width and height
@@ -40,7 +40,7 @@ export const applyFrameToDiagram = (
 			rotation: frame.rotation,
 			scaleX: frame.scaleX,
 			scaleY: frame.scaleY,
-		} as Diagram & Ellipse;
+		} as Diagram & TransformedEllipse;
 	}
 
 	return undefined;

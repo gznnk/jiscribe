@@ -3,7 +3,7 @@ import {
 	calcRectangleBoundingBoxGeometry,
 	isLineIntersectingBoxGeometry,
 } from "@workspace/geometry";
-import type { Frame, Point } from "@workspace/geometry";
+import type { TransformedFrame, Point } from "@workspace/geometry";
 
 import { addMarginToBoxGeometry } from "./addMarginToBoxGeometry";
 import { cleanPath } from "./cleanPath";
@@ -64,10 +64,10 @@ const addCandidatePointWithIntersections = (
 export const generateOptimalFrameToFrameConnection = (
 	startX: number,
 	startY: number,
-	startOwnerFrame: Frame,
+	startOwnerFrame: TransformedFrame,
 	endX: number,
 	endY: number,
-	endOwnerFrame: Frame,
+	endOwnerFrame: TransformedFrame,
 ): Point[] => {
 	// Calculate the direction from shape center to connection point
 	// This determines which side of the shape the connection starts/ends

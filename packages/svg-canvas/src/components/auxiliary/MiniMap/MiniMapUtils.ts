@@ -1,5 +1,6 @@
+import type { Rect } from "@workspace/geometry";
+
 import { MINIMAP_VIEWPORT_MARGIN } from "../../../constants/core/Constants";
-import type { Bounds } from "../../../types/core/Bounds";
 import type { Diagram } from "../../../types/state/core/Diagram";
 import { calcDiagramsBoundingBox } from "../../../utils/geometry/calcDiagramsBoundingBox";
 
@@ -19,7 +20,7 @@ export const calculateCanvasViewportBounds = (
 	containerWidth: number,
 	containerHeight: number,
 	zoom: number,
-): Bounds => {
+): Rect => {
 	const viewportWidth = containerWidth / zoom;
 	const viewportHeight = containerHeight / zoom;
 	const viewportLeft = minX / zoom;
@@ -43,8 +44,8 @@ export const calculateCanvasViewportBounds = (
  */
 export const calculateCombinedCanvasBounds = (
 	items: Diagram[],
-	viewportBounds: Bounds,
-): Bounds => {
+	viewportBounds: Rect,
+): Rect => {
 	if (items.length === 0) {
 		// If no items, use viewport bounds
 		return viewportBounds;

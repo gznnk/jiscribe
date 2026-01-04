@@ -1,4 +1,4 @@
-import { calcRectangleVertices } from "@workspace/geometry";
+import { calcRectKeyPoints } from "@workspace/geometry";
 import type React from "react";
 import { memo } from "react";
 
@@ -31,7 +31,7 @@ const BottomLabelComponent: React.FC<BottomLabelProps> = ({
 	scaleY,
 	children,
 }) => {
-	const vertices = calcRectangleVertices({
+	const keyPoints = calcRectKeyPoints({
 		x,
 		y,
 		width,
@@ -41,7 +41,7 @@ const BottomLabelComponent: React.FC<BottomLabelProps> = ({
 		scaleY,
 	});
 
-	const { labelX, labelY } = calcBottomLabelPosition(vertices);
+	const { labelX, labelY } = calcBottomLabelPosition(keyPoints);
 
 	return (
 		<text

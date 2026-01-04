@@ -1,9 +1,10 @@
-import { calcRectangleVertices, isRect } from "@workspace/geometry";
+import { calcRectKeyPoints, isRect } from "@workspace/geometry";
+import type { RectKeyPoints } from "@workspace/geometry";
 
-import type { RectangleVertices } from "../../../types/core/RectangleVertices";
 import type { Diagram } from "../../../types/state/core/Diagram";
 import type { ConnectPointState } from "../../../types/state/shapes/ConnectPointState";
 import { isConnectableState } from "../../validation/isConnectableState";
+import { isTransformativeState } from "../../validation/isTransformativeState";
 
 /**
  * Calculate the position of the connection points of the rectangle.
@@ -16,15 +17,24 @@ export const calcRectangleConnectPointPosition = (
 ): ConnectPointState[] => {
 	if (!isRect(diagram)) return []; // Type guard.
 	if (!isConnectableState(diagram)) return []; // Type guard.
+	if (!isTransformativeState(diagram)) return []; // Type guard.
 
-	// Calculate the vertices of the rectangle.
-	const vertices = calcRectangleVertices(diagram);
+	// Calculate the key points of the rectangle.
+	const keyPoints = calcRectKeyPoints({
+		x: diagram.x,
+		y: diagram.y,
+		width: diagram.width,
+		height: diagram.height,
+		rotation: diagram.rotation,
+		scaleX: diagram.scaleX,
+		scaleY: diagram.scaleY,
+	});
 
 	// Create connection point move data.
 	const newConnectPoints: ConnectPointState[] = [];
 	for (const connectPointData of diagram.connectPoints) {
-		const vertex = (vertices as RectangleVertices)[
-			connectPointData.name as keyof RectangleVertices
+		const keyPoint = (keyPoints as RectKeyPoints)[
+			connectPointData.name as keyof RectKeyPoints
 		];
 
 		newConnectPoints.push({
@@ -32,8 +42,8 @@ export const calcRectangleConnectPointPosition = (
 			type: "ConnectPoint",
 			geometryType: "point",
 			name: connectPointData.name,
-			x: vertex.x,
-			y: vertex.y,
+			x: keyPoint.x,
+			y: keyPoint.y,
 			isDragging: false,
 		});
 	}

@@ -1,4 +1,4 @@
-import type { Frame } from "@workspace/geometry";
+import type { TransformedFrame } from "@workspace/geometry";
 
 import { convertDiagramToFrame } from "./convertDiagramToFrame";
 import type { Diagram } from "../../types/state/core/Diagram";
@@ -8,7 +8,7 @@ import { isSelectableState } from "../validation/isSelectableState";
 /**
  * Outline data structure containing frame properties for rendering
  */
-export type OutlineData = Frame & {
+export type OutlineData = TransformedFrame & {
 	id: string;
 };
 

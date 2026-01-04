@@ -1,4 +1,4 @@
-import type { Frame } from "@workspace/geometry";
+import type { TransformedFrame } from "@workspace/geometry";
 
 import type { EventPhase } from "./EventPhase";
 /**
@@ -9,8 +9,8 @@ export type DiagramTransformEvent = {
 	eventId: string;
 	id: string;
 	eventPhase: EventPhase;
-	startFrame: Frame;
-	endFrame: Frame;
+	startFrame: TransformedFrame;
+	endFrame: TransformedFrame;
 	cursorX: number;
 	cursorY: number;
 	minX?: number;

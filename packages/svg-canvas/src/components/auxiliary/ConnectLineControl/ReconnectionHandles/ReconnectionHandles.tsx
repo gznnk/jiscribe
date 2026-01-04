@@ -1,5 +1,5 @@
 import { calcRectangleBoundingBoxGeometry } from "@workspace/geometry";
-import type { Frame, Point } from "@workspace/geometry";
+import type { TransformedFrame, Point } from "@workspace/geometry";
 import type React from "react";
 import { memo, useCallback, useEffect, useRef } from "react";
 
@@ -26,8 +26,8 @@ type ReconnectionHandlesProps = {
 	points: PathPointState[];
 	startOwnerId?: string;
 	endOwnerId?: string;
-	startOwnerFrame?: Frame;
-	endOwnerFrame?: Frame;
+	startOwnerFrame?: TransformedFrame;
+	endOwnerFrame?: TransformedFrame;
 	autoRouting: boolean;
 	zoom: number;
 	onDiagramChange?: (e: DiagramChangeEvent) => void;
@@ -76,7 +76,7 @@ const ReconnectionHandlesComponent: React.FC<ReconnectionHandlesProps> = ({
 	const processDrag = useCallback(
 		(
 			oppositePoint: PathPointState,
-			oppositeOwnerFrame: Frame,
+			oppositeOwnerFrame: TransformedFrame,
 			isStartPointDrag: boolean,
 			e: DiagramDragEvent,
 		) => {

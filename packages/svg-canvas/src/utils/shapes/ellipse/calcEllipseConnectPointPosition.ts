@@ -1,9 +1,10 @@
-import { calcEllipseVertices, isEllipse } from "@workspace/geometry";
+import { calcEllipseKeyPoints, isEllipse } from "@workspace/geometry";
+import type { EllipseKeyPoints } from "@workspace/geometry";
 
-import type { EllipseVertices } from "../../../types/core/EllipseVertices";
 import type { Diagram } from "../../../types/state/core/Diagram";
 import type { ConnectPointState } from "../../../types/state/shapes/ConnectPointState";
 import { isConnectableState } from "../../validation/isConnectableState";
+import { isTransformativeState } from "../../validation/isTransformativeState";
 
 /**
  * Calculate the position of the connection points of the ellipse.
@@ -14,16 +15,24 @@ import { isConnectableState } from "../../validation/isConnectableState";
 export const calcEllipseConnectPointPosition = (
 	diagram: Diagram,
 ): ConnectPointState[] => {
-	if (!isConnectableState(diagram) || !isEllipse(diagram)) return []; // Type guard.
+	if (!isConnectableState(diagram) || !isEllipse(diagram) || !isTransformativeState(diagram)) return []; // Type guard.
 
-	// Calculate the vertices of the ellipse.
-	const vertices = calcEllipseVertices(diagram);
+	// Calculate the key points of the ellipse.
+	const keyPoints = calcEllipseKeyPoints({
+		cx: diagram.cx,
+		cy: diagram.cy,
+		rx: diagram.rx,
+		ry: diagram.ry,
+		rotation: diagram.rotation,
+		scaleX: diagram.scaleX,
+		scaleY: diagram.scaleY,
+	});
 
 	// Create connection point move data.
 	const newConnectPoints: ConnectPointState[] = [];
 	for (const connectPointData of diagram.connectPoints) {
-		const vertex = (vertices as EllipseVertices)[
-			connectPointData.name as keyof EllipseVertices
+		const keyPoint = (keyPoints as EllipseKeyPoints)[
+			connectPointData.name as keyof EllipseKeyPoints
 		];
 
 		newConnectPoints.push({
@@ -31,8 +40,8 @@ export const calcEllipseConnectPointPosition = (
 			type: "ConnectPoint",
 			geometryType: "point",
 			name: connectPointData.name,
-			x: vertex.x,
-			y: vertex.y,
+			x: keyPoint.x,
+			y: keyPoint.y,
 			isDragging: false,
 		});
 	}

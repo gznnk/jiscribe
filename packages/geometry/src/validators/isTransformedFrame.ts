@@ -1,6 +1,6 @@
-import type { TransformedFrame } from "../types/TransformedFrame";
 import { isFrame } from "./isFrame";
 import { isTransform } from "./isTransform";
+import type { TransformedFrame } from "../types/TransformedFrame";
 
 /**
  * Check if an object is a TransformedFrame.

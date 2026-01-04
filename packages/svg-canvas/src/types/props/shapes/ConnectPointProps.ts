@@ -1,4 +1,4 @@
-import type { Frame } from "@workspace/geometry";
+import type { TransformedFrame } from "@workspace/geometry";
 
 import type { ConnectType } from "../../core/ConnectType";
 import type { DiagramConnectEvent } from "../../events/DiagramConnectEvent";
@@ -13,7 +13,7 @@ export type ConnectPointProps = Omit<
 	"type" | "geometryType"
 > & {
 	ownerId: string;
-	ownerFrame: Frame; // Should be passed as memoized
+	ownerFrame: TransformedFrame; // Should be passed as memoized
 	alwaysVisible: boolean; // Whether to always show the connect point, even when not hovered.
 	connectType?: ConnectType;
 	onConnect?: (e: DiagramConnectEvent) => void;

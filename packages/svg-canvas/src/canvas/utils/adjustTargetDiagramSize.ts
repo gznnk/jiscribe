@@ -1,7 +1,7 @@
 ﻿import {
 	degreesToRadians,
 	calcRotatedPoint,
-	isFrame,
+	isTransformedFrame,
 } from "@workspace/geometry";
 
 import type { Diagram } from "../../types/state/core/Diagram";
@@ -18,7 +18,7 @@ import { isItemableState } from "../../utils/validation/isItemableState";
 export const adjustTargetDiagramSize = (diagram: Diagram): Diagram => {
 	// Only process Frame type diagrams with itemableType === "canvas"
 	if (
-		!isFrame(diagram) ||
+		!isTransformedFrame(diagram) ||
 		!isItemableState(diagram) ||
 		diagram.itemableType !== "canvas" ||
 		!diagram.items ||

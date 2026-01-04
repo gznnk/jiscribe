@@ -2,13 +2,13 @@
 	degreesToRadians,
 	nanToZero,
 	calcRotatedPoint,
-	isFrame,
+	isTransformedFrame,
 	isPoint,
 	type BoundingBox,
+	type Rect,
 } from "@workspace/geometry";
 
 import { calcUnrotatedItemableBoundingBox } from "./calcUnrotatedItemableBoundingBox";
-import type { Bounds } from "../../types/core/Bounds";
 import type { ItemableState } from "../../types/state/core/ItemableState";
 
 /**
@@ -18,7 +18,7 @@ import type { ItemableState } from "../../types/state/core/ItemableState";
  * @param itemable - The itemable data containing items, position, and rotation
  * @returns The oriented bounding box with center position and original dimensions
  */
-export const calcItemableOrientedBox = (itemable: ItemableState): Bounds => {
+export const calcItemableOrientedBox = (itemable: ItemableState): Rect => {
 	if (!isPoint(itemable)) {
 		// throw new Error("Unsupported itemable state");
 		// TODO: ちゃんと対応
@@ -30,7 +30,7 @@ export const calcItemableOrientedBox = (itemable: ItemableState): Bounds => {
 		};
 	}
 	const { x, y } = itemable;
-	const rotation = isFrame(itemable) ? itemable.rotation : 0;
+	const rotation = isTransformedFrame(itemable) ? itemable.rotation : 0;
 	const { items } = itemable;
 	const radians = degreesToRadians(rotation);
 
@@ -41,7 +41,7 @@ export const calcItemableOrientedBox = (itemable: ItemableState): Bounds => {
 		itemable.itemableType === "composite" ||
 		itemable.itemableType === "canvas"
 	) {
-		if (isFrame(itemable)) {
+		if (isTransformedFrame(itemable)) {
 			const halfWidth = itemable.width / 2;
 			const halfHeight = itemable.height / 2;
 			boundingBox = {

@@ -1,4 +1,4 @@
-import type { Frame } from "@workspace/geometry";
+import type { TransformedFrame } from "@workspace/geometry";
 
 export type ConnectionEventType = "connecting" | "connect" | "disconnect";
 
@@ -12,7 +12,7 @@ export type ConnectionEvent = {
 	endX: number;
 	endY: number;
 	endOwnerId: string;
-	endOwnerFrame: Frame;
+	endOwnerFrame: TransformedFrame;
 };
 
 export type ConnectingPoint = {
@@ -20,5 +20,5 @@ export type ConnectingPoint = {
 	x: number;
 	y: number;
 	onwerId: string;
-	ownerFrame: Frame;
+	ownerFrame: TransformedFrame;
 };

@@ -1,6 +1,6 @@
-import type { TransformedEllipse } from "../types/TransformedEllipse";
 import { isEllipse } from "./isEllipse";
 import { isTransform } from "./isTransform";
+import type { TransformedEllipse } from "../types/TransformedEllipse";
 
 /**
  * Check if an object is a TransformedEllipse.

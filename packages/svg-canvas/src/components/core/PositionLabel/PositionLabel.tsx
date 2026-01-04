@@ -1,8 +1,8 @@
-import { calcRectangleVertices } from "@workspace/geometry";
+import { calcRectKeyPoints } from "@workspace/geometry";
+import type { RectKeyPoints } from "@workspace/geometry";
 import type React from "react";
 import { memo } from "react";
 
-import type { RectangleVertices } from "../../../types/core/RectangleVertices";
 import { calcBottomLabelPosition } from "../BottomLabel";
 import { StyledText } from "./PositionLabelStyled";
 
@@ -31,7 +31,7 @@ const PositionLabelComponent: React.FC<PositionLabelProps> = ({
 	scaleX,
 	scaleY,
 }) => {
-	const vertices = calcRectangleVertices({
+	const keyPoints = calcRectKeyPoints({
 		x,
 		y,
 		width,
@@ -41,14 +41,14 @@ const PositionLabelComponent: React.FC<PositionLabelProps> = ({
 		scaleY,
 	});
 
-	const { labelX, labelY } = calcBottomLabelPosition(vertices);
+	const { labelX, labelY } = calcBottomLabelPosition(keyPoints);
 
 	let left = Number.POSITIVE_INFINITY;
 	let top = Number.POSITIVE_INFINITY;
-	for (const key of Object.keys(vertices)) {
-		const vertex = vertices[key as keyof RectangleVertices];
-		left = Math.min(left, vertex.x);
-		top = Math.min(top, vertex.y);
+	for (const key of Object.keys(keyPoints)) {
+		const keyPoint = keyPoints[key as keyof RectKeyPoints];
+		left = Math.min(left, keyPoint.x);
+		top = Math.min(top, keyPoint.y);
 	}
 
 	return (

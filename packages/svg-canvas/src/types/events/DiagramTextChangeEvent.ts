@@ -1,4 +1,4 @@
-import type { Frame } from "@workspace/geometry";
+import type { TransformedFrame } from "@workspace/geometry";
 
 import type { EventPhase } from "./EventPhase";
 import type { TextableData } from "../data/core/TextableData";
@@ -6,7 +6,7 @@ import type { TextableData } from "../data/core/TextableData";
 /**
  * Attributes for the text editor component.
  */
-export type TextEditorAttributes = Frame & TextableData;
+export type TextEditorAttributes = TransformedFrame & TextableData;
 
 /**
  * Event fired when text content is changed on a diagram

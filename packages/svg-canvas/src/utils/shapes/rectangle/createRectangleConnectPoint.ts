@@ -1,6 +1,6 @@
-import { calcRectangleVertices } from "@workspace/geometry";
+import { calcRectKeyPoints } from "@workspace/geometry";
+import type { RectKeyPoints } from "@workspace/geometry";
 
-import type { RectangleVertices } from "../../../types/core/RectangleVertices";
 import type { ConnectPointState } from "../../../types/state/shapes/ConnectPointState";
 import { newId } from "../../../utils/shapes/common/newId";
 
@@ -27,7 +27,7 @@ export const createRectangleConnectPoint = ({
 	scaleX: number;
 	scaleY: number;
 }): ConnectPointState[] => {
-	const vertices = calcRectangleVertices({
+	const keyPoints = calcRectKeyPoints({
 		x,
 		y,
 		width,
@@ -38,8 +38,8 @@ export const createRectangleConnectPoint = ({
 	});
 
 	const connectPoints: ConnectPointState[] = [];
-	for (const key of Object.keys(vertices)) {
-		const point = vertices[key as keyof RectangleVertices];
+	for (const key of Object.keys(keyPoints)) {
+		const point = keyPoints[key as keyof RectKeyPoints];
 		connectPoints.push({
 			id: newId(),
 			type: "ConnectPoint",

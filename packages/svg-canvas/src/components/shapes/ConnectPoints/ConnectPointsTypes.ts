@@ -1,4 +1,4 @@
-import type { Frame } from "@workspace/geometry";
+import type { TransformedFrame } from "@workspace/geometry";
 
 import type { ConnectType } from "../../../types/core/ConnectType";
 import type { DiagramConnectEvent } from "../../../types/events/DiagramConnectEvent";
@@ -12,7 +12,7 @@ export type ConnectPointsProps = {
 	/** Owner shape ID */
 	ownerId: string;
 	/** Owner shape properties */
-	ownerFrame: Frame;
+	ownerFrame: TransformedFrame;
 	/** Array of connect points to render */
 	connectPoints: ConnectPointState[];
 	/** Whether to show all connect points */

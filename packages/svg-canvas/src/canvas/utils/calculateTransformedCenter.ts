@@ -1,5 +1,5 @@
 ﻿import { degreesToRadians, calcRotatedPoint } from "@workspace/geometry";
-import type { Frame, Point } from "@workspace/geometry";
+import type { TransformedFrame, Point } from "@workspace/geometry";
 
 // TODO: endFrameだけで計算できるのでは？
 /**
@@ -21,8 +21,8 @@ import type { Frame, Point } from "@workspace/geometry";
 export const calculateTransformedCenter = (
 	initialItemX: number,
 	initialItemY: number,
-	startFrame: Frame,
-	endFrame: Frame,
+	startFrame: TransformedFrame,
+	endFrame: TransformedFrame,
 ): Point => {
 	// Calculate the scale ratios between start and end frames
 	const groupScaleX = endFrame.width / startFrame.width;

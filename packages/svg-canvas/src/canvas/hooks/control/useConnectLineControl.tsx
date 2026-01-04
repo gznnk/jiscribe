@@ -1,5 +1,5 @@
 import type { JSX } from "@emotion/react/jsx-runtime";
-import type { Frame } from "@workspace/geometry";
+import type { TransformedFrame } from "@workspace/geometry";
 import { useCallback, useMemo, useRef } from "react";
 
 import { ConnectLineControl } from "../../../components/auxiliary/ConnectLineControl";
@@ -66,7 +66,7 @@ export const useConnectLineControl = (
 		: null;
 
 	// Get owner frames (must be called unconditionally for hooks rules)
-	const startOwnerFrame: Frame | undefined = useMemo(() => {
+	const startOwnerFrame: TransformedFrame | undefined = useMemo(() => {
 		if (!connectLineItem?.startOwnerId) return undefined;
 		const startOwner = getDiagramById(
 			refBus.current.items,

@@ -1,21 +1,20 @@
-import type { Frame, Point } from "@workspace/geometry";
+import type { BoxFeatures, TransformedFrame, Point } from "@workspace/geometry";
 
 import { getLineDirection } from "./getLineDirection";
 import { CONNECT_LINE_MARGIN } from "../../../constants/core/Constants";
-import type { BoxGeometry } from "../../../types/core/BoxGeometry";
 
 /**
  * Gets the second connect point for a shape based on direction.
  *
  * @param ownerFrame - The frame that owns the connect point
- * @param ownerBoundingBoxGeometry - The bounding box geometry of the owner shape
+ * @param ownerBoundingBoxGeometry - The bounding box features of the owner shape
  * @param cx - Connect point x coordinate
  * @param cy - Connect point y coordinate
  * @returns The second connect point
  */
 export const getSecondConnectPoint = (
-	ownerFrame: Frame,
-	ownerBoundingBoxGeometry: BoxGeometry,
+	ownerFrame: TransformedFrame,
+	ownerBoundingBoxGeometry: BoxFeatures,
 	cx: number,
 	cy: number,
 ): Point => {

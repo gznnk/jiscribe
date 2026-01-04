@@ -1,15 +1,16 @@
+import type { BoxFeatures } from "@workspace/geometry";
+
 import { CONNECT_LINE_MARGIN } from "../../../constants/core/Constants";
-import type { BoxGeometry } from "../../../types/core/BoxGeometry";
 
 /**
- * Adds margin to a box geometry and returns a new box geometry with expanded boundaries.
+ * Adds margin to box features and returns new box features with expanded boundaries.
  *
- * @param boxGeometry - The box geometry to add margin to
- * @returns A new box geometry with added margin
+ * @param boxGeometry - The box features to add margin to
+ * @returns New box features with added margin
  */
 export const addMarginToBoxGeometry = (
-	boxGeometry: BoxGeometry,
-): BoxGeometry => {
+	boxGeometry: BoxFeatures,
+): BoxFeatures => {
 	const left = boxGeometry.left - CONNECT_LINE_MARGIN;
 	const top = boxGeometry.top - CONNECT_LINE_MARGIN;
 	const right = boxGeometry.right + CONNECT_LINE_MARGIN;

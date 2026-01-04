@@ -1,9 +1,8 @@
 ﻿import { calcCloserNumber , doSegmentsIntersect } from "@workspace/geometry";
-import type { Point } from "@workspace/geometry";
+import type { BoxFeatures, Point } from "@workspace/geometry";
 
 import { addMarginToBoxGeometry } from "./addMarginToBoxGeometry";
 import { getLineDirection } from "./getLineDirection";
-import type { BoxGeometry } from "../../../types/core/BoxGeometry";
 import type { Direction } from "../../../types/core/Direction";
 
 
@@ -16,7 +15,7 @@ import type { Direction } from "../../../types/core/Direction";
  * @param startX - Start point x coordinate on the frame
  * @param startY - Start point y coordinate on the frame
  * @param startDirection - Direction from start frame (up/down/left/right)
- * @param startOwnerBoundingBoxGeometry - Bounding box geometry of start frame
+ * @param startOwnerBoundingBoxGeometry - Bounding box features of start frame
  * @param endX - Target point x coordinate (can be anywhere)
  * @param endY - Target point y coordinate (can be anywhere)
  * @returns Array of points representing the connection path
@@ -25,7 +24,7 @@ export const generatePathFromFrameToPoint = (
 	startX: number,
 	startY: number,
 	startDirection: Direction,
-	startOwnerBoundingBoxGeometry: BoxGeometry,
+	startOwnerBoundingBoxGeometry: BoxFeatures,
 	endX: number,
 	endY: number,
 ) => {

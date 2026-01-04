@@ -1,6 +1,5 @@
-import type { Frame } from "@workspace/geometry";
+import type { Rect } from "@workspace/geometry";
 
-import type { Bounds } from "../../../types/core/Bounds";
 import type { Diagram } from "../../../types/state/core/Diagram";
 import type { ItemableState } from "../../../types/state/core/ItemableState";
 import { calcItemableOrientedBox } from "../calcItemableOrientedBox";
@@ -14,11 +13,13 @@ describe("calcItemableOrientedBox", () => {
 		height: number,
 		rotation = 0,
 		items: Diagram[] = [],
-	): Diagram & Frame & ItemableState =>
+	): Diagram & ItemableState =>
 		({
 			id: "test-shape",
 			type: "Group",
 			geometryType: "rect",
+			cx: x,
+			cy: y,
 			x,
 			y,
 			width,
@@ -28,7 +29,7 @@ describe("calcItemableOrientedBox", () => {
 			scaleY: 1,
 			itemableType: "group",
 			items,
-		}) as Diagram & Frame & ItemableState;
+		}) as Diagram & ItemableState;
 
 	// Mock point state for testing
 	const createMockPoint = (
@@ -53,7 +54,7 @@ describe("calcItemableOrientedBox", () => {
 				const frame = createMockFrame(0, 0, 100, 50);
 				const result = calcItemableOrientedBox(frame);
 
-				expect(result).toEqual<Bounds>({
+				expect(result).toEqual<Rect>({
 					x: 0,
 					y: 0,
 					width: 100,
@@ -65,7 +66,7 @@ describe("calcItemableOrientedBox", () => {
 				const frame = createMockFrame(100, 200, 80, 60);
 				const result = calcItemableOrientedBox(frame);
 
-				expect(result).toEqual<Bounds>({
+				expect(result).toEqual<Rect>({
 					x: 100,
 					y: 200,
 					width: 80,
@@ -77,7 +78,7 @@ describe("calcItemableOrientedBox", () => {
 				const frame = createMockFrame(-50, -30, 40, 20);
 				const result = calcItemableOrientedBox(frame);
 
-				expect(result).toEqual<Bounds>({
+				expect(result).toEqual<Rect>({
 					x: -50,
 					y: -30,
 					width: 40,
@@ -91,7 +92,7 @@ describe("calcItemableOrientedBox", () => {
 				const point = createMockPoint(0, 0);
 				const result = calcItemableOrientedBox(point);
 
-				expect(result).toEqual<Bounds>({
+				expect(result).toEqual<Rect>({
 					x: 0,
 					y: 0,
 					width: 0,
@@ -103,7 +104,7 @@ describe("calcItemableOrientedBox", () => {
 				const point = createMockPoint(150, 75);
 				const result = calcItemableOrientedBox(point);
 
-				expect(result).toEqual<Bounds>({
+				expect(result).toEqual<Rect>({
 					x: 150,
 					y: 75,
 					width: 0,
@@ -115,7 +116,7 @@ describe("calcItemableOrientedBox", () => {
 				const point = createMockPoint(-25, -40);
 				const result = calcItemableOrientedBox(point);
 
-				expect(result).toEqual<Bounds>({
+				expect(result).toEqual<Rect>({
 					x: -25,
 					y: -40,
 					width: 0,
@@ -399,9 +400,9 @@ describe("calcItemableOrientedBox", () => {
 	});
 
 	describe("Type compatibility", () => {
-		it("should accept ItemableState and return Bounds", () => {
+		it("should accept ItemableState and return Rect", () => {
 			const frame = createMockFrame(0, 0, 100, 50);
-			const result: Bounds = calcItemableOrientedBox(frame);
+			const result: Rect = calcItemableOrientedBox(frame);
 
 			expect(result).toBeDefined();
 			expect(typeof result.x).toBe("number");

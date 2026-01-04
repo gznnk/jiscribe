@@ -1,25 +1,25 @@
-import type { RectangleVertices } from "../../../types/core/RectangleVertices";
+import type { RectKeyPoints } from "@workspace/geometry";
 
 /**
  * Calculate the position of the bottom label.
  *
- * @param vertices - Rectangle vertices.
+ * @param keyPoints - Rectangle key points.
  * @returns The position of the bottom label.
  */
-export const calcBottomLabelPosition = (vertices: RectangleVertices) => {
+export const calcBottomLabelPosition = (keyPoints: RectKeyPoints) => {
 	let labelX = Number.NEGATIVE_INFINITY;
 	let labelY = Number.NEGATIVE_INFINITY;
 	const minYPosXList: number[] = [];
-	for (const key of Object.keys(vertices)) {
-		const vertex = vertices[key as keyof RectangleVertices];
-		if (labelY < vertex.y) {
-			labelY = vertex.y;
-			labelX = vertex.x;
+	for (const key of Object.keys(keyPoints)) {
+		const keyPoint = keyPoints[key as keyof RectKeyPoints];
+		if (labelY < keyPoint.y) {
+			labelY = keyPoint.y;
+			labelX = keyPoint.x;
 			// Clear the list if a new minimum Y position is found.
 			minYPosXList.length = 0;
-			minYPosXList.push(vertex.x);
-		} else if (labelY === vertex.y) {
-			minYPosXList.push(vertex.x);
+			minYPosXList.push(keyPoint.x);
+		} else if (labelY === keyPoint.y) {
+			minYPosXList.push(keyPoint.x);
 		}
 	}
 

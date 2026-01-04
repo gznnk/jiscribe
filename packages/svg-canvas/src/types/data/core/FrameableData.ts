@@ -1,7 +1,7 @@
-import type { Frame } from "@workspace/geometry";
+import type { TransformedFrame } from "@workspace/geometry";
 
 /**
  * Defines frameable data properties.
- * Extends Frame to provide position, dimensions, rotation, and scaling.
+ * Extends TransformedFrame to provide position, dimensions, rotation, and scaling.
  */
-export type FrameableData = Frame;
+export type FrameableData = TransformedFrame;

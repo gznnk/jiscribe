@@ -1,6 +1,6 @@
-import type { TransformedRect } from "../types/TransformedRect";
 import { isRect } from "./isRect";
 import { isTransform } from "./isTransform";
+import type { TransformedRect } from "../types/TransformedRect";
 
 /**
  * Check if an object is a TransformedRect.

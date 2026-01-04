@@ -1,4 +1,4 @@
-import type { Frame } from "@workspace/geometry";
+import type { TransformedFrame } from "@workspace/geometry";
 import type React from "react";
 import { memo, useCallback, useState } from "react";
 
@@ -14,8 +14,8 @@ import type { DiagramChangeEvent } from "../../../types/events/DiagramChangeEven
 export type ConnectLineControlProps = PathControlProps & {
 	startOwnerId?: string;
 	endOwnerId?: string;
-	startOwnerFrame?: Frame;
-	endOwnerFrame?: Frame;
+	startOwnerFrame?: TransformedFrame;
+	endOwnerFrame?: TransformedFrame;
 	autoRouting?: boolean;
 };
 
