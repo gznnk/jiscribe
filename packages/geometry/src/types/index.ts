@@ -1,10 +1,24 @@
-export * from "./BoundingBox";
-export * from "./BoxGeometry";
-export * from "./Bounds";
-export * from "./Dimensions";
-export * from "./Ellipse";
-export * from "./EllipseVertices";
-export * from "./Frame";
+// Basic types
 export * from "./Point";
-export * from "./RectangleVertices";
+export * from "./Dimensions";
+export * from "./BoundingBox";
+
+// Primitive shapes (without transformation)
 export * from "./Rect";
+export * from "./Frame";
+export * from "./Ellipse";
+
+// Transformation
+export * from "./Transform";
+
+// Transformed shapes (with rotation and scale)
+export * from "./TransformedRect";
+export * from "./TransformedFrame";
+export * from "./TransformedEllipse";
+
+// Key points and features
+export * from "./KeyPoints";
+export * from "./RectKeyPoints";
+export * from "./EllipseKeyPoints";
+export * from "./FrameKeyPoints";
+export * from "./BoxFeatures";

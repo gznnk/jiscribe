@@ -2,8 +2,8 @@ import { degreesToRadians } from "../common/degreesToRadians";
 import { nanToZero } from "../common/nanToZero";
 import { calcAffineTransformedPoint } from "../transform/calcAffineTransformedPoint";
 import { calcInverseAffineTransformedPoint } from "../transform/calcInverseAffineTransformedPoint";
-import type { Frame } from "../types/Frame";
 import type { Point } from "../types/Point";
+import type { TransformedFrame } from "../types/TransformedFrame";
 
 // TODO: いらんかも
 /**
@@ -11,20 +11,20 @@ import type { Point } from "../types/Point";
  * This is useful for computing the bounding frame that encompasses all points
  * while maintaining rotation and scale properties.
  *
- * This function derives a Frame object (including rotation and scale)
+ * This function derives a TransformedFrame object (including rotation and scale)
  * that represents the minimum bounding box containing all given points.
  * It's particularly useful for path-based shapes where you need to determine
  * the overall frame properties from the constituent points.
  *
  * @param points - Array of points to calculate the bounding box for
- * @returns A Frame object representing the oriented bounding box of the path
+ * @returns A TransformedFrame object representing the oriented bounding box of the path
  */
 export const calcOrientedFrameFromPoints = (
 	points: Point[],
 	scaleX = 1,
 	scaleY = 1,
 	rotation = 0,
-): Frame => {
+): TransformedFrame => {
 	const left = Math.min(...points.map((p) => p.x));
 	const top = Math.min(...points.map((p) => p.y));
 	const right = Math.max(...points.map((p) => p.x));

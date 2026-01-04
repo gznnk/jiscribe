@@ -1,19 +1,19 @@
 ﻿import { doSegmentsIntersect } from "./doSegmentsIntersect";
-import type { BoxGeometry } from "../types/BoxGeometry";
+import type { BoxFeatures } from "../types/BoxFeatures";
 import type { Point } from "../types/Point";
 
 /**
- * Determines if a line segment intersects with a box geometry.
+ * Determines if a line segment intersects with a box.
  *
  * @param p1 - Starting point of the line segment
  * @param p2 - Ending point of the line segment
- * @param boxGeometry - The box geometry to check for intersection
- * @returns True if the line segment intersects the box geometry, false otherwise
+ * @param boxGeometry - The box features to check for intersection
+ * @returns True if the line segment intersects the box, false otherwise
  */
 export const isLineIntersectingBoxGeometry = (
 	p1: Point,
 	p2: Point,
-	boxGeometry: BoxGeometry,
+	boxGeometry: BoxFeatures,
 ): boolean => {
 	const boxEdges: [Point, Point][] = [
 		[

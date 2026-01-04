@@ -1,15 +1,17 @@
 import { degreesToRadians } from "../common/degreesToRadians";
 import { calcAffineTransformedPoint } from "../transform/calcAffineTransformedPoint";
-import type { Frame } from "../types/Frame";
-import type { FrameFeaturePoints } from "../types/FrameFeaturePoints";
+import type { FrameKeyPoints } from "../types/FrameKeyPoints";
+import type { TransformedFrame } from "../types/TransformedFrame";
 
 /**
- * Calculates the feature points (vertices and edge centers) of a frame.
+ * Calculates the key points (vertices and edge centers) of a frame.
  *
- * @param frame - The frame geometry (center position, dimensions, rotation, scale)
- * @returns The coordinates of the frame's feature points
+ * @param frame - The transformed frame geometry (center position, dimensions, rotation, scale)
+ * @returns The coordinates of the frame's key points
  */
-export const calcFrameFeaturePoints = (frame: Frame): FrameFeaturePoints => {
+export const calcFrameFeaturePoints = (
+	frame: TransformedFrame,
+): FrameKeyPoints => {
 	const { cx, cy, width, height, rotation, scaleX, scaleY } = frame;
 
 	const halfWidth = width / 2;

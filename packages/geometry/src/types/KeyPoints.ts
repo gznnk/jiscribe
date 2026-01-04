@@ -1,9 +1,10 @@
 import type { Point } from "./Point";
 
 /**
- * Defines the coordinates for feature points of a frame.
+ * Defines the coordinates for key reference points of a shape.
+ * Includes corner points and mid-points for each side to support manipulation and connection.
  */
-export type FrameFeaturePoints = {
+export type KeyPoints = {
 	topLeft: Point;
 	topCenter: Point;
 	topRight: Point;

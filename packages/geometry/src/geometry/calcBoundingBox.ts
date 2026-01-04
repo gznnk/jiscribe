@@ -1,18 +1,18 @@
 import { degreesToRadians } from "../common/degreesToRadians";
 import { calcAffineTransformedPoint } from "../transform/calcAffineTransformedPoint";
 import type { BoundingBox } from "../types/BoundingBox";
-import type { Frame } from "../types/Frame";
+import type { TransformedFrame } from "../types/TransformedFrame";
 
 // TODO: この関数は calcRectangleBoundingBoxGeometry と似ているので、統合を検討すること
 /**
- * Calculates the bounding box of a Frame.
+ * Calculates the bounding box of a TransformedFrame.
  * Returns the box coordinates representing the frame's outer bounds.
  * Note: cx and cy represent the center coordinates of the frame.
  *
- * @param frame - The frame to calculate bounding box for
+ * @param frame - The transformed frame to calculate bounding box for
  * @returns The bounding box with top, left, right, bottom coordinates
  */
-export const calcBoundingBox = (frame: Frame): BoundingBox => {
+export const calcBoundingBox = (frame: TransformedFrame): BoundingBox => {
 	const { cx, cy } = frame;
 
 	const { width, height, rotation = 0, scaleX = 1, scaleY = 1 } = frame;

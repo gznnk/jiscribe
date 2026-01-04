@@ -4,10 +4,10 @@ import type { BoundingBox } from "./BoundingBox";
 import type { Point } from "./Point";
 
 /**
- * Defines a rectangular box geometry with edge coordinates and corner points.
+ * Defines a rectangular box with edge coordinates and feature points.
  * Used for determining boundaries and calculating intersection points with other elements.
  */
-export type BoxGeometry = Prettify<
+export type BoxFeatures = Prettify<
 	BoundingBox & {
 		center: Point;
 		topLeft: Point;

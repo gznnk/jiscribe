@@ -1,16 +1,18 @@
-import { calcRectangleVertices } from "./calcRectangleVertices";
-import type { BoxGeometry } from "../types/BoxGeometry";
-import type { Frame } from "../types/Frame";
+import { calcRectKeyPoints } from "./calcRectKeyPoints";
+import type { BoxFeatures } from "../types/BoxFeatures";
+import type { TransformedFrame } from "../types/TransformedFrame";
 
 // TODO: この関数は calcBoundingBox と似ているので、統合を検討すること
 /**
- * Calculates the bounding box geometry of a rectangle.
+ * Calculates the bounding box features of a rectangle.
  * Takes into account rotation and scaling.
  *
- * @param shape - Rectangle shape parameters
- * @returns The bounding box geometry
+ * @param shape - Transformed rectangle shape parameters
+ * @returns The bounding box features
  */
-export const calcRectangleBoundingBoxGeometry = (frame: Frame): BoxGeometry => {
+export const calcRectangleBoundingBoxGeometry = (
+	frame: TransformedFrame,
+): BoxFeatures => {
 	const { cx, cy, width, height, rotation, scaleX, scaleY } = frame;
 	const rectGeometry = {
 		x: cx - width / 2,
@@ -21,33 +23,13 @@ export const calcRectangleBoundingBoxGeometry = (frame: Frame): BoxGeometry => {
 		scaleX,
 		scaleY,
 	};
-	const { topLeftPoint, bottomLeftPoint, topRightPoint, bottomRightPoint } =
-		calcRectangleVertices(rectGeometry);
+	const { topLeft, bottomLeft, topRight, bottomRight } =
+		calcRectKeyPoints(rectGeometry);
 
-	const left = Math.min(
-		topLeftPoint.x,
-		bottomLeftPoint.x,
-		topRightPoint.x,
-		bottomRightPoint.x,
-	);
-	const top = Math.min(
-		topLeftPoint.y,
-		bottomLeftPoint.y,
-		topRightPoint.y,
-		bottomRightPoint.y,
-	);
-	const right = Math.max(
-		topLeftPoint.x,
-		bottomLeftPoint.x,
-		topRightPoint.x,
-		bottomRightPoint.x,
-	);
-	const bottom = Math.max(
-		topLeftPoint.y,
-		bottomLeftPoint.y,
-		topRightPoint.y,
-		bottomRightPoint.y,
-	);
+	const left = Math.min(topLeft.x, bottomLeft.x, topRight.x, bottomRight.x);
+	const top = Math.min(topLeft.y, bottomLeft.y, topRight.y, bottomRight.y);
+	const right = Math.max(topLeft.x, bottomLeft.x, topRight.x, bottomRight.x);
+	const bottom = Math.max(topLeft.y, bottomLeft.y, topRight.y, bottomRight.y);
 
 	return {
 		top,

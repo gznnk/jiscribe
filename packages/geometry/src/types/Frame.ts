@@ -1,16 +1,15 @@
-import type { Prettify } from "@workspace/utility-types";
-
 /**
- * Defines the geometric properties of a frame.
- * Includes position, dimensions, rotation, and scaling factors.
- * Uses center coordinates (cx, cy) for position.
+ * Geometry definition for a frame (primitive).
+ * Pure geometric definition without transformation.
+ * Uses center coordinate system.
  */
-export type Frame = Prettify<{
+export type Frame = {
+	/** Center X coordinate */
 	cx: number;
+	/** Center Y coordinate */
 	cy: number;
+	/** Width of the frame */
 	width: number;
+	/** Height of the frame */
 	height: number;
-	rotation: number;
-	scaleX: number;
-	scaleY: number;
-}>;
+};

@@ -1,13 +1,13 @@
-import type { Frame } from "../types/Frame";
-import type { Rect } from "../types/Rect";
+import type { TransformedFrame } from "../types/TransformedFrame";
+import type { TransformedRect } from "../types/TransformedRect";
 
 /**
- * Converts a Rect (top-left based) to a Frame (center based).
+ * Converts a TransformedRect (top-left based) to a TransformedFrame (center based).
  *
- * @param geometry - The rectangle geometry
- * @returns The corresponding Frame
+ * @param geometry - The transformed rectangle geometry
+ * @returns The corresponding TransformedFrame
  */
-export const convertRectToFrame = (geometry: Rect): Frame => {
+export const convertRectToFrame = (geometry: TransformedRect): TransformedFrame => {
 	const { x, y, width, height, rotation, scaleX, scaleY } = geometry;
 	return {
 		cx: x + width / 2,

@@ -1,5 +1,6 @@
 /**
- * Geometry definition for elliptical shapes.
+ * Geometry definition for elliptical shapes (primitive).
+ * Pure geometric definition without transformation.
  * Uses center coordinate system with radii.
  */
 export type Ellipse = {
@@ -11,10 +12,4 @@ export type Ellipse = {
 	rx: number;
 	/** Radius along Y axis */
 	ry: number;
-	/** Rotation in degrees */
-	rotation: number;
-	/** Scale factor for X axis */
-	scaleX: number;
-	/** Scale factor for Y axis */
-	scaleY: number;
 };

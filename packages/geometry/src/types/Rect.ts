@@ -1,5 +1,6 @@
 /**
- * Geometry definition for rectangular shapes.
+ * Geometry definition for rectangular shapes (primitive).
+ * Pure geometric definition without transformation.
  * Uses top-left coordinate system.
  */
 export type Rect = {
@@ -11,10 +12,4 @@ export type Rect = {
 	width: number;
 	/** Height of the rectangle */
 	height: number;
-	/** Rotation in degrees */
-	rotation: number;
-	/** Scale factor for X axis */
-	scaleX: number;
-	/** Scale factor for Y axis */
-	scaleY: number;
 };

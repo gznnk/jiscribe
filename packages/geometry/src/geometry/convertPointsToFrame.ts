@@ -1,15 +1,15 @@
-import type { Frame } from "../types/Frame";
 import type { Point } from "../types/Point";
+import type { TransformedFrame } from "../types/TransformedFrame";
 
 /**
- * Converts an array of Points to a Frame (center based).
+ * Converts an array of Points to a TransformedFrame (center based).
  * The frame will encompass all points.
  * Rotation is fixed to 0, and scale is fixed to 1.
  *
  * @param points - The array of points
- * @returns The corresponding Frame
+ * @returns The corresponding TransformedFrame
  */
-export const convertPointsToFrame = (points: Point[]): Frame => {
+export const convertPointsToFrame = (points: Point[]): TransformedFrame => {
 	if (points.length === 0) {
 		return {
 			cx: 0,
