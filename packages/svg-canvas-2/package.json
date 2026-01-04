@@ -9,7 +9,8 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"react": "catalog:"
+		"react": "catalog:",
+		"@workspace/geometry": "workspace:*"
 	},
 	"devDependencies": {
 		"@types/react": "^19.2.7",
