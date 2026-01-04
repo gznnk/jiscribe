@@ -1,7 +1,7 @@
 import {
 	calcCloserNumber,
-	calcRectangleBoundingBoxGeometry,
-	isLineIntersectingBoxGeometry,
+	calcFrameBoxFeatures,
+	isLineIntersectingBox,
 } from "@workspace/geometry";
 import type { TransformedFrame, Point } from "@workspace/geometry";
 
@@ -85,8 +85,8 @@ export const generateOptimalFrameToFrameConnection = (
 	);
 
 	// Get bounding box geometries for both frames to calculate connection points
-	const startFrameBounds = calcRectangleBoundingBoxGeometry(startOwnerFrame);
-	const endFrameBounds = calcRectangleBoundingBoxGeometry(endOwnerFrame);
+	const startFrameBounds = calcFrameBoxFeatures(startOwnerFrame);
+	const endFrameBounds = calcFrameBoxFeatures(endOwnerFrame);
 
 	// Calculate secondary connection points that extend from the frame edges
 	// These points help create cleaner connection paths that avoid overlapping with frames
@@ -183,12 +183,12 @@ export const generateOptimalFrameToFrameConnection = (
 				const pathPoint1 = fullConnectionPath[i];
 				const pathPoint2 = fullConnectionPath[i + 1];
 				if (
-					isLineIntersectingBoxGeometry(
+					isLineIntersectingBox(
 						pathPoint1,
 						pathPoint2,
 						startShapeWithMargin,
 					) ||
-					isLineIntersectingBoxGeometry(
+					isLineIntersectingBox(
 						pathPoint1,
 						pathPoint2,
 						endShapeWithMargin,

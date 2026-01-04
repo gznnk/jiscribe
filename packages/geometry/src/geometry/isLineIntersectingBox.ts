@@ -7,30 +7,30 @@ import type { Point } from "../types/Point";
  *
  * @param p1 - Starting point of the line segment
  * @param p2 - Ending point of the line segment
- * @param boxGeometry - The box features to check for intersection
+ * @param box - The box features to check for intersection
  * @returns True if the line segment intersects the box, false otherwise
  */
-export const isLineIntersectingBoxGeometry = (
+export const isLineIntersectingBox = (
 	p1: Point,
 	p2: Point,
-	boxGeometry: BoxFeatures,
+	box: BoxFeatures,
 ): boolean => {
 	const boxEdges: [Point, Point][] = [
 		[
-			{ x: boxGeometry.left, y: boxGeometry.top },
-			{ x: boxGeometry.right, y: boxGeometry.top },
+			{ x: box.left, y: box.top },
+			{ x: box.right, y: box.top },
 		], // Top edge
 		[
-			{ x: boxGeometry.right, y: boxGeometry.top },
-			{ x: boxGeometry.right, y: boxGeometry.bottom },
+			{ x: box.right, y: box.top },
+			{ x: box.right, y: box.bottom },
 		], // Right edge
 		[
-			{ x: boxGeometry.right, y: boxGeometry.bottom },
-			{ x: boxGeometry.left, y: boxGeometry.bottom },
+			{ x: box.right, y: box.bottom },
+			{ x: box.left, y: box.bottom },
 		], // Bottom edge
 		[
-			{ x: boxGeometry.left, y: boxGeometry.bottom },
-			{ x: boxGeometry.left, y: boxGeometry.top },
+			{ x: box.left, y: box.bottom },
+			{ x: box.left, y: box.top },
 		], // Left edge
 	];
 

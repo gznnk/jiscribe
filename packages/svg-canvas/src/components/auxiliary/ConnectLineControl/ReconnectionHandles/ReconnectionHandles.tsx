@@ -1,4 +1,4 @@
-import { calcRectangleBoundingBoxGeometry } from "@workspace/geometry";
+import { calcFrameBoxFeatures } from "@workspace/geometry";
 import type { TransformedFrame, Point } from "@workspace/geometry";
 import type React from "react";
 import { memo, useCallback, useEffect, useRef } from "react";
@@ -93,7 +93,7 @@ const ReconnectionHandlesComponent: React.FC<ReconnectionHandlesProps> = ({
 
 			// Bounding box geometry of the connect point's owner
 			const ownerBoundingBoxGeometry =
-				calcRectangleBoundingBoxGeometry(oppositeOwnerFrame);
+				calcFrameBoxFeatures(oppositeOwnerFrame);
 
 			// Direction of the connect point
 			const direction = getLineDirection(

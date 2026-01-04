@@ -1,4 +1,4 @@
-import { calcRectangleBoundingBoxGeometry } from "@workspace/geometry";
+import { calcFrameBoxFeatures } from "@workspace/geometry";
 import type { Point } from "@workspace/geometry";
 import type React from "react";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
@@ -44,7 +44,7 @@ const ConnectPointComponent: React.FC<ConnectPointProps> = ({
 	// Connecting point
 	const connectingPoint = useRef<ConnectingPoint | undefined>(undefined);
 	// Bounding box geometry of the connect point's owner
-	const ownerBoundingBoxGeometry = calcRectangleBoundingBoxGeometry(ownerFrame);
+	const ownerBoundingBoxGeometry = calcFrameBoxFeatures(ownerFrame);
 	// Direction of the connect point
 	const direction = getLineDirection(ownerFrame.cx, ownerFrame.cy, x, y);
 

@@ -3,7 +3,7 @@ import { calcAffineTransformedPoint } from "../transform/calcAffineTransformedPo
 import type { BoundingBox } from "../types/BoundingBox";
 import type { TransformedFrame } from "../types/TransformedFrame";
 
-// TODO: この関数は calcRectangleBoundingBoxGeometry と似ているので、統合を検討すること
+// TODO: この関数は calcFrameBoxFeatures と似ているので、統合を検討すること
 /**
  * Calculates the bounding box of a TransformedFrame.
  * Returns the box coordinates representing the frame's outer bounds.

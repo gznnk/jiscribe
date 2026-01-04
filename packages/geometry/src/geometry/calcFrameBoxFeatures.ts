@@ -4,13 +4,13 @@ import type { TransformedFrame } from "../types/TransformedFrame";
 
 // TODO: この関数は calcBoundingBox と似ているので、統合を検討すること
 /**
- * Calculates the bounding box features of a rectangle.
+ * Calculates the bounding box features of a transformed frame.
  * Takes into account rotation and scaling.
  *
- * @param shape - Transformed rectangle shape parameters
+ * @param frame - Transformed frame shape parameters
  * @returns The bounding box features
  */
-export const calcRectangleBoundingBoxGeometry = (
+export const calcFrameBoxFeatures = (
 	frame: TransformedFrame,
 ): BoxFeatures => {
 	const { cx, cy, width, height, rotation, scaleX, scaleY } = frame;
