@@ -1,0 +1,16 @@
+.app {
+	max-width: 1200px;
+	margin: 0 auto;
+}
+
+h1 {
+	font-size: 2.5em;
+	line-height: 1.1;
+	margin-bottom: 0.5em;
+}
+
+.canvas-container {
+	margin-top: 2rem;
+	display: flex;
+	justify-content: center;
+}
