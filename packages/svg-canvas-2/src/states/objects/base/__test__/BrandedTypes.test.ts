@@ -5,9 +5,9 @@
 
 import { describe, it, expect } from "vitest";
 
+import { MetaStateMapper } from "../../../../operations/base/MetaStateMapper";
 import type { MetaDoc } from "../../../../schemas/objects/base/MetaDoc";
 import type { MetaState } from "../MetaState";
-import { MetaStateMapper } from "../MetaStateMapper";
 
 describe("Branded Types", () => {
 	it("should create MetaDoc instances", () => {

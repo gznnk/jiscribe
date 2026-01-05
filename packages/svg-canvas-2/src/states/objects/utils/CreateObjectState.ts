@@ -1,0 +1,71 @@
+import type { Frame, Transform } from "@workspace/geometry";
+import type { Brand, Prettify } from "@workspace/utility-types";
+
+import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
+import type { Poly } from "../../../schemas/objects/types/Poly";
+import type { FillStyleState } from "../base/FillStyleState";
+import type { ObjectState } from "../base/ObjectState";
+import type { StrokeStyleState } from "../base/StrokeStyleState";
+
+/**
+ * Conditional geometry type based on specified geometry feature (runtime state).
+ *
+ * - `none`: No geometry properties
+ * - `rect`/`ellipse`: Frame (x, y, width, height)
+ * - `poly`: Poly (points array)
+ */
+type GeometryState<T extends ObjectFeatures> = //
+	T["geometry"] extends "none"
+		? object
+		: T["geometry"] extends "rect"
+			? Frame
+			: T["geometry"] extends "ellipse"
+				? Frame
+				: T["geometry"] extends "poly"
+					? Poly
+					: object;
+
+/**
+ * Generic type creator for object state types (runtime in-memory data).
+ * Conditionally includes feature interfaces based on provided features.
+ * Automatically applies branding to prevent structural type compatibility with Doc types.
+ *
+ * Key differences from CreateObjectType (Doc):
+ * - Uses Frame instead of Rect/Ellipse (runtime representation)
+ * - Uses Transform instead of TransformDoc (pre-computed transform)
+ * - Includes Brand to prevent direct assignment from/to Doc types
+ *
+ * @template T - ObjectFeatures configuration (shared with Doc)
+ * @template S - Unique symbol for branding (prevents direct assignment between types)
+ * @template P - Additional properties type (optional)
+ *
+ * @example
+ * ```typescript
+ * const RectFeatures = {
+ *   geometry: "rect",
+ *   transform: true,
+ *   stroke: true,
+ *   fill: true,
+ * } as const satisfies ObjectFeatures;
+ *
+ * declare const RectStateBrand: unique symbol;
+ * type RectState = CreateObjectState<
+ *   typeof RectFeatures,
+ *   typeof RectStateBrand,
+ *   { type: "rect" }
+ * >;
+ * ```
+ */
+export type CreateObjectState<
+	T extends ObjectFeatures,
+	S extends symbol,
+	P = object,
+> = Prettify<
+	ObjectState &
+		GeometryState<T> &
+		(T["transform"] extends true ? Transform : object) &
+		(T["stroke"] extends true ? StrokeStyleState : object) &
+		(T["fill"] extends true ? FillStyleState : object) &
+		Brand<S> &
+		P
+>;

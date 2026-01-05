@@ -17,10 +17,10 @@ export type EllipseDoc = CreateObjectType<
 	{ type: "ellipse" }
 >;
 
-export const ELLIPSE_DOC_DEFAULTS = {
+export const ELLIPSE_DOC_DEFAULTS: Omit<EllipseDoc, "id"> = {
 	type: "ellipse",
 	cx: 0,
 	cy: 0,
 	rx: 50,
 	ry: 30,
-} as const satisfies Omit<EllipseDoc, "id" | typeof EllipseDocBrand>;
+} as const as EllipseDoc;

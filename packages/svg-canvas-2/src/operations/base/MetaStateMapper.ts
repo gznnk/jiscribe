@@ -1,5 +1,5 @@
-import type { MetaState } from "./MetaState";
-import type { MetaDoc } from "../../../schemas/objects/base/MetaDoc";
+import type { MetaDoc } from "../../schemas/objects/base/MetaDoc";
+import type { MetaState } from "../../states/objects/base/MetaState";
 
 /**
  * Mapper for converting between MetaDoc and MetaState.
