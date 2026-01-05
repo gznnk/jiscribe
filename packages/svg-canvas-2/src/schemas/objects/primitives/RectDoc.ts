@@ -8,4 +8,11 @@ export const RectFeatures = {
 	fill: true,
 } as const satisfies ObjectFeatures;
 
-export type RectDoc = CreateObjectType<typeof RectFeatures, { type: "rect" }>;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+declare const RectDocBrand: unique symbol;
+
+export type RectDoc = CreateObjectType<
+	typeof RectFeatures,
+	typeof RectDocBrand,
+	{ type: "rect" }
+>;

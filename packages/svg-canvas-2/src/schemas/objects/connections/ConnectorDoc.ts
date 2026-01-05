@@ -7,8 +7,12 @@ export const ConnectorFeatures = {
 	stroke: true,
 } as const satisfies ObjectFeatures;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+declare const ConnectorDocBrand: unique symbol;
+
 export type ConnectorDoc = CreateObjectType<
 	typeof ConnectorFeatures,
+	typeof ConnectorDocBrand,
 	{
 		type: "connector";
 		startArrow?: ArrowType;

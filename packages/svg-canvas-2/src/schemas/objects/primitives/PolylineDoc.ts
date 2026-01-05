@@ -7,8 +7,12 @@ export const PolylineFeatures = {
 	stroke: true,
 } as const satisfies ObjectFeatures;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+declare const PolylineDocBrand: unique symbol;
+
 export type PolylineDoc = CreateObjectType<
 	typeof PolylineFeatures,
+	typeof PolylineDocBrand,
 	{
 		type: "polyline";
 		startArrow?: ArrowType;

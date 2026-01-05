@@ -7,7 +7,11 @@ export const PolygonFeatures = {
 	fill: true,
 } as const satisfies ObjectFeatures;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+declare const PolygonDocBrand: unique symbol;
+
 export type PolygonDoc = CreateObjectType<
 	typeof PolygonFeatures,
+	typeof PolygonDocBrand,
 	{ type: "polygon" }
 >;

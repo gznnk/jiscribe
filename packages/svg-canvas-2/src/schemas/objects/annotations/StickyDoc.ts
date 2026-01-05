@@ -8,7 +8,11 @@ export const StickyFeatures = {
 	fill: true,
 } as const satisfies ObjectFeatures;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+declare const StickyDocBrand: unique symbol;
+
 export type StickyDoc = CreateObjectType<
 	typeof StickyFeatures,
+	typeof StickyDocBrand,
 	{ type: "sticky" }
 >;
