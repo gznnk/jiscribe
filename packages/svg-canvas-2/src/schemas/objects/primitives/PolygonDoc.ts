@@ -1,5 +1,5 @@
-import type { ObjectFeatures } from "../../types/ObjectFeatures";
-import type { CreateObjectType } from "../../utils/CreateObjectType";
+import type { ObjectFeatures } from "../types/ObjectFeatures";
+import type { CreateObjectType } from "../utils/CreateObjectType";
 
 export const PolygonFeatures = {
 	geometry: "poly",
@@ -7,4 +7,7 @@ export const PolygonFeatures = {
 	fill: true,
 } as const satisfies ObjectFeatures;
 
-export type PolygonDoc = CreateObjectType<typeof PolygonFeatures, { type: "polygon" }>;
+export type PolygonDoc = CreateObjectType<
+	typeof PolygonFeatures,
+	{ type: "polygon" }
+>;

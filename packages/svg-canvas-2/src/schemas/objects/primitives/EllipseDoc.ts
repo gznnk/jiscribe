@@ -1,6 +1,6 @@
 import type { ReadonlyOmit } from "../../../../../utility-types/src";
-import type { ObjectFeatures } from "../../types/ObjectFeatures";
-import type { CreateObjectType } from "../../utils/CreateObjectType";
+import type { ObjectFeatures } from "../types/ObjectFeatures";
+import type { CreateObjectType } from "../utils/CreateObjectType";
 
 export const EllipseFeatures = {
 	geometry: "ellipse",
@@ -9,7 +9,10 @@ export const EllipseFeatures = {
 	fill: true,
 } as const satisfies ObjectFeatures;
 
-export type EllipseDoc = CreateObjectType<typeof EllipseFeatures, { type: "ellipse" }>;
+export type EllipseDoc = CreateObjectType<
+	typeof EllipseFeatures,
+	{ type: "ellipse" }
+>;
 
 export const ELLIPSE_DOC_DEFAULTS: ReadonlyOmit<EllipseDoc, "id"> = {
 	type: "ellipse",

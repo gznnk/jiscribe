@@ -1,5 +1,5 @@
 import type { MetaDoc } from "./MetaDoc";
-import type { ObjectType } from "../../types/ObjectType";
+import type { ObjectType } from "../types/ObjectType";
 
 export type ObjectDoc = {
 	id: string;

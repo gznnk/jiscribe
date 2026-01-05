@@ -1,10 +1,10 @@
 import type { Ellipse, Rect } from "@workspace/geometry";
 
-import type { Prettify } from "../../../../utility-types/src";
-import type { FillStyleDoc } from "../objects/base/FillStyleDoc";
-import type { ObjectDoc } from "../objects/base/ObjectDoc";
-import type { StrokeStyleDoc } from "../objects/base/StrokeStyleDoc";
-import type { TransformDoc } from "../objects/base/TransformDoc";
+import type { Prettify } from "../../../../../utility-types/src";
+import type { FillStyleDoc } from "../base/FillStyleDoc";
+import type { ObjectDoc } from "../base/ObjectDoc";
+import type { StrokeStyleDoc } from "../base/StrokeStyleDoc";
+import type { TransformDoc } from "../base/TransformDoc";
 import type { ObjectFeatures } from "../types/ObjectFeatures";
 import type { Poly } from "../types/Poly";
 

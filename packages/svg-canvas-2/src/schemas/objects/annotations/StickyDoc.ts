@@ -1,5 +1,5 @@
-import type { ObjectFeatures } from "../../types/ObjectFeatures";
-import type { CreateObjectType } from "../../utils/CreateObjectType";
+import type { ObjectFeatures } from "../types/ObjectFeatures";
+import type { CreateObjectType } from "../utils/CreateObjectType";
 
 export const StickyFeatures = {
 	geometry: "rect",
@@ -8,4 +8,7 @@ export const StickyFeatures = {
 	fill: true,
 } as const satisfies ObjectFeatures;
 
-export type StickyDoc = CreateObjectType<typeof StickyFeatures, { type: "sticky" }>;
+export type StickyDoc = CreateObjectType<
+	typeof StickyFeatures,
+	{ type: "sticky" }
+>;

@@ -1,17 +1,16 @@
 # Schemas
 
-svg-canvas-2 のデータ構造定義（スキーマ）を管理するディレクトリです。
+svg-canvas-2 で永続化するデータ構造の定義（スキーマ）を管理するディレクトリです。
 TypeScriptの型システムを活用し、機能フラグ（`ObjectFeatures`）に基づいてオブジェクトの型を自動合成する設計になっています。
 
 ## Directory Structure
 
 | Directory | Description |
-|Data Structure|Description|
 |---|---|
 | `canvas/` | キャンバス全体のルート構造 (`CanvasDoc`) を定義します。 |
-| `objects/` | 個別のオブジェクト定義。`base`（共通）, `primitives`（基本図形）, `connections`（線・矢印）等に分類されます。 |
-| `types/` | スキーマで使用される列挙型や共有型 (`ObjectType`, `GeometryType` 等) を定義します。 |
-| `utils/` | 型定義を生成するためのユーティリティ (`CreateObjectType`) です。 |
+| `objects/` | 個別のオブジェクト定義。`base`（共通）, `primitives`（基本図形）, `connections`（線・矢印）, `annotations`（注釈）等に分類されます。 |
+| `objects/types/` | オブジェクトで使用される列挙型や共有型 (`ObjectType`, `GeometryType` 等) を定義します。 |
+| `objects/utils/` | オブジェクトの型定義を生成するためのユーティリティ (`CreateObjectType`) です。 |
 
 ## Type Composition Architecture
 

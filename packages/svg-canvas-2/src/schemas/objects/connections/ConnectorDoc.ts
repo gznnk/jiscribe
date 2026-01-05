@@ -1,6 +1,6 @@
-import type { ArrowType } from "../../types/ArrowType";
-import type { ObjectFeatures } from "../../types/ObjectFeatures";
-import type { CreateObjectType } from "../../utils/CreateObjectType";
+import type { ArrowType } from "../types/ArrowType";
+import type { ObjectFeatures } from "../types/ObjectFeatures";
+import type { CreateObjectType } from "../utils/CreateObjectType";
 
 export const ConnectorFeatures = {
 	geometry: "poly",
