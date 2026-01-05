@@ -6,10 +6,10 @@ import type { ObjectDoc } from "../base/ObjectDoc";
 import type { StrokeStyleDoc } from "../base/StrokeStyleDoc";
 import type { TransformDoc } from "../base/TransformDoc";
 
-export type RectDoc = Prettify<
+export type StickyDoc = Prettify<
 	ObjectDoc &
 		Rect &
 		TransformDoc &
 		StrokeStyleDoc &
-		FillStyleDoc & { type: "rect" }
+		FillStyleDoc & { type: "sticky" }
 >;
