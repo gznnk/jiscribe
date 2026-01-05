@@ -2,6 +2,7 @@ import type { ObjectFeatures } from "../types/ObjectFeatures";
 import type { CreateObjectType } from "../utils/CreateObjectType";
 
 export const EllipseFeatures = {
+	type: "ellipse",
 	geometry: "ellipse",
 	transform: true,
 	stroke: true,
@@ -13,8 +14,7 @@ declare const EllipseDocBrand: unique symbol;
 
 export type EllipseDoc = CreateObjectType<
 	typeof EllipseFeatures,
-	typeof EllipseDocBrand,
-	{ type: "ellipse" }
+	typeof EllipseDocBrand
 >;
 
 export const ELLIPSE_DOC_DEFAULTS: Omit<EllipseDoc, "id"> = {

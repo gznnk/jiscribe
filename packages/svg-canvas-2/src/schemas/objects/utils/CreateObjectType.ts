@@ -34,6 +34,7 @@ type GeometryDoc<T extends ObjectFeatures> = //
  * @example
  * ```typescript
  * const RectFeatures = {
+ *   type: "rect",
  *   geometry: "rect",
  *   transform: true,
  *   stroke: true,
@@ -43,8 +44,7 @@ type GeometryDoc<T extends ObjectFeatures> = //
  * declare const RectDocBrand: unique symbol;
  * type RectDoc = CreateObjectType<
  *   typeof RectFeatures,
- *   typeof RectDocBrand,
- *   { type: "rect" }
+ *   typeof RectDocBrand
  * >;
  * ```
  */
@@ -53,8 +53,7 @@ export type CreateObjectType<
 	S extends symbol,
 	P = object,
 > = Prettify<
-	ObjectDoc &
-		GeometryDoc<T> &
+	ObjectDoc & { type: T["type"] } & GeometryDoc<T> &
 		(T["transform"] extends true ? TransformDoc : object) &
 		(T["stroke"] extends true ? StrokeStyleDoc : object) &
 		(T["fill"] extends true ? FillStyleDoc : object) &

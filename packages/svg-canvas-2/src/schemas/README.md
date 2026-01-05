@@ -1,16 +1,18 @@
 # Schemas
 
-svg-canvas-2 で永続化するデータ構造の定義（スキーマ）を管理するディレクトリです。
+永続化するデータ構造の定義（スキーマ）を管理するディレクトリです。
 TypeScriptの型システムを活用し、機能フラグ（`ObjectFeatures`）に基づいてオブジェクトの型を自動合成する設計になっています。
+
+**Note:** Branded Types を使用して Doc 型と State 型を区別しています。直接の相互代入を防ぎ、明示的なマッパー関数（`operations/base/`）を通じた変換を強制します。
 
 ## Directory Structure
 
-| Directory | Description |
-|---|---|
-| `canvas/` | キャンバス全体のルート構造 (`CanvasDoc`) を定義します。 |
-| `objects/` | 個別のオブジェクト定義。`base`（共通）, `primitives`（基本図形）, `connections`（線・矢印）, `annotations`（注釈）等に分類されます。 |
-| `objects/types/` | オブジェクトで使用される列挙型や共有型 (`ObjectType`, `GeometryType` 等) を定義します。 |
-| `objects/utils/` | オブジェクトの型定義を生成するためのユーティリティ (`CreateObjectType`) です。 |
+| Directory        | Description                                                                                                                          |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `canvas/`        | キャンバス全体のルート構造 (`CanvasDoc`) を定義します。                                                                              |
+| `objects/`       | 個別のオブジェクト定義。`base`（共通）, `primitives`（基本図形）, `connections`（線・矢印）, `annotations`（注釈）等に分類されます。 |
+| `objects/types/` | オブジェクトで使用される列挙型や共有型 (`ObjectType`, `GeometryType` 等) を定義します。                                              |
+| `objects/utils/` | オブジェクトの型定義を生成するためのユーティリティ (`CreateObjectType`) です。                                                       |
 
 ## Type Composition Architecture
 
@@ -32,6 +34,7 @@ classDiagram
 
     %% Features & Utils
     class ObjectFeatures {
+        +type: ObjectType
         +geometry: GeometryType
         +transform: boolean
         +stroke: boolean
@@ -41,6 +44,7 @@ classDiagram
     class CreateObjectType {
         <<Utility>>
         Generates final type based on Features
+        Accepts symbol for branding
     }
 
     %% Component Parts
@@ -80,17 +84,28 @@ classDiagram
 
 新しいオブジェクトタイプを追加する場合：
 
-1. `ObjectFeatures` を定義して、必要な機能を有効にします。
-2. `CreateObjectType` を使って型を生成します。
+1. `ObjectFeatures` を定義して、必要な機能を有効にします（`type`フィールドを含む）。
+2. `unique symbol` でブランドを宣言します。
+3. `CreateObjectType` を使って型を生成します。
 
 ```typescript
 // Example: RectDoc.ts
 export const RectFeatures = {
+	type: "rect",
 	geometry: "rect",
 	transform: true,
 	stroke: true,
 	fill: true,
 } as const satisfies ObjectFeatures;
 
-export type RectDoc = CreateObjectType<typeof RectFeatures, { type: "rect" }>;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+declare const RectDocBrand: unique symbol;
+
+export type RectDoc = CreateObjectType<
+	typeof RectFeatures,
+	typeof RectDocBrand
+>;
 ```
+
+対応する State 型は `states/objects/` に配置し、`CreateObjectState` を使用して生成します。
+Doc と State の変換には `operations/base/` のマッパー関数を使用してください。

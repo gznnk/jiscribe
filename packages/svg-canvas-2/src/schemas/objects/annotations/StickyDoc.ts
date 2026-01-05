@@ -2,6 +2,7 @@ import type { ObjectFeatures } from "../types/ObjectFeatures";
 import type { CreateObjectType } from "../utils/CreateObjectType";
 
 export const StickyFeatures = {
+	type: "sticky",
 	geometry: "rect",
 	transform: true,
 	stroke: true,
@@ -13,6 +14,5 @@ declare const StickyDocBrand: unique symbol;
 
 export type StickyDoc = CreateObjectType<
 	typeof StickyFeatures,
-	typeof StickyDocBrand,
-	{ type: "sticky" }
+	typeof StickyDocBrand
 >;

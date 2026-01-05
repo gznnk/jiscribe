@@ -3,6 +3,7 @@ import type { ObjectFeatures } from "../types/ObjectFeatures";
 import type { CreateObjectType } from "../utils/CreateObjectType";
 
 export const ConnectorFeatures = {
+	type: "connector",
 	geometry: "poly",
 	stroke: true,
 } as const satisfies ObjectFeatures;
@@ -14,7 +15,6 @@ export type ConnectorDoc = CreateObjectType<
 	typeof ConnectorFeatures,
 	typeof ConnectorDocBrand,
 	{
-		type: "connector";
 		startArrow?: ArrowType;
 		endArrow?: ArrowType;
 	}

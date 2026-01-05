@@ -42,6 +42,7 @@ type GeometryState<T extends ObjectFeatures> = //
  * @example
  * ```typescript
  * const RectFeatures = {
+ *   type: "rect",
  *   geometry: "rect",
  *   transform: true,
  *   stroke: true,
@@ -51,8 +52,7 @@ type GeometryState<T extends ObjectFeatures> = //
  * declare const RectStateBrand: unique symbol;
  * type RectState = CreateObjectState<
  *   typeof RectFeatures,
- *   typeof RectStateBrand,
- *   { type: "rect" }
+ *   typeof RectStateBrand
  * >;
  * ```
  */
@@ -61,8 +61,7 @@ export type CreateObjectState<
 	S extends symbol,
 	P = object,
 > = Prettify<
-	ObjectState &
-		GeometryState<T> &
+	ObjectState & { type: T["type"] } & GeometryState<T> &
 		(T["transform"] extends true ? Transform : object) &
 		(T["stroke"] extends true ? StrokeStyleState : object) &
 		(T["fill"] extends true ? FillStyleState : object) &

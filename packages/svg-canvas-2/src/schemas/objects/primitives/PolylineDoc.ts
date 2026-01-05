@@ -3,6 +3,7 @@ import type { ObjectFeatures } from "../types/ObjectFeatures";
 import type { CreateObjectType } from "../utils/CreateObjectType";
 
 export const PolylineFeatures = {
+	type: "polyline",
 	geometry: "poly",
 	stroke: true,
 } as const satisfies ObjectFeatures;
@@ -14,7 +15,6 @@ export type PolylineDoc = CreateObjectType<
 	typeof PolylineFeatures,
 	typeof PolylineDocBrand,
 	{
-		type: "polyline";
 		startArrow?: ArrowType;
 		endArrow?: ArrowType;
 	}

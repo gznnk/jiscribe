@@ -2,6 +2,7 @@ import type { ObjectFeatures } from "../types/ObjectFeatures";
 import type { CreateObjectType } from "../utils/CreateObjectType";
 
 export const RectFeatures = {
+	type: "rect",
 	geometry: "rect",
 	transform: true,
 	stroke: true,
@@ -13,6 +14,5 @@ declare const RectDocBrand: unique symbol;
 
 export type RectDoc = CreateObjectType<
 	typeof RectFeatures,
-	typeof RectDocBrand,
-	{ type: "rect" }
+	typeof RectDocBrand
 >;

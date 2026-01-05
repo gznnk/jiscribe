@@ -3,6 +3,7 @@ import type { ObjectFeatures } from "../types/ObjectFeatures";
 import type { CreateObjectType } from "../utils/CreateObjectType";
 
 export const GroupFeatures = {
+	type: "group",
 	geometry: "none",
 	transform: true,
 } as const satisfies ObjectFeatures;
@@ -14,7 +15,6 @@ export type GroupDoc = CreateObjectType<
 	typeof GroupFeatures,
 	typeof GroupDocBrand,
 	{
-		type: "group";
 		children: ObjectDoc[];
 	}
 >;

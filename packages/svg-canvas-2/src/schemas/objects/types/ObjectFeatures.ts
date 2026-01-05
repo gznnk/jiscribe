@@ -1,4 +1,5 @@
 import type { GeometryType } from "./GeometryType";
+import type { ObjectType } from "./ObjectType";
 
 /**
  * Object features configuration for svg-canvas-2.
@@ -6,6 +7,8 @@ import type { GeometryType } from "./GeometryType";
  * Used for generating object document types based on their capabilities.
  */
 export type ObjectFeatures = {
+	/** Object type identifier */
+	type: ObjectType;
 	/** Geometry type of the object */
 	geometry: GeometryType;
 	/** Position, rotation, and flip transformation (TransformDoc) */
