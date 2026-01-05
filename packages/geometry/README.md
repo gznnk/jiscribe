@@ -1,8 +1,8 @@
 # @workspace/geometry
 
-A library for geometric calculations and utilities.
+幾何学計算とユーティリティのためのライブラリです。
 
-## Documentation
+## ドキュメント
 
-- [Naming Conventions & Directory Structure](./docs/naming_and_structure.md)
-- [Type Definitions](./docs/types.md)
+- [命名規則とディレクトリ構造](./docs/naming_and_structure.md)
+- [型定義](./docs/types.md)
