@@ -6,14 +6,19 @@
 	"types": "src/index.ts",
 	"scripts": {
 		"lint": "eslint .",
+		"test": "vitest",
+		"test:ui": "vitest --ui",
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
 		"react": "catalog:",
-		"@workspace/geometry": "workspace:*"
+		"@workspace/geometry": "workspace:*",
+		"@workspace/utility-types": "workspace:*"
 	},
 	"devDependencies": {
 		"@types/react": "^19.2.7",
-		"typescript": "catalog:"
+		"@vitest/ui": "^2.1.8",
+		"typescript": "catalog:",
+		"vitest": "^2.1.8"
 	}
 }
