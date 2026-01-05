@@ -1,15 +1,11 @@
-import type { Rect } from "@workspace/geometry";
+import type { ObjectFeatures } from "../../types/ObjectFeatures";
+import type { CreateObjectType } from "../../utils/CreateObjectType";
 
-import type { Prettify } from "../../../../../utility-types/src";
-import type { FillStyleDoc } from "../base/FillStyleDoc";
-import type { ObjectDoc } from "../base/ObjectDoc";
-import type { StrokeStyleDoc } from "../base/StrokeStyleDoc";
-import type { TransformDoc } from "../base/TransformDoc";
+export const RectFeatures = {
+	geometry: "rect",
+	transform: true,
+	stroke: true,
+	fill: true,
+} as const satisfies ObjectFeatures;
 
-export type RectDoc = Prettify<
-	ObjectDoc &
-		Rect &
-		TransformDoc &
-		StrokeStyleDoc &
-		FillStyleDoc & { type: "rect" }
->;
+export type RectDoc = CreateObjectType<typeof RectFeatures, { type: "rect" }>;

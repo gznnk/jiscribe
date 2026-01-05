@@ -1,18 +1,15 @@
-import type { Ellipse } from "@workspace/geometry";
+import type { ReadonlyOmit } from "../../../../../utility-types/src";
+import type { ObjectFeatures } from "../../types/ObjectFeatures";
+import type { CreateObjectType } from "../../utils/CreateObjectType";
 
-import type { Prettify, ReadonlyOmit } from "../../../../../utility-types/src";
-import type { FillStyleDoc } from "../base/FillStyleDoc";
-import type { ObjectDoc } from "../base/ObjectDoc";
-import type { StrokeStyleDoc } from "../base/StrokeStyleDoc";
-import type { TransformDoc } from "../base/TransformDoc";
+export const EllipseFeatures = {
+	geometry: "ellipse",
+	transform: true,
+	stroke: true,
+	fill: true,
+} as const satisfies ObjectFeatures;
 
-export type EllipseDoc = Prettify<
-	ObjectDoc &
-		Ellipse &
-		TransformDoc &
-		StrokeStyleDoc &
-		FillStyleDoc & { type: "ellipse" }
->;
+export type EllipseDoc = CreateObjectType<typeof EllipseFeatures, { type: "ellipse" }>;
 
 export const ELLIPSE_DOC_DEFAULTS: ReadonlyOmit<EllipseDoc, "id"> = {
 	type: "ellipse",

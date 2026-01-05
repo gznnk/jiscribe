@@ -1,15 +1,10 @@
-import type { Point } from "@workspace/geometry";
+import type { ObjectFeatures } from "../../types/ObjectFeatures";
+import type { CreateObjectType } from "../../utils/CreateObjectType";
 
-import type { Prettify } from "../../../../../utility-types/src";
-import type { FillStyleDoc } from "../base/FillStyleDoc";
-import type { ObjectDoc } from "../base/ObjectDoc";
-import type { StrokeStyleDoc } from "../base/StrokeStyleDoc";
+export const PolygonFeatures = {
+	geometry: "poly",
+	stroke: true,
+	fill: true,
+} as const satisfies ObjectFeatures;
 
-export type PolygonDoc = Prettify<
-	ObjectDoc &
-		StrokeStyleDoc &
-		FillStyleDoc & {
-			type: "polygon";
-			points: Point[];
-		}
->;
+export type PolygonDoc = CreateObjectType<typeof PolygonFeatures, { type: "polygon" }>;
