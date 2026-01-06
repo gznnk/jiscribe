@@ -5,7 +5,7 @@ import type { StickyState } from "../../../../states/objects/annotations/StickyS
 import type {
 	DocToStateMapper,
 	StateToDocMapper,
-} from "../../../types/ObjectMapperTypes";
+} from "../../types/ObjectMapperTypes";
 import { ObjectMapper } from "../../base/ObjectMapper";
 
 /**

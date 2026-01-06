@@ -5,11 +5,11 @@ import {
 
 import type { EllipseDoc } from "../../../../schemas/objects/primitives/EllipseDoc";
 import type { EllipseState } from "../../../../states/objects/primitives/EllipseState";
+import { ObjectMapper } from "../../base/ObjectMapper";
 import type {
 	DocToStateMapper,
 	StateToDocMapper,
-} from "../../../types/ObjectMapperTypes";
-import { ObjectMapper } from "../../base/ObjectMapper";
+} from "../../types/ObjectMapperTypes";
 
 /**
  * Converts EllipseDoc to EllipseState.

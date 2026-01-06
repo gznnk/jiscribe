@@ -3,7 +3,7 @@ import type { ConnectorState } from "../../../../states/objects/connections/Conn
 import type {
 	DocToStateMapper,
 	StateToDocMapper,
-} from "../../../types/ObjectMapperTypes";
+} from "../../types/ObjectMapperTypes";
 import { ObjectMapper } from "../../base/ObjectMapper";
 
 /**

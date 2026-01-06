@@ -3,7 +3,7 @@ import type { GroupState } from "../../../../states/objects/primitives/GroupStat
 import type {
 	DocToStateMapper,
 	StateToDocMapper,
-} from "../../../types/ObjectMapperTypes";
+} from "../../types/ObjectMapperTypes";
 import { ObjectMapper } from "../../base/ObjectMapper";
 
 /**

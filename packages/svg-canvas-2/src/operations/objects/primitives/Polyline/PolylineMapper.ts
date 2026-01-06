@@ -3,7 +3,7 @@ import type { PolylineState } from "../../../../states/objects/primitives/Polyli
 import type {
 	DocToStateMapper,
 	StateToDocMapper,
-} from "../../../types/ObjectMapperTypes";
+} from "../../types/ObjectMapperTypes";
 import { ObjectMapper } from "../../base/ObjectMapper";
 
 /**

@@ -3,7 +3,7 @@ import type { PolygonState } from "../../../../states/objects/primitives/Polygon
 import type {
 	DocToStateMapper,
 	StateToDocMapper,
-} from "../../../types/ObjectMapperTypes";
+} from "../../types/ObjectMapperTypes";
 import { ObjectMapper } from "../../base/ObjectMapper";
 
 /**
