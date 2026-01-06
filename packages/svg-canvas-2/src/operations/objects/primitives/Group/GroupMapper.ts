@@ -1,4 +1,3 @@
-import { objectRegistry } from "../../../../registry/ObjectRegistry";
 import type {
 	DocToStateMapper,
 	StateToDocMapper,
@@ -18,12 +17,13 @@ export const groupToState: DocToStateMapper<GroupDoc, GroupState> = (doc) => {
 	const base = ObjectMapper.toState(doc);
 	const transform = convertTransformDocToState(doc);
 
-	// Note: children conversion is handled by the registry to avoid circular dependencies
+	// Note: Children are handled by CanvasMapper during the normalization process.
+	// We initialize with an empty array here, which will be populated by the parent process.
 	return {
 		...base,
 		...transform,
-		children: doc.children.map((child) => objectRegistry.toState(child)),
-	} as GroupState;
+		children: [],
+	} as unknown as GroupState;
 };
 
 /**
@@ -33,10 +33,11 @@ export const groupToDoc: StateToDocMapper<GroupState, GroupDoc> = (state) => {
 	const base = ObjectMapper.toDoc(state);
 	const transform = convertTransformStateToDoc(state);
 
-	// Note: children conversion is handled by the registry to avoid circular dependencies
+	// Note: Children are handled by CanvasMapper during the denormalization process.
+	// We initialize with an empty array here.
 	return {
 		...base,
 		...transform,
-		children: state.children.map((child) => objectRegistry.toDoc(child)),
-	} as GroupDoc;
+		children: [],
+	} as unknown as GroupDoc;
 };

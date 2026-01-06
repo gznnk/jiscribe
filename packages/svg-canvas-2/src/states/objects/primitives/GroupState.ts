@@ -1,5 +1,4 @@
 import type { GroupFeatures } from "../../../schemas/objects/primitives/GroupDoc";
-import type { ObjectState } from "../base/ObjectState";
 import type { CreateObjectState } from "../utils/CreateObjectState";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -9,6 +8,10 @@ export type GroupState = CreateObjectState<
 	typeof GroupFeatures,
 	typeof GroupStateBrand,
 	{
-		children: ObjectState[];
+		/**
+		 * List of child object IDs.
+		 * The order in the array represents the rendering order (Z-index).
+		 */
+		children: string[];
 	}
 >;
