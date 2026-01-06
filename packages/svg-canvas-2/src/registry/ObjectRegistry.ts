@@ -1,7 +1,4 @@
-import type {
-	ObjectComponentType,
-	ObjectDefinition,
-} from "./ObjectRegistryTypes";
+import type { ObjectDefinition } from "./ObjectRegistryTypes";
 import type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
 import type { ObjectType } from "../schemas/objects/types/ObjectType";
 import type { ObjectState } from "../states/objects/base/ObjectState";
@@ -35,7 +32,8 @@ class ObjectRegistry {
 	/**
 	 * Retrieves the component for a specific object type.
 	 */
-	getComponent(type: ObjectType): ObjectComponentType | undefined {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	getComponent(type: ObjectType): React.FC<any> | undefined {
 		return this.definitions.get(type)?.component;
 	}
 

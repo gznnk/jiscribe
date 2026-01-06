@@ -11,9 +11,11 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"react": "catalog:",
+		"@emotion/react": "catalog:",
+		"@emotion/styled": "catalog:",
 		"@workspace/geometry": "workspace:*",
-		"@workspace/utility-types": "workspace:*"
+		"@workspace/utility-types": "workspace:*",
+		"react": "catalog:"
 	},
 	"devDependencies": {
 		"@types/react": "^19.2.7",

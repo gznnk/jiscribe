@@ -1,5 +1,3 @@
-import type { ComponentType } from "react";
-
 import type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
 import type { ObjectState } from "../states/objects/base/ObjectState";
 
@@ -31,22 +29,6 @@ export type ObjectMapperType<
 };
 
 /**
- * Props passed to the object component.
- */
-export interface ObjectComponentProps<
-	TState extends ObjectState = ObjectState,
-> {
-	state: TState;
-	// Future: can add isSelected, isEditing, etc.
-}
-
-/**
- * React Component for rendering the object.
- */
-export type ObjectComponentType<TState extends ObjectState = ObjectState> =
-	ComponentType<ObjectComponentProps<TState>>;
-
-/**
  * Complete definition for an object type in the registry.
  * Includes both data mapping logic and UI component.
  */
@@ -55,5 +37,6 @@ export type ObjectDefinition<
 	TState extends ObjectState = ObjectState,
 > = {
 	mapper: ObjectMapperType<TDoc, TState>;
-	component: ObjectComponentType<TState>;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	component: React.FC<any>;
 };
