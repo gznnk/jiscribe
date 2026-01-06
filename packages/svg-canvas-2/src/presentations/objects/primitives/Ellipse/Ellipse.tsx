@@ -1,13 +1,13 @@
 import type React from "react";
 import { memo } from "react";
 
-import { RectElement } from "./RectStyled";
-import type { RectState } from "../../../../states/objects/primitives/RectState";
+import { EllipseElement } from "./EllipseStyled";
+import type { EllipseState } from "../../../../states/objects/primitives/EllipseState";
 import { createSvgTransform } from "../../utils/createSvgTransform";
 
-type RectProps = RectState;
+type EllipseProps = EllipseState;
 
-const RectComponent: React.FC<RectProps> = ({
+const EllipseComponent: React.FC<EllipseProps> = ({
 	cx,
 	cy,
 	width,
@@ -21,12 +21,15 @@ const RectComponent: React.FC<RectProps> = ({
 }) => {
 	const transformAttr = createSvgTransform(scaleX, scaleY, rotation, cx, cy);
 
+	const rx = width / 2;
+	const ry = height / 2;
+
 	return (
-		<RectElement
-			x={-width / 2}
-			y={-height / 2}
-			width={width}
-			height={height}
+		<EllipseElement
+			cx={0}
+			cy={0}
+			rx={rx}
+			ry={ry}
 			transform={transformAttr}
 			fill={fill}
 			stroke={stroke}
@@ -35,4 +38,4 @@ const RectComponent: React.FC<RectProps> = ({
 	);
 };
 
-export const Rect = memo(RectComponent);
+export const Ellipse = memo(EllipseComponent);

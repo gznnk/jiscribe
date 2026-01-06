@@ -1,11 +1,16 @@
 import { memo } from "react";
 
 import {
+	ellipseToDoc,
+	ellipseToState,
+} from "../../operations/objects/primitives/Ellipse/EllipseMapper";
+import {
 	rectToDoc,
 	rectToState,
 } from "../../operations/objects/primitives/Rect/RectMapper";
 import { objectRegistry } from "../../registry/ObjectRegistry";
 import type { CanvasState } from "../../states/canvas/CanvasState";
+import { Ellipse } from "../objects/primitives/Ellipse/Ellipse";
 import { Rect } from "../objects/primitives/Rect/Rect";
 
 objectRegistry.register("rect", {
@@ -14,6 +19,14 @@ objectRegistry.register("rect", {
 		toState: rectToState,
 	},
 	component: Rect,
+});
+
+objectRegistry.register("ellipse", {
+	mapper: {
+		toDoc: ellipseToDoc,
+		toState: ellipseToState,
+	},
+	component: Ellipse,
 });
 
 type CanvasProps = CanvasState;
