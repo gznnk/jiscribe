@@ -3,6 +3,7 @@ import type {
 	ObjectDefinition,
 } from "./ObjectRegistryTypes";
 import type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
+import type { ObjectType } from "../schemas/objects/types/ObjectType";
 import type { ObjectState } from "../states/objects/base/ObjectState";
 
 /**
@@ -10,32 +11,32 @@ import type { ObjectState } from "../states/objects/base/ObjectState";
  * Handles polymorphic conversion and component retrieval.
  */
 class ObjectRegistry {
-	private definitions = new Map<string, ObjectDefinition>();
+	private definitions = new Map<ObjectType, ObjectDefinition>();
 
 	/**
 	 * Registers a definition for a specific object type.
-	 * @param typeStr - The object type string (e.g., 'group', 'rectangle')
+	 * @param type - The object type (e.g., 'group', 'rect')
 	 * @param definition - The object definition (mapper + component)
 	 */
 	register<D extends ObjectDoc, S extends ObjectState>(
-		typeStr: string,
+		type: ObjectType,
 		definition: ObjectDefinition<D, S>,
 	) {
-		this.definitions.set(typeStr, definition as unknown as ObjectDefinition);
+		this.definitions.set(type, definition as unknown as ObjectDefinition);
 	}
 
 	/**
 	 * Retrieves the definition for a specific object type.
 	 */
-	getDefinition(typeStr: string): ObjectDefinition | undefined {
-		return this.definitions.get(typeStr);
+	getDefinition(type: ObjectType): ObjectDefinition | undefined {
+		return this.definitions.get(type);
 	}
 
 	/**
 	 * Retrieves the component for a specific object type.
 	 */
-	getComponent(typeStr: string): ObjectComponentType | undefined {
-		return this.definitions.get(typeStr)?.component;
+	getComponent(type: ObjectType): ObjectComponentType | undefined {
+		return this.definitions.get(type)?.component;
 	}
 
 	/**
