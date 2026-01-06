@@ -1,4 +1,7 @@
-import { convertEllipseToFrame } from "@workspace/geometry";
+import {
+	convertEllipseToFrame,
+	convertFrameToEllipse,
+} from "@workspace/geometry";
 
 import type { EllipseDoc } from "../../../../schemas/objects/primitives/EllipseDoc";
 import type { EllipseState } from "../../../../states/objects/primitives/EllipseState";
@@ -43,10 +46,7 @@ export const ellipseToDoc: StateToDocMapper<EllipseState, EllipseDoc> = (
 	state,
 ) => {
 	const base = ObjectMapper.toDoc(state);
-
-	// Frame to Ellipse conversion
-	const rx = state.width / 2;
-	const ry = state.height / 2;
+	const ellipse = convertFrameToEllipse(state);
 
 	// Transform to TransformDoc conversion
 	const rotation = state.rotation !== 0 ? state.rotation : undefined;
@@ -55,10 +55,7 @@ export const ellipseToDoc: StateToDocMapper<EllipseState, EllipseDoc> = (
 
 	return {
 		...base,
-		cx: state.cx,
-		cy: state.cy,
-		rx,
-		ry,
+		...ellipse,
 		rotation,
 		flipX,
 		flipY,

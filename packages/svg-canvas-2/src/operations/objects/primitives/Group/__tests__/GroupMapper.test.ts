@@ -16,7 +16,7 @@ describe("GroupMapper", () => {
 				y: 0,
 				width: 100,
 				height: 100,
-			} as RectDoc;
+			} as unknown as RectDoc;
 
 			const doc: GroupDoc = {
 				id: "group-1",
@@ -25,7 +25,7 @@ describe("GroupMapper", () => {
 				flipX: true,
 				flipY: false,
 				children: [childDoc],
-			} as GroupDoc;
+			} as unknown as GroupDoc;
 
 			const state = groupToState(doc);
 
@@ -44,7 +44,7 @@ describe("GroupMapper", () => {
 				id: "group-2",
 				type: "group",
 				children: [],
-			} as GroupDoc;
+			} as unknown as GroupDoc;
 
 			const state = groupToState(doc);
 
@@ -61,7 +61,7 @@ describe("GroupMapper", () => {
 				y: 0,
 				width: 50,
 				height: 50,
-			} as RectDoc;
+			} as unknown as RectDoc;
 
 			const rect2: RectDoc = {
 				id: "rect-2",
@@ -70,13 +70,13 @@ describe("GroupMapper", () => {
 				y: 50,
 				width: 50,
 				height: 50,
-			} as RectDoc;
+			} as unknown as RectDoc;
 
 			const doc: GroupDoc = {
 				id: "group-3",
 				type: "group",
 				children: [rect1, rect2],
-			} as GroupDoc;
+			} as unknown as GroupDoc;
 
 			const state = groupToState(doc);
 
@@ -98,7 +98,7 @@ describe("GroupMapper", () => {
 				rotation: 0,
 				scaleX: 1,
 				scaleY: 1,
-			} as RectState;
+			} as unknown as RectState;
 
 			const state: GroupState = {
 				id: "group-1",
@@ -107,7 +107,7 @@ describe("GroupMapper", () => {
 				scaleX: -1,
 				scaleY: 1,
 				children: [childState],
-			} as GroupState;
+			} as unknown as GroupState;
 
 			const doc = groupToDoc(state);
 
@@ -129,7 +129,7 @@ describe("GroupMapper", () => {
 				scaleX: 1,
 				scaleY: 1,
 				children: [],
-			} as GroupState;
+			} as unknown as GroupState;
 
 			const doc = groupToDoc(state);
 
@@ -149,7 +149,7 @@ describe("GroupMapper", () => {
 				rotation: 0,
 				scaleX: 1,
 				scaleY: 1,
-			} as RectState;
+			} as unknown as RectState;
 
 			const rect2: RectState = {
 				id: "rect-2",
@@ -161,7 +161,7 @@ describe("GroupMapper", () => {
 				rotation: 0,
 				scaleX: 1,
 				scaleY: 1,
-			} as RectState;
+			} as unknown as RectState;
 
 			const state: GroupState = {
 				id: "group-3",
@@ -170,7 +170,7 @@ describe("GroupMapper", () => {
 				scaleX: 1,
 				scaleY: 1,
 				children: [rect1, rect2],
-			} as GroupState;
+			} as unknown as GroupState;
 
 			const doc = groupToDoc(state);
 
@@ -189,7 +189,7 @@ describe("GroupMapper", () => {
 				y: 20,
 				width: 100,
 				height: 50,
-			} as RectDoc;
+			} as unknown as RectDoc;
 
 			const originalDoc: GroupDoc = {
 				id: "group-round-trip",
@@ -197,7 +197,7 @@ describe("GroupMapper", () => {
 				rotation: 30,
 				flipX: true,
 				children: [childDoc],
-			} as GroupDoc;
+			} as unknown as GroupDoc;
 
 			const state = groupToState(originalDoc);
 			const convertedDoc = groupToDoc(state);

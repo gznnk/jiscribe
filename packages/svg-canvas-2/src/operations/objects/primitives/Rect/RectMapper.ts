@@ -1,4 +1,4 @@
-import { convertRectToFrame } from "@workspace/geometry";
+import { convertFrameToRect, convertRectToFrame } from "@workspace/geometry";
 
 import type { RectDoc } from "../../../../schemas/objects/primitives/RectDoc";
 import type { RectState } from "../../../../states/objects/primitives/RectState";
@@ -36,10 +36,7 @@ export const rectToState: DocToStateMapper<RectDoc, RectState> = (doc) => {
  */
 export const rectToDoc: StateToDocMapper<RectState, RectDoc> = (state) => {
 	const base = ObjectMapper.toDoc(state);
-
-	// Frame to Rect conversion
-	const x = state.cx - state.width / 2;
-	const y = state.cy - state.height / 2;
+	const rect = convertFrameToRect(state);
 
 	// Transform to TransformDoc conversion
 	const rotation = state.rotation !== 0 ? state.rotation : undefined;
@@ -48,10 +45,7 @@ export const rectToDoc: StateToDocMapper<RectState, RectDoc> = (state) => {
 
 	return {
 		...base,
-		x,
-		y,
-		width: state.width,
-		height: state.height,
+		...rect,
 		rotation,
 		flipX,
 		flipY,

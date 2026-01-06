@@ -19,7 +19,7 @@ describe("ConnectorMapper", () => {
 				strokeWidth: 2,
 				startArrow: "arrow",
 				endArrow: "circle",
-			} as ConnectorDoc;
+			} as unknown as ConnectorDoc;
 
 			const state = connectorToState(doc);
 
@@ -45,7 +45,7 @@ describe("ConnectorMapper", () => {
 					{ x: 50, y: 50 },
 				],
 				stroke: "#000000",
-			} as ConnectorDoc;
+			} as unknown as ConnectorDoc;
 
 			const state = connectorToState(doc);
 
@@ -74,7 +74,7 @@ describe("ConnectorMapper", () => {
 				strokeWidth: 2,
 				startArrow: "arrow",
 				endArrow: "circle",
-			} as ConnectorState;
+			} as unknown as ConnectorState;
 
 			const doc = connectorToDoc(state);
 
@@ -100,7 +100,7 @@ describe("ConnectorMapper", () => {
 					{ x: 50, y: 50 },
 				],
 				stroke: "#000000",
-			} as ConnectorState;
+			} as unknown as ConnectorState;
 
 			const doc = connectorToDoc(state);
 
@@ -129,7 +129,7 @@ describe("ConnectorMapper", () => {
 				strokeWidth: 2,
 				startArrow: "arrow",
 				endArrow: "circle",
-			} as ConnectorDoc;
+			} as unknown as ConnectorDoc;
 
 			const state = connectorToState(originalDoc);
 			const convertedDoc = connectorToDoc(state);

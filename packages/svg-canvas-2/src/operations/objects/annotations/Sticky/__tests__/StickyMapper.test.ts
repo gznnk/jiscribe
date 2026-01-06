@@ -20,7 +20,7 @@ describe("StickyMapper", () => {
 				stroke: "#000000",
 				strokeWidth: 2,
 				fill: "#ffff00",
-			} as StickyDoc;
+			} as unknown as StickyDoc;
 
 			const state = stickyToState(doc);
 
@@ -46,7 +46,7 @@ describe("StickyMapper", () => {
 				y: 0,
 				width: 100,
 				height: 100,
-			} as StickyDoc;
+			} as unknown as StickyDoc;
 
 			const state = stickyToState(doc);
 
@@ -64,7 +64,7 @@ describe("StickyMapper", () => {
 				width: 100,
 				height: 100,
 				flipY: true,
-			} as StickyDoc;
+			} as unknown as StickyDoc;
 
 			const state = stickyToState(doc);
 
@@ -88,7 +88,7 @@ describe("StickyMapper", () => {
 				stroke: "#000000",
 				strokeWidth: 2,
 				fill: "#ffff00",
-			} as StickyState;
+			} as unknown as StickyState;
 
 			const doc = stickyToDoc(state);
 
@@ -117,7 +117,7 @@ describe("StickyMapper", () => {
 				rotation: 0,
 				scaleX: 1,
 				scaleY: 1,
-			} as StickyState;
+			} as unknown as StickyState;
 
 			const doc = stickyToDoc(state);
 
@@ -137,7 +137,7 @@ describe("StickyMapper", () => {
 				rotation: 0,
 				scaleX: 1,
 				scaleY: -1,
-			} as StickyState;
+			} as unknown as StickyState;
 
 			const doc = stickyToDoc(state);
 
@@ -160,7 +160,7 @@ describe("StickyMapper", () => {
 				stroke: "#000000",
 				strokeWidth: 2,
 				fill: "#ffff00",
-			} as StickyDoc;
+			} as unknown as StickyDoc;
 
 			const state = stickyToState(originalDoc);
 			const convertedDoc = stickyToDoc(state);

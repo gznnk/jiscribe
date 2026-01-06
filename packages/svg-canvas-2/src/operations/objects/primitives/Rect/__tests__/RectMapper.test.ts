@@ -20,7 +20,7 @@ describe("RectMapper", () => {
 				stroke: "#000000",
 				strokeWidth: 2,
 				fill: "#ff0000",
-			} as RectDoc;
+			} as unknown as RectDoc;
 
 			const state = rectToState(doc);
 
@@ -46,7 +46,7 @@ describe("RectMapper", () => {
 				y: 0,
 				width: 100,
 				height: 100,
-			} as RectDoc;
+			} as unknown as RectDoc;
 
 			const state = rectToState(doc);
 
@@ -64,7 +64,7 @@ describe("RectMapper", () => {
 				width: 100,
 				height: 100,
 				flipY: true,
-			} as RectDoc;
+			} as unknown as RectDoc;
 
 			const state = rectToState(doc);
 
@@ -88,7 +88,7 @@ describe("RectMapper", () => {
 				stroke: "#000000",
 				strokeWidth: 2,
 				fill: "#ff0000",
-			} as RectState;
+			} as unknown as RectState;
 
 			const doc = rectToDoc(state);
 
@@ -117,7 +117,7 @@ describe("RectMapper", () => {
 				rotation: 0,
 				scaleX: 1,
 				scaleY: 1,
-			} as RectState;
+			} as unknown as RectState;
 
 			const doc = rectToDoc(state);
 
@@ -137,7 +137,7 @@ describe("RectMapper", () => {
 				rotation: 0,
 				scaleX: 1,
 				scaleY: -1,
-			} as RectState;
+			} as unknown as RectState;
 
 			const doc = rectToDoc(state);
 
@@ -160,7 +160,7 @@ describe("RectMapper", () => {
 				stroke: "#000000",
 				strokeWidth: 2,
 				fill: "#ff0000",
-			} as RectDoc;
+			} as unknown as RectDoc;
 
 			const state = rectToState(originalDoc);
 			const convertedDoc = rectToDoc(state);

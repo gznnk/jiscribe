@@ -19,7 +19,7 @@ describe("PolylineMapper", () => {
 				strokeWidth: 2,
 				startArrow: "arrow",
 				endArrow: "circle",
-			} as PolylineDoc;
+			} as unknown as PolylineDoc;
 
 			const state = polylineToState(doc);
 
@@ -45,7 +45,7 @@ describe("PolylineMapper", () => {
 					{ x: 50, y: 50 },
 				],
 				stroke: "#000000",
-			} as PolylineDoc;
+			} as unknown as PolylineDoc;
 
 			const state = polylineToState(doc);
 
@@ -74,7 +74,7 @@ describe("PolylineMapper", () => {
 				strokeWidth: 2,
 				startArrow: "arrow",
 				endArrow: "circle",
-			} as PolylineState;
+			} as unknown as PolylineState;
 
 			const doc = polylineToDoc(state);
 
@@ -100,7 +100,7 @@ describe("PolylineMapper", () => {
 					{ x: 50, y: 50 },
 				],
 				stroke: "#000000",
-			} as PolylineState;
+			} as unknown as PolylineState;
 
 			const doc = polylineToDoc(state);
 
@@ -129,7 +129,7 @@ describe("PolylineMapper", () => {
 				strokeWidth: 2,
 				startArrow: "arrow",
 				endArrow: "circle",
-			} as PolylineDoc;
+			} as unknown as PolylineDoc;
 
 			const state = polylineToState(originalDoc);
 			const convertedDoc = polylineToDoc(state);

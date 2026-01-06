@@ -18,7 +18,7 @@ describe("PolygonMapper", () => {
 				stroke: "#000000",
 				strokeWidth: 2,
 				fill: "#ff0000",
-			} as PolygonDoc;
+			} as unknown as PolygonDoc;
 
 			const state = polygonToState(doc);
 
@@ -43,7 +43,7 @@ describe("PolygonMapper", () => {
 					{ x: 50, y: 50 },
 					{ x: 0, y: 50 },
 				],
-			} as PolygonDoc;
+			} as unknown as PolygonDoc;
 
 			const state = polygonToState(doc);
 
@@ -73,7 +73,7 @@ describe("PolygonMapper", () => {
 				stroke: "#000000",
 				strokeWidth: 2,
 				fill: "#ff0000",
-			} as PolygonState;
+			} as unknown as PolygonState;
 
 			const doc = polygonToDoc(state);
 
@@ -98,7 +98,7 @@ describe("PolygonMapper", () => {
 					{ x: 50, y: 50 },
 					{ x: 0, y: 50 },
 				],
-			} as PolygonState;
+			} as unknown as PolygonState;
 
 			const doc = polygonToDoc(state);
 
@@ -128,7 +128,7 @@ describe("PolygonMapper", () => {
 				stroke: "#000000",
 				strokeWidth: 2,
 				fill: "#ff0000",
-			} as PolygonDoc;
+			} as unknown as PolygonDoc;
 
 			const state = polygonToState(originalDoc);
 			const convertedDoc = polygonToDoc(state);

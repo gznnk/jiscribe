@@ -20,7 +20,7 @@ describe("EllipseMapper", () => {
 				stroke: "#000000",
 				strokeWidth: 2,
 				fill: "#ff0000",
-			} as EllipseDoc;
+			} as unknown as EllipseDoc;
 
 			const state = ellipseToState(doc);
 
@@ -46,7 +46,7 @@ describe("EllipseMapper", () => {
 				cy: 50,
 				rx: 25,
 				ry: 25,
-			} as EllipseDoc;
+			} as unknown as EllipseDoc;
 
 			const state = ellipseToState(doc);
 
@@ -64,7 +64,7 @@ describe("EllipseMapper", () => {
 				rx: 25,
 				ry: 25,
 				flipY: true,
-			} as EllipseDoc;
+			} as unknown as EllipseDoc;
 
 			const state = ellipseToState(doc);
 
@@ -88,7 +88,7 @@ describe("EllipseMapper", () => {
 				stroke: "#000000",
 				strokeWidth: 2,
 				fill: "#ff0000",
-			} as EllipseState;
+			} as unknown as EllipseState;
 
 			const doc = ellipseToDoc(state);
 
@@ -117,7 +117,7 @@ describe("EllipseMapper", () => {
 				rotation: 0,
 				scaleX: 1,
 				scaleY: 1,
-			} as EllipseState;
+			} as unknown as EllipseState;
 
 			const doc = ellipseToDoc(state);
 
@@ -137,7 +137,7 @@ describe("EllipseMapper", () => {
 				rotation: 0,
 				scaleX: 1,
 				scaleY: -1,
-			} as EllipseState;
+			} as unknown as EllipseState;
 
 			const doc = ellipseToDoc(state);
 
@@ -160,7 +160,7 @@ describe("EllipseMapper", () => {
 				stroke: "#000000",
 				strokeWidth: 2,
 				fill: "#ff0000",
-			} as EllipseDoc;
+			} as unknown as EllipseDoc;
 
 			const state = ellipseToState(originalDoc);
 			const convertedDoc = ellipseToDoc(state);
