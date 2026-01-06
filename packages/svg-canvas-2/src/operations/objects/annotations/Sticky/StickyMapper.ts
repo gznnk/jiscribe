@@ -2,11 +2,15 @@ import { convertFrameToRect, convertRectToFrame } from "@workspace/geometry";
 
 import type { StickyDoc } from "../../../../schemas/objects/annotations/StickyDoc";
 import type { StickyState } from "../../../../states/objects/annotations/StickyState";
+import { ObjectMapper } from "../../base/ObjectMapper";
 import type {
 	DocToStateMapper,
 	StateToDocMapper,
 } from "../../types/ObjectMapperTypes";
-import { ObjectMapper } from "../../base/ObjectMapper";
+import {
+	convertTransformDocToState,
+	convertTransformStateToDoc,
+} from "../../utils/transformConverter";
 
 /**
  * Converts StickyDoc to StickyState.
@@ -16,20 +20,12 @@ export const stickyToState: DocToStateMapper<StickyDoc, StickyState> = (
 ) => {
 	const base = ObjectMapper.toState(doc);
 	const frame = convertRectToFrame(doc);
-
-	// TransformDoc to Transform conversion
-	const rotation = doc.rotation ?? 0;
-	const flipX = doc.flipX ?? false;
-	const flipY = doc.flipY ?? false;
-	const scaleX = flipX ? -1 : 1;
-	const scaleY = flipY ? -1 : 1;
+	const transform = convertTransformDocToState(doc);
 
 	return {
 		...base,
 		...frame,
-		rotation,
-		scaleX,
-		scaleY,
+		...transform,
 		stroke: doc.stroke,
 		strokeWidth: doc.strokeWidth,
 		fill: doc.fill,
@@ -44,18 +40,12 @@ export const stickyToDoc: StateToDocMapper<StickyState, StickyDoc> = (
 ) => {
 	const base = ObjectMapper.toDoc(state);
 	const rect = convertFrameToRect(state);
-
-	// Transform to TransformDoc conversion
-	const rotation = state.rotation !== 0 ? state.rotation : undefined;
-	const flipX = state.scaleX < 0 ? true : undefined;
-	const flipY = state.scaleY < 0 ? true : undefined;
+	const transform = convertTransformStateToDoc(state);
 
 	return {
 		...base,
 		...rect,
-		rotation,
-		flipX,
-		flipY,
+		...transform,
 		stroke: state.stroke,
 		strokeWidth: state.strokeWidth,
 		fill: state.fill,

@@ -1,30 +1,26 @@
 import type { GroupDoc } from "../../../../schemas/objects/primitives/GroupDoc";
 import type { GroupState } from "../../../../states/objects/primitives/GroupState";
+import { ObjectMapper } from "../../base/ObjectMapper";
 import type {
 	DocToStateMapper,
 	StateToDocMapper,
 } from "../../types/ObjectMapperTypes";
-import { ObjectMapper } from "../../base/ObjectMapper";
+import {
+	convertTransformDocToState,
+	convertTransformStateToDoc,
+} from "../../utils/transformConverter";
 
 /**
  * Converts GroupDoc to GroupState.
  */
 export const groupToState: DocToStateMapper<GroupDoc, GroupState> = (doc) => {
 	const base = ObjectMapper.toState(doc);
-
-	// TransformDoc to Transform conversion
-	const rotation = doc.rotation ?? 0;
-	const flipX = doc.flipX ?? false;
-	const flipY = doc.flipY ?? false;
-	const scaleX = flipX ? -1 : 1;
-	const scaleY = flipY ? -1 : 1;
+	const transform = convertTransformDocToState(doc);
 
 	// Note: children conversion should be handled by the caller/registry
 	return {
 		...base,
-		rotation,
-		scaleX,
-		scaleY,
+		...transform,
 		children: doc.children.map((child) => ObjectMapper.toState(child)),
 	} as GroupState;
 };
@@ -34,18 +30,12 @@ export const groupToState: DocToStateMapper<GroupDoc, GroupState> = (doc) => {
  */
 export const groupToDoc: StateToDocMapper<GroupState, GroupDoc> = (state) => {
 	const base = ObjectMapper.toDoc(state);
-
-	// Transform to TransformDoc conversion
-	const rotation = state.rotation !== 0 ? state.rotation : undefined;
-	const flipX = state.scaleX < 0 ? true : undefined;
-	const flipY = state.scaleY < 0 ? true : undefined;
+	const transform = convertTransformStateToDoc(state);
 
 	// Note: children conversion should be handled by the caller/registry
 	return {
 		...base,
-		rotation,
-		flipX,
-		flipY,
+		...transform,
 		children: state.children.map((child) => ObjectMapper.toDoc(child)),
 	} as GroupDoc;
 };

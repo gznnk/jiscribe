@@ -1,5 +1,5 @@
-import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
-import type { ObjectState } from "../../states/objects/base/ObjectState";
+import type { ObjectDoc } from "../../../schemas/objects/base/ObjectDoc";
+import type { ObjectState } from "../../../states/objects/base/ObjectState";
 
 /**
  * Function type that converts ObjectDoc to ObjectState.

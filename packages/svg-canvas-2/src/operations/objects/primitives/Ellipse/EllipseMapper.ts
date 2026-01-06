@@ -10,6 +10,10 @@ import type {
 	DocToStateMapper,
 	StateToDocMapper,
 } from "../../types/ObjectMapperTypes";
+import {
+	convertTransformDocToState,
+	convertTransformStateToDoc,
+} from "../../utils/transformConverter";
 
 /**
  * Converts EllipseDoc to EllipseState.
@@ -19,20 +23,12 @@ export const ellipseToState: DocToStateMapper<EllipseDoc, EllipseState> = (
 ) => {
 	const base = ObjectMapper.toState(doc);
 	const frame = convertEllipseToFrame(doc);
-
-	// TransformDoc to Transform conversion
-	const rotation = doc.rotation ?? 0;
-	const flipX = doc.flipX ?? false;
-	const flipY = doc.flipY ?? false;
-	const scaleX = flipX ? -1 : 1;
-	const scaleY = flipY ? -1 : 1;
+	const transform = convertTransformDocToState(doc);
 
 	return {
 		...base,
 		...frame,
-		rotation,
-		scaleX,
-		scaleY,
+		...transform,
 		stroke: doc.stroke,
 		strokeWidth: doc.strokeWidth,
 		fill: doc.fill,
@@ -47,18 +43,12 @@ export const ellipseToDoc: StateToDocMapper<EllipseState, EllipseDoc> = (
 ) => {
 	const base = ObjectMapper.toDoc(state);
 	const ellipse = convertFrameToEllipse(state);
-
-	// Transform to TransformDoc conversion
-	const rotation = state.rotation !== 0 ? state.rotation : undefined;
-	const flipX = state.scaleX < 0 ? true : undefined;
-	const flipY = state.scaleY < 0 ? true : undefined;
+	const transform = convertTransformStateToDoc(state);
 
 	return {
 		...base,
 		...ellipse,
-		rotation,
-		flipX,
-		flipY,
+		...transform,
 		stroke: state.stroke,
 		strokeWidth: state.strokeWidth,
 		fill: state.fill,

@@ -1,10 +1,10 @@
 import type { ConnectorDoc } from "../../../../schemas/objects/connections/ConnectorDoc";
 import type { ConnectorState } from "../../../../states/objects/connections/ConnectorState";
+import { ObjectMapper } from "../../base/ObjectMapper";
 import type {
 	DocToStateMapper,
 	StateToDocMapper,
 } from "../../types/ObjectMapperTypes";
-import { ObjectMapper } from "../../base/ObjectMapper";
 
 /**
  * Converts ConnectorDoc to ConnectorState.
