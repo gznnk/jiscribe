@@ -1,8 +1,8 @@
 import type { TransformedFrame, Point, TransformedRect, TransformedEllipse } from "@workspace/geometry";
 import {
-	convertEllipseToFrame,
+	convertTransformedEllipseToFrame,
 	convertPointsToFrame,
-	convertRectToFrame,
+	convertTransformedRectToFrame,
 } from "@workspace/geometry";
 
 import { convertDiagramToPoint } from "./convertDiagramToPoint";
@@ -22,7 +22,7 @@ export const convertDiagramToFrame = (diagram: Diagram): TransformedFrame | unde
 			scaleX: d.scaleX,
 			scaleY: d.scaleY,
 		};
-		return convertRectToFrame(rect);
+		return convertTransformedRectToFrame(rect);
 	}
 	if (diagram.geometryType === "ellipse") {
 		// Type assertion: we know from geometryType that diagram has ellipse properties
@@ -36,7 +36,7 @@ export const convertDiagramToFrame = (diagram: Diagram): TransformedFrame | unde
 			scaleX: d.scaleX,
 			scaleY: d.scaleY,
 		};
-		return convertEllipseToFrame(ellipse);
+		return convertTransformedEllipseToFrame(ellipse);
 	}
 	if (diagram.geometryType === "poly" && isPolyState(diagram)) {
 		const points = diagram.points

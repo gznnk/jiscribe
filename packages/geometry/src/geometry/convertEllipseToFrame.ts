@@ -1,21 +1,18 @@
-import type { TransformedEllipse } from "../types/TransformedEllipse";
-import type { TransformedFrame } from "../types/TransformedFrame";
+import type { Ellipse } from "../types/Ellipse";
+import type { Frame } from "../types/Frame";
 
 /**
- * Converts a TransformedEllipse (center/radii based) to a TransformedFrame (center/dimensions based).
+ * Converts an Ellipse (center/radii based) to a Frame (center/dimensions based).
  *
- * @param geometry - The transformed ellipse geometry
- * @returns The corresponding TransformedFrame
+ * @param ellipse - The ellipse geometry
+ * @returns The corresponding Frame
  */
-export const convertEllipseToFrame = (geometry: TransformedEllipse): TransformedFrame => {
-	const { cx, cy, rx, ry, rotation, scaleX, scaleY } = geometry;
+export const convertEllipseToFrame = (ellipse: Ellipse): Frame => {
+	const { cx, cy, rx, ry } = ellipse;
 	return {
 		cx,
 		cy,
 		width: rx * 2,
 		height: ry * 2,
-		rotation,
-		scaleX,
-		scaleY,
 	};
 };

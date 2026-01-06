@@ -11,5 +11,7 @@ export * from "./createLinearY2xFunction";
 export * from "./isLineIntersectingBox";
 export * from "./doSegmentsIntersect";
 export * from "./convertRectToFrame";
+export * from "./convertTransformedRectToFrame";
 export * from "./convertEllipseToFrame";
+export * from "./convertTransformedEllipseToFrame";
 export * from "./convertPointsToFrame";
