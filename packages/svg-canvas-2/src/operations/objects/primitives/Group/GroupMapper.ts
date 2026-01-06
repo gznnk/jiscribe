@@ -1,10 +1,11 @@
-import type { GroupDoc } from "../../../../schemas/objects/primitives/GroupDoc";
-import type { GroupState } from "../../../../states/objects/primitives/GroupState";
-import { ObjectMapper } from "../../base/ObjectMapper";
+import { objectRegistry } from "../../../../registry/ObjectRegistry";
 import type {
 	DocToStateMapper,
 	StateToDocMapper,
-} from "../../types/ObjectMapperTypes";
+} from "../../../../registry/ObjectRegistryTypes";
+import type { GroupDoc } from "../../../../schemas/objects/primitives/GroupDoc";
+import type { GroupState } from "../../../../states/objects/primitives/GroupState";
+import { ObjectMapper } from "../../base/ObjectMapper";
 import {
 	convertTransformDocToState,
 	convertTransformStateToDoc,
@@ -17,11 +18,11 @@ export const groupToState: DocToStateMapper<GroupDoc, GroupState> = (doc) => {
 	const base = ObjectMapper.toState(doc);
 	const transform = convertTransformDocToState(doc);
 
-	// Note: children conversion should be handled by the caller/registry
+	// Note: children conversion is handled by the registry to avoid circular dependencies
 	return {
 		...base,
 		...transform,
-		children: doc.children.map((child) => ObjectMapper.toState(child)),
+		children: doc.children.map((child) => objectRegistry.toState(child)),
 	} as GroupState;
 };
 
@@ -32,10 +33,10 @@ export const groupToDoc: StateToDocMapper<GroupState, GroupDoc> = (state) => {
 	const base = ObjectMapper.toDoc(state);
 	const transform = convertTransformStateToDoc(state);
 
-	// Note: children conversion should be handled by the caller/registry
+	// Note: children conversion is handled by the registry to avoid circular dependencies
 	return {
 		...base,
 		...transform,
-		children: state.children.map((child) => ObjectMapper.toDoc(child)),
+		children: state.children.map((child) => objectRegistry.toDoc(child)),
 	} as GroupDoc;
 };

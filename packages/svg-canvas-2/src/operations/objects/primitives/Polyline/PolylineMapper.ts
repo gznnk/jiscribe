@@ -1,10 +1,10 @@
-import type { PolylineDoc } from "../../../../schemas/objects/primitives/PolylineDoc";
-import type { PolylineState } from "../../../../states/objects/primitives/PolylineState";
-import { ObjectMapper } from "../../base/ObjectMapper";
 import type {
 	DocToStateMapper,
 	StateToDocMapper,
-} from "../../types/ObjectMapperTypes";
+} from "../../../../registry/ObjectRegistryTypes";
+import type { PolylineDoc } from "../../../../schemas/objects/primitives/PolylineDoc";
+import type { PolylineState } from "../../../../states/objects/primitives/PolylineState";
+import { ObjectMapper } from "../../base/ObjectMapper";
 
 /**
  * Converts PolylineDoc to PolylineState.

@@ -1,10 +1,10 @@
-import type { ConnectorDoc } from "../../../../schemas/objects/connections/ConnectorDoc";
-import type { ConnectorState } from "../../../../states/objects/connections/ConnectorState";
-import { ObjectMapper } from "../../base/ObjectMapper";
 import type {
 	DocToStateMapper,
 	StateToDocMapper,
-} from "../../types/ObjectMapperTypes";
+} from "../../../../registry/ObjectRegistryTypes";
+import type { ConnectorDoc } from "../../../../schemas/objects/connections/ConnectorDoc";
+import type { ConnectorState } from "../../../../states/objects/connections/ConnectorState";
+import { ObjectMapper } from "../../base/ObjectMapper";
 
 /**
  * Converts ConnectorDoc to ConnectorState.
@@ -28,10 +28,9 @@ export const connectorToState: DocToStateMapper<
 /**
  * Converts ConnectorState to ConnectorDoc.
  */
-export const connectorToDoc: StateToDocMapper<
-	ConnectorState,
-	ConnectorDoc
-> = (state) => {
+export const connectorToDoc: StateToDocMapper<ConnectorState, ConnectorDoc> = (
+	state,
+) => {
 	const base = ObjectMapper.toDoc(state);
 
 	return {

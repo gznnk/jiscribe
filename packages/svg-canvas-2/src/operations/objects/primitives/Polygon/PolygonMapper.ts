@@ -1,10 +1,10 @@
-import type { PolygonDoc } from "../../../../schemas/objects/primitives/PolygonDoc";
-import type { PolygonState } from "../../../../states/objects/primitives/PolygonState";
-import { ObjectMapper } from "../../base/ObjectMapper";
 import type {
 	DocToStateMapper,
 	StateToDocMapper,
-} from "../../types/ObjectMapperTypes";
+} from "../../../../registry/ObjectRegistryTypes";
+import type { PolygonDoc } from "../../../../schemas/objects/primitives/PolygonDoc";
+import type { PolygonState } from "../../../../states/objects/primitives/PolygonState";
+import { ObjectMapper } from "../../base/ObjectMapper";
 
 /**
  * Converts PolygonDoc to PolygonState.

@@ -3,13 +3,13 @@ import {
 	convertFrameToEllipse,
 } from "@workspace/geometry";
 
-import type { EllipseDoc } from "../../../../schemas/objects/primitives/EllipseDoc";
-import type { EllipseState } from "../../../../states/objects/primitives/EllipseState";
-import { ObjectMapper } from "../../base/ObjectMapper";
 import type {
 	DocToStateMapper,
 	StateToDocMapper,
-} from "../../types/ObjectMapperTypes";
+} from "../../../../registry/ObjectRegistryTypes";
+import type { EllipseDoc } from "../../../../schemas/objects/primitives/EllipseDoc";
+import type { EllipseState } from "../../../../states/objects/primitives/EllipseState";
+import { ObjectMapper } from "../../base/ObjectMapper";
 import {
 	convertTransformDocToState,
 	convertTransformStateToDoc,

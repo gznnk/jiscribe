@@ -1,12 +1,12 @@
 import { convertFrameToRect, convertRectToFrame } from "@workspace/geometry";
 
-import type { StickyDoc } from "../../../../schemas/objects/annotations/StickyDoc";
-import type { StickyState } from "../../../../states/objects/annotations/StickyState";
-import { ObjectMapper } from "../../base/ObjectMapper";
 import type {
 	DocToStateMapper,
 	StateToDocMapper,
-} from "../../types/ObjectMapperTypes";
+} from "../../../../registry/ObjectRegistryTypes";
+import type { StickyDoc } from "../../../../schemas/objects/annotations/StickyDoc";
+import type { StickyState } from "../../../../states/objects/annotations/StickyState";
+import { ObjectMapper } from "../../base/ObjectMapper";
 import {
 	convertTransformDocToState,
 	convertTransformStateToDoc,
