@@ -12,6 +12,6 @@ export type GroupState = CreateObjectState<
 		 * List of child object IDs.
 		 * The order in the array represents the rendering order (Z-index).
 		 */
-		children: string[];
+		childIds: string[];
 	}
 >;

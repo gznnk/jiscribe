@@ -38,7 +38,7 @@ describe("GroupMapper", () => {
 			expect(state.scaleY).toBe(1); // flipY = false
 
 			// Verify structural normalization behavior
-			expect(state.children).toEqual([]);
+			expect(state.childIds).toEqual([]);
 		});
 	});
 
@@ -50,7 +50,7 @@ describe("GroupMapper", () => {
 				rotation: 45,
 				scaleX: -1,
 				scaleY: 1,
-				children: ["rect-1"], // Has child IDs
+				childIds: ["rect-1"], // Has child IDs
 			} as unknown as GroupState;
 
 			const doc = groupToDoc(state);

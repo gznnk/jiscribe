@@ -22,7 +22,7 @@ export const groupToState: DocToStateMapper<GroupDoc, GroupState> = (doc) => {
 	return {
 		...base,
 		...transform,
-		children: [],
+		childIds: [],
 	} as unknown as GroupState;
 };
 

@@ -4,6 +4,7 @@ import { canvasToState } from "./operations/canvas/CanvasMapper";
 import { Canvas } from "./presentations/canvas/Canvas";
 import type { CanvasDoc } from "./schemas/canvas/CanvasDoc";
 import type { EllipseDoc } from "./schemas/objects/primitives/EllipseDoc";
+import type { GroupDoc } from "./schemas/objects/primitives/GroupDoc";
 import type { RectDoc } from "./schemas/objects/primitives/RectDoc";
 
 export interface SvgCanvas2Props {
@@ -26,6 +27,34 @@ const testCanvasDoc: CanvasDoc = {
 			stroke: "#2E7D32",
 			strokeWidth: 2,
 		} as unknown as RectDoc,
+		{
+			id: "group-1",
+			type: "group",
+			children: [
+				{
+					id: "rect-in-group-1",
+					type: "rect",
+					x: 500,
+					y: 50,
+					width: 80,
+					height: 80,
+					fill: "#FFEB3B",
+					stroke: "#F57F17",
+					strokeWidth: 2,
+				} as unknown as RectDoc,
+				{
+					id: "ellipse-in-group-1",
+					type: "ellipse",
+					cx: 600,
+					cy: 90,
+					rx: 40,
+					ry: 30,
+					fill: "#00BCD4",
+					stroke: "#006064",
+					strokeWidth: 2,
+				} as unknown as EllipseDoc,
+			],
+		} as unknown as GroupDoc,
 		{
 			id: "ellipse-1",
 			type: "ellipse",

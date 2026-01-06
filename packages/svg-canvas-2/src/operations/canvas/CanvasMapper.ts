@@ -34,7 +34,7 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 			const groupState = objState as GroupState;
 
 			// Map children Docs to IDs, processing each child
-			groupState.children = groupDoc.children.map((childDoc) =>
+			groupState.childIds = groupDoc.children.map((childDoc) =>
 				processObject(childDoc, groupState.id),
 			);
 		}
@@ -111,7 +111,7 @@ export const canvasToDoc = (state: CanvasState): CanvasDoc => {
 			const groupDoc = objDoc as GroupDoc;
 
 			// Reconstruct children recursively
-			groupDoc.children = groupState.children.map((childId) =>
+			groupDoc.children = groupState.childIds.map((childId) =>
 				reconstructObject(childId),
 			);
 		}

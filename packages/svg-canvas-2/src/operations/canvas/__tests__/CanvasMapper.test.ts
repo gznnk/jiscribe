@@ -94,13 +94,13 @@ describe("CanvasMapper", () => {
 
 			// Check parent-child relationships (Graph)
 			const g1 = state.objects["group-1"] as GroupState;
-			expect(g1.children).toHaveLength(2);
-			expect(g1.children[0]).toBe("rect-2");
-			expect(g1.children[1]).toBe("group-2");
+			expect(g1.childIds).toHaveLength(2);
+			expect(g1.childIds[0]).toBe("rect-2");
+			expect(g1.childIds[1]).toBe("group-2");
 
 			const g2 = state.objects["group-2"] as GroupState;
-			expect(g2.children).toHaveLength(1);
-			expect(g2.children[0]).toBe("rect-3");
+			expect(g2.childIds).toHaveLength(1);
+			expect(g2.childIds[0]).toBe("rect-3");
 
 			// Check parent references (Back pointers)
 			expect(state.objects["rect-1"].parentId).toBeUndefined();
@@ -137,7 +137,7 @@ describe("CanvasMapper", () => {
 						rotation: 0,
 						scaleX: 1,
 						scaleY: 1,
-						children: ["rect-2", "group-2"],
+						childIds: ["rect-2", "group-2"],
 					} as unknown as ObjectState,
 					"rect-2": {
 						id: "rect-2",
@@ -158,7 +158,7 @@ describe("CanvasMapper", () => {
 						rotation: 0,
 						scaleX: 1,
 						scaleY: 1,
-						children: ["rect-3"],
+						childIds: ["rect-3"],
 					} as unknown as ObjectState,
 					"rect-3": {
 						id: "rect-3",
