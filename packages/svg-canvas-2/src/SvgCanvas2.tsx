@@ -1,7 +1,6 @@
-import React, { useMemo } from "react";
+import React from "react";
 
-import { canvasToState } from "./operations/canvas/CanvasMapper";
-import { Canvas } from "./presentations/canvas/Canvas";
+import { Canvas } from "./controllers/Canvas";
 import type { CanvasDoc } from "./schemas/canvas/CanvasDoc";
 import type { EllipseDoc } from "./schemas/objects/primitives/EllipseDoc";
 import type { GroupDoc } from "./schemas/objects/primitives/GroupDoc";
@@ -105,12 +104,8 @@ const testCanvasDoc: CanvasDoc = {
 
 /**
  * SvgCanvas2 - 新しいバージョンのSVGキャンバスコンポーネント
- * CanvasDoc形式のテストデータをCanvasMapperで変換してCanvasコンポーネントで描画
+ * CanvasDoc形式のテストデータを描画
  */
 export const SvgCanvas2: React.FC<SvgCanvas2Props> = () => {
-	const canvasState = useMemo(() => {
-		return canvasToState(testCanvasDoc);
-	}, []);
-
-	return <Canvas {...canvasState} />;
+	return <Canvas canvasDoc={testCanvasDoc} />;
 };

@@ -42,9 +42,12 @@ objectRegistry.register("group", {
 	component: () => null, // Groupはコンポーネントを持たない（再帰的に描画される）
 });
 
-type CanvasProps = CanvasState;
+type ObjectsRendererProps = CanvasState;
 
-const CanvasComponent: React.FC<CanvasProps> = ({ objects, rootIds }) => {
+const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
+	objects,
+	rootIds,
+}) => {
 	const renderObject = (id: string, result: React.ReactNode[]): void => {
 		const objState = objects[id];
 		if (!objState) return;
@@ -71,4 +74,4 @@ const CanvasComponent: React.FC<CanvasProps> = ({ objects, rootIds }) => {
 		</svg>
 	);
 };
-export const Canvas = memo(CanvasComponent);
+export const ObjectsRenderer = memo(ObjectsRendererComponent);

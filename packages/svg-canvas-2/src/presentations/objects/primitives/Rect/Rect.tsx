@@ -8,6 +8,7 @@ import { createSvgTransform } from "../../utils/createSvgTransform";
 type RectProps = RectState;
 
 const RectComponent: React.FC<RectProps> = ({
+	id,
 	cx,
 	cy,
 	width,
@@ -23,6 +24,7 @@ const RectComponent: React.FC<RectProps> = ({
 
 	return (
 		<RectElement
+			id={id}
 			x={-width / 2}
 			y={-height / 2}
 			width={width}

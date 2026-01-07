@@ -8,6 +8,7 @@ import { createSvgTransform } from "../../utils/createSvgTransform";
 type EllipseProps = EllipseState;
 
 const EllipseComponent: React.FC<EllipseProps> = ({
+	id,
 	cx,
 	cy,
 	width,
@@ -26,6 +27,7 @@ const EllipseComponent: React.FC<EllipseProps> = ({
 
 	return (
 		<EllipseElement
+			id={id}
 			cx={0}
 			cy={0}
 			rx={rx}
