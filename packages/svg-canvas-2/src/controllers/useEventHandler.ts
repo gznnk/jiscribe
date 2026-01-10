@@ -11,12 +11,15 @@ export type ObjectEventHandlers = {
 
 const DRAG_THRESHOLD = 3 * 3; // 3 pixels squared
 
+type Mods = { shift: boolean; alt: boolean; ctrl: boolean; meta: boolean };
+
 type Pressed = {
 	pointerId: number;
 	start: Point;
 	last: Point;
 	time: number;
 	target: EventTarget | null;
+	mods: Mods;
 	dragging: boolean;
 };
 
@@ -40,6 +43,12 @@ export const useEventHandler = (): ObjectEventHandlers => {
 				last: { x: e.clientX, y: e.clientY },
 				time: e.timeStamp,
 				target: e.target,
+				mods: {
+					shift: e.shiftKey,
+					alt: e.altKey,
+					ctrl: e.ctrlKey,
+					meta: e.metaKey,
+				},
 				dragging: false,
 			};
 			console.log("Pointer down at:", pressed.current.start);
@@ -53,13 +62,11 @@ export const useEventHandler = (): ObjectEventHandlers => {
 			const currentPos = { x: e.clientX, y: e.clientY };
 			pressed.current.last = currentPos;
 
-			const deltaX = currentPos.x - pressed.current.last.x;
-			const deltaY = currentPos.y - pressed.current.last.y;
+			const deltaX = currentPos.x - pressed.current.start.x;
+			const deltaY = currentPos.y - pressed.current.start.y;
 
 			if (!pressed.current.dragging) {
-				const distanceSquared =
-					(currentPos.x - pressed.current.start.x) ** 2 +
-					(currentPos.y - pressed.current.start.y) ** 2;
+				const distanceSquared = deltaX ** 2 + deltaY ** 2;
 				if (distanceSquared >= DRAG_THRESHOLD) {
 					pressed.current.dragging = true;
 					console.log("Drag started at:", currentPos);
@@ -67,6 +74,7 @@ export const useEventHandler = (): ObjectEventHandlers => {
 			} else {
 				console.log("Dragging. Delta:", { x: deltaX, y: deltaY });
 			}
+			return;
 		}
 
 		if (e.type === "pointerup") {
@@ -87,7 +95,9 @@ export const useEventHandler = (): ObjectEventHandlers => {
 			scheduled.current = false;
 
 			const batch: React.PointerEvent<HTMLElement>[] = [];
-			while (fifo.current.length) batch.push(fifo.current.shift()!);
+			while (fifo.current.length) {
+				batch.push(fifo.current.shift()!);
+			}
 			if (lastMove.current) {
 				batch.push(lastMove.current);
 				lastMove.current = null;
@@ -97,15 +107,17 @@ export const useEventHandler = (): ObjectEventHandlers => {
 				for (const e of batch) {
 					feed(e);
 				}
-				// console.log("Flushed events:", batch);
 			}
 		});
 	}, [feed]);
 
 	const enqueue = useCallback(
 		(e: React.PointerEvent<HTMLElement>) => {
-			if (e.type === "pointermove") lastMove.current = e;
-			else fifo.current.push(e);
+			if (e.type === "pointermove") {
+				lastMove.current = e;
+			} else {
+				fifo.current.push(e);
+			}
 			schedule();
 		},
 		[schedule],
