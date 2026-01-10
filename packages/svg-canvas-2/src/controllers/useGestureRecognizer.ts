@@ -44,58 +44,104 @@ export const useGestureRecognizer = (
 	const lastMove = useRef<React.PointerEvent<HTMLElement> | null>(null);
 	const scheduled = useRef<boolean>(false);
 
-	const feed = useCallback((e: React.PointerEvent<HTMLElement>) => {
-		if (e.type === "pointerdown") {
-			pressed.current = {
-				pointerId: e.pointerId,
-				start: { x: e.clientX, y: e.clientY },
-				last: { x: e.clientX, y: e.clientY },
-				time: e.timeStamp,
-				target: e.target,
-				mods: {
-					shift: e.shiftKey,
-					alt: e.altKey,
-					ctrl: e.ctrlKey,
-					meta: e.metaKey,
-				},
-				dragging: false,
-			};
-			console.log("Pointer down at:", pressed.current.start);
-		}
-
-		if (!pressed.current || pressed.current.pointerId !== e.pointerId) {
-			return;
-		}
-
-		if (e.type === "pointermove") {
+	const feed = useCallback(
+		(e: React.PointerEvent<HTMLElement>) => {
 			const currentPos = { x: e.clientX, y: e.clientY };
-			pressed.current.last = currentPos;
+			const mods = {
+				shift: e.shiftKey,
+				alt: e.altKey,
+				ctrl: e.ctrlKey,
+				meta: e.metaKey,
+			};
 
-			const deltaX = currentPos.x - pressed.current.start.x;
-			const deltaY = currentPos.y - pressed.current.start.y;
-
-			if (!pressed.current.dragging) {
-				const distanceSquared = deltaX ** 2 + deltaY ** 2;
-				if (distanceSquared >= DRAG_THRESHOLD) {
-					pressed.current.dragging = true;
-					console.log("Drag started at:", currentPos);
-				}
-			} else {
-				console.log("Dragging. Delta:", { x: deltaX, y: deltaY });
+			// pointerdown: 新しいジェスチャーを開始
+			if (e.type === "pointerdown") {
+				pressed.current = {
+					pointerId: e.pointerId,
+					start: currentPos,
+					last: currentPos,
+					time: e.timeStamp,
+					target: e.target,
+					mods,
+					dragging: false,
+				};
+				gestureCallback({
+					type: "pressed",
+					start: currentPos,
+					last: currentPos,
+					delta: { x: 0, y: 0 },
+					mods,
+				});
+				return;
 			}
-			return;
-		}
 
-		if (e.type === "pointerup") {
-			pressed.current = null;
-			return;
-		}
+			// 以降の処理は pressed 状態かつ同じポインターの場合のみ
+			if (!pressed.current || pressed.current.pointerId !== e.pointerId) {
+				return;
+			}
 
-		if (e.type === "pointercancel") {
-			pressed.current = null;
-			return;
-		}
-	}, []);
+			const delta = {
+				x: currentPos.x - pressed.current.start.x,
+				y: currentPos.y - pressed.current.start.y,
+			};
+
+			// pointermove: ドラッグ判定と処理
+			if (e.type === "pointermove") {
+				pressed.current.last = currentPos;
+
+				if (!pressed.current.dragging) {
+					const distanceSquared = delta.x ** 2 + delta.y ** 2;
+					if (distanceSquared >= DRAG_THRESHOLD) {
+						pressed.current.dragging = true;
+						gestureCallback({
+							type: "dragStart",
+							start: pressed.current.start,
+							last: currentPos,
+							delta,
+							mods,
+						});
+					}
+				} else {
+					gestureCallback({
+						type: "drag",
+						start: pressed.current.start,
+						last: currentPos,
+						delta,
+						mods,
+					});
+				}
+				return;
+			}
+
+			// pointerup: ジェスチャー終了
+			if (e.type === "pointerup") {
+				gestureCallback({
+					type: pressed.current.dragging ? "dragEnd" : "click",
+					start: pressed.current.start,
+					last: currentPos,
+					delta,
+					mods,
+				});
+				pressed.current = null;
+				return;
+			}
+
+			// pointercancel: ジェスチャーを中断
+			if (e.type === "pointercancel") {
+				if (pressed.current.dragging) {
+					gestureCallback({
+						type: "dragEnd",
+						start: pressed.current.start,
+						last: currentPos,
+						delta,
+						mods,
+					});
+				}
+				pressed.current = null;
+			}
+		},
+		[gestureCallback],
+	);
 
 	const schedule = useCallback(() => {
 		if (scheduled.current) return;
