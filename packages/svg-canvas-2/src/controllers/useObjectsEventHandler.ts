@@ -1,3 +1,4 @@
+import type { Point } from "@workspace/geometry";
 import type React from "react";
 import { useCallback, useRef } from "react";
 
@@ -5,12 +6,79 @@ export type ObjectEventHandlers = {
 	onPointerDown: React.PointerEventHandler<HTMLElement>;
 	onPointerMove: React.PointerEventHandler<HTMLElement>;
 	onPointerUp: React.PointerEventHandler<HTMLElement>;
+	onPointerCancel: React.PointerEventHandler<HTMLElement>;
+};
+
+const DRAG_THRESHOLD = 3 * 3; // 3 pixels squared
+
+type Pressed = {
+	pointerId: number;
+	start: Point;
+	last: Point;
+	time: number;
+	target: EventTarget | null;
+	dragging: boolean;
 };
 
 export const useObjectsEventHandler = (): ObjectEventHandlers => {
+	// Refs for event feeding
+	const pressed = useRef<Pressed | null>(null);
+
+	// Refs for RAF queuing
 	const fifo = useRef<React.PointerEvent<HTMLElement>[]>([]);
 	const lastMove = useRef<React.PointerEvent<HTMLElement> | null>(null);
 	const scheduled = useRef<boolean>(false);
+
+	const feed = useCallback((e: React.PointerEvent<HTMLElement>) => {
+		// Placeholder for feeding events to the object event processor
+		console.log("Processing event:", e.type);
+
+		if (e.type === "pointerdown") {
+			pressed.current = {
+				pointerId: e.pointerId,
+				start: { x: e.clientX, y: e.clientY },
+				last: { x: e.clientX, y: e.clientY },
+				time: e.timeStamp,
+				target: e.target,
+				dragging: false,
+			};
+			console.log("Pointer down at:", pressed.current.start);
+		}
+
+		if (!pressed.current || pressed.current.pointerId !== e.pointerId) {
+			return;
+		}
+
+		if (e.type === "pointermove") {
+			const currentPos = { x: e.clientX, y: e.clientY };
+			pressed.current.last = currentPos;
+
+			const deltaX = currentPos.x - pressed.current.last.x;
+			const deltaY = currentPos.y - pressed.current.last.y;
+
+			if (!pressed.current.dragging) {
+				const distanceSquared =
+					(currentPos.x - pressed.current.start.x) ** 2 +
+					(currentPos.y - pressed.current.start.y) ** 2;
+				if (distanceSquared >= DRAG_THRESHOLD) {
+					pressed.current.dragging = true;
+					console.log("Drag started at:", currentPos);
+				}
+			} else {
+				console.log("Dragging. Delta:", { x: deltaX, y: deltaY });
+			}
+		}
+
+		if (e.type === "pointerup") {
+			pressed.current = null;
+			return;
+		}
+
+		if (e.type === "pointercancel") {
+			pressed.current = null;
+			return;
+		}
+	}, []);
 
 	const schedule = useCallback(() => {
 		if (scheduled.current) return;
@@ -26,11 +94,13 @@ export const useObjectsEventHandler = (): ObjectEventHandlers => {
 			}
 
 			if (batch.length) {
-				// onFlush(batch);
-				console.log("Flushed events:", batch);
+				for (const e of batch) {
+					feed(e);
+				}
+				// console.log("Flushed events:", batch);
 			}
 		});
-	}, []);
+	}, [feed]);
 
 	const enqueue = useCallback(
 		(e: React.PointerEvent<HTMLElement>) => {
@@ -56,9 +126,14 @@ export const useObjectsEventHandler = (): ObjectEventHandlers => {
 		[enqueue],
 	);
 
+	const handlePointerCancel = useCallback<
+		React.PointerEventHandler<HTMLElement>
+	>((e) => enqueue(e), [enqueue]);
+
 	return {
 		onPointerDown: handlePointerDown,
 		onPointerMove: handlePointerMove,
 		onPointerUp: handlePointerUp,
+		onPointerCancel: handlePointerCancel,
 	};
 };
