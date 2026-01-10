@@ -20,7 +20,7 @@ type Pressed = {
 	dragging: boolean;
 };
 
-export const useObjectsEventHandler = (): ObjectEventHandlers => {
+export const useEventHandler = (): ObjectEventHandlers => {
 	// Refs for event feeding
 	const pressed = useRef<Pressed | null>(null);
 
