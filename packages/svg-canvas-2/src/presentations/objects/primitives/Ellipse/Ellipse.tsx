@@ -27,7 +27,8 @@ const EllipseComponent: React.FC<EllipseProps> = ({
 
 	return (
 		<EllipseElement
-			id={id}
+			data-kind="object"
+			data-id={id}
 			cx={0}
 			cy={0}
 			rx={rx}

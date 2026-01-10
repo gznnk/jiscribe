@@ -24,7 +24,8 @@ const RectComponent: React.FC<RectProps> = ({
 
 	return (
 		<RectElement
-			id={id}
+			data-kind="object"
+			data-id={id}
 			x={-width / 2}
 			y={-height / 2}
 			width={width}

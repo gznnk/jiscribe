@@ -18,6 +18,7 @@ type Pressed = {
 
 export type Gesture = {
 	type: "pressed" | "dragStart" | "drag" | "dragEnd" | "click";
+	target: EventTarget | null;
 	start: Point;
 	last: Point;
 	delta: Point;
@@ -67,6 +68,7 @@ export const useGestureRecognizer = (
 				};
 				gestureCallback({
 					type: "pressed",
+					target: e.target,
 					start: currentPos,
 					last: currentPos,
 					delta: { x: 0, y: 0 },
@@ -95,6 +97,7 @@ export const useGestureRecognizer = (
 						pressed.current.dragging = true;
 						gestureCallback({
 							type: "dragStart",
+							target: pressed.current.target,
 							start: pressed.current.start,
 							last: currentPos,
 							delta,
@@ -104,6 +107,7 @@ export const useGestureRecognizer = (
 				} else {
 					gestureCallback({
 						type: "drag",
+						target: pressed.current.target,
 						start: pressed.current.start,
 						last: currentPos,
 						delta,
@@ -117,6 +121,7 @@ export const useGestureRecognizer = (
 			if (e.type === "pointerup") {
 				gestureCallback({
 					type: pressed.current.dragging ? "dragEnd" : "click",
+					target: pressed.current.target,
 					start: pressed.current.start,
 					last: currentPos,
 					delta,
@@ -131,6 +136,7 @@ export const useGestureRecognizer = (
 				if (pressed.current.dragging) {
 					gestureCallback({
 						type: "dragEnd",
+						target: pressed.current.target,
 						start: pressed.current.start,
 						last: currentPos,
 						delta,
