@@ -2,13 +2,6 @@ import type { Point } from "@workspace/geometry";
 import type React from "react";
 import { useCallback, useRef } from "react";
 
-export type PointerEventHandlers = {
-	onPointerDown: React.PointerEventHandler<HTMLElement>;
-	onPointerMove: React.PointerEventHandler<HTMLElement>;
-	onPointerUp: React.PointerEventHandler<HTMLElement>;
-	onPointerCancel: React.PointerEventHandler<HTMLElement>;
-};
-
 const DRAG_THRESHOLD = 3 * 3; // 3 pixels squared
 
 type Mods = { shift: boolean; alt: boolean; ctrl: boolean; meta: boolean };
@@ -23,7 +16,26 @@ type Pressed = {
 	dragging: boolean;
 };
 
-export const useGestureRecognizer = (): PointerEventHandlers => {
+export type Gesture = {
+	type: "pressed" | "dragStart" | "drag" | "dragEnd" | "click";
+	start: Point;
+	last: Point;
+	delta: Point;
+	mods: Mods;
+};
+
+export type GestureCallback = (gesture: Gesture) => void;
+
+export type PointerEventHandlers = {
+	onPointerDown: React.PointerEventHandler<HTMLElement>;
+	onPointerMove: React.PointerEventHandler<HTMLElement>;
+	onPointerUp: React.PointerEventHandler<HTMLElement>;
+	onPointerCancel: React.PointerEventHandler<HTMLElement>;
+};
+
+export const useGestureRecognizer = (
+	gestureCallback: GestureCallback,
+): PointerEventHandlers => {
 	// Refs for event feeding
 	const pressed = useRef<Pressed | null>(null);
 
@@ -33,9 +45,6 @@ export const useGestureRecognizer = (): PointerEventHandlers => {
 	const scheduled = useRef<boolean>(false);
 
 	const feed = useCallback((e: React.PointerEvent<HTMLElement>) => {
-		// Placeholder for feeding events to the object event processor
-		console.log("Processing event:", e.type);
-
 		if (e.type === "pointerdown") {
 			pressed.current = {
 				pointerId: e.pointerId,
