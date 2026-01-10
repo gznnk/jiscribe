@@ -1,6 +1,6 @@
 import { memo, useMemo } from "react";
 
-import { useEventHandler } from "./useEventHandler";
+import { useGestureRecognizer } from "./useGestureRecognizer";
 import { canvasToState } from "../operations/canvas/CanvasMapper";
 import { ObjectsRenderer } from "../presentations/canvas/ObjectsRenderer";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
@@ -14,7 +14,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc }) => {
 		return canvasToState(canvasDoc);
 	}, [canvasDoc]);
 
-	const eventHandlers = useEventHandler();
+	const eventHandlers = useGestureRecognizer();
 
 	return (
 		<div {...eventHandlers}>

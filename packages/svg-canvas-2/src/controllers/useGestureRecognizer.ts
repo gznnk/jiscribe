@@ -2,7 +2,7 @@ import type { Point } from "@workspace/geometry";
 import type React from "react";
 import { useCallback, useRef } from "react";
 
-export type ObjectEventHandlers = {
+export type PointerEventHandlers = {
 	onPointerDown: React.PointerEventHandler<HTMLElement>;
 	onPointerMove: React.PointerEventHandler<HTMLElement>;
 	onPointerUp: React.PointerEventHandler<HTMLElement>;
@@ -23,7 +23,7 @@ type Pressed = {
 	dragging: boolean;
 };
 
-export const useEventHandler = (): ObjectEventHandlers => {
+export const useGestureRecognizer = (): PointerEventHandlers => {
 	// Refs for event feeding
 	const pressed = useRef<Pressed | null>(null);
 
