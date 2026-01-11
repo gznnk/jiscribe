@@ -15,6 +15,7 @@ import {
 import { objectRegistry } from "../../registry/ObjectRegistry";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { GroupState } from "../../states/objects/primitives/GroupState";
+import { SelectionOverlay } from "../layers/feedback/SelectionOverlay";
 import { Ellipse } from "../objects/primitives/Ellipse";
 import { Rect } from "../objects/primitives/Rect";
 
@@ -47,6 +48,7 @@ type ObjectsRendererProps = CanvasState;
 const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 	objects,
 	rootIds,
+	selectedIds,
 }) => {
 	const renderObject = (id: string, result: React.ReactNode[]): void => {
 		const objState = objects[id];
@@ -71,6 +73,7 @@ const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 	return (
 		<svg width={1000} height={1000} style={{ backgroundColor: "#fff" }}>
 			{renderObjects}
+			<SelectionOverlay selectedIds={selectedIds} objects={objects} />
 		</svg>
 	);
 };
