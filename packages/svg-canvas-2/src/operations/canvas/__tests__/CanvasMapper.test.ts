@@ -117,6 +117,8 @@ describe("CanvasMapper", () => {
 			const state: CanvasState = {
 				rootIds: ["rect-1", "group-1"],
 				connectorIds: [],
+				selectedIds: [],
+				dragging: null,
 				objects: {
 					"rect-1": {
 						id: "rect-1",

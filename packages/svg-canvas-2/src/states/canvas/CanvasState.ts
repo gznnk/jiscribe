@@ -1,3 +1,5 @@
+import type { Point } from "@workspace/geometry";
+
 import type { ObjectState } from "../objects/base/ObjectState";
 
 export type CanvasState = {
@@ -18,4 +20,19 @@ export type CanvasState = {
 	 * List of IDs for independent connectors (if managed separately from root objects).
 	 */
 	connectorIds: string[];
+
+	/**
+	 * Currently selected object IDs.
+	 */
+	selectedIds: string[];
+
+	/**
+	 * Drag operation state. Null when not dragging.
+	 */
+	dragging: {
+		/** IDs of objects being dragged */
+		targetIds: string[];
+		/** Original positions (cx, cy) of objects at drag start */
+		startPositions: Record<string, Point>;
+	} | null;
 };

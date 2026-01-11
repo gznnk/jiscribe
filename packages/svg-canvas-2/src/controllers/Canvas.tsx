@@ -1,61 +1,43 @@
-import { memo, useMemo } from "react";
+import { memo, useCallback, useMemo, useReducer } from "react";
 
-import { useGestureHandler, type GestureStrategy } from "./useGestureHandler";
-import { useGestureRecognizer } from "./useGestureRecognizer";
+import { canvasReducer } from "./canvasReducer";
+import {
+	useGestureRecognizer,
+	type GestureCallback,
+} from "./useGestureRecognizer";
 import { canvasToState } from "../operations/canvas/CanvasMapper";
 import { ObjectsRenderer } from "../presentations/canvas/ObjectsRenderer";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
+import type { CanvasState } from "../states/canvas/CanvasState";
 
 type CanvasProps = {
 	canvasDoc: CanvasDoc;
 };
 
-const strategy: GestureStrategy = {
-	canvas: {
-		onClick: () => {
-			console.log("Canvas clicked (deselect)");
-		},
-		onDragStart: () => {
-			console.log("Canvas drag start (pan or marquee)");
-		},
-		onDrag: (gesture) => {
-			console.log("Canvas drag:", gesture.delta);
-		},
-		onDragEnd: () => {
-			console.log("Canvas drag end");
-		},
-	},
-	object: {
-		onClick: (gesture) => {
-			const el = (gesture.target as Element)?.closest("[data-id]");
-			const id = el?.getAttribute("data-id");
-			console.log("Object clicked:", id);
-		},
-		onDragStart: (gesture) => {
-			const el = (gesture.target as Element)?.closest("[data-id]");
-			const id = el?.getAttribute("data-id");
-			console.log("Object drag start:", id);
-		},
-		onDrag: (gesture) => {
-			console.log("Object drag:", gesture.delta);
-		},
-		onDragEnd: (gesture) => {
-			console.log("Object drag end:", gesture.delta);
-		},
-	},
-};
-
 const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc }) => {
-	const canvasState = useMemo(() => {
-		return canvasToState(canvasDoc);
+	const initialState = useMemo((): CanvasState => {
+		const baseState = canvasToState(canvasDoc);
+		return {
+			...baseState,
+			selectedIds: [],
+			dragging: null,
+		};
 	}, [canvasDoc]);
 
-	const handleGesture = useGestureHandler(strategy);
+	const [state, dispatch] = useReducer(canvasReducer, initialState);
+
+	const handleGesture = useCallback<GestureCallback>(
+		(gesture) => {
+			dispatch({ type: "GESTURE", gesture });
+		},
+		[dispatch],
+	);
+
 	const eventHandlers = useGestureRecognizer(handleGesture);
 
 	return (
 		<div data-kind="canvas" {...eventHandlers}>
-			<ObjectsRenderer {...canvasState} />
+			<ObjectsRenderer {...state} />
 		</div>
 	);
 };

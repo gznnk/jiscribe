@@ -60,8 +60,8 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 		objects,
 		rootIds,
 		connectorIds,
-		// Initially, nothing selected
-		// selectedIds: [], // If added to CanvasState
+		selectedIds: [],
+		dragging: null,
 	};
 };
 
