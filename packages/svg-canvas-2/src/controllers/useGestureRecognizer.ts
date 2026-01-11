@@ -16,8 +16,15 @@ type Pressed = {
 	dragging: boolean;
 };
 
+export type GestureType =
+	| "pressed"
+	| "dragStart"
+	| "drag"
+	| "dragEnd"
+	| "click";
+
 export type Gesture = {
-	type: "pressed" | "dragStart" | "drag" | "dragEnd" | "click";
+	type: GestureType;
 	target: EventTarget | null;
 	start: Point;
 	last: Point;
