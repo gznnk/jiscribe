@@ -6,7 +6,7 @@ import {
 	type GestureCallback,
 } from "./useGestureRecognizer";
 import { canvasToState } from "../operations/canvas/CanvasMapper";
-import { ObjectsRenderer } from "../presentations/canvas/ObjectsRenderer";
+import { CanvasView } from "../presentations/canvas/CanvasView";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { CanvasState } from "../states/canvas/CanvasState";
 
@@ -37,7 +37,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc }) => {
 
 	return (
 		<div data-kind="canvas" {...eventHandlers}>
-			<ObjectsRenderer {...state} />
+			<CanvasView {...state} />
 		</div>
 	);
 };

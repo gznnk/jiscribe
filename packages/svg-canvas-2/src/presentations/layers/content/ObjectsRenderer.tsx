@@ -3,21 +3,20 @@ import { memo } from "react";
 import {
 	ellipseToDoc,
 	ellipseToState,
-} from "../../operations/objects/primitives/Ellipse/EllipseMapper";
+} from "../../../operations/objects/primitives/Ellipse/EllipseMapper";
 import {
 	groupToDoc,
 	groupToState,
-} from "../../operations/objects/primitives/Group/GroupMapper";
+} from "../../../operations/objects/primitives/Group/GroupMapper";
 import {
 	rectToDoc,
 	rectToState,
-} from "../../operations/objects/primitives/Rect/RectMapper";
-import { objectRegistry } from "../../registry/ObjectRegistry";
-import type { CanvasState } from "../../states/canvas/CanvasState";
-import type { GroupState } from "../../states/objects/primitives/GroupState";
-import { SelectionOverlay } from "../layers/feedback/SelectionOverlay";
-import { Ellipse } from "../objects/primitives/Ellipse";
-import { Rect } from "../objects/primitives/Rect";
+} from "../../../operations/objects/primitives/Rect/RectMapper";
+import { objectRegistry } from "../../../registry/ObjectRegistry";
+import type { CanvasState } from "../../../states/canvas/CanvasState";
+import type { GroupState } from "../../../states/objects/primitives/GroupState";
+import { Ellipse } from "../../objects/primitives/Ellipse";
+import { Rect } from "../../objects/primitives/Rect";
 
 objectRegistry.register("rect", {
 	mapper: {
@@ -43,12 +42,11 @@ objectRegistry.register("group", {
 	component: () => null, // Groupはコンポーネントを持たない（再帰的に描画される）
 });
 
-type ObjectsRendererProps = CanvasState;
+type ObjectsRendererProps = Pick<CanvasState, "objects" | "rootIds">;
 
 const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 	objects,
 	rootIds,
-	selectedIds,
 }) => {
 	const renderObject = (id: string, result: React.ReactNode[]): void => {
 		const objState = objects[id];
@@ -70,11 +68,6 @@ const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 	const renderObjects: React.ReactNode[] = [];
 	rootIds.forEach((id) => renderObject(id, renderObjects));
 
-	return (
-		<svg width={1000} height={1000} style={{ backgroundColor: "#fff" }}>
-			{renderObjects}
-			<SelectionOverlay selectedIds={selectedIds} objects={objects} />
-		</svg>
-	);
+	return <>{renderObjects}</>;
 };
 export const ObjectsRenderer = memo(ObjectsRendererComponent);
