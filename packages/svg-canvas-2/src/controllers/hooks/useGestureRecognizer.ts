@@ -18,12 +18,55 @@ type Pressed = {
 	dragging: boolean;
 };
 
+/**
+ * 要素から最も近い [data-kind] を持つ要素の id と kind を取得
+ * id が存在しない場合は null を返す
+ */
+const getKindAndId = (el: Element): { id: string; kind: string } | null => {
+	const kindEl = el.closest("[data-kind]");
+	if (!kindEl) return null;
+	const kind = kindEl.getAttribute("data-kind");
+	if (!kind) return null;
+	const id = kindEl.getAttribute("data-id");
+	if (!id) return null;
+	return { id, kind };
+};
+
+/**
+ * 座標上のホバー要素を取得（重複除外、指定IDの除外）
+ */
+const getHoveredElements = (
+	x: number,
+	y: number,
+	excludeId?: string,
+): HoveredElement[] => {
+	const elements = document.elementsFromPoint(x, y);
+	const hovered: HoveredElement[] = [];
+	const seenIds = new Set<string>();
+	for (const el of elements) {
+		const item = getKindAndId(el);
+		if (!item) continue;
+		// 重複チェック: 既に同じ id が存在する場合はスキップ
+		if (seenIds.has(item.id)) continue;
+		seenIds.add(item.id);
+		// excludeId と同じ場合は hovered に追加しない
+		if (excludeId && item.id === excludeId) continue;
+		hovered.push(item);
+	}
+	return hovered;
+};
+
 export type GestureType =
 	| "pressed"
 	| "dragStart"
 	| "drag"
 	| "dragEnd"
 	| "click";
+
+export type HoveredElement = {
+	id: string;
+	kind: string;
+};
 
 export type Gesture = {
 	type: GestureType;
@@ -34,6 +77,7 @@ export type Gesture = {
 	last: Point;
 	delta: Point;
 	mods: Mods;
+	hovered: HoveredElement[];
 };
 
 export type GestureCallback = (gesture: Gesture) => void;
@@ -71,6 +115,9 @@ export const useGestureRecognizer = ({
 				ctrl: e.ctrlKey,
 				meta: e.metaKey,
 			};
+			const target = getKindAndId(e.target as Element);
+			const targetId = target?.id;
+			const targetKind = target?.kind;
 
 			// pointerdown: 新しいジェスチャーを開始
 			if (e.type === "pointerdown") {
@@ -79,11 +126,7 @@ export const useGestureRecognizer = ({
 					targetRef.current.setPointerCapture(e.pointerId);
 				}
 
-				const closest = (e.target as HTMLElement).closest<HTMLElement>(
-					"[data-kind]",
-				);
-				const targetId = closest?.getAttribute("data-id") || undefined;
-				const targetKind = closest?.getAttribute("data-kind") || undefined;
+				const hovered = getHoveredElements(e.clientX, e.clientY, targetId);
 
 				pressed.current = {
 					pointerId: e.pointerId,
@@ -105,6 +148,7 @@ export const useGestureRecognizer = ({
 					last: currentPos,
 					delta: { x: 0, y: 0 },
 					mods,
+					hovered,
 				});
 				return;
 			}
@@ -123,6 +167,12 @@ export const useGestureRecognizer = ({
 			if (e.type === "pointermove") {
 				pressed.current.last = currentPos;
 
+				const hovered = getHoveredElements(
+					e.clientX,
+					e.clientY,
+					pressed.current.targetId,
+				);
+
 				if (!pressed.current.dragging) {
 					const distanceSquared = delta.x ** 2 + delta.y ** 2;
 					if (distanceSquared >= DRAG_THRESHOLD) {
@@ -136,18 +186,20 @@ export const useGestureRecognizer = ({
 							last: currentPos,
 							delta,
 							mods,
+							hovered,
 						});
 					}
 				} else {
 					gestureCallback({
 						type: "drag",
 						target: pressed.current.target,
-						start: pressed.current.start,
 						targetId: pressed.current.targetId,
 						targetKind: pressed.current.targetKind,
+						start: pressed.current.start,
 						last: currentPos,
 						delta,
 						mods,
+						hovered,
 					});
 				}
 				return;
@@ -160,6 +212,12 @@ export const useGestureRecognizer = ({
 					targetRef.current.releasePointerCapture(e.pointerId);
 				}
 
+				const hovered = getHoveredElements(
+					e.clientX,
+					e.clientY,
+					pressed.current.targetId,
+				);
+
 				gestureCallback({
 					type: pressed.current.dragging ? "dragEnd" : "click",
 					target: pressed.current.target,
@@ -169,6 +227,7 @@ export const useGestureRecognizer = ({
 					last: currentPos,
 					delta,
 					mods,
+					hovered,
 				});
 				pressed.current = null;
 				return;
@@ -181,6 +240,12 @@ export const useGestureRecognizer = ({
 					targetRef.current.releasePointerCapture(e.pointerId);
 				}
 
+				const hovered = getHoveredElements(
+					e.clientX,
+					e.clientY,
+					pressed.current.targetId,
+				);
+
 				if (pressed.current.dragging) {
 					gestureCallback({
 						type: "dragEnd",
@@ -191,6 +256,7 @@ export const useGestureRecognizer = ({
 						last: currentPos,
 						delta,
 						mods,
+						hovered,
 					});
 				}
 				pressed.current = null;

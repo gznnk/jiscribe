@@ -67,7 +67,12 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc }) => {
 	useContainerSize(canvasRef, handleResize);
 
 	return (
-		<Container data-kind="container" ref={canvasRef} {...eventHandlers}>
+		<Container
+			data-id="container"
+			data-kind="container"
+			ref={canvasRef}
+			{...eventHandlers}
+		>
 			<CanvasView {...state} />
 		</Container>
 	);

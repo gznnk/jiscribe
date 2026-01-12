@@ -154,7 +154,6 @@ export const handleGesture = (
 	state: CanvasState,
 	gesture: Gesture,
 ): CanvasState => {
-	// console.log("Handling gesture:", gesture);
 	const kind = getKindFromGesture(gesture);
 
 	if (kind === "canvas") {
