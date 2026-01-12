@@ -1,3 +1,4 @@
+import type { Dimensions } from "@workspace/geometry";
 import {
 	memo,
 	useCallback,
@@ -7,12 +8,13 @@ import {
 	useRef,
 } from "react";
 
-import { canvasReducer } from "./canvasReducer";
 import { Container } from "./CanvasStyled";
+import { useContainerSize } from "./hooks/useContainerSize";
 import {
 	useGestureRecognizer,
 	type GestureCallback,
 } from "./hooks/useGestureRecognizer";
+import { canvasReducer } from "./reducer/canvasReducer";
 import { canvasToState } from "../operations/canvas/CanvasMapper";
 import { CanvasView } from "../presentations/canvas/CanvasView";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
@@ -42,6 +44,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc }) => {
 		dispatch({ type: "SYNC_EXTERNAL", payload: newState });
 	}, [canvasDoc]);
 
+	// Bypass gesture events to reducer
 	const handleGesture = useCallback<GestureCallback>(
 		(gesture) => {
 			dispatch({ type: "GESTURE", gesture });
@@ -53,6 +56,15 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc }) => {
 		gestureCallback: handleGesture,
 		targetRef: canvasRef,
 	});
+
+	const handleResize = useCallback(
+		(dimensions: Dimensions) => {
+			dispatch({ type: "CONTAINER_RESIZE", dimensions });
+		},
+		[dispatch],
+	);
+
+	useContainerSize(canvasRef, handleResize);
 
 	return (
 		<Container data-kind="canvas" ref={canvasRef} {...eventHandlers}>

@@ -62,6 +62,13 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 		connectorIds,
 		selectedIds: [],
 		dragging: null,
+		viewport: {
+			minX: 0,
+			minY: 0,
+			width: 1000,
+			height: 800,
+			zoom: 1,
+		},
 	};
 };
 

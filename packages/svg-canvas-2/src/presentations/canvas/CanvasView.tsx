@@ -10,9 +10,15 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 	objects,
 	rootIds,
 	selectedIds,
+	viewport,
 }) => {
 	return (
-		<svg width={1000} height={1000} style={{ backgroundColor: "#fff" }}>
+		<svg
+			width={viewport.width}
+			height={viewport.height}
+			viewBox={`${viewport.minX / viewport.zoom} ${viewport.minY / viewport.zoom} ${viewport.width / viewport.zoom} ${viewport.height / viewport.zoom}`}
+			style={{ backgroundColor: "#fff" }}
+		>
 			<ObjectsRenderer objects={objects} rootIds={rootIds} />
 			<SelectionOverlay selectedIds={selectedIds} objects={objects} />
 		</svg>

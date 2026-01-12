@@ -26,6 +26,7 @@ export type CanvasState = {
 	 */
 	selectedIds: string[];
 
+	// TODO 精査
 	/**
 	 * Drag operation state. Null when not dragging.
 	 */
@@ -35,4 +36,15 @@ export type CanvasState = {
 		/** Original positions (cx, cy) of objects at drag start */
 		startPositions: Record<string, Point>;
 	} | null;
+
+	/**
+	 * Current viewport state.
+	 */
+	viewport: {
+		minX: number;
+		minY: number;
+		width: number;
+		height: number;
+		zoom: number;
+	};
 };

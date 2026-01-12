@@ -17,7 +17,7 @@ import { type RefObject, useEffect, useRef } from "react";
  * ```
  */
 export function useContainerSize(
-	containerRef: RefObject<HTMLElement>,
+	containerRef: RefObject<HTMLDivElement | null>,
 	onResize: (dimensions: Dimensions) => void,
 ): void {
 	const lastDimensions = useRef<Dimensions | null>(null);
