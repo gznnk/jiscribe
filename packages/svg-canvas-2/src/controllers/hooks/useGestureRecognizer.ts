@@ -12,6 +12,8 @@ type Pressed = {
 	last: Point;
 	time: number;
 	target: EventTarget | null;
+	targetId?: string;
+	targetKind?: string;
 	mods: Mods;
 	dragging: boolean;
 };
@@ -26,6 +28,8 @@ export type GestureType =
 export type Gesture = {
 	type: GestureType;
 	target: EventTarget | null;
+	targetId?: string;
+	targetKind?: string;
 	start: Point;
 	last: Point;
 	delta: Point;
@@ -75,18 +79,28 @@ export const useGestureRecognizer = ({
 					targetRef.current.setPointerCapture(e.pointerId);
 				}
 
+				const closest = (e.target as HTMLElement).closest<HTMLElement>(
+					"[data-kind]",
+				);
+				const targetId = closest?.getAttribute("data-id") || undefined;
+				const targetKind = closest?.getAttribute("data-kind") || undefined;
+
 				pressed.current = {
 					pointerId: e.pointerId,
 					start: currentPos,
 					last: currentPos,
 					time: e.timeStamp,
 					target: e.target,
+					targetId,
+					targetKind,
 					mods,
 					dragging: false,
 				};
 				gestureCallback({
 					type: "pressed",
 					target: e.target,
+					targetId,
+					targetKind,
 					start: currentPos,
 					last: currentPos,
 					delta: { x: 0, y: 0 },
@@ -116,6 +130,8 @@ export const useGestureRecognizer = ({
 						gestureCallback({
 							type: "dragStart",
 							target: pressed.current.target,
+							targetId: pressed.current.targetId,
+							targetKind: pressed.current.targetKind,
 							start: pressed.current.start,
 							last: currentPos,
 							delta,
@@ -127,6 +143,8 @@ export const useGestureRecognizer = ({
 						type: "drag",
 						target: pressed.current.target,
 						start: pressed.current.start,
+						targetId: pressed.current.targetId,
+						targetKind: pressed.current.targetKind,
 						last: currentPos,
 						delta,
 						mods,
@@ -145,6 +163,8 @@ export const useGestureRecognizer = ({
 				gestureCallback({
 					type: pressed.current.dragging ? "dragEnd" : "click",
 					target: pressed.current.target,
+					targetId: pressed.current.targetId,
+					targetKind: pressed.current.targetKind,
 					start: pressed.current.start,
 					last: currentPos,
 					delta,
@@ -165,6 +185,8 @@ export const useGestureRecognizer = ({
 					gestureCallback({
 						type: "dragEnd",
 						target: pressed.current.target,
+						targetId: pressed.current.targetId,
+						targetKind: pressed.current.targetKind,
 						start: pressed.current.start,
 						last: currentPos,
 						delta,
