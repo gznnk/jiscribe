@@ -1,4 +1,11 @@
-import { memo, useCallback, useMemo, useReducer, useRef } from "react";
+import {
+	memo,
+	useCallback,
+	useEffect,
+	useMemo,
+	useReducer,
+	useRef,
+} from "react";
 
 import { canvasReducer } from "./canvasReducer";
 import {
@@ -27,6 +34,12 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc }) => {
 	}, [canvasDoc]);
 
 	const [state, dispatch] = useReducer(canvasReducer, initialState);
+
+	// 外部からのcanvasDoc更新を検知して同期
+	useEffect(() => {
+		const newState = canvasToState(canvasDoc);
+		dispatch({ type: "SYNC_EXTERNAL", payload: newState });
+	}, [canvasDoc]);
 
 	const handleGesture = useCallback<GestureCallback>(
 		(gesture) => {
