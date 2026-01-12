@@ -68,8 +68,8 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc }) => {
 
 	return (
 		<Container
-			data-id="container"
-			data-kind="container"
+			data-id="canvas"
+			data-kind="canvas"
 			ref={canvasRef}
 			{...eventHandlers}
 		>

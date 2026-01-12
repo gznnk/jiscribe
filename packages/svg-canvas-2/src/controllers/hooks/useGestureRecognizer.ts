@@ -24,11 +24,20 @@ type Pressed = {
  */
 const getKindAndId = (el: Element): { id: string; kind: string } | null => {
 	const kindEl = el.closest("[data-kind]");
-	if (!kindEl) return null;
+	if (!kindEl) {
+		return null;
+	}
+
 	const kind = kindEl.getAttribute("data-kind");
-	if (!kind) return null;
+	if (!kind) {
+		return null;
+	}
+
 	const id = kindEl.getAttribute("data-id");
-	if (!id) return null;
+	if (!id) {
+		return null;
+	}
+
 	return { id, kind };
 };
 
@@ -45,12 +54,24 @@ const getHoveredElements = (
 	const seenIds = new Set<string>();
 	for (const el of elements) {
 		const item = getKindAndId(el);
-		if (!item) continue;
+		if (!item) {
+			continue;
+		}
+
+		if (item.id === "canvas") {
+			continue;
+		}
+
 		// 重複チェック: 既に同じ id が存在する場合はスキップ
-		if (seenIds.has(item.id)) continue;
+		if (seenIds.has(item.id)) {
+			continue;
+		}
 		seenIds.add(item.id);
+
 		// excludeId と同じ場合は hovered に追加しない
-		if (excludeId && item.id === excludeId) continue;
+		if (excludeId && item.id === excludeId) {
+			continue;
+		}
 		hovered.push(item);
 	}
 	return hovered;
