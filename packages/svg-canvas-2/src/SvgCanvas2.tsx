@@ -6,12 +6,6 @@ import type { EllipseDoc } from "./schemas/objects/primitives/EllipseDoc";
 import type { GroupDoc } from "./schemas/objects/primitives/GroupDoc";
 import type { RectDoc } from "./schemas/objects/primitives/RectDoc";
 
-export interface SvgCanvas2Props {
-	width?: number;
-	height?: number;
-	className?: string;
-}
-
 // 暫定的なテストデータ
 const testCanvasDoc: CanvasDoc = {
 	root: [
@@ -106,6 +100,6 @@ const testCanvasDoc: CanvasDoc = {
  * SvgCanvas2 - 新しいバージョンのSVGキャンバスコンポーネント
  * CanvasDoc形式のテストデータを描画
  */
-export const SvgCanvas2: React.FC<SvgCanvas2Props> = () => {
+export const SvgCanvas2: React.FC = () => {
 	return <Canvas canvasDoc={testCanvasDoc} />;
 };

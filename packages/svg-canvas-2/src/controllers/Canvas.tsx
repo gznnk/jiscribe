@@ -8,6 +8,7 @@ import {
 } from "react";
 
 import { canvasReducer } from "./canvasReducer";
+import { Container } from "./CanvasStyled";
 import {
 	useGestureRecognizer,
 	type GestureCallback,
@@ -54,9 +55,9 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc }) => {
 	});
 
 	return (
-		<div ref={canvasRef} data-kind="canvas" {...eventHandlers}>
+		<Container data-kind="canvas" ref={canvasRef} {...eventHandlers}>
 			<CanvasView {...state} />
-		</div>
+		</Container>
 	);
 };
 export const Canvas = memo(CanvasComponent);
