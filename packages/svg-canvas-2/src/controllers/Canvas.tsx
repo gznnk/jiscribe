@@ -12,7 +12,7 @@ import { Container } from "./CanvasStyled";
 import {
 	useGestureRecognizer,
 	type GestureCallback,
-} from "./useGestureRecognizer";
+} from "./hooks/useGestureRecognizer";
 import { canvasToState } from "../operations/canvas/CanvasMapper";
 import { CanvasView } from "../presentations/canvas/CanvasView";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";

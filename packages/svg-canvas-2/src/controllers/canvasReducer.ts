@@ -1,5 +1,5 @@
 import { handleGesture } from "./gestures";
-import type { Gesture } from "./useGestureRecognizer";
+import type { Gesture } from "./hooks/useGestureRecognizer";
 import type { CanvasState } from "../states/canvas/CanvasState";
 
 // Action types

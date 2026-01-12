@@ -4,7 +4,7 @@ import { getObjectGestureHandlers } from "./objectHandlers";
 import type { GestureContext, ObjectGestureHandlerSet } from "./types";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
-import type { Gesture } from "../useGestureRecognizer";
+import type { Gesture } from "../hooks/useGestureRecognizer";
 
 /**
  * Get the kind (canvas/object) from gesture target.
