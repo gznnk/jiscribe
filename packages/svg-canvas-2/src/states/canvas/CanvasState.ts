@@ -1,5 +1,6 @@
 import type { Point } from "@workspace/geometry";
 
+import type { Viewport } from "./Viewport";
 import type { ObjectState } from "../objects/base/ObjectState";
 
 export type CanvasState = {
@@ -40,11 +41,5 @@ export type CanvasState = {
 	/**
 	 * Current viewport state.
 	 */
-	viewport: {
-		minX: number;
-		minY: number;
-		width: number;
-		height: number;
-		zoom: number;
-	};
+	viewport: Viewport;
 };

@@ -1,5 +1,6 @@
 import { memo } from "react";
 
+import { Svg } from "./CanvasViewStyled";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import { ObjectsRenderer } from "../layers/content/ObjectsRenderer";
 import { SelectionOverlay } from "../layers/feedback/SelectionOverlay";
@@ -13,7 +14,7 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 	viewport,
 }) => {
 	return (
-		<svg
+		<Svg
 			width={viewport.width}
 			height={viewport.height}
 			viewBox={`${viewport.minX / viewport.zoom} ${viewport.minY / viewport.zoom} ${viewport.width / viewport.zoom} ${viewport.height / viewport.zoom}`}
@@ -21,7 +22,7 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 		>
 			<ObjectsRenderer objects={objects} rootIds={rootIds} />
 			<SelectionOverlay selectedIds={selectedIds} objects={objects} />
-		</svg>
+		</Svg>
 	);
 };
 

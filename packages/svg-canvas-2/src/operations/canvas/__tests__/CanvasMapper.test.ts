@@ -175,6 +175,13 @@ describe("CanvasMapper", () => {
 						scaleY: 1,
 					} as unknown as ObjectState,
 				},
+				viewport: {
+					minX: 0,
+					minY: 0,
+					width: 1000,
+					height: 800,
+					zoom: 1,
+				},
 			};
 
 			const doc = canvasToDoc(state);

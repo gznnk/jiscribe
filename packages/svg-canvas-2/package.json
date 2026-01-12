@@ -15,10 +15,12 @@
 		"@emotion/styled": "catalog:",
 		"@workspace/geometry": "workspace:*",
 		"@workspace/utility-types": "workspace:*",
-		"react": "catalog:"
+		"react": "catalog:",
+		"react-dom": "catalog:"
 	},
 	"devDependencies": {
 		"@types/react": "^19.2.7",
+		"@types/react-dom": "^19.2.3",
 		"@vitest/ui": "^2.1.8",
 		"typescript": "catalog:",
 		"vitest": "^2.1.8"

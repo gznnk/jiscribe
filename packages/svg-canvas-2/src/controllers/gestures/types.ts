@@ -1,7 +1,7 @@
 import type { Point } from "@workspace/geometry";
 
 import type { ObjectState } from "../../states/objects/base/ObjectState";
-import type { Gesture } from "../useGestureRecognizer";
+import type { Gesture } from "../hooks/useGestureRecognizer";
 
 /**
  * Context passed to object gesture handlers.
