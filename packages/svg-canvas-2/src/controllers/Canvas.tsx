@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useReducer } from "react";
+import { memo, useCallback, useMemo, useReducer, useRef } from "react";
 
 import { canvasReducer } from "./canvasReducer";
 import {
@@ -15,6 +15,8 @@ type CanvasProps = {
 };
 
 const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc }) => {
+	const canvasRef = useRef<HTMLDivElement>(null);
+
 	const initialState = useMemo((): CanvasState => {
 		const baseState = canvasToState(canvasDoc);
 		return {
@@ -33,10 +35,13 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc }) => {
 		[dispatch],
 	);
 
-	const eventHandlers = useGestureRecognizer(handleGesture);
+	const eventHandlers = useGestureRecognizer({
+		gestureCallback: handleGesture,
+		targetRef: canvasRef,
+	});
 
 	return (
-		<div data-kind="canvas" {...eventHandlers}>
+		<div ref={canvasRef} data-kind="canvas" {...eventHandlers}>
 			<CanvasView {...state} />
 		</div>
 	);

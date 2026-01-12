@@ -41,9 +41,15 @@ export type PointerEventHandlers = {
 	onPointerCancel: React.PointerEventHandler<HTMLElement>;
 };
 
-export const useGestureRecognizer = (
-	gestureCallback: GestureCallback,
-): PointerEventHandlers => {
+export type UseGestureRecognizerParams = {
+	gestureCallback: GestureCallback;
+	targetRef: React.RefObject<HTMLElement | null>;
+};
+
+export const useGestureRecognizer = ({
+	gestureCallback,
+	targetRef,
+}: UseGestureRecognizerParams): PointerEventHandlers => {
 	// Refs for event feeding
 	const pressed = useRef<Pressed | null>(null);
 
@@ -64,6 +70,11 @@ export const useGestureRecognizer = (
 
 			// pointerdown: 新しいジェスチャーを開始
 			if (e.type === "pointerdown") {
+				// ポインターキャプチャを設定
+				if (targetRef.current) {
+					targetRef.current.setPointerCapture(e.pointerId);
+				}
+
 				pressed.current = {
 					pointerId: e.pointerId,
 					start: currentPos,
@@ -126,6 +137,11 @@ export const useGestureRecognizer = (
 
 			// pointerup: ジェスチャー終了
 			if (e.type === "pointerup") {
+				// ポインターキャプチャを解放
+				if (targetRef.current) {
+					targetRef.current.releasePointerCapture(e.pointerId);
+				}
+
 				gestureCallback({
 					type: pressed.current.dragging ? "dragEnd" : "click",
 					target: pressed.current.target,
@@ -140,6 +156,11 @@ export const useGestureRecognizer = (
 
 			// pointercancel: ジェスチャーを中断
 			if (e.type === "pointercancel") {
+				// ポインターキャプチャを解放
+				if (targetRef.current) {
+					targetRef.current.releasePointerCapture(e.pointerId);
+				}
+
 				if (pressed.current.dragging) {
 					gestureCallback({
 						type: "dragEnd",
@@ -153,7 +174,7 @@ export const useGestureRecognizer = (
 				pressed.current = null;
 			}
 		},
-		[gestureCallback],
+		[gestureCallback, targetRef],
 	);
 
 	const schedule = useCallback(() => {
