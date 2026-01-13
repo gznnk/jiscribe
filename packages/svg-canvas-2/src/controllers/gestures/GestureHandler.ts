@@ -2,6 +2,7 @@ import type { Prettify } from "@workspace/utility-types/src/Prettify";
 
 import { objectRegistry } from "../../registry/ObjectRegistry";
 import type { CanvasState } from "../../states/canvas/CanvasState";
+import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { Gesture, GestureType } from "../hooks/useGestureRecognizer";
 
 type EventType = GestureType | "dragOver" | "dragLeave";
@@ -11,6 +12,36 @@ type CanvasEvent = Prettify<
 		type: EventType;
 	} & Omit<Gesture, "type">
 >;
+
+/**
+ * Event types that should trigger saving the current state as eventStartState.
+ * Add new event start types here as needed.
+ */
+const EVENT_START_TYPES: readonly EventType[] = ["dragStart"] as const;
+
+/**
+ * Event types that should trigger clearing the eventStartState.
+ * Add new event end types here as needed.
+ */
+const EVENT_END_TYPES: readonly EventType[] = ["dragEnd"] as const;
+
+const updateObjectInState = (
+	state: CanvasState,
+	objectId: string,
+	newObjectState: ObjectState,
+	originalObjectState: ObjectState,
+): CanvasState => {
+	if (newObjectState === originalObjectState) {
+		return state;
+	}
+	return {
+		...state,
+		objects: {
+			...state.objects,
+			[objectId]: newObjectState,
+		},
+	};
+};
 
 const handleObjectEvent = (
 	state: CanvasState,
@@ -31,7 +62,7 @@ const handleObjectEvent = (
 
 	let nextState = state;
 
-	if (event.type === "dragStart") {
+	if (EVENT_START_TYPES.includes(event.type)) {
 		nextState = {
 			...state,
 			eventStartState: state,
@@ -49,48 +80,39 @@ const handleObjectEvent = (
 			objectStartState,
 			nextState,
 		);
-		if (newObjectState !== objectStartState) {
-			return {
-				...nextState,
-				objects: {
-					...nextState.objects,
-					[targetObjectId]: newObjectState,
-				},
-			};
-		}
+		nextState = updateObjectInState(
+			nextState,
+			targetObjectId,
+			newObjectState,
+			objectStartState,
+		);
 	} else if (event.type === "drag" && eventHandler.onDrag) {
 		const newObjectState = eventHandler.onDrag(
 			event.delta!,
 			objectStartState,
 			nextState,
 		);
-		if (newObjectState !== objectStartState) {
-			return {
-				...nextState,
-				objects: {
-					...nextState.objects,
-					[targetObjectId]: newObjectState,
-				},
-			};
-		}
+		nextState = updateObjectInState(
+			nextState,
+			targetObjectId,
+			newObjectState,
+			objectStartState,
+		);
 	} else if (event.type === "dragEnd" && eventHandler.onDragEnd) {
 		const newObjectState = eventHandler.onDragEnd(
 			event.delta!,
 			objectStartState,
 			nextState,
 		);
-		if (newObjectState !== objectStartState) {
-			return {
-				...nextState,
-				objects: {
-					...nextState.objects,
-					[targetObjectId]: newObjectState,
-				},
-			};
-		}
+		nextState = updateObjectInState(
+			nextState,
+			targetObjectId,
+			newObjectState,
+			objectStartState,
+		);
 	}
 
-	if (event.type === "dragEnd") {
+	if (EVENT_END_TYPES.includes(event.type)) {
 		nextState = {
 			...nextState,
 			eventStartState: null,
