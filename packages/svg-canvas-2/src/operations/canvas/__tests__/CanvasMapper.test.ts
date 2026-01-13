@@ -119,6 +119,7 @@ describe("CanvasMapper", () => {
 				connectorIds: [],
 				selectedIds: [],
 				dragging: null,
+				commitId: 0,
 				objects: {
 					"rect-1": {
 						id: "rect-1",

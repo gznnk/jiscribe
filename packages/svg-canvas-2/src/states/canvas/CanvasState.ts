@@ -42,4 +42,10 @@ export type CanvasState = {
 	 * Current viewport state.
 	 */
 	viewport: Viewport;
+
+	/**
+	 * Commit counter. Incremented when a committable action occurs.
+	 * Parent components can watch this to detect when to persist state.
+	 */
+	commitId: number;
 };
