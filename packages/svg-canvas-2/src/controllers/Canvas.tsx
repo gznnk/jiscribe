@@ -8,6 +8,7 @@ import {
 	useRef,
 } from "react";
 
+import { initializeObjectRegistry } from "./CanvasRegistry";
 import { Container } from "./CanvasStyled";
 import { useContainerSize } from "./hooks/useContainerSize";
 import {
@@ -19,6 +20,8 @@ import { canvasToState } from "../operations/canvas/CanvasMapper";
 import { CanvasView } from "../presentations/canvas/CanvasView";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { CanvasState } from "../states/canvas/CanvasState";
+
+initializeObjectRegistry();
 
 type CanvasProps = {
 	canvasDoc: CanvasDoc;
@@ -37,11 +40,13 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 		return {
 			...baseState,
 			selectedIds: [],
-			dragging: null,
+			hoveredIds: [],
+			eventStartState: null,
 			commitId: 0,
 		};
 	}, [canvasDoc]);
 
+	// Reducer for canvas state management
 	const [state, dispatch] = useReducer(canvasReducer, initialState);
 
 	// Notify parent component when a committable action occurs
@@ -51,32 +56,31 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 		}
 	}, [state, onCommit]);
 
-	// 外部からのcanvasDoc更新を検知して同期
+	// Sync external canvasDoc changes
 	useEffect(() => {
 		const newState = canvasToState(canvasDoc);
 		dispatch({ type: "SYNC_EXTERNAL", payload: newState });
 	}, [canvasDoc]);
 
-	// Bypass gesture events to reducer
+	// Gesture handling
 	const handleGesture = useCallback<GestureCallback>(
 		(gesture) => {
 			dispatch({ type: "GESTURE", gesture });
 		},
 		[dispatch],
 	);
-
 	const eventHandlers = useGestureRecognizer({
 		gestureCallback: handleGesture,
 		targetRef: canvasRef,
 	});
 
+	// Container resize handling
 	const handleResize = useCallback(
 		(dimensions: Dimensions) => {
 			dispatch({ type: "CONTAINER_RESIZE", dimensions });
 		},
 		[dispatch],
 	);
-
 	useContainerSize(canvasRef, handleResize);
 
 	return (

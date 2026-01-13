@@ -1,5 +1,3 @@
-import type { Point } from "@workspace/geometry";
-
 import type { Viewport } from "./Viewport";
 import type { ObjectState } from "../objects/base/ObjectState";
 
@@ -27,16 +25,17 @@ export type CanvasState = {
 	 */
 	selectedIds: string[];
 
-	// TODO 精査
 	/**
-	 * Drag operation state. Null when not dragging.
+	 * IDs of objects currently hovered during drag operations.
+	 * Used to detect DragOver/DragLeave events.
 	 */
-	dragging: {
-		/** IDs of objects being dragged */
-		targetIds: string[];
-		/** Original positions (cx, cy) of objects at drag start */
-		startPositions: Record<string, Point>;
-	} | null;
+	hoveredIds: string[];
+
+	/**
+	 * Snapshot of CanvasState at the start of an event/gesture.
+	 * Used to compare or restore state during event handling.
+	 */
+	eventStartState: CanvasState | null;
 
 	/**
 	 * Current viewport state.

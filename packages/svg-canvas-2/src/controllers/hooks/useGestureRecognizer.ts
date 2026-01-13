@@ -58,7 +58,7 @@ const getHoveredElements = (
 			continue;
 		}
 
-		if (item.id === "canvas") {
+		if (item.kind === "canvas") {
 			continue;
 		}
 
@@ -103,16 +103,16 @@ export type Gesture = {
 
 export type GestureCallback = (gesture: Gesture) => void;
 
+export type UseGestureRecognizerParams = {
+	gestureCallback: GestureCallback;
+	targetRef: React.RefObject<HTMLElement | null>;
+};
+
 export type PointerEventHandlers = {
 	onPointerDown: React.PointerEventHandler<HTMLElement>;
 	onPointerMove: React.PointerEventHandler<HTMLElement>;
 	onPointerUp: React.PointerEventHandler<HTMLElement>;
 	onPointerCancel: React.PointerEventHandler<HTMLElement>;
-};
-
-export type UseGestureRecognizerParams = {
-	gestureCallback: GestureCallback;
-	targetRef: React.RefObject<HTMLElement | null>;
 };
 
 export const useGestureRecognizer = ({

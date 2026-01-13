@@ -1,3 +1,4 @@
+import type { Point } from "@workspace/geometry";
 import { describe, expect, it, beforeEach } from "vitest";
 
 import { objectRegistry } from "../../../registry/ObjectRegistry";
@@ -21,13 +22,21 @@ import { canvasToState, canvasToDoc } from "../CanvasMapper";
 describe("CanvasMapper", () => {
 	// Register mappers before tests
 	beforeEach(() => {
+		const dummyEventHandler = {
+			onDragStart: (_delta: Point, objectState: ObjectState) => objectState,
+			onDrag: (_delta: Point, objectState: ObjectState) => objectState,
+			onDragEnd: (_delta: Point, objectState: ObjectState) => objectState,
+		};
+
 		objectRegistry.register("group", {
 			mapper: { toState: groupToState, toDoc: groupToDoc },
+			eventHandler: dummyEventHandler,
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			component: () => null as any, // Dummy component
 		});
 		objectRegistry.register("rect", {
 			mapper: { toState: rectToState, toDoc: rectToDoc },
+			eventHandler: dummyEventHandler,
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			component: () => null as any, // Dummy component
 		});
@@ -118,7 +127,8 @@ describe("CanvasMapper", () => {
 				rootIds: ["rect-1", "group-1"],
 				connectorIds: [],
 				selectedIds: [],
-				dragging: null,
+				hoveredIds: [],
+				eventStartState: null,
 				commitId: 0,
 				objects: {
 					"rect-1": {

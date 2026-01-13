@@ -1,4 +1,7 @@
+import type { Point } from "@workspace/geometry/src/types/Point";
+
 import type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
+import type { CanvasState } from "../states/canvas/CanvasState";
 import type { ObjectState } from "../states/objects/base/ObjectState";
 
 /**
@@ -29,6 +32,24 @@ export type ObjectMapperType<
 };
 
 /**
+ * Event handler for drag events on objects.
+ */
+export type OnDragEventHandler<TState extends ObjectState = ObjectState> = (
+	delta: Point,
+	objectState: TState,
+	canvasState: CanvasState,
+) => TState;
+
+/**
+ * Set of event handlers for an object type.
+ */
+export type ObjectEventHandler = {
+	onDragStart?: OnDragEventHandler;
+	onDrag?: OnDragEventHandler;
+	onDragEnd?: OnDragEventHandler;
+};
+
+/**
  * Complete definition for an object type in the registry.
  * Includes both data mapping logic and UI component.
  */
@@ -37,6 +58,7 @@ export type ObjectDefinition<
 	TState extends ObjectState = ObjectState,
 > = {
 	mapper: ObjectMapperType<TDoc, TState>;
+	eventHandler: ObjectEventHandler;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	component: React.FC<any>;
 };

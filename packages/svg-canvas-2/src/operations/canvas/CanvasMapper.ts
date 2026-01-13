@@ -61,7 +61,8 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 		rootIds,
 		connectorIds,
 		selectedIds: [],
-		dragging: null,
+		hoveredIds: [],
+		eventStartState: null,
 		viewport: {
 			minX: 0,
 			minY: 0,

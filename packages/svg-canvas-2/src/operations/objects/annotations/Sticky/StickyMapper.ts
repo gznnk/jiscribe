@@ -8,9 +8,9 @@ import type { StickyDoc } from "../../../../schemas/objects/annotations/StickyDo
 import type { StickyState } from "../../../../states/objects/annotations/StickyState";
 import { ObjectMapper } from "../../base/ObjectMapper";
 import {
-	convertTransformDocToState,
-	convertTransformStateToDoc,
-} from "../../utils/transformConverter";
+	mapTransformDocToState,
+	mapTransformStateToDoc,
+} from "../../base/TransformMapper";
 
 /**
  * Converts StickyDoc to StickyState.
@@ -20,7 +20,7 @@ export const stickyToState: DocToStateMapper<StickyDoc, StickyState> = (
 ) => {
 	const base = ObjectMapper.toState(doc);
 	const frame = convertRectToFrame(doc);
-	const transform = convertTransformDocToState(doc);
+	const transform = mapTransformDocToState(doc);
 
 	return {
 		...base,
@@ -40,7 +40,7 @@ export const stickyToDoc: StateToDocMapper<StickyState, StickyDoc> = (
 ) => {
 	const base = ObjectMapper.toDoc(state);
 	const rect = convertFrameToRect(state);
-	const transform = convertTransformStateToDoc(state);
+	const transform = mapTransformStateToDoc(state);
 
 	return {
 		...base,

@@ -1,9 +1,10 @@
 import type { Dimensions } from "@workspace/geometry";
 
 import type { Gesture, GestureType } from "./../hooks/useGestureRecognizer";
-import { handleGesture } from "./handleGesture";
 import type { CanvasState } from "../../states/canvas/CanvasState";
+import { handleGesture } from "../gestures/GestureHandler";
 
+// TODO: 要検討
 /**
  * Check if a gesture type should trigger a commit to parent component.
  * Committable gestures are: dragEnd (after drag operation) and click (selection change).
@@ -26,6 +27,7 @@ export const canvasReducer = (
 		case "GESTURE": {
 			const newState = handleGesture(state, action.gesture);
 
+			// TODO: 要検討
 			// Increment commitId for committable gestures (dragEnd, click)
 			if (isCommittableGesture(action.gesture.type)) {
 				return { ...newState, commitId: state.commitId + 1 };

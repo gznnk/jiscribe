@@ -1,46 +1,8 @@
 import { memo } from "react";
 
-import {
-	ellipseToDoc,
-	ellipseToState,
-} from "../../../operations/objects/primitives/Ellipse/EllipseMapper";
-import {
-	groupToDoc,
-	groupToState,
-} from "../../../operations/objects/primitives/Group/GroupMapper";
-import {
-	rectToDoc,
-	rectToState,
-} from "../../../operations/objects/primitives/Rect/RectMapper";
 import { objectRegistry } from "../../../registry/ObjectRegistry";
 import type { CanvasState } from "../../../states/canvas/CanvasState";
 import type { GroupState } from "../../../states/objects/primitives/GroupState";
-import { Ellipse } from "../../objects/primitives/Ellipse";
-import { Rect } from "../../objects/primitives/Rect";
-
-objectRegistry.register("rect", {
-	mapper: {
-		toDoc: rectToDoc,
-		toState: rectToState,
-	},
-	component: Rect,
-});
-
-objectRegistry.register("ellipse", {
-	mapper: {
-		toDoc: ellipseToDoc,
-		toState: ellipseToState,
-	},
-	component: Ellipse,
-});
-
-objectRegistry.register("group", {
-	mapper: {
-		toDoc: groupToDoc,
-		toState: groupToState,
-	},
-	component: () => null, // Groupはコンポーネントを持たない（再帰的に描画される）
-});
 
 type ObjectsRendererProps = Pick<CanvasState, "objects" | "rootIds">;
 

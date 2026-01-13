@@ -1,4 +1,7 @@
-import type { ObjectDefinition } from "./ObjectRegistryTypes";
+import type {
+	ObjectDefinition,
+	ObjectEventHandler,
+} from "./ObjectRegistryTypes";
 import type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
 import type { ObjectType } from "../schemas/objects/types/ObjectType";
 import type { ObjectState } from "../states/objects/base/ObjectState";
@@ -57,6 +60,20 @@ class ObjectRegistry {
 			throw new Error(`Definition for object type '${state.type}' not found.`);
 		}
 		return def.mapper.toDoc(state);
+	}
+
+	/**
+	 * Retrieves the event handler for a specific object type.
+	 */
+	getEventHandler(type: ObjectType): ObjectEventHandler | undefined {
+		return this.definitions.get(type)?.eventHandler;
+	}
+
+	/**
+	 * Clears all registered definitions.
+	 */
+	clear(): void {
+		this.definitions.clear();
 	}
 }
 

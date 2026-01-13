@@ -6,16 +6,16 @@ import type { GroupDoc } from "../../../../schemas/objects/primitives/GroupDoc";
 import type { GroupState } from "../../../../states/objects/primitives/GroupState";
 import { ObjectMapper } from "../../base/ObjectMapper";
 import {
-	convertTransformDocToState,
-	convertTransformStateToDoc,
-} from "../../utils/transformConverter";
+	mapTransformDocToState,
+	mapTransformStateToDoc,
+} from "../../base/TransformMapper";
 
 /**
  * Converts GroupDoc to GroupState.
  */
 export const groupToState: DocToStateMapper<GroupDoc, GroupState> = (doc) => {
 	const base = ObjectMapper.toState(doc);
-	const transform = convertTransformDocToState(doc);
+	const transform = mapTransformDocToState(doc);
 
 	// Note: Children are handled by CanvasMapper during the normalization process.
 	// We initialize with an empty array here, which will be populated by the parent process.
@@ -31,7 +31,7 @@ export const groupToState: DocToStateMapper<GroupDoc, GroupState> = (doc) => {
  */
 export const groupToDoc: StateToDocMapper<GroupState, GroupDoc> = (state) => {
 	const base = ObjectMapper.toDoc(state);
-	const transform = convertTransformStateToDoc(state);
+	const transform = mapTransformStateToDoc(state);
 
 	// Note: Children are handled by CanvasMapper during the denormalization process.
 	// We initialize with an empty array here.

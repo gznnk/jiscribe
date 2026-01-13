@@ -11,9 +11,9 @@ import type { EllipseDoc } from "../../../../schemas/objects/primitives/EllipseD
 import type { EllipseState } from "../../../../states/objects/primitives/EllipseState";
 import { ObjectMapper } from "../../base/ObjectMapper";
 import {
-	convertTransformDocToState,
-	convertTransformStateToDoc,
-} from "../../utils/transformConverter";
+	mapTransformDocToState,
+	mapTransformStateToDoc,
+} from "../../base/TransformMapper";
 
 /**
  * Converts EllipseDoc to EllipseState.
@@ -23,7 +23,7 @@ export const ellipseToState: DocToStateMapper<EllipseDoc, EllipseState> = (
 ) => {
 	const base = ObjectMapper.toState(doc);
 	const frame = convertEllipseToFrame(doc);
-	const transform = convertTransformDocToState(doc);
+	const transform = mapTransformDocToState(doc);
 
 	return {
 		...base,
@@ -43,7 +43,7 @@ export const ellipseToDoc: StateToDocMapper<EllipseState, EllipseDoc> = (
 ) => {
 	const base = ObjectMapper.toDoc(state);
 	const ellipse = convertFrameToEllipse(state);
-	const transform = convertTransformStateToDoc(state);
+	const transform = mapTransformStateToDoc(state);
 
 	return {
 		...base,
