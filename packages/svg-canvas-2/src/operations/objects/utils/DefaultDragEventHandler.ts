@@ -25,26 +25,29 @@ export const DefaultDragEventHandler: DragEventHandler<ObjectState> = (
 		return canvasState;
 	}
 
+	// Ensure we have eventStartState to reference original positions
+	const eventStartObjects = canvasState.eventStartState?.objects;
+	if (!eventStartObjects) {
+		return canvasState;
+	}
+
 	// Get all selected object IDs
 	const selectedIds = canvasState.selectedIds;
 
 	// Update all selected objects
-	const updatedObjects = { ...canvasState.objects };
+	const updatedObjects = { ...eventStartObjects };
 
 	for (const selectedId of selectedIds) {
-		const selectedObject = canvasState.objects[selectedId];
+		const selectedObject = eventStartObjects[selectedId];
 		if (!selectedObject || !isFrame(selectedObject)) {
 			continue;
 		}
 
-		// Cast to FrameObjectState after isFrame check
-		const frameObject = selectedObject as FrameObjectState;
-		const updatedFrameObject: FrameObjectState = {
-			...frameObject,
-			cx: frameObject.cx + delta.x,
-			cy: frameObject.cy + delta.y,
-		};
-		updatedObjects[selectedId] = updatedFrameObject;
+		updatedObjects[selectedId] = {
+			...selectedObject,
+			cx: selectedObject.cx + delta.x,
+			cy: selectedObject.cy + delta.y,
+		} as FrameObjectState;
 	}
 
 	// Update the canvas state with all moved objects
