@@ -1,4 +1,4 @@
-import { isFrame } from "@workspace/geometry";
+import { isFrame, type Frame } from "@workspace/geometry";
 
 import type {
 	DragEventHandler,
@@ -7,8 +7,14 @@ import type {
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 
 /**
+ * Helper type for ObjectState that has Frame properties
+ */
+type FrameObjectState = ObjectState & Frame;
+
+/**
  * Default drag event handler that updates an object's position.
- * Returns the entire CanvasState with the updated object.
+ * Also moves all other selected objects by the same delta.
+ * Returns the entire CanvasState with the updated objects.
  */
 export const DefaultDragEventHandler: DragEventHandler<ObjectState> = (
 	params: DragEventHandlerParams<ObjectState>,
@@ -18,20 +24,33 @@ export const DefaultDragEventHandler: DragEventHandler<ObjectState> = (
 	if (!isFrame(objectState)) {
 		return canvasState;
 	}
-	const { cx, cy, id } = objectState;
-	const updatedObjectState = {
-		...objectState,
-		cx: cx + delta.x,
-		cy: cy + delta.y,
-	};
 
-	// Update the object in the canvas state
+	// Get all selected object IDs
+	const selectedIds = canvasState.selectedIds;
+
+	// Update all selected objects
+	const updatedObjects = { ...canvasState.objects };
+
+	for (const selectedId of selectedIds) {
+		const selectedObject = canvasState.objects[selectedId];
+		if (!selectedObject || !isFrame(selectedObject)) {
+			continue;
+		}
+
+		// Cast to FrameObjectState after isFrame check
+		const frameObject = selectedObject as FrameObjectState;
+		const updatedFrameObject: FrameObjectState = {
+			...frameObject,
+			cx: frameObject.cx + delta.x,
+			cy: frameObject.cy + delta.y,
+		};
+		updatedObjects[selectedId] = updatedFrameObject;
+	}
+
+	// Update the canvas state with all moved objects
 	return {
 		...canvasState,
-		objects: {
-			...canvasState.objects,
-			[id]: updatedObjectState,
-		},
+		objects: updatedObjects,
 	};
 };
 
