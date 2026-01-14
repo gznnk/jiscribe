@@ -32,13 +32,37 @@ export type ObjectMapperType<
 };
 
 /**
+ * Modifier keys state from pointer events.
+ */
+export type Mods = {
+	shift: boolean;
+	alt: boolean;
+	ctrl: boolean;
+	meta: boolean;
+};
+
+/**
+ * Parameters passed to drag event handlers.
+ */
+export type DragEventHandlerParams<TState extends ObjectState = ObjectState> = {
+	/** The movement delta from the drag start position */
+	delta: Point;
+	/** The object state at the start of the event (from eventStartState) */
+	objectState: TState;
+	/** The current canvas state */
+	canvasState: CanvasState;
+	/** Modifier keys pressed during the event */
+	mods: Mods;
+	/** Timestamp of the event */
+	time: number;
+};
+
+/**
  * Event handler for drag events on objects.
  * Returns the entire CanvasState to allow full canvas updates.
  */
 export type DragEventHandler<TState extends ObjectState = ObjectState> = (
-	delta: Point,
-	objectState: TState,
-	canvasState: CanvasState,
+	params: DragEventHandlerParams<TState>,
 ) => CanvasState;
 
 /**

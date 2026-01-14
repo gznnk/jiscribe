@@ -1,4 +1,3 @@
-import type { Point } from "@workspace/geometry";
 import { describe, expect, it, beforeEach } from "vitest";
 
 import { objectRegistry } from "../../../registry/ObjectRegistry";
@@ -23,21 +22,10 @@ describe("CanvasMapper", () => {
 	// Register mappers before tests
 	beforeEach(() => {
 		const dummyEventHandler = {
-			onDragStart: (
-				_delta: Point,
-				_objectState: ObjectState,
-				canvasState: CanvasState,
-			) => canvasState,
-			onDrag: (
-				_delta: Point,
-				_objectState: ObjectState,
-				canvasState: CanvasState,
-			) => canvasState,
-			onDragEnd: (
-				_delta: Point,
-				_objectState: ObjectState,
-				canvasState: CanvasState,
-			) => canvasState,
+			onDragStart: ({ canvasState }: { canvasState: CanvasState }) =>
+				canvasState,
+			onDrag: ({ canvasState }: { canvasState: CanvasState }) => canvasState,
+			onDragEnd: ({ canvasState }: { canvasState: CanvasState }) => canvasState,
 		};
 
 		objectRegistry.register("group", {

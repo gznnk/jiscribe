@@ -55,20 +55,21 @@ const handleObjectEvent = (
 		return nextState;
 	}
 
+	// Prepare common parameters for event handlers
+	const handlerParams = {
+		delta: event.delta,
+		objectState: objectStartState,
+		canvasState: nextState,
+		mods: event.mods,
+		time: event.time,
+	};
+
 	if (event.type === "dragStart" && eventHandler.onDragStart) {
-		nextState = eventHandler.onDragStart(
-			event.delta,
-			objectStartState,
-			nextState,
-		);
+		nextState = eventHandler.onDragStart(handlerParams);
 	} else if (event.type === "drag" && eventHandler.onDrag) {
-		nextState = eventHandler.onDrag(event.delta, objectStartState, nextState);
+		nextState = eventHandler.onDrag(handlerParams);
 	} else if (event.type === "dragEnd" && eventHandler.onDragEnd) {
-		nextState = eventHandler.onDragEnd(
-			event.delta,
-			objectStartState,
-			nextState,
-		);
+		nextState = eventHandler.onDragEnd(handlerParams);
 	}
 
 	if (EVENT_END_TYPES.includes(event.type)) {
