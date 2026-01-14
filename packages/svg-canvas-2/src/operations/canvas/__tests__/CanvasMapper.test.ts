@@ -129,7 +129,7 @@ describe("CanvasMapper", () => {
 				selectedIds: [],
 				hoveredIds: [],
 				eventStartState: null,
-				commitId: 0,
+				lastCommitTime: 0,
 				objects: {
 					"rect-1": {
 						id: "rect-1",

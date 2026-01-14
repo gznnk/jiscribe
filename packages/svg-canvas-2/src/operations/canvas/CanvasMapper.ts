@@ -70,7 +70,7 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 			height: 800,
 			zoom: 1,
 		},
-		commitId: 0,
+		lastCommitTime: 0,
 	};
 };
 

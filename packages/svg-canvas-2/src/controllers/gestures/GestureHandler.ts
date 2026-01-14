@@ -116,6 +116,7 @@ const handleObjectEvent = (
 		nextState = {
 			...nextState,
 			eventStartState: null,
+			lastCommitTime: event.time,
 		};
 	}
 

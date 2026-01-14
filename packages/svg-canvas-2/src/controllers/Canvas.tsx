@@ -42,7 +42,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 			selectedIds: [],
 			hoveredIds: [],
 			eventStartState: null,
-			commitId: 0,
+			lastCommitTime: 0,
 		};
 	}, [canvasDoc]);
 
@@ -51,7 +51,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 
 	// Notify parent component when a committable action occurs
 	useEffect(() => {
-		if (state.commitId > 0) {
+		if (state.lastCommitTime > 0) {
 			onCommit?.(state);
 		}
 	}, [state, onCommit]);

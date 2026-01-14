@@ -99,6 +99,7 @@ export type Gesture = {
 	delta: Point;
 	mods: Mods;
 	hovered: HoveredElement[];
+	time: number;
 };
 
 export type GestureCallback = (gesture: Gesture) => void;
@@ -139,6 +140,7 @@ export const useGestureRecognizer = ({
 			const target = getKindAndId(e.target as Element);
 			const targetId = target?.id;
 			const targetKind = target?.kind;
+			const time = e.timeStamp;
 
 			// pointerdown: 新しいジェスチャーを開始
 			if (e.type === "pointerdown") {
@@ -153,7 +155,7 @@ export const useGestureRecognizer = ({
 					pointerId: e.pointerId,
 					start: currentPos,
 					last: currentPos,
-					time: e.timeStamp,
+					time,
 					target: e.target,
 					targetId,
 					targetKind,
@@ -170,6 +172,7 @@ export const useGestureRecognizer = ({
 					delta: { x: 0, y: 0 },
 					mods,
 					hovered,
+					time,
 				});
 				return;
 			}
@@ -208,6 +211,7 @@ export const useGestureRecognizer = ({
 							delta,
 							mods,
 							hovered,
+							time,
 						});
 					}
 				} else {
@@ -221,6 +225,7 @@ export const useGestureRecognizer = ({
 						delta,
 						mods,
 						hovered,
+						time,
 					});
 				}
 				return;
@@ -249,6 +254,7 @@ export const useGestureRecognizer = ({
 					delta,
 					mods,
 					hovered,
+					time,
 				});
 				pressed.current = null;
 				return;
@@ -278,6 +284,7 @@ export const useGestureRecognizer = ({
 						delta,
 						mods,
 						hovered,
+						time,
 					});
 				}
 				pressed.current = null;
