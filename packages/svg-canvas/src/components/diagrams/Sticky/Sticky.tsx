@@ -104,12 +104,10 @@ const StickyComponent: React.FC<StickyProps> = ({
 
 	// Points for the shadow polygon
 	const shadowPoints = [
-		[left, top + 2], // Top-left
-		[right, top + 2], // Top-right
-		[right + 1, top + 30], // Mid-right
-		[right + 3, bottom + 8], // Bottom-right
-		[left - 4, bottom + 8], // Bottom-left
-		[left - 1, top + 30], // Mid-left
+		[left + 3, top], // Top-left
+		[right - 3, top], // Top-right
+		[right + 3, bottom + 5], // Bottom-right
+		[left - 3, bottom + 5], // Bottom-left
 	]
 		.map(([px, py]) => `${px},${py}`)
 		.join(" ");
@@ -155,7 +153,7 @@ const StickyComponent: React.FC<StickyProps> = ({
 			{/* Shadow */}
 			<polygon
 				points={shadowPoints}
-				fill="rgba(0,0,0,0.05)"
+				fill="rgba(0,0,0,0.08)"
 				transform={transform}
 				pointerEvents="none"
 				filter="url(#sticky-blur)"
