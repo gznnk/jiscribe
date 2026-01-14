@@ -34,7 +34,7 @@ export type ObjectMapperType<
 /**
  * Event handler for drag events on objects.
  */
-export type OnDragEventHandler<TState extends ObjectState = ObjectState> = (
+export type DragEventHandler<TState extends ObjectState = ObjectState> = (
 	delta: Point,
 	objectState: TState,
 	canvasState: CanvasState,
@@ -44,9 +44,9 @@ export type OnDragEventHandler<TState extends ObjectState = ObjectState> = (
  * Set of event handlers for an object type.
  */
 export type ObjectEventHandler = {
-	onDragStart?: OnDragEventHandler;
-	onDrag?: OnDragEventHandler;
-	onDragEnd?: OnDragEventHandler;
+	onDragStart?: DragEventHandler;
+	onDrag?: DragEventHandler;
+	onDragEnd?: DragEventHandler;
 };
 
 /**
