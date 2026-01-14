@@ -23,9 +23,21 @@ describe("CanvasMapper", () => {
 	// Register mappers before tests
 	beforeEach(() => {
 		const dummyEventHandler = {
-			onDragStart: (_delta: Point, objectState: ObjectState) => objectState,
-			onDrag: (_delta: Point, objectState: ObjectState) => objectState,
-			onDragEnd: (_delta: Point, objectState: ObjectState) => objectState,
+			onDragStart: (
+				_delta: Point,
+				_objectState: ObjectState,
+				canvasState: CanvasState,
+			) => canvasState,
+			onDrag: (
+				_delta: Point,
+				_objectState: ObjectState,
+				canvasState: CanvasState,
+			) => canvasState,
+			onDragEnd: (
+				_delta: Point,
+				_objectState: ObjectState,
+				canvasState: CanvasState,
+			) => canvasState,
 		};
 
 		objectRegistry.register("group", {

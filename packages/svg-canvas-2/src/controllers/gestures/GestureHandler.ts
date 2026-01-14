@@ -2,7 +2,6 @@ import type { Prettify } from "@workspace/utility-types/src/Prettify";
 
 import { objectRegistry } from "../../registry/ObjectRegistry";
 import type { CanvasState } from "../../states/canvas/CanvasState";
-import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { Gesture, GestureType } from "../hooks/useGestureRecognizer";
 
 type EventType = GestureType | "dragOver" | "dragLeave";
@@ -24,24 +23,6 @@ const EVENT_START_TYPES: readonly EventType[] = ["dragStart"] as const;
  * Add new event end types here as needed.
  */
 const EVENT_END_TYPES: readonly EventType[] = ["dragEnd"] as const;
-
-const updateObjectInState = (
-	state: CanvasState,
-	objectId: string,
-	newObjectState: ObjectState,
-	originalObjectState: ObjectState,
-): CanvasState => {
-	if (newObjectState === originalObjectState) {
-		return state;
-	}
-	return {
-		...state,
-		objects: {
-			...state.objects,
-			[objectId]: newObjectState,
-		},
-	};
-};
 
 const handleObjectEvent = (
 	state: CanvasState,
@@ -75,40 +56,18 @@ const handleObjectEvent = (
 	}
 
 	if (event.type === "dragStart" && eventHandler.onDragStart) {
-		const newObjectState = eventHandler.onDragStart(
-			event.delta!,
+		nextState = eventHandler.onDragStart(
+			event.delta,
 			objectStartState,
 			nextState,
-		);
-		nextState = updateObjectInState(
-			nextState,
-			targetObjectId,
-			newObjectState,
-			objectStartState,
 		);
 	} else if (event.type === "drag" && eventHandler.onDrag) {
-		const newObjectState = eventHandler.onDrag(
-			event.delta!,
-			objectStartState,
-			nextState,
-		);
-		nextState = updateObjectInState(
-			nextState,
-			targetObjectId,
-			newObjectState,
-			objectStartState,
-		);
+		nextState = eventHandler.onDrag(event.delta, objectStartState, nextState);
 	} else if (event.type === "dragEnd" && eventHandler.onDragEnd) {
-		const newObjectState = eventHandler.onDragEnd(
-			event.delta!,
+		nextState = eventHandler.onDragEnd(
+			event.delta,
 			objectStartState,
 			nextState,
-		);
-		nextState = updateObjectInState(
-			nextState,
-			targetObjectId,
-			newObjectState,
-			objectStartState,
 		);
 	}
 

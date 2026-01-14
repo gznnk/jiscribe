@@ -33,12 +33,13 @@ export type ObjectMapperType<
 
 /**
  * Event handler for drag events on objects.
+ * Returns the entire CanvasState to allow full canvas updates.
  */
 export type DragEventHandler<TState extends ObjectState = ObjectState> = (
 	delta: Point,
 	objectState: TState,
 	canvasState: CanvasState,
-) => TState;
+) => CanvasState;
 
 /**
  * Set of event handlers for an object type.
