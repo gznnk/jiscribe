@@ -33,6 +33,13 @@ class ObjectRegistry {
 	}
 
 	/**
+	 * Retrieves the features configuration for a specific object type.
+	 */
+	getFeatures(type: ObjectType) {
+		return this.definitions.get(type)?.features;
+	}
+
+	/**
 	 * Retrieves the component for a specific object type.
 	 */
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any

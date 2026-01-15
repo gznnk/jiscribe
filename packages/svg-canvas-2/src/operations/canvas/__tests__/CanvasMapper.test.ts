@@ -33,12 +33,24 @@ describe("CanvasMapper", () => {
 			eventHandler: dummyEventHandler,
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			component: () => null as any, // Dummy component
+			features: {
+				type: "group",
+				geometry: "none",
+				transform: true,
+			},
 		});
 		objectRegistry.register("rect", {
 			mapper: { toState: rectToState, toDoc: rectToDoc },
 			eventHandler: dummyEventHandler,
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			component: () => null as any, // Dummy component
+			features: {
+				type: "rect",
+				geometry: "rect",
+				transform: true,
+				stroke: true,
+				fill: true,
+			},
 		});
 	});
 

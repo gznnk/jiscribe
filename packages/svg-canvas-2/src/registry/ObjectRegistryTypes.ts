@@ -1,6 +1,7 @@
 import type { Point } from "@workspace/geometry/src/types/Point";
 
 import type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
+import type { ObjectFeatures } from "../schemas/objects/types/ObjectFeatures";
 import type { CanvasState } from "../states/canvas/CanvasState";
 import type { ObjectState } from "../states/objects/base/ObjectState";
 
@@ -82,6 +83,7 @@ export type ObjectDefinition<
 	TDoc extends ObjectDoc = ObjectDoc,
 	TState extends ObjectState = ObjectState,
 > = {
+	features: ObjectFeatures;
 	mapper: ObjectMapperType<TDoc, TState>;
 	eventHandler: ObjectEventHandler;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any

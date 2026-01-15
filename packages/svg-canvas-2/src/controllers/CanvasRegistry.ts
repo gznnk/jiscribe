@@ -16,11 +16,15 @@ import {
 import { Ellipse } from "../presentations/objects/primitives/Ellipse";
 import { Rect } from "../presentations/objects/primitives/Rect";
 import { objectRegistry } from "../registry/ObjectRegistry";
+import { EllipseFeatures } from "../schemas/objects/primitives/EllipseDoc";
+import { GroupFeatures } from "../schemas/objects/primitives/GroupDoc";
+import { RectFeatures } from "../schemas/objects/primitives/RectDoc";
 
 export const initializeObjectRegistry = (): void => {
 	objectRegistry.clear();
 
 	objectRegistry.register("rect", {
+		features: RectFeatures,
 		mapper: {
 			toDoc: rectToDoc,
 			toState: rectToState,
@@ -30,6 +34,7 @@ export const initializeObjectRegistry = (): void => {
 	});
 
 	objectRegistry.register("ellipse", {
+		features: EllipseFeatures,
 		mapper: {
 			toDoc: ellipseToDoc,
 			toState: ellipseToState,
@@ -39,6 +44,7 @@ export const initializeObjectRegistry = (): void => {
 	});
 
 	objectRegistry.register("group", {
+		features: GroupFeatures,
 		mapper: {
 			toDoc: groupToDoc,
 			toState: groupToState,
