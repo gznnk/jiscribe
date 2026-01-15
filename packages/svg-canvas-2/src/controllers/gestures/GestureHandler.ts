@@ -24,6 +24,23 @@ const EVENT_START_TYPES: readonly EventType[] = ["dragStart"] as const;
  */
 const EVENT_END_TYPES: readonly EventType[] = ["dragEnd"] as const;
 
+const handleCanvasEvent = (
+	state: CanvasState,
+	event: CanvasEvent,
+): CanvasState => {
+	let nextState = state;
+
+	// Clear selection on click
+	if (event.type === "click") {
+		nextState = {
+			...nextState,
+			selectedIds: [],
+		};
+	}
+
+	return nextState;
+};
+
 const handleObjectEvent = (
 	state: CanvasState,
 	event: CanvasEvent,
@@ -90,8 +107,11 @@ export const handleGesture = (
 	const events: CanvasEvent[] = [gesture];
 
 	if (gesture.targetKind === "canvas") {
-		// Handle canvas-level gestures here
-		return state;
+		let nextState = state;
+		for (const event of events) {
+			nextState = handleCanvasEvent(nextState, event);
+		}
+		return nextState;
 	}
 
 	if (gesture.targetKind === "object") {
