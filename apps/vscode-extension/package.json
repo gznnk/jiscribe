@@ -34,7 +34,7 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@workspace/svg-canvas": "workspace:*",
+		"@workspace/svg-canvas-2": "workspace:*",
 		"react": "catalog:",
 		"react-dom": "catalog:"
 	},

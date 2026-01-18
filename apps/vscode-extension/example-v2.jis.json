@@ -1,0 +1,71 @@
+{
+  "root": [
+    {
+      "id": "rect-1",
+      "type": "rect",
+      "x": 100,
+      "y": 100,
+      "width": 200,
+      "height": 150,
+      "fill": "#4CAF50",
+      "stroke": "#2E7D32",
+      "strokeWidth": 2
+    },
+    {
+      "id": "ellipse-1",
+      "type": "ellipse",
+      "cx": 450,
+      "cy": 175,
+      "rx": 100,
+      "ry": 75,
+      "fill": "#2196F3",
+      "stroke": "#1565C0",
+      "strokeWidth": 2
+    },
+    {
+      "id": "rect-2",
+      "type": "rect",
+      "x": 150,
+      "y": 320,
+      "width": 180,
+      "height": 120,
+      "fill": "#FF9800",
+      "stroke": "#E65100",
+      "strokeWidth": 3
+    },
+    {
+      "id": "ellipse-2",
+      "type": "ellipse",
+      "cx": 450,
+      "cy": 400,
+      "rx": 80,
+      "ry": 60,
+      "fill": "#9C27B0",
+      "stroke": "#6A1B9A",
+      "strokeWidth": 2
+    },
+    {
+      "id": "rect-3",
+      "type": "rect",
+      "x": 600,
+      "y": 150,
+      "width": 150,
+      "height": 150,
+      "fill": "#FFEB3B",
+      "stroke": "#F57F17",
+      "strokeWidth": 1
+    },
+    {
+      "id": "ellipse-3",
+      "type": "ellipse",
+      "cx": 675,
+      "cy": 400,
+      "rx": 60,
+      "ry": 80,
+      "fill": "#00BCD4",
+      "stroke": "#006064",
+      "strokeWidth": 2
+    }
+  ],
+  "connectors": []
+}

@@ -1,10 +1,5 @@
-import {
-	SvgCanvas,
-	useSvgCanvas,
-	type SvgCanvasRef,
-	type SvgCanvasData,
-} from "@workspace/svg-canvas";
-import { useEffect, useRef, useState } from "react";
+import { Canvas, type CanvasDoc } from "@workspace/svg-canvas-2";
+import { useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 
 // VSCode API type
@@ -17,29 +12,17 @@ declare const acquireVsCodeApi: () => {
 const vscode = acquireVsCodeApi();
 
 function App() {
-	const [canvasData, setCanvasData] = useState<SvgCanvasData | null>(null);
+	const [canvasDoc, setCanvasDoc] = useState<CanvasDoc | null>(null);
 	const [error, setError] = useState<string>("");
-	const canvasRef = useRef<SvgCanvasRef | null>(null);
 
-	// Handle data changes from canvas
-	const handleDataChange = (data: SvgCanvasData) => {
-		console.log("Canvas data changed, sending to extension");
+	// Handle commits from canvas - receive doc
+	const handleCommit = useCallback((doc: CanvasDoc) => {
+		console.log("Canvas committed, sending to extension");
 		vscode.postMessage({
 			type: "update",
-			data: JSON.stringify(data, null, 2),
+			data: JSON.stringify(doc, null, 2),
 		});
-	};
-
-	// Initialize canvas with useSvgCanvas hook
-	const { canvasProps, loadCanvasData } = useSvgCanvas({
-		id: "vscode-canvas",
-		minX: 0,
-		minY: 0,
-		zoom: 1,
-		items: canvasData?.items || [],
-		canvasRef,
-		onDataChange: handleDataChange,
-	});
+	}, []);
 
 	useEffect(() => {
 		console.log("Setting up message listener");
@@ -53,22 +36,15 @@ function App() {
 
 			switch (message.type) {
 				case "update":
-					console.log("Update message received, data length:", message.data?.length);
+					console.log(
+						"Update message received, data length:",
+						message.data?.length,
+					);
 					try {
-						const parsed = JSON.parse(message.data);
+						const parsed = JSON.parse(message.data) as CanvasDoc;
 						console.log("Parsed data:", parsed);
 
-						// Extract content if it exists (for the jis.json format)
-						const content = parsed.content || parsed;
-
-						setCanvasData(content);
-						loadCanvasData({
-							id: "vscode-canvas",
-							minX: content.minX || 0,
-							minY: content.minY || 0,
-							zoom: content.zoom || 1,
-							items: content.items || [],
-						});
+						setCanvasDoc(parsed);
 						setError("");
 					} catch (err) {
 						console.error("Failed to parse canvas data:", err);
@@ -93,10 +69,9 @@ function App() {
 			console.log("Cleaning up message listener");
 			window.removeEventListener("message", messageHandler);
 		};
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
-	console.log("Render state:", { canvasData, error });
+	console.log("Render state:", { canvasDoc, error });
 
 	return (
 		<div style={{ width: "100%", height: "100vh" }}>
@@ -116,8 +91,8 @@ function App() {
 						Failed to parse canvas data
 					</div>
 				</div>
-			) : canvasData ? (
-				<SvgCanvas {...canvasProps} ref={canvasRef} />
+			) : canvasDoc ? (
+				<Canvas canvasDoc={canvasDoc} onCommit={handleCommit} />
 			) : (
 				<div
 					style={{

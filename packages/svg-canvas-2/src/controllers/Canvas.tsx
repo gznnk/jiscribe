@@ -16,7 +16,10 @@ import {
 	type GestureCallback,
 } from "./hooks/useGestureRecognizer";
 import { canvasReducer } from "./reducer/canvasReducer";
-import { canvasToState } from "../operations/canvas/CanvasMapper";
+import {
+	canvasToDoc,
+	canvasToState,
+} from "../operations/canvas/CanvasMapper";
 import { CanvasView } from "../presentations/canvas/CanvasView";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { CanvasState } from "../states/canvas/CanvasState";
@@ -29,7 +32,7 @@ type CanvasProps = {
 	 * Callback invoked when a committable action occurs (e.g., dragEnd, click).
 	 * Use this to persist or sync the canvas state to external storage.
 	 */
-	onCommit?: (state: CanvasState) => void;
+	onCommit?: (doc: CanvasDoc) => void;
 };
 
 const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
@@ -52,7 +55,8 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 	// Notify parent component when a committable action occurs
 	useEffect(() => {
 		if (state.lastCommitTime > 0) {
-			onCommit?.(state);
+			const doc = canvasToDoc(state);
+			onCommit?.(doc);
 		}
 	}, [state, onCommit]);
 
