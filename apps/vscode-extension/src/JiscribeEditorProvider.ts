@@ -17,11 +17,17 @@ export class JiscribeEditorProvider
 
 		webviewPanel.webview.html = this.getHtmlForWebview(webviewPanel.webview);
 
+		// Flag to track if update is coming from webview
+		let isUpdatingFromWebview = false;
+
 		// Update webview content when document changes
 		const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(
 			(e) => {
 				if (e.document.uri.toString() === document.uri.toString()) {
-					this.updateWebview(webviewPanel, document);
+					// Don't update webview if the change came from the webview itself
+					if (!isUpdatingFromWebview) {
+						this.updateWebview(webviewPanel, document);
+					}
 				}
 			}
 		);
@@ -40,7 +46,12 @@ export class JiscribeEditorProvider
 					this.updateWebview(webviewPanel, document);
 					break;
 				case "update":
-					this.updateTextDocument(document, message.data);
+					// Set flag before updating document
+					isUpdatingFromWebview = true;
+					this.updateTextDocument(document, message.data).then(() => {
+						// Reset flag after update is complete
+						isUpdatingFromWebview = false;
+					});
 					break;
 			}
 		});
