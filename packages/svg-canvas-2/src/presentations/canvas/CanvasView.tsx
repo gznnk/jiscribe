@@ -6,6 +6,7 @@ import { GridBackground } from "../layers/background/GridBackground";
 import { GridPattern } from "../layers/background/GridPattern";
 import { ObjectsRenderer } from "../layers/content/ObjectsRenderer";
 import { TransformControlsLayer } from "../layers/controls/TransformControlsLayer";
+import { DebugInfo } from "../layers/debug/DebugInfo";
 import { SelectionOverlay } from "../layers/feedback/SelectionOverlay";
 
 type CanvasViewProps = CanvasState;
@@ -36,6 +37,23 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 			<ObjectsRenderer objects={objects} rootIds={rootIds} />
 			<SelectionOverlay selectedIds={selectedIds} objects={objects} />
 			<TransformControlsLayer selectedIds={selectedIds} objects={objects} />
+
+			{/* Debug: Origin marker */}
+			<g data-layer="debug-origin">
+				<circle cx={0} cy={0} r={5} fill="red" />
+				<line x1={-20} y1={0} x2={20} y2={0} stroke="red" strokeWidth={1} />
+				<line x1={0} y1={-20} x2={0} y2={20} stroke="red" strokeWidth={1} />
+			</g>
+
+			{/* Debug: Selected object info */}
+			<DebugInfo
+				selectedIds={selectedIds}
+				objects={objects}
+				viewportWidth={width}
+				viewportMinX={minX}
+				viewportMinY={minY}
+				zoom={zoom}
+			/>
 		</Svg>
 	);
 };
