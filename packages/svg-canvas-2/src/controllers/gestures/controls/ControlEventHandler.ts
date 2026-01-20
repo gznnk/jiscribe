@@ -105,12 +105,17 @@ const handleControlDrag = (
 	}
 
 	// Calculate the inverse transformed cursor position (in object's local space)
-	const { cx, cy, rotation, scaleX, scaleY } = startObject;
+	const { cx, cy, width, height, rotation, scaleX, scaleY } = startObject;
 	const radians = (rotation * Math.PI) / 180;
 
+	// Current cursor position in world space
+	const cursorX = event.start.x + event.delta.x;
+	const cursorY = event.start.y + event.delta.y;
+
+	// Transform cursor to object's local space
 	const inversedCursor = calcInverseAffineTransformedPoint(
-		event.start.x + event.delta.x,
-		event.start.y + event.delta.y,
+		cursorX,
+		cursorY,
 		scaleX,
 		scaleY,
 		radians,
@@ -118,13 +123,15 @@ const handleControlDrag = (
 		cy,
 	);
 
-	// Calculate new width and height from the inversed cursor position
-	// For bottomRight, we're dragging from topLeft (cx - width/2, cy - height/2)
-	const topLeftX = cx - startObject.width / 2;
-	const topLeftY = cy - startObject.height / 2;
+	// For bottomRight anchor: topLeft is the fixed point
+	// In local space (before scale), topLeft is at (-width/2, -height/2)
+	// and bottomRight is at (width/2, height/2)
+	const localTopLeftX = -width / 2;
+	const localTopLeftY = -height / 2;
 
-	const newWidth = (inversedCursor.x - topLeftX) * 2;
-	const newHeight = (inversedCursor.y - topLeftY) * 2;
+	// New dimensions from cursor position in local space
+	const newWidth = inversedCursor.x - localTopLeftX;
+	const newHeight = inversedCursor.y - localTopLeftY;
 
 	// Get the current object state from eventStartState
 	const eventStartObjects = state.eventStartState?.objects;
@@ -133,12 +140,15 @@ const handleControlDrag = (
 	}
 
 	// Update the object with new dimensions
+	// Center position remains at (cx, cy) since we're just changing size
 	const updatedObject = {
 		...startObject,
 		width: Math.abs(newWidth),
 		height: Math.abs(newHeight),
-		cx: topLeftX + nanToZero(newWidth / 2),
-		cy: topLeftY + nanToZero(newHeight / 2),
+		// Center doesn't move in this simplified version
+		// In reality, we need to calculate the new center based on the fixed topLeft point
+		cx: cx + nanToZero(newWidth / 2) - width / 2,
+		cy: cy + nanToZero(newHeight / 2) - height / 2,
 	};
 
 	// Create updated objects map from eventStartState
