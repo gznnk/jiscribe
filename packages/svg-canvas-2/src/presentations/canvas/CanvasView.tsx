@@ -5,6 +5,7 @@ import type { CanvasState } from "../../states/canvas/CanvasState";
 import { GridBackground } from "../layers/background/GridBackground";
 import { GridPattern } from "../layers/background/GridPattern";
 import { ObjectsRenderer } from "../layers/content/ObjectsRenderer";
+import { TransformControlsLayer } from "../layers/controls/TransformControlsLayer";
 import { SelectionOverlay } from "../layers/feedback/SelectionOverlay";
 
 type CanvasViewProps = CanvasState;
@@ -34,6 +35,7 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 			/>
 			<ObjectsRenderer objects={objects} rootIds={rootIds} />
 			<SelectionOverlay selectedIds={selectedIds} objects={objects} />
+			<TransformControlsLayer selectedIds={selectedIds} objects={objects} />
 		</Svg>
 	);
 };

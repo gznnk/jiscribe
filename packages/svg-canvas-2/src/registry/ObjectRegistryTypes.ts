@@ -67,12 +67,36 @@ export type DragEventHandler<TState extends ObjectState = ObjectState> = (
 ) => CanvasState;
 
 /**
+ * Parameters passed to click event handlers.
+ */
+export type ClickEventHandlerParams<TState extends ObjectState = ObjectState> =
+	{
+		/** The object state that was clicked */
+		objectState: TState;
+		/** The current canvas state */
+		canvasState: CanvasState;
+		/** Modifier keys pressed during the event */
+		mods: Mods;
+		/** Timestamp of the event */
+		time: number;
+	};
+
+/**
+ * Event handler for click events on objects.
+ * Returns the entire CanvasState to allow full canvas updates.
+ */
+export type ClickEventHandler<TState extends ObjectState = ObjectState> = (
+	params: ClickEventHandlerParams<TState>,
+) => CanvasState;
+
+/**
  * Set of event handlers for an object type.
  */
 export type ObjectEventHandler = {
 	onDragStart?: DragEventHandler;
 	onDrag?: DragEventHandler;
 	onDragEnd?: DragEventHandler;
+	onClick?: ClickEventHandler;
 };
 
 /**

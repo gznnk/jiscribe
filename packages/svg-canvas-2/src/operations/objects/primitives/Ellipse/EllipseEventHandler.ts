@@ -1,4 +1,5 @@
 import type { ObjectEventHandler } from "../../../../registry/ObjectRegistryTypes";
+import { DefaultClickEventHandler } from "../../utils/DefaultClickEventHandler";
 import {
 	DefaultDragEventHandler,
 	DefaultDragStartEventHandler,
@@ -8,4 +9,5 @@ export const EllipseEventHandler: ObjectEventHandler = {
 	onDragStart: DefaultDragStartEventHandler,
 	onDrag: DefaultDragEventHandler,
 	onDragEnd: DefaultDragEventHandler,
+	onClick: DefaultClickEventHandler,
 };

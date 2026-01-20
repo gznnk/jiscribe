@@ -44,26 +44,38 @@ export const handleObjectEvent = (
 		};
 	}
 
-	const objectStartState = nextState.eventStartState?.objects[targetObjectId];
-	if (!objectStartState) {
-		return nextState;
-	}
+	// For click events, we don't need eventStartState
+	if (event.type === "click" && eventHandler.onClick) {
+		const clickHandlerParams = {
+			objectState: targetObject,
+			canvasState: nextState,
+			mods: event.mods,
+			time: event.time,
+		};
+		nextState = eventHandler.onClick(clickHandlerParams);
+	} else {
+		// For drag events, we need eventStartState
+		const objectStartState = nextState.eventStartState?.objects[targetObjectId];
+		if (!objectStartState) {
+			return nextState;
+		}
 
-	// Prepare common parameters for event handlers
-	const handlerParams = {
-		delta: event.delta,
-		objectState: objectStartState,
-		canvasState: nextState,
-		mods: event.mods,
-		time: event.time,
-	};
+		// Prepare common parameters for drag event handlers
+		const dragHandlerParams = {
+			delta: event.delta,
+			objectState: objectStartState,
+			canvasState: nextState,
+			mods: event.mods,
+			time: event.time,
+		};
 
-	if (event.type === "dragStart" && eventHandler.onDragStart) {
-		nextState = eventHandler.onDragStart(handlerParams);
-	} else if (event.type === "drag" && eventHandler.onDrag) {
-		nextState = eventHandler.onDrag(handlerParams);
-	} else if (event.type === "dragEnd" && eventHandler.onDragEnd) {
-		nextState = eventHandler.onDragEnd(handlerParams);
+		if (event.type === "dragStart" && eventHandler.onDragStart) {
+			nextState = eventHandler.onDragStart(dragHandlerParams);
+		} else if (event.type === "drag" && eventHandler.onDrag) {
+			nextState = eventHandler.onDrag(dragHandlerParams);
+		} else if (event.type === "dragEnd" && eventHandler.onDragEnd) {
+			nextState = eventHandler.onDragEnd(dragHandlerParams);
+		}
 	}
 
 	if (EVENT_END_TYPES.includes(event.type)) {
