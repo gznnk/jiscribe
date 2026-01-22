@@ -151,6 +151,7 @@ export const useGestureRecognizer = ({
 
 				const hovered = getHoveredElements(e.clientX, e.clientY, targetId);
 
+				// pressed 状態をセット
 				pressed.current = {
 					pointerId: e.pointerId,
 					start: currentPos,
@@ -162,6 +163,7 @@ export const useGestureRecognizer = ({
 					mods,
 					dragging: false,
 				};
+
 				gestureCallback({
 					type: "pressed",
 					target: e.target,
