@@ -1,52 +1,33 @@
-import type { Prettify } from "@workspace/utility-types/src/Prettify";
-
+import { CanvasEventHandler } from "./canvas/CanvasEventHandler";
+import { ControlEventHandler } from "./controls/ControlEventHandler";
+import { ObjectEventHandler } from "./objects/ObjectEventHandler";
+import { GestureHandlerRegistry } from "../../registry/GestureHandlerRegistry";
 import type { CanvasState } from "../../states/canvas/CanvasState";
-import type { Gesture, GestureType } from "../hooks/useGestureRecognizer";
-import { handleCanvasEvent } from "./canvas/CanvasEventHandler";
-import { handleControlEvent } from "./controls/ControlEventHandler";
-import { handleObjectEvent } from "./objects/ObjectEventHandler";
+import type { Gesture } from "../hooks/useGestureRecognizer";
 
-export type EventType = GestureType | "dragOver" | "dragLeave";
+// Re-export types for convenience
+export type {
+	CanvasGesture,
+	EventType,
+	GestureHandler,
+} from "../../registry/GestureHandlerRegistryTypes";
 
-export type CanvasEvent = Prettify<
-	{
-		type: EventType;
-	} & Omit<Gesture, "type">
->;
+/**
+ * Gesture handler registry instance.
+ * Initialized with handlers for canvas, object, and control events.
+ */
+const gestureHandlerRegistry = new GestureHandlerRegistry()
+	.register("canvas-handler", CanvasEventHandler)
+	.register("object-handler", ObjectEventHandler)
+	.register("control-handler", ControlEventHandler);
 
 /**
  * Main gesture router.
- * Routes gestures to appropriate handlers based on target kind.
+ * Routes gestures to appropriate handlers based on their supports() method.
  */
 export const handleGesture = (
 	state: CanvasState,
 	gesture: Gesture,
 ): CanvasState => {
-	const events: CanvasEvent[] = [gesture];
-
-	if (gesture.targetKind === "canvas") {
-		let nextState = state;
-		for (const event of events) {
-			nextState = handleCanvasEvent(nextState, event);
-		}
-		return nextState;
-	}
-
-	if (gesture.targetKind === "object") {
-		let nextState = state;
-		for (const event of events) {
-			nextState = handleObjectEvent(nextState, event);
-		}
-		return nextState;
-	}
-
-	if (gesture.targetKind === "control") {
-		let nextState = state;
-		for (const event of events) {
-			nextState = handleControlEvent(nextState, event);
-		}
-		return nextState;
-	}
-
-	return state;
+	return gestureHandlerRegistry.handle(state, gesture);
 };

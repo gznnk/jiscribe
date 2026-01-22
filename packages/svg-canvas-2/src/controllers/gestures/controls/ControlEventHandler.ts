@@ -7,8 +7,12 @@ import {
 	nanToZero,
 } from "@workspace/geometry";
 
+import type {
+	CanvasGesture,
+	EventType,
+	GestureHandler,
+} from "../../../registry/GestureHandlerRegistryTypes";
 import type { CanvasState } from "../../../states/canvas/CanvasState";
-import type { CanvasEvent, EventType } from "../GestureHandler";
 
 /**
  * Event types that should trigger saving the current state as eventStartState.
@@ -21,61 +25,11 @@ const EVENT_START_TYPES: readonly EventType[] = ["dragStart"] as const;
 const EVENT_END_TYPES: readonly EventType[] = ["dragEnd"] as const;
 
 /**
- * Handles events that occur on transform control anchors.
- * This is the main entry point for control-level event handling.
- */
-export const handleControlEvent = (
-	state: CanvasState,
-	event: CanvasEvent,
-): CanvasState => {
-	const targetControlId = event.targetId;
-	if (!targetControlId) {
-		return state;
-	}
-
-	// Parse control ID format: "transform-control:anchorType"
-	const parts = targetControlId.split(":");
-	if (parts.length !== 2 || parts[0] !== "transform-control") {
-		return state;
-	}
-
-	const anchorType = parts[1];
-
-	let nextState = state;
-
-	if (EVENT_START_TYPES.includes(event.type)) {
-		nextState = {
-			...state,
-			eventStartState: state,
-		};
-	}
-
-	// Handle drag events on control anchors
-	if (event.type === "dragStart") {
-		nextState = handleControlDragStart(nextState, event, anchorType);
-	} else if (event.type === "drag") {
-		nextState = handleControlDrag(nextState, event, anchorType);
-	} else if (event.type === "dragEnd") {
-		nextState = handleControlDragEnd(nextState, event, anchorType);
-	}
-
-	if (EVENT_END_TYPES.includes(event.type)) {
-		nextState = {
-			...nextState,
-			eventStartState: null,
-			lastCommitTime: event.time,
-		};
-	}
-
-	return nextState;
-};
-
-/**
  * Handle drag start on control anchor.
  */
 const handleControlDragStart = (
 	state: CanvasState,
-	_event: CanvasEvent,
+	_gesture: CanvasGesture,
 	_anchorType: string,
 ): CanvasState => {
 	// Just save the state for now
@@ -87,7 +41,7 @@ const handleControlDragStart = (
  */
 const handleControlDrag = (
 	state: CanvasState,
-	event: CanvasEvent,
+	gesture: CanvasGesture,
 	anchorType: string,
 ): CanvasState => {
 	// Only handle bottomRight for now
@@ -114,8 +68,8 @@ const handleControlDrag = (
 	const radians = degreesToRadians(startObject.rotation);
 
 	// Current cursor position in world space
-	const cursorX = event.last.x;
-	const cursorY = event.last.y;
+	const cursorX = gesture.last.x;
+	const cursorY = gesture.last.y;
 
 	// Transform cursor to object's local space (rotation only, no scale)
 	const inversedCursor = calcInverseAffineTransformedPoint(
@@ -186,9 +140,62 @@ const handleControlDrag = (
  */
 const handleControlDragEnd = (
 	state: CanvasState,
-	event: CanvasEvent,
+	gesture: CanvasGesture,
 	anchorType: string,
 ): CanvasState => {
 	// Call drag handler one more time to finalize
-	return handleControlDrag(state, event, anchorType);
+	return handleControlDrag(state, gesture, anchorType);
+};
+
+/**
+ * Handles events that occur on transform control anchors.
+ * This is the main entry point for control-level event handling.
+ */
+export const ControlEventHandler: GestureHandler = {
+	supports(gesture: CanvasGesture): boolean {
+		return gesture.targetKind === "control";
+	},
+
+	handle(state: CanvasState, gesture: CanvasGesture): CanvasState {
+		const targetControlId = gesture.targetId;
+		if (!targetControlId) {
+			return state;
+		}
+
+		// Parse control ID format: "transform-control:anchorType"
+		const parts = targetControlId.split(":");
+		if (parts.length !== 2 || parts[0] !== "transform-control") {
+			return state;
+		}
+
+		const anchorType = parts[1];
+
+		let nextState = state;
+
+		if (EVENT_START_TYPES.includes(gesture.type)) {
+			nextState = {
+				...state,
+				eventStartState: state,
+			};
+		}
+
+		// Handle drag events on control anchors
+		if (gesture.type === "dragStart") {
+			nextState = handleControlDragStart(nextState, gesture, anchorType);
+		} else if (gesture.type === "drag") {
+			nextState = handleControlDrag(nextState, gesture, anchorType);
+		} else if (gesture.type === "dragEnd") {
+			nextState = handleControlDragEnd(nextState, gesture, anchorType);
+		}
+
+		if (EVENT_END_TYPES.includes(gesture.type)) {
+			nextState = {
+				...nextState,
+				eventStartState: null,
+				lastCommitTime: gesture.time,
+			};
+		}
+
+		return nextState;
+	},
 };
