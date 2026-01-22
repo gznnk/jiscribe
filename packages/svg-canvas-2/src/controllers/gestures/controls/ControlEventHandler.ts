@@ -1,5 +1,8 @@
 import {
+	calcAffineTransformedPoint,
+	calcFrameFeaturePoints,
 	calcInverseAffineTransformedPoint,
+	degreesToRadians,
 	isTransformedFrame,
 	nanToZero,
 } from "@workspace/geometry";
@@ -98,62 +101,77 @@ const handleControlDrag = (
 	}
 
 	const selectedId = state.selectedIds[0];
-	const startObject = state.eventStartState?.objects[selectedId];
-
+	const eventStartState = state.eventStartState;
+	if (!eventStartState) {
+		return state;
+	}
+	const startObject = eventStartState.objects[selectedId];
 	if (!startObject || !isTransformedFrame(startObject)) {
 		return state;
 	}
 
 	// Calculate the inverse transformed cursor position (in object's local space)
-	const { cx, cy, width, height, rotation, scaleX, scaleY } = startObject;
-	const radians = (rotation * Math.PI) / 180;
+	const radians = degreesToRadians(startObject.rotation);
 
 	// Current cursor position in world space
-	const cursorX = event.start.x + event.delta.x;
-	const cursorY = event.start.y + event.delta.y;
+	const cursorX = event.last.x;
+	const cursorY = event.last.y;
 
-	// Transform cursor to object's local space
+	// Transform cursor to object's local space (rotation only, no scale)
 	const inversedCursor = calcInverseAffineTransformedPoint(
 		cursorX,
 		cursorY,
-		scaleX,
-		scaleY,
+		1,
+		1,
 		radians,
-		cx,
-		cy,
+		startObject.cx,
+		startObject.cy,
 	);
 
-	// For bottomRight anchor: topLeft is the fixed point
-	// In local space (before scale), topLeft is at (-width/2, -height/2)
-	// and bottomRight is at (width/2, height/2)
-	const localTopLeftX = -width / 2;
-	const localTopLeftY = -height / 2;
+	// Transform the fixed point (topLeft) to local space
+	const startFrameFeaturePoint = calcFrameFeaturePoints(startObject);
+
+	const inversedTopLeft = calcInverseAffineTransformedPoint(
+		startFrameFeaturePoint.topLeft.x,
+		startFrameFeaturePoint.topLeft.y,
+		1,
+		1,
+		radians,
+		startObject.cx,
+		startObject.cy,
+	);
 
 	// New dimensions from cursor position in local space
-	const newWidth = inversedCursor.x - localTopLeftX;
-	const newHeight = inversedCursor.y - localTopLeftY;
+	const newWidth = inversedCursor.x - inversedTopLeft.x;
+	const newHeight = inversedCursor.y - inversedTopLeft.y;
 
-	// Get the current object state from eventStartState
-	const eventStartObjects = state.eventStartState?.objects;
-	if (!eventStartObjects) {
-		return state;
-	}
+	// Calculate new center in local space
+	const inversedCenterX = inversedTopLeft.x + nanToZero(newWidth / 2);
+	const inversedCenterY = inversedTopLeft.y + nanToZero(newHeight / 2);
 
-	// Update the object with new dimensions
-	// Center position remains at (cx, cy) since we're just changing size
+	// Transform new center back to world space
+	const newCenter = calcAffineTransformedPoint(
+		inversedCenterX,
+		inversedCenterY,
+		1,
+		1,
+		radians,
+		startObject.cx,
+		startObject.cy,
+	);
+
+	// Update the object with new dimensions and center
 	const updatedObject = {
 		...startObject,
 		width: Math.abs(newWidth),
 		height: Math.abs(newHeight),
-		// Center doesn't move in this simplified version
-		// In reality, we need to calculate the new center based on the fixed topLeft point
-		cx: cx + nanToZero(newWidth / 2) - width / 2,
-		cy: cy + nanToZero(newHeight / 2) - height / 2,
+		cx: newCenter.x,
+		cy: newCenter.y,
 	};
 
 	// Create updated objects map from eventStartState
 	const updatedObjects = {
-		...eventStartObjects,
+		...eventStartState.objects,
 		[selectedId]: updatedObject,
 	};
 
