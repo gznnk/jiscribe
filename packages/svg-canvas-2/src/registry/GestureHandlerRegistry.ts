@@ -2,7 +2,6 @@ import type {
 	CanvasGesture,
 	GestureHandler,
 } from "./GestureHandlerRegistryTypes";
-import type { Gesture } from "../controllers/hooks/useGestureRecognizer";
 import type { CanvasState } from "../states/canvas/CanvasState";
 
 /**
@@ -42,19 +41,16 @@ export class GestureHandlerRegistry {
 	}
 
 	/**
-	 * Processes a gesture by routing it to the first handler that supports it.
+	 * Processes a canvas gesture by routing it to the first handler that supports it.
 	 * @param state - The current canvas state
-	 * @param gesture - The gesture to process
+	 * @param gesture - The canvas gesture to process
 	 * @returns The updated canvas state
 	 */
-	handle(state: CanvasState, gesture: Gesture): CanvasState {
-		// Convert Gesture to CanvasGesture
-		const canvasGesture: CanvasGesture = gesture;
-
+	handle(state: CanvasState, gesture: CanvasGesture): CanvasState {
 		// Iterate through all handlers and find the first one that supports this gesture
 		for (const handler of this.handlers.values()) {
-			if (handler.supports(canvasGesture)) {
-				return handler.handle(state, canvasGesture);
+			if (handler.supports(gesture)) {
+				return handler.handle(state, gesture);
 			}
 		}
 

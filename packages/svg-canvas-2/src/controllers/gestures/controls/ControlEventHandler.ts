@@ -9,20 +9,9 @@ import {
 
 import type {
 	CanvasGesture,
-	EventType,
 	GestureHandler,
 } from "../../../registry/GestureHandlerRegistryTypes";
 import type { CanvasState } from "../../../states/canvas/CanvasState";
-
-/**
- * Event types that should trigger saving the current state as eventStartState.
- */
-const EVENT_START_TYPES: readonly EventType[] = ["dragStart"] as const;
-
-/**
- * Event types that should trigger clearing the eventStartState.
- */
-const EVENT_END_TYPES: readonly EventType[] = ["dragEnd"] as const;
 
 /**
  * Handle drag start on control anchor.
@@ -150,6 +139,8 @@ const handleControlDragEnd = (
 /**
  * Handles events that occur on transform control anchors.
  * This is the main entry point for control-level event handling.
+ *
+ * Note: eventStartState is managed by handleGesture(), not here.
  */
 export const ControlEventHandler: GestureHandler = {
 	supports(gesture: CanvasGesture): boolean {
@@ -172,13 +163,6 @@ export const ControlEventHandler: GestureHandler = {
 
 		let nextState = state;
 
-		if (EVENT_START_TYPES.includes(gesture.type)) {
-			nextState = {
-				...state,
-				eventStartState: state,
-			};
-		}
-
 		// Handle drag events on control anchors
 		if (gesture.type === "dragStart") {
 			nextState = handleControlDragStart(nextState, gesture, anchorType);
@@ -186,14 +170,6 @@ export const ControlEventHandler: GestureHandler = {
 			nextState = handleControlDrag(nextState, gesture, anchorType);
 		} else if (gesture.type === "dragEnd") {
 			nextState = handleControlDragEnd(nextState, gesture, anchorType);
-		}
-
-		if (EVENT_END_TYPES.includes(gesture.type)) {
-			nextState = {
-				...nextState,
-				eventStartState: null,
-				lastCommitTime: gesture.time,
-			};
 		}
 
 		return nextState;
