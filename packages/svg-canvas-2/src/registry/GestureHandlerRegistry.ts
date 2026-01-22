@@ -68,3 +68,9 @@ export class GestureHandlerRegistry {
 		this.handlers.clear();
 	}
 }
+
+/**
+ * Singleton instance of GestureHandlerRegistry.
+ * Should be initialized via initializeGestureHandlerRegistry() from controllers/setup/.
+ */
+export const gestureHandlerRegistry = new GestureHandlerRegistry();

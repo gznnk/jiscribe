@@ -8,7 +8,6 @@ import {
 	useRef,
 } from "react";
 
-import { initializeObjectRegistry } from "./CanvasRegistry";
 import { Container } from "./CanvasStyled";
 import { useContainerSize } from "./hooks/useContainerSize";
 import {
@@ -16,6 +15,7 @@ import {
 	type GestureCallback,
 } from "./hooks/useGestureRecognizer";
 import { canvasReducer } from "./reducer/canvasReducer";
+import { initializeRegistries } from "./setup";
 import {
 	canvasToDoc,
 	canvasToState,
@@ -24,7 +24,8 @@ import { CanvasView } from "../presentations/canvas/CanvasView";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { CanvasState } from "../states/canvas/CanvasState";
 
-initializeObjectRegistry();
+// Initialize all registries (ObjectRegistry, GestureHandlerRegistry)
+initializeRegistries();
 
 type CanvasProps = {
 	canvasDoc: CanvasDoc;
