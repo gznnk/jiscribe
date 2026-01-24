@@ -16,6 +16,7 @@ type Pressed = {
 	targetKind?: string;
 	mods: Mods;
 	dragging: boolean;
+	button: number;
 };
 
 /**
@@ -100,6 +101,7 @@ export type Gesture = {
 	mods: Mods;
 	hovered: HoveredElement[];
 	time: number;
+	button: number;
 };
 
 export type GestureCallback = (gesture: Gesture) => void;
@@ -162,6 +164,7 @@ export const useGestureRecognizer = ({
 					targetKind,
 					mods,
 					dragging: false,
+					button: e.button,
 				};
 
 				gestureCallback({
@@ -175,6 +178,7 @@ export const useGestureRecognizer = ({
 					mods,
 					hovered,
 					time,
+					button: e.button,
 				});
 				return;
 			}
@@ -214,6 +218,7 @@ export const useGestureRecognizer = ({
 							mods,
 							hovered,
 							time,
+							button: pressed.current.button,
 						});
 					}
 				} else {
@@ -228,6 +233,7 @@ export const useGestureRecognizer = ({
 						mods,
 						hovered,
 						time,
+						button: pressed.current.button,
 					});
 				}
 				return;
@@ -257,6 +263,7 @@ export const useGestureRecognizer = ({
 					mods,
 					hovered,
 					time,
+					button: pressed.current.button,
 				});
 				pressed.current = null;
 				return;
@@ -287,6 +294,7 @@ export const useGestureRecognizer = ({
 						mods,
 						hovered,
 						time,
+						button: pressed.current.button,
 					});
 				}
 				pressed.current = null;
