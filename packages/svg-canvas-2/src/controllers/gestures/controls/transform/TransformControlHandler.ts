@@ -1,3 +1,4 @@
+import type { TransformedFrame } from "@workspace/geometry";
 import {
 	calcAffineTransformedPoint,
 	calcFrameFeaturePoints,
@@ -14,6 +15,8 @@ import {
 
 import type { CanvasGesture } from "../../../../registry/GestureHandlerRegistryTypes";
 import type { CanvasState } from "../../../../states/canvas/CanvasState";
+import type { TransformState } from "../../../../states/objects/base/TransformState";
+import { isTransformState } from "../../../../states/objects/base/TransformState";
 import type { ControlStrategy } from "../ControlEventHandler";
 
 /**
@@ -120,399 +123,56 @@ export class TransformControlHandler implements ControlStrategy {
 			return state;
 		}
 		const startObject = eventStartState.objects[selectedId];
-		if (!startObject || !isTransformedFrame(startObject)) {
+		if (
+			!startObject ||
+			!isTransformedFrame(startObject) ||
+			!isTransformState(startObject)
+		) {
 			return state;
 		}
 
+		const startFrame = startObject as TransformedFrame & TransformState;
+
 		// 逆アフィン変換されたカーソル位置を計算（オブジェクトのローカル空間内）
-		const radians = degreesToRadians(startObject.rotation);
+		const radians = degreesToRadians(startFrame.rotation);
 
 		// ワールド空間でのカーソル位置
 
 		// 固定点をローカル空間に変換
-		const startFrameFeaturePoint = calcFrameFeaturePoints(startObject);
+		const startFrameFeaturePoint = calcFrameFeaturePoints(startFrame);
 
-		const isSwapped = (startObject.rotation + 405) % 180 > 90;
+		const isSwapped = (startFrame.rotation + 405) % 180 > 90;
 
-		const { scaleX, scaleY } = startObject;
-		const aspectRatio = startObject.width / startObject.height;
-		const lockAspectRatio = (startObject as any).lockAspectRatio ?? false;
+		const { scaleX, scaleY } = startFrame;
+		const aspectRatio = startFrame.width / startFrame.height;
+		const lockAspectRatio = startFrame.lockAspectRatio ?? false;
 		const doKeepProportion = lockAspectRatio || gesture.mods.shift;
 
-		// Apply drag constraints to cursor position
-		let cursorX = gesture.last.x;
-		let cursorY = gesture.last.y;
-
-		let constraintFunction:
-			| ((x: number, y: number) => { x: number; y: number })
-			| undefined;
-
-		switch (anchorType) {
-			case "topLeft":
-				if (doKeepProportion) {
-					constraintFunction = createLinearY2xFunction(
-						startFrameFeaturePoint.topLeft,
-						startFrameFeaturePoint.bottomRight,
-					);
-				}
-				break;
-			case "topRight":
-				if (doKeepProportion) {
-					constraintFunction = createLinearY2xFunction(
-						startFrameFeaturePoint.topRight,
-						startFrameFeaturePoint.bottomLeft,
-					);
-				}
-				break;
-			case "bottomRight":
-				if (doKeepProportion) {
-					constraintFunction = createLinearY2xFunction(
-						startFrameFeaturePoint.bottomRight,
-						startFrameFeaturePoint.topLeft,
-					);
-				}
-				break;
-			case "bottomLeft":
-				if (doKeepProportion) {
-					constraintFunction = createLinearY2xFunction(
-						startFrameFeaturePoint.bottomLeft,
-						startFrameFeaturePoint.topRight,
-					);
-				}
-				break;
-			case "topCenter":
-			case "bottomCenter":
-				constraintFunction = !isSwapped
-					? createLinearY2xFunction(
-							startFrameFeaturePoint.bottomCenter,
-							startFrameFeaturePoint.topCenter,
-						)
-					: createLinearX2yFunction(
-							startFrameFeaturePoint.bottomCenter,
-							startFrameFeaturePoint.topCenter,
-						);
-				break;
-			case "leftCenter":
-			case "rightCenter":
-				constraintFunction = !isSwapped
-					? createLinearX2yFunction(
-							startFrameFeaturePoint.leftCenter,
-							startFrameFeaturePoint.rightCenter,
-						)
-					: createLinearY2xFunction(
-							startFrameFeaturePoint.leftCenter,
-							startFrameFeaturePoint.rightCenter,
-						);
-				break;
-		}
-
-		if (constraintFunction) {
-			const constrained = constraintFunction(cursorX, cursorY);
-			cursorX = constrained.x;
-			cursorY = constrained.y;
-		}
-
-		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
-		const inversedCursor = calcInverseAffineTransformedPoint(
-			cursorX,
-			cursorY,
-			1,
-			1,
+		// アンカー固有のリサイズ処理にルーティング
+		const resizeResult = this.calculateResize(
+			anchorType,
+			startFrame,
+			gesture.last.x,
+			gesture.last.y,
+			startFrameFeaturePoint,
 			radians,
-			startObject.cx,
-			startObject.cy,
+			aspectRatio,
+			doKeepProportion,
+			isSwapped,
+			scaleX,
+			scaleY,
 		);
 
-		// アンカー固有のリサイズ処理にルーティング
-		let newWidth: number;
-		let newHeight: number;
-		let inversedCenterX: number;
-		let inversedCenterY: number;
-
-		switch (anchorType) {
-			case "bottomRight": {
-				const inversedTopLeft = calcInverseAffineTransformedPoint(
-					startFrameFeaturePoint.topLeft.x,
-					startFrameFeaturePoint.topLeft.y,
-					1,
-					1,
-					radians,
-					startObject.cx,
-					startObject.cy,
-				);
-				newWidth = inversedCursor.x - inversedTopLeft.x;
-				if (doKeepProportion) {
-					newHeight = this.calcHeightWithAspectRatio(
-						newWidth,
-						aspectRatio,
-						scaleX,
-						scaleY,
-					);
-				} else {
-					newHeight = inversedCursor.y - inversedTopLeft.y;
-				}
-
-				const enforced = this.enforceMinimumDimensions(
-					newWidth,
-					newHeight,
-					aspectRatio,
-					doKeepProportion,
-				);
-				newWidth = enforced.width;
-				newHeight = enforced.height;
-
-				inversedCenterX = inversedTopLeft.x + nanToZero(newWidth / 2);
-				inversedCenterY = inversedTopLeft.y + nanToZero(newHeight / 2);
-				break;
-			}
-			case "topLeft": {
-				const inversedBottomRight = calcInverseAffineTransformedPoint(
-					startFrameFeaturePoint.bottomRight.x,
-					startFrameFeaturePoint.bottomRight.y,
-					1,
-					1,
-					radians,
-					startObject.cx,
-					startObject.cy,
-				);
-				newWidth = inversedBottomRight.x - inversedCursor.x;
-				if (doKeepProportion) {
-					newHeight = this.calcHeightWithAspectRatio(
-						newWidth,
-						aspectRatio,
-						scaleX,
-						scaleY,
-					);
-				} else {
-					newHeight = inversedBottomRight.y - inversedCursor.y;
-				}
-
-				const enforced = this.enforceMinimumDimensions(
-					newWidth,
-					newHeight,
-					aspectRatio,
-					doKeepProportion,
-				);
-				newWidth = enforced.width;
-				newHeight = enforced.height;
-
-				inversedCenterX = inversedBottomRight.x - nanToZero(newWidth / 2);
-				inversedCenterY = inversedBottomRight.y - nanToZero(newHeight / 2);
-				break;
-			}
-			case "topRight": {
-				const inversedBottomLeft = calcInverseAffineTransformedPoint(
-					startFrameFeaturePoint.bottomLeft.x,
-					startFrameFeaturePoint.bottomLeft.y,
-					1,
-					1,
-					radians,
-					startObject.cx,
-					startObject.cy,
-				);
-				newWidth = inversedCursor.x - inversedBottomLeft.x;
-				if (doKeepProportion) {
-					newHeight = this.calcHeightWithAspectRatio(
-						newWidth,
-						aspectRatio,
-						scaleX,
-						scaleY,
-					);
-				} else {
-					newHeight = inversedBottomLeft.y - inversedCursor.y;
-				}
-
-				const enforced = this.enforceMinimumDimensions(
-					newWidth,
-					newHeight,
-					aspectRatio,
-					doKeepProportion,
-				);
-				newWidth = enforced.width;
-				newHeight = enforced.height;
-
-				inversedCenterX = inversedBottomLeft.x + nanToZero(newWidth / 2);
-				inversedCenterY = inversedBottomLeft.y - nanToZero(newHeight / 2);
-				break;
-			}
-			case "bottomLeft": {
-				const inversedTopRight = calcInverseAffineTransformedPoint(
-					startFrameFeaturePoint.topRight.x,
-					startFrameFeaturePoint.topRight.y,
-					1,
-					1,
-					radians,
-					startObject.cx,
-					startObject.cy,
-				);
-				newWidth = inversedTopRight.x - inversedCursor.x;
-				if (doKeepProportion) {
-					newHeight = this.calcHeightWithAspectRatio(
-						newWidth,
-						aspectRatio,
-						scaleX,
-						scaleY,
-					);
-				} else {
-					newHeight = inversedCursor.y - inversedTopRight.y;
-				}
-
-				const enforced = this.enforceMinimumDimensions(
-					newWidth,
-					newHeight,
-					aspectRatio,
-					doKeepProportion,
-				);
-				newWidth = enforced.width;
-				newHeight = enforced.height;
-
-				inversedCenterX = inversedTopRight.x - nanToZero(newWidth / 2);
-				inversedCenterY = inversedTopRight.y + nanToZero(newHeight / 2);
-				break;
-			}
-			case "topCenter": {
-				const inversedBottomCenter = calcInverseAffineTransformedPoint(
-					startFrameFeaturePoint.bottomCenter.x,
-					startFrameFeaturePoint.bottomCenter.y,
-					1,
-					1,
-					radians,
-					startObject.cx,
-					startObject.cy,
-				);
-				newHeight = inversedBottomCenter.y - inversedCursor.y;
-				if (doKeepProportion) {
-					newWidth = this.calcWidthWithAspectRatio(
-						newHeight,
-						aspectRatio,
-						scaleX,
-						scaleY,
-					);
-				} else {
-					newWidth = startObject.width;
-				}
-
-				const enforced = this.enforceMinimumDimensions(
-					newWidth,
-					newHeight,
-					aspectRatio,
-					doKeepProportion,
-				);
-				newWidth = enforced.width;
-				newHeight = enforced.height;
-
-				inversedCenterX = inversedBottomCenter.x;
-				inversedCenterY = inversedBottomCenter.y - nanToZero(newHeight / 2);
-				break;
-			}
-			case "rightCenter": {
-				const inversedLeftCenter = calcInverseAffineTransformedPoint(
-					startFrameFeaturePoint.leftCenter.x,
-					startFrameFeaturePoint.leftCenter.y,
-					1,
-					1,
-					radians,
-					startObject.cx,
-					startObject.cy,
-				);
-				newWidth = inversedCursor.x - inversedLeftCenter.x;
-				if (doKeepProportion) {
-					newHeight = this.calcHeightWithAspectRatio(
-						newWidth,
-						aspectRatio,
-						scaleX,
-						scaleY,
-					);
-				} else {
-					newHeight = startObject.height;
-				}
-
-				const enforced = this.enforceMinimumDimensions(
-					newWidth,
-					newHeight,
-					aspectRatio,
-					doKeepProportion,
-				);
-				newWidth = enforced.width;
-				newHeight = enforced.height;
-
-				inversedCenterX = inversedLeftCenter.x + nanToZero(newWidth / 2);
-				inversedCenterY = inversedLeftCenter.y;
-				break;
-			}
-			case "bottomCenter": {
-				const inversedTopCenter = calcInverseAffineTransformedPoint(
-					startFrameFeaturePoint.topCenter.x,
-					startFrameFeaturePoint.topCenter.y,
-					1,
-					1,
-					radians,
-					startObject.cx,
-					startObject.cy,
-				);
-				newHeight = inversedCursor.y - inversedTopCenter.y;
-				if (doKeepProportion) {
-					newWidth = this.calcWidthWithAspectRatio(
-						newHeight,
-						aspectRatio,
-						scaleX,
-						scaleY,
-					);
-				} else {
-					newWidth = startObject.width;
-				}
-
-				const enforced = this.enforceMinimumDimensions(
-					newWidth,
-					newHeight,
-					aspectRatio,
-					doKeepProportion,
-				);
-				newWidth = enforced.width;
-				newHeight = enforced.height;
-
-				inversedCenterX = inversedTopCenter.x;
-				inversedCenterY = inversedTopCenter.y + nanToZero(newHeight / 2);
-				break;
-			}
-			case "leftCenter": {
-				const inversedRightCenter = calcInverseAffineTransformedPoint(
-					startFrameFeaturePoint.rightCenter.x,
-					startFrameFeaturePoint.rightCenter.y,
-					1,
-					1,
-					radians,
-					startObject.cx,
-					startObject.cy,
-				);
-				newWidth = inversedRightCenter.x - inversedCursor.x;
-				if (doKeepProportion) {
-					newHeight = this.calcHeightWithAspectRatio(
-						newWidth,
-						aspectRatio,
-						scaleX,
-						scaleY,
-					);
-				} else {
-					newHeight = startObject.height;
-				}
-
-				const enforced = this.enforceMinimumDimensions(
-					newWidth,
-					newHeight,
-					aspectRatio,
-					doKeepProportion,
-				);
-				newWidth = enforced.width;
-				newHeight = enforced.height;
-
-				inversedCenterX = inversedRightCenter.x - nanToZero(newWidth / 2);
-				inversedCenterY = inversedRightCenter.y;
-				break;
-			}
-			default:
-				return state;
+		if (!resizeResult) {
+			return state;
 		}
+
+		const {
+			width: newWidth,
+			height: newHeight,
+			inversedCenterX,
+			inversedCenterY,
+		} = resizeResult;
 
 		// 新しい中心をワールド空間に変換
 		const newCenter = calcAffineTransformedPoint(
@@ -521,8 +181,8 @@ export class TransformControlHandler implements ControlStrategy {
 			1,
 			1,
 			radians,
-			startObject.cx,
-			startObject.cy,
+			startFrame.cx,
+			startFrame.cy,
 		);
 
 		// 新しい寸法と中心でオブジェクトを更新
@@ -543,6 +203,773 @@ export class TransformControlHandler implements ControlStrategy {
 		return {
 			...state,
 			objects: updatedObjects,
+		};
+	}
+
+	/**
+	 * アンカータイプに応じたリサイズ計算を行う。
+	 */
+	private calculateResize(
+		anchorType: TransformAnchorType,
+		startFrame: TransformedFrame & TransformState,
+		cursorX: number,
+		cursorY: number,
+		startFrameFeaturePoint: ReturnType<typeof calcFrameFeaturePoints>,
+		radians: number,
+		aspectRatio: number,
+		doKeepProportion: boolean,
+		isSwapped: boolean,
+		scaleX: number,
+		scaleY: number,
+	): {
+		width: number;
+		height: number;
+		inversedCenterX: number;
+		inversedCenterY: number;
+	} | null {
+		switch (anchorType) {
+			case "bottomRight":
+				return this.calculateBottomRightResize(
+					startFrame,
+					cursorX,
+					cursorY,
+					startFrameFeaturePoint,
+					radians,
+					aspectRatio,
+					doKeepProportion,
+					scaleX,
+					scaleY,
+				);
+			case "topLeft":
+				return this.calculateTopLeftResize(
+					startFrame,
+					cursorX,
+					cursorY,
+					startFrameFeaturePoint,
+					radians,
+					aspectRatio,
+					doKeepProportion,
+					scaleX,
+					scaleY,
+				);
+			case "topRight":
+				return this.calculateTopRightResize(
+					startFrame,
+					cursorX,
+					cursorY,
+					startFrameFeaturePoint,
+					radians,
+					aspectRatio,
+					doKeepProportion,
+					scaleX,
+					scaleY,
+				);
+			case "bottomLeft":
+				return this.calculateBottomLeftResize(
+					startFrame,
+					cursorX,
+					cursorY,
+					startFrameFeaturePoint,
+					radians,
+					aspectRatio,
+					doKeepProportion,
+					scaleX,
+					scaleY,
+				);
+			case "topCenter":
+				return this.calculateTopCenterResize(
+					startFrame,
+					cursorX,
+					cursorY,
+					startFrameFeaturePoint,
+					radians,
+					aspectRatio,
+					doKeepProportion,
+					isSwapped,
+					scaleX,
+					scaleY,
+				);
+			case "rightCenter":
+				return this.calculateRightCenterResize(
+					startFrame,
+					cursorX,
+					cursorY,
+					startFrameFeaturePoint,
+					radians,
+					aspectRatio,
+					doKeepProportion,
+					isSwapped,
+					scaleX,
+					scaleY,
+				);
+			case "bottomCenter":
+				return this.calculateBottomCenterResize(
+					startFrame,
+					cursorX,
+					cursorY,
+					startFrameFeaturePoint,
+					radians,
+					aspectRatio,
+					doKeepProportion,
+					isSwapped,
+					scaleX,
+					scaleY,
+				);
+			case "leftCenter":
+				return this.calculateLeftCenterResize(
+					startFrame,
+					cursorX,
+					cursorY,
+					startFrameFeaturePoint,
+					radians,
+					aspectRatio,
+					doKeepProportion,
+					isSwapped,
+					scaleX,
+					scaleY,
+				);
+			default:
+				return null;
+		}
+	}
+
+	/**
+	 * 右下アンカーのリサイズ計算。
+	 */
+	private calculateBottomRightResize(
+		startFrame: TransformedFrame & TransformState,
+		cursorX: number,
+		cursorY: number,
+		startFrameFeaturePoint: ReturnType<typeof calcFrameFeaturePoints>,
+		radians: number,
+		aspectRatio: number,
+		doKeepProportion: boolean,
+		scaleX: number,
+		scaleY: number,
+	) {
+		// Apply drag constraints to cursor position
+		if (doKeepProportion) {
+			const constraintFunction = createLinearY2xFunction(
+				startFrameFeaturePoint.bottomRight,
+				startFrameFeaturePoint.topLeft,
+			);
+			const constrained = constraintFunction(cursorX, cursorY);
+			cursorX = constrained.x;
+			cursorY = constrained.y;
+		}
+
+		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
+		const inversedCursor = calcInverseAffineTransformedPoint(
+			cursorX,
+			cursorY,
+			1,
+			1,
+			radians,
+			startFrame.cx,
+			startFrame.cy,
+		);
+
+		const inversedTopLeft = calcInverseAffineTransformedPoint(
+			startFrameFeaturePoint.topLeft.x,
+			startFrameFeaturePoint.topLeft.y,
+			1,
+			1,
+			radians,
+			startFrame.cx,
+			startFrame.cy,
+		);
+		let newWidth = inversedCursor.x - inversedTopLeft.x;
+		let newHeight: number;
+		if (doKeepProportion) {
+			newHeight = this.calcHeightWithAspectRatio(
+				newWidth,
+				aspectRatio,
+				scaleX,
+				scaleY,
+			);
+		} else {
+			newHeight = inversedCursor.y - inversedTopLeft.y;
+		}
+
+		const enforced = this.enforceMinimumDimensions(
+			newWidth,
+			newHeight,
+			aspectRatio,
+			doKeepProportion,
+		);
+		newWidth = enforced.width;
+		newHeight = enforced.height;
+
+		const inversedCenterX = inversedTopLeft.x + nanToZero(newWidth / 2);
+		const inversedCenterY = inversedTopLeft.y + nanToZero(newHeight / 2);
+
+		return {
+			width: newWidth,
+			height: newHeight,
+			inversedCenterX,
+			inversedCenterY,
+		};
+	}
+
+	/**
+	 * 左上アンカーのリサイズ計算。
+	 */
+	private calculateTopLeftResize(
+		startFrame: TransformedFrame & TransformState,
+		cursorX: number,
+		cursorY: number,
+		startFrameFeaturePoint: ReturnType<typeof calcFrameFeaturePoints>,
+		radians: number,
+		aspectRatio: number,
+		doKeepProportion: boolean,
+		scaleX: number,
+		scaleY: number,
+	) {
+		// Apply drag constraints to cursor position
+		if (doKeepProportion) {
+			const constraintFunction = createLinearY2xFunction(
+				startFrameFeaturePoint.topLeft,
+				startFrameFeaturePoint.bottomRight,
+			);
+			const constrained = constraintFunction(cursorX, cursorY);
+			cursorX = constrained.x;
+			cursorY = constrained.y;
+		}
+
+		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
+		const inversedCursor = calcInverseAffineTransformedPoint(
+			cursorX,
+			cursorY,
+			1,
+			1,
+			radians,
+			startFrame.cx,
+			startFrame.cy,
+		);
+
+		const inversedBottomRight = calcInverseAffineTransformedPoint(
+			startFrameFeaturePoint.bottomRight.x,
+			startFrameFeaturePoint.bottomRight.y,
+			1,
+			1,
+			radians,
+			startFrame.cx,
+			startFrame.cy,
+		);
+		let newWidth = inversedBottomRight.x - inversedCursor.x;
+		let newHeight: number;
+		if (doKeepProportion) {
+			newHeight = this.calcHeightWithAspectRatio(
+				newWidth,
+				aspectRatio,
+				scaleX,
+				scaleY,
+			);
+		} else {
+			newHeight = inversedBottomRight.y - inversedCursor.y;
+		}
+
+		const enforced = this.enforceMinimumDimensions(
+			newWidth,
+			newHeight,
+			aspectRatio,
+			doKeepProportion,
+		);
+		newWidth = enforced.width;
+		newHeight = enforced.height;
+
+		const inversedCenterX = inversedBottomRight.x - nanToZero(newWidth / 2);
+		const inversedCenterY = inversedBottomRight.y - nanToZero(newHeight / 2);
+
+		return {
+			width: newWidth,
+			height: newHeight,
+			inversedCenterX,
+			inversedCenterY,
+		};
+	}
+
+	/**
+	 * 右上アンカーのリサイズ計算。
+	 */
+	private calculateTopRightResize(
+		startFrame: TransformedFrame & TransformState,
+		cursorX: number,
+		cursorY: number,
+		startFrameFeaturePoint: ReturnType<typeof calcFrameFeaturePoints>,
+		radians: number,
+		aspectRatio: number,
+		doKeepProportion: boolean,
+		scaleX: number,
+		scaleY: number,
+	) {
+		// Apply drag constraints to cursor position
+		if (doKeepProportion) {
+			const constraintFunction = createLinearY2xFunction(
+				startFrameFeaturePoint.topRight,
+				startFrameFeaturePoint.bottomLeft,
+			);
+			const constrained = constraintFunction(cursorX, cursorY);
+			cursorX = constrained.x;
+			cursorY = constrained.y;
+		}
+
+		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
+		const inversedCursor = calcInverseAffineTransformedPoint(
+			cursorX,
+			cursorY,
+			1,
+			1,
+			radians,
+			startFrame.cx,
+			startFrame.cy,
+		);
+
+		const inversedBottomLeft = calcInverseAffineTransformedPoint(
+			startFrameFeaturePoint.bottomLeft.x,
+			startFrameFeaturePoint.bottomLeft.y,
+			1,
+			1,
+			radians,
+			startFrame.cx,
+			startFrame.cy,
+		);
+		let newWidth = inversedCursor.x - inversedBottomLeft.x;
+		let newHeight: number;
+		if (doKeepProportion) {
+			newHeight = this.calcHeightWithAspectRatio(
+				newWidth,
+				aspectRatio,
+				scaleX,
+				scaleY,
+			);
+		} else {
+			newHeight = inversedBottomLeft.y - inversedCursor.y;
+		}
+
+		const enforced = this.enforceMinimumDimensions(
+			newWidth,
+			newHeight,
+			aspectRatio,
+			doKeepProportion,
+		);
+		newWidth = enforced.width;
+		newHeight = enforced.height;
+
+		const inversedCenterX = inversedBottomLeft.x + nanToZero(newWidth / 2);
+		const inversedCenterY = inversedBottomLeft.y - nanToZero(newHeight / 2);
+
+		return {
+			width: newWidth,
+			height: newHeight,
+			inversedCenterX,
+			inversedCenterY,
+		};
+	}
+
+	/**
+	 * 左下アンカーのリサイズ計算。
+	 */
+	private calculateBottomLeftResize(
+		startFrame: TransformedFrame & TransformState,
+		cursorX: number,
+		cursorY: number,
+		startFrameFeaturePoint: ReturnType<typeof calcFrameFeaturePoints>,
+		radians: number,
+		aspectRatio: number,
+		doKeepProportion: boolean,
+		scaleX: number,
+		scaleY: number,
+	) {
+		// Apply drag constraints to cursor position
+		if (doKeepProportion) {
+			const constraintFunction = createLinearY2xFunction(
+				startFrameFeaturePoint.bottomLeft,
+				startFrameFeaturePoint.topRight,
+			);
+			const constrained = constraintFunction(cursorX, cursorY);
+			cursorX = constrained.x;
+			cursorY = constrained.y;
+		}
+
+		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
+		const inversedCursor = calcInverseAffineTransformedPoint(
+			cursorX,
+			cursorY,
+			1,
+			1,
+			radians,
+			startFrame.cx,
+			startFrame.cy,
+		);
+
+		const inversedTopRight = calcInverseAffineTransformedPoint(
+			startFrameFeaturePoint.topRight.x,
+			startFrameFeaturePoint.topRight.y,
+			1,
+			1,
+			radians,
+			startFrame.cx,
+			startFrame.cy,
+		);
+		let newWidth = inversedTopRight.x - inversedCursor.x;
+		let newHeight: number;
+		if (doKeepProportion) {
+			newHeight = this.calcHeightWithAspectRatio(
+				newWidth,
+				aspectRatio,
+				scaleX,
+				scaleY,
+			);
+		} else {
+			newHeight = inversedCursor.y - inversedTopRight.y;
+		}
+
+		const enforced = this.enforceMinimumDimensions(
+			newWidth,
+			newHeight,
+			aspectRatio,
+			doKeepProportion,
+		);
+		newWidth = enforced.width;
+		newHeight = enforced.height;
+
+		const inversedCenterX = inversedTopRight.x - nanToZero(newWidth / 2);
+		const inversedCenterY = inversedTopRight.y + nanToZero(newHeight / 2);
+
+		return {
+			width: newWidth,
+			height: newHeight,
+			inversedCenterX,
+			inversedCenterY,
+		};
+	}
+
+	/**
+	 * 上中央アンカーのリサイズ計算。
+	 */
+	private calculateTopCenterResize(
+		startFrame: TransformedFrame & TransformState,
+		cursorX: number,
+		cursorY: number,
+		startFrameFeaturePoint: ReturnType<typeof calcFrameFeaturePoints>,
+		radians: number,
+		aspectRatio: number,
+		doKeepProportion: boolean,
+		isSwapped: boolean,
+		scaleX: number,
+		scaleY: number,
+	) {
+		// Apply drag constraints to cursor position
+		const constraintFunction = !isSwapped
+			? createLinearY2xFunction(
+					startFrameFeaturePoint.bottomCenter,
+					startFrameFeaturePoint.topCenter,
+				)
+			: createLinearX2yFunction(
+					startFrameFeaturePoint.bottomCenter,
+					startFrameFeaturePoint.topCenter,
+				);
+		const constrained = constraintFunction(cursorX, cursorY);
+		cursorX = constrained.x;
+		cursorY = constrained.y;
+
+		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
+		const inversedCursor = calcInverseAffineTransformedPoint(
+			cursorX,
+			cursorY,
+			1,
+			1,
+			radians,
+			startFrame.cx,
+			startFrame.cy,
+		);
+
+		const inversedBottomCenter = calcInverseAffineTransformedPoint(
+			startFrameFeaturePoint.bottomCenter.x,
+			startFrameFeaturePoint.bottomCenter.y,
+			1,
+			1,
+			radians,
+			startFrame.cx,
+			startFrame.cy,
+		);
+		const newHeight = inversedBottomCenter.y - inversedCursor.y;
+		let newWidth: number;
+		if (doKeepProportion) {
+			newWidth = this.calcWidthWithAspectRatio(
+				newHeight,
+				aspectRatio,
+				scaleX,
+				scaleY,
+			);
+		} else {
+			newWidth = startFrame.width;
+		}
+
+		const enforced = this.enforceMinimumDimensions(
+			newWidth,
+			newHeight,
+			aspectRatio,
+			doKeepProportion,
+		);
+		const finalWidth = enforced.width;
+		const finalHeight = enforced.height;
+
+		const inversedCenterX = inversedBottomCenter.x;
+		const inversedCenterY = inversedBottomCenter.y - nanToZero(finalHeight / 2);
+
+		return {
+			width: finalWidth,
+			height: finalHeight,
+			inversedCenterX,
+			inversedCenterY,
+		};
+	}
+
+	/**
+	 * 右中央アンカーのリサイズ計算。
+	 */
+	private calculateRightCenterResize(
+		startFrame: TransformedFrame & TransformState,
+		cursorX: number,
+		cursorY: number,
+		startFrameFeaturePoint: ReturnType<typeof calcFrameFeaturePoints>,
+		radians: number,
+		aspectRatio: number,
+		doKeepProportion: boolean,
+		isSwapped: boolean,
+		scaleX: number,
+		scaleY: number,
+	) {
+		// Apply drag constraints to cursor position
+		const constraintFunction = !isSwapped
+			? createLinearX2yFunction(
+					startFrameFeaturePoint.leftCenter,
+					startFrameFeaturePoint.rightCenter,
+				)
+			: createLinearY2xFunction(
+					startFrameFeaturePoint.leftCenter,
+					startFrameFeaturePoint.rightCenter,
+				);
+		const constrained = constraintFunction(cursorX, cursorY);
+		cursorX = constrained.x;
+		cursorY = constrained.y;
+
+		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
+		const inversedCursor = calcInverseAffineTransformedPoint(
+			cursorX,
+			cursorY,
+			1,
+			1,
+			radians,
+			startFrame.cx,
+			startFrame.cy,
+		);
+
+		const inversedLeftCenter = calcInverseAffineTransformedPoint(
+			startFrameFeaturePoint.leftCenter.x,
+			startFrameFeaturePoint.leftCenter.y,
+			1,
+			1,
+			radians,
+			startFrame.cx,
+			startFrame.cy,
+		);
+		let newWidth = inversedCursor.x - inversedLeftCenter.x;
+		let newHeight: number;
+		if (doKeepProportion) {
+			newHeight = this.calcHeightWithAspectRatio(
+				newWidth,
+				aspectRatio,
+				scaleX,
+				scaleY,
+			);
+		} else {
+			newHeight = startFrame.height;
+		}
+
+		const enforced = this.enforceMinimumDimensions(
+			newWidth,
+			newHeight,
+			aspectRatio,
+			doKeepProportion,
+		);
+		newWidth = enforced.width;
+		newHeight = enforced.height;
+
+		const inversedCenterX = inversedLeftCenter.x + nanToZero(newWidth / 2);
+		const inversedCenterY = inversedLeftCenter.y;
+
+		return {
+			width: newWidth,
+			height: newHeight,
+			inversedCenterX,
+			inversedCenterY,
+		};
+	}
+
+	/**
+	 * 下中央アンカーのリサイズ計算。
+	 */
+	private calculateBottomCenterResize(
+		startFrame: TransformedFrame & TransformState,
+		cursorX: number,
+		cursorY: number,
+		startFrameFeaturePoint: ReturnType<typeof calcFrameFeaturePoints>,
+		radians: number,
+		aspectRatio: number,
+		doKeepProportion: boolean,
+		isSwapped: boolean,
+		scaleX: number,
+		scaleY: number,
+	) {
+		// Apply drag constraints to cursor position
+		const constraintFunction = !isSwapped
+			? createLinearY2xFunction(
+					startFrameFeaturePoint.bottomCenter,
+					startFrameFeaturePoint.topCenter,
+				)
+			: createLinearX2yFunction(
+					startFrameFeaturePoint.bottomCenter,
+					startFrameFeaturePoint.topCenter,
+				);
+		const constrained = constraintFunction(cursorX, cursorY);
+		cursorX = constrained.x;
+		cursorY = constrained.y;
+
+		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
+		const inversedCursor = calcInverseAffineTransformedPoint(
+			cursorX,
+			cursorY,
+			1,
+			1,
+			radians,
+			startFrame.cx,
+			startFrame.cy,
+		);
+
+		const inversedTopCenter = calcInverseAffineTransformedPoint(
+			startFrameFeaturePoint.topCenter.x,
+			startFrameFeaturePoint.topCenter.y,
+			1,
+			1,
+			radians,
+			startFrame.cx,
+			startFrame.cy,
+		);
+		const newHeight = inversedCursor.y - inversedTopCenter.y;
+		let newWidth: number;
+		if (doKeepProportion) {
+			newWidth = this.calcWidthWithAspectRatio(
+				newHeight,
+				aspectRatio,
+				scaleX,
+				scaleY,
+			);
+		} else {
+			newWidth = startFrame.width;
+		}
+
+		const enforced = this.enforceMinimumDimensions(
+			newWidth,
+			newHeight,
+			aspectRatio,
+			doKeepProportion,
+		);
+		const finalWidth = enforced.width;
+		const finalHeight = enforced.height;
+
+		const inversedCenterX = inversedTopCenter.x;
+		const inversedCenterY = inversedTopCenter.y + nanToZero(finalHeight / 2);
+
+		return {
+			width: finalWidth,
+			height: finalHeight,
+			inversedCenterX,
+			inversedCenterY,
+		};
+	}
+
+	/**
+	 * 左中央アンカーのリサイズ計算。
+	 */
+	private calculateLeftCenterResize(
+		startFrame: TransformedFrame & TransformState,
+		cursorX: number,
+		cursorY: number,
+		startFrameFeaturePoint: ReturnType<typeof calcFrameFeaturePoints>,
+		radians: number,
+		aspectRatio: number,
+		doKeepProportion: boolean,
+		isSwapped: boolean,
+		scaleX: number,
+		scaleY: number,
+	) {
+		// Apply drag constraints to cursor position
+		const constraintFunction = !isSwapped
+			? createLinearX2yFunction(
+					startFrameFeaturePoint.leftCenter,
+					startFrameFeaturePoint.rightCenter,
+				)
+			: createLinearY2xFunction(
+					startFrameFeaturePoint.leftCenter,
+					startFrameFeaturePoint.rightCenter,
+				);
+		const constrained = constraintFunction(cursorX, cursorY);
+		cursorX = constrained.x;
+		cursorY = constrained.y;
+
+		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
+		const inversedCursor = calcInverseAffineTransformedPoint(
+			cursorX,
+			cursorY,
+			1,
+			1,
+			radians,
+			startFrame.cx,
+			startFrame.cy,
+		);
+
+		const inversedRightCenter = calcInverseAffineTransformedPoint(
+			startFrameFeaturePoint.rightCenter.x,
+			startFrameFeaturePoint.rightCenter.y,
+			1,
+			1,
+			radians,
+			startFrame.cx,
+			startFrame.cy,
+		);
+		let newWidth = inversedRightCenter.x - inversedCursor.x;
+		let newHeight: number;
+		if (doKeepProportion) {
+			newHeight = this.calcHeightWithAspectRatio(
+				newWidth,
+				aspectRatio,
+				scaleX,
+				scaleY,
+			);
+		} else {
+			newHeight = startFrame.height;
+		}
+
+		const enforced = this.enforceMinimumDimensions(
+			newWidth,
+			newHeight,
+			aspectRatio,
+			doKeepProportion,
+		);
+		newWidth = enforced.width;
+		newHeight = enforced.height;
+
+		const inversedCenterX = inversedRightCenter.x - nanToZero(newWidth / 2);
+		const inversedCenterY = inversedRightCenter.y;
+
+		return {
+			width: newWidth,
+			height: newHeight,
+			inversedCenterX,
+			inversedCenterY,
 		};
 	}
 
