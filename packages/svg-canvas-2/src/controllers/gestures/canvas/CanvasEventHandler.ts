@@ -18,13 +18,7 @@ export const CanvasEventHandler: GestureHandler = {
 
 		// Right-click drag for viewport panning (GrabScroll)
 		if (gesture.button === 2) {
-			if (gesture.type === "dragStart") {
-				// Save the initial state when starting to drag
-				nextState = {
-					...nextState,
-					eventStartState: state,
-				};
-			} else if (gesture.type === "drag") {
+			if (gesture.type === "drag") {
 				// Calculate viewport offset from the initial state
 				// Use clientDelta (screen pixels) directly for viewport panning
 				const initialViewport =
@@ -39,12 +33,6 @@ export const CanvasEventHandler: GestureHandler = {
 						minX: initialViewport.minX - deltaX,
 						minY: initialViewport.minY - deltaY,
 					},
-				};
-			} else if (gesture.type === "dragEnd") {
-				// Clear the initial state when drag ends
-				nextState = {
-					...nextState,
-					eventStartState: null,
 				};
 			}
 			return nextState;
