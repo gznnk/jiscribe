@@ -1,8 +1,8 @@
 import { isTransformedFrame } from "@workspace/geometry";
 import { memo } from "react";
 
+import { createSvgTransform } from "../../../../presentations/objects/utils/createSvgTransform";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
-import { createSvgTransform } from "../../../objects/utils/createSvgTransform";
 
 type OutlineProps = {
 	object: ObjectState;

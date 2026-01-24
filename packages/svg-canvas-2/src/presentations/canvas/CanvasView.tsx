@@ -1,13 +1,13 @@
 import { memo } from "react";
 
 import { Svg } from "./CanvasViewStyled";
+import { TransformControlsLayer } from "../../controllers/ui/controls/TransformControlsLayer";
+import { SelectionOverlay } from "../../controllers/ui/feedback/SelectionOverlay";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import { GridBackground } from "../layers/background/GridBackground";
 import { GridPattern } from "../layers/background/GridPattern";
 import { ObjectsRenderer } from "../layers/content/ObjectsRenderer";
-import { TransformControlsLayer } from "../layers/controls/TransformControlsLayer";
 import { DebugInfo } from "../layers/debug/DebugInfo";
-import { SelectionOverlay } from "../layers/feedback/SelectionOverlay";
 
 type CanvasViewProps = CanvasState;
 
