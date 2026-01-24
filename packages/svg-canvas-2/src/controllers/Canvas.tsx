@@ -38,6 +38,7 @@ type CanvasProps = {
 
 const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 	const canvasRef = useRef<HTMLDivElement>(null);
+	const svgRef = useRef<SVGSVGElement>(null);
 
 	const initialState = useMemo((): CanvasState => {
 		const baseState = canvasToState(canvasDoc);
@@ -76,7 +77,8 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 	);
 	const eventHandlers = useGestureRecognizer({
 		gestureCallback: handleGesture,
-		targetRef: canvasRef,
+		containerRef: canvasRef,
+		svgRef,
 	});
 
 	// Container resize handling
@@ -95,7 +97,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 			ref={canvasRef}
 			{...eventHandlers}
 		>
-			<CanvasView {...state} />
+			<CanvasView {...state} svgRef={svgRef} />
 		</Container>
 	);
 };

@@ -108,7 +108,8 @@ export type GestureCallback = (gesture: Gesture) => void;
 
 export type UseGestureRecognizerParams = {
 	gestureCallback: GestureCallback;
-	targetRef: React.RefObject<HTMLElement | null>;
+	containerRef: React.RefObject<HTMLElement | null>;
+	svgRef: React.RefObject<SVGSVGElement | null>;
 };
 
 export type PointerEventHandlers = {
@@ -120,7 +121,8 @@ export type PointerEventHandlers = {
 
 export const useGestureRecognizer = ({
 	gestureCallback,
-	targetRef,
+	containerRef,
+	svgRef,
 }: UseGestureRecognizerParams): PointerEventHandlers => {
 	// Refs for event feeding
 	const pressed = useRef<Pressed | null>(null);
@@ -130,9 +132,36 @@ export const useGestureRecognizer = ({
 	const lastMove = useRef<React.PointerEvent<HTMLElement> | null>(null);
 	const scheduled = useRef<boolean>(false);
 
+	/**
+	 * Convert client coordinates to SVG coordinates
+	 */
+	const getSvgPoint = useCallback(
+		(clientX: number, clientY: number): Point => {
+			const svg = svgRef.current;
+			if (!svg) {
+				// Fallback to client coordinates if SVG ref is not available
+				return { x: clientX, y: clientY };
+			}
+
+			const point = svg.createSVGPoint();
+			point.x = clientX;
+			point.y = clientY;
+
+			const ctm = svg.getScreenCTM();
+			if (!ctm) {
+				// Fallback to client coordinates if CTM is not available
+				return { x: clientX, y: clientY };
+			}
+
+			const svgPoint = point.matrixTransform(ctm.inverse());
+			return { x: svgPoint.x, y: svgPoint.y };
+		},
+		[svgRef],
+	);
+
 	const feed = useCallback(
 		(e: React.PointerEvent<HTMLElement>) => {
-			const currentPos = { x: e.clientX, y: e.clientY };
+			const currentPos = getSvgPoint(e.clientX, e.clientY);
 			const mods = {
 				shift: e.shiftKey,
 				alt: e.altKey,
@@ -147,8 +176,8 @@ export const useGestureRecognizer = ({
 			// pointerdown: 新しいジェスチャーを開始
 			if (e.type === "pointerdown") {
 				// ポインターキャプチャを設定
-				if (targetRef.current) {
-					targetRef.current.setPointerCapture(e.pointerId);
+				if (containerRef.current) {
+					containerRef.current.setPointerCapture(e.pointerId);
 				}
 
 				const hovered = getHoveredElements(e.clientX, e.clientY, targetId);
@@ -242,8 +271,8 @@ export const useGestureRecognizer = ({
 			// pointerup: ジェスチャー終了
 			if (e.type === "pointerup") {
 				// ポインターキャプチャを解放
-				if (targetRef.current) {
-					targetRef.current.releasePointerCapture(e.pointerId);
+				if (containerRef.current) {
+					containerRef.current.releasePointerCapture(e.pointerId);
 				}
 
 				const hovered = getHoveredElements(
@@ -272,8 +301,8 @@ export const useGestureRecognizer = ({
 			// pointercancel: ジェスチャーを中断
 			if (e.type === "pointercancel") {
 				// ポインターキャプチャを解放
-				if (targetRef.current) {
-					targetRef.current.releasePointerCapture(e.pointerId);
+				if (containerRef.current) {
+					containerRef.current.releasePointerCapture(e.pointerId);
 				}
 
 				const hovered = getHoveredElements(
@@ -300,7 +329,7 @@ export const useGestureRecognizer = ({
 				pressed.current = null;
 			}
 		},
-		[gestureCallback, targetRef],
+		[gestureCallback, getSvgPoint, containerRef],
 	);
 
 	const schedule = useCallback(() => {

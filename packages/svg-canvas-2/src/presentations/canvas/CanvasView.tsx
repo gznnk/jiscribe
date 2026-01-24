@@ -1,4 +1,5 @@
 import { memo } from "react";
+import type React from "react";
 
 import { Svg } from "./CanvasViewStyled";
 import { TransformControlsLayer } from "../../controllers/ui/controls/TransformControlsLayer";
@@ -9,18 +10,22 @@ import { GridPattern } from "../layers/background/GridPattern";
 import { ObjectsRenderer } from "../layers/content/ObjectsRenderer";
 import { DebugInfo } from "../layers/debug/DebugInfo";
 
-type CanvasViewProps = CanvasState;
+type CanvasViewProps = CanvasState & {
+	svgRef: React.RefObject<SVGSVGElement | null>;
+};
 
 const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 	objects,
 	rootIds,
 	selectedIds,
 	viewport,
+	svgRef,
 }) => {
 	const { minX, minY, width, height, zoom } = viewport;
 
 	return (
 		<Svg
+			ref={svgRef}
 			width={width}
 			height={height}
 			viewBox={`${minX / zoom} ${minY / zoom} ${width / zoom} ${height / zoom}`}
