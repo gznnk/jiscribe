@@ -1,12 +1,3 @@
-import {
-	calcAffineTransformedPoint,
-	calcFrameFeaturePoints,
-	calcInverseAffineTransformedPoint,
-	degreesToRadians,
-	isTransformedFrame,
-	nanToZero,
-} from "@workspace/geometry";
-
 import type {
 	CanvasGesture,
 	GestureHandler,
@@ -14,164 +5,60 @@ import type {
 import type { CanvasState } from "../../../states/canvas/CanvasState";
 
 /**
- * Handle drag start on control anchor.
- */
-const handleControlDragStart = (
-	state: CanvasState,
-	_gesture: CanvasGesture,
-	_anchorType: string,
-): CanvasState => {
-	// Just save the state for now
-	return state;
-};
-
-/**
- * Handle drag on control anchor.
- */
-const handleControlDrag = (
-	state: CanvasState,
-	gesture: CanvasGesture,
-	anchorType: string,
-): CanvasState => {
-	// Only handle bottomRight for now
-	if (anchorType !== "bottomRight") {
-		return state;
-	}
-
-	// Get the selected object (should be exactly one)
-	if (state.selectedIds.length !== 1) {
-		return state;
-	}
-
-	const selectedId = state.selectedIds[0];
-	const eventStartState = state.eventStartState;
-	if (!eventStartState) {
-		return state;
-	}
-	const startObject = eventStartState.objects[selectedId];
-	if (!startObject || !isTransformedFrame(startObject)) {
-		return state;
-	}
-
-	// Calculate the inverse transformed cursor position (in object's local space)
-	const radians = degreesToRadians(startObject.rotation);
-
-	// Current cursor position in world space
-	const cursorX = gesture.last.x;
-	const cursorY = gesture.last.y;
-
-	// Transform cursor to object's local space (rotation only, no scale)
-	const inversedCursor = calcInverseAffineTransformedPoint(
-		cursorX,
-		cursorY,
-		1,
-		1,
-		radians,
-		startObject.cx,
-		startObject.cy,
-	);
-
-	// Transform the fixed point (topLeft) to local space
-	const startFrameFeaturePoint = calcFrameFeaturePoints(startObject);
-
-	const inversedTopLeft = calcInverseAffineTransformedPoint(
-		startFrameFeaturePoint.topLeft.x,
-		startFrameFeaturePoint.topLeft.y,
-		1,
-		1,
-		radians,
-		startObject.cx,
-		startObject.cy,
-	);
-
-	// New dimensions from cursor position in local space
-	const newWidth = inversedCursor.x - inversedTopLeft.x;
-	const newHeight = inversedCursor.y - inversedTopLeft.y;
-
-	// Calculate new center in local space
-	const inversedCenterX = inversedTopLeft.x + nanToZero(newWidth / 2);
-	const inversedCenterY = inversedTopLeft.y + nanToZero(newHeight / 2);
-
-	// Transform new center back to world space
-	const newCenter = calcAffineTransformedPoint(
-		inversedCenterX,
-		inversedCenterY,
-		1,
-		1,
-		radians,
-		startObject.cx,
-		startObject.cy,
-	);
-
-	// Update the object with new dimensions and center
-	const updatedObject = {
-		...startObject,
-		width: Math.abs(newWidth),
-		height: Math.abs(newHeight),
-		cx: newCenter.x,
-		cy: newCenter.y,
-	};
-
-	// Create updated objects map from eventStartState
-	const updatedObjects = {
-		...eventStartState.objects,
-		[selectedId]: updatedObject,
-	};
-
-	return {
-		...state,
-		objects: updatedObjects,
-	};
-};
-
-/**
- * Handle drag end on control anchor.
- */
-const handleControlDragEnd = (
-	state: CanvasState,
-	gesture: CanvasGesture,
-	anchorType: string,
-): CanvasState => {
-	// Call drag handler one more time to finalize
-	return handleControlDrag(state, gesture, anchorType);
-};
-
-/**
- * Handles events that occur on transform control anchors.
- * This is the main entry point for control-level event handling.
+ * コントロールストラテジは、特定のコントロールタイプを処理する GestureHandler。
+ * 各ストラテジは自身が処理するコントロールタイプを controlType プロパティで公開する。
  *
- * Note: eventStartState is managed by handleGesture(), not here.
+ * 例: TransformControlHandler (controlType: "transform-control")
+ *     PathControlHandler (controlType: "path-control")
  */
-export const ControlEventHandler: GestureHandler = {
+export type ControlStrategy = GestureHandler & {
+	readonly controlType: string;
+};
+
+/**
+ * すべてのコントロールレベルイベントのメインハンドラー。
+ * コントロールストラテジを Map で管理し、Control ID から適切なストラテジにルーティングする。
+ *
+ * 使用例:
+ * ```typescript
+ * const handler = new ControlEventHandler([
+ *   transformControlHandler,
+ *   pathControlHandler,
+ * ]);
+ * ```
+ */
+export class ControlEventHandler implements GestureHandler {
+	private strategies = new Map<string, ControlStrategy>();
+
+	/**
+	 * 指定されたストラテジで新しい ControlEventHandler を作成する。
+	 *
+	 * @param strategies - 登録するコントロールストラテジハンドラーの配列
+	 *
+	 * 各ストラテジは以下を満たす必要がある:
+	 * 1. GestureHandler インターフェースを実装
+	 * 2. 自身を識別するための controlType プロパティを持つ
+	 */
+	constructor(strategies: ControlStrategy[]) {
+		// すべてのストラテジを登録
+		for (const strategy of strategies) {
+			this.strategies.set(strategy.controlType, strategy);
+		}
+	}
+
 	supports(gesture: CanvasGesture): boolean {
 		return gesture.targetKind === "control";
-	},
+	}
 
 	handle(state: CanvasState, gesture: CanvasGesture): CanvasState {
-		const targetControlId = gesture.targetId;
-		if (!targetControlId) {
-			return state;
+		// 各ストラテジを試して、最初に supports() が true を返したものを使用
+		for (const strategy of this.strategies.values()) {
+			if (strategy.supports(gesture)) {
+				return strategy.handle(state, gesture);
+			}
 		}
 
-		// Parse control ID format: "transform-control:anchorType"
-		const parts = targetControlId.split(":");
-		if (parts.length !== 2 || parts[0] !== "transform-control") {
-			return state;
-		}
-
-		const anchorType = parts[1];
-
-		let nextState = state;
-
-		// Handle drag events on control anchors
-		if (gesture.type === "dragStart") {
-			nextState = handleControlDragStart(nextState, gesture, anchorType);
-		} else if (gesture.type === "drag") {
-			nextState = handleControlDrag(nextState, gesture, anchorType);
-		} else if (gesture.type === "dragEnd") {
-			nextState = handleControlDragEnd(nextState, gesture, anchorType);
-		}
-
-		return nextState;
-	},
-};
+		// どのストラテジも対応しない場合は状態をそのまま返す
+		return state;
+	}
+}
