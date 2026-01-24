@@ -18,8 +18,15 @@ export type TransformState = Transform & {
  * @returns True if the object is TransformState, false otherwise
  */
 export const isTransformState = (obj: unknown): obj is TransformState => {
-	return (
-		isTransform(obj) &&
-		(!("lockAspectRatio" in obj) || isBoolean(obj.lockAspectRatio))
-	);
+	if (!isTransform(obj)) {
+		return false;
+	}
+	if (
+		"lockAspectRatio" in obj &&
+		obj.lockAspectRatio !== undefined &&
+		!isBoolean(obj.lockAspectRatio)
+	) {
+		return false;
+	}
+	return true;
 };
