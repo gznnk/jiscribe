@@ -100,29 +100,217 @@ export class TransformControlHandler implements ControlStrategy {
 		gesture: CanvasGesture,
 		anchorType: TransformAnchorType,
 	): CanvasState {
-		// アンカー固有のハンドラーにルーティング
+		// 回転は別処理
+		if (anchorType === "rotation") {
+			return this.handleRotationDrag(state, gesture);
+		}
+
+		// リサイズ処理の共通前処理
+		// 選択されているオブジェクトを取得（正確に1つであるべき）
+		if (state.selectedIds.length !== 1) {
+			return state;
+		}
+
+		const selectedId = state.selectedIds[0];
+		const eventStartState = state.eventStartState;
+		if (!eventStartState) {
+			return state;
+		}
+		const startObject = eventStartState.objects[selectedId];
+		if (!startObject || !isTransformedFrame(startObject)) {
+			return state;
+		}
+
+		// 逆アフィン変換されたカーソル位置を計算（オブジェクトのローカル空間内）
+		const radians = degreesToRadians(startObject.rotation);
+
+		// ワールド空間でのカーソル位置
+		const cursorX = gesture.last.x;
+		const cursorY = gesture.last.y;
+
+		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
+		const inversedCursor = calcInverseAffineTransformedPoint(
+			cursorX,
+			cursorY,
+			1,
+			1,
+			radians,
+			startObject.cx,
+			startObject.cy,
+		);
+
+		// 固定点をローカル空間に変換
+		const startFrameFeaturePoint = calcFrameFeaturePoints(startObject);
+
+		// アンカー固有のリサイズ処理にルーティング
+		let newWidth: number;
+		let newHeight: number;
+		let inversedCenterX: number;
+		let inversedCenterY: number;
+
 		switch (anchorType) {
-			case "bottomRight":
-				return this.handleBottomRightDrag(state, gesture);
-			case "topLeft":
-				return this.handleTopLeftDrag(state, gesture);
-			case "topRight":
-				return this.handleTopRightDrag(state, gesture);
-			case "bottomLeft":
-				return this.handleBottomLeftDrag(state, gesture);
-			case "topCenter":
-				return this.handleTopCenterDrag(state, gesture);
-			case "rightCenter":
-				return this.handleRightCenterDrag(state, gesture);
-			case "bottomCenter":
-				return this.handleBottomCenterDrag(state, gesture);
-			case "leftCenter":
-				return this.handleLeftCenterDrag(state, gesture);
-			case "rotation":
-				return this.handleRotationDrag(state, gesture);
+			case "bottomRight": {
+				const inversedTopLeft = calcInverseAffineTransformedPoint(
+					startFrameFeaturePoint.topLeft.x,
+					startFrameFeaturePoint.topLeft.y,
+					1,
+					1,
+					radians,
+					startObject.cx,
+					startObject.cy,
+				);
+				newWidth = inversedCursor.x - inversedTopLeft.x;
+				newHeight = inversedCursor.y - inversedTopLeft.y;
+				inversedCenterX = inversedTopLeft.x + nanToZero(newWidth / 2);
+				inversedCenterY = inversedTopLeft.y + nanToZero(newHeight / 2);
+				break;
+			}
+			case "topLeft": {
+				const inversedBottomRight = calcInverseAffineTransformedPoint(
+					startFrameFeaturePoint.bottomRight.x,
+					startFrameFeaturePoint.bottomRight.y,
+					1,
+					1,
+					radians,
+					startObject.cx,
+					startObject.cy,
+				);
+				newWidth = inversedBottomRight.x - inversedCursor.x;
+				newHeight = inversedBottomRight.y - inversedCursor.y;
+				inversedCenterX = inversedBottomRight.x - nanToZero(newWidth / 2);
+				inversedCenterY = inversedBottomRight.y - nanToZero(newHeight / 2);
+				break;
+			}
+			case "topRight": {
+				const inversedBottomLeft = calcInverseAffineTransformedPoint(
+					startFrameFeaturePoint.bottomLeft.x,
+					startFrameFeaturePoint.bottomLeft.y,
+					1,
+					1,
+					radians,
+					startObject.cx,
+					startObject.cy,
+				);
+				newWidth = inversedCursor.x - inversedBottomLeft.x;
+				newHeight = inversedBottomLeft.y - inversedCursor.y;
+				inversedCenterX = inversedBottomLeft.x + nanToZero(newWidth / 2);
+				inversedCenterY = inversedBottomLeft.y - nanToZero(newHeight / 2);
+				break;
+			}
+			case "bottomLeft": {
+				const inversedTopRight = calcInverseAffineTransformedPoint(
+					startFrameFeaturePoint.topRight.x,
+					startFrameFeaturePoint.topRight.y,
+					1,
+					1,
+					radians,
+					startObject.cx,
+					startObject.cy,
+				);
+				newWidth = inversedTopRight.x - inversedCursor.x;
+				newHeight = inversedCursor.y - inversedTopRight.y;
+				inversedCenterX = inversedTopRight.x - nanToZero(newWidth / 2);
+				inversedCenterY = inversedTopRight.y + nanToZero(newHeight / 2);
+				break;
+			}
+			case "topCenter": {
+				const inversedBottomCenter = calcInverseAffineTransformedPoint(
+					startFrameFeaturePoint.bottomCenter.x,
+					startFrameFeaturePoint.bottomCenter.y,
+					1,
+					1,
+					radians,
+					startObject.cx,
+					startObject.cy,
+				);
+				newWidth = startObject.width;
+				newHeight = inversedBottomCenter.y - inversedCursor.y;
+				inversedCenterX = inversedBottomCenter.x;
+				inversedCenterY = inversedBottomCenter.y - nanToZero(newHeight / 2);
+				break;
+			}
+			case "rightCenter": {
+				const inversedLeftCenter = calcInverseAffineTransformedPoint(
+					startFrameFeaturePoint.leftCenter.x,
+					startFrameFeaturePoint.leftCenter.y,
+					1,
+					1,
+					radians,
+					startObject.cx,
+					startObject.cy,
+				);
+				newWidth = inversedCursor.x - inversedLeftCenter.x;
+				newHeight = startObject.height;
+				inversedCenterX = inversedLeftCenter.x + nanToZero(newWidth / 2);
+				inversedCenterY = inversedLeftCenter.y;
+				break;
+			}
+			case "bottomCenter": {
+				const inversedTopCenter = calcInverseAffineTransformedPoint(
+					startFrameFeaturePoint.topCenter.x,
+					startFrameFeaturePoint.topCenter.y,
+					1,
+					1,
+					radians,
+					startObject.cx,
+					startObject.cy,
+				);
+				newWidth = startObject.width;
+				newHeight = inversedCursor.y - inversedTopCenter.y;
+				inversedCenterX = inversedTopCenter.x;
+				inversedCenterY = inversedTopCenter.y + nanToZero(newHeight / 2);
+				break;
+			}
+			case "leftCenter": {
+				const inversedRightCenter = calcInverseAffineTransformedPoint(
+					startFrameFeaturePoint.rightCenter.x,
+					startFrameFeaturePoint.rightCenter.y,
+					1,
+					1,
+					radians,
+					startObject.cx,
+					startObject.cy,
+				);
+				newWidth = inversedRightCenter.x - inversedCursor.x;
+				newHeight = startObject.height;
+				inversedCenterX = inversedRightCenter.x - nanToZero(newWidth / 2);
+				inversedCenterY = inversedRightCenter.y;
+				break;
+			}
 			default:
 				return state;
 		}
+
+		// 新しい中心をワールド空間に変換
+		const newCenter = calcAffineTransformedPoint(
+			inversedCenterX,
+			inversedCenterY,
+			1,
+			1,
+			radians,
+			startObject.cx,
+			startObject.cy,
+		);
+
+		// 新しい寸法と中心でオブジェクトを更新
+		const updatedObject = {
+			...startObject,
+			width: Math.abs(newWidth),
+			height: Math.abs(newHeight),
+			cx: newCenter.x,
+			cy: newCenter.y,
+		};
+
+		// eventStartState から更新されたオブジェクトマップを作成
+		const updatedObjects = {
+			...eventStartState.objects,
+			[selectedId]: updatedObject,
+		};
+
+		return {
+			...state,
+			objects: updatedObjects,
+		};
 	}
 
 	/**
@@ -135,762 +323,6 @@ export class TransformControlHandler implements ControlStrategy {
 	): CanvasState {
 		// ドラッグハンドラーをもう一度呼び出して確定
 		return this.handleDrag(state, gesture, anchorType);
-	}
-
-	/**
-	 * bottomRight アンカーのドラッグを処理（右下コーナーからのリサイズ）。
-	 * これは現在実装されているアンカー。
-	 */
-	private handleBottomRightDrag(
-		state: CanvasState,
-		gesture: CanvasGesture,
-	): CanvasState {
-		// 選択されているオブジェクトを取得（正確に1つであるべき）
-		if (state.selectedIds.length !== 1) {
-			return state;
-		}
-
-		const selectedId = state.selectedIds[0];
-		const eventStartState = state.eventStartState;
-		if (!eventStartState) {
-			return state;
-		}
-		const startObject = eventStartState.objects[selectedId];
-		if (!startObject || !isTransformedFrame(startObject)) {
-			return state;
-		}
-
-		// 逆アフィン変換されたカーソル位置を計算（オブジェクトのローカル空間内）
-		const radians = degreesToRadians(startObject.rotation);
-
-		// ワールド空間でのカーソル位置
-		const cursorX = gesture.last.x;
-		const cursorY = gesture.last.y;
-
-		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
-		const inversedCursor = calcInverseAffineTransformedPoint(
-			cursorX,
-			cursorY,
-			1,
-			1,
-			radians,
-			startObject.cx,
-			startObject.cy,
-		);
-
-		// 固定点（topLeft）をローカル空間に変換
-		const startFrameFeaturePoint = calcFrameFeaturePoints(startObject);
-
-		const inversedTopLeft = calcInverseAffineTransformedPoint(
-			startFrameFeaturePoint.topLeft.x,
-			startFrameFeaturePoint.topLeft.y,
-			1,
-			1,
-			radians,
-			startObject.cx,
-			startObject.cy,
-		);
-
-		// ローカル空間でのカーソル位置から新しい寸法を計算
-		const newWidth = inversedCursor.x - inversedTopLeft.x;
-		const newHeight = inversedCursor.y - inversedTopLeft.y;
-
-		// ローカル空間での新しい中心を計算
-		const inversedCenterX = inversedTopLeft.x + nanToZero(newWidth / 2);
-		const inversedCenterY = inversedTopLeft.y + nanToZero(newHeight / 2);
-
-		// 新しい中心をワールド空間に変換
-		const newCenter = calcAffineTransformedPoint(
-			inversedCenterX,
-			inversedCenterY,
-			1,
-			1,
-			radians,
-			startObject.cx,
-			startObject.cy,
-		);
-
-		// 新しい寸法と中心でオブジェクトを更新
-		const updatedObject = {
-			...startObject,
-			width: Math.abs(newWidth),
-			height: Math.abs(newHeight),
-			cx: newCenter.x,
-			cy: newCenter.y,
-		};
-
-		// eventStartState から更新されたオブジェクトマップを作成
-		const updatedObjects = {
-			...eventStartState.objects,
-			[selectedId]: updatedObject,
-		};
-
-		return {
-			...state,
-			objects: updatedObjects,
-		};
-	}
-
-	/**
-	 * topLeft アンカーのドラッグを処理（左上コーナーからのリサイズ）。
-	 * 固定点は bottomRight。
-	 */
-	private handleTopLeftDrag(
-		state: CanvasState,
-		gesture: CanvasGesture,
-	): CanvasState {
-		// 選択されているオブジェクトを取得（正確に1つであるべき）
-		if (state.selectedIds.length !== 1) {
-			return state;
-		}
-
-		const selectedId = state.selectedIds[0];
-		const eventStartState = state.eventStartState;
-		if (!eventStartState) {
-			return state;
-		}
-		const startObject = eventStartState.objects[selectedId];
-		if (!startObject || !isTransformedFrame(startObject)) {
-			return state;
-		}
-
-		// 逆アフィン変換されたカーソル位置を計算（オブジェクトのローカル空間内）
-		const radians = degreesToRadians(startObject.rotation);
-
-		// ワールド空間でのカーソル位置
-		const cursorX = gesture.last.x;
-		const cursorY = gesture.last.y;
-
-		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
-		const inversedCursor = calcInverseAffineTransformedPoint(
-			cursorX,
-			cursorY,
-			1,
-			1,
-			radians,
-			startObject.cx,
-			startObject.cy,
-		);
-
-		// 固定点（bottomRight）をローカル空間に変換
-		const startFrameFeaturePoint = calcFrameFeaturePoints(startObject);
-
-		const inversedBottomRight = calcInverseAffineTransformedPoint(
-			startFrameFeaturePoint.bottomRight.x,
-			startFrameFeaturePoint.bottomRight.y,
-			1,
-			1,
-			radians,
-			startObject.cx,
-			startObject.cy,
-		);
-
-		// ローカル空間でのカーソル位置から新しい寸法を計算
-		const newWidth = inversedBottomRight.x - inversedCursor.x;
-		const newHeight = inversedBottomRight.y - inversedCursor.y;
-
-		// ローカル空間での新しい中心を計算
-		const inversedCenterX = inversedBottomRight.x - nanToZero(newWidth / 2);
-		const inversedCenterY = inversedBottomRight.y - nanToZero(newHeight / 2);
-
-		// 新しい中心をワールド空間に変換
-		const newCenter = calcAffineTransformedPoint(
-			inversedCenterX,
-			inversedCenterY,
-			1,
-			1,
-			radians,
-			startObject.cx,
-			startObject.cy,
-		);
-
-		// 新しい寸法と中心でオブジェクトを更新
-		const updatedObject = {
-			...startObject,
-			width: Math.abs(newWidth),
-			height: Math.abs(newHeight),
-			cx: newCenter.x,
-			cy: newCenter.y,
-		};
-
-		// eventStartState から更新されたオブジェクトマップを作成
-		const updatedObjects = {
-			...eventStartState.objects,
-			[selectedId]: updatedObject,
-		};
-
-		return {
-			...state,
-			objects: updatedObjects,
-		};
-	}
-
-	/**
-	 * topRight アンカーのドラッグを処理（右上コーナーからのリサイズ）。
-	 * 固定点は bottomLeft。
-	 */
-	private handleTopRightDrag(
-		state: CanvasState,
-		gesture: CanvasGesture,
-	): CanvasState {
-		// 選択されているオブジェクトを取得（正確に1つであるべき）
-		if (state.selectedIds.length !== 1) {
-			return state;
-		}
-
-		const selectedId = state.selectedIds[0];
-		const eventStartState = state.eventStartState;
-		if (!eventStartState) {
-			return state;
-		}
-		const startObject = eventStartState.objects[selectedId];
-		if (!startObject || !isTransformedFrame(startObject)) {
-			return state;
-		}
-
-		// 逆アフィン変換されたカーソル位置を計算（オブジェクトのローカル空間内）
-		const radians = degreesToRadians(startObject.rotation);
-
-		// ワールド空間でのカーソル位置
-		const cursorX = gesture.last.x;
-		const cursorY = gesture.last.y;
-
-		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
-		const inversedCursor = calcInverseAffineTransformedPoint(
-			cursorX,
-			cursorY,
-			1,
-			1,
-			radians,
-			startObject.cx,
-			startObject.cy,
-		);
-
-		// 固定点（bottomLeft）をローカル空間に変換
-		const startFrameFeaturePoint = calcFrameFeaturePoints(startObject);
-
-		const inversedBottomLeft = calcInverseAffineTransformedPoint(
-			startFrameFeaturePoint.bottomLeft.x,
-			startFrameFeaturePoint.bottomLeft.y,
-			1,
-			1,
-			radians,
-			startObject.cx,
-			startObject.cy,
-		);
-
-		// ローカル空間でのカーソル位置から新しい寸法を計算
-		const newWidth = inversedCursor.x - inversedBottomLeft.x;
-		const newHeight = inversedBottomLeft.y - inversedCursor.y;
-
-		// ローカル空間での新しい中心を計算
-		const inversedCenterX = inversedBottomLeft.x + nanToZero(newWidth / 2);
-		const inversedCenterY = inversedBottomLeft.y - nanToZero(newHeight / 2);
-
-		// 新しい中心をワールド空間に変換
-		const newCenter = calcAffineTransformedPoint(
-			inversedCenterX,
-			inversedCenterY,
-			1,
-			1,
-			radians,
-			startObject.cx,
-			startObject.cy,
-		);
-
-		// 新しい寸法と中心でオブジェクトを更新
-		const updatedObject = {
-			...startObject,
-			width: Math.abs(newWidth),
-			height: Math.abs(newHeight),
-			cx: newCenter.x,
-			cy: newCenter.y,
-		};
-
-		// eventStartState から更新されたオブジェクトマップを作成
-		const updatedObjects = {
-			...eventStartState.objects,
-			[selectedId]: updatedObject,
-		};
-
-		return {
-			...state,
-			objects: updatedObjects,
-		};
-	}
-
-	/**
-	 * bottomLeft アンカーのドラッグを処理（左下コーナーからのリサイズ）。
-	 * 固定点は topRight。
-	 */
-	private handleBottomLeftDrag(
-		state: CanvasState,
-		gesture: CanvasGesture,
-	): CanvasState {
-		// 選択されているオブジェクトを取得（正確に1つであるべき）
-		if (state.selectedIds.length !== 1) {
-			return state;
-		}
-
-		const selectedId = state.selectedIds[0];
-		const eventStartState = state.eventStartState;
-		if (!eventStartState) {
-			return state;
-		}
-		const startObject = eventStartState.objects[selectedId];
-		if (!startObject || !isTransformedFrame(startObject)) {
-			return state;
-		}
-
-		// 逆アフィン変換されたカーソル位置を計算（オブジェクトのローカル空間内）
-		const radians = degreesToRadians(startObject.rotation);
-
-		// ワールド空間でのカーソル位置
-		const cursorX = gesture.last.x;
-		const cursorY = gesture.last.y;
-
-		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
-		const inversedCursor = calcInverseAffineTransformedPoint(
-			cursorX,
-			cursorY,
-			1,
-			1,
-			radians,
-			startObject.cx,
-			startObject.cy,
-		);
-
-		// 固定点（topRight）をローカル空間に変換
-		const startFrameFeaturePoint = calcFrameFeaturePoints(startObject);
-
-		const inversedTopRight = calcInverseAffineTransformedPoint(
-			startFrameFeaturePoint.topRight.x,
-			startFrameFeaturePoint.topRight.y,
-			1,
-			1,
-			radians,
-			startObject.cx,
-			startObject.cy,
-		);
-
-		// ローカル空間でのカーソル位置から新しい寸法を計算
-		const newWidth = inversedTopRight.x - inversedCursor.x;
-		const newHeight = inversedCursor.y - inversedTopRight.y;
-
-		// ローカル空間での新しい中心を計算
-		const inversedCenterX = inversedTopRight.x - nanToZero(newWidth / 2);
-		const inversedCenterY = inversedTopRight.y + nanToZero(newHeight / 2);
-
-		// 新しい中心をワールド空間に変換
-		const newCenter = calcAffineTransformedPoint(
-			inversedCenterX,
-			inversedCenterY,
-			1,
-			1,
-			radians,
-			startObject.cx,
-			startObject.cy,
-		);
-
-		// 新しい寸法と中心でオブジェクトを更新
-		const updatedObject = {
-			...startObject,
-			width: Math.abs(newWidth),
-			height: Math.abs(newHeight),
-			cx: newCenter.x,
-			cy: newCenter.y,
-		};
-
-		// eventStartState から更新されたオブジェクトマップを作成
-		const updatedObjects = {
-			...eventStartState.objects,
-			[selectedId]: updatedObject,
-		};
-
-		return {
-			...state,
-			objects: updatedObjects,
-		};
-	}
-
-	/**
-	 * topCenter アンカーのドラッグを処理（上辺の中央からのリサイズ）。
-	 * 固定点は bottomCenter。高さのみ変更し、幅は保持。
-	 */
-	private handleTopCenterDrag(
-		state: CanvasState,
-		gesture: CanvasGesture,
-	): CanvasState {
-		// 選択されているオブジェクトを取得（正確に1つであるべき）
-		if (state.selectedIds.length !== 1) {
-			return state;
-		}
-
-		const selectedId = state.selectedIds[0];
-		const eventStartState = state.eventStartState;
-		if (!eventStartState) {
-			return state;
-		}
-		const startObject = eventStartState.objects[selectedId];
-		if (!startObject || !isTransformedFrame(startObject)) {
-			return state;
-		}
-
-		// 逆アフィン変換されたカーソル位置を計算（オブジェクトのローカル空間内）
-		const radians = degreesToRadians(startObject.rotation);
-
-		// ワールド空間でのカーソル位置
-		const cursorX = gesture.last.x;
-		const cursorY = gesture.last.y;
-
-		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
-		const inversedCursor = calcInverseAffineTransformedPoint(
-			cursorX,
-			cursorY,
-			1,
-			1,
-			radians,
-			startObject.cx,
-			startObject.cy,
-		);
-
-		// 固定点（bottomCenter）をローカル空間に変換
-		const startFrameFeaturePoint = calcFrameFeaturePoints(startObject);
-
-		const inversedBottomCenter = calcInverseAffineTransformedPoint(
-			startFrameFeaturePoint.bottomCenter.x,
-			startFrameFeaturePoint.bottomCenter.y,
-			1,
-			1,
-			radians,
-			startObject.cx,
-			startObject.cy,
-		);
-
-		// ローカル空間でのカーソル位置から新しい寸法を計算
-		// 幅は変更しない
-		const newWidth = startObject.width;
-		const newHeight = inversedBottomCenter.y - inversedCursor.y;
-
-		// ローカル空間での新しい中心を計算
-		const inversedCenterX = inversedBottomCenter.x;
-		const inversedCenterY = inversedBottomCenter.y - nanToZero(newHeight / 2);
-
-		// 新しい中心をワールド空間に変換
-		const newCenter = calcAffineTransformedPoint(
-			inversedCenterX,
-			inversedCenterY,
-			1,
-			1,
-			radians,
-			startObject.cx,
-			startObject.cy,
-		);
-
-		// 新しい寸法と中心でオブジェクトを更新
-		const updatedObject = {
-			...startObject,
-			width: Math.abs(newWidth),
-			height: Math.abs(newHeight),
-			cx: newCenter.x,
-			cy: newCenter.y,
-		};
-
-		// eventStartState から更新されたオブジェクトマップを作成
-		const updatedObjects = {
-			...eventStartState.objects,
-			[selectedId]: updatedObject,
-		};
-
-		return {
-			...state,
-			objects: updatedObjects,
-		};
-	}
-
-	/**
-	 * rightCenter アンカーのドラッグを処理（右辺の中央からのリサイズ）。
-	 * 固定点は leftCenter。幅のみ変更し、高さは保持。
-	 */
-	private handleRightCenterDrag(
-		state: CanvasState,
-		gesture: CanvasGesture,
-	): CanvasState {
-		// 選択されているオブジェクトを取得（正確に1つであるべき）
-		if (state.selectedIds.length !== 1) {
-			return state;
-		}
-
-		const selectedId = state.selectedIds[0];
-		const eventStartState = state.eventStartState;
-		if (!eventStartState) {
-			return state;
-		}
-		const startObject = eventStartState.objects[selectedId];
-		if (!startObject || !isTransformedFrame(startObject)) {
-			return state;
-		}
-
-		// 逆アフィン変換されたカーソル位置を計算（オブジェクトのローカル空間内）
-		const radians = degreesToRadians(startObject.rotation);
-
-		// ワールド空間でのカーソル位置
-		const cursorX = gesture.last.x;
-		const cursorY = gesture.last.y;
-
-		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
-		const inversedCursor = calcInverseAffineTransformedPoint(
-			cursorX,
-			cursorY,
-			1,
-			1,
-			radians,
-			startObject.cx,
-			startObject.cy,
-		);
-
-		// 固定点（leftCenter）をローカル空間に変換
-		const startFrameFeaturePoint = calcFrameFeaturePoints(startObject);
-
-		const inversedLeftCenter = calcInverseAffineTransformedPoint(
-			startFrameFeaturePoint.leftCenter.x,
-			startFrameFeaturePoint.leftCenter.y,
-			1,
-			1,
-			radians,
-			startObject.cx,
-			startObject.cy,
-		);
-
-		// ローカル空間でのカーソル位置から新しい寸法を計算
-		// 高さは変更しない
-		const newWidth = inversedCursor.x - inversedLeftCenter.x;
-		const newHeight = startObject.height;
-
-		// ローカル空間での新しい中心を計算
-		const inversedCenterX = inversedLeftCenter.x + nanToZero(newWidth / 2);
-		const inversedCenterY = inversedLeftCenter.y;
-
-		// 新しい中心をワールド空間に変換
-		const newCenter = calcAffineTransformedPoint(
-			inversedCenterX,
-			inversedCenterY,
-			1,
-			1,
-			radians,
-			startObject.cx,
-			startObject.cy,
-		);
-
-		// 新しい寸法と中心でオブジェクトを更新
-		const updatedObject = {
-			...startObject,
-			width: Math.abs(newWidth),
-			height: Math.abs(newHeight),
-			cx: newCenter.x,
-			cy: newCenter.y,
-		};
-
-		// eventStartState から更新されたオブジェクトマップを作成
-		const updatedObjects = {
-			...eventStartState.objects,
-			[selectedId]: updatedObject,
-		};
-
-		return {
-			...state,
-			objects: updatedObjects,
-		};
-	}
-
-	/**
-	 * bottomCenter アンカーのドラッグを処理（下辺の中央からのリサイズ）。
-	 * 固定点は topCenter。高さのみ変更し、幅は保持。
-	 */
-	private handleBottomCenterDrag(
-		state: CanvasState,
-		gesture: CanvasGesture,
-	): CanvasState {
-		// 選択されているオブジェクトを取得（正確に1つであるべき）
-		if (state.selectedIds.length !== 1) {
-			return state;
-		}
-
-		const selectedId = state.selectedIds[0];
-		const eventStartState = state.eventStartState;
-		if (!eventStartState) {
-			return state;
-		}
-		const startObject = eventStartState.objects[selectedId];
-		if (!startObject || !isTransformedFrame(startObject)) {
-			return state;
-		}
-
-		// 逆アフィン変換されたカーソル位置を計算（オブジェクトのローカル空間内）
-		const radians = degreesToRadians(startObject.rotation);
-
-		// ワールド空間でのカーソル位置
-		const cursorX = gesture.last.x;
-		const cursorY = gesture.last.y;
-
-		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
-		const inversedCursor = calcInverseAffineTransformedPoint(
-			cursorX,
-			cursorY,
-			1,
-			1,
-			radians,
-			startObject.cx,
-			startObject.cy,
-		);
-
-		// 固定点（topCenter）をローカル空間に変換
-		const startFrameFeaturePoint = calcFrameFeaturePoints(startObject);
-
-		const inversedTopCenter = calcInverseAffineTransformedPoint(
-			startFrameFeaturePoint.topCenter.x,
-			startFrameFeaturePoint.topCenter.y,
-			1,
-			1,
-			radians,
-			startObject.cx,
-			startObject.cy,
-		);
-
-		// ローカル空間でのカーソル位置から新しい寸法を計算
-		// 幅は変更しない
-		const newWidth = startObject.width;
-		const newHeight = inversedCursor.y - inversedTopCenter.y;
-
-		// ローカル空間での新しい中心を計算
-		const inversedCenterX = inversedTopCenter.x;
-		const inversedCenterY = inversedTopCenter.y + nanToZero(newHeight / 2);
-
-		// 新しい中心をワールド空間に変換
-		const newCenter = calcAffineTransformedPoint(
-			inversedCenterX,
-			inversedCenterY,
-			1,
-			1,
-			radians,
-			startObject.cx,
-			startObject.cy,
-		);
-
-		// 新しい寸法と中心でオブジェクトを更新
-		const updatedObject = {
-			...startObject,
-			width: Math.abs(newWidth),
-			height: Math.abs(newHeight),
-			cx: newCenter.x,
-			cy: newCenter.y,
-		};
-
-		// eventStartState から更新されたオブジェクトマップを作成
-		const updatedObjects = {
-			...eventStartState.objects,
-			[selectedId]: updatedObject,
-		};
-
-		return {
-			...state,
-			objects: updatedObjects,
-		};
-	}
-
-	/**
-	 * leftCenter アンカーのドラッグを処理（左辺の中央からのリサイズ）。
-	 * 固定点は rightCenter。幅のみ変更し、高さは保持。
-	 */
-	private handleLeftCenterDrag(
-		state: CanvasState,
-		gesture: CanvasGesture,
-	): CanvasState {
-		// 選択されているオブジェクトを取得（正確に1つであるべき）
-		if (state.selectedIds.length !== 1) {
-			return state;
-		}
-
-		const selectedId = state.selectedIds[0];
-		const eventStartState = state.eventStartState;
-		if (!eventStartState) {
-			return state;
-		}
-		const startObject = eventStartState.objects[selectedId];
-		if (!startObject || !isTransformedFrame(startObject)) {
-			return state;
-		}
-
-		// 逆アフィン変換されたカーソル位置を計算（オブジェクトのローカル空間内）
-		const radians = degreesToRadians(startObject.rotation);
-
-		// ワールド空間でのカーソル位置
-		const cursorX = gesture.last.x;
-		const cursorY = gesture.last.y;
-
-		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
-		const inversedCursor = calcInverseAffineTransformedPoint(
-			cursorX,
-			cursorY,
-			1,
-			1,
-			radians,
-			startObject.cx,
-			startObject.cy,
-		);
-
-		// 固定点（rightCenter）をローカル空間に変換
-		const startFrameFeaturePoint = calcFrameFeaturePoints(startObject);
-
-		const inversedRightCenter = calcInverseAffineTransformedPoint(
-			startFrameFeaturePoint.rightCenter.x,
-			startFrameFeaturePoint.rightCenter.y,
-			1,
-			1,
-			radians,
-			startObject.cx,
-			startObject.cy,
-		);
-
-		// ローカル空間でのカーソル位置から新しい寸法を計算
-		// 高さは変更しない
-		const newWidth = inversedRightCenter.x - inversedCursor.x;
-		const newHeight = startObject.height;
-
-		// ローカル空間での新しい中心を計算
-		const inversedCenterX = inversedRightCenter.x - nanToZero(newWidth / 2);
-		const inversedCenterY = inversedRightCenter.y;
-
-		// 新しい中心をワールド空間に変換
-		const newCenter = calcAffineTransformedPoint(
-			inversedCenterX,
-			inversedCenterY,
-			1,
-			1,
-			radians,
-			startObject.cx,
-			startObject.cy,
-		);
-
-		// 新しい寸法と中心でオブジェクトを更新
-		const updatedObject = {
-			...startObject,
-			width: Math.abs(newWidth),
-			height: Math.abs(newHeight),
-			cx: newCenter.x,
-			cy: newCenter.y,
-		};
-
-		// eventStartState から更新されたオブジェクトマップを作成
-		const updatedObjects = {
-			...eventStartState.objects,
-			[selectedId]: updatedObject,
-		};
-
-		return {
-			...state,
-			objects: updatedObjects,
-		};
 	}
 
 	/**
