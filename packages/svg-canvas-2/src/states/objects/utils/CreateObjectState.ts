@@ -1,4 +1,4 @@
-import type { Frame, Transform } from "@workspace/geometry";
+import type { Frame } from "@workspace/geometry";
 import type { Brand, Prettify } from "@workspace/utility-types";
 
 import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
@@ -6,6 +6,7 @@ import type { Poly } from "../../../schemas/objects/types/Poly";
 import type { FillStyleState } from "../base/FillStyleState";
 import type { ObjectState } from "../base/ObjectState";
 import type { StrokeStyleState } from "../base/StrokeStyleState";
+import type { TransformState } from "../base/TransformState";
 
 /**
  * Conditional geometry type based on specified geometry feature (runtime state).
@@ -32,7 +33,7 @@ type GeometryState<T extends ObjectFeatures> = //
  *
  * Key differences from CreateObjectType (Doc):
  * - Uses Frame instead of Rect/Ellipse (runtime representation)
- * - Uses Transform instead of TransformDoc (pre-computed transform)
+ * - Uses TransformState instead of TransformDoc (pre-computed transform with UI properties)
  * - Includes Brand to prevent direct assignment from/to Doc types
  *
  * @template T - ObjectFeatures configuration (shared with Doc)
@@ -62,7 +63,7 @@ export type CreateObjectState<
 	P = object,
 > = Prettify<
 	ObjectState & { type: T["type"] } & GeometryState<T> &
-		(T["transform"] extends true ? Transform : object) &
+		(T["transform"] extends true ? TransformState : object) &
 		(T["stroke"] extends true ? StrokeStyleState : object) &
 		(T["fill"] extends true ? FillStyleState : object) &
 		Brand<S> &

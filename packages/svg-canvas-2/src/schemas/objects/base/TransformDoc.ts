@@ -9,4 +9,6 @@ export type TransformDoc = {
 	flipX?: boolean;
 	/** Vertical flip. Default: false */
 	flipY?: boolean;
+	/** Lock aspect ratio during resize. Default: false */
+	lockAspectRatio?: boolean;
 };

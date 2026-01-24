@@ -17,6 +17,7 @@ const testCanvasDoc: CanvasDoc = {
 			width: 200,
 			height: 100,
 			rotation: 45,
+			lockAspectRatio: true,
 			fill: "#4CAF50",
 			stroke: "#2E7D32",
 			strokeWidth: 2,
