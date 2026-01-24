@@ -71,6 +71,7 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 			zoom: 1,
 		},
 		lastCommitTime: 0,
+		contextMenuPosition: null,
 	};
 };
 

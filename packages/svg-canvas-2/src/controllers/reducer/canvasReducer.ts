@@ -8,7 +8,11 @@ import { handleGesture } from "../gestures/handleGesture";
 export type CanvasAction =
 	| { type: "GESTURE"; gesture: Gesture }
 	| { type: "CONTAINER_RESIZE"; dimensions: Dimensions }
-	| { type: "SYNC_EXTERNAL"; payload: CanvasState };
+	| { type: "SYNC_EXTERNAL"; payload: CanvasState }
+	| {
+			type: "CONTEXT_MENU";
+			payload: { clientX: number; clientY: number } | null;
+	  };
 
 export const canvasReducer = (
 	state: CanvasState,
@@ -38,6 +42,12 @@ export const canvasReducer = (
 				connectorIds: action.payload.connectorIds,
 			};
 		}
+
+		case "CONTEXT_MENU":
+			return {
+				...state,
+				contextMenuPosition: action.payload,
+			};
 
 		default:
 			return state;

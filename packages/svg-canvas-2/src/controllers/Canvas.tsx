@@ -48,6 +48,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 			hoveredIds: [],
 			eventStartState: null,
 			lastCommitTime: 0,
+			contextMenuPosition: null,
 		};
 	}, [canvasDoc]);
 
@@ -90,11 +91,24 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 	);
 	useContainerSize(canvasRef, handleResize);
 
+	// Context menu handling
+	const handleContextMenu = useCallback(
+		(e: React.MouseEvent<HTMLDivElement>) => {
+			e.preventDefault();
+			dispatch({
+				type: "CONTEXT_MENU",
+				payload: { clientX: e.clientX, clientY: e.clientY },
+			});
+		},
+		[dispatch],
+	);
+
 	return (
 		<Container
 			data-id="canvas"
 			data-kind="canvas"
 			ref={canvasRef}
+			onContextMenu={handleContextMenu}
 			{...eventHandlers}
 		>
 			<CanvasView {...state} svgRef={svgRef} />

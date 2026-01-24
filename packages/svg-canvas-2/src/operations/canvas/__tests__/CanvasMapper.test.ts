@@ -142,6 +142,7 @@ describe("CanvasMapper", () => {
 				hoveredIds: [],
 				eventStartState: null,
 				lastCommitTime: 0,
+				contextMenuPosition: null,
 				objects: {
 					"rect-1": {
 						id: "rect-1",

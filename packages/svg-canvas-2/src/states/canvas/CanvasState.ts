@@ -47,4 +47,10 @@ export type CanvasState = {
 	 * Derived from event.timeStamp. Parent components can watch this to detect when to persist state.
 	 */
 	lastCommitTime: number;
+
+	/**
+	 * Context menu position (client coordinates).
+	 * Null when no context menu should be displayed.
+	 */
+	contextMenuPosition: { clientX: number; clientY: number } | null;
 };
