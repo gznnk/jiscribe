@@ -8,8 +8,10 @@ type Mods = { shift: boolean; alt: boolean; ctrl: boolean; meta: boolean };
 
 type Pressed = {
 	pointerId: number;
-	start: Point;
-	last: Point;
+	start: Point; // SVG coordinates
+	last: Point; // SVG coordinates
+	clientStart: Point; // Client coordinates
+	clientLast: Point; // Client coordinates
 	time: number;
 	target: EventTarget | null;
 	targetId?: string;
@@ -95,9 +97,12 @@ export type Gesture = {
 	target: EventTarget | null;
 	targetId?: string;
 	targetKind?: string;
-	start: Point;
-	last: Point;
-	delta: Point;
+	start: Point; // SVG coordinates
+	last: Point; // SVG coordinates
+	delta: Point; // SVG coordinates
+	clientStart: Point; // Client (screen) coordinates
+	clientLast: Point; // Client (screen) coordinates
+	clientDelta: Point; // Client (screen) coordinates
 	mods: Mods;
 	hovered: HoveredElement[];
 	time: number;
@@ -162,6 +167,7 @@ export const useGestureRecognizer = ({
 	const feed = useCallback(
 		(e: React.PointerEvent<HTMLElement>) => {
 			const currentPos = getSvgPoint(e.clientX, e.clientY);
+			const currentClientPos = { x: e.clientX, y: e.clientY };
 			const mods = {
 				shift: e.shiftKey,
 				alt: e.altKey,
@@ -187,6 +193,8 @@ export const useGestureRecognizer = ({
 					pointerId: e.pointerId,
 					start: currentPos,
 					last: currentPos,
+					clientStart: currentClientPos,
+					clientLast: currentClientPos,
 					time,
 					target: e.target,
 					targetId,
@@ -204,6 +212,9 @@ export const useGestureRecognizer = ({
 					start: currentPos,
 					last: currentPos,
 					delta: { x: 0, y: 0 },
+					clientStart: currentClientPos,
+					clientLast: currentClientPos,
+					clientDelta: { x: 0, y: 0 },
 					mods,
 					hovered,
 					time,
@@ -221,10 +232,15 @@ export const useGestureRecognizer = ({
 				x: currentPos.x - pressed.current.start.x,
 				y: currentPos.y - pressed.current.start.y,
 			};
+			const clientDelta = {
+				x: currentClientPos.x - pressed.current.clientStart.x,
+				y: currentClientPos.y - pressed.current.clientStart.y,
+			};
 
 			// pointermove: ドラッグ判定と処理
 			if (e.type === "pointermove") {
 				pressed.current.last = currentPos;
+				pressed.current.clientLast = currentClientPos;
 
 				const hovered = getHoveredElements(
 					e.clientX,
@@ -244,6 +260,9 @@ export const useGestureRecognizer = ({
 							start: pressed.current.start,
 							last: currentPos,
 							delta,
+							clientStart: pressed.current.clientStart,
+							clientLast: currentClientPos,
+							clientDelta,
 							mods,
 							hovered,
 							time,
@@ -259,6 +278,9 @@ export const useGestureRecognizer = ({
 						start: pressed.current.start,
 						last: currentPos,
 						delta,
+						clientStart: pressed.current.clientStart,
+						clientLast: currentClientPos,
+						clientDelta,
 						mods,
 						hovered,
 						time,
@@ -289,6 +311,9 @@ export const useGestureRecognizer = ({
 					start: pressed.current.start,
 					last: currentPos,
 					delta,
+					clientStart: pressed.current.clientStart,
+					clientLast: currentClientPos,
+					clientDelta,
 					mods,
 					hovered,
 					time,
@@ -320,6 +345,9 @@ export const useGestureRecognizer = ({
 						start: pressed.current.start,
 						last: currentPos,
 						delta,
+						clientStart: pressed.current.clientStart,
+						clientLast: currentClientPos,
+						clientDelta,
 						mods,
 						hovered,
 						time,

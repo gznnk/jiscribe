@@ -26,11 +26,11 @@ export const CanvasEventHandler: GestureHandler = {
 				};
 			} else if (gesture.type === "drag") {
 				// Calculate viewport offset from the initial state
-				// gesture.delta is already in SVG coordinate system, so we need to multiply by zoom to get pixel offset
+				// Use clientDelta (screen pixels) directly for viewport panning
 				const initialViewport =
 					state.eventStartState?.viewport ?? state.viewport;
-				const deltaX = gesture.delta.x * initialViewport.zoom;
-				const deltaY = gesture.delta.y * initialViewport.zoom;
+				const deltaX = gesture.clientDelta.x;
+				const deltaY = gesture.clientDelta.y;
 
 				nextState = {
 					...nextState,
