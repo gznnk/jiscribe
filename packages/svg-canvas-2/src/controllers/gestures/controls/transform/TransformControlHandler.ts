@@ -348,20 +348,17 @@ export class TransformControlHandler implements ControlStrategy {
 		scaleY: number,
 	) {
 		// Apply drag constraints to cursor position
-		if (doKeepProportion) {
-			const constraintFunction = createLinearY2xFunction(
-				startFrameFeaturePoint.bottomRight,
-				startFrameFeaturePoint.topLeft,
-			);
-			const constrained = constraintFunction(cursorX, cursorY);
-			cursorX = constrained.x;
-			cursorY = constrained.y;
-		}
+		const constrained = doKeepProportion
+			? createLinearY2xFunction(
+					startFrameFeaturePoint.bottomRight,
+					startFrameFeaturePoint.topLeft,
+				)(cursorX, cursorY)
+			: { x: cursorX, y: cursorY };
 
 		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
 		const inversedCursor = calcInverseAffineTransformedPoint(
-			cursorX,
-			cursorY,
+			constrained.x,
+			constrained.y,
 			1,
 			1,
 			radians,
@@ -426,20 +423,17 @@ export class TransformControlHandler implements ControlStrategy {
 		scaleY: number,
 	) {
 		// Apply drag constraints to cursor position
-		if (doKeepProportion) {
-			const constraintFunction = createLinearY2xFunction(
-				startFrameFeaturePoint.topLeft,
-				startFrameFeaturePoint.bottomRight,
-			);
-			const constrained = constraintFunction(cursorX, cursorY);
-			cursorX = constrained.x;
-			cursorY = constrained.y;
-		}
+		const constrained = doKeepProportion
+			? createLinearY2xFunction(
+					startFrameFeaturePoint.topLeft,
+					startFrameFeaturePoint.bottomRight,
+				)(cursorX, cursorY)
+			: { x: cursorX, y: cursorY };
 
 		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
 		const inversedCursor = calcInverseAffineTransformedPoint(
-			cursorX,
-			cursorY,
+			constrained.x,
+			constrained.y,
 			1,
 			1,
 			radians,
@@ -504,20 +498,17 @@ export class TransformControlHandler implements ControlStrategy {
 		scaleY: number,
 	) {
 		// Apply drag constraints to cursor position
-		if (doKeepProportion) {
-			const constraintFunction = createLinearY2xFunction(
-				startFrameFeaturePoint.topRight,
-				startFrameFeaturePoint.bottomLeft,
-			);
-			const constrained = constraintFunction(cursorX, cursorY);
-			cursorX = constrained.x;
-			cursorY = constrained.y;
-		}
+		const constrained = doKeepProportion
+			? createLinearY2xFunction(
+					startFrameFeaturePoint.topRight,
+					startFrameFeaturePoint.bottomLeft,
+				)(cursorX, cursorY)
+			: { x: cursorX, y: cursorY };
 
 		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
 		const inversedCursor = calcInverseAffineTransformedPoint(
-			cursorX,
-			cursorY,
+			constrained.x,
+			constrained.y,
 			1,
 			1,
 			radians,
@@ -582,20 +573,17 @@ export class TransformControlHandler implements ControlStrategy {
 		scaleY: number,
 	) {
 		// Apply drag constraints to cursor position
-		if (doKeepProportion) {
-			const constraintFunction = createLinearY2xFunction(
-				startFrameFeaturePoint.bottomLeft,
-				startFrameFeaturePoint.topRight,
-			);
-			const constrained = constraintFunction(cursorX, cursorY);
-			cursorX = constrained.x;
-			cursorY = constrained.y;
-		}
+		const constrained = doKeepProportion
+			? createLinearY2xFunction(
+					startFrameFeaturePoint.bottomLeft,
+					startFrameFeaturePoint.topRight,
+				)(cursorX, cursorY)
+			: { x: cursorX, y: cursorY };
 
 		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
 		const inversedCursor = calcInverseAffineTransformedPoint(
-			cursorX,
-			cursorY,
+			constrained.x,
+			constrained.y,
 			1,
 			1,
 			radians,
@@ -661,23 +649,20 @@ export class TransformControlHandler implements ControlStrategy {
 		scaleY: number,
 	) {
 		// Apply drag constraints to cursor position
-		const constraintFunction = !isSwapped
+		const constrained = !isSwapped
 			? createLinearY2xFunction(
 					startFrameFeaturePoint.bottomCenter,
 					startFrameFeaturePoint.topCenter,
-				)
+				)(cursorX, cursorY)
 			: createLinearX2yFunction(
 					startFrameFeaturePoint.bottomCenter,
 					startFrameFeaturePoint.topCenter,
-				);
-		const constrained = constraintFunction(cursorX, cursorY);
-		cursorX = constrained.x;
-		cursorY = constrained.y;
+				)(cursorX, cursorY);
 
 		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
 		const inversedCursor = calcInverseAffineTransformedPoint(
-			cursorX,
-			cursorY,
+			constrained.x,
+			constrained.y,
 			1,
 			1,
 			radians,
@@ -743,23 +728,20 @@ export class TransformControlHandler implements ControlStrategy {
 		scaleY: number,
 	) {
 		// Apply drag constraints to cursor position
-		const constraintFunction = !isSwapped
+		const constrained = !isSwapped
 			? createLinearX2yFunction(
 					startFrameFeaturePoint.leftCenter,
 					startFrameFeaturePoint.rightCenter,
-				)
+				)(cursorX, cursorY)
 			: createLinearY2xFunction(
 					startFrameFeaturePoint.leftCenter,
 					startFrameFeaturePoint.rightCenter,
-				);
-		const constrained = constraintFunction(cursorX, cursorY);
-		cursorX = constrained.x;
-		cursorY = constrained.y;
+				)(cursorX, cursorY);
 
 		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
 		const inversedCursor = calcInverseAffineTransformedPoint(
-			cursorX,
-			cursorY,
+			constrained.x,
+			constrained.y,
 			1,
 			1,
 			radians,
@@ -825,23 +807,20 @@ export class TransformControlHandler implements ControlStrategy {
 		scaleY: number,
 	) {
 		// Apply drag constraints to cursor position
-		const constraintFunction = !isSwapped
+		const constrained = !isSwapped
 			? createLinearY2xFunction(
 					startFrameFeaturePoint.bottomCenter,
 					startFrameFeaturePoint.topCenter,
-				)
+				)(cursorX, cursorY)
 			: createLinearX2yFunction(
 					startFrameFeaturePoint.bottomCenter,
 					startFrameFeaturePoint.topCenter,
-				);
-		const constrained = constraintFunction(cursorX, cursorY);
-		cursorX = constrained.x;
-		cursorY = constrained.y;
+				)(cursorX, cursorY);
 
 		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
 		const inversedCursor = calcInverseAffineTransformedPoint(
-			cursorX,
-			cursorY,
+			constrained.x,
+			constrained.y,
 			1,
 			1,
 			radians,
@@ -907,23 +886,20 @@ export class TransformControlHandler implements ControlStrategy {
 		scaleY: number,
 	) {
 		// Apply drag constraints to cursor position
-		const constraintFunction = !isSwapped
+		const constrained = !isSwapped
 			? createLinearX2yFunction(
 					startFrameFeaturePoint.leftCenter,
 					startFrameFeaturePoint.rightCenter,
-				)
+				)(cursorX, cursorY)
 			: createLinearY2xFunction(
 					startFrameFeaturePoint.leftCenter,
 					startFrameFeaturePoint.rightCenter,
-				);
-		const constrained = constraintFunction(cursorX, cursorY);
-		cursorX = constrained.x;
-		cursorY = constrained.y;
+				)(cursorX, cursorY);
 
 		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
 		const inversedCursor = calcInverseAffineTransformedPoint(
-			cursorX,
-			cursorY,
+			constrained.x,
+			constrained.y,
 			1,
 			1,
 			radians,
