@@ -2,7 +2,10 @@ import {
 	calcAffineTransformedPoint,
 	calcFrameFeaturePoints,
 	calcInverseAffineTransformedPoint,
+	calcNonZeroSign,
 	calcVectorAngle,
+	createLinearX2yFunction,
+	createLinearY2xFunction,
 	degreesToRadians,
 	isTransformedFrame,
 	nanToZero,
@@ -125,8 +128,89 @@ export class TransformControlHandler implements ControlStrategy {
 		const radians = degreesToRadians(startObject.rotation);
 
 		// ワールド空間でのカーソル位置
-		const cursorX = gesture.last.x;
-		const cursorY = gesture.last.y;
+
+		// 固定点をローカル空間に変換
+		const startFrameFeaturePoint = calcFrameFeaturePoints(startObject);
+
+		const isSwapped = (startObject.rotation + 405) % 180 > 90;
+
+		const { scaleX, scaleY } = startObject;
+		const aspectRatio = startObject.width / startObject.height;
+		const lockAspectRatio = (startObject as any).lockAspectRatio ?? false;
+		const doKeepProportion = lockAspectRatio || gesture.mods.shift;
+
+		// Apply drag constraints to cursor position
+		let cursorX = gesture.last.x;
+		let cursorY = gesture.last.y;
+
+		let constraintFunction:
+			| ((x: number, y: number) => { x: number; y: number })
+			| undefined;
+
+		switch (anchorType) {
+			case "topLeft":
+				if (doKeepProportion) {
+					constraintFunction = createLinearY2xFunction(
+						startFrameFeaturePoint.topLeft,
+						startFrameFeaturePoint.bottomRight,
+					);
+				}
+				break;
+			case "topRight":
+				if (doKeepProportion) {
+					constraintFunction = createLinearY2xFunction(
+						startFrameFeaturePoint.topRight,
+						startFrameFeaturePoint.bottomLeft,
+					);
+				}
+				break;
+			case "bottomRight":
+				if (doKeepProportion) {
+					constraintFunction = createLinearY2xFunction(
+						startFrameFeaturePoint.bottomRight,
+						startFrameFeaturePoint.topLeft,
+					);
+				}
+				break;
+			case "bottomLeft":
+				if (doKeepProportion) {
+					constraintFunction = createLinearY2xFunction(
+						startFrameFeaturePoint.bottomLeft,
+						startFrameFeaturePoint.topRight,
+					);
+				}
+				break;
+			case "topCenter":
+			case "bottomCenter":
+				constraintFunction = !isSwapped
+					? createLinearY2xFunction(
+							startFrameFeaturePoint.bottomCenter,
+							startFrameFeaturePoint.topCenter,
+						)
+					: createLinearX2yFunction(
+							startFrameFeaturePoint.bottomCenter,
+							startFrameFeaturePoint.topCenter,
+						);
+				break;
+			case "leftCenter":
+			case "rightCenter":
+				constraintFunction = !isSwapped
+					? createLinearX2yFunction(
+							startFrameFeaturePoint.leftCenter,
+							startFrameFeaturePoint.rightCenter,
+						)
+					: createLinearY2xFunction(
+							startFrameFeaturePoint.leftCenter,
+							startFrameFeaturePoint.rightCenter,
+						);
+				break;
+		}
+
+		if (constraintFunction) {
+			const constrained = constraintFunction(cursorX, cursorY);
+			cursorX = constrained.x;
+			cursorY = constrained.y;
+		}
 
 		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
 		const inversedCursor = calcInverseAffineTransformedPoint(
@@ -138,9 +222,6 @@ export class TransformControlHandler implements ControlStrategy {
 			startObject.cx,
 			startObject.cy,
 		);
-
-		// 固定点をローカル空間に変換
-		const startFrameFeaturePoint = calcFrameFeaturePoints(startObject);
 
 		// アンカー固有のリサイズ処理にルーティング
 		let newWidth: number;
@@ -160,7 +241,26 @@ export class TransformControlHandler implements ControlStrategy {
 					startObject.cy,
 				);
 				newWidth = inversedCursor.x - inversedTopLeft.x;
-				newHeight = inversedCursor.y - inversedTopLeft.y;
+				if (doKeepProportion) {
+					newHeight = this.calcHeightWithAspectRatio(
+						newWidth,
+						aspectRatio,
+						scaleX,
+						scaleY,
+					);
+				} else {
+					newHeight = inversedCursor.y - inversedTopLeft.y;
+				}
+
+				const enforced = this.enforceMinimumDimensions(
+					newWidth,
+					newHeight,
+					aspectRatio,
+					doKeepProportion,
+				);
+				newWidth = enforced.width;
+				newHeight = enforced.height;
+
 				inversedCenterX = inversedTopLeft.x + nanToZero(newWidth / 2);
 				inversedCenterY = inversedTopLeft.y + nanToZero(newHeight / 2);
 				break;
@@ -176,7 +276,26 @@ export class TransformControlHandler implements ControlStrategy {
 					startObject.cy,
 				);
 				newWidth = inversedBottomRight.x - inversedCursor.x;
-				newHeight = inversedBottomRight.y - inversedCursor.y;
+				if (doKeepProportion) {
+					newHeight = this.calcHeightWithAspectRatio(
+						newWidth,
+						aspectRatio,
+						scaleX,
+						scaleY,
+					);
+				} else {
+					newHeight = inversedBottomRight.y - inversedCursor.y;
+				}
+
+				const enforced = this.enforceMinimumDimensions(
+					newWidth,
+					newHeight,
+					aspectRatio,
+					doKeepProportion,
+				);
+				newWidth = enforced.width;
+				newHeight = enforced.height;
+
 				inversedCenterX = inversedBottomRight.x - nanToZero(newWidth / 2);
 				inversedCenterY = inversedBottomRight.y - nanToZero(newHeight / 2);
 				break;
@@ -192,7 +311,26 @@ export class TransformControlHandler implements ControlStrategy {
 					startObject.cy,
 				);
 				newWidth = inversedCursor.x - inversedBottomLeft.x;
-				newHeight = inversedBottomLeft.y - inversedCursor.y;
+				if (doKeepProportion) {
+					newHeight = this.calcHeightWithAspectRatio(
+						newWidth,
+						aspectRatio,
+						scaleX,
+						scaleY,
+					);
+				} else {
+					newHeight = inversedBottomLeft.y - inversedCursor.y;
+				}
+
+				const enforced = this.enforceMinimumDimensions(
+					newWidth,
+					newHeight,
+					aspectRatio,
+					doKeepProportion,
+				);
+				newWidth = enforced.width;
+				newHeight = enforced.height;
+
 				inversedCenterX = inversedBottomLeft.x + nanToZero(newWidth / 2);
 				inversedCenterY = inversedBottomLeft.y - nanToZero(newHeight / 2);
 				break;
@@ -208,7 +346,26 @@ export class TransformControlHandler implements ControlStrategy {
 					startObject.cy,
 				);
 				newWidth = inversedTopRight.x - inversedCursor.x;
-				newHeight = inversedCursor.y - inversedTopRight.y;
+				if (doKeepProportion) {
+					newHeight = this.calcHeightWithAspectRatio(
+						newWidth,
+						aspectRatio,
+						scaleX,
+						scaleY,
+					);
+				} else {
+					newHeight = inversedCursor.y - inversedTopRight.y;
+				}
+
+				const enforced = this.enforceMinimumDimensions(
+					newWidth,
+					newHeight,
+					aspectRatio,
+					doKeepProportion,
+				);
+				newWidth = enforced.width;
+				newHeight = enforced.height;
+
 				inversedCenterX = inversedTopRight.x - nanToZero(newWidth / 2);
 				inversedCenterY = inversedTopRight.y + nanToZero(newHeight / 2);
 				break;
@@ -223,8 +380,27 @@ export class TransformControlHandler implements ControlStrategy {
 					startObject.cx,
 					startObject.cy,
 				);
-				newWidth = startObject.width;
 				newHeight = inversedBottomCenter.y - inversedCursor.y;
+				if (doKeepProportion) {
+					newWidth = this.calcWidthWithAspectRatio(
+						newHeight,
+						aspectRatio,
+						scaleX,
+						scaleY,
+					);
+				} else {
+					newWidth = startObject.width;
+				}
+
+				const enforced = this.enforceMinimumDimensions(
+					newWidth,
+					newHeight,
+					aspectRatio,
+					doKeepProportion,
+				);
+				newWidth = enforced.width;
+				newHeight = enforced.height;
+
 				inversedCenterX = inversedBottomCenter.x;
 				inversedCenterY = inversedBottomCenter.y - nanToZero(newHeight / 2);
 				break;
@@ -240,7 +416,26 @@ export class TransformControlHandler implements ControlStrategy {
 					startObject.cy,
 				);
 				newWidth = inversedCursor.x - inversedLeftCenter.x;
-				newHeight = startObject.height;
+				if (doKeepProportion) {
+					newHeight = this.calcHeightWithAspectRatio(
+						newWidth,
+						aspectRatio,
+						scaleX,
+						scaleY,
+					);
+				} else {
+					newHeight = startObject.height;
+				}
+
+				const enforced = this.enforceMinimumDimensions(
+					newWidth,
+					newHeight,
+					aspectRatio,
+					doKeepProportion,
+				);
+				newWidth = enforced.width;
+				newHeight = enforced.height;
+
 				inversedCenterX = inversedLeftCenter.x + nanToZero(newWidth / 2);
 				inversedCenterY = inversedLeftCenter.y;
 				break;
@@ -255,8 +450,27 @@ export class TransformControlHandler implements ControlStrategy {
 					startObject.cx,
 					startObject.cy,
 				);
-				newWidth = startObject.width;
 				newHeight = inversedCursor.y - inversedTopCenter.y;
+				if (doKeepProportion) {
+					newWidth = this.calcWidthWithAspectRatio(
+						newHeight,
+						aspectRatio,
+						scaleX,
+						scaleY,
+					);
+				} else {
+					newWidth = startObject.width;
+				}
+
+				const enforced = this.enforceMinimumDimensions(
+					newWidth,
+					newHeight,
+					aspectRatio,
+					doKeepProportion,
+				);
+				newWidth = enforced.width;
+				newHeight = enforced.height;
+
 				inversedCenterX = inversedTopCenter.x;
 				inversedCenterY = inversedTopCenter.y + nanToZero(newHeight / 2);
 				break;
@@ -272,7 +486,26 @@ export class TransformControlHandler implements ControlStrategy {
 					startObject.cy,
 				);
 				newWidth = inversedRightCenter.x - inversedCursor.x;
-				newHeight = startObject.height;
+				if (doKeepProportion) {
+					newHeight = this.calcHeightWithAspectRatio(
+						newWidth,
+						aspectRatio,
+						scaleX,
+						scaleY,
+					);
+				} else {
+					newHeight = startObject.height;
+				}
+
+				const enforced = this.enforceMinimumDimensions(
+					newWidth,
+					newHeight,
+					aspectRatio,
+					doKeepProportion,
+				);
+				newWidth = enforced.width;
+				newHeight = enforced.height;
+
 				inversedCenterX = inversedRightCenter.x - nanToZero(newWidth / 2);
 				inversedCenterY = inversedRightCenter.y;
 				break;
@@ -386,6 +619,82 @@ export class TransformControlHandler implements ControlStrategy {
 		return {
 			...state,
 			objects: updatedObjects,
+		};
+	}
+
+	/**
+	 * Calculates the height that maintains the original aspect ratio.
+	 */
+	private calcHeightWithAspectRatio(
+		width: number,
+		aspectRatio: number,
+		scaleX: number,
+		scaleY: number,
+	) {
+		return nanToZero(width / aspectRatio) * scaleX * scaleY;
+	}
+
+	/**
+	 * Calculates the width that maintains the original aspect ratio.
+	 */
+	private calcWidthWithAspectRatio(
+		height: number,
+		aspectRatio: number,
+		scaleX: number,
+		scaleY: number,
+	) {
+		return nanToZero(height * aspectRatio) * scaleX * scaleY;
+	}
+
+	/**
+	 * Checks if dimensions are below minimum values and adjusts them.
+	 */
+	private enforceMinimumDimensions(
+		newWidth: number,
+		newHeight: number,
+		aspectRatio: number | undefined,
+		shouldKeepProportion: boolean | undefined,
+	): { width: number; height: number } {
+		const minWidth = 0;
+		const minHeight = 0;
+
+		const absWidth = Math.abs(newWidth);
+		const absHeight = Math.abs(newHeight);
+		const widthSign = calcNonZeroSign(newWidth);
+		const heightSign = calcNonZeroSign(newHeight);
+
+		// Check if either dimension is below minimum
+		const widthBelowMin = absWidth < minWidth;
+		const heightBelowMin = absHeight < minHeight;
+
+		if (!widthBelowMin && !heightBelowMin) {
+			return { width: newWidth, height: newHeight };
+		}
+
+		if (!shouldKeepProportion || !aspectRatio) {
+			return {
+				width: widthBelowMin ? minWidth * widthSign : newWidth,
+				height: heightBelowMin ? minHeight * heightSign : newHeight,
+			};
+		}
+
+		const minWidthFromHeight = minHeight * aspectRatio;
+		const minHeightFromWidth = minWidth / aspectRatio;
+
+		let adjustedWidth: number;
+		let adjustedHeight: number;
+
+		if (minWidthFromHeight > minWidth) {
+			adjustedHeight = minHeight * heightSign;
+			adjustedWidth = minWidthFromHeight * widthSign;
+		} else {
+			adjustedWidth = minWidth * widthSign;
+			adjustedHeight = minHeightFromWidth * heightSign;
+		}
+
+		return {
+			width: adjustedWidth,
+			height: adjustedHeight,
 		};
 	}
 }
