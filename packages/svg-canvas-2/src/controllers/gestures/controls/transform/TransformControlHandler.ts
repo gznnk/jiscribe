@@ -389,6 +389,7 @@ export class TransformControlHandler implements ControlStrategy {
 		}
 
 		const enforced = this.enforceMinimumDimensions(
+			startFrame,
 			newWidth,
 			newHeight,
 			aspectRatio,
@@ -464,6 +465,7 @@ export class TransformControlHandler implements ControlStrategy {
 		}
 
 		const enforced = this.enforceMinimumDimensions(
+			startFrame,
 			newWidth,
 			newHeight,
 			aspectRatio,
@@ -539,6 +541,7 @@ export class TransformControlHandler implements ControlStrategy {
 		}
 
 		const enforced = this.enforceMinimumDimensions(
+			startFrame,
 			newWidth,
 			newHeight,
 			aspectRatio,
@@ -614,6 +617,7 @@ export class TransformControlHandler implements ControlStrategy {
 		}
 
 		const enforced = this.enforceMinimumDimensions(
+			startFrame,
 			newWidth,
 			newHeight,
 			aspectRatio,
@@ -693,6 +697,7 @@ export class TransformControlHandler implements ControlStrategy {
 		}
 
 		const enforced = this.enforceMinimumDimensions(
+			startFrame,
 			newWidth,
 			newHeight,
 			aspectRatio,
@@ -772,6 +777,7 @@ export class TransformControlHandler implements ControlStrategy {
 		}
 
 		const enforced = this.enforceMinimumDimensions(
+			startFrame,
 			newWidth,
 			newHeight,
 			aspectRatio,
@@ -851,6 +857,7 @@ export class TransformControlHandler implements ControlStrategy {
 		}
 
 		const enforced = this.enforceMinimumDimensions(
+			startFrame,
 			newWidth,
 			newHeight,
 			aspectRatio,
@@ -930,6 +937,7 @@ export class TransformControlHandler implements ControlStrategy {
 		}
 
 		const enforced = this.enforceMinimumDimensions(
+			startFrame,
 			newWidth,
 			newHeight,
 			aspectRatio,
@@ -1053,13 +1061,14 @@ export class TransformControlHandler implements ControlStrategy {
 	 * Checks if dimensions are below minimum values and adjusts them.
 	 */
 	private enforceMinimumDimensions(
+		startFrame: TransformedFrame & TransformState,
 		newWidth: number,
 		newHeight: number,
 		aspectRatio: number | undefined,
 		shouldKeepProportion: boolean | undefined,
 	): { width: number; height: number } {
-		const minWidth = 0;
-		const minHeight = 0;
+		const minWidth = startFrame.minWidth ?? 0;
+		const minHeight = startFrame.minHeight ?? 0;
 
 		const absWidth = Math.abs(newWidth);
 		const absHeight = Math.abs(newHeight);

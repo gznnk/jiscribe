@@ -9,6 +9,10 @@ import { isBoolean } from "../../../../../basic-validators/src";
 export type TransformState = Transform & {
 	/** Lock aspect ratio during resize. Default: false */
 	lockAspectRatio?: boolean;
+	/** Minimum width during transformation. Optional. */
+	minWidth?: number;
+	/** Minimum height during transformation. Optional. */
+	minHeight?: number;
 };
 
 /**
