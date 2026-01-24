@@ -188,10 +188,10 @@ export class TransformControlHandler implements ControlStrategy {
 		// 新しい寸法と中心でオブジェクトを更新
 		const updatedObject = {
 			...startObject,
-			width: Math.abs(newWidth),
-			height: Math.abs(newHeight),
-			cx: newCenter.x,
-			cy: newCenter.y,
+			width: Number(Math.abs(newWidth).toFixed(2)),
+			height: Number(Math.abs(newHeight).toFixed(2)),
+			cx: Number(newCenter.x.toFixed(2)),
+			cy: Number(newCenter.y.toFixed(2)),
 		};
 
 		// eventStartState から更新されたオブジェクトマップを作成
