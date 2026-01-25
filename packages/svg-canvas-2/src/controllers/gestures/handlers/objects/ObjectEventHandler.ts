@@ -1,9 +1,9 @@
 import type {
 	CanvasGesture,
 	GestureHandler,
-} from "../../../registry/GestureHandlerRegistryTypes";
-import { objectRegistry } from "../../../registry/ObjectRegistry";
-import type { CanvasState } from "../../../states/canvas/CanvasState";
+} from "../../../../registry/GestureHandlerRegistryTypes";
+import { objectRegistry } from "../../../../registry/ObjectRegistry";
+import type { CanvasState } from "../../../../states/canvas/CanvasState";
 
 /**
  * Handles events that occur on objects (not on canvas).

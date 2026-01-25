@@ -1,8 +1,8 @@
 import type {
 	CanvasGesture,
 	GestureHandler,
-} from "../../../registry/GestureHandlerRegistryTypes";
-import type { CanvasState } from "../../../states/canvas/CanvasState";
+} from "../../../../registry/GestureHandlerRegistryTypes";
+import type { CanvasState } from "../../../../states/canvas/CanvasState";
 
 /**
  * コントロールストラテジは、特定のコントロールタイプを処理する GestureHandler。

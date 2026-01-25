@@ -13,10 +13,10 @@ import {
 	radiansToDegrees,
 } from "@workspace/geometry";
 
-import type { CanvasGesture } from "../../../../registry/GestureHandlerRegistryTypes";
-import type { CanvasState } from "../../../../states/canvas/CanvasState";
-import type { TransformState } from "../../../../states/objects/base/TransformState";
-import { isTransformState } from "../../../../states/objects/base/TransformState";
+import type { CanvasGesture } from "../../../../../registry/GestureHandlerRegistryTypes";
+import type { CanvasState } from "../../../../../states/canvas/CanvasState";
+import type { TransformState } from "../../../../../states/objects/base/TransformState";
+import { isTransformState } from "../../../../../states/objects/base/TransformState";
 import type { ControlStrategy } from "../ControlEventHandler";
 
 /**

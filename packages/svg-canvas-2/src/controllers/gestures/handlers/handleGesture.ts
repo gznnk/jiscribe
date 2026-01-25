@@ -1,10 +1,10 @@
-import { gestureHandlerRegistry } from "../../registry/GestureHandlerRegistry";
+import { gestureHandlerRegistry } from "../../../registry/GestureHandlerRegistry";
 import type {
 	CanvasGesture,
 	EventType,
-} from "../../registry/GestureHandlerRegistryTypes";
-import type { CanvasState } from "../../states/canvas/CanvasState";
-import type { Gesture } from "../hooks/useGestureRecognizer";
+} from "../../../registry/GestureHandlerRegistryTypes";
+import type { CanvasState } from "../../../states/canvas/CanvasState";
+import type { Gesture } from "../../hooks/useGestureRecognizer";
 
 /**
  * Event types that should trigger saving the current state as eventStartState.

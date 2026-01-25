@@ -1,8 +1,8 @@
 import { gestureHandlerRegistry } from "../../registry/GestureHandlerRegistry";
-import { CanvasEventHandler } from "../gestures/canvas/CanvasEventHandler";
-import { ControlEventHandler } from "../gestures/controls/ControlEventHandler";
-import { TransformControlHandler } from "../gestures/controls/transform/TransformControlHandler";
-import { ObjectEventHandler } from "../gestures/objects/ObjectEventHandler";
+import { CanvasEventHandler } from "../gestures/handlers/canvas/CanvasEventHandler";
+import { ControlEventHandler } from "../gestures/handlers/controls/ControlEventHandler";
+import { TransformControlHandler } from "../gestures/handlers/controls/transform/TransformControlHandler";
+import { ObjectEventHandler } from "../gestures/handlers/objects/ObjectEventHandler";
 
 /**
  * Initialize the GestureHandlerRegistry with all gesture handlers.
