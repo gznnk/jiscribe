@@ -9,6 +9,7 @@ import type {
 	PointerEventHandlers,
 } from "./GestureRecognizerTypes";
 import {
+	calculateScrollDelta,
 	detectEdgeProximity,
 	getHoveredElements,
 	getKindAndId,
@@ -192,11 +193,16 @@ export class GestureRecognizer {
 							currentPos.y,
 						);
 						if (edgeProximity.isNearEdge) {
+							const scrollDelta = calculateScrollDelta(
+								edgeProximity.horizontal,
+								edgeProximity.vertical,
+							);
+							console.log("Scroll delta:", scrollDelta);
+
 							// Enqueue another event to continue processing edge scrolling
 							this.enqueue({
 								...e,
 							});
-							console.log("Edge proximity detected:", edgeProximity);
 						}
 					}
 				}

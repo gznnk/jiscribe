@@ -22,6 +22,11 @@ export type HoveredElement = {
 	kind: string;
 };
 
+export type ScrollDelta = {
+	deltaX: number;
+	deltaY: number;
+};
+
 export type Gesture = {
 	type: GestureType;
 	target: EventTarget | null;
