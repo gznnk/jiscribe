@@ -16,6 +16,24 @@ import {
 } from "./utils";
 import type { Viewport } from "../../../states/canvas/Viewport";
 
+/**
+ * 内部で使用するポインターイベントの型
+ * React.PointerEventから必要なプロパティのみを抽出
+ */
+export type PointerEvent = {
+	type: string;
+	pointerId: number;
+	clientX: number;
+	clientY: number;
+	shiftKey: boolean;
+	altKey: boolean;
+	ctrlKey: boolean;
+	metaKey: boolean;
+	target: EventTarget | null;
+	timeStamp: number;
+	button: number;
+};
+
 export type Pressed = {
 	pointerId: number;
 	start: Point; // SVG coordinates
@@ -45,8 +63,8 @@ export class GestureRecognizer {
 	private pressed: Pressed | null = null;
 
 	// RAF queuing
-	private fifo: React.PointerEvent<HTMLElement>[] = [];
-	private lastMove: React.PointerEvent<HTMLElement> | null = null;
+	private fifo: PointerEvent[] = [];
+	private lastMove: PointerEvent | null = null;
 	private scheduled = false;
 
 	constructor(config: GestureRecognizerConfig) {
@@ -59,7 +77,7 @@ export class GestureRecognizer {
 	/**
 	 * ポインターイベントを処理してジェスチャーコールバックを呼び出す
 	 */
-	private feed(e: React.PointerEvent<HTMLElement>): void {
+	private feed(e: PointerEvent): void {
 		const currentPos = getSvgPoint(this.svgRef.current, e.clientX, e.clientY);
 		const currentClientPos = { x: e.clientX, y: e.clientY };
 		const mods: Mods = {
@@ -277,7 +295,7 @@ export class GestureRecognizer {
 		requestAnimationFrame(() => {
 			this.scheduled = false;
 
-			const batch: React.PointerEvent<HTMLElement>[] = [];
+			const batch: PointerEvent[] = [];
 			while (this.fifo.length) {
 				batch.push(this.fifo.shift()!);
 			}
@@ -297,7 +315,7 @@ export class GestureRecognizer {
 	/**
 	 * イベントをキューに追加してスケジュール
 	 */
-	private enqueue(e: React.PointerEvent<HTMLElement>): void {
+	private enqueue(e: PointerEvent): void {
 		if (e.type === "pointermove") {
 			this.lastMove = e;
 		} else {
@@ -307,14 +325,33 @@ export class GestureRecognizer {
 	}
 
 	/**
+	 * React.PointerEventを内部型に変換
+	 */
+	private toPointerEvent(e: React.PointerEvent<HTMLElement>): PointerEvent {
+		return {
+			type: e.type,
+			pointerId: e.pointerId,
+			clientX: e.clientX,
+			clientY: e.clientY,
+			shiftKey: e.shiftKey,
+			altKey: e.altKey,
+			ctrlKey: e.ctrlKey,
+			metaKey: e.metaKey,
+			target: e.target,
+			timeStamp: e.timeStamp,
+			button: e.button,
+		};
+	}
+
+	/**
 	 * ポインターイベントハンドラーを取得
 	 */
 	public getHandlers(): PointerEventHandlers {
 		return {
-			onPointerDown: (e) => this.enqueue(e),
-			onPointerMove: (e) => this.enqueue(e),
-			onPointerUp: (e) => this.enqueue(e),
-			onPointerCancel: (e) => this.enqueue(e),
+			onPointerDown: (e) => this.enqueue(this.toPointerEvent(e)),
+			onPointerMove: (e) => this.enqueue(this.toPointerEvent(e)),
+			onPointerUp: (e) => this.enqueue(this.toPointerEvent(e)),
+			onPointerCancel: (e) => this.enqueue(this.toPointerEvent(e)),
 		};
 	}
 }
