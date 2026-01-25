@@ -1,6 +1,8 @@
 import type { Point } from "@workspace/geometry";
 import type React from "react";
 
+import type { Viewport } from "../../../states/canvas/Viewport";
+
 export type Mods = {
 	shift: boolean;
 	alt: boolean;
@@ -65,4 +67,5 @@ export type GestureRecognizerConfig = {
 	gestureCallback: GestureCallback;
 	containerRef: React.RefObject<HTMLElement | null>;
 	svgRef: React.RefObject<SVGSVGElement | null>;
+	viewportRef: React.RefObject<Viewport>;
 };

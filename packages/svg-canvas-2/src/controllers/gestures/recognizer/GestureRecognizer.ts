@@ -1,3 +1,4 @@
+import type { Point } from "@workspace/geometry/src/types/Point";
 import type React from "react";
 
 import { DRAG_THRESHOLD } from "./GestureRecognizerConstants";
@@ -6,20 +7,29 @@ import type {
 	GestureRecognizerConfig,
 	Mods,
 	PointerEventHandlers,
-	Pressed,
 } from "./GestureRecognizerTypes";
-import { getHoveredElements, getKindAndId, getSvgPoint } from "./utils";
+import {
+	detectEdgeProximity,
+	getHoveredElements,
+	getKindAndId,
+	getSvgPoint,
+} from "./utils";
+import type { Viewport } from "../../../states/canvas/Viewport";
 
-// 型を再エクスポート
-export type {
-	Gesture,
-	GestureCallback,
-	GestureRecognizerConfig,
-	GestureType,
-	HoveredElement,
-	Mods,
-	PointerEventHandlers,
-} from "./GestureRecognizerTypes";
+export type Pressed = {
+	pointerId: number;
+	start: Point; // SVG coordinates
+	last: Point; // SVG coordinates
+	clientStart: Point; // Client coordinates
+	clientLast: Point; // Client coordinates
+	time: number;
+	target: EventTarget | null;
+	targetId?: string;
+	targetKind?: string;
+	mods: Mods;
+	dragging: boolean;
+	button: number;
+};
 
 /**
  * ジェスチャー認識を行うクラス
@@ -29,6 +39,7 @@ export class GestureRecognizer {
 	private gestureCallback: GestureCallback;
 	private containerRef: React.RefObject<HTMLElement | null>;
 	private svgRef: React.RefObject<SVGSVGElement | null>;
+	private viewportRef: React.RefObject<Viewport>;
 
 	// State management
 	private pressed: Pressed | null = null;
@@ -42,6 +53,7 @@ export class GestureRecognizer {
 		this.gestureCallback = config.gestureCallback;
 		this.containerRef = config.containerRef;
 		this.svgRef = config.svgRef;
+		this.viewportRef = config.viewportRef;
 	}
 
 	/**
@@ -152,6 +164,22 @@ export class GestureRecognizer {
 					});
 				}
 			} else {
+				// Detect edge proximity during drag
+				if (this.viewportRef.current) {
+					const edgeProximity = detectEdgeProximity(
+						this.viewportRef.current,
+						e.clientX,
+						e.clientY,
+					);
+					if (edgeProximity.isNearEdge) {
+						console.log(
+							"[Edge Detected]",
+							`horizontal: ${edgeProximity.horizontal || "none"}`,
+							`vertical: ${edgeProximity.vertical || "none"}`,
+						);
+					}
+				}
+
 				this.gestureCallback({
 					type: "drag",
 					target: this.pressed.target,

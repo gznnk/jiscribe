@@ -80,6 +80,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 		gestureCallback: handleGesture,
 		containerRef: canvasRef,
 		svgRef,
+		viewport: state.viewport,
 	});
 
 	// Container resize handling
