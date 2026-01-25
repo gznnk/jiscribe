@@ -1,3 +1,4 @@
+export { calculateScrollDelta } from "./calculateScrollDelta";
 export { detectEdgeProximity, type EdgeProximity } from "./detectEdgeProximity";
 export { getHoveredElements } from "./getHoveredElements";
 export { getKindAndId } from "./getKindAndId";

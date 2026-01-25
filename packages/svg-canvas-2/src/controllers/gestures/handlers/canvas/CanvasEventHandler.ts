@@ -16,6 +16,22 @@ export const CanvasEventHandler: GestureHandler = {
 	handle(state: CanvasState, gesture: CanvasGesture): CanvasState {
 		let nextState = state;
 
+		// Edge scroll handling
+		if (gesture.type === "scroll" && gesture.scrollDelta) {
+			const { deltaX, deltaY } = gesture.scrollDelta;
+			const currentViewport = state.viewport;
+
+			nextState = {
+				...nextState,
+				viewport: {
+					...currentViewport,
+					minX: currentViewport.minX + deltaX,
+					minY: currentViewport.minY + deltaY,
+				},
+			};
+			return nextState;
+		}
+
 		// Right-click drag for viewport panning (GrabScroll)
 		if (gesture.button === 2) {
 			if (gesture.type === "drag") {

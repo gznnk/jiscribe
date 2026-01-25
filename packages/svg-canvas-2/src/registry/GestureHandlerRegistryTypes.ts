@@ -9,7 +9,7 @@ import type { CanvasState } from "../states/canvas/CanvasState";
 /**
  * Extended event type that includes gesture types plus additional canvas-specific events.
  */
-export type EventType = GestureType | "dragOver" | "dragLeave";
+export type EventType = GestureType | "dragOver" | "dragLeave" | "scroll";
 
 /**
  * Canvas gesture type.

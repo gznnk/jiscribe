@@ -45,8 +45,22 @@ export const handleGesture = (
 		};
 	}
 
-	// Route to appropriate handler
-	nextState = gestureHandlerRegistry.handle(nextState, canvasGesture);
+	// Collect gestures to process (original + derived)
+	const derivedGestures: CanvasGesture[] = [canvasGesture];
+
+	// If scrollDelta is present, add a scroll event for canvas
+	if (gesture.scrollDelta) {
+		derivedGestures.push({
+			...canvasGesture,
+			type: "scroll",
+			targetKind: "canvas",
+		});
+	}
+
+	// Process all gestures
+	for (const g of derivedGestures) {
+		nextState = gestureHandlerRegistry.handle(nextState, g);
+	}
 
 	// Clear eventStartState on event end
 	if (EVENT_END_TYPES.includes(canvasGesture.type)) {

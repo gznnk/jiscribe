@@ -9,6 +9,7 @@ import type {
 	PointerEventHandlers,
 } from "./GestureRecognizerTypes";
 import {
+	calculateScrollDelta,
 	detectEdgeProximity,
 	getHoveredElements,
 	getKindAndId,
@@ -183,6 +184,7 @@ export class GestureRecognizer {
 				}
 			} else {
 				// Detect edge proximity during drag
+				let scrollDelta: { deltaX: number; deltaY: number } | undefined;
 				if (this.canvasStateRef.current) {
 					const canvasState = this.canvasStateRef.current;
 					if (canvasState.edgeScrollEnabled) {
@@ -192,11 +194,15 @@ export class GestureRecognizer {
 							currentPos.y,
 						);
 						if (edgeProximity.isNearEdge) {
+							scrollDelta = calculateScrollDelta(
+								edgeProximity.horizontal,
+								edgeProximity.vertical,
+							);
+
 							// Enqueue another event to continue processing edge scrolling
 							this.enqueue({
 								...e,
 							});
-							console.log("Edge proximity detected:", edgeProximity);
 						}
 					}
 				}
@@ -216,6 +222,7 @@ export class GestureRecognizer {
 					hovered,
 					time,
 					button: this.pressed.button,
+					scrollDelta,
 				});
 			}
 			return;
