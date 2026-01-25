@@ -10,21 +10,6 @@ export type Mods = {
 	meta: boolean;
 };
 
-export type Pressed = {
-	pointerId: number;
-	start: Point; // SVG coordinates
-	last: Point; // SVG coordinates
-	clientStart: Point; // Client coordinates
-	clientLast: Point; // Client coordinates
-	time: number;
-	target: EventTarget | null;
-	targetId?: string;
-	targetKind?: string;
-	mods: Mods;
-	dragging: boolean;
-	button: number;
-};
-
 export type GestureType =
 	| "pressed"
 	| "dragStart"
