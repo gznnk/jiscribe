@@ -56,6 +56,8 @@ export type DragEventHandlerParams<TState extends ObjectState = ObjectState> = {
 	mods: Mods;
 	/** Timestamp of the event */
 	time: number;
+	/** Mouse button that triggered the event (0: left, 1: middle, 2: right) */
+	button: number;
 };
 
 /**
@@ -79,6 +81,8 @@ export type ClickEventHandlerParams<TState extends ObjectState = ObjectState> =
 		mods: Mods;
 		/** Timestamp of the event */
 		time: number;
+		/** Mouse button that triggered the event (0: left, 1: middle, 2: right) */
+		button: number;
 	};
 
 /**

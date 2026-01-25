@@ -59,6 +59,11 @@ export class TransformControlHandler implements ControlStrategy {
 	}
 
 	handle(state: CanvasState, gesture: CanvasGesture): CanvasState {
+		// Only handle left-click (button 0)
+		if (gesture.button !== 0) {
+			return state;
+		}
+
 		const targetControlId = gesture.targetId;
 		if (!targetControlId) {
 			return state;

@@ -15,11 +15,17 @@ type FrameObjectState = ObjectState & Frame;
  * Default drag event handler that updates an object's position.
  * Also moves all other selected objects by the same delta.
  * Returns the entire CanvasState with the updated objects.
+ * Only handles left-click drag (button 0).
  */
 export const DefaultDragEventHandler: DragEventHandler<ObjectState> = (
 	params: DragEventHandlerParams<ObjectState>,
 ) => {
-	const { delta, objectState, canvasState } = params;
+	const { delta, objectState, canvasState, button } = params;
+
+	// Only handle left-click drag (button 0)
+	if (button !== 0) {
+		return canvasState;
+	}
 
 	if (!isFrame(objectState)) {
 		return canvasState;
@@ -62,12 +68,18 @@ export const DefaultDragEventHandler: DragEventHandler<ObjectState> = (
  * - If Ctrl (or Meta on Mac) is pressed: adds the dragged object to selectedIds
  * - Otherwise: sets selectedIds to only the dragged object
  * Then calls DefaultDragEventHandler to update the object's position.
+ * Only handles left-click drag (button 0).
  */
 export const DefaultDragStartEventHandler: DragEventHandler<ObjectState> = (
 	params: DragEventHandlerParams<ObjectState>,
 ) => {
-	const { objectState, canvasState, mods } = params;
+	const { objectState, canvasState, mods, button } = params;
 	const { id } = objectState;
+
+	// Only handle left-click drag (button 0)
+	if (button !== 0) {
+		return canvasState;
+	}
 
 	// Check if Ctrl or Meta (Cmd on Mac) is pressed for additive selection
 	const isAdditive = mods.ctrl || mods.meta;

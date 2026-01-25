@@ -39,6 +39,7 @@ export const ObjectEventHandler: GestureHandler = {
 				canvasState: nextState,
 				mods: gesture.mods,
 				time: gesture.time,
+				button: gesture.button,
 			};
 			nextState = eventHandler.onClick(clickHandlerParams);
 		} else {
@@ -56,6 +57,7 @@ export const ObjectEventHandler: GestureHandler = {
 				canvasState: nextState,
 				mods: gesture.mods,
 				time: gesture.time,
+				button: gesture.button,
 			};
 
 			if (gesture.type === "dragStart" && eventHandler.onDragStart) {
