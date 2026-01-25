@@ -206,6 +206,7 @@ describe("CanvasMapper", () => {
 					height: 800,
 					zoom: 1,
 				},
+				edgeScrollEnabled: false,
 			};
 
 			const doc = canvasToDoc(state);

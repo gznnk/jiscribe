@@ -1,8 +1,8 @@
 import type { Dimensions } from "@workspace/geometry";
 
-import type { Gesture } from "./../hooks/useGestureRecognizer";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import { handleGesture } from "../gestures/handlers/handleGesture";
+import type { Gesture } from "../gestures/recognizer/GestureRecognizerTypes";
 
 // Action types
 export type CanvasAction =

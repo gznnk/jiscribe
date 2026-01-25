@@ -99,8 +99,11 @@ export class TransformControlHandler implements ControlStrategy {
 		_gesture: CanvasGesture,
 		_anchorType: TransformAnchorType,
 	): CanvasState {
-		// 状態を保存するだけ（handleGesture で管理される）
-		return state;
+		// Enable edge scrolling on drag start
+		return {
+			...state,
+			edgeScrollEnabled: true,
+		};
 	}
 
 	/**
@@ -970,8 +973,13 @@ export class TransformControlHandler implements ControlStrategy {
 		gesture: CanvasGesture,
 		anchorType: TransformAnchorType,
 	): CanvasState {
+		// Disable edge scrolling on drag end
+		const nextState = {
+			...state,
+			edgeScrollEnabled: false,
+		};
 		// ドラッグハンドラーをもう一度呼び出して確定
-		return this.handleDrag(state, gesture, anchorType);
+		return this.handleDrag(nextState, gesture, anchorType);
 	}
 
 	/**

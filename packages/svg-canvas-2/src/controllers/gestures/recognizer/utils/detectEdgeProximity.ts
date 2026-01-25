@@ -14,38 +14,41 @@ export type EdgeProximity = {
  * カーソルがビューポートのエッジ近くにいるかを検出
  *
  * @param viewport - 現在のビューポート
- * @param clientX - カーソルのX座標（クライアント座標）
- * @param clientY - カーソルのY座標（クライアント座標）
+ * @param svgX - カーソルのX座標（SVG座標）
+ * @param svgY - カーソルのY座標（SVG座標）
  * @returns エッジ近接情報
  */
 export const detectEdgeProximity = (
 	viewport: Viewport,
-	clientX: number,
-	clientY: number,
+	svgX: number,
+	svgY: number,
 ): EdgeProximity => {
-	const { minX, minY, width, height } = viewport;
+	const { minX, minY, width, height, zoom } = viewport;
 
-	// Calculate distances from each edge in client (screen) coordinates
-	const distFromLeft = clientX - minX;
-	const distFromTop = clientY - minY;
-	const distFromRight = minX + width - clientX;
-	const distFromBottom = minY + height - clientY;
+	// AUTO_SCROLL_THRESHOLDはピクセル単位なので、SVG座標系に変換
+	const thresholdInSvg = AUTO_SCROLL_THRESHOLD / zoom;
+
+	// Calculate distances from each edge in SVG coordinates
+	const distFromLeft = svgX - minX;
+	const distFromTop = svgY - minY;
+	const distFromRight = minX + width - svgX;
+	const distFromBottom = minY + height - svgY;
 
 	// Determine which edges the cursor is close to
 	let horizontal: "left" | "right" | null = null;
 	let vertical: "top" | "bottom" | null = null;
 
 	// Check horizontal edges
-	if (distFromLeft < AUTO_SCROLL_THRESHOLD && distFromLeft >= 0) {
+	if (distFromLeft < thresholdInSvg) {
 		horizontal = "left";
-	} else if (distFromRight < AUTO_SCROLL_THRESHOLD && distFromRight >= 0) {
+	} else if (distFromRight < thresholdInSvg) {
 		horizontal = "right";
 	}
 
 	// Check vertical edges
-	if (distFromTop < AUTO_SCROLL_THRESHOLD && distFromTop >= 0) {
+	if (distFromTop < thresholdInSvg) {
 		vertical = "top";
-	} else if (distFromBottom < AUTO_SCROLL_THRESHOLD && distFromBottom >= 0) {
+	} else if (distFromBottom < thresholdInSvg) {
 		vertical = "bottom";
 	}
 

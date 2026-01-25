@@ -96,15 +96,35 @@ export const DefaultDragStartEventHandler: DragEventHandler<ObjectState> = (
 		selectedIds = [id];
 	}
 
-	// Update canvas state with new selection
-	const stateWithSelection = {
+	// Update canvas state with new selection and enable edge scrolling
+	const nextState = {
 		...canvasState,
 		selectedIds,
+		edgeScrollEnabled: true,
 	};
 
 	// Call default handler to update object position
 	return DefaultDragEventHandler({
 		...params,
-		canvasState: stateWithSelection,
+		canvasState: nextState,
+	});
+};
+
+/**
+ * Drag end event handler that disables edge scrolling.
+ * Then calls DefaultDragEventHandler to finalize the object's position.
+ */
+export const DefaultDragEndEventHandler: DragEventHandler<ObjectState> = (
+	params: DragEventHandlerParams<ObjectState>,
+) => {
+	// Disable edge scrolling on drag end
+	const nextState = {
+		...params.canvasState,
+		edgeScrollEnabled: false,
+	};
+
+	return DefaultDragEventHandler({
+		...params,
+		canvasState: nextState,
 	});
 };

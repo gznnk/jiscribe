@@ -70,6 +70,7 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 			height: 800,
 			zoom: 1,
 		},
+		edgeScrollEnabled: false,
 		lastCommitTime: 0,
 		contextMenuPosition: null,
 	};

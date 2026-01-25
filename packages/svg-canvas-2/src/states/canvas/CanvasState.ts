@@ -43,6 +43,11 @@ export type CanvasState = {
 	viewport: Viewport;
 
 	/**
+	 * Whether edge scrolling is enabled when dragging near canvas edges.
+	 */
+	edgeScrollEnabled: boolean;
+
+	/**
 	 * Timestamp of the last committable event (e.g., dragEnd).
 	 * Derived from event.timeStamp. Parent components can watch this to detect when to persist state.
 	 */

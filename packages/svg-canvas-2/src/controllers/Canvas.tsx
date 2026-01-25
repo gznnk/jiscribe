@@ -9,17 +9,12 @@ import {
 } from "react";
 
 import { Container } from "./CanvasStyled";
+import type { GestureCallback } from "./gestures/recognizer/GestureRecognizerTypes";
 import { useContainerSize } from "./hooks/useContainerSize";
-import {
-	useGestureRecognizer,
-	type GestureCallback,
-} from "./hooks/useGestureRecognizer";
+import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
 import { canvasReducer } from "./reducer/canvasReducer";
 import { initializeRegistries } from "./setup";
-import {
-	canvasToDoc,
-	canvasToState,
-} from "../operations/canvas/CanvasMapper";
+import { canvasToDoc, canvasToState } from "../operations/canvas/CanvasMapper";
 import { CanvasView } from "../presentations/canvas/CanvasView";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { CanvasState } from "../states/canvas/CanvasState";
@@ -80,7 +75,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 		gestureCallback: handleGesture,
 		containerRef: canvasRef,
 		svgRef,
-		viewport: state.viewport,
+		canvasState: state,
 	});
 
 	// Container resize handling

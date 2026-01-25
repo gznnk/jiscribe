@@ -14,7 +14,7 @@ import {
 	getKindAndId,
 	getSvgPoint,
 } from "./utils";
-import type { Viewport } from "../../../states/canvas/Viewport";
+import type { CanvasState } from "../../../states/canvas/CanvasState";
 
 /**
  * 内部で使用するポインターイベントの型
@@ -57,7 +57,7 @@ export class GestureRecognizer {
 	private gestureCallback: GestureCallback;
 	private containerRef: React.RefObject<HTMLElement | null>;
 	private svgRef: React.RefObject<SVGSVGElement | null>;
-	private viewportRef: React.RefObject<Viewport>;
+	private canvasStateRef: React.RefObject<CanvasState>;
 
 	// State management
 	private pressed: Pressed | null = null;
@@ -71,7 +71,7 @@ export class GestureRecognizer {
 		this.gestureCallback = config.gestureCallback;
 		this.containerRef = config.containerRef;
 		this.svgRef = config.svgRef;
-		this.viewportRef = config.viewportRef;
+		this.canvasStateRef = config.canvasStateRef;
 	}
 
 	/**
@@ -183,18 +183,21 @@ export class GestureRecognizer {
 				}
 			} else {
 				// Detect edge proximity during drag
-				if (this.viewportRef.current) {
-					const edgeProximity = detectEdgeProximity(
-						this.viewportRef.current,
-						e.clientX,
-						e.clientY,
-					);
-					if (edgeProximity.isNearEdge) {
-						console.log(
-							"[Edge Detected]",
-							`horizontal: ${edgeProximity.horizontal || "none"}`,
-							`vertical: ${edgeProximity.vertical || "none"}`,
+				if (this.canvasStateRef.current) {
+					const canvasState = this.canvasStateRef.current;
+					if (canvasState.edgeScrollEnabled) {
+						const edgeProximity = detectEdgeProximity(
+							this.canvasStateRef.current.viewport,
+							currentPos.x,
+							currentPos.y,
 						);
+						if (edgeProximity.isNearEdge) {
+							// Enqueue another event to continue processing edge scrolling
+							this.enqueue({
+								...e,
+							});
+							console.log("Edge proximity detected:", edgeProximity);
+						}
 					}
 				}
 

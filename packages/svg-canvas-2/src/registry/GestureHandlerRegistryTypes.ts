@@ -1,6 +1,9 @@
 import type { Prettify } from "@workspace/utility-types/src/Prettify";
 
-import type { Gesture, GestureType } from "../controllers/hooks/useGestureRecognizer";
+import type {
+	Gesture,
+	GestureType,
+} from "../controllers/gestures/recognizer/GestureRecognizerTypes";
 import type { CanvasState } from "../states/canvas/CanvasState";
 
 /**
