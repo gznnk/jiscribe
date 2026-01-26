@@ -207,6 +207,14 @@ export class GestureRecognizer {
 					}
 				}
 
+				// Apply scroll delta to current position and delta
+				if (scrollDelta) {
+					currentPos.x += scrollDelta.deltaX;
+					currentPos.y += scrollDelta.deltaY;
+					delta.x += scrollDelta.deltaX;
+					delta.y += scrollDelta.deltaY;
+				}
+
 				this.gestureCallback({
 					type: "drag",
 					target: this.pressed.target,
