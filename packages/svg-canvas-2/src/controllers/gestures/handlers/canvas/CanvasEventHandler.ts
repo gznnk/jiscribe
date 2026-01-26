@@ -39,8 +39,8 @@ export const CanvasEventHandler: GestureHandler = {
 				// Use clientDelta (screen pixels) directly for viewport panning
 				const initialViewport =
 					state.eventStartState?.viewport ?? state.viewport;
-				const deltaX = gesture.clientDelta.x;
-				const deltaY = gesture.clientDelta.y;
+				const deltaX = gesture.clientDelta.x / initialViewport.zoom;
+				const deltaY = gesture.clientDelta.y / initialViewport.zoom;
 
 				nextState = {
 					...nextState,

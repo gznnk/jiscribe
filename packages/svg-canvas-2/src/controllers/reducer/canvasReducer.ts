@@ -12,6 +12,14 @@ export type CanvasAction =
 	| {
 			type: "CONTEXT_MENU";
 			payload: { clientX: number; clientY: number } | null;
+	  }
+	| {
+			type: "VIEWPORT_ZOOM";
+			payload: {
+				zoom: number;
+				svgX: number;
+				svgY: number;
+			};
 	  };
 
 export const canvasReducer = (
@@ -48,6 +56,28 @@ export const canvasReducer = (
 				...state,
 				contextMenuPosition: action.payload,
 			};
+
+		case "VIEWPORT_ZOOM": {
+			const { svgX, svgY } = action.payload;
+			const { minX, minY, width, height, zoom } = state.viewport;
+			const currentViewBoxWidth = width / zoom;
+			const currentViewBoxHeight = height / zoom;
+			const newViewBoxWidth = width / action.payload.zoom;
+			const newViewBoxHeight = height / action.payload.zoom;
+			const offsetX = (svgX - minX) / currentViewBoxWidth;
+			const offsetY = (svgY - minY) / currentViewBoxHeight;
+			const newMinX = svgX - newViewBoxWidth * offsetX;
+			const newMinY = svgY - newViewBoxHeight * offsetY;
+			return {
+				...state,
+				viewport: {
+					...state.viewport,
+					zoom: action.payload.zoom,
+					minX: newMinX,
+					minY: newMinY,
+				},
+			};
+		}
 
 		default:
 			return state;

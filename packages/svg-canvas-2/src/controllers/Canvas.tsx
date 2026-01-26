@@ -11,9 +11,11 @@ import {
 import { Container } from "./CanvasStyled";
 import type { GestureCallback } from "./gestures/recognizer/GestureRecognizerTypes";
 import { useContainerSize } from "./hooks/useContainerSize";
+import { useDocumentWheel } from "./hooks/useDocumentWheel";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
 import { canvasReducer } from "./reducer/canvasReducer";
 import { initializeRegistries } from "./setup";
+import { getSvgPoint } from "./utils/getSvgPoint";
 import { canvasToDoc, canvasToState } from "../operations/canvas/CanvasMapper";
 import { CanvasView } from "../presentations/canvas/CanvasView";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
@@ -98,6 +100,33 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 		},
 		[dispatch],
 	);
+
+	// Wheel zoom handling (Ctrl + wheel)
+	const handleWheel = useCallback(
+		(e: WheelEvent) => {
+			// Only handle zoom when Ctrl is pressed
+			if (!e.ctrlKey) {
+				return;
+			}
+
+			// Convert client coordinates to SVG coordinates
+			const svgPoint = getSvgPoint(svgRef.current, e.clientX, e.clientY);
+
+			const delta = e.deltaY > 0 ? 0.9 : 1.1;
+			const newZoom = state.viewport.zoom * delta;
+
+			dispatch({
+				type: "VIEWPORT_ZOOM",
+				payload: {
+					zoom: newZoom,
+					svgX: svgPoint.x,
+					svgY: svgPoint.y,
+				},
+			});
+		},
+		[state.viewport.zoom],
+	);
+	useDocumentWheel(svgRef, handleWheel);
 
 	return (
 		<Container

@@ -28,14 +28,14 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 			ref={svgRef}
 			width={width}
 			height={height}
-			viewBox={`${minX / zoom} ${minY / zoom} ${width / zoom} ${height / zoom}`}
+			viewBox={`${minX} ${minY} ${width / zoom} ${height / zoom}`}
 		>
 			{/* Grid pattern definition */}
 			<GridPattern zoom={zoom} baseGridSize={25} color="#f3f4f6" />
 			{/* Grid background */}
 			<GridBackground
-				x={minX / zoom}
-				y={minY / zoom}
+				x={minX}
+				y={minY}
 				width={width / zoom}
 				height={height / zoom}
 			/>

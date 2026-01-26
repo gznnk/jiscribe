@@ -13,9 +13,9 @@ import {
 	detectEdgeProximity,
 	getHoveredElements,
 	getKindAndId,
-	getSvgPoint,
 } from "./utils";
 import type { CanvasState } from "../../../states/canvas/CanvasState";
+import { getSvgPoint } from "../../utils/getSvgPoint";
 
 /**
  * 内部で使用するポインターイベントの型
