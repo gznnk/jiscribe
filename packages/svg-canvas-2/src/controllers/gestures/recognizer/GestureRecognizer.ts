@@ -189,7 +189,7 @@ export class GestureRecognizer {
 					const canvasState = this.canvasStateRef.current;
 					if (canvasState.edgeScrollEnabled) {
 						const edgeProximity = detectEdgeProximity(
-							this.canvasStateRef.current.viewport,
+							canvasState.viewport,
 							currentPos.x,
 							currentPos.y,
 						);
@@ -197,6 +197,7 @@ export class GestureRecognizer {
 							scrollDelta = calculateScrollDelta(
 								edgeProximity.horizontal,
 								edgeProximity.vertical,
+								canvasState.viewport.zoom,
 							);
 
 							// Enqueue another event to continue processing edge scrolling

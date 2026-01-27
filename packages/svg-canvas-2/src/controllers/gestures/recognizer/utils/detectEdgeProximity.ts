@@ -31,8 +31,8 @@ export const detectEdgeProximity = (
 	// Calculate distances from each edge in SVG coordinates
 	const distFromLeft = svgX - minX;
 	const distFromTop = svgY - minY;
-	const distFromRight = minX + width - svgX;
-	const distFromBottom = minY + height - svgY;
+	const distFromRight = minX + width / zoom - svgX;
+	const distFromBottom = minY + height / zoom - svgY;
 
 	// Determine which edges the cursor is close to
 	let horizontal: "left" | "right" | null = null;
