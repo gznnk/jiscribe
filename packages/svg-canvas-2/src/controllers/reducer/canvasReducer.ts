@@ -1,26 +1,6 @@
-import type { Dimensions } from "@workspace/geometry";
-
+import type { CanvasAction } from "./CanvasActions";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import { handleGesture } from "../gestures/handlers/handleGesture";
-import type { Gesture } from "../gestures/recognizer/GestureRecognizerTypes";
-
-// Action types
-export type CanvasAction =
-	| { type: "GESTURE"; gesture: Gesture }
-	| { type: "CONTAINER_RESIZE"; dimensions: Dimensions }
-	| { type: "SYNC_EXTERNAL"; payload: CanvasState }
-	| {
-			type: "CONTEXT_MENU";
-			payload: { clientX: number; clientY: number } | null;
-	  }
-	| {
-			type: "VIEWPORT_ZOOM";
-			payload: {
-				zoom: number;
-				svgX: number;
-				svgY: number;
-			};
-	  };
 
 export const canvasReducer = (
 	state: CanvasState,
@@ -75,6 +55,22 @@ export const canvasReducer = (
 					zoom: action.payload.zoom,
 					minX: newMinX,
 					minY: newMinY,
+				},
+			};
+		}
+
+		case "VIEWPORT_PAN": {
+			const { deltaX, deltaY } = action.payload;
+			const { zoom } = state.viewport;
+			// Convert pixel delta to SVG coordinate delta
+			const svgDeltaX = deltaX / zoom;
+			const svgDeltaY = deltaY / zoom;
+			return {
+				...state,
+				viewport: {
+					...state.viewport,
+					minX: state.viewport.minX + svgDeltaX,
+					minY: state.viewport.minY + svgDeltaY,
 				},
 			};
 		}

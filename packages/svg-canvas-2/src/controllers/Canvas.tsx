@@ -101,28 +101,33 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 		[dispatch],
 	);
 
-	// Wheel zoom handling (Ctrl + wheel)
+	// Wheel handling (Ctrl + wheel for zoom, otherwise scroll)
 	const handleWheel = useCallback(
 		(e: WheelEvent) => {
-			// Only handle zoom when Ctrl is pressed
-			if (!e.ctrlKey) {
-				return;
+			if (e.ctrlKey) {
+				// Zoom when Ctrl is pressed
+				const svgPoint = getSvgPoint(svgRef.current, e.clientX, e.clientY);
+				const delta = e.deltaY > 0 ? 0.9 : 1.1;
+				const newZoom = state.viewport.zoom * delta;
+
+				dispatch({
+					type: "VIEWPORT_ZOOM",
+					payload: {
+						zoom: newZoom,
+						svgX: svgPoint.x,
+						svgY: svgPoint.y,
+					},
+				});
+			} else {
+				// Pan when Ctrl is not pressed
+				dispatch({
+					type: "VIEWPORT_PAN",
+					payload: {
+						deltaX: e.deltaX,
+						deltaY: e.deltaY,
+					},
+				});
 			}
-
-			// Convert client coordinates to SVG coordinates
-			const svgPoint = getSvgPoint(svgRef.current, e.clientX, e.clientY);
-
-			const delta = e.deltaY > 0 ? 0.9 : 1.1;
-			const newZoom = state.viewport.zoom * delta;
-
-			dispatch({
-				type: "VIEWPORT_ZOOM",
-				payload: {
-					zoom: newZoom,
-					svgX: svgPoint.x,
-					svgY: svgPoint.y,
-				},
-			});
 		},
 		[state.viewport.zoom],
 	);
