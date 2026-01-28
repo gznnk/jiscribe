@@ -79,6 +79,9 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 		canvasState: state,
 	});
 
+	// Use wheel handler from GestureRecognizer
+	useDocumentWheel(svgRef, wheelHandler);
+
 	// Container resize handling
 	const handleResize = useCallback(
 		(dimensions: Dimensions) => {
@@ -99,9 +102,6 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 		},
 		[dispatch],
 	);
-
-	// Use wheel handler from GestureRecognizer
-	useDocumentWheel(svgRef, wheelHandler);
 
 	return (
 		<Container

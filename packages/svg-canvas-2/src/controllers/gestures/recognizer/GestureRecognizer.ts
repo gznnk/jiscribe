@@ -13,9 +13,9 @@ import {
 	detectEdgeProximity,
 	getHoveredElements,
 	getKindAndId,
+	getSvgPoint,
 } from "./utils";
 import type { CanvasState } from "../../../states/canvas/CanvasState";
-import { getSvgPoint } from "../../utils/getSvgPoint";
 
 /**
  * 内部で使用するイベントの型
@@ -96,13 +96,16 @@ export class GestureRecognizer {
 
 		// wheel: ドラッグ外のホイールイベント
 		if (e.type === "wheel") {
+			// ドラッグ中はpointermoveとして処理されるため、ここではドラッグ外の処理
 			const hovered = getHoveredElements(e.clientX, e.clientY, targetId);
 
+			// ドラッグ外の処理なので、targetIdとtargetKindをcanvasに固定
+			// 将来的にオブジェクト上でのホイール操作をサポートする場合はここを変更
 			this.gestureCallback({
 				type: "wheel",
 				target: e.target,
-				targetId,
-				targetKind,
+				targetId: "canvas",
+				targetKind: "canvas",
 				start: currentPos,
 				last: currentPos,
 				delta: { x: 0, y: 0 },
@@ -237,7 +240,6 @@ export class GestureRecognizer {
 						scrollDelta = calculateScrollDelta(
 							edgeProximity.horizontal,
 							edgeProximity.vertical,
-							canvasState.viewport.zoom,
 						);
 
 						// Enqueue another event to continue processing edge scrolling

@@ -13,7 +13,6 @@ import type { ScrollDelta } from "../GestureRecognizerTypes";
 export const calculateScrollDelta = (
 	horizontal: "left" | "right" | null,
 	vertical: "top" | "bottom" | null,
-	zoom: number,
 ): ScrollDelta => {
 	let deltaX = 0;
 	let deltaY = 0;
@@ -30,5 +29,5 @@ export const calculateScrollDelta = (
 		deltaY = AUTO_SCROLL_STEP_SIZE;
 	}
 
-	return { deltaX: deltaX * zoom, deltaY: deltaY * zoom };
+	return { deltaX, deltaY };
 };
