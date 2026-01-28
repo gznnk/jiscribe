@@ -1,7 +1,7 @@
-import type { TransformedFrame } from "@workspace/geometry";
+import type { FrameKeyPoints, TransformedFrame } from "@workspace/geometry";
 import {
 	calcAffineTransformedPoint,
-	calcFrameFeaturePoints,
+	calcFrameKeyPoints,
 	calcInverseAffineTransformedPoint,
 	calcNonZeroSign,
 	calcVectorAngle,
@@ -147,7 +147,7 @@ export class TransformControlHandler implements ControlStrategy {
 		// ワールド空間でのカーソル位置
 
 		// 固定点をローカル空間に変換
-		const startFrameFeaturePoint = calcFrameFeaturePoints(startFrame);
+		const startFrameKeyPoints = calcFrameKeyPoints(startFrame);
 
 		const isSwapped = (startFrame.rotation + 405) % 180 > 90;
 
@@ -162,7 +162,7 @@ export class TransformControlHandler implements ControlStrategy {
 			startFrame,
 			event.last.x,
 			event.last.y,
-			startFrameFeaturePoint,
+			startFrameKeyPoints,
 			radians,
 			aspectRatio,
 			doKeepProportion,
@@ -222,7 +222,7 @@ export class TransformControlHandler implements ControlStrategy {
 		startFrame: TransformedFrame & TransformState,
 		cursorX: number,
 		cursorY: number,
-		startFrameFeaturePoint: ReturnType<typeof calcFrameFeaturePoints>,
+		startFrameKeyPoints: FrameKeyPoints,
 		radians: number,
 		aspectRatio: number,
 		doKeepProportion: boolean,
@@ -241,7 +241,7 @@ export class TransformControlHandler implements ControlStrategy {
 					startFrame,
 					cursorX,
 					cursorY,
-					startFrameFeaturePoint,
+					startFrameKeyPoints,
 					radians,
 					aspectRatio,
 					doKeepProportion,
@@ -253,7 +253,7 @@ export class TransformControlHandler implements ControlStrategy {
 					startFrame,
 					cursorX,
 					cursorY,
-					startFrameFeaturePoint,
+					startFrameKeyPoints,
 					radians,
 					aspectRatio,
 					doKeepProportion,
@@ -265,7 +265,7 @@ export class TransformControlHandler implements ControlStrategy {
 					startFrame,
 					cursorX,
 					cursorY,
-					startFrameFeaturePoint,
+					startFrameKeyPoints,
 					radians,
 					aspectRatio,
 					doKeepProportion,
@@ -277,7 +277,7 @@ export class TransformControlHandler implements ControlStrategy {
 					startFrame,
 					cursorX,
 					cursorY,
-					startFrameFeaturePoint,
+					startFrameKeyPoints,
 					radians,
 					aspectRatio,
 					doKeepProportion,
@@ -289,7 +289,7 @@ export class TransformControlHandler implements ControlStrategy {
 					startFrame,
 					cursorX,
 					cursorY,
-					startFrameFeaturePoint,
+					startFrameKeyPoints,
 					radians,
 					aspectRatio,
 					doKeepProportion,
@@ -302,7 +302,7 @@ export class TransformControlHandler implements ControlStrategy {
 					startFrame,
 					cursorX,
 					cursorY,
-					startFrameFeaturePoint,
+					startFrameKeyPoints,
 					radians,
 					aspectRatio,
 					doKeepProportion,
@@ -315,7 +315,7 @@ export class TransformControlHandler implements ControlStrategy {
 					startFrame,
 					cursorX,
 					cursorY,
-					startFrameFeaturePoint,
+					startFrameKeyPoints,
 					radians,
 					aspectRatio,
 					doKeepProportion,
@@ -328,7 +328,7 @@ export class TransformControlHandler implements ControlStrategy {
 					startFrame,
 					cursorX,
 					cursorY,
-					startFrameFeaturePoint,
+					startFrameKeyPoints,
 					radians,
 					aspectRatio,
 					doKeepProportion,
@@ -348,7 +348,7 @@ export class TransformControlHandler implements ControlStrategy {
 		startFrame: TransformedFrame & TransformState,
 		cursorX: number,
 		cursorY: number,
-		startFrameFeaturePoint: ReturnType<typeof calcFrameFeaturePoints>,
+		startFrameKeyPoints: FrameKeyPoints,
 		radians: number,
 		aspectRatio: number,
 		doKeepProportion: boolean,
@@ -358,8 +358,8 @@ export class TransformControlHandler implements ControlStrategy {
 		// Apply drag constraints to cursor position
 		const constrained = doKeepProportion
 			? createLinearY2xFunction(
-					startFrameFeaturePoint.bottomRight,
-					startFrameFeaturePoint.topLeft,
+					startFrameKeyPoints.bottomRight,
+					startFrameKeyPoints.topLeft,
 				)(cursorX, cursorY)
 			: { x: cursorX, y: cursorY };
 
@@ -375,8 +375,8 @@ export class TransformControlHandler implements ControlStrategy {
 		);
 
 		const inversedTopLeft = calcInverseAffineTransformedPoint(
-			startFrameFeaturePoint.topLeft.x,
-			startFrameFeaturePoint.topLeft.y,
+			startFrameKeyPoints.topLeft.x,
+			startFrameKeyPoints.topLeft.y,
 			1,
 			1,
 			radians,
@@ -424,7 +424,7 @@ export class TransformControlHandler implements ControlStrategy {
 		startFrame: TransformedFrame & TransformState,
 		cursorX: number,
 		cursorY: number,
-		startFrameFeaturePoint: ReturnType<typeof calcFrameFeaturePoints>,
+		startFrameKeyPoints: FrameKeyPoints,
 		radians: number,
 		aspectRatio: number,
 		doKeepProportion: boolean,
@@ -434,8 +434,8 @@ export class TransformControlHandler implements ControlStrategy {
 		// Apply drag constraints to cursor position
 		const constrained = doKeepProportion
 			? createLinearY2xFunction(
-					startFrameFeaturePoint.topLeft,
-					startFrameFeaturePoint.bottomRight,
+					startFrameKeyPoints.topLeft,
+					startFrameKeyPoints.bottomRight,
 				)(cursorX, cursorY)
 			: { x: cursorX, y: cursorY };
 
@@ -451,8 +451,8 @@ export class TransformControlHandler implements ControlStrategy {
 		);
 
 		const inversedBottomRight = calcInverseAffineTransformedPoint(
-			startFrameFeaturePoint.bottomRight.x,
-			startFrameFeaturePoint.bottomRight.y,
+			startFrameKeyPoints.bottomRight.x,
+			startFrameKeyPoints.bottomRight.y,
 			1,
 			1,
 			radians,
@@ -500,7 +500,7 @@ export class TransformControlHandler implements ControlStrategy {
 		startFrame: TransformedFrame & TransformState,
 		cursorX: number,
 		cursorY: number,
-		startFrameFeaturePoint: ReturnType<typeof calcFrameFeaturePoints>,
+		startFrameKeyPoints: FrameKeyPoints,
 		radians: number,
 		aspectRatio: number,
 		doKeepProportion: boolean,
@@ -510,8 +510,8 @@ export class TransformControlHandler implements ControlStrategy {
 		// Apply drag constraints to cursor position
 		const constrained = doKeepProportion
 			? createLinearY2xFunction(
-					startFrameFeaturePoint.topRight,
-					startFrameFeaturePoint.bottomLeft,
+					startFrameKeyPoints.topRight,
+					startFrameKeyPoints.bottomLeft,
 				)(cursorX, cursorY)
 			: { x: cursorX, y: cursorY };
 
@@ -527,8 +527,8 @@ export class TransformControlHandler implements ControlStrategy {
 		);
 
 		const inversedBottomLeft = calcInverseAffineTransformedPoint(
-			startFrameFeaturePoint.bottomLeft.x,
-			startFrameFeaturePoint.bottomLeft.y,
+			startFrameKeyPoints.bottomLeft.x,
+			startFrameKeyPoints.bottomLeft.y,
 			1,
 			1,
 			radians,
@@ -576,7 +576,7 @@ export class TransformControlHandler implements ControlStrategy {
 		startFrame: TransformedFrame & TransformState,
 		cursorX: number,
 		cursorY: number,
-		startFrameFeaturePoint: ReturnType<typeof calcFrameFeaturePoints>,
+		startFrameKeyPoints: FrameKeyPoints,
 		radians: number,
 		aspectRatio: number,
 		doKeepProportion: boolean,
@@ -586,8 +586,8 @@ export class TransformControlHandler implements ControlStrategy {
 		// Apply drag constraints to cursor position
 		const constrained = doKeepProportion
 			? createLinearY2xFunction(
-					startFrameFeaturePoint.bottomLeft,
-					startFrameFeaturePoint.topRight,
+					startFrameKeyPoints.bottomLeft,
+					startFrameKeyPoints.topRight,
 				)(cursorX, cursorY)
 			: { x: cursorX, y: cursorY };
 
@@ -603,8 +603,8 @@ export class TransformControlHandler implements ControlStrategy {
 		);
 
 		const inversedTopRight = calcInverseAffineTransformedPoint(
-			startFrameFeaturePoint.topRight.x,
-			startFrameFeaturePoint.topRight.y,
+			startFrameKeyPoints.topRight.x,
+			startFrameKeyPoints.topRight.y,
 			1,
 			1,
 			radians,
@@ -652,7 +652,7 @@ export class TransformControlHandler implements ControlStrategy {
 		startFrame: TransformedFrame & TransformState,
 		cursorX: number,
 		cursorY: number,
-		startFrameFeaturePoint: ReturnType<typeof calcFrameFeaturePoints>,
+		startFrameKeyPoints: FrameKeyPoints,
 		radians: number,
 		aspectRatio: number,
 		doKeepProportion: boolean,
@@ -663,12 +663,12 @@ export class TransformControlHandler implements ControlStrategy {
 		// Apply drag constraints to cursor position
 		const constrained = !isSwapped
 			? createLinearY2xFunction(
-					startFrameFeaturePoint.bottomCenter,
-					startFrameFeaturePoint.topCenter,
+					startFrameKeyPoints.bottomCenter,
+					startFrameKeyPoints.topCenter,
 				)(cursorX, cursorY)
 			: createLinearX2yFunction(
-					startFrameFeaturePoint.bottomCenter,
-					startFrameFeaturePoint.topCenter,
+					startFrameKeyPoints.bottomCenter,
+					startFrameKeyPoints.topCenter,
 				)(cursorX, cursorY);
 
 		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
@@ -683,8 +683,8 @@ export class TransformControlHandler implements ControlStrategy {
 		);
 
 		const inversedBottomCenter = calcInverseAffineTransformedPoint(
-			startFrameFeaturePoint.bottomCenter.x,
-			startFrameFeaturePoint.bottomCenter.y,
+			startFrameKeyPoints.bottomCenter.x,
+			startFrameKeyPoints.bottomCenter.y,
 			1,
 			1,
 			radians,
@@ -732,7 +732,7 @@ export class TransformControlHandler implements ControlStrategy {
 		startFrame: TransformedFrame & TransformState,
 		cursorX: number,
 		cursorY: number,
-		startFrameFeaturePoint: ReturnType<typeof calcFrameFeaturePoints>,
+		startFrameKeyPoints: FrameKeyPoints,
 		radians: number,
 		aspectRatio: number,
 		doKeepProportion: boolean,
@@ -743,12 +743,12 @@ export class TransformControlHandler implements ControlStrategy {
 		// Apply drag constraints to cursor position
 		const constrained = !isSwapped
 			? createLinearX2yFunction(
-					startFrameFeaturePoint.leftCenter,
-					startFrameFeaturePoint.rightCenter,
+					startFrameKeyPoints.leftCenter,
+					startFrameKeyPoints.rightCenter,
 				)(cursorX, cursorY)
 			: createLinearY2xFunction(
-					startFrameFeaturePoint.leftCenter,
-					startFrameFeaturePoint.rightCenter,
+					startFrameKeyPoints.leftCenter,
+					startFrameKeyPoints.rightCenter,
 				)(cursorX, cursorY);
 
 		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
@@ -763,8 +763,8 @@ export class TransformControlHandler implements ControlStrategy {
 		);
 
 		const inversedLeftCenter = calcInverseAffineTransformedPoint(
-			startFrameFeaturePoint.leftCenter.x,
-			startFrameFeaturePoint.leftCenter.y,
+			startFrameKeyPoints.leftCenter.x,
+			startFrameKeyPoints.leftCenter.y,
 			1,
 			1,
 			radians,
@@ -812,7 +812,7 @@ export class TransformControlHandler implements ControlStrategy {
 		startFrame: TransformedFrame & TransformState,
 		cursorX: number,
 		cursorY: number,
-		startFrameFeaturePoint: ReturnType<typeof calcFrameFeaturePoints>,
+		startFrameKeyPoints: FrameKeyPoints,
 		radians: number,
 		aspectRatio: number,
 		doKeepProportion: boolean,
@@ -823,12 +823,12 @@ export class TransformControlHandler implements ControlStrategy {
 		// Apply drag constraints to cursor position
 		const constrained = !isSwapped
 			? createLinearY2xFunction(
-					startFrameFeaturePoint.bottomCenter,
-					startFrameFeaturePoint.topCenter,
+					startFrameKeyPoints.bottomCenter,
+					startFrameKeyPoints.topCenter,
 				)(cursorX, cursorY)
 			: createLinearX2yFunction(
-					startFrameFeaturePoint.bottomCenter,
-					startFrameFeaturePoint.topCenter,
+					startFrameKeyPoints.bottomCenter,
+					startFrameKeyPoints.topCenter,
 				)(cursorX, cursorY);
 
 		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
@@ -843,8 +843,8 @@ export class TransformControlHandler implements ControlStrategy {
 		);
 
 		const inversedTopCenter = calcInverseAffineTransformedPoint(
-			startFrameFeaturePoint.topCenter.x,
-			startFrameFeaturePoint.topCenter.y,
+			startFrameKeyPoints.topCenter.x,
+			startFrameKeyPoints.topCenter.y,
 			1,
 			1,
 			radians,
@@ -892,7 +892,7 @@ export class TransformControlHandler implements ControlStrategy {
 		startFrame: TransformedFrame & TransformState,
 		cursorX: number,
 		cursorY: number,
-		startFrameFeaturePoint: ReturnType<typeof calcFrameFeaturePoints>,
+		startFrameKeyPoints: FrameKeyPoints,
 		radians: number,
 		aspectRatio: number,
 		doKeepProportion: boolean,
@@ -903,12 +903,12 @@ export class TransformControlHandler implements ControlStrategy {
 		// Apply drag constraints to cursor position
 		const constrained = !isSwapped
 			? createLinearX2yFunction(
-					startFrameFeaturePoint.leftCenter,
-					startFrameFeaturePoint.rightCenter,
+					startFrameKeyPoints.leftCenter,
+					startFrameKeyPoints.rightCenter,
 				)(cursorX, cursorY)
 			: createLinearY2xFunction(
-					startFrameFeaturePoint.leftCenter,
-					startFrameFeaturePoint.rightCenter,
+					startFrameKeyPoints.leftCenter,
+					startFrameKeyPoints.rightCenter,
 				)(cursorX, cursorY);
 
 		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
@@ -923,8 +923,8 @@ export class TransformControlHandler implements ControlStrategy {
 		);
 
 		const inversedRightCenter = calcInverseAffineTransformedPoint(
-			startFrameFeaturePoint.rightCenter.x,
-			startFrameFeaturePoint.rightCenter.y,
+			startFrameKeyPoints.rightCenter.x,
+			startFrameKeyPoints.rightCenter.y,
 			1,
 			1,
 			radians,

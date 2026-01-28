@@ -1,4 +1,4 @@
-import { calcFrameFeaturePoints } from "@workspace/geometry";
+import { calcFrameKeyPoints } from "@workspace/geometry";
 import type { TransformedFrame } from "@workspace/geometry";
 import { memo } from "react";
 
@@ -43,7 +43,7 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 	const { cx, cy, width, height, rotation, scaleX, scaleY } = frame;
 
 	// Calculate all feature points (corners and edge midpoints)
-	const points = calcFrameFeaturePoints({
+	const points = calcFrameKeyPoints({
 		cx,
 		cy,
 		width,

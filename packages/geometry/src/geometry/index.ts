@@ -1,6 +1,6 @@
 ﻿export * from "./calcBoundingBox";
 export * from "./calcEllipseKeyPoints";
-export * from "./calcFrameFeaturePoints";
+export * from "./calcFrameKeyPoints";
 export * from "./calcOrientedFrameFromPoints";
 export * from "./calcFrameBoxFeatures";
 export * from "./calcRectKeyPoints";

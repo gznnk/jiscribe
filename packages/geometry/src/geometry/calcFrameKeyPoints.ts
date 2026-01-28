@@ -9,7 +9,7 @@ import type { TransformedFrame } from "../types/TransformedFrame";
  * @param frame - The transformed frame geometry (center position, dimensions, rotation, scale)
  * @returns The coordinates of the frame's key points
  */
-export const calcFrameFeaturePoints = (
+export const calcFrameKeyPoints = (
 	frame: TransformedFrame,
 ): FrameKeyPoints => {
 	const { cx, cy, width, height, rotation, scaleX, scaleY } = frame;

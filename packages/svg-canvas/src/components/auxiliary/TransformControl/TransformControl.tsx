@@ -1,7 +1,7 @@
 import {
 	calcClosestCircleIntersection,
 	calcVectorAngle,
-	calcFrameFeaturePoints,
+	calcFrameKeyPoints,
 	createLinearX2yFunction,
 	createLinearY2xFunction,
 	degreesToRadians,
@@ -84,7 +84,7 @@ const TransformControlComponent: React.FC<Props> = ({
 		scaleX,
 		scaleY,
 		aspectRatio: width / height,
-		...calcFrameFeaturePoints({
+		...calcFrameKeyPoints({
 			cx,
 			cy,
 			width,
@@ -95,7 +95,7 @@ const TransformControlComponent: React.FC<Props> = ({
 		}),
 	});
 
-	const featurePoints = calcFrameFeaturePoints({
+	const featurePoints = calcFrameKeyPoints({
 		cx,
 		cy,
 		width,
