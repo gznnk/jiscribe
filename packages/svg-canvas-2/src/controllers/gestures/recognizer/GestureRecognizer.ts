@@ -213,39 +213,37 @@ export class GestureRecognizer {
 					});
 				}
 			} else {
-				// Detect edge proximity during drag
+				const canvasState = this.canvasStateRef.current;
+				if (!canvasState) {
+					return;
+				}
+
 				let scrollDelta: { deltaX: number; deltaY: number } | undefined;
 
 				// Check if this pointermove has deltaX/deltaY (converted from wheel event)
 				if (e.deltaX !== undefined || e.deltaY !== undefined) {
-					const canvasState = this.canvasStateRef.current;
-					if (canvasState) {
-						scrollDelta = {
-							deltaX: e.deltaX ?? 0,
-							deltaY: e.deltaY ?? 0,
-						};
-					}
-				} else if (this.canvasStateRef.current) {
-					// Normal edge scroll detection for regular pointer moves
-					const canvasState = this.canvasStateRef.current;
-					if (canvasState.edgeScrollEnabled) {
-						const edgeProximity = detectEdgeProximity(
-							canvasState.viewport,
-							currentPos.x,
-							currentPos.y,
+					scrollDelta = {
+						deltaX: e.deltaX ?? 0,
+						deltaY: e.deltaY ?? 0,
+					};
+				} else if (canvasState.edgeScrollEnabled) {
+					// Detect edge proximity during drag
+					const edgeProximity = detectEdgeProximity(
+						canvasState.viewport,
+						currentPos.x,
+						currentPos.y,
+					);
+					if (edgeProximity.isNearEdge) {
+						scrollDelta = calculateScrollDelta(
+							edgeProximity.horizontal,
+							edgeProximity.vertical,
+							canvasState.viewport.zoom,
 						);
-						if (edgeProximity.isNearEdge) {
-							scrollDelta = calculateScrollDelta(
-								edgeProximity.horizontal,
-								edgeProximity.vertical,
-								canvasState.viewport.zoom,
-							);
 
-							// Enqueue another event to continue processing edge scrolling
-							this.enqueue({
-								...e,
-							});
-						}
+						// Enqueue another event to continue processing edge scrolling
+						this.enqueue({
+							...e,
+						});
 					}
 				}
 
@@ -253,10 +251,8 @@ export class GestureRecognizer {
 				if (scrollDelta) {
 					currentPos.x += scrollDelta.deltaX;
 					currentPos.y += scrollDelta.deltaY;
-					delta.x +=
-						scrollDelta.deltaX / this.canvasStateRef.current!.viewport.zoom;
-					delta.y +=
-						scrollDelta.deltaY / this.canvasStateRef.current!.viewport.zoom;
+					delta.x += scrollDelta.deltaX / canvasState.viewport.zoom;
+					delta.y += scrollDelta.deltaY / canvasState.viewport.zoom;
 				}
 
 				this.gestureCallback({
