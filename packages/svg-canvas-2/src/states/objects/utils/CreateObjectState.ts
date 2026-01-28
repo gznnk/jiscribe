@@ -1,4 +1,4 @@
-import type { Frame } from "@workspace/geometry";
+import type { Frame, FrameKeyPoints } from "@workspace/geometry";
 import type { Brand, Prettify } from "@workspace/utility-types";
 
 import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
@@ -12,16 +12,16 @@ import type { TransformState } from "../base/TransformState";
  * Conditional geometry type based on specified geometry feature (runtime state).
  *
  * - `none`: No geometry properties
- * - `rect`/`ellipse`: Frame (x, y, width, height)
+ * - `rect`/`ellipse`: Frame (cx, cy, width, height) with optional cached keyPoints
  * - `poly`: Poly (points array)
  */
 type GeometryState<T extends ObjectFeatures> = //
 	T["geometry"] extends "none"
 		? object
 		: T["geometry"] extends "rect"
-			? Frame
+			? Frame & { keyPoints?: FrameKeyPoints }
 			: T["geometry"] extends "ellipse"
-				? Frame
+				? Frame & { keyPoints?: FrameKeyPoints }
 				: T["geometry"] extends "poly"
 					? Poly
 					: object;
