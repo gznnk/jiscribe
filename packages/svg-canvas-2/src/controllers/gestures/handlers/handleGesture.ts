@@ -1,6 +1,6 @@
 import { gestureHandlerRegistry } from "../../../registry/GestureHandlerRegistry";
 import type {
-	CanvasGesture,
+	CanvasEvent,
 	EventType,
 } from "../../../registry/GestureHandlerRegistryTypes";
 import type { CanvasState } from "../../../states/canvas/CanvasState";
@@ -20,7 +20,7 @@ const EVENT_END_TYPES: readonly EventType[] = ["dragEnd"] as const;
 
 /**
  * Main gesture router.
- * Routes gestures to appropriate handlers based on their supports() method.
+ * Converts low-level gestures to high-level canvas events and routes them to appropriate handlers.
  * Also manages eventStartState lifecycle (save on dragStart, clear on dragEnd).
  *
  * Note: The gestureHandlerRegistry must be initialized via initializeRegistries()
@@ -30,44 +30,52 @@ export const handleGesture = (
 	state: CanvasState,
 	gesture: Gesture,
 ): CanvasState => {
-	// Convert Gesture to CanvasGesture
-	// Currently, Gesture and CanvasGesture are structurally identical,
-	// but this conversion point allows for future extensions (e.g., dragOver, dragLeave)
-	const canvasGesture: CanvasGesture = gesture;
-
 	let nextState = state;
 
+	// Convert Gesture to CanvasEvent
+	// wheel is converted to scroll/zoom, others are passed through
+	let canvasEvent: CanvasEvent;
+	if (gesture.type === "wheel") {
+		if (gesture.mods.ctrl) {
+			canvasEvent = { ...gesture, type: "zoom" } as CanvasEvent;
+		} else {
+			canvasEvent = { ...gesture, type: "scroll" } as CanvasEvent;
+		}
+	} else {
+		canvasEvent = gesture as CanvasEvent;
+	}
+
 	// Save eventStartState on event start
-	if (EVENT_START_TYPES.includes(canvasGesture.type)) {
+	if (EVENT_START_TYPES.includes(canvasEvent.type)) {
 		nextState = {
 			...state,
 			eventStartState: state,
 		};
 	}
 
-	// Collect gestures to process (original + derived)
-	const derivedGestures: CanvasGesture[] = [canvasGesture];
+	// Collect events to process (original + derived)
+	const derivedEvents: CanvasEvent[] = [canvasEvent];
 
-	// If scrollDelta is present, add a scroll event for canvas
-	if (gesture.scrollDelta) {
-		derivedGestures.push({
-			...canvasGesture,
+	// Edge scroll: If drag has scrollDelta, add a scroll event
+	if (canvasEvent.type === "drag" && gesture.scrollDelta) {
+		derivedEvents.push({
+			...canvasEvent,
 			type: "scroll",
 			targetKind: "canvas",
 		});
 	}
 
-	// Process all gestures
-	for (const g of derivedGestures) {
-		nextState = gestureHandlerRegistry.handle(nextState, g);
+	// Process all events
+	for (const event of derivedEvents) {
+		nextState = gestureHandlerRegistry.handle(nextState, event);
 	}
 
 	// Clear eventStartState on event end
-	if (EVENT_END_TYPES.includes(canvasGesture.type)) {
+	if (EVENT_END_TYPES.includes(canvasEvent.type)) {
 		nextState = {
 			...nextState,
 			eventStartState: null,
-			lastCommitTime: canvasGesture.time,
+			lastCommitTime: canvasEvent.time,
 		};
 	}
 

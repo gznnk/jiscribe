@@ -13,7 +13,7 @@ import {
 	radiansToDegrees,
 } from "@workspace/geometry";
 
-import type { CanvasGesture } from "../../../../../registry/GestureHandlerRegistryTypes";
+import type { CanvasEvent } from "../../../../../registry/GestureHandlerRegistryTypes";
 import type { CanvasState } from "../../../../../states/canvas/CanvasState";
 import type { TransformState } from "../../../../../states/objects/base/TransformState";
 import { isTransformState } from "../../../../../states/objects/base/TransformState";
@@ -44,12 +44,12 @@ export type TransformAnchorType =
 export class TransformControlHandler implements ControlStrategy {
 	readonly controlType = "transform-control";
 
-	supports(gesture: CanvasGesture): boolean {
-		if (gesture.targetKind !== "control") {
+	supports(event: CanvasEvent): boolean {
+		if (event.targetKind !== "control") {
 			return false;
 		}
 
-		const targetId = gesture.targetId;
+		const targetId = event.targetId;
 		if (!targetId) {
 			return false;
 		}
@@ -58,13 +58,13 @@ export class TransformControlHandler implements ControlStrategy {
 		return targetId.startsWith("transform-control:");
 	}
 
-	handle(state: CanvasState, gesture: CanvasGesture): CanvasState {
+	handle(state: CanvasState, event: CanvasEvent): CanvasState {
 		// Only handle left-click (button 0)
-		if (gesture.button !== 0) {
+		if (event.button !== 0) {
 			return state;
 		}
 
-		const targetControlId = gesture.targetId;
+		const targetControlId = event.targetId;
 		if (!targetControlId) {
 			return state;
 		}
@@ -80,12 +80,12 @@ export class TransformControlHandler implements ControlStrategy {
 		// ジェスチャータイプに応じて適切なハンドラーにルーティング
 		let nextState = state;
 
-		if (gesture.type === "dragStart") {
-			nextState = this.handleDragStart(nextState, gesture, anchorType);
-		} else if (gesture.type === "drag") {
-			nextState = this.handleDrag(nextState, gesture, anchorType);
-		} else if (gesture.type === "dragEnd") {
-			nextState = this.handleDragEnd(nextState, gesture, anchorType);
+		if (event.type === "dragStart") {
+			nextState = this.handleDragStart(nextState, event, anchorType);
+		} else if (event.type === "drag") {
+			nextState = this.handleDrag(nextState, event, anchorType);
+		} else if (event.type === "dragEnd") {
+			nextState = this.handleDragEnd(nextState, event, anchorType);
 		}
 
 		return nextState;
@@ -96,7 +96,7 @@ export class TransformControlHandler implements ControlStrategy {
 	 */
 	private handleDragStart(
 		state: CanvasState,
-		_gesture: CanvasGesture,
+		_event: CanvasEvent,
 		_anchorType: TransformAnchorType,
 	): CanvasState {
 		// Enable edge scrolling on drag start
@@ -111,12 +111,12 @@ export class TransformControlHandler implements ControlStrategy {
 	 */
 	private handleDrag(
 		state: CanvasState,
-		gesture: CanvasGesture,
+		event: CanvasEvent,
 		anchorType: TransformAnchorType,
 	): CanvasState {
 		// 回転は別処理
 		if (anchorType === "rotation") {
-			return this.handleRotationDrag(state, gesture);
+			return this.handleRotationDrag(state, event);
 		}
 
 		// リサイズ処理の共通前処理
@@ -154,14 +154,14 @@ export class TransformControlHandler implements ControlStrategy {
 		const { scaleX, scaleY } = startFrame;
 		const aspectRatio = startFrame.width / startFrame.height;
 		const lockAspectRatio = startFrame.lockAspectRatio ?? false;
-		const doKeepProportion = lockAspectRatio || gesture.mods.shift;
+		const doKeepProportion = lockAspectRatio || event.mods.shift;
 
 		// アンカー固有のリサイズ処理にルーティング
 		const resizeResult = this.calculateResize(
 			anchorType,
 			startFrame,
-			gesture.last.x,
-			gesture.last.y,
+			event.last.x,
+			event.last.y,
 			startFrameFeaturePoint,
 			radians,
 			aspectRatio,
@@ -970,7 +970,7 @@ export class TransformControlHandler implements ControlStrategy {
 	 */
 	private handleDragEnd(
 		state: CanvasState,
-		gesture: CanvasGesture,
+		event: CanvasEvent,
 		anchorType: TransformAnchorType,
 	): CanvasState {
 		// Disable edge scrolling on drag end
@@ -979,7 +979,7 @@ export class TransformControlHandler implements ControlStrategy {
 			edgeScrollEnabled: false,
 		};
 		// ドラッグハンドラーをもう一度呼び出して確定
-		return this.handleDrag(nextState, gesture, anchorType);
+		return this.handleDrag(nextState, event, anchorType);
 	}
 
 	/**
@@ -987,7 +987,7 @@ export class TransformControlHandler implements ControlStrategy {
 	 */
 	private handleRotationDrag(
 		state: CanvasState,
-		gesture: CanvasGesture,
+		event: CanvasEvent,
 	): CanvasState {
 		// 選択されているオブジェクトを取得（正確に1つであるべき）
 		if (state.selectedIds.length !== 1) {
@@ -1005,8 +1005,8 @@ export class TransformControlHandler implements ControlStrategy {
 		}
 
 		// ワールド空間でのカーソル位置
-		const cursorX = gesture.last.x;
-		const cursorY = gesture.last.y;
+		const cursorX = event.last.x;
+		const cursorY = event.last.y;
 
 		// 中心点からカーソルへのベクトル角度を計算
 		const radian = calcVectorAngle(

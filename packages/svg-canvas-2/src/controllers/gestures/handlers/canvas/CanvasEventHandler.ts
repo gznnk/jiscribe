@@ -1,5 +1,5 @@
 import type {
-	CanvasGesture,
+	CanvasEvent,
 	GestureHandler,
 } from "../../../../registry/GestureHandlerRegistryTypes";
 import type { CanvasState } from "../../../../states/canvas/CanvasState";
@@ -9,38 +9,66 @@ import type { CanvasState } from "../../../../states/canvas/CanvasState";
  * This is the main entry point for canvas-level event handling.
  */
 export const CanvasEventHandler: GestureHandler = {
-	supports(gesture: CanvasGesture): boolean {
-		return gesture.targetKind === "canvas";
+	supports(event: CanvasEvent): boolean {
+		return event.targetKind === "canvas";
 	},
 
-	handle(state: CanvasState, gesture: CanvasGesture): CanvasState {
+	handle(state: CanvasState, event: CanvasEvent): CanvasState {
 		let nextState = state;
 
-		// Edge scroll handling
-		if (gesture.type === "scroll" && gesture.scrollDelta) {
-			const { deltaX, deltaY } = gesture.scrollDelta;
-			const currentViewport = state.viewport;
+		// Zoom handling
+		if (event.type === "zoom" && event.scrollDelta) {
+			const { deltaY } = event.scrollDelta;
+			const zoomDelta = deltaY > 0 ? 0.9 : 1.1;
+			const newZoom = state.viewport.zoom * zoomDelta;
+			const { minX, minY, width, height, zoom } = state.viewport;
+			const currentViewBoxWidth = width / zoom;
+			const currentViewBoxHeight = height / zoom;
+			const newViewBoxWidth = width / newZoom;
+			const newViewBoxHeight = height / newZoom;
+			const offsetX = (event.last.x - minX) / currentViewBoxWidth;
+			const offsetY = (event.last.y - minY) / currentViewBoxHeight;
+			const newMinX = event.last.x - newViewBoxWidth * offsetX;
+			const newMinY = event.last.y - newViewBoxHeight * offsetY;
 
 			nextState = {
 				...nextState,
 				viewport: {
-					...currentViewport,
-					minX: currentViewport.minX + deltaX,
-					minY: currentViewport.minY + deltaY,
+					...state.viewport,
+					zoom: newZoom,
+					minX: newMinX,
+					minY: newMinY,
+				},
+			};
+			return nextState;
+		}
+
+		// Scroll handling (wheel scroll + edge scroll)
+		if (event.type === "scroll" && event.scrollDelta) {
+			const { deltaX, deltaY } = event.scrollDelta;
+			const svgDeltaX = deltaX / state.viewport.zoom;
+			const svgDeltaY = deltaY / state.viewport.zoom;
+
+			nextState = {
+				...nextState,
+				viewport: {
+					...state.viewport,
+					minX: state.viewport.minX + svgDeltaX,
+					minY: state.viewport.minY + svgDeltaY,
 				},
 			};
 			return nextState;
 		}
 
 		// Right-click drag for viewport panning (GrabScroll)
-		if (gesture.button === 2) {
-			if (gesture.type === "drag") {
+		if (event.button === 2) {
+			if (event.type === "drag") {
 				// Calculate viewport offset from the initial state
 				// Use clientDelta (screen pixels) directly for viewport panning
 				const initialViewport =
 					state.eventStartState?.viewport ?? state.viewport;
-				const deltaX = gesture.clientDelta.x / initialViewport.zoom;
-				const deltaY = gesture.clientDelta.y / initialViewport.zoom;
+				const deltaX = event.clientDelta.x / initialViewport.zoom;
+				const deltaY = event.clientDelta.y / initialViewport.zoom;
 
 				nextState = {
 					...nextState,
@@ -55,7 +83,7 @@ export const CanvasEventHandler: GestureHandler = {
 		}
 
 		// Clear selection on click (left-click only)
-		if (gesture.type === "click" && gesture.button === 0) {
+		if (event.type === "click" && event.button === 0) {
 			nextState = {
 				...nextState,
 				selectedIds: [],

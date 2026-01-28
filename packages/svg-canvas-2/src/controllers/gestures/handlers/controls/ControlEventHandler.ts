@@ -1,5 +1,5 @@
 import type {
-	CanvasGesture,
+	CanvasEvent,
 	GestureHandler,
 } from "../../../../registry/GestureHandlerRegistryTypes";
 import type { CanvasState } from "../../../../states/canvas/CanvasState";
@@ -46,15 +46,15 @@ export class ControlEventHandler implements GestureHandler {
 		}
 	}
 
-	supports(gesture: CanvasGesture): boolean {
-		return gesture.targetKind === "control";
+	supports(event: CanvasEvent): boolean {
+		return event.targetKind === "control";
 	}
 
-	handle(state: CanvasState, gesture: CanvasGesture): CanvasState {
+	handle(state: CanvasState, event: CanvasEvent): CanvasState {
 		// 各ストラテジを試して、最初に supports() が true を返したものを使用
 		for (const strategy of this.strategies.values()) {
-			if (strategy.supports(gesture)) {
-				return strategy.handle(state, gesture);
+			if (strategy.supports(event)) {
+				return strategy.handle(state, event);
 			}
 		}
 

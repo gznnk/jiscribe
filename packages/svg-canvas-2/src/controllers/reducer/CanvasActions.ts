@@ -36,35 +36,10 @@ export type ContextMenuAction = {
 };
 
 /**
- * Viewport zoom action - zooms in/out around a point
- */
-export type ViewportZoomAction = {
-	type: "VIEWPORT_ZOOM";
-	payload: {
-		zoom: number;
-		svgX: number;
-		svgY: number;
-	};
-};
-
-/**
- * Viewport pan action - pans the viewport by delta
- */
-export type ViewportPanAction = {
-	type: "VIEWPORT_PAN";
-	payload: {
-		deltaX: number;
-		deltaY: number;
-	};
-};
-
-/**
  * Union of all canvas actions
  */
 export type CanvasAction =
 	| GestureAction
 	| ContainerResizeAction
 	| SyncExternalAction
-	| ContextMenuAction
-	| ViewportZoomAction
-	| ViewportPanAction;
+	| ContextMenuAction;

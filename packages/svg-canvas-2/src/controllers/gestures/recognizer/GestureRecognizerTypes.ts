@@ -15,7 +15,8 @@ export type GestureType =
 	| "dragStart"
 	| "drag"
 	| "dragEnd"
-	| "click";
+	| "click"
+	| "wheel";
 
 export type HoveredElement = {
 	id: string;

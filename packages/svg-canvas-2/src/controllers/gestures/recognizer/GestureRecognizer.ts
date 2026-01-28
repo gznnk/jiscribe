@@ -18,12 +18,12 @@ import type { CanvasState } from "../../../states/canvas/CanvasState";
 import { getSvgPoint } from "../../utils/getSvgPoint";
 
 /**
- * 内部で使用するポインターイベントの型
- * React.PointerEventから必要なプロパティのみを抽出
+ * 内部で使用するイベントの型
+ * PointerEventとWheelEventの両方をサポート
  */
-export type PointerEvent = {
+export type InternalEvent = {
 	type: string;
-	pointerId: number;
+	pointerId?: number; // wheel イベントには存在しない
 	clientX: number;
 	clientY: number;
 	shiftKey: boolean;
@@ -33,6 +33,8 @@ export type PointerEvent = {
 	target: EventTarget | null;
 	timeStamp: number;
 	button: number;
+	deltaX?: number; // wheel イベント用
+	deltaY?: number; // wheel イベント用
 };
 
 export type Pressed = {
@@ -64,8 +66,8 @@ export class GestureRecognizer {
 	private pressed: Pressed | null = null;
 
 	// RAF queuing
-	private fifo: PointerEvent[] = [];
-	private lastMove: PointerEvent | null = null;
+	private fifo: InternalEvent[] = [];
+	private lastMove: InternalEvent | null = null;
 	private scheduled = false;
 
 	constructor(config: GestureRecognizerConfig) {
@@ -76,9 +78,9 @@ export class GestureRecognizer {
 	}
 
 	/**
-	 * ポインターイベントを処理してジェスチャーコールバックを呼び出す
+	 * イベントを処理してジェスチャーコールバックを呼び出す
 	 */
-	private feed(e: PointerEvent): void {
+	private feed(e: InternalEvent): void {
 		const currentPos = getSvgPoint(this.svgRef.current, e.clientX, e.clientY);
 		const currentClientPos = { x: e.clientX, y: e.clientY };
 		const mods: Mods = {
@@ -92,10 +94,37 @@ export class GestureRecognizer {
 		const targetKind = target?.kind;
 		const time = e.timeStamp;
 
+		// wheel: ドラッグ外のホイールイベント
+		if (e.type === "wheel") {
+			const hovered = getHoveredElements(e.clientX, e.clientY, targetId);
+
+			this.gestureCallback({
+				type: "wheel",
+				target: e.target,
+				targetId,
+				targetKind,
+				start: currentPos,
+				last: currentPos,
+				delta: { x: 0, y: 0 },
+				clientStart: currentClientPos,
+				clientLast: currentClientPos,
+				clientDelta: { x: 0, y: 0 },
+				mods,
+				hovered,
+				time,
+				button: 0,
+				scrollDelta: {
+					deltaX: e.deltaX ?? 0,
+					deltaY: e.deltaY ?? 0,
+				},
+			});
+			return;
+		}
+
 		// pointerdown: 新しいジェスチャーを開始
 		if (e.type === "pointerdown") {
 			// ポインターキャプチャを設定
-			if (this.containerRef.current) {
+			if (this.containerRef.current && e.pointerId !== undefined) {
 				this.containerRef.current.setPointerCapture(e.pointerId);
 			}
 
@@ -103,7 +132,7 @@ export class GestureRecognizer {
 
 			// pressed 状態をセット
 			this.pressed = {
-				pointerId: e.pointerId,
+				pointerId: e.pointerId!,
 				start: currentPos,
 				last: currentPos,
 				clientStart: currentClientPos,
@@ -137,7 +166,7 @@ export class GestureRecognizer {
 		}
 
 		// 以降の処理は pressed 状態かつ同じポインターの場合のみ
-		if (!this.pressed || this.pressed.pointerId !== e.pointerId) {
+		if (!this.pressed || this.pressed.pointerId !== e.pointerId!) {
 			return;
 		}
 
@@ -162,6 +191,7 @@ export class GestureRecognizer {
 			);
 
 			if (!this.pressed.dragging) {
+				// ドラッグ開始判定
 				const distanceSquared = delta.x ** 2 + delta.y ** 2;
 				if (distanceSquared >= DRAG_THRESHOLD) {
 					this.pressed.dragging = true;
@@ -185,7 +215,18 @@ export class GestureRecognizer {
 			} else {
 				// Detect edge proximity during drag
 				let scrollDelta: { deltaX: number; deltaY: number } | undefined;
-				if (this.canvasStateRef.current) {
+
+				// Check if this pointermove has deltaX/deltaY (converted from wheel event)
+				if (e.deltaX !== undefined || e.deltaY !== undefined) {
+					const canvasState = this.canvasStateRef.current;
+					if (canvasState) {
+						scrollDelta = {
+							deltaX: e.deltaX ?? 0,
+							deltaY: e.deltaY ?? 0,
+						};
+					}
+				} else if (this.canvasStateRef.current) {
+					// Normal edge scroll detection for regular pointer moves
 					const canvasState = this.canvasStateRef.current;
 					if (canvasState.edgeScrollEnabled) {
 						const edgeProximity = detectEdgeProximity(
@@ -212,8 +253,10 @@ export class GestureRecognizer {
 				if (scrollDelta) {
 					currentPos.x += scrollDelta.deltaX;
 					currentPos.y += scrollDelta.deltaY;
-					delta.x += scrollDelta.deltaX;
-					delta.y += scrollDelta.deltaY;
+					delta.x +=
+						scrollDelta.deltaX / this.canvasStateRef.current!.viewport.zoom;
+					delta.y +=
+						scrollDelta.deltaY / this.canvasStateRef.current!.viewport.zoom;
 				}
 
 				this.gestureCallback({
@@ -240,7 +283,7 @@ export class GestureRecognizer {
 		// pointerup: ジェスチャー終了
 		if (e.type === "pointerup") {
 			// ポインターキャプチャを解放
-			if (this.containerRef.current) {
+			if (this.containerRef.current && e.pointerId !== undefined) {
 				this.containerRef.current.releasePointerCapture(e.pointerId);
 			}
 
@@ -273,7 +316,7 @@ export class GestureRecognizer {
 		// pointercancel: ジェスチャーを中断
 		if (e.type === "pointercancel") {
 			// ポインターキャプチャを解放
-			if (this.containerRef.current) {
+			if (this.containerRef.current && e.pointerId !== undefined) {
 				this.containerRef.current.releasePointerCapture(e.pointerId);
 			}
 
@@ -314,7 +357,7 @@ export class GestureRecognizer {
 		requestAnimationFrame(() => {
 			this.scheduled = false;
 
-			const batch: PointerEvent[] = [];
+			const batch: InternalEvent[] = [];
 			while (this.fifo.length) {
 				batch.push(this.fifo.shift()!);
 			}
@@ -334,7 +377,7 @@ export class GestureRecognizer {
 	/**
 	 * イベントをキューに追加してスケジュール
 	 */
-	private enqueue(e: PointerEvent): void {
+	private enqueue(e: InternalEvent): void {
 		if (e.type === "pointermove") {
 			this.lastMove = e;
 		} else {
@@ -346,7 +389,7 @@ export class GestureRecognizer {
 	/**
 	 * React.PointerEventを内部型に変換
 	 */
-	private toPointerEvent(e: React.PointerEvent<HTMLElement>): PointerEvent {
+	private toPointerEvent(e: React.PointerEvent<HTMLElement>): InternalEvent {
 		return {
 			type: e.type,
 			pointerId: e.pointerId,
@@ -363,6 +406,47 @@ export class GestureRecognizer {
 	}
 
 	/**
+	 * WheelEventを内部型に変換
+	 * ドラッグ中の場合は pointermove として変換し、それ以外は wheel として変換
+	 */
+	private toWheelEvent(e: WheelEvent): InternalEvent {
+		// ドラッグ中は pointermove に変換して deltaX/deltaY を保持
+		if (this.pressed?.dragging) {
+			return {
+				type: "pointermove",
+				pointerId: this.pressed.pointerId,
+				clientX: e.clientX,
+				clientY: e.clientY,
+				shiftKey: e.shiftKey,
+				altKey: e.altKey,
+				ctrlKey: e.ctrlKey,
+				metaKey: e.metaKey,
+				target: e.target,
+				timeStamp: e.timeStamp,
+				button: this.pressed.button,
+				deltaX: e.deltaX,
+				deltaY: e.deltaY,
+			};
+		}
+
+		// ドラッグ外は wheel として変換
+		return {
+			type: "wheel",
+			clientX: e.clientX,
+			clientY: e.clientY,
+			shiftKey: e.shiftKey,
+			altKey: e.altKey,
+			ctrlKey: e.ctrlKey,
+			metaKey: e.metaKey,
+			target: e.target,
+			timeStamp: e.timeStamp,
+			button: 0,
+			deltaX: e.deltaX,
+			deltaY: e.deltaY,
+		};
+	}
+
+	/**
 	 * ポインターイベントハンドラーを取得
 	 */
 	public getHandlers(): PointerEventHandlers {
@@ -372,5 +456,12 @@ export class GestureRecognizer {
 			onPointerUp: (e) => this.enqueue(this.toPointerEvent(e)),
 			onPointerCancel: (e) => this.enqueue(this.toPointerEvent(e)),
 		};
+	}
+
+	/**
+	 * ホイールイベントハンドラーを取得
+	 */
+	public getWheelHandler(): (e: WheelEvent) => void {
+		return (e: WheelEvent) => this.enqueue(this.toWheelEvent(e));
 	}
 }

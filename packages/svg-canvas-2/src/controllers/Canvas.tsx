@@ -15,7 +15,6 @@ import { useDocumentWheel } from "./hooks/useDocumentWheel";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
 import { canvasReducer } from "./reducer/canvasReducer";
 import { initializeRegistries } from "./setup";
-import { getSvgPoint } from "./utils/getSvgPoint";
 import { canvasToDoc, canvasToState } from "../operations/canvas/CanvasMapper";
 import { CanvasView } from "../presentations/canvas/CanvasView";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
@@ -73,7 +72,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 		},
 		[dispatch],
 	);
-	const eventHandlers = useGestureRecognizer({
+	const { pointerHandlers, wheelHandler } = useGestureRecognizer({
 		gestureCallback: handleGesture,
 		containerRef: canvasRef,
 		svgRef,
@@ -101,37 +100,8 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 		[dispatch],
 	);
 
-	// Wheel handling (Ctrl + wheel for zoom, otherwise scroll)
-	const handleWheel = useCallback(
-		(e: WheelEvent) => {
-			if (e.ctrlKey) {
-				// Zoom when Ctrl is pressed
-				const svgPoint = getSvgPoint(svgRef.current, e.clientX, e.clientY);
-				const delta = e.deltaY > 0 ? 0.9 : 1.1;
-				const newZoom = state.viewport.zoom * delta;
-
-				dispatch({
-					type: "VIEWPORT_ZOOM",
-					payload: {
-						zoom: newZoom,
-						svgX: svgPoint.x,
-						svgY: svgPoint.y,
-					},
-				});
-			} else {
-				// Pan when Ctrl is not pressed
-				dispatch({
-					type: "VIEWPORT_PAN",
-					payload: {
-						deltaX: e.deltaX,
-						deltaY: e.deltaY,
-					},
-				});
-			}
-		},
-		[state.viewport.zoom],
-	);
-	useDocumentWheel(svgRef, handleWheel);
+	// Use wheel handler from GestureRecognizer
+	useDocumentWheel(svgRef, wheelHandler);
 
 	return (
 		<Container
@@ -139,7 +109,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 			data-kind="canvas"
 			ref={canvasRef}
 			onContextMenu={handleContextMenu}
-			{...eventHandlers}
+			{...pointerHandlers}
 		>
 			<CanvasView {...state} svgRef={svgRef} />
 		</Container>

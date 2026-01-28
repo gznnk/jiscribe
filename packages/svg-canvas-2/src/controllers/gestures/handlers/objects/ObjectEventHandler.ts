@@ -1,5 +1,5 @@
 import type {
-	CanvasGesture,
+	CanvasEvent,
 	GestureHandler,
 } from "../../../../registry/GestureHandlerRegistryTypes";
 import { objectRegistry } from "../../../../registry/ObjectRegistry";
@@ -12,12 +12,12 @@ import type { CanvasState } from "../../../../states/canvas/CanvasState";
  * Note: eventStartState is managed by handleGesture(), not here.
  */
 export const ObjectEventHandler: GestureHandler = {
-	supports(gesture: CanvasGesture): boolean {
-		return gesture.targetKind === "object";
+	supports(event: CanvasEvent): boolean {
+		return event.targetKind === "object";
 	},
 
-	handle(state: CanvasState, gesture: CanvasGesture): CanvasState {
-		const targetObjectId = gesture.targetId;
+	handle(state: CanvasState, event: CanvasEvent): CanvasState {
+		const targetObjectId = event.targetId;
 		if (!targetObjectId) {
 			return state;
 		}
@@ -33,13 +33,13 @@ export const ObjectEventHandler: GestureHandler = {
 		let nextState = state;
 
 		// For click events, we don't need eventStartState
-		if (gesture.type === "click" && eventHandler.onClick) {
+		if (event.type === "click" && eventHandler.onClick) {
 			const clickHandlerParams = {
 				objectState: targetObject,
 				canvasState: nextState,
-				mods: gesture.mods,
-				time: gesture.time,
-				button: gesture.button,
+				mods: event.mods,
+				time: event.time,
+				button: event.button,
 			};
 			nextState = eventHandler.onClick(clickHandlerParams);
 		} else {
@@ -52,19 +52,19 @@ export const ObjectEventHandler: GestureHandler = {
 
 			// Prepare common parameters for drag event handlers
 			const dragHandlerParams = {
-				delta: gesture.delta,
+				delta: event.delta,
 				objectState: objectStartState,
 				canvasState: nextState,
-				mods: gesture.mods,
-				time: gesture.time,
-				button: gesture.button,
+				mods: event.mods,
+				time: event.time,
+				button: event.button,
 			};
 
-			if (gesture.type === "dragStart" && eventHandler.onDragStart) {
+			if (event.type === "dragStart" && eventHandler.onDragStart) {
 				nextState = eventHandler.onDragStart(dragHandlerParams);
-			} else if (gesture.type === "drag" && eventHandler.onDrag) {
+			} else if (event.type === "drag" && eventHandler.onDrag) {
 				nextState = eventHandler.onDrag(dragHandlerParams);
-			} else if (gesture.type === "dragEnd" && eventHandler.onDragEnd) {
+			} else if (event.type === "dragEnd" && eventHandler.onDragEnd) {
 				nextState = eventHandler.onDragEnd(dragHandlerParams);
 			}
 		}

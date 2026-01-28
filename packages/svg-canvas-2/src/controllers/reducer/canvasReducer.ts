@@ -37,44 +37,6 @@ export const canvasReducer = (
 				contextMenuPosition: action.payload,
 			};
 
-		case "VIEWPORT_ZOOM": {
-			const { svgX, svgY } = action.payload;
-			const { minX, minY, width, height, zoom } = state.viewport;
-			const currentViewBoxWidth = width / zoom;
-			const currentViewBoxHeight = height / zoom;
-			const newViewBoxWidth = width / action.payload.zoom;
-			const newViewBoxHeight = height / action.payload.zoom;
-			const offsetX = (svgX - minX) / currentViewBoxWidth;
-			const offsetY = (svgY - minY) / currentViewBoxHeight;
-			const newMinX = svgX - newViewBoxWidth * offsetX;
-			const newMinY = svgY - newViewBoxHeight * offsetY;
-			return {
-				...state,
-				viewport: {
-					...state.viewport,
-					zoom: action.payload.zoom,
-					minX: newMinX,
-					minY: newMinY,
-				},
-			};
-		}
-
-		case "VIEWPORT_PAN": {
-			const { deltaX, deltaY } = action.payload;
-			const { zoom } = state.viewport;
-			// Convert pixel delta to SVG coordinate delta
-			const svgDeltaX = deltaX / zoom;
-			const svgDeltaY = deltaY / zoom;
-			return {
-				...state,
-				viewport: {
-					...state.viewport,
-					minX: state.viewport.minX + svgDeltaX,
-					minY: state.viewport.minY + svgDeltaY,
-				},
-			};
-		}
-
 		default:
 			return state;
 	}

@@ -30,5 +30,5 @@ export const calculateScrollDelta = (
 		deltaY = AUTO_SCROLL_STEP_SIZE;
 	}
 
-	return { deltaX: deltaX / zoom, deltaY: deltaY / zoom };
+	return { deltaX: deltaX * zoom, deltaY: deltaY * zoom };
 };

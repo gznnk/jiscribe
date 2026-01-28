@@ -7,15 +7,23 @@ import type {
 import type { CanvasState } from "../states/canvas/CanvasState";
 
 /**
- * Extended event type that includes gesture types plus additional canvas-specific events.
+ * Canvas event type.
+ * Excludes "wheel" from GestureType (wheel is converted to scroll/zoom).
+ * Adds canvas-specific events like dragOver, dragLeave, scroll, and zoom.
  */
-export type EventType = GestureType | "dragOver" | "dragLeave" | "scroll";
+export type EventType =
+	| Exclude<GestureType, "wheel">
+	| "dragOver"
+	| "dragLeave"
+	| "scroll"
+	| "zoom";
 
 /**
- * Canvas gesture type.
- * Extends the base Gesture type with additional event types like dragOver and dragLeave.
+ * Canvas event type.
+ * Represents high-level user intentions (scroll, zoom, drag, click, etc.)
+ * derived from low-level input gestures.
  */
-export type CanvasGesture = Prettify<
+export type CanvasEvent = Prettify<
 	{
 		type: EventType;
 	} & Omit<Gesture, "type">
@@ -23,21 +31,21 @@ export type CanvasGesture = Prettify<
 
 /**
  * Interface for gesture handlers.
- * Handlers can determine if they support a gesture and process it accordingly.
+ * Handlers can determine if they support a canvas event and process it accordingly.
  */
 export interface GestureHandler {
 	/**
-	 * Determines if this handler supports the given canvas gesture.
-	 * @param gesture - The canvas gesture to check
-	 * @returns true if this handler can process the gesture
+	 * Determines if this handler supports the given canvas event.
+	 * @param event - The canvas event to check
+	 * @returns true if this handler can process the event
 	 */
-	supports(gesture: CanvasGesture): boolean;
+	supports(event: CanvasEvent): boolean;
 
 	/**
-	 * Handles the canvas gesture and returns the updated canvas state.
+	 * Handles the canvas event and returns the updated canvas state.
 	 * @param state - The current canvas state
-	 * @param gesture - The canvas gesture to process
+	 * @param event - The canvas event to process
 	 * @returns The updated canvas state
 	 */
-	handle(state: CanvasState, gesture: CanvasGesture): CanvasState;
+	handle(state: CanvasState, event: CanvasEvent): CanvasState;
 }
