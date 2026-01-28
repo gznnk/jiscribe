@@ -8,7 +8,6 @@ import type { CanvasState } from "../../states/canvas/CanvasState";
 import { GridBackground } from "../layers/background/GridBackground";
 import { GridPattern } from "../layers/background/GridPattern";
 import { ObjectsRenderer } from "../layers/content/ObjectsRenderer";
-import { DebugInfo } from "../layers/debug/DebugInfo";
 
 type CanvasViewProps = CanvasState & {
 	svgRef: React.RefObject<SVGSVGElement | null>;
@@ -49,16 +48,6 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 				<line x1={-20} y1={0} x2={20} y2={0} stroke="red" strokeWidth={1} />
 				<line x1={0} y1={-20} x2={0} y2={20} stroke="red" strokeWidth={1} />
 			</g>
-
-			{/* Debug: Selected object info */}
-			<DebugInfo
-				selectedIds={selectedIds}
-				objects={objects}
-				viewportWidth={width}
-				viewportMinX={minX}
-				viewportMinY={minY}
-				zoom={zoom}
-			/>
 		</Svg>
 	);
 };

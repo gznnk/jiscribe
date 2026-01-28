@@ -8,13 +8,20 @@ import {
 	useRef,
 } from "react";
 
-import { Container } from "./CanvasStyled";
+import {
+	Container,
+	ScrollSyncedOverlay,
+	Viewport,
+	ViewportOverlay,
+	ZoomScaledOverlay,
+} from "./CanvasStyled";
 import type { GestureCallback } from "./gestures/recognizer/GestureRecognizerTypes";
 import { useContainerSize } from "./hooks/useContainerSize";
 import { useDocumentWheel } from "./hooks/useDocumentWheel";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
 import { canvasReducer } from "./reducer/canvasReducer";
 import { initializeRegistries } from "./setup";
+import { DebugInfo } from "./ui/debug/DebugInfo";
 import { canvasToDoc, canvasToState } from "../operations/canvas/CanvasMapper";
 import { CanvasView } from "../presentations/canvas/CanvasView";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
@@ -103,16 +110,31 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 		[dispatch],
 	);
 
+	const { minX, minY, zoom } = state.viewport;
+
 	return (
-		<Container
-			data-id="canvas"
-			data-kind="canvas"
-			ref={canvasRef}
-			onContextMenu={handleContextMenu}
-			{...pointerHandlers}
-		>
-			<CanvasView {...state} svgRef={svgRef} />
-		</Container>
+		<Viewport>
+			<Container
+				data-id="canvas"
+				data-kind="canvas"
+				ref={canvasRef}
+				onContextMenu={handleContextMenu}
+				{...pointerHandlers}
+			>
+				<CanvasView {...state} svgRef={svgRef} />
+				{/* Container for HTML elements that follow canvas scroll AND zoom */}
+				<ZoomScaledOverlay left={-minX} top={-minY} zoom={zoom}>
+					{/* TODO: Add zoom-scaled elements (e.g., text editors on objects) */}
+				</ZoomScaledOverlay>
+				{/* Container for HTML elements that follow canvas scroll but NOT zoom */}
+				<ScrollSyncedOverlay left={-minX} top={-minY}>
+					{/* TODO: Add scroll-synced elements (e.g., object menus, popovers) */}
+				</ScrollSyncedOverlay>
+			</Container>
+			<ViewportOverlay>
+				<DebugInfo selectedIds={state.selectedIds} objects={state.objects} />
+			</ViewportOverlay>
+		</Viewport>
 	);
 };
 export const Canvas = memo(CanvasComponent);
