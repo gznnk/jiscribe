@@ -8,16 +8,23 @@ import {
 	groupToDoc,
 	groupToState,
 } from "../../operations/objects/primitives/Group/GroupMapper";
+import { PolylineEventHandler } from "../../operations/objects/primitives/Polyline/PolylineEventHandler";
+import {
+	polylineToDoc,
+	polylineToState,
+} from "../../operations/objects/primitives/Polyline/PolylineMapper";
 import { RectEventHandler } from "../../operations/objects/primitives/Rect/RectEventHandler";
 import {
 	rectToDoc,
 	rectToState,
 } from "../../operations/objects/primitives/Rect/RectMapper";
 import { Ellipse } from "../../presentations/objects/primitives/Ellipse";
+import { Polyline } from "../../presentations/objects/primitives/Polyline";
 import { Rect } from "../../presentations/objects/primitives/Rect";
 import { objectRegistry } from "../../registry/ObjectRegistry";
 import { EllipseFeatures } from "../../schemas/objects/primitives/EllipseDoc";
 import { GroupFeatures } from "../../schemas/objects/primitives/GroupDoc";
+import { PolylineFeatures } from "../../schemas/objects/primitives/PolylineDoc";
 import { RectFeatures } from "../../schemas/objects/primitives/RectDoc";
 
 /**
@@ -55,5 +62,15 @@ export const initializeObjectRegistry = (): void => {
 		},
 		eventHandler: GroupEventHandler,
 		component: () => null, // Groupはコンポーネントを持たない（再帰的に描画される）
+	});
+
+	objectRegistry.register("polyline", {
+		features: PolylineFeatures,
+		mapper: {
+			toDoc: polylineToDoc,
+			toState: polylineToState,
+		},
+		eventHandler: PolylineEventHandler,
+		component: Polyline,
 	});
 };

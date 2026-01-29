@@ -4,6 +4,7 @@ import { Canvas } from "./controllers/Canvas";
 import type { CanvasDoc } from "./schemas/canvas/CanvasDoc";
 import type { EllipseDoc } from "./schemas/objects/primitives/EllipseDoc";
 import type { GroupDoc } from "./schemas/objects/primitives/GroupDoc";
+import type { PolylineDoc } from "./schemas/objects/primitives/PolylineDoc";
 import type { RectDoc } from "./schemas/objects/primitives/RectDoc";
 
 // 暫定的なテストデータ
@@ -94,6 +95,31 @@ const testCanvasDoc: CanvasDoc = {
 			stroke: "#E65100",
 			strokeWidth: 1,
 		} as unknown as RectDoc,
+		{
+			id: "polyline-1",
+			type: "polyline",
+			points: [
+				{ x: 50, y: 300 },
+				{ x: 150, y: 320 },
+				{ x: 200, y: 280 },
+				{ x: 250, y: 340 },
+				{ x: 350, y: 310 },
+			],
+			stroke: "#E91E63",
+			strokeWidth: 3,
+		} as unknown as PolylineDoc,
+		{
+			id: "polyline-2",
+			type: "polyline",
+			points: [
+				{ x: 400, y: 350 },
+				{ x: 450, y: 380 },
+				{ x: 500, y: 360 },
+				{ x: 550, y: 400 },
+			],
+			stroke: "#00BCD4",
+			strokeWidth: 2,
+		} as unknown as PolylineDoc,
 	],
 	connectors: [],
 };

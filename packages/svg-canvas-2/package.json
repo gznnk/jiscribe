@@ -18,6 +18,7 @@
 	"dependencies": {
 		"@emotion/react": "catalog:",
 		"@emotion/styled": "catalog:",
+		"@workspace/basic-validators": "workspace:*",
 		"@workspace/geometry": "workspace:*",
 		"@workspace/utility-types": "workspace:*",
 		"react": "catalog:",
