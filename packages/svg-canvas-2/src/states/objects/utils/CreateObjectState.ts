@@ -1,9 +1,9 @@
-import type { Frame, FrameKeyPoints } from "@workspace/geometry";
 import type { Brand, Prettify } from "@workspace/utility-types";
 
 import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
 import type { Poly } from "../../../schemas/objects/types/Poly";
 import type { FillStyleState } from "../base/FillStyleState";
+import type { FrameWithKeyPoints } from "../base/FrameWithKeyPoints";
 import type { ObjectState } from "../base/ObjectState";
 import type { StrokeStyleState } from "../base/StrokeStyleState";
 import type { TransformState } from "../base/TransformState";
@@ -12,16 +12,16 @@ import type { TransformState } from "../base/TransformState";
  * Conditional geometry type based on specified geometry feature (runtime state).
  *
  * - `none`: No geometry properties
- * - `rect`/`ellipse`: Frame (cx, cy, width, height) with optional cached keyPoints
+ * - `rect`/`ellipse`: FrameWithKeyPoints (Frame with optional cached keyPoints)
  * - `poly`: Poly (points array)
  */
 type GeometryState<T extends ObjectFeatures> = //
 	T["geometry"] extends "none"
 		? object
 		: T["geometry"] extends "rect"
-			? Frame & { keyPoints?: FrameKeyPoints }
+			? FrameWithKeyPoints
 			: T["geometry"] extends "ellipse"
-				? Frame & { keyPoints?: FrameKeyPoints }
+				? FrameWithKeyPoints
 				: T["geometry"] extends "poly"
 					? Poly
 					: object;

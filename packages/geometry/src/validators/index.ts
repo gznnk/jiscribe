@@ -11,3 +11,6 @@ export * from "./isTransform";
 export * from "./isTransformedRect";
 export * from "./isTransformedFrame";
 export * from "./isTransformedEllipse";
+
+// KeyPoints validators
+export * from "./isFrameKeyPoints";

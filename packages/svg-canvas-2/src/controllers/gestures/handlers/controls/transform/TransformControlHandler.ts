@@ -15,6 +15,7 @@ import {
 
 import type { CanvasEvent } from "../../../../../registry/GestureHandlerRegistryTypes";
 import type { CanvasState } from "../../../../../states/canvas/CanvasState";
+import { hasFrameKeyPoints } from "../../../../../states/objects/base/FrameWithKeyPoints";
 import type { TransformState } from "../../../../../states/objects/base/TransformState";
 import { isTransformState } from "../../../../../states/objects/base/TransformState";
 import type { ControlStrategy } from "../ControlEventHandler";
@@ -146,8 +147,10 @@ export class TransformControlHandler implements ControlStrategy {
 
 		// ワールド空間でのカーソル位置
 
-		// 固定点をローカル空間に変換
-		const startFrameKeyPoints = calcFrameKeyPoints(startFrame);
+		// キャッシュがあればそれを使用、なければ計算
+		const startFrameKeyPoints: FrameKeyPoints = hasFrameKeyPoints(startFrame)
+			? startFrame.keyPoints
+			: calcFrameKeyPoints(startFrame);
 
 		const isSwapped = (startFrame.rotation + 405) % 180 > 90;
 
