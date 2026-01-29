@@ -2,6 +2,7 @@ import React from "react";
 
 import { Canvas } from "./controllers/Canvas";
 import type { CanvasDoc } from "./schemas/canvas/CanvasDoc";
+import type { ConnectorDoc } from "./schemas/objects/connections/ConnectorDoc";
 import type { EllipseDoc } from "./schemas/objects/primitives/EllipseDoc";
 import type { GroupDoc } from "./schemas/objects/primitives/GroupDoc";
 import type { PolylineDoc } from "./schemas/objects/primitives/PolylineDoc";
@@ -121,7 +122,62 @@ const testCanvasDoc: CanvasDoc = {
 			strokeWidth: 2,
 		} as unknown as PolylineDoc,
 	],
-	connectors: [],
+	connectors: [
+		{
+			id: "connector-1",
+			type: "connector",
+			points: [
+				{ x: 150, y: 100 },
+				{ x: 400, y: 200 },
+			],
+			source: {
+				owner: { type: "rect", id: "rect-1" },
+				anchor: { kind: "center" },
+			},
+			target: {
+				owner: { type: "ellipse", id: "ellipse-1" },
+				anchor: { kind: "center" },
+			},
+			stroke: "#795548",
+			strokeWidth: 2,
+		} as unknown as ConnectorDoc,
+		{
+			id: "connector-2",
+			type: "connector",
+			points: [
+				{ x: 375, y: 175 },
+				{ x: 150, y: 400 },
+			],
+			source: {
+				owner: { type: "rect", id: "rect-2" },
+				anchor: { kind: "center" },
+			},
+			target: {
+				owner: { type: "ellipse", id: "ellipse-2" },
+				anchor: { kind: "center" },
+			},
+			stroke: "#607D8B",
+			strokeWidth: 2,
+		} as unknown as ConnectorDoc,
+		{
+			id: "connector-3",
+			type: "connector",
+			points: [
+				{ x: 150, y: 275 },
+				{ x: 540, y: 90 },
+			],
+			source: {
+				owner: { type: "rect", id: "rect-3" },
+				anchor: { kind: "center" },
+			},
+			target: {
+				owner: { type: "rect", id: "rect-in-group-1" },
+				anchor: { kind: "center" },
+			},
+			stroke: "#9E9E9E",
+			strokeWidth: 2,
+		} as unknown as ConnectorDoc,
+	],
 };
 
 /**

@@ -7,6 +7,7 @@ import { SelectionOverlay } from "../../controllers/ui/feedback/SelectionOverlay
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import { GridBackground } from "../layers/background/GridBackground";
 import { GridPattern } from "../layers/background/GridPattern";
+import { ConnectorsRenderer } from "../layers/content/ConnectorsRenderer";
 import { ObjectsRenderer } from "../layers/content/ObjectsRenderer";
 
 type CanvasViewProps = CanvasState & {
@@ -16,6 +17,7 @@ type CanvasViewProps = CanvasState & {
 const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 	objects,
 	rootIds,
+	connectorIds,
 	selectedIds,
 	viewport,
 	svgRef,
@@ -38,6 +40,8 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 				width={width / zoom}
 				height={height / zoom}
 			/>
+			{/* Connectors rendered below objects */}
+			<ConnectorsRenderer objects={objects} connectorIds={connectorIds} />
 			<ObjectsRenderer objects={objects} rootIds={rootIds} />
 			<SelectionOverlay selectedIds={selectedIds} objects={objects} />
 			<TransformControlsLayer selectedIds={selectedIds} objects={objects} />

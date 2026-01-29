@@ -18,10 +18,10 @@ export const connectorToState: DocToStateMapper<
 	return {
 		...base,
 		points: doc.points,
-		stroke: doc.stroke,
-		strokeWidth: doc.strokeWidth,
 		source: doc.source,
 		target: doc.target,
+		stroke: doc.stroke,
+		strokeWidth: doc.strokeWidth,
 		startArrow: doc.startArrow,
 		endArrow: doc.endArrow,
 	} as ConnectorState;
@@ -38,10 +38,10 @@ export const connectorToDoc: StateToDocMapper<ConnectorState, ConnectorDoc> = (
 	return {
 		...base,
 		points: state.points,
-		stroke: state.stroke,
-		strokeWidth: state.strokeWidth,
 		source: state.source,
 		target: state.target,
+		stroke: state.stroke,
+		strokeWidth: state.strokeWidth,
 		startArrow: state.startArrow,
 		endArrow: state.endArrow,
 	} as ConnectorDoc;

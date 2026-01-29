@@ -1,3 +1,7 @@
+import {
+	connectorToDoc,
+	connectorToState,
+} from "../../operations/objects/connections/Connector/ConnectorMapper";
 import { EllipseEventHandler } from "../../operations/objects/primitives/Ellipse/EllipseEventHandler";
 import {
 	ellipseToDoc,
@@ -18,10 +22,12 @@ import {
 	rectToDoc,
 	rectToState,
 } from "../../operations/objects/primitives/Rect/RectMapper";
+import { Connector } from "../../presentations/objects/connections/Connector";
 import { Ellipse } from "../../presentations/objects/primitives/Ellipse";
 import { Polyline } from "../../presentations/objects/primitives/Polyline";
 import { Rect } from "../../presentations/objects/primitives/Rect";
 import { objectRegistry } from "../../registry/ObjectRegistry";
+import { ConnectorFeatures } from "../../schemas/objects/connections/ConnectorDoc";
 import { EllipseFeatures } from "../../schemas/objects/primitives/EllipseDoc";
 import { GroupFeatures } from "../../schemas/objects/primitives/GroupDoc";
 import { PolylineFeatures } from "../../schemas/objects/primitives/PolylineDoc";
@@ -72,5 +78,15 @@ export const initializeObjectRegistry = (): void => {
 		},
 		eventHandler: PolylineEventHandler,
 		component: Polyline,
+	});
+
+	objectRegistry.register("connector", {
+		features: ConnectorFeatures,
+		mapper: {
+			toDoc: connectorToDoc,
+			toState: connectorToState,
+		},
+		eventHandler: {}, // Event handling not yet implemented
+		component: Connector,
 	});
 };
