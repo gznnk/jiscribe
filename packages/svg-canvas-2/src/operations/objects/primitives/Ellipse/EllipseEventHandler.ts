@@ -1,14 +1,14 @@
 import type { ObjectEventHandler } from "../../../../registry/ObjectRegistryTypes";
 import { DefaultClickEventHandler } from "../../utils/DefaultClickEventHandler";
 import {
-	DefaultDragEndEventHandler,
-	DefaultDragEventHandler,
-	DefaultDragStartEventHandler,
-} from "../../utils/DefaultDragEventHandler";
+	FrameDragEndEventHandler,
+	FrameDragEventHandler,
+	FrameDragStartEventHandler,
+} from "../../utils/FrameDragEventHandler";
 
 export const EllipseEventHandler: ObjectEventHandler = {
-	onDragStart: DefaultDragStartEventHandler,
-	onDrag: DefaultDragEventHandler,
-	onDragEnd: DefaultDragEndEventHandler,
+	onDragStart: FrameDragStartEventHandler,
+	onDrag: FrameDragEventHandler,
+	onDragEnd: FrameDragEndEventHandler,
 	onClick: DefaultClickEventHandler,
 };

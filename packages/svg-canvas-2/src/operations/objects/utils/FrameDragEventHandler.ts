@@ -12,12 +12,12 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 type FrameObjectState = ObjectState & Frame;
 
 /**
- * Default drag event handler that updates an object's position.
- * Also moves all other selected objects by the same delta.
+ * Frame-specific drag event handler that updates an object's position.
+ * Also moves all other selected Frame objects by the same delta.
  * Returns the entire CanvasState with the updated objects.
  * Only handles left-click drag (button 0).
  */
-export const DefaultDragEventHandler: DragEventHandler<ObjectState> = (
+export const FrameDragEventHandler: DragEventHandler<ObjectState> = (
 	params: DragEventHandlerParams<ObjectState>,
 ) => {
 	const { delta, objectState, canvasState, button } = params;
@@ -67,10 +67,10 @@ export const DefaultDragEventHandler: DragEventHandler<ObjectState> = (
  * Drag start event handler that updates selection state based on modifiers.
  * - If Ctrl (or Meta on Mac) is pressed: adds the dragged object to selectedIds
  * - Otherwise: sets selectedIds to only the dragged object
- * Then calls DefaultDragEventHandler to update the object's position.
+ * Then calls FrameDragEventHandler to update the object's position.
  * Only handles left-click drag (button 0).
  */
-export const DefaultDragStartEventHandler: DragEventHandler<ObjectState> = (
+export const FrameDragStartEventHandler: DragEventHandler<ObjectState> = (
 	params: DragEventHandlerParams<ObjectState>,
 ) => {
 	const { objectState, canvasState, mods, button } = params;
@@ -103,8 +103,8 @@ export const DefaultDragStartEventHandler: DragEventHandler<ObjectState> = (
 		edgeScrollEnabled: true,
 	};
 
-	// Call default handler to update object position
-	return DefaultDragEventHandler({
+	// Call Frame handler to update object position
+	return FrameDragEventHandler({
 		...params,
 		canvasState: nextState,
 	});
@@ -112,9 +112,9 @@ export const DefaultDragStartEventHandler: DragEventHandler<ObjectState> = (
 
 /**
  * Drag end event handler that disables edge scrolling.
- * Then calls DefaultDragEventHandler to finalize the object's position.
+ * Then calls FrameDragEventHandler to finalize the object's position.
  */
-export const DefaultDragEndEventHandler: DragEventHandler<ObjectState> = (
+export const FrameDragEndEventHandler: DragEventHandler<ObjectState> = (
 	params: DragEventHandlerParams<ObjectState>,
 ) => {
 	// Disable edge scrolling on drag end
@@ -123,7 +123,7 @@ export const DefaultDragEndEventHandler: DragEventHandler<ObjectState> = (
 		edgeScrollEnabled: false,
 	};
 
-	return DefaultDragEventHandler({
+	return FrameDragEventHandler({
 		...params,
 		canvasState: nextState,
 	});
