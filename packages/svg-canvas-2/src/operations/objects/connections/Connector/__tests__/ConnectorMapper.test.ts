@@ -17,6 +17,14 @@ describe("ConnectorMapper", () => {
 				],
 				stroke: "#000000",
 				strokeWidth: 2,
+				source: {
+					owner: { type: "rect", id: "rect-1" },
+					anchor: { kind: "center" },
+				},
+				target: {
+					owner: { type: "rect", id: "rect-2" },
+					anchor: { kind: "center" },
+				},
 				startArrow: "arrow",
 				endArrow: "circle",
 			} as unknown as ConnectorDoc;
@@ -32,11 +40,19 @@ describe("ConnectorMapper", () => {
 			]);
 			expect(state.stroke).toBe("#000000");
 			expect(state.strokeWidth).toBe(2);
+			expect(state.source).toEqual({
+				owner: { type: "rect", id: "rect-1" },
+				anchor: { kind: "center" },
+			});
+			expect(state.target).toEqual({
+				owner: { type: "rect", id: "rect-2" },
+				anchor: { kind: "center" },
+			});
 			expect(state.startArrow).toBe("arrow");
 			expect(state.endArrow).toBe("circle");
 		});
 
-		it("should handle connector without arrows", () => {
+		it("should handle connector with free endpoints", () => {
 			const doc: ConnectorDoc = {
 				id: "connector-2",
 				type: "connector",
@@ -45,6 +61,12 @@ describe("ConnectorMapper", () => {
 					{ x: 50, y: 50 },
 				],
 				stroke: "#000000",
+				source: {
+					anchor: { kind: "free", point: { x: 0, y: 0 } },
+				},
+				target: {
+					anchor: { kind: "free", point: { x: 50, y: 50 } },
+				},
 			} as unknown as ConnectorDoc;
 
 			const state = connectorToState(doc);
@@ -55,6 +77,12 @@ describe("ConnectorMapper", () => {
 				{ x: 0, y: 0 },
 				{ x: 50, y: 50 },
 			]);
+			expect(state.source).toEqual({
+				anchor: { kind: "free", point: { x: 0, y: 0 } },
+			});
+			expect(state.target).toEqual({
+				anchor: { kind: "free", point: { x: 50, y: 50 } },
+			});
 			expect(state.startArrow).toBeUndefined();
 			expect(state.endArrow).toBeUndefined();
 		});
@@ -72,6 +100,14 @@ describe("ConnectorMapper", () => {
 				],
 				stroke: "#000000",
 				strokeWidth: 2,
+				source: {
+					owner: { type: "rect", id: "rect-1" },
+					anchor: { kind: "center" },
+				},
+				target: {
+					owner: { type: "rect", id: "rect-2" },
+					anchor: { kind: "center" },
+				},
 				startArrow: "arrow",
 				endArrow: "circle",
 			} as unknown as ConnectorState;
@@ -87,11 +123,19 @@ describe("ConnectorMapper", () => {
 			]);
 			expect(doc.stroke).toBe("#000000");
 			expect(doc.strokeWidth).toBe(2);
+			expect(doc.source).toEqual({
+				owner: { type: "rect", id: "rect-1" },
+				anchor: { kind: "center" },
+			});
+			expect(doc.target).toEqual({
+				owner: { type: "rect", id: "rect-2" },
+				anchor: { kind: "center" },
+			});
 			expect(doc.startArrow).toBe("arrow");
 			expect(doc.endArrow).toBe("circle");
 		});
 
-		it("should handle connector without arrows", () => {
+		it("should handle connector with free endpoints", () => {
 			const state: ConnectorState = {
 				id: "connector-2",
 				type: "connector",
@@ -100,6 +144,12 @@ describe("ConnectorMapper", () => {
 					{ x: 50, y: 50 },
 				],
 				stroke: "#000000",
+				source: {
+					anchor: { kind: "free", point: { x: 0, y: 0 } },
+				},
+				target: {
+					anchor: { kind: "free", point: { x: 50, y: 50 } },
+				},
 			} as unknown as ConnectorState;
 
 			const doc = connectorToDoc(state);
@@ -110,6 +160,12 @@ describe("ConnectorMapper", () => {
 				{ x: 0, y: 0 },
 				{ x: 50, y: 50 },
 			]);
+			expect(doc.source).toEqual({
+				anchor: { kind: "free", point: { x: 0, y: 0 } },
+			});
+			expect(doc.target).toEqual({
+				anchor: { kind: "free", point: { x: 50, y: 50 } },
+			});
 			expect(doc.startArrow).toBeUndefined();
 			expect(doc.endArrow).toBeUndefined();
 		});
@@ -127,6 +183,14 @@ describe("ConnectorMapper", () => {
 				],
 				stroke: "#000000",
 				strokeWidth: 2,
+				source: {
+					owner: { type: "rect", id: "rect-1" },
+					anchor: { kind: "center" },
+				},
+				target: {
+					owner: { type: "rect", id: "rect-2" },
+					anchor: { kind: "connectPoint", id: "cp-1" },
+				},
 				startArrow: "arrow",
 				endArrow: "circle",
 			} as unknown as ConnectorDoc;
@@ -139,6 +203,8 @@ describe("ConnectorMapper", () => {
 			expect(convertedDoc.points).toEqual(originalDoc.points);
 			expect(convertedDoc.stroke).toBe(originalDoc.stroke);
 			expect(convertedDoc.strokeWidth).toBe(originalDoc.strokeWidth);
+			expect(convertedDoc.source).toEqual(originalDoc.source);
+			expect(convertedDoc.target).toEqual(originalDoc.target);
 			expect(convertedDoc.startArrow).toBe(originalDoc.startArrow);
 			expect(convertedDoc.endArrow).toBe(originalDoc.endArrow);
 		});

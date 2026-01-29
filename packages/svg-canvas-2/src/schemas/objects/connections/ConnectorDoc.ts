@@ -1,4 +1,5 @@
 import type { ArrowType } from "../types/ArrowType";
+import type { EndpointRef } from "../types/EndpointRef";
 import type { ObjectFeatures } from "../types/ObjectFeatures";
 import type { CreateObjectType } from "../utils/CreateObjectType";
 
@@ -15,6 +16,8 @@ export type ConnectorDoc = CreateObjectType<
 	typeof ConnectorFeatures,
 	typeof ConnectorDocBrand,
 	{
+		source: EndpointRef;
+		target: EndpointRef;
 		startArrow?: ArrowType;
 		endArrow?: ArrowType;
 	}

@@ -6,7 +6,8 @@
 	"types": "src/index.ts",
 	"scripts": {
 		"lint": "eslint .",
-		"test": "vitest",
+		"test": "vitest run",
+		"test:watch": "vitest --watch",
 		"test:ui": "vitest --ui",
 		"typecheck": "tsc --noEmit",
 		"dep:clean": "rimraf .dependency-graph && mkdir .dependency-graph",
