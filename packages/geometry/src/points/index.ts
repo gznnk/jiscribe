@@ -5,3 +5,4 @@ export * from "./calcVectorAngle";
 export * from "./calcCloserPoint";
 export * from "./calcRotatedPoint";
 export * from "./calcOutlinePointTowardForRotatedFrame";
+export * from "./calcOutlinePointTowardForRotatedEllipse";
