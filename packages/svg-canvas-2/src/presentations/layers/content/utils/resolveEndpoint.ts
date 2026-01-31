@@ -1,4 +1,4 @@
-import type { Point } from "@workspace/geometry";
+import { isCenterPoint, type Point } from "@workspace/geometry";
 
 import type { EndpointRef } from "../../../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
@@ -30,9 +30,12 @@ export const resolveEndpoint = (
 
 	// CenterAnchor: use the object's center point
 	if (endpoint.anchor.kind === "center") {
-		// Objects with center points (Rect, Ellipse, etc.) have cx and cy properties
-		if ("cx" in obj && "cy" in obj) {
-			return { x: obj.cx as number, y: obj.cy as number };
+		// Type-based check for objects that support center anchors
+		if (obj.type === "rect" || obj.type === "ellipse") {
+			// Validate that the object has cx and cy properties
+			if (isCenterPoint(obj)) {
+				return { x: obj.cx, y: obj.cy };
+			}
 		}
 	}
 

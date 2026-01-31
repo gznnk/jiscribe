@@ -1,5 +1,6 @@
 // Primitive validators
 export * from "./isPoint";
+export * from "./isCenterPoint";
 export * from "./isRect";
 export * from "./isFrame";
 export * from "./isEllipse";

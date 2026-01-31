@@ -1,5 +1,6 @@
 // Basic types
 export * from "./Point";
+export * from "./CenterPoint";
 export * from "./Dimensions";
 export * from "./BoundingBox";
 
