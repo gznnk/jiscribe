@@ -110,6 +110,8 @@ const testCanvasDoc: CanvasDoc = {
 			],
 			stroke: "#E91E63",
 			strokeWidth: 3,
+			startArrow: "Circle",
+			endArrow: "FilledTriangle",
 		} as unknown as PolylineDoc,
 		{
 			id: "polyline-2",
@@ -122,6 +124,8 @@ const testCanvasDoc: CanvasDoc = {
 			],
 			stroke: "#00BCD4",
 			strokeWidth: 2,
+			startArrow: "HollowDiamond",
+			endArrow: "OpenArrow",
 		} as unknown as PolylineDoc,
 	],
 	connectors: [
@@ -142,6 +146,8 @@ const testCanvasDoc: CanvasDoc = {
 			},
 			stroke: "#795548",
 			strokeWidth: 2,
+			startArrow: "FilledDiamond",
+			endArrow: "FilledTriangle",
 		} as unknown as ConnectorDoc,
 		{
 			id: "connector-2",
@@ -160,6 +166,8 @@ const testCanvasDoc: CanvasDoc = {
 			},
 			stroke: "#607D8B",
 			strokeWidth: 2,
+			startArrow: "HollowTriangle",
+			endArrow: "ConcaveTriangle",
 		} as unknown as ConnectorDoc,
 		{
 			id: "connector-3",
@@ -178,6 +186,7 @@ const testCanvasDoc: CanvasDoc = {
 			},
 			stroke: "#9E9E9E",
 			strokeWidth: 2,
+			endArrow: "OpenArrow",
 		} as unknown as ConnectorDoc,
 	],
 };
