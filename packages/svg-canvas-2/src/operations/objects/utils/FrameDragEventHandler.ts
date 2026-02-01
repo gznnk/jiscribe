@@ -1,4 +1,4 @@
-import { isFrame, type Frame } from "@workspace/geometry";
+import { isFrame, roundToDecimal, type Frame } from "@workspace/geometry";
 
 import type {
 	DragEventHandler,
@@ -51,8 +51,8 @@ export const FrameDragEventHandler: DragEventHandler<ObjectState> = (
 
 		updatedObjects[selectedId] = {
 			...selectedObject,
-			cx: selectedObject.cx + delta.x,
-			cy: selectedObject.cy + delta.y,
+			cx: roundToDecimal(selectedObject.cx + delta.x),
+			cy: roundToDecimal(selectedObject.cy + delta.y),
 		} as FrameObjectState;
 	}
 

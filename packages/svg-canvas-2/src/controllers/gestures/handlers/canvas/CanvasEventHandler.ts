@@ -1,3 +1,5 @@
+import { roundToDecimal } from "@workspace/geometry";
+
 import type {
 	CanvasEvent,
 	GestureHandler,
@@ -35,9 +37,9 @@ export const CanvasEventHandler: GestureHandler = {
 				...nextState,
 				viewport: {
 					...state.viewport,
-					zoom: newZoom,
-					minX: newMinX,
-					minY: newMinY,
+					zoom: roundToDecimal(newZoom),
+					minX: roundToDecimal(newMinX),
+					minY: roundToDecimal(newMinY),
 				},
 			};
 			return nextState;
@@ -53,8 +55,8 @@ export const CanvasEventHandler: GestureHandler = {
 				...nextState,
 				viewport: {
 					...state.viewport,
-					minX: state.viewport.minX + svgDeltaX,
-					minY: state.viewport.minY + svgDeltaY,
+					minX: roundToDecimal(state.viewport.minX + svgDeltaX),
+					minY: roundToDecimal(state.viewport.minY + svgDeltaY),
 				},
 			};
 			return nextState;
@@ -74,8 +76,8 @@ export const CanvasEventHandler: GestureHandler = {
 					...nextState,
 					viewport: {
 						...initialViewport,
-						minX: initialViewport.minX - deltaX,
-						minY: initialViewport.minY - deltaY,
+						minX: roundToDecimal(initialViewport.minX - deltaX),
+						minY: roundToDecimal(initialViewport.minY - deltaY),
 					},
 				};
 			}
