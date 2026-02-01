@@ -34,7 +34,7 @@ const EllipseComponent: React.FC<EllipseProps> = ({
 			rx={rx}
 			ry={ry}
 			transform={transformAttr}
-			fill={fill}
+			fill={fill ?? "transparent"}
 			stroke={stroke}
 			strokeWidth={strokeWidth}
 		/>

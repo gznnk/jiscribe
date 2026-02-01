@@ -31,7 +31,7 @@ const RectComponent: React.FC<RectProps> = ({
 			width={width}
 			height={height}
 			transform={transformAttr}
-			fill={fill}
+			fill={fill ?? "transparent"}
 			stroke={stroke}
 			strokeWidth={strokeWidth}
 		/>
