@@ -7,16 +7,15 @@ import type { TransformedEllipse } from "../types/TransformedEllipse";
  * Return the intersection point on the ellipse outline along the ray
  * from ellipse center toward `toward` (world coord).
  *
- * If degenerate (toward == center), returns center.
+ * Returns null if `toward` is inside the ellipse or if degenerate (toward == center).
  */
 export function calcOutlinePointTowardForRotatedEllipse(
 	ellipse: TransformedEllipse,
 	toward: Point,
-): Point {
+): Point | null {
 	const { cx, cy, rx, ry, rotation } = ellipse;
-	const center = { x: cx, y: cy };
 
-	if (rx <= 0 || ry <= 0) return center;
+	if (rx <= 0 || ry <= 0) return null;
 
 	// Convert rotation from degrees to radians
 	const rotationRad = degreesToRadians(rotation);
@@ -27,10 +26,15 @@ export function calcOutlinePointTowardForRotatedEllipse(
 
 	const dx = towardLocal.x - cx;
 	const dy = towardLocal.y - cy;
-	if (dx === 0 && dy === 0) return center;
+	if (dx === 0 && dy === 0) return null;
 
-	const denom = Math.sqrt((dx * dx) / (rx * rx) + (dy * dy) / (ry * ry));
-	if (denom === 0) return center;
+	// Check if the point is inside the ellipse
+	// In local coordinates: (x/rx)^2 + (y/ry)^2 <= 1 means inside
+	const normalizedDist = (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry);
+	if (normalizedDist <= 1) return null;
+
+	const denom = Math.sqrt(normalizedDist);
+	if (denom === 0) return null;
 
 	const pLocal: Point = { x: dx / denom, y: dy / denom };
 

@@ -35,6 +35,8 @@ const ConnectorsRendererComponent: React.FC<ConnectorsRendererProps> = ({
 						targetPoint,
 						objects,
 					);
+					// Skip rendering if adjusted point is null (toward point is inside the shape)
+					if (!sourcePoint) return null;
 				}
 				if (connectorState.target.anchor.kind === "center") {
 					targetPoint = adjustToOutline(
@@ -43,6 +45,8 @@ const ConnectorsRendererComponent: React.FC<ConnectorsRendererProps> = ({
 						sourcePoint,
 						objects,
 					);
+					// Skip rendering if adjusted point is null (toward point is inside the shape)
+					if (!targetPoint) return null;
 				}
 
 				return (

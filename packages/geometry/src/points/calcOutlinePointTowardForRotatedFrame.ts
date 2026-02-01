@@ -7,16 +7,15 @@ import type { TransformedFrame } from "../types/TransformedFrame";
  * Return the intersection point on the frame outline along the ray
  * from frame center toward `toward` (world coord).
  *
- * If degenerate (toward == center), returns center.
+ * Returns null if `toward` is inside the frame or if degenerate (toward == center).
  */
 export function calcOutlinePointTowardForRotatedFrame(
 	frame: TransformedFrame,
 	toward: Point,
-): Point {
+): Point | null {
 	const { cx, cy, width, height, rotation } = frame;
-	const center = { x: cx, y: cy };
 
-	if (width <= 0 || height <= 0) return center;
+	if (width <= 0 || height <= 0) return null;
 
 	// Convert rotation from degrees to radians
 	const rotationRad = degreesToRadians(rotation);
@@ -27,10 +26,14 @@ export function calcOutlinePointTowardForRotatedFrame(
 
 	const dx = towardLocal.x - cx;
 	const dy = towardLocal.y - cy;
-	if (dx === 0 && dy === 0) return center;
+	if (dx === 0 && dy === 0) return null;
 
 	const hx = width / 2;
 	const hy = height / 2;
+
+	// Check if the point is inside the frame
+	// In local coordinates: |x| <= hx && |y| <= hy means inside
+	if (Math.abs(dx) <= hx && Math.abs(dy) <= hy) return null;
 
 	const eps = 1e-9;
 	const candidates: { t: number; p: Point }[] = [];
@@ -72,7 +75,7 @@ export function calcOutlinePointTowardForRotatedFrame(
 	for (const c of candidates) {
 		if (!best || c.t < best.t) best = c;
 	}
-	if (!best) return center;
+	if (!best) return null;
 
 	// local -> world
 	// The best.p is in local coordinates (offset from center)

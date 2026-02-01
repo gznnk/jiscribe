@@ -18,14 +18,14 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
  * @param point - The resolved point (typically the center)
  * @param toward - The point to direct the outline intersection toward
  * @param objects - Map of all objects in the canvas
- * @returns The adjusted point (outline point for rect/ellipse geometry, original point otherwise)
+ * @returns The adjusted point (outline point for rect/ellipse geometry), null if toward is inside the shape, or original point for non-rect/ellipse
  */
 export const adjustToOutline = (
 	endpoint: EndpointRef,
 	point: Point,
 	toward: Point,
 	objects: Record<string, ObjectState>,
-): Point => {
+): Point | null => {
 	if (!endpoint.owner) {
 		return point;
 	}
