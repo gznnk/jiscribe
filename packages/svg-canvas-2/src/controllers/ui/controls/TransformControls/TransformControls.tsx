@@ -1,12 +1,20 @@
-import { calcFrameKeyPoints } from "@workspace/geometry";
+import {
+	calcFrameKeyPoints,
+	calcAffineTransformedPoint,
+	degreesToRadians,
+} from "@workspace/geometry";
 import type { TransformedFrame } from "@workspace/geometry";
 import { memo } from "react";
+
+import { RotateRight } from "../../icons/RotateRight";
 
 const ANCHOR_RADIUS = 4;
 const ANCHOR_STROKE_WIDTH = 1;
 const ANCHOR_COLOR = "#0d99ff";
 const ANCHOR_FILL = "white";
-const ROTATION_HANDLE_OFFSET = 20;
+const ROTATION_HANDLE_OFFSET = 15;
+const ROTATION_ICON_SIZE = 20;
+const ROTATION_HIT_RADIUS = 7;
 
 type TransformControlsProps = {
 	/**
@@ -53,9 +61,17 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 		scaleY,
 	});
 
-	// Rotation handle position (above top-center)
-	const rotationY = points.topCenter.y - ROTATION_HANDLE_OFFSET;
-	const rotationX = points.topCenter.x;
+	// Rotation handle position (top-right corner with offset)
+	const radians = degreesToRadians(rotation);
+	const rotationPoint = calcAffineTransformedPoint(
+		width / 2 + ROTATION_HANDLE_OFFSET,
+		-(height / 2 + ROTATION_HANDLE_OFFSET),
+		1,
+		1,
+		radians,
+		cx,
+		cy,
+	);
 
 	return (
 		<g>
@@ -171,24 +187,19 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 			{/* Rotation handle */}
 			{showRotation && (
 				<>
-					{/* Line connecting to rotation handle */}
-					<line
-						x1={points.topCenter.x}
-						y1={points.topCenter.y}
-						x2={rotationX}
-						y2={rotationY}
-						stroke={ANCHOR_COLOR}
-						strokeWidth={ANCHOR_STROKE_WIDTH}
-						pointerEvents="none"
-					/>
-					{/* Rotation handle anchor */}
+					<g
+						transform={`translate(${rotationPoint.x} ${rotationPoint.y}) rotate(${rotation}) translate(${-ROTATION_ICON_SIZE / 2} ${-ROTATION_ICON_SIZE / 2})`}
+					>
+						<RotateRight
+							width={ROTATION_ICON_SIZE}
+							height={ROTATION_ICON_SIZE}
+						/>
+					</g>
 					<circle
-						cx={rotationX}
-						cy={rotationY}
-						r={ANCHOR_RADIUS}
-						fill={ANCHOR_FILL}
-						stroke={ANCHOR_COLOR}
-						strokeWidth={ANCHOR_STROKE_WIDTH}
+						cx={rotationPoint.x}
+						cy={rotationPoint.y}
+						r={ROTATION_HIT_RADIUS}
+						fill="transparent"
 						data-kind="control"
 						data-id="transform-control:rotation"
 						style={{ cursor: "grab" }}
