@@ -7,6 +7,7 @@ import { TransformControls } from "../TransformControls";
 type TransformControlsLayerProps = {
 	selectedIds: string[];
 	objects: Record<string, ObjectState>;
+	zoom?: number;
 };
 
 /**
@@ -15,7 +16,7 @@ type TransformControlsLayerProps = {
  */
 const TransformControlsLayerComponent: React.FC<
 	TransformControlsLayerProps
-> = ({ selectedIds, objects }) => {
+> = ({ selectedIds, objects, zoom = 1 }) => {
 	// Only show transform controls when exactly one object is selected
 	if (selectedIds.length !== 1) {
 		return null;
@@ -38,6 +39,7 @@ const TransformControlsLayerComponent: React.FC<
 			frame={selectedObject}
 			showRotation={true}
 			showEdgeHandles={true}
+			zoom={zoom}
 		/>
 	);
 };

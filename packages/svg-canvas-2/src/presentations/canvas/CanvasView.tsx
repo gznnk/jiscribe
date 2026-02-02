@@ -44,7 +44,11 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 			<ConnectorsRenderer objects={objects} connectorIds={connectorIds} />
 			<ObjectsRenderer objects={objects} rootIds={rootIds} />
 			<SelectionOverlay selectedIds={selectedIds} objects={objects} />
-			<TransformControlsLayer selectedIds={selectedIds} objects={objects} />
+			<TransformControlsLayer
+				selectedIds={selectedIds}
+				objects={objects}
+				zoom={zoom}
+			/>
 
 			{/* Debug: Origin marker */}
 			<g data-layer="debug-origin">

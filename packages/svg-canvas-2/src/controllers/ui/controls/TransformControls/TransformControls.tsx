@@ -31,6 +31,11 @@ type TransformControlsProps = {
 	 * @default true
 	 */
 	showEdgeHandles?: boolean;
+	/**
+	 * Zoom level for adjusting handle sizes.
+	 * @default 1
+	 */
+	zoom?: number;
 };
 
 /**
@@ -47,8 +52,16 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 	frame,
 	showRotation = true,
 	showEdgeHandles = true,
+	zoom = 1,
 }) => {
 	const { cx, cy, width, height, rotation, scaleX, scaleY } = frame;
+
+	// Adjust sizes based on zoom level to maintain consistent visual size
+	const scale = 1 / zoom;
+	const adjustedAnchorRadius = ANCHOR_RADIUS / zoom;
+	const adjustedStrokeWidth = ANCHOR_STROKE_WIDTH / zoom;
+	const adjustedRotationOffset = ROTATION_HANDLE_OFFSET / zoom;
+	const adjustedRotationHitRadius = ROTATION_HIT_RADIUS / zoom;
 
 	// Calculate all feature points (corners and edge midpoints)
 	const points = calcFrameKeyPoints({
@@ -64,8 +77,8 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 	// Rotation handle position (top-right corner with offset)
 	const radians = degreesToRadians(rotation);
 	const rotationPoint = calcAffineTransformedPoint(
-		width / 2 + ROTATION_HANDLE_OFFSET,
-		-(height / 2 + ROTATION_HANDLE_OFFSET),
+		width / 2 + adjustedRotationOffset,
+		-(height / 2 + adjustedRotationOffset),
 		1,
 		1,
 		radians,
@@ -83,7 +96,7 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 				height={height}
 				fill="none"
 				stroke={ANCHOR_COLOR}
-				strokeWidth={ANCHOR_STROKE_WIDTH}
+				strokeWidth={adjustedStrokeWidth}
 				transform={`rotate(${rotation} ${cx} ${cy})`}
 				pointerEvents="none"
 			/>
@@ -92,10 +105,10 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 			<circle
 				cx={points.topLeft.x}
 				cy={points.topLeft.y}
-				r={ANCHOR_RADIUS}
+				r={adjustedAnchorRadius}
 				fill={ANCHOR_FILL}
 				stroke={ANCHOR_COLOR}
-				strokeWidth={ANCHOR_STROKE_WIDTH}
+				strokeWidth={adjustedStrokeWidth}
 				data-kind="control"
 				data-id="transform-control:topLeft"
 				style={{ cursor: "nwse-resize" }}
@@ -103,10 +116,10 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 			<circle
 				cx={points.topRight.x}
 				cy={points.topRight.y}
-				r={ANCHOR_RADIUS}
+				r={adjustedAnchorRadius}
 				fill={ANCHOR_FILL}
 				stroke={ANCHOR_COLOR}
-				strokeWidth={ANCHOR_STROKE_WIDTH}
+				strokeWidth={adjustedStrokeWidth}
 				data-kind="control"
 				data-id="transform-control:topRight"
 				style={{ cursor: "nesw-resize" }}
@@ -114,10 +127,10 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 			<circle
 				cx={points.bottomLeft.x}
 				cy={points.bottomLeft.y}
-				r={ANCHOR_RADIUS}
+				r={adjustedAnchorRadius}
 				fill={ANCHOR_FILL}
 				stroke={ANCHOR_COLOR}
-				strokeWidth={ANCHOR_STROKE_WIDTH}
+				strokeWidth={adjustedStrokeWidth}
 				data-kind="control"
 				data-id="transform-control:bottomLeft"
 				style={{ cursor: "nesw-resize" }}
@@ -125,10 +138,10 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 			<circle
 				cx={points.bottomRight.x}
 				cy={points.bottomRight.y}
-				r={ANCHOR_RADIUS}
+				r={adjustedAnchorRadius}
 				fill={ANCHOR_FILL}
 				stroke={ANCHOR_COLOR}
-				strokeWidth={ANCHOR_STROKE_WIDTH}
+				strokeWidth={adjustedStrokeWidth}
 				data-kind="control"
 				data-id="transform-control:bottomRight"
 				style={{ cursor: "nwse-resize" }}
@@ -140,10 +153,10 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 					<circle
 						cx={points.topCenter.x}
 						cy={points.topCenter.y}
-						r={ANCHOR_RADIUS}
+						r={adjustedAnchorRadius}
 						fill={ANCHOR_FILL}
 						stroke={ANCHOR_COLOR}
-						strokeWidth={ANCHOR_STROKE_WIDTH}
+						strokeWidth={adjustedStrokeWidth}
 						data-kind="control"
 						data-id="transform-control:topCenter"
 						style={{ cursor: "ns-resize" }}
@@ -151,10 +164,10 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 					<circle
 						cx={points.rightCenter.x}
 						cy={points.rightCenter.y}
-						r={ANCHOR_RADIUS}
+						r={adjustedAnchorRadius}
 						fill={ANCHOR_FILL}
 						stroke={ANCHOR_COLOR}
-						strokeWidth={ANCHOR_STROKE_WIDTH}
+						strokeWidth={adjustedStrokeWidth}
 						data-kind="control"
 						data-id="transform-control:rightCenter"
 						style={{ cursor: "ew-resize" }}
@@ -162,10 +175,10 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 					<circle
 						cx={points.bottomCenter.x}
 						cy={points.bottomCenter.y}
-						r={ANCHOR_RADIUS}
+						r={adjustedAnchorRadius}
 						fill={ANCHOR_FILL}
 						stroke={ANCHOR_COLOR}
-						strokeWidth={ANCHOR_STROKE_WIDTH}
+						strokeWidth={adjustedStrokeWidth}
 						data-kind="control"
 						data-id="transform-control:bottomCenter"
 						style={{ cursor: "ns-resize" }}
@@ -173,10 +186,10 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 					<circle
 						cx={points.leftCenter.x}
 						cy={points.leftCenter.y}
-						r={ANCHOR_RADIUS}
+						r={adjustedAnchorRadius}
 						fill={ANCHOR_FILL}
 						stroke={ANCHOR_COLOR}
-						strokeWidth={ANCHOR_STROKE_WIDTH}
+						strokeWidth={adjustedStrokeWidth}
 						data-kind="control"
 						data-id="transform-control:leftCenter"
 						style={{ cursor: "ew-resize" }}
@@ -188,7 +201,7 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 			{showRotation && (
 				<>
 					<g
-						transform={`translate(${rotationPoint.x} ${rotationPoint.y}) rotate(${rotation}) translate(${-ROTATION_ICON_SIZE / 2} ${-ROTATION_ICON_SIZE / 2})`}
+						transform={`translate(${rotationPoint.x} ${rotationPoint.y}) rotate(${rotation}) scale(${scale}) translate(${-ROTATION_ICON_SIZE / 2} ${-ROTATION_ICON_SIZE / 2})`}
 					>
 						<RotateRight
 							width={ROTATION_ICON_SIZE}
@@ -198,7 +211,7 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 					<circle
 						cx={rotationPoint.x}
 						cy={rotationPoint.y}
-						r={ROTATION_HIT_RADIUS}
+						r={adjustedRotationHitRadius}
 						fill="transparent"
 						data-kind="control"
 						data-id="transform-control:rotation"
