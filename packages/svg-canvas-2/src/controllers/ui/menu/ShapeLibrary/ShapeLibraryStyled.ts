@@ -1,10 +1,10 @@
 import styled from "@emotion/styled";
 
 /**
- * シェイプメニューのコンテナ。
+ * シェイプライブラリのコンテナ。
  * ビューポート左側に固定し、pointer-events: auto で操作を受け付ける。
  */
-export const ShapeMenuContainer = styled.div`
+export const ShapeLibraryContainer = styled.div`
 	position: absolute;
 	top: 50%;
 	left: 8px;

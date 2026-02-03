@@ -22,7 +22,7 @@ import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
 import { canvasReducer } from "./reducer/canvasReducer";
 import { initializeRegistries } from "./setup";
 import { DebugInfo } from "./ui/debug/DebugInfo";
-import { ShapeMenu } from "./ui/menu/ShapeMenu";
+import { ShapeLibrary } from "./ui/menu/ShapeLibrary";
 import { canvasToDoc, canvasToState } from "../operations/canvas/CanvasMapper";
 import { CanvasView } from "../presentations/canvas/CanvasView";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
@@ -134,7 +134,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 				</ScrollSyncedOverlay>
 			</Container>
 			<ViewportOverlay>
-				<ShapeMenu />
+				<ShapeLibrary />
 				<DebugInfo selectedIds={state.selectedIds} objects={state.objects} />
 			</ViewportOverlay>
 		</Viewport>

@@ -1,10 +1,10 @@
 import { memo } from "react";
 
-import type { ObjectType } from "../../../schemas/objects/types/ObjectType";
-import { EllipseIcon } from "../icons/EllipseIcon";
-import { RectIcon } from "../icons/RectIcon";
+import type { ObjectType } from "../../../../schemas/objects/types/ObjectType";
+import { EllipseIcon } from "../../icons/EllipseIcon";
+import { RectIcon } from "../../icons/RectIcon";
 
-type ShapeMenuItemProps = {
+type ShapeLibraryItemProps = {
 	type: ObjectType;
 	label: string;
 };
@@ -22,7 +22,7 @@ const getIcon = (type: ObjectType) => {
 	}
 };
 
-const ShapeMenuItemComponent: React.FC<ShapeMenuItemProps> = ({
+const ShapeLibraryItemComponent: React.FC<ShapeLibraryItemProps> = ({
 	type,
 	label,
 }) => {
@@ -47,4 +47,4 @@ const ShapeMenuItemComponent: React.FC<ShapeMenuItemProps> = ({
 	);
 };
 
-export const ShapeMenuItem = memo(ShapeMenuItemComponent);
+export const ShapeLibraryItem = memo(ShapeLibraryItemComponent);
