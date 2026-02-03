@@ -54,6 +54,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 			lastCommitTime: 0,
 			contextMenuPosition: null,
 			pendingShapeType: null,
+			ghostPosition: null,
 		};
 	}, [canvasDoc]);
 

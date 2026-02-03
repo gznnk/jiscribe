@@ -74,6 +74,7 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 		lastCommitTime: 0,
 		contextMenuPosition: null,
 		pendingShapeType: null,
+		ghostPosition: null,
 	};
 };
 

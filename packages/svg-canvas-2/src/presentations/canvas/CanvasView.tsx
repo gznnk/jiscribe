@@ -3,6 +3,7 @@ import type React from "react";
 
 import { Svg } from "./CanvasViewStyled";
 import { TransformControlsLayer } from "../../controllers/ui/controls/TransformControlsLayer";
+import { DragGhost } from "../../controllers/ui/feedback/DragGhost";
 import { SelectionOverlay } from "../../controllers/ui/feedback/SelectionOverlay";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import { GridBackground } from "../layers/background/GridBackground";
@@ -19,6 +20,8 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 	rootIds,
 	connectorIds,
 	selectedIds,
+	pendingShapeType,
+	ghostPosition,
 	viewport,
 	svgRef,
 }) => {
@@ -48,6 +51,10 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 				selectedIds={selectedIds}
 				objects={objects}
 				zoom={zoom}
+			/>
+			<DragGhost
+				pendingShapeType={pendingShapeType}
+				ghostPosition={ghostPosition}
 			/>
 
 			{/* Debug: Origin marker */}

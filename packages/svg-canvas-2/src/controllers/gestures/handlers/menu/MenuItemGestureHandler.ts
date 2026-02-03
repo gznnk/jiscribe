@@ -71,12 +71,21 @@ export const MenuItemGestureHandler: GestureHandler = {
 				return {
 					...state,
 					pendingShapeType: shapeType,
+					ghostPosition: event.last,
 					edgeScrollEnabled: true,
 				};
 			}
 
+			case "drag": {
+				// ゴースト位置を現在のポインタ位置で更新する
+				return {
+					...state,
+					ghostPosition: event.last,
+				};
+			}
+
 			case "dragEnd": {
-				// ドロップ位置に配置、pendingShapeType をクリアする
+				// ドロップ位置に配置、pendingShapeType とゴーストをクリアする
 				if (!state.pendingShapeType) {
 					return state;
 				}
@@ -88,6 +97,7 @@ export const MenuItemGestureHandler: GestureHandler = {
 				return {
 					...nextState,
 					pendingShapeType: null,
+					ghostPosition: null,
 					edgeScrollEnabled: false,
 				};
 			}

@@ -1,3 +1,5 @@
+import type { Point } from "@workspace/geometry";
+
 import type { Viewport } from "./Viewport";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 import type { ObjectState } from "../objects/base/ObjectState";
@@ -65,4 +67,11 @@ export type CanvasState = {
 	 * dragStart で設定し、dragEnd で読み取って図形を追加した後に null にクリアする。
 	 */
 	pendingShapeType: ObjectType | null;
+
+	/**
+	 * ドラッグゴースト表示用の現在位置（SVG座標）。
+	 * pendingShapeType と組み合わせて、ドラッグ中の図形プレビューを描画する。
+	 * dragEnd で null にクリアする。
+	 */
+	ghostPosition: Point | null;
 };
