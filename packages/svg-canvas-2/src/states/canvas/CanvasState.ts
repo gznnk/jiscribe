@@ -1,4 +1,5 @@
 import type { Viewport } from "./Viewport";
+import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 import type { ObjectState } from "../objects/base/ObjectState";
 
 export type CanvasState = {
@@ -58,4 +59,10 @@ export type CanvasState = {
 	 * Null when no context menu should be displayed.
 	 */
 	contextMenuPosition: { clientX: number; clientY: number } | null;
+
+	/**
+	 * メニューからドラッグ中の図形タイプ。
+	 * dragStart で設定し、dragEnd で読み取って図形を追加した後に null にクリアする。
+	 */
+	pendingShapeType: ObjectType | null;
 };

@@ -23,4 +23,7 @@ export const ELLIPSE_DOC_DEFAULTS: Omit<EllipseDoc, "id"> = {
 	cy: 0,
 	rx: 50,
 	ry: 30,
+	fill: "transparent",
+	stroke: "#374151",
+	strokeWidth: 2,
 } as const as EllipseDoc;

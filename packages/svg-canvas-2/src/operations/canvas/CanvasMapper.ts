@@ -73,6 +73,7 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 		edgeScrollEnabled: false,
 		lastCommitTime: 0,
 		contextMenuPosition: null,
+		pendingShapeType: null,
 	};
 };
 

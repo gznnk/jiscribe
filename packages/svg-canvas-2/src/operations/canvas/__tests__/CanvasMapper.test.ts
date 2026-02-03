@@ -143,6 +143,7 @@ describe("CanvasMapper", () => {
 				eventStartState: null,
 				lastCommitTime: 0,
 				contextMenuPosition: null,
+				pendingShapeType: null,
 				objects: {
 					"rect-1": {
 						id: "rect-1",

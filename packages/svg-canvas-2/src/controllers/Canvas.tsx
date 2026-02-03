@@ -22,6 +22,7 @@ import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
 import { canvasReducer } from "./reducer/canvasReducer";
 import { initializeRegistries } from "./setup";
 import { DebugInfo } from "./ui/debug/DebugInfo";
+import { ShapeMenu } from "./ui/menu/ShapeMenu";
 import { canvasToDoc, canvasToState } from "../operations/canvas/CanvasMapper";
 import { CanvasView } from "../presentations/canvas/CanvasView";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
@@ -52,6 +53,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 			eventStartState: null,
 			lastCommitTime: 0,
 			contextMenuPosition: null,
+			pendingShapeType: null,
 		};
 	}, [canvasDoc]);
 
@@ -113,14 +115,14 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 	const { minX, minY, zoom } = state.viewport;
 
 	return (
-		<Viewport>
-			<Container
-				data-id="canvas"
-				data-kind="canvas"
-				ref={canvasRef}
-				onContextMenu={handleContextMenu}
-				{...pointerHandlers}
-			>
+		<Viewport
+			data-id="canvas"
+			data-kind="canvas"
+			ref={canvasRef}
+			onContextMenu={handleContextMenu}
+			{...pointerHandlers}
+		>
+			<Container>
 				<CanvasView {...state} svgRef={svgRef} />
 				{/* Container for HTML elements that follow canvas scroll AND zoom */}
 				<ZoomScaledOverlay left={-minX} top={-minY} zoom={zoom}>
@@ -132,6 +134,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 				</ScrollSyncedOverlay>
 			</Container>
 			<ViewportOverlay>
+				<ShapeMenu />
 				<DebugInfo selectedIds={state.selectedIds} objects={state.objects} />
 			</ViewportOverlay>
 		</Viewport>

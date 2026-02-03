@@ -16,3 +16,14 @@ export type RectDoc = CreateObjectType<
 	typeof RectFeatures,
 	typeof RectDocBrand
 >;
+
+export const RECT_DOC_DEFAULTS: Omit<RectDoc, "id"> = {
+	type: "rect",
+	x: 0,
+	y: 0,
+	width: 120,
+	height: 80,
+	fill: "transparent",
+	stroke: "#374151",
+	strokeWidth: 2,
+} as const as RectDoc;
