@@ -2,28 +2,24 @@ import { memo } from "react";
 import type React from "react";
 
 import { Svg } from "./CanvasViewStyled";
-import { TransformControlsLayer } from "../../controllers/ui/controls/TransformControlsLayer";
-import { DragGhost } from "../../controllers/ui/feedback/DragGhost";
-import { SelectionOverlay } from "../../controllers/ui/feedback/SelectionOverlay";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import { GridBackground } from "../layers/background/GridBackground";
 import { GridPattern } from "../layers/background/GridPattern";
 import { ConnectorsRenderer } from "../layers/content/ConnectorsRenderer";
 import { ObjectsRenderer } from "../layers/content/ObjectsRenderer";
 
-type CanvasViewProps = CanvasState & {
+type CanvasViewProps = {
 	svgRef: React.RefObject<SVGSVGElement | null>;
-};
+	children?: React.ReactNode;
+} & Pick<CanvasState, "objects" | "rootIds" | "connectorIds" | "viewport">;
 
 const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 	objects,
 	rootIds,
 	connectorIds,
-	selectedIds,
-	pendingShapeType,
-	ghostPosition,
 	viewport,
 	svgRef,
+	children,
 }) => {
 	const { minX, minY, width, height, zoom } = viewport;
 
@@ -46,23 +42,8 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 			{/* Connectors rendered below objects */}
 			<ConnectorsRenderer objects={objects} connectorIds={connectorIds} />
 			<ObjectsRenderer objects={objects} rootIds={rootIds} />
-			<SelectionOverlay selectedIds={selectedIds} objects={objects} />
-			<TransformControlsLayer
-				selectedIds={selectedIds}
-				objects={objects}
-				zoom={zoom}
-			/>
-			<DragGhost
-				pendingShapeType={pendingShapeType}
-				ghostPosition={ghostPosition}
-			/>
-
-			{/* Debug: Origin marker */}
-			<g data-layer="debug-origin">
-				<circle cx={0} cy={0} r={5} fill="red" />
-				<line x1={-20} y1={0} x2={20} y2={0} stroke="red" strokeWidth={1} />
-				<line x1={0} y1={-20} x2={0} y2={20} stroke="red" strokeWidth={1} />
-			</g>
+			{/* Overlay layers injected from parent */}
+			{children}
 		</Svg>
 	);
 };

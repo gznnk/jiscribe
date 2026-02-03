@@ -21,7 +21,10 @@ import { useDocumentWheel } from "./hooks/useDocumentWheel";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
 import { canvasReducer } from "./reducer/canvasReducer";
 import { initializeRegistries } from "./setup";
+import { TransformControlsLayer } from "./ui/controls/TransformControlsLayer";
 import { DebugInfo } from "./ui/debug/DebugInfo";
+import { DragGhost } from "./ui/feedback/DragGhost";
+import { SelectionOverlay } from "./ui/feedback/SelectionOverlay";
 import { ShapeLibrary } from "./ui/menu/ShapeLibrary";
 import { canvasToDoc, canvasToState } from "../operations/canvas/CanvasMapper";
 import { CanvasView } from "../presentations/canvas/CanvasView";
@@ -124,7 +127,27 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 			{...pointerHandlers}
 		>
 			<Container>
-				<CanvasView {...state} svgRef={svgRef} />
+				<CanvasView
+					objects={state.objects}
+					rootIds={state.rootIds}
+					connectorIds={state.connectorIds}
+					viewport={state.viewport}
+					svgRef={svgRef}
+				>
+					<SelectionOverlay
+						selectedIds={state.selectedIds}
+						objects={state.objects}
+					/>
+					<TransformControlsLayer
+						selectedIds={state.selectedIds}
+						objects={state.objects}
+						zoom={state.viewport.zoom}
+					/>
+					<DragGhost
+						pendingShapeType={state.pendingShapeType}
+						ghostPosition={state.ghostPosition}
+					/>
+				</CanvasView>
 				{/* Container for HTML elements that follow canvas scroll AND zoom */}
 				<ZoomScaledOverlay left={-minX} top={-minY} zoom={zoom}>
 					{/* TODO: Add zoom-scaled elements (e.g., text editors on objects) */}
