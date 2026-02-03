@@ -1,10 +1,10 @@
-import { createObjectDoc } from "../../../../operations/menu/createObjectDoc";
 import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../../../registry/GestureHandlerRegistryTypes";
 import { objectRegistry } from "../../../../registry/ObjectRegistry";
 import type { ObjectType } from "../../../../schemas/objects/types/ObjectType";
+import { createObjectDoc } from "../../../../schemas/objects/utils/createObjectDoc";
 import type { CanvasState } from "../../../../states/canvas/CanvasState";
 
 /**

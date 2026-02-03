@@ -1,9 +1,9 @@
 import type { Point } from "@workspace/geometry";
 import React, { memo } from "react";
 
-import { createObjectDoc } from "../../../../operations/menu/createObjectDoc";
 import { objectRegistry } from "../../../../registry/ObjectRegistry";
 import type { ObjectType } from "../../../../schemas/objects/types/ObjectType";
+import { createObjectDoc } from "../../../../schemas/objects/utils/createObjectDoc";
 
 type DragGhostProps = {
 	pendingShapeType: ObjectType | null;

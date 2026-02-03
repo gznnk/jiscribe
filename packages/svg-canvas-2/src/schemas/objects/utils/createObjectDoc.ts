@@ -1,9 +1,9 @@
 import type { Point } from "@workspace/geometry";
 
-import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
-import { ELLIPSE_DOC_DEFAULTS } from "../../schemas/objects/primitives/EllipseDoc";
-import { RECT_DOC_DEFAULTS } from "../../schemas/objects/primitives/RectDoc";
-import type { ObjectType } from "../../schemas/objects/types/ObjectType";
+import type { ObjectDoc } from "../base/ObjectDoc";
+import { ELLIPSE_DOC_DEFAULTS } from "../primitives/EllipseDoc";
+import { RECT_DOC_DEFAULTS } from "../primitives/RectDoc";
+import type { ObjectType } from "../types/ObjectType";
 
 /**
  * ObjectType と配置位置から ObjectDoc を生成する。
