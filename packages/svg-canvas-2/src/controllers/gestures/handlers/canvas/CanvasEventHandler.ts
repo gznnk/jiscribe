@@ -95,6 +95,8 @@ export const CanvasEventHandler: GestureHandler = {
 			nextState = {
 				...nextState,
 				selectedIds: [],
+				// コンテキストメニューが開いている場合は閉じる
+				contextMenuPosition: null,
 			};
 		}
 

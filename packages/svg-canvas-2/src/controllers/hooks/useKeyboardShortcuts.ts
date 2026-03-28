@@ -1,0 +1,39 @@
+import { useEffect } from "react";
+
+import type { CanvasState } from "../../states/canvas/CanvasState";
+import { commandRegistry } from "../commands/CommandRegistry";
+import type { CanvasAction } from "../reducer/CanvasActions";
+
+/**
+ * キーボードショートカットを処理するカスタムフック
+ */
+export const useKeyboardShortcuts = (
+	canvasState: CanvasState,
+	dispatch: React.Dispatch<CanvasAction>,
+) => {
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			// 入力フィールドなどでは無効化
+			if (
+				event.target instanceof HTMLInputElement ||
+				event.target instanceof HTMLTextAreaElement ||
+				event.target instanceof HTMLSelectElement
+			) {
+				return;
+			}
+
+			const command = commandRegistry.findByShortcut(event);
+			if (command && command.canExecute(canvasState)) {
+				dispatch({ type: "COMMAND", commandId: command.id });
+				event.preventDefault();
+				event.stopPropagation();
+			}
+		};
+
+		// document にイベントリスナーを登録（グローバルショートカット）
+		document.addEventListener("keydown", handleKeyDown);
+		return () => {
+			document.removeEventListener("keydown", handleKeyDown);
+		};
+	}, [canvasState, dispatch]);
+};

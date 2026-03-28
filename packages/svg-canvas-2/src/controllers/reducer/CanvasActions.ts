@@ -36,10 +36,19 @@ export type ContextMenuAction = {
 };
 
 /**
+ * Command action - handles keyboard shortcuts and context menu commands
+ */
+export type CommandAction = {
+	type: "COMMAND";
+	commandId: string;
+};
+
+/**
  * Union of all canvas actions
  */
 export type CanvasAction =
 	| GestureAction
 	| ContainerResizeAction
 	| SyncExternalAction
-	| ContextMenuAction;
+	| ContextMenuAction
+	| CommandAction;

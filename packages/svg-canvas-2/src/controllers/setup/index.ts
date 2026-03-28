@@ -1,3 +1,4 @@
+import { initializeCommands } from "./initializeCommands";
 import { initializeGestureHandlerRegistry } from "./initializeGestureHandlerRegistry";
 import { initializeObjectRegistry } from "./initializeObjectRegistry";
 
@@ -8,8 +9,10 @@ import { initializeObjectRegistry } from "./initializeObjectRegistry";
 export const initializeRegistries = (): void => {
 	initializeObjectRegistry();
 	initializeGestureHandlerRegistry();
+	initializeCommands();
 };
 
 // Re-export individual initializers for testing or partial initialization
 export { initializeObjectRegistry } from "./initializeObjectRegistry";
 export { initializeGestureHandlerRegistry } from "./initializeGestureHandlerRegistry";
+export { initializeCommands } from "./initializeCommands";

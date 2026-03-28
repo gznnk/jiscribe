@@ -1,5 +1,6 @@
 import type { CanvasAction } from "./CanvasActions";
 import type { CanvasState } from "../../states/canvas/CanvasState";
+import { handleCommand } from "../commands/handlers/handleCommand";
 import { handleGesture } from "../gestures/handlers/handleGesture";
 
 export const canvasReducer = (
@@ -9,6 +10,10 @@ export const canvasReducer = (
 	switch (action.type) {
 		case "GESTURE": {
 			return handleGesture(state, action.gesture);
+		}
+
+		case "COMMAND": {
+			return handleCommand(state, action.commandId);
 		}
 
 		case "CONTAINER_RESIZE":

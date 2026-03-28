@@ -2,6 +2,7 @@ import { gestureHandlerRegistry } from "../../registry/GestureHandlerRegistry";
 import { CanvasEventHandler } from "../gestures/handlers/canvas/CanvasEventHandler";
 import { ControlEventHandler } from "../gestures/handlers/controls/ControlEventHandler";
 import { TransformControlHandler } from "../gestures/handlers/controls/transform/TransformControlHandler";
+import { ContextMenuHandler } from "../gestures/handlers/menu/ContextMenuHandler";
 import { MenuItemGestureHandler } from "../gestures/handlers/menu/MenuItemGestureHandler";
 import { ObjectEventHandler } from "../gestures/handlers/objects/ObjectEventHandler";
 
@@ -24,6 +25,7 @@ export const initializeGestureHandlerRegistry = (): void => {
 
 	gestureHandlerRegistry
 		.register("menu-handler", MenuItemGestureHandler)
+		.register("context-menu-handler", ContextMenuHandler)
 		.register("canvas-handler", CanvasEventHandler)
 		.register("object-handler", ObjectEventHandler)
 		.register("control-handler", controlEventHandler);

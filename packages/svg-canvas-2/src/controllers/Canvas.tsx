@@ -19,12 +19,14 @@ import type { GestureCallback } from "./gestures/recognizer/GestureRecognizerTyp
 import { useContainerSize } from "./hooks/useContainerSize";
 import { useDocumentWheel } from "./hooks/useDocumentWheel";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
+import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { canvasReducer } from "./reducer/canvasReducer";
 import { initializeRegistries } from "./setup";
 import { TransformControlsLayer } from "./ui/controls/TransformControlsLayer";
 import { DebugInfo } from "./ui/debug/DebugInfo";
 import { DragGhost } from "./ui/feedback/DragGhost";
 import { SelectionOverlay } from "./ui/feedback/SelectionOverlay";
+import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ShapeLibrary } from "./ui/menu/ShapeLibrary";
 import { canvasToDoc, canvasToState } from "../operations/canvas/CanvasMapper";
 import { CanvasView } from "../presentations/canvas/CanvasView";
@@ -104,6 +106,9 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 	);
 	useContainerSize(canvasRef, handleResize);
 
+	// Keyboard shortcuts handling
+	useKeyboardShortcuts(state, dispatch);
+
 	// Context menu handling
 	const handleContextMenu = useCallback(
 		(e: React.MouseEvent<HTMLDivElement>) => {
@@ -160,6 +165,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 			<ViewportOverlay>
 				<ShapeLibrary />
 				<DebugInfo selectedIds={state.selectedIds} objects={state.objects} />
+				<ContextMenu position={state.contextMenuPosition} canvasState={state} />
 			</ViewportOverlay>
 		</Viewport>
 	);
