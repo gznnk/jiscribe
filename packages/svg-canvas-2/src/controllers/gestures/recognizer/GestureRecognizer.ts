@@ -37,6 +37,9 @@ export type InternalEvent = {
 	deltaY?: number; // wheel イベント用
 };
 
+/**
+ * pressed状態の型
+ */
 export type Pressed = {
 	pointerId: number;
 	start: Point; // SVG coordinates
@@ -75,6 +78,44 @@ export class GestureRecognizer {
 		this.containerRef = config.containerRef;
 		this.svgRef = config.svgRef;
 		this.canvasStateRef = config.canvasStateRef;
+	}
+
+	/**
+	 * イベントをキューに追加してスケジュール
+	 */
+	private enqueue(e: InternalEvent): void {
+		if (e.type === "pointermove") {
+			this.lastMove = e;
+		} else {
+			this.fifo.push(e);
+		}
+		this.schedule();
+	}
+
+	/**
+	 * requestAnimationFrameを使ってイベント処理をスケジュール
+	 */
+	private schedule(): void {
+		if (this.scheduled) return;
+		this.scheduled = true;
+		requestAnimationFrame(() => {
+			this.scheduled = false;
+
+			const batch: InternalEvent[] = [];
+			while (this.fifo.length) {
+				batch.push(this.fifo.shift()!);
+			}
+			if (this.lastMove) {
+				batch.push(this.lastMove);
+				this.lastMove = null;
+			}
+
+			if (batch.length) {
+				for (const e of batch) {
+					this.feed(e);
+				}
+			}
+		});
 	}
 
 	/**
@@ -224,7 +265,10 @@ export class GestureRecognizer {
 				let scrollDelta: { deltaX: number; deltaY: number } | undefined;
 
 				// Check if this pointermove has deltaX/deltaY (converted from wheel event)
-				if (e.deltaX !== undefined || e.deltaY !== undefined) {
+				const isWheel = e.deltaX !== undefined || e.deltaY !== undefined;
+
+				// ドラッグ中のホイールイベントの場合はスクロールデルタを取得
+				if (isWheel) {
 					scrollDelta = {
 						deltaX: e.deltaX ?? 0,
 						deltaY: e.deltaY ?? 0,
@@ -344,44 +388,6 @@ export class GestureRecognizer {
 			}
 			this.pressed = null;
 		}
-	}
-
-	/**
-	 * requestAnimationFrameを使ってイベント処理をスケジュール
-	 */
-	private schedule(): void {
-		if (this.scheduled) return;
-		this.scheduled = true;
-		requestAnimationFrame(() => {
-			this.scheduled = false;
-
-			const batch: InternalEvent[] = [];
-			while (this.fifo.length) {
-				batch.push(this.fifo.shift()!);
-			}
-			if (this.lastMove) {
-				batch.push(this.lastMove);
-				this.lastMove = null;
-			}
-
-			if (batch.length) {
-				for (const e of batch) {
-					this.feed(e);
-				}
-			}
-		});
-	}
-
-	/**
-	 * イベントをキューに追加してスケジュール
-	 */
-	private enqueue(e: InternalEvent): void {
-		if (e.type === "pointermove") {
-			this.lastMove = e;
-		} else {
-			this.fifo.push(e);
-		}
-		this.schedule();
 	}
 
 	/**
