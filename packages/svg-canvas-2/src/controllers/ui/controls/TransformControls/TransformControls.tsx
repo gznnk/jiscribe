@@ -7,6 +7,7 @@ import type { TransformedFrame } from "@workspace/geometry";
 import { memo } from "react";
 
 import { RotateRight } from "../../icons/RotateRight";
+import { getResizeCursorForRotation } from "../../utils/getResizeCursorForRotation";
 
 const ANCHOR_RADIUS = 4;
 const ANCHOR_STROKE_WIDTH = 1;
@@ -86,6 +87,18 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 		cy,
 	);
 
+	// Get cursors based on rotation angle and scale
+	const cursors = {
+		topLeft: getResizeCursorForRotation(rotation + 225, scaleX, scaleY),
+		topCenter: getResizeCursorForRotation(rotation - 90, scaleX, scaleY),
+		topRight: getResizeCursorForRotation(rotation - 45, scaleX, scaleY),
+		rightCenter: getResizeCursorForRotation(rotation, scaleX, scaleY),
+		bottomRight: getResizeCursorForRotation(rotation + 45, scaleX, scaleY),
+		bottomCenter: getResizeCursorForRotation(rotation + 90, scaleX, scaleY),
+		bottomLeft: getResizeCursorForRotation(rotation + 135, scaleX, scaleY),
+		leftCenter: getResizeCursorForRotation(rotation + 180, scaleX, scaleY),
+	};
+
 	return (
 		<g>
 			{/* Bounding box outline */}
@@ -111,7 +124,7 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 				strokeWidth={adjustedStrokeWidth}
 				data-kind="control"
 				data-id="transform-control:topLeft"
-				style={{ cursor: "nwse-resize" }}
+				style={{ cursor: cursors.topLeft }}
 			/>
 			<circle
 				cx={points.topRight.x}
@@ -122,7 +135,7 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 				strokeWidth={adjustedStrokeWidth}
 				data-kind="control"
 				data-id="transform-control:topRight"
-				style={{ cursor: "nesw-resize" }}
+				style={{ cursor: cursors.topRight }}
 			/>
 			<circle
 				cx={points.bottomLeft.x}
@@ -133,7 +146,7 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 				strokeWidth={adjustedStrokeWidth}
 				data-kind="control"
 				data-id="transform-control:bottomLeft"
-				style={{ cursor: "nesw-resize" }}
+				style={{ cursor: cursors.bottomLeft }}
 			/>
 			<circle
 				cx={points.bottomRight.x}
@@ -144,7 +157,7 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 				strokeWidth={adjustedStrokeWidth}
 				data-kind="control"
 				data-id="transform-control:bottomRight"
-				style={{ cursor: "nwse-resize" }}
+				style={{ cursor: cursors.bottomRight }}
 			/>
 
 			{/* Edge midpoint anchors */}
@@ -159,7 +172,7 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 						strokeWidth={adjustedStrokeWidth}
 						data-kind="control"
 						data-id="transform-control:topCenter"
-						style={{ cursor: "ns-resize" }}
+						style={{ cursor: cursors.topCenter }}
 					/>
 					<circle
 						cx={points.rightCenter.x}
@@ -170,7 +183,7 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 						strokeWidth={adjustedStrokeWidth}
 						data-kind="control"
 						data-id="transform-control:rightCenter"
-						style={{ cursor: "ew-resize" }}
+						style={{ cursor: cursors.rightCenter }}
 					/>
 					<circle
 						cx={points.bottomCenter.x}
@@ -181,7 +194,7 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 						strokeWidth={adjustedStrokeWidth}
 						data-kind="control"
 						data-id="transform-control:bottomCenter"
-						style={{ cursor: "ns-resize" }}
+						style={{ cursor: cursors.bottomCenter }}
 					/>
 					<circle
 						cx={points.leftCenter.x}
@@ -192,7 +205,7 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 						strokeWidth={adjustedStrokeWidth}
 						data-kind="control"
 						data-id="transform-control:leftCenter"
-						style={{ cursor: "ew-resize" }}
+						style={{ cursor: cursors.leftCenter }}
 					/>
 				</>
 			)}
