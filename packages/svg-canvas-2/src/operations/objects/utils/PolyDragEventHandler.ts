@@ -1,5 +1,6 @@
 import { roundToDecimal } from "@workspace/geometry";
 
+import { PRECISION } from "../../../constants/precision";
 import type {
 	DragEventHandler,
 	DragEventHandlerParams,
@@ -52,8 +53,8 @@ export const PolyDragEventHandler: DragEventHandler<ObjectState> = (
 
 		// Update all points by adding delta
 		const updatedPoints = selectedObject.points.map((point) => ({
-			x: roundToDecimal(point.x + delta.x),
-			y: roundToDecimal(point.y + delta.y),
+			x: roundToDecimal(point.x + delta.x, PRECISION.COORDINATE),
+			y: roundToDecimal(point.y + delta.y, PRECISION.COORDINATE),
 		}));
 
 		updatedObjects[selectedId] = {

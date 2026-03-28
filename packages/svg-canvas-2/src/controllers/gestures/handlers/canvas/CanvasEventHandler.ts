@@ -1,5 +1,7 @@
 import { roundToDecimal } from "@workspace/geometry";
 
+import { PRECISION } from "../../../../constants/precision";
+import { ZOOM } from "../../../../constants/zoom";
 import type {
 	CanvasEvent,
 	GestureHandler,
@@ -20,9 +22,13 @@ export const CanvasEventHandler: GestureHandler = {
 
 		// Zoom handling
 		if (event.type === "zoom" && event.scrollDelta) {
+			// TODO: scrollDeltaというプロパティを再利用するのは少し違和感がある。将来的にはGestureにzoomDeltaを直接持たせるか、別のプロパティにすることを検討。
 			const { deltaY } = event.scrollDelta;
-			const zoomDelta = deltaY > 0 ? 0.9 : 1.1;
-			const newZoom = state.viewport.zoom * zoomDelta;
+			const zoomDelta = deltaY > 0 ? ZOOM.OUT_FACTOR : ZOOM.IN_FACTOR;
+			const newZoom = Math.max(
+				ZOOM.MIN,
+				Math.min(ZOOM.MAX, state.viewport.zoom * zoomDelta),
+			);
 			const { minX, minY, width, height, zoom } = state.viewport;
 			const currentViewBoxWidth = width / zoom;
 			const currentViewBoxHeight = height / zoom;
@@ -37,9 +43,9 @@ export const CanvasEventHandler: GestureHandler = {
 				...nextState,
 				viewport: {
 					...state.viewport,
-					zoom: roundToDecimal(newZoom),
-					minX: roundToDecimal(newMinX),
-					minY: roundToDecimal(newMinY),
+					zoom: roundToDecimal(newZoom, PRECISION.ZOOM),
+					minX: roundToDecimal(newMinX, PRECISION.COORDINATE),
+					minY: roundToDecimal(newMinY, PRECISION.COORDINATE),
 				},
 			};
 			return nextState;
@@ -55,8 +61,8 @@ export const CanvasEventHandler: GestureHandler = {
 				...nextState,
 				viewport: {
 					...state.viewport,
-					minX: roundToDecimal(state.viewport.minX + svgDeltaX),
-					minY: roundToDecimal(state.viewport.minY + svgDeltaY),
+					minX: roundToDecimal(state.viewport.minX + svgDeltaX, PRECISION.COORDINATE),
+					minY: roundToDecimal(state.viewport.minY + svgDeltaY, PRECISION.COORDINATE),
 				},
 			};
 			return nextState;
@@ -76,8 +82,8 @@ export const CanvasEventHandler: GestureHandler = {
 					...nextState,
 					viewport: {
 						...initialViewport,
-						minX: roundToDecimal(initialViewport.minX - deltaX),
-						minY: roundToDecimal(initialViewport.minY - deltaY),
+						minX: roundToDecimal(initialViewport.minX - deltaX, PRECISION.COORDINATE),
+						minY: roundToDecimal(initialViewport.minY - deltaY, PRECISION.COORDINATE),
 					},
 				};
 			}

@@ -1,5 +1,6 @@
 import { isFrame, roundToDecimal, type Frame } from "@workspace/geometry";
 
+import { PRECISION } from "../../../constants/precision";
 import type {
 	DragEventHandler,
 	DragEventHandlerParams,
@@ -51,8 +52,8 @@ export const FrameDragEventHandler: DragEventHandler<ObjectState> = (
 
 		updatedObjects[selectedId] = {
 			...selectedObject,
-			cx: roundToDecimal(selectedObject.cx + delta.x),
-			cy: roundToDecimal(selectedObject.cy + delta.y),
+			cx: roundToDecimal(selectedObject.cx + delta.x, PRECISION.COORDINATE),
+			cy: roundToDecimal(selectedObject.cy + delta.y, PRECISION.COORDINATE),
 		} as FrameObjectState;
 	}
 

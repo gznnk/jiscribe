@@ -14,6 +14,7 @@ import {
 	roundToDecimal,
 } from "@workspace/geometry";
 
+import { PRECISION } from "../../../../../constants/precision";
 import type { CanvasEvent } from "../../../../../registry/GestureHandlerRegistryTypes";
 import type { CanvasState } from "../../../../../states/canvas/CanvasState";
 import { hasFrameKeyPoints } from "../../../../../states/objects/base/FrameWithKeyPoints";
@@ -200,10 +201,10 @@ export class TransformControlHandler implements ControlStrategy {
 		// 新しい寸法と中心でオブジェクトを更新
 		const updatedObject = {
 			...startObject,
-			width: roundToDecimal(Math.abs(newWidth)),
-			height: roundToDecimal(Math.abs(newHeight)),
-			cx: roundToDecimal(newCenter.x),
-			cy: roundToDecimal(newCenter.y),
+			width: roundToDecimal(Math.abs(newWidth), PRECISION.SIZE),
+			height: roundToDecimal(Math.abs(newHeight), PRECISION.SIZE),
+			cx: roundToDecimal(newCenter.x, PRECISION.COORDINATE),
+			cy: roundToDecimal(newCenter.y, PRECISION.COORDINATE),
 		};
 
 		// eventStartState から更新されたオブジェクトマップを作成
@@ -1028,9 +1029,10 @@ export class TransformControlHandler implements ControlStrategy {
 			startObject.cy - startObject.height,
 		);
 
-		// 新しい回転角度を計算（0-360度、小数点第2位で丸める）
+		// 新しい回転角度を計算（0-360度、小数点第3位で丸める）
 		const newRotation = roundToDecimal(
 			(radiansToDegrees(radian - rotatePointRadian) + 360) % 360,
+			PRECISION.ROTATION,
 		);
 
 		// 回転のみを更新したオブジェクトを作成
