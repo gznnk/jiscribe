@@ -29,7 +29,7 @@ import { SelectionOverlay } from "./ui/feedback/SelectionOverlay";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ShapeLibrary } from "./ui/menu/ShapeLibrary";
 import { canvasToDoc, canvasToState } from "../operations/canvas/CanvasMapper";
-import { CanvasView } from "../presentations/canvas/CanvasView";
+import { CanvasView } from "../presentations/CanvasView";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { CanvasState } from "../states/canvas/CanvasState";
 

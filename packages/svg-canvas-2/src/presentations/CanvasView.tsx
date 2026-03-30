@@ -2,11 +2,11 @@ import { memo } from "react";
 import type React from "react";
 
 import { Svg } from "./CanvasViewStyled";
-import type { CanvasState } from "../../states/canvas/CanvasState";
-import { GridBackground } from "../layers/background/GridBackground";
-import { GridPattern } from "../layers/background/GridPattern";
-import { ConnectorsRenderer } from "../layers/content/ConnectorsRenderer";
-import { ObjectsRenderer } from "../layers/content/ObjectsRenderer";
+import type { CanvasState } from "../states/canvas/CanvasState";
+import { GridBackground } from "./layers/background/GridBackground";
+import { GridPattern } from "./layers/background/GridPattern";
+import { ConnectorsRenderer } from "./layers/content/ConnectorsRenderer";
+import { ObjectsRenderer } from "./layers/content/ObjectsRenderer";
 
 type CanvasViewProps = {
 	svgRef: React.RefObject<SVGSVGElement | null>;
