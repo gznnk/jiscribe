@@ -4,10 +4,11 @@ export const SendBackwardCommand: Command = {
 	id: "sendBackward",
 	label: "背面へ移動",
 	category: "arrange",
-	shortcuts: [
-		{ key: "[", ctrl: true },
-		{ key: "[", meta: true }, // Mac用
-	],
+	shortcuts: {
+		mac: [{ key: "[", meta: true }],
+		win: [{ key: "[", ctrl: true }],
+		default: [{ key: "[", ctrl: true }],
+	},
 
 	canExecute: (state) => {
 		return state.selectedIds.length > 0;

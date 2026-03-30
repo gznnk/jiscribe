@@ -4,7 +4,9 @@ export const DeleteCommand: Command = {
 	id: "delete",
 	label: "削除",
 	category: "edit",
-	shortcuts: [{ key: "Delete" }, { key: "Backspace" }],
+	shortcuts: {
+		default: [{ key: "Delete" }, { key: "Backspace" }],
+	},
 
 	canExecute: (state) => {
 		return state.selectedIds.length > 0;

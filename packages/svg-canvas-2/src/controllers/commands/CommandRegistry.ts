@@ -1,4 +1,5 @@
 import type { Command } from "./CommandTypes";
+import { getPlatformShortcuts } from "./CommandUtils";
 
 /**
  * Command を管理するレジストリ
@@ -31,18 +32,25 @@ class CommandRegistry {
 
 	/**
 	 * キーボードイベントに一致するコマンドを検索
+	 * プラットフォームに応じたショートカットと照合する
 	 */
 	findByShortcut(event: KeyboardEvent): Command | undefined {
-		return Array.from(this.commands.values()).find((cmd) =>
-			cmd.shortcuts?.some(
+		return Array.from(this.commands.values()).find((cmd) => {
+			if (!cmd.shortcuts) return false;
+
+			// 現在のプラットフォームに対応したショートカット配列を取得
+			const bindings = getPlatformShortcuts(cmd.shortcuts);
+
+			// 配列内のいずれかのショートカットがマッチするか確認
+			return bindings.some(
 				(binding) =>
 					binding.key.toLowerCase() === event.key.toLowerCase() &&
 					!!binding.ctrl === event.ctrlKey &&
 					!!binding.shift === event.shiftKey &&
 					!!binding.alt === event.altKey &&
 					!!binding.meta === event.metaKey,
-			),
-		);
+			);
+		});
 	}
 }
 

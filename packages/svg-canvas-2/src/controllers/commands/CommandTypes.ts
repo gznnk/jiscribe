@@ -17,6 +17,20 @@ export type KeyBinding = {
 };
 
 /**
+ * プラットフォーム別のキーボードショートカット定義
+ * Mac (⌘) と Windows/Linux (Ctrl) で異なるショートカットを設定可能
+ * 各プラットフォームに複数のショートカットを登録できる
+ */
+export type PlatformKeyBindings = {
+	/** Mac用のショートカット配列（metaキーを使用） */
+	mac?: KeyBinding[];
+	/** Windows/Linux用のショートカット配列（ctrlキーを使用） */
+	win?: KeyBinding[];
+	/** 明示的に指定されていないプラットフォーム用のデフォルト */
+	default: KeyBinding[];
+};
+
+/**
  * コマンドの定義
  * ショートカットキーとコンテキストメニューから実行される操作
  */
@@ -41,9 +55,9 @@ export type Command = {
 	execute: (state: CanvasState) => CanvasState;
 
 	/**
-	 * キーボードショートカット（複数可）
+	 * プラットフォーム別キーボードショートカット
 	 */
-	shortcuts?: KeyBinding[];
+	shortcuts?: PlatformKeyBindings;
 };
 
 /**

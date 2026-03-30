@@ -4,10 +4,11 @@ export const SelectAllCommand: Command = {
 	id: "selectAll",
 	label: "すべて選択",
 	category: "selection",
-	shortcuts: [
-		{ key: "a", ctrl: true },
-		{ key: "a", meta: true }, // Mac用
-	],
+	shortcuts: {
+		mac: [{ key: "a", meta: true }],
+		win: [{ key: "a", ctrl: true }],
+		default: [{ key: "a", ctrl: true }],
+	},
 
 	canExecute: (state) => {
 		return state.rootIds.length > 0;

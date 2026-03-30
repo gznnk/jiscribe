@@ -120,9 +120,9 @@ export type Command = {
   execute: (state: CanvasState) => CanvasState;
 
   /**
-   * キーボードショートカット（複数可）
+   * プラットフォーム別キーボードショートカット
    */
-  shortcuts?: KeyBinding[];
+  shortcuts?: PlatformKeyBindings;
 };
 ```
 
@@ -135,6 +135,24 @@ export type KeyBinding = {
   shift?: boolean;     // Shift キー
   alt?: boolean;       // Alt キー
   meta?: boolean;      // Cmd キー (Mac)
+};
+```
+
+### PlatformKeyBindings
+
+```typescript
+/**
+ * プラットフォーム別のキーボードショートカット定義
+ * Mac (⌘) と Windows/Linux (Ctrl) で異なるショートカットを設定可能
+ * 各プラットフォームに複数のショートカットを登録できる
+ */
+export type PlatformKeyBindings = {
+  /** Mac用のショートカット配列（metaキーを使用） */
+  mac?: KeyBinding[];
+  /** Windows/Linux用のショートカット配列（ctrlキーを使用） */
+  win?: KeyBinding[];
+  /** 明示的に指定されていないプラットフォーム用のデフォルト */
+  default: KeyBinding[];
 };
 ```
 
@@ -157,10 +175,9 @@ export const DeleteCommand: Command = {
   id: "delete",
   label: "削除",
   category: "edit",
-  shortcuts: [
-    { key: "Delete" },
-    { key: "Backspace" },
-  ],
+  shortcuts: {
+    default: [{ key: "Delete" }, { key: "Backspace" }],
+  },
 
   canExecute: (state) => {
     return state.selectedIds.length > 0;
@@ -190,6 +207,23 @@ export const DeleteCommand: Command = {
 };
 ```
 
+**プラットフォーム別ショートカットの例**:
+
+```typescript
+// SelectAllCommand.ts
+export const SelectAllCommand: Command = {
+  id: "selectAll",
+  label: "すべて選択",
+  category: "selection",
+  shortcuts: {
+    mac: [{ key: "a", meta: true }],
+    win: [{ key: "a", ctrl: true }],
+    default: [{ key: "a", ctrl: true }],
+  },
+  // ...
+};
+```
+
 ### 2. CommandRegistry
 
 ```typescript
@@ -210,15 +244,21 @@ class CommandRegistry {
   }
 
   findByShortcut(event: KeyboardEvent): Command | undefined {
-    return Array.from(this.commands.values()).find(cmd =>
-      cmd.shortcuts?.some(binding =>
+    return Array.from(this.commands.values()).find(cmd => {
+      if (!cmd.shortcuts) return false;
+
+      // 現在のプラットフォームに対応したショートカット配列を取得
+      const bindings = getPlatformShortcuts(cmd.shortcuts);
+
+      // 配列内のいずれかのショートカットがマッチするか確認
+      return bindings.some(binding =>
         binding.key.toLowerCase() === event.key.toLowerCase() &&
         !!binding.ctrl === event.ctrlKey &&
         !!binding.shift === event.shiftKey &&
         !!binding.alt === event.altKey &&
         !!binding.meta === event.metaKey
-      )
-    );
+      );
+    });
   }
 }
 
@@ -341,18 +381,22 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
         if (!command) return null;
 
         const enabled = command.canExecute(canvasState);
-        const shortcut = command.shortcuts?.[0];
+        const shortcuts = command.shortcuts
+          ? getPlatformShortcuts(command.shortcuts)
+          : null;
+        const firstShortcut = shortcuts?.[0];
 
         return (
           <MenuItem
             key={command.id}
             disabled={!enabled}
-            onClick={() => handleMenuItemClick(command.id)}
+            data-kind="context-menu"
+            data-id={`context-menu:${command.id}`}
           >
             <MenuItemLabel>{command.label}</MenuItemLabel>
-            {shortcut && (
+            {firstShortcut && (
               <MenuItemShortcut>
-                {formatKeyBinding(shortcut)}
+                {formatShortcut(firstShortcut)}
               </MenuItemShortcut>
             )}
           </MenuItem>
@@ -363,7 +407,64 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
 };
 ```
 
-### 7. 初期化
+### 7. プラットフォーム別ショートカットのユーティリティ関数
+
+```typescript
+// CommandUtils.ts
+
+/**
+ * 現在のプラットフォームを判定
+ */
+export const getPlatform = (): "mac" | "win" => {
+  const platform = navigator.platform.toLowerCase();
+  return platform.includes("mac") ? "mac" : "win";
+};
+
+/**
+ * プラットフォームに応じたショートカット配列を取得
+ */
+export const getPlatformShortcuts = (
+  bindings: PlatformKeyBindings,
+): KeyBinding[] => {
+  const platform = getPlatform();
+  return bindings[platform] ?? bindings.default;
+};
+
+/**
+ * KeyBinding を人間が読みやすい文字列に変換
+ * @example formatShortcut({ key: "a", meta: true }) => "⌘A" (Mac)
+ * @example formatShortcut({ key: "a", ctrl: true }) => "Ctrl+A" (Windows)
+ */
+export const formatShortcut = (binding: KeyBinding): string => {
+  const platform = getPlatform();
+  const parts: string[] = [];
+
+  if (binding.ctrl) {
+    parts.push(platform === "mac" ? "⌃" : "Ctrl");
+  }
+  if (binding.shift) {
+    parts.push(platform === "mac" ? "⇧" : "Shift");
+  }
+  if (binding.alt) {
+    parts.push(platform === "mac" ? "⌥" : "Alt");
+  }
+  if (binding.meta) {
+    parts.push(platform === "mac" ? "⌘" : "Win");
+  }
+
+  const keyName = ["Delete", "Backspace", "Enter", "Escape", "Tab"].includes(
+    binding.key,
+  )
+    ? binding.key
+    : binding.key.toUpperCase();
+
+  parts.push(keyName);
+
+  return platform === "mac" ? parts.join("") : parts.join("+");
+};
+```
+
+### 8. 初期化
 
 ```typescript
 // setup/index.ts

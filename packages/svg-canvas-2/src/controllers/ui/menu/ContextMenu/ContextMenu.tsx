@@ -9,33 +9,15 @@ import {
 } from "./ContextMenuStyled";
 import type { CanvasState } from "../../../../states/canvas/CanvasState";
 import { commandRegistry } from "../../../commands/CommandRegistry";
-import type {
-	CommandMenuItem,
-	KeyBinding,
-} from "../../../commands/CommandTypes";
+import type { CommandMenuItem } from "../../../commands/CommandTypes";
+import {
+	formatShortcut,
+	getPlatformShortcuts,
+} from "../../../commands/CommandUtils";
 
 type ContextMenuProps = {
 	position: { clientX: number; clientY: number } | null;
 	canvasState: CanvasState;
-};
-
-/**
- * キーバインディングを表示用文字列に変換
- */
-const formatKeyBinding = (binding: KeyBinding): string => {
-	const parts: string[] = [];
-
-	if (binding.ctrl) parts.push("Ctrl");
-	if (binding.meta) parts.push("Cmd");
-	if (binding.shift) parts.push("Shift");
-	if (binding.alt) parts.push("Alt");
-
-	// キー名を大文字に
-	const key =
-		binding.key.length === 1 ? binding.key.toUpperCase() : binding.key;
-	parts.push(key);
-
-	return parts.join("+");
 };
 
 const ContextMenuComponent: React.FC<ContextMenuProps> = ({
@@ -71,7 +53,10 @@ const ContextMenuComponent: React.FC<ContextMenuProps> = ({
 				if (!command) return null;
 
 				const enabled = command.canExecute(canvasState);
-				const shortcut = command.shortcuts?.[0];
+				const shortcuts = command.shortcuts
+					? getPlatformShortcuts(command.shortcuts)
+					: null;
+				const firstShortcut = shortcuts?.[0];
 
 				return (
 					<MenuItem
@@ -81,8 +66,10 @@ const ContextMenuComponent: React.FC<ContextMenuProps> = ({
 						data-id={`context-menu:${command.id}`}
 					>
 						<MenuItemLabel>{command.label}</MenuItemLabel>
-						{shortcut && (
-							<MenuItemShortcut>{formatKeyBinding(shortcut)}</MenuItemShortcut>
+						{firstShortcut && (
+							<MenuItemShortcut>
+								{formatShortcut(firstShortcut)}
+							</MenuItemShortcut>
 						)}
 					</MenuItem>
 				);
