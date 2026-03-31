@@ -45,7 +45,7 @@ export const DefaultClickEventHandler: ClickEventHandler<ObjectState> = (
 
 	// Determine the new selection target and whether to select or deselect
 	let newSelectionTargetId: string;
-	let newSelectionState = true;
+	let shouldSelectTarget = true;
 
 	if (!isGroupedItem) {
 		// ========== Non-grouped item selection logic ==========
@@ -57,7 +57,7 @@ export const DefaultClickEventHandler: ClickEventHandler<ObjectState> = (
 		} else if (isAdditive) {
 			// Already selected + Ctrl: deselect it
 			newSelectionTargetId = id;
-			newSelectionState = false;
+			shouldSelectTarget = false;
 		} else {
 			// Already selected + no Ctrl: no change
 			return canvasState;
@@ -88,7 +88,7 @@ export const DefaultClickEventHandler: ClickEventHandler<ObjectState> = (
 					} else {
 						// Ctrl: deselect the parent
 						newSelectionTargetId = selectedAncestorId;
-						newSelectionState = false;
+						shouldSelectTarget = false;
 					}
 				} else {
 					// Child already selected: no change
@@ -103,7 +103,7 @@ export const DefaultClickEventHandler: ClickEventHandler<ObjectState> = (
 					} else {
 						// Ctrl: deselect the selected ancestor
 						newSelectionTargetId = selectedAncestorId;
-						newSelectionState = false;
+						shouldSelectTarget = false;
 					}
 				} else {
 					// Item already selected: no change
@@ -128,7 +128,7 @@ export const DefaultClickEventHandler: ClickEventHandler<ObjectState> = (
 				} else if (isAdditive) {
 					// Ctrl + already selected: deselect
 					newSelectionTargetId = id;
-					newSelectionState = false;
+					shouldSelectTarget = false;
 				} else {
 					// Already selected: no change
 					return canvasState;
@@ -168,7 +168,7 @@ export const DefaultClickEventHandler: ClickEventHandler<ObjectState> = (
 						} else if (isAdditive) {
 							// Ctrl: deselect
 							newSelectionTargetId = id;
-							newSelectionState = false;
+							shouldSelectTarget = false;
 						} else {
 							// Already selected: no change
 							return canvasState;
@@ -180,7 +180,7 @@ export const DefaultClickEventHandler: ClickEventHandler<ObjectState> = (
 						} else if (isAdditive) {
 							// Ctrl: deselect
 							newSelectionTargetId = id;
-							newSelectionState = false;
+							shouldSelectTarget = false;
 						} else {
 							// Already selected: no change
 							return canvasState;
@@ -193,7 +193,7 @@ export const DefaultClickEventHandler: ClickEventHandler<ObjectState> = (
 					} else if (isAdditive) {
 						// Ctrl: deselect
 						newSelectionTargetId = id;
-						newSelectionState = false;
+						shouldSelectTarget = false;
 					} else {
 						// Already selected: no change
 						return canvasState;
@@ -209,7 +209,7 @@ export const DefaultClickEventHandler: ClickEventHandler<ObjectState> = (
 
 	if (isAdditive) {
 		// Ctrl/Meta mode: toggle or add
-		if (newSelectionState) {
+		if (shouldSelectTarget) {
 			// Add to selection (if not already there)
 			selectedIds = canvasState.selectedIds.includes(newSelectionTargetId)
 				? canvasState.selectedIds
@@ -222,7 +222,7 @@ export const DefaultClickEventHandler: ClickEventHandler<ObjectState> = (
 		}
 	} else {
 		// Normal mode: single selection
-		selectedIds = newSelectionState ? [newSelectionTargetId] : [];
+		selectedIds = shouldSelectTarget ? [newSelectionTargetId] : [];
 	}
 
 	// ========== Auto-select parent groups if all children are selected ==========
