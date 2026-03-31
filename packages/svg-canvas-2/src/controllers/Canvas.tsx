@@ -66,6 +66,8 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 	// Reducer for canvas state management
 	const [state, dispatch] = useReducer(canvasReducer, initialState);
 
+	console.log("[Canvas] Render", { state });
+
 	// Notify parent component when a committable action occurs
 	useEffect(() => {
 		if (state.lastCommitTime > 0) {

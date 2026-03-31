@@ -1,25 +1,20 @@
-import { isTransformedFrame } from "@workspace/geometry";
+import type { TransformedFrame } from "@workspace/geometry";
 import { memo } from "react";
 
 import { createSvgTransform } from "../../../../presentations/objects/utils/createSvgTransform";
-import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 
 type OutlineProps = {
-	object: ObjectState;
+	frame: TransformedFrame;
 };
 
 const OUTLINE_COLOR = "#0d99ff";
 const OUTLINE_WIDTH = 1.5;
 
 /**
- * Renders a selection outline around an object.
+ * Renders a selection outline around a transformed frame.
  */
-const OutlineComponent: React.FC<OutlineProps> = ({ object }) => {
-	if (!isTransformedFrame(object)) {
-		return null;
-	}
-
-	const { cx, cy, width, height, scaleX, scaleY, rotation } = object;
+const OutlineComponent: React.FC<OutlineProps> = ({ frame }) => {
+	const { cx, cy, width, height, scaleX, scaleY, rotation } = frame;
 	const transformAttr = createSvgTransform(scaleX, scaleY, rotation, cx, cy);
 
 	return (
