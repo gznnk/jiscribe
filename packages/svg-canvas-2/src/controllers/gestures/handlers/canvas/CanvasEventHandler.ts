@@ -9,12 +9,13 @@ import type {
 import type { CanvasState } from "../../../../states/canvas/CanvasState";
 
 /**
- * Handles events that occur on the canvas (not on objects).
- * This is the main entry point for canvas-level event handling.
+ * Handles events that occur on the canvas.
+ * Right-click interactions are also treated as canvas-level behavior so
+ * grab-scroll and context menus work consistently above objects and controls.
  */
 export const CanvasEventHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {
-		return event.targetKind === "canvas";
+		return event.targetKind === "canvas" || event.button === 2;
 	},
 
 	handle(state: CanvasState, event: CanvasEvent): CanvasState {
@@ -61,8 +62,14 @@ export const CanvasEventHandler: GestureHandler = {
 				...nextState,
 				viewport: {
 					...state.viewport,
-					minX: roundToDecimal(state.viewport.minX + svgDeltaX, PRECISION.COORDINATE),
-					minY: roundToDecimal(state.viewport.minY + svgDeltaY, PRECISION.COORDINATE),
+					minX: roundToDecimal(
+						state.viewport.minX + svgDeltaX,
+						PRECISION.COORDINATE,
+					),
+					minY: roundToDecimal(
+						state.viewport.minY + svgDeltaY,
+						PRECISION.COORDINATE,
+					),
 				},
 			};
 			return nextState;
@@ -92,8 +99,14 @@ export const CanvasEventHandler: GestureHandler = {
 					...nextState,
 					viewport: {
 						...initialViewport,
-						minX: roundToDecimal(initialViewport.minX - deltaX, PRECISION.COORDINATE),
-						minY: roundToDecimal(initialViewport.minY - deltaY, PRECISION.COORDINATE),
+						minX: roundToDecimal(
+							initialViewport.minX - deltaX,
+							PRECISION.COORDINATE,
+						),
+						minY: roundToDecimal(
+							initialViewport.minY - deltaY,
+							PRECISION.COORDINATE,
+						),
 					},
 				};
 			}
