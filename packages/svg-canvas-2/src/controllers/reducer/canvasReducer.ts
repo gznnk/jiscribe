@@ -36,12 +36,6 @@ export const canvasReducer = (
 			};
 		}
 
-		case "CONTEXT_MENU":
-			return {
-				...state,
-				contextMenuPosition: action.payload,
-			};
-
 		default:
 			return state;
 	}

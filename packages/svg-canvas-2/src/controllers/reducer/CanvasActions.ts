@@ -28,14 +28,6 @@ export type SyncExternalAction = {
 };
 
 /**
- * Context menu action - shows/hides context menu
- */
-export type ContextMenuAction = {
-	type: "CONTEXT_MENU";
-	payload: { clientX: number; clientY: number } | null;
-};
-
-/**
  * Command action - handles keyboard shortcuts and context menu commands
  */
 export type CommandAction = {
@@ -50,5 +42,4 @@ export type CanvasAction =
 	| GestureAction
 	| ContainerResizeAction
 	| SyncExternalAction
-	| ContextMenuAction
 	| CommandAction;

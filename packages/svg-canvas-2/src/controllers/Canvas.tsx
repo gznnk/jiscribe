@@ -115,12 +115,8 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 	const handleContextMenu = useCallback(
 		(e: React.MouseEvent<HTMLDivElement>) => {
 			e.preventDefault();
-			dispatch({
-				type: "CONTEXT_MENU",
-				payload: { clientX: e.clientX, clientY: e.clientY },
-			});
 		},
-		[dispatch],
+		[],
 	);
 
 	const { minX, minY, zoom } = state.viewport;
