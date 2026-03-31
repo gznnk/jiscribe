@@ -1,3 +1,4 @@
+import type { GroupState } from "../../../states/objects/primitives/GroupState";
 import type { Command } from "../CommandTypes";
 
 export const DeleteCommand: Command = {
@@ -13,22 +14,51 @@ export const DeleteCommand: Command = {
 	},
 
 	execute: (state) => {
-		const updatedObjects = { ...state.objects };
-		const updatedRootIds = [...state.rootIds];
+		// 削除対象IDを収集（グループの場合は子孫も再帰的に含める）
+		const idsToDelete = new Set<string>();
 
-		// 選択オブジェクトを削除
+		const collectIds = (id: string) => {
+			if (idsToDelete.has(id)) return;
+			idsToDelete.add(id);
+			const obj = state.objects[id];
+			if (obj?.type === "group") {
+				for (const childId of (obj as GroupState).childIds) {
+					collectIds(childId);
+				}
+			}
+		};
+
 		for (const id of state.selectedIds) {
+			collectIds(id);
+		}
+
+		const updatedObjects = { ...state.objects };
+
+		// 削除対象オブジェクトを objects から除去
+		for (const id of idsToDelete) {
 			delete updatedObjects[id];
-			const index = updatedRootIds.indexOf(id);
-			if (index !== -1) {
-				updatedRootIds.splice(index, 1);
+		}
+
+		// 選択オブジェクトのうち、親が削除されない場合は親の childIds から除去
+		for (const id of state.selectedIds) {
+			const obj = state.objects[id];
+			if (obj?.parentId != null && !idsToDelete.has(obj.parentId)) {
+				const parent = updatedObjects[obj.parentId];
+				if (parent?.type === "group") {
+					const groupParent = parent as GroupState;
+					updatedObjects[obj.parentId] = {
+						...groupParent,
+						childIds: groupParent.childIds.filter((childId) => childId !== id),
+					} as GroupState;
+				}
 			}
 		}
 
 		return {
 			...state,
 			objects: updatedObjects,
-			rootIds: updatedRootIds,
+			rootIds: state.rootIds.filter((id) => !idsToDelete.has(id)),
+			connectorIds: state.connectorIds.filter((id) => !idsToDelete.has(id)),
 			selectedIds: [],
 			lastCommitTime: Date.now(), // コミット必要
 		};
