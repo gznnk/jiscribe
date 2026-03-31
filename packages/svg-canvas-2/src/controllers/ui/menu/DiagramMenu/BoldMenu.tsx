@@ -1,0 +1,36 @@
+import { memo } from "react";
+
+import { DiagramMenuButton, MenuItemPositioner } from "./DiagramMenuStyled";
+import type { CanvasState } from "../../../../states/canvas/CanvasState";
+import { BoldIcon } from "../../icons/BoldIcon";
+
+type BoldMenuProps = {
+	canvasState: CanvasState;
+};
+
+/**
+ * 太字メニュー（見た目のみ）。
+ * テキスト機能の実装後に fontWeight プロパティと連携予定。
+ */
+const BoldMenuComponent: React.FC<BoldMenuProps> = ({
+	canvasState: _canvasState,
+}) => {
+	// TODO: テキスト機能実装後に fontWeight を取得してトグル
+	void _canvasState;
+	const _isBold = false;
+
+	return (
+		<MenuItemPositioner>
+			<DiagramMenuButton
+				isActive={false}
+				data-kind="diagram-menu"
+				data-id="diagram-menu:set-fontWeight:bold"
+				title="Bold"
+			>
+				<BoldIcon fill={_isBold ? "#333333" : "#999999"} />
+			</DiagramMenuButton>
+		</MenuItemPositioner>
+	);
+};
+
+export const BoldMenu = memo(BoldMenuComponent);

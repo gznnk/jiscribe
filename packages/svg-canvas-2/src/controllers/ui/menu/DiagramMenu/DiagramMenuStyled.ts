@@ -89,3 +89,16 @@ export const DropdownPanel = styled.div`
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 	pointer-events: auto;
 `;
+
+/**
+ * ドロップダウンカラーパネル。DropdownPanel の幅広版。
+ * カラーピッカーグリッドを表示するために使用する。
+ */
+export const DropdownColorPanel = styled.div`
+	position: absolute;
+	left: 50%;
+	top: 36px;
+	transform: translateX(-50%);
+	z-index: 1100;
+	pointer-events: auto;
+`;
