@@ -2,18 +2,20 @@ import type { CanvasState } from "../../../states/canvas/CanvasState";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 
 /**
- * Gets all ancestor IDs of an object, ordered from parent to root.
+ * Gets all ancestor IDs of an object, ordered from root to leaf (outermost to innermost).
  * Returns an empty array if the object is at root level.
+ *
+ * This matches the behavior of svg-canvas's getAncestorItemsById.
  *
  * @param state - The canvas state
  * @param objectId - The ID of the object
- * @returns Array of ancestor IDs [parent, grandparent, ..., root]
+ * @returns Array of ancestor IDs [root, ..., grandparent, parent]
  * @complexity O(depth) where depth is nesting level (typically < 10)
  *
  * @example
  * // Object hierarchy: root -> group1 -> group2 -> rect
  * getAncestors(state, 'rect-1')
- * // Returns: ['group-2', 'group-1', 'root']
+ * // Returns: ['root', 'group-1', 'group-2']
  */
 export function getAncestors(
 	state: CanvasState,
@@ -42,21 +44,22 @@ export function getAncestors(
 		currentId = obj.parentId;
 	}
 
-	return ancestors;
+	// Reverse to match svg-canvas order: root to leaf (outermost to innermost)
+	return ancestors.reverse();
 }
 
 /**
- * Gets all ancestor objects of an object, ordered from parent to root.
+ * Gets all ancestor objects of an object, ordered from root to leaf (outermost to innermost).
  * Returns an empty array if the object is at root level.
  *
  * @param state - The canvas state
  * @param objectId - The ID of the object
- * @returns Array of ancestor objects [parent, grandparent, ..., root]
+ * @returns Array of ancestor objects [root, ..., grandparent, parent]
  *
  * @example
  * // Object hierarchy: root -> group1 -> group2 -> rect
  * getAncestorObjects(state, 'rect-1')
- * // Returns: [GroupState('group-2'), GroupState('group-1'), GroupState('root')]
+ * // Returns: [GroupState('root'), GroupState('group-1'), GroupState('group-2')]
  */
 export function getAncestorObjects(
 	state: CanvasState,
