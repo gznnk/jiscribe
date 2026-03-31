@@ -5,19 +5,20 @@ import { calcInverseAffineTransformedPoint } from "../transform/calcInverseAffin
 import type { Point } from "../types/Point";
 import type { TransformedFrame } from "../types/TransformedFrame";
 
-// TODO: いらんかも
 /**
- * Calculates an oriented bounding box for a series of points.
- * This is useful for computing the bounding frame that encompasses all points
- * while maintaining rotation and scale properties.
+ * 点群から指定された transform を持つ TransformedFrame を計算します。
  *
- * This function derives a TransformedFrame object (including rotation and scale)
- * that represents the minimum bounding box containing all given points.
- * It's particularly useful for path-based shapes where you need to determine
- * the overall frame properties from the constituent points.
+ * このアルゴリズムは以下の手順で動作します:
+ * 1. 点群の軸平行バウンディングボックス (AABB) の中心を計算
+ * 2. その中心を基準に、指定された transform の**逆変換**を全点に適用
+ * 3. 逆変換後の点群の AABB を計算し、width/height を取得
+ * 4. 逆変換後の中心を順変換して最終的な中心位置を計算
  *
- * @param points - Array of points to calculate the bounding box for
- * @returns A TransformedFrame object representing the oriented bounding box of the path
+ * @param points - フレームを計算する点の配列
+ * @param scaleX - X軸のスケール (デフォルト: 1)
+ * @param scaleY - Y軸のスケール (デフォルト: 1)
+ * @param rotation - 回転角度（度数法、デフォルト: 0）
+ * @returns 点群を包含する TransformedFrame
  */
 export const calcOrientedFrameFromPoints = (
 	points: Point[],

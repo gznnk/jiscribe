@@ -28,6 +28,9 @@ const testCanvasDoc: CanvasDoc = {
 		{
 			id: "group-1",
 			type: "group",
+			rotation: 0, // 回転なしグループ
+			scaleX: 1,
+			scaleY: 1,
 			children: [
 				{
 					id: "rect-in-group-1",
@@ -51,6 +54,48 @@ const testCanvasDoc: CanvasDoc = {
 					stroke: "#006064",
 					strokeWidth: 2,
 				} as unknown as EllipseDoc,
+			],
+		} as unknown as GroupDoc,
+		{
+			id: "group-2",
+			type: "group",
+			rotation: 30, // 30度回転
+			scaleX: 1,
+			scaleY: 1,
+			children: [
+				{
+					id: "rect-in-group-2",
+					type: "rect",
+					x: 700,
+					y: 200,
+					width: 60,
+					height: 60,
+					fill: "#E91E63",
+					stroke: "#880E4F",
+					strokeWidth: 2,
+				} as unknown as RectDoc,
+				{
+					id: "ellipse-in-group-2",
+					type: "ellipse",
+					cx: 780,
+					cy: 230,
+					rx: 30,
+					ry: 20,
+					fill: "#9C27B0",
+					stroke: "#4A148C",
+					strokeWidth: 2,
+				} as unknown as EllipseDoc,
+				{
+					id: "rect-in-group-2-b",
+					type: "rect",
+					x: 700,
+					y: 270,
+					width: 80,
+					height: 40,
+					fill: "#3F51B5",
+					stroke: "#1A237E",
+					strokeWidth: 2,
+				} as unknown as RectDoc,
 			],
 		} as unknown as GroupDoc,
 		{

@@ -2,7 +2,7 @@ import { isTransformedFrame } from "@workspace/geometry";
 import { memo } from "react";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
-import { calculateGroupBounds } from "../../utils/calculateGroupBounds";
+import { calculateGroupOrientedBounds } from "../../utils/calculateGroupOrientedBounds";
 import { Outline } from "../Outline";
 
 type SelectionOverlayProps = {
@@ -30,7 +30,7 @@ const SelectionOverlayComponent: React.FC<SelectionOverlayProps> = ({
 
 				// グループの場合はバウンディングボックスを計算
 				if (obj.type === "group") {
-					const bounds = calculateGroupBounds(objects, id);
+					const bounds = calculateGroupOrientedBounds(objects, id);
 					if (!bounds) return null;
 
 					return <Outline key={id} frame={bounds} />;
