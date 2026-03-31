@@ -1,6 +1,6 @@
 import { autoSelectParentGroups } from "./autoSelectParentGroups";
 import { getAncestors } from "./getAncestors";
-import { hasSelectedChildren } from "./getGroupSelectionStatus";
+import { hasSelectedChildren } from "./hasSelectedChildren";
 import type {
 	ClickEventHandler,
 	ClickEventHandlerParams,

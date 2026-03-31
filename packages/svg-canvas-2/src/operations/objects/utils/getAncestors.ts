@@ -17,10 +17,7 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
  * getAncestors(state, 'rect-1')
  * // Returns: ['root', 'group-1', 'group-2']
  */
-export function getAncestors(
-	state: CanvasState,
-	objectId: string,
-): string[] {
+export function getAncestors(state: CanvasState, objectId: string): string[] {
 	const ancestors: string[] = [];
 	let currentId: string | undefined = objectId;
 	const visited = new Set<string>();
@@ -46,26 +43,4 @@ export function getAncestors(
 
 	// Reverse to match svg-canvas order: root to leaf (outermost to innermost)
 	return ancestors.reverse();
-}
-
-/**
- * Gets all ancestor objects of an object, ordered from root to leaf (outermost to innermost).
- * Returns an empty array if the object is at root level.
- *
- * @param state - The canvas state
- * @param objectId - The ID of the object
- * @returns Array of ancestor objects [root, ..., grandparent, parent]
- *
- * @example
- * // Object hierarchy: root -> group1 -> group2 -> rect
- * getAncestorObjects(state, 'rect-1')
- * // Returns: [GroupState('root'), GroupState('group-1'), GroupState('group-2')]
- */
-export function getAncestorObjects(
-	state: CanvasState,
-	objectId: string,
-): ObjectState[] {
-	return getAncestors(state, objectId)
-		.map((id) => state.objects[id])
-		.filter((obj): obj is ObjectState => obj !== undefined);
 }

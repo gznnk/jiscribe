@@ -1,4 +1,3 @@
-import { areAllChildrenSelected } from "./getGroupSelectionStatus";
 import type { CanvasState } from "../../../states/canvas/CanvasState";
 import type { GroupState } from "../../../states/objects/primitives/GroupState";
 
@@ -41,9 +40,15 @@ export function autoSelectParentGroups(
 
 		// Check each parent: if all children are selected, select the parent instead
 		for (const parentId of parentCandidates) {
-			if (areAllChildrenSelected(state, parentId)) {
-				const parent = state.objects[parentId] as GroupState;
+			const parent = state.objects[parentId] as GroupState;
+			if (!parent) continue;
 
+			// Check if all children are in the current result (not state.selectedIds)
+			const allChildrenSelected =
+				parent.childIds.length > 0 &&
+				parent.childIds.every((childId) => result.includes(childId));
+
+			if (allChildrenSelected) {
 				// Remove all children from selection
 				result = result.filter((id) => !parent.childIds.includes(id));
 
