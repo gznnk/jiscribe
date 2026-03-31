@@ -24,6 +24,7 @@ import { canvasReducer } from "./reducer/canvasReducer";
 import { initializeRegistries } from "./setup";
 import { TransformControlsLayer } from "./ui/controls/TransformControlsLayer";
 import { DebugInfo } from "./ui/debug/DebugInfo";
+import { AreaSelectionRect } from "./ui/feedback/AreaSelectionRect";
 import { DragGhost } from "./ui/feedback/DragGhost";
 import { SelectionOverlay } from "./ui/feedback/SelectionOverlay";
 import { ContextMenu } from "./ui/menu/ContextMenu";
@@ -60,13 +61,14 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 			contextMenuPosition: null,
 			pendingShapeType: null,
 			ghostPosition: null,
+			areaSelection: null,
 		};
 	}, [canvasDoc]);
 
 	// Reducer for canvas state management
 	const [state, dispatch] = useReducer(canvasReducer, initialState);
 
-	console.log("[Canvas] Render", { state });
+	// console.log("[Canvas] Render", { state });
 
 	// Notify parent component when a committable action occurs
 	useEffect(() => {
@@ -150,6 +152,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 						pendingShapeType={state.pendingShapeType}
 						ghostPosition={state.ghostPosition}
 					/>
+					<AreaSelectionRect areaSelection={state.areaSelection} />
 				</CanvasView>
 				{/* Container for HTML elements that follow canvas scroll AND zoom */}
 				<ZoomScaledOverlay left={-minX} top={-minY} zoom={zoom}>

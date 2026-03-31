@@ -74,4 +74,15 @@ export type CanvasState = {
 	 * dragEnd で null にクリアする。
 	 */
 	ghostPosition: Point | null;
+
+	/**
+	 * 範囲選択中の矩形（SVG座標）。
+	 * Canvas上で左ドラッグ時に設定され、dragEnd / Escape で null にクリアする。
+	 */
+	areaSelection: {
+		startX: number;
+		startY: number;
+		endX: number;
+		endY: number;
+	} | null;
 };

@@ -1,7 +1,9 @@
 import { roundToDecimal } from "@workspace/geometry";
 
+import { collectIdsInArea } from "./utils/collectIdsInArea";
 import { PRECISION } from "../../../../constants/precision";
 import { ZOOM } from "../../../../constants/zoom";
+import { autoSelectParentGroups } from "../../../../operations/objects/utils/autoSelectParentGroups";
 import type {
 	CanvasEvent,
 	GestureHandler,
@@ -111,6 +113,60 @@ export const CanvasEventHandler: GestureHandler = {
 				};
 			}
 			return nextState;
+		}
+
+		// Left-button drag for area selection
+		if (event.button === 0) {
+			if (event.type === "dragStart") {
+				nextState = {
+					...nextState,
+					areaSelection: {
+						startX: event.start.x,
+						startY: event.start.y,
+						endX: event.last.x,
+						endY: event.last.y,
+					},
+					selectedIds: [],
+					edgeScrollEnabled: true,
+				};
+				return nextState;
+			}
+
+			if (event.type === "drag" && nextState.areaSelection) {
+				const area = nextState.areaSelection;
+				const endX = event.last.x;
+				const endY = event.last.y;
+				const areaMinX = Math.min(area.startX, endX);
+				const areaMinY = Math.min(area.startY, endY);
+				const areaMaxX = Math.max(area.startX, endX);
+				const areaMaxY = Math.max(area.startY, endY);
+
+				const hitIds = collectIdsInArea(
+					nextState.objects,
+					areaMinX,
+					areaMinY,
+					areaMaxX,
+					areaMaxY,
+				);
+
+				const selectedIds = autoSelectParentGroups(nextState, hitIds);
+
+				nextState = {
+					...nextState,
+					areaSelection: { ...area, endX, endY },
+					selectedIds,
+				};
+				return nextState;
+			}
+
+			if (event.type === "dragEnd" && nextState.areaSelection) {
+				nextState = {
+					...nextState,
+					areaSelection: null,
+					edgeScrollEnabled: false,
+				};
+				return nextState;
+			}
 		}
 
 		// Clear selection on click (left-click only)
