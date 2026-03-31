@@ -1,6 +1,5 @@
 import { autoSelectParentGroups } from "./autoSelectParentGroups";
 import { getAncestors } from "./getAncestors";
-import { hasSelectedChildren } from "./hasSelectedChildren";
 import type {
 	ClickEventHandler,
 	ClickEventHandlerParams,
@@ -116,11 +115,26 @@ export const DefaultClickEventHandler: ClickEventHandler<ObjectState> = (
 
 			// Check if any sibling is selected (same parent has selected children)
 			// (svg-canvas lines 135-155)
-			const parentWithSelectedChild = ancestors.find((ancestorId) =>
-				hasSelectedChildren(canvasState, ancestorId),
-			);
+			// IMPORTANT: We need to check if:
+			// 1. The clicked item is a direct child of this ancestor (parent.childIds.includes(id))
+			// 2. AND this ancestor has other selected children
+			const parentWithSelectedSibling = ancestors.find((ancestorId) => {
+				const parent = canvasState.objects[ancestorId];
+				if (!parent || parent.type !== "group") {
+					return false;
+				}
+				const group = parent as GroupState;
+				// Check if clicked item is direct child of this group
+				const isDirectChild = group.childIds.includes(id);
+				// Check if this group has other selected children
+				const hasOtherSelectedChildren = group.childIds.some(
+					(childId) =>
+						childId !== id && canvasState.selectedIds.includes(childId),
+				);
+				return isDirectChild && hasOtherSelectedChildren;
+			});
 
-			if (parentWithSelectedChild) {
+			if (parentWithSelectedSibling) {
 				// Sibling is selected in the same group
 				if (!isCurrentlySelected) {
 					// Select the clicked item (same level as sibling)
@@ -162,8 +176,7 @@ export const DefaultClickEventHandler: ClickEventHandler<ObjectState> = (
 								newSelectionTargetId = id;
 							} else {
 								// Select the ancestor level to match other selections
-								newSelectionTargetId =
-									reversedAncestors[commonAncestorIdx - 1];
+								newSelectionTargetId = reversedAncestors[commonAncestorIdx - 1];
 							}
 						} else if (isAdditive) {
 							// Ctrl: deselect
