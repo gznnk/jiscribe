@@ -63,6 +63,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 			pendingShapeType: null,
 			ghostPosition: null,
 			areaSelection: null,
+			diagramMenuOpenId: null,
 		};
 	}, [canvasDoc]);
 

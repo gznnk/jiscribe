@@ -85,4 +85,10 @@ export type CanvasState = {
 		endX: number;
 		endY: number;
 	} | null;
+
+	/**
+	 * DiagramMenu 内で現在展開中のセクション ID。
+	 * null なら全セクション閉じた状態。
+	 */
+	diagramMenuOpenId: string | null;
 };

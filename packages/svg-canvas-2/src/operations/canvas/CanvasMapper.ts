@@ -76,6 +76,7 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 		pendingShapeType: null,
 		ghostPosition: null,
 		areaSelection: null,
+		diagramMenuOpenId: null,
 	};
 };
 

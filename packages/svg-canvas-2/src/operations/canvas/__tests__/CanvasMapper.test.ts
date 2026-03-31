@@ -146,6 +146,7 @@ describe("CanvasMapper", () => {
 				pendingShapeType: null,
 				ghostPosition: null,
 				areaSelection: null,
+				diagramMenuOpenId: null,
 				objects: {
 					"rect-1": {
 						id: "rect-1",

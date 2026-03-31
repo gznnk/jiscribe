@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo } from "react";
 
 import {
 	DiagramMenuButton,
@@ -12,6 +12,8 @@ import { BringToFrontIcon } from "../../icons/BringToFrontIcon";
 import { SendBackwardIcon } from "../../icons/SendBackwardIcon";
 import { SendToBackIcon } from "../../icons/SendToBackIcon";
 import { StackOrderIcon } from "../../icons/StackOrderIcon";
+
+const SECTION_ID = "stack-order";
 
 type StackOrderMenuProps = {
 	canvasState: CanvasState;
@@ -27,15 +29,14 @@ const arrangeCommands = [
 const StackOrderMenuComponent: React.FC<StackOrderMenuProps> = ({
 	canvasState,
 }) => {
-	const [isOpen, setIsOpen] = useState(false);
+	const isOpen = canvasState.diagramMenuOpenId === SECTION_ID;
 
 	return (
 		<>
 			<DiagramMenuButton
 				isActive={isOpen}
-				onClick={() => setIsOpen((prev) => !prev)}
 				data-kind="diagram-menu"
-				data-id="diagram-menu:toggle-stack-order"
+				data-id={`diagram-menu:toggle-${SECTION_ID}`}
 			>
 				<StackOrderIcon />
 			</DiagramMenuButton>

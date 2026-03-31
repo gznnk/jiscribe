@@ -16,16 +16,21 @@ export const DiagramMenuHandler: GestureHandler = {
 
 	handle(state: CanvasState, event: CanvasEvent): CanvasState {
 		if (event.type === "click" && event.targetId) {
-			// targetId から "diagram-menu:" プレフィックスを除去してコマンドIDを取得
-			const commandId = event.targetId.replace("diagram-menu:", "");
+			// targetId から "diagram-menu:" プレフィックスを除去してIDを取得
+			const actionId = event.targetId.replace("diagram-menu:", "");
 
-			// toggle ボタンはコマンドではないので無視
-			if (commandId.startsWith("toggle-")) {
-				return state;
+			// toggle ボタン: セクションの開閉を切り替える
+			if (actionId.startsWith("toggle-")) {
+				const sectionId = actionId.replace("toggle-", "");
+				return {
+					...state,
+					diagramMenuOpenId:
+						state.diagramMenuOpenId === sectionId ? null : sectionId,
+				};
 			}
 
-			// COMMAND アクションを実行
-			return handleCommand(state, commandId);
+			// コマンドボタン: コマンドを実行
+			return handleCommand(state, actionId);
 		}
 
 		return state;
