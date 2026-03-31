@@ -63,10 +63,29 @@ export const DiagramMenuButton = styled.button<{ isActive?: boolean }>`
 `;
 
 /**
- * サブメニュー（StackOrder 展開時など）のコンテナ。
+ * メニューボタンの位置基準コンテナ（relative）。
+ * ドロップダウンの基準位置になる。
  */
-export const SubMenuContainer = styled.div`
+export const MenuItemPositioner = styled.div`
+	position: relative;
+`;
+
+/**
+ * ドロップダウンパネル。ボタンの下に中央揃えで表示される。
+ */
+export const DropdownPanel = styled.div`
+	position: absolute;
+	left: 50%;
+	top: 36px;
+	transform: translateX(-50%);
+	z-index: 1100;
 	display: flex;
 	align-items: center;
 	gap: 2px;
+	padding: 4px;
+	background: white;
+	border: 1px solid #ddd;
+	border-radius: 6px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+	pointer-events: auto;
 `;

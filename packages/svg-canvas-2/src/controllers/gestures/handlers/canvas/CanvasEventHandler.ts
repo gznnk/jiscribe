@@ -176,6 +176,8 @@ export const CanvasEventHandler: GestureHandler = {
 				selectedIds: [],
 				// コンテキストメニューが開いている場合は閉じる
 				contextMenuPosition: null,
+				// DiagramMenu の展開をリセット
+				diagramMenuOpenId: null,
 			};
 		}
 

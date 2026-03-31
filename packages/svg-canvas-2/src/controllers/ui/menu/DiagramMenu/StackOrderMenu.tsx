@@ -2,8 +2,8 @@ import { memo } from "react";
 
 import {
 	DiagramMenuButton,
-	DiagramMenuDivider,
-	SubMenuContainer,
+	DropdownPanel,
+	MenuItemPositioner,
 } from "./DiagramMenuStyled";
 import type { CanvasState } from "../../../../states/canvas/CanvasState";
 import { commandRegistry } from "../../../commands/CommandRegistry";
@@ -32,7 +32,7 @@ const StackOrderMenuComponent: React.FC<StackOrderMenuProps> = ({
 	const isOpen = canvasState.diagramMenuOpenId === SECTION_ID;
 
 	return (
-		<>
+		<MenuItemPositioner>
 			<DiagramMenuButton
 				isActive={isOpen}
 				data-kind="diagram-menu"
@@ -41,31 +41,28 @@ const StackOrderMenuComponent: React.FC<StackOrderMenuProps> = ({
 				<StackOrderIcon />
 			</DiagramMenuButton>
 			{isOpen && (
-				<>
-					<DiagramMenuDivider />
-					<SubMenuContainer>
-						{arrangeCommands.map(({ commandId, Icon }) => {
-							const command = commandRegistry.get(commandId);
-							if (!command) return null;
-							const enabled = command.canExecute(canvasState);
-							return (
-								<DiagramMenuButton
-									key={commandId}
-									disabled={!enabled}
-									data-kind="diagram-menu"
-									data-id={`diagram-menu:${commandId}`}
-								>
-									<Icon
-										fill={enabled ? "#333333" : "#cccccc"}
-										title={command.label}
-									/>
-								</DiagramMenuButton>
-							);
-						})}
-					</SubMenuContainer>
-				</>
+				<DropdownPanel>
+					{arrangeCommands.map(({ commandId, Icon }) => {
+						const command = commandRegistry.get(commandId);
+						if (!command) return null;
+						const enabled = command.canExecute(canvasState);
+						return (
+							<DiagramMenuButton
+								key={commandId}
+								disabled={!enabled}
+								data-kind="diagram-menu"
+								data-id={`diagram-menu:${commandId}`}
+							>
+								<Icon
+									fill={enabled ? "#333333" : "#cccccc"}
+									title={command.label}
+								/>
+							</DiagramMenuButton>
+						);
+					})}
+				</DropdownPanel>
 			)}
-		</>
+		</MenuItemPositioner>
 	);
 };
 

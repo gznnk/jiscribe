@@ -60,6 +60,7 @@ export const DeleteCommand: Command = {
 			rootIds: state.rootIds.filter((id) => !idsToDelete.has(id)),
 			connectorIds: state.connectorIds.filter((id) => !idsToDelete.has(id)),
 			selectedIds: [],
+			diagramMenuOpenId: null,
 			lastCommitTime: Date.now(), // コミット必要
 		};
 	},

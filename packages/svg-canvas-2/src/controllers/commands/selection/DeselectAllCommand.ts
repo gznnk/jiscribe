@@ -19,6 +19,7 @@ export const DeselectAllCommand: Command = {
 			...state,
 			selectedIds: [],
 			areaSelection: null,
+			diagramMenuOpenId: null,
 		};
 	},
 };
