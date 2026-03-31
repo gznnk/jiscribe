@@ -86,6 +86,37 @@ const testCanvasDoc: CanvasDoc = {
 					strokeWidth: 2,
 				} as unknown as EllipseDoc,
 				{
+					id: "nested-group-in-group-2",
+					type: "group",
+					rotation: -15, // ネストした子グループ
+					scaleX: 1,
+					scaleY: 1,
+					children: [
+						{
+							id: "rect-in-nested-group-2",
+							type: "rect",
+							x: 820,
+							y: 220,
+							width: 70,
+							height: 45,
+							fill: "#8BC34A",
+							stroke: "#33691E",
+							strokeWidth: 2,
+						} as unknown as RectDoc,
+						{
+							id: "ellipse-in-nested-group-2",
+							type: "ellipse",
+							cx: 910,
+							cy: 245,
+							rx: 22,
+							ry: 18,
+							fill: "#FFC107",
+							stroke: "#FF6F00",
+							strokeWidth: 2,
+						} as unknown as EllipseDoc,
+					],
+				} as unknown as GroupDoc,
+				{
 					id: "rect-in-group-2-b",
 					type: "rect",
 					x: 700,
