@@ -39,10 +39,10 @@ const addObjectToState = (
 };
 
 /**
- * メニューアイテムのジェスチャーハンドラー。
- * シェイプメニューからのドラッグ（エッジスクロール対応）と押下による中央配置を処理する。
+ * ShapeLibrary アイテムのジェスチャーハンドラー。
+ * ShapeLibrary からのドラッグ（エッジスクロール対応）と押下による中央配置を処理する。
  */
-export const MenuItemGestureHandler: GestureHandler = {
+export const ShapeLibraryItemHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {
 		return event.targetKind === "menu-item";
 	},
