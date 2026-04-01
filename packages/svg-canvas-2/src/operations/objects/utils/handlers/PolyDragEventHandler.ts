@@ -1,24 +1,25 @@
-import { isFrame, roundToDecimal, type Frame } from "@workspace/geometry";
+import { roundToDecimal } from "@workspace/geometry";
 
-import { PRECISION } from "../../../constants/precision";
+import { PRECISION } from "../../../../constants/precision";
 import type {
 	DragEventHandler,
 	DragEventHandlerParams,
-} from "../../../registry/ObjectRegistryTypes";
-import type { ObjectState } from "../../../states/objects/base/ObjectState";
+} from "../../../../registry/ObjectRegistryTypes";
+import { isPoly, type Poly } from "../../../../schemas/objects/types/Poly";
+import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 
 /**
- * Helper type for ObjectState that has Frame properties
+ * Helper type for ObjectState that has Poly properties
  */
-type FrameObjectState = ObjectState & Frame;
+type PolyObjectState = ObjectState & Poly;
 
 /**
- * Frame-specific drag event handler that updates an object's position.
- * Also moves all other selected Frame objects by the same delta.
+ * Poly-specific drag event handler that updates all points in the points array.
+ * Also moves all other selected Poly objects by the same delta.
  * Returns the entire CanvasState with the updated objects.
  * Only handles left-click drag (button 0).
  */
-export const FrameDragEventHandler: DragEventHandler<ObjectState> = (
+export const PolyDragEventHandler: DragEventHandler<ObjectState> = (
 	params: DragEventHandlerParams<ObjectState>,
 ) => {
 	const { delta, objectState, canvasState, button } = params;
@@ -28,7 +29,7 @@ export const FrameDragEventHandler: DragEventHandler<ObjectState> = (
 		return canvasState;
 	}
 
-	if (!isFrame(objectState)) {
+	if (!isPoly(objectState)) {
 		return canvasState;
 	}
 
@@ -46,15 +47,20 @@ export const FrameDragEventHandler: DragEventHandler<ObjectState> = (
 
 	for (const selectedId of selectedIds) {
 		const selectedObject = eventStartObjects[selectedId];
-		if (!selectedObject || !isFrame(selectedObject)) {
+		if (!selectedObject || !isPoly(selectedObject)) {
 			continue;
 		}
 
+		// Update all points by adding delta
+		const updatedPoints = selectedObject.points.map((point) => ({
+			x: roundToDecimal(point.x + delta.x, PRECISION.COORDINATE),
+			y: roundToDecimal(point.y + delta.y, PRECISION.COORDINATE),
+		}));
+
 		updatedObjects[selectedId] = {
 			...selectedObject,
-			cx: roundToDecimal(selectedObject.cx + delta.x, PRECISION.COORDINATE),
-			cy: roundToDecimal(selectedObject.cy + delta.y, PRECISION.COORDINATE),
-		} as FrameObjectState;
+			points: updatedPoints,
+		} as PolyObjectState;
 	}
 
 	// Update the canvas state with all moved objects
@@ -68,10 +74,10 @@ export const FrameDragEventHandler: DragEventHandler<ObjectState> = (
  * Drag start event handler that updates selection state based on modifiers.
  * - If Ctrl (or Meta on Mac) is pressed: adds the dragged object to selectedIds
  * - Otherwise: sets selectedIds to only the dragged object
- * Then calls FrameDragEventHandler to update the object's position.
+ * Then calls PolyDragEventHandler to update the object's position.
  * Only handles left-click drag (button 0).
  */
-export const FrameDragStartEventHandler: DragEventHandler<ObjectState> = (
+export const PolyDragStartEventHandler: DragEventHandler<ObjectState> = (
 	params: DragEventHandlerParams<ObjectState>,
 ) => {
 	const { objectState, canvasState, mods, button } = params;
@@ -104,8 +110,8 @@ export const FrameDragStartEventHandler: DragEventHandler<ObjectState> = (
 		edgeScrollEnabled: true,
 	};
 
-	// Call Frame handler to update object position
-	return FrameDragEventHandler({
+	// Call Poly handler to update object position
+	return PolyDragEventHandler({
 		...params,
 		canvasState: nextState,
 	});
@@ -113,9 +119,9 @@ export const FrameDragStartEventHandler: DragEventHandler<ObjectState> = (
 
 /**
  * Drag end event handler that disables edge scrolling.
- * Then calls FrameDragEventHandler to finalize the object's position.
+ * Then calls PolyDragEventHandler to finalize the object's position.
  */
-export const FrameDragEndEventHandler: DragEventHandler<ObjectState> = (
+export const PolyDragEndEventHandler: DragEventHandler<ObjectState> = (
 	params: DragEventHandlerParams<ObjectState>,
 ) => {
 	// Disable edge scrolling on drag end
@@ -124,7 +130,7 @@ export const FrameDragEndEventHandler: DragEventHandler<ObjectState> = (
 		edgeScrollEnabled: false,
 	};
 
-	return FrameDragEventHandler({
+	return PolyDragEventHandler({
 		...params,
 		canvasState: nextState,
 	});

@@ -1,10 +1,10 @@
 import type { ObjectEventHandler } from "../../../../registry/ObjectRegistryTypes";
-import { DefaultClickEventHandler } from "../../utils/DefaultClickEventHandler";
+import { DefaultClickEventHandler } from "../../utils/handlers/DefaultClickEventHandler";
 import {
 	PolyDragEndEventHandler,
 	PolyDragEventHandler,
 	PolyDragStartEventHandler,
-} from "../../utils/PolyDragEventHandler";
+} from "../../utils/handlers/PolyDragEventHandler";
 
 export const PolylineEventHandler: ObjectEventHandler = {
 	onDragStart: PolyDragStartEventHandler,

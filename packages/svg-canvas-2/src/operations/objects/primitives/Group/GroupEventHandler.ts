@@ -3,7 +3,7 @@ import {
 	FrameDragEndEventHandler,
 	FrameDragEventHandler,
 	FrameDragStartEventHandler,
-} from "../../utils/FrameDragEventHandler";
+} from "../../utils/handlers/FrameDragEventHandler";
 
 /**
  * Event handler for Group objects.

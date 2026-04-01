@@ -1,12 +1,12 @@
-import { autoSelectParentGroups } from "./autoSelectParentGroups";
-import { getAncestors } from "./getAncestors";
-import { hasSelectedDescendants } from "./hasSelectedDescendants";
 import type {
 	ClickEventHandler,
 	ClickEventHandlerParams,
-} from "../../../registry/ObjectRegistryTypes";
-import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import type { GroupState } from "../../../states/objects/primitives/GroupState";
+} from "../../../../registry/ObjectRegistryTypes";
+import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import type { GroupState } from "../../../../states/objects/primitives/GroupState";
+import { autoSelectParentGroups } from "../autoSelectParentGroups";
+import { getAncestors } from "../getAncestors";
+import { hasSelectedDescendants } from "../hasSelectedDescendants";
 
 /**
  * Hierarchical click event handler with group-aware selection logic.
