@@ -38,6 +38,9 @@ const ContextMenuComponent: React.FC<ContextMenuProps> = ({
 		{ commandId: "bringForward" },
 		{ commandId: "sendBackward" },
 		{ commandId: "sendToBack" },
+		{ separator: true },
+		{ commandId: "group" },
+		{ commandId: "ungroup" },
 	];
 
 	return (

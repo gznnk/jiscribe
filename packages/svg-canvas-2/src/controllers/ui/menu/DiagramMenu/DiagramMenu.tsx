@@ -12,6 +12,7 @@ import {
 import { FontColorMenu } from "./FontColorMenu";
 import { FontSizeMenu } from "./FontSizeMenu";
 import { useMenuConfig } from "./getMenuConfig";
+import { GroupMenu } from "./GroupMenu";
 import { KeepAspectRatioMenu } from "./KeepAspectRatioMenu";
 import { StackOrderMenu } from "./StackOrderMenu";
 import { StrokeColorMenu } from "./StrokeColorMenu";
@@ -87,6 +88,9 @@ const DiagramMenuComponent: React.FC<DiagramMenuProps> = ({ canvasState }) => {
 				{menuConfig.hasTransform && (
 					<KeepAspectRatioMenu canvasState={canvasState} />
 				)}
+
+				{/* Group / Ungroup */}
+				<GroupMenu canvasState={canvasState} />
 			</DiagramMenuContainer>
 		</DiagramMenuWrapper>
 	);
