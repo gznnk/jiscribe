@@ -1,5 +1,6 @@
 import { autoSelectParentGroups } from "./autoSelectParentGroups";
 import { getAncestors } from "./getAncestors";
+import { hasSelectedDescendants } from "./hasSelectedDescendants";
 import type {
 	ClickEventHandler,
 	ClickEventHandlerParams,
@@ -161,10 +162,13 @@ export const DefaultClickEventHandler: ClickEventHandler<ObjectState> = (
 								return false;
 							}
 							const group = ancestor as GroupState;
-							// Check if this ancestor contains any selected items
-							return canvasState.selectedIds.some((selectedId) => {
-								return group.childIds.includes(selectedId);
-							});
+							// Check if this ancestor contains any selected items (at any depth)
+							// This matches svg-canvas's getSelectedDiagrams behavior
+							return hasSelectedDescendants(
+								canvasState,
+								group.childIds,
+								canvasState.selectedIds,
+							);
 						},
 					);
 
