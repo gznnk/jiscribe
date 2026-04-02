@@ -1,4 +1,4 @@
-import { memo } from "react";
+﻿import { memo } from "react";
 
 import {
 	ArrowGrid,
@@ -11,10 +11,10 @@ import { ArrowTypes } from "../../../../../../schemas/objects/types/ArrowType";
 import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
 import { ArrowHeadIcon } from "../../../../icons/ArrowHeadIcon";
 import {
-	DiagramMenuButton,
+	ObjectMenuButton,
 	DropdownPanel,
 	MenuItemPositioner,
-} from "../../DiagramMenuStyled";
+} from "../../ObjectMenuStyled";
 
 const SECTION_ID = "arrow-head";
 
@@ -63,20 +63,20 @@ const getArrowLabel = (type: string): string => {
 const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 	canvasState,
 }) => {
-	const isOpen = canvasState.diagramMenuOpenId === SECTION_ID;
+	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const currentStart = getSelectedArrowType(canvasState, "startArrow");
 	const currentEnd = getSelectedArrowType(canvasState, "endArrow");
 
 	return (
 		<MenuItemPositioner>
-			<DiagramMenuButton
+			<ObjectMenuButton
 				isActive={isOpen}
-				data-kind="diagram-menu"
-				data-id={`diagram-menu:toggle-${SECTION_ID}`}
+				data-kind="object-menu"
+				data-id={`object-menu:toggle-${SECTION_ID}`}
 				title="Arrow Head"
 			>
 				<ArrowHeadIcon />
-			</DiagramMenuButton>
+			</ObjectMenuButton>
 			{isOpen && (
 				<DropdownPanel style={{ flexDirection: "column", width: "auto" }}>
 					<ArrowGrid>
@@ -87,8 +87,8 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 									<ArrowTypeButton
 										key={`start-${type}`}
 										isActive={currentStart === type}
-										data-kind="diagram-menu"
-										data-id={`diagram-menu:set-startArrow:${type}`}
+										data-kind="object-menu"
+										data-id={`object-menu:set-startArrow:${type}`}
 										title={type}
 									>
 										{getArrowLabel(type)}
@@ -103,8 +103,8 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 									<ArrowTypeButton
 										key={`end-${type}`}
 										isActive={currentEnd === type}
-										data-kind="diagram-menu"
-										data-id={`diagram-menu:set-endArrow:${type}`}
+										data-kind="object-menu"
+										data-id={`object-menu:set-endArrow:${type}`}
 										title={type}
 									>
 										{getArrowLabel(type)}

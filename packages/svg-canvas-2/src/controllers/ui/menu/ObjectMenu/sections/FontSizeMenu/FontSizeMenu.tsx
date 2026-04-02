@@ -1,4 +1,4 @@
-import { memo } from "react";
+﻿import { memo } from "react";
 
 import {
 	NumberDisplay,
@@ -10,10 +10,10 @@ import {
 import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
 import { FontSizeIcon } from "../../../../icons/FontSizeIcon";
 import {
-	DiagramMenuButton,
+	ObjectMenuButton,
 	DropdownPanel,
 	MenuItemPositioner,
-} from "../../DiagramMenuStyled";
+} from "../../ObjectMenuStyled";
 
 const SECTION_ID = "font-size";
 
@@ -28,20 +28,20 @@ type FontSizeMenuProps = {
 const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 	canvasState,
 }) => {
-	const isOpen = canvasState.diagramMenuOpenId === SECTION_ID;
+	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	// TODO: テキスト機能実装後に fontSize を取得
 	const _currentSize = 14;
 
 	return (
 		<MenuItemPositioner>
-			<DiagramMenuButton
+			<ObjectMenuButton
 				isActive={isOpen}
-				data-kind="diagram-menu"
-				data-id={`diagram-menu:toggle-${SECTION_ID}`}
+				data-kind="object-menu"
+				data-id={`object-menu:toggle-${SECTION_ID}`}
 				title="Font Size"
 			>
 				<FontSizeIcon />
-			</DiagramMenuButton>
+			</ObjectMenuButton>
 			{isOpen && (
 				<DropdownPanel style={{ flexDirection: "column" }}>
 					<SliderContainer>

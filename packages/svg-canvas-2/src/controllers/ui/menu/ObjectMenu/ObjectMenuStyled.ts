@@ -1,10 +1,10 @@
 import styled from "@emotion/styled";
 
 /**
- * DiagramMenu の外枠コンテナ。
+ * ObjectMenu の外枠コンテナ。
  * ScrollSyncedOverlay 内でキャンバス座標に配置される。
  */
-export const DiagramMenuWrapper = styled.div<{ left: number; top: number }>`
+export const ObjectMenuWrapper = styled.div<{ left: number; top: number }>`
 	position: absolute;
 	left: ${(props) => props.left}px;
 	top: ${(props) => props.top}px;
@@ -14,9 +14,9 @@ export const DiagramMenuWrapper = styled.div<{ left: number; top: number }>`
 `;
 
 /**
- * DiagramMenu の内部コンテナ（角丸・影付き）。
+ * ObjectMenu の内部コンテナ（角丸・影付き）。
  */
-export const DiagramMenuContainer = styled.div`
+export const ObjectMenuContainer = styled.div`
 	display: flex;
 	align-items: center;
 	gap: 2px;
@@ -30,7 +30,7 @@ export const DiagramMenuContainer = styled.div`
 /**
  * メニュー内の区切り線。
  */
-export const DiagramMenuDivider = styled.div`
+export const ObjectMenuDivider = styled.div`
 	width: 1px;
 	height: 20px;
 	background: #e0e0e0;
@@ -40,7 +40,7 @@ export const DiagramMenuDivider = styled.div`
 /**
  * メニューボタン共通スタイル。
  */
-export const DiagramMenuButton = styled.button<{ isActive?: boolean }>`
+export const ObjectMenuButton = styled.button<{ isActive?: boolean }>`
 	display: flex;
 	align-items: center;
 	justify-content: center;

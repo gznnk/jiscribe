@@ -1,9 +1,9 @@
-import { memo } from "react";
+﻿import { memo } from "react";
 
 import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
 import { commandRegistry } from "../../../../../commands/CommandRegistry";
 import { GroupIcon } from "../../../../icons/GroupIcon";
-import { DiagramMenuButton, MenuItemPositioner } from "../../DiagramMenuStyled";
+import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
 
 type GroupMenuProps = {
 	canvasState: CanvasState;
@@ -25,17 +25,17 @@ const GroupMenuComponent: React.FC<GroupMenuProps> = ({ canvasState }) => {
 
 	return (
 		<MenuItemPositioner>
-			<DiagramMenuButton
+			<ObjectMenuButton
 				isActive={isGroup}
 				disabled={!enabled}
-				data-kind="diagram-menu"
-				data-id={`diagram-menu:${commandId}`}
+				data-kind="object-menu"
+				data-id={`object-menu:${commandId}`}
 			>
 				<GroupIcon
 					fill={enabled ? "#333333" : "#cccccc"}
 					title={command.label}
 				/>
-			</DiagramMenuButton>
+			</ObjectMenuButton>
 		</MenuItemPositioner>
 	);
 };

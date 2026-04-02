@@ -1,4 +1,4 @@
-import type { GroupState } from "../../../states/objects/primitives/GroupState";
+﻿import type { GroupState } from "../../../states/objects/primitives/GroupState";
 import type { Command } from "../CommandTypes";
 
 export const GroupCommand: Command = {
@@ -69,7 +69,7 @@ export const GroupCommand: Command = {
 				...state,
 				objects: updatedObjects,
 				selectedIds: [groupId],
-				diagramMenuOpenId: null,
+				objectMenuOpenId: null,
 				lastCommitTime: Date.now(),
 			};
 		}
@@ -79,7 +79,7 @@ export const GroupCommand: Command = {
 			objects: updatedObjects,
 			rootIds: updatedSourceIds,
 			selectedIds: [groupId],
-			diagramMenuOpenId: null,
+			objectMenuOpenId: null,
 			lastCommitTime: Date.now(),
 		};
 	},

@@ -3,10 +3,10 @@ import { useMemo } from "react";
 
 import type { CanvasState } from "../../../../states/canvas/CanvasState";
 
-/** DiagramMenu とオブジェクト間の距離 (px) */
+/** ObjectMenu とオブジェクト間の距離 (px) */
 const DISTANCE_FROM_OBJECT = 8;
 
-type DiagramMenuPosition = {
+type ObjectMenuPosition = {
 	/** メニューを表示すべきか */
 	shouldRender: boolean;
 	/** キャンバス座標系での x 座標（zoom 適用済み） */
@@ -21,9 +21,7 @@ type DiagramMenuPosition = {
  * ScrollSyncedOverlay 内に配置されるため、座標はキャンバス座標に zoom を掛けた値。
  * オーバーレイ自体がスクロール追従するので viewport offset は不要。
  */
-export function useDiagramMenuPosition(
-	state: CanvasState,
-): DiagramMenuPosition {
+export function useObjectMenuPosition(state: CanvasState): ObjectMenuPosition {
 	const {
 		selectedIds,
 		objects,

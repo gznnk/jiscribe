@@ -1,13 +1,13 @@
-import { memo } from "react";
+﻿import { memo } from "react";
 
 import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
 import { ColorPreviewIcon } from "../../../../icons/ColorPreviewIcon";
 import { ColorPickerGrid } from "../../common/ColorPickerGrid";
 import {
-	DiagramMenuButton,
+	ObjectMenuButton,
 	DropdownColorPanel,
 	MenuItemPositioner,
-} from "../../DiagramMenuStyled";
+} from "../../ObjectMenuStyled";
 
 const SECTION_ID = "stroke-color";
 
@@ -37,19 +37,19 @@ const getSelectedStrokeColor = (state: CanvasState): string => {
 const StrokeColorMenuComponent: React.FC<StrokeColorMenuProps> = ({
 	canvasState,
 }) => {
-	const isOpen = canvasState.diagramMenuOpenId === SECTION_ID;
+	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const currentColor = getSelectedStrokeColor(canvasState);
 
 	return (
 		<MenuItemPositioner>
-			<DiagramMenuButton
+			<ObjectMenuButton
 				isActive={isOpen}
-				data-kind="diagram-menu"
-				data-id={`diagram-menu:toggle-${SECTION_ID}`}
+				data-kind="object-menu"
+				data-id={`object-menu:toggle-${SECTION_ID}`}
 				title="Stroke Color"
 			>
 				<ColorPreviewIcon color={currentColor} title="Stroke Color" />
-			</DiagramMenuButton>
+			</ObjectMenuButton>
 			{isOpen && (
 				<DropdownColorPanel>
 					<ColorPickerGrid currentColor={currentColor} property="stroke" />

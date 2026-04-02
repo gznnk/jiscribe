@@ -1,13 +1,13 @@
-import { memo } from "react";
+﻿import { memo } from "react";
 
 import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
 import { ColorPreviewIcon } from "../../../../icons/ColorPreviewIcon";
 import { ColorPickerGrid } from "../../common/ColorPickerGrid";
 import {
-	DiagramMenuButton,
+	ObjectMenuButton,
 	DropdownColorPanel,
 	MenuItemPositioner,
-} from "../../DiagramMenuStyled";
+} from "../../ObjectMenuStyled";
 
 const SECTION_ID = "bg-color";
 
@@ -36,19 +36,19 @@ const getSelectedFillColor = (state: CanvasState): string => {
 const BackgroundColorMenuComponent: React.FC<BackgroundColorMenuProps> = ({
 	canvasState,
 }) => {
-	const isOpen = canvasState.diagramMenuOpenId === SECTION_ID;
+	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const currentColor = getSelectedFillColor(canvasState);
 
 	return (
 		<MenuItemPositioner>
-			<DiagramMenuButton
+			<ObjectMenuButton
 				isActive={isOpen}
-				data-kind="diagram-menu"
-				data-id={`diagram-menu:toggle-${SECTION_ID}`}
+				data-kind="object-menu"
+				data-id={`object-menu:toggle-${SECTION_ID}`}
 				title="Background Color"
 			>
 				<ColorPreviewIcon color={currentColor} title="Background Color" />
-			</DiagramMenuButton>
+			</ObjectMenuButton>
 			{isOpen && (
 				<DropdownColorPanel>
 					<ColorPickerGrid currentColor={currentColor} property="fill" />

@@ -1,6 +1,6 @@
-import { memo } from "react";
+﻿import { memo } from "react";
 
-import { PRESET_COLORS } from "../DiagramMenuConstants";
+import { PRESET_COLORS } from "../ObjectMenuConstants";
 import {
 	ColorGrid,
 	ColorPickerContainer,
@@ -17,7 +17,7 @@ type ColorPickerGridProps = {
 /**
  * カラーピッカーグリッド。
  * プリセットカラーのスウォッチを 4×7 グリッドで表示する。
- * 各スウォッチは data-kind="diagram-menu" を持ち、ジェスチャーシステム経由でプロパティ更新を行う。
+ * 各スウォッチは data-kind="object-menu" を持ち、ジェスチャーシステム経由でプロパティ更新を行う。
  */
 const ColorPickerGridComponent: React.FC<ColorPickerGridProps> = ({
 	currentColor,
@@ -31,8 +31,8 @@ const ColorPickerGridComponent: React.FC<ColorPickerGridProps> = ({
 						key={preset.value}
 						swatchColor={preset.value}
 						selected={preset.value.toLowerCase() === currentColor.toLowerCase()}
-						data-kind="diagram-menu"
-						data-id={`diagram-menu:set-${property}:${preset.value}`}
+						data-kind="object-menu"
+						data-id={`object-menu:set-${property}:${preset.value}`}
 						title={preset.name}
 					/>
 				))}

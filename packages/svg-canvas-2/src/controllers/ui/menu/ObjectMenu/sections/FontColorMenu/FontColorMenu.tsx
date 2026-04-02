@@ -1,13 +1,13 @@
-import { memo } from "react";
+﻿import { memo } from "react";
 
 import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
 import { FontColorIcon } from "../../../../icons/FontColorIcon";
 import { ColorPickerGrid } from "../../common/ColorPickerGrid";
 import {
-	DiagramMenuButton,
+	ObjectMenuButton,
 	DropdownColorPanel,
 	MenuItemPositioner,
-} from "../../DiagramMenuStyled";
+} from "../../ObjectMenuStyled";
 
 const SECTION_ID = "font-color";
 
@@ -22,20 +22,20 @@ type FontColorMenuProps = {
 const FontColorMenuComponent: React.FC<FontColorMenuProps> = ({
 	canvasState,
 }) => {
-	const isOpen = canvasState.diagramMenuOpenId === SECTION_ID;
+	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	// TODO: テキスト機能実装後に fontColor を取得する
 	const currentColor = "#333333";
 
 	return (
 		<MenuItemPositioner>
-			<DiagramMenuButton
+			<ObjectMenuButton
 				isActive={isOpen}
-				data-kind="diagram-menu"
-				data-id={`diagram-menu:toggle-${SECTION_ID}`}
+				data-kind="object-menu"
+				data-id={`object-menu:toggle-${SECTION_ID}`}
 				title="Font Color"
 			>
 				<FontColorIcon underlineColor={currentColor} />
-			</DiagramMenuButton>
+			</ObjectMenuButton>
 			{isOpen && (
 				<DropdownColorPanel>
 					{/* TODO: テキスト機能実装後に property="fontColor" に変更 */}

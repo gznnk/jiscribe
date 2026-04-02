@@ -1,4 +1,4 @@
-import { roundToDecimal } from "@workspace/geometry";
+﻿import { roundToDecimal } from "@workspace/geometry";
 
 import { collectIdsInArea } from "./utils/collectIdsInArea";
 import { PRECISION } from "../../../../constants/precision";
@@ -177,8 +177,8 @@ export const CanvasEventHandler: GestureHandler = {
 				selectedIds: [],
 				// コンテキストメニューが開いている場合は閉じる
 				contextMenuPosition: null,
-				// DiagramMenu の展開をリセット
-				diagramMenuOpenId: null,
+				// ObjectMenu の展開をリセット
+				objectMenuOpenId: null,
 			};
 		}
 

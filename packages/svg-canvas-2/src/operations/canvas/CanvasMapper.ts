@@ -1,4 +1,4 @@
-import { objectRegistry } from "../../registry/ObjectRegistry";
+﻿import { objectRegistry } from "../../registry/ObjectRegistry";
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
 import type { ConnectorDoc } from "../../schemas/objects/connections/ConnectorDoc";
@@ -76,7 +76,7 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 		pendingShapeType: null,
 		ghostPosition: null,
 		areaSelection: null,
-		diagramMenuOpenId: null,
+		objectMenuOpenId: null,
 	};
 };
 

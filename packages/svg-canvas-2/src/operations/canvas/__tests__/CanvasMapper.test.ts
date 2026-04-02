@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from "vitest";
+﻿import { describe, expect, it, beforeEach } from "vitest";
 
 import { objectRegistry } from "../../../registry/ObjectRegistry";
 import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
@@ -148,7 +148,7 @@ describe("CanvasMapper", () => {
 				pendingShapeType: null,
 				ghostPosition: null,
 				areaSelection: null,
-				diagramMenuOpenId: null,
+				objectMenuOpenId: null,
 				objects: {
 					"rect-1": {
 						id: "rect-1",

@@ -1,4 +1,4 @@
-import { memo } from "react";
+﻿import { memo } from "react";
 
 import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
 import { commandRegistry } from "../../../../../commands/CommandRegistry";
@@ -8,10 +8,10 @@ import { SendBackwardIcon } from "../../../../icons/SendBackwardIcon";
 import { SendToBackIcon } from "../../../../icons/SendToBackIcon";
 import { StackOrderIcon } from "../../../../icons/StackOrderIcon";
 import {
-	DiagramMenuButton,
+	ObjectMenuButton,
 	DropdownPanel,
 	MenuItemPositioner,
-} from "../../DiagramMenuStyled";
+} from "../../ObjectMenuStyled";
 
 const SECTION_ID = "stack-order";
 
@@ -29,17 +29,17 @@ const arrangeCommands = [
 const StackOrderMenuComponent: React.FC<StackOrderMenuProps> = ({
 	canvasState,
 }) => {
-	const isOpen = canvasState.diagramMenuOpenId === SECTION_ID;
+	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 
 	return (
 		<MenuItemPositioner>
-			<DiagramMenuButton
+			<ObjectMenuButton
 				isActive={isOpen}
-				data-kind="diagram-menu"
-				data-id={`diagram-menu:toggle-${SECTION_ID}`}
+				data-kind="object-menu"
+				data-id={`object-menu:toggle-${SECTION_ID}`}
 			>
 				<StackOrderIcon />
-			</DiagramMenuButton>
+			</ObjectMenuButton>
 			{isOpen && (
 				<DropdownPanel>
 					{arrangeCommands.map(({ commandId, Icon }) => {
@@ -47,17 +47,17 @@ const StackOrderMenuComponent: React.FC<StackOrderMenuProps> = ({
 						if (!command) return null;
 						const enabled = command.canExecute(canvasState);
 						return (
-							<DiagramMenuButton
+							<ObjectMenuButton
 								key={commandId}
 								disabled={!enabled}
-								data-kind="diagram-menu"
-								data-id={`diagram-menu:${commandId}`}
+								data-kind="object-menu"
+								data-id={`object-menu:${commandId}`}
 							>
 								<Icon
 									fill={enabled ? "#333333" : "#cccccc"}
 									title={command.label}
 								/>
-							</DiagramMenuButton>
+							</ObjectMenuButton>
 						);
 					})}
 				</DropdownPanel>

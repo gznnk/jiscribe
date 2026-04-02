@@ -1,8 +1,8 @@
-import { memo } from "react";
+﻿import { memo } from "react";
 
 import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
 import { BoldIcon } from "../../../../icons/BoldIcon";
-import { DiagramMenuButton, MenuItemPositioner } from "../../DiagramMenuStyled";
+import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
 
 type BoldMenuProps = {
 	canvasState: CanvasState;
@@ -21,14 +21,14 @@ const BoldMenuComponent: React.FC<BoldMenuProps> = ({
 
 	return (
 		<MenuItemPositioner>
-			<DiagramMenuButton
+			<ObjectMenuButton
 				isActive={false}
-				data-kind="diagram-menu"
-				data-id="diagram-menu:set-fontWeight:bold"
+				data-kind="object-menu"
+				data-id="object-menu:set-fontWeight:bold"
 				title="Bold"
 			>
 				<BoldIcon fill={_isBold ? "#333333" : "#999999"} />
-			</DiagramMenuButton>
+			</ObjectMenuButton>
 		</MenuItemPositioner>
 	);
 };

@@ -1,4 +1,4 @@
-import type { Dimensions } from "@workspace/geometry";
+﻿import type { Dimensions } from "@workspace/geometry";
 import {
 	memo,
 	useCallback,
@@ -28,7 +28,7 @@ import { AreaSelectionRect } from "./ui/feedback/AreaSelectionRect";
 import { DragGhost } from "./ui/feedback/DragGhost";
 import { SelectionOverlay } from "./ui/feedback/SelectionOverlay";
 import { ContextMenu } from "./ui/menu/ContextMenu";
-import { DiagramMenu } from "./ui/menu/DiagramMenu";
+import { ObjectMenu } from "./ui/menu/ObjectMenu";
 import { ShapeLibrary } from "./ui/menu/ShapeLibrary";
 import { canvasToDoc, canvasToState } from "../operations/canvas/CanvasMapper";
 import { CanvasView } from "../presentations/CanvasView";
@@ -63,7 +63,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 			pendingShapeType: null,
 			ghostPosition: null,
 			areaSelection: null,
-			diagramMenuOpenId: null,
+			objectMenuOpenId: null,
 		};
 	}, [canvasDoc]);
 
@@ -162,7 +162,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 				</ZoomScaledOverlay>
 				{/* Container for HTML elements that follow canvas scroll but NOT zoom */}
 				<ScrollSyncedOverlay left={-minX} top={-minY}>
-					<DiagramMenu canvasState={state} />
+					<ObjectMenu canvasState={state} />
 				</ScrollSyncedOverlay>
 			</Container>
 			<ViewportOverlay>

@@ -1,10 +1,10 @@
 import { memo } from "react";
 
 import {
-	DiagramMenuContainer,
-	DiagramMenuDivider,
-	DiagramMenuWrapper,
-} from "./DiagramMenuStyled";
+	ObjectMenuContainer,
+	ObjectMenuDivider,
+	ObjectMenuWrapper,
+} from "./ObjectMenuStyled";
 import { useMenuConfig } from "./getMenuConfig";
 import { AlignmentMenu } from "./sections/AlignmentMenu";
 import { ArrowHeadMenu } from "./sections/ArrowHeadMenu";
@@ -16,10 +16,10 @@ import { GroupMenu } from "./sections/GroupMenu";
 import { KeepAspectRatioMenu } from "./sections/KeepAspectRatioMenu";
 import { StackOrderMenu } from "./sections/StackOrderMenu";
 import { StrokeColorMenu } from "./sections/StrokeColorMenu";
-import { useDiagramMenuPosition } from "./useDiagramMenuPosition";
+import { useObjectMenuPosition } from "./useObjectMenuPosition";
 import type { CanvasState } from "../../../../states/canvas/CanvasState";
 
-type DiagramMenuProps = {
+type ObjectMenuProps = {
 	canvasState: CanvasState;
 };
 
@@ -35,19 +35,19 @@ type DiagramMenuProps = {
  * - hasTransform: アスペクト比ロック
  * - StackOrder: 常に表示
  */
-const DiagramMenuComponent: React.FC<DiagramMenuProps> = ({ canvasState }) => {
-	const { shouldRender, x, y } = useDiagramMenuPosition(canvasState);
+const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({ canvasState }) => {
+	const { shouldRender, x, y } = useObjectMenuPosition(canvasState);
 	const menuConfig = useMenuConfig(canvasState);
 
 	if (!shouldRender) return null;
 
 	return (
-		<DiagramMenuWrapper
+		<ObjectMenuWrapper
 			left={x}
 			top={y}
 			style={{ transform: "translateX(-50%)" }}
 		>
-			<DiagramMenuContainer>
+			<ObjectMenuContainer>
 				{/* Fill color section */}
 				{menuConfig.hasFill && (
 					<BackgroundColorMenu canvasState={canvasState} />
@@ -56,7 +56,7 @@ const DiagramMenuComponent: React.FC<DiagramMenuProps> = ({ canvasState }) => {
 				{/* Stroke color section */}
 				{menuConfig.hasStroke && (
 					<>
-						{menuConfig.hasFill && <DiagramMenuDivider />}
+						{menuConfig.hasFill && <ObjectMenuDivider />}
 						<StrokeColorMenu canvasState={canvasState} />
 					</>
 				)}
@@ -64,7 +64,7 @@ const DiagramMenuComponent: React.FC<DiagramMenuProps> = ({ canvasState }) => {
 				{/* Text section (appearance only) */}
 				{menuConfig.hasText && (
 					<>
-						<DiagramMenuDivider />
+						<ObjectMenuDivider />
 						<FontColorMenu canvasState={canvasState} />
 						<BoldMenu canvasState={canvasState} />
 						<AlignmentMenu canvasState={canvasState} />
@@ -75,13 +75,13 @@ const DiagramMenuComponent: React.FC<DiagramMenuProps> = ({ canvasState }) => {
 				{/* Arrow section */}
 				{menuConfig.hasArrow && (
 					<>
-						<DiagramMenuDivider />
+						<ObjectMenuDivider />
 						<ArrowHeadMenu canvasState={canvasState} />
 					</>
 				)}
 
 				{/* Stack order (always visible) */}
-				<DiagramMenuDivider />
+				<ObjectMenuDivider />
 				<StackOrderMenu canvasState={canvasState} />
 
 				{/* Aspect ratio lock */}
@@ -91,9 +91,9 @@ const DiagramMenuComponent: React.FC<DiagramMenuProps> = ({ canvasState }) => {
 
 				{/* Group / Ungroup */}
 				<GroupMenu canvasState={canvasState} />
-			</DiagramMenuContainer>
-		</DiagramMenuWrapper>
+			</ObjectMenuContainer>
+		</ObjectMenuWrapper>
 	);
 };
 
-export const DiagramMenu = memo(DiagramMenuComponent);
+export const ObjectMenu = memo(ObjectMenuComponent);

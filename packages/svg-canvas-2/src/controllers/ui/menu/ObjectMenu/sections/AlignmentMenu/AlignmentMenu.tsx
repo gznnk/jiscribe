@@ -1,4 +1,4 @@
-import { memo } from "react";
+﻿import { memo } from "react";
 
 import { AlignmentDropdownPanel, AlignmentRow } from "./AlignmentMenuStyled";
 import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
@@ -8,7 +8,7 @@ import { AlignLeftIcon } from "../../../../icons/AlignLeftIcon";
 import { AlignMiddleIcon } from "../../../../icons/AlignMiddleIcon";
 import { AlignRightIcon } from "../../../../icons/AlignRightIcon";
 import { AlignTopIcon } from "../../../../icons/AlignTopIcon";
-import { DiagramMenuButton, MenuItemPositioner } from "../../DiagramMenuStyled";
+import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
 
 const SECTION_ID = "alignment";
 
@@ -35,43 +35,43 @@ const verticalAlignments = [
 const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 	canvasState,
 }) => {
-	const isOpen = canvasState.diagramMenuOpenId === SECTION_ID;
+	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	// TODO: テキスト機能実装後に現在の textAlign を取得
 
 	return (
 		<MenuItemPositioner>
-			<DiagramMenuButton
+			<ObjectMenuButton
 				isActive={isOpen}
-				data-kind="diagram-menu"
-				data-id={`diagram-menu:toggle-${SECTION_ID}`}
+				data-kind="object-menu"
+				data-id={`object-menu:toggle-${SECTION_ID}`}
 				title="Text Alignment"
 			>
 				<AlignLeftIcon />
-			</DiagramMenuButton>
+			</ObjectMenuButton>
 			{isOpen && (
 				<AlignmentDropdownPanel>
 					<AlignmentRow>
 						{horizontalAlignments.map(({ value, Icon, title }) => (
-							<DiagramMenuButton
+							<ObjectMenuButton
 								key={value}
-								data-kind="diagram-menu"
-								data-id={`diagram-menu:set-textAlign:${value}`}
+								data-kind="object-menu"
+								data-id={`object-menu:set-textAlign:${value}`}
 								title={title}
 							>
 								<Icon fill="#999999" />
-							</DiagramMenuButton>
+							</ObjectMenuButton>
 						))}
 					</AlignmentRow>
 					<AlignmentRow>
 						{verticalAlignments.map(({ value, Icon, title }) => (
-							<DiagramMenuButton
+							<ObjectMenuButton
 								key={value}
-								data-kind="diagram-menu"
-								data-id={`diagram-menu:set-verticalAlign:${value}`}
+								data-kind="object-menu"
+								data-id={`object-menu:set-verticalAlign:${value}`}
 								title={title}
 							>
 								<Icon fill="#999999" />
-							</DiagramMenuButton>
+							</ObjectMenuButton>
 						))}
 					</AlignmentRow>
 				</AlignmentDropdownPanel>

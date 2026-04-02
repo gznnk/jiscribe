@@ -7,31 +7,31 @@ import type { CanvasState } from "../../../../states/canvas/CanvasState";
 import { handleCommand } from "../../../commands/handlers/handleCommand";
 
 /**
- * DiagramMenu 項目のクリックを処理する GestureHandler。
- * targetKind が "diagram-menu" の場合に処理を行う。
+ * ObjectMenu 項目のクリックを処理する GestureHandler。
+ * targetKind が "object-menu" の場合に処理を行う。
  *
  * アクション ID のフォーマット:
  * - `toggle-{sectionId}` → セクションの開閉を切り替え
  * - `set-{property}:{value}` → 選択オブジェクトのプロパティを更新
  * - `{commandId}` → コマンドを実行
  */
-export const DiagramMenuHandler: GestureHandler = {
+export const ObjectMenuHandler: GestureHandler = {
 	supports(event: CanvasEvent) {
-		return event.targetKind === "diagram-menu";
+		return event.targetKind === "object-menu";
 	},
 
 	handle(state: CanvasState, event: CanvasEvent): CanvasState {
 		if (event.type === "click" && event.targetId) {
-			// targetId から "diagram-menu:" プレフィックスを除去してIDを取得
-			const actionId = event.targetId.replace("diagram-menu:", "");
+			// targetId から "object-menu:" プレフィックスを除去してIDを取得
+			const actionId = event.targetId.replace("object-menu:", "");
 
 			// toggle ボタン: セクションの開閉を切り替える
 			if (actionId.startsWith("toggle-")) {
 				const sectionId = actionId.replace("toggle-", "");
 				return {
 					...state,
-					diagramMenuOpenId:
-						state.diagramMenuOpenId === sectionId ? null : sectionId,
+					objectMenuOpenId:
+						state.objectMenuOpenId === sectionId ? null : sectionId,
 				};
 			}
 
@@ -45,7 +45,7 @@ export const DiagramMenuHandler: GestureHandler = {
 					const newState = handlePropertyUpdate(state, property, value);
 					return {
 						...newState,
-						diagramMenuOpenId: null,
+						objectMenuOpenId: null,
 						lastCommitTime: event.time,
 					};
 				}

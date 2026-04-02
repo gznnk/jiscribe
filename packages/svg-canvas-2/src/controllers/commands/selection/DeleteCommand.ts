@@ -1,4 +1,4 @@
-import type { GroupState } from "../../../states/objects/primitives/GroupState";
+﻿import type { GroupState } from "../../../states/objects/primitives/GroupState";
 import type { Command } from "../CommandTypes";
 
 export const DeleteCommand: Command = {
@@ -60,7 +60,7 @@ export const DeleteCommand: Command = {
 			rootIds: state.rootIds.filter((id) => !idsToDelete.has(id)),
 			connectorIds: state.connectorIds.filter((id) => !idsToDelete.has(id)),
 			selectedIds: [],
-			diagramMenuOpenId: null,
+			objectMenuOpenId: null,
 			lastCommitTime: Date.now(), // コミット必要
 		};
 	},

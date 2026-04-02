@@ -1,4 +1,4 @@
-import type { Command } from "../CommandTypes";
+﻿import type { Command } from "../CommandTypes";
 
 export const DeselectAllCommand: Command = {
 	id: "deselectAll",
@@ -19,7 +19,7 @@ export const DeselectAllCommand: Command = {
 			...state,
 			selectedIds: [],
 			areaSelection: null,
-			diagramMenuOpenId: null,
+			objectMenuOpenId: null,
 		};
 	},
 };

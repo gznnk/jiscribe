@@ -1,8 +1,8 @@
-import { memo } from "react";
+﻿import { memo } from "react";
 
 import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
 import { AspectRatioIcon } from "../../../../icons/AspectRatioIcon";
-import { DiagramMenuButton, MenuItemPositioner } from "../../DiagramMenuStyled";
+import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
 
 type KeepAspectRatioMenuProps = {
 	canvasState: CanvasState;
@@ -39,16 +39,16 @@ const KeepAspectRatioMenuComponent: React.FC<KeepAspectRatioMenuProps> = ({
 
 	return (
 		<MenuItemPositioner>
-			<DiagramMenuButton
+			<ObjectMenuButton
 				isActive={isLocked}
-				data-kind="diagram-menu"
-				data-id={`diagram-menu:set-lockAspectRatio:${nextValue}`}
+				data-kind="object-menu"
+				data-id={`object-menu:set-lockAspectRatio:${nextValue}`}
 				title={isLocked ? "Unlock Aspect Ratio" : "Lock Aspect Ratio"}
 			>
 				<AspectRatioIcon
 					title={isLocked ? "Unlock Aspect Ratio" : "Lock Aspect Ratio"}
 				/>
-			</DiagramMenuButton>
+			</ObjectMenuButton>
 		</MenuItemPositioner>
 	);
 };
