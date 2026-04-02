@@ -2,25 +2,11 @@ import { calcBoundingBox, isTransformedFrame } from "@workspace/geometry";
 import { useMemo } from "react";
 
 import type { CanvasState } from "../../../../states/canvas/CanvasState";
-import type { GroupState } from "../../../../states/objects/primitives/GroupState";
+import { isGroupState } from "../../../../states/objects/primitives/GroupState";
 import { calcGroupBoundingBox } from "../../utils/calcGroupBoundingBox";
 
 /** ObjectMenu とオブジェクト間の距離 (px) */
 const DISTANCE_FROM_OBJECT = 8;
-
-/**
- * グループかどうかを判定する型ガード
- */
-function isGroup(obj: unknown): obj is GroupState {
-	return (
-		typeof obj === "object" &&
-		obj !== null &&
-		"type" in obj &&
-		obj.type === "group" &&
-		"childIds" in obj &&
-		Array.isArray(obj.childIds)
-	);
-}
 
 type ObjectMenuPosition = {
 	/** メニューを表示すべきか */
@@ -80,7 +66,7 @@ export function useObjectMenuPosition(state: CanvasState): ObjectMenuPosition {
 			if (isTransformedFrame(obj)) {
 				// rect, ellipse など Frame を持つオブジェクト
 				bbox = calcBoundingBox(obj);
-			} else if (isGroup(obj)) {
+			} else if (isGroupState(obj)) {
 				// グループの場合、子要素から再帰的にバウンディングボックスを計算
 				bbox = calcGroupBoundingBox(obj, objects);
 				if (!bbox) continue;

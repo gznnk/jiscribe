@@ -15,3 +15,20 @@ export type GroupState = CreateObjectState<
 		childIds: string[];
 	}
 >;
+
+/**
+ * Type guard to check if an object is GroupState.
+ *
+ * @param obj - The object to check
+ * @returns True if the object is GroupState, false otherwise
+ */
+export const isGroupState = (obj: unknown): obj is GroupState => {
+	return (
+		typeof obj === "object" &&
+		obj !== null &&
+		"type" in obj &&
+		obj.type === "group" &&
+		"childIds" in obj &&
+		Array.isArray(obj.childIds)
+	);
+};

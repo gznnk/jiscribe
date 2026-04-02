@@ -4,7 +4,10 @@ import {
 	type BoundingBox,
 } from "@workspace/geometry";
 
-import type { GroupState } from "../../../states/objects/primitives/GroupState";
+import {
+	isGroupState,
+	type GroupState,
+} from "../../../states/objects/primitives/GroupState";
 
 /**
  * グループの子要素を再帰的に走査してバウンディングボックスを計算する
@@ -30,12 +33,8 @@ export function calcGroupBoundingBox(
 		let bbox;
 		if (isTransformedFrame(child)) {
 			bbox = calcBoundingBox(child);
-		} else if (
-			typeof child === "object" &&
-			"type" in child &&
-			child.type === "group"
-		) {
-			bbox = calcGroupBoundingBox(child as GroupState, objects);
+		} else if (isGroupState(child)) {
+			bbox = calcGroupBoundingBox(child, objects);
 			if (!bbox) continue;
 		} else {
 			continue;
