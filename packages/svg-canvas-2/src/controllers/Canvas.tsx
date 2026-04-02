@@ -156,12 +156,12 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 					/>
 					<AreaSelectionRect areaSelection={state.areaSelection} />
 				</CanvasView>
-				{/* Container for HTML elements that follow canvas scroll AND zoom */}
+				{/* Container for HTML elements that follow canvas scroll AND zoom (elements scale with zoom) */}
 				<ZoomScaledOverlay left={-minX} top={-minY} zoom={zoom}>
 					{/* TODO: Add zoom-scaled elements (e.g., text editors on objects) */}
 				</ZoomScaledOverlay>
-				{/* Container for HTML elements that follow canvas scroll but NOT zoom */}
-				<ScrollSyncedOverlay left={-minX} top={-minY}>
+				{/* Container for HTML elements with fixed size (position follows zoom, but size does not) */}
+				<ScrollSyncedOverlay left={-minX} top={-minY} zoom={zoom}>
 					<ObjectMenu canvasState={state} />
 				</ScrollSyncedOverlay>
 			</Container>

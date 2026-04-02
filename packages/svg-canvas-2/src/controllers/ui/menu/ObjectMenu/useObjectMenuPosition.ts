@@ -9,16 +9,16 @@ const DISTANCE_FROM_OBJECT = 8;
 type ObjectMenuPosition = {
 	/** メニューを表示すべきか */
 	shouldRender: boolean;
-	/** キャンバス座標系での x 座標（zoom 適用済み） */
+	/** キャンバス座標系での x 座標 */
 	x: number;
-	/** キャンバス座標系での y 座標（zoom 適用済み） */
+	/** キャンバス座標系での y 座標 */
 	y: number;
 };
 
 /**
  * 選択中オブジェクトの下にメニューを配置するための座標を計算する。
  *
- * ScrollSyncedOverlay 内に配置されるため、座標はキャンバス座標に zoom を掛けた値。
+ * ScrollSyncedOverlay 内に配置されるため、座標はキャンバス座標系のまま返す。
  * オーバーレイ自体がスクロール追従するので viewport offset は不要。
  */
 export function useObjectMenuPosition(state: CanvasState): ObjectMenuPosition {
@@ -74,14 +74,16 @@ export function useObjectMenuPosition(state: CanvasState): ObjectMenuPosition {
 
 		const { zoom } = viewport;
 
-		// 選択全体の中央 X、下端 Y（キャンバス座標 × zoom）
+		// 選択全体の中央 X、下端 Y を計算
+		// ScrollSyncedOverlay の座標系に合わせるため、キャンバス座標に zoom を掛ける
+		// （詳細は CanvasStyled.ts の ScrollSyncedOverlay のコメントを参照）
 		const centerX = ((minX + maxX) / 2) * zoom;
-		const bottomY = maxY * zoom;
+		const bottomY = maxY * zoom + DISTANCE_FROM_OBJECT;
 
 		return {
 			shouldRender: true,
 			x: Math.round(centerX),
-			y: Math.round(bottomY + DISTANCE_FROM_OBJECT),
+			y: Math.round(bottomY),
 		};
 	}, [
 		selectedIds,

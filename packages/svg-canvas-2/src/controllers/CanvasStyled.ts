@@ -29,17 +29,30 @@ export const Container = styled.div`
 type ScrollSyncedOverlayProps = {
 	left: number;
 	top: number;
+	zoom: number;
 };
 
 /**
- * Container for HTML elements that follow canvas scroll but NOT zoom.
- * Used for elements that should maintain fixed size while scrolling with canvas content.
- * Example: Diagram menus, info popovers that appear near objects.
+ * Container for HTML elements with fixed size that follow canvas content position.
+ * Elements inside maintain their original size regardless of zoom level,
+ * but their position tracks the zoomed canvas coordinates.
+ *
+ * Use case: Object menus, info popovers that appear near canvas objects.
+ *
+ * Coordinate System:
+ * - SVG viewBox: `${minX} ${minY} ${width/zoom} ${height/zoom}`
+ * - Canvas object at (cx, cy) appears at screen position: (cx - minX) * zoom
+ * - To align HTML elements with canvas objects:
+ *   1. Container offset: left = -minX * zoom, top = -minY * zoom
+ *   2. Child element position: left = cx * zoom, top = cy * zoom
+ *   3. Final screen position: -minX * zoom + cx * zoom = (cx - minX) * zoom ✓
+ *
+ * Note: Child elements must multiply their canvas coordinates by zoom for positioning.
  */
 export const ScrollSyncedOverlay = styled.div<ScrollSyncedOverlayProps>`
 	position: absolute;
-	left: ${(props) => props.left}px;
-	top: ${(props) => props.top}px;
+	left: ${(props) => props.left * props.zoom}px;
+	top: ${(props) => props.top * props.zoom}px;
 	pointer-events: none;
 `;
 
