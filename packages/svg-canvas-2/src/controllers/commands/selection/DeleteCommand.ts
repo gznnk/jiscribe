@@ -1,6 +1,7 @@
-﻿import type { GroupState } from "../../../states/objects/primitives/GroupState";
+﻿import { cleanupGroups } from "./utils/cleanupGroups";
+import type { GroupState } from "../../../states/objects/primitives/GroupState";
+import { updateGroupBounds } from "../../ui/utils/updateGroupBounds";
 import type { Command } from "../CommandTypes";
-import { cleanupGroups } from "./utils/cleanupGroups";
 
 export const DeleteCommand: Command = {
 	id: "delete",
@@ -51,6 +52,12 @@ export const DeleteCommand: Command = {
 						...groupParent,
 						childIds: groupParent.childIds.filter((childId) => childId !== id),
 					} as GroupState;
+
+					// Update parent's bounds after child removal
+					const updatedParent = updateGroupBounds(updatedObjects, obj.parentId);
+					if (updatedParent) {
+						updatedObjects[obj.parentId] = updatedParent;
+					}
 				}
 			}
 		}

@@ -1,6 +1,7 @@
 import type { CanvasState } from "../../../../states/canvas/CanvasState";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/GroupState";
+import { updateGroupBounds } from "../../../ui/utils/updateGroupBounds";
 
 /**
  * グループのクリーンアップを行う
@@ -54,6 +55,16 @@ export const cleanupGroups = (state: CanvasState): CanvasState => {
 								(cid: string) => cid !== groupId,
 							),
 						} as GroupState;
+
+						// 除去後の親の bounds を更新
+						const updatedParent = updateGroupBounds(
+							updatedObjects,
+							group.parentId,
+						);
+						if (updatedParent) {
+							updatedObjects[group.parentId] = updatedParent;
+						}
+
 						// 親も再チェック対象に
 						groupsToProcess.add(group.parentId);
 					}
@@ -87,6 +98,16 @@ export const cleanupGroups = (state: CanvasState): CanvasState => {
 								cid === groupId ? childId : cid,
 							),
 						} as GroupState;
+
+						// 移動後の親の bounds を更新
+						const updatedParent = updateGroupBounds(
+							updatedObjects,
+							group.parentId,
+						);
+						if (updatedParent) {
+							updatedObjects[group.parentId] = updatedParent;
+						}
+
 						// 親も再チェック対象に
 						groupsToProcess.add(group.parentId);
 					}

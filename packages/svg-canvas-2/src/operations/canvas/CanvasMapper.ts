@@ -1,4 +1,5 @@
-﻿import { objectRegistry } from "../../registry/ObjectRegistry";
+﻿import { updateGroupBounds } from "../../controllers/ui/utils/updateGroupBounds";
+import { objectRegistry } from "../../registry/ObjectRegistry";
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
 import type { ConnectorDoc } from "../../schemas/objects/connections/ConnectorDoc";
@@ -37,6 +38,12 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 			groupState.childIds = groupDoc.children.map((childDoc) =>
 				processObject(childDoc, groupState.id),
 			);
+
+			// Calculate and cache the group's bounding frame
+			const updatedGroup = updateGroupBounds(objects, groupState.id);
+			if (updatedGroup) {
+				objects[groupState.id] = updatedGroup;
+			}
 		}
 
 		return objState.id;

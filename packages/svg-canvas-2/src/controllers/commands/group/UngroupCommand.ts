@@ -1,4 +1,5 @@
 ﻿import type { GroupState } from "../../../states/objects/primitives/GroupState";
+import { updateGroupBounds } from "../../ui/utils/updateGroupBounds";
 import type { Command } from "../CommandTypes";
 
 export const UngroupCommand: Command = {
@@ -52,6 +53,12 @@ export const UngroupCommand: Command = {
 						id === groupId ? childIds : [id],
 					),
 				} as GroupState;
+
+				// Update parent's bounds after child list changes
+				const updatedParent = updateGroupBounds(updatedObjects, parentId);
+				if (updatedParent) {
+					updatedObjects[parentId] = updatedParent;
+				}
 			} else {
 				// Group is at root: update rootIds
 				updatedRootIds = updatedRootIds.flatMap((id) =>

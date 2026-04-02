@@ -1,4 +1,5 @@
 ﻿import type { GroupState } from "../../../states/objects/primitives/GroupState";
+import { calculateGroupOrientedBounds } from "../../ui/utils/calculateGroupOrientedBounds";
 import type { Command } from "../CommandTypes";
 
 export const GroupCommand: Command = {
@@ -35,8 +36,8 @@ export const GroupCommand: Command = {
 				: state.rootIds;
 		const childIds = sourceIds.filter((id) => selectedIds.includes(id));
 
-		// Create new group state
-		const newGroup = {
+		// Create temporary group state to calculate bounds
+		const tempGroup = {
 			id: groupId,
 			type: "group",
 			parentId: commonParentId,
@@ -44,6 +45,23 @@ export const GroupCommand: Command = {
 			scaleX: 1,
 			scaleY: 1,
 			childIds,
+			cx: 0,
+			cy: 0,
+			width: 0,
+			height: 0,
+		} as unknown as GroupState;
+
+		// Temporarily add to objects to calculate bounds
+		const tempObjects = { ...state.objects, [groupId]: tempGroup };
+		const bounds = calculateGroupOrientedBounds(tempObjects, groupId);
+
+		// Create new group state with calculated bounds
+		const newGroup = {
+			...tempGroup,
+			cx: bounds?.cx ?? 0,
+			cy: bounds?.cy ?? 0,
+			width: bounds?.width ?? 0,
+			height: bounds?.height ?? 0,
 		} as unknown as GroupState;
 
 		// Update children: set parentId to new group
