@@ -3,6 +3,7 @@ import { roundToDecimal } from "@workspace/geometry";
 import { collectIdsInArea } from "./utils/collectIdsInArea";
 import { PRECISION } from "../../../../constants/precision";
 import { ZOOM } from "../../../../constants/zoom";
+// TODO: operationsのautoSelectParentGroupsを直接呼び出すのは少し違和感がある。将来的にはCanvasEventHandler内で完結させるか、別のユーティリティ関数として切り出すことを検討。
 import { autoSelectParentGroups } from "../../../../operations/objects/utils/autoSelectParentGroups";
 import type {
 	CanvasEvent,

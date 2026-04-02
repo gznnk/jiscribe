@@ -2,26 +2,31 @@ import {
 	connectorToDoc,
 	connectorToState,
 } from "../../operations/objects/connections/Connector/ConnectorMapper";
+import { connectorMoveByDelta } from "../../operations/objects/connections/Connector/ConnectorMoveByDelta";
 import { EllipseEventHandler } from "../../operations/objects/primitives/Ellipse/EllipseEventHandler";
 import {
 	ellipseToDoc,
 	ellipseToState,
 } from "../../operations/objects/primitives/Ellipse/EllipseMapper";
+import { ellipseMoveByDelta } from "../../operations/objects/primitives/Ellipse/EllipseMoveByDelta";
 import { GroupEventHandler } from "../../operations/objects/primitives/Group/GroupEventHandler";
 import {
 	groupToDoc,
 	groupToState,
 } from "../../operations/objects/primitives/Group/GroupMapper";
+import { groupMoveByDelta } from "../../operations/objects/primitives/Group/GroupMoveByDelta";
 import { PolylineEventHandler } from "../../operations/objects/primitives/Polyline/PolylineEventHandler";
 import {
 	polylineToDoc,
 	polylineToState,
 } from "../../operations/objects/primitives/Polyline/PolylineMapper";
+import { polylineMoveByDelta } from "../../operations/objects/primitives/Polyline/PolylineMoveByDelta";
 import { RectEventHandler } from "../../operations/objects/primitives/Rect/RectEventHandler";
 import {
 	rectToDoc,
 	rectToState,
 } from "../../operations/objects/primitives/Rect/RectMapper";
+import { rectMoveByDelta } from "../../operations/objects/primitives/Rect/RectMoveByDelta";
 import { Connector } from "../../presentations/objects/connections/Connector";
 import { Ellipse } from "../../presentations/objects/primitives/Ellipse";
 import { Polyline } from "../../presentations/objects/primitives/Polyline";
@@ -48,6 +53,7 @@ export const initializeObjectRegistry = (): void => {
 		},
 		eventHandler: RectEventHandler,
 		component: Rect,
+		moveByDelta: rectMoveByDelta,
 	});
 
 	objectRegistry.register("ellipse", {
@@ -58,6 +64,7 @@ export const initializeObjectRegistry = (): void => {
 		},
 		eventHandler: EllipseEventHandler,
 		component: Ellipse,
+		moveByDelta: ellipseMoveByDelta,
 	});
 
 	objectRegistry.register("group", {
@@ -68,6 +75,7 @@ export const initializeObjectRegistry = (): void => {
 		},
 		eventHandler: GroupEventHandler,
 		component: () => null, // Groupはコンポーネントを持たない（再帰的に描画される）
+		moveByDelta: groupMoveByDelta,
 	});
 
 	objectRegistry.register("polyline", {
@@ -78,6 +86,7 @@ export const initializeObjectRegistry = (): void => {
 		},
 		eventHandler: PolylineEventHandler,
 		component: Polyline,
+		moveByDelta: polylineMoveByDelta,
 	});
 
 	objectRegistry.register("connector", {
@@ -88,5 +97,6 @@ export const initializeObjectRegistry = (): void => {
 		},
 		eventHandler: {}, // Event handling not yet implemented
 		component: Connector,
+		moveByDelta: connectorMoveByDelta,
 	});
 };

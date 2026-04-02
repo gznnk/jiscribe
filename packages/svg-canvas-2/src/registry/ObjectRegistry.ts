@@ -77,6 +77,13 @@ class ObjectRegistry {
 	}
 
 	/**
+	 * Retrieves the moveByDelta function for a specific object type.
+	 */
+	getMoveByDelta(type: ObjectType) {
+		return this.definitions.get(type)?.moveByDelta;
+	}
+
+	/**
 	 * Clears all registered definitions.
 	 */
 	clear(): void {

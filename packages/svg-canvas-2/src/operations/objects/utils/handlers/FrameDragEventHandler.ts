@@ -1,6 +1,6 @@
-import { isFrame, roundToDecimal, type Frame } from "@workspace/geometry";
+import { isFrame } from "@workspace/geometry";
 
-import { PRECISION } from "../../../../constants/precision";
+import { objectRegistry } from "../../../../registry/ObjectRegistry";
 import type {
 	DragEventHandler,
 	DragEventHandlerParams,
@@ -9,12 +9,7 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/GroupState";
 import { determineSelection } from "../determineSelection";
 import { getAncestors } from "../getAncestors";
-import { updateDescendantsRecursively } from "../updateDescendantsRecursively";
-
-/**
- * Helper type for ObjectState that has Frame properties
- */
-type FrameObjectState = ObjectState & Frame;
+import { moveDescendantsRecursively } from "../moveDescendantsRecursively";
 
 /**
  * Frame-specific drag event handler that updates an object's position.
@@ -55,23 +50,22 @@ export const FrameDragEventHandler: DragEventHandler<ObjectState> = (
 		}
 
 		if (selectedObject.type === "group") {
-			// Group: update all descendants recursively
+			// Group: move all descendants recursively
 			// Note: Groups don't have position (geometry: "none"), only children move
 			const group = selectedObject as GroupState;
 
-			updateDescendantsRecursively(
+			moveDescendantsRecursively(
 				group.childIds,
 				eventStartObjects,
 				updatedObjects,
 				delta,
 			);
-		} else if (isFrame(selectedObject)) {
-			// Frame object: update position directly
-			updatedObjects[selectedId] = {
-				...selectedObject,
-				cx: roundToDecimal(selectedObject.cx + delta.x, PRECISION.COORDINATE),
-				cy: roundToDecimal(selectedObject.cy + delta.y, PRECISION.COORDINATE),
-			} as FrameObjectState;
+		} else {
+			// Use registry to get the type-specific moveByDelta function
+			const moveByDelta = objectRegistry.getMoveByDelta(selectedObject.type);
+			if (moveByDelta) {
+				updatedObjects[selectedId] = moveByDelta(selectedObject, delta);
+			}
 		}
 	}
 

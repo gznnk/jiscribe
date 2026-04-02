@@ -1,21 +1,14 @@
-import { roundToDecimal } from "@workspace/geometry";
-
-import { PRECISION } from "../../../../constants/precision";
+import { objectRegistry } from "../../../../registry/ObjectRegistry";
 import type {
 	DragEventHandler,
 	DragEventHandlerParams,
 } from "../../../../registry/ObjectRegistryTypes";
-import { isPoly, type Poly } from "../../../../schemas/objects/types/Poly";
+import { isPoly } from "../../../../schemas/objects/types/Poly";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/GroupState";
 import { determineSelection } from "../determineSelection";
 import { getAncestors } from "../getAncestors";
-import { updateDescendantsRecursively } from "../updateDescendantsRecursively";
-
-/**
- * Helper type for ObjectState that has Poly properties
- */
-type PolyObjectState = ObjectState & Poly;
+import { moveDescendantsRecursively } from "../moveDescendantsRecursively";
 
 /**
  * Poly-specific drag event handler that updates all points in the points array.
@@ -56,27 +49,22 @@ export const PolyDragEventHandler: DragEventHandler<ObjectState> = (
 		}
 
 		if (selectedObject.type === "group") {
-			// Group: update all descendants recursively
+			// Group: move all descendants recursively
 			// Note: Groups don't have position (geometry: "none"), only children move
 			const group = selectedObject as GroupState;
 
-			updateDescendantsRecursively(
+			moveDescendantsRecursively(
 				group.childIds,
 				eventStartObjects,
 				updatedObjects,
 				delta,
 			);
-		} else if (isPoly(selectedObject)) {
-			// Poly object: update all points
-			const updatedPoints = selectedObject.points.map((point) => ({
-				x: roundToDecimal(point.x + delta.x, PRECISION.COORDINATE),
-				y: roundToDecimal(point.y + delta.y, PRECISION.COORDINATE),
-			}));
-
-			updatedObjects[selectedId] = {
-				...selectedObject,
-				points: updatedPoints,
-			} as PolyObjectState;
+		} else {
+			// Use registry to get the type-specific moveByDelta function
+			const moveByDelta = objectRegistry.getMoveByDelta(selectedObject.type);
+			if (moveByDelta) {
+				updatedObjects[selectedId] = moveByDelta(selectedObject, delta);
+			}
 		}
 	}
 

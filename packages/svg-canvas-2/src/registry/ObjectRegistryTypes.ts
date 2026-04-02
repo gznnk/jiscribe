@@ -104,6 +104,15 @@ export type ObjectEventHandler = {
 };
 
 /**
+ * Function that moves an object by a delta.
+ * Returns a new object state with updated position.
+ */
+export type MoveByDeltaFunction<TState extends ObjectState = ObjectState> = (
+	state: TState,
+	delta: Point,
+) => TState;
+
+/**
  * Complete definition for an object type in the registry.
  * Includes both data mapping logic and UI component.
  */
@@ -116,4 +125,9 @@ export type ObjectDefinition<
 	eventHandler: ObjectEventHandler;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	component: React.FC<any>;
+	/**
+	 * Moves the object by a delta.
+	 * For objects with geometry: "none" (e.g., groups), this should return the state unchanged.
+	 */
+	moveByDelta: MoveByDeltaFunction<TState>;
 };

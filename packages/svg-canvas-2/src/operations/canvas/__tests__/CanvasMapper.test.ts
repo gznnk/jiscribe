@@ -38,6 +38,7 @@ describe("CanvasMapper", () => {
 				geometry: "none",
 				transform: true,
 			},
+			moveByDelta: (state) => state, // Dummy moveByDelta
 		});
 		objectRegistry.register("rect", {
 			mapper: { toState: rectToState, toDoc: rectToDoc },
@@ -51,6 +52,7 @@ describe("CanvasMapper", () => {
 				stroke: true,
 				fill: true,
 			},
+			moveByDelta: (state) => state, // Dummy moveByDelta
 		});
 	});
 
