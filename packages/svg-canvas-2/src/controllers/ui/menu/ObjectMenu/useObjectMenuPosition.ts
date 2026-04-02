@@ -1,10 +1,70 @@
-import { calcBoundingBox, isTransformedFrame } from "@workspace/geometry";
+import {
+	calcBoundingBox,
+	isTransformedFrame,
+	type BoundingBox,
+} from "@workspace/geometry";
 import { useMemo } from "react";
 
 import type { CanvasState } from "../../../../states/canvas/CanvasState";
+import type { GroupState } from "../../../../states/objects/primitives/GroupState";
 
 /** ObjectMenu とオブジェクト間の距離 (px) */
 const DISTANCE_FROM_OBJECT = 8;
+
+/**
+ * グループかどうかを判定する型ガード
+ */
+function isGroup(obj: unknown): obj is GroupState {
+	return (
+		typeof obj === "object" &&
+		obj !== null &&
+		"type" in obj &&
+		obj.type === "group" &&
+		"childIds" in obj &&
+		Array.isArray(obj.childIds)
+	);
+}
+
+/**
+ * グループの子要素を再帰的に走査してバウンディングボックスを計算する
+ */
+function calcGroupBoundingBox(
+	group: GroupState,
+	objects: Record<string, unknown>,
+): BoundingBox | null {
+	let minX = Infinity;
+	let minY = Infinity;
+	let maxX = -Infinity;
+	let maxY = -Infinity;
+	let hasValidChild = false;
+
+	for (const childId of group.childIds) {
+		const child = objects[childId];
+		if (!child) continue;
+
+		let bbox;
+		if (isTransformedFrame(child)) {
+			bbox = calcBoundingBox(child);
+		} else if (isGroup(child)) {
+			bbox = calcGroupBoundingBox(child, objects);
+			if (!bbox) continue;
+		} else {
+			continue;
+		}
+
+		minX = Math.min(minX, bbox.left);
+		minY = Math.min(minY, bbox.top);
+		maxX = Math.max(maxX, bbox.right);
+		maxY = Math.max(maxY, bbox.bottom);
+		hasValidChild = true;
+	}
+
+	if (!hasValidChild) {
+		return null;
+	}
+
+	return { left: minX, top: minY, right: maxX, bottom: maxY };
+}
 
 type ObjectMenuPosition = {
 	/** メニューを表示すべきか */
@@ -58,9 +118,21 @@ export function useObjectMenuPosition(state: CanvasState): ObjectMenuPosition {
 
 		for (const id of selectedIds) {
 			const obj = objects[id];
-			if (!obj || !isTransformedFrame(obj)) continue;
+			if (!obj) continue;
 
-			const bbox = calcBoundingBox(obj);
+			let bbox;
+			if (isTransformedFrame(obj)) {
+				// rect, ellipse など Frame を持つオブジェクト
+				bbox = calcBoundingBox(obj);
+			} else if (isGroup(obj)) {
+				// グループの場合、子要素から再帰的にバウンディングボックスを計算
+				bbox = calcGroupBoundingBox(obj, objects);
+				if (!bbox) continue;
+			} else {
+				// Transform を持たないオブジェクト（connector など）はスキップ
+				continue;
+			}
+
 			minX = Math.min(minX, bbox.left);
 			minY = Math.min(minY, bbox.top);
 			maxX = Math.max(maxX, bbox.right);
