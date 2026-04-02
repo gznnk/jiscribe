@@ -6,8 +6,10 @@ import type {
 	DragEventHandlerParams,
 } from "../../../../registry/ObjectRegistryTypes";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import type { GroupState } from "../../../../states/objects/primitives/GroupState";
 import { determineSelection } from "../determineSelection";
 import { getAncestors } from "../getAncestors";
+import { updateDescendantsRecursively } from "../updateDescendantsRecursively";
 
 /**
  * Helper type for ObjectState that has Frame properties
@@ -48,15 +50,29 @@ export const FrameDragEventHandler: DragEventHandler<ObjectState> = (
 
 	for (const selectedId of selectedIds) {
 		const selectedObject = eventStartObjects[selectedId];
-		if (!selectedObject || !isFrame(selectedObject)) {
+		if (!selectedObject) {
 			continue;
 		}
 
-		updatedObjects[selectedId] = {
-			...selectedObject,
-			cx: roundToDecimal(selectedObject.cx + delta.x, PRECISION.COORDINATE),
-			cy: roundToDecimal(selectedObject.cy + delta.y, PRECISION.COORDINATE),
-		} as FrameObjectState;
+		if (selectedObject.type === "group") {
+			// Group: update all descendants recursively
+			// Note: Groups don't have position (geometry: "none"), only children move
+			const group = selectedObject as GroupState;
+
+			updateDescendantsRecursively(
+				group.childIds,
+				eventStartObjects,
+				updatedObjects,
+				delta,
+			);
+		} else if (isFrame(selectedObject)) {
+			// Frame object: update position directly
+			updatedObjects[selectedId] = {
+				...selectedObject,
+				cx: roundToDecimal(selectedObject.cx + delta.x, PRECISION.COORDINATE),
+				cy: roundToDecimal(selectedObject.cy + delta.y, PRECISION.COORDINATE),
+			} as FrameObjectState;
+		}
 	}
 
 	// Update the canvas state with all moved objects

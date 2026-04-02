@@ -7,8 +7,10 @@ import type {
 } from "../../../../registry/ObjectRegistryTypes";
 import { isPoly, type Poly } from "../../../../schemas/objects/types/Poly";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import type { GroupState } from "../../../../states/objects/primitives/GroupState";
 import { determineSelection } from "../determineSelection";
 import { getAncestors } from "../getAncestors";
+import { updateDescendantsRecursively } from "../updateDescendantsRecursively";
 
 /**
  * Helper type for ObjectState that has Poly properties
@@ -49,20 +51,33 @@ export const PolyDragEventHandler: DragEventHandler<ObjectState> = (
 
 	for (const selectedId of selectedIds) {
 		const selectedObject = eventStartObjects[selectedId];
-		if (!selectedObject || !isPoly(selectedObject)) {
+		if (!selectedObject) {
 			continue;
 		}
 
-		// Update all points by adding delta
-		const updatedPoints = selectedObject.points.map((point) => ({
-			x: roundToDecimal(point.x + delta.x, PRECISION.COORDINATE),
-			y: roundToDecimal(point.y + delta.y, PRECISION.COORDINATE),
-		}));
+		if (selectedObject.type === "group") {
+			// Group: update all descendants recursively
+			// Note: Groups don't have position (geometry: "none"), only children move
+			const group = selectedObject as GroupState;
 
-		updatedObjects[selectedId] = {
-			...selectedObject,
-			points: updatedPoints,
-		} as PolyObjectState;
+			updateDescendantsRecursively(
+				group.childIds,
+				eventStartObjects,
+				updatedObjects,
+				delta,
+			);
+		} else if (isPoly(selectedObject)) {
+			// Poly object: update all points
+			const updatedPoints = selectedObject.points.map((point) => ({
+				x: roundToDecimal(point.x + delta.x, PRECISION.COORDINATE),
+				y: roundToDecimal(point.y + delta.y, PRECISION.COORDINATE),
+			}));
+
+			updatedObjects[selectedId] = {
+				...selectedObject,
+				points: updatedPoints,
+			} as PolyObjectState;
+		}
 	}
 
 	// Update the canvas state with all moved objects
