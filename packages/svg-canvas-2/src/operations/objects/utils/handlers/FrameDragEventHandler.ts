@@ -6,6 +6,8 @@ import type {
 	DragEventHandlerParams,
 } from "../../../../registry/ObjectRegistryTypes";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import { determineSelection } from "../determineSelection";
+import { getAncestors } from "../getAncestors";
 
 /**
  * Helper type for ObjectState that has Frame properties
@@ -65,9 +67,9 @@ export const FrameDragEventHandler: DragEventHandler<ObjectState> = (
 };
 
 /**
- * Drag start event handler that updates selection state based on modifiers.
- * - If Ctrl (or Meta on Mac) is pressed: adds the dragged object to selectedIds
- * - Otherwise: sets selectedIds to only the dragged object
+ * Drag start event handler that updates selection state using hierarchical logic.
+ * - If the dragged object is already selected: maintains current selection
+ * - If the dragged object is not selected: uses determineSelection for hierarchical logic
  * Then calls FrameDragEventHandler to update the object's position.
  * Only handles left-click drag (button 0).
  */
@@ -82,19 +84,23 @@ export const FrameDragStartEventHandler: DragEventHandler<ObjectState> = (
 		return canvasState;
 	}
 
-	// Check if Ctrl or Meta (Cmd on Mac) is pressed for additive selection
-	const isAdditive = mods.ctrl || mods.meta;
+	// Check if this object or any of its ancestors are already selected
+	const isCurrentlySelected = canvasState.selectedIds.includes(id);
+	const ancestors = getAncestors(canvasState, id);
+	const isAncestorSelected = ancestors.some((ancestorId) =>
+		canvasState.selectedIds.includes(ancestorId),
+	);
 
-	// Update selection based on modifiers
 	let selectedIds: string[];
-	if (isAdditive) {
-		// Ctrl/Meta pressed: add to selection if not already selected
-		selectedIds = canvasState.selectedIds.includes(id)
-			? canvasState.selectedIds
-			: [...canvasState.selectedIds, id];
+
+	if (isCurrentlySelected || isAncestorSelected) {
+		// Already selected (or ancestor is selected): maintain current selection
+		// (allows dragging multiple selected items and grouped items)
+		selectedIds = canvasState.selectedIds;
 	} else {
-		// No Ctrl/Meta: select only this object
-		selectedIds = [id];
+		// Not selected: use hierarchical selection logic
+		const newSelection = determineSelection(objectState, canvasState, mods);
+		selectedIds = newSelection ?? canvasState.selectedIds;
 	}
 
 	// Update canvas state with new selection and enable edge scrolling
