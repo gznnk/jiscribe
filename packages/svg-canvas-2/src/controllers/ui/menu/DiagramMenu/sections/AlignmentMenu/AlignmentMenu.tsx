@@ -1,17 +1,14 @@
 import { memo } from "react";
 
-import {
-	DiagramMenuButton,
-	DropdownPanel,
-	MenuItemPositioner,
-} from "./DiagramMenuStyled";
-import type { CanvasState } from "../../../../states/canvas/CanvasState";
-import { AlignBottomIcon } from "../../icons/AlignBottomIcon";
-import { AlignCenterIcon } from "../../icons/AlignCenterIcon";
-import { AlignLeftIcon } from "../../icons/AlignLeftIcon";
-import { AlignMiddleIcon } from "../../icons/AlignMiddleIcon";
-import { AlignRightIcon } from "../../icons/AlignRightIcon";
-import { AlignTopIcon } from "../../icons/AlignTopIcon";
+import { AlignmentDropdownPanel, AlignmentRow } from "./AlignmentMenuStyled";
+import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
+import { AlignBottomIcon } from "../../../../icons/AlignBottomIcon";
+import { AlignCenterIcon } from "../../../../icons/AlignCenterIcon";
+import { AlignLeftIcon } from "../../../../icons/AlignLeftIcon";
+import { AlignMiddleIcon } from "../../../../icons/AlignMiddleIcon";
+import { AlignRightIcon } from "../../../../icons/AlignRightIcon";
+import { AlignTopIcon } from "../../../../icons/AlignTopIcon";
+import { DiagramMenuButton, MenuItemPositioner } from "../../DiagramMenuStyled";
 
 const SECTION_ID = "alignment";
 
@@ -52,10 +49,8 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 				<AlignLeftIcon />
 			</DiagramMenuButton>
 			{isOpen && (
-				<DropdownPanel
-					style={{ flexDirection: "column", gap: "4px", padding: "6px" }}
-				>
-					<div style={{ display: "flex", gap: "2px" }}>
+				<AlignmentDropdownPanel>
+					<AlignmentRow>
 						{horizontalAlignments.map(({ value, Icon, title }) => (
 							<DiagramMenuButton
 								key={value}
@@ -66,8 +61,8 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 								<Icon fill="#999999" />
 							</DiagramMenuButton>
 						))}
-					</div>
-					<div style={{ display: "flex", gap: "2px" }}>
+					</AlignmentRow>
+					<AlignmentRow>
 						{verticalAlignments.map(({ value, Icon, title }) => (
 							<DiagramMenuButton
 								key={value}
@@ -78,8 +73,8 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 								<Icon fill="#999999" />
 							</DiagramMenuButton>
 						))}
-					</div>
-				</DropdownPanel>
+					</AlignmentRow>
+				</AlignmentDropdownPanel>
 			)}
 		</MenuItemPositioner>
 	);

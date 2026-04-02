@@ -1,0 +1,1 @@
+export { StrokeColorMenu } from "./StrokeColorMenu";

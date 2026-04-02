@@ -1,13 +1,13 @@
 import { memo } from "react";
 
-import { ColorPickerGrid } from "./components/ColorPickerGrid";
+import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
+import { FontColorIcon } from "../../../../icons/FontColorIcon";
+import { ColorPickerGrid } from "../../common/ColorPickerGrid";
 import {
 	DiagramMenuButton,
 	DropdownColorPanel,
 	MenuItemPositioner,
-} from "./DiagramMenuStyled";
-import type { CanvasState } from "../../../../states/canvas/CanvasState";
-import { FontColorIcon } from "../../icons/FontColorIcon";
+} from "../../DiagramMenuStyled";
 
 const SECTION_ID = "font-color";
 

@@ -1,0 +1,1 @@
+export { FontSizeMenu } from "./FontSizeMenu";

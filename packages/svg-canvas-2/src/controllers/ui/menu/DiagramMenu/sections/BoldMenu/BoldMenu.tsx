@@ -1,8 +1,8 @@
 import { memo } from "react";
 
-import { DiagramMenuButton, MenuItemPositioner } from "./DiagramMenuStyled";
-import type { CanvasState } from "../../../../states/canvas/CanvasState";
-import { BoldIcon } from "../../icons/BoldIcon";
+import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
+import { BoldIcon } from "../../../../icons/BoldIcon";
+import { DiagramMenuButton, MenuItemPositioner } from "../../DiagramMenuStyled";
 
 type BoldMenuProps = {
 	canvasState: CanvasState;

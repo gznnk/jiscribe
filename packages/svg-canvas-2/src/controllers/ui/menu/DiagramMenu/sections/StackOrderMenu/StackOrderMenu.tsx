@@ -1,17 +1,17 @@
 import { memo } from "react";
 
+import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
+import { commandRegistry } from "../../../../../commands/CommandRegistry";
+import { BringForwardIcon } from "../../../../icons/BringForwardIcon";
+import { BringToFrontIcon } from "../../../../icons/BringToFrontIcon";
+import { SendBackwardIcon } from "../../../../icons/SendBackwardIcon";
+import { SendToBackIcon } from "../../../../icons/SendToBackIcon";
+import { StackOrderIcon } from "../../../../icons/StackOrderIcon";
 import {
 	DiagramMenuButton,
 	DropdownPanel,
 	MenuItemPositioner,
-} from "./DiagramMenuStyled";
-import type { CanvasState } from "../../../../states/canvas/CanvasState";
-import { commandRegistry } from "../../../commands/CommandRegistry";
-import { BringForwardIcon } from "../../icons/BringForwardIcon";
-import { BringToFrontIcon } from "../../icons/BringToFrontIcon";
-import { SendBackwardIcon } from "../../icons/SendBackwardIcon";
-import { SendToBackIcon } from "../../icons/SendToBackIcon";
-import { StackOrderIcon } from "../../icons/StackOrderIcon";
+} from "../../DiagramMenuStyled";
 
 const SECTION_ID = "stack-order";
 

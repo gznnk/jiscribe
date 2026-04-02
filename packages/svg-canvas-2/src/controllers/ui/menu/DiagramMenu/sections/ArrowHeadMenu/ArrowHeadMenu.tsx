@@ -1,68 +1,26 @@
-import styled from "@emotion/styled";
 import { memo } from "react";
 
+import {
+	ArrowGrid,
+	ArrowSection,
+	ArrowSectionLabel,
+	ArrowTypeButton,
+	ArrowTypeRow,
+} from "./ArrowHeadMenuStyled";
+import { ArrowTypes } from "../../../../../../schemas/objects/types/ArrowType";
+import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
+import { ArrowHeadIcon } from "../../../../icons/ArrowHeadIcon";
 import {
 	DiagramMenuButton,
 	DropdownPanel,
 	MenuItemPositioner,
-} from "./DiagramMenuStyled";
-import { ArrowTypes } from "../../../../schemas/objects/types/ArrowType";
-import type { CanvasState } from "../../../../states/canvas/CanvasState";
-import { ArrowHeadIcon } from "../../icons/ArrowHeadIcon";
+} from "../../DiagramMenuStyled";
 
 const SECTION_ID = "arrow-head";
 
 type ArrowHeadMenuProps = {
 	canvasState: CanvasState;
 };
-
-const ArrowGrid = styled.div`
-	display: flex;
-	flex-direction: column;
-	gap: 4px;
-	padding: 4px;
-`;
-
-const ArrowSection = styled.div`
-	display: flex;
-	flex-direction: column;
-	gap: 2px;
-`;
-
-const ArrowSectionLabel = styled.div`
-	font-size: 10px;
-	font-weight: 600;
-	color: #6b7280;
-	padding: 0 4px;
-	user-select: none;
-`;
-
-const ArrowTypeRow = styled.div`
-	display: grid;
-	grid-template-columns: repeat(4, 1fr);
-	gap: 2px;
-`;
-
-const ArrowTypeButton = styled.button<{ isActive?: boolean }>`
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	height: 24px;
-	padding: 2px 6px;
-	border: 1px solid ${(p) => (p.isActive ? "#6b7280" : "#e5e7eb")};
-	border-radius: 4px;
-	background: ${(p) => (p.isActive ? "#f3f4f6" : "transparent")};
-	cursor: pointer;
-	font-size: 9px;
-	color: #374151;
-	white-space: nowrap;
-	transition: all 0.15s;
-
-	&:hover {
-		background: #f0f0f0;
-		border-color: #9ca3af;
-	}
-`;
 
 /**
  * 選択中オブジェクトの矢印タイプを取得する。

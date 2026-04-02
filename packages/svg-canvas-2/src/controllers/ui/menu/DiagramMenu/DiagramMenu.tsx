@@ -1,21 +1,21 @@
 import { memo } from "react";
 
-import { AlignmentMenu } from "./AlignmentMenu";
-import { ArrowHeadMenu } from "./ArrowHeadMenu";
-import { BackgroundColorMenu } from "./BackgroundColorMenu";
-import { BoldMenu } from "./BoldMenu";
 import {
 	DiagramMenuContainer,
 	DiagramMenuDivider,
 	DiagramMenuWrapper,
 } from "./DiagramMenuStyled";
-import { FontColorMenu } from "./FontColorMenu";
-import { FontSizeMenu } from "./FontSizeMenu";
 import { useMenuConfig } from "./getMenuConfig";
-import { GroupMenu } from "./GroupMenu";
-import { KeepAspectRatioMenu } from "./KeepAspectRatioMenu";
-import { StackOrderMenu } from "./StackOrderMenu";
-import { StrokeColorMenu } from "./StrokeColorMenu";
+import { AlignmentMenu } from "./sections/AlignmentMenu";
+import { ArrowHeadMenu } from "./sections/ArrowHeadMenu";
+import { BackgroundColorMenu } from "./sections/BackgroundColorMenu";
+import { BoldMenu } from "./sections/BoldMenu";
+import { FontColorMenu } from "./sections/FontColorMenu";
+import { FontSizeMenu } from "./sections/FontSizeMenu";
+import { GroupMenu } from "./sections/GroupMenu";
+import { KeepAspectRatioMenu } from "./sections/KeepAspectRatioMenu";
+import { StackOrderMenu } from "./sections/StackOrderMenu";
+import { StrokeColorMenu } from "./sections/StrokeColorMenu";
 import { useDiagramMenuPosition } from "./useDiagramMenuPosition";
 import type { CanvasState } from "../../../../states/canvas/CanvasState";
 

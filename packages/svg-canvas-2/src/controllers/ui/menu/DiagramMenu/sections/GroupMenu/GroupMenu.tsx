@@ -1,9 +1,9 @@
 import { memo } from "react";
 
-import { DiagramMenuButton, MenuItemPositioner } from "./DiagramMenuStyled";
-import type { CanvasState } from "../../../../states/canvas/CanvasState";
-import { commandRegistry } from "../../../commands/CommandRegistry";
-import { GroupIcon } from "../../icons/GroupIcon";
+import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
+import { commandRegistry } from "../../../../../commands/CommandRegistry";
+import { GroupIcon } from "../../../../icons/GroupIcon";
+import { DiagramMenuButton, MenuItemPositioner } from "../../DiagramMenuStyled";
 
 type GroupMenuProps = {
 	canvasState: CanvasState;

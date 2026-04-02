@@ -1,8 +1,8 @@
 import { memo } from "react";
 
-import { DiagramMenuButton, MenuItemPositioner } from "./DiagramMenuStyled";
-import type { CanvasState } from "../../../../states/canvas/CanvasState";
-import { AspectRatioIcon } from "../../icons/AspectRatioIcon";
+import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
+import { AspectRatioIcon } from "../../../../icons/AspectRatioIcon";
+import { DiagramMenuButton, MenuItemPositioner } from "../../DiagramMenuStyled";
 
 type KeepAspectRatioMenuProps = {
 	canvasState: CanvasState;
