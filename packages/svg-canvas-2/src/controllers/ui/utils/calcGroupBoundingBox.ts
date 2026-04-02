@@ -7,20 +7,6 @@ import {
 import type { GroupState } from "../../../states/objects/primitives/GroupState";
 
 /**
- * グループかどうかを判定する型ガード
- */
-function isGroup(obj: unknown): obj is GroupState {
-	return (
-		typeof obj === "object" &&
-		obj !== null &&
-		"type" in obj &&
-		obj.type === "group" &&
-		"childIds" in obj &&
-		Array.isArray(obj.childIds)
-	);
-}
-
-/**
  * グループの子要素を再帰的に走査してバウンディングボックスを計算する
  *
  * @param group - バウンディングボックスを計算するグループ
@@ -44,8 +30,12 @@ export function calcGroupBoundingBox(
 		let bbox;
 		if (isTransformedFrame(child)) {
 			bbox = calcBoundingBox(child);
-		} else if (isGroup(child)) {
-			bbox = calcGroupBoundingBox(child, objects);
+		} else if (
+			typeof child === "object" &&
+			"type" in child &&
+			child.type === "group"
+		) {
+			bbox = calcGroupBoundingBox(child as GroupState, objects);
 			if (!bbox) continue;
 		} else {
 			continue;
