@@ -1,5 +1,6 @@
 ﻿import type { GroupState } from "../../../states/objects/primitives/GroupState";
 import type { Command } from "../CommandTypes";
+import { cleanupGroups } from "./utils/cleanupGroups";
 
 export const DeleteCommand: Command = {
 	id: "delete",
@@ -54,14 +55,19 @@ export const DeleteCommand: Command = {
 			}
 		}
 
-		return {
+		const nextStateBeforeCleanup = {
 			...state,
 			objects: updatedObjects,
 			rootIds: state.rootIds.filter((id) => !idsToDelete.has(id)),
 			connectorIds: state.connectorIds.filter((id) => !idsToDelete.has(id)),
-			selectedIds: [],
+			selectedIds: [] as string[],
 			objectMenuOpenId: null,
 			lastCommitTime: Date.now(), // コミット必要
 		};
+
+		// グループのクリーンアップ（空グループの削除、1個グループの解除）
+		const nextState = cleanupGroups(nextStateBeforeCleanup);
+
+		return nextState;
 	},
 };
