@@ -1,11 +1,11 @@
 import { memo } from "react";
 
+import { useMenuConfig } from "./getMenuConfig";
 import {
 	ObjectMenuContainer,
 	ObjectMenuDivider,
 	ObjectMenuWrapper,
 } from "./ObjectMenuStyled";
-import { useMenuConfig } from "./getMenuConfig";
 import { AlignmentMenu } from "./sections/AlignmentMenu";
 import { ArrowHeadMenu } from "./sections/ArrowHeadMenu";
 import { BackgroundColorMenu } from "./sections/BackgroundColorMenu";
