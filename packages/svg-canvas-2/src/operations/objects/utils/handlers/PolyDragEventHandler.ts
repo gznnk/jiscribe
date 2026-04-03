@@ -5,10 +5,10 @@ import type {
 } from "../../../../registry/ObjectRegistryTypes";
 import { isPoly } from "../../../../schemas/objects/types/Poly";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
-import type { GroupState } from "../../../../states/objects/primitives/GroupState";
 import { determineSelection } from "../determineSelection";
 import { getAncestors } from "../getAncestors";
-import { moveDescendantsRecursively } from "../moveDescendantsRecursively";
+import { moveGroup } from "../moveGroup";
+import { updateAffectedGroupBounds } from "../updateAffectedGroupBounds";
 
 /**
  * Poly-specific drag event handler that updates all points in the points array.
@@ -49,16 +49,8 @@ export const PolyDragEventHandler: DragEventHandler<ObjectState> = (
 		}
 
 		if (selectedObject.type === "group") {
-			// Group: move all descendants recursively
-			// Note: Groups don't have position (geometry: "none"), only children move
-			const group = selectedObject as GroupState;
-
-			moveDescendantsRecursively(
-				group.childIds,
-				eventStartObjects,
-				updatedObjects,
-				delta,
-			);
+			// Group: move the group and all its descendants recursively
+			moveGroup(selectedId, eventStartObjects, updatedObjects, delta);
 		} else {
 			// Use registry to get the type-specific moveByDelta function
 			const moveByDelta = objectRegistry.getMoveByDelta(selectedObject.type);
@@ -127,8 +119,8 @@ export const PolyDragStartEventHandler: DragEventHandler<ObjectState> = (
 };
 
 /**
- * Drag end event handler that disables edge scrolling.
- * Then calls PolyDragEventHandler to finalize the object's position.
+ * Drag end event handler that disables edge scrolling and updates parent group bounds.
+ * Updates the bounding frames of all parent groups affected by the drag operation.
  */
 export const PolyDragEndEventHandler: DragEventHandler<ObjectState> = (
 	params: DragEventHandlerParams<ObjectState>,
@@ -139,8 +131,12 @@ export const PolyDragEndEventHandler: DragEventHandler<ObjectState> = (
 		edgeScrollEnabled: false,
 	};
 
-	return PolyDragEventHandler({
+	// Finalize drag operation
+	const resultState = PolyDragEventHandler({
 		...params,
 		canvasState: nextState,
 	});
+
+	// Update bounds of parent groups affected by the drag
+	return updateAffectedGroupBounds(resultState, resultState.selectedIds);
 };

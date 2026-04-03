@@ -1,0 +1,77 @@
+import { updateGroupBounds } from "../../../controllers/ui/utils/updateGroupBounds";
+import type { CanvasState } from "../../../states/canvas/CanvasState";
+
+/**
+ * Updates the bounding frames of all parent groups affected by moving the selected objects.
+ * Processes groups from bottom-up (children first, then parents) to ensure correct bounds.
+ *
+ * @param state - Current canvas state with updated object positions
+ * @param selectedIds - IDs of objects that were moved
+ * @returns Updated canvas state with recalculated group bounds
+ */
+export function updateAffectedGroupBounds(
+	state: CanvasState,
+	selectedIds: string[],
+): CanvasState {
+	const affectedGroupIds = new Set<string>();
+
+	// Collect all parent groups (and their ancestors) of selected objects
+	for (const selectedId of selectedIds) {
+		const obj = state.objects[selectedId];
+		if (!obj) continue;
+
+		// Collect all ancestor groups (parent, grandparent, etc.)
+		let currentParentId = obj.parentId;
+		while (currentParentId) {
+			affectedGroupIds.add(currentParentId);
+			const parent = state.objects[currentParentId];
+			currentParentId = parent?.parentId;
+		}
+	}
+
+	// If no groups need updating, return state as-is
+	if (affectedGroupIds.size === 0) {
+		return state;
+	}
+
+	// Sort groups by depth (deepest first) to ensure bottom-up processing
+	const sortedGroupIds = Array.from(affectedGroupIds).sort((a, b) => {
+		const depthA = getGroupDepth(state.objects, a);
+		const depthB = getGroupDepth(state.objects, b);
+		return depthB - depthA; // Descending order (deepest first)
+	});
+
+	// Update bounds for each affected group
+	const updatedObjects = { ...state.objects };
+	for (const groupId of sortedGroupIds) {
+		const updatedGroup = updateGroupBounds(updatedObjects, groupId);
+		if (updatedGroup) {
+			updatedObjects[groupId] = updatedGroup;
+		}
+	}
+
+	return {
+		...state,
+		objects: updatedObjects,
+	};
+}
+
+/**
+ * Calculates the depth of a group in the hierarchy (0 = root level).
+ */
+function getGroupDepth(
+	objects: Record<string, { parentId?: string }>,
+	groupId: string,
+): number {
+	let depth = 0;
+	let currentId: string | undefined = groupId;
+
+	while (currentId) {
+		const obj: { parentId?: string } | undefined = objects[currentId];
+		if (!obj) break;
+		currentId = obj.parentId;
+		if (currentId) depth++;
+	}
+
+	return depth;
+}
