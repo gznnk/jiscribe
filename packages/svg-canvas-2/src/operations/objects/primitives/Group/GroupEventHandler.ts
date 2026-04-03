@@ -9,7 +9,7 @@ import type { ObjectEventHandler } from "../../../../registry/ObjectRegistryType
  */
 export const GroupEventHandler: ObjectEventHandler = {
 	onDragStart: undefined, // Group has no DOM element; drag is handled via child objects
-	onDrag: undefined,      // Group has no DOM element; drag is handled via child objects
-	onDragEnd: undefined,   // Group has no DOM element; drag is handled via child objects
-	onClick: undefined,     // Group has no DOM element; click is handled via child objects
+	onDrag: undefined, // Group has no DOM element; drag is handled via child objects
+	onDragEnd: undefined, // Group has no DOM element; drag is handled via child objects
+	onClick: undefined, // Group has no DOM element; click is handled via child objects
 };
