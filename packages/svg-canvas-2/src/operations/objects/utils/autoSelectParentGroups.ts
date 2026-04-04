@@ -2,6 +2,35 @@ import type { CanvasState } from "../../../states/canvas/CanvasState";
 import type { GroupState } from "../../../states/objects/primitives/GroupState";
 
 /**
+ * Recursively collects all descendant IDs of a group
+ * @param state - The canvas state
+ * @param groupId - The group ID to collect descendants from
+ * @returns Set of all descendant IDs (children, grandchildren, etc.)
+ */
+function collectAllDescendants(
+	state: CanvasState,
+	groupId: string,
+): Set<string> {
+	const descendants = new Set<string>();
+	const group = state.objects[groupId] as GroupState;
+	if (!group || group.type !== "group") return descendants;
+
+	for (const childId of group.childIds) {
+		descendants.add(childId);
+		const child = state.objects[childId];
+		if (child?.type === "group") {
+			// Recursively collect descendants of child groups
+			const childDescendants = collectAllDescendants(state, childId);
+			for (const descendantId of childDescendants) {
+				descendants.add(descendantId);
+			}
+		}
+	}
+
+	return descendants;
+}
+
+/**
  * Automatically selects parent groups when all their children are selected,
  * and deselects the children. This process is applied recursively up the hierarchy.
  *
@@ -49,8 +78,11 @@ export function autoSelectParentGroups(
 				parent.childIds.every((childId) => result.includes(childId));
 
 			if (allChildrenSelected) {
-				// Remove all children from selection
-				result = result.filter((id) => !parent.childIds.includes(id));
+				// Collect all descendants (children, grandchildren, etc.)
+				const allDescendants = collectAllDescendants(state, parentId);
+
+				// Remove all descendants from selection
+				result = result.filter((id) => !allDescendants.has(id));
 
 				// Add parent to selection (if not already there)
 				if (!result.includes(parentId)) {
