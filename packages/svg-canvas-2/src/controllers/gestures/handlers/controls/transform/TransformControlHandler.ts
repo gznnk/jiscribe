@@ -102,11 +102,39 @@ export class TransformControlHandler implements ControlStrategy {
 		_event: CanvasEvent,
 		_anchorType: TransformAnchorType,
 	): CanvasState {
-		// Enable edge scrolling on drag start
-		return {
+		let nextState = {
 			...state,
 			edgeScrollEnabled: true,
 		};
+
+		// ドラッグ中の再計算を防ぐため、開始時のオブジェクトに keyPoints を付与して eventStartState キャッシュを更新する
+		if (state.selectedIds.length === 1 && state.eventStartState) {
+			const selectedId = state.selectedIds[0];
+			const startObject = state.eventStartState.objects[selectedId];
+
+			if (
+				startObject &&
+				isTransformedFrame(startObject) &&
+				!hasFrameKeyPoints(startObject)
+			) {
+				const keyPoints = calcFrameKeyPoints(startObject as TransformedFrame);
+				nextState = {
+					...nextState,
+					eventStartState: {
+						...state.eventStartState,
+						objects: {
+							...state.eventStartState.objects,
+							[selectedId]: {
+								...startObject,
+								keyPoints,
+							} as typeof startObject,
+						},
+					},
+				};
+			}
+		}
+
+		return nextState;
 	}
 
 	/**
