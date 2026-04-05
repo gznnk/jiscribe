@@ -233,4 +233,141 @@ describe("autoSelectParentGroups", () => {
 		// Should select only group-1, not group-2 or group-3
 		expect(result).toEqual(["group-1"]);
 	});
+
+	it("should handle order independence: multiple groups with children selected simultaneously", () => {
+		// This tests if the order of processing parentCandidates affects the result
+		// Structure:
+		// group-A           group-B
+		//   ├─ rect-a1        ├─ rect-b1
+		//   └─ rect-a2        └─ rect-b2
+		//
+		// If we select all rects, both groups should be selected regardless of processing order
+
+		const state = {
+			objects: {
+				"group-A": {
+					id: "group-A",
+					type: "group",
+					childIds: ["rect-a1", "rect-a2"],
+				} as GroupState,
+				"group-B": {
+					id: "group-B",
+					type: "group",
+					childIds: ["rect-b1", "rect-b2"],
+				} as GroupState,
+				"rect-a1": {
+					id: "rect-a1",
+					type: "rect",
+					parentId: "group-A",
+				} as RectState,
+				"rect-a2": {
+					id: "rect-a2",
+					type: "rect",
+					parentId: "group-A",
+				} as RectState,
+				"rect-b1": {
+					id: "rect-b1",
+					type: "rect",
+					parentId: "group-B",
+				} as RectState,
+				"rect-b2": {
+					id: "rect-b2",
+					type: "rect",
+					parentId: "group-B",
+				} as RectState,
+			},
+		} as unknown as CanvasState;
+
+		const result = autoSelectParentGroups(state, [
+			"rect-a1",
+			"rect-a2",
+			"rect-b1",
+			"rect-b2",
+		]);
+
+		// Both groups should be selected
+		expect(result).toHaveLength(2);
+		expect(result).toContain("group-A");
+		expect(result).toContain("group-B");
+		expect(result).not.toContain("rect-a1");
+		expect(result).not.toContain("rect-a2");
+		expect(result).not.toContain("rect-b1");
+		expect(result).not.toContain("rect-b2");
+	});
+
+	it("should handle complex scenario: sibling groups at different nesting levels", () => {
+		// Structure:
+		// root
+		//   ├─ group-1
+		//   │   ├─ group-1-1
+		//   │   │   ├─ rect-1-1-1
+		//   │   │   └─ rect-1-1-2
+		//   │   └─ rect-1-2
+		//   └─ group-2
+		//       ├─ rect-2-1
+		//       └─ rect-2-2
+		//
+		// When all leaf rects are selected, we expect ["group-1", "group-2"]
+		// Not ["root"] because they are separate groups
+
+		const state = {
+			objects: {
+				"group-1": {
+					id: "group-1",
+					type: "group",
+					childIds: ["group-1-1", "rect-1-2"],
+				} as GroupState,
+				"group-1-1": {
+					id: "group-1-1",
+					type: "group",
+					parentId: "group-1",
+					childIds: ["rect-1-1-1", "rect-1-1-2"],
+				} as GroupState,
+				"rect-1-1-1": {
+					id: "rect-1-1-1",
+					type: "rect",
+					parentId: "group-1-1",
+				} as RectState,
+				"rect-1-1-2": {
+					id: "rect-1-1-2",
+					type: "rect",
+					parentId: "group-1-1",
+				} as RectState,
+				"rect-1-2": {
+					id: "rect-1-2",
+					type: "rect",
+					parentId: "group-1",
+				} as RectState,
+				"group-2": {
+					id: "group-2",
+					type: "group",
+					childIds: ["rect-2-1", "rect-2-2"],
+				} as GroupState,
+				"rect-2-1": {
+					id: "rect-2-1",
+					type: "rect",
+					parentId: "group-2",
+				} as RectState,
+				"rect-2-2": {
+					id: "rect-2-2",
+					type: "rect",
+					parentId: "group-2",
+				} as RectState,
+			},
+		} as unknown as CanvasState;
+
+		const result = autoSelectParentGroups(state, [
+			"rect-1-1-1",
+			"rect-1-1-2",
+			"rect-1-2",
+			"rect-2-1",
+			"rect-2-2",
+		]);
+
+		// Should select both top-level groups
+		expect(result).toHaveLength(2);
+		expect(result).toContain("group-1");
+		expect(result).toContain("group-2");
+		expect(result).not.toContain("group-1-1");
+	});
 });

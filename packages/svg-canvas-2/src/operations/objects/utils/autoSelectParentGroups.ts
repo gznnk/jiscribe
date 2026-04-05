@@ -51,16 +51,21 @@ export function autoSelectParentGroups(
 	state: CanvasState,
 	selectedIds: string[],
 ): string[] {
-	let result = [...selectedIds];
+	let currentSelectedIds = [...selectedIds];
 	let changed = true;
 
 	// Loop until no more changes occur (handles multi-level hierarchies)
-	while (changed) {
+	// Safety limit to prevent infinite loops in case of circular references
+	const MAX_ITERATIONS = 100;
+	let iterations = 0;
+
+	while (changed && iterations < MAX_ITERATIONS) {
 		changed = false;
+		iterations++;
 		const parentCandidates = new Set<string>();
 
 		// Collect all parent groups of currently selected objects
-		for (const id of result) {
+		for (const id of currentSelectedIds) {
 			const obj = state.objects[id];
 			if (obj?.parentId) {
 				parentCandidates.add(obj.parentId);
@@ -72,26 +77,37 @@ export function autoSelectParentGroups(
 			const parent = state.objects[parentId] as GroupState;
 			if (!parent) continue;
 
-			// Check if all children are in the current result (not state.selectedIds)
+			// Check if all children are in the current selection
 			const allChildrenSelected =
 				parent.childIds.length > 0 &&
-				parent.childIds.every((childId) => result.includes(childId));
+				parent.childIds.every((childId) =>
+					currentSelectedIds.includes(childId),
+				);
 
 			if (allChildrenSelected) {
 				// Collect all descendants (children, grandchildren, etc.)
 				const allDescendants = collectAllDescendants(state, parentId);
 
 				// Remove all descendants from selection
-				result = result.filter((id) => !allDescendants.has(id));
+				currentSelectedIds = currentSelectedIds.filter(
+					(id) => !allDescendants.has(id),
+				);
 
 				// Add parent to selection (if not already there)
-				if (!result.includes(parentId)) {
-					result.push(parentId);
+				if (!currentSelectedIds.includes(parentId)) {
+					currentSelectedIds.push(parentId);
 					changed = true;
 				}
 			}
 		}
 	}
 
-	return result;
+	// Log warning if we hit the iteration limit (indicates potential data issue)
+	if (iterations >= MAX_ITERATIONS) {
+		console.warn(
+			"[autoSelectParentGroups] Maximum iterations reached. Possible circular reference in group hierarchy.",
+		);
+	}
+
+	return currentSelectedIds;
 }
