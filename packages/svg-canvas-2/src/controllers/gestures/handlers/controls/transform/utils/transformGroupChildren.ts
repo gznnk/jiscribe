@@ -2,8 +2,10 @@ import {
 	calcRotatedPoint,
 	degreesToRadians,
 	isTransformedFrame,
+	roundToDecimal,
 } from "@workspace/geometry";
 
+import { PRECISION } from "../../../../../../constants/precision";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../../states/objects/primitives/GroupState";
 
@@ -108,12 +110,18 @@ export function transformGroupChildren(
 			newHeight = child.height * heightScale;
 		}
 
+		// 回転角度の計算（グループの回転変化を子にも適用）
+		const rotationDelta =
+			transformRootGroupEndState.rotation - transformRootGroupStartState.rotation;
+		const newRotation = child.rotation + rotationDelta;
+
 		const updatedChild = {
 			...child,
-			cx: newChildCenter.x,
-			cy: newChildCenter.y,
-			width: newWidth,
-			height: newHeight,
+			cx: roundToDecimal(newChildCenter.x, PRECISION.COORDINATE),
+			cy: roundToDecimal(newChildCenter.y, PRECISION.COORDINATE),
+			width: roundToDecimal(newWidth, PRECISION.SIZE),
+			height: roundToDecimal(newHeight, PRECISION.SIZE),
+			rotation: roundToDecimal(newRotation, PRECISION.ROTATION),
 		};
 
 		transformedObjects[childId] = updatedChild;
