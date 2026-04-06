@@ -15,6 +15,7 @@ import {
 } from "@workspace/geometry";
 
 import { transformGroupChildren } from "./utils/transformGroupChildren";
+import { updateAffectedGroupBoundsFromRoot } from "./utils/updateAffectedGroupBoundsFromRoot";
 import { PRECISION } from "../../../../../constants/precision";
 import { updateAffectedGroupBounds } from "../../../../../operations/objects/utils/updateAffectedGroupBounds";
 import type { CanvasEvent } from "../../../../../registry/GestureHandlerRegistryTypes";
@@ -236,8 +237,12 @@ export class TransformControlHandler implements ControlStrategy {
 			objects: updatedObjects,
 		};
 
-		// 親グループのバウンディングボックスを更新
-		return updateAffectedGroupBounds(nextState, [selectedId]);
+		// グループの場合、または親グループがある場合、rootから子方向へグループ境界を更新
+		if (updatedObject.type === "group" || updatedObject.parentId) {
+			return updateAffectedGroupBoundsFromRoot(nextState, selectedId);
+		}
+
+		return nextState;
 	}
 
 	/**
