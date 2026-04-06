@@ -1,9 +1,13 @@
+import { calcFrameKeyPoints, isTransformedFrame } from "@workspace/geometry";
+import type { TransformedFrame } from "@workspace/geometry";
+
 import { gestureHandlerRegistry } from "../../../registry/GestureHandlerRegistry";
 import type {
 	CanvasEvent,
 	EventType,
 } from "../../../registry/GestureHandlerRegistryTypes";
 import type { CanvasState } from "../../../states/canvas/CanvasState";
+import { hasFrameKeyPoints } from "../../../states/objects/base/FrameWithKeyPoints";
 import type { Gesture } from "../recognizer/GestureRecognizerTypes";
 
 /**
@@ -47,9 +51,28 @@ export const handleGesture = (
 
 	// Save eventStartState on event start
 	if (EVENT_START_TYPES.includes(canvasEvent.type)) {
+		// ドラッグ中の再計算を防ぐため、開始時の全オブジェクトに keyPoints を付与してキャッシュする
+		const objectsWithKeyPoints = Object.fromEntries(
+			Object.entries(state.objects).map(([id, obj]) => {
+				if (isTransformedFrame(obj) && !hasFrameKeyPoints(obj)) {
+					return [
+						id,
+						{
+							...obj,
+							keyPoints: calcFrameKeyPoints(obj as TransformedFrame),
+						},
+					];
+				}
+				return [id, obj];
+			}),
+		);
+
 		nextState = {
 			...state,
-			eventStartState: state,
+			eventStartState: {
+				...state,
+				objects: objectsWithKeyPoints,
+			},
 		};
 	}
 
