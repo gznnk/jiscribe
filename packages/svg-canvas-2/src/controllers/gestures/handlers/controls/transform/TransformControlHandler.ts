@@ -187,6 +187,8 @@ export class TransformControlHandler implements ControlStrategy {
 			height: newHeight,
 			inversedCenterX,
 			inversedCenterY,
+			scaleX: newScaleX,
+			scaleY: newScaleY,
 		} = resizeResult;
 
 		// 新しい中心をワールド空間に変換
@@ -207,6 +209,8 @@ export class TransformControlHandler implements ControlStrategy {
 			height: roundToDecimal(Math.abs(newHeight), PRECISION.SIZE),
 			cx: roundToDecimal(newCenter.x, PRECISION.COORDINATE),
 			cy: roundToDecimal(newCenter.y, PRECISION.COORDINATE),
+			scaleX: newScaleX,
+			scaleY: newScaleY,
 		};
 
 		// eventStartState から更新されたオブジェクトマップを作成
@@ -252,6 +256,8 @@ export class TransformControlHandler implements ControlStrategy {
 		height: number;
 		inversedCenterX: number;
 		inversedCenterY: number;
+		scaleX: number;
+		scaleY: number;
 	} | null {
 		switch (anchorType) {
 			case "bottomRight":
@@ -427,11 +433,17 @@ export class TransformControlHandler implements ControlStrategy {
 		const inversedCenterX = inversedTopLeft.x + nanToZero(newWidth / 2);
 		const inversedCenterY = inversedTopLeft.y + nanToZero(newHeight / 2);
 
+		// Calculate scaleX and scaleY from the sign of newWidth and newHeight
+		const newScaleX = calcNonZeroSign(newWidth);
+		const newScaleY = calcNonZeroSign(newHeight);
+
 		return {
 			width: newWidth,
 			height: newHeight,
 			inversedCenterX,
 			inversedCenterY,
+			scaleX: newScaleX,
+			scaleY: newScaleY,
 		};
 	}
 
@@ -503,11 +515,17 @@ export class TransformControlHandler implements ControlStrategy {
 		const inversedCenterX = inversedBottomRight.x - nanToZero(newWidth / 2);
 		const inversedCenterY = inversedBottomRight.y - nanToZero(newHeight / 2);
 
+		// Calculate scaleX and scaleY from the sign of newWidth and newHeight
+		const newScaleX = calcNonZeroSign(newWidth);
+		const newScaleY = calcNonZeroSign(newHeight);
+
 		return {
 			width: newWidth,
 			height: newHeight,
 			inversedCenterX,
 			inversedCenterY,
+			scaleX: newScaleX,
+			scaleY: newScaleY,
 		};
 	}
 
@@ -579,11 +597,17 @@ export class TransformControlHandler implements ControlStrategy {
 		const inversedCenterX = inversedBottomLeft.x + nanToZero(newWidth / 2);
 		const inversedCenterY = inversedBottomLeft.y - nanToZero(newHeight / 2);
 
+		// Calculate scaleX and scaleY from the sign of newWidth and newHeight
+		const newScaleX = calcNonZeroSign(newWidth);
+		const newScaleY = calcNonZeroSign(newHeight);
+
 		return {
 			width: newWidth,
 			height: newHeight,
 			inversedCenterX,
 			inversedCenterY,
+			scaleX: newScaleX,
+			scaleY: newScaleY,
 		};
 	}
 
@@ -655,11 +679,17 @@ export class TransformControlHandler implements ControlStrategy {
 		const inversedCenterX = inversedTopRight.x - nanToZero(newWidth / 2);
 		const inversedCenterY = inversedTopRight.y + nanToZero(newHeight / 2);
 
+		// Calculate scaleX and scaleY from the sign of newWidth and newHeight
+		const newScaleX = calcNonZeroSign(newWidth);
+		const newScaleY = calcNonZeroSign(newHeight);
+
 		return {
 			width: newWidth,
 			height: newHeight,
 			inversedCenterX,
 			inversedCenterY,
+			scaleX: newScaleX,
+			scaleY: newScaleY,
 		};
 	}
 
@@ -735,11 +765,17 @@ export class TransformControlHandler implements ControlStrategy {
 		const inversedCenterX = inversedBottomCenter.x;
 		const inversedCenterY = inversedBottomCenter.y - nanToZero(finalHeight / 2);
 
+		// Calculate scaleX and scaleY from the sign of newWidth and newHeight
+		const newScaleX = calcNonZeroSign(finalWidth);
+		const newScaleY = calcNonZeroSign(finalHeight);
+
 		return {
 			width: finalWidth,
 			height: finalHeight,
 			inversedCenterX,
 			inversedCenterY,
+			scaleX: newScaleX,
+			scaleY: newScaleY,
 		};
 	}
 
@@ -815,11 +851,17 @@ export class TransformControlHandler implements ControlStrategy {
 		const inversedCenterX = inversedLeftCenter.x + nanToZero(newWidth / 2);
 		const inversedCenterY = inversedLeftCenter.y;
 
+		// Calculate scaleX and scaleY from the sign of newWidth and newHeight
+		const newScaleX = calcNonZeroSign(newWidth);
+		const newScaleY = calcNonZeroSign(newHeight);
+
 		return {
 			width: newWidth,
 			height: newHeight,
 			inversedCenterX,
 			inversedCenterY,
+			scaleX: newScaleX,
+			scaleY: newScaleY,
 		};
 	}
 
@@ -895,11 +937,17 @@ export class TransformControlHandler implements ControlStrategy {
 		const inversedCenterX = inversedTopCenter.x;
 		const inversedCenterY = inversedTopCenter.y + nanToZero(finalHeight / 2);
 
+		// Calculate scaleX and scaleY from the sign of newWidth and newHeight
+		const newScaleX = calcNonZeroSign(finalWidth);
+		const newScaleY = calcNonZeroSign(finalHeight);
+
 		return {
 			width: finalWidth,
 			height: finalHeight,
 			inversedCenterX,
 			inversedCenterY,
+			scaleX: newScaleX,
+			scaleY: newScaleY,
 		};
 	}
 
@@ -975,11 +1023,17 @@ export class TransformControlHandler implements ControlStrategy {
 		const inversedCenterX = inversedRightCenter.x - nanToZero(newWidth / 2);
 		const inversedCenterY = inversedRightCenter.y;
 
+		// Calculate scaleX and scaleY from the sign of newWidth and newHeight
+		const newScaleX = calcNonZeroSign(newWidth);
+		const newScaleY = calcNonZeroSign(newHeight);
+
 		return {
 			width: newWidth,
 			height: newHeight,
 			inversedCenterX,
 			inversedCenterY,
+			scaleX: newScaleX,
+			scaleY: newScaleY,
 		};
 	}
 
