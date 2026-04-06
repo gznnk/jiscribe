@@ -7,7 +7,6 @@ import type {
 	EventType,
 } from "../../../registry/GestureHandlerRegistryTypes";
 import type { CanvasState } from "../../../states/canvas/CanvasState";
-import { hasFrameKeyPoints } from "../../../states/objects/base/FrameWithKeyPoints";
 import type { Gesture } from "../recognizer/GestureRecognizerTypes";
 
 /**
@@ -54,7 +53,9 @@ export const handleGesture = (
 		// ドラッグ中の再計算を防ぐため、開始時の全オブジェクトに keyPoints を付与してキャッシュする
 		const objectsWithKeyPoints = Object.fromEntries(
 			Object.entries(state.objects).map(([id, obj]) => {
-				if (isTransformedFrame(obj) && !hasFrameKeyPoints(obj)) {
+				console.log("Processing object for eventStartState:", { id, obj });
+				// 既存の keyPoints があっても常に最新を計算し直す
+				if (isTransformedFrame(obj)) {
 					return [
 						id,
 						{
@@ -95,6 +96,13 @@ export const handleGesture = (
 
 	// Clear eventStartState on event end
 	if (EVENT_END_TYPES.includes(canvasEvent.type)) {
+		// keyPoints をミュータブルに削除（再描画を防ぐため）
+		for (const obj of Object.values(nextState.objects)) {
+			if ("keyPoints" in obj) {
+				delete (obj as Record<string, unknown>).keyPoints;
+			}
+		}
+
 		nextState = {
 			...nextState,
 			eventStartState: null,
