@@ -16,6 +16,7 @@ import {
 
 import { transformGroupChildren } from "./utils/transformGroupChildren";
 import { PRECISION } from "../../../../../constants/precision";
+import { updateAffectedGroupBounds } from "../../../../../operations/objects/utils/updateAffectedGroupBounds";
 import type { CanvasEvent } from "../../../../../registry/GestureHandlerRegistryTypes";
 import type { CanvasState } from "../../../../../states/canvas/CanvasState";
 import { hasFrameKeyPoints } from "../../../../../states/objects/base/FrameWithKeyPoints";
@@ -230,10 +231,13 @@ export class TransformControlHandler implements ControlStrategy {
 			Object.assign(updatedObjects, groupChildrenUpdates);
 		}
 
-		return {
+		const nextState = {
 			...state,
 			objects: updatedObjects,
 		};
+
+		// 親グループのバウンディングボックスを更新
+		return updateAffectedGroupBounds(nextState, [selectedId]);
 	}
 
 	/**
@@ -1125,10 +1129,13 @@ export class TransformControlHandler implements ControlStrategy {
 			Object.assign(updatedObjects, rotatedChildren);
 		}
 
-		return {
+		const nextState = {
 			...state,
 			objects: updatedObjects,
 		};
+
+		// 親グループのバウンディングボックスを更新
+		return updateAffectedGroupBounds(nextState, [selectedId]);
 	}
 
 	/**
