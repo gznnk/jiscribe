@@ -102,6 +102,7 @@ export function autoSelectParentGroups(
 		}
 	}
 
+	// TODO: そもそも、グループ階層の循環参照が発生していないかを検証するロジックをいれて、この処理は廃止すべき
 	// Log warning if we hit the iteration limit (indicates potential data issue)
 	if (iterations >= MAX_ITERATIONS) {
 		console.warn(

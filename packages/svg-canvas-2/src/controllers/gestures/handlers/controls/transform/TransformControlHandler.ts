@@ -21,6 +21,8 @@ import { hasFrameKeyPoints } from "../../../../../states/objects/base/FrameWithK
 import type { TransformState } from "../../../../../states/objects/base/TransformState";
 import { isTransformState } from "../../../../../states/objects/base/TransformState";
 import type { ControlStrategy } from "../ControlEventHandler";
+import { rotateGroupChildren } from "./utils/rotateGroupChildren";
+import type { GroupState } from "../../../../../states/objects/primitives/GroupState";
 
 /**
  * Transform control のアンカータイプ。
@@ -1041,10 +1043,24 @@ export class TransformControlHandler implements ControlStrategy {
 		};
 
 		// eventStartState から更新されたオブジェクトマップを作成
-		const updatedObjects = {
+		let updatedObjects = {
 			...eventStartState.objects,
 			[selectedId]: updatedObject,
 		};
+
+		// グループの場合、子オブジェクトも回転させる
+		if (updatedObject.type === "group") {
+			const rotatedChildren = rotateGroupChildren(
+				startObject as GroupState,
+				updatedObject as GroupState,
+				newRotation,
+				updatedObjects,
+			);
+			updatedObjects = {
+				...updatedObjects,
+				...rotatedChildren,
+			};
+		}
 
 		return {
 			...state,
