@@ -8,6 +8,7 @@ import type { ObjectState } from "../../../../../../states/objects/base/ObjectSt
 import type { GroupState } from "../../../../../../states/objects/primitives/GroupState";
 
 // TODO: operations として実装するべきかも
+// TODO: 引数がちょっとわかりずらい
 /**
  * グループの回転に伴い、子オブジェクトの位置と回転を更新する
  *
@@ -25,7 +26,7 @@ export function rotateGroupChildren(
 ): Record<string, ObjectState> {
 	const rotationDelta = endGroupRotation - rotationRootGroupState.rotation;
 
-	let rotatedObjects = {} as Record<string, ObjectState>;
+	const rotatedObjects = {} as Record<string, ObjectState>;
 
 	targetGroupState.childIds.forEach((childId) => {
 		const child = allObjects[childId];
@@ -47,7 +48,7 @@ export function rotateGroupChildren(
 			...child,
 			cx: rotatedChildCenter.x,
 			cy: rotatedChildCenter.y,
-			rotation: (child.rotation + rotationDelta) % 360,
+			rotation: (child.rotation + rotationDelta) % 360, // TODO: 丸め処理
 		};
 
 		rotatedObjects[childId] = updatedChild;
@@ -60,10 +61,7 @@ export function rotateGroupChildren(
 				endGroupRotation,
 				allObjects,
 			);
-			rotatedObjects = {
-				...rotatedObjects,
-				...nestedRotatedChildren,
-			};
+			Object.assign(rotatedObjects, nestedRotatedChildren);
 		}
 	});
 

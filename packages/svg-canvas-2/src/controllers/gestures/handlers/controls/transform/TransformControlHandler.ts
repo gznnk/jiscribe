@@ -14,6 +14,7 @@ import {
 	roundToDecimal,
 } from "@workspace/geometry";
 
+import { transformGroupChildren } from "./utils/transformGroupChildren";
 import { PRECISION } from "../../../../../constants/precision";
 import type { CanvasEvent } from "../../../../../registry/GestureHandlerRegistryTypes";
 import type { CanvasState } from "../../../../../states/canvas/CanvasState";
@@ -213,6 +214,17 @@ export class TransformControlHandler implements ControlStrategy {
 			...eventStartState.objects,
 			[selectedId]: updatedObject,
 		};
+
+		// グループの場合、子オブジェクトも変換する
+		if (updatedObject.type === "group") {
+			const groupChildrenUpdates = transformGroupChildren(
+				startObject as GroupState,
+				updatedObject as GroupState,
+				updatedObject as GroupState,
+				eventStartState.objects,
+			);
+			Object.assign(updatedObjects, groupChildrenUpdates);
+		}
 
 		return {
 			...state,
@@ -1043,7 +1055,7 @@ export class TransformControlHandler implements ControlStrategy {
 		};
 
 		// eventStartState から更新されたオブジェクトマップを作成
-		let updatedObjects = {
+		const updatedObjects = {
 			...eventStartState.objects,
 			[selectedId]: updatedObject,
 		};
@@ -1056,10 +1068,7 @@ export class TransformControlHandler implements ControlStrategy {
 				newRotation,
 				updatedObjects,
 			);
-			updatedObjects = {
-				...updatedObjects,
-				...rotatedChildren,
-			};
+			Object.assign(updatedObjects, rotatedChildren);
 		}
 
 		return {
