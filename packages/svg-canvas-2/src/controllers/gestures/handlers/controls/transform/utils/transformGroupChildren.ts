@@ -59,10 +59,61 @@ export function transformGroupChildren(
 			degreesToRadians(transformRootGroupEndState.rotation),
 		);
 
+		// 子オブジェクトのグループローカル座標系での回転角度（度数）
+		const childRelativeRotationDeg =
+			(child.rotation - transformRootGroupStartState.rotation + 360) % 360;
+
+		// 最適化: 角度差が0度、90度、180度、270度（平行・直角）の場合はシンプルな計算
+		let newWidth: number;
+		let newHeight: number;
+
+		if (
+			Math.abs(childRelativeRotationDeg) < 0.001 ||
+			Math.abs(childRelativeRotationDeg - 180) < 0.001
+		) {
+			// 0度または180度: 平行
+			newWidth = child.width * groupScaleX;
+			newHeight = child.height * groupScaleY;
+		} else if (
+			Math.abs(childRelativeRotationDeg - 90) < 0.001 ||
+			Math.abs(childRelativeRotationDeg - 270) < 0.001
+		) {
+			// 90度または270度: 直角
+			newWidth = child.width * groupScaleY;
+			newHeight = child.height * groupScaleX;
+		} else {
+			// 一般的な角度: 三角関数で厳密計算
+			const childRelativeRotation = degreesToRadians(childRelativeRotationDeg);
+			const cosTheta = Math.cos(childRelativeRotation);
+			const sinTheta = Math.sin(childRelativeRotation);
+
+			// グループの拡縮を子オブジェクトの回転を考慮してwidth/heightに分解
+			// 子オブジェクトのwidth軸方向の単位ベクトル: (cos(θ), sin(θ))
+			// このベクトルがグループのscaleで変形される: (scaleX * cos(θ), scaleY * sin(θ))
+			// 変形後のベクトルの長さが新しいwidthのスケール係数
+			const widthScaleX = groupScaleX * cosTheta;
+			const widthScaleY = groupScaleY * sinTheta;
+			const widthScale = Math.sqrt(
+				widthScaleX * widthScaleX + widthScaleY * widthScaleY,
+			);
+
+			// 同様にheight軸方向（width軸に対して90度回転）: (-sin(θ), cos(θ))
+			const heightScaleX = groupScaleX * -sinTheta;
+			const heightScaleY = groupScaleY * cosTheta;
+			const heightScale = Math.sqrt(
+				heightScaleX * heightScaleX + heightScaleY * heightScaleY,
+			);
+
+			newWidth = child.width * widthScale;
+			newHeight = child.height * heightScale;
+		}
+
 		const updatedChild = {
 			...child,
 			cx: newChildCenter.x,
 			cy: newChildCenter.y,
+			width: newWidth,
+			height: newHeight,
 		};
 
 		transformedObjects[childId] = updatedChild;
