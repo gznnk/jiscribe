@@ -27,7 +27,7 @@ export function calculateMultiSelectBounds(
 	}
 
 	// 選択されたオブジェクトのTransformedFrameを収集（グループも展開）
-	const frames = collectFrames(objects, selectedIds);
+	const frames = collectSelectedFrames(objects, selectedIds);
 
 	if (frames.length === 0) {
 		return undefined;
@@ -42,26 +42,53 @@ export function calculateMultiSelectBounds(
 }
 
 /**
- * 指定されたIDリストからTransformedFrameを再帰的に収集
- * グループの場合は子要素を展開して収集
+ * 選択されたオブジェクトのTransformedFrameを収集
+ * グループの場合は再帰的に子要素を展開して収集
  */
-function collectFrames(
+function collectSelectedFrames(
 	objects: Record<string, ObjectState>,
-	ids: string[],
+	selectedIds: string[],
 ): TransformedFrame[] {
 	const frames: TransformedFrame[] = [];
 
-	for (const id of ids) {
-		const obj = objects[id];
+	for (const selectedId of selectedIds) {
+		const obj = objects[selectedId];
 		if (!obj) continue;
 
 		if (obj.type === "group") {
 			// グループの場合は再帰的に子を収集
 			const group = obj as GroupState;
-			frames.push(...collectFrames(objects, group.childIds));
+			frames.push(...collectChildFrames(objects, group.childIds));
 		} else if (isTransformedFrame(obj)) {
 			// TransformedFrameを持つオブジェクトの場合は追加
 			frames.push(obj);
+		}
+	}
+
+	return frames;
+}
+
+/**
+ * 子要素のTransformedFrameを再帰的に収集
+ * （calculateGroupOrientedBoundsから流用）
+ */
+function collectChildFrames(
+	objects: Record<string, ObjectState>,
+	childIds: string[],
+): TransformedFrame[] {
+	const frames: TransformedFrame[] = [];
+
+	for (const childId of childIds) {
+		const child = objects[childId];
+		if (!child) continue;
+
+		if (child.type === "group") {
+			// グループの場合は再帰的に子を収集
+			const nestedGroup = child as GroupState;
+			frames.push(...collectChildFrames(objects, nestedGroup.childIds));
+		} else if (isTransformedFrame(child)) {
+			// TransformedFrameを持つオブジェクトの場合は追加
+			frames.push(child);
 		}
 	}
 
