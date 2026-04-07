@@ -14,6 +14,8 @@ import {
 	roundToDecimal,
 } from "@workspace/geometry";
 
+import { transformGroupChildren } from "./utils/transformGroupChildren";
+import { updateAffectedGroupBoundsFromRoot } from "./utils/updateAffectedGroupBoundsFromRoot";
 import { PRECISION } from "../../../../../constants/precision";
 import { updateAffectedGroupBounds } from "../../../../../operations/objects/utils/updateAffectedGroupBounds";
 import type { CanvasEvent } from "../../../../../registry/GestureHandlerRegistryTypes";
@@ -21,13 +23,9 @@ import type { CanvasState } from "../../../../../states/canvas/CanvasState";
 import { hasFrameKeyPoints } from "../../../../../states/objects/base/FrameWithKeyPoints";
 import type { TransformState } from "../../../../../states/objects/base/TransformState";
 import { isTransformState } from "../../../../../states/objects/base/TransformState";
-import type { GroupState } from "../../../../../states/objects/primitives/GroupState";
-import { calculateMultiSelectBounds } from "../../../../ui/utils/calculateMultiSelectBounds";
 import type { ControlStrategy } from "../ControlEventHandler";
-import { distributeTransformToSelection } from "./utils/distributeTransformToSelection";
 import { rotateGroupChildren } from "./utils/rotateGroupChildren";
-import { transformGroupChildren } from "./utils/transformGroupChildren";
-import { updateAffectedGroupBoundsFromRoot } from "./utils/updateAffectedGroupBoundsFromRoot";
+import type { GroupState } from "../../../../../states/objects/primitives/GroupState";
 
 /**
  * Transform control のアンカータイプ。
@@ -123,17 +121,13 @@ export class TransformControlHandler implements ControlStrategy {
 		event: CanvasEvent,
 		anchorType: TransformAnchorType,
 	): CanvasState {
-		// 回転は複数選択では非対応（TransformControlsLayerで表示しない）
+		// 回転は別処理
 		if (anchorType === "rotation") {
 			return this.handleRotationDrag(state, event);
 		}
 
-		// 複数選択の場合は仮想グループの変形として処理
-		if (state.selectedIds.length > 1) {
-			return this.handleMultiSelectDrag(state, event, anchorType);
-		}
-
-		// 単一選択の場合は既存のロジック
+		// リサイズ処理の共通前処理
+		// 選択されているオブジェクトを取得（正確に1つであるべき）
 		if (state.selectedIds.length !== 1) {
 			return state;
 		}
@@ -1067,113 +1061,6 @@ export class TransformControlHandler implements ControlStrategy {
 		};
 		// ドラッグハンドラーをもう一度呼び出して確定
 		return this.handleDrag(nextState, event, anchorType);
-	}
-
-	/**
-	 * 複数選択時のドラッグを処理（仮想グループの変形）。
-	 */
-	private handleMultiSelectDrag(
-		state: CanvasState,
-		event: CanvasEvent,
-		anchorType: TransformAnchorType,
-	): CanvasState {
-		const eventStartState = state.eventStartState;
-		if (!eventStartState) {
-			return state;
-		}
-
-		// 変形開始時の仮想バウンディングボックスを計算
-		const startVirtualBounds = calculateMultiSelectBounds(
-			eventStartState.objects,
-			state.selectedIds,
-		);
-
-		if (!startVirtualBounds) {
-			return state;
-		}
-
-		// 仮想バウンディングボックスを単一オブジェクトとして変形計算
-		// rotation は常に 0、scaleX/scaleY は 1 なので、TransformState として扱う
-		const startFrame = {
-			...startVirtualBounds,
-			lockAspectRatio: false, // 複数選択時はアスペクト比固定なし（Shift キーで対応）
-		} as TransformedFrame & TransformState;
-
-		const radians = degreesToRadians(startFrame.rotation);
-
-		const startFrameKeyPoints = calcFrameKeyPoints(startFrame);
-
-		const { scaleX, scaleY } = startFrame;
-		const aspectRatio = startFrame.width / startFrame.height;
-		const lockAspectRatio = startFrame.lockAspectRatio ?? false;
-		const doKeepProportion = lockAspectRatio || event.mods.shift;
-		const isSwapped = (startFrame.rotation + 405) % 180 > 90;
-
-		// 既存のリサイズ計算ロジックを使用
-		const resizeResult = this.calculateResize(
-			anchorType,
-			startFrame,
-			event.last.x,
-			event.last.y,
-			startFrameKeyPoints,
-			radians,
-			aspectRatio,
-			doKeepProportion,
-			isSwapped,
-			scaleX,
-			scaleY,
-		);
-
-		if (!resizeResult) {
-			return state;
-		}
-
-		const {
-			width: newWidth,
-			height: newHeight,
-			inversedCenterX,
-			inversedCenterY,
-			scaleX: newScaleX,
-			scaleY: newScaleY,
-		} = resizeResult;
-
-		// 新しい中心をワールド空間に変換
-		const newCenter = calcAffineTransformedPoint(
-			inversedCenterX,
-			inversedCenterY,
-			1,
-			1,
-			radians,
-			startFrame.cx,
-			startFrame.cy,
-		);
-
-		// 変形後の仮想バウンディングボックス
-		const endVirtualBounds: TransformedFrame = {
-			cx: roundToDecimal(newCenter.x, PRECISION.COORDINATE),
-			cy: roundToDecimal(newCenter.y, PRECISION.COORDINATE),
-			width: roundToDecimal(Math.abs(newWidth), PRECISION.SIZE),
-			height: roundToDecimal(Math.abs(newHeight), PRECISION.SIZE),
-			rotation: startFrame.rotation, // 回転は変更しない（常に0）
-			scaleX: newScaleX,
-			scaleY: newScaleY,
-		};
-
-		// 変形を各選択オブジェクトに分配
-		const updatedObjects = distributeTransformToSelection(
-			state.selectedIds,
-			eventStartState.objects,
-			startVirtualBounds,
-			endVirtualBounds,
-		);
-
-		const nextState = {
-			...state,
-			objects: updatedObjects,
-		};
-
-		// 親グループのバウンディングボックスを更新
-		return updateAffectedGroupBounds(nextState, state.selectedIds);
 	}
 
 	/**
