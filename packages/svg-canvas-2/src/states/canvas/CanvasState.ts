@@ -3,6 +3,7 @@ import type { Point } from "@workspace/geometry";
 import type { Viewport } from "./Viewport";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 import type { ObjectState } from "../objects/base/ObjectState";
+import type { GroupState } from "../objects/primitives/GroupState";
 
 export type CanvasState = {
 	/**
@@ -91,4 +92,12 @@ export type CanvasState = {
 	 * null なら全セクション閉じた状態。
 	 */
 	objectMenuOpenId: string | null;
+
+	/**
+	 * 複数選択されたオブジェクトがグループ化されている場合の、グループ状態。
+	 * multiSelectGroup が null でない場合、selectedIds 内のオブジェクトは全てこのグループの子として扱われる。
+	 * グループ化された選択状態を管理するために使用される。
+	 * グループ化されていない場合は null。
+	 */
+	multiSelectGroup: GroupState | null;
 };

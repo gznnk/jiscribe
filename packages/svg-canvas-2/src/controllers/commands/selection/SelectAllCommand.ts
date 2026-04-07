@@ -1,3 +1,4 @@
+import { createMultiSelectGroup } from "../../../operations/objects/utils/createMultiSelectGroup";
 import type { Command } from "../CommandTypes";
 
 export const SelectAllCommand: Command = {
@@ -18,6 +19,7 @@ export const SelectAllCommand: Command = {
 		return {
 			...state,
 			selectedIds: [...state.rootIds],
+			multiSelectGroup: createMultiSelectGroup(state.rootIds, state.objects),
 		};
 	},
 };

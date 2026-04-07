@@ -14,6 +14,7 @@ import {
 	roundToDecimal,
 } from "@workspace/geometry";
 
+import { rotateGroupChildren } from "./utils/rotateGroupChildren";
 import { transformGroupChildren } from "./utils/transformGroupChildren";
 import { updateAffectedGroupBoundsFromRoot } from "./utils/updateAffectedGroupBoundsFromRoot";
 import { PRECISION } from "../../../../../constants/precision";
@@ -23,9 +24,8 @@ import type { CanvasState } from "../../../../../states/canvas/CanvasState";
 import { hasFrameKeyPoints } from "../../../../../states/objects/base/FrameWithKeyPoints";
 import type { TransformState } from "../../../../../states/objects/base/TransformState";
 import { isTransformState } from "../../../../../states/objects/base/TransformState";
-import type { ControlStrategy } from "../ControlEventHandler";
-import { rotateGroupChildren } from "./utils/rotateGroupChildren";
 import type { GroupState } from "../../../../../states/objects/primitives/GroupState";
+import type { ControlStrategy } from "../ControlEventHandler";
 
 /**
  * Transform control のアンカータイプ。
@@ -127,26 +127,42 @@ export class TransformControlHandler implements ControlStrategy {
 		}
 
 		// リサイズ処理の共通前処理
-		// 選択されているオブジェクトを取得（正確に1つであるべき）
-		if (state.selectedIds.length !== 1) {
-			return state;
-		}
-
-		const selectedId = state.selectedIds[0];
 		const eventStartState = state.eventStartState;
 		if (!eventStartState) {
 			return state;
 		}
-		const startObject = eventStartState.objects[selectedId];
-		if (
-			!startObject ||
-			!isTransformedFrame(startObject) ||
-			!isTransformState(startObject)
-		) {
-			return state;
+
+		// 対象のフレームを決定（複数選択時は multiSelectGroup、単一選択時は選択オブジェクト）
+		let startFrame: (TransformedFrame & TransformState) | null = null;
+		let selectedId: string | null = null;
+		const isMultiSelect = state.selectedIds.length > 1;
+
+		if (isMultiSelect) {
+			// 複数選択の場合は multiSelectGroup を使用
+			const multiSelectGroup = eventStartState.multiSelectGroup;
+			if (
+				multiSelectGroup &&
+				isTransformedFrame(multiSelectGroup) &&
+				isTransformState(multiSelectGroup)
+			) {
+				startFrame = multiSelectGroup as TransformedFrame & TransformState;
+			}
+		} else if (state.selectedIds.length === 1) {
+			// 単一選択の場合
+			selectedId = state.selectedIds[0];
+			const startObject = eventStartState.objects[selectedId];
+			if (
+				startObject &&
+				isTransformedFrame(startObject) &&
+				isTransformState(startObject)
+			) {
+				startFrame = startObject as TransformedFrame & TransformState;
+			}
 		}
 
-		const startFrame = startObject as TransformedFrame & TransformState;
+		if (!startFrame) {
+			return state;
+		}
 
 		// 逆アフィン変換されたカーソル位置を計算（オブジェクトのローカル空間内）
 		const radians = degreesToRadians(startFrame.rotation);
@@ -204,9 +220,9 @@ export class TransformControlHandler implements ControlStrategy {
 			startFrame.cy,
 		);
 
-		// 新しい寸法と中心でオブジェクトを更新
-		const updatedObject = {
-			...startObject,
+		// 新しい寸法と中心でオブジェクト/グループを更新
+		const updatedFrame = {
+			...startFrame,
 			width: roundToDecimal(Math.abs(newWidth), PRECISION.SIZE),
 			height: roundToDecimal(Math.abs(newHeight), PRECISION.SIZE),
 			cx: roundToDecimal(newCenter.x, PRECISION.COORDINATE),
@@ -218,28 +234,77 @@ export class TransformControlHandler implements ControlStrategy {
 		// eventStartState から更新されたオブジェクトマップを作成
 		const updatedObjects = {
 			...eventStartState.objects,
-			[selectedId]: updatedObject,
 		};
 
-		// グループの場合、子オブジェクトも変換する
-		if (updatedObject.type === "group") {
+		let nextState: CanvasState;
+
+		if (isMultiSelect) {
+			// 複数選択の場合: multiSelectGroup を基準に各選択オブジェクトを変換
+			const startGroup = startFrame as GroupState;
+			const updatedGroup: GroupState = {
+				...startGroup,
+				...updatedFrame,
+			};
+
 			const groupChildrenUpdates = transformGroupChildren(
-				startObject as GroupState,
-				updatedObject as GroupState,
-				updatedObject as GroupState,
+				startGroup,
+				updatedGroup,
+				startGroup,
 				eventStartState.objects,
 			);
 			Object.assign(updatedObjects, groupChildrenUpdates);
-		}
 
-		const nextState = {
-			...state,
-			objects: updatedObjects,
-		};
+			// multiSelectGroup も更新
+			nextState = {
+				...state,
+				objects: updatedObjects,
+				multiSelectGroup: updatedGroup,
+			};
 
-		// グループの場合、または親グループがある場合、rootから子方向へグループ境界を更新
-		if (updatedObject.type === "group" || updatedObject.parentId) {
-			return updateAffectedGroupBoundsFromRoot(nextState, selectedId);
+			// 各選択オブジェクトの親グループ境界を更新
+			for (const id of state.selectedIds) {
+				const obj = nextState.objects[id];
+				if (obj && (obj.type === "group" || obj.parentId)) {
+					nextState = updateAffectedGroupBoundsFromRoot(nextState, id);
+				}
+			}
+		} else {
+			// 単一選択の場合: 選択オブジェクト自身を更新
+			if (!selectedId) {
+				return state;
+			}
+
+			const startObject = eventStartState.objects[selectedId];
+			if (!startObject) {
+				return state;
+			}
+
+			const updatedObject = {
+				...startObject,
+				...updatedFrame,
+			};
+			updatedObjects[selectedId] = updatedObject;
+
+			// グループの場合、子オブジェクトも変換する
+			if (updatedObject.type === "group") {
+				const groupChildrenUpdates = transformGroupChildren(
+					startObject as GroupState,
+					updatedObject as GroupState,
+					updatedObject as GroupState,
+					eventStartState.objects,
+				);
+				Object.assign(updatedObjects, groupChildrenUpdates);
+			}
+
+			nextState = {
+				...state,
+				objects: updatedObjects,
+			};
+
+			// グループの場合、または親グループがある場合、rootから子方向へグループ境界を更新
+			if (updatedObject.type === "group" || updatedObject.parentId) {
+				return updateAffectedGroupBoundsFromRoot(nextState, selectedId);
+			}
 		}
 
 		return nextState;
@@ -1054,13 +1119,13 @@ export class TransformControlHandler implements ControlStrategy {
 		event: CanvasEvent,
 		anchorType: TransformAnchorType,
 	): CanvasState {
-		// Disable edge scrolling on drag end
-		const nextState = {
-			...state,
-			edgeScrollEnabled: false,
+		// ドラッグ中の状態更新を適用して最終状態を計算
+		const nextState = this.handleDrag({ ...state }, event, anchorType);
+
+		return {
+			...nextState,
+			edgeScrollEnabled: false, // Disable edge scrolling on drag end
 		};
-		// ドラッグハンドラーをもう一度呼び出して確定
-		return this.handleDrag(nextState, event, anchorType);
 	}
 
 	/**
@@ -1070,18 +1135,32 @@ export class TransformControlHandler implements ControlStrategy {
 		state: CanvasState,
 		event: CanvasEvent,
 	): CanvasState {
-		// 選択されているオブジェクトを取得（正確に1つであるべき）
-		if (state.selectedIds.length !== 1) {
-			return state;
-		}
-
-		const selectedId = state.selectedIds[0];
 		const eventStartState = state.eventStartState;
 		if (!eventStartState) {
 			return state;
 		}
-		const startObject = eventStartState.objects[selectedId];
-		if (!startObject || !isTransformedFrame(startObject)) {
+
+		// 対象のフレームを決定（複数選択時は multiSelectGroup、単一選択時は選択オブジェクト）
+		let startFrame: TransformedFrame | null = null;
+		let selectedId: string | null = null;
+		const isMultiSelect = state.selectedIds.length > 1;
+
+		if (isMultiSelect) {
+			// 複数選択の場合は multiSelectGroup を使用
+			const multiSelectGroup = eventStartState.multiSelectGroup;
+			if (multiSelectGroup && isTransformedFrame(multiSelectGroup)) {
+				startFrame = multiSelectGroup;
+			}
+		} else if (state.selectedIds.length === 1) {
+			// 単一選択の場合
+			selectedId = state.selectedIds[0];
+			const startObject = eventStartState.objects[selectedId];
+			if (startObject && isTransformedFrame(startObject)) {
+				startFrame = startObject;
+			}
+		}
+
+		if (!startFrame) {
 			return state;
 		}
 
@@ -1091,18 +1170,18 @@ export class TransformControlHandler implements ControlStrategy {
 
 		// 中心点からカーソルへのベクトル角度を計算
 		const radian = calcVectorAngle(
-			startObject.cx,
-			startObject.cy,
+			startFrame.cx,
+			startFrame.cy,
 			cursorX,
 			cursorY,
 		);
 
 		// 回転ポイントの基準角度を計算（右上方向）
 		const rotatePointRadian = calcVectorAngle(
-			startObject.cx,
-			startObject.cy,
-			startObject.cx + startObject.width,
-			startObject.cy - startObject.height,
+			startFrame.cx,
+			startFrame.cy,
+			startFrame.cx + startFrame.width,
+			startFrame.cy - startFrame.height,
 		);
 
 		// 新しい回転角度を計算（0-360度、小数点第3位で丸める）
@@ -1111,36 +1190,81 @@ export class TransformControlHandler implements ControlStrategy {
 			PRECISION.ROTATION,
 		);
 
-		// 回転のみを更新したオブジェクトを作成
-		const updatedObject = {
-			...startObject,
-			rotation: newRotation,
-		};
-
 		// eventStartState から更新されたオブジェクトマップを作成
 		const updatedObjects = {
 			...eventStartState.objects,
-			[selectedId]: updatedObject,
 		};
 
-		// グループの場合、子オブジェクトも回転させる
-		if (updatedObject.type === "group") {
+		let nextState: CanvasState;
+
+		if (isMultiSelect) {
+			// 複数選択の場合: multiSelectGroup を基準に各選択オブジェクトを回転
+			const startGroup = startFrame as GroupState;
+			const updatedGroup: GroupState = {
+				...startGroup,
+				rotation: newRotation,
+			};
+
 			const rotatedChildren = rotateGroupChildren(
-				startObject as GroupState,
-				updatedObject as GroupState,
+				startGroup,
+				updatedGroup,
 				newRotation,
 				updatedObjects,
 			);
 			Object.assign(updatedObjects, rotatedChildren);
+
+			// multiSelectGroup も更新
+			nextState = {
+				...state,
+				objects: updatedObjects,
+				multiSelectGroup: updatedGroup,
+			};
+
+			// 各選択オブジェクトの親グループ境界を更新
+			for (const id of state.selectedIds) {
+				const obj = nextState.objects[id];
+				if (obj && (obj.type === "group" || obj.parentId)) {
+					nextState = updateAffectedGroupBoundsFromRoot(nextState, id);
+				}
+			}
+		} else {
+			// 単一選択の場合: 選択オブジェクト自身を回転
+			if (!selectedId) {
+				return state;
+			}
+
+			const startObject = eventStartState.objects[selectedId];
+			if (!startObject) {
+				return state;
+			}
+
+			const updatedObject = {
+				...startObject,
+				rotation: newRotation,
+			};
+			updatedObjects[selectedId] = updatedObject;
+
+			// グループの場合、子オブジェクトも回転させる
+			if (updatedObject.type === "group") {
+				const rotatedChildren = rotateGroupChildren(
+					startObject as GroupState,
+					updatedObject as GroupState,
+					newRotation,
+					updatedObjects,
+				);
+				Object.assign(updatedObjects, rotatedChildren);
+			}
+
+			nextState = {
+				...state,
+				objects: updatedObjects,
+			};
+
+			// 親グループのバウンディングボックスを更新
+			return updateAffectedGroupBounds(nextState, [selectedId]);
 		}
 
-		const nextState = {
-			...state,
-			objects: updatedObjects,
-		};
-
-		// 親グループのバウンディングボックスを更新
-		return updateAffectedGroupBounds(nextState, [selectedId]);
+		return nextState;
 	}
 
 	/**

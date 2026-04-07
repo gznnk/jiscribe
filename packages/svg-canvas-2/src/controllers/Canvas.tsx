@@ -148,6 +148,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 					<TransformControlsLayer
 						selectedIds={state.selectedIds}
 						objects={state.objects}
+						multiSelectGroup={state.multiSelectGroup}
 						zoom={state.viewport.zoom}
 					/>
 					<DragGhost

@@ -3,6 +3,7 @@ import type {
 	ClickEventHandlerParams,
 } from "../../../../registry/ObjectRegistryTypes";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import { createMultiSelectGroup } from "../createMultiSelectGroup";
 import { determineSelection } from "../determineSelection";
 
 /**
@@ -40,8 +41,15 @@ export const DefaultClickEventHandler: ClickEventHandler<ObjectState> = (
 		return canvasState;
 	}
 
+	// Create multiSelectGroup if multiple items are selected
+	let multiSelectGroup = null;
+	if (1 < selectedIds.length) {
+		multiSelectGroup = createMultiSelectGroup(selectedIds, canvasState.objects);
+	}
+
 	return {
 		...canvasState,
 		selectedIds,
+		multiSelectGroup,
 	};
 };

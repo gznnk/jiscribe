@@ -149,6 +149,7 @@ describe("CanvasMapper", () => {
 				ghostPosition: null,
 				areaSelection: null,
 				objectMenuOpenId: null,
+				multiSelectGroup: null,
 				objects: {
 					"rect-1": {
 						id: "rect-1",

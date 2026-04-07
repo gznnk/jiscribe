@@ -60,11 +60,27 @@ export const PolyDragEventHandler: DragEventHandler<ObjectState> = (
 		}
 	}
 
-	// Update the canvas state with all moved objects
-	return {
+	// Create the next canvas state with all moved objects
+	const nextState = {
 		...canvasState,
 		objects: updatedObjects,
 	};
+
+	// If multiple objects are selected, we may want to update the multiSelectGroup bounds as well
+	const multiSelectGroup = canvasState.multiSelectGroup;
+	const eventStartMultiSelectGroup =
+		canvasState.eventStartState?.multiSelectGroup;
+	if (multiSelectGroup && eventStartMultiSelectGroup) {
+		// Move the multiSelectGroup by the same delta to keep it in sync with the moved objects
+		nextState.multiSelectGroup = {
+			...multiSelectGroup,
+			cx: eventStartMultiSelectGroup.cx + delta.x,
+			cy: eventStartMultiSelectGroup.cy + delta.y,
+		};
+	}
+
+	// Update the canvas state with all moved objects
+	return nextState;
 };
 
 /**

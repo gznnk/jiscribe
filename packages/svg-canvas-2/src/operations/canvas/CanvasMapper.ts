@@ -84,6 +84,7 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 		ghostPosition: null,
 		areaSelection: null,
 		objectMenuOpenId: null,
+		multiSelectGroup: null,
 	};
 };
 

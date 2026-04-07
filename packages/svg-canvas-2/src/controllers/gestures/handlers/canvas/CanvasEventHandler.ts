@@ -5,6 +5,7 @@ import { PRECISION } from "../../../../constants/precision";
 import { ZOOM } from "../../../../constants/zoom";
 // TODO: operationsのautoSelectParentGroupsを直接呼び出すのは少し違和感がある。将来的にはCanvasEventHandler内で完結させるか、別のユーティリティ関数として切り出すことを検討。
 import { autoSelectParentGroups } from "../../../../operations/objects/utils/autoSelectParentGroups";
+import { createMultiSelectGroup } from "../../../../operations/objects/utils/createMultiSelectGroup";
 import type {
 	CanvasEvent,
 	GestureHandler,
@@ -152,10 +153,19 @@ export const CanvasEventHandler: GestureHandler = {
 
 				const selectedIds = autoSelectParentGroups(nextState, hitIds);
 
+				let multiSelectGroup = null;
+				if (selectedIds.length > 1) {
+					multiSelectGroup = createMultiSelectGroup(
+						selectedIds,
+						nextState.objects,
+					);
+				}
+
 				nextState = {
 					...nextState,
 					areaSelection: { ...area, endX, endY },
 					selectedIds,
+					multiSelectGroup,
 				};
 				return nextState;
 			}
@@ -179,6 +189,8 @@ export const CanvasEventHandler: GestureHandler = {
 				contextMenuPosition: null,
 				// ObjectMenu の展開をリセット
 				objectMenuOpenId: null,
+				// マルチセレクトグループをリセット
+				multiSelectGroup: null,
 			};
 		}
 
