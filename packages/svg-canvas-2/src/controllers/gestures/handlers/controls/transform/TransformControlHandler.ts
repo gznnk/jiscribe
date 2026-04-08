@@ -17,7 +17,7 @@ import {
 import { calcMultiSelectGroupBounds } from "./utils/calcMultiSelectGroupBounds";
 import { rotateGroupChildren } from "./utils/rotateGroupChildren";
 import { transformGroupChildren } from "./utils/transformGroupChildren";
-import { updateAffectedGroupBoundsFromRoot } from "./utils/updateAffectedGroupBoundsFromRoot";
+import { updateGroupBoundsFromRoot } from "./utils/updateGroupBoundsFromRoot";
 import { PRECISION } from "../../../../../constants/precision";
 import { updateAffectedGroupBounds } from "../../../../../operations/objects/utils/updateAffectedGroupBounds";
 import type { CanvasEvent } from "../../../../../registry/GestureHandlerRegistryTypes";
@@ -264,7 +264,7 @@ export class TransformControlHandler implements ControlStrategy {
 			for (const id of state.selectedIds) {
 				const obj = nextState.objects[id];
 				if (obj && (obj.type === "group" || obj.parentId)) {
-					nextState = updateAffectedGroupBoundsFromRoot(nextState, id);
+					nextState = updateGroupBoundsFromRoot(nextState, id);
 				}
 			}
 
@@ -318,7 +318,7 @@ export class TransformControlHandler implements ControlStrategy {
 
 			// グループの場合、または親グループがある場合、rootから子方向へグループ境界を更新
 			if (updatedObject.type === "group" || updatedObject.parentId) {
-				return updateAffectedGroupBoundsFromRoot(nextState, selectedId);
+				return updateGroupBoundsFromRoot(nextState, selectedId);
 			}
 		}
 
@@ -1158,7 +1158,7 @@ export class TransformControlHandler implements ControlStrategy {
 			for (const id of state.selectedIds) {
 				const obj = nextState.objects[id];
 				if (obj && (obj.type === "group" || obj.parentId)) {
-					nextState = updateAffectedGroupBoundsFromRoot(nextState, id);
+					nextState = updateGroupBoundsFromRoot(nextState, id);
 				}
 			}
 		} else {
