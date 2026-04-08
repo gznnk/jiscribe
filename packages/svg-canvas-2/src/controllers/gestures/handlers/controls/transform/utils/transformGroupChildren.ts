@@ -8,6 +8,7 @@ import {
 import { PRECISION } from "../../../../../../constants/precision";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../../states/objects/primitives/GroupState";
+import { normalizeRotation } from "../../../../../../utils/normalizeRotation";
 
 export function transformGroupChildren(
 	transformRootGroupStartState: GroupState,
@@ -114,7 +115,7 @@ export function transformGroupChildren(
 		const rotationDelta =
 			transformRootGroupEndState.rotation -
 			transformRootGroupStartState.rotation;
-		const newRotation = child.rotation + rotationDelta;
+		const newRotation = normalizeRotation(child.rotation + rotationDelta);
 
 		// scaleX/scaleYの計算（1 or -1 の反転）
 		const newScaleX =
@@ -132,7 +133,7 @@ export function transformGroupChildren(
 			cy: roundToDecimal(newChildCenter.y, PRECISION.COORDINATE),
 			width: roundToDecimal(newWidth, PRECISION.SIZE),
 			height: roundToDecimal(newHeight, PRECISION.SIZE),
-			rotation: roundToDecimal(newRotation, PRECISION.ROTATION),
+			rotation: newRotation,
 			scaleX: newScaleX,
 			scaleY: newScaleY,
 		};

@@ -53,7 +53,7 @@ export const handleGesture = (
 		// ドラッグ中の再計算を防ぐため、開始時の全オブジェクトに keyPoints を付与してキャッシュする
 		const objectsWithKeyPoints = Object.fromEntries(
 			Object.entries(state.objects).map(([id, obj]) => {
-				console.log("Processing object for eventStartState:", { id, obj });
+				// console.log("Processing object for eventStartState:", { id, obj });
 				// 既存の keyPoints があっても常に最新を計算し直す
 				if (isTransformedFrame(obj)) {
 					return [

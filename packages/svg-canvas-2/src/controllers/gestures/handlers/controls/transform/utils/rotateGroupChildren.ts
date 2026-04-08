@@ -6,6 +6,7 @@ import {
 
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../../states/objects/primitives/GroupState";
+import { normalizeRotation } from "../../../../../../utils/normalizeRotation";
 
 // TODO: operations として実装するべきかも
 // TODO: 引数がちょっとわかりずらい
@@ -48,7 +49,7 @@ export function rotateGroupChildren(
 			...child,
 			cx: rotatedChildCenter.x,
 			cy: rotatedChildCenter.y,
-			rotation: (child.rotation + rotationDelta) % 360, // TODO: 丸め処理
+			rotation: normalizeRotation(child.rotation + rotationDelta),
 		};
 
 		rotatedObjects[childId] = updatedChild;
