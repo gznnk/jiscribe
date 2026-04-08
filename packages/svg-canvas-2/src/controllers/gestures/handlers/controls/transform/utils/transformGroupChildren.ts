@@ -112,8 +112,19 @@ export function transformGroupChildren(
 
 		// 回転角度の計算（グループの回転変化を子にも適用）
 		const rotationDelta =
-			transformRootGroupEndState.rotation - transformRootGroupStartState.rotation;
+			transformRootGroupEndState.rotation -
+			transformRootGroupStartState.rotation;
 		const newRotation = child.rotation + rotationDelta;
+
+		// scaleX/scaleYの計算（1 or -1 の反転）
+		const newScaleX =
+			child.scaleX *
+			transformRootGroupStartState.scaleX *
+			transformRootGroupEndState.scaleX;
+		const newScaleY =
+			child.scaleY *
+			transformRootGroupStartState.scaleY *
+			transformRootGroupEndState.scaleY;
 
 		const updatedChild = {
 			...child,
@@ -122,6 +133,8 @@ export function transformGroupChildren(
 			width: roundToDecimal(newWidth, PRECISION.SIZE),
 			height: roundToDecimal(newHeight, PRECISION.SIZE),
 			rotation: roundToDecimal(newRotation, PRECISION.ROTATION),
+			scaleX: newScaleX,
+			scaleY: newScaleY,
 		};
 
 		transformedObjects[childId] = updatedChild;

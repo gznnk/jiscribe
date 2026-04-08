@@ -177,7 +177,6 @@ export class TransformControlHandler implements ControlStrategy {
 
 		const isSwapped = (startFrame.rotation + 405) % 180 > 90;
 
-		const { scaleX, scaleY } = startFrame;
 		const aspectRatio = startFrame.width / startFrame.height;
 		const lockAspectRatio = startFrame.lockAspectRatio ?? false;
 		const doKeepProportion = lockAspectRatio || event.mods.shift;
@@ -193,8 +192,6 @@ export class TransformControlHandler implements ControlStrategy {
 			aspectRatio,
 			doKeepProportion,
 			isSwapped,
-			scaleX,
-			scaleY,
 		);
 
 		if (!resizeResult) {
@@ -340,8 +337,6 @@ export class TransformControlHandler implements ControlStrategy {
 		aspectRatio: number,
 		doKeepProportion: boolean,
 		isSwapped: boolean,
-		scaleX: number,
-		scaleY: number,
 	): {
 		width: number;
 		height: number;
@@ -360,8 +355,6 @@ export class TransformControlHandler implements ControlStrategy {
 					radians,
 					aspectRatio,
 					doKeepProportion,
-					scaleX,
-					scaleY,
 				);
 			case "topLeft":
 				return this.calculateTopLeftResize(
@@ -372,8 +365,6 @@ export class TransformControlHandler implements ControlStrategy {
 					radians,
 					aspectRatio,
 					doKeepProportion,
-					scaleX,
-					scaleY,
 				);
 			case "topRight":
 				return this.calculateTopRightResize(
@@ -384,8 +375,6 @@ export class TransformControlHandler implements ControlStrategy {
 					radians,
 					aspectRatio,
 					doKeepProportion,
-					scaleX,
-					scaleY,
 				);
 			case "bottomLeft":
 				return this.calculateBottomLeftResize(
@@ -396,8 +385,6 @@ export class TransformControlHandler implements ControlStrategy {
 					radians,
 					aspectRatio,
 					doKeepProportion,
-					scaleX,
-					scaleY,
 				);
 			case "topCenter":
 				return this.calculateTopCenterResize(
@@ -409,8 +396,6 @@ export class TransformControlHandler implements ControlStrategy {
 					aspectRatio,
 					doKeepProportion,
 					isSwapped,
-					scaleX,
-					scaleY,
 				);
 			case "rightCenter":
 				return this.calculateRightCenterResize(
@@ -422,8 +407,6 @@ export class TransformControlHandler implements ControlStrategy {
 					aspectRatio,
 					doKeepProportion,
 					isSwapped,
-					scaleX,
-					scaleY,
 				);
 			case "bottomCenter":
 				return this.calculateBottomCenterResize(
@@ -435,8 +418,6 @@ export class TransformControlHandler implements ControlStrategy {
 					aspectRatio,
 					doKeepProportion,
 					isSwapped,
-					scaleX,
-					scaleY,
 				);
 			case "leftCenter":
 				return this.calculateLeftCenterResize(
@@ -448,8 +429,6 @@ export class TransformControlHandler implements ControlStrategy {
 					aspectRatio,
 					doKeepProportion,
 					isSwapped,
-					scaleX,
-					scaleY,
 				);
 			default:
 				return null;
@@ -467,8 +446,6 @@ export class TransformControlHandler implements ControlStrategy {
 		radians: number,
 		aspectRatio: number,
 		doKeepProportion: boolean,
-		scaleX: number,
-		scaleY: number,
 	) {
 		// Apply drag constraints to cursor position
 		const constrained = doKeepProportion
@@ -498,18 +475,17 @@ export class TransformControlHandler implements ControlStrategy {
 			startFrame.cx,
 			startFrame.cy,
 		);
-		let newWidth = inversedCursor.x - inversedTopLeft.x;
+		const newWidth = inversedCursor.x - inversedTopLeft.x;
 		let newHeight: number;
 		if (doKeepProportion) {
-			newHeight = this.calcHeightWithAspectRatio(
-				newWidth,
-				aspectRatio,
-				scaleX,
-				scaleY,
-			);
+			newHeight = this.calcHeightWithAspectRatio(newWidth, aspectRatio);
 		} else {
 			newHeight = inversedCursor.y - inversedTopLeft.y;
 		}
+
+		// Calculate scaleX and scaleY from the sign of newWidth and newHeight
+		const newScaleX = calcNonZeroSign(newWidth);
+		const newScaleY = calcNonZeroSign(newHeight);
 
 		const enforced = this.enforceMinimumDimensions(
 			startFrame,
@@ -518,19 +494,13 @@ export class TransformControlHandler implements ControlStrategy {
 			aspectRatio,
 			doKeepProportion,
 		);
-		newWidth = enforced.width;
-		newHeight = enforced.height;
 
-		const inversedCenterX = inversedTopLeft.x + nanToZero(newWidth / 2);
-		const inversedCenterY = inversedTopLeft.y + nanToZero(newHeight / 2);
-
-		// Calculate scaleX and scaleY from the sign of newWidth and newHeight
-		const newScaleX = calcNonZeroSign(newWidth);
-		const newScaleY = calcNonZeroSign(newHeight);
+		const inversedCenterX = inversedTopLeft.x + nanToZero(enforced.width / 2);
+		const inversedCenterY = inversedTopLeft.y + nanToZero(enforced.height / 2);
 
 		return {
-			width: newWidth,
-			height: newHeight,
+			width: enforced.width,
+			height: enforced.height,
 			inversedCenterX,
 			inversedCenterY,
 			scaleX: newScaleX,
@@ -549,8 +519,6 @@ export class TransformControlHandler implements ControlStrategy {
 		radians: number,
 		aspectRatio: number,
 		doKeepProportion: boolean,
-		scaleX: number,
-		scaleY: number,
 	) {
 		// Apply drag constraints to cursor position
 		const constrained = doKeepProportion
@@ -580,18 +548,17 @@ export class TransformControlHandler implements ControlStrategy {
 			startFrame.cx,
 			startFrame.cy,
 		);
-		let newWidth = inversedBottomRight.x - inversedCursor.x;
+		const newWidth = inversedBottomRight.x - inversedCursor.x;
 		let newHeight: number;
 		if (doKeepProportion) {
-			newHeight = this.calcHeightWithAspectRatio(
-				newWidth,
-				aspectRatio,
-				scaleX,
-				scaleY,
-			);
+			newHeight = this.calcHeightWithAspectRatio(newWidth, aspectRatio);
 		} else {
 			newHeight = inversedBottomRight.y - inversedCursor.y;
 		}
+
+		// Calculate scaleX and scaleY from the sign of newWidth and newHeight
+		const newScaleX = calcNonZeroSign(newWidth);
+		const newScaleY = calcNonZeroSign(newHeight);
 
 		const enforced = this.enforceMinimumDimensions(
 			startFrame,
@@ -600,19 +567,15 @@ export class TransformControlHandler implements ControlStrategy {
 			aspectRatio,
 			doKeepProportion,
 		);
-		newWidth = enforced.width;
-		newHeight = enforced.height;
 
-		const inversedCenterX = inversedBottomRight.x - nanToZero(newWidth / 2);
-		const inversedCenterY = inversedBottomRight.y - nanToZero(newHeight / 2);
-
-		// Calculate scaleX and scaleY from the sign of newWidth and newHeight
-		const newScaleX = calcNonZeroSign(newWidth);
-		const newScaleY = calcNonZeroSign(newHeight);
+		const inversedCenterX =
+			inversedBottomRight.x - nanToZero(enforced.width / 2);
+		const inversedCenterY =
+			inversedBottomRight.y - nanToZero(enforced.height / 2);
 
 		return {
-			width: newWidth,
-			height: newHeight,
+			width: enforced.width,
+			height: enforced.height,
 			inversedCenterX,
 			inversedCenterY,
 			scaleX: newScaleX,
@@ -631,8 +594,6 @@ export class TransformControlHandler implements ControlStrategy {
 		radians: number,
 		aspectRatio: number,
 		doKeepProportion: boolean,
-		scaleX: number,
-		scaleY: number,
 	) {
 		// Apply drag constraints to cursor position
 		const constrained = doKeepProportion
@@ -662,18 +623,17 @@ export class TransformControlHandler implements ControlStrategy {
 			startFrame.cx,
 			startFrame.cy,
 		);
-		let newWidth = inversedCursor.x - inversedBottomLeft.x;
+		const newWidth = inversedCursor.x - inversedBottomLeft.x;
 		let newHeight: number;
 		if (doKeepProportion) {
-			newHeight = this.calcHeightWithAspectRatio(
-				newWidth,
-				aspectRatio,
-				scaleX,
-				scaleY,
-			);
+			newHeight = this.calcHeightWithAspectRatio(newWidth, aspectRatio);
 		} else {
 			newHeight = inversedBottomLeft.y - inversedCursor.y;
 		}
+
+		// Calculate scaleX and scaleY from the sign of newWidth and newHeight
+		const newScaleX = calcNonZeroSign(newWidth);
+		const newScaleY = calcNonZeroSign(newHeight);
 
 		const enforced = this.enforceMinimumDimensions(
 			startFrame,
@@ -682,19 +642,15 @@ export class TransformControlHandler implements ControlStrategy {
 			aspectRatio,
 			doKeepProportion,
 		);
-		newWidth = enforced.width;
-		newHeight = enforced.height;
 
-		const inversedCenterX = inversedBottomLeft.x + nanToZero(newWidth / 2);
-		const inversedCenterY = inversedBottomLeft.y - nanToZero(newHeight / 2);
-
-		// Calculate scaleX and scaleY from the sign of newWidth and newHeight
-		const newScaleX = calcNonZeroSign(newWidth);
-		const newScaleY = calcNonZeroSign(newHeight);
+		const inversedCenterX =
+			inversedBottomLeft.x + nanToZero(enforced.width / 2);
+		const inversedCenterY =
+			inversedBottomLeft.y - nanToZero(enforced.height / 2);
 
 		return {
-			width: newWidth,
-			height: newHeight,
+			width: enforced.width,
+			height: enforced.height,
 			inversedCenterX,
 			inversedCenterY,
 			scaleX: newScaleX,
@@ -713,8 +669,6 @@ export class TransformControlHandler implements ControlStrategy {
 		radians: number,
 		aspectRatio: number,
 		doKeepProportion: boolean,
-		scaleX: number,
-		scaleY: number,
 	) {
 		// Apply drag constraints to cursor position
 		const constrained = doKeepProportion
@@ -744,18 +698,17 @@ export class TransformControlHandler implements ControlStrategy {
 			startFrame.cx,
 			startFrame.cy,
 		);
-		let newWidth = inversedTopRight.x - inversedCursor.x;
+		const newWidth = inversedTopRight.x - inversedCursor.x;
 		let newHeight: number;
 		if (doKeepProportion) {
-			newHeight = this.calcHeightWithAspectRatio(
-				newWidth,
-				aspectRatio,
-				scaleX,
-				scaleY,
-			);
+			newHeight = this.calcHeightWithAspectRatio(newWidth, aspectRatio);
 		} else {
 			newHeight = inversedCursor.y - inversedTopRight.y;
 		}
+
+		// Calculate scaleX and scaleY from the sign of newWidth and newHeight
+		const newScaleX = calcNonZeroSign(newWidth);
+		const newScaleY = calcNonZeroSign(newHeight);
 
 		const enforced = this.enforceMinimumDimensions(
 			startFrame,
@@ -764,19 +717,13 @@ export class TransformControlHandler implements ControlStrategy {
 			aspectRatio,
 			doKeepProportion,
 		);
-		newWidth = enforced.width;
-		newHeight = enforced.height;
 
-		const inversedCenterX = inversedTopRight.x - nanToZero(newWidth / 2);
-		const inversedCenterY = inversedTopRight.y + nanToZero(newHeight / 2);
-
-		// Calculate scaleX and scaleY from the sign of newWidth and newHeight
-		const newScaleX = calcNonZeroSign(newWidth);
-		const newScaleY = calcNonZeroSign(newHeight);
+		const inversedCenterX = inversedTopRight.x - nanToZero(enforced.width / 2);
+		const inversedCenterY = inversedTopRight.y + nanToZero(enforced.height / 2);
 
 		return {
-			width: newWidth,
-			height: newHeight,
+			width: enforced.width,
+			height: enforced.height,
 			inversedCenterX,
 			inversedCenterY,
 			scaleX: newScaleX,
@@ -796,8 +743,6 @@ export class TransformControlHandler implements ControlStrategy {
 		aspectRatio: number,
 		doKeepProportion: boolean,
 		isSwapped: boolean,
-		scaleX: number,
-		scaleY: number,
 	) {
 		// Apply drag constraints to cursor position
 		const constrained = !isSwapped
@@ -833,15 +778,14 @@ export class TransformControlHandler implements ControlStrategy {
 		const newHeight = inversedBottomCenter.y - inversedCursor.y;
 		let newWidth: number;
 		if (doKeepProportion) {
-			newWidth = this.calcWidthWithAspectRatio(
-				newHeight,
-				aspectRatio,
-				scaleX,
-				scaleY,
-			);
+			newWidth = this.calcWidthWithAspectRatio(newHeight, aspectRatio);
 		} else {
 			newWidth = startFrame.width;
 		}
+
+		// Calculate scaleX and scaleY from the sign of newWidth and newHeight
+		const newScaleX = startFrame.scaleX;
+		const newScaleY = calcNonZeroSign(newHeight);
 
 		const enforced = this.enforceMinimumDimensions(
 			startFrame,
@@ -855,10 +799,6 @@ export class TransformControlHandler implements ControlStrategy {
 
 		const inversedCenterX = inversedBottomCenter.x;
 		const inversedCenterY = inversedBottomCenter.y - nanToZero(finalHeight / 2);
-
-		// Calculate scaleX and scaleY from the sign of newWidth and newHeight
-		const newScaleX = calcNonZeroSign(finalWidth);
-		const newScaleY = calcNonZeroSign(finalHeight);
 
 		return {
 			width: finalWidth,
@@ -882,8 +822,6 @@ export class TransformControlHandler implements ControlStrategy {
 		aspectRatio: number,
 		doKeepProportion: boolean,
 		isSwapped: boolean,
-		scaleX: number,
-		scaleY: number,
 	) {
 		// Apply drag constraints to cursor position
 		const constrained = !isSwapped
@@ -916,18 +854,17 @@ export class TransformControlHandler implements ControlStrategy {
 			startFrame.cx,
 			startFrame.cy,
 		);
-		let newWidth = inversedCursor.x - inversedLeftCenter.x;
+		const newWidth = inversedCursor.x - inversedLeftCenter.x;
 		let newHeight: number;
 		if (doKeepProportion) {
-			newHeight = this.calcHeightWithAspectRatio(
-				newWidth,
-				aspectRatio,
-				scaleX,
-				scaleY,
-			);
+			newHeight = this.calcHeightWithAspectRatio(newWidth, aspectRatio);
 		} else {
 			newHeight = startFrame.height;
 		}
+
+		// Calculate scaleX and scaleY from the sign of newWidth and newHeight
+		const newScaleX = calcNonZeroSign(newWidth);
+		const newScaleY = startFrame.scaleY;
 
 		const enforced = this.enforceMinimumDimensions(
 			startFrame,
@@ -936,19 +873,14 @@ export class TransformControlHandler implements ControlStrategy {
 			aspectRatio,
 			doKeepProportion,
 		);
-		newWidth = enforced.width;
-		newHeight = enforced.height;
 
-		const inversedCenterX = inversedLeftCenter.x + nanToZero(newWidth / 2);
+		const inversedCenterX =
+			inversedLeftCenter.x + nanToZero(enforced.width / 2);
 		const inversedCenterY = inversedLeftCenter.y;
 
-		// Calculate scaleX and scaleY from the sign of newWidth and newHeight
-		const newScaleX = calcNonZeroSign(newWidth);
-		const newScaleY = calcNonZeroSign(newHeight);
-
 		return {
-			width: newWidth,
-			height: newHeight,
+			width: enforced.width,
+			height: enforced.height,
 			inversedCenterX,
 			inversedCenterY,
 			scaleX: newScaleX,
@@ -968,8 +900,6 @@ export class TransformControlHandler implements ControlStrategy {
 		aspectRatio: number,
 		doKeepProportion: boolean,
 		isSwapped: boolean,
-		scaleX: number,
-		scaleY: number,
 	) {
 		// Apply drag constraints to cursor position
 		const constrained = !isSwapped
@@ -1005,15 +935,14 @@ export class TransformControlHandler implements ControlStrategy {
 		const newHeight = inversedCursor.y - inversedTopCenter.y;
 		let newWidth: number;
 		if (doKeepProportion) {
-			newWidth = this.calcWidthWithAspectRatio(
-				newHeight,
-				aspectRatio,
-				scaleX,
-				scaleY,
-			);
+			newWidth = this.calcWidthWithAspectRatio(newHeight, aspectRatio);
 		} else {
 			newWidth = startFrame.width;
 		}
+
+		// Calculate scaleX and scaleY from the sign of newWidth and newHeight
+		const newScaleX = startFrame.scaleX;
+		const newScaleY = calcNonZeroSign(newHeight);
 
 		const enforced = this.enforceMinimumDimensions(
 			startFrame,
@@ -1027,10 +956,6 @@ export class TransformControlHandler implements ControlStrategy {
 
 		const inversedCenterX = inversedTopCenter.x;
 		const inversedCenterY = inversedTopCenter.y + nanToZero(finalHeight / 2);
-
-		// Calculate scaleX and scaleY from the sign of newWidth and newHeight
-		const newScaleX = calcNonZeroSign(finalWidth);
-		const newScaleY = calcNonZeroSign(finalHeight);
 
 		return {
 			width: finalWidth,
@@ -1054,8 +979,6 @@ export class TransformControlHandler implements ControlStrategy {
 		aspectRatio: number,
 		doKeepProportion: boolean,
 		isSwapped: boolean,
-		scaleX: number,
-		scaleY: number,
 	) {
 		// Apply drag constraints to cursor position
 		const constrained = !isSwapped
@@ -1088,18 +1011,17 @@ export class TransformControlHandler implements ControlStrategy {
 			startFrame.cx,
 			startFrame.cy,
 		);
-		let newWidth = inversedRightCenter.x - inversedCursor.x;
+		const newWidth = inversedRightCenter.x - inversedCursor.x;
 		let newHeight: number;
 		if (doKeepProportion) {
-			newHeight = this.calcHeightWithAspectRatio(
-				newWidth,
-				aspectRatio,
-				scaleX,
-				scaleY,
-			);
+			newHeight = this.calcHeightWithAspectRatio(newWidth, aspectRatio);
 		} else {
 			newHeight = startFrame.height;
 		}
+
+		// Calculate scaleX and scaleY from the sign of newWidth and newHeight
+		const newScaleX = calcNonZeroSign(newWidth);
+		const newScaleY = startFrame.scaleY;
 
 		const enforced = this.enforceMinimumDimensions(
 			startFrame,
@@ -1108,19 +1030,14 @@ export class TransformControlHandler implements ControlStrategy {
 			aspectRatio,
 			doKeepProportion,
 		);
-		newWidth = enforced.width;
-		newHeight = enforced.height;
 
-		const inversedCenterX = inversedRightCenter.x - nanToZero(newWidth / 2);
+		const inversedCenterX =
+			inversedRightCenter.x - nanToZero(enforced.width / 2);
 		const inversedCenterY = inversedRightCenter.y;
 
-		// Calculate scaleX and scaleY from the sign of newWidth and newHeight
-		const newScaleX = calcNonZeroSign(newWidth);
-		const newScaleY = calcNonZeroSign(newHeight);
-
 		return {
-			width: newWidth,
-			height: newHeight,
+			width: enforced.width,
+			height: enforced.height,
 			inversedCenterX,
 			inversedCenterY,
 			scaleX: newScaleX,
@@ -1287,25 +1204,15 @@ export class TransformControlHandler implements ControlStrategy {
 	/**
 	 * Calculates the height that maintains the original aspect ratio.
 	 */
-	private calcHeightWithAspectRatio(
-		width: number,
-		aspectRatio: number,
-		scaleX: number,
-		scaleY: number,
-	) {
-		return nanToZero(width / aspectRatio) * scaleX * scaleY;
+	private calcHeightWithAspectRatio(width: number, aspectRatio: number) {
+		return nanToZero(width / aspectRatio);
 	}
 
 	/**
 	 * Calculates the width that maintains the original aspect ratio.
 	 */
-	private calcWidthWithAspectRatio(
-		height: number,
-		aspectRatio: number,
-		scaleX: number,
-		scaleY: number,
-	) {
-		return nanToZero(height * aspectRatio) * scaleX * scaleY;
+	private calcWidthWithAspectRatio(height: number, aspectRatio: number) {
+		return nanToZero(height * aspectRatio);
 	}
 
 	/**
