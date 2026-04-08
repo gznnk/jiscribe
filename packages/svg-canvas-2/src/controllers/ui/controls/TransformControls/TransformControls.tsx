@@ -89,14 +89,14 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 
 	// Get cursors based on rotation angle and scale
 	const cursors = {
-		topLeft: getResizeCursorForRotation(rotation + 225, scaleX, scaleY),
-		topCenter: getResizeCursorForRotation(rotation - 90, scaleX, scaleY),
-		topRight: getResizeCursorForRotation(rotation - 45, scaleX, scaleY),
-		rightCenter: getResizeCursorForRotation(rotation, scaleX, scaleY),
-		bottomRight: getResizeCursorForRotation(rotation + 45, scaleX, scaleY),
-		bottomCenter: getResizeCursorForRotation(rotation + 90, scaleX, scaleY),
-		bottomLeft: getResizeCursorForRotation(rotation + 135, scaleX, scaleY),
-		leftCenter: getResizeCursorForRotation(rotation + 180, scaleX, scaleY),
+		topLeft: getResizeCursorForRotation(225, rotation, scaleX, scaleY),
+		topCenter: getResizeCursorForRotation(-90, rotation, scaleX, scaleY),
+		topRight: getResizeCursorForRotation(-45, rotation, scaleX, scaleY),
+		rightCenter: getResizeCursorForRotation(0, rotation, scaleX, scaleY),
+		bottomRight: getResizeCursorForRotation(45, rotation, scaleX, scaleY),
+		bottomCenter: getResizeCursorForRotation(90, rotation, scaleX, scaleY),
+		bottomLeft: getResizeCursorForRotation(135, rotation, scaleX, scaleY),
+		leftCenter: getResizeCursorForRotation(180, rotation, scaleX, scaleY),
 	};
 
 	return (

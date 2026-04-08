@@ -4,40 +4,45 @@
  * Maps rotation angles to directional resize cursors (n-resize, ne-resize, etc.).
  * Considers scale inversions (negative scaleX/scaleY) to provide correct cursor directions.
  *
- * @param rotation - The rotation angle in degrees
+ * @param offset - The handle's direction offset in the shape's local oriented frame (degrees)
+ * @param rotation - The shape's rotation angle in degrees
  * @param scaleX - Horizontal scaling factor (negative values indicate horizontal flip)
  * @param scaleY - Vertical scaling factor (negative values indicate vertical flip)
  * @returns The CSS cursor style name for resize operations
  *
  * @example
  * ```typescript
- * // Get cursor for top edge of a rotated rectangle
- * const cursor = getResizeCursorForRotation(45, 1, 1); // Returns "ne-resize"
+ * // Get cursor for right-center handle of a 45° rotated rectangle
+ * const cursor = getResizeCursorForRotation(0, 45, 1, 1); // Returns "se-resize"
  *
- * // Get cursor for horizontally flipped shape
- * const cursor = getResizeCursorForRotation(0, -1, 1); // Returns "w-resize"
+ * // Get cursor for right-center handle of a horizontally flipped shape
+ * const cursor = getResizeCursorForRotation(0, 0, -1, 1); // Returns "w-resize"
  * ```
  */
 export const getResizeCursorForRotation = (
+	offset: number,
 	rotation: number,
 	scaleX: number = 1,
 	scaleY: number = 1,
 ): string => {
-	// Adjust rotation based on scale inversions
-	let adjustedRotation = rotation;
+	// Apply scale inversions to the local offset angle only,
+	// then add back the shape rotation to get the final screen-space angle.
+	// Applying to the combined angle (rotation + offset) would give wrong results
+	// when rotation ≠ 0.
+	let localAngle = offset;
 
-	// If scaleX is negative (horizontal flip), mirror the rotation horizontally
+	// If scaleX is negative (horizontal flip), mirror the local angle horizontally
 	if (scaleX < 0) {
-		adjustedRotation = 180 - adjustedRotation;
+		localAngle = 180 - localAngle;
 	}
 
-	// If scaleY is negative (vertical flip), mirror the rotation vertically
+	// If scaleY is negative (vertical flip), mirror the local angle vertically
 	if (scaleY < 0) {
-		adjustedRotation = -adjustedRotation;
+		localAngle = -localAngle;
 	}
 
 	// Normalize rotation to 0-360 range
-	const normalizedRotation = (adjustedRotation + 360) % 360;
+	const normalizedRotation = (((rotation + localAngle) % 360) + 360) % 360;
 
 	// Map rotation to cursor (45-degree increments)
 	if (normalizedRotation >= 337.5 || normalizedRotation < 22.5) {
