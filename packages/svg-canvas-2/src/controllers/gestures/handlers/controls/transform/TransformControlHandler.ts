@@ -14,6 +14,7 @@ import {
 	roundToDecimal,
 } from "@workspace/geometry";
 
+import { calcMultiSelectGroupBounds } from "./utils/calcMultiSelectGroupBounds";
 import { rotateGroupChildren } from "./utils/rotateGroupChildren";
 import { transformGroupChildren } from "./utils/transformGroupChildren";
 import { updateAffectedGroupBoundsFromRoot } from "./utils/updateAffectedGroupBoundsFromRoot";
@@ -267,6 +268,22 @@ export class TransformControlHandler implements ControlStrategy {
 				if (obj && (obj.type === "group" || obj.parentId)) {
 					nextState = updateAffectedGroupBoundsFromRoot(nextState, id);
 				}
+			}
+
+			// multiSelectGroup のバウンディングボックスを再計算
+			const recalculatedBounds = calcMultiSelectGroupBounds(
+				state.selectedIds,
+				nextState.objects,
+				nextState.multiSelectGroup,
+			);
+			if (recalculatedBounds && nextState.multiSelectGroup) {
+				nextState = {
+					...nextState,
+					multiSelectGroup: {
+						...nextState.multiSelectGroup,
+						...recalculatedBounds,
+					},
+				};
 			}
 		} else {
 			// 単一選択の場合: 選択オブジェクト自身を更新
