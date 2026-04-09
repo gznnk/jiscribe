@@ -2,7 +2,6 @@ import type { Point } from "@workspace/geometry/src/types/Point";
 
 import type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
 import type { ObjectFeatures } from "../schemas/objects/types/ObjectFeatures";
-import type { CanvasState } from "../states/canvas/CanvasState";
 import type { ObjectState } from "../states/objects/base/ObjectState";
 
 /**
@@ -40,67 +39,6 @@ export type Mods = {
 	alt: boolean;
 	ctrl: boolean;
 	meta: boolean;
-};
-
-/**
- * Parameters passed to drag event handlers.
- */
-export type DragEventHandlerParams<TState extends ObjectState = ObjectState> = {
-	/** The movement delta from the drag start position */
-	delta: Point;
-	/** The object state at the start of the event (from eventStartState) */
-	objectState: TState;
-	/** The current canvas state */
-	canvasState: CanvasState;
-	/** Modifier keys pressed during the event */
-	mods: Mods;
-	/** Timestamp of the event */
-	time: number;
-	/** Mouse button that triggered the event (0: left, 1: middle, 2: right) */
-	button: number;
-};
-
-/**
- * Event handler for drag events on objects.
- * Returns the entire CanvasState to allow full canvas updates.
- */
-export type DragEventHandler<TState extends ObjectState = ObjectState> = (
-	params: DragEventHandlerParams<TState>,
-) => CanvasState;
-
-/**
- * Parameters passed to click event handlers.
- */
-export type ClickEventHandlerParams<TState extends ObjectState = ObjectState> =
-	{
-		/** The object state that was clicked */
-		objectState: TState;
-		/** The current canvas state */
-		canvasState: CanvasState;
-		/** Modifier keys pressed during the event */
-		mods: Mods;
-		/** Timestamp of the event */
-		time: number;
-		/** Mouse button that triggered the event (0: left, 1: middle, 2: right) */
-		button: number;
-	};
-
-/**
- * Event handler for click events on objects.
- * Returns the entire CanvasState to allow full canvas updates.
- */
-export type ClickEventHandler<TState extends ObjectState = ObjectState> = (
-	params: ClickEventHandlerParams<TState>,
-) => CanvasState;
-
-/**
- * Set of event handlers for an object type.
- */
-export type ObjectEventHandler = {
-	onDragStart?: DragEventHandler;
-	onDrag?: DragEventHandler;
-	onDragEnd?: DragEventHandler;
-	onClick?: ClickEventHandler;
 };
 
 /**
@@ -143,7 +81,6 @@ export type ObjectDefinition<
 > = {
 	features: ObjectFeatures;
 	mapper: ObjectMapperType<TDoc, TState>;
-	eventHandler: ObjectEventHandler;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	component: React.FC<any>;
 	/**

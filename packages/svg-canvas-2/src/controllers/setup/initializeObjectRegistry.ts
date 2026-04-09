@@ -38,25 +38,21 @@ import {
 	rotateByGroup as ellipseRotateByGroup,
 	transformByGroup as ellipseTransformByGroup,
 } from "../gestures/handlers/objects/primitives/EllipseController";
-import { EllipseEventHandler } from "../gestures/handlers/objects/primitives/EllipseEventHandler";
 import {
 	moveByDelta as groupMoveByDelta,
 	rotateByGroup as groupRotateByGroup,
 	transformByGroup as groupTransformByGroup,
 } from "../gestures/handlers/objects/primitives/GroupController";
-import { GroupEventHandler } from "../gestures/handlers/objects/primitives/GroupEventHandler";
 import {
 	moveByDelta as polylineMoveByDelta,
 	rotateByGroup as polylineRotateByGroup,
 	transformByGroup as polylineTransformByGroup,
 } from "../gestures/handlers/objects/primitives/PolylineController";
-import { PolylineEventHandler } from "../gestures/handlers/objects/primitives/PolylineEventHandler";
 import {
 	moveByDelta as rectMoveByDelta,
 	rotateByGroup as rectRotateByGroup,
 	transformByGroup as rectTransformByGroup,
 } from "../gestures/handlers/objects/primitives/RectController";
-import { RectEventHandler } from "../gestures/handlers/objects/primitives/RectEventHandler";
 
 /**
  * Initialize the ObjectRegistry with all object type definitions.
@@ -71,7 +67,6 @@ export const initializeObjectRegistry = (): void => {
 			toDoc: rectToDoc,
 			toState: rectToState,
 		},
-		eventHandler: RectEventHandler,
 		component: Rect,
 		moveByDelta: rectMoveByDelta,
 		transformByGroup: rectTransformByGroup,
@@ -84,7 +79,6 @@ export const initializeObjectRegistry = (): void => {
 			toDoc: ellipseToDoc,
 			toState: ellipseToState,
 		},
-		eventHandler: EllipseEventHandler,
 		component: Ellipse,
 		moveByDelta: ellipseMoveByDelta,
 		transformByGroup: ellipseTransformByGroup,
@@ -97,7 +91,6 @@ export const initializeObjectRegistry = (): void => {
 			toDoc: groupToDoc,
 			toState: groupToState,
 		},
-		eventHandler: GroupEventHandler,
 		component: () => null, // Groupはコンポーネントを持たない（再帰的に描画される）
 		moveByDelta: groupMoveByDelta,
 		transformByGroup: groupTransformByGroup,
@@ -110,7 +103,6 @@ export const initializeObjectRegistry = (): void => {
 			toDoc: polylineToDoc,
 			toState: polylineToState,
 		},
-		eventHandler: PolylineEventHandler,
 		component: Polyline,
 		moveByDelta: polylineMoveByDelta,
 		transformByGroup: polylineTransformByGroup,
@@ -123,7 +115,6 @@ export const initializeObjectRegistry = (): void => {
 			toDoc: connectorToDoc,
 			toState: connectorToState,
 		},
-		eventHandler: {}, // Event handling not yet implemented
 		component: Connector,
 		moveByDelta: connectorMoveByDelta,
 		transformByGroup: connectorTransformByGroup,

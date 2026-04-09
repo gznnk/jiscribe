@@ -21,16 +21,8 @@ import {
 describe("CanvasMapper", () => {
 	// Register mappers before tests
 	beforeEach(() => {
-		const dummyEventHandler = {
-			onDragStart: ({ canvasState }: { canvasState: CanvasState }) =>
-				canvasState,
-			onDrag: ({ canvasState }: { canvasState: CanvasState }) => canvasState,
-			onDragEnd: ({ canvasState }: { canvasState: CanvasState }) => canvasState,
-		};
-
 		objectRegistry.register("group", {
 			mapper: { toState: groupToState, toDoc: groupToDoc },
-			eventHandler: dummyEventHandler,
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			component: () => null as any, // Dummy component
 			features: {
@@ -44,7 +36,6 @@ describe("CanvasMapper", () => {
 		});
 		objectRegistry.register("rect", {
 			mapper: { toState: rectToState, toDoc: rectToDoc },
-			eventHandler: dummyEventHandler,
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			component: () => null as any, // Dummy component
 			features: {
