@@ -1,7 +1,10 @@
 import { roundToDecimal } from "@workspace/geometry";
 
 import { PRECISION } from "../../../../../constants/precision";
-import type { MoveByDeltaFunction } from "../../../../../registry/ObjectRegistryTypes";
+import type {
+	MoveByDeltaFunction,
+	TransformByGroupFunction,
+} from "../../../../../registry/ObjectRegistryTypes";
 import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
 
 /**
@@ -16,4 +19,17 @@ export const moveByDelta: MoveByDeltaFunction<ConnectorState> = (state, delta) =
 			y: roundToDecimal(p.y + delta.y, PRECISION.COORDINATE),
 		})),
 	};
+};
+
+/**
+ * Transforms a Connector object when its parent group is transformed.
+ * TODO: Implement connector-specific transform logic
+ */
+export const transformByGroup: TransformByGroupFunction<ConnectorState> = (
+	state,
+	_groupStart,
+	_groupEnd,
+) => {
+	// TODO: Implement connector transform logic
+	return state;
 };

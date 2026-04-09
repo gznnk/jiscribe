@@ -113,6 +113,17 @@ export type MoveByDeltaFunction<TState extends ObjectState = ObjectState> = (
 ) => TState;
 
 /**
+ * Function that transforms an object when its parent group is transformed.
+ * Returns a new object state with updated position, size, and rotation.
+ */
+export type TransformByGroupFunction<TState extends ObjectState = ObjectState> =
+	(
+		state: TState,
+		groupStartState: ObjectState,
+		groupEndState: ObjectState,
+	) => TState;
+
+/**
  * Complete definition for an object type in the registry.
  * Includes both data mapping logic and UI component.
  */
@@ -130,4 +141,9 @@ export type ObjectDefinition<
 	 * For objects with geometry: "none" (e.g., groups), this should return the state unchanged.
 	 */
 	moveByDelta: MoveByDeltaFunction<TState>;
+	/**
+	 * Transforms the object when its parent group is transformed.
+	 * Applies group's translation, rotation, and scale to the object.
+	 */
+	transformByGroup: TransformByGroupFunction<TState>;
 };

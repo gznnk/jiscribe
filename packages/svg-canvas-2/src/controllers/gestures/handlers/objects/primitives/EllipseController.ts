@@ -1,8 +1,13 @@
 import { roundToDecimal } from "@workspace/geometry";
 
+import { transformFrameByGroup } from "../base/FrameTransform";
 import { PRECISION } from "../../../../../constants/precision";
-import type { MoveByDeltaFunction } from "../../../../../registry/ObjectRegistryTypes";
+import type {
+	MoveByDeltaFunction,
+	TransformByGroupFunction,
+} from "../../../../../registry/ObjectRegistryTypes";
 import type { EllipseState } from "../../../../../states/objects/primitives/ellipse/EllipseState";
+import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
 
 /**
  * Moves an Ellipse object by a delta.
@@ -14,4 +19,19 @@ export const moveByDelta: MoveByDeltaFunction<EllipseState> = (state, delta) => 
 		cx: roundToDecimal(state.cx + delta.x, PRECISION.COORDINATE),
 		cy: roundToDecimal(state.cy + delta.y, PRECISION.COORDINATE),
 	};
+};
+
+/**
+ * Transforms an Ellipse object when its parent group is transformed.
+ */
+export const transformByGroup: TransformByGroupFunction<EllipseState> = (
+	state,
+	groupStart,
+	groupEnd,
+) => {
+	return transformFrameByGroup(
+		state,
+		groupStart as GroupState,
+		groupEnd as GroupState,
+	);
 };

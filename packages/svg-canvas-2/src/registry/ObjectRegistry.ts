@@ -84,6 +84,13 @@ class ObjectRegistry {
 	}
 
 	/**
+	 * Retrieves the transformByGroup function for a specific object type.
+	 */
+	getTransformByGroup(type: ObjectType) {
+		return this.definitions.get(type)?.transformByGroup;
+	}
+
+	/**
 	 * Clears all registered definitions.
 	 */
 	clear(): void {
