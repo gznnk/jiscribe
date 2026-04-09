@@ -130,3 +130,35 @@ export function transformFrameByGroup<T extends TransformedFrame>(
 		scaleY: newScaleY,
 	} as T;
 }
+
+/**
+ * Frame系（Rect, Ellipse, Group等）のグループ回転処理
+ *
+ * @param frame - 回転対象のFrame
+ * @param rotationRootGroup - 回転の基準となるグループの状態
+ * @param endGroupRotation - グループの最終的な回転角度
+ * @returns 回転後のFrame
+ */
+export function rotateFrameByGroup<T extends TransformedFrame>(
+	frame: T,
+	rotationRootGroup: GroupState,
+	endGroupRotation: number,
+): T {
+	const rotationDelta = endGroupRotation - rotationRootGroup.rotation;
+
+	// 回転中心を基準に子オブジェクトの中心座標を回転
+	const rotatedCenter = calcRotatedPoint(
+		frame.cx,
+		frame.cy,
+		rotationRootGroup.cx,
+		rotationRootGroup.cy,
+		degreesToRadians(rotationDelta),
+	);
+
+	return {
+		...frame,
+		cx: rotatedCenter.x,
+		cy: rotatedCenter.y,
+		rotation: normalizeRotation(frame.rotation + rotationDelta),
+	} as T;
+}

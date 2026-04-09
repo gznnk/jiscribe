@@ -3,11 +3,12 @@ import { roundToDecimal } from "@workspace/geometry";
 import { PRECISION } from "../../../../../constants/precision";
 import type {
 	MoveByDeltaFunction,
+	RotateByGroupFunction,
 	TransformByGroupFunction,
 } from "../../../../../registry/ObjectRegistryTypes";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
 import type { PolylineState } from "../../../../../states/objects/primitives/polyline/PolylineState";
-import { transformPolyByGroup } from "../base/PolyTransform";
+import { transformPolyByGroup, rotatePolyByGroup } from "../base/PolyTransform";
 
 /**
  * Moves a Polyline object by a delta.
@@ -38,5 +39,20 @@ export const transformByGroup: TransformByGroupFunction<PolylineState> = (
 		state,
 		groupStart as GroupState,
 		groupEnd as GroupState,
+	);
+};
+
+/**
+ * Rotates a Polyline object when its parent group is rotated.
+ */
+export const rotateByGroup: RotateByGroupFunction<PolylineState> = (
+	state,
+	rotationRootGroup,
+	endGroupRotation,
+) => {
+	return rotatePolyByGroup(
+		state,
+		rotationRootGroup as GroupState,
+		endGroupRotation,
 	);
 };

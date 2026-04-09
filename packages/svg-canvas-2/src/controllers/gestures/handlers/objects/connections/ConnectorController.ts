@@ -3,6 +3,7 @@ import { roundToDecimal } from "@workspace/geometry";
 import { PRECISION } from "../../../../../constants/precision";
 import type {
 	MoveByDeltaFunction,
+	RotateByGroupFunction,
 	TransformByGroupFunction,
 } from "../../../../../registry/ObjectRegistryTypes";
 import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
@@ -31,5 +32,18 @@ export const transformByGroup: TransformByGroupFunction<ConnectorState> = (
 	_groupEnd,
 ) => {
 	// TODO: Implement connector transform logic
+	return state;
+};
+
+/**
+ * Rotates a Connector object when its parent group is rotated.
+ * TODO: Implement connector-specific rotation logic
+ */
+export const rotateByGroup: RotateByGroupFunction<ConnectorState> = (
+	state,
+	_rotationRootGroup,
+	_endGroupRotation,
+) => {
+	// TODO: Implement connector rotation logic
 	return state;
 };

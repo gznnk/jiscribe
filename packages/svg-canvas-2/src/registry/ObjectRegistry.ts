@@ -91,6 +91,13 @@ class ObjectRegistry {
 	}
 
 	/**
+	 * Retrieves the rotateByGroup function for a specific object type.
+	 */
+	getRotateByGroup(type: ObjectType) {
+		return this.definitions.get(type)?.rotateByGroup;
+	}
+
+	/**
 	 * Clears all registered definitions.
 	 */
 	clear(): void {

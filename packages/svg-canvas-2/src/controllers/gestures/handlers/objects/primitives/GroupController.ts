@@ -3,11 +3,12 @@ import type { Point } from "@workspace/geometry";
 import { objectRegistry } from "../../../../../registry/ObjectRegistry";
 import type {
 	MoveByDeltaFunction,
+	RotateByGroupFunction,
 	TransformByGroupFunction,
 } from "../../../../../registry/ObjectRegistryTypes";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
-import { transformGroupByGroup } from "../base/GroupTransform";
+import { transformGroupByGroup, rotateGroupByGroup } from "../base/GroupTransform";
 
 /**
  * Moves a Group object by a delta.
@@ -30,6 +31,21 @@ export const transformByGroup: TransformByGroupFunction<GroupState> = (
 		state,
 		groupStart as GroupState,
 		groupEnd as GroupState,
+	);
+};
+
+/**
+ * Rotates a Group object when its parent group is rotated.
+ */
+export const rotateByGroup: RotateByGroupFunction<GroupState> = (
+	state,
+	rotationRootGroup,
+	endGroupRotation,
+) => {
+	return rotateGroupByGroup(
+		state,
+		rotationRootGroup as GroupState,
+		endGroupRotation,
 	);
 };
 
@@ -122,4 +138,48 @@ export function transformChildren(
 	}
 
 	return transformed;
+}
+
+/**
+ * グループの子要素を再帰的に回転する
+ * registry経由で各形状のrotateByGroupを呼び出す
+ *
+ * @param rotationRootGroup - 回転の基準となるグループ状態
+ * @param endGroupRotation - 終了時のグループ回転角度
+ * @param targetGroup - 回転対象のグループ（ルートまたはネストされたグループ）
+ * @param allObjects - 全オブジェクトの状態
+ * @returns 回転後のオブジェクト群
+ */
+export function rotateChildren(
+	rotationRootGroup: GroupState,
+	endGroupRotation: number,
+	targetGroup: GroupState,
+	allObjects: Record<string, ObjectState>,
+): Record<string, ObjectState> {
+	const rotated = {} as Record<string, ObjectState>;
+
+	for (const childId of targetGroup.childIds) {
+		const child = allObjects[childId];
+		if (!child) continue;
+
+		// registry経由で形状ごとのrotate関数を取得
+		const rotateByGroupFn = objectRegistry.getRotateByGroup(child.type);
+
+		if (rotateByGroupFn) {
+			rotated[childId] = rotateByGroupFn(child, rotationRootGroup, endGroupRotation);
+		}
+
+		// 子がGroupの場合は再帰的に子の子も回転
+		if (child.type === "group") {
+			const nestedRotated = rotateChildren(
+				rotationRootGroup,
+				endGroupRotation,
+				child as GroupState,
+				allObjects,
+			);
+			Object.assign(rotated, nestedRotated);
+		}
+	}
+
+	return rotated;
 }

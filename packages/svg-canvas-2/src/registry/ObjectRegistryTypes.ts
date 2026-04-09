@@ -124,6 +124,16 @@ export type TransformByGroupFunction<TState extends ObjectState = ObjectState> =
 	) => TState;
 
 /**
+ * Function that rotates an object when its parent group is rotated.
+ * Returns a new object state with updated position and rotation.
+ */
+export type RotateByGroupFunction<TState extends ObjectState = ObjectState> = (
+	state: TState,
+	rotationRootGroup: ObjectState,
+	endGroupRotation: number,
+) => TState;
+
+/**
  * Complete definition for an object type in the registry.
  * Includes both data mapping logic and UI component.
  */
@@ -146,4 +156,9 @@ export type ObjectDefinition<
 	 * Applies group's translation, rotation, and scale to the object.
 	 */
 	transformByGroup: TransformByGroupFunction<TState>;
+	/**
+	 * Rotates the object when its parent group is rotated.
+	 * Applies group's rotation to the object (performance-optimized version of transformByGroup for rotation-only).
+	 */
+	rotateByGroup: RotateByGroupFunction<TState>;
 };

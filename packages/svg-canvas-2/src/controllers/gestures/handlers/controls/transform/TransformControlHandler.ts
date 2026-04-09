@@ -23,10 +23,9 @@ import { isTransformState } from "../../../../../states/objects/base/TransformSt
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
 import { updateAffectedGroupBounds } from "../../../../ui/utils/updateAffectedGroupBounds";
 import { normalizeRotation } from "../../../../utils/normalizeRotation";
-import { transformChildren } from "../../objects/primitives/GroupController";
+import { transformChildren, rotateChildren } from "../../objects/primitives/GroupController";
 import type { ControlStrategy } from "../ControlEventHandler";
 import { calcMultiSelectGroupBounds } from "./utils/calcMultiSelectGroupBounds";
-import { rotateGroupChildren } from "./utils/rotateGroupChildren";
 import { updateGroupBoundsFromRoot } from "./utils/updateGroupBoundsFromRoot";
 
 /**
@@ -1139,10 +1138,10 @@ export class TransformControlHandler implements ControlStrategy {
 				rotation: newRotation,
 			};
 
-			const rotatedChildren = rotateGroupChildren(
+			const rotatedChildren = rotateChildren(
 				startGroup,
-				updatedGroup,
 				newRotation,
+				updatedGroup,
 				updatedObjects,
 			);
 			Object.assign(updatedObjects, rotatedChildren);
@@ -1180,10 +1179,10 @@ export class TransformControlHandler implements ControlStrategy {
 
 			// グループの場合、子オブジェクトも回転させる
 			if (updatedObject.type === "group") {
-				const rotatedChildren = rotateGroupChildren(
+				const rotatedChildren = rotateChildren(
 					startObject as GroupState,
-					updatedObject as GroupState,
 					newRotation,
+					updatedObject as GroupState,
 					updatedObjects,
 				);
 				Object.assign(updatedObjects, rotatedChildren);

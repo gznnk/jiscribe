@@ -30,25 +30,30 @@ import {
 } from "../../states/objects/primitives/rect/RectMapper";
 import {
 	moveByDelta as connectorMoveByDelta,
+	rotateByGroup as connectorRotateByGroup,
 	transformByGroup as connectorTransformByGroup,
 } from "../gestures/handlers/objects/connections/ConnectorController";
 import {
 	moveByDelta as ellipseMoveByDelta,
+	rotateByGroup as ellipseRotateByGroup,
 	transformByGroup as ellipseTransformByGroup,
 } from "../gestures/handlers/objects/primitives/EllipseController";
 import { EllipseEventHandler } from "../gestures/handlers/objects/primitives/EllipseEventHandler";
 import {
 	moveByDelta as groupMoveByDelta,
+	rotateByGroup as groupRotateByGroup,
 	transformByGroup as groupTransformByGroup,
 } from "../gestures/handlers/objects/primitives/GroupController";
 import { GroupEventHandler } from "../gestures/handlers/objects/primitives/GroupEventHandler";
 import {
 	moveByDelta as polylineMoveByDelta,
+	rotateByGroup as polylineRotateByGroup,
 	transformByGroup as polylineTransformByGroup,
 } from "../gestures/handlers/objects/primitives/PolylineController";
 import { PolylineEventHandler } from "../gestures/handlers/objects/primitives/PolylineEventHandler";
 import {
 	moveByDelta as rectMoveByDelta,
+	rotateByGroup as rectRotateByGroup,
 	transformByGroup as rectTransformByGroup,
 } from "../gestures/handlers/objects/primitives/RectController";
 import { RectEventHandler } from "../gestures/handlers/objects/primitives/RectEventHandler";
@@ -70,6 +75,7 @@ export const initializeObjectRegistry = (): void => {
 		component: Rect,
 		moveByDelta: rectMoveByDelta,
 		transformByGroup: rectTransformByGroup,
+		rotateByGroup: rectRotateByGroup,
 	});
 
 	objectRegistry.register("ellipse", {
@@ -82,6 +88,7 @@ export const initializeObjectRegistry = (): void => {
 		component: Ellipse,
 		moveByDelta: ellipseMoveByDelta,
 		transformByGroup: ellipseTransformByGroup,
+		rotateByGroup: ellipseRotateByGroup,
 	});
 
 	objectRegistry.register("group", {
@@ -94,6 +101,7 @@ export const initializeObjectRegistry = (): void => {
 		component: () => null, // Groupはコンポーネントを持たない（再帰的に描画される）
 		moveByDelta: groupMoveByDelta,
 		transformByGroup: groupTransformByGroup,
+		rotateByGroup: groupRotateByGroup,
 	});
 
 	objectRegistry.register("polyline", {
@@ -106,6 +114,7 @@ export const initializeObjectRegistry = (): void => {
 		component: Polyline,
 		moveByDelta: polylineMoveByDelta,
 		transformByGroup: polylineTransformByGroup,
+		rotateByGroup: polylineRotateByGroup,
 	});
 
 	objectRegistry.register("connector", {
@@ -118,5 +127,6 @@ export const initializeObjectRegistry = (): void => {
 		component: Connector,
 		moveByDelta: connectorMoveByDelta,
 		transformByGroup: connectorTransformByGroup,
+		rotateByGroup: connectorRotateByGroup,
 	});
 };
