@@ -7,7 +7,7 @@ import {
 
 import { PRECISION } from "../../../../../../constants/precision";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
-import type { GroupState } from "../../../../../../states/objects/primitives/GroupState";
+import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
 import { normalizeRotation } from "../../../../../../utils/normalizeRotation";
 
 export function transformGroupChildren(

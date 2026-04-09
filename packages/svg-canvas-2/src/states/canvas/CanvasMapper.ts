@@ -6,7 +6,7 @@ import type { ConnectorDoc } from "../../schemas/objects/connections/ConnectorDo
 import type { GroupDoc } from "../../schemas/objects/primitives/GroupDoc";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
-import type { GroupState } from "../../states/objects/primitives/GroupState";
+import type { GroupState } from "../objects/primitives/group/GroupState";
 
 /**
  * Converts CanvasDoc (tree structure) to CanvasState (flat structure).

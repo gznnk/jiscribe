@@ -1,6 +1,6 @@
 import { calculateGroupOrientedBounds } from "./calculateGroupOrientedBounds";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import type { GroupState } from "../../../states/objects/primitives/GroupState";
+import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 
 /**
  * Updates the bounding frame (cx, cy, width, height) of a group based on its children.

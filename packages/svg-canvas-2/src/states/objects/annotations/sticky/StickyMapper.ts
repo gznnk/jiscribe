@@ -4,8 +4,8 @@ import type {
 	DocToStateMapper,
 	StateToDocMapper,
 } from "../../../../registry/ObjectRegistryTypes";
-import type { RectDoc } from "../../../../schemas/objects/primitives/RectDoc";
-import type { RectState } from "../../../../states/objects/primitives/RectState";
+import type { StickyDoc } from "../../../../schemas/objects/annotations/StickyDoc";
+import type { StickyState } from "./StickyState";
 import { ObjectMapper } from "../../base/ObjectMapper";
 import {
 	mapTransformDocToState,
@@ -13,9 +13,11 @@ import {
 } from "../../base/TransformMapper";
 
 /**
- * Converts RectDoc to RectState.
+ * Converts StickyDoc to StickyState.
  */
-export const rectToState: DocToStateMapper<RectDoc, RectState> = (doc) => {
+export const stickyToState: DocToStateMapper<StickyDoc, StickyState> = (
+	doc,
+) => {
 	const base = ObjectMapper.toState(doc);
 	const frame = convertRectToFrame(doc);
 	const transform = mapTransformDocToState(doc);
@@ -27,13 +29,15 @@ export const rectToState: DocToStateMapper<RectDoc, RectState> = (doc) => {
 		stroke: doc.stroke,
 		strokeWidth: doc.strokeWidth,
 		fill: doc.fill,
-	} as RectState;
+	} as StickyState;
 };
 
 /**
- * Converts RectState to RectDoc.
+ * Converts StickyState to StickyDoc.
  */
-export const rectToDoc: StateToDocMapper<RectState, RectDoc> = (state) => {
+export const stickyToDoc: StateToDocMapper<StickyState, StickyDoc> = (
+	state,
+) => {
 	const base = ObjectMapper.toDoc(state);
 	const rect = convertFrameToRect(state);
 	const transform = mapTransformStateToDoc(state);
@@ -45,5 +49,5 @@ export const rectToDoc: StateToDocMapper<RectState, RectDoc> = (state) => {
 		stroke: state.stroke,
 		strokeWidth: state.strokeWidth,
 		fill: state.fill,
-	} as RectDoc;
+	} as StickyDoc;
 };

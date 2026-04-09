@@ -2,7 +2,7 @@ import { roundToDecimal } from "@workspace/geometry";
 
 import { PRECISION } from "../../../../constants/precision";
 import type { MoveByDeltaFunction } from "../../../../registry/ObjectRegistryTypes";
-import type { EllipseState } from "../../../../states/objects/primitives/EllipseState";
+import type { EllipseState } from "../../../../states/objects/primitives/ellipse/EllipseState";
 
 /**
  * Moves an Ellipse object by a delta.

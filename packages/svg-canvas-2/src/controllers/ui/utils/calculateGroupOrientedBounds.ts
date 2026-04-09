@@ -7,7 +7,7 @@ import {
 import type { Point, TransformedFrame } from "@workspace/geometry";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import type { GroupState } from "../../../states/objects/primitives/GroupState";
+import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 
 /**
  * グループの子要素すべてを含む Oriented Bounding Box (OBB) を計算

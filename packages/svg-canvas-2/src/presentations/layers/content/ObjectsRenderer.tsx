@@ -2,7 +2,7 @@ import { memo } from "react";
 
 import { objectRegistry } from "../../../registry/ObjectRegistry";
 import type { CanvasState } from "../../../states/canvas/CanvasState";
-import type { GroupState } from "../../../states/objects/primitives/GroupState";
+import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 
 type ObjectsRendererProps = Pick<CanvasState, "objects" | "rootIds">;
 

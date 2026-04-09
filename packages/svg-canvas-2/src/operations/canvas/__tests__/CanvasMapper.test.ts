@@ -7,16 +7,16 @@ import type { GroupDoc } from "../../../schemas/objects/primitives/GroupDoc";
 import type { RectDoc } from "../../../schemas/objects/primitives/RectDoc";
 import type { CanvasState } from "../../../states/canvas/CanvasState";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import type { GroupState } from "../../../states/objects/primitives/GroupState";
+import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import {
 	groupToState,
 	groupToDoc,
-} from "../../objects/primitives/Group/GroupMapper";
+} from "../../../states/objects/primitives/group/GroupMapper";
 import {
 	rectToState,
 	rectToDoc,
-} from "../../objects/primitives/Rect/RectMapper";
-import { canvasToState, canvasToDoc } from "../CanvasMapper";
+} from "../../../states/objects/primitives/rect/RectMapper";
+import { canvasToState, canvasToDoc } from "../../../states/canvas/CanvasMapper";
 
 describe("CanvasMapper", () => {
 	// Register mappers before tests

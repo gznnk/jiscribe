@@ -1,5 +1,5 @@
 import type { CanvasState } from "../../../states/canvas/CanvasState";
-import type { GroupState } from "../../../states/objects/primitives/GroupState";
+import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 
 /**
  * Recursively collects all descendant IDs of a group

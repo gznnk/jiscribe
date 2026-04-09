@@ -2,7 +2,7 @@ import type React from "react";
 import { memo } from "react";
 
 import { RectElement } from "./RectStyled";
-import type { RectState } from "../../../../states/objects/primitives/RectState";
+import type { RectState } from "../../../../states/objects/primitives/rect/RectState";
 import { createSvgTransform } from "../../utils/createSvgTransform";
 
 type RectProps = RectState;

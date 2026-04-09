@@ -2,7 +2,7 @@ import type { Point } from "@workspace/geometry";
 
 import { objectRegistry } from "../../../registry/ObjectRegistry";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import type { GroupState } from "../../../states/objects/primitives/GroupState";
+import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 
 /**
  * Moves a group and all its descendants (including nested groups) by delta.

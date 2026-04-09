@@ -2,7 +2,7 @@ import { roundToDecimal } from "@workspace/geometry";
 
 import { PRECISION } from "../../../../constants/precision";
 import type { MoveByDeltaFunction } from "../../../../registry/ObjectRegistryTypes";
-import type { RectState } from "../../../../states/objects/primitives/RectState";
+import type { RectState } from "../../../../states/objects/primitives/rect/RectState";
 
 /**
  * Moves a Rect object by a delta.

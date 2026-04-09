@@ -2,7 +2,7 @@ import { roundToDecimal } from "@workspace/geometry";
 
 import { PRECISION } from "../../../../constants/precision";
 import type { MoveByDeltaFunction } from "../../../../registry/ObjectRegistryTypes";
-import type { PolylineState } from "../../../../states/objects/primitives/PolylineState";
+import type { PolylineState } from "../../../../states/objects/primitives/polyline/PolylineState";
 
 /**
  * Moves a Polyline object by a delta.

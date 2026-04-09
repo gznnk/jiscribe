@@ -8,7 +8,7 @@ import type {
 	StateToDocMapper,
 } from "../../../../registry/ObjectRegistryTypes";
 import type { EllipseDoc } from "../../../../schemas/objects/primitives/EllipseDoc";
-import type { EllipseState } from "../../../../states/objects/primitives/EllipseState";
+import type { EllipseState } from "./EllipseState";
 import { ObjectMapper } from "../../base/ObjectMapper";
 import {
 	mapTransformDocToState,

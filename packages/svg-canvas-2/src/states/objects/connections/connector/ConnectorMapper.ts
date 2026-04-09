@@ -2,32 +2,35 @@ import type {
 	DocToStateMapper,
 	StateToDocMapper,
 } from "../../../../registry/ObjectRegistryTypes";
-import type { PolylineDoc } from "../../../../schemas/objects/primitives/PolylineDoc";
-import type { PolylineState } from "../../../../states/objects/primitives/PolylineState";
+import type { ConnectorDoc } from "../../../../schemas/objects/connections/ConnectorDoc";
+import type { ConnectorState } from "./ConnectorState";
 import { ObjectMapper } from "../../base/ObjectMapper";
 
 /**
- * Converts PolylineDoc to PolylineState.
+ * Converts ConnectorDoc to ConnectorState.
  */
-export const polylineToState: DocToStateMapper<PolylineDoc, PolylineState> = (
-	doc,
-) => {
+export const connectorToState: DocToStateMapper<
+	ConnectorDoc,
+	ConnectorState
+> = (doc) => {
 	const base = ObjectMapper.toState(doc);
 
 	return {
 		...base,
 		points: doc.points,
+		source: doc.source,
+		target: doc.target,
 		stroke: doc.stroke,
 		strokeWidth: doc.strokeWidth,
 		startArrow: doc.startArrow,
 		endArrow: doc.endArrow,
-	} as PolylineState;
+	} as ConnectorState;
 };
 
 /**
- * Converts PolylineState to PolylineDoc.
+ * Converts ConnectorState to ConnectorDoc.
  */
-export const polylineToDoc: StateToDocMapper<PolylineState, PolylineDoc> = (
+export const connectorToDoc: StateToDocMapper<ConnectorState, ConnectorDoc> = (
 	state,
 ) => {
 	const base = ObjectMapper.toDoc(state);
@@ -35,9 +38,11 @@ export const polylineToDoc: StateToDocMapper<PolylineState, PolylineDoc> = (
 	return {
 		...base,
 		points: state.points,
+		source: state.source,
+		target: state.target,
 		stroke: state.stroke,
 		strokeWidth: state.strokeWidth,
 		startArrow: state.startArrow,
 		endArrow: state.endArrow,
-	} as PolylineDoc;
+	} as ConnectorDoc;
 };

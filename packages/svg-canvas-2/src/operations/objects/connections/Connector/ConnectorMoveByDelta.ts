@@ -2,7 +2,7 @@ import { roundToDecimal } from "@workspace/geometry";
 
 import { PRECISION } from "../../../../constants/precision";
 import type { MoveByDeltaFunction } from "../../../../registry/ObjectRegistryTypes";
-import type { ConnectorState } from "../../../../states/objects/connections/ConnectorState";
+import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
 
 /**
  * Moves a Connector object by a delta.

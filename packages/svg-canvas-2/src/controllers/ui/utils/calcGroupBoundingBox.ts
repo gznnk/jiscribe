@@ -7,7 +7,7 @@ import {
 import {
 	isGroupState,
 	type GroupState,
-} from "../../../states/objects/primitives/GroupState";
+} from "../../../states/objects/primitives/group/GroupState";
 
 /**
  * グループの子要素を再帰的に走査してバウンディングボックスを計算する

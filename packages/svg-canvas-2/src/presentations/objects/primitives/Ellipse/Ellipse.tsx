@@ -2,7 +2,7 @@ import type React from "react";
 import { memo } from "react";
 
 import { EllipseElement } from "./EllipseStyled";
-import type { EllipseState } from "../../../../states/objects/primitives/EllipseState";
+import type { EllipseState } from "../../../../states/objects/primitives/ellipse/EllipseState";
 import { createSvgTransform } from "../../utils/createSvgTransform";
 
 type EllipseProps = EllipseState;

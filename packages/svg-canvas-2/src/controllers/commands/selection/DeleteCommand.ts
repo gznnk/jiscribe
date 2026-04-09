@@ -1,5 +1,5 @@
 ﻿import { cleanupGroups } from "./utils/cleanupGroups";
-import type { GroupState } from "../../../states/objects/primitives/GroupState";
+import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import { updateGroupBounds } from "../../ui/utils/updateGroupBounds";
 import type { Command } from "../CommandTypes";
 

@@ -3,7 +3,7 @@ import { memo } from "react";
 import { adjustToOutline } from "./utils/adjustToOutline";
 import { resolveEndpoint } from "./utils/resolveEndpoint";
 import type { CanvasState } from "../../../states/canvas/CanvasState";
-import type { ConnectorState } from "../../../states/objects/connections/ConnectorState";
+import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
 import { Connector } from "../../objects/connections/Connector";
 
 type ConnectorsRendererProps = Pick<CanvasState, "objects" | "connectorIds">;

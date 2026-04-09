@@ -3,7 +3,7 @@ import type {
 	StateToDocMapper,
 } from "../../../../registry/ObjectRegistryTypes";
 import type { GroupDoc } from "../../../../schemas/objects/primitives/GroupDoc";
-import type { GroupState } from "../../../../states/objects/primitives/GroupState";
+import type { GroupState } from "./GroupState";
 import { ObjectMapper } from "../../base/ObjectMapper";
 import {
 	mapTransformDocToState,

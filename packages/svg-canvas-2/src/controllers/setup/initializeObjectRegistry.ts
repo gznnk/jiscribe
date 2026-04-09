@@ -1,31 +1,31 @@
 import {
 	connectorToDoc,
 	connectorToState,
-} from "../../operations/objects/connections/Connector/ConnectorMapper";
+} from "../../states/objects/connections/connector/ConnectorMapper";
 import { connectorMoveByDelta } from "../../operations/objects/connections/Connector/ConnectorMoveByDelta";
 import { EllipseEventHandler } from "../../operations/objects/primitives/Ellipse/EllipseEventHandler";
 import {
 	ellipseToDoc,
 	ellipseToState,
-} from "../../operations/objects/primitives/Ellipse/EllipseMapper";
+} from "../../states/objects/primitives/ellipse/EllipseMapper";
 import { ellipseMoveByDelta } from "../../operations/objects/primitives/Ellipse/EllipseMoveByDelta";
 import { GroupEventHandler } from "../../operations/objects/primitives/Group/GroupEventHandler";
 import {
 	groupToDoc,
 	groupToState,
-} from "../../operations/objects/primitives/Group/GroupMapper";
+} from "../../states/objects/primitives/group/GroupMapper";
 import { groupMoveByDelta } from "../../operations/objects/primitives/Group/GroupMoveByDelta";
 import { PolylineEventHandler } from "../../operations/objects/primitives/Polyline/PolylineEventHandler";
 import {
 	polylineToDoc,
 	polylineToState,
-} from "../../operations/objects/primitives/Polyline/PolylineMapper";
+} from "../../states/objects/primitives/polyline/PolylineMapper";
 import { polylineMoveByDelta } from "../../operations/objects/primitives/Polyline/PolylineMoveByDelta";
 import { RectEventHandler } from "../../operations/objects/primitives/Rect/RectEventHandler";
 import {
 	rectToDoc,
 	rectToState,
-} from "../../operations/objects/primitives/Rect/RectMapper";
+} from "../../states/objects/primitives/rect/RectMapper";
 import { rectMoveByDelta } from "../../operations/objects/primitives/Rect/RectMoveByDelta";
 import { Connector } from "../../presentations/objects/connections/Connector";
 import { Ellipse } from "../../presentations/objects/primitives/Ellipse";

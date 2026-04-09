@@ -1,4 +1,4 @@
-﻿import type { GroupState } from "../../../states/objects/primitives/GroupState";
+﻿import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import { calculateGroupOrientedBounds } from "../../ui/utils/calculateGroupOrientedBounds";
 import type { Command } from "../CommandTypes";
 

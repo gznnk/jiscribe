@@ -1,5 +1,5 @@
 import type { MoveByDeltaFunction } from "../../../../registry/ObjectRegistryTypes";
-import type { GroupState } from "../../../../states/objects/primitives/GroupState";
+import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 
 /**
  * Moves a Group object by a delta.

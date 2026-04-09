@@ -1,7 +1,7 @@
 import { updateGroupBounds } from "../../../../../../controllers/ui/utils/updateGroupBounds";
 import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
-import type { GroupState } from "../../../../../../states/objects/primitives/GroupState";
+import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
 
 /**
  * Finds the root group of the given group and updates all group bounds

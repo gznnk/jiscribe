@@ -8,7 +8,7 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { determineSelection } from "../determineSelection";
 import { getAncestors } from "../getAncestors";
 import { moveGroup } from "../moveGroup";
-import { updateAffectedGroupBounds } from "../updateAffectedGroupBounds";
+import { updateAffectedGroupBounds } from "../../../../controllers/ui/utils/updateAffectedGroupBounds";
 
 /**
  * Poly-specific drag event handler that updates all points in the points array.

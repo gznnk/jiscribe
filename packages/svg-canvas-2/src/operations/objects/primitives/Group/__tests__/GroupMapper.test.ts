@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import type { GroupDoc } from "../../../../../schemas/objects/primitives/GroupDoc";
 import type { RectDoc } from "../../../../../schemas/objects/primitives/RectDoc";
-import type { GroupState } from "../../../../../states/objects/primitives/GroupState";
-import { groupToDoc, groupToState } from "../GroupMapper";
+import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
+import { groupToDoc, groupToState } from "../../../../../states/objects/primitives/group/GroupMapper";
 
 describe("GroupMapper", () => {
 	// Note: GroupMapper no longer handles recursive children mapping.

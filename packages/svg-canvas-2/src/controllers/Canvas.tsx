@@ -22,6 +22,7 @@ import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { canvasReducer } from "./reducer/canvasReducer";
 import { initializeRegistries } from "./setup";
+import { CanvasView } from "../presentations/CanvasView";
 import { TransformControlsLayer } from "./ui/controls/TransformControlsLayer";
 import { DebugInfo } from "./ui/debug/DebugInfo";
 import { AreaSelectionRect } from "./ui/feedback/AreaSelectionRect";
@@ -30,9 +31,8 @@ import { SelectionOverlay } from "./ui/feedback/SelectionOverlay";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
 import { ShapeLibrary } from "./ui/menu/ShapeLibrary";
-import { canvasToDoc, canvasToState } from "../operations/canvas/CanvasMapper";
-import { CanvasView } from "../presentations/CanvasView";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
+import { canvasToDoc, canvasToState } from "../states/canvas/CanvasMapper";
 import type { CanvasState } from "../states/canvas/CanvasState";
 
 // Initialize all registries (ObjectRegistry, GestureHandlerRegistry)

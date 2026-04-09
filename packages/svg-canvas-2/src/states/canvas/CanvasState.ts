@@ -3,7 +3,7 @@ import type { Point } from "@workspace/geometry";
 import type { Viewport } from "./Viewport";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 import type { ObjectState } from "../objects/base/ObjectState";
-import type { GroupState } from "../objects/primitives/GroupState";
+import type { GroupState } from "../objects/primitives/group/GroupState";
 
 export type CanvasState = {
 	/**

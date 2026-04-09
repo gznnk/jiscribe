@@ -2,7 +2,7 @@ import { calcBoundingBox, isTransformedFrame } from "@workspace/geometry";
 import { useMemo } from "react";
 
 import type { CanvasState } from "../../../../states/canvas/CanvasState";
-import { isGroupState } from "../../../../states/objects/primitives/GroupState";
+import { isGroupState } from "../../../../states/objects/primitives/group/GroupState";
 import { calcGroupBoundingBox } from "../../utils/calcGroupBoundingBox";
 
 /** ObjectMenu とオブジェクト間の距離 (px) */

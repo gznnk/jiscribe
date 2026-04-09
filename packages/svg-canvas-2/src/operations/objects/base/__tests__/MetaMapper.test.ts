@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { MetaDoc } from "../../../../schemas/objects/base/MetaDoc";
 import type { MetaState } from "../../../../states/objects/base/MetaState";
-import { MetaMapper } from "../MetaMapper";
+import { MetaMapper } from "../../../../states/objects/base/MetaMapper";
 
 describe("MetaMapper", () => {
 	describe("toState", () => {

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import type { RectDoc } from "../../../../../schemas/objects/primitives/RectDoc";
-import type { RectState } from "../../../../../states/objects/primitives/RectState";
-import { rectToDoc, rectToState } from "../RectMapper";
+import type { RectState } from "../../../../../states/objects/primitives/rect/RectState";
+import { rectToDoc, rectToState } from "../../../../../states/objects/primitives/rect/RectMapper";
 
 describe("RectMapper", () => {
 	describe("rectToState", () => {

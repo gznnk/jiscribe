@@ -3,7 +3,7 @@ import type React from "react";
 import { memo } from "react";
 
 import { PolylineElement } from "./PolylineStyled";
-import type { PolylineState } from "../../../../states/objects/primitives/PolylineState";
+import type { PolylineState } from "../../../../states/objects/primitives/polyline/PolylineState";
 import { Arrow } from "../../arrows";
 
 type PolylineProps = PolylineState;

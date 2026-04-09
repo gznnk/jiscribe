@@ -4,7 +4,7 @@ import { hasSelectedDescendants } from "./hasSelectedDescendants";
 import type { Mods } from "../../../registry/ObjectRegistryTypes";
 import type { CanvasState } from "../../../states/canvas/CanvasState";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import type { GroupState } from "../../../states/objects/primitives/GroupState";
+import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 
 /**
  * Determines the new selection IDs based on hierarchical selection logic.
