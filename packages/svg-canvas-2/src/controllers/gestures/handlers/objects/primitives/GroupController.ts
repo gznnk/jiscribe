@@ -1,8 +1,18 @@
 import type { Point } from "@workspace/geometry";
 
-import { objectRegistry } from "../../../registry/ObjectRegistry";
-import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
+import { objectRegistry } from "../../../../../registry/ObjectRegistry";
+import type { MoveByDeltaFunction } from "../../../../../registry/ObjectRegistryTypes";
+import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
+import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
+
+/**
+ * Moves a Group object by a delta.
+ * Groups have geometry: "none" and no position (cx, cy), so this returns the state unchanged.
+ * When dragging a group, only its descendants are moved (handled by updateDescendantsRecursively).
+ */
+export const moveByDelta: MoveByDeltaFunction<GroupState> = (state, _delta) => {
+	return state;
+};
 
 /**
  * Moves a group and all its descendants (including nested groups) by delta.
@@ -43,9 +53,9 @@ export function moveGroup(
 			moveGroup(childId, originalObjects, updatedObjects, delta);
 		} else {
 			// Move regular object using type-specific moveByDelta
-			const moveByDelta = objectRegistry.getMoveByDelta(child.type);
-			if (moveByDelta) {
-				updatedObjects[childId] = moveByDelta(child, delta);
+			const moveByDeltaFn = objectRegistry.getMoveByDelta(child.type);
+			if (moveByDeltaFn) {
+				updatedObjects[childId] = moveByDeltaFn(child, delta);
 			}
 		}
 	}

@@ -19,7 +19,6 @@ import { rotateGroupChildren } from "./utils/rotateGroupChildren";
 import { transformGroupChildren } from "./utils/transformGroupChildren";
 import { updateGroupBoundsFromRoot } from "./utils/updateGroupBoundsFromRoot";
 import { PRECISION } from "../../../../../constants/precision";
-import { updateAffectedGroupBounds } from "../../../../ui/utils/updateAffectedGroupBounds";
 import type { CanvasEvent } from "../../../../../registry/GestureHandlerRegistryTypes";
 import type { CanvasState } from "../../../../../states/canvas/CanvasState";
 import { hasFrameKeyPoints } from "../../../../../states/objects/base/FrameWithKeyPoints";
@@ -27,6 +26,7 @@ import type { TransformState } from "../../../../../states/objects/base/Transfor
 import { isTransformState } from "../../../../../states/objects/base/TransformState";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
 import { normalizeRotation } from "../../../../../utils/normalizeRotation";
+import { updateAffectedGroupBounds } from "../../../../ui/utils/updateAffectedGroupBounds";
 import type { ControlStrategy } from "../ControlEventHandler";
 
 /**

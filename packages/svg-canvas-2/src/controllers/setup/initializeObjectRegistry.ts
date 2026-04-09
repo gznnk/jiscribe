@@ -2,31 +2,31 @@ import {
 	connectorToDoc,
 	connectorToState,
 } from "../../states/objects/connections/connector/ConnectorMapper";
-import { connectorMoveByDelta } from "../../operations/objects/connections/Connector/ConnectorMoveByDelta";
+import { moveByDelta as connectorMoveByDelta } from "../gestures/handlers/objects/connections/ConnectorController";
 import { EllipseEventHandler } from "../../operations/objects/primitives/Ellipse/EllipseEventHandler";
 import {
 	ellipseToDoc,
 	ellipseToState,
 } from "../../states/objects/primitives/ellipse/EllipseMapper";
-import { ellipseMoveByDelta } from "../../operations/objects/primitives/Ellipse/EllipseMoveByDelta";
+import { moveByDelta as ellipseMoveByDelta } from "../gestures/handlers/objects/primitives/EllipseController";
 import { GroupEventHandler } from "../../operations/objects/primitives/Group/GroupEventHandler";
 import {
 	groupToDoc,
 	groupToState,
 } from "../../states/objects/primitives/group/GroupMapper";
-import { groupMoveByDelta } from "../../operations/objects/primitives/Group/GroupMoveByDelta";
+import { moveByDelta as groupMoveByDelta } from "../gestures/handlers/objects/primitives/GroupController";
 import { PolylineEventHandler } from "../../operations/objects/primitives/Polyline/PolylineEventHandler";
 import {
 	polylineToDoc,
 	polylineToState,
 } from "../../states/objects/primitives/polyline/PolylineMapper";
-import { polylineMoveByDelta } from "../../operations/objects/primitives/Polyline/PolylineMoveByDelta";
+import { moveByDelta as polylineMoveByDelta } from "../gestures/handlers/objects/primitives/PolylineController";
 import { RectEventHandler } from "../../operations/objects/primitives/Rect/RectEventHandler";
 import {
 	rectToDoc,
 	rectToState,
 } from "../../states/objects/primitives/rect/RectMapper";
-import { rectMoveByDelta } from "../../operations/objects/primitives/Rect/RectMoveByDelta";
+import { moveByDelta as rectMoveByDelta } from "../gestures/handlers/objects/primitives/RectController";
 import { Connector } from "../../presentations/objects/connections/Connector";
 import { Ellipse } from "../../presentations/objects/primitives/Ellipse";
 import { Polyline } from "../../presentations/objects/primitives/Polyline";
