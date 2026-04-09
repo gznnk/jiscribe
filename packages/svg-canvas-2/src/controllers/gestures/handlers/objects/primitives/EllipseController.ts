@@ -1,6 +1,5 @@
 import { roundToDecimal } from "@workspace/geometry";
 
-import { transformFrameByGroup } from "../base/FrameTransform";
 import { PRECISION } from "../../../../../constants/precision";
 import type {
 	MoveByDeltaFunction,
@@ -8,6 +7,7 @@ import type {
 } from "../../../../../registry/ObjectRegistryTypes";
 import type { EllipseState } from "../../../../../states/objects/primitives/ellipse/EllipseState";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
+import { transformFrameByGroup } from "../base/FrameTransform";
 
 /**
  * Moves an Ellipse object by a delta.

@@ -1,4 +1,5 @@
-import { moveGroup } from "../primitives/GroupController";
+import { determineSelection } from "./determineSelection";
+import { getAncestors } from "./getAncestors";
 import { objectRegistry } from "../../../../../registry/ObjectRegistry";
 import type {
 	DragEventHandler,
@@ -7,8 +8,7 @@ import type {
 import { isPoly } from "../../../../../schemas/objects/types/Poly";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import { updateAffectedGroupBounds } from "../../../../ui/utils/updateAffectedGroupBounds";
-import { determineSelection } from "./determineSelection";
-import { getAncestors } from "./getAncestors";
+import { moveGroup } from "../primitives/GroupController";
 
 /**
  * Poly-specific drag event handler that updates all points in the points array.

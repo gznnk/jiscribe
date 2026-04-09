@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import type { MetaDoc } from "../../../../schemas/objects/base/MetaDoc";
 import type { ObjectDoc } from "../../../../schemas/objects/base/ObjectDoc";
 import type { MetaState } from "../../../../states/objects/base/MetaState";
-import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { ObjectMapper } from "../../../../states/objects/base/ObjectMapper";
+import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 
 describe("ObjectMapper", () => {
 	describe("toState", () => {

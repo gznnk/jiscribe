@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import type { EllipseDoc } from "../../../../../schemas/objects/primitives/EllipseDoc";
-import type { EllipseState } from "../../../../../states/objects/primitives/ellipse/EllipseState";
 import { ellipseToDoc, ellipseToState } from "../../../../../states/objects/primitives/ellipse/EllipseMapper";
+import type { EllipseState } from "../../../../../states/objects/primitives/ellipse/EllipseState";
 
 describe("EllipseMapper", () => {
 	describe("ellipseToState", () => {

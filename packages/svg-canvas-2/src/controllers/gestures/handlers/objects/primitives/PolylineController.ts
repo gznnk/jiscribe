@@ -1,6 +1,5 @@
 import { roundToDecimal } from "@workspace/geometry";
 
-import { transformPolyByGroup } from "../base/PolyTransform";
 import { PRECISION } from "../../../../../constants/precision";
 import type {
 	MoveByDeltaFunction,
@@ -8,12 +7,16 @@ import type {
 } from "../../../../../registry/ObjectRegistryTypes";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
 import type { PolylineState } from "../../../../../states/objects/primitives/polyline/PolylineState";
+import { transformPolyByGroup } from "../base/PolyTransform";
 
 /**
  * Moves a Polyline object by a delta.
  * Updates all points in the points array.
  */
-export const moveByDelta: MoveByDeltaFunction<PolylineState> = (state, delta) => {
+export const moveByDelta: MoveByDeltaFunction<PolylineState> = (
+	state,
+	delta,
+) => {
 	return {
 		...state,
 		points: state.points.map((p) => ({

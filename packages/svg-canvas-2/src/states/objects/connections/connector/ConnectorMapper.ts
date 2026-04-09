@@ -1,9 +1,9 @@
+import type { ConnectorState } from "./ConnectorState";
 import type {
 	DocToStateMapper,
 	StateToDocMapper,
 } from "../../../../registry/ObjectRegistryTypes";
 import type { ConnectorDoc } from "../../../../schemas/objects/connections/ConnectorDoc";
-import type { ConnectorState } from "./ConnectorState";
 import { ObjectMapper } from "../../base/ObjectMapper";
 
 /**

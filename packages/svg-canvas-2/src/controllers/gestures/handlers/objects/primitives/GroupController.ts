@@ -1,6 +1,5 @@
 import type { Point } from "@workspace/geometry";
 
-import { transformGroupByGroup } from "../base/GroupTransform";
 import { objectRegistry } from "../../../../../registry/ObjectRegistry";
 import type {
 	MoveByDeltaFunction,
@@ -8,6 +7,7 @@ import type {
 } from "../../../../../registry/ObjectRegistryTypes";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
+import { transformGroupByGroup } from "../base/GroupTransform";
 
 /**
  * Moves a Group object by a delta.

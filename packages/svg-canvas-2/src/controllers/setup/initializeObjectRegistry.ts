@@ -1,47 +1,3 @@
-import {
-	connectorToDoc,
-	connectorToState,
-} from "../../states/objects/connections/connector/ConnectorMapper";
-import {
-	moveByDelta as connectorMoveByDelta,
-	transformByGroup as connectorTransformByGroup,
-} from "../gestures/handlers/objects/connections/ConnectorController";
-import { EllipseEventHandler } from "../../operations/objects/primitives/Ellipse/EllipseEventHandler";
-import {
-	ellipseToDoc,
-	ellipseToState,
-} from "../../states/objects/primitives/ellipse/EllipseMapper";
-import {
-	moveByDelta as ellipseMoveByDelta,
-	transformByGroup as ellipseTransformByGroup,
-} from "../gestures/handlers/objects/primitives/EllipseController";
-import { GroupEventHandler } from "../../operations/objects/primitives/Group/GroupEventHandler";
-import {
-	groupToDoc,
-	groupToState,
-} from "../../states/objects/primitives/group/GroupMapper";
-import {
-	moveByDelta as groupMoveByDelta,
-	transformByGroup as groupTransformByGroup,
-} from "../gestures/handlers/objects/primitives/GroupController";
-import { PolylineEventHandler } from "../../operations/objects/primitives/Polyline/PolylineEventHandler";
-import {
-	polylineToDoc,
-	polylineToState,
-} from "../../states/objects/primitives/polyline/PolylineMapper";
-import {
-	moveByDelta as polylineMoveByDelta,
-	transformByGroup as polylineTransformByGroup,
-} from "../gestures/handlers/objects/primitives/PolylineController";
-import { RectEventHandler } from "../../operations/objects/primitives/Rect/RectEventHandler";
-import {
-	rectToDoc,
-	rectToState,
-} from "../../states/objects/primitives/rect/RectMapper";
-import {
-	moveByDelta as rectMoveByDelta,
-	transformByGroup as rectTransformByGroup,
-} from "../gestures/handlers/objects/primitives/RectController";
 import { Connector } from "../../presentations/objects/connections/Connector";
 import { Ellipse } from "../../presentations/objects/primitives/Ellipse";
 import { Polyline } from "../../presentations/objects/primitives/Polyline";
@@ -52,6 +8,50 @@ import { EllipseFeatures } from "../../schemas/objects/primitives/EllipseDoc";
 import { GroupFeatures } from "../../schemas/objects/primitives/GroupDoc";
 import { PolylineFeatures } from "../../schemas/objects/primitives/PolylineDoc";
 import { RectFeatures } from "../../schemas/objects/primitives/RectDoc";
+import {
+	connectorToDoc,
+	connectorToState,
+} from "../../states/objects/connections/connector/ConnectorMapper";
+import {
+	ellipseToDoc,
+	ellipseToState,
+} from "../../states/objects/primitives/ellipse/EllipseMapper";
+import {
+	groupToDoc,
+	groupToState,
+} from "../../states/objects/primitives/group/GroupMapper";
+import {
+	polylineToDoc,
+	polylineToState,
+} from "../../states/objects/primitives/polyline/PolylineMapper";
+import {
+	rectToDoc,
+	rectToState,
+} from "../../states/objects/primitives/rect/RectMapper";
+import {
+	moveByDelta as connectorMoveByDelta,
+	transformByGroup as connectorTransformByGroup,
+} from "../gestures/handlers/objects/connections/ConnectorController";
+import {
+	moveByDelta as ellipseMoveByDelta,
+	transformByGroup as ellipseTransformByGroup,
+} from "../gestures/handlers/objects/primitives/EllipseController";
+import { EllipseEventHandler } from "../gestures/handlers/objects/primitives/EllipseEventHandler";
+import {
+	moveByDelta as groupMoveByDelta,
+	transformByGroup as groupTransformByGroup,
+} from "../gestures/handlers/objects/primitives/GroupController";
+import { GroupEventHandler } from "../gestures/handlers/objects/primitives/GroupEventHandler";
+import {
+	moveByDelta as polylineMoveByDelta,
+	transformByGroup as polylineTransformByGroup,
+} from "../gestures/handlers/objects/primitives/PolylineController";
+import { PolylineEventHandler } from "../gestures/handlers/objects/primitives/PolylineEventHandler";
+import {
+	moveByDelta as rectMoveByDelta,
+	transformByGroup as rectTransformByGroup,
+} from "../gestures/handlers/objects/primitives/RectController";
+import { RectEventHandler } from "../gestures/handlers/objects/primitives/RectEventHandler";
 
 /**
  * Initialize the ObjectRegistry with all object type definitions.

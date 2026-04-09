@@ -1,11 +1,11 @@
 import { convertFrameToRect, convertRectToFrame } from "@workspace/geometry";
 
+import type { RectState } from "./RectState";
 import type {
 	DocToStateMapper,
 	StateToDocMapper,
 } from "../../../../registry/ObjectRegistryTypes";
 import type { RectDoc } from "../../../../schemas/objects/primitives/RectDoc";
-import type { RectState } from "./RectState";
 import { ObjectMapper } from "../../base/ObjectMapper";
 import {
 	mapTransformDocToState,

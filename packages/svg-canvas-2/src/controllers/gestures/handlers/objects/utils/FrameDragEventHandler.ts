@@ -1,6 +1,7 @@
 import { isFrame } from "@workspace/geometry";
 
-import { moveGroup } from "../primitives/GroupController";
+import { determineSelection } from "./determineSelection";
+import { getAncestors } from "./getAncestors";
 import { objectRegistry } from "../../../../../registry/ObjectRegistry";
 import type {
 	DragEventHandler,
@@ -8,8 +9,7 @@ import type {
 } from "../../../../../registry/ObjectRegistryTypes";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import { updateAffectedGroupBounds } from "../../../../ui/utils/updateAffectedGroupBounds";
-import { determineSelection } from "./determineSelection";
-import { getAncestors } from "./getAncestors";
+import { moveGroup } from "../primitives/GroupController";
 
 /**
  * Frame-specific drag event handler that updates an object's position.

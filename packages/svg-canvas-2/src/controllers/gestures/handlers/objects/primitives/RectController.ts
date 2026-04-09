@@ -1,6 +1,5 @@
 import { roundToDecimal } from "@workspace/geometry";
 
-import { transformFrameByGroup } from "../base/FrameTransform";
 import { PRECISION } from "../../../../../constants/precision";
 import type {
 	MoveByDeltaFunction,
@@ -8,6 +7,7 @@ import type {
 } from "../../../../../registry/ObjectRegistryTypes";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
 import type { RectState } from "../../../../../states/objects/primitives/rect/RectState";
+import { transformFrameByGroup } from "../base/FrameTransform";
 
 /**
  * Moves a Rect object by a delta.

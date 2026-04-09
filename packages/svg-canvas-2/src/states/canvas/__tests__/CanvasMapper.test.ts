@@ -5,18 +5,18 @@ import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../../schemas/objects/base/ObjectDoc";
 import type { GroupDoc } from "../../../schemas/objects/primitives/GroupDoc";
 import type { RectDoc } from "../../../schemas/objects/primitives/RectDoc";
+import { canvasToState, canvasToDoc } from "../../../states/canvas/CanvasMapper";
 import type { CanvasState } from "../../../states/canvas/CanvasState";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import {
 	groupToState,
 	groupToDoc,
 } from "../../../states/objects/primitives/group/GroupMapper";
+import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import {
 	rectToState,
 	rectToDoc,
 } from "../../../states/objects/primitives/rect/RectMapper";
-import { canvasToState, canvasToDoc } from "../../../states/canvas/CanvasMapper";
 
 describe("CanvasMapper", () => {
 	// Register mappers before tests

@@ -3,12 +3,12 @@ import {
 	convertFrameToEllipse,
 } from "@workspace/geometry";
 
+import type { EllipseState } from "./EllipseState";
 import type {
 	DocToStateMapper,
 	StateToDocMapper,
 } from "../../../../registry/ObjectRegistryTypes";
 import type { EllipseDoc } from "../../../../schemas/objects/primitives/EllipseDoc";
-import type { EllipseState } from "./EllipseState";
 import { ObjectMapper } from "../../base/ObjectMapper";
 import {
 	mapTransformDocToState,

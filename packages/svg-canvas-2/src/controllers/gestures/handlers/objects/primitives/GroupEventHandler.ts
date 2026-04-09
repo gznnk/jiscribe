@@ -1,4 +1,4 @@
-import type { ObjectEventHandler } from "../../../../registry/ObjectRegistryTypes";
+import type { ObjectEventHandler } from "../../../../../registry/ObjectRegistryTypes";
 
 /**
  * Event handler for Group objects.

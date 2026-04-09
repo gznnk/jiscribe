@@ -1,5 +1,5 @@
-import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
 import { transformFrameByGroup } from "./FrameTransform";
+import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
 
 /**
  * Group系のグループ変形処理（再帰）
