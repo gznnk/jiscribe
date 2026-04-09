@@ -14,10 +14,6 @@ import {
 	roundToDecimal,
 } from "@workspace/geometry";
 
-import { calcMultiSelectGroupBounds } from "./utils/calcMultiSelectGroupBounds";
-import { rotateGroupChildren } from "./utils/rotateGroupChildren";
-import { transformGroupChildren } from "./utils/transformGroupChildren";
-import { updateGroupBoundsFromRoot } from "./utils/updateGroupBoundsFromRoot";
 import { PRECISION } from "../../../../../constants/precision";
 import type { CanvasEvent } from "../../../../../registry/GestureHandlerRegistryTypes";
 import type { CanvasState } from "../../../../../states/canvas/CanvasState";
@@ -27,7 +23,11 @@ import { isTransformState } from "../../../../../states/objects/base/TransformSt
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
 import { updateAffectedGroupBounds } from "../../../../ui/utils/updateAffectedGroupBounds";
 import { normalizeRotation } from "../../../../utils/normalizeRotation";
+import { transformChildren } from "../../objects/primitives/GroupController";
 import type { ControlStrategy } from "../ControlEventHandler";
+import { calcMultiSelectGroupBounds } from "./utils/calcMultiSelectGroupBounds";
+import { rotateGroupChildren } from "./utils/rotateGroupChildren";
+import { updateGroupBoundsFromRoot } from "./utils/updateGroupBoundsFromRoot";
 
 /**
  * Transform control のアンカータイプ。
@@ -245,7 +245,7 @@ export class TransformControlHandler implements ControlStrategy {
 				...updatedFrame,
 			};
 
-			const groupChildrenUpdates = transformGroupChildren(
+			const groupChildrenUpdates = transformChildren(
 				startGroup,
 				updatedGroup,
 				startGroup,
@@ -302,7 +302,7 @@ export class TransformControlHandler implements ControlStrategy {
 
 			// グループの場合、子オブジェクトも変換する
 			if (updatedObject.type === "group") {
-				const groupChildrenUpdates = transformGroupChildren(
+				const groupChildrenUpdates = transformChildren(
 					startObject as GroupState,
 					updatedObject as GroupState,
 					updatedObject as GroupState,
