@@ -1,10 +1,10 @@
-import type { ObjectEventHandler } from "../../../../registry/ObjectRegistryTypes";
-import { DefaultClickEventHandler } from "../../utils/handlers/DefaultClickEventHandler";
+import { DefaultClickEventHandler } from "../../../../controllers/gestures/handlers/objects/utils/DefaultClickEventHandler";
 import {
 	FrameDragEndEventHandler,
 	FrameDragEventHandler,
 	FrameDragStartEventHandler,
-} from "../../utils/handlers/FrameDragEventHandler";
+} from "../../../../controllers/gestures/handlers/objects/utils/FrameDragEventHandler";
+import type { ObjectEventHandler } from "../../../../registry/ObjectRegistryTypes";
 
 export const RectEventHandler: ObjectEventHandler = {
 	onDragStart: FrameDragStartEventHandler,

@@ -1,5 +1,5 @@
-import type { CanvasState } from "../../../states/canvas/CanvasState";
-import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
+import type { CanvasState } from "../../../../../states/canvas/CanvasState";
+import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
 
 /**
  * Checks if a group has any selected children.

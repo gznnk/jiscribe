@@ -1,6 +1,6 @@
 import { normalizeAngle, roundToDecimal } from "@workspace/geometry";
 
-import { PRECISION } from "../constants/precision";
+import { PRECISION } from "../../constants/precision";
 
 /**
  * 回転角度を0～360度の範囲に正規化し、指定された精度で丸める

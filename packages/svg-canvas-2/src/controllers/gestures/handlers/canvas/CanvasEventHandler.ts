@@ -3,14 +3,13 @@
 import { collectIdsInArea } from "./utils/collectIdsInArea";
 import { PRECISION } from "../../../../constants/precision";
 import { ZOOM } from "../../../../constants/zoom";
-// TODO: operationsのautoSelectParentGroupsを直接呼び出すのは少し違和感がある。将来的にはCanvasEventHandler内で完結させるか、別のユーティリティ関数として切り出すことを検討。
-import { autoSelectParentGroups } from "../../../../operations/objects/utils/autoSelectParentGroups";
-import { createMultiSelectGroup } from "../../../../operations/objects/utils/createMultiSelectGroup";
 import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../../../registry/GestureHandlerRegistryTypes";
 import type { CanvasState } from "../../../../states/canvas/CanvasState";
+import { autoSelectParentGroups } from "../objects/utils/autoSelectParentGroups";
+import { createMultiSelectGroup } from "../objects/utils/createMultiSelectGroup";
 
 /**
  * Handles events that occur on the canvas.

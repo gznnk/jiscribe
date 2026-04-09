@@ -1,10 +1,10 @@
+import { createMultiSelectGroup } from "./createMultiSelectGroup";
+import { determineSelection } from "./determineSelection";
 import type {
 	ClickEventHandler,
 	ClickEventHandlerParams,
-} from "../../../../registry/ObjectRegistryTypes";
-import type { ObjectState } from "../../../../states/objects/base/ObjectState";
-import { createMultiSelectGroup } from "../createMultiSelectGroup";
-import { determineSelection } from "../determineSelection";
+} from "../../../../../registry/ObjectRegistryTypes";
+import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 
 /**
  * Hierarchical click event handler with group-aware selection logic.

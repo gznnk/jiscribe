@@ -6,7 +6,7 @@ import {
 
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
-import { normalizeRotation } from "../../../../../../utils/normalizeRotation";
+import { normalizeRotation } from "../../../../../utils/normalizeRotation";
 
 // TODO: operations として実装するべきかも
 // TODO: 引数がちょっとわかりずらい

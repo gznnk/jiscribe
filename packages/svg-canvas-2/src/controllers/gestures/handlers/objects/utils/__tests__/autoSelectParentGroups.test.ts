@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
 
-import type { CanvasState } from "../../../../states/canvas/CanvasState";
-import type { EllipseState } from "../../../../states/objects/primitives/ellipse/EllipseState";
-import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
-import type { RectState } from "../../../../states/objects/primitives/rect/RectState";
+import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
+import type { EllipseState } from "../../../../../../states/objects/primitives/ellipse/EllipseState";
+import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
+import type { RectState } from "../../../../../../states/objects/primitives/rect/RectState";
 import { autoSelectParentGroups } from "../autoSelectParentGroups";
 
 describe("autoSelectParentGroups", () => {

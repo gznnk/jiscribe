@@ -25,8 +25,8 @@ import { hasFrameKeyPoints } from "../../../../../states/objects/base/FrameWithK
 import type { TransformState } from "../../../../../states/objects/base/TransformState";
 import { isTransformState } from "../../../../../states/objects/base/TransformState";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
-import { normalizeRotation } from "../../../../../utils/normalizeRotation";
 import { updateAffectedGroupBounds } from "../../../../ui/utils/updateAffectedGroupBounds";
+import { normalizeRotation } from "../../../../utils/normalizeRotation";
 import type { ControlStrategy } from "../ControlEventHandler";
 
 /**

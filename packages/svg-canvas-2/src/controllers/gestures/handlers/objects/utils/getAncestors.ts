@@ -1,5 +1,5 @@
-import type { CanvasState } from "../../../states/canvas/CanvasState";
-import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import type { CanvasState } from "../../../../../states/canvas/CanvasState";
+import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 
 /**
  * Gets all ancestor IDs of an object, ordered from root to leaf (outermost to innermost).

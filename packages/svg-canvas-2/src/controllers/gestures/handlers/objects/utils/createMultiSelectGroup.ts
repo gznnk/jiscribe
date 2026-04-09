@@ -1,8 +1,8 @@
 import { calcBoundingBox, isTransformedFrame } from "@workspace/geometry";
 
-import { MULTI_SELECT_GROUP } from "../../../constants/multiSelectGroup";
-import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
+import { MULTI_SELECT_GROUP } from "../../../../../constants/multiSelectGroup";
+import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
+import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
 
 export function createMultiSelectGroup(
 	selectedIds: string[],
