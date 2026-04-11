@@ -2,6 +2,7 @@ import { memo } from "react";
 import type React from "react";
 
 import { Svg } from "./CanvasViewStyled";
+import { CanvasDefs } from "./defs/CanvasDefs";
 import type { CanvasState } from "../states/canvas/CanvasState";
 import { GridBackground } from "./layers/background/GridBackground";
 import { GridPattern } from "./layers/background/GridPattern";
@@ -30,11 +31,7 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 			height={height}
 			viewBox={`${minX} ${minY} ${width / zoom} ${height / zoom}`}
 		>
-			<defs>
-				<filter id="sticky-blur">
-					<feGaussianBlur in="SourceGraphic" stdDeviation="2" />
-				</filter>
-			</defs>
+			<CanvasDefs />
 			{/* Grid pattern definition */}
 			<GridPattern zoom={zoom} baseGridSize={25} color="#f3f4f6" />
 			{/* Grid background */}
