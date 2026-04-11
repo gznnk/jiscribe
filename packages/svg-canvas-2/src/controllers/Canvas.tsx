@@ -24,6 +24,7 @@ import { canvasReducer } from "./reducer/canvasReducer";
 import { initializeRegistries } from "./setup";
 import { CanvasView } from "../presentations/CanvasView";
 import { TransformControlsLayer } from "./ui/controls/TransformControlsLayer";
+import { VertexControlsLayer } from "./ui/controls/VertexControlsLayer/VertexControlsLayer";
 import { DebugInfo } from "./ui/debug/DebugInfo";
 import { AreaSelectionRect } from "./ui/feedback/AreaSelectionRect";
 import { DragGhost } from "./ui/feedback/DragGhost";
@@ -149,6 +150,11 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 						selectedIds={state.selectedIds}
 						objects={state.objects}
 						multiSelectGroup={state.multiSelectGroup}
+						zoom={state.viewport.zoom}
+					/>
+					<VertexControlsLayer
+						selectedIds={state.selectedIds}
+						objects={state.objects}
 						zoom={state.viewport.zoom}
 					/>
 					<DragGhost

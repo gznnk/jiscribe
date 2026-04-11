@@ -13,8 +13,9 @@ type TransformControlsLayerProps = {
 };
 
 /**
- * Renders TransformControls for the selected object when exactly one object is selected.
- * For multiple selections, no controls are shown (similar to SelectionOverlay which shows outlines).
+ * Renders TransformControls for objects with transform properties (Frame-based objects).
+ * For single selection: shows controls if the object has transform properties.
+ * For multiple selections: shows controls for the multiSelectGroup.
  */
 const TransformControlsLayerComponent: React.FC<
 	TransformControlsLayerProps
