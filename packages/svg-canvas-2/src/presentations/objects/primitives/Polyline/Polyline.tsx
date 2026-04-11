@@ -2,7 +2,7 @@ import { calcVectorAngle } from "@workspace/geometry";
 import type React from "react";
 import { memo } from "react";
 
-import { PolylineElement } from "./PolylineStyled";
+import { PolylineElement, PolylineHitArea } from "./PolylineStyled";
 import type { PolylineState } from "../../../../states/objects/primitives/polyline/PolylineState";
 import { Arrow } from "../../arrows";
 
@@ -43,9 +43,8 @@ const PolylineComponent: React.FC<PolylineProps> = ({
 
 	return (
 		<>
+			<PolylineHitArea data-kind="object" data-id={id} points={pointsAttr} />
 			<PolylineElement
-				data-kind="object"
-				data-id={id}
 				points={pointsAttr}
 				stroke={stroke}
 				strokeWidth={strokeWidth}
