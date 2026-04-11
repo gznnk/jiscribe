@@ -1,9 +1,10 @@
+import { roundToDecimal } from "@workspace/geometry";
 import type { Point } from "@workspace/geometry";
 
+import { PRECISION } from "../../../../../constants/precision";
 import type { CanvasEvent } from "../../../../../registry/GestureHandlerRegistryTypes";
 import type { CanvasState } from "../../../../../states/canvas/CanvasState";
 import type { PolylineState } from "../../../../../states/objects/primitives/polyline/PolylineState";
-import { updateVertexPosition } from "../../objects/primitives/PolylineController";
 import type { ControlStrategy } from "../ControlEventHandler";
 import { updateGroupBoundsFromRoot } from "../transform/utils/updateGroupBoundsFromRoot";
 
@@ -102,16 +103,19 @@ export class VertexControlHandler implements ControlStrategy {
 
 		// 新しい頂点位置を計算（カーソルの現在位置）
 		const newPosition: Point = {
-			x: event.last.x,
-			y: event.last.y,
+			x: roundToDecimal(event.last.x, PRECISION.COORDINATE),
+			y: roundToDecimal(event.last.y, PRECISION.COORDINATE),
 		};
 
 		// 頂点位置を更新
-		const updatedObject = updateVertexPosition(
-			startObject as PolylineState,
-			vertexIndex,
-			newPosition,
-		);
+		const polyline = startObject as PolylineState;
+		const newPoints = [...polyline.points];
+		newPoints[vertexIndex] = newPosition;
+
+		const updatedObject: PolylineState = {
+			...polyline,
+			points: newPoints,
+		};
 
 		const nextState: CanvasState = {
 			...state,
@@ -140,7 +144,12 @@ export class VertexControlHandler implements ControlStrategy {
 		vertexIndex: number,
 	): CanvasState {
 		// ドラッグ中の状態更新を適用して最終状態を計算
-		const nextState = this.handleDrag({ ...state }, event, objectId, vertexIndex);
+		const nextState = this.handleDrag(
+			{ ...state },
+			event,
+			objectId,
+			vertexIndex,
+		);
 
 		return {
 			...nextState,

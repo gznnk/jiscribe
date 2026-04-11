@@ -3,6 +3,7 @@ import { CanvasEventHandler } from "../gestures/handlers/canvas/CanvasEventHandl
 import { ControlEventHandler } from "../gestures/handlers/controls/ControlEventHandler";
 import { TransformControlHandler } from "../gestures/handlers/controls/transform/TransformControlHandler";
 import { VertexControlHandler } from "../gestures/handlers/controls/vertex/VertexControlHandler";
+import { VertexInsertHandler } from "../gestures/handlers/controls/vertex/VertexInsertHandler";
 import { ContextMenuHandler } from "../gestures/handlers/menu/ContextMenuHandler";
 import { ObjectMenuHandler } from "../gestures/handlers/menu/ObjectMenuHandler";
 import { ShapeLibraryItemHandler } from "../gestures/handlers/menu/ShapeLibraryItemHandler";
@@ -18,12 +19,14 @@ export const initializeGestureHandlerRegistry = (): void => {
 	// コントロールストラテジの作成
 	const transformControlHandler = new TransformControlHandler();
 	const vertexControlHandler = new VertexControlHandler();
+	const vertexInsertHandler = new VertexInsertHandler();
 	// 将来: const pathControlHandler = new PathControlHandler();
 
 	// ControlEventHandler をストラテジ配列でインスタンス化
 	const controlEventHandler = new ControlEventHandler([
 		transformControlHandler,
 		vertexControlHandler,
+		vertexInsertHandler,
 		// 将来: pathControlHandler,
 	]);
 

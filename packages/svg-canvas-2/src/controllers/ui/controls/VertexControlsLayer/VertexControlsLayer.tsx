@@ -2,7 +2,7 @@ import type { Point } from "@workspace/geometry";
 import { memo } from "react";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
-import { VertexControls } from "../VertexControls/VertexControls";
+import { VertexControls, VertexInsertControls } from "../VertexControls";
 
 type VertexControlsLayerProps = {
 	selectedIds: string[];
@@ -37,12 +37,22 @@ const VertexControlsLayerComponent: React.FC<VertexControlsLayerProps> = ({
 		"points" in selectedObject &&
 		Array.isArray(selectedObject.points)
 	) {
+		const points = selectedObject.points as Point[];
 		return (
-			<VertexControls
-				objectId={selectedId}
-				points={selectedObject.points as Point[]}
-				zoom={zoom}
-			/>
+			<>
+				{/* Vertex controls for moving existing vertices */}
+				<VertexControls
+					objectId={selectedId}
+					points={points}
+					zoom={zoom}
+				/>
+				{/* Vertex insert controls for adding new vertices */}
+				<VertexInsertControls
+					objectId={selectedId}
+					points={points}
+					zoom={zoom}
+				/>
+			</>
 		);
 	}
 
