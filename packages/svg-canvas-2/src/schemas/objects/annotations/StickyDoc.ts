@@ -16,3 +16,14 @@ export type StickyDoc = CreateObjectType<
 	typeof StickyFeatures,
 	typeof StickyDocBrand
 >;
+
+export const STICKY_DOC_DEFAULTS: Omit<StickyDoc, "id"> = {
+	type: "sticky",
+	x: 0,
+	y: 0,
+	width: 160,
+	height: 120,
+	fill: "#fef9c3",
+	stroke: "#fef9c3",
+	strokeWidth: 1,
+} as const as StickyDoc;

@@ -3,6 +3,7 @@ import { memo } from "react";
 import type { ObjectType } from "../../../../schemas/objects/types/ObjectType";
 import { EllipseIcon } from "../../icons/EllipseIcon";
 import { RectIcon } from "../../icons/RectIcon";
+import { StickyIcon } from "../../icons/StickyIcon";
 
 type ShapeLibraryItemProps = {
 	type: ObjectType;
@@ -17,6 +18,8 @@ const getIcon = (type: ObjectType) => {
 			return <RectIcon width={ICON_SIZE} height={ICON_SIZE} />;
 		case "ellipse":
 			return <EllipseIcon width={ICON_SIZE} height={ICON_SIZE} />;
+		case "sticky":
+			return <StickyIcon width={ICON_SIZE} height={ICON_SIZE} />;
 		default:
 			return null;
 	}
