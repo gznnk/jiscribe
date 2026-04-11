@@ -5,6 +5,7 @@ import type { CanvasState } from "../../../../../states/canvas/CanvasState";
 import type { PolylineState } from "../../../../../states/objects/primitives/polyline/PolylineState";
 import { updateVertexPosition } from "../../objects/primitives/PolylineController";
 import type { ControlStrategy } from "../ControlEventHandler";
+import { updateGroupBoundsFromRoot } from "../transform/utils/updateGroupBoundsFromRoot";
 
 /**
  * Vertex control の操作（頂点の移動）を処理する。
@@ -112,13 +113,21 @@ export class VertexControlHandler implements ControlStrategy {
 			newPosition,
 		);
 
-		return {
+		const nextState: CanvasState = {
 			...state,
 			objects: {
 				...state.objects,
 				[objectId]: updatedObject,
 			},
 		};
+
+		// グループに所属している場合はグループの枠を更新する
+		const parentId = updatedObject.parentId;
+		if (parentId) {
+			return updateGroupBoundsFromRoot(nextState, parentId);
+		}
+
+		return nextState;
 	}
 
 	/**
