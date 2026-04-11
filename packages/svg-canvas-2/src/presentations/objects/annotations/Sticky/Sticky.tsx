@@ -6,8 +6,6 @@ import { createSvgTransform } from "../../utils/createSvgTransform";
 
 type StickyProps = StickyState;
 
-const FOLD_SIZE = 12;
-
 const StickyComponent: React.FC<StickyProps> = ({
 	id,
 	cx,
@@ -22,49 +20,47 @@ const StickyComponent: React.FC<StickyProps> = ({
 	strokeWidth,
 }) => {
 	const transformAttr = createSvgTransform(scaleX, scaleY, rotation, cx, cy);
-	const x = -width / 2;
-	const y = -height / 2;
-	const foldX = x + width - FOLD_SIZE;
-	const foldY = y + FOLD_SIZE;
-	const resolvedFill = fill ?? "#fef08a";
 
-	const bodyPath = [
-		`M ${x} ${y}`,
-		`L ${foldX} ${y}`,
-		`L ${x + width} ${foldY}`,
-		`L ${x + width} ${y + height}`,
-		`L ${x} ${y + height}`,
-		`Z`,
-	].join(" ");
+	const left = -width / 2;
+	const right = width / 2;
+	const top = -height / 2;
+	const bottom = height / 2;
 
-	const foldPath = [
-		`M ${foldX} ${y}`,
-		`L ${foldX} ${foldY}`,
-		`L ${x + width} ${foldY}`,
-		`Z`,
-	].join(" ");
+	const points = [
+		[left, top],
+		[right, top],
+		[right, bottom],
+		[left, bottom],
+	]
+		.map(([px, py]) => `${px},${py}`)
+		.join(" ");
+
+	const shadowPoints = [
+		[left + 3, top],
+		[right - 3, top],
+		[right + 3, bottom + 5],
+		[left - 3, bottom + 5],
+	]
+		.map(([px, py]) => `${px},${py}`)
+		.join(" ");
 
 	return (
-		<g
-			data-kind="object"
-			data-id={id}
-			transform={transformAttr}
-			style={{ cursor: "grab" }}
-		>
-			<path
-				d={bodyPath}
-				fill={resolvedFill}
-				stroke={stroke}
-				strokeWidth={strokeWidth}
-				strokeLinejoin="round"
+		<g data-kind="object" data-id={id} style={{ cursor: "grab" }}>
+			{/* Shadow */}
+			<polygon
+				points={shadowPoints}
+				fill="rgba(0,0,0,0.08)"
+				transform={transformAttr}
+				pointerEvents="none"
+				filter="url(#sticky-blur)"
 			/>
-			<path
-				d={foldPath}
-				fill={resolvedFill}
+			{/* Main sticky note */}
+			<polygon
+				points={points}
+				fill={fill ?? "#fef9c3"}
 				stroke={stroke}
 				strokeWidth={strokeWidth}
-				strokeLinejoin="round"
-				opacity={0.6}
+				transform={transformAttr}
 			/>
 		</g>
 	);

@@ -30,6 +30,11 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 			height={height}
 			viewBox={`${minX} ${minY} ${width / zoom} ${height / zoom}`}
 		>
+			<defs>
+				<filter id="sticky-blur">
+					<feGaussianBlur in="SourceGraphic" stdDeviation="2" />
+				</filter>
+			</defs>
 			{/* Grid pattern definition */}
 			<GridPattern zoom={zoom} baseGridSize={25} color="#f3f4f6" />
 			{/* Grid background */}
