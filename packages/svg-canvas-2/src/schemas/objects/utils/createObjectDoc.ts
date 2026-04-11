@@ -3,6 +3,7 @@ import type { Point } from "@workspace/geometry";
 import type { ObjectDoc } from "../base/ObjectDoc";
 import { ELLIPSE_DOC_DEFAULTS } from "../primitives/EllipseDoc";
 import { RECT_DOC_DEFAULTS } from "../primitives/RectDoc";
+import { STICKY_DOC_DEFAULTS } from "../annotations/StickyDoc";
 import type { ObjectType } from "../types/ObjectType";
 
 /**
@@ -34,6 +35,14 @@ export const createObjectDoc = (
 				id,
 				cx: position.x,
 				cy: position.y,
+			} as ObjectDoc;
+
+		case "sticky":
+			return {
+				...STICKY_DOC_DEFAULTS,
+				id,
+				x: position.x - STICKY_DOC_DEFAULTS.width / 2,
+				y: position.y - STICKY_DOC_DEFAULTS.height / 2,
 			} as ObjectDoc;
 
 		default:

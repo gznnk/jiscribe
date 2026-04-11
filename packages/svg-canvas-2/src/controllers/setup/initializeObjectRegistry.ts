@@ -1,13 +1,19 @@
+import { Sticky } from "../../presentations/objects/annotations/Sticky";
 import { Connector } from "../../presentations/objects/connections/Connector";
 import { Ellipse } from "../../presentations/objects/primitives/Ellipse";
 import { Polyline } from "../../presentations/objects/primitives/Polyline";
 import { Rect } from "../../presentations/objects/primitives/Rect";
 import { objectRegistry } from "../../registry/ObjectRegistry";
+import { StickyFeatures } from "../../schemas/objects/annotations/StickyDoc";
 import { ConnectorFeatures } from "../../schemas/objects/connections/ConnectorDoc";
 import { EllipseFeatures } from "../../schemas/objects/primitives/EllipseDoc";
 import { GroupFeatures } from "../../schemas/objects/primitives/GroupDoc";
 import { PolylineFeatures } from "../../schemas/objects/primitives/PolylineDoc";
 import { RectFeatures } from "../../schemas/objects/primitives/RectDoc";
+import {
+	stickyToDoc,
+	stickyToState,
+} from "../../states/objects/annotations/sticky/StickyMapper";
 import {
 	connectorToDoc,
 	connectorToState,
@@ -28,6 +34,11 @@ import {
 	rectToDoc,
 	rectToState,
 } from "../../states/objects/primitives/rect/RectMapper";
+import {
+	moveByDelta as stickyMoveByDelta,
+	rotateByGroup as stickyRotateByGroup,
+	transformByGroup as stickyTransformByGroup,
+} from "../gestures/handlers/objects/annotations/StickyController";
 import {
 	moveByDelta as connectorMoveByDelta,
 	rotateByGroup as connectorRotateByGroup,
@@ -119,5 +130,17 @@ export const initializeObjectRegistry = (): void => {
 		moveByDelta: connectorMoveByDelta,
 		transformByGroup: connectorTransformByGroup,
 		rotateByGroup: connectorRotateByGroup,
+	});
+
+	objectRegistry.register("sticky", {
+		features: StickyFeatures,
+		mapper: {
+			toDoc: stickyToDoc,
+			toState: stickyToState,
+		},
+		component: Sticky,
+		moveByDelta: stickyMoveByDelta,
+		transformByGroup: stickyTransformByGroup,
+		rotateByGroup: stickyRotateByGroup,
 	});
 };

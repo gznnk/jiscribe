@@ -5,6 +5,7 @@ export const ObjectTypes = [
 	"polygon",
 	"group",
 	"connector",
+	"sticky",
 ] as const;
 
 export type ObjectType = (typeof ObjectTypes)[number] | (string & {});

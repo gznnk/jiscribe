@@ -12,6 +12,7 @@ type ShapeLibraryItemDefinition = {
 const SHAPE_LIBRARY_ITEMS: ShapeLibraryItemDefinition[] = [
 	{ type: "rect", label: "Rectangle" },
 	{ type: "ellipse", label: "Ellipse" },
+	{ type: "sticky", label: "Sticky" },
 ];
 
 const ShapeLibraryComponent: React.FC = () => {
