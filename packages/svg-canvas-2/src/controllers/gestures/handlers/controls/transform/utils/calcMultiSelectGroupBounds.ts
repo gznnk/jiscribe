@@ -7,6 +7,7 @@ import {
 } from "@workspace/geometry";
 import type { Point, TransformedFrame } from "@workspace/geometry";
 
+import { isPoly } from "../../../../../../schemas/objects/types/Poly";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
 
@@ -25,14 +26,11 @@ export function calcMultiSelectGroupBounds(
 
 	// existingGroup が指定されている場合は、rotation/scale を考慮した OBB を計算
 	if (existingGroup) {
-		// 子要素のTransformedFrameを収集
-		const frames = collectChildFrames(allObjects, selectedIds);
-		if (frames.length === 0) {
+		// 子要素のすべての点を収集
+		const allPoints = collectChildPoints(allObjects, selectedIds);
+		if (allPoints.length === 0) {
 			return null;
 		}
-
-		// 各子要素の全コーナー点を収集
-		const allPoints = frames.flatMap((frame) => getFrameCornerPoints(frame));
 
 		// グループのtransformを取得
 		const groupRotation = existingGroup.rotation ?? 0;
@@ -101,18 +99,27 @@ function collectBounds(
 			bounds.maxX = Math.max(bounds.maxX, box.right);
 			bounds.minY = Math.min(bounds.minY, box.top);
 			bounds.maxY = Math.max(bounds.maxY, box.bottom);
+		} else if (isPoly(child)) {
+			// Poly系（Polyline, Polygon）の場合、points配列から直接バウンディングボックスを計算
+			for (const point of child.points) {
+				bounds.minX = Math.min(bounds.minX, point.x);
+				bounds.maxX = Math.max(bounds.maxX, point.x);
+				bounds.minY = Math.min(bounds.minY, point.y);
+				bounds.maxY = Math.max(bounds.maxY, point.y);
+			}
 		}
 	}
 }
 
 /**
- * 子要素のTransformedFrameを再帰的に収集
+ * 子要素のすべての点を再帰的に収集
+ * Frame系はコーナー点、Poly系は頂点を収集
  */
-function collectChildFrames(
+function collectChildPoints(
 	objects: Record<string, ObjectState>,
 	childIds: string[],
-): TransformedFrame[] {
-	const frames: TransformedFrame[] = [];
+): Point[] {
+	const points: Point[] = [];
 
 	for (const childId of childIds) {
 		const child = objects[childId];
@@ -120,13 +127,17 @@ function collectChildFrames(
 
 		if (child.type === "group") {
 			const nestedGroup = child as GroupState;
-			frames.push(...collectChildFrames(objects, nestedGroup.childIds));
+			points.push(...collectChildPoints(objects, nestedGroup.childIds));
 		} else if (isTransformedFrame(child)) {
-			frames.push(child);
+			// TransformedFrameを持つオブジェクトの場合はコーナー点を追加
+			points.push(...getFrameCornerPoints(child));
+		} else if (isPoly(child)) {
+			// Poly系の場合はpoints配列を直接追加
+			points.push(...child.points);
 		}
 	}
 
-	return frames;
+	return points;
 }
 
 /**

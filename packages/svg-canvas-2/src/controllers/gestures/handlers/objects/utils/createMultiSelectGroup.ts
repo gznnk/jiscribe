@@ -1,6 +1,7 @@
 import { calcBoundingBox, isTransformedFrame } from "@workspace/geometry";
 
 import { MULTI_SELECT_GROUP } from "../../../../../constants/multiSelectGroup";
+import { isPoly } from "../../../../../schemas/objects/types/Poly";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
 
@@ -70,6 +71,14 @@ function collectBounds(
 			bounds.maxX = Math.max(bounds.maxX, box.right);
 			bounds.minY = Math.min(bounds.minY, box.top);
 			bounds.maxY = Math.max(bounds.maxY, box.bottom);
+		} else if (isPoly(child)) {
+			// Poly系（Polyline, Polygon）の場合、points配列から直接バウンディングボックスを計算
+			for (const point of child.points) {
+				bounds.minX = Math.min(bounds.minX, point.x);
+				bounds.maxX = Math.max(bounds.maxX, point.x);
+				bounds.minY = Math.min(bounds.minY, point.y);
+				bounds.maxY = Math.max(bounds.maxY, point.y);
+			}
 		}
 	}
 }

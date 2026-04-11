@@ -6,6 +6,7 @@ import {
 } from "@workspace/geometry";
 import type { Point, TransformedFrame } from "@workspace/geometry";
 
+import { isPoly } from "../../../schemas/objects/types/Poly";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 
@@ -30,15 +31,12 @@ export function calculateGroupOrientedBounds(
 
 	const groupState = group as GroupState;
 
-	// 子要素のTransformedFrameを収集（再帰的にネストされたグループも展開）
-	const frames = collectChildFrames(objects, groupState.childIds);
+	// 子要素のすべての点を収集（再帰的にネストされたグループも展開）
+	const allPoints = collectChildPoints(objects, groupState.childIds);
 
-	if (frames.length === 0) {
+	if (allPoints.length === 0) {
 		return undefined;
 	}
-
-	// 各子要素の全コーナー点を収集
-	const allPoints = frames.flatMap((frame) => getFrameCornerPoints(frame));
 
 	// グループのtransformを取得
 	const groupRotation = groupState.rotation ?? 0;
@@ -55,13 +53,14 @@ export function calculateGroupOrientedBounds(
 }
 
 /**
- * 子要素のTransformedFrameを再帰的に収集
+ * 子要素のすべての点を再帰的に収集
+ * Frame系はコーナー点、Poly系は頂点を収集
  */
-function collectChildFrames(
+function collectChildPoints(
 	objects: Record<string, ObjectState>,
 	childIds: string[],
-): TransformedFrame[] {
-	const frames: TransformedFrame[] = [];
+): Point[] {
+	const points: Point[] = [];
 
 	for (const childId of childIds) {
 		const child = objects[childId];
@@ -70,14 +69,17 @@ function collectChildFrames(
 		if (child.type === "group") {
 			// グループの場合は再帰的に子を収集
 			const nestedGroup = child as GroupState;
-			frames.push(...collectChildFrames(objects, nestedGroup.childIds));
+			points.push(...collectChildPoints(objects, nestedGroup.childIds));
 		} else if (isTransformedFrame(child)) {
-			// TransformedFrameを持つオブジェクトの場合は追加
-			frames.push(child);
+			// TransformedFrameを持つオブジェクトの場合はコーナー点を追加
+			points.push(...getFrameCornerPoints(child));
+		} else if (isPoly(child)) {
+			// Poly系の場合はpoints配列を直接追加
+			points.push(...child.points);
 		}
 	}
 
-	return frames;
+	return points;
 }
 
 /**
