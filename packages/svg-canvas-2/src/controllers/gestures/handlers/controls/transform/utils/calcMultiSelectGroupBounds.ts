@@ -2,6 +2,7 @@ import {
 	calcAffineTransformedPoint,
 	calcBoundingBox,
 	calcOrientedFrameFromPoints,
+	calcPolyBoundingBox,
 	degreesToRadians,
 	isTransformedFrame,
 } from "@workspace/geometry";
@@ -101,11 +102,12 @@ function collectBounds(
 			bounds.maxY = Math.max(bounds.maxY, box.bottom);
 		} else if (isPoly(child)) {
 			// Poly系（Polyline, Polygon）の場合、points配列から直接バウンディングボックスを計算
-			for (const point of child.points) {
-				bounds.minX = Math.min(bounds.minX, point.x);
-				bounds.maxX = Math.max(bounds.maxX, point.x);
-				bounds.minY = Math.min(bounds.minY, point.y);
-				bounds.maxY = Math.max(bounds.maxY, point.y);
+			const bbox = calcPolyBoundingBox(child.points);
+			if (bbox) {
+				bounds.minX = Math.min(bounds.minX, bbox.left);
+				bounds.maxX = Math.max(bounds.maxX, bbox.right);
+				bounds.minY = Math.min(bounds.minY, bbox.top);
+				bounds.maxY = Math.max(bounds.maxY, bbox.bottom);
 			}
 		}
 	}

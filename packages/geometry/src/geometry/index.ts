@@ -3,6 +3,7 @@ export * from "./calcEllipseKeyPoints";
 export * from "./calcFrameKeyPoints";
 export * from "./calcOrientedFrameFromPoints";
 export * from "./calcFrameBoxFeatures";
+export * from "./calcPolyBoundingBox";
 export * from "./calcRectKeyPoints";
 export * from "./calcClosestOrthogonalIntersection";
 export * from "./calcDimensionsWithMinSize";

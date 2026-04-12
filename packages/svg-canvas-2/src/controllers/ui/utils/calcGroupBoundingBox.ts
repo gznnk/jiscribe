@@ -1,5 +1,6 @@
 import {
 	calcBoundingBox,
+	calcPolyBoundingBox,
 	isTransformedFrame,
 	type BoundingBox,
 } from "@workspace/geometry";
@@ -39,24 +40,8 @@ export function calcGroupBoundingBox(
 			if (!bbox) continue;
 		} else if (isPoly(child)) {
 			// Poly系（Polyline, Polygon）の場合、points配列からバウンディングボックスを計算
-			let polyMinX = Infinity;
-			let polyMinY = Infinity;
-			let polyMaxX = -Infinity;
-			let polyMaxY = -Infinity;
-
-			for (const point of child.points) {
-				polyMinX = Math.min(polyMinX, point.x);
-				polyMinY = Math.min(polyMinY, point.y);
-				polyMaxX = Math.max(polyMaxX, point.x);
-				polyMaxY = Math.max(polyMaxY, point.y);
-			}
-
-			bbox = {
-				left: polyMinX,
-				top: polyMinY,
-				right: polyMaxX,
-				bottom: polyMaxY,
-			};
+			bbox = calcPolyBoundingBox(child.points);
+			if (!bbox) continue;
 		} else {
 			continue;
 		}
