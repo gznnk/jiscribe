@@ -109,7 +109,7 @@ export class VertexInsertHandler implements ControlStrategy {
 			[objectId]: updatedObject,
 		};
 
-		let nextState: CanvasState = {
+		const nextState: CanvasState = {
 			...state,
 			objects: updatedObjects,
 			edgeScrollEnabled: true,
@@ -121,19 +121,6 @@ export class VertexInsertHandler implements ControlStrategy {
 				...state.eventStartState,
 				objects: updatedObjects,
 			};
-		}
-
-		// グループに所属している場合はグループの枠を更新する
-		const parentId = updatedObject.parentId;
-		if (parentId) {
-			nextState = updateGroupBoundsFromRoot(nextState, parentId);
-			// グループの枠を更新した後もeventStartStateを同期
-			if (nextState.eventStartState) {
-				nextState.eventStartState = {
-					...nextState.eventStartState,
-					objects: nextState.objects,
-				};
-			}
 		}
 
 		return nextState;
@@ -180,26 +167,18 @@ export class VertexInsertHandler implements ControlStrategy {
 			points: newPoints,
 		};
 
-		let nextState: CanvasState = {
+		return {
 			...state,
 			objects: {
 				...state.objects,
 				[objectId]: updatedObject,
 			},
 		};
-
-		// グループに所属している場合はグループの枠を更新する
-		const parentId = updatedObject.parentId;
-		if (parentId) {
-			nextState = updateGroupBoundsFromRoot(nextState, parentId);
-		}
-
-		return nextState;
 	}
 
 	/**
 	 * Vertex insert control でのドラッグ終了を処理する。
-	 * 最終位置を確定する。
+	 * 最終位置を確定し、グループの枠を更新する。
 	 */
 	private handleDragEnd(
 		state: CanvasState,
@@ -208,12 +187,18 @@ export class VertexInsertHandler implements ControlStrategy {
 		segmentIndex: number,
 	): CanvasState {
 		// ドラッグ中の状態更新を適用して最終状態を計算
-		const nextState = this.handleDrag(
+		let nextState = this.handleDrag(
 			{ ...state },
 			event,
 			objectId,
 			segmentIndex,
 		);
+
+		// グループに所属している場合はグループの枠を更新する
+		const updatedObject = nextState.objects[objectId];
+		if (updatedObject?.parentId) {
+			nextState = updateGroupBoundsFromRoot(nextState, updatedObject.parentId);
+		}
 
 		return {
 			...nextState,

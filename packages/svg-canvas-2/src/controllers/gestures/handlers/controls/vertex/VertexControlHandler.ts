@@ -117,21 +117,13 @@ export class VertexControlHandler implements ControlStrategy {
 			points: newPoints,
 		};
 
-		const nextState: CanvasState = {
+		return {
 			...state,
 			objects: {
 				...state.objects,
 				[objectId]: updatedObject,
 			},
 		};
-
-		// グループに所属している場合はグループの枠を更新する
-		const parentId = updatedObject.parentId;
-		if (parentId) {
-			return updateGroupBoundsFromRoot(nextState, parentId);
-		}
-
-		return nextState;
 	}
 
 	/**
@@ -144,12 +136,18 @@ export class VertexControlHandler implements ControlStrategy {
 		vertexIndex: number,
 	): CanvasState {
 		// ドラッグ中の状態更新を適用して最終状態を計算
-		const nextState = this.handleDrag(
+		let nextState = this.handleDrag(
 			{ ...state },
 			event,
 			objectId,
 			vertexIndex,
 		);
+
+		// グループに所属している場合はグループの枠を更新する
+		const updatedObject = nextState.objects[objectId];
+		if (updatedObject?.parentId) {
+			nextState = updateGroupBoundsFromRoot(nextState, updatedObject.parentId);
+		}
 
 		return {
 			...nextState,
