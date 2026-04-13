@@ -21,12 +21,15 @@ import { hasFrameKeyPoints } from "../../../../../states/objects/base/FrameWithK
 import type { TransformState } from "../../../../../states/objects/base/TransformState";
 import { isTransformState } from "../../../../../states/objects/base/TransformState";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
-import { updateAffectedGroupBounds } from "../../../../ui/utils/updateAffectedGroupBounds";
 import { normalizeRotation } from "../../../../utils/normalizeRotation";
-import { transformChildren, rotateChildren } from "../../objects/primitives/GroupController";
+import {
+	transformChildren,
+	rotateChildren,
+} from "../../objects/primitives/GroupController";
 import type { ControlStrategy } from "../ControlEventHandler";
 import { calcMultiSelectGroupBounds } from "./utils/calcMultiSelectGroupBounds";
 import { updateGroupBoundsFromRoot } from "./utils/updateGroupBoundsFromRoot";
+import { updateSingleGroupBounds } from "./utils/updateSingleGroupBounds";
 
 /**
  * Transform control のアンカータイプ。
@@ -259,15 +262,7 @@ export class TransformControlHandler implements ControlStrategy {
 				multiSelectGroup: updatedGroup,
 			};
 
-			// 各選択オブジェクトの親グループ境界を更新
-			for (const id of state.selectedIds) {
-				const obj = nextState.objects[id];
-				if (obj && (obj.type === "group" || obj.parentId)) {
-					nextState = updateGroupBoundsFromRoot(nextState, id);
-				}
-			}
-
-			// multiSelectGroup のバウンディングボックスを再計算
+			// multiSelectGroup のバウンディングボックスを再計算（drag中はこれのみ更新）
 			const recalculatedBounds = calcMultiSelectGroupBounds(
 				state.selectedIds,
 				nextState.objects,
@@ -315,9 +310,10 @@ export class TransformControlHandler implements ControlStrategy {
 				objects: updatedObjects,
 			};
 
-			// グループの場合、または親グループがある場合、rootから子方向へグループ境界を更新
-			if (updatedObject.type === "group" || updatedObject.parentId) {
-				return updateGroupBoundsFromRoot(nextState, selectedId);
+			// 単一グループ選択の場合のみ、そのグループ自身の境界を更新（drag中）
+			// 親グループの更新はdragEndで行う
+			if (updatedObject.type === "group") {
+				return updateSingleGroupBounds(nextState, selectedId);
 			}
 		}
 
@@ -1054,7 +1050,15 @@ export class TransformControlHandler implements ControlStrategy {
 		anchorType: TransformAnchorType,
 	): CanvasState {
 		// ドラッグ中の状態更新を適用して最終状態を計算
-		const nextState = this.handleDrag({ ...state }, event, anchorType);
+		let nextState = this.handleDrag({ ...state }, event, anchorType);
+
+		// dragEnd時に選択中のオブジェクトとその親グループの境界を更新
+		for (const selectedId of nextState.selectedIds) {
+			const obj = nextState.objects[selectedId];
+			if (obj && (obj.type === "group" || obj.parentId)) {
+				nextState = updateGroupBoundsFromRoot(nextState, selectedId);
+			}
+		}
 
 		return {
 			...nextState,
@@ -1153,13 +1157,7 @@ export class TransformControlHandler implements ControlStrategy {
 				multiSelectGroup: updatedGroup,
 			};
 
-			// 各選択オブジェクトの親グループ境界を更新
-			for (const id of state.selectedIds) {
-				const obj = nextState.objects[id];
-				if (obj && (obj.type === "group" || obj.parentId)) {
-					nextState = updateGroupBoundsFromRoot(nextState, id);
-				}
-			}
+			// drag中は親グループの更新はしない（dragEndで行う）
 		} else {
 			// 単一選択の場合: 選択オブジェクト自身を回転
 			if (!selectedId) {
@@ -1193,8 +1191,11 @@ export class TransformControlHandler implements ControlStrategy {
 				objects: updatedObjects,
 			};
 
-			// 親グループのバウンディングボックスを更新
-			return updateAffectedGroupBounds(nextState, [selectedId]);
+			// 単一グループ選択の場合のみ、そのグループ自身の境界を更新（drag中）
+			// 親グループの更新はdragEndで行う
+			if (updatedObject.type === "group") {
+				return updateSingleGroupBounds(nextState, selectedId);
+			}
 		}
 
 		return nextState;
