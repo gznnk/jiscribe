@@ -17,5 +17,6 @@ import { PRECISION } from "../../constants/precision";
  * ```
  */
 export function normalizeRotation(degrees: number): number {
-	return roundToDecimal(normalizeAngle(degrees), PRECISION.ROTATION);
+	const rounded = roundToDecimal(normalizeAngle(degrees), PRECISION.ROTATION);
+	return rounded >= 360 ? 0 : rounded;
 }

@@ -10,6 +10,7 @@ import {
 	degreesToRadians,
 	isTransformedFrame,
 	nanToZero,
+	normalizeAngle,
 	radiansToDegrees,
 	roundToDecimal,
 } from "@workspace/geometry";
@@ -21,7 +22,6 @@ import { hasFrameKeyPoints } from "../../../../../states/objects/base/FrameWithK
 import type { TransformState } from "../../../../../states/objects/base/TransformState";
 import { isTransformState } from "../../../../../states/objects/base/TransformState";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
-import { normalizeRotation } from "../../../../utils/normalizeRotation";
 import {
 	transformChildren,
 	rotateChildren,
@@ -1122,9 +1122,9 @@ export class TransformControlHandler implements ControlStrategy {
 			startFrame.cy - startFrame.height,
 		);
 
-		// 新しい回転角度を計算（0-360度、小数点第3位で丸める）
-		const newRotation = normalizeRotation(
-			radiansToDegrees(radian - rotatePointRadian),
+		// 新しい回転角度を計算（0-360度、整数に丸める）
+		const newRotation = normalizeAngle(
+			roundToDecimal(radiansToDegrees(radian - rotatePointRadian), 0),
 		);
 
 		// eventStartState から更新されたオブジェクトマップを作成
