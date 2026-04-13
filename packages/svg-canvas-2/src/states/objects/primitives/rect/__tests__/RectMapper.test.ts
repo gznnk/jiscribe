@@ -20,6 +20,14 @@ describe("RectMapper", () => {
 				stroke: "#000000",
 				strokeWidth: 2,
 				fill: "#ff0000",
+				text: "Sample Text",
+				textType: "textarea",
+				textAlign: "center",
+				verticalAlign: "center",
+				fontColor: "#333333",
+				fontSize: 16,
+				fontFamily: "Arial",
+				fontWeight: "bold",
 			} as unknown as RectDoc;
 
 			const state = rectToState(doc);
@@ -36,6 +44,14 @@ describe("RectMapper", () => {
 			expect(state.stroke).toBe("#000000");
 			expect(state.strokeWidth).toBe(2);
 			expect(state.fill).toBe("#ff0000");
+			expect(state.text).toBe("Sample Text");
+			expect(state.textType).toBe("textarea");
+			expect(state.textAlign).toBe("center");
+			expect(state.verticalAlign).toBe("center");
+			expect(state.fontColor).toBe("#333333");
+			expect(state.fontSize).toBe(16);
+			expect(state.fontFamily).toBe("Arial");
+			expect(state.fontWeight).toBe("bold");
 		});
 
 		it("should handle default transform values", () => {
@@ -88,6 +104,14 @@ describe("RectMapper", () => {
 				stroke: "#000000",
 				strokeWidth: 2,
 				fill: "#ff0000",
+				text: "Sample Text",
+				textType: "textarea",
+				textAlign: "center",
+				verticalAlign: "center",
+				fontColor: "#333333",
+				fontSize: 16,
+				fontFamily: "Arial",
+				fontWeight: "bold",
 			} as unknown as RectState;
 
 			const doc = rectToDoc(state);
@@ -104,6 +128,14 @@ describe("RectMapper", () => {
 			expect(doc.stroke).toBe("#000000");
 			expect(doc.strokeWidth).toBe(2);
 			expect(doc.fill).toBe("#ff0000");
+			expect(doc.text).toBe("Sample Text");
+			expect(doc.textType).toBe("textarea");
+			expect(doc.textAlign).toBe("center");
+			expect(doc.verticalAlign).toBe("center");
+			expect(doc.fontColor).toBe("#333333");
+			expect(doc.fontSize).toBe(16);
+			expect(doc.fontFamily).toBe("Arial");
+			expect(doc.fontWeight).toBe("bold");
 		});
 
 		it("should omit default transform values", () => {
@@ -160,6 +192,14 @@ describe("RectMapper", () => {
 				stroke: "#000000",
 				strokeWidth: 2,
 				fill: "#ff0000",
+				text: "Round Trip",
+				textType: "markdown",
+				textAlign: "left",
+				verticalAlign: "start",
+				fontColor: "#111111",
+				fontSize: 14,
+				fontFamily: "Noto Sans JP",
+				fontWeight: "normal",
 			} as unknown as RectDoc;
 
 			const state = rectToState(originalDoc);
@@ -176,6 +216,14 @@ describe("RectMapper", () => {
 			expect(convertedDoc.stroke).toBe(originalDoc.stroke);
 			expect(convertedDoc.strokeWidth).toBe(originalDoc.strokeWidth);
 			expect(convertedDoc.fill).toBe(originalDoc.fill);
+			expect(convertedDoc.text).toBe(originalDoc.text);
+			expect(convertedDoc.textType).toBe(originalDoc.textType);
+			expect(convertedDoc.textAlign).toBe(originalDoc.textAlign);
+			expect(convertedDoc.verticalAlign).toBe(originalDoc.verticalAlign);
+			expect(convertedDoc.fontColor).toBe(originalDoc.fontColor);
+			expect(convertedDoc.fontSize).toBe(originalDoc.fontSize);
+			expect(convertedDoc.fontFamily).toBe(originalDoc.fontFamily);
+			expect(convertedDoc.fontWeight).toBe(originalDoc.fontWeight);
 		});
 	});
 });
