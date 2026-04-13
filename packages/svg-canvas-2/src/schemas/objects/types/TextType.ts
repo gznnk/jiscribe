@@ -10,3 +10,13 @@ export const TextTypes = ["text", "textarea", "markdown"] as const;
  * - `markdown`: Markdown-formatted text rendered as HTML
  */
 export type TextType = (typeof TextTypes)[number];
+
+/**
+ * Type guard to check if a value is a valid TextType.
+ *
+ * @param value - The value to check
+ * @returns True if the value is a valid TextType, false otherwise
+ */
+export const isTextType = (value: unknown): value is TextType => {
+	return TextTypes.includes(value as TextType);
+};

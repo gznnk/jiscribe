@@ -16,6 +16,7 @@ export type GestureType =
 	| "drag"
 	| "dragEnd"
 	| "click"
+	| "doubleClick"
 	| "wheel";
 
 export type HoveredElement = {

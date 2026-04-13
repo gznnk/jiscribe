@@ -8,6 +8,7 @@ import { UngroupCommand } from "../commands/group/UngroupCommand";
 import { DeleteCommand } from "../commands/selection/DeleteCommand";
 import { DeselectAllCommand } from "../commands/selection/DeselectAllCommand";
 import { SelectAllCommand } from "../commands/selection/SelectAllCommand";
+import { StartTextEditCommand } from "../commands/text/StartTextEditCommand";
 
 /**
  * コマンドをレジストリに登録
@@ -25,5 +26,7 @@ export const initializeCommands = (): void => {
 		.register(SendToBackCommand)
 		// Group commands
 		.register(GroupCommand)
-		.register(UngroupCommand);
+		.register(UngroupCommand)
+		// Text commands
+		.register(StartTextEditCommand);
 };

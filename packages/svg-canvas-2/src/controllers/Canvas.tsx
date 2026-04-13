@@ -26,6 +26,7 @@ import { CanvasView } from "../presentations/CanvasView";
 import { TransformControlsLayer } from "./ui/controls/TransformControlsLayer";
 import { VertexControlsLayer } from "./ui/controls/VertexControlsLayer";
 import { DebugInfo } from "./ui/debug/DebugInfo";
+import { TextEditorLayer } from "./ui/editors/TextEditorLayer";
 import { AreaSelectionRect } from "./ui/feedback/AreaSelectionRect";
 import { DragGhost } from "./ui/feedback/DragGhost";
 import { SelectionOverlay } from "./ui/feedback/SelectionOverlay";
@@ -65,6 +66,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 			ghostPosition: null,
 			areaSelection: null,
 			objectMenuOpenId: null,
+			textEditState: null,
 		};
 	}, [canvasDoc]);
 
@@ -141,6 +143,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 					connectorIds={state.connectorIds}
 					viewport={state.viewport}
 					svgRef={svgRef}
+					textEditObjectId={state.textEditState?.objectId ?? null}
 				>
 					<SelectionOverlay
 						selectedIds={state.selectedIds}
@@ -165,7 +168,12 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 				</CanvasView>
 				{/* Container for HTML elements that follow canvas scroll AND zoom (elements scale with zoom) */}
 				<ZoomScaledOverlay left={-minX} top={-minY} zoom={zoom}>
-					{/* TODO: Add zoom-scaled elements (e.g., text editors on objects) */}
+					<TextEditorLayer
+						textEditState={state.textEditState}
+						objects={state.objects}
+						onTextChange={(text) => dispatch({ type: "UPDATE_TEXT_EDIT", text })}
+						onEscape={() => dispatch({ type: "END_TEXT_EDIT", commit: false })}
+					/>
 				</ZoomScaledOverlay>
 				{/* Container for HTML elements with fixed size (position follows zoom, but size does not) */}
 				<ScrollSyncedOverlay left={-minX} top={-minY} zoom={zoom}>
