@@ -7,8 +7,8 @@ export function App() {
 			<div
 				style={{
 					position: "fixed",
-					top: 8,
-					left: 8,
+					bottom: 8,
+					right: 8,
 					padding: "2px 8px",
 					background: "rgba(0,0,0,0.5)",
 					color: "#fff",
