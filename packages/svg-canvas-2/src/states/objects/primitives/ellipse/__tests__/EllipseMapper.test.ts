@@ -20,6 +20,14 @@ describe("EllipseMapper", () => {
 				stroke: "#000000",
 				strokeWidth: 2,
 				fill: "#ff0000",
+				text: "Ellipse Text",
+				textType: "text",
+				textAlign: "right",
+				verticalAlign: "end",
+				fontColor: "#222222",
+				fontSize: 18,
+				fontFamily: "Verdana",
+				fontWeight: "600",
 			} as unknown as EllipseDoc;
 
 			const state = ellipseToState(doc);
@@ -36,6 +44,14 @@ describe("EllipseMapper", () => {
 			expect(state.stroke).toBe("#000000");
 			expect(state.strokeWidth).toBe(2);
 			expect(state.fill).toBe("#ff0000");
+			expect(state.text).toBe("Ellipse Text");
+			expect(state.textType).toBe("text");
+			expect(state.textAlign).toBe("right");
+			expect(state.verticalAlign).toBe("end");
+			expect(state.fontColor).toBe("#222222");
+			expect(state.fontSize).toBe(18);
+			expect(state.fontFamily).toBe("Verdana");
+			expect(state.fontWeight).toBe("600");
 		});
 
 		it("should handle default transform values", () => {
@@ -88,6 +104,14 @@ describe("EllipseMapper", () => {
 				stroke: "#000000",
 				strokeWidth: 2,
 				fill: "#ff0000",
+				text: "Ellipse Text",
+				textType: "text",
+				textAlign: "right",
+				verticalAlign: "end",
+				fontColor: "#222222",
+				fontSize: 18,
+				fontFamily: "Verdana",
+				fontWeight: "600",
 			} as unknown as EllipseState;
 
 			const doc = ellipseToDoc(state);
@@ -104,6 +128,14 @@ describe("EllipseMapper", () => {
 			expect(doc.stroke).toBe("#000000");
 			expect(doc.strokeWidth).toBe(2);
 			expect(doc.fill).toBe("#ff0000");
+			expect(doc.text).toBe("Ellipse Text");
+			expect(doc.textType).toBe("text");
+			expect(doc.textAlign).toBe("right");
+			expect(doc.verticalAlign).toBe("end");
+			expect(doc.fontColor).toBe("#222222");
+			expect(doc.fontSize).toBe(18);
+			expect(doc.fontFamily).toBe("Verdana");
+			expect(doc.fontWeight).toBe("600");
 		});
 
 		it("should omit default transform values", () => {
@@ -160,6 +192,14 @@ describe("EllipseMapper", () => {
 				stroke: "#000000",
 				strokeWidth: 2,
 				fill: "#ff0000",
+				text: "Round Trip Text",
+				textType: "textarea",
+				textAlign: "center",
+				verticalAlign: "center",
+				fontColor: "#444444",
+				fontSize: 20,
+				fontFamily: "Georgia",
+				fontWeight: "normal",
 			} as unknown as EllipseDoc;
 
 			const state = ellipseToState(originalDoc);
@@ -176,6 +216,14 @@ describe("EllipseMapper", () => {
 			expect(convertedDoc.stroke).toBe(originalDoc.stroke);
 			expect(convertedDoc.strokeWidth).toBe(originalDoc.strokeWidth);
 			expect(convertedDoc.fill).toBe(originalDoc.fill);
+			expect(convertedDoc.text).toBe(originalDoc.text);
+			expect(convertedDoc.textType).toBe(originalDoc.textType);
+			expect(convertedDoc.textAlign).toBe(originalDoc.textAlign);
+			expect(convertedDoc.verticalAlign).toBe(originalDoc.verticalAlign);
+			expect(convertedDoc.fontColor).toBe(originalDoc.fontColor);
+			expect(convertedDoc.fontSize).toBe(originalDoc.fontSize);
+			expect(convertedDoc.fontFamily).toBe(originalDoc.fontFamily);
+			expect(convertedDoc.fontWeight).toBe(originalDoc.fontWeight);
 		});
 	});
 });

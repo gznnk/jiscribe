@@ -21,6 +21,7 @@
 		"@emotion/styled": "catalog:",
 		"@workspace/basic-validators": "workspace:*",
 		"@workspace/geometry": "workspace:*",
+		"@workspace/markdown": "workspace:*",
 		"@workspace/utility-types": "workspace:*",
 		"react": "catalog:",
 		"react-dom": "catalog:"

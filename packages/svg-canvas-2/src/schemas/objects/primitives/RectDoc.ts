@@ -7,6 +7,7 @@ export const RectFeatures = {
 	transform: true,
 	stroke: true,
 	fill: true,
+	text: true,
 } as const satisfies ObjectFeatures;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -26,4 +27,12 @@ export const RECT_DOC_DEFAULTS: Omit<RectDoc, "id"> = {
 	fill: "transparent",
 	stroke: "#374151",
 	strokeWidth: 2,
+	text: "",
+	textType: "textarea",
+	textAlign: "center",
+	verticalAlign: "center",
+	fontColor: "#000000",
+	fontSize: 16,
+	fontFamily: "Noto Sans JP",
+	fontWeight: "normal",
 } as const as RectDoc;

@@ -32,6 +32,14 @@ export const ellipseToState: DocToStateMapper<EllipseDoc, EllipseState> = (
 		stroke: doc.stroke,
 		strokeWidth: doc.strokeWidth,
 		fill: doc.fill,
+		text: doc.text,
+		textType: doc.textType,
+		textAlign: doc.textAlign,
+		verticalAlign: doc.verticalAlign,
+		fontColor: doc.fontColor,
+		fontSize: doc.fontSize,
+		fontFamily: doc.fontFamily,
+		fontWeight: doc.fontWeight,
 	} as EllipseState;
 };
 
@@ -52,5 +60,13 @@ export const ellipseToDoc: StateToDocMapper<EllipseState, EllipseDoc> = (
 		stroke: state.stroke,
 		strokeWidth: state.strokeWidth,
 		fill: state.fill,
+		text: state.text,
+		textType: state.textType,
+		textAlign: state.textAlign,
+		verticalAlign: state.verticalAlign,
+		fontColor: state.fontColor,
+		fontSize: state.fontSize,
+		fontFamily: state.fontFamily,
+		fontWeight: state.fontWeight,
 	} as EllipseDoc;
 };

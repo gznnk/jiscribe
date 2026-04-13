@@ -6,6 +6,7 @@ import type { FillStyleState } from "../base/FillStyleState";
 import type { FrameWithKeyPoints } from "../base/FrameWithKeyPoints";
 import type { ObjectState } from "../base/ObjectState";
 import type { StrokeStyleState } from "../base/StrokeStyleState";
+import type { TextStyleState } from "../base/TextStyleState";
 import type { TransformState } from "../base/TransformState";
 
 /**
@@ -66,6 +67,7 @@ export type CreateObjectState<
 		(T["transform"] extends true ? TransformState : object) &
 		(T["stroke"] extends true ? StrokeStyleState : object) &
 		(T["fill"] extends true ? FillStyleState : object) &
+		(T["text"] extends true ? TextStyleState : object) &
 		Brand<S> &
 		P
 >;

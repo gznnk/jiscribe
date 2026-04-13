@@ -4,6 +4,7 @@ import type { Brand, Prettify } from "@workspace/utility-types";
 import type { FillStyleDoc } from "../base/FillStyleDoc";
 import type { ObjectDoc } from "../base/ObjectDoc";
 import type { StrokeStyleDoc } from "../base/StrokeStyleDoc";
+import type { TextStyleDoc } from "../base/TextStyleDoc";
 import type { TransformDoc } from "../base/TransformDoc";
 import type { ObjectFeatures } from "../types/ObjectFeatures";
 import type { Poly } from "../types/Poly";
@@ -57,6 +58,7 @@ export type CreateObjectType<
 		(T["transform"] extends true ? TransformDoc : object) &
 		(T["stroke"] extends true ? StrokeStyleDoc : object) &
 		(T["fill"] extends true ? FillStyleDoc : object) &
+		(T["text"] extends true ? TextStyleDoc : object) &
 		Brand<S> &
 		P
 >;
