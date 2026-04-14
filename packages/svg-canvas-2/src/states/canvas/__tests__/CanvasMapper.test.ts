@@ -145,6 +145,7 @@ describe("CanvasMapper", () => {
 				areaSelection: null,
 				objectMenuOpenId: null,
 				multiSelectGroup: null,
+				textEditState: null,
 				objects: {
 					"rect-1": {
 						id: "rect-1",

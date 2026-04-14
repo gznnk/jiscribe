@@ -100,4 +100,13 @@ export type CanvasState = {
 	 * グループ化されていない場合は null。
 	 */
 	multiSelectGroup: GroupState | null;
+
+	/**
+	 * テキスト編集中の状態。
+	 * null の場合はテキスト編集していない。
+	 */
+	textEditState: {
+		objectId: string;
+		text: string;
+	} | null;
 };

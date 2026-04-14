@@ -8,6 +8,7 @@ import type {
 	GestureHandler,
 } from "../../../../registry/GestureHandlerRegistryTypes";
 import type { CanvasState } from "../../../../states/canvas/CanvasState";
+import { commitTextEdit } from "../../../utils/commitTextEdit";
 import { autoSelectParentGroups } from "../objects/utils/autoSelectParentGroups";
 import { createMultiSelectGroup } from "../objects/utils/createMultiSelectGroup";
 
@@ -22,7 +23,10 @@ export const CanvasEventHandler: GestureHandler = {
 	},
 
 	handle(state: CanvasState, event: CanvasEvent): CanvasState {
-		let nextState = state;
+		// Commit text editing if active
+		let nextState = state.textEditState
+			? commitTextEdit(state, event.time)
+			: state;
 
 		// Zoom handling
 		if (event.type === "zoom" && event.scrollDelta) {

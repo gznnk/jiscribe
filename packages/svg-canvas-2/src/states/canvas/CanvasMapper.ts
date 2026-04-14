@@ -85,6 +85,7 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 		areaSelection: null,
 		objectMenuOpenId: null,
 		multiSelectGroup: null,
+		textEditState: null,
 	};
 };
 

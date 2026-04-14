@@ -6,7 +6,9 @@ import type { EllipseState } from "../../../../states/objects/primitives/ellipse
 import { TextOverlay } from "../../base/TextOverlay";
 import { createSvgTransform } from "../../utils/createSvgTransform";
 
-type EllipseProps = EllipseState;
+type EllipseProps = EllipseState & {
+	isEditing?: boolean;
+};
 
 const EllipseComponent: React.FC<EllipseProps> = ({
 	id,
@@ -28,6 +30,7 @@ const EllipseComponent: React.FC<EllipseProps> = ({
 	fontSize,
 	fontFamily,
 	fontWeight,
+	isEditing = false,
 }) => {
 	const transformAttr = createSvgTransform(scaleX, scaleY, rotation, cx, cy);
 
@@ -62,6 +65,7 @@ const EllipseComponent: React.FC<EllipseProps> = ({
 				fontSize={fontSize}
 				fontFamily={fontFamily}
 				fontWeight={fontWeight}
+				isEditing={isEditing}
 			/>
 		</>
 	);

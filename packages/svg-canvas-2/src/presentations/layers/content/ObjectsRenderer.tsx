@@ -4,11 +4,14 @@ import { objectRegistry } from "../../../registry/ObjectRegistry";
 import type { CanvasState } from "../../../states/canvas/CanvasState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 
-type ObjectsRendererProps = Pick<CanvasState, "objects" | "rootIds">;
+type ObjectsRendererProps = Pick<CanvasState, "objects" | "rootIds"> & {
+	textEditObjectId?: string | null;
+};
 
 const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 	objects,
 	rootIds,
+	textEditObjectId,
 }) => {
 	const renderObject = (id: string, result: React.ReactNode[]): void => {
 		const objState = objects[id];
@@ -24,7 +27,12 @@ const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 		// 通常のオブジェクトはレジストリからコンポーネントを取得して配列に追加
 		const ObjectComponent = objectRegistry.getComponent(objState.type);
 		if (!ObjectComponent) return;
-		result.push(<ObjectComponent key={id} {...objState} />);
+
+		// テキスト編集中の場合は isEditing prop を追加
+		const isEditing = id === textEditObjectId;
+		result.push(
+			<ObjectComponent key={id} {...objState} isEditing={isEditing} />,
+		);
 	};
 
 	const renderObjects: React.ReactNode[] = [];

@@ -6,3 +6,6 @@ export const AUTO_SCROLL_THRESHOLD = 20;
 
 /** エッジスクロール時のスクロール量（ピクセル） */
 export const AUTO_SCROLL_STEP_SIZE = 10;
+
+/** ダブルクリックとみなす時間の閾値（ミリ秒） */
+export const DOUBLE_CLICK_THRESHOLD = 300;

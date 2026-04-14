@@ -1,7 +1,10 @@
 import type { Point } from "@workspace/geometry/src/types/Point";
 import type React from "react";
 
-import { DRAG_THRESHOLD } from "./GestureRecognizerConstants";
+import {
+	DOUBLE_CLICK_THRESHOLD,
+	DRAG_THRESHOLD,
+} from "./GestureRecognizerConstants";
 import type {
 	GestureCallback,
 	GestureRecognizerConfig,
@@ -67,6 +70,10 @@ export class GestureRecognizer {
 
 	// State management
 	private pressed: Pressed | null = null;
+
+	// Double-click detection
+	private lastClickTime = 0;
+	private lastClickTargetId: string | undefined = undefined;
 
 	// RAF queuing
 	private fifo: InternalEvent[] = [];
@@ -335,8 +342,31 @@ export class GestureRecognizer {
 				this.pressed.targetId,
 			);
 
+			// Determine event type: dragEnd, doubleClick, or click
+			let eventType: "dragEnd" | "doubleClick" | "click";
+			if (this.pressed.dragging) {
+				eventType = "dragEnd";
+			} else {
+				// Check for double-click: same target within threshold time
+				const isDoubleClick =
+					this.pressed.targetId === this.lastClickTargetId &&
+					time - this.lastClickTime < DOUBLE_CLICK_THRESHOLD;
+
+				eventType = isDoubleClick ? "doubleClick" : "click";
+
+				// Update last click info for single clicks only
+				// (double-click resets to prevent triple-click)
+				if (isDoubleClick) {
+					this.lastClickTime = 0;
+					this.lastClickTargetId = undefined;
+				} else {
+					this.lastClickTime = time;
+					this.lastClickTargetId = this.pressed.targetId;
+				}
+			}
+
 			this.gestureCallback({
-				type: this.pressed.dragging ? "dragEnd" : "click",
+				type: eventType,
 				target: this.pressed.target,
 				targetId: this.pressed.targetId,
 				targetKind: this.pressed.targetKind,

@@ -6,7 +6,9 @@ import type { RectState } from "../../../../states/objects/primitives/rect/RectS
 import { TextOverlay } from "../../base/TextOverlay";
 import { createSvgTransform } from "../../utils/createSvgTransform";
 
-type RectProps = RectState;
+type RectProps = RectState & {
+	isEditing?: boolean;
+};
 
 const RectComponent: React.FC<RectProps> = ({
 	id,
@@ -28,6 +30,7 @@ const RectComponent: React.FC<RectProps> = ({
 	fontSize,
 	fontFamily,
 	fontWeight,
+	isEditing = false,
 }) => {
 	const transformAttr = createSvgTransform(scaleX, scaleY, rotation, cx, cy);
 
@@ -59,6 +62,7 @@ const RectComponent: React.FC<RectProps> = ({
 				fontSize={fontSize}
 				fontFamily={fontFamily}
 				fontWeight={fontWeight}
+				isEditing={isEditing}
 			/>
 		</>
 	);

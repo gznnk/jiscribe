@@ -12,6 +12,7 @@ import { ObjectsRenderer } from "./layers/content/ObjectsRenderer";
 type CanvasViewProps = {
 	svgRef: React.RefObject<SVGSVGElement | null>;
 	children?: React.ReactNode;
+	textEditObjectId?: string | null;
 } & Pick<CanvasState, "objects" | "rootIds" | "connectorIds" | "viewport">;
 
 const CanvasViewComponent: React.FC<CanvasViewProps> = ({
@@ -21,6 +22,7 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 	viewport,
 	svgRef,
 	children,
+	textEditObjectId,
 }) => {
 	const { minX, minY, width, height, zoom } = viewport;
 
@@ -43,7 +45,11 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 			/>
 			{/* Connectors rendered below objects */}
 			<ConnectorsRenderer objects={objects} connectorIds={connectorIds} />
-			<ObjectsRenderer objects={objects} rootIds={rootIds} />
+			<ObjectsRenderer
+				objects={objects}
+				rootIds={rootIds}
+				textEditObjectId={textEditObjectId}
+			/>
 			{/* Overlay layers injected from parent */}
 			{children}
 		</Svg>

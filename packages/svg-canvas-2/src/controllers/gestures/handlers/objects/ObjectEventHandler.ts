@@ -12,7 +12,9 @@ import { objectRegistry } from "../../../../registry/ObjectRegistry";
 import type { Mods } from "../../../../registry/ObjectRegistryTypes";
 import type { CanvasState } from "../../../../states/canvas/CanvasState";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import { isTextStyleState } from "../../../../states/objects/base/TextStyleState";
 import { updateAffectedGroupBounds } from "../../../ui/utils/updateAffectedGroupBounds";
+import { commitTextEdit } from "../../../utils/commitTextEdit";
 
 /**
  * オブジェクトのクリック処理
@@ -190,41 +192,67 @@ export const ObjectEventHandler: GestureHandler = {
 	},
 
 	handle(state: CanvasState, event: CanvasEvent): CanvasState {
-		const targetObjectId = event.targetId;
-		if (!targetObjectId) {
-			return state;
+		// Commit text editing if active (except for doubleClick which starts editing)
+		let nextState = state;
+		if (state.textEditState && event.type !== "doubleClick") {
+			nextState = commitTextEdit(state, event.time);
 		}
 
-		const targetObject = state.objects[targetObjectId];
+		const targetObjectId = event.targetId;
+		if (!targetObjectId) {
+			return nextState;
+		}
+
+		const targetObject = nextState.objects[targetObjectId];
 		if (!targetObject) {
-			return state;
+			return nextState;
 		}
 
 		// クリックイベントの処理
 		if (event.type === "click") {
-			return handleObjectClick(state, targetObject, event.mods, event.button);
+			return handleObjectClick(
+				nextState,
+				targetObject,
+				event.mods,
+				event.button,
+			);
+		}
+
+		// ダブルクリックイベントの処理
+		if (event.type === "doubleClick") {
+			// テキストを持つオブジェクトの場合はテキスト編集を開始
+			if (isTextStyleState(targetObject)) {
+				return {
+					...nextState,
+					textEditState: {
+						objectId: targetObject.id,
+						text: targetObject.text ?? "",
+					},
+				};
+			}
+			return nextState;
 		}
 
 		// ドラッグイベントの処理
-		const objectStartState = state.eventStartState?.objects[targetObjectId];
+		const objectStartState = nextState.eventStartState?.objects[targetObjectId];
 		if (!objectStartState) {
-			return state;
+			return nextState;
 		}
 
 		if (event.type === "dragStart") {
 			return handleObjectDragStart(
-				state,
+				nextState,
 				objectStartState,
 				event.delta,
 				event.mods,
 				event.button,
 			);
 		} else if (event.type === "drag") {
-			return handleObjectDrag(state, event.delta, event.button);
+			return handleObjectDrag(nextState, event.delta, event.button);
 		} else if (event.type === "dragEnd") {
-			return handleObjectDragEnd(state, event.delta, event.button);
+			return handleObjectDragEnd(nextState, event.delta, event.button);
 		}
 
-		return state;
+		return nextState;
 	},
 };

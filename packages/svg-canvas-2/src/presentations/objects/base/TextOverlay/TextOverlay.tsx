@@ -25,6 +25,8 @@ type TextOverlayProps = {
 	fontSize?: number;
 	fontFamily?: string;
 	fontWeight?: string;
+	// Editing state
+	isEditing?: boolean;
 };
 
 const TextOverlayComponent: React.FC<TextOverlayProps> = ({
@@ -41,6 +43,7 @@ const TextOverlayComponent: React.FC<TextOverlayProps> = ({
 	fontSize = 16,
 	fontFamily = "Noto Sans JP",
 	fontWeight = "normal",
+	isEditing = false,
 }) => {
 	const textRef = useRef<HTMLDivElement>(null);
 
@@ -53,8 +56,8 @@ const TextOverlayComponent: React.FC<TextOverlayProps> = ({
 		}
 	}, [text, textType]);
 
-	// Don't render anything if text is empty
-	if (!text) return null;
+	// Don't render anything if editing or text is empty
+	if (isEditing || !text) return null;
 
 	return (
 		<ForeignObjectElement
