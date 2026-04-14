@@ -11,6 +11,10 @@ export const DeselectAllCommand: Command = {
 	},
 
 	canExecute: (state) => {
+		// オブジェクトドラッグ中（範囲選択以外のドラッグ）は無効化
+		if (state.eventStartState !== null && state.areaSelection === null) {
+			return false;
+		}
 		return state.selectedIds.length > 0 || state.areaSelection !== null;
 	},
 
@@ -20,6 +24,7 @@ export const DeselectAllCommand: Command = {
 			selectedIds: [],
 			areaSelection: null,
 			objectMenuOpenId: null,
+			edgeScrollEnabled: false,
 		};
 	},
 };
