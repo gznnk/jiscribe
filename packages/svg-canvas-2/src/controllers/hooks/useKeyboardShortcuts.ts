@@ -2,14 +2,13 @@ import { useEffect } from "react";
 
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import { commandRegistry } from "../commands/CommandRegistry";
-import type { CanvasAction } from "../reducer/CanvasActions";
 
 /**
  * キーボードショートカットを処理するカスタムフック
  */
 export const useKeyboardShortcuts = (
 	canvasState: CanvasState,
-	dispatch: React.Dispatch<CanvasAction>,
+	handleCommand: (commandId: string) => void,
 ) => {
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
@@ -24,7 +23,7 @@ export const useKeyboardShortcuts = (
 
 			const command = commandRegistry.findByShortcut(event);
 			if (command && command.canExecute(canvasState)) {
-				dispatch({ type: "COMMAND", commandId: command.id });
+				handleCommand(command.id);
 				event.preventDefault();
 				event.stopPropagation();
 			}
@@ -35,5 +34,5 @@ export const useKeyboardShortcuts = (
 		return () => {
 			document.removeEventListener("keydown", handleKeyDown);
 		};
-	}, [canvasState, dispatch]);
+	}, [canvasState, handleCommand]);
 };

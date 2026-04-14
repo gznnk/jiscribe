@@ -16,6 +16,7 @@ import {
 	ZoomScaledOverlay,
 } from "./CanvasStyled";
 import type { GestureCallback } from "./gestures/recognizer/GestureRecognizerTypes";
+import { useHistory } from "./history/useHistory";
 import { useContainerSize } from "./hooks/useContainerSize";
 import { useDocumentWheel } from "./hooks/useDocumentWheel";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
@@ -73,6 +74,10 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 	// Reducer for canvas state management
 	const [state, dispatch] = useReducer(canvasReducer, initialState);
 
+	// 履歴管理
+	const { history, record, undo, redo, replace, canUndo, canRedo } =
+		useHistory(canvasDoc);
+
 	// console.log("[Canvas] Render", { state });
 
 	// Notify parent component when a committable action occurs
@@ -80,14 +85,21 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 		if (state.lastCommitTime > 0) {
 			const doc = canvasToDoc(state);
 			onCommit?.(doc);
+
+			// 履歴に記録（Undo/Redo実行中は内部で自動スキップされる）
+			record(doc);
 		}
-	}, [state, onCommit]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [state.lastCommitTime, onCommit, record]);
 
 	// Sync external canvasDoc changes
 	useEffect(() => {
 		const newState = canvasToState(canvasDoc);
 		dispatch({ type: "SYNC_EXTERNAL", payload: newState });
-	}, [canvasDoc]);
+
+		// 履歴のpresentも置き換え
+		replace(canvasDoc);
+	}, [canvasDoc, replace]);
 
 	// Gesture handling
 	const handleGesture = useCallback<GestureCallback>(
@@ -115,8 +127,35 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 	);
 	useContainerSize(canvasRef, handleResize);
 
+	// カスタムコマンドハンドラ（Undo/Redoを処理）
+	const handleCommand = useCallback(
+		(commandId: string) => {
+			if (commandId === "undo") {
+				if (canUndo) {
+					const doc = history.past[history.past.length - 1];
+					dispatch({ type: "UNDO", doc });
+					undo(); // 内部でフラグ管理される
+				}
+				return;
+			}
+
+			if (commandId === "redo") {
+				if (canRedo) {
+					const doc = history.future[0];
+					dispatch({ type: "REDO", doc });
+					redo(); // 内部でフラグ管理される
+				}
+				return;
+			}
+
+			// 通常のコマンドは既存のロジックへ
+			dispatch({ type: "COMMAND", commandId });
+		},
+		[canUndo, canRedo, history, undo, redo, dispatch],
+	);
+
 	// Keyboard shortcuts handling
-	useKeyboardShortcuts(state, dispatch);
+	useKeyboardShortcuts(state, handleCommand);
 
 	// Context menu handling
 	const handleContextMenu = useCallback(

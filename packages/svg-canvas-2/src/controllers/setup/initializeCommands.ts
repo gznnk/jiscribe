@@ -3,6 +3,8 @@ import { BringToFrontCommand } from "../commands/arrange/BringToFrontCommand";
 import { SendBackwardCommand } from "../commands/arrange/SendBackwardCommand";
 import { SendToBackCommand } from "../commands/arrange/SendToBackCommand";
 import { commandRegistry } from "../commands/CommandRegistry";
+import { RedoCommand } from "../commands/edit/RedoCommand";
+import { UndoCommand } from "../commands/edit/UndoCommand";
 import { GroupCommand } from "../commands/group/GroupCommand";
 import { UngroupCommand } from "../commands/group/UngroupCommand";
 import { DeleteCommand } from "../commands/selection/DeleteCommand";
@@ -15,6 +17,9 @@ import { StartTextEditCommand } from "../commands/text/StartTextEditCommand";
  */
 export const initializeCommands = (): void => {
 	commandRegistry
+		// Edit commands
+		.register(UndoCommand)
+		.register(RedoCommand)
 		// Selection commands
 		.register(SelectAllCommand)
 		.register(DeselectAllCommand)

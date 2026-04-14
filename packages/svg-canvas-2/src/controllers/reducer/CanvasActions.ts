@@ -1,5 +1,6 @@
 import type { Dimensions } from "@workspace/geometry";
 
+import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { Gesture } from "../gestures/recognizer/GestureRecognizerTypes";
 
@@ -60,6 +61,22 @@ export type EndTextEditAction = {
 };
 
 /**
+ * Undo action - restores previous state from history
+ */
+export type UndoAction = {
+	type: "UNDO";
+	doc: CanvasDoc; // 復元するドキュメント
+};
+
+/**
+ * Redo action - restores next state from history
+ */
+export type RedoAction = {
+	type: "REDO";
+	doc: CanvasDoc; // 復元するドキュメント
+};
+
+/**
  * Union of all canvas actions
  */
 export type CanvasAction =
@@ -69,4 +86,6 @@ export type CanvasAction =
 	| CommandAction
 	| StartTextEditAction
 	| UpdateTextEditAction
-	| EndTextEditAction;
+	| EndTextEditAction
+	| UndoAction
+	| RedoAction;

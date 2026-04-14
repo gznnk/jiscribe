@@ -1,4 +1,5 @@
 import type { CanvasAction } from "./CanvasActions";
+import { canvasToState } from "../../states/canvas/CanvasMapper";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import { isTextStyleState } from "../../states/objects/base/TextStyleState";
 import { handleCommand } from "../commands/handlers/handleCommand";
@@ -74,6 +75,28 @@ export const canvasReducer = (
 			// キャンセルの場合は textEditState のみクリア
 			return {
 				...state,
+				textEditState: null,
+			};
+		}
+
+		case "UNDO":
+		case "REDO": {
+			// CanvasDocからStateに変換
+			const newState = canvasToState(action.doc);
+
+			// UI状態をクリア、viewportは保持
+			return {
+				...newState,
+				viewport: state.viewport, // ズーム・パンは維持
+				selectedIds: [],
+				hoveredIds: [],
+				eventStartState: null,
+				lastCommitTime: Date.now(), // commit発火のため更新
+				contextMenuPosition: null,
+				pendingShapeType: null,
+				ghostPosition: null,
+				areaSelection: null,
+				objectMenuOpenId: null,
 				textEditState: null,
 			};
 		}
