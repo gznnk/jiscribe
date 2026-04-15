@@ -29,6 +29,11 @@ const ConnectionAnchorsLayerComponent: React.FC<
 		return null;
 	}
 
+	// Exclude groups
+	if (selectedObject.type === "group") {
+		return null;
+	}
+
 	// Only render for frame-based objects
 	if (!isTransformedFrame(selectedObject)) {
 		return null;
