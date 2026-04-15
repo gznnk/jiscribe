@@ -73,8 +73,6 @@ export const DeleteCommand: Command = {
 		};
 
 		// グループのクリーンアップ（空グループの削除、1個グループの解除）
-		const nextState = cleanupGroups(nextStateBeforeCleanup);
-
-		return nextState;
+		return cleanupGroups(nextStateBeforeCleanup);
 	},
 };

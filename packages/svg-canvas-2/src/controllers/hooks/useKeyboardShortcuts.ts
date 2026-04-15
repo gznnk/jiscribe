@@ -1,13 +1,13 @@
 import { useEffect } from "react";
 
-import type { CanvasState } from "../../states/canvas/CanvasState";
+import type { CanvasControllerState } from "../CanvasTypes";
 import { commandRegistry } from "../commands/CommandRegistry";
 
 /**
  * キーボードショートカットを処理するカスタムフック
  */
 export const useKeyboardShortcuts = (
-	canvasState: CanvasState,
+	canvasState: CanvasControllerState,
 	handleCommand: (commandId: string) => void,
 ) => {
 	useEffect(() => {

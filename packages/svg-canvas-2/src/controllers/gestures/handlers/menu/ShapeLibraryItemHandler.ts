@@ -5,7 +5,7 @@ import type {
 import { objectRegistry } from "../../../../registry/ObjectRegistry";
 import type { ObjectType } from "../../../../schemas/objects/types/ObjectType";
 import { createObjectDoc } from "../../../../schemas/objects/utils/createObjectDoc";
-import type { CanvasState } from "../../../../states/canvas/CanvasState";
+import type { CanvasControllerState } from "../../../CanvasTypes";
 
 /**
  * targetId から shapeType を抽出する。
@@ -17,13 +17,13 @@ const parseShapeType = (targetId: string): ObjectType => {
 };
 
 /**
- * 図形を state に追加し、新しい CanvasState を返す。
+ * 図形を state に追加し、新しい CanvasControllerState を返す。
  */
 const addObjectToState = (
-	state: CanvasState,
+	state: CanvasControllerState,
 	shapeType: ObjectType,
 	position: { x: number; y: number },
-): CanvasState => {
+): CanvasControllerState => {
 	const doc = createObjectDoc(shapeType, position);
 	const objectState = objectRegistry.toState(doc);
 
@@ -47,7 +47,7 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 		return event.targetKind === "menu-item";
 	},
 
-	handle(state: CanvasState, event: CanvasEvent): CanvasState {
+	handle(state, event) {
 		if (!event.targetId) {
 			return state;
 		}

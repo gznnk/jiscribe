@@ -1,5 +1,5 @@
-import type { CanvasState } from "../../../../../states/canvas/CanvasState";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
+import type { CanvasControllerState } from "../../../../CanvasTypes";
 
 /**
  * Gets all ancestor IDs of an object, ordered from root to leaf (outermost to innermost).
@@ -7,7 +7,7 @@ import type { ObjectState } from "../../../../../states/objects/base/ObjectState
  *
  * This matches the behavior of svg-canvas's getAncestorItemsById.
  *
- * @param state - The canvas state
+ * @param state - The canvas controller state
  * @param objectId - The ID of the object
  * @returns Array of ancestor IDs [root, ..., grandparent, parent]
  * @complexity O(depth) where depth is nesting level (typically < 10)
@@ -17,7 +17,10 @@ import type { ObjectState } from "../../../../../states/objects/base/ObjectState
  * getAncestors(state, 'rect-1')
  * // Returns: ['root', 'group-1', 'group-2']
  */
-export function getAncestors(state: CanvasState, objectId: string): string[] {
+export function getAncestors(
+	state: CanvasControllerState,
+	objectId: string,
+): string[] {
 	const ancestors: string[] = [];
 	let currentId: string | undefined = objectId;
 	const visited = new Set<string>();

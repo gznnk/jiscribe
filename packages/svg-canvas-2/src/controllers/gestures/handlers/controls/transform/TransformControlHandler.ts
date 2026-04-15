@@ -15,21 +15,21 @@ import {
 	roundToDecimal,
 } from "@workspace/geometry";
 
+import { calcMultiSelectGroupBounds } from "./utils/calcMultiSelectGroupBounds";
+import { updateGroupBoundsFromRoot } from "./utils/updateGroupBoundsFromRoot";
+import { updateSingleGroupBounds } from "./utils/updateSingleGroupBounds";
 import { PRECISION } from "../../../../../constants/precision";
 import type { CanvasEvent } from "../../../../../registry/GestureHandlerRegistryTypes";
-import type { CanvasState } from "../../../../../states/canvas/CanvasState";
 import { hasFrameKeyPoints } from "../../../../../states/objects/base/FrameWithKeyPoints";
 import type { TransformState } from "../../../../../states/objects/base/TransformState";
 import { isTransformState } from "../../../../../states/objects/base/TransformState";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
+import type { CanvasControllerState } from "../../../../CanvasTypes";
 import {
 	transformChildren,
 	rotateChildren,
 } from "../../objects/primitives/GroupController";
 import type { ControlStrategy } from "../ControlEventHandler";
-import { calcMultiSelectGroupBounds } from "./utils/calcMultiSelectGroupBounds";
-import { updateGroupBoundsFromRoot } from "./utils/updateGroupBoundsFromRoot";
-import { updateSingleGroupBounds } from "./utils/updateSingleGroupBounds";
 
 /**
  * Transform control のアンカータイプ。
@@ -70,7 +70,10 @@ export class TransformControlHandler implements ControlStrategy {
 		return targetId.startsWith("transform-control:");
 	}
 
-	handle(state: CanvasState, event: CanvasEvent): CanvasState {
+	handle(
+		state: CanvasControllerState,
+		event: CanvasEvent,
+	): CanvasControllerState {
 		// Only handle left-click (button 0)
 		if (event.button !== 0) {
 			return state;
@@ -107,10 +110,10 @@ export class TransformControlHandler implements ControlStrategy {
 	 * Transform control アンカーでのドラッグ開始を処理する。
 	 */
 	private handleDragStart(
-		state: CanvasState,
+		state: CanvasControllerState,
 		_event: CanvasEvent,
 		_anchorType: TransformAnchorType,
-	): CanvasState {
+	): CanvasControllerState {
 		return {
 			...state,
 			edgeScrollEnabled: true,
@@ -121,10 +124,10 @@ export class TransformControlHandler implements ControlStrategy {
 	 * Transform control アンカーでのドラッグを処理する。
 	 */
 	private handleDrag(
-		state: CanvasState,
+		state: CanvasControllerState,
 		event: CanvasEvent,
 		anchorType: TransformAnchorType,
-	): CanvasState {
+	): CanvasControllerState {
 		// 回転は別処理
 		if (anchorType === "rotation") {
 			return this.handleRotationDrag(state, event);
@@ -237,7 +240,7 @@ export class TransformControlHandler implements ControlStrategy {
 			...eventStartState.objects,
 		};
 
-		let nextState: CanvasState;
+		let nextState: CanvasControllerState;
 
 		if (isMultiSelect) {
 			// 複数選択の場合: multiSelectGroup を基準に各選択オブジェクトを変換
@@ -1045,10 +1048,10 @@ export class TransformControlHandler implements ControlStrategy {
 	 * Transform control アンカーでのドラッグ終了を処理する。
 	 */
 	private handleDragEnd(
-		state: CanvasState,
+		state: CanvasControllerState,
 		event: CanvasEvent,
 		anchorType: TransformAnchorType,
-	): CanvasState {
+	): CanvasControllerState {
 		// ドラッグ中の状態更新を適用して最終状態を計算
 		let nextState = this.handleDrag({ ...state }, event, anchorType);
 
@@ -1070,9 +1073,9 @@ export class TransformControlHandler implements ControlStrategy {
 	 * rotation アンカーのドラッグを処理（回転ハンドル）。
 	 */
 	private handleRotationDrag(
-		state: CanvasState,
+		state: CanvasControllerState,
 		event: CanvasEvent,
-	): CanvasState {
+	): CanvasControllerState {
 		const eventStartState = state.eventStartState;
 		if (!eventStartState) {
 			return state;
@@ -1132,7 +1135,7 @@ export class TransformControlHandler implements ControlStrategy {
 			...eventStartState.objects,
 		};
 
-		let nextState: CanvasState;
+		let nextState: CanvasControllerState;
 
 		if (isMultiSelect) {
 			// 複数選択の場合: multiSelectGroup を基準に各選択オブジェクトを回転

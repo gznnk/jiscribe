@@ -1,16 +1,19 @@
-import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../states/objects/base/TextStyleState";
+import type { CanvasControllerState } from "../CanvasTypes";
 
 /**
  * Commits the current text editing session if active.
  * Updates the object's text and clears textEditState.
  *
- * @param state - Current canvas state
+ * @param state - Current canvas controller state
  * @param time - Event timestamp for lastCommitTime
- * @returns Updated canvas state with text committed, or unchanged state if not editing
+ * @returns Updated canvas controller state with text committed, or unchanged state if not editing
  */
-export function commitTextEdit(state: CanvasState, time: number): CanvasState {
+export function commitTextEdit(
+	state: CanvasControllerState,
+	time: number,
+): CanvasControllerState {
 	if (!state.textEditState) {
 		return state;
 	}

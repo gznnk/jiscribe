@@ -1,7 +1,7 @@
 import { objectRegistry } from "../../../../../registry/ObjectRegistry";
 import type { ObjectFeatures } from "../../../../../schemas/objects/types/ObjectFeatures";
-import type { CanvasState } from "../../../../../states/canvas/CanvasState";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
+import type { CanvasControllerState } from "../../../../CanvasTypes";
 
 /**
  * プロパティが対象オブジェクトの features でサポートされているか判定する。
@@ -56,16 +56,16 @@ const parsePropertyValue = (property: string, value: string): unknown => {
  * 選択中の全オブジェクトに対してプロパティを更新する。
  * objectRegistry の features を使って、対象オブジェクトがそのプロパティをサポートしているか判定する。
  *
- * @param state - 現在の CanvasState
+ * @param state - 現在の CanvasControllerState
  * @param property - 更新するプロパティ名 (例: "fill", "stroke", "lockAspectRatio")
  * @param value - 設定する値の文字列表現
- * @returns 更新後の CanvasState
+ * @returns 更新後の CanvasControllerState
  */
 export const handlePropertyUpdate = (
-	state: CanvasState,
+	state: CanvasControllerState,
 	property: string,
 	value: string,
-): CanvasState => {
+): CanvasControllerState => {
 	const { selectedIds, objects } = state;
 	if (selectedIds.length === 0) return state;
 

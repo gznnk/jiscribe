@@ -17,10 +17,10 @@ import { KeepAspectRatioMenu } from "./sections/KeepAspectRatioMenu";
 import { StackOrderMenu } from "./sections/StackOrderMenu";
 import { StrokeColorMenu } from "./sections/StrokeColorMenu";
 import { useObjectMenuPosition } from "./useObjectMenuPosition";
-import type { CanvasState } from "../../../../states/canvas/CanvasState";
+import type { CanvasControllerState } from "../../../CanvasTypes";
 
 type ObjectMenuProps = {
-	canvasState: CanvasState;
+	canvasState: CanvasControllerState;
 };
 
 /**

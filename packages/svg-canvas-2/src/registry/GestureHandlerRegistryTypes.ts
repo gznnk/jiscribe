@@ -1,10 +1,10 @@
 import type { Prettify } from "@workspace/utility-types/src/Prettify";
 
+import type { CanvasControllerState } from "../controllers/CanvasTypes";
 import type {
 	Gesture,
 	GestureType,
 } from "../controllers/gestures/recognizer/GestureRecognizerTypes";
-import type { CanvasState } from "../states/canvas/CanvasState";
 
 /**
  * Canvas event type.
@@ -42,10 +42,13 @@ export interface GestureHandler {
 	supports(event: CanvasEvent): boolean;
 
 	/**
-	 * Handles the canvas event and returns the updated canvas state.
-	 * @param state - The current canvas state
+	 * Handles the canvas event and returns the updated canvas controller state.
+	 * @param state - The current canvas controller state
 	 * @param event - The canvas event to process
-	 * @returns The updated canvas state
+	 * @returns The updated canvas controller state
 	 */
-	handle(state: CanvasState, event: CanvasEvent): CanvasState;
+	handle(
+		state: CanvasControllerState,
+		event: CanvasEvent,
+	): CanvasControllerState;
 }

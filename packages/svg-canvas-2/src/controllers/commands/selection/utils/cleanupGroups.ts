@@ -1,6 +1,6 @@
-import type { CanvasState } from "../../../../states/canvas/CanvasState";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
+import type { CanvasControllerState } from "../../../CanvasTypes";
 import { updateGroupBounds } from "../../../ui/utils/updateGroupBounds";
 
 /**
@@ -10,10 +10,12 @@ import { updateGroupBounds } from "../../../ui/utils/updateGroupBounds";
  * - グループ内の図形が1個 → グループ化を解除し、図形を親グループ（またはルート）に移動
  * - グループ内の図形が2個以上 → グループを維持
  *
- * @param state - 現在のキャンバス状態
- * @returns クリーンアップ後のキャンバス状態
+ * @param state - 現在のキャンバスコントローラー状態
+ * @returns クリーンアップ後のキャンバスコントローラー状態
  */
-export const cleanupGroups = (state: CanvasState): CanvasState => {
+export const cleanupGroups = (
+	state: CanvasControllerState,
+): CanvasControllerState => {
 	const updatedObjects = { ...state.objects };
 	const updatedRootIds = [...state.rootIds];
 	const groupsToProcess = new Set<string>();

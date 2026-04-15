@@ -2,7 +2,6 @@ import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../../../registry/GestureHandlerRegistryTypes";
-import type { CanvasState } from "../../../../states/canvas/CanvasState";
 import { handleCommand } from "../../../commands/handlers/handleCommand";
 
 /**
@@ -14,7 +13,7 @@ export const ContextMenuHandler: GestureHandler = {
 		return event.targetKind === "context-menu";
 	},
 
-	handle(state: CanvasState, event: CanvasEvent): CanvasState {
+	handle(state, event) {
 		if (event.type === "click" && event.targetId) {
 			// targetId から "context-menu:" プレフィックスを除去してコマンドIDを取得
 			const commandId = event.targetId.replace("context-menu:", "");

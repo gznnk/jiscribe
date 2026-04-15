@@ -3,7 +3,6 @@ import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../../../registry/GestureHandlerRegistryTypes";
-import type { CanvasState } from "../../../../states/canvas/CanvasState";
 import { handleCommand } from "../../../commands/handlers/handleCommand";
 
 /**
@@ -20,7 +19,7 @@ export const ObjectMenuHandler: GestureHandler = {
 		return event.targetKind === "object-menu";
 	},
 
-	handle(state: CanvasState, event: CanvasEvent): CanvasState {
+	handle(state, event) {
 		if (event.type === "click" && event.targetId) {
 			// targetId から "object-menu:" プレフィックスを除去してIDを取得
 			const actionId = event.targetId.replace("object-menu:", "");

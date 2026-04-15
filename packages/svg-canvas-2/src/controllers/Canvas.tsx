@@ -15,8 +15,8 @@ import {
 	ViewportOverlay,
 	ZoomScaledOverlay,
 } from "./CanvasStyled";
+import type { CanvasControllerState } from "./CanvasTypes";
 import type { GestureCallback } from "./gestures/recognizer/GestureRecognizerTypes";
-import { useHistory } from "./history/useHistory";
 import { useContainerSize } from "./hooks/useContainerSize";
 import { useDocumentWheel } from "./hooks/useDocumentWheel";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
@@ -36,7 +36,6 @@ import { ObjectMenu } from "./ui/menu/ObjectMenu";
 import { ShapeLibrary } from "./ui/menu/ShapeLibrary";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import { canvasToDoc, canvasToState } from "../states/canvas/CanvasMapper";
-import type { CanvasState } from "../states/canvas/CanvasState";
 
 // Initialize all registries (ObjectRegistry, GestureHandlerRegistry)
 initializeRegistries();
@@ -54,7 +53,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 	const canvasRef = useRef<HTMLDivElement>(null);
 	const svgRef = useRef<SVGSVGElement>(null);
 
-	const initialState = useMemo((): CanvasState => {
+	const initialState = useMemo((): CanvasControllerState => {
 		const baseState = canvasToState(canvasDoc);
 		return {
 			...baseState,
@@ -68,15 +67,16 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 			areaSelection: null,
 			objectMenuOpenId: null,
 			textEditState: null,
+			history: {
+				past: [],
+				present: canvasDoc,
+				future: [],
+			},
 		};
 	}, [canvasDoc]);
 
-	// Reducer for canvas state management
+	// Reducer for canvas state management with history
 	const [state, dispatch] = useReducer(canvasReducer, initialState);
-
-	// 履歴管理
-	const { history, record, undo, redo, replace, canUndo, canRedo } =
-		useHistory(canvasDoc);
 
 	// console.log("[Canvas] Render", { state });
 
@@ -85,21 +85,15 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 		if (state.lastCommitTime > 0) {
 			const doc = canvasToDoc(state);
 			onCommit?.(doc);
-
-			// 履歴に記録（Undo/Redo実行中は内部で自動スキップされる）
-			record(doc);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [state.lastCommitTime, onCommit, record]);
+	}, [state.lastCommitTime, onCommit]);
 
 	// Sync external canvasDoc changes
 	useEffect(() => {
 		const newState = canvasToState(canvasDoc);
 		dispatch({ type: "SYNC_EXTERNAL", payload: newState });
-
-		// 履歴のpresentも置き換え
-		replace(canvasDoc);
-	}, [canvasDoc, replace]);
+	}, [canvasDoc]);
 
 	// Gesture handling
 	const handleGesture = useCallback<GestureCallback>(
@@ -127,34 +121,14 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 	);
 	useContainerSize(canvasRef, handleResize);
 
-	// カスタムコマンドハンドラ（Undo/Redoを処理）
+	// Keyboard shortcuts handling
 	const handleCommand = useCallback(
 		(commandId: string) => {
-			if (commandId === "undo") {
-				if (canUndo) {
-					const doc = history.past[history.past.length - 1];
-					dispatch({ type: "UNDO", doc });
-					undo(); // 内部でフラグ管理される
-				}
-				return;
-			}
-
-			if (commandId === "redo") {
-				if (canRedo) {
-					const doc = history.future[0];
-					dispatch({ type: "REDO", doc });
-					redo(); // 内部でフラグ管理される
-				}
-				return;
-			}
-
-			// 通常のコマンドは既存のロジックへ
 			dispatch({ type: "COMMAND", commandId });
 		},
-		[canUndo, canRedo, history, undo, redo, dispatch],
+		[dispatch],
 	);
 
-	// Keyboard shortcuts handling
 	useKeyboardShortcuts(state, handleCommand);
 
 	// Context menu handling
@@ -210,7 +184,9 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 					<TextEditorLayer
 						textEditState={state.textEditState}
 						objects={state.objects}
-						onTextChange={(text) => dispatch({ type: "UPDATE_TEXT_EDIT", text })}
+						onTextChange={(text) =>
+							dispatch({ type: "UPDATE_TEXT_EDIT", text })
+						}
 						onEscape={() => dispatch({ type: "END_TEXT_EDIT", commit: false })}
 					/>
 				</ZoomScaledOverlay>

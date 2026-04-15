@@ -2,22 +2,22 @@ import { autoSelectParentGroups } from "./autoSelectParentGroups";
 import { getAncestors } from "./getAncestors";
 import { hasSelectedDescendants } from "./hasSelectedDescendants";
 import type { Mods } from "../../../../../registry/ObjectRegistryTypes";
-import type { CanvasState } from "../../../../../states/canvas/CanvasState";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
+import type { CanvasControllerState } from "../../../../CanvasTypes";
 
 /**
  * Determines the new selection IDs based on hierarchical selection logic.
  * Extracted from DefaultClickEventHandler to be reused in drag handlers.
  *
  * @param objectState - The object that was clicked/dragged
- * @param canvasState - Current canvas state
+ * @param canvasState - Current canvas controller state
  * @param mods - Keyboard modifiers (ctrl, meta, etc.)
  * @returns New selection IDs array, or null if no change should be made
  */
 export function determineSelection(
 	objectState: ObjectState,
-	canvasState: CanvasState,
+	canvasState: CanvasControllerState,
 	mods: Mods,
 ): string[] | null {
 	const { id } = objectState;

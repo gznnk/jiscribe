@@ -3,11 +3,7 @@
 import { collectIdsInArea } from "./utils/collectIdsInArea";
 import { PRECISION } from "../../../../constants/precision";
 import { ZOOM } from "../../../../constants/zoom";
-import type {
-	CanvasEvent,
-	GestureHandler,
-} from "../../../../registry/GestureHandlerRegistryTypes";
-import type { CanvasState } from "../../../../states/canvas/CanvasState";
+import type { GestureHandler } from "../../../../registry/GestureHandlerRegistryTypes";
 import { commitTextEdit } from "../../../utils/commitTextEdit";
 import { autoSelectParentGroups } from "../objects/utils/autoSelectParentGroups";
 import { createMultiSelectGroup } from "../objects/utils/createMultiSelectGroup";
@@ -18,11 +14,11 @@ import { createMultiSelectGroup } from "../objects/utils/createMultiSelectGroup"
  * grab-scroll and context menus work consistently above objects and controls.
  */
 export const CanvasEventHandler: GestureHandler = {
-	supports(event: CanvasEvent): boolean {
+	supports(event): boolean {
 		return event.targetKind === "canvas" || event.button === 2;
 	},
 
-	handle(state: CanvasState, event: CanvasEvent): CanvasState {
+	handle(state, event) {
 		// Commit text editing if active
 		let nextState = state.textEditState
 			? commitTextEdit(state, event.time)

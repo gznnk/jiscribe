@@ -1,6 +1,6 @@
 ﻿import { memo } from "react";
 
-import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
+import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { commandRegistry } from "../../../../../commands/CommandRegistry";
 import { BringForwardIcon } from "../../../../icons/BringForwardIcon";
 import { BringToFrontIcon } from "../../../../icons/BringToFrontIcon";
@@ -16,7 +16,7 @@ import {
 const SECTION_ID = "stack-order";
 
 type StackOrderMenuProps = {
-	canvasState: CanvasState;
+	canvasState: CanvasControllerState;
 };
 
 const arrangeCommands = [

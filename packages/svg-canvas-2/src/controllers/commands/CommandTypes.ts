@@ -1,4 +1,4 @@
-import type { CanvasState } from "../../states/canvas/CanvasState";
+import type { CanvasControllerState } from "../CanvasTypes";
 
 /**
  * キーボードショートカットの定義
@@ -46,13 +46,13 @@ export type Command = {
 	 * コマンドが実行可能かどうかを判定
 	 * メニュー項目の有効/無効化に使用
 	 */
-	canExecute: (state: CanvasState) => boolean;
+	canExecute: (state: CanvasControllerState) => boolean;
 
 	/**
-	 * コマンドを実行し、新しい CanvasState を返す
+	 * コマンドを実行し、新しい CanvasControllerState を返す
 	 * 純粋関数として実装（副作用なし）
 	 */
-	execute: (state: CanvasState) => CanvasState;
+	execute: (state: CanvasControllerState) => CanvasControllerState;
 
 	/**
 	 * プラットフォーム別キーボードショートカット

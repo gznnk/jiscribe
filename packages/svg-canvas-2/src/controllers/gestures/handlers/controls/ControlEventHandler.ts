@@ -2,7 +2,7 @@ import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../../../registry/GestureHandlerRegistryTypes";
-import type { CanvasState } from "../../../../states/canvas/CanvasState";
+import type { CanvasControllerState } from "../../../CanvasTypes";
 import { commitTextEdit } from "../../../utils/commitTextEdit";
 
 /**
@@ -51,7 +51,10 @@ export class ControlEventHandler implements GestureHandler {
 		return event.targetKind === "control";
 	}
 
-	handle(state: CanvasState, event: CanvasEvent): CanvasState {
+	handle(
+		state: CanvasControllerState,
+		event: CanvasEvent,
+	): CanvasControllerState {
 		// Commit text editing if active
 		const nextState = state.textEditState
 			? commitTextEdit(state, event.time)

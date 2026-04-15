@@ -3,8 +3,8 @@ import type { Point } from "@workspace/geometry";
 
 import { PRECISION } from "../../../../../constants/precision";
 import type { CanvasEvent } from "../../../../../registry/GestureHandlerRegistryTypes";
-import type { CanvasState } from "../../../../../states/canvas/CanvasState";
 import type { PolylineState } from "../../../../../states/objects/primitives/polyline/PolylineState";
+import type { CanvasControllerState } from "../../../../CanvasTypes";
 import type { ControlStrategy } from "../ControlEventHandler";
 import { updateGroupBoundsFromRoot } from "../transform/utils/updateGroupBoundsFromRoot";
 
@@ -31,7 +31,10 @@ export class VertexControlHandler implements ControlStrategy {
 		return targetId.startsWith("vertex-control:");
 	}
 
-	handle(state: CanvasState, event: CanvasEvent): CanvasState {
+	handle(
+		state: CanvasControllerState,
+		event: CanvasEvent,
+	): CanvasControllerState {
 		// Only handle left-click (button 0)
 		if (event.button !== 0) {
 			return state;
@@ -73,9 +76,9 @@ export class VertexControlHandler implements ControlStrategy {
 	 * Vertex control でのドラッグ開始を処理する。
 	 */
 	private handleDragStart(
-		state: CanvasState,
+		state: CanvasControllerState,
 		_event: CanvasEvent,
-	): CanvasState {
+	): CanvasControllerState {
 		return {
 			...state,
 			edgeScrollEnabled: true,
@@ -86,11 +89,11 @@ export class VertexControlHandler implements ControlStrategy {
 	 * Vertex control でのドラッグを処理する。
 	 */
 	private handleDrag(
-		state: CanvasState,
+		state: CanvasControllerState,
 		event: CanvasEvent,
 		objectId: string,
 		vertexIndex: number,
-	): CanvasState {
+	): CanvasControllerState {
 		const eventStartState = state.eventStartState;
 		if (!eventStartState) {
 			return state;
@@ -130,11 +133,11 @@ export class VertexControlHandler implements ControlStrategy {
 	 * Vertex control でのドラッグ終了を処理する。
 	 */
 	private handleDragEnd(
-		state: CanvasState,
+		state: CanvasControllerState,
 		event: CanvasEvent,
 		objectId: string,
 		vertexIndex: number,
-	): CanvasState {
+	): CanvasControllerState {
 		// ドラッグ中の状態更新を適用して最終状態を計算
 		let nextState = this.handleDrag(
 			{ ...state },

@@ -1,4 +1,3 @@
-import type { CanvasState } from "../../../states/canvas/CanvasState";
 import { isTextStyleState } from "../../../states/objects/base/TextStyleState";
 import type { Command } from "../CommandTypes";
 
@@ -10,7 +9,7 @@ export const StartTextEditCommand: Command = {
 		default: [{ key: "Enter" }],
 	},
 
-	canExecute(state: CanvasState): boolean {
+	canExecute(state) {
 		// 既にテキスト編集中の場合は実行不可
 		if (state.textEditState) return false;
 
@@ -22,7 +21,7 @@ export const StartTextEditCommand: Command = {
 		return selectedObject != null && isTextStyleState(selectedObject);
 	},
 
-	execute(state: CanvasState): CanvasState {
+	execute(state) {
 		const objectId = state.selectedIds[0];
 		const targetObject = state.objects[objectId];
 

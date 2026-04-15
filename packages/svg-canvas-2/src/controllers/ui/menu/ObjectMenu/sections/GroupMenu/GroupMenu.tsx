@@ -1,12 +1,12 @@
 ﻿import { memo } from "react";
 
-import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
+import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { commandRegistry } from "../../../../../commands/CommandRegistry";
 import { GroupIcon } from "../../../../icons/GroupIcon";
 import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
 
 type GroupMenuProps = {
-	canvasState: CanvasState;
+	canvasState: CanvasControllerState;
 };
 
 const GroupMenuComponent: React.FC<GroupMenuProps> = ({ canvasState }) => {

@@ -2,7 +2,7 @@ import type {
 	CanvasEvent,
 	GestureHandler,
 } from "./GestureHandlerRegistryTypes";
-import type { CanvasState } from "../states/canvas/CanvasState";
+import type { CanvasControllerState } from "../controllers/CanvasTypes";
 
 /**
  * Registry for gesture handlers.
@@ -42,11 +42,14 @@ export class GestureHandlerRegistry {
 
 	/**
 	 * Processes a canvas event by routing it to the first handler that supports it.
-	 * @param state - The current canvas state
+	 * @param state - The current canvas controller state
 	 * @param event - The canvas event to process
-	 * @returns The updated canvas state
+	 * @returns The updated canvas controller state
 	 */
-	handle(state: CanvasState, event: CanvasEvent): CanvasState {
+	handle(
+		state: CanvasControllerState,
+		event: CanvasEvent,
+	): CanvasControllerState {
 		// Iterate through all handlers and find the first one that supports this event
 		for (const handler of this.handlers.values()) {
 			if (handler.supports(event)) {

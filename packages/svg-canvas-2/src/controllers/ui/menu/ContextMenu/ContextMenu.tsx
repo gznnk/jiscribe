@@ -7,7 +7,7 @@ import {
 	MenuItemShortcut,
 	MenuSeparator,
 } from "./ContextMenuStyled";
-import type { CanvasState } from "../../../../states/canvas/CanvasState";
+import type { CanvasControllerState } from "../../../CanvasTypes";
 import { commandRegistry } from "../../../commands/CommandRegistry";
 import type { CommandMenuItem } from "../../../commands/CommandTypes";
 import {
@@ -17,7 +17,7 @@ import {
 
 type ContextMenuProps = {
 	position: { clientX: number; clientY: number } | null;
-	canvasState: CanvasState;
+	canvasState: CanvasControllerState;
 };
 
 const ContextMenuComponent: React.FC<ContextMenuProps> = ({

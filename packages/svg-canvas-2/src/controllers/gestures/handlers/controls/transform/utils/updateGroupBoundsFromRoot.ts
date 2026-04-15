@@ -1,20 +1,20 @@
 import { updateGroupBounds } from "../../../../../../controllers/ui/utils/updateGroupBounds";
-import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
+import type { CanvasControllerState } from "../../../../../CanvasTypes";
 
 /**
  * Finds the root group of the given group and updates all group bounds
  * in the subtree from root downward (children first, then parent).
  *
- * @param state - Current canvas state with updated object positions
+ * @param state - Current canvas controller state with updated object positions
  * @param groupId - ID of the group whose root subtree should be updated
- * @returns Updated canvas state with recalculated group bounds
+ * @returns Updated canvas controller state with recalculated group bounds
  */
 export function updateGroupBoundsFromRoot(
-	state: CanvasState,
+	state: CanvasControllerState,
 	groupId: string,
-): CanvasState {
+): CanvasControllerState {
 	const rootGroupId = findRootGroupId(state.objects, groupId);
 	if (!rootGroupId) {
 		return state;

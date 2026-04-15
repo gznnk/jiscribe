@@ -1,25 +1,29 @@
 import type { CanvasAction } from "./CanvasActions";
-import { canvasToState } from "../../states/canvas/CanvasMapper";
-import type { CanvasState } from "../../states/canvas/CanvasState";
+import { canvasToDoc } from "../../states/canvas/CanvasMapper";
 import { isTextStyleState } from "../../states/objects/base/TextStyleState";
+import type { CanvasControllerState } from "../CanvasTypes";
 import { handleCommand } from "../commands/handlers/handleCommand";
 import { handleGesture } from "../gestures/handlers/handleGesture";
 import { commitTextEdit } from "../utils/commitTextEdit";
+import { recordHistoryIfNeeded } from "../utils/recordHistory";
 
 export const canvasReducer = (
-	state: CanvasState,
+	state: CanvasControllerState,
 	action: CanvasAction,
-): CanvasState => {
+): CanvasControllerState => {
 	switch (action.type) {
 		case "GESTURE": {
+			// handleGesture internally records history when lastCommitTime changes
 			return handleGesture(state, action.gesture);
 		}
 
 		case "COMMAND": {
+			// Handle all commands through handleCommand (including undo/redo)
+			// handleCommand internally records history when needed
 			return handleCommand(state, action.commandId);
 		}
 
-		case "CONTAINER_RESIZE":
+		case "CONTAINER_RESIZE": {
 			return {
 				...state,
 				viewport: {
@@ -28,14 +32,26 @@ export const canvasReducer = (
 					height: action.dimensions.height,
 				},
 			};
+		}
 
 		case "SYNC_EXTERNAL": {
-			// 外部更新を反映
+			// 外部更新を反映 + 履歴のpresentも更新
+			const doc = canvasToDoc({
+				...state,
+				objects: action.payload.objects,
+				rootIds: action.payload.rootIds,
+				connectorIds: action.payload.connectorIds,
+			});
+
 			return {
 				...state,
 				objects: action.payload.objects,
 				rootIds: action.payload.rootIds,
 				connectorIds: action.payload.connectorIds,
+				history: {
+					...state.history,
+					present: doc,
+				},
 			};
 		}
 
@@ -69,34 +85,13 @@ export const canvasReducer = (
 
 			if (action.commit) {
 				// commitTextEdit を使用してテキストを確定
-				return commitTextEdit(state, Date.now());
+				const commitResult = commitTextEdit(state, Date.now());
+				return recordHistoryIfNeeded(commitResult, state.lastCommitTime);
 			}
 
 			// キャンセルの場合は textEditState のみクリア
 			return {
 				...state,
-				textEditState: null,
-			};
-		}
-
-		case "UNDO":
-		case "REDO": {
-			// CanvasDocからStateに変換
-			const newState = canvasToState(action.doc);
-
-			// UI状態をクリア、viewportは保持
-			return {
-				...newState,
-				viewport: state.viewport, // ズーム・パンは維持
-				selectedIds: [],
-				hoveredIds: [],
-				eventStartState: null,
-				lastCommitTime: Date.now(), // commit発火のため更新
-				contextMenuPosition: null,
-				pendingShapeType: null,
-				ghostPosition: null,
-				areaSelection: null,
-				objectMenuOpenId: null,
 				textEditState: null,
 			};
 		}

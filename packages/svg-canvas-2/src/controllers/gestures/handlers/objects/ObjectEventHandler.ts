@@ -10,9 +10,9 @@ import type {
 } from "../../../../registry/GestureHandlerRegistryTypes";
 import { objectRegistry } from "../../../../registry/ObjectRegistry";
 import type { Mods } from "../../../../registry/ObjectRegistryTypes";
-import type { CanvasState } from "../../../../states/canvas/CanvasState";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../../../states/objects/base/TextStyleState";
+import type { CanvasControllerState } from "../../../CanvasTypes";
 import { updateAffectedGroupBounds } from "../../../ui/utils/updateAffectedGroupBounds";
 import { commitTextEdit } from "../../../utils/commitTextEdit";
 
@@ -21,11 +21,11 @@ import { commitTextEdit } from "../../../utils/commitTextEdit";
  * 階層的な選択ロジックを適用し、選択状態を更新する
  */
 function handleObjectClick(
-	canvasState: CanvasState,
+	canvasState: CanvasControllerState,
 	targetObject: ObjectState,
 	mods: Mods,
 	button: number,
-): CanvasState {
+): CanvasControllerState {
 	// Only handle left-click (button 0)
 	if (button !== 0) {
 		return canvasState;
@@ -57,10 +57,10 @@ function handleObjectClick(
  * Registry経由で各形状のmoveByDeltaを動的に解決
  */
 function handleObjectDrag(
-	canvasState: CanvasState,
+	canvasState: CanvasControllerState,
 	delta: Point,
 	button: number,
-): CanvasState {
+): CanvasControllerState {
 	// Only handle left-click drag (button 0)
 	if (button !== 0) {
 		return canvasState;
@@ -115,12 +115,12 @@ function handleObjectDrag(
  * ドラッグ開始時の選択処理
  */
 function handleObjectDragStart(
-	canvasState: CanvasState,
+	canvasState: CanvasControllerState,
 	targetObject: ObjectState,
 	delta: Point,
 	mods: Mods,
 	button: number,
-): CanvasState {
+): CanvasControllerState {
 	// Only handle left-click drag (button 0)
 	if (button !== 0) {
 		return canvasState;
@@ -161,10 +161,10 @@ function handleObjectDragStart(
  * ドラッグ終了時の処理
  */
 function handleObjectDragEnd(
-	canvasState: CanvasState,
+	canvasState: CanvasControllerState,
 	delta: Point,
 	button: number,
-): CanvasState {
+): CanvasControllerState {
 	// エッジスクロールを無効化
 	const nextState = {
 		...canvasState,
@@ -191,7 +191,7 @@ export const ObjectEventHandler: GestureHandler = {
 		return event.targetKind === "object";
 	},
 
-	handle(state: CanvasState, event: CanvasEvent): CanvasState {
+	handle(state, event) {
 		// Commit text editing if active (except for doubleClick which starts editing)
 		let nextState = state;
 		if (state.textEditState && event.type !== "doubleClick") {

@@ -3,8 +3,8 @@ import type { Point } from "@workspace/geometry";
 
 import { PRECISION } from "../../../../../constants/precision";
 import type { CanvasEvent } from "../../../../../registry/GestureHandlerRegistryTypes";
-import type { CanvasState } from "../../../../../states/canvas/CanvasState";
 import type { PolylineState } from "../../../../../states/objects/primitives/polyline/PolylineState";
+import type { CanvasControllerState } from "../../../../CanvasTypes";
 import type { ControlStrategy } from "../ControlEventHandler";
 import { updateGroupBoundsFromRoot } from "../transform/utils/updateGroupBoundsFromRoot";
 
@@ -36,7 +36,10 @@ export class VertexInsertHandler implements ControlStrategy {
 		return targetId.startsWith("vertex-insert:");
 	}
 
-	handle(state: CanvasState, event: CanvasEvent): CanvasState {
+	handle(
+		state: CanvasControllerState,
+		event: CanvasEvent,
+	): CanvasControllerState {
 		// Only handle left-click (button 0)
 		if (event.button !== 0) {
 			return state;
@@ -77,11 +80,11 @@ export class VertexInsertHandler implements ControlStrategy {
 	 * 新しい頂点を追加し、eventStartStateを更新して次のdragイベントで参照できるようにする。
 	 */
 	private handleDragStart(
-		state: CanvasState,
+		state: CanvasControllerState,
 		event: CanvasEvent,
 		objectId: string,
 		segmentIndex: number,
-	): CanvasState {
+	): CanvasControllerState {
 		const currentObject = state.objects[objectId];
 		if (!currentObject || currentObject.type !== "polyline") {
 			return state;
@@ -109,7 +112,7 @@ export class VertexInsertHandler implements ControlStrategy {
 			[objectId]: updatedObject,
 		};
 
-		const nextState: CanvasState = {
+		const nextState: CanvasControllerState = {
 			...state,
 			objects: updatedObjects,
 			edgeScrollEnabled: true,
@@ -131,11 +134,11 @@ export class VertexInsertHandler implements ControlStrategy {
 	 * 新しく追加された頂点（segmentIndex + 1の位置）を移動する。
 	 */
 	private handleDrag(
-		state: CanvasState,
+		state: CanvasControllerState,
 		event: CanvasEvent,
 		objectId: string,
 		segmentIndex: number,
-	): CanvasState {
+	): CanvasControllerState {
 		const eventStartState = state.eventStartState;
 		if (!eventStartState) {
 			return state;
@@ -181,11 +184,11 @@ export class VertexInsertHandler implements ControlStrategy {
 	 * 最終位置を確定し、グループの枠を更新する。
 	 */
 	private handleDragEnd(
-		state: CanvasState,
+		state: CanvasControllerState,
 		event: CanvasEvent,
 		objectId: string,
 		segmentIndex: number,
-	): CanvasState {
+	): CanvasControllerState {
 		// ドラッグ中の状態更新を適用して最終状態を計算
 		let nextState = this.handleDrag(
 			{ ...state },

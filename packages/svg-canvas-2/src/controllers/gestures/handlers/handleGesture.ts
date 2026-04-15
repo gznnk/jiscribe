@@ -6,7 +6,8 @@ import type {
 	CanvasEvent,
 	EventType,
 } from "../../../registry/GestureHandlerRegistryTypes";
-import type { CanvasState } from "../../../states/canvas/CanvasState";
+import type { CanvasControllerState } from "../../CanvasTypes";
+import { recordHistoryIfNeeded } from "../../utils/recordHistory";
 import type { Gesture } from "../recognizer/GestureRecognizerTypes";
 
 /**
@@ -25,14 +26,15 @@ const EVENT_END_TYPES: readonly EventType[] = ["dragEnd"] as const;
  * Main gesture router.
  * Converts low-level gestures to high-level canvas events and routes them to appropriate handlers.
  * Also manages eventStartState lifecycle (save on dragStart, clear on dragEnd).
+ * Automatically records history when lastCommitTime changes.
  *
  * Note: The gestureHandlerRegistry must be initialized via initializeRegistries()
  * from controllers/setup/ before using this function.
  */
 export const handleGesture = (
-	state: CanvasState,
+	state: CanvasControllerState,
 	gesture: Gesture,
-): CanvasState => {
+): CanvasControllerState => {
 	let nextState = state;
 
 	// Convert Gesture to CanvasEvent
@@ -110,5 +112,6 @@ export const handleGesture = (
 		};
 	}
 
-	return nextState;
+	// Record history if needed
+	return recordHistoryIfNeeded(nextState, state.lastCommitTime);
 };
