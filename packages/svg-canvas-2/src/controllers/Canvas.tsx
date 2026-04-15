@@ -180,6 +180,8 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 						selectedIds={state.selectedIds}
 						objects={state.objects}
 						zoom={state.viewport.zoom}
+						pendingConnector={state.pendingConnector}
+						hoveredIds={state.hoveredIds}
 					/>
 					<VertexControlsLayer
 						selectedIds={state.selectedIds}
