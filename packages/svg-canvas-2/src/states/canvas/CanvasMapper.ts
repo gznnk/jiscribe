@@ -68,7 +68,6 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 		rootIds,
 		connectorIds,
 		selectedIds: [],
-		hoveredIds: [],
 		eventStartState: null,
 		viewport: {
 			minX: 0,

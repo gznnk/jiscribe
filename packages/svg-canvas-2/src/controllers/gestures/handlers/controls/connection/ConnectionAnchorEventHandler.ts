@@ -158,31 +158,27 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			},
 		} as ConnectorState;
 
-		// Get the source object ID to exclude it from hover detection
+		// Get the source object ID to exclude it from hover detection.
 		const sourceObjectId = pendingConnector.source.owner?.id;
 
-		// Filter hoveredIds to exclude:
-		// - The source object itself (can't connect to self)
-		// - Connectors (for now, only allow connecting to shapes)
-		const validHoveredIds = event.hovered
+		// Find the first valid hover target:
+		// - Exclude the source object itself (can't connect to self)
+		// - Exclude connectors (for now, only allow connecting to shapes)
+		const targetObjectId = event.hovered
 			.map((h) => h.id)
-			.filter((id: string) => {
-				if (id === sourceObjectId) {
-					return false;
-				}
+			.find((id: string) => {
+				if (id === sourceObjectId) return false;
 				const obj = state.objects[id];
 				return obj && obj.type !== "connector";
 			});
+		const targetObject = targetObjectId ? state.objects[targetObjectId] : null;
 
 		// If hovering over a valid target, preview as connected (OwnedEndpointRef).
 		// Use the nearest connect-point (topCenter/rightCenter/bottomCenter/leftCenter)
 		// or center, whichever is closest to the current cursor position.
-		const targetObjectId = validHoveredIds[0];
-		const targetObject = targetObjectId ? state.objects[targetObjectId] : null;
-
 		const previewTarget: ConnectorState["target"] = targetObject
 			? {
-					owner: { type: targetObject.type, id: targetObjectId },
+					owner: { type: targetObject.type, id: targetObjectId! },
 					anchor: this.calcNearestAnchor(
 						targetObject,
 						event.last.x,
@@ -194,7 +190,6 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 		return {
 			...state,
 			pendingConnector: { ...updatedConnector, target: previewTarget },
-			hoveredIds: validHoveredIds,
 		};
 	}
 
@@ -206,7 +201,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 		state: CanvasControllerState,
 		event: CanvasEvent,
 	): CanvasControllerState {
-		const { pendingConnector, hoveredIds } = state;
+		const { pendingConnector } = state;
 
 		if (!pendingConnector) {
 			return {
@@ -215,16 +210,17 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			};
 		}
 
-		// Check if there's a valid target object under the cursor
-		const targetObjectId = hoveredIds[0];
-		const targetObject = targetObjectId ? state.objects[targetObjectId] : null;
+		// Derive target from pendingConnector.target set during handleDrag.
+		// OwnedEndpointRef means a valid target was found; FreeEndpointRef means none.
+		const targetOwner = pendingConnector.target.owner;
+		const targetObject = targetOwner ? state.objects[targetOwner.id] : null;
 
 		// If there's a valid target, finalize the connector
-		if (targetObject && targetObject.type !== "connector") {
+		if (targetOwner && targetObject && targetObject.type !== "connector") {
 			const finalConnector: ConnectorState = {
 				...pendingConnector,
 				target: {
-					owner: { type: targetObject.type, id: targetObjectId },
+					owner: { type: targetObject.type, id: targetOwner!.id },
 					anchor: this.calcNearestAnchor(
 						targetObject,
 						event.last.x,
@@ -241,7 +237,6 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 				},
 				connectorIds: [...state.connectorIds, finalConnector.id],
 				pendingConnector: null,
-				hoveredIds: [],
 				edgeScrollEnabled: false,
 				lastCommitTime: event.time,
 			};
@@ -251,7 +246,6 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 		return {
 			...state,
 			pendingConnector: null,
-			hoveredIds: [],
 			edgeScrollEnabled: false,
 		};
 	}

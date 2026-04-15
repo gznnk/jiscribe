@@ -5,7 +5,10 @@ import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../../schemas/objects/base/ObjectDoc";
 import type { GroupDoc } from "../../../schemas/objects/primitives/GroupDoc";
 import type { RectDoc } from "../../../schemas/objects/primitives/RectDoc";
-import { canvasToState, canvasToDoc } from "../../../states/canvas/CanvasMapper";
+import {
+	canvasToState,
+	canvasToDoc,
+} from "../../../states/canvas/CanvasMapper";
 import type { CanvasState } from "../../../states/canvas/CanvasState";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import {
@@ -136,7 +139,6 @@ describe("CanvasMapper", () => {
 				rootIds: ["rect-1", "group-1"],
 				connectorIds: [],
 				selectedIds: [],
-				hoveredIds: [],
 				eventStartState: null,
 				lastCommitTime: 0,
 				contextMenuPosition: null,

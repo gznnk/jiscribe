@@ -46,7 +46,6 @@ export const RedoCommand: Command = {
 			...restoredState,
 			viewport: state.viewport, // Preserve viewport
 			selectedIds: [],
-			hoveredIds: [],
 			eventStartState: null,
 			lastCommitTime: state.lastCommitTime, // Don't update - this is history restoration, not a new commit
 			contextMenuPosition: null,

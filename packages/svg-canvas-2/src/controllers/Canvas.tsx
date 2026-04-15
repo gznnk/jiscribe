@@ -60,7 +60,6 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 		return {
 			...baseState,
 			selectedIds: [],
-			hoveredIds: [],
 			eventStartState: null,
 			lastCommitTime: 0,
 			contextMenuPosition: null,
@@ -181,7 +180,6 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 						objects={state.objects}
 						zoom={state.viewport.zoom}
 						pendingConnector={state.pendingConnector}
-						hoveredIds={state.hoveredIds}
 					/>
 					<VertexControlsLayer
 						selectedIds={state.selectedIds}

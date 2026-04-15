@@ -16,11 +16,6 @@ type ConnectionAnchorsLayerProps = {
 	 * これがある場合、接続ターゲット側の受け口アンカーを表示する。
 	 */
 	pendingConnector?: ConnectorState | null;
-	/**
-	 * 現在カーソルが乗っているオブジェクト ID の一覧。
-	 * pendingConnector が存在するとき、hoveredIds[0] が接続先候補となる。
-	 */
-	hoveredIds?: string[];
 };
 
 /**
@@ -32,7 +27,7 @@ type ConnectionAnchorsLayerProps = {
  */
 const ConnectionAnchorsLayerComponent: React.FC<
 	ConnectionAnchorsLayerProps
-> = ({ selectedIds, objects, zoom = 1, pendingConnector, hoveredIds = [] }) => {
+> = ({ selectedIds, objects, zoom = 1, pendingConnector }) => {
 	// --- Source anchors (shown on single-selected, frame-based, non-group objects) ---
 	const selectedId = selectedIds.length === 1 ? selectedIds[0] : null;
 	const selectedObject = selectedId ? objects[selectedId] : null;
@@ -42,7 +37,10 @@ const ConnectionAnchorsLayerComponent: React.FC<
 		isTransformedFrame(selectedObject);
 
 	// --- Target anchors (shown during a connection drag on the hovered object) ---
-	const targetObjectId = pendingConnector ? hoveredIds[0] : undefined;
+	// Target is encoded directly in pendingConnector.target:
+	// - OwnedEndpointRef → owner.id is the target object
+	// - FreeEndpointRef  → no target yet
+	const targetObjectId = pendingConnector?.target.owner?.id;
 	const targetObject = targetObjectId ? objects[targetObjectId] : null;
 	const showTargetAnchors =
 		targetObject != null &&

@@ -31,12 +31,6 @@ export type CanvasState = {
 	selectedIds: string[];
 
 	/**
-	 * IDs of objects currently hovered during drag operations.
-	 * Used to detect DragOver/DragLeave events.
-	 */
-	hoveredIds: string[];
-
-	/**
 	 * Snapshot of CanvasState at the start of an event/gesture.
 	 * Used to compare or restore state during event handling.
 	 */
