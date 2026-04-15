@@ -21,6 +21,7 @@ export const initializeGestureHandlerRegistry = (): void => {
 	const transformControlHandler = new TransformControlHandler();
 	const vertexControlHandler = new VertexControlHandler();
 	const vertexInsertHandler = new VertexInsertHandler();
+	const connectionAnchorEventHandler = new ConnectionAnchorEventHandler();
 	// 将来: const pathControlHandler = new PathControlHandler();
 
 	// ControlEventHandler をストラテジ配列でインスタンス化
@@ -28,6 +29,7 @@ export const initializeGestureHandlerRegistry = (): void => {
 		transformControlHandler,
 		vertexControlHandler,
 		vertexInsertHandler,
+		connectionAnchorEventHandler,
 		// 将来: pathControlHandler,
 	]);
 
@@ -35,7 +37,6 @@ export const initializeGestureHandlerRegistry = (): void => {
 		.register("shape-library-item-handler", ShapeLibraryItemHandler)
 		.register("context-menu-handler", ContextMenuHandler)
 		.register("object-menu-handler", ObjectMenuHandler)
-		.register("connection-anchor-handler", ConnectionAnchorEventHandler)
 		.register("canvas-handler", CanvasEventHandler)
 		.register("object-handler", ObjectEventHandler)
 		.register("control-handler", controlEventHandler);

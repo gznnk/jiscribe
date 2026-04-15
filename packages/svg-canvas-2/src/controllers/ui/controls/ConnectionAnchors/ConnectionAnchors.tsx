@@ -111,8 +111,8 @@ const ConnectionAnchorsComponent: React.FC<ConnectionAnchorsProps> = ({
 					fill={ANCHOR_FILL}
 					stroke={ANCHOR_COLOR}
 					strokeWidth={adjustedStrokeWidth}
-					data-kind="connection-anchor"
-					data-id={`${objectId}:${position}`}
+					data-kind="control"
+					data-id={`connection-anchor:${objectId}:${position}`}
 					style={{ cursor: "crosshair" }}
 				/>
 			))}

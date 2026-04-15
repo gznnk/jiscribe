@@ -24,8 +24,13 @@ export const resolveEndpoint = (
 	objects: Record<string, ObjectState>,
 ): Point | null => {
 	// FreeAnchor: point is directly specified
-	if (!endpoint.owner) {
+	if (endpoint.anchor.kind === "free") {
 		return endpoint.anchor.point;
+	}
+
+	// For owned endpoints, the owner must be specified
+	if (!endpoint.owner) {
+		return null;
 	}
 
 	// Get the referenced object
