@@ -86,6 +86,7 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 		objectMenuOpenId: null,
 		multiSelectGroup: null,
 		textEditState: null,
+		pendingConnector: null,
 	};
 };
 

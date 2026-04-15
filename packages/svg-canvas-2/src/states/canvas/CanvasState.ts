@@ -4,6 +4,7 @@ import type { Viewport } from "./Viewport";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 import type { ObjectState } from "../objects/base/ObjectState";
 import type { GroupState } from "../objects/primitives/group/GroupState";
+import type { ConnectorState } from "../objects/connections/connector/ConnectorState";
 
 export type CanvasState = {
 	/**
@@ -109,4 +110,10 @@ export type CanvasState = {
 		objectId: string;
 		text: string;
 	} | null;
+
+	/**
+	 * コネクター作成中の一時的な状態。
+	 * connection-anchor からドラッグ中に設定され、dragEnd で確定または破棄される。
+	 */
+	pendingConnector: ConnectorState | null;
 };

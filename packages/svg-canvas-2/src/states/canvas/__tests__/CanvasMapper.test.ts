@@ -146,6 +146,7 @@ describe("CanvasMapper", () => {
 				objectMenuOpenId: null,
 				multiSelectGroup: null,
 				textEditState: null,
+				pendingConnector: null,
 				objects: {
 					"rect-1": {
 						id: "rect-1",

@@ -1,5 +1,6 @@
 import { gestureHandlerRegistry } from "../../registry/GestureHandlerRegistry";
 import { CanvasEventHandler } from "../gestures/handlers/canvas/CanvasEventHandler";
+import { ConnectionAnchorEventHandler } from "../gestures/handlers/connections/ConnectionAnchorEventHandler";
 import { ControlEventHandler } from "../gestures/handlers/controls/ControlEventHandler";
 import { TransformControlHandler } from "../gestures/handlers/controls/transform/TransformControlHandler";
 import { VertexControlHandler } from "../gestures/handlers/controls/vertex/VertexControlHandler";
@@ -34,6 +35,7 @@ export const initializeGestureHandlerRegistry = (): void => {
 		.register("shape-library-item-handler", ShapeLibraryItemHandler)
 		.register("context-menu-handler", ContextMenuHandler)
 		.register("object-menu-handler", ObjectMenuHandler)
+		.register("connection-anchor-handler", ConnectionAnchorEventHandler)
 		.register("canvas-handler", CanvasEventHandler)
 		.register("object-handler", ObjectEventHandler)
 		.register("control-handler", controlEventHandler);

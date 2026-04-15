@@ -67,6 +67,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 			areaSelection: null,
 			objectMenuOpenId: null,
 			textEditState: null,
+			pendingConnector: null,
 			history: {
 				past: [],
 				present: canvasDoc,
@@ -157,6 +158,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 					viewport={state.viewport}
 					svgRef={svgRef}
 					textEditObjectId={state.textEditState?.objectId ?? null}
+					pendingConnector={state.pendingConnector}
 				>
 					<SelectionOverlay
 						selectedIds={state.selectedIds}

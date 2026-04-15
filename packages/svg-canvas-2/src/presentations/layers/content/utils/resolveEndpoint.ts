@@ -1,13 +1,19 @@
-import { isCenterPoint, type Point } from "@workspace/geometry";
+import {
+	calcFrameKeyPoints,
+	isCenterPoint,
+	isTransformedFrame,
+	type Point,
+} from "@workspace/geometry";
 
 import type { EndpointRef } from "../../../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 
 /**
  * Resolves an EndpointRef to a Point coordinate.
- * Currently supports:
+ * Supports:
  * - FreeAnchor: Returns the specified point directly
  * - CenterAnchor: Returns the center point (cx, cy) of the referenced object
+ * - ConnectPointAnchor: Returns the specified connection point (e.g., topCenter, rightCenter)
  *
  * @param endpoint - The endpoint reference to resolve
  * @param objects - Map of all objects in the canvas
@@ -39,8 +45,40 @@ export const resolveEndpoint = (
 		}
 	}
 
-	// ConnectPointAnchor: not yet implemented
-	// Will be added in a future update
+	// ConnectPointAnchor: use a specific connection point on the object's edge
+	if (endpoint.anchor.kind === "connectPoint") {
+		const anchorId = endpoint.anchor.id;
+
+		// Check if the object has transform properties (Frame-based)
+		if (isTransformedFrame(obj)) {
+			// TODO: キャッシュを使うようにしたい
+			// Calculate all key points (corners and edge midpoints)
+			const keyPoints = calcFrameKeyPoints({
+				cx: obj.cx,
+				cy: obj.cy,
+				width: obj.width,
+				height: obj.height,
+				rotation: obj.rotation,
+				scaleX: obj.scaleX,
+				scaleY: obj.scaleY,
+			});
+
+			// Return the specified anchor point
+			switch (anchorId) {
+				case "topCenter":
+					return keyPoints.topCenter;
+				case "rightCenter":
+					return keyPoints.rightCenter;
+				case "bottomCenter":
+					return keyPoints.bottomCenter;
+				case "leftCenter":
+					return keyPoints.leftCenter;
+				default:
+					// Invalid anchor ID
+					return null;
+			}
+		}
+	}
 
 	return null;
 };
