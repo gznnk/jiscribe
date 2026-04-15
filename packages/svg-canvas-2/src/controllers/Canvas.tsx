@@ -161,6 +161,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 					<SelectionOverlay
 						selectedIds={state.selectedIds}
 						objects={state.objects}
+						multiSelectGroup={state.multiSelectGroup}
 					/>
 					<TransformControlsLayer
 						selectedIds={state.selectedIds}

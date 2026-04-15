@@ -101,19 +101,6 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 
 	return (
 		<g>
-			{/* Bounding box outline */}
-			<rect
-				x={cx - width / 2}
-				y={cy - height / 2}
-				width={width}
-				height={height}
-				fill="none"
-				stroke={ANCHOR_COLOR}
-				strokeWidth={adjustedStrokeWidth}
-				transform={`rotate(${rotation} ${cx} ${cy})`}
-				pointerEvents="none"
-			/>
-
 			{/* Corner anchors */}
 			<circle
 				cx={points.topLeft.x}
