@@ -1,7 +1,4 @@
-import {
-	calcFrameKeyPoints,
-	degreesToRadians,
-} from "@workspace/geometry";
+import { calcFrameKeyPoints, degreesToRadians } from "@workspace/geometry";
 import type { TransformedFrame } from "@workspace/geometry";
 import { memo } from "react";
 
@@ -9,9 +6,13 @@ const ANCHOR_RADIUS = 5;
 const ANCHOR_STROKE_WIDTH = 1.5;
 const ANCHOR_COLOR = "#10b981"; // emerald-500
 const ANCHOR_FILL = "white";
-const ANCHOR_OFFSET = 10; // Distance from the edge
+const ANCHOR_OFFSET = 20; // Distance from the edge
 
-type AnchorPosition = "topCenter" | "rightCenter" | "bottomCenter" | "leftCenter";
+type AnchorPosition =
+	| "topCenter"
+	| "rightCenter"
+	| "bottomCenter"
+	| "leftCenter";
 
 type ConnectionAnchorsProps = {
 	/**
@@ -89,7 +90,10 @@ const ConnectionAnchorsComponent: React.FC<ConnectionAnchorsProps> = ({
 		y: points.leftCenter.y - Math.sin(radians) * adjustedOffset,
 	};
 
-	const anchors: Array<{ position: AnchorPosition; point: { x: number; y: number } }> = [
+	const anchors: Array<{
+		position: AnchorPosition;
+		point: { x: number; y: number };
+	}> = [
 		{ position: "topCenter", point: topCenterAnchor },
 		{ position: "rightCenter", point: rightCenterAnchor },
 		{ position: "bottomCenter", point: bottomCenterAnchor },

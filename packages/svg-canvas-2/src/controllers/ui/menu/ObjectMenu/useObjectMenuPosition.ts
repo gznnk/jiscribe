@@ -6,7 +6,7 @@ import { isGroupState } from "../../../../states/objects/primitives/group/GroupS
 import { calcGroupBoundingBox } from "../../utils/calcGroupBoundingBox";
 
 /** ObjectMenu とオブジェクト間の距離 (px) */
-const DISTANCE_FROM_OBJECT = 8;
+const DISTANCE_FROM_OBJECT = 40;
 
 type ObjectMenuPosition = {
 	/** メニューを表示すべきか */
