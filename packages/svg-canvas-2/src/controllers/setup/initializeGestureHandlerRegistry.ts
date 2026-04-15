@@ -1,6 +1,6 @@
 import { gestureHandlerRegistry } from "../../registry/GestureHandlerRegistry";
 import { CanvasEventHandler } from "../gestures/handlers/canvas/CanvasEventHandler";
-import { ConnectionAnchorEventHandler } from "../gestures/handlers/connections/ConnectionAnchorEventHandler";
+import { ConnectionAnchorEventHandler } from "../gestures/handlers/controls/connection/ConnectionAnchorEventHandler";
 import { ControlEventHandler } from "../gestures/handlers/controls/ControlEventHandler";
 import { TransformControlHandler } from "../gestures/handlers/controls/transform/TransformControlHandler";
 import { VertexControlHandler } from "../gestures/handlers/controls/vertex/VertexControlHandler";

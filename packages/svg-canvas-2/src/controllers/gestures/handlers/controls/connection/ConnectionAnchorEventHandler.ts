@@ -1,15 +1,19 @@
 import { roundToDecimal } from "@workspace/geometry";
 
-import { PRECISION } from "../../../../constants/precision";
+import { PRECISION } from "../../../../../constants/precision";
 import type {
 	CanvasEvent,
 	GestureHandler,
-} from "../../../../registry/GestureHandlerRegistryTypes";
-import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
-import type { CanvasControllerState } from "../../../CanvasTypes";
-import { commitTextEdit } from "../../../utils/commitTextEdit";
+} from "../../../../../registry/GestureHandlerRegistryTypes";
+import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
+import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { commitTextEdit } from "../../../../utils/commitTextEdit";
 
-type AnchorPosition = "topCenter" | "rightCenter" | "bottomCenter" | "leftCenter";
+type AnchorPosition =
+	| "topCenter"
+	| "rightCenter"
+	| "bottomCenter"
+	| "leftCenter";
 
 /**
  * Connection anchor でのドラッグ開始を処理する。
