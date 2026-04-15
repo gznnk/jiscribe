@@ -14,7 +14,7 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../../../states/objects/base/TextStyleState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { updateAffectedGroupBounds } from "../../../ui/utils/updateAffectedGroupBounds";
-import { commitTextEdit } from "../../../utils/commitTextEdit";
+import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 
 /**
  * オブジェクトのクリック処理
@@ -194,8 +194,8 @@ export const ObjectEventHandler: GestureHandler = {
 	handle(state, event) {
 		// Commit text editing if active (except for doubleClick which starts editing)
 		let nextState = state;
-		if (state.textEditState && event.type !== "doubleClick") {
-			nextState = commitTextEdit(state, event.time);
+		if (event.type !== "doubleClick") {
+			nextState = commitTextEditIfNeeded(state, event.time);
 		}
 
 		const targetObjectId = event.targetId;

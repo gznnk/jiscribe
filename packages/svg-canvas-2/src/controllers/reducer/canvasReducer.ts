@@ -4,7 +4,7 @@ import { isTextStyleState } from "../../states/objects/base/TextStyleState";
 import type { CanvasControllerState } from "../CanvasTypes";
 import { handleCommand } from "../commands/handlers/handleCommand";
 import { handleGesture } from "../gestures/handlers/handleGesture";
-import { commitTextEdit } from "../utils/commitTextEdit";
+import { commitTextEditIfNeeded } from "../utils/commitTextEditIfNeeded";
 import { recordHistoryIfNeeded } from "../utils/recordHistory";
 
 export const canvasReducer = (
@@ -85,7 +85,7 @@ export const canvasReducer = (
 
 			if (action.commit) {
 				// commitTextEdit を使用してテキストを確定
-				const commitResult = commitTextEdit(state, Date.now());
+				const commitResult = commitTextEditIfNeeded(state, Date.now());
 				return recordHistoryIfNeeded(commitResult, state.lastCommitTime);
 			}
 

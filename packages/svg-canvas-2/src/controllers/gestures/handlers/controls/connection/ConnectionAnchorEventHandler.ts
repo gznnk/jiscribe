@@ -7,7 +7,7 @@ import type {
 } from "../../../../../registry/GestureHandlerRegistryTypes";
 import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
-import { commitTextEdit } from "../../../../utils/commitTextEdit";
+import { commitTextEditIfNeeded } from "../../../../utils/commitTextEditIfNeeded";
 
 type AnchorPosition =
 	| "topCenter"
@@ -202,9 +202,7 @@ export const ConnectionAnchorEventHandler: GestureHandler = {
 
 	handle(state, event) {
 		// Commit text editing if active
-		const nextState = state.textEditState
-			? commitTextEdit(state, event.time)
-			: state;
+		const nextState = commitTextEditIfNeeded(state, event.time);
 
 		// Only handle left-click (button 0)
 		if (event.button !== 0) {

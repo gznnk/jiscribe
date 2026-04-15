@@ -3,7 +3,7 @@ import type {
 	GestureHandler,
 } from "../../../../registry/GestureHandlerRegistryTypes";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { commitTextEdit } from "../../../utils/commitTextEdit";
+import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 
 /**
  * コントロールストラテジは、特定のコントロールタイプを処理する GestureHandler。
@@ -56,9 +56,7 @@ export class ControlEventHandler implements GestureHandler {
 		event: CanvasEvent,
 	): CanvasControllerState {
 		// Commit text editing if active
-		const nextState = state.textEditState
-			? commitTextEdit(state, event.time)
-			: state;
+		const nextState = commitTextEditIfNeeded(state, event.time);
 
 		// 各ストラテジを試して、最初に supports() が true を返したものを使用
 		for (const strategy of this.strategies.values()) {

@@ -10,7 +10,7 @@ import type { CanvasControllerState } from "../CanvasTypes";
  * @param time - Event timestamp for lastCommitTime
  * @returns Updated canvas controller state with text committed, or unchanged state if not editing
  */
-export function commitTextEdit(
+export function commitTextEditIfNeeded(
 	state: CanvasControllerState,
 	time: number,
 ): CanvasControllerState {

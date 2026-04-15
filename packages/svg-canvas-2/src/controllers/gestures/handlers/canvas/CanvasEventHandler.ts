@@ -4,7 +4,7 @@ import { collectIdsInArea } from "./utils/collectIdsInArea";
 import { PRECISION } from "../../../../constants/precision";
 import { ZOOM } from "../../../../constants/zoom";
 import type { GestureHandler } from "../../../../registry/GestureHandlerRegistryTypes";
-import { commitTextEdit } from "../../../utils/commitTextEdit";
+import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { autoSelectParentGroups } from "../objects/utils/autoSelectParentGroups";
 import { createMultiSelectGroup } from "../objects/utils/createMultiSelectGroup";
 
@@ -20,9 +20,7 @@ export const CanvasEventHandler: GestureHandler = {
 
 	handle(state, event) {
 		// Commit text editing if active
-		let nextState = state.textEditState
-			? commitTextEdit(state, event.time)
-			: state;
+		let nextState = commitTextEditIfNeeded(state, event.time);
 
 		// Zoom handling
 		if (event.type === "zoom" && event.scrollDelta) {
