@@ -2,9 +2,12 @@ import type React from "react";
 import { memo } from "react";
 
 import type { StickyState } from "../../../../states/objects/annotations/sticky/StickyState";
+import { TextOverlay } from "../../base/TextOverlay";
 import { createSvgTransform } from "../../utils/createSvgTransform";
 
-type StickyProps = StickyState;
+type StickyProps = StickyState & {
+	isEditing?: boolean;
+};
 
 const StickyComponent: React.FC<StickyProps> = ({
 	id,
@@ -18,6 +21,15 @@ const StickyComponent: React.FC<StickyProps> = ({
 	fill,
 	stroke,
 	strokeWidth,
+	text,
+	textType,
+	textAlign,
+	verticalAlign,
+	fontColor,
+	fontSize,
+	fontFamily,
+	fontWeight,
+	isEditing = false,
 }) => {
 	const transformAttr = createSvgTransform(scaleX, scaleY, rotation, cx, cy);
 
@@ -61,6 +73,22 @@ const StickyComponent: React.FC<StickyProps> = ({
 				stroke={stroke}
 				strokeWidth={strokeWidth}
 				transform={transformAttr}
+			/>
+			<TextOverlay
+				x={-width / 2}
+				y={-height / 2}
+				width={width}
+				height={height}
+				transform={transformAttr}
+				text={text}
+				textType={textType}
+				textAlign={textAlign}
+				verticalAlign={verticalAlign}
+				fontColor={fontColor}
+				fontSize={fontSize}
+				fontFamily={fontFamily}
+				fontWeight={fontWeight}
+				isEditing={isEditing}
 			/>
 		</g>
 	);

@@ -7,6 +7,7 @@ export const StickyFeatures = {
 	transform: true,
 	stroke: true,
 	fill: true,
+	text: true,
 } as const satisfies ObjectFeatures;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -26,4 +27,12 @@ export const STICKY_DOC_DEFAULTS: Omit<StickyDoc, "id"> = {
 	fill: "#fef9c3",
 	stroke: "#fef9c3",
 	strokeWidth: 1,
+	text: "",
+	textType: "textarea",
+	textAlign: "center",
+	verticalAlign: "center",
+	fontColor: "#000000",
+	fontSize: 14,
+	fontFamily: "Noto Sans JP",
+	fontWeight: "normal",
 } as const as StickyDoc;
