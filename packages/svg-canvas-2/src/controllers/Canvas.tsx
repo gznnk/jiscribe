@@ -24,6 +24,7 @@ import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { canvasReducer } from "./reducer/canvasReducer";
 import { initializeRegistries } from "./setup";
 import { CanvasView } from "../presentations/CanvasView";
+import { ConnectionAnchorsLayer } from "./ui/controls/ConnectionAnchorsLayer";
 import { TransformControlsLayer } from "./ui/controls/TransformControlsLayer";
 import { VertexControlsLayer } from "./ui/controls/VertexControlsLayer";
 import { DebugInfo } from "./ui/debug/DebugInfo";
@@ -173,6 +174,11 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 						selectedIds={state.selectedIds}
 						objects={state.objects}
 						multiSelectGroup={state.multiSelectGroup}
+						zoom={state.viewport.zoom}
+					/>
+					<ConnectionAnchorsLayer
+						selectedIds={state.selectedIds}
+						objects={state.objects}
 						zoom={state.viewport.zoom}
 					/>
 					<VertexControlsLayer

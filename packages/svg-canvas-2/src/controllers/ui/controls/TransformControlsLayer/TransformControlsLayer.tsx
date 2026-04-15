@@ -3,7 +3,6 @@ import { memo } from "react";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
-import { ConnectionAnchors } from "../ConnectionAnchors";
 import { TransformControls } from "../TransformControls";
 
 type TransformControlsLayerProps = {
@@ -41,19 +40,12 @@ const TransformControlsLayerComponent: React.FC<
 		}
 
 		return (
-			<>
-				<TransformControls
-					frame={selectedObject}
-					showRotation={true}
-					showEdgeHandles={true}
-					zoom={zoom}
-				/>
-				<ConnectionAnchors
-					objectId={selectedId}
-					frame={selectedObject}
-					zoom={zoom}
-				/>
-			</>
+			<TransformControls
+				frame={selectedObject}
+				showRotation={true}
+				showEdgeHandles={true}
+				zoom={zoom}
+			/>
 		);
 	}
 
