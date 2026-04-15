@@ -1,4 +1,8 @@
-import { calcFrameKeyPoints, degreesToRadians } from "@workspace/geometry";
+import {
+	calcFrameKeyPoints,
+	calcNonZeroSign,
+	degreesToRadians,
+} from "@workspace/geometry";
 import type { TransformedFrame } from "@workspace/geometry";
 import { memo } from "react";
 
@@ -65,29 +69,31 @@ const ConnectionAnchorsComponent: React.FC<ConnectionAnchorsProps> = ({
 
 	const radians = degreesToRadians(rotation);
 
-	// Calculate anchor positions with offset in the normal direction
-	// For topCenter: offset upward (negative y direction in local space)
+	// Calculate anchor positions with offset in the outward normal direction.
+	// Math.sign(scaleX/scaleY) corrects the direction when the frame is flipped:
+	// - Top/Bottom normals flip with scaleY (scaleY=-1 makes topCenter appear at bottom)
+	// - Left/Right normals flip with scaleX (scaleX=-1 makes rightCenter appear at left)
+	const signX = calcNonZeroSign(scaleX);
+	const signY = calcNonZeroSign(scaleY);
+
 	const topCenterAnchor = {
-		x: points.topCenter.x + Math.sin(radians) * adjustedOffset,
-		y: points.topCenter.y - Math.cos(radians) * adjustedOffset,
+		x: points.topCenter.x + signY * Math.sin(radians) * adjustedOffset,
+		y: points.topCenter.y - signY * Math.cos(radians) * adjustedOffset,
 	};
 
-	// For rightCenter: offset rightward (positive x direction in local space)
 	const rightCenterAnchor = {
-		x: points.rightCenter.x + Math.cos(radians) * adjustedOffset,
-		y: points.rightCenter.y + Math.sin(radians) * adjustedOffset,
+		x: points.rightCenter.x + signX * Math.cos(radians) * adjustedOffset,
+		y: points.rightCenter.y + signX * Math.sin(radians) * adjustedOffset,
 	};
 
-	// For bottomCenter: offset downward (positive y direction in local space)
 	const bottomCenterAnchor = {
-		x: points.bottomCenter.x - Math.sin(radians) * adjustedOffset,
-		y: points.bottomCenter.y + Math.cos(radians) * adjustedOffset,
+		x: points.bottomCenter.x - signY * Math.sin(radians) * adjustedOffset,
+		y: points.bottomCenter.y + signY * Math.cos(radians) * adjustedOffset,
 	};
 
-	// For leftCenter: offset leftward (negative x direction in local space)
 	const leftCenterAnchor = {
-		x: points.leftCenter.x - Math.cos(radians) * adjustedOffset,
-		y: points.leftCenter.y - Math.sin(radians) * adjustedOffset,
+		x: points.leftCenter.x - signX * Math.cos(radians) * adjustedOffset,
+		y: points.leftCenter.y - signX * Math.sin(radians) * adjustedOffset,
 	};
 
 	const anchors: Array<{
