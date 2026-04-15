@@ -3,11 +3,10 @@ import { memo } from "react";
 
 import type { StickyState } from "../../../../states/objects/annotations/sticky/StickyState";
 import { TextOverlay } from "../../base/TextOverlay";
+import type { TextEditable } from "../../base/TextOverlay";
 import { createSvgTransform } from "../../utils/createSvgTransform";
 
-type StickyProps = StickyState & {
-	isEditing?: boolean;
-};
+type StickyProps = StickyState & TextEditable;
 
 const StickyComponent: React.FC<StickyProps> = ({
 	id,

@@ -8,6 +8,8 @@ import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
 import type { TextType } from "../../../../schemas/objects/types/TextType";
 import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
 
+export type TextEditable = { isEditing?: boolean };
+
 type TextOverlayProps = {
 	// Position and size (relative to parent shape's center)
 	x: number;

@@ -4,11 +4,10 @@ import { memo } from "react";
 import { RectElement } from "./RectStyled";
 import type { RectState } from "../../../../states/objects/primitives/rect/RectState";
 import { TextOverlay } from "../../base/TextOverlay";
+import type { TextEditable } from "../../base/TextOverlay";
 import { createSvgTransform } from "../../utils/createSvgTransform";
 
-type RectProps = RectState & {
-	isEditing?: boolean;
-};
+type RectProps = RectState & TextEditable;
 
 const RectComponent: React.FC<RectProps> = ({
 	id,

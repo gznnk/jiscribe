@@ -4,11 +4,10 @@ import { memo } from "react";
 import { EllipseElement } from "./EllipseStyled";
 import type { EllipseState } from "../../../../states/objects/primitives/ellipse/EllipseState";
 import { TextOverlay } from "../../base/TextOverlay";
+import type { TextEditable } from "../../base/TextOverlay";
 import { createSvgTransform } from "../../utils/createSvgTransform";
 
-type EllipseProps = EllipseState & {
-	isEditing?: boolean;
-};
+type EllipseProps = EllipseState & TextEditable;
 
 const EllipseComponent: React.FC<EllipseProps> = ({
 	id,
