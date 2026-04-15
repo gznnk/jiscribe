@@ -169,9 +169,20 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 				return obj && obj.type !== "connector";
 			});
 
+		// If hovering over a valid target, preview as connected (OwnedEndpointRef)
+		const targetObjectId = validHoveredIds[0];
+		const targetObject = targetObjectId ? state.objects[targetObjectId] : null;
+
+		const previewTarget: ConnectorState["target"] = targetObject
+			? {
+					owner: { type: targetObject.type, id: targetObjectId },
+					anchor: { kind: "center" },
+				}
+			: updatedConnector.target;
+
 		return {
 			...state,
-			pendingConnector: updatedConnector,
+			pendingConnector: { ...updatedConnector, target: previewTarget },
 			hoveredIds: validHoveredIds,
 		};
 	}
