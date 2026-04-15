@@ -13,10 +13,7 @@ type CanvasViewProps = {
 	svgRef: React.RefObject<SVGSVGElement | null>;
 	children?: React.ReactNode;
 	textEditObjectId?: string | null;
-} & Pick<
-	CanvasState,
-	"objects" | "rootIds" | "connectorIds" | "viewport" | "pendingConnector"
->;
+} & Pick<CanvasState, "objects" | "rootIds" | "connectorIds" | "viewport">;
 
 const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 	objects,
@@ -26,7 +23,6 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 	svgRef,
 	children,
 	textEditObjectId,
-	pendingConnector,
 }) => {
 	const { minX, minY, width, height, zoom } = viewport;
 
@@ -48,11 +44,7 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 				height={height / zoom}
 			/>
 			{/* Connectors rendered below objects */}
-			<ConnectorsRenderer
-				objects={objects}
-				connectorIds={connectorIds}
-				pendingConnector={pendingConnector}
-			/>
+			<ConnectorsRenderer objects={objects} connectorIds={connectorIds} />
 			<ObjectsRenderer
 				objects={objects}
 				rootIds={rootIds}

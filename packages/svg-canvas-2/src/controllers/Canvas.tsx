@@ -30,6 +30,7 @@ import { DebugInfo } from "./ui/debug/DebugInfo";
 import { TextEditorLayer } from "./ui/editors/TextEditorLayer";
 import { AreaSelectionRect } from "./ui/feedback/AreaSelectionRect";
 import { DragGhost } from "./ui/feedback/DragGhost";
+import { PendingConnectorOverlay } from "./ui/feedback/PendingConnectorOverlay";
 import { SelectionOverlay } from "./ui/feedback/SelectionOverlay";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
@@ -158,8 +159,11 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 					viewport={state.viewport}
 					svgRef={svgRef}
 					textEditObjectId={state.textEditState?.objectId ?? null}
-					pendingConnector={state.pendingConnector}
 				>
+					<PendingConnectorOverlay
+						pendingConnector={state.pendingConnector}
+						objects={state.objects}
+					/>
 					<SelectionOverlay
 						selectedIds={state.selectedIds}
 						objects={state.objects}
