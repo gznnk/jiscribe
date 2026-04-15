@@ -1,4 +1,9 @@
-import { roundToDecimal } from "@workspace/geometry";
+import {
+	calcEuclideanDistance,
+	calcFrameKeyPoints,
+	isTransformedFrame,
+	roundToDecimal,
+} from "@workspace/geometry";
 
 import { PRECISION } from "../../../../../constants/precision";
 import type { CanvasEvent } from "../../../../../registry/GestureHandlerRegistryTypes";
@@ -169,14 +174,20 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 				return obj && obj.type !== "connector";
 			});
 
-		// If hovering over a valid target, preview as connected (OwnedEndpointRef)
+		// If hovering over a valid target, preview as connected (OwnedEndpointRef).
+		// Use the nearest connect-point (topCenter/rightCenter/bottomCenter/leftCenter)
+		// or center, whichever is closest to the current cursor position.
 		const targetObjectId = validHoveredIds[0];
 		const targetObject = targetObjectId ? state.objects[targetObjectId] : null;
 
 		const previewTarget: ConnectorState["target"] = targetObject
 			? {
 					owner: { type: targetObject.type, id: targetObjectId },
-					anchor: { kind: "center" },
+					anchor: this.calcNearestAnchor(
+						targetObject,
+						event.last.x,
+						event.last.y,
+					),
 				}
 			: updatedConnector.target;
 
@@ -214,7 +225,11 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 				...pendingConnector,
 				target: {
 					owner: { type: targetObject.type, id: targetObjectId },
-					anchor: { kind: "center" }, // For now, always connect to center
+					anchor: this.calcNearestAnchor(
+						targetObject,
+						event.last.x,
+						event.last.y,
+					),
 				},
 			} as ConnectorState;
 
@@ -239,5 +254,62 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			hoveredIds: [],
 			edgeScrollEnabled: false,
 		};
+	}
+
+	/**
+	 * カーソル位置に最も近いアンカーを返す。
+	 * フレームを持つオブジェクトは 4 中点 + center から選択し、
+	 * フレームを持たないオブジェクトは center を返す。
+	 */
+	private calcNearestAnchor(
+		obj: { cx?: number; cy?: number; [key: string]: unknown },
+		cursorX: number,
+		cursorY: number,
+	): { kind: "center" } | { kind: "connectPoint"; id: string } {
+		if (!isTransformedFrame(obj)) {
+			return { kind: "center" };
+		}
+
+		const keyPoints = calcFrameKeyPoints(obj);
+
+		const candidates: Array<{
+			id: string | null;
+			x: number;
+			y: number;
+		}> = [
+			{ id: null, x: obj.cx, y: obj.cy },
+			{ id: "topCenter", x: keyPoints.topCenter.x, y: keyPoints.topCenter.y },
+			{
+				id: "rightCenter",
+				x: keyPoints.rightCenter.x,
+				y: keyPoints.rightCenter.y,
+			},
+			{
+				id: "bottomCenter",
+				x: keyPoints.bottomCenter.x,
+				y: keyPoints.bottomCenter.y,
+			},
+			{
+				id: "leftCenter",
+				x: keyPoints.leftCenter.x,
+				y: keyPoints.leftCenter.y,
+			},
+		];
+
+		let nearest = candidates[0];
+		let minDist = calcEuclideanDistance(cursorX, cursorY, nearest.x, nearest.y);
+
+		for (let i = 1; i < candidates.length; i++) {
+			const c = candidates[i];
+			const dist = calcEuclideanDistance(cursorX, cursorY, c.x, c.y);
+			if (dist < minDist) {
+				minDist = dist;
+				nearest = c;
+			}
+		}
+
+		return nearest.id === null
+			? { kind: "center" }
+			: { kind: "connectPoint", id: nearest.id };
 	}
 }
