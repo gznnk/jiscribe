@@ -41,12 +41,8 @@ export const resolveEndpoint = (
 
 	// CenterAnchor: use the object's center point
 	if (endpoint.anchor.kind === "center") {
-		// Type-based check for objects that support center anchors
-		if (obj.type === "rect" || obj.type === "ellipse") {
-			// Validate that the object has cx and cy properties
-			if (isCenterPoint(obj)) {
-				return { x: obj.cx, y: obj.cy };
-			}
+		if (isCenterPoint(obj)) {
+			return { x: obj.cx, y: obj.cy };
 		}
 	}
 
