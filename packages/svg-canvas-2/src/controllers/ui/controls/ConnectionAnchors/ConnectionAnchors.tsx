@@ -13,6 +13,7 @@ const ANCHOR_FILL = "white";
 const ANCHOR_OFFSET = 20; // Distance from the edge
 
 type AnchorPosition =
+	| "center"
 	| "topCenter"
 	| "rightCenter"
 	| "bottomCenter"
@@ -100,6 +101,7 @@ const ConnectionAnchorsComponent: React.FC<ConnectionAnchorsProps> = ({
 		position: AnchorPosition;
 		point: { x: number; y: number };
 	}> = [
+		{ position: "center", point: { x: cx, y: cy } },
 		{ position: "topCenter", point: topCenterAnchor },
 		{ position: "rightCenter", point: rightCenterAnchor },
 		{ position: "bottomCenter", point: bottomCenterAnchor },

@@ -12,6 +12,7 @@ import type { CanvasControllerState } from "../../../../CanvasTypes";
 import type { ControlStrategy } from "../ControlEventHandler";
 
 type AnchorPosition =
+	| "center"
 	| "topCenter"
 	| "rightCenter"
 	| "bottomCenter"
@@ -89,6 +90,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 
 		// Validate anchor position
 		const validPositions: AnchorPosition[] = [
+			"center",
 			"topCenter",
 			"rightCenter",
 			"bottomCenter",
@@ -111,7 +113,10 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			],
 			source: {
 				owner: { type: sourceObject.type, id: sourceObjectId },
-				anchor: { kind: "connectPoint", id: anchorPosition },
+				anchor:
+					anchorPosition === "center"
+						? { kind: "center" }
+						: { kind: "connectPoint", id: anchorPosition },
 			},
 			target: {
 				anchor: { kind: "free", point: { x: event.last.x, y: event.last.y } },
