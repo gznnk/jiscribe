@@ -32,7 +32,7 @@ export const Input = styled.input<TextEditorStyledProps>`
 	font-family: ${(props) => props.fontFamily};
 	font-weight: ${(props) => props.fontWeight};
 	background: transparent;
-	border: 1px solid #3b82f6;
+	border: none;
 	outline: none;
 	overflow: hidden;
 	resize: none;
@@ -58,7 +58,7 @@ export const TextArea = styled.textarea<TextEditorStyledProps>`
 	font-family: ${(props) => props.fontFamily};
 	font-weight: ${(props) => props.fontWeight};
 	background: transparent;
-	border: 1px solid #3b82f6;
+	border: none;
 	outline: none;
 	overflow-y: auto;
 	resize: none;

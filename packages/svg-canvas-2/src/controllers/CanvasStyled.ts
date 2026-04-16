@@ -72,8 +72,8 @@ type ZoomScaledOverlayProps = {
  */
 export const ZoomScaledOverlay = styled.div<ZoomScaledOverlayProps>`
 	position: absolute;
-	left: ${(props) => props.left}px;
-	top: ${(props) => props.top}px;
+	left: ${(props) => props.left * props.zoom}px;
+	top: ${(props) => props.top * props.zoom}px;
 	transform: scale(${(props) => props.zoom});
 	transform-origin: top left;
 	pointer-events: none;
