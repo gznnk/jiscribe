@@ -7,16 +7,15 @@ import {
 
 import { PRECISION } from "../../../../../constants/precision";
 import type { CanvasEvent } from "../../../../../registry/GestureHandlerRegistryTypes";
+import type {
+	CenterAnchorSpec,
+	ConnectPointAnchorSpec,
+	ConnectPointId,
+} from "../../../../../schemas/objects/types/EndpointRef";
+import { isConnectPointId } from "../../../../../schemas/objects/types/EndpointRef";
 import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import type { ControlStrategy } from "../ControlEventHandler";
-
-type AnchorPosition =
-	| "center"
-	| "topCenter"
-	| "rightCenter"
-	| "bottomCenter"
-	| "leftCenter";
 
 /**
  * Connection anchor からのドラッグでコネクターを作成するハンドラー。
@@ -89,14 +88,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 		}
 
 		// Validate anchor position
-		const validPositions: AnchorPosition[] = [
-			"center",
-			"topCenter",
-			"rightCenter",
-			"bottomCenter",
-			"leftCenter",
-		];
-		if (!validPositions.includes(anchorPosition as AnchorPosition)) {
+		if (!isConnectPointId(anchorPosition)) {
 			return state;
 		}
 
@@ -264,7 +256,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 		obj: { cx?: number; cy?: number; [key: string]: unknown },
 		cursorX: number,
 		cursorY: number,
-	): { kind: "center" } | { kind: "connectPoint"; id: string } {
+	): CenterAnchorSpec | ConnectPointAnchorSpec {
 		if (!isTransformedFrame(obj)) {
 			return { kind: "center" };
 		}
@@ -272,7 +264,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 		const keyPoints = calcFrameKeyPoints(obj);
 
 		const candidates: Array<{
-			id: string | null;
+			id: ConnectPointId | null;
 			x: number;
 			y: number;
 		}> = [

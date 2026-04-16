@@ -6,18 +6,13 @@ import {
 import type { TransformedFrame } from "@workspace/geometry";
 import { memo } from "react";
 
+import type { ConnectPointId } from "../../../../schemas/objects/types/EndpointRef";
+
 const ANCHOR_RADIUS = 5;
 const ANCHOR_STROKE_WIDTH = 1.5;
 const ANCHOR_COLOR = "#10b981"; // emerald-500
 const ANCHOR_FILL = "white";
 const ANCHOR_OFFSET = 20; // Distance from the edge
-
-type AnchorPosition =
-	| "center"
-	| "topCenter"
-	| "rightCenter"
-	| "bottomCenter"
-	| "leftCenter";
 
 type ConnectionAnchorsProps = {
 	/**
@@ -98,7 +93,7 @@ const ConnectionAnchorsComponent: React.FC<ConnectionAnchorsProps> = ({
 	};
 
 	const anchors: Array<{
-		position: AnchorPosition;
+		position: ConnectPointId;
 		point: { x: number; y: number };
 	}> = [
 		{ position: "center", point: { x: cx, y: cy } },

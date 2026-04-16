@@ -6,9 +6,22 @@ export type CenterAnchorSpec = {
 	kind: "center";
 };
 
+export const ConnectPointIds = [
+	"center",
+	"topCenter",
+	"rightCenter",
+	"bottomCenter",
+	"leftCenter",
+] as const;
+
+export type ConnectPointId = (typeof ConnectPointIds)[number];
+
+export const isConnectPointId = (value: unknown): value is ConnectPointId =>
+	ConnectPointIds.includes(value as ConnectPointId);
+
 export type ConnectPointAnchorSpec = {
 	kind: "connectPoint";
-	id: string;
+	id: ConnectPointId;
 };
 
 export type FreeAnchorSpec = {

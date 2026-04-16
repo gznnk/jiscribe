@@ -2,17 +2,14 @@ import { calcFrameKeyPoints } from "@workspace/geometry";
 import type { TransformedFrame } from "@workspace/geometry";
 import { memo } from "react";
 
+import type { ConnectPointId } from "../../../../schemas/objects/types/EndpointRef";
+
 const TARGET_RADIUS = 5;
 const TARGET_STROKE_WIDTH = 1.5;
 const TARGET_COLOR = "#6366f1"; // indigo-500
 const TARGET_FILL = "white";
 
-export type TargetAnchorId =
-	| "center"
-	| "topCenter"
-	| "rightCenter"
-	| "bottomCenter"
-	| "leftCenter";
+export type { ConnectPointId };
 
 type ConnectionTargetAnchorsProps = {
 	/**
@@ -23,7 +20,7 @@ type ConnectionTargetAnchorsProps = {
 	 * The anchor that is currently nearest to the cursor.
 	 * null means no specific anchor is highlighted.
 	 */
-	activeAnchorId: TargetAnchorId | null;
+	activeAnchorId: ConnectPointId | null;
 	/**
 	 * Zoom level for adjusting handle sizes.
 	 * @default 1
@@ -60,7 +57,7 @@ const ConnectionTargetAnchorsComponent: React.FC<
 		scaleY,
 	});
 
-	const anchors: Array<{ id: TargetAnchorId; x: number; y: number }> = [
+	const anchors: Array<{ id: ConnectPointId; x: number; y: number }> = [
 		{ id: "center", x: cx, y: cy },
 		{ id: "topCenter", x: points.topCenter.x, y: points.topCenter.y },
 		{ id: "rightCenter", x: points.rightCenter.x, y: points.rightCenter.y },

@@ -1,11 +1,11 @@
 import { isTransformedFrame } from "@workspace/geometry";
 import { memo } from "react";
 
+import type { ConnectPointId } from "../../../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
 import { ConnectionAnchors } from "../ConnectionAnchors";
 import { ConnectionTargetAnchors } from "../ConnectionTargetAnchors";
-import type { TargetAnchorId } from "../ConnectionTargetAnchors";
 
 type ConnectionAnchorsLayerProps = {
 	selectedIds: string[];
@@ -50,13 +50,13 @@ const ConnectionAnchorsLayerComponent: React.FC<
 	// Determine which anchor on the target is nearest to the cursor.
 	// ConnectionAnchorEventHandler already computes this and stores it in
 	// pendingConnector.target when owner matches.
-	let activeAnchorId: TargetAnchorId | null = null;
+	let activeAnchorId: ConnectPointId | null = null;
 	if (pendingConnector && targetObjectId) {
 		const anchor = pendingConnector.target.anchor;
 		if (anchor.kind === "center") {
 			activeAnchorId = "center";
 		} else if (anchor.kind === "connectPoint") {
-			activeAnchorId = anchor.id as TargetAnchorId;
+			activeAnchorId = anchor.id;
 		}
 	}
 
