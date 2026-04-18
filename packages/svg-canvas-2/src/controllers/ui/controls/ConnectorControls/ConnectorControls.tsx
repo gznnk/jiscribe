@@ -41,10 +41,10 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 	const adjustedEndpointRadius = ENDPOINT_RADIUS / zoom;
 	const adjustedEndpointStrokeWidth = ENDPOINT_STROKE_WIDTH / zoom;
 
-	// Only show handles for FreeAnchor endpoints
-	// (Owned endpoints should not be dragged because their owner object would be deleted)
-	const showSourceHandle = connectorState.source.anchor.kind === "free";
-	const showTargetHandle = connectorState.target.anchor.kind === "free";
+	// Always show handles for both endpoints
+	// Users can drag to reconnect (Owned -> Owned/Free) or adjust position (Free -> Free/Owned)
+	const showSourceHandle = true;
+	const showTargetHandle = true;
 
 	return (
 		<g data-layer="connector-controls">
