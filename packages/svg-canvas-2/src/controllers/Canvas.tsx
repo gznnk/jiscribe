@@ -186,6 +186,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 						objects={state.objects}
 						zoom={state.viewport.zoom}
 						pendingConnector={state.pendingConnector}
+						editingEndpoint={state.editingEndpoint}
 					/>
 					<VertexControlsLayer
 						selectedIds={state.selectedIds}

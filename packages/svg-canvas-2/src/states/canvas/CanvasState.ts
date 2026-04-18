@@ -125,4 +125,13 @@ export type CanvasState = {
 	 * dragEnd で null にクリアする。
 	 */
 	editingConnectorId: string | null;
+
+	/**
+	 * pendingConnector のうち、現在編集中（ドラッグ中）のエンドポイント。
+	 * 新規作成時は "target"（source は固定、target を動かす）。
+	 * 編集時は "source" または "target"（ドラッグしているハンドル側）。
+	 * これにより、UI層で固定側のオブジェクトにのみアンカーを表示できる。
+	 * dragEnd で null にクリアする。
+	 */
+	editingEndpoint: "source" | "target" | null;
 };

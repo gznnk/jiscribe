@@ -132,6 +132,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 		return {
 			...state,
 			pendingConnector,
+			editingEndpoint: "target", // 新規作成時は常に target を編集
 			edgeScrollEnabled: true,
 			// Clear any selection to avoid confusion
 			selectedIds: [],
@@ -196,6 +197,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			connectorIds: updatedConnectorIds,
 			pendingConnector,
 			editingConnectorId: connectorId,
+			editingEndpoint: endpoint,
 			selectedConnectorId: null, // 編集中は選択解除
 			edgeScrollEnabled: true,
 		};
@@ -328,6 +330,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			return {
 				...dragResult,
 				edgeScrollEnabled: false,
+				editingEndpoint: null,
 			};
 		}
 
@@ -343,6 +346,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 				connectorIds: [...dragResult.connectorIds, editingConnectorId],
 				pendingConnector: null,
 				editingConnectorId: null,
+				editingEndpoint: null,
 				selectedConnectorId: editingConnectorId, // 選択を復元
 				edgeScrollEnabled: false,
 				lastCommitTime: event.time,
@@ -357,6 +361,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 				},
 				connectorIds: [...dragResult.connectorIds, finalConnector.id],
 				pendingConnector: null,
+				editingEndpoint: null,
 				edgeScrollEnabled: false,
 				lastCommitTime: event.time,
 			};

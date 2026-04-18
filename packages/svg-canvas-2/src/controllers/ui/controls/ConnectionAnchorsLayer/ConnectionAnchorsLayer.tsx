@@ -16,6 +16,11 @@ type ConnectionAnchorsLayerProps = {
 	 * これがある場合、接続ターゲット側の受け口アンカーを表示する。
 	 */
 	pendingConnector?: ConnectorState | null;
+	/**
+	 * pendingConnector のうち、現在編集中（ドラッグ中）のエンドポイント。
+	 * これにより、固定側（編集していない側）のオブジェクトにのみアンカーを表示できる。
+	 */
+	editingEndpoint?: "source" | "target" | null;
 };
 
 /**
@@ -27,7 +32,7 @@ type ConnectionAnchorsLayerProps = {
  */
 const ConnectionAnchorsLayerComponent: React.FC<
 	ConnectionAnchorsLayerProps
-> = ({ selectedIds, objects, zoom = 1, pendingConnector }) => {
+> = ({ selectedIds, objects, zoom = 1, pendingConnector, editingEndpoint }) => {
 	// --- Source anchors (shown on single-selected, frame-based, non-group objects) ---
 	const selectedId = selectedIds.length === 1 ? selectedIds[0] : null;
 	const selectedObject = selectedId ? objects[selectedId] : null;
@@ -37,36 +42,33 @@ const ConnectionAnchorsLayerComponent: React.FC<
 		isTransformedFrame(selectedObject);
 
 	// --- Target anchors (shown during a connection drag on the hovered object) ---
-	// Show anchors on both source and target if they are Owned (not Free).
-	// This handles both creation (source=Owned, target=hover) and editing (either endpoint can be dragged).
-	const sourceObjectId = pendingConnector?.source.owner?.id;
-	const targetObjectId = pendingConnector?.target.owner?.id;
+	// Show anchors on the endpoint being edited (hover target).
+	// - If editingEndpoint is "target", show anchors on target object (hover candidate)
+	// - If editingEndpoint is "source", show anchors on source object (hover candidate)
+	// - Default to "target" for backward compatibility (new creation mode)
+	const activeEditingEndpoint = editingEndpoint ?? "target";
 
-	// Collect all owned objects that should show target anchors
-	const ownedObjectIds = new Set<string>();
-	if (sourceObjectId) ownedObjectIds.add(sourceObjectId);
-	if (targetObjectId) ownedObjectIds.add(targetObjectId);
+	// Determine which endpoint is being edited (hover target)
+	const editingEndpointRef = activeEditingEndpoint === "source"
+		? pendingConnector?.source
+		: pendingConnector?.target;
 
-	// For each owned object, determine the active anchor
-	const activeAnchors = new Map<string, ConnectPointId>();
-	if (pendingConnector) {
-		// Check source endpoint
-		if (sourceObjectId) {
-			const anchor = pendingConnector.source.anchor;
-			if (anchor.kind === "center") {
-				activeAnchors.set(sourceObjectId, "center");
-			} else if (anchor.kind === "connectPoint") {
-				activeAnchors.set(sourceObjectId, anchor.id);
-			}
-		}
-		// Check target endpoint
-		if (targetObjectId) {
-			const anchor = pendingConnector.target.anchor;
-			if (anchor.kind === "center") {
-				activeAnchors.set(targetObjectId, "center");
-			} else if (anchor.kind === "connectPoint") {
-				activeAnchors.set(targetObjectId, anchor.id);
-			}
+	const targetObjectId = editingEndpointRef?.owner?.id;
+	const targetObject = targetObjectId ? objects[targetObjectId] : null;
+
+	const showTargetAnchors =
+		targetObject != null &&
+		targetObject.type !== "connector" &&
+		isTransformedFrame(targetObject);
+
+	// Determine the active anchor on the hover target
+	let activeAnchorId: ConnectPointId | null = null;
+	if (editingEndpointRef && targetObjectId) {
+		const anchor = editingEndpointRef.anchor;
+		if (anchor.kind === "center") {
+			activeAnchorId = "center";
+		} else if (anchor.kind === "connectPoint") {
+			activeAnchorId = anchor.id;
 		}
 	}
 
@@ -79,21 +81,13 @@ const ConnectionAnchorsLayerComponent: React.FC<
 					zoom={zoom}
 				/>
 			)}
-			{/* Show target anchors on all owned objects during connection drag */}
-			{Array.from(ownedObjectIds).map((objId) => {
-				const obj = objects[objId];
-				if (!obj || obj.type === "connector" || !isTransformedFrame(obj)) {
-					return null;
-				}
-				return (
-					<ConnectionTargetAnchors
-						key={objId}
-						frame={obj}
-						activeAnchorId={activeAnchors.get(objId) ?? null}
-						zoom={zoom}
-					/>
-				);
-			})}
+			{showTargetAnchors && (
+				<ConnectionTargetAnchors
+					frame={targetObject!}
+					activeAnchorId={activeAnchorId}
+					zoom={zoom}
+				/>
+			)}
 		</>
 	);
 };
