@@ -8,10 +8,10 @@ import { memo } from "react";
 
 import type { ConnectPointId } from "../../../../schemas/objects/types/EndpointRef";
 
-const ANCHOR_RADIUS = 5;
-const ANCHOR_STROKE_WIDTH = 1.5;
-const ANCHOR_COLOR = "#10b981"; // emerald-500
-const ANCHOR_FILL = "white";
+const ANCHOR_RADIUS = 4;
+const ANCHOR_STROKE_WIDTH = 1;
+const ANCHOR_COLOR = "#6366f1";
+const ANCHOR_FILL = "#6366f1";
 const ANCHOR_OFFSET = 20; // Distance from the edge
 
 type ConnectionAnchorsProps = {

@@ -125,8 +125,9 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			target: {
 				anchor: { kind: "free", point: { x: event.last.x, y: event.last.y } },
 			},
-			stroke: "#6366f1", // indigo-500
+			stroke: "black",
 			strokeWidth: 2,
+			endArrow: "ConcaveTriangle",
 		} as ConnectorState;
 
 		return {
@@ -209,7 +210,9 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 	 * "connection-anchor:edit:...:target" -> "target"
 	 * "connection-anchor:create:..." -> "target" (デフォルト)
 	 */
-	private getEditingEndpoint(targetId: string | undefined): "source" | "target" {
+	private getEditingEndpoint(
+		targetId: string | undefined,
+	): "source" | "target" {
 		if (!targetId) {
 			return "target";
 		}
@@ -259,12 +262,17 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 		// Update the connector with the free endpoint on the correct side
 		const updatedConnector: ConnectorState = {
 			...pendingConnector,
-			source: endpointToUpdate === "source" ? freeEndpoint : pendingConnector.source,
-			target: endpointToUpdate === "target" ? freeEndpoint : pendingConnector.target,
+			source:
+				endpointToUpdate === "source" ? freeEndpoint : pendingConnector.source,
+			target:
+				endpointToUpdate === "target" ? freeEndpoint : pendingConnector.target,
 		} as ConnectorState;
 
 		// Get the fixed endpoint's object ID to exclude it from hover detection
-		const fixedEndpoint = endpointToUpdate === "source" ? pendingConnector.target : pendingConnector.source;
+		const fixedEndpoint =
+			endpointToUpdate === "source"
+				? pendingConnector.target
+				: pendingConnector.source;
 		const fixedObjectId = fixedEndpoint.owner?.id;
 
 		// Find the first valid hover target:
@@ -277,7 +285,9 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 				const obj = state.objects[id];
 				return obj && obj.type !== "connector";
 			});
-		const hoveredObject = hoveredObjectId ? state.objects[hoveredObjectId] : null;
+		const hoveredObject = hoveredObjectId
+			? state.objects[hoveredObjectId]
+			: null;
 
 		// If hovering over a valid target, preview as connected (OwnedEndpointRef).
 		// Use the nearest connect-point (topCenter/rightCenter/bottomCenter/leftCenter)
@@ -296,8 +306,14 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 		// Apply the preview endpoint to the correct side
 		const finalConnector: ConnectorState = {
 			...updatedConnector,
-			source: endpointToUpdate === "source" ? previewEndpoint : updatedConnector.source,
-			target: endpointToUpdate === "target" ? previewEndpoint : updatedConnector.target,
+			source:
+				endpointToUpdate === "source"
+					? previewEndpoint
+					: updatedConnector.source,
+			target:
+				endpointToUpdate === "target"
+					? previewEndpoint
+					: updatedConnector.target,
 		};
 
 		return {

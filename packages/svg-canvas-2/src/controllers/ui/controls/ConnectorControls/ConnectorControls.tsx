@@ -4,9 +4,6 @@ import { useResolvedConnectorPoints } from "../../../../presentations/layers/con
 import type { CanvasState } from "../../../../states/canvas/CanvasState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
 
-const SELECTION_COLOR = "#0d99ff";
-const SELECTION_STROKE_WIDTH = 1.5;
-
 const ENDPOINT_RADIUS = 4;
 const ENDPOINT_STROKE_WIDTH = 1;
 const ENDPOINT_COLOR = "#0d99ff";
@@ -35,8 +32,6 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 
 	if (!points) return null;
 
-	const pointsAttr = `${points.source.x},${points.source.y} ${points.target.x},${points.target.y}`;
-
 	// Adjust sizes based on zoom level to maintain consistent visual size
 	const adjustedEndpointRadius = ENDPOINT_RADIUS / zoom;
 	const adjustedEndpointStrokeWidth = ENDPOINT_STROKE_WIDTH / zoom;
@@ -48,16 +43,6 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 
 	return (
 		<g data-layer="connector-controls">
-			{/* Selection outline (non-interactive) */}
-			<polyline
-				points={pointsAttr}
-				stroke={SELECTION_COLOR}
-				strokeWidth={SELECTION_STROKE_WIDTH}
-				fill="none"
-				strokeLinecap="round"
-				pointerEvents="none"
-			/>
-
 			{/* Source endpoint handle (interactive) - only for FreeAnchor */}
 			{showSourceHandle && (
 				<circle

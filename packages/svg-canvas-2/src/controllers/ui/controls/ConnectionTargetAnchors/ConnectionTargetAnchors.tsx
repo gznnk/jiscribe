@@ -4,8 +4,8 @@ import { memo } from "react";
 
 import type { ConnectPointId } from "../../../../schemas/objects/types/EndpointRef";
 
-const TARGET_RADIUS = 5;
-const TARGET_STROKE_WIDTH = 1.5;
+const TARGET_RADIUS = 4;
+const TARGET_STROKE_WIDTH = 1;
 const TARGET_COLOR = "#6366f1"; // indigo-500
 const TARGET_FILL = "white";
 
@@ -74,7 +74,7 @@ const ConnectionTargetAnchorsComponent: React.FC<
 						key={id}
 						cx={x}
 						cy={y}
-						r={isActive ? adjustedRadius * 1.4 : adjustedRadius}
+						r={isActive ? adjustedRadius * 1.2 : adjustedRadius}
 						fill={isActive ? TARGET_COLOR : TARGET_FILL}
 						stroke={TARGET_COLOR}
 						strokeWidth={adjustedStrokeWidth}
