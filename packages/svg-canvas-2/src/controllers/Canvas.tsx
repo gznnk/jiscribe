@@ -173,6 +173,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 					<ConnectorControlsLayer
 						selectedConnectorId={state.selectedConnectorId}
 						objects={state.objects}
+						zoom={state.viewport.zoom}
 					/>
 					<TransformControlsLayer
 						selectedIds={state.selectedIds}

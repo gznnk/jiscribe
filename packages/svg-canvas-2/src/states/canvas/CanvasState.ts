@@ -117,4 +117,12 @@ export type CanvasState = {
 	 * null の場合はコネクターが選択されていない。
 	 */
 	selectedConnectorId: string | null;
+
+	/**
+	 * 編集中のコネクターID。
+	 * エンドポイントをドラッグ編集している場合に設定され、pendingConnector と組み合わせて使用される。
+	 * 新規作成時は null、編集時は元のコネクターIDが設定される。
+	 * dragEnd で null にクリアする。
+	 */
+	editingConnectorId: string | null;
 };

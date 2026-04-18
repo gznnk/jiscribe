@@ -37,8 +37,8 @@ type ConnectionAnchorsProps = {
  * These anchors can be dragged to create new connectors.
  *
  * Each anchor has:
- * - data-kind="connection-anchor" for GestureHandler to identify
- * - data-id="<objectId>:<anchorPosition>" for identifying which anchor was interacted with
+ * - data-kind="control" for GestureHandler to identify
+ * - data-id="connection-anchor:create:<objectId>:<anchorPosition>" for identifying which anchor was interacted with
  */
 const ConnectionAnchorsComponent: React.FC<ConnectionAnchorsProps> = ({
 	objectId,
@@ -115,7 +115,7 @@ const ConnectionAnchorsComponent: React.FC<ConnectionAnchorsProps> = ({
 					stroke={ANCHOR_COLOR}
 					strokeWidth={adjustedStrokeWidth}
 					data-kind="control"
-					data-id={`connection-anchor:${objectId}:${position}`}
+					data-id={`connection-anchor:create:${objectId}:${position}`}
 					style={{ cursor: "crosshair" }}
 				/>
 			))}

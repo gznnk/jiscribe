@@ -7,12 +7,13 @@ import {
 
 import { PRECISION } from "../../../../../constants/precision";
 import type { CanvasEvent } from "../../../../../registry/GestureHandlerRegistryTypes";
-import type {
-	CenterAnchorSpec,
-	ConnectPointAnchorSpec,
-	ConnectPointId,
+import {
+	isConnectPointId,
+	type CenterAnchorSpec,
+	type ConnectPointAnchorSpec,
+	type ConnectPointId,
+	type EndpointRef,
 } from "../../../../../schemas/objects/types/EndpointRef";
-import { isConnectPointId } from "../../../../../schemas/objects/types/EndpointRef";
 import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import type { ControlStrategy } from "../ControlEventHandler";
@@ -37,6 +38,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			return false;
 		}
 
+		// connection-anchor で始まるコントロールをサポート（create/edit 両方）
 		return targetId.startsWith("connection-anchor:");
 	}
 
@@ -49,38 +51,48 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			return state;
 		}
 
+		const targetControlId = event.targetId;
+		if (!targetControlId) {
+			return state;
+		}
+
+		// Control ID をパース: "connection-anchor:<mode>:..."
+		const parts = targetControlId.split(":");
+		if (parts.length < 2 || parts[0] !== "connection-anchor") {
+			return state;
+		}
+
+		const mode = parts[1]; // "create" or "edit"
+
 		// ジェスチャータイプに応じて処理
 		if (event.type === "dragStart") {
-			return this.handleDragStart(state, event);
+			return mode === "edit"
+				? this.handleEditDragStart(state, event, parts)
+				: this.handleCreateDragStart(state, event, parts);
 		} else if (event.type === "drag") {
-			return this.handleDrag(state, event);
+			return this.handleDrag(state, event); // 新規・編集共通
 		} else if (event.type === "dragEnd") {
-			return this.handleDragEnd(state, event);
+			return this.handleDragEnd(state, event); // 新規・編集共通
 		}
 
 		return state;
 	}
 
 	/**
-	 * Connection anchor でのドラッグ開始を処理する。
+	 * Connection anchor でのドラッグ開始を処理する（新規作成モード）。
 	 * 新しいコネクターの作成を開始する。
 	 */
-	private handleDragStart(
+	private handleCreateDragStart(
 		state: CanvasControllerState,
 		event: CanvasEvent,
+		parts: string[],
 	): CanvasControllerState {
-		const targetId = event.targetId;
-		if (!targetId) {
+		// parts = ["connection-anchor", "create", sourceObjectId, anchorPosition]
+		if (parts.length !== 4) {
 			return state;
 		}
 
-		// Parse anchor ID: "connection-anchor:<objectId>:<anchorPosition>"
-		const parts = targetId.split(":");
-		if (parts.length !== 3 || parts[0] !== "connection-anchor") {
-			return state;
-		}
-
-		const [, sourceObjectId, anchorPosition] = parts;
+		const [, , sourceObjectId, anchorPosition] = parts;
 		const sourceObject = state.objects[sourceObjectId];
 
 		if (!sourceObject) {
@@ -124,6 +136,69 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			// Clear any selection to avoid confusion
 			selectedIds: [],
 			multiSelectGroup: null,
+		};
+	}
+
+	/**
+	 * エンドポイント編集のドラッグ開始処理。
+	 * 選択中のコネクターをpendingConnectorに変換し、編集対象のエンドポイントをFreeAnchorに設定。
+	 */
+	private handleEditDragStart(
+		state: CanvasControllerState,
+		event: CanvasEvent,
+		parts: string[],
+	): CanvasControllerState {
+		// parts = ["connection-anchor", "edit", connectorId, endpoint]
+		if (parts.length !== 4) {
+			return state;
+		}
+
+		const [, , connectorId, endpointStr] = parts;
+		const endpoint = endpointStr as "source" | "target";
+
+		if (endpoint !== "source" && endpoint !== "target") {
+			return state;
+		}
+
+		const connector = state.objects[connectorId];
+		if (!connector || connector.type !== "connector") {
+			return state;
+		}
+
+		// 編集対象のエンドポイントをFreeAnchorに変換（カーソル位置追従準備）
+		const freeEndpoint: EndpointRef = {
+			anchor: {
+				kind: "free",
+				point: {
+					x: roundToDecimal(event.last.x, PRECISION.COORDINATE),
+					y: roundToDecimal(event.last.y, PRECISION.COORDINATE),
+				},
+			},
+		};
+
+		// pendingConnectorを作成（編集対象のエンドポイントをtargetとして設定）
+		// sourceは固定、targetが編集対象（新規作成時と同じ構造）
+		const pendingConnector: ConnectorState = {
+			...(connector as ConnectorState),
+			// 編集対象をtargetに統一（dragで更新される）
+			source: endpoint === "source" ? freeEndpoint : (connector as ConnectorState).source,
+			target: endpoint === "target" ? freeEndpoint : (connector as ConnectorState).target,
+		};
+
+		// 編集元のコネクターをobjectsから削除（非表示化）
+		const { [connectorId]: _, ...remainingObjects } = state.objects;
+		const updatedConnectorIds = state.connectorIds.filter(
+			(id) => id !== connectorId,
+		);
+
+		return {
+			...state,
+			objects: remainingObjects,
+			connectorIds: updatedConnectorIds,
+			pendingConnector,
+			editingConnectorId: connectorId,
+			selectedConnectorId: null, // 編集中は選択解除
+			edgeScrollEnabled: true,
 		};
 	}
 
@@ -192,13 +267,13 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 
 	/**
 	 * Connection anchor でのドラッグ終了を処理する。
-	 * hover 中のオブジェクトがあればコネクターを確定し、なければキャンセル。
+	 * hover 中のオブジェクトがあればコネクターを確定し、なければ FreeAnchor として確定。
 	 */
 	private handleDragEnd(
 		state: CanvasControllerState,
 		event: CanvasEvent,
 	): CanvasControllerState {
-		const { pendingConnector } = state;
+		const { pendingConnector, editingConnectorId } = state;
 
 		if (!pendingConnector) {
 			return {
@@ -207,44 +282,77 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			};
 		}
 
-		// Derive target from pendingConnector.target set during handleDrag.
-		// OwnedEndpointRef means a valid target was found; FreeEndpointRef means none.
-		const targetOwner = pendingConnector.target.owner;
-		const targetObject = targetOwner ? state.objects[targetOwner.id] : null;
+		// drag の最終状態を適用
+		const dragResult = this.handleDrag(state, event);
+		const finalPendingConnector = dragResult.pendingConnector;
+		if (!finalPendingConnector) {
+			return { ...dragResult, edgeScrollEnabled: false };
+		}
 
-		// If there's a valid target, finalize the connector
+		// target endpoint の確定（Owned or Free）
+		const targetOwner = finalPendingConnector.target.owner;
+		const targetObject = targetOwner ? dragResult.objects[targetOwner.id] : null;
+
+		let finalTarget: EndpointRef;
+
+		// If there's a valid target object, finalize as Owned
 		if (targetOwner && targetObject && targetObject.type !== "connector") {
-			const finalConnector: ConnectorState = {
-				...pendingConnector,
-				target: {
-					owner: { type: targetObject.type, id: targetOwner!.id },
-					anchor: this.calcNearestAnchor(
-						targetObject,
-						event.last.x,
-						event.last.y,
-					),
+			finalTarget = {
+				owner: { type: targetObject.type, id: targetOwner.id },
+				anchor: this.calcNearestAnchor(
+					targetObject,
+					event.last.x,
+					event.last.y,
+				),
+			};
+		} else {
+			// No valid target: finalize as FreeAnchor instead of canceling
+			finalTarget = {
+				anchor: {
+					kind: "free",
+					point: {
+						x: roundToDecimal(event.last.x, PRECISION.COORDINATE),
+						y: roundToDecimal(event.last.y, PRECISION.COORDINATE),
+					},
 				},
-			} as ConnectorState;
+			};
+		}
 
+		const finalConnector: ConnectorState = {
+			...finalPendingConnector,
+			target: finalTarget,
+		};
+
+		// 編集モードか新規作成モードかで処理を分岐
+		if (editingConnectorId) {
+			// 編集モード: 元のIDで上書き
 			return {
-				...state,
+				...dragResult,
 				objects: {
-					...state.objects,
+					...dragResult.objects,
+					[editingConnectorId]: { ...finalConnector, id: editingConnectorId },
+				},
+				connectorIds: [...dragResult.connectorIds, editingConnectorId],
+				pendingConnector: null,
+				editingConnectorId: null,
+				selectedConnectorId: editingConnectorId, // 選択を復元
+				edgeScrollEnabled: false,
+				lastCommitTime: event.time,
+			};
+		} else {
+			// 新規作成モード（既存ロジック）
+			return {
+				...dragResult,
+				objects: {
+					...dragResult.objects,
 					[finalConnector.id]: finalConnector,
 				},
-				connectorIds: [...state.connectorIds, finalConnector.id],
+				connectorIds: [...dragResult.connectorIds, finalConnector.id],
 				pendingConnector: null,
 				edgeScrollEnabled: false,
 				lastCommitTime: event.time,
 			};
 		}
-
-		// No valid target, cancel the connector creation
-		return {
-			...state,
-			pendingConnector: null,
-			edgeScrollEnabled: false,
-		};
 	}
 
 	/**

@@ -7,22 +7,29 @@ import type { ConnectorState } from "../../../../states/objects/connections/conn
 const SELECTION_COLOR = "#0d99ff";
 const SELECTION_STROKE_WIDTH = 1.5;
 
+const ENDPOINT_RADIUS = 4;
+const ENDPOINT_STROKE_WIDTH = 1;
+const ENDPOINT_COLOR = "#0d99ff";
+const ENDPOINT_FILL = "white";
+
 type ConnectorControlsProps = {
 	connectorState: ConnectorState;
 	objects: CanvasState["objects"];
+	zoom?: number;
 };
 
 /**
- * Renders the selection outline for a selected connector.
+ * Renders the selection outline and endpoint handles for a selected connector.
  * Placed in the controllers layer so selection visuals are decoupled from the connector itself.
  *
- * Future extension: reconnection handles (circles at source/target endpoints)
- * should be added here as separate elements with data-kind="control" and
- * data-id="connector-endpoint:<id>:source" / "connector-endpoint:<id>:target".
+ * Endpoint handles allow reconnection via drag:
+ * - data-kind="control" for GestureHandler routing
+ * - data-id="connection-anchor:edit:<id>:source|target" for identifying which endpoint
  */
 const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 	connectorState,
 	objects,
+	zoom = 1,
 }) => {
 	const points = useResolvedConnectorPoints(connectorState, objects);
 
@@ -30,15 +37,46 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 
 	const pointsAttr = `${points.source.x},${points.source.y} ${points.target.x},${points.target.y}`;
 
+	// Adjust sizes based on zoom level to maintain consistent visual size
+	const adjustedEndpointRadius = ENDPOINT_RADIUS / zoom;
+	const adjustedEndpointStrokeWidth = ENDPOINT_STROKE_WIDTH / zoom;
+
 	return (
-		<g data-layer="connector-controls" pointerEvents="none">
-			{/* Selection outline */}
+		<g data-layer="connector-controls">
+			{/* Selection outline (non-interactive) */}
 			<polyline
 				points={pointsAttr}
 				stroke={SELECTION_COLOR}
 				strokeWidth={SELECTION_STROKE_WIDTH}
 				fill="none"
 				strokeLinecap="round"
+				pointerEvents="none"
+			/>
+
+			{/* Source endpoint handle (interactive) */}
+			<circle
+				cx={points.source.x}
+				cy={points.source.y}
+				r={adjustedEndpointRadius}
+				fill={ENDPOINT_FILL}
+				stroke={ENDPOINT_COLOR}
+				strokeWidth={adjustedEndpointStrokeWidth}
+				data-kind="control"
+				data-id={`connection-anchor:edit:${connectorState.id}:source`}
+				style={{ cursor: "move" }}
+			/>
+
+			{/* Target endpoint handle (interactive) */}
+			<circle
+				cx={points.target.x}
+				cy={points.target.y}
+				r={adjustedEndpointRadius}
+				fill={ENDPOINT_FILL}
+				stroke={ENDPOINT_COLOR}
+				strokeWidth={adjustedEndpointStrokeWidth}
+				data-kind="control"
+				data-id={`connection-anchor:edit:${connectorState.id}:target`}
+				style={{ cursor: "move" }}
 			/>
 		</g>
 	);

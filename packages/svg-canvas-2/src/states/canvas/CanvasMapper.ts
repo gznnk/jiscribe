@@ -87,6 +87,7 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 		textEditState: null,
 		pendingConnector: null,
 		selectedConnectorId: null,
+		editingConnectorId: null,
 	};
 };
 

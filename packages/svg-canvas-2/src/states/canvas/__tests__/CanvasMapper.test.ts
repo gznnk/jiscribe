@@ -140,6 +140,14 @@ describe("CanvasMapper", () => {
 				connectorIds: [],
 				selectedIds: [],
 				eventStartState: null,
+				viewport: {
+					minX: 0,
+					minY: 0,
+					width: 1000,
+					height: 800,
+					zoom: 1,
+				},
+				edgeScrollEnabled: false,
 				lastCommitTime: 0,
 				contextMenuPosition: null,
 				pendingShapeType: null,
@@ -150,6 +158,7 @@ describe("CanvasMapper", () => {
 				textEditState: null,
 				pendingConnector: null,
 				selectedConnectorId: null,
+				editingConnectorId: null,
 				objects: {
 					"rect-1": {
 						id: "rect-1",
@@ -206,14 +215,6 @@ describe("CanvasMapper", () => {
 						scaleY: 1,
 					} as unknown as ObjectState,
 				},
-				viewport: {
-					minX: 0,
-					minY: 0,
-					width: 1000,
-					height: 800,
-					zoom: 1,
-				},
-				edgeScrollEnabled: false,
 			};
 
 			const doc = canvasToDoc(state);
