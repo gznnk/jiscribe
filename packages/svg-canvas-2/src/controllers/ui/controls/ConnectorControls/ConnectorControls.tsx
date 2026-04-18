@@ -41,6 +41,11 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 	const adjustedEndpointRadius = ENDPOINT_RADIUS / zoom;
 	const adjustedEndpointStrokeWidth = ENDPOINT_STROKE_WIDTH / zoom;
 
+	// Only show handles for FreeAnchor endpoints
+	// (Owned endpoints should not be dragged because their owner object would be deleted)
+	const showSourceHandle = connectorState.source.anchor.kind === "free";
+	const showTargetHandle = connectorState.target.anchor.kind === "free";
+
 	return (
 		<g data-layer="connector-controls">
 			{/* Selection outline (non-interactive) */}
@@ -53,31 +58,35 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 				pointerEvents="none"
 			/>
 
-			{/* Source endpoint handle (interactive) */}
-			<circle
-				cx={points.source.x}
-				cy={points.source.y}
-				r={adjustedEndpointRadius}
-				fill={ENDPOINT_FILL}
-				stroke={ENDPOINT_COLOR}
-				strokeWidth={adjustedEndpointStrokeWidth}
-				data-kind="control"
-				data-id={`connection-anchor:edit:${connectorState.id}:source`}
-				style={{ cursor: "move" }}
-			/>
+			{/* Source endpoint handle (interactive) - only for FreeAnchor */}
+			{showSourceHandle && (
+				<circle
+					cx={points.source.x}
+					cy={points.source.y}
+					r={adjustedEndpointRadius}
+					fill={ENDPOINT_FILL}
+					stroke={ENDPOINT_COLOR}
+					strokeWidth={adjustedEndpointStrokeWidth}
+					data-kind="control"
+					data-id={`connection-anchor:edit:${connectorState.id}:source`}
+					style={{ cursor: "move" }}
+				/>
+			)}
 
-			{/* Target endpoint handle (interactive) */}
-			<circle
-				cx={points.target.x}
-				cy={points.target.y}
-				r={adjustedEndpointRadius}
-				fill={ENDPOINT_FILL}
-				stroke={ENDPOINT_COLOR}
-				strokeWidth={adjustedEndpointStrokeWidth}
-				data-kind="control"
-				data-id={`connection-anchor:edit:${connectorState.id}:target`}
-				style={{ cursor: "move" }}
-			/>
+			{/* Target endpoint handle (interactive) - only for FreeAnchor */}
+			{showTargetHandle && (
+				<circle
+					cx={points.target.x}
+					cy={points.target.y}
+					r={adjustedEndpointRadius}
+					fill={ENDPOINT_FILL}
+					stroke={ENDPOINT_COLOR}
+					strokeWidth={adjustedEndpointStrokeWidth}
+					data-kind="control"
+					data-id={`connection-anchor:edit:${connectorState.id}:target`}
+					style={{ cursor: "move" }}
+				/>
+			)}
 		</g>
 	);
 };

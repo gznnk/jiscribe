@@ -176,13 +176,12 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			},
 		};
 
-		// pendingConnectorを作成（編集対象のエンドポイントをtargetとして設定）
-		// sourceは固定、targetが編集対象（新規作成時と同じ構造）
+		// pendingConnectorを作成（編集対象のエンドポイントをFreeに設定）
+		const connectorTyped = connector as ConnectorState;
 		const pendingConnector: ConnectorState = {
-			...(connector as ConnectorState),
-			// 編集対象をtargetに統一（dragで更新される）
-			source: endpoint === "source" ? freeEndpoint : (connector as ConnectorState).source,
-			target: endpoint === "target" ? freeEndpoint : (connector as ConnectorState).target,
+			...connectorTyped,
+			source: endpoint === "source" ? freeEndpoint : connectorTyped.source,
+			target: endpoint === "target" ? freeEndpoint : connectorTyped.target,
 		};
 
 		// 編集元のコネクターをobjectsから削除（非表示化）
@@ -197,6 +196,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			connectorIds: updatedConnectorIds,
 			pendingConnector,
 			editingConnectorId: connectorId,
+			editingEndpoint: endpoint,
 			selectedConnectorId: null, // 編集中は選択解除
 			edgeScrollEnabled: true,
 		};
@@ -210,58 +210,73 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 		state: CanvasControllerState,
 		event: CanvasEvent,
 	): CanvasControllerState {
-		const { pendingConnector } = state;
+		const { pendingConnector, editingEndpoint } = state;
 
 		if (!pendingConnector) {
 			return state;
 		}
 
-		// Update the target point to the current mouse position
-		const updatedConnector: ConnectorState = {
-			...pendingConnector,
-			target: {
-				anchor: {
-					kind: "free",
-					point: {
-						x: roundToDecimal(event.last.x, PRECISION.COORDINATE),
-						y: roundToDecimal(event.last.y, PRECISION.COORDINATE),
-					},
+		// Determine which endpoint is being edited (default to "target" for new creation)
+		const endpointToUpdate = editingEndpoint || "target";
+
+		// Create a free endpoint at the current cursor position
+		const freeEndpoint: EndpointRef = {
+			anchor: {
+				kind: "free",
+				point: {
+					x: roundToDecimal(event.last.x, PRECISION.COORDINATE),
+					y: roundToDecimal(event.last.y, PRECISION.COORDINATE),
 				},
 			},
+		};
+
+		// Update the connector with the free endpoint on the correct side
+		const updatedConnector: ConnectorState = {
+			...pendingConnector,
+			source: endpointToUpdate === "source" ? freeEndpoint : pendingConnector.source,
+			target: endpointToUpdate === "target" ? freeEndpoint : pendingConnector.target,
 		} as ConnectorState;
 
-		// Get the source object ID to exclude it from hover detection.
-		const sourceObjectId = pendingConnector.source.owner?.id;
+		// Get the fixed endpoint's object ID to exclude it from hover detection
+		const fixedEndpoint = endpointToUpdate === "source" ? pendingConnector.target : pendingConnector.source;
+		const fixedObjectId = fixedEndpoint.owner?.id;
 
 		// Find the first valid hover target:
-		// - Exclude the source object itself (can't connect to self)
+		// - Exclude the fixed endpoint's object (can't connect to self)
 		// - Exclude connectors (for now, only allow connecting to shapes)
-		const targetObjectId = event.hovered
+		const hoveredObjectId = event.hovered
 			.map((h) => h.id)
 			.find((id: string) => {
-				if (id === sourceObjectId) return false;
+				if (id === fixedObjectId) return false;
 				const obj = state.objects[id];
 				return obj && obj.type !== "connector";
 			});
-		const targetObject = targetObjectId ? state.objects[targetObjectId] : null;
+		const hoveredObject = hoveredObjectId ? state.objects[hoveredObjectId] : null;
 
 		// If hovering over a valid target, preview as connected (OwnedEndpointRef).
 		// Use the nearest connect-point (topCenter/rightCenter/bottomCenter/leftCenter)
 		// or center, whichever is closest to the current cursor position.
-		const previewTarget: ConnectorState["target"] = targetObject
+		const previewEndpoint: EndpointRef = hoveredObject
 			? {
-					owner: { type: targetObject.type, id: targetObjectId! },
+					owner: { type: hoveredObject.type, id: hoveredObjectId! },
 					anchor: this.calcNearestAnchor(
-						targetObject,
+						hoveredObject,
 						event.last.x,
 						event.last.y,
 					),
 				}
-			: updatedConnector.target;
+			: freeEndpoint;
+
+		// Apply the preview endpoint to the correct side
+		const finalConnector: ConnectorState = {
+			...updatedConnector,
+			source: endpointToUpdate === "source" ? previewEndpoint : updatedConnector.source,
+			target: endpointToUpdate === "target" ? previewEndpoint : updatedConnector.target,
+		};
 
 		return {
 			...state,
-			pendingConnector: { ...updatedConnector, target: previewTarget },
+			pendingConnector: finalConnector,
 		};
 	}
 
@@ -282,46 +297,16 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			};
 		}
 
-		// drag の最終状態を適用
+		// drag の最終状態を適用（handleDrag が既に正しい endpoint を更新済み）
 		const dragResult = this.handleDrag(state, event);
-		const finalPendingConnector = dragResult.pendingConnector;
-		if (!finalPendingConnector) {
-			return { ...dragResult, edgeScrollEnabled: false };
-		}
-
-		// target endpoint の確定（Owned or Free）
-		const targetOwner = finalPendingConnector.target.owner;
-		const targetObject = targetOwner ? dragResult.objects[targetOwner.id] : null;
-
-		let finalTarget: EndpointRef;
-
-		// If there's a valid target object, finalize as Owned
-		if (targetOwner && targetObject && targetObject.type !== "connector") {
-			finalTarget = {
-				owner: { type: targetObject.type, id: targetOwner.id },
-				anchor: this.calcNearestAnchor(
-					targetObject,
-					event.last.x,
-					event.last.y,
-				),
-			};
-		} else {
-			// No valid target: finalize as FreeAnchor instead of canceling
-			finalTarget = {
-				anchor: {
-					kind: "free",
-					point: {
-						x: roundToDecimal(event.last.x, PRECISION.COORDINATE),
-						y: roundToDecimal(event.last.y, PRECISION.COORDINATE),
-					},
-				},
+		const finalConnector = dragResult.pendingConnector;
+		if (!finalConnector) {
+			return {
+				...dragResult,
+				edgeScrollEnabled: false,
+				editingEndpoint: null,
 			};
 		}
-
-		const finalConnector: ConnectorState = {
-			...finalPendingConnector,
-			target: finalTarget,
-		};
 
 		// 編集モードか新規作成モードかで処理を分岐
 		if (editingConnectorId) {
@@ -335,6 +320,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 				connectorIds: [...dragResult.connectorIds, editingConnectorId],
 				pendingConnector: null,
 				editingConnectorId: null,
+				editingEndpoint: null,
 				selectedConnectorId: editingConnectorId, // 選択を復元
 				edgeScrollEnabled: false,
 				lastCommitTime: event.time,
@@ -349,6 +335,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 				},
 				connectorIds: [...dragResult.connectorIds, finalConnector.id],
 				pendingConnector: null,
+				editingEndpoint: null,
 				edgeScrollEnabled: false,
 				lastCommitTime: event.time,
 			};
