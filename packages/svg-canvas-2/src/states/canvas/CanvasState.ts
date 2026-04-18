@@ -125,12 +125,4 @@ export type CanvasState = {
 	 * dragEnd で null にクリアする。
 	 */
 	editingConnectorId: string | null;
-
-	/**
-	 * 編集中のエンドポイント (source or target)。
-	 * エンドポイントを編集している場合に設定される。
-	 * 新規作成時は null、編集時は "source" または "target"。
-	 * dragEnd で null にクリアする。
-	 */
-	editingEndpoint: "source" | "target" | null;
 };

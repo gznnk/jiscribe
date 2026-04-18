@@ -196,10 +196,33 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			connectorIds: updatedConnectorIds,
 			pendingConnector,
 			editingConnectorId: connectorId,
-			editingEndpoint: endpoint,
 			selectedConnectorId: null, // 編集中は選択解除
 			edgeScrollEnabled: true,
 		};
+	}
+
+	/**
+	 * targetId から編集中のエンドポイントを取得する。
+	 * "connection-anchor:edit:...:source" -> "source"
+	 * "connection-anchor:edit:...:target" -> "target"
+	 * "connection-anchor:create:..." -> "target" (デフォルト)
+	 */
+	private getEditingEndpoint(targetId: string | undefined): "source" | "target" {
+		if (!targetId) {
+			return "target";
+		}
+
+		const parts = targetId.split(":");
+		// Format: "connection-anchor:edit:connectorId:endpoint"
+		if (parts.length === 4 && parts[1] === "edit") {
+			const endpoint = parts[3];
+			if (endpoint === "source" || endpoint === "target") {
+				return endpoint;
+			}
+		}
+
+		// Default to "target" for creation mode
+		return "target";
 	}
 
 	/**
@@ -210,14 +233,15 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 		state: CanvasControllerState,
 		event: CanvasEvent,
 	): CanvasControllerState {
-		const { pendingConnector, editingEndpoint } = state;
+		const { pendingConnector } = state;
 
 		if (!pendingConnector) {
 			return state;
 		}
 
-		// Determine which endpoint is being edited (default to "target" for new creation)
-		const endpointToUpdate = editingEndpoint || "target";
+		// Determine which endpoint is being edited from targetId
+		// Format: "connection-anchor:create:..." or "connection-anchor:edit:...:source|target"
+		const endpointToUpdate = this.getEditingEndpoint(event.targetId);
 
 		// Create a free endpoint at the current cursor position
 		const freeEndpoint: EndpointRef = {
@@ -304,7 +328,6 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			return {
 				...dragResult,
 				edgeScrollEnabled: false,
-				editingEndpoint: null,
 			};
 		}
 
@@ -320,7 +343,6 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 				connectorIds: [...dragResult.connectorIds, editingConnectorId],
 				pendingConnector: null,
 				editingConnectorId: null,
-				editingEndpoint: null,
 				selectedConnectorId: editingConnectorId, // 選択を復元
 				edgeScrollEnabled: false,
 				lastCommitTime: event.time,
@@ -335,7 +357,6 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 				},
 				connectorIds: [...dragResult.connectorIds, finalConnector.id],
 				pendingConnector: null,
-				editingEndpoint: null,
 				edgeScrollEnabled: false,
 				lastCommitTime: event.time,
 			};

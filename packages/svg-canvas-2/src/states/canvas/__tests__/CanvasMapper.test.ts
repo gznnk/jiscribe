@@ -159,7 +159,6 @@ describe("CanvasMapper", () => {
 				pendingConnector: null,
 				selectedConnectorId: null,
 				editingConnectorId: null,
-				editingEndpoint: null,
 				objects: {
 					"rect-1": {
 						id: "rect-1",
