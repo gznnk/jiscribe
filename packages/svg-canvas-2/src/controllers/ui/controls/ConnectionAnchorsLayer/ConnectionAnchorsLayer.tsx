@@ -37,26 +37,36 @@ const ConnectionAnchorsLayerComponent: React.FC<
 		isTransformedFrame(selectedObject);
 
 	// --- Target anchors (shown during a connection drag on the hovered object) ---
-	// Target is encoded directly in pendingConnector.target:
-	// - OwnedEndpointRef → owner.id is the target object
-	// - FreeEndpointRef  → no target yet
+	// Show anchors on both source and target if they are Owned (not Free).
+	// This handles both creation (source=Owned, target=hover) and editing (either endpoint can be dragged).
+	const sourceObjectId = pendingConnector?.source.owner?.id;
 	const targetObjectId = pendingConnector?.target.owner?.id;
-	const targetObject = targetObjectId ? objects[targetObjectId] : null;
-	const showTargetAnchors =
-		targetObject != null &&
-		targetObject.type !== "connector" &&
-		isTransformedFrame(targetObject);
 
-	// Determine which anchor on the target is nearest to the cursor.
-	// ConnectionAnchorEventHandler already computes this and stores it in
-	// pendingConnector.target when owner matches.
-	let activeAnchorId: ConnectPointId | null = null;
-	if (pendingConnector && targetObjectId) {
-		const anchor = pendingConnector.target.anchor;
-		if (anchor.kind === "center") {
-			activeAnchorId = "center";
-		} else if (anchor.kind === "connectPoint") {
-			activeAnchorId = anchor.id;
+	// Collect all owned objects that should show target anchors
+	const ownedObjectIds = new Set<string>();
+	if (sourceObjectId) ownedObjectIds.add(sourceObjectId);
+	if (targetObjectId) ownedObjectIds.add(targetObjectId);
+
+	// For each owned object, determine the active anchor
+	const activeAnchors = new Map<string, ConnectPointId>();
+	if (pendingConnector) {
+		// Check source endpoint
+		if (sourceObjectId) {
+			const anchor = pendingConnector.source.anchor;
+			if (anchor.kind === "center") {
+				activeAnchors.set(sourceObjectId, "center");
+			} else if (anchor.kind === "connectPoint") {
+				activeAnchors.set(sourceObjectId, anchor.id);
+			}
+		}
+		// Check target endpoint
+		if (targetObjectId) {
+			const anchor = pendingConnector.target.anchor;
+			if (anchor.kind === "center") {
+				activeAnchors.set(targetObjectId, "center");
+			} else if (anchor.kind === "connectPoint") {
+				activeAnchors.set(targetObjectId, anchor.id);
+			}
 		}
 	}
 
@@ -69,13 +79,21 @@ const ConnectionAnchorsLayerComponent: React.FC<
 					zoom={zoom}
 				/>
 			)}
-			{showTargetAnchors && (
-				<ConnectionTargetAnchors
-					frame={targetObject!}
-					activeAnchorId={activeAnchorId}
-					zoom={zoom}
-				/>
-			)}
+			{/* Show target anchors on all owned objects during connection drag */}
+			{Array.from(ownedObjectIds).map((objId) => {
+				const obj = objects[objId];
+				if (!obj || obj.type === "connector" || !isTransformedFrame(obj)) {
+					return null;
+				}
+				return (
+					<ConnectionTargetAnchors
+						key={objId}
+						frame={obj}
+						activeAnchorId={activeAnchors.get(objId) ?? null}
+						zoom={zoom}
+					/>
+				);
+			})}
 		</>
 	);
 };
