@@ -15,13 +15,18 @@ export const DeselectAllCommand: Command = {
 		if (state.eventStartState !== null && state.areaSelection === null) {
 			return false;
 		}
-		return state.selectedIds.length > 0 || state.areaSelection !== null;
+		return (
+			state.selectedIds.length > 0 ||
+			state.selectedConnectorId !== null ||
+			state.areaSelection !== null
+		);
 	},
 
 	execute: (state) => {
 		return {
 			...state,
 			selectedIds: [],
+			selectedConnectorId: null,
 			areaSelection: null,
 			objectMenuOpenId: null,
 			edgeScrollEnabled: false,

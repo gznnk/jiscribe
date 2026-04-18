@@ -110,4 +110,11 @@ export type CanvasState = {
 	 * connection-anchor からドラッグ中に設定され、dragEnd で確定または破棄される。
 	 */
 	pendingConnector: ConnectorState | null;
+
+	/**
+	 * 現在選択中のコネクターID。
+	 * selectedIds（図形専用）とは独立して管理し、相互排他を保証する。
+	 * null の場合はコネクターが選択されていない。
+	 */
+	selectedConnectorId: string | null;
 };

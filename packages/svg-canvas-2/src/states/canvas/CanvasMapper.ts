@@ -86,6 +86,7 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 		multiSelectGroup: null,
 		textEditState: null,
 		pendingConnector: null,
+		selectedConnectorId: null,
 	};
 };
 

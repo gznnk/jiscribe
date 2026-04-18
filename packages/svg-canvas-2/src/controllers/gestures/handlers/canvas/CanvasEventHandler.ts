@@ -126,6 +126,7 @@ export const CanvasEventHandler: GestureHandler = {
 						endY: event.last.y,
 					},
 					selectedIds: [],
+					selectedConnectorId: null,
 					edgeScrollEnabled: true,
 				};
 				return nextState;
@@ -182,6 +183,7 @@ export const CanvasEventHandler: GestureHandler = {
 			nextState = {
 				...nextState,
 				selectedIds: [],
+				selectedConnectorId: null,
 				// コンテキストメニューが開いている場合は閉じる
 				contextMenuPosition: null,
 				// ObjectMenu の展開をリセット

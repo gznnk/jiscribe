@@ -149,6 +149,7 @@ describe("CanvasMapper", () => {
 				multiSelectGroup: null,
 				textEditState: null,
 				pendingConnector: null,
+				selectedConnectorId: null,
 				objects: {
 					"rect-1": {
 						id: "rect-1",

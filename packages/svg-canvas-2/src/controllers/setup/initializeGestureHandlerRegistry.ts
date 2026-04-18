@@ -8,6 +8,7 @@ import { VertexInsertHandler } from "../gestures/handlers/controls/vertex/Vertex
 import { ContextMenuHandler } from "../gestures/handlers/menu/ContextMenuHandler";
 import { ObjectMenuHandler } from "../gestures/handlers/menu/ObjectMenuHandler";
 import { ShapeLibraryItemHandler } from "../gestures/handlers/menu/ShapeLibraryItemHandler";
+import { ConnectorEventHandler } from "../gestures/handlers/objects/ConnectorEventHandler";
 import { ObjectEventHandler } from "../gestures/handlers/objects/ObjectEventHandler";
 
 /**
@@ -38,6 +39,7 @@ export const initializeGestureHandlerRegistry = (): void => {
 		.register("context-menu-handler", ContextMenuHandler)
 		.register("object-menu-handler", ObjectMenuHandler)
 		.register("canvas-handler", CanvasEventHandler)
+		.register("connector-handler", ConnectorEventHandler)
 		.register("object-handler", ObjectEventHandler)
 		.register("control-handler", controlEventHandler);
 };

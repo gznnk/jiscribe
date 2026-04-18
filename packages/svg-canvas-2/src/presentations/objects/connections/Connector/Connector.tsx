@@ -2,7 +2,7 @@ import { calcVectorAngle } from "@workspace/geometry";
 import type React from "react";
 import { memo } from "react";
 
-import { ConnectorElement } from "./ConnectorStyled";
+import { ConnectorElement, ConnectorHitArea } from "./ConnectorStyled";
 import type { ArrowType } from "../../../../schemas/objects/types/ArrowType";
 import { Arrow } from "../../arrows";
 
@@ -38,9 +38,13 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 
 	return (
 		<>
-			<ConnectorElement
+			{/* Wide transparent hit area for easier clicking (same as Polyline pattern) */}
+			<ConnectorHitArea
 				data-kind="connector"
 				data-id={id}
+				points={pointsAttr}
+			/>
+			<ConnectorElement
 				points={pointsAttr}
 				stroke={stroke}
 				strokeWidth={strokeWidth}

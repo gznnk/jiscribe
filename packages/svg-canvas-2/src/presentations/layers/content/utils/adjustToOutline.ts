@@ -7,30 +7,23 @@ import {
 } from "@workspace/geometry";
 
 import { objectRegistry } from "../../../../registry/ObjectRegistry";
-import type { EndpointRef } from "../../../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 
 /**
  * Adjusts a center anchor endpoint to the outline point on a rect or ellipse geometry object.
- * Should only be called when endpoint.anchor.kind === "center".
+ * Should only be called when the anchor is a center anchor.
+ * This version takes a single object instead of the entire objects map for better memoization.
  *
- * @param endpoint - The endpoint reference to adjust (must be a center anchor)
  * @param point - The resolved point (typically the center)
  * @param toward - The point to direct the outline intersection toward
- * @param objects - Map of all objects in the canvas
+ * @param obj - The object referenced by the endpoint (or null if not found)
  * @returns The adjusted point (outline point for rect/ellipse geometry), null if toward is inside the shape, or original point for non-rect/ellipse
  */
 export const adjustToOutline = (
-	endpoint: EndpointRef,
 	point: Point,
 	toward: Point,
-	objects: Record<string, ObjectState>,
+	obj: ObjectState | null | undefined,
 ): Point | null => {
-	if (!endpoint.owner) {
-		return point;
-	}
-
-	const obj = objects[endpoint.owner.id];
 	if (!obj) {
 		return point;
 	}

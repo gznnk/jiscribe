@@ -25,6 +25,7 @@ import { canvasReducer } from "./reducer/canvasReducer";
 import { initializeRegistries } from "./setup";
 import { CanvasView } from "../presentations/CanvasView";
 import { ConnectionAnchorsLayer } from "./ui/controls/ConnectionAnchorsLayer";
+import { ConnectorControlsLayer } from "./ui/controls/ConnectorControlsLayer";
 import { TransformControlsLayer } from "./ui/controls/TransformControlsLayer";
 import { VertexControlsLayer } from "./ui/controls/VertexControlsLayer";
 import { DebugInfo } from "./ui/debug/DebugInfo";
@@ -168,6 +169,10 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 						selectedIds={state.selectedIds}
 						objects={state.objects}
 						multiSelectGroup={state.multiSelectGroup}
+					/>
+					<ConnectorControlsLayer
+						selectedConnectorId={state.selectedConnectorId}
+						objects={state.objects}
 					/>
 					<TransformControlsLayer
 						selectedIds={state.selectedIds}

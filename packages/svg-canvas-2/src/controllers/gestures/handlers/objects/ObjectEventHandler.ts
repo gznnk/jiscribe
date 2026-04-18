@@ -49,6 +49,8 @@ function handleObjectClick(
 		...canvasState,
 		selectedIds,
 		multiSelectGroup,
+		// コネクター選択を解除して排他を保証
+		selectedConnectorId: null,
 	};
 }
 
@@ -151,6 +153,8 @@ function handleObjectDragStart(
 		...canvasState,
 		selectedIds,
 		edgeScrollEnabled: true,
+		// コネクター選択を解除して排他を保証
+		selectedConnectorId: null,
 	};
 
 	// ドラッグ処理を実行

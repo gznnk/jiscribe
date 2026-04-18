@@ -12,7 +12,7 @@ export const DeleteCommand: Command = {
 	},
 
 	canExecute: (state) => {
-		return state.selectedIds.length > 0;
+		return state.selectedIds.length > 0 || state.selectedConnectorId !== null;
 	},
 
 	execute: (state) => {
@@ -32,6 +32,11 @@ export const DeleteCommand: Command = {
 
 		for (const id of state.selectedIds) {
 			collectIds(id);
+		}
+
+		// 選択中のコネクターも削除対象に追加
+		if (state.selectedConnectorId != null) {
+			idsToDelete.add(state.selectedConnectorId);
 		}
 
 		const updatedObjects = { ...state.objects };
@@ -68,6 +73,7 @@ export const DeleteCommand: Command = {
 			rootIds: state.rootIds.filter((id) => !idsToDelete.has(id)),
 			connectorIds: state.connectorIds.filter((id) => !idsToDelete.has(id)),
 			selectedIds: [] as string[],
+			selectedConnectorId: null,
 			objectMenuOpenId: null,
 			lastCommitTime: Date.now(), // コミット必要
 		};
