@@ -104,7 +104,7 @@ export function useObjectMenuPosition(
 			return { shouldRender: false, x: 0, y: 0 };
 		}
 
-		const { zoom, width: viewportWidth, height: viewportHeight } = viewport;
+		const { zoom, width: viewportWidth, height: viewportHeight, minX: vpMinX, minY: vpMinY } = viewport;
 
 		// 選択全体の中央 X、下端 Y を計算
 		// ScrollSyncedOverlay の座標系に合わせるため、キャンバス座標に zoom を掛ける
@@ -120,16 +120,14 @@ export function useObjectMenuPosition(
 		let menuX = objectCenterX; // translateX(-50%) で中央揃えされるため center を直接使用
 		let menuY = objectBottomY + DISTANCE_FROM_OBJECT;
 
-		// Calculate viewport boundaries in the same coordinate system
-		// viewport.minX/minY are not available in svg-canvas-2, so we use 0 as origin
-		const viewportMinX = 0;
-		const viewportMinY = 0;
-		const viewportMaxX = viewportWidth;
-		const viewportMaxY = viewportHeight;
+		// Calculate viewport boundaries in the same coordinate system (ScrollSyncedOverlay internal coordinates)
+		const viewportMinX = vpMinX * zoom;
+		const viewportMinY = vpMinY * zoom;
+		const viewportMaxX = viewportMinX + viewportWidth;
+		const viewportMaxY = viewportMinY + viewportHeight;
 
 		// Check if menu overflows viewport vertically (bottom)
-		// Note: menu uses translateX(-50%), so we need to account for that in boundary checks
-		const menuEffectiveBottom = menuY + menuHeight / zoom;
+		const menuEffectiveBottom = menuY + menuHeight;
 		if (menuEffectiveBottom > viewportMaxY) {
 			// Position above the object
 			menuY = objectTopY - DISTANCE_FROM_OBJECT - menuHeight;
@@ -145,13 +143,13 @@ export function useObjectMenuPosition(
 		const menuLeft = menuX - menuHalfWidth;
 		const menuRight = menuX + menuHalfWidth;
 
-		if (menuRight / zoom > viewportMaxX) {
+		if (menuRight > viewportMaxX) {
 			// Adjust to fit within right boundary
-			menuX = (viewportMaxX * zoom) - menuHalfWidth;
+			menuX = viewportMaxX - menuHalfWidth;
 		}
-		if (menuLeft / zoom < viewportMinX) {
+		if (menuLeft < viewportMinX) {
 			// Adjust to fit within left boundary
-			menuX = (viewportMinX * zoom) + menuHalfWidth;
+			menuX = viewportMinX + menuHalfWidth;
 		}
 
 		return {
