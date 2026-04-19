@@ -104,7 +104,13 @@ export function useObjectMenuPosition(
 			return { shouldRender: false, x: 0, y: 0 };
 		}
 
-		const { zoom, width: viewportWidth, height: viewportHeight, minX: vpMinX, minY: vpMinY } = viewport;
+		const {
+			zoom,
+			width: viewportWidth,
+			height: viewportHeight,
+			minX: vpMinX,
+			minY: vpMinY,
+		} = viewport;
 
 		// 選択全体の中央 X、下端 Y を計算
 		// ScrollSyncedOverlay の座標系に合わせるため、キャンバス座標に zoom を掛ける
@@ -157,11 +163,5 @@ export function useObjectMenuPosition(
 			x: Math.round(menuX),
 			y: Math.round(menuY),
 		};
-	}, [
-		shouldRender,
-		selectedIds,
-		objects,
-		viewport,
-		menuDimensions,
-	]);
+	}, [shouldRender, selectedIds, objects, viewport, menuDimensions]);
 }

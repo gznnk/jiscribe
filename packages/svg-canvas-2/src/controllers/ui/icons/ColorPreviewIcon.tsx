@@ -7,13 +7,13 @@ type ColorPreviewIconProps = {
 };
 
 /**
- * カラープレビューアイコン。
+ * カラープレビューアイコン（塗りつぶし円）。
  * 現在の色を示す塗りつぶし円を表示する。
  * transparent の場合はチェッカーパターンを表示する。
  */
 const ColorPreviewIconComponent: React.FC<ColorPreviewIconProps> = ({
 	color,
-	size = 20,
+	size = 24,
 	title = "Color",
 }) => {
 	const isTransparent =
@@ -23,34 +23,36 @@ const ColorPreviewIconComponent: React.FC<ColorPreviewIconProps> = ({
 		<svg
 			width={size}
 			height={size}
-			viewBox="0 0 20 20"
+			viewBox="0 0 24 24"
 			xmlns="http://www.w3.org/2000/svg"
 		>
 			<title>{title}</title>
 			{isTransparent && (
 				<defs>
 					<pattern
-						id="transparent-pattern"
+						id="color-preview-transparent-pattern"
 						x="0"
 						y="0"
-						width="6"
-						height="6"
+						width="8"
+						height="8"
 						patternUnits="userSpaceOnUse"
 					>
-						<rect x="0" y="0" width="3" height="3" fill="#ccc" />
-						<rect x="3" y="0" width="3" height="3" fill="#fff" />
-						<rect x="0" y="3" width="3" height="3" fill="#fff" />
-						<rect x="3" y="3" width="3" height="3" fill="#ccc" />
+						<rect x="0" y="0" width="4" height="4" fill="#ccc" />
+						<rect x="4" y="0" width="4" height="4" fill="#fff" />
+						<rect x="0" y="4" width="4" height="4" fill="#fff" />
+						<rect x="4" y="4" width="4" height="4" fill="#ccc" />
 					</pattern>
 				</defs>
 			)}
 			<circle
-				cx="10"
-				cy="10"
-				r="8"
+				cx="12"
+				cy="12"
+				r="10"
 				stroke="#ddd"
 				strokeWidth="1"
-				fill={isTransparent ? "url(#transparent-pattern)" : color}
+				fill={
+					isTransparent ? "url(#color-preview-transparent-pattern)" : color
+				}
 			/>
 		</svg>
 	);

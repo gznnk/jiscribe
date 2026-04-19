@@ -9,6 +9,7 @@ import { AlignmentMenu } from "./sections/AlignmentMenu";
 import { ArrowHeadMenu } from "./sections/ArrowHeadMenu";
 import { BackgroundColorMenu } from "./sections/BackgroundColorMenu";
 import { BoldMenu } from "./sections/BoldMenu";
+import { BorderStyleMenu } from "./sections/BorderStyleMenu/BorderStyleMenu";
 import { FontColorMenu } from "./sections/FontColorMenu";
 import { FontSizeMenu } from "./sections/FontSizeMenu";
 import { GroupMenu } from "./sections/GroupMenu";
@@ -67,8 +68,7 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({ canvasState }) => {
 		menuItemComponents.push(<ObjectMenuDivider key="LineSectionDivider" />);
 	}
 
-	// Shape style section (backgroundColor and borderColor)
-	// TODO: borderStyle needs dedicated component implementation
+	// Shape style section (backgroundColor, borderColor, and borderStyle)
 	if (menuConfig.backgroundColor) {
 		menuItemComponents.push(
 			<BackgroundColorMenu key="BgColor" canvasState={canvasState} />,
@@ -81,7 +81,21 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({ canvasState }) => {
 		);
 	}
 
-	if (menuConfig.backgroundColor || menuConfig.borderColor) {
+	if (menuConfig.borderStyle) {
+		menuItemComponents.push(
+			<BorderStyleMenu
+				key="BorderStyle"
+				canvasState={canvasState}
+				showRadius={menuConfig.borderStyle.radius}
+			/>,
+		);
+	}
+
+	if (
+		menuConfig.backgroundColor ||
+		menuConfig.borderColor ||
+		menuConfig.borderStyle
+	) {
 		menuItemComponents.push(
 			<ObjectMenuDivider key="ShapeStyleSectionDivider" />,
 		);

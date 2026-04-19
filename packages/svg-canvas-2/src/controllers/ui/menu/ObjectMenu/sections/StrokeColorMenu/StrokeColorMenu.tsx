@@ -1,7 +1,7 @@
-﻿import { memo } from "react";
+import { memo } from "react";
 
 import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
-import { ColorPreviewIcon } from "../../../../icons/ColorPreviewIcon";
+import { BorderColorIcon } from "../../../../icons/BorderColorIcon";
 import { ColorPickerGrid } from "../../common/ColorPickerGrid";
 import {
 	ObjectMenuButton,
@@ -48,7 +48,7 @@ const StrokeColorMenuComponent: React.FC<StrokeColorMenuProps> = ({
 				data-id={`object-menu:toggle-${SECTION_ID}`}
 				title="Stroke Color"
 			>
-				<ColorPreviewIcon color={currentColor} title="Stroke Color" />
+				<BorderColorIcon color={currentColor} title="Stroke Color" />
 			</ObjectMenuButton>
 			{isOpen && (
 				<DropdownColorPanel>

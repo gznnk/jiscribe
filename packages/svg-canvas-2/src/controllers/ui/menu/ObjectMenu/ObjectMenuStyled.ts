@@ -17,14 +17,19 @@ export const ObjectMenuWrapper = styled.div<{ left: number; top: number }>`
  * ObjectMenu の内部コンテナ（角丸・影付き）。
  */
 export const ObjectMenuContainer = styled.div`
+	height: 40px;
+	box-sizing: border-box;
 	display: flex;
+	flex-direction: row;
 	align-items: center;
-	gap: 2px;
-	background: white;
-	border: 1px solid #ddd;
-	border-radius: 6px;
+	font-size: 14px;
+	padding: 4px 8px;
+	background-color: #ffffff;
+	border: 1px solid #e5e7eb;
+	border-radius: 8px;
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-	padding: 4px;
+	pointer-events: auto;
+	user-select: none;
 `;
 
 /**
@@ -32,9 +37,10 @@ export const ObjectMenuContainer = styled.div`
  */
 export const ObjectMenuDivider = styled.div`
 	width: 1px;
-	height: 20px;
-	background: #e0e0e0;
-	margin: 0 2px;
+	height: 16px;
+	margin: 0 8px;
+	background-color: #f3f4f6;
+	align-self: center;
 `;
 
 /**
@@ -42,23 +48,34 @@ export const ObjectMenuDivider = styled.div`
  */
 export const ObjectMenuButton = styled.button<{ isActive?: boolean }>`
 	display: flex;
+	flex-direction: row;
 	align-items: center;
 	justify-content: center;
-	width: 28px;
-	height: 28px;
+	width: 32px;
+	height: 32px;
 	padding: 0;
-	border: none;
-	border-radius: 4px;
-	background: ${(props) => (props.isActive ? "#e8e8e8" : "transparent")};
+	border-radius: 6px;
+	border: 1px solid ${(props) => (props.isActive ? "#6b7280" : "transparent")};
+	background: ${(props) => (props.isActive ? "#f9fafb" : "transparent")};
 	cursor: pointer;
-	transition: background-color 0.15s;
+	user-select: none;
+	transition: all 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
 
 	&:hover {
-		background: #f0f0f0;
+		background-color: #f3f4f6;
 	}
 
-	&:active {
-		background: #e0e0e0;
+	svg {
+		color: #6b7280;
+		transition: color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+	}
+
+	&:hover svg {
+		color: #374151;
+	}
+
+	&.active svg {
+		color: #374151;
 	}
 `;
 
@@ -76,18 +93,15 @@ export const MenuItemPositioner = styled.div`
 export const DropdownPanel = styled.div`
 	position: absolute;
 	left: 50%;
-	top: 36px;
+	top: 40px;
 	transform: translateX(-50%);
 	z-index: 1100;
 	display: flex;
 	align-items: center;
-	gap: 2px;
-	padding: 4px;
-	background: white;
-	border: 1px solid #ddd;
-	border-radius: 6px;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+	flex-direction: column;
+	justify-content: flex-start;
 	pointer-events: auto;
+	gap: 8px;
 `;
 
 /**
@@ -97,7 +111,7 @@ export const DropdownPanel = styled.div`
 export const DropdownColorPanel = styled.div`
 	position: absolute;
 	left: 50%;
-	top: 36px;
+	top: 40px;
 	transform: translateX(-50%);
 	z-index: 1100;
 	pointer-events: auto;
