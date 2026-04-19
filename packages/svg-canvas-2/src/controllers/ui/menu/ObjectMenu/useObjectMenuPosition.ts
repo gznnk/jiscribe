@@ -1,5 +1,5 @@
 import { calcBoundingBox, isTransformedFrame } from "@workspace/geometry";
-import { useMemo } from "react";
+import { type RefObject, useEffect, useMemo, useState } from "react";
 
 import type { CanvasState } from "../../../../states/canvas/CanvasState";
 import { isGroupState } from "../../../../states/objects/primitives/group/GroupState";
@@ -22,8 +22,16 @@ type ObjectMenuPosition = {
  *
  * ScrollSyncedOverlay 内に配置されるため、座標はキャンバス座標系のまま返す。
  * オーバーレイ自体がスクロール追従するので viewport offset は不要。
+ *
+ * Based on svg-canvas's useDiagramMenuDisplay but adapted for svg-canvas-2 architecture.
+ * - Automatically positions menu above object if it would overflow bottom viewport boundary
+ * - Adjusts horizontal position to fit within left/right viewport boundaries
+ * - Measures actual menu dimensions from DOM for accurate positioning
  */
-export function useObjectMenuPosition(state: CanvasState): ObjectMenuPosition {
+export function useObjectMenuPosition(
+	state: CanvasState,
+	menuRef: RefObject<HTMLDivElement | null>,
+): ObjectMenuPosition {
 	const {
 		selectedIds,
 		objects,
@@ -33,21 +41,31 @@ export function useObjectMenuPosition(state: CanvasState): ObjectMenuPosition {
 		eventStartState,
 	} = state;
 
-	return useMemo(() => {
+	const [menuDimensions, setMenuDimensions] = useState({
+		width: 0,
+		height: 40,
+	});
+
+	// Measure menu dimensions from DOM when it renders or selection changes
+	const selectedIdsString = selectedIds.slice().sort().join(",");
+	const shouldRender = useMemo(() => {
 		// メニューを表示しない条件
-		if (selectedIds.length === 0) {
-			return { shouldRender: false, x: 0, y: 0 };
+		if (selectedIds.length === 0) return false;
+		if (contextMenuPosition !== null) return false;
+		if (eventStartState !== null) return false;
+		if (areaSelection !== null) return false;
+		return true;
+	}, [selectedIds, contextMenuPosition, eventStartState, areaSelection]);
+
+	useEffect(() => {
+		if (menuRef.current && shouldRender) {
+			const rect = menuRef.current.getBoundingClientRect();
+			setMenuDimensions({ width: rect.width, height: rect.height });
 		}
-		// コンテキストメニュー表示中は非表示
-		if (contextMenuPosition !== null) {
-			return { shouldRender: false, x: 0, y: 0 };
-		}
-		// ドラッグ/リサイズ操作中は非表示
-		if (eventStartState !== null) {
-			return { shouldRender: false, x: 0, y: 0 };
-		}
-		// エリア選択中は非表示
-		if (areaSelection !== null) {
+	}, [menuRef, shouldRender, selectedIdsString]);
+
+	return useMemo(() => {
+		if (!shouldRender) {
 			return { shouldRender: false, x: 0, y: 0 };
 		}
 
@@ -86,25 +104,66 @@ export function useObjectMenuPosition(state: CanvasState): ObjectMenuPosition {
 			return { shouldRender: false, x: 0, y: 0 };
 		}
 
-		const { zoom } = viewport;
+		const { zoom, width: viewportWidth, height: viewportHeight } = viewport;
 
 		// 選択全体の中央 X、下端 Y を計算
 		// ScrollSyncedOverlay の座標系に合わせるため、キャンバス座標に zoom を掛ける
 		// （詳細は CanvasStyled.ts の ScrollSyncedOverlay のコメントを参照）
-		const centerX = ((minX + maxX) / 2) * zoom;
-		const bottomY = maxY * zoom + DISTANCE_FROM_OBJECT;
+		const objectCenterX = ((minX + maxX) / 2) * zoom;
+		const objectBottomY = maxY * zoom;
+		const objectTopY = minY * zoom;
+
+		const menuWidth = menuDimensions.width;
+		const menuHeight = menuDimensions.height;
+
+		// Default position: below the object, centered
+		let menuX = objectCenterX; // translateX(-50%) で中央揃えされるため center を直接使用
+		let menuY = objectBottomY + DISTANCE_FROM_OBJECT;
+
+		// Calculate viewport boundaries in the same coordinate system
+		// viewport.minX/minY are not available in svg-canvas-2, so we use 0 as origin
+		const viewportMinX = 0;
+		const viewportMinY = 0;
+		const viewportMaxX = viewportWidth;
+		const viewportMaxY = viewportHeight;
+
+		// Check if menu overflows viewport vertically (bottom)
+		// Note: menu uses translateX(-50%), so we need to account for that in boundary checks
+		const menuEffectiveBottom = menuY + menuHeight / zoom;
+		if (menuEffectiveBottom > viewportMaxY) {
+			// Position above the object
+			menuY = objectTopY - DISTANCE_FROM_OBJECT - menuHeight;
+		}
+
+		// Ensure menu doesn't go above viewport
+		if (menuY < viewportMinY) {
+			menuY = viewportMinY;
+		}
+
+		// Horizontal boundary checks (accounting for translateX(-50%))
+		const menuHalfWidth = menuWidth / 2;
+		const menuLeft = menuX - menuHalfWidth;
+		const menuRight = menuX + menuHalfWidth;
+
+		if (menuRight / zoom > viewportMaxX) {
+			// Adjust to fit within right boundary
+			menuX = (viewportMaxX * zoom) - menuHalfWidth;
+		}
+		if (menuLeft / zoom < viewportMinX) {
+			// Adjust to fit within left boundary
+			menuX = (viewportMinX * zoom) + menuHalfWidth;
+		}
 
 		return {
 			shouldRender: true,
-			x: Math.round(centerX),
-			y: Math.round(bottomY),
+			x: Math.round(menuX),
+			y: Math.round(menuY),
 		};
 	}, [
+		shouldRender,
 		selectedIds,
 		objects,
 		viewport,
-		contextMenuPosition,
-		areaSelection,
-		eventStartState,
+		menuDimensions,
 	]);
 }

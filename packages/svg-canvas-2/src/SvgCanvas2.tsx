@@ -18,6 +18,7 @@ const testCanvasDoc: CanvasDoc = {
 			y: 50,
 			width: 200,
 			height: 100,
+			rx: 10,
 			rotation: 45,
 			lockAspectRatio: true,
 			fill: "transparent",

@@ -19,4 +19,6 @@ export type ObjectFeatures = {
 	fill?: boolean;
 	/** Text content and styling */
 	text?: boolean;
+	/** Corner radius styling (for rect) */
+	radius?: boolean;
 };

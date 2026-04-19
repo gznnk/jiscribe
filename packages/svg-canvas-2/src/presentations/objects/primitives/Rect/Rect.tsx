@@ -21,6 +21,7 @@ const RectComponent: React.FC<RectProps> = ({
 	fill,
 	stroke,
 	strokeWidth,
+	rx,
 	text,
 	textType,
 	textAlign,
@@ -42,6 +43,7 @@ const RectComponent: React.FC<RectProps> = ({
 				y={-height / 2}
 				width={width}
 				height={height}
+				rx={rx}
 				transform={transformAttr}
 				fill={fill ?? "transparent"}
 				stroke={stroke}

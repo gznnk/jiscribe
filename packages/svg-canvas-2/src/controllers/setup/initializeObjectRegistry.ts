@@ -64,6 +64,7 @@ import {
 	rotateByGroup as rectRotateByGroup,
 	transformByGroup as rectTransformByGroup,
 } from "../gestures/handlers/objects/primitives/RectController";
+import { createMenuConfig } from "../ui/menu/ObjectMenu/utils/createMenuConfig";
 
 /**
  * Initialize the ObjectRegistry with all object type definitions.
@@ -74,6 +75,7 @@ export const initializeObjectRegistry = (): void => {
 
 	objectRegistry.register("rect", {
 		features: RectFeatures,
+		menuConfig: createMenuConfig(RectFeatures),
 		mapper: {
 			toDoc: rectToDoc,
 			toState: rectToState,
@@ -86,6 +88,7 @@ export const initializeObjectRegistry = (): void => {
 
 	objectRegistry.register("ellipse", {
 		features: EllipseFeatures,
+		menuConfig: createMenuConfig(EllipseFeatures),
 		mapper: {
 			toDoc: ellipseToDoc,
 			toState: ellipseToState,
@@ -98,6 +101,7 @@ export const initializeObjectRegistry = (): void => {
 
 	objectRegistry.register("group", {
 		features: GroupFeatures,
+		menuConfig: {}, // Group has no menu
 		mapper: {
 			toDoc: groupToDoc,
 			toState: groupToState,
@@ -110,6 +114,14 @@ export const initializeObjectRegistry = (): void => {
 
 	objectRegistry.register("polyline", {
 		features: PolylineFeatures,
+		menuConfig: createMenuConfig(PolylineFeatures, {
+			aspectRatio: false,
+			arrowHead: true,
+			lineStyle: true,
+			lineColor: true,
+			borderColor: false,
+			borderStyle: undefined,
+		}),
 		mapper: {
 			toDoc: polylineToDoc,
 			toState: polylineToState,
@@ -122,6 +134,14 @@ export const initializeObjectRegistry = (): void => {
 
 	objectRegistry.register("connector", {
 		features: ConnectorFeatures,
+		menuConfig: createMenuConfig(ConnectorFeatures, {
+			aspectRatio: false,
+			arrowHead: true,
+			lineStyle: true,
+			lineColor: true,
+			borderColor: false,
+			borderStyle: undefined,
+		}),
 		mapper: {
 			toDoc: connectorToDoc,
 			toState: connectorToState,
@@ -134,6 +154,7 @@ export const initializeObjectRegistry = (): void => {
 
 	objectRegistry.register("sticky", {
 		features: StickyFeatures,
+		menuConfig: createMenuConfig(StickyFeatures),
 		mapper: {
 			toDoc: stickyToDoc,
 			toState: stickyToState,

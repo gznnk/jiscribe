@@ -5,6 +5,7 @@ import type { Poly } from "../../../schemas/objects/types/Poly";
 import type { FillStyleState } from "../base/FillStyleState";
 import type { FrameWithKeyPoints } from "../base/FrameWithKeyPoints";
 import type { ObjectState } from "../base/ObjectState";
+import type { RadiusStyleState } from "../base/RadiusStyleState";
 import type { StrokeStyleState } from "../base/StrokeStyleState";
 import type { TextStyleState } from "../base/TextStyleState";
 import type { TransformState } from "../base/TransformState";
@@ -68,6 +69,7 @@ export type CreateObjectState<
 		(T["stroke"] extends true ? StrokeStyleState : object) &
 		(T["fill"] extends true ? FillStyleState : object) &
 		(T["text"] extends true ? TextStyleState : object) &
+		(T["radius"] extends true ? RadiusStyleState : object) &
 		Brand<S> &
 		P
 >;

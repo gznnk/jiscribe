@@ -37,6 +37,13 @@ class ObjectRegistry {
 	}
 
 	/**
+	 * Retrieves the menu configuration for a specific object type.
+	 */
+	getMenuConfig(type: ObjectType) {
+		return this.definitions.get(type)?.menuConfig;
+	}
+
+	/**
 	 * Retrieves the component for a specific object type.
 	 */
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any

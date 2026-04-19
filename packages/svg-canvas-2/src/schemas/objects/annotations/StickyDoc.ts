@@ -8,6 +8,7 @@ export const StickyFeatures = {
 	stroke: true,
 	fill: true,
 	text: true,
+	radius: false,
 } as const satisfies ObjectFeatures;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
