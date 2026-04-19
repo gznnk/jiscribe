@@ -1,3 +1,5 @@
+import type { StrokeDashType } from "../../../schemas/objects/types/StrokeDashType";
+
 /**
  * Properties related to stroke (outline) styling (runtime state).
  */
@@ -6,4 +8,6 @@ export type StrokeStyleState = {
 	stroke?: string;
 	/** Stroke width in pixels. */
 	strokeWidth?: number;
+	/** Stroke dash type (e.g. 'solid', 'dashed', 'dotted'). */
+	strokeDashType?: StrokeDashType;
 };

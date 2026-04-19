@@ -22,6 +22,7 @@ export const connectorToState: DocToStateMapper<
 		target: doc.target,
 		stroke: doc.stroke,
 		strokeWidth: doc.strokeWidth,
+		strokeDashType: doc.strokeDashType,
 		startArrow: doc.startArrow,
 		endArrow: doc.endArrow,
 	} as ConnectorState;
@@ -42,6 +43,7 @@ export const connectorToDoc: StateToDocMapper<ConnectorState, ConnectorDoc> = (
 		target: state.target,
 		stroke: state.stroke,
 		strokeWidth: state.strokeWidth,
+		strokeDashType: state.strokeDashType,
 		startArrow: state.startArrow,
 		endArrow: state.endArrow,
 	} as ConnectorDoc;

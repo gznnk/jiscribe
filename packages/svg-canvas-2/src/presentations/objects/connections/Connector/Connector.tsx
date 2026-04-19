@@ -4,7 +4,9 @@ import { memo } from "react";
 
 import { ConnectorElement, ConnectorHitArea } from "./ConnectorStyled";
 import type { ArrowType } from "../../../../schemas/objects/types/ArrowType";
+import type { StrokeDashType } from "../../../../schemas/objects/types/StrokeDashType";
 import { Arrow } from "../../arrows";
+import { getStrokeDasharray } from "../../utils/getStrokeDasharray";
 
 type ConnectorProps = {
 	id: string;
@@ -14,6 +16,7 @@ type ConnectorProps = {
 	targetY: number;
 	stroke?: string;
 	strokeWidth?: number;
+	strokeDashType?: StrokeDashType;
 	startArrow?: ArrowType;
 	endArrow?: ArrowType;
 };
@@ -26,6 +29,7 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 	targetY,
 	stroke = "black",
 	strokeWidth = 1,
+	strokeDashType,
 	startArrow,
 	endArrow,
 }) => {
@@ -48,6 +52,7 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 				points={pointsAttr}
 				stroke={stroke}
 				strokeWidth={strokeWidth}
+				strokeDasharray={getStrokeDasharray(strokeDashType, strokeWidth)}
 			/>
 			{startArrow && startArrow !== "None" && (
 				<Arrow

@@ -6,6 +6,7 @@ import type { EllipseState } from "../../../../states/objects/primitives/ellipse
 import { TextOverlay } from "../../base/TextOverlay";
 import type { TextEditable } from "../../base/TextOverlay";
 import { createSvgTransform } from "../../utils/createSvgTransform";
+import { getStrokeDasharray } from "../../utils/getStrokeDasharray";
 
 type EllipseProps = EllipseState & TextEditable;
 
@@ -21,6 +22,7 @@ const EllipseComponent: React.FC<EllipseProps> = ({
 	fill,
 	stroke,
 	strokeWidth,
+	strokeDashType,
 	text,
 	textType,
 	textAlign,
@@ -49,6 +51,7 @@ const EllipseComponent: React.FC<EllipseProps> = ({
 				fill={fill ?? "transparent"}
 				stroke={stroke}
 				strokeWidth={strokeWidth}
+				strokeDasharray={getStrokeDasharray(strokeDashType, strokeWidth)}
 			/>
 			<TextOverlay
 				x={-width / 2}

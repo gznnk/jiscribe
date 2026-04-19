@@ -15,7 +15,10 @@ const isPropertySupported = (
 			return features.fill === true;
 		case "stroke":
 		case "strokeWidth":
+		case "strokeDashType":
 			return features.stroke === true;
+		case "rx":
+			return features.radius === true;
 		case "lockAspectRatio":
 			return features.transform === true;
 		case "startArrow":
@@ -44,6 +47,7 @@ const isArrowPropertySupported = (
 const parsePropertyValue = (property: string, value: string): unknown => {
 	switch (property) {
 		case "strokeWidth":
+		case "rx":
 			return Number(value);
 		case "lockAspectRatio":
 			return value === "true";

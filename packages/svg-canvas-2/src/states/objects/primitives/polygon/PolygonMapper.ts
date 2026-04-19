@@ -19,6 +19,7 @@ export const polygonToState: DocToStateMapper<PolygonDoc, PolygonState> = (
 		points: doc.points,
 		stroke: doc.stroke,
 		strokeWidth: doc.strokeWidth,
+		strokeDashType: doc.strokeDashType,
 		fill: doc.fill,
 	} as PolygonState;
 };
@@ -36,6 +37,7 @@ export const polygonToDoc: StateToDocMapper<PolygonState, PolygonDoc> = (
 		points: state.points,
 		stroke: state.stroke,
 		strokeWidth: state.strokeWidth,
+		strokeDashType: state.strokeDashType,
 		fill: state.fill,
 	} as PolygonDoc;
 };

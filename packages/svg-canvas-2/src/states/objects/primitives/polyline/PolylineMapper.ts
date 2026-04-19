@@ -19,6 +19,7 @@ export const polylineToState: DocToStateMapper<PolylineDoc, PolylineState> = (
 		points: doc.points,
 		stroke: doc.stroke,
 		strokeWidth: doc.strokeWidth,
+		strokeDashType: doc.strokeDashType,
 		startArrow: doc.startArrow,
 		endArrow: doc.endArrow,
 	} as PolylineState;
@@ -37,6 +38,7 @@ export const polylineToDoc: StateToDocMapper<PolylineState, PolylineDoc> = (
 		points: state.points,
 		stroke: state.stroke,
 		strokeWidth: state.strokeWidth,
+		strokeDashType: state.strokeDashType,
 		startArrow: state.startArrow,
 		endArrow: state.endArrow,
 	} as PolylineDoc;

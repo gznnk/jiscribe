@@ -6,6 +6,7 @@ import type { RectState } from "../../../../states/objects/primitives/rect/RectS
 import { TextOverlay } from "../../base/TextOverlay";
 import type { TextEditable } from "../../base/TextOverlay";
 import { createSvgTransform } from "../../utils/createSvgTransform";
+import { getStrokeDasharray } from "../../utils/getStrokeDasharray";
 
 type RectProps = RectState & TextEditable;
 
@@ -21,6 +22,7 @@ const RectComponent: React.FC<RectProps> = ({
 	fill,
 	stroke,
 	strokeWidth,
+	strokeDashType,
 	rx,
 	text,
 	textType,
@@ -48,6 +50,7 @@ const RectComponent: React.FC<RectProps> = ({
 				fill={fill ?? "transparent"}
 				stroke={stroke}
 				strokeWidth={strokeWidth}
+				strokeDasharray={getStrokeDasharray(strokeDashType, strokeWidth)}
 			/>
 			<TextOverlay
 				x={-width / 2}

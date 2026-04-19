@@ -132,6 +132,14 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 		[dispatch],
 	);
 
+	// Property update handling (used by menus with sliders)
+	const handleUpdateProperty = useCallback(
+		(property: string, value: string, commit: boolean) => {
+			dispatch({ type: "UPDATE_OBJECT_PROPERTIES", property, value, commit });
+		},
+		[dispatch],
+	);
+
 	useKeyboardShortcuts(state, handleCommand);
 
 	// Context menu handling
@@ -214,7 +222,10 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 				</ZoomScaledOverlay>
 				{/* Container for HTML elements with fixed size (position follows zoom, but size does not) */}
 				<ScrollSyncedOverlay left={-minX} top={-minY} zoom={zoom}>
-					<ObjectMenu canvasState={state} />
+					<ObjectMenu
+						canvasState={state}
+						onUpdateProperty={handleUpdateProperty}
+					/>
 				</ScrollSyncedOverlay>
 			</Container>
 			<ViewportOverlay>

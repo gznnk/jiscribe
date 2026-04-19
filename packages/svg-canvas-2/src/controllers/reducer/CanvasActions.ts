@@ -77,6 +77,20 @@ export type RedoAction = {
 };
 
 /**
+ * Update object properties action - updates properties of selected objects
+ * Used for real-time updates (e.g., sliders) with optional history commit
+ */
+export type UpdateObjectPropertiesAction = {
+	type: "UPDATE_OBJECT_PROPERTIES";
+	/** Property name to update (e.g., "strokeWidth", "rx") */
+	property: string;
+	/** String representation of the value */
+	value: string;
+	/** Whether to commit to history (true = save history, false = real-time update only) */
+	commit: boolean;
+};
+
+/**
  * Union of all canvas actions
  */
 export type CanvasAction =
@@ -88,4 +102,5 @@ export type CanvasAction =
 	| UpdateTextEditAction
 	| EndTextEditAction
 	| UndoAction
-	| RedoAction;
+	| RedoAction
+	| UpdateObjectPropertiesAction;

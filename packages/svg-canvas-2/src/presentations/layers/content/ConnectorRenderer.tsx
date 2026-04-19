@@ -26,6 +26,7 @@ export const ConnectorRenderer: React.FC<ConnectorRendererProps> = ({
 			targetY={points.target.y}
 			stroke={connectorState.stroke}
 			strokeWidth={connectorState.strokeWidth}
+			strokeDashType={connectorState.strokeDashType}
 			startArrow={connectorState.startArrow}
 			endArrow={connectorState.endArrow}
 		/>

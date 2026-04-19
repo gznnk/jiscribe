@@ -5,6 +5,7 @@ import { memo } from "react";
 import { PolylineElement, PolylineHitArea } from "./PolylineStyled";
 import type { PolylineState } from "../../../../states/objects/primitives/polyline/PolylineState";
 import { Arrow } from "../../arrows";
+import { getStrokeDasharray } from "../../utils/getStrokeDasharray";
 
 type PolylineProps = PolylineState;
 
@@ -13,6 +14,7 @@ const PolylineComponent: React.FC<PolylineProps> = ({
 	points,
 	stroke = "black",
 	strokeWidth = 1,
+	strokeDashType,
 	startArrow,
 	endArrow,
 }) => {
@@ -48,6 +50,7 @@ const PolylineComponent: React.FC<PolylineProps> = ({
 				points={pointsAttr}
 				stroke={stroke}
 				strokeWidth={strokeWidth}
+				strokeDasharray={getStrokeDasharray(strokeDashType, strokeWidth)}
 			/>
 			{startArrow && startArrow !== "None" && points.length >= 1 && (
 				<Arrow

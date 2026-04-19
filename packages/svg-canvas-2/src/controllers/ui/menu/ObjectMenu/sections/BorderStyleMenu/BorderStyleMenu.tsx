@@ -4,6 +4,7 @@ import {
 	BorderStyleMenuWrapper,
 	BorderStyleSection,
 } from "./BorderStyleMenuStyled";
+import type { StrokeDashType } from "../../../../../../schemas/objects/types/StrokeDashType";
 import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
 import { DashedCircleIcon } from "../../../../icons/DashedCircleIcon";
 import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
@@ -27,12 +28,12 @@ const MIN_CORNER_RADIUS = 0;
 const MAX_CORNER_RADIUS = 999;
 const DEFAULT_CORNER_RADIUS = 0;
 
-type StrokeDashType = "solid" | "dashed" | "dotted";
-
 type BorderStyleMenuProps = {
 	canvasState: CanvasState;
 	/** Whether to show corner radius control */
 	showRadius?: boolean;
+	/** Callback for updating object properties (used by sliders) */
+	onUpdateProperty?: (property: string, value: string, commit: boolean) => void;
 };
 
 /**
@@ -89,37 +90,27 @@ const getSelectedCornerRadius = (state: CanvasState): number => {
 const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 	canvasState,
 	showRadius = true,
+	onUpdateProperty,
 }) => {
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const strokeWidth = getSelectedStrokeWidth(canvasState);
 	const strokeDashType = getSelectedStrokeDashType(canvasState);
 	const cornerRadius = getSelectedCornerRadius(canvasState);
 
-	// TODO: Implement stroke width change handlers with history support
-	const handleStrokeWidthChange = (_width: number) => {
-		// Real-time update (no history saving)
-		// Will be implemented with proper update operation
+	const handleStrokeWidthChange = (width: number) => {
+		onUpdateProperty?.("strokeWidth", String(width), false);
 	};
 
-	const handleStrokeWidthCommit = (_width: number) => {
-		// Save history on commit
-		// Will be implemented with proper update operation
+	const handleStrokeWidthCommit = (width: number) => {
+		onUpdateProperty?.("strokeWidth", String(width), true);
 	};
 
-	// TODO: Implement stroke dash type change handler with history support
-	const handleStrokeDashChange = (_dashType: StrokeDashType) => {
-		// Will be implemented with proper update operation
+	const handleCornerRadiusChange = (radius: number) => {
+		onUpdateProperty?.("rx", String(radius), false);
 	};
 
-	// TODO: Implement corner radius change handlers with history support
-	const handleCornerRadiusChange = (_radius: number) => {
-		// Real-time update (no history saving)
-		// Will be implemented with proper update operation
-	};
-
-	const handleCornerRadiusCommit = (_radius: number) => {
-		// Save history on commit
-		// Will be implemented with proper update operation
+	const handleCornerRadiusCommit = (radius: number) => {
+		onUpdateProperty?.("rx", String(radius), true);
 	};
 
 	return (
@@ -138,22 +129,25 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 						{/* Stroke Dash Type */}
 						<BorderStyleSection>
 							<ObjectMenuButton
-								isActive={strokeDashType === "solid"}
-								onClick={() => handleStrokeDashChange("solid")}
+								isActive={!strokeDashType || strokeDashType === "solid"}
+								data-kind="object-menu"
+								data-id="object-menu:set-strokeDashType:solid"
 								title="Solid line"
 							>
 								<SolidLineIcon title="Solid line" />
 							</ObjectMenuButton>
 							<ObjectMenuButton
 								isActive={strokeDashType === "dashed"}
-								onClick={() => handleStrokeDashChange("dashed")}
+								data-kind="object-menu"
+								data-id="object-menu:set-strokeDashType:dashed"
 								title="Dashed line"
 							>
 								<DashedLineIcon title="Dashed line" />
 							</ObjectMenuButton>
 							<ObjectMenuButton
 								isActive={strokeDashType === "dotted"}
-								onClick={() => handleStrokeDashChange("dotted")}
+								data-kind="object-menu"
+								data-id="object-menu:set-strokeDashType:dotted"
 								title="Dotted line"
 							>
 								<DottedLineIcon title="Dotted line" />
