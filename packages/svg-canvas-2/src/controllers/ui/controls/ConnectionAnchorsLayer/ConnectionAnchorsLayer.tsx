@@ -21,6 +21,7 @@ type ConnectionAnchorsLayerProps = {
 	 * これにより、固定側（編集していない側）のオブジェクトにのみアンカーを表示できる。
 	 */
 	editingEndpoint?: "source" | "target" | null;
+	isTextEditing: boolean;
 };
 
 /**
@@ -32,7 +33,12 @@ type ConnectionAnchorsLayerProps = {
  */
 const ConnectionAnchorsLayerComponent: React.FC<
 	ConnectionAnchorsLayerProps
-> = ({ selectedIds, objects, zoom = 1, pendingConnector, editingEndpoint }) => {
+> = ({ selectedIds, objects, zoom = 1, pendingConnector, editingEndpoint, isTextEditing }) => {
+	// Do not render anchors while text editing
+	if (isTextEditing) {
+		return null;
+	}
+
 	// --- Source anchors (shown on single-selected, frame-based, non-group objects) ---
 	const selectedId = selectedIds.length === 1 ? selectedIds[0] : null;
 	const selectedObject = selectedId ? objects[selectedId] : null;

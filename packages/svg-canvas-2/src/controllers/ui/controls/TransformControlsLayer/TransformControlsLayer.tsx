@@ -10,6 +10,7 @@ type TransformControlsLayerProps = {
 	objects: Record<string, ObjectState>;
 	multiSelectGroup?: GroupState | null;
 	zoom?: number;
+	isTextEditing: boolean;
 };
 
 /**
@@ -19,7 +20,12 @@ type TransformControlsLayerProps = {
  */
 const TransformControlsLayerComponent: React.FC<
 	TransformControlsLayerProps
-> = ({ selectedIds, objects, multiSelectGroup, zoom = 1 }) => {
+> = ({ selectedIds, objects, multiSelectGroup, zoom = 1, isTextEditing }) => {
+	// Do not render controls while text editing
+	if (isTextEditing) {
+		return null;
+	}
+
 	// No selection, or multiple selection: do not render controls
 	if (selectedIds.length === 0) {
 		return null;

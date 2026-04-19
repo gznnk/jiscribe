@@ -180,6 +180,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 						objects={state.objects}
 						multiSelectGroup={state.multiSelectGroup}
 						zoom={state.viewport.zoom}
+						isTextEditing={!!state.textEditState}
 					/>
 					<ConnectionAnchorsLayer
 						selectedIds={state.selectedIds}
@@ -187,6 +188,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 						zoom={state.viewport.zoom}
 						pendingConnector={state.pendingConnector}
 						editingEndpoint={state.editingEndpoint}
+						isTextEditing={!!state.textEditState}
 					/>
 					<VertexControlsLayer
 						selectedIds={state.selectedIds}
