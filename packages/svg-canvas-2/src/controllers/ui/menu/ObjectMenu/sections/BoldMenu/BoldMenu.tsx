@@ -24,7 +24,7 @@ const BoldMenuComponent: React.FC<BoldMenuProps> = ({
 			<ObjectMenuButton
 				isActive={false}
 				data-kind="object-menu"
-				data-id="object-menu:set-fontWeight:bold"
+				data-id="object-menu:set:fontWeight:bold"
 				title="Bold"
 			>
 				<BoldIcon fill={_isBold ? "#333333" : "#999999"} />

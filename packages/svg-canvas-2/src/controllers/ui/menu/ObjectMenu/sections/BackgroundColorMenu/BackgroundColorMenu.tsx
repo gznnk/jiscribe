@@ -44,7 +44,7 @@ const BackgroundColorMenuComponent: React.FC<BackgroundColorMenuProps> = ({
 			<ObjectMenuButton
 				isActive={isOpen}
 				data-kind="object-menu"
-				data-id={`object-menu:toggle-${SECTION_ID}`}
+				data-id={`object-menu:toggle:${SECTION_ID}`}
 				title="Background Color"
 			>
 				<ColorPreviewIcon color={currentColor} title="Background Color" />

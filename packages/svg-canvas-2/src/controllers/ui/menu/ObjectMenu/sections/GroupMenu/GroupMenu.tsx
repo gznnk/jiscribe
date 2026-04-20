@@ -29,7 +29,7 @@ const GroupMenuComponent: React.FC<GroupMenuProps> = ({ canvasState }) => {
 				isActive={isGroup}
 				disabled={!enabled}
 				data-kind="object-menu"
-				data-id={`object-menu:${commandId}`}
+				data-id={`object-menu:command:${commandId}`}
 			>
 				<GroupIcon
 					fill={enabled ? "#333333" : "#cccccc"}

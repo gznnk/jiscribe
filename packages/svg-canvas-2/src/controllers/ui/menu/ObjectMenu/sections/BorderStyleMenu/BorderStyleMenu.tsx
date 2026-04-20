@@ -99,7 +99,7 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 			<ObjectMenuButton
 				isActive={isOpen}
 				data-kind="object-menu"
-				data-id={`object-menu:toggle-${SECTION_ID}`}
+				data-id={`object-menu:toggle:${SECTION_ID}`}
 				title="Border Style"
 			>
 				<DashedCircleIcon title="Border Style" />
@@ -112,7 +112,7 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 							<ObjectMenuButton
 								isActive={!strokeDashType || strokeDashType === "solid"}
 								data-kind="object-menu"
-								data-id="object-menu:set-strokeDashType:solid"
+								data-id="object-menu:set:strokeDashType:solid"
 								title="Solid line"
 							>
 								<SolidLineIcon title="Solid line" />
@@ -120,7 +120,7 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 							<ObjectMenuButton
 								isActive={strokeDashType === "dashed"}
 								data-kind="object-menu"
-								data-id="object-menu:set-strokeDashType:dashed"
+								data-id="object-menu:set:strokeDashType:dashed"
 								title="Dashed line"
 							>
 								<DashedLineIcon title="Dashed line" />
@@ -128,7 +128,7 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 							<ObjectMenuButton
 								isActive={strokeDashType === "dotted"}
 								data-kind="object-menu"
-								data-id="object-menu:set-strokeDashType:dotted"
+								data-id="object-menu:set:strokeDashType:dotted"
 								title="Dotted line"
 							>
 								<DottedLineIcon title="Dotted line" />

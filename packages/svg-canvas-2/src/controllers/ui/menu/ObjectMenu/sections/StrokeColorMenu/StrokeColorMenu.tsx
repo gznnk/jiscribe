@@ -45,7 +45,7 @@ const StrokeColorMenuComponent: React.FC<StrokeColorMenuProps> = ({
 			<ObjectMenuButton
 				isActive={isOpen}
 				data-kind="object-menu"
-				data-id={`object-menu:toggle-${SECTION_ID}`}
+				data-id={`object-menu:toggle:${SECTION_ID}`}
 				title="Stroke Color"
 			>
 				<BorderColorIcon color={currentColor} title="Stroke Color" />

@@ -16,11 +16,11 @@ import { recordHistoryIfNeeded } from "../../../utils/recordHistory";
  * - dragEnd: スライダーの最終値確定 + 履歴記録
  *
  * targetId のフォーマット:
- * - `object-menu:toggle-{sectionId}` → セクションの開閉を切り替え
- * - `object-menu:set-{property}:{value}` → 選択オブジェクトのプロパティを更新
- * - `object-menu:{commandId}` → コマンドを実行
- * - `slider:{property}` → スライダーによるプロパティ更新
- * - `number-input:{property}` → 数値入力によるプロパティ更新
+ * - `object-menu:toggle:{sectionId}` → セクションの開閉を切り替え
+ * - `object-menu:set:{property}:{value}` → 選択オブジェクトのプロパティを更新
+ * - `object-menu:command:{commandId}` → コマンドを実行
+ * - `object-menu:slider:{property}` → スライダーによるプロパティ更新
+ * - `object-menu:number-input:{property}` → 数値入力によるプロパティ更新
  */
 export const ObjectMenuHandler: GestureHandler = {
 	supports(event: CanvasEvent) {
@@ -29,7 +29,7 @@ export const ObjectMenuHandler: GestureHandler = {
 
 	handle(state, event) {
 		// スライダー操作: drag / dragEnd
-		if (event.targetId?.startsWith("slider:")) {
+		if (event.targetId?.startsWith("object-menu:slider:")) {
 			// pressed, dragStart, click イベントは何もせず状態を維持
 			if (
 				event.type === "pressed" ||
@@ -46,8 +46,8 @@ export const ObjectMenuHandler: GestureHandler = {
 				return state;
 			}
 
-			// targetId から "slider:" プレフィックスを除去してプロパティ名を取得
-			const property = event.targetId.replace("slider:", "");
+			// targetId から "object-menu:slider:" プレフィックスを除去してプロパティ名を取得
+			const property = event.targetId.slice("object-menu:slider:".length);
 			if (!property) {
 				console.warn("[ObjectMenuHandler] No property found in targetId");
 				return state;
@@ -75,7 +75,7 @@ export const ObjectMenuHandler: GestureHandler = {
 		}
 
 		// 数値入力操作: change イベント
-		if (event.targetId?.startsWith("number-input:")) {
+		if (event.targetId?.startsWith("object-menu:number-input:")) {
 			// 将来的に数値入力のイベント処理が必要になった場合はここに実装
 			// 現在は MenuSlider 内で React の onChange で処理されているため不要
 			return state;
@@ -83,12 +83,12 @@ export const ObjectMenuHandler: GestureHandler = {
 
 		// メニュー項目のクリック
 		if (event.type === "click" && event.targetId) {
-			// targetId から "object-menu:" プレフィックスを除去してIDを取得
-			const actionId = event.targetId.replace("object-menu:", "");
+			// targetId から "object-menu:" プレフィックスを除去してアクションを取得
+			const actionId = event.targetId.slice("object-menu:".length);
 
 			// toggle ボタン: セクションの開閉を切り替える
-			if (actionId.startsWith("toggle-")) {
-				const sectionId = actionId.replace("toggle-", "");
+			if (actionId.startsWith("toggle:")) {
+				const sectionId = actionId.slice("toggle:".length);
 				return {
 					...state,
 					objectMenuOpenId:
@@ -96,9 +96,9 @@ export const ObjectMenuHandler: GestureHandler = {
 				};
 			}
 
-			// プロパティ更新: set-{property}:{value}
-			if (actionId.startsWith("set-")) {
-				const rest = actionId.slice(4); // "set-" を除去
+			// プロパティ更新: set:{property}:{value}
+			if (actionId.startsWith("set:")) {
+				const rest = actionId.slice("set:".length);
 				const colonIndex = rest.indexOf(":");
 				if (colonIndex !== -1) {
 					const property = rest.slice(0, colonIndex);
@@ -115,8 +115,11 @@ export const ObjectMenuHandler: GestureHandler = {
 				}
 			}
 
-			// コマンドボタン: コマンドを実行
-			return handleCommand(state, actionId);
+			// コマンドボタン: command:{commandId}
+			if (actionId.startsWith("command:")) {
+				const commandId = actionId.slice("command:".length);
+				return handleCommand(state, commandId);
+			}
 		}
 
 		return state;

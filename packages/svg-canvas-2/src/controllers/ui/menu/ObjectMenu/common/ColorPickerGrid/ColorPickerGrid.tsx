@@ -32,7 +32,7 @@ const ColorPickerGridComponent: React.FC<ColorPickerGridProps> = ({
 						swatchColor={preset.value}
 						selected={preset.value.toLowerCase() === currentColor.toLowerCase()}
 						data-kind="object-menu"
-						data-id={`object-menu:set-${property}:${preset.value}`}
+						data-id={`object-menu:set:${property}:${preset.value}`}
 						title={preset.name}
 					/>
 				))}

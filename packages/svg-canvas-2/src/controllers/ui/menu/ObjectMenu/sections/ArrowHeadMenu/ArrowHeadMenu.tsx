@@ -72,7 +72,7 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 			<ObjectMenuButton
 				isActive={isOpen}
 				data-kind="object-menu"
-				data-id={`object-menu:toggle-${SECTION_ID}`}
+				data-id={`object-menu:toggle:${SECTION_ID}`}
 				title="Arrow Head"
 			>
 				<ArrowHeadIcon />
@@ -88,7 +88,7 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 										key={`start-${type}`}
 										isActive={currentStart === type}
 										data-kind="object-menu"
-										data-id={`object-menu:set-startArrow:${type}`}
+										data-id={`object-menu:set:startArrow:${type}`}
 										title={type}
 									>
 										{getArrowLabel(type)}
@@ -104,7 +104,7 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 										key={`end-${type}`}
 										isActive={currentEnd === type}
 										data-kind="object-menu"
-										data-id={`object-menu:set-endArrow:${type}`}
+										data-id={`object-menu:set:endArrow:${type}`}
 										title={type}
 									>
 										{getArrowLabel(type)}

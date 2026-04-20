@@ -91,7 +91,7 @@ const MenuSliderComponent: React.FC<MenuSliderProps> = ({
 					onFocus={handleNumberInputFocus}
 					onBlur={handleNumberInputBlur}
 					data-kind="object-menu"
-					data-id={`number-input:${property}`}
+					data-id={`object-menu:number-input:${property}`}
 					data-interactive="true"
 				/>
 			</MenuSliderFooter>
@@ -102,7 +102,7 @@ const MenuSliderComponent: React.FC<MenuSliderProps> = ({
 				value={sliderValue}
 				onChange={handleSliderChange}
 				data-kind="object-menu"
-				data-id={`slider:${property}`}
+				data-id={`object-menu:slider:${property}`}
 				data-interactive="true"
 			/>
 		</MenuSliderWrapper>

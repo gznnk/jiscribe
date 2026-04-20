@@ -36,7 +36,7 @@ const StackOrderMenuComponent: React.FC<StackOrderMenuProps> = ({
 			<ObjectMenuButton
 				isActive={isOpen}
 				data-kind="object-menu"
-				data-id={`object-menu:toggle-${SECTION_ID}`}
+				data-id={`object-menu:toggle:${SECTION_ID}`}
 			>
 				<StackOrderIcon />
 			</ObjectMenuButton>
@@ -51,7 +51,7 @@ const StackOrderMenuComponent: React.FC<StackOrderMenuProps> = ({
 								key={commandId}
 								disabled={!enabled}
 								data-kind="object-menu"
-								data-id={`object-menu:${commandId}`}
+								data-id={`object-menu:command:${commandId}`}
 							>
 								<Icon
 									fill={enabled ? "#333333" : "#cccccc"}
