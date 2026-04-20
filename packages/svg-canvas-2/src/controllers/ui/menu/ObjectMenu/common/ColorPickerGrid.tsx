@@ -10,7 +10,7 @@ import {
 type ColorPickerGridProps = {
 	/** 現在選択中の色 */
 	currentColor: string;
-	/** プロパティ名 (例: "fill", "stroke") - data-id のプレフィックスに使用 */
+	/** プロパティ名 (例: "fill", "stroke") */
 	property: string;
 };
 

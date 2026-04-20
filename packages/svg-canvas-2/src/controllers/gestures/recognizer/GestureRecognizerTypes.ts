@@ -45,6 +45,7 @@ export type Gesture = {
 	time: number;
 	button: number;
 	scrollDelta?: ScrollDelta; // Optional scroll delta for edge scrolling
+	inputValue?: string; // Optional input value from interactive elements (data-interactive="true")
 };
 
 export type GestureCallback = (gesture: Gesture) => void;

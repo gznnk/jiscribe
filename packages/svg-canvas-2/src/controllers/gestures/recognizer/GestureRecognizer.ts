@@ -126,6 +126,25 @@ export class GestureRecognizer {
 	}
 
 	/**
+	 * ポインターキャプチャを無効にすべき要素かどうかを判定
+	 * data-interactive="true" が設定されている要素は、ブラウザのネイティブな動作を維持する
+	 */
+	private shouldPreserveNativeBehavior(target: EventTarget | null): boolean {
+		if (!(target instanceof HTMLElement)) return false;
+		return target.getAttribute("data-interactive") === "true";
+	}
+
+	/**
+	 * インタラクティブ要素（data-interactive="true"）から値を読み取る
+	 * input要素（range, number, text, color等）の値を文字列として返す
+	 */
+	private getInputValue(target: EventTarget | null): string | undefined {
+		if (!(target instanceof HTMLInputElement)) return undefined;
+		if (target.getAttribute("data-interactive") !== "true") return undefined;
+		return target.value;
+	}
+
+	/**
 	 * イベントを処理してジェスチャーコールバックを呼び出す
 	 */
 	private feed(e: InternalEvent): void {
@@ -141,6 +160,7 @@ export class GestureRecognizer {
 		const targetId = target?.id;
 		const targetKind = target?.kind;
 		const time = e.timeStamp;
+		const inputValue = this.getInputValue(e.target);
 
 		// wheel: ドラッグ外のホイールイベント
 		if (e.type === "wheel") {
@@ -168,14 +188,20 @@ export class GestureRecognizer {
 					deltaX: e.deltaX ?? 0,
 					deltaY: e.deltaY ?? 0,
 				},
+				inputValue,
 			});
 			return;
 		}
 
 		// pointerdown: 新しいジェスチャーを開始
 		if (e.type === "pointerdown") {
-			// ポインターキャプチャを設定
-			if (this.containerRef.current && e.pointerId !== undefined) {
+			// ポインターキャプチャを設定（data-interactive="true"の要素では設定しない）
+			// インタラクティブな要素ではブラウザのネイティブな動作を維持する必要がある
+			if (
+				this.containerRef.current &&
+				e.pointerId !== undefined &&
+				!this.shouldPreserveNativeBehavior(e.target)
+			) {
 				this.containerRef.current.setPointerCapture(e.pointerId);
 			}
 
@@ -212,6 +238,7 @@ export class GestureRecognizer {
 				hovered,
 				time,
 				button: e.button,
+				inputValue,
 			});
 			return;
 		}
@@ -246,6 +273,8 @@ export class GestureRecognizer {
 				const distanceSquared = delta.x ** 2 + delta.y ** 2;
 				if (distanceSquared >= DRAG_THRESHOLD) {
 					this.pressed.dragging = true;
+					// For sliders, read current value from the target element
+					const dragStartInputValue = this.getInputValue(this.pressed.target);
 					this.gestureCallback({
 						type: "dragStart",
 						target: this.pressed.target,
@@ -261,6 +290,7 @@ export class GestureRecognizer {
 						hovered,
 						time,
 						button: this.pressed.button,
+						inputValue: dragStartInputValue,
 					});
 				}
 			} else {
@@ -308,6 +338,9 @@ export class GestureRecognizer {
 					delta.y += scrollDelta.deltaY / canvasState.viewport.zoom;
 				}
 
+				// For sliders, read current value from the target element
+				const dragInputValue = this.getInputValue(this.pressed.target);
+
 				this.gestureCallback({
 					type: "drag",
 					target: this.pressed.target,
@@ -324,6 +357,7 @@ export class GestureRecognizer {
 					time,
 					button: this.pressed.button,
 					scrollDelta,
+					inputValue: dragInputValue,
 				});
 			}
 			return;
@@ -331,8 +365,12 @@ export class GestureRecognizer {
 
 		// pointerup: ジェスチャー終了
 		if (e.type === "pointerup") {
-			// ポインターキャプチャを解放
-			if (this.containerRef.current && e.pointerId !== undefined) {
+			// ポインターキャプチャを解放（data-interactive="true"の要素では何もしない）
+			if (
+				this.containerRef.current &&
+				e.pointerId !== undefined &&
+				!this.shouldPreserveNativeBehavior(this.pressed.target)
+			) {
 				this.containerRef.current.releasePointerCapture(e.pointerId);
 			}
 
@@ -365,6 +403,9 @@ export class GestureRecognizer {
 				}
 			}
 
+			// For sliders, read final value from the target element
+			const finalInputValue = this.getInputValue(this.pressed.target);
+
 			this.gestureCallback({
 				type: eventType,
 				target: this.pressed.target,
@@ -380,6 +421,7 @@ export class GestureRecognizer {
 				hovered,
 				time,
 				button: this.pressed.button,
+				inputValue: finalInputValue,
 			});
 			this.pressed = null;
 			return;
@@ -387,8 +429,12 @@ export class GestureRecognizer {
 
 		// pointercancel: ジェスチャーを中断
 		if (e.type === "pointercancel") {
-			// ポインターキャプチャを解放
-			if (this.containerRef.current && e.pointerId !== undefined) {
+			// ポインターキャプチャを解放（data-interactive="true"の要素では何もしない）
+			if (
+				this.containerRef.current &&
+				e.pointerId !== undefined &&
+				!this.shouldPreserveNativeBehavior(this.pressed.target)
+			) {
 				this.containerRef.current.releasePointerCapture(e.pointerId);
 			}
 
@@ -399,6 +445,9 @@ export class GestureRecognizer {
 			);
 
 			if (this.pressed.dragging) {
+				// For sliders, read final value from the target element
+				const cancelInputValue = this.getInputValue(this.pressed.target);
+
 				this.gestureCallback({
 					type: "dragEnd",
 					target: this.pressed.target,
@@ -414,6 +463,7 @@ export class GestureRecognizer {
 					hovered,
 					time,
 					button: this.pressed.button,
+					inputValue: cancelInputValue,
 				});
 			}
 			this.pressed = null;

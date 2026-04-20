@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 
+import type { ObjectMenuConfig } from "./types/ObjectMenuConfig";
 import { objectRegistry } from "../../../../registry/ObjectRegistry";
 import type { CanvasState } from "../../../../states/canvas/CanvasState";
-import type { ObjectMenuConfig } from "./types/ObjectMenuConfig";
 
 /**
  * Merge a boolean property: only include if all configs have it set to true.
@@ -78,7 +78,7 @@ export const getMenuConfig = (state: CanvasState): ObjectMenuConfig => {
 	// Get menu configs for all selected object types
 	const menuConfigs: ObjectMenuConfig[] = [];
 	for (const type of types) {
-		const config = objectRegistry.getMenuConfig(type as any);
+		const config = objectRegistry.getMenuConfig(type);
 		if (config) {
 			menuConfigs.push(config);
 		}
@@ -155,8 +155,6 @@ export const getMenuConfig = (state: CanvasState): ObjectMenuConfig => {
  * @returns ObjectMenuConfig with only commonly enabled menu items set to true
  */
 export const useMenuConfig = (state: CanvasState): ObjectMenuConfig => {
-	return useMemo(
-		() => getMenuConfig(state),
-		[state.selectedIds, state.objects],
-	);
+	// TODO: メモ化の意味がほぼない
+	return useMemo(() => getMenuConfig(state), [state]);
 };

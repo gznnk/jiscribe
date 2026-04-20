@@ -4,7 +4,6 @@ import { isTextStyleState } from "../../states/objects/base/TextStyleState";
 import type { CanvasControllerState } from "../CanvasTypes";
 import { handleCommand } from "../commands/handlers/handleCommand";
 import { handleGesture } from "../gestures/handlers/handleGesture";
-import { handlePropertyUpdate } from "../gestures/handlers/menu/utils/handlePropertyUpdate";
 import { commitTextEditIfNeeded } from "../utils/commitTextEditIfNeeded";
 import { recordHistoryIfNeeded } from "../utils/recordHistory";
 
@@ -95,21 +94,6 @@ export const canvasReducer = (
 				...state,
 				textEditState: null,
 			};
-		}
-
-		case "UPDATE_OBJECT_PROPERTIES": {
-			const updatedState = handlePropertyUpdate(
-				state,
-				action.property,
-				action.value,
-			);
-			if (action.commit) {
-				return recordHistoryIfNeeded(
-					{ ...updatedState, lastCommitTime: Date.now() },
-					state.lastCommitTime,
-				);
-			}
-			return updatedState;
 		}
 
 		default:

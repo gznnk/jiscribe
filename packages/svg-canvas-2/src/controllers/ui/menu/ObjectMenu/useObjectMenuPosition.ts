@@ -39,6 +39,7 @@ export function useObjectMenuPosition(
 		contextMenuPosition,
 		areaSelection,
 		eventStartState,
+		objectMenuOpenId,
 	} = state;
 
 	const [menuDimensions, setMenuDimensions] = useState({
@@ -52,10 +53,18 @@ export function useObjectMenuPosition(
 		// メニューを表示しない条件
 		if (selectedIds.length === 0) return false;
 		if (contextMenuPosition !== null) return false;
-		if (eventStartState !== null) return false;
+		// eventStartState が null でない場合でも、objectMenuOpenId が null でない場合は表示を続ける
+		// （スライダーのドラッグ中にメニューを表示し続けるため）
+		if (eventStartState !== null && objectMenuOpenId === null) return false;
 		if (areaSelection !== null) return false;
 		return true;
-	}, [selectedIds, contextMenuPosition, eventStartState, areaSelection]);
+	}, [
+		selectedIds,
+		contextMenuPosition,
+		eventStartState,
+		areaSelection,
+		objectMenuOpenId,
+	]);
 
 	useEffect(() => {
 		if (menuRef.current && shouldRender) {

@@ -4,15 +4,23 @@ import type {
 	GestureHandler,
 } from "../../../../registry/GestureHandlerRegistryTypes";
 import { handleCommand } from "../../../commands/handlers/handleCommand";
+import { recordHistoryIfNeeded } from "../../../utils/recordHistory";
 
 /**
- * ObjectMenu 項目のクリックを処理する GestureHandler。
+ * ObjectMenu 項目の操作を処理する GestureHandler。
  * targetKind が "object-menu" の場合に処理を行う。
  *
- * アクション ID のフォーマット:
- * - `toggle-{sectionId}` → セクションの開閉を切り替え
- * - `set-{property}:{value}` → 選択オブジェクトのプロパティを更新
- * - `{commandId}` → コマンドを実行
+ * 処理するイベント:
+ * - click: メニュー項目のクリック
+ * - drag: スライダーのリアルタイム更新（履歴記録なし）
+ * - dragEnd: スライダーの最終値確定 + 履歴記録
+ *
+ * targetId のフォーマット:
+ * - `object-menu:toggle-{sectionId}` → セクションの開閉を切り替え
+ * - `object-menu:set-{property}:{value}` → 選択オブジェクトのプロパティを更新
+ * - `object-menu:{commandId}` → コマンドを実行
+ * - `slider:{property}` → スライダーによるプロパティ更新
+ * - `number-input:{property}` → 数値入力によるプロパティ更新
  */
 export const ObjectMenuHandler: GestureHandler = {
 	supports(event: CanvasEvent) {
@@ -20,6 +28,60 @@ export const ObjectMenuHandler: GestureHandler = {
 	},
 
 	handle(state, event) {
+		// スライダー操作: drag / dragEnd
+		if (event.targetId?.startsWith("slider:")) {
+			// pressed, dragStart, click イベントは何もせず状態を維持
+			if (
+				event.type === "pressed" ||
+				event.type === "dragStart" ||
+				event.type === "click" ||
+				event.type === "doubleClick"
+			) {
+				return state;
+			}
+
+			// 入力値が存在しない場合は何もしない
+			if (event.inputValue === undefined) {
+				console.warn("[ObjectMenuHandler] No input value found");
+				return state;
+			}
+
+			// targetId から "slider:" プレフィックスを除去してプロパティ名を取得
+			const property = event.targetId.replace("slider:", "");
+			if (!property) {
+				console.warn("[ObjectMenuHandler] No property found in targetId");
+				return state;
+			}
+
+			// drag イベント: リアルタイム更新（履歴記録なし、メニュー維持）
+			if (event.type === "drag") {
+				return handlePropertyUpdate(state, property, event.inputValue);
+			}
+
+			// dragEnd イベント: 最終値確定 + 履歴記録（メニュー維持）
+			if (event.type === "dragEnd") {
+				const newState = handlePropertyUpdate(
+					state,
+					property,
+					event.inputValue,
+				);
+				return recordHistoryIfNeeded(
+					{ ...newState, lastCommitTime: event.time },
+					state.lastCommitTime,
+				);
+			}
+
+			return state;
+		}
+
+		// 数値入力操作: change イベント
+		if (event.targetId?.startsWith("number-input:")) {
+			// 将来的に数値入力のイベント処理が必要になった場合はここに実装
+			// 現在は MenuSlider 内で React の onChange で処理されているため不要
+			return state;
+		}
+
+		// メニュー項目のクリック
 		if (event.type === "click" && event.targetId) {
 			// targetId から "object-menu:" プレフィックスを除去してIDを取得
 			const actionId = event.targetId.replace("object-menu:", "");
@@ -42,11 +104,14 @@ export const ObjectMenuHandler: GestureHandler = {
 					const property = rest.slice(0, colonIndex);
 					const value = rest.slice(colonIndex + 1);
 					const newState = handlePropertyUpdate(state, property, value);
-					return {
+					const stateWithMenuClosed = {
 						...newState,
 						objectMenuOpenId: null,
-						lastCommitTime: event.time,
 					};
+					return recordHistoryIfNeeded(
+						{ ...stateWithMenuClosed, lastCommitTime: event.time },
+						state.lastCommitTime,
+					);
 				}
 			}
 

@@ -23,8 +23,6 @@ import type { CanvasControllerState } from "../../../CanvasTypes";
 
 type ObjectMenuProps = {
 	canvasState: CanvasControllerState;
-	/** Callback for updating object properties (used by sliders) */
-	onUpdateProperty?: (property: string, value: string, commit: boolean) => void;
 };
 
 /**
@@ -34,10 +32,7 @@ type ObjectMenuProps = {
  * Based on svg-canvas's DiagramMenu but adapted for svg-canvas-2 architecture.
  * Uses ObjectMenuConfig to control which sections are displayed.
  */
-const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
-	canvasState,
-	onUpdateProperty,
-}) => {
+const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({ canvasState }) => {
 	const menuRef = useRef<HTMLDivElement>(null);
 	const { shouldRender, x, y } = useObjectMenuPosition(canvasState, menuRef);
 	const menuConfig = useMenuConfig(canvasState);
@@ -92,7 +87,6 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 				key="BorderStyle"
 				canvasState={canvasState}
 				showRadius={menuConfig.borderStyle.radius}
-				onUpdateProperty={onUpdateProperty}
 			/>,
 		);
 	}

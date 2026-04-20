@@ -18,24 +18,21 @@ type MenuSliderProps = {
 	max?: number;
 	/** Label text displayed above the slider */
 	label?: string;
-	/** Called on every value change (real-time updates, no history saving) */
-	onChange: (newValue: number) => void;
-	/** Called when value change is committed (slider mouse up, input blur - triggers history saving) */
-	onChangeCommit?: (newValue: number) => void;
+	/** Property name for data-id (e.g., "strokeWidth", "rx") */
+	property: string;
 };
 
 /**
  * MenuSlider component.
  * A UI control for adjusting values using a slider.
- * Provides separate callbacks for real-time updates and committed changes.
+ * Uses CanvasEvent system (data-kind/data-id) for property updates.
  */
 const MenuSliderComponent: React.FC<MenuSliderProps> = ({
 	value,
 	min = 1,
 	max = 100,
 	label = "Value",
-	onChange,
-	onChangeCommit,
+	property,
 }) => {
 	const [sliderValue, setSliderValue] = useState(value);
 	const [inputValue, setInputValue] = useState(String(value));
@@ -45,13 +42,6 @@ const MenuSliderComponent: React.FC<MenuSliderProps> = ({
 		const newValue = Number.parseInt(e.target.value, 10);
 		setSliderValue(newValue);
 		setInputValue(String(newValue));
-		// Real-time update only while dragging the slider (do not commit history)
-		onChange(newValue);
-	};
-
-	const handleSliderMouseUp = () => {
-		// Commit the change (save history) when the user releases the slider
-		onChangeCommit?.(sliderValue);
 	};
 
 	const handleNumberInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,7 +52,6 @@ const MenuSliderComponent: React.FC<MenuSliderProps> = ({
 		if (!Number.isNaN(parsedValue)) {
 			const clampedValue = Math.max(min, Math.min(max, parsedValue));
 			setSliderValue(clampedValue);
-			onChange(clampedValue);
 		}
 	};
 
@@ -77,8 +66,6 @@ const MenuSliderComponent: React.FC<MenuSliderProps> = ({
 			const clampedValue = Math.max(min, Math.min(max, parsedValue));
 			setSliderValue(clampedValue);
 			setInputValue(String(clampedValue));
-			// Only commit the change (save history) on blur; do not call onChange again
-			onChangeCommit?.(clampedValue);
 		} else {
 			setInputValue(String(sliderValue));
 		}
@@ -103,6 +90,9 @@ const MenuSliderComponent: React.FC<MenuSliderProps> = ({
 					onChange={handleNumberInputChange}
 					onFocus={handleNumberInputFocus}
 					onBlur={handleNumberInputBlur}
+					data-kind="object-menu"
+					data-id={`number-input:${property}`}
+					data-interactive="true"
 				/>
 			</MenuSliderFooter>
 			<MenuSliderInput
@@ -111,7 +101,9 @@ const MenuSliderComponent: React.FC<MenuSliderProps> = ({
 				max={max}
 				value={sliderValue}
 				onChange={handleSliderChange}
-				onMouseUp={handleSliderMouseUp}
+				data-kind="object-menu"
+				data-id={`slider:${property}`}
+				data-interactive="true"
 			/>
 		</MenuSliderWrapper>
 	);

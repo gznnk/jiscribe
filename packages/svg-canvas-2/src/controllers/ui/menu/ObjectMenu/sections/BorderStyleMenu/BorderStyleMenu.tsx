@@ -32,8 +32,6 @@ type BorderStyleMenuProps = {
 	canvasState: CanvasState;
 	/** Whether to show corner radius control */
 	showRadius?: boolean;
-	/** Callback for updating object properties (used by sliders) */
-	onUpdateProperty?: (property: string, value: string, commit: boolean) => void;
 };
 
 /**
@@ -90,28 +88,11 @@ const getSelectedCornerRadius = (state: CanvasState): number => {
 const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 	canvasState,
 	showRadius = true,
-	onUpdateProperty,
 }) => {
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const strokeWidth = getSelectedStrokeWidth(canvasState);
 	const strokeDashType = getSelectedStrokeDashType(canvasState);
 	const cornerRadius = getSelectedCornerRadius(canvasState);
-
-	const handleStrokeWidthChange = (width: number) => {
-		onUpdateProperty?.("strokeWidth", String(width), false);
-	};
-
-	const handleStrokeWidthCommit = (width: number) => {
-		onUpdateProperty?.("strokeWidth", String(width), true);
-	};
-
-	const handleCornerRadiusChange = (radius: number) => {
-		onUpdateProperty?.("rx", String(radius), false);
-	};
-
-	const handleCornerRadiusCommit = (radius: number) => {
-		onUpdateProperty?.("rx", String(radius), true);
-	};
 
 	return (
 		<MenuItemPositioner>
@@ -154,25 +135,23 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 							</ObjectMenuButton>
 						</BorderStyleSection>
 
-						{/* Stroke Width */}
+						{/* Stroke Width - TODO: スライダー対応 */}
 						<MenuSlider
 							label="Border Width"
 							value={strokeWidth}
 							min={MIN_STROKE_WIDTH}
 							max={MAX_STROKE_WIDTH}
-							onChange={handleStrokeWidthChange}
-							onChangeCommit={handleStrokeWidthCommit}
+							property="strokeWidth"
 						/>
 
-						{/* Corner Radius */}
+						{/* Corner Radius - TODO: スライダー対応 */}
 						{showRadius && (
 							<MenuSlider
 								label="Corner Radius"
 								value={cornerRadius}
 								min={MIN_CORNER_RADIUS}
 								max={MAX_CORNER_RADIUS}
-								onChange={handleCornerRadiusChange}
-								onChangeCommit={handleCornerRadiusCommit}
+								property="rx"
 							/>
 						)}
 					</BorderStyleMenuWrapper>
