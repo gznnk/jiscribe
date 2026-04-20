@@ -104,12 +104,8 @@ export const ObjectMenuHandler: GestureHandler = {
 					const property = rest.slice(0, colonIndex);
 					const value = rest.slice(colonIndex + 1);
 					const newState = handlePropertyUpdate(state, property, value);
-					const stateWithMenuClosed = {
-						...newState,
-						objectMenuOpenId: null,
-					};
 					return recordHistoryIfNeeded(
-						{ ...stateWithMenuClosed, lastCommitTime: event.time },
+						{ ...newState, lastCommitTime: event.time },
 						state.lastCommitTime,
 					);
 				}
