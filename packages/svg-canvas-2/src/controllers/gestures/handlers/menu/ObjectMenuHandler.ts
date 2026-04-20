@@ -4,7 +4,6 @@ import type {
 	GestureHandler,
 } from "../../../../registry/GestureHandlerRegistryTypes";
 import { handleCommand } from "../../../commands/handlers/handleCommand";
-import { recordHistoryIfNeeded } from "../../../utils/recordHistory";
 
 /**
  * ObjectMenu 項目の操作を処理する GestureHandler。
@@ -58,17 +57,14 @@ export const ObjectMenuHandler: GestureHandler = {
 				return handlePropertyUpdate(state, property, event.inputValue);
 			}
 
-			// dragEnd イベント: 最終値確定 + 履歴記録（メニュー維持）
+			// dragEnd イベント: 最終値確定（履歴記録は handleGesture に委譲）
 			if (event.type === "dragEnd") {
 				const newState = handlePropertyUpdate(
 					state,
 					property,
 					event.inputValue,
 				);
-				return recordHistoryIfNeeded(
-					{ ...newState, lastCommitTime: event.time },
-					state.lastCommitTime,
-				);
+				return { ...newState, lastCommitTime: event.time };
 			}
 
 			return state;
@@ -104,10 +100,8 @@ export const ObjectMenuHandler: GestureHandler = {
 					const property = rest.slice(0, colonIndex);
 					const value = rest.slice(colonIndex + 1);
 					const newState = handlePropertyUpdate(state, property, value);
-					return recordHistoryIfNeeded(
-						{ ...newState, lastCommitTime: event.time },
-						state.lastCommitTime,
-					);
+					// 履歴記録は handleGesture に委譲するため、lastCommitTime のみ更新
+					return { ...newState, lastCommitTime: event.time };
 				}
 			}
 
