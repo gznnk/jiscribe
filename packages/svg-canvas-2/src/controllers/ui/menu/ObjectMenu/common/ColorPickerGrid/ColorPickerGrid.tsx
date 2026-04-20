@@ -1,11 +1,11 @@
 ﻿import { memo } from "react";
 
-import { PRESET_COLORS } from "../ObjectMenuConstants";
 import {
 	ColorGrid,
 	ColorPickerContainer,
 	ColorSwatch,
-} from "./ColorPickerStyled";
+} from "./ColorPickerGridStyled";
+import { PRESET_COLORS } from "../../ObjectMenuConstants";
 
 type ColorPickerGridProps = {
 	/** 現在選択中の色 */

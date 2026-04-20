@@ -2,7 +2,7 @@ import { memo } from "react";
 
 import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
 import { BorderColorIcon } from "../../../../icons/BorderColorIcon";
-import { ColorPickerGrid } from "../../common/ColorPickerGrid";
+import { ColorPickerGrid } from "../../common/ColorPickerGrid/ColorPickerGrid";
 import {
 	ObjectMenuButton,
 	DropdownColorPanel,

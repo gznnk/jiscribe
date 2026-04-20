@@ -2,7 +2,7 @@
 
 import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
 import { FontColorIcon } from "../../../../icons/FontColorIcon";
-import { ColorPickerGrid } from "../../common/ColorPickerGrid";
+import { ColorPickerGrid } from "../../common/ColorPickerGrid/ColorPickerGrid";
 import {
 	ObjectMenuButton,
 	DropdownColorPanel,

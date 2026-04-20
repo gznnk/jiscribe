@@ -9,7 +9,7 @@ import { AlignmentMenu } from "./sections/AlignmentMenu";
 import { ArrowHeadMenu } from "./sections/ArrowHeadMenu";
 import { BackgroundColorMenu } from "./sections/BackgroundColorMenu";
 import { BoldMenu } from "./sections/BoldMenu";
-import { BorderStyleMenu } from "./sections/BorderStyleMenu/BorderStyleMenu";
+import { BorderStyleMenu } from "./sections/BorderStyleMenu";
 import { FontColorMenu } from "./sections/FontColorMenu";
 import { FontSizeMenu } from "./sections/FontSizeMenu";
 import { GroupMenu } from "./sections/GroupMenu";

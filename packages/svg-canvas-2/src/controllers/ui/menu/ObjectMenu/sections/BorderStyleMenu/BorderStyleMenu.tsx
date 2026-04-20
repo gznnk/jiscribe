@@ -10,7 +10,7 @@ import { DashedCircleIcon } from "../../../../icons/DashedCircleIcon";
 import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
 import { DottedLineIcon } from "../../../../icons/DottedLineIcon";
 import { SolidLineIcon } from "../../../../icons/SolidLineIcon";
-import { MenuSlider } from "../../common/MenuSlider/MenuSlider";
+import { MenuSlider } from "../../common/MenuSlider";
 import {
 	ObjectMenuButton,
 	DropdownPanel,
