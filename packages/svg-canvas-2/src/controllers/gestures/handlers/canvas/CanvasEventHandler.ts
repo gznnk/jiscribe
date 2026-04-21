@@ -128,6 +128,7 @@ export const CanvasEventHandler: GestureHandler = {
 					selectedIds: [],
 					selectedConnectorId: null,
 					edgeScrollEnabled: true,
+					objectMenuOpenId: null,
 				};
 				return nextState;
 			}

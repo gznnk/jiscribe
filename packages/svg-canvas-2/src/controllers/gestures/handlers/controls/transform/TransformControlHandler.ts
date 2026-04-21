@@ -117,6 +117,7 @@ export class TransformControlHandler implements ControlStrategy {
 		return {
 			...state,
 			edgeScrollEnabled: true,
+			objectMenuOpenId: null,
 		};
 	}
 

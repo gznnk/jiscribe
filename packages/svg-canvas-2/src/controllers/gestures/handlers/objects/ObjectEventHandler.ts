@@ -155,6 +155,8 @@ function handleObjectDragStart(
 		edgeScrollEnabled: true,
 		// コネクター選択を解除して排他を保証
 		selectedConnectorId: null,
+		// ドラッグ開始時にオブジェクトメニューのドロップダウンを閉じる
+		objectMenuOpenId: null,
 	};
 
 	// ドラッグ処理を実行

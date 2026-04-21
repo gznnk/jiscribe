@@ -138,6 +138,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			// Clear any selection to avoid confusion
 			selectedIds: [],
 			multiSelectGroup: null,
+			objectMenuOpenId: null,
 		};
 	}
 
@@ -201,6 +202,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			editingEndpoint: endpoint,
 			selectedConnectorId: null, // 編集中は選択解除
 			edgeScrollEnabled: true,
+			objectMenuOpenId: null,
 		};
 	}
 

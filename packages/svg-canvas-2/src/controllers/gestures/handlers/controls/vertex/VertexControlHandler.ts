@@ -82,6 +82,7 @@ export class VertexControlHandler implements ControlStrategy {
 		return {
 			...state,
 			edgeScrollEnabled: true,
+			objectMenuOpenId: null,
 		};
 	}
 
@@ -139,12 +140,7 @@ export class VertexControlHandler implements ControlStrategy {
 		vertexIndex: number,
 	): CanvasControllerState {
 		// ドラッグ中の状態更新を適用して最終状態を計算
-		let nextState = this.handleDrag(
-			{ ...state },
-			event,
-			objectId,
-			vertexIndex,
-		);
+		let nextState = this.handleDrag({ ...state }, event, objectId, vertexIndex);
 
 		// グループに所属している場合はグループの枠を更新する
 		const updatedObject = nextState.objects[objectId];
