@@ -45,22 +45,24 @@ export function useSubmenuPosition(
 		// ブラウザウィンドウの高さを取得（viewport.heightはキャンバスの座標系なので使えない）
 		const windowHeight = window.innerHeight;
 
+		// CSSの top: 40px は MenuItemPositioner の top からの距離
 		// サブメニューを下に表示した場合の下端位置（ブラウザビューポート座標）
 		const submenuBottomIfDown =
-			buttonRect.bottom + SUBMENU_DISTANCE + submenuSize.height;
+			buttonRect.top + SUBMENU_DISTANCE + submenuSize.height;
 
-		// ブラウザウィンドウの下端との距離を計算
-		const spaceBelow = windowHeight - submenuBottomIfDown;
+		// ブラウザウィンドウの下端との距離を計算（正の値＝余裕あり、負の値＝はみ出る）
+		const spaceBelow = windowHeight - submenuBottomIfDown - VIEWPORT_MARGIN;
 
 		// 下にはみ出る場合は上に表示
-		if (spaceBelow < VIEWPORT_MARGIN) {
+		if (spaceBelow < 0) {
 			// 念のため上にも十分なスペースがあるか確認
+			// CSSの bottom: 40px は MenuItemPositioner の bottom からの距離
 			const submenuTopIfUp =
-				buttonRect.top - SUBMENU_DISTANCE - submenuSize.height;
-			const spaceAbove = submenuTopIfUp;
+				buttonRect.bottom - SUBMENU_DISTANCE - submenuSize.height;
+			const spaceAbove = submenuTopIfUp - VIEWPORT_MARGIN;
 
 			// 上にスペースがある場合は上に表示
-			if (spaceAbove >= VIEWPORT_MARGIN) {
+			if (spaceAbove >= 0) {
 				return { placement: "up" };
 			}
 		}
