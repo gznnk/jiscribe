@@ -5,7 +5,6 @@ import type { CanvasControllerState } from "../CanvasTypes";
 import { handleCommand } from "../commands/handlers/handleCommand";
 import { handleGesture } from "../gestures/handlers/handleGesture";
 import { commitTextEditIfNeeded } from "../utils/commitTextEditIfNeeded";
-import { recordHistoryIfNeeded } from "../utils/recordHistory";
 
 export const canvasReducer = (
 	state: CanvasControllerState,
@@ -13,14 +12,13 @@ export const canvasReducer = (
 ): CanvasControllerState => {
 	switch (action.type) {
 		case "GESTURE": {
-			// handleGesture internally records history when lastCommitTime changes
-			return handleGesture(state, action.gesture);
+			const gestureResult = handleGesture(state, action.gesture);
+			return recordHistoryIfNeeded(gestureResult, state.lastCommitTime);
 		}
 
 		case "COMMAND": {
-			// Handle all commands through handleCommand (including undo/redo)
-			// handleCommand internally records history when needed
-			return handleCommand(state, action.commandId);
+			const commandResult = handleCommand(state, action.commandId);
+			return recordHistoryIfNeeded(commandResult, state.lastCommitTime);
 		}
 
 		case "CONTAINER_RESIZE": {
@@ -84,7 +82,6 @@ export const canvasReducer = (
 			if (!state.textEditState) return state;
 
 			if (action.commit) {
-				// commitTextEdit を使用してテキストを確定
 				const commitResult = commitTextEditIfNeeded(state, Date.now());
 				return recordHistoryIfNeeded(commitResult, state.lastCommitTime);
 			}
@@ -99,4 +96,30 @@ export const canvasReducer = (
 		default:
 			return state;
 	}
+};
+
+/**
+ * lastCommitTime が変化していれば履歴を記録する。
+ * canvasReducer のみが呼び出してよい。
+ */
+const recordHistoryIfNeeded = (
+	state: CanvasControllerState,
+	previousLastCommitTime: number,
+): CanvasControllerState => {
+	if (
+		state.lastCommitTime > 0 &&
+		state.lastCommitTime !== previousLastCommitTime
+	) {
+		const doc = canvasToDoc(state);
+		const newPast = [...state.history.past, state.history.present].slice(-50);
+		return {
+			...state,
+			history: {
+				past: newPast,
+				present: doc,
+				future: [],
+			},
+		};
+	}
+	return state;
 };

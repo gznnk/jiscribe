@@ -7,7 +7,6 @@ import type {
 	EventType,
 } from "../../../registry/GestureHandlerRegistryTypes";
 import type { CanvasControllerState } from "../../CanvasTypes";
-import { recordHistoryIfNeeded } from "../../utils/recordHistory";
 import type { Gesture } from "../recognizer/GestureRecognizerTypes";
 
 /**
@@ -112,6 +111,6 @@ export const handleGesture = (
 		};
 	}
 
-	// Record history if needed
-	return recordHistoryIfNeeded(nextState, state.lastCommitTime);
+	// Return final state (history recording is handled by canvasReducer)
+	return nextState;
 };

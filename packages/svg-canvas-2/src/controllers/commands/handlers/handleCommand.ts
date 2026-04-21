@@ -1,11 +1,10 @@
 import type { CanvasControllerState } from "../../CanvasTypes";
-import { recordHistoryIfNeeded } from "../../utils/recordHistory";
 import { commandRegistry } from "../CommandRegistry";
 
 /**
- * COMMAND アクションを処理する
- * CommandRegistry に登録された Command を実行し、新しい CanvasControllerState を返す
- * 実行後に履歴記録が必要な場合は自動的に記録する
+ * COMMAND アクションを処理する。
+ * CommandRegistry に登録された Command を実行し、新しい CanvasControllerState を返す。
+ * 履歴記録は canvasReducer に委譲する。
  */
 export const handleCommand = (
 	state: CanvasControllerState,
@@ -22,8 +21,5 @@ export const handleCommand = (
 		return state;
 	}
 
-	const nextState = command.execute(state);
-
-	// Record history if needed (similar to handleGesture)
-	return recordHistoryIfNeeded(nextState, state.lastCommitTime);
+	return command.execute(state);
 };
