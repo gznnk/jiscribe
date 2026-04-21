@@ -8,8 +8,8 @@ type GroupIconProps = {
 };
 
 const GroupIconComponent: React.FC<GroupIconProps> = ({
-	width = 20,
-	height = 20,
+	width = 24,
+	height = 24,
 	fill = "#333333",
 	title = "Group",
 }) => (

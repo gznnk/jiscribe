@@ -177,7 +177,6 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({ canvasState }) => {
 		<ObjectMenuWrapper
 			left={x}
 			top={y}
-			style={{ transform: "translateX(-50%)" }}
 		>
 			<ObjectMenuContainer ref={menuRef}>
 				{menuItemComponents}

@@ -132,7 +132,7 @@ export function useObjectMenuPosition(
 		const menuHeight = menuDimensions.height;
 
 		// Default position: below the object, centered
-		let menuX = objectCenterX; // translateX(-50%) で中央揃えされるため center を直接使用
+		let menuCenterX = objectCenterX;
 		let menuY = objectBottomY + DISTANCE_FROM_OBJECT;
 
 		// Calculate viewport boundaries in the same coordinate system (ScrollSyncedOverlay internal coordinates)
@@ -153,19 +153,20 @@ export function useObjectMenuPosition(
 			menuY = viewportMinY;
 		}
 
-		// Horizontal boundary checks (accounting for translateX(-50%))
+		// Horizontal boundary checks
 		const menuHalfWidth = menuWidth / 2;
-		const menuLeft = menuX - menuHalfWidth;
-		const menuRight = menuX + menuHalfWidth;
-
-		if (menuRight > viewportMaxX) {
+		if (menuCenterX + menuHalfWidth > viewportMaxX) {
 			// Adjust to fit within right boundary
-			menuX = viewportMaxX - menuHalfWidth;
+			menuCenterX = viewportMaxX - menuHalfWidth;
 		}
-		if (menuLeft < viewportMinX) {
+		if (menuCenterX - menuHalfWidth < viewportMinX) {
 			// Adjust to fit within left boundary
-			menuX = viewportMinX + menuHalfWidth;
+			menuCenterX = viewportMinX + menuHalfWidth;
 		}
+
+		// 左端座標を px で直接計算することで translateX(-50%) を不要にし、
+		// サブピクセルレンダリングによるアイコンのぼやけを防ぐ
+		const menuX = menuCenterX - menuHalfWidth;
 
 		return {
 			shouldRender: true,
