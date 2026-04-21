@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useRef } from "react";
 
 import {
 	BorderStyleMenuWrapper,
@@ -16,6 +16,7 @@ import {
 	DropdownPanel,
 	MenuItemPositioner,
 } from "../../ObjectMenuStyled";
+import { useSubmenuPosition } from "../../useSubmenuPosition";
 
 const SECTION_ID = "border-style";
 
@@ -89,13 +90,15 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 	canvasState,
 	showRadius = true,
 }) => {
+	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const strokeWidth = getSelectedStrokeWidth(canvasState);
 	const strokeDashType = getSelectedStrokeDashType(canvasState);
 	const cornerRadius = getSelectedCornerRadius(canvasState);
+	const { placement } = useSubmenuPosition(menuItemRef, "borderStyle", isOpen);
 
 	return (
-		<MenuItemPositioner>
+		<MenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
 				data-kind="object-menu"
@@ -105,7 +108,7 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 				<DashedCircleIcon title="Border Style" />
 			</ObjectMenuButton>
 			{isOpen && (
-				<DropdownPanel>
+				<DropdownPanel placement={placement}>
 					<BorderStyleMenuWrapper>
 						{/* Stroke Dash Type */}
 						<BorderStyleSection>

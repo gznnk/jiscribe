@@ -174,10 +174,7 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({ canvasState }) => {
 	}
 
 	return (
-		<ObjectMenuWrapper
-			left={x}
-			top={y}
-		>
+		<ObjectMenuWrapper left={x} top={y}>
 			<ObjectMenuContainer ref={menuRef}>
 				{menuItemComponents}
 			</ObjectMenuContainer>

@@ -1,9 +1,12 @@
 import styled from "@emotion/styled";
 
-export const AlignmentDropdownPanel = styled.div`
+export const AlignmentDropdownPanel = styled.div<{ placement?: "down" | "up" }>`
 	position: absolute;
 	left: 50%;
-	top: 36px;
+	${(props) =>
+		props.placement === "up"
+			? "bottom: 36px;"
+			: "top: 36px;"}
 	transform: translateX(-50%);
 	z-index: 1100;
 	display: flex;

@@ -88,12 +88,15 @@ export const MenuItemPositioner = styled.div`
 `;
 
 /**
- * ドロップダウンパネル。ボタンの下に中央揃えで表示される。
+ * ドロップダウンパネル。ボタンの下または上に中央揃えで表示される。
  */
-export const DropdownPanel = styled.div`
+export const DropdownPanel = styled.div<{ placement?: "down" | "up" }>`
 	position: absolute;
 	left: 50%;
-	top: 40px;
+	${(props) =>
+		props.placement === "up"
+			? "bottom: 40px;"
+			: "top: 40px;"}
 	transform: translateX(-50%);
 	z-index: 1100;
 	display: flex;
@@ -108,10 +111,13 @@ export const DropdownPanel = styled.div`
  * ドロップダウンカラーパネル。DropdownPanel の幅広版。
  * カラーピッカーグリッドを表示するために使用する。
  */
-export const DropdownColorPanel = styled.div`
+export const DropdownColorPanel = styled.div<{ placement?: "down" | "up" }>`
 	position: absolute;
 	left: 50%;
-	top: 40px;
+	${(props) =>
+		props.placement === "up"
+			? "bottom: 40px;"
+			: "top: 40px;"}
 	transform: translateX(-50%);
 	z-index: 1100;
 	pointer-events: auto;

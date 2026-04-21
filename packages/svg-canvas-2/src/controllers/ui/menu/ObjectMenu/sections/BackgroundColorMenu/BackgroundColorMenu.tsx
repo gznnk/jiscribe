@@ -1,4 +1,4 @@
-﻿import { memo } from "react";
+﻿import { memo, useRef } from "react";
 
 import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
 import { ColorPreviewIcon } from "../../../../icons/ColorPreviewIcon";
@@ -8,6 +8,7 @@ import {
 	DropdownColorPanel,
 	MenuItemPositioner,
 } from "../../ObjectMenuStyled";
+import { useSubmenuPosition } from "../../useSubmenuPosition";
 
 const SECTION_ID = "bg-color";
 
@@ -36,11 +37,17 @@ const getSelectedFillColor = (state: CanvasState): string => {
 const BackgroundColorMenuComponent: React.FC<BackgroundColorMenuProps> = ({
 	canvasState,
 }) => {
+	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const currentColor = getSelectedFillColor(canvasState);
+	const { placement } = useSubmenuPosition(
+		menuItemRef,
+		"backgroundColor",
+		isOpen,
+	);
 
 	return (
-		<MenuItemPositioner>
+		<MenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
 				data-kind="object-menu"
@@ -50,7 +57,7 @@ const BackgroundColorMenuComponent: React.FC<BackgroundColorMenuProps> = ({
 				<ColorPreviewIcon color={currentColor} title="Background Color" />
 			</ObjectMenuButton>
 			{isOpen && (
-				<DropdownColorPanel>
+				<DropdownColorPanel placement={placement}>
 					<ColorPickerGrid currentColor={currentColor} property="fill" />
 				</DropdownColorPanel>
 			)}

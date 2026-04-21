@@ -1,4 +1,4 @@
-﻿import { memo } from "react";
+﻿import { memo, useRef } from "react";
 
 import { StackOrderMenuRow } from "./StackOrderMenuStyled";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
@@ -13,6 +13,7 @@ import {
 	DropdownPanel,
 	MenuItemPositioner,
 } from "../../ObjectMenuStyled";
+import { useSubmenuPosition } from "../../useSubmenuPosition";
 
 const SECTION_ID = "stack-order";
 
@@ -30,10 +31,12 @@ const arrangeCommands = [
 const StackOrderMenuComponent: React.FC<StackOrderMenuProps> = ({
 	canvasState,
 }) => {
+	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
+	const { placement } = useSubmenuPosition(menuItemRef, "stackOrder", isOpen);
 
 	return (
-		<MenuItemPositioner>
+		<MenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
 				data-kind="object-menu"
@@ -42,7 +45,7 @@ const StackOrderMenuComponent: React.FC<StackOrderMenuProps> = ({
 				<StackOrderIcon />
 			</ObjectMenuButton>
 			{isOpen && (
-				<DropdownPanel>
+				<DropdownPanel placement={placement}>
 					<StackOrderMenuRow>
 						{arrangeCommands.map(({ commandId, Icon }) => {
 							const command = commandRegistry.get(commandId);

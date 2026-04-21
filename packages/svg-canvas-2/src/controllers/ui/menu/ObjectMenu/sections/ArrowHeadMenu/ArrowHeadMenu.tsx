@@ -1,4 +1,4 @@
-﻿import { memo } from "react";
+﻿import { memo, useRef } from "react";
 
 import {
 	ArrowGrid,
@@ -15,6 +15,7 @@ import {
 	DropdownPanel,
 	MenuItemPositioner,
 } from "../../ObjectMenuStyled";
+import { useSubmenuPosition } from "../../useSubmenuPosition";
 
 const SECTION_ID = "arrow-head";
 
@@ -63,12 +64,14 @@ const getArrowLabel = (type: string): string => {
 const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 	canvasState,
 }) => {
+	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const currentStart = getSelectedArrowType(canvasState, "startArrow");
 	const currentEnd = getSelectedArrowType(canvasState, "endArrow");
+	const { placement } = useSubmenuPosition(menuItemRef, "arrowHead", isOpen);
 
 	return (
-		<MenuItemPositioner>
+		<MenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
 				data-kind="object-menu"
@@ -78,7 +81,10 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 				<ArrowHeadIcon />
 			</ObjectMenuButton>
 			{isOpen && (
-				<DropdownPanel style={{ flexDirection: "column", width: "auto" }}>
+				<DropdownPanel
+					placement={placement}
+					style={{ flexDirection: "column", width: "auto" }}
+				>
 					<ArrowGrid>
 						<ArrowSection>
 							<ArrowSectionLabel>Start</ArrowSectionLabel>

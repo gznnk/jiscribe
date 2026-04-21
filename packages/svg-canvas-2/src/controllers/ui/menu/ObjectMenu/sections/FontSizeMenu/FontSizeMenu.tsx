@@ -1,4 +1,4 @@
-﻿import { memo } from "react";
+﻿import { memo, useRef } from "react";
 
 import {
 	NumberDisplay,
@@ -14,6 +14,7 @@ import {
 	DropdownPanel,
 	MenuItemPositioner,
 } from "../../ObjectMenuStyled";
+import { useSubmenuPosition } from "../../useSubmenuPosition";
 
 const SECTION_ID = "font-size";
 
@@ -28,12 +29,14 @@ type FontSizeMenuProps = {
 const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 	canvasState,
 }) => {
+	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	// TODO: テキスト機能実装後に fontSize を取得
 	const _currentSize = 14;
+	const { placement } = useSubmenuPosition(menuItemRef, "fontSize", isOpen);
 
 	return (
-		<MenuItemPositioner>
+		<MenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
 				data-kind="object-menu"
@@ -43,7 +46,7 @@ const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 				<FontSizeIcon />
 			</ObjectMenuButton>
 			{isOpen && (
-				<DropdownPanel style={{ flexDirection: "column" }}>
+				<DropdownPanel placement={placement} style={{ flexDirection: "column" }}>
 					<SliderContainer>
 						<SliderLabel>Font Size</SliderLabel>
 						<SliderRow>

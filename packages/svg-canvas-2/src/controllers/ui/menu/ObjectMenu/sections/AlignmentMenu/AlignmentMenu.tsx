@@ -1,4 +1,4 @@
-﻿import { memo } from "react";
+﻿import { memo, useRef } from "react";
 
 import { AlignmentDropdownPanel, AlignmentRow } from "./AlignmentMenuStyled";
 import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
@@ -9,6 +9,7 @@ import { AlignMiddleIcon } from "../../../../icons/AlignMiddleIcon";
 import { AlignRightIcon } from "../../../../icons/AlignRightIcon";
 import { AlignTopIcon } from "../../../../icons/AlignTopIcon";
 import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
+import { useSubmenuPosition } from "../../useSubmenuPosition";
 
 const SECTION_ID = "alignment";
 
@@ -35,11 +36,13 @@ const verticalAlignments = [
 const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 	canvasState,
 }) => {
+	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	// TODO: テキスト機能実装後に現在の textAlign を取得
+	const { placement } = useSubmenuPosition(menuItemRef, "alignment", isOpen);
 
 	return (
-		<MenuItemPositioner>
+		<MenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
 				data-kind="object-menu"
@@ -49,7 +52,7 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 				<AlignLeftIcon />
 			</ObjectMenuButton>
 			{isOpen && (
-				<AlignmentDropdownPanel>
+				<AlignmentDropdownPanel placement={placement}>
 					<AlignmentRow>
 						{horizontalAlignments.map(({ value, Icon, title }) => (
 							<ObjectMenuButton

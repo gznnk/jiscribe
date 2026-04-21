@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useRef } from "react";
 
 import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
 import { BorderColorIcon } from "../../../../icons/BorderColorIcon";
@@ -8,6 +8,7 @@ import {
 	DropdownColorPanel,
 	MenuItemPositioner,
 } from "../../ObjectMenuStyled";
+import { useSubmenuPosition } from "../../useSubmenuPosition";
 
 const SECTION_ID = "stroke-color";
 
@@ -37,11 +38,13 @@ const getSelectedStrokeColor = (state: CanvasState): string => {
 const StrokeColorMenuComponent: React.FC<StrokeColorMenuProps> = ({
 	canvasState,
 }) => {
+	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const currentColor = getSelectedStrokeColor(canvasState);
+	const { placement } = useSubmenuPosition(menuItemRef, "strokeColor", isOpen);
 
 	return (
-		<MenuItemPositioner>
+		<MenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
 				data-kind="object-menu"
@@ -51,7 +54,7 @@ const StrokeColorMenuComponent: React.FC<StrokeColorMenuProps> = ({
 				<BorderColorIcon color={currentColor} title="Stroke Color" />
 			</ObjectMenuButton>
 			{isOpen && (
-				<DropdownColorPanel>
+				<DropdownColorPanel placement={placement}>
 					<ColorPickerGrid currentColor={currentColor} property="stroke" />
 				</DropdownColorPanel>
 			)}

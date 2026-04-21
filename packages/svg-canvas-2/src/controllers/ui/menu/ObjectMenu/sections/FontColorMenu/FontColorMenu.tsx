@@ -1,4 +1,4 @@
-﻿import { memo } from "react";
+﻿import { memo, useRef } from "react";
 
 import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
 import { FontColorIcon } from "../../../../icons/FontColorIcon";
@@ -8,6 +8,7 @@ import {
 	DropdownColorPanel,
 	MenuItemPositioner,
 } from "../../ObjectMenuStyled";
+import { useSubmenuPosition } from "../../useSubmenuPosition";
 
 const SECTION_ID = "font-color";
 
@@ -22,12 +23,14 @@ type FontColorMenuProps = {
 const FontColorMenuComponent: React.FC<FontColorMenuProps> = ({
 	canvasState,
 }) => {
+	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	// TODO: テキスト機能実装後に fontColor を取得する
 	const currentColor = "#333333";
+	const { placement } = useSubmenuPosition(menuItemRef, "fontColor", isOpen);
 
 	return (
-		<MenuItemPositioner>
+		<MenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
 				data-kind="object-menu"
@@ -37,7 +40,7 @@ const FontColorMenuComponent: React.FC<FontColorMenuProps> = ({
 				<FontColorIcon underlineColor={currentColor} />
 			</ObjectMenuButton>
 			{isOpen && (
-				<DropdownColorPanel>
+				<DropdownColorPanel placement={placement}>
 					{/* TODO: テキスト機能実装後に property="fontColor" に変更 */}
 					<ColorPickerGrid currentColor={currentColor} property="fontColor" />
 				</DropdownColorPanel>
