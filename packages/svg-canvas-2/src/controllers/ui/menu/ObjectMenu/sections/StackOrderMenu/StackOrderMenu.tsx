@@ -1,5 +1,6 @@
 ﻿import { memo } from "react";
 
+import { StackOrderMenuRow } from "./StackOrderMenuStyled";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { commandRegistry } from "../../../../../commands/CommandRegistry";
 import { BringForwardIcon } from "../../../../icons/BringForwardIcon";
@@ -42,24 +43,26 @@ const StackOrderMenuComponent: React.FC<StackOrderMenuProps> = ({
 			</ObjectMenuButton>
 			{isOpen && (
 				<DropdownPanel>
-					{arrangeCommands.map(({ commandId, Icon }) => {
-						const command = commandRegistry.get(commandId);
-						if (!command) return null;
-						const enabled = command.canExecute(canvasState);
-						return (
-							<ObjectMenuButton
-								key={commandId}
-								disabled={!enabled}
-								data-kind="object-menu"
-								data-id={`object-menu:command:${commandId}`}
-							>
-								<Icon
-									fill={enabled ? "#333333" : "#cccccc"}
-									title={command.label}
-								/>
-							</ObjectMenuButton>
-						);
-					})}
+					<StackOrderMenuRow>
+						{arrangeCommands.map(({ commandId, Icon }) => {
+							const command = commandRegistry.get(commandId);
+							if (!command) return null;
+							const enabled = command.canExecute(canvasState);
+							return (
+								<ObjectMenuButton
+									key={commandId}
+									disabled={!enabled}
+									data-kind="object-menu"
+									data-id={`object-menu:command:${commandId}`}
+								>
+									<Icon
+										fill={enabled ? "#333333" : "#cccccc"}
+										title={command.label}
+									/>
+								</ObjectMenuButton>
+							);
+						})}
+					</StackOrderMenuRow>
 				</DropdownPanel>
 			)}
 		</MenuItemPositioner>
