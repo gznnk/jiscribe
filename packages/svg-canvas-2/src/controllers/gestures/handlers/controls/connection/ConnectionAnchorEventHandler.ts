@@ -7,6 +7,7 @@ import {
 
 import { PRECISION } from "../../../../../constants/precision";
 import type { CanvasEvent } from "../../../../../registry/GestureHandlerRegistryTypes";
+import { objectRegistry } from "../../../../../registry/ObjectRegistry";
 import {
 	isConnectPointId,
 	type CenterAnchorSpec,
@@ -279,13 +280,20 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 
 		// Find the first valid hover target:
 		// - Exclude the fixed endpoint's object (can't connect to self)
-		// - Exclude connectors (for now, only allow connecting to shapes)
+		// - Only include objects with connectable feature enabled
 		const hoveredObjectId = event.hovered
 			.map((h) => h.id)
 			.find((id: string) => {
-				if (id === fixedObjectId) return false;
+				if (id === fixedObjectId) {
+					return false;
+				}
+
 				const obj = state.objects[id];
-				return obj && obj.type !== "connector";
+				if (!obj) {
+					return false;
+				}
+
+				return objectRegistry.getFeatures(obj.type)?.connectable === true;
 			});
 		const hoveredObject = hoveredObjectId
 			? state.objects[hoveredObjectId]

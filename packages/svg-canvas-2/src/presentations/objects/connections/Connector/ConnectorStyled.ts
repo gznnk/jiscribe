@@ -1,7 +1,10 @@
 import styled from "@emotion/styled";
 
-export const ConnectorHitArea = styled.polyline`
-	pointer-events: stroke;
+export const ConnectorHitArea = styled.polyline<{
+	disablePointerEvents?: boolean;
+}>`
+	pointer-events: ${({ disablePointerEvents }) =>
+		disablePointerEvents ? "none" : "stroke"};
 	cursor: grab;
 	fill: none;
 	stroke: transparent;

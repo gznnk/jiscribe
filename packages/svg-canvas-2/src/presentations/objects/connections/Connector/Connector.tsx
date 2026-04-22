@@ -19,6 +19,7 @@ type ConnectorProps = {
 	strokeDashType?: StrokeDashType;
 	startArrow?: ArrowType;
 	endArrow?: ArrowType;
+	disablePointerEvents?: boolean;
 };
 
 const ConnectorComponent: React.FC<ConnectorProps> = ({
@@ -32,6 +33,7 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 	strokeDashType,
 	startArrow,
 	endArrow,
+	disablePointerEvents = false,
 }) => {
 	// Simple straight line between source and target points
 	const pointsAttr = `${sourceX},${sourceY} ${targetX},${targetY}`;
@@ -47,6 +49,7 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 				data-kind="connector"
 				data-id={id}
 				points={pointsAttr}
+				disablePointerEvents={disablePointerEvents}
 			/>
 			<ConnectorElement
 				points={pointsAttr}

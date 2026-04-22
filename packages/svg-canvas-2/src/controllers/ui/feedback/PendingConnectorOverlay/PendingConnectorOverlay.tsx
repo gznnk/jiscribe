@@ -14,7 +14,11 @@ const PendingConnectorOverlayComponent: React.FC<
 	if (!pendingConnector) return null;
 
 	return (
-		<ConnectorRenderer connectorState={pendingConnector} objects={objects} />
+		<ConnectorRenderer
+			connectorState={pendingConnector}
+			objects={objects}
+			disablePointerEvents={true}
+		/>
 	);
 };
 

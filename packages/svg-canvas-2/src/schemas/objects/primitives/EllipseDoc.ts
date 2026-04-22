@@ -8,6 +8,7 @@ export const EllipseFeatures = {
 	stroke: true,
 	fill: true,
 	text: true,
+	connectable: true,
 } as const satisfies ObjectFeatures;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -9,6 +9,7 @@ export const RectFeatures = {
 	fill: true,
 	text: true,
 	radius: true,
+	connectable: true,
 } as const satisfies ObjectFeatures;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

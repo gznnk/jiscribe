@@ -9,6 +9,7 @@ export const StickyFeatures = {
 	fill: true,
 	text: true,
 	radius: false,
+	connectable: true,
 } as const satisfies ObjectFeatures;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

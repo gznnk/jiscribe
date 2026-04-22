@@ -6,6 +6,7 @@ export const PolylineFeatures = {
 	type: "polyline",
 	geometry: "poly",
 	stroke: true,
+	connectable: false,
 } as const satisfies ObjectFeatures;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

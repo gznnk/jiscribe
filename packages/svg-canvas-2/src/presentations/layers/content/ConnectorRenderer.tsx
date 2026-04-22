@@ -6,11 +6,13 @@ import { Connector } from "../../objects/connections/Connector";
 type ConnectorRendererProps = {
 	connectorState: ConnectorState;
 	objects: CanvasState["objects"];
+	disablePointerEvents?: boolean;
 };
 
 export const ConnectorRenderer: React.FC<ConnectorRendererProps> = ({
 	connectorState,
 	objects,
+	disablePointerEvents = false,
 }) => {
 	const points = useResolvedConnectorPoints(connectorState, objects);
 
@@ -29,6 +31,7 @@ export const ConnectorRenderer: React.FC<ConnectorRendererProps> = ({
 			strokeDashType={connectorState.strokeDashType}
 			startArrow={connectorState.startArrow}
 			endArrow={connectorState.endArrow}
+			disablePointerEvents={disablePointerEvents}
 		/>
 	);
 };

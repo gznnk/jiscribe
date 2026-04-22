@@ -6,6 +6,7 @@ export const PolygonFeatures = {
 	geometry: "poly",
 	stroke: true,
 	fill: true,
+	connectable: false,
 } as const satisfies ObjectFeatures;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
