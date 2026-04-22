@@ -60,6 +60,8 @@ const PolylineComponent: React.FC<PolylineProps> = ({
 					color={stroke}
 					radians={startAngleRadians}
 					scale={strokeWidth}
+					dataKind="object"
+					dataId={id}
 				/>
 			)}
 			{endArrow && endArrow !== "None" && points.length >= 1 && (
@@ -70,6 +72,8 @@ const PolylineComponent: React.FC<PolylineProps> = ({
 					color={stroke}
 					radians={endAngleRadians}
 					scale={strokeWidth}
+					dataKind="object"
+					dataId={id}
 				/>
 			)}
 		</>

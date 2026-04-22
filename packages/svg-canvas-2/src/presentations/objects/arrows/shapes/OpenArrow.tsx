@@ -4,6 +4,7 @@ import { memo } from "react";
 
 import { createSvgTransform } from "../../utils/createSvgTransform";
 import { ARROW_SIZE } from "../ArrowConstants";
+import { ArrowPolyline } from "./ArrowStyled";
 import type { ArrowShapeProps } from "../ArrowTypes";
 
 /**
@@ -15,6 +16,8 @@ const OpenArrowArrowComponent: React.FC<ArrowShapeProps> = ({
 	color,
 	radians,
 	scale,
+	dataKind,
+	dataId,
 }) => {
 	const rotationDegrees = radiansToDegrees(radians);
 	const transform = createSvgTransform(scale, scale, rotationDegrees, x, y);
@@ -23,13 +26,15 @@ const OpenArrowArrowComponent: React.FC<ArrowShapeProps> = ({
 	const points = `${-size},${-size / 2} 0,0 ${-size},${size / 2}`;
 
 	return (
-		<polyline
+		<ArrowPolyline
 			points={points}
 			fill="none"
 			stroke={color}
 			strokeWidth={1}
 			strokeLinejoin="miter"
 			transform={transform}
+			data-kind={dataKind}
+			data-id={dataId}
 		/>
 	);
 };

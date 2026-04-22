@@ -7,4 +7,6 @@ export type ArrowShapeProps = {
 	color: string;
 	radians: number;
 	scale: number;
+	dataKind?: string;
+	dataId?: string;
 };

@@ -2,6 +2,7 @@ import { radiansToDegrees } from "@workspace/geometry";
 import type React from "react";
 import { memo } from "react";
 
+import { ArrowCircle } from "./ArrowStyled";
 import { createSvgTransform } from "../../utils/createSvgTransform";
 import { ARROW_SIZE } from "../ArrowConstants";
 import type { ArrowShapeProps } from "../ArrowTypes";
@@ -15,6 +16,8 @@ const CircleArrowComponent: React.FC<ArrowShapeProps> = ({
 	color,
 	radians,
 	scale,
+	dataKind,
+	dataId,
 }) => {
 	const rotationDegrees = radiansToDegrees(radians);
 	const transform = createSvgTransform(scale, scale, rotationDegrees, x, y);
@@ -23,7 +26,15 @@ const CircleArrowComponent: React.FC<ArrowShapeProps> = ({
 	const cx = -radius;
 
 	return (
-		<circle cx={cx} cy={0} r={radius} fill={color} transform={transform} />
+		<ArrowCircle
+			cx={cx}
+			cy={0}
+			r={radius}
+			fill={color}
+			transform={transform}
+			data-kind={dataKind}
+			data-id={dataId}
+		/>
 	);
 };
 

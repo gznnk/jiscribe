@@ -2,6 +2,7 @@ import { radiansToDegrees } from "@workspace/geometry";
 import type React from "react";
 import { memo } from "react";
 
+import { ArrowPolygon } from "./ArrowStyled";
 import { createSvgTransform } from "../../utils/createSvgTransform";
 import { ARROW_SIZE } from "../ArrowConstants";
 import type { ArrowShapeProps } from "../ArrowTypes";
@@ -15,6 +16,8 @@ const FilledDiamondArrowComponent: React.FC<ArrowShapeProps> = ({
 	color,
 	radians,
 	scale,
+	dataKind,
+	dataId,
 }) => {
 	const rotationDegrees = radiansToDegrees(radians);
 	const transform = createSvgTransform(scale, scale, rotationDegrees, x, y);
@@ -22,7 +25,15 @@ const FilledDiamondArrowComponent: React.FC<ArrowShapeProps> = ({
 	// Arrow with tip at (0,0), pointing right when radians=0
 	const points = `0,0 ${-size / 2},${size / 2} ${-size},0 ${-size / 2},${-size / 2}`;
 
-	return <polygon points={points} fill={color} transform={transform} />;
+	return (
+		<ArrowPolygon
+			points={points}
+			fill={color}
+			transform={transform}
+			data-kind={dataKind}
+			data-id={dataId}
+		/>
+	);
 };
 
 export const FilledDiamondArrow = memo(FilledDiamondArrowComponent);

@@ -20,6 +20,8 @@ type ArrowProps = {
 	color: string;
 	radians: number;
 	scale: number;
+	dataKind?: string;
+	dataId?: string;
 };
 
 /**
@@ -34,10 +36,12 @@ const ArrowComponent: React.FC<ArrowProps> = ({
 	color,
 	radians,
 	scale,
+	dataKind,
+	dataId,
 }) => {
 	if (type === "None") return null;
 
-	const props = { x, y, color, radians, scale };
+	const props = { x, y, color, radians, scale, dataKind, dataId };
 
 	if (type === "FilledTriangle") {
 		return <FilledTriangleArrow {...props} />;

@@ -65,6 +65,8 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 					color={stroke}
 					radians={startAngleRadians}
 					scale={strokeWidth}
+					dataKind="connector"
+					dataId={id}
 				/>
 			)}
 			{endArrow && endArrow !== "None" && (
@@ -75,6 +77,8 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 					color={stroke}
 					radians={endAngleRadians}
 					scale={strokeWidth}
+					dataKind="connector"
+					dataId={id}
 				/>
 			)}
 		</>
