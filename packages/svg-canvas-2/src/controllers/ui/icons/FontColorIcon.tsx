@@ -13,8 +13,8 @@ type FontColorIconProps = {
  * "A" の文字と下部にカラーバーを表示する。
  */
 const FontColorIconComponent: React.FC<FontColorIconProps> = ({
-	width = 20,
-	height = 20,
+	width = 24,
+	height = 24,
 	fill = "#333333",
 	underlineColor = "#333333",
 	title = "Font Color",
@@ -27,16 +27,18 @@ const FontColorIconComponent: React.FC<FontColorIconProps> = ({
 	>
 		<title>{title}</title>
 		<text
-			x="12"
-			y="16"
+			x="50%"
+			y="45%"
+			dominantBaseline="central"
 			textAnchor="middle"
-			fontSize="16"
-			fontWeight="bold"
+			fontFamily="Arial, Helvetica, sans-serif"
+			fontSize="20"
+			fontWeight="500"
 			fill={fill}
 		>
 			A
 		</text>
-		<rect x="4" y="20" width="16" height="2.5" rx="1" fill={underlineColor} />
+		<rect x="4" y="20" width="16" height="2" fill={underlineColor} rx="0.5" />
 	</svg>
 );
 

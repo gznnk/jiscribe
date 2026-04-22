@@ -12,8 +12,8 @@ type ArrowHeadIconProps = {
  * 直線と矢印先端を表示する。
  */
 const ArrowHeadIconComponent: React.FC<ArrowHeadIconProps> = ({
-	width = 20,
-	height = 20,
+	width = 24,
+	height = 24,
 	fill = "#333333",
 	title = "Arrow Head",
 }) => (

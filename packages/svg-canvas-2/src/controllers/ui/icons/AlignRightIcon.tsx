@@ -8,8 +8,8 @@ type AlignRightIconProps = {
 };
 
 const AlignRightIconComponent: React.FC<AlignRightIconProps> = ({
-	width = 20,
-	height = 20,
+	width = 24,
+	height = 24,
 	fill = "#333333",
 	title = "Align Right",
 }) => (

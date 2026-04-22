@@ -12,8 +12,8 @@ type AspectRatioIconProps = {
  * 矩形と対角の両端矢印で「比率維持」を示す。
  */
 const AspectRatioIconComponent: React.FC<AspectRatioIconProps> = ({
-	width = 22,
-	height = 22,
+	width = 24,
+	height = 24,
 	fill = "#333333",
 	title = "Keep Aspect Ratio",
 }) => (

@@ -12,8 +12,8 @@ type BoldIconProps = {
  * "B" の文字を太字で表示する。
  */
 const BoldIconComponent: React.FC<BoldIconProps> = ({
-	width = 20,
-	height = 20,
+	width = 24,
+	height = 24,
 	fill = "#333333",
 	title = "Bold",
 }) => (
@@ -25,11 +25,13 @@ const BoldIconComponent: React.FC<BoldIconProps> = ({
 	>
 		<title>{title}</title>
 		<text
-			x="12"
-			y="17"
+			x="50%"
+			y="50%"
+			dominantBaseline="central"
 			textAnchor="middle"
-			fontSize="16"
-			fontWeight="bold"
+			fontFamily="Arial, Helvetica, sans-serif"
+			fontSize="22"
+			fontWeight="600"
 			fill={fill}
 		>
 			B
