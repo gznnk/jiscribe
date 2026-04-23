@@ -1,6 +1,8 @@
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
+import type { CanvasControllerState } from "../../CanvasTypes";
 import { calculateGroupOrientedBounds } from "../../ui/utils/calculateGroupOrientedBounds";
 import { cleanupGroups } from "../../utils/cleanupGroups";
+import { updateGroupBoundsFromRoot } from "../../utils/updateGroupBoundsFromRoot";
 import type { Command } from "../CommandTypes";
 
 export const GroupCommand: Command = {
@@ -110,6 +112,7 @@ export const GroupCommand: Command = {
 
 		// Cross-parent: remove each selected object from its current parent, add new group at root
 		const selectedSet = new Set(selectedIds);
+		const affectedParentIds = new Set<string>();
 		for (const id of selectedIds) {
 			const parentId = state.objects[id]?.parentId;
 			if (parentId != null) {
@@ -119,6 +122,7 @@ export const GroupCommand: Command = {
 						...parent,
 						childIds: parent.childIds.filter((cid) => cid !== id),
 					} as GroupState;
+					affectedParentIds.add(parentId);
 				}
 			}
 		}
@@ -126,7 +130,7 @@ export const GroupCommand: Command = {
 		const updatedRootIds = state.rootIds.filter((id) => !selectedSet.has(id));
 		updatedRootIds.push(groupId);
 
-		const nextState = {
+		let nextState: CanvasControllerState = {
 			...state,
 			objects: updatedObjects,
 			rootIds: updatedRootIds,
@@ -134,6 +138,10 @@ export const GroupCommand: Command = {
 			objectMenuOpenId: null,
 			lastCommitTime: Date.now(),
 		};
+
+		for (const parentId of affectedParentIds) {
+			nextState = updateGroupBoundsFromRoot(nextState, parentId);
+		}
 
 		return cleanupGroups(nextState);
 	},

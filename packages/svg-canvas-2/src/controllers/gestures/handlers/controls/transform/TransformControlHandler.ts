@@ -16,7 +16,6 @@ import {
 } from "@workspace/geometry";
 
 import { calcMultiSelectGroupBounds } from "./utils/calcMultiSelectGroupBounds";
-import { updateGroupBoundsFromRoot } from "./utils/updateGroupBoundsFromRoot";
 import { updateSingleGroupBounds } from "./utils/updateSingleGroupBounds";
 import { PRECISION } from "../../../../../constants/precision";
 import type { CanvasEvent } from "../../../../../registry/GestureHandlerRegistryTypes";
@@ -25,6 +24,7 @@ import type { TransformState } from "../../../../../states/objects/base/Transfor
 import { isTransformState } from "../../../../../states/objects/base/TransformState";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
 import {
 	transformChildren,
 	rotateChildren,

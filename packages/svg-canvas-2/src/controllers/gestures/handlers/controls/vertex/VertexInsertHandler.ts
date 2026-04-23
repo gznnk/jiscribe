@@ -5,8 +5,8 @@ import { PRECISION } from "../../../../../constants/precision";
 import type { CanvasEvent } from "../../../../../registry/GestureHandlerRegistryTypes";
 import type { PolylineState } from "../../../../../states/objects/primitives/polyline/PolylineState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
 import type { ControlStrategy } from "../ControlEventHandler";
-import { updateGroupBoundsFromRoot } from "../transform/utils/updateGroupBoundsFromRoot";
 
 /**
  * Vertex insert control の操作（セグメントへの頂点追加）を処理する。
