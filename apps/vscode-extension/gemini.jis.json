@@ -1,0 +1,899 @@
+{
+  "root": [
+    {
+      "id": "bg",
+      "type": "rect",
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 900,
+      "fill": "#F9FAFB"
+    },
+    {
+      "id": "header",
+      "type": "rect",
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 60,
+      "fill": "#1E40AF",
+      "text": "Acme Corp - Business Intelligence",
+      "textAlign": "left",
+      "verticalAlign": "center",
+      "fontColor": "#FFFFFF",
+      "fontSize": 20,
+      "fontWeight": "bold"
+    },
+    {
+      "id": "sidebar",
+      "type": "rect",
+      "x": 0,
+      "y": 60,
+      "width": 240,
+      "height": 840,
+      "stroke": "#E5E7EB",
+      "fill": "#FFFFFF"
+    },
+    {
+      "id": "sb-title-1",
+      "type": "rect",
+      "x": 20,
+      "y": 80,
+      "width": 200,
+      "height": 30,
+      "fill": "transparent",
+      "text": "DASHBOARDS",
+      "textAlign": "left",
+      "fontColor": "#6B7280",
+      "fontSize": 12,
+      "fontWeight": "bold"
+    },
+    {
+      "id": "sb-item-1",
+      "type": "rect",
+      "x": 10,
+      "y": 120,
+      "width": 220,
+      "height": 40,
+      "fill": "#EFF6FF",
+      "rx": 6,
+      "text": "  Executive Overview",
+      "textAlign": "left",
+      "fontColor": "#1E40AF",
+      "fontWeight": "bold"
+    },
+    {
+      "id": "sb-item-2",
+      "type": "rect",
+      "x": 10,
+      "y": 160,
+      "width": 220,
+      "height": 40,
+      "fill": "transparent",
+      "rx": 6,
+      "text": "  Marketing Performance",
+      "textAlign": "left",
+      "fontColor": "#4B5563"
+    },
+    {
+      "id": "sb-item-3",
+      "type": "rect",
+      "x": 10,
+      "y": 200,
+      "width": 220,
+      "height": 40,
+      "fill": "transparent",
+      "rx": 6,
+      "text": "  User Analytics",
+      "textAlign": "left",
+      "fontColor": "#4B5563"
+    },
+    {
+      "id": "kpi-1-bg",
+      "type": "rect",
+      "x": 280,
+      "y": 90,
+      "width": 220,
+      "height": 120,
+      "stroke": "#E5E7EB",
+      "fill": "#FFFFFF",
+      "rx": 8
+    },
+    {
+      "id": "kpi-1-title",
+      "type": "rect",
+      "x": 300,
+      "y": 105,
+      "width": 180,
+      "height": 20,
+      "fill": "transparent",
+      "text": "Total Revenue",
+      "textAlign": "left",
+      "fontColor": "#6B7280",
+      "fontSize": 14
+    },
+    {
+      "id": "kpi-1-val",
+      "type": "rect",
+      "x": 300,
+      "y": 130,
+      "width": 180,
+      "height": 40,
+      "fill": "transparent",
+      "text": "$1.24M",
+      "textAlign": "left",
+      "fontColor": "#111827",
+      "fontSize": 32,
+      "fontWeight": "bold"
+    },
+    {
+      "id": "kpi-1-trend",
+      "type": "rect",
+      "x": 300,
+      "y": 175,
+      "width": 180,
+      "height": 20,
+      "fill": "transparent",
+      "text": "▲ 12.5% vs last month",
+      "textAlign": "left",
+      "fontColor": "#10B981",
+      "fontSize": 12
+    },
+    {
+      "id": "kpi-2-bg",
+      "type": "rect",
+      "x": 520,
+      "y": 90,
+      "width": 220,
+      "height": 120,
+      "stroke": "#E5E7EB",
+      "fill": "#FFFFFF",
+      "rx": 8
+    },
+    {
+      "id": "kpi-2-title",
+      "type": "rect",
+      "x": 540,
+      "y": 105,
+      "width": 180,
+      "height": 20,
+      "fill": "transparent",
+      "text": "Active Users",
+      "textAlign": "left",
+      "fontColor": "#6B7280",
+      "fontSize": 14
+    },
+    {
+      "id": "kpi-2-val",
+      "type": "rect",
+      "x": 540,
+      "y": 130,
+      "width": 180,
+      "height": 40,
+      "fill": "transparent",
+      "text": "84,592",
+      "textAlign": "left",
+      "fontColor": "#111827",
+      "fontSize": 32,
+      "fontWeight": "bold"
+    },
+    {
+      "id": "kpi-2-trend",
+      "type": "rect",
+      "x": 540,
+      "y": 175,
+      "width": 180,
+      "height": 20,
+      "fill": "transparent",
+      "text": "▲ 5.2% vs last month",
+      "textAlign": "left",
+      "fontColor": "#10B981",
+      "fontSize": 12
+    },
+    {
+      "id": "kpi-3-bg",
+      "type": "rect",
+      "x": 760,
+      "y": 90,
+      "width": 220,
+      "height": 120,
+      "stroke": "#E5E7EB",
+      "fill": "#FFFFFF",
+      "rx": 8
+    },
+    {
+      "id": "kpi-3-title",
+      "type": "rect",
+      "x": 780,
+      "y": 105,
+      "width": 180,
+      "height": 20,
+      "fill": "transparent",
+      "text": "Conversion Rate",
+      "textAlign": "left",
+      "fontColor": "#6B7280",
+      "fontSize": 14
+    },
+    {
+      "id": "kpi-3-val",
+      "type": "rect",
+      "x": 780,
+      "y": 130,
+      "width": 180,
+      "height": 40,
+      "fill": "transparent",
+      "text": "3.84%",
+      "textAlign": "left",
+      "fontColor": "#111827",
+      "fontSize": 32,
+      "fontWeight": "bold"
+    },
+    {
+      "id": "kpi-3-trend",
+      "type": "rect",
+      "x": 780,
+      "y": 175,
+      "width": 180,
+      "height": 20,
+      "fill": "transparent",
+      "text": "▼ 0.4% vs last month",
+      "textAlign": "left",
+      "fontColor": "#EF4444",
+      "fontSize": 12
+    },
+    {
+      "id": "kpi-4-bg",
+      "type": "rect",
+      "x": 1000,
+      "y": 90,
+      "width": 240,
+      "height": 120,
+      "stroke": "#E5E7EB",
+      "fill": "#FFFFFF",
+      "rx": 8
+    },
+    {
+      "id": "kpi-4-title",
+      "type": "rect",
+      "x": 1020,
+      "y": 105,
+      "width": 200,
+      "height": 20,
+      "fill": "transparent",
+      "text": "Customer Acquisition Cost",
+      "textAlign": "left",
+      "fontColor": "#6B7280",
+      "fontSize": 14
+    },
+    {
+      "id": "kpi-4-val",
+      "type": "rect",
+      "x": 1020,
+      "y": 130,
+      "width": 200,
+      "height": 40,
+      "fill": "transparent",
+      "text": "$42.50",
+      "textAlign": "left",
+      "fontColor": "#111827",
+      "fontSize": 32,
+      "fontWeight": "bold"
+    },
+    {
+      "id": "kpi-4-trend",
+      "type": "rect",
+      "x": 1020,
+      "y": 175,
+      "width": 200,
+      "height": 20,
+      "fill": "transparent",
+      "text": "▲ 1.1% vs last month",
+      "textAlign": "left",
+      "fontColor": "#10B981",
+      "fontSize": 12
+    },
+    {
+      "id": "chart-panel-large",
+      "type": "rect",
+      "x": 280,
+      "y": 240,
+      "width": 700,
+      "height": 380,
+      "stroke": "#E5E7EB",
+      "fill": "#FFFFFF",
+      "rx": 8
+    },
+    {
+      "id": "cp-title",
+      "type": "rect",
+      "x": 310,
+      "y": 260,
+      "width": 400,
+      "height": 30,
+      "fill": "transparent",
+      "text": "Revenue & Traffic Forecast",
+      "textAlign": "left",
+      "fontColor": "#111827",
+      "fontSize": 18,
+      "fontWeight": "bold"
+    },
+    {
+      "id": "grid-1",
+      "type": "polyline",
+      "points": [
+        {
+          "x": 340,
+          "y": 320
+        },
+        {
+          "x": 940,
+          "y": 320
+        }
+      ],
+      "stroke": "#F3F4F6",
+      "strokeWidth": 2,
+      "strokeDashType": "dashed"
+    },
+    {
+      "id": "grid-2",
+      "type": "polyline",
+      "points": [
+        {
+          "x": 340,
+          "y": 380
+        },
+        {
+          "x": 940,
+          "y": 380
+        }
+      ],
+      "stroke": "#F3F4F6",
+      "strokeWidth": 2,
+      "strokeDashType": "dashed"
+    },
+    {
+      "id": "grid-3",
+      "type": "polyline",
+      "points": [
+        {
+          "x": 340,
+          "y": 440
+        },
+        {
+          "x": 940,
+          "y": 440
+        }
+      ],
+      "stroke": "#F3F4F6",
+      "strokeWidth": 2,
+      "strokeDashType": "dashed"
+    },
+    {
+      "id": "grid-4",
+      "type": "polyline",
+      "points": [
+        {
+          "x": 340,
+          "y": 500
+        },
+        {
+          "x": 940,
+          "y": 500
+        }
+      ],
+      "stroke": "#F3F4F6",
+      "strokeWidth": 2,
+      "strokeDashType": "dashed"
+    },
+    {
+      "id": "axis-base",
+      "type": "polyline",
+      "points": [
+        {
+          "x": 340,
+          "y": 560
+        },
+        {
+          "x": 940,
+          "y": 560
+        }
+      ],
+      "stroke": "#D1D5DB",
+      "strokeWidth": 2
+    },
+    {
+      "id": "axis-lbl-y1",
+      "type": "rect",
+      "x": 280,
+      "y": 310,
+      "width": 50,
+      "height": 20,
+      "fill": "transparent",
+      "text": "100k",
+      "textAlign": "right",
+      "fontColor": "#9CA3AF",
+      "fontSize": 12
+    },
+    {
+      "id": "axis-lbl-y2",
+      "type": "rect",
+      "x": 280,
+      "y": 430,
+      "width": 50,
+      "height": 20,
+      "fill": "transparent",
+      "text": "50k",
+      "textAlign": "right",
+      "fontColor": "#9CA3AF",
+      "fontSize": 12
+    },
+    {
+      "id": "axis-lbl-y3",
+      "type": "rect",
+      "x": 280,
+      "y": 550,
+      "width": 50,
+      "height": 20,
+      "fill": "transparent",
+      "text": "0",
+      "textAlign": "right",
+      "fontColor": "#9CA3AF",
+      "fontSize": 12
+    },
+    {
+      "id": "axis-lbl-x1",
+      "type": "rect",
+      "x": 350,
+      "y": 570,
+      "width": 50,
+      "height": 20,
+      "fill": "transparent",
+      "text": "JAN",
+      "textAlign": "center",
+      "fontColor": "#9CA3AF",
+      "fontSize": 12
+    },
+    {
+      "id": "axis-lbl-x2",
+      "type": "rect",
+      "x": 430,
+      "y": 570,
+      "width": 50,
+      "height": 20,
+      "fill": "transparent",
+      "text": "FEB",
+      "textAlign": "center",
+      "fontColor": "#9CA3AF",
+      "fontSize": 12
+    },
+    {
+      "id": "axis-lbl-x3",
+      "type": "rect",
+      "x": 510,
+      "y": 570,
+      "width": 50,
+      "height": 20,
+      "fill": "transparent",
+      "text": "MAR",
+      "textAlign": "center",
+      "fontColor": "#9CA3AF",
+      "fontSize": 12
+    },
+    {
+      "id": "axis-lbl-x4",
+      "type": "rect",
+      "x": 590,
+      "y": 570,
+      "width": 50,
+      "height": 20,
+      "fill": "transparent",
+      "text": "APR",
+      "textAlign": "center",
+      "fontColor": "#9CA3AF",
+      "fontSize": 12
+    },
+    {
+      "id": "axis-lbl-x5",
+      "type": "rect",
+      "x": 670,
+      "y": 570,
+      "width": 50,
+      "height": 20,
+      "fill": "transparent",
+      "text": "MAY",
+      "textAlign": "center",
+      "fontColor": "#9CA3AF",
+      "fontSize": 12
+    },
+    {
+      "id": "axis-lbl-x6",
+      "type": "rect",
+      "x": 750,
+      "y": 570,
+      "width": 50,
+      "height": 20,
+      "fill": "transparent",
+      "text": "JUN",
+      "textAlign": "center",
+      "fontColor": "#9CA3AF",
+      "fontSize": 12
+    },
+    {
+      "id": "axis-lbl-x7",
+      "type": "rect",
+      "x": 830,
+      "y": 570,
+      "width": 50,
+      "height": 20,
+      "fill": "transparent",
+      "text": "JUL",
+      "textAlign": "center",
+      "fontColor": "#9CA3AF",
+      "fontSize": 12
+    },
+    {
+      "id": "bar-jan",
+      "type": "rect",
+      "x": 360,
+      "y": 460,
+      "width": 30,
+      "height": 100,
+      "fill": "#93C5FD",
+      "rx": 4
+    },
+    {
+      "id": "bar-feb",
+      "type": "rect",
+      "x": 440,
+      "y": 410,
+      "width": 30,
+      "height": 150,
+      "fill": "#93C5FD",
+      "rx": 4
+    },
+    {
+      "id": "bar-mar",
+      "type": "rect",
+      "x": 520,
+      "y": 350,
+      "width": 30,
+      "height": 210,
+      "fill": "#93C5FD",
+      "rx": 4
+    },
+    {
+      "id": "bar-apr",
+      "type": "rect",
+      "x": 600,
+      "y": 380,
+      "width": 30,
+      "height": 180,
+      "fill": "#3B82F6",
+      "rx": 4
+    },
+    {
+      "id": "bar-may",
+      "type": "rect",
+      "x": 680,
+      "y": 310,
+      "width": 30,
+      "height": 250,
+      "fill": "#93C5FD",
+      "rx": 4
+    },
+    {
+      "id": "bar-jun",
+      "type": "rect",
+      "x": 760,
+      "y": 280,
+      "width": 30,
+      "height": 280,
+      "fill": "#93C5FD",
+      "rx": 4
+    },
+    {
+      "id": "bar-jul",
+      "type": "rect",
+      "x": 840,
+      "y": 350,
+      "width": 30,
+      "height": 210,
+      "fill": "#E0E7FF",
+      "rx": 4
+    },
+    {
+      "id": "trend-line",
+      "type": "polyline",
+      "points": [
+        {
+          "x": 375,
+          "y": 430
+        },
+        {
+          "x": 455,
+          "y": 390
+        },
+        {
+          "x": 535,
+          "y": 320
+        },
+        {
+          "x": 615,
+          "y": 350
+        },
+        {
+          "x": 695,
+          "y": 260
+        },
+        {
+          "x": 775,
+          "y": 230
+        },
+        {
+          "x": 855,
+          "y": 300
+        }
+      ],
+      "stroke": "#F59E0B",
+      "strokeWidth": 4,
+      "startArrow": "None",
+      "endArrow": "None"
+    },
+    {
+      "id": "dp-1",
+      "type": "ellipse",
+      "cx": 615,
+      "cy": 350,
+      "rx": 6,
+      "ry": 6,
+      "stroke": "#F59E0B",
+      "strokeWidth": 3,
+      "fill": "#FFFFFF"
+    },
+    {
+      "id": "dp-2",
+      "type": "ellipse",
+      "cx": 695,
+      "cy": 260,
+      "rx": 6,
+      "ry": 6,
+      "stroke": "#F59E0B",
+      "strokeWidth": 3,
+      "fill": "#FFFFFF"
+    },
+    {
+      "id": "dp-3",
+      "type": "ellipse",
+      "cx": 775,
+      "cy": 230,
+      "rx": 6,
+      "ry": 6,
+      "stroke": "#F59E0B",
+      "strokeWidth": 3,
+      "fill": "#FFFFFF"
+    },
+    {
+      "id": "panel-donut",
+      "type": "rect",
+      "x": 1000,
+      "y": 240,
+      "width": 240,
+      "height": 380,
+      "stroke": "#E5E7EB",
+      "fill": "#FFFFFF",
+      "rx": 8
+    },
+    {
+      "id": "pd-title",
+      "type": "rect",
+      "x": 1020,
+      "y": 260,
+      "width": 200,
+      "height": 30,
+      "fill": "transparent",
+      "text": "Traffic Sources",
+      "textAlign": "center",
+      "fontColor": "#111827",
+      "fontSize": 16,
+      "fontWeight": "bold"
+    },
+    {
+      "id": "ring-bg",
+      "type": "ellipse",
+      "cx": 1120,
+      "cy": 400,
+      "rx": 70,
+      "ry": 70,
+      "stroke": "#F3F4F6",
+      "strokeWidth": 20,
+      "fill": "transparent"
+    },
+    {
+      "id": "ring-fg",
+      "type": "ellipse",
+      "cx": 1120,
+      "cy": 400,
+      "rx": 70,
+      "ry": 70,
+      "stroke": "#8B5CF6",
+      "strokeWidth": 20,
+      "strokeDashType": "dashed",
+      "fill": "transparent"
+    },
+    {
+      "id": "ring-inner",
+      "type": "ellipse",
+      "cx": 1120,
+      "cy": 400,
+      "rx": 50,
+      "ry": 50,
+      "fill": "#FFFFFF"
+    },
+    {
+      "id": "ring-text-1",
+      "type": "rect",
+      "x": 1070,
+      "y": 380,
+      "width": 100,
+      "height": 30,
+      "fill": "transparent",
+      "text": "68%",
+      "textAlign": "center",
+      "fontColor": "#111827",
+      "fontSize": 28,
+      "fontWeight": "bold"
+    },
+    {
+      "id": "ring-text-2",
+      "type": "rect",
+      "x": 1070,
+      "y": 415,
+      "width": 100,
+      "height": 20,
+      "fill": "transparent",
+      "text": "Organic Search",
+      "textAlign": "center",
+      "fontColor": "#6B7280",
+      "fontSize": 12
+    },
+    {
+      "id": "tooltip-group",
+      "type": "group",
+      "children": [
+        {
+          "id": "tt-bg",
+          "type": "rect",
+          "x": 630,
+          "y": 260,
+          "width": 140,
+          "height": 60,
+          "fill": "#1F2937",
+          "rx": 6
+        },
+        {
+          "id": "tt-title",
+          "type": "rect",
+          "x": 640,
+          "y": 270,
+          "width": 120,
+          "height": 20,
+          "fill": "transparent",
+          "text": "APRIL",
+          "textAlign": "left",
+          "fontColor": "#FFFFFF",
+          "fontSize": 14,
+          "fontWeight": "bold"
+        },
+        {
+          "id": "tt-desc",
+          "type": "rect",
+          "x": 640,
+          "y": 290,
+          "width": 120,
+          "height": 20,
+          "fill": "transparent",
+          "text": "Traffic: 14,200",
+          "textAlign": "left",
+          "fontColor": "#9CA3AF",
+          "fontSize": 12
+        }
+      ]
+    },
+    {
+      "id": "annotation-note",
+      "type": "rect",
+      "x": 740,
+      "y": 140,
+      "width": 160,
+      "height": 40,
+      "stroke": "#F59E0B",
+      "strokeWidth": 1,
+      "fill": "#FEF3C7",
+      "rx": 6,
+      "text": "Campaign Launch",
+      "textAlign": "center",
+      "fontColor": "#92400E",
+      "fontSize": 12,
+      "fontWeight": "bold"
+    }
+  ],
+  "connectors": [
+    {
+      "id": "conn-annotation",
+      "type": "connector",
+      "points": [
+        {
+          "x": 820,
+          "y": 180
+        },
+        {
+          "x": 775,
+          "y": 230
+        }
+      ],
+      "source": {
+        "owner": {
+          "type": "rect",
+          "id": "annotation-note"
+        },
+        "anchor": {
+          "kind": "connectPoint",
+          "id": "bottomCenter"
+        }
+      },
+      "target": {
+        "owner": {
+          "type": "ellipse",
+          "id": "dp-3"
+        },
+        "anchor": {
+          "kind": "connectPoint",
+          "id": "topCenter"
+        }
+      },
+      "stroke": "#F59E0B",
+      "strokeWidth": 2,
+      "strokeDashType": "dashed",
+      "startArrow": "None",
+      "endArrow": "FilledTriangle"
+    },
+    {
+      "id": "conn-tooltip",
+      "type": "connector",
+      "points": [
+        {
+          "x": 630,
+          "y": 290
+        },
+        {
+          "x": 615,
+          "y": 350
+        }
+      ],
+      "source": {
+        "owner": {
+          "type": "rect",
+          "id": "tt-bg"
+        },
+        "anchor": {
+          "kind": "connectPoint",
+          "id": "leftCenter"
+        }
+      },
+      "target": {
+        "owner": {
+          "type": "ellipse",
+          "id": "dp-1"
+        },
+        "anchor": {
+          "kind": "connectPoint",
+          "id": "center"
+        }
+      },
+      "stroke": "#9CA3AF",
+      "strokeWidth": 1.5,
+      "startArrow": "None",
+      "endArrow": "Circle"
+    }
+  ]
+}
