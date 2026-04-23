@@ -1,3 +1,5 @@
+import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
+import { isSameGroupSelection } from "../../utils/isSameGroupSelection";
 import type { Command } from "../CommandTypes";
 
 export const BringForwardCommand: Command = {
@@ -11,30 +13,38 @@ export const BringForwardCommand: Command = {
 	},
 
 	canExecute: (state) => {
-		return state.selectedIds.length > 0;
+		return isSameGroupSelection(state);
 	},
 
 	execute: (state) => {
-		const updatedRootIds = [...state.rootIds];
+		const commonParentId = state.objects[state.selectedIds[0]]?.parentId;
+		const sourceIds =
+			commonParentId != null
+				? (state.objects[commonParentId] as GroupState).childIds
+				: state.rootIds;
 
-		// 後ろから処理して、1つ前に移動
-		for (let i = updatedRootIds.length - 2; i >= 0; i--) {
-			const id = updatedRootIds[i];
+		const updatedIds = [...sourceIds];
+		for (let i = updatedIds.length - 2; i >= 0; i--) {
+			const id = updatedIds[i];
 			if (
 				state.selectedIds.includes(id) &&
-				!state.selectedIds.includes(updatedRootIds[i + 1])
+				!state.selectedIds.includes(updatedIds[i + 1])
 			) {
-				// 選択されていて、次が選択されていない場合は入れ替え
-				[updatedRootIds[i], updatedRootIds[i + 1]] = [
-					updatedRootIds[i + 1],
-					updatedRootIds[i],
-				];
+				[updatedIds[i], updatedIds[i + 1]] = [updatedIds[i + 1], updatedIds[i]];
 			}
 		}
 
+		if (commonParentId == null) {
+			return { ...state, rootIds: updatedIds, lastCommitTime: Date.now() };
+		}
+
+		const parent = state.objects[commonParentId] as GroupState;
 		return {
 			...state,
-			rootIds: updatedRootIds,
+			objects: {
+				...state.objects,
+				[commonParentId]: { ...parent, childIds: updatedIds },
+			},
 			lastCommitTime: Date.now(),
 		};
 	},

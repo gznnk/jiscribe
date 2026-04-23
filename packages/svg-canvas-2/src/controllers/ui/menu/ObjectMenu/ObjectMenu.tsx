@@ -20,6 +20,7 @@ import { useMenuConfig } from "./useMenuConfig";
 import { useObjectMenuPosition } from "./useObjectMenuPosition";
 import { objectRegistry } from "../../../../registry/ObjectRegistry";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { isSameGroupSelection } from "../../../utils/isSameGroupSelection";
 
 type ObjectMenuProps = {
 	canvasState: CanvasControllerState;
@@ -133,8 +134,8 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 		);
 	}
 
-	// Stack order section (always visible when objects are selected)
-	const shouldDisplayStackOrderMenu = selectedIds.length > 0;
+	// Stack order section (visible when all selected objects are siblings)
+	const shouldDisplayStackOrderMenu = isSameGroupSelection(canvasState);
 	if (shouldDisplayStackOrderMenu) {
 		menuItemComponents.push(
 			<StackOrderMenu key="StackOrder" canvasState={canvasState} />,

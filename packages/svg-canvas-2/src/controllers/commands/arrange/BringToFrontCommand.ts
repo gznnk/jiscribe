@@ -1,3 +1,5 @@
+import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
+import { isSameGroupSelection } from "../../utils/isSameGroupSelection";
 import type { Command } from "../CommandTypes";
 
 export const BringToFrontCommand: Command = {
@@ -11,19 +13,31 @@ export const BringToFrontCommand: Command = {
 	},
 
 	canExecute: (state) => {
-		return state.selectedIds.length > 0;
+		return isSameGroupSelection(state);
 	},
 
 	execute: (state) => {
-		const updatedRootIds = state.rootIds.filter(
+		const commonParentId = state.objects[state.selectedIds[0]]?.parentId;
+
+		if (commonParentId == null) {
+			const updatedRootIds = state.rootIds.filter(
+				(id) => !state.selectedIds.includes(id),
+			);
+			updatedRootIds.push(...state.selectedIds);
+			return { ...state, rootIds: updatedRootIds, lastCommitTime: Date.now() };
+		}
+
+		const parent = state.objects[commonParentId] as GroupState;
+		const updatedChildIds = parent.childIds.filter(
 			(id) => !state.selectedIds.includes(id),
 		);
-		// 選択オブジェクトを最後（最前面）に追加
-		updatedRootIds.push(...state.selectedIds);
-
+		updatedChildIds.push(...state.selectedIds);
 		return {
 			...state,
-			rootIds: updatedRootIds,
+			objects: {
+				...state.objects,
+				[commonParentId]: { ...parent, childIds: updatedChildIds },
+			},
 			lastCommitTime: Date.now(),
 		};
 	},
