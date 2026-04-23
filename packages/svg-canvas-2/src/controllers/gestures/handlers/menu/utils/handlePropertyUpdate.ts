@@ -19,6 +19,14 @@ const isPropertySupported = (
 			return features.stroke === true;
 		case "rx":
 			return features.radius === true;
+		case "text":
+		case "textAlign":
+		case "verticalAlign":
+		case "fontColor":
+		case "fontSize":
+		case "fontFamily":
+		case "fontWeight":
+			return features.text === true;
 		case "lockAspectRatio":
 			return features.transform === true;
 		case "startArrow":

@@ -2,6 +2,7 @@
 
 import { AlignmentDropdownPanel, AlignmentRow } from "./AlignmentMenuStyled";
 import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
+import type { TextStyleState } from "../../../../../../states/objects/base/TextStyleState";
 import { AlignBottomIcon } from "../../../../icons/AlignBottomIcon";
 import { AlignCenterIcon } from "../../../../icons/AlignCenterIcon";
 import { AlignLeftIcon } from "../../../../icons/AlignLeftIcon";
@@ -24,22 +25,37 @@ const horizontalAlignments = [
 ] as const;
 
 const verticalAlignments = [
-	{ value: "top", Icon: AlignTopIcon, title: "Top" },
-	{ value: "middle", Icon: AlignMiddleIcon, title: "Middle" },
-	{ value: "bottom", Icon: AlignBottomIcon, title: "Bottom" },
+	{ value: "start", Icon: AlignTopIcon, title: "Top" },
+	{ value: "center", Icon: AlignMiddleIcon, title: "Middle" },
+	{ value: "end", Icon: AlignBottomIcon, title: "Bottom" },
 ] as const;
 
 /**
- * テキスト整列メニュー（見た目のみ）。
- * テキスト機能の実装後に textAlign / verticalAlign プロパティと連携予定。
+ * テキスト整列メニュー。
+ * 選択中のテキストオブジェクトの textAlign と verticalAlign を変更する。
+ * 各ボタンは data 属性経由でジェスチャーシステムと連携する。
  */
 const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 	canvasState,
 }) => {
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
-	// TODO: テキスト機能実装後に現在の textAlign を取得
 	const { placement } = useSubmenuPosition(menuItemRef, "alignment", isOpen);
+
+	// Get textAlign and verticalAlign from the first selected object (if it has text properties)
+	const { selectedIds, objects } = canvasState;
+	const firstSelectedId = selectedIds[0];
+	const firstSelectedObject = firstSelectedId
+		? objects[firstSelectedId]
+		: undefined;
+	const textAlign =
+		firstSelectedObject && "textAlign" in firstSelectedObject
+			? (firstSelectedObject as TextStyleState).textAlign ?? "left"
+			: "left";
+	const verticalAlign =
+		firstSelectedObject && "verticalAlign" in firstSelectedObject
+			? (firstSelectedObject as TextStyleState).verticalAlign ?? "center"
+			: "center";
 
 	return (
 		<MenuItemPositioner ref={menuItemRef}>
@@ -57,11 +73,12 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 						{horizontalAlignments.map(({ value, Icon, title }) => (
 							<ObjectMenuButton
 								key={value}
+								isActive={textAlign === value}
 								data-kind="object-menu"
 								data-id={`object-menu:set:textAlign:${value}`}
 								title={title}
 							>
-								<Icon fill="#999999" />
+								<Icon />
 							</ObjectMenuButton>
 						))}
 					</AlignmentRow>
@@ -69,11 +86,12 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 						{verticalAlignments.map(({ value, Icon, title }) => (
 							<ObjectMenuButton
 								key={value}
+								isActive={verticalAlign === value}
 								data-kind="object-menu"
 								data-id={`object-menu:set:verticalAlign:${value}`}
 								title={title}
 							>
-								<Icon fill="#999999" />
+								<Icon />
 							</ObjectMenuButton>
 						))}
 					</AlignmentRow>

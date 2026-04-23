@@ -105,6 +105,10 @@ export const DropdownPanel = styled.div<{ placement?: "down" | "up" }>`
 	justify-content: flex-start;
 	pointer-events: auto;
 	gap: 8px;
+	background-color: #ffffff;
+	border: 1px solid #e5e7eb;
+	border-radius: 6px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 `;
 
 /**

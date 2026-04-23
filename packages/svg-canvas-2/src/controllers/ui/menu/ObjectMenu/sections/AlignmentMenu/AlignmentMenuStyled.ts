@@ -5,8 +5,8 @@ export const AlignmentDropdownPanel = styled.div<{ placement?: "down" | "up" }>`
 	left: 50%;
 	${(props) =>
 		props.placement === "up"
-			? "bottom: 36px;"
-			: "top: 36px;"}
+			? "bottom: 40px;"
+			: "top: 40px;"}
 	transform: translateX(-50%);
 	z-index: 1100;
 	display: flex;

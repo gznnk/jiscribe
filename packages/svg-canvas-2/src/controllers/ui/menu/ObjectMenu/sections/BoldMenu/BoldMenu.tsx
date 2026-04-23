@@ -1,6 +1,7 @@
 ﻿import { memo } from "react";
 
 import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
+import type { TextStyleState } from "../../../../../../states/objects/base/TextStyleState";
 import { BoldIcon } from "../../../../icons/BoldIcon";
 import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
 
@@ -9,25 +10,31 @@ type BoldMenuProps = {
 };
 
 /**
- * 太字メニュー（見た目のみ）。
- * テキスト機能の実装後に fontWeight プロパティと連携予定。
+ * 太字メニュー。
+ * 選択中のテキストオブジェクトの fontWeight をトグルする。
  */
-const BoldMenuComponent: React.FC<BoldMenuProps> = ({
-	canvasState: _canvasState,
-}) => {
-	// TODO: テキスト機能実装後に fontWeight を取得してトグル
-	void _canvasState;
-	const _isBold = false;
+const BoldMenuComponent: React.FC<BoldMenuProps> = ({ canvasState }) => {
+	// Get fontWeight from the first selected object (if it has text properties)
+	const { selectedIds, objects } = canvasState;
+	const firstSelectedId = selectedIds[0];
+	const firstSelectedObject = firstSelectedId
+		? objects[firstSelectedId]
+		: undefined;
+	const fontWeight =
+		firstSelectedObject && "fontWeight" in firstSelectedObject
+			? (firstSelectedObject as TextStyleState).fontWeight
+			: "normal";
+	const isBold = fontWeight === "bold";
 
 	return (
 		<MenuItemPositioner>
 			<ObjectMenuButton
-				isActive={false}
+				isActive={isBold}
 				data-kind="object-menu"
-				data-id="object-menu:set:fontWeight:bold"
+				data-id={`object-menu:set:fontWeight:${isBold ? "normal" : "bold"}`}
 				title="Bold"
 			>
-				<BoldIcon fill={_isBold ? "#333333" : "#999999"} />
+				<BoldIcon />
 			</ObjectMenuButton>
 		</MenuItemPositioner>
 	);

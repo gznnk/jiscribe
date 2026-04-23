@@ -1,14 +1,10 @@
 ﻿import { memo, useRef } from "react";
 
-import {
-	NumberDisplay,
-	SliderContainer,
-	SliderInput,
-	SliderLabel,
-	SliderRow,
-} from "./FontSizeMenuStyled";
+import { FontSizeMenuWrapper } from "./FontSizeMenuStyled";
 import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
+import type { TextStyleState } from "../../../../../../states/objects/base/TextStyleState";
 import { FontSizeIcon } from "../../../../icons/FontSizeIcon";
+import { MenuSlider } from "../../common/MenuSlider";
 import {
 	ObjectMenuButton,
 	DropdownPanel,
@@ -17,23 +13,35 @@ import {
 import { useSubmenuPosition } from "../../useSubmenuPosition";
 
 const SECTION_ID = "font-size";
+const DEFAULT_FONT_SIZE = 14;
+const MIN_FONT_SIZE = 1;
+const MAX_FONT_SIZE = 999;
 
 type FontSizeMenuProps = {
 	canvasState: CanvasState;
 };
 
 /**
- * フォントサイズメニュー（見た目のみ）。
- * テキスト機能の実装後に fontSize プロパティと連携予定。
+ * フォントサイズメニュー。
+ * 選択中のテキストオブジェクトのフォントサイズを変更する。
  */
 const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 	canvasState,
 }) => {
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
-	// TODO: テキスト機能実装後に fontSize を取得
-	const _currentSize = 14;
 	const { placement } = useSubmenuPosition(menuItemRef, "fontSize", isOpen);
+
+	// Get fontSize from the first selected object (if it has text properties)
+	const { selectedIds, objects } = canvasState;
+	const firstSelectedId = selectedIds[0];
+	const firstSelectedObject = firstSelectedId
+		? objects[firstSelectedId]
+		: undefined;
+	const fontSize =
+		firstSelectedObject && "fontSize" in firstSelectedObject
+			? (firstSelectedObject as TextStyleState).fontSize ?? DEFAULT_FONT_SIZE
+			: DEFAULT_FONT_SIZE;
 
 	return (
 		<MenuItemPositioner ref={menuItemRef}>
@@ -46,20 +54,16 @@ const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 				<FontSizeIcon />
 			</ObjectMenuButton>
 			{isOpen && (
-				<DropdownPanel placement={placement} style={{ flexDirection: "column" }}>
-					<SliderContainer>
-						<SliderLabel>Font Size</SliderLabel>
-						<SliderRow>
-							<SliderInput
-								type="range"
-								min={1}
-								max={999}
-								value={_currentSize}
-								readOnly
-							/>
-							<NumberDisplay>{_currentSize}</NumberDisplay>
-						</SliderRow>
-					</SliderContainer>
+				<DropdownPanel placement={placement}>
+					<FontSizeMenuWrapper>
+						<MenuSlider
+							label="Font Size"
+							value={fontSize}
+							min={MIN_FONT_SIZE}
+							max={MAX_FONT_SIZE}
+							property="fontSize"
+						/>
+					</FontSizeMenuWrapper>
 				</DropdownPanel>
 			)}
 		</MenuItemPositioner>
