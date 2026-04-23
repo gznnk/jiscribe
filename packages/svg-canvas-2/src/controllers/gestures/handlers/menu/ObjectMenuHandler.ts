@@ -1,9 +1,9 @@
-import { handlePropertyUpdate } from "./utils/handlePropertyUpdate";
 import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../../../registry/GestureHandlerRegistryTypes";
 import { handleCommand } from "../../../commands/handlers/handleCommand";
+import { handlePropertyUpdate } from "../../../utils/handlePropertyUpdate";
 
 /**
  * ObjectMenu 項目の操作を処理する GestureHandler。
@@ -67,13 +67,6 @@ export const ObjectMenuHandler: GestureHandler = {
 				return { ...newState, lastCommitTime: event.time };
 			}
 
-			return state;
-		}
-
-		// 数値入力操作: change イベント
-		if (event.targetId?.startsWith("object-menu:number-input:")) {
-			// 将来的に数値入力のイベント処理が必要になった場合はここに実装
-			// 現在は MenuSlider 内で React の onChange で処理されているため不要
 			return state;
 		}
 

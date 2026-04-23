@@ -33,6 +33,7 @@ type BorderStyleMenuProps = {
 	canvasState: CanvasState;
 	/** Whether to show corner radius control */
 	showRadius?: boolean;
+	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
 };
 
 /**
@@ -89,6 +90,7 @@ const getSelectedCornerRadius = (state: CanvasState): number => {
 const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 	canvasState,
 	showRadius = true,
+	onPropertyUpdate,
 }) => {
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
@@ -138,16 +140,15 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 							</ObjectMenuButton>
 						</BorderStyleSection>
 
-						{/* Stroke Width - TODO: スライダー対応 */}
 						<MenuSlider
 							label="Border Width"
 							value={strokeWidth}
 							min={MIN_STROKE_WIDTH}
 							max={MAX_STROKE_WIDTH}
 							property="strokeWidth"
+							onPropertyUpdate={onPropertyUpdate}
 						/>
 
-						{/* Corner Radius - TODO: スライダー対応 */}
 						{showRadius && (
 							<MenuSlider
 								label="Corner Radius"
@@ -155,6 +156,7 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 								min={MIN_CORNER_RADIUS}
 								max={MAX_CORNER_RADIUS}
 								property="rx"
+								onPropertyUpdate={onPropertyUpdate}
 							/>
 						)}
 					</BorderStyleMenuWrapper>

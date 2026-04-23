@@ -5,6 +5,7 @@ import type { CanvasControllerState } from "../CanvasTypes";
 import { handleCommand } from "../commands/handlers/handleCommand";
 import { handleGesture } from "../gestures/handlers/handleGesture";
 import { commitTextEditIfNeeded } from "../utils/commitTextEditIfNeeded";
+import { handlePropertyUpdate } from "../utils/handlePropertyUpdate";
 
 export const canvasReducer = (
 	state: CanvasControllerState,
@@ -30,6 +31,19 @@ export const canvasReducer = (
 					height: action.dimensions.height,
 				},
 			};
+		}
+
+		case "MENU_PROPERTY_UPDATE": {
+			const updated = handlePropertyUpdate(
+				state,
+				action.property,
+				action.value,
+			);
+			if (!action.commit) return updated;
+			return recordHistoryIfNeeded(
+				{ ...updated, lastCommitTime: Date.now() },
+				state.lastCommitTime,
+			);
 		}
 
 		case "SYNC_EXTERNAL": {

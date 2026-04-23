@@ -9,17 +9,17 @@ import {
 	MenuSliderNumberInput,
 } from "./MenuSliderStyled";
 
-/**
- * Props for the MenuSlider component.
- */
 type MenuSliderProps = {
 	value: number;
 	min?: number;
 	max?: number;
-	/** Label text displayed above the slider */
 	label?: string;
-	/** Property name for data-id (e.g., "strokeWidth", "rx") */
 	property: string;
+	onPropertyUpdate?: (
+		property: string,
+		value: string,
+		commit: boolean,
+	) => void;
 };
 
 /**
@@ -33,6 +33,7 @@ const MenuSliderComponent: React.FC<MenuSliderProps> = ({
 	max = 100,
 	label = "Value",
 	property,
+	onPropertyUpdate,
 }) => {
 	const [sliderValue, setSliderValue] = useState(value);
 	const [inputValue, setInputValue] = useState(String(value));
@@ -52,6 +53,7 @@ const MenuSliderComponent: React.FC<MenuSliderProps> = ({
 		if (!Number.isNaN(parsedValue)) {
 			const clampedValue = Math.max(min, Math.min(max, parsedValue));
 			setSliderValue(clampedValue);
+			onPropertyUpdate?.(property, String(clampedValue), false);
 		}
 	};
 
@@ -59,15 +61,29 @@ const MenuSliderComponent: React.FC<MenuSliderProps> = ({
 		setIsEditing(true);
 	};
 
-	const handleNumberInputBlur = () => {
-		setIsEditing(false);
-		const parsedValue = Number.parseInt(inputValue, 10);
+	const commitNumberInput = (currentInputValue: string) => {
+		const parsedValue = Number.parseInt(currentInputValue, 10);
 		if (!Number.isNaN(parsedValue)) {
 			const clampedValue = Math.max(min, Math.min(max, parsedValue));
 			setSliderValue(clampedValue);
 			setInputValue(String(clampedValue));
+			onPropertyUpdate?.(property, String(clampedValue), true);
 		} else {
 			setInputValue(String(sliderValue));
+		}
+	};
+
+	const handleNumberInputBlur = () => {
+		setIsEditing(false);
+		commitNumberInput(inputValue);
+	};
+
+	const handleNumberInputKeyDown = (
+		e: React.KeyboardEvent<HTMLInputElement>,
+	) => {
+		if (e.key === "Enter") {
+			commitNumberInput(inputValue);
+			e.currentTarget.blur();
 		}
 	};
 
@@ -90,6 +106,7 @@ const MenuSliderComponent: React.FC<MenuSliderProps> = ({
 					onChange={handleNumberInputChange}
 					onFocus={handleNumberInputFocus}
 					onBlur={handleNumberInputBlur}
+					onKeyDown={handleNumberInputKeyDown}
 					data-kind="object-menu"
 					data-id={`object-menu:number-input:${property}`}
 					data-interactive="true"

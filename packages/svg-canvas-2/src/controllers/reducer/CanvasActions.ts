@@ -77,6 +77,17 @@ export type RedoAction = {
 };
 
 /**
+ * Menu property update action - handles real-time preview and commit from ObjectMenu inputs
+ */
+export type MenuPropertyUpdateAction = {
+	type: "MENU_PROPERTY_UPDATE";
+	property: string;
+	value: string;
+	/** true: 履歴記録あり（blur/Enter）、false: プレビューのみ */
+	commit: boolean;
+};
+
+/**
  * Union of all canvas actions
  */
 export type CanvasAction =
@@ -88,4 +99,5 @@ export type CanvasAction =
 	| UpdateTextEditAction
 	| EndTextEditAction
 	| UndoAction
-	| RedoAction;
+	| RedoAction
+	| MenuPropertyUpdateAction;

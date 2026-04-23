@@ -19,6 +19,7 @@ const MAX_FONT_SIZE = 999;
 
 type FontSizeMenuProps = {
 	canvasState: CanvasState;
+	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
 };
 
 /**
@@ -27,6 +28,7 @@ type FontSizeMenuProps = {
  */
 const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 	canvasState,
+	onPropertyUpdate,
 }) => {
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
@@ -62,6 +64,7 @@ const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 							min={MIN_FONT_SIZE}
 							max={MAX_FONT_SIZE}
 							property="fontSize"
+							onPropertyUpdate={onPropertyUpdate}
 						/>
 					</FontSizeMenuWrapper>
 				</DropdownPanel>

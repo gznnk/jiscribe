@@ -23,6 +23,7 @@ import type { CanvasControllerState } from "../../../CanvasTypes";
 
 type ObjectMenuProps = {
 	canvasState: CanvasControllerState;
+	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
 };
 
 /**
@@ -32,7 +33,10 @@ type ObjectMenuProps = {
  * Based on svg-canvas's DiagramMenu but adapted for svg-canvas-2 architecture.
  * Uses ObjectMenuConfig to control which sections are displayed.
  */
-const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({ canvasState }) => {
+const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
+	canvasState,
+	onPropertyUpdate,
+}) => {
 	const menuRef = useRef<HTMLDivElement>(null);
 	const { shouldRender, x, y } = useObjectMenuPosition(canvasState, menuRef);
 	const menuConfig = useMenuConfig(canvasState);
@@ -87,6 +91,7 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({ canvasState }) => {
 				key="BorderStyle"
 				canvasState={canvasState}
 				showRadius={menuConfig.borderStyle.radius}
+				onPropertyUpdate={onPropertyUpdate}
 			/>,
 		);
 	}
@@ -104,7 +109,11 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({ canvasState }) => {
 	// Text appearance section (fontStyle and textAlignment)
 	if (menuConfig.fontStyle) {
 		menuItemComponents.push(
-			<FontSizeMenu key="FontSize" canvasState={canvasState} />,
+			<FontSizeMenu
+				key="FontSize"
+				canvasState={canvasState}
+				onPropertyUpdate={onPropertyUpdate}
+			/>,
 		);
 		menuItemComponents.push(
 			<FontColorMenu key="FontColor" canvasState={canvasState} />,
