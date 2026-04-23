@@ -17,6 +17,12 @@ type VertexInsertControlsProps = {
 	 */
 	points: Point[];
 	/**
+	 * Whether the shape is closed (e.g. polygon).
+	 * When true, also renders a midpoint handle on the segment from the last point back to the first.
+	 * @default false
+	 */
+	closed?: boolean;
+	/**
 	 * Zoom level for adjusting handle sizes.
 	 * @default 1
 	 */
@@ -36,6 +42,7 @@ type VertexInsertControlsProps = {
 const VertexInsertControlsComponent: React.FC<VertexInsertControlsProps> = ({
 	objectId,
 	points,
+	closed = false,
 	zoom = 1,
 }) => {
 	// Adjust sizes based on zoom level to maintain consistent visual size
@@ -52,6 +59,17 @@ const VertexInsertControlsComponent: React.FC<VertexInsertControlsProps> = ({
 			y: (start.y + end.y) / 2,
 		};
 		segmentMidpoints.push({ point: midpoint, segmentIndex: i });
+	}
+
+	// For closed shapes (polygon), also add midpoint for the closing segment (last → first)
+	if (closed && points.length >= 2) {
+		const last = points[points.length - 1];
+		const first = points[0];
+		const midpoint: Point = {
+			x: (last.x + first.x) / 2,
+			y: (last.y + first.y) / 2,
+		};
+		segmentMidpoints.push({ point: midpoint, segmentIndex: points.length - 1 });
 	}
 
 	return (

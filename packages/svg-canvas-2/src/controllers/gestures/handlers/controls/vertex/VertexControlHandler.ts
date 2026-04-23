@@ -3,10 +3,13 @@ import type { Point } from "@workspace/geometry";
 
 import { PRECISION } from "../../../../../constants/precision";
 import type { CanvasEvent } from "../../../../../registry/GestureHandlerRegistryTypes";
+import type { PolygonState } from "../../../../../states/objects/primitives/polygon/PolygonState";
 import type { PolylineState } from "../../../../../states/objects/primitives/polyline/PolylineState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
 import type { ControlStrategy } from "../ControlEventHandler";
+
+type PolyState = PolylineState | PolygonState;
 
 /**
  * Vertex control の操作（頂点の移動）を処理する。
@@ -101,7 +104,10 @@ export class VertexControlHandler implements ControlStrategy {
 		}
 
 		const startObject = eventStartState.objects[objectId];
-		if (!startObject || startObject.type !== "polyline") {
+		if (
+			!startObject ||
+			(startObject.type !== "polyline" && startObject.type !== "polygon")
+		) {
 			return state;
 		}
 
@@ -112,12 +118,12 @@ export class VertexControlHandler implements ControlStrategy {
 		};
 
 		// 頂点位置を更新
-		const polyline = startObject as PolylineState;
-		const newPoints = [...polyline.points];
+		const poly = startObject as PolyState;
+		const newPoints = [...poly.points];
 		newPoints[vertexIndex] = newPosition;
 
-		const updatedObject: PolylineState = {
-			...polyline,
+		const updatedObject: PolyState = {
+			...poly,
 			points: newPoints,
 		};
 

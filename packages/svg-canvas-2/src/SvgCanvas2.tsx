@@ -5,6 +5,7 @@ import type { CanvasDoc } from "./schemas/canvas/CanvasDoc";
 import type { ConnectorDoc } from "./schemas/objects/connections/ConnectorDoc";
 import type { EllipseDoc } from "./schemas/objects/primitives/EllipseDoc";
 import type { GroupDoc } from "./schemas/objects/primitives/GroupDoc";
+import type { PolygonDoc } from "./schemas/objects/primitives/PolygonDoc";
 import type { PolylineDoc } from "./schemas/objects/primitives/PolylineDoc";
 import type { RectDoc } from "./schemas/objects/primitives/RectDoc";
 
@@ -321,6 +322,52 @@ const testCanvasDoc: CanvasDoc = {
 			startArrow: "HollowDiamond",
 			endArrow: "OpenArrow",
 		} as unknown as PolylineDoc,
+		// --- Polygon テストデータ ---
+		{
+			id: "polygon-1",
+			type: "polygon",
+			// 三角形（fill あり）
+			points: [
+				{ x: 50, y: 500 },
+				{ x: 150, y: 500 },
+				{ x: 100, y: 420 },
+			],
+			fill: "#4CAF50",
+			stroke: "#1B5E20",
+			strokeWidth: 2,
+		} as unknown as PolygonDoc,
+		{
+			id: "polygon-2",
+			type: "polygon",
+			// 五角形（fill なし・破線）
+			points: [
+				{ x: 250, y: 420 },
+				{ x: 300, y: 450 },
+				{ x: 280, y: 510 },
+				{ x: 220, y: 510 },
+				{ x: 200, y: 450 },
+			],
+			fill: "transparent",
+			stroke: "#F44336",
+			strokeWidth: 2,
+			strokeDashType: "dashed",
+		} as unknown as PolygonDoc,
+		{
+			id: "polygon-3",
+			type: "polygon",
+			// 六角形（fill 半透明色）
+			points: [
+				{ x: 420, y: 430 },
+				{ x: 460, y: 415 },
+				{ x: 500, y: 430 },
+				{ x: 500, y: 470 },
+				{ x: 460, y: 485 },
+				{ x: 420, y: 470 },
+			],
+			fill: "#9C27B0",
+			stroke: "#4A148C",
+			strokeWidth: 3,
+		} as unknown as PolygonDoc,
 	],
 	connectors: [
 		{

@@ -1,6 +1,7 @@
 import { Sticky } from "../../presentations/objects/annotations/Sticky";
 import { Connector } from "../../presentations/objects/connections/Connector";
 import { Ellipse } from "../../presentations/objects/primitives/Ellipse";
+import { Polygon } from "../../presentations/objects/primitives/Polygon";
 import { Polyline } from "../../presentations/objects/primitives/Polyline";
 import { Rect } from "../../presentations/objects/primitives/Rect";
 import { objectRegistry } from "../../registry/ObjectRegistry";
@@ -8,6 +9,7 @@ import { StickyFeatures } from "../../schemas/objects/annotations/StickyDoc";
 import { ConnectorFeatures } from "../../schemas/objects/connections/ConnectorDoc";
 import { EllipseFeatures } from "../../schemas/objects/primitives/EllipseDoc";
 import { GroupFeatures } from "../../schemas/objects/primitives/GroupDoc";
+import { PolygonFeatures } from "../../schemas/objects/primitives/PolygonDoc";
 import { PolylineFeatures } from "../../schemas/objects/primitives/PolylineDoc";
 import { RectFeatures } from "../../schemas/objects/primitives/RectDoc";
 import {
@@ -26,6 +28,10 @@ import {
 	groupToDoc,
 	groupToState,
 } from "../../states/objects/primitives/group/GroupMapper";
+import {
+	polygonToDoc,
+	polygonToState,
+} from "../../states/objects/primitives/polygon/PolygonMapper";
 import {
 	polylineToDoc,
 	polylineToState,
@@ -54,6 +60,11 @@ import {
 	rotateByGroup as groupRotateByGroup,
 	transformByGroup as groupTransformByGroup,
 } from "../gestures/handlers/objects/primitives/GroupController";
+import {
+	moveByDelta as polygonMoveByDelta,
+	rotateByGroup as polygonRotateByGroup,
+	transformByGroup as polygonTransformByGroup,
+} from "../gestures/handlers/objects/primitives/PolygonController";
 import {
 	moveByDelta as polylineMoveByDelta,
 	rotateByGroup as polylineRotateByGroup,
@@ -110,6 +121,21 @@ export const initializeObjectRegistry = (): void => {
 		moveByDelta: groupMoveByDelta,
 		transformByGroup: groupTransformByGroup,
 		rotateByGroup: groupRotateByGroup,
+	});
+
+	objectRegistry.register("polygon", {
+		features: PolygonFeatures,
+		menuConfig: createMenuConfig(PolygonFeatures, {
+			lineStyle: true,
+		}),
+		mapper: {
+			toDoc: polygonToDoc,
+			toState: polygonToState,
+		},
+		component: Polygon,
+		moveByDelta: polygonMoveByDelta,
+		transformByGroup: polygonTransformByGroup,
+		rotateByGroup: polygonRotateByGroup,
 	});
 
 	objectRegistry.register("polyline", {

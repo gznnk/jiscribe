@@ -31,25 +31,23 @@ const VertexControlsLayerComponent: React.FC<VertexControlsLayerProps> = ({
 		return null;
 	}
 
-	// Only render for Polyline objects with points
+	// Only render for Polyline or Polygon objects with points
 	if (
-		selectedObject.type === "polyline" &&
+		(selectedObject.type === "polyline" || selectedObject.type === "polygon") &&
 		"points" in selectedObject &&
 		Array.isArray(selectedObject.points)
 	) {
 		const points = selectedObject.points as Point[];
+		const isClosed = selectedObject.type === "polygon";
 		return (
 			<>
 				{/* Vertex controls for moving existing vertices */}
-				<VertexControls
-					objectId={selectedId}
-					points={points}
-					zoom={zoom}
-				/>
+				<VertexControls objectId={selectedId} points={points} zoom={zoom} />
 				{/* Vertex insert controls for adding new vertices */}
 				<VertexInsertControls
 					objectId={selectedId}
 					points={points}
+					closed={isClosed}
 					zoom={zoom}
 				/>
 			</>
