@@ -4,12 +4,12 @@ import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
 import type { TextStyleState } from "../../../../../../states/objects/base/TextStyleState";
 import { FontColorIcon } from "../../../../icons/FontColorIcon";
 import { ColorPickerGrid } from "../../common/ColorPickerGrid/ColorPickerGrid";
+import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
 import {
 	ObjectMenuButton,
 	DropdownColorPanel,
 	MenuItemPositioner,
 } from "../../ObjectMenuStyled";
-import { useSubmenuPosition } from "../../useSubmenuPosition";
 
 const SECTION_ID = "font-color";
 const DEFAULT_FONT_COLOR = "#333333";
@@ -39,7 +39,8 @@ const FontColorMenuComponent: React.FC<FontColorMenuProps> = ({
 		: undefined;
 	const currentColor =
 		firstSelectedObject && "fontColor" in firstSelectedObject
-			? (firstSelectedObject as TextStyleState).fontColor ?? DEFAULT_FONT_COLOR
+			? ((firstSelectedObject as TextStyleState).fontColor ??
+				DEFAULT_FONT_COLOR)
 			: DEFAULT_FONT_COLOR;
 
 	return (

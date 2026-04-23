@@ -1,5 +1,7 @@
 import { memo, useRef } from "react";
 
+import { useMenuConfig } from "./hooks/useMenuConfig";
+import { useObjectMenuPosition } from "./hooks/useObjectMenuPosition";
 import {
 	ObjectMenuContainer,
 	ObjectMenuDivider,
@@ -16,8 +18,6 @@ import { GroupMenu } from "./sections/GroupMenu";
 import { KeepAspectRatioMenu } from "./sections/KeepAspectRatioMenu";
 import { StackOrderMenu } from "./sections/StackOrderMenu";
 import { StrokeColorMenu } from "./sections/StrokeColorMenu";
-import { useMenuConfig } from "./useMenuConfig";
-import { useObjectMenuPosition } from "./useObjectMenuPosition";
 import { objectRegistry } from "../../../../registry/ObjectRegistry";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { isSameGroupSelection } from "../../../utils/isSameGroupSelection";

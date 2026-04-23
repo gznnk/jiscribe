@@ -10,12 +10,12 @@ import {
 import { ArrowTypes } from "../../../../../../schemas/objects/types/ArrowType";
 import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
 import { ArrowHeadIcon } from "../../../../icons/ArrowHeadIcon";
+import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
 import {
 	ObjectMenuButton,
 	DropdownPanel,
 	MenuItemPositioner,
 } from "../../ObjectMenuStyled";
-import { useSubmenuPosition } from "../../useSubmenuPosition";
 
 const SECTION_ID = "arrow-head";
 

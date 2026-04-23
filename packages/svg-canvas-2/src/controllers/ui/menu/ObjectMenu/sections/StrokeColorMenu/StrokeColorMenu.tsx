@@ -3,12 +3,12 @@ import { memo, useRef } from "react";
 import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
 import { BorderColorIcon } from "../../../../icons/BorderColorIcon";
 import { ColorPickerGrid } from "../../common/ColorPickerGrid/ColorPickerGrid";
+import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
 import {
 	ObjectMenuButton,
 	DropdownColorPanel,
 	MenuItemPositioner,
 } from "../../ObjectMenuStyled";
-import { useSubmenuPosition } from "../../useSubmenuPosition";
 
 const SECTION_ID = "stroke-color";
 

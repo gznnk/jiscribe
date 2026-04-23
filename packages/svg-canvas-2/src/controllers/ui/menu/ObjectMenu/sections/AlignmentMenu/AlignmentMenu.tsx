@@ -9,8 +9,8 @@ import { AlignLeftIcon } from "../../../../icons/AlignLeftIcon";
 import { AlignMiddleIcon } from "../../../../icons/AlignMiddleIcon";
 import { AlignRightIcon } from "../../../../icons/AlignRightIcon";
 import { AlignTopIcon } from "../../../../icons/AlignTopIcon";
+import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
 import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
-import { useSubmenuPosition } from "../../useSubmenuPosition";
 
 const SECTION_ID = "alignment";
 
@@ -50,11 +50,11 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 		: undefined;
 	const textAlign =
 		firstSelectedObject && "textAlign" in firstSelectedObject
-			? (firstSelectedObject as TextStyleState).textAlign ?? "left"
+			? ((firstSelectedObject as TextStyleState).textAlign ?? "left")
 			: "left";
 	const verticalAlign =
 		firstSelectedObject && "verticalAlign" in firstSelectedObject
-			? (firstSelectedObject as TextStyleState).verticalAlign ?? "center"
+			? ((firstSelectedObject as TextStyleState).verticalAlign ?? "center")
 			: "center";
 
 	return (

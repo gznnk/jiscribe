@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 
-import type { ObjectMenuConfig } from "./types/ObjectMenuConfig";
-import { objectRegistry } from "../../../../registry/ObjectRegistry";
-import type { CanvasState } from "../../../../states/canvas/CanvasState";
+import { objectRegistry } from "../../../../../registry/ObjectRegistry";
+import type { CanvasState } from "../../../../../states/canvas/CanvasState";
+import type { ObjectMenuConfig } from "../types/ObjectMenuConfig";
 
 /**
  * Merge a boolean property: only include if all configs have it set to true.

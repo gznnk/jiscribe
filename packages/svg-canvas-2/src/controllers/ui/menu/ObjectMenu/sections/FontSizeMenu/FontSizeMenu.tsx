@@ -5,12 +5,12 @@ import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
 import type { TextStyleState } from "../../../../../../states/objects/base/TextStyleState";
 import { FontSizeIcon } from "../../../../icons/FontSizeIcon";
 import { MenuSlider } from "../../common/MenuSlider";
+import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
 import {
 	ObjectMenuButton,
 	DropdownPanel,
 	MenuItemPositioner,
 } from "../../ObjectMenuStyled";
-import { useSubmenuPosition } from "../../useSubmenuPosition";
 
 const SECTION_ID = "font-size";
 const DEFAULT_FONT_SIZE = 14;
@@ -42,7 +42,7 @@ const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 		: undefined;
 	const fontSize =
 		firstSelectedObject && "fontSize" in firstSelectedObject
-			? (firstSelectedObject as TextStyleState).fontSize ?? DEFAULT_FONT_SIZE
+			? ((firstSelectedObject as TextStyleState).fontSize ?? DEFAULT_FONT_SIZE)
 			: DEFAULT_FONT_SIZE;
 
 	return (

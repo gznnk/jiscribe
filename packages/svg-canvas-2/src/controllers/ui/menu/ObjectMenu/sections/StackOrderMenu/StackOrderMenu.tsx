@@ -8,12 +8,12 @@ import { BringToFrontIcon } from "../../../../icons/BringToFrontIcon";
 import { SendBackwardIcon } from "../../../../icons/SendBackwardIcon";
 import { SendToBackIcon } from "../../../../icons/SendToBackIcon";
 import { StackOrderIcon } from "../../../../icons/StackOrderIcon";
+import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
 import {
 	ObjectMenuButton,
 	DropdownPanel,
 	MenuItemPositioner,
 } from "../../ObjectMenuStyled";
-import { useSubmenuPosition } from "../../useSubmenuPosition";
 
 const SECTION_ID = "stack-order";
 
