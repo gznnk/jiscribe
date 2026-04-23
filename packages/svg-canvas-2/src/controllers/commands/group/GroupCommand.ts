@@ -1,5 +1,6 @@
-﻿import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
+import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import { calculateGroupOrientedBounds } from "../../ui/utils/calculateGroupOrientedBounds";
+import { cleanupGroups } from "../../utils/cleanupGroups";
 import type { Command } from "../CommandTypes";
 
 export const GroupCommand: Command = {
@@ -13,28 +14,31 @@ export const GroupCommand: Command = {
 	},
 
 	canExecute: (state) => {
-		if (state.selectedIds.length < 2) return false;
-
-		// All selected objects must share the same parent (or all be root-level)
-		const parentIds = state.selectedIds.map(
-			(id) => state.objects[id]?.parentId,
-		);
-		return parentIds.every((pid) => pid === parentIds[0]);
+		return state.selectedIds.length >= 2;
 	},
 
 	execute: (state) => {
 		const groupId = crypto.randomUUID();
 		const selectedIds = state.selectedIds;
 
-		// Determine the common parent of selected objects
-		const commonParentId = state.objects[selectedIds[0]]?.parentId;
+		// Check if all selected objects share the same parent
+		const firstParentId = state.objects[selectedIds[0]]?.parentId;
+		const isSameParent = selectedIds.every(
+			(id) => state.objects[id]?.parentId === firstParentId,
+		);
+		const commonParentId = isSameParent ? firstParentId : undefined;
 
-		// Build childIds preserving z-order from the source list
-		const sourceIds =
-			commonParentId != null
-				? (state.objects[commonParentId] as GroupState).childIds
-				: state.rootIds;
-		const childIds = sourceIds.filter((id) => selectedIds.includes(id));
+		// Build childIds: preserve z-order from source list for same-parent, use selectedIds order for cross-parent
+		let childIds: string[];
+		if (isSameParent) {
+			const sourceIds =
+				commonParentId != null
+					? (state.objects[commonParentId] as GroupState).childIds
+					: state.rootIds;
+			childIds = sourceIds.filter((id) => selectedIds.includes(id));
+		} else {
+			childIds = [...selectedIds];
+		}
 
 		// Create temporary group state to calculate bounds
 		const tempGroup = {
@@ -51,11 +55,9 @@ export const GroupCommand: Command = {
 			height: 0,
 		} as unknown as GroupState;
 
-		// Temporarily add to objects to calculate bounds
 		const tempObjects = { ...state.objects, [groupId]: tempGroup };
 		const bounds = calculateGroupOrientedBounds(tempObjects, groupId);
 
-		// Create new group state with calculated bounds
 		const newGroup = {
 			...tempGroup,
 			cx: bounds?.cx ?? 0,
@@ -73,33 +75,67 @@ export const GroupCommand: Command = {
 			};
 		}
 
-		// Update the source list: replace selected ids with the group id at the position of the first selected
-		const updatedSourceIds = replaceWithGroup(sourceIds, selectedIds, groupId);
+		if (isSameParent) {
+			// Same parent: replace selected ids with group id at the position of the first selected
+			const sourceIds =
+				commonParentId != null
+					? (state.objects[commonParentId] as GroupState).childIds
+					: state.rootIds;
+			const updatedSourceIds = replaceWithGroup(sourceIds, selectedIds, groupId);
 
-		// If inside a parent group, update parent's childIds
-		if (commonParentId != null) {
-			const parent = updatedObjects[commonParentId] as GroupState;
-			updatedObjects[commonParentId] = {
-				...parent,
-				childIds: updatedSourceIds,
-			} as GroupState;
+			if (commonParentId != null) {
+				const parent = updatedObjects[commonParentId] as GroupState;
+				updatedObjects[commonParentId] = {
+					...parent,
+					childIds: updatedSourceIds,
+				} as GroupState;
+				return {
+					...state,
+					objects: updatedObjects,
+					selectedIds: [groupId],
+					objectMenuOpenId: null,
+					lastCommitTime: Date.now(),
+				};
+			}
+
 			return {
 				...state,
 				objects: updatedObjects,
+				rootIds: updatedSourceIds,
 				selectedIds: [groupId],
 				objectMenuOpenId: null,
 				lastCommitTime: Date.now(),
 			};
 		}
 
-		return {
+		// Cross-parent: remove each selected object from its current parent, add new group at root
+		const selectedSet = new Set(selectedIds);
+		for (const id of selectedIds) {
+			const parentId = state.objects[id]?.parentId;
+			if (parentId != null) {
+				const parent = updatedObjects[parentId] as GroupState;
+				if (parent) {
+					updatedObjects[parentId] = {
+						...parent,
+						childIds: parent.childIds.filter((cid) => cid !== id),
+					} as GroupState;
+				}
+			}
+		}
+
+		const updatedRootIds = state.rootIds.filter((id) => !selectedSet.has(id));
+		updatedRootIds.push(groupId);
+
+		const nextState = {
 			...state,
 			objects: updatedObjects,
-			rootIds: updatedSourceIds,
+			rootIds: updatedRootIds,
 			selectedIds: [groupId],
 			objectMenuOpenId: null,
 			lastCommitTime: Date.now(),
 		};
+
+		return cleanupGroups(nextState);
 	},
 };
 

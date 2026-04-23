@@ -1,6 +1,6 @@
-﻿import { cleanupGroups } from "./utils/cleanupGroups";
-import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
+﻿import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import { updateGroupBounds } from "../../ui/utils/updateGroupBounds";
+import { cleanupGroups } from "../../utils/cleanupGroups";
 import type { Command } from "../CommandTypes";
 
 export const DeleteCommand: Command = {
