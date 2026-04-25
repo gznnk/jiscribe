@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 
-import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
 import { objectRegistry } from "../../../../../registry/ObjectRegistry";
 import type { CanvasState } from "../../../../../states/canvas/CanvasState";
+import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
 import type { ObjectMenuConfig } from "../types/ObjectMenuConfig";
 
 /**
