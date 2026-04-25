@@ -12,6 +12,7 @@ import type { GroupState } from "../../../../../states/objects/primitives/group/
 export function createMultiSelectGroup(
 	selectedIds: string[],
 	allObjects: Record<string, ObjectState>,
+	existingMultiSelectGroup?: GroupState | null,
 ): GroupState | null {
 	if (selectedIds.length <= 1) {
 		return null; // 1つ以下の選択ではグループ化しない
@@ -37,6 +38,9 @@ export function createMultiSelectGroup(
 	const width = bounds.maxX - bounds.minX;
 	const height = bounds.maxY - bounds.minY;
 
+	// 既存のlockAspectRatioを保持、なければデフォルトtrue
+	const lockAspectRatio = existingMultiSelectGroup?.lockAspectRatio ?? true;
+
 	// GroupStateを返す(角度0、反転なし)
 	return {
 		type: "group",
@@ -49,6 +53,7 @@ export function createMultiSelectGroup(
 		scaleX: 1,
 		scaleY: 1,
 		childIds: selectedIds,
+		lockAspectRatio,
 	} as unknown as GroupState;
 }
 

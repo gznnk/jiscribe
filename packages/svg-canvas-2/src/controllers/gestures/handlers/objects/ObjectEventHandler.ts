@@ -42,7 +42,11 @@ function handleObjectClick(
 	// 複数選択の場合は multiSelectGroup を作成
 	let multiSelectGroup = null;
 	if (1 < selectedIds.length) {
-		multiSelectGroup = createMultiSelectGroup(selectedIds, canvasState.objects);
+		multiSelectGroup = createMultiSelectGroup(
+			selectedIds,
+			canvasState.objects,
+			canvasState.multiSelectGroup,
+		);
 	}
 
 	return {

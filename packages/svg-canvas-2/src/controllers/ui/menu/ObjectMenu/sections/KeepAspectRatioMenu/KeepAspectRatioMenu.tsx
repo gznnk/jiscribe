@@ -10,9 +10,15 @@ type KeepAspectRatioMenuProps = {
 
 /**
  * 選択中オブジェクトの lockAspectRatio 値を取得する。
- * 最初に見つかった lockAspectRatio 値を返す。
+ * 複数選択時はmultiSelectGroupの値を優先、単一選択時は選択オブジェクトの値を返す。
  */
 const getSelectedLockAspectRatio = (state: CanvasState): boolean => {
+	// 複数選択時はmultiSelectGroupの値を使用
+	if (state.multiSelectGroup) {
+		return state.multiSelectGroup.lockAspectRatio ?? false;
+	}
+
+	// 単一選択時は選択オブジェクトの値を使用
 	for (const id of state.selectedIds) {
 		const obj = state.objects[id];
 		if (

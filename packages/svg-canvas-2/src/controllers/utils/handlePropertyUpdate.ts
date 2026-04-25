@@ -57,14 +57,27 @@ const parsePropertyValue = (property: string, value: string): unknown => {
 
 /**
  * 選択中の全オブジェクトに対してプロパティを更新する。
+ * lockAspectRatio かつ複数選択時は multiSelectGroup のみ更新。
  */
 export const handlePropertyUpdate = (
 	state: CanvasControllerState,
 	property: string,
 	value: string,
 ): CanvasControllerState => {
-	const { selectedIds, objects } = state;
+	const { selectedIds, objects, multiSelectGroup } = state;
 	if (selectedIds.length === 0) return state;
+
+	// lockAspectRatio かつ複数選択時は multiSelectGroup のみ更新
+	if (property === "lockAspectRatio" && multiSelectGroup) {
+		const parsedValue = parsePropertyValue(property, value) as boolean;
+		return {
+			...state,
+			multiSelectGroup: {
+				...multiSelectGroup,
+				lockAspectRatio: parsedValue,
+			},
+		};
+	}
 
 	const updatedObjects = { ...objects };
 	let changed = false;

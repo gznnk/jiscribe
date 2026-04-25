@@ -19,7 +19,11 @@ export const SelectAllCommand: Command = {
 		return {
 			...state,
 			selectedIds: [...state.rootIds],
-			multiSelectGroup: createMultiSelectGroup(state.rootIds, state.objects),
+			multiSelectGroup: createMultiSelectGroup(
+				state.rootIds,
+				state.objects,
+				state.multiSelectGroup,
+			),
 		};
 	},
 };

@@ -147,8 +147,9 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 
 	// Keep aspect ratio section
 	const shouldDisplayKeepAspectRatioMenu = Boolean(
-		singleSelectedObject &&
-		objectRegistry.getMenuConfig(singleSelectedObject.type)?.aspectRatio,
+		(singleSelectedObject &&
+			objectRegistry.getMenuConfig(singleSelectedObject.type)?.aspectRatio) ||
+			canvasState.multiSelectGroup,
 	);
 	if (shouldDisplayKeepAspectRatioMenu) {
 		menuItemComponents.push(

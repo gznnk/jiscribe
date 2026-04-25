@@ -42,6 +42,9 @@ export const GroupCommand: Command = {
 			childIds = [...selectedIds];
 		}
 
+		// multiSelectGroupからlockAspectRatioを引き継ぐ
+		const lockAspectRatio = state.multiSelectGroup?.lockAspectRatio ?? false;
+
 		// Create temporary group state to calculate bounds
 		const tempGroup = {
 			id: groupId,
@@ -55,6 +58,7 @@ export const GroupCommand: Command = {
 			cy: 0,
 			width: 0,
 			height: 0,
+			lockAspectRatio,
 		} as unknown as GroupState;
 
 		const tempObjects = { ...state.objects, [groupId]: tempGroup };

@@ -157,6 +157,7 @@ export const CanvasEventHandler: GestureHandler = {
 					multiSelectGroup = createMultiSelectGroup(
 						selectedIds,
 						nextState.objects,
+						state.multiSelectGroup,
 					);
 				}
 
