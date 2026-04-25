@@ -3,7 +3,7 @@ import { memo } from "react";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
-import { collectDescendantIds } from "../../utils/collectDescendantIds";
+import { collectDescendantIds } from "../../../utils/collectDescendantIds";
 import { Outline } from "../Outline";
 
 type SelectionOverlayProps = {

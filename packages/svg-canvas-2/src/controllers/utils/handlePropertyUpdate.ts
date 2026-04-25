@@ -1,3 +1,4 @@
+import { collectDescendantIds } from "./collectDescendantIds";
 import { objectRegistry } from "../../registry/ObjectRegistry";
 import type { ObjectFeatures } from "../../schemas/objects/types/ObjectFeatures";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
@@ -82,6 +83,7 @@ export const handlePropertyUpdate = (
 	const updatedObjects = { ...objects };
 	let changed = false;
 
+	// ルートレベルの選択オブジェクトに対してプロパティを更新
 	for (const id of selectedIds) {
 		const obj = objects[id];
 		if (!obj) continue;
@@ -100,6 +102,28 @@ export const handlePropertyUpdate = (
 			[property]: parsedValue,
 		} as ObjectState;
 		changed = true;
+	}
+
+	// Recursively update descendants of selected groups (lockAspectRatio は除外)
+	if (property !== "lockAspectRatio") {
+		for (const id of selectedIds) {
+			const descendantIds = collectDescendantIds(id, objects);
+			for (const descId of descendantIds) {
+				const descObj = updatedObjects[descId] ?? objects[descId];
+				if (!descObj) continue;
+				const features = objectRegistry.getFeatures(descObj.type);
+				const supported = features
+					? isPropertySupported(features, property)
+					: false;
+				if (!supported) continue;
+				const parsedValue = parsePropertyValue(property, value);
+				updatedObjects[descId] = {
+					...descObj,
+					[property]: parsedValue,
+				} as ObjectState;
+				changed = true;
+			}
+		}
 	}
 
 	if (!changed) return state;

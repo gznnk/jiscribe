@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 
+import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
 import { objectRegistry } from "../../../../../registry/ObjectRegistry";
 import type { CanvasState } from "../../../../../states/canvas/CanvasState";
 import type { ObjectMenuConfig } from "../types/ObjectMenuConfig";
@@ -62,12 +63,22 @@ export const getMenuConfig = (state: CanvasState): ObjectMenuConfig => {
 		return {};
 	}
 
-	// Collect unique object types (excluding "group")
+	// Collect unique object types (excluding "group").
+	// For groups, collect types from all non-group descendants so that
+	// recursive property updates are reflected in the menu.
 	const types = new Set<string>();
 	for (const id of selectedIds) {
 		const obj = objects[id];
-		if (obj && obj.type !== "group") {
+		if (!obj) continue;
+		if (obj.type !== "group") {
 			types.add(obj.type);
+		} else {
+			for (const descId of collectDescendantIds(id, objects)) {
+				const descObj = objects[descId];
+				if (descObj && descObj.type !== "group") {
+					types.add(descObj.type);
+				}
+			}
 		}
 	}
 

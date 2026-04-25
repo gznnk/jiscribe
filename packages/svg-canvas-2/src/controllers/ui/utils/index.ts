@@ -1,3 +1,3 @@
 export { calcGroupBoundingBox } from "./calcGroupBoundingBox";
-export { collectDescendantIds } from "./collectDescendantIds";
+export { collectDescendantIds } from "../../utils/collectDescendantIds";
 export { getResizeCursorForRotation } from "./getResizeCursorForRotation";
