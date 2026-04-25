@@ -1,4 +1,5 @@
 ﻿import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
+import { createMultiSelectGroup } from "../../gestures/handlers/objects/utils/createMultiSelectGroup";
 import { updateGroupBounds } from "../../ui/utils/updateGroupBounds";
 import type { Command } from "../CommandTypes";
 
@@ -75,6 +76,11 @@ export const UngroupCommand: Command = {
 			objects: updatedObjects,
 			rootIds: updatedRootIds,
 			selectedIds: promotedChildIds,
+			multiSelectGroup: createMultiSelectGroup(
+				promotedChildIds,
+				updatedObjects,
+				null,
+			),
 			objectMenuOpenId: null,
 			lastCommitTime: Date.now(),
 		};
