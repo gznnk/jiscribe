@@ -1,15 +1,11 @@
 ﻿import { memo, useRef } from "react";
 
-import {
-	ArrowGrid,
-	ArrowSection,
-	ArrowSectionLabel,
-	ArrowTypeButton,
-	ArrowTypeRow,
-} from "./ArrowHeadMenuStyled";
+import { ArrowHeadIconPreview } from "./ArrowHeadIconPreview";
+import { ArrowSelectorGrid, ArrowTypeButton } from "./ArrowHeadMenuStyled";
 import { ArrowTypes } from "../../../../../../schemas/objects/types/ArrowType";
+import type { ArrowType } from "../../../../../../schemas/objects/types/ArrowType";
 import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
-import { ArrowHeadIcon } from "../../../../icons/ArrowHeadIcon";
+import { ArrowSwapIcon } from "../../../../icons/ArrowSwapIcon";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
 import {
 	ObjectMenuButton,
@@ -17,7 +13,8 @@ import {
 	MenuItemPositioner,
 } from "../../ObjectMenuStyled";
 
-const SECTION_ID = "arrow-head";
+const SECTION_ID_START = "arrow-head-start";
+const SECTION_ID_END = "arrow-head-end";
 
 type ArrowHeadMenuProps = {
 	canvasState: CanvasState;
@@ -29,99 +26,114 @@ type ArrowHeadMenuProps = {
 const getSelectedArrowType = (
 	state: CanvasState,
 	property: "startArrow" | "endArrow",
-): string => {
+): ArrowType => {
 	for (const id of state.selectedIds) {
 		const obj = state.objects[id];
 		if (obj && property in obj) {
 			const value = (obj as Record<string, unknown>)[property];
-			if (typeof value === "string") return value;
+			if (typeof value === "string") return value as ArrowType;
 		}
 	}
 	return "None";
 };
 
 /**
- * 矢印タイプ表示用の短いラベルを返す。
- */
-const getArrowLabel = (type: string): string => {
-	const labels: Record<string, string> = {
-		FilledTriangle: "▶",
-		ConcaveTriangle: "►",
-		OpenArrow: "➤",
-		HollowTriangle: "△",
-		FilledDiamond: "◆",
-		HollowDiamond: "◇",
-		Circle: "●",
-		None: "—",
-	};
-	return labels[type] ?? type;
-};
-
-/**
  * 矢印メニュー。
- * 選択中オブジェクトの startArrow / endArrow を変更する。
+ * Start 矢印ボタン → 入れ替えボタン → End 矢印ボタン の3要素をインラインに並べる。
+ * 各ボタンをクリックするとそれぞれの矢印セレクターが展開する。
  */
 const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 	canvasState,
 }) => {
-	const menuItemRef = useRef<HTMLDivElement>(null);
-	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
+	const startRef = useRef<HTMLDivElement>(null);
+	const endRef = useRef<HTMLDivElement>(null);
+
+	const isStartOpen = canvasState.objectMenuOpenId === SECTION_ID_START;
+	const isEndOpen = canvasState.objectMenuOpenId === SECTION_ID_END;
+
 	const currentStart = getSelectedArrowType(canvasState, "startArrow");
 	const currentEnd = getSelectedArrowType(canvasState, "endArrow");
-	const { placement } = useSubmenuPosition(menuItemRef, "arrowHead", isOpen);
+
+	const { placement: startPlacement } = useSubmenuPosition(
+		startRef,
+		"arrowHead",
+		isStartOpen,
+	);
+	const { placement: endPlacement } = useSubmenuPosition(
+		endRef,
+		"arrowHead",
+		isEndOpen,
+	);
 
 	return (
-		<MenuItemPositioner ref={menuItemRef}>
-			<ObjectMenuButton
-				isActive={isOpen}
-				data-kind="object-menu"
-				data-id={`object-menu:toggle:${SECTION_ID}`}
-				title="Arrow Head"
-			>
-				<ArrowHeadIcon />
-			</ObjectMenuButton>
-			{isOpen && (
-				<DropdownPanel
-					placement={placement}
-					style={{ flexDirection: "column", width: "auto" }}
+		<>
+			{/* Start Arrow Button */}
+			<MenuItemPositioner ref={startRef}>
+				<ObjectMenuButton
+					isActive={isStartOpen}
+					data-kind="object-menu"
+					data-id={`object-menu:toggle:${SECTION_ID_START}`}
+					title="Start Arrow"
 				>
-					<ArrowGrid>
-						<ArrowSection>
-							<ArrowSectionLabel>Start</ArrowSectionLabel>
-							<ArrowTypeRow>
-								{ArrowTypes.map((type) => (
-									<ArrowTypeButton
-										key={`start-${type}`}
-										isActive={currentStart === type}
-										data-kind="object-menu"
-										data-id={`object-menu:set:startArrow:${type}`}
-										title={type}
-									>
-										{getArrowLabel(type)}
-									</ArrowTypeButton>
-								))}
-							</ArrowTypeRow>
-						</ArrowSection>
-						<ArrowSection>
-							<ArrowSectionLabel>End</ArrowSectionLabel>
-							<ArrowTypeRow>
-								{ArrowTypes.map((type) => (
-									<ArrowTypeButton
-										key={`end-${type}`}
-										isActive={currentEnd === type}
-										data-kind="object-menu"
-										data-id={`object-menu:set:endArrow:${type}`}
-										title={type}
-									>
-										{getArrowLabel(type)}
-									</ArrowTypeButton>
-								))}
-							</ArrowTypeRow>
-						</ArrowSection>
-					</ArrowGrid>
-				</DropdownPanel>
-			)}
-		</MenuItemPositioner>
+					<ArrowHeadIconPreview arrowType={currentStart} direction="start" />
+				</ObjectMenuButton>
+				{isStartOpen && (
+					<DropdownPanel placement={startPlacement}>
+						<ArrowSelectorGrid>
+							{ArrowTypes.map((type) => (
+								<ArrowTypeButton
+									key={`start-${type}`}
+									isActive={currentStart === type}
+									data-kind="object-menu"
+									data-id={`object-menu:set:startArrow:${type}`}
+									title={type}
+								>
+									<ArrowHeadIconPreview arrowType={type} direction="start" />
+								</ArrowTypeButton>
+							))}
+						</ArrowSelectorGrid>
+					</DropdownPanel>
+				)}
+			</MenuItemPositioner>
+
+			{/* Swap Button */}
+			<ObjectMenuButton
+				data-kind="object-menu"
+				data-id="object-menu:swap:arrows"
+				title="Swap arrows"
+			>
+				<ArrowSwapIcon fill="#6b7280" width={24} height={24} />
+			</ObjectMenuButton>
+
+			{/* End Arrow Button */}
+			<MenuItemPositioner ref={endRef}>
+				<ObjectMenuButton
+					isActive={isEndOpen}
+					data-kind="object-menu"
+					data-id={`object-menu:toggle:${SECTION_ID_END}`}
+					title="End Arrow"
+				>
+					<ArrowHeadIconPreview arrowType={currentEnd} direction="end" />
+				</ObjectMenuButton>
+				{isEndOpen && (
+					<DropdownPanel placement={endPlacement}>
+						<ArrowSelectorGrid>
+							{ArrowTypes.map((type) => (
+								<ArrowTypeButton
+									key={`end-${type}`}
+									isActive={currentEnd === type}
+									data-kind="object-menu"
+									data-id={`object-menu:set:endArrow:${type}`}
+									title={type}
+								>
+									<ArrowHeadIconPreview arrowType={type} direction="end" />
+								</ArrowTypeButton>
+							))}
+						</ArrowSelectorGrid>
+					</DropdownPanel>
+				)}
+			</MenuItemPositioner>
+		</>
 	);
 };
 
