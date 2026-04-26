@@ -1,6 +1,11 @@
-import { calcBoundingBox, isTransformedFrame } from "@workspace/geometry";
+import {
+	calcBoundingBox,
+	calcPolyBoundingBox,
+	isTransformedFrame,
+} from "@workspace/geometry";
 import { type RefObject, useEffect, useMemo, useState } from "react";
 
+import { isPoly } from "../../../../../schemas/objects/types/Poly";
 import type { CanvasState } from "../../../../../states/canvas/CanvasState";
 import { isGroupState } from "../../../../../states/objects/primitives/group/GroupState";
 import { calcGroupBoundingBox } from "../../../utils/calcGroupBoundingBox";
@@ -97,6 +102,11 @@ export function useObjectMenuPosition(
 				// グループの場合、子要素から再帰的にバウンディングボックスを計算
 				bbox = calcGroupBoundingBox(obj, objects);
 				if (!bbox) continue;
+			} else if (isPoly(obj)) {
+				// polyline, polygon など points 配列を持つオブジェクト
+				const polyBbox = calcPolyBoundingBox(obj.points);
+				if (!polyBbox) continue;
+				bbox = polyBbox;
 			} else {
 				// Transform を持たないオブジェクト（connector など）はスキップ
 				continue;
