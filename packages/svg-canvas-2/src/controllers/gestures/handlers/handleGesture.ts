@@ -8,6 +8,7 @@ import type {
 } from "../../../registry/GestureHandlerRegistryTypes";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { Gesture } from "../recognizer/GestureRecognizerTypes";
+import { calcSnapCandidates } from "./objects/utils/snap/calcSnapCandidates";
 
 /**
  * Event types that should trigger saving the current state as eventStartState.
@@ -54,7 +55,6 @@ export const handleGesture = (
 		// ドラッグ中の再計算を防ぐため、開始時の全オブジェクトに keyPoints を付与してキャッシュする
 		const objectsWithKeyPoints = Object.fromEntries(
 			Object.entries(state.objects).map(([id, obj]) => {
-				// console.log("Processing object for eventStartState:", { id, obj });
 				// 既存の keyPoints があっても常に最新を計算し直す
 				if (isTransformedFrame(obj)) {
 					return [
@@ -69,11 +69,18 @@ export const handleGesture = (
 			}),
 		);
 
+		// ドラッグ中選択オブジェクトを除いたスナップ候補を事前計算する（毎 drag event での再計算を避けるため）
+		const snapCandidates = calcSnapCandidates(
+			objectsWithKeyPoints,
+			new Set(state.selectedIds),
+		);
+
 		nextState = {
 			...state,
 			eventStartState: {
 				...state,
 				objects: objectsWithKeyPoints,
+				snapCandidates,
 			},
 		};
 	}
@@ -107,6 +114,7 @@ export const handleGesture = (
 		nextState = {
 			...nextState,
 			eventStartState: null,
+			snapFeedback: null,
 			lastCommitTime: canvasEvent.time,
 		};
 	}

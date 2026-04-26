@@ -1,15 +1,18 @@
 import type { Point } from "@workspace/geometry";
 
 import { moveGroup } from "./primitives/GroupController";
+import { calcGroupBBox } from "./utils/calcGroupBBox";
 import { createMultiSelectGroup } from "./utils/createMultiSelectGroup";
 import { determineSelection } from "./utils/determineSelection";
 import { getAncestors } from "./utils/getAncestors";
+import { findSnap, SNAP_THRESHOLD_PX } from "./utils/snap/findSnap";
 import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../../../registry/GestureHandlerRegistryTypes";
 import { objectRegistry } from "../../../../registry/ObjectRegistry";
 import type { Mods } from "../../../../registry/ObjectRegistryTypes";
+import type { SnapFeedback } from "../../../../states/canvas/SnapTypes";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../../../states/objects/base/TextStyleState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
@@ -78,21 +81,44 @@ function handleObjectDrag(
 	}
 
 	const selectedIds = canvasState.selectedIds;
+
+	// --- スナップ補正 ---
+	let adjustedDelta = delta;
+	let snapFeedback: SnapFeedback = { x: null, y: null };
+
+	const snapCandidates = canvasState.eventStartState?.snapCandidates;
+	if (snapCandidates) {
+		const groupBBox = calcGroupBBox(eventStartObjects, selectedIds, delta);
+		if (groupBBox) {
+			const zoom = canvasState.viewport.zoom;
+			const result = findSnap(
+				groupBBox,
+				snapCandidates,
+				SNAP_THRESHOLD_PX / zoom,
+			);
+			adjustedDelta = {
+				x: delta.x + result.delta.x,
+				y: delta.y + result.delta.y,
+			};
+			snapFeedback = result.feedback;
+		}
+	}
+
+	// --- 全選択オブジェクトを adjustedDelta で移動 ---
 	const updatedObjects = { ...eventStartObjects };
 
-	// 選択中のすべてのオブジェクトを移動
 	for (const selectedId of selectedIds) {
 		const selectedObject = eventStartObjects[selectedId];
 		if (!selectedObject) continue;
 
 		if (selectedObject.type === "group") {
 			// Group: 再帰的に子も移動
-			moveGroup(selectedId, eventStartObjects, updatedObjects, delta);
+			moveGroup(selectedId, eventStartObjects, updatedObjects, adjustedDelta);
 		} else {
 			// Registry経由で形状ごとのmoveByDeltaを取得
 			const moveByDelta = objectRegistry.getMoveByDelta(selectedObject.type);
 			if (moveByDelta) {
-				updatedObjects[selectedId] = moveByDelta(selectedObject, delta);
+				updatedObjects[selectedId] = moveByDelta(selectedObject, adjustedDelta);
 			}
 		}
 	}
@@ -100,6 +126,7 @@ function handleObjectDrag(
 	const nextState = {
 		...canvasState,
 		objects: updatedObjects,
+		snapFeedback,
 	};
 
 	// multiSelectGroup も同期して移動
@@ -109,8 +136,8 @@ function handleObjectDrag(
 	if (multiSelectGroup && eventStartMultiSelectGroup) {
 		nextState.multiSelectGroup = {
 			...multiSelectGroup,
-			cx: eventStartMultiSelectGroup.cx + delta.x,
-			cy: eventStartMultiSelectGroup.cy + delta.y,
+			cx: eventStartMultiSelectGroup.cx + adjustedDelta.x,
+			cy: eventStartMultiSelectGroup.cy + adjustedDelta.y,
 		};
 	}
 

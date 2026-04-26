@@ -1,0 +1,64 @@
+import type { SnapCandidate, SnapCandidates } from "../../../../../../states/canvas/SnapTypes";
+import { hasFrameKeyPoints } from "../../../../../../states/objects/base/FrameWithKeyPoints";
+import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
+
+/**
+ * Frame を持つオブジェクトの keyPoints（dragStart 時にキャッシュ済み）から AABB を取得する。
+ * keyPoints の 4 隅から min/max を取るだけなので再計算不要。
+ */
+const getBBoxFromKeyPoints = (
+	obj: ObjectState,
+): { left: number; right: number; top: number; bottom: number } | null => {
+	if (!hasFrameKeyPoints(obj)) return null;
+	const { topLeft, topRight, bottomLeft, bottomRight } = obj.keyPoints;
+	return {
+		left: Math.min(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x),
+		right: Math.max(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x),
+		top: Math.min(topLeft.y, topRight.y, bottomLeft.y, bottomRight.y),
+		bottom: Math.max(topLeft.y, topRight.y, bottomLeft.y, bottomRight.y),
+	};
+};
+
+/**
+ * 全 Frame オブジェクトからスナップ候補を生成する。
+ * dragStart 時に eventStartState（keyPoints キャッシュ済み）を渡して呼ぶこと。
+ *
+ * @param objects - keyPoints がキャッシュされたオブジェクトマップ
+ * @param excludeIds - スナップ候補から除外する ID（ドラッグ中の選択オブジェクト）
+ */
+export const calcSnapCandidates = (
+	objects: Record<string, ObjectState>,
+	excludeIds: Set<string>,
+): SnapCandidates => {
+	const xCandidates: SnapCandidate[] = [];
+	const yCandidates: SnapCandidate[] = [];
+
+	for (const [id, obj] of Object.entries(objects)) {
+		if (excludeIds.has(id)) continue;
+		if (obj.type === "group") continue;
+
+		const bbox = getBBoxFromKeyPoints(obj);
+		if (!bbox) continue;
+
+		const { left, right, top, bottom } = bbox;
+
+		// x 候補: left / right エッジ
+		// perpendicularMin/Max は Y 方向の範囲（ガイド縦線の延伸用）
+		xCandidates.push(
+			{ objectId: id, coordinate: left, edge: "left", perpendicularMin: top, perpendicularMax: bottom },
+			{ objectId: id, coordinate: right, edge: "right", perpendicularMin: top, perpendicularMax: bottom },
+		);
+
+		// y 候補: top / bottom エッジ
+		// perpendicularMin/Max は X 方向の範囲（ガイド横線の延伸用）
+		yCandidates.push(
+			{ objectId: id, coordinate: top, edge: "top", perpendicularMin: left, perpendicularMax: right },
+			{ objectId: id, coordinate: bottom, edge: "bottom", perpendicularMin: left, perpendicularMax: right },
+		);
+	}
+
+	xCandidates.sort((a, b) => a.coordinate - b.coordinate);
+	yCandidates.sort((a, b) => a.coordinate - b.coordinate);
+
+	return { x: xCandidates, y: yCandidates };
+};

@@ -34,6 +34,7 @@ import { AreaSelectionRect } from "./ui/feedback/AreaSelectionRect";
 import { DragGhost } from "./ui/feedback/DragGhost";
 import { PendingConnectorOverlay } from "./ui/feedback/PendingConnectorOverlay";
 import { SelectionOverlay } from "./ui/feedback/SelectionOverlay";
+import { SnapGuides } from "./ui/feedback/SnapGuides";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
 import { ShapeLibrary } from "./ui/menu/ShapeLibrary";
@@ -207,6 +208,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 						ghostPosition={state.ghostPosition}
 					/>
 					<AreaSelectionRect areaSelection={state.areaSelection} />
+					<SnapGuides snapFeedback={state.snapFeedback} zoom={state.viewport.zoom} />
 				</CanvasView>
 				{/* Container for HTML elements that follow canvas scroll AND zoom (elements scale with zoom) */}
 				<ZoomScaledOverlay left={-minX} top={-minY} zoom={zoom}>

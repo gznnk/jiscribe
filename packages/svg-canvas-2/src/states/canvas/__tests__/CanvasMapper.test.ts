@@ -162,6 +162,8 @@ describe("CanvasMapper", () => {
 				selectedConnectorId: null,
 				editingConnectorId: null,
 				editingEndpoint: null,
+				snapCandidates: null,
+				snapFeedback: null,
 				objects: {
 					"rect-1": {
 						id: "rect-1",

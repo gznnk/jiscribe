@@ -1,5 +1,6 @@
 import type { Point } from "@workspace/geometry";
 
+import type { SnapCandidates, SnapFeedback } from "./SnapTypes";
 import type { Viewport } from "./Viewport";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 import type { ObjectState } from "../objects/base/ObjectState";
@@ -134,4 +135,17 @@ export type CanvasState = {
 	 * dragEnd で null にクリアする。
 	 */
 	editingEndpoint: "source" | "target" | null;
+
+	/**
+	 * ドラッグ開始時に計算されたスナップ候補。
+	 * eventStartState にのみセットされ、drag 中に参照される。
+	 * dragEnd 時は eventStartState ごとクリアされるため履歴には残らない。
+	 */
+	snapCandidates: SnapCandidates | null;
+
+	/**
+	 * ドラッグ中のスナップフィードバック。
+	 * スナップしている間のみ non-null。dragEnd でクリアする。
+	 */
+	snapFeedback: SnapFeedback | null;
 };
