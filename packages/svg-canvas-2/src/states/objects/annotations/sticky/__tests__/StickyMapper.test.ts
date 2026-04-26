@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import type { StickyDoc } from "../../../../../schemas/objects/annotations/StickyDoc";
-import { stickyToDoc, stickyToState } from "../../../../../states/objects/annotations/sticky/StickyMapper";
+import {
+	stickyToDoc,
+	stickyToState,
+} from "../../../../../states/objects/annotations/sticky/StickyMapper";
 import type { StickyState } from "../../../../../states/objects/annotations/sticky/StickyState";
 
 describe("StickyMapper", () => {
@@ -17,8 +20,6 @@ describe("StickyMapper", () => {
 				rotation: 45,
 				flipX: true,
 				flipY: false,
-				stroke: "#000000",
-				strokeWidth: 2,
 				fill: "#ffff00",
 			} as unknown as StickyDoc;
 
@@ -33,8 +34,6 @@ describe("StickyMapper", () => {
 			expect(state.rotation).toBe(45);
 			expect(state.scaleX).toBe(-1); // flipX = true
 			expect(state.scaleY).toBe(1); // flipY = false
-			expect(state.stroke).toBe("#000000");
-			expect(state.strokeWidth).toBe(2);
 			expect(state.fill).toBe("#ffff00");
 		});
 
@@ -85,8 +84,6 @@ describe("StickyMapper", () => {
 				rotation: 45,
 				scaleX: -1,
 				scaleY: 1,
-				stroke: "#000000",
-				strokeWidth: 2,
 				fill: "#ffff00",
 			} as unknown as StickyState;
 
@@ -101,8 +98,6 @@ describe("StickyMapper", () => {
 			expect(doc.rotation).toBe(45);
 			expect(doc.flipX).toBe(true); // scaleX < 0
 			expect(doc.flipY).toBeUndefined(); // scaleY >= 0
-			expect(doc.stroke).toBe("#000000");
-			expect(doc.strokeWidth).toBe(2);
 			expect(doc.fill).toBe("#ffff00");
 		});
 
@@ -157,8 +152,6 @@ describe("StickyMapper", () => {
 				height: 50,
 				rotation: 30,
 				flipX: true,
-				stroke: "#000000",
-				strokeWidth: 2,
 				fill: "#ffff00",
 			} as unknown as StickyDoc;
 
@@ -173,8 +166,6 @@ describe("StickyMapper", () => {
 			expect(convertedDoc.height).toBe(originalDoc.height);
 			expect(convertedDoc.rotation).toBe(originalDoc.rotation);
 			expect(convertedDoc.flipX).toBe(originalDoc.flipX);
-			expect(convertedDoc.stroke).toBe(originalDoc.stroke);
-			expect(convertedDoc.strokeWidth).toBe(originalDoc.strokeWidth);
 			expect(convertedDoc.fill).toBe(originalDoc.fill);
 		});
 	});

@@ -5,7 +5,6 @@ import type { StickyState } from "../../../../states/objects/annotations/sticky/
 import { TextOverlay } from "../../base/TextOverlay";
 import type { TextEditable } from "../../base/TextOverlay";
 import { createSvgTransform } from "../../utils/createSvgTransform";
-import { getStrokeDasharray } from "../../utils/getStrokeDasharray";
 
 type StickyProps = StickyState & TextEditable;
 
@@ -19,9 +18,6 @@ const StickyComponent: React.FC<StickyProps> = ({
 	scaleY,
 	rotation,
 	fill,
-	stroke,
-	strokeWidth,
-	strokeDashType,
 	text,
 	textType,
 	textAlign,
@@ -71,9 +67,6 @@ const StickyComponent: React.FC<StickyProps> = ({
 			<polygon
 				points={points}
 				fill={fill ?? "#fef9c3"}
-				stroke={stroke}
-				strokeWidth={strokeWidth}
-				strokeDasharray={getStrokeDasharray(strokeDashType, strokeWidth)}
 				transform={transformAttr}
 			/>
 			<TextOverlay
