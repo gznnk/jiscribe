@@ -36,9 +36,10 @@ export const createMenuConfig = (
 	// Add stroke features
 	if (features.stroke) {
 		config.borderColor = overrides.borderColor ?? true;
-		config.borderStyle = overrides.borderStyle ?? {
-			radius: false,
-		};
+		// Only include borderStyle if not explicitly overridden to undefined
+		if (!("borderStyle" in overrides) || overrides.borderStyle !== undefined) {
+			config.borderStyle = overrides.borderStyle ?? { radius: false };
+		}
 	}
 
 	// Add radius features
@@ -58,6 +59,21 @@ export const createMenuConfig = (
 	// Add transform features (aspect ratio)
 	if (features.transform) {
 		config.aspectRatio = overrides.aspectRatio ?? true;
+	}
+
+	// Add line color (for lines, connectors, polylines)
+	if (overrides.lineColor !== undefined) {
+		config.lineColor = overrides.lineColor;
+	}
+
+	// Add arrow head controls
+	if (overrides.arrowHead !== undefined) {
+		config.arrowHead = overrides.arrowHead;
+	}
+
+	// Add line style controls
+	if (overrides.lineStyle !== undefined) {
+		config.lineStyle = overrides.lineStyle;
 	}
 
 	return config;
