@@ -3,10 +3,14 @@ import type { BoundingBox } from "@workspace/geometry";
 import type {
 	SnapCandidate,
 	SnapCandidates,
+	SnapAxisFeedback,
 	SnapFeedback,
 } from "../../../../../../states/canvas/SnapTypes";
 
 export const SNAP_THRESHOLD_PX = 8;
+
+/** 浮動小数点誤差吸収用 epsilon（SVG単位）*/
+const SNAP_EPSILON = 0.5;
 
 type SnapDelta = { x: number; y: number };
 
@@ -56,6 +60,46 @@ const findNearest = (
 };
 
 /**
+ * スナップ後の各エッジについて、候補と一致するガイドを収集する。
+ * 一次スナップで合わせたエッジは必ず一致し、もう一方のエッジはオブジェクトの
+ * 幅/高さがちょうど2つのスナップ線の間に収まる場合のみ一致する。
+ *
+ * @param snappedEdges - スナップ後のエッジ座標（x軸なら[left, right]）
+ * @param candidates - ソート済みスナップ候補
+ * @param perpendicularMin - ガイド線垂直方向のグループ側範囲（開始）
+ * @param perpendicularMax - ガイド線垂直方向のグループ側範囲（終了）
+ */
+const collectAxisFeedbacks = (
+	snappedEdges: [number, number],
+	candidates: SnapCandidate[],
+	perpendicularMin: number,
+	perpendicularMax: number,
+): SnapAxisFeedback[] => {
+	const feedbacks: SnapAxisFeedback[] = [];
+
+	for (const edgeValue of snappedEdges) {
+		const matching: SnapCandidate[] = [];
+		for (const c of candidates) {
+			if (Math.abs(c.coordinate - edgeValue) <= SNAP_EPSILON) {
+				matching.push(c);
+			}
+		}
+		if (matching.length === 0) continue;
+
+		const sourcePerpendicularMin = Math.min(...matching.map((c) => c.perpendicularMin));
+		const sourcePerpendicularMax = Math.max(...matching.map((c) => c.perpendicularMax));
+		feedbacks.push({
+			coordinate: matching[0].coordinate,
+			lineStart: Math.min(perpendicularMin, sourcePerpendicularMin),
+			lineEnd: Math.max(perpendicularMax, sourcePerpendicularMax),
+			sourceObjectIds: [...new Set(matching.map((c) => c.objectId))],
+		});
+	}
+
+	return feedbacks;
+};
+
+/**
  * ドラッグ中グループのバウンディングボックスとスナップ候補を比較し、
  * スナップ補正量とフィードバック情報を返す。
  *
@@ -96,39 +140,27 @@ export const findSnap = (
 	};
 
 	// --- ③ ガイド線のフィードバックを生成 ---
-	const feedback: SnapFeedback = { x: null, y: null };
-
-	if (xResult) {
-		// 縦ガイド線の Y 範囲 = スナップ後グループとスナップ先のユニオン
-		const sourcePerpendicularMin = Math.min(
-			...xResult.candidates.map((c) => c.perpendicularMin),
-		);
-		const sourcePerpendicularMax = Math.max(
-			...xResult.candidates.map((c) => c.perpendicularMax),
-		);
-		feedback.x = {
-			coordinate: xResult.snapCoordinate,
-			lineStart: Math.min(snappedBBox.top, sourcePerpendicularMin),
-			lineEnd: Math.max(snappedBBox.bottom, sourcePerpendicularMax),
-			sourceObjectIds: [...new Set(xResult.candidates.map((c) => c.objectId))],
-		};
-	}
-
-	if (yResult) {
-		// 横ガイド線の X 範囲 = スナップ後グループとスナップ先のユニオン
-		const sourcePerpendicularMin = Math.min(
-			...yResult.candidates.map((c) => c.perpendicularMin),
-		);
-		const sourcePerpendicularMax = Math.max(
-			...yResult.candidates.map((c) => c.perpendicularMax),
-		);
-		feedback.y = {
-			coordinate: yResult.snapCoordinate,
-			lineStart: Math.min(snappedBBox.left, sourcePerpendicularMin),
-			lineEnd: Math.max(snappedBBox.right, sourcePerpendicularMax),
-			sourceObjectIds: [...new Set(yResult.candidates.map((c) => c.objectId))],
-		};
-	}
+	// スナップ後の各エッジを候補と照合し、一致するもの全てをガイドとして収集する。
+	// 一次スナップで合わせたエッジは必ず一致し、もう一方のエッジはオブジェクトの
+	// 幅/高さが2つのスナップ線の間にちょうど収まる場合にのみ一致する。
+	const feedback: SnapFeedback = {
+		x: xResult
+			? collectAxisFeedbacks(
+					[snappedBBox.left, snappedBBox.right],
+					candidates.x,
+					snappedBBox.top,
+					snappedBBox.bottom,
+				)
+			: [],
+		y: yResult
+			? collectAxisFeedbacks(
+					[snappedBBox.top, snappedBBox.bottom],
+					candidates.y,
+					snappedBBox.left,
+					snappedBBox.right,
+				)
+			: [],
+	};
 
 	return { delta, feedback };
 };

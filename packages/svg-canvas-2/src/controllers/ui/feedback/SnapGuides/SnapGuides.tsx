@@ -20,32 +20,34 @@ const SnapGuidesComponent: React.FC<SnapGuidesProps> = ({ snapFeedback, zoom }) 
 
 	return (
 		<>
-			{/* x軸スナップ: 縦ガイド線 */}
-			{snapFeedback.x && (
+			{/* x軸スナップ: 縦ガイド線（left/right 各々に出る場合あり）*/}
+			{snapFeedback.x.map((guide) => (
 				<line
-					x1={snapFeedback.x.coordinate}
-					y1={snapFeedback.x.lineStart - ext}
-					x2={snapFeedback.x.coordinate}
-					y2={snapFeedback.x.lineEnd + ext}
+					key={guide.coordinate}
+					x1={guide.coordinate}
+					y1={guide.lineStart - ext}
+					x2={guide.coordinate}
+					y2={guide.lineEnd + ext}
 					stroke={STROKE}
 					strokeWidth={STROKE_WIDTH}
 					strokeDasharray={STROKE_DASHARRAY}
 					pointerEvents="none"
 				/>
-			)}
-			{/* y軸スナップ: 横ガイド線 */}
-			{snapFeedback.y && (
+			))}
+			{/* y軸スナップ: 横ガイド線（top/bottom 各々に出る場合あり）*/}
+			{snapFeedback.y.map((guide) => (
 				<line
-					x1={snapFeedback.y.lineStart - ext}
-					y1={snapFeedback.y.coordinate}
-					x2={snapFeedback.y.lineEnd + ext}
-					y2={snapFeedback.y.coordinate}
+					key={guide.coordinate}
+					x1={guide.lineStart - ext}
+					y1={guide.coordinate}
+					x2={guide.lineEnd + ext}
+					y2={guide.coordinate}
 					stroke={STROKE}
 					strokeWidth={STROKE_WIDTH}
 					strokeDasharray={STROKE_DASHARRAY}
 					pointerEvents="none"
 				/>
-			)}
+			))}
 		</>
 	);
 };

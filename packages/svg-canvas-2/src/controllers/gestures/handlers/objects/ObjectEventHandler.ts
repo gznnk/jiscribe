@@ -84,7 +84,7 @@ function handleObjectDrag(
 
 	// --- スナップ補正 ---
 	let adjustedDelta = delta;
-	let snapFeedback: SnapFeedback = { x: null, y: null };
+	let snapFeedback: SnapFeedback = { x: [], y: [] };
 
 	const snapCandidates = canvasState.eventStartState?.snapCandidates;
 	if (snapCandidates) {

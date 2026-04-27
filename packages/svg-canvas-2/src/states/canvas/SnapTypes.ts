@@ -33,8 +33,8 @@ export type SnapAxisFeedback = {
 };
 
 export type SnapFeedback = {
-	/** X軸スナップ（縦ガイド線）*/
-	x: SnapAxisFeedback | null;
-	/** Y軸スナップ（横ガイド線）*/
-	y: SnapAxisFeedback | null;
+	/** X軸スナップ（縦ガイド線）。left/right が各々候補と一致した場合に複数になる */
+	x: SnapAxisFeedback[];
+	/** Y軸スナップ（横ガイド線）。top/bottom が各々候補と一致した場合に複数になる */
+	y: SnapAxisFeedback[];
 };
