@@ -223,6 +223,7 @@ function handleObjectDragStart(
 	);
 
 	let selectedIds: string[];
+	let newMultiSelectGroup = canvasState.multiSelectGroup;
 
 	if (isCurrentlySelected || isAncestorSelected) {
 		// すでに選択済み: 現在の選択を維持
@@ -231,15 +232,19 @@ function handleObjectDragStart(
 		// 未選択: 階層的選択ロジックを適用
 		const newSelection = determineSelection(targetObject, canvasState, mods);
 		selectedIds = newSelection ?? canvasState.selectedIds;
-	}
 
-	// eventStartState.objects（keyPoints キャッシュ済み）から multiSelectGroup を計算し、
-	// eventStartState にも反映することでアウトライン表示と計算を一本化する
-	const eventStartObjects = canvasState.eventStartState?.objects ?? canvasState.objects;
-	const newMultiSelectGroup =
+		// 選択中の図形が増えたのに伴い multiSelectGroup を作成・更新する
+		const eventStartObjects =
+			canvasState.eventStartState?.objects ?? canvasState.objects;
+		newMultiSelectGroup =
 		selectedIds.length > 1
-			? createMultiSelectGroup(selectedIds, eventStartObjects, canvasState.multiSelectGroup)
+				? createMultiSelectGroup(
+						selectedIds,
+						eventStartObjects,
+						canvasState.multiSelectGroup,
+					)
 			: null;
+	}
 
 	// 選択状態を更新し、エッジスクロールを有効化
 	const nextState = {
@@ -251,9 +256,12 @@ function handleObjectDragStart(
 		selectedConnectorId: null,
 		// ドラッグ開始時にオブジェクトメニューのドロップダウンを閉じる
 		objectMenuOpenId: null,
-		// eventStartState の multiSelectGroup も同期（calcSnapGroupBBox で参照するため）
+		// eventStartState の multiSelectGroup を更新
 		eventStartState: canvasState.eventStartState
-			? { ...canvasState.eventStartState, multiSelectGroup: newMultiSelectGroup }
+			? {
+					...canvasState.eventStartState,
+					multiSelectGroup: newMultiSelectGroup,
+				}
 			: null,
 	};
 
