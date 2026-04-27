@@ -1,7 +1,7 @@
-import type { Frame } from "@workspace/geometry";
 import type { Prettify } from "@workspace/utility-types/src/Prettify";
 
 import type { GroupFeatures } from "../../../../schemas/objects/primitives/GroupDoc";
+import type { FrameWithKeyPoints } from "../../base/FrameWithKeyPoints";
 import type { CreateObjectState } from "../../utils/CreateObjectState";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -19,7 +19,7 @@ export type GroupState = Prettify<
 			childIds: string[];
 		}
 	> &
-		Frame // Cached bounding frame (cx, cy, width, height) for performance
+		FrameWithKeyPoints // Cached bounding frame with optional keyPoints cache
 >;
 
 /**

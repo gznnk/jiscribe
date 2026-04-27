@@ -72,12 +72,21 @@ export const handleGesture = (
 		// スナップ候補を事前計算する（毎 drag event での再計算を避けるため）
 		const snapCandidates = calcSnapCandidates(objectsWithKeyPoints);
 
+		// multiSelectGroup があれば keyPoints をキャッシュする（スナップ AABB 計算で利用）
+		const multiSelectGroupWithKeyPoints = state.multiSelectGroup
+			? {
+					...state.multiSelectGroup,
+					keyPoints: calcFrameKeyPoints(state.multiSelectGroup as TransformedFrame),
+				}
+			: null;
+
 		nextState = {
 			...state,
 			eventStartState: {
 				...state,
 				objects: objectsWithKeyPoints,
 				snapCandidates,
+				multiSelectGroup: multiSelectGroupWithKeyPoints,
 			},
 		};
 	}
