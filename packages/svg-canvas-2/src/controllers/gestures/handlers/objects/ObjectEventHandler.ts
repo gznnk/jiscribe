@@ -17,6 +17,7 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../../../states/objects/base/TextStyleState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { updateAffectedGroupBounds } from "../../../ui/utils/updateAffectedGroupBounds";
+import { collectDescendantIds } from "../../../utils/collectDescendantIds";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 
 /**
@@ -90,10 +91,21 @@ function handleObjectDrag(
 	if (snapCandidates) {
 		const groupBBox = calcGroupBBox(eventStartObjects, selectedIds, delta);
 		if (groupBBox) {
+			// 現在の selectedIds + 全子孫を除外（dragStart後の選択変更・グループ子図形も対応）
+			const excludeIds = new Set(selectedIds);
+			for (const id of selectedIds) {
+				for (const descendantId of collectDescendantIds(id, eventStartObjects)) {
+					excludeIds.add(descendantId);
+				}
+			}
+			const filteredCandidates = {
+				x: snapCandidates.x.filter((c) => !excludeIds.has(c.objectId)),
+				y: snapCandidates.y.filter((c) => !excludeIds.has(c.objectId)),
+			};
 			const zoom = canvasState.viewport.zoom;
 			const result = findSnap(
 				groupBBox,
-				snapCandidates,
+				filteredCandidates,
 				SNAP_THRESHOLD_PX / zoom,
 			);
 			adjustedDelta = {

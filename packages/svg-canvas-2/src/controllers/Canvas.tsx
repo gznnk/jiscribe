@@ -208,7 +208,10 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 						ghostPosition={state.ghostPosition}
 					/>
 					<AreaSelectionRect areaSelection={state.areaSelection} />
-					<SnapGuides snapFeedback={state.snapFeedback} zoom={state.viewport.zoom} />
+					<SnapGuides
+						snapFeedback={state.snapFeedback}
+						zoom={state.viewport.zoom}
+					/>
 				</CanvasView>
 				{/* Container for HTML elements that follow canvas scroll AND zoom (elements scale with zoom) */}
 				<ZoomScaledOverlay left={-minX} top={-minY} zoom={zoom}>

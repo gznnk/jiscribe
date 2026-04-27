@@ -69,11 +69,8 @@ export const handleGesture = (
 			}),
 		);
 
-		// ドラッグ中選択オブジェクトを除いたスナップ候補を事前計算する（毎 drag event での再計算を避けるため）
-		const snapCandidates = calcSnapCandidates(
-			objectsWithKeyPoints,
-			new Set(state.selectedIds),
-		);
+		// スナップ候補を事前計算する（毎 drag event での再計算を避けるため）
+		const snapCandidates = calcSnapCandidates(objectsWithKeyPoints);
 
 		nextState = {
 			...state,

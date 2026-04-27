@@ -22,19 +22,17 @@ const getBBoxFromKeyPoints = (
 /**
  * 全 Frame オブジェクトからスナップ候補を生成する。
  * dragStart 時に eventStartState（keyPoints キャッシュ済み）を渡して呼ぶこと。
+ * 除外（選択中・子孫）は呼び出し側で filteredCandidates としてフィルタすること。
  *
  * @param objects - keyPoints がキャッシュされたオブジェクトマップ
- * @param excludeIds - スナップ候補から除外する ID（ドラッグ中の選択オブジェクト）
  */
 export const calcSnapCandidates = (
 	objects: Record<string, ObjectState>,
-	excludeIds: Set<string>,
 ): SnapCandidates => {
 	const xCandidates: SnapCandidate[] = [];
 	const yCandidates: SnapCandidate[] = [];
 
 	for (const [id, obj] of Object.entries(objects)) {
-		if (excludeIds.has(id)) continue;
 		if (obj.type === "group") continue;
 
 		const bbox = getBBoxFromKeyPoints(obj);
