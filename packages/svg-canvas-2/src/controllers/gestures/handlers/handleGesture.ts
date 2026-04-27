@@ -76,7 +76,9 @@ export const handleGesture = (
 		const multiSelectGroupWithKeyPoints = state.multiSelectGroup
 			? {
 					...state.multiSelectGroup,
-					keyPoints: calcFrameKeyPoints(state.multiSelectGroup as TransformedFrame),
+					keyPoints: calcFrameKeyPoints(
+						state.multiSelectGroup as TransformedFrame,
+					),
 				}
 			: null;
 

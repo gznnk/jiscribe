@@ -63,48 +63,6 @@ function handleObjectClick(
 }
 
 /**
- * ドラッグ中の選択グループ全体の AABB をスナップ用に計算する。
- *
- * - 複数選択: eventStartState.multiSelectGroup から導出（O(1)）
- * - 単一選択: 対象オブジェクトの keyPoints から計算
- */
-function calcSnapGroupBBox(
-	canvasState: CanvasControllerState,
-	eventStartObjects: Record<string, ObjectState>,
-	selectedIds: string[],
-	delta: Point,
-): { left: number; right: number; top: number; bottom: number } | null {
-	if (selectedIds.length > 1) {
-		const mg = canvasState.eventStartState?.multiSelectGroup;
-		if (!mg) return null;
-		return {
-			left: mg.cx - mg.width / 2 + delta.x,
-			right: mg.cx + mg.width / 2 + delta.x,
-			top: mg.cy - mg.height / 2 + delta.y,
-			bottom: mg.cy + mg.height / 2 + delta.y,
-		};
-	}
-
-	if (selectedIds.length === 1) {
-		const obj = eventStartObjects[selectedIds[0]];
-		if (!obj || !hasFrameKeyPoints(obj)) return null;
-		const kp = obj.keyPoints;
-		const left = Math.min(kp.topLeft.x, kp.topRight.x, kp.bottomLeft.x, kp.bottomRight.x);
-		const right = Math.max(kp.topLeft.x, kp.topRight.x, kp.bottomLeft.x, kp.bottomRight.x);
-		const top = Math.min(kp.topLeft.y, kp.topRight.y, kp.bottomLeft.y, kp.bottomRight.y);
-		const bottom = Math.max(kp.topLeft.y, kp.topRight.y, kp.bottomLeft.y, kp.bottomRight.y);
-		return {
-			left: left + delta.x,
-			right: right + delta.x,
-			top: top + delta.y,
-			bottom: bottom + delta.y,
-		};
-	}
-
-	return null;
-}
-
-/**
  * オブジェクトのドラッグ処理
  * Registry経由で各形状のmoveByDeltaを動的に解決
  */
@@ -131,12 +89,51 @@ function handleObjectDrag(
 
 	const snapCandidates = canvasState.eventStartState?.snapCandidates;
 	if (snapCandidates) {
-		const groupBBox = calcSnapGroupBBox(canvasState, eventStartObjects, selectedIds, delta);
-		if (groupBBox) {
+		const snapSource =
+			selectedIds.length > 1
+				? canvasState.eventStartState?.multiSelectGroup
+				: eventStartObjects[selectedIds[0]];
+
+		if (snapSource && hasFrameKeyPoints(snapSource)) {
+			const kp = snapSource.keyPoints;
+			const selectedBBox = {
+				left:
+					Math.min(
+						kp.topLeft.x,
+						kp.topRight.x,
+						kp.bottomLeft.x,
+						kp.bottomRight.x,
+					) + delta.x,
+				right:
+					Math.max(
+						kp.topLeft.x,
+						kp.topRight.x,
+						kp.bottomLeft.x,
+						kp.bottomRight.x,
+					) + delta.x,
+				top:
+					Math.min(
+						kp.topLeft.y,
+						kp.topRight.y,
+						kp.bottomLeft.y,
+						kp.bottomRight.y,
+					) + delta.y,
+				bottom:
+					Math.max(
+						kp.topLeft.y,
+						kp.topRight.y,
+						kp.bottomLeft.y,
+						kp.bottomRight.y,
+					) + delta.y,
+			};
+
 			// 現在の selectedIds + 全子孫を除外（dragStart後の選択変更・グループ子図形も対応）
 			const excludeIds = new Set(selectedIds);
 			for (const id of selectedIds) {
-				for (const descendantId of collectDescendantIds(id, eventStartObjects)) {
+				for (const descendantId of collectDescendantIds(
+					id,
+					eventStartObjects,
+				)) {
 					excludeIds.add(descendantId);
 				}
 			}
@@ -146,7 +143,7 @@ function handleObjectDrag(
 			};
 			const zoom = canvasState.viewport.zoom;
 			const result = findSnap(
-				groupBBox,
+				selectedBBox,
 				filteredCandidates,
 				SNAP_THRESHOLD_PX / zoom,
 			);
@@ -224,6 +221,10 @@ function handleObjectDragStart(
 
 	let selectedIds: string[];
 	let newMultiSelectGroup = canvasState.multiSelectGroup;
+	// eventStartState に設定する multiSelectGroup:
+	// - 選択済み: handleGesture.ts が計算した fresh keyPoints 付きの値をそのまま保持
+	// - 新規選択: createMultiSelectGroup の結果（keyPoints付き）を使う
+	let eventStartMultiSelectGroup = canvasState.eventStartState?.multiSelectGroup ?? null;
 
 	if (isCurrentlySelected || isAncestorSelected) {
 		// すでに選択済み: 現在の選択を維持
@@ -237,13 +238,14 @@ function handleObjectDragStart(
 		const eventStartObjects =
 			canvasState.eventStartState?.objects ?? canvasState.objects;
 		newMultiSelectGroup =
-		selectedIds.length > 1
+			selectedIds.length > 1
 				? createMultiSelectGroup(
 						selectedIds,
 						eventStartObjects,
 						canvasState.multiSelectGroup,
 					)
-			: null;
+				: null;
+		eventStartMultiSelectGroup = newMultiSelectGroup;
 	}
 
 	// 選択状態を更新し、エッジスクロールを有効化
@@ -256,11 +258,10 @@ function handleObjectDragStart(
 		selectedConnectorId: null,
 		// ドラッグ開始時にオブジェクトメニューのドロップダウンを閉じる
 		objectMenuOpenId: null,
-		// eventStartState の multiSelectGroup を更新
 		eventStartState: canvasState.eventStartState
 			? {
 					...canvasState.eventStartState,
-					multiSelectGroup: newMultiSelectGroup,
+					multiSelectGroup: eventStartMultiSelectGroup,
 				}
 			: null,
 	};
