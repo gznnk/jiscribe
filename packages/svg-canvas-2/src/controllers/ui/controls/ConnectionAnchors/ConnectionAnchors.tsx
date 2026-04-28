@@ -96,7 +96,7 @@ const ConnectionAnchorsComponent: React.FC<ConnectionAnchorsProps> = ({
 		position: ConnectPointId;
 		point: { x: number; y: number };
 	}> = [
-		{ position: "center", point: { x: cx, y: cy } },
+		// { position: "center", point: { x: cx, y: cy } },
 		{ position: "topCenter", point: topCenterAnchor },
 		{ position: "rightCenter", point: rightCenterAnchor },
 		{ position: "bottomCenter", point: bottomCenterAnchor },
