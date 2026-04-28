@@ -14,9 +14,20 @@ const SNAP_EPSILON = 0.5;
 
 type SnapDelta = { x: number; y: number };
 
-type FindSnapResult = {
+/**
+ * findNearest の戻り値。スナップした候補・座標・元エッジ値を保持する。
+ * buildSnapFeedback に渡してガイド線を生成するために使う。
+ */
+export type SnapAxisResult = {
+	candidates: SnapCandidate[];
+	snapCoordinate: number;
+	draggedEdgeValue: number;
+} | null;
+
+export type FindSnapResult = {
 	delta: SnapDelta;
-	feedback: SnapFeedback;
+	xResult: SnapAxisResult;
+	yResult: SnapAxisResult;
 };
 
 /**
@@ -27,11 +38,7 @@ const findNearest = (
 	candidates: SnapCandidate[],
 	edges: number[],
 	threshold: number,
-): {
-	candidates: SnapCandidate[];
-	snapCoordinate: number;
-	draggedEdgeValue: number;
-} | null => {
+): SnapAxisResult => {
 	let bestDist = threshold;
 	let bestCoordinate: number | null = null;
 	let bestDraggedEdgeValue = 0;
@@ -100,10 +107,42 @@ const collectAxisFeedbacks = (
 };
 
 /**
+ * スナップ後の実際の BBox からガイド線フィードバックを生成する。
+ * findSnap で得た xResult/yResult と、スナップ適用後の実際の BBox を渡す。
+ * Drag では groupBBox + delta が actualBBox に相当し、
+ * 変形スナップでは calculateResize 再実行後の BBox を渡すことで
+ * ガイド線位置を実際の図形形状に合わせる。
+ */
+export const buildSnapFeedback = (
+	actualBBox: BoundingBox,
+	xResult: SnapAxisResult,
+	yResult: SnapAxisResult,
+	candidates: SnapCandidates,
+): SnapFeedback => ({
+	x: xResult
+		? collectAxisFeedbacks(
+				[actualBBox.left, actualBBox.right],
+				candidates.x,
+				actualBBox.top,
+				actualBBox.bottom,
+			)
+		: [],
+	y: yResult
+		? collectAxisFeedbacks(
+				[actualBBox.top, actualBBox.bottom],
+				candidates.y,
+				actualBBox.left,
+				actualBBox.right,
+			)
+		: [],
+});
+
+/**
  * ドラッグ中グループのバウンディングボックスとスナップ候補を比較し、
- * スナップ補正量とフィードバック情報を返す。
+ * スナップ補正量と軸ごとのスナップ結果を返す。
+ * ガイド線は buildSnapFeedback に実際のBBoxを渡して生成すること。
  *
- * @param groupBBox - 選択オブジェクト全体の AABB（delta 適用後の仮位置）
+ * @param groupBBox - 選択オブジェクト全体の AABB（delta 適用前の仮位置）
  * @param candidates - dragStart 時に計算されたスナップ候補
  * @param thresholdSvg - スナップ閾値（SVG 座標単位）= SNAP_THRESHOLD_PX / zoom
  * @param xEdgeValues - スナップ判定するX軸エッジ値の配列（省略時は left/right 両方）
@@ -118,7 +157,6 @@ export const findSnap = (
 ): FindSnapResult => {
 	const delta: SnapDelta = { x: 0, y: 0 };
 
-	// --- ① スナップ補正量を先にすべて計算 ---
 	const xResult = findNearest(
 		candidates.x,
 		xEdgeValues ?? [groupBBox.left, groupBBox.right],
@@ -133,38 +171,5 @@ export const findSnap = (
 	if (xResult) delta.x = xResult.snapCoordinate - xResult.draggedEdgeValue;
 	if (yResult) delta.y = yResult.snapCoordinate - yResult.draggedEdgeValue;
 
-	// --- ② スナップ後の AABB を算出（ガイド線の範囲はこちらを使う）---
-	// groupBBox はスナップ補正前なので、delta を加算してスナップ後の座標に揃える。
-	// こうすることで、図形の実際の描画位置とガイド線の範囲が一致する。
-	const snappedBBox: BoundingBox = {
-		left: groupBBox.left + delta.x,
-		right: groupBBox.right + delta.x,
-		top: groupBBox.top + delta.y,
-		bottom: groupBBox.bottom + delta.y,
-	};
-
-	// --- ③ ガイド線のフィードバックを生成 ---
-	// スナップ後の各エッジを候補と照合し、一致するもの全てをガイドとして収集する。
-	// 一次スナップで合わせたエッジは必ず一致し、もう一方のエッジはオブジェクトの
-	// 幅/高さが2つのスナップ線の間にちょうど収まる場合にのみ一致する。
-	const feedback: SnapFeedback = {
-		x: xResult
-			? collectAxisFeedbacks(
-					[snappedBBox.left, snappedBBox.right],
-					candidates.x,
-					snappedBBox.top,
-					snappedBBox.bottom,
-				)
-			: [],
-		y: yResult
-			? collectAxisFeedbacks(
-					[snappedBBox.top, snappedBBox.bottom],
-					candidates.y,
-					snappedBBox.left,
-					snappedBBox.right,
-				)
-			: [],
-	};
-
-	return { delta, feedback };
+	return { delta, xResult, yResult };
 };

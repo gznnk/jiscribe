@@ -5,7 +5,7 @@ import { moveGroup } from "./primitives/GroupController";
 import { createMultiSelectGroup } from "./utils/createMultiSelectGroup";
 import { determineSelection } from "./utils/determineSelection";
 import { getAncestors } from "./utils/getAncestors";
-import { findSnap, SNAP_THRESHOLD_PX } from "./utils/snap/findSnap";
+import { buildSnapFeedback, findSnap, SNAP_THRESHOLD_PX } from "./utils/snap/findSnap";
 import type {
 	CanvasEvent,
 	GestureHandler,
@@ -128,7 +128,13 @@ function handleObjectDrag(
 				x: delta.x + result.delta.x,
 				y: delta.y + result.delta.y,
 			};
-			snapFeedback = result.feedback;
+			const actualBBox = {
+				left: selectedBBox.left + result.delta.x,
+				right: selectedBBox.right + result.delta.x,
+				top: selectedBBox.top + result.delta.y,
+				bottom: selectedBBox.bottom + result.delta.y,
+			};
+			snapFeedback = buildSnapFeedback(actualBBox, result.xResult, result.yResult, filteredCandidates);
 		}
 	}
 

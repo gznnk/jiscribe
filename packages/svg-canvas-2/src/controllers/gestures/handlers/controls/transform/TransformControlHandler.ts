@@ -33,6 +33,7 @@ import {
 	rotateChildren,
 } from "../../objects/primitives/GroupController";
 import {
+	buildSnapFeedback,
 	findSnap,
 	SNAP_THRESHOLD_PX,
 } from "../../objects/utils/snap/findSnap";
@@ -271,8 +272,6 @@ export class TransformControlHandler implements ControlStrategy {
 						snapY && yEdge ? [tentativeBBox[yEdge]] : undefined,
 					);
 
-					snapFeedback = findSnapResult.feedback;
-
 					const cursorDelta = this.solveSnapCursorDelta(
 						J,
 						snapX ? xEdge : null,
@@ -292,6 +291,15 @@ export class TransformControlHandler implements ControlStrategy {
 							resizeResult = snapped;
 						}
 					}
+
+					// スナップ後の実際のBBoxでガイド線を生成
+					const actualBBox = this.calcTentativeBBox(resizeResult, startFrame, radians);
+					snapFeedback = buildSnapFeedback(
+						actualBBox,
+						findSnapResult.xResult,
+						findSnapResult.yResult,
+						filteredCandidates,
+					);
 				}
 			}
 		}
