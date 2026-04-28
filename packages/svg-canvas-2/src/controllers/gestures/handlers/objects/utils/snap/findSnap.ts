@@ -106,23 +106,27 @@ const collectAxisFeedbacks = (
  * @param groupBBox - 選択オブジェクト全体の AABB（delta 適用後の仮位置）
  * @param candidates - dragStart 時に計算されたスナップ候補
  * @param thresholdSvg - スナップ閾値（SVG 座標単位）= SNAP_THRESHOLD_PX / zoom
+ * @param xEdgeValues - スナップ判定するX軸エッジ値の配列（省略時は left/right 両方）
+ * @param yEdgeValues - スナップ判定するY軸エッジ値の配列（省略時は top/bottom 両方）
  */
 export const findSnap = (
 	groupBBox: BoundingBox,
 	candidates: SnapCandidates,
 	thresholdSvg: number,
+	xEdgeValues?: number[],
+	yEdgeValues?: number[],
 ): FindSnapResult => {
 	const delta: SnapDelta = { x: 0, y: 0 };
 
 	// --- ① スナップ補正量を先にすべて計算 ---
 	const xResult = findNearest(
 		candidates.x,
-		[groupBBox.left, groupBBox.right],
+		xEdgeValues ?? [groupBBox.left, groupBBox.right],
 		thresholdSvg,
 	);
 	const yResult = findNearest(
 		candidates.y,
-		[groupBBox.top, groupBBox.bottom],
+		yEdgeValues ?? [groupBBox.top, groupBBox.bottom],
 		thresholdSvg,
 	);
 

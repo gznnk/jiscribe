@@ -1,4 +1,4 @@
-import type { FrameKeyPoints, TransformedFrame } from "@workspace/geometry";
+import type { BoundingBox, FrameKeyPoints, TransformedFrame } from "@workspace/geometry";
 import {
 	calcAffineTransformedPoint,
 	calcFrameKeyPoints,
@@ -19,17 +19,25 @@ import { calcMultiSelectGroupBounds } from "./utils/calcMultiSelectGroupBounds";
 import { updateSingleGroupBounds } from "./utils/updateSingleGroupBounds";
 import { PRECISION } from "../../../../../constants/precision";
 import type { CanvasEvent } from "../../../../../registry/GestureHandlerRegistryTypes";
+import type { SnapFeedback } from "../../../../../states/canvas/SnapTypes";
 import { hasFrameKeyPoints } from "../../../../../states/objects/base/FrameWithKeyPoints";
 import type { TransformState } from "../../../../../states/objects/base/TransformState";
 import { isTransformState } from "../../../../../states/objects/base/TransformState";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
 import {
 	transformChildren,
 	rotateChildren,
 } from "../../objects/primitives/GroupController";
+import {
+	findSnap,
+	SNAP_THRESHOLD_PX,
+} from "../../objects/utils/snap/findSnap";
 import type { ControlStrategy } from "../ControlEventHandler";
+
+const AXIS_ALIGN_THRESHOLD_DEG = 5;
 
 /**
  * Transform control のアンカータイプ。
@@ -189,7 +197,7 @@ export class TransformControlHandler implements ControlStrategy {
 		const doKeepProportion = lockAspectRatio || event.mods.shift;
 
 		// アンカー固有のリサイズ処理にルーティング
-		const resizeResult = this.calculateResize(
+		let resizeResult = this.calculateResize(
 			anchorType,
 			startFrame,
 			event.last.x,
@@ -204,6 +212,73 @@ export class TransformControlHandler implements ControlStrategy {
 		if (!resizeResult) {
 			return state;
 		}
+
+		// ── スナップ補正 ────────────────────────────────────────────────────
+		let snapFeedback: SnapFeedback = { x: [], y: [] };
+		const snapCandidates = eventStartState.snapCandidates;
+
+		if (snapCandidates && this.isAxisAligned(startFrame.rotation)) {
+			const oldBBox = this.calcBBoxFromKeyPoints(startFrameKeyPoints);
+			const tentativeBBox = this.calcTentativeBBox(resizeResult, startFrame, radians);
+
+			const EDGE_EPSILON = 0.5;
+			const xEdgeValues: number[] = [];
+			if (Math.abs(tentativeBBox.left - oldBBox.left) > EDGE_EPSILON) {
+				xEdgeValues.push(tentativeBBox.left);
+			}
+			if (Math.abs(tentativeBBox.right - oldBBox.right) > EDGE_EPSILON) {
+				xEdgeValues.push(tentativeBBox.right);
+			}
+			const yEdgeValues: number[] = [];
+			if (Math.abs(tentativeBBox.top - oldBBox.top) > EDGE_EPSILON) {
+				yEdgeValues.push(tentativeBBox.top);
+			}
+			if (Math.abs(tentativeBBox.bottom - oldBBox.bottom) > EDGE_EPSILON) {
+				yEdgeValues.push(tentativeBBox.bottom);
+			}
+
+			if (xEdgeValues.length > 0 || yEdgeValues.length > 0) {
+				const excludeIds = new Set<string>();
+				for (const id of state.selectedIds) {
+					excludeIds.add(id);
+					for (const descendantId of collectDescendantIds(id, eventStartState.objects)) {
+						excludeIds.add(descendantId);
+					}
+				}
+				const filteredCandidates = {
+					x: snapCandidates.x.filter((c) => !excludeIds.has(c.objectId)),
+					y: snapCandidates.y.filter((c) => !excludeIds.has(c.objectId)),
+				};
+
+				const zoom = state.viewport.zoom;
+				const snapResult = findSnap(
+					tentativeBBox,
+					filteredCandidates,
+					SNAP_THRESHOLD_PX / zoom,
+					xEdgeValues.length > 0 ? xEdgeValues : undefined,
+					yEdgeValues.length > 0 ? yEdgeValues : undefined,
+				);
+
+				if (snapResult.delta.x !== 0 || snapResult.delta.y !== 0) {
+					const snapped = this.calculateResize(
+						anchorType,
+						startFrame,
+						event.last.x + snapResult.delta.x,
+						event.last.y + snapResult.delta.y,
+						startFrameKeyPoints,
+						radians,
+						aspectRatio,
+						doKeepProportion,
+						isSwapped,
+					);
+					if (snapped) {
+						resizeResult = snapped;
+					}
+				}
+				snapFeedback = snapResult.feedback;
+			}
+		}
+		// ────────────────────────────────────────────────────────────────────
 
 		const {
 			width: newWidth,
@@ -264,6 +339,7 @@ export class TransformControlHandler implements ControlStrategy {
 				...state,
 				objects: updatedObjects,
 				multiSelectGroup: updatedGroup,
+				snapFeedback,
 			};
 
 			// multiSelectGroup のバウンディングボックスを再計算（drag中はこれのみ更新）
@@ -312,6 +388,7 @@ export class TransformControlHandler implements ControlStrategy {
 			nextState = {
 				...state,
 				objects: updatedObjects,
+				snapFeedback,
 			};
 
 			// 単一グループ選択の場合のみ、そのグループ自身の境界を更新（drag中）
@@ -1203,6 +1280,58 @@ export class TransformControlHandler implements ControlStrategy {
 		}
 
 		return nextState;
+	}
+
+	/** 回転角度が軸方向（0/90/180/270°）に近いか判定する。 */
+	private isAxisAligned(rotationDeg: number): boolean {
+		const n = ((rotationDeg % 360) + 360) % 360;
+		return (
+			n < AXIS_ALIGN_THRESHOLD_DEG ||
+			Math.abs(n - 90) < AXIS_ALIGN_THRESHOLD_DEG ||
+			Math.abs(n - 180) < AXIS_ALIGN_THRESHOLD_DEG ||
+			Math.abs(n - 270) < AXIS_ALIGN_THRESHOLD_DEG ||
+			n > 360 - AXIS_ALIGN_THRESHOLD_DEG
+		);
+	}
+
+	/** FrameKeyPoints から AABB を計算する。 */
+	private calcBBoxFromKeyPoints(kp: FrameKeyPoints): BoundingBox {
+		return {
+			left: Math.min(kp.topLeft.x, kp.topRight.x, kp.bottomLeft.x, kp.bottomRight.x),
+			right: Math.max(kp.topLeft.x, kp.topRight.x, kp.bottomLeft.x, kp.bottomRight.x),
+			top: Math.min(kp.topLeft.y, kp.topRight.y, kp.bottomLeft.y, kp.bottomRight.y),
+			bottom: Math.max(kp.topLeft.y, kp.topRight.y, kp.bottomLeft.y, kp.bottomRight.y),
+		};
+	}
+
+	/** リサイズ仮結果から変換後の AABB を計算する。 */
+	private calcTentativeBBox(
+		resizeResult: {
+			width: number;
+			height: number;
+			inversedCenterX: number;
+			inversedCenterY: number;
+		},
+		startFrame: TransformedFrame & TransformState,
+		radians: number,
+	): BoundingBox {
+		const newCenter = calcAffineTransformedPoint(
+			resizeResult.inversedCenterX,
+			resizeResult.inversedCenterY,
+			1,
+			1,
+			radians,
+			startFrame.cx,
+			startFrame.cy,
+		);
+		const kp = calcFrameKeyPoints({
+			...startFrame,
+			cx: newCenter.x,
+			cy: newCenter.y,
+			width: Math.abs(resizeResult.width),
+			height: Math.abs(resizeResult.height),
+		});
+		return this.calcBBoxFromKeyPoints(kp);
 	}
 
 	/**
