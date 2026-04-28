@@ -219,8 +219,8 @@ export class TransformControlHandler implements ControlStrategy {
 
 		if (snapCandidates) {
 			const tentativeBBox = this.calcTentativeBBox(resizeResult, startFrame, radians);
-			const xEdge = this.getAnchorXSnapEdge(anchorType, startFrame.scaleX);
-			const yEdge = this.getAnchorYSnapEdge(anchorType, startFrame.scaleY);
+			const xEdge = this.getAnchorXSnapEdge(anchorType, resizeResult.scaleX);
+			const yEdge = this.getAnchorYSnapEdge(anchorType, resizeResult.scaleY);
 
 			if (xEdge !== null || yEdge !== null) {
 				// 数値ヤコビアン: カーソルをε動かした場合のBBox変化を計算
