@@ -77,14 +77,17 @@ const findNearest = (
  * @param perpendicularMax - ガイド線垂直方向のグループ側範囲（終了）
  */
 const collectAxisFeedbacks = (
-	snappedEdges: [number, number],
+	snappedEdges: number[],
 	candidates: SnapCandidate[],
 	perpendicularMin: number,
 	perpendicularMax: number,
 ): SnapAxisFeedback[] => {
 	const feedbacks: SnapAxisFeedback[] = [];
 
-	for (const edgeValue of snappedEdges) {
+	// 同一値の重複を排除（点スナップで left=right になる場合など）
+	const uniqueEdges = [...new Set(snappedEdges)];
+
+	for (const edgeValue of uniqueEdges) {
 		const matching: SnapCandidate[] = [];
 		for (const c of candidates) {
 			if (Math.abs(c.coordinate - edgeValue) <= SNAP_EPSILON) {
@@ -112,6 +115,7 @@ const collectAxisFeedbacks = (
  * Drag では groupBBox + delta が actualBBox に相当し、
  * 変形スナップでは calculateResize 再実行後の BBox を渡すことで
  * ガイド線位置を実際の図形形状に合わせる。
+ * 点スナップ（頂点）では left=right=x, top=bottom=y の BBox を渡す。
  */
 export const buildSnapFeedback = (
 	actualBBox: BoundingBox,
@@ -138,35 +142,24 @@ export const buildSnapFeedback = (
 });
 
 /**
- * ドラッグ中グループのバウンディングボックスとスナップ候補を比較し、
- * スナップ補正量と軸ごとのスナップ結果を返す。
+ * エッジ値リストとスナップ候補を比較し、スナップ補正量と軸ごとのスナップ結果を返す。
  * ガイド線は buildSnapFeedback に実際のBBoxを渡して生成すること。
  *
- * @param groupBBox - 選択オブジェクト全体の AABB（delta 適用前の仮位置）
  * @param candidates - dragStart 時に計算されたスナップ候補
  * @param thresholdSvg - スナップ閾値（SVG 座標単位）= SNAP_THRESHOLD_PX / zoom
- * @param xEdgeValues - スナップ判定するX軸エッジ値の配列（省略時は left/right 両方）
- * @param yEdgeValues - スナップ判定するY軸エッジ値の配列（省略時は top/bottom 両方）
+ * @param xEdgeValues - X軸スナップ対象の座標値リスト。空配列でX軸スナップをスキップ
+ * @param yEdgeValues - Y軸スナップ対象の座標値リスト。空配列でY軸スナップをスキップ
  */
 export const findSnap = (
-	groupBBox: BoundingBox,
 	candidates: SnapCandidates,
 	thresholdSvg: number,
-	xEdgeValues?: number[],
-	yEdgeValues?: number[],
+	xEdgeValues: number[],
+	yEdgeValues: number[],
 ): FindSnapResult => {
 	const delta: SnapDelta = { x: 0, y: 0 };
 
-	const xResult = findNearest(
-		candidates.x,
-		xEdgeValues ?? [groupBBox.left, groupBBox.right],
-		thresholdSvg,
-	);
-	const yResult = findNearest(
-		candidates.y,
-		yEdgeValues ?? [groupBBox.top, groupBBox.bottom],
-		thresholdSvg,
-	);
+	const xResult = findNearest(candidates.x, xEdgeValues, thresholdSvg);
+	const yResult = findNearest(candidates.y, yEdgeValues, thresholdSvg);
 
 	if (xResult) delta.x = xResult.snapCoordinate - xResult.draggedEdgeValue;
 	if (yResult) delta.y = yResult.snapCoordinate - yResult.draggedEdgeValue;

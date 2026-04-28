@@ -7,6 +7,11 @@ import type { PolygonState } from "../../../../../states/objects/primitives/poly
 import type { PolylineState } from "../../../../../states/objects/primitives/polyline/PolylineState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
+import {
+	buildSnapFeedback,
+	findSnap,
+	SNAP_THRESHOLD_PX,
+} from "../../objects/utils/snap/findSnap";
 import type { ControlStrategy } from "../ControlEventHandler";
 
 type PolyState = PolylineState | PolygonState;
@@ -111,10 +116,30 @@ export class VertexControlHandler implements ControlStrategy {
 			return state;
 		}
 
-		// 新しい頂点位置を計算（カーソルの現在位置）
+		// スナップ補正
+		let cursorX = event.last.x;
+		let cursorY = event.last.y;
+		const snapCandidates = eventStartState.snapCandidates;
+		let snapFeedback = state.snapFeedback ?? { x: [], y: [] };
+
+		if (snapCandidates) {
+			const zoom = state.viewport.zoom;
+			const result = findSnap(
+				snapCandidates,
+				SNAP_THRESHOLD_PX / zoom,
+				[cursorX],
+				[cursorY],
+			);
+			cursorX += result.delta.x;
+			cursorY += result.delta.y;
+			const pointBBox = { left: cursorX, right: cursorX, top: cursorY, bottom: cursorY };
+			snapFeedback = buildSnapFeedback(pointBBox, result.xResult, result.yResult, snapCandidates);
+		}
+
+		// 新しい頂点位置を計算
 		const newPosition: Point = {
-			x: roundToDecimal(event.last.x, PRECISION.COORDINATE),
-			y: roundToDecimal(event.last.y, PRECISION.COORDINATE),
+			x: roundToDecimal(cursorX, PRECISION.COORDINATE),
+			y: roundToDecimal(cursorY, PRECISION.COORDINATE),
 		};
 
 		// 頂点位置を更新
@@ -133,6 +158,7 @@ export class VertexControlHandler implements ControlStrategy {
 				...state.objects,
 				[objectId]: updatedObject,
 			},
+			snapFeedback,
 		};
 	}
 

@@ -120,9 +120,10 @@ function handleObjectDrag(
 			};
 			const zoom = canvasState.viewport.zoom;
 			const result = findSnap(
-				selectedBBox,
 				filteredCandidates,
 				SNAP_THRESHOLD_PX / zoom,
+				[selectedBBox.left, selectedBBox.right],
+				[selectedBBox.top, selectedBBox.bottom],
 			);
 			adjustedDelta = {
 				x: delta.x + result.delta.x,

@@ -265,11 +265,10 @@ export class TransformControlHandler implements ControlStrategy {
 
 					const zoom = state.viewport.zoom;
 					const findSnapResult = findSnap(
-						tentativeBBox,
 						filteredCandidates,
 						SNAP_THRESHOLD_PX / zoom,
-						snapX && xEdge ? [tentativeBBox[xEdge]] : undefined,
-						snapY && yEdge ? [tentativeBBox[yEdge]] : undefined,
+						snapX && xEdge ? [tentativeBBox[xEdge]] : [],
+						snapY && yEdge ? [tentativeBBox[yEdge]] : [],
 					);
 
 					const cursorDelta = this.solveSnapCursorDelta(
