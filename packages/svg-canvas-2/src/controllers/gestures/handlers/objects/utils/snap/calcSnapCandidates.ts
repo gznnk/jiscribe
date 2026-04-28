@@ -5,16 +5,6 @@ import { hasFrameKeyPoints } from "../../../../../../states/objects/base/FrameWi
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 
 /**
- * Frame を持つオブジェクトの keyPoints（dragStart 時にキャッシュ済み）から AABB を取得する。
- */
-const getBBoxFromKeyPoints = (
-	obj: ObjectState,
-): { left: number; right: number; top: number; bottom: number } | null => {
-	if (!hasFrameKeyPoints(obj)) return null;
-	return calcKeyPointsBoundingBox(obj.keyPoints);
-};
-
-/**
  * 全 Frame オブジェクトからスナップ候補を生成する。
  * dragStart 時に eventStartState（keyPoints キャッシュ済み）を渡して呼ぶこと。
  * 除外（選択中・子孫）は呼び出し側で filteredCandidates としてフィルタすること。
@@ -29,9 +19,9 @@ export const calcSnapCandidates = (
 
 	for (const [id, obj] of Object.entries(objects)) {
 		if (obj.type === "group") continue;
+		if (!hasFrameKeyPoints(obj)) continue;
 
-		const bbox = getBBoxFromKeyPoints(obj);
-		if (!bbox) continue;
+		const bbox = calcKeyPointsBoundingBox(obj.keyPoints);
 
 		const { left, right, top, bottom } = bbox;
 
