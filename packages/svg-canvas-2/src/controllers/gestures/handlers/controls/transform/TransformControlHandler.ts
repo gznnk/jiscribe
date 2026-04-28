@@ -1,9 +1,8 @@
-import type { BoundingBox, FrameKeyPoints, TransformedFrame } from "@workspace/geometry";
+import type { FrameKeyPoints, TransformedFrame } from "@workspace/geometry";
 import {
 	calcAffineTransformedPoint,
 	calcFrameKeyPoints,
 	calcInverseAffineTransformedPoint,
-	calcKeyPointsBoundingBox,
 	calcNonZeroSign,
 	calcVectorAngle,
 	createLinearX2yFunction,
@@ -18,6 +17,17 @@ import {
 
 import { calcMultiSelectGroupBounds } from "./utils/calcMultiSelectGroupBounds";
 import { updateSingleGroupBounds } from "./utils/updateSingleGroupBounds";
+import {
+	calcSnapCursorDelta,
+	calcTentativeBBox,
+	getAnchorXSnapEdge,
+	getAnchorYSnapEdge,
+} from "./utils/calcSnapCursorDelta";
+import {
+	calcHeightWithAspectRatio,
+	calcWidthWithAspectRatio,
+	enforceResizeDimensions,
+} from "./utils/enforceResizeDimensions";
 import { PRECISION } from "../../../../../constants/precision";
 import type { CanvasEvent } from "../../../../../registry/GestureHandlerRegistryTypes";
 import type { SnapFeedback } from "../../../../../states/canvas/SnapTypes";
@@ -38,22 +48,7 @@ import {
 	SNAP_THRESHOLD_PX,
 } from "../../objects/utils/snap/findSnap";
 import type { ControlStrategy } from "../ControlEventHandler";
-
-/**
- * Transform control のアンカータイプ。
- * TransformControls.tsx の data-id 値に対応する:
- * "transform-control:<anchorType>"
- */
-export type TransformAnchorType =
-	| "topLeft"
-	| "topCenter"
-	| "topRight"
-	| "rightCenter"
-	| "bottomRight"
-	| "bottomCenter"
-	| "bottomLeft"
-	| "leftCenter"
-	| "rotation";
+import type { TransformAnchorType } from "./TransformAnchorType";
 
 /**
  * Transform control の操作（リサイズと回転）を処理する。
@@ -218,9 +213,9 @@ export class TransformControlHandler implements ControlStrategy {
 		const snapCandidates = eventStartState.snapCandidates;
 
 		if (snapCandidates) {
-			const tentativeBBox = this.calcTentativeBBox(resizeResult, startFrame, radians);
-			const xEdge = this.getAnchorXSnapEdge(anchorType, resizeResult.scaleX);
-			const yEdge = this.getAnchorYSnapEdge(anchorType, resizeResult.scaleY);
+			const tentativeBBox = calcTentativeBBox(resizeResult, startFrame, radians);
+			const xEdge = getAnchorXSnapEdge(anchorType, resizeResult.scaleX);
+			const yEdge = getAnchorYSnapEdge(anchorType, resizeResult.scaleY);
 
 			if (xEdge !== null || yEdge !== null) {
 				// 数値ヤコビアン: カーソルをε動かした場合のBBox変化を計算
@@ -233,8 +228,8 @@ export class TransformControlHandler implements ControlStrategy {
 					anchorType, startFrame, event.last.x, event.last.y + ε,
 					startFrameKeyPoints, radians, aspectRatio, doKeepProportion, isSwapped,
 				);
-				const bboxPlusDx = resPlusDx ? this.calcTentativeBBox(resPlusDx, startFrame, radians) : tentativeBBox;
-				const bboxPlusDy = resPlusDy ? this.calcTentativeBBox(resPlusDy, startFrame, radians) : tentativeBBox;
+				const bboxPlusDx = resPlusDx ? calcTentativeBBox(resPlusDx, startFrame, radians) : tentativeBBox;
+				const bboxPlusDy = resPlusDy ? calcTentativeBBox(resPlusDy, startFrame, radians) : tentativeBBox;
 
 				const J = {
 					left:   { dx: (bboxPlusDx.left   - tentativeBBox.left)   / ε, dy: (bboxPlusDy.left   - tentativeBBox.left)   / ε },
@@ -271,7 +266,7 @@ export class TransformControlHandler implements ControlStrategy {
 						snapY && yEdge ? [tentativeBBox[yEdge]] : [],
 					);
 
-					const cursorDelta = this.solveSnapCursorDelta(
+					const cursorDelta = calcSnapCursorDelta(
 						J,
 						snapX ? xEdge : null,
 						snapY ? yEdge : null,
@@ -292,7 +287,7 @@ export class TransformControlHandler implements ControlStrategy {
 					}
 
 					// スナップ後の実際のBBoxでガイド線を生成
-					const actualBBox = this.calcTentativeBBox(resizeResult, startFrame, radians);
+					const actualBBox = calcTentativeBBox(resizeResult, startFrame, radians);
 					snapFeedback = buildSnapFeedback(
 						actualBBox,
 						findSnapResult.xResult,
@@ -579,7 +574,7 @@ export class TransformControlHandler implements ControlStrategy {
 		const newWidth = inversedCursor.x - inversedTopLeft.x;
 		let newHeight: number;
 		if (doKeepProportion) {
-			newHeight = this.calcHeightWithAspectRatio(newWidth, aspectRatio);
+			newHeight = calcHeightWithAspectRatio(newWidth, aspectRatio);
 		} else {
 			newHeight = inversedCursor.y - inversedTopLeft.y;
 		}
@@ -588,7 +583,7 @@ export class TransformControlHandler implements ControlStrategy {
 		const newScaleX = calcNonZeroSign(newWidth);
 		const newScaleY = calcNonZeroSign(newHeight);
 
-		const enforced = this.enforceMinimumDimensions(
+		const enforced = enforceResizeDimensions(
 			startFrame,
 			newWidth,
 			newHeight,
@@ -652,7 +647,7 @@ export class TransformControlHandler implements ControlStrategy {
 		const newWidth = inversedBottomRight.x - inversedCursor.x;
 		let newHeight: number;
 		if (doKeepProportion) {
-			newHeight = this.calcHeightWithAspectRatio(newWidth, aspectRatio);
+			newHeight = calcHeightWithAspectRatio(newWidth, aspectRatio);
 		} else {
 			newHeight = inversedBottomRight.y - inversedCursor.y;
 		}
@@ -661,7 +656,7 @@ export class TransformControlHandler implements ControlStrategy {
 		const newScaleX = calcNonZeroSign(newWidth);
 		const newScaleY = calcNonZeroSign(newHeight);
 
-		const enforced = this.enforceMinimumDimensions(
+		const enforced = enforceResizeDimensions(
 			startFrame,
 			newWidth,
 			newHeight,
@@ -727,7 +722,7 @@ export class TransformControlHandler implements ControlStrategy {
 		const newWidth = inversedCursor.x - inversedBottomLeft.x;
 		let newHeight: number;
 		if (doKeepProportion) {
-			newHeight = this.calcHeightWithAspectRatio(newWidth, aspectRatio);
+			newHeight = calcHeightWithAspectRatio(newWidth, aspectRatio);
 		} else {
 			newHeight = inversedBottomLeft.y - inversedCursor.y;
 		}
@@ -736,7 +731,7 @@ export class TransformControlHandler implements ControlStrategy {
 		const newScaleX = calcNonZeroSign(newWidth);
 		const newScaleY = calcNonZeroSign(newHeight);
 
-		const enforced = this.enforceMinimumDimensions(
+		const enforced = enforceResizeDimensions(
 			startFrame,
 			newWidth,
 			newHeight,
@@ -802,7 +797,7 @@ export class TransformControlHandler implements ControlStrategy {
 		const newWidth = inversedTopRight.x - inversedCursor.x;
 		let newHeight: number;
 		if (doKeepProportion) {
-			newHeight = this.calcHeightWithAspectRatio(newWidth, aspectRatio);
+			newHeight = calcHeightWithAspectRatio(newWidth, aspectRatio);
 		} else {
 			newHeight = inversedCursor.y - inversedTopRight.y;
 		}
@@ -811,7 +806,7 @@ export class TransformControlHandler implements ControlStrategy {
 		const newScaleX = calcNonZeroSign(newWidth);
 		const newScaleY = calcNonZeroSign(newHeight);
 
-		const enforced = this.enforceMinimumDimensions(
+		const enforced = enforceResizeDimensions(
 			startFrame,
 			newWidth,
 			newHeight,
@@ -879,7 +874,7 @@ export class TransformControlHandler implements ControlStrategy {
 		const newHeight = inversedBottomCenter.y - inversedCursor.y;
 		let newWidth: number;
 		if (doKeepProportion) {
-			newWidth = this.calcWidthWithAspectRatio(newHeight, aspectRatio);
+			newWidth = calcWidthWithAspectRatio(newHeight, aspectRatio);
 		} else {
 			newWidth = startFrame.width;
 		}
@@ -888,7 +883,7 @@ export class TransformControlHandler implements ControlStrategy {
 		const newScaleX = startFrame.scaleX;
 		const newScaleY = calcNonZeroSign(newHeight);
 
-		const enforced = this.enforceMinimumDimensions(
+		const enforced = enforceResizeDimensions(
 			startFrame,
 			newWidth,
 			newHeight,
@@ -958,7 +953,7 @@ export class TransformControlHandler implements ControlStrategy {
 		const newWidth = inversedCursor.x - inversedLeftCenter.x;
 		let newHeight: number;
 		if (doKeepProportion) {
-			newHeight = this.calcHeightWithAspectRatio(newWidth, aspectRatio);
+			newHeight = calcHeightWithAspectRatio(newWidth, aspectRatio);
 		} else {
 			newHeight = startFrame.height;
 		}
@@ -967,7 +962,7 @@ export class TransformControlHandler implements ControlStrategy {
 		const newScaleX = calcNonZeroSign(newWidth);
 		const newScaleY = startFrame.scaleY;
 
-		const enforced = this.enforceMinimumDimensions(
+		const enforced = enforceResizeDimensions(
 			startFrame,
 			newWidth,
 			newHeight,
@@ -1036,7 +1031,7 @@ export class TransformControlHandler implements ControlStrategy {
 		const newHeight = inversedCursor.y - inversedTopCenter.y;
 		let newWidth: number;
 		if (doKeepProportion) {
-			newWidth = this.calcWidthWithAspectRatio(newHeight, aspectRatio);
+			newWidth = calcWidthWithAspectRatio(newHeight, aspectRatio);
 		} else {
 			newWidth = startFrame.width;
 		}
@@ -1045,7 +1040,7 @@ export class TransformControlHandler implements ControlStrategy {
 		const newScaleX = startFrame.scaleX;
 		const newScaleY = calcNonZeroSign(newHeight);
 
-		const enforced = this.enforceMinimumDimensions(
+		const enforced = enforceResizeDimensions(
 			startFrame,
 			newWidth,
 			newHeight,
@@ -1115,7 +1110,7 @@ export class TransformControlHandler implements ControlStrategy {
 		const newWidth = inversedRightCenter.x - inversedCursor.x;
 		let newHeight: number;
 		if (doKeepProportion) {
-			newHeight = this.calcHeightWithAspectRatio(newWidth, aspectRatio);
+			newHeight = calcHeightWithAspectRatio(newWidth, aspectRatio);
 		} else {
 			newHeight = startFrame.height;
 		}
@@ -1124,7 +1119,7 @@ export class TransformControlHandler implements ControlStrategy {
 		const newScaleX = calcNonZeroSign(newWidth);
 		const newScaleY = startFrame.scaleY;
 
-		const enforced = this.enforceMinimumDimensions(
+		const enforced = enforceResizeDimensions(
 			startFrame,
 			newWidth,
 			newHeight,
@@ -1304,191 +1299,5 @@ export class TransformControlHandler implements ControlStrategy {
 		}
 
 		return nextState;
-	}
-
-	/** アンカーとscaleXからスナップ対象のX辺を返す。反転時はleft/rightを入れ替える。 */
-	private getAnchorXSnapEdge(
-		anchorType: TransformAnchorType,
-		scaleX: number,
-	): "left" | "right" | null {
-		const flipped = scaleX < 0;
-		switch (anchorType) {
-			case "topRight":
-			case "bottomRight":
-			case "rightCenter":
-				return flipped ? "left" : "right";
-			case "topLeft":
-			case "bottomLeft":
-			case "leftCenter":
-				return flipped ? "right" : "left";
-			default:
-				return null;
-		}
-	}
-
-	/** アンカーとscaleYからスナップ対象のY辺を返す。反転時はtop/bottomを入れ替える。 */
-	private getAnchorYSnapEdge(
-		anchorType: TransformAnchorType,
-		scaleY: number,
-	): "top" | "bottom" | null {
-		const flipped = scaleY < 0;
-		switch (anchorType) {
-			case "topLeft":
-			case "topRight":
-			case "topCenter":
-				return flipped ? "bottom" : "top";
-			case "bottomLeft":
-			case "bottomRight":
-			case "bottomCenter":
-				return flipped ? "top" : "bottom";
-			default:
-				return null;
-		}
-	}
-
-	/**
-	 * AABBエッジのスナップ量からカーソル補正量を逆算する。
-	 * xEdge/yEdge が両方ある場合は2x2線形系を解き、行列式が小さい場合は感度の高い辺のみ解く。
-	 */
-	private solveSnapCursorDelta(
-		J: Record<"left" | "right" | "top" | "bottom", { dx: number; dy: number }>,
-		xEdge: "left" | "right" | null,
-		yEdge: "top" | "bottom" | null,
-		snapAabbDx: number,
-		snapAabbDy: number,
-	): { dx: number; dy: number } {
-		if (xEdge !== null && yEdge !== null && snapAabbDx !== 0 && snapAabbDy !== 0) {
-			const a = J[xEdge].dx, b = J[xEdge].dy;
-			const c = J[yEdge].dx, d = J[yEdge].dy;
-			const det = a * d - b * c;
-			if (Math.abs(det) > 0.09) {
-				return {
-					dx: (snapAabbDx * d - snapAabbDy * b) / det,
-					dy: (snapAabbDy * a - snapAabbDx * c) / det,
-				};
-			}
-			// 行列式が小さい→感度の高い辺のみ
-			const xSens = Math.max(Math.abs(a), Math.abs(b));
-			const ySens = Math.max(Math.abs(c), Math.abs(d));
-			if (xSens >= ySens) {
-				return this.solveEdgeCursorDelta(J[xEdge], snapAabbDx);
-			}
-			return this.solveEdgeCursorDelta(J[yEdge], snapAabbDy);
-		}
-		if (xEdge !== null && snapAabbDx !== 0) {
-			return this.solveEdgeCursorDelta(J[xEdge], snapAabbDx);
-		}
-		if (yEdge !== null && snapAabbDy !== 0) {
-			return this.solveEdgeCursorDelta(J[yEdge], snapAabbDy);
-		}
-		return { dx: 0, dy: 0 };
-	}
-
-	/** 1辺のスナップ量を支配的なカーソル軸で解く。 */
-	private solveEdgeCursorDelta(
-		j: { dx: number; dy: number },
-		snapDelta: number,
-	): { dx: number; dy: number } {
-		if (Math.abs(j.dx) >= Math.abs(j.dy)) {
-			return { dx: j.dx !== 0 ? snapDelta / j.dx : 0, dy: 0 };
-		}
-		return { dx: 0, dy: j.dy !== 0 ? snapDelta / j.dy : 0 };
-	}
-
-	/** リサイズ仮結果から変換後の AABB を計算する。 */
-	private calcTentativeBBox(
-		resizeResult: {
-			width: number;
-			height: number;
-			inversedCenterX: number;
-			inversedCenterY: number;
-		},
-		startFrame: TransformedFrame & TransformState,
-		radians: number,
-	): BoundingBox {
-		const newCenter = calcAffineTransformedPoint(
-			resizeResult.inversedCenterX,
-			resizeResult.inversedCenterY,
-			1,
-			1,
-			radians,
-			startFrame.cx,
-			startFrame.cy,
-		);
-		const kp = calcFrameKeyPoints({
-			...startFrame,
-			cx: newCenter.x,
-			cy: newCenter.y,
-			width: Math.abs(resizeResult.width),
-			height: Math.abs(resizeResult.height),
-		});
-		return calcKeyPointsBoundingBox(kp);
-	}
-
-	/**
-	 * Calculates the height that maintains the original aspect ratio.
-	 */
-	private calcHeightWithAspectRatio(width: number, aspectRatio: number) {
-		return nanToZero(width / aspectRatio);
-	}
-
-	/**
-	 * Calculates the width that maintains the original aspect ratio.
-	 */
-	private calcWidthWithAspectRatio(height: number, aspectRatio: number) {
-		return nanToZero(height * aspectRatio);
-	}
-
-	/**
-	 * Checks if dimensions are below minimum values and adjusts them.
-	 */
-	private enforceMinimumDimensions(
-		startFrame: TransformedFrame & TransformState,
-		newWidth: number,
-		newHeight: number,
-		aspectRatio: number | undefined,
-		shouldKeepProportion: boolean | undefined,
-	): { width: number; height: number } {
-		const minWidth = startFrame.minWidth ?? 0;
-		const minHeight = startFrame.minHeight ?? 0;
-
-		const absWidth = Math.abs(newWidth);
-		const absHeight = Math.abs(newHeight);
-		const widthSign = calcNonZeroSign(newWidth);
-		const heightSign = calcNonZeroSign(newHeight);
-
-		// Check if either dimension is below minimum
-		const widthBelowMin = absWidth < minWidth;
-		const heightBelowMin = absHeight < minHeight;
-
-		if (!widthBelowMin && !heightBelowMin) {
-			return { width: newWidth, height: newHeight };
-		}
-
-		if (!shouldKeepProportion || !aspectRatio) {
-			return {
-				width: widthBelowMin ? minWidth * widthSign : newWidth,
-				height: heightBelowMin ? minHeight * heightSign : newHeight,
-			};
-		}
-
-		const minWidthFromHeight = minHeight * aspectRatio;
-		const minHeightFromWidth = minWidth / aspectRatio;
-
-		let adjustedWidth: number;
-		let adjustedHeight: number;
-
-		if (minWidthFromHeight > minWidth) {
-			adjustedHeight = minHeight * heightSign;
-			adjustedWidth = minWidthFromHeight * widthSign;
-		} else {
-			adjustedWidth = minWidth * widthSign;
-			adjustedHeight = minHeightFromWidth * heightSign;
-		}
-
-		return {
-			width: adjustedWidth,
-			height: adjustedHeight,
-		};
 	}
 }
