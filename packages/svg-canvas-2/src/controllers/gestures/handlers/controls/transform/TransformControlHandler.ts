@@ -38,8 +38,6 @@ import {
 } from "../../objects/utils/snap/findSnap";
 import type { ControlStrategy } from "../ControlEventHandler";
 
-const AXIS_ALIGN_THRESHOLD_DEG = 5;
-
 /**
  * Transform control のアンカータイプ。
  * TransformControls.tsx の data-id 値に対応する:
@@ -218,65 +216,83 @@ export class TransformControlHandler implements ControlStrategy {
 		let snapFeedback: SnapFeedback = { x: [], y: [] };
 		const snapCandidates = eventStartState.snapCandidates;
 
-		if (snapCandidates && this.isAxisAligned(startFrame.rotation)) {
-			const oldBBox = calcKeyPointsBoundingBox(startFrameKeyPoints);
+		if (snapCandidates) {
 			const tentativeBBox = this.calcTentativeBBox(resizeResult, startFrame, radians);
+			const xEdge = this.getAnchorXSnapEdge(anchorType, startFrame.scaleX);
+			const yEdge = this.getAnchorYSnapEdge(anchorType, startFrame.scaleY);
 
-			const EDGE_EPSILON = 0.5;
-			const xEdgeValues: number[] = [];
-			if (Math.abs(tentativeBBox.left - oldBBox.left) > EDGE_EPSILON) {
-				xEdgeValues.push(tentativeBBox.left);
-			}
-			if (Math.abs(tentativeBBox.right - oldBBox.right) > EDGE_EPSILON) {
-				xEdgeValues.push(tentativeBBox.right);
-			}
-			const yEdgeValues: number[] = [];
-			if (Math.abs(tentativeBBox.top - oldBBox.top) > EDGE_EPSILON) {
-				yEdgeValues.push(tentativeBBox.top);
-			}
-			if (Math.abs(tentativeBBox.bottom - oldBBox.bottom) > EDGE_EPSILON) {
-				yEdgeValues.push(tentativeBBox.bottom);
-			}
-
-			if (xEdgeValues.length > 0 || yEdgeValues.length > 0) {
-				const excludeIds = new Set<string>();
-				for (const id of state.selectedIds) {
-					excludeIds.add(id);
-					for (const descendantId of collectDescendantIds(id, eventStartState.objects)) {
-						excludeIds.add(descendantId);
-					}
-				}
-				const filteredCandidates = {
-					x: snapCandidates.x.filter((c) => !excludeIds.has(c.objectId)),
-					y: snapCandidates.y.filter((c) => !excludeIds.has(c.objectId)),
-				};
-
-				const zoom = state.viewport.zoom;
-				const snapResult = findSnap(
-					tentativeBBox,
-					filteredCandidates,
-					SNAP_THRESHOLD_PX / zoom,
-					xEdgeValues.length > 0 ? xEdgeValues : undefined,
-					yEdgeValues.length > 0 ? yEdgeValues : undefined,
+			if (xEdge !== null || yEdge !== null) {
+				// 数値ヤコビアン: カーソルをε動かした場合のBBox変化を計算
+				const ε = 1.0;
+				const resPlusDx = this.calculateResize(
+					anchorType, startFrame, event.last.x + ε, event.last.y,
+					startFrameKeyPoints, radians, aspectRatio, doKeepProportion, isSwapped,
 				);
+				const resPlusDy = this.calculateResize(
+					anchorType, startFrame, event.last.x, event.last.y + ε,
+					startFrameKeyPoints, radians, aspectRatio, doKeepProportion, isSwapped,
+				);
+				const bboxPlusDx = resPlusDx ? this.calcTentativeBBox(resPlusDx, startFrame, radians) : tentativeBBox;
+				const bboxPlusDy = resPlusDy ? this.calcTentativeBBox(resPlusDy, startFrame, radians) : tentativeBBox;
 
-				if (snapResult.delta.x !== 0 || snapResult.delta.y !== 0) {
-					const snapped = this.calculateResize(
-						anchorType,
-						startFrame,
-						event.last.x + snapResult.delta.x,
-						event.last.y + snapResult.delta.y,
-						startFrameKeyPoints,
-						radians,
-						aspectRatio,
-						doKeepProportion,
-						isSwapped,
+				const J = {
+					left:   { dx: (bboxPlusDx.left   - tentativeBBox.left)   / ε, dy: (bboxPlusDy.left   - tentativeBBox.left)   / ε },
+					right:  { dx: (bboxPlusDx.right  - tentativeBBox.right)  / ε, dy: (bboxPlusDy.right  - tentativeBBox.right)  / ε },
+					top:    { dx: (bboxPlusDx.top    - tentativeBBox.top)    / ε, dy: (bboxPlusDy.top    - tentativeBBox.top)    / ε },
+					bottom: { dx: (bboxPlusDx.bottom - tentativeBBox.bottom) / ε, dy: (bboxPlusDy.bottom - tentativeBBox.bottom) / ε },
+				} as const;
+
+				// 感度が低い辺のスナップはスキップ
+				const SENSITIVITY = 0.3;
+				const xSens = xEdge ? Math.max(Math.abs(J[xEdge].dx), Math.abs(J[xEdge].dy)) : 0;
+				const ySens = yEdge ? Math.max(Math.abs(J[yEdge].dx), Math.abs(J[yEdge].dy)) : 0;
+				const snapX = xEdge !== null && xSens > SENSITIVITY;
+				const snapY = yEdge !== null && ySens > SENSITIVITY;
+
+				if (snapX || snapY) {
+					const excludeIds = new Set<string>();
+					for (const id of state.selectedIds) {
+						excludeIds.add(id);
+						for (const desc of collectDescendantIds(id, eventStartState.objects)) {
+							excludeIds.add(desc);
+						}
+					}
+					const filteredCandidates = {
+						x: snapCandidates.x.filter((c) => !excludeIds.has(c.objectId)),
+						y: snapCandidates.y.filter((c) => !excludeIds.has(c.objectId)),
+					};
+
+					const zoom = state.viewport.zoom;
+					const findSnapResult = findSnap(
+						tentativeBBox,
+						filteredCandidates,
+						SNAP_THRESHOLD_PX / zoom,
+						snapX && xEdge ? [tentativeBBox[xEdge]] : undefined,
+						snapY && yEdge ? [tentativeBBox[yEdge]] : undefined,
 					);
-					if (snapped) {
-						resizeResult = snapped;
+
+					snapFeedback = findSnapResult.feedback;
+
+					const cursorDelta = this.solveSnapCursorDelta(
+						J,
+						snapX ? xEdge : null,
+						snapY ? yEdge : null,
+						findSnapResult.delta.x,
+						findSnapResult.delta.y,
+					);
+
+					if (cursorDelta.dx !== 0 || cursorDelta.dy !== 0) {
+						const snapped = this.calculateResize(
+							anchorType, startFrame,
+							event.last.x + cursorDelta.dx,
+							event.last.y + cursorDelta.dy,
+							startFrameKeyPoints, radians, aspectRatio, doKeepProportion, isSwapped,
+						);
+						if (snapped) {
+							resizeResult = snapped;
+						}
 					}
 				}
-				snapFeedback = snapResult.feedback;
 			}
 		}
 		// ────────────────────────────────────────────────────────────────────
@@ -1283,16 +1299,93 @@ export class TransformControlHandler implements ControlStrategy {
 		return nextState;
 	}
 
-	/** 回転角度が軸方向（0/90/180/270°）に近いか判定する。 */
-	private isAxisAligned(rotationDeg: number): boolean {
-		const n = ((rotationDeg % 360) + 360) % 360;
-		return (
-			n < AXIS_ALIGN_THRESHOLD_DEG ||
-			Math.abs(n - 90) < AXIS_ALIGN_THRESHOLD_DEG ||
-			Math.abs(n - 180) < AXIS_ALIGN_THRESHOLD_DEG ||
-			Math.abs(n - 270) < AXIS_ALIGN_THRESHOLD_DEG ||
-			n > 360 - AXIS_ALIGN_THRESHOLD_DEG
-		);
+	/** アンカーとscaleXからスナップ対象のX辺を返す。反転時はleft/rightを入れ替える。 */
+	private getAnchorXSnapEdge(
+		anchorType: TransformAnchorType,
+		scaleX: number,
+	): "left" | "right" | null {
+		const flipped = scaleX < 0;
+		switch (anchorType) {
+			case "topRight":
+			case "bottomRight":
+			case "rightCenter":
+				return flipped ? "left" : "right";
+			case "topLeft":
+			case "bottomLeft":
+			case "leftCenter":
+				return flipped ? "right" : "left";
+			default:
+				return null;
+		}
+	}
+
+	/** アンカーとscaleYからスナップ対象のY辺を返す。反転時はtop/bottomを入れ替える。 */
+	private getAnchorYSnapEdge(
+		anchorType: TransformAnchorType,
+		scaleY: number,
+	): "top" | "bottom" | null {
+		const flipped = scaleY < 0;
+		switch (anchorType) {
+			case "topLeft":
+			case "topRight":
+			case "topCenter":
+				return flipped ? "bottom" : "top";
+			case "bottomLeft":
+			case "bottomRight":
+			case "bottomCenter":
+				return flipped ? "top" : "bottom";
+			default:
+				return null;
+		}
+	}
+
+	/**
+	 * AABBエッジのスナップ量からカーソル補正量を逆算する。
+	 * xEdge/yEdge が両方ある場合は2x2線形系を解き、行列式が小さい場合は感度の高い辺のみ解く。
+	 */
+	private solveSnapCursorDelta(
+		J: Record<"left" | "right" | "top" | "bottom", { dx: number; dy: number }>,
+		xEdge: "left" | "right" | null,
+		yEdge: "top" | "bottom" | null,
+		snapAabbDx: number,
+		snapAabbDy: number,
+	): { dx: number; dy: number } {
+		if (xEdge !== null && yEdge !== null && snapAabbDx !== 0 && snapAabbDy !== 0) {
+			const a = J[xEdge].dx, b = J[xEdge].dy;
+			const c = J[yEdge].dx, d = J[yEdge].dy;
+			const det = a * d - b * c;
+			if (Math.abs(det) > 0.09) {
+				return {
+					dx: (snapAabbDx * d - snapAabbDy * b) / det,
+					dy: (snapAabbDy * a - snapAabbDx * c) / det,
+				};
+			}
+			// 行列式が小さい→感度の高い辺のみ
+			const xSens = Math.max(Math.abs(a), Math.abs(b));
+			const ySens = Math.max(Math.abs(c), Math.abs(d));
+			if (xSens >= ySens) {
+				return this.solveEdgeCursorDelta(J[xEdge], snapAabbDx);
+			}
+			return this.solveEdgeCursorDelta(J[yEdge], snapAabbDy);
+		}
+		if (xEdge !== null && snapAabbDx !== 0) {
+			return this.solveEdgeCursorDelta(J[xEdge], snapAabbDx);
+		}
+		if (yEdge !== null && snapAabbDy !== 0) {
+			return this.solveEdgeCursorDelta(J[yEdge], snapAabbDy);
+		}
+		return { dx: 0, dy: 0 };
+	}
+
+	/** 1辺のスナップ量を支配的なカーソル軸で解く。 */
+	private solveEdgeCursorDelta(
+		j: { dx: number; dy: number },
+		snapDelta: number,
+	): { dx: number; dy: number } {
+		if (Math.abs(j.dx) >= Math.abs(j.dy)) {
+			return { dx: j.dx !== 0 ? snapDelta / j.dx : 0, dy: 0 };
+		}
+		return { dx: 0, dy: j.dy !== 0 ? snapDelta / j.dy : 0 };
 	}
 
 	/** リサイズ仮結果から変換後の AABB を計算する。 */
