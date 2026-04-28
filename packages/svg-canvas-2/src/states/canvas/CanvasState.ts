@@ -144,6 +144,13 @@ export type CanvasState = {
 	snapCandidates: SnapCandidates | null;
 
 	/**
+	 * ドラッグ開始時に計算された、選択オブジェクト＋全子孫の ID セット。
+	 * eventStartState にのみセットされ、drag 中のスナップ除外などに参照される。
+	 * dragEnd 時は eventStartState ごとクリアされるため履歴には残らない。
+	 */
+	selectedIdsWithDescendants: ReadonlySet<string> | null;
+
+	/**
 	 * ドラッグ中のスナップフィードバック。
 	 * スナップしている間のみ non-null。dragEnd でクリアする。
 	 */

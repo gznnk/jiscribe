@@ -8,6 +8,7 @@ import type {
 } from "../../../registry/GestureHandlerRegistryTypes";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { Gesture } from "../recognizer/GestureRecognizerTypes";
+import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWithDescendants";
 import { calcSnapCandidates } from "./objects/utils/snap/calcSnapCandidates";
 
 /**
@@ -82,6 +83,13 @@ export const handleGesture = (
 				}
 			: null;
 
+		// 選択オブジェクト＋全子孫のIDセットを事前計算する（毎 drag event での再計算を避けるため）
+		// dragStart 後に handler が selectedIds を変更した場合は、ObjectEventHandler が上書きする
+		const selectedIdsWithDescendants = buildSelectedIdsWithDescendants(
+			state.selectedIds,
+			objectsWithKeyPoints,
+		);
+
 		nextState = {
 			...state,
 			eventStartState: {
@@ -89,6 +97,7 @@ export const handleGesture = (
 				objects: objectsWithKeyPoints,
 				snapCandidates,
 				multiSelectGroup: multiSelectGroupWithKeyPoints,
+				selectedIdsWithDescendants,
 			},
 		};
 	}

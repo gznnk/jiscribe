@@ -36,7 +36,7 @@ import type { TransformState } from "../../../../../states/objects/base/Transfor
 import { isTransformState } from "../../../../../states/objects/base/TransformState";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
-import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
+import { buildSelectedIdsWithDescendants } from "../../../../utils/buildSelectedIdsWithDescendants";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
 import {
 	transformChildren,
@@ -246,13 +246,9 @@ export class TransformControlHandler implements ControlStrategy {
 				const snapY = yEdge !== null && ySens > SENSITIVITY;
 
 				if (snapX || snapY) {
-					const excludeIds = new Set<string>();
-					for (const id of state.selectedIds) {
-						excludeIds.add(id);
-						for (const desc of collectDescendantIds(id, eventStartState.objects)) {
-							excludeIds.add(desc);
-						}
-					}
+					const excludeIds =
+						state.eventStartState?.selectedIdsWithDescendants
+						?? buildSelectedIdsWithDescendants(state.selectedIds, eventStartState.objects);
 					const filteredCandidates = {
 						x: snapCandidates.x.filter((c) => !excludeIds.has(c.objectId)),
 						y: snapCandidates.y.filter((c) => !excludeIds.has(c.objectId)),

@@ -90,6 +90,7 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 		editingConnectorId: null,
 		editingEndpoint: null,
 		snapCandidates: null,
+		selectedIdsWithDescendants: null,
 		snapFeedback: null,
 	};
 };

@@ -18,7 +18,7 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../../../states/objects/base/TextStyleState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { updateAffectedGroupBounds } from "../../../ui/utils/updateAffectedGroupBounds";
-import { collectDescendantIds } from "../../../utils/collectDescendantIds";
+import { buildSelectedIdsWithDescendants } from "../../../utils/buildSelectedIdsWithDescendants";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 
 /**
@@ -105,15 +105,10 @@ function handleObjectDrag(
 			};
 
 			// 現在の selectedIds + 全子孫を除外（dragStart後の選択変更・グループ子図形も対応）
-			const excludeIds = new Set(selectedIds);
-			for (const id of selectedIds) {
-				for (const descendantId of collectDescendantIds(
-					id,
-					eventStartObjects,
-				)) {
-					excludeIds.add(descendantId);
-				}
-			}
+			// dragStart 時にキャッシュ済みの値を優先して使用し、フォールバックとして再計算する
+			const excludeIds =
+				canvasState.eventStartState?.selectedIdsWithDescendants
+				?? buildSelectedIdsWithDescendants(selectedIds, eventStartObjects);
 			const filteredCandidates = {
 				x: snapCandidates.x.filter((c) => !excludeIds.has(c.objectId)),
 				y: snapCandidates.y.filter((c) => !excludeIds.has(c.objectId)),
@@ -232,6 +227,14 @@ function handleObjectDragStart(
 		eventStartMultiSelectGroup = newMultiSelectGroup;
 	}
 
+	// dragStart 確定後の selectedIds で excludeIds をキャッシュする
+	const selectedIdsWithDescendants = canvasState.eventStartState
+		? buildSelectedIdsWithDescendants(
+				selectedIds,
+				canvasState.eventStartState.objects,
+			)
+		: null;
+
 	// 選択状態を更新し、エッジスクロールを有効化
 	const nextState = {
 		...canvasState,
@@ -246,6 +249,7 @@ function handleObjectDragStart(
 			? {
 					...canvasState.eventStartState,
 					multiSelectGroup: eventStartMultiSelectGroup,
+					selectedIdsWithDescendants,
 				}
 			: null,
 	};
