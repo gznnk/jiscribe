@@ -6,7 +6,7 @@ import styled from "@emotion/styled";
  */
 export const ArrowPolygon = styled.polygon`
 	pointer-events: auto;
-	cursor: pointer;
+	cursor: grab;
 `;
 
 /**
@@ -15,7 +15,7 @@ export const ArrowPolygon = styled.polygon`
  */
 export const ArrowPolyline = styled.polyline`
 	pointer-events: auto;
-	cursor: pointer;
+	cursor: grab;
 `;
 
 /**
@@ -24,5 +24,5 @@ export const ArrowPolyline = styled.polyline`
  */
 export const ArrowCircle = styled.circle`
 	pointer-events: auto;
-	cursor: pointer;
+	cursor: grab;
 `;
