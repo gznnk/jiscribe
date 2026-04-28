@@ -3,6 +3,7 @@ import {
 	calcAffineTransformedPoint,
 	calcFrameKeyPoints,
 	calcInverseAffineTransformedPoint,
+	calcKeyPointsBoundingBox,
 	calcNonZeroSign,
 	calcVectorAngle,
 	createLinearX2yFunction,
@@ -218,7 +219,7 @@ export class TransformControlHandler implements ControlStrategy {
 		const snapCandidates = eventStartState.snapCandidates;
 
 		if (snapCandidates && this.isAxisAligned(startFrame.rotation)) {
-			const oldBBox = this.calcBBoxFromKeyPoints(startFrameKeyPoints);
+			const oldBBox = calcKeyPointsBoundingBox(startFrameKeyPoints);
 			const tentativeBBox = this.calcTentativeBBox(resizeResult, startFrame, radians);
 
 			const EDGE_EPSILON = 0.5;
@@ -1294,16 +1295,6 @@ export class TransformControlHandler implements ControlStrategy {
 		);
 	}
 
-	/** FrameKeyPoints から AABB を計算する。 */
-	private calcBBoxFromKeyPoints(kp: FrameKeyPoints): BoundingBox {
-		return {
-			left: Math.min(kp.topLeft.x, kp.topRight.x, kp.bottomLeft.x, kp.bottomRight.x),
-			right: Math.max(kp.topLeft.x, kp.topRight.x, kp.bottomLeft.x, kp.bottomRight.x),
-			top: Math.min(kp.topLeft.y, kp.topRight.y, kp.bottomLeft.y, kp.bottomRight.y),
-			bottom: Math.max(kp.topLeft.y, kp.topRight.y, kp.bottomLeft.y, kp.bottomRight.y),
-		};
-	}
-
 	/** リサイズ仮結果から変換後の AABB を計算する。 */
 	private calcTentativeBBox(
 		resizeResult: {
@@ -1331,7 +1322,7 @@ export class TransformControlHandler implements ControlStrategy {
 			width: Math.abs(resizeResult.width),
 			height: Math.abs(resizeResult.height),
 		});
-		return this.calcBBoxFromKeyPoints(kp);
+		return calcKeyPointsBoundingBox(kp);
 	}
 
 	/**

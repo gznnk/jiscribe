@@ -1,4 +1,5 @@
 import type { Point } from "@workspace/geometry";
+import { calcKeyPointsBoundingBox } from "@workspace/geometry";
 
 import { moveGroup } from "./primitives/GroupController";
 import { createMultiSelectGroup } from "./utils/createMultiSelectGroup";
@@ -95,36 +96,12 @@ function handleObjectDrag(
 				: eventStartObjects[selectedIds[0]];
 
 		if (snapSource && hasFrameKeyPoints(snapSource)) {
-			const kp = snapSource.keyPoints;
+			const bbox = calcKeyPointsBoundingBox(snapSource.keyPoints);
 			const selectedBBox = {
-				left:
-					Math.min(
-						kp.topLeft.x,
-						kp.topRight.x,
-						kp.bottomLeft.x,
-						kp.bottomRight.x,
-					) + delta.x,
-				right:
-					Math.max(
-						kp.topLeft.x,
-						kp.topRight.x,
-						kp.bottomLeft.x,
-						kp.bottomRight.x,
-					) + delta.x,
-				top:
-					Math.min(
-						kp.topLeft.y,
-						kp.topRight.y,
-						kp.bottomLeft.y,
-						kp.bottomRight.y,
-					) + delta.y,
-				bottom:
-					Math.max(
-						kp.topLeft.y,
-						kp.topRight.y,
-						kp.bottomLeft.y,
-						kp.bottomRight.y,
-					) + delta.y,
+				left: bbox.left + delta.x,
+				right: bbox.right + delta.x,
+				top: bbox.top + delta.y,
+				bottom: bbox.bottom + delta.y,
 			};
 
 			// 現在の selectedIds + 全子孫を除外（dragStart後の選択変更・グループ子図形も対応）

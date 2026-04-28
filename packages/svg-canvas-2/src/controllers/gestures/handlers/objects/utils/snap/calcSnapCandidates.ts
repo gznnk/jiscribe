@@ -1,22 +1,17 @@
+import { calcKeyPointsBoundingBox } from "@workspace/geometry";
+
 import type { SnapCandidate, SnapCandidates } from "../../../../../../states/canvas/SnapTypes";
 import { hasFrameKeyPoints } from "../../../../../../states/objects/base/FrameWithKeyPoints";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 
 /**
  * Frame を持つオブジェクトの keyPoints（dragStart 時にキャッシュ済み）から AABB を取得する。
- * keyPoints の 4 隅から min/max を取るだけなので再計算不要。
  */
 const getBBoxFromKeyPoints = (
 	obj: ObjectState,
 ): { left: number; right: number; top: number; bottom: number } | null => {
 	if (!hasFrameKeyPoints(obj)) return null;
-	const { topLeft, topRight, bottomLeft, bottomRight } = obj.keyPoints;
-	return {
-		left: Math.min(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x),
-		right: Math.max(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x),
-		top: Math.min(topLeft.y, topRight.y, bottomLeft.y, bottomRight.y),
-		bottom: Math.max(topLeft.y, topRight.y, bottomLeft.y, bottomRight.y),
-	};
+	return calcKeyPointsBoundingBox(obj.keyPoints);
 };
 
 /**
