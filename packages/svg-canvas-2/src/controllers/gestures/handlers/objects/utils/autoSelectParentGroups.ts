@@ -73,6 +73,7 @@ export function autoSelectParentGroups(
 		}
 
 		// Check each parent: if all children are selected, select the parent instead
+		const selectedSet = new Set(currentSelectedIds);
 		for (const parentId of parentCandidates) {
 			const parent = state.objects[parentId] as GroupState;
 			if (!parent) continue;
@@ -80,9 +81,7 @@ export function autoSelectParentGroups(
 			// Check if all children are in the current selection
 			const allChildrenSelected =
 				parent.childIds.length > 0 &&
-				parent.childIds.every((childId) =>
-					currentSelectedIds.includes(childId),
-				);
+				parent.childIds.every((childId) => selectedSet.has(childId));
 
 			if (allChildrenSelected) {
 				// Collect all descendants (children, grandchildren, etc.)
@@ -94,7 +93,7 @@ export function autoSelectParentGroups(
 				);
 
 				// Add parent to selection (if not already there)
-				if (!currentSelectedIds.includes(parentId)) {
+				if (!selectedSet.has(parentId)) {
 					currentSelectedIds.push(parentId);
 					changed = true;
 				}
