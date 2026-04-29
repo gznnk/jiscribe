@@ -166,6 +166,7 @@ export const getMenuConfig = (state: CanvasControllerState): ObjectMenuConfig =>
  * @returns ObjectMenuConfig with only commonly enabled menu items set to true
  */
 export const useMenuConfig = (state: CanvasControllerState): ObjectMenuConfig => {
-	// TODO: メモ化の意味がほぼない
-	return useMemo(() => getMenuConfig(state), [state]);
+	const { selectedIds, objects } = state;
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	return useMemo(() => getMenuConfig(state), [selectedIds, objects]);
 };
