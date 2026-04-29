@@ -56,14 +56,24 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 
 		switch (event.type) {
 			case "click": {
-				// ビューポート中央に配置
-				const { minX, minY, width, height, zoom } = state.viewport;
-				const centerX = minX + width / zoom / 2;
-				const centerY = minY + height / zoom / 2;
-				return addObjectToState(state, shapeType, {
-					x: centerX,
-					y: centerY,
-				});
+				// sticky はビューポート中央に配置、rect/ellipse は描画モードをトグル
+				if (shapeType === "sticky") {
+					const { minX, minY, width, height, zoom } = state.viewport;
+					const centerX = minX + width / zoom / 2;
+					const centerY = minY + height / zoom / 2;
+					return addObjectToState(state, shapeType, {
+						x: centerX,
+						y: centerY,
+					});
+				}
+
+				const nextTool =
+					state.activeDrawingTool === shapeType ? null : shapeType;
+				return {
+					...state,
+					activeDrawingTool: nextTool,
+					drawingPreview: null,
+				};
 			}
 
 			case "dragStart": {

@@ -8,6 +8,7 @@ import { StickyIcon } from "../../icons/StickyIcon";
 type ShapeLibraryItemProps = {
 	type: ObjectType;
 	label: string;
+	isActive?: boolean;
 };
 
 const ICON_SIZE = 20;
@@ -28,6 +29,7 @@ const getIcon = (type: ObjectType) => {
 const ShapeLibraryItemComponent: React.FC<ShapeLibraryItemProps> = ({
 	type,
 	label,
+	isActive = false,
 }) => {
 	return (
 		<div
@@ -38,14 +40,19 @@ const ShapeLibraryItemComponent: React.FC<ShapeLibraryItemProps> = ({
 				alignItems: "center",
 				gap: 8,
 				padding: "6px 10px",
-				cursor: "grab",
+				cursor: isActive ? "crosshair" : "grab",
 				borderRadius: 6,
 				userSelect: "none",
 				pointerEvents: "auto",
+				backgroundColor: isActive ? "#eff6ff" : undefined,
+				outline: isActive ? "1.5px solid #3b82f6" : undefined,
+				color: isActive ? "#1d4ed8" : undefined,
 			}}
 		>
 			{getIcon(type)}
-			<span style={{ fontSize: 13, color: "#374151" }}>{label}</span>
+			<span style={{ fontSize: 13, color: isActive ? "#1d4ed8" : "#374151" }}>
+				{label}
+			</span>
 		</div>
 	);
 };

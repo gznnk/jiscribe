@@ -15,11 +15,22 @@ const SHAPE_LIBRARY_ITEMS: ShapeLibraryItemDefinition[] = [
 	{ type: "sticky", label: "Sticky" },
 ];
 
-const ShapeLibraryComponent: React.FC = () => {
+type ShapeLibraryProps = {
+	activeDrawingTool: ObjectType | null;
+};
+
+const ShapeLibraryComponent: React.FC<ShapeLibraryProps> = ({
+	activeDrawingTool,
+}) => {
 	return (
 		<ShapeLibraryContainer>
 			{SHAPE_LIBRARY_ITEMS.map((item) => (
-				<ShapeLibraryItem key={item.type} type={item.type} label={item.label} />
+				<ShapeLibraryItem
+					key={item.type}
+					type={item.type}
+					label={item.label}
+					isActive={activeDrawingTool === item.type}
+				/>
 			))}
 		</ShapeLibraryContainer>
 	);

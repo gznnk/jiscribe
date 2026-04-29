@@ -4,6 +4,8 @@ import { collectIdsInArea } from "./utils/collectIdsInArea";
 import { PRECISION } from "../../../../constants/precision";
 import { ZOOM } from "../../../../constants/zoom";
 import type { GestureHandler } from "../../../../registry/GestureHandlerRegistryTypes";
+import { objectRegistry } from "../../../../registry/ObjectRegistry";
+import { createObjectDocFromBounds } from "../../../../schemas/objects/utils/createObjectDocFromBounds";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { autoSelectParentGroups } from "../objects/utils/autoSelectParentGroups";
 import { createMultiSelectGroup } from "../objects/utils/createMultiSelectGroup";
@@ -111,6 +113,78 @@ export const CanvasEventHandler: GestureHandler = {
 					},
 				};
 			}
+			return nextState;
+		}
+
+		// Left-button drag in draw mode: draw rect/ellipse
+		const drawingTool =
+			nextState.activeDrawingTool === "rect" ||
+			nextState.activeDrawingTool === "ellipse"
+				? (nextState.activeDrawingTool as "rect" | "ellipse")
+				: null;
+		if (event.button === 0 && drawingTool !== null) {
+			if (event.type === "dragStart") {
+				nextState = {
+					...nextState,
+					drawingPreview: {
+						startX: event.start.x,
+						startY: event.start.y,
+						endX: event.start.x,
+						endY: event.start.y,
+					},
+					edgeScrollEnabled: true,
+				};
+				return nextState;
+			}
+
+			if (event.type === "drag" && nextState.drawingPreview) {
+				nextState = {
+					...nextState,
+					drawingPreview: {
+						...nextState.drawingPreview,
+						endX: event.last.x,
+						endY: event.last.y,
+					},
+				};
+				return nextState;
+			}
+
+			if (event.type === "dragEnd" && nextState.drawingPreview) {
+				const { startX, startY, endX, endY } = nextState.drawingPreview;
+				const doc = createObjectDocFromBounds(
+					drawingTool,
+					startX,
+					startY,
+					endX,
+					endY,
+				);
+
+				if (doc) {
+					const objectState = objectRegistry.toState(doc);
+					nextState = {
+						...nextState,
+						objects: { ...nextState.objects, [objectState.id]: objectState },
+						rootIds: [...nextState.rootIds, objectState.id],
+						selectedIds: [objectState.id],
+					};
+				}
+
+				return {
+					...nextState,
+					activeDrawingTool: null,
+					drawingPreview: null,
+					edgeScrollEnabled: false,
+				};
+			}
+
+			if (event.type === "click") {
+				return {
+					...nextState,
+					activeDrawingTool: null,
+					drawingPreview: null,
+				};
+			}
+
 			return nextState;
 		}
 

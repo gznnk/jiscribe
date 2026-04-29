@@ -32,6 +32,7 @@ import { DebugInfo } from "./ui/debug/DebugInfo";
 import { TextEditorLayer } from "./ui/editors/TextEditorLayer";
 import { AreaSelectionRect } from "./ui/feedback/AreaSelectionRect";
 import { DragGhost } from "./ui/feedback/DragGhost";
+import { DrawingPreviewOverlay } from "./ui/feedback/DrawingPreviewOverlay";
 import { PendingConnectorOverlay } from "./ui/feedback/PendingConnectorOverlay";
 import { SelectionOverlay } from "./ui/feedback/SelectionOverlay";
 import { SnapGuides } from "./ui/feedback/SnapGuides";
@@ -71,6 +72,8 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 			objectMenuOpenId: null,
 			textEditState: null,
 			pendingConnector: null,
+			activeDrawingTool: null,
+			drawingPreview: null,
 			history: {
 				past: [],
 				present: canvasDoc,
@@ -158,6 +161,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 			data-kind="canvas"
 			ref={canvasRef}
 			onContextMenu={handleContextMenu}
+			cursor={state.activeDrawingTool ? "crosshair" : undefined}
 			{...pointerHandlers}
 		>
 			<Container>
@@ -207,6 +211,10 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 						pendingShapeType={state.pendingShapeType}
 						ghostPosition={state.ghostPosition}
 					/>
+					<DrawingPreviewOverlay
+						activeDrawingTool={state.activeDrawingTool}
+						drawingPreview={state.drawingPreview}
+					/>
 					<AreaSelectionRect areaSelection={state.areaSelection} />
 					<SnapGuides
 						snapFeedback={state.snapFeedback}
@@ -233,7 +241,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 				</ScrollSyncedOverlay>
 			</Container>
 			<ViewportOverlay>
-				<ShapeLibrary />
+				<ShapeLibrary activeDrawingTool={state.activeDrawingTool} />
 				<DebugInfo selectedIds={state.selectedIds} objects={state.objects} />
 				<ContextMenu position={state.contextMenuPosition} canvasState={state} />
 			</ViewportOverlay>

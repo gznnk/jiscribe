@@ -92,6 +92,8 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 		snapCandidates: null,
 		selectedIdsWithDescendants: null,
 		snapFeedback: null,
+		activeDrawingTool: null,
+		drawingPreview: null,
 	};
 };
 

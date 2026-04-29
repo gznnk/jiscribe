@@ -155,4 +155,22 @@ export type CanvasState = {
 	 * スナップしている間のみ non-null。dragEnd でクリアする。
 	 */
 	snapFeedback: SnapFeedback | null;
+
+	/**
+	 * 現在アクティブな描画ツール。
+	 * ShapeLibrary の Rect/Ellipse ボタンをクリックすると設定され、
+	 * 描画完了・Escape・キャンバスクリック時に null にクリアされる。
+	 */
+	activeDrawingTool: ObjectType | null;
+
+	/**
+	 * 描画モード中のプレビュー矩形（SVG座標）。
+	 * dragStart で開始点を設定し、drag で終点を更新、dragEnd で null にクリアする。
+	 */
+	drawingPreview: {
+		startX: number;
+		startY: number;
+		endX: number;
+		endY: number;
+	} | null;
 };

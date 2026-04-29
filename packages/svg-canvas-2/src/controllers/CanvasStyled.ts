@@ -1,13 +1,18 @@
 import styled from "@emotion/styled";
 
+type ViewportProps = {
+	cursor?: string;
+};
+
 /**
  * Root viewport container that takes up full available space.
  */
-export const Viewport = styled.div`
+export const Viewport = styled.div<ViewportProps>`
 	position: relative;
 	width: 100%;
 	height: 100%;
 	overflow: hidden;
+	${(props) => props.cursor && `cursor: ${props.cursor};`}
 `;
 
 /**

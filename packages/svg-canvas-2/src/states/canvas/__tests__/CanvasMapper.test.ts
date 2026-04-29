@@ -165,6 +165,8 @@ describe("CanvasMapper", () => {
 				snapCandidates: null,
 				selectedIdsWithDescendants: null,
 				snapFeedback: null,
+				activeDrawingTool: null,
+				drawingPreview: null,
 				objects: {
 					"rect-1": {
 						id: "rect-1",
