@@ -1,11 +1,11 @@
 import { memo } from "react";
 
-import type { CanvasState } from "../../../../states/canvas/CanvasState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
+import type { CanvasControllerState } from "../../../CanvasTypes";
 import { ConnectorControls } from "../ConnectorControls";
 
 type ConnectorControlsLayerProps = Pick<
-	CanvasState,
+	CanvasControllerState,
 	"selectedConnectorId" | "objects"
 > & {
 	zoom?: number;

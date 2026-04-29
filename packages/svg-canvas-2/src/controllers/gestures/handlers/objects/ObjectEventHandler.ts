@@ -12,7 +12,7 @@ import type {
 } from "../../../../registry/GestureHandlerRegistryTypes";
 import { objectRegistry } from "../../../../registry/ObjectRegistry";
 import type { Mods } from "../../../../registry/ObjectRegistryTypes";
-import type { SnapFeedback } from "../../../../states/canvas/SnapTypes";
+import type { SnapFeedback } from "../../../CanvasTypes";
 import { hasFrameKeyPoints } from "../../../../states/objects/base/FrameWithKeyPoints";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../../../states/objects/base/TextStyleState";

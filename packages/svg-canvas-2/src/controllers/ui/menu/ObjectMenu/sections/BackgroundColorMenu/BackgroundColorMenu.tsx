@@ -1,6 +1,6 @@
 ﻿import { memo, useRef } from "react";
 
-import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
+import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { ColorPreviewIcon } from "../../../../icons/ColorPreviewIcon";
 import { ColorPickerGrid } from "../../common/ColorPickerGrid/ColorPickerGrid";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
@@ -13,14 +13,14 @@ import {
 const SECTION_ID = "bg-color";
 
 type BackgroundColorMenuProps = {
-	canvasState: CanvasState;
+	canvasState: CanvasControllerState;
 };
 
 /**
  * 選択中オブジェクトの fill 色を取得する。
  * 最初に見つかった fill 値を返す。
  */
-const getSelectedFillColor = (state: CanvasState): string => {
+const getSelectedFillColor = (state: CanvasControllerState): string => {
 	for (const id of state.selectedIds) {
 		const obj = state.objects[id];
 		if (obj && "fill" in obj && typeof obj.fill === "string") {

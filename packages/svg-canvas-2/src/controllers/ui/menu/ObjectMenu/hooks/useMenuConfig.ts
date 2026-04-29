@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 
 import { objectRegistry } from "../../../../../registry/ObjectRegistry";
-import type { CanvasState } from "../../../../../states/canvas/CanvasState";
+import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
 import type { ObjectMenuConfig } from "../types/ObjectMenuConfig";
 
@@ -56,7 +56,7 @@ const mergeBorderStyle = (
  * @param state - Canvas state
  * @returns ObjectMenuConfig with only commonly enabled menu items set to true
  */
-export const getMenuConfig = (state: CanvasState): ObjectMenuConfig => {
+export const getMenuConfig = (state: CanvasControllerState): ObjectMenuConfig => {
 	const { selectedIds, objects } = state;
 
 	if (selectedIds.length === 0) {
@@ -165,7 +165,7 @@ export const getMenuConfig = (state: CanvasState): ObjectMenuConfig => {
  * @param state - Canvas state
  * @returns ObjectMenuConfig with only commonly enabled menu items set to true
  */
-export const useMenuConfig = (state: CanvasState): ObjectMenuConfig => {
+export const useMenuConfig = (state: CanvasControllerState): ObjectMenuConfig => {
 	// TODO: メモ化の意味がほぼない
 	return useMemo(() => getMenuConfig(state), [state]);
 };

@@ -7,8 +7,8 @@ import type {
 	EventType,
 } from "../../../registry/GestureHandlerRegistryTypes";
 import type { CanvasControllerState } from "../../CanvasTypes";
-import type { Gesture } from "../recognizer/GestureRecognizerTypes";
 import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWithDescendants";
+import type { Gesture } from "../recognizer/GestureRecognizerTypes";
 import { calcSnapCandidates } from "./objects/utils/snap/calcSnapCandidates";
 
 /**

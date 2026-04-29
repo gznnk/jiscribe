@@ -1,5 +1,5 @@
-import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { collectDescendantIds } from "./collectDescendantIds";
+import type { ObjectState } from "../../states/objects/base/ObjectState";
 
 /**
  * 選択中の ID 群 + それぞれの全子孫 ID を含む Set を構築する。

@@ -1,7 +1,7 @@
 ﻿import { memo, useRef } from "react";
 
 import { AlignmentDropdownPanel, AlignmentRow } from "./AlignmentMenuStyled";
-import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
+import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import type { TextStyleState } from "../../../../../../states/objects/base/TextStyleState";
 import { AlignBottomIcon } from "../../../../icons/AlignBottomIcon";
 import { AlignCenterIcon } from "../../../../icons/AlignCenterIcon";
@@ -15,7 +15,7 @@ import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
 const SECTION_ID = "alignment";
 
 type AlignmentMenuProps = {
-	canvasState: CanvasState;
+	canvasState: CanvasControllerState;
 };
 
 const horizontalAlignments = [

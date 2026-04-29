@@ -1,6 +1,6 @@
 import { memo, useRef } from "react";
 
-import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
+import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { BorderColorIcon } from "../../../../icons/BorderColorIcon";
 import { ColorPickerGrid } from "../../common/ColorPickerGrid/ColorPickerGrid";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
@@ -13,14 +13,14 @@ import {
 const SECTION_ID = "stroke-color";
 
 type StrokeColorMenuProps = {
-	canvasState: CanvasState;
+	canvasState: CanvasControllerState;
 };
 
 /**
  * 選択中オブジェクトの stroke 色を取得する。
  * 最初に見つかった stroke 値を返す。
  */
-const getSelectedStrokeColor = (state: CanvasState): string => {
+const getSelectedStrokeColor = (state: CanvasControllerState): string => {
 	for (const id of state.selectedIds) {
 		const obj = state.objects[id];
 		if (obj && "stroke" in obj && typeof obj.stroke === "string") {

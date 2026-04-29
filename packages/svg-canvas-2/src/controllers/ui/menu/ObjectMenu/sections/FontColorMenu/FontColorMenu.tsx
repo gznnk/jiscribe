@@ -1,6 +1,6 @@
 ﻿import { memo, useRef } from "react";
 
-import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
+import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import type { TextStyleState } from "../../../../../../states/objects/base/TextStyleState";
 import { FontColorIcon } from "../../../../icons/FontColorIcon";
 import { ColorPickerGrid } from "../../common/ColorPickerGrid/ColorPickerGrid";
@@ -15,7 +15,7 @@ const SECTION_ID = "font-color";
 const DEFAULT_FONT_COLOR = "#333333";
 
 type FontColorMenuProps = {
-	canvasState: CanvasState;
+	canvasState: CanvasControllerState;
 };
 
 /**

@@ -6,7 +6,7 @@ import { ZOOM } from "../../../../constants/zoom";
 import type { GestureHandler } from "../../../../registry/GestureHandlerRegistryTypes";
 import { objectRegistry } from "../../../../registry/ObjectRegistry";
 import { createObjectDocFromBounds } from "../../../../schemas/objects/utils/createObjectDocFromBounds";
-import type { SnapFeedback } from "../../../../states/canvas/SnapTypes";
+import type { SnapFeedback } from "../../../CanvasTypes";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { autoSelectParentGroups } from "../objects/utils/autoSelectParentGroups";
 import { createMultiSelectGroup } from "../objects/utils/createMultiSelectGroup";

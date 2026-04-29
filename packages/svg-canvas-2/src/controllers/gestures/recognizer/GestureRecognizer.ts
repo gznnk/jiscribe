@@ -18,7 +18,7 @@ import {
 	getKindAndId,
 	getSvgPoint,
 } from "./utils";
-import type { CanvasState } from "../../../states/canvas/CanvasState";
+import type { CanvasControllerState } from "../../CanvasTypes";
 
 /**
  * 内部で使用するイベントの型
@@ -66,7 +66,7 @@ export class GestureRecognizer {
 	private gestureCallback: GestureCallback;
 	private containerRef: React.RefObject<HTMLElement | null>;
 	private svgRef: React.RefObject<SVGSVGElement | null>;
-	private canvasStateRef: React.RefObject<CanvasState>;
+	private canvasStateRef: React.RefObject<CanvasControllerState>;
 
 	// State management
 	private pressed: Pressed | null = null;

@@ -1,6 +1,6 @@
 import { calcKeyPointsBoundingBox } from "@workspace/geometry";
 
-import type { SnapCandidate, SnapCandidates } from "../../../../../../states/canvas/SnapTypes";
+import type { SnapCandidate, SnapCandidates } from "../../../../../CanvasTypes";
 import { hasFrameKeyPoints } from "../../../../../../states/objects/base/FrameWithKeyPoints";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 

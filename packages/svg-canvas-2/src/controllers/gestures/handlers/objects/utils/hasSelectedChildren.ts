@@ -1,10 +1,10 @@
-import type { CanvasState } from "../../../../../states/canvas/CanvasState";
+import type { CanvasControllerState } from "../../../../../controllers/CanvasTypes";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
 
 /**
  * Checks if a group has any selected children.
  *
- * @param state - The canvas state
+ * @param state - The canvas controller state
  * @param groupId - The ID of the group to check
  * @returns true if at least one child is selected, false otherwise
  *
@@ -16,7 +16,7 @@ import type { GroupState } from "../../../../../states/objects/primitives/group/
  * hasSelectedChildren(state, 'group-2') // false
  */
 export function hasSelectedChildren(
-	state: CanvasState,
+	state: CanvasControllerState,
 	groupId: string,
 ): boolean {
 	const group = state.objects[groupId];

@@ -1,12 +1,12 @@
 ﻿import { memo } from "react";
 
-import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
+import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import type { TextStyleState } from "../../../../../../states/objects/base/TextStyleState";
 import { BoldIcon } from "../../../../icons/BoldIcon";
 import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
 
 type BoldMenuProps = {
-	canvasState: CanvasState;
+	canvasState: CanvasControllerState;
 };
 
 /**

@@ -4,8 +4,8 @@ import {
 	BorderStyleMenuWrapper,
 	BorderStyleSection,
 } from "./BorderStyleMenuStyled";
+import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import type { StrokeDashType } from "../../../../../../schemas/objects/types/StrokeDashType";
-import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
 import { DashedCircleIcon } from "../../../../icons/DashedCircleIcon";
 import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
 import { DottedLineIcon } from "../../../../icons/DottedLineIcon";
@@ -30,7 +30,7 @@ const MAX_CORNER_RADIUS = 999;
 const DEFAULT_CORNER_RADIUS = 0;
 
 type BorderStyleMenuProps = {
-	canvasState: CanvasState;
+	canvasState: CanvasControllerState;
 	/** Whether to show corner radius control */
 	showRadius?: boolean;
 	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
@@ -39,7 +39,7 @@ type BorderStyleMenuProps = {
 /**
  * Get first selected object's stroke width.
  */
-const getSelectedStrokeWidth = (state: CanvasState): number => {
+const getSelectedStrokeWidth = (state: CanvasControllerState): number => {
 	for (const id of state.selectedIds) {
 		const obj = state.objects[id];
 		if (obj && "strokeWidth" in obj && typeof obj.strokeWidth === "number") {
@@ -53,7 +53,7 @@ const getSelectedStrokeWidth = (state: CanvasState): number => {
  * Get first selected object's stroke dash type.
  */
 const getSelectedStrokeDashType = (
-	state: CanvasState,
+	state: CanvasControllerState,
 ): StrokeDashType | undefined => {
 	for (const id of state.selectedIds) {
 		const obj = state.objects[id];
@@ -71,7 +71,7 @@ const getSelectedStrokeDashType = (
 /**
  * Get first selected object's corner radius (rx).
  */
-const getSelectedCornerRadius = (state: CanvasState): number => {
+const getSelectedCornerRadius = (state: CanvasControllerState): number => {
 	for (const id of state.selectedIds) {
 		const obj = state.objects[id];
 		if (obj && "rx" in obj && typeof obj.rx === "number") {

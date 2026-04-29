@@ -2,15 +2,15 @@ import type React from "react";
 import { memo, useEffect, useState } from "react";
 
 // Import components related to SvgCanvas.
-import { Minus } from "../../../../../icons/Minus";
-import { Plus } from "../../../../../icons/Plus";
-// Imports related to this component.
-import { DiagramMenuControl } from "../DiagramMenuControl";
 import {
 	NumberStepperButton,
 	NumberStepperContainer,
 	NumberStepperInput,
 } from "./NumberStepperStyled";
+import { Minus } from "../../../../../icons/Minus";
+import { Plus } from "../../../../../icons/Plus";
+// Imports related to this component.
+import { DiagramMenuControl } from "../DiagramMenuControl";
 
 /**
  * Props for the NumberStepper component.

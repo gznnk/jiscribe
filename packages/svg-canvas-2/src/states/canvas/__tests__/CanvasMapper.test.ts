@@ -140,8 +140,6 @@ describe("CanvasMapper", () => {
 			const state: CanvasState = {
 				rootIds: ["rect-1", "group-1"],
 				connectorIds: [],
-				selectedIds: [],
-				eventStartState: null,
 				viewport: {
 					minX: 0,
 					minY: 0,
@@ -149,24 +147,6 @@ describe("CanvasMapper", () => {
 					height: 800,
 					zoom: 1,
 				},
-				edgeScrollEnabled: false,
-				lastCommitTime: 0,
-				contextMenuPosition: null,
-				pendingShapeType: null,
-				ghostPosition: null,
-				areaSelection: null,
-				objectMenuOpenId: null,
-				multiSelectGroup: null,
-				textEditState: null,
-				pendingConnector: null,
-				selectedConnectorId: null,
-				editingConnectorId: null,
-				editingEndpoint: null,
-				snapCandidates: null,
-				selectedIdsWithDescendants: null,
-				snapFeedback: null,
-				activeDrawingTool: null,
-				drawingPreview: null,
 				objects: {
 					"rect-1": {
 						id: "rect-1",

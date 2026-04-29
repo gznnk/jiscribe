@@ -15,8 +15,8 @@ import {
 	roundToDecimal,
 } from "@workspace/geometry";
 
+import type { TransformAnchorType } from "./TransformAnchorType";
 import { calcMultiSelectGroupBounds } from "./utils/calcMultiSelectGroupBounds";
-import { updateSingleGroupBounds } from "./utils/updateSingleGroupBounds";
 import {
 	calcSnapCursorDelta,
 	calcTentativeBBox,
@@ -28,9 +28,10 @@ import {
 	calcWidthWithAspectRatio,
 	enforceResizeDimensions,
 } from "./utils/enforceResizeDimensions";
+import { updateSingleGroupBounds } from "./utils/updateSingleGroupBounds";
 import { PRECISION } from "../../../../../constants/precision";
 import type { CanvasEvent } from "../../../../../registry/GestureHandlerRegistryTypes";
-import type { SnapFeedback } from "../../../../../states/canvas/SnapTypes";
+import type { SnapFeedback } from "../../../../CanvasTypes";
 import { hasFrameKeyPoints } from "../../../../../states/objects/base/FrameWithKeyPoints";
 import type { TransformState } from "../../../../../states/objects/base/TransformState";
 import { isTransformState } from "../../../../../states/objects/base/TransformState";
@@ -48,7 +49,6 @@ import {
 	SNAP_THRESHOLD_PX,
 } from "../../objects/utils/snap/findSnap";
 import type { ControlStrategy } from "../ControlEventHandler";
-import type { TransformAnchorType } from "./TransformAnchorType";
 
 /**
  * Transform control の操作（リサイズと回転）を処理する。

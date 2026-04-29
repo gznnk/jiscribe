@@ -1,7 +1,7 @@
 import type React from "react";
 import { useMemo, useRef } from "react";
 
-import type { CanvasState } from "../../states/canvas/CanvasState";
+import type { CanvasControllerState } from "../CanvasTypes";
 import { GestureRecognizer } from "../gestures/recognizer/GestureRecognizer";
 import type {
 	GestureCallback,
@@ -12,7 +12,7 @@ export type UseGestureRecognizerParams = {
 	gestureCallback: GestureCallback;
 	containerRef: React.RefObject<HTMLElement | null>;
 	svgRef: React.RefObject<SVGSVGElement | null>;
-	canvasState: CanvasState;
+	canvasState: CanvasControllerState;
 };
 
 export type UseGestureRecognizerReturn = {
@@ -30,7 +30,7 @@ export const useGestureRecognizer = ({
 	const recognizerRef = useRef<GestureRecognizer | null>(null);
 
 	// canvasStateの最新値を常に保持するRef
-	const canvasStateRef = useRef<CanvasState>(canvasState);
+	const canvasStateRef = useRef<CanvasControllerState>(canvasState);
 	canvasStateRef.current = canvasState; // レンダリングごとに最新値を設定
 
 	// 初回のみインスタンス作成

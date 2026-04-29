@@ -1,6 +1,6 @@
 import { memo } from "react";
 
-import type { SnapFeedback } from "../../../../states/canvas/SnapTypes";
+import type { SnapFeedback } from "../../../CanvasTypes";
 
 type SnapGuidesProps = {
 	snapFeedback: SnapFeedback | null;

@@ -67,8 +67,6 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 		objects,
 		rootIds,
 		connectorIds,
-		selectedIds: [],
-		eventStartState: null,
 		viewport: {
 			minX: 0,
 			minY: 0,
@@ -76,24 +74,6 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 			height: 800,
 			zoom: 1,
 		},
-		edgeScrollEnabled: false,
-		lastCommitTime: 0,
-		contextMenuPosition: null,
-		pendingShapeType: null,
-		ghostPosition: null,
-		areaSelection: null,
-		objectMenuOpenId: null,
-		multiSelectGroup: null,
-		textEditState: null,
-		pendingConnector: null,
-		selectedConnectorId: null,
-		editingConnectorId: null,
-		editingEndpoint: null,
-		snapCandidates: null,
-		selectedIdsWithDescendants: null,
-		snapFeedback: null,
-		activeDrawingTool: null,
-		drawingPreview: null,
 	};
 };
 

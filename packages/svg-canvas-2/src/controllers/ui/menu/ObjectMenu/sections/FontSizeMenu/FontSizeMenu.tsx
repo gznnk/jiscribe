@@ -1,7 +1,7 @@
 ﻿import { memo, useRef } from "react";
 
 import { FontSizeMenuWrapper } from "./FontSizeMenuStyled";
-import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
+import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import type { TextStyleState } from "../../../../../../states/objects/base/TextStyleState";
 import { FontSizeIcon } from "../../../../icons/FontSizeIcon";
 import { MenuSlider } from "../../common/MenuSlider";
@@ -18,7 +18,7 @@ const MIN_FONT_SIZE = 1;
 const MAX_FONT_SIZE = 999;
 
 type FontSizeMenuProps = {
-	canvasState: CanvasState;
+	canvasState: CanvasControllerState;
 	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
 };
 

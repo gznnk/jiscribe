@@ -1,7 +1,7 @@
 import type { Point } from "@workspace/geometry";
 import type React from "react";
 
-import type { CanvasState } from "../../../states/canvas/CanvasState";
+import type { CanvasControllerState } from "../../CanvasTypes";
 
 export type Mods = {
 	shift: boolean;
@@ -61,5 +61,5 @@ export type GestureRecognizerConfig = {
 	gestureCallback: GestureCallback;
 	containerRef: React.RefObject<HTMLElement | null>;
 	svgRef: React.RefObject<SVGSVGElement | null>;
-	canvasStateRef: React.RefObject<CanvasState>;
+	canvasStateRef: React.RefObject<CanvasControllerState>;
 };

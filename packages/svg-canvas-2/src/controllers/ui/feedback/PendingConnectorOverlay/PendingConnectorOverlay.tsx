@@ -1,10 +1,10 @@
 import { memo } from "react";
 
 import { ConnectorRenderer } from "../../../../presentations/layers/content/ConnectorRenderer";
-import type { CanvasState } from "../../../../states/canvas/CanvasState";
+import type { CanvasControllerState } from "../../../CanvasTypes";
 
 type PendingConnectorOverlayProps = Pick<
-	CanvasState,
+	CanvasControllerState,
 	"pendingConnector" | "objects"
 >;
 

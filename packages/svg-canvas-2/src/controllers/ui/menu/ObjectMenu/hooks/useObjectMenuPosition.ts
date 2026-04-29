@@ -6,8 +6,8 @@ import {
 import { type RefObject, useEffect, useMemo, useState } from "react";
 
 import { isPoly } from "../../../../../schemas/objects/types/Poly";
-import type { CanvasState } from "../../../../../states/canvas/CanvasState";
 import { isGroupState } from "../../../../../states/objects/primitives/group/GroupState";
+import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { calcGroupBoundingBox } from "../../../utils/calcGroupBoundingBox";
 
 /** ObjectMenu とオブジェクト間の距離 (px) */
@@ -34,7 +34,7 @@ type ObjectMenuPosition = {
  * - Measures actual menu dimensions from DOM for accurate positioning
  */
 export function useObjectMenuPosition(
-	state: CanvasState,
+	state: CanvasControllerState,
 	menuRef: RefObject<HTMLDivElement | null>,
 ): ObjectMenuPosition {
 	const {

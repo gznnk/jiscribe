@@ -1,13 +1,13 @@
 import type { TransformedFrame } from "@workspace/geometry";
 import { memo } from "react";
 
-import type { CanvasState } from "../../../../states/canvas/CanvasState";
 import { isTextStyleState } from "../../../../states/objects/base/TextStyleState";
+import type { CanvasControllerState } from "../../../CanvasTypes";
 import { TextEditor } from "../TextEditor";
 
 type TextEditorLayerProps = {
-	textEditState: CanvasState["textEditState"];
-	objects: CanvasState["objects"];
+	textEditState: CanvasControllerState["textEditState"];
+	objects: CanvasControllerState["objects"];
 	onTextChange: (text: string) => void;
 	onEscape: () => void;
 };

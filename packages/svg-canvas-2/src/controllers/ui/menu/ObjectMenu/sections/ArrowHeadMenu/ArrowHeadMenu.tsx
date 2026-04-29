@@ -2,9 +2,9 @@
 
 import { ArrowHeadIconPreview } from "./ArrowHeadIconPreview";
 import { ArrowSelectorGrid, ArrowTypeButton } from "./ArrowHeadMenuStyled";
+import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { ArrowTypes } from "../../../../../../schemas/objects/types/ArrowType";
 import type { ArrowType } from "../../../../../../schemas/objects/types/ArrowType";
-import type { CanvasState } from "../../../../../../states/canvas/CanvasState";
 import { ArrowSwapIcon } from "../../../../icons/ArrowSwapIcon";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
 import {
@@ -17,14 +17,14 @@ const SECTION_ID_START = "arrow-head-start";
 const SECTION_ID_END = "arrow-head-end";
 
 type ArrowHeadMenuProps = {
-	canvasState: CanvasState;
+	canvasState: CanvasControllerState;
 };
 
 /**
  * 選択中オブジェクトの矢印タイプを取得する。
  */
 const getSelectedArrowType = (
-	state: CanvasState,
+	state: CanvasControllerState,
 	property: "startArrow" | "endArrow",
 ): ArrowType => {
 	for (const id of state.selectedIds) {
