@@ -63,7 +63,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 		return {
 			...baseState,
 			selectedIds: [],
-			eventStartState: null,
+			eventStartSnapshot: null,
 			edgeScrollEnabled: false,
 			lastCommitTime: 0,
 			contextMenuPosition: null,
@@ -77,8 +77,6 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 			selectedConnectorId: null,
 			editingConnectorId: null,
 			editingEndpoint: null,
-			snapCandidates: null,
-			selectedIdsWithDescendants: null,
 			snapFeedback: null,
 			activeDrawingTool: null,
 			drawingPreview: null,

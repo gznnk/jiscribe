@@ -31,12 +31,10 @@ import {
 import { updateSingleGroupBounds } from "./utils/updateSingleGroupBounds";
 import { PRECISION } from "../../../../../constants/precision";
 import type { CanvasEvent } from "../../../../../registry/GestureHandlerRegistryTypes";
-import type { SnapFeedback } from "../../../../CanvasTypes";
-import { hasFrameKeyPoints } from "../../../../../states/objects/base/FrameWithKeyPoints";
 import type { TransformState } from "../../../../../states/objects/base/TransformState";
 import { isTransformState } from "../../../../../states/objects/base/TransformState";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
-import type { CanvasControllerState } from "../../../../CanvasTypes";
+import type { CanvasControllerState, SnapFeedback } from "../../../../CanvasTypes";
 import { buildSelectedIdsWithDescendants } from "../../../../utils/buildSelectedIdsWithDescendants";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
 import {
@@ -138,8 +136,8 @@ export class TransformControlHandler implements ControlStrategy {
 		}
 
 		// リサイズ処理の共通前処理
-		const eventStartState = state.eventStartState;
-		if (!eventStartState) {
+		const eventStartSnapshot = state.eventStartSnapshot;
+		if (!eventStartSnapshot) {
 			return state;
 		}
 
@@ -150,7 +148,7 @@ export class TransformControlHandler implements ControlStrategy {
 
 		if (isMultiSelect) {
 			// 複数選択の場合は multiSelectGroup を使用
-			const multiSelectGroup = eventStartState.multiSelectGroup;
+			const multiSelectGroup = eventStartSnapshot.multiSelectGroup;
 			if (
 				multiSelectGroup &&
 				isTransformedFrame(multiSelectGroup) &&
@@ -161,7 +159,7 @@ export class TransformControlHandler implements ControlStrategy {
 		} else if (state.selectedIds.length === 1) {
 			// 単一選択の場合
 			selectedId = state.selectedIds[0];
-			const startObject = eventStartState.objects[selectedId];
+			const startObject = eventStartSnapshot.objects[selectedId];
 			if (
 				startObject &&
 				isTransformedFrame(startObject) &&
@@ -180,10 +178,13 @@ export class TransformControlHandler implements ControlStrategy {
 
 		// ワールド空間でのカーソル位置
 
-		// キャッシュがあればそれを使用、なければ計算
-		const startFrameKeyPoints: FrameKeyPoints = hasFrameKeyPoints(startFrame)
-			? startFrame.keyPoints
-			: calcFrameKeyPoints(startFrame);
+		// keyPointsCache から取得、なければ計算
+		const startFrameKeyPointsId = isMultiSelect
+			? eventStartSnapshot.multiSelectGroup?.id
+			: selectedId;
+		const startFrameKeyPoints: FrameKeyPoints =
+			(startFrameKeyPointsId && eventStartSnapshot.keyPointsCache[startFrameKeyPointsId])
+			|| calcFrameKeyPoints(startFrame);
 
 		const isSwapped = (startFrame.rotation + 405) % 180 > 90;
 
@@ -210,7 +211,7 @@ export class TransformControlHandler implements ControlStrategy {
 
 		// ── スナップ補正 ────────────────────────────────────────────────────
 		let snapFeedback: SnapFeedback = { x: [], y: [] };
-		const snapCandidates = eventStartState.snapCandidates;
+		const snapCandidates = eventStartSnapshot.snapCandidates;
 
 		if (snapCandidates) {
 			const tentativeBBox = calcTentativeBBox(resizeResult, startFrame, radians);
@@ -247,8 +248,8 @@ export class TransformControlHandler implements ControlStrategy {
 
 				if (snapX || snapY) {
 					const excludeIds =
-						state.eventStartState?.selectedIdsWithDescendants
-						?? buildSelectedIdsWithDescendants(state.selectedIds, eventStartState.objects);
+						eventStartSnapshot.selectedIdsWithDescendants
+						?? buildSelectedIdsWithDescendants(state.selectedIds, eventStartSnapshot.objects);
 					const filteredCandidates = {
 						x: snapCandidates.x.filter((c) => !excludeIds.has(c.objectId)),
 						y: snapCandidates.y.filter((c) => !excludeIds.has(c.objectId)),
@@ -326,9 +327,9 @@ export class TransformControlHandler implements ControlStrategy {
 			scaleY: newScaleY,
 		};
 
-		// eventStartState から更新されたオブジェクトマップを作成
+		// eventStartSnapshot から更新されたオブジェクトマップを作成
 		const updatedObjects = {
-			...eventStartState.objects,
+			...eventStartSnapshot.objects,
 		};
 
 		let nextState: CanvasControllerState;
@@ -345,7 +346,7 @@ export class TransformControlHandler implements ControlStrategy {
 				startGroup,
 				updatedGroup,
 				startGroup,
-				eventStartState.objects,
+				eventStartSnapshot.objects,
 			);
 			Object.assign(updatedObjects, groupChildrenUpdates);
 
@@ -378,7 +379,7 @@ export class TransformControlHandler implements ControlStrategy {
 				return state;
 			}
 
-			const startObject = eventStartState.objects[selectedId];
+			const startObject = eventStartSnapshot.objects[selectedId];
 			if (!startObject) {
 				return state;
 			}
@@ -395,7 +396,7 @@ export class TransformControlHandler implements ControlStrategy {
 					startObject as GroupState,
 					updatedObject as GroupState,
 					updatedObject as GroupState,
-					eventStartState.objects,
+					eventStartSnapshot.objects,
 				);
 				Object.assign(updatedObjects, groupChildrenUpdates);
 			}
@@ -1169,8 +1170,8 @@ export class TransformControlHandler implements ControlStrategy {
 		state: CanvasControllerState,
 		event: CanvasEvent,
 	): CanvasControllerState {
-		const eventStartState = state.eventStartState;
-		if (!eventStartState) {
+		const eventStartSnapshot = state.eventStartSnapshot;
+		if (!eventStartSnapshot) {
 			return state;
 		}
 
@@ -1181,14 +1182,14 @@ export class TransformControlHandler implements ControlStrategy {
 
 		if (isMultiSelect) {
 			// 複数選択の場合は multiSelectGroup を使用
-			const multiSelectGroup = eventStartState.multiSelectGroup;
+			const multiSelectGroup = eventStartSnapshot.multiSelectGroup;
 			if (multiSelectGroup && isTransformedFrame(multiSelectGroup)) {
 				startFrame = multiSelectGroup;
 			}
 		} else if (state.selectedIds.length === 1) {
 			// 単一選択の場合
 			selectedId = state.selectedIds[0];
-			const startObject = eventStartState.objects[selectedId];
+			const startObject = eventStartSnapshot.objects[selectedId];
 			if (startObject && isTransformedFrame(startObject)) {
 				startFrame = startObject;
 			}
@@ -1223,9 +1224,9 @@ export class TransformControlHandler implements ControlStrategy {
 			roundToDecimal(radiansToDegrees(radian - rotatePointRadian), 0),
 		);
 
-		// eventStartState から更新されたオブジェクトマップを作成
+		// eventStartSnapshot から更新されたオブジェクトマップを作成
 		const updatedObjects = {
-			...eventStartState.objects,
+			...eventStartSnapshot.objects,
 		};
 
 		let nextState: CanvasControllerState;
@@ -1260,7 +1261,7 @@ export class TransformControlHandler implements ControlStrategy {
 				return state;
 			}
 
-			const startObject = eventStartState.objects[selectedId];
+			const startObject = eventStartSnapshot.objects[selectedId];
 			if (!startObject) {
 				return state;
 			}
@@ -1277,7 +1278,7 @@ export class TransformControlHandler implements ControlStrategy {
 					startObject as GroupState,
 					newRotation,
 					updatedObject as GroupState,
-					updatedObjects,
+					eventStartSnapshot.objects,
 				);
 				Object.assign(updatedObjects, rotatedChildren);
 			}

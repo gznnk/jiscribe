@@ -1,5 +1,5 @@
-import type { Point } from "@workspace/geometry";
-import { calcKeyPointsBoundingBox } from "@workspace/geometry";
+import { calcFrameKeyPoints, calcKeyPointsBoundingBox, isTransformedFrame } from "@workspace/geometry";
+import type { FrameKeyPoints, Point, TransformedFrame } from "@workspace/geometry";
 
 import { moveGroup } from "./primitives/GroupController";
 import { createMultiSelectGroup } from "./utils/createMultiSelectGroup";
@@ -12,11 +12,9 @@ import type {
 } from "../../../../registry/GestureHandlerRegistryTypes";
 import { objectRegistry } from "../../../../registry/ObjectRegistry";
 import type { Mods } from "../../../../registry/ObjectRegistryTypes";
-import type { SnapFeedback } from "../../../CanvasTypes";
-import { hasFrameKeyPoints } from "../../../../states/objects/base/FrameWithKeyPoints";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../../../states/objects/base/TextStyleState";
-import type { CanvasControllerState } from "../../../CanvasTypes";
+import type { CanvasControllerState, SnapFeedback } from "../../../CanvasTypes";
 import { updateAffectedGroupBounds } from "../../../ui/utils/updateAffectedGroupBounds";
 import { buildSelectedIdsWithDescendants } from "../../../utils/buildSelectedIdsWithDescendants";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
@@ -77,61 +75,62 @@ function handleObjectDrag(
 		return canvasState;
 	}
 
-	const eventStartObjects = canvasState.eventStartState?.objects;
-	if (!eventStartObjects) {
+	const eventStartSnapshot = canvasState.eventStartSnapshot;
+	if (!eventStartSnapshot) {
 		return canvasState;
 	}
 
+	const eventStartObjects = eventStartSnapshot.objects;
 	const selectedIds = canvasState.selectedIds;
 
 	// --- スナップ補正 ---
 	let adjustedDelta = delta;
 	let snapFeedback: SnapFeedback = { x: [], y: [] };
 
-	const snapCandidates = canvasState.eventStartState?.snapCandidates;
-	if (snapCandidates) {
-		const snapSource =
-			selectedIds.length > 1
-				? canvasState.eventStartState?.multiSelectGroup
-				: eventStartObjects[selectedIds[0]];
+	const snapCandidates = eventStartSnapshot.snapCandidates;
+	const snapSourceId =
+		selectedIds.length > 1
+			? eventStartSnapshot.multiSelectGroup?.id
+			: selectedIds[0];
+	const snapSourceKeyPoints: FrameKeyPoints | undefined =
+		snapSourceId ? eventStartSnapshot.keyPointsCache[snapSourceId] : undefined;
 
-		if (snapSource && hasFrameKeyPoints(snapSource)) {
-			const bbox = calcKeyPointsBoundingBox(snapSource.keyPoints);
-			const selectedBBox = {
-				left: bbox.left + delta.x,
-				right: bbox.right + delta.x,
-				top: bbox.top + delta.y,
-				bottom: bbox.bottom + delta.y,
-			};
+	if (snapCandidates && snapSourceKeyPoints) {
+		const bbox = calcKeyPointsBoundingBox(snapSourceKeyPoints);
+		const selectedBBox = {
+			left: bbox.left + delta.x,
+			right: bbox.right + delta.x,
+			top: bbox.top + delta.y,
+			bottom: bbox.bottom + delta.y,
+		};
 
-			// 現在の selectedIds + 全子孫を除外（dragStart後の選択変更・グループ子図形も対応）
-			// dragStart 時にキャッシュ済みの値を優先して使用し、フォールバックとして再計算する
-			const excludeIds =
-				canvasState.eventStartState?.selectedIdsWithDescendants
-				?? buildSelectedIdsWithDescendants(selectedIds, eventStartObjects);
-			const filteredCandidates = {
-				x: snapCandidates.x.filter((c) => !excludeIds.has(c.objectId)),
-				y: snapCandidates.y.filter((c) => !excludeIds.has(c.objectId)),
-			};
-			const zoom = canvasState.viewport.zoom;
-			const result = findSnap(
-				filteredCandidates,
-				SNAP_THRESHOLD_PX / zoom,
-				[selectedBBox.left, selectedBBox.right],
-				[selectedBBox.top, selectedBBox.bottom],
-			);
-			adjustedDelta = {
-				x: delta.x + result.delta.x,
-				y: delta.y + result.delta.y,
-			};
-			const actualBBox = {
-				left: selectedBBox.left + result.delta.x,
-				right: selectedBBox.right + result.delta.x,
-				top: selectedBBox.top + result.delta.y,
-				bottom: selectedBBox.bottom + result.delta.y,
-			};
-			snapFeedback = buildSnapFeedback(actualBBox, result.xResult, result.yResult, filteredCandidates);
-		}
+		// 現在の selectedIds + 全子孫を除外（dragStart後の選択変更・グループ子図形も対応）
+		// dragStart 時にキャッシュ済みの値を優先して使用し、フォールバックとして再計算する
+		const excludeIds =
+			eventStartSnapshot.selectedIdsWithDescendants
+			?? buildSelectedIdsWithDescendants(selectedIds, eventStartObjects);
+		const filteredCandidates = {
+			x: snapCandidates.x.filter((c) => !excludeIds.has(c.objectId)),
+			y: snapCandidates.y.filter((c) => !excludeIds.has(c.objectId)),
+		};
+		const zoom = canvasState.viewport.zoom;
+		const result = findSnap(
+			filteredCandidates,
+			SNAP_THRESHOLD_PX / zoom,
+			[selectedBBox.left, selectedBBox.right],
+			[selectedBBox.top, selectedBBox.bottom],
+		);
+		adjustedDelta = {
+			x: delta.x + result.delta.x,
+			y: delta.y + result.delta.y,
+		};
+		const actualBBox = {
+			left: selectedBBox.left + result.delta.x,
+			right: selectedBBox.right + result.delta.x,
+			top: selectedBBox.top + result.delta.y,
+			bottom: selectedBBox.bottom + result.delta.y,
+		};
+		snapFeedback = buildSnapFeedback(actualBBox, result.xResult, result.yResult, filteredCandidates);
 	}
 
 	// --- 全選択オブジェクトを adjustedDelta で移動 ---
@@ -161,8 +160,7 @@ function handleObjectDrag(
 
 	// multiSelectGroup も同期して移動
 	const multiSelectGroup = canvasState.multiSelectGroup;
-	const eventStartMultiSelectGroup =
-		canvasState.eventStartState?.multiSelectGroup;
+	const eventStartMultiSelectGroup = eventStartSnapshot.multiSelectGroup;
 	if (multiSelectGroup && eventStartMultiSelectGroup) {
 		nextState.multiSelectGroup = {
 			...multiSelectGroup,
@@ -200,10 +198,9 @@ function handleObjectDragStart(
 
 	let selectedIds: string[];
 	let newMultiSelectGroup = canvasState.multiSelectGroup;
-	// eventStartState に設定する multiSelectGroup:
-	// - 選択済み: handleGesture.ts が計算した fresh keyPoints 付きの値をそのまま保持
-	// - 新規選択: createMultiSelectGroup の結果（keyPoints付き）を使う
-	let eventStartMultiSelectGroup = canvasState.eventStartState?.multiSelectGroup ?? null;
+	// eventStartSnapshot に設定する multiSelectGroup と keyPointsCache の更新分
+	let eventStartMultiSelectGroup = canvasState.eventStartSnapshot?.multiSelectGroup ?? null;
+	let keyPointsCache = canvasState.eventStartSnapshot?.keyPointsCache ?? {};
 
 	if (isCurrentlySelected || isAncestorSelected) {
 		// すでに選択済み: 現在の選択を維持
@@ -215,7 +212,7 @@ function handleObjectDragStart(
 
 		// 選択中の図形が増えたのに伴い multiSelectGroup を作成・更新する
 		const eventStartObjects =
-			canvasState.eventStartState?.objects ?? canvasState.objects;
+			canvasState.eventStartSnapshot?.objects ?? canvasState.objects;
 		newMultiSelectGroup =
 			selectedIds.length > 1
 				? createMultiSelectGroup(
@@ -225,13 +222,23 @@ function handleObjectDragStart(
 					)
 				: null;
 		eventStartMultiSelectGroup = newMultiSelectGroup;
+
+		// 新しい multiSelectGroup の keyPoints も cache に追加する
+		if (newMultiSelectGroup && isTransformedFrame(newMultiSelectGroup)) {
+			keyPointsCache = {
+				...keyPointsCache,
+				[newMultiSelectGroup.id]: calcFrameKeyPoints(
+					newMultiSelectGroup as TransformedFrame,
+				),
+			};
+		}
 	}
 
 	// dragStart 確定後の selectedIds で excludeIds をキャッシュする
-	const selectedIdsWithDescendants = canvasState.eventStartState
+	const selectedIdsWithDescendants = canvasState.eventStartSnapshot
 		? buildSelectedIdsWithDescendants(
 				selectedIds,
-				canvasState.eventStartState.objects,
+				canvasState.eventStartSnapshot.objects,
 			)
 		: null;
 
@@ -245,11 +252,12 @@ function handleObjectDragStart(
 		selectedConnectorId: null,
 		// ドラッグ開始時にオブジェクトメニューのドロップダウンを閉じる
 		objectMenuOpenId: null,
-		eventStartState: canvasState.eventStartState
+		eventStartSnapshot: canvasState.eventStartSnapshot
 			? {
-					...canvasState.eventStartState,
+					...canvasState.eventStartSnapshot,
 					multiSelectGroup: eventStartMultiSelectGroup,
-					selectedIdsWithDescendants,
+					keyPointsCache,
+					...(selectedIdsWithDescendants && { selectedIdsWithDescendants }),
 				}
 			: null,
 	};
@@ -285,7 +293,7 @@ function handleObjectDragEnd(
  *
  * Registry経由で各形状の処理を動的に解決するため、形状に依存しない。
  *
- * Note: eventStartState is managed by handleGesture(), not here.
+ * Note: eventStartSnapshot is managed by handleGesture(), not here.
  */
 export const ObjectEventHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {
@@ -335,7 +343,7 @@ export const ObjectEventHandler: GestureHandler = {
 		}
 
 		// ドラッグイベントの処理
-		const objectStartState = nextState.eventStartState?.objects[targetObjectId];
+		const objectStartState = nextState.eventStartSnapshot?.objects[targetObjectId];
 		if (!objectStartState) {
 			return nextState;
 		}

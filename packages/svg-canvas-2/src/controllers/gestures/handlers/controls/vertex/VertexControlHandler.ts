@@ -103,12 +103,12 @@ export class VertexControlHandler implements ControlStrategy {
 		objectId: string,
 		vertexIndex: number,
 	): CanvasControllerState {
-		const eventStartState = state.eventStartState;
-		if (!eventStartState) {
+		const eventStartSnapshot = state.eventStartSnapshot;
+		if (!eventStartSnapshot) {
 			return state;
 		}
 
-		const startObject = eventStartState.objects[objectId];
+		const startObject = eventStartSnapshot.objects[objectId];
 		if (
 			!startObject ||
 			(startObject.type !== "polyline" && startObject.type !== "polygon")
@@ -119,7 +119,7 @@ export class VertexControlHandler implements ControlStrategy {
 		// スナップ補正
 		let cursorX = event.last.x;
 		let cursorY = event.last.y;
-		const snapCandidates = eventStartState.snapCandidates;
+		const snapCandidates = eventStartSnapshot.snapCandidates;
 		let snapFeedback = state.snapFeedback ?? { x: [], y: [] };
 
 		if (snapCandidates) {

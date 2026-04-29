@@ -85,7 +85,7 @@ export class VertexInsertHandler implements ControlStrategy {
 
 	/**
 	 * Vertex insert control でのドラッグ開始を処理する。
-	 * 新しい頂点を追加し、eventStartStateを更新して次のdragイベントで参照できるようにする。
+	 * 新しい頂点を追加し、eventStartSnapshotを更新して次のdragイベントで参照できるようにする。
 	 */
 	private handleDragStart(
 		state: CanvasControllerState,
@@ -129,10 +129,10 @@ export class VertexInsertHandler implements ControlStrategy {
 			edgeScrollEnabled: true,
 		};
 
-		// eventStartStateを更新して、dragイベントで新しい頂点を含む状態を参照できるようにする
-		if (state.eventStartState) {
-			nextState.eventStartState = {
-				...state.eventStartState,
+		// eventStartSnapshotを更新して、dragイベントで新しい頂点を含む状態を参照できるようにする
+		if (state.eventStartSnapshot) {
+			nextState.eventStartSnapshot = {
+				...state.eventStartSnapshot,
 				objects: updatedObjects,
 			};
 		}
@@ -150,14 +150,14 @@ export class VertexInsertHandler implements ControlStrategy {
 		objectId: string,
 		segmentIndex: number,
 	): CanvasControllerState {
-		const eventStartState = state.eventStartState;
-		if (!eventStartState) {
+		const eventStartSnapshot = state.eventStartSnapshot;
+		if (!eventStartSnapshot) {
 			return state;
 		}
 
-		// dragStartで更新されたeventStartStateから開始オブジェクトを取得
+		// dragStartで更新されたeventStartSnapshotから開始オブジェクトを取得
 		// （新しく追加された頂点を含む状態）
-		const startObject = eventStartState.objects[objectId];
+		const startObject = eventStartSnapshot.objects[objectId];
 		if (
 			!startObject ||
 			(startObject.type !== "polyline" && startObject.type !== "polygon")
@@ -171,7 +171,7 @@ export class VertexInsertHandler implements ControlStrategy {
 		// スナップ補正
 		let cursorX = event.last.x;
 		let cursorY = event.last.y;
-		const snapCandidates = eventStartState.snapCandidates;
+		const snapCandidates = eventStartSnapshot.snapCandidates;
 		let snapFeedback = state.snapFeedback ?? { x: [], y: [] };
 
 		if (snapCandidates) {

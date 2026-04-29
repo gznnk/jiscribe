@@ -43,7 +43,6 @@ packages/svg-canvas-2/src/
 │       │   ├── MetaMapper.ts
 │       │   ├── TransformState.ts
 │       │   ├── TransformMapper.ts
-│       │   ├── FrameWithKeyPoints.ts
 │       │   └── __tests__/
 │       ├── primitives/              # 形状ごとのフォルダ（State + Mapper）
 │       │   ├── rect/

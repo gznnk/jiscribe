@@ -100,7 +100,7 @@ export const CanvasEventHandler: GestureHandler = {
 				// Calculate viewport offset from the initial state
 				// Use clientDelta (screen pixels) directly for viewport panning
 				const initialViewport =
-					state.eventStartState?.viewport ?? state.viewport;
+					state.eventStartSnapshot?.viewport ?? state.viewport;
 				const deltaX = event.clientDelta.x / initialViewport.zoom;
 				const deltaY = event.clientDelta.y / initialViewport.zoom;
 
@@ -148,7 +148,7 @@ export const CanvasEventHandler: GestureHandler = {
 				let endY = event.last.y;
 				let snapFeedback: SnapFeedback = { x: [], y: [] };
 
-				const snapCandidates = nextState.eventStartState?.snapCandidates;
+				const snapCandidates = nextState.eventStartSnapshot?.snapCandidates;
 				if (snapCandidates) {
 					const result = findSnap(
 						snapCandidates,

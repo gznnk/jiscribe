@@ -1,10 +1,8 @@
 import {
 	calcBoundingBox,
-	calcFrameKeyPoints,
 	calcPolyBoundingBox,
 	isTransformedFrame,
 } from "@workspace/geometry";
-import type { TransformedFrame } from "@workspace/geometry";
 
 import { MULTI_SELECT_GROUP } from "../../../../../constants/multiSelectGroup";
 import { isPoly } from "../../../../../schemas/objects/types/Poly";
@@ -43,9 +41,8 @@ export function createMultiSelectGroup(
 	// 既存のlockAspectRatioを保持、なければデフォルトtrue
 	const lockAspectRatio = existingMultiSelectGroup?.lockAspectRatio ?? true;
 
-	const frame = { cx, cy, width, height, rotation: 0, scaleX: 1, scaleY: 1 } as TransformedFrame;
-
 	// GroupStateを返す(角度0、反転なし)
+	// keyPoints は EventStartSnapshot.keyPointsCache で管理するためここでは設定しない
 	return {
 		type: "group",
 		id: MULTI_SELECT_GROUP.ID,
@@ -58,7 +55,6 @@ export function createMultiSelectGroup(
 		scaleY: 1,
 		childIds: selectedIds,
 		lockAspectRatio,
-		keyPoints: calcFrameKeyPoints(frame),
 	} as unknown as GroupState;
 }
 

@@ -1,8 +1,10 @@
-import type { Point } from "@workspace/geometry";
+import type { FrameKeyPoints, Point } from "@workspace/geometry";
 
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { ObjectType } from "../schemas/objects/types/ObjectType";
 import type { CanvasState } from "../states/canvas/CanvasState";
+import type { Viewport } from "../states/canvas/Viewport";
+import type { ObjectState } from "../states/objects/base/ObjectState";
 import type { ConnectorState } from "../states/objects/connections/connector/ConnectorState";
 import type { GroupState } from "../states/objects/primitives/group/GroupState";
 
@@ -64,6 +66,28 @@ export type HistoryState = {
 };
 
 /**
+ * ジェスチャー開始時（dragStart）のスナップショット。
+ * ドラッグ中の計算に必要なデータを事前計算・キャッシュする専用型。
+ * dragStart で生成され、dragEnd で null にクリアされる。
+ */
+export type EventStartSnapshot = {
+	/** ドラッグ開始時のオブジェクトマップ */
+	objects: Record<string, ObjectState>;
+	/** オブジェクト ID → FrameKeyPoints の事前計算済みキャッシュ（multiSelectGroup.id も含む）*/
+	keyPointsCache: Record<string, FrameKeyPoints>;
+	/** スナップ候補（dragStart 時に事前計算）*/
+	snapCandidates: SnapCandidates;
+	/** ドラッグ開始時の選択 ID 一覧 */
+	selectedIds: string[];
+	/** 選択オブジェクト＋全子孫の ID セット（dragStart 時に事前計算）*/
+	selectedIdsWithDescendants: ReadonlySet<string>;
+	/** 複数選択グループ（null の場合は複数選択なし）*/
+	multiSelectGroup: GroupState | null;
+	/** ドラッグ開始時の viewport（grab scroll の基準点）*/
+	viewport: Viewport;
+};
+
+/**
  * Canvas state extended with history management for the controller layer
  * This combines the pure canvas state with undo/redo history
  */
@@ -76,10 +100,11 @@ export type CanvasControllerState = CanvasState & {
 	selectedIds: string[];
 
 	/**
-	 * Snapshot of CanvasControllerState at the start of an event/gesture.
-	 * Used to compare or restore state during event handling.
+	 * Snapshot of canvas state at the start of a gesture (dragStart).
+	 * Pre-computed data (keyPoints, snap candidates, etc.) is stored here
+	 * and cleared on dragEnd. null when no gesture is in progress.
 	 */
-	eventStartState: CanvasControllerState | null;
+	eventStartSnapshot: EventStartSnapshot | null;
 
 	/**
 	 * Whether edge scrolling is enabled when dragging near canvas edges.
@@ -174,20 +199,6 @@ export type CanvasControllerState = CanvasState & {
 	 * dragEnd で null にクリアする。
 	 */
 	editingEndpoint: "source" | "target" | null;
-
-	/**
-	 * ドラッグ開始時に計算されたスナップ候補。
-	 * eventStartState にのみセットされ、drag 中に参照される。
-	 * dragEnd 時は eventStartState ごとクリアされるため履歴には残らない。
-	 */
-	snapCandidates: SnapCandidates | null;
-
-	/**
-	 * ドラッグ開始時に計算された、選択オブジェクト＋全子孫の ID セット。
-	 * eventStartState にのみセットされ、drag 中のスナップ除外などに参照される。
-	 * dragEnd 時は eventStartState ごとクリアされるため履歴には残らない。
-	 */
-	selectedIdsWithDescendants: ReadonlySet<string> | null;
 
 	/**
 	 * ドラッグ中のスナップフィードバック。

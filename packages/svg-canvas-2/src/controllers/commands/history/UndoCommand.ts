@@ -19,7 +19,7 @@ export const UndoCommand: Command = {
 
 	canExecute: (state) => {
 		// ドラッグ中、テキスト編集中は実行不可
-		if (state.eventStartState !== null) return false;
+		if (state.eventStartSnapshot !== null) return false;
 		if (state.textEditState !== null) return false;
 		// 履歴がない場合は実行不可
 		return state.history.past.length > 0;
@@ -37,7 +37,7 @@ export const UndoCommand: Command = {
 			...restoredState,
 			viewport: state.viewport, // Preserve viewport
 			selectedIds: [],
-			eventStartState: null,
+			eventStartSnapshot: null,
 			edgeScrollEnabled: false,
 			lastCommitTime: state.lastCommitTime, // Don't update - this is history restoration, not a new commit
 			contextMenuPosition: null,
@@ -51,8 +51,6 @@ export const UndoCommand: Command = {
 			selectedConnectorId: null,
 			editingConnectorId: null,
 			editingEndpoint: null,
-			snapCandidates: null,
-			selectedIdsWithDescendants: null,
 			snapFeedback: null,
 			activeDrawingTool: null,
 			drawingPreview: null,

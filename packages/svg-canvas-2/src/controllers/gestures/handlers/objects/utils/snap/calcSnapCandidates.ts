@@ -1,27 +1,30 @@
 import { calcKeyPointsBoundingBox } from "@workspace/geometry";
+import type { FrameKeyPoints } from "@workspace/geometry";
 
-import type { SnapCandidate, SnapCandidates } from "../../../../../CanvasTypes";
-import { hasFrameKeyPoints } from "../../../../../../states/objects/base/FrameWithKeyPoints";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
+import type { SnapCandidate, SnapCandidates } from "../../../../../CanvasTypes";
 
 /**
  * 全 Frame オブジェクトからスナップ候補を生成する。
- * dragStart 時に eventStartState（keyPoints キャッシュ済み）を渡して呼ぶこと。
+ * dragStart 時に keyPointsCache（事前計算済み）を渡して呼ぶこと。
  * 除外（選択中・子孫）は呼び出し側で filteredCandidates としてフィルタすること。
  *
- * @param objects - keyPoints がキャッシュされたオブジェクトマップ
+ * @param objects - オブジェクトマップ
+ * @param keyPointsCache - 事前計算済みの keyPoints キャッシュ（EventStartSnapshot から渡す）
  */
 export const calcSnapCandidates = (
 	objects: Record<string, ObjectState>,
+	keyPointsCache: Record<string, FrameKeyPoints>,
 ): SnapCandidates => {
 	const xCandidates: SnapCandidate[] = [];
 	const yCandidates: SnapCandidate[] = [];
 
 	for (const [id, obj] of Object.entries(objects)) {
 		if (obj.type === "group") continue;
-		if (!hasFrameKeyPoints(obj)) continue;
+		const keyPoints = keyPointsCache[id];
+		if (!keyPoints) continue;
 
-		const bbox = calcKeyPointsBoundingBox(obj.keyPoints);
+		const bbox = calcKeyPointsBoundingBox(keyPoints);
 
 		const { left, right, top, bottom } = bbox;
 
