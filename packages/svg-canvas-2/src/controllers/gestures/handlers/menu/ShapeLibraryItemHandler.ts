@@ -6,6 +6,7 @@ import { objectRegistry } from "../../../../registry/ObjectRegistry";
 import type { ObjectType } from "../../../../schemas/objects/types/ObjectType";
 import { createObjectDoc } from "../../../../schemas/objects/utils/createObjectDoc";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 
 /**
  * targetId から shapeType を抽出する。
@@ -69,17 +70,33 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 
 				const nextTool =
 					state.activeDrawingTool === shapeType ? null : shapeType;
+
+				if (nextTool === null) {
+					return { ...state, activeDrawingTool: null, drawingPreview: null };
+				}
+
+				// 描画モード ON: テキスト編集をコミットし、選択状態を解除する
+				const nextState = commitTextEditIfNeeded(state, event.time);
 				return {
-					...state,
+					...nextState,
 					activeDrawingTool: nextTool,
 					drawingPreview: null,
+					selectedIds: [],
+					selectedConnectorId: null,
+					multiSelectGroup: null,
+					objectMenuOpenId: null,
 				};
 			}
 
 			case "dragStart": {
-				// shapeType を保持し、エッジスクロールを有効にする
+				// テキスト編集をコミットし、選択状態を解除してからD&Dを開始する
+				const nextState = commitTextEditIfNeeded(state, event.time);
 				return {
-					...state,
+					...nextState,
+					selectedIds: [],
+					selectedConnectorId: null,
+					multiSelectGroup: null,
+					objectMenuOpenId: null,
 					pendingShapeType: shapeType,
 					ghostPosition: event.last,
 					edgeScrollEnabled: true,
