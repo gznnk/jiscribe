@@ -35,11 +35,12 @@ export function updateAffectedGroupBounds(
 	}
 
 	// Sort groups by depth (deepest first) to ensure bottom-up processing
-	const sortedGroupIds = Array.from(affectedGroupIds).sort((a, b) => {
-		const depthA = getGroupDepth(state.objects, a);
-		const depthB = getGroupDepth(state.objects, b);
-		return depthB - depthA; // Descending order (deepest first)
-	});
+	const withDepth = Array.from(affectedGroupIds).map((id) => ({
+		id,
+		depth: getGroupDepth(state.objects, id),
+	}));
+	withDepth.sort((a, b) => b.depth - a.depth); // Descending order (deepest first)
+	const sortedGroupIds = withDepth.map((x) => x.id);
 
 	// Update bounds for each affected group
 	const updatedObjects = { ...state.objects };
