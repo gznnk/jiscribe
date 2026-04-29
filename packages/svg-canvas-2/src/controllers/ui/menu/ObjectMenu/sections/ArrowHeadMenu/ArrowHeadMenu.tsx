@@ -102,7 +102,7 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 				data-id="object-menu:swap:arrows"
 				title="Swap arrows"
 			>
-				<ArrowSwapIcon fill="#6b7280" width={24} height={24} />
+				<ArrowSwapIcon fill="#333333" width={24} height={24} />
 			</ObjectMenuButton>
 
 			{/* End Arrow Button */}
