@@ -32,7 +32,7 @@ export const cleanupGroups = (
 	while (hasChanges) {
 		hasChanges = false;
 
-		for (const groupId of Array.from(groupsToProcess)) {
+		for (const groupId of groupsToProcess) {
 			const group = updatedObjects[groupId] as GroupState | undefined;
 			if (!group || group.type !== "group") {
 				groupsToProcess.delete(groupId);
