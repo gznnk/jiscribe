@@ -83,6 +83,9 @@ export const handlePropertyUpdate = (
 	const updatedObjects = { ...objects };
 	let changed = false;
 
+	// property/value の組み合わせは全オブジェクトで共通なので一度だけ変換
+	const parsedValue = parsePropertyValue(property, value);
+
 	// ルートレベルの選択オブジェクトに対してプロパティを更新
 	for (const id of selectedIds) {
 		const obj = objects[id];
@@ -96,7 +99,6 @@ export const handlePropertyUpdate = (
 
 		if (!supported && !arrowSupported) continue;
 
-		const parsedValue = parsePropertyValue(property, value);
 		updatedObjects[id] = {
 			...obj,
 			[property]: parsedValue,
@@ -116,7 +118,6 @@ export const handlePropertyUpdate = (
 					? isPropertySupported(features, property)
 					: false;
 				if (!supported) continue;
-				const parsedValue = parsePropertyValue(property, value);
 				updatedObjects[descId] = {
 					...descObj,
 					[property]: parsedValue,
