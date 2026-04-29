@@ -6,9 +6,15 @@ import { ZOOM } from "../../../../constants/zoom";
 import type { GestureHandler } from "../../../../registry/GestureHandlerRegistryTypes";
 import { objectRegistry } from "../../../../registry/ObjectRegistry";
 import { createObjectDocFromBounds } from "../../../../schemas/objects/utils/createObjectDocFromBounds";
+import type { SnapFeedback } from "../../../../states/canvas/SnapTypes";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { autoSelectParentGroups } from "../objects/utils/autoSelectParentGroups";
 import { createMultiSelectGroup } from "../objects/utils/createMultiSelectGroup";
+import {
+	SNAP_THRESHOLD_PX,
+	buildSnapFeedback,
+	findSnap,
+} from "../objects/utils/snap/findSnap";
 
 /**
  * Handles events that occur on the canvas.
@@ -138,18 +144,44 @@ export const CanvasEventHandler: GestureHandler = {
 			}
 
 			if (event.type === "drag" && nextState.drawingPreview) {
+				let endX = event.last.x;
+				let endY = event.last.y;
+				let snapFeedback: SnapFeedback = { x: [], y: [] };
+
+				const snapCandidates = nextState.eventStartState?.snapCandidates;
+				if (snapCandidates) {
+					const result = findSnap(
+						snapCandidates,
+						SNAP_THRESHOLD_PX / nextState.viewport.zoom,
+						[endX],
+						[endY],
+					);
+					endX += result.delta.x;
+					endY += result.delta.y;
+
+					const pointBBox = { left: endX, right: endX, top: endY, bottom: endY };
+					snapFeedback = buildSnapFeedback(
+						pointBBox,
+						result.xResult,
+						result.yResult,
+						snapCandidates,
+					);
+				}
+
 				nextState = {
 					...nextState,
 					drawingPreview: {
 						...nextState.drawingPreview,
-						endX: event.last.x,
-						endY: event.last.y,
+						endX,
+						endY,
 					},
+					snapFeedback,
 				};
 				return nextState;
 			}
 
 			if (event.type === "dragEnd" && nextState.drawingPreview) {
+				// drag イベントで endX/endY はスナップ済みのため、drawingPreview の値をそのまま使う
 				const { startX, startY, endX, endY } = nextState.drawingPreview;
 				const doc = createObjectDocFromBounds(
 					drawingTool,
