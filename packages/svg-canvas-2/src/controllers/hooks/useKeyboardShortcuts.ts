@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import type { CanvasControllerState } from "../CanvasTypes";
 import { commandRegistry } from "../commands/CommandRegistry";
@@ -10,6 +10,9 @@ export const useKeyboardShortcuts = (
 	canvasState: CanvasControllerState,
 	handleCommand: (commandId: string) => void,
 ) => {
+	const canvasStateRef = useRef(canvasState);
+	canvasStateRef.current = canvasState;
+
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
 			// 入力フィールドなどでは無効化
@@ -22,7 +25,7 @@ export const useKeyboardShortcuts = (
 			}
 
 			const command = commandRegistry.findByShortcut(event);
-			if (command && command.canExecute(canvasState)) {
+			if (command && command.canExecute(canvasStateRef.current)) {
 				handleCommand(command.id);
 				event.preventDefault();
 				event.stopPropagation();
@@ -34,5 +37,5 @@ export const useKeyboardShortcuts = (
 		return () => {
 			document.removeEventListener("keydown", handleKeyDown);
 		};
-	}, [canvasState, handleCommand]);
+	}, [handleCommand]);
 };
