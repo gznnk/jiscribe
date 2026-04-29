@@ -1,7 +1,7 @@
 import { memo } from "react";
 import type React from "react";
 
-import { Svg } from "./CanvasViewStyled";
+import { ContentGroup, Svg } from "./CanvasViewStyled";
 import { CanvasDefs } from "./defs/CanvasDefs";
 import type { CanvasState } from "../states/canvas/CanvasState";
 import { GridBackground } from "./layers/background/GridBackground";
@@ -13,6 +13,7 @@ type CanvasViewProps = {
 	svgRef: React.RefObject<SVGSVGElement | null>;
 	children?: React.ReactNode;
 	textEditObjectId?: string | null;
+	isDrawMode?: boolean;
 } & Pick<CanvasState, "objects" | "rootIds" | "connectorIds" | "viewport">;
 
 const CanvasViewComponent: React.FC<CanvasViewProps> = ({
@@ -23,6 +24,7 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 	svgRef,
 	children,
 	textEditObjectId,
+	isDrawMode = false,
 }) => {
 	const { minX, minY, width, height, zoom } = viewport;
 
@@ -43,15 +45,17 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 				width={width / zoom}
 				height={height / zoom}
 			/>
-			{/* Connectors rendered below objects */}
-			<ConnectorsRenderer objects={objects} connectorIds={connectorIds} />
-			<ObjectsRenderer
-				objects={objects}
-				rootIds={rootIds}
-				textEditObjectId={textEditObjectId}
-			/>
-			{/* Overlay layers injected from parent */}
-			{children}
+			<ContentGroup isDrawMode={isDrawMode}>
+				{/* Connectors rendered below objects */}
+				<ConnectorsRenderer objects={objects} connectorIds={connectorIds} />
+				<ObjectsRenderer
+					objects={objects}
+					rootIds={rootIds}
+					textEditObjectId={textEditObjectId}
+				/>
+				{/* Overlay layers injected from parent */}
+				{children}
+			</ContentGroup>
 		</Svg>
 	);
 };

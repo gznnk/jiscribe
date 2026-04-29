@@ -172,6 +172,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 					viewport={state.viewport}
 					svgRef={svgRef}
 					textEditObjectId={state.textEditState?.objectId ?? null}
+					isDrawMode={!!state.activeDrawingTool}
 				>
 					<PendingConnectorOverlay
 						pendingConnector={state.pendingConnector}
