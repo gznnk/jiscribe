@@ -23,13 +23,11 @@ export const SendBackwardCommand: Command = {
 				? (state.objects[commonParentId] as GroupState).childIds
 				: state.rootIds;
 
+		const selectedSet = new Set(state.selectedIds);
 		const updatedIds = [...sourceIds];
 		for (let i = 1; i < updatedIds.length; i++) {
 			const id = updatedIds[i];
-			if (
-				state.selectedIds.includes(id) &&
-				!state.selectedIds.includes(updatedIds[i - 1])
-			) {
+			if (selectedSet.has(id) && !selectedSet.has(updatedIds[i - 1])) {
 				[updatedIds[i - 1], updatedIds[i]] = [updatedIds[i], updatedIds[i - 1]];
 			}
 		}

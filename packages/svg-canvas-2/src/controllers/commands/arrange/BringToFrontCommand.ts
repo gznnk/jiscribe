@@ -18,10 +18,11 @@ export const BringToFrontCommand: Command = {
 
 	execute: (state) => {
 		const commonParentId = state.objects[state.selectedIds[0]]?.parentId;
+		const selectedSet = new Set(state.selectedIds);
 
 		if (commonParentId == null) {
 			const updatedRootIds = state.rootIds.filter(
-				(id) => !state.selectedIds.includes(id),
+				(id) => !selectedSet.has(id),
 			);
 			updatedRootIds.push(...state.selectedIds);
 			return { ...state, rootIds: updatedRootIds, lastCommitTime: Date.now() };
@@ -29,7 +30,7 @@ export const BringToFrontCommand: Command = {
 
 		const parent = state.objects[commonParentId] as GroupState;
 		const updatedChildIds = parent.childIds.filter(
-			(id) => !state.selectedIds.includes(id),
+			(id) => !selectedSet.has(id),
 		);
 		updatedChildIds.push(...state.selectedIds);
 		return {
