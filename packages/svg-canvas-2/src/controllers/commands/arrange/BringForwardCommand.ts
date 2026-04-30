@@ -23,13 +23,11 @@ export const BringForwardCommand: Command = {
 				? (state.objects[commonParentId] as GroupState).childIds
 				: state.rootIds;
 
+		const selectedSet = new Set(state.selectedIds);
 		const updatedIds = [...sourceIds];
 		for (let i = updatedIds.length - 2; i >= 0; i--) {
 			const id = updatedIds[i];
-			if (
-				state.selectedIds.includes(id) &&
-				!state.selectedIds.includes(updatedIds[i + 1])
-			) {
+			if (selectedSet.has(id) && !selectedSet.has(updatedIds[i + 1])) {
 				[updatedIds[i], updatedIds[i + 1]] = [updatedIds[i + 1], updatedIds[i]];
 			}
 		}
