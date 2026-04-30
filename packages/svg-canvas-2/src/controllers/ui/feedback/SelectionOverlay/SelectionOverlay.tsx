@@ -27,15 +27,16 @@ const SelectionOverlayComponent: React.FC<SelectionOverlayProps> = ({
 	}
 
 	// Collect selected IDs plus all descendants (deduped)
-	const allIds = [
-		...selectedIds,
-		...selectedIds.flatMap((id) => collectDescendantIds(id, objects)),
-	];
-	const uniqueIds = [...new Set(allIds)];
+	const uniqueIds = new Set(selectedIds);
+	for (const id of selectedIds) {
+		for (const desc of collectDescendantIds(id, objects)) {
+			uniqueIds.add(desc);
+		}
+	}
 
 	return (
 		<g data-layer="selection-overlay">
-			{uniqueIds.map((id) => {
+			{Array.from(uniqueIds).map((id) => {
 				const obj = objects[id];
 				if (!obj) return null;
 
