@@ -16,6 +16,7 @@ import { FontColorMenu } from "./sections/FontColorMenu";
 import { FontSizeMenu } from "./sections/FontSizeMenu";
 import { GroupMenu } from "./sections/GroupMenu";
 import { KeepAspectRatioMenu } from "./sections/KeepAspectRatioMenu";
+import { LineColorMenu } from "./sections/LineColorMenu";
 import { StackOrderMenu } from "./sections/StackOrderMenu";
 import { StrokeColorMenu } from "./sections/StrokeColorMenu";
 import { objectRegistry } from "../../../../registry/ObjectRegistry";
@@ -68,7 +69,7 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 	// TODO: lineStyle needs dedicated component implementation
 	if (menuConfig.lineColor) {
 		menuItemComponents.push(
-			<StrokeColorMenu key="LineColor" canvasState={canvasState} />,
+			<LineColorMenu key="LineColor" canvasState={canvasState} />,
 		);
 		menuItemComponents.push(<ObjectMenuDivider key="LineSectionDivider" />);
 	}
