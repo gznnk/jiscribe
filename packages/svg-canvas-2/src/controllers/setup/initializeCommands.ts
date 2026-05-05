@@ -2,6 +2,7 @@ import { BringForwardCommand } from "../commands/arrange/BringForwardCommand";
 import { BringToFrontCommand } from "../commands/arrange/BringToFrontCommand";
 import { SendBackwardCommand } from "../commands/arrange/SendBackwardCommand";
 import { SendToBackCommand } from "../commands/arrange/SendToBackCommand";
+import { SwapArrowsCommand } from "../commands/arrow/SwapArrowsCommand";
 import { commandRegistry } from "../commands/CommandRegistry";
 import { GroupCommand } from "../commands/group/GroupCommand";
 import { UngroupCommand } from "../commands/group/UngroupCommand";
@@ -29,6 +30,8 @@ export const initializeCommands = (): void => {
 		.register(BringForwardCommand)
 		.register(SendBackwardCommand)
 		.register(SendToBackCommand)
+		// Arrow commands
+		.register(SwapArrowsCommand)
 		// Group commands
 		.register(GroupCommand)
 		.register(UngroupCommand)
