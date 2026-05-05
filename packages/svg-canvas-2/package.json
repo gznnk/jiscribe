@@ -5,6 +5,8 @@
 	"main": "src/index.ts",
 	"types": "src/index.ts",
 	"scripts": {
+		"generate:schema-validator": "node scripts/build-schema-validator.mjs",
+		"pretypecheck": "pnpm generate:schema-validator",
 		"lint": "eslint .",
 		"test": "vitest run",
 		"test:watch": "vitest --watch",
@@ -23,6 +25,7 @@
 		"@workspace/geometry": "workspace:*",
 		"@workspace/markdown": "workspace:*",
 		"@workspace/utility-types": "workspace:*",
+		"ajv": "^8.20.0",
 		"react": "catalog:",
 		"react-dom": "catalog:"
 	},

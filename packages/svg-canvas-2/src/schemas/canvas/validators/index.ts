@@ -1,5 +1,6 @@
 import type { CanvasDoc } from "../CanvasDoc";
 import { validateSemantics, type SemanticDiagnostic } from "./validateSemantics";
+import { validateCanvasDocSchema } from "./validateSchema";
 
 export class CanvasValidationError extends Error {
   constructor(
@@ -12,27 +13,26 @@ export class CanvasValidationError extends Error {
 }
 
 /**
- * Validates the parsed structure of a CanvasDoc
- * ensuring it satisfies logical constraints like ID uniqueness.
+ * Validates the structure and semantics of a CanvasDoc.
  */
-export function validateCanvasDocSemantics(doc: CanvasDoc): SemanticDiagnostic[] {
-  return validateSemantics(doc);
+export function validateCanvasDocSemantics(doc: unknown): SemanticDiagnostic[] {
+  const schemaErrors = validateCanvasDocSchema(doc);
+  if (schemaErrors.length > 0) {
+    return schemaErrors;
+  }
+  return validateSemantics(doc as CanvasDoc);
 }
 
 export function parseAndValidateCanvasDoc(data: unknown): CanvasDoc {
-  // A robust JSON schema check would go here if AJV was used.
-  // We'll assume structure is mostly ok since VSCode handles JSON Schema.
-  const doc = data as CanvasDoc;
-
-  const semanticErrors = validateSemantics(doc);
-  if (semanticErrors.length > 0) {
+  const errors = validateCanvasDocSemantics(data);
+  if (errors.length > 0) {
     throw new CanvasValidationError(
-      "Semantic validation failed (e.g. duplicate IDs or missing references)",
-      semanticErrors
+      "Validation failed",
+      errors
     );
   }
 
-  return doc;
+  return data as CanvasDoc;
 }
 
 export * from "./validateSemantics";
