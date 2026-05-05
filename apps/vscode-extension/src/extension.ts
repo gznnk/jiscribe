@@ -1,9 +1,13 @@
 import * as vscode from "vscode";
 
 import { JiscribeEditorProvider } from "./JiscribeEditorProvider";
+import { DiagnosticProvider } from "./DiagnosticProvider";
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log("Jiscribe extension is now active");
+
+	// Initialize diagnostic provider for text editors
+	new DiagnosticProvider(context);
 
 	// Register custom editor provider
 	const provider = new JiscribeEditorProvider(context);

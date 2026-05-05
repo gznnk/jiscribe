@@ -61,7 +61,7 @@
 		"StrokeDashType": {
 			"description": "Dash pattern for stroke/border.",
 			"type": "string",
-			"enum": ["solid", "dashed", "dotted", "dash-dot"]
+			"enum": ["solid", "dashed", "dotted"]
 		},
 
 		"TextType": {

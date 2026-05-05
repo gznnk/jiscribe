@@ -288,7 +288,7 @@ AI がデータを生成する際や、外部ツールから `.jis.json` ファ�
 | `strokeWidth`    | `number`         | `2`         | 線の太さ（px）       |
 | `strokeDashType` | `StrokeDashType` | `"solid"`   | 線の破線パターン     |
 
-`StrokeDashType`: `"solid"` / `"dashed"` / `"dotted"` / `"dash-dot"`
+`StrokeDashType`: `"solid"` / `"dashed"` / `"dotted"`
 
 ### Fill スタイル
 

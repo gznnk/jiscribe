@@ -24,6 +24,12 @@
 				],
 				"priority": "default"
 			}
+		],
+		"jsonValidation": [
+			{
+				"fileMatch": "*.jis.json",
+				"url": "./canvas-doc.schema.json"
+			}
 		]
 	},
 	"scripts": {
