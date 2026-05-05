@@ -13,8 +13,6 @@ export function getStrokeDasharray(
 			return `${strokeWidth * 4} ${strokeWidth * 4}`;
 		case "dotted":
 			return `${strokeWidth} ${strokeWidth * 2}`;
-		case "dash-dot":
-			return `${strokeWidth * 4} ${strokeWidth * 2} ${strokeWidth} ${strokeWidth * 2}`;
 		default:
 			return undefined;
 	}

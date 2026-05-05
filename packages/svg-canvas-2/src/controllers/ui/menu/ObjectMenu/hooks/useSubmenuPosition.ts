@@ -22,6 +22,7 @@ const SUBMENU_SIZES = {
 	fontColor: { width: 240, height: 140 },
 	fontSize: { width: 160, height: 80 },
 	alignment: { width: 120, height: 50 },
+	lineStyle: { width: 220, height: 120 },
 } as const satisfies Record<string, SubmenuSize>;
 
 /** サブメニューの識別子 */

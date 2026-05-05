@@ -1,12 +1,7 @@
 /**
  * Available stroke dash types.
  */
-export const StrokeDashTypes = [
-	"solid",
-	"dashed",
-	"dotted",
-	"dash-dot",
-] as const;
+export const StrokeDashTypes = ["solid", "dashed", "dotted"] as const;
 
 /**
  * Defines the available dash patterns for strokes/borders.
