@@ -1,6 +1,6 @@
 import type { CanvasDoc } from "../CanvasDoc";
-import { validateSemantics, type SemanticDiagnostic } from "./validateSemantics";
 import { validateCanvasDocSchema } from "./validateSchema";
+import { validateSemantics, type SemanticDiagnostic } from "./validateSemantics";
 
 export class CanvasValidationError extends Error {
   constructor(
