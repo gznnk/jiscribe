@@ -39,10 +39,8 @@ import { SnapGuides } from "./ui/feedback/SnapGuides";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
 import { ShapeLibrary } from "./ui/menu/ShapeLibrary";
-import { CanvasErrorOverlay } from "./ui/feedback/CanvasErrorOverlay";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import { canvasToDoc, canvasToState } from "../states/canvas/CanvasMapper";
-import { validateCanvasDocSemantics, CanvasValidationError } from "../schemas/canvas/validators";
 
 // Initialize all registries (ObjectRegistry, GestureHandlerRegistry)
 initializeRegistries();
@@ -60,39 +58,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 	const canvasRef = useRef<HTMLDivElement>(null);
 	const svgRef = useRef<SVGSVGElement>(null);
 
-	// Validate syntactic/semantic errors dynamically
-	const semanticErrors = useMemo(() => validateCanvasDocSemantics(canvasDoc), [canvasDoc]);
-	const hasFatalErrors = semanticErrors.length > 0;
-
 	const initialState = useMemo((): CanvasControllerState => {
-		if (hasFatalErrors) {
-			// Return a safe dummy state. The ErrorOverlay will block interaction anyway.
-			return {
-				objects: {},
-				rootIds: [],
-				connectorIds: [],
-				viewport: { minX: 0, minY: 0, width: 1000, height: 800, zoom: 1 },
-				selectedIds: [],
-				eventStartSnapshot: null,
-				edgeScrollEnabled: false,
-				lastCommitTime: 0,
-				contextMenuPosition: null,
-				pendingShapeType: null,
-				ghostPosition: null,
-				areaSelection: null,
-				objectMenuOpenId: null,
-				multiSelectGroup: null,
-				textEditState: null,
-				pendingConnector: null,
-				selectedConnectorId: null,
-				editingConnectorId: null,
-				editingEndpoint: null,
-				snapFeedback: null,
-				activeDrawingTool: null,
-				drawingPreview: null,
-				history: { past: [], present: canvasDoc, future: [] }
-			};
-		}
 		const baseState = canvasToState(canvasDoc);
 		return {
 			...baseState,
@@ -120,7 +86,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 				future: [],
 			},
 		};
-	}, [canvasDoc, hasFatalErrors]);
+	}, [canvasDoc]);
 
 	// Reducer for canvas state management with history
 	const [state, dispatch] = useReducer(canvasReducer, initialState);
@@ -138,10 +104,9 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 
 	// Sync external canvasDoc changes
 	useEffect(() => {
-		if (hasFatalErrors) return; // Do not crash the reducer if invalid
 		const newState = canvasToState(canvasDoc);
 		dispatch({ type: "SYNC_EXTERNAL", payload: newState });
-	}, [canvasDoc, hasFatalErrors]);
+	}, [canvasDoc]);
 
 	// Gesture handling
 	const handleGesture = useCallback<GestureCallback>(
@@ -205,12 +170,6 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 			cursor={state.activeDrawingTool ? "crosshair" : undefined}
 			{...pointerHandlers}
 		>
-			{hasFatalErrors && (
-				<CanvasErrorOverlay 
-					error={new CanvasValidationError("Semantic validation failed", semanticErrors)} 
-				/>
-			)}
-			
 			<Container>
 				<CanvasView
 					objects={state.objects}

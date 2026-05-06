@@ -38,9 +38,7 @@ const testCanvasDoc: CanvasDoc = {
 		{
 			id: "group-1",
 			type: "group",
-			rotation: 0, // 回転なしグループ
-			scaleX: 1,
-			scaleY: 1,
+			rotation: 0,
 			children: [
 				{
 					id: "rect-in-group-1",
@@ -91,9 +89,7 @@ const testCanvasDoc: CanvasDoc = {
 		{
 			id: "group-2",
 			type: "group",
-			rotation: 30, // 30度回転
-			scaleX: 1,
-			scaleY: 1,
+			rotation: 30,
 			children: [
 				{
 					id: "rect-in-group-2",
@@ -120,9 +116,7 @@ const testCanvasDoc: CanvasDoc = {
 				{
 					id: "nested-group-in-group-2",
 					type: "group",
-					rotation: -15, // ネストした子グループ
-					scaleX: 1,
-					scaleY: 1,
+					rotation: -15,
 					children: [
 						{
 							id: "rect-in-nested-group-2",
@@ -165,15 +159,11 @@ const testCanvasDoc: CanvasDoc = {
 			id: "group-deep-test",
 			type: "group",
 			rotation: 0,
-			scaleX: 1,
-			scaleY: 1,
 			children: [
 				{
 					id: "group-deep-child",
 					type: "group",
 					rotation: 0,
-					scaleX: 1,
-					scaleY: 1,
 					children: [
 						{
 							id: "rect-deep-grandchild",
@@ -203,8 +193,6 @@ const testCanvasDoc: CanvasDoc = {
 					id: "group-deep-sibling",
 					type: "group",
 					rotation: 0,
-					scaleX: 1,
-					scaleY: 1,
 					children: [
 						{
 							id: "rect-deep-nephew",

@@ -12,10 +12,13 @@ const schemaStr = readFileSync(schemaPath, "utf-8");
 const schema = JSON.parse(schemaStr);
 
 // To generate standalone code, `code.source` must be true.
-const ajv = new Ajv({ 
-  code: { source: true, esm: true }, 
-  allErrors: true, 
-  strict: false 
+// discriminator: true enables OpenAPI discriminator support, which uses the `type` property
+// to select the matching oneOf branch, avoiding noisy errors from non-matching branches.
+const ajv = new Ajv({
+  code: { source: true, esm: true },
+  allErrors: true,
+  strict: false,
+  discriminator: true,
 });
 
 const validate = ajv.compile(schema);
