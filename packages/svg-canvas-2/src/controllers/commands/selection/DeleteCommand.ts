@@ -1,5 +1,6 @@
 ﻿import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import { updateGroupBounds } from "../../ui/utils/updateGroupBounds";
+import { cleanupConnectorsOnDelete } from "../../utils/cleanupConnectorsOnDelete";
 import { cleanupGroups } from "../../utils/cleanupGroups";
 import type { Command } from "../CommandTypes";
 
@@ -39,7 +40,10 @@ export const DeleteCommand: Command = {
 			idsToDelete.add(state.selectedConnectorId);
 		}
 
-		const updatedObjects = { ...state.objects };
+		// コネクターの整理（削除前の状態で座標解決するため先に実行）
+		const stateAfterConnectors = cleanupConnectorsOnDelete(state, idsToDelete);
+
+		const updatedObjects = { ...stateAfterConnectors.objects };
 
 		// 削除対象オブジェクトを objects から除去
 		for (const id of idsToDelete) {
@@ -71,7 +75,7 @@ export const DeleteCommand: Command = {
 			...state,
 			objects: updatedObjects,
 			rootIds: state.rootIds.filter((id) => !idsToDelete.has(id)),
-			connectorIds: state.connectorIds.filter((id) => !idsToDelete.has(id)),
+			connectorIds: stateAfterConnectors.connectorIds.filter((id) => !idsToDelete.has(id)),
 			selectedIds: [] as string[],
 			selectedConnectorId: null,
 			objectMenuOpenId: null,
