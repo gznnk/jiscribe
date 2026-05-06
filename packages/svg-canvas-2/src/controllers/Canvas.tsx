@@ -16,11 +16,13 @@ import {
 	ZoomScaledOverlay,
 } from "./CanvasStyled";
 import type { CanvasControllerState } from "./CanvasTypes";
+import { isClipboardData } from "./clipboard/ClipboardData";
 import type { GestureCallback } from "./gestures/recognizer/GestureRecognizerTypes";
 import { useContainerSize } from "./hooks/useContainerSize";
 import { useDocumentWheel } from "./hooks/useDocumentWheel";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
+import { usePasteKeyboardShortcut } from "./hooks/usePasteKeyboardShortcut";
 import { canvasReducer } from "./reducer/canvasReducer";
 import { initializeRegistries } from "./setup";
 import { CanvasView } from "../presentations/CanvasView";
@@ -143,6 +145,18 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 
 	useKeyboardShortcuts(state, handleCommand);
 
+	const handlePasteCallback = useCallback(async () => {
+		try {
+			const text = await navigator.clipboard.readText();
+			const parsed: unknown = JSON.parse(text);
+			if (!isClipboardData(parsed)) return;
+			dispatch({ type: "PASTE", data: parsed });
+		} catch {
+			// clipboard read failure or parse error
+		}
+	}, [dispatch]);
+	usePasteKeyboardShortcut(handlePasteCallback);
+
 	const handleMenuPropertyUpdate = useCallback(
 		(property: string, value: string, commit: boolean) => {
 			dispatch({ type: "MENU_PROPERTY_UPDATE", property, value, commit });
@@ -246,7 +260,11 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 			<ViewportOverlay>
 				<ShapeLibrary activeDrawingTool={state.activeDrawingTool} />
 				<DebugInfo selectedIds={state.selectedIds} objects={state.objects} />
-				<ContextMenu position={state.contextMenuPosition} canvasState={state} />
+				<ContextMenu
+					position={state.contextMenuPosition}
+					canvasState={state}
+					callbacks={{ paste: handlePasteCallback }}
+				/>
 			</ViewportOverlay>
 		</Viewport>
 	);

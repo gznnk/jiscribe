@@ -2,6 +2,7 @@ import type { Dimensions } from "@workspace/geometry";
 
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import type { CanvasState } from "../../states/canvas/CanvasState";
+import type { ClipboardData } from "../clipboard/ClipboardData";
 import type { Gesture } from "../gestures/recognizer/GestureRecognizerTypes";
 
 /**
@@ -88,6 +89,14 @@ export type MenuPropertyUpdateAction = {
 };
 
 /**
+ * Paste action - applies clipboard data to canvas state
+ */
+export type PasteAction = {
+	type: "PASTE";
+	data: ClipboardData;
+};
+
+/**
  * Union of all canvas actions
  */
 export type CanvasAction =
@@ -100,4 +109,5 @@ export type CanvasAction =
 	| EndTextEditAction
 	| UndoAction
 	| RedoAction
-	| MenuPropertyUpdateAction;
+	| MenuPropertyUpdateAction
+	| PasteAction;

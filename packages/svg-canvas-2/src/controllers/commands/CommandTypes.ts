@@ -60,12 +60,3 @@ export type Command = {
 	shortcuts?: PlatformKeyBindings;
 };
 
-/**
- * コンテキストメニューの項目定義
- */
-export type CommandMenuItem = {
-	/** 実行するコマンドID */
-	commandId?: string;
-	/** セパレーター（区切り線）として表示 */
-	separator?: boolean;
-};

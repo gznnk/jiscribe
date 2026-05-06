@@ -2,6 +2,7 @@ import type { CanvasAction } from "./CanvasActions";
 import { canvasToDoc } from "../../states/canvas/CanvasMapper";
 import { isTextStyleState } from "../../states/objects/base/TextStyleState";
 import type { CanvasControllerState } from "../CanvasTypes";
+import { applyPaste } from "../clipboard/applyPaste";
 import { handleCommand } from "../commands/handlers/handleCommand";
 import { handleGesture } from "../gestures/handlers/handleGesture";
 import { commitTextEditIfNeeded } from "../utils/commitTextEditIfNeeded";
@@ -105,6 +106,11 @@ export const canvasReducer = (
 				...state,
 				textEditState: null,
 			};
+		}
+
+		case "PASTE": {
+			const pasteResult = applyPaste(state, action.data);
+			return recordHistoryIfNeeded(pasteResult, state.lastCommitTime);
 		}
 
 		default:

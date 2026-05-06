@@ -8,6 +8,8 @@ import { GroupCommand } from "../commands/group/GroupCommand";
 import { UngroupCommand } from "../commands/group/UngroupCommand";
 import { RedoCommand } from "../commands/history/RedoCommand";
 import { UndoCommand } from "../commands/history/UndoCommand";
+import { CopyCommand } from "../commands/selection/CopyCommand";
+import { CutCommand } from "../commands/selection/CutCommand";
 import { DeleteCommand } from "../commands/selection/DeleteCommand";
 import { DeselectAllCommand } from "../commands/selection/DeselectAllCommand";
 import { SelectAllCommand } from "../commands/selection/SelectAllCommand";
@@ -21,6 +23,9 @@ export const initializeCommands = (): void => {
 		// Edit commands
 		.register(UndoCommand)
 		.register(RedoCommand)
+		// Clipboard commands
+		.register(CopyCommand)
+		.register(CutCommand)
 		// Selection commands
 		.register(SelectAllCommand)
 		.register(DeselectAllCommand)
