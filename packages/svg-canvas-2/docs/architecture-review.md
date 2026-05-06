@@ -124,20 +124,21 @@ controllers/utils/cleanupConnectorsOnDelete.ts
 
 ---
 
-## 5. ドキュメントと実装の差異（Minor）
+## 5. ドキュメントと実装の差異（Minor）✅ 対応済み
 
-`architecture.md` が記述した構造と実際の実装が食い違っている箇所です（アーキテクチャ違反ではなく整合性の問題）。
+`architecture.md` の構造ツリーおよび関連記述を実装に合わせて修正した。
 
-| ドキュメントの記載 | 実際の実装 |
-|---|---|
-| `primitives/RectEventHandler.ts` など per-shape な EventHandler が存在 | 統合済みの単一 `ObjectEventHandler.ts` に変更されている |
-| `presentations/controls/` にコントロール UI を配置 | 存在せず `controllers/ui/controls/` に実装されている |
-| 記載なし | `presentations/objects/arrows/`（矢印 UI）が追加されている |
-| 記載なし | `presentations/objects/base/TextOverlay/` が追加されている |
-| 記載なし | ルートに `SvgCanvas2.tsx` が存在する |
-| 記載なし | `schemas/objects/types/` フォルダが存在する |
-
-また `controllers/ui/controls/TransformControls/TransformControls.tsx` のコメントには "pure presentation component" と記載されているが、`controllers/ui/` に置かれている。純粋描画コンポーネントであれば `presentations/controls/` に移動することを検討する。
+| 修正内容 |
+|---|
+| `primitives/*EventHandler.ts` の per-shape 記載を削除し、統合済みの `ObjectEventHandler.ts` / `ConnectorEventHandler.ts` に更新 |
+| `presentations/controls/` の記載を削除し、`controllers/ui/controls/` 配下の実際の構成を反映 |
+| `presentations/objects/arrows/`（矢印UI）を追加 |
+| `presentations/objects/base/TextOverlay/` を追加 |
+| ルートの `SvgCanvas2.tsx` を追加 |
+| `schemas/objects/types/` フォルダを追加 |
+| `states/objects/base/MapperTypes.ts` を追加 |
+| 新しい形状の追加手順から廃止済みの `NewShapeEventHandler.ts` ステップを削除 |
+| `TransformControls.tsx` の「pure presentation component」コメントを修正 |
 
 ---
 
@@ -149,4 +150,4 @@ controllers/utils/cleanupConnectorsOnDelete.ts
 | 2 | `states ↔ registry` 循環依存（Mapper 型の配置問題） | Significant ✅ |
 | 3 | `registry ↔ controllers` 循環依存（`CanvasControllerState` の配置問題） | Significant |
 | 4 | `resolveEndpoint` / `resolveConnectorPoints` が `presentations/` に置かれている | Moderate |
-| 5 | ドキュメントと実装の差異 | Minor |
+| 5 | ドキュメントと実装の差異 | Minor ✅ |

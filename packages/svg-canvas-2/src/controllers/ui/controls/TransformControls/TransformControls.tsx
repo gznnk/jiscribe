@@ -42,8 +42,8 @@ type TransformControlsProps = {
 /**
  * TransformControls component for svg-canvas-2.
  *
- * This is a pure presentation component that renders visual transform handles.
- * All interaction logic should be handled by the GestureHandler.
+ * This component renders visual transform handles for the selected object.
+ * All interaction logic is handled by the GestureHandler via data attributes.
  *
  * Each anchor has:
  * - data-kind="control" for GestureHandler to identify

@@ -13,38 +13,51 @@
 
 ```
 packages/svg-canvas-2/src/
-├── schemas/                         # 永続化データ型定義（Docモデル）
+├── SvgCanvas2.tsx                       # パッケージエントリーポイント
+├── schemas/                             # 永続化データ型定義（Docモデル）
 │   ├── canvas/
-│   │   └── CanvasDoc.ts             # Canvas全体のドキュメント型
+│   │   └── CanvasDoc.ts                 # Canvas全体のドキュメント型
 │   └── objects/
-│       ├── base/                    # 基底型
+│       ├── base/                        # 基底型
 │       │   ├── ObjectDoc.ts
 │       │   ├── MetaDoc.ts
 │       │   └── TransformDoc.ts
-│       └── primitives/              # 形状ごとの型定義
-│           ├── RectDoc.ts
-│           ├── EllipseDoc.ts
-│           ├── GroupDoc.ts
-│           ├── PolygonDoc.ts
-│           └── PolylineDoc.ts
+│       ├── primitives/                  # 形状ごとの型定義
+│       │   ├── RectDoc.ts
+│       │   ├── EllipseDoc.ts
+│       │   ├── GroupDoc.ts
+│       │   ├── PolygonDoc.ts
+│       │   └── PolylineDoc.ts
+│       └── types/                       # 共通列挙型・補助型
+│           ├── ObjectType.ts
+│           ├── ObjectFeatures.ts
+│           ├── GeometryType.ts
+│           ├── ArrowType.ts
+│           ├── StrokeDashType.ts
+│           ├── TextType.ts
+│           ├── TextAlign.ts
+│           ├── VerticalAlign.ts
+│           ├── EndpointRef.ts
+│           └── Poly.ts
 │
-├── states/                          # ランタイム状態型定義（Stateモデル）+ Mapper
+├── states/                              # ランタイム状態型定義（Stateモデル）+ Mapper
 │   ├── canvas/
-│   │   ├── CanvasState.ts           # フラット化されたCanvas状態
-│   │   ├── CanvasMapper.ts          # Doc ↔ State 変換
+│   │   ├── CanvasState.ts               # フラット化されたCanvas状態
+│   │   ├── CanvasMapper.ts              # Doc ↔ State 変換（registry参照を許容）
 │   │   ├── Viewport.ts
-│   │   └── __tests__/               # Mapperのテスト
+│   │   └── __tests__/
 │   │       └── CanvasMapper.test.ts
 │   └── objects/
-│       ├── base/                    # 基底型 + Mapper
+│       ├── base/                        # 基底型 + Mapper
 │       │   ├── ObjectState.ts
 │       │   ├── ObjectMapper.ts
+│       │   ├── MapperTypes.ts           # DocToStateMapper / StateToDocMapper 等
 │       │   ├── MetaState.ts
 │       │   ├── MetaMapper.ts
 │       │   ├── TransformState.ts
 │       │   ├── TransformMapper.ts
 │       │   └── __tests__/
-│       ├── primitives/              # 形状ごとのフォルダ（State + Mapper）
+│       ├── primitives/                  # 形状ごとのフォルダ（State + Mapper）
 │       │   ├── rect/
 │       │   │   ├── RectState.ts
 │       │   │   ├── RectMapper.ts
@@ -76,77 +89,77 @@ packages/svg-canvas-2/src/
 │               ├── StickyMapper.ts
 │               └── __tests__/
 │
-├── controllers/                     # 状態管理 + ビジネスロジック
-│   ├── Canvas.tsx                   # メインキャンバスコンポーネント
+├── controllers/                         # 状態管理 + ビジネスロジック
+│   ├── Canvas.tsx                       # メインキャンバスコンポーネント
 │   ├── CanvasStyled.ts
-│   ├── gestures/                    # ジェスチャー認識 + 操作ロジック
+│   ├── gestures/                        # ジェスチャー認識 + 操作ロジック
 │   │   ├── handlers/
-│   │   │   ├── canvas/              # キャンバス全体のイベント
-│   │   │   ├── controls/            # 変形コントロール
+│   │   │   ├── canvas/                  # キャンバス全体のイベント
+│   │   │   ├── controls/                # 変形コントロール
 │   │   │   │   └── transform/
 │   │   │   │       ├── TransformControlHandler.ts
 │   │   │   │       └── utils/
-│   │   │   ├── menu/                # メニュー操作
-│   │   │   └── objects/             # オブジェクト操作
-│   │   │       ├── base/            # 共通変形ロジック
-│   │   │       │   ├── FrameTransform.ts     # Frame系変形
-│   │   │       │   ├── PolyTransform.ts      # Poly系変形
-│   │   │       │   └── GroupTransform.ts     # Group再帰変形
-│   │   │       ├── primitives/      # 形状ごとの状態更新ロジック
-│   │   │       │   ├── RectController.ts     # moveByDelta, transformByGroup
-│   │   │       │   ├── RectEventHandler.ts   # イベントハンドラー
+│   │   │   ├── menu/                    # メニュー操作
+│   │   │   └── objects/                 # オブジェクト操作
+│   │   │       ├── ObjectEventHandler.ts    # 全形状共通イベントハンドラー
+│   │   │       ├── ConnectorEventHandler.ts # コネクター専用イベントハンドラー
+│   │   │       ├── base/                # 共通変形ロジック
+│   │   │       │   ├── FrameTransform.ts
+│   │   │       │   ├── PolyTransform.ts
+│   │   │       │   └── GroupTransform.ts
+│   │   │       ├── primitives/          # 形状ごとの状態更新ロジック
+│   │   │       │   ├── RectController.ts
 │   │   │       │   ├── EllipseController.ts
-│   │   │       │   ├── EllipseEventHandler.ts
-│   │   │       │   ├── GroupController.ts    # transformChildren含む
-│   │   │       │   ├── GroupEventHandler.ts
-│   │   │       │   ├── PolylineController.ts
-│   │   │       │   └── PolylineEventHandler.ts
+│   │   │       │   ├── GroupController.ts
+│   │   │       │   ├── PolygonController.ts
+│   │   │       │   └── PolylineController.ts
 │   │   │       ├── connections/
 │   │   │       │   └── ConnectorController.ts
 │   │   │       ├── annotations/
 │   │   │       │   └── StickyController.ts
-│   │   │       └── utils/           # EventHandler共通ロジック
-│   │   │           ├── FrameDragEventHandler.ts
-│   │   │           ├── PolyDragEventHandler.ts
-│   │   │           ├── DefaultClickEventHandler.ts
+│   │   │       └── utils/               # EventHandler共通ロジック
 │   │   │           ├── determineSelection.ts
-│   │   │           └── getAncestors.ts
-│   │   └── recognizer/              # ジェスチャー認識
-│   ├── commands/                    # コマンドパターン（Undo/Redo）
-│   ├── hooks/                       # カスタムフック
-│   ├── reducer/                     # 状態管理reducer
-│   ├── setup/                       # 初期化処理
+│   │   │           ├── getAncestors.ts
+│   │   │           └── ...
+│   │   └── recognizer/                  # ジェスチャー認識
+│   ├── commands/                        # コマンドパターン（Undo/Redo）
+│   ├── hooks/                           # カスタムフック
+│   ├── reducer/                         # 状態管理reducer
+│   ├── setup/                           # 初期化処理
 │   │   └── initializeObjectRegistry.ts
-│   ├── ui/                          # UI制御
-│   │   ├── controls/                # 変形コントロールUI
-│   │   ├── feedback/                # ビジュアルフィードバック
-│   │   ├── menu/                    # メニューUI
-│   │   ├── icons/                   # アイコン
-│   │   └── utils/                   # UI関連ユーティリティ
-│   │       ├── calcGroupBoundingBox.ts
-│   │       ├── calculateGroupOrientedBounds.ts
-│   │       ├── updateGroupBounds.ts
-│   │       └── getResizeCursorForRotation.ts
-│   └── utils/                       # 共通ユーティリティ
-│       └── normalizeRotation.ts
+│   ├── ui/                              # UI制御
+│   │   ├── controls/                    # 変形コントロールUI
+│   │   │   ├── TransformControls/
+│   │   │   ├── TransformControlsLayer/
+│   │   │   ├── ConnectorControls/
+│   │   │   ├── VertexControls/
+│   │   │   └── ConnectionAnchors/
+│   │   ├── feedback/                    # ビジュアルフィードバック
+│   │   ├── menu/                        # メニューUI
+│   │   ├── icons/                       # アイコン
+│   │   └── utils/                       # UI関連ユーティリティ
+│   └── utils/                           # 共通ユーティリティ
 │
-├── presentations/                   # 表示コンポーネント（純粋な描画）
-│   ├── layers/
+├── presentations/                       # 表示コンポーネント（純粋な描画）
+│   ├── layers/                          # レイヤー構成
 │   ├── objects/
+│   │   ├── base/
+│   │   │   └── TextOverlay/             # テキスト編集オーバーレイ
 │   │   ├── primitives/
-│   │   │   ├── Rect.tsx
-│   │   │   ├── Ellipse.tsx
-│   │   │   ├── Polygon.tsx
-│   │   │   └── Polyline.tsx
+│   │   │   ├── Rect/
+│   │   │   ├── Ellipse/
+│   │   │   ├── Polygon/
+│   │   │   └── Polyline/
 │   │   ├── connections/
-│   │   │   └── Connector.tsx
-│   │   └── annotations/
-│   │       └── Sticky.tsx
-│   └── controls/
+│   │   │   └── Connector/
+│   │   ├── annotations/
+│   │   │   └── Sticky/
+│   │   └── arrows/                      # 矢印UI（コネクター端点）
+│   └── defs/                            # SVG defs（フィルター等）
 │
-├── registry/                        # レジストリパターン
-│   ├── ObjectRegistry.ts            # 形状ごとの機能を動的解決
-│   └── ObjectRegistryTypes.ts       # 型定義
+├── registry/                            # レジストリパターン
+│   ├── ObjectRegistry.ts                # 形状ごとの機能を動的解決
+│   └── ObjectRegistryTypes.ts           # 型定義
 │
 └── constants/
     └── precision.ts
@@ -390,9 +403,8 @@ export const transformByGroup: TransformByGroupFunction<EllipseState> = (
 4. **Controller 実装**: `controllers/gestures/handlers/objects/primitives/NewShapeController.ts`
    - moveByDelta
    - transformByGroup
-5. **EventHandler 実装**: `controllers/gestures/handlers/objects/primitives/NewShapeEventHandler.ts`
-6. **Component 実装**: `presentations/objects/primitives/NewShape.tsx`
-7. **Registry 登録**: `controllers/setup/initializeObjectRegistry.ts`
+5. **Component 実装**: `presentations/objects/primitives/NewShape/NewShape.tsx`
+6. **Registry 登録**: `controllers/setup/initializeObjectRegistry.ts`
 
 ## 設計上の禁止事項
 
