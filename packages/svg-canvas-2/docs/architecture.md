@@ -229,6 +229,10 @@ packages/svg-canvas-2/src/
 - registry → states（型定義のみ）
 - controllers → registry（機能の動的取得）
 
+> **⚠️ 例外**: `states/canvas/CanvasMapper.ts` のみ `registry/ObjectRegistry` を参照することを許容する。
+> `CanvasDoc ↔ CanvasState` の全体変換はオブジェクト型ごとの Mapper を多態的に呼び出す必要があるため、この依存は設計上不可避である。
+> 他の `states/` ファイルから `registry/` を参照することは禁止。
+
 ## 依存関係グラフ
 
 ```mermaid

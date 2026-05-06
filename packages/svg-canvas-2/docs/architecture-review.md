@@ -27,13 +27,13 @@ states/canvas/CanvasMapper.ts
 
 ---
 
-## 2. `states ↔ registry` の循環依存（Significant）
+## 2. `states ↔ registry` の循環依存（Significant）✅ 対応済み
 
 ### 概要
 
-アーキテクチャが想定する依存方向は `registry → states` の一方向ですが、逆方向の依存が存在し循環しています。
+アーキテクチャが想定する依存方向は `registry → states` の一方向ですが、逆方向の依存が存在し循環していた。
 
-### 違反箇所
+### 違反箇所（修正前）
 
 ```
 registry/ObjectRegistryTypes.ts → states/（許可: registry → states）
@@ -53,13 +53,13 @@ states/canvas/CanvasMapper.ts
   └─ import { objectRegistry } from "../../registry/ObjectRegistry"
 ```
 
-### 問題
+### 修正内容（2026-05-06）
 
-各 `*Mapper.ts` が `DocToStateMapper` / `StateToDocMapper` 型を `registry/ObjectRegistryTypes.ts` から参照しているため、状態定義層が Registry 層に依存しています。
+**Mapper 型の移動**:
+`DocToStateMapper` / `StateToDocMapper` / `ObjectMapperType` を `states/objects/base/MapperTypes.ts` に新設して定義した。各 `*Mapper.ts` は `registry/ObjectRegistryTypes` の代わりに `../../base/MapperTypes` からインポートするよう変更した。`registry/ObjectRegistryTypes.ts` は `ObjectMapperType` のみを `MapperTypes.ts` から直接 import して使用し、re-export は行わない形に整理した。
 
-### 修正方針
-
-`DocToStateMapper` / `StateToDocMapper` 型を `states/objects/base/MapperTypes.ts` などに移動し、`registry/ObjectRegistryTypes.ts` がそこからインポートするよう変更する。`CanvasMapper` の `objectRegistry` 利用については、Registry 経由での変換という現設計の核心部分であるため、依存方向のルール自体を「`states/canvas/` のみ `registry` 参照可」と明文化するか、変換処理を `controllers/` に移動するかを設計判断する。
+**`CanvasMapper` の例外明文化**:
+`CanvasMapper.ts` が `objectRegistry` を利用して全オブジェクトの Doc↔State 変換を多態的に行う設計は本質的であり変更しない。代わりに `architecture.md` の Registry 層セクションに「`states/canvas/CanvasMapper.ts` のみ `registry/ObjectRegistry` を参照することを許容する」旨を明文化した。
 
 ---
 
@@ -145,8 +145,8 @@ controllers/utils/cleanupConnectorsOnDelete.ts
 
 | # | 内容 | 優先度 |
 |---|---|---|
-| 1 | `states → controllers` 依存（`CanvasMapper` → `updateGroupBounds`） | Critical |
-| 2 | `states ↔ registry` 循環依存（Mapper 型の配置問題） | Significant |
+| 1 | `states → controllers` 依存（`CanvasMapper` → `updateGroupBounds`） | Critical ✅ |
+| 2 | `states ↔ registry` 循環依存（Mapper 型の配置問題） | Significant ✅ |
 | 3 | `registry ↔ controllers` 循環依存（`CanvasControllerState` の配置問題） | Significant |
 | 4 | `resolveEndpoint` / `resolveConnectorPoints` が `presentations/` に置かれている | Moderate |
 | 5 | ドキュメントと実装の差異 | Minor |

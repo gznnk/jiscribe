@@ -1,9 +1,9 @@
 import type { PolylineState } from "./PolylineState";
+import type { PolylineDoc } from "../../../../schemas/objects/primitives/PolylineDoc";
 import type {
 	DocToStateMapper,
 	StateToDocMapper,
-} from "../../../../registry/ObjectRegistryTypes";
-import type { PolylineDoc } from "../../../../schemas/objects/primitives/PolylineDoc";
+} from "../../base/MapperTypes";
 import { ObjectMapper } from "../../base/ObjectMapper";
 
 /**
