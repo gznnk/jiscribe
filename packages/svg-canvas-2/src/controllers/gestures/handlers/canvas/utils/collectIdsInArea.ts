@@ -29,7 +29,7 @@ export function collectIdsInArea(
 		if (isTransformedFrame(obj)) {
 			// Frame系オブジェクト（Rect, Ellipse, Group, Sticky）
 			bbox = calcBoundingBox(obj);
-		} else if (isPoly(obj)) {
+		} else if (isPoly(obj) && obj.type !== "connector") {
 			// Poly系オブジェクト（Polyline, Polygon）
 			bbox = calcPolyBoundingBox(obj.points);
 		} else {
