@@ -1,7 +1,7 @@
 import { isTransformedFrame } from "@workspace/geometry";
 
+import type { ClipboardData } from "./ClipboardData";
 import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
-import type { ClipboardData } from "../../clipboard/ClipboardData";
 import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWithDescendants";
 import type { Command } from "../CommandTypes";
 

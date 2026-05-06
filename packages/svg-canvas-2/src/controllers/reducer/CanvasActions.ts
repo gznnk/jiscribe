@@ -2,7 +2,7 @@ import type { Dimensions } from "@workspace/geometry";
 
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import type { CanvasState } from "../../states/canvas/CanvasState";
-import type { ClipboardData } from "../clipboard/ClipboardData";
+import type { ClipboardData } from "../commands/selection/ClipboardData";
 import type { Gesture } from "../gestures/recognizer/GestureRecognizerTypes";
 
 /**

@@ -16,7 +16,7 @@ import {
 	ZoomScaledOverlay,
 } from "./CanvasStyled";
 import type { CanvasControllerState } from "./CanvasTypes";
-import { isClipboardData } from "./clipboard/ClipboardData";
+import { isClipboardData } from "./commands/selection/ClipboardData";
 import type { GestureCallback } from "./gestures/recognizer/GestureRecognizerTypes";
 import { useContainerSize } from "./hooks/useContainerSize";
 import { useDocumentWheel } from "./hooks/useDocumentWheel";

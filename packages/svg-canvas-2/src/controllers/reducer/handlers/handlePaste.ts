@@ -1,12 +1,12 @@
-import type { ClipboardData } from "./ClipboardData";
-import { objectRegistry } from "../../registry/ObjectRegistry";
-import type { EndpointRef } from "../../schemas/objects/types/EndpointRef";
-import type { ObjectState } from "../../states/objects/base/ObjectState";
-import type { ConnectorState } from "../../states/objects/connections/connector/ConnectorState";
-import type { GroupState } from "../../states/objects/primitives/group/GroupState";
-import type { CanvasControllerState } from "../CanvasTypes";
-import { moveGroup } from "../gestures/handlers/objects/primitives/GroupController";
-import { createMultiSelectGroup } from "../gestures/handlers/objects/utils/createMultiSelectGroup";
+import { objectRegistry } from "../../../registry/ObjectRegistry";
+import type { EndpointRef } from "../../../schemas/objects/types/EndpointRef";
+import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
+import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
+import type { CanvasControllerState } from "../../CanvasTypes";
+import type { ClipboardData } from "../../commands/selection/ClipboardData";
+import { moveGroup } from "../../gestures/handlers/objects/primitives/GroupController";
+import { createMultiSelectGroup } from "../../gestures/handlers/objects/utils/createMultiSelectGroup";
 
 const PASTE_OFFSET = { x: 20, y: 20 };
 
@@ -15,17 +15,15 @@ const remapEndpointRef = (ref: EndpointRef, idMap: Map<string, string>): Endpoin
 	return { ...ref, owner: { ...ref.owner, id: idMap.get(ref.owner.id) ?? ref.owner.id } };
 };
 
-export const applyPaste = (
+export const handlePaste = (
 	state: CanvasControllerState,
 	data: ClipboardData,
 ): CanvasControllerState => {
-	// Build oldId → newId map for all objects (including connectors)
 	const idMap = new Map<string, string>();
 	for (const oldId of Object.keys(data.objects)) {
 		idMap.set(oldId, crypto.randomUUID());
 	}
 
-	// Clone and remap all objects
 	const newObjects: Record<string, ObjectState> = {};
 
 	for (const [oldId, obj] of Object.entries(data.objects)) {
@@ -57,7 +55,6 @@ export const applyPaste = (
 		newObjects[newId] = newObj;
 	}
 
-	// Apply offset to root-level objects only
 	for (const oldRootId of data.rootIds) {
 		const newRootId = idMap.get(oldRootId);
 		if (!newRootId) continue;

@@ -1,6 +1,6 @@
 import type { Point } from "@workspace/geometry";
 
-import type { ObjectState } from "../../states/objects/base/ObjectState";
+import type { ObjectState } from "../../../states/objects/base/ObjectState";
 
 export type ClipboardData = {
 	__type: "jiscribe-canvas-clipboard";
