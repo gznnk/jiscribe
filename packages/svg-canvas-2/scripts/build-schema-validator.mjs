@@ -24,5 +24,5 @@ const ajv = new Ajv({
 const validate = ajv.compile(schema);
 const moduleCode = standaloneCode(ajv, validate);
 
-writeFileSync(outPath, moduleCode);
+writeFileSync(outPath, `/* eslint-disable */\n${moduleCode}`);
 console.log(`✅ Schema validator successfully generated at: ${outPath}`);

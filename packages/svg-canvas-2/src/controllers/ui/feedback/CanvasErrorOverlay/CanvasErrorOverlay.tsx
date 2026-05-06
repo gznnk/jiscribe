@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import type { CanvasValidationError } from "../../../../schemas/canvas/validators";
+
 import {
 	ErrorOverlayContainer,
 	ErrorCard,
@@ -12,6 +12,7 @@ import {
 	ErrorPath,
 	ErrorDetail,
 } from "./CanvasErrorOverlayStyled";
+import type { CanvasValidationError } from "../../../../schemas/canvas/validators";
 
 type CanvasErrorOverlayProps = {
 	error: CanvasValidationError;

@@ -1,5 +1,5 @@
-import type { SemanticDiagnostic } from "./validateSemantics";
 import validate from "./generated-schema-validator.js";
+import type { SemanticDiagnostic } from "./validateSemantics";
 
 export function validateCanvasDocSchema(parsedJson: unknown): SemanticDiagnostic[] {
   const valid = validate(parsedJson);

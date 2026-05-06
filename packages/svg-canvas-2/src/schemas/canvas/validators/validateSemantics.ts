@@ -1,6 +1,6 @@
-import type { CanvasDoc } from "../CanvasDoc";
 import type { ObjectDoc } from "../../objects/base/ObjectDoc";
 import type { GroupDoc } from "../../objects/primitives/GroupDoc";
+import type { CanvasDoc } from "../CanvasDoc";
 
 export type SemanticDiagnostic = {
   path: string;

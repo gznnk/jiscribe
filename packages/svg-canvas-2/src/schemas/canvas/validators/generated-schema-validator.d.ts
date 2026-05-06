@@ -1,7 +1,7 @@
 import type { ErrorObject } from "ajv";
 
 declare const validate: {
-  (data: any): boolean;
+  (data: unknown): boolean;
   errors?: ErrorObject[] | null;
 };
 

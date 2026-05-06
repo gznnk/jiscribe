@@ -1,4 +1,4 @@
-import { calcFrameKeyPoints, isTransformedFrame } from "@workspace/geometry";
+import { calcFrameKeyPoints, calcPolyKeyPoints, isTransformedFrame } from "@workspace/geometry";
 import type { FrameKeyPoints, TransformedFrame } from "@workspace/geometry";
 
 import { gestureHandlerRegistry } from "../../../registry/GestureHandlerRegistry";
@@ -6,6 +6,7 @@ import type {
 	CanvasEvent,
 	EventType,
 } from "../../../registry/GestureHandlerRegistryTypes";
+import { isPoly } from "../../../schemas/objects/types/Poly";
 import type { CanvasControllerState, EventStartSnapshot } from "../../CanvasTypes";
 import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWithDescendants";
 import type { Gesture } from "../recognizer/GestureRecognizerTypes";
@@ -58,6 +59,11 @@ export const handleGesture = (
 		for (const [id, obj] of Object.entries(state.objects)) {
 			if (isTransformedFrame(obj)) {
 				keyPointsCache[id] = calcFrameKeyPoints(obj as TransformedFrame);
+			} else if (isPoly(obj) && obj.type !== "connector") {
+				const keyPoints = calcPolyKeyPoints(obj.points);
+				if (keyPoints) {
+					keyPointsCache[id] = keyPoints;
+				}
 			}
 		}
 
