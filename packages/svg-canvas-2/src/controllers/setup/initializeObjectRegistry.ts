@@ -125,9 +125,7 @@ export const initializeObjectRegistry = (): void => {
 
 	objectRegistry.register("polygon", {
 		features: PolygonFeatures,
-		menuConfig: createMenuConfig(PolygonFeatures, {
-			lineStyle: true,
-		}),
+		menuConfig: createMenuConfig(PolygonFeatures),
 		mapper: {
 			toDoc: polygonToDoc,
 			toState: polygonToState,
