@@ -12,10 +12,9 @@ type DrawingPreviewOverlayProps = {
 	} | null;
 };
 
-const FILL = "rgba(59, 130, 246, 0.08)";
-const STROKE = "#3b82f6";
+const FILL = "rgba(120, 120, 120, 0.25)";
+const STROKE = "#000000";
 const STROKE_WIDTH = 1.5;
-const STROKE_DASHARRAY = "5, 3";
 
 const DrawingPreviewOverlayComponent: React.FC<DrawingPreviewOverlayProps> = ({
 	activeDrawingTool,
@@ -34,7 +33,6 @@ const DrawingPreviewOverlayComponent: React.FC<DrawingPreviewOverlayProps> = ({
 		fill: FILL,
 		stroke: STROKE,
 		strokeWidth: STROKE_WIDTH,
-		strokeDasharray: STROKE_DASHARRAY,
 		pointerEvents: "none" as const,
 	};
 
