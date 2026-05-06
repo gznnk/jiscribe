@@ -194,6 +194,7 @@ packages/svg-canvas-2/src/
 - controllers → states（状態の型を参照）
 - controllers → schemas（一部でDoc型を参照）
 - controllers → registry（動的な機能解決）
+- controllers → presentations（表示座標の解決ロジック再利用など、utilities のみ）
 
 ### 3. 表示層（presentations）
 
@@ -235,6 +236,7 @@ packages/svg-canvas-2/src/
 graph TD
     subgraph Presentations["表示層 (presentations)"]
         PresentationComponents["React Components<br>(Rect, Ellipse, etc.)"]
+        PresentationUtils["utils<br>(座標解決など)"]
     end
 
     subgraph Controllers["ロジック層 (controllers)"]
@@ -263,6 +265,7 @@ graph TD
     Commands --> StatesTypes
     Setup --> ObjectRegistry
     ControllerUtils --> StatesTypes
+    ControllerUtils --> PresentationUtils
 
     ObjectRegistry --> StatesTypes
 
@@ -270,6 +273,7 @@ graph TD
 
     %% スタイリング
     style PresentationComponents fill:#e1f5fe,stroke:#01579b
+    style PresentationUtils fill:#e1f5fe,stroke:#01579b
     style Gestures fill:#fff3e0,stroke:#e65100
     style UI fill:#fff3e0,stroke:#e65100
     style Commands fill:#fff3e0,stroke:#e65100
