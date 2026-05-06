@@ -4,13 +4,13 @@
 
 ---
 
-## 1. `states → controllers` 依存（Critical）
+## 1. `states → controllers` 依存（Critical）✅ 対応済み
 
 ### 概要
 
 `architecture.md` で明示的に禁止されている方向の依存が存在します。
 
-### 違反箇所
+### 違反箇所（修正前）
 
 ```
 states/canvas/CanvasMapper.ts
@@ -21,9 +21,9 @@ states/canvas/CanvasMapper.ts
 
 `updateGroupBounds` はグループのバウンディングボックスを再計算する純粋な関数であり、UI 描画への依存は持ちません。しかし `controllers/ui/utils/` に配置されているため、データ層（`states/`）がロジック層（`controllers/`）に依存する構造になっています。
 
-### 修正方針
+### 修正内容（2026-05-06）
 
-`updateGroupBounds` および `calculateGroupOrientedBounds` を `controllers/ui/utils/` から切り出し、`states/` 内または `controllers/utils/` に移動する。その上で `CanvasMapper` がそこからインポートするよう変更する。
+`calculateGroupOrientedBounds` を `controllers/ui/utils/` から `states/utils/` に移動した。`CanvasMapper` は `updateGroupBounds` の代わりに `calculateGroupOrientedBounds` を `states/utils/` から直接インポートするよう変更し、`states → controllers` の依存を解消した。`updateGroupBounds` は `controllers/` に残置し、移動先からインポートするよう更新した。
 
 ---
 

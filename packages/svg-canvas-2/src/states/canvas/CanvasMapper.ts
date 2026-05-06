@@ -1,4 +1,4 @@
-﻿import { updateGroupBounds } from "../../controllers/ui/utils/updateGroupBounds";
+﻿import { calculateGroupOrientedBounds } from "../utils/calculateGroupOrientedBounds";
 import { objectRegistry } from "../../registry/ObjectRegistry";
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
@@ -40,9 +40,15 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 			);
 
 			// Calculate and cache the group's bounding frame
-			const updatedGroup = updateGroupBounds(objects, groupState.id);
-			if (updatedGroup) {
-				objects[groupState.id] = updatedGroup;
+			const bounds = calculateGroupOrientedBounds(objects, groupState.id);
+			if (bounds) {
+				objects[groupState.id] = {
+					...groupState,
+					cx: bounds.cx,
+					cy: bounds.cy,
+					width: bounds.width,
+					height: bounds.height,
+				} as GroupState;
 			}
 		}
 

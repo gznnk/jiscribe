@@ -1,4 +1,4 @@
-import { calculateGroupOrientedBounds } from "./calculateGroupOrientedBounds";
+import { calculateGroupOrientedBounds } from "../../../states/utils/calculateGroupOrientedBounds";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 
