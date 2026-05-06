@@ -3,7 +3,7 @@ import {
 	calcPolyBoundingBox,
 	isTransformedFrame,
 } from "@workspace/geometry";
-import { type RefObject, useEffect, useMemo, useState } from "react";
+import { type RefObject, useLayoutEffect, useMemo, useState } from "react";
 
 import { isPoly } from "../../../../../schemas/objects/types/Poly";
 import { isGroupState } from "../../../../../states/objects/primitives/group/GroupState";
@@ -71,7 +71,7 @@ export function useObjectMenuPosition(
 		objectMenuOpenId,
 	]);
 
-	useEffect(() => {
+	useLayoutEffect(() => {
 		if (menuRef.current && shouldRender) {
 			const rect = menuRef.current.getBoundingClientRect();
 			setMenuDimensions({ width: rect.width, height: rect.height });
