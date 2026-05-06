@@ -20,9 +20,9 @@ export const ArrowTypeButton = styled.button<{ isActive?: boolean }>`
 	align-items: center;
 	justify-content: center;
 	width: 32px;
-	height: 28px;
+	height: 32px;
 	padding: 2px;
-	border: 1px solid ${(p) => (p.isActive ? "#6b7280" : "#e5e7eb")};
+	border: 1px solid ${(p) => (p.isActive ? "#6b7280" : "transparent")};
 	border-radius: 4px;
 	background: ${(p) => (p.isActive ? "#f3f4f6" : "transparent")};
 	cursor: pointer;
