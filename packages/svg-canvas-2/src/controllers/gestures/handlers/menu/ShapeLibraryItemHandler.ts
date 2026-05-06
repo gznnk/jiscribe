@@ -31,7 +31,7 @@ const parseShapeType = (targetId: string): ObjectType => {
  * 図形タイプから中央基準の半サイズを返す。
  * dragStart 時に一度だけ計算してキャッシュするためのヘルパー。
  */
-const calcGhostHalfDimensions = (
+const calcShapeDimensions = (
 	type: ObjectType,
 ): { halfWidth: number; halfHeight: number } => {
 	switch (type) {
@@ -135,27 +135,35 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 					selectedConnectorId: null,
 					multiSelectGroup: null,
 					objectMenuOpenId: null,
-					pendingShapeType: shapeType,
-					ghostPosition: event.last,
-					ghostShapeDimensions: calcGhostHalfDimensions(shapeType),
+					shapeLibraryDrag: {
+						shapeType,
+						ghostPosition: event.last,
+						shapeDimensions: calcShapeDimensions(shapeType),
+					},
 					edgeScrollEnabled: true,
 				};
 			}
 
 			case "drag": {
 				const snapCandidates = state.eventStartSnapshot?.snapCandidates;
-				const dims = state.ghostShapeDimensions;
+				const drag = state.shapeLibraryDrag;
 
-				if (!snapCandidates || !dims) {
-					return { ...state, ghostPosition: event.last };
+				if (!snapCandidates || !drag) {
+					return {
+						...state,
+						shapeLibraryDrag: drag
+							? { ...drag, ghostPosition: event.last }
+							: null,
+					};
 				}
 
 				const pos = event.last;
+				const { halfWidth, halfHeight } = drag.shapeDimensions;
 				const rawBBox: BoundingBox = {
-					left: pos.x - dims.halfWidth,
-					right: pos.x + dims.halfWidth,
-					top: pos.y - dims.halfHeight,
-					bottom: pos.y + dims.halfHeight,
+					left: pos.x - halfWidth,
+					right: pos.x + halfWidth,
+					top: pos.y - halfHeight,
+					bottom: pos.y + halfHeight,
 				};
 
 				const zoom = state.viewport.zoom;
@@ -166,11 +174,6 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 					[rawBBox.top, rawBBox.bottom],
 				);
 
-				const snappedPos = {
-					x: pos.x + result.delta.x,
-					y: pos.y + result.delta.y,
-				};
-
 				const actualBBox: BoundingBox = {
 					left: rawBBox.left + result.delta.x,
 					right: rawBBox.right + result.delta.x,
@@ -180,7 +183,13 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 
 				return {
 					...state,
-					ghostPosition: snappedPos,
+					shapeLibraryDrag: {
+						...drag,
+						ghostPosition: {
+							x: pos.x + result.delta.x,
+							y: pos.y + result.delta.y,
+						},
+					},
 					snapFeedback: buildSnapFeedback(
 						actualBBox,
 						result.xResult,
@@ -192,20 +201,15 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 
 			case "dragEnd": {
 				// 最後にスナップ済みの ghostPosition を配置座標として使用する
-				if (!state.pendingShapeType) {
+				const drag = state.shapeLibraryDrag;
+				if (!drag) {
 					return state;
 				}
-				const position = state.ghostPosition ?? event.last;
-				const nextState = addObjectToState(
-					state,
-					state.pendingShapeType,
-					position,
-				);
+				const position = drag.ghostPosition ?? event.last;
+				const nextState = addObjectToState(state, drag.shapeType, position);
 				return {
 					...nextState,
-					pendingShapeType: null,
-					ghostPosition: null,
-					ghostShapeDimensions: null,
+					shapeLibraryDrag: null,
 					edgeScrollEnabled: false,
 				};
 			}

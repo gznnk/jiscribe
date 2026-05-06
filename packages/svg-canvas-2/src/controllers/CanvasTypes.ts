@@ -124,24 +124,18 @@ export type CanvasControllerState = CanvasState & {
 	contextMenuPosition: { clientX: number; clientY: number } | null;
 
 	/**
-	 * メニューからドラッグ中の図形タイプ。
-	 * dragStart で設定し、dragEnd で読み取って図形を追加した後に null にクリアする。
+	 * ShapeLibrary からのドラッグ中状態。
+	 * dragStart で設定し、dragEnd で図形を追加後に null にクリアする。
+	 * null でない間はドラッグ進行中を意味する。
 	 */
-	pendingShapeType: ObjectType | null;
-
-	/**
-	 * ドラッグゴースト表示用の現在位置（SVG座標）。
-	 * pendingShapeType と組み合わせて、ドラッグ中の図形プレビューを描画する。
-	 * dragEnd で null にクリアする。
-	 */
-	ghostPosition: Point | null;
-
-	/**
-	 * ドラッグゴーストの図形サイズ（半幅・半高さ、SVG座標）。
-	 * 全図形タイプが中央基準配置のため half サイズで保持する。
-	 * dragStart で計算・キャッシュし、dragEnd で null にクリアする。
-	 */
-	ghostShapeDimensions: { halfWidth: number; halfHeight: number } | null;
+	shapeLibraryDrag: {
+		/** ドラッグ中の図形タイプ */
+		shapeType: ObjectType;
+		/** ゴースト表示位置（SVG座標・スナップ済み）*/
+		ghostPosition: Point;
+		/** ゴースト図形の半サイズ（dragStart 時にキャッシュ）*/
+		shapeDimensions: { halfWidth: number; halfHeight: number };
+	} | null;
 
 	/**
 	 * 範囲選択中の矩形（SVG座標）。

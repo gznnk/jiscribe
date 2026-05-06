@@ -4,10 +4,10 @@ import React, { memo } from "react";
 import { objectRegistry } from "../../../../registry/ObjectRegistry";
 import type { ObjectType } from "../../../../schemas/objects/types/ObjectType";
 import { createObjectDoc } from "../../../../schemas/objects/utils/createObjectDoc";
+import type { CanvasControllerState } from "../../../CanvasTypes";
 
 type DragGhostProps = {
-	pendingShapeType: ObjectType | null;
-	ghostPosition: Point | null;
+	shapeLibraryDrag: CanvasControllerState["shapeLibraryDrag"];
 };
 
 const GHOST_ID = "drag-ghost";
@@ -30,17 +30,14 @@ const createGhostElement = (
 	return React.createElement(component, ghostState);
 };
 
-const DragGhostComponent: React.FC<DragGhostProps> = ({
-	pendingShapeType,
-	ghostPosition,
-}) => {
-	if (!pendingShapeType || !ghostPosition) {
+const DragGhostComponent: React.FC<DragGhostProps> = ({ shapeLibraryDrag }) => {
+	if (!shapeLibraryDrag) {
 		return null;
 	}
 
 	return (
 		<g opacity={0.5} pointerEvents="none">
-			{createGhostElement(pendingShapeType, ghostPosition)}
+			{createGhostElement(shapeLibraryDrag.shapeType, shapeLibraryDrag.ghostPosition)}
 		</g>
 	);
 };

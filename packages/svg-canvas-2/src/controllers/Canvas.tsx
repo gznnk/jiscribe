@@ -67,9 +67,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 			edgeScrollEnabled: false,
 			lastCommitTime: 0,
 			contextMenuPosition: null,
-			pendingShapeType: null,
-			ghostPosition: null,
-			ghostShapeDimensions: null,
+			shapeLibraryDrag: null,
 			areaSelection: null,
 			objectMenuOpenId: null,
 			multiSelectGroup: null,
@@ -215,10 +213,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 						objects={state.objects}
 						zoom={state.viewport.zoom}
 					/>
-					<DragGhost
-						pendingShapeType={state.pendingShapeType}
-						ghostPosition={state.ghostPosition}
-					/>
+					<DragGhost shapeLibraryDrag={state.shapeLibraryDrag} />
 					<DrawingPreviewOverlay
 						activeDrawingTool={state.activeDrawingTool}
 						drawingPreview={state.drawingPreview}
