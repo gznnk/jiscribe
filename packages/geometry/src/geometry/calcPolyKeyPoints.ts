@@ -1,6 +1,6 @@
+import { calcPolyBoundingBox } from "./calcPolyBoundingBox";
 import type { FrameKeyPoints } from "../types/FrameKeyPoints";
 import type { Point } from "../types/Point";
-import { calcPolyBoundingBox } from "./calcPolyBoundingBox";
 
 /**
  * Poly系オブジェクトの points 配列から FrameKeyPoints を計算する。
