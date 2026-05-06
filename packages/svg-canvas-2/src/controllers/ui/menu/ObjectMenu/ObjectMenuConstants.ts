@@ -1,4 +1,9 @@
 /**
+ * ObjectMenu およびすべてのサブメニューで共通使用するボックスシャドウ。
+ */
+export const MENU_BOX_SHADOW = "0 2px 8px rgba(0, 0, 0, 0.15)";
+
+/**
  * Tailwind CSS ベースのプリセットカラー。
  * ColorPickerGrid で使用する 4×7 = 28 色のカラーパレット。
  */

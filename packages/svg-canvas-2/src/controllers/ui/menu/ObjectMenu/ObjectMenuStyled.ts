@@ -1,5 +1,7 @@
 import styled from "@emotion/styled";
 
+import { MENU_BOX_SHADOW } from "./ObjectMenuConstants";
+
 /**
  * ObjectMenu の外枠コンテナ。
  * ScrollSyncedOverlay 内でキャンバス座標に配置される。
@@ -27,7 +29,7 @@ export const ObjectMenuContainer = styled.div`
 	background-color: #ffffff;
 	border: 1px solid #e5e7eb;
 	border-radius: 8px;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+	box-shadow: ${MENU_BOX_SHADOW};
 	pointer-events: auto;
 	user-select: none;
 `;
@@ -108,21 +110,5 @@ export const DropdownPanel = styled.div<{ placement?: "down" | "up" }>`
 	background-color: #ffffff;
 	border: 1px solid #e5e7eb;
 	border-radius: 6px;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-`;
-
-/**
- * ドロップダウンカラーパネル。DropdownPanel の幅広版。
- * カラーピッカーグリッドを表示するために使用する。
- */
-export const DropdownColorPanel = styled.div<{ placement?: "down" | "up" }>`
-	position: absolute;
-	left: 50%;
-	${(props) =>
-		props.placement === "up"
-			? "bottom: 40px;"
-			: "top: 40px;"}
-	transform: translateX(-50%);
-	z-index: 1100;
-	pointer-events: auto;
+	box-shadow: ${MENU_BOX_SHADOW};
 `;

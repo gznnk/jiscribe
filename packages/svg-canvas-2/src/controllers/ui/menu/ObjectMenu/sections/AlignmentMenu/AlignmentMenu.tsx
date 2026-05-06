@@ -1,6 +1,6 @@
 ﻿import { memo, useRef } from "react";
 
-import { AlignmentDropdownPanel, AlignmentRow } from "./AlignmentMenuStyled";
+import { AlignmentMenuContent, AlignmentRow } from "./AlignmentMenuStyled";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import type { TextStyleState } from "../../../../../../states/objects/base/TextStyleState";
 import { AlignBottomIcon } from "../../../../icons/AlignBottomIcon";
@@ -10,7 +10,11 @@ import { AlignMiddleIcon } from "../../../../icons/AlignMiddleIcon";
 import { AlignRightIcon } from "../../../../icons/AlignRightIcon";
 import { AlignTopIcon } from "../../../../icons/AlignTopIcon";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
-import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
+import {
+	ObjectMenuButton,
+	DropdownPanel,
+	MenuItemPositioner,
+} from "../../ObjectMenuStyled";
 
 const SECTION_ID = "alignment";
 
@@ -68,34 +72,36 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 				<AlignLeftIcon />
 			</ObjectMenuButton>
 			{isOpen && (
-				<AlignmentDropdownPanel placement={placement}>
-					<AlignmentRow>
-						{horizontalAlignments.map(({ value, Icon, title }) => (
-							<ObjectMenuButton
-								key={value}
-								isActive={textAlign === value}
-								data-kind="object-menu"
-								data-id={`object-menu:set:textAlign:${value}`}
-								title={title}
-							>
-								<Icon />
-							</ObjectMenuButton>
-						))}
-					</AlignmentRow>
-					<AlignmentRow>
-						{verticalAlignments.map(({ value, Icon, title }) => (
-							<ObjectMenuButton
-								key={value}
-								isActive={verticalAlign === value}
-								data-kind="object-menu"
-								data-id={`object-menu:set:verticalAlign:${value}`}
-								title={title}
-							>
-								<Icon />
-							</ObjectMenuButton>
-						))}
-					</AlignmentRow>
-				</AlignmentDropdownPanel>
+				<DropdownPanel placement={placement}>
+					<AlignmentMenuContent>
+						<AlignmentRow>
+							{horizontalAlignments.map(({ value, Icon, title }) => (
+								<ObjectMenuButton
+									key={value}
+									isActive={textAlign === value}
+									data-kind="object-menu"
+									data-id={`object-menu:set:textAlign:${value}`}
+									title={title}
+								>
+									<Icon />
+								</ObjectMenuButton>
+							))}
+						</AlignmentRow>
+						<AlignmentRow>
+							{verticalAlignments.map(({ value, Icon, title }) => (
+								<ObjectMenuButton
+									key={value}
+									isActive={verticalAlign === value}
+									data-kind="object-menu"
+									data-id={`object-menu:set:verticalAlign:${value}`}
+									title={title}
+								>
+									<Icon />
+								</ObjectMenuButton>
+							))}
+						</AlignmentRow>
+					</AlignmentMenuContent>
+				</DropdownPanel>
 			)}
 		</MenuItemPositioner>
 	);

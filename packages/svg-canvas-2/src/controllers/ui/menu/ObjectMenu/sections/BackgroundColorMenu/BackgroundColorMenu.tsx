@@ -6,7 +6,7 @@ import { ColorPickerGrid } from "../../common/ColorPickerGrid/ColorPickerGrid";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
 import {
 	ObjectMenuButton,
-	DropdownColorPanel,
+	DropdownPanel,
 	MenuItemPositioner,
 } from "../../ObjectMenuStyled";
 
@@ -57,9 +57,9 @@ const BackgroundColorMenuComponent: React.FC<BackgroundColorMenuProps> = ({
 				<ColorPreviewIcon color={currentColor} title="Background Color" />
 			</ObjectMenuButton>
 			{isOpen && (
-				<DropdownColorPanel placement={placement}>
+				<DropdownPanel placement={placement}>
 					<ColorPickerGrid currentColor={currentColor} property="fill" />
-				</DropdownColorPanel>
+				</DropdownPanel>
 			)}
 		</MenuItemPositioner>
 	);

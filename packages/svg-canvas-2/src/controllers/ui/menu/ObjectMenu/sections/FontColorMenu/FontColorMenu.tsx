@@ -7,7 +7,7 @@ import { ColorPickerGrid } from "../../common/ColorPickerGrid/ColorPickerGrid";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
 import {
 	ObjectMenuButton,
-	DropdownColorPanel,
+	DropdownPanel,
 	MenuItemPositioner,
 } from "../../ObjectMenuStyled";
 
@@ -54,9 +54,9 @@ const FontColorMenuComponent: React.FC<FontColorMenuProps> = ({
 				<FontColorIcon underlineColor={currentColor} />
 			</ObjectMenuButton>
 			{isOpen && (
-				<DropdownColorPanel placement={placement}>
+				<DropdownPanel placement={placement}>
 					<ColorPickerGrid currentColor={currentColor} property="fontColor" />
-				</DropdownColorPanel>
+				</DropdownPanel>
 			)}
 		</MenuItemPositioner>
 	);
