@@ -58,6 +58,8 @@ function handleObjectClick(
 		multiSelectGroup,
 		// コネクター選択を解除して排他を保証
 		selectedConnectorId: null,
+		// 選択変化時にサブメニューを閉じる
+		objectMenuOpenId: null,
 	};
 }
 
