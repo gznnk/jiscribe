@@ -52,6 +52,7 @@ export const RedoCommand: Command = {
 			contextMenuPosition: null,
 			pendingShapeType: null,
 			ghostPosition: null,
+			ghostShapeDimensions: null,
 			areaSelection: null,
 			objectMenuOpenId: null,
 			multiSelectGroup: null,

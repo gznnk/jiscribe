@@ -69,6 +69,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 			contextMenuPosition: null,
 			pendingShapeType: null,
 			ghostPosition: null,
+			ghostShapeDimensions: null,
 			areaSelection: null,
 			objectMenuOpenId: null,
 			multiSelectGroup: null,

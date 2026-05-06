@@ -137,6 +137,13 @@ export type CanvasControllerState = CanvasState & {
 	ghostPosition: Point | null;
 
 	/**
+	 * ドラッグゴーストの図形サイズ（半幅・半高さ、SVG座標）。
+	 * 全図形タイプが中央基準配置のため half サイズで保持する。
+	 * dragStart で計算・キャッシュし、dragEnd で null にクリアする。
+	 */
+	ghostShapeDimensions: { halfWidth: number; halfHeight: number } | null;
+
+	/**
 	 * 範囲選択中の矩形（SVG座標）。
 	 * Canvas上で左ドラッグ時に設定され、dragEnd / Escape で null にクリアする。
 	 */
