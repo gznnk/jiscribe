@@ -1,9 +1,8 @@
-import * as vscode from "vscode";
-
 import {
-	parseAndValidateCanvasDoc,
 	CanvasValidationError,
+	parseAndValidateCanvasDoc,
 } from "@workspace/svg-canvas-2";
+import * as vscode from "vscode";
 
 export class DiagnosticProvider {
 	private collection: vscode.DiagnosticCollection;
@@ -45,7 +44,7 @@ export class DiagnosticProvider {
 			let json;
 			try {
 				json = JSON.parse(text);
-			} catch (e) {
+			} catch {
 				// Let VS Code's built-in JSON tools handle basic syntax errors
 				return;
 			}

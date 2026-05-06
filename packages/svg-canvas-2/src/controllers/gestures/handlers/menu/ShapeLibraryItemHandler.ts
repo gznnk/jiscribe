@@ -1,12 +1,22 @@
+import type { BoundingBox } from "@workspace/geometry";
+
 import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../../../registry/GestureHandlerRegistryTypes";
 import { objectRegistry } from "../../../../registry/ObjectRegistry";
+import { STICKY_DOC_DEFAULTS } from "../../../../schemas/objects/annotations/StickyDoc";
+import { ELLIPSE_DOC_DEFAULTS } from "../../../../schemas/objects/primitives/EllipseDoc";
+import { RECT_DOC_DEFAULTS } from "../../../../schemas/objects/primitives/RectDoc";
 import type { ObjectType } from "../../../../schemas/objects/types/ObjectType";
 import { createObjectDoc } from "../../../../schemas/objects/utils/createObjectDoc";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
+import {
+	SNAP_THRESHOLD_PX,
+	buildSnapFeedback,
+	findSnap,
+} from "../objects/utils/snap/findSnap";
 
 /**
  * targetId から shapeType を抽出する。
@@ -15,6 +25,34 @@ import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 const parseShapeType = (targetId: string): ObjectType => {
 	const parts = targetId.split(":");
 	return parts[1] as ObjectType;
+};
+
+/**
+ * 図形タイプから中央基準の半サイズを返す。
+ * dragStart 時に一度だけ計算してキャッシュするためのヘルパー。
+ */
+const calcShapeDimensions = (
+	type: ObjectType,
+): { halfWidth: number; halfHeight: number } => {
+	switch (type) {
+		case "rect":
+			return {
+				halfWidth: RECT_DOC_DEFAULTS.width / 2,
+				halfHeight: RECT_DOC_DEFAULTS.height / 2,
+			};
+		case "ellipse":
+			return {
+				halfWidth: ELLIPSE_DOC_DEFAULTS.rx,
+				halfHeight: ELLIPSE_DOC_DEFAULTS.ry,
+			};
+		case "sticky":
+			return {
+				halfWidth: STICKY_DOC_DEFAULTS.width / 2,
+				halfHeight: STICKY_DOC_DEFAULTS.height / 2,
+			};
+		default:
+			throw new Error(`Unsupported object type for menu: ${type}`);
+	}
 };
 
 /**
@@ -97,34 +135,81 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 					selectedConnectorId: null,
 					multiSelectGroup: null,
 					objectMenuOpenId: null,
-					pendingShapeType: shapeType,
-					ghostPosition: event.last,
+					shapeLibraryDrag: {
+						shapeType,
+						ghostPosition: event.last,
+						shapeDimensions: calcShapeDimensions(shapeType),
+					},
 					edgeScrollEnabled: true,
 				};
 			}
 
 			case "drag": {
-				// ゴースト位置を現在のポインタ位置で更新する
+				const snapCandidates = state.eventStartSnapshot?.snapCandidates;
+				const drag = state.shapeLibraryDrag;
+
+				if (!snapCandidates || !drag) {
+					return {
+						...state,
+						shapeLibraryDrag: drag
+							? { ...drag, ghostPosition: event.last }
+							: null,
+					};
+				}
+
+				const pos = event.last;
+				const { halfWidth, halfHeight } = drag.shapeDimensions;
+				const rawBBox: BoundingBox = {
+					left: pos.x - halfWidth,
+					right: pos.x + halfWidth,
+					top: pos.y - halfHeight,
+					bottom: pos.y + halfHeight,
+				};
+
+				const zoom = state.viewport.zoom;
+				const result = findSnap(
+					snapCandidates,
+					SNAP_THRESHOLD_PX / zoom,
+					[rawBBox.left, rawBBox.right],
+					[rawBBox.top, rawBBox.bottom],
+				);
+
+				const actualBBox: BoundingBox = {
+					left: rawBBox.left + result.delta.x,
+					right: rawBBox.right + result.delta.x,
+					top: rawBBox.top + result.delta.y,
+					bottom: rawBBox.bottom + result.delta.y,
+				};
+
 				return {
 					...state,
-					ghostPosition: event.last,
+					shapeLibraryDrag: {
+						...drag,
+						ghostPosition: {
+							x: pos.x + result.delta.x,
+							y: pos.y + result.delta.y,
+						},
+					},
+					snapFeedback: buildSnapFeedback(
+						actualBBox,
+						result.xResult,
+						result.yResult,
+						snapCandidates,
+					),
 				};
 			}
 
 			case "dragEnd": {
-				// ドロップ位置に配置、pendingShapeType とゴーストをクリアする
-				if (!state.pendingShapeType) {
+				// 最後にスナップ済みの ghostPosition を配置座標として使用する
+				const drag = state.shapeLibraryDrag;
+				if (!drag) {
 					return state;
 				}
-				const nextState = addObjectToState(
-					state,
-					state.pendingShapeType,
-					event.last,
-				);
+				const position = drag.ghostPosition ?? event.last;
+				const nextState = addObjectToState(state, drag.shapeType, position);
 				return {
 					...nextState,
-					pendingShapeType: null,
-					ghostPosition: null,
+					shapeLibraryDrag: null,
 					edgeScrollEnabled: false,
 				};
 			}

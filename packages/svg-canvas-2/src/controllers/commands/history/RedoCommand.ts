@@ -50,8 +50,7 @@ export const RedoCommand: Command = {
 			edgeScrollEnabled: false,
 			lastCommitTime: state.lastCommitTime, // Don't update - this is history restoration, not a new commit
 			contextMenuPosition: null,
-			pendingShapeType: null,
-			ghostPosition: null,
+			shapeLibraryDrag: null,
 			areaSelection: null,
 			objectMenuOpenId: null,
 			multiSelectGroup: null,
