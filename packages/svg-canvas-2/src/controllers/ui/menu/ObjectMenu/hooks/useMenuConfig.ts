@@ -8,6 +8,11 @@ import type { MenuSection, MenuSectionGroup } from "../ObjectMenuTypes";
 const sectionKey = (section: MenuSection): string =>
 	section.type === "custom" ? section.id : section.type;
 
+/**
+ * 複数オブジェクト型のセクションリストを AND 結合する。
+ * 全型に共通するセクションのみを残す。
+ * borderStyle は全型が radius: true の場合のみ radius を有効にする。
+ */
 const mergeSections = (arrays: MenuSection[][]): MenuSection[] => {
 	if (arrays.length === 1) return arrays[0];
 
@@ -18,6 +23,7 @@ const mergeSections = (arrays: MenuSection[][]): MenuSection[] => {
 		})
 		.map((section) => {
 			if (section.type !== "borderStyle") return section;
+			// radius は全型が true の場合のみ表示する
 			const allRadius = arrays.every((arr) => {
 				const found = arr.find((s) => s.type === "borderStyle");
 				return found?.type === "borderStyle" && found.radius === true;
@@ -26,6 +32,10 @@ const mergeSections = (arrays: MenuSection[][]): MenuSection[] => {
 		});
 };
 
+/**
+ * 複数オブジェクト型のグループリストを AND 結合する。
+ * 全型に共通する id のグループのみを残し、各グループ内のセクションも AND 結合する。
+ */
 const mergeGroups = (arrays: MenuSectionGroup[][]): MenuSectionGroup[] => {
 	if (arrays.length === 0) return [];
 	if (arrays.length === 1) return arrays[0];
@@ -43,12 +53,20 @@ const mergeGroups = (arrays: MenuSectionGroup[][]): MenuSectionGroup[] => {
 		.filter((group) => group.sections.length > 0);
 };
 
+/**
+ * 選択中オブジェクトから表示すべきメニューグループを計算する。
+ *
+ * グループオブジェクトが選択されている場合は子孫の実オブジェクト型を展開し、
+ * 複数の型が混在する場合は共通するグループ・セクションのみを表示する（AND 結合）。
+ */
 export const getMenuGroups = (
 	state: CanvasControllerState,
 ): MenuSectionGroup[] => {
 	const { selectedIds, objects } = state;
 	if (selectedIds.length === 0) return [];
 
+	// 選択中オブジェクトに含まれる実オブジェクト型を収集する。
+	// group型は子孫の実オブジェクト型に展開する。
 	const types = new Set<string>();
 	for (const id of selectedIds) {
 		const obj = objects[id];
@@ -65,6 +83,7 @@ export const getMenuGroups = (
 
 	if (types.size === 0) return [];
 
+	// 各型の代表インスタンスでメニューグループを取得し、AND 結合する
 	const groupArrays = [...types].map((type) => {
 		const representative = Object.values(objects).find((o) => o?.type === type);
 		return representative ? objectMenuRegistry.getGroups(type, representative) : [];
