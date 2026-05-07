@@ -1,5 +1,4 @@
-﻿import { calculateGroupOrientedBounds } from "../utils/calculateGroupOrientedBounds";
-import { objectRegistry } from "../../registry/ObjectRegistry";
+﻿import { objectRegistry } from "../../registry/ObjectRegistry";
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
 import type { ConnectorDoc } from "../../schemas/objects/connections/ConnectorDoc";
@@ -7,6 +6,7 @@ import type { GroupDoc } from "../../schemas/objects/primitives/GroupDoc";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { GroupState } from "../objects/primitives/group/GroupState";
+import { calculateGroupOrientedBounds } from "../utils/calculateGroupOrientedBounds";
 
 /**
  * Converts CanvasDoc (tree structure) to CanvasState (flat structure).
