@@ -33,7 +33,6 @@ describe("CanvasMapper", () => {
 				geometry: "none",
 				transform: true,
 			},
-			menuConfig: {}, // Dummy menuConfig
 			moveByDelta: (state) => state, // Dummy moveByDelta
 			transformByGroup: (state) => state, // Dummy transformByGroup
 			rotateByGroup: (state) => state, // Dummy rotateByGroup
@@ -49,7 +48,6 @@ describe("CanvasMapper", () => {
 				stroke: true,
 				fill: true,
 			},
-			menuConfig: {}, // Dummy menuConfig
 			moveByDelta: (state) => state, // Dummy moveByDelta
 			transformByGroup: (state) => state, // Dummy transformByGroup
 			rotateByGroup: (state) => state, // Dummy rotateByGroup

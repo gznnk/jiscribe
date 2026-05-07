@@ -5,17 +5,22 @@ import { Polygon } from "../../presentations/objects/primitives/Polygon";
 import { Polyline } from "../../presentations/objects/primitives/Polyline";
 import { Rect } from "../../presentations/objects/primitives/Rect";
 import { objectRegistry } from "../../registry/ObjectRegistry";
+import type { ObjectDefinition } from "../../registry/ObjectRegistryTypes";
 import { StickyFeatures } from "../../schemas/objects/annotations/StickyDoc";
+import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
 import { ConnectorFeatures } from "../../schemas/objects/connections/ConnectorDoc";
 import { EllipseFeatures } from "../../schemas/objects/primitives/EllipseDoc";
 import { GroupFeatures } from "../../schemas/objects/primitives/GroupDoc";
 import { PolygonFeatures } from "../../schemas/objects/primitives/PolygonDoc";
 import { PolylineFeatures } from "../../schemas/objects/primitives/PolylineDoc";
 import { RectFeatures } from "../../schemas/objects/primitives/RectDoc";
+import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 import {
 	stickyToDoc,
 	stickyToState,
 } from "../../states/objects/annotations/sticky/StickyMapper";
+import type { StickyState } from "../../states/objects/annotations/sticky/StickyState";
+import type { ObjectState } from "../../states/objects/base/ObjectState";
 import {
 	connectorToDoc,
 	connectorToState,
@@ -75,117 +80,195 @@ import {
 	rotateByGroup as rectRotateByGroup,
 	transformByGroup as rectTransformByGroup,
 } from "../gestures/handlers/objects/primitives/RectController";
-import { createMenuConfig } from "../ui/menu/ObjectMenu/utils/createMenuConfig";
+import { menuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
+import type { MenuSectionFactory } from "../ui/menu/ObjectMenu/ObjectMenuTypes";
 
 /**
- * Initialize the ObjectRegistry with all object type definitions.
- * Registers mappers, event handlers, features, and components for each object type.
+ * Initialize the ObjectRegistry and MenuRegistry with all object type definitions.
  */
 export const initializeObjectRegistry = (): void => {
 	objectRegistry.clear();
+	menuRegistry.clear();
 
-	objectRegistry.register("rect", {
-		features: RectFeatures,
-		menuConfig: createMenuConfig(RectFeatures),
-		mapper: {
-			toDoc: rectToDoc,
-			toState: rectToState,
+	registerObject(
+		"rect",
+		{
+			features: RectFeatures,
+			mapper: { toDoc: rectToDoc, toState: rectToState },
+			component: Rect,
+			moveByDelta: rectMoveByDelta,
+			transformByGroup: rectTransformByGroup,
+			rotateByGroup: rectRotateByGroup,
 		},
-		component: Rect,
-		moveByDelta: rectMoveByDelta,
-		transformByGroup: rectTransformByGroup,
-		rotateByGroup: rectRotateByGroup,
-	});
+		(_state) => [
+			{
+				id: "style",
+				sections: [
+					{ type: "backgroundColor" },
+					{ type: "borderColor" },
+					{ type: "borderStyle", radius: true },
+				],
+			},
+			{
+				id: "text",
+				sections: [{ type: "fontStyle" }, { type: "textAlignment" }],
+			},
+			{
+				id: "transform",
+				sections: [{ type: "aspectRatio" }],
+			},
+		],
+	);
 
-	objectRegistry.register("ellipse", {
-		features: EllipseFeatures,
-		menuConfig: createMenuConfig(EllipseFeatures),
-		mapper: {
-			toDoc: ellipseToDoc,
-			toState: ellipseToState,
+	registerObject(
+		"ellipse",
+		{
+			features: EllipseFeatures,
+			mapper: { toDoc: ellipseToDoc, toState: ellipseToState },
+			component: Ellipse,
+			moveByDelta: ellipseMoveByDelta,
+			transformByGroup: ellipseTransformByGroup,
+			rotateByGroup: ellipseRotateByGroup,
 		},
-		component: Ellipse,
-		moveByDelta: ellipseMoveByDelta,
-		transformByGroup: ellipseTransformByGroup,
-		rotateByGroup: ellipseRotateByGroup,
-	});
+		(_state) => [
+			{
+				id: "style",
+				sections: [
+					{ type: "backgroundColor" },
+					{ type: "borderColor" },
+					{ type: "borderStyle", radius: false },
+				],
+			},
+			{
+				id: "text",
+				sections: [{ type: "fontStyle" }, { type: "textAlignment" }],
+			},
+			{
+				id: "transform",
+				sections: [{ type: "aspectRatio" }],
+			},
+		],
+	);
 
-	objectRegistry.register("group", {
-		features: GroupFeatures,
-		menuConfig: {}, // Group has no menu
-		mapper: {
-			toDoc: groupToDoc,
-			toState: groupToState,
+	registerObject(
+		"group",
+		{
+			features: GroupFeatures,
+			mapper: { toDoc: groupToDoc, toState: groupToState },
+			component: () => null,
+			moveByDelta: groupMoveByDelta,
+			transformByGroup: groupTransformByGroup,
+			rotateByGroup: groupRotateByGroup,
 		},
-		component: () => null, // Groupはコンポーネントを持たない（再帰的に描画される）
-		moveByDelta: groupMoveByDelta,
-		transformByGroup: groupTransformByGroup,
-		rotateByGroup: groupRotateByGroup,
-	});
+		(_state) => [
+			{
+				id: "transform",
+				sections: [{ type: "aspectRatio" }],
+			},
+		],
+	);
 
-	objectRegistry.register("polygon", {
-		features: PolygonFeatures,
-		menuConfig: createMenuConfig(PolygonFeatures),
-		mapper: {
-			toDoc: polygonToDoc,
-			toState: polygonToState,
+	registerObject(
+		"polygon",
+		{
+			features: PolygonFeatures,
+			mapper: { toDoc: polygonToDoc, toState: polygonToState },
+			component: Polygon,
+			moveByDelta: polygonMoveByDelta,
+			transformByGroup: polygonTransformByGroup,
+			rotateByGroup: polygonRotateByGroup,
 		},
-		component: Polygon,
-		moveByDelta: polygonMoveByDelta,
-		transformByGroup: polygonTransformByGroup,
-		rotateByGroup: polygonRotateByGroup,
-	});
+		(_state) => [
+			{
+				id: "style",
+				sections: [
+					{ type: "backgroundColor" },
+					{ type: "borderColor" },
+					{ type: "borderStyle", radius: false },
+				],
+			},
+		],
+	);
 
-	objectRegistry.register("polyline", {
-		features: PolylineFeatures,
-		menuConfig: createMenuConfig(PolylineFeatures, {
-			aspectRatio: false,
-			arrowHead: true,
-			lineStyle: true,
-			lineColor: true,
-			borderColor: false,
-			borderStyle: undefined,
-		}),
-		mapper: {
-			toDoc: polylineToDoc,
-			toState: polylineToState,
+	registerObject(
+		"polyline",
+		{
+			features: PolylineFeatures,
+			mapper: { toDoc: polylineToDoc, toState: polylineToState },
+			component: Polyline,
+			moveByDelta: polylineMoveByDelta,
+			transformByGroup: polylineTransformByGroup,
+			rotateByGroup: polylineRotateByGroup,
 		},
-		component: Polyline,
-		moveByDelta: polylineMoveByDelta,
-		transformByGroup: polylineTransformByGroup,
-		rotateByGroup: polylineRotateByGroup,
-	});
+		(_state) => [
+			{
+				id: "arrowHead",
+				sections: [{ type: "arrowHead" }],
+			},
+			{
+				id: "line",
+				sections: [{ type: "lineColor" }, { type: "lineStyle" }],
+			},
+		],
+	);
 
-	objectRegistry.register("connector", {
-		features: ConnectorFeatures,
-		menuConfig: createMenuConfig(ConnectorFeatures, {
-			aspectRatio: false,
-			arrowHead: true,
-			lineStyle: true,
-			lineColor: true,
-			borderColor: false,
-			borderStyle: undefined,
-		}),
-		mapper: {
-			toDoc: connectorToDoc,
-			toState: connectorToState,
+	registerObject(
+		"connector",
+		{
+			features: ConnectorFeatures,
+			mapper: { toDoc: connectorToDoc, toState: connectorToState },
+			component: Connector,
+			moveByDelta: connectorMoveByDelta,
+			transformByGroup: connectorTransformByGroup,
+			rotateByGroup: connectorRotateByGroup,
 		},
-		component: Connector,
-		moveByDelta: connectorMoveByDelta,
-		transformByGroup: connectorTransformByGroup,
-		rotateByGroup: connectorRotateByGroup,
-	});
+		(_state) => [
+			{
+				id: "arrowHead",
+				sections: [{ type: "arrowHead" }],
+			},
+			{
+				id: "line",
+				sections: [{ type: "lineColor" }, { type: "lineStyle" }],
+			},
+		],
+	);
 
-	objectRegistry.register("sticky", {
-		features: StickyFeatures,
-		menuConfig: createMenuConfig(StickyFeatures),
-		mapper: {
-			toDoc: stickyToDoc,
-			toState: stickyToState,
+	registerObject(
+		"sticky",
+		{
+			features: StickyFeatures,
+			mapper: { toDoc: stickyToDoc, toState: stickyToState },
+			component: Sticky,
+			moveByDelta: stickyMoveByDelta,
+			transformByGroup: stickyTransformByGroup,
+			rotateByGroup: stickyRotateByGroup,
 		},
-		component: Sticky,
-		moveByDelta: stickyMoveByDelta,
-		transformByGroup: stickyTransformByGroup,
-		rotateByGroup: stickyRotateByGroup,
-	});
+		(_state: StickyState) => [
+			{
+				id: "style",
+				sections: [{ type: "backgroundColor" }],
+			},
+			{
+				id: "text",
+				sections: [{ type: "fontStyle" }, { type: "textAlignment" }],
+			},
+			{
+				id: "transform",
+				sections: [{ type: "aspectRatio" }],
+			},
+		],
+	);
+};
+
+export const registerObject = <
+	TDoc extends ObjectDoc,
+	TState extends ObjectState,
+>(
+	type: ObjectType,
+	definition: ObjectDefinition<TDoc, TState>,
+	menuFactory: MenuSectionFactory<TState>,
+): void => {
+	objectRegistry.register(type, definition);
+	menuRegistry.register(type, menuFactory);
 };

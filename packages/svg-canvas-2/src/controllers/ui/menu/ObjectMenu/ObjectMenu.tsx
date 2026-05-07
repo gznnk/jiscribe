@@ -1,12 +1,13 @@
-import { memo, useRef } from "react";
+import React, { memo, useRef } from "react";
 
-import { useMenuConfig } from "./hooks/useMenuConfig";
+import { useMenuGroups } from "./hooks/useMenuConfig";
 import { useObjectMenuPosition } from "./hooks/useObjectMenuPosition";
 import {
 	ObjectMenuContainer,
 	ObjectMenuDivider,
 	ObjectMenuWrapper,
 } from "./ObjectMenuStyled";
+import type { MenuSection, MenuSectionGroup, MenuSectionProps } from "./ObjectMenuTypes";
 import { AlignmentMenu } from "./sections/AlignmentMenu";
 import { ArrowHeadMenu } from "./sections/ArrowHeadMenu";
 import { BackgroundColorMenu } from "./sections/BackgroundColorMenu";
@@ -20,7 +21,6 @@ import { LineColorMenu } from "./sections/LineColorMenu";
 import { LineStyleMenu } from "./sections/LineStyleMenu";
 import { StackOrderMenu } from "./sections/StackOrderMenu";
 import { StrokeColorMenu } from "./sections/StrokeColorMenu";
-import { objectRegistry } from "../../../../registry/ObjectRegistry";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { isSameGroupSelection } from "../../../utils/isSameGroupSelection";
 
@@ -29,12 +29,110 @@ type ObjectMenuProps = {
 	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
 };
 
+const renderSection = (
+	section: MenuSection,
+	props: MenuSectionProps,
+): React.ReactNode => {
+	const { canvasState, onPropertyUpdate } = props;
+	switch (section.type) {
+		case "arrowHead":
+			return <ArrowHeadMenu key="arrowHead" canvasState={canvasState} />;
+		case "lineColor":
+			return <LineColorMenu key="lineColor" canvasState={canvasState} />;
+		case "lineStyle":
+			return (
+				<LineStyleMenu
+					key="lineStyle"
+					canvasState={canvasState}
+					onPropertyUpdate={onPropertyUpdate}
+				/>
+			);
+		case "backgroundColor":
+			return (
+				<BackgroundColorMenu key="backgroundColor" canvasState={canvasState} />
+			);
+		case "borderColor":
+			return <StrokeColorMenu key="borderColor" canvasState={canvasState} />;
+		case "borderStyle":
+			return (
+				<BorderStyleMenu
+					key="borderStyle"
+					canvasState={canvasState}
+					showRadius={section.radius}
+					onPropertyUpdate={onPropertyUpdate}
+				/>
+			);
+		case "fontStyle":
+			return (
+				<React.Fragment key="fontStyle">
+					<FontSizeMenu
+						canvasState={canvasState}
+						onPropertyUpdate={onPropertyUpdate}
+					/>
+					<FontColorMenu canvasState={canvasState} />
+					<BoldMenu canvasState={canvasState} />
+				</React.Fragment>
+			);
+		case "textAlignment":
+			return (
+				<AlignmentMenu key="textAlignment" canvasState={canvasState} />
+			);
+		case "aspectRatio":
+			return (
+				<KeepAspectRatioMenu key="aspectRatio" canvasState={canvasState} />
+			);
+		case "stackOrder":
+			return <StackOrderMenu key="stackOrder" canvasState={canvasState} />;
+		case "group":
+			return <GroupMenu key="group" canvasState={canvasState} />;
+		case "custom":
+			return (
+				<section.component
+					key={section.id}
+					canvasState={canvasState}
+					onPropertyUpdate={onPropertyUpdate}
+				/>
+			);
+	}
+};
+
+const buildSystemGroups = (
+	canvasState: CanvasControllerState,
+): MenuSectionGroup[] => {
+	const systemGroups: MenuSectionGroup[] = [];
+
+	if (isSameGroupSelection(canvasState)) {
+		systemGroups.push({
+			id: "system-stack-order",
+			sections: [{ type: "stackOrder" }],
+		});
+	}
+
+	if (canvasState.multiSelectGroup) {
+		systemGroups.push({
+			id: "system-aspect-ratio",
+			sections: [{ type: "aspectRatio" }],
+		});
+	}
+
+	const { selectedIds, objects } = canvasState;
+	const singleSelected =
+		selectedIds.length === 1 ? objects[selectedIds[0]] : undefined;
+	const shouldShowGroup =
+		selectedIds.length > 1 || singleSelected?.type === "group";
+	if (shouldShowGroup) {
+		systemGroups.push({
+			id: "system-group",
+			sections: [{ type: "group" }],
+		});
+	}
+
+	return systemGroups;
+};
+
 /**
  * 選択中オブジェクトの下に表示されるフローティングメニュー。
  * ScrollSyncedOverlay 内に配置され、キャンバススクロールに追従する。
- *
- * Based on svg-canvas's DiagramMenu but adapted for svg-canvas-2 architecture.
- * Uses ObjectMenuConfig to control which sections are displayed.
  */
 const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 	canvasState,
@@ -42,166 +140,27 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 }) => {
 	const menuRef = useRef<HTMLDivElement>(null);
 	const { shouldRender, x, y } = useObjectMenuPosition(canvasState, menuRef);
-	const menuConfig = useMenuConfig(canvasState);
+	const objectGroups = useMenuGroups(canvasState);
+	const systemGroups = buildSystemGroups(canvasState);
+	const allGroups = [...objectGroups, ...systemGroups];
 
-	if (!shouldRender) return null;
+	if (!shouldRender || allGroups.length === 0) return null;
 
-	const { selectedIds, objects } = canvasState;
+	const sectionProps: MenuSectionProps = { canvasState, onPropertyUpdate };
 
-	// Get single selected object (if only one is selected)
-	const singleSelectedId =
-		selectedIds.length === 1 ? selectedIds[0] : undefined;
-	const singleSelectedObject = singleSelectedId
-		? objects[singleSelectedId]
-		: undefined;
-
-	// Array to hold the menu item components
-	const menuItemComponents: React.ReactNode[] = [];
-
-	// Arrow head section
-	if (menuConfig.arrowHead) {
-		menuItemComponents.push(
-			<ArrowHeadMenu key="Arrow" canvasState={canvasState} />,
-		);
-		menuItemComponents.push(<ObjectMenuDivider key="ArrowDivider" />);
-	}
-
-	// Line appearance section
-	if (menuConfig.lineColor || menuConfig.lineStyle) {
-		if (menuConfig.lineColor) {
-			menuItemComponents.push(
-				<LineColorMenu key="LineColor" canvasState={canvasState} />,
-			);
+	const items: React.ReactNode[] = [];
+	allGroups.forEach((group, gi) => {
+		group.sections.forEach((section) => {
+			items.push(renderSection(section, sectionProps));
+		});
+		if (gi < allGroups.length - 1) {
+			items.push(<ObjectMenuDivider key={`sep-${gi}`} />);
 		}
-		if (menuConfig.lineStyle) {
-			menuItemComponents.push(
-				<LineStyleMenu
-					key="LineStyle"
-					canvasState={canvasState}
-					onPropertyUpdate={onPropertyUpdate}
-				/>,
-			);
-		}
-		menuItemComponents.push(<ObjectMenuDivider key="LineSectionDivider" />);
-	}
-
-	// Shape style section (backgroundColor, borderColor, and borderStyle)
-	if (menuConfig.backgroundColor) {
-		menuItemComponents.push(
-			<BackgroundColorMenu key="BgColor" canvasState={canvasState} />,
-		);
-	}
-
-	if (menuConfig.borderColor) {
-		menuItemComponents.push(
-			<StrokeColorMenu key="BorderColor" canvasState={canvasState} />,
-		);
-	}
-
-	if (menuConfig.borderStyle) {
-		menuItemComponents.push(
-			<BorderStyleMenu
-				key="BorderStyle"
-				canvasState={canvasState}
-				showRadius={menuConfig.borderStyle.radius}
-				onPropertyUpdate={onPropertyUpdate}
-			/>,
-		);
-	}
-
-	if (
-		menuConfig.backgroundColor ||
-		menuConfig.borderColor ||
-		menuConfig.borderStyle
-	) {
-		menuItemComponents.push(
-			<ObjectMenuDivider key="ShapeStyleSectionDivider" />,
-		);
-	}
-
-	// Text appearance section (fontStyle and textAlignment)
-	if (menuConfig.fontStyle) {
-		menuItemComponents.push(
-			<FontSizeMenu
-				key="FontSize"
-				canvasState={canvasState}
-				onPropertyUpdate={onPropertyUpdate}
-			/>,
-		);
-		menuItemComponents.push(
-			<FontColorMenu key="FontColor" canvasState={canvasState} />,
-		);
-		menuItemComponents.push(<BoldMenu key="Bold" canvasState={canvasState} />);
-	}
-
-	if (menuConfig.textAlignment) {
-		menuItemComponents.push(
-			<AlignmentMenu key="Alignment" canvasState={canvasState} />,
-		);
-	}
-
-	if (menuConfig.fontStyle || menuConfig.textAlignment) {
-		menuItemComponents.push(
-			<ObjectMenuDivider key="TextAppearanceSectionDivider" />,
-		);
-	}
-
-	// Stack order section (visible when all selected objects are siblings)
-	const shouldDisplayStackOrderMenu = isSameGroupSelection(canvasState);
-	if (shouldDisplayStackOrderMenu) {
-		menuItemComponents.push(
-			<StackOrderMenu key="StackOrder" canvasState={canvasState} />,
-		);
-		menuItemComponents.push(
-			<ObjectMenuDivider key="StackOrderSectionDivider" />,
-		);
-	}
-
-	// Keep aspect ratio section
-	const shouldDisplayKeepAspectRatioMenu = Boolean(
-		(singleSelectedObject &&
-			(objectRegistry.getMenuConfig(singleSelectedObject.type)?.aspectRatio ||
-				singleSelectedObject.type === "group")) ||
-			canvasState.multiSelectGroup,
-	);
-	if (shouldDisplayKeepAspectRatioMenu) {
-		menuItemComponents.push(
-			<KeepAspectRatioMenu key="KeepAspectRatio" canvasState={canvasState} />,
-		);
-		menuItemComponents.push(
-			<ObjectMenuDivider key="KeepAspectRatioSectionDivider" />,
-		);
-	}
-
-	// Group / Ungroup section
-	const shouldShowGroupMenu = Boolean(
-		selectedIds.length > 1 ||
-		(singleSelectedObject && singleSelectedObject.type === "group"),
-	);
-	if (shouldShowGroupMenu) {
-		menuItemComponents.push(
-			<GroupMenu key="Group" canvasState={canvasState} />,
-		);
-		menuItemComponents.push(<ObjectMenuDivider key="GroupSectionDivider" />);
-	}
-
-	// Remove the last divider
-	if (
-		menuItemComponents.length > 0 &&
-		(
-			menuItemComponents[menuItemComponents.length - 1] as React.ReactElement
-		)?.key
-			?.toString()
-			.includes("Divider")
-	) {
-		menuItemComponents.pop();
-	}
+	});
 
 	return (
 		<ObjectMenuWrapper left={x} top={y}>
-			<ObjectMenuContainer ref={menuRef}>
-				{menuItemComponents}
-			</ObjectMenuContainer>
+			<ObjectMenuContainer ref={menuRef}>{items}</ObjectMenuContainer>
 		</ObjectMenuWrapper>
 	);
 };

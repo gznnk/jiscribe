@@ -1,6 +1,5 @@
 import type { Point } from "@workspace/geometry/src/types/Point";
 
-import type { ObjectMenuConfig } from "../controllers/ui/menu/ObjectMenu/types/ObjectMenuConfig";
 import type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
 import type { ObjectFeatures } from "../schemas/objects/types/ObjectFeatures";
 import type { ObjectMapperType } from "../states/objects/base/MapperTypes";
@@ -55,7 +54,6 @@ export type ObjectDefinition<
 	TState extends ObjectState = ObjectState,
 > = {
 	features: ObjectFeatures;
-	menuConfig: ObjectMenuConfig;
 	mapper: ObjectMapperType<TDoc, TState>;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	component: React.FC<any>;
