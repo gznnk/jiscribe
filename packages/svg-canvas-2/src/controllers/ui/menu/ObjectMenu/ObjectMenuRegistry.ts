@@ -2,7 +2,7 @@ import type { MenuSectionFactory, MenuSectionGroup } from "./ObjectMenuTypes";
 import type { ObjectType } from "../../../../schemas/objects/types/ObjectType";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 
-class MenuRegistry {
+class ObjectMenuRegistry {
 	private readonly factories = new Map<ObjectType, MenuSectionFactory>();
 
 	register<TState extends ObjectState>(
@@ -21,4 +21,4 @@ class MenuRegistry {
 	}
 }
 
-export const menuRegistry = new MenuRegistry();
+export const objectMenuRegistry = new ObjectMenuRegistry();

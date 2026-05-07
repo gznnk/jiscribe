@@ -2,7 +2,7 @@ import { useMemo } from "react";
 
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
-import { menuRegistry } from "../ObjectMenuRegistry";
+import { objectMenuRegistry } from "../ObjectMenuRegistry";
 import type { MenuSection, MenuSectionGroup } from "../ObjectMenuTypes";
 
 const sectionKey = (section: MenuSection): string =>
@@ -67,7 +67,7 @@ export const getMenuGroups = (
 
 	const groupArrays = [...types].map((type) => {
 		const representative = Object.values(objects).find((o) => o?.type === type);
-		return representative ? menuRegistry.getGroups(type, representative) : [];
+		return representative ? objectMenuRegistry.getGroups(type, representative) : [];
 	});
 
 	return mergeGroups(groupArrays);

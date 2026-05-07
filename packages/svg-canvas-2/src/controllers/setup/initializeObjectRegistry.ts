@@ -80,7 +80,7 @@ import {
 	rotateByGroup as rectRotateByGroup,
 	transformByGroup as rectTransformByGroup,
 } from "../gestures/handlers/objects/primitives/RectController";
-import { menuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
+import { objectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
 import type { MenuSectionFactory } from "../ui/menu/ObjectMenu/ObjectMenuTypes";
 
 /**
@@ -88,7 +88,7 @@ import type { MenuSectionFactory } from "../ui/menu/ObjectMenu/ObjectMenuTypes";
  */
 export const initializeObjectRegistry = (): void => {
 	objectRegistry.clear();
-	menuRegistry.clear();
+	objectMenuRegistry.clear();
 
 	registerObject(
 		"rect",
@@ -270,5 +270,5 @@ export const registerObject = <
 	menuFactory: MenuSectionFactory<TState>,
 ): void => {
 	objectRegistry.register(type, definition);
-	menuRegistry.register(type, menuFactory);
+	objectMenuRegistry.register(type, menuFactory);
 };
