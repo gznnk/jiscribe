@@ -6,13 +6,7 @@ export const ColorPickerContainer = styled.div`
 	align-items: center;
 	box-sizing: border-box;
 	padding: 12px;
-	background: white;
-	border: 1px solid #ddd;
-	border-radius: 8px;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 	user-select: none;
-	pointer-events: auto;
-	z-index: 1100;
 `;
 
 export const ColorGrid = styled.div`

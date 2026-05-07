@@ -6,7 +6,7 @@ import { ColorPickerGrid } from "../../common/ColorPickerGrid/ColorPickerGrid";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
 import {
 	ObjectMenuButton,
-	DropdownColorPanel,
+	DropdownPanel,
 	MenuItemPositioner,
 } from "../../ObjectMenuStyled";
 
@@ -49,9 +49,9 @@ const LineColorMenuComponent: React.FC<LineColorMenuProps> = ({
 				<ColorPreviewIcon color={currentColor} title="Line Color" />
 			</ObjectMenuButton>
 			{isOpen && (
-				<DropdownColorPanel placement={placement}>
+				<DropdownPanel placement={placement}>
 					<ColorPickerGrid currentColor={currentColor} property="stroke" />
-				</DropdownColorPanel>
+				</DropdownPanel>
 			)}
 		</MenuItemPositioner>
 	);

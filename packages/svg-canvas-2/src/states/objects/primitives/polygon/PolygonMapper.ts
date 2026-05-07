@@ -1,9 +1,9 @@
 import type { PolygonState } from "./PolygonState";
+import type { PolygonDoc } from "../../../../schemas/objects/primitives/PolygonDoc";
 import type {
 	DocToStateMapper,
 	StateToDocMapper,
-} from "../../../../registry/ObjectRegistryTypes";
-import type { PolygonDoc } from "../../../../schemas/objects/primitives/PolygonDoc";
+} from "../../base/MapperTypes";
 import { ObjectMapper } from "../../base/ObjectMapper";
 
 /**

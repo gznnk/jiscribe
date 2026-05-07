@@ -1,6 +1,6 @@
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../CanvasTypes";
-import { calculateGroupOrientedBounds } from "../../ui/utils/calculateGroupOrientedBounds";
+import { calculateGroupOrientedBounds } from "../../../states/utils/calculateGroupOrientedBounds";
 import { cleanupGroups } from "../../utils/cleanupGroups";
 import { updateGroupBoundsFromRoot } from "../../utils/updateGroupBoundsFromRoot";
 import type { Command } from "../CommandTypes";

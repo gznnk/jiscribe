@@ -1,9 +1,9 @@
 import type { GroupState } from "./GroupState";
+import type { GroupDoc } from "../../../../schemas/objects/primitives/GroupDoc";
 import type {
 	DocToStateMapper,
 	StateToDocMapper,
-} from "../../../../registry/ObjectRegistryTypes";
-import type { GroupDoc } from "../../../../schemas/objects/primitives/GroupDoc";
+} from "../../base/MapperTypes";
 import { ObjectMapper } from "../../base/ObjectMapper";
 import {
 	mapTransformDocToState,
