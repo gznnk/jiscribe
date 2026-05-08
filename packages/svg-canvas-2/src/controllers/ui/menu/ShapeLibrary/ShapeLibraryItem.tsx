@@ -1,10 +1,10 @@
 import { memo } from "react";
 
+import { ShapeLibraryButton } from "./ShapeLibraryStyled";
 import type { ObjectType } from "../../../../schemas/objects/types/ObjectType";
 import { EllipseIcon } from "../../icons/EllipseIcon";
 import { RectIcon } from "../../icons/RectIcon";
 import { StickyIcon } from "../../icons/StickyIcon";
-import { ShapeLibraryButton } from "./ShapeLibraryStyled";
 
 type ShapeLibraryItemProps = {
 	type: ObjectType;
@@ -40,7 +40,7 @@ const ShapeLibraryItemComponent: React.FC<ShapeLibraryItemProps> = ({
 			isActive={isActive}
 		>
 			{getIcon(type)}
-			</ShapeLibraryButton>
+		</ShapeLibraryButton>
 	);
 };
 
