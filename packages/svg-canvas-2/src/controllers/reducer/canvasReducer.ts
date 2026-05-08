@@ -49,6 +49,7 @@ export const canvasReducer = (
 
 		case "SYNC_EXTERNAL": {
 			// 外部更新を反映 + 履歴のpresentも更新
+			// future をクリアすることで、外部変更後に古い状態へ redo されるのを防ぐ
 			const doc = canvasToDoc({
 				...state,
 				objects: action.payload.objects,
@@ -64,6 +65,7 @@ export const canvasReducer = (
 				history: {
 					...state.history,
 					present: doc,
+					future: [],
 				},
 			};
 		}
