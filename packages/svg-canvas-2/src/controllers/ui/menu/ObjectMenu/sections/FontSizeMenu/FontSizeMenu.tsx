@@ -2,6 +2,7 @@
 
 import { FontSizeMenuWrapper } from "./FontSizeMenuStyled";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
+import { getFirstSelectedWithProp } from "../../../../../../controllers/utils/getFirstSelectedWithProp";
 import type { TextStyleState } from "../../../../../../states/objects/base/TextStyleState";
 import { FontSizeIcon } from "../../../../icons/FontSizeIcon";
 import { MenuSlider } from "../../common/MenuSlider";
@@ -35,16 +36,9 @@ const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const { placement } = useSubmenuPosition(menuItemRef, SUBMENU_SIZE, isOpen);
 
-	// Get fontSize from the first selected object (if it has text properties)
 	const { selectedIds, objects } = canvasState;
-	const firstSelectedId = selectedIds[0];
-	const firstSelectedObject = firstSelectedId
-		? objects[firstSelectedId]
-		: undefined;
-	const fontSize =
-		firstSelectedObject && "fontSize" in firstSelectedObject
-			? ((firstSelectedObject as TextStyleState).fontSize ?? DEFAULT_FONT_SIZE)
-			: DEFAULT_FONT_SIZE;
+	const obj = getFirstSelectedWithProp(selectedIds, objects, "fontSize");
+	const fontSize = (obj as TextStyleState | undefined)?.fontSize ?? DEFAULT_FONT_SIZE;
 
 	return (
 		<MenuItemPositioner ref={menuItemRef}>

@@ -2,6 +2,7 @@
 
 import { AlignmentMenuContent, AlignmentRow } from "./AlignmentMenuStyled";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
+import { getFirstSelectedWithProp } from "../../../../../../controllers/utils/getFirstSelectedWithProp";
 import type { TextStyleState } from "../../../../../../states/objects/base/TextStyleState";
 import { AlignBottomIcon } from "../../../../icons/AlignBottomIcon";
 import { AlignCenterIcon } from "../../../../icons/AlignCenterIcon";
@@ -47,20 +48,10 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const { placement } = useSubmenuPosition(menuItemRef, SUBMENU_SIZE, isOpen);
 
-	// Get textAlign and verticalAlign from the first selected object (if it has text properties)
 	const { selectedIds, objects } = canvasState;
-	const firstSelectedId = selectedIds[0];
-	const firstSelectedObject = firstSelectedId
-		? objects[firstSelectedId]
-		: undefined;
-	const textAlign =
-		firstSelectedObject && "textAlign" in firstSelectedObject
-			? ((firstSelectedObject as TextStyleState).textAlign ?? "left")
-			: "left";
-	const verticalAlign =
-		firstSelectedObject && "verticalAlign" in firstSelectedObject
-			? ((firstSelectedObject as TextStyleState).verticalAlign ?? "center")
-			: "center";
+	const obj = getFirstSelectedWithProp(selectedIds, objects, "textAlign") as TextStyleState | undefined;
+	const textAlign = obj?.textAlign ?? "left";
+	const verticalAlign = obj?.verticalAlign ?? "center";
 
 	return (
 		<MenuItemPositioner ref={menuItemRef}>

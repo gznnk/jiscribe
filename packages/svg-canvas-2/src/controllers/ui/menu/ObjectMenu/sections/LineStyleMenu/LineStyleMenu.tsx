@@ -2,6 +2,7 @@ import { memo, useRef } from "react";
 
 import { LineStyleMenuWrapper, LineStyleSection } from "./LineStyleMenuStyled";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
+import { getFirstSelectedWithProp } from "../../../../../../controllers/utils/getFirstSelectedWithProp";
 import type { StrokeDashType } from "../../../../../../schemas/objects/types/StrokeDashType";
 import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
 import { DottedLineIcon } from "../../../../icons/DottedLineIcon";
@@ -23,29 +24,17 @@ const MAX_STROKE_WIDTH = 100;
 const DEFAULT_STROKE_WIDTH = 2;
 
 const getSelectedStrokeWidth = (state: CanvasControllerState): number => {
-	for (const id of state.selectedIds) {
-		const obj = state.objects[id];
-		if (obj && "strokeWidth" in obj && typeof obj.strokeWidth === "number") {
-			return obj.strokeWidth;
-		}
-	}
-	return DEFAULT_STROKE_WIDTH;
+	const obj = getFirstSelectedWithProp(state.selectedIds, state.objects, "strokeWidth");
+	const v = (obj as Record<string, unknown>)?.strokeWidth;
+	return typeof v === "number" ? v : DEFAULT_STROKE_WIDTH;
 };
 
 const getSelectedStrokeDashType = (
 	state: CanvasControllerState,
 ): StrokeDashType | undefined => {
-	for (const id of state.selectedIds) {
-		const obj = state.objects[id];
-		if (
-			obj &&
-			"strokeDashType" in obj &&
-			typeof obj.strokeDashType === "string"
-		) {
-			return obj.strokeDashType as StrokeDashType;
-		}
-	}
-	return undefined;
+	const obj = getFirstSelectedWithProp(state.selectedIds, state.objects, "strokeDashType");
+	const v = (obj as Record<string, unknown>)?.strokeDashType;
+	return typeof v === "string" ? (v as StrokeDashType) : undefined;
 };
 
 type LineStyleMenuProps = {

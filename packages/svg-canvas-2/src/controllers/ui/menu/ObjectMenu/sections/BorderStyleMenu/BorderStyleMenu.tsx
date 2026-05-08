@@ -5,6 +5,7 @@ import {
 	BorderStyleSection,
 } from "./BorderStyleMenuStyled";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
+import { getFirstSelectedWithProp } from "../../../../../../controllers/utils/getFirstSelectedWithProp";
 import type { StrokeDashType } from "../../../../../../schemas/objects/types/StrokeDashType";
 import { DashedCircleIcon } from "../../../../icons/DashedCircleIcon";
 import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
@@ -37,49 +38,24 @@ type BorderStyleMenuProps = {
 	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
 };
 
-/**
- * Get first selected object's stroke width.
- */
 const getSelectedStrokeWidth = (state: CanvasControllerState): number => {
-	for (const id of state.selectedIds) {
-		const obj = state.objects[id];
-		if (obj && "strokeWidth" in obj && typeof obj.strokeWidth === "number") {
-			return obj.strokeWidth;
-		}
-	}
-	return DEFAULT_STROKE_WIDTH;
+	const obj = getFirstSelectedWithProp(state.selectedIds, state.objects, "strokeWidth");
+	const v = (obj as Record<string, unknown>)?.strokeWidth;
+	return typeof v === "number" ? v : DEFAULT_STROKE_WIDTH;
 };
 
-/**
- * Get first selected object's stroke dash type.
- */
 const getSelectedStrokeDashType = (
 	state: CanvasControllerState,
 ): StrokeDashType | undefined => {
-	for (const id of state.selectedIds) {
-		const obj = state.objects[id];
-		if (
-			obj &&
-			"strokeDashType" in obj &&
-			typeof obj.strokeDashType === "string"
-		) {
-			return obj.strokeDashType as StrokeDashType;
-		}
-	}
-	return undefined;
+	const obj = getFirstSelectedWithProp(state.selectedIds, state.objects, "strokeDashType");
+	const v = (obj as Record<string, unknown>)?.strokeDashType;
+	return typeof v === "string" ? (v as StrokeDashType) : undefined;
 };
 
-/**
- * Get first selected object's corner radius (rx).
- */
 const getSelectedCornerRadius = (state: CanvasControllerState): number => {
-	for (const id of state.selectedIds) {
-		const obj = state.objects[id];
-		if (obj && "rx" in obj && typeof obj.rx === "number") {
-			return obj.rx;
-		}
-	}
-	return DEFAULT_CORNER_RADIUS;
+	const obj = getFirstSelectedWithProp(state.selectedIds, state.objects, "rx");
+	const v = (obj as Record<string, unknown>)?.rx;
+	return typeof v === "number" ? v : DEFAULT_CORNER_RADIUS;
 };
 
 /**

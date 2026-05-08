@@ -1,6 +1,7 @@
 ﻿import { memo, useRef } from "react";
 
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
+import { getFirstSelectedWithProp } from "../../../../../../controllers/utils/getFirstSelectedWithProp";
 import type { TextStyleState } from "../../../../../../states/objects/base/TextStyleState";
 import { FontColorIcon } from "../../../../icons/FontColorIcon";
 import { ColorPickerGrid } from "../../common/ColorPickerGrid/ColorPickerGrid";
@@ -32,17 +33,9 @@ const FontColorMenuComponent: React.FC<FontColorMenuProps> = ({
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const { placement } = useSubmenuPosition(menuItemRef, SUBMENU_SIZE, isOpen);
 
-	// Get fontColor from the first selected object (if it has text properties)
 	const { selectedIds, objects } = canvasState;
-	const firstSelectedId = selectedIds[0];
-	const firstSelectedObject = firstSelectedId
-		? objects[firstSelectedId]
-		: undefined;
-	const currentColor =
-		firstSelectedObject && "fontColor" in firstSelectedObject
-			? ((firstSelectedObject as TextStyleState).fontColor ??
-				DEFAULT_FONT_COLOR)
-			: DEFAULT_FONT_COLOR;
+	const obj = getFirstSelectedWithProp(selectedIds, objects, "fontColor");
+	const currentColor = (obj as TextStyleState | undefined)?.fontColor ?? DEFAULT_FONT_COLOR;
 
 	return (
 		<MenuItemPositioner ref={menuItemRef}>

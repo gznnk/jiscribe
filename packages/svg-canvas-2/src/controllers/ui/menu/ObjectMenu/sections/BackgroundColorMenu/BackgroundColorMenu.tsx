@@ -1,6 +1,7 @@
 ﻿import { memo, useRef } from "react";
 
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
+import { getFirstSelectedWithProp } from "../../../../../../controllers/utils/getFirstSelectedWithProp";
 import { ColorPreviewIcon } from "../../../../icons/ColorPreviewIcon";
 import { ColorPickerGrid } from "../../common/ColorPickerGrid/ColorPickerGrid";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
@@ -17,18 +18,10 @@ type BackgroundColorMenuProps = {
 	canvasState: CanvasControllerState;
 };
 
-/**
- * 選択中オブジェクトの fill 色を取得する。
- * 最初に見つかった fill 値を返す。
- */
 const getSelectedFillColor = (state: CanvasControllerState): string => {
-	for (const id of state.selectedIds) {
-		const obj = state.objects[id];
-		if (obj && "fill" in obj && typeof obj.fill === "string") {
-			return obj.fill;
-		}
-	}
-	return "transparent";
+	const obj = getFirstSelectedWithProp(state.selectedIds, state.objects, "fill");
+	const fill = (obj as Record<string, unknown>)?.fill;
+	return typeof fill === "string" ? fill : "transparent";
 };
 
 /**
