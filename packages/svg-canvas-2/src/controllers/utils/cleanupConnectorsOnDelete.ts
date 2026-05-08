@@ -1,5 +1,4 @@
 import { resolveConnectorPoints } from "../../presentations/layers/content/utils/resolveConnectorPoints";
-import { resolveEndpoint } from "../../presentations/layers/content/utils/resolveEndpoint";
 import type { FreeEndpointRef } from "../../schemas/objects/types/EndpointRef";
 import type { ConnectorState } from "../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../CanvasTypes";
@@ -8,7 +7,7 @@ import type { CanvasControllerState } from "../CanvasTypes";
  * 図形削除に伴うコネクターの整理を行う。
  *
  * - 両端の接続先が削除対象 → コネクターも削除
- * - 片端のみ削除対象 → 削除される側のエンドポイントを Free に変換して保持
+ * - 片端のみ削除対象 → 削除される側のエンドポイントを Free に変換して保持（座標解決不能な場合はコネクターも削除）
  *
  * @param state - 削除前のキャンバス状態（エンドポイント座標の解決に使用）
  * @param idsToDelete - 削除対象オブジェクトのIDセット
@@ -61,23 +60,32 @@ export function cleanupConnectorsOnDelete(
 		const resolved = resolveConnectorPoints(connector, sourceObj, targetObj);
 
 		const updatedConnector = { ...connector };
+		let shouldDeleteConnector = false;
 
 		if (sourceDeleted) {
-			const point =
-				resolved?.source ??
-				resolveEndpoint(connector.source, sourceObj) ??
-				{ x: 0, y: 0 };
-			const freeSource: FreeEndpointRef = { anchor: { kind: "free", point } };
-			updatedConnector.source = freeSource;
+			const point = resolved?.source;
+			if (point == null) {
+				shouldDeleteConnector = true;
+			} else {
+				const freeSource: FreeEndpointRef = { anchor: { kind: "free", point } };
+				updatedConnector.source = freeSource;
+			}
 		}
 
-		if (targetDeleted) {
-			const point =
-				resolved?.target ??
-				resolveEndpoint(connector.target, targetObj) ??
-				{ x: 0, y: 0 };
-			const freeTarget: FreeEndpointRef = { anchor: { kind: "free", point } };
-			updatedConnector.target = freeTarget;
+		if (!shouldDeleteConnector && targetDeleted) {
+			const point = resolved?.target;
+			if (point == null) {
+				shouldDeleteConnector = true;
+			} else {
+				const freeTarget: FreeEndpointRef = { anchor: { kind: "free", point } };
+				updatedConnector.target = freeTarget;
+			}
+		}
+
+		if (shouldDeleteConnector) {
+			delete updatedObjects[connectorId];
+			updatedConnectorIds.splice(i, 1);
+			continue;
 		}
 
 		updatedObjects[connectorId] = updatedConnector as ConnectorState;
