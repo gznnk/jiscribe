@@ -2,7 +2,8 @@ import type { CanvasState } from "../../../../../states/canvas/CanvasState";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
 
 /**
- * Recursively collects all descendant IDs of a group
+ * Collects all descendant IDs of a group using BFS.
+ * Circular references in the hierarchy are detected and skipped with a warning.
  * @param state - The canvas state
  * @param groupId - The group ID to collect descendants from
  * @returns Set of all descendant IDs (children, grandchildren, etc.)
@@ -12,18 +13,23 @@ function collectAllDescendants(
 	groupId: string,
 ): Set<string> {
 	const descendants = new Set<string>();
-	const group = state.objects[groupId] as GroupState;
-	if (!group || group.type !== "group") return descendants;
+	const visited = new Set([groupId]);
+	const queue = [groupId];
 
-	for (const childId of group.childIds) {
-		descendants.add(childId);
-		const child = state.objects[childId];
-		if (child?.type === "group") {
-			// Recursively collect descendants of child groups
-			const childDescendants = collectAllDescendants(state, childId);
-			for (const descendantId of childDescendants) {
-				descendants.add(descendantId);
+	while (queue.length > 0) {
+		const currentId = queue.shift()!;
+		const obj = state.objects[currentId];
+		if (!obj || obj.type !== "group") continue;
+
+		const group = obj as GroupState;
+		for (const childId of group.childIds) {
+			if (visited.has(childId)) {
+				console.warn(`[collectAllDescendants] Circular reference detected at "${childId}"`);
+				continue;
 			}
+			visited.add(childId);
+			descendants.add(childId);
+			queue.push(childId);
 		}
 	}
 
@@ -31,21 +37,26 @@ function collectAllDescendants(
 }
 
 /**
- * Automatically selects parent groups when all their children are selected,
- * and deselects the children. This process is applied recursively up the hierarchy.
+ * 選択中のオブジェクトを対象に、グループの全子が選択されていれば
+ * 子を選択解除してグループ自体を選択する処理を階層の上方向へ繰り返す。
  *
- * This implements the logic from svg-canvas (useOnSelect.ts lines 264-311) where
- * groups are automatically selected when all children become selected.
+ * 例: group-1 の子 [rect-1, rect-2, rect-3] がすべて選択されている場合
+ *   入力: ['rect-1', 'rect-2', 'rect-3']
+ *   出力: ['group-1']
  *
- * @param state - The canvas state
- * @param selectedIds - The current selected IDs
- * @returns Updated selectedIds with parent groups auto-selected
+ * ### ループの終了保証
+ * 各イテレーションで「全子が選択済み」の親を「昇格」させる。
+ * 昇格した親は everPromoted に記録され、同じ親が再昇格することはない。
+ * オブジェクト数は有限かつ everPromoted は単調増加するため、
+ * データに循環参照があってもループは必ず終了する。
  *
- * @example
- * // Before: children ['rect-1', 'rect-2', 'rect-3'] are selected
- * // After: parent 'group-1' is selected, children are deselected
- * autoSelectParentGroups(state, ['rect-1', 'rect-2', 'rect-3'])
- * // Returns: ['group-1']
+ * ### 2つのガード条件（どちらも必要）
+ * - `!selectedSet.has(parentId)`:
+ *   そのイテレーション開始時点で既に選択中の親（ネスト内のサブグループなど）を
+ *   誤って二重昇格させないためのガード。
+ * - `!everPromoted.has(parentId)`:
+ *   循環参照 (A→B→A) があるとき、一度昇格した親が次のイテレーションで
+ *   再び昇格候補になっても無限ループしないためのガード。
  */
 export function autoSelectParentGroups(
 	state: CanvasState,
@@ -53,18 +64,13 @@ export function autoSelectParentGroups(
 ): string[] {
 	let currentSelectedIds = [...selectedIds];
 	let changed = true;
+	const everPromoted = new Set<string>();
 
-	// Loop until no more changes occur (handles multi-level hierarchies)
-	// Safety limit to prevent infinite loops in case of circular references
-	const MAX_ITERATIONS = 100;
-	let iterations = 0;
-
-	while (changed && iterations < MAX_ITERATIONS) {
+	while (changed) {
 		changed = false;
-		iterations++;
-		const parentCandidates = new Set<string>();
 
-		// Collect all parent groups of currently selected objects
+		// 現在の選択オブジェクトの親グループをすべて候補として収集する
+		const parentCandidates = new Set<string>();
 		for (const id of currentSelectedIds) {
 			const obj = state.objects[id];
 			if (obj?.parentId) {
@@ -72,41 +78,30 @@ export function autoSelectParentGroups(
 			}
 		}
 
-		// Check each parent: if all children are selected, select the parent instead
+		// このイテレーションの選択スナップショット。
+		// 同一イテレーション内で currentSelectedIds が変化しても
+		// 子の選択判定は開始時点の状態で行う。
 		const selectedSet = new Set(currentSelectedIds);
+
 		for (const parentId of parentCandidates) {
 			const parent = state.objects[parentId] as GroupState;
 			if (!parent) continue;
 
-			// Check if all children are in the current selection
 			const allChildrenSelected =
 				parent.childIds.length > 0 &&
 				parent.childIds.every((childId) => selectedSet.has(childId));
 
-			if (allChildrenSelected) {
-				// Collect all descendants (children, grandchildren, etc.)
+			if (allChildrenSelected && !selectedSet.has(parentId) && !everPromoted.has(parentId)) {
+				// 全子孫（孫以降も含む）を選択から取り除き、グループ自体を選択する
 				const allDescendants = collectAllDescendants(state, parentId);
-
-				// Remove all descendants from selection
 				currentSelectedIds = currentSelectedIds.filter(
 					(id) => !allDescendants.has(id),
 				);
-
-				// Add parent to selection (if not already there)
-				if (!selectedSet.has(parentId)) {
-					currentSelectedIds.push(parentId);
-					changed = true;
-				}
+				currentSelectedIds.push(parentId);
+				everPromoted.add(parentId);
+				changed = true;
 			}
 		}
-	}
-
-	// TODO: そもそも、グループ階層の循環参照が発生していないかを検証するロジックをいれて、この処理は廃止すべき
-	// Log warning if we hit the iteration limit (indicates potential data issue)
-	if (iterations >= MAX_ITERATIONS) {
-		console.warn(
-			"[autoSelectParentGroups] Maximum iterations reached. Possible circular reference in group hierarchy.",
-		);
 	}
 
 	return currentSelectedIds;
