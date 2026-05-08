@@ -4,6 +4,7 @@ import type { ObjectType } from "../../../../schemas/objects/types/ObjectType";
 import { EllipseIcon } from "../../icons/EllipseIcon";
 import { RectIcon } from "../../icons/RectIcon";
 import { StickyIcon } from "../../icons/StickyIcon";
+import { ShapeLibraryButton } from "./ShapeLibraryStyled";
 
 type ShapeLibraryItemProps = {
 	type: ObjectType;
@@ -32,28 +33,14 @@ const ShapeLibraryItemComponent: React.FC<ShapeLibraryItemProps> = ({
 	isActive = false,
 }) => {
 	return (
-		<div
+		<ShapeLibraryButton
 			data-kind="menu-item"
 			data-id={`menu-item:${type}`}
-			style={{
-				display: "flex",
-				alignItems: "center",
-				gap: 8,
-				padding: "6px 10px",
-				cursor: isActive ? "crosshair" : "grab",
-				borderRadius: 6,
-				userSelect: "none",
-				pointerEvents: "auto",
-				backgroundColor: isActive ? "#eff6ff" : undefined,
-				outline: isActive ? "1.5px solid #3b82f6" : undefined,
-				color: isActive ? "#1d4ed8" : undefined,
-			}}
+			title={label}
+			isActive={isActive}
 		>
 			{getIcon(type)}
-			<span style={{ fontSize: 13, color: isActive ? "#1d4ed8" : "#374151" }}>
-				{label}
-			</span>
-		</div>
+			</ShapeLibraryButton>
 	);
 };
 
