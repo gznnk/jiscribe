@@ -11,6 +11,7 @@ import {
 } from "../../ObjectMenuStyled";
 
 const SECTION_ID = "line-color";
+const SUBMENU_SIZE = { width: 240, height: 140 } as const;
 
 type LineColorMenuProps = {
 	canvasState: CanvasControllerState;
@@ -36,7 +37,7 @@ const LineColorMenuComponent: React.FC<LineColorMenuProps> = ({
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const currentColor = getSelectedStrokeColor(canvasState);
-	const { placement } = useSubmenuPosition(menuItemRef, "strokeColor", isOpen);
+	const { placement } = useSubmenuPosition(menuItemRef, SUBMENU_SIZE, isOpen);
 
 	return (
 		<MenuItemPositioner ref={menuItemRef}>

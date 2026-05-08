@@ -17,6 +17,7 @@ import {
 } from "../../ObjectMenuStyled";
 
 const SECTION_ID = "alignment";
+const SUBMENU_SIZE = { width: 120, height: 50 } as const;
 
 type AlignmentMenuProps = {
 	canvasState: CanvasControllerState;
@@ -44,7 +45,7 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 }) => {
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
-	const { placement } = useSubmenuPosition(menuItemRef, "alignment", isOpen);
+	const { placement } = useSubmenuPosition(menuItemRef, SUBMENU_SIZE, isOpen);
 
 	// Get textAlign and verticalAlign from the first selected object (if it has text properties)
 	const { selectedIds, objects } = canvasState;

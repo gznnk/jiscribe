@@ -13,6 +13,7 @@ import {
 
 const SECTION_ID = "font-color";
 const DEFAULT_FONT_COLOR = "#333333";
+const SUBMENU_SIZE = { width: 240, height: 140 } as const;
 
 type FontColorMenuProps = {
 	canvasState: CanvasControllerState;
@@ -29,7 +30,7 @@ const FontColorMenuComponent: React.FC<FontColorMenuProps> = ({
 }) => {
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
-	const { placement } = useSubmenuPosition(menuItemRef, "fontColor", isOpen);
+	const { placement } = useSubmenuPosition(menuItemRef, SUBMENU_SIZE, isOpen);
 
 	// Get fontColor from the first selected object (if it has text properties)
 	const { selectedIds, objects } = canvasState;

@@ -11,6 +11,7 @@ import {
 } from "../../ObjectMenuStyled";
 
 const SECTION_ID = "bg-color";
+const SUBMENU_SIZE = { width: 240, height: 140 } as const;
 
 type BackgroundColorMenuProps = {
 	canvasState: CanvasControllerState;
@@ -40,11 +41,7 @@ const BackgroundColorMenuComponent: React.FC<BackgroundColorMenuProps> = ({
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const currentColor = getSelectedFillColor(canvasState);
-	const { placement } = useSubmenuPosition(
-		menuItemRef,
-		"backgroundColor",
-		isOpen,
-	);
+	const { placement } = useSubmenuPosition(menuItemRef, SUBMENU_SIZE, isOpen);
 
 	return (
 		<MenuItemPositioner ref={menuItemRef}>

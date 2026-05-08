@@ -14,6 +14,7 @@ import {
 
 const SECTION_ID = "font-size";
 const DEFAULT_FONT_SIZE = 14;
+const SUBMENU_SIZE = { width: 160, height: 80 } as const;
 const MIN_FONT_SIZE = 1;
 const MAX_FONT_SIZE = 999;
 
@@ -32,7 +33,7 @@ const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 }) => {
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
-	const { placement } = useSubmenuPosition(menuItemRef, "fontSize", isOpen);
+	const { placement } = useSubmenuPosition(menuItemRef, SUBMENU_SIZE, isOpen);
 
 	// Get fontSize from the first selected object (if it has text properties)
 	const { selectedIds, objects } = canvasState;

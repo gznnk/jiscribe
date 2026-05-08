@@ -1,32 +1,10 @@
 import { type RefObject, useMemo } from "react";
 
-/**
- * サブメニューの概算サイズ定義。
- * 画面はみ出し判定に使用する。
- */
-type SubmenuSize = {
+/** サブメニューの概算サイズ（px）。画面はみ出し判定に使用する。 */
+export type SubmenuSize = {
 	width: number;
 	height: number;
 };
-
-/**
- * 各サブメニューの概算サイズ（px）。
- * 実際のサイズと多少の誤差があっても問題ないように、余裕を持たせた値を設定。
- */
-const SUBMENU_SIZES = {
-	stackOrder: { width: 180, height: 40 },
-	borderStyle: { width: 220, height: 162 },
-	arrowHead: { width: 200, height: 120 },
-	backgroundColor: { width: 240, height: 140 },
-	strokeColor: { width: 240, height: 140 },
-	fontColor: { width: 240, height: 140 },
-	fontSize: { width: 160, height: 80 },
-	alignment: { width: 120, height: 50 },
-	lineStyle: { width: 220, height: 120 },
-} as const satisfies Record<string, SubmenuSize>;
-
-/** サブメニューの識別子 */
-type SubmenuId = keyof typeof SUBMENU_SIZES;
 
 /** メニューボタンとサブメニュー間の距離 (px) */
 const SUBMENU_DISTANCE = 40;
@@ -44,17 +22,15 @@ type SubmenuPositionResult = {
  * サブメニューが画面からはみ出る場合に、表示方向を上下反転するかを判定する。
  *
  * @param menuItemRef - メニューボタンの ref（位置計算に使用）
- * @param submenuId - サブメニューの識別子（サイズ取得に使用）
+ * @param submenuSize - サブメニューの概算サイズ（px）
  * @param isOpen - サブメニューが開いているかどうか（再計算トリガー用）
  * @returns サブメニューの配置方向
  */
 export function useSubmenuPosition(
 	menuItemRef: RefObject<HTMLDivElement | null>,
-	submenuId: SubmenuId,
+	submenuSize: SubmenuSize,
 	isOpen: boolean,
 ): SubmenuPositionResult {
-	const submenuSize: SubmenuSize = SUBMENU_SIZES[submenuId];
-
 	return useMemo(() => {
 		// サブメニューが閉じている場合は計算不要
 		if (!isOpen) {

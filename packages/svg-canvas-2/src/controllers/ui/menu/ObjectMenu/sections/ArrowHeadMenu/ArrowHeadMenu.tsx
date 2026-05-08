@@ -15,6 +15,7 @@ import {
 
 const SECTION_ID_START = "arrow-head-start";
 const SECTION_ID_END = "arrow-head-end";
+const SUBMENU_SIZE = { width: 200, height: 120 } as const;
 
 type ArrowHeadMenuProps = {
 	canvasState: CanvasControllerState;
@@ -56,12 +57,12 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 
 	const { placement: startPlacement } = useSubmenuPosition(
 		startRef,
-		"arrowHead",
+		SUBMENU_SIZE,
 		isStartOpen,
 	);
 	const { placement: endPlacement } = useSubmenuPosition(
 		endRef,
-		"arrowHead",
+		SUBMENU_SIZE,
 		isEndOpen,
 	);
 

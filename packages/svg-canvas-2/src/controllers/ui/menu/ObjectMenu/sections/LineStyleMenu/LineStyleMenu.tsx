@@ -16,6 +16,7 @@ import {
 } from "../../ObjectMenuStyled";
 
 const SECTION_ID = "line-style";
+const SUBMENU_SIZE = { width: 220, height: 120 } as const;
 
 const MIN_STROKE_WIDTH = 1;
 const MAX_STROKE_WIDTH = 100;
@@ -60,7 +61,7 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const strokeWidth = getSelectedStrokeWidth(canvasState);
 	const strokeDashType = getSelectedStrokeDashType(canvasState);
-	const { placement } = useSubmenuPosition(menuItemRef, "lineStyle", isOpen);
+	const { placement } = useSubmenuPosition(menuItemRef, SUBMENU_SIZE, isOpen);
 
 	return (
 		<MenuItemPositioner ref={menuItemRef}>
