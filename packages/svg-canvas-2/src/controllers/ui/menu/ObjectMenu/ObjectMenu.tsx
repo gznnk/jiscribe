@@ -7,7 +7,11 @@ import {
 	ObjectMenuDivider,
 	ObjectMenuWrapper,
 } from "./ObjectMenuStyled";
-import type { MenuSection, MenuSectionGroup, MenuSectionProps } from "./ObjectMenuTypes";
+import type {
+	MenuSection,
+	MenuSectionGroup,
+	MenuSectionProps,
+} from "./ObjectMenuTypes";
 import { AlignmentMenu } from "./sections/AlignmentMenu";
 import { ArrowHeadMenu } from "./sections/ArrowHeadMenu";
 import { BackgroundColorMenu } from "./sections/BackgroundColorMenu";
@@ -74,9 +78,7 @@ const renderSection = (
 				</React.Fragment>
 			);
 		case "textAlignment":
-			return (
-				<AlignmentMenu key="textAlignment" canvasState={canvasState} />
-			);
+			return <AlignmentMenu key="textAlignment" canvasState={canvasState} />;
 		case "aspectRatio":
 			return (
 				<KeepAspectRatioMenu key="aspectRatio" canvasState={canvasState} />
@@ -148,12 +150,25 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 
 	const sectionProps: MenuSectionProps = { canvasState, onPropertyUpdate };
 
+	// objectGroups と systemGroups の両方に同じセクションタイプが含まれる場合があるため、
+	// 先に出現したものを優先し、重複レンダリングを防ぐ
+	const renderedSectionKeys = new Set<string>();
 	const items: React.ReactNode[] = [];
+
 	allGroups.forEach((group, gi) => {
+		// 未レンダリングのセクションのみ抽出する
+		const groupItems: React.ReactNode[] = [];
 		group.sections.forEach((section) => {
-			items.push(renderSection(section, sectionProps));
+			const key = section.type === "custom" ? section.id : section.type;
+			if (renderedSectionKeys.has(key)) return;
+			renderedSectionKeys.add(key);
+			groupItems.push(renderSection(section, sectionProps));
 		});
-		if (gi < allGroups.length - 1) {
+
+		items.push(...groupItems);
+
+		// グループ間にセパレータを挿入（最終グループ、または全セクションが重複スキップされたグループの後ろには挿入しない）
+		if (gi < allGroups.length - 1 && groupItems.length > 0) {
 			items.push(<ObjectMenuDivider key={`sep-${gi}`} />);
 		}
 	});
