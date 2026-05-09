@@ -17,17 +17,17 @@ const StickyIconComponent: React.FC<StickyIconProps> = ({
 			xmlns="http://www.w3.org/2000/svg"
 		>
 			<path
-				d="M4 4 L16 4 L20 8 L20 20 L4 20 Z"
+				d="M4 3 L15 3 L21 9 L21 21 L4 21 Z"
 				fill="none"
 				stroke="currentColor"
-				strokeWidth={1.5}
+				strokeWidth={2}
 				strokeLinejoin="round"
 			/>
 			<path
-				d="M16 4 L16 8 L20 8"
+				d="M15 3 L15 9 L21 9"
 				fill="none"
 				stroke="currentColor"
-				strokeWidth={1.5}
+				strokeWidth={2}
 				strokeLinejoin="round"
 			/>
 		</svg>

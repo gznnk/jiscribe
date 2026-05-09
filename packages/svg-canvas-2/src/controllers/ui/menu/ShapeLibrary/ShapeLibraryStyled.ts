@@ -16,7 +16,7 @@ export const ShapeLibraryContainer = styled.div`
 	flex-direction: column;
 	align-items: center;
 	padding: 6px 4px;
-	gap: 2px;
+	gap: 4px;
 	background-color: #ffffff;
 	border: 1px solid #e5e7eb;
 	border-radius: 8px;
