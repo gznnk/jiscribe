@@ -1,13 +1,11 @@
 import { memo } from "react";
 
 type StickyIconProps = {
-	fill?: string;
 	width?: number;
 	height?: number;
 };
 
 const StickyIconComponent: React.FC<StickyIconProps> = ({
-	fill = "#374151",
 	width = 24,
 	height = 24,
 }) => {
@@ -19,18 +17,17 @@ const StickyIconComponent: React.FC<StickyIconProps> = ({
 			xmlns="http://www.w3.org/2000/svg"
 		>
 			<path
-				d="M4 4 L16 4 L20 8 L20 20 L4 20 Z"
-				fill={fill}
-				fillOpacity={0.15}
-				stroke={fill}
-				strokeWidth={1.5}
+				d="M4 3 L15 3 L21 9 L21 21 L4 21 Z"
+				fill="none"
+				stroke="currentColor"
+				strokeWidth={2}
 				strokeLinejoin="round"
 			/>
 			<path
-				d="M16 4 L16 8 L20 8"
+				d="M15 3 L15 9 L21 9"
 				fill="none"
-				stroke={fill}
-				strokeWidth={1.5}
+				stroke="currentColor"
+				strokeWidth={2}
 				strokeLinejoin="round"
 			/>
 		</svg>
