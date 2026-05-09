@@ -303,9 +303,12 @@ export const ObjectEventHandler: GestureHandler = {
 	},
 
 	handle(state, event) {
-		// Commit text editing if active (except for doubleClick which starts editing)
+		// 現在編集中のオブジェクト自身への doubleClick のみ commit をスキップ（編集継続のため）
+		// それ以外（非テキストオブジェクトへの doubleClick を含む）は commit してクリアする
 		let nextState = state;
-		if (event.type !== "doubleClick") {
+		const isDoubleClickOnCurrentEditTarget =
+			event.type === "doubleClick" && state.textEditState?.objectId === event.targetId;
+		if (!isDoubleClickOnCurrentEditTarget) {
 			nextState = commitTextEditIfNeeded(state, event.time);
 		}
 

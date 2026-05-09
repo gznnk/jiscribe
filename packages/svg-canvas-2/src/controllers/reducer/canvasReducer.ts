@@ -1,6 +1,5 @@
 import type { CanvasAction } from "./CanvasActions";
 import { canvasToDoc } from "../../states/canvas/CanvasMapper";
-import { isTextStyleState } from "../../states/objects/base/TextStyleState";
 import type { CanvasControllerState } from "../CanvasTypes";
 import { handlePaste } from "./handlers/handlePaste";
 import { handleCommand } from "../commands/handlers/handleCommand";
@@ -66,20 +65,6 @@ export const canvasReducer = (
 					...state.history,
 					present: doc,
 					future: [],
-				},
-			};
-		}
-
-		case "START_TEXT_EDIT": {
-			const targetObject = state.objects[action.objectId];
-			if (!targetObject || !isTextStyleState(targetObject)) {
-				return state;
-			}
-			return {
-				...state,
-				textEditState: {
-					objectId: action.objectId,
-					text: targetObject.text ?? "",
 				},
 			};
 		}

@@ -38,14 +38,6 @@ export type CommandAction = {
 };
 
 /**
- * Start text edit action - begins editing text in an object
- */
-export type StartTextEditAction = {
-	type: "START_TEXT_EDIT";
-	objectId: string;
-};
-
-/**
  * Update text edit action - updates text during editing
  */
 export type UpdateTextEditAction = {
@@ -104,7 +96,6 @@ export type CanvasAction =
 	| ContainerResizeAction
 	| SyncExternalAction
 	| CommandAction
-	| StartTextEditAction
 	| UpdateTextEditAction
 	| EndTextEditAction
 	| UndoAction
