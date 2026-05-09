@@ -12,7 +12,7 @@ type ShapeLibraryItemProps = {
 	isActive?: boolean;
 };
 
-const ICON_SIZE = 20;
+const ICON_SIZE = 24;
 
 const getIcon = (type: ObjectType) => {
 	switch (type) {

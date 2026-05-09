@@ -15,8 +15,8 @@ export const ShapeLibraryContainer = styled.div`
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	padding: 4px 8px;
-	gap: 0;
+	padding: 6px 4px;
+	gap: 2px;
 	background-color: #ffffff;
 	border: 1px solid #e5e7eb;
 	border-radius: 8px;
@@ -47,11 +47,7 @@ export const ShapeLibraryButton = styled.button<{ isActive?: boolean }>`
 	}
 
 	svg {
-		color: ${(props) => (props.isActive ? "#374151" : "#6b7280")};
+		color: #333333;
 		transition: color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
-	}
-
-	&:hover svg {
-		color: #374151;
 	}
 `;
