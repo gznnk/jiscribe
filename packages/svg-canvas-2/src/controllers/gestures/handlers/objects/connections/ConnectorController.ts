@@ -23,27 +23,21 @@ export const moveByDelta: MoveByDeltaFunction<ConnectorState> = (state, delta) =
 };
 
 /**
- * Transforms a Connector object when its parent group is transformed.
- * TODO: Implement connector-specific transform logic
+ * No-op: connectors cannot be added to groups via the UI (exclusive selection),
+ * so this function is never reached in practice.
  */
 export const transformByGroup: TransformByGroupFunction<ConnectorState> = (
 	state,
 	_groupStart,
 	_groupEnd,
-) => {
-	// TODO: Implement connector transform logic
-	return state;
-};
+) => state;
 
 /**
- * Rotates a Connector object when its parent group is rotated.
- * TODO: Implement connector-specific rotation logic
+ * No-op: connectors cannot be added to groups via the UI (exclusive selection),
+ * so this function is never reached in practice.
  */
 export const rotateByGroup: RotateByGroupFunction<ConnectorState> = (
 	state,
 	_rotationRootGroup,
 	_endGroupRotation,
-) => {
-	// TODO: Implement connector rotation logic
-	return state;
-};
+) => state;
