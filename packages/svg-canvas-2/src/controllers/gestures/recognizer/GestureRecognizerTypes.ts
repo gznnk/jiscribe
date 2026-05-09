@@ -44,6 +44,7 @@ export type Gesture = {
 	hovered: HoveredElement[];
 	time: number;
 	button: number;
+	zoomDelta?: number; // Optional zoom delta (deltaY from wheel event, zoom events only)
 	scrollDelta?: ScrollDelta; // Optional scroll delta for edge scrolling
 	inputValue?: string; // Optional input value from interactive elements (data-interactive="true")
 };

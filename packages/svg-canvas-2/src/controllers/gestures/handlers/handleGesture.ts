@@ -44,7 +44,12 @@ export const handleGesture = (
 	let canvasEvent: CanvasEvent;
 	if (gesture.type === "wheel") {
 		if (gesture.mods.ctrl) {
-			canvasEvent = { ...gesture, type: "zoom" } as CanvasEvent;
+			canvasEvent = {
+				...gesture,
+				type: "zoom",
+				zoomDelta: gesture.scrollDelta?.deltaY,
+				scrollDelta: undefined,
+			} as CanvasEvent;
 		} else {
 			canvasEvent = { ...gesture, type: "scroll" } as CanvasEvent;
 		}

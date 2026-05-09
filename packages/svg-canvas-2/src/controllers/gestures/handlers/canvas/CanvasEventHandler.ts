@@ -31,9 +31,8 @@ export const CanvasEventHandler: GestureHandler = {
 		let nextState = commitTextEditIfNeeded(state, event.time);
 
 		// Zoom handling
-		if (event.type === "zoom" && event.scrollDelta) {
-			// TODO: scrollDeltaというプロパティを再利用するのは少し違和感がある。将来的にはGestureにzoomDeltaを直接持たせるか、別のプロパティにすることを検討。
-			const { deltaY } = event.scrollDelta;
+		if (event.type === "zoom" && event.zoomDelta != null) {
+			const deltaY = event.zoomDelta;
 			const zoomDelta = deltaY > 0 ? ZOOM.OUT_FACTOR : ZOOM.IN_FACTOR;
 			const newZoom = Math.max(
 				ZOOM.MIN,
