@@ -1,5 +1,7 @@
 import styled from "@emotion/styled";
 
+import { scrollbarStyles } from "../../../../constants/scrollbarStyles";
+
 /**
  * Props for the text editor element.
  */
@@ -61,6 +63,7 @@ export const TextArea = styled.textarea<TextEditorStyledProps>`
 	border: none;
 	outline: none;
 	overflow-y: auto;
+	${scrollbarStyles}
 	resize: none;
 	box-sizing: border-box;
 	padding: 2px 6px;

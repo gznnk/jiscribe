@@ -1,5 +1,7 @@
 import styled from "@emotion/styled";
 
+import { scrollbarStyles } from "../../../../constants/scrollbarStyles";
+
 export const ErrorOverlayContainer = styled.div`
 	position: absolute;
 	top: 0;
@@ -15,13 +17,16 @@ export const ErrorOverlayContainer = styled.div`
 	justify-content: flex-start;
 	padding: 40px 20px;
 	overflow-y: auto;
+	${scrollbarStyles}
 `;
 
 export const ErrorCard = styled.div`
 	background-color: white;
 	border: 1px solid #fca5a5;
 	border-radius: 8px;
-	box-shadow: 0 4px 6px -1px rgba(255, 0, 0, 0.1), 0 2px 4px -1px rgba(255, 0, 0, 0.06);
+	box-shadow:
+		0 4px 6px -1px rgba(255, 0, 0, 0.1),
+		0 2px 4px -1px rgba(255, 0, 0, 0.06);
 	width: 100%;
 	max-width: 800px;
 	padding: 24px;
@@ -68,7 +73,7 @@ export const CopyButton = styled.button`
 	&:hover {
 		background-color: #e5e7eb;
 	}
-	
+
 	&:active {
 		background-color: #d1d5db;
 	}

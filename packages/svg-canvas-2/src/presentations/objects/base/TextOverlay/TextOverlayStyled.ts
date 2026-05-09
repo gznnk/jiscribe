@@ -1,5 +1,6 @@
 import styled from "@emotion/styled";
 
+import { scrollbarStyles } from "../../../../constants/scrollbarStyles";
 import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
 import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
 
@@ -167,6 +168,7 @@ export const Text = styled.div<TextProps>`
 		border-radius: 4px;
 		overflow-x: auto;
 		margin: 0.4em 0;
+		${scrollbarStyles}
 
 		& > code {
 			background: transparent;
