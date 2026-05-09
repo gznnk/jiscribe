@@ -56,7 +56,7 @@ const TextOverlayComponent: React.FC<TextOverlayProps> = ({
 			// Set the new content with sanitized HTML
 			textRef.current.innerHTML = renderMarkdown(text);
 		}
-	}, [text, textType]);
+	}, [text, textType, isEditing]);
 
 	// Don't render anything if editing or text is empty
 	if (isEditing || !text) return null;

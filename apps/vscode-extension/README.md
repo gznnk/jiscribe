@@ -71,3 +71,27 @@ pnpm watch
 
 - VSCodeを再起動
 - 拡張機能開発ホストを再起動（F5）
+
+## TODO
+
+### KaTeX CSS の組み込み
+
+Webview で数式（KaTeX）を正しくレンダリングするには、KaTeX の CSS とフォントファイルを Webview に読み込ませる必要がある。
+
+現状は未対応のため、数式のレイアウトが崩れる可能性がある。
+
+対応方針（2択）：
+
+**① esbuild でバンドル（推奨・オフライン対応）**
+1. `src/webview/index.tsx` に `import "katex/dist/katex.min.css"` を追加
+2. `build.mjs` の webview ビルド設定に CSS ローダーを追加し、KaTeX フォント（`node_modules/katex/dist/fonts/`）を `dist/fonts/` にコピーするステップを追加
+3. `JiscribeEditorProvider.ts` の `getHtmlForWebview` に `<link rel="stylesheet">` タグを追加
+4. CSP に `font-src ${webview.cspSource}` を追加（すでに含まれている場合は確認のみ）
+
+**② CDN から読み込む（実装が簡単・要インターネット）**
+1. `getHtmlForWebview` の `<head>` に以下を追加：
+   ```html
+   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
+   ```
+2. CSP の `style-src` と `font-src` に `https://cdn.jsdelivr.net` を追加
+
