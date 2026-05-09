@@ -12,6 +12,7 @@
 	},
 	"dependencies": {
 		"@workspace/svg-canvas-2": "workspace:*",
+		"katex": "catalog:",
 		"react": "catalog:",
 		"react-dom": "catalog:"
 	},
