@@ -66,6 +66,8 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 			...baseState,
 			selectedIds: [],
 			eventStartSnapshot: null,
+			keyPointsCache: {},
+			snapCandidatesCache: null,
 			edgeScrollEnabled: false,
 			lastCommitTime: 0,
 			contextMenuPosition: null,

@@ -178,12 +178,12 @@ export class TransformControlHandler implements ControlStrategy {
 
 		// ワールド空間でのカーソル位置
 
-		// keyPointsCache から取得、なければ計算
+		// keyPoints から取得、なければ計算
 		const startFrameKeyPointsId = isMultiSelect
 			? eventStartSnapshot.multiSelectGroup?.id
 			: selectedId;
 		const startFrameKeyPoints: FrameKeyPoints =
-			(startFrameKeyPointsId && eventStartSnapshot.keyPointsCache[startFrameKeyPointsId])
+			(startFrameKeyPointsId && eventStartSnapshot.keyPoints[startFrameKeyPointsId])
 			|| calcFrameKeyPoints(startFrame);
 
 		const isSwapped = (startFrame.rotation + 405) % 180 > 90;

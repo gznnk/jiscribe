@@ -14,7 +14,7 @@ import type { TransformState } from "../base/TransformState";
  * Conditional geometry type based on specified geometry feature (runtime state).
  *
  * - `none`: No geometry properties
- * - `rect`/`ellipse`: Frame (keyPoints are stored in EventStartSnapshot.keyPointsCache)
+ * - `rect`/`ellipse`: Frame (keyPoints are stored in EventStartSnapshot.keyPoints)
  * - `poly`: Poly (points array)
  */
 type GeometryState<T extends ObjectFeatures> = //

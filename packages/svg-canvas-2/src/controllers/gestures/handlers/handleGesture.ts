@@ -7,7 +7,7 @@ import type {
 	EventType,
 } from "../../../registry/GestureHandlerRegistryTypes";
 import { isPoly } from "../../../schemas/objects/types/Poly";
-import type { CanvasControllerState, EventStartSnapshot } from "../../CanvasTypes";
+import type { CanvasControllerState, EventStartSnapshot, KeyPointsCache } from "../../CanvasTypes";
 import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWithDescendants";
 import type { Gesture } from "../recognizer/GestureRecognizerTypes";
 import { calcSnapCandidates } from "./objects/utils/snap/calcSnapCandidates";
@@ -54,28 +54,53 @@ export const handleGesture = (
 
 	// Save eventStartSnapshot on event start
 	if (EVENT_START_TYPES.includes(canvasEvent.type)) {
-		// 全 Frame オブジェクトの keyPoints を事前計算してキャッシュする
-		const keyPointsCache: Record<string, FrameKeyPoints> = {};
+		// state.keyPointsCache を読み取り、参照比較で変化があったオブジェクトのみ再計算する
+		const oldCache = state.keyPointsCache;
+		const newCache: KeyPointsCache = {};
+		let cacheChanged = false;
+		const keyPoints: Record<string, FrameKeyPoints> = {};
+
 		for (const [id, obj] of Object.entries(state.objects)) {
-			if (isTransformedFrame(obj)) {
-				keyPointsCache[id] = calcFrameKeyPoints(obj as TransformedFrame);
-			} else if (isPoly(obj) && obj.type !== "connector") {
-				const keyPoints = calcPolyKeyPoints(obj.points);
-				if (keyPoints) {
-					keyPointsCache[id] = keyPoints;
+			const cached = oldCache[id];
+			if (cached && cached.stateRef === obj) {
+				// キャッシュヒット: 参照が同じなので keyPoints も同じ
+				newCache[id] = cached;
+				keyPoints[id] = cached.keyPoints;
+			} else {
+				// キャッシュミス: 再計算
+				let computed: FrameKeyPoints | undefined;
+				if (isTransformedFrame(obj)) {
+					computed = calcFrameKeyPoints(obj as TransformedFrame);
+				} else if (isPoly(obj) && obj.type !== "connector") {
+					const kp = calcPolyKeyPoints(obj.points);
+					if (kp) computed = kp;
 				}
+				if (computed) {
+					newCache[id] = { stateRef: obj, keyPoints: computed };
+					keyPoints[id] = computed;
+					cacheChanged = true;
+				}
+				// Frame を持たないオブジェクト（connector 等）は newCache に含めない
 			}
 		}
 
-		// multiSelectGroup の keyPoints も同 cache に格納する
+		// 削除されたオブジェクトのエントリを検出（newCache は state.objects から構築するため自動的に除外される）
+		if (Object.keys(newCache).length !== Object.keys(oldCache).length) {
+			cacheChanged = true;
+		}
+
+		// multiSelectGroup の keyPoints（選択状態に依存するため毎回計算）
 		if (state.multiSelectGroup && isTransformedFrame(state.multiSelectGroup)) {
-			keyPointsCache[state.multiSelectGroup.id] = calcFrameKeyPoints(
+			keyPoints[state.multiSelectGroup.id] = calcFrameKeyPoints(
 				state.multiSelectGroup as TransformedFrame,
 			);
 		}
 
-		// スナップ候補を事前計算する（毎 drag event での再計算を避けるため）
-		const snapCandidates = calcSnapCandidates(state.objects, keyPointsCache);
+		// snapCandidates は keyPointsCache が変化した場合のみ再計算する
+		const snapCandidatesCache =
+			cacheChanged || !state.snapCandidatesCache
+				? calcSnapCandidates(state.objects, keyPoints)
+				: state.snapCandidatesCache;
 
 		// 選択オブジェクト＋全子孫のIDセットを事前計算する（毎 drag event での再計算を避けるため）
 		// dragStart 後に handler が selectedIds を変更した場合は、ObjectEventHandler が上書きする
@@ -86,8 +111,8 @@ export const handleGesture = (
 
 		const eventStartSnapshot: EventStartSnapshot = {
 			objects: state.objects,
-			keyPointsCache,
-			snapCandidates,
+			keyPoints,
+			snapCandidates: snapCandidatesCache,
 			selectedIds: state.selectedIds,
 			selectedIdsWithDescendants,
 			multiSelectGroup: state.multiSelectGroup,
@@ -96,6 +121,8 @@ export const handleGesture = (
 
 		nextState = {
 			...state,
+			keyPointsCache: newCache,
+			snapCandidatesCache,
 			eventStartSnapshot,
 		};
 	}

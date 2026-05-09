@@ -47,6 +47,8 @@ export const RedoCommand: Command = {
 			viewport: state.viewport, // Preserve viewport
 			selectedIds: [],
 			eventStartSnapshot: null,
+			keyPointsCache: state.keyPointsCache,
+			snapCandidatesCache: state.snapCandidatesCache,
 			edgeScrollEnabled: false,
 			lastCommitTime: state.lastCommitTime, // Don't update - this is history restoration, not a new commit
 			contextMenuPosition: null,

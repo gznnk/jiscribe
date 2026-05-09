@@ -42,7 +42,7 @@ export function createMultiSelectGroup(
 	const lockAspectRatio = existingMultiSelectGroup?.lockAspectRatio ?? true;
 
 	// GroupStateを返す(角度0、反転なし)
-	// keyPoints は EventStartSnapshot.keyPointsCache で管理するためここでは設定しない
+	// keyPoints は EventStartSnapshot.keyPoints で管理するためここでは設定しない
 	return {
 		type: "group",
 		id: MULTI_SELECT_GROUP.ID,

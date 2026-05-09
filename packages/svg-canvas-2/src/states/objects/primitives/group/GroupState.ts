@@ -19,7 +19,7 @@ export type GroupState = Prettify<
 			childIds: string[];
 		}
 	> &
-		Frame // Bounding frame of the group (cached in EventStartSnapshot.keyPointsCache when needed)
+		Frame // Bounding frame of the group (stored in EventStartSnapshot.keyPoints when needed)
 >;
 
 /**

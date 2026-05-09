@@ -9,6 +9,18 @@ import type { ConnectorState } from "../states/objects/connections/connector/Con
 import type { GroupState } from "../states/objects/primitives/group/GroupState";
 
 // ---------------------------------------------------------------------------
+// KeyPoints cache types (stored in CanvasControllerState)
+// ---------------------------------------------------------------------------
+
+export type KeyPointsCacheEntry = {
+	stateRef: ObjectState;
+	keyPoints: FrameKeyPoints;
+};
+
+/** オブジェクトID → keyPoints のキャッシュ。CanvasControllerState に保持し、handleGesture で更新する。 */
+export type KeyPointsCache = Record<string, KeyPointsCacheEntry>;
+
+// ---------------------------------------------------------------------------
 // Snap types (controller-layer only)
 // ---------------------------------------------------------------------------
 
@@ -73,8 +85,8 @@ export type HistoryState = {
 export type EventStartSnapshot = {
 	/** ドラッグ開始時のオブジェクトマップ */
 	objects: Record<string, ObjectState>;
-	/** オブジェクト ID → FrameKeyPoints の事前計算済みキャッシュ（multiSelectGroup.id も含む）*/
-	keyPointsCache: Record<string, FrameKeyPoints>;
+	/** オブジェクト ID → FrameKeyPoints の断面（multiSelectGroup.id も含む）*/
+	keyPoints: Record<string, FrameKeyPoints>;
 	/** スナップ候補（dragStart 時に事前計算）*/
 	snapCandidates: SnapCandidates;
 	/** ドラッグ開始時の選択 ID 一覧 */
@@ -105,6 +117,18 @@ export type CanvasControllerState = CanvasState & {
 	 * and cleared on dragEnd. null when no gesture is in progress.
 	 */
 	eventStartSnapshot: EventStartSnapshot | null;
+
+	/**
+	 * keyPoints の永続キャッシュ。dragStart のたびに参照比較で差分のみ再計算する。
+	 * CanvasDoc には含まれず、履歴管理の対象外。
+	 */
+	keyPointsCache: KeyPointsCache;
+
+	/**
+	 * snapCandidates のキャッシュ。keyPointsCache が変化した dragStart のみ再計算する。
+	 * null の場合は未計算（次の dragStart で必ず計算される）。
+	 */
+	snapCandidatesCache: SnapCandidates | null;
 
 	/**
 	 * Whether edge scrolling is enabled when dragging near canvas edges.

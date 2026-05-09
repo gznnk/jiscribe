@@ -95,7 +95,7 @@ function handleObjectDrag(
 			? eventStartSnapshot.multiSelectGroup?.id
 			: selectedIds[0];
 	const snapSourceKeyPoints: FrameKeyPoints | undefined =
-		snapSourceId ? eventStartSnapshot.keyPointsCache[snapSourceId] : undefined;
+		snapSourceId ? eventStartSnapshot.keyPoints[snapSourceId] : undefined;
 
 	if (snapCandidates && snapSourceKeyPoints) {
 		const bbox = calcKeyPointsBoundingBox(snapSourceKeyPoints);
@@ -200,9 +200,9 @@ function handleObjectDragStart(
 
 	let selectedIds: string[];
 	let newMultiSelectGroup = canvasState.multiSelectGroup;
-	// eventStartSnapshot に設定する multiSelectGroup と keyPointsCache の更新分
+	// eventStartSnapshot に設定する multiSelectGroup と keyPoints の更新分
 	let eventStartMultiSelectGroup = canvasState.eventStartSnapshot?.multiSelectGroup ?? null;
-	let keyPointsCache = canvasState.eventStartSnapshot?.keyPointsCache ?? {};
+	let keyPoints = canvasState.eventStartSnapshot?.keyPoints ?? {};
 
 	if (isCurrentlySelected || isAncestorSelected) {
 		// すでに選択済み: 現在の選択を維持
@@ -225,10 +225,10 @@ function handleObjectDragStart(
 				: null;
 		eventStartMultiSelectGroup = newMultiSelectGroup;
 
-		// 新しい multiSelectGroup の keyPoints も cache に追加する
+		// 新しい multiSelectGroup の keyPoints も追加する
 		if (newMultiSelectGroup && isTransformedFrame(newMultiSelectGroup)) {
-			keyPointsCache = {
-				...keyPointsCache,
+			keyPoints = {
+				...keyPoints,
 				[newMultiSelectGroup.id]: calcFrameKeyPoints(
 					newMultiSelectGroup as TransformedFrame,
 				),
@@ -258,7 +258,7 @@ function handleObjectDragStart(
 			? {
 					...canvasState.eventStartSnapshot,
 					multiSelectGroup: eventStartMultiSelectGroup,
-					keyPointsCache,
+					keyPoints,
 					...(selectedIdsWithDescendants && { selectedIdsWithDescendants }),
 				}
 			: null,
