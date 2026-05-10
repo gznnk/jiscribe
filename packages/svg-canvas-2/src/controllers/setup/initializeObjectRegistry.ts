@@ -103,7 +103,7 @@ export const initializeObjectRegistry = (): void => {
 		(_state) => [
 			{
 				id: "style",
-				sections: [
+				items: [
 					{ type: "backgroundColor" },
 					{ type: "borderColor" },
 					{ type: "borderStyle", radius: true },
@@ -111,11 +111,11 @@ export const initializeObjectRegistry = (): void => {
 			},
 			{
 				id: "text",
-				sections: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				items: [{ type: "fontStyle" }, { type: "textAlignment" }],
 			},
 			{
 				id: "transform",
-				sections: [{ type: "aspectRatio" }],
+				items: [{ type: "aspectRatio" }],
 			},
 		],
 	);
@@ -133,7 +133,7 @@ export const initializeObjectRegistry = (): void => {
 		(_state) => [
 			{
 				id: "style",
-				sections: [
+				items: [
 					{ type: "backgroundColor" },
 					{ type: "borderColor" },
 					{ type: "borderStyle", radius: false },
@@ -141,11 +141,11 @@ export const initializeObjectRegistry = (): void => {
 			},
 			{
 				id: "text",
-				sections: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				items: [{ type: "fontStyle" }, { type: "textAlignment" }],
 			},
 			{
 				id: "transform",
-				sections: [{ type: "aspectRatio" }],
+				items: [{ type: "aspectRatio" }],
 			},
 		],
 	);
@@ -163,7 +163,7 @@ export const initializeObjectRegistry = (): void => {
 		(_state) => [
 			{
 				id: "transform",
-				sections: [{ type: "aspectRatio" }],
+				items: [{ type: "aspectRatio" }],
 			},
 		],
 	);
@@ -181,7 +181,7 @@ export const initializeObjectRegistry = (): void => {
 		(_state) => [
 			{
 				id: "style",
-				sections: [
+				items: [
 					{ type: "backgroundColor" },
 					{ type: "borderColor" },
 					{ type: "borderStyle", radius: false },
@@ -203,11 +203,11 @@ export const initializeObjectRegistry = (): void => {
 		(_state) => [
 			{
 				id: "arrowHead",
-				sections: [{ type: "arrowHead" }],
+				items: [{ type: "arrowHead" }],
 			},
 			{
 				id: "line",
-				sections: [{ type: "lineColor" }, { type: "lineStyle" }],
+				items: [{ type: "lineColor" }, { type: "lineStyle" }],
 			},
 		],
 	);
@@ -225,11 +225,11 @@ export const initializeObjectRegistry = (): void => {
 		(_state) => [
 			{
 				id: "arrowHead",
-				sections: [{ type: "arrowHead" }],
+				items: [{ type: "arrowHead" }],
 			},
 			{
 				id: "line",
-				sections: [{ type: "lineColor" }, { type: "lineStyle" }],
+				items: [{ type: "lineColor" }, { type: "lineStyle" }],
 			},
 		],
 	);
@@ -247,15 +247,15 @@ export const initializeObjectRegistry = (): void => {
 		(_state: StickyState) => [
 			{
 				id: "style",
-				sections: [{ type: "backgroundColor" }],
+				items: [{ type: "backgroundColor" }],
 			},
 			{
 				id: "text",
-				sections: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				items: [{ type: "fontStyle" }, { type: "textAlignment" }],
 			},
 			{
 				id: "transform",
-				sections: [{ type: "aspectRatio" }],
+				items: [{ type: "aspectRatio" }],
 			},
 		],
 	);

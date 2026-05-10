@@ -2,29 +2,25 @@ import React, { memo, useRef } from "react";
 
 import { useMenuGroups } from "./hooks/useMenuConfig";
 import { useObjectMenuPosition } from "./hooks/useObjectMenuPosition";
+import { AlignmentMenu } from "./items/AlignmentMenu";
+import { ArrowHeadMenu } from "./items/ArrowHeadMenu";
+import { BackgroundColorMenu } from "./items/BackgroundColorMenu";
+import { BoldMenu } from "./items/BoldMenu";
+import { BorderStyleMenu } from "./items/BorderStyleMenu";
+import { FontColorMenu } from "./items/FontColorMenu";
+import { FontSizeMenu } from "./items/FontSizeMenu";
+import { GroupMenu } from "./items/GroupMenu";
+import { KeepAspectRatioMenu } from "./items/KeepAspectRatioMenu";
+import { LineColorMenu } from "./items/LineColorMenu";
+import { LineStyleMenu } from "./items/LineStyleMenu";
+import { StackOrderMenu } from "./items/StackOrderMenu";
+import { StrokeColorMenu } from "./items/StrokeColorMenu";
 import {
 	ObjectMenuContainer,
 	ObjectMenuDivider,
 	ObjectMenuWrapper,
 } from "./ObjectMenuStyled";
-import type {
-	MenuSection,
-	MenuSectionGroup,
-	MenuSectionProps,
-} from "./ObjectMenuTypes";
-import { AlignmentMenu } from "./sections/AlignmentMenu";
-import { ArrowHeadMenu } from "./sections/ArrowHeadMenu";
-import { BackgroundColorMenu } from "./sections/BackgroundColorMenu";
-import { BoldMenu } from "./sections/BoldMenu";
-import { BorderStyleMenu } from "./sections/BorderStyleMenu";
-import { FontColorMenu } from "./sections/FontColorMenu";
-import { FontSizeMenu } from "./sections/FontSizeMenu";
-import { GroupMenu } from "./sections/GroupMenu";
-import { KeepAspectRatioMenu } from "./sections/KeepAspectRatioMenu";
-import { LineColorMenu } from "./sections/LineColorMenu";
-import { LineStyleMenu } from "./sections/LineStyleMenu";
-import { StackOrderMenu } from "./sections/StackOrderMenu";
-import { StrokeColorMenu } from "./sections/StrokeColorMenu";
+import type { MenuItem, MenuSection, MenuItemProps } from "./ObjectMenuTypes";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { isSameGroupSelection } from "../../../utils/isSameGroupSelection";
 
@@ -33,9 +29,9 @@ type ObjectMenuProps = {
 	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
 };
 
-const renderSection = (
-	section: MenuSection,
-	props: MenuSectionProps,
+const renderItem = (
+	section: MenuItem,
+	props: MenuItemProps,
 ): React.ReactNode => {
 	const { canvasState, onPropertyUpdate } = props;
 	switch (section.type) {
@@ -100,20 +96,20 @@ const renderSection = (
 
 const buildSystemGroups = (
 	canvasState: CanvasControllerState,
-): MenuSectionGroup[] => {
-	const systemGroups: MenuSectionGroup[] = [];
+): MenuSection[] => {
+	const systemGroups: MenuSection[] = [];
 
 	if (isSameGroupSelection(canvasState)) {
 		systemGroups.push({
 			id: "system-stack-order",
-			sections: [{ type: "stackOrder" }],
+			items: [{ type: "stackOrder" }],
 		});
 	}
 
 	if (canvasState.multiSelectGroup) {
 		systemGroups.push({
 			id: "system-aspect-ratio",
-			sections: [{ type: "aspectRatio" }],
+			items: [{ type: "aspectRatio" }],
 		});
 	}
 
@@ -125,7 +121,7 @@ const buildSystemGroups = (
 	if (shouldShowGroup) {
 		systemGroups.push({
 			id: "system-group",
-			sections: [{ type: "group" }],
+			items: [{ type: "group" }],
 		});
 	}
 
@@ -148,26 +144,26 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 
 	if (!shouldRender || allGroups.length === 0) return null;
 
-	const sectionProps: MenuSectionProps = { canvasState, onPropertyUpdate };
+	const itemProps: MenuItemProps = { canvasState, onPropertyUpdate };
 
-	// objectGroups と systemGroups の両方に同じセクションタイプが含まれる場合があるため、
+	// objectGroups と systemGroups の両方に同じアイテムタイプが含まれる場合があるため、
 	// 先に出現したものを優先し、重複レンダリングを防ぐ
-	const renderedSectionKeys = new Set<string>();
+	const renderedItemKeys = new Set<string>();
 	const items: React.ReactNode[] = [];
 
 	allGroups.forEach((group, gi) => {
-		// 未レンダリングのセクションのみ抽出する
+		// 未レンダリングのアイテムのみ抽出する
 		const groupItems: React.ReactNode[] = [];
-		group.sections.forEach((section) => {
-			const key = section.type === "custom" ? section.id : section.type;
-			if (renderedSectionKeys.has(key)) return;
-			renderedSectionKeys.add(key);
-			groupItems.push(renderSection(section, sectionProps));
+		group.items.forEach((item) => {
+			const key = item.type === "custom" ? item.id : item.type;
+			if (renderedItemKeys.has(key)) return;
+			renderedItemKeys.add(key);
+			groupItems.push(renderItem(item, itemProps));
 		});
 
 		items.push(...groupItems);
 
-		// グループ間にセパレータを挿入（最終グループ、または全セクションが重複スキップされたグループの後ろには挿入しない）
+		// グループ間にセパレータを挿入（最終グループ、または全アイテムが重複スキップされたグループの後ろには挿入しない）
 		if (gi < allGroups.length - 1 && groupItems.length > 0) {
 			items.push(<ObjectMenuDivider key={`sep-${gi}`} />);
 		}

@@ -3,23 +3,25 @@ import { useMemo } from "react";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
 import { objectMenuRegistry } from "../ObjectMenuRegistry";
-import type { MenuSection, MenuSectionGroup } from "../ObjectMenuTypes";
+import type { MenuItem, MenuSection } from "../ObjectMenuTypes";
 
-const sectionKey = (section: MenuSection): string =>
+const itemKey = (section: MenuItem): string =>
 	section.type === "custom" ? section.id : section.type;
 
 /**
- * 複数オブジェクト型のセクションリストを AND 結合する。
- * 全型に共通するセクションのみを残す。
+ * 複数オブジェクト型のアイテムリストを AND 結合する。
+ * 全型に共通するアイテムのみを残す。
  * borderStyle は全型が radius: true の場合のみ radius を有効にする。
  */
-const mergeSections = (arrays: MenuSection[][]): MenuSection[] => {
+const mergeItems = (arrays: MenuItem[][]): MenuItem[] => {
 	if (arrays.length === 1) return arrays[0];
 
 	return arrays[0]
 		.filter((section) => {
-			const key = sectionKey(section);
-			return arrays.slice(1).every((arr) => arr.some((s) => sectionKey(s) === key));
+			const key = itemKey(section);
+			return arrays
+				.slice(1)
+				.every((arr) => arr.some((s) => itemKey(s) === key));
 		})
 		.map((section) => {
 			if (section.type !== "borderStyle") return section;
@@ -33,10 +35,10 @@ const mergeSections = (arrays: MenuSection[][]): MenuSection[] => {
 };
 
 /**
- * 複数オブジェクト型のグループリストを AND 結合する。
- * 全型に共通する id のグループのみを残し、各グループ内のセクションも AND 結合する。
+ * 複数オブジェクト型のセクションリストを AND 結合する。
+ * 全型に共通する id のセクションのみを残し、各セクション内のアイテムも AND 結合する。
  */
-const mergeGroups = (arrays: MenuSectionGroup[][]): MenuSectionGroup[] => {
+const mergeSections = (arrays: MenuSection[][]): MenuSection[] => {
 	if (arrays.length === 0) return [];
 	if (arrays.length === 1) return arrays[0];
 
@@ -46,11 +48,11 @@ const mergeGroups = (arrays: MenuSectionGroup[][]): MenuSectionGroup[] => {
 		)
 		.map((group) => ({
 			id: group.id,
-			sections: mergeSections(
-				arrays.map((arr) => arr.find((g) => g.id === group.id)!.sections),
+			items: mergeItems(
+				arrays.map((arr) => arr.find((g) => g.id === group.id)!.items),
 			),
 		}))
-		.filter((group) => group.sections.length > 0);
+		.filter((group) => group.items.length > 0);
 };
 
 /**
@@ -60,9 +62,7 @@ const mergeGroups = (arrays: MenuSectionGroup[][]): MenuSectionGroup[] => {
  * グループオブジェクトが選択されている場合は子孫の実オブジェクト型を展開し、
  * 複数の型が混在する場合は共通するグループ・セクションのみを表示する（AND 結合）。
  */
-export const getMenuGroups = (
-	state: CanvasControllerState,
-): MenuSectionGroup[] => {
+export const getMenuGroups = (state: CanvasControllerState): MenuSection[] => {
 	const { selectedIds, selectedConnectorId, objects } = state;
 
 	// Connector 選択時は selectedIds の代わりに connector のグループを返す
@@ -95,16 +95,19 @@ export const getMenuGroups = (
 	// 各型の代表インスタンスでメニューグループを取得し、AND 結合する
 	const groupArrays = [...types].map((type) => {
 		const representative = Object.values(objects).find((o) => o?.type === type);
-		return representative ? objectMenuRegistry.getGroups(type, representative) : [];
+		return representative
+			? objectMenuRegistry.getGroups(type, representative)
+			: [];
 	});
 
-	return mergeGroups(groupArrays);
+	return mergeSections(groupArrays);
 };
 
-export const useMenuGroups = (
-	state: CanvasControllerState,
-): MenuSectionGroup[] => {
+export const useMenuGroups = (state: CanvasControllerState): MenuSection[] => {
 	const { selectedIds, selectedConnectorId, objects } = state;
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	return useMemo(() => getMenuGroups(state), [selectedIds, selectedConnectorId, objects]);
+	return useMemo(
+		() => getMenuGroups(state),
+		[selectedIds, selectedConnectorId, objects],
+	);
 };

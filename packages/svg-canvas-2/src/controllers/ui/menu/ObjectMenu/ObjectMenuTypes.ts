@@ -1,6 +1,6 @@
 import type { CanvasControllerState } from "../../../CanvasTypes";
 
-export type BuiltinSectionKey =
+export type BuiltinItemKey =
 	| "arrowHead"
 	| "lineColor"
 	| "lineStyle"
@@ -13,29 +13,29 @@ export type BuiltinSectionKey =
 	| "stackOrder"
 	| "group";
 
-export type MenuSectionProps = {
+export type MenuItemProps = {
 	canvasState: CanvasControllerState;
 	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
 };
 
-export type BuiltinSection =
-	| { type: Exclude<BuiltinSectionKey, "borderStyle"> }
+export type BuiltinItem =
+	| { type: Exclude<BuiltinItemKey, "borderStyle"> }
 	| { type: "borderStyle"; radius?: boolean };
 
-export type CustomSection = {
+export type CustomItem = {
 	type: "custom";
 	id: string;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	component: React.ComponentType<any>;
 };
 
-export type MenuSection = BuiltinSection | CustomSection;
+export type MenuItem = BuiltinItem | CustomItem;
 
-export type MenuSectionGroup = {
+export type MenuSection = {
 	id: string;
-	sections: MenuSection[];
+	items: MenuItem[];
 };
 
 export type MenuSectionFactory<TState = unknown> = (
 	state: TState,
-) => MenuSectionGroup[];
+) => MenuSection[];

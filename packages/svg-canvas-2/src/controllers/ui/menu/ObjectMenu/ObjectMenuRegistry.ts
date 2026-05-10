@@ -1,4 +1,4 @@
-import type { MenuSectionFactory, MenuSectionGroup } from "./ObjectMenuTypes";
+import type { MenuSectionFactory, MenuSection } from "./ObjectMenuTypes";
 import type { ObjectType } from "../../../../schemas/objects/types/ObjectType";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 
@@ -33,7 +33,7 @@ class ObjectMenuRegistry {
 	 * 指定した型のファクトリを呼び出してメニューグループを返す。
 	 * 未登録の型は空配列を返す。
 	 */
-	getGroups(type: ObjectType, state: ObjectState): MenuSectionGroup[] {
+	getGroups(type: ObjectType, state: ObjectState): MenuSection[] {
 		return this.factories.get(type)?.(state) ?? [];
 	}
 
