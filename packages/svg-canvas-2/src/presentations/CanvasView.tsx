@@ -46,13 +46,13 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 				height={height / zoom}
 			/>
 			<ContentGroup isDrawMode={isDrawMode}>
-				{/* Connectors rendered below objects */}
-				<ConnectorsRenderer objects={objects} connectorIds={connectorIds} />
 				<ObjectsRenderer
 					objects={objects}
 					rootIds={rootIds}
 					textEditObjectId={textEditObjectId}
 				/>
+				{/* Connectors rendered above objects */}
+				<ConnectorsRenderer objects={objects} connectorIds={connectorIds} />
 				{/* Overlay layers injected from parent */}
 				{children}
 			</ContentGroup>
