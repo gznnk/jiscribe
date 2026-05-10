@@ -56,6 +56,7 @@ function validateObjectNode(obj: unknown, path: string): SemanticDiagnostic[] {
 
 	switch (o.type) {
 		case "rect":
+		case "sticky":
 			if (!isNumber(o.x)) errors.push({ path: `${path}.x`, message: "must be a number" });
 			if (!isNumber(o.y)) errors.push({ path: `${path}.y`, message: "must be a number" });
 			if (!isNumber(o.width)) errors.push({ path: `${path}.width`, message: "must be a number" });

@@ -1,6 +1,7 @@
 import * as esbuild from "esbuild";
-import { fileURLToPath } from "url";
+import { copyFileSync } from "fs";
 import { dirname, join } from "path";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -39,8 +40,17 @@ const webviewConfig = {
 	},
 };
 
+function copySchema() {
+	const src = join(__dirname, "../../packages/svg-canvas-2/src/schemas/canvas/canvas-doc.schema.json");
+	const dest = join(__dirname, "canvas-doc.schema.json");
+	copyFileSync(src, dest);
+	console.log("✅ Schema copied: canvas-doc.schema.json");
+}
+
 async function build() {
 	try {
+		copySchema();
+
 		if (isWatch) {
 			const extensionCtx = await esbuild.context(extensionConfig);
 			const webviewCtx = await esbuild.context(webviewConfig);
