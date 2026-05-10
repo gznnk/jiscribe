@@ -29,7 +29,7 @@ export const ELLIPSE_DOC_DEFAULTS: Omit<EllipseDoc, "id"> = {
 	stroke: "#374151",
 	strokeWidth: 2,
 	text: "",
-	textType: "textarea",
+	textType: "text",
 	textAlign: "center",
 	verticalAlign: "center",
 	fontColor: "#000000",

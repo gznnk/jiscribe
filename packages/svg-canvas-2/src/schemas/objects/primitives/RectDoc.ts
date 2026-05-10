@@ -31,7 +31,7 @@ export const RECT_DOC_DEFAULTS: Omit<RectDoc, "id"> = {
 	strokeWidth: 2,
 	rx: 0,
 	text: "",
-	textType: "textarea",
+	textType: "text",
 	textAlign: "center",
 	verticalAlign: "center",
 	fontColor: "#000000",

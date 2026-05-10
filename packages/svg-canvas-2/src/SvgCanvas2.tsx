@@ -26,7 +26,7 @@ const testCanvasDoc: CanvasDoc = {
 			stroke: "#2E7D32",
 			strokeWidth: 2,
 			text: "回転した矩形",
-			textType: "textarea",
+			textType: "text",
 			textAlign: "center",
 			verticalAlign: "center",
 			fontColor: "#2E7D32",

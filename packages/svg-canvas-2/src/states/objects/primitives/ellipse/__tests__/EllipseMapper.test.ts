@@ -193,7 +193,7 @@ describe("EllipseMapper", () => {
 				strokeWidth: 2,
 				fill: "#ff0000",
 				text: "Round Trip Text",
-				textType: "textarea",
+				textType: "text",
 				textAlign: "center",
 				verticalAlign: "center",
 				fontColor: "#444444",

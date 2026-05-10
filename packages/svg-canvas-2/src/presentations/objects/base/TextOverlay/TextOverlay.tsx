@@ -38,7 +38,7 @@ const TextOverlayComponent: React.FC<TextOverlayProps> = ({
 	height,
 	transform,
 	text,
-	textType = "textarea",
+	textType = "text",
 	textAlign = "center",
 	verticalAlign = "center",
 	fontColor = "#000000",
@@ -89,8 +89,8 @@ const TextOverlayComponent: React.FC<TextOverlayProps> = ({
 						fontSize={fontSize}
 						fontFamily={fontFamily}
 						fontWeight={fontWeight}
-						wordBreak={textType === "text" ? "normal" : "break-word"}
-						whiteSpace={textType === "text" ? "nowrap" : "pre-wrap"}
+						wordBreak="break-word"
+						whiteSpace="pre-wrap"
 					>
 						{text}
 					</Text>

@@ -68,7 +68,7 @@
 		"TextType": {
 			"description": "How text content is rendered.",
 			"type": "string",
-			"enum": ["text", "textarea", "markdown"]
+			"enum": ["text", "markdown"]
 		},
 
 		"TextAlign": {
@@ -150,7 +150,7 @@
 					"type": "string"
 				},
 				"textType": {
-					"description": "How text is rendered. Default: \"textarea\"",
+					"description": "How text is rendered. Default: \"text\"",
 					"$ref": "#/$defs/TextType"
 				},
 				"textAlign": {
@@ -428,7 +428,9 @@
 				"text": { "$ref": "#/$defs/TextStyle/properties/text" },
 				"textType": { "$ref": "#/$defs/TextStyle/properties/textType" },
 				"textAlign": { "$ref": "#/$defs/TextStyle/properties/textAlign" },
-				"verticalAlign": { "$ref": "#/$defs/TextStyle/properties/verticalAlign" },
+				"verticalAlign": {
+					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
+				},
 				"fontColor": { "$ref": "#/$defs/TextStyle/properties/fontColor" },
 				"fontSize": { "$ref": "#/$defs/TextStyle/properties/fontSize" },
 				"fontFamily": { "$ref": "#/$defs/TextStyle/properties/fontFamily" },

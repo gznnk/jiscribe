@@ -1,7 +1,7 @@
 import type React from "react";
 import { memo, useEffect, useRef } from "react";
 
-import { Input, TextArea } from "./TextEditorStyled";
+import { TextArea } from "./TextEditorStyled";
 import { createSvgTransform } from "../../../../presentations/objects/utils/createSvgTransform";
 import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
 import type { TextType } from "../../../../schemas/objects/types/TextType";
@@ -35,7 +35,6 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 	scaleX,
 	scaleY,
 	rotation,
-	textType = "textarea",
 	textAlign = "center",
 	fontColor = "#000000",
 	fontSize = 16,
@@ -44,31 +43,20 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 	onChange,
 	onEscape,
 }) => {
-	const inputRef = useRef<HTMLInputElement>(null);
 	const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
 	// 初回フォーカス
 	useEffect(() => {
-		if (textType === "text") {
-			inputRef.current?.focus();
-			// Set cursor to the end of the text
-			inputRef.current?.setSelectionRange(text.length, text.length);
-		} else {
-			textAreaRef.current?.focus();
-			// Set cursor to the end of the text
-			textAreaRef.current?.setSelectionRange(text.length, text.length);
-		}
-	}, [textType, text.length]);
+		textAreaRef.current?.focus();
+		// Set cursor to the end of the text
+		textAreaRef.current?.setSelectionRange(text.length, text.length);
+	}, [text.length]);
 
-	const handleChange = (
-		e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-	) => {
+	const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		onChange(e.target.value);
 	};
 
-	const handleKeyDown = (
-		e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
-	) => {
+	const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
 		if (e.key === "Escape" && onEscape) {
 			e.preventDefault();
 			e.stopPropagation();
@@ -99,15 +87,7 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		onKeyDown: handleKeyDown,
 	};
 
-	return textType === "text" ? (
-		<Input
-			data-kind="text-editor"
-			data-id="input"
-			{...commonProps}
-			ref={inputRef}
-			type="text"
-		/>
-	) : (
+	return (
 		<TextArea
 			data-kind="text-editor"
 			data-id="textarea"
