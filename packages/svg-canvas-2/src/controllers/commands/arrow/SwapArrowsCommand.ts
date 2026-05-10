@@ -8,13 +8,38 @@ export const SwapArrowsCommand: Command = {
 	category: "edit",
 
 	canExecute: (state) => {
-		return state.selectedIds.some((id) => {
-			const type = state.objects[id]?.type;
-			return type === "polyline" || type === "connector";
-		});
+		if (state.selectedConnectorId !== null) {
+			return state.objects[state.selectedConnectorId]?.type === "connector";
+		}
+		return state.selectedIds.some(
+			(id) => state.objects[id]?.type === "polyline",
+		);
 	},
 
 	execute: (state) => {
+		// Connector 選択時
+		if (state.selectedIds.length === 0 && state.selectedConnectorId !== null) {
+			const connector = state.objects[state.selectedConnectorId] as
+				| ConnectorState
+				| undefined;
+			if (!connector) return state;
+			const prev = connector.startArrow ?? "None";
+			const next = connector.endArrow ?? "None";
+			return {
+				...state,
+				objects: {
+					...state.objects,
+					[state.selectedConnectorId]: {
+						...connector,
+						startArrow: next,
+						endArrow: prev,
+					} as ConnectorState,
+				},
+				lastCommitTime: Date.now(),
+			};
+		}
+
+		// Polyline 選択時
 		const updatedObjects = { ...state.objects };
 		let changed = false;
 
@@ -26,13 +51,11 @@ export const SwapArrowsCommand: Command = {
 				const polyline = obj as PolylineState;
 				const prev = polyline.startArrow ?? "None";
 				const next = polyline.endArrow ?? "None";
-				updatedObjects[id] = { ...polyline, startArrow: next, endArrow: prev } as PolylineState;
-				changed = true;
-			} else if (obj.type === "connector") {
-				const connector = obj as ConnectorState;
-				const prev = connector.startArrow ?? "None";
-				const next = connector.endArrow ?? "None";
-				updatedObjects[id] = { ...connector, startArrow: next, endArrow: prev } as ConnectorState;
+				updatedObjects[id] = {
+					...polyline,
+					startArrow: next,
+					endArrow: prev,
+				} as PolylineState;
 				changed = true;
 			}
 		}

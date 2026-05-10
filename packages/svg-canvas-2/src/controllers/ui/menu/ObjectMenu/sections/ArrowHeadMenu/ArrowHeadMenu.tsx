@@ -3,6 +3,7 @@
 import { ArrowHeadIconPreview } from "./ArrowHeadIconPreview";
 import { ArrowSelectorGrid, ArrowTypeButton } from "./ArrowHeadMenuStyled";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
+import { getEffectiveSelectedIds } from "../../../../../../controllers/utils/getEffectiveSelectedIds";
 import { ArrowTypes } from "../../../../../../schemas/objects/types/ArrowType";
 import type { ArrowType } from "../../../../../../schemas/objects/types/ArrowType";
 import { ArrowSwapIcon } from "../../../../icons/ArrowSwapIcon";
@@ -23,12 +24,13 @@ type ArrowHeadMenuProps = {
 
 /**
  * 選択中オブジェクトの矢印タイプを取得する。
+ * Connector が選択されている場合は selectedConnectorId から取得する。
  */
 const getSelectedArrowType = (
 	state: CanvasControllerState,
 	property: "startArrow" | "endArrow",
 ): ArrowType => {
-	for (const id of state.selectedIds) {
+	for (const id of getEffectiveSelectedIds(state)) {
 		const obj = state.objects[id];
 		if (obj && property in obj) {
 			const value = (obj as Record<string, unknown>)[property];

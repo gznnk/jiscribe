@@ -6,8 +6,10 @@ import {
 import { type RefObject, useLayoutEffect, useMemo, useState } from "react";
 
 import { isPoly } from "../../../../../schemas/objects/types/Poly";
+import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
 import { isGroupState } from "../../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { calcConnectorEndpointBBox } from "../../../../utils/calcConnectorEndpointBBox";
 import { calcGroupBoundingBox } from "../../../utils/calcGroupBoundingBox";
 
 /** ObjectMenu とオブジェクト間の距離 (px) */
@@ -39,6 +41,7 @@ export function useObjectMenuPosition(
 ): ObjectMenuPosition {
 	const {
 		selectedIds,
+		selectedConnectorId,
 		objects,
 		viewport,
 		contextMenuPosition,
@@ -55,8 +58,8 @@ export function useObjectMenuPosition(
 	// Measure menu dimensions from DOM when it renders or selection changes
 	const selectedIdsString = selectedIds.slice().sort().join(",");
 	const shouldRender = useMemo(() => {
-		// メニューを表示しない条件
-		if (selectedIds.length === 0) return false;
+		const hasSelection = selectedIds.length > 0 || selectedConnectorId !== null;
+		if (!hasSelection) return false;
 		if (contextMenuPosition !== null) return false;
 		// eventStartSnapshot が null でない場合でも、objectMenuOpenId が null でない場合は表示を続ける
 		// （スライダーのドラッグ中にメニューを表示し続けるため）
@@ -65,6 +68,7 @@ export function useObjectMenuPosition(
 		return true;
 	}, [
 		selectedIds,
+		selectedConnectorId,
 		contextMenuPosition,
 		eventStartSnapshot,
 		areaSelection,
@@ -76,7 +80,7 @@ export function useObjectMenuPosition(
 			const rect = menuRef.current.getBoundingClientRect();
 			setMenuDimensions({ width: rect.width, height: rect.height });
 		}
-	}, [menuRef, shouldRender, selectedIdsString]);
+	}, [menuRef, shouldRender, selectedIdsString, selectedConnectorId]);
 
 	return useMemo(() => {
 		if (!shouldRender) {
@@ -89,6 +93,23 @@ export function useObjectMenuPosition(
 		let maxX = -Infinity;
 		let maxY = -Infinity;
 		let hasValidObject = false;
+
+		if (selectedConnectorId !== null) {
+			const connector = objects[selectedConnectorId];
+			if (connector) {
+				const bbox = calcConnectorEndpointBBox(
+					connector as ConnectorState,
+					objects,
+				);
+				if (bbox) {
+					minX = Math.min(minX, bbox.left);
+					minY = Math.min(minY, bbox.top);
+					maxX = Math.max(maxX, bbox.right);
+					maxY = Math.max(maxY, bbox.bottom);
+					hasValidObject = true;
+				}
+			}
+		}
 
 		for (const id of selectedIds) {
 			const obj = objects[id];
@@ -108,7 +129,6 @@ export function useObjectMenuPosition(
 				if (!polyBbox) continue;
 				bbox = polyBbox;
 			} else {
-				// Transform を持たないオブジェクト（connector など）はスキップ
 				continue;
 			}
 
@@ -183,5 +203,5 @@ export function useObjectMenuPosition(
 			x: Math.round(menuX),
 			y: Math.round(menuY),
 		};
-	}, [shouldRender, selectedIds, objects, viewport, menuDimensions]);
+	}, [shouldRender, selectedIds, selectedConnectorId, objects, viewport, menuDimensions]);
 }

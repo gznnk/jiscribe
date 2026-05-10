@@ -1,6 +1,7 @@
 import { memo, useRef } from "react";
 
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
+import { getEffectiveSelectedIds } from "../../../../../../controllers/utils/getEffectiveSelectedIds";
 import { getFirstSelectedWithProp } from "../../../../../../controllers/utils/getFirstSelectedWithProp";
 import { ColorPreviewIcon } from "../../../../icons/ColorPreviewIcon";
 import { ColorPickerGrid } from "../../common/ColorPickerGrid/ColorPickerGrid";
@@ -19,7 +20,7 @@ type LineColorMenuProps = {
 };
 
 const getSelectedStrokeColor = (state: CanvasControllerState): string => {
-	const obj = getFirstSelectedWithProp(state.selectedIds, state.objects, "stroke");
+	const obj = getFirstSelectedWithProp(getEffectiveSelectedIds(state), state.objects, "stroke");
 	const stroke = (obj as Record<string, unknown>)?.stroke;
 	return typeof stroke === "string" ? stroke : "#374151";
 };

@@ -58,6 +58,7 @@ const parsePropertyValue = (property: string, value: string): unknown => {
 
 /**
  * 選択中の全オブジェクトに対してプロパティを更新する。
+ * Connector が選択されている場合（selectedConnectorId != null）はその Connector を更新する。
  * lockAspectRatio かつ複数選択時は multiSelectGroup のみ更新。
  */
 export const handlePropertyUpdate = (
@@ -65,7 +66,28 @@ export const handlePropertyUpdate = (
 	property: string,
 	value: string,
 ): CanvasControllerState => {
-	const { selectedIds, objects, multiSelectGroup } = state;
+	const { selectedIds, selectedConnectorId, objects, multiSelectGroup } = state;
+
+	// Connector 選択時（selectedIds は空）
+	if (selectedIds.length === 0 && selectedConnectorId !== null) {
+		const connector = objects[selectedConnectorId];
+		if (!connector) return state;
+
+		const features = objectRegistry.getFeatures(connector.type);
+		const supported = features ? isPropertySupported(features, property) : false;
+		const arrowSupported = isArrowPropertySupported(connector.type, property);
+		if (!supported && !arrowSupported) return state;
+
+		const parsedValue = parsePropertyValue(property, value);
+		return {
+			...state,
+			objects: {
+				...objects,
+				[selectedConnectorId]: { ...connector, [property]: parsedValue } as ObjectState,
+			},
+		};
+	}
+
 	if (selectedIds.length === 0) return state;
 
 	// lockAspectRatio かつ複数選択時は multiSelectGroup のみ更新

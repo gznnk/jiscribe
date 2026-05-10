@@ -56,13 +56,22 @@ const mergeGroups = (arrays: MenuSectionGroup[][]): MenuSectionGroup[] => {
 /**
  * 選択中オブジェクトから表示すべきメニューグループを計算する。
  *
+ * Connector が選択されている場合（selectedConnectorId != null）はその型のグループを返す。
  * グループオブジェクトが選択されている場合は子孫の実オブジェクト型を展開し、
  * 複数の型が混在する場合は共通するグループ・セクションのみを表示する（AND 結合）。
  */
 export const getMenuGroups = (
 	state: CanvasControllerState,
 ): MenuSectionGroup[] => {
-	const { selectedIds, objects } = state;
+	const { selectedIds, selectedConnectorId, objects } = state;
+
+	// Connector 選択時は selectedIds の代わりに connector のグループを返す
+	if (selectedConnectorId !== null) {
+		const connector = objects[selectedConnectorId];
+		if (!connector) return [];
+		return objectMenuRegistry.getGroups(connector.type, connector);
+	}
+
 	if (selectedIds.length === 0) return [];
 
 	// 選択中オブジェクトに含まれる実オブジェクト型を収集する。
@@ -95,7 +104,7 @@ export const getMenuGroups = (
 export const useMenuGroups = (
 	state: CanvasControllerState,
 ): MenuSectionGroup[] => {
-	const { selectedIds, objects } = state;
+	const { selectedIds, selectedConnectorId, objects } = state;
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	return useMemo(() => getMenuGroups(state), [selectedIds, objects]);
+	return useMemo(() => getMenuGroups(state), [selectedIds, selectedConnectorId, objects]);
 };
