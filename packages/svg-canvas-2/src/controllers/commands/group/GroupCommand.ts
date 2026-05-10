@@ -87,7 +87,11 @@ export const GroupCommand: Command = {
 				commonParentId != null
 					? (state.objects[commonParentId] as GroupState).childIds
 					: state.rootIds;
-			const updatedSourceIds = replaceWithGroup(sourceIds, selectedIds, groupId);
+			const updatedSourceIds = replaceWithGroup(
+				sourceIds,
+				selectedIds,
+				groupId,
+			);
 
 			if (commonParentId != null) {
 				const parent = updatedObjects[commonParentId] as GroupState;

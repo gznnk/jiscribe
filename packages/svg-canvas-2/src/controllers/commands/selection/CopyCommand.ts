@@ -36,8 +36,10 @@ export const CopyCommand: Command = {
 			if (!conn) continue;
 			const sourceOwnerId = conn.source.owner?.id;
 			const targetOwnerId = conn.target.owner?.id;
-			const sourceOk = !sourceOwnerId || selectedIdsWithDescendants.has(sourceOwnerId);
-			const targetOk = !targetOwnerId || selectedIdsWithDescendants.has(targetOwnerId);
+			const sourceOk =
+				!sourceOwnerId || selectedIdsWithDescendants.has(sourceOwnerId);
+			const targetOk =
+				!targetOwnerId || selectedIdsWithDescendants.has(targetOwnerId);
 			if (sourceOk && targetOk) {
 				connectorIds.push(connId);
 				objects[connId] = conn;
@@ -45,11 +47,12 @@ export const CopyCommand: Command = {
 		}
 
 		const firstObj = state.objects[state.selectedIds[0]];
-		const center = state.multiSelectGroup != null
-			? { x: state.multiSelectGroup.cx, y: state.multiSelectGroup.cy }
-			: firstObj && isTransformedFrame(firstObj)
-				? { x: firstObj.cx, y: firstObj.cy }
-				: { x: 0, y: 0 };
+		const center =
+			state.multiSelectGroup != null
+				? { x: state.multiSelectGroup.cx, y: state.multiSelectGroup.cy }
+				: firstObj && isTransformedFrame(firstObj)
+					? { x: firstObj.cx, y: firstObj.cy }
+					: { x: 0, y: 0 };
 
 		const data: ClipboardData = {
 			__type: "jiscribe-canvas-clipboard",

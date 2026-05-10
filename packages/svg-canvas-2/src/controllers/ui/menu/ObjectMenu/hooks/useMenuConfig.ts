@@ -105,9 +105,10 @@ export const getMenuGroups = (state: CanvasControllerState): MenuSection[] => {
 
 export const useMenuGroups = (state: CanvasControllerState): MenuSection[] => {
 	const { selectedIds, selectedConnectorId, objects } = state;
-	// eslint-disable-next-line react-hooks/exhaustive-deps
+
 	return useMemo(
 		() => getMenuGroups(state),
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[selectedIds, selectedConnectorId, objects],
 	);
 };

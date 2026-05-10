@@ -21,9 +21,7 @@ export const SendToBackCommand: Command = {
 		const selectedSet = new Set(state.selectedIds);
 
 		if (commonParentId == null) {
-			const updatedRootIds = state.rootIds.filter(
-				(id) => !selectedSet.has(id),
-			);
+			const updatedRootIds = state.rootIds.filter((id) => !selectedSet.has(id));
 			updatedRootIds.unshift(...state.selectedIds);
 			return { ...state, rootIds: updatedRootIds, lastCommitTime: Date.now() };
 		}

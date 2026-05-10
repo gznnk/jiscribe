@@ -75,7 +75,9 @@ export const DeleteCommand: Command = {
 			...state,
 			objects: updatedObjects,
 			rootIds: state.rootIds.filter((id) => !idsToDelete.has(id)),
-			connectorIds: stateAfterConnectors.connectorIds.filter((id) => !idsToDelete.has(id)),
+			connectorIds: stateAfterConnectors.connectorIds.filter(
+				(id) => !idsToDelete.has(id),
+			),
 			selectedIds: [] as string[],
 			selectedConnectorId: null,
 			objectMenuOpenId: null,

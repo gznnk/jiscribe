@@ -98,7 +98,7 @@ const ContextMenuComponent: React.FC<ContextMenuProps> = ({
 							</MenuItem>
 						);
 					}
-					
+
 					case "command": {
 						const command = commandRegistry.get(item.commandId);
 						if (!command) return null;
