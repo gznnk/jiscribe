@@ -2,9 +2,9 @@ import type { Point } from "@workspace/geometry";
 import React, { memo } from "react";
 
 import { objectRegistry } from "../../../../registry/ObjectRegistry";
-import type { ObjectType } from "../../../../schemas/objects/types/ObjectType";
 import { createObjectDoc } from "../../../../schemas/objects/utils/createObjectDoc";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import type { ShapePreset } from "../../menu/ShapeLibrary/ShapePresets";
 
 type DragGhostProps = {
 	shapeLibraryDrag: CanvasControllerState["shapeLibraryDrag"];
@@ -17,13 +17,13 @@ const GHOST_ID = "drag-ghost";
  * レンダル中にコンポーネント変数を生成しないよう、React.createElement を使用する。
  */
 const createGhostElement = (
-	type: ObjectType,
+	preset: ShapePreset,
 	position: Point,
 ): React.ReactNode => {
-	const component = objectRegistry.getComponent(type);
+	const component = objectRegistry.getComponent(preset.objectType);
 	if (!component) return null;
 
-	const doc = createObjectDoc(type, position);
+	const doc = createObjectDoc(preset.objectType, position, preset.defaultOverrides);
 	const ghostState = objectRegistry.toState(doc);
 	ghostState.id = GHOST_ID;
 
@@ -37,7 +37,7 @@ const DragGhostComponent: React.FC<DragGhostProps> = ({ shapeLibraryDrag }) => {
 
 	return (
 		<g opacity={0.5} pointerEvents="none">
-			{createGhostElement(shapeLibraryDrag.shapeType, shapeLibraryDrag.ghostPosition)}
+			{createGhostElement(shapeLibraryDrag.preset, shapeLibraryDrag.ghostPosition)}
 		</g>
 	);
 };

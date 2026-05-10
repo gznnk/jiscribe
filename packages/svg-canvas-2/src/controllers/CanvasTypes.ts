@@ -1,12 +1,13 @@
 import type { FrameKeyPoints, Point } from "@workspace/geometry";
 
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
-import type { ObjectType } from "../schemas/objects/types/ObjectType";
 import type { CanvasState } from "../states/canvas/CanvasState";
 import type { Viewport } from "../states/canvas/Viewport";
 import type { ObjectState } from "../states/objects/base/ObjectState";
+import type { ShapePreset } from "./ui/menu/ShapeLibrary/ShapePresets";
 import type { ConnectorState } from "../states/objects/connections/connector/ConnectorState";
 import type { GroupState } from "../states/objects/primitives/group/GroupState";
+
 
 // ---------------------------------------------------------------------------
 // KeyPoints cache types (stored in CanvasControllerState)
@@ -153,12 +154,32 @@ export type CanvasControllerState = CanvasState & {
 	 * null でない間はドラッグ進行中を意味する。
 	 */
 	shapeLibraryDrag: {
-		/** ドラッグ中の図形タイプ */
-		shapeType: ObjectType;
+		/** ドラッグ中の図形プリセット */
+		preset: ShapePreset;
 		/** ゴースト表示位置（SVG座標・スナップ済み）*/
 		ghostPosition: Point;
 		/** ゴースト図形の半サイズ（dragStart 時にキャッシュ）*/
 		shapeDimensions: { halfWidth: number; halfHeight: number };
+	} | null;
+
+	/**
+	 * 描画モード中の状態。
+	 * ShapeLibrary の Rect/Ellipse ボタンをクリックすると設定され、
+	 * 描画完了・Escape・キャンバスクリック時に null にクリアされる。
+	 * - null: 描画モード OFF
+	 * - preview が null: 描画モード ON（ドラッグ未開始）
+	 * - preview が non-null: ドラッグ中（プレビュー表示中）
+	 */
+	shapeDrawing: {
+		/** 描画中の図形プリセット */
+		preset: ShapePreset;
+		/** ドラッグ中のプレビュー矩形（SVG座標）。ドラッグ開始前は null */
+		preview: {
+			startX: number;
+			startY: number;
+			endX: number;
+			endY: number;
+		} | null;
 	} | null;
 
 	/**
@@ -230,22 +251,4 @@ export type CanvasControllerState = CanvasState & {
 	 * スナップしている間のみ non-null。dragEnd でクリアする。
 	 */
 	snapFeedback: SnapFeedback | null;
-
-	/**
-	 * 現在アクティブな描画ツール。
-	 * ShapeLibrary の Rect/Ellipse ボタンをクリックすると設定され、
-	 * 描画完了・Escape・キャンバスクリック時に null にクリアされる。
-	 */
-	activeDrawingTool: ObjectType | null;
-
-	/**
-	 * 描画モード中のプレビュー矩形（SVG座標）。
-	 * dragStart で開始点を設定し、drag で終点を更新、dragEnd で null にクリアする。
-	 */
-	drawingPreview: {
-		startX: number;
-		startY: number;
-		endX: number;
-		endY: number;
-	} | null;
 };

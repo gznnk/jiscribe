@@ -122,27 +122,32 @@ export const CanvasEventHandler: GestureHandler = {
 		}
 
 		// Left-button drag in draw mode: draw rect/ellipse
-		const drawingTool =
-			nextState.activeDrawingTool === "rect" ||
-			nextState.activeDrawingTool === "ellipse"
-				? (nextState.activeDrawingTool as "rect" | "ellipse")
+		const shapeDrawing = nextState.shapeDrawing;
+		const drawingObjectType =
+			shapeDrawing !== null &&
+			(shapeDrawing.preset.objectType === "rect" ||
+				shapeDrawing.preset.objectType === "ellipse")
+				? (shapeDrawing.preset.objectType as "rect" | "ellipse")
 				: null;
-		if (event.button === 0 && drawingTool !== null) {
+		if (event.button === 0 && drawingObjectType !== null) {
 			if (event.type === "dragStart") {
 				nextState = {
 					...nextState,
-					drawingPreview: {
-						startX: event.start.x,
-						startY: event.start.y,
-						endX: event.start.x,
-						endY: event.start.y,
+					shapeDrawing: {
+						preset: shapeDrawing!.preset,
+						preview: {
+							startX: event.start.x,
+							startY: event.start.y,
+							endX: event.start.x,
+							endY: event.start.y,
+						},
 					},
 					edgeScrollEnabled: true,
 				};
 				return nextState;
 			}
 
-			if (event.type === "drag" && nextState.drawingPreview) {
+			if (event.type === "drag" && nextState.shapeDrawing?.preview) {
 				let endX = event.last.x;
 				let endY = event.last.y;
 				let snapFeedback: SnapFeedback = { x: [], y: [] };
@@ -169,25 +174,29 @@ export const CanvasEventHandler: GestureHandler = {
 
 				nextState = {
 					...nextState,
-					drawingPreview: {
-						...nextState.drawingPreview,
-						endX,
-						endY,
+					shapeDrawing: {
+						...nextState.shapeDrawing!,
+						preview: {
+							...nextState.shapeDrawing!.preview!,
+							endX,
+							endY,
+						},
 					},
 					snapFeedback,
 				};
 				return nextState;
 			}
 
-			if (event.type === "dragEnd" && nextState.drawingPreview) {
-				// drag イベントで endX/endY はスナップ済みのため、drawingPreview の値をそのまま使う
-				const { startX, startY, endX, endY } = nextState.drawingPreview;
+			if (event.type === "dragEnd" && nextState.shapeDrawing?.preview) {
+				// drag イベントで endX/endY はスナップ済みのため、preview の値をそのまま使う
+				const { startX, startY, endX, endY } = nextState.shapeDrawing.preview;
 				const doc = createObjectDocFromBounds(
-					drawingTool,
+					drawingObjectType,
 					startX,
 					startY,
 					endX,
 					endY,
+					nextState.shapeDrawing.preset.defaultOverrides,
 				);
 
 				if (doc) {
@@ -202,8 +211,7 @@ export const CanvasEventHandler: GestureHandler = {
 
 				return {
 					...nextState,
-					activeDrawingTool: null,
-					drawingPreview: null,
+					shapeDrawing: null,
 					edgeScrollEnabled: false,
 				};
 			}
@@ -211,8 +219,7 @@ export const CanvasEventHandler: GestureHandler = {
 			if (event.type === "click") {
 				return {
 					...nextState,
-					activeDrawingTool: null,
-					drawingPreview: null,
+					shapeDrawing: null,
 				};
 			}
 

@@ -81,8 +81,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 			editingConnectorId: null,
 			editingEndpoint: null,
 			snapFeedback: null,
-			activeDrawingTool: null,
-			drawingPreview: null,
+			shapeDrawing: null,
 			history: {
 				past: [],
 				present: canvasDoc,
@@ -182,7 +181,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 			data-kind="canvas"
 			ref={canvasRef}
 			onContextMenu={handleContextMenu}
-			cursor={state.activeDrawingTool ? "crosshair" : undefined}
+			cursor={state.shapeDrawing ? "crosshair" : undefined}
 			{...pointerHandlers}
 		>
 			<Container>
@@ -193,7 +192,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 					viewport={state.viewport}
 					svgRef={svgRef}
 					textEditObjectId={state.textEditState?.objectId ?? null}
-					isDrawMode={!!state.activeDrawingTool}
+					isDrawMode={!!state.shapeDrawing}
 				>
 					<PendingConnectorOverlay
 						pendingConnector={state.pendingConnector}
@@ -230,10 +229,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 						zoom={state.viewport.zoom}
 					/>
 					<DragGhost shapeLibraryDrag={state.shapeLibraryDrag} />
-					<DrawingPreviewOverlay
-						activeDrawingTool={state.activeDrawingTool}
-						drawingPreview={state.drawingPreview}
-					/>
+					<DrawingPreviewOverlay shapeDrawing={state.shapeDrawing} />
 					<AreaSelectionRect areaSelection={state.areaSelection} />
 					<SnapGuides
 						snapFeedback={state.snapFeedback}
@@ -260,7 +256,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 				</ScrollSyncedOverlay>
 			</Container>
 			<ViewportOverlay>
-				<ShapeLibrary activeDrawingTool={state.activeDrawingTool} />
+				<ShapeLibrary activePresetId={state.shapeDrawing?.preset.id ?? null} />
 				<DebugInfo selectedIds={state.selectedIds} objects={state.objects} />
 				<ContextMenu
 					position={state.contextMenuPosition}
