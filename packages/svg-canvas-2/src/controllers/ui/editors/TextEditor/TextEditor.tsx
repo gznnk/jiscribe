@@ -47,10 +47,11 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 
 	// 初回フォーカス
 	useEffect(() => {
-		textAreaRef.current?.focus();
-		// Set cursor to the end of the text
-		textAreaRef.current?.setSelectionRange(text.length, text.length);
-	}, [text.length]);
+		const el = textAreaRef.current;
+		if (!el) return;
+		el.focus();
+		el.setSelectionRange(el.value.length, el.value.length);
+	}, []);
 
 	const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		onChange(e.target.value);
