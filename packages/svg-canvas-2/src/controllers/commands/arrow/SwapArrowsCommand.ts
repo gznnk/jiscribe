@@ -4,7 +4,7 @@ import type { Command } from "../CommandTypes";
 
 export const SwapArrowsCommand: Command = {
 	id: "swapArrows",
-	label: "矢印を入れ替え",
+	label: "Swap Arrows",
 	category: "edit",
 
 	canExecute: (state) => {

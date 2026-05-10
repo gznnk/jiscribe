@@ -6,7 +6,7 @@ import type { Command } from "../CommandTypes";
 
 export const DeleteCommand: Command = {
 	id: "delete",
-	label: "削除",
+	label: "Delete",
 	category: "edit",
 	shortcuts: {
 		default: [{ key: "Delete" }, { key: "Backspace" }],

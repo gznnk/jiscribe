@@ -4,7 +4,7 @@ import type { Command } from "../CommandTypes";
 
 export const BringToFrontCommand: Command = {
 	id: "bringToFront",
-	label: "最前面へ移動",
+	label: "Bring to Front",
 	category: "arrange",
 	shortcuts: {
 		mac: [{ key: "]", meta: true, shift: true }],

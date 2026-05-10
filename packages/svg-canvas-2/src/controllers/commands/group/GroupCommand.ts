@@ -7,7 +7,7 @@ import type { Command } from "../CommandTypes";
 
 export const GroupCommand: Command = {
 	id: "group",
-	label: "グループ化",
+	label: "Group",
 	category: "arrange",
 	shortcuts: {
 		mac: [{ key: "g", meta: true }],

@@ -5,7 +5,7 @@ import type { Command } from "../CommandTypes";
 
 export const UngroupCommand: Command = {
 	id: "ungroup",
-	label: "グループ解除",
+	label: "Ungroup",
 	category: "arrange",
 	shortcuts: {
 		mac: [{ key: "g", meta: true, shift: true }],

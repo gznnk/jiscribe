@@ -4,7 +4,7 @@ import type { Command } from "../CommandTypes";
 
 export const BringForwardCommand: Command = {
 	id: "bringForward",
-	label: "前面へ移動",
+	label: "Bring Forward",
 	category: "arrange",
 	shortcuts: {
 		mac: [{ key: "]", meta: true }],

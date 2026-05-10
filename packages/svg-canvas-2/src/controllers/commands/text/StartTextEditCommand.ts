@@ -3,7 +3,7 @@ import type { Command } from "../CommandTypes";
 
 export const StartTextEditCommand: Command = {
 	id: "start-text-edit",
-	label: "テキスト編集を開始",
+	label: "Start Text Editing",
 	category: "edit",
 	shortcuts: {
 		default: [{ key: "Enter" }],

@@ -43,7 +43,7 @@ const ContextMenuComponent: React.FC<ContextMenuProps> = ({
 		{
 			type: "callback",
 			id: "paste",
-			label: "貼り付け",
+			label: "Paste",
 			shortcuts: {
 				mac: [{ key: "v", meta: true }],
 				default: [{ key: "v", ctrl: true }],

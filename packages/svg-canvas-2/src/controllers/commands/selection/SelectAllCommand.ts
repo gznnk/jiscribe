@@ -3,7 +3,7 @@ import type { Command } from "../CommandTypes";
 
 export const SelectAllCommand: Command = {
 	id: "selectAll",
-	label: "すべて選択",
+	label: "Select All",
 	category: "selection",
 	shortcuts: {
 		mac: [{ key: "a", meta: true }],

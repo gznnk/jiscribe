@@ -25,7 +25,7 @@ export const SHAPE_PRESETS: ShapePreset[] = [
 			stroke: "#d1d5db",
 			strokeWidth: 1,
 			fontColor: "#374151",
-			text: "# 見出し\n\n本文テキスト。**太字**・*斜体*・`コード`\n\n- リスト 1\n- リスト 2",
+			text: "# Heading\n\nBody text. **Bold** · *Italic* · `Code`\n\n- Item 1\n- Item 2",
 		},
 	},
 ];

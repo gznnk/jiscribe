@@ -2,7 +2,7 @@
 
 export const DeselectAllCommand: Command = {
 	id: "deselectAll",
-	label: "選択解除",
+	label: "Deselect All",
 	category: "selection",
 	shortcuts: {
 		mac: [{ key: "a", meta: true, shift: true }, { key: "Escape" }],

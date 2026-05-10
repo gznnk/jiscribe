@@ -4,7 +4,7 @@ import type { Command } from "../CommandTypes";
 
 export const SendToBackCommand: Command = {
 	id: "sendToBack",
-	label: "最背面へ移動",
+	label: "Send to Back",
 	category: "arrange",
 	shortcuts: {
 		mac: [{ key: "[", meta: true, shift: true }],

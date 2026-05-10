@@ -7,7 +7,7 @@ import type { Command } from "../CommandTypes";
 
 export const CopyCommand: Command = {
 	id: "copy",
-	label: "コピー",
+	label: "Copy",
 	category: "edit",
 	shortcuts: {
 		mac: [{ key: "c", meta: true }],

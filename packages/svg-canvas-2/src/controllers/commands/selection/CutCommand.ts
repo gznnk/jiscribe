@@ -4,7 +4,7 @@ import type { Command } from "../CommandTypes";
 
 export const CutCommand: Command = {
 	id: "cut",
-	label: "切り取り",
+	label: "Cut",
 	category: "edit",
 	shortcuts: {
 		mac: [{ key: "x", meta: true }],
