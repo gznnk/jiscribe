@@ -8,9 +8,10 @@ import { objectRegistry } from "../../../../registry/ObjectRegistry";
 import { STICKY_DOC_DEFAULTS } from "../../../../schemas/objects/annotations/StickyDoc";
 import { ELLIPSE_DOC_DEFAULTS } from "../../../../schemas/objects/primitives/EllipseDoc";
 import { RECT_DOC_DEFAULTS } from "../../../../schemas/objects/primitives/RectDoc";
-import type { ObjectType } from "../../../../schemas/objects/types/ObjectType";
 import { createObjectDoc } from "../../../../schemas/objects/utils/createObjectDoc";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import type { ShapePreset } from "../../../ui/menu/ShapeLibrary/ShapePresets";
+import { getShapePreset } from "../../../ui/menu/ShapeLibrary/ShapePresets";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import {
 	SNAP_THRESHOLD_PX,
@@ -19,22 +20,18 @@ import {
 } from "../objects/utils/snap/findSnap";
 
 /**
- * targetId から shapeType を抽出する。
- * フォーマット: "menu-item:<shapeType>"
+ * targetId からプリセット ID を抽出する。
+ * フォーマット: "menu-item:<presetId>"
  */
-const parseShapeType = (targetId: string): ObjectType => {
-	const parts = targetId.split(":");
-	return parts[1] as ObjectType;
-};
+const parsePresetId = (targetId: string): string => targetId.split(":")[1];
 
 /**
- * 図形タイプから中央基準の半サイズを返す。
- * dragStart 時に一度だけ計算してキャッシュするためのヘルパー。
+ * プリセットからゴースト図形の半サイズを返す。
  */
 const calcShapeDimensions = (
-	type: ObjectType,
+	preset: ShapePreset,
 ): { halfWidth: number; halfHeight: number } => {
-	switch (type) {
+	switch (preset.objectType) {
 		case "rect":
 			return {
 				halfWidth: RECT_DOC_DEFAULTS.width / 2,
@@ -51,19 +48,19 @@ const calcShapeDimensions = (
 				halfHeight: STICKY_DOC_DEFAULTS.height / 2,
 			};
 		default:
-			throw new Error(`Unsupported object type for menu: ${type}`);
+			throw new Error(`Unsupported object type for menu: ${preset.objectType}`);
 	}
 };
 
 /**
- * 図形を state に追加し、新しい CanvasControllerState を返す。
+ * プリセットに従って図形を state に追加し、新しい CanvasControllerState を返す。
  */
 const addObjectToState = (
 	state: CanvasControllerState,
-	shapeType: ObjectType,
+	preset: ShapePreset,
 	position: { x: number; y: number },
 ): CanvasControllerState => {
-	const doc = createObjectDoc(shapeType, position);
+	const doc = createObjectDoc(preset.objectType, position, preset.defaultOverrides);
 	const objectState = objectRegistry.toState(doc);
 
 	return {
@@ -91,34 +88,33 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 			return state;
 		}
 
-		const shapeType = parseShapeType(event.targetId);
+		const presetId = parsePresetId(event.targetId);
+		const preset = getShapePreset(presetId);
+		if (!preset) {
+			return state;
+		}
 
 		switch (event.type) {
 			case "click": {
 				// sticky はビューポート中央に配置、rect/ellipse は描画モードをトグル
-				if (shapeType === "sticky") {
+				if (preset.objectType === "sticky") {
 					const { minX, minY, width, height, zoom } = state.viewport;
 					const centerX = minX + width / zoom / 2;
 					const centerY = minY + height / zoom / 2;
-					return addObjectToState(state, shapeType, {
-						x: centerX,
-						y: centerY,
-					});
+					return addObjectToState(state, preset, { x: centerX, y: centerY });
 				}
 
-				const nextTool =
-					state.activeDrawingTool === shapeType ? null : shapeType;
+				const isActive = state.shapeDrawing?.preset.id === presetId;
 
-				if (nextTool === null) {
-					return { ...state, activeDrawingTool: null, drawingPreview: null };
+				if (isActive) {
+					return { ...state, shapeDrawing: null };
 				}
 
 				// 描画モード ON: テキスト編集をコミットし、選択状態を解除する
 				const nextState = commitTextEditIfNeeded(state, event.time);
 				return {
 					...nextState,
-					activeDrawingTool: nextTool,
-					drawingPreview: null,
+					shapeDrawing: { preset, preview: null },
 					selectedIds: [],
 					selectedConnectorId: null,
 					multiSelectGroup: null,
@@ -136,9 +132,9 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 					multiSelectGroup: null,
 					objectMenuOpenId: null,
 					shapeLibraryDrag: {
-						shapeType,
+						preset,
 						ghostPosition: event.last,
-						shapeDimensions: calcShapeDimensions(shapeType),
+						shapeDimensions: calcShapeDimensions(preset),
 					},
 					edgeScrollEnabled: true,
 				};
@@ -206,7 +202,7 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 					return state;
 				}
 				const position = drag.ghostPosition ?? event.last;
-				const nextState = addObjectToState(state, drag.shapeType, position);
+				const nextState = addObjectToState(state, drag.preset, position);
 				return {
 					...nextState,
 					shapeLibraryDrag: null,

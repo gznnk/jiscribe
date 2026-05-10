@@ -19,7 +19,7 @@ export const DeselectAllCommand: Command = {
 			state.selectedIds.length > 0 ||
 			state.selectedConnectorId !== null ||
 			state.areaSelection !== null ||
-			state.activeDrawingTool !== null
+			state.shapeDrawing !== null
 		);
 	},
 
@@ -31,8 +31,7 @@ export const DeselectAllCommand: Command = {
 			areaSelection: null,
 			objectMenuOpenId: null,
 			edgeScrollEnabled: false,
-			activeDrawingTool: null,
-			drawingPreview: null,
+			shapeDrawing: null,
 		};
 	},
 };

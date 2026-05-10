@@ -1,15 +1,9 @@
 import { memo } from "react";
 
-import type { ObjectType } from "../../../../schemas/objects/types/ObjectType";
+import type { CanvasControllerState } from "../../../CanvasTypes";
 
 type DrawingPreviewOverlayProps = {
-	activeDrawingTool: ObjectType | null;
-	drawingPreview: {
-		startX: number;
-		startY: number;
-		endX: number;
-		endY: number;
-	} | null;
+	shapeDrawing: CanvasControllerState["shapeDrawing"];
 };
 
 const FILL = "rgba(120, 120, 120, 0.25)";
@@ -17,17 +11,17 @@ const STROKE = "#000000";
 const STROKE_WIDTH = 1.5;
 
 const DrawingPreviewOverlayComponent: React.FC<DrawingPreviewOverlayProps> = ({
-	activeDrawingTool,
-	drawingPreview,
+	shapeDrawing,
 }) => {
-	if (!activeDrawingTool || !drawingPreview) {
+	if (!shapeDrawing?.preview) {
 		return null;
 	}
 
-	const x = Math.min(drawingPreview.startX, drawingPreview.endX);
-	const y = Math.min(drawingPreview.startY, drawingPreview.endY);
-	const width = Math.abs(drawingPreview.endX - drawingPreview.startX);
-	const height = Math.abs(drawingPreview.endY - drawingPreview.startY);
+	const { startX, startY, endX, endY } = shapeDrawing.preview;
+	const x = Math.min(startX, endX);
+	const y = Math.min(startY, endY);
+	const width = Math.abs(endX - startX);
+	const height = Math.abs(endY - startY);
 
 	const sharedProps = {
 		fill: FILL,
@@ -36,7 +30,7 @@ const DrawingPreviewOverlayComponent: React.FC<DrawingPreviewOverlayProps> = ({
 		pointerEvents: "none" as const,
 	};
 
-	if (activeDrawingTool === "ellipse") {
+	if (shapeDrawing.preset.objectType === "ellipse") {
 		return (
 			<ellipse
 				cx={x + width / 2}

@@ -53,8 +53,7 @@ export const UndoCommand: Command = {
 			editingConnectorId: null,
 			editingEndpoint: null,
 			snapFeedback: null,
-			activeDrawingTool: null,
-			drawingPreview: null,
+			shapeDrawing: null,
 			history: {
 				past: state.history.past.slice(0, -1),
 				present: docToRestore,

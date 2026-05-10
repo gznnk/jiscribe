@@ -12,6 +12,7 @@ export const createObjectDocFromBounds = (
 	y1: number,
 	x2: number,
 	y2: number,
+	overrides?: Record<string, unknown>,
 	minSize = 5,
 ): ObjectDoc | null => {
 	const width = Math.abs(x2 - x1);
@@ -26,6 +27,7 @@ export const createObjectDocFromBounds = (
 	if (type === "rect") {
 		return {
 			...RECT_DOC_DEFAULTS,
+			...overrides,
 			id,
 			x: Math.min(x1, x2),
 			y: Math.min(y1, y2),
@@ -36,6 +38,7 @@ export const createObjectDocFromBounds = (
 
 	return {
 		...ELLIPSE_DOC_DEFAULTS,
+		...overrides,
 		id,
 		cx: (x1 + x2) / 2,
 		cy: (y1 + y2) / 2,

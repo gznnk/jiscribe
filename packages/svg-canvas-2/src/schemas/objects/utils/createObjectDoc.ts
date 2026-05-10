@@ -17,6 +17,7 @@ import type { ObjectType } from "../types/ObjectType";
 export const createObjectDoc = (
 	type: ObjectType,
 	position: Point,
+	overrides?: Record<string, unknown>,
 ): ObjectDoc => {
 	const id = crypto.randomUUID();
 
@@ -24,6 +25,7 @@ export const createObjectDoc = (
 		case "rect":
 			return {
 				...RECT_DOC_DEFAULTS,
+				...overrides,
 				id,
 				x: position.x - RECT_DOC_DEFAULTS.width / 2,
 				y: position.y - RECT_DOC_DEFAULTS.height / 2,
@@ -32,6 +34,7 @@ export const createObjectDoc = (
 		case "ellipse":
 			return {
 				...ELLIPSE_DOC_DEFAULTS,
+				...overrides,
 				id,
 				cx: position.x,
 				cy: position.y,
@@ -40,6 +43,7 @@ export const createObjectDoc = (
 		case "sticky":
 			return {
 				...STICKY_DOC_DEFAULTS,
+				...overrides,
 				id,
 				x: position.x - STICKY_DOC_DEFAULTS.width / 2,
 				y: position.y - STICKY_DOC_DEFAULTS.height / 2,

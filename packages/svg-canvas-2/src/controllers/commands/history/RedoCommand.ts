@@ -62,8 +62,7 @@ export const RedoCommand: Command = {
 			editingConnectorId: null,
 			editingEndpoint: null,
 			snapFeedback: null,
-			activeDrawingTool: null,
-			drawingPreview: null,
+			shapeDrawing: null,
 			history: {
 				past: [...state.history.past, state.history.present],
 				present: docToRestore,
