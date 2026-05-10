@@ -7,3 +7,4 @@ export {
 	CanvasValidationError,
 } from "./schemas/canvas/validators";
 export type { SemanticDiagnostic } from "./schemas/canvas/validators";
+export { CanvasErrorScreen } from "./controllers/ui/feedback/CanvasErrorScreen";

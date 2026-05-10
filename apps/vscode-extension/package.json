@@ -28,7 +28,7 @@
 		"jsonValidation": [
 			{
 				"fileMatch": "*.jis.json",
-				"url": "./canvas-doc.schema.json"
+				"url": "../../packages/svg-canvas-2/src/schemas/canvas/canvas-doc.schema.json"
 			}
 		]
 	},
