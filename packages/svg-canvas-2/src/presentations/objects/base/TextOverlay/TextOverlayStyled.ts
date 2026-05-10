@@ -1,6 +1,5 @@
 import styled from "@emotion/styled";
 
-import { scrollbarStyles } from "../../../../constants/scrollbarStyles";
 import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
 import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
 
@@ -27,6 +26,7 @@ export const TextWrapper = styled.div<TextWrapperProps>`
 	display: flex;
 	width: 100%;
 	height: 100%;
+	overflow: hidden;
 	align-items: ${(props) => VerticalAlignMap[props.verticalAlign]};
 `;
 
@@ -166,9 +166,8 @@ export const Text = styled.div<TextProps>`
 		border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
 		padding: 0.5em 0.75em;
 		border-radius: 4px;
-		overflow-x: auto;
+		overflow-x: hidden;
 		margin: 0.4em 0;
-		${scrollbarStyles}
 
 		& > code {
 			background: transparent;
@@ -177,6 +176,7 @@ export const Text = styled.div<TextProps>`
 			margin: 0;
 			border-radius: 0;
 			font-size: inherit;
+			overflow-x: hidden;
 		}
 	}
 
