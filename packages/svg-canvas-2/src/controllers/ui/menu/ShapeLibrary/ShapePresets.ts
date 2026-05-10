@@ -10,7 +10,17 @@ export type ShapePreset = {
 export const SHAPE_PRESETS: ShapePreset[] = [
 	{ id: "rect", objectType: "rect", label: "Rectangle" },
 	{ id: "ellipse", objectType: "ellipse", label: "Ellipse" },
-	{ id: "sticky", objectType: "sticky", label: "Sticky" },
+	{
+		id: "sticky",
+		objectType: "sticky",
+		label: "Sticky",
+		defaultOverrides: {
+			width: 200,
+			height: 150,
+			textAlign: "left",
+			verticalAlign: "start",
+		},
+	},
 	{
 		id: "rect-markdown",
 		objectType: "rect",

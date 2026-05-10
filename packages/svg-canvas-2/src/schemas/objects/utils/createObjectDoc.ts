@@ -22,14 +22,23 @@ export const createObjectDoc = (
 	const id = crypto.randomUUID();
 
 	switch (type) {
-		case "rect":
+		case "rect": {
+			const width =
+				typeof overrides?.width === "number"
+					? overrides.width
+					: RECT_DOC_DEFAULTS.width;
+			const height =
+				typeof overrides?.height === "number"
+					? overrides.height
+					: RECT_DOC_DEFAULTS.height;
 			return {
 				...RECT_DOC_DEFAULTS,
 				...overrides,
 				id,
-				x: position.x - RECT_DOC_DEFAULTS.width / 2,
-				y: position.y - RECT_DOC_DEFAULTS.height / 2,
+				x: position.x - width / 2,
+				y: position.y - height / 2,
 			} as ObjectDoc;
+		}
 
 		case "ellipse":
 			return {
@@ -40,14 +49,23 @@ export const createObjectDoc = (
 				cy: position.y,
 			} as ObjectDoc;
 
-		case "sticky":
+		case "sticky": {
+			const width =
+				typeof overrides?.width === "number"
+					? overrides.width
+					: STICKY_DOC_DEFAULTS.width;
+			const height =
+				typeof overrides?.height === "number"
+					? overrides.height
+					: STICKY_DOC_DEFAULTS.height;
 			return {
 				...STICKY_DOC_DEFAULTS,
 				...overrides,
 				id,
-				x: position.x - STICKY_DOC_DEFAULTS.width / 2,
-				y: position.y - STICKY_DOC_DEFAULTS.height / 2,
+				x: position.x - width / 2,
+				y: position.y - height / 2,
 			} as ObjectDoc;
+		}
 
 		default:
 			throw new Error(`Unsupported object type for menu: ${type}`);

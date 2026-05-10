@@ -5,9 +5,9 @@ import type {
 	GestureHandler,
 } from "../../../../registry/GestureHandlerRegistryTypes";
 import { objectRegistry } from "../../../../registry/ObjectRegistry";
-import { STICKY_DOC_DEFAULTS } from "../../../../schemas/objects/annotations/StickyDoc";
-import { ELLIPSE_DOC_DEFAULTS } from "../../../../schemas/objects/primitives/EllipseDoc";
-import { RECT_DOC_DEFAULTS } from "../../../../schemas/objects/primitives/RectDoc";
+import type { StickyDoc } from "../../../../schemas/objects/annotations/StickyDoc";
+import type { EllipseDoc } from "../../../../schemas/objects/primitives/EllipseDoc";
+import type { RectDoc } from "../../../../schemas/objects/primitives/RectDoc";
 import { createObjectDoc } from "../../../../schemas/objects/utils/createObjectDoc";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ShapePreset } from "../../../ui/menu/ShapeLibrary/ShapePresets";
@@ -27,26 +27,29 @@ const parsePresetId = (targetId: string): string => targetId.split(":")[1];
 
 /**
  * プリセットからゴースト図形の半サイズを返す。
+ * createObjectDoc で overrides とデフォルト値をマージした doc から寸法を取得する。
  */
 const calcShapeDimensions = (
 	preset: ShapePreset,
 ): { halfWidth: number; halfHeight: number } => {
-	switch (preset.objectType) {
-		case "rect":
-			return {
-				halfWidth: RECT_DOC_DEFAULTS.width / 2,
-				halfHeight: RECT_DOC_DEFAULTS.height / 2,
-			};
-		case "ellipse":
-			return {
-				halfWidth: ELLIPSE_DOC_DEFAULTS.rx,
-				halfHeight: ELLIPSE_DOC_DEFAULTS.ry,
-			};
-		case "sticky":
-			return {
-				halfWidth: STICKY_DOC_DEFAULTS.width / 2,
-				halfHeight: STICKY_DOC_DEFAULTS.height / 2,
-			};
+	const doc = createObjectDoc(
+		preset.objectType,
+		{ x: 0, y: 0 },
+		preset.defaultOverrides,
+	);
+	switch (doc.type) {
+		case "rect": {
+			const { width, height } = doc as RectDoc;
+			return { halfWidth: width / 2, halfHeight: height / 2 };
+		}
+		case "sticky": {
+			const { width, height } = doc as StickyDoc;
+			return { halfWidth: width / 2, halfHeight: height / 2 };
+		}
+		case "ellipse": {
+			const { rx, ry } = doc as EllipseDoc;
+			return { halfWidth: rx, halfHeight: ry };
+		}
 		default:
 			throw new Error(`Unsupported object type for menu: ${preset.objectType}`);
 	}
@@ -60,7 +63,11 @@ const addObjectToState = (
 	preset: ShapePreset,
 	position: { x: number; y: number },
 ): CanvasControllerState => {
-	const doc = createObjectDoc(preset.objectType, position, preset.defaultOverrides);
+	const doc = createObjectDoc(
+		preset.objectType,
+		position,
+		preset.defaultOverrides,
+	);
 	const objectState = objectRegistry.toState(doc);
 
 	return {
