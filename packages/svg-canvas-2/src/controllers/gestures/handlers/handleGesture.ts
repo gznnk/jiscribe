@@ -151,11 +151,19 @@ export const handleGesture = (
 
 	// Clear eventStartSnapshot on event end
 	if (EVENT_END_TYPES.includes(canvasEvent.type)) {
+		// Only commit if objects/rootIds/connectorIds actually changed.
+		// Guards against phantom undo entries when a drag produces no doc change
+		// (e.g. shape drawn below the minimum size threshold).
+		const hasDocChanges =
+			nextState.objects !== state.objects ||
+			nextState.rootIds !== state.rootIds ||
+			nextState.connectorIds !== state.connectorIds;
+
 		nextState = {
 			...nextState,
 			eventStartSnapshot: null,
 			snapFeedback: null,
-			lastCommitTime: canvasEvent.time,
+			...(hasDocChanges ? { lastCommitTime: canvasEvent.time } : {}),
 		};
 	}
 

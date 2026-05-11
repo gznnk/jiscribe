@@ -31,16 +31,12 @@ export const UngroupCommand: Command = {
 			const parentId = group.parentId;
 			const childIds = group.childIds;
 
-			// Promote children: set their parentId to the group's parent
+			// Promote children: set their parentId to the group's parent (undefined if root)
 			for (const childId of childIds) {
 				updatedObjects[childId] = {
 					...updatedObjects[childId],
-					parentId,
+					parentId: parentId ?? undefined,
 				};
-				// Remove parentId entirely if promoting to root
-				if (parentId == null) {
-					delete updatedObjects[childId].parentId;
-				}
 				promotedChildIds.push(childId);
 			}
 
