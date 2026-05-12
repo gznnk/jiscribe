@@ -19,16 +19,17 @@
 				"viewType": "jiscribe.editor",
 				"displayName": "Jiscribe Canvas Editor",
 				"selector": [
-					{
-						"filenamePattern": "*.jis.json"
-					}
+					{ "filenamePattern": "*.jis.json" },
+					{ "filenamePattern": "*.jiscribe.json" },
+					{ "filenamePattern": "*.jis.jsonc" },
+					{ "filenamePattern": "*.jiscribe.jsonc" }
 				],
 				"priority": "default"
 			}
 		],
 		"jsonValidation": [
 			{
-				"fileMatch": "*.jis.json",
+				"fileMatch": ["*.jis.json", "*.jiscribe.json", "*.jis.jsonc", "*.jiscribe.jsonc"],
 				"url": "./canvas-doc.schema.json"
 			}
 		],

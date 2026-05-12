@@ -65,17 +65,27 @@ const SAMPLE_CONTENT = JSON.stringify(
 	2,
 );
 
+const VALID_EXTENSIONS = [".jis.json", ".jiscribe.json", ".jis.jsonc", ".jiscribe.jsonc"];
+
+function stripJisExtension(name: string): string {
+	for (const ext of VALID_EXTENSIONS) {
+		if (name.endsWith(ext)) return name.slice(0, -ext.length);
+	}
+	return name;
+}
+
 async function findAvailableFileName(
 	folder: vscode.Uri,
 	base: string,
 ): Promise<string> {
-	const stem = base.replace(/\.jis\.json$/, "");
+	const stem = stripJisExtension(base);
+	const ext = base.slice(stem.length);
 	let candidate = base;
 	let n = 2;
 	while (true) {
 		try {
 			await vscode.workspace.fs.stat(vscode.Uri.joinPath(folder, candidate));
-			candidate = `${stem}-${n}.jis.json`;
+			candidate = `${stem}-${n}${ext}`;
 			n++;
 		} catch {
 			return candidate;
@@ -120,8 +130,8 @@ async function createCanvas(
 		value: defaultName,
 		validateInput: (value) => {
 			if (!value.trim()) return "File name is required";
-			if (!value.endsWith(".jis.json"))
-				return "File name must end with .jis.json";
+			if (!VALID_EXTENSIONS.some((ext) => value.endsWith(ext)))
+				return `File name must end with one of: ${VALID_EXTENSIONS.join(", ")}`;
 			return null;
 		},
 	});
