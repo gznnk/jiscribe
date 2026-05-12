@@ -31,7 +31,41 @@
 				"fileMatch": "*.jis.json",
 				"url": "./canvas-doc.schema.json"
 			}
-		]
+		],
+		"commands": [
+			{
+				"command": "jiscribe.newEmptyCanvas",
+				"title": "New Empty Jiscribe Canvas",
+				"category": "Jiscribe"
+			},
+			{
+				"command": "jiscribe.newCanvasFromTemplate",
+				"title": "New Jiscribe Canvas from Template",
+				"category": "Jiscribe"
+			}
+		],
+		"menus": {
+			"explorer/context": [
+				{
+					"command": "jiscribe.newEmptyCanvas",
+					"when": "explorerResourceIsFolder",
+					"group": "jiscribe@1"
+				},
+				{
+					"command": "jiscribe.newCanvasFromTemplate",
+					"when": "explorerResourceIsFolder",
+					"group": "jiscribe@2"
+				}
+			],
+			"commandPalette": [
+				{
+					"command": "jiscribe.newEmptyCanvas"
+				},
+				{
+					"command": "jiscribe.newCanvasFromTemplate"
+				}
+			]
+		}
 	},
 	"scripts": {
 		"vscode:prepublish": "pnpm run build",

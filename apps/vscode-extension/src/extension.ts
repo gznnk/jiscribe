@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 
+import { registerNewCanvasCommands } from "./commands/newCanvas";
 import { DiagnosticProvider } from "./diagnostics/DiagnosticProvider";
 import { JiscribeEditorProvider } from "./editor/JiscribeEditorProvider";
 
@@ -32,6 +33,8 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 
 	context.subscriptions.push(registration);
+
+	registerNewCanvasCommands(context);
 }
 
 /**
