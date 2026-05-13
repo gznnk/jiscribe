@@ -1,5 +1,5 @@
 import * as esbuild from "esbuild";
-import { copyFileSync } from "fs";
+import { copyFileSync, cpSync, mkdirSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
@@ -42,14 +42,25 @@ const webviewConfig = {
 
 function copySchema() {
 	const src = join(__dirname, "../../packages/svg-canvas-2/src/schemas/canvas/canvas-doc.schema.json");
-	const dest = join(__dirname, "canvas-doc.schema.json");
+	const dest = join(__dirname, "dist", "canvas-doc.schema.json");
 	copyFileSync(src, dest);
 	console.log("✅ Schema copied: canvas-doc.schema.json");
+}
+
+// jsonc-parser uses a UMD format that esbuild cannot properly inline.
+// Copy it directly into dist/node_modules so runtime require() resolves correctly.
+function copyJsoncParser() {
+	const src = join(__dirname, "node_modules", "jsonc-parser");
+	const dest = join(__dirname, "dist", "node_modules", "jsonc-parser");
+	mkdirSync(join(__dirname, "dist", "node_modules"), { recursive: true });
+	cpSync(src, dest, { recursive: true, dereference: true });
+	console.log("✅ jsonc-parser copied to dist/node_modules");
 }
 
 async function build() {
 	try {
 		copySchema();
+		copyJsoncParser();
 
 		if (isWatch) {
 			const extensionCtx = await esbuild.context(extensionConfig);

@@ -43,7 +43,7 @@
 					"*.jis.jsonc",
 					"*.jiscribe.jsonc"
 				],
-				"url": "./canvas-doc.schema.json"
+				"url": "./dist/canvas-doc.schema.json"
 			}
 		],
 		"commands": [
@@ -98,21 +98,27 @@
 		"vscode:prepublish": "pnpm run build",
 		"build": "node build.mjs",
 		"watch": "node build.mjs --watch",
+		"package": "vsce package --no-dependencies",
+		"publish-ext": "vsce publish --no-dependencies",
 		"lint": "eslint .",
 		"typecheck": "tsc --noEmit"
 	},
-	"dependencies": {
-		"@workspace/svg-canvas-2": "workspace:*",
-		"jsonc-parser": "^3.3.1",
-		"react": "catalog:",
-		"react-dom": "catalog:"
+	"dependencies": {},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/gznnk/jiscribe.git"
 	},
-	"license": "UNLICENSED",
+	"license": "MIT",
 	"devDependencies": {
 		"@types/node": "^22.10.5",
 		"@types/react": "^19.2.7",
 		"@types/react-dom": "^19.2.3",
 		"@types/vscode": "^1.85.0",
-		"esbuild": "^0.24.2"
+		"@vscode/vsce": "^3.4.2",
+		"@workspace/svg-canvas-2": "workspace:*",
+		"esbuild": "^0.24.2",
+		"jsonc-parser": "^3.3.1",
+		"react": "catalog:",
+		"react-dom": "catalog:"
 	}
 }

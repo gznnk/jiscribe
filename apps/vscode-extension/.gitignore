@@ -1,3 +1,4 @@
 dist/
 node_modules/
-canvas-doc.schema.json
+dist/canvas-doc.schema.json
+*.vsix
