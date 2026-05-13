@@ -31,7 +31,7 @@ export const ELLIPSE_DOC_DEFAULTS: Omit<EllipseDoc, "id"> = {
 	text: "",
 	textType: "text",
 	textAlign: "center",
-	verticalAlign: "center",
+	verticalAlign: "middle",
 	fontColor: "#000000",
 	fontSize: 16,
 	fontFamily: "Noto Sans JP",

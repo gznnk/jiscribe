@@ -18,7 +18,7 @@ export const SHAPE_PRESETS: ShapePreset[] = [
 			width: 200,
 			height: 150,
 			textAlign: "left",
-			verticalAlign: "start",
+			verticalAlign: "top",
 		},
 	},
 	{
@@ -30,7 +30,7 @@ export const SHAPE_PRESETS: ShapePreset[] = [
 			height: 200,
 			textType: "markdown",
 			textAlign: "left",
-			verticalAlign: "start",
+			verticalAlign: "top",
 			fill: "#ffffff",
 			stroke: "#d1d5db",
 			strokeWidth: 1,

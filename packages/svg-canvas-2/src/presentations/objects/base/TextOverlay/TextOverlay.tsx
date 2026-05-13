@@ -40,7 +40,7 @@ const TextOverlayComponent: React.FC<TextOverlayProps> = ({
 	text,
 	textType = "text",
 	textAlign = "center",
-	verticalAlign = "center",
+	verticalAlign = "middle",
 	fontColor = "#000000",
 	fontSize = 16,
 	fontFamily = "Noto Sans JP",

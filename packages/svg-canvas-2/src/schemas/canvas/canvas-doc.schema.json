@@ -80,7 +80,7 @@
 		"VerticalAlign": {
 			"description": "Vertical text alignment.",
 			"type": "string",
-			"enum": ["start", "center", "end"]
+			"enum": ["top", "middle", "bottom"]
 		},
 
 		"ArrowType": {

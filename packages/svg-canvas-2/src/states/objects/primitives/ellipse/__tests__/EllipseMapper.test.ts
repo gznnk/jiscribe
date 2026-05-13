@@ -23,7 +23,7 @@ describe("EllipseMapper", () => {
 				text: "Ellipse Text",
 				textType: "text",
 				textAlign: "right",
-				verticalAlign: "end",
+				verticalAlign: "bottom",
 				fontColor: "#222222",
 				fontSize: 18,
 				fontFamily: "Verdana",
@@ -47,7 +47,7 @@ describe("EllipseMapper", () => {
 			expect(state.text).toBe("Ellipse Text");
 			expect(state.textType).toBe("text");
 			expect(state.textAlign).toBe("right");
-			expect(state.verticalAlign).toBe("end");
+			expect(state.verticalAlign).toBe("bottom");
 			expect(state.fontColor).toBe("#222222");
 			expect(state.fontSize).toBe(18);
 			expect(state.fontFamily).toBe("Verdana");
@@ -107,7 +107,7 @@ describe("EllipseMapper", () => {
 				text: "Ellipse Text",
 				textType: "text",
 				textAlign: "right",
-				verticalAlign: "end",
+				verticalAlign: "bottom",
 				fontColor: "#222222",
 				fontSize: 18,
 				fontFamily: "Verdana",
@@ -131,7 +131,7 @@ describe("EllipseMapper", () => {
 			expect(doc.text).toBe("Ellipse Text");
 			expect(doc.textType).toBe("text");
 			expect(doc.textAlign).toBe("right");
-			expect(doc.verticalAlign).toBe("end");
+			expect(doc.verticalAlign).toBe("bottom");
 			expect(doc.fontColor).toBe("#222222");
 			expect(doc.fontSize).toBe(18);
 			expect(doc.fontFamily).toBe("Verdana");

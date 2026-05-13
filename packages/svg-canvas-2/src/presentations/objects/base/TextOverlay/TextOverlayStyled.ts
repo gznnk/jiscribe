@@ -7,9 +7,9 @@ const VerticalAlignMap: Record<
 	VerticalAlign,
 	React.CSSProperties["alignItems"]
 > = {
-	start: "flex-start",
-	center: "center",
-	end: "flex-end",
+	top: "flex-start",
+	middle: "center",
+	bottom: "flex-end",
 } as const;
 
 const TextAlignMap: Record<TextAlign, React.CSSProperties["textAlign"]> = {

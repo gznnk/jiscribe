@@ -33,7 +33,7 @@ export const RECT_DOC_DEFAULTS: Omit<RectDoc, "id"> = {
 	text: "",
 	textType: "text",
 	textAlign: "center",
-	verticalAlign: "center",
+	verticalAlign: "middle",
 	fontColor: "#000000",
 	fontSize: 16,
 	fontFamily: "Noto Sans JP",

@@ -1,7 +1,7 @@
 /**
  * Available vertical text alignment options.
  */
-export const VerticalAligns = ["start", "center", "end"] as const;
+export const VerticalAligns = ["top", "middle", "bottom"] as const;
 
 /**
  * Defines vertical text alignment within a shape.

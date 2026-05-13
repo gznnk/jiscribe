@@ -30,7 +30,7 @@ export const STICKY_DOC_DEFAULTS: Omit<StickyDoc, "id"> = {
 	text: "",
 	textType: "text",
 	textAlign: "center",
-	verticalAlign: "center",
+	verticalAlign: "middle",
 	fontColor: "#000000",
 	fontSize: 14,
 	fontFamily: "Noto Sans JP",

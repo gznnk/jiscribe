@@ -195,7 +195,7 @@ describe("RectMapper", () => {
 				text: "Round Trip",
 				textType: "markdown",
 				textAlign: "left",
-				verticalAlign: "start",
+				verticalAlign: "top",
 				fontColor: "#111111",
 				fontSize: 14,
 				fontFamily: "Noto Sans JP",
