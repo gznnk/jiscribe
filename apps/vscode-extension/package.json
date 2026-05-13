@@ -19,17 +19,30 @@
 				"viewType": "jiscribe.editor",
 				"displayName": "Jiscribe Canvas Editor",
 				"selector": [
-					{ "filenamePattern": "*.jis.json" },
-					{ "filenamePattern": "*.jiscribe.json" },
-					{ "filenamePattern": "*.jis.jsonc" },
-					{ "filenamePattern": "*.jiscribe.jsonc" }
+					{
+						"filenamePattern": "*.jis.json"
+					},
+					{
+						"filenamePattern": "*.jiscribe.json"
+					},
+					{
+						"filenamePattern": "*.jis.jsonc"
+					},
+					{
+						"filenamePattern": "*.jiscribe.jsonc"
+					}
 				],
 				"priority": "default"
 			}
 		],
 		"jsonValidation": [
 			{
-				"fileMatch": ["*.jis.json", "*.jiscribe.json", "*.jis.jsonc", "*.jiscribe.jsonc"],
+				"fileMatch": [
+					"*.jis.json",
+					"*.jiscribe.json",
+					"*.jis.jsonc",
+					"*.jiscribe.jsonc"
+				],
 				"url": "./canvas-doc.schema.json"
 			}
 		],
@@ -37,6 +50,11 @@
 			{
 				"command": "jiscribe.newEmptyCanvas",
 				"title": "New Empty Jiscribe Canvas",
+				"category": "Jiscribe"
+			},
+			{
+				"command": "jiscribe.newEmptyCanvasWithSpec",
+				"title": "New Empty Jiscribe Canvas with Spec",
 				"category": "Jiscribe"
 			},
 			{
@@ -53,14 +71,22 @@
 					"group": "jiscribe@1"
 				},
 				{
-					"command": "jiscribe.newCanvasFromTemplate",
+					"command": "jiscribe.newEmptyCanvasWithSpec",
 					"when": "explorerResourceIsFolder",
 					"group": "jiscribe@2"
+				},
+				{
+					"command": "jiscribe.newCanvasFromTemplate",
+					"when": "explorerResourceIsFolder",
+					"group": "jiscribe@3"
 				}
 			],
 			"commandPalette": [
 				{
 					"command": "jiscribe.newEmptyCanvas"
+				},
+				{
+					"command": "jiscribe.newEmptyCanvasWithSpec"
 				},
 				{
 					"command": "jiscribe.newCanvasFromTemplate"
@@ -77,15 +103,16 @@
 	},
 	"dependencies": {
 		"@workspace/svg-canvas-2": "workspace:*",
+		"jsonc-parser": "^3.3.1",
 		"react": "catalog:",
 		"react-dom": "catalog:"
 	},
 	"license": "UNLICENSED",
 	"devDependencies": {
-		"@types/vscode": "^1.85.0",
 		"@types/node": "^22.10.5",
 		"@types/react": "^19.2.7",
 		"@types/react-dom": "^19.2.3",
+		"@types/vscode": "^1.85.0",
 		"esbuild": "^0.24.2"
 	}
 }

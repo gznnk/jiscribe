@@ -13,7 +13,7 @@ const extensionConfig = {
 	entryPoints: [join(__dirname, "src", "extension.ts")],
 	bundle: true,
 	outfile: join(__dirname, "dist", "extension.js"),
-	external: ["vscode"],
+	external: ["vscode", "jsonc-parser"],
 	format: "cjs",
 	platform: "node",
 	target: "node18",

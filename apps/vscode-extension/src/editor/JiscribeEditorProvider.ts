@@ -1,3 +1,4 @@
+import * as jsoncParser from "jsonc-parser";
 import * as vscode from "vscode";
 
 import type {
@@ -122,10 +123,13 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 		panel: vscode.WebviewPanel,
 		document: vscode.TextDocument,
 	) {
-		const message: ExtensionToWebviewMessage = {
-			type: "update",
-			data: document.getText(),
-		};
+		const text = document.getText();
+		const errors: jsoncParser.ParseError[] = [];
+		const parsed = jsoncParser.parse(text, errors);
+		// JSONC parse に失敗した場合はそのまま送り、Webview 側のエラー画面に任せる
+		const data =
+			errors.length === 0 ? JSON.stringify(parsed, null, 2) : text;
+		const message: ExtensionToWebviewMessage = { type: "update", data };
 		panel.webview.postMessage(message);
 	}
 
