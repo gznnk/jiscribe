@@ -1,10 +1,10 @@
 {
-	"name": "jiscribe-beta",
+	"name": "jiscribe",
 	"displayName": "Jiscribe Beta",
 	"description": "VSCode extension for editing .jis.json files with SVG canvas",
 	"publisher": "gznnk",
 	"version": "0.0.1",
-	"private": false,
+	"private": true,
 	"engines": {
 		"vscode": "^1.85.0"
 	},
