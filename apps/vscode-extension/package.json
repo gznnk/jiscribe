@@ -1,7 +1,7 @@
 {
 	"name": "jiscribe",
 	"displayName": "Jiscribe Beta",
-	"description": "VSCode extension for editing .jis.json files with SVG canvas",
+	"description": "An AI-friendly, Git-manageable JSON canvas editor. Draw diagrams directly in VS Code and collaborate visually with AI.",
 	"publisher": "gznnk",
 	"version": "0.0.1",
 	"private": true,
