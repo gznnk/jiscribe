@@ -318,7 +318,8 @@ async function createCanvas(
 	const targetFolder = await resolveTargetFolder(folderUri);
 	if (!targetFolder) return;
 
-	const defaultExtension = template === "spec" ? ".jis.jsonc" : ".jis.json";
+	const defaultExtension =
+		template === "spec" ? ".jiscribe.jsonc" : ".jiscribe.json";
 	const defaultName = await findAvailableFileName(
 		targetFolder,
 		`untitled${defaultExtension}`,

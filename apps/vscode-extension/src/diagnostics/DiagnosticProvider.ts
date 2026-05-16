@@ -44,8 +44,14 @@ export class DiagnosticProvider {
 	}
 
 	private validateDocument(document: vscode.TextDocument) {
-		// .jis.json 以外のファイルは対象外
-		if (!document.fileName.endsWith(".jis.json")) return;
+		// 対象外ファイルはスキップ
+		const validExts = [
+			".jis.json",
+			".jiscribe.json",
+			".jis.jsonc",
+			".jiscribe.jsonc",
+		];
+		if (!validExts.some((ext) => document.fileName.endsWith(ext))) return;
 
 		const text = document.getText();
 
