@@ -213,7 +213,7 @@ export class TransformControlHandler implements ControlStrategy {
 		let snapFeedback: SnapFeedback = { x: [], y: [] };
 		const snapCandidates = eventStartSnapshot.snapCandidates;
 
-		if (snapCandidates) {
+		if (snapCandidates && !event.mods.ctrl) {
 			const tentativeBBox = calcTentativeBBox(resizeResult, startFrame, radians);
 			const xEdge = getAnchorXSnapEdge(anchorType, resizeResult.scaleX);
 			const yEdge = getAnchorYSnapEdge(anchorType, resizeResult.scaleY);

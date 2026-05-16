@@ -151,12 +151,13 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 				const snapCandidates = state.eventStartSnapshot?.snapCandidates;
 				const drag = state.shapeLibraryDrag;
 
-				if (!snapCandidates || !drag) {
+				if (!snapCandidates || !drag || event.mods.ctrl) {
 					return {
 						...state,
 						shapeLibraryDrag: drag
 							? { ...drag, ghostPosition: event.last }
 							: null,
+						snapFeedback: null,
 					};
 				}
 

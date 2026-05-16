@@ -153,7 +153,7 @@ export const CanvasEventHandler: GestureHandler = {
 				let snapFeedback: SnapFeedback = { x: [], y: [] };
 
 				const snapCandidates = nextState.eventStartSnapshot?.snapCandidates;
-				if (snapCandidates) {
+				if (snapCandidates && !event.mods.ctrl) {
 					const result = findSnap(
 						snapCandidates,
 						SNAP_THRESHOLD_PX / nextState.viewport.zoom,

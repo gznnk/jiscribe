@@ -71,6 +71,7 @@ function handleObjectDrag(
 	canvasState: CanvasControllerState,
 	delta: Point,
 	button: number,
+	mods: Mods,
 ): CanvasControllerState {
 	// Only handle left-click drag (button 0)
 	if (button !== 0) {
@@ -97,7 +98,7 @@ function handleObjectDrag(
 	const snapSourceKeyPoints: FrameKeyPoints | undefined =
 		snapSourceId ? eventStartSnapshot.keyPoints[snapSourceId] : undefined;
 
-	if (snapCandidates && snapSourceKeyPoints) {
+	if (snapCandidates && snapSourceKeyPoints && !mods.ctrl) {
 		const bbox = calcKeyPointsBoundingBox(snapSourceKeyPoints);
 		const selectedBBox = {
 			left: bbox.left + delta.x,
@@ -265,7 +266,7 @@ function handleObjectDragStart(
 	};
 
 	// ドラッグ処理を実行
-	return handleObjectDrag(nextState, delta, button);
+	return handleObjectDrag(nextState, delta, button, mods);
 }
 
 /**
@@ -275,6 +276,7 @@ function handleObjectDragEnd(
 	canvasState: CanvasControllerState,
 	delta: Point,
 	button: number,
+	mods: Mods,
 ): CanvasControllerState {
 	// エッジスクロールを無効化
 	const nextState = {
@@ -283,7 +285,7 @@ function handleObjectDragEnd(
 	};
 
 	// 最終的なドラッグ処理
-	const resultState = handleObjectDrag(nextState, delta, button);
+	const resultState = handleObjectDrag(nextState, delta, button, mods);
 
 	// 親グループのバウンディングボックスを更新
 	return updateAffectedGroupBounds(resultState, resultState.selectedIds);
@@ -362,9 +364,9 @@ export const ObjectEventHandler: GestureHandler = {
 				event.button,
 			);
 		} else if (event.type === "drag") {
-			return handleObjectDrag(nextState, event.delta, event.button);
+			return handleObjectDrag(nextState, event.delta, event.button, event.mods);
 		} else if (event.type === "dragEnd") {
-			return handleObjectDragEnd(nextState, event.delta, event.button);
+			return handleObjectDragEnd(nextState, event.delta, event.button, event.mods);
 		}
 
 		return nextState;
