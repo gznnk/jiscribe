@@ -24,12 +24,6 @@
 					},
 					{
 						"filenamePattern": "*.jiscribe.json"
-					},
-					{
-						"filenamePattern": "*.jis.jsonc"
-					},
-					{
-						"filenamePattern": "*.jiscribe.jsonc"
 					}
 				],
 				"priority": "default"
@@ -39,9 +33,7 @@
 			{
 				"fileMatch": [
 					"*.jis.json",
-					"*.jiscribe.json",
-					"*.jis.jsonc",
-					"*.jiscribe.jsonc"
+					"*.jiscribe.json"
 				],
 				"url": "./dist/canvas-doc.schema.json"
 			}
@@ -53,13 +45,8 @@
 				"category": "Jiscribe"
 			},
 			{
-				"command": "jiscribe.newEmptyCanvasWithSpec",
-				"title": "New Empty Jiscribe Canvas with Spec",
-				"category": "Jiscribe"
-			},
-			{
-				"command": "jiscribe.newCanvasFromTemplate",
-				"title": "New Jiscribe Canvas from Template",
+				"command": "jiscribe.exportSchema",
+				"title": "Export Jiscribe Canvas Schema",
 				"category": "Jiscribe"
 			}
 		],
@@ -71,14 +58,9 @@
 					"group": "jiscribe@1"
 				},
 				{
-					"command": "jiscribe.newEmptyCanvasWithSpec",
+					"command": "jiscribe.exportSchema",
 					"when": "explorerResourceIsFolder",
 					"group": "jiscribe@2"
-				},
-				{
-					"command": "jiscribe.newCanvasFromTemplate",
-					"when": "explorerResourceIsFolder",
-					"group": "jiscribe@3"
 				}
 			],
 			"commandPalette": [
@@ -86,10 +68,7 @@
 					"command": "jiscribe.newEmptyCanvas"
 				},
 				{
-					"command": "jiscribe.newEmptyCanvasWithSpec"
-				},
-				{
-					"command": "jiscribe.newCanvasFromTemplate"
+					"command": "jiscribe.exportSchema"
 				}
 			]
 		}
