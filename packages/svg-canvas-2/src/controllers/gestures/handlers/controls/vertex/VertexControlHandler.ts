@@ -69,7 +69,9 @@ export class VertexControlHandler implements ControlStrategy {
 		// ジェスチャータイプに応じて適切なハンドラーにルーティング
 		let nextState = state;
 
-		if (event.type === "dragStart") {
+		if (event.type === "click") {
+			nextState = this.handleClick(nextState, objectId, vertexIndex);
+		} else if (event.type === "dragStart") {
 			nextState = this.handleDragStart(nextState, event);
 		} else if (event.type === "drag") {
 			nextState = this.handleDrag(nextState, event, objectId, vertexIndex);
@@ -81,6 +83,21 @@ export class VertexControlHandler implements ControlStrategy {
 	}
 
 	/**
+	 * Vertex control のクリックを処理する。クリックされた頂点を選択状態にする。
+	 */
+	private handleClick(
+		state: CanvasControllerState,
+		objectId: string,
+		vertexIndex: number,
+	): CanvasControllerState {
+		return {
+			...state,
+			selectedVertex: { objectId, vertexIndex },
+			objectMenuOpenId: null,
+		};
+	}
+
+	/**
 	 * Vertex control でのドラッグ開始を処理する。
 	 */
 	private handleDragStart(
@@ -89,6 +106,7 @@ export class VertexControlHandler implements ControlStrategy {
 	): CanvasControllerState {
 		return {
 			...state,
+			selectedVertex: null,
 			edgeScrollEnabled: true,
 			objectMenuOpenId: null,
 		};

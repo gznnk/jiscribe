@@ -239,6 +239,7 @@ export const CanvasEventHandler: GestureHandler = {
 					},
 					selectedIds: [],
 					selectedConnectorId: null,
+					selectedVertex: null,
 					edgeScrollEnabled: true,
 					objectMenuOpenId: null,
 				};
@@ -298,6 +299,7 @@ export const CanvasEventHandler: GestureHandler = {
 				...nextState,
 				selectedIds: [],
 				selectedConnectorId: null,
+				selectedVertex: null,
 				// コンテキストメニューが開いている場合は閉じる
 				contextMenuPosition: null,
 				// ObjectMenu の展開をリセット

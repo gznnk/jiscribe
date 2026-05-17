@@ -59,6 +59,7 @@ export const RedoCommand: Command = {
 			textEditState: null,
 			pendingConnector: null,
 			selectedConnectorId: null,
+			selectedVertex: null,
 			editingConnectorId: null,
 			editingEndpoint: null,
 			snapFeedback: null,

@@ -230,6 +230,16 @@ export type CanvasControllerState = CanvasState & {
 	selectedConnectorId: string | null;
 
 	/**
+	 * 現在選択中の頂点。
+	 * polyline/polygon が1つ選択されているときのみ有効。
+	 * null の場合は頂点が選択されていない。
+	 */
+	selectedVertex: {
+		objectId: string;
+		vertexIndex: number;
+	} | null;
+
+	/**
 	 * 編集中のコネクターID。
 	 * エンドポイントをドラッグ編集している場合に設定され、pendingConnector と組み合わせて使用される。
 	 * 新規作成時は null、編集時は元のコネクターIDが設定される。

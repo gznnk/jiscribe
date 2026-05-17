@@ -78,6 +78,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 			textEditState: null,
 			pendingConnector: null,
 			selectedConnectorId: null,
+			selectedVertex: null,
 			editingConnectorId: null,
 			editingEndpoint: null,
 			snapFeedback: null,
@@ -225,6 +226,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 						selectedIds={state.selectedIds}
 						objects={state.objects}
 						zoom={state.viewport.zoom}
+						selectedVertex={state.selectedVertex}
 					/>
 					<DragGhost shapeLibraryDrag={state.shapeLibraryDrag} />
 					<DrawingPreviewOverlay shapeDrawing={state.shapeDrawing} />

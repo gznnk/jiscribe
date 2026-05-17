@@ -8,6 +8,7 @@ type VertexControlsLayerProps = {
 	selectedIds: string[];
 	objects: Record<string, ObjectState>;
 	zoom?: number;
+	selectedVertex: { objectId: string; vertexIndex: number } | null;
 };
 
 /**
@@ -18,6 +19,7 @@ const VertexControlsLayerComponent: React.FC<VertexControlsLayerProps> = ({
 	selectedIds,
 	objects,
 	zoom = 1,
+	selectedVertex,
 }) => {
 	// Only render for single selection
 	if (selectedIds.length !== 1) {
@@ -39,10 +41,17 @@ const VertexControlsLayerComponent: React.FC<VertexControlsLayerProps> = ({
 	) {
 		const points = selectedObject.points as Point[];
 		const isClosed = selectedObject.type === "polygon";
+		const selectedVertexIndex =
+			selectedVertex?.objectId === selectedId ? selectedVertex.vertexIndex : null;
 		return (
 			<>
 				{/* Vertex controls for moving existing vertices */}
-				<VertexControls objectId={selectedId} points={points} zoom={zoom} />
+				<VertexControls
+					objectId={selectedId}
+					points={points}
+					zoom={zoom}
+					selectedVertexIndex={selectedVertexIndex}
+				/>
 				{/* Vertex insert controls for adding new vertices */}
 				<VertexInsertControls
 					objectId={selectedId}

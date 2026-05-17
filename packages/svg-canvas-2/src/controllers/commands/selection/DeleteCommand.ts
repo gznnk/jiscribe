@@ -1,7 +1,13 @@
-﻿import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
+﻿import type { Point } from "@workspace/geometry";
+
+import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
+import type { PolygonState } from "../../../states/objects/primitives/polygon/PolygonState";
+import type { PolylineState } from "../../../states/objects/primitives/polyline/PolylineState";
+import type { CanvasControllerState } from "../../CanvasTypes";
 import { updateGroupBounds } from "../../ui/utils/updateGroupBounds";
 import { cleanupConnectorsOnDelete } from "../../utils/cleanupConnectorsOnDelete";
 import { cleanupGroups } from "../../utils/cleanupGroups";
+import { updateGroupBoundsFromRoot } from "../../utils/updateGroupBoundsFromRoot";
 import type { Command } from "../CommandTypes";
 
 export const DeleteCommand: Command = {
@@ -13,10 +19,57 @@ export const DeleteCommand: Command = {
 	},
 
 	canExecute: (state) => {
-		return state.selectedIds.length > 0 || state.selectedConnectorId !== null;
+		return (
+			state.selectedVertex !== null ||
+			state.selectedIds.length > 0 ||
+			state.selectedConnectorId !== null
+		);
 	},
 
 	execute: (state) => {
+		// selectedVertex がある場合は頂点削除を優先する。
+		// selectedIds にオブジェクトが残っていても、この分岐でリターンしてオブジェクト削除に落ちないようにする。
+		if (state.selectedVertex !== null) {
+			const { objectId, vertexIndex } = state.selectedVertex;
+			const poly = state.objects[objectId];
+
+			if (
+				!poly ||
+				(poly.type !== "polyline" && poly.type !== "polygon") ||
+				!("points" in poly)
+			) {
+				return { ...state, selectedVertex: null };
+			}
+
+			const points = (poly as PolylineState | PolygonState).points as Point[];
+			const minPoints = poly.type === "polygon" ? 3 : 2;
+
+			// 最小頂点数以下は削除しない
+			if (points.length <= minPoints) {
+				return state;
+			}
+
+			const newPoints = points.filter((_, i) => i !== vertexIndex);
+			const updatedPoly = { ...(poly as PolylineState | PolygonState), points: newPoints };
+
+			let nextState: CanvasControllerState = {
+				...state,
+				objects: {
+					...state.objects,
+					[objectId]: updatedPoly,
+				},
+				selectedVertex: null,
+				lastCommitTime: Date.now(),
+			};
+
+			if (updatedPoly.parentId) {
+				nextState = updateGroupBoundsFromRoot(nextState, updatedPoly.parentId);
+			}
+
+			return nextState;
+		}
+
+
 		// 削除対象IDを収集（グループの場合は子孫も再帰的に含める）
 		const idsToDelete = new Set<string>();
 

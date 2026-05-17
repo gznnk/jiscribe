@@ -58,6 +58,8 @@ function handleObjectClick(
 		multiSelectGroup,
 		// コネクター選択を解除して排他を保証
 		selectedConnectorId: null,
+		// 頂点選択を解除
+		selectedVertex: null,
 		// 選択変化時にサブメニューを閉じる
 		objectMenuOpenId: null,
 	};
@@ -253,6 +255,8 @@ function handleObjectDragStart(
 		edgeScrollEnabled: true,
 		// コネクター選択を解除して排他を保証
 		selectedConnectorId: null,
+		// 頂点選択を解除
+		selectedVertex: null,
 		// ドラッグ開始時にオブジェクトメニューのドロップダウンを閉じる
 		objectMenuOpenId: null,
 		eventStartSnapshot: canvasState.eventStartSnapshot

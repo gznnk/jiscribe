@@ -9,6 +9,11 @@ import { handlePropertyUpdate } from "../../../utils/handlePropertyUpdate";
  * ObjectMenu 項目の操作を処理する GestureHandler。
  * targetKind が "object-menu" の場合に処理を行う。
  *
+ * ObjectMenu からのプロパティ更新には2経路ある。
+ * (1) このハンドラー: gesture システム経由（set: / slider:）。大半のプロパティ変更はここを通る
+ * (2) canvasReducer の MENU_PROPERTY_UPDATE ケース: number-input など React の onChange 経由。ここは通らない
+ * selectedVertex のクリアなど両経路で共通して必要な処理は、それぞれに追加すること。
+ *
  * 処理するイベント:
  * - click: メニュー項目のクリック
  * - drag: スライダーのリアルタイム更新（履歴記録なし）
@@ -54,7 +59,8 @@ export const ObjectMenuHandler: GestureHandler = {
 
 			// drag イベント: リアルタイム更新（履歴記録なし、メニュー維持）
 			if (event.type === "drag") {
-				return handlePropertyUpdate(state, property, event.inputValue);
+				const newState = handlePropertyUpdate(state, property, event.inputValue);
+				return { ...newState, selectedVertex: null };
 			}
 
 			// dragEnd イベント: 最終値確定（履歴記録は handleGesture に委譲）
@@ -64,7 +70,7 @@ export const ObjectMenuHandler: GestureHandler = {
 					property,
 					event.inputValue,
 				);
-				return { ...newState, lastCommitTime: event.time };
+				return { ...newState, selectedVertex: null, lastCommitTime: event.time };
 			}
 
 			return state;
@@ -94,7 +100,7 @@ export const ObjectMenuHandler: GestureHandler = {
 					const value = rest.slice(colonIndex + 1);
 					const newState = handlePropertyUpdate(state, property, value);
 					// 履歴記録は handleGesture に委譲するため、lastCommitTime のみ更新
-					return { ...newState, lastCommitTime: event.time };
+					return { ...newState, selectedVertex: null, lastCommitTime: event.time };
 				}
 			}
 

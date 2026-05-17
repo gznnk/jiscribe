@@ -34,14 +34,19 @@ export const canvasReducer = (
 		}
 
 		case "MENU_PROPERTY_UPDATE": {
+			// ObjectMenu からのプロパティ更新には2経路ある。
+			// (1) このケース: number-input など React の onChange イベント経由で Canvas.tsx の onPropertyUpdate コールバックから dispatch される
+			// (2) ObjectMenuHandler: gesture システム経由（set: / slider:）。こちらはここを通らない
 			const updated = handlePropertyUpdate(
 				state,
 				action.property,
 				action.value,
 			);
-			if (!action.commit) return updated;
+			// プロパティ変更後は頂点選択を解除する（Delete キーがオブジェクト削除として機能するように）
+			const updatedWithVertexCleared = { ...updated, selectedVertex: null };
+			if (!action.commit) return updatedWithVertexCleared;
 			return recordHistoryIfNeeded(
-				{ ...updated, lastCommitTime: Date.now() },
+				{ ...updatedWithVertexCleared, lastCommitTime: Date.now() },
 				state.lastCommitTime,
 			);
 		}

@@ -126,6 +126,7 @@ export class VertexInsertHandler implements ControlStrategy {
 		const nextState: CanvasControllerState = {
 			...state,
 			objects: updatedObjects,
+			selectedVertex: null,
 			edgeScrollEnabled: true,
 		};
 
