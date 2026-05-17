@@ -30,7 +30,6 @@ import { ConnectionAnchorsLayer } from "./ui/controls/ConnectionAnchorsLayer";
 import { ConnectorControlsLayer } from "./ui/controls/ConnectorControlsLayer";
 import { TransformControlsLayer } from "./ui/controls/TransformControlsLayer";
 import { VertexControlsLayer } from "./ui/controls/VertexControlsLayer";
-import { DebugInfo } from "./ui/debug/DebugInfo";
 import { TextEditorLayer } from "./ui/editors/TextEditorLayer";
 import { AreaSelectionRect } from "./ui/feedback/AreaSelectionRect";
 import { DragGhost } from "./ui/feedback/DragGhost";
@@ -257,8 +256,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 			</Container>
 			<ViewportOverlay>
 				<ShapeLibrary activePresetId={state.shapeDrawing?.preset.id ?? null} />
-				<DebugInfo selectedIds={state.selectedIds} objects={state.objects} />
-				<ContextMenu
+<ContextMenu
 					position={state.contextMenuPosition}
 					canvasState={state}
 					callbacks={{ paste: handlePasteCallback }}
