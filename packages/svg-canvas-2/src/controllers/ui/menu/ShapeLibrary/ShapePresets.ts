@@ -10,6 +10,8 @@ export type ShapePreset = {
 export const SHAPE_PRESETS: ShapePreset[] = [
 	{ id: "rect", objectType: "rect", label: "Rectangle" },
 	{ id: "ellipse", objectType: "ellipse", label: "Ellipse" },
+	{ id: "polyline", objectType: "polyline", label: "Polyline" },
+	{ id: "polygon", objectType: "polygon", label: "Polygon" },
 	{
 		id: "sticky",
 		objectType: "sticky",
@@ -21,8 +23,6 @@ export const SHAPE_PRESETS: ShapePreset[] = [
 			verticalAlign: "top",
 		},
 	},
-	{ id: "polyline", objectType: "polyline", label: "Polyline" },
-	{ id: "polygon", objectType: "polygon", label: "Polygon" },
 	{
 		id: "rect-markdown",
 		objectType: "rect",

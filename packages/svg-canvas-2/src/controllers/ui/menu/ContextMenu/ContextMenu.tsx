@@ -40,6 +40,8 @@ const ContextMenuComponent: React.FC<ContextMenuProps> = ({
 	if (!position) return null;
 
 	const menuItems: CommandMenuItem[] = [
+		{ type: "command", commandId: "cut" },
+		{ type: "command", commandId: "copy" },
 		{
 			type: "callback",
 			id: "paste",
@@ -49,8 +51,6 @@ const ContextMenuComponent: React.FC<ContextMenuProps> = ({
 				default: [{ key: "v", ctrl: true }],
 			},
 		},
-		{ type: "command", commandId: "copy" },
-		{ type: "command", commandId: "cut" },
 		{ type: "command", commandId: "delete" },
 		{ type: "separator" },
 		{ type: "command", commandId: "selectAll" },
