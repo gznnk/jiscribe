@@ -4,7 +4,7 @@
 // 監視モード: node build.mjs --watch
 
 import * as esbuild from "esbuild";
-import { copyFileSync, cpSync, mkdirSync } from "fs";
+import { copyFileSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
@@ -27,8 +27,7 @@ const extensionConfig = {
 	outfile: join(__dirname, "dist", "extension.js"),
 	// バンドルに含めず実行時に require() で解決するモジュール
 	// vscode: VSCode が実行環境として提供するため同梱不要
-	// jsonc-parser: UMD形式のためバンドルできず、別途 dist/node_modules にコピーする
-	external: ["vscode", "jsonc-parser"],
+	external: ["vscode"],
 	// CommonJS 形式で出力（VSCode 拡張機能が require() で読み込むため）
 	format: "cjs",
 	// Node.js 向けのビルド（グローバル変数 process や __dirname などが使える）
@@ -81,24 +80,10 @@ function copySchema() {
 	console.log("✅ Schema copied: canvas-doc.schema.json");
 }
 
-// ── jsonc-parser のコピー ────────────────────────────────────────────────
-// jsonc-parser は UMD 形式で配布されており、esbuild が正しくバンドルできない。
-// そのため external に指定してバンドルから除外し、
-// 実行時に Node.js の require() で解決できるよう dist/node_modules/ に直接コピーする。
-function copyJsoncParser() {
-	const src = join(__dirname, "node_modules", "jsonc-parser");
-	const dest = join(__dirname, "dist", "node_modules", "jsonc-parser");
-	mkdirSync(join(__dirname, "dist", "node_modules"), { recursive: true });
-	cpSync(src, dest, { recursive: true, dereference: true });
-	console.log("✅ jsonc-parser copied to dist/node_modules");
-}
-
 // ── メインのビルド処理 ───────────────────────────────────────────────────
 async function build() {
 	try {
-		// まず静的ファイルをコピーしておく
 		copySchema();
-		copyJsoncParser();
 
 		if (isWatch) {
 			// 監視モード: ファイル変更を検知して自動的に再ビルドする
