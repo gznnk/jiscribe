@@ -1,8 +1,5 @@
-﻿import type { Point } from "@workspace/geometry";
-
+﻿import { isPoly } from "../../../schemas/objects/types/Poly";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
-import type { PolygonState } from "../../../states/objects/primitives/polygon/PolygonState";
-import type { PolylineState } from "../../../states/objects/primitives/polyline/PolylineState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { updateGroupBounds } from "../../ui/utils/updateGroupBounds";
 import { cleanupConnectorsOnDelete } from "../../utils/cleanupConnectorsOnDelete";
@@ -33,15 +30,11 @@ export const DeleteCommand: Command = {
 			const { objectId, vertexIndex } = state.selectedVertex;
 			const poly = state.objects[objectId];
 
-			if (
-				!poly ||
-				(poly.type !== "polyline" && poly.type !== "polygon") ||
-				!("points" in poly)
-			) {
+			if (!isPoly(poly)) {
 				return { ...state, selectedVertex: null };
 			}
 
-			const points = (poly as PolylineState | PolygonState).points as Point[];
+			const points = poly.points;
 			const minPoints = poly.type === "polygon" ? 3 : 2;
 
 			// 最小頂点数以下は削除しない
@@ -50,7 +43,7 @@ export const DeleteCommand: Command = {
 			}
 
 			const newPoints = points.filter((_, i) => i !== vertexIndex);
-			const updatedPoly = { ...(poly as PolylineState | PolygonState), points: newPoints };
+			const updatedPoly = { ...poly, points: newPoints };
 
 			let nextState: CanvasControllerState = {
 				...state,
@@ -68,7 +61,6 @@ export const DeleteCommand: Command = {
 
 			return nextState;
 		}
-
 
 		// 削除対象IDを収集（グループの場合は子孫も再帰的に含める）
 		const idsToDelete = new Set<string>();

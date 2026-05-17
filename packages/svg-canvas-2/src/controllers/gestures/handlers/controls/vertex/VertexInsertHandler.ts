@@ -1,10 +1,9 @@
 import { roundToDecimal } from "@workspace/geometry";
 import type { Point } from "@workspace/geometry";
 
+import { isPoly } from "../../../../../schemas/objects/types/Poly";
 import { PRECISION } from "../../../../../constants/precision";
 import type { CanvasEvent } from "../../../../../registry/GestureHandlerRegistryTypes";
-import type { PolygonState } from "../../../../../states/objects/primitives/polygon/PolygonState";
-import type { PolylineState } from "../../../../../states/objects/primitives/polyline/PolylineState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
 import {
@@ -13,8 +12,6 @@ import {
 	SNAP_THRESHOLD_PX,
 } from "../../objects/utils/snap/findSnap";
 import type { ControlStrategy } from "../ControlEventHandler";
-
-type PolyState = PolylineState | PolygonState;
 
 /**
  * Vertex insert control の操作（セグメントへの頂点追加）を処理する。
@@ -94,10 +91,7 @@ export class VertexInsertHandler implements ControlStrategy {
 		segmentIndex: number,
 	): CanvasControllerState {
 		const currentObject = state.objects[objectId];
-		if (
-			!currentObject ||
-			(currentObject.type !== "polyline" && currentObject.type !== "polygon")
-		) {
+		if (!isPoly(currentObject)) {
 			return state;
 		}
 
@@ -108,12 +102,11 @@ export class VertexInsertHandler implements ControlStrategy {
 		};
 
 		// 頂点を挿入（segmentIndex + 1の位置に追加）
-		const poly = currentObject as PolyState;
-		const newPoints = [...poly.points];
+		const newPoints = [...currentObject.points];
 		newPoints.splice(segmentIndex + 1, 0, newPosition);
 
-		const updatedObject: PolyState = {
-			...poly,
+		const updatedObject = {
+			...currentObject,
 			points: newPoints,
 		};
 
@@ -159,10 +152,7 @@ export class VertexInsertHandler implements ControlStrategy {
 		// dragStartで更新されたeventStartSnapshotから開始オブジェクトを取得
 		// （新しく追加された頂点を含む状態）
 		const startObject = eventStartSnapshot.objects[objectId];
-		if (
-			!startObject ||
-			(startObject.type !== "polyline" && startObject.type !== "polygon")
-		) {
+		if (!isPoly(startObject)) {
 			return state;
 		}
 
@@ -196,12 +186,11 @@ export class VertexInsertHandler implements ControlStrategy {
 		};
 
 		// 頂点位置を更新
-		const poly = startObject as PolyState;
-		const newPoints = [...poly.points];
+		const newPoints = [...startObject.points];
 		newPoints[newVertexIndex] = newPosition;
 
-		const updatedObject: PolyState = {
-			...poly,
+		const updatedObject = {
+			...startObject,
 			points: newPoints,
 		};
 

@@ -1,10 +1,9 @@
 import { roundToDecimal } from "@workspace/geometry";
 import type { Point } from "@workspace/geometry";
 
+import { isPoly } from "../../../../../schemas/objects/types/Poly";
 import { PRECISION } from "../../../../../constants/precision";
 import type { CanvasEvent } from "../../../../../registry/GestureHandlerRegistryTypes";
-import type { PolygonState } from "../../../../../states/objects/primitives/polygon/PolygonState";
-import type { PolylineState } from "../../../../../states/objects/primitives/polyline/PolylineState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
 import {
@@ -13,8 +12,6 @@ import {
 	SNAP_THRESHOLD_PX,
 } from "../../objects/utils/snap/findSnap";
 import type { ControlStrategy } from "../ControlEventHandler";
-
-type PolyState = PolylineState | PolygonState;
 
 /**
  * Vertex control の操作（頂点の移動）を処理する。
@@ -127,10 +124,7 @@ export class VertexControlHandler implements ControlStrategy {
 		}
 
 		const startObject = eventStartSnapshot.objects[objectId];
-		if (
-			!startObject ||
-			(startObject.type !== "polyline" && startObject.type !== "polygon")
-		) {
+		if (!isPoly(startObject)) {
 			return state;
 		}
 
@@ -161,12 +155,11 @@ export class VertexControlHandler implements ControlStrategy {
 		};
 
 		// 頂点位置を更新
-		const poly = startObject as PolyState;
-		const newPoints = [...poly.points];
+		const newPoints = [...startObject.points];
 		newPoints[vertexIndex] = newPosition;
 
-		const updatedObject: PolyState = {
-			...poly,
+		const updatedObject = {
+			...startObject,
 			points: newPoints,
 		};
 

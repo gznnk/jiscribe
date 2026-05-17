@@ -4,6 +4,8 @@ import { Fragment, memo } from "react";
 const VERTEX_RADIUS = 4;
 const VERTEX_RING_RADIUS = 7;
 const VERTEX_STROKE_WIDTH = 1;
+const VERTEX_RING_STROKE_WIDTH = 1.5;
+const VERTEX_RING_OPACITY = 0.6;
 const VERTEX_COLOR = "#0d99ff";
 const VERTEX_FILL = "white";
 
@@ -61,8 +63,8 @@ const VertexControlsComponent: React.FC<VertexControlsProps> = ({
 								r={adjustedRingRadius}
 								fill="none"
 								stroke={VERTEX_COLOR}
-								strokeWidth={adjustedStrokeWidth}
-								strokeOpacity={0.4}
+								strokeWidth={VERTEX_RING_STROKE_WIDTH / zoom}
+								strokeOpacity={VERTEX_RING_OPACITY}
 								style={{ pointerEvents: "none" }}
 							/>
 						)}
@@ -72,7 +74,9 @@ const VertexControlsComponent: React.FC<VertexControlsProps> = ({
 							r={adjustedVertexRadius}
 							fill={isSelected ? VERTEX_COLOR : VERTEX_FILL}
 							stroke={isSelected ? VERTEX_FILL : VERTEX_COLOR}
-							strokeWidth={isSelected ? adjustedStrokeWidth * 1.5 : adjustedStrokeWidth}
+							strokeWidth={
+								isSelected ? adjustedStrokeWidth * 1.5 : adjustedStrokeWidth
+							}
 							data-kind="control"
 							data-id={`vertex-control:${objectId}:${index}`}
 							style={{ cursor: "move" }}
