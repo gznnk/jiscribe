@@ -74,10 +74,10 @@ const webviewConfig = {
 // VSCode の jsonValidation 機能がこのスキーマを参照し、
 // .jis.json ファイルの編集時に補完・バリデーションを提供する。
 function copySchema() {
-	const src = join(__dirname, "../../packages/svg-canvas-2/src/schemas/canvas/canvas-doc.schema.json");
-	const dest = join(__dirname, "dist", "canvas-doc.schema.json");
+	const src = join(__dirname, "../../packages/svg-canvas-2/src/schemas/canvas/jiscribe.schema.json");
+	const dest = join(__dirname, "dist", "jiscribe.schema.json");
 	copyFileSync(src, dest);
-	console.log("✅ Schema copied: canvas-doc.schema.json");
+	console.log("✅ Schema copied: jiscribe.schema.json");
 }
 
 // ── メインのビルド処理 ───────────────────────────────────────────────────

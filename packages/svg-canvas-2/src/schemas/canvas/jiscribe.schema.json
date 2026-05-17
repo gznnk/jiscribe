@@ -1,6 +1,6 @@
 {
 	"$schema": "http://json-schema.org/draft-07/schema#",
-	"$id": "https://jiscribe.dev/schemas/canvas-doc.schema.json",
+	"$id": "https://jiscribe.dev/schemas/jiscribe.schema.json",
 	"title": "CanvasDoc",
 	"description": "Root document format for a .jis.json file used by svg-canvas-2.",
 	"type": "object",
@@ -26,7 +26,8 @@
 				{ "$ref": "#/$defs/EllipseDoc" },
 				{ "$ref": "#/$defs/PolylineDoc" },
 				{ "$ref": "#/$defs/PolygonDoc" },
-				{ "$ref": "#/$defs/GroupDoc" }
+				{ "$ref": "#/$defs/GroupDoc" },
+				{ "$ref": "#/$defs/StickyDoc" }
 			],
 			"discriminator": { "propertyName": "type" }
 		},
@@ -79,7 +80,7 @@
 		"VerticalAlign": {
 			"description": "Vertical text alignment.",
 			"type": "string",
-			"enum": ["start", "center", "end"]
+			"enum": ["top", "middle", "bottom"]
 		},
 
 		"ArrowType": {
@@ -389,6 +390,51 @@
 					"type": "array",
 					"items": { "$ref": "#/$defs/AnyObjectDoc" }
 				},
+				"rotation": { "$ref": "#/$defs/TransformStyle/properties/rotation" },
+				"flipX": { "$ref": "#/$defs/TransformStyle/properties/flipX" },
+				"flipY": { "$ref": "#/$defs/TransformStyle/properties/flipY" },
+				"lockAspectRatio": {
+					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				}
+			}
+		},
+
+		"StickyDoc": {
+			"description": "Sticky note annotation.",
+			"type": "object",
+			"required": ["id", "type", "x", "y", "width", "height"],
+			"additionalProperties": false,
+			"properties": {
+				"id": { "description": "Unique identifier.", "type": "string" },
+				"type": {
+					"description": "Must be \"sticky\".",
+					"type": "string",
+					"const": "sticky"
+				},
+				"meta": { "$ref": "#/$defs/MetaDoc" },
+				"x": { "description": "Left-edge X coordinate.", "type": "number" },
+				"y": { "description": "Top-edge Y coordinate.", "type": "number" },
+				"width": {
+					"description": "Width in pixels.",
+					"type": "number",
+					"minimum": 0
+				},
+				"height": {
+					"description": "Height in pixels.",
+					"type": "number",
+					"minimum": 0
+				},
+				"fill": { "$ref": "#/$defs/FillStyle/properties/fill" },
+				"text": { "$ref": "#/$defs/TextStyle/properties/text" },
+				"textType": { "$ref": "#/$defs/TextStyle/properties/textType" },
+				"textAlign": { "$ref": "#/$defs/TextStyle/properties/textAlign" },
+				"verticalAlign": {
+					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
+				},
+				"fontColor": { "$ref": "#/$defs/TextStyle/properties/fontColor" },
+				"fontSize": { "$ref": "#/$defs/TextStyle/properties/fontSize" },
+				"fontFamily": { "$ref": "#/$defs/TextStyle/properties/fontFamily" },
+				"fontWeight": { "$ref": "#/$defs/TextStyle/properties/fontWeight" },
 				"rotation": { "$ref": "#/$defs/TransformStyle/properties/rotation" },
 				"flipX": { "$ref": "#/$defs/TransformStyle/properties/flipX" },
 				"flipY": { "$ref": "#/$defs/TransformStyle/properties/flipY" },

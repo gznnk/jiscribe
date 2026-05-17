@@ -23,19 +23,19 @@ export function registerExportSchemaCommand(
 
 				const destUri = vscode.Uri.joinPath(
 					targetFolder,
-					"canvas-doc.schema.json",
+					"jiscribe.schema.json",
 				);
 				const srcUri = vscode.Uri.joinPath(
 					context.extensionUri,
 					"dist",
-					"canvas-doc.schema.json",
+					"jiscribe.schema.json",
 				);
 
 				try {
 					try {
 						await vscode.workspace.fs.stat(destUri);
 						const answer = await vscode.window.showWarningMessage(
-							`"canvas-doc.schema.json" already exists. Overwrite it?`,
+							`"jiscribe.schema.json" already exists. Overwrite it?`,
 							{ modal: true },
 							"Overwrite",
 						);
@@ -47,7 +47,7 @@ export function registerExportSchemaCommand(
 					await vscode.workspace.fs.copy(srcUri, destUri, { overwrite: true });
 
 					const action = await vscode.window.showInformationMessage(
-						"Schema exported: canvas-doc.schema.json",
+						"Schema exported: jiscribe.schema.json",
 						"Open File",
 					);
 					if (action === "Open File") {

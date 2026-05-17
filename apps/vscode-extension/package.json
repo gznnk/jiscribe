@@ -35,7 +35,7 @@
 					"*.jis.json",
 					"*.jiscribe.json"
 				],
-				"url": "./dist/canvas-doc.schema.json"
+				"url": "./dist/jiscribe.schema.json"
 			}
 		],
 		"commands": [
