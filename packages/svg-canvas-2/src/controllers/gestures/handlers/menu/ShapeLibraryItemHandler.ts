@@ -50,6 +50,10 @@ const calcShapeDimensions = (
 			const { rx, ry } = doc as EllipseDoc;
 			return { halfWidth: rx, halfHeight: ry };
 		}
+		case "polyline":
+			return { halfWidth: 80, halfHeight: 0 };
+		case "polygon":
+			return { halfWidth: 60, halfHeight: 60 };
 		default:
 			throw new Error(`Unsupported object type for menu: ${preset.objectType}`);
 	}
@@ -103,8 +107,8 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 
 		switch (event.type) {
 			case "click": {
-				// sticky はビューポート中央に配置、rect/ellipse は描画モードをトグル
-				if (preset.objectType === "sticky") {
+				// sticky / polygon はビューポート中央に配置、rect/ellipse/polyline は描画モードをトグル
+				if (preset.objectType === "sticky" || preset.objectType === "polygon") {
 					const { minX, minY, width, height, zoom } = state.viewport;
 					const centerX = minX + width / zoom / 2;
 					const centerY = minY + height / zoom / 2;

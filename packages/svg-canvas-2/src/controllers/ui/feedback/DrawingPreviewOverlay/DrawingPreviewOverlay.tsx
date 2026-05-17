@@ -30,6 +30,21 @@ const DrawingPreviewOverlayComponent: React.FC<DrawingPreviewOverlayProps> = ({
 		pointerEvents: "none" as const,
 	};
 
+	if (shapeDrawing.preset.objectType === "polyline") {
+		return (
+			<line
+				x1={startX}
+				y1={startY}
+				x2={endX}
+				y2={endY}
+				fill="none"
+				stroke={STROKE}
+				strokeWidth={STROKE_WIDTH}
+				pointerEvents="none"
+			/>
+		);
+	}
+
 	if (shapeDrawing.preset.objectType === "ellipse") {
 		return (
 			<ellipse

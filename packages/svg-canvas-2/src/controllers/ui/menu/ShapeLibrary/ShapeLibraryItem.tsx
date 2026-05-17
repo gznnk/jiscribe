@@ -4,6 +4,8 @@ import { ShapeLibraryButton } from "./ShapeLibraryStyled";
 import type { ShapePreset } from "./ShapePresets";
 import { EllipseIcon } from "../../icons/EllipseIcon";
 import { MarkdownRectIcon } from "../../icons/MarkdownRectIcon";
+import { PolygonIcon } from "../../icons/PolygonIcon";
+import { PolylineIcon } from "../../icons/PolylineIcon";
 import { RectIcon } from "../../icons/RectIcon";
 import { StickyIcon } from "../../icons/StickyIcon";
 
@@ -24,6 +26,10 @@ const getIcon = (presetId: string) => {
 			return <EllipseIcon width={ICON_SIZE} height={ICON_SIZE} />;
 		case "sticky":
 			return <StickyIcon width={ICON_SIZE} height={ICON_SIZE} />;
+		case "polyline":
+			return <PolylineIcon width={ICON_SIZE} height={ICON_SIZE} />;
+		case "polygon":
+			return <PolygonIcon width={ICON_SIZE} height={ICON_SIZE} />;
 		default:
 			return null;
 	}

@@ -21,6 +21,8 @@ export const SHAPE_PRESETS: ShapePreset[] = [
 			verticalAlign: "top",
 		},
 	},
+	{ id: "polyline", objectType: "polyline", label: "Polyline" },
+	{ id: "polygon", objectType: "polygon", label: "Polygon" },
 	{
 		id: "rect-markdown",
 		objectType: "rect",

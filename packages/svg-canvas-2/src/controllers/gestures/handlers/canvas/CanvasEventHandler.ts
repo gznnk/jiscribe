@@ -121,13 +121,14 @@ export const CanvasEventHandler: GestureHandler = {
 			return nextState;
 		}
 
-		// Left-button drag in draw mode: draw rect/ellipse
+		// Left-button drag in draw mode: draw rect/ellipse/polyline
 		const shapeDrawing = nextState.shapeDrawing;
 		const drawingObjectType =
 			shapeDrawing !== null &&
 			(shapeDrawing.preset.objectType === "rect" ||
-				shapeDrawing.preset.objectType === "ellipse")
-				? (shapeDrawing.preset.objectType as "rect" | "ellipse")
+				shapeDrawing.preset.objectType === "ellipse" ||
+				shapeDrawing.preset.objectType === "polyline")
+				? (shapeDrawing.preset.objectType as "rect" | "ellipse" | "polyline")
 				: null;
 		if (event.button === 0 && drawingObjectType !== null) {
 			if (event.type === "dragStart") {

@@ -1,3 +1,4 @@
+import { roundToDecimal } from "@workspace/geometry";
 import type { Point } from "@workspace/geometry";
 
 import { STICKY_DOC_DEFAULTS } from "../annotations/StickyDoc";
@@ -5,6 +6,14 @@ import type { ObjectDoc } from "../base/ObjectDoc";
 import { ELLIPSE_DOC_DEFAULTS } from "../primitives/EllipseDoc";
 import { RECT_DOC_DEFAULTS } from "../primitives/RectDoc";
 import type { ObjectType } from "../types/ObjectType";
+
+const POLY_STROKE = "#374151";
+const POLY_STROKE_WIDTH = 2;
+// polyline のデフォルト半幅（左右対称の水平2点線）
+const POLYLINE_HALF_WIDTH = 80;
+// polygon のデフォルト外接円半径
+const POLYGON_RADIUS = 60;
+const POLYGON_SIDES = 5;
 
 /**
  * ObjectType と配置位置から ObjectDoc を生成する。
@@ -64,6 +73,38 @@ export const createObjectDoc = (
 				id,
 				x: position.x - width / 2,
 				y: position.y - height / 2,
+			} as ObjectDoc;
+		}
+
+		case "polyline":
+			return {
+				type: "polyline",
+				id,
+				points: [
+					{ x: position.x - POLYLINE_HALF_WIDTH, y: position.y },
+					{ x: position.x + POLYLINE_HALF_WIDTH, y: position.y },
+				],
+				stroke: POLY_STROKE,
+				strokeWidth: POLY_STROKE_WIDTH,
+				...overrides,
+			} as ObjectDoc;
+
+		case "polygon": {
+			const points = Array.from({ length: POLYGON_SIDES }, (_, i) => {
+				const angle = (2 * Math.PI * i) / POLYGON_SIDES - Math.PI / 2;
+				return {
+					x: roundToDecimal(position.x + POLYGON_RADIUS * Math.cos(angle), 4),
+					y: roundToDecimal(position.y + POLYGON_RADIUS * Math.sin(angle), 4),
+				};
+			});
+			return {
+				type: "polygon",
+				id,
+				points,
+				stroke: POLY_STROKE,
+				strokeWidth: POLY_STROKE_WIDTH,
+				fill: "transparent",
+				...overrides,
 			} as ObjectDoc;
 		}
 
