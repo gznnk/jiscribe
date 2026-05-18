@@ -79,6 +79,14 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 						this.updateWebview(webviewPanel, document);
 						break;
 
+					case "undo":
+						vscode.commands.executeCommand("undo");
+						break;
+
+					case "redo":
+						vscode.commands.executeCommand("redo");
+						break;
+
 					case "update": {
 						// Canvas が編集されたときにファイルへ書き戻す。
 						//

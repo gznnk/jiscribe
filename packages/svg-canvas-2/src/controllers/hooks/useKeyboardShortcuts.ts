@@ -5,10 +5,15 @@ import { commandRegistry } from "../commands/CommandRegistry";
 
 /**
  * キーボードショートカットを処理するカスタムフック
+ *
+ * @param onUndo 提供時、Ctrl+Z を Canvas 内部の UndoCommand ではなくこのコールバックで処理する
+ * @param onRedo 提供時、Ctrl+Shift+Z / Ctrl+Y を Canvas 内部の RedoCommand ではなくこのコールバックで処理する
  */
 export const useKeyboardShortcuts = (
 	canvasState: CanvasControllerState,
 	handleCommand: (commandId: string) => void,
+	onUndo?: () => void,
+	onRedo?: () => void,
 ) => {
 	const canvasStateRef = useRef(canvasState);
 	canvasStateRef.current = canvasState;
@@ -25,7 +30,23 @@ export const useKeyboardShortcuts = (
 			}
 
 			const command = commandRegistry.findByShortcut(event);
-			if (command && command.canExecute(canvasStateRef.current)) {
+			if (!command) return;
+
+			// undo/redo は外部コールバックが提供されている場合、canExecute を確認せず委譲する
+			// （利用可否は VSCode など外部の管理者が判断するため）
+			if (command.id === "undo" && onUndo) {
+				onUndo();
+				event.preventDefault();
+				event.stopPropagation();
+				return;
+			}
+			if (command.id === "redo" && onRedo) {
+				onRedo();
+				event.preventDefault();
+				event.stopPropagation();
+				return;
+			}
+			if (command.canExecute(canvasStateRef.current)) {
 				handleCommand(command.id);
 				event.preventDefault();
 				event.stopPropagation();
@@ -37,5 +58,5 @@ export const useKeyboardShortcuts = (
 		return () => {
 			document.removeEventListener("keydown", handleKeyDown);
 		};
-	}, [handleCommand]);
+	}, [handleCommand, onUndo, onRedo]);
 };

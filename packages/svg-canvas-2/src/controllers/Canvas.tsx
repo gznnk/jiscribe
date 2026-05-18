@@ -53,9 +53,19 @@ type CanvasProps = {
 	 * Use this to persist or sync the canvas state to external storage.
 	 */
 	onCommit?: (doc: CanvasDoc) => void;
+	/**
+	 * When provided, Ctrl+Z is delegated to this callback instead of Canvas's
+	 * internal undo stack. Use this in VSCode to forward undo to the host editor.
+	 */
+	onUndo?: () => void;
+	/**
+	 * When provided, Ctrl+Shift+Z / Ctrl+Y is delegated to this callback instead
+	 * of Canvas's internal redo stack.
+	 */
+	onRedo?: () => void;
 };
 
-const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
+const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit, onUndo, onRedo }) => {
 	const canvasRef = useRef<HTMLDivElement>(null);
 	const svgRef = useRef<SVGSVGElement>(null);
 
@@ -142,7 +152,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 		[dispatch],
 	);
 
-	useKeyboardShortcuts(state, handleCommand);
+	useKeyboardShortcuts(state, handleCommand, onUndo, onRedo);
 
 	const handlePasteCallback = useCallback(async () => {
 		try {

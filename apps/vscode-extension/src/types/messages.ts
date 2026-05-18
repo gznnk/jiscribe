@@ -19,7 +19,11 @@ export type WebviewToExtensionMessage =
 	/** Webview の初期化が完了し、ファイル内容の初回送信を要求する */
 	| { type: "ready" }
 	/** Canvas 上の編集内容を JSON 文字列としてファイルへ書き戻すよう要求する */
-	| { type: "update"; data: string };
+	| { type: "update"; data: string }
+	/** Canvas 上で Undo が要求された（ホストエディタの undo コマンドに委譲する） */
+	| { type: "undo" }
+	/** Canvas 上で Redo が要求された（ホストエディタの redo コマンドに委譲する） */
+	| { type: "redo" };
 
 /**
  * Extension → Webview 方向のメッセージ

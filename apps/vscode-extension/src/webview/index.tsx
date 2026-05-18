@@ -83,6 +83,14 @@ function App() {
 		debouncedPostRef.current(doc);
 	}, []);
 
+	const handleUndo = useCallback(() => {
+		vscode.postMessage({ type: "undo" });
+	}, []);
+
+	const handleRedo = useCallback(() => {
+		vscode.postMessage({ type: "redo" });
+	}, []);
+
 	useEffect(() => {
 		/**
 		 * Extension からのメッセージを受信するハンドラ。
@@ -184,7 +192,7 @@ function App() {
 	if (canvasDoc) {
 		return (
 			<div style={{ width: "100%", height: "100vh" }}>
-				<Canvas canvasDoc={canvasDoc} onCommit={handleCommit} />
+				<Canvas canvasDoc={canvasDoc} onCommit={handleCommit} onUndo={handleUndo} onRedo={handleRedo} />
 			</div>
 		);
 	}
