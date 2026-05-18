@@ -72,11 +72,31 @@ export const canvasReducer = (
 
 			// 外部からの本物の変更: 現在の present を past に記録してから present を更新する。
 			// future はクリア（外部変更後に古い状態へ redo されるのを防ぐ）。
+			// オブジェクトが差し替わるため、選択状態・進行中の操作など全ての UI state もクリアする。
+			// viewport のみ維持（ユーザーの現在の視点を保持するため）。
 			return {
 				...state,
 				objects: action.payload.objects,
 				rootIds: action.payload.rootIds,
 				connectorIds: action.payload.connectorIds,
+				selectedIds: [],
+				selectedConnectorId: null,
+				eventStartSnapshot: null,
+				keyPointsCache: {},
+				snapCandidatesCache: null,
+				edgeScrollEnabled: false,
+				textEditState: null,
+				pendingConnector: null,
+				editingConnectorId: null,
+				editingEndpoint: null,
+				contextMenuPosition: null,
+				areaSelection: null,
+				multiSelectGroup: null,
+				selectedVertex: null,
+				shapeDrawing: null,
+				shapeLibraryDrag: null,
+				snapFeedback: null,
+				objectMenuOpenId: null,
 				history: {
 					past: [...state.history.past, state.history.present].slice(-50),
 					present: newDoc,
