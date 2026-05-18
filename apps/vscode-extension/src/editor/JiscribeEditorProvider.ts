@@ -49,7 +49,6 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 		//
 		// number（カウンター）にすることで、進行中の update() 件数を正確に追跡できる。
 		let pendingWebviewUpdates = 0;
-		let hasPendingExternalUpdate = false;
 
 		// ---- ファイル変更監視 ----
 		//
@@ -59,11 +58,11 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 			vscode.workspace.onDidChangeTextDocument((e) => {
 				if (e.document.uri.toString() !== document.uri.toString()) return;
 
-				// Webview からの書き込みによるイベントは無視する（無限ループ防止）
+				// Webview からの書き込みによるイベントは無視する（無限ループ防止）。
+				// pendingWebviewUpdates > 0 の間に来たイベントは自分の applyEdit() が
+				// 原因であるため、Webview へ再送してはならない。
 				if (pendingWebviewUpdates === 0) {
 					this.updateWebview(webviewPanel, document);
-				} else {
-					hasPendingExternalUpdate = true;
 				}
 			});
 
@@ -90,22 +89,15 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 						// .then(onFulfilled, onRejected) の2引数形式を使う。
 						// .then().catch() と違い、onFulfilled 内の例外も onRejected に流れない
 						// ため意図が明確になる。
-						const decrementAndFlush = () => {
-							pendingWebviewUpdates--;
-							if (pendingWebviewUpdates === 0 && hasPendingExternalUpdate) {
-								hasPendingExternalUpdate = false;
-								this.updateWebview(webviewPanel, document);
-							}
-						};
 						this.updateTextDocument(document, message.data).then(
 							() => {
-								decrementAndFlush();
+								pendingWebviewUpdates--;
 							},
 							(err: unknown) => {
 								// (#2 修正) 失敗しても必ずカウンターを戻す。
 								// 戻さないと pendingWebviewUpdates が 0 に戻らず、
 								// 以降の外部ファイル変更がすべて Webview へ反映されなくなる。
-								decrementAndFlush();
+								pendingWebviewUpdates--;
 								console.error("[Jiscribe] ファイルへの書き込みに失敗しました:", err);
 							},
 						);

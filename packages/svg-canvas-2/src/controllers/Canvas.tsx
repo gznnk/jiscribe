@@ -85,7 +85,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 			shapeDrawing: null,
 			history: {
 				past: [],
-				present: canvasDoc,
+				present: canvasToDoc(baseState),
 				future: [],
 			},
 		};
