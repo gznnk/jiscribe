@@ -83,6 +83,6 @@ export const handlePaste = (
 		selectedIds: newRootIds,
 		multiSelectGroup: createMultiSelectGroup(newRootIds, mergedObjects, null),
 		contextMenuPosition: null,
-		lastCommitTime: Date.now(),
+		commitVersion: state.commitVersion + 1,
 	};
 };

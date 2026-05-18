@@ -104,7 +104,7 @@ export const GroupCommand: Command = {
 					objects: updatedObjects,
 					selectedIds: [groupId],
 					objectMenuOpenId: null,
-					lastCommitTime: Date.now(),
+					commitVersion: state.commitVersion + 1,
 				};
 			}
 
@@ -114,7 +114,7 @@ export const GroupCommand: Command = {
 				rootIds: updatedSourceIds,
 				selectedIds: [groupId],
 				objectMenuOpenId: null,
-				lastCommitTime: Date.now(),
+				commitVersion: state.commitVersion + 1,
 			};
 		}
 
@@ -144,7 +144,7 @@ export const GroupCommand: Command = {
 			rootIds: updatedRootIds,
 			selectedIds: [groupId],
 			objectMenuOpenId: null,
-			lastCommitTime: Date.now(),
+			commitVersion: state.commitVersion + 1,
 		};
 
 		for (const parentId of affectedParentIds) {

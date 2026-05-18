@@ -70,7 +70,7 @@ export const ObjectMenuHandler: GestureHandler = {
 					property,
 					event.inputValue,
 				);
-				return { ...newState, selectedVertex: null, lastCommitTime: event.time };
+				return { ...newState, selectedVertex: null, commitVersion: state.commitVersion + 1 };
 			}
 
 			return state;
@@ -99,8 +99,8 @@ export const ObjectMenuHandler: GestureHandler = {
 					const property = rest.slice(0, colonIndex);
 					const value = rest.slice(colonIndex + 1);
 					const newState = handlePropertyUpdate(state, property, value);
-					// 履歴記録は handleGesture に委譲するため、lastCommitTime のみ更新
-					return { ...newState, selectedVertex: null, lastCommitTime: event.time };
+					// 履歴記録は handleGesture に委譲するため、commitVersion のみ更新
+					return { ...newState, selectedVertex: null, commitVersion: state.commitVersion + 1 };
 				}
 			}
 

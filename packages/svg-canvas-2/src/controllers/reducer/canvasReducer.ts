@@ -14,12 +14,12 @@ export const canvasReducer = (
 	switch (action.type) {
 		case "GESTURE": {
 			const gestureResult = handleGesture(state, action.gesture);
-			return recordHistoryIfNeeded(gestureResult, state.lastCommitTime);
+			return recordHistoryIfNeeded(gestureResult, state.commitVersion);
 		}
 
 		case "COMMAND": {
 			const commandResult = handleCommand(state, action.commandId);
-			return recordHistoryIfNeeded(commandResult, state.lastCommitTime);
+			return recordHistoryIfNeeded(commandResult, state.commitVersion);
 		}
 
 		case "CONTAINER_RESIZE": {
@@ -46,29 +46,40 @@ export const canvasReducer = (
 			const updatedWithVertexCleared = { ...updated, selectedVertex: null };
 			if (!action.commit) return updatedWithVertexCleared;
 			return recordHistoryIfNeeded(
-				{ ...updatedWithVertexCleared, lastCommitTime: Date.now() },
-				state.lastCommitTime,
+				{ ...updatedWithVertexCleared, commitVersion: state.commitVersion + 1 },
+				state.commitVersion,
 			);
 		}
 
 		case "SYNC_EXTERNAL": {
-			// 外部更新を反映 + 履歴のpresentも更新
-			// future をクリアすることで、外部変更後に古い状態へ redo されるのを防ぐ
-			const doc = canvasToDoc({
+			const newDoc = canvasToDoc({
 				...state,
 				objects: action.payload.objects,
 				rootIds: action.payload.rootIds,
 				connectorIds: action.payload.connectorIds,
 			});
 
+			// Undo/Redoによる自己保存の折り返しなど、incoming doc が現在の present と同一の場合は
+			// オブジェクト参照だけ更新し、past/future（history）は変更しない。
+			if (JSON.stringify(newDoc) === JSON.stringify(state.history.present)) {
+				return {
+					...state,
+					objects: action.payload.objects,
+					rootIds: action.payload.rootIds,
+					connectorIds: action.payload.connectorIds,
+				};
+			}
+
+			// 外部からの本物の変更: 現在の present を past に記録してから present を更新する。
+			// future はクリア（外部変更後に古い状態へ redo されるのを防ぐ）。
 			return {
 				...state,
 				objects: action.payload.objects,
 				rootIds: action.payload.rootIds,
 				connectorIds: action.payload.connectorIds,
 				history: {
-					...state.history,
-					present: doc,
+					past: [...state.history.past, state.history.present].slice(-50),
+					present: newDoc,
 					future: [],
 				},
 			};
@@ -89,8 +100,8 @@ export const canvasReducer = (
 			if (!state.textEditState) return state;
 
 			if (action.commit) {
-				const commitResult = commitTextEditIfNeeded(state, Date.now());
-				return recordHistoryIfNeeded(commitResult, state.lastCommitTime);
+				const commitResult = commitTextEditIfNeeded(state);
+				return recordHistoryIfNeeded(commitResult, state.commitVersion);
 			}
 
 			// キャンセルの場合は textEditState のみクリア
@@ -102,7 +113,7 @@ export const canvasReducer = (
 
 		case "PASTE": {
 			const pasteResult = handlePaste(state, action.data);
-			return recordHistoryIfNeeded(pasteResult, state.lastCommitTime);
+			return recordHistoryIfNeeded(pasteResult, state.commitVersion);
 		}
 
 		default:
@@ -111,21 +122,22 @@ export const canvasReducer = (
 };
 
 /**
- * lastCommitTime が変化していれば履歴を記録する。
+ * commitVersion が変化していれば履歴を記録し、saveVersion もインクリメントする。
  * canvasReducer のみが呼び出してよい。
  */
 const recordHistoryIfNeeded = (
 	state: CanvasControllerState,
-	previousLastCommitTime: number,
+	previousCommitVersion: number,
 ): CanvasControllerState => {
 	if (
-		state.lastCommitTime > 0 &&
-		state.lastCommitTime !== previousLastCommitTime
+		state.commitVersion > 0 &&
+		state.commitVersion !== previousCommitVersion
 	) {
 		const doc = canvasToDoc(state);
 		const newPast = [...state.history.past, state.history.present].slice(-50);
 		return {
 			...state,
+			saveVersion: state.saveVersion + 1,
 			history: {
 				past: newPast,
 				present: doc,

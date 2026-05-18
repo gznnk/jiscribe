@@ -122,7 +122,7 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 				}
 
 				// 描画モード ON: テキスト編集をコミットし、選択状態を解除する
-				const nextState = commitTextEditIfNeeded(state, event.time);
+				const nextState = commitTextEditIfNeeded(state);
 				return {
 					...nextState,
 					shapeDrawing: { preset, preview: null },
@@ -135,7 +135,7 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 
 			case "dragStart": {
 				// テキスト編集をコミットし、選択状態を解除してからD&Dを開始する
-				const nextState = commitTextEditIfNeeded(state, event.time);
+				const nextState = commitTextEditIfNeeded(state);
 				return {
 					...nextState,
 					selectedIds: [],

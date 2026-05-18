@@ -41,7 +41,8 @@ export const UndoCommand: Command = {
 			keyPointsCache: state.keyPointsCache,
 			snapCandidatesCache: state.snapCandidatesCache,
 			edgeScrollEnabled: false,
-			lastCommitTime: state.lastCommitTime, // Don't update - this is history restoration, not a new commit
+			commitVersion: state.commitVersion, // Don't update - this is history restoration, not a new commit
+			saveVersion: state.saveVersion + 1,
 			contextMenuPosition: null,
 			shapeLibraryDrag: null,
 			areaSelection: null,

@@ -315,7 +315,7 @@ export const ObjectEventHandler: GestureHandler = {
 		const isDoubleClickOnCurrentEditTarget =
 			event.type === "doubleClick" && state.textEditState?.objectId === event.targetId;
 		if (!isDoubleClickOnCurrentEditTarget) {
-			nextState = commitTextEditIfNeeded(state, event.time);
+			nextState = commitTextEditIfNeeded(state);
 		}
 
 		const targetObjectId = event.targetId;

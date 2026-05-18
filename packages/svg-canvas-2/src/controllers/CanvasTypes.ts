@@ -137,10 +137,17 @@ export type CanvasControllerState = CanvasState & {
 	edgeScrollEnabled: boolean;
 
 	/**
-	 * Timestamp of the last committable event (e.g., dragEnd).
-	 * Derived from event.timeStamp. Parent components can watch this to detect when to persist state.
+	 * Incremented when a new edit is confirmed (dragEnd, command execution, etc.).
+	 * Internal signal used exclusively by recordHistoryIfNeeded to trigger history recording.
 	 */
-	lastCommitTime: number;
+	commitVersion: number;
+
+	/**
+	 * Incremented when a file save is required.
+	 * Set by recordHistoryIfNeeded (on normal commits) and Undo/Redo.
+	 * Monitored by the single useEffect in Canvas.tsx.
+	 */
+	saveVersion: number;
 
 	/**
 	 * Context menu position (client coordinates).

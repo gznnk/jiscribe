@@ -52,7 +52,7 @@ export const DeleteCommand: Command = {
 					[objectId]: updatedPoly,
 				},
 				selectedVertex: null,
-				lastCommitTime: Date.now(),
+				commitVersion: state.commitVersion + 1,
 			};
 
 			if (updatedPoly.parentId) {
@@ -126,7 +126,7 @@ export const DeleteCommand: Command = {
 			selectedIds: [] as string[],
 			selectedConnectorId: null,
 			objectMenuOpenId: null,
-			lastCommitTime: Date.now(), // コミット必要
+			commitVersion: state.commitVersion + 1, // コミット必要
 		};
 
 		// グループのクリーンアップ（空グループの削除、1個グループの解除）

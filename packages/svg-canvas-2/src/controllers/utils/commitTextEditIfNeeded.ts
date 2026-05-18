@@ -7,12 +7,10 @@ import type { CanvasControllerState } from "../CanvasTypes";
  * Updates the object's text and clears textEditState.
  *
  * @param state - Current canvas controller state
- * @param time - Event timestamp for lastCommitTime
  * @returns Updated canvas controller state with text committed, or unchanged state if not editing
  */
 export function commitTextEditIfNeeded(
 	state: CanvasControllerState,
-	time: number,
 ): CanvasControllerState {
 	if (!state.textEditState) {
 		return state;
@@ -38,6 +36,6 @@ export function commitTextEditIfNeeded(
 			} as ObjectState,
 		},
 		textEditState: null,
-		lastCommitTime: time,
+		commitVersion: state.commitVersion + 1,
 	};
 }

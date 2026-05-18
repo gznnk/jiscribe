@@ -28,7 +28,7 @@ const EVENT_END_TYPES: readonly EventType[] = ["dragEnd"] as const;
  * Main gesture router.
  * Converts low-level gestures to high-level canvas events and routes them to appropriate handlers.
  * Also manages eventStartSnapshot lifecycle (save on dragStart, clear on dragEnd).
- * Automatically records history when lastCommitTime changes.
+ * Automatically records history when commitVersion changes.
  *
  * Note: The gestureHandlerRegistry must be initialized via initializeRegistries()
  * from controllers/setup/ before using this function.
@@ -163,7 +163,7 @@ export const handleGesture = (
 			...nextState,
 			eventStartSnapshot: null,
 			snapFeedback: null,
-			...(hasDocChanges ? { lastCommitTime: canvasEvent.time } : {}),
+			...(hasDocChanges ? { commitVersion: state.commitVersion + 1 } : {}),
 		};
 	}
 

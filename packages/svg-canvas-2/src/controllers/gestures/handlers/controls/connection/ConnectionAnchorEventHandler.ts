@@ -375,7 +375,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 				editingEndpoint: null,
 				selectedConnectorId: editingConnectorId, // 選択を復元
 				edgeScrollEnabled: false,
-				lastCommitTime: event.time,
+				commitVersion: state.commitVersion + 1,
 			};
 		} else {
 			// 新規作成モード（既存ロジック）
@@ -389,7 +389,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 				pendingConnector: null,
 				editingEndpoint: null,
 				edgeScrollEnabled: false,
-				lastCommitTime: event.time,
+				commitVersion: state.commitVersion + 1,
 			};
 		}
 	}

@@ -68,7 +68,8 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 			keyPointsCache: {},
 			snapCandidatesCache: null,
 			edgeScrollEnabled: false,
-			lastCommitTime: 0,
+			commitVersion: 0,
+			saveVersion: 0,
 			contextMenuPosition: null,
 			shapeLibraryDrag: null,
 			areaSelection: null,
@@ -93,14 +94,13 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit }) => {
 	// Reducer for canvas state management with history
 	const [state, dispatch] = useReducer(canvasReducer, initialState);
 
-	// Notify parent component when a committable action occurs
+	// Notify parent component when a save is required (after commit or undo/redo)
 	useEffect(() => {
-		if (state.lastCommitTime > 0) {
-			const doc = canvasToDoc(state);
-			onCommit?.(doc);
+		if (state.saveVersion > 0) {
+			onCommit?.(canvasToDoc(state));
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [state.lastCommitTime, onCommit]);
+	}, [state.saveVersion, onCommit]);
 
 	// Sync external canvasDoc changes
 	useEffect(() => {

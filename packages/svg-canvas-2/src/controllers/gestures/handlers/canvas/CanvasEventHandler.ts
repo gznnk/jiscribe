@@ -28,7 +28,7 @@ export const CanvasEventHandler: GestureHandler = {
 
 	handle(state, event) {
 		// Commit text editing if active
-		let nextState = commitTextEditIfNeeded(state, event.time);
+		let nextState = commitTextEditIfNeeded(state);
 
 		// Zoom handling
 		if (event.type === "zoom" && event.zoomDelta != null) {

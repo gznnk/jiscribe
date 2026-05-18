@@ -24,7 +24,7 @@ export const ConnectorEventHandler: GestureHandler = {
 			return state;
 		}
 
-		const nextState = commitTextEditIfNeeded(state, event.time);
+		const nextState = commitTextEditIfNeeded(state);
 
 		const connectorId = event.targetId;
 		if (!connectorId) {

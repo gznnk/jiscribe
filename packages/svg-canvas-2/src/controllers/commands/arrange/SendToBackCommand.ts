@@ -23,7 +23,7 @@ export const SendToBackCommand: Command = {
 		if (commonParentId == null) {
 			const updatedRootIds = state.rootIds.filter((id) => !selectedSet.has(id));
 			updatedRootIds.unshift(...state.selectedIds);
-			return { ...state, rootIds: updatedRootIds, lastCommitTime: Date.now() };
+			return { ...state, rootIds: updatedRootIds, commitVersion: state.commitVersion + 1 };
 		}
 
 		const parent = state.objects[commonParentId] as GroupState;
@@ -37,7 +37,7 @@ export const SendToBackCommand: Command = {
 				...state.objects,
 				[commonParentId]: { ...parent, childIds: updatedChildIds },
 			},
-			lastCommitTime: Date.now(),
+			commitVersion: state.commitVersion + 1,
 		};
 	},
 };

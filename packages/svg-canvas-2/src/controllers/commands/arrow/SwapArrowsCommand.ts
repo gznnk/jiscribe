@@ -35,7 +35,7 @@ export const SwapArrowsCommand: Command = {
 						endArrow: prev,
 					} as ConnectorState,
 				},
-				lastCommitTime: Date.now(),
+				commitVersion: state.commitVersion + 1,
 			};
 		}
 
@@ -64,7 +64,7 @@ export const SwapArrowsCommand: Command = {
 		return {
 			...state,
 			objects: updatedObjects,
-			lastCommitTime: Date.now(),
+			commitVersion: state.commitVersion + 1,
 		};
 	},
 };

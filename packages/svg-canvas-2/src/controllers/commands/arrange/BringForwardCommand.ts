@@ -33,7 +33,7 @@ export const BringForwardCommand: Command = {
 		}
 
 		if (commonParentId == null) {
-			return { ...state, rootIds: updatedIds, lastCommitTime: Date.now() };
+			return { ...state, rootIds: updatedIds, commitVersion: state.commitVersion + 1 };
 		}
 
 		const parent = state.objects[commonParentId] as GroupState;
@@ -43,7 +43,7 @@ export const BringForwardCommand: Command = {
 				...state.objects,
 				[commonParentId]: { ...parent, childIds: updatedIds },
 			},
-			lastCommitTime: Date.now(),
+			commitVersion: state.commitVersion + 1,
 		};
 	},
 };

@@ -56,7 +56,7 @@ export class ControlEventHandler implements GestureHandler {
 		event: CanvasEvent,
 	): CanvasControllerState {
 		// Commit text editing if active
-		const nextState = commitTextEditIfNeeded(state, event.time);
+		const nextState = commitTextEditIfNeeded(state);
 
 		// 各ストラテジを試して、最初に supports() が true を返したものを使用
 		for (const strategy of this.strategies.values()) {
