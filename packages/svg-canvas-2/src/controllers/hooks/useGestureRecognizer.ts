@@ -18,6 +18,7 @@ export type UseGestureRecognizerParams = {
 export type UseGestureRecognizerReturn = {
 	pointerHandlers: PointerEventHandlers;
 	wheelHandler: (e: WheelEvent) => void;
+	resetGestureState: () => void;
 };
 
 export const useGestureRecognizer = ({
@@ -44,6 +45,7 @@ export const useGestureRecognizer = ({
 		return {
 			pointerHandlers: recognizerRef.current.getHandlers(),
 			wheelHandler: recognizerRef.current.getWheelHandler(),
+			resetGestureState: () => recognizerRef.current?.resetGestureState(),
 		};
 	}, [gestureCallback, containerRef, svgRef]); // canvasStateは依存に含めない
 

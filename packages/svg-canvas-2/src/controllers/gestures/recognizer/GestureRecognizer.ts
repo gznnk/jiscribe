@@ -531,6 +531,27 @@ export class GestureRecognizer {
 	}
 
 	/**
+	 * ドラッグ状態を外部から強制リセットする。
+	 * SYNC_EXTERNAL など外部変更でキャンバス状態が差し替わる際に呼び出す。
+	 * pressed が null の場合（非ドラッグ中）は何もしない。
+	 */
+	public resetGestureState(): void {
+		if (this.pressed !== null) {
+			if (
+				this.containerRef.current &&
+				this.pressed.pointerId !== undefined &&
+				!this.shouldPreserveNativeBehavior(this.pressed.target)
+			) {
+				this.containerRef.current.releasePointerCapture(this.pressed.pointerId);
+			}
+			this.pressed = null;
+		}
+		// 中断後のドラッグイベントが RAF キューから発火しないよう破棄する
+		this.fifo = [];
+		this.lastMove = null;
+	}
+
+	/**
 	 * ポインターイベントハンドラーを取得
 	 */
 	public getHandlers(): PointerEventHandlers {

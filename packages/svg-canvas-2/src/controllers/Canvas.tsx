@@ -65,7 +65,12 @@ type CanvasProps = {
 	onRedo?: () => void;
 };
 
-const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit, onUndo, onRedo }) => {
+const CanvasComponent: React.FC<CanvasProps> = ({
+	canvasDoc,
+	onCommit,
+	onUndo,
+	onRedo,
+}) => {
 	const canvasRef = useRef<HTMLDivElement>(null);
 	const svgRef = useRef<SVGSVGElement>(null);
 
@@ -104,6 +109,20 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit, onUndo, o
 	// Reducer for canvas state management with history
 	const [state, dispatch] = useReducer(canvasReducer, initialState);
 
+	// Gesture handling — declared before the SYNC_EXTERNAL effect so resetGestureState is available
+	const handleGesture = useCallback<GestureCallback>(
+		(gesture) => {
+			dispatch({ type: "GESTURE", gesture });
+		},
+		[dispatch],
+	);
+	const { pointerHandlers, wheelHandler, resetGestureState } = useGestureRecognizer({
+		gestureCallback: handleGesture,
+		containerRef: canvasRef,
+		svgRef,
+		canvasState: state,
+	});
+
 	// Notify parent component when a save is required (after commit or undo/redo)
 	useEffect(() => {
 		if (state.saveVersion > 0) {
@@ -115,22 +134,9 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit, onUndo, o
 	// Sync external canvasDoc changes
 	useEffect(() => {
 		const newState = canvasToState(canvasDoc);
+		resetGestureState();
 		dispatch({ type: "SYNC_EXTERNAL", payload: newState });
-	}, [canvasDoc]);
-
-	// Gesture handling
-	const handleGesture = useCallback<GestureCallback>(
-		(gesture) => {
-			dispatch({ type: "GESTURE", gesture });
-		},
-		[dispatch],
-	);
-	const { pointerHandlers, wheelHandler } = useGestureRecognizer({
-		gestureCallback: handleGesture,
-		containerRef: canvasRef,
-		svgRef,
-		canvasState: state,
-	});
+	}, [canvasDoc, resetGestureState]);
 
 	// Use wheel handler from GestureRecognizer
 	useDocumentWheel(svgRef, wheelHandler);
@@ -266,7 +272,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({ canvasDoc, onCommit, onUndo, o
 			</Container>
 			<ViewportOverlay>
 				<ShapeLibrary activePresetId={state.shapeDrawing?.preset.id ?? null} />
-<ContextMenu
+				<ContextMenu
 					position={state.contextMenuPosition}
 					canvasState={state}
 					callbacks={{ paste: handlePasteCallback }}
