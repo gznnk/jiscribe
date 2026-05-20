@@ -1,5 +1,12 @@
 import type { ObjectDocValidateFn } from "../../../registry/ObjectDocValidatorRegistry";
-import { validatePointsField } from "../../utils/validateDocUtils";
+import {
+	validateFillStyleFields,
+	validatePolyFields,
+	validateStrokeStyleFields,
+} from "../../utils/validateDocUtils";
 
-export const validatePolygonDoc: ObjectDocValidateFn = (o, path) =>
-	validatePointsField(o, path);
+export const validatePolygonDoc: ObjectDocValidateFn = (o, path) => [
+	...validatePolyFields(o, path),
+	...validateStrokeStyleFields(o, path),
+	...validateFillStyleFields(o, path),
+];

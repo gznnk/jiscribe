@@ -18,3 +18,6 @@ export const ArrowTypes = [
  * Includes standard arrows and UML relationship markers.
  */
 export type ArrowType = (typeof ArrowTypes)[number];
+
+export const isArrowType = (value: unknown): value is ArrowType =>
+	ArrowTypes.includes(value as ArrowType);

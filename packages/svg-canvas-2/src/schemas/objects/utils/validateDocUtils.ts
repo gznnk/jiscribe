@@ -1,51 +1,119 @@
-import { isArray, isNumber, isObject, isString } from "@workspace/basic-validators";
+import { isNumber, isString } from "@workspace/basic-validators";
 
 import type { SemanticDiagnostic } from "../../canvas/validators/types";
+import { isArrowType } from "../types/ArrowType";
+import { isOwnedEndpointRef } from "../types/EndpointRef";
+import { isPoly } from "../types/Poly";
+import { isStrokeDashType } from "../types/StrokeDashType";
+import { isTextAlign } from "../types/TextAlign";
+import { isTextType } from "../types/TextType";
+import { isVerticalAlign } from "../types/VerticalAlign";
 
-export function validatePointsField(
+export function validatePolyFields(
 	o: Record<string, unknown>,
 	path: string,
 ): SemanticDiagnostic[] {
-	const errors: SemanticDiagnostic[] = [];
-	if (!isArray(o.points)) {
-		errors.push({ path: `${path}.points`, message: "must be an array" });
-		return errors;
-	}
-	const points = o.points as unknown[];
-	if (points.length < 2) {
-		errors.push({
-			path: `${path}.points`,
-			message: "must have at least 2 points",
-		});
-	}
-	points.forEach((pt, i) => {
-		const p = pt as Record<string, unknown>;
-		if (!isObject(pt) || !isNumber(p.x) || !isNumber(p.y)) {
-			errors.push({
-				path: `${path}.points[${i}]`,
-				message: "must be { x: number, y: number }",
-			});
-		}
-	});
-	return errors;
+	if (!isPoly(o))
+		return [{ path: `${path}.points`, message: "must be a valid points array" }];
+	if (o.points.length < 2)
+		return [{ path: `${path}.points`, message: "must have at least 2 points" }];
+	return [];
 }
 
 export function validateEndpointRef(
 	ref: unknown,
 	path: string,
 ): SemanticDiagnostic[] {
-	if (!isObject(ref)) return [];
-	const r = ref as Record<string, unknown>;
-	if (!("owner" in r)) return [];
+	if (!isOwnedEndpointRef(ref)) return [];
 	const errors: SemanticDiagnostic[] = [];
-	if (!isObject(r.owner)) {
-		errors.push({ path: `${path}.owner`, message: "must be an object" });
-	} else {
-		const owner = r.owner as Record<string, unknown>;
-		if (!isString(owner.id))
-			errors.push({ path: `${path}.owner.id`, message: "must be a string" });
-		if (!isString(owner.type))
-			errors.push({ path: `${path}.owner.type`, message: "must be a string" });
-	}
+	const owner = (ref as { owner: Record<string, unknown> }).owner;
+	if (!isString(owner.id))
+		errors.push({ path: `${path}.owner.id`, message: "must be a string" });
+	if (!isString(owner.type))
+		errors.push({ path: `${path}.owner.type`, message: "must be a string" });
+	return errors;
+}
+
+export function validateTransformFields(
+	o: Record<string, unknown>,
+	path: string,
+): SemanticDiagnostic[] {
+	const errors: SemanticDiagnostic[] = [];
+	if ("rotation" in o && !isNumber(o.rotation))
+		errors.push({ path: `${path}.rotation`, message: "must be a number" });
+	if ("flipX" in o && typeof o.flipX !== "boolean")
+		errors.push({ path: `${path}.flipX`, message: "must be a boolean" });
+	if ("flipY" in o && typeof o.flipY !== "boolean")
+		errors.push({ path: `${path}.flipY`, message: "must be a boolean" });
+	return errors;
+}
+
+export function validateStrokeStyleFields(
+	o: Record<string, unknown>,
+	path: string,
+): SemanticDiagnostic[] {
+	const errors: SemanticDiagnostic[] = [];
+	if ("stroke" in o && !isString(o.stroke))
+		errors.push({ path: `${path}.stroke`, message: "must be a string" });
+	if ("strokeWidth" in o && !isNumber(o.strokeWidth))
+		errors.push({ path: `${path}.strokeWidth`, message: "must be a number" });
+	if ("strokeDashType" in o && !isStrokeDashType(o.strokeDashType))
+		errors.push({ path: `${path}.strokeDashType`, message: "must be one of: solid, dashed, dotted" });
+	return errors;
+}
+
+export function validateFillStyleFields(
+	o: Record<string, unknown>,
+	path: string,
+): SemanticDiagnostic[] {
+	const errors: SemanticDiagnostic[] = [];
+	if ("fill" in o && !isString(o.fill))
+		errors.push({ path: `${path}.fill`, message: "must be a string" });
+	return errors;
+}
+
+export function validateTextStyleFields(
+	o: Record<string, unknown>,
+	path: string,
+): SemanticDiagnostic[] {
+	const errors: SemanticDiagnostic[] = [];
+	if ("text" in o && !isString(o.text))
+		errors.push({ path: `${path}.text`, message: "must be a string" });
+	if ("textType" in o && !isTextType(o.textType))
+		errors.push({ path: `${path}.textType`, message: "must be one of: text, markdown" });
+	if ("textAlign" in o && !isTextAlign(o.textAlign))
+		errors.push({ path: `${path}.textAlign`, message: "must be one of: left, center, right" });
+	if ("verticalAlign" in o && !isVerticalAlign(o.verticalAlign))
+		errors.push({ path: `${path}.verticalAlign`, message: "must be one of: top, middle, bottom" });
+	if ("fontColor" in o && !isString(o.fontColor))
+		errors.push({ path: `${path}.fontColor`, message: "must be a string" });
+	if ("fontSize" in o && !isNumber(o.fontSize))
+		errors.push({ path: `${path}.fontSize`, message: "must be a number" });
+	if ("fontFamily" in o && !isString(o.fontFamily))
+		errors.push({ path: `${path}.fontFamily`, message: "must be a string" });
+	if ("fontWeight" in o && !isString(o.fontWeight))
+		errors.push({ path: `${path}.fontWeight`, message: "must be a string" });
+	return errors;
+}
+
+export function validateRadiusStyleFields(
+	o: Record<string, unknown>,
+	path: string,
+): SemanticDiagnostic[] {
+	const errors: SemanticDiagnostic[] = [];
+	if ("rx" in o && !isNumber(o.rx))
+		errors.push({ path: `${path}.rx`, message: "must be a number" });
+	return errors;
+}
+
+export function validateArrowFields(
+	o: Record<string, unknown>,
+	path: string,
+): SemanticDiagnostic[] {
+	const errors: SemanticDiagnostic[] = [];
+	if ("startArrow" in o && !isArrowType(o.startArrow))
+		errors.push({ path: `${path}.startArrow`, message: "must be a valid ArrowType" });
+	if ("endArrow" in o && !isArrowType(o.endArrow))
+		errors.push({ path: `${path}.endArrow`, message: "must be a valid ArrowType" });
 	return errors;
 }
