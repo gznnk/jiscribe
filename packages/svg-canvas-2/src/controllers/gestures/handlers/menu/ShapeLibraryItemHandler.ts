@@ -1,8 +1,8 @@
 import type { BoundingBox } from "@workspace/geometry";
 
-import type { StickyDoc } from "../../../../schemas/objects/annotations/StickyDoc";
-import type { EllipseDoc } from "../../../../schemas/objects/primitives/EllipseDoc";
-import type { RectDoc } from "../../../../schemas/objects/primitives/RectDoc";
+import type { StickyDoc } from "../../../../schemas/objects/annotations/sticky/StickyDoc";
+import type { EllipseDoc } from "../../../../schemas/objects/primitives/ellipse/EllipseDoc";
+import type { RectDoc } from "../../../../schemas/objects/primitives/rect/RectDoc";
 import { createObjectDoc } from "../../../../schemas/objects/utils/createObjectDoc";
 import { objectMapperRegistry } from "../../../../states/registry/ObjectMapperRegistry";
 import type { CanvasControllerState } from "../../../CanvasTypes";

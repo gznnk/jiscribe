@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { RectDoc } from "../../../../../schemas/objects/primitives/RectDoc";
+import type { RectDoc } from "../../../../../schemas/objects/primitives/rect/RectDoc";
 import { rectToDoc, rectToState } from "../../../../../states/objects/primitives/rect/RectMapper";
 import type { RectState } from "../../../../../states/objects/primitives/rect/RectState";
 

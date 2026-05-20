@@ -1,7 +1,7 @@
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
-import type { EllipseDoc } from "../schemas/objects/primitives/EllipseDoc";
-import type { PolylineDoc } from "../schemas/objects/primitives/PolylineDoc";
-import type { RectDoc } from "../schemas/objects/primitives/RectDoc";
+import type { EllipseDoc } from "../schemas/objects/primitives/ellipse/EllipseDoc";
+import type { PolylineDoc } from "../schemas/objects/primitives/polyline/PolylineDoc";
+import type { RectDoc } from "../schemas/objects/primitives/rect/RectDoc";
 
 // =====================================================================
 // Jiscribe SaaS ランディングページ デモデータ（テキスト対応版）

@@ -1,7 +1,7 @@
-import type { ArrowType } from "../types/ArrowType";
-import type { EndpointRef } from "../types/EndpointRef";
-import type { ObjectFeatures } from "../types/ObjectFeatures";
-import type { CreateObjectType } from "../utils/CreateObjectType";
+import type { ArrowType } from "../../types/ArrowType";
+import type { EndpointRef } from "../../types/EndpointRef";
+import type { ObjectFeatures } from "../../types/ObjectFeatures";
+import type { CreateObjectType } from "../../utils/CreateObjectType";
 
 export const ConnectorFeatures = {
 	type: "connector",

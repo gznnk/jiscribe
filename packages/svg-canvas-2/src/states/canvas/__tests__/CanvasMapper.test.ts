@@ -2,8 +2,8 @@ import { describe, expect, it, beforeEach } from "vitest";
 
 import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../../schemas/objects/base/ObjectDoc";
-import type { GroupDoc } from "../../../schemas/objects/primitives/GroupDoc";
-import type { RectDoc } from "../../../schemas/objects/primitives/RectDoc";
+import type { GroupDoc } from "../../../schemas/objects/primitives/group/GroupDoc";
+import type { RectDoc } from "../../../schemas/objects/primitives/rect/RectDoc";
 import {
 	canvasToState,
 	canvasToDoc,

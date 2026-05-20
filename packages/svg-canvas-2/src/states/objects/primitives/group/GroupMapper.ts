@@ -1,5 +1,5 @@
 import type { GroupState } from "./GroupState";
-import type { GroupDoc } from "../../../../schemas/objects/primitives/GroupDoc";
+import type { GroupDoc } from "../../../../schemas/objects/primitives/group/GroupDoc";
 import type {
 	DocToStateMapper,
 	StateToDocMapper,

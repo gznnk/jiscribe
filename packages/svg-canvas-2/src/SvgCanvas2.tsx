@@ -2,12 +2,12 @@ import React from "react";
 
 import { Canvas } from "./controllers/Canvas";
 import type { CanvasDoc } from "./schemas/canvas/CanvasDoc";
-import type { ConnectorDoc } from "./schemas/objects/connections/ConnectorDoc";
-import type { EllipseDoc } from "./schemas/objects/primitives/EllipseDoc";
-import type { GroupDoc } from "./schemas/objects/primitives/GroupDoc";
-import type { PolygonDoc } from "./schemas/objects/primitives/PolygonDoc";
-import type { PolylineDoc } from "./schemas/objects/primitives/PolylineDoc";
-import type { RectDoc } from "./schemas/objects/primitives/RectDoc";
+import type { ConnectorDoc } from "./schemas/objects/connections/connector/ConnectorDoc";
+import type { EllipseDoc } from "./schemas/objects/primitives/ellipse/EllipseDoc";
+import type { GroupDoc } from "./schemas/objects/primitives/group/GroupDoc";
+import type { PolygonDoc } from "./schemas/objects/primitives/polygon/PolygonDoc";
+import type { PolylineDoc } from "./schemas/objects/primitives/polyline/PolylineDoc";
+import type { RectDoc } from "./schemas/objects/primitives/rect/RectDoc";
 
 // 暫定的なテストデータ
 const testCanvasDoc: CanvasDoc = {

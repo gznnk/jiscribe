@@ -1,4 +1,4 @@
-import type { ConnectorFeatures } from "../../../../schemas/objects/connections/ConnectorDoc";
+import type { ConnectorFeatures } from "../../../../schemas/objects/connections/connector/ConnectorDoc";
 import type { ArrowType } from "../../../../schemas/objects/types/ArrowType";
 import type { EndpointRef } from "../../../../schemas/objects/types/EndpointRef";
 import type { CreateObjectState } from "../../utils/CreateObjectState";

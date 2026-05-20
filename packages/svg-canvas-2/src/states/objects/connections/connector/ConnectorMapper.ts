@@ -1,5 +1,5 @@
 import type { ConnectorState } from "./ConnectorState";
-import type { ConnectorDoc } from "../../../../schemas/objects/connections/ConnectorDoc";
+import type { ConnectorDoc } from "../../../../schemas/objects/connections/connector/ConnectorDoc";
 import type {
 	DocToStateMapper,
 	StateToDocMapper,

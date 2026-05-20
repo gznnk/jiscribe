@@ -1,4 +1,4 @@
-import type { StickyFeatures } from "../../../../schemas/objects/annotations/StickyDoc";
+import type { StickyFeatures } from "../../../../schemas/objects/annotations/sticky/StickyDoc";
 import type { CreateObjectState } from "../../utils/CreateObjectState";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

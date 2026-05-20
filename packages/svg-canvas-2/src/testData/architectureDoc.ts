@@ -1,6 +1,6 @@
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
-import type { ConnectorDoc } from "../schemas/objects/connections/ConnectorDoc";
-import type { RectDoc } from "../schemas/objects/primitives/RectDoc";
+import type { ConnectorDoc } from "../schemas/objects/connections/connector/ConnectorDoc";
+import type { RectDoc } from "../schemas/objects/primitives/rect/RectDoc";
 
 // =====================================================================
 // svg-canvas-2 アーキテクチャ図

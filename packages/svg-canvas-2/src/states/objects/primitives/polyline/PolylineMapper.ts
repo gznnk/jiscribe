@@ -1,5 +1,5 @@
 import type { PolylineState } from "./PolylineState";
-import type { PolylineDoc } from "../../../../schemas/objects/primitives/PolylineDoc";
+import type { PolylineDoc } from "../../../../schemas/objects/primitives/polyline/PolylineDoc";
 import type {
 	DocToStateMapper,
 	StateToDocMapper,

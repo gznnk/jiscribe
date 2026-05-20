@@ -1,6 +1,6 @@
 import type { SemanticDiagnostic } from "./types";
 import type { ObjectDoc } from "../../objects/base/ObjectDoc";
-import type { GroupDoc } from "../../objects/primitives/GroupDoc";
+import type { GroupDoc } from "../../objects/primitives/group/GroupDoc";
 import type { CanvasDoc } from "../CanvasDoc";
 
 export function validateSemantics(doc: CanvasDoc): SemanticDiagnostic[] {

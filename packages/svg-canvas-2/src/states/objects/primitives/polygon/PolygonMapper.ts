@@ -1,5 +1,5 @@
 import type { PolygonState } from "./PolygonState";
-import type { PolygonDoc } from "../../../../schemas/objects/primitives/PolygonDoc";
+import type { PolygonDoc } from "../../../../schemas/objects/primitives/polygon/PolygonDoc";
 import type {
 	DocToStateMapper,
 	StateToDocMapper,

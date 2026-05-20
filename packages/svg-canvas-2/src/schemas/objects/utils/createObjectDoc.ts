@@ -1,10 +1,10 @@
 import { roundToDecimal } from "@workspace/geometry";
 import type { Point } from "@workspace/geometry";
 
-import { STICKY_DOC_DEFAULTS } from "../annotations/StickyDoc";
+import { STICKY_DOC_DEFAULTS } from "../annotations/sticky/StickyDoc";
 import type { ObjectDoc } from "../base/ObjectDoc";
-import { ELLIPSE_DOC_DEFAULTS } from "../primitives/EllipseDoc";
-import { RECT_DOC_DEFAULTS } from "../primitives/RectDoc";
+import { ELLIPSE_DOC_DEFAULTS } from "../primitives/ellipse/EllipseDoc";
+import { RECT_DOC_DEFAULTS } from "../primitives/rect/RectDoc";
 import type { ObjectType } from "../types/ObjectType";
 
 const POLY_STROKE = "#374151";

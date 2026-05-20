@@ -1,5 +1,5 @@
-import type { ObjectFeatures } from "../types/ObjectFeatures";
-import type { CreateObjectType } from "../utils/CreateObjectType";
+import type { ObjectFeatures } from "../../types/ObjectFeatures";
+import type { CreateObjectType } from "../../utils/CreateObjectType";
 
 export const RectFeatures = {
 	type: "rect",

@@ -1,7 +1,7 @@
 import { convertFrameToRect, convertRectToFrame } from "@workspace/geometry";
 
 import type { StickyState } from "./StickyState";
-import type { StickyDoc } from "../../../../schemas/objects/annotations/StickyDoc";
+import type { StickyDoc } from "../../../../schemas/objects/annotations/sticky/StickyDoc";
 import type {
 	DocToStateMapper,
 	StateToDocMapper,

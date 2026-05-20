@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { StickyDoc } from "../../../../../schemas/objects/annotations/StickyDoc";
+import type { StickyDoc } from "../../../../../schemas/objects/annotations/sticky/StickyDoc";
 import {
 	stickyToDoc,
 	stickyToState,

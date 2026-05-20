@@ -4,7 +4,7 @@ import {
 } from "@workspace/geometry";
 
 import type { EllipseState } from "./EllipseState";
-import type { EllipseDoc } from "../../../../schemas/objects/primitives/EllipseDoc";
+import type { EllipseDoc } from "../../../../schemas/objects/primitives/ellipse/EllipseDoc";
 import type {
 	DocToStateMapper,
 	StateToDocMapper,

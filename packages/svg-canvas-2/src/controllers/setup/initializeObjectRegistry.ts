@@ -7,23 +7,21 @@ import { Ellipse } from "../../presentations/objects/primitives/Ellipse";
 import { Polygon } from "../../presentations/objects/primitives/Polygon";
 import { Polyline } from "../../presentations/objects/primitives/Polyline";
 import { Rect } from "../../presentations/objects/primitives/Rect";
-import {
-	validateConnectorDoc,
-	validateEllipseDoc,
-	validateGroupDoc,
-	validatePolygonDoc,
-	validatePolylineDoc,
-	validateRectDoc,
-	validateStickyDoc,
-} from "../../schemas/canvas/validators/objectDocValidators";
-import { StickyFeatures } from "../../schemas/objects/annotations/StickyDoc";
+import { StickyFeatures } from "../../schemas/objects/annotations/sticky/StickyDoc";
+import { validateStickyDoc } from "../../schemas/objects/annotations/sticky/validateStickyDoc";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
-import { ConnectorFeatures } from "../../schemas/objects/connections/ConnectorDoc";
-import { EllipseFeatures } from "../../schemas/objects/primitives/EllipseDoc";
-import { GroupFeatures } from "../../schemas/objects/primitives/GroupDoc";
-import { PolygonFeatures } from "../../schemas/objects/primitives/PolygonDoc";
-import { PolylineFeatures } from "../../schemas/objects/primitives/PolylineDoc";
-import { RectFeatures } from "../../schemas/objects/primitives/RectDoc";
+import { ConnectorFeatures } from "../../schemas/objects/connections/connector/ConnectorDoc";
+import { validateConnectorDoc } from "../../schemas/objects/connections/connector/validateConnectorDoc";
+import { EllipseFeatures } from "../../schemas/objects/primitives/ellipse/EllipseDoc";
+import { validateEllipseDoc } from "../../schemas/objects/primitives/ellipse/validateEllipseDoc";
+import { GroupFeatures } from "../../schemas/objects/primitives/group/GroupDoc";
+import { validateGroupDoc } from "../../schemas/objects/primitives/group/validateGroupDoc";
+import { PolygonFeatures } from "../../schemas/objects/primitives/polygon/PolygonDoc";
+import { validatePolygonDoc } from "../../schemas/objects/primitives/polygon/validatePolygonDoc";
+import { PolylineFeatures } from "../../schemas/objects/primitives/polyline/PolylineDoc";
+import { validatePolylineDoc } from "../../schemas/objects/primitives/polyline/validatePolylineDoc";
+import { RectFeatures } from "../../schemas/objects/primitives/rect/RectDoc";
+import { validateRectDoc } from "../../schemas/objects/primitives/rect/validateRectDoc";
 import type { ObjectFeatures } from "../../schemas/objects/types/ObjectFeatures";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 import type { ObjectDocValidateFn } from "../../schemas/registry/ObjectDocValidatorRegistry";

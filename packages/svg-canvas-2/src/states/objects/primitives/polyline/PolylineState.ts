@@ -1,4 +1,4 @@
-import type { PolylineFeatures } from "../../../../schemas/objects/primitives/PolylineDoc";
+import type { PolylineFeatures } from "../../../../schemas/objects/primitives/polyline/PolylineDoc";
 import type { ArrowType } from "../../../../schemas/objects/types/ArrowType";
 import type { CreateObjectState } from "../../utils/CreateObjectState";
 

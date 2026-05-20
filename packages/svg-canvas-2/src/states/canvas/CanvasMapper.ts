@@ -1,7 +1,7 @@
 ﻿import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
-import type { ConnectorDoc } from "../../schemas/objects/connections/ConnectorDoc";
-import type { GroupDoc } from "../../schemas/objects/primitives/GroupDoc";
+import type { ConnectorDoc } from "../../schemas/objects/connections/connector/ConnectorDoc";
+import type { GroupDoc } from "../../schemas/objects/primitives/group/GroupDoc";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { GroupState } from "../objects/primitives/group/GroupState";
