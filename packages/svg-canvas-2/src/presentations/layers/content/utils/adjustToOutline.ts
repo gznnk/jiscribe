@@ -7,7 +7,7 @@ import {
 } from "@workspace/geometry";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
-import { objectMapperRegistry } from "../../../../states/objects/ObjectMapperRegistry";
+import { objectMapperRegistry } from "../../../../states/registry/ObjectMapperRegistry";
 
 /**
  * Adjusts a center anchor endpoint to the outline point on a rect or ellipse geometry object.

@@ -10,7 +10,6 @@ import {
 } from "../../../states/canvas/CanvasMapper";
 import type { CanvasState } from "../../../states/canvas/CanvasState";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import { objectMapperRegistry } from "../../../states/objects/ObjectMapperRegistry";
 import {
 	groupToState,
 	groupToDoc,
@@ -20,6 +19,7 @@ import {
 	rectToState,
 	rectToDoc,
 } from "../../../states/objects/primitives/rect/RectMapper";
+import { objectMapperRegistry } from "../../../states/registry/ObjectMapperRegistry";
 
 describe("CanvasMapper", () => {
 	// Register mappers before tests

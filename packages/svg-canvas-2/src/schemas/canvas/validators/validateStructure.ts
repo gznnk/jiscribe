@@ -1,7 +1,7 @@
 import { isArray, isObject, isString } from "@workspace/basic-validators";
 
-import { objectDocValidatorRegistry } from "./ObjectDocValidatorRegistry";
 import type { SemanticDiagnostic } from "./types";
+import { objectDocValidatorRegistry } from "../../registry/ObjectDocValidatorRegistry";
 
 function validateObjectNode(obj: unknown, path: string): SemanticDiagnostic[] {
 	if (!isObject(obj)) {

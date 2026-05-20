@@ -7,8 +7,6 @@ import { Ellipse } from "../../presentations/objects/primitives/Ellipse";
 import { Polygon } from "../../presentations/objects/primitives/Polygon";
 import { Polyline } from "../../presentations/objects/primitives/Polyline";
 import { Rect } from "../../presentations/objects/primitives/Rect";
-import { objectDocValidatorRegistry } from "../../schemas/canvas/validators/ObjectDocValidatorRegistry";
-import type { ObjectDocValidateFn } from "../../schemas/canvas/validators/ObjectDocValidatorRegistry";
 import {
 	validateConnectorDoc,
 	validateEllipseDoc,
@@ -28,6 +26,8 @@ import { PolylineFeatures } from "../../schemas/objects/primitives/PolylineDoc";
 import { RectFeatures } from "../../schemas/objects/primitives/RectDoc";
 import type { ObjectFeatures } from "../../schemas/objects/types/ObjectFeatures";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
+import type { ObjectDocValidateFn } from "../../schemas/registry/ObjectDocValidatorRegistry";
+import { objectDocValidatorRegistry } from "../../schemas/registry/ObjectDocValidatorRegistry";
 import {
 	stickyToDoc,
 	stickyToState,
@@ -39,7 +39,6 @@ import {
 	connectorToDoc,
 	connectorToState,
 } from "../../states/objects/connections/connector/ConnectorMapper";
-import { objectMapperRegistry } from "../../states/objects/ObjectMapperRegistry";
 import {
 	ellipseToDoc,
 	ellipseToState,
@@ -60,6 +59,7 @@ import {
 	rectToDoc,
 	rectToState,
 } from "../../states/objects/primitives/rect/RectMapper";
+import { objectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import {
 	moveByDelta as stickyMoveByDelta,
 	rotateByGroup as stickyRotateByGroup,

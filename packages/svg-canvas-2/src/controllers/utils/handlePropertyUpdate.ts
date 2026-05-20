@@ -1,7 +1,7 @@
 import { collectDescendantIds } from "./collectDescendantIds";
 import type { ObjectFeatures } from "../../schemas/objects/types/ObjectFeatures";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
-import { objectMapperRegistry } from "../../states/objects/ObjectMapperRegistry";
+import { objectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import type { CanvasControllerState } from "../CanvasTypes";
 
 const isPropertySupported = (

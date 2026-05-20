@@ -1,5 +1,5 @@
-import type { SemanticDiagnostic } from "./types";
-import type { ObjectType } from "../../objects/types/ObjectType";
+import type { SemanticDiagnostic } from "../canvas/validators/types";
+import type { ObjectType } from "../objects/types/ObjectType";
 
 export type ObjectDocValidateFn = (
 	obj: Record<string, unknown>,

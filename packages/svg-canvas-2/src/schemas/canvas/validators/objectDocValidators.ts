@@ -1,7 +1,7 @@
 import { isArray, isNumber, isObject, isString } from "@workspace/basic-validators";
 
-import type { ObjectDocValidateFn } from "./ObjectDocValidatorRegistry";
 import type { SemanticDiagnostic } from "./types";
+import type { ObjectDocValidateFn } from "../../registry/ObjectDocValidatorRegistry";
 
 function validatePointsField(
 	o: Record<string, unknown>,

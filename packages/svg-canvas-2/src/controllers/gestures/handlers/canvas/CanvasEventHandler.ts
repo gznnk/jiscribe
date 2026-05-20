@@ -4,7 +4,7 @@ import { collectIdsInArea } from "./utils/collectIdsInArea";
 import { PRECISION } from "../../../../constants/precision";
 import { ZOOM } from "../../../../constants/zoom";
 import { createObjectDocFromBounds } from "../../../../schemas/objects/utils/createObjectDocFromBounds";
-import { objectMapperRegistry } from "../../../../states/objects/ObjectMapperRegistry";
+import { objectMapperRegistry } from "../../../../states/registry/ObjectMapperRegistry";
 import type { SnapFeedback } from "../../../CanvasTypes";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import type { GestureHandler } from "../../registry/GestureHandlerTypes";

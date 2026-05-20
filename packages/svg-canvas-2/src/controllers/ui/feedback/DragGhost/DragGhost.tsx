@@ -3,7 +3,7 @@ import React, { memo } from "react";
 
 import { objectComponentRegistry } from "../../../../presentations/objects/ObjectComponentRegistry";
 import { createObjectDoc } from "../../../../schemas/objects/utils/createObjectDoc";
-import { objectMapperRegistry } from "../../../../states/objects/ObjectMapperRegistry";
+import { objectMapperRegistry } from "../../../../states/registry/ObjectMapperRegistry";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ShapePreset } from "../../menu/ShapeLibrary/ShapePresets";
 

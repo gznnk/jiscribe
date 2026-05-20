@@ -14,7 +14,7 @@ import {
 	type EndpointRef,
 } from "../../../../../schemas/objects/types/EndpointRef";
 import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
-import { objectMapperRegistry } from "../../../../../states/objects/ObjectMapperRegistry";
+import { objectMapperRegistry } from "../../../../../states/registry/ObjectMapperRegistry";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import type { ControlStrategy } from "../ControlEventHandler";

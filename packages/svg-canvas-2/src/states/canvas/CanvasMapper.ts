@@ -4,8 +4,8 @@ import type { ConnectorDoc } from "../../schemas/objects/connections/ConnectorDo
 import type { GroupDoc } from "../../schemas/objects/primitives/GroupDoc";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
-import { objectMapperRegistry } from "../objects/ObjectMapperRegistry";
 import type { GroupState } from "../objects/primitives/group/GroupState";
+import { objectMapperRegistry } from "../registry/ObjectMapperRegistry";
 import { calculateGroupOrientedBounds } from "../utils/calculateGroupOrientedBounds";
 
 /**
