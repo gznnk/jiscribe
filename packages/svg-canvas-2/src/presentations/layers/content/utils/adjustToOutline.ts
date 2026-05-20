@@ -6,8 +6,8 @@ import {
 	type TransformedEllipse,
 } from "@workspace/geometry";
 
-import { objectRegistry } from "../../../../registry/ObjectRegistry";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import { objectMapperRegistry } from "../../../../states/objects/ObjectMapperRegistry";
 
 /**
  * Adjusts a center anchor endpoint to the outline point on a rect or ellipse geometry object.
@@ -28,7 +28,7 @@ export const adjustToOutline = (
 		return point;
 	}
 
-	const features = objectRegistry.getFeatures(obj.type);
+	const features = objectMapperRegistry.getFeatures(obj.type);
 	if (!features) {
 		return point;
 	}

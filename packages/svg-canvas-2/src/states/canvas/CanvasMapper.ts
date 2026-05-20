@@ -1,10 +1,10 @@
-﻿import { objectRegistry } from "../../registry/ObjectRegistry";
-import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
+﻿import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
 import type { ConnectorDoc } from "../../schemas/objects/connections/ConnectorDoc";
 import type { GroupDoc } from "../../schemas/objects/primitives/GroupDoc";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
+import { objectMapperRegistry } from "../objects/ObjectMapperRegistry";
 import type { GroupState } from "../objects/primitives/group/GroupState";
 import { calculateGroupOrientedBounds } from "../utils/calculateGroupOrientedBounds";
 
@@ -21,7 +21,7 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 	const processObject = (objDoc: ObjectDoc, parentId?: string): string => {
 		// Returns the ID of the processed object
 		// 1. Convert the object itself using the registry
-		const objState = objectRegistry.toState(objDoc);
+		const objState = objectMapperRegistry.toState(objDoc);
 
 		// 2. Set the parent ID (normalization)
 		objState.parentId = parentId;
@@ -122,7 +122,7 @@ export const canvasToDoc = (state: CanvasState): CanvasDoc => {
 		 * Handle recursion here centrally.
 		 */
 
-		const objDoc = objectRegistry.toDoc(objState);
+		const objDoc = objectMapperRegistry.toDoc(objState);
 
 		if (objState.type === "group") {
 			const groupState = objState as GroupState;

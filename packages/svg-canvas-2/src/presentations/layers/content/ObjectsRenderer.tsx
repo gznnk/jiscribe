@@ -1,8 +1,8 @@
 import { memo } from "react";
 
-import { objectRegistry } from "../../../registry/ObjectRegistry";
 import type { CanvasState } from "../../../states/canvas/CanvasState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
+import { objectComponentRegistry } from "../../objects/ObjectComponentRegistry";
 
 type ObjectsRendererProps = Pick<CanvasState, "objects" | "rootIds"> & {
 	textEditObjectId?: string | null;
@@ -25,7 +25,7 @@ const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 		}
 
 		// 通常のオブジェクトはレジストリからコンポーネントを取得して配列に追加
-		const ObjectComponent = objectRegistry.getComponent(objState.type);
+		const ObjectComponent = objectComponentRegistry.get(objState.type);
 		if (!ObjectComponent) return;
 
 		// テキスト編集中の場合は isEditing prop を追加

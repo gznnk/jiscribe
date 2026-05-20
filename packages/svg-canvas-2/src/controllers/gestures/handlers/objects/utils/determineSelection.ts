@@ -1,10 +1,10 @@
 import { autoSelectParentGroups } from "./autoSelectParentGroups";
 import { getAncestors } from "./getAncestors";
 import { hasSelectedDescendants } from "./hasSelectedDescendants";
-import type { Mods } from "../../../../../registry/ObjectRegistryTypes";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import type { Mods } from "../../../registry/ObjectBehaviorTypes";
 
 /**
  * Determines the new selection IDs based on hierarchical selection logic.

@@ -1,6 +1,5 @@
-﻿import { describe, expect, it, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
 
-import { objectRegistry } from "../../../registry/ObjectRegistry";
 import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../../schemas/objects/base/ObjectDoc";
 import type { GroupDoc } from "../../../schemas/objects/primitives/GroupDoc";
@@ -11,6 +10,7 @@ import {
 } from "../../../states/canvas/CanvasMapper";
 import type { CanvasState } from "../../../states/canvas/CanvasState";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import { objectMapperRegistry } from "../../../states/objects/ObjectMapperRegistry";
 import {
 	groupToState,
 	groupToDoc,
@@ -24,34 +24,17 @@ import {
 describe("CanvasMapper", () => {
 	// Register mappers before tests
 	beforeEach(() => {
-		objectRegistry.register("group", {
-			mapper: { toState: groupToState, toDoc: groupToDoc },
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			component: () => null as any, // Dummy component
-			features: {
-				type: "group",
-				geometry: "none",
-				transform: true,
-			},
-			moveByDelta: (state) => state, // Dummy moveByDelta
-			transformByGroup: (state) => state, // Dummy transformByGroup
-			rotateByGroup: (state) => state, // Dummy rotateByGroup
-		});
-		objectRegistry.register("rect", {
-			mapper: { toState: rectToState, toDoc: rectToDoc },
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			component: () => null as any, // Dummy component
-			features: {
-				type: "rect",
-				geometry: "rect",
-				transform: true,
-				stroke: true,
-				fill: true,
-			},
-			moveByDelta: (state) => state, // Dummy moveByDelta
-			transformByGroup: (state) => state, // Dummy transformByGroup
-			rotateByGroup: (state) => state, // Dummy rotateByGroup
-		});
+		objectMapperRegistry.clear();
+		objectMapperRegistry.register(
+			"group",
+			{ toState: groupToState, toDoc: groupToDoc },
+			{ type: "group", geometry: "none", transform: true },
+		);
+		objectMapperRegistry.register(
+			"rect",
+			{ toState: rectToState, toDoc: rectToDoc },
+			{ type: "rect", geometry: "rect", transform: true, stroke: true, fill: true },
+		);
 	});
 
 	const createRectDoc = (id: string, x = 0, y = 0): RectDoc =>

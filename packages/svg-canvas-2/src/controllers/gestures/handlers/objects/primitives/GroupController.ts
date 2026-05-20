@@ -1,13 +1,13 @@
 import type { Point } from "@workspace/geometry";
 
-import { objectRegistry } from "../../../../../registry/ObjectRegistry";
+import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
+import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
+import { objectBehaviorRegistry } from "../../../registry/ObjectBehaviorRegistry";
 import type {
 	MoveByDeltaFunction,
 	RotateByGroupFunction,
 	TransformByGroupFunction,
-} from "../../../../../registry/ObjectRegistryTypes";
-import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
-import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
+} from "../../../registry/ObjectBehaviorTypes";
 import { transformGroupByGroup, rotateGroupByGroup } from "../base/GroupTransform";
 
 /**
@@ -88,7 +88,7 @@ export function moveGroup(
 			moveGroup(childId, originalObjects, updatedObjects, delta);
 		} else {
 			// Move regular object using type-specific moveByDelta
-			const moveByDeltaFn = objectRegistry.getMoveByDelta(child.type);
+			const moveByDeltaFn = objectBehaviorRegistry.getMoveByDelta(child.type);
 			if (moveByDeltaFn) {
 				updatedObjects[childId] = moveByDeltaFn(child, delta);
 			}
@@ -119,7 +119,7 @@ export function transformChildren(
 		if (!child) continue;
 
 		// registry経由で形状ごとのtransform関数を取得
-		const transformByGroupFn = objectRegistry.getTransformByGroup(child.type);
+		const transformByGroupFn = objectBehaviorRegistry.getTransformByGroup(child.type);
 
 		if (transformByGroupFn) {
 			transformed[childId] = transformByGroupFn(child, rootGroupStart, rootGroupEnd);
@@ -163,7 +163,7 @@ export function rotateChildren(
 		if (!child) continue;
 
 		// registry経由で形状ごとのrotate関数を取得
-		const rotateByGroupFn = objectRegistry.getRotateByGroup(child.type);
+		const rotateByGroupFn = objectBehaviorRegistry.getRotateByGroup(child.type);
 
 		if (rotateByGroupFn) {
 			rotated[childId] = rotateByGroupFn(child, rotationRootGroup, endGroupRotation);

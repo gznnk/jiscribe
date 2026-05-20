@@ -1,10 +1,10 @@
 import type { Prettify } from "@workspace/utility-types/src/Prettify";
 
-import type { CanvasControllerState } from "../controllers/CanvasTypes";
+import type { CanvasControllerState } from "../../CanvasTypes";
 import type {
 	Gesture,
 	GestureType,
-} from "../controllers/gestures/recognizer/GestureRecognizerTypes";
+} from "../recognizer/GestureRecognizerTypes";
 
 /**
  * Canvas event type.

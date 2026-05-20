@@ -1,7 +1,7 @@
 import { collectDescendantIds } from "./collectDescendantIds";
-import { objectRegistry } from "../../registry/ObjectRegistry";
 import type { ObjectFeatures } from "../../schemas/objects/types/ObjectFeatures";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
+import { objectMapperRegistry } from "../../states/objects/ObjectMapperRegistry";
 import type { CanvasControllerState } from "../CanvasTypes";
 
 const isPropertySupported = (
@@ -73,8 +73,10 @@ export const handlePropertyUpdate = (
 		const connector = objects[selectedConnectorId];
 		if (!connector) return state;
 
-		const features = objectRegistry.getFeatures(connector.type);
-		const supported = features ? isPropertySupported(features, property) : false;
+		const features = objectMapperRegistry.getFeatures(connector.type);
+		const supported = features
+			? isPropertySupported(features, property)
+			: false;
 		const arrowSupported = isArrowPropertySupported(connector.type, property);
 		if (!supported && !arrowSupported) return state;
 
@@ -83,7 +85,10 @@ export const handlePropertyUpdate = (
 			...state,
 			objects: {
 				...objects,
-				[selectedConnectorId]: { ...connector, [property]: parsedValue } as ObjectState,
+				[selectedConnectorId]: {
+					...connector,
+					[property]: parsedValue,
+				} as ObjectState,
 			},
 		};
 	}
@@ -113,7 +118,7 @@ export const handlePropertyUpdate = (
 		const obj = objects[id];
 		if (!obj) continue;
 
-		const features = objectRegistry.getFeatures(obj.type);
+		const features = objectMapperRegistry.getFeatures(obj.type);
 		const supported = features
 			? isPropertySupported(features, property)
 			: false;
@@ -135,7 +140,7 @@ export const handlePropertyUpdate = (
 			for (const descId of descendantIds) {
 				const descObj = updatedObjects[descId] ?? objects[descId];
 				if (!descObj) continue;
-				const features = objectRegistry.getFeatures(descObj.type);
+				const features = objectMapperRegistry.getFeatures(descObj.type);
 				const supported = features
 					? isPropertySupported(features, property)
 					: false;

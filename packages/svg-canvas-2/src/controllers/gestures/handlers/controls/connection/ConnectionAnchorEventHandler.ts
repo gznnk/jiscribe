@@ -6,8 +6,6 @@ import {
 } from "@workspace/geometry";
 
 import { PRECISION } from "../../../../../constants/precision";
-import type { CanvasEvent } from "../../../../../registry/GestureHandlerRegistryTypes";
-import { objectRegistry } from "../../../../../registry/ObjectRegistry";
 import {
 	isConnectPointId,
 	type CenterAnchorSpec,
@@ -16,7 +14,9 @@ import {
 	type EndpointRef,
 } from "../../../../../schemas/objects/types/EndpointRef";
 import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
+import { objectMapperRegistry } from "../../../../../states/objects/ObjectMapperRegistry";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import type { ControlStrategy } from "../ControlEventHandler";
 
 /**
@@ -293,7 +293,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 					return false;
 				}
 
-				return objectRegistry.getFeatures(obj.type)?.connectable === true;
+				return objectMapperRegistry.getFeatures(obj.type)?.connectable === true;
 			});
 		const hoveredObject = hoveredObjectId
 			? state.objects[hoveredObjectId]

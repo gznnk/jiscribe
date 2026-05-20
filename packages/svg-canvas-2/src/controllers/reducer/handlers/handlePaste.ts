@@ -1,4 +1,3 @@
-import { objectRegistry } from "../../../registry/ObjectRegistry";
 import type { EndpointRef } from "../../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
@@ -7,12 +6,19 @@ import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ClipboardData } from "../../commands/selection/ClipboardData";
 import { moveGroup } from "../../gestures/handlers/objects/primitives/GroupController";
 import { createMultiSelectGroup } from "../../gestures/handlers/objects/utils/createMultiSelectGroup";
+import { objectBehaviorRegistry } from "../../gestures/registry/ObjectBehaviorRegistry";
 
 const PASTE_OFFSET = { x: 20, y: 20 };
 
-const remapEndpointRef = (ref: EndpointRef, idMap: Map<string, string>): EndpointRef => {
+const remapEndpointRef = (
+	ref: EndpointRef,
+	idMap: Map<string, string>,
+): EndpointRef => {
 	if (!ref.owner) return ref;
-	return { ...ref, owner: { ...ref.owner, id: idMap.get(ref.owner.id) ?? ref.owner.id } };
+	return {
+		...ref,
+		owner: { ...ref.owner, id: idMap.get(ref.owner.id) ?? ref.owner.id },
+	};
 };
 
 export const handlePaste = (
@@ -32,7 +38,10 @@ export const handlePaste = (
 		let newObj: ObjectState = {
 			...obj,
 			id: newId,
-			parentId: obj.parentId !== undefined ? (idMap.get(obj.parentId) ?? undefined) : undefined,
+			parentId:
+				obj.parentId !== undefined
+					? (idMap.get(obj.parentId) ?? undefined)
+					: undefined,
 		};
 
 		if (obj.type === "group") {
@@ -64,7 +73,7 @@ export const handlePaste = (
 		if (obj.type === "group") {
 			moveGroup(newRootId, newObjects, newObjects, PASTE_OFFSET);
 		} else {
-			const moveByDeltaFn = objectRegistry.getMoveByDelta(obj.type);
+			const moveByDeltaFn = objectBehaviorRegistry.getMoveByDelta(obj.type);
 			if (moveByDeltaFn) {
 				newObjects[newRootId] = moveByDeltaFn(obj, PASTE_OFFSET);
 			}
@@ -72,7 +81,9 @@ export const handlePaste = (
 	}
 
 	const newRootIds = data.rootIds.map((id) => idMap.get(id)!).filter(Boolean);
-	const newConnectorIds = data.connectorIds.map((id) => idMap.get(id)!).filter(Boolean);
+	const newConnectorIds = data.connectorIds
+		.map((id) => idMap.get(id)!)
+		.filter(Boolean);
 	const mergedObjects = { ...state.objects, ...newObjects };
 
 	return {

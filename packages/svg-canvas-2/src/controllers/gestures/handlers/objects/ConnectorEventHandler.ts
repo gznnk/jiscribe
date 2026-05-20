@@ -1,9 +1,9 @@
+import type { CanvasControllerState } from "../../../CanvasTypes";
+import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import type {
 	CanvasEvent,
 	GestureHandler,
-} from "../../../../registry/GestureHandlerRegistryTypes";
-import type { CanvasControllerState } from "../../../CanvasTypes";
-import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
+} from "../../registry/GestureHandlerTypes";
 
 /**
  * Handles click events on connectors.

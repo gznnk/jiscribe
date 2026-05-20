@@ -1,13 +1,13 @@
 import { roundToDecimal } from "@workspace/geometry";
 
 import { PRECISION } from "../../../../../constants/precision";
+import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
+import type { PolygonState } from "../../../../../states/objects/primitives/polygon/PolygonState";
 import type {
 	MoveByDeltaFunction,
 	RotateByGroupFunction,
 	TransformByGroupFunction,
-} from "../../../../../registry/ObjectRegistryTypes";
-import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
-import type { PolygonState } from "../../../../../states/objects/primitives/polygon/PolygonState";
+} from "../../../registry/ObjectBehaviorTypes";
 import { rotatePolyByGroup, transformPolyByGroup } from "../base/PolyTransform";
 
 /**

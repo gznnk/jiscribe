@@ -1,15 +1,15 @@
 import { calcFrameKeyPoints, calcPolyKeyPoints, isTransformedFrame } from "@workspace/geometry";
 import type { FrameKeyPoints, TransformedFrame } from "@workspace/geometry";
 
-import { gestureHandlerRegistry } from "../../../registry/GestureHandlerRegistry";
-import type {
-	CanvasEvent,
-	EventType,
-} from "../../../registry/GestureHandlerRegistryTypes";
 import { isPoly } from "../../../schemas/objects/types/Poly";
 import type { CanvasControllerState, EventStartSnapshot, KeyPointsCache } from "../../CanvasTypes";
 import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWithDescendants";
 import type { Gesture } from "../recognizer/GestureRecognizerTypes";
+import { gestureHandlerRegistry } from "../registry/GestureHandlerRegistry";
+import type {
+	CanvasEvent,
+	EventType,
+} from "../registry/GestureHandlerTypes";
 import { calcSnapCandidates } from "./objects/utils/snap/calcSnapCandidates";
 
 /**

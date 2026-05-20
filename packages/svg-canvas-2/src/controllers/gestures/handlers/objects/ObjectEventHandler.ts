@@ -5,19 +5,19 @@ import { moveGroup } from "./primitives/GroupController";
 import { createMultiSelectGroup } from "./utils/createMultiSelectGroup";
 import { determineSelection } from "./utils/determineSelection";
 import { getAncestors } from "./utils/getAncestors";
-import { buildSnapFeedback, findSnap, SNAP_THRESHOLD_PX } from "./utils/snap/findSnap";
-import type {
-	CanvasEvent,
-	GestureHandler,
-} from "../../../../registry/GestureHandlerRegistryTypes";
-import { objectRegistry } from "../../../../registry/ObjectRegistry";
-import type { Mods } from "../../../../registry/ObjectRegistryTypes";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../../../states/objects/base/TextStyleState";
 import type { CanvasControllerState, SnapFeedback } from "../../../CanvasTypes";
+import type {
+	CanvasEvent,
+	GestureHandler,
+} from "../../registry/GestureHandlerTypes";
+import { buildSnapFeedback, findSnap, SNAP_THRESHOLD_PX } from "./utils/snap/findSnap";
 import { updateAffectedGroupBounds } from "../../../ui/utils/updateAffectedGroupBounds";
 import { buildSelectedIdsWithDescendants } from "../../../utils/buildSelectedIdsWithDescendants";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
+import { objectBehaviorRegistry } from "../../registry/ObjectBehaviorRegistry";
+import type { Mods } from "../../registry/ObjectBehaviorTypes";
 
 /**
  * オブジェクトのクリック処理
@@ -150,7 +150,7 @@ function handleObjectDrag(
 			moveGroup(selectedId, eventStartObjects, updatedObjects, adjustedDelta);
 		} else {
 			// Registry経由で形状ごとのmoveByDeltaを取得
-			const moveByDelta = objectRegistry.getMoveByDelta(selectedObject.type);
+			const moveByDelta = objectBehaviorRegistry.getMoveByDelta(selectedObject.type);
 			if (moveByDelta) {
 				updatedObjects[selectedId] = moveByDelta(selectedObject, adjustedDelta);
 			}

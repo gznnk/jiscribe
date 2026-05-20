@@ -1,4 +1,3 @@
-import { gestureHandlerRegistry } from "../../registry/GestureHandlerRegistry";
 import { CanvasEventHandler } from "../gestures/handlers/canvas/CanvasEventHandler";
 import { ConnectionAnchorEventHandler } from "../gestures/handlers/controls/connection/ConnectionAnchorEventHandler";
 import { ControlEventHandler } from "../gestures/handlers/controls/ControlEventHandler";
@@ -10,6 +9,7 @@ import { ObjectMenuHandler } from "../gestures/handlers/menu/ObjectMenuHandler";
 import { ShapeLibraryItemHandler } from "../gestures/handlers/menu/ShapeLibraryItemHandler";
 import { ConnectorEventHandler } from "../gestures/handlers/objects/ConnectorEventHandler";
 import { ObjectEventHandler } from "../gestures/handlers/objects/ObjectEventHandler";
+import { gestureHandlerRegistry } from "../gestures/registry/GestureHandlerRegistry";
 
 /**
  * Initialize the GestureHandlerRegistry with all gesture handlers.

@@ -3,11 +3,11 @@
 import { collectIdsInArea } from "./utils/collectIdsInArea";
 import { PRECISION } from "../../../../constants/precision";
 import { ZOOM } from "../../../../constants/zoom";
-import type { GestureHandler } from "../../../../registry/GestureHandlerRegistryTypes";
-import { objectRegistry } from "../../../../registry/ObjectRegistry";
 import { createObjectDocFromBounds } from "../../../../schemas/objects/utils/createObjectDocFromBounds";
+import { objectMapperRegistry } from "../../../../states/objects/ObjectMapperRegistry";
 import type { SnapFeedback } from "../../../CanvasTypes";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
+import type { GestureHandler } from "../../registry/GestureHandlerTypes";
 import { autoSelectParentGroups } from "../objects/utils/autoSelectParentGroups";
 import { createMultiSelectGroup } from "../objects/utils/createMultiSelectGroup";
 import {
@@ -164,7 +164,12 @@ export const CanvasEventHandler: GestureHandler = {
 					endX += result.delta.x;
 					endY += result.delta.y;
 
-					const pointBBox = { left: endX, right: endX, top: endY, bottom: endY };
+					const pointBBox = {
+						left: endX,
+						right: endX,
+						top: endY,
+						bottom: endY,
+					};
 					snapFeedback = buildSnapFeedback(
 						pointBBox,
 						result.xResult,
@@ -201,7 +206,7 @@ export const CanvasEventHandler: GestureHandler = {
 				);
 
 				if (doc) {
-					const objectState = objectRegistry.toState(doc);
+					const objectState = objectMapperRegistry.toState(doc);
 					nextState = {
 						...nextState,
 						objects: { ...nextState.objects, [objectState.id]: objectState },

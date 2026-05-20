@@ -1,8 +1,8 @@
+import { handleCommand } from "../../../commands/handlers/handleCommand";
 import type {
 	CanvasEvent,
 	GestureHandler,
-} from "../../../../registry/GestureHandlerRegistryTypes";
-import { handleCommand } from "../../../commands/handlers/handleCommand";
+} from "../../registry/GestureHandlerTypes";
 
 /**
  * コンテキストメニュー項目のクリックを処理する GestureHandler

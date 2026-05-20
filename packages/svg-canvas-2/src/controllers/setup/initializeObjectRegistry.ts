@@ -1,11 +1,23 @@
+import type { FC } from "react";
+
 import { Sticky } from "../../presentations/objects/annotations/Sticky";
 import { Connector } from "../../presentations/objects/connections/Connector";
+import { objectComponentRegistry } from "../../presentations/objects/ObjectComponentRegistry";
 import { Ellipse } from "../../presentations/objects/primitives/Ellipse";
 import { Polygon } from "../../presentations/objects/primitives/Polygon";
 import { Polyline } from "../../presentations/objects/primitives/Polyline";
 import { Rect } from "../../presentations/objects/primitives/Rect";
-import { objectRegistry } from "../../registry/ObjectRegistry";
-import type { ObjectDefinition } from "../../registry/ObjectRegistryTypes";
+import { objectDocValidatorRegistry } from "../../schemas/canvas/validators/ObjectDocValidatorRegistry";
+import type { ObjectDocValidateFn } from "../../schemas/canvas/validators/ObjectDocValidatorRegistry";
+import {
+	validateConnectorDoc,
+	validateEllipseDoc,
+	validateGroupDoc,
+	validatePolygonDoc,
+	validatePolylineDoc,
+	validateRectDoc,
+	validateStickyDoc,
+} from "../../schemas/canvas/validators/objectDocValidators";
 import { StickyFeatures } from "../../schemas/objects/annotations/StickyDoc";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
 import { ConnectorFeatures } from "../../schemas/objects/connections/ConnectorDoc";
@@ -14,17 +26,20 @@ import { GroupFeatures } from "../../schemas/objects/primitives/GroupDoc";
 import { PolygonFeatures } from "../../schemas/objects/primitives/PolygonDoc";
 import { PolylineFeatures } from "../../schemas/objects/primitives/PolylineDoc";
 import { RectFeatures } from "../../schemas/objects/primitives/RectDoc";
+import type { ObjectFeatures } from "../../schemas/objects/types/ObjectFeatures";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 import {
 	stickyToDoc,
 	stickyToState,
 } from "../../states/objects/annotations/sticky/StickyMapper";
 import type { StickyState } from "../../states/objects/annotations/sticky/StickyState";
+import type { ObjectMapperType } from "../../states/objects/base/MapperTypes";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import {
 	connectorToDoc,
 	connectorToState,
 } from "../../states/objects/connections/connector/ConnectorMapper";
+import { objectMapperRegistry } from "../../states/objects/ObjectMapperRegistry";
 import {
 	ellipseToDoc,
 	ellipseToState,
@@ -80,22 +95,27 @@ import {
 	rotateByGroup as rectRotateByGroup,
 	transformByGroup as rectTransformByGroup,
 } from "../gestures/handlers/objects/primitives/RectController";
+import { objectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
+import type { ObjectBehaviorEntry } from "../gestures/registry/ObjectBehaviorTypes";
 import { objectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
 import type { MenuSectionFactory } from "../ui/menu/ObjectMenu/ObjectMenuTypes";
 
 /**
- * Initialize the ObjectRegistry and MenuRegistry with all object type definitions.
+ * Initialize all object registries with definitions for every object type.
  */
 export const initializeObjectRegistry = (): void => {
-	objectRegistry.clear();
+	objectMapperRegistry.clear();
+	objectComponentRegistry.clear();
+	objectBehaviorRegistry.clear();
+	objectDocValidatorRegistry.clear();
 	objectMenuRegistry.clear();
 
 	registerObject(
 		"rect",
+		{ toDoc: rectToDoc, toState: rectToState },
+		RectFeatures,
+		Rect,
 		{
-			features: RectFeatures,
-			mapper: { toDoc: rectToDoc, toState: rectToState },
-			component: Rect,
 			moveByDelta: rectMoveByDelta,
 			transformByGroup: rectTransformByGroup,
 			rotateByGroup: rectRotateByGroup,
@@ -118,14 +138,15 @@ export const initializeObjectRegistry = (): void => {
 				items: [{ type: "aspectRatio" }],
 			},
 		],
+		validateRectDoc,
 	);
 
 	registerObject(
 		"ellipse",
+		{ toDoc: ellipseToDoc, toState: ellipseToState },
+		EllipseFeatures,
+		Ellipse,
 		{
-			features: EllipseFeatures,
-			mapper: { toDoc: ellipseToDoc, toState: ellipseToState },
-			component: Ellipse,
 			moveByDelta: ellipseMoveByDelta,
 			transformByGroup: ellipseTransformByGroup,
 			rotateByGroup: ellipseRotateByGroup,
@@ -148,14 +169,15 @@ export const initializeObjectRegistry = (): void => {
 				items: [{ type: "aspectRatio" }],
 			},
 		],
+		validateEllipseDoc,
 	);
 
 	registerObject(
 		"group",
+		{ toDoc: groupToDoc, toState: groupToState },
+		GroupFeatures,
+		() => null,
 		{
-			features: GroupFeatures,
-			mapper: { toDoc: groupToDoc, toState: groupToState },
-			component: () => null,
 			moveByDelta: groupMoveByDelta,
 			transformByGroup: groupTransformByGroup,
 			rotateByGroup: groupRotateByGroup,
@@ -166,14 +188,15 @@ export const initializeObjectRegistry = (): void => {
 				items: [{ type: "aspectRatio" }],
 			},
 		],
+		validateGroupDoc,
 	);
 
 	registerObject(
 		"polygon",
+		{ toDoc: polygonToDoc, toState: polygonToState },
+		PolygonFeatures,
+		Polygon,
 		{
-			features: PolygonFeatures,
-			mapper: { toDoc: polygonToDoc, toState: polygonToState },
-			component: Polygon,
 			moveByDelta: polygonMoveByDelta,
 			transformByGroup: polygonTransformByGroup,
 			rotateByGroup: polygonRotateByGroup,
@@ -188,14 +211,15 @@ export const initializeObjectRegistry = (): void => {
 				],
 			},
 		],
+		validatePolygonDoc,
 	);
 
 	registerObject(
 		"polyline",
+		{ toDoc: polylineToDoc, toState: polylineToState },
+		PolylineFeatures,
+		Polyline,
 		{
-			features: PolylineFeatures,
-			mapper: { toDoc: polylineToDoc, toState: polylineToState },
-			component: Polyline,
 			moveByDelta: polylineMoveByDelta,
 			transformByGroup: polylineTransformByGroup,
 			rotateByGroup: polylineRotateByGroup,
@@ -210,14 +234,15 @@ export const initializeObjectRegistry = (): void => {
 				items: [{ type: "lineColor" }, { type: "lineStyle" }],
 			},
 		],
+		validatePolylineDoc,
 	);
 
 	registerObject(
 		"connector",
+		{ toDoc: connectorToDoc, toState: connectorToState },
+		ConnectorFeatures,
+		Connector,
 		{
-			features: ConnectorFeatures,
-			mapper: { toDoc: connectorToDoc, toState: connectorToState },
-			component: Connector,
 			moveByDelta: connectorMoveByDelta,
 			transformByGroup: connectorTransformByGroup,
 			rotateByGroup: connectorRotateByGroup,
@@ -232,14 +257,15 @@ export const initializeObjectRegistry = (): void => {
 				items: [{ type: "lineColor" }, { type: "lineStyle" }],
 			},
 		],
+		validateConnectorDoc,
 	);
 
 	registerObject(
 		"sticky",
+		{ toDoc: stickyToDoc, toState: stickyToState },
+		StickyFeatures,
+		Sticky,
 		{
-			features: StickyFeatures,
-			mapper: { toDoc: stickyToDoc, toState: stickyToState },
-			component: Sticky,
 			moveByDelta: stickyMoveByDelta,
 			transformByGroup: stickyTransformByGroup,
 			rotateByGroup: stickyRotateByGroup,
@@ -258,6 +284,7 @@ export const initializeObjectRegistry = (): void => {
 				items: [{ type: "aspectRatio" }],
 			},
 		],
+		validateStickyDoc,
 	);
 };
 
@@ -266,9 +293,17 @@ export const registerObject = <
 	TState extends ObjectState,
 >(
 	type: ObjectType,
-	definition: ObjectDefinition<TDoc, TState>,
+	mapper: ObjectMapperType<TDoc, TState>,
+	features: ObjectFeatures,
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	component: FC<any>,
+	behavior: ObjectBehaviorEntry<TState>,
 	menuFactory: MenuSectionFactory<TState>,
+	validate: ObjectDocValidateFn,
 ): void => {
-	objectRegistry.register(type, definition);
+	objectMapperRegistry.register(type, mapper, features);
+	objectComponentRegistry.register(type, component);
+	objectBehaviorRegistry.register(type, behavior);
+	objectDocValidatorRegistry.register(type, validate);
 	objectMenuRegistry.register(type, menuFactory);
 };

@@ -1,18 +1,18 @@
 import type { BoundingBox } from "@workspace/geometry";
 
-import type {
-	CanvasEvent,
-	GestureHandler,
-} from "../../../../registry/GestureHandlerRegistryTypes";
-import { objectRegistry } from "../../../../registry/ObjectRegistry";
 import type { StickyDoc } from "../../../../schemas/objects/annotations/StickyDoc";
 import type { EllipseDoc } from "../../../../schemas/objects/primitives/EllipseDoc";
 import type { RectDoc } from "../../../../schemas/objects/primitives/RectDoc";
 import { createObjectDoc } from "../../../../schemas/objects/utils/createObjectDoc";
+import { objectMapperRegistry } from "../../../../states/objects/ObjectMapperRegistry";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ShapePreset } from "../../../ui/menu/ShapeLibrary/ShapePresets";
 import { getShapePreset } from "../../../ui/menu/ShapeLibrary/ShapePresets";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
+import type {
+	CanvasEvent,
+	GestureHandler,
+} from "../../registry/GestureHandlerTypes";
 import {
 	SNAP_THRESHOLD_PX,
 	buildSnapFeedback,
@@ -72,7 +72,7 @@ const addObjectToState = (
 		position,
 		preset.defaultOverrides,
 	);
-	const objectState = objectRegistry.toState(doc);
+	const objectState = objectMapperRegistry.toState(doc);
 
 	return {
 		...state,

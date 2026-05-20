@@ -1,8 +1,9 @@
 import type { Point } from "@workspace/geometry";
 import React, { memo } from "react";
 
-import { objectRegistry } from "../../../../registry/ObjectRegistry";
+import { objectComponentRegistry } from "../../../../presentations/objects/ObjectComponentRegistry";
 import { createObjectDoc } from "../../../../schemas/objects/utils/createObjectDoc";
+import { objectMapperRegistry } from "../../../../states/objects/ObjectMapperRegistry";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ShapePreset } from "../../menu/ShapeLibrary/ShapePresets";
 
@@ -20,11 +21,15 @@ const createGhostElement = (
 	preset: ShapePreset,
 	position: Point,
 ): React.ReactNode => {
-	const component = objectRegistry.getComponent(preset.objectType);
+	const component = objectComponentRegistry.get(preset.objectType);
 	if (!component) return null;
 
-	const doc = createObjectDoc(preset.objectType, position, preset.defaultOverrides);
-	const ghostState = objectRegistry.toState(doc);
+	const doc = createObjectDoc(
+		preset.objectType,
+		position,
+		preset.defaultOverrides,
+	);
+	const ghostState = objectMapperRegistry.toState(doc);
 	ghostState.id = GHOST_ID;
 
 	return React.createElement(component, ghostState);
@@ -37,7 +42,10 @@ const DragGhostComponent: React.FC<DragGhostProps> = ({ shapeLibraryDrag }) => {
 
 	return (
 		<g opacity={0.5} pointerEvents="none">
-			{createGhostElement(shapeLibraryDrag.preset, shapeLibraryDrag.ghostPosition)}
+			{createGhostElement(
+				shapeLibraryDrag.preset,
+				shapeLibraryDrag.ghostPosition,
+			)}
 		</g>
 	);
 };

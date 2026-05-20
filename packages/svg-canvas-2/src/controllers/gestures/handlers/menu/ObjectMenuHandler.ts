@@ -1,9 +1,9 @@
+import { handleCommand } from "../../../commands/handlers/handleCommand";
+import { handlePropertyUpdate } from "../../../utils/handlePropertyUpdate";
 import type {
 	CanvasEvent,
 	GestureHandler,
-} from "../../../../registry/GestureHandlerRegistryTypes";
-import { handleCommand } from "../../../commands/handlers/handleCommand";
-import { handlePropertyUpdate } from "../../../utils/handlePropertyUpdate";
+} from "../../registry/GestureHandlerTypes";
 
 /**
  * ObjectMenu 項目の操作を処理する GestureHandler。

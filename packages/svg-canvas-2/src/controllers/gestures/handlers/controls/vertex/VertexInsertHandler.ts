@@ -2,10 +2,10 @@ import { roundToDecimal } from "@workspace/geometry";
 import type { Point } from "@workspace/geometry";
 
 import { PRECISION } from "../../../../../constants/precision";
-import type { CanvasEvent } from "../../../../../registry/GestureHandlerRegistryTypes";
 import { isPoly } from "../../../../../schemas/objects/types/Poly";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
+import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import {
 	buildSnapFeedback,
 	findSnap,

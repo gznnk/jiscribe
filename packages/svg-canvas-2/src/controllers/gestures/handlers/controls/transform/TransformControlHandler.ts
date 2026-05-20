@@ -30,13 +30,13 @@ import {
 } from "./utils/enforceResizeDimensions";
 import { updateSingleGroupBounds } from "./utils/updateSingleGroupBounds";
 import { PRECISION } from "../../../../../constants/precision";
-import type { CanvasEvent } from "../../../../../registry/GestureHandlerRegistryTypes";
 import type { TransformState } from "../../../../../states/objects/base/TransformState";
 import { isTransformState } from "../../../../../states/objects/base/TransformState";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState, SnapFeedback } from "../../../../CanvasTypes";
 import { buildSelectedIdsWithDescendants } from "../../../../utils/buildSelectedIdsWithDescendants";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
+import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import {
 	transformChildren,
 	rotateChildren,
