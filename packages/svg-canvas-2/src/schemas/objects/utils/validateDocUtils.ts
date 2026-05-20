@@ -2,7 +2,7 @@ import { isNumber, isString } from "@workspace/basic-validators";
 
 import type { SemanticDiagnostic } from "../../canvas/validators/types";
 import { isArrowType } from "../types/ArrowType";
-import { isOwnedEndpointRef } from "../types/EndpointRef";
+import { isConnectPointId } from "../types/EndpointRef";
 import { isPoly } from "../types/Poly";
 import { isStrokeDashType } from "../types/StrokeDashType";
 import { isTextAlign } from "../types/TextAlign";
@@ -24,13 +24,81 @@ export function validateEndpointRef(
 	ref: unknown,
 	path: string,
 ): SemanticDiagnostic[] {
-	if (!isOwnedEndpointRef(ref)) return [];
+	if (typeof ref !== "object" || ref === null) return [];
+	const r = ref as Record<string, unknown>;
+
+	// owner の有無で OwnedEndpointRef / FreeEndpointRef を判別
+	const hasOwner = "owner" in r && r.owner != null;
+	return hasOwner
+		? validateOwnedEndpointRef(r, path)
+		: validateFreeEndpointRef(r, path);
+}
+
+function validateOwnedEndpointRef(
+	r: Record<string, unknown>,
+	path: string,
+): SemanticDiagnostic[] {
 	const errors: SemanticDiagnostic[] = [];
-	const owner = (ref as { owner: Record<string, unknown> }).owner;
-	if (!isString(owner.id))
-		errors.push({ path: `${path}.owner.id`, message: "must be a string" });
-	if (!isString(owner.type))
-		errors.push({ path: `${path}.owner.type`, message: "must be a string" });
+
+	if (typeof r.owner !== "object") {
+		errors.push({ path: `${path}.owner`, message: "must be an object" });
+	} else {
+		const owner = r.owner as Record<string, unknown>;
+		if (!isString(owner.id))
+			errors.push({ path: `${path}.owner.id`, message: "must be a string" });
+		if (!isString(owner.type))
+			errors.push({ path: `${path}.owner.type`, message: "must be a string" });
+	}
+
+	errors.push(...validateNonFreeAnchor(r.anchor, path));
+	return errors;
+}
+
+function validateFreeEndpointRef(
+	r: Record<string, unknown>,
+	path: string,
+): SemanticDiagnostic[] {
+	return validateFreeAnchor(r.anchor, path);
+}
+
+function validateNonFreeAnchor(
+	anchor: unknown,
+	path: string,
+): SemanticDiagnostic[] {
+	if (typeof anchor !== "object" || anchor === null)
+		return [{ path: `${path}.anchor`, message: "must be an object" }];
+
+	const a = anchor as Record<string, unknown>;
+	if (a.kind === "center") return [];
+	if (a.kind === "connectPoint") {
+		if (!isConnectPointId(a.id))
+			return [{ path: `${path}.anchor.id`, message: "must be a valid ConnectPointId" }];
+		return [];
+	}
+	return [{ path: `${path}.anchor.kind`, message: "must be 'center' or 'connectPoint' for owned endpoint" }];
+}
+
+function validateFreeAnchor(
+	anchor: unknown,
+	path: string,
+): SemanticDiagnostic[] {
+	if (typeof anchor !== "object" || anchor === null)
+		return [{ path: `${path}.anchor`, message: "must be an object" }];
+
+	const a = anchor as Record<string, unknown>;
+	if (a.kind !== "free")
+		return [{ path: `${path}.anchor.kind`, message: "must be 'free' for free endpoint" }];
+
+	const errors: SemanticDiagnostic[] = [];
+	if (typeof a.point !== "object" || a.point === null) {
+		errors.push({ path: `${path}.anchor.point`, message: "must be an object" });
+	} else {
+		const p = a.point as Record<string, unknown>;
+		if (!isNumber(p.x))
+			errors.push({ path: `${path}.anchor.point.x`, message: "must be a number" });
+		if (!isNumber(p.y))
+			errors.push({ path: `${path}.anchor.point.y`, message: "must be a number" });
+	}
 	return errors;
 }
 
