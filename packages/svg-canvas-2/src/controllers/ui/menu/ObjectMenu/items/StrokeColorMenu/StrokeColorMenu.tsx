@@ -12,10 +12,11 @@ import {
 } from "../../ObjectMenuStyled";
 
 const SECTION_ID = "stroke-color";
-const SUBMENU_SIZE = { width: 240, height: 140 } as const;
+const SUBMENU_SIZE = { width: 240, height: 195 } as const;
 
 type StrokeColorMenuProps = {
 	canvasState: CanvasControllerState;
+	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
 };
 
 const getSelectedStrokeColor = (state: CanvasControllerState): string => {
@@ -31,6 +32,7 @@ const getSelectedStrokeColor = (state: CanvasControllerState): string => {
  */
 const StrokeColorMenuComponent: React.FC<StrokeColorMenuProps> = ({
 	canvasState,
+	onPropertyUpdate,
 }) => {
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
@@ -49,7 +51,11 @@ const StrokeColorMenuComponent: React.FC<StrokeColorMenuProps> = ({
 			</ObjectMenuButton>
 			{isOpen && (
 				<DropdownPanel placement={placement}>
-					<ColorPickerGrid currentColor={currentColor} property="stroke" />
+					<ColorPickerGrid
+						currentColor={currentColor}
+						property="stroke"
+						onPropertyUpdate={onPropertyUpdate}
+					/>
 				</DropdownPanel>
 			)}
 		</MenuItemPositioner>

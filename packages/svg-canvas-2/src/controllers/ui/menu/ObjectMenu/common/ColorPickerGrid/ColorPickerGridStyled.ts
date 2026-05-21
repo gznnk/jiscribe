@@ -9,6 +9,66 @@ export const ColorPickerContainer = styled.div`
 	user-select: none;
 `;
 
+export const NativeColorPickerRow = styled.div`
+	display: flex;
+	align-items: center;
+	align-self: stretch;
+	margin-top: 8px;
+	padding-top: 8px;
+	border-top: 1px solid #e5e7eb;
+`;
+
+type NativeColorPickerButtonProps = {
+	isCustom: boolean;
+};
+
+export const NativeColorPickerButton = styled.button<NativeColorPickerButtonProps>`
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex: 1;
+	height: 28px;
+	padding: 0 8px;
+	border: ${({ isCustom }) => (isCustom ? "2px solid #6b7280" : "1px solid #e5e7eb")};
+	border-radius: 6px;
+	background: white;
+	cursor: pointer;
+	font-size: 12px;
+	color: #374151;
+	user-select: none;
+
+	&:hover {
+		border-color: #6b7280;
+		background: #f9fafb;
+	}
+
+	&:active {
+		background: #f3f4f6;
+	}
+`;
+
+type NativeColorPreviewProps = {
+	previewColor: string;
+};
+
+export const NativeColorPreview = styled.div<NativeColorPreviewProps>`
+	width: 16px;
+	height: 16px;
+	border-radius: 3px;
+	border: 1px solid #d1d5db;
+	background: ${({ previewColor }) => previewColor};
+	flex-shrink: 0;
+`;
+
+export const NativeColorInput = styled.input`
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	opacity: 0;
+	overflow: hidden;
+	pointer-events: none;
+`;
+
 export const ColorGrid = styled.div`
 	display: grid;
 	grid-template-columns: repeat(7, 24px);

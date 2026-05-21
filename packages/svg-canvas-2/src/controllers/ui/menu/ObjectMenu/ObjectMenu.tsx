@@ -38,7 +38,13 @@ const renderItem = (
 		case "arrowHead":
 			return <ArrowHeadMenu key="arrowHead" canvasState={canvasState} />;
 		case "lineColor":
-			return <LineColorMenu key="lineColor" canvasState={canvasState} />;
+			return (
+				<LineColorMenu
+					key="lineColor"
+					canvasState={canvasState}
+					onPropertyUpdate={onPropertyUpdate}
+				/>
+			);
 		case "lineStyle":
 			return (
 				<LineStyleMenu
@@ -49,10 +55,20 @@ const renderItem = (
 			);
 		case "backgroundColor":
 			return (
-				<BackgroundColorMenu key="backgroundColor" canvasState={canvasState} />
+				<BackgroundColorMenu
+					key="backgroundColor"
+					canvasState={canvasState}
+					onPropertyUpdate={onPropertyUpdate}
+				/>
 			);
 		case "borderColor":
-			return <StrokeColorMenu key="borderColor" canvasState={canvasState} />;
+			return (
+				<StrokeColorMenu
+					key="borderColor"
+					canvasState={canvasState}
+					onPropertyUpdate={onPropertyUpdate}
+				/>
+			);
 		case "borderStyle":
 			return (
 				<BorderStyleMenu
@@ -69,7 +85,10 @@ const renderItem = (
 						canvasState={canvasState}
 						onPropertyUpdate={onPropertyUpdate}
 					/>
-					<FontColorMenu canvasState={canvasState} />
+					<FontColorMenu
+						canvasState={canvasState}
+						onPropertyUpdate={onPropertyUpdate}
+					/>
 					<BoldMenu canvasState={canvasState} />
 				</React.Fragment>
 			);

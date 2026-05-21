@@ -12,10 +12,11 @@ import {
 } from "../../ObjectMenuStyled";
 
 const SECTION_ID = "bg-color";
-const SUBMENU_SIZE = { width: 240, height: 140 } as const;
+const SUBMENU_SIZE = { width: 240, height: 195 } as const;
 
 type BackgroundColorMenuProps = {
 	canvasState: CanvasControllerState;
+	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
 };
 
 const getSelectedFillColor = (state: CanvasControllerState): string => {
@@ -30,6 +31,7 @@ const getSelectedFillColor = (state: CanvasControllerState): string => {
  */
 const BackgroundColorMenuComponent: React.FC<BackgroundColorMenuProps> = ({
 	canvasState,
+	onPropertyUpdate,
 }) => {
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
@@ -48,7 +50,11 @@ const BackgroundColorMenuComponent: React.FC<BackgroundColorMenuProps> = ({
 			</ObjectMenuButton>
 			{isOpen && (
 				<DropdownPanel placement={placement}>
-					<ColorPickerGrid currentColor={currentColor} property="fill" />
+					<ColorPickerGrid
+						currentColor={currentColor}
+						property="fill"
+						onPropertyUpdate={onPropertyUpdate}
+					/>
 				</DropdownPanel>
 			)}
 		</MenuItemPositioner>
