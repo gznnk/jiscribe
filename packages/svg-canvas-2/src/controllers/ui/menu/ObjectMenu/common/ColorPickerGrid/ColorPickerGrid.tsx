@@ -1,4 +1,4 @@
-﻿import { memo, useCallback, useEffect, useState } from "react";
+﻿import { memo, useCallback, useEffect, useRef, useState } from "react";
 
 import {
 	ColorGrid,
@@ -31,11 +31,20 @@ const ColorPickerGridComponent: React.FC<ColorPickerGridProps> = ({
 }) => {
 	const [inputValue, setInputValue] = useState(currentColor);
 	const [isValid, setIsValid] = useState(true);
+	// レンダー後に useEffect から最新の inputValue を参照するためのref
+	const inputValueRef = useRef(inputValue);
+	inputValueRef.current = inputValue;
+	// ユーザーが有効な編集をしてまだコミットしていない状態かどうか
+	const pendingCommit = useRef(false);
 
-	// プリセットクリックなど外部からの色変更に追従する
+	// currentColor がユーザーの入力と異なる場合のみ外部変更（プリセット等）として扱い入力欄をリセットする。
+	// commit:false のプレビューも currentColor を更新するが、その場合は inputValue と一致するためスキップする。
 	useEffect(() => {
-		setInputValue(currentColor);
-		setIsValid(true);
+		if (currentColor !== inputValueRef.current) {
+			setInputValue(currentColor);
+			setIsValid(true);
+			pendingCommit.current = false;
+		}
 	}, [currentColor]);
 
 	const handleTextChange = useCallback(
@@ -45,6 +54,7 @@ const ColorPickerGridComponent: React.FC<ColorPickerGridProps> = ({
 			const valid = CSS.supports("color", val);
 			setIsValid(valid);
 			if (valid) {
+				pendingCommit.current = true;
 				onPropertyUpdate(property, val, false);
 			}
 		},
@@ -52,10 +62,11 @@ const ColorPickerGridComponent: React.FC<ColorPickerGridProps> = ({
 	);
 
 	const commit = useCallback(() => {
-		if (isValid && inputValue !== currentColor) {
+		if (isValid && pendingCommit.current) {
 			onPropertyUpdate(property, inputValue, true);
+			pendingCommit.current = false;
 		}
-	}, [isValid, inputValue, currentColor, property, onPropertyUpdate]);
+	}, [isValid, inputValue, property, onPropertyUpdate]);
 
 	const handleBlur = useCallback(() => {
 		commit();
