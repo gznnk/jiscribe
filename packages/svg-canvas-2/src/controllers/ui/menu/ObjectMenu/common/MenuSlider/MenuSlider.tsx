@@ -1,5 +1,5 @@
 import type React from "react";
-import { memo, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 
 import {
 	MenuSliderWrapper,
@@ -87,6 +87,10 @@ const MenuSliderComponent: React.FC<MenuSliderProps> = ({
 		}
 	};
 
+	const stopPropagation = useCallback((e: React.PointerEvent) => {
+		e.stopPropagation();
+	}, []);
+
 	useEffect(() => {
 		if (!isEditing) {
 			setSliderValue(value);
@@ -107,9 +111,7 @@ const MenuSliderComponent: React.FC<MenuSliderProps> = ({
 					onFocus={handleNumberInputFocus}
 					onBlur={handleNumberInputBlur}
 					onKeyDown={handleNumberInputKeyDown}
-					data-kind="object-menu"
-					data-id={`object-menu:number-input:${property}`}
-					data-interactive="true"
+					onPointerDown={stopPropagation}
 				/>
 			</MenuSliderFooter>
 			<MenuSliderInput
