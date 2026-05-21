@@ -9,64 +9,44 @@ export const ColorPickerContainer = styled.div`
 	user-select: none;
 `;
 
-export const NativeColorPickerRow = styled.div`
+export const ColorInputRow = styled.div`
 	display: flex;
-	align-items: center;
+	justify-content: center;
 	align-self: stretch;
 	margin-top: 8px;
 	padding-top: 8px;
 	border-top: 1px solid #e5e7eb;
 `;
 
-type NativeColorPickerButtonProps = {
-	isCustom: boolean;
+type ColorTextInputProps = {
+	isValid: boolean;
 };
 
-export const NativeColorPickerButton = styled.button<NativeColorPickerButtonProps>`
-	display: flex;
-	align-items: center;
-	gap: 6px;
-	flex: 1;
+export const ColorTextInput = styled.input<ColorTextInputProps>`
+	width: 160px;
 	height: 28px;
 	padding: 0 8px;
-	border: ${({ isCustom }) => (isCustom ? "2px solid #6b7280" : "1px solid #e5e7eb")};
+	box-sizing: border-box;
+	border: 1px solid ${({ isValid }) => (isValid ? "#e5e7eb" : "#ef4444")};
 	border-radius: 6px;
 	background: white;
-	cursor: pointer;
-	font-size: 12px;
 	color: #374151;
-	user-select: none;
+	font-size: 12px;
+	text-align: center;
+	outline: none;
+
+	&:focus {
+		border-color: #6b7280;
+		box-shadow: 0 0 0 2px rgba(107, 114, 128, 0.2);
+	}
 
 	&:hover {
-		border-color: #6b7280;
-		background: #f9fafb;
+		border-color: ${({ isValid }) => (isValid ? "#9ca3af" : "#f87171")};
 	}
 
-	&:active {
-		background: #f3f4f6;
+	::placeholder {
+		color: #9ca3af;
 	}
-`;
-
-type NativeColorPreviewProps = {
-	previewColor: string;
-};
-
-export const NativeColorPreview = styled.div<NativeColorPreviewProps>`
-	width: 16px;
-	height: 16px;
-	border-radius: 3px;
-	border: 1px solid #d1d5db;
-	background: ${({ previewColor }) => previewColor};
-	flex-shrink: 0;
-`;
-
-export const NativeColorInput = styled.input`
-	position: absolute;
-	width: 1px;
-	height: 1px;
-	opacity: 0;
-	overflow: hidden;
-	pointer-events: none;
 `;
 
 export const ColorGrid = styled.div`

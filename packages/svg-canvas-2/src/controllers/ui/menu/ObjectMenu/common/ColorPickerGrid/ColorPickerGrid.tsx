@@ -1,13 +1,11 @@
-﻿import { memo, useCallback, useEffect, useRef } from "react";
+﻿import { memo, useCallback, useEffect, useState } from "react";
 
 import {
 	ColorGrid,
+	ColorInputRow,
 	ColorPickerContainer,
 	ColorSwatch,
-	NativeColorInput,
-	NativeColorPickerButton,
-	NativeColorPickerRow,
-	NativeColorPreview,
+	ColorTextInput,
 } from "./ColorPickerGridStyled";
 import { PRESET_COLORS } from "../../ObjectMenuConstants";
 
@@ -19,60 +17,61 @@ type ColorPickerGridProps = {
 	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
 };
 
-/** CSS カラー文字列を input[type="color"] が受け付ける #rrggbb 形式に変換する */
-const toHexColorValue = (color: string): string => {
-	if (/^#[0-9a-fA-F]{6}$/.test(color)) return color.toLowerCase();
-	if (/^#[0-9a-fA-F]{3}$/.test(color)) {
-		const r = color[1], g = color[2], b = color[3];
-		return `#${r}${r}${g}${g}${b}${b}`.toLowerCase();
-	}
-	return "#000000";
-};
-
 /**
  * カラーピッカーグリッド。
- * プリセットカラーのスウォッチ（4×7 グリッド）と、ブラウザ標準カラーピッカーを表示する。
+ * プリセットカラーのスウォッチ（4×7 グリッド）と CSS カラーテキスト入力を表示する。
  * 各スウォッチは data-kind="object-menu" を持ち、ジェスチャーシステム経由でプロパティ更新を行う。
- * カスタムカラーボタンはブラウザ標準の color picker を開き、onChange でリアルタイムプレビュー、
- * ネイティブ change イベント（picker 確定時）でコミットする。
+ * テキスト入力は onChange でリアルタイムプレビュー（commit: false）、
+ * onBlur / Enter でコミット（commit: true）する。
  */
 const ColorPickerGridComponent: React.FC<ColorPickerGridProps> = ({
 	currentColor,
 	property,
 	onPropertyUpdate,
 }) => {
-	const inputRef = useRef<HTMLInputElement>(null);
+	const [inputValue, setInputValue] = useState(currentColor);
+	const [isValid, setIsValid] = useState(true);
 
-	const handleNativeChange = useCallback(
+	// プリセットクリックなど外部からの色変更に追従する
+	useEffect(() => {
+		setInputValue(currentColor);
+		setIsValid(true);
+	}, [currentColor]);
+
+	const handleTextChange = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => {
-			onPropertyUpdate(property, e.target.value, false);
+			const val = e.target.value;
+			setInputValue(val);
+			const valid = CSS.supports("color", val);
+			setIsValid(valid);
+			if (valid) {
+				onPropertyUpdate(property, val, false);
+			}
 		},
 		[property, onPropertyUpdate],
 	);
 
-	// ネイティブ change イベント（picker を閉じた/確定したときのみ発火）でコミット
-	useEffect(() => {
-		const input = inputRef.current;
-		if (!input) return;
-		const handleCommit = () => {
-			onPropertyUpdate(property, input.value, true);
-		};
-		input.addEventListener("change", handleCommit);
-		return () => input.removeEventListener("change", handleCommit);
-	}, [property, onPropertyUpdate]);
+	const commit = useCallback(() => {
+		if (isValid && inputValue !== currentColor) {
+			onPropertyUpdate(property, inputValue, true);
+		}
+	}, [isValid, inputValue, currentColor, property, onPropertyUpdate]);
 
-	const handleButtonClick = useCallback(() => {
-		inputRef.current?.click();
-	}, []);
+	const handleBlur = useCallback(() => {
+		commit();
+	}, [commit]);
 
+	const handleKeyDown = useCallback(
+		(e: React.KeyboardEvent<HTMLInputElement>) => {
+			if (e.key === "Enter") commit();
+		},
+		[commit],
+	);
+
+	// テキスト入力の pointerdown をキャンバスのジェスチャーシステムに伝播させない
 	const stopPropagation = useCallback((e: React.PointerEvent) => {
 		e.stopPropagation();
 	}, []);
-
-	const hexValue = toHexColorValue(currentColor);
-	const isCustomColor = !PRESET_COLORS.some(
-		(p) => p.value.toLowerCase() === currentColor.toLowerCase(),
-	);
 
 	return (
 		<ColorPickerContainer>
@@ -88,24 +87,19 @@ const ColorPickerGridComponent: React.FC<ColorPickerGridProps> = ({
 					/>
 				))}
 			</ColorGrid>
-			<NativeColorPickerRow>
-				<NativeColorPickerButton
-					type="button"
-					isCustom={isCustomColor}
-					onClick={handleButtonClick}
+			<ColorInputRow>
+				<ColorTextInput
+					isValid={isValid}
+					value={inputValue}
+					onChange={handleTextChange}
+					onBlur={handleBlur}
+					onKeyDown={handleKeyDown}
 					onPointerDown={stopPropagation}
-					title="カスタムカラーを選択"
-				>
-					<NativeColorPreview previewColor={hexValue} />
-					{isCustomColor ? `Custom ${hexValue}` : "Custom..."}
-				</NativeColorPickerButton>
-				<NativeColorInput
-					ref={inputRef}
-					type="color"
-					value={hexValue}
-					onChange={handleNativeChange}
+					maxLength={32}
+					placeholder="CSS color"
+					spellCheck={false}
 				/>
-			</NativeColorPickerRow>
+			</ColorInputRow>
 		</ColorPickerContainer>
 	);
 };
