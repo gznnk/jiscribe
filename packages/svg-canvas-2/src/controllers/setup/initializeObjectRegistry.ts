@@ -95,6 +95,7 @@ import {
 } from "../gestures/handlers/objects/primitives/RectController";
 import { objectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
 import type { ObjectBehaviorEntry } from "../gestures/registry/ObjectBehaviorTypes";
+import { StickyColorMenu } from "../ui/menu/ObjectMenu/items/StickyColorMenu";
 import { objectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
 import type { MenuSectionFactory } from "../ui/menu/ObjectMenu/ObjectMenuTypes";
 
@@ -271,7 +272,9 @@ export const initializeObjectRegistry = (): void => {
 		(_state: StickyState) => [
 			{
 				id: "style",
-				items: [{ type: "backgroundColor" }],
+				items: [
+					{ type: "custom", id: "sticky-color", component: StickyColorMenu },
+				],
 			},
 			{
 				id: "text",
