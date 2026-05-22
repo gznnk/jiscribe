@@ -1,12 +1,5 @@
 ﻿import type { Dimensions } from "@workspace/geometry";
-import {
-	memo,
-	useCallback,
-	useEffect,
-	useMemo,
-	useReducer,
-	useRef,
-} from "react";
+import { memo, useCallback, useEffect, useReducer, useRef } from "react";
 
 import {
 	Container,
@@ -74,40 +67,42 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	const canvasRef = useRef<HTMLDivElement>(null);
 	const svgRef = useRef<SVGSVGElement>(null);
 
-	const initialState = useMemo((): CanvasControllerState => {
-		const baseState = canvasToState(canvasDoc);
-		return {
-			...baseState,
-			selectedIds: [],
-			eventStartSnapshot: null,
-			keyPointsCache: {},
-			snapCandidatesCache: null,
-			edgeScrollEnabled: false,
-			commitVersion: 0,
-			saveVersion: 0,
-			contextMenuPosition: null,
-			shapeLibraryDrag: null,
-			areaSelection: null,
-			objectMenuOpenId: null,
-			multiSelectGroup: null,
-			textEditState: null,
-			pendingConnector: null,
-			selectedConnectorId: null,
-			selectedVertex: null,
-			editingConnectorId: null,
-			editingEndpoint: null,
-			snapFeedback: null,
-			shapeDrawing: null,
-			history: {
-				past: [],
-				present: canvasToDoc(baseState),
-				future: [],
-			},
-		};
-	}, [canvasDoc]);
-
 	// Reducer for canvas state management with history
-	const [state, dispatch] = useReducer(canvasReducer, initialState);
+	const [state, dispatch] = useReducer(
+		canvasReducer,
+		canvasDoc,
+		(initialDoc): CanvasControllerState => {
+			const baseState = canvasToState(initialDoc);
+			return {
+				...baseState,
+				selectedIds: [],
+				eventStartSnapshot: null,
+				keyPointsCache: {},
+				snapCandidatesCache: null,
+				edgeScrollEnabled: false,
+				commitVersion: 0,
+				saveVersion: 0,
+				contextMenuPosition: null,
+				shapeLibraryDrag: null,
+				areaSelection: null,
+				objectMenuOpenId: null,
+				multiSelectGroup: null,
+				textEditState: null,
+				pendingConnector: null,
+				selectedConnectorId: null,
+				selectedVertex: null,
+				editingConnectorId: null,
+				editingEndpoint: null,
+				snapFeedback: null,
+				shapeDrawing: null,
+				history: {
+					past: [],
+					present: canvasToDoc(baseState),
+					future: [],
+				},
+			};
+		},
+	);
 
 	// Gesture handling — declared before the SYNC_EXTERNAL effect so resetGestureState is available
 	const handleGesture = useCallback<GestureCallback>(
@@ -116,12 +111,13 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 		},
 		[dispatch],
 	);
-	const { pointerHandlers, wheelHandler, resetGestureState } = useGestureRecognizer({
-		gestureCallback: handleGesture,
-		containerRef: canvasRef,
-		svgRef,
-		canvasState: state,
-	});
+	const { pointerHandlers, wheelHandler, resetGestureState } =
+		useGestureRecognizer({
+			gestureCallback: handleGesture,
+			containerRef: canvasRef,
+			svgRef,
+			canvasState: state,
+		});
 
 	// Notify parent component when a save is required (after commit or undo/redo)
 	useEffect(() => {
