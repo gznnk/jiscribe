@@ -1,5 +1,6 @@
 import type { CanvasState } from "../../../../../states/canvas/CanvasState";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
+import { getTopLevelSelectedIds } from "../../../../utils/getTopLevelSelectedIds";
 
 /**
  * Collects all descendant IDs of a group using BFS.
@@ -50,6 +51,18 @@ function collectAllDescendants(
  * オブジェクト数は有限かつ everPromoted は単調増加するため、
  * データに循環参照があってもループは必ず終了する。
  *
+ * ### 処理の流れ
+ * ① 祖先が既に選択済みの子孫を除去する（不変条件の強制）。
+ *   範囲選択などでグループとその子孫が同時に selectedIds に入った場合でも、
+ *   子孫を取り除いて最上位アイテムだけを残す。
+ * ② 全子が選択されているグループを親グループへ昇格させる（上方向へ繰り返し）。
+ *
+ * ### ループの終了保証
+ * 各イテレーションで「全子が選択済み」の親を「昇格」させる。
+ * 昇格した親は everPromoted に記録され、同じ親が再昇格することはない。
+ * オブジェクト数は有限かつ everPromoted は単調増加するため、
+ * データに循環参照があってもループは必ず終了する。
+ *
  * ### 2つのガード条件（どちらも必要）
  * - `!selectedSet.has(parentId)`:
  *   そのイテレーション開始時点で既に選択中の親（ネスト内のサブグループなど）を
@@ -62,7 +75,8 @@ export function autoSelectParentGroups(
 	state: CanvasState,
 	selectedIds: string[],
 ): string[] {
-	let currentSelectedIds = [...selectedIds];
+	// ① 祖先が既に選択済みの子孫を除去する
+	let currentSelectedIds = getTopLevelSelectedIds(selectedIds, state.objects);
 	let changed = true;
 	const everPromoted = new Set<string>();
 

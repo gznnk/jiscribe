@@ -7,6 +7,73 @@ import type { RectState } from "../../../../../../states/objects/primitives/rect
 import { autoSelectParentGroups } from "../autoSelectParentGroups";
 
 describe("autoSelectParentGroups", () => {
+	// ─── ① 子孫除去（不変条件の強制） ────────────────────────────
+
+	it("グループとその子が混在するとき、子を除去してグループだけを残す", () => {
+		const state = {
+			objects: {
+				"group-1": {
+					id: "group-1",
+					type: "group",
+					childIds: ["rect-1", "rect-2"],
+				} as GroupState,
+				"rect-1": {
+					id: "rect-1",
+					type: "rect",
+					parentId: "group-1",
+				} as RectState,
+				"rect-2": {
+					id: "rect-2",
+					type: "rect",
+					parentId: "group-1",
+				} as RectState,
+			},
+		} as unknown as CanvasState;
+
+		// 範囲選択などで group-1 とその子 rect-1, rect-2 が混在した場合
+		const result = autoSelectParentGroups(state, [
+			"group-1",
+			"rect-1",
+			"rect-2",
+		]);
+		expect(result).toEqual(["group-1"]);
+	});
+
+	it("複数グループと各自の子が混在するとき、それぞれのグループだけが残る", () => {
+		const state = {
+			objects: {
+				"group-a": {
+					id: "group-a",
+					type: "group",
+					childIds: ["rect-1", "rect-2"],
+				} as GroupState,
+				"group-b": {
+					id: "group-b",
+					type: "group",
+					childIds: ["rect-3", "rect-4"],
+				} as GroupState,
+				"rect-1": { id: "rect-1", type: "rect", parentId: "group-a" } as RectState,
+				"rect-2": { id: "rect-2", type: "rect", parentId: "group-a" } as RectState,
+				"rect-3": { id: "rect-3", type: "rect", parentId: "group-b" } as RectState,
+				"rect-4": { id: "rect-4", type: "rect", parentId: "group-b" } as RectState,
+			},
+		} as unknown as CanvasState;
+
+		const result = autoSelectParentGroups(state, [
+			"group-a",
+			"group-b",
+			"rect-1",
+			"rect-2",
+			"rect-3",
+			"rect-4",
+		]);
+		expect(result).toHaveLength(2);
+		expect(result).toContain("group-a");
+		expect(result).toContain("group-b");
+	});
+
+	// ─── ② 昇格（全子選択 → 親グループへ） ──────────────────────
+
 	it("should select parent group when all children are selected", () => {
 		const state = {
 			objects: {
