@@ -79,12 +79,12 @@ export const Text = styled.div<TextProps>`
 		line-height: 1.3;
 		color: currentColor;
 	}
-	h1:first-child,
-	h2:first-child,
-	h3:first-child,
-	h4:first-child,
-	h5:first-child,
-	h6:first-child {
+	h1:first-of-type,
+	h2:first-of-type,
+	h3:first-of-type,
+	h4:first-of-type,
+	h5:first-of-type,
+	h6:first-of-type {
 		margin-top: 0;
 	}
 	h1 {
