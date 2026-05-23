@@ -1,7 +1,9 @@
+import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import { calculateGroupOrientedBounds } from "../../../states/utils/calculateGroupOrientedBounds";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { cleanupGroups } from "../../utils/cleanupGroups";
+import { findLowestCommonAncestor } from "../../utils/findLowestCommonAncestor";
 import { updateGroupBoundsFromRoot } from "../../utils/updateGroupBoundsFromRoot";
 import type { Command } from "../CommandTypes";
 
@@ -118,7 +120,7 @@ export const GroupCommand: Command = {
 			};
 		}
 
-		// Cross-parent: remove each selected object from its current parent, add new group at root
+		// Cross-parent: remove each selected object from its current parent
 		const selectedSet = new Set(selectedIds);
 		const affectedParentIds = new Set<string>();
 		for (const id of selectedIds) {
@@ -135,6 +137,72 @@ export const GroupCommand: Command = {
 			}
 		}
 
+		// Find LCA to determine where to place the new group
+		const lcaId = findLowestCommonAncestor(selectedIds, state.objects);
+
+		if (lcaId != null) {
+			// LCA found: insert new group inside LCA at the correct z-position
+			const originalLcaChildIds = (state.objects[lcaId] as GroupState).childIds;
+
+			// Find the earliest LCA-entry position among selected items
+			let earliestPos = originalLcaChildIds.length;
+			for (const id of selectedIds) {
+				const lcaEntry = findLcaEntry(id, lcaId, state.objects);
+				if (lcaEntry != null) {
+					const pos = originalLcaChildIds.indexOf(lcaEntry);
+					if (pos !== -1) earliestPos = Math.min(earliestPos, pos);
+				}
+			}
+
+			// Adjust insert position: account for items removed from LCA's childIds
+			const currentLcaChildIds = (updatedObjects[lcaId] as GroupState).childIds;
+			let removedBefore = 0;
+			for (let i = 0; i < earliestPos; i++) {
+				if (!currentLcaChildIds.includes(originalLcaChildIds[i]!)) {
+					removedBefore++;
+				}
+			}
+			const adjustedInsertPos = earliestPos - removedBefore;
+
+			const updatedLcaChildIds = [...currentLcaChildIds];
+			updatedLcaChildIds.splice(adjustedInsertPos, 0, groupId);
+			updatedObjects[lcaId] = {
+				...(updatedObjects[lcaId] as GroupState),
+				childIds: updatedLcaChildIds,
+			} as GroupState;
+			// Update new group's parentId to LCA
+			updatedObjects[groupId] = {
+				...(updatedObjects[groupId] as GroupState),
+				parentId: lcaId,
+			} as GroupState;
+
+			// Remove empty groups that resulted from pulling items out (up to LCA, not including LCA)
+			for (const parentId of affectedParentIds) {
+				if (parentId !== lcaId) {
+					removeEmptyGroupUpToLca(updatedObjects, parentId, lcaId);
+				}
+			}
+
+			let nextState: CanvasControllerState = {
+				...state,
+				objects: updatedObjects,
+				rootIds: state.rootIds,
+				selectedIds: [groupId],
+				objectMenuOpenId: null,
+				commitVersion: state.commitVersion + 1,
+			};
+
+			for (const parentId of affectedParentIds) {
+				if (updatedObjects[parentId] != null) {
+					nextState = updateGroupBoundsFromRoot(nextState, parentId);
+				}
+			}
+			nextState = updateGroupBoundsFromRoot(nextState, lcaId);
+
+			return nextState;
+		}
+
+		// No LCA: place new group at root
 		const updatedRootIds = state.rootIds.filter((id) => !selectedSet.has(id));
 		updatedRootIds.push(groupId);
 
@@ -177,4 +245,58 @@ function replaceWithGroup(
 		}
 	}
 	return result;
+}
+
+/**
+ * Returns the direct child of lcaId that is an ancestor of (or equal to) id.
+ */
+function findLcaEntry(
+	id: string,
+	lcaId: string,
+	objects: Record<string, ObjectState>,
+): string | undefined {
+	let currentId: string | undefined = id;
+	const visited = new Set<string>();
+	while (currentId != null) {
+		if (visited.has(currentId)) break;
+		visited.add(currentId);
+		const obj: ObjectState | undefined = objects[currentId];
+		if (obj?.parentId === lcaId) return currentId;
+		if (obj?.parentId == null) return undefined;
+		currentId = obj.parentId;
+	}
+	return undefined;
+}
+
+/**
+ * Recursively removes an empty group and its empty ancestors up to (but not including) lcaId.
+ */
+function removeEmptyGroupUpToLca(
+	objects: Record<string, ObjectState>,
+	groupId: string,
+	lcaId: string,
+): void {
+	if (groupId === lcaId) return;
+	const group = objects[groupId] as GroupState | undefined;
+	if (!group || group.type !== "group" || group.childIds.length !== 0) return;
+
+	const parentId = group.parentId;
+	delete objects[groupId];
+
+	if (parentId != null) {
+		const parent = objects[parentId] as GroupState | undefined;
+		if (parent?.type === "group") {
+			objects[parentId] = {
+				...parent,
+				childIds: parent.childIds.filter((cid) => cid !== groupId),
+			} as GroupState;
+			// Recurse if parent is now empty and is not LCA
+			if (
+				parentId !== lcaId &&
+				(objects[parentId] as GroupState).childIds.length === 0
+			) {
+				removeEmptyGroupUpToLca(objects, parentId, lcaId);
+			}
+		}
+	}
 }
