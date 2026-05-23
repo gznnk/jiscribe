@@ -26,6 +26,13 @@ export function commitTextEditIfNeeded(
 		};
 	}
 
+	if (text === targetObject.text) {
+		return {
+			...state,
+			textEditState: null,
+		};
+	}
+
 	return {
 		...state,
 		objects: {
