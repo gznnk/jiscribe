@@ -1,7 +1,6 @@
 ﻿import { isPoly } from "../../../schemas/objects/types/Poly";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../CanvasTypes";
-import { updateGroupBounds } from "../../ui/utils/updateGroupBounds";
 import { cleanupConnectorsOnDelete } from "../../utils/cleanupConnectorsOnDelete";
 import { cleanupGroups } from "../../utils/cleanupGroups";
 import { updateGroupBoundsFromRoot } from "../../utils/updateGroupBoundsFromRoot";
@@ -96,6 +95,7 @@ export const DeleteCommand: Command = {
 		}
 
 		// 選択オブジェクトのうち、親が削除されない場合は親の childIds から除去
+		const affectedParentIds = new Set<string>();
 		for (const id of state.selectedIds) {
 			const obj = state.objects[id];
 			if (obj?.parentId != null && !idsToDelete.has(obj.parentId)) {
@@ -106,17 +106,12 @@ export const DeleteCommand: Command = {
 						...groupParent,
 						childIds: groupParent.childIds.filter((childId) => childId !== id),
 					} as GroupState;
-
-					// Update parent's bounds after child removal
-					const updatedParent = updateGroupBounds(updatedObjects, obj.parentId);
-					if (updatedParent) {
-						updatedObjects[obj.parentId] = updatedParent;
-					}
+					affectedParentIds.add(obj.parentId);
 				}
 			}
 		}
 
-		const nextStateBeforeCleanup = {
+		let nextStateBeforeCleanup: CanvasControllerState = {
 			...state,
 			objects: updatedObjects,
 			rootIds: state.rootIds.filter((id) => !idsToDelete.has(id)),
@@ -126,8 +121,14 @@ export const DeleteCommand: Command = {
 			selectedIds: [] as string[],
 			selectedConnectorId: null,
 			objectMenuOpenId: null,
-			commitVersion: state.commitVersion + 1, // コミット必要
+			commitVersion: state.commitVersion + 1,
 		};
+
+		// 削除による葉オブジェクトの消失を全祖先グループに反映する（cleanupGroups の前に行う）。
+		// cleanup 後だと解除されたグループの ID が消えて updateGroupBoundsFromRoot が空振りするケースがある。
+		for (const parentId of affectedParentIds) {
+			nextStateBeforeCleanup = updateGroupBoundsFromRoot(nextStateBeforeCleanup, parentId);
+		}
 
 		// グループのクリーンアップ（空グループの削除、1個グループの解除）
 		return cleanupGroups(nextStateBeforeCleanup);
