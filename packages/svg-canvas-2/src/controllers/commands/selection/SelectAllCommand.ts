@@ -6,9 +6,9 @@ export const SelectAllCommand: Command = {
 	label: "Select All",
 	category: "selection",
 	shortcuts: {
-		mac: [{ key: "a", meta: true }],
-		win: [{ key: "a", ctrl: true }],
-		default: [{ key: "a", ctrl: true }],
+		mac: [{ code: "KeyA", meta: true }],
+		win: [{ code: "KeyA", ctrl: true }],
+		default: [{ code: "KeyA", ctrl: true }],
 	},
 
 	canExecute: (state) => {

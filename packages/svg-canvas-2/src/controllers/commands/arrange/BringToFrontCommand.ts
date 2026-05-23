@@ -7,9 +7,9 @@ export const BringToFrontCommand: Command = {
 	label: "Bring to Front",
 	category: "arrange",
 	shortcuts: {
-		mac: [{ key: "]", meta: true, shift: true }],
-		win: [{ key: "]", ctrl: true, shift: true }],
-		default: [{ key: "]", ctrl: true, shift: true }],
+		mac: [{ key: "}", meta: true }],
+		win: [{ key: "}", ctrl: true }],
+		default: [{ key: "}", ctrl: true }],
 	},
 
 	canExecute: (state) => {

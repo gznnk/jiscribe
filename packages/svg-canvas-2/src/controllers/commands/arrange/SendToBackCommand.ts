@@ -7,9 +7,9 @@ export const SendToBackCommand: Command = {
 	label: "Send to Back",
 	category: "arrange",
 	shortcuts: {
-		mac: [{ key: "[", meta: true, shift: true }],
-		win: [{ key: "[", ctrl: true, shift: true }],
-		default: [{ key: "[", ctrl: true, shift: true }],
+		mac: [{ key: "{", meta: true }],
+		win: [{ key: "{", ctrl: true }],
+		default: [{ key: "{", ctrl: true }],
 	},
 
 	canExecute: (state) => {

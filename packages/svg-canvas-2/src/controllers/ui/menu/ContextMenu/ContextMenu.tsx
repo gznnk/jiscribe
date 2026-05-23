@@ -47,8 +47,8 @@ const ContextMenuComponent: React.FC<ContextMenuProps> = ({
 			id: "paste",
 			label: "Paste",
 			shortcuts: {
-				mac: [{ key: "v", meta: true }],
-				default: [{ key: "v", ctrl: true }],
+				mac: [{ code: "KeyV", meta: true }],
+				default: [{ code: "KeyV", ctrl: true }],
 			},
 		},
 		{ type: "command", commandId: "delete" },

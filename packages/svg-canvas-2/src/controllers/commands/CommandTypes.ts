@@ -4,11 +4,21 @@ import type { CanvasControllerState } from "../CanvasTypes";
  * キーボードショートカットの定義
  */
 export type KeyBinding = {
-	/** キー名（例: "Delete", "a", "z"） */
-	key: string;
+	/**
+	 * 物理キーコード（例: "KeyZ", "Delete", "Digit0"）— レイアウト非依存
+	 * 文字キー・数字キーなど JIS/US で同じ位置にあるキーに使用
+	 * code を指定した場合は shift も厳密にチェックされる
+	 */
+	code?: string;
+	/**
+	 * 文字キー値（例: "[", "]", "=", "+"）— レイアウト依存
+	 * 記号キーなど JIS/US でキー位置が異なる場合に使用
+	 * key を指定した場合は shift チェックをスキップ（文字に shift が内包されるため）
+	 */
+	key?: string;
 	/** Ctrl キー */
 	ctrl?: boolean;
-	/** Shift キー */
+	/** Shift キー — code ベースの場合のみ有効 */
 	shift?: boolean;
 	/** Alt キー */
 	alt?: boolean;

@@ -12,9 +12,9 @@ export const UndoCommand: Command = {
 	category: "edit",
 
 	shortcuts: {
-		mac: [{ key: "z", meta: true }],
-		win: [{ key: "z", ctrl: true }],
-		default: [{ key: "z", ctrl: true }],
+		mac: [{ code: "KeyZ", meta: true }],
+		win: [{ code: "KeyZ", ctrl: true }],
+		default: [{ code: "KeyZ", ctrl: true }],
 	},
 
 	canExecute: (state) => {

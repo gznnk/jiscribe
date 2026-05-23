@@ -8,9 +8,9 @@ export const UngroupCommand: Command = {
 	label: "Ungroup",
 	category: "arrange",
 	shortcuts: {
-		mac: [{ key: "g", meta: true, shift: true }],
-		win: [{ key: "g", ctrl: true, shift: true }],
-		default: [{ key: "g", ctrl: true, shift: true }],
+		mac: [{ code: "KeyG", meta: true, shift: true }],
+		win: [{ code: "KeyG", ctrl: true, shift: true }],
+		default: [{ code: "KeyG", ctrl: true, shift: true }],
 	},
 
 	canExecute: (state) => {

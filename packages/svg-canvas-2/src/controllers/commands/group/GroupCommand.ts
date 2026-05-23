@@ -10,9 +10,9 @@ export const GroupCommand: Command = {
 	label: "Group",
 	category: "arrange",
 	shortcuts: {
-		mac: [{ key: "g", meta: true }],
-		win: [{ key: "g", ctrl: true }],
-		default: [{ key: "g", ctrl: true }],
+		mac: [{ code: "KeyG", meta: true }],
+		win: [{ code: "KeyG", ctrl: true }],
+		default: [{ code: "KeyG", ctrl: true }],
 	},
 
 	canExecute: (state) => {

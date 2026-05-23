@@ -6,7 +6,7 @@ export const StartTextEditCommand: Command = {
 	label: "Start Text Editing",
 	category: "edit",
 	shortcuts: {
-		default: [{ key: "Enter" }],
+		default: [{ code: "Enter" }],
 	},
 
 	canExecute(state) {

@@ -10,9 +10,9 @@ export const CopyCommand: Command = {
 	label: "Copy",
 	category: "edit",
 	shortcuts: {
-		mac: [{ key: "c", meta: true }],
-		win: [{ key: "c", ctrl: true }],
-		default: [{ key: "c", ctrl: true }],
+		mac: [{ code: "KeyC", meta: true }],
+		win: [{ code: "KeyC", ctrl: true }],
+		default: [{ code: "KeyC", ctrl: true }],
 	},
 
 	canExecute: (state) => state.selectedIds.length > 0,

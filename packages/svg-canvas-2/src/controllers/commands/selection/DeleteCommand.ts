@@ -11,7 +11,7 @@ export const DeleteCommand: Command = {
 	label: "Delete",
 	category: "edit",
 	shortcuts: {
-		default: [{ key: "Delete" }, { key: "Backspace" }],
+		default: [{ code: "Delete" }, { code: "Backspace" }],
 	},
 
 	canExecute: (state) => {

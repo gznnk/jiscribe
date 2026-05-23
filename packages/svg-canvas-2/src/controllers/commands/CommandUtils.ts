@@ -41,10 +41,27 @@ export const getPlatformShortcuts = (
 	return bindings[platform] ?? bindings.default;
 };
 
+/** event.code → 表示文字列のマッピング */
+const CODE_DISPLAY_MAP: Record<string, string> = {
+	KeyA: "A", KeyB: "B", KeyC: "C", KeyD: "D", KeyE: "E",
+	KeyF: "F", KeyG: "G", KeyH: "H", KeyI: "I", KeyJ: "J",
+	KeyK: "K", KeyL: "L", KeyM: "M", KeyN: "N", KeyO: "O",
+	KeyP: "P", KeyQ: "Q", KeyR: "R", KeyS: "S", KeyT: "T",
+	KeyU: "U", KeyV: "V", KeyW: "W", KeyX: "X", KeyY: "Y", KeyZ: "Z",
+	Digit0: "0", Digit1: "1", Digit2: "2", Digit3: "3", Digit4: "4",
+	Digit5: "5", Digit6: "6", Digit7: "7", Digit8: "8", Digit9: "9",
+	Minus: "-", Equal: "=", BracketLeft: "[", BracketRight: "]",
+	Backslash: "\\", Semicolon: ";", Quote: "'", Comma: ",",
+	Period: ".", Slash: "/", Backquote: "`",
+	Delete: "Delete", Backspace: "Backspace", Enter: "Enter",
+	Escape: "Escape", Tab: "Tab", Space: "Space",
+	ArrowLeft: "←", ArrowRight: "→", ArrowUp: "↑", ArrowDown: "↓",
+};
+
 /**
  * KeyBinding を人間が読みやすい文字列に変換
- * @example formatShortcut({ key: "a", meta: true }) => "⌘A" (Mac)
- * @example formatShortcut({ key: "a", ctrl: true }) => "Ctrl+A" (Windows)
+ * @example formatShortcut({ code: "KeyA", meta: true }) => "⌘A" (Mac)
+ * @example formatShortcut({ code: "KeyA", ctrl: true }) => "Ctrl+A" (Windows)
  */
 export const formatShortcut = (binding: KeyBinding): string => {
 	const platform = getPlatform();
@@ -63,14 +80,11 @@ export const formatShortcut = (binding: KeyBinding): string => {
 		parts.push(platform === "mac" ? "⌘" : "Win");
 	}
 
-	// キー名を大文字に変換（特殊キーは例外）
-	const keyName = ["Delete", "Backspace", "Enter", "Escape", "Tab"].includes(
-		binding.key,
-	)
-		? binding.key
-		: binding.key.toUpperCase();
-
-	parts.push(keyName);
+	if (binding.code !== undefined) {
+		parts.push(CODE_DISPLAY_MAP[binding.code] ?? binding.code);
+	} else if (binding.key !== undefined) {
+		parts.push(binding.key);
+	}
 
 	return platform === "mac" ? parts.join("") : parts.join("+");
 };

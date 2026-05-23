@@ -14,6 +14,10 @@ import { DeleteCommand } from "../commands/selection/DeleteCommand";
 import { DeselectAllCommand } from "../commands/selection/DeselectAllCommand";
 import { SelectAllCommand } from "../commands/selection/SelectAllCommand";
 import { StartTextEditCommand } from "../commands/text/StartTextEditCommand";
+import { ZoomInCommand } from "../commands/view/ZoomInCommand";
+import { ZoomOutCommand } from "../commands/view/ZoomOutCommand";
+import { ZoomToFitCommand } from "../commands/view/ZoomToFitCommand";
+import { ZoomToSelectionCommand } from "../commands/view/ZoomToSelectionCommand";
 
 /**
  * コマンドをレジストリに登録
@@ -41,5 +45,10 @@ export const initializeCommands = (): void => {
 		.register(GroupCommand)
 		.register(UngroupCommand)
 		// Text commands
-		.register(StartTextEditCommand);
+		.register(StartTextEditCommand)
+		// View commands
+		.register(ZoomInCommand)
+		.register(ZoomOutCommand)
+		.register(ZoomToFitCommand)
+		.register(ZoomToSelectionCommand);
 };

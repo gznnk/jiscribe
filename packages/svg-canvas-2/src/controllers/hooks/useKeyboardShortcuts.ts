@@ -32,24 +32,22 @@ export const useKeyboardShortcuts = (
 			const command = commandRegistry.findByShortcut(event);
 			if (!command) return;
 
+			// バインディングが存在する場合はブラウザデフォルト動作を常に止める
+			event.preventDefault();
+			event.stopPropagation();
+
 			// undo/redo は外部コールバックが提供されている場合、canExecute を確認せず委譲する
 			// （利用可否は VSCode など外部の管理者が判断するため）
 			if (command.id === "undo" && onUndo) {
 				onUndo();
-				event.preventDefault();
-				event.stopPropagation();
 				return;
 			}
 			if (command.id === "redo" && onRedo) {
 				onRedo();
-				event.preventDefault();
-				event.stopPropagation();
 				return;
 			}
 			if (command.canExecute(canvasStateRef.current)) {
 				handleCommand(command.id);
-				event.preventDefault();
-				event.stopPropagation();
 			}
 		};
 

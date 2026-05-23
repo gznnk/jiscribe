@@ -13,16 +13,16 @@ export const RedoCommand: Command = {
 
 	shortcuts: {
 		mac: [
-			{ key: "z", meta: true, shift: true },
-			{ key: "y", meta: true },
+			{ code: "KeyZ", meta: true, shift: true },
+			{ code: "KeyY", meta: true },
 		],
 		win: [
-			{ key: "z", ctrl: true, shift: true },
-			{ key: "y", ctrl: true },
+			{ code: "KeyZ", ctrl: true, shift: true },
+			{ code: "KeyY", ctrl: true },
 		],
 		default: [
-			{ key: "z", ctrl: true, shift: true },
-			{ key: "y", ctrl: true },
+			{ code: "KeyZ", ctrl: true, shift: true },
+			{ code: "KeyY", ctrl: true },
 		],
 	},
 

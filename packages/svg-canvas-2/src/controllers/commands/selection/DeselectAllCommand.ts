@@ -5,9 +5,9 @@ export const DeselectAllCommand: Command = {
 	label: "Deselect All",
 	category: "selection",
 	shortcuts: {
-		mac: [{ key: "a", meta: true, shift: true }, { key: "Escape" }],
-		win: [{ key: "a", ctrl: true, shift: true }, { key: "Escape" }],
-		default: [{ key: "a", ctrl: true, shift: true }, { key: "Escape" }],
+		mac: [{ code: "KeyA", meta: true, shift: true }, { code: "Escape" }],
+		win: [{ code: "KeyA", ctrl: true, shift: true }, { code: "Escape" }],
+		default: [{ code: "KeyA", ctrl: true, shift: true }, { code: "Escape" }],
 	},
 
 	canExecute: (state) => {

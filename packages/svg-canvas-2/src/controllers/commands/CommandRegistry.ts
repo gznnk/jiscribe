@@ -42,14 +42,20 @@ class CommandRegistry {
 			const bindings = getPlatformShortcuts(cmd.shortcuts);
 
 			// 配列内のいずれかのショートカットがマッチするか確認
-			return bindings.some(
-				(binding) =>
-					binding.key.toLowerCase() === event.key.toLowerCase() &&
+			return bindings.some((binding) => {
+				const isCodeBased = binding.code !== undefined;
+				const keyMatch = isCodeBased
+					? binding.code === event.code
+					: binding.key === event.key;
+				return (
+					keyMatch &&
 					!!binding.ctrl === event.ctrlKey &&
-					!!binding.shift === event.shiftKey &&
 					!!binding.alt === event.altKey &&
-					!!binding.meta === event.metaKey,
-			);
+					!!binding.meta === event.metaKey &&
+					// key ベースの場合は shift を文字値が内包するためスキップ
+					(isCodeBased ? !!binding.shift === event.shiftKey : true)
+				);
+			});
 		});
 	}
 }

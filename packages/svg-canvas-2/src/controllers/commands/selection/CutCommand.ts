@@ -7,9 +7,9 @@ export const CutCommand: Command = {
 	label: "Cut",
 	category: "edit",
 	shortcuts: {
-		mac: [{ key: "x", meta: true }],
-		win: [{ key: "x", ctrl: true }],
-		default: [{ key: "x", ctrl: true }],
+		mac: [{ code: "KeyX", meta: true }],
+		win: [{ code: "KeyX", ctrl: true }],
+		default: [{ code: "KeyX", ctrl: true }],
 	},
 
 	canExecute: (state) => state.selectedIds.length > 0,
