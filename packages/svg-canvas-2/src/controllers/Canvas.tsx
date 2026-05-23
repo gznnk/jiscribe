@@ -30,6 +30,7 @@ import { DrawingPreviewOverlay } from "./ui/feedback/DrawingPreviewOverlay";
 import { PendingConnectorOverlay } from "./ui/feedback/PendingConnectorOverlay";
 import { SelectionOverlay } from "./ui/feedback/SelectionOverlay";
 import { SnapGuides } from "./ui/feedback/SnapGuides";
+import { ZoomIndicator } from "./ui/feedback/ZoomIndicator";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
 import { ShapeLibrary } from "./ui/menu/ShapeLibrary";
@@ -268,6 +269,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 			</Container>
 			<ViewportOverlay>
 				<ShapeLibrary activePresetId={state.shapeDrawing?.preset.id ?? null} />
+				<ZoomIndicator zoom={state.viewport.zoom} />
 				<ContextMenu
 					position={state.contextMenuPosition}
 					canvasState={state}
