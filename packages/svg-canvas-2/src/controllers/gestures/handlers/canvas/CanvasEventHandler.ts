@@ -299,8 +299,8 @@ export const CanvasEventHandler: GestureHandler = {
 			}
 		}
 
-		// Clear selection on click (left-click only)
-		if (event.type === "click" && event.button === 0) {
+		// Clear selection on press (left-click only)
+		if (event.type === "pressed" && event.button === 0) {
 			nextState = {
 				...nextState,
 				selectedIds: [],
