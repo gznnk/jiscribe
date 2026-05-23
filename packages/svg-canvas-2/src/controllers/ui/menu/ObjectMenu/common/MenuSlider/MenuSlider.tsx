@@ -1,5 +1,5 @@
 import type React from "react";
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 
 import {
 	MenuSliderWrapper,
@@ -37,7 +37,11 @@ const MenuSliderComponent: React.FC<MenuSliderProps> = ({
 }) => {
 	const [sliderValue, setSliderValue] = useState(value);
 	const [inputValue, setInputValue] = useState(String(value));
-	const [isEditing, setIsEditing] = useState(false);
+	// レンダー後に useEffect から最新の inputValue を参照するための ref
+	const inputValueRef = useRef(inputValue);
+	inputValueRef.current = inputValue;
+	// ユーザーが有効な編集をしてまだコミットしていない状態かどうか
+	const pendingCommit = useRef(false);
 
 	const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const newValue = Number.parseInt(e.target.value, 10);
@@ -53,50 +57,54 @@ const MenuSliderComponent: React.FC<MenuSliderProps> = ({
 		if (!Number.isNaN(parsedValue)) {
 			const clampedValue = Math.max(min, Math.min(max, parsedValue));
 			setSliderValue(clampedValue);
+			pendingCommit.current = true;
 			onPropertyUpdate?.(property, String(clampedValue), false);
 		}
 	};
 
-	const handleNumberInputFocus = () => {
-		setIsEditing(true);
-	};
+	const commitNumberInput = useCallback(
+		(currentInputValue: string) => {
+			const parsedValue = Number.parseInt(currentInputValue, 10);
+			if (!Number.isNaN(parsedValue) && pendingCommit.current) {
+				const clampedValue = Math.max(min, Math.min(max, parsedValue));
+				setSliderValue(clampedValue);
+				setInputValue(String(clampedValue));
+				onPropertyUpdate?.(property, String(clampedValue), true);
+				pendingCommit.current = false;
+			} else if (Number.isNaN(parsedValue)) {
+				setInputValue(String(sliderValue));
+			}
+		},
+		[min, max, property, sliderValue, onPropertyUpdate],
+	);
 
-	const commitNumberInput = (currentInputValue: string) => {
-		const parsedValue = Number.parseInt(currentInputValue, 10);
-		if (!Number.isNaN(parsedValue)) {
-			const clampedValue = Math.max(min, Math.min(max, parsedValue));
-			setSliderValue(clampedValue);
-			setInputValue(String(clampedValue));
-			onPropertyUpdate?.(property, String(clampedValue), true);
-		} else {
-			setInputValue(String(sliderValue));
-		}
-	};
-
-	const handleNumberInputBlur = () => {
-		setIsEditing(false);
+	const handleNumberInputBlur = useCallback(() => {
 		commitNumberInput(inputValue);
-	};
+	}, [commitNumberInput, inputValue]);
 
-	const handleNumberInputKeyDown = (
-		e: React.KeyboardEvent<HTMLInputElement>,
-	) => {
-		if (e.key === "Enter") {
-			commitNumberInput(inputValue);
-			e.currentTarget.blur();
-		}
-	};
+	const handleNumberInputKeyDown = useCallback(
+		(e: React.KeyboardEvent<HTMLInputElement>) => {
+			if (e.key === "Enter") {
+				commitNumberInput(inputValue);
+				e.currentTarget.blur();
+			}
+		},
+		[commitNumberInput, inputValue],
+	);
 
 	const stopPropagation = useCallback((e: React.PointerEvent) => {
 		e.stopPropagation();
 	}, []);
 
+	// value がユーザーの入力と異なる場合のみ外部変更（スライダー操作等）として扱い入力欄をリセットする。
+	// commit:false のプレビューも value を更新するが、その場合は inputValue と一致するためスキップする。
 	useEffect(() => {
-		if (!isEditing) {
+		if (String(value) !== inputValueRef.current) {
 			setSliderValue(value);
 			setInputValue(String(value));
+			pendingCommit.current = false;
 		}
-	}, [value, isEditing]);
+	}, [value]);
 
 	return (
 		<MenuSliderWrapper>
@@ -108,7 +116,6 @@ const MenuSliderComponent: React.FC<MenuSliderProps> = ({
 					max={max}
 					value={inputValue}
 					onChange={handleNumberInputChange}
-					onFocus={handleNumberInputFocus}
 					onBlur={handleNumberInputBlur}
 					onKeyDown={handleNumberInputKeyDown}
 					onPointerDown={stopPropagation}
