@@ -121,39 +121,22 @@ export const GroupCommand: Command = {
 				...(updatedObjects[lcaId] as GroupState),
 				childIds: updatedLcaChildIds,
 			} as GroupState;
-
-			// 選択アイテムを取り出した結果、LCA 内の中間グループが空または1件になった場合は
-			// cleanupGroups 相当の処理で解体する
-			// （LCA 自体は対象外。LCA は新グループを子に持つため解体対象にならない）
-			for (const parentId of affectedParentIds) {
-				if (parentId !== lcaId) {
-					cleanupGroupUpToLca(updatedObjects, parentId, lcaId);
-				}
-			}
-
-			// 変更を反映したステートを構築し、バウンドを更新する
-			let nextState: CanvasControllerState = {
-				...state,
-				objects: updatedObjects,
-				selectedIds: [groupId],
-				objectMenuOpenId: null,
-				commitVersion: state.commitVersion + 1,
-			};
-			for (const parentId of affectedParentIds) {
-				if (parentId !== lcaId && updatedObjects[parentId] != null) {
-					nextState = updateGroupBoundsFromRoot(nextState, parentId);
-				}
-			}
-			return updateGroupBoundsFromRoot(nextState, lcaId);
+		} else {
+			// ── LCA が存在しない場合: 新グループをルートに配置する ────────────────────────
+			//
+			// 選択アイテムが共通の祖先グループを持たない（異なるルートグループ間の選択など）ケース。
+			// ルート直下にある選択アイテムの元の位置に新グループを挿入し、残りは末尾に追加する。
+			updatedObjects[groupId] = {
+				...(updatedObjects[groupId] as GroupState),
+				parentId: undefined,
+			} as GroupState;
 		}
 
-		// No LCA: place at root, preserving z-order of root-level selected items
-		// ── LCA が存在しない場合: 新グループをルートに配置する ────────────────────────
-		//
-		// 選択アイテムが共通の祖先グループを持たない（異なるルートグループ間の選択など）ケース。
-		// ルート直下にある選択アイテムの元の位置に新グループを挿入し、残りは末尾に追加する。
-		// また、選択アイテムを取り出した副作用で空や単体になったグループを cleanupGroups で整理する。
-		const updatedRootIds = insertGroupIntoList(state.rootIds, selectedSet, groupId);
+		// 選択アイテムを取り出した副作用で空や単体になったグループ（LCA を含む）を整理する。
+		// LCA 自体も1件になれば cleanupGroups が解体する（これは正しい挙動）。
+		const updatedRootIds = lcaId == null
+			? insertGroupIntoList(state.rootIds, selectedSet, groupId)
+			: state.rootIds.filter((id) => !selectedSet.has(id));
 
 		let nextState: CanvasControllerState = {
 			...state,
@@ -170,7 +153,18 @@ export const GroupCommand: Command = {
 	},
 };
 
-/** Sorts selectedIds by z-order within the LCA container. */
+/**
+ * グループ化後も図形の重なり順（z-order）が変わらないよう、selectedIds を並び替えて返す。
+ *
+ * LCA が存在する場合、各選択アイテムの「LCA 直下エントリ」（LCA の直接の子であって
+ * 選択アイテムの祖先または本人にあたるオブジェクト）の位置を基準にソートする。
+ * LCA が存在しない（ルート配置）場合は selectedIds の順序をそのまま使う。
+ *
+ * @param selectedIds - グループ化対象のオブジェクト ID 一覧
+ * @param lcaId - 新グループの配置先となる LCA のID。ルート配置の場合は undefined
+ * @param objects - キャンバス上の全オブジェクトマップ
+ * @returns z-order でソートされた childIds
+ */
 function sortByZOrder(
 	selectedIds: string[],
 	lcaId: string | undefined,
@@ -185,7 +179,21 @@ function sortByZOrder(
 	});
 }
 
-/** Returns the direct child of lcaId that is an ancestor of (or equal to) id. */
+/**
+ * 指定オブジェクトの「LCA 直下エントリ」を返す。
+ *
+ * LCA 直下エントリとは、lcaId の直接の子であって、id の祖先（または id 本人）にあたる
+ * オブジェクトのこと。言い換えると、id から親をたどっていったとき最初に lcaId の
+ * 直接の子になるオブジェクト。
+ *
+ * 例: lcaId = "group-A"、id = "rect-1"（group-A → group-B → rect-1 の階層）の場合、
+ *     group-B を返す。
+ *
+ * @param id - 対象オブジェクトの ID
+ * @param lcaId - LCA グループの ID
+ * @param objects - キャンバス上の全オブジェクトマップ
+ * @returns LCA 直下エントリの ID。見つからない場合は undefined
+ */
 function findLcaEntry(
 	id: string,
 	lcaId: string,
@@ -204,7 +212,18 @@ function findLcaEntry(
 	return undefined;
 }
 
-/** Inserts groupId where the first selected item was in the list, or appends if none found. */
+/**
+ * ids の中から selectedSet に含まれるアイテムを groupId に置き換えたリストを返す。
+ *
+ * 最初に一致したアイテムの位置に groupId を挿入し、以降の一致アイテムは除去する。
+ * selectedSet に含まれるアイテムが ids に一つも存在しない場合は末尾に groupId を追加する。
+ * ルート配置時に rootIds の z-order を維持しながら新グループを挿入するために使用する。
+ *
+ * @param ids - 挿入先のリスト（rootIds など）
+ * @param selectedSet - グループ化対象の ID セット
+ * @param groupId - 挿入する新グループの ID
+ * @returns groupId を挿入した新しいリスト
+ */
 function insertGroupIntoList(
 	ids: string[],
 	selectedSet: Set<string>,
@@ -226,47 +245,3 @@ function insertGroupIntoList(
 	return result;
 }
 
-/**
- * cleanupGroups 相当の処理を LCA 配下に限定して実行する。
- * - 0件: グループを削除し、親から取り除く
- * - 1件: グループを解体し、子を親へ引き上げる（z-order 維持）
- * LCA 自体は対象外（LCA を意図せず解体しないよう保護）。
- */
-function cleanupGroupUpToLca(
-	objects: Record<string, ObjectState>,
-	groupId: string,
-	lcaId: string,
-): void {
-	if (groupId === lcaId) return;
-	const group = objects[groupId] as GroupState | undefined;
-	if (!group || group.type !== "group") return;
-
-	const parentId = group.parentId;
-	const parent = parentId != null ? (objects[parentId] as GroupState | undefined) : undefined;
-
-	if (group.childIds.length === 0) {
-		// 0件: グループを削除して親の childIds から取り除く
-		delete objects[groupId];
-		if (parent?.type === "group" && parentId != null) {
-			objects[parentId] = {
-				...parent,
-				childIds: parent.childIds.filter((cid) => cid !== groupId),
-			} as GroupState;
-			cleanupGroupUpToLca(objects, parentId, lcaId);
-		}
-	} else if (group.childIds.length === 1) {
-		// 1件: グループを解体し、子を親へ引き上げる
-		const childId = group.childIds[0]!;
-		const child = objects[childId];
-		if (!child) return;
-		delete objects[groupId];
-		objects[childId] = { ...child, parentId } as ObjectState;
-		if (parent?.type === "group" && parentId != null) {
-			objects[parentId] = {
-				...parent,
-				childIds: parent.childIds.map((cid) => (cid === groupId ? childId : cid)),
-			} as GroupState;
-			cleanupGroupUpToLca(objects, parentId, lcaId);
-		}
-	}
-}
