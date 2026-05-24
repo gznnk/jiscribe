@@ -1,11 +1,22 @@
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 
-function getAncestorChain(id: string, objects: Record<string, ObjectState>): string[] {
+/**
+ * Retrieves the chain of ancestor IDs for a given object.
+ * The returned array is ordered from the immediate parent up to the root ancestor.
+ *
+ * @param id - The ID of the target object.
+ * @param objects - A record mapping object IDs to their respective state.
+ * @returns An array of ancestor IDs: `[immediateParentId, ..., rootId]`.
+ */
+function getAncestorChain(
+	id: string,
+	objects: Record<string, ObjectState>,
+): string[] {
 	const chain: string[] = [];
-	let currentId = objects[id]?.parentId;
-	while (currentId != null) {
-		chain.push(currentId);
-		currentId = objects[currentId]?.parentId;
+	let currentParentId = objects[id]?.parentId;
+	while (currentParentId != null) {
+		chain.push(currentParentId);
+		currentParentId = objects[currentParentId]?.parentId;
 	}
 	return chain; // [immediate parent, ..., root]
 }
