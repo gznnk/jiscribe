@@ -4,6 +4,7 @@ import { calculateGroupOrientedBounds } from "../../../states/utils/calculateGro
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { cleanupGroups } from "../../utils/cleanupGroups";
 import { findLowestCommonAncestor } from "../../utils/findLowestCommonAncestor";
+import { sortObjectIdsByZOrder } from "../../utils/sortObjectIdsByZOrder";
 import { updateGroupBoundsFromRoot } from "../../utils/updateGroupBoundsFromRoot";
 import type { Command } from "../CommandTypes";
 
@@ -32,7 +33,11 @@ export const GroupCommand: Command = {
 		const lcaId = findLowestCommonAncestor(selectedIds, state.objects);
 
 		// グループ化後も図形の重なり順が変わらないよう、selectedIds を z-order で並び替える
-		const childIds = sortByZOrder(selectedIds, lcaId, state.objects);
+		const childIds = sortObjectIdsByZOrder(
+			selectedIds,
+			state.objects,
+			state.rootIds,
+		);
 
 		// 新グループのバウンドを計算するため、仮のグループオブジェクトを作成して
 		// calculateGroupOrientedBounds に渡す（この時点では cx/cy/width/height は仮の 0）
@@ -68,7 +73,10 @@ export const GroupCommand: Command = {
 		// objects に新グループを追加し、各子アイテムの parentId を新グループに付け替える
 		const updatedObjects = { ...state.objects, [groupId]: newGroup };
 		for (const childId of childIds) {
-			updatedObjects[childId] = { ...updatedObjects[childId], parentId: groupId };
+			updatedObjects[childId] = {
+				...updatedObjects[childId],
+				parentId: groupId,
+			};
 		}
 
 		// 各選択アイテムをそれぞれの元の親グループの childIds から取り除く。
@@ -113,7 +121,9 @@ export const GroupCommand: Command = {
 			const currentSet = new Set(currentLcaChildIds);
 			const insertPos =
 				origPos -
-				originalLcaChildIds.slice(0, origPos).filter((id) => !currentSet.has(id)).length;
+				originalLcaChildIds
+					.slice(0, origPos)
+					.filter((id) => !currentSet.has(id)).length;
 
 			const updatedLcaChildIds = [...currentLcaChildIds];
 			updatedLcaChildIds.splice(insertPos, 0, groupId);
@@ -134,9 +144,10 @@ export const GroupCommand: Command = {
 
 		// 選択アイテムを取り出した副作用で空や単体になったグループ（LCA を含む）を整理する。
 		// LCA 自体も1件になれば cleanupGroups が解体する（これは正しい挙動）。
-		const updatedRootIds = lcaId == null
-			? insertGroupIntoList(state.rootIds, selectedSet, groupId)
-			: state.rootIds.filter((id) => !selectedSet.has(id));
+		const updatedRootIds =
+			lcaId == null
+				? insertGroupIntoList(state.rootIds, selectedSet, groupId)
+				: state.rootIds.filter((id) => !selectedSet.has(id));
 
 		let nextState: CanvasControllerState = {
 			...state,
@@ -152,32 +163,6 @@ export const GroupCommand: Command = {
 		return cleanupGroups(nextState);
 	},
 };
-
-/**
- * グループ化後も図形の重なり順（z-order）が変わらないよう、selectedIds を並び替えて返す。
- *
- * LCA が存在する場合、各選択アイテムの「LCA 直下エントリ」（LCA の直接の子であって
- * 選択アイテムの祖先または本人にあたるオブジェクト）の位置を基準にソートする。
- * LCA が存在しない（ルート配置）場合は selectedIds の順序をそのまま使う。
- *
- * @param selectedIds - グループ化対象のオブジェクト ID 一覧
- * @param lcaId - 新グループの配置先となる LCA のID。ルート配置の場合は undefined
- * @param objects - キャンバス上の全オブジェクトマップ
- * @returns z-order でソートされた childIds
- */
-function sortByZOrder(
-	selectedIds: string[],
-	lcaId: string | undefined,
-	objects: Record<string, ObjectState>,
-): string[] {
-	if (lcaId == null) return [...selectedIds];
-	const lcaChildIds = (objects[lcaId] as GroupState).childIds;
-	return [...selectedIds].sort((a, b) => {
-		const ea = findAncestorUnderLca(a, lcaId, objects) ?? "";
-		const eb = findAncestorUnderLca(b, lcaId, objects) ?? "";
-		return lcaChildIds.indexOf(ea) - lcaChildIds.indexOf(eb);
-	});
-}
 
 /**
  * 指定オブジェクトの「LCA 直下エントリ」を返す。
@@ -244,4 +229,3 @@ function insertGroupIntoList(
 	if (!inserted) result.push(groupId);
 	return result;
 }
-
