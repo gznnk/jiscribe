@@ -1,5 +1,5 @@
 import type React from "react";
-import { memo, useEffect, useRef } from "react";
+import { memo, useCallback, useEffect, useRef } from "react";
 
 import { TextArea } from "./TextEditorStyled";
 import { createSvgTransform } from "../../../../presentations/objects/utils/createSvgTransform";
@@ -57,6 +57,10 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		onChange(e.target.value);
 	};
 
+	const handlePointerDown = useCallback((e: React.PointerEvent<HTMLTextAreaElement>) => {
+		e.stopPropagation();
+	}, []);
+
 	const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
 		if (e.key === "Escape" && onEscape) {
 			e.preventDefault();
@@ -94,6 +98,7 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 			data-id="textarea"
 			{...commonProps}
 			ref={textAreaRef}
+			onPointerDown={handlePointerDown}
 		/>
 	);
 };
