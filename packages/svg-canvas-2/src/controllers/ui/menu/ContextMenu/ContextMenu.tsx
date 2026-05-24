@@ -42,6 +42,7 @@ const ContextMenuComponent: React.FC<ContextMenuProps> = ({
 	const menuItems: CommandMenuItem[] = [
 		{ type: "command", commandId: "cut" },
 		{ type: "command", commandId: "copy" },
+		{ type: "command", commandId: "duplicate" },
 		{
 			type: "callback",
 			id: "paste",

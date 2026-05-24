@@ -128,6 +128,7 @@ export const GroupCommand: Command = {
 			rootIds: updatedRootIds,
 			selectedIds: [groupId],
 			objectMenuOpenId: null,
+			lastDuplicate: null,
 			commitVersion: state.commitVersion + 1,
 		};
 		for (const parentId of affectedParentIds) {

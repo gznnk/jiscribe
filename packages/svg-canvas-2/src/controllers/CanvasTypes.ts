@@ -268,4 +268,19 @@ export type CanvasControllerState = CanvasState & {
 	 * スナップしている間のみ non-null。dragEnd でクリアする。
 	 */
 	snapFeedback: SnapFeedback | null;
+
+	/**
+	 * 直前の Duplicate 操作の記録。Move-aware オフセット計算に使用。
+	 * - newIds: 複製で生成した新しいオブジェクト ID
+	 * - cx/cy: 生成直後の選択中心座標
+	 * - offset: その複製で使用したオフセット
+	 * 次の Duplicate 時に selectedIds == newIds なら delta を計算し、
+	 * 動かしていなければ offset を再利用、動かしていれば delta を新 offset として採用する。
+	 */
+	lastDuplicate: {
+		newIds: string[];
+		cx: number;
+		cy: number;
+		offset: { x: number; y: number };
+	} | null;
 };

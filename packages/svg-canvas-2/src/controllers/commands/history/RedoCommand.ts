@@ -65,6 +65,7 @@ export const RedoCommand: Command = {
 			editingEndpoint: null,
 			snapFeedback: null,
 			shapeDrawing: null,
+			lastDuplicate: null,
 			history: {
 				past: [...state.history.past, state.history.present],
 				present: docToRestore,

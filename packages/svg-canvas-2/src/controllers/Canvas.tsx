@@ -96,6 +96,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 				editingEndpoint: null,
 				snapFeedback: null,
 				shapeDrawing: null,
+				lastDuplicate: null,
 				history: {
 					past: [],
 					present: canvasToDoc(baseState),

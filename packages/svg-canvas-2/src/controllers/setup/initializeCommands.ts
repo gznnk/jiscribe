@@ -12,6 +12,7 @@ import { CopyCommand } from "../commands/selection/CopyCommand";
 import { CutCommand } from "../commands/selection/CutCommand";
 import { DeleteCommand } from "../commands/selection/DeleteCommand";
 import { DeselectAllCommand } from "../commands/selection/DeselectAllCommand";
+import { DuplicateCommand } from "../commands/selection/DuplicateCommand";
 import { SelectAllCommand } from "../commands/selection/SelectAllCommand";
 import { StartTextEditCommand } from "../commands/text/StartTextEditCommand";
 import { ZoomInCommand } from "../commands/view/ZoomInCommand";
@@ -30,6 +31,7 @@ export const initializeCommands = (): void => {
 		// Clipboard commands
 		.register(CopyCommand)
 		.register(CutCommand)
+		.register(DuplicateCommand)
 		// Selection commands
 		.register(SelectAllCommand)
 		.register(DeselectAllCommand)
