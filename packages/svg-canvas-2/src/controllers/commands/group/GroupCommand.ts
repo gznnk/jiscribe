@@ -104,7 +104,7 @@ export const GroupCommand: Command = {
 
 			let origPos = originalLcaChildIds.length;
 			for (const id of selectedIds) {
-				const entry = findLcaEntry(id, lcaId, state.objects);
+				const entry = findAncestorUnderLca(id, lcaId, state.objects);
 				if (entry != null) {
 					const p = originalLcaChildIds.indexOf(entry);
 					if (p >= 0) origPos = Math.min(origPos, p);
@@ -173,8 +173,8 @@ function sortByZOrder(
 	if (lcaId == null) return [...selectedIds];
 	const lcaChildIds = (objects[lcaId] as GroupState).childIds;
 	return [...selectedIds].sort((a, b) => {
-		const ea = findLcaEntry(a, lcaId, objects) ?? "";
-		const eb = findLcaEntry(b, lcaId, objects) ?? "";
+		const ea = findAncestorUnderLca(a, lcaId, objects) ?? "";
+		const eb = findAncestorUnderLca(b, lcaId, objects) ?? "";
 		return lcaChildIds.indexOf(ea) - lcaChildIds.indexOf(eb);
 	});
 }
@@ -194,7 +194,7 @@ function sortByZOrder(
  * @param objects - キャンバス上の全オブジェクトマップ
  * @returns LCA 直下エントリの ID。見つからない場合は undefined
  */
-function findLcaEntry(
+function findAncestorUnderLca(
 	id: string,
 	lcaId: string,
 	objects: Record<string, ObjectState>,
