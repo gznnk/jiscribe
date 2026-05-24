@@ -1,4 +1,3 @@
-import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import { calculateGroupOrientedBounds } from "../../../states/utils/calculateGroupOrientedBounds";
 import type { CanvasControllerState } from "../../CanvasTypes";
@@ -96,59 +95,33 @@ export const GroupCommand: Command = {
 			}
 		}
 
+		let updatedRootIds = state.rootIds;
+
 		if (lcaId != null) {
-			// ── LCA が存在する場合: 新グループを LCA の childIds に挿入する ──────────────
-			//
-			// 挿入位置は「選択アイテムの LCA 直下エントリのうち最も前にあった位置」にする。
-			// LCA 直下エントリとは、LCA の直接の子であって選択アイテムの祖先（または本人）のこと。
-			// 例: LCA が group-A で、選択が group-A/group-B/rect-1 の場合、
-			//     rect-1 の LCA エントリは group-B になる。
-			//
-			// すでに選択アイテムが直接 LCA の子だった場合は上のステップで childIds から
-			// 除去済みなので、元の childIds（originalLcaChildIds）を基準に位置を計算し、
-			// 除去された分だけインデックスを調整する。
-			const originalLcaChildIds = (state.objects[lcaId] as GroupState).childIds;
+			// ── LCA が存在する場合: 新グループを LCA の childIds の末尾（最前面）に追加する ──────────────
 			const currentLcaChildIds = (updatedObjects[lcaId] as GroupState).childIds;
 
-			let origPos = originalLcaChildIds.length;
-			for (const id of selectedIds) {
-				const entry = findAncestorUnderLca(id, lcaId, state.objects);
-				if (entry != null) {
-					const p = originalLcaChildIds.indexOf(entry);
-					if (p >= 0) origPos = Math.min(origPos, p);
-				}
-			}
-			const currentSet = new Set(currentLcaChildIds);
-			const insertPos =
-				origPos -
-				originalLcaChildIds
-					.slice(0, origPos)
-					.filter((id) => !currentSet.has(id)).length;
-
-			const updatedLcaChildIds = [...currentLcaChildIds];
-			updatedLcaChildIds.splice(insertPos, 0, groupId);
 			updatedObjects[lcaId] = {
 				...(updatedObjects[lcaId] as GroupState),
-				childIds: updatedLcaChildIds,
+				childIds: [...currentLcaChildIds, groupId],
 			} as GroupState;
+
+			// LCA 自体が選択アイテムの影響を受けて rootIds から消えることはないため、
+			// rootにいる要素が選択対象に含まれていれば取り除く
+			updatedRootIds = state.rootIds.filter((id) => !selectedSet.has(id));
 		} else {
-			// ── LCA が存在しない場合: 新グループをルートに配置する ────────────────────────
-			//
-			// 選択アイテムが共通の祖先グループを持たない（異なるルートグループ間の選択など）ケース。
-			// ルート直下にある選択アイテムの元の位置に新グループを挿入し、残りは末尾に追加する。
+			// ── LCA が存在しない場合: 新グループをルートの末尾（最前面）に配置する ──────────────
 			updatedObjects[groupId] = {
 				...(updatedObjects[groupId] as GroupState),
 				parentId: undefined,
 			} as GroupState;
+
+			const currentRootIds = state.rootIds.filter((id) => !selectedSet.has(id));
+			updatedRootIds = [...currentRootIds, groupId];
 		}
 
 		// 選択アイテムを取り出した副作用で空や単体になったグループ（LCA を含む）を整理する。
 		// LCA 自体も1件になれば cleanupGroups が解体する（これは正しい挙動）。
-		const updatedRootIds =
-			lcaId == null
-				? insertGroupIntoList(state.rootIds, selectedSet, groupId)
-				: state.rootIds.filter((id) => !selectedSet.has(id));
-
 		let nextState: CanvasControllerState = {
 			...state,
 			objects: updatedObjects,
@@ -163,69 +136,3 @@ export const GroupCommand: Command = {
 		return cleanupGroups(nextState);
 	},
 };
-
-/**
- * 指定オブジェクトの「LCA 直下エントリ」を返す。
- *
- * LCA 直下エントリとは、lcaId の直接の子であって、id の祖先（または id 本人）にあたる
- * オブジェクトのこと。言い換えると、id から親をたどっていったとき最初に lcaId の
- * 直接の子になるオブジェクト。
- *
- * 例: lcaId = "group-A"、id = "rect-1"（group-A → group-B → rect-1 の階層）の場合、
- *     group-B を返す。
- *
- * @param id - 対象オブジェクトの ID
- * @param lcaId - LCA グループの ID
- * @param objects - キャンバス上の全オブジェクトマップ
- * @returns LCA 直下エントリの ID。見つからない場合は undefined
- */
-function findAncestorUnderLca(
-	id: string,
-	lcaId: string,
-	objects: Record<string, ObjectState>,
-): string | undefined {
-	let currentId: string | undefined = id;
-	const visited = new Set<string>();
-	while (currentId != null) {
-		if (visited.has(currentId)) return undefined;
-		visited.add(currentId);
-		const obj: ObjectState | undefined = objects[currentId];
-		if (obj?.parentId === lcaId) return currentId;
-		if (obj?.parentId == null) return undefined;
-		currentId = obj.parentId;
-	}
-	return undefined;
-}
-
-/**
- * ids の中から selectedSet に含まれるアイテムを groupId に置き換えたリストを返す。
- *
- * 最初に一致したアイテムの位置に groupId を挿入し、以降の一致アイテムは除去する。
- * selectedSet に含まれるアイテムが ids に一つも存在しない場合は末尾に groupId を追加する。
- * ルート配置時に rootIds の z-order を維持しながら新グループを挿入するために使用する。
- *
- * @param ids - 挿入先のリスト（rootIds など）
- * @param selectedSet - グループ化対象の ID セット
- * @param groupId - 挿入する新グループの ID
- * @returns groupId を挿入した新しいリスト
- */
-function insertGroupIntoList(
-	ids: string[],
-	selectedSet: Set<string>,
-	groupId: string,
-): string[] {
-	const result: string[] = [];
-	let inserted = false;
-	for (const id of ids) {
-		if (selectedSet.has(id)) {
-			if (!inserted) {
-				result.push(groupId);
-				inserted = true;
-			}
-		} else {
-			result.push(id);
-		}
-	}
-	if (!inserted) result.push(groupId);
-	return result;
-}
