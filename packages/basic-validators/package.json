@@ -6,9 +6,14 @@
 	"types": "src/index.ts",
 	"scripts": {
 		"lint": "eslint .",
+		"test": "vitest run",
+		"test:watch": "vitest --watch",
+		"test:coverage": "vitest run --coverage",
 		"typecheck": "tsc --noEmit"
 	},
 	"devDependencies": {
-		"typescript": "catalog:"
+		"@vitest/coverage-v8": "^2.1.8",
+		"typescript": "catalog:",
+		"vitest": "^2.1.8"
 	}
 }
