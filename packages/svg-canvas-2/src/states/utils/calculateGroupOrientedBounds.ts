@@ -44,11 +44,13 @@ export function calculateGroupOrientedBounds(
 	const groupScaleY = groupState.scaleY ?? 1;
 
 	// 点群からグループのtransformを持つOriented Bounding Boxを計算
-	return calcOrientedFrameFromPoints(
-		allPoints,
-		groupScaleX,
-		groupScaleY,
-		groupRotation,
+	return (
+		calcOrientedFrameFromPoints(
+			allPoints,
+			groupScaleX,
+			groupScaleY,
+			groupRotation,
+		) ?? undefined // TODO: undefinedではなくnullで返すべきか？
 	);
 }
 

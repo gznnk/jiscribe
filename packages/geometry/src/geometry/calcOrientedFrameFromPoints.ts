@@ -18,14 +18,16 @@ import type { TransformedFrame } from "../types/TransformedFrame";
  * @param scaleX - X軸のスケール (デフォルト: 1)
  * @param scaleY - Y軸のスケール (デフォルト: 1)
  * @param rotation - 回転角度（度数法、デフォルト: 0）
- * @returns 点群を包含する TransformedFrame
+ * @returns 点群を包含する TransformedFrame。points が空の場合は null
  */
 export const calcOrientedFrameFromPoints = (
 	points: Point[],
 	scaleX = 1,
 	scaleY = 1,
 	rotation = 0,
-): TransformedFrame => {
+): TransformedFrame | null => {
+	if (points.length === 0) return null;
+
 	const left = Math.min(...points.map((p) => p.x));
 	const top = Math.min(...points.map((p) => p.y));
 	const right = Math.max(...points.map((p) => p.x));
