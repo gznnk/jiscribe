@@ -15,7 +15,9 @@ const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 }) => {
 	const renderObject = (id: string, result: React.ReactNode[]): void => {
 		const objState = objects[id];
-		if (!objState) return;
+		if (!objState) {
+			return;
+		}
 
 		// Groupの場合は子要素を再帰的に配列に追加
 		if (objState.type === "group") {
@@ -26,7 +28,9 @@ const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 
 		// 通常のオブジェクトはレジストリからコンポーネントを取得して配列に追加
 		const ObjectComponent = objectComponentRegistry.get(objState.type);
-		if (!ObjectComponent) return;
+		if (!ObjectComponent) {
+			return;
+		}
 
 		// テキスト編集中の場合は isEditing prop を追加
 		const isEditing = id === textEditObjectId;

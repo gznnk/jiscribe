@@ -21,7 +21,9 @@ function validateObjectNode(obj: unknown, path: string): SemanticDiagnostic[] {
 	}
 
 	// 型ごとのバリデーションをレジストリへ委譲
-	errors.push(...objectDocValidatorRegistry.validate(o.type as string, o, path));
+	errors.push(
+		...objectDocValidatorRegistry.validate(o.type as string, o, path),
+	);
 
 	// group の children 再帰は構造的ルールなので validateStructure 側で処理する
 	if (o.type === "group") {

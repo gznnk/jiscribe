@@ -38,7 +38,9 @@ const SelectionOverlayComponent: React.FC<SelectionOverlayProps> = ({
 		<g data-layer="selection-overlay">
 			{Array.from(uniqueIds).map((id) => {
 				const obj = objects[id];
-				if (!obj) return null;
+				if (!obj) {
+					return null;
+				}
 
 				if (!isTransformedFrame(obj)) {
 					return null;

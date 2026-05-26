@@ -18,11 +18,17 @@ export type Poly = {
  * @returns True if the object is a Poly, false otherwise
  */
 export const isPoly = (obj: unknown): obj is Poly => {
-	if (!isObject(obj)) return false;
+	if (!isObject(obj)) {
+		return false;
+	}
 
-	if (!("points" in obj)) return false;
+	if (!("points" in obj)) {
+		return false;
+	}
 
-	if (!isArray(obj.points)) return false;
+	if (!isArray(obj.points)) {
+		return false;
+	}
 
 	return obj.points.every((point) => isPoint(point));
 };

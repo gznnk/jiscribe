@@ -42,7 +42,9 @@ export const useOnStackOrderChange = (props: SvgCanvasSubHooksProps) => {
 			setCanvasState((prevState) => {
 				const moveInList = (items: Diagram[]): Diagram[] => {
 					const index = items.findIndex((item) => item.id === e.id);
-					if (index === -1) return items;
+					if (index === -1) {
+						return items;
+					}
 
 					const newItems = [...items];
 					const [target] = newItems.splice(index, 1); // remove

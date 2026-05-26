@@ -18,19 +18,21 @@ type CanvasErrorOverlayProps = {
 	error: CanvasValidationError;
 };
 
-export const CanvasErrorOverlay: React.FC<CanvasErrorOverlayProps> = ({ error }) => {
+export const CanvasErrorOverlay: React.FC<CanvasErrorOverlayProps> = ({
+	error,
+}) => {
 	const [copied, setCopied] = useState(false);
 
 	const handleCopy = useCallback(() => {
 		const errorJson = JSON.stringify(
-			error.specifics.map(err => ({
+			error.specifics.map((err) => ({
 				code: "SEMANTIC_ERROR",
 				path: err.path,
 				message: err.message,
-                id: err.id
+				id: err.id,
 			})),
 			null,
-			2
+			2,
 		);
 		navigator.clipboard.writeText(errorJson).then(() => {
 			setCopied(true);
@@ -43,7 +45,9 @@ export const CanvasErrorOverlay: React.FC<CanvasErrorOverlayProps> = ({ error })
 			<ErrorCard>
 				<ErrorHeader>
 					<ErrorTitle>
-						<span role="img" aria-label="Error">⚠️</span>
+						<span role="img" aria-label="Error">
+							⚠️
+						</span>
 						キャンバスデータの読み込みエラー
 					</ErrorTitle>
 					<CopyButton onClick={handleCopy}>
@@ -52,7 +56,8 @@ export const CanvasErrorOverlay: React.FC<CanvasErrorOverlayProps> = ({ error })
 				</ErrorHeader>
 
 				<ErrorMessage>
-					JSONデータに意味的な問題（IDの重複や無効な参照など）が見つかりました。<br/>
+					JSONデータに意味的な問題（IDの重複や無効な参照など）が見つかりました。
+					<br />
 					エディタでファイルを直接修正するか、AIにエラーを渡して修正させてください。
 				</ErrorMessage>
 

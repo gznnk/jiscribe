@@ -8,7 +8,10 @@ import type {
 	RotateByGroupFunction,
 	TransformByGroupFunction,
 } from "../../../registry/ObjectBehaviorTypes";
-import { transformFrameByGroup, rotateFrameByGroup } from "../base/FrameTransform";
+import {
+	transformFrameByGroup,
+	rotateFrameByGroup,
+} from "../base/FrameTransform";
 
 /**
  * Moves a Rect object by a delta.

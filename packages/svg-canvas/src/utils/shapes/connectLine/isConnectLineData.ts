@@ -18,14 +18,24 @@ const baseValidator = createValidatorFromTypeAndFeatures(
  * @returns True if the data is ConnectLineData
  */
 export const isConnectLineData = (data: unknown): data is ConnectLineData => {
-	if (!baseValidator(data)) return false;
+	if (!baseValidator(data)) {
+		return false;
+	}
 
 	const lineData = data as ConnectLineData;
 
-	if (!isPathType(lineData.pathType)) return false;
-	if (!isString(lineData.startOwnerId)) return false;
-	if (!isString(lineData.endOwnerId)) return false;
-	if (!isBoolean(lineData.autoRouting)) return false;
+	if (!isPathType(lineData.pathType)) {
+		return false;
+	}
+	if (!isString(lineData.startOwnerId)) {
+		return false;
+	}
+	if (!isString(lineData.endOwnerId)) {
+		return false;
+	}
+	if (!isBoolean(lineData.autoRouting)) {
+		return false;
+	}
 
 	if (lineData.startArrowHead && !isArrowHeadType(lineData.startArrowHead)) {
 		return false;

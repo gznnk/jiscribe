@@ -13,10 +13,14 @@ export function validatePolyFields(
 	o: Record<string, unknown>,
 	path: string,
 ): SemanticDiagnostic[] {
-	if (!isPoly(o))
-		return [{ path: `${path}.points`, message: "must be a valid points array" }];
-	if (o.points.length < 2)
+	if (!isPoly(o)) {
+		return [
+			{ path: `${path}.points`, message: "must be a valid points array" },
+		];
+	}
+	if (o.points.length < 2) {
 		return [{ path: `${path}.points`, message: "must have at least 2 points" }];
+	}
 	return [];
 }
 
@@ -24,7 +28,9 @@ export function validateEndpointRef(
 	ref: unknown,
 	path: string,
 ): SemanticDiagnostic[] {
-	if (typeof ref !== "object" || ref === null) return [];
+	if (typeof ref !== "object" || ref === null) {
+		return [];
+	}
 	const r = ref as Record<string, unknown>;
 
 	// owner の有無で OwnedEndpointRef / FreeEndpointRef を判別
@@ -44,10 +50,12 @@ function validateOwnedEndpointRef(
 		errors.push({ path: `${path}.owner`, message: "must be an object" });
 	} else {
 		const owner = r.owner as Record<string, unknown>;
-		if (!isString(owner.id))
+		if (!isString(owner.id)) {
 			errors.push({ path: `${path}.owner.id`, message: "must be a string" });
-		if (!isString(owner.type))
+		}
+		if (!isString(owner.type)) {
 			errors.push({ path: `${path}.owner.type`, message: "must be a string" });
+		}
 	}
 
 	errors.push(...validateNonFreeAnchor(r.anchor, path));
@@ -65,39 +73,68 @@ function validateNonFreeAnchor(
 	anchor: unknown,
 	path: string,
 ): SemanticDiagnostic[] {
-	if (typeof anchor !== "object" || anchor === null)
+	if (typeof anchor !== "object" || anchor === null) {
 		return [{ path: `${path}.anchor`, message: "must be an object" }];
+	}
 
 	const a = anchor as Record<string, unknown>;
-	if (a.kind === "center") return [];
-	if (a.kind === "connectPoint") {
-		if (!isConnectPointId(a.id))
-			return [{ path: `${path}.anchor.id`, message: "must be a valid ConnectPointId" }];
+	if (a.kind === "center") {
 		return [];
 	}
-	return [{ path: `${path}.anchor.kind`, message: "must be 'center' or 'connectPoint' for owned endpoint" }];
+	if (a.kind === "connectPoint") {
+		if (!isConnectPointId(a.id)) {
+			return [
+				{
+					path: `${path}.anchor.id`,
+					message: "must be a valid ConnectPointId",
+				},
+			];
+		}
+		return [];
+	}
+	return [
+		{
+			path: `${path}.anchor.kind`,
+			message: "must be 'center' or 'connectPoint' for owned endpoint",
+		},
+	];
 }
 
 function validateFreeAnchor(
 	anchor: unknown,
 	path: string,
 ): SemanticDiagnostic[] {
-	if (typeof anchor !== "object" || anchor === null)
+	if (typeof anchor !== "object" || anchor === null) {
 		return [{ path: `${path}.anchor`, message: "must be an object" }];
+	}
 
 	const a = anchor as Record<string, unknown>;
-	if (a.kind !== "free")
-		return [{ path: `${path}.anchor.kind`, message: "must be 'free' for free endpoint" }];
+	if (a.kind !== "free") {
+		return [
+			{
+				path: `${path}.anchor.kind`,
+				message: "must be 'free' for free endpoint",
+			},
+		];
+	}
 
 	const errors: SemanticDiagnostic[] = [];
 	if (typeof a.point !== "object" || a.point === null) {
 		errors.push({ path: `${path}.anchor.point`, message: "must be an object" });
 	} else {
 		const p = a.point as Record<string, unknown>;
-		if (!isNumber(p.x))
-			errors.push({ path: `${path}.anchor.point.x`, message: "must be a number" });
-		if (!isNumber(p.y))
-			errors.push({ path: `${path}.anchor.point.y`, message: "must be a number" });
+		if (!isNumber(p.x)) {
+			errors.push({
+				path: `${path}.anchor.point.x`,
+				message: "must be a number",
+			});
+		}
+		if (!isNumber(p.y)) {
+			errors.push({
+				path: `${path}.anchor.point.y`,
+				message: "must be a number",
+			});
+		}
 	}
 	return errors;
 }
@@ -107,12 +144,15 @@ export function validateTransformFields(
 	path: string,
 ): SemanticDiagnostic[] {
 	const errors: SemanticDiagnostic[] = [];
-	if ("rotation" in o && !isNumber(o.rotation))
+	if ("rotation" in o && !isNumber(o.rotation)) {
 		errors.push({ path: `${path}.rotation`, message: "must be a number" });
-	if ("flipX" in o && typeof o.flipX !== "boolean")
+	}
+	if ("flipX" in o && typeof o.flipX !== "boolean") {
 		errors.push({ path: `${path}.flipX`, message: "must be a boolean" });
-	if ("flipY" in o && typeof o.flipY !== "boolean")
+	}
+	if ("flipY" in o && typeof o.flipY !== "boolean") {
 		errors.push({ path: `${path}.flipY`, message: "must be a boolean" });
+	}
 	return errors;
 }
 
@@ -121,12 +161,18 @@ export function validateStrokeStyleFields(
 	path: string,
 ): SemanticDiagnostic[] {
 	const errors: SemanticDiagnostic[] = [];
-	if ("stroke" in o && !isString(o.stroke))
+	if ("stroke" in o && !isString(o.stroke)) {
 		errors.push({ path: `${path}.stroke`, message: "must be a string" });
-	if ("strokeWidth" in o && !isNumber(o.strokeWidth))
+	}
+	if ("strokeWidth" in o && !isNumber(o.strokeWidth)) {
 		errors.push({ path: `${path}.strokeWidth`, message: "must be a number" });
-	if ("strokeDashType" in o && !isStrokeDashType(o.strokeDashType))
-		errors.push({ path: `${path}.strokeDashType`, message: "must be one of: solid, dashed, dotted" });
+	}
+	if ("strokeDashType" in o && !isStrokeDashType(o.strokeDashType)) {
+		errors.push({
+			path: `${path}.strokeDashType`,
+			message: "must be one of: solid, dashed, dotted",
+		});
+	}
 	return errors;
 }
 
@@ -135,8 +181,9 @@ export function validateFillStyleFields(
 	path: string,
 ): SemanticDiagnostic[] {
 	const errors: SemanticDiagnostic[] = [];
-	if ("fill" in o && !isString(o.fill))
+	if ("fill" in o && !isString(o.fill)) {
 		errors.push({ path: `${path}.fill`, message: "must be a string" });
+	}
 	return errors;
 }
 
@@ -145,22 +192,39 @@ export function validateTextStyleFields(
 	path: string,
 ): SemanticDiagnostic[] {
 	const errors: SemanticDiagnostic[] = [];
-	if ("text" in o && !isString(o.text))
+	if ("text" in o && !isString(o.text)) {
 		errors.push({ path: `${path}.text`, message: "must be a string" });
-	if ("textType" in o && !isTextType(o.textType))
-		errors.push({ path: `${path}.textType`, message: "must be one of: text, markdown" });
-	if ("textAlign" in o && !isTextAlign(o.textAlign))
-		errors.push({ path: `${path}.textAlign`, message: "must be one of: left, center, right" });
-	if ("verticalAlign" in o && !isVerticalAlign(o.verticalAlign))
-		errors.push({ path: `${path}.verticalAlign`, message: "must be one of: top, middle, bottom" });
-	if ("fontColor" in o && !isString(o.fontColor))
+	}
+	if ("textType" in o && !isTextType(o.textType)) {
+		errors.push({
+			path: `${path}.textType`,
+			message: "must be one of: text, markdown",
+		});
+	}
+	if ("textAlign" in o && !isTextAlign(o.textAlign)) {
+		errors.push({
+			path: `${path}.textAlign`,
+			message: "must be one of: left, center, right",
+		});
+	}
+	if ("verticalAlign" in o && !isVerticalAlign(o.verticalAlign)) {
+		errors.push({
+			path: `${path}.verticalAlign`,
+			message: "must be one of: top, middle, bottom",
+		});
+	}
+	if ("fontColor" in o && !isString(o.fontColor)) {
 		errors.push({ path: `${path}.fontColor`, message: "must be a string" });
-	if ("fontSize" in o && !isNumber(o.fontSize))
+	}
+	if ("fontSize" in o && !isNumber(o.fontSize)) {
 		errors.push({ path: `${path}.fontSize`, message: "must be a number" });
-	if ("fontFamily" in o && !isString(o.fontFamily))
+	}
+	if ("fontFamily" in o && !isString(o.fontFamily)) {
 		errors.push({ path: `${path}.fontFamily`, message: "must be a string" });
-	if ("fontWeight" in o && !isString(o.fontWeight))
+	}
+	if ("fontWeight" in o && !isString(o.fontWeight)) {
 		errors.push({ path: `${path}.fontWeight`, message: "must be a string" });
+	}
 	return errors;
 }
 
@@ -169,8 +233,9 @@ export function validateRadiusStyleFields(
 	path: string,
 ): SemanticDiagnostic[] {
 	const errors: SemanticDiagnostic[] = [];
-	if ("rx" in o && !isNumber(o.rx))
+	if ("rx" in o && !isNumber(o.rx)) {
 		errors.push({ path: `${path}.rx`, message: "must be a number" });
+	}
 	return errors;
 }
 
@@ -179,9 +244,17 @@ export function validateArrowFields(
 	path: string,
 ): SemanticDiagnostic[] {
 	const errors: SemanticDiagnostic[] = [];
-	if ("startArrow" in o && !isArrowType(o.startArrow))
-		errors.push({ path: `${path}.startArrow`, message: "must be a valid ArrowType" });
-	if ("endArrow" in o && !isArrowType(o.endArrow))
-		errors.push({ path: `${path}.endArrow`, message: "must be a valid ArrowType" });
+	if ("startArrow" in o && !isArrowType(o.startArrow)) {
+		errors.push({
+			path: `${path}.startArrow`,
+			message: "must be a valid ArrowType",
+		});
+	}
+	if ("endArrow" in o && !isArrowType(o.endArrow)) {
+		errors.push({
+			path: `${path}.endArrow`,
+			message: "must be a valid ArrowType",
+		});
+	}
 	return errors;
 }

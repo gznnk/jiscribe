@@ -19,7 +19,9 @@ export function registerExportSchemaCommand(
 					targetFolder = selected?.[0];
 				}
 
-				if (!targetFolder) return;
+				if (!targetFolder) {
+					return;
+				}
 
 				const destUri = vscode.Uri.joinPath(
 					targetFolder,
@@ -39,7 +41,9 @@ export function registerExportSchemaCommand(
 							{ modal: true },
 							"Overwrite",
 						);
-						if (answer !== "Overwrite") return;
+						if (answer !== "Overwrite") {
+							return;
+						}
 					} catch {
 						// File does not exist — proceed normally
 					}

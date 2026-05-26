@@ -24,7 +24,9 @@ export function useContainerSize(
 
 	useEffect(() => {
 		const container = containerRef.current;
-		if (!container) return;
+		if (!container) {
+			return;
+		}
 
 		const updateDimensions = (width: number, height: number) => {
 			// 値が変更された場合のみコールバックを実行

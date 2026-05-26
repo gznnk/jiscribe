@@ -64,7 +64,9 @@ function collectChildPoints(
 
 	for (const childId of childIds) {
 		const child = objects[childId];
-		if (!child) continue;
+		if (!child) {
+			continue;
+		}
 
 		if (child.type === "group") {
 			// グループの場合は再帰的に子を収集

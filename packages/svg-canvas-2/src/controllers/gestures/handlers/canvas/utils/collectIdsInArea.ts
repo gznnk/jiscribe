@@ -22,7 +22,9 @@ export function collectIdsInArea(
 	const result: string[] = [];
 
 	for (const obj of Object.values(objects)) {
-		if (!obj) continue;
+		if (!obj) {
+			continue;
+		}
 
 		let bbox: BoundingBox | null;
 
@@ -38,7 +40,9 @@ export function collectIdsInArea(
 		}
 
 		// nullチェック（空のPolyなど）
-		if (!bbox) continue;
+		if (!bbox) {
+			continue;
+		}
 
 		// 完全に含まれるかチェック
 		if (

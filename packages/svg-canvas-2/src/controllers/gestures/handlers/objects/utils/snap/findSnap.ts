@@ -54,7 +54,9 @@ const findNearest = (
 		}
 	}
 
-	if (bestCoordinate === null) return null;
+	if (bestCoordinate === null) {
+		return null;
+	}
 
 	const snappedCandidates = candidates.filter(
 		(c) => c.coordinate === bestCoordinate,
@@ -94,10 +96,16 @@ const collectAxisFeedbacks = (
 				matching.push(c);
 			}
 		}
-		if (matching.length === 0) continue;
+		if (matching.length === 0) {
+			continue;
+		}
 
-		const sourcePerpendicularMin = Math.min(...matching.map((c) => c.perpendicularMin));
-		const sourcePerpendicularMax = Math.max(...matching.map((c) => c.perpendicularMax));
+		const sourcePerpendicularMin = Math.min(
+			...matching.map((c) => c.perpendicularMin),
+		);
+		const sourcePerpendicularMax = Math.max(
+			...matching.map((c) => c.perpendicularMax),
+		);
 		feedbacks.push({
 			coordinate: matching[0].coordinate,
 			lineStart: Math.min(perpendicularMin, sourcePerpendicularMin),
@@ -161,8 +169,12 @@ export const findSnap = (
 	const xResult = findNearest(candidates.x, xEdgeValues, thresholdSvg);
 	const yResult = findNearest(candidates.y, yEdgeValues, thresholdSvg);
 
-	if (xResult) delta.x = xResult.snapCoordinate - xResult.draggedEdgeValue;
-	if (yResult) delta.y = yResult.snapCoordinate - yResult.draggedEdgeValue;
+	if (xResult) {
+		delta.x = xResult.snapCoordinate - xResult.draggedEdgeValue;
+	}
+	if (yResult) {
+		delta.y = yResult.snapCoordinate - yResult.draggedEdgeValue;
+	}
 
 	return { delta, xResult, yResult };
 };

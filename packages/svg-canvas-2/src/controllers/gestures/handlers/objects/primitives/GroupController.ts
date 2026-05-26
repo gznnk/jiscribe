@@ -8,7 +8,10 @@ import type {
 	RotateByGroupFunction,
 	TransformByGroupFunction,
 } from "../../../registry/ObjectBehaviorTypes";
-import { transformGroupByGroup, rotateGroupByGroup } from "../base/GroupTransform";
+import {
+	transformGroupByGroup,
+	rotateGroupByGroup,
+} from "../base/GroupTransform";
 
 /**
  * Moves a Group object by a delta.
@@ -81,7 +84,9 @@ export function moveGroup(
 	// Move all children recursively
 	for (const childId of groupState.childIds) {
 		const child = originalObjects[childId];
-		if (!child) continue;
+		if (!child) {
+			continue;
+		}
 
 		if (child.type === "group") {
 			// Recursively move nested group
@@ -116,13 +121,21 @@ export function transformChildren(
 
 	for (const childId of targetGroup.childIds) {
 		const child = allObjects[childId];
-		if (!child) continue;
+		if (!child) {
+			continue;
+		}
 
 		// registry経由で形状ごとのtransform関数を取得
-		const transformByGroupFn = objectBehaviorRegistry.getTransformByGroup(child.type);
+		const transformByGroupFn = objectBehaviorRegistry.getTransformByGroup(
+			child.type,
+		);
 
 		if (transformByGroupFn) {
-			transformed[childId] = transformByGroupFn(child, rootGroupStart, rootGroupEnd);
+			transformed[childId] = transformByGroupFn(
+				child,
+				rootGroupStart,
+				rootGroupEnd,
+			);
 		}
 
 		// 子がGroupの場合は再帰的に子の子も変形
@@ -160,13 +173,19 @@ export function rotateChildren(
 
 	for (const childId of targetGroup.childIds) {
 		const child = allObjects[childId];
-		if (!child) continue;
+		if (!child) {
+			continue;
+		}
 
 		// registry経由で形状ごとのrotate関数を取得
 		const rotateByGroupFn = objectBehaviorRegistry.getRotateByGroup(child.type);
 
 		if (rotateByGroupFn) {
-			rotated[childId] = rotateByGroupFn(child, rotationRootGroup, endGroupRotation);
+			rotated[childId] = rotateByGroupFn(
+				child,
+				rotationRootGroup,
+				endGroupRotation,
+			);
 		}
 
 		// 子がGroupの場合は再帰的に子の子も回転

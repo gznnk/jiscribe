@@ -30,10 +30,18 @@ export const convertPointsToFrame = (points: Point[]): TransformedFrame => {
 
 	for (let i = 1; i < points.length; i++) {
 		const p = points[i];
-		if (p.x < minX) minX = p.x;
-		if (p.x > maxX) maxX = p.x;
-		if (p.y < minY) minY = p.y;
-		if (p.y > maxY) maxY = p.y;
+		if (p.x < minX) {
+			minX = p.x;
+		}
+		if (p.x > maxX) {
+			maxX = p.x;
+		}
+		if (p.y < minY) {
+			minY = p.y;
+		}
+		if (p.y > maxY) {
+			maxY = p.y;
+		}
 	}
 
 	const width = maxX - minX;

@@ -25,7 +25,11 @@ const MAX_STROKE_WIDTH = 100;
 const DEFAULT_STROKE_WIDTH = 2;
 
 const getSelectedStrokeWidth = (state: CanvasControllerState): number => {
-	const obj = getFirstSelectedWithProp(getEffectiveSelectedIds(state), state.objects, "strokeWidth");
+	const obj = getFirstSelectedWithProp(
+		getEffectiveSelectedIds(state),
+		state.objects,
+		"strokeWidth",
+	);
 	const v = (obj as Record<string, unknown>)?.strokeWidth;
 	return typeof v === "number" ? v : DEFAULT_STROKE_WIDTH;
 };
@@ -33,7 +37,11 @@ const getSelectedStrokeWidth = (state: CanvasControllerState): number => {
 const getSelectedStrokeDashType = (
 	state: CanvasControllerState,
 ): StrokeDashType | undefined => {
-	const obj = getFirstSelectedWithProp(getEffectiveSelectedIds(state), state.objects, "strokeDashType");
+	const obj = getFirstSelectedWithProp(
+		getEffectiveSelectedIds(state),
+		state.objects,
+		"strokeDashType",
+	);
 	const v = (obj as Record<string, unknown>)?.strokeDashType;
 	return typeof v === "string" ? (v as StrokeDashType) : undefined;
 };

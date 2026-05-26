@@ -164,12 +164,16 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 		try {
 			const text = await navigator.clipboard.readText();
 			const parsed: unknown = JSON.parse(text);
-			if (isClipboardData(parsed)) data = parsed;
+			if (isClipboardData(parsed)) {
+				data = parsed;
+			}
 		} catch {
 			// clipboard read failure or parse error
 		}
 		data ??= state.internalClipboard;
-		if (!data) return;
+		if (!data) {
+			return;
+		}
 		dispatch({ type: "PASTE", data });
 	}, [dispatch, state.internalClipboard]);
 	usePasteKeyboardShortcut(handlePasteCallback);

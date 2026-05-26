@@ -26,14 +26,18 @@ export const CopyCommand: Command = {
 		const objects: ClipboardData["objects"] = {};
 		for (const id of selectedIdsWithDescendants) {
 			const obj = state.objects[id];
-			if (obj) objects[id] = obj;
+			if (obj) {
+				objects[id] = obj;
+			}
 		}
 
 		// Only include connectors whose both endpoints are within the selection
 		const connectorIds: string[] = [];
 		for (const connId of state.connectorIds) {
 			const conn = state.objects[connId] as ConnectorState | undefined;
-			if (!conn) continue;
+			if (!conn) {
+				continue;
+			}
 			const sourceOwnerId = conn.source.owner?.id;
 			const targetOwnerId = conn.target.owner?.id;
 			const sourceOk =

@@ -41,7 +41,8 @@ export const SvgViewportProvider = ({
  */
 export const useSvgViewport = (): React.RefObject<SvgViewport> => {
 	const ctx = useContext(SvgViewportContext);
-	if (!ctx)
+	if (!ctx) {
 		throw new Error("useSvgViewport must be used within a SvgViewportProvider");
+	}
 	return ctx;
 };

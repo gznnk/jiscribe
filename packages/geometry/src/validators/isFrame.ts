@@ -16,7 +16,9 @@ import type { Frame } from "../types/Frame";
  * @returns True if the object is a Frame, false otherwise
  */
 export const isFrame = (obj: unknown): obj is Frame => {
-	if (!isObject(obj)) return false;
+	if (!isObject(obj)) {
+		return false;
+	}
 
 	return (
 		"cx" in obj &&

@@ -16,7 +16,9 @@ const baseValidator = createValidatorFromTypeAndFeatures(
  * @returns True if the data is ImageData
  */
 export const isImageData = (data: unknown): data is ImageData => {
-	if (!baseValidator(data)) return false;
+	if (!baseValidator(data)) {
+		return false;
+	}
 
 	return isString((data as ImageData).base64Data);
 };

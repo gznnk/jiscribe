@@ -9,7 +9,9 @@ import type { ItemableData } from "../../types/data/core/ItemableData";
  * @returns True if the object is ItemableData, false otherwise
  */
 export const isItemableData = (obj: unknown): obj is ItemableData => {
-	if (!isObject(obj)) return false;
+	if (!isObject(obj)) {
+		return false;
+	}
 
 	return "items" in obj && isArray(obj.items);
 };

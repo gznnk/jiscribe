@@ -41,7 +41,9 @@ function findRootGroupId(
 
 	while (currentId) {
 		const obj: ObjectState | undefined = objects[currentId];
-		if (!obj) break;
+		if (!obj) {
+			break;
+		}
 
 		rootId = currentId;
 		currentId = obj.parentId;

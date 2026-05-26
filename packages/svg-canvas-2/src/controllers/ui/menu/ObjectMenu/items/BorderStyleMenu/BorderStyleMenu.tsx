@@ -39,7 +39,11 @@ type BorderStyleMenuProps = {
 };
 
 const getSelectedStrokeWidth = (state: CanvasControllerState): number => {
-	const obj = getFirstSelectedWithProp(state.selectedIds, state.objects, "strokeWidth");
+	const obj = getFirstSelectedWithProp(
+		state.selectedIds,
+		state.objects,
+		"strokeWidth",
+	);
 	const v = (obj as Record<string, unknown>)?.strokeWidth;
 	return typeof v === "number" ? v : DEFAULT_STROKE_WIDTH;
 };
@@ -47,7 +51,11 @@ const getSelectedStrokeWidth = (state: CanvasControllerState): number => {
 const getSelectedStrokeDashType = (
 	state: CanvasControllerState,
 ): StrokeDashType | undefined => {
-	const obj = getFirstSelectedWithProp(state.selectedIds, state.objects, "strokeDashType");
+	const obj = getFirstSelectedWithProp(
+		state.selectedIds,
+		state.objects,
+		"strokeDashType",
+	);
 	const v = (obj as Record<string, unknown>)?.strokeDashType;
 	return typeof v === "string" ? (v as StrokeDashType) : undefined;
 };

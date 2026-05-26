@@ -37,7 +37,9 @@ const ContextMenuComponent: React.FC<ContextMenuProps> = ({
 	canvasState,
 	callbacks,
 }) => {
-	if (!position) return null;
+	if (!position) {
+		return null;
+	}
 
 	const menuItems: CommandMenuItem[] = [
 		{ type: "command", commandId: "cut" },
@@ -102,7 +104,9 @@ const ContextMenuComponent: React.FC<ContextMenuProps> = ({
 
 					case "command": {
 						const command = commandRegistry.get(item.commandId);
-						if (!command) return null;
+						if (!command) {
+							return null;
+						}
 
 						const enabled = command.canExecute(canvasState);
 						const shortcuts = command.shortcuts

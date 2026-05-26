@@ -183,16 +183,8 @@ export const generateOptimalFrameToFrameConnection = (
 				const pathPoint1 = fullConnectionPath[i];
 				const pathPoint2 = fullConnectionPath[i + 1];
 				if (
-					isLineIntersectingBox(
-						pathPoint1,
-						pathPoint2,
-						startShapeWithMargin,
-					) ||
-					isLineIntersectingBox(
-						pathPoint1,
-						pathPoint2,
-						endShapeWithMargin,
-					)
+					isLineIntersectingBox(pathPoint1, pathPoint2, startShapeWithMargin) ||
+					isLineIntersectingBox(pathPoint1, pathPoint2, endShapeWithMargin)
 				) {
 					return true;
 				}

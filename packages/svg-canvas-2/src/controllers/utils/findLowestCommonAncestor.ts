@@ -29,7 +29,9 @@ export function findLowestCommonAncestor(
 	ids: string[],
 	objects: Record<string, ObjectState>,
 ): string | undefined {
-	if (ids.length === 0) return undefined;
+	if (ids.length === 0) {
+		return undefined;
+	}
 
 	// Start with the ancestor chain of the first ID, then narrow it down
 	// by intersecting with the ancestor chain of each subsequent ID.

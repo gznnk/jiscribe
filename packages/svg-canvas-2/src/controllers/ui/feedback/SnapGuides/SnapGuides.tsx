@@ -13,8 +13,13 @@ const STROKE_DASHARRAY = "4, 3";
 /** ガイド線を両端から伸ばすスクリーンピクセル数 */
 const EXTENSION_PX = 16;
 
-const SnapGuidesComponent: React.FC<SnapGuidesProps> = ({ snapFeedback, zoom }) => {
-	if (!snapFeedback) return null;
+const SnapGuidesComponent: React.FC<SnapGuidesProps> = ({
+	snapFeedback,
+	zoom,
+}) => {
+	if (!snapFeedback) {
+		return null;
+	}
 
 	const ext = EXTENSION_PX / zoom;
 

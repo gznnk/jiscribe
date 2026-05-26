@@ -41,9 +41,10 @@ export const SvgCanvasStateProvider = ({
  */
 export const useSvgCanvasState = (): React.RefObject<SvgCanvasState> => {
 	const ctx = useContext(SvgCanvasStateContext);
-	if (!ctx)
+	if (!ctx) {
 		throw new Error(
 			"useSvgCanvasState must be used within a SvgCanvasStateProvider",
 		);
+	}
 	return ctx;
 };

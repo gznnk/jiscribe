@@ -92,8 +92,7 @@ const ReconnectionHandlesComponent: React.FC<ReconnectionHandlesProps> = ({
 			} = refBus.current;
 
 			// Bounding box geometry of the connect point's owner
-			const ownerBoundingBoxGeometry =
-				calcFrameBoxFeatures(oppositeOwnerFrame);
+			const ownerBoundingBoxGeometry = calcFrameBoxFeatures(oppositeOwnerFrame);
 
 			// Direction of the connect point
 			const direction = getLineDirection(
@@ -229,7 +228,9 @@ const ReconnectionHandlesComponent: React.FC<ReconnectionHandlesProps> = ({
 
 	const handleStartPointDrag = useCallback(
 		(e: DiagramDragEvent) => {
-			if (endOwnerFrame === undefined) return;
+			if (endOwnerFrame === undefined) {
+				return;
+			}
 			const ownerFrame = endOwnerFrame;
 			const oppositePoint = endPoint;
 
@@ -240,7 +241,9 @@ const ReconnectionHandlesComponent: React.FC<ReconnectionHandlesProps> = ({
 
 	const handleEndPointDrag = useCallback(
 		(e: DiagramDragEvent) => {
-			if (startOwnerFrame === undefined) return;
+			if (startOwnerFrame === undefined) {
+				return;
+			}
 			const ownerFrame = startOwnerFrame;
 			const oppositePoint = startPoint;
 

@@ -17,7 +17,9 @@ const updateDiagramAtPath = (
 	path: DiagramPath,
 	updateFn: (diagram: Diagram, path: DiagramPath) => Diagram,
 ): Diagram[] => {
-	if (path.length === 0) return items;
+	if (path.length === 0) {
+		return items;
+	}
 
 	// Build array of parent diagrams that need to be updated along the path
 	const parentDiagrams: Diagram[] = [];
@@ -27,19 +29,25 @@ const updateDiagramAtPath = (
 	// Navigate to the target diagram's level, collecting parent diagrams along the way
 	for (let i = 0; i < path.length - 1; i++) {
 		const idx = path[i];
-		if (idx >= currentLevel.length) return items;
+		if (idx >= currentLevel.length) {
+			return items;
+		}
 
 		const diagram = currentLevel[idx];
 		parentDiagrams.push(diagram);
 
-		if (!isItemableState(diagram)) return items;
+		if (!isItemableState(diagram)) {
+			return items;
+		}
 		// Move to the next level (children of current diagram)
 		currentLevel = diagram.items;
 	}
 
 	// Get and update the target diagram at the final level
 	const lastIdx = path[path.length - 1];
-	if (lastIdx >= currentLevel.length) return items;
+	if (lastIdx >= currentLevel.length) {
+		return items;
+	}
 
 	const targetDiagram = currentLevel[lastIdx];
 	const updatedDiagram = updateFn(targetDiagram, path);
@@ -54,7 +62,9 @@ const updateDiagramAtPath = (
 		const parentDiagram = parentDiagrams[i];
 		const pathIdx = path[i];
 
-		if (!isItemableState(parentDiagram)) return items;
+		if (!isItemableState(parentDiagram)) {
+			return items;
+		}
 
 		// Create updated parent with new children
 		const updatedParent = {
@@ -70,7 +80,9 @@ const updateDiagramAtPath = (
 		} else {
 			// This diagram is nested, get its siblings from its grandparent
 			const grandparent = parentDiagrams[i - 1];
-			if (!isItemableState(grandparent)) return items;
+			if (!isItemableState(grandparent)) {
+				return items;
+			}
 			parentSiblingLevel = grandparent.items;
 		}
 
@@ -95,7 +107,9 @@ export const updateDiagramsByPath = (
 	pathIndex: DiagramPathIndex,
 	updateFn: (diagram: Diagram, path: DiagramPath) => Diagram,
 ): Diagram[] => {
-	if (pathIndex.size === 0) return items;
+	if (pathIndex.size === 0) {
+		return items;
+	}
 
 	let result = items;
 

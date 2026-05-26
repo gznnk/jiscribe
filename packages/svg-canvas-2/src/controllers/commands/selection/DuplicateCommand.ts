@@ -22,7 +22,9 @@ function getSelectionCenter(
 	state: CanvasControllerState,
 	ids: string[],
 ): { cx: number; cy: number } | null {
-	if (ids.length === 0) return null;
+	if (ids.length === 0) {
+		return null;
+	}
 
 	if (ids.length > 1) {
 		const msg = state.multiSelectGroup;
@@ -30,7 +32,9 @@ function getSelectionCenter(
 	}
 
 	const obj = state.objects[ids[0]];
-	if (!obj) return null;
+	if (!obj) {
+		return null;
+	}
 
 	if (obj.type === "group") {
 		const g = obj as GroupState;
@@ -41,7 +45,9 @@ function getSelectionCenter(
 	}
 	if (isPoly(obj)) {
 		const bbox = calcPolyBoundingBox(obj.points);
-		if (!bbox) return null;
+		if (!bbox) {
+			return null;
+		}
 		return {
 			cx: (bbox.left + bbox.right) / 2,
 			cy: (bbox.top + bbox.bottom) / 2,
@@ -61,23 +67,32 @@ function getSelectionCenter(
  */
 function computeOffset(state: CanvasControllerState): { x: number; y: number } {
 	const { lastDuplicate, selectedIds } = state;
-	if (!lastDuplicate) return DUPLICATE_OFFSET;
+	if (!lastDuplicate) {
+		return DUPLICATE_OFFSET;
+	}
 
 	// 選択セットが直前の複製結果と一致するか確認
-	if (lastDuplicate.newIds.length !== selectedIds.length)
+	if (lastDuplicate.newIds.length !== selectedIds.length) {
 		return DUPLICATE_OFFSET;
+	}
 	const lastSet = new Set(lastDuplicate.newIds);
-	if (!selectedIds.every((id) => lastSet.has(id))) return DUPLICATE_OFFSET;
+	if (!selectedIds.every((id) => lastSet.has(id))) {
+		return DUPLICATE_OFFSET;
+	}
 
 	// 現在の選択中心を取得
 	const center = getSelectionCenter(state, selectedIds);
-	if (!center) return lastDuplicate.offset;
+	if (!center) {
+		return lastDuplicate.offset;
+	}
 
 	const dx = center.cx - lastDuplicate.cx;
 	const dy = center.cy - lastDuplicate.cy;
 
 	// ほぼ動いていない（1px 未満）→ 前回オフセットを継続
-	if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return lastDuplicate.offset;
+	if (Math.abs(dx) < 1 && Math.abs(dy) < 1) {
+		return lastDuplicate.offset;
+	}
 
 	// 動かした距離を新しいオフセットとして採用
 	return { x: dx, y: dy };
@@ -107,14 +122,18 @@ export const DuplicateCommand: Command = {
 		const allObjects: Record<string, ObjectState> = {};
 		for (const id of selectedIdsWithDescendants) {
 			const obj = state.objects[id];
-			if (obj) allObjects[id] = obj;
+			if (obj) {
+				allObjects[id] = obj;
+			}
 		}
 
 		// 両端点が選択範囲内のコネクターのみ複製（CopyCommand と同じ判定）
 		const connectorIds: string[] = [];
 		for (const connId of state.connectorIds) {
 			const conn = state.objects[connId] as ConnectorState | undefined;
-			if (!conn) continue;
+			if (!conn) {
+				continue;
+			}
 			const sourceOwnerId = conn.source.owner?.id;
 			const targetOwnerId = conn.target.owner?.id;
 			const sourceOk =

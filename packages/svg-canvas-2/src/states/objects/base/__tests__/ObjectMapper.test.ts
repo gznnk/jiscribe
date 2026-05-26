@@ -86,12 +86,25 @@ describe("ObjectMapper", () => {
 
 			expect(state.id).toBe("object-5");
 			expect(state.meta?.name).toBe("Sticky Note");
-			expect((state.meta as Record<string, unknown>)?.customProp).toBe("custom value");
-			expect((state.meta as Record<string, unknown>)?.tags).toEqual(["note", "important"]);
+			expect((state.meta as Record<string, unknown>)?.customProp).toBe(
+				"custom value",
+			);
+			expect((state.meta as Record<string, unknown>)?.tags).toEqual([
+				"note",
+				"important",
+			]);
 		});
 
 		it("should handle different object types", () => {
-			const types = ["rect", "ellipse", "polygon", "polyline", "group", "sticky", "connector"] as const;
+			const types = [
+				"rect",
+				"ellipse",
+				"polygon",
+				"polyline",
+				"group",
+				"sticky",
+				"connector",
+			] as const;
 
 			types.forEach((type) => {
 				const doc: ObjectDoc = {
@@ -186,12 +199,25 @@ describe("ObjectMapper", () => {
 
 			expect(doc.id).toBe("object-5");
 			expect(doc.meta?.name).toBe("Connection");
-			expect((doc.meta as Record<string, unknown>)?.customProp).toBe("custom value");
-			expect((doc.meta as Record<string, unknown>)?.tags).toEqual(["connector", "active"]);
+			expect((doc.meta as Record<string, unknown>)?.customProp).toBe(
+				"custom value",
+			);
+			expect((doc.meta as Record<string, unknown>)?.tags).toEqual([
+				"connector",
+				"active",
+			]);
 		});
 
 		it("should handle different object types", () => {
-			const types = ["rect", "ellipse", "polygon", "polyline", "group", "sticky", "connector"] as const;
+			const types = [
+				"rect",
+				"ellipse",
+				"polygon",
+				"polyline",
+				"group",
+				"sticky",
+				"connector",
+			] as const;
 
 			types.forEach((type) => {
 				const state: ObjectState = {
@@ -282,7 +308,15 @@ describe("ObjectMapper", () => {
 		});
 
 		it("should maintain data integrity for all object types", () => {
-			const types = ["rect", "ellipse", "polygon", "polyline", "group", "sticky", "connector"] as const;
+			const types = [
+				"rect",
+				"ellipse",
+				"polygon",
+				"polyline",
+				"group",
+				"sticky",
+				"connector",
+			] as const;
 
 			types.forEach((type) => {
 				const originalDoc: ObjectDoc = {
@@ -370,8 +404,13 @@ describe("ObjectMapper", () => {
 			const state = ObjectMapper.toState(doc);
 			const convertedDoc = ObjectMapper.toDoc(state);
 
-			expect((convertedDoc.meta as Record<string, unknown>)?.items).toEqual([1, 2, 3]);
-			expect((convertedDoc.meta as Record<string, unknown>)?.nested).toEqual([{ a: 1 }, { b: 2 }]);
+			expect((convertedDoc.meta as Record<string, unknown>)?.items).toEqual([
+				1, 2, 3,
+			]);
+			expect((convertedDoc.meta as Record<string, unknown>)?.nested).toEqual([
+				{ a: 1 },
+				{ b: 2 },
+			]);
 		});
 	});
 });

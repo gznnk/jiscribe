@@ -1,5 +1,13 @@
-import { calcFrameKeyPoints, calcKeyPointsBoundingBox, isTransformedFrame } from "@workspace/geometry";
-import type { FrameKeyPoints, Point, TransformedFrame } from "@workspace/geometry";
+import {
+	calcFrameKeyPoints,
+	calcKeyPointsBoundingBox,
+	isTransformedFrame,
+} from "@workspace/geometry";
+import type {
+	FrameKeyPoints,
+	Point,
+	TransformedFrame,
+} from "@workspace/geometry";
 
 import { moveGroup } from "./primitives/GroupController";
 import { createMultiSelectGroup } from "./utils/createMultiSelectGroup";
@@ -12,7 +20,11 @@ import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
-import { buildSnapFeedback, findSnap, SNAP_THRESHOLD_PX } from "./utils/snap/findSnap";
+import {
+	buildSnapFeedback,
+	findSnap,
+	SNAP_THRESHOLD_PX,
+} from "./utils/snap/findSnap";
 import { updateAffectedGroupBounds } from "../../../ui/utils/updateAffectedGroupBounds";
 import { buildSelectedIdsWithDescendants } from "../../../utils/buildSelectedIdsWithDescendants";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
@@ -97,8 +109,9 @@ function handleObjectDrag(
 		selectedIds.length > 1
 			? eventStartSnapshot.multiSelectGroup?.id
 			: selectedIds[0];
-	const snapSourceKeyPoints: FrameKeyPoints | undefined =
-		snapSourceId ? eventStartSnapshot.keyPoints[snapSourceId] : undefined;
+	const snapSourceKeyPoints: FrameKeyPoints | undefined = snapSourceId
+		? eventStartSnapshot.keyPoints[snapSourceId]
+		: undefined;
 
 	if (snapCandidates && snapSourceKeyPoints && !mods.ctrl) {
 		const bbox = calcKeyPointsBoundingBox(snapSourceKeyPoints);
@@ -112,8 +125,8 @@ function handleObjectDrag(
 		// 現在の selectedIds + 全子孫を除外（dragStart後の選択変更・グループ子図形も対応）
 		// dragStart 時にキャッシュ済みの値を優先して使用し、フォールバックとして再計算する
 		const excludeIds =
-			eventStartSnapshot.selectedIdsWithDescendants
-			?? buildSelectedIdsWithDescendants(selectedIds, eventStartObjects);
+			eventStartSnapshot.selectedIdsWithDescendants ??
+			buildSelectedIdsWithDescendants(selectedIds, eventStartObjects);
 		const filteredCandidates = {
 			x: snapCandidates.x.filter((c) => !excludeIds.has(c.objectId)),
 			y: snapCandidates.y.filter((c) => !excludeIds.has(c.objectId)),
@@ -135,7 +148,12 @@ function handleObjectDrag(
 			top: selectedBBox.top + result.delta.y,
 			bottom: selectedBBox.bottom + result.delta.y,
 		};
-		snapFeedback = buildSnapFeedback(actualBBox, result.xResult, result.yResult, filteredCandidates);
+		snapFeedback = buildSnapFeedback(
+			actualBBox,
+			result.xResult,
+			result.yResult,
+			filteredCandidates,
+		);
 	}
 
 	// --- 全選択オブジェクトを adjustedDelta で移動 ---
@@ -143,14 +161,18 @@ function handleObjectDrag(
 
 	for (const selectedId of selectedIds) {
 		const selectedObject = eventStartObjects[selectedId];
-		if (!selectedObject) continue;
+		if (!selectedObject) {
+			continue;
+		}
 
 		if (selectedObject.type === "group") {
 			// Group: 再帰的に子も移動
 			moveGroup(selectedId, eventStartObjects, updatedObjects, adjustedDelta);
 		} else {
 			// Registry経由で形状ごとのmoveByDeltaを取得
-			const moveByDelta = objectBehaviorRegistry.getMoveByDelta(selectedObject.type);
+			const moveByDelta = objectBehaviorRegistry.getMoveByDelta(
+				selectedObject.type,
+			);
 			if (moveByDelta) {
 				updatedObjects[selectedId] = moveByDelta(selectedObject, adjustedDelta);
 			}
@@ -204,7 +226,8 @@ function handleObjectDragStart(
 	let selectedIds: string[];
 	let newMultiSelectGroup = canvasState.multiSelectGroup;
 	// eventStartSnapshot に設定する multiSelectGroup と keyPoints の更新分
-	let eventStartMultiSelectGroup = canvasState.eventStartSnapshot?.multiSelectGroup ?? null;
+	let eventStartMultiSelectGroup =
+		canvasState.eventStartSnapshot?.multiSelectGroup ?? null;
 	let keyPoints = canvasState.eventStartSnapshot?.keyPoints ?? {};
 
 	if (isCurrentlySelected || isAncestorSelected) {
@@ -313,7 +336,8 @@ export const ObjectEventHandler: GestureHandler = {
 		// それ以外（非テキストオブジェクトへの doubleClick を含む）は commit してクリアする
 		let nextState = state;
 		const isDoubleClickOnCurrentEditTarget =
-			event.type === "doubleClick" && state.textEditState?.objectId === event.targetId;
+			event.type === "doubleClick" &&
+			state.textEditState?.objectId === event.targetId;
 		if (!isDoubleClickOnCurrentEditTarget) {
 			nextState = commitTextEditIfNeeded(state);
 		}
@@ -354,7 +378,8 @@ export const ObjectEventHandler: GestureHandler = {
 		}
 
 		// ドラッグイベントの処理
-		const objectStartState = nextState.eventStartSnapshot?.objects[targetObjectId];
+		const objectStartState =
+			nextState.eventStartSnapshot?.objects[targetObjectId];
 		if (!objectStartState) {
 			return nextState;
 		}
@@ -370,7 +395,12 @@ export const ObjectEventHandler: GestureHandler = {
 		} else if (event.type === "drag") {
 			return handleObjectDrag(nextState, event.delta, event.button, event.mods);
 		} else if (event.type === "dragEnd") {
-			return handleObjectDragEnd(nextState, event.delta, event.button, event.mods);
+			return handleObjectDragEnd(
+				nextState,
+				event.delta,
+				event.button,
+				event.mods,
+			);
 		}
 
 		return nextState;

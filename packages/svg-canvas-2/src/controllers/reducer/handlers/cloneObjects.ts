@@ -11,7 +11,9 @@ const remapEndpointRef = (
 	ref: EndpointRef,
 	idRemap: Map<string, string>,
 ): EndpointRef => {
-	if (!ref.owner) return ref;
+	if (!ref.owner) {
+		return ref;
+	}
 	return {
 		...ref,
 		owner: { ...ref.owner, id: idRemap.get(ref.owner.id) ?? ref.owner.id },
@@ -82,9 +84,13 @@ export function cloneObjects(
 	// ── 3. ルートオブジェクトのみ offset を適用 ──────────────────────────────
 	for (const srcRootId of rootIds) {
 		const clonedRootId = idRemap.get(srcRootId);
-		if (!clonedRootId) continue;
+		if (!clonedRootId) {
+			continue;
+		}
 		const clone = clonedObjects[clonedRootId];
-		if (!clone) continue;
+		if (!clone) {
+			continue;
+		}
 
 		if (clone.type === "group") {
 			moveGroup(clonedRootId, clonedObjects, clonedObjects, offset);

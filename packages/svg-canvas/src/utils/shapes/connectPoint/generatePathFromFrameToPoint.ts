@@ -1,10 +1,9 @@
-﻿import { calcCloserNumber , doSegmentsIntersect } from "@workspace/geometry";
+﻿import { calcCloserNumber, doSegmentsIntersect } from "@workspace/geometry";
 import type { BoxFeatures, Point } from "@workspace/geometry";
 
 import { addMarginToBoxGeometry } from "./addMarginToBoxGeometry";
 import { getLineDirection } from "./getLineDirection";
 import type { Direction } from "../../../types/core/Direction";
-
 
 /**
  * Generates connection path points from a frame to an arbitrary point.
@@ -199,6 +198,3 @@ export const generatePathFromFrameToPoint = (
 
 	return pathPoints;
 };
-
-
-

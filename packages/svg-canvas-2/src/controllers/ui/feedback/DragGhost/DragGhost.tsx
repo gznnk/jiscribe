@@ -22,7 +22,9 @@ const createGhostElement = (
 	position: Point,
 ): React.ReactNode => {
 	const component = objectComponentRegistry.get(preset.objectType);
-	if (!component) return null;
+	if (!component) {
+		return null;
+	}
 
 	const doc = createObjectDoc(
 		preset.objectType,

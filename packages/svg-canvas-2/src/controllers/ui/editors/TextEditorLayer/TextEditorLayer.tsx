@@ -18,10 +18,14 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 	onTextChange,
 	onEscape,
 }) => {
-	if (!textEditState) return null;
+	if (!textEditState) {
+		return null;
+	}
 
 	const targetObject = objects[textEditState.objectId];
-	if (!targetObject || !isTextStyleState(targetObject)) return null;
+	if (!targetObject || !isTextStyleState(targetObject)) {
+		return null;
+	}
 
 	// Type assertion: objects with text also have geometry properties
 	const obj = targetObject as typeof targetObject & TransformedFrame;

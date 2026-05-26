@@ -13,7 +13,9 @@ import type { Transform } from "../types/Transform";
  * @returns True if the object has Transform properties, false otherwise
  */
 export const isTransform = (obj: unknown): obj is Transform => {
-	if (!isObject(obj)) return false;
+	if (!isObject(obj)) {
+		return false;
+	}
 
 	return (
 		"rotation" in obj &&

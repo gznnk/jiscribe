@@ -11,7 +11,9 @@ type PendingConnectorOverlayProps = Pick<
 const PendingConnectorOverlayComponent: React.FC<
 	PendingConnectorOverlayProps
 > = ({ pendingConnector, objects }) => {
-	if (!pendingConnector) return null;
+	if (!pendingConnector) {
+		return null;
+	}
 
 	return (
 		<ConnectorRenderer

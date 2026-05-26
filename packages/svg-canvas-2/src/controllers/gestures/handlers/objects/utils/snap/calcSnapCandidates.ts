@@ -20,9 +20,13 @@ export const calcSnapCandidates = (
 	const yCandidates: SnapCandidate[] = [];
 
 	for (const [id, obj] of Object.entries(objects)) {
-		if (obj.type === "group") continue;
+		if (obj.type === "group") {
+			continue;
+		}
 		const keyPoints = keyPointsCache[id];
-		if (!keyPoints) continue;
+		if (!keyPoints) {
+			continue;
+		}
 
 		const bbox = calcKeyPointsBoundingBox(keyPoints);
 
@@ -31,15 +35,39 @@ export const calcSnapCandidates = (
 		// x 候補: left / right エッジ
 		// perpendicularMin/Max は Y 方向の範囲（ガイド縦線の延伸用）
 		xCandidates.push(
-			{ objectId: id, coordinate: left, edge: "left", perpendicularMin: top, perpendicularMax: bottom },
-			{ objectId: id, coordinate: right, edge: "right", perpendicularMin: top, perpendicularMax: bottom },
+			{
+				objectId: id,
+				coordinate: left,
+				edge: "left",
+				perpendicularMin: top,
+				perpendicularMax: bottom,
+			},
+			{
+				objectId: id,
+				coordinate: right,
+				edge: "right",
+				perpendicularMin: top,
+				perpendicularMax: bottom,
+			},
 		);
 
 		// y 候補: top / bottom エッジ
 		// perpendicularMin/Max は X 方向の範囲（ガイド横線の延伸用）
 		yCandidates.push(
-			{ objectId: id, coordinate: top, edge: "top", perpendicularMin: left, perpendicularMax: right },
-			{ objectId: id, coordinate: bottom, edge: "bottom", perpendicularMin: left, perpendicularMax: right },
+			{
+				objectId: id,
+				coordinate: top,
+				edge: "top",
+				perpendicularMin: left,
+				perpendicularMax: right,
+			},
+			{
+				objectId: id,
+				coordinate: bottom,
+				edge: "bottom",
+				perpendicularMin: left,
+				perpendicularMax: right,
+			},
 		);
 	}
 

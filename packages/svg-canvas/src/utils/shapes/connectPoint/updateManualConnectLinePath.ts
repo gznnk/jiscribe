@@ -98,7 +98,9 @@ export const updateManualConnectLinePath = (
 
 	// Check if all lines are vertical and horizontal only
 	const isVerticalHorizontalLines = originalPoints.every((item, idx) => {
-		if (idx === 0) return true;
+		if (idx === 0) {
+			return true;
+		}
 
 		const prev = originalPoints[idx - 1];
 		const radians = calcVectorAngle(prev.x, prev.y, item.x, item.y);

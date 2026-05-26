@@ -20,7 +20,11 @@ type StrokeColorMenuProps = {
 };
 
 const getSelectedStrokeColor = (state: CanvasControllerState): string => {
-	const obj = getFirstSelectedWithProp(state.selectedIds, state.objects, "stroke");
+	const obj = getFirstSelectedWithProp(
+		state.selectedIds,
+		state.objects,
+		"stroke",
+	);
 	const stroke = (obj as Record<string, unknown>)?.stroke;
 	return typeof stroke === "string" ? stroke : "#374151";
 };

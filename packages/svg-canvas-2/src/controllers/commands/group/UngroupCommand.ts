@@ -14,7 +14,9 @@ export const UngroupCommand: Command = {
 	},
 
 	canExecute: (state) => {
-		if (state.selectedIds.length === 0) return false;
+		if (state.selectedIds.length === 0) {
+			return false;
+		}
 		// All selected objects must be groups
 		return state.selectedIds.every((id) => state.objects[id]?.type === "group");
 	},
@@ -26,7 +28,9 @@ export const UngroupCommand: Command = {
 
 		for (const groupId of state.selectedIds) {
 			const group = updatedObjects[groupId] as GroupState;
-			if (!group || group.type !== "group") continue;
+			if (!group || group.type !== "group") {
+				continue;
+			}
 
 			const parentId = group.parentId;
 			const childIds = group.childIds;

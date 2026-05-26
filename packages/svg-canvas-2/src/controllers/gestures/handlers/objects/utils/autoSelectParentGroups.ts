@@ -20,12 +20,16 @@ function collectAllDescendants(
 	while (queue.length > 0) {
 		const currentId = queue.shift()!;
 		const obj = state.objects[currentId];
-		if (!obj || obj.type !== "group") continue;
+		if (!obj || obj.type !== "group") {
+			continue;
+		}
 
 		const group = obj as GroupState;
 		for (const childId of group.childIds) {
 			if (visited.has(childId)) {
-				console.warn(`[collectAllDescendants] Circular reference detected at "${childId}"`);
+				console.warn(
+					`[collectAllDescendants] Circular reference detected at "${childId}"`,
+				);
 				continue;
 			}
 			visited.add(childId);
@@ -99,13 +103,19 @@ export function autoSelectParentGroups(
 
 		for (const parentId of parentCandidates) {
 			const parent = state.objects[parentId] as GroupState;
-			if (!parent) continue;
+			if (!parent) {
+				continue;
+			}
 
 			const allChildrenSelected =
 				parent.childIds.length > 0 &&
 				parent.childIds.every((childId) => selectedSet.has(childId));
 
-			if (allChildrenSelected && !selectedSet.has(parentId) && !everPromoted.has(parentId)) {
+			if (
+				allChildrenSelected &&
+				!selectedSet.has(parentId) &&
+				!everPromoted.has(parentId)
+			) {
 				// 全子孫（孫以降も含む）を選択から取り除き、グループ自体を選択する
 				const allDescendants = collectAllDescendants(state, parentId);
 				currentSelectedIds = currentSelectedIds.filter(

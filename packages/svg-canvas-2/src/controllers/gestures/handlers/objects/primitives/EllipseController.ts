@@ -8,13 +8,19 @@ import type {
 	RotateByGroupFunction,
 	TransformByGroupFunction,
 } from "../../../registry/ObjectBehaviorTypes";
-import { transformFrameByGroup, rotateFrameByGroup } from "../base/FrameTransform";
+import {
+	transformFrameByGroup,
+	rotateFrameByGroup,
+} from "../base/FrameTransform";
 
 /**
  * Moves an Ellipse object by a delta.
  * Updates cx and cy coordinates.
  */
-export const moveByDelta: MoveByDeltaFunction<EllipseState> = (state, delta) => {
+export const moveByDelta: MoveByDeltaFunction<EllipseState> = (
+	state,
+	delta,
+) => {
 	return {
 		...state,
 		cx: roundToDecimal(state.cx + delta.x, PRECISION.COORDINATE),

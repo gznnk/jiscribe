@@ -29,13 +29,17 @@ export function cleanupConnectorsOnDelete(
 		}
 
 		const connector = state.objects[connectorId] as ConnectorState | undefined;
-		if (!connector) continue;
+		if (!connector) {
+			continue;
+		}
 
 		const sourceOwnerId = connector.source.owner?.id;
 		const targetOwnerId = connector.target.owner?.id;
 
-		const sourceDeleted = sourceOwnerId != null && idsToDelete.has(sourceOwnerId);
-		const targetDeleted = targetOwnerId != null && idsToDelete.has(targetOwnerId);
+		const sourceDeleted =
+			sourceOwnerId != null && idsToDelete.has(sourceOwnerId);
+		const targetDeleted =
+			targetOwnerId != null && idsToDelete.has(targetOwnerId);
 
 		if (!sourceDeleted && !targetDeleted) {
 			continue;
@@ -55,8 +59,10 @@ export function cleanupConnectorsOnDelete(
 		// 片端削除 → 削除される側を Free に変換
 		// resolveConnectorPoints で center アンカーのアウトライン調整を含む視覚上の座標を取得。
 		// 削除前の state.objects を使うため両端のオブジェクトがまだ存在している。
-		const sourceObj = sourceOwnerId != null ? state.objects[sourceOwnerId] : null;
-		const targetObj = targetOwnerId != null ? state.objects[targetOwnerId] : null;
+		const sourceObj =
+			sourceOwnerId != null ? state.objects[sourceOwnerId] : null;
+		const targetObj =
+			targetOwnerId != null ? state.objects[targetOwnerId] : null;
 		const resolved = resolveConnectorPoints(connector, sourceObj, targetObj);
 
 		const updatedConnector = { ...connector };

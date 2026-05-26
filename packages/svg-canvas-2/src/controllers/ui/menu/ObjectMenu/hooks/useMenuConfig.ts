@@ -14,7 +14,9 @@ const itemKey = (section: MenuItem): string =>
  * borderStyle は全型が radius: true の場合のみ radius を有効にする。
  */
 const mergeItems = (arrays: MenuItem[][]): MenuItem[] => {
-	if (arrays.length === 1) return arrays[0];
+	if (arrays.length === 1) {
+		return arrays[0];
+	}
 
 	return arrays[0]
 		.filter((section) => {
@@ -24,7 +26,9 @@ const mergeItems = (arrays: MenuItem[][]): MenuItem[] => {
 				.every((arr) => arr.some((s) => itemKey(s) === key));
 		})
 		.map((section) => {
-			if (section.type !== "borderStyle") return section;
+			if (section.type !== "borderStyle") {
+				return section;
+			}
 			// radius は全型が true の場合のみ表示する
 			const allRadius = arrays.every((arr) => {
 				const found = arr.find((s) => s.type === "borderStyle");
@@ -39,8 +43,12 @@ const mergeItems = (arrays: MenuItem[][]): MenuItem[] => {
  * 全型に共通する id のセクションのみを残し、各セクション内のアイテムも AND 結合する。
  */
 const mergeSections = (arrays: MenuSection[][]): MenuSection[] => {
-	if (arrays.length === 0) return [];
-	if (arrays.length === 1) return arrays[0];
+	if (arrays.length === 0) {
+		return [];
+	}
+	if (arrays.length === 1) {
+		return arrays[0];
+	}
 
 	return arrays[0]
 		.filter((group) =>
@@ -68,29 +76,39 @@ export const getMenuGroups = (state: CanvasControllerState): MenuSection[] => {
 	// Connector 選択時は selectedIds の代わりに connector のグループを返す
 	if (selectedConnectorId !== null) {
 		const connector = objects[selectedConnectorId];
-		if (!connector) return [];
+		if (!connector) {
+			return [];
+		}
 		return objectMenuRegistry.getGroups(connector.type, connector);
 	}
 
-	if (selectedIds.length === 0) return [];
+	if (selectedIds.length === 0) {
+		return [];
+	}
 
 	// 選択中オブジェクトに含まれる実オブジェクト型を収集する。
 	// group型は子孫の実オブジェクト型に展開する。
 	const types = new Set<string>();
 	for (const id of selectedIds) {
 		const obj = objects[id];
-		if (!obj) continue;
+		if (!obj) {
+			continue;
+		}
 		if (obj.type !== "group") {
 			types.add(obj.type);
 		} else {
 			for (const descId of collectDescendantIds(id, objects)) {
 				const desc = objects[descId];
-				if (desc && desc.type !== "group") types.add(desc.type);
+				if (desc && desc.type !== "group") {
+					types.add(desc.type);
+				}
 			}
 		}
 	}
 
-	if (types.size === 0) return [];
+	if (types.size === 0) {
+		return [];
+	}
 
 	// 各型の代表インスタンスでメニューグループを取得し、AND 結合する
 	const groupArrays = [...types].map((type) => {

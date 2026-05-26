@@ -30,18 +30,24 @@ export function calcGroupBoundingBox(
 
 	for (const childId of group.childIds) {
 		const child = objects[childId];
-		if (!child) continue;
+		if (!child) {
+			continue;
+		}
 
 		let bbox;
 		if (isTransformedFrame(child)) {
 			bbox = calcBoundingBox(child);
 		} else if (isGroupState(child)) {
 			bbox = calcGroupBoundingBox(child, objects);
-			if (!bbox) continue;
+			if (!bbox) {
+				continue;
+			}
 		} else if (isPoly(child)) {
 			// Poly系（Polyline, Polygon）の場合、points配列からバウンディングボックスを計算
 			bbox = calcPolyBoundingBox(child.points);
-			if (!bbox) continue;
+			if (!bbox) {
+				continue;
+			}
 		} else {
 			continue;
 		}

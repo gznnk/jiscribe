@@ -56,4 +56,3 @@ export const rotateByGroup: RotateByGroupFunction<PolylineState> = (
 		endGroupRotation,
 	);
 };
-

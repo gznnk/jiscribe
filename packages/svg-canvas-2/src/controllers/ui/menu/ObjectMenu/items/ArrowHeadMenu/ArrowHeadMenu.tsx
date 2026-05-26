@@ -34,7 +34,9 @@ const getSelectedArrowType = (
 		const obj = state.objects[id];
 		if (obj && property in obj) {
 			const value = (obj as Record<string, unknown>)[property];
-			if (typeof value === "string") return value as ArrowType;
+			if (typeof value === "string") {
+				return value as ArrowType;
+			}
 		}
 	}
 	return "None";

@@ -46,14 +46,20 @@ export function validateSemantics(doc: CanvasDoc): SemanticDiagnostic[] {
 			}
 			seenIds.add(connector.id);
 
-			if (connector.source?.owner?.id && !seenIds.has(connector.source.owner.id)) {
+			if (
+				connector.source?.owner?.id &&
+				!seenIds.has(connector.source.owner.id)
+			) {
 				errors.push({
 					path: `${connPath}.source`,
 					message: `Source target ID "${connector.source.owner.id}" does not exist.`,
 					id: connector.source.owner.id,
 				});
 			}
-			if (connector.target?.owner?.id && !seenIds.has(connector.target.owner.id)) {
+			if (
+				connector.target?.owner?.id &&
+				!seenIds.has(connector.target.owner.id)
+			) {
 				errors.push({
 					path: `${connPath}.target`,
 					message: `Target target ID "${connector.target.owner.id}" does not exist.`,

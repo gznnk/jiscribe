@@ -1017,7 +1017,9 @@ const TransformControlComponent: React.FC<Props> = ({
 
 		onTransform?.(event);
 
-		if (e.eventPhase === "Ended") setIsRotating(false);
+		if (e.eventPhase === "Ended") {
+			setIsRotating(false);
+		}
 	}, []);
 
 	const dragFunctionRotationPoint = useCallback((rx: number, ry: number) => {

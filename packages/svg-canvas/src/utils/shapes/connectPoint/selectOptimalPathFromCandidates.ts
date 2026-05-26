@@ -43,7 +43,9 @@ export const selectOptimalPathFromCandidates = (
 		// First, compare distances
 		const bestPathDistance = Math.round(
 			bestPath.reduce((totalDistance, point, index) => {
-				if (index === 0) return totalDistance;
+				if (index === 0) {
+					return totalDistance;
+				}
 				const previousPoint = bestPath[index - 1];
 				return (
 					totalDistance +
@@ -59,7 +61,9 @@ export const selectOptimalPathFromCandidates = (
 
 		const currentPathDistance = Math.round(
 			currentPath.reduce((totalDistance, point, index) => {
-				if (index === 0) return totalDistance;
+				if (index === 0) {
+					return totalDistance;
+				}
 				const previousPoint = currentPath[index - 1];
 				return (
 					totalDistance +
@@ -81,7 +85,9 @@ export const selectOptimalPathFromCandidates = (
 		// If distances are equal, compare turns
 		const fullBestPath = [startPoint].concat(bestPath, endPoint);
 		const bestPathTurns = fullBestPath.reduce((totalTurns, point, index) => {
-			if (index < 2) return totalTurns;
+			if (index < 2) {
+				return totalTurns;
+			}
 			return (
 				totalTurns +
 				(isStraight(fullBestPath[index - 2], fullBestPath[index - 1], point)
@@ -93,7 +99,9 @@ export const selectOptimalPathFromCandidates = (
 		const fullCurrentPath = [startPoint].concat(currentPath, endPoint);
 		const currentPathTurns = fullCurrentPath.reduce(
 			(totalTurns, point, index) => {
-				if (index < 2) return totalTurns;
+				if (index < 2) {
+					return totalTurns;
+				}
 				return (
 					totalTurns +
 					(isStraight(

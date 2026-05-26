@@ -67,7 +67,9 @@ export const useConnectLineControl = (
 
 	// Get owner frames (must be called unconditionally for hooks rules)
 	const startOwnerFrame: TransformedFrame | undefined = useMemo(() => {
-		if (!connectLineItem?.startOwnerId) return undefined;
+		if (!connectLineItem?.startOwnerId) {
+			return undefined;
+		}
 		const startOwner = getDiagramById(
 			refBus.current.items,
 			connectLineItem.startOwnerId,
@@ -76,7 +78,9 @@ export const useConnectLineControl = (
 	}, [connectLineItem?.startOwnerId]);
 
 	const endOwnerFrame = useMemo(() => {
-		if (!connectLineItem?.endOwnerId) return undefined;
+		if (!connectLineItem?.endOwnerId) {
+			return undefined;
+		}
 		const endOwner = getDiagramById(
 			refBus.current.items,
 			connectLineItem.endOwnerId,

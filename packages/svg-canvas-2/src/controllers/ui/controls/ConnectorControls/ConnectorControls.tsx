@@ -30,7 +30,9 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 }) => {
 	const points = useResolvedConnectorPoints(connectorState, objects);
 
-	if (!points) return null;
+	if (!points) {
+		return null;
+	}
 
 	// Adjust sizes based on zoom level to maintain consistent visual size
 	const adjustedEndpointRadius = ENDPOINT_RADIUS / zoom;

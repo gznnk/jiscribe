@@ -24,7 +24,9 @@ export const createBezierDValue = (
 	endTrim = 0,
 ): string => {
 	const n = points.length;
-	if (n < 2) return "";
+	if (n < 2) {
+		return "";
+	}
 
 	// --- Two points: a single straight segment
 	if (n === 2) {

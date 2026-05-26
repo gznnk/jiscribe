@@ -14,12 +14,18 @@ const baseValidator = createValidatorFromTypeAndFeatures("Path", PathFeatures);
  * @returns True if the data is PathData
  */
 export const isPathData = (data: unknown): data is PathData => {
-	if (!baseValidator(data)) return false;
-	if (!isPolyData(data)) return false;
+	if (!baseValidator(data)) {
+		return false;
+	}
+	if (!isPolyData(data)) {
+		return false;
+	}
 
 	const pathData = data as PathData;
 
-	if (!isPathType(pathData.pathType)) return false;
+	if (!isPathType(pathData.pathType)) {
+		return false;
+	}
 
 	if (pathData.startArrowHead && !isArrowHeadType(pathData.startArrowHead)) {
 		return false;

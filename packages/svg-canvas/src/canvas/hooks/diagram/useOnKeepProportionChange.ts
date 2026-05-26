@@ -72,7 +72,9 @@ export const useOnKeepProportionChange = (props: SvgCanvasSubHooksProps) => {
 				// Standard handling for individual items
 				const items = applyFunctionRecursively(prevState.items, (item) => {
 					// If the id does not match, return the original item.
-					if (item.id !== e.id) return item;
+					if (item.id !== e.id) {
+						return item;
+					}
 
 					// If the id matches, update the item with the new keepProportion value.
 					return { ...item, keepProportion: e.keepProportion };

@@ -52,7 +52,9 @@ export const useOnTextChange = (props: SvgCanvasSubHooksProps) => {
 					}),
 				};
 
-				if (!targetItem) return prevState;
+				if (!targetItem) {
+					return prevState;
+				}
 
 				if (e.activateEditor) {
 					if (e.initializeAttributes) {

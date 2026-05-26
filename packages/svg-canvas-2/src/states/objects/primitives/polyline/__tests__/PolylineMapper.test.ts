@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import type { PolylineDoc } from "../../../../../schemas/objects/primitives/polyline/PolylineDoc";
-import { polylineToDoc, polylineToState } from "../../../../../states/objects/primitives/polyline/PolylineMapper";
+import {
+	polylineToDoc,
+	polylineToState,
+} from "../../../../../states/objects/primitives/polyline/PolylineMapper";
 import type { PolylineState } from "../../../../../states/objects/primitives/polyline/PolylineState";
 
 describe("PolylineMapper", () => {

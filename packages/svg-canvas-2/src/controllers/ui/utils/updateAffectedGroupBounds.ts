@@ -18,7 +18,9 @@ export function updateAffectedGroupBounds(
 	// Collect all parent groups (and their ancestors) of selected objects
 	for (const selectedId of selectedIds) {
 		const obj = state.objects[selectedId];
-		if (!obj) continue;
+		if (!obj) {
+			continue;
+		}
 
 		// Collect all ancestor groups (parent, grandparent, etc.)
 		let currentParentId = obj.parentId;
@@ -69,9 +71,13 @@ function getGroupDepth(
 
 	while (currentId) {
 		const obj: { parentId?: string } | undefined = objects[currentId];
-		if (!obj) break;
+		if (!obj) {
+			break;
+		}
 		currentId = obj.parentId;
-		if (currentId) depth++;
+		if (currentId) {
+			depth++;
+		}
 	}
 
 	return depth;

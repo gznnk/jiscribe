@@ -18,7 +18,9 @@ type CanvasErrorScreenProps = {
 	diagnostics: SemanticDiagnostic[];
 };
 
-export const CanvasErrorScreen: React.FC<CanvasErrorScreenProps> = ({ diagnostics }) => {
+export const CanvasErrorScreen: React.FC<CanvasErrorScreenProps> = ({
+	diagnostics,
+}) => {
 	const [copied, setCopied] = useState(false);
 
 	const handleCopy = useCallback(() => {
@@ -43,7 +45,9 @@ export const CanvasErrorScreen: React.FC<CanvasErrorScreenProps> = ({ diagnostic
 			<ErrorCard>
 				<ErrorHeader>
 					<ErrorTitle>
-						<span role="img" aria-label="Error">⚠️</span>
+						<span role="img" aria-label="Error">
+							⚠️
+						</span>
 						キャンバスデータの読み込みエラー
 					</ErrorTitle>
 					<CopyButton onClick={handleCopy}>
@@ -52,7 +56,8 @@ export const CanvasErrorScreen: React.FC<CanvasErrorScreenProps> = ({ diagnostic
 				</ErrorHeader>
 
 				<ErrorMessage>
-					JSONデータに問題が見つかりました。<br />
+					JSONデータに問題が見つかりました。
+					<br />
 					エディタでファイルを直接修正するか、AIにエラーを渡して修正させてください。
 				</ErrorMessage>
 

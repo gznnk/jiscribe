@@ -36,7 +36,9 @@ export const doSegmentsIntersect = (
 	const s = subtract(q2, q1);
 	const denominator = crossProduct(r, s);
 
-	if (denominator === 0) return false; // Parallel or colinear 竊・always non-intersecting
+	if (denominator === 0) {
+		return false;
+	} // Parallel or colinear 竊・always non-intersecting
 
 	const qp = subtract(q1, p1);
 	const t = crossProduct(qp, s) / denominator;

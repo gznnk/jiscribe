@@ -8,10 +8,10 @@ import { getTopLevelSelectedIds } from "../getTopLevelSelectedIds";
 type Objects = Record<string, ObjectState>;
 
 const rect = (id: string, parentId?: string): RectState =>
-	({ id, type: "rect", parentId } as RectState);
+	({ id, type: "rect", parentId }) as RectState;
 
 const group = (id: string, childIds: string[], parentId?: string): GroupState =>
-	({ id, type: "group", childIds, parentId } as unknown as GroupState);
+	({ id, type: "group", childIds, parentId }) as unknown as GroupState;
 
 describe("getTopLevelSelectedIds", () => {
 	// ─── 基本ケース ────────────────────────────────────────────────

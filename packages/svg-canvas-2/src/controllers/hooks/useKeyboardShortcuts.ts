@@ -30,7 +30,9 @@ export const useKeyboardShortcuts = (
 			}
 
 			const command = commandRegistry.findByShortcut(event);
-			if (!command) return;
+			if (!command) {
+				return;
+			}
 
 			// バインディングが存在する場合はブラウザデフォルト動作を常に止める
 			event.preventDefault();

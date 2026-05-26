@@ -10,7 +10,9 @@ import type { DiagramType } from "../../types/core/DiagramType";
  * @returns True if the object is exportable, false otherwise
  */
 export const isExportable = (obj: unknown): boolean => {
-	if (!isObject(obj)) return false;
+	if (!isObject(obj)) {
+		return false;
+	}
 
 	return (
 		"type" in obj &&

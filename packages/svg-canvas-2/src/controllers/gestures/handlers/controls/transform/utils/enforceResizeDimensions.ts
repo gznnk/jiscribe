@@ -4,12 +4,18 @@ import { calcNonZeroSign, nanToZero } from "@workspace/geometry";
 import type { TransformState } from "../../../../../../states/objects/base/TransformState";
 
 /** アスペクト比を維持した高さを計算する。 */
-export function calcHeightWithAspectRatio(width: number, aspectRatio: number): number {
+export function calcHeightWithAspectRatio(
+	width: number,
+	aspectRatio: number,
+): number {
 	return nanToZero(width / aspectRatio);
 }
 
 /** アスペクト比を維持した幅を計算する。 */
-export function calcWidthWithAspectRatio(height: number, aspectRatio: number): number {
+export function calcWidthWithAspectRatio(
+	height: number,
+	aspectRatio: number,
+): number {
 	return nanToZero(height * aspectRatio);
 }
 

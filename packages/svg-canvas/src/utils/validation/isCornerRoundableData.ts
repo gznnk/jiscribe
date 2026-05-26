@@ -8,7 +8,9 @@ import type { CornerRoundableData } from "../../types/data/core/CornerRoundableD
 export const isCornerRoundableData = (
 	data: unknown,
 ): data is CornerRoundableData => {
-	if (!isObject(data)) return false;
+	if (!isObject(data)) {
+		return false;
+	}
 
 	return "cornerRadius" in data && isNonNegativeNumber(data.cornerRadius);
 };

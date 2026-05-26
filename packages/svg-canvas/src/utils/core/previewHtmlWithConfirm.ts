@@ -1,5 +1,7 @@
 export const previewHtmlWithConfirm = (html: string) => {
-	if (!window.confirm("このHTMLを表示しますか？")) return;
+	if (!window.confirm("このHTMLを表示しますか？")) {
+		return;
+	}
 
 	// 1) Blob URL で開く（推奨）
 	const blob = new Blob([html], { type: "text/html;charset=utf-8" });

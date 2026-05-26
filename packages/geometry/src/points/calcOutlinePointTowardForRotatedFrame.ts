@@ -15,25 +15,37 @@ export function calcOutlinePointTowardForRotatedFrame(
 ): Point | null {
 	const { cx, cy, width, height, rotation } = frame;
 
-	if (width <= 0 || height <= 0) return null;
+	if (width <= 0 || height <= 0) {
+		return null;
+	}
 
 	// Convert rotation from degrees to radians
 	const rotationRad = degreesToRadians(rotation);
 
 	// world -> local (centered, unrotated)
 	// Rotate the target point around the center by -rotation
-	const towardLocal = calcRotatedPoint(toward.x, toward.y, cx, cy, -rotationRad);
+	const towardLocal = calcRotatedPoint(
+		toward.x,
+		toward.y,
+		cx,
+		cy,
+		-rotationRad,
+	);
 
 	const dx = towardLocal.x - cx;
 	const dy = towardLocal.y - cy;
-	if (dx === 0 && dy === 0) return null;
+	if (dx === 0 && dy === 0) {
+		return null;
+	}
 
 	const hx = width / 2;
 	const hy = height / 2;
 
 	// Check if the point is inside the frame
 	// In local coordinates: |x| <= hx && |y| <= hy means inside
-	if (Math.abs(dx) <= hx && Math.abs(dy) <= hy) return null;
+	if (Math.abs(dx) <= hx && Math.abs(dy) <= hy) {
+		return null;
+	}
 
 	const eps = 1e-9;
 	const candidates: { t: number; p: Point }[] = [];
@@ -43,14 +55,16 @@ export function calcOutlinePointTowardForRotatedFrame(
 		const t1 = -hx / dx;
 		if (t1 > 0) {
 			const y = t1 * dy;
-			if (y >= -hy - eps && y <= hy + eps)
+			if (y >= -hy - eps && y <= hy + eps) {
 				candidates.push({ t: t1, p: { x: -hx, y } });
+			}
 		}
 		const t2 = hx / dx;
 		if (t2 > 0) {
 			const y = t2 * dy;
-			if (y >= -hy - eps && y <= hy + eps)
+			if (y >= -hy - eps && y <= hy + eps) {
 				candidates.push({ t: t2, p: { x: hx, y } });
+			}
 		}
 	}
 
@@ -59,23 +73,29 @@ export function calcOutlinePointTowardForRotatedFrame(
 		const t1 = -hy / dy;
 		if (t1 > 0) {
 			const x = t1 * dx;
-			if (x >= -hx - eps && x <= hx + eps)
+			if (x >= -hx - eps && x <= hx + eps) {
 				candidates.push({ t: t1, p: { x, y: -hy } });
+			}
 		}
 		const t2 = hy / dy;
 		if (t2 > 0) {
 			const x = t2 * dx;
-			if (x >= -hx - eps && x <= hx + eps)
+			if (x >= -hx - eps && x <= hx + eps) {
 				candidates.push({ t: t2, p: { x, y: hy } });
+			}
 		}
 	}
 
 	// pick smallest positive t (first hit on the ray)
 	let best = candidates[0];
 	for (const c of candidates) {
-		if (!best || c.t < best.t) best = c;
+		if (!best || c.t < best.t) {
+			best = c;
+		}
 	}
-	if (!best) return null;
+	if (!best) {
+		return null;
+	}
 
 	// local -> world
 	// The best.p is in local coordinates (offset from center)

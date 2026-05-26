@@ -15,11 +15,7 @@ type MenuSliderProps = {
 	max?: number;
 	label?: string;
 	property: string;
-	onPropertyUpdate?: (
-		property: string,
-		value: string,
-		commit: boolean,
-	) => void;
+	onPropertyUpdate?: (property: string, value: string, commit: boolean) => void;
 };
 
 /**

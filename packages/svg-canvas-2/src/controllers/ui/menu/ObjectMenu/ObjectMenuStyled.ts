@@ -95,10 +95,7 @@ export const MenuItemPositioner = styled.div`
 export const DropdownPanel = styled.div<{ placement?: "down" | "up" }>`
 	position: absolute;
 	left: 50%;
-	${(props) =>
-		props.placement === "up"
-			? "bottom: 40px;"
-			: "top: 40px;"}
+	${(props) => (props.placement === "up" ? "bottom: 40px;" : "top: 40px;")}
 	transform: translateX(-50%);
 	z-index: 1100;
 	display: flex;

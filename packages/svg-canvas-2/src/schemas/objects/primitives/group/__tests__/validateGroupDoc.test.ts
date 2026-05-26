@@ -8,17 +8,19 @@ describe("validateGroupDoc", () => {
 	});
 
 	it("有効な transform フィールドはエラーなし", () => {
-		expect(validateGroupDoc({ rotation: 90, flipX: false, flipY: true }, "root")).toEqual([]);
+		expect(
+			validateGroupDoc({ rotation: 90, flipX: false, flipY: true }, "root"),
+		).toEqual([]);
 	});
 
 	it("rotation が数値でない場合はエラー", () => {
 		const errors = validateGroupDoc({ rotation: "90deg" }, "root");
-		expect(errors.some(e => e.path === "root.rotation")).toBe(true);
+		expect(errors.some((e) => e.path === "root.rotation")).toBe(true);
 	});
 
 	it("flipX が boolean でない場合はエラー", () => {
 		const errors = validateGroupDoc({ flipX: 1 }, "root");
-		expect(errors.some(e => e.path === "root.flipX")).toBe(true);
+		expect(errors.some((e) => e.path === "root.flipX")).toBe(true);
 	});
 
 	it("children の検証は validateStructure 側で行うためここではエラーなし", () => {

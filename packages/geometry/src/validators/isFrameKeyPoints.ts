@@ -8,7 +8,9 @@ import type { FrameKeyPoints } from "../types/FrameKeyPoints";
  * Validates that the value has all required point properties (8 points).
  */
 export const isFrameKeyPoints = (value: unknown): value is FrameKeyPoints => {
-	if (!isObject(value)) return false;
+	if (!isObject(value)) {
+		return false;
+	}
 
 	// Check all required point properties
 	const requiredPoints = [

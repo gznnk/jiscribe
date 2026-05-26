@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import type { GroupDoc } from "../../../../../schemas/objects/primitives/group/GroupDoc";
 import type { RectDoc } from "../../../../../schemas/objects/primitives/rect/RectDoc";
-import { groupToDoc, groupToState } from "../../../../../states/objects/primitives/group/GroupMapper";
+import {
+	groupToDoc,
+	groupToState,
+} from "../../../../../states/objects/primitives/group/GroupMapper";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
 
 describe("GroupMapper", () => {

@@ -39,8 +39,12 @@ const updateItemsWithOutline = (
 	const maxY = Math.max(selectionBounds.startY, selectionBounds.endY);
 
 	return applyFunctionRecursively(items, (item, ancestors) => {
-		if (!isSelectableState(item)) return item;
-		if (item.type === "ConnectLine") return item;
+		if (!isSelectableState(item)) {
+			return item;
+		}
+		if (item.type === "ConnectLine") {
+			return item;
+		}
 		if (
 			ancestors.some(
 				(ancestor) =>
@@ -428,7 +432,9 @@ export const useAreaSelection = (props: SvgCanvasSubHooksProps) => {
 		setCanvasState((prevState) => ({
 			...prevState,
 			items: applyFunctionRecursively(prevState.items, (item) => {
-				if (!isSelectableState(item)) return item;
+				if (!isSelectableState(item)) {
+					return item;
+				}
 				return {
 					...item,
 					showOutline: false,

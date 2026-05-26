@@ -19,10 +19,12 @@ import type { MenuItemProps } from "../../ObjectMenuTypes";
 const SECTION_ID = "sticky-color";
 const SUBMENU_SIZE = { width: 200, height: 100 } as const;
 
-const getSelectedFillColor = (
-	state: MenuItemProps["canvasState"],
-): string => {
-	const obj = getFirstSelectedWithProp(state.selectedIds, state.objects, "fill");
+const getSelectedFillColor = (state: MenuItemProps["canvasState"]): string => {
+	const obj = getFirstSelectedWithProp(
+		state.selectedIds,
+		state.objects,
+		"fill",
+	);
 	const fill = (obj as Record<string, unknown>)?.fill;
 	return typeof fill === "string" ? fill : "transparent";
 };
@@ -52,8 +54,7 @@ const StickyColorMenuComponent: React.FC<MenuItemProps> = ({ canvasState }) => {
 									key={preset.value}
 									swatchColor={preset.value}
 									selected={
-										preset.value.toLowerCase() ===
-										currentColor.toLowerCase()
+										preset.value.toLowerCase() === currentColor.toLowerCase()
 									}
 									data-kind="object-menu"
 									data-id={`object-menu:set:fill:${preset.value}`}

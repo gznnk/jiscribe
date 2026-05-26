@@ -182,6 +182,7 @@ packages/svg-canvas-2/src/
   - **共配置**: 形状ごとに State + Mapper + テストをセットで配置
 
 **依存関係**:
+
 - states → schemas（StateはDocから変換される）
 
 ### 2. ロジック層（controllers）
@@ -190,10 +191,10 @@ packages/svg-canvas-2/src/
 
 - **gestures/handlers/objects/**: オブジェクト操作ロジック
   - **base/**: 共通変形ロジック（FrameTransform, PolyTransform, GroupTransform）
-  - **primitives/*Controller.ts**: 形状ごとの状態更新関数
+  - **primitives/\*Controller.ts**: 形状ごとの状態更新関数
     - `moveByDelta`: 平行移動
     - `transformByGroup`: 親グループ変形時の子の変換
-  - **primitives/*EventHandler.ts**: イベントハンドラー
+  - **primitives/\*EventHandler.ts**: イベントハンドラー
     - onDragStart, onDrag, onDragEnd, onClick
 
 - **gestures/handlers/controls/**: 変形コントロールロジック
@@ -204,6 +205,7 @@ packages/svg-canvas-2/src/
   - カーソル制御など
 
 **依存関係**:
+
 - controllers → states（状態の型を参照）
 - controllers → schemas（一部でDoc型を参照）
 - controllers → registry（動的な機能解決）
@@ -220,6 +222,7 @@ packages/svg-canvas-2/src/
   - イベントハンドラーは Props 経由で受け取る
 
 **依存関係**:
+
 - presentations → states（Props の型として参照）
 
 ### 4. Registry 層
@@ -240,6 +243,7 @@ packages/svg-canvas-2/src/
   - 依存関係の逆転（registry は具体的な実装に依存しない）
 
 **依存関係**:
+
 - registry → states（型定義のみ）
 - controllers → registry（機能の動的取得）
 
@@ -316,6 +320,7 @@ states/objects/primitives/rect/
 ```
 
 **メリット**:
+
 - 関連ファイルが近くにある（検索しやすい）
 - 形状追加時に必要なファイルが明確
 - テストも同じ場所に配置
@@ -327,40 +332,45 @@ states/objects/primitives/rect/
 ```typescript
 // GroupController.ts
 export function transformChildren(
-    rootGroupStart: GroupState,
-    rootGroupEnd: GroupState,
-    targetGroup: GroupState,
-    allObjects: Record<string, ObjectState>
+	rootGroupStart: GroupState,
+	rootGroupEnd: GroupState,
+	targetGroup: GroupState,
+	allObjects: Record<string, ObjectState>,
 ): Record<string, ObjectState> {
-    const transformed = {} as Record<string, ObjectState>;
+	const transformed = {} as Record<string, ObjectState>;
 
-    for (const childId of targetGroup.childIds) {
-        const child = allObjects[childId];
+	for (const childId of targetGroup.childIds) {
+		const child = allObjects[childId];
 
-        // Registry経由で形状ごとのtransform関数を取得
-        const transformByGroup = objectRegistry.getTransformByGroup(child.type);
+		// Registry経由で形状ごとのtransform関数を取得
+		const transformByGroup = objectRegistry.getTransformByGroup(child.type);
 
-        if (transformByGroup) {
-            transformed[childId] = transformByGroup(child, rootGroupStart, rootGroupEnd);
-        }
+		if (transformByGroup) {
+			transformed[childId] = transformByGroup(
+				child,
+				rootGroupStart,
+				rootGroupEnd,
+			);
+		}
 
-        // 再帰処理
-        if (child.type === "group") {
-            const nestedTransformed = transformChildren(
-                rootGroupStart,
-                rootGroupEnd,
-                child as GroupState,
-                allObjects
-            );
-            Object.assign(transformed, nestedTransformed);
-        }
-    }
+		// 再帰処理
+		if (child.type === "group") {
+			const nestedTransformed = transformChildren(
+				rootGroupStart,
+				rootGroupEnd,
+				child as GroupState,
+				allObjects,
+			);
+			Object.assign(transformed, nestedTransformed);
+		}
+	}
 
-    return transformed;
+	return transformed;
 }
 ```
 
 **メリット**:
+
 - if-else の分岐不要
 - 新しい形状追加時にロジック変更不要
 - 型安全
@@ -383,15 +393,15 @@ export function transformChildren(
 ```typescript
 // EllipseController.ts
 export const transformByGroup: TransformByGroupFunction<EllipseState> = (
-    state,
-    groupStart,
-    groupEnd,
+	state,
+	groupStart,
+	groupEnd,
 ) => {
-    return transformFrameByGroup(
-        state,
-        groupStart as GroupState,
-        groupEnd as GroupState,
-    );
+	return transformFrameByGroup(
+		state,
+		groupStart as GroupState,
+		groupEnd as GroupState,
+	);
 };
 ```
 
@@ -409,15 +419,18 @@ export const transformByGroup: TransformByGroupFunction<EllipseState> = (
 ## 設計上の禁止事項
 
 ❌ **禁止される依存関係**:
+
 - states → controllers（状態定義がロジックに依存してはいけない）
 - schemas → states（永続化型がランタイム型に依存してはいけない）
 - presentations → controllers（表示がロジックに依存してはいけない）
 
 ❌ **Mapper での再帰処理禁止**:
+
 - Mapper は自身のプロパティのみを変換
 - 子要素の変換は CanvasMapper が一元管理
 
 ❌ **EventHandler での形状判定禁止**:
+
 - if (child.type === "rect") のような分岐を避ける
 - Registry 経由で動的に解決
 

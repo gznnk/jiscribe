@@ -87,7 +87,9 @@ export const cleanupGroups = (
 
 				const childId = group.childIds[0];
 				const child = updatedObjects[childId];
-				if (!child) continue;
+				if (!child) {
+					continue;
+				}
 
 				if (group.parentId != null) {
 					// 親グループに子を移動

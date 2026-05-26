@@ -1,4 +1,9 @@
-import type { TransformedFrame, Point, TransformedRect, TransformedEllipse } from "@workspace/geometry";
+import type {
+	TransformedFrame,
+	Point,
+	TransformedRect,
+	TransformedEllipse,
+} from "@workspace/geometry";
 import {
 	convertTransformedEllipseToFrame,
 	convertPointsToFrame,
@@ -9,7 +14,9 @@ import { convertDiagramToPoint } from "./convertDiagramToPoint";
 import type { Diagram } from "../../types/state/core/Diagram";
 import { isPolyState } from "../validation/isPolyState";
 
-export const convertDiagramToFrame = (diagram: Diagram): TransformedFrame | undefined => {
+export const convertDiagramToFrame = (
+	diagram: Diagram,
+): TransformedFrame | undefined => {
 	if (diagram.geometryType === "rect") {
 		// Type assertion: we know from geometryType that diagram has rect properties
 		const d = diagram as Diagram & TransformedRect;

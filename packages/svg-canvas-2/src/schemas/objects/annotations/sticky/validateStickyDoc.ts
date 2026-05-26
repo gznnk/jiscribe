@@ -8,10 +8,18 @@ import {
 } from "../../utils/validateDocUtils";
 
 export const validateStickyDoc: ObjectDocValidateFn = (o, path) => [
-	...(isNumber(o.x) ? [] : [{ path: `${path}.x`, message: "must be a number" }]),
-	...(isNumber(o.y) ? [] : [{ path: `${path}.y`, message: "must be a number" }]),
-	...(isNumber(o.width) ? [] : [{ path: `${path}.width`, message: "must be a number" }]),
-	...(isNumber(o.height) ? [] : [{ path: `${path}.height`, message: "must be a number" }]),
+	...(isNumber(o.x)
+		? []
+		: [{ path: `${path}.x`, message: "must be a number" }]),
+	...(isNumber(o.y)
+		? []
+		: [{ path: `${path}.y`, message: "must be a number" }]),
+	...(isNumber(o.width)
+		? []
+		: [{ path: `${path}.width`, message: "must be a number" }]),
+	...(isNumber(o.height)
+		? []
+		: [{ path: `${path}.height`, message: "must be a number" }]),
 	...validateTransformFields(o, path),
 	...validateFillStyleFields(o, path),
 	...validateTextStyleFields(o, path),

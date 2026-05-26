@@ -22,7 +22,9 @@ export const SwapArrowsCommand: Command = {
 			const connector = state.objects[state.selectedConnectorId] as
 				| ConnectorState
 				| undefined;
-			if (!connector) return state;
+			if (!connector) {
+				return state;
+			}
 			const prev = connector.startArrow ?? "None";
 			const next = connector.endArrow ?? "None";
 			return {
@@ -45,7 +47,9 @@ export const SwapArrowsCommand: Command = {
 
 		for (const id of state.selectedIds) {
 			const obj = state.objects[id];
-			if (!obj) continue;
+			if (!obj) {
+				continue;
+			}
 
 			if (obj.type === "polyline") {
 				const polyline = obj as PolylineState;
@@ -60,7 +64,9 @@ export const SwapArrowsCommand: Command = {
 			}
 		}
 
-		if (!changed) return state;
+		if (!changed) {
+			return state;
+		}
 		return {
 			...state,
 			objects: updatedObjects,

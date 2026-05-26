@@ -33,7 +33,10 @@ import { PRECISION } from "../../../../../constants/precision";
 import type { TransformState } from "../../../../../states/objects/base/TransformState";
 import { isTransformState } from "../../../../../states/objects/base/TransformState";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
-import type { CanvasControllerState, SnapFeedback } from "../../../../CanvasTypes";
+import type {
+	CanvasControllerState,
+	SnapFeedback,
+} from "../../../../CanvasTypes";
 import { buildSelectedIdsWithDescendants } from "../../../../utils/buildSelectedIdsWithDescendants";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
@@ -183,8 +186,9 @@ export class TransformControlHandler implements ControlStrategy {
 			? eventStartSnapshot.multiSelectGroup?.id
 			: selectedId;
 		const startFrameKeyPoints: FrameKeyPoints =
-			(startFrameKeyPointsId && eventStartSnapshot.keyPoints[startFrameKeyPointsId])
-			|| calcFrameKeyPoints(startFrame);
+			(startFrameKeyPointsId &&
+				eventStartSnapshot.keyPoints[startFrameKeyPointsId]) ||
+			calcFrameKeyPoints(startFrame);
 
 		const isSwapped = (startFrame.rotation + 405) % 180 > 90;
 
@@ -214,7 +218,11 @@ export class TransformControlHandler implements ControlStrategy {
 		const snapCandidates = eventStartSnapshot.snapCandidates;
 
 		if (snapCandidates && !event.mods.ctrl) {
-			const tentativeBBox = calcTentativeBBox(resizeResult, startFrame, radians);
+			const tentativeBBox = calcTentativeBBox(
+				resizeResult,
+				startFrame,
+				radians,
+			);
 			const xEdge = getAnchorXSnapEdge(anchorType, resizeResult.scaleX);
 			const yEdge = getAnchorYSnapEdge(anchorType, resizeResult.scaleY);
 
@@ -222,34 +230,71 @@ export class TransformControlHandler implements ControlStrategy {
 				// 数値ヤコビアン: カーソルをε動かした場合のBBox変化を計算
 				const ε = 1.0;
 				const resPlusDx = this.calculateResize(
-					anchorType, startFrame, event.last.x + ε, event.last.y,
-					startFrameKeyPoints, radians, aspectRatio, doKeepProportion, isSwapped,
+					anchorType,
+					startFrame,
+					event.last.x + ε,
+					event.last.y,
+					startFrameKeyPoints,
+					radians,
+					aspectRatio,
+					doKeepProportion,
+					isSwapped,
 				);
 				const resPlusDy = this.calculateResize(
-					anchorType, startFrame, event.last.x, event.last.y + ε,
-					startFrameKeyPoints, radians, aspectRatio, doKeepProportion, isSwapped,
+					anchorType,
+					startFrame,
+					event.last.x,
+					event.last.y + ε,
+					startFrameKeyPoints,
+					radians,
+					aspectRatio,
+					doKeepProportion,
+					isSwapped,
 				);
-				const bboxPlusDx = resPlusDx ? calcTentativeBBox(resPlusDx, startFrame, radians) : tentativeBBox;
-				const bboxPlusDy = resPlusDy ? calcTentativeBBox(resPlusDy, startFrame, radians) : tentativeBBox;
+				const bboxPlusDx = resPlusDx
+					? calcTentativeBBox(resPlusDx, startFrame, radians)
+					: tentativeBBox;
+				const bboxPlusDy = resPlusDy
+					? calcTentativeBBox(resPlusDy, startFrame, radians)
+					: tentativeBBox;
 
 				const J = {
-					left:   { dx: (bboxPlusDx.left   - tentativeBBox.left)   / ε, dy: (bboxPlusDy.left   - tentativeBBox.left)   / ε },
-					right:  { dx: (bboxPlusDx.right  - tentativeBBox.right)  / ε, dy: (bboxPlusDy.right  - tentativeBBox.right)  / ε },
-					top:    { dx: (bboxPlusDx.top    - tentativeBBox.top)    / ε, dy: (bboxPlusDy.top    - tentativeBBox.top)    / ε },
-					bottom: { dx: (bboxPlusDx.bottom - tentativeBBox.bottom) / ε, dy: (bboxPlusDy.bottom - tentativeBBox.bottom) / ε },
+					left: {
+						dx: (bboxPlusDx.left - tentativeBBox.left) / ε,
+						dy: (bboxPlusDy.left - tentativeBBox.left) / ε,
+					},
+					right: {
+						dx: (bboxPlusDx.right - tentativeBBox.right) / ε,
+						dy: (bboxPlusDy.right - tentativeBBox.right) / ε,
+					},
+					top: {
+						dx: (bboxPlusDx.top - tentativeBBox.top) / ε,
+						dy: (bboxPlusDy.top - tentativeBBox.top) / ε,
+					},
+					bottom: {
+						dx: (bboxPlusDx.bottom - tentativeBBox.bottom) / ε,
+						dy: (bboxPlusDy.bottom - tentativeBBox.bottom) / ε,
+					},
 				} as const;
 
 				// 感度が低い辺のスナップはスキップ
 				const SENSITIVITY = 0.3;
-				const xSens = xEdge ? Math.max(Math.abs(J[xEdge].dx), Math.abs(J[xEdge].dy)) : 0;
-				const ySens = yEdge ? Math.max(Math.abs(J[yEdge].dx), Math.abs(J[yEdge].dy)) : 0;
+				const xSens = xEdge
+					? Math.max(Math.abs(J[xEdge].dx), Math.abs(J[xEdge].dy))
+					: 0;
+				const ySens = yEdge
+					? Math.max(Math.abs(J[yEdge].dx), Math.abs(J[yEdge].dy))
+					: 0;
 				const snapX = xEdge !== null && xSens > SENSITIVITY;
 				const snapY = yEdge !== null && ySens > SENSITIVITY;
 
 				if (snapX || snapY) {
 					const excludeIds =
-						eventStartSnapshot.selectedIdsWithDescendants
-						?? buildSelectedIdsWithDescendants(state.selectedIds, eventStartSnapshot.objects);
+						eventStartSnapshot.selectedIdsWithDescendants ??
+						buildSelectedIdsWithDescendants(
+							state.selectedIds,
+							eventStartSnapshot.objects,
+						);
 					const filteredCandidates = {
 						x: snapCandidates.x.filter((c) => !excludeIds.has(c.objectId)),
 						y: snapCandidates.y.filter((c) => !excludeIds.has(c.objectId)),
@@ -273,10 +318,15 @@ export class TransformControlHandler implements ControlStrategy {
 
 					if (cursorDelta.dx !== 0 || cursorDelta.dy !== 0) {
 						const snapped = this.calculateResize(
-							anchorType, startFrame,
+							anchorType,
+							startFrame,
 							event.last.x + cursorDelta.dx,
 							event.last.y + cursorDelta.dy,
-							startFrameKeyPoints, radians, aspectRatio, doKeepProportion, isSwapped,
+							startFrameKeyPoints,
+							radians,
+							aspectRatio,
+							doKeepProportion,
+							isSwapped,
 						);
 						if (snapped) {
 							resizeResult = snapped;
@@ -284,7 +334,11 @@ export class TransformControlHandler implements ControlStrategy {
 					}
 
 					// スナップ後の実際のBBoxでガイド線を生成
-					const actualBBox = calcTentativeBBox(resizeResult, startFrame, radians);
+					const actualBBox = calcTentativeBBox(
+						resizeResult,
+						startFrame,
+						radians,
+					);
 					snapFeedback = buildSnapFeedback(
 						actualBBox,
 						findSnapResult.xResult,

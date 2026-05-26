@@ -40,7 +40,9 @@ export const ZoomToSelectionCommand: Command = {
 
 		for (const id of targetIds) {
 			const obj = state.objects[id];
-			if (!obj || obj.type === "group") continue;
+			if (!obj || obj.type === "group") {
+				continue;
+			}
 
 			if (isTransformedFrame(obj)) {
 				const bbox = calcBoundingBox(obj);
@@ -59,7 +61,9 @@ export const ZoomToSelectionCommand: Command = {
 			}
 		}
 
-		if (!isFinite(minX)) return state;
+		if (!isFinite(minX)) {
+			return state;
+		}
 
 		const contentWidth = maxX - minX;
 		const contentHeight = maxY - minY;

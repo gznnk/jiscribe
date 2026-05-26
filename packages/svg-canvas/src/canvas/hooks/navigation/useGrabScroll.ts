@@ -239,7 +239,9 @@ export const useGrabScroll = (
 	const onGrabMove = useCallback(
 		(e: React.PointerEvent<SVGSVGElement>): void => {
 			// If drag start state is not set, do nothing
-			if (!dragStartState.current) return;
+			if (!dragStartState.current) {
+				return;
+			}
 
 			// Bypass references to avoid function creation in every render.
 			const { setCanvasState, zoom, onPanZoomChange } = refBus.current;

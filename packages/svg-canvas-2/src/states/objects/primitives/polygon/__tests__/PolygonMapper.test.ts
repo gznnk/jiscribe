@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import type { PolygonDoc } from "../../../../../schemas/objects/primitives/polygon/PolygonDoc";
-import { polygonToDoc, polygonToState } from "../../../../../states/objects/primitives/polygon/PolygonMapper";
+import {
+	polygonToDoc,
+	polygonToState,
+} from "../../../../../states/objects/primitives/polygon/PolygonMapper";
 import type { PolygonState } from "../../../../../states/objects/primitives/polygon/PolygonState";
 
 describe("PolygonMapper", () => {

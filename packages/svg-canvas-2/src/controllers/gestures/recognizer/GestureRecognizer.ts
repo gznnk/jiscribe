@@ -105,7 +105,9 @@ export class GestureRecognizer {
 	 * requestAnimationFrameを使ってイベント処理をスケジュール
 	 */
 	private schedule(): void {
-		if (this.scheduled) return;
+		if (this.scheduled) {
+			return;
+		}
 		this.scheduled = true;
 		requestAnimationFrame(() => {
 			this.scheduled = false;

@@ -8,7 +8,9 @@ import type { TransformativeData } from "../../types/data/core/TransformativeDat
 export const isTransformativeData = (
 	data: unknown,
 ): data is TransformativeData => {
-	if (!isObject(data)) return false;
+	if (!isObject(data)) {
+		return false;
+	}
 	return (
 		// TODO: 要精査
 		// isFrame(data) &&

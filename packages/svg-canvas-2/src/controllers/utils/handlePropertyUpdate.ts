@@ -39,7 +39,9 @@ const isArrowPropertySupported = (
 	objectType: string,
 	property: string,
 ): boolean => {
-	if (property !== "startArrow" && property !== "endArrow") return false;
+	if (property !== "startArrow" && property !== "endArrow") {
+		return false;
+	}
 	return objectType === "polyline" || objectType === "connector";
 };
 
@@ -71,14 +73,18 @@ export const handlePropertyUpdate = (
 	// Connector 選択時（selectedIds は空）
 	if (selectedIds.length === 0 && selectedConnectorId !== null) {
 		const connector = objects[selectedConnectorId];
-		if (!connector) return state;
+		if (!connector) {
+			return state;
+		}
 
 		const features = objectMapperRegistry.getFeatures(connector.type);
 		const supported = features
 			? isPropertySupported(features, property)
 			: false;
 		const arrowSupported = isArrowPropertySupported(connector.type, property);
-		if (!supported && !arrowSupported) return state;
+		if (!supported && !arrowSupported) {
+			return state;
+		}
 
 		const parsedValue = parsePropertyValue(property, value);
 		return {
@@ -93,7 +99,9 @@ export const handlePropertyUpdate = (
 		};
 	}
 
-	if (selectedIds.length === 0) return state;
+	if (selectedIds.length === 0) {
+		return state;
+	}
 
 	// lockAspectRatio かつ複数選択時は multiSelectGroup のみ更新
 	if (property === "lockAspectRatio" && multiSelectGroup) {
@@ -116,7 +124,9 @@ export const handlePropertyUpdate = (
 	// ルートレベルの選択オブジェクトに対してプロパティを更新
 	for (const id of selectedIds) {
 		const obj = objects[id];
-		if (!obj) continue;
+		if (!obj) {
+			continue;
+		}
 
 		const features = objectMapperRegistry.getFeatures(obj.type);
 		const supported = features
@@ -124,7 +134,9 @@ export const handlePropertyUpdate = (
 			: false;
 		const arrowSupported = isArrowPropertySupported(obj.type, property);
 
-		if (!supported && !arrowSupported) continue;
+		if (!supported && !arrowSupported) {
+			continue;
+		}
 
 		updatedObjects[id] = {
 			...obj,
@@ -139,12 +151,16 @@ export const handlePropertyUpdate = (
 			const descendantIds = collectDescendantIds(id, objects);
 			for (const descId of descendantIds) {
 				const descObj = updatedObjects[descId] ?? objects[descId];
-				if (!descObj) continue;
+				if (!descObj) {
+					continue;
+				}
 				const features = objectMapperRegistry.getFeatures(descObj.type);
 				const supported = features
 					? isPropertySupported(features, property)
 					: false;
-				if (!supported) continue;
+				if (!supported) {
+					continue;
+				}
 				updatedObjects[descId] = {
 					...descObj,
 					[property]: parsedValue,
@@ -154,7 +170,9 @@ export const handlePropertyUpdate = (
 		}
 	}
 
-	if (!changed) return state;
+	if (!changed) {
+		return state;
+	}
 
 	return {
 		...state,

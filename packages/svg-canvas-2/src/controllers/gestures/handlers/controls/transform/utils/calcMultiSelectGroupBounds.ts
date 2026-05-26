@@ -89,7 +89,9 @@ function collectBounds(
 ): void {
 	for (const childId of childIds) {
 		const child = objects[childId];
-		if (!child) continue;
+		if (!child) {
+			continue;
+		}
 
 		if (child.type === "group") {
 			const nestedGroup = child as GroupState;
@@ -125,7 +127,9 @@ function collectChildPoints(
 
 	for (const childId of childIds) {
 		const child = objects[childId];
-		if (!child) continue;
+		if (!child) {
+			continue;
+		}
 
 		if (child.type === "group") {
 			const nestedGroup = child as GroupState;

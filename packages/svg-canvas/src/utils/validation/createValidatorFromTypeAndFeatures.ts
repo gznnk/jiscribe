@@ -15,17 +15,35 @@ import type { DiagramFeatures } from "../../types/core/DiagramFeatures";
 export const createValidatorFromTypeAndFeatures =
 	(type: string, features: DiagramFeatures) =>
 	(data: unknown): boolean => {
-		if (!isDiagramBaseData(data)) return false;
-		if (data.type !== type) return false;
+		if (!isDiagramBaseData(data)) {
+			return false;
+		}
+		if (data.type !== type) {
+			return false;
+		}
 
 		// Check all required features
-		if (features.transformative && !isTransformativeData(data)) return false;
-		if (features.connectable && !isConnectableData(data)) return false;
-		if (features.strokable && !isStrokableData(data)) return false;
-		if (features.fillable && !isFillableData(data)) return false;
-		if (features.cornerRoundable && !isCornerRoundableData(data)) return false;
-		if (features.textable && !isTextableData(data)) return false;
-		if (features.originable && !isOriginableData(data)) return false;
+		if (features.transformative && !isTransformativeData(data)) {
+			return false;
+		}
+		if (features.connectable && !isConnectableData(data)) {
+			return false;
+		}
+		if (features.strokable && !isStrokableData(data)) {
+			return false;
+		}
+		if (features.fillable && !isFillableData(data)) {
+			return false;
+		}
+		if (features.cornerRoundable && !isCornerRoundableData(data)) {
+			return false;
+		}
+		if (features.textable && !isTextableData(data)) {
+			return false;
+		}
+		if (features.originable && !isOriginableData(data)) {
+			return false;
+		}
 
 		return true;
 	};

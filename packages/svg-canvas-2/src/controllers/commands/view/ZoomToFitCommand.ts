@@ -33,7 +33,9 @@ export const ZoomToFitCommand: Command = {
 			maxY = -Infinity;
 
 		for (const obj of Object.values(state.objects)) {
-			if (!obj || obj.type === "group") continue;
+			if (!obj || obj.type === "group") {
+				continue;
+			}
 
 			if (isTransformedFrame(obj)) {
 				const bbox = calcBoundingBox(obj);
@@ -52,7 +54,9 @@ export const ZoomToFitCommand: Command = {
 			}
 		}
 
-		if (!isFinite(minX)) return state;
+		if (!isFinite(minX)) {
+			return state;
+		}
 
 		const contentWidth = maxX - minX;
 		const contentHeight = maxY - minY;

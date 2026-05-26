@@ -6,7 +6,9 @@ const VALID_EXTENSIONS = [".jis.json", ".jiscribe.json"];
 
 function stripJisExtension(name: string): string {
 	for (const ext of VALID_EXTENSIONS) {
-		if (name.endsWith(ext)) return name.slice(0, -ext.length);
+		if (name.endsWith(ext)) {
+			return name.slice(0, -ext.length);
+		}
 	}
 	return name;
 }
@@ -33,7 +35,9 @@ async function findAvailableFileName(
 async function resolveTargetFolder(
 	folderUri: vscode.Uri | undefined,
 ): Promise<vscode.Uri | undefined> {
-	if (folderUri) return folderUri;
+	if (folderUri) {
+		return folderUri;
+	}
 
 	const workspaceFolders = vscode.workspace.workspaceFolders;
 	if (workspaceFolders && workspaceFolders.length === 1) {
@@ -57,7 +61,9 @@ async function resolveTargetFolder(
 
 async function createCanvas(folderUri: vscode.Uri | undefined): Promise<void> {
 	const targetFolder = await resolveTargetFolder(folderUri);
-	if (!targetFolder) return;
+	if (!targetFolder) {
+		return;
+	}
 
 	const defaultName = await findAvailableFileName(
 		targetFolder,
@@ -68,14 +74,19 @@ async function createCanvas(folderUri: vscode.Uri | undefined): Promise<void> {
 		prompt: "Enter a file name",
 		value: defaultName,
 		validateInput: (value) => {
-			if (!value.trim()) return "File name is required";
-			if (!VALID_EXTENSIONS.some((ext) => value.endsWith(ext)))
+			if (!value.trim()) {
+				return "File name is required";
+			}
+			if (!VALID_EXTENSIONS.some((ext) => value.endsWith(ext))) {
 				return `File name must end with one of: ${VALID_EXTENSIONS.join(", ")}`;
+			}
 			return null;
 		},
 	});
 
-	if (!fileName) return;
+	if (!fileName) {
+		return;
+	}
 
 	const fileUri = vscode.Uri.joinPath(targetFolder, fileName);
 
@@ -87,7 +98,9 @@ async function createCanvas(folderUri: vscode.Uri | undefined): Promise<void> {
 				{ modal: true },
 				"Overwrite",
 			);
-			if (answer !== "Overwrite") return;
+			if (answer !== "Overwrite") {
+				return;
+			}
 		} catch {
 			// File does not exist — proceed normally
 		}

@@ -10,8 +10,12 @@ import { isDiagramBaseData } from "../../validation/isDiagramBaseData";
  * @returns True if the data is ConnectPointData
  */
 export const isConnectPointData = (data: unknown): data is ConnectPointData => {
-	if (!isDiagramBaseData(data)) return false;
-	if (data.type !== "ConnectPoint") return false;
+	if (!isDiagramBaseData(data)) {
+		return false;
+	}
+	if (data.type !== "ConnectPoint") {
+		return false;
+	}
 
 	const connectPointData = data as ConnectPointData;
 	return isString(connectPointData.name);

@@ -102,10 +102,14 @@ export const useOnDrag = (props: SvgCanvasSubHooksProps) => {
 			// Recursively update diagram and all its descendants
 			const updateDiagramRecursively = (diagram: Diagram): Diagram => {
 				const initialItem = initialItems.get(diagram.id);
-				if (!initialItem) return diagram;
+				if (!initialItem) {
+					return diagram;
+				}
 
 				const initialPoint = convertDiagramToPoint(initialItem);
-				if (!initialPoint) return diagram;
+				if (!initialPoint) {
+					return diagram;
+				}
 
 				// Update position and dragging state
 				let newItem = {

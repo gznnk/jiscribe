@@ -60,7 +60,9 @@ const DiagramMenuComponent: React.FC<DiagramMenuProps> = ({
 	// Only one menu can be open at a time (exclusive behavior)
 	const menuState = useDiagramMenuItemsState({ shouldCloseAll: !shouldRender });
 
-	if (!shouldRender) return null;
+	if (!shouldRender) {
+		return null;
+	}
 
 	// Get common menu configuration for selected diagrams
 	const menuConfig = getCommonMenuConfig(selectedItems);
@@ -216,7 +218,7 @@ const DiagramMenuComponent: React.FC<DiagramMenuProps> = ({
 	const shouldDisplayKeepAspectRatioMenu = Boolean(
 		(singleSelectedItem &&
 			DiagramRegistry.getMenuConfig(singleSelectedItem.type)?.aspectRatio) ||
-			canvasProps.multiSelectGroup,
+		canvasProps.multiSelectGroup,
 	);
 	if (shouldDisplayKeepAspectRatioMenu) {
 		// Create a section for keep aspect ratio items.
@@ -235,7 +237,7 @@ const DiagramMenuComponent: React.FC<DiagramMenuProps> = ({
 	// Create a section for group and ungroup items.
 	const shouldShowGroupMenu = Boolean(
 		canvasProps.multiSelectGroup ||
-			(singleSelectedItem && singleSelectedItem.type === "Group"),
+		(singleSelectedItem && singleSelectedItem.type === "Group"),
 	);
 	if (shouldShowGroupMenu) {
 		// Create a section for group and ungroup items.

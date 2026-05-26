@@ -15,26 +15,40 @@ export function calcOutlinePointTowardForRotatedEllipse(
 ): Point | null {
 	const { cx, cy, rx, ry, rotation } = ellipse;
 
-	if (rx <= 0 || ry <= 0) return null;
+	if (rx <= 0 || ry <= 0) {
+		return null;
+	}
 
 	// Convert rotation from degrees to radians
 	const rotationRad = degreesToRadians(rotation);
 
 	// world -> local (centered, unrotated)
 	// Rotate the target point around the center by -rotation
-	const towardLocal = calcRotatedPoint(toward.x, toward.y, cx, cy, -rotationRad);
+	const towardLocal = calcRotatedPoint(
+		toward.x,
+		toward.y,
+		cx,
+		cy,
+		-rotationRad,
+	);
 
 	const dx = towardLocal.x - cx;
 	const dy = towardLocal.y - cy;
-	if (dx === 0 && dy === 0) return null;
+	if (dx === 0 && dy === 0) {
+		return null;
+	}
 
 	// Check if the point is inside the ellipse
 	// In local coordinates: (x/rx)^2 + (y/ry)^2 <= 1 means inside
 	const normalizedDist = (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry);
-	if (normalizedDist <= 1) return null;
+	if (normalizedDist <= 1) {
+		return null;
+	}
 
 	const denom = Math.sqrt(normalizedDist);
-	if (denom === 0) return null;
+	if (denom === 0) {
+		return null;
+	}
 
 	const pLocal: Point = { x: dx / denom, y: dy / denom };
 

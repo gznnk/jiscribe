@@ -66,7 +66,9 @@ export const useCopy = (props: SvgCanvasSubHooksProps) => {
 		const selectedItems = getSelectedDiagrams(items);
 
 		// If no items are selected, do nothing
-		if (selectedItems.length === 0) return;
+		if (selectedItems.length === 0) {
+			return;
+		}
 
 		try {
 			// Collect IDs of selected shapes

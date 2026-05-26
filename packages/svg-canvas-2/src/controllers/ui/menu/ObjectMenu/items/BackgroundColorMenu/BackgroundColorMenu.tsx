@@ -20,7 +20,11 @@ type BackgroundColorMenuProps = {
 };
 
 const getSelectedFillColor = (state: CanvasControllerState): string => {
-	const obj = getFirstSelectedWithProp(state.selectedIds, state.objects, "fill");
+	const obj = getFirstSelectedWithProp(
+		state.selectedIds,
+		state.objects,
+		"fill",
+	);
 	const fill = (obj as Record<string, unknown>)?.fill;
 	return typeof fill === "string" ? fill : "transparent";
 };

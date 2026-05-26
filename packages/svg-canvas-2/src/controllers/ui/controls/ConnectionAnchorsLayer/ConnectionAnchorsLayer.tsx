@@ -33,7 +33,14 @@ type ConnectionAnchorsLayerProps = {
  */
 const ConnectionAnchorsLayerComponent: React.FC<
 	ConnectionAnchorsLayerProps
-> = ({ selectedIds, objects, zoom = 1, pendingConnector, editingEndpoint, isTextEditing }) => {
+> = ({
+	selectedIds,
+	objects,
+	zoom = 1,
+	pendingConnector,
+	editingEndpoint,
+	isTextEditing,
+}) => {
 	// Do not render anchors while text editing
 	if (isTextEditing) {
 		return null;
@@ -55,9 +62,10 @@ const ConnectionAnchorsLayerComponent: React.FC<
 	const activeEditingEndpoint = editingEndpoint ?? "target";
 
 	// Determine which endpoint is being edited (hover target)
-	const editingEndpointRef = activeEditingEndpoint === "source"
-		? pendingConnector?.source
-		: pendingConnector?.target;
+	const editingEndpointRef =
+		activeEditingEndpoint === "source"
+			? pendingConnector?.source
+			: pendingConnector?.target;
 
 	const targetObjectId = editingEndpointRef?.owner?.id;
 	const targetObject = targetObjectId ? objects[targetObjectId] : null;

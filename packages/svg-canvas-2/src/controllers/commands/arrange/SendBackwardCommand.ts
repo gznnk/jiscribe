@@ -33,7 +33,11 @@ export const SendBackwardCommand: Command = {
 		}
 
 		if (commonParentId == null) {
-			return { ...state, rootIds: updatedIds, commitVersion: state.commitVersion + 1 };
+			return {
+				...state,
+				rootIds: updatedIds,
+				commitVersion: state.commitVersion + 1,
+			};
 		}
 
 		const parent = state.objects[commonParentId] as GroupState;

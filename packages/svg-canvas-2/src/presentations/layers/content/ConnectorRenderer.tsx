@@ -17,7 +17,9 @@ export const ConnectorRenderer: React.FC<ConnectorRendererProps> = ({
 	const points = useResolvedConnectorPoints(connectorState, objects);
 
 	// Skip rendering if endpoints cannot be resolved
-	if (!points) return null;
+	if (!points) {
+		return null;
+	}
 
 	return (
 		<Connector

@@ -380,7 +380,9 @@ const SvgCanvasComponent = forwardRef<SvgCanvasRef, SvgCanvasProps>(
 		// Monitor container size changes with ResizeObserver
 		useEffect(() => {
 			const container = containerRef.current;
-			if (!container) return;
+			if (!container) {
+				return;
+			}
 
 			const resizeObserver = new ResizeObserver((entries) => {
 				for (const entry of entries) {

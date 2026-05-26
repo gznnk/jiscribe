@@ -8,7 +8,9 @@ import { getDiagramById } from "../utils/core/getDiagramById";
  * @param diagramId - The ID of the diagram to find
  * @returns The diagram with the specified ID, or undefined if not found
  */
-export const useDiagramById = (diagramId: string | undefined): Diagram | undefined => {
+export const useDiagramById = (
+	diagramId: string | undefined,
+): Diagram | undefined => {
 	const canvasStateRef = useSvgCanvasState();
 	const allDiagrams = canvasStateRef.current?.items || [];
 

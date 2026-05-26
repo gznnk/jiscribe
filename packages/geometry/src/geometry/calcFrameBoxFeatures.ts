@@ -10,9 +10,7 @@ import type { TransformedFrame } from "../types/TransformedFrame";
  * @param frame - Transformed frame shape parameters
  * @returns The bounding box features
  */
-export const calcFrameBoxFeatures = (
-	frame: TransformedFrame,
-): BoxFeatures => {
+export const calcFrameBoxFeatures = (frame: TransformedFrame): BoxFeatures => {
 	const { cx, cy, width, height, rotation, scaleX, scaleY } = frame;
 	const rectGeometry = {
 		x: cx - width / 2,

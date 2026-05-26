@@ -16,7 +16,9 @@ export const mergeProps = <T = Record<string, unknown>>(
 
 	// Process each props object
 	for (const props of propsList) {
-		if (!props) continue;
+		if (!props) {
+			continue;
+		}
 
 		for (const [key, value] of Object.entries(props)) {
 			// Check if this is an event handler (starts with 'on' and is a function)

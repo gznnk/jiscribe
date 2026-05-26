@@ -1,4 +1,9 @@
-import { isCssColor, isNonNegativeNumber, isObject, isString } from "@workspace/basic-validators";
+import {
+	isCssColor,
+	isNonNegativeNumber,
+	isObject,
+	isString,
+} from "@workspace/basic-validators";
 
 import { isTextableType } from "./isTextableType";
 import { isTextAlign } from "./isTextAlign";
@@ -9,7 +14,9 @@ import type { TextableData } from "../../types/data/core/TextableData";
  * Check if data has valid text properties (textable feature).
  */
 export const isTextableData = (data: unknown): data is TextableData => {
-	if (!isObject(data)) return false;
+	if (!isObject(data)) {
+		return false;
+	}
 
 	return (
 		"text" in data &&

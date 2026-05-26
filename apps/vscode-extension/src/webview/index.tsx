@@ -192,7 +192,12 @@ function App() {
 	if (canvasDoc) {
 		return (
 			<div style={{ width: "100%", height: "100vh" }}>
-				<Canvas canvasDoc={canvasDoc} onCommit={handleCommit} onUndo={handleUndo} onRedo={handleRedo} />
+				<Canvas
+					canvasDoc={canvasDoc}
+					onCommit={handleCommit}
+					onUndo={handleUndo}
+					onRedo={handleRedo}
+				/>
 			</div>
 		);
 	}

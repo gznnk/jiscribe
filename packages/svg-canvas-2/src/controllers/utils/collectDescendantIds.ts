@@ -21,11 +21,15 @@ export function collectDescendantIds(
 	while (queue.length > 0) {
 		const currentId = queue.shift()!;
 		const obj = objects[currentId];
-		if (!obj || !isGroupState(obj)) continue;
+		if (!obj || !isGroupState(obj)) {
+			continue;
+		}
 
 		for (const childId of obj.childIds) {
 			if (visited.has(childId)) {
-				console.warn(`[collectDescendantIds] Circular reference detected at "${childId}"`);
+				console.warn(
+					`[collectDescendantIds] Circular reference detected at "${childId}"`,
+				);
 				continue;
 			}
 			visited.add(childId);

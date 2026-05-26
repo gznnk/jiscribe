@@ -8,7 +8,7 @@ svg-canvasの新しいバージョンです。
 import { SvgCanvas2 } from "@workspace/svg-canvas-2";
 
 function App() {
-  return <SvgCanvas2 width={800} height={600} />;
+	return <SvgCanvas2 width={800} height={600} />;
 }
 ```
 

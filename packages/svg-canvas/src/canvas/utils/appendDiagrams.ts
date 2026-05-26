@@ -12,7 +12,7 @@ import { isItemableState } from "../../utils/validation/isItemableState";
 export const appendDiagrams = (
 	diagrams: Diagram[],
 	targetFrameId: string,
-	diagramsToAppend: Diagram[]
+	diagramsToAppend: Diagram[],
 ): Diagram[] => {
 	let isChanged = false;
 	const newItems = diagrams.map((item) => {
@@ -27,7 +27,11 @@ export const appendDiagrams = (
 
 		// If this item has children, recursively process them
 		if (isItemableState(item) && item.items) {
-			const updatedItems = appendDiagrams(item.items, targetFrameId, diagramsToAppend);
+			const updatedItems = appendDiagrams(
+				item.items,
+				targetFrameId,
+				diagramsToAppend,
+			);
 			if (updatedItems !== item.items) {
 				isChanged = true;
 				return {

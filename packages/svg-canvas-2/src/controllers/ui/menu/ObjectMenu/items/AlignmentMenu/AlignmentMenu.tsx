@@ -49,7 +49,9 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 	const { placement } = useSubmenuPosition(menuItemRef, SUBMENU_SIZE, isOpen);
 
 	const { selectedIds, objects } = canvasState;
-	const obj = getFirstSelectedWithProp(selectedIds, objects, "textAlign") as TextStyleState | undefined;
+	const obj = getFirstSelectedWithProp(selectedIds, objects, "textAlign") as
+		| TextStyleState
+		| undefined;
 	const textAlign = obj?.textAlign ?? "left";
 	const verticalAlign = obj?.verticalAlign ?? "center";
 

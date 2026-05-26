@@ -12,11 +12,17 @@ export function getFirstSelectedWithProp(
 ): ObjectState | undefined {
 	for (const id of selectedIds) {
 		const obj = objects[id];
-		if (!obj) continue;
-		if (prop in obj) return obj;
+		if (!obj) {
+			continue;
+		}
+		if (prop in obj) {
+			return obj;
+		}
 		for (const descId of collectDescendantIds(id, objects)) {
 			const desc = objects[descId];
-			if (desc && prop in desc) return desc;
+			if (desc && prop in desc) {
+				return desc;
+			}
 		}
 	}
 	return undefined;

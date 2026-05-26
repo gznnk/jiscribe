@@ -177,7 +177,9 @@ const SegmentDragHandlesComponent: React.FC<SegmentDragHandlesProps> = ({
 		}
 
 		// Type guard.
-		if (!draggingSegment || !startSegment.current) return;
+		if (!draggingSegment || !startSegment.current) {
+			return;
+		}
 
 		// Calculate new segment position based on drag event.
 		const dx = e.endX - e.startX;

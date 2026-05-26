@@ -11,6 +11,8 @@ import type { CanvasControllerState } from "../CanvasTypes";
 export function getEffectiveSelectedIds(
 	state: Pick<CanvasControllerState, "selectedIds" | "selectedConnectorId">,
 ): string[] {
-	if (state.selectedConnectorId !== null) return [state.selectedConnectorId];
+	if (state.selectedConnectorId !== null) {
+		return [state.selectedConnectorId];
+	}
 	return state.selectedIds;
 }

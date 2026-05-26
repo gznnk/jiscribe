@@ -22,8 +22,24 @@ const LineStyleIconComponent: React.FC<LineStyleIconProps> = ({
 	>
 		<title>{title}</title>
 		<line x1="1" y1="6" x2="23" y2="6" stroke={fill} strokeWidth="2" />
-		<line x1="1" y1="12" x2="23" y2="12" stroke={fill} strokeWidth="2" strokeDasharray="4,2" />
-		<line x1="1" y1="18" x2="23" y2="18" stroke={fill} strokeWidth="2" strokeDasharray="2,2" />
+		<line
+			x1="1"
+			y1="12"
+			x2="23"
+			y2="12"
+			stroke={fill}
+			strokeWidth="2"
+			strokeDasharray="4,2"
+		/>
+		<line
+			x1="1"
+			y1="18"
+			x2="23"
+			y2="18"
+			stroke={fill}
+			strokeWidth="2"
+			strokeDasharray="2,2"
+		/>
 	</svg>
 );
 

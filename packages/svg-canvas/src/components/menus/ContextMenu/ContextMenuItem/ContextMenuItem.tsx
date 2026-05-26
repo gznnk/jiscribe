@@ -32,7 +32,9 @@ const ContextMenuItemComponent: React.FC<ContextMenuItemProps> = ({
 	}, [menuType, onMenuClick]);
 
 	const menuState = menuStateMap[menuType];
-	if (menuState === "Hidden") return null;
+	if (menuState === "Hidden") {
+		return null;
+	}
 
 	return (
 		<ContextMenuItemDiv

@@ -44,7 +44,9 @@ export const canvasReducer = (
 			);
 			// プロパティ変更後は頂点選択を解除する（Delete キーがオブジェクト削除として機能するように）
 			const updatedWithVertexCleared = { ...updated, selectedVertex: null };
-			if (!action.commit) return updatedWithVertexCleared;
+			if (!action.commit) {
+				return updatedWithVertexCleared;
+			}
 			return recordHistoryIfNeeded(
 				{ ...updatedWithVertexCleared, commitVersion: state.commitVersion + 1 },
 				state.commitVersion,
@@ -106,7 +108,9 @@ export const canvasReducer = (
 		}
 
 		case "UPDATE_TEXT_EDIT": {
-			if (!state.textEditState) return state;
+			if (!state.textEditState) {
+				return state;
+			}
 			return {
 				...state,
 				textEditState: {
@@ -117,7 +121,9 @@ export const canvasReducer = (
 		}
 
 		case "END_TEXT_EDIT": {
-			if (!state.textEditState) return state;
+			if (!state.textEditState) {
+				return state;
+			}
 
 			if (action.commit) {
 				const commitResult = commitTextEditIfNeeded(state);

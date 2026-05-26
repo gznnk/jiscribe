@@ -7,7 +7,9 @@ import type { CenterPoint } from "../types/CenterPoint";
  * Validates that the value has cx and cy properties that are both numbers.
  */
 export const isCenterPoint = (value: unknown): value is CenterPoint => {
-	if (!isObject(value)) return false;
+	if (!isObject(value)) {
+		return false;
+	}
 
 	return (
 		"cx" in value && isNumber(value.cx) && "cy" in value && isNumber(value.cy)

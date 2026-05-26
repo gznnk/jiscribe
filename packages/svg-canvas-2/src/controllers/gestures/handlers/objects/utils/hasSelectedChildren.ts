@@ -29,4 +29,3 @@ export function hasSelectedChildren(
 		state.selectedIds.includes(childId),
 	);
 }
-

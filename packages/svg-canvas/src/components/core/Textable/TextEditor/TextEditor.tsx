@@ -54,7 +54,9 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 	}, [isActive, text, textType]);
 
 	// Hide the thext editor when not active.
-	if (!isActive) return null;
+	if (!isActive) {
+		return null;
+	}
 
 	/**
 	 * Handle text change event for textarea.

@@ -38,7 +38,8 @@ const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 
 	const { selectedIds, objects } = canvasState;
 	const obj = getFirstSelectedWithProp(selectedIds, objects, "fontSize");
-	const fontSize = (obj as TextStyleState | undefined)?.fontSize ?? DEFAULT_FONT_SIZE;
+	const fontSize =
+		(obj as TextStyleState | undefined)?.fontSize ?? DEFAULT_FONT_SIZE;
 
 	return (
 		<MenuItemPositioner ref={menuItemRef}>

@@ -121,7 +121,9 @@ export const useContextMenu = (
 			e.preventDefault();
 
 			// If context menu should be suppressed (e.g., after grab scroll), do not show it.
-			if (suppressContextMenu === true) return;
+			if (suppressContextMenu === true) {
+				return;
+			}
 
 			let x = e.clientX;
 			let y = e.clientY;

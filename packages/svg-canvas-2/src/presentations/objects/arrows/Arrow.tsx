@@ -39,7 +39,9 @@ const ArrowComponent: React.FC<ArrowProps> = ({
 	dataKind,
 	dataId,
 }) => {
-	if (type === "None") return null;
+	if (type === "None") {
+		return null;
+	}
 
 	const props = { x, y, color, radians, scale, dataKind, dataId };
 

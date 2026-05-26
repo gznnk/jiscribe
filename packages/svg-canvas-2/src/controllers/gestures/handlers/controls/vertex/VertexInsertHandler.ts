@@ -175,8 +175,18 @@ export class VertexInsertHandler implements ControlStrategy {
 			);
 			cursorX += result.delta.x;
 			cursorY += result.delta.y;
-			const pointBBox = { left: cursorX, right: cursorX, top: cursorY, bottom: cursorY };
-			snapFeedback = buildSnapFeedback(pointBBox, result.xResult, result.yResult, snapCandidates);
+			const pointBBox = {
+				left: cursorX,
+				right: cursorX,
+				top: cursorY,
+				bottom: cursorY,
+			};
+			snapFeedback = buildSnapFeedback(
+				pointBBox,
+				result.xResult,
+				result.yResult,
+				snapCandidates,
+			);
 		}
 
 		// 新しい頂点位置を計算

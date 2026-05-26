@@ -33,12 +33,16 @@ export const resolveConnectorPoints = (
 	// Adjust to outline for center anchors on rect/ellipse objects
 	if (connectorState.source.anchor.kind === "center") {
 		sourcePoint = adjustToOutline(sourcePoint, targetPoint, sourceObj);
-		if (!sourcePoint) return null;
+		if (!sourcePoint) {
+			return null;
+		}
 	}
 
 	if (connectorState.target.anchor.kind === "center") {
 		targetPoint = adjustToOutline(targetPoint, sourcePoint, targetObj);
-		if (!targetPoint) return null;
+		if (!targetPoint) {
+			return null;
+		}
 	}
 
 	return { source: sourcePoint, target: targetPoint };

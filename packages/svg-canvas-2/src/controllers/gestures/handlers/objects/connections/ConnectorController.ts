@@ -12,7 +12,10 @@ import type {
  * Moves a Connector object by a delta.
  * Updates all points in the points array.
  */
-export const moveByDelta: MoveByDeltaFunction<ConnectorState> = (state, delta) => {
+export const moveByDelta: MoveByDeltaFunction<ConnectorState> = (
+	state,
+	delta,
+) => {
 	return {
 		...state,
 		points: state.points.map((p) => ({

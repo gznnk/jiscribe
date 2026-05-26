@@ -33,7 +33,13 @@ describe("CanvasMapper", () => {
 		objectMapperRegistry.register(
 			"rect",
 			{ toState: rectToState, toDoc: rectToDoc },
-			{ type: "rect", geometry: "rect", transform: true, stroke: true, fill: true },
+			{
+				type: "rect",
+				geometry: "rect",
+				transform: true,
+				stroke: true,
+				fill: true,
+			},
 		);
 	});
 

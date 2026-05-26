@@ -16,7 +16,9 @@ import type { Ellipse } from "../types/Ellipse";
  * @returns True if the object is an Ellipse, false otherwise
  */
 export const isEllipse = (obj: unknown): obj is Ellipse => {
-	if (!isObject(obj)) return false;
+	if (!isObject(obj)) {
+		return false;
+	}
 
 	return (
 		"cx" in obj &&

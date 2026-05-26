@@ -14,13 +14,12 @@ export type MoveByDeltaFunction<TState extends ObjectState = ObjectState> = (
 	delta: Point,
 ) => TState;
 
-export type TransformByGroupFunction<
-	TState extends ObjectState = ObjectState,
-> = (
-	state: TState,
-	groupStartState: ObjectState,
-	groupEndState: ObjectState,
-) => TState;
+export type TransformByGroupFunction<TState extends ObjectState = ObjectState> =
+	(
+		state: TState,
+		groupStartState: ObjectState,
+		groupEndState: ObjectState,
+	) => TState;
 
 export type RotateByGroupFunction<TState extends ObjectState = ObjectState> = (
 	state: TState,

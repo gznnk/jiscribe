@@ -37,7 +37,8 @@ const FontColorMenuComponent: React.FC<FontColorMenuProps> = ({
 
 	const { selectedIds, objects } = canvasState;
 	const obj = getFirstSelectedWithProp(selectedIds, objects, "fontColor");
-	const currentColor = (obj as TextStyleState | undefined)?.fontColor ?? DEFAULT_FONT_COLOR;
+	const currentColor =
+		(obj as TextStyleState | undefined)?.fontColor ?? DEFAULT_FONT_COLOR;
 
 	return (
 		<MenuItemPositioner ref={menuItemRef}>

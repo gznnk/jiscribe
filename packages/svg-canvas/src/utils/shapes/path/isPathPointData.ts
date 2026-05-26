@@ -8,6 +8,8 @@ import { isDiagramBaseData } from "../../validation/isDiagramBaseData";
  * @returns True if the data is PathPointData
  */
 export const isPathPointData = (data: unknown): data is PathPointData => {
-	if (!isDiagramBaseData(data)) return false;
+	if (!isDiagramBaseData(data)) {
+		return false;
+	}
 	return data.type === "PathPoint";
 };

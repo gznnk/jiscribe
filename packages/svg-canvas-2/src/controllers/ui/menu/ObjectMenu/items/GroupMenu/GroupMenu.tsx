@@ -19,7 +19,9 @@ const GroupMenuComponent: React.FC<GroupMenuProps> = ({ canvasState }) => {
 
 	const commandId = isGroup ? "ungroup" : "group";
 	const command = commandRegistry.get(commandId);
-	if (!command) return null;
+	if (!command) {
+		return null;
+	}
 
 	const enabled = command.canExecute(canvasState);
 

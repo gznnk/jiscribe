@@ -17,7 +17,9 @@ export function getTopLevelSelectedIds(
 	return selectedIds.filter((id) => {
 		let parentId = objects[id]?.parentId;
 		while (parentId != null) {
-			if (selectedSet.has(parentId)) return false;
+			if (selectedSet.has(parentId)) {
+				return false;
+			}
 			parentId = objects[parentId]?.parentId;
 		}
 		return true;

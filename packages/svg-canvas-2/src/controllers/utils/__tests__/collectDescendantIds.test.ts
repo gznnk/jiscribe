@@ -9,10 +9,10 @@ import { collectDescendantIds } from "../collectDescendantIds";
 type Objects = Record<string, ObjectState>;
 
 const rect = (id: string, parentId?: string): RectState =>
-	({ id, type: "rect", parentId } as RectState);
+	({ id, type: "rect", parentId }) as RectState;
 
 const group = (id: string, childIds: string[], parentId?: string): GroupState =>
-	({ id, type: "group", childIds, parentId } as unknown as GroupState);
+	({ id, type: "group", childIds, parentId }) as unknown as GroupState;
 
 describe("collectDescendantIds", () => {
 	afterEach(() => {
@@ -67,9 +67,9 @@ describe("collectDescendantIds", () => {
 
 	it("3階層のネストでも全子孫を返す", () => {
 		const objects: Objects = {
-			"g1": group("g1", ["g2"]),
-			"g2": group("g2", ["g3"], "g1"),
-			"g3": group("g3", ["rect-1"], "g2"),
+			g1: group("g1", ["g2"]),
+			g2: group("g2", ["g3"], "g1"),
+			g3: group("g3", ["rect-1"], "g2"),
 			"rect-1": rect("rect-1", "g3"),
 		};
 		const result = collectDescendantIds("g1", objects);

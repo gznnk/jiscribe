@@ -9,7 +9,9 @@ import type { GroupState } from "../../types/state/shapes/GroupState";
  * @returns True if the object is GroupState, false otherwise
  */
 export const isGroupState = (obj: unknown): obj is GroupState => {
-	if (!isObject(obj)) return false;
+	if (!isObject(obj)) {
+		return false;
+	}
 
 	return (
 		"type" in obj &&

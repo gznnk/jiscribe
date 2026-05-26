@@ -69,4 +69,3 @@ export type Command = {
 	 */
 	shortcuts?: PlatformKeyBindings;
 };
-

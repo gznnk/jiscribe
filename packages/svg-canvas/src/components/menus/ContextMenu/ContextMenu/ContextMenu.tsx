@@ -46,7 +46,9 @@ const ContextMenuComponent: React.FC<ContextMenuProps> = ({
 		}
 	}, [isVisible]);
 
-	if (!isVisible) return null;
+	if (!isVisible) {
+		return null;
+	}
 
 	const menuItemProps = {
 		menuStateMap,

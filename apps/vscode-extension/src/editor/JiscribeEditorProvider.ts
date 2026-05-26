@@ -54,9 +54,11 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 		//
 		// onDidChangeTextDocument は Disposable を返す。
 		// 変数に代入して後で明示的に dispose() するためここで保持する。
-		const changeDocumentSubscription =
-			vscode.workspace.onDidChangeTextDocument((e) => {
-				if (e.document.uri.toString() !== document.uri.toString()) return;
+		const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(
+			(e) => {
+				if (e.document.uri.toString() !== document.uri.toString()) {
+					return;
+				}
 
 				// Webview からの書き込みによるイベントは無視する（無限ループ防止）。
 				// pendingWebviewUpdates > 0 の間に来たイベントは自分の applyEdit() が
@@ -64,7 +66,8 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 				if (pendingWebviewUpdates === 0) {
 					this.updateWebview(webviewPanel, document);
 				}
-			});
+			},
+		);
 
 		// ---- Webview からのメッセージ受信 (#1 修正) ----
 		//
@@ -106,7 +109,10 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 								// 戻さないと pendingWebviewUpdates が 0 に戻らず、
 								// 以降の外部ファイル変更がすべて Webview へ反映されなくなる。
 								pendingWebviewUpdates--;
-								console.error("[Jiscribe] ファイルへの書き込みに失敗しました:", err);
+								console.error(
+									"[Jiscribe] ファイルへの書き込みに失敗しました:",
+									err,
+								);
 							},
 						);
 						break;

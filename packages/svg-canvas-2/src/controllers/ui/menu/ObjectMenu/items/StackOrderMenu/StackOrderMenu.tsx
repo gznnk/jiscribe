@@ -50,7 +50,9 @@ const StackOrderMenuComponent: React.FC<StackOrderMenuProps> = ({
 					<StackOrderMenuRow>
 						{arrangeCommands.map(({ commandId, Icon }) => {
 							const command = commandRegistry.get(commandId);
-							if (!command) return null;
+							if (!command) {
+								return null;
+							}
 							const enabled = command.canExecute(canvasState);
 							return (
 								<ObjectMenuButton

@@ -36,7 +36,9 @@ class CommandRegistry {
 	 */
 	findByShortcut(event: KeyboardEvent): Command | undefined {
 		return Array.from(this.commands.values()).find((cmd) => {
-			if (!cmd.shortcuts) return false;
+			if (!cmd.shortcuts) {
+				return false;
+			}
 
 			// 現在のプラットフォームに対応したショートカット配列を取得
 			const bindings = getPlatformShortcuts(cmd.shortcuts);

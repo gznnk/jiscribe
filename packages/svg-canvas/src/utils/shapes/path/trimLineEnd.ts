@@ -5,13 +5,17 @@ import type { Point } from "@workspace/geometry";
  * The trim amount is clamped to avoid degenerating the segment.
  */
 export const trimLineEnd = (from: Point, to: Point, trim: number): Point => {
-	if (trim <= 0) return to;
+	if (trim <= 0) {
+		return to;
+	}
 
 	const dx = to.x - from.x;
 	const dy = to.y - from.y;
 	const len = Math.hypot(dx, dy);
 
-	if (len <= 1e-6) return to;
+	if (len <= 1e-6) {
+		return to;
+	}
 
 	const clamped = Math.min(trim, Math.max(0, len - 1e-3));
 	const ux = dx / len;

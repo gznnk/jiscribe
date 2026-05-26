@@ -50,9 +50,7 @@ const ColorPreviewIconComponent: React.FC<ColorPreviewIconProps> = ({
 				r="10"
 				stroke="#ddd"
 				strokeWidth="1"
-				fill={
-					isTransparent ? "url(#color-preview-transparent-pattern)" : color
-				}
+				fill={isTransparent ? "url(#color-preview-transparent-pattern)" : color}
 			/>
 		</svg>
 	);

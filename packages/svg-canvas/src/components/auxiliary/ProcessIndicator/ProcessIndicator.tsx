@@ -1,4 +1,4 @@
-﻿import { degreesToRadians , calcRotatedPoint } from "@workspace/geometry";
+﻿import { degreesToRadians, calcRotatedPoint } from "@workspace/geometry";
 import { memo, type ReactElement } from "react";
 
 import { StyledCircle } from "./ProcessIndicatorStyled";
@@ -37,7 +37,9 @@ const calculatePositions = (
 	rotation: number,
 	count: number,
 ): Array<{ x: number; y: number }> => {
-	if (count === 0) return [];
+	if (count === 0) {
+		return [];
+	}
 
 	const positions: Array<{ x: number; y: number }> = [];
 	const radius = 8; // Icon radius
@@ -86,7 +88,9 @@ const ProcessIndicatorComponent = ({
 		<g>
 			{processes.slice(0, maxCount).map((process, index) => {
 				const position = positions[index];
-				if (!position) return null;
+				if (!position) {
+					return null;
+				}
 
 				// Calculate X coordinate offset (used for translateX)
 				const translateX = index * iconSpacing;
@@ -109,4 +113,3 @@ const ProcessIndicatorComponent = ({
 };
 
 export const ProcessIndicator = memo(ProcessIndicatorComponent);
-

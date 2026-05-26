@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import type { ConnectorDoc } from "../../../../../schemas/objects/connections/connector/ConnectorDoc";
-import { connectorToDoc, connectorToState } from "../../../../../states/objects/connections/connector/ConnectorMapper";
+import {
+	connectorToDoc,
+	connectorToState,
+} from "../../../../../states/objects/connections/connector/ConnectorMapper";
 import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
 
 describe("ConnectorMapper", () => {

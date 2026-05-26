@@ -18,7 +18,9 @@ describe("MetaMapper", () => {
 
 			expect(state.name).toBe("Test Object");
 			expect(state.description).toBe("This is a test object");
-			expect((state as Record<string, unknown>).customField).toBe("custom value");
+			expect((state as Record<string, unknown>).customField).toBe(
+				"custom value",
+			);
 			expect((state as Record<string, unknown>).tags).toEqual(["tag1", "tag2"]);
 		});
 
@@ -68,7 +70,9 @@ describe("MetaMapper", () => {
 			expect((state as Record<string, unknown>).customNumber).toBe(42);
 			expect((state as Record<string, unknown>).customBoolean).toBe(true);
 			expect((state as Record<string, unknown>).customNull).toBeNull();
-			expect((state as Record<string, unknown>).customObject).toEqual({ nested: "value" });
+			expect((state as Record<string, unknown>).customObject).toEqual({
+				nested: "value",
+			});
 			expect((state as Record<string, unknown>).customArray).toEqual([1, 2, 3]);
 		});
 	});
@@ -136,7 +140,9 @@ describe("MetaMapper", () => {
 			expect((doc as Record<string, unknown>).customNumber).toBe(42);
 			expect((doc as Record<string, unknown>).customBoolean).toBe(true);
 			expect((doc as Record<string, unknown>).customNull).toBeNull();
-			expect((doc as Record<string, unknown>).customObject).toEqual({ nested: "value" });
+			expect((doc as Record<string, unknown>).customObject).toEqual({
+				nested: "value",
+			});
 			expect((doc as Record<string, unknown>).customArray).toEqual([1, 2, 3]);
 		});
 	});

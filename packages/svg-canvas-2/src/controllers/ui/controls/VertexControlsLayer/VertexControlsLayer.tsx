@@ -42,7 +42,9 @@ const VertexControlsLayerComponent: React.FC<VertexControlsLayerProps> = ({
 		const points = selectedObject.points as Point[];
 		const isClosed = selectedObject.type === "polygon";
 		const selectedVertexIndex =
-			selectedVertex?.objectId === selectedId ? selectedVertex.vertexIndex : null;
+			selectedVertex?.objectId === selectedId
+				? selectedVertex.vertexIndex
+				: null;
 		return (
 			<>
 				{/* Vertex controls for moving existing vertices */}

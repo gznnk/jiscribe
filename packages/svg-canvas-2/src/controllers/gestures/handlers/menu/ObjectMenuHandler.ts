@@ -59,7 +59,11 @@ export const ObjectMenuHandler: GestureHandler = {
 
 			// drag イベント: リアルタイム更新（履歴記録なし、メニュー維持）
 			if (event.type === "drag") {
-				const newState = handlePropertyUpdate(state, property, event.inputValue);
+				const newState = handlePropertyUpdate(
+					state,
+					property,
+					event.inputValue,
+				);
 				return { ...newState, selectedVertex: null };
 			}
 
@@ -70,7 +74,11 @@ export const ObjectMenuHandler: GestureHandler = {
 					property,
 					event.inputValue,
 				);
-				return { ...newState, selectedVertex: null, commitVersion: state.commitVersion + 1 };
+				return {
+					...newState,
+					selectedVertex: null,
+					commitVersion: state.commitVersion + 1,
+				};
 			}
 
 			return state;
@@ -100,7 +108,11 @@ export const ObjectMenuHandler: GestureHandler = {
 					const value = rest.slice(colonIndex + 1);
 					const newState = handlePropertyUpdate(state, property, value);
 					// 履歴記録は handleGesture に委譲するため、commitVersion のみ更新
-					return { ...newState, selectedVertex: null, commitVersion: state.commitVersion + 1 };
+					return {
+						...newState,
+						selectedVertex: null,
+						commitVersion: state.commitVersion + 1,
+					};
 				}
 			}
 

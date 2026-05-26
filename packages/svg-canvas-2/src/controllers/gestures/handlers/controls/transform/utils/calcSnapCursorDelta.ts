@@ -70,9 +70,16 @@ export function calcSnapCursorDelta(
 	snapAabbDx: number,
 	snapAabbDy: number,
 ): { dx: number; dy: number } {
-	if (xEdge !== null && yEdge !== null && snapAabbDx !== 0 && snapAabbDy !== 0) {
-		const a = J[xEdge].dx, b = J[xEdge].dy;
-		const c = J[yEdge].dx, d = J[yEdge].dy;
+	if (
+		xEdge !== null &&
+		yEdge !== null &&
+		snapAabbDx !== 0 &&
+		snapAabbDy !== 0
+	) {
+		const a = J[xEdge].dx,
+			b = J[xEdge].dy;
+		const c = J[yEdge].dx,
+			d = J[yEdge].dy;
 		const det = a * d - b * c;
 		if (Math.abs(det) > 0.09) {
 			return {

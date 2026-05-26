@@ -15,7 +15,13 @@ import { isTransformativeState } from "../../validation/isTransformativeState";
 export const calcEllipseConnectPointPosition = (
 	diagram: Diagram,
 ): ConnectPointState[] => {
-	if (!isConnectableState(diagram) || !isEllipse(diagram) || !isTransformativeState(diagram)) return []; // Type guard.
+	if (
+		!isConnectableState(diagram) ||
+		!isEllipse(diagram) ||
+		!isTransformativeState(diagram)
+	) {
+		return [];
+	} // Type guard.
 
 	// Calculate the key points of the ellipse.
 	const keyPoints = calcEllipseKeyPoints({

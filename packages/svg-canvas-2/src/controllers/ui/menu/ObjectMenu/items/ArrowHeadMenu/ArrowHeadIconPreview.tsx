@@ -27,14 +27,7 @@ const ArrowHeadIconPreviewComponent: React.FC<ArrowHeadIconPreviewProps> = ({
 			xmlns="http://www.w3.org/2000/svg"
 			style={{ pointerEvents: "none" }}
 		>
-			<line
-				x1="2"
-				y1="12"
-				x2="22"
-				y2="12"
-				stroke="#333333"
-				strokeWidth="2"
-			/>
+			<line x1="2" y1="12" x2="22" y2="12" stroke="#333333" strokeWidth="2" />
 
 			<Arrow
 				type={type}

@@ -161,7 +161,9 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 	const systemGroups = buildSystemGroups(canvasState);
 	const allGroups = [...objectGroups, ...systemGroups];
 
-	if (!shouldRender || allGroups.length === 0) return null;
+	if (!shouldRender || allGroups.length === 0) {
+		return null;
+	}
 
 	const itemProps: MenuItemProps = { canvasState, onPropertyUpdate };
 
@@ -175,7 +177,9 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 		const groupItems: React.ReactNode[] = [];
 		group.items.forEach((item) => {
 			const key = item.type === "custom" ? item.id : item.type;
-			if (renderedItemKeys.has(key)) return;
+			if (renderedItemKeys.has(key)) {
+				return;
+			}
 			renderedItemKeys.add(key);
 			groupItems.push(renderItem(item, itemProps));
 		});

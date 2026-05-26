@@ -6,7 +6,9 @@ import type { CanvasControllerState } from "../CanvasTypes";
  */
 export function isSameGroupSelection(state: CanvasControllerState): boolean {
 	const { selectedIds, objects } = state;
-	if (selectedIds.length === 0) return false;
+	if (selectedIds.length === 0) {
+		return false;
+	}
 	const firstParentId = objects[selectedIds[0]]?.parentId;
 	return selectedIds.every((id) => objects[id]?.parentId === firstParentId);
 }

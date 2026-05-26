@@ -56,7 +56,9 @@ const VertexHandlesComponent: React.FC<VertexHandlesProps> = ({
 			startPoints.current = points;
 		}
 
-		if (startPoints.current === null) return;
+		if (startPoints.current === null) {
+			return;
+		}
 
 		onDiagramChange?.({
 			id,

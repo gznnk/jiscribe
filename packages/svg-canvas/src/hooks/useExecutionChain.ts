@@ -24,7 +24,9 @@ export const useExecutionChain = (props: ExecutionChainProps) => {
 		const handlePropagation = (e: CustomEvent) => {
 			const customEvent = e as CustomEvent<ExecutionPropagationEvent>;
 			// If the event is triggered by itself, do nothing.
-			if (customEvent.detail.id === refBus.current.id) return;
+			if (customEvent.detail.id === refBus.current.id) {
+				return;
+			}
 
 			// If this event is targeting the parent component, invoke its onPropagation callback.
 			const targetId = customEvent.detail.targetId;

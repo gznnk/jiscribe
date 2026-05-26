@@ -16,7 +16,9 @@ import type { Rect } from "../types/Rect";
  * @returns True if the object is a Rect, false otherwise
  */
 export const isRect = (obj: unknown): obj is Rect => {
-	if (!isObject(obj)) return false;
+	if (!isObject(obj)) {
+		return false;
+	}
 
 	return (
 		"x" in obj &&

@@ -36,7 +36,9 @@ export const Svg = styled.svg<SvgProps>`
 	background-color: #ffffff;
 	outline: none;
 	cursor: ${(props) => {
-		if (props.isGrabbing) return "grabbing";
+		if (props.isGrabbing) {
+			return "grabbing";
+		}
 		return "default";
 	}};
 	* {

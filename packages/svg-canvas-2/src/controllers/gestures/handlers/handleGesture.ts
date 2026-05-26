@@ -1,15 +1,20 @@
-import { calcFrameKeyPoints, calcPolyKeyPoints, isTransformedFrame } from "@workspace/geometry";
+import {
+	calcFrameKeyPoints,
+	calcPolyKeyPoints,
+	isTransformedFrame,
+} from "@workspace/geometry";
 import type { FrameKeyPoints, TransformedFrame } from "@workspace/geometry";
 
 import { isPoly } from "../../../schemas/objects/types/Poly";
-import type { CanvasControllerState, EventStartSnapshot, KeyPointsCache } from "../../CanvasTypes";
+import type {
+	CanvasControllerState,
+	EventStartSnapshot,
+	KeyPointsCache,
+} from "../../CanvasTypes";
 import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWithDescendants";
 import type { Gesture } from "../recognizer/GestureRecognizerTypes";
 import { gestureHandlerRegistry } from "../registry/GestureHandlerRegistry";
-import type {
-	CanvasEvent,
-	EventType,
-} from "../registry/GestureHandlerTypes";
+import type { CanvasEvent, EventType } from "../registry/GestureHandlerTypes";
 import { calcSnapCandidates } from "./objects/utils/snap/calcSnapCandidates";
 
 /**
@@ -78,7 +83,9 @@ export const handleGesture = (
 					computed = calcFrameKeyPoints(obj as TransformedFrame);
 				} else if (isPoly(obj) && obj.type !== "connector") {
 					const kp = calcPolyKeyPoints(obj.points);
-					if (kp) computed = kp;
+					if (kp) {
+						computed = kp;
+					}
 				}
 				if (computed) {
 					newCache[id] = { stateRef: obj, keyPoints: computed };

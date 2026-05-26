@@ -26,7 +26,9 @@ export const calcOrientedFrameFromPoints = (
 	scaleY = 1,
 	rotation = 0,
 ): TransformedFrame | null => {
-	if (points.length === 0) return null;
+	if (points.length === 0) {
+		return null;
+	}
 
 	const left = Math.min(...points.map((p) => p.x));
 	const top = Math.min(...points.map((p) => p.y));

@@ -20,7 +20,9 @@ export const calcConnectorEndpointBBox = (
 		: undefined;
 
 	const points = resolveConnectorPoints(connector, sourceObj, targetObj);
-	if (!points) return null;
+	if (!points) {
+		return null;
+	}
 
 	return {
 		left: Math.min(points.source.x, points.target.x),

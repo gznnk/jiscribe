@@ -47,8 +47,12 @@ const TextableComponent: React.FC<TextableProps> = ({
 		}
 	}, [text, isTextEditing]);
 
-	if (!text) return null;
-	if (isTextEditing) return null;
+	if (!text) {
+		return null;
+	}
+	if (isTextEditing) {
+		return null;
+	}
 
 	return (
 		<ForeignObjectElement

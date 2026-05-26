@@ -34,6 +34,7 @@ export const isLineIntersectingBox = (
 		], // Left edge
 	];
 
-	return boxEdges.some(([q1, q2]) => doSegmentsIntersect(p1, p2, q1, q2, false));
+	return boxEdges.some(([q1, q2]) =>
+		doSegmentsIntersect(p1, p2, q1, q2, false),
+	);
 };
-

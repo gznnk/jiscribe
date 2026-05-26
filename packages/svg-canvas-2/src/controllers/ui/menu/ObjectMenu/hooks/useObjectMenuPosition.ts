@@ -59,12 +59,20 @@ export function useObjectMenuPosition(
 	const selectedIdsString = selectedIds.slice().sort().join(",");
 	const shouldRender = useMemo(() => {
 		const hasSelection = selectedIds.length > 0 || selectedConnectorId !== null;
-		if (!hasSelection) return false;
-		if (contextMenuPosition !== null) return false;
+		if (!hasSelection) {
+			return false;
+		}
+		if (contextMenuPosition !== null) {
+			return false;
+		}
 		// eventStartSnapshot が null でない場合でも、objectMenuOpenId が null でない場合は表示を続ける
 		// （スライダーのドラッグ中にメニューを表示し続けるため）
-		if (eventStartSnapshot !== null && objectMenuOpenId === null) return false;
-		if (areaSelection !== null) return false;
+		if (eventStartSnapshot !== null && objectMenuOpenId === null) {
+			return false;
+		}
+		if (areaSelection !== null) {
+			return false;
+		}
 		return true;
 	}, [
 		selectedIds,
@@ -113,7 +121,9 @@ export function useObjectMenuPosition(
 
 		for (const id of selectedIds) {
 			const obj = objects[id];
-			if (!obj) continue;
+			if (!obj) {
+				continue;
+			}
 
 			let bbox;
 			if (isTransformedFrame(obj)) {
@@ -122,11 +132,15 @@ export function useObjectMenuPosition(
 			} else if (isGroupState(obj)) {
 				// グループの場合、子要素から再帰的にバウンディングボックスを計算
 				bbox = calcGroupBoundingBox(obj, objects);
-				if (!bbox) continue;
+				if (!bbox) {
+					continue;
+				}
 			} else if (isPoly(obj)) {
 				// polyline, polygon など points 配列を持つオブジェクト
 				const polyBbox = calcPolyBoundingBox(obj.points);
-				if (!polyBbox) continue;
+				if (!polyBbox) {
+					continue;
+				}
 				bbox = polyBbox;
 			} else {
 				continue;
@@ -203,5 +217,12 @@ export function useObjectMenuPosition(
 			x: Math.round(menuX),
 			y: Math.round(menuY),
 		};
-	}, [shouldRender, selectedIds, selectedConnectorId, objects, viewport, menuDimensions]);
+	}, [
+		shouldRender,
+		selectedIds,
+		selectedConnectorId,
+		objects,
+		viewport,
+		menuDimensions,
+	]);
 }

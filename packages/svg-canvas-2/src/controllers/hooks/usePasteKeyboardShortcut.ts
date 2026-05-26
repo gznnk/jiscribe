@@ -13,7 +13,12 @@ export const usePasteKeyboardShortcut = (onPaste: () => void): void => {
 				return;
 			}
 			const isMac = getPlatform() === "mac";
-			if (e.code === "KeyV" && (isMac ? e.metaKey : e.ctrlKey) && !e.shiftKey && !e.altKey) {
+			if (
+				e.code === "KeyV" &&
+				(isMac ? e.metaKey : e.ctrlKey) &&
+				!e.shiftKey &&
+				!e.altKey
+			) {
 				onPaste();
 				e.preventDefault();
 				e.stopPropagation();

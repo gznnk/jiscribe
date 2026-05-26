@@ -59,7 +59,9 @@ const TextOverlayComponent: React.FC<TextOverlayProps> = ({
 	}, [text, textType, isEditing]);
 
 	// Don't render anything if editing or text is empty
-	if (isEditing || !text) return null;
+	if (isEditing || !text) {
+		return null;
+	}
 
 	return (
 		<ForeignObjectElement

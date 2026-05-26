@@ -28,8 +28,12 @@ export const RedoCommand: Command = {
 
 	canExecute: (state) => {
 		// ドラッグ中、テキスト編集中は実行不可
-		if (state.eventStartSnapshot !== null) return false;
-		if (state.textEditState !== null) return false;
+		if (state.eventStartSnapshot !== null) {
+			return false;
+		}
+		if (state.textEditState !== null) {
+			return false;
+		}
 		// 履歴がない場合は実行不可
 		return state.history.future.length > 0;
 	},

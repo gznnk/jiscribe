@@ -29,7 +29,9 @@ export const useOnExecute = (props: SvgCanvasSubHooksProps) => {
 			} = refBus.current;
 
 			const lines = canvasState.items.filter((i) => {
-				if (i.type !== "ConnectLine") return false;
+				if (i.type !== "ConnectLine") {
+					return false;
+				}
 
 				const connectLine = i as ConnectLineState;
 				return connectLine.startOwnerId === e.id;

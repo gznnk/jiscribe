@@ -1,7 +1,6 @@
 import type { EventBus } from "@workspace/event-bus";
 import { createContext, useContext, type ReactNode } from "react";
 
-
 /**
  * EventBus context for SvgCanvas components
  */

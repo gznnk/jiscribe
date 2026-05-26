@@ -6,7 +6,9 @@ import type { OriginableData } from "../../types/data/core/OriginableData";
  * Check if data has valid origin properties (originable feature).
  */
 export const isOriginableData = (data: unknown): data is OriginableData => {
-	if (!isObject(data)) return false;
+	if (!isObject(data)) {
+		return false;
+	}
 
 	return (
 		"originX" in data &&

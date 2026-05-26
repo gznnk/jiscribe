@@ -103,26 +103,26 @@ packages/svg-canvas-2/src/
 
 ```typescript
 export type Command = {
-  id: string;                             // コマンドの一意識別子
-  label: string;                          // メニュー表示用ラベル
-  category?: "edit" | "view" | "arrange" | "selection";
+	id: string; // コマンドの一意識別子
+	label: string; // メニュー表示用ラベル
+	category?: "edit" | "view" | "arrange" | "selection";
 
-  /**
-   * コマンドが実行可能かどうかを判定
-   * メニュー項目の有効/無効化に使用
-   */
-  canExecute: (state: CanvasState) => boolean;
+	/**
+	 * コマンドが実行可能かどうかを判定
+	 * メニュー項目の有効/無効化に使用
+	 */
+	canExecute: (state: CanvasState) => boolean;
 
-  /**
-   * コマンドを実行し、新しい CanvasState を返す
-   * 純粋関数として実装（副作用なし）
-   */
-  execute: (state: CanvasState) => CanvasState;
+	/**
+	 * コマンドを実行し、新しい CanvasState を返す
+	 * 純粋関数として実装（副作用なし）
+	 */
+	execute: (state: CanvasState) => CanvasState;
 
-  /**
-   * プラットフォーム別キーボードショートカット
-   */
-  shortcuts?: PlatformKeyBindings;
+	/**
+	 * プラットフォーム別キーボードショートカット
+	 */
+	shortcuts?: PlatformKeyBindings;
 };
 ```
 
@@ -130,11 +130,11 @@ export type Command = {
 
 ```typescript
 export type KeyBinding = {
-  key: string;         // "Delete", "a", "z" など
-  ctrl?: boolean;      // Ctrl キー
-  shift?: boolean;     // Shift キー
-  alt?: boolean;       // Alt キー
-  meta?: boolean;      // Cmd キー (Mac)
+	key: string; // "Delete", "a", "z" など
+	ctrl?: boolean; // Ctrl キー
+	shift?: boolean; // Shift キー
+	alt?: boolean; // Alt キー
+	meta?: boolean; // Cmd キー (Mac)
 };
 ```
 
@@ -147,12 +147,12 @@ export type KeyBinding = {
  * 各プラットフォームに複数のショートカットを登録できる
  */
 export type PlatformKeyBindings = {
-  /** Mac用のショートカット配列（metaキーを使用） */
-  mac?: KeyBinding[];
-  /** Windows/Linux用のショートカット配列（ctrlキーを使用） */
-  win?: KeyBinding[];
-  /** 明示的に指定されていないプラットフォーム用のデフォルト */
-  default: KeyBinding[];
+	/** Mac用のショートカット配列（metaキーを使用） */
+	mac?: KeyBinding[];
+	/** Windows/Linux用のショートカット配列（ctrlキーを使用） */
+	win?: KeyBinding[];
+	/** 明示的に指定されていないプラットフォーム用のデフォルト */
+	default: KeyBinding[];
 };
 ```
 
@@ -160,8 +160,8 @@ export type PlatformKeyBindings = {
 
 ```typescript
 export type CommandAction = {
-  type: "COMMAND";
-  commandId: string;
+	type: "COMMAND";
+	commandId: string;
 };
 ```
 
@@ -172,38 +172,38 @@ export type CommandAction = {
 ```typescript
 // DeleteCommand.ts
 export const DeleteCommand: Command = {
-  id: "delete",
-  label: "削除",
-  category: "edit",
-  shortcuts: {
-    default: [{ key: "Delete" }, { key: "Backspace" }],
-  },
+	id: "delete",
+	label: "削除",
+	category: "edit",
+	shortcuts: {
+		default: [{ key: "Delete" }, { key: "Backspace" }],
+	},
 
-  canExecute: (state) => {
-    return state.selectedIds.length > 0;
-  },
+	canExecute: (state) => {
+		return state.selectedIds.length > 0;
+	},
 
-  execute: (state) => {
-    const updatedObjects = { ...state.objects };
-    const updatedRootIds = [...state.rootIds];
+	execute: (state) => {
+		const updatedObjects = { ...state.objects };
+		const updatedRootIds = [...state.rootIds];
 
-    // 選択オブジェクトを削除
-    for (const id of state.selectedIds) {
-      delete updatedObjects[id];
-      const index = updatedRootIds.indexOf(id);
-      if (index !== -1) {
-        updatedRootIds.splice(index, 1);
-      }
-    }
+		// 選択オブジェクトを削除
+		for (const id of state.selectedIds) {
+			delete updatedObjects[id];
+			const index = updatedRootIds.indexOf(id);
+			if (index !== -1) {
+				updatedRootIds.splice(index, 1);
+			}
+		}
 
-    return {
-      ...state,
-      objects: updatedObjects,
-      rootIds: updatedRootIds,
-      selectedIds: [],
-      lastCommitTime: Date.now(), // コミットが必要な操作
-    };
-  },
+		return {
+			...state,
+			objects: updatedObjects,
+			rootIds: updatedRootIds,
+			selectedIds: [],
+			lastCommitTime: Date.now(), // コミットが必要な操作
+		};
+	},
 };
 ```
 
@@ -212,15 +212,15 @@ export const DeleteCommand: Command = {
 ```typescript
 // SelectAllCommand.ts
 export const SelectAllCommand: Command = {
-  id: "selectAll",
-  label: "すべて選択",
-  category: "selection",
-  shortcuts: {
-    mac: [{ key: "a", meta: true }],
-    win: [{ key: "a", ctrl: true }],
-    default: [{ key: "a", ctrl: true }],
-  },
-  // ...
+	id: "selectAll",
+	label: "すべて選択",
+	category: "selection",
+	shortcuts: {
+		mac: [{ key: "a", meta: true }],
+		win: [{ key: "a", ctrl: true }],
+		default: [{ key: "a", ctrl: true }],
+	},
+	// ...
 };
 ```
 
@@ -228,38 +228,39 @@ export const SelectAllCommand: Command = {
 
 ```typescript
 class CommandRegistry {
-  private commands = new Map<string, Command>();
+	private commands = new Map<string, Command>();
 
-  register(command: Command): this {
-    this.commands.set(command.id, command);
-    return this;
-  }
+	register(command: Command): this {
+		this.commands.set(command.id, command);
+		return this;
+	}
 
-  get(commandId: string): Command | undefined {
-    return this.commands.get(commandId);
-  }
+	get(commandId: string): Command | undefined {
+		return this.commands.get(commandId);
+	}
 
-  getAll(): Command[] {
-    return Array.from(this.commands.values());
-  }
+	getAll(): Command[] {
+		return Array.from(this.commands.values());
+	}
 
-  findByShortcut(event: KeyboardEvent): Command | undefined {
-    return Array.from(this.commands.values()).find(cmd => {
-      if (!cmd.shortcuts) return false;
+	findByShortcut(event: KeyboardEvent): Command | undefined {
+		return Array.from(this.commands.values()).find((cmd) => {
+			if (!cmd.shortcuts) return false;
 
-      // 現在のプラットフォームに対応したショートカット配列を取得
-      const bindings = getPlatformShortcuts(cmd.shortcuts);
+			// 現在のプラットフォームに対応したショートカット配列を取得
+			const bindings = getPlatformShortcuts(cmd.shortcuts);
 
-      // 配列内のいずれかのショートカットがマッチするか確認
-      return bindings.some(binding =>
-        binding.key.toLowerCase() === event.key.toLowerCase() &&
-        !!binding.ctrl === event.ctrlKey &&
-        !!binding.shift === event.shiftKey &&
-        !!binding.alt === event.altKey &&
-        !!binding.meta === event.metaKey
-      );
-    });
-  }
+			// 配列内のいずれかのショートカットがマッチするか確認
+			return bindings.some(
+				(binding) =>
+					binding.key.toLowerCase() === event.key.toLowerCase() &&
+					!!binding.ctrl === event.ctrlKey &&
+					!!binding.shift === event.shiftKey &&
+					!!binding.alt === event.altKey &&
+					!!binding.meta === event.metaKey,
+			);
+		});
+	}
 }
 
 export const commandRegistry = new CommandRegistry();
@@ -269,21 +270,21 @@ export const commandRegistry = new CommandRegistry();
 
 ```typescript
 export const handleCommand = (
-  state: CanvasState,
-  commandId: string,
+	state: CanvasState,
+	commandId: string,
 ): CanvasState => {
-  const command = commandRegistry.get(commandId);
+	const command = commandRegistry.get(commandId);
 
-  if (!command) {
-    console.warn(`Command not found: ${commandId}`);
-    return state;
-  }
+	if (!command) {
+		console.warn(`Command not found: ${commandId}`);
+		return state;
+	}
 
-  if (!command.canExecute(state)) {
-    return state;
-  }
+	if (!command.canExecute(state)) {
+		return state;
+	}
 
-  return command.execute(state);
+	return command.execute(state);
 };
 ```
 
@@ -291,18 +292,18 @@ export const handleCommand = (
 
 ```typescript
 export const canvasReducer = (
-  state: CanvasState,
-  action: CanvasAction,
+	state: CanvasState,
+	action: CanvasAction,
 ): CanvasState => {
-  switch (action.type) {
-    case "GESTURE":
-      return handleGesture(state, action.gesture);
+	switch (action.type) {
+		case "GESTURE":
+			return handleGesture(state, action.gesture);
 
-    case "COMMAND":
-      return handleCommand(state, action.commandId);
+		case "COMMAND":
+			return handleCommand(state, action.commandId);
 
-    // ... その他のアクション
-  }
+		// ... その他のアクション
+	}
 };
 ```
 
@@ -310,36 +311,36 @@ export const canvasReducer = (
 
 ```typescript
 export const useKeyboardShortcuts = (
-  canvasState: CanvasState,
-  dispatch: React.Dispatch<CanvasAction>,
-  containerRef: React.RefObject<HTMLElement>
+	canvasState: CanvasState,
+	dispatch: React.Dispatch<CanvasAction>,
+	containerRef: React.RefObject<HTMLElement>,
 ) => {
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // 入力フィールドでは無効化
-      if (
-        event.target instanceof HTMLInputElement ||
-        event.target instanceof HTMLTextAreaElement
-      ) {
-        return;
-      }
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			// 入力フィールドでは無効化
+			if (
+				event.target instanceof HTMLInputElement ||
+				event.target instanceof HTMLTextAreaElement
+			) {
+				return;
+			}
 
-      const command = commandRegistry.findByShortcut(event);
-      if (command && command.canExecute(canvasState)) {
-        dispatch({ type: "COMMAND", commandId: command.id });
-        event.preventDefault();
-        event.stopPropagation();
-      }
-    };
+			const command = commandRegistry.findByShortcut(event);
+			if (command && command.canExecute(canvasState)) {
+				dispatch({ type: "COMMAND", commandId: command.id });
+				event.preventDefault();
+				event.stopPropagation();
+			}
+		};
 
-    const element = containerRef.current;
-    if (!element) return;
+		const element = containerRef.current;
+		if (!element) return;
 
-    element.addEventListener("keydown", handleKeyDown);
-    return () => {
-      element.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [canvasState, dispatch, containerRef]);
+		element.addEventListener("keydown", handleKeyDown);
+		return () => {
+			element.removeEventListener("keydown", handleKeyDown);
+		};
+	}, [canvasState, dispatch, containerRef]);
 };
 ```
 
@@ -416,18 +417,18 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
  * 現在のプラットフォームを判定
  */
 export const getPlatform = (): "mac" | "win" => {
-  const platform = navigator.platform.toLowerCase();
-  return platform.includes("mac") ? "mac" : "win";
+	const platform = navigator.platform.toLowerCase();
+	return platform.includes("mac") ? "mac" : "win";
 };
 
 /**
  * プラットフォームに応じたショートカット配列を取得
  */
 export const getPlatformShortcuts = (
-  bindings: PlatformKeyBindings,
+	bindings: PlatformKeyBindings,
 ): KeyBinding[] => {
-  const platform = getPlatform();
-  return bindings[platform] ?? bindings.default;
+	const platform = getPlatform();
+	return bindings[platform] ?? bindings.default;
 };
 
 /**
@@ -436,31 +437,31 @@ export const getPlatformShortcuts = (
  * @example formatShortcut({ key: "a", ctrl: true }) => "Ctrl+A" (Windows)
  */
 export const formatShortcut = (binding: KeyBinding): string => {
-  const platform = getPlatform();
-  const parts: string[] = [];
+	const platform = getPlatform();
+	const parts: string[] = [];
 
-  if (binding.ctrl) {
-    parts.push(platform === "mac" ? "⌃" : "Ctrl");
-  }
-  if (binding.shift) {
-    parts.push(platform === "mac" ? "⇧" : "Shift");
-  }
-  if (binding.alt) {
-    parts.push(platform === "mac" ? "⌥" : "Alt");
-  }
-  if (binding.meta) {
-    parts.push(platform === "mac" ? "⌘" : "Win");
-  }
+	if (binding.ctrl) {
+		parts.push(platform === "mac" ? "⌃" : "Ctrl");
+	}
+	if (binding.shift) {
+		parts.push(platform === "mac" ? "⇧" : "Shift");
+	}
+	if (binding.alt) {
+		parts.push(platform === "mac" ? "⌥" : "Alt");
+	}
+	if (binding.meta) {
+		parts.push(platform === "mac" ? "⌘" : "Win");
+	}
 
-  const keyName = ["Delete", "Backspace", "Enter", "Escape", "Tab"].includes(
-    binding.key,
-  )
-    ? binding.key
-    : binding.key.toUpperCase();
+	const keyName = ["Delete", "Backspace", "Enter", "Escape", "Tab"].includes(
+		binding.key,
+	)
+		? binding.key
+		: binding.key.toUpperCase();
 
-  parts.push(keyName);
+	parts.push(keyName);
 
-  return platform === "mac" ? parts.join("") : parts.join("+");
+	return platform === "mac" ? parts.join("") : parts.join("+");
 };
 ```
 
@@ -469,31 +470,31 @@ export const formatShortcut = (binding: KeyBinding): string => {
 ```typescript
 // setup/index.ts
 export const initializeRegistries = () => {
-  initializeObjectRegistry();
-  initializeGestureHandlerRegistry();
-  initializeCommands();
+	initializeObjectRegistry();
+	initializeGestureHandlerRegistry();
+	initializeCommands();
 };
 
 // setup/initializeCommands.ts
 export const initializeCommands = () => {
-  commandRegistry
-    .register(DeleteCommand)
-    .register(SelectAllCommand)
-    .register(DeselectAllCommand)
-    .register(BringForwardCommand)
-    .register(SendBackwardCommand)
-    .register(BringToFrontCommand)
-    .register(SendToBackCommand)
-    .register(CutCommand)
-    .register(CopyCommand)
-    .register(PasteCommand)
-    .register(DuplicateCommand)
-    .register(UndoCommand)
-    .register(RedoCommand)
-    .register(ZoomInCommand)
-    .register(ZoomOutCommand)
-    .register(ZoomToFitCommand)
-    .register(ZoomToSelectionCommand);
+	commandRegistry
+		.register(DeleteCommand)
+		.register(SelectAllCommand)
+		.register(DeselectAllCommand)
+		.register(BringForwardCommand)
+		.register(SendBackwardCommand)
+		.register(BringToFrontCommand)
+		.register(SendToBackCommand)
+		.register(CutCommand)
+		.register(CopyCommand)
+		.register(PasteCommand)
+		.register(DuplicateCommand)
+		.register(UndoCommand)
+		.register(RedoCommand)
+		.register(ZoomInCommand)
+		.register(ZoomOutCommand)
+		.register(ZoomToFitCommand)
+		.register(ZoomToSelectionCommand);
 };
 ```
 
@@ -501,39 +502,39 @@ export const initializeCommands = () => {
 
 ### Selection（選択）
 
-| コマンドID | ラベル | ショートカット |
-|-----------|--------|---------------|
-| `selectAll` | すべて選択 | Ctrl+A / Cmd+A |
-| `deselectAll` | 選択解除 | Ctrl+Shift+A / Cmd+Shift+A |
-| `delete` | 削除 | Delete / Backspace |
+| コマンドID    | ラベル     | ショートカット             |
+| ------------- | ---------- | -------------------------- |
+| `selectAll`   | すべて選択 | Ctrl+A / Cmd+A             |
+| `deselectAll` | 選択解除   | Ctrl+Shift+A / Cmd+Shift+A |
+| `delete`      | 削除       | Delete / Backspace         |
 
 ### Edit（編集）
 
-| コマンドID | ラベル | ショートカット |
-|-----------|--------|---------------|
-| `cut` | 切り取り | Ctrl+X / Cmd+X |
-| `copy` | コピー | Ctrl+C / Cmd+C |
-| `paste` | 貼り付け | Ctrl+V / Cmd+V |
-| `duplicate` | 複製 | Ctrl+D / Cmd+D |
-| `undo` | 元に戻す | Ctrl+Z / Cmd+Z |
-| `redo` | やり直す | Ctrl+Shift+Z / Cmd+Shift+Z |
+| コマンドID  | ラベル   | ショートカット             |
+| ----------- | -------- | -------------------------- |
+| `cut`       | 切り取り | Ctrl+X / Cmd+X             |
+| `copy`      | コピー   | Ctrl+C / Cmd+C             |
+| `paste`     | 貼り付け | Ctrl+V / Cmd+V             |
+| `duplicate` | 複製     | Ctrl+D / Cmd+D             |
+| `undo`      | 元に戻す | Ctrl+Z / Cmd+Z             |
+| `redo`      | やり直す | Ctrl+Shift+Z / Cmd+Shift+Z |
 
 ### Arrange（配置）
 
-| コマンドID | ラベル | ショートカット |
-|-----------|--------|---------------|
-| `bringToFront` | 最前面へ移動 | Ctrl+Shift+] |
-| `bringForward` | 前面へ移動 | Ctrl+] |
-| `sendBackward` | 背面へ移動 | Ctrl+[ |
-| `sendToBack` | 最背面へ移動 | Ctrl+Shift+[ |
+| コマンドID     | ラベル       | ショートカット |
+| -------------- | ------------ | -------------- |
+| `bringToFront` | 最前面へ移動 | Ctrl+Shift+]   |
+| `bringForward` | 前面へ移動   | Ctrl+]         |
+| `sendBackward` | 背面へ移動   | Ctrl+[         |
+| `sendToBack`   | 最背面へ移動 | Ctrl+Shift+[   |
 
 ### View（表示）
 
-| コマンドID | ラベル | ショートカット |
-|-----------|--------|---------------|
-| `zoomIn` | ズームイン | Ctrl++ / Cmd++ |
-| `zoomOut` | ズームアウト | Ctrl+- / Cmd+- |
-| `zoomToFit` | 全体を表示 | Ctrl+0 / Cmd+0 |
+| コマンドID        | ラベル         | ショートカット |
+| ----------------- | -------------- | -------------- |
+| `zoomIn`          | ズームイン     | Ctrl++ / Cmd++ |
+| `zoomOut`         | ズームアウト   | Ctrl+- / Cmd+- |
+| `zoomToFit`       | 全体を表示     | Ctrl+0 / Cmd+0 |
 | `zoomToSelection` | 選択範囲を表示 | Ctrl+2 / Cmd+2 |
 
 ## 設計の利点
@@ -579,13 +580,13 @@ expect(resultState.selectedIds).toEqual([]);
 
 ```typescript
 execute: (state) => {
-  // ... 状態更新処理 ...
-  return {
-    ...state,
-    // ... 更新内容 ...
-    lastCommitTime: Date.now(), // コミット必要
-  };
-}
+	// ... 状態更新処理 ...
+	return {
+		...state,
+		// ... 更新内容 ...
+		lastCommitTime: Date.now(), // コミット必要
+	};
+};
 ```
 
 ### 2. グループ内オブジェクトの処理
@@ -602,8 +603,8 @@ execute: (state) => {
 
 ```typescript
 export type CanvasState = {
-  // ...
-  clipboard: ObjectState[] | null;
+	// ...
+	clipboard: ObjectState[] | null;
 };
 ```
 
@@ -615,8 +616,8 @@ export type CanvasState = {
 
 ```typescript
 const CommandPalette = () => {
-  const commands = commandRegistry.getAll();
-  // ... 検索・フィルタリング UI ...
+	const commands = commandRegistry.getAll();
+	// ... 検索・フィルタリング UI ...
 };
 ```
 
@@ -642,13 +643,13 @@ const commandHistory: Array<{ commandId: string; timestamp: number }> = [];
 
 ```typescript
 const MacroCommand: Command = {
-  id: "alignAndDistribute",
-  execute: (state) => {
-    let nextState = state;
-    nextState = AlignLeftCommand.execute(nextState);
-    nextState = DistributeVerticallyCommand.execute(nextState);
-    return nextState;
-  },
+	id: "alignAndDistribute",
+	execute: (state) => {
+		let nextState = state;
+		nextState = AlignLeftCommand.execute(nextState);
+		nextState = DistributeVerticallyCommand.execute(nextState);
+		return nextState;
+	},
 };
 ```
 

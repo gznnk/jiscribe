@@ -14,7 +14,9 @@ const ConnectorsRendererComponent: React.FC<ConnectorsRendererProps> = ({
 		<>
 			{connectorIds.map((id) => {
 				const connector = objects[id];
-				if (!connector || connector.type !== "connector") return null;
+				if (!connector || connector.type !== "connector") {
+					return null;
+				}
 				return (
 					<ConnectorRenderer
 						key={id}

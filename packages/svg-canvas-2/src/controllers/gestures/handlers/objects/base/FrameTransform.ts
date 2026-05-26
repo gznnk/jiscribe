@@ -105,8 +105,7 @@ export function transformFrameByGroup<T extends TransformedFrame>(
 
 	// 回転角度の計算（グループの回転変化を子にも適用）
 	const rotationDelta =
-		transformRootGroupEndState.rotation -
-		transformRootGroupStartState.rotation;
+		transformRootGroupEndState.rotation - transformRootGroupStartState.rotation;
 	const newRotation = normalizeRotation(frame.rotation + rotationDelta);
 
 	// scaleX/scaleYの計算（1 or -1 の反転）

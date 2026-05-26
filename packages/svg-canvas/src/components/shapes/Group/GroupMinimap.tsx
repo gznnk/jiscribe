@@ -12,7 +12,9 @@ const GroupMinimapComponent: React.FC<GroupProps> = ({ items }) => {
 		<g>
 			{items.map((item) => {
 				const MinimapComponent = DiagramRegistry.getMinimapComponent(item.type);
-				if (!MinimapComponent) return null;
+				if (!MinimapComponent) {
+					return null;
+				}
 
 				return (
 					<MinimapComponent

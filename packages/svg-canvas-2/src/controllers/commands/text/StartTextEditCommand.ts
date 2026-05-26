@@ -11,10 +11,14 @@ export const StartTextEditCommand: Command = {
 
 	canExecute(state) {
 		// 既にテキスト編集中の場合は実行不可
-		if (state.textEditState) return false;
+		if (state.textEditState) {
+			return false;
+		}
 
 		// 単一選択のみ
-		if (state.selectedIds.length !== 1) return false;
+		if (state.selectedIds.length !== 1) {
+			return false;
+		}
 
 		const selectedId = state.selectedIds[0];
 		const selectedObject = state.objects[selectedId];

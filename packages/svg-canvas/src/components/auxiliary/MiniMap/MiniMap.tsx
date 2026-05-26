@@ -63,7 +63,9 @@ const MiniMapComponent: React.FC<MiniMapProps> = ({
 	// Handle navigation based on click coordinates
 	const handleNavigate = useCallback(
 		(clientX: number, clientY: number, svgElement: SVGSVGElement) => {
-			if (!onNavigate) return;
+			if (!onNavigate) {
+				return;
+			}
 
 			// Get the bounding rectangle of the SVG element
 			const rect = svgElement.getBoundingClientRect();
@@ -118,7 +120,9 @@ const MiniMapComponent: React.FC<MiniMapProps> = ({
 
 			// Calculate relative position within viewport
 			const svgElement = e.currentTarget.ownerSVGElement;
-			if (!svgElement) return;
+			if (!svgElement) {
+				return;
+			}
 
 			// Get the bounding rectangle of the SVG element
 			const rect = svgElement.getBoundingClientRect();
@@ -144,10 +148,14 @@ const MiniMapComponent: React.FC<MiniMapProps> = ({
 	// Handle pointer move event to update viewport position
 	const handleViewportPointerMove = useCallback(
 		(e: React.PointerEvent<SVGRectElement>) => {
-			if (!isViewportInteraction) return;
+			if (!isViewportInteraction) {
+				return;
+			}
 
 			const svgElement = e.currentTarget.ownerSVGElement;
-			if (!svgElement) return;
+			if (!svgElement) {
+				return;
+			}
 
 			// Get the bounding rectangle of the SVG element
 			const rect = svgElement.getBoundingClientRect();

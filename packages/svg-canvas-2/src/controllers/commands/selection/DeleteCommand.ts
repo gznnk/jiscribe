@@ -66,7 +66,9 @@ export const DeleteCommand: Command = {
 		const idsToDelete = new Set<string>();
 
 		const collectIds = (id: string) => {
-			if (idsToDelete.has(id)) return;
+			if (idsToDelete.has(id)) {
+				return;
+			}
 			idsToDelete.add(id);
 			const obj = state.objects[id];
 			if (obj?.type === "group") {
@@ -129,7 +131,10 @@ export const DeleteCommand: Command = {
 		// 削除による葉オブジェクトの消失を全祖先グループに反映する（cleanupGroups の前に行う）。
 		// cleanup 後だと解除されたグループの ID が消えて updateGroupBoundsFromRoot が空振りするケースがある。
 		for (const parentId of affectedParentIds) {
-			nextStateBeforeCleanup = updateGroupBoundsFromRoot(nextStateBeforeCleanup, parentId);
+			nextStateBeforeCleanup = updateGroupBoundsFromRoot(
+				nextStateBeforeCleanup,
+				parentId,
+			);
 		}
 
 		// グループのクリーンアップ（空グループの削除、1個グループの解除）

@@ -48,7 +48,9 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 	// 初回フォーカス
 	useEffect(() => {
 		const el = textAreaRef.current;
-		if (!el) return;
+		if (!el) {
+			return;
+		}
 		el.focus();
 		el.setSelectionRange(el.value.length, el.value.length);
 	}, []);
@@ -57,13 +59,19 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		onChange(e.target.value);
 	};
 
-	const handlePointerDown = useCallback((e: React.PointerEvent<HTMLTextAreaElement>) => {
-		e.stopPropagation();
-	}, []);
+	const handlePointerDown = useCallback(
+		(e: React.PointerEvent<HTMLTextAreaElement>) => {
+			e.stopPropagation();
+		},
+		[],
+	);
 
-	const handleContextMenu = useCallback((e: React.MouseEvent<HTMLTextAreaElement>) => {
-		e.stopPropagation();
-	}, []);
+	const handleContextMenu = useCallback(
+		(e: React.MouseEvent<HTMLTextAreaElement>) => {
+			e.stopPropagation();
+		},
+		[],
+	);
 
 	const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
 		if (e.key === "Escape" && onEscape) {

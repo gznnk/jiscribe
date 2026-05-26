@@ -15,9 +15,15 @@ import { isTransformativeState } from "../../validation/isTransformativeState";
 export const calcRectangleConnectPointPosition = (
 	diagram: Diagram,
 ): ConnectPointState[] => {
-	if (!isRect(diagram)) return []; // Type guard.
-	if (!isConnectableState(diagram)) return []; // Type guard.
-	if (!isTransformativeState(diagram)) return []; // Type guard.
+	if (!isRect(diagram)) {
+		return [];
+	} // Type guard.
+	if (!isConnectableState(diagram)) {
+		return [];
+	} // Type guard.
+	if (!isTransformativeState(diagram)) {
+		return [];
+	} // Type guard.
 
 	// Calculate the key points of the rectangle.
 	const keyPoints = calcRectKeyPoints({

@@ -5,10 +5,7 @@ import { useState, useEffect } from "react";
 
 // Import utilities.
 import { BOX_SHADOW } from "../../../constants/styling/core/CommonStyling";
-import {
-	GeminiKeyManager,
-	OpenAiKeyManager,
-} from "../../../utils/KeyManager";
+import { GeminiKeyManager, OpenAiKeyManager } from "../../../utils/KeyManager";
 
 const UserMenuDiv = styled.div`
 	position: absolute;

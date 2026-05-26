@@ -9,9 +9,7 @@ import type { TransformedRect } from "../types/TransformedRect";
  * @param geometry - The transformed rectangle geometry (top-left, dimensions, rotation, scale)
  * @returns The coordinates of the rectangle key points
  */
-export const calcRectKeyPoints = (
-	geometry: TransformedRect,
-): RectKeyPoints => {
+export const calcRectKeyPoints = (geometry: TransformedRect): RectKeyPoints => {
 	const { x, y, width, height, rotation, scaleX, scaleY } = geometry;
 
 	const halfWidth = width / 2;

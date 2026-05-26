@@ -52,10 +52,26 @@ describe("autoSelectParentGroups", () => {
 					type: "group",
 					childIds: ["rect-3", "rect-4"],
 				} as GroupState,
-				"rect-1": { id: "rect-1", type: "rect", parentId: "group-a" } as RectState,
-				"rect-2": { id: "rect-2", type: "rect", parentId: "group-a" } as RectState,
-				"rect-3": { id: "rect-3", type: "rect", parentId: "group-b" } as RectState,
-				"rect-4": { id: "rect-4", type: "rect", parentId: "group-b" } as RectState,
+				"rect-1": {
+					id: "rect-1",
+					type: "rect",
+					parentId: "group-a",
+				} as RectState,
+				"rect-2": {
+					id: "rect-2",
+					type: "rect",
+					parentId: "group-a",
+				} as RectState,
+				"rect-3": {
+					id: "rect-3",
+					type: "rect",
+					parentId: "group-b",
+				} as RectState,
+				"rect-4": {
+					id: "rect-4",
+					type: "rect",
+					parentId: "group-b",
+				} as RectState,
 			},
 		} as unknown as CanvasState;
 

@@ -11,7 +11,9 @@ import type { ImageState } from "../../types/state/shapes/ImageState";
  * @returns True if the diagram is an image data object
  */
 export const isImageState = (data: Diagram): data is ImageState => {
-	if (!isObject(data)) return false;
+	if (!isObject(data)) {
+		return false;
+	}
 
 	return (
 		"type" in data &&

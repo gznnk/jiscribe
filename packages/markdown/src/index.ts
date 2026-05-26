@@ -37,7 +37,9 @@ const katexLite = (md: MarkdownIt): void => {
 	 */
 	md.inline.ruler.after("escape", "math_inline", (state, silent) => {
 		const start = state.pos;
-		if (state.src[start] !== "$") return false;
+		if (state.src[start] !== "$") {
+			return false;
+		}
 
 		let match = start + 1;
 		match = state.src.indexOf("$", match);
@@ -48,8 +50,12 @@ const katexLite = (md: MarkdownIt): void => {
 				continue;
 			}
 			const content = state.src.slice(start + 1, match);
-			if (content.includes("\n")) return false;
-			if (silent) return true;
+			if (content.includes("\n")) {
+				return false;
+			}
+			if (silent) {
+				return true;
+			}
 
 			const token = state.push("math_inline", "", 0);
 			token.content = content;
@@ -70,18 +76,26 @@ const katexLite = (md: MarkdownIt): void => {
 		(state, startLine, endLine, silent) => {
 			// Check if the line starts with $$
 			const begin = state.bMarks[startLine] + state.tShift[startLine];
-			if (state.src.slice(begin, begin + 2) !== "$$") return false;
+			if (state.src.slice(begin, begin + 2) !== "$$") {
+				return false;
+			}
 
 			// Find the closing $$ on a subsequent line
 			let next = startLine;
 			while (++next < endLine) {
 				const pos = state.bMarks[next] + state.tShift[next];
-				if (state.src.slice(pos, pos + 2) === "$$") break;
+				if (state.src.slice(pos, pos + 2) === "$$") {
+					break;
+				}
 			}
 
 			// Reject if no closing $$ is found
-			if (next >= endLine) return false;
-			if (silent) return true;
+			if (next >= endLine) {
+				return false;
+			}
+			if (silent) {
+				return true;
+			}
 
 			// Create a token for the block math expression
 			const token = state.push("math_block", "", 0);

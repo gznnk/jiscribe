@@ -1,3 +1,1 @@
 ﻿export { RotatePoint } from "./RotatePoint";
-
-

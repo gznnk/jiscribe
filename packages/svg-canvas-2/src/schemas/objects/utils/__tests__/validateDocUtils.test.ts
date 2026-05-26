@@ -15,12 +15,23 @@ import {
 
 describe("validatePolyFields", () => {
 	it("有効な points 配列はエラーなし", () => {
-		const o = { points: [{ x: 0, y: 0 }, { x: 10, y: 10 }] };
+		const o = {
+			points: [
+				{ x: 0, y: 0 },
+				{ x: 10, y: 10 },
+			],
+		};
 		expect(validatePolyFields(o, "root")).toEqual([]);
 	});
 
 	it("3点以上でもエラーなし", () => {
-		const o = { points: [{ x: 0, y: 0 }, { x: 5, y: 5 }, { x: 10, y: 0 }] };
+		const o = {
+			points: [
+				{ x: 0, y: 0 },
+				{ x: 5, y: 5 },
+				{ x: 10, y: 0 },
+			],
+		};
 		expect(validatePolyFields(o, "root")).toEqual([]);
 	});
 
@@ -65,55 +76,85 @@ describe("validateEndpointRef", () => {
 
 	describe("OwnedEndpointRef", () => {
 		it("center anchor はエラーなし", () => {
-			const ref = { owner: { id: "rect-1", type: "rect" }, anchor: { kind: "center" } };
+			const ref = {
+				owner: { id: "rect-1", type: "rect" },
+				anchor: { kind: "center" },
+			};
 			expect(validateEndpointRef(ref, "root")).toEqual([]);
 		});
 
 		it("connectPoint anchor（有効な id）はエラーなし", () => {
-			const ref = { owner: { id: "rect-1", type: "rect" }, anchor: { kind: "connectPoint", id: "topCenter" } };
+			const ref = {
+				owner: { id: "rect-1", type: "rect" },
+				anchor: { kind: "connectPoint", id: "topCenter" },
+			};
 			expect(validateEndpointRef(ref, "root")).toEqual([]);
 		});
 
 		it("owner.id が string でない場合はエラー", () => {
-			const ref = { owner: { id: 123, type: "rect" }, anchor: { kind: "center" } };
+			const ref = {
+				owner: { id: 123, type: "rect" },
+				anchor: { kind: "center" },
+			};
 			const errors = validateEndpointRef(ref, "root");
-			expect(errors.some(e => e.path === "root.owner.id")).toBe(true);
+			expect(errors.some((e) => e.path === "root.owner.id")).toBe(true);
 		});
 
 		it("owner.type が string でない場合はエラー", () => {
-			const ref = { owner: { id: "rect-1", type: 42 }, anchor: { kind: "center" } };
+			const ref = {
+				owner: { id: "rect-1", type: 42 },
+				anchor: { kind: "center" },
+			};
 			const errors = validateEndpointRef(ref, "root");
-			expect(errors.some(e => e.path === "root.owner.type")).toBe(true);
+			expect(errors.some((e) => e.path === "root.owner.type")).toBe(true);
 		});
 
 		it("anchor が存在しない場合はエラー", () => {
 			const ref = { owner: { id: "rect-1", type: "rect" } };
 			const errors = validateEndpointRef(ref, "root");
-			expect(errors.some(e => e.path === "root.anchor")).toBe(true);
+			expect(errors.some((e) => e.path === "root.anchor")).toBe(true);
 		});
 
 		it("anchor.kind が free の場合はエラー（owned には不正）", () => {
-			const ref = { owner: { id: "rect-1", type: "rect" }, anchor: { kind: "free", point: { x: 0, y: 0 } } };
+			const ref = {
+				owner: { id: "rect-1", type: "rect" },
+				anchor: { kind: "free", point: { x: 0, y: 0 } },
+			};
 			const errors = validateEndpointRef(ref, "root");
-			expect(errors.some(e => e.path === "root.anchor.kind")).toBe(true);
+			expect(errors.some((e) => e.path === "root.anchor.kind")).toBe(true);
 		});
 
 		it("anchor.kind が不正な値はエラー", () => {
-			const ref = { owner: { id: "rect-1", type: "rect" }, anchor: { kind: "unknown" } };
+			const ref = {
+				owner: { id: "rect-1", type: "rect" },
+				anchor: { kind: "unknown" },
+			};
 			const errors = validateEndpointRef(ref, "root");
-			expect(errors.some(e => e.path === "root.anchor.kind")).toBe(true);
+			expect(errors.some((e) => e.path === "root.anchor.kind")).toBe(true);
 		});
 
 		it("connectPoint anchor で id が不正な値はエラー", () => {
-			const ref = { owner: { id: "rect-1", type: "rect" }, anchor: { kind: "connectPoint", id: "invalid" } };
+			const ref = {
+				owner: { id: "rect-1", type: "rect" },
+				anchor: { kind: "connectPoint", id: "invalid" },
+			};
 			const errors = validateEndpointRef(ref, "root");
-			expect(errors.some(e => e.path === "root.anchor.id")).toBe(true);
+			expect(errors.some((e) => e.path === "root.anchor.id")).toBe(true);
 		});
 
 		it("全 ConnectPointId はエラーなし", () => {
-			const ids = ["center", "topCenter", "rightCenter", "bottomCenter", "leftCenter"];
+			const ids = [
+				"center",
+				"topCenter",
+				"rightCenter",
+				"bottomCenter",
+				"leftCenter",
+			];
 			for (const id of ids) {
-				const ref = { owner: { id: "rect-1", type: "rect" }, anchor: { kind: "connectPoint", id } };
+				const ref = {
+					owner: { id: "rect-1", type: "rect" },
+					anchor: { kind: "connectPoint", id },
+				};
 				expect(validateEndpointRef(ref, "root")).toEqual([]);
 			}
 		});
@@ -128,37 +169,40 @@ describe("validateEndpointRef", () => {
 		});
 
 		it("owner が null の場合も free endpoint として扱いエラーなし", () => {
-			const ref = { owner: null, anchor: { kind: "free", point: { x: 0, y: 0 } } };
+			const ref = {
+				owner: null,
+				anchor: { kind: "free", point: { x: 0, y: 0 } },
+			};
 			expect(validateEndpointRef(ref, "root")).toEqual([]);
 		});
 
 		it("anchor がない場合はエラー", () => {
 			const errors = validateEndpointRef({}, "root");
-			expect(errors.some(e => e.path === "root.anchor")).toBe(true);
+			expect(errors.some((e) => e.path === "root.anchor")).toBe(true);
 		});
 
 		it("anchor.kind が free でない場合はエラー", () => {
 			const ref = { anchor: { kind: "center" } };
 			const errors = validateEndpointRef(ref, "root");
-			expect(errors.some(e => e.path === "root.anchor.kind")).toBe(true);
+			expect(errors.some((e) => e.path === "root.anchor.kind")).toBe(true);
 		});
 
 		it("anchor.point がない場合はエラー", () => {
 			const ref = { anchor: { kind: "free" } };
 			const errors = validateEndpointRef(ref, "root");
-			expect(errors.some(e => e.path === "root.anchor.point")).toBe(true);
+			expect(errors.some((e) => e.path === "root.anchor.point")).toBe(true);
 		});
 
 		it("anchor.point.x が数値でない場合はエラー", () => {
 			const ref = { anchor: { kind: "free", point: { x: "10", y: 0 } } };
 			const errors = validateEndpointRef(ref, "root");
-			expect(errors.some(e => e.path === "root.anchor.point.x")).toBe(true);
+			expect(errors.some((e) => e.path === "root.anchor.point.x")).toBe(true);
 		});
 
 		it("anchor.point.y が数値でない場合はエラー", () => {
 			const ref = { anchor: { kind: "free", point: { x: 0, y: "20" } } };
 			const errors = validateEndpointRef(ref, "root");
-			expect(errors.some(e => e.path === "root.anchor.point.y")).toBe(true);
+			expect(errors.some((e) => e.path === "root.anchor.point.y")).toBe(true);
 		});
 	});
 });
@@ -221,13 +265,20 @@ describe("validateStrokeStyleFields", () => {
 	});
 
 	it("strokeDashType が不正な値はエラー", () => {
-		const errors = validateStrokeStyleFields({ strokeDashType: "double" }, "root");
+		const errors = validateStrokeStyleFields(
+			{ strokeDashType: "double" },
+			"root",
+		);
 		expect(errors[0].path).toBe("root.strokeDashType");
 	});
 
 	it("strokeDashType: dashed / dotted はエラーなし", () => {
-		expect(validateStrokeStyleFields({ strokeDashType: "dashed" }, "root")).toEqual([]);
-		expect(validateStrokeStyleFields({ strokeDashType: "dotted" }, "root")).toEqual([]);
+		expect(
+			validateStrokeStyleFields({ strokeDashType: "dashed" }, "root"),
+		).toEqual([]);
+		expect(
+			validateStrokeStyleFields({ strokeDashType: "dotted" }, "root"),
+		).toEqual([]);
 	});
 });
 
@@ -239,7 +290,9 @@ describe("validateFillStyleFields", () => {
 	});
 
 	it("fill が string はエラーなし", () => {
-		expect(validateFillStyleFields({ fill: "transparent" }, "root")).toEqual([]);
+		expect(validateFillStyleFields({ fill: "transparent" }, "root")).toEqual(
+			[],
+		);
 	});
 
 	it("fill が string でない場合はエラー", () => {
@@ -280,17 +333,26 @@ describe("validateTextStyleFields", () => {
 	});
 
 	it("verticalAlign が不正な値はエラー", () => {
-		const errors = validateTextStyleFields({ verticalAlign: "baseline" }, "root");
+		const errors = validateTextStyleFields(
+			{ verticalAlign: "baseline" },
+			"root",
+		);
 		expect(errors[0].path).toBe("root.verticalAlign");
 	});
 
 	it("verticalAlign: top / bottom はエラーなし", () => {
-		expect(validateTextStyleFields({ verticalAlign: "top" }, "root")).toEqual([]);
-		expect(validateTextStyleFields({ verticalAlign: "bottom" }, "root")).toEqual([]);
+		expect(validateTextStyleFields({ verticalAlign: "top" }, "root")).toEqual(
+			[],
+		);
+		expect(
+			validateTextStyleFields({ verticalAlign: "bottom" }, "root"),
+		).toEqual([]);
 	});
 
 	it("textType: markdown はエラーなし", () => {
-		expect(validateTextStyleFields({ textType: "markdown" }, "root")).toEqual([]);
+		expect(validateTextStyleFields({ textType: "markdown" }, "root")).toEqual(
+			[],
+		);
 	});
 
 	it("textType が不正な値はエラー", () => {
@@ -350,8 +412,16 @@ describe("validateArrowFields", () => {
 	});
 
 	it("全 ArrowType 値はエラーなし", () => {
-		const validTypes = ["FilledTriangle", "ConcaveTriangle", "OpenArrow", "HollowTriangle",
-			"FilledDiamond", "HollowDiamond", "Circle", "None"];
+		const validTypes = [
+			"FilledTriangle",
+			"ConcaveTriangle",
+			"OpenArrow",
+			"HollowTriangle",
+			"FilledDiamond",
+			"HollowDiamond",
+			"Circle",
+			"None",
+		];
 		for (const t of validTypes) {
 			expect(validateArrowFields({ startArrow: t }, "root")).toEqual([]);
 		}

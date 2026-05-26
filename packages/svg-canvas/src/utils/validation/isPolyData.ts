@@ -9,7 +9,9 @@ import type { PolyData } from "../../types/data/core/PolyData";
  * @returns True if the object is PolyData, false otherwise
  */
 export const isPolyData = (obj: unknown): obj is PolyData => {
-	if (!isObject(obj)) return false;
+	if (!isObject(obj)) {
+		return false;
+	}
 
 	return "points" in obj && isArray(obj.points);
 };

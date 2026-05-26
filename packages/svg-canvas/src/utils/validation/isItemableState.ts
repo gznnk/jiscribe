@@ -9,7 +9,9 @@ import type { ItemableState } from "../../types/state/core/ItemableState";
  * @returns True if the object is ItemableState, false otherwise
  */
 export const isItemableState = (obj: unknown): obj is ItemableState => {
-	if (!isObject(obj)) return false;
+	if (!isObject(obj)) {
+		return false;
+	}
 
 	return "itemableType" in obj && "items" in obj && isArray(obj.items);
 };

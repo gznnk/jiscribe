@@ -166,8 +166,12 @@ export const useOnConnectShapes = (props: SvgCanvasSubHooksProps) => {
 			);
 
 			const newPathPointId = (i: number) => {
-				if (i === 0) return sourceConnectPoint.id;
-				if (i === points.length - 1) return targetConnectPoint.id;
+				if (i === 0) {
+					return sourceConnectPoint.id;
+				}
+				if (i === points.length - 1) {
+					return targetConnectPoint.id;
+				}
 				return newId();
 			};
 
