@@ -45,26 +45,12 @@ const TransformControlsLayerComponent: React.FC<
 			return null;
 		}
 
-		return (
-			<TransformControls
-				frame={selectedObject}
-				showRotation={true}
-				showEdgeHandles={true}
-				zoom={zoom}
-			/>
-		);
+		return <TransformControls frame={selectedObject} zoom={zoom} />;
 	}
 
 	// Multiple selection: render TransformControls with multiSelectGroup if available (optional, can be skipped if not needed)
 	if (multiSelectGroup) {
-		return (
-			<TransformControls
-				frame={multiSelectGroup}
-				showRotation={true}
-				showEdgeHandles={true}
-				zoom={zoom}
-			/>
-		);
+		return <TransformControls frame={multiSelectGroup} zoom={zoom} />;
 	}
 
 	return null;

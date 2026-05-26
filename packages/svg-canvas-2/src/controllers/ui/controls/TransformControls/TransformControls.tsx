@@ -23,16 +23,6 @@ type TransformControlsProps = {
 	 */
 	frame: TransformedFrame;
 	/**
-	 * Whether to show rotation controls.
-	 * @default true
-	 */
-	showRotation?: boolean;
-	/**
-	 * Whether to show edge (mid-point) resize handles.
-	 * @default true
-	 */
-	showEdgeHandles?: boolean;
-	/**
 	 * Zoom level for adjusting handle sizes.
 	 * @default 1
 	 */
@@ -51,8 +41,6 @@ type TransformControlsProps = {
  */
 const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 	frame,
-	showRotation = true,
-	showEdgeHandles = true,
 	zoom = 1,
 }) => {
 	const { cx, cy, width, height, rotation, scaleX, scaleY } = frame;
@@ -148,77 +136,66 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 			/>
 
 			{/* Edge midpoint anchors */}
-			{showEdgeHandles && (
-				<>
-					<circle
-						cx={points.topCenter.x}
-						cy={points.topCenter.y}
-						r={adjustedAnchorRadius}
-						fill={ANCHOR_FILL}
-						stroke={ANCHOR_COLOR}
-						strokeWidth={adjustedStrokeWidth}
-						data-kind="control"
-						data-id="transform-control:topCenter"
-						style={{ cursor: cursors.topCenter }}
-					/>
-					<circle
-						cx={points.rightCenter.x}
-						cy={points.rightCenter.y}
-						r={adjustedAnchorRadius}
-						fill={ANCHOR_FILL}
-						stroke={ANCHOR_COLOR}
-						strokeWidth={adjustedStrokeWidth}
-						data-kind="control"
-						data-id="transform-control:rightCenter"
-						style={{ cursor: cursors.rightCenter }}
-					/>
-					<circle
-						cx={points.bottomCenter.x}
-						cy={points.bottomCenter.y}
-						r={adjustedAnchorRadius}
-						fill={ANCHOR_FILL}
-						stroke={ANCHOR_COLOR}
-						strokeWidth={adjustedStrokeWidth}
-						data-kind="control"
-						data-id="transform-control:bottomCenter"
-						style={{ cursor: cursors.bottomCenter }}
-					/>
-					<circle
-						cx={points.leftCenter.x}
-						cy={points.leftCenter.y}
-						r={adjustedAnchorRadius}
-						fill={ANCHOR_FILL}
-						stroke={ANCHOR_COLOR}
-						strokeWidth={adjustedStrokeWidth}
-						data-kind="control"
-						data-id="transform-control:leftCenter"
-						style={{ cursor: cursors.leftCenter }}
-					/>
-				</>
-			)}
+			<circle
+				cx={points.topCenter.x}
+				cy={points.topCenter.y}
+				r={adjustedAnchorRadius}
+				fill={ANCHOR_FILL}
+				stroke={ANCHOR_COLOR}
+				strokeWidth={adjustedStrokeWidth}
+				data-kind="control"
+				data-id="transform-control:topCenter"
+				style={{ cursor: cursors.topCenter }}
+			/>
+			<circle
+				cx={points.rightCenter.x}
+				cy={points.rightCenter.y}
+				r={adjustedAnchorRadius}
+				fill={ANCHOR_FILL}
+				stroke={ANCHOR_COLOR}
+				strokeWidth={adjustedStrokeWidth}
+				data-kind="control"
+				data-id="transform-control:rightCenter"
+				style={{ cursor: cursors.rightCenter }}
+			/>
+			<circle
+				cx={points.bottomCenter.x}
+				cy={points.bottomCenter.y}
+				r={adjustedAnchorRadius}
+				fill={ANCHOR_FILL}
+				stroke={ANCHOR_COLOR}
+				strokeWidth={adjustedStrokeWidth}
+				data-kind="control"
+				data-id="transform-control:bottomCenter"
+				style={{ cursor: cursors.bottomCenter }}
+			/>
+			<circle
+				cx={points.leftCenter.x}
+				cy={points.leftCenter.y}
+				r={adjustedAnchorRadius}
+				fill={ANCHOR_FILL}
+				stroke={ANCHOR_COLOR}
+				strokeWidth={adjustedStrokeWidth}
+				data-kind="control"
+				data-id="transform-control:leftCenter"
+				style={{ cursor: cursors.leftCenter }}
+			/>
 
 			{/* Rotation handle */}
-			{showRotation && (
-				<>
-					<g
-						transform={`translate(${rotationPoint.x} ${rotationPoint.y}) rotate(${rotation}) scale(${scale}) translate(${-ROTATION_ICON_SIZE / 2} ${-ROTATION_ICON_SIZE / 2})`}
-					>
-						<RotateRight
-							width={ROTATION_ICON_SIZE}
-							height={ROTATION_ICON_SIZE}
-						/>
-					</g>
-					<circle
-						cx={rotationPoint.x}
-						cy={rotationPoint.y}
-						r={adjustedRotationHitRadius}
-						fill="transparent"
-						data-kind="control"
-						data-id="transform-control:rotation"
-						style={{ cursor: "grab" }}
-					/>
-				</>
-			)}
+			<g
+				transform={`translate(${rotationPoint.x} ${rotationPoint.y}) rotate(${rotation}) scale(${scale}) translate(${-ROTATION_ICON_SIZE / 2} ${-ROTATION_ICON_SIZE / 2})`}
+			>
+				<RotateRight width={ROTATION_ICON_SIZE} height={ROTATION_ICON_SIZE} />
+			</g>
+			<circle
+				cx={rotationPoint.x}
+				cy={rotationPoint.y}
+				r={adjustedRotationHitRadius}
+				fill="transparent"
+				data-kind="control"
+				data-id="transform-control:rotation"
+				style={{ cursor: "grab" }}
+			/>
 		</g>
 	);
 };
