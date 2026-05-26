@@ -106,7 +106,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 		}
 
 		// Generate unique ID for the new connector
-		const connectorId = `connector-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+		const connectorId = crypto.randomUUID();
 
 		// Create a temporary connector with source anchor and free target
 		const pendingConnector: ConnectorState = {

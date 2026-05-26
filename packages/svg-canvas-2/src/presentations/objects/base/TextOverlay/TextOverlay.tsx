@@ -53,7 +53,8 @@ const TextOverlayComponent: React.FC<TextOverlayProps> = ({
 		if (textRef.current && textType === "markdown" && text) {
 			// Clear the previous content
 			textRef.current.innerHTML = "";
-			// Set the new content with sanitized HTML
+			// XSS サニタイズは @workspace/markdown の renderMarkdown 内で DOMPurify により担保される。
+			// サニタイズの維持責務は @workspace/markdown 側にある。
 			textRef.current.innerHTML = renderMarkdown(text);
 		}
 	}, [text, textType, isEditing]);

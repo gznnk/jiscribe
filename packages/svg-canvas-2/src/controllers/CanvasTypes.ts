@@ -150,6 +150,12 @@ export type CanvasControllerState = CanvasState & {
 	saveVersion: number;
 
 	/**
+	 * UUID generated each time saveVersion increments.
+	 * Passed to onCommit and echoed back via SYNC_EXTERNAL to identify fold-back saves.
+	 */
+	saveNonce: string;
+
+	/**
 	 * Context menu position (client coordinates).
 	 * Null when no context menu should be displayed.
 	 */

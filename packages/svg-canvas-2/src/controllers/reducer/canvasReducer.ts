@@ -61,9 +61,13 @@ export const canvasReducer = (
 				connectorIds: action.payload.connectorIds,
 			});
 
-			// Undo/Redoによる自己保存の折り返しなど、incoming doc が現在の present と同一の場合は
+			// 自己保存の折り返し: action.saveNonce が state.saveNonce と一致する場合、
+			// この SYNC_EXTERNAL は自分が送ったデータがエコーバックされたものなので
 			// オブジェクト参照だけ更新し、past/future（history）は変更しない。
-			if (JSON.stringify(newDoc) === JSON.stringify(state.history.present)) {
+			if (
+				action.saveNonce !== undefined &&
+				action.saveNonce === state.saveNonce
+			) {
 				return {
 					...state,
 					objects: action.payload.objects,
@@ -164,6 +168,7 @@ const recordHistoryIfNeeded = (
 		return {
 			...state,
 			saveVersion: state.saveVersion + 1,
+			saveNonce: crypto.randomUUID(),
 			history: {
 				past: newPast,
 				present: doc,

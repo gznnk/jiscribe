@@ -43,10 +43,16 @@ initializeRegistries();
 type CanvasProps = {
 	canvasDoc: CanvasDoc;
 	/**
+	 * Nonce from the most recent incoming sync message.
+	 * Passed through to SYNC_EXTERNAL so the reducer can detect fold-back saves.
+	 */
+	syncNonce?: string;
+	/**
 	 * Callback invoked when a committable action occurs (e.g., dragEnd, click).
 	 * Use this to persist or sync the canvas state to external storage.
+	 * The second argument is the saveNonce that should be echoed back via syncNonce.
 	 */
-	onCommit?: (doc: CanvasDoc) => void;
+	onCommit?: (doc: CanvasDoc, saveNonce: string) => void;
 	/**
 	 * When provided, Ctrl+Z is delegated to this callback instead of Canvas's
 	 * internal undo stack. Use this in VSCode to forward undo to the host editor.
@@ -61,12 +67,14 @@ type CanvasProps = {
 
 const CanvasComponent: React.FC<CanvasProps> = ({
 	canvasDoc,
+	syncNonce,
 	onCommit,
 	onUndo,
 	onRedo,
 }) => {
 	const canvasRef = useRef<HTMLDivElement>(null);
 	const svgRef = useRef<SVGSVGElement>(null);
+	const hasMountedRef = useRef(false);
 
 	// Reducer for canvas state management with history
 	const [state, dispatch] = useReducer(
@@ -83,6 +91,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 				edgeScrollEnabled: false,
 				commitVersion: 0,
 				saveVersion: 0,
+				saveNonce: "",
 				contextMenuPosition: null,
 				shapeLibraryDrag: null,
 				areaSelection: null,
@@ -125,17 +134,23 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	// Notify parent component when a save is required (after commit or undo/redo)
 	useEffect(() => {
 		if (state.saveVersion > 0) {
-			onCommit?.(canvasToDoc(state));
+			onCommit?.(canvasToDoc(state), state.saveNonce);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [state.saveVersion, onCommit]);
 
-	// Sync external canvasDoc changes
+	// Sync external canvasDoc changes.
+	// Skip the first invocation on mount: the initializer already used the same canvasDoc,
+	// so dispatching SYNC_EXTERNAL would create a redundant history entry.
 	useEffect(() => {
+		if (!hasMountedRef.current) {
+			hasMountedRef.current = true;
+			return;
+		}
 		const newState = canvasToState(canvasDoc);
 		resetGestureState();
-		dispatch({ type: "SYNC_EXTERNAL", payload: newState });
-	}, [canvasDoc, resetGestureState]);
+		dispatch({ type: "SYNC_EXTERNAL", payload: newState, saveNonce: syncNonce });
+	}, [canvasDoc, resetGestureState, syncNonce]);
 
 	// Use wheel handler from GestureRecognizer
 	useDocumentWheel(svgRef, wheelHandler);

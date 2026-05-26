@@ -47,6 +47,7 @@ export const UndoCommand: Command = {
 			edgeScrollEnabled: false,
 			commitVersion: state.commitVersion, // Don't update - this is history restoration, not a new commit
 			saveVersion: state.saveVersion + 1,
+			saveNonce: crypto.randomUUID(),
 			contextMenuPosition: null,
 			shapeLibraryDrag: null,
 			areaSelection: null,
