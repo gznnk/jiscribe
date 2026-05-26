@@ -192,9 +192,13 @@ export class TransformControlHandler implements ControlStrategy {
 
 		const isSwapped = (startFrame.rotation + 405) % 180 > 90;
 
-		const aspectRatio = startFrame.width / startFrame.height;
+		const aspectRatio =
+			startFrame.height !== 0 && startFrame.width !== 0
+				? startFrame.width / startFrame.height
+				: undefined;
 		const lockAspectRatio = startFrame.lockAspectRatio ?? false;
-		const doKeepProportion = lockAspectRatio || event.mods.shift;
+		const doKeepProportion =
+			(lockAspectRatio || event.mods.shift) && aspectRatio !== undefined;
 
 		// アンカー固有のリサイズ処理にルーティング
 		let resizeResult = this.calculateResize(
@@ -481,7 +485,7 @@ export class TransformControlHandler implements ControlStrategy {
 		cursorY: number,
 		startFrameKeyPoints: FrameKeyPoints,
 		radians: number,
-		aspectRatio: number,
+		aspectRatio: number | undefined,
 		doKeepProportion: boolean,
 		isSwapped: boolean,
 	): {
@@ -591,7 +595,7 @@ export class TransformControlHandler implements ControlStrategy {
 		cursorY: number,
 		startFrameKeyPoints: FrameKeyPoints,
 		radians: number,
-		aspectRatio: number,
+		aspectRatio: number | undefined,
 		doKeepProportion: boolean,
 	) {
 		// Apply drag constraints to cursor position
@@ -624,7 +628,7 @@ export class TransformControlHandler implements ControlStrategy {
 		);
 		const newWidth = inversedCursor.x - inversedTopLeft.x;
 		let newHeight: number;
-		if (doKeepProportion) {
+		if (doKeepProportion && aspectRatio !== undefined) {
 			newHeight = calcHeightWithAspectRatio(newWidth, aspectRatio);
 		} else {
 			newHeight = inversedCursor.y - inversedTopLeft.y;
@@ -664,7 +668,7 @@ export class TransformControlHandler implements ControlStrategy {
 		cursorY: number,
 		startFrameKeyPoints: FrameKeyPoints,
 		radians: number,
-		aspectRatio: number,
+		aspectRatio: number | undefined,
 		doKeepProportion: boolean,
 	) {
 		// Apply drag constraints to cursor position
@@ -697,7 +701,7 @@ export class TransformControlHandler implements ControlStrategy {
 		);
 		const newWidth = inversedBottomRight.x - inversedCursor.x;
 		let newHeight: number;
-		if (doKeepProportion) {
+		if (doKeepProportion && aspectRatio !== undefined) {
 			newHeight = calcHeightWithAspectRatio(newWidth, aspectRatio);
 		} else {
 			newHeight = inversedBottomRight.y - inversedCursor.y;
@@ -739,7 +743,7 @@ export class TransformControlHandler implements ControlStrategy {
 		cursorY: number,
 		startFrameKeyPoints: FrameKeyPoints,
 		radians: number,
-		aspectRatio: number,
+		aspectRatio: number | undefined,
 		doKeepProportion: boolean,
 	) {
 		// Apply drag constraints to cursor position
@@ -772,7 +776,7 @@ export class TransformControlHandler implements ControlStrategy {
 		);
 		const newWidth = inversedCursor.x - inversedBottomLeft.x;
 		let newHeight: number;
-		if (doKeepProportion) {
+		if (doKeepProportion && aspectRatio !== undefined) {
 			newHeight = calcHeightWithAspectRatio(newWidth, aspectRatio);
 		} else {
 			newHeight = inversedBottomLeft.y - inversedCursor.y;
@@ -814,7 +818,7 @@ export class TransformControlHandler implements ControlStrategy {
 		cursorY: number,
 		startFrameKeyPoints: FrameKeyPoints,
 		radians: number,
-		aspectRatio: number,
+		aspectRatio: number | undefined,
 		doKeepProportion: boolean,
 	) {
 		// Apply drag constraints to cursor position
@@ -847,7 +851,7 @@ export class TransformControlHandler implements ControlStrategy {
 		);
 		const newWidth = inversedTopRight.x - inversedCursor.x;
 		let newHeight: number;
-		if (doKeepProportion) {
+		if (doKeepProportion && aspectRatio !== undefined) {
 			newHeight = calcHeightWithAspectRatio(newWidth, aspectRatio);
 		} else {
 			newHeight = inversedCursor.y - inversedTopRight.y;
@@ -887,7 +891,7 @@ export class TransformControlHandler implements ControlStrategy {
 		cursorY: number,
 		startFrameKeyPoints: FrameKeyPoints,
 		radians: number,
-		aspectRatio: number,
+		aspectRatio: number | undefined,
 		doKeepProportion: boolean,
 		isSwapped: boolean,
 	) {
@@ -924,7 +928,7 @@ export class TransformControlHandler implements ControlStrategy {
 		);
 		const newHeight = inversedBottomCenter.y - inversedCursor.y;
 		let newWidth: number;
-		if (doKeepProportion) {
+		if (doKeepProportion && aspectRatio !== undefined) {
 			newWidth = calcWidthWithAspectRatio(newHeight, aspectRatio);
 		} else {
 			newWidth = startFrame.width;
@@ -966,7 +970,7 @@ export class TransformControlHandler implements ControlStrategy {
 		cursorY: number,
 		startFrameKeyPoints: FrameKeyPoints,
 		radians: number,
-		aspectRatio: number,
+		aspectRatio: number | undefined,
 		doKeepProportion: boolean,
 		isSwapped: boolean,
 	) {
@@ -1003,7 +1007,7 @@ export class TransformControlHandler implements ControlStrategy {
 		);
 		const newWidth = inversedCursor.x - inversedLeftCenter.x;
 		let newHeight: number;
-		if (doKeepProportion) {
+		if (doKeepProportion && aspectRatio !== undefined) {
 			newHeight = calcHeightWithAspectRatio(newWidth, aspectRatio);
 		} else {
 			newHeight = startFrame.height;
@@ -1044,7 +1048,7 @@ export class TransformControlHandler implements ControlStrategy {
 		cursorY: number,
 		startFrameKeyPoints: FrameKeyPoints,
 		radians: number,
-		aspectRatio: number,
+		aspectRatio: number | undefined,
 		doKeepProportion: boolean,
 		isSwapped: boolean,
 	) {
@@ -1081,7 +1085,7 @@ export class TransformControlHandler implements ControlStrategy {
 		);
 		const newHeight = inversedCursor.y - inversedTopCenter.y;
 		let newWidth: number;
-		if (doKeepProportion) {
+		if (doKeepProportion && aspectRatio !== undefined) {
 			newWidth = calcWidthWithAspectRatio(newHeight, aspectRatio);
 		} else {
 			newWidth = startFrame.width;
@@ -1123,7 +1127,7 @@ export class TransformControlHandler implements ControlStrategy {
 		cursorY: number,
 		startFrameKeyPoints: FrameKeyPoints,
 		radians: number,
-		aspectRatio: number,
+		aspectRatio: number | undefined,
 		doKeepProportion: boolean,
 		isSwapped: boolean,
 	) {
@@ -1160,7 +1164,7 @@ export class TransformControlHandler implements ControlStrategy {
 		);
 		const newWidth = inversedRightCenter.x - inversedCursor.x;
 		let newHeight: number;
-		if (doKeepProportion) {
+		if (doKeepProportion && aspectRatio !== undefined) {
 			newHeight = calcHeightWithAspectRatio(newWidth, aspectRatio);
 		} else {
 			newHeight = startFrame.height;
