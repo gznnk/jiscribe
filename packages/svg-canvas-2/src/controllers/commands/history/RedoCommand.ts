@@ -66,6 +66,7 @@ export const RedoCommand: Command = {
 			snapFeedback: null,
 			shapeDrawing: null,
 			lastDuplicate: null,
+			internalClipboard: state.internalClipboard,
 			history: {
 				past: [...state.history.past, state.history.present],
 				present: docToRestore,

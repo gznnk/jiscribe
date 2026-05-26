@@ -15,7 +15,7 @@ export const CutCommand: Command = {
 	canExecute: (state) => state.selectedIds.length > 0,
 
 	execute: (state) => {
-		CopyCommand.execute(state);
-		return DeleteCommand.execute(state);
+		const stateWithClipboard = CopyCommand.execute(state);
+		return DeleteCommand.execute(stateWithClipboard);
 	},
 };

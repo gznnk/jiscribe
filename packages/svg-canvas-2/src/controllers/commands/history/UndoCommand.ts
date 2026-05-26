@@ -57,6 +57,7 @@ export const UndoCommand: Command = {
 			snapFeedback: null,
 			shapeDrawing: null,
 			lastDuplicate: null,
+			internalClipboard: state.internalClipboard,
 			history: {
 				past: state.history.past.slice(0, -1),
 				present: docToRestore,

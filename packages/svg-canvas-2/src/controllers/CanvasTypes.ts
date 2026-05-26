@@ -3,11 +3,11 @@ import type { FrameKeyPoints, Point } from "@workspace/geometry";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { CanvasState } from "../states/canvas/CanvasState";
 import type { Viewport } from "../states/canvas/Viewport";
+import type { ClipboardData } from "./commands/selection/ClipboardData";
 import type { ObjectState } from "../states/objects/base/ObjectState";
 import type { ShapePreset } from "./ui/menu/ShapeLibrary/ShapePresets";
 import type { ConnectorState } from "../states/objects/connections/connector/ConnectorState";
 import type { GroupState } from "../states/objects/primitives/group/GroupState";
-
 
 // ---------------------------------------------------------------------------
 // KeyPoints cache types (stored in CanvasControllerState)
@@ -268,6 +268,13 @@ export type CanvasControllerState = CanvasState & {
 	 * スナップしている間のみ non-null。dragEnd でクリアする。
 	 */
 	snapFeedback: SnapFeedback | null;
+
+	/**
+	 * インターナルクリップボード。
+	 * navigator.clipboard への書き込み成否に関わらず、CopyCommand 実行時に同期的にセットされる。
+	 * Cut 後に navigator.clipboard が利用不可でもペーストできるよう保証するためのフォールバック。
+	 */
+	internalClipboard: ClipboardData | null;
 
 	/**
 	 * 直前の Duplicate 操作の記録。Move-aware オフセット計算に使用。

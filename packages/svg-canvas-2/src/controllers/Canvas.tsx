@@ -97,6 +97,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 				snapFeedback: null,
 				shapeDrawing: null,
 				lastDuplicate: null,
+				internalClipboard: null,
 				history: {
 					past: [],
 					present: canvasToDoc(baseState),
@@ -159,15 +160,18 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	useKeyboardShortcuts(state, handleCommand, onUndo, onRedo);
 
 	const handlePasteCallback = useCallback(async () => {
+		let data = null;
 		try {
 			const text = await navigator.clipboard.readText();
 			const parsed: unknown = JSON.parse(text);
-			if (!isClipboardData(parsed)) return;
-			dispatch({ type: "PASTE", data: parsed });
+			if (isClipboardData(parsed)) data = parsed;
 		} catch {
 			// clipboard read failure or parse error
 		}
-	}, [dispatch]);
+		data ??= state.internalClipboard;
+		if (!data) return;
+		dispatch({ type: "PASTE", data });
+	}, [dispatch, state.internalClipboard]);
 	usePasteKeyboardShortcut(handlePasteCallback);
 
 	const handleMenuPropertyUpdate = useCallback(
