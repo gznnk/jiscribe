@@ -38,8 +38,14 @@ function findRootGroupId(
 ): string | undefined {
 	let currentId: string | undefined = groupId;
 	let rootId: string | undefined = groupId;
+	const visited = new Set<string>();
 
 	while (currentId) {
+		if (visited.has(currentId)) {
+			break;
+		}
+		visited.add(currentId);
+
 		const obj: ObjectState | undefined = objects[currentId];
 		if (!obj) {
 			break;
