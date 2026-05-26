@@ -63,6 +63,7 @@ function debounce<Args extends unknown[]>(
  */
 function App() {
 	const [canvasDoc, setCanvasDoc] = useState<CanvasDoc | null>(null);
+	const [syncNonce, setSyncNonce] = useState<string | undefined>(undefined);
 	const [diagnostics, setDiagnostics] = useState<SemanticDiagnostic[]>([]);
 	const [parseError, setParseError] = useState<string>("");
 
@@ -70,17 +71,18 @@ function App() {
 	// 同じ関数インスタンスを維持する必要がある（再生成するとタイマーがリセットされる）。
 	// useRef で関数インスタンスを保持し、useCallback で安定した参照を返す。
 	const debouncedPostRef = useRef(
-		debounce((doc: CanvasDoc) => {
+		debounce((doc: CanvasDoc, saveNonce: string) => {
 			const message: WebviewToExtensionMessage = {
 				type: "update",
 				data: JSON.stringify(doc, null, 2),
+				saveNonce,
 			};
 			vscode.postMessage(message);
 		}, 150),
 	);
 
-	const handleCommit = useCallback((doc: CanvasDoc) => {
-		debouncedPostRef.current(doc);
+	const handleCommit = useCallback((doc: CanvasDoc, saveNonce: string) => {
+		debouncedPostRef.current(doc, saveNonce);
 	}, []);
 
 	const handleUndo = useCallback(() => {
@@ -119,6 +121,7 @@ function App() {
 					// parseAndValidateCanvasDoc() はエラー時に CanvasValidationError をスローする。
 					try {
 						const validated = parseAndValidateCanvasDoc(parsed);
+						setSyncNonce(message.saveNonce);
 						setCanvasDoc(validated);
 						setDiagnostics([]);
 						setParseError("");
@@ -194,6 +197,7 @@ function App() {
 			<div style={{ width: "100%", height: "100vh" }}>
 				<Canvas
 					canvasDoc={canvasDoc}
+					syncNonce={syncNonce}
 					onCommit={handleCommit}
 					onUndo={handleUndo}
 					onRedo={handleRedo}

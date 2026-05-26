@@ -50,6 +50,16 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 		// number（カウンター）にすることで、進行中の update() 件数を正確に追跡できる。
 		let pendingWebviewUpdates = 0;
 
+		// ---- 折り返し検出用 nonce ----
+		//
+		// Webview からの "update" メッセージに含まれる saveNonce をここに保持する。
+		// onDidChangeTextDocument が発火したとき:
+		//   - pendingWebviewUpdates > 0 の場合（同期的な折り返し）: nonce を消費して無視。
+		//   - pendingWebviewUpdates === 0 の場合（非同期的な折り返し or 外部変更）:
+		//     nonce を添えて Webview へ送信する。Canvas 側でこの nonce を比較し、
+		//     自己保存の折り返しかどうかを判定する。
+		let lastSaveNonce: string | undefined;
+
 		// ---- ファイル変更監視 ----
 		//
 		// onDidChangeTextDocument は Disposable を返す。
@@ -63,8 +73,13 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 				// Webview からの書き込みによるイベントは無視する（無限ループ防止）。
 				// pendingWebviewUpdates > 0 の間に来たイベントは自分の applyEdit() が
 				// 原因であるため、Webview へ再送してはならない。
-				if (pendingWebviewUpdates === 0) {
-					this.updateWebview(webviewPanel, document);
+				if (pendingWebviewUpdates > 0) {
+					// 自分の書き込みが進行中 → 無視。nonce も消費して後続イベントに引き継がない。
+					lastSaveNonce = undefined;
+				} else {
+					// 外部変更 or 非同期折り返し → nonce を添えて送信し消費する。
+					this.updateWebview(webviewPanel, document, lastSaveNonce);
+					lastSaveNonce = undefined;
 				}
 			},
 		);
@@ -96,6 +111,7 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 						// カウンターをインクリメントして「現在 Webview 由来の書き込みが進行中」
 						// とマークする。applyEdit() は非同期なので、完了前に
 						// onDidChangeTextDocument が発火する可能性があるためカウンターで管理する。
+						lastSaveNonce = message.saveNonce;
 						pendingWebviewUpdates++;
 						// .then(onFulfilled, onRejected) の2引数形式を使う。
 						// .then().catch() と違い、onFulfilled 内の例外も onRejected に流れない
@@ -138,6 +154,7 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 	private updateWebview(
 		panel: vscode.WebviewPanel,
 		document: vscode.TextDocument,
+		saveNonce?: string,
 	) {
 		const text = document.getText();
 		let data: string;
@@ -147,7 +164,7 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 			// JSON parse に失敗した場合はそのまま送り、Webview 側のエラー画面に任せる
 			data = text;
 		}
-		const message: ExtensionToWebviewMessage = { type: "update", data };
+		const message: ExtensionToWebviewMessage = { type: "update", data, saveNonce };
 		panel.webview.postMessage(message);
 	}
 
