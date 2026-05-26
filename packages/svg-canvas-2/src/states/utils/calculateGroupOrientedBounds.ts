@@ -18,15 +18,15 @@ import type { GroupState } from "../objects/primitives/group/GroupState";
  *
  * @param objects - オブジェクトマップ
  * @param groupId - グループのID
- * @returns Oriented Bounding Box（TransformedFrame形式）、子要素がない場合はundefined
+ * @returns Oriented Bounding Box（TransformedFrame形式）、子要素がない場合はnull
  */
 export function calculateGroupOrientedBounds(
 	objects: Record<string, ObjectState>,
 	groupId: string,
-): TransformedFrame | undefined {
+): TransformedFrame | null {
 	const group = objects[groupId];
 	if (!group || group.type !== "group") {
-		return undefined;
+		return null;
 	}
 
 	const groupState = group as GroupState;
@@ -35,7 +35,7 @@ export function calculateGroupOrientedBounds(
 	const allPoints = collectChildPoints(objects, groupState.childIds);
 
 	if (allPoints.length === 0) {
-		return undefined;
+		return null;
 	}
 
 	// グループのtransformを取得
@@ -44,13 +44,11 @@ export function calculateGroupOrientedBounds(
 	const groupScaleY = groupState.scaleY ?? 1;
 
 	// 点群からグループのtransformを持つOriented Bounding Boxを計算
-	return (
-		calcOrientedFrameFromPoints(
-			allPoints,
-			groupScaleX,
-			groupScaleY,
-			groupRotation,
-		) ?? undefined // TODO: undefinedではなくnullで返すべきか？
+	return calcOrientedFrameFromPoints(
+		allPoints,
+		groupScaleX,
+		groupScaleY,
+		groupRotation,
 	);
 }
 
