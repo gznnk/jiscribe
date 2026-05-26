@@ -15,8 +15,10 @@ import {
 	calculateScrollDelta,
 	detectEdgeProximity,
 	getHoveredElements,
+	getInputValue,
 	getKindAndId,
 	getSvgPoint,
+	shouldPreserveNativeBehavior,
 } from "./utils";
 import type { CanvasControllerState } from "../../CanvasTypes";
 
@@ -126,25 +128,6 @@ export class GestureRecognizer {
 	}
 
 	/**
-	 * ポインターキャプチャを無効にすべき要素かどうかを判定
-	 * data-interactive="true" が設定されている要素は、ブラウザのネイティブな動作を維持する
-	 */
-	private shouldPreserveNativeBehavior(target: EventTarget | null): boolean {
-		if (!(target instanceof HTMLElement)) return false;
-		return target.getAttribute("data-interactive") === "true";
-	}
-
-	/**
-	 * インタラクティブ要素（data-interactive="true"）から値を読み取る
-	 * input要素（range, number, text, color等）の値を文字列として返す
-	 */
-	private getInputValue(target: EventTarget | null): string | undefined {
-		if (!(target instanceof HTMLInputElement)) return undefined;
-		if (target.getAttribute("data-interactive") !== "true") return undefined;
-		return target.value;
-	}
-
-	/**
 	 * イベントを処理してジェスチャーコールバックを呼び出す
 	 */
 	private feed(e: InternalEvent): void {
@@ -160,7 +143,7 @@ export class GestureRecognizer {
 		const targetId = target?.id;
 		const targetKind = target?.kind;
 		const time = e.timeStamp;
-		const inputValue = this.getInputValue(e.target);
+		const inputValue = getInputValue(e.target);
 
 		// wheel: ドラッグ外のホイールイベント
 		if (e.type === "wheel") {
@@ -200,7 +183,7 @@ export class GestureRecognizer {
 			if (
 				this.containerRef.current &&
 				e.pointerId !== undefined &&
-				!this.shouldPreserveNativeBehavior(e.target)
+				!shouldPreserveNativeBehavior(e.target)
 			) {
 				this.containerRef.current.setPointerCapture(e.pointerId);
 			}
@@ -274,7 +257,7 @@ export class GestureRecognizer {
 				if (distanceSquared >= DRAG_THRESHOLD) {
 					this.pressed.dragging = true;
 					// For sliders, read current value from the target element
-					const dragStartInputValue = this.getInputValue(this.pressed.target);
+					const dragStartInputValue = getInputValue(this.pressed.target);
 					this.gestureCallback({
 						type: "dragStart",
 						target: this.pressed.target,
@@ -339,7 +322,7 @@ export class GestureRecognizer {
 				}
 
 				// For sliders, read current value from the target element
-				const dragInputValue = this.getInputValue(this.pressed.target);
+				const dragInputValue = getInputValue(this.pressed.target);
 
 				this.gestureCallback({
 					type: "drag",
@@ -369,7 +352,7 @@ export class GestureRecognizer {
 			if (
 				this.containerRef.current &&
 				e.pointerId !== undefined &&
-				!this.shouldPreserveNativeBehavior(this.pressed.target)
+				!shouldPreserveNativeBehavior(this.pressed.target)
 			) {
 				this.containerRef.current.releasePointerCapture(e.pointerId);
 			}
@@ -404,7 +387,7 @@ export class GestureRecognizer {
 			}
 
 			// For sliders, read final value from the target element
-			const finalInputValue = this.getInputValue(this.pressed.target);
+			const finalInputValue = getInputValue(this.pressed.target);
 
 			this.gestureCallback({
 				type: eventType,
@@ -433,7 +416,7 @@ export class GestureRecognizer {
 			if (
 				this.containerRef.current &&
 				e.pointerId !== undefined &&
-				!this.shouldPreserveNativeBehavior(this.pressed.target)
+				!shouldPreserveNativeBehavior(this.pressed.target)
 			) {
 				this.containerRef.current.releasePointerCapture(e.pointerId);
 			}
@@ -446,7 +429,7 @@ export class GestureRecognizer {
 
 			if (this.pressed.dragging) {
 				// For sliders, read final value from the target element
-				const cancelInputValue = this.getInputValue(this.pressed.target);
+				const cancelInputValue = getInputValue(this.pressed.target);
 
 				this.gestureCallback({
 					type: "dragEnd",
@@ -540,7 +523,7 @@ export class GestureRecognizer {
 			if (
 				this.containerRef.current &&
 				this.pressed.pointerId !== undefined &&
-				!this.shouldPreserveNativeBehavior(this.pressed.target)
+				!shouldPreserveNativeBehavior(this.pressed.target)
 			) {
 				this.containerRef.current.releasePointerCapture(this.pressed.pointerId);
 			}

@@ -61,6 +61,10 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		e.stopPropagation();
 	}, []);
 
+	const handleContextMenu = useCallback((e: React.MouseEvent<HTMLTextAreaElement>) => {
+		e.stopPropagation();
+	}, []);
+
 	const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
 		if (e.key === "Escape" && onEscape) {
 			e.preventDefault();
@@ -99,6 +103,7 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 			{...commonProps}
 			ref={textAreaRef}
 			onPointerDown={handlePointerDown}
+			onContextMenu={handleContextMenu}
 		/>
 	);
 };
