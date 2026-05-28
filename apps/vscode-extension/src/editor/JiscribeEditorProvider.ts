@@ -164,7 +164,11 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 			// JSON parse に失敗した場合はそのまま送り、Webview 側のエラー画面に任せる
 			data = text;
 		}
-		const message: ExtensionToWebviewMessage = { type: "update", data, saveNonce };
+		const message: ExtensionToWebviewMessage = {
+			type: "update",
+			data,
+			saveNonce,
+		};
 		panel.webview.postMessage(message);
 	}
 

@@ -149,7 +149,11 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 		}
 		const newState = canvasToState(canvasDoc);
 		resetGestureState();
-		dispatch({ type: "SYNC_EXTERNAL", payload: newState, saveNonce: syncNonce });
+		dispatch({
+			type: "SYNC_EXTERNAL",
+			payload: newState,
+			saveNonce: syncNonce,
+		});
 	}, [canvasDoc, resetGestureState, syncNonce]);
 
 	// Use wheel handler from GestureRecognizer
