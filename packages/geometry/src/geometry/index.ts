@@ -8,6 +8,7 @@ export * from "./calcPolyBoundingBox";
 export * from "./calcPolyKeyPoints";
 export * from "./calcRectKeyPoints";
 export * from "./calcClosestOrthogonalIntersection";
+export * from "./calcProjectionOntoLine";
 export * from "./calcDimensionsWithMinSize";
 export * from "./createLinearX2yFunction";
 export * from "./createLinearY2xFunction";
