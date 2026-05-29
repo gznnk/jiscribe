@@ -22,13 +22,7 @@ import {
 } from "./utils";
 import type { CanvasControllerState } from "../../CanvasTypes";
 
-/**
- * 内部で使用するイベントの型
- * PointerEventとWheelEventの両方をサポート
- */
-export type InternalEvent = {
-	type: string;
-	pointerId?: number; // wheel イベントには存在しない
+type InternalEventBase = {
 	clientX: number;
 	clientY: number;
 	shiftKey: boolean;
@@ -38,9 +32,22 @@ export type InternalEvent = {
 	target: EventTarget | null;
 	timeStamp: number;
 	button: number;
-	deltaX?: number; // wheel イベント用
-	deltaY?: number; // wheel イベント用
 };
+
+export type PointerInternalEvent = InternalEventBase & {
+	type: "pointerdown" | "pointermove" | "pointerup" | "pointercancel";
+	pointerId: number;
+	deltaX?: number;
+	deltaY?: number;
+};
+
+export type WheelInternalEvent = InternalEventBase & {
+	type: "wheel";
+	deltaX?: number;
+	deltaY?: number;
+};
+
+export type InternalEvent = PointerInternalEvent | WheelInternalEvent;
 
 /**
  * pressed状態の型
@@ -184,7 +191,6 @@ export class GestureRecognizer {
 			// インタラクティブな要素ではブラウザのネイティブな動作を維持する必要がある
 			if (
 				this.containerRef.current &&
-				e.pointerId !== undefined &&
 				!shouldPreserveNativeBehavior(e.target)
 			) {
 				this.containerRef.current.setPointerCapture(e.pointerId);
@@ -194,7 +200,7 @@ export class GestureRecognizer {
 
 			// pressed 状態をセット
 			this.pressed = {
-				pointerId: e.pointerId!,
+				pointerId: e.pointerId,
 				start: currentPos,
 				last: currentPos,
 				clientStart: currentClientPos,
@@ -229,7 +235,7 @@ export class GestureRecognizer {
 		}
 
 		// 以降の処理は pressed 状態かつ同じポインターの場合のみ
-		if (!this.pressed || this.pressed.pointerId !== e.pointerId!) {
+		if (!this.pressed || this.pressed.pointerId !== e.pointerId) {
 			return;
 		}
 
@@ -353,7 +359,6 @@ export class GestureRecognizer {
 			// ポインターキャプチャを解放（data-interactive="true"の要素では何もしない）
 			if (
 				this.containerRef.current &&
-				e.pointerId !== undefined &&
 				!shouldPreserveNativeBehavior(this.pressed.target)
 			) {
 				this.containerRef.current.releasePointerCapture(e.pointerId);
@@ -417,7 +422,6 @@ export class GestureRecognizer {
 			// ポインターキャプチャを解放（data-interactive="true"の要素では何もしない）
 			if (
 				this.containerRef.current &&
-				e.pointerId !== undefined &&
 				!shouldPreserveNativeBehavior(this.pressed.target)
 			) {
 				this.containerRef.current.releasePointerCapture(e.pointerId);
@@ -458,9 +462,9 @@ export class GestureRecognizer {
 	/**
 	 * React.PointerEventを内部型に変換
 	 */
-	private toPointerEvent(e: React.PointerEvent<HTMLElement>): InternalEvent {
+	private toPointerEvent(e: React.PointerEvent<HTMLElement>): PointerInternalEvent {
 		return {
-			type: e.type,
+			type: e.type as PointerInternalEvent["type"],
 			pointerId: e.pointerId,
 			clientX: e.clientX,
 			clientY: e.clientY,
