@@ -18,6 +18,20 @@ export function sortObjectIdsByZOrder(
 	objects: Record<string, ObjectState>,
 	rootIds: string[],
 ): string[] {
+	const rootIndexMap = new Map(rootIds.map((id, i) => [id, i]));
+	// childIds の indexOf を O(1) にするため、比較時に都度 Map を生成してキャッシュする
+	const childIndexCache = new Map<string, Map<string, number>>();
+
+	const getChildIndex = (parentId: string, childId: string): number => {
+		let map = childIndexCache.get(parentId);
+		if (!map) {
+			const group = objects[parentId] as GroupState;
+			map = new Map(group.childIds.map((id, i) => [id, i]));
+			childIndexCache.set(parentId, map);
+		}
+		return map.get(childId) ?? -1;
+	};
+
 	return [...ids].sort((idA, idB) => {
 		const pathA = getPathFromRoot(idA, objects);
 		const pathB = getPathFromRoot(idB, objects);
@@ -28,20 +42,19 @@ export function sortObjectIdsByZOrder(
 			const nodeIdB = pathB[depthIndex];
 
 			if (nodeIdA !== nodeIdB) {
-				// ルート要素同士の場合
 				if (depthIndex === 0) {
-					return rootIds.indexOf(nodeIdA) - rootIds.indexOf(nodeIdB);
+					return (
+						(rootIndexMap.get(nodeIdA) ?? -1) -
+						(rootIndexMap.get(nodeIdB) ?? -1)
+					);
 				}
-				// 枝分かれする位置の共通の親グループ内で比較
 				const commonParentId = pathA[depthIndex - 1];
-				const commonParentGroup = objects[commonParentId] as GroupState;
 				return (
-					commonParentGroup.childIds.indexOf(nodeIdA) -
-					commonParentGroup.childIds.indexOf(nodeIdB)
+					getChildIndex(commonParentId, nodeIdA) -
+					getChildIndex(commonParentId, nodeIdB)
 				);
 			}
 		}
-		// 完全に包含されている場合は階層が浅いもの（親）を先にする
 		return pathA.length - pathB.length;
 	});
 }
