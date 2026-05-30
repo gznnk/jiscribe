@@ -1,4 +1,4 @@
-import { isArray, isObject, isString } from "@workspace/basic-validators";
+import { isArray, isNumber, isObject, isString } from "@workspace/basic-validators";
 
 import type { SemanticDiagnostic } from "./types";
 import { objectDocValidatorRegistry } from "../../registry/ObjectDocValidatorRegistry";
@@ -52,6 +52,10 @@ export function validateStructure(doc: unknown): SemanticDiagnostic[] {
 
 	const d = doc as Record<string, unknown>;
 	const errors: SemanticDiagnostic[] = [];
+
+	if (!isNumber(d.version) || !Number.isInteger(d.version) || d.version < 1) {
+		errors.push({ path: "version", message: "must be a positive integer" });
+	}
 
 	if (!isArray(d.root)) {
 		errors.push({ path: "root", message: "must be an array" });

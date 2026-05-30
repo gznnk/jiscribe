@@ -11,6 +11,7 @@ import type { RectDoc } from "./schemas/objects/primitives/rect/RectDoc";
 
 // 暫定的なテストデータ
 const testCanvasDoc: CanvasDoc = {
+	version: 1,
 	root: [
 		{
 			id: "rect-1",

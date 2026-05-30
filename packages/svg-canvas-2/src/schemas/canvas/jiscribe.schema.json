@@ -4,9 +4,14 @@
 	"title": "CanvasDoc",
 	"description": "Root document format for a .jis.json file used by svg-canvas-2.",
 	"type": "object",
-	"required": ["root", "connectors"],
+	"required": ["version", "root", "connectors"],
 	"additionalProperties": false,
 	"properties": {
+		"version": {
+			"description": "Schema version. Must be 1 for this version of the format.",
+			"type": "integer",
+			"const": 1
+		},
 		"root": {
 			"description": "All objects on the canvas (shapes, polylines, groups). Connectors are separate.",
 			"type": "array",

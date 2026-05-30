@@ -83,6 +83,7 @@ describe("CanvasMapper", () => {
 			const group1 = createGroupDoc("group-1", [rect2, group2]);
 
 			const canvasDoc: CanvasDoc = {
+				version: 1,
 				root: [rect1, group1],
 				connectors: [],
 			};

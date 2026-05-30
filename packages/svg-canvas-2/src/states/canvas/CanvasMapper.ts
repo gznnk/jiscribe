@@ -138,6 +138,7 @@ export const canvasToDoc = (state: CanvasState): CanvasDoc => {
 	};
 
 	return {
+		version: 1,
 		root: state.rootIds.map((id) => reconstructObject(id)),
 		connectors: state.connectorIds.map(
 			(id) => reconstructObject(id) as ConnectorDoc,
