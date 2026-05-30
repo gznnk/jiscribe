@@ -15,6 +15,7 @@ import type { RectDoc } from "../schemas/objects/primitives/rect/RectDoc";
 //   [720 .. 800 ] FOOTER
 // =====================================================================
 export const saasLandingPageDoc: CanvasDoc = {
+	version: 1,
 	connectors: [],
 	root: [
 		// ─────────────────────────────────────────────────

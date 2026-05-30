@@ -20,6 +20,7 @@ import type { RectDoc } from "../schemas/objects/primitives/rect/RectDoc";
 //   states        → schemas
 // =====================================================================
 export const architectureDoc: CanvasDoc = {
+	version: 1,
 	root: [
 		// ─────────────────────────────────────────────────
 		// タイトル帯

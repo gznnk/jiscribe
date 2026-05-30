@@ -5,6 +5,7 @@ import type { RectDoc } from "../schemas/objects/primitives/rect/RectDoc";
 
 // BIツール ダッシュボード デモデータ（テキストなし）
 export const biDashboardDoc: CanvasDoc = {
+	version: 1,
 	root: [
 		// ========== 背景 ==========
 		// ダッシュボード全体背景
