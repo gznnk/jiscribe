@@ -33,15 +33,16 @@ Because the files are neatly formatted JSON, you can easily review diffs in Git.
 
 ### ⚡ 4. Everything in VS Code
 
+<!-- TODO: Add screenshot here — landing page design created with Jiscribe, showing a complex layout open in the canvas editor inside VS Code -->
+
 Say goodbye to context-switching between external drawing apps and your editor. Draw system diagrams and flowcharts in a tab right next to your source code.
 
 ---
 
 ## 🛠 Key Features
 
-<!-- TODO: Add screenshots for features -->
-
 - **Two-way Sync Between Visual and Text Editors**
+  <!-- TODO: Add GIF demo of two-way sync (canvas edit ↔ JSON update) -->
   - Visual modifications on the canvas instantly update the underlying JSON.
   - Editing the JSON directly in the text editor (e.g., auto-completion by Copilot) renders to the canvas immediately.
 - **Intuitive Canvas Operations**
