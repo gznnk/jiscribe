@@ -6,7 +6,7 @@
 **A VS Code-native canvas editor for visual communication between AI and humans.**
 
 Do you find it limiting to explain architectures and UI layouts to AI using only text?  
-Jiscribe is an extension that saves intuitively drawn diagrams as simple, AI-friendly JSON (`.jiscribe.json`), and lets you view and edit them via an integrated SVG canvas editor.
+Jiscribe is an extension that saves intuitively drawn diagrams as simple, AI-friendly JSON (`.jis.json`), and lets you view and edit them via an integrated SVG canvas editor.
 
 Complete your visual documentation locally in VS Code—no need to switch to external web tools. Treat your diagrams just like code with full Git version control!
 
@@ -56,7 +56,7 @@ Say goodbye to context-switching between external drawing apps and your editor. 
 
 ## Usage
 
-1. Create a file with the `.jiscribe.json` extension in your workspace.
+1. Create a file with the `.jis.json` extension in your workspace.
 2. VS Code will automatically open it using the Jiscribe Canvas Editor.
 3. Edit the shapes on the canvas; the underlying JSON updates automatically.
 
@@ -66,7 +66,7 @@ Say goodbye to context-switching between external drawing apps and your editor. 
 
 ## File Format & Schema
 
-`.jiscribe.json` (and `.jis.json`) is essentially a JSON representation of an SVG canvas.  
+`.jis.json` (short for `.jiscribe.json`) is essentially a JSON representation of an SVG canvas.  
 The JSON Schema URL is planned to be published at:  
 `https://schema.jiscribe.dev/v1/jiscribe.schema.json` _(Placeholder)_
 
