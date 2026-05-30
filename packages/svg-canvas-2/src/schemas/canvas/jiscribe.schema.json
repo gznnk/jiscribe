@@ -1,6 +1,6 @@
 {
 	"$schema": "http://json-schema.org/draft-07/schema#",
-	"$id": "https://jiscribe.dev/schemas/jiscribe.schema.json",
+	"$id": "https://schema.jiscribe.dev/v1/jiscribe.schema.json",
 	"title": "CanvasDoc",
 	"description": "Root document format for a .jis.json file used by svg-canvas-2.",
 	"type": "object",
