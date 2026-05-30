@@ -31,7 +31,9 @@ export function useDocumentWheel(
 		});
 
 		return () => {
-			document.removeEventListener("wheel", onDocumentWheel, true);
+			document.removeEventListener("wheel", onDocumentWheel, {
+				capture: true,
+			});
 		};
 	}, [svgRef, onWheel]);
 }
