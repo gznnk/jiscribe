@@ -463,7 +463,9 @@ export class GestureRecognizer {
 	/**
 	 * React.PointerEventを内部型に変換
 	 */
-	private toPointerEvent(e: React.PointerEvent<HTMLElement>): PointerInternalEvent {
+	private toPointerEvent(
+		e: React.PointerEvent<HTMLElement>,
+	): PointerInternalEvent {
 		return {
 			type: e.type as PointerInternalEvent["type"],
 			pointerId: e.pointerId,

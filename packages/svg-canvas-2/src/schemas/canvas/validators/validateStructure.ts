@@ -1,4 +1,9 @@
-import { isArray, isNumber, isObject, isString } from "@workspace/basic-validators";
+import {
+	isArray,
+	isNumber,
+	isObject,
+	isString,
+} from "@workspace/basic-validators";
 
 import type { SemanticDiagnostic } from "./types";
 import { objectDocValidatorRegistry } from "../../registry/ObjectDocValidatorRegistry";

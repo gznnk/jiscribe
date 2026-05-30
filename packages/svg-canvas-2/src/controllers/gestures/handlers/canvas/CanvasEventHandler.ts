@@ -130,12 +130,16 @@ export const CanvasEventHandler: GestureHandler = {
 				shapeDrawing.preset.objectType === "polyline")
 				? (shapeDrawing.preset.objectType as "rect" | "ellipse" | "polyline")
 				: null;
-		if (event.button === 0 && drawingObjectType !== null) {
+		if (
+			event.button === 0 &&
+			shapeDrawing !== null &&
+			drawingObjectType !== null
+		) {
 			if (event.type === "dragStart") {
 				nextState = {
 					...nextState,
 					shapeDrawing: {
-						preset: shapeDrawing!.preset,
+						preset: shapeDrawing.preset,
 						preview: {
 							startX: event.start.x,
 							startY: event.start.y,
@@ -148,7 +152,13 @@ export const CanvasEventHandler: GestureHandler = {
 				return nextState;
 			}
 
-			if (event.type === "drag" && nextState.shapeDrawing?.preview) {
+			if (event.type === "drag") {
+				const currentShapeDrawing = nextState.shapeDrawing;
+				const currentPreview = currentShapeDrawing?.preview;
+				if (!currentShapeDrawing || !currentPreview) {
+					return nextState;
+				}
+
 				let endX = event.last.x;
 				let endY = event.last.y;
 				let snapFeedback: SnapFeedback = { x: [], y: [] };
@@ -181,9 +191,9 @@ export const CanvasEventHandler: GestureHandler = {
 				nextState = {
 					...nextState,
 					shapeDrawing: {
-						...nextState.shapeDrawing!,
+						...currentShapeDrawing,
 						preview: {
-							...nextState.shapeDrawing!.preview!,
+							...currentPreview,
 							endX,
 							endY,
 						},
