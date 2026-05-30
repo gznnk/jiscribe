@@ -95,6 +95,10 @@ export class VertexInsertHandler implements ControlStrategy {
 			return state;
 		}
 
+		if (segmentIndex < 0 || segmentIndex >= currentObject.points.length) {
+			return state;
+		}
+
 		// ドラッグ開始位置に新しい頂点を追加
 		const newPosition: Point = {
 			x: roundToDecimal(event.last.x, PRECISION.COORDINATE),
