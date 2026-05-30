@@ -314,7 +314,8 @@ export class GestureRecognizer {
 							edgeProximity.vertical,
 						);
 
-						// Enqueue another event to continue processing edge scrolling
+						// pointermove は lastMove（単一スロット）に上書きされるため、
+						// キューは増加せず 1件/フレームの定常ティックになる
 						this.enqueue({
 							...e,
 						});
