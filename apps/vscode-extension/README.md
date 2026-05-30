@@ -18,7 +18,7 @@ Complete your visual documentation locally in VS Code—no need to switch to ext
 
 Instead of image formats (PNG) or complex XML (SVG), Jiscribe uses a semantically organized, schema-backed JSON format. This makes it trivial for Large Language Models (LLMs) to read shapes to generate code, or to output a diagram (JSON) based on a text prompt.
 
-_(Our public JSON schema that powers this will be available at: `https://schema.jiscribe.dev/jiscribe.schema.json`)_
+_(Our public JSON schema that powers this will be available at: `https://schema.jiscribe.dev/v1/jiscribe.schema.json`)_
 
 ### 🤝 2. Visual Communication with AI
 
@@ -68,13 +68,13 @@ Say goodbye to context-switching between external drawing apps and your editor. 
 
 `.jiscribe.json` (and `.jis.json`) is essentially a JSON representation of an SVG canvas.  
 The JSON Schema URL is planned to be published at:  
-`https://schema.jiscribe.dev/jiscribe.schema.json` _(Placeholder)_
+`https://schema.jiscribe.dev/v1/jiscribe.schema.json` _(Placeholder)_
 
 ### Top-level Structure
 
 ```json
 {
-	"$schema": "https://schema.jiscribe.dev/jiscribe.schema.json",
+	"$schema": "https://schema.jiscribe.dev/v1/jiscribe.schema.json",
 	"root": [],
 	"connectors": []
 }
