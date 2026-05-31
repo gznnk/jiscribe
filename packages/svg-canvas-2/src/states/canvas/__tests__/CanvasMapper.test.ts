@@ -90,6 +90,15 @@ describe("CanvasMapper", () => {
 
 			const state = canvasToState(canvasDoc);
 
+			// Check initial viewport
+			expect(state.viewport).toEqual({
+				minX: 0,
+				minY: 0,
+				width: 1000,
+				height: 800,
+				zoom: 1,
+			});
+
 			// Check flat map completeness
 			expect(Object.keys(state.objects)).toHaveLength(5);
 			expect(state.objects["rect-1"]).toBeDefined();
