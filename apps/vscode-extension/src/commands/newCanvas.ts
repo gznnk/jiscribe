@@ -67,7 +67,7 @@ async function createCanvas(folderUri: vscode.Uri | undefined): Promise<void> {
 
 	const defaultName = await findAvailableFileName(
 		targetFolder,
-		"untitled.jiscribe.json",
+		"untitled.jis.json",
 	);
 
 	const fileName = await vscode.window.showInputBox({
