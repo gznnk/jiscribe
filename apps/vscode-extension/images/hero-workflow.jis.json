@@ -1,0 +1,321 @@
+{
+	"version": 1,
+	"root": [
+		{
+			"id": "bg",
+			"type": "rect",
+			"x": 0,
+			"y": 0,
+			"width": 1220,
+			"height": 460,
+			"fill": "#f8fafc",
+			"stroke": "#e2e8f0",
+			"strokeWidth": 1,
+			"rx": 20
+		},
+		{
+			"id": "title",
+			"type": "rect",
+			"x": 200,
+			"y": 18,
+			"width": 820,
+			"height": 56,
+			"fill": "transparent",
+			"stroke": "transparent",
+			"strokeWidth": 0,
+			"text": "AIに頼むだけ。図が生まれる。",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#0f172a",
+			"fontSize": 28,
+			"fontWeight": "bold"
+		},
+
+		{
+			"id": "badge1",
+			"type": "ellipse",
+			"cx": 160,
+			"cy": 112,
+			"rx": 20,
+			"ry": 20,
+			"fill": "#f97316",
+			"stroke": "#ea580c",
+			"strokeWidth": 1.5,
+			"text": "1",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#ffffff",
+			"fontSize": 15,
+			"fontWeight": "bold"
+		},
+		{
+			"id": "card1",
+			"type": "rect",
+			"x": 60,
+			"y": 130,
+			"width": 200,
+			"height": 100,
+			"fill": "#fff7ed",
+			"stroke": "#f97316",
+			"strokeWidth": 2.5,
+			"rx": 12,
+			"text": "あなた",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#c2410c",
+			"fontSize": 20,
+			"fontWeight": "bold"
+		},
+		{
+			"id": "sub1",
+			"type": "rect",
+			"x": 45,
+			"y": 242,
+			"width": 230,
+			"height": 44,
+			"fill": "transparent",
+			"stroke": "transparent",
+			"strokeWidth": 0,
+			"text": "「図を描いて」と伝えるだけ",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#64748b",
+			"fontSize": 13
+		},
+
+		{
+			"id": "badge2",
+			"type": "ellipse",
+			"cx": 460,
+			"cy": 112,
+			"rx": 20,
+			"ry": 20,
+			"fill": "#8b5cf6",
+			"stroke": "#7c3aed",
+			"strokeWidth": 1.5,
+			"text": "2",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#ffffff",
+			"fontSize": 15,
+			"fontWeight": "bold"
+		},
+		{
+			"id": "card2",
+			"type": "rect",
+			"x": 360,
+			"y": 130,
+			"width": 200,
+			"height": 100,
+			"fill": "#f5f3ff",
+			"stroke": "#7c3aed",
+			"strokeWidth": 2.5,
+			"rx": 12,
+			"text": "AI / LLM",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#5b21b6",
+			"fontSize": 20,
+			"fontWeight": "bold"
+		},
+		{
+			"id": "sub2",
+			"type": "rect",
+			"x": 345,
+			"y": 242,
+			"width": 230,
+			"height": 44,
+			"fill": "transparent",
+			"stroke": "transparent",
+			"strokeWidth": 0,
+			"text": "Claude · GPT · Gemini",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#64748b",
+			"fontSize": 13
+		},
+
+		{
+			"id": "badge3",
+			"type": "ellipse",
+			"cx": 760,
+			"cy": 112,
+			"rx": 20,
+			"ry": 20,
+			"fill": "#10b981",
+			"stroke": "#059669",
+			"strokeWidth": 1.5,
+			"text": "3",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#ffffff",
+			"fontSize": 15,
+			"fontWeight": "bold"
+		},
+		{
+			"id": "card3",
+			"type": "rect",
+			"x": 660,
+			"y": 130,
+			"width": 200,
+			"height": 100,
+			"fill": "#ecfdf5",
+			"stroke": "#10b981",
+			"strokeWidth": 3,
+			"rx": 12,
+			"text": ".jis.json",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#065f46",
+			"fontSize": 22,
+			"fontWeight": "bold"
+		},
+		{
+			"id": "sub3",
+			"type": "rect",
+			"x": 620,
+			"y": 242,
+			"width": 280,
+			"height": 44,
+			"fill": "transparent",
+			"stroke": "transparent",
+			"strokeWidth": 0,
+			"text": "AIが読み書きできる構造化フォーマット",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#059669",
+			"fontSize": 13,
+			"fontWeight": "bold"
+		},
+
+		{
+			"id": "badge4",
+			"type": "ellipse",
+			"cx": 1060,
+			"cy": 112,
+			"rx": 20,
+			"ry": 20,
+			"fill": "#3b82f6",
+			"stroke": "#2563eb",
+			"strokeWidth": 1.5,
+			"text": "4",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#ffffff",
+			"fontSize": 15,
+			"fontWeight": "bold"
+		},
+		{
+			"id": "card4",
+			"type": "rect",
+			"x": 960,
+			"y": 130,
+			"width": 200,
+			"height": 100,
+			"fill": "#eff6ff",
+			"stroke": "#3b82f6",
+			"strokeWidth": 2.5,
+			"rx": 12,
+			"text": "Jiscribe",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#1d4ed8",
+			"fontSize": 20,
+			"fontWeight": "bold"
+		},
+		{
+			"id": "sub4",
+			"type": "rect",
+			"x": 945,
+			"y": 242,
+			"width": 230,
+			"height": 44,
+			"fill": "transparent",
+			"stroke": "transparent",
+			"strokeWidth": 0,
+			"text": "VSCode で即プレビュー",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#64748b",
+			"fontSize": 13
+		},
+
+		{
+			"id": "highlight",
+			"type": "rect",
+			"x": 310,
+			"y": 318,
+			"width": 600,
+			"height": 52,
+			"fill": "#ecfdf5",
+			"stroke": "#10b981",
+			"strokeWidth": 2,
+			"rx": 10,
+			"text": "LLMが生成できる、唯一の構造化ダイアグラム形式",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#065f46",
+			"fontSize": 15,
+			"fontWeight": "bold"
+		}
+	],
+	"connectors": [
+		{
+			"id": "conn-1-2",
+			"type": "connector",
+			"points": [
+				{ "x": 260, "y": 180 },
+				{ "x": 360, "y": 180 }
+			],
+			"source": {
+				"owner": { "type": "rect", "id": "card1" },
+				"anchor": { "kind": "connectPoint", "id": "rightCenter" }
+			},
+			"target": {
+				"owner": { "type": "rect", "id": "card2" },
+				"anchor": { "kind": "connectPoint", "id": "leftCenter" }
+			},
+			"endArrow": "FilledTriangle",
+			"stroke": "#f97316",
+			"strokeWidth": 3
+		},
+		{
+			"id": "conn-2-3",
+			"type": "connector",
+			"points": [
+				{ "x": 560, "y": 180 },
+				{ "x": 660, "y": 180 }
+			],
+			"source": {
+				"owner": { "type": "rect", "id": "card2" },
+				"anchor": { "kind": "connectPoint", "id": "rightCenter" }
+			},
+			"target": {
+				"owner": { "type": "rect", "id": "card3" },
+				"anchor": { "kind": "connectPoint", "id": "leftCenter" }
+			},
+			"endArrow": "FilledTriangle",
+			"stroke": "#8b5cf6",
+			"strokeWidth": 3
+		},
+		{
+			"id": "conn-3-4",
+			"type": "connector",
+			"points": [
+				{ "x": 860, "y": 180 },
+				{ "x": 960, "y": 180 }
+			],
+			"source": {
+				"owner": { "type": "rect", "id": "card3" },
+				"anchor": { "kind": "connectPoint", "id": "rightCenter" }
+			},
+			"target": {
+				"owner": { "type": "rect", "id": "card4" },
+				"anchor": { "kind": "connectPoint", "id": "leftCenter" }
+			},
+			"endArrow": "FilledTriangle",
+			"stroke": "#10b981",
+			"strokeWidth": 3
+		}
+	]
+}

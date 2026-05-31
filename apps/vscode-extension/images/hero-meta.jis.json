@@ -1,0 +1,791 @@
+{
+	"root": [
+		{
+			"id": "bg",
+			"type": "rect",
+			"x": 0,
+			"y": 0,
+			"width": 860,
+			"height": 730,
+			"stroke": "#e2e8f0",
+			"strokeWidth": 1,
+			"fill": "#f8fafc",
+			"rx": 0
+		},
+		{
+			"id": "user",
+			"type": "ellipse",
+			"cx": 148,
+			"cy": 66,
+			"rx": 115,
+			"ry": 50,
+			"stroke": "#f97316",
+			"strokeWidth": 2.5,
+			"fill": "#fff7ed",
+			"text": "You",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#c2410c",
+			"fontSize": 18,
+			"fontWeight": "bold"
+		},
+		{
+			"id": "ai",
+			"type": "rect",
+			"x": 340,
+			"y": 30,
+			"width": 210,
+			"height": 70,
+			"stroke": "#7c3aed",
+			"strokeWidth": 2.5,
+			"fill": "#f5f3ff",
+			"rx": 12,
+			"text": "AI / LLM",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#5b21b6",
+			"fontSize": 18,
+			"fontWeight": "bold"
+		},
+		{
+			"id": "jis-file",
+			"type": "rect",
+			"x": 621,
+			"y": 26.271600000000007,
+			"width": 195,
+			"height": 80,
+			"stroke": "#16a34a",
+			"strokeWidth": 2,
+			"strokeDashType": "dashed",
+			"fill": "#f0fdf4",
+			"rx": 10,
+			"text": ".jis.json",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#166534",
+			"fontSize": 18,
+			"fontWeight": "bold"
+		},
+		{
+			"id": "924fb1ef-bafd-4bdf-9f35-84c1618bcd58",
+			"type": "group",
+			"lockAspectRatio": true,
+			"children": [
+				{
+					"id": "vscode-container",
+					"type": "rect",
+					"x": 15,
+					"y": 148.2716,
+					"width": 830,
+					"height": 210,
+					"stroke": "#0ea5e9",
+					"strokeWidth": 2,
+					"fill": "#f0f9ff",
+					"rx": 12
+				},
+				{
+					"id": "vscode-label",
+					"type": "rect",
+					"x": 28,
+					"y": 151.2716,
+					"width": 400,
+					"height": 28,
+					"stroke": "transparent",
+					"strokeWidth": 0,
+					"fill": "transparent",
+					"text": "Jiscribe  VSCode Extension",
+					"textAlign": "left",
+					"verticalAlign": "middle",
+					"fontColor": "#0369a1",
+					"fontSize": 13,
+					"fontWeight": "bold"
+				},
+				{
+					"id": "filewatcher",
+					"type": "rect",
+					"x": 38,
+					"y": 190.2716,
+					"width": 160,
+					"height": 72,
+					"stroke": "#3b82f6",
+					"strokeWidth": 2,
+					"fill": "#dbeafe",
+					"rx": 8,
+					"text": "File\nWatcher",
+					"textAlign": "center",
+					"verticalAlign": "middle",
+					"fontColor": "#1e40af",
+					"fontSize": 14,
+					"fontWeight": "bold"
+				},
+				{
+					"id": "parser",
+					"type": "rect",
+					"x": 228,
+					"y": 190.2716,
+					"width": 160,
+					"height": 72,
+					"stroke": "#3b82f6",
+					"strokeWidth": 2,
+					"fill": "#dbeafe",
+					"rx": 8,
+					"text": "JSON\nParser",
+					"textAlign": "center",
+					"verticalAlign": "middle",
+					"fontColor": "#1e40af",
+					"fontSize": 14,
+					"fontWeight": "bold"
+				},
+				{
+					"id": "validator",
+					"type": "rect",
+					"x": 418,
+					"y": 190.2716,
+					"width": 160,
+					"height": 72,
+					"stroke": "#3b82f6",
+					"strokeWidth": 2,
+					"fill": "#dbeafe",
+					"rx": 8,
+					"text": "Schema\nValidator",
+					"textAlign": "center",
+					"verticalAlign": "middle",
+					"fontColor": "#1e40af",
+					"fontSize": 14,
+					"fontWeight": "bold"
+				},
+				{
+					"id": "json-schema",
+					"type": "rect",
+					"x": 612,
+					"y": 180.2716,
+					"width": 208,
+					"height": 92,
+					"stroke": "#0d9488",
+					"strokeWidth": 2,
+					"strokeDashType": "dashed",
+					"fill": "#f0fdfa",
+					"rx": 8,
+					"text": "JSON Schema\nschema.jiscribe.dev",
+					"textAlign": "center",
+					"verticalAlign": "middle",
+					"fontColor": "#115e59",
+					"fontSize": 13
+				},
+				{
+					"id": "canvasdoc",
+					"type": "rect",
+					"x": 200,
+					"y": 282.2716,
+					"width": 430,
+					"height": 58,
+					"stroke": "#10b981",
+					"strokeWidth": 2.5,
+					"fill": "#d1fae5",
+					"rx": 8,
+					"text": "CanvasDoc  —  Validated Structured Data",
+					"textAlign": "center",
+					"verticalAlign": "middle",
+					"fontColor": "#065f46",
+					"fontSize": 14,
+					"fontWeight": "bold"
+				}
+			]
+		},
+		{
+			"id": "5cc366d9-f693-4736-a87a-53a7ce54dbee",
+			"type": "group",
+			"lockAspectRatio": true,
+			"children": [
+				{
+					"id": "render-container",
+					"type": "rect",
+					"x": 15,
+					"y": 409.3087,
+					"width": 830,
+					"height": 138,
+					"stroke": "#22c55e",
+					"strokeWidth": 2,
+					"fill": "#f0fdf4",
+					"rx": 12
+				},
+				{
+					"id": "render-label",
+					"type": "rect",
+					"x": 28,
+					"y": 412.3087,
+					"width": 280,
+					"height": 28,
+					"stroke": "transparent",
+					"strokeWidth": 0,
+					"fill": "transparent",
+					"text": "Jiscribe Renderer",
+					"textAlign": "left",
+					"verticalAlign": "middle",
+					"fontColor": "#15803d",
+					"fontSize": 13,
+					"fontWeight": "bold"
+				},
+				{
+					"id": "svg-engine",
+					"type": "rect",
+					"x": 38,
+					"y": 447.3087,
+					"width": 210,
+					"height": 78,
+					"stroke": "#16a34a",
+					"strokeWidth": 2,
+					"fill": "#bbf7d0",
+					"rx": 8,
+					"text": "SVG\nEngine",
+					"textAlign": "center",
+					"verticalAlign": "middle",
+					"fontColor": "#14532d",
+					"fontSize": 14,
+					"fontWeight": "bold"
+				},
+				{
+					"id": "layout-calc",
+					"type": "rect",
+					"x": 298,
+					"y": 447.3087,
+					"width": 210,
+					"height": 78,
+					"stroke": "#16a34a",
+					"strokeWidth": 2,
+					"fill": "#bbf7d0",
+					"rx": 8,
+					"text": "Layout\nCalculator",
+					"textAlign": "center",
+					"verticalAlign": "middle",
+					"fontColor": "#14532d",
+					"fontSize": 14,
+					"fontWeight": "bold"
+				},
+				{
+					"id": "conn-resolver",
+					"type": "rect",
+					"x": 558,
+					"y": 447.3087,
+					"width": 258,
+					"height": 78,
+					"stroke": "#16a34a",
+					"strokeWidth": 2,
+					"fill": "#bbf7d0",
+					"rx": 8,
+					"text": "Connector\nResolver",
+					"textAlign": "center",
+					"verticalAlign": "middle",
+					"fontColor": "#14532d",
+					"fontSize": 14,
+					"fontWeight": "bold"
+				}
+			]
+		},
+		{
+			"id": "webview",
+			"type": "rect",
+			"x": 207.75029999999998,
+			"y": 593.2564,
+			"width": 460,
+			"height": 100,
+			"stroke": "#3b82f6",
+			"strokeWidth": 2.5,
+			"fill": "#eff6ff",
+			"rx": 12,
+			"text": "VSCode WebView Panel\nReal-time SVG Preview",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#1d4ed8",
+			"fontSize": 15,
+			"fontWeight": "bold"
+		}
+	],
+	"connectors": [
+		{
+			"id": "c-user-ai",
+			"type": "connector",
+			"points": [
+				{
+					"x": 270,
+					"y": 128
+				},
+				{
+					"x": 348,
+					"y": 128
+				}
+			],
+			"source": {
+				"owner": {
+					"type": "ellipse",
+					"id": "user"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "ai"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#f97316",
+			"strokeWidth": 2.5,
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "c-ai-jis",
+			"type": "connector",
+			"points": [
+				{
+					"x": 558,
+					"y": 128
+				},
+				{
+					"x": 628,
+					"y": 128
+				}
+			],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "ai"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "jis-file"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#7c3aed",
+			"strokeWidth": 2.5,
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "c-jis-fw",
+			"type": "connector",
+			"points": [
+				{
+					"x": 725,
+					"y": 168
+				},
+				{
+					"x": 725,
+					"y": 200
+				},
+				{
+					"x": 118,
+					"y": 200
+				},
+				{
+					"x": 118,
+					"y": 252
+				}
+			],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "jis-file"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "filewatcher"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
+			},
+			"stroke": "#16a34a",
+			"strokeWidth": 2.5,
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "c-fw-parser",
+			"type": "connector",
+			"points": [
+				{
+					"x": 198,
+					"y": 288
+				},
+				{
+					"x": 228,
+					"y": 288
+				}
+			],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "filewatcher"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "parser"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#3b82f6",
+			"strokeWidth": 2.5,
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "c-parser-val",
+			"type": "connector",
+			"points": [
+				{
+					"x": 388,
+					"y": 288
+				},
+				{
+					"x": 418,
+					"y": 288
+				}
+			],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "parser"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "validator"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#3b82f6",
+			"strokeWidth": 2.5,
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "c-schema-val",
+			"type": "connector",
+			"points": [
+				{
+					"x": 612,
+					"y": 288
+				},
+				{
+					"x": 578,
+					"y": 288
+				}
+			],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "json-schema"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "validator"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"stroke": "#0d9488",
+			"strokeWidth": 2,
+			"strokeDashType": "dashed",
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "c-val-doc",
+			"type": "connector",
+			"points": [
+				{
+					"x": 498,
+					"y": 324
+				},
+				{
+					"x": 498,
+					"y": 336
+				},
+				{
+					"x": 415,
+					"y": 336
+				},
+				{
+					"x": 415,
+					"y": 344
+				}
+			],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "validator"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "canvasdoc"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
+			},
+			"stroke": "#10b981",
+			"strokeWidth": 2.5,
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "c-doc-svg",
+			"type": "connector",
+			"points": [
+				{
+					"x": 415,
+					"y": 402
+				},
+				{
+					"x": 415,
+					"y": 455
+				},
+				{
+					"x": 143,
+					"y": 455
+				},
+				{
+					"x": 143,
+					"y": 472
+				}
+			],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "canvasdoc"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "svg-engine"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
+			},
+			"stroke": "#10b981",
+			"strokeWidth": 2.5,
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "c-svg-layout",
+			"type": "connector",
+			"points": [
+				{
+					"x": 248,
+					"y": 511
+				},
+				{
+					"x": 298,
+					"y": 511
+				}
+			],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "svg-engine"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "layout-calc"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#16a34a",
+			"strokeWidth": 2.5,
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "c-layout-conn",
+			"type": "connector",
+			"points": [
+				{
+					"x": 508,
+					"y": 511
+				},
+				{
+					"x": 558,
+					"y": 511
+				}
+			],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "layout-calc"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "conn-resolver"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#16a34a",
+			"strokeWidth": 2.5,
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "c-svg-webview",
+			"type": "connector",
+			"points": [
+				{
+					"x": 143,
+					"y": 550
+				},
+				{
+					"x": 143,
+					"y": 578
+				},
+				{
+					"x": 200,
+					"y": 578
+				},
+				{
+					"x": 200,
+					"y": 596
+				}
+			],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "svg-engine"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "webview"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
+			},
+			"stroke": "#3b82f6",
+			"strokeWidth": 2.5,
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "c-conn-webview",
+			"type": "connector",
+			"points": [
+				{
+					"x": 687,
+					"y": 550
+				},
+				{
+					"x": 687,
+					"y": 578
+				},
+				{
+					"x": 490,
+					"y": 578
+				},
+				{
+					"x": 490,
+					"y": 596
+				}
+			],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "conn-resolver"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "webview"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
+			},
+			"stroke": "#3b82f6",
+			"strokeWidth": 2.5,
+			"endArrow": "FilledTriangle"
+		}
+	]
+}
