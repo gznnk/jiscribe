@@ -20,8 +20,8 @@ describe("PolylineMapper", () => {
 				],
 				stroke: "#000000",
 				strokeWidth: 2,
-				startArrow: "arrow",
-				endArrow: "circle",
+				startArrow: "OpenArrow",
+				endArrow: "Circle",
 			} as unknown as PolylineDoc;
 
 			const state = polylineToState(doc);
@@ -35,8 +35,8 @@ describe("PolylineMapper", () => {
 			]);
 			expect(state.stroke).toBe("#000000");
 			expect(state.strokeWidth).toBe(2);
-			expect(state.startArrow).toBe("arrow");
-			expect(state.endArrow).toBe("circle");
+			expect(state.startArrow).toBe("OpenArrow");
+			expect(state.endArrow).toBe("Circle");
 		});
 
 		it("should handle polyline without arrows", () => {
@@ -75,8 +75,8 @@ describe("PolylineMapper", () => {
 				],
 				stroke: "#000000",
 				strokeWidth: 2,
-				startArrow: "arrow",
-				endArrow: "circle",
+				startArrow: "OpenArrow",
+				endArrow: "Circle",
 			} as unknown as PolylineState;
 
 			const doc = polylineToDoc(state);
@@ -90,8 +90,8 @@ describe("PolylineMapper", () => {
 			]);
 			expect(doc.stroke).toBe("#000000");
 			expect(doc.strokeWidth).toBe(2);
-			expect(doc.startArrow).toBe("arrow");
-			expect(doc.endArrow).toBe("circle");
+			expect(doc.startArrow).toBe("OpenArrow");
+			expect(doc.endArrow).toBe("Circle");
 		});
 
 		it("should handle polyline without arrows", () => {
@@ -130,8 +130,8 @@ describe("PolylineMapper", () => {
 				],
 				stroke: "#000000",
 				strokeWidth: 2,
-				startArrow: "arrow",
-				endArrow: "circle",
+				startArrow: "OpenArrow",
+				endArrow: "Circle",
 			} as unknown as PolylineDoc;
 
 			const state = polylineToState(originalDoc);

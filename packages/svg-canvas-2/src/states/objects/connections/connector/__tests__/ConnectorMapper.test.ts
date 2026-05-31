@@ -28,8 +28,8 @@ describe("ConnectorMapper", () => {
 					owner: { type: "rect", id: "rect-2" },
 					anchor: { kind: "center" },
 				},
-				startArrow: "arrow",
-				endArrow: "circle",
+				startArrow: "OpenArrow",
+				endArrow: "Circle",
 			} as unknown as ConnectorDoc;
 
 			const state = connectorToState(doc);
@@ -51,8 +51,8 @@ describe("ConnectorMapper", () => {
 				owner: { type: "rect", id: "rect-2" },
 				anchor: { kind: "center" },
 			});
-			expect(state.startArrow).toBe("arrow");
-			expect(state.endArrow).toBe("circle");
+			expect(state.startArrow).toBe("OpenArrow");
+			expect(state.endArrow).toBe("Circle");
 		});
 
 		it("should handle connector with free endpoints", () => {
@@ -111,8 +111,8 @@ describe("ConnectorMapper", () => {
 					owner: { type: "rect", id: "rect-2" },
 					anchor: { kind: "center" },
 				},
-				startArrow: "arrow",
-				endArrow: "circle",
+				startArrow: "OpenArrow",
+				endArrow: "Circle",
 			} as unknown as ConnectorState;
 
 			const doc = connectorToDoc(state);
@@ -134,8 +134,8 @@ describe("ConnectorMapper", () => {
 				owner: { type: "rect", id: "rect-2" },
 				anchor: { kind: "center" },
 			});
-			expect(doc.startArrow).toBe("arrow");
-			expect(doc.endArrow).toBe("circle");
+			expect(doc.startArrow).toBe("OpenArrow");
+			expect(doc.endArrow).toBe("Circle");
 		});
 
 		it("should handle connector with free endpoints", () => {
@@ -192,10 +192,10 @@ describe("ConnectorMapper", () => {
 				},
 				target: {
 					owner: { type: "rect", id: "rect-2" },
-					anchor: { kind: "connectPoint", id: "cp-1" },
+					anchor: { kind: "connectPoint", id: "topCenter" },
 				},
-				startArrow: "arrow",
-				endArrow: "circle",
+				startArrow: "OpenArrow",
+				endArrow: "Circle",
 			} as unknown as ConnectorDoc;
 
 			const state = connectorToState(originalDoc);
