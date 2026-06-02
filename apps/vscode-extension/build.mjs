@@ -4,7 +4,7 @@
 // 監視モード: node build.mjs --watch
 
 import * as esbuild from "esbuild";
-import { copyFileSync } from "fs";
+import { copyFileSync, mkdirSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
@@ -78,7 +78,9 @@ function copySchema() {
 		__dirname,
 		"../../packages/svg-canvas-2/src/schemas/canvas/jiscribe.schema.json",
 	);
-	const dest = join(__dirname, "dist", "jiscribe.schema.json");
+	const distDir = join(__dirname, "dist");
+	mkdirSync(distDir, { recursive: true });
+	const dest = join(distDir, "jiscribe.schema.json");
 	copyFileSync(src, dest);
 	console.log("✅ Schema copied: jiscribe.schema.json");
 }
