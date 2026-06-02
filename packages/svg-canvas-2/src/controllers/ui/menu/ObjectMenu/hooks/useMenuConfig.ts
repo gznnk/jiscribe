@@ -57,7 +57,7 @@ const mergeSections = (arrays: MenuSection[][]): MenuSection[] => {
 		.map((group) => ({
 			id: group.id,
 			items: mergeItems(
-				arrays.map((arr) => arr.find((g) => g.id === group.id)!.items),
+				arrays.map((arr) => arr.find((g) => g.id === group.id)?.items ?? []),
 			),
 		}))
 		.filter((group) => group.items.length > 0);
