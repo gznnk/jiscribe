@@ -7,6 +7,10 @@
 	"required": ["version", "root", "connectors"],
 	"additionalProperties": false,
 	"properties": {
+		"$schema": {
+			"description": "JSON Schema URL for this document.",
+			"type": "string"
+		},
 		"version": {
 			"description": "Schema version. Must be 1 for this version of the format.",
 			"type": "integer",
