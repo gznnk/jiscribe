@@ -1,0 +1,904 @@
+{
+	"version": 1,
+	"root": [
+		{
+			"id": "bg",
+			"type": "rect",
+			"x": 0,
+			"y": 0,
+			"width": 1280,
+			"height": 868,
+			"fill": "#f8fafc",
+			"stroke": "#e2e8f0",
+			"strokeWidth": 1,
+			"rx": 24
+		},
+
+		{
+			"id": "logo-accent",
+			"type": "rect",
+			"x": 40,
+			"y": 26,
+			"width": 40,
+			"height": 40,
+			"fill": "#6366f1",
+			"stroke": "#4f46e5",
+			"strokeWidth": 1.5,
+			"rx": 12,
+			"text": "J",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#ffffff",
+			"fontSize": 22,
+			"fontWeight": "bold"
+		},
+		{
+			"id": "title",
+			"type": "rect",
+			"x": 92,
+			"y": 24,
+			"width": 820,
+			"height": 30,
+			"fill": "transparent",
+			"stroke": "transparent",
+			"strokeWidth": 0,
+			"text": "Cloud-Native Commerce Platform",
+			"textAlign": "left",
+			"verticalAlign": "middle",
+			"fontColor": "#0f172a",
+			"fontSize": 28,
+			"fontWeight": "bold"
+		},
+		{
+			"id": "subtitle",
+			"type": "rect",
+			"x": 92,
+			"y": 58,
+			"width": 820,
+			"height": 22,
+			"fill": "transparent",
+			"stroke": "transparent",
+			"strokeWidth": 0,
+			"text": "Reference architecture — one .jis.json file, fully diffable in Git.",
+			"textAlign": "left",
+			"verticalAlign": "middle",
+			"fontColor": "#64748b",
+			"fontSize": 14
+		},
+
+		{
+			"id": "zone-clients",
+			"type": "rect",
+			"x": 40,
+			"y": 110,
+			"width": 1200,
+			"height": 120,
+			"fill": "#eff6ff",
+			"stroke": "#bfdbfe",
+			"strokeWidth": 1.5,
+			"rx": 16
+		},
+		{
+			"id": "label-clients",
+			"type": "rect",
+			"x": 60,
+			"y": 120,
+			"width": 320,
+			"height": 22,
+			"fill": "transparent",
+			"stroke": "transparent",
+			"strokeWidth": 0,
+			"text": "CLIENT APPS",
+			"textAlign": "left",
+			"verticalAlign": "middle",
+			"fontColor": "#1d4ed8",
+			"fontSize": 13,
+			"fontWeight": "bold"
+		},
+		{
+			"id": "cl-web",
+			"type": "rect",
+			"x": 108,
+			"y": 156,
+			"width": 320,
+			"height": 58,
+			"fill": "#dbeafe",
+			"stroke": "#3b82f6",
+			"strokeWidth": 2,
+			"rx": 12,
+			"text": "Web Storefront",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#1e3a8a",
+			"fontSize": 16,
+			"fontWeight": "bold"
+		},
+		{
+			"id": "cl-mobile",
+			"type": "rect",
+			"x": 480,
+			"y": 156,
+			"width": 320,
+			"height": 58,
+			"fill": "#dbeafe",
+			"stroke": "#3b82f6",
+			"strokeWidth": 2,
+			"rx": 12,
+			"text": "Mobile App",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#1e3a8a",
+			"fontSize": 16,
+			"fontWeight": "bold"
+		},
+		{
+			"id": "cl-admin",
+			"type": "rect",
+			"x": 852,
+			"y": 156,
+			"width": 320,
+			"height": 58,
+			"fill": "#dbeafe",
+			"stroke": "#3b82f6",
+			"strokeWidth": 2,
+			"rx": 12,
+			"text": "Admin Console",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#1e3a8a",
+			"fontSize": 16,
+			"fontWeight": "bold"
+		},
+
+		{
+			"id": "zone-edge",
+			"type": "rect",
+			"x": 40,
+			"y": 250,
+			"width": 1200,
+			"height": 92,
+			"fill": "#f5f3ff",
+			"stroke": "#ddd6fe",
+			"strokeWidth": 1.5,
+			"rx": 16
+		},
+		{
+			"id": "label-edge",
+			"type": "rect",
+			"x": 60,
+			"y": 258,
+			"width": 200,
+			"height": 22,
+			"fill": "transparent",
+			"stroke": "transparent",
+			"strokeWidth": 0,
+			"text": "EDGE",
+			"textAlign": "left",
+			"verticalAlign": "middle",
+			"fontColor": "#6d28d9",
+			"fontSize": 13,
+			"fontWeight": "bold"
+		},
+		{
+			"id": "edge-gateway",
+			"type": "rect",
+			"x": 380,
+			"y": 280,
+			"width": 520,
+			"height": 52,
+			"fill": "#ede9fe",
+			"stroke": "#7c3aed",
+			"strokeWidth": 2.5,
+			"rx": 12,
+			"text": "API Gateway",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#5b21b6",
+			"fontSize": 18,
+			"fontWeight": "bold"
+		},
+
+		{
+			"id": "zone-services",
+			"type": "rect",
+			"x": 40,
+			"y": 360,
+			"width": 1200,
+			"height": 150,
+			"fill": "#eef2ff",
+			"stroke": "#c7d2fe",
+			"strokeWidth": 1.5,
+			"rx": 16
+		},
+		{
+			"id": "label-services",
+			"type": "rect",
+			"x": 60,
+			"y": 368,
+			"width": 320,
+			"height": 22,
+			"fill": "transparent",
+			"stroke": "transparent",
+			"strokeWidth": 0,
+			"text": "MICROSERVICES",
+			"textAlign": "left",
+			"verticalAlign": "middle",
+			"fontColor": "#4338ca",
+			"fontSize": 13,
+			"fontWeight": "bold"
+		},
+		{
+			"id": "svc-auth",
+			"type": "rect",
+			"x": 56,
+			"y": 404,
+			"width": 192,
+			"height": 74,
+			"fill": "#e0e7ff",
+			"stroke": "#6366f1",
+			"strokeWidth": 2,
+			"rx": 12,
+			"text": "Auth\nService",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#3730a3",
+			"fontSize": 15,
+			"fontWeight": "bold"
+		},
+		{
+			"id": "svc-catalog",
+			"type": "rect",
+			"x": 300,
+			"y": 404,
+			"width": 192,
+			"height": 74,
+			"fill": "#e0e7ff",
+			"stroke": "#6366f1",
+			"strokeWidth": 2,
+			"rx": 12,
+			"text": "Catalog\nService",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#3730a3",
+			"fontSize": 15,
+			"fontWeight": "bold"
+		},
+		{
+			"id": "svc-cart",
+			"type": "rect",
+			"x": 544,
+			"y": 404,
+			"width": 192,
+			"height": 74,
+			"fill": "#e0e7ff",
+			"stroke": "#6366f1",
+			"strokeWidth": 2,
+			"rx": 12,
+			"text": "Cart\nService",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#3730a3",
+			"fontSize": 15,
+			"fontWeight": "bold"
+		},
+		{
+			"id": "svc-order",
+			"type": "rect",
+			"x": 788,
+			"y": 404,
+			"width": 192,
+			"height": 74,
+			"fill": "#e0e7ff",
+			"stroke": "#6366f1",
+			"strokeWidth": 2,
+			"rx": 12,
+			"text": "Order\nService",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#3730a3",
+			"fontSize": 15,
+			"fontWeight": "bold"
+		},
+		{
+			"id": "svc-payment",
+			"type": "rect",
+			"x": 1032,
+			"y": 404,
+			"width": 192,
+			"height": 74,
+			"fill": "#e0e7ff",
+			"stroke": "#6366f1",
+			"strokeWidth": 2,
+			"rx": 12,
+			"text": "Payment\nService",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#3730a3",
+			"fontSize": 15,
+			"fontWeight": "bold"
+		},
+
+		{
+			"id": "zone-messaging",
+			"type": "rect",
+			"x": 40,
+			"y": 528,
+			"width": 1200,
+			"height": 92,
+			"fill": "#fffbeb",
+			"stroke": "#fde68a",
+			"strokeWidth": 1.5,
+			"rx": 16
+		},
+		{
+			"id": "label-messaging",
+			"type": "rect",
+			"x": 60,
+			"y": 536,
+			"width": 200,
+			"height": 22,
+			"fill": "transparent",
+			"stroke": "transparent",
+			"strokeWidth": 0,
+			"text": "MESSAGING",
+			"textAlign": "left",
+			"verticalAlign": "middle",
+			"fontColor": "#b45309",
+			"fontSize": 13,
+			"fontWeight": "bold"
+		},
+		{
+			"id": "msg-bus",
+			"type": "rect",
+			"x": 330,
+			"y": 556,
+			"width": 620,
+			"height": 56,
+			"fill": "#fef3c7",
+			"stroke": "#f59e0b",
+			"strokeWidth": 2.5,
+			"rx": 12,
+			"text": "Event Bus  ·  Kafka",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#92400e",
+			"fontSize": 17,
+			"fontWeight": "bold"
+		},
+
+		{
+			"id": "zone-data",
+			"type": "rect",
+			"x": 40,
+			"y": 638,
+			"width": 1200,
+			"height": 150,
+			"fill": "#f8fafc",
+			"stroke": "#e2e8f0",
+			"strokeWidth": 1.5,
+			"rx": 16
+		},
+		{
+			"id": "label-data",
+			"type": "rect",
+			"x": 60,
+			"y": 646,
+			"width": 320,
+			"height": 22,
+			"fill": "transparent",
+			"stroke": "transparent",
+			"strokeWidth": 0,
+			"text": "DATA & STORAGE",
+			"textAlign": "left",
+			"verticalAlign": "middle",
+			"fontColor": "#475569",
+			"fontSize": 13,
+			"fontWeight": "bold"
+		},
+		{
+			"id": "db-postgres",
+			"type": "rect",
+			"x": 101,
+			"y": 684,
+			"width": 236,
+			"height": 74,
+			"fill": "#d1fae5",
+			"stroke": "#10b981",
+			"strokeWidth": 2,
+			"rx": 10,
+			"text": "PostgreSQL\nOrders · Users",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#065f46",
+			"fontSize": 14,
+			"fontWeight": "bold"
+		},
+		{
+			"id": "db-redis",
+			"type": "rect",
+			"x": 382,
+			"y": 684,
+			"width": 236,
+			"height": 74,
+			"fill": "#fee2e2",
+			"stroke": "#ef4444",
+			"strokeWidth": 2,
+			"rx": 10,
+			"text": "Redis\nSessions · Cart",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#991b1b",
+			"fontSize": 14,
+			"fontWeight": "bold"
+		},
+		{
+			"id": "db-elastic",
+			"type": "rect",
+			"x": 663,
+			"y": 684,
+			"width": 236,
+			"height": 74,
+			"fill": "#cffafe",
+			"stroke": "#06b6d4",
+			"strokeWidth": 2,
+			"rx": 10,
+			"text": "Elasticsearch\nProduct Search",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#155e75",
+			"fontSize": 14,
+			"fontWeight": "bold"
+		},
+		{
+			"id": "db-object",
+			"type": "rect",
+			"x": 944,
+			"y": 684,
+			"width": 236,
+			"height": 74,
+			"fill": "#f1f5f9",
+			"stroke": "#64748b",
+			"strokeWidth": 2,
+			"rx": 10,
+			"text": "Object Storage\nMedia · Assets",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#334155",
+			"fontSize": 14,
+			"fontWeight": "bold"
+		},
+
+		{
+			"id": "legend-sync-line",
+			"type": "polyline",
+			"points": [
+				{ "x": 60, "y": 822 },
+				{ "x": 104, "y": 822 }
+			],
+			"stroke": "#7c3aed",
+			"strokeWidth": 3,
+			"startArrow": "None",
+			"endArrow": "None"
+		},
+		{
+			"id": "legend-sync-text",
+			"type": "rect",
+			"x": 112,
+			"y": 808,
+			"width": 180,
+			"height": 28,
+			"fill": "transparent",
+			"stroke": "transparent",
+			"strokeWidth": 0,
+			"text": "Sync request (REST/gRPC)",
+			"textAlign": "left",
+			"verticalAlign": "middle",
+			"fontColor": "#475569",
+			"fontSize": 13
+		},
+		{
+			"id": "legend-async-line",
+			"type": "polyline",
+			"points": [
+				{ "x": 320, "y": 822 },
+				{ "x": 364, "y": 822 }
+			],
+			"stroke": "#f59e0b",
+			"strokeWidth": 3,
+			"strokeDashType": "dashed",
+			"startArrow": "None",
+			"endArrow": "None"
+		},
+		{
+			"id": "legend-async-text",
+			"type": "rect",
+			"x": 372,
+			"y": 808,
+			"width": 180,
+			"height": 28,
+			"fill": "transparent",
+			"stroke": "transparent",
+			"strokeWidth": 0,
+			"text": "Async event stream",
+			"textAlign": "left",
+			"verticalAlign": "middle",
+			"fontColor": "#475569",
+			"fontSize": 13
+		},
+		{
+			"id": "footer-note",
+			"type": "rect",
+			"x": 800,
+			"y": 808,
+			"width": 440,
+			"height": 28,
+			"fill": "transparent",
+			"stroke": "transparent",
+			"strokeWidth": 0,
+			"text": "17 components · 17 connections · drawn in Jiscribe",
+			"textAlign": "right",
+			"verticalAlign": "middle",
+			"fontColor": "#94a3b8",
+			"fontSize": 13
+		}
+	],
+	"connectors": [
+		{
+			"id": "c-web-gw",
+			"type": "connector",
+			"points": [
+				{ "x": 268, "y": 214 },
+				{ "x": 268, "y": 306 },
+				{ "x": 380, "y": 306 }
+			],
+			"source": {
+				"owner": { "type": "rect", "id": "cl-web" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "type": "rect", "id": "edge-gateway" },
+				"anchor": { "kind": "connectPoint", "id": "leftCenter" }
+			},
+			"stroke": "#60a5fa",
+			"strokeWidth": 2.5,
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "c-mobile-gw",
+			"type": "connector",
+			"points": [
+				{ "x": 640, "y": 214 },
+				{ "x": 640, "y": 280 }
+			],
+			"source": {
+				"owner": { "type": "rect", "id": "cl-mobile" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "type": "rect", "id": "edge-gateway" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "#60a5fa",
+			"strokeWidth": 2.5,
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "c-admin-gw",
+			"type": "connector",
+			"points": [
+				{ "x": 1012, "y": 214 },
+				{ "x": 1012, "y": 306 },
+				{ "x": 900, "y": 306 }
+			],
+			"source": {
+				"owner": { "type": "rect", "id": "cl-admin" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "type": "rect", "id": "edge-gateway" },
+				"anchor": { "kind": "connectPoint", "id": "rightCenter" }
+			},
+			"stroke": "#60a5fa",
+			"strokeWidth": 2.5,
+			"endArrow": "FilledTriangle"
+		},
+
+		{
+			"id": "c-gw-auth",
+			"type": "connector",
+			"points": [
+				{ "x": 640, "y": 332 },
+				{ "x": 640, "y": 372 },
+				{ "x": 152, "y": 372 },
+				{ "x": 152, "y": 404 }
+			],
+			"source": {
+				"owner": { "type": "rect", "id": "edge-gateway" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "type": "rect", "id": "svc-auth" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "#a78bfa",
+			"strokeWidth": 2.5,
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "c-gw-catalog",
+			"type": "connector",
+			"points": [
+				{ "x": 640, "y": 332 },
+				{ "x": 640, "y": 372 },
+				{ "x": 396, "y": 372 },
+				{ "x": 396, "y": 404 }
+			],
+			"source": {
+				"owner": { "type": "rect", "id": "edge-gateway" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "type": "rect", "id": "svc-catalog" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "#a78bfa",
+			"strokeWidth": 2.5,
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "c-gw-cart",
+			"type": "connector",
+			"points": [
+				{ "x": 640, "y": 332 },
+				{ "x": 640, "y": 404 }
+			],
+			"source": {
+				"owner": { "type": "rect", "id": "edge-gateway" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "type": "rect", "id": "svc-cart" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "#a78bfa",
+			"strokeWidth": 2.5,
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "c-gw-order",
+			"type": "connector",
+			"points": [
+				{ "x": 640, "y": 332 },
+				{ "x": 640, "y": 372 },
+				{ "x": 884, "y": 372 },
+				{ "x": 884, "y": 404 }
+			],
+			"source": {
+				"owner": { "type": "rect", "id": "edge-gateway" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "type": "rect", "id": "svc-order" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "#a78bfa",
+			"strokeWidth": 2.5,
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "c-gw-payment",
+			"type": "connector",
+			"points": [
+				{ "x": 640, "y": 332 },
+				{ "x": 640, "y": 372 },
+				{ "x": 1128, "y": 372 },
+				{ "x": 1128, "y": 404 }
+			],
+			"source": {
+				"owner": { "type": "rect", "id": "edge-gateway" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "type": "rect", "id": "svc-payment" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "#a78bfa",
+			"strokeWidth": 2.5,
+			"endArrow": "FilledTriangle"
+		},
+
+		{
+			"id": "c-auth-bus",
+			"type": "connector",
+			"points": [
+				{ "x": 152, "y": 478 },
+				{ "x": 152, "y": 520 },
+				{ "x": 640, "y": 520 },
+				{ "x": 640, "y": 556 }
+			],
+			"source": {
+				"owner": { "type": "rect", "id": "svc-auth" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "type": "rect", "id": "msg-bus" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "#f59e0b",
+			"strokeWidth": 2.5,
+			"strokeDashType": "dashed",
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "c-catalog-bus",
+			"type": "connector",
+			"points": [
+				{ "x": 396, "y": 478 },
+				{ "x": 396, "y": 520 },
+				{ "x": 640, "y": 520 },
+				{ "x": 640, "y": 556 }
+			],
+			"source": {
+				"owner": { "type": "rect", "id": "svc-catalog" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "type": "rect", "id": "msg-bus" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "#f59e0b",
+			"strokeWidth": 2.5,
+			"strokeDashType": "dashed",
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "c-cart-bus",
+			"type": "connector",
+			"points": [
+				{ "x": 640, "y": 478 },
+				{ "x": 640, "y": 556 }
+			],
+			"source": {
+				"owner": { "type": "rect", "id": "svc-cart" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "type": "rect", "id": "msg-bus" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "#f59e0b",
+			"strokeWidth": 2.5,
+			"strokeDashType": "dashed",
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "c-order-bus",
+			"type": "connector",
+			"points": [
+				{ "x": 884, "y": 478 },
+				{ "x": 884, "y": 520 },
+				{ "x": 640, "y": 520 },
+				{ "x": 640, "y": 556 }
+			],
+			"source": {
+				"owner": { "type": "rect", "id": "svc-order" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "type": "rect", "id": "msg-bus" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "#f59e0b",
+			"strokeWidth": 2.5,
+			"strokeDashType": "dashed",
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "c-payment-bus",
+			"type": "connector",
+			"points": [
+				{ "x": 1128, "y": 478 },
+				{ "x": 1128, "y": 520 },
+				{ "x": 640, "y": 520 },
+				{ "x": 640, "y": 556 }
+			],
+			"source": {
+				"owner": { "type": "rect", "id": "svc-payment" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "type": "rect", "id": "msg-bus" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "#f59e0b",
+			"strokeWidth": 2.5,
+			"strokeDashType": "dashed",
+			"endArrow": "FilledTriangle"
+		},
+
+		{
+			"id": "c-bus-postgres",
+			"type": "connector",
+			"points": [
+				{ "x": 640, "y": 612 },
+				{ "x": 640, "y": 650 },
+				{ "x": 219, "y": 650 },
+				{ "x": 219, "y": 684 }
+			],
+			"source": {
+				"owner": { "type": "rect", "id": "msg-bus" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "type": "rect", "id": "db-postgres" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "#94a3b8",
+			"strokeWidth": 2.5,
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "c-bus-redis",
+			"type": "connector",
+			"points": [
+				{ "x": 640, "y": 612 },
+				{ "x": 640, "y": 650 },
+				{ "x": 500, "y": 650 },
+				{ "x": 500, "y": 684 }
+			],
+			"source": {
+				"owner": { "type": "rect", "id": "msg-bus" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "type": "rect", "id": "db-redis" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "#94a3b8",
+			"strokeWidth": 2.5,
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "c-bus-elastic",
+			"type": "connector",
+			"points": [
+				{ "x": 640, "y": 612 },
+				{ "x": 640, "y": 650 },
+				{ "x": 781, "y": 650 },
+				{ "x": 781, "y": 684 }
+			],
+			"source": {
+				"owner": { "type": "rect", "id": "msg-bus" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "type": "rect", "id": "db-elastic" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "#94a3b8",
+			"strokeWidth": 2.5,
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "c-bus-object",
+			"type": "connector",
+			"points": [
+				{ "x": 640, "y": 612 },
+				{ "x": 640, "y": 650 },
+				{ "x": 1062, "y": 650 },
+				{ "x": 1062, "y": 684 }
+			],
+			"source": {
+				"owner": { "type": "rect", "id": "msg-bus" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "type": "rect", "id": "db-object" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "#94a3b8",
+			"strokeWidth": 2.5,
+			"endArrow": "FilledTriangle"
+		}
+	]
+}
