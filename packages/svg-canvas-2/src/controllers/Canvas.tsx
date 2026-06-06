@@ -1,5 +1,12 @@
 ﻿import type { Dimensions } from "@workspace/geometry";
-import { memo, useCallback, useEffect, useReducer, useRef } from "react";
+import {
+	memo,
+	useCallback,
+	useEffect,
+	useReducer,
+	useRef,
+	useState,
+} from "react";
 
 import {
 	Container,
@@ -25,6 +32,7 @@ import { TransformControlsLayer } from "./ui/controls/TransformControlsLayer";
 import { VertexControlsLayer } from "./ui/controls/VertexControlsLayer";
 import { TextEditorLayer } from "./ui/editors/TextEditorLayer";
 import { AreaSelectionRect } from "./ui/feedback/AreaSelectionRect";
+import { ClipboardErrorToast } from "./ui/feedback/ClipboardErrorToast";
 import { DragGhost } from "./ui/feedback/DragGhost";
 import { DrawingPreviewOverlay } from "./ui/feedback/DrawingPreviewOverlay";
 import { PendingConnectorOverlay } from "./ui/feedback/PendingConnectorOverlay";
@@ -115,6 +123,21 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 			};
 		},
 	);
+
+	// Clipboard write side effect: fired whenever internalClipboard changes (Copy / Cut).
+	// Keeping this outside Command.execute preserves the pure-function contract of commands.
+	const [clipboardWriteErrorVersion, setClipboardWriteErrorVersion] =
+		useState(0);
+	useEffect(() => {
+		if (!state.internalClipboard) {
+			return;
+		}
+		navigator.clipboard
+			.writeText(JSON.stringify(state.internalClipboard))
+			.catch(() => {
+				setClipboardWriteErrorVersion((v) => v + 1);
+			});
+	}, [state.internalClipboard]);
 
 	// Gesture handling — declared before the SYNC_EXTERNAL effect so resetGestureState is available
 	const handleGesture = useCallback<GestureCallback>(
@@ -298,6 +321,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 			<ViewportOverlay>
 				<ShapeLibrary activePresetId={state.shapeDrawing?.preset.id ?? null} />
 				<ZoomIndicator zoom={state.viewport.zoom} />
+				<ClipboardErrorToast errorVersion={clipboardWriteErrorVersion} />
 				<ContextMenu
 					position={state.contextMenuPosition}
 					canvasState={state}

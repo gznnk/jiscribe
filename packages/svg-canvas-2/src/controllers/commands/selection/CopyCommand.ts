@@ -67,8 +67,6 @@ export const CopyCommand: Command = {
 			center,
 		};
 
-		navigator.clipboard.writeText(JSON.stringify(data)).catch(console.error);
-
 		return { ...state, internalClipboard: data };
 	},
 };
