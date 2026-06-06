@@ -61,6 +61,10 @@ const calcShapeDimensions = (
 
 /**
  * プリセットに従って図形を state に追加し、新しい CanvasControllerState を返す。
+ *
+ * オブジェクト追加は常に doc を変更するため commitVersion を増分する。
+ * これにより click 経由（中央配置）でも履歴記録・保存が行われる。
+ * dragEnd 経由では handleGesture が同値で上書きするため二重増分にはならない。
  */
 const addObjectToState = (
 	state: CanvasControllerState,
@@ -82,6 +86,7 @@ const addObjectToState = (
 		},
 		rootIds: [...state.rootIds, objectState.id],
 		selectedIds: [objectState.id],
+		commitVersion: state.commitVersion + 1,
 	};
 };
 
