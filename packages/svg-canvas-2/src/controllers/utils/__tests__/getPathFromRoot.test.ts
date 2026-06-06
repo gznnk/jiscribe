@@ -26,4 +26,20 @@ describe("getPathFromRoot", () => {
 	it("should handle unknown IDs gracefully by returning just the targetId", () => {
 		expect(getPathFromRoot("unknownId", objects)).toEqual(["unknownId"]);
 	});
+
+	it("should not loop forever on a self-referential parentId", () => {
+		const cyclic: Record<string, ObjectState> = {
+			a: { id: "a", parentId: "a" } as ObjectState,
+		};
+		expect(getPathFromRoot("a", cyclic)).toEqual(["a"]);
+	});
+
+	it("should not loop forever on a two-node cycle", () => {
+		const cyclic: Record<string, ObjectState> = {
+			a: { id: "a", parentId: "b" } as ObjectState,
+			b: { id: "b", parentId: "a" } as ObjectState,
+		};
+		// 循環を検出した時点で打ち切るため、有限のパスを返す
+		expect(getPathFromRoot("a", cyclic)).toEqual(["b", "a"]);
+	});
 });

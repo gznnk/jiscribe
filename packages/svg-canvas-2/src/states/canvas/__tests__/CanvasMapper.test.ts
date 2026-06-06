@@ -222,5 +222,35 @@ describe("CanvasMapper", () => {
 			const r3 = g2.children[0] as RectDoc;
 			expect(r3.id).toBe("rect-3");
 		});
+
+		it("should not overflow the stack on a circular childIds graph", () => {
+			// group-a と group-b が互いを childIds に持つ循環状態
+			const groupA = {
+				id: "group-a",
+				type: "group",
+				childIds: ["group-b"],
+				rotation: 0,
+				scaleX: 1,
+				scaleY: 1,
+			} as unknown as GroupState;
+			const groupB = {
+				id: "group-b",
+				type: "group",
+				childIds: ["group-a"],
+				rotation: 0,
+				scaleX: 1,
+				scaleY: 1,
+			} as unknown as GroupState;
+
+			const state: CanvasState = {
+				objects: { "group-a": groupA, "group-b": groupB },
+				rootIds: ["group-a"],
+				connectorIds: [],
+				viewport: { minX: 0, minY: 0, width: 1000, height: 800, zoom: 1 },
+			};
+
+			// 循環を検出して打ち切るため、スタックオーバーフローにならず完了する
+			expect(() => canvasToDoc(state)).not.toThrow();
+		});
 	});
 });

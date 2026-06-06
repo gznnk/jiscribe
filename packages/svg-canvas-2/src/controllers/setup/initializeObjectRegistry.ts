@@ -305,6 +305,6 @@ export const registerObject = <
 	objectMapperRegistry.register(type, mapper, features);
 	objectComponentRegistry.register(type, component);
 	objectBehaviorRegistry.register(type, behavior);
-	objectDocValidatorRegistry.register(type, validate);
+	objectDocValidatorRegistry.register(type, validate, features);
 	objectMenuRegistry.register(type, menuFactory);
 };

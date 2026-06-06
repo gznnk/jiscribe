@@ -1,11 +1,14 @@
-import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { walkParentChain } from "../../../../utils/walkParentChain";
 
 /**
  * Gets all ancestor IDs of an object, ordered from root to leaf (outermost to innermost).
  * Returns an empty array if the object is at root level.
  *
  * This matches the behavior of svg-canvas's getAncestorItemsById.
+ *
+ * Circular references in the hierarchy are detected and broken by the shared
+ * {@link walkParentChain} utility (visited-set guard).
  *
  * @param state - The canvas controller state
  * @param objectId - The ID of the object
@@ -21,29 +24,6 @@ export function getAncestors(
 	state: CanvasControllerState,
 	objectId: string,
 ): string[] {
-	const ancestors: string[] = [];
-	let currentId: string | undefined = objectId;
-	const visited = new Set<string>();
-
-	while (currentId) {
-		const obj: ObjectState | undefined = state.objects[currentId];
-		if (!obj || !obj.parentId) {
-			break;
-		}
-
-		// Circular reference detection (safety check)
-		if (visited.has(obj.parentId)) {
-			console.warn(
-				`Circular reference detected in object hierarchy at ${obj.parentId}`,
-			);
-			break;
-		}
-
-		ancestors.push(obj.parentId);
-		visited.add(currentId);
-		currentId = obj.parentId;
-	}
-
-	// Reverse to match svg-canvas order: root to leaf (outermost to innermost)
-	return ancestors.reverse();
+	// walkParentChain は [parent, ..., root] を返すので、root→leaf 順に反転する。
+	return walkParentChain(objectId, state.objects).reverse();
 }

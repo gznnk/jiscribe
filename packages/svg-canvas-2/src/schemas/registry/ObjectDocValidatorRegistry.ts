@@ -1,4 +1,5 @@
 import type { SemanticDiagnostic } from "../canvas/validators/types";
+import type { ObjectFeatures } from "../objects/types/ObjectFeatures";
 import type { ObjectType } from "../objects/types/ObjectType";
 
 export type ObjectDocValidateFn = (
@@ -6,11 +7,20 @@ export type ObjectDocValidateFn = (
 	path: string,
 ) => SemanticDiagnostic[];
 
-class ObjectDocValidatorRegistry {
-	private readonly validators = new Map<ObjectType, ObjectDocValidateFn>();
+type ValidatorEntry = {
+	validate: ObjectDocValidateFn;
+	features: ObjectFeatures;
+};
 
-	register(type: ObjectType, validate: ObjectDocValidateFn): void {
-		this.validators.set(type, validate);
+class ObjectDocValidatorRegistry {
+	private readonly entries = new Map<ObjectType, ValidatorEntry>();
+
+	register(
+		type: ObjectType,
+		validate: ObjectDocValidateFn,
+		features: ObjectFeatures,
+	): void {
+		this.entries.set(type, { validate, features });
 	}
 
 	validate(
@@ -18,11 +28,20 @@ class ObjectDocValidatorRegistry {
 		obj: Record<string, unknown>,
 		path: string,
 	): SemanticDiagnostic[] {
-		return this.validators.get(type as ObjectType)?.(obj, path) ?? [];
+		return this.entries.get(type as ObjectType)?.validate(obj, path) ?? [];
+	}
+
+	getFeatures(type: string): ObjectFeatures | undefined {
+		return this.entries.get(type as ObjectType)?.features;
+	}
+
+	/** 指定した型が connector の端点として接続可能かを返す。未登録型は false。 */
+	isConnectable(type: string): boolean {
+		return this.entries.get(type as ObjectType)?.features.connectable === true;
 	}
 
 	clear(): void {
-		this.validators.clear();
+		this.entries.clear();
 	}
 }
 

@@ -65,6 +65,9 @@ export const DeleteCommand: Command = {
 		// 削除対象IDを収集（グループの場合は子孫も再帰的に含める）
 		const idsToDelete = new Set<string>();
 
+		// idsToDelete は訪問済みセットも兼ねる。子孫を辿る前に id を追加するため、
+		// childIds が自身や祖先を参照する循環参照（例: childId === groupId）でも
+		// 先頭の has チェックで再帰が打ち切られ、スタックオーバーフローを防ぐ。
 		const collectIds = (id: string) => {
 			if (idsToDelete.has(id)) {
 				return;

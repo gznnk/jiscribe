@@ -17,7 +17,10 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 	const rootIds: string[] = [];
 	const connectorIds: string[] = [];
 
-	// Helper to process an object and its children recursively
+	// Helper to process an object and its children recursively.
+	// Input is a validated CanvasDoc (a nested tree); since the tree is finite
+	// and cannot encode a parent/child cycle, no recursion guard is needed here.
+	// ID uniqueness / reference integrity are the validator's responsibility.
 	const processObject = (objDoc: ObjectDoc, parentId?: string): string => {
 		// Returns the ID of the processed object
 		// 1. Convert the object itself using the registry
@@ -88,8 +91,13 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
  * This reconstructs the tree for serialization/storage.
  */
 export const canvasToDoc = (state: CanvasState): CanvasDoc => {
-	// Helper to reconstruct an object tree from an ID
-	const reconstructObject = (id: string): ObjectDoc => {
+	// Helper to reconstruct an object tree from an ID.
+	// `ancestorIds` tracks the IDs on the current recursion path so a circular
+	// `childIds` graph in the flat state cannot cause an infinite recursion.
+	const reconstructObject = (
+		id: string,
+		ancestorIds: Set<string> = new Set(),
+	): ObjectDoc => {
 		const objState = state.objects[id];
 		if (!objState) {
 			throw new Error(`Object with ID ${id} not found in state.`);
@@ -128,10 +136,18 @@ export const canvasToDoc = (state: CanvasState): CanvasDoc => {
 			const groupState = objState as GroupState;
 			const groupDoc = objDoc as GroupDoc;
 
+			const childAncestorIds = new Set(ancestorIds).add(id);
+
 			// Reconstruct children recursively
-			groupDoc.children = groupState.childIds.map((childId) =>
-				reconstructObject(childId),
-			);
+			groupDoc.children = groupState.childIds.flatMap((childId) => {
+				if (ancestorIds.has(childId) || childId === id) {
+					console.warn(
+						`[canvasToDoc] Circular reference detected at "${childId}"; skipping`,
+					);
+					return [];
+				}
+				return [reconstructObject(childId, childAncestorIds)];
+			});
 		}
 
 		return objDoc;

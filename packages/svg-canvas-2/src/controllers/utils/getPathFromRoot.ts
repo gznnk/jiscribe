@@ -1,7 +1,11 @@
+import { walkParentChain } from "./walkParentChain";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 
 /**
  * 指定したオブジェクトからルートまで辿り、ルートからそのオブジェクト自身へ至るパス（IDの配列）を返します。
+ *
+ * 循環参照を含むデータでも、{@link walkParentChain} の visited ガードにより
+ * 無限ループにならず安全にパスを返します。
  *
  * @param targetId - 対象となるオブジェクトのID
  * @param objects - キャンバス上の全オブジェクトマップ
@@ -11,11 +15,6 @@ export function getPathFromRoot(
 	targetId: string,
 	objects: Record<string, ObjectState>,
 ): string[] {
-	const path: string[] = [targetId];
-	let currentParentId = objects[targetId]?.parentId;
-	while (currentParentId != null) {
-		path.push(currentParentId);
-		currentParentId = objects[currentParentId]?.parentId;
-	}
-	return path.reverse();
+	// walkParentChain は [parent, ..., root] を返すので、targetId を先頭に付けて反転する。
+	return [targetId, ...walkParentChain(targetId, objects)].reverse();
 }
