@@ -1,7 +1,4 @@
-import {
-	CanvasValidationError,
-	parseAndValidateCanvasDoc,
-} from "@workspace/svg-canvas-2";
+import { parseCanvasText } from "@workspace/svg-canvas-2";
 import * as vscode from "vscode";
 
 /**
@@ -55,53 +52,54 @@ export class DiagnosticProvider {
 		// 前回のエラー表示をクリアしてから新しい診断を行う
 		this.collection.delete(document.uri);
 
-		// ---- Step 1: JSON 構文チェック (#6 修正) ----
-		//
-		// 以前は構文エラーを無音でスキップしていた（早期 return するだけ）ため、
-		// ユーザーがなぜ Problems パネルに何も表示されないのか分からない問題があった。
-		// 構文エラーの場合もエラーを表示するように修正した。
-		let json: unknown;
-		try {
-			json = JSON.parse(text);
-		} catch (e) {
-			const message = e instanceof Error ? e.message : "JSON parse error";
-			const diagnostic = new vscode.Diagnostic(
-				new vscode.Range(0, 0, 0, 0),
-				`JSON 構文エラー: ${message}`,
-				vscode.DiagnosticSeverity.Error,
-			);
-			this.collection.set(document.uri, [diagnostic]);
-			return;
-		}
+		// JSON 構文チェック → CanvasDoc セマンティクスチェックを共通ヘルパーへ委譲する。
+		// parseCanvasText() は例外を投げず、判別可能なユニオンで結果を返すため、
+		// すべてのケース（構文エラー・セマンティクスエラー・予期しないエラー）を
+		// 漏れなく Problems パネルへ反映できる。
+		const result = parseCanvasText(text);
+		switch (result.kind) {
+			case "ok":
+				return;
 
-		// ---- Step 2: CanvasDoc セマンティクスチェック ----
-		//
-		// parseAndValidateCanvasDoc() は CanvasValidationError をスローすることで
-		// バリデーション結果を返す設計になっている。
-		// error.specifics には個々のエラー詳細（対象の ID・パス・メッセージ）が入る。
-		const diagnostics: vscode.Diagnostic[] = [];
-		try {
-			parseAndValidateCanvasDoc(json);
-		} catch (error) {
-			if (error instanceof CanvasValidationError) {
-				for (const diag of error.specifics) {
+			case "syntax-error": {
+				// 以前は構文エラーを無音でスキップしていた（早期 return するだけ）ため、
+				// ユーザーがなぜ Problems パネルに何も表示されないのか分からない問題があった。
+				const diagnostic = new vscode.Diagnostic(
+					new vscode.Range(0, 0, 0, 0),
+					`JSON 構文エラー: ${result.message}`,
+					vscode.DiagnosticSeverity.Error,
+				);
+				this.collection.set(document.uri, [diagnostic]);
+				return;
+			}
+
+			case "semantic-error": {
+				// diag.path / diag.id を使って対象箇所をハイライトする。
+				const diagnostics = result.diagnostics.map((diag) => {
 					const range = diag.id
 						? this.findIdRange(text, document, diag.id)
 						: new vscode.Range(0, 0, 0, 10);
 
-					diagnostics.push(
-						new vscode.Diagnostic(
-							range,
-							`[Jiscribe] ${diag.message} (${diag.path})`,
-							vscode.DiagnosticSeverity.Error,
-						),
+					return new vscode.Diagnostic(
+						range,
+						`[Jiscribe] ${diag.message} (${diag.path})`,
+						vscode.DiagnosticSeverity.Error,
 					);
-				}
+				});
+				this.collection.set(document.uri, diagnostics);
+				return;
 			}
-		}
 
-		if (diagnostics.length > 0) {
-			this.collection.set(document.uri, diagnostics);
+			case "internal-error": {
+				// 想定外のエラーを握りつぶさず、ファイル先頭に診断として表示する。
+				const diagnostic = new vscode.Diagnostic(
+					new vscode.Range(0, 0, 0, 0),
+					`[Jiscribe] 検証中に予期しないエラーが発生しました: ${result.message}`,
+					vscode.DiagnosticSeverity.Error,
+				);
+				this.collection.set(document.uri, [diagnostic]);
+				return;
+			}
 		}
 	}
 

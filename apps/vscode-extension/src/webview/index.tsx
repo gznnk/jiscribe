@@ -1,14 +1,12 @@
 import {
 	Canvas,
-	CanvasErrorScreen,
-	CanvasValidationError,
-	parseAndValidateCanvasDoc,
+	parseCanvasText,
 	type CanvasDoc,
-	type SemanticDiagnostic,
 } from "@workspace/svg-canvas-2";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 
+import { CanvasErrorNotice } from "./CanvasErrorNotice";
 import type {
 	ExtensionToWebviewMessage,
 	WebviewToExtensionMessage,
@@ -56,15 +54,17 @@ function debounce<Args extends unknown[]>(
  *
  * 状態の種類:
  *   - canvasDoc: バリデーション済みの CanvasDoc（正常時に Canvas を表示）
- *   - diagnostics: セマンティクスエラー一覧（Canvas UI の代わりにエラー画面を表示）
+ *   - hasSemanticError: 検証エラーの有無（Canvas UI の代わりにエラー通知を表示）
  *   - parseError: JSON 構文エラーメッセージ（JSON が壊れている場合に表示）
  *
+ * エラー詳細は Extension 側（DiagnosticProvider）が Problems パネルへ出すため、
+ * Webview ではエラーの有無だけを保持する。
  * これら3つは排他的で、同時に複数が表示されることはない。
  */
 function App() {
 	const [canvasDoc, setCanvasDoc] = useState<CanvasDoc | null>(null);
 	const [syncNonce, setSyncNonce] = useState<string | undefined>(undefined);
-	const [diagnostics, setDiagnostics] = useState<SemanticDiagnostic[]>([]);
+	const [hasSemanticError, setHasSemanticError] = useState(false);
 	const [parseError, setParseError] = useState<string>("");
 
 	// debounce した関数は、コンポーネントの再レンダリングをまたいで
@@ -105,39 +105,33 @@ function App() {
 
 			switch (message.type) {
 				case "update": {
-					// Step 1: JSON 構文チェック
-					let parsed: unknown;
-					try {
-						parsed = JSON.parse(message.data);
-					} catch (err) {
-						const msg = err instanceof Error ? err.message : "JSON parse error";
-						setParseError(msg);
-						setDiagnostics([]);
-						setCanvasDoc(null);
-						return;
-					}
+					// JSON 構文チェック → CanvasDoc セマンティクスチェックを共通ヘルパーへ委譲する。
+					// parseCanvasText() は例外を投げず判別可能なユニオンを返すため、
+					// 拡張側（DiagnosticProvider）と同一ロジックで全ケースを扱える。
+					const result = parseCanvasText(message.data);
+					switch (result.kind) {
+						case "ok":
+							setSyncNonce(message.saveNonce);
+							setCanvasDoc(result.doc);
+							setHasSemanticError(false);
+							setParseError("");
+							break;
 
-					// Step 2: CanvasDoc セマンティクスチェック
-					// parseAndValidateCanvasDoc() はエラー時に CanvasValidationError をスローする。
-					try {
-						const validated = parseAndValidateCanvasDoc(parsed);
-						setSyncNonce(message.saveNonce);
-						setCanvasDoc(validated);
-						setDiagnostics([]);
-						setParseError("");
-					} catch (err) {
-						if (err instanceof CanvasValidationError) {
-							// セマンティクスエラー（重複 ID 等）はエラー画面で表示
-							setDiagnostics(err.specifics);
+						case "semantic-error":
+							// セマンティクスエラー（重複 ID 等）はエラー通知を表示。
+							// 詳細は Problems パネル側に出るためここでは有無のみ持つ。
+							setHasSemanticError(true);
 							setCanvasDoc(null);
 							setParseError("");
-						} else {
-							// 予期しないエラー
-							setParseError(
-								err instanceof Error ? err.message : "Unknown error",
-							);
+							break;
+
+						case "syntax-error":
+						case "internal-error":
+							// JSON 構文エラー・予期しないエラーはメッセージで表示
+							setParseError(result.message);
+							setHasSemanticError(false);
 							setCanvasDoc(null);
-						}
+							break;
 					}
 					break;
 				}
@@ -184,12 +178,8 @@ function App() {
 		);
 	}
 
-	if (diagnostics.length > 0) {
-		return (
-			<div style={{ width: "100%", height: "100vh" }}>
-				<CanvasErrorScreen diagnostics={diagnostics} />
-			</div>
-		);
+	if (hasSemanticError) {
+		return <CanvasErrorNotice />;
 	}
 
 	if (canvasDoc) {

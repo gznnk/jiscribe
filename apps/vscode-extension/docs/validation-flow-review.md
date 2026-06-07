@@ -24,7 +24,40 @@ VSCode 拡張側で `.jis.json` / `.jiscribe.json` を `parseAndValidateCanvasDo
 
 ---
 
+## 対応状況サマリー（2026-06-07 更新）
+
+| 項目 | 状態 |
+|---|---|
+| 1. 予期しないエラーの握りつぶし／非対称 | ✅ 対応済み |
+| 2. 例外による制御フロー + 2箇所での重複 | ✅ 対応済み |
+| 3. `findIdRange` の正規表現による位置復元 | ⏸ 未対応（将来課題として保留） |
+| 4. 命名・細かい点 | ✅ 対応済み（`parseAndValidateCanvasDoc` ごと廃止） |
+
+項目1・2・4 の対応に伴い、検証フローを以下のとおり再構成した。
+
+- **`parseCanvasText`（判別ユニオン版）を単一エントリに**。
+  `JSON.parse` → 構造検証 → 意味検証を 1 関数に集約し、例外ではなく
+  `CanvasParseResult`（`ok` / `syntax-error` / `semantic-error` / `internal-error`）を返す。
+  拡張側・Webview 側はこれを `switch (result.kind)` で扱うだけになり、2 段ロジックの重複と
+  非対称（項目1）が解消された。
+- **`CanvasValidationError` / `parseAndValidateCanvasDoc`（throw 版）を廃止**。実消費者が
+  無くなったため `parseAndValidate.ts` ごと削除。命名のズレ（項目4）も消滅した。
+- **`validateCanvasDocSemantics`（→ 一時 `validateCanvasDoc`）も廃止**。構造→意味を順に
+  呼ぶだけの薄いラッパーだったため、`parseCanvasText` 内へインライン化。検証の構成要素は
+  `validateStructure` / `validateSemantics` の 2 つだけになった。
+- **エラー表示 UI を svg-canvas-2 から拡張側へ移設**。未使用の `CanvasErrorOverlay` を削除し、
+  詳細一覧を持つ `CanvasErrorScreen` も廃止。詳細は Problems パネル（`DiagnosticProvider`）が
+  担うため、Webview 側は「エラーがあること」だけを示す最小コンポーネント
+  `CanvasErrorNotice`（英語表記）に置き換えた。
+
+以下、各項目の詳細はレビュー当時の記録として残す。
+
+---
+
 ## 1. 🔴 DiagnosticProvider が予期しないエラーを握りつぶす（優先度: 高）
+
+> ✅ **対応済み (2026-06-07)**: `parseCanvasText` へ寄せ、`internal-error` ケースを
+> 拡張側でも Problems パネルへ表示するようにした。Webview 側との非対称も解消。
 
 **ファイル**: `src/diagnostics/DiagnosticProvider.ts:83-101`
 
@@ -53,6 +86,9 @@ Problems パネルへ表示する。
 ---
 
 ## 2. 🟡 例外による制御フロー + 2箇所での重複（優先度: 中）
+
+> ✅ **対応済み (2026-06-07)**: 共有ヘルパー `parseCanvasText` を新設し、両 caller を
+> `switch (result.kind)` に統一。重複・例外制御・非対称をまとめて解消した。
 
 `parseAndValidateCanvasDoc` は内部で `validateCanvasDocSemantics`（エラー配列を返す）を
 呼び、エラーがあれば `CanvasValidationError` を throw する。
@@ -84,6 +120,8 @@ throw 版の `parseAndValidateCanvasDoc` は、戻り値が型付き `CanvasDoc`
 
 ## 3. 🟡 `findIdRange` の正規表現による位置復元（優先度: 中〜低）
 
+> ⏸ **未対応 (2026-06-07)**: 将来課題として保留。現状は「最初の1件を指す妥協」を許容する。
+
 **ファイル**: `src/diagnostics/DiagnosticProvider.ts:126-149`
 
 バリデーション層が持つのは `path`（例: `root[0].children[1].id`）と `id` だけで
@@ -102,16 +140,19 @@ throw 版の `parseAndValidateCanvasDoc` は、戻り値が型付き `CanvasDoc`
 
 ## 4. 🟢 細かい点
 
-- `parseAndValidateCanvasDoc` は名前に "parse" とあるが、実体は `data as CanvasDoc` の
-  検証＋キャストであり変換はしていない。`validateAndAssertCanvasDoc` 等のほうが実態に合う
-  （命名規則の「役割を明示する」観点）。
+> ✅ **対応済み (2026-06-07)**: 命名のズレは `parseAndValidateCanvasDoc` の廃止により消滅。
+
+- ~~`parseAndValidateCanvasDoc` は名前に "parse" とあるが、実体は `data as CanvasDoc` の
+  検証＋キャストであり変換はしていない。~~ → 関数自体を廃止し、入口は `parseCanvasText` に統一。
 - 2段階分離・`collection` の事前 `delete`・対象拡張子フィルタ
   （`.jis.json` / `.jiscribe.json`）は適切。
 
 ---
 
-## 対応の優先順位
+## 対応の優先順位（当時の計画）
 
-1. **項目1**（予期しないエラーの握りつぶし／非対称）の修正 — 最優先。
-2. **項目2**（2段ロジックの共有ヘルパー化）— 項目1も同時に解消できる。
-3. 項目3・4 は余裕があれば。
+1. **項目1**（予期しないエラーの握りつぶし／非対称）の修正 — 最優先。 → ✅ 完了
+2. **項目2**（2段ロジックの共有ヘルパー化）— 項目1も同時に解消できる。 → ✅ 完了
+3. 項目3・4 は余裕があれば。 → 項目4 ✅ 完了 / 項目3 ⏸ 保留
+
+残課題は項目3（`jsonc-parser` による正確な位置解決）のみ。
