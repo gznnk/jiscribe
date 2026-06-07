@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach, vi } from "vitest";
 
 import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../../schemas/objects/base/ObjectDoc";
@@ -251,6 +251,52 @@ describe("CanvasMapper", () => {
 
 			// 循環を検出して打ち切るため、スタックオーバーフローにならず完了する
 			expect(() => canvasToDoc(state)).not.toThrow();
+		});
+
+		it("should skip (not throw) IDs that are missing from state.objects", () => {
+			// childIds に存在しない "ghost" を含むグループと、rootIds に存在しない
+			// "missing-root" を含む不整合な flat state。
+			const group = {
+				id: "group-1",
+				type: "group",
+				childIds: ["rect-1", "ghost"],
+				rotation: 0,
+				scaleX: 1,
+				scaleY: 1,
+			} as unknown as GroupState;
+			const rect = {
+				id: "rect-1",
+				type: "rect",
+				rotation: 0,
+				scaleX: 1,
+				scaleY: 1,
+			} as unknown as ObjectState;
+
+			const state: CanvasState = {
+				objects: { "group-1": group, "rect-1": rect },
+				rootIds: ["group-1", "missing-root"],
+				connectorIds: [],
+				viewport: { minX: 0, minY: 0, width: 1000, height: 800, zoom: 1 },
+			};
+
+			const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+			let doc!: CanvasDoc;
+			expect(() => {
+				doc = canvasToDoc(state);
+			}).not.toThrow();
+
+			// 未発見の rootId / childId は欠落として除外され、実在分だけが残る
+			expect(doc.root).toHaveLength(1);
+			const g1 = doc.root[0] as GroupDoc;
+			expect(g1.id).toBe("group-1");
+			expect(g1.children).toHaveLength(1);
+			expect(g1.children[0].id).toBe("rect-1");
+
+			// 欠落は warn で通知される（missing-root と ghost の 2 件）
+			expect(warnSpy).toHaveBeenCalledTimes(2);
+
+			warnSpy.mockRestore();
 		});
 	});
 });

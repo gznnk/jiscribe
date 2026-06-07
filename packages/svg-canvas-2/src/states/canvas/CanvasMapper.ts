@@ -94,13 +94,19 @@ export const canvasToDoc = (state: CanvasState): CanvasDoc => {
 	// Helper to reconstruct an object tree from an ID.
 	// `ancestorIds` tracks the IDs on the current recursion path so a circular
 	// `childIds` graph in the flat state cannot cause an infinite recursion.
+	// 未発見 ID は throw せず null を返してスキップする。flat state の index
+	// （rootIds / connectorIds / childIds）が state.objects と食い違っても、
+	// 描画・保存経路を巻き込んでクラッシュさせず、欠落のみ warn で通知する。
 	const reconstructObject = (
 		id: string,
 		ancestorIds: Set<string> = new Set(),
-	): ObjectDoc => {
+	): ObjectDoc | null => {
 		const objState = state.objects[id];
 		if (!objState) {
-			throw new Error(`Object with ID ${id} not found in state.`);
+			console.warn(
+				`[canvasToDoc] Object with ID "${id}" not found in state; skipping`,
+			);
+			return null;
 		}
 
 		// 1. Convert the state back to doc using the registry
@@ -146,7 +152,8 @@ export const canvasToDoc = (state: CanvasState): CanvasDoc => {
 					);
 					return [];
 				}
-				return [reconstructObject(childId, childAncestorIds)];
+				const childDoc = reconstructObject(childId, childAncestorIds);
+				return childDoc ? [childDoc] : [];
 			});
 		}
 
@@ -155,9 +162,13 @@ export const canvasToDoc = (state: CanvasState): CanvasDoc => {
 
 	return {
 		version: 1,
-		root: state.rootIds.map((id) => reconstructObject(id)),
-		connectors: state.connectorIds.map(
-			(id) => reconstructObject(id) as ConnectorDoc,
-		),
+		root: state.rootIds.flatMap((id) => {
+			const objDoc = reconstructObject(id);
+			return objDoc ? [objDoc] : [];
+		}),
+		connectors: state.connectorIds.flatMap((id) => {
+			const objDoc = reconstructObject(id);
+			return objDoc ? [objDoc as ConnectorDoc] : [];
+		}),
 	};
 };
