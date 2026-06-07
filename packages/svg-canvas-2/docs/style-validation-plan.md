@@ -72,12 +72,19 @@ Step 1 が生成する共有 style バリデータを Step 2 が再利用する�
 **完了条件**: 不正な CSS 値を持つ CanvasDoc が診断で弾かれ、かつ描画側でも
 危険な値が無害化されること。これをもって旧レポートのセキュリティ指摘をクローズ。
 
-### Step 2: state バリデータレジストリ（clipboard 検証の厳密化）
+### Step 2: state バリデータレジストリ（clipboard 検証の厳密化）✅ 対応済み
 
 スキーマ側 `ObjectDocValidatorRegistry` の構造を state 側へミラーする。
 
+**返り値の設計判断**: スキーマ側は Problems パネル向けに `SemanticDiagnostic[]` を返すが、
+state 側の唯一の消費者は `isClipboardData`（boolean を返す型ガード）であり、診断の path を
+読む UI が存在しない。state 層の既存ガード（`isGroupState` / `isTransformState` /
+`isTextStyleState`）も boolean 方式のため、**state バリデータは boolean を返す型ガード**として
+実装した（レジストリ構造はミラーしつつ、返り値だけ state 層の流儀に合わせた）。
+
 1. **`states/registry/ObjectStateValidatorRegistry.ts`** 新規
-   （`ObjectDocValidatorRegistry` のほぼ複製）。
+   （`ObjectDocValidatorRegistry` の構造をミラー。`validate(type, value): boolean`、
+   未登録の型は false で拒否）。
 2. **`states/objects/utils/validateStateUtils.ts`** 新規
    - state 固有の幾何・変換フィールド（`cx` / `cy` / `scaleX` / `scaleY` / `width` /
      `height` / `childIds` 等）を検証。

@@ -3,6 +3,7 @@ import type { Point } from "@workspace/geometry";
 import { isPoint } from "@workspace/geometry";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import { objectStateValidatorRegistry } from "../../../states/registry/ObjectStateValidatorRegistry";
 
 export type ClipboardData = {
 	__type: "jiscribe-canvas-clipboard";
@@ -47,22 +48,12 @@ export const isClipboardData = (value: unknown): value is ClipboardData => {
 			return false;
 		}
 		const o = obj as Record<string, unknown>;
-		if (!isString(o.id) || (o.id as string).length === 0) {
-			return false;
-		}
 		if (!isString(o.type)) {
 			return false;
 		}
-		if (
-			o.type === "group" &&
-			!(isArray(o.childIds) && (o.childIds as unknown[]).every(isString))
-		) {
-			return false;
-		}
-		if (
-			o.type === "connector" &&
-			(!isObject(o.source) || !isObject(o.target))
-		) {
+		// 型別の厳格検証はレジストリへ委譲する（id / 各種フィールド・CSS 安全性を含む）。
+		// 未登録の型は拒否される。レジストリは initializeObjectRegistry() で初期化される。
+		if (!objectStateValidatorRegistry.validate(o.type, o)) {
 			return false;
 		}
 	}

@@ -31,33 +31,42 @@ import {
 	stickyToState,
 } from "../../states/objects/annotations/sticky/StickyMapper";
 import type { StickyState } from "../../states/objects/annotations/sticky/StickyState";
+import { isValidStickyState } from "../../states/objects/annotations/sticky/validateStickyState";
 import type { ObjectMapperType } from "../../states/objects/base/MapperTypes";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import {
 	connectorToDoc,
 	connectorToState,
 } from "../../states/objects/connections/connector/ConnectorMapper";
+import { isValidConnectorState } from "../../states/objects/connections/connector/validateConnectorState";
 import {
 	ellipseToDoc,
 	ellipseToState,
 } from "../../states/objects/primitives/ellipse/EllipseMapper";
+import { isValidEllipseState } from "../../states/objects/primitives/ellipse/validateEllipseState";
 import {
 	groupToDoc,
 	groupToState,
 } from "../../states/objects/primitives/group/GroupMapper";
+import { isValidGroupState } from "../../states/objects/primitives/group/validateGroupState";
 import {
 	polygonToDoc,
 	polygonToState,
 } from "../../states/objects/primitives/polygon/PolygonMapper";
+import { isValidPolygonState } from "../../states/objects/primitives/polygon/validatePolygonState";
 import {
 	polylineToDoc,
 	polylineToState,
 } from "../../states/objects/primitives/polyline/PolylineMapper";
+import { isValidPolylineState } from "../../states/objects/primitives/polyline/validatePolylineState";
 import {
 	rectToDoc,
 	rectToState,
 } from "../../states/objects/primitives/rect/RectMapper";
+import { isValidRectState } from "../../states/objects/primitives/rect/validateRectState";
 import { objectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
+import type { ObjectStateValidateFn } from "../../states/registry/ObjectStateValidatorRegistry";
+import { objectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
 import {
 	moveByDelta as stickyMoveByDelta,
 	rotateByGroup as stickyRotateByGroup,
@@ -107,6 +116,7 @@ export const initializeObjectRegistry = (): void => {
 	objectComponentRegistry.clear();
 	objectBehaviorRegistry.clear();
 	objectDocValidatorRegistry.clear();
+	objectStateValidatorRegistry.clear();
 	objectMenuRegistry.clear();
 
 	registerObject(
@@ -138,6 +148,7 @@ export const initializeObjectRegistry = (): void => {
 			},
 		],
 		validateRectDoc,
+		isValidRectState,
 	);
 
 	registerObject(
@@ -169,6 +180,7 @@ export const initializeObjectRegistry = (): void => {
 			},
 		],
 		validateEllipseDoc,
+		isValidEllipseState,
 	);
 
 	registerObject(
@@ -188,6 +200,7 @@ export const initializeObjectRegistry = (): void => {
 			},
 		],
 		validateGroupDoc,
+		isValidGroupState,
 	);
 
 	registerObject(
@@ -211,6 +224,7 @@ export const initializeObjectRegistry = (): void => {
 			},
 		],
 		validatePolygonDoc,
+		isValidPolygonState,
 	);
 
 	registerObject(
@@ -234,6 +248,7 @@ export const initializeObjectRegistry = (): void => {
 			},
 		],
 		validatePolylineDoc,
+		isValidPolylineState,
 	);
 
 	registerObject(
@@ -257,6 +272,7 @@ export const initializeObjectRegistry = (): void => {
 			},
 		],
 		validateConnectorDoc,
+		isValidConnectorState,
 	);
 
 	registerObject(
@@ -286,6 +302,7 @@ export const initializeObjectRegistry = (): void => {
 			},
 		],
 		validateStickyDoc,
+		isValidStickyState,
 	);
 };
 
@@ -301,10 +318,12 @@ export const registerObject = <
 	behavior: ObjectBehaviorEntry<TState>,
 	menuFactory: MenuSectionFactory<TState>,
 	validate: ObjectDocValidateFn,
+	validateState: ObjectStateValidateFn,
 ): void => {
 	objectMapperRegistry.register(type, mapper, features);
 	objectComponentRegistry.register(type, component);
 	objectBehaviorRegistry.register(type, behavior);
 	objectDocValidatorRegistry.register(type, validate, features);
+	objectStateValidatorRegistry.register(type, validateState);
 	objectMenuRegistry.register(type, menuFactory);
 };
