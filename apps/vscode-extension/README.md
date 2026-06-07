@@ -1,7 +1,6 @@
 # Jiscribe (Beta)
 
-<!-- TODO: Add hero image (fullscreen screenshot of the editor) -->
-<!-- ![Jiscribe Canvas Editor](./images/hero.png) -->
+![Jiscribe Canvas Editor](./images/hero-showcase.png)
 
 **A VS Code-native canvas editor for visual communication between AI and humans.**
 
@@ -18,7 +17,7 @@ Complete your visual documentation locally in VS Code—no need to switch to ext
 
 Instead of image formats (PNG) or complex XML (SVG), Jiscribe uses a semantically organized, schema-backed JSON format. This makes it trivial for Large Language Models (LLMs) to read shapes to generate code, or to output a diagram (JSON) based on a text prompt.
 
-_(Our public JSON schema that powers this will be available at: `https://schema.jiscribe.dev/v1/jiscribe.schema.json`)_
+_(Our public JSON schema that powers this is available at: `https://schema.jiscribe.dev/v1/jiscribe.schema.json`)_
 
 ### 🤝 2. Visual Communication with AI
 
@@ -33,7 +32,7 @@ Because the files are neatly formatted JSON, you can easily review diffs in Git.
 
 ### ⚡ 4. Everything in VS Code
 
-<!-- TODO: Add screenshot here — landing page design created with Jiscribe, showing a complex layout open in the canvas editor inside VS Code -->
+![Landing page design built with Jiscribe](./images/landing-page-design.png)
 
 Say goodbye to context-switching between external drawing apps and your editor. Draw system diagrams and flowcharts in a tab right next to your source code.
 
@@ -42,7 +41,6 @@ Say goodbye to context-switching between external drawing apps and your editor. 
 ## 🛠 Key Features
 
 - **Two-way Sync Between Visual and Text Editors**
-  <!-- TODO: Add GIF demo of two-way sync (canvas edit ↔ JSON update) -->
   - Visual modifications on the canvas instantly update the underlying JSON.
   - Editing the JSON directly in the text editor (e.g., auto-completion by Copilot) renders to the canvas immediately.
 - **Intuitive Canvas Operations**
@@ -68,19 +66,21 @@ Say goodbye to context-switching between external drawing apps and your editor. 
 ## File Format & Schema
 
 `.jis.json` (short for `.jiscribe.json`) is essentially a JSON representation of an SVG canvas.  
-The JSON Schema URL is planned to be published at:  
-`https://schema.jiscribe.dev/v1/jiscribe.schema.json` _(Placeholder)_
+The JSON Schema is published at:  
+`https://schema.jiscribe.dev/v1/jiscribe.schema.json`
 
 ### Top-level Structure
 
 ```json
 {
 	"$schema": "https://schema.jiscribe.dev/v1/jiscribe.schema.json",
+	"version": 1,
 	"root": [],
 	"connectors": []
 }
 ```
 
+- **`version`**: The schema version of the file format (currently `1`).
 - **`root`**: Contains all the canvas object documents (can be nested within groups).
 - **`connectors`**: Defines the connection lines between shapes.
 
@@ -90,4 +90,7 @@ _(More detailed references will be available on our doc site soon!)_
 
 ## License
 
-UNLICENSED
+Copyright © 2026 gznnk. All rights reserved.
+
+Jiscribe is proprietary software; its source code is not publicly available.
+Use of this extension is governed by [LICENSE.txt](./LICENSE.txt).

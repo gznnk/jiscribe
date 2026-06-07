@@ -87,7 +87,7 @@
 		"type": "git",
 		"url": "https://github.com/gznnk/jiscribe.git"
 	},
-	"license": "UNLICENSED",
+	"license": "SEE LICENSE IN LICENSE.txt",
 	"devDependencies": {
 		"@types/node": "^22.10.5",
 		"@types/react": "^19.2.7",
