@@ -16,5 +16,6 @@ export * from "./isPositiveNumber";
 export * from "./isNonNegativeNumber";
 export * from "./isNumberInRange";
 export * from "./isCssColor";
+export * from "./isCssSafeValue";
 export * from "./isUrl";
 export * from "./isEnum";

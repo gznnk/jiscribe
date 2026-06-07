@@ -1,4 +1,8 @@
-import { isNumber, isString } from "@workspace/basic-validators";
+import {
+	isCssSafeValue,
+	isNumber,
+	isString,
+} from "@workspace/basic-validators";
 
 import type { SemanticDiagnostic } from "../../canvas/validators/types";
 import { isArrowType } from "../types/ArrowType";
@@ -161,8 +165,11 @@ export function validateStrokeStyleFields(
 	path: string,
 ): SemanticDiagnostic[] {
 	const errors: SemanticDiagnostic[] = [];
-	if ("stroke" in o && !isString(o.stroke)) {
-		errors.push({ path: `${path}.stroke`, message: "must be a string" });
+	if ("stroke" in o && !isCssSafeValue(o.stroke)) {
+		errors.push({
+			path: `${path}.stroke`,
+			message: "must be a safe CSS color value",
+		});
 	}
 	if ("strokeWidth" in o && !isNumber(o.strokeWidth)) {
 		errors.push({ path: `${path}.strokeWidth`, message: "must be a number" });
@@ -181,8 +188,11 @@ export function validateFillStyleFields(
 	path: string,
 ): SemanticDiagnostic[] {
 	const errors: SemanticDiagnostic[] = [];
-	if ("fill" in o && !isString(o.fill)) {
-		errors.push({ path: `${path}.fill`, message: "must be a string" });
+	if ("fill" in o && !isCssSafeValue(o.fill)) {
+		errors.push({
+			path: `${path}.fill`,
+			message: "must be a safe CSS color value",
+		});
 	}
 	return errors;
 }
@@ -213,17 +223,26 @@ export function validateTextStyleFields(
 			message: "must be one of: top, middle, bottom",
 		});
 	}
-	if ("fontColor" in o && !isString(o.fontColor)) {
-		errors.push({ path: `${path}.fontColor`, message: "must be a string" });
+	if ("fontColor" in o && !isCssSafeValue(o.fontColor)) {
+		errors.push({
+			path: `${path}.fontColor`,
+			message: "must be a safe CSS color value",
+		});
 	}
 	if ("fontSize" in o && !isNumber(o.fontSize)) {
 		errors.push({ path: `${path}.fontSize`, message: "must be a number" });
 	}
-	if ("fontFamily" in o && !isString(o.fontFamily)) {
-		errors.push({ path: `${path}.fontFamily`, message: "must be a string" });
+	if ("fontFamily" in o && !isCssSafeValue(o.fontFamily)) {
+		errors.push({
+			path: `${path}.fontFamily`,
+			message: "must be a safe CSS font-family value",
+		});
 	}
-	if ("fontWeight" in o && !isString(o.fontWeight)) {
-		errors.push({ path: `${path}.fontWeight`, message: "must be a string" });
+	if ("fontWeight" in o && !isCssSafeValue(o.fontWeight)) {
+		errors.push({
+			path: `${path}.fontWeight`,
+			message: "must be a safe CSS font-weight value",
+		});
 	}
 	return errors;
 }

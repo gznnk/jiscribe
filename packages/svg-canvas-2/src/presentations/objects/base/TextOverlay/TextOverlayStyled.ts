@@ -2,6 +2,7 @@ import styled from "@emotion/styled";
 
 import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
 import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
+import { cssSafeValue } from "../../utils/cssSafeValue";
 
 const VerticalAlignMap: Record<
 	VerticalAlign,
@@ -43,10 +44,10 @@ type TextProps = {
 export const Text = styled.div<TextProps>`
 	width: 100%;
 	text-align: ${(props) => TextAlignMap[props.textAlign]};
-	color: ${(props) => props.color};
+	color: ${(props) => cssSafeValue(props.color)};
 	font-size: ${(props) => props.fontSize}px;
-	font-family: ${(props) => props.fontFamily};
-	font-weight: ${(props) => props.fontWeight};
+	font-family: ${(props) => cssSafeValue(props.fontFamily)};
+	font-weight: ${(props) => cssSafeValue(props.fontWeight)};
 	border: none;
 	outline: none;
 	background: transparent;

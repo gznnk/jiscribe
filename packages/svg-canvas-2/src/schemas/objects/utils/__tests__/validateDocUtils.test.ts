@@ -259,6 +259,14 @@ describe("validateStrokeStyleFields", () => {
 		expect(errors[0].path).toBe("root.stroke");
 	});
 
+	it("stroke が CSS インジェクションを含む場合はエラー", () => {
+		const errors = validateStrokeStyleFields(
+			{ stroke: "red; } body { background: url(http://evil) " },
+			"root",
+		);
+		expect(errors[0].path).toBe("root.stroke");
+	});
+
 	it("strokeWidth が数値でない場合はエラー", () => {
 		const errors = validateStrokeStyleFields({ strokeWidth: "2px" }, "root");
 		expect(errors[0].path).toBe("root.strokeWidth");
@@ -297,6 +305,14 @@ describe("validateFillStyleFields", () => {
 
 	it("fill が string でない場合はエラー", () => {
 		const errors = validateFillStyleFields({ fill: 0xff0000 }, "root");
+		expect(errors[0].path).toBe("root.fill");
+	});
+
+	it("fill に CSS ブレイクアウトを含む場合はエラー", () => {
+		const errors = validateFillStyleFields(
+			{ fill: "url(http://evil/x)" },
+			"root",
+		);
 		expect(errors[0].path).toBe("root.fill");
 	});
 });
@@ -368,6 +384,30 @@ describe("validateTextStyleFields", () => {
 	it("fontColor が string でない場合はエラー", () => {
 		const errors = validateTextStyleFields({ fontColor: 0 }, "root");
 		expect(errors[0].path).toBe("root.fontColor");
+	});
+
+	it("fontColor に CSS ブレイクアウトを含む場合はエラー", () => {
+		const errors = validateTextStyleFields(
+			{ fontColor: "#000; } body {" },
+			"root",
+		);
+		expect(errors[0].path).toBe("root.fontColor");
+	});
+
+	it("fontFamily に CSS ブレイクアウトを含む場合はエラー", () => {
+		const errors = validateTextStyleFields(
+			{ fontFamily: "Arial; } body { display: none" },
+			"root",
+		);
+		expect(errors[0].path).toBe("root.fontFamily");
+	});
+
+	it("fontWeight に CSS ブレイクアウトを含む場合はエラー", () => {
+		const errors = validateTextStyleFields(
+			{ fontWeight: "bold } html {" },
+			"root",
+		);
+		expect(errors[0].path).toBe("root.fontWeight");
 	});
 });
 
