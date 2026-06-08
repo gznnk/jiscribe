@@ -4,6 +4,8 @@
 
 **A VS Code-native canvas editor for visual communication between AI and humans.**
 
+🌐 **[beta.jiscribe.dev](https://beta.jiscribe.dev)**
+
 Do you find it limiting to explain architectures and UI layouts to AI using only text?  
 Jiscribe is an extension that saves intuitively drawn diagrams as simple, AI-friendly JSON (`.jis.json`), and lets you view and edit them via an integrated SVG canvas editor.
 
