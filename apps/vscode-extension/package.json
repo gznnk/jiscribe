@@ -3,13 +3,30 @@
 	"displayName": "Jiscribe Beta",
 	"description": "An AI-friendly, Git-manageable JSON canvas editor. Draw diagrams directly in VS Code and collaborate visually with AI.",
 	"publisher": "gznnk",
+	"author": {
+		"name": "gznnk"
+	},
 	"version": "0.0.1",
 	"private": true,
 	"engines": {
 		"vscode": "^1.85.0"
 	},
 	"categories": [
+		"Visualization",
+		"AI",
 		"Other"
+	],
+	"keywords": [
+		"diagram",
+		"canvas",
+		"svg",
+		"json",
+		"ai",
+		"visualization",
+		"flowchart",
+		"architecture",
+		"drawing",
+		"jis.json"
 	],
 	"activationEvents": [],
 	"main": "./dist/extension.js",
@@ -83,10 +100,6 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {},
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/gznnk/jiscribe.git"
-	},
 	"license": "SEE LICENSE IN LICENSE.txt",
 	"devDependencies": {
 		"@types/node": "^22.10.5",
