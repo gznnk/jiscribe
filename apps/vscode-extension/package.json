@@ -7,7 +7,7 @@
 		"name": "gznnk"
 	},
 	"homepage": "https://beta.jiscribe.dev",
-	"version": "0.0.1",
+	"version": "0.1.0",
 	"private": true,
 	"engines": {
 		"vscode": "^1.85.0"
