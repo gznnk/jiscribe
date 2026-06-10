@@ -18,6 +18,7 @@ export const DeselectAllCommand: Command = {
 		return (
 			state.selectedIds.length > 0 ||
 			state.selectedConnectorId !== null ||
+			state.selectedVertex !== null ||
 			state.areaSelection !== null ||
 			state.shapeDrawing !== null
 		);
@@ -28,6 +29,9 @@ export const DeselectAllCommand: Command = {
 			...state,
 			selectedIds: [],
 			selectedConnectorId: null,
+			// 解除しないと不可視の頂点選択が残り、Delete キーで意図しない頂点削除が起きる
+			selectedVertex: null,
+			multiSelectGroup: null,
 			areaSelection: null,
 			objectMenuOpenId: null,
 			edgeScrollEnabled: false,

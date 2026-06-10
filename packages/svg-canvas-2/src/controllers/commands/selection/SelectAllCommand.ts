@@ -24,6 +24,11 @@ export const SelectAllCommand: Command = {
 				state.objects,
 				state.multiSelectGroup,
 			),
+			// selectedIds と selectedConnectorId / selectedVertex は排他。
+			// 解除しないと SwapArrows や handlePropertyUpdate の分岐が崩れる
+			selectedConnectorId: null,
+			selectedVertex: null,
+			objectMenuOpenId: null,
 		};
 	},
 };
