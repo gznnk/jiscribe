@@ -7,5 +7,6 @@ node_modules/**
 tsconfig.json
 # 内部ドキュメント・開発用テストファイル
 canvas-doc-reference.md
+icon-source.png
 *.jis.json
 *.vsix
