@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, type RefObject, useRef } from "react";
 
 import {
 	Menu,
@@ -7,6 +7,7 @@ import {
 	MenuItemShortcut,
 	MenuSeparator,
 } from "./ContextMenuStyled";
+import { useContextMenuPosition } from "./useContextMenuPosition";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { commandRegistry } from "../../../commands/CommandRegistry";
 import type { PlatformKeyBindings } from "../../../commands/CommandTypes";
@@ -30,16 +31,24 @@ type ContextMenuProps = {
 	position: { clientX: number; clientY: number } | null;
 	canvasState: CanvasControllerState;
 	callbacks: Record<string, () => void>;
+	viewportRef: RefObject<HTMLDivElement | null>;
 };
 
-const ContextMenuComponent: React.FC<ContextMenuProps> = ({
+type ContextMenuBodyProps = {
+	position: { clientX: number; clientY: number };
+	canvasState: CanvasControllerState;
+	callbacks: Record<string, () => void>;
+	viewportRef: RefObject<HTMLDivElement | null>;
+};
+
+const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 	position,
 	canvasState,
 	callbacks,
+	viewportRef,
 }) => {
-	if (!position) {
-		return null;
-	}
+	const menuRef = useRef<HTMLDivElement>(null);
+	const { left, top } = useContextMenuPosition(position, menuRef, viewportRef);
 
 	const menuItems: CommandMenuItem[] = [
 		{ type: "command", commandId: "cut" },
@@ -69,7 +78,7 @@ const ContextMenuComponent: React.FC<ContextMenuProps> = ({
 	];
 
 	return (
-		<Menu left={position.clientX} top={position.clientY}>
+		<Menu ref={menuRef} left={left} top={top}>
 			{menuItems.map((item, index) => {
 				switch (item.type) {
 					case "separator": {
@@ -133,6 +142,26 @@ const ContextMenuComponent: React.FC<ContextMenuProps> = ({
 				}
 			})}
 		</Menu>
+	);
+};
+
+const ContextMenuComponent: React.FC<ContextMenuProps> = ({
+	position,
+	canvasState,
+	callbacks,
+	viewportRef,
+}) => {
+	if (!position) {
+		return null;
+	}
+
+	return (
+		<ContextMenuBody
+			position={position}
+			canvasState={canvasState}
+			callbacks={callbacks}
+			viewportRef={viewportRef}
+		/>
 	);
 };
 

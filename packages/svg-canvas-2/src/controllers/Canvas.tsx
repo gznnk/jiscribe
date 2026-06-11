@@ -348,6 +348,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 					position={state.contextMenuPosition}
 					canvasState={state}
 					callbacks={{ paste: handlePasteCallback }}
+					viewportRef={canvasRef}
 				/>
 			</ViewportOverlay>
 		</Viewport>
