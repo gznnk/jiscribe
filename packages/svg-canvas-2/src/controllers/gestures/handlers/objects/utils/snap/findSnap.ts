@@ -58,12 +58,15 @@ const findNearest = (
 		return null;
 	}
 
+	// collectAxisFeedbacks と同様に SNAP_EPSILON で丸め誤差を吸収して束ねる
+	// （厳密等価だと別経路で算出された極めて近い座標が同一スナップ線にまとまらない）
+	const snapCoordinate = bestCoordinate;
 	const snappedCandidates = candidates.filter(
-		(c) => c.coordinate === bestCoordinate,
+		(c) => Math.abs(c.coordinate - snapCoordinate) <= SNAP_EPSILON,
 	);
 	return {
 		candidates: snappedCandidates,
-		snapCoordinate: bestCoordinate,
+		snapCoordinate,
 		draggedEdgeValue: bestDraggedEdgeValue,
 	};
 };
