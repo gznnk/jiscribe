@@ -125,16 +125,19 @@ const buildSystemGroups = (
 		});
 	}
 
-	if (canvasState.multiSelectGroup) {
+	const { selectedIds, objects } = canvasState;
+	const singleSelected =
+		selectedIds.length === 1 ? objects[selectedIds[0]] : undefined;
+
+	// グループは multiSelectGroup と同様に自身が lockAspectRatio を保持するため、
+	// 子孫の型構成に依らずアスペクト比メニューを表示する
+	if (canvasState.multiSelectGroup || singleSelected?.type === "group") {
 		systemGroups.push({
 			id: "system-aspect-ratio",
 			items: [{ type: "aspectRatio" }],
 		});
 	}
 
-	const { selectedIds, objects } = canvasState;
-	const singleSelected =
-		selectedIds.length === 1 ? objects[selectedIds[0]] : undefined;
 	const shouldShowGroup =
 		selectedIds.length > 1 || singleSelected?.type === "group";
 	if (shouldShowGroup) {
