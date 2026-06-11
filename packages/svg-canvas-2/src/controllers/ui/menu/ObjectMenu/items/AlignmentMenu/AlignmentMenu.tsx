@@ -18,7 +18,6 @@ import {
 } from "../../ObjectMenuStyled";
 
 const SECTION_ID = "alignment";
-const SUBMENU_SIZE = { width: 120, height: 50 } as const;
 
 type AlignmentMenuProps = {
 	canvasState: CanvasControllerState;
@@ -46,7 +45,10 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 }) => {
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
-	const { placement } = useSubmenuPosition(menuItemRef, SUBMENU_SIZE, isOpen);
+	const { submenuRef, placement, offsetX } = useSubmenuPosition(
+		menuItemRef,
+		isOpen,
+	);
 
 	const { selectedIds, objects } = canvasState;
 	const obj = getFirstSelectedWithProp(selectedIds, objects, "textAlign") as
@@ -66,7 +68,7 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 				<AlignLeftIcon />
 			</ObjectMenuButton>
 			{isOpen && (
-				<DropdownPanel placement={placement}>
+				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>
 					<AlignmentMenuContent>
 						<AlignmentRow>
 							{horizontalAlignments.map(({ value, Icon, title }) => (

@@ -91,12 +91,16 @@ export const MenuItemPositioner = styled.div`
 
 /**
  * ドロップダウンパネル。ボタンの下または上に中央揃えで表示される。
+ * offsetX はキャンバス領域からのはみ出しを防ぐための水平方向の補正量（px）。
  */
-export const DropdownPanel = styled.div<{ placement?: "down" | "up" }>`
+export const DropdownPanel = styled.div<{
+	placement?: "down" | "up";
+	offsetX?: number;
+}>`
 	position: absolute;
 	left: 50%;
 	${(props) => (props.placement === "up" ? "bottom: 40px;" : "top: 40px;")}
-	transform: translateX(-50%);
+	transform: translateX(calc(-50% + ${(props) => props.offsetX ?? 0}px));
 	z-index: 1100;
 	display: flex;
 	align-items: center;

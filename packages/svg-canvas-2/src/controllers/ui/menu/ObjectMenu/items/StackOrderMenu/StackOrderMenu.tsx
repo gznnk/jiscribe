@@ -16,7 +16,6 @@ import {
 } from "../../ObjectMenuStyled";
 
 const SECTION_ID = "stack-order";
-const SUBMENU_SIZE = { width: 180, height: 40 } as const;
 
 type StackOrderMenuProps = {
 	canvasState: CanvasControllerState;
@@ -34,7 +33,10 @@ const StackOrderMenuComponent: React.FC<StackOrderMenuProps> = ({
 }) => {
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
-	const { placement } = useSubmenuPosition(menuItemRef, SUBMENU_SIZE, isOpen);
+	const { submenuRef, placement, offsetX } = useSubmenuPosition(
+		menuItemRef,
+		isOpen,
+	);
 
 	return (
 		<MenuItemPositioner ref={menuItemRef}>
@@ -46,7 +48,7 @@ const StackOrderMenuComponent: React.FC<StackOrderMenuProps> = ({
 				<StackOrderIcon />
 			</ObjectMenuButton>
 			{isOpen && (
-				<DropdownPanel placement={placement}>
+				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>
 					<StackOrderMenuRow>
 						{arrangeCommands.map(({ commandId, Icon }) => {
 							const command = commandRegistry.get(commandId);

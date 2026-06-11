@@ -1,5 +1,7 @@
 import { type RefObject, useLayoutEffect, useState } from "react";
 
+import { useCanvasViewportRef } from "../../../contexts/CanvasViewportRefContext";
+
 /** キャンバス領域の端からの最小マージン (px) */
 const VIEWPORT_MARGIN = 8;
 
@@ -54,7 +56,8 @@ function calcAdjustedAxisCoord(
  * コンテキストメニューがキャンバス領域からはみ出さないよう表示座標を補正する。
  *
  * メニューは position: fixed（ブラウザビューポート座標）で配置されるため、
- * 境界にはキャンバスルート要素の getBoundingClientRect()（同じ座標系）を使う。
+ * 境界にはキャンバスルート要素（CanvasViewportRefContext 経由で取得）の
+ * getBoundingClientRect()（同じ座標系）を使う。
  * state.viewport はキャンバス内部のスクロール・zoom 状態なのでここでは使えない。
  *
  * メニューの高さは項目数に依存するため、レンダリング後の実 DOM を
@@ -62,14 +65,13 @@ function calcAdjustedAxisCoord(
  *
  * @param position - 右クリック時のクリック座標
  * @param menuRef - メニュー要素の ref（実寸の計測に使用）
- * @param viewportRef - キャンバスルート要素（Viewport）の ref（表示領域の境界に使用）
  * @returns 補正後の表示座標
  */
 export function useContextMenuPosition(
 	position: ContextMenuPosition,
 	menuRef: RefObject<HTMLDivElement | null>,
-	viewportRef: RefObject<HTMLDivElement | null>,
 ): AdjustedMenuPosition {
+	const viewportRef = useCanvasViewportRef();
 	const [adjustedPosition, setAdjustedPosition] =
 		useState<AdjustedMenuPosition>({
 			left: position.clientX,
@@ -87,8 +89,8 @@ export function useContextMenuPosition(
 			menuElement.getBoundingClientRect();
 
 		// キャンバス領域の矩形（ブラウザビューポート座標）。
-		// ref が未設定の場合はブラウザウィンドウ全体にフォールバックする
-		const viewportElement = viewportRef.current;
+		// Provider 外や ref 未設定の場合はブラウザウィンドウ全体にフォールバックする
+		const viewportElement = viewportRef?.current ?? null;
 		const areaRect = viewportElement
 			? viewportElement.getBoundingClientRect()
 			: {

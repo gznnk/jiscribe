@@ -14,7 +14,6 @@ import {
 
 const SECTION_ID = "font-color";
 const DEFAULT_FONT_COLOR = "#333333";
-const SUBMENU_SIZE = { width: 240, height: 195 } as const;
 
 type FontColorMenuProps = {
 	canvasState: CanvasControllerState;
@@ -33,7 +32,10 @@ const FontColorMenuComponent: React.FC<FontColorMenuProps> = ({
 }) => {
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
-	const { placement } = useSubmenuPosition(menuItemRef, SUBMENU_SIZE, isOpen);
+	const { submenuRef, placement, offsetX } = useSubmenuPosition(
+		menuItemRef,
+		isOpen,
+	);
 
 	const { selectedIds, objects } = canvasState;
 	const obj = getFirstSelectedWithProp(selectedIds, objects, "fontColor");
@@ -51,7 +53,7 @@ const FontColorMenuComponent: React.FC<FontColorMenuProps> = ({
 				<FontColorIcon underlineColor={currentColor} />
 			</ObjectMenuButton>
 			{isOpen && (
-				<DropdownPanel placement={placement}>
+				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>
 					<ColorPickerGrid
 						currentColor={currentColor}
 						property="fontColor"

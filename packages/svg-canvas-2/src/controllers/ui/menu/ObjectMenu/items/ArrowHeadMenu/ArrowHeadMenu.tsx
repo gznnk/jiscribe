@@ -16,7 +16,6 @@ import {
 
 const SECTION_ID_START = "arrow-head-start";
 const SECTION_ID_END = "arrow-head-end";
-const SUBMENU_SIZE = { width: 200, height: 120 } as const;
 
 type ArrowHeadMenuProps = {
 	canvasState: CanvasControllerState;
@@ -59,16 +58,16 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 	const currentStart = getSelectedArrowType(canvasState, "startArrow");
 	const currentEnd = getSelectedArrowType(canvasState, "endArrow");
 
-	const { placement: startPlacement } = useSubmenuPosition(
-		startRef,
-		SUBMENU_SIZE,
-		isStartOpen,
-	);
-	const { placement: endPlacement } = useSubmenuPosition(
-		endRef,
-		SUBMENU_SIZE,
-		isEndOpen,
-	);
+	const {
+		submenuRef: startSubmenuRef,
+		placement: startPlacement,
+		offsetX: startOffsetX,
+	} = useSubmenuPosition(startRef, isStartOpen);
+	const {
+		submenuRef: endSubmenuRef,
+		placement: endPlacement,
+		offsetX: endOffsetX,
+	} = useSubmenuPosition(endRef, isEndOpen);
 
 	return (
 		<>
@@ -83,7 +82,11 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 					<ArrowHeadIconPreview arrowType={currentStart} direction="start" />
 				</ObjectMenuButton>
 				{isStartOpen && (
-					<DropdownPanel placement={startPlacement}>
+					<DropdownPanel
+						ref={startSubmenuRef}
+						placement={startPlacement}
+						offsetX={startOffsetX}
+					>
 						<ArrowSelectorGrid>
 							{ArrowTypes.map((type) => (
 								<ArrowTypeButton
@@ -121,7 +124,11 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 					<ArrowHeadIconPreview arrowType={currentEnd} direction="end" />
 				</ObjectMenuButton>
 				{isEndOpen && (
-					<DropdownPanel placement={endPlacement}>
+					<DropdownPanel
+						ref={endSubmenuRef}
+						placement={endPlacement}
+						offsetX={endOffsetX}
+					>
 						<ArrowSelectorGrid>
 							{ArrowTypes.map((type) => (
 								<ArrowTypeButton

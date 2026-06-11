@@ -1,4 +1,4 @@
-import { memo, type RefObject, useRef } from "react";
+import { memo, useRef } from "react";
 
 import {
 	Menu,
@@ -31,24 +31,21 @@ type ContextMenuProps = {
 	position: { clientX: number; clientY: number } | null;
 	canvasState: CanvasControllerState;
 	callbacks: Record<string, () => void>;
-	viewportRef: RefObject<HTMLDivElement | null>;
 };
 
 type ContextMenuBodyProps = {
 	position: { clientX: number; clientY: number };
 	canvasState: CanvasControllerState;
 	callbacks: Record<string, () => void>;
-	viewportRef: RefObject<HTMLDivElement | null>;
 };
 
 const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 	position,
 	canvasState,
 	callbacks,
-	viewportRef,
 }) => {
 	const menuRef = useRef<HTMLDivElement>(null);
-	const { left, top } = useContextMenuPosition(position, menuRef, viewportRef);
+	const { left, top } = useContextMenuPosition(position, menuRef);
 
 	const menuItems: CommandMenuItem[] = [
 		{ type: "command", commandId: "cut" },
@@ -149,7 +146,6 @@ const ContextMenuComponent: React.FC<ContextMenuProps> = ({
 	position,
 	canvasState,
 	callbacks,
-	viewportRef,
 }) => {
 	if (!position) {
 		return null;
@@ -160,7 +156,6 @@ const ContextMenuComponent: React.FC<ContextMenuProps> = ({
 			position={position}
 			canvasState={canvasState}
 			callbacks={callbacks}
-			viewportRef={viewportRef}
 		/>
 	);
 };

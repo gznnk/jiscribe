@@ -20,7 +20,6 @@ import {
 } from "../../ObjectMenuStyled";
 
 const SECTION_ID = "border-style";
-const SUBMENU_SIZE = { width: 220, height: 162 } as const;
 
 // Constants for border styling
 const MIN_STROKE_WIDTH = 0;
@@ -82,7 +81,10 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 	const strokeWidth = getSelectedStrokeWidth(canvasState);
 	const strokeDashType = getSelectedStrokeDashType(canvasState);
 	const cornerRadius = getSelectedCornerRadius(canvasState);
-	const { placement } = useSubmenuPosition(menuItemRef, SUBMENU_SIZE, isOpen);
+	const { submenuRef, placement, offsetX } = useSubmenuPosition(
+		menuItemRef,
+		isOpen,
+	);
 
 	return (
 		<MenuItemPositioner ref={menuItemRef}>
@@ -95,7 +97,7 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 				<DashedCircleIcon title="Border Style" />
 			</ObjectMenuButton>
 			{isOpen && (
-				<DropdownPanel placement={placement}>
+				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>
 					<BorderStyleMenuWrapper>
 						{/* Stroke Dash Type */}
 						<BorderStyleSection>
