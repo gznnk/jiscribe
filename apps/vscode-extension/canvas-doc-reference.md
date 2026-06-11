@@ -215,10 +215,7 @@ AI がデータを生成する際や、外部ツールから `.jis.json` ファ�
 {
 	"id": "connector-1",
 	"type": "connector",
-	"points": [
-		{ "x": 300, "y": 175 },
-		{ "x": 350, "y": 175 }
-	],
+	"points": [],
 	"source": {
 		"owner": { "type": "rect", "id": "rect-1" },
 		"anchor": { "kind": "connectPoint", "id": "rightCenter" }
@@ -234,13 +231,18 @@ AI がデータを生成する際や、外部ツールから `.jis.json` ファ�
 }
 ```
 
-| フィールド   | 型            | 必須 | 説明           |
-| ------------ | ------------- | ---- | -------------- |
-| `points`     | `Point[]`     | ✅   | 経路の座標配列 |
-| `source`     | `EndpointRef` | ✅   | 始点の接続仕様 |
-| `target`     | `EndpointRef` | ✅   | 終点の接続仕様 |
-| `startArrow` | `ArrowType`   | -    | 始点の矢印種別 |
-| `endArrow`   | `ArrowType`   | -    | 終点の矢印種別 |
+| フィールド   | 型            | 必須 | 説明                                       |
+| ------------ | ------------- | ---- | ------------------------------------------ |
+| `points`     | `Point[]`     | ✅   | 中間経由点の座標配列（直線は空配列。後述） |
+| `source`     | `EndpointRef` | ✅   | 始点の接続仕様                             |
+| `target`     | `EndpointRef` | ✅   | 終点の接続仕様                             |
+| `startArrow` | `ArrowType`   | -    | 始点の矢印種別                             |
+| `endArrow`   | `ArrowType`   | -    | 終点の矢印種別                             |
+
+`points` には**端点の座標を含めない**。端点は `source` / `target` の EndpointRef が正であり、
+接続先オブジェクトの移動に合わせて描画時に動的解決される。`points` は source → target 順の
+中間経由点（ワールド座標）のみを保持し、直線コネクターでは空配列にする
+（経由点による変形は将来実装予定の機能で、現時点では描画に使用されない）。
 
 ### EndpointRef
 
@@ -394,10 +396,7 @@ AI がデータを生成する際や、外部ツールから `.jis.json` ファ�
 		{
 			"id": "conn-1",
 			"type": "connector",
-			"points": [
-				{ "x": 210, "y": 140 },
-				{ "x": 300, "y": 140 }
-			],
+			"points": [],
 			"source": {
 				"owner": { "type": "rect", "id": "start" },
 				"anchor": { "kind": "connectPoint", "id": "rightCenter" }

@@ -9,7 +9,7 @@ import { isPoly } from "../../../../../schemas/objects/types/Poly";
 import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
 import { isGroupState } from "../../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
-import { calcConnectorEndpointBBox } from "../../../../utils/calcConnectorEndpointBBox";
+import { calcConnectorBoundingBox } from "../../../../utils/calcConnectorBoundingBox";
 import { calcGroupBoundingBox } from "../../../utils/calcGroupBoundingBox";
 
 /** ObjectMenu とオブジェクト間の距離 (px) */
@@ -105,7 +105,7 @@ export function useObjectMenuPosition(
 		if (selectedConnectorId !== null) {
 			const connector = objects[selectedConnectorId];
 			if (connector) {
-				const bbox = calcConnectorEndpointBBox(
+				const bbox = calcConnectorBoundingBox(
 					connector as ConnectorState,
 					objects,
 				);

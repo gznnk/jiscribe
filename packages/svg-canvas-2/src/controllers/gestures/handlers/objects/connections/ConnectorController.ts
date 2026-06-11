@@ -1,6 +1,3 @@
-import { roundToDecimal } from "@workspace/geometry";
-
-import { PRECISION } from "../../../../../constants/precision";
 import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
 import type {
 	MoveByDeltaFunction,
@@ -9,21 +6,15 @@ import type {
 } from "../../../registry/ObjectBehaviorTypes";
 
 /**
- * Moves a Connector object by a delta.
- * Updates all points in the points array.
+ * No-op: connectors are never in selectedIds (exclusive selection via
+ * selectedConnectorId) and cloneObjects applies offsets to rootIds only,
+ * so this function is never reached in practice. Connector geometry follows
+ * its endpoints, which are resolved dynamically at render time.
  */
 export const moveByDelta: MoveByDeltaFunction<ConnectorState> = (
 	state,
-	delta,
-) => {
-	return {
-		...state,
-		points: state.points.map((p) => ({
-			x: roundToDecimal(p.x + delta.x, PRECISION.COORDINATE),
-			y: roundToDecimal(p.y + delta.y, PRECISION.COORDINATE),
-		})),
-	};
-};
+	_delta,
+) => state;
 
 /**
  * No-op: connectors cannot be added to groups via the UI (exclusive selection),

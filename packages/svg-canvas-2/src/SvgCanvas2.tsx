@@ -417,10 +417,7 @@ const testCanvasDoc: CanvasDoc = {
 		{
 			id: "connector-1",
 			type: "connector",
-			points: [
-				{ x: 150, y: 100 },
-				{ x: 400, y: 200 },
-			],
+			points: [],
 			source: {
 				owner: { type: "rect", id: "rect-1" },
 				anchor: { kind: "center" },
@@ -437,10 +434,7 @@ const testCanvasDoc: CanvasDoc = {
 		{
 			id: "connector-2",
 			type: "connector",
-			points: [
-				{ x: 375, y: 175 },
-				{ x: 150, y: 400 },
-			],
+			points: [],
 			source: {
 				owner: { type: "rect", id: "rect-2" },
 				anchor: { kind: "center" },
@@ -457,10 +451,7 @@ const testCanvasDoc: CanvasDoc = {
 		{
 			id: "connector-3",
 			type: "connector",
-			points: [
-				{ x: 150, y: 275 },
-				{ x: 540, y: 90 },
-			],
+			points: [],
 			source: {
 				owner: { type: "rect", id: "rect-3" },
 				anchor: { kind: "center" },
