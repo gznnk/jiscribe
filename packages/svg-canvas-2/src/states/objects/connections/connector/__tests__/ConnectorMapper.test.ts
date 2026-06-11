@@ -36,11 +36,9 @@ describe("ConnectorMapper", () => {
 
 			expect(state.id).toBe("connector-1");
 			expect(state.type).toBe("connector");
-			expect(state.points).toEqual([
-				{ x: 0, y: 0 },
-				{ x: 100, y: 50 },
-				{ x: 200, y: 0 },
-			]);
+			// points は読み込み時に正規化される（過去バージョンの陳腐化した
+			// 端点座標データを掃除するため。経由点機能の実装時に引き継ぎへ戻す）
+			expect(state.points).toEqual([]);
 			expect(state.stroke).toBe("#000000");
 			expect(state.strokeWidth).toBe(2);
 			expect(state.source).toEqual({
@@ -76,10 +74,8 @@ describe("ConnectorMapper", () => {
 
 			expect(state.id).toBe("connector-2");
 			expect(state.type).toBe("connector");
-			expect(state.points).toEqual([
-				{ x: 0, y: 0 },
-				{ x: 50, y: 50 },
-			]);
+			// points は読み込み時に正規化される（connectorToState の TODO コメント参照）
+			expect(state.points).toEqual([]);
 			expect(state.source).toEqual({
 				anchor: { kind: "free", point: { x: 0, y: 0 } },
 			});
@@ -203,7 +199,8 @@ describe("ConnectorMapper", () => {
 
 			expect(convertedDoc.id).toBe(originalDoc.id);
 			expect(convertedDoc.type).toBe(originalDoc.type);
-			expect(convertedDoc.points).toEqual(originalDoc.points);
+			// points は読み込み時に正規化されるため空配列になる（陳腐データの掃除）
+			expect(convertedDoc.points).toEqual([]);
 			expect(convertedDoc.stroke).toBe(originalDoc.stroke);
 			expect(convertedDoc.strokeWidth).toBe(originalDoc.strokeWidth);
 			expect(convertedDoc.source).toEqual(originalDoc.source);

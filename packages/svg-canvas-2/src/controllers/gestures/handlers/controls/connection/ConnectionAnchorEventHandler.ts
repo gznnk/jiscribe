@@ -3,6 +3,7 @@ import {
 	calcFrameKeyPoints,
 	isTransformedFrame,
 	roundToDecimal,
+	type Point,
 } from "@workspace/geometry";
 
 import { PRECISION } from "../../../../../constants/precision";
@@ -112,10 +113,8 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 		const pendingConnector: ConnectorState = {
 			id: connectorId,
 			type: "connector",
-			points: [
-				{ x: event.last.x, y: event.last.y },
-				{ x: event.last.x, y: event.last.y },
-			],
+			// points は中間経由点のみ（端点は source/target が持つ）。新規作成時は直線なので空
+			points: [] as Point[],
 			source: {
 				owner: { type: sourceObject.type, id: sourceObjectId },
 				anchor:

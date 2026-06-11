@@ -28,6 +28,23 @@ export function validatePolyFields(
 	return [];
 }
 
+/**
+ * Connector の points（中間経由点）を検証する。
+ * 端点座標は source/target の EndpointRef が持つため、
+ * polyline/polygon と異なり空配列（= 直線コネクター）を許容する。
+ */
+export function validateWaypointFields(
+	o: Record<string, unknown>,
+	path: string,
+): SemanticDiagnostic[] {
+	if (!isPoly(o)) {
+		return [
+			{ path: `${path}.points`, message: "must be a valid points array" },
+		];
+	}
+	return [];
+}
+
 export function validateEndpointRef(
 	ref: unknown,
 	path: string,

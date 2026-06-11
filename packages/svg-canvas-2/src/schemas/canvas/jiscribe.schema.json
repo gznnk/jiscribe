@@ -547,10 +547,9 @@
 				},
 				"meta": { "$ref": "#/$defs/MetaDoc" },
 				"points": {
-					"description": "Ordered list of path vertices.",
+					"description": "Ordered list of intermediate waypoints from source to target, in world coordinates. Endpoint coordinates are NOT included; they are defined by source/target and resolved dynamically. An empty array means a straight connector.",
 					"type": "array",
-					"items": { "$ref": "#/$defs/Point" },
-					"minItems": 2
+					"items": { "$ref": "#/$defs/Point" }
 				},
 				"source": {
 					"description": "Where the connector starts.",

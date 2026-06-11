@@ -34,8 +34,13 @@ describe("validateConnectorDoc", () => {
 		expect(validateConnectorDoc(o, "root")).toEqual([]);
 	});
 
+	it("points が空配列（直線コネクター）はエラーなし", () => {
+		const o = { points: [], source: freeRef, target: freeRef };
+		expect(validateConnectorDoc(o, "root")).toEqual([]);
+	});
+
 	it("points が不正な場合はエラー", () => {
-		const o = { points: [{ x: 0, y: 0 }], source: freeRef, target: freeRef };
+		const o = { points: [{ x: 0 }], source: freeRef, target: freeRef };
 		expect(
 			validateConnectorDoc(o, "root").some((e) => e.path === "root.points"),
 		).toBe(true);
