@@ -17,12 +17,12 @@ export const SwapArrowsCommand: Command = {
 	},
 
 	execute: (state) => {
-		// Connector 選択時
-		if (state.selectedIds.length === 0 && state.selectedConnectorId !== null) {
+		// Connector 選択時（selectedIds より優先 — getEffectiveSelectedIds と同じ優先順位）
+		if (state.selectedConnectorId !== null) {
 			const connector = state.objects[state.selectedConnectorId] as
 				| ConnectorState
 				| undefined;
-			if (!connector) {
+			if (!connector || connector.type !== "connector") {
 				return state;
 			}
 			const prev = connector.startArrow ?? "None";
