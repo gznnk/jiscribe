@@ -42,6 +42,7 @@ import { ZoomIndicator } from "./ui/feedback/ZoomIndicator";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
 import { ShapeLibrary } from "./ui/menu/ShapeLibrary";
+import { isSameCanvasDocContent } from "./utils/isSameCanvasDocContent";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import { canvasToDoc, canvasToState } from "../states/canvas/CanvasMapper";
 
@@ -154,13 +155,27 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 			canvasState: state,
 		});
 
-	// Notify parent component when a save is required (after commit or undo/redo)
+	// Always-fresh mirrors of props/state read by the effects below.
+	// Reading through refs keeps those effects from depending on the parent
+	// keeping onCommit / canvasDoc referentially stable across renders.
+	const onCommitRef = useRef(onCommit);
+	const stateRef = useRef(state);
+	useEffect(() => {
+		onCommitRef.current = onCommit;
+		stateRef.current = state;
+	});
+
+	// Notify parent component when a save is required (after commit or undo/redo).
+	// Depends only on saveVersion: the closure captures the state of exactly the
+	// render in which saveVersion was bumped, which is the state to persist.
+	// onCommit goes through a ref so a parent passing a new function on every
+	// render cannot re-fire this effect and resend the same saveNonce.
 	useEffect(() => {
 		if (state.saveVersion > 0) {
-			onCommit?.(canvasToDoc(state), state.saveNonce);
+			onCommitRef.current?.(canvasToDoc(state), state.saveNonce);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [state.saveVersion, onCommit]);
+	}, [state.saveVersion]);
 
 	// Sync external canvasDoc changes.
 	// Skip the first invocation on mount: the initializer already used the same canvasDoc,
@@ -168,6 +183,13 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	useEffect(() => {
 		if (!hasMountedRef.current) {
 			hasMountedRef.current = true;
+			return;
+		}
+		// Content-identical doc (e.g. the parent re-created the object, or our own
+		// save echoed back): skip entirely. Proceeding would interrupt an
+		// in-progress gesture, clear all UI state, and push a redundant history
+		// entry even though nothing changed.
+		if (isSameCanvasDocContent(canvasDoc, stateRef.current.history.present)) {
 			return;
 		}
 		const newState = canvasToState(canvasDoc);
