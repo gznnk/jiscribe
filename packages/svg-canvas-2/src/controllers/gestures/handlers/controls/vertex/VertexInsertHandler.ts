@@ -64,7 +64,7 @@ export class VertexInsertHandler implements ControlStrategy {
 		const objectId = parts[1];
 		const segmentIndex = parseInt(parts[2], 10);
 
-		if (isNaN(segmentIndex)) {
+		if (isNaN(segmentIndex) || segmentIndex < 0) {
 			return state;
 		}
 
@@ -162,6 +162,12 @@ export class VertexInsertHandler implements ControlStrategy {
 
 		// 新しく追加された頂点のインデックスは segmentIndex + 1
 		const newVertexIndex = segmentIndex + 1;
+
+		// 範囲外の頂点インデックスへの書き込みを防ぐ
+		// （dragStart で頂点が挿入されていれば必ず範囲内に収まる）
+		if (newVertexIndex >= startObject.points.length) {
+			return state;
+		}
 
 		// スナップ補正
 		let cursorX = event.last.x;

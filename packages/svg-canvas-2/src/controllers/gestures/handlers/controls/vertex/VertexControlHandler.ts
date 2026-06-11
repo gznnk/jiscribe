@@ -59,7 +59,7 @@ export class VertexControlHandler implements ControlStrategy {
 		const objectId = parts[1];
 		const vertexIndex = parseInt(parts[2], 10);
 
-		if (isNaN(vertexIndex)) {
+		if (isNaN(vertexIndex) || vertexIndex < 0) {
 			return state;
 		}
 
@@ -87,6 +87,11 @@ export class VertexControlHandler implements ControlStrategy {
 		objectId: string,
 		vertexIndex: number,
 	): CanvasControllerState {
+		const targetObject = state.objects[objectId];
+		if (!isPoly(targetObject) || vertexIndex >= targetObject.points.length) {
+			return state;
+		}
+
 		return {
 			...state,
 			selectedVertex: { objectId, vertexIndex },
@@ -125,6 +130,11 @@ export class VertexControlHandler implements ControlStrategy {
 
 		const startObject = eventStartSnapshot.objects[objectId];
 		if (!isPoly(startObject)) {
+			return state;
+		}
+
+		// 範囲外の頂点インデックスへの書き込みを防ぐ
+		if (vertexIndex >= startObject.points.length) {
 			return state;
 		}
 
