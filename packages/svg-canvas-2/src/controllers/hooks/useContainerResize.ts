@@ -1,24 +1,25 @@
 import type { Dimensions } from "@workspace/geometry";
-import { type RefObject, useEffect, useRef } from "react";
+import { type Dispatch, type RefObject, useEffect, useRef } from "react";
+
+import type { CanvasAction } from "../reducer/CanvasActions";
 
 /**
- * コンテナ要素のサイズ変更を監視し、変更時にコールバックを実行するHook
+ * コンテナ要素のサイズ変更を監視し、変更時に CONTAINER_RESIZE アクションを dispatch するHook
  *
  * @param containerRef - 監視対象のコンテナ要素への参照
- * @param onResize - サイズ変更時に呼ばれるコールバック関数
+ * @param dispatch - Canvas reducer の dispatch
  *
  * @example
  * ```tsx
  * const containerRef = useRef<HTMLDivElement>(null);
+ * const [state, dispatch] = useCanvasReducer(canvasDoc);
  *
- * useContainerSize(containerRef, (dimensions) => {
- *   console.log(`Container size: ${dimensions.width} x ${dimensions.height}`);
- * });
+ * useContainerResize(containerRef, dispatch);
  * ```
  */
-export function useContainerSize(
+export function useContainerResize(
 	containerRef: RefObject<HTMLDivElement | null>,
-	onResize: (dimensions: Dimensions) => void,
+	dispatch: Dispatch<CanvasAction>,
 ): void {
 	const lastDimensions = useRef<Dimensions | null>(null);
 
@@ -29,7 +30,7 @@ export function useContainerSize(
 		}
 
 		const updateDimensions = (width: number, height: number) => {
-			// 値が変更された場合のみコールバックを実行
+			// 値が変更された場合のみ dispatch を実行
 			if (
 				!lastDimensions.current ||
 				lastDimensions.current.width !== width ||
@@ -37,7 +38,7 @@ export function useContainerSize(
 			) {
 				const dimensions = { width, height };
 				lastDimensions.current = dimensions;
-				onResize(dimensions);
+				dispatch({ type: "CONTAINER_RESIZE", dimensions });
 			}
 		};
 
@@ -57,5 +58,5 @@ export function useContainerSize(
 		return () => {
 			resizeObserver.disconnect();
 		};
-	}, [containerRef, onResize]);
+	}, [containerRef, dispatch]);
 }

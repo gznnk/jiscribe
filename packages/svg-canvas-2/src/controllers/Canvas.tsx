@@ -1,12 +1,4 @@
-﻿import type { Dimensions } from "@workspace/geometry";
-import {
-	memo,
-	useCallback,
-	useEffect,
-	useReducer,
-	useRef,
-	useState,
-} from "react";
+﻿import { memo, useCallback, useRef } from "react";
 
 import {
 	Container,
@@ -15,16 +7,16 @@ import {
 	ViewportOverlay,
 	ZoomScaledOverlay,
 } from "./CanvasStyled";
-import type { CanvasControllerState } from "./CanvasTypes";
-import { isClipboardData } from "./commands/selection/ClipboardData";
 import { CanvasViewportRefContext } from "./contexts/CanvasViewportRefContext";
-import type { GestureCallback } from "./gestures/recognizer/GestureRecognizerTypes";
-import { useContainerSize } from "./hooks/useContainerSize";
+import { useCanvasReducer } from "./hooks/useCanvasReducer";
+import { useClipboardPaste } from "./hooks/useClipboardPaste";
+import { useClipboardWrite } from "./hooks/useClipboardWrite";
+import { useContainerResize } from "./hooks/useContainerResize";
 import { useDocumentWheel } from "./hooks/useDocumentWheel";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
-import { usePasteKeyboardShortcut } from "./hooks/usePasteKeyboardShortcut";
-import { canvasReducer } from "./reducer/canvasReducer";
+import { useNotifySaveRequest } from "./hooks/useNotifySaveRequest";
+import { useSyncExternalDoc } from "./hooks/useSyncExternalDoc";
 import { initializeRegistries } from "./setup";
 import { CanvasView } from "../presentations/CanvasView";
 import { ConnectionAnchorsLayer } from "./ui/controls/ConnectionAnchorsLayer";
@@ -43,9 +35,7 @@ import { ZoomIndicator } from "./ui/feedback/ZoomIndicator";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
 import { ShapeLibrary } from "./ui/menu/ShapeLibrary";
-import { isSameCanvasDocContent } from "./utils/isSameCanvasDocContent";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
-import { canvasToDoc, canvasToState } from "../states/canvas/CanvasMapper";
 
 // Initialize all registries (ObjectRegistry, GestureHandlerRegistry)
 initializeRegistries();
@@ -84,164 +74,45 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 }) => {
 	const canvasRef = useRef<HTMLDivElement>(null);
 	const svgRef = useRef<SVGSVGElement>(null);
-	const hasMountedRef = useRef(false);
 
 	// Reducer for canvas state management with history
-	const [state, dispatch] = useReducer(
-		canvasReducer,
-		canvasDoc,
-		(initialDoc): CanvasControllerState => {
-			const baseState = canvasToState(initialDoc);
-			return {
-				...baseState,
-				selectedIds: [],
-				eventStartSnapshot: null,
-				keyPointsCache: {},
-				snapCandidatesCache: null,
-				edgeScrollEnabled: false,
-				commitVersion: 0,
-				saveVersion: 0,
-				saveNonce: "",
-				contextMenuPosition: null,
-				shapeLibraryDrag: null,
-				areaSelection: null,
-				objectMenuOpenId: null,
-				multiSelectGroup: null,
-				textEditState: null,
-				pendingConnector: null,
-				selectedConnectorId: null,
-				selectedVertex: null,
-				editingConnectorId: null,
-				editingEndpoint: null,
-				snapFeedback: null,
-				shapeDrawing: null,
-				lastDuplicate: null,
-				internalClipboard: null,
-				history: {
-					past: [],
-					present: canvasToDoc(baseState),
-					future: [],
-				},
-			};
-		},
-	);
+	const [state, dispatch] = useCanvasReducer(canvasDoc);
 
-	// Clipboard write side effect: fired whenever internalClipboard changes (Copy / Cut).
-	// Keeping this outside Command.execute preserves the pure-function contract of commands.
-	const [clipboardWriteErrorVersion, setClipboardWriteErrorVersion] =
-		useState(0);
-	useEffect(() => {
-		if (!state.internalClipboard) {
-			return;
-		}
-		navigator.clipboard
-			.writeText(JSON.stringify(state.internalClipboard))
-			.catch(() => {
-				setClipboardWriteErrorVersion((v) => v + 1);
-			});
-	}, [state.internalClipboard]);
+	// Clipboard write side effect: fired whenever internalClipboard changes (Copy / Cut)
+	const clipboardWriteErrorVersion = useClipboardWrite(state.internalClipboard);
 
-	// Gesture handling — declared before the SYNC_EXTERNAL effect so resetGestureState is available
-	const handleGesture = useCallback<GestureCallback>(
-		(gesture) => {
-			dispatch({ type: "GESTURE", gesture });
-		},
-		[dispatch],
-	);
+	// Gesture handling — declared before useSyncExternalDoc so resetGestureState is available
 	const { pointerHandlers, wheelHandler, resetGestureState } =
 		useGestureRecognizer({
-			gestureCallback: handleGesture,
+			dispatch,
 			containerRef: canvasRef,
 			svgRef,
 			canvasState: state,
 		});
 
-	// Always-fresh mirrors of props/state read by the effects below.
-	// Reading through refs keeps those effects from depending on the parent
-	// keeping onCommit / canvasDoc referentially stable across renders.
-	const onCommitRef = useRef(onCommit);
-	const stateRef = useRef(state);
-	useEffect(() => {
-		onCommitRef.current = onCommit;
-		stateRef.current = state;
+	// Notify parent component when a save is required (after commit or undo/redo)
+	useNotifySaveRequest(state, onCommit);
+
+	// Sync external canvasDoc changes
+	useSyncExternalDoc({
+		canvasDoc,
+		syncNonce,
+		canvasState: state,
+		dispatch,
+		resetGestureState,
 	});
-
-	// Notify parent component when a save is required (after commit or undo/redo).
-	// Depends only on saveVersion: the closure captures the state of exactly the
-	// render in which saveVersion was bumped, which is the state to persist.
-	// onCommit goes through a ref so a parent passing a new function on every
-	// render cannot re-fire this effect and resend the same saveNonce.
-	useEffect(() => {
-		if (state.saveVersion > 0) {
-			onCommitRef.current?.(canvasToDoc(state), state.saveNonce);
-		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [state.saveVersion]);
-
-	// Sync external canvasDoc changes.
-	// Skip the first invocation on mount: the initializer already used the same canvasDoc,
-	// so dispatching SYNC_EXTERNAL would create a redundant history entry.
-	useEffect(() => {
-		if (!hasMountedRef.current) {
-			hasMountedRef.current = true;
-			return;
-		}
-		// Content-identical doc (e.g. the parent re-created the object, or our own
-		// save echoed back): skip entirely. Proceeding would interrupt an
-		// in-progress gesture, clear all UI state, and push a redundant history
-		// entry even though nothing changed.
-		if (isSameCanvasDocContent(canvasDoc, stateRef.current.history.present)) {
-			return;
-		}
-		const newState = canvasToState(canvasDoc);
-		resetGestureState();
-		dispatch({
-			type: "SYNC_EXTERNAL",
-			payload: newState,
-			saveNonce: syncNonce,
-		});
-	}, [canvasDoc, resetGestureState, syncNonce]);
 
 	// Use wheel handler from GestureRecognizer
 	useDocumentWheel(svgRef, wheelHandler);
 
 	// Container resize handling
-	const handleResize = useCallback(
-		(dimensions: Dimensions) => {
-			dispatch({ type: "CONTAINER_RESIZE", dimensions });
-		},
-		[dispatch],
-	);
-	useContainerSize(canvasRef, handleResize);
+	useContainerResize(canvasRef, dispatch);
 
 	// Keyboard shortcuts handling
-	const handleCommand = useCallback(
-		(commandId: string) => {
-			dispatch({ type: "COMMAND", commandId });
-		},
-		[dispatch],
-	);
+	useKeyboardShortcuts({ canvasState: state, dispatch, onUndo, onRedo });
 
-	useKeyboardShortcuts(state, handleCommand, onUndo, onRedo);
-
-	const handlePasteCallback = useCallback(async () => {
-		let data = null;
-		try {
-			const text = await navigator.clipboard.readText();
-			const parsed: unknown = JSON.parse(text);
-			if (isClipboardData(parsed)) {
-				data = parsed;
-			}
-		} catch {
-			// clipboard read failure or parse error
-		}
-		data ??= state.internalClipboard;
-		if (!data) {
-			return;
-		}
-		dispatch({ type: "PASTE", data });
-	}, [dispatch, state.internalClipboard]);
-	usePasteKeyboardShortcut(handlePasteCallback);
+	// Paste handling (keyboard shortcut + context menu)
+	const handlePaste = useClipboardPaste(state.internalClipboard, dispatch);
 
 	const handleMenuPropertyUpdate = useCallback(
 		(property: string, value: string, commit: boolean) => {
@@ -353,7 +224,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 					<ContextMenu
 						position={state.contextMenuPosition}
 						canvasState={state}
-						callbacks={{ paste: handlePasteCallback }}
+						callbacks={{ paste: handlePaste }}
 					/>
 				</ViewportOverlay>
 			</Viewport>
