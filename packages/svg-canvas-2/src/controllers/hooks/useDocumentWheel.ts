@@ -1,5 +1,7 @@
 import { type RefObject, useEffect } from "react";
 
+import { shouldUseNativeWheel } from "../gestures/recognizer/utils/shouldUseNativeWheel";
+
 /**
  * documentのwheelイベントを監視し、Ctrl押下時にコールバックを実行するHook
  *
@@ -21,6 +23,11 @@ export function useDocumentWheel(
 ): void {
 	useEffect(() => {
 		const onDocumentWheel = (e: WheelEvent) => {
+			// スクロール可能な data-native-wheel 要素（編集中の textarea など）上では
+			// ネイティブスクロールに任せ、キャンバスのスクロールは行わない
+			if (shouldUseNativeWheel(e.target, e.ctrlKey)) {
+				return;
+			}
 			e.preventDefault();
 			onWheel(e);
 		};

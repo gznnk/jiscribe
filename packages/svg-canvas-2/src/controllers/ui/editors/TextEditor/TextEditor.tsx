@@ -124,6 +124,7 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 			onContextMenu={handleContextMenu}
 		>
 			<TextArea
+				data-native-wheel="true"
 				value={text}
 				textAlign={textAlign}
 				color={fontColor}

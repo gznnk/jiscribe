@@ -5,3 +5,4 @@ export { getInputValue } from "./getInputValue";
 export { getKindAndId } from "./getKindAndId";
 export { getSvgPoint } from "./getSvgPoint";
 export { shouldPreserveNativeBehavior } from "./shouldPreserveNativeBehavior";
+export { shouldUseNativeWheel } from "./shouldUseNativeWheel";
