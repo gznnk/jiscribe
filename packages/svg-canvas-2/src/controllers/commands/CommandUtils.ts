@@ -13,7 +13,7 @@ interface NavigatorWithUserAgentData extends Navigator {
 /**
  * 現在のプラットフォームを判定
  * User-Agent Client Hints API（推奨）を優先的に使用し、
- * サポートされていない場合は navigator.platform（非推奨）にフォールバック
+ * サポートされていない場合は navigator.userAgent にフォールバック
  */
 export const getPlatform = (): "mac" | "win" => {
 	// User-Agent Client Hints API（Chromium系ブラウザでサポート）
@@ -24,9 +24,8 @@ export const getPlatform = (): "mac" | "win" => {
 			: "win";
 	}
 
-	// フォールバック: 非推奨だが広くサポートされている
-	const platform = navigator.platform.toLowerCase();
-	return platform.includes("mac") ? "mac" : "win";
+	// フォールバック: navigator.userAgent で判定（Mac / iPhone / iPad を検出）
+	return /mac|iphone|ipad|ipod/i.test(navigator.userAgent) ? "mac" : "win";
 };
 
 /**
