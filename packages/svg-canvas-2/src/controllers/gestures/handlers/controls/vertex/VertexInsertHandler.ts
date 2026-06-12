@@ -175,7 +175,7 @@ export class VertexInsertHandler implements ControlStrategy {
 		const snapCandidates = eventStartSnapshot.snapCandidates;
 		let snapFeedback = state.snapFeedback ?? { x: [], y: [] };
 
-		if (snapCandidates) {
+		if (snapCandidates && !event.mods.ctrl) {
 			const zoom = state.viewport.zoom;
 			const result = findSnap(
 				snapCandidates,
