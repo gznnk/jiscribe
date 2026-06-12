@@ -43,6 +43,7 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 			rotation={obj.rotation ?? 0}
 			textType={obj.textType}
 			textAlign={obj.textAlign}
+			verticalAlign={obj.verticalAlign}
 			fontColor={obj.fontColor}
 			fontSize={obj.fontSize}
 			fontFamily={obj.fontFamily}
