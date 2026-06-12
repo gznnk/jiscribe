@@ -1,5 +1,5 @@
 import type React from "react";
-import { useMemo, useRef } from "react";
+import { type Dispatch, useMemo, useRef } from "react";
 
 import type { CanvasControllerState } from "../CanvasTypes";
 import { GestureRecognizer } from "../gestures/recognizer/GestureRecognizer";
@@ -7,9 +7,10 @@ import type {
 	GestureCallback,
 	PointerEventHandlers,
 } from "../gestures/recognizer/GestureRecognizerTypes";
+import type { CanvasAction } from "../reducer/CanvasActions";
 
 export type UseGestureRecognizerParams = {
-	gestureCallback: GestureCallback;
+	dispatch: Dispatch<CanvasAction>;
 	containerRef: React.RefObject<HTMLElement | null>;
 	svgRef: React.RefObject<SVGSVGElement | null>;
 	canvasState: CanvasControllerState;
@@ -22,7 +23,7 @@ export type UseGestureRecognizerReturn = {
 };
 
 export const useGestureRecognizer = ({
-	gestureCallback,
+	dispatch,
 	containerRef,
 	svgRef,
 	canvasState,
@@ -36,6 +37,11 @@ export const useGestureRecognizer = ({
 
 	// 初回のみインスタンス作成
 	const handlers = useMemo(() => {
+		// 認識されたジェスチャーは GESTURE アクションとして reducer へ送る
+		// （GestureRecognizer クラス自体はコールバック契約のまま React に依存しない）
+		const gestureCallback: GestureCallback = (gesture) => {
+			dispatch({ type: "GESTURE", gesture });
+		};
 		recognizerRef.current = new GestureRecognizer({
 			gestureCallback,
 			containerRef,
@@ -47,7 +53,7 @@ export const useGestureRecognizer = ({
 			wheelHandler: recognizerRef.current.getWheelHandler(),
 			resetGestureState: () => recognizerRef.current?.resetGestureState(),
 		};
-	}, [gestureCallback, containerRef, svgRef]); // canvasStateは依存に含めない
+	}, [dispatch, containerRef, svgRef]); // canvasStateは依存に含めない
 
 	return handlers;
 };

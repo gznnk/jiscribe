@@ -1,20 +1,28 @@
-import { useEffect, useRef } from "react";
+import { type Dispatch, useEffect, useRef } from "react";
 
 import type { CanvasControllerState } from "../CanvasTypes";
 import { commandRegistry } from "../commands/CommandRegistry";
+import type { CanvasAction } from "../reducer/CanvasActions";
+
+export type UseKeyboardShortcutsParams = {
+	canvasState: CanvasControllerState;
+	/** Canvas reducer の dispatch（実行可能なコマンドを COMMAND アクションとして送る） */
+	dispatch: Dispatch<CanvasAction>;
+	/** 提供時、Ctrl+Z を Canvas 内部の UndoCommand ではなくこのコールバックで処理する */
+	onUndo?: () => void;
+	/** 提供時、Ctrl+Shift+Z / Ctrl+Y を Canvas 内部の RedoCommand ではなくこのコールバックで処理する */
+	onRedo?: () => void;
+};
 
 /**
  * キーボードショートカットを処理するカスタムフック
- *
- * @param onUndo 提供時、Ctrl+Z を Canvas 内部の UndoCommand ではなくこのコールバックで処理する
- * @param onRedo 提供時、Ctrl+Shift+Z / Ctrl+Y を Canvas 内部の RedoCommand ではなくこのコールバックで処理する
  */
-export const useKeyboardShortcuts = (
-	canvasState: CanvasControllerState,
-	handleCommand: (commandId: string) => void,
-	onUndo?: () => void,
-	onRedo?: () => void,
-) => {
+export const useKeyboardShortcuts = ({
+	canvasState,
+	dispatch,
+	onUndo,
+	onRedo,
+}: UseKeyboardShortcutsParams): void => {
 	const canvasStateRef = useRef(canvasState);
 	canvasStateRef.current = canvasState;
 
@@ -49,7 +57,7 @@ export const useKeyboardShortcuts = (
 				return;
 			}
 			if (command.canExecute(canvasStateRef.current)) {
-				handleCommand(command.id);
+				dispatch({ type: "COMMAND", commandId: command.id });
 			}
 		};
 
@@ -58,5 +66,5 @@ export const useKeyboardShortcuts = (
 		return () => {
 			document.removeEventListener("keydown", handleKeyDown);
 		};
-	}, [handleCommand, onUndo, onRedo]);
+	}, [dispatch, onUndo, onRedo]);
 };
