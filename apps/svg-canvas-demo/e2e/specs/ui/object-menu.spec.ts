@@ -1,4 +1,4 @@
-import { test, expect } from "../fixtures";
+import { test, expect } from "../../fixtures";
 
 test.describe("ObjectMenu によるスタイル設定", () => {
 	test("背景色と枠線色を CSS カラー入力で設定できる", async ({ canvas }) => {

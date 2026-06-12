@@ -1,4 +1,4 @@
-import { test, expect } from "../fixtures";
+import { test, expect } from "../../fixtures";
 
 test.describe("図形の描画", () => {
 	test("Rectangle は rect 要素を作る", async ({ canvas }) => {

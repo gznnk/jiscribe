@@ -1,4 +1,4 @@
-import { test, expect } from "../fixtures";
+import { test, expect } from "../../fixtures";
 
 test.describe("テキスト編集", () => {
 	test("ダブルクリックで編集し、外側クリックで確定される", async ({
