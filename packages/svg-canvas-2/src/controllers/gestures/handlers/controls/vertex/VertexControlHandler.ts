@@ -3,7 +3,7 @@ import type { Point } from "@workspace/geometry";
 
 import { PRECISION } from "../../../../../constants/precision";
 import { isPoly } from "../../../../../schemas/objects/types/Poly";
-import type { CanvasControllerState } from "../../../../CanvasTypes";
+import type { CanvasControllerState, SnapFeedback } from "../../../../CanvasTypes";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import {
@@ -142,7 +142,7 @@ export class VertexControlHandler implements ControlStrategy {
 		let cursorX = event.last.x;
 		let cursorY = event.last.y;
 		const snapCandidates = eventStartSnapshot.snapCandidates;
-		let snapFeedback = state.snapFeedback ?? { x: [], y: [] };
+		let snapFeedback: SnapFeedback = { x: [], y: [] };
 
 		if (snapCandidates && !event.mods.ctrl) {
 			const zoom = state.viewport.zoom;
