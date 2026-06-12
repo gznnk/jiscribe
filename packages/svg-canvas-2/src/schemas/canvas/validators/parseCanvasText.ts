@@ -2,6 +2,8 @@ import type { CanvasDoc } from "../CanvasDoc";
 import type { SemanticDiagnostic } from "./types";
 import { validateSemantics } from "./validateSemantics";
 import { validateStructure } from "./validateStructure";
+import { initializeObjectDocValidatorRegistry } from "../../registry/initializeObjectDocValidatorRegistry";
+import { objectDocValidatorRegistry } from "../../registry/ObjectDocValidatorRegistry";
 
 /**
  * Canvas ドキュメント文字列のパース結果。
@@ -27,6 +29,15 @@ export type CanvasParseResult =
  * @param text パース対象の JSON 文字列
  */
 export function parseCanvasText(text: string): CanvasParseResult {
+	// validateStructure / validateSemantics は型別検証・接続可能性判定を
+	// objectDocValidatorRegistry に委譲する。このレジストリは「parse 時の検証」で
+	// しか使われないため、ここで未初期化なら埋める（冪等: 既に埋まっていれば何もしない）。
+	// こうすることで呼び出し側（UI エントリ / パーサー専用エントリ）が初期化を
+	// 気にする必要がなくなり、エントリ取り違えによる誤検知を構造的に防ぐ。
+	if (objectDocValidatorRegistry.isEmpty()) {
+		initializeObjectDocValidatorRegistry();
+	}
+
 	let data: unknown;
 	try {
 		data = JSON.parse(text);
