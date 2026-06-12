@@ -1,5 +1,6 @@
 import styled from "@emotion/styled";
 
+import { TEXT_LINE_HEIGHT } from "../../../../constants/textLineHeight";
 import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
 import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
 import { cssSafeValue } from "../../utils/cssSafeValue";
@@ -48,6 +49,7 @@ export const Text = styled.div<TextProps>`
 	font-size: ${(props) => props.fontSize}px;
 	font-family: ${(props) => cssSafeValue(props.fontFamily)};
 	font-weight: ${(props) => cssSafeValue(props.fontWeight)};
+	line-height: ${TEXT_LINE_HEIGHT};
 	border: none;
 	outline: none;
 	background: transparent;

@@ -1,6 +1,7 @@
 import styled from "@emotion/styled";
 
 import { scrollbarStyles } from "../../../../constants/scrollbarStyles";
+import { TEXT_LINE_HEIGHT } from "../../../../constants/textLineHeight";
 import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
 
 const VerticalAlignMap: Record<
@@ -107,6 +108,9 @@ export const TextArea = styled.textarea<TextAreaProps>`
 	font-size: ${(props) => props.fontSize}px;
 	font-family: ${(props) => props.fontFamily};
 	font-weight: ${(props) => props.fontWeight};
+	line-height: ${TEXT_LINE_HEIGHT};
+	word-break: break-word;
+	white-space: pre-wrap;
 	background: transparent;
 	border: none;
 	outline: none;
