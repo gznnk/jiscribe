@@ -1,6 +1,6 @@
 # Jiscribe (Beta)
 
-![Jiscribe Canvas Editor](./images/hero-showcase.png)
+![Jiscribe Canvas Editor](https://beta.jiscribe.dev/images/vscode/hero-showcase.png)
 
 **A VS Code-native canvas editor for visual communication between AI and humans.**
 
@@ -34,7 +34,7 @@ Because the files are neatly formatted JSON, you can easily review diffs in Git.
 
 ### ⚡ 4. Everything in VS Code
 
-![Landing page design built with Jiscribe](./images/landing-page-design.png)
+![Landing page design built with Jiscribe](https://beta.jiscribe.dev/images/vscode/landing-page-design.png)
 
 Say goodbye to context-switching between external drawing apps and your editor. Draw system diagrams and flowcharts in a tab right next to your source code.
 
@@ -95,4 +95,7 @@ _(More detailed references will be available on our doc site soon!)_
 Copyright © 2026 gznnk. All rights reserved.
 
 Jiscribe is proprietary software; its source code is not publicly available.
-Use of this extension is governed by [LICENSE.txt](./LICENSE.txt).
+Use of this extension is governed by the bundled `LICENSE.txt`.
+
+This extension bundles third-party open-source software.
+See the bundled `THIRD-PARTY-NOTICES.txt` for their license texts.

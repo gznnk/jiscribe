@@ -2,7 +2,7 @@
 .vscode-test/**
 src/**
 build.mjs
-node_modules/**
+**/node_modules/**
 **/*.map
 tsconfig.json
 # 内部ドキュメント・開発用テストファイル
@@ -10,5 +10,7 @@ canvas-doc-reference.md
 icon-source.png
 docs/**
 .gitignore
-*.jis.json
+**/*.jis.json
 *.vsix
+# README は公開 URL の画像を参照するため、ローカル画像は同梱しない
+images/**
