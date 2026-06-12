@@ -30,9 +30,9 @@ const horizontalAlignments = [
 ] as const;
 
 const verticalAlignments = [
-	{ value: "start", Icon: AlignTopIcon, title: "Top" },
-	{ value: "center", Icon: AlignMiddleIcon, title: "Middle" },
-	{ value: "end", Icon: AlignBottomIcon, title: "Bottom" },
+	{ value: "top", Icon: AlignTopIcon, title: "Top" },
+	{ value: "middle", Icon: AlignMiddleIcon, title: "Middle" },
+	{ value: "bottom", Icon: AlignBottomIcon, title: "Bottom" },
 ] as const;
 
 /**
@@ -55,7 +55,7 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 		| TextStyleState
 		| undefined;
 	const textAlign = obj?.textAlign ?? "left";
-	const verticalAlign = obj?.verticalAlign ?? "center";
+	const verticalAlign = obj?.verticalAlign ?? "middle";
 
 	return (
 		<MenuItemPositioner ref={menuItemRef}>
