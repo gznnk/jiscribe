@@ -17,12 +17,12 @@ specs/
 
 ## 分類の考え方
 
-| フォルダ | 対象 | 追加するテストの例 |
-|---|---|---|
-| ルート | 横断的な起動・基本動作 | ― |
-| `shapes/` | SVG 図形の生成・変換・接続 | `transform.spec.ts`（移動・リサイズ・回転）、`group.spec.ts`（グループ化）、`path.spec.ts` |
-| `editing/` | 図形内コンテンツの編集 | `copy-paste.spec.ts`、`undo-redo.spec.ts` |
-| `ui/` | ツールバー・パネルなど UI 操作 | `toolbar.spec.ts`、`keyboard-shortcuts.spec.ts` |
+| フォルダ   | 対象                           | 追加するテストの例                                                                         |
+| ---------- | ------------------------------ | ------------------------------------------------------------------------------------------ |
+| ルート     | 横断的な起動・基本動作         | ―                                                                                          |
+| `shapes/`  | SVG 図形の生成・変換・接続     | `transform.spec.ts`（移動・リサイズ・回転）、`group.spec.ts`（グループ化）、`path.spec.ts` |
+| `editing/` | 図形内コンテンツの編集         | `copy-paste.spec.ts`、`undo-redo.spec.ts`                                                  |
+| `ui/`      | ツールバー・パネルなど UI 操作 | `toolbar.spec.ts`、`keyboard-shortcuts.spec.ts`                                            |
 
 ## ファイル分割の目安
 
