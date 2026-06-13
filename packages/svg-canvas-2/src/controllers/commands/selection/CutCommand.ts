@@ -15,7 +15,13 @@ export const CutCommand: Command = {
 	canExecute: (state) => state.selectedIds.length > 0,
 
 	execute: (state) => {
-		const stateWithClipboard = CopyCommand.execute(state);
+		// selectedVertex をクリアしてから合成する。
+		// そのままだと CopyCommand は polyline 全体をコピーするのに
+		// DeleteCommand が頂点 1 個だけを削除する非対称な結果になる。
+		const stateWithClipboard = CopyCommand.execute({
+			...state,
+			selectedVertex: null,
+		});
 		return DeleteCommand.execute(stateWithClipboard);
 	},
 };
