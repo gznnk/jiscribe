@@ -65,9 +65,24 @@ export const selectors = {
 	objectMenuSet: (property: string, value: string) =>
 		`[data-id="object-menu:set:${property}:${value}"]`,
 
+	/** ObjectMenu のスライダー（range input、ドラッグで値を変える） */
+	objectMenuSlider: (property: string) =>
+		`[data-id="object-menu:slider:${property}"]`,
+
 	/** カラーピッカーの CSS カラーテキスト入力欄（Enter で確定） */
 	cssColorInput: 'input[placeholder="CSS color"]',
 
 	/** テキスト編集中の TEXTAREA */
 	textEditor: "[data-kind=text-editor]",
+
+	/** コンテキストメニューの項目すべて（command / callback）。出現判定に使う */
+	contextMenuAny: '[data-kind^="context-menu"]',
+
+	/** コンテキストメニューの command 項目（最前面へ・複製など） */
+	contextMenuCommand: (commandId: string) =>
+		`[data-id="context-menu:${commandId}"]`,
+
+	/** コンテキストメニューの callback 項目（paste など） */
+	contextMenuCallback: (id: string) =>
+		`[data-kind="context-menu-callback"][data-id="${id}"]`,
 } as const;

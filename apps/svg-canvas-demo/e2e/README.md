@@ -49,6 +49,11 @@ await page.goto("http://localhost:5174/", { waitUntil: "networkidle" });
 
 ジェスチャーシステムが `data-kind` / `data-id` でイベントをルーティングしているため、テストでも同じ属性を使うのが確実。
 
+属性の使い分け:
+
+- **`data-kind` / `data-id`** … プロダクトの**機能契約**（gesture システムが読む）。テストは「ついでに」これを利用する
+- **`data-testid`** … **テスト専用フック**。機能で特定できない要素（gesture を経由しない数値入力欄など）に付ける。`playwright.config.ts` の `testIdAttribute: "data-testid"` で有効化済みで、`page.getByTestId("menu-number-input:strokeWidth")` のように使う。機能契約（`data-id`）に混ぜないことで、テスト都合の識別子と機能の識別子を区別する
+
 | data-kind     | 意味                                    | data-id の形式                    |
 | ------------- | --------------------------------------- | --------------------------------- |
 | `canvas`      | キャンバス本体（DIV）                   | `canvas`                          |

@@ -110,6 +110,7 @@ const MenuSliderComponent: React.FC<MenuSliderProps> = ({
 					onChange={handleNumberInputChange}
 					onBlur={handleNumberInputBlur}
 					onKeyDown={handleNumberInputKeyDown}
+					data-testid={`menu-number-input:${property}`}
 					data-gesture="none"
 				/>
 			</MenuSliderFooter>

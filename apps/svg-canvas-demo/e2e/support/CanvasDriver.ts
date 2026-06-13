@@ -80,6 +80,64 @@ export class CanvasDriver {
 	}
 
 	/**
+	 * 指定座標でホイールを回す。ctrl=true でキャンバスズーム、それ以外はスクロール。
+	 * 先に move でポインタを置いてから wheel を送る（wheel の target を確定させるため）。
+	 */
+	async wheel(
+		point: { x: number; y: number },
+		{
+			deltaX = 0,
+			deltaY = 0,
+			ctrl = false,
+		}: { deltaX?: number; deltaY?: number; ctrl?: boolean },
+	) {
+		await this.page.mouse.move(point.x, point.y);
+		if (ctrl) {
+			await this.page.keyboard.down("Control");
+		}
+		await this.page.mouse.wheel(deltaX, deltaY);
+		if (ctrl) {
+			await this.page.keyboard.up("Control");
+		}
+	}
+
+	/** 右ボタンドラッグ（ビューポートのパンに使う） */
+	async rightDrag(
+		from: { x: number; y: number },
+		to: { x: number; y: number },
+		steps = 8,
+	) {
+		await this.page.mouse.move(from.x, from.y);
+		await this.page.mouse.down({ button: "right" });
+		await this.page.mouse.move(to.x, to.y, { steps });
+		await this.page.mouse.up({ button: "right" });
+	}
+
+	/**
+	 * いま表示されているコントロール（選択ハンドル・接続アンカー等）の data-id 一覧。
+	 * コントロールは表示中のみ DOM にマウントされるため、これがそのまま可視集合になる。
+	 */
+	async visibleControlIds(): Promise<string[]> {
+		return this.page.evaluate(
+			(controlSelector) =>
+				[...document.querySelectorAll(controlSelector)]
+					.map((el) => el.getAttribute("data-id"))
+					.filter((id): id is string => id !== null),
+			selectors.control,
+		);
+	}
+
+	/** 特定のコントロールが表示されているか */
+	async isControlVisible(controlId: string): Promise<boolean> {
+		return (await this.visibleControlIds()).includes(controlId);
+	}
+
+	/** いずれかのコントロールが表示されているか（選択状態の簡易判定） */
+	async hasAnyControl(): Promise<boolean> {
+		return (await this.visibleControlIds()).length > 0;
+	}
+
+	/**
 	 * ツールを選んでドラッグで図形を描き、新規図形の data-id を返す。
 	 * 描画直後は図形が自動選択され ObjectMenu が表示される。
 	 */
@@ -140,14 +198,119 @@ export class CanvasDriver {
 		await expect(this.page.locator(selectors.textEditor)).toHaveCount(0);
 	}
 
+	/** 編集中の textarea 要素のロケーター（data-kind ラッパーの内側） */
+	textArea() {
+		return this.page.locator(`${selectors.textEditor} textarea`);
+	}
+
+	/** 編集中の textarea にフォーカスが当たっているか */
+	async isTextEditorFocused(): Promise<boolean> {
+		return this.page.evaluate((sel) => {
+			const textarea = document.querySelector(`${sel} textarea`);
+			return textarea !== null && document.activeElement === textarea;
+		}, selectors.textEditor);
+	}
+
+	/**
+	 * 編集中エディタの縦方向アライメントを top / middle / bottom で返す。
+	 * ラッパー（flex）の computed align-items から逆算する。
+	 */
+	async textEditorVerticalAlign(): Promise<"top" | "middle" | "bottom" | null> {
+		return this.page.evaluate((sel) => {
+			const wrapper = document.querySelector(sel);
+			if (!wrapper) {
+				return null;
+			}
+			const align = getComputedStyle(wrapper).alignItems;
+			if (align === "flex-start") {
+				return "top";
+			}
+			if (align === "flex-end") {
+				return "bottom";
+			}
+			if (align === "center") {
+				return "middle";
+			}
+			return null;
+		}, selectors.textEditor);
+	}
+
+	/** 編集中 textarea のスクロール位置 */
+	async textEditorScrollTop(): Promise<number> {
+		return this.page.evaluate((sel) => {
+			const textarea = document.querySelector(`${sel} textarea`);
+			return textarea instanceof HTMLTextAreaElement ? textarea.scrollTop : 0;
+		}, selectors.textEditor);
+	}
+
+	/** 編集中 textarea の選択範囲（selectionStart / selectionEnd） */
+	async textEditorSelection(): Promise<{ start: number; end: number } | null> {
+		return this.page.evaluate((sel) => {
+			const textarea = document.querySelector(`${sel} textarea`);
+			if (!(textarea instanceof HTMLTextAreaElement)) {
+				return null;
+			}
+			return { start: textarea.selectionStart, end: textarea.selectionEnd };
+		}, selectors.textEditor);
+	}
+
+	/** ObjectMenu のセクション（ドロップダウン）をトグルで開く */
+	async openObjectMenu(sectionId: string) {
+		await this.page.click(selectors.objectMenuToggle(sectionId));
+	}
+
 	/**
 	 * 選択中の図形の ObjectMenu からカラーピッカーを開き、CSS カラーを設定する。
 	 * プリセットにない色も hex や "transparent" で指定できる。
 	 */
 	async setColor(sectionId: ColorSectionId, cssColor: string) {
-		await this.page.click(selectors.objectMenuToggle(sectionId));
+		await this.openObjectMenu(sectionId);
 		const input = this.page.locator(selectors.cssColorInput);
 		await input.fill(cssColor);
+		await input.press("Enter");
+	}
+
+	/**
+	 * カラーピッカーのプリセットスウォッチをクリックして色を設定する。
+	 * セクションはあらかじめ開いておくか、open=true で開いてから押す。
+	 */
+	async pickColorSwatch(
+		sectionId: ColorSectionId,
+		property: string,
+		value: string,
+		open = true,
+	) {
+		if (open) {
+			await this.openObjectMenu(sectionId);
+		}
+		await this.page.click(selectors.objectMenuSet(property, value));
+	}
+
+	/**
+	 * ObjectMenu のスライダーを水平ドラッグして値を変える。
+	 * セクションは事前に開いておくこと。dx 正で右（増加）方向。
+	 * スライダーは gesture（native-pointer）経由で drag/dragEnd を発火させる必要があるため
+	 * 実際のポインタドラッグで操作する。
+	 */
+	async dragSliderBy(property: string, dx: number) {
+		const slider = this.page.locator(selectors.objectMenuSlider(property));
+		await expect(slider).toBeVisible();
+		const box = await slider.boundingBox();
+		if (!box) {
+			throw new Error(`スライダー ${property} の位置が取得できない`);
+		}
+		const startX = box.x + box.width / 2;
+		const y = box.y + box.height / 2;
+		await this.drag({ x: startX, y }, { x: startX + dx, y }, 10);
+	}
+
+	/**
+	 * ObjectMenu スライダー横の数値入力欄に値を入れて Enter で確定する。
+	 * セクションは事前に開いておくこと。テスト専用フック data-testid で特定する。
+	 */
+	async setNumberInput(property: string, value: number) {
+		const input = this.page.getByTestId(`menu-number-input:${property}`);
+		await input.fill(String(value));
 		await input.press("Enter");
 	}
 
@@ -199,6 +362,69 @@ export class CanvasDriver {
 			throw new Error("作成されたコネクターの data-id が取得できない");
 		}
 		return created.id;
+	}
+
+	/** 指定座標を右クリックして自前のコンテキストメニューを開く */
+	async openContextMenu(point: { x: number; y: number }) {
+		await this.page.mouse.click(point.x, point.y, { button: "right" });
+		await expect(
+			this.page.locator(selectors.contextMenuAny).first(),
+		).toBeVisible();
+	}
+
+	/** 自前のコンテキストメニューが表示されているか */
+	async contextMenuVisible(): Promise<boolean> {
+		return (await this.page.locator(selectors.contextMenuAny).count()) > 0;
+	}
+
+	/** コンテキストメニューの command 項目をクリックする */
+	async clickContextMenuCommand(commandId: string) {
+		await this.page.click(selectors.contextMenuCommand(commandId));
+	}
+
+	/** コンテキストメニューの callback 項目をクリックする */
+	async clickContextMenuItem(id: string) {
+		await this.page.click(selectors.contextMenuCallback(id));
+	}
+
+	/**
+	 * 変形ハンドル（リサイズ8方向 / 回転）をドラッグする。対象は選択済みであること。
+	 * handle は selectors.transformControl と同じ識別子。
+	 */
+	async dragTransformHandle(
+		handle:
+			| "topLeft"
+			| "topCenter"
+			| "topRight"
+			| "leftCenter"
+			| "rightCenter"
+			| "bottomLeft"
+			| "bottomCenter"
+			| "bottomRight"
+			| "rotation",
+		to: { x: number; y: number },
+	) {
+		const control = this.page.locator(selectors.transformControl(handle));
+		await expect(control).toBeVisible();
+		const box = await control.boundingBox();
+		if (!box) {
+			throw new Error(`変形ハンドル ${handle} の位置が取得できない`);
+		}
+		await this.drag(
+			{ x: box.x + box.width / 2, y: box.y + box.height / 2 },
+			to,
+			10,
+		);
+	}
+
+	/** Undo（Ctrl+Z） */
+	async undo() {
+		await this.page.keyboard.press("Control+z");
+	}
+
+	/** Redo（Ctrl+Shift+Z） */
+	async redo() {
+		await this.page.keyboard.press("Control+Shift+z");
 	}
 
 	/** data-id で図形のロケーターを取得する */
