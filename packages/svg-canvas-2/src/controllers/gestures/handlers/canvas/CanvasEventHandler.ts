@@ -27,10 +27,8 @@ export const CanvasEventHandler: GestureHandler = {
 	},
 
 	handle(state, event) {
-		// Commit text editing if active
-		let nextState = commitTextEditIfNeeded(state);
-
 		// Zoom handling
+		// テキスト編集中もズームで編集を中断しないよう、commitTextEditIfNeeded より前に処理する
 		if (event.type === "zoom" && event.zoomDelta != null) {
 			const deltaY = event.zoomDelta;
 			const zoomDelta = deltaY > 0 ? ZOOM.OUT_FACTOR : ZOOM.IN_FACTOR;
@@ -48,8 +46,8 @@ export const CanvasEventHandler: GestureHandler = {
 			const newMinX = event.last.x - newViewBoxWidth * offsetX;
 			const newMinY = event.last.y - newViewBoxHeight * offsetY;
 
-			nextState = {
-				...nextState,
+			return {
+				...state,
 				viewport: {
 					...state.viewport,
 					zoom: roundToDecimal(newZoom, PRECISION.ZOOM),
@@ -57,17 +55,17 @@ export const CanvasEventHandler: GestureHandler = {
 					minY: roundToDecimal(newMinY, PRECISION.COORDINATE),
 				},
 			};
-			return nextState;
 		}
 
 		// Scroll handling (wheel scroll + edge scroll)
+		// ズームと同様、テキスト編集を中断せずビューポートのみ更新する
 		if (event.type === "scroll" && event.scrollDelta) {
 			const { deltaX, deltaY } = event.scrollDelta;
 			const svgDeltaX = deltaX / state.viewport.zoom;
 			const svgDeltaY = deltaY / state.viewport.zoom;
 
-			nextState = {
-				...nextState,
+			return {
+				...state,
 				viewport: {
 					...state.viewport,
 					minX: roundToDecimal(
@@ -80,8 +78,10 @@ export const CanvasEventHandler: GestureHandler = {
 					),
 				},
 			};
-			return nextState;
 		}
+
+		// Commit text editing if active
+		let nextState = commitTextEditIfNeeded(state);
 
 		// Right-click drag for viewport panning (GrabScroll)
 		if (event.button === 2) {

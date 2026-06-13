@@ -40,6 +40,11 @@ class ObjectDocValidatorRegistry {
 		return this.entries.get(type as ObjectType)?.features.connectable === true;
 	}
 
+	/** 登録が空かどうか。parseCanvasText の遅延初期化要否の判定に使う。 */
+	isEmpty(): boolean {
+		return this.entries.size === 0;
+	}
+
 	clear(): void {
 		this.entries.clear();
 	}

@@ -1,4 +1,7 @@
-import { parseCanvasText } from "@workspace/svg-canvas-2";
+// ルートエントリ（Canvas コンポーネント込み）ではなくパーサー専用エントリを使う。
+// これにより Node 側バンドル（extension.js）へ react / @emotion / katex などの
+// UI 依存が混入せず、拡張の起動が軽くなる。
+import { parseCanvasText } from "@workspace/svg-canvas-2/parser";
 import * as vscode from "vscode";
 
 /**

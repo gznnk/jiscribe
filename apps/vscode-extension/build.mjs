@@ -4,7 +4,7 @@
 // 監視モード: node build.mjs --watch
 
 import * as esbuild from "esbuild";
-import { copyFileSync, mkdirSync } from "fs";
+import { copyFileSync, mkdirSync, rmSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
@@ -88,6 +88,12 @@ function copySchema() {
 // ── メインのビルド処理 ───────────────────────────────────────────────────
 async function build() {
 	try {
+		// 過去のビルドの残骸（古い成果物や実験時のファイル）が vsix に混入しないよう、
+		// 監視モード以外では dist を空にしてからビルドする
+		if (!isWatch) {
+			rmSync(join(__dirname, "dist"), { recursive: true, force: true });
+		}
+
 		copySchema();
 
 		if (isWatch) {

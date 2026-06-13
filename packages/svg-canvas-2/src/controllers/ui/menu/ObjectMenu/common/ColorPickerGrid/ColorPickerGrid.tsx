@@ -81,11 +81,6 @@ const ColorPickerGridComponent: React.FC<ColorPickerGridProps> = ({
 		[commit],
 	);
 
-	// テキスト入力の pointerdown をキャンバスのジェスチャーシステムに伝播させない
-	const stopPropagation = useCallback((e: React.PointerEvent) => {
-		e.stopPropagation();
-	}, []);
-
 	return (
 		<ColorPickerContainer>
 			<ColorGrid>
@@ -107,7 +102,7 @@ const ColorPickerGridComponent: React.FC<ColorPickerGridProps> = ({
 					onChange={handleTextChange}
 					onBlur={handleBlur}
 					onKeyDown={handleKeyDown}
-					onPointerDown={stopPropagation}
+					data-gesture="none"
 					maxLength={32}
 					placeholder="CSS color"
 					spellCheck={false}

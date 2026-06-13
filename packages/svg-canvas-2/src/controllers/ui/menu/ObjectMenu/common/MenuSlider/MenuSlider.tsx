@@ -88,10 +88,6 @@ const MenuSliderComponent: React.FC<MenuSliderProps> = ({
 		[commitNumberInput, inputValue],
 	);
 
-	const stopPropagation = useCallback((e: React.PointerEvent) => {
-		e.stopPropagation();
-	}, []);
-
 	// value がユーザーの入力と異なる場合のみ外部変更（スライダー操作等）として扱い入力欄をリセットする。
 	// commit:false のプレビューも value を更新するが、その場合は inputValue と一致するためスキップする。
 	useEffect(() => {
@@ -114,7 +110,7 @@ const MenuSliderComponent: React.FC<MenuSliderProps> = ({
 					onChange={handleNumberInputChange}
 					onBlur={handleNumberInputBlur}
 					onKeyDown={handleNumberInputKeyDown}
-					onPointerDown={stopPropagation}
+					data-gesture="none"
 				/>
 			</MenuSliderFooter>
 			<MenuSliderInput
@@ -125,7 +121,7 @@ const MenuSliderComponent: React.FC<MenuSliderProps> = ({
 				onChange={handleSliderChange}
 				data-kind="object-menu"
 				data-id={`object-menu:slider:${property}`}
-				data-interactive="true"
+				data-gesture="native-pointer"
 			/>
 		</MenuSliderWrapper>
 	);

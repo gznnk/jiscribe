@@ -8,24 +8,15 @@ import { Polygon } from "../../presentations/objects/primitives/Polygon";
 import { Polyline } from "../../presentations/objects/primitives/Polyline";
 import { Rect } from "../../presentations/objects/primitives/Rect";
 import { StickyFeatures } from "../../schemas/objects/annotations/sticky/StickyDoc";
-import { validateStickyDoc } from "../../schemas/objects/annotations/sticky/validateStickyDoc";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
 import { ConnectorFeatures } from "../../schemas/objects/connections/connector/ConnectorDoc";
-import { validateConnectorDoc } from "../../schemas/objects/connections/connector/validateConnectorDoc";
 import { EllipseFeatures } from "../../schemas/objects/primitives/ellipse/EllipseDoc";
-import { validateEllipseDoc } from "../../schemas/objects/primitives/ellipse/validateEllipseDoc";
 import { GroupFeatures } from "../../schemas/objects/primitives/group/GroupDoc";
-import { validateGroupDoc } from "../../schemas/objects/primitives/group/validateGroupDoc";
 import { PolygonFeatures } from "../../schemas/objects/primitives/polygon/PolygonDoc";
-import { validatePolygonDoc } from "../../schemas/objects/primitives/polygon/validatePolygonDoc";
 import { PolylineFeatures } from "../../schemas/objects/primitives/polyline/PolylineDoc";
-import { validatePolylineDoc } from "../../schemas/objects/primitives/polyline/validatePolylineDoc";
 import { RectFeatures } from "../../schemas/objects/primitives/rect/RectDoc";
-import { validateRectDoc } from "../../schemas/objects/primitives/rect/validateRectDoc";
 import type { ObjectFeatures } from "../../schemas/objects/types/ObjectFeatures";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
-import type { ObjectDocValidateFn } from "../../schemas/registry/ObjectDocValidatorRegistry";
-import { objectDocValidatorRegistry } from "../../schemas/registry/ObjectDocValidatorRegistry";
 import {
 	stickyToDoc,
 	stickyToState,
@@ -115,9 +106,12 @@ export const initializeObjectRegistry = (): void => {
 	objectMapperRegistry.clear();
 	objectComponentRegistry.clear();
 	objectBehaviorRegistry.clear();
-	objectDocValidatorRegistry.clear();
 	objectStateValidatorRegistry.clear();
 	objectMenuRegistry.clear();
+
+	// doc バリデータ（objectDocValidatorRegistry）はここでは初期化しない。
+	// 登録内容は parse 時の検証でしか使われず、parseCanvasText が必要時に
+	// 遅延初期化する（schemas/registry/initializeObjectDocValidatorRegistry）。
 
 	registerObject(
 		"rect",
@@ -147,7 +141,6 @@ export const initializeObjectRegistry = (): void => {
 				items: [{ type: "aspectRatio" }],
 			},
 		],
-		validateRectDoc,
 		isValidRectState,
 	);
 
@@ -179,7 +172,6 @@ export const initializeObjectRegistry = (): void => {
 				items: [{ type: "aspectRatio" }],
 			},
 		],
-		validateEllipseDoc,
 		isValidEllipseState,
 	);
 
@@ -199,7 +191,6 @@ export const initializeObjectRegistry = (): void => {
 				items: [{ type: "aspectRatio" }],
 			},
 		],
-		validateGroupDoc,
 		isValidGroupState,
 	);
 
@@ -223,7 +214,6 @@ export const initializeObjectRegistry = (): void => {
 				],
 			},
 		],
-		validatePolygonDoc,
 		isValidPolygonState,
 	);
 
@@ -247,7 +237,6 @@ export const initializeObjectRegistry = (): void => {
 				items: [{ type: "lineColor" }, { type: "lineStyle" }],
 			},
 		],
-		validatePolylineDoc,
 		isValidPolylineState,
 	);
 
@@ -271,7 +260,6 @@ export const initializeObjectRegistry = (): void => {
 				items: [{ type: "lineColor" }, { type: "lineStyle" }],
 			},
 		],
-		validateConnectorDoc,
 		isValidConnectorState,
 	);
 
@@ -301,7 +289,6 @@ export const initializeObjectRegistry = (): void => {
 				items: [{ type: "aspectRatio" }],
 			},
 		],
-		validateStickyDoc,
 		isValidStickyState,
 	);
 };
@@ -317,13 +304,11 @@ export const registerObject = <
 	component: FC<any>,
 	behavior: ObjectBehaviorEntry<TState>,
 	menuFactory: MenuSectionFactory<TState>,
-	validate: ObjectDocValidateFn,
 	validateState: ObjectStateValidateFn,
 ): void => {
 	objectMapperRegistry.register(type, mapper, features);
 	objectComponentRegistry.register(type, component);
 	objectBehaviorRegistry.register(type, behavior);
-	objectDocValidatorRegistry.register(type, validate, features);
 	objectStateValidatorRegistry.register(type, validateState);
 	objectMenuRegistry.register(type, menuFactory);
 };

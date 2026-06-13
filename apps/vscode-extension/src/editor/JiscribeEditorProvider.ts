@@ -117,18 +117,21 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 						// .then().catch() と違い、onFulfilled 内の例外も onRejected に流れない
 						// ため意図が明確になる。
 						this.updateTextDocument(document, message.data).then(
-							() => {
+							(applied) => {
 								pendingWebviewUpdates--;
+								// applyEdit() は失敗時に reject ではなく false で resolve する
+								// こともある（例: ドキュメントが既に閉じられている）。
+								// どちらの経路でも、保存されていないことをユーザーへ通知する。
+								if (!applied) {
+									this.notifySaveFailure(document, undefined);
+								}
 							},
 							(err: unknown) => {
 								// (#2 修正) 失敗しても必ずカウンターを戻す。
 								// 戻さないと pendingWebviewUpdates が 0 に戻らず、
 								// 以降の外部ファイル変更がすべて Webview へ反映されなくなる。
 								pendingWebviewUpdates--;
-								console.error(
-									"[Jiscribe] ファイルへの書き込みに失敗しました:",
-									err,
-								);
+								this.notifySaveFailure(document, err);
 							},
 						);
 						break;
@@ -145,6 +148,20 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 			changeDocumentSubscription.dispose();
 			messageListener.dispose(); // (#1 修正) 追加
 		});
+	}
+
+	/**
+	 * Canvas の編集内容をファイルへ書き戻せなかったことをユーザーへ通知する。
+	 * console.error だけでは気づかれず、保存されたつもりで編集を続けてしまうため、
+	 * 必ずエラーメッセージを画面に表示する。
+	 */
+	private notifySaveFailure(document: vscode.TextDocument, err: unknown) {
+		console.error("[Jiscribe] ファイルへの書き込みに失敗しました:", err);
+		const detail = err instanceof Error ? `: ${err.message}` : "";
+		const baseName = document.uri.path.split("/").pop() ?? document.uri.path;
+		vscode.window.showErrorMessage(
+			`Jiscribe: Failed to write canvas changes to "${baseName}"${detail}. Your latest edits are NOT saved.`,
+		);
 	}
 
 	/**

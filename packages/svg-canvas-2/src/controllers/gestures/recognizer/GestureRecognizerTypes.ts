@@ -46,7 +46,7 @@ export type Gesture = {
 	button: number;
 	zoomDelta?: number; // Optional zoom delta (deltaY from wheel event, zoom events only)
 	scrollDelta?: ScrollDelta; // Optional scroll delta for edge scrolling
-	inputValue?: string; // Optional input value from interactive elements (data-interactive="true")
+	inputValue?: string; // Optional input value from native-pointer elements (data-gesture="native-pointer")
 };
 
 export type GestureCallback = (gesture: Gesture) => void;

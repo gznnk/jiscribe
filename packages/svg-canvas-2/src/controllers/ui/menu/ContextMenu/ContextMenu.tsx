@@ -95,8 +95,8 @@ const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 								disabled={!enabled}
 								data-kind="context-menu-callback"
 								data-id={item.id}
+								data-gesture="none"
 								onClick={enabled ? callbacks[item.id] : undefined}
-								onPointerDown={(e) => e.stopPropagation()}
 							>
 								<MenuItemLabel>{item.label}</MenuItemLabel>
 								{firstShortcut && (

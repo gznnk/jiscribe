@@ -10,8 +10,15 @@
 	"icon": "icon.png",
 	"version": "0.1.0",
 	"private": true,
+	"preview": true,
 	"engines": {
 		"vscode": "^1.85.0"
+	},
+	"capabilities": {
+		"untrustedWorkspaces": {
+			"supported": true
+		},
+		"virtualWorkspaces": true
 	},
 	"categories": [
 		"Visualization",
