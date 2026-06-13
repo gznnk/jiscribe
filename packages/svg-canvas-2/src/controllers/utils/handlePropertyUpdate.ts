@@ -49,8 +49,10 @@ const parsePropertyValue = (property: string, value: string): unknown => {
 	switch (property) {
 		case "strokeWidth":
 		case "rx":
-		case "fontSize":
-			return Number(value);
+		case "fontSize": {
+			const n = Number(value);
+			return isNaN(n) ? null : n;
+		}
 		case "lockAspectRatio":
 			return value === "true";
 		default:
@@ -87,6 +89,10 @@ export const handlePropertyUpdate = (
 		}
 
 		const parsedValue = parsePropertyValue(property, value);
+		if (parsedValue === null) {
+			return state;
+		}
+
 		return {
 			...state,
 			objects: {
@@ -120,6 +126,9 @@ export const handlePropertyUpdate = (
 
 	// property/value の組み合わせは全オブジェクトで共通なので一度だけ変換
 	const parsedValue = parsePropertyValue(property, value);
+	if (parsedValue === null) {
+		return state;
+	}
 
 	// ルートレベルの選択オブジェクトに対してプロパティを更新
 	for (const id of selectedIds) {
