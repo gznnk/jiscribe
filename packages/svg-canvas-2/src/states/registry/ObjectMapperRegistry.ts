@@ -5,7 +5,8 @@ import type { ObjectMapperType } from "../objects/base/MapperTypes";
 import type { ObjectState } from "../objects/base/ObjectState";
 
 type MapperEntry = {
-	mapper: ObjectMapperType;
+	toState: (doc: ObjectDoc) => ObjectState;
+	toDoc: (state: ObjectState) => ObjectDoc;
 	features: ObjectFeatures;
 };
 
@@ -18,7 +19,8 @@ class ObjectMapperRegistry {
 		features: ObjectFeatures,
 	): void {
 		this.entries.set(type, {
-			mapper: mapper as unknown as ObjectMapperType,
+			toState: (doc) => mapper.toState(doc as TDoc),
+			toDoc: (state) => mapper.toDoc(state as TState),
 			features,
 		});
 	}
@@ -28,7 +30,7 @@ class ObjectMapperRegistry {
 		if (!entry) {
 			throw new Error(`Mapper for object type '${doc.type}' not found.`);
 		}
-		return entry.mapper.toState(doc);
+		return entry.toState(doc);
 	}
 
 	toDoc(state: ObjectState): ObjectDoc {
@@ -36,7 +38,7 @@ class ObjectMapperRegistry {
 		if (!entry) {
 			throw new Error(`Mapper for object type '${state.type}' not found.`);
 		}
-		return entry.mapper.toDoc(state);
+		return entry.toDoc(state);
 	}
 
 	getFeatures(type: ObjectType): ObjectFeatures | undefined {
