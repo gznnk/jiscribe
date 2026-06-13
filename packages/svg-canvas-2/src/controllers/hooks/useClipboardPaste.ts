@@ -1,6 +1,6 @@
-import { type Dispatch, useCallback } from "react";
+import { type Dispatch, useCallback, useEffect } from "react";
 
-import { usePasteKeyboardShortcut } from "./usePasteKeyboardShortcut";
+import { getPlatform } from "../commands/CommandUtils";
 import {
 	type ClipboardData,
 	isClipboardData,
@@ -41,7 +41,31 @@ export const useClipboardPaste = (
 		dispatch({ type: "PASTE", data });
 	}, [dispatch, internalClipboard]);
 
-	usePasteKeyboardShortcut(handlePaste);
+	// Ctrl+V / Cmd+V でペースト
+	useEffect(() => {
+		const handler = (e: KeyboardEvent) => {
+			if (
+				e.target instanceof HTMLInputElement ||
+				e.target instanceof HTMLTextAreaElement ||
+				e.target instanceof HTMLSelectElement
+			) {
+				return;
+			}
+			const isMac = getPlatform() === "mac";
+			if (
+				e.code === "KeyV" &&
+				(isMac ? e.metaKey : e.ctrlKey) &&
+				!e.shiftKey &&
+				!e.altKey
+			) {
+				void handlePaste();
+				e.preventDefault();
+				e.stopPropagation();
+			}
+		};
+		document.addEventListener("keydown", handler);
+		return () => document.removeEventListener("keydown", handler);
+	}, [handlePaste]);
 
 	return handlePaste;
 };
