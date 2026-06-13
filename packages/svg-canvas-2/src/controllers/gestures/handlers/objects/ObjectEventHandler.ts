@@ -132,11 +132,14 @@ function handleObjectDrag(
 			y: snapCandidates.y.filter((c) => !excludeIds.has(c.objectId)),
 		};
 		const zoom = canvasState.viewport.zoom;
+		// 中央（中点）もドラッグ側エッジ値に含め、中央↔中央 / 中央↔エッジ を吸着可能にする
+		const selectedCenterX = (selectedBBox.left + selectedBBox.right) / 2;
+		const selectedCenterY = (selectedBBox.top + selectedBBox.bottom) / 2;
 		const result = findSnap(
 			filteredCandidates,
 			SNAP_THRESHOLD_PX / zoom,
-			[selectedBBox.left, selectedBBox.right],
-			[selectedBBox.top, selectedBBox.bottom],
+			[selectedBBox.left, selectedCenterX, selectedBBox.right],
+			[selectedBBox.top, selectedCenterY, selectedBBox.bottom],
 		);
 		adjustedDelta = {
 			x: delta.x + result.delta.x,

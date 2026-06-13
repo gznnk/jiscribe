@@ -133,24 +133,30 @@ export const buildSnapFeedback = (
 	xResult: SnapAxisResult,
 	yResult: SnapAxisResult,
 	candidates: SnapCandidates,
-): SnapFeedback => ({
-	x: xResult
-		? collectAxisFeedbacks(
-				[actualBBox.left, actualBBox.right],
-				candidates.x,
-				actualBBox.top,
-				actualBBox.bottom,
-			)
-		: [],
-	y: yResult
-		? collectAxisFeedbacks(
-				[actualBBox.top, actualBBox.bottom],
-				candidates.y,
-				actualBBox.left,
-				actualBBox.right,
-			)
-		: [],
-});
+): SnapFeedback => {
+	// 中央（中点）も含めてガイド対象に。中央が候補と一致したときに青破線を描画する。
+	// 点スナップ（left=right）では collectAxisFeedbacks 内の Set 重複排除で吸収される。
+	const centerX = (actualBBox.left + actualBBox.right) / 2;
+	const centerY = (actualBBox.top + actualBBox.bottom) / 2;
+	return {
+		x: xResult
+			? collectAxisFeedbacks(
+					[actualBBox.left, centerX, actualBBox.right],
+					candidates.x,
+					actualBBox.top,
+					actualBBox.bottom,
+				)
+			: [],
+		y: yResult
+			? collectAxisFeedbacks(
+					[actualBBox.top, centerY, actualBBox.bottom],
+					candidates.y,
+					actualBBox.left,
+					actualBBox.right,
+				)
+			: [],
+	};
+};
 
 /**
  * エッジ値リストとスナップ候補を比較し、スナップ補正量と軸ごとのスナップ結果を返す。

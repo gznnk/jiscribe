@@ -180,11 +180,14 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 				};
 
 				const zoom = state.viewport.zoom;
+				// 中央（中点）もドラッグ側エッジ値に含め、中央↔中央 / 中央↔エッジ を吸着可能にする
+				const rawCenterX = (rawBBox.left + rawBBox.right) / 2;
+				const rawCenterY = (rawBBox.top + rawBBox.bottom) / 2;
 				const result = findSnap(
 					snapCandidates,
 					SNAP_THRESHOLD_PX / zoom,
-					[rawBBox.left, rawBBox.right],
-					[rawBBox.top, rawBBox.bottom],
+					[rawBBox.left, rawCenterX, rawBBox.right],
+					[rawBBox.top, rawCenterY, rawBBox.bottom],
 				);
 
 				const actualBBox: BoundingBox = {

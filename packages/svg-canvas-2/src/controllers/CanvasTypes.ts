@@ -25,12 +25,18 @@ export type KeyPointsCache = Record<string, KeyPointsCacheEntry>;
 // Snap types (controller-layer only)
 // ---------------------------------------------------------------------------
 
-export type SnapEdge = "left" | "right" | "top" | "bottom";
+export type SnapEdge =
+	| "left"
+	| "right"
+	| "top"
+	| "bottom"
+	| "hCenter"
+	| "vCenter";
 
 /**
  * スナップ候補点。
- * x候補: left/right エッジ。coordinate はX座標、perpendicularMin/Max はそのオブジェクトのtop/bottom。
- * y候補: top/bottom エッジ。coordinate はY座標、perpendicularMin/Max はそのオブジェクトのleft/right。
+ * x候補: left/right エッジ + hCenter（中央のX座標）。coordinate はX座標、perpendicularMin/Max はそのオブジェクトのtop/bottom。
+ * y候補: top/bottom エッジ + vCenter（中央のY座標）。coordinate はY座標、perpendicularMin/Max はそのオブジェクトのleft/right。
  */
 export type SnapCandidate = {
 	objectId: string;

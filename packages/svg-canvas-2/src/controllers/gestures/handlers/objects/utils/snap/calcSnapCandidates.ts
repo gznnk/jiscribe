@@ -31,8 +31,10 @@ export const calcSnapCandidates = (
 		const bbox = calcKeyPointsBoundingBox(keyPoints);
 
 		const { left, right, top, bottom } = bbox;
+		const centerX = (left + right) / 2;
+		const centerY = (top + bottom) / 2;
 
-		// x 候補: left / right エッジ
+		// x 候補: left / right エッジ + hCenter（中央のX座標）
 		// perpendicularMin/Max は Y 方向の範囲（ガイド縦線の延伸用）
 		xCandidates.push(
 			{
@@ -49,9 +51,16 @@ export const calcSnapCandidates = (
 				perpendicularMin: top,
 				perpendicularMax: bottom,
 			},
+			{
+				objectId: id,
+				coordinate: centerX,
+				edge: "hCenter",
+				perpendicularMin: top,
+				perpendicularMax: bottom,
+			},
 		);
 
-		// y 候補: top / bottom エッジ
+		// y 候補: top / bottom エッジ + vCenter（中央のY座標）
 		// perpendicularMin/Max は X 方向の範囲（ガイド横線の延伸用）
 		yCandidates.push(
 			{
@@ -65,6 +74,13 @@ export const calcSnapCandidates = (
 				objectId: id,
 				coordinate: bottom,
 				edge: "bottom",
+				perpendicularMin: left,
+				perpendicularMax: right,
+			},
+			{
+				objectId: id,
+				coordinate: centerY,
+				edge: "vCenter",
 				perpendicularMin: left,
 				perpendicularMax: right,
 			},
