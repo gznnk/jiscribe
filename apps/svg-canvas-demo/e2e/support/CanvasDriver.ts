@@ -199,6 +199,22 @@ export class CanvasDriver {
 		const beforeIds = new Set(before.map((obj) => obj.id));
 
 		await this.page.click(selectors.toolButton(tool));
+
+		// ツールの click は描画モード（state.shapeDrawing）をセットするが、これは
+		// React の非同期な状態更新なので、armed になる前にキャンバスをドラッグすると
+		// CanvasEventHandler が shapeDrawing=null と判断し、描画ではなく範囲選択になる。
+		// armed なツールボタンは cursor: crosshair（非 armed は grab）になるため、
+		// これを状態待ちのシグナルにしてからドラッグする。
+		await expect
+			.poll(
+				() =>
+					this.page
+						.locator(selectors.toolButton(tool))
+						.evaluate((el) => getComputedStyle(el).cursor),
+				{ message: `${tool} ツールが描画モードになること` },
+			)
+			.toBe("crosshair");
+
 		await this.drag(from, to);
 
 		// 状態待ち: 新規オブジェクトの出現を待つ（出なければ操作が効いていない）
