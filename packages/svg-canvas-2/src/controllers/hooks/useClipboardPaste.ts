@@ -33,6 +33,9 @@ export const useClipboardPaste = (
 		}
 		data ??= internalClipboard;
 		if (!data) {
+			// ペースト対象が無くても、メニュー経由のクリックならメニューは閉じる。
+			// PASTE は dispatch されないため、ここで明示的に閉じないと開いたままになる。
+			dispatch({ type: "CLOSE_CONTEXT_MENU" });
 			return;
 		}
 		dispatch({ type: "PASTE", data });

@@ -91,6 +91,15 @@ export type PasteAction = {
 };
 
 /**
+ * Close context menu action - clears the context menu without any other change.
+ * Used by callback menu items (e.g. paste with empty clipboard) that bypass the
+ * gesture system and would otherwise leave the menu open.
+ */
+export type CloseContextMenuAction = {
+	type: "CLOSE_CONTEXT_MENU";
+};
+
+/**
  * Union of all canvas actions
  */
 export type CanvasAction =
@@ -103,4 +112,5 @@ export type CanvasAction =
 	| UndoAction
 	| RedoAction
 	| MenuPropertyUpdateAction
-	| PasteAction;
+	| PasteAction
+	| CloseContextMenuAction;

@@ -146,6 +146,13 @@ export const canvasReducer = (
 			return recordHistoryIfNeeded(pasteResult, state.commitVersion);
 		}
 
+		case "CLOSE_CONTEXT_MENU": {
+			if (state.contextMenuPosition === null) {
+				return state;
+			}
+			return { ...state, contextMenuPosition: null };
+		}
+
 		default:
 			return state;
 	}

@@ -52,6 +52,25 @@ test.describe("ドライバ動作確認: コンテキストメニュー", () => 
 		await expect.poll(() => canvas.contextMenuVisible()).toBe(false);
 	});
 
+	// #34 の非回帰: ペースト対象が無くても Paste クリックでメニューは閉じる。
+	// コピーを一切行わない（OS クリップボード読み取りは権限なしで失敗し internalClipboard も null）。
+	test("callback 項目（paste）は対象が無くてもメニューを閉じる（#34）", async ({
+		canvas,
+	}) => {
+		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
+		const before = (await canvas.captureObjects()).length;
+
+		await canvas.openContextMenu({ x: 500, y: 260 });
+		await canvas.clickContextMenuItem("paste");
+
+		// 対象が無いのでオブジェクトは増えない
+		await expect
+			.poll(async () => (await canvas.captureObjects()).length)
+			.toBe(before);
+		// それでもメニューは閉じる
+		await expect.poll(() => canvas.contextMenuVisible()).toBe(false);
+	});
+
 	test("メニュー外をクリックすると閉じる", async ({ canvas }) => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
 
