@@ -12,5 +12,4 @@ docs/**
 .gitignore
 **/*.jis.json
 *.vsix
-# README は公開 URL の画像を参照するため、ローカル画像は同梱しない
-images/**
+sample/**
