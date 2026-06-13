@@ -36,6 +36,7 @@ import { ZoomIndicator } from "./ui/feedback/ZoomIndicator";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
 import { ShapeLibrary } from "./ui/menu/ShapeLibrary";
+import { ShortcutHelp } from "./ui/menu/ShortcutHelp";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 
 // Initialize all registries (ObjectRegistry, GestureHandlerRegistry)
@@ -226,6 +227,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 						activePresetId={state.shapeDrawing?.preset.id ?? null}
 					/>
 					<ZoomIndicator zoom={state.viewport.zoom} />
+					<ShortcutHelp />
 					<ClipboardErrorToast errorVersion={clipboardWriteErrorVersion} />
 					<ContextMenu
 						position={state.contextMenuPosition}

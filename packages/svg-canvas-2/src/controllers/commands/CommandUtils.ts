@@ -131,3 +131,35 @@ export const formatShortcut = (binding: KeyBinding): string => {
 
 	return platform === "mac" ? parts.join("") : parts.join("+");
 };
+
+/**
+ * KeyBinding を構成キーごとのトークン配列に分割
+ * ショートカット一覧などで各キーを個別の <kbd> チップとして描画する用途に使う
+ * @example formatShortcutTokens({ code: "KeyZ", ctrl: true }) => ["Ctrl", "Z"] (Windows)
+ * @example formatShortcutTokens({ code: "KeyZ", meta: true }) => ["⌘", "Z"] (Mac)
+ */
+export const formatShortcutTokens = (binding: KeyBinding): string[] => {
+	const platform = getPlatform();
+	const tokens: string[] = [];
+
+	if (binding.ctrl) {
+		tokens.push(platform === "mac" ? "⌃" : "Ctrl");
+	}
+	if (binding.shift) {
+		tokens.push(platform === "mac" ? "⇧" : "Shift");
+	}
+	if (binding.alt) {
+		tokens.push(platform === "mac" ? "⌥" : "Alt");
+	}
+	if (binding.meta) {
+		tokens.push(platform === "mac" ? "⌘" : "Win");
+	}
+
+	if (binding.code !== undefined) {
+		tokens.push(CODE_DISPLAY_MAP[binding.code] ?? binding.code);
+	} else if (binding.key !== undefined) {
+		tokens.push(binding.key);
+	}
+
+	return tokens;
+};
