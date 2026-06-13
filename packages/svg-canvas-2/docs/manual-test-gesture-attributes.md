@@ -1,6 +1,26 @@
 # 手動テスト: data-gesture 統一後の回帰確認
 
-`data-interactive` / 各所の `stopPropagation` / `data-native-wheel` を `data-gesture` に統一した変更（[gesture-attributes.md](./gesture-attributes.md) 参照）の回帰確認項目。ポインタ・ホイール・右クリックまわりは自動テストで完全には担保できないため、デモアプリ（`pnpm dev:demo`）で以下を確認する。
+`data-interactive` / 各所の `stopPropagation` / `data-native-wheel` を `data-gesture` に統一した変更（[gesture-attributes.md](./gesture-attributes.md) 参照）の回帰確認項目。
+
+## E2E 自動化の状況
+
+下表の多くは `apps/svg-canvas-demo/e2e` で自動化済み。手動確認は補助とし、回帰検知は e2e に任せる。
+
+| 項目                                    | 自動化先 spec                                                                  |
+| --------------------------------------- | ------------------------------------------------------------------------------ |
+| 1-1〜1-8（テキスト編集のジェスチャー）  | `specs/editing/text-edit-gestures.spec.ts`                                     |
+| 1-9 確定 / 1-10 Escape                  | `specs/editing/text-edit.spec.ts`                                              |
+| 2-1〜2-4（スライダー）                  | `specs/driver/driver-slider.spec.ts`                                           |
+| 3-1 スウォッチ / 3-2 CSS 入力           | `specs/driver/driver-transform.spec.ts`・`specs/ui/object-menu.spec.ts`        |
+| 4-1〜4-4（コンテキストメニュー）        | `specs/driver/driver-context-menu.spec.ts`                                     |
+| 5-1 移動                                | `specs/shapes/draw.spec.ts`                                                    |
+| 5-2 リサイズ/回転                       | `specs/driver/driver-transform.spec.ts`・`specs/shapes/basic-gestures.spec.ts` |
+| 5-3 マーキー選択                        | `specs/shapes/basic-gestures.spec.ts`                                          |
+| 5-4 ホイール/ズーム・5-5 右ドラッグパン | `specs/driver/driver-input.spec.ts`                                            |
+
+未自動化の補足: 3-3（入力欄での右クリックがネイティブメニューになる）はブラウザ標準メニューの表示自体を assert できないため、自前メニューが出ないことのみ 1-8 で担保している。空クリップボードでの Paste 挙動は [#34](https://github.com/gznnk/jiscribe/issues/34) を参照。
+
+ポインタ・ホイール・右クリックまわりを目視したいときは、デモアプリ（`pnpm dev:demo`）で以下を確認する。
 
 ## 1. テキスト編集
 

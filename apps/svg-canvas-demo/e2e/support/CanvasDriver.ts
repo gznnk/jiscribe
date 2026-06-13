@@ -314,6 +314,12 @@ export class CanvasDriver {
 		await input.press("Enter");
 	}
 
+	/** 選択中の図形の縦方向アライメント（top / middle / bottom）を設定する */
+	async setVerticalAlign(value: "top" | "middle" | "bottom") {
+		await this.openObjectMenu("alignment");
+		await this.page.click(selectors.objectMenuSet("verticalAlign", value));
+	}
+
 	/** 選択中の線・コネクター・図形枠線の線種を設定する */
 	async setStrokeDashType(
 		menuSectionId: "line-style" | "border-style",
@@ -415,6 +421,11 @@ export class CanvasDriver {
 			to,
 			10,
 		);
+	}
+
+	/** 選択中のオブジェクトを Delete キーで削除する */
+	async deleteSelection() {
+		await this.page.keyboard.press("Delete");
 	}
 
 	/** Undo（Ctrl+Z） */
