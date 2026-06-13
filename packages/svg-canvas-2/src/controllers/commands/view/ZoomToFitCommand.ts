@@ -85,10 +85,11 @@ export const ZoomToFitCommand: Command = {
 		const availableW = viewport.width - 2 * PADDING_PX;
 		const availableH = viewport.height - 2 * PADDING_PX;
 
-		let newZoom =
-			contentWidth > 0 && contentHeight > 0
-				? Math.min(availableW / contentWidth, availableH / contentHeight)
-				: 1;
+		const zoomCandidates = [
+			contentWidth > 0 ? availableW / contentWidth : null,
+			contentHeight > 0 ? availableH / contentHeight : null,
+		].filter((v): v is number => v !== null);
+		let newZoom = zoomCandidates.length > 0 ? Math.min(...zoomCandidates) : 1;
 		newZoom = Math.max(ZOOM.MIN, Math.min(ZOOM.MAX, newZoom));
 
 		const newMinX = contentCx - viewport.width / (2 * newZoom);
