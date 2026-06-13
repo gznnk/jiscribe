@@ -25,10 +25,12 @@ const SnapGuidesComponent: React.FC<SnapGuidesProps> = ({
 
 	return (
 		<>
-			{/* x軸スナップ: 縦ガイド線（left/right 各々に出る場合あり）*/}
+			{/* x軸スナップ: 縦ガイド線（left/right/center 各々に出る場合あり）*/}
+			{/* 整列X座標は line の x1(=x2) がそのまま保持する。data-testid は軸の列挙のみ担う */}
 			{snapFeedback.x.map((guide) => (
 				<line
 					key={guide.coordinate}
+					data-testid="snap-guide:x"
 					x1={guide.coordinate}
 					y1={guide.lineStart - ext}
 					x2={guide.coordinate}
@@ -39,10 +41,11 @@ const SnapGuidesComponent: React.FC<SnapGuidesProps> = ({
 					pointerEvents="none"
 				/>
 			))}
-			{/* y軸スナップ: 横ガイド線（top/bottom 各々に出る場合あり）*/}
+			{/* y軸スナップ: 横ガイド線（top/bottom/center 各々に出る場合あり）*/}
 			{snapFeedback.y.map((guide) => (
 				<line
 					key={guide.coordinate}
+					data-testid="snap-guide:y"
 					x1={guide.lineStart - ext}
 					y1={guide.coordinate}
 					x2={guide.lineEnd + ext}

@@ -52,7 +52,14 @@ await page.goto("http://localhost:5174/", { waitUntil: "networkidle" });
 属性の使い分け:
 
 - **`data-kind` / `data-id`** … プロダクトの**機能契約**（gesture システムが読む）。テストは「ついでに」これを利用する
-- **`data-testid`** … **テスト専用フック**。機能で特定できない要素（gesture を経由しない数値入力欄など）に付ける。`playwright.config.ts` の `testIdAttribute: "data-testid"` で有効化済みで、`page.getByTestId("menu-number-input:strokeWidth")` のように使う。機能契約（`data-id`）に混ぜないことで、テスト都合の識別子と機能の識別子を区別する
+- **`data-testid`** … **テスト専用フック**。機能で特定できない要素（gesture を経由しない数値入力欄や、`pointerEvents: none` の装飾要素など）に付ける。`playwright.config.ts` の `testIdAttribute: "data-testid"` で有効化済みで、`page.getByTestId("menu-number-input:strokeWidth")` のように使う。機能契約（`data-id`）に混ぜないことで、テスト都合の識別子と機能の識別子を区別する
+
+### data-testid 一覧
+
+| data-testid                     | 要素                        | 補足                                                                                             |
+| ------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------ |
+| `menu-number-input:{property}`  | ObjectMenu の数値入力欄     | gesture を経由しないフォーム要素                                                                 |
+| `snap-guide:x` / `snap-guide:y` | スナップガイド線（縦 / 横） | `pointerEvents: none` の装飾。drag 中のみ存在。整列座標は line の `x1`（x軸）/ `y1`（y軸）が保持 |
 
 | data-kind     | 意味                                    | data-id の形式                    |
 | ------------- | --------------------------------------- | --------------------------------- |

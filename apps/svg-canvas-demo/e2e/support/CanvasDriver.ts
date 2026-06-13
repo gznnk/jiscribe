@@ -101,6 +101,55 @@ export class CanvasDriver {
 		}
 	}
 
+	/**
+	 * ドラッグを「押下→移動」まで進めて保持したまま inspect を実行し、その後に解放する。
+	 * スナップガイドは drag 中のみ DOM に存在し dragEnd でクリアされるため、
+	 * ガイドの検証は解放前のこのコールバック内で行う必要がある。
+	 * ctrl=true で Control を押しながらドラッグする（スナップ無効化の検証用）。
+	 */
+	async dragInspecting(
+		from: { x: number; y: number },
+		to: { x: number; y: number },
+		inspect: () => Promise<void>,
+		{ steps = 10, ctrl = false }: { steps?: number; ctrl?: boolean } = {},
+	) {
+		await this.page.mouse.move(from.x, from.y);
+		await this.page.mouse.down();
+		if (ctrl) {
+			await this.page.keyboard.down("Control");
+		}
+		await this.page.mouse.move(to.x, to.y, { steps });
+		try {
+			await inspect();
+		} finally {
+			await this.page.mouse.up();
+			if (ctrl) {
+				await this.page.keyboard.up("Control");
+			}
+		}
+	}
+
+	/** 表示中のスナップガイド（指定軸）のロケーター。x=縦ガイド / y=横ガイド */
+	snapGuides(axis: "x" | "y") {
+		return this.page.getByTestId(`snap-guide:${axis}`);
+	}
+
+	/**
+	 * 表示中のスナップガイド（指定軸）の整列座標を返す。
+	 * x軸ガイド（縦線）は x1、y軸ガイド（横線）は y1 が整列座標そのもの。
+	 * 既定ビューポート（zoom=1・パンなし）では SVG 座標＝画面座標。
+	 */
+	async snapGuideCoordinates(axis: "x" | "y"): Promise<number[]> {
+		return this.page.evaluate((targetAxis) => {
+			const attr = targetAxis === "x" ? "x1" : "y1";
+			return [
+				...document.querySelectorAll(
+					`[data-testid="snap-guide:${targetAxis}"]`,
+				),
+			].map((el) => Number(el.getAttribute(attr)));
+		}, axis);
+	}
+
 	/** 右ボタンドラッグ（ビューポートのパンに使う） */
 	async rightDrag(
 		from: { x: number; y: number },
