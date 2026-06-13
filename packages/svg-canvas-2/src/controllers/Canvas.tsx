@@ -8,6 +8,7 @@ import {
 	ZoomScaledOverlay,
 } from "./CanvasStyled";
 import { CanvasViewportRefContext } from "./contexts/CanvasViewportRefContext";
+import { isGestureOptedOut } from "./gestures/recognizer/utils/isGestureOptedOut";
 import { useCanvasReducer } from "./hooks/useCanvasReducer";
 import { useClipboardPaste } from "./hooks/useClipboardPaste";
 import { useClipboardWrite } from "./hooks/useClipboardWrite";
@@ -124,6 +125,11 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	// Context menu handling
 	const handleContextMenu = useCallback(
 		(e: React.MouseEvent<HTMLDivElement>) => {
+			// data-gesture="none" の要素（テキスト編集中の textarea など）では
+			// ブラウザ標準のコンテキストメニューを表示する
+			if (isGestureOptedOut(e.target)) {
+				return;
+			}
 			e.preventDefault();
 		},
 		[],

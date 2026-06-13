@@ -14,7 +14,7 @@ const makeTarget = (params: {
 	return {
 		closest: (selector: string) => {
 			if (
-				selector === '[data-native-wheel="true"]' &&
+				selector === '[data-gesture~="native-wheel"]' &&
 				params.hasNativeWheelAncestor
 			) {
 				return scrollableEl;
@@ -42,12 +42,12 @@ describe("shouldUseNativeWheel", () => {
 		expect(shouldUseNativeWheel({} as EventTarget, false)).toBe(false);
 	});
 
-	it("data-native-wheel 要素の外側のとき false を返す", () => {
+	it("native-wheel 要素の外側のとき false を返す", () => {
 		const target = makeTarget({ hasNativeWheelAncestor: false });
 		expect(shouldUseNativeWheel(target, false)).toBe(false);
 	});
 
-	it("data-native-wheel 要素内でも内容があふれていないとき false を返す", () => {
+	it("native-wheel 要素内でも内容があふれていないとき false を返す", () => {
 		const target = makeTarget({
 			hasNativeWheelAncestor: true,
 			scrollHeight: 100,
@@ -56,7 +56,7 @@ describe("shouldUseNativeWheel", () => {
 		expect(shouldUseNativeWheel(target, false)).toBe(false);
 	});
 
-	it("data-native-wheel 要素内で内容があふれているとき true を返す", () => {
+	it("native-wheel 要素内で内容があふれているとき true を返す", () => {
 		const target = makeTarget({
 			hasNativeWheelAncestor: true,
 			scrollHeight: 200,

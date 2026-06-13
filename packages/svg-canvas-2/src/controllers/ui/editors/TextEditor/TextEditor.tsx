@@ -72,17 +72,10 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		onChange(e.target.value);
 	};
 
-	const handlePointerDown = useCallback(
-		(e: React.PointerEvent<HTMLElement>) => {
-			e.stopPropagation();
-		},
-		[],
-	);
-
-	// テキスト外の余白クリックでフォーカスが外れないようにする
+	// テキスト外の余白クリックでフォーカスが外れないようにする。
+	// ジェスチャーシステムからの除外は data-gesture="none" が担う。
 	const handleWrapperPointerDown = useCallback(
 		(e: React.PointerEvent<HTMLDivElement>) => {
-			e.stopPropagation();
 			if (e.target === e.currentTarget) {
 				e.preventDefault();
 				textAreaRef.current?.focus();
@@ -90,10 +83,6 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		},
 		[],
 	);
-
-	const handleContextMenu = useCallback((e: React.MouseEvent<HTMLElement>) => {
-		e.stopPropagation();
-	}, []);
 
 	const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
 		if (e.key === "Escape" && onEscape) {
@@ -114,6 +103,7 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		<TextEditorWrapper
 			data-kind="text-editor"
 			data-id="textarea"
+			data-gesture="none"
 			left={x}
 			top={y}
 			width={width}
@@ -121,10 +111,9 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 			transform={transform}
 			verticalAlign={verticalAlign}
 			onPointerDown={handleWrapperPointerDown}
-			onContextMenu={handleContextMenu}
 		>
 			<TextArea
-				data-native-wheel="true"
+				data-gesture="native-wheel"
 				value={text}
 				textAlign={textAlign}
 				color={fontColor}
@@ -134,7 +123,6 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 				ref={textAreaRef}
 				onChange={handleChange}
 				onKeyDown={handleKeyDown}
-				onPointerDown={handlePointerDown}
 			/>
 		</TextEditorWrapper>
 	);

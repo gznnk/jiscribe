@@ -21,3 +21,11 @@ pnpm --filter @workspace/svg-canvas-2 typecheck
 # Lint
 pnpm --filter @workspace/svg-canvas-2 lint
 ```
+
+## ドキュメント
+
+- [アーキテクチャ](./docs/architecture.md)
+- [Commands アーキテクチャ](./docs/commands.md)
+- [ジェスチャー連携属性（data-gesture / data-kind / data-id）](./docs/gesture-attributes.md)
+- [Canvas Doc リファレンス](./docs/canvas-doc-reference.md)
+- [Controller の変遷](./docs/controller-evolution.md)

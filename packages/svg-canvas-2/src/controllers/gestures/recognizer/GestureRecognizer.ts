@@ -18,7 +18,8 @@ import {
 	getInputValue,
 	getKindAndId,
 	getSvgPoint,
-	shouldPreserveNativeBehavior,
+	isGestureOptedOut,
+	shouldSkipPointerCapture,
 } from "./utils";
 import type { CanvasControllerState } from "../../CanvasTypes";
 
@@ -187,12 +188,9 @@ export class GestureRecognizer {
 
 		// pointerdown: 新しいジェスチャーを開始
 		if (e.type === "pointerdown") {
-			// ポインターキャプチャを設定（data-interactive="true"の要素では設定しない）
-			// インタラクティブな要素ではブラウザのネイティブな動作を維持する必要がある
-			if (
-				this.containerRef.current &&
-				!shouldPreserveNativeBehavior(e.target)
-			) {
+			// ポインターキャプチャを設定（data-gesture="native-pointer" の要素では設定しない）
+			// スライダーなどではブラウザのネイティブなドラッグ挙動を維持する必要がある
+			if (this.containerRef.current && !shouldSkipPointerCapture(e.target)) {
 				this.containerRef.current.setPointerCapture(e.pointerId);
 			}
 
@@ -357,10 +355,10 @@ export class GestureRecognizer {
 
 		// pointerup: ジェスチャー終了
 		if (e.type === "pointerup") {
-			// ポインターキャプチャを解放（data-interactive="true"の要素では何もしない）
+			// ポインターキャプチャを解放（data-gesture="native-pointer" の要素では何もしない）
 			if (
 				this.containerRef.current &&
-				!shouldPreserveNativeBehavior(this.pressed.target)
+				!shouldSkipPointerCapture(this.pressed.target)
 			) {
 				this.containerRef.current.releasePointerCapture(e.pointerId);
 			}
@@ -420,10 +418,10 @@ export class GestureRecognizer {
 
 		// pointercancel: ジェスチャーを中断
 		if (e.type === "pointercancel") {
-			// ポインターキャプチャを解放（data-interactive="true"の要素では何もしない）
+			// ポインターキャプチャを解放（data-gesture="native-pointer" の要素では何もしない）
 			if (
 				this.containerRef.current &&
-				!shouldPreserveNativeBehavior(this.pressed.target)
+				!shouldSkipPointerCapture(this.pressed.target)
 			) {
 				this.containerRef.current.releasePointerCapture(e.pointerId);
 			}
@@ -532,7 +530,7 @@ export class GestureRecognizer {
 			if (
 				this.containerRef.current &&
 				this.pressed.pointerId !== undefined &&
-				!shouldPreserveNativeBehavior(this.pressed.target)
+				!shouldSkipPointerCapture(this.pressed.target)
 			) {
 				this.containerRef.current.releasePointerCapture(this.pressed.pointerId);
 			}
@@ -548,7 +546,14 @@ export class GestureRecognizer {
 	 */
 	public getHandlers(): PointerEventHandlers {
 		return {
-			onPointerDown: (e) => this.enqueue(this.toPointerEvent(e)),
+			onPointerDown: (e) => {
+				// data-gesture="none" の要素由来のイベントはジェスチャーの起点にしない
+				// （テキスト編集中の textarea やメニュー内の入力欄など）
+				if (isGestureOptedOut(e.target)) {
+					return;
+				}
+				this.enqueue(this.toPointerEvent(e));
+			},
 			onPointerMove: (e) => this.enqueue(this.toPointerEvent(e)),
 			onPointerUp: (e) => this.enqueue(this.toPointerEvent(e)),
 			onPointerCancel: (e) => this.enqueue(this.toPointerEvent(e)),
