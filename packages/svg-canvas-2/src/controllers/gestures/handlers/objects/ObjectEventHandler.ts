@@ -99,8 +99,22 @@ function handleObjectDrag(
 	const eventStartObjects = eventStartSnapshot.objects;
 	const selectedIds = canvasState.selectedIds;
 
+	// --- Shift による軸固定 ---
+	// Shift 押下中は移動を一方の軸へ固定する。固定する軸（lockedAxis）は累積 delta の
+	// 絶対値が小さい方とし、絶対値が大きい方向にのみ動かす。累積量で判定するため、
+	// ドラッグ中に大きい方が入れ替われば固定軸も追従する。
+	const lockedAxis: "x" | "y" | null = mods.shift
+		? Math.abs(delta.x) >= Math.abs(delta.y)
+			? "y"
+			: "x"
+		: null;
+	const constrainedDelta: Point = {
+		x: lockedAxis === "x" ? 0 : delta.x,
+		y: lockedAxis === "y" ? 0 : delta.y,
+	};
+
 	// --- スナップ補正 ---
-	let adjustedDelta = delta;
+	let adjustedDelta = constrainedDelta;
 	let snapFeedback: SnapFeedback = { x: [], y: [] };
 
 	const snapCandidates = eventStartSnapshot.snapCandidates;
@@ -115,10 +129,10 @@ function handleObjectDrag(
 	if (snapCandidates && snapSourceKeyPoints && !mods.ctrl) {
 		const bbox = calcKeyPointsBoundingBox(snapSourceKeyPoints);
 		const selectedBBox = {
-			left: bbox.left + delta.x,
-			right: bbox.right + delta.x,
-			top: bbox.top + delta.y,
-			bottom: bbox.bottom + delta.y,
+			left: bbox.left + constrainedDelta.x,
+			right: bbox.right + constrainedDelta.x,
+			top: bbox.top + constrainedDelta.y,
+			bottom: bbox.bottom + constrainedDelta.y,
 		};
 
 		// 現在の selectedIds + 全子孫を除外（dragStart後の選択変更・グループ子図形も対応）
@@ -134,15 +148,20 @@ function handleObjectDrag(
 		// 中央（中点）もドラッグ側エッジ値に含め、中央↔中央 / 中央↔エッジ を吸着可能にする
 		const selectedCenterX = (selectedBBox.left + selectedBBox.right) / 2;
 		const selectedCenterY = (selectedBBox.top + selectedBBox.bottom) / 2;
+		// 固定軸はスナップ補正でも動かさないよう、その軸のエッジ値を空にしてスキップする
 		const result = findSnap(
 			filteredCandidates,
 			SNAP_THRESHOLD_PX / zoom,
-			[selectedBBox.left, selectedCenterX, selectedBBox.right],
-			[selectedBBox.top, selectedCenterY, selectedBBox.bottom],
+			lockedAxis === "x"
+				? []
+				: [selectedBBox.left, selectedCenterX, selectedBBox.right],
+			lockedAxis === "y"
+				? []
+				: [selectedBBox.top, selectedCenterY, selectedBBox.bottom],
 		);
 		adjustedDelta = {
-			x: delta.x + result.delta.x,
-			y: delta.y + result.delta.y,
+			x: constrainedDelta.x + result.delta.x,
+			y: constrainedDelta.y + result.delta.y,
 		};
 		const actualBBox = {
 			left: selectedBBox.left + result.delta.x,
