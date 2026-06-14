@@ -1,0 +1,450 @@
+{
+	"version": 1,
+	"root": [
+		{
+			"id": "title",
+			"type": "rect",
+			"x": 40,
+			"y": 20,
+			"width": 1300,
+			"height": 54,
+			"stroke": "#1e293b",
+			"strokeWidth": 2,
+			"fill": "#0f172a",
+			"rx": 10,
+			"text": "GitHub Issue 対応 WBS — 実施順 (左 → 右 = 優先度 高 → 低)",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#f8fafc",
+			"fontSize": 20,
+			"fontWeight": "bold"
+		},
+
+		{
+			"id": "p1-header",
+			"type": "rect",
+			"x": 40,
+			"y": 104,
+			"width": 300,
+			"height": 60,
+			"stroke": "#b91c1c",
+			"strokeWidth": 2,
+			"fill": "#7f1d1d",
+			"rx": 8,
+			"text": "Phase 1 ・ 最優先\nセキュリティ & データ整合性",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#fee2e2",
+			"fontSize": 15,
+			"fontWeight": "bold"
+		},
+		{
+			"id": "p2-header",
+			"type": "rect",
+			"x": 380,
+			"y": 104,
+			"width": 300,
+			"height": 60,
+			"stroke": "#1d4ed8",
+			"strokeWidth": 2,
+			"fill": "#1e3a8a",
+			"rx": 8,
+			"text": "Phase 2 ・ 高\nグループ不変条件の整備",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#dbeafe",
+			"fontSize": 15,
+			"fontWeight": "bold"
+		},
+		{
+			"id": "p3-header",
+			"type": "rect",
+			"x": 720,
+			"y": 104,
+			"width": 300,
+			"height": 60,
+			"stroke": "#b45309",
+			"strokeWidth": 2,
+			"fill": "#78350f",
+			"rx": 8,
+			"text": "Phase 3 ・ 中\nジェスチャー / 履歴の堅牢化",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#fef3c7",
+			"fontSize": 15,
+			"fontWeight": "bold"
+		},
+		{
+			"id": "p4-header",
+			"type": "rect",
+			"x": 1060,
+			"y": 104,
+			"width": 300,
+			"height": 60,
+			"stroke": "#6b21a8",
+			"strokeWidth": 2,
+			"fill": "#4c1d95",
+			"rx": 8,
+			"text": "Phase 4 ・ 低\n改善・パフォーマンス・a11y",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#f3e8ff",
+			"fontSize": 15,
+			"fontWeight": "bold"
+		},
+
+		{
+			"id": "i23",
+			"type": "rect",
+			"x": 40,
+			"y": 190,
+			"width": 300,
+			"height": 96,
+			"stroke": "#dc2626",
+			"strokeWidth": 2,
+			"fill": "#fee2e2",
+			"rx": 8,
+			"text": "#23 · security\nmarkdown-it html:true による XSS\npackages/markdown",
+			"textAlign": "left",
+			"verticalAlign": "middle",
+			"fontColor": "#991b1b",
+			"fontSize": 13
+		},
+		{
+			"id": "i25",
+			"type": "rect",
+			"x": 40,
+			"y": 302,
+			"width": 300,
+			"height": 96,
+			"stroke": "#dc2626",
+			"strokeWidth": 2,
+			"fill": "#fee2e2",
+			"rx": 8,
+			"text": "#25 · security\nGestureRecognizer\nマルチタッチ時の状態汚染",
+			"textAlign": "left",
+			"verticalAlign": "middle",
+			"fontColor": "#991b1b",
+			"fontSize": 13
+		},
+		{
+			"id": "i24",
+			"type": "rect",
+			"x": 40,
+			"y": 414,
+			"width": 300,
+			"height": 96,
+			"stroke": "#dc2626",
+			"strokeWidth": 2,
+			"fill": "#fee2e2",
+			"rx": 8,
+			"text": "#24 · security\nuseKeyboardShortcuts\nグローバルリスナーで二重実行",
+			"textAlign": "left",
+			"verticalAlign": "middle",
+			"fontColor": "#991b1b",
+			"fontSize": 13
+		},
+		{
+			"id": "i11",
+			"type": "rect",
+			"x": 40,
+			"y": 526,
+			"width": 300,
+			"height": 96,
+			"stroke": "#d97706",
+			"strokeWidth": 2,
+			"fill": "#fef3c7",
+			"rx": 8,
+			"text": "#11 · bug\ncloneObjects\nparentId リマップ失敗で消失",
+			"textAlign": "left",
+			"verticalAlign": "middle",
+			"fontColor": "#92400e",
+			"fontSize": 13
+		},
+		{
+			"id": "i19",
+			"type": "rect",
+			"x": 40,
+			"y": 638,
+			"width": 300,
+			"height": 96,
+			"stroke": "#d97706",
+			"strokeWidth": 2,
+			"fill": "#fef3c7",
+			"rx": 8,
+			"text": "#19 · bug\nhandleGesture\ncommitVersion 参照比較で phantom history",
+			"textAlign": "left",
+			"verticalAlign": "middle",
+			"fontColor": "#92400e",
+			"fontSize": 13
+		},
+
+		{
+			"id": "i35",
+			"type": "rect",
+			"x": 380,
+			"y": 190,
+			"width": 300,
+			"height": 96,
+			"stroke": "#2563eb",
+			"strokeWidth": 2,
+			"fill": "#dbeafe",
+			"rx": 8,
+			"text": "#35 · design\nGroupState ゼロサイズを防ぐ\n不変条件の整備 (根本対応)",
+			"textAlign": "left",
+			"verticalAlign": "middle",
+			"fontColor": "#1e40af",
+			"fontSize": 13
+		},
+		{
+			"id": "i16",
+			"type": "rect",
+			"x": 380,
+			"y": 302,
+			"width": 300,
+			"height": 96,
+			"stroke": "#d97706",
+			"strokeWidth": 2,
+			"fill": "#fef3c7",
+			"rx": 8,
+			"text": "#16 · bug\nGroupCommand tempGroup\nゼロ初期値での bounds 計算",
+			"textAlign": "left",
+			"verticalAlign": "middle",
+			"fontColor": "#92400e",
+			"fontSize": 13
+		},
+
+		{
+			"id": "i14",
+			"type": "rect",
+			"x": 720,
+			"y": 190,
+			"width": 300,
+			"height": 96,
+			"stroke": "#d97706",
+			"strokeWidth": 2,
+			"fill": "#fef3c7",
+			"rx": 8,
+			"text": "#14 · bug\nGestureRecognizer.schedule\nアンマウント後の RAF 継続",
+			"textAlign": "left",
+			"verticalAlign": "middle",
+			"fontColor": "#92400e",
+			"fontSize": 13
+		},
+		{
+			"id": "i13",
+			"type": "rect",
+			"x": 720,
+			"y": 302,
+			"width": 300,
+			"height": 96,
+			"stroke": "#d97706",
+			"strokeWidth": 2,
+			"fill": "#fef3c7",
+			"rx": 8,
+			"text": "#13 · bug\nhandleDragEnd\nシャロウコピーの非対称パターン",
+			"textAlign": "left",
+			"verticalAlign": "middle",
+			"fontColor": "#92400e",
+			"fontSize": 13
+		},
+		{
+			"id": "i30",
+			"type": "rect",
+			"x": 720,
+			"y": 414,
+			"width": 300,
+			"height": 96,
+			"stroke": "#d97706",
+			"strokeWidth": 2,
+			"fill": "#fef3c7",
+			"rx": 8,
+			"text": "#30 · bug (低)\nコネクター端点 dragEnd\n重なり順変化・no-op コミット",
+			"textAlign": "left",
+			"verticalAlign": "middle",
+			"fontColor": "#92400e",
+			"fontSize": 13
+		},
+		{
+			"id": "i29",
+			"type": "rect",
+			"x": 720,
+			"y": 526,
+			"width": 300,
+			"height": 96,
+			"stroke": "#2563eb",
+			"strokeWidth": 2,
+			"fill": "#dbeafe",
+			"rx": 8,
+			"text": "#29 · design\nVSCode 拡張 saveNonce\n折り返し競合",
+			"textAlign": "left",
+			"verticalAlign": "middle",
+			"fontColor": "#1e40af",
+			"fontSize": 13
+		},
+
+		{
+			"id": "i26",
+			"type": "rect",
+			"x": 1060,
+			"y": 190,
+			"width": 300,
+			"height": 96,
+			"stroke": "#7c3aed",
+			"strokeWidth": 2,
+			"fill": "#f3e8ff",
+			"rx": 8,
+			"text": "#26 · perf\nautoSelectParentGroups\nO(n²) 複雑度の改善",
+			"textAlign": "left",
+			"verticalAlign": "middle",
+			"fontColor": "#6b21a8",
+			"fontSize": 13
+		},
+		{
+			"id": "i27",
+			"type": "rect",
+			"x": 1060,
+			"y": 302,
+			"width": 300,
+			"height": 96,
+			"stroke": "#7c3aed",
+			"strokeWidth": 2,
+			"fill": "#f3e8ff",
+			"rx": 8,
+			"text": "#27 · improvement\nconsole.warn の散在\nログレベル制御の仕組み",
+			"textAlign": "left",
+			"verticalAlign": "middle",
+			"fontColor": "#6b21a8",
+			"fontSize": 13
+		},
+		{
+			"id": "i33",
+			"type": "rect",
+			"x": 1060,
+			"y": 414,
+			"width": 300,
+			"height": 96,
+			"stroke": "#7c3aed",
+			"strokeWidth": 2,
+			"fill": "#f3e8ff",
+			"rx": 8,
+			"text": "#33 · a11y\nMenuSlider 数値入力欄に\nアクセシブル名を付与",
+			"textAlign": "left",
+			"verticalAlign": "middle",
+			"fontColor": "#6b21a8",
+			"fontSize": 13
+		},
+
+		{
+			"id": "legend",
+			"type": "rect",
+			"x": 1060,
+			"y": 534,
+			"width": 300,
+			"height": 200,
+			"stroke": "#94a3b8",
+			"strokeWidth": 1,
+			"fill": "#f8fafc",
+			"rx": 8,
+			"text": "凡例\n\n■ security   セキュリティ\n■ bug         不具合\n■ design      設計・不変条件\n■ perf / improvement / a11y\n\n矢印 = 依存 (先に解消すべき issue)",
+			"textAlign": "left",
+			"verticalAlign": "middle",
+			"fontColor": "#334155",
+			"fontSize": 12
+		}
+	],
+	"connectors": [
+		{
+			"id": "c-title-p1",
+			"type": "connector",
+			"points": [
+				{ "x": 690, "y": 90 },
+				{ "x": 190, "y": 90 }
+			],
+			"source": {
+				"owner": { "type": "rect", "id": "title" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "type": "rect", "id": "p1-header" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "#64748b",
+			"strokeWidth": 2,
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "c-title-p2",
+			"type": "connector",
+			"points": [
+				{ "x": 690, "y": 90 },
+				{ "x": 530, "y": 90 }
+			],
+			"source": {
+				"owner": { "type": "rect", "id": "title" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "type": "rect", "id": "p2-header" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "#64748b",
+			"strokeWidth": 2,
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "c-title-p3",
+			"type": "connector",
+			"points": [
+				{ "x": 690, "y": 90 },
+				{ "x": 870, "y": 90 }
+			],
+			"source": {
+				"owner": { "type": "rect", "id": "title" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "type": "rect", "id": "p3-header" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "#64748b",
+			"strokeWidth": 2,
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "c-title-p4",
+			"type": "connector",
+			"points": [
+				{ "x": 690, "y": 90 },
+				{ "x": 1210, "y": 90 }
+			],
+			"source": {
+				"owner": { "type": "rect", "id": "title" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "type": "rect", "id": "p4-header" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "#64748b",
+			"strokeWidth": 2,
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "c-35-16",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": { "type": "rect", "id": "i35" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "type": "rect", "id": "i16" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "#2563eb",
+			"strokeWidth": 2,
+			"endArrow": "FilledTriangle"
+		}
+	]
+}
