@@ -28,6 +28,7 @@ import {
 	findSnap,
 	SNAP_THRESHOLD_PX,
 } from "./utils/snap/findSnap";
+import { ORIGIN_SNAP_PX } from "../../../../constants/axisLock";
 import { updateAffectedGroupBounds } from "../../../ui/utils/updateAffectedGroupBounds";
 import { buildSelectedIdsWithDescendants } from "../../../utils/buildSelectedIdsWithDescendants";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
@@ -112,10 +113,21 @@ function handleObjectDrag(
 			? "y"
 			: "x"
 		: null;
-	const constrainedDelta: Point = {
-		x: lockedAxis === "x" ? 0 : delta.x,
-		y: lockedAxis === "y" ? 0 : delta.y,
-	};
+
+	const zoom = canvasState.viewport.zoom;
+
+	// 軸固定中、フリー軸（移動する側）の移動量がわずかなら開始位置へ吸着する。
+	// 開始位置に揃っていることを両軸ガイドで示すため、後段で feedback を両軸に設定する。
+	const freeAxisDelta = lockedAxis === "x" ? delta.y : delta.x;
+	const snapToOrigin =
+		lockedAxis !== null && Math.abs(freeAxisDelta) <= ORIGIN_SNAP_PX / zoom;
+
+	const constrainedDelta: Point = snapToOrigin
+		? { x: 0, y: 0 }
+		: {
+				x: lockedAxis === "x" ? 0 : delta.x,
+				y: lockedAxis === "y" ? 0 : delta.y,
+			};
 
 	// --- スナップ補正 ---
 	let adjustedDelta = constrainedDelta;
@@ -130,7 +142,7 @@ function handleObjectDrag(
 		? eventStartSnapshot.keyPoints[snapSourceId]
 		: undefined;
 
-	if (snapCandidates && snapSourceKeyPoints && !mods.ctrl) {
+	if (snapCandidates && snapSourceKeyPoints && !mods.ctrl && !snapToOrigin) {
 		const bbox = calcKeyPointsBoundingBox(snapSourceKeyPoints);
 		const selectedBBox = {
 			left: bbox.left + constrainedDelta.x,
@@ -148,7 +160,6 @@ function handleObjectDrag(
 			x: snapCandidates.x.filter((c) => !excludeIds.has(c.objectId)),
 			y: snapCandidates.y.filter((c) => !excludeIds.has(c.objectId)),
 		};
-		const zoom = canvasState.viewport.zoom;
 		// 中央（中点）もドラッグ側エッジ値に含め、中央↔中央 / 中央↔エッジ を吸着可能にする
 		const selectedCenterX = (selectedBBox.left + selectedBBox.right) / 2;
 		const selectedCenterY = (selectedBBox.top + selectedBBox.bottom) / 2;
@@ -183,15 +194,23 @@ function handleObjectDrag(
 
 	// --- Shift 軸固定のフィードバック ---
 	// 移動できる軸方向を示すガイド線（ビューポート全体に伸びる線）の位置を決める。
-	// 固定軸が x（縦移動）なら中心 X を通る縦線、y（横移動）なら中心 Y を通る横線。
+	// 通常は固定軸に応じて 1 本（縦移動=縦線 x / 横移動=横線 y）。
+	// 原点スナップ中は開始位置に揃っていることを示すため両軸（x・y）を出す。
 	// 実描画は専用コンポーネント AxisLockGuide が担う。
 	let axisLockFeedback: AxisLockFeedback | null = null;
 	if (lockedAxis && snapSourceKeyPoints) {
 		const baseBBox = calcKeyPointsBoundingBox(snapSourceKeyPoints);
-		axisLockFeedback =
-			lockedAxis === "y"
-				? { axis: "y", coordinate: (baseBBox.top + baseBBox.bottom) / 2 }
-				: { axis: "x", coordinate: (baseBBox.left + baseBBox.right) / 2 };
+		const centerX = (baseBBox.left + baseBBox.right) / 2;
+		const centerY = (baseBBox.top + baseBBox.bottom) / 2;
+		if (snapToOrigin) {
+			axisLockFeedback = { x: centerX, y: centerY };
+		} else if (lockedAxis === "y") {
+			// 横移動: 中心 Y を通る横線
+			axisLockFeedback = { y: centerY };
+		} else {
+			// 縦移動: 中心 X を通る縦線
+			axisLockFeedback = { x: centerX };
+		}
 	}
 
 	// --- 全選択オブジェクトを adjustedDelta で移動（ナッジ移動と共有）---

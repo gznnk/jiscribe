@@ -130,20 +130,20 @@ describe("ObjectEventHandler - Shift 軸固定ドラッグ", () => {
 	});
 
 	describe("軸固定フィードバック", () => {
-		it("横移動（Y 固定）では中心 Y を通る横線（axis=y）を返す", () => {
+		it("横移動（Y 固定）では中心 Y を通る横線（y のみ）を返す", () => {
 			const next = ObjectEventHandler.handle(
 				makeDragState(20, 30),
 				makeDragEvent({ x: 50, y: 8 }, true),
 			);
-			expect(next.axisLockFeedback).toEqual({ axis: "y", coordinate: 30 });
+			expect(next.axisLockFeedback).toEqual({ y: 30 });
 		});
 
-		it("縦移動（X 固定）では中心 X を通る縦線（axis=x）を返す", () => {
+		it("縦移動（X 固定）では中心 X を通る縦線（x のみ）を返す", () => {
 			const next = ObjectEventHandler.handle(
 				makeDragState(20, 30),
 				makeDragEvent({ x: 8, y: 50 }, true),
 			);
-			expect(next.axisLockFeedback).toEqual({ axis: "x", coordinate: 20 });
+			expect(next.axisLockFeedback).toEqual({ x: 20 });
 		});
 
 		it("優位軸が入れ替わるとフィードバックの軸も切り替わる", () => {
@@ -151,13 +151,51 @@ describe("ObjectEventHandler - Shift 軸固定ドラッグ", () => {
 				makeDragState(20, 30),
 				makeDragEvent({ x: 40, y: 5 }, true),
 			);
-			expect(afterX.axisLockFeedback).toEqual({ axis: "y", coordinate: 30 });
+			expect(afterX.axisLockFeedback).toEqual({ y: 30 });
 
 			const afterY = ObjectEventHandler.handle(
 				afterX,
 				makeDragEvent({ x: 5, y: 40 }, true),
 			);
-			expect(afterY.axisLockFeedback).toEqual({ axis: "x", coordinate: 20 });
+			expect(afterY.axisLockFeedback).toEqual({ x: 20 });
+		});
+	});
+
+	describe("原点スナップ（軸固定中・開始位置付近）", () => {
+		it("フリー軸の移動量がしきい値以下なら開始位置へ吸着する", () => {
+			// |dx|=4 が優位 → Y 固定・X がフリー軸。X 移動量 4 <= 6px(zoom=1) なので原点吸着
+			const next = ObjectEventHandler.handle(
+				makeDragState(20, 30),
+				makeDragEvent({ x: 4, y: 3 }, true),
+			);
+			expect(movedRect(next)).toMatchObject({ cx: 20, cy: 30 });
+		});
+
+		it("原点スナップ中は両軸（十字）のガイドを返す", () => {
+			const next = ObjectEventHandler.handle(
+				makeDragState(20, 30),
+				makeDragEvent({ x: 4, y: 3 }, true),
+			);
+			expect(next.axisLockFeedback).toEqual({ x: 20, y: 30 });
+		});
+
+		it("しきい値を超えると吸着が外れ片軸固定に戻る", () => {
+			// X 移動量 8 > 6px → 原点を抜けて Y 固定の横移動
+			const next = ObjectEventHandler.handle(
+				makeDragState(20, 30),
+				makeDragEvent({ x: 8, y: 3 }, true),
+			);
+			expect(movedRect(next)).toMatchObject({ cx: 28, cy: 30 });
+			expect(next.axisLockFeedback).toEqual({ y: 30 });
+		});
+
+		it("Shift なしでは原点付近でも吸着しない", () => {
+			const next = ObjectEventHandler.handle(
+				makeDragState(20, 30),
+				makeDragEvent({ x: 4, y: 3 }, false),
+			);
+			expect(movedRect(next)).toMatchObject({ cx: 24, cy: 33 });
+			expect(next.axisLockFeedback).toBeNull();
 		});
 	});
 });
