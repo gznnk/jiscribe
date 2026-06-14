@@ -1,9 +1,11 @@
 import { roundToDecimal } from "@workspace/geometry";
 import type { Point } from "@workspace/geometry";
 
+import { ORIGIN_SNAP_PX } from "../../../../../constants/axisLock";
 import { PRECISION } from "../../../../../constants/precision";
 import { isPoly } from "../../../../../schemas/objects/types/Poly";
 import type {
+	AxisLockFeedback,
 	CanvasControllerState,
 	SnapFeedback,
 } from "../../../../CanvasTypes";
@@ -141,19 +143,45 @@ export class VertexControlHandler implements ControlStrategy {
 			return state;
 		}
 
-		// スナップ補正
+		const startPoint = startObject.points[vertexIndex];
+		const zoom = state.viewport.zoom;
+
+		// --- Shift による軸固定 ---
+		// 開始頂点位置を基準に、移動量の大きい軸方向へのみ動かす（小さい軸を固定）。
+		// 累積量で判定するため、ドラッグ中に優位軸が入れ替われば固定軸も追従する。
+		const dx = event.last.x - startPoint.x;
+		const dy = event.last.y - startPoint.y;
+		const lockedAxis: "x" | "y" | null = event.mods.shift
+			? Math.abs(dx) >= Math.abs(dy)
+				? "y"
+				: "x"
+			: null;
+
+		// 軸固定中、フリー軸の移動量がわずかなら開始頂点へ吸着し、両軸ガイドを出す。
+		const freeAxisDelta = lockedAxis === "x" ? dy : dx;
+		const snapToOrigin =
+			lockedAxis !== null && Math.abs(freeAxisDelta) <= ORIGIN_SNAP_PX / zoom;
+
+		// 軸固定を反映したカーソル位置（固定軸・原点スナップは開始頂点座標に置き換える）
 		let cursorX = event.last.x;
 		let cursorY = event.last.y;
+		if (lockedAxis === "x" || snapToOrigin) {
+			cursorX = startPoint.x;
+		}
+		if (lockedAxis === "y" || snapToOrigin) {
+			cursorY = startPoint.y;
+		}
+
+		// --- オブジェクト間スナップ補正（固定軸・原点スナップ中はスキップ）---
 		const snapCandidates = eventStartSnapshot.snapCandidates;
 		let snapFeedback: SnapFeedback = { x: [], y: [] };
 
-		if (snapCandidates && !event.mods.ctrl) {
-			const zoom = state.viewport.zoom;
+		if (snapCandidates && !event.mods.ctrl && !snapToOrigin) {
 			const result = findSnap(
 				snapCandidates,
 				SNAP_THRESHOLD_PX / zoom,
-				[cursorX],
-				[cursorY],
+				lockedAxis === "x" ? [] : [cursorX],
+				lockedAxis === "y" ? [] : [cursorY],
 			);
 			cursorX += result.delta.x;
 			cursorY += result.delta.y;
@@ -169,6 +197,19 @@ export class VertexControlHandler implements ControlStrategy {
 				result.yResult,
 				snapCandidates,
 			);
+		}
+
+		// --- Shift 軸固定のフィードバック（ビューポート全体ガイド）---
+		// 固定軸は開始頂点の座標を通る線。原点スナップ中は両軸（十字）を出す。
+		let axisLockFeedback: AxisLockFeedback | null = null;
+		if (lockedAxis) {
+			if (snapToOrigin) {
+				axisLockFeedback = { x: startPoint.x, y: startPoint.y };
+			} else if (lockedAxis === "y") {
+				axisLockFeedback = { y: startPoint.y };
+			} else {
+				axisLockFeedback = { x: startPoint.x };
+			}
 		}
 
 		// 新しい頂点位置を計算
@@ -193,6 +234,7 @@ export class VertexControlHandler implements ControlStrategy {
 				[objectId]: updatedObject,
 			},
 			snapFeedback,
+			axisLockFeedback,
 		};
 	}
 
