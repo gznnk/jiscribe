@@ -14,7 +14,9 @@ export const test = base.extend<CanvasFixtures>({
 		// クリップボード権限を付与しているため readText() が実 OS クリップボードを
 		// 返す。テスト間の持ち越しを防ぐため、各テスト開始時に空にしておく
 		// （内部クリップボードのみに依存する前提を保つ）。
-		await page.evaluate(() => navigator.clipboard.writeText("")).catch(() => {});
+		await page
+			.evaluate(() => navigator.clipboard.writeText(""))
+			.catch(() => {});
 		await use(canvas);
 	},
 });

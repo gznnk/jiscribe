@@ -7,14 +7,16 @@ Playwright Test で svg-canvas-2 を実ユーザーと同じ UI 操作でテス�
 
 ```
 apps/svg-canvas-demo/
-├── playwright.config.ts   # webServer で vite dev (port 5174) を自動起動
+├── playwright.config.ts        # webServer で vite dev (port 5174) を自動起動。testDir: e2e/specs
+├── playwright.demo.config.ts   # デモ専用。本体 config を流用し testDir を e2e/demo に差し替え
 ├── e2e/
 │   ├── fixtures.ts        # canvas フィクスチャ（CanvasDriver を注入）
 │   ├── support/
 │   │   ├── selectors.ts   # data-kind / data-id セレクタ定数
 │   │   └── CanvasDriver.ts # 操作API（描画・選択・テキスト・色・コネクター）
-│   └── specs/             # テスト本体
-└── scripts/               # Playwright を使った手動デモ・調査用スクリプト
+│   ├── specs/             # テスト本体（通常の test:e2e で走る）
+│   └── demo/              # マーケ素材生成用デモ（testDir 外。test:e2e:demo でのみ走る）
+└── scripts/               # Playwright を使った手動デモ・調査用スクリプト（テスト基盤を使わない素の node）
 ```
 
 実行:
@@ -23,7 +25,17 @@ apps/svg-canvas-demo/
 pnpm --filter svg-canvas-demo test:e2e         # ルートからは pnpm test:e2e
 pnpm --filter svg-canvas-demo test:e2e:headed  # ブラウザ表示あり
 pnpm --filter svg-canvas-demo test:e2e:ui      # Playwright UI モード
+pnpm --filter svg-canvas-demo test:e2e:demo    # マーケ素材生成デモ（hero-showcase 再現）
 ```
+
+### e2e/demo — マーケ素材生成デモ
+
+回帰検知ではなく、スクリーンショット／録画などの素材を作るためのデモ。CanvasDriver の
+テスト済み操作だけを合成し、`vscode-extension/sample/hero-showcase.jis.json`（17 部品＋17 結線の
+参照アーキテクチャ図）を UI 操作だけで丸ごと描き起こす。`scripts/replay-hero-showcase.mjs` と
+同じ図を、失敗を隠さない E2E ドライバで再現する位置づけ。重く（約 40s）コネクター選択が
+flake しやすいため、通常の `test:e2e`（CI ゲート）からは外して `test:e2e:demo` で明示実行する。
+最終状態はスクリーンショットとしてレポートに添付される（目視は `test:e2e:demo:headed`）。
 
 設計方針: **失敗を隠すリトライは入れない**。CanvasDriver は時間待ちではなく状態待ち
 （要素の出現・オブジェクト数の変化を `expect.poll` 等で待つ）で同期し、操作が効かない場合は
