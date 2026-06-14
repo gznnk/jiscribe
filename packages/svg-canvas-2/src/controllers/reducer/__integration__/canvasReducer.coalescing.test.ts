@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestState } from "./support/createTestState";
@@ -71,5 +71,21 @@ describe("canvasReducer（結合）", () => {
 			state = runCommands(state, "move-right");
 			expect(state.history.past).toHaveLength(2);
 		});
+
+		it("集約ウィンドウ（1000ms）を超えた同一方向ナッジは別エントリになる", () => {
+			vi.useFakeTimers();
+			let state = createState();
+			state = runCommands(state, "move-right");
+			expect(state.history.past).toHaveLength(1);
+
+			// 同じキー（move:rect-1）でも、前回コミットから 1000ms 超過すると集約されない
+			vi.advanceTimersByTime(1500);
+			state = runCommands(state, "move-right");
+			expect(state.history.past).toHaveLength(2);
+		});
 	});
+});
+
+afterEach(() => {
+	vi.useRealTimers();
 });

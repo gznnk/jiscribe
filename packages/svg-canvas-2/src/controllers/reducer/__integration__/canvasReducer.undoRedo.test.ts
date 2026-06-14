@@ -59,6 +59,52 @@ describe("canvasReducer（結合）", () => {
 			expect(after).toBe(state); // 参照ごと不変
 		});
 
+		it("future が空のときの redo は no-op（状態は変化しない）", () => {
+			const state = createState();
+			const after = runCommands(state, "redo");
+			expect(after).toBe(state); // 参照ごと不変
+		});
+
+		it("テキスト編集中は undo/redo が canExecute=false で弾かれる", () => {
+			let state = createState();
+			state = runCommands(state, "move-right");
+			// 編集セッションを開始した状態を再現する
+			state = {
+				...state,
+				textEditState: { objectId: "rect-1", text: "editing" },
+			};
+
+			// 編集中の undo は no-op（past は消費されない）
+			const afterUndo = runCommands(state, "undo");
+			expect(afterUndo).toBe(state);
+			expect(afterUndo.history.past).toHaveLength(1);
+		});
+
+		it("delete → undo で削除したオブジェクトが復活する", () => {
+			let state = createState();
+			expect(state.objects["rect-1"]).toBeDefined();
+
+			state = runCommands(state, "delete");
+			expect(state.objects["rect-1"]).toBeUndefined();
+
+			state = runCommands(state, "undo");
+			expect(state.objects["rect-1"]).toBeDefined();
+			expect(cxOf(state)).toBe(5); // 削除前の位置で戻る
+		});
+
+		it("集約ナッジ → undo → redo で集約結果がまるごと復元される", () => {
+			let state = createState();
+			state = runCommands(state, "move-right", "move-right", "move-right");
+			expect(cxOf(state)).toBe(8); // 5 + 1*3（集約で 1 エントリ）
+			expect(state.history.past).toHaveLength(1);
+
+			state = runCommands(state, "undo");
+			expect(cxOf(state)).toBe(5); // 集約分を一括で戻す
+
+			state = runCommands(state, "redo");
+			expect(cxOf(state)).toBe(8); // 集約結果がまるごと復元される
+		});
+
 		it("undo 後に新しいコミットを行うと future がクリアされる", () => {
 			let state = createState();
 			state = runCommands(state, "move-right");

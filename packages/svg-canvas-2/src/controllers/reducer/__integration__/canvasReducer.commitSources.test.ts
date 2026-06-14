@@ -101,5 +101,45 @@ describe("canvasReducer（結合）", () => {
 			expect(after.history.past).toHaveLength(0);
 			expect(after.textEditState).toBeNull();
 		});
+
+		it("END_TEXT_EDIT 確定でもテキストが変わっていなければ記録しない", () => {
+			let state = createTestState(twoRectsDoc, {
+				selectedIds: ["rect-1"],
+				textEditState: { objectId: "rect-1", text: "hello" },
+			});
+			// 1 回目: テキストが変わるので記録される
+			state = canvasReducer(state, { type: "END_TEXT_EDIT", commit: true });
+			expect(state.history.past).toHaveLength(1);
+
+			// 同じテキストでもう一度確定 → 差分なしで commitVersion が上がらず記録されない
+			state = {
+				...state,
+				textEditState: { objectId: "rect-1", text: "hello" },
+			};
+			state = canvasReducer(state, { type: "END_TEXT_EDIT", commit: true });
+			expect(state.history.past).toHaveLength(1);
+			expect(state.textEditState).toBeNull();
+		});
+
+		it("MENU_PROPERTY_UPDATE は preview → commit と続けても記録は 1 回だけ", () => {
+			let state = createState();
+			// プレビュー（commit:false）は記録しない
+			state = canvasReducer(state, {
+				type: "MENU_PROPERTY_UPDATE",
+				property: "fill",
+				value: "#ff0000",
+				commit: false,
+			});
+			expect(state.history.past).toHaveLength(0);
+
+			// 確定（commit:true）で初めて 1 エントリ積まれる（プレビュー分は二重に積まれない）
+			state = canvasReducer(state, {
+				type: "MENU_PROPERTY_UPDATE",
+				property: "fill",
+				value: "#ff0000",
+				commit: true,
+			});
+			expect(state.history.past).toHaveLength(1);
+		});
 	});
 });
