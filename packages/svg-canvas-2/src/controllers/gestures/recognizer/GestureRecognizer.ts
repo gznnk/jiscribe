@@ -158,7 +158,12 @@ export class GestureRecognizer {
 		// wheel: ドラッグ外のホイールイベント
 		if (e.type === "wheel") {
 			// ドラッグ中はpointermoveとして処理されるため、ここではドラッグ外の処理
-			const hovered = getHoveredElements(e.clientX, e.clientY, targetId);
+			const hovered = getHoveredElements(
+				e.clientX,
+				e.clientY,
+				targetId,
+				this.containerRef.current,
+			);
 
 			// ドラッグ外の処理なので、targetIdとtargetKindをcanvasに固定
 			// 将来的にオブジェクト上でのホイール操作をサポートする場合はここを変更
@@ -194,7 +199,12 @@ export class GestureRecognizer {
 				this.containerRef.current.setPointerCapture(e.pointerId);
 			}
 
-			const hovered = getHoveredElements(e.clientX, e.clientY, targetId);
+			const hovered = getHoveredElements(
+				e.clientX,
+				e.clientY,
+				targetId,
+				this.containerRef.current,
+			);
 
 			// pressed 状態をセット
 			this.pressed = {
@@ -251,11 +261,12 @@ export class GestureRecognizer {
 			this.pressed.last = currentPos;
 			this.pressed.clientLast = currentClientPos;
 
-			const hovered = getHoveredElements(
-				e.clientX,
-				e.clientY,
-				this.pressed.targetId,
-			);
+		const hovered = getHoveredElements(
+			e.clientX,
+			e.clientY,
+			this.pressed.targetId,
+			this.containerRef.current,
+		);
 
 			if (!this.pressed.dragging) {
 				// ドラッグ開始判定
@@ -367,6 +378,7 @@ export class GestureRecognizer {
 				e.clientX,
 				e.clientY,
 				this.pressed.targetId,
+				this.containerRef.current,
 			);
 
 			// Determine event type: dragEnd, doubleClick, or click
@@ -430,6 +442,7 @@ export class GestureRecognizer {
 				e.clientX,
 				e.clientY,
 				this.pressed.targetId,
+				this.containerRef.current,
 			);
 
 			if (this.pressed.dragging) {

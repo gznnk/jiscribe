@@ -3,13 +3,19 @@ import type { HoveredElement } from "../GestureRecognizerTypes";
 
 /**
  * 座標上のホバー要素を取得（重複除外、指定IDの除外）
+ * rootElement を渡すとキャンバス外の要素を除外できる
  */
 export const getHoveredElements = (
 	x: number,
 	y: number,
 	excludeId?: string,
+	rootElement?: Element | null,
 ): HoveredElement[] => {
-	const elements = document.elementsFromPoint(x, y);
+	const allElements = document.elementsFromPoint(x, y);
+	const elements =
+		rootElement != null
+			? allElements.filter((el) => rootElement.contains(el))
+			: allElements;
 	const hovered: HoveredElement[] = [];
 	const seenIds = new Set<string>();
 	for (const el of elements) {
