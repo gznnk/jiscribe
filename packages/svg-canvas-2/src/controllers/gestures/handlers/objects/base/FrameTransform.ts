@@ -19,9 +19,13 @@ export function transformFrameByGroup<T extends TransformedFrame>(
 	transformRootGroupEndState: GroupState,
 ): T {
 	const groupScaleX =
-		transformRootGroupEndState.width / transformRootGroupStartState.width;
+		transformRootGroupStartState.width !== 0
+			? transformRootGroupEndState.width / transformRootGroupStartState.width
+			: 1;
 	const groupScaleY =
-		transformRootGroupEndState.height / transformRootGroupStartState.height;
+		transformRootGroupStartState.height !== 0
+			? transformRootGroupEndState.height / transformRootGroupStartState.height
+			: 1;
 
 	const inversedChildStartCenter = calcRotatedPoint(
 		frame.cx,
