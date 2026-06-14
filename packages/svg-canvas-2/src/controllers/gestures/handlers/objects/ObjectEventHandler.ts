@@ -14,7 +14,11 @@ import { determineSelection } from "./utils/determineSelection";
 import { getAncestors } from "./utils/getAncestors";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../../../states/objects/base/TextStyleState";
-import type { CanvasControllerState, SnapFeedback } from "../../../CanvasTypes";
+import type {
+	AxisLockFeedback,
+	CanvasControllerState,
+	SnapFeedback,
+} from "../../../CanvasTypes";
 import type {
 	CanvasEvent,
 	GestureHandler,
@@ -177,6 +181,19 @@ function handleObjectDrag(
 		);
 	}
 
+	// --- Shift 軸固定のフィードバック ---
+	// 移動できる軸方向を示すガイド線（ビューポート全体に伸びる線）の位置を決める。
+	// 固定軸が x（縦移動）なら中心 X を通る縦線、y（横移動）なら中心 Y を通る横線。
+	// 実描画は専用コンポーネント AxisLockGuide が担う。
+	let axisLockFeedback: AxisLockFeedback | null = null;
+	if (lockedAxis && snapSourceKeyPoints) {
+		const baseBBox = calcKeyPointsBoundingBox(snapSourceKeyPoints);
+		axisLockFeedback =
+			lockedAxis === "y"
+				? { axis: "y", coordinate: (baseBBox.top + baseBBox.bottom) / 2 }
+				: { axis: "x", coordinate: (baseBBox.left + baseBBox.right) / 2 };
+	}
+
 	// --- 全選択オブジェクトを adjustedDelta で移動（ナッジ移動と共有）---
 	// ドラッグはドラッグ開始スナップショットを移動元にして累積 delta で移動する。
 	// 親グループの境界更新は dragEnd でまとめて行うため、ここでは行わない。
@@ -193,6 +210,7 @@ function handleObjectDrag(
 		...canvasState,
 		objects: updatedObjects,
 		snapFeedback,
+		axisLockFeedback,
 	};
 
 	// multiSelectGroup も同期して移動（ドラッグ中に複数選択が維持されている場合のみ）

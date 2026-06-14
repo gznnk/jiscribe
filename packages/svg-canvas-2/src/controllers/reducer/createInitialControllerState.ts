@@ -35,6 +35,7 @@ export const createInitialControllerState = (
 		editingConnectorId: null,
 		editingEndpoint: null,
 		snapFeedback: null,
+		axisLockFeedback: null,
 		shapeDrawing: null,
 		lastDuplicate: null,
 		internalClipboard: null,

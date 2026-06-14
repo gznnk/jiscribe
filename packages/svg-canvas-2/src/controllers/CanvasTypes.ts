@@ -96,6 +96,17 @@ export type SnapFeedback = {
 };
 
 /**
+ * Shift ドラッグの軸固定フィードバック。
+ * ビューポート全体に伸びるガイド線 1 本を表す。
+ */
+export type AxisLockFeedback = {
+	/** 固定された軸。"x" = X 固定（縦線）、"y" = Y 固定（横線） */
+	axis: "x" | "y";
+	/** ガイド線が通る座標（SVG 座標）。axis="x" は線の X 座標、axis="y" は線の Y 座標 */
+	coordinate: number;
+};
+
+/**
  * 履歴スタックの状態
  */
 export type HistoryState = {
@@ -309,6 +320,13 @@ export type CanvasControllerState = CanvasState & {
 	 * スナップしている間のみ non-null。dragEnd でクリアする。
 	 */
 	snapFeedback: SnapFeedback | null;
+
+	/**
+	 * Shift ドラッグによる軸固定フィードバック。
+	 * 軸固定中のみ non-null。dragEnd でクリアする。
+	 * ビューポート全体に伸びるガイド線を AxisLockGuide が描画する。
+	 */
+	axisLockFeedback: AxisLockFeedback | null;
 
 	/**
 	 * インターナルクリップボード。

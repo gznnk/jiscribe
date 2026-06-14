@@ -11,22 +11,44 @@ beforeAll(() => {
 	initializeObjectRegistry();
 });
 
+const SIZE = 10;
+
 const makeRect = (id: string, cx: number, cy: number): ObjectState =>
 	({
 		id,
 		type: "rect",
 		cx,
 		cy,
-		width: 10,
-		height: 10,
+		width: SIZE,
+		height: SIZE,
 	}) as unknown as ObjectState;
+
+/** rect の4隅＋中点から keyPoints を作る（calcKeyPointsBoundingBox は4隅のみ参照）*/
+const makeKeyPoints = (cx: number, cy: number) => {
+	const half = SIZE / 2;
+	const left = cx - half;
+	const right = cx + half;
+	const top = cy - half;
+	const bottom = cy + half;
+	return {
+		topLeft: { x: left, y: top },
+		topCenter: { x: cx, y: top },
+		topRight: { x: right, y: top },
+		rightCenter: { x: right, y: cy },
+		bottomRight: { x: right, y: bottom },
+		bottomCenter: { x: cx, y: bottom },
+		bottomLeft: { x: left, y: bottom },
+		leftCenter: { x: left, y: cy },
+	};
+};
 
 /**
  * ドラッグ中の state を組み立てる。snapCandidates を null にしてスナップ補正を無効化し、
- * Shift 軸固定ロジックだけを検証できるようにする。
+ * Shift 軸固定ロジックだけを検証できるようにする。keyPoints は軸固定フィードバックの
+ * 線位置（中心座標）算出に使われる。
  */
-const makeDragState = (): CanvasControllerState => {
-	const rect = makeRect("rect-1", 0, 0);
+const makeDragState = (cx = 0, cy = 0): CanvasControllerState => {
+	const rect = makeRect("rect-1", cx, cy);
 	return {
 		objects: { "rect-1": rect },
 		rootIds: ["rect-1"],
@@ -38,7 +60,7 @@ const makeDragState = (): CanvasControllerState => {
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 		eventStartSnapshot: {
 			objects: { "rect-1": rect },
-			keyPoints: {},
+			keyPoints: { "rect-1": makeKeyPoints(cx, cy) },
 			snapCandidates: null,
 			selectedIds: ["rect-1"],
 			selectedIdsWithDescendants: new Set(["rect-1"]),
@@ -65,12 +87,13 @@ const movedRect = (state: CanvasControllerState) =>
 	state.objects["rect-1"] as unknown as { cx: number; cy: number };
 
 describe("ObjectEventHandler - Shift 軸固定ドラッグ", () => {
-	it("Shift なしでは両軸が移動する", () => {
+	it("Shift なしでは両軸が移動し、軸固定フィードバックは出ない", () => {
 		const next = ObjectEventHandler.handle(
 			makeDragState(),
 			makeDragEvent({ x: 30, y: 12 }, false),
 		);
 		expect(movedRect(next)).toMatchObject({ cx: 30, cy: 12 });
+		expect(next.axisLockFeedback).toBeNull();
 	});
 
 	it("Shift + 横方向優位（|dx| >= |dy|）では Y を固定し X だけ動く", () => {
@@ -104,5 +127,37 @@ describe("ObjectEventHandler - Shift 軸固定ドラッグ", () => {
 			makeDragEvent({ x: 6, y: 40 }, true),
 		);
 		expect(movedRect(afterY)).toMatchObject({ cx: 0, cy: 40 });
+	});
+
+	describe("軸固定フィードバック", () => {
+		it("横移動（Y 固定）では中心 Y を通る横線（axis=y）を返す", () => {
+			const next = ObjectEventHandler.handle(
+				makeDragState(20, 30),
+				makeDragEvent({ x: 50, y: 8 }, true),
+			);
+			expect(next.axisLockFeedback).toEqual({ axis: "y", coordinate: 30 });
+		});
+
+		it("縦移動（X 固定）では中心 X を通る縦線（axis=x）を返す", () => {
+			const next = ObjectEventHandler.handle(
+				makeDragState(20, 30),
+				makeDragEvent({ x: 8, y: 50 }, true),
+			);
+			expect(next.axisLockFeedback).toEqual({ axis: "x", coordinate: 20 });
+		});
+
+		it("優位軸が入れ替わるとフィードバックの軸も切り替わる", () => {
+			const afterX = ObjectEventHandler.handle(
+				makeDragState(20, 30),
+				makeDragEvent({ x: 40, y: 5 }, true),
+			);
+			expect(afterX.axisLockFeedback).toEqual({ axis: "y", coordinate: 30 });
+
+			const afterY = ObjectEventHandler.handle(
+				afterX,
+				makeDragEvent({ x: 5, y: 40 }, true),
+			);
+			expect(afterY.axisLockFeedback).toEqual({ axis: "x", coordinate: 20 });
+		});
 	});
 });

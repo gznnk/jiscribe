@@ -170,6 +170,7 @@ export const handleGesture = (
 			...nextState,
 			eventStartSnapshot: null,
 			snapFeedback: null,
+			axisLockFeedback: null,
 			...(hasDocChanges ? { commitVersion: state.commitVersion + 1 } : {}),
 		};
 	}
