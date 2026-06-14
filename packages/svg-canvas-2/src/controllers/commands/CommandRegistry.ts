@@ -17,6 +17,17 @@ class CommandRegistry {
 	}
 
 	/**
+	 * 複数のコマンドをまとめて登録する。
+	 * ファクトリ生成した配列（移動コマンド等）を fluent chain に溶け込ませるためのもの。
+	 */
+	registerAll(commands: Command[]): this {
+		for (const command of commands) {
+			this.register(command);
+		}
+		return this;
+	}
+
+	/**
 	 * コマンドIDからコマンドを取得
 	 */
 	get(commandId: string): Command | undefined {

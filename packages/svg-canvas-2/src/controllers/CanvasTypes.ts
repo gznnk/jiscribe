@@ -10,6 +10,29 @@ import type { ConnectorState } from "../states/objects/connections/connector/Con
 import type { GroupState } from "../states/objects/primitives/group/GroupState";
 
 // ---------------------------------------------------------------------------
+// History coalescing types (stored in CanvasControllerState)
+// ---------------------------------------------------------------------------
+
+/**
+ * 連続操作を 1 つの undo エントリにまとめるための集約状態。
+ * recorded は履歴層が、pending は各イベントハンドラが責務を持つ（役割で分離）。
+ */
+export type HistoryCoalesce = {
+	/**
+	 * 直前コミットの集約識別子（key とコミット時刻）。
+	 * recordHistoryIfNeeded のみが書き、ハンドラからは read-only。
+	 * null は集約境界（次のコミットは必ず新規エントリになる）。
+	 */
+	recorded: { key: string; time: number } | null;
+	/**
+	 * 各ハンドラが「集約したい時だけ」セットする集約キー（intent）。
+	 * recordHistoryIfNeeded がコミット時に消費し、必ず null に戻す。
+	 * 何を同じ操作の連続とみなすかをキーに織り込む（例: "move:<選択ID>"）。
+	 */
+	pending: string | null;
+};
+
+// ---------------------------------------------------------------------------
 // KeyPoints cache types (stored in CanvasControllerState)
 // ---------------------------------------------------------------------------
 
@@ -160,6 +183,12 @@ export type CanvasControllerState = CanvasState & {
 	 * Passed to onCommit and echoed back via SYNC_EXTERNAL to identify fold-back saves.
 	 */
 	saveNonce: string;
+
+	/**
+	 * 履歴エントリの集約（連続したナッジ＝矢印キー移動などを 1 つの undo にまとめる）に使う状態。
+	 * CanvasDoc には含めない transient な内部シグナル。
+	 */
+	historyCoalesce: HistoryCoalesce;
 
 	/**
 	 * Context menu position (client coordinates).

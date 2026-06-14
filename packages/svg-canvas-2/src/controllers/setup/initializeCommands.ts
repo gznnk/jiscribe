@@ -1,5 +1,6 @@
 import { BringForwardCommand } from "../commands/arrange/BringForwardCommand";
 import { BringToFrontCommand } from "../commands/arrange/BringToFrontCommand";
+import { moveCommands } from "../commands/arrange/MoveCommands";
 import { SendBackwardCommand } from "../commands/arrange/SendBackwardCommand";
 import { SendToBackCommand } from "../commands/arrange/SendToBackCommand";
 import { SwapArrowsCommand } from "../commands/arrow/SwapArrowsCommand";
@@ -41,6 +42,8 @@ export const initializeCommands = (): void => {
 		.register(BringForwardCommand)
 		.register(SendBackwardCommand)
 		.register(SendToBackCommand)
+		// Move (nudge) commands: 上下左右 × 通常/Shift の 8 コマンド
+		.registerAll(moveCommands)
 		// Arrow commands
 		.register(SwapArrowsCommand)
 		// Group commands

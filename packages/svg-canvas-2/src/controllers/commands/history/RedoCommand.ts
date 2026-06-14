@@ -57,6 +57,7 @@ export const RedoCommand: Command = {
 			commitVersion: state.commitVersion, // Don't update - this is history restoration, not a new commit
 			saveVersion: state.saveVersion + 1,
 			saveNonce: crypto.randomUUID(),
+			historyCoalesce: { recorded: null, pending: null }, // 履歴ナビゲーションは集約境界
 			contextMenuPosition: null,
 			shapeLibraryDrag: null,
 			areaSelection: null,

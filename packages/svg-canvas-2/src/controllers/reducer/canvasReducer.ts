@@ -14,12 +14,12 @@ export const canvasReducer = (
 	switch (action.type) {
 		case "GESTURE": {
 			const gestureResult = handleGesture(state, action.gesture);
-			return recordHistoryIfNeeded(gestureResult, state.commitVersion);
+			return recordHistoryIfNeeded(gestureResult, state);
 		}
 
 		case "COMMAND": {
 			const commandResult = handleCommand(state, action.commandId);
-			return recordHistoryIfNeeded(commandResult, state.commitVersion);
+			return recordHistoryIfNeeded(commandResult, state);
 		}
 
 		case "CONTAINER_RESIZE": {
@@ -49,7 +49,7 @@ export const canvasReducer = (
 			}
 			return recordHistoryIfNeeded(
 				{ ...updatedWithVertexCleared, commitVersion: state.commitVersion + 1 },
-				state.commitVersion,
+				state,
 			);
 		}
 
@@ -103,6 +103,9 @@ export const canvasReducer = (
 				shapeLibraryDrag: null,
 				snapFeedback: null,
 				objectMenuOpenId: null,
+				// 外部変更は履歴境界。recordHistoryIfNeeded を通さず past を直接積むため、
+				// 集約状態をここで明示的にリセットする（直前ナッジの recorded を残さない）。
+				historyCoalesce: { recorded: null, pending: null },
 				history: {
 					past: [...state.history.past, state.history.present].slice(-50),
 					present: newDoc,
@@ -131,7 +134,7 @@ export const canvasReducer = (
 
 			if (action.commit) {
 				const commitResult = commitTextEditIfNeeded(state);
-				return recordHistoryIfNeeded(commitResult, state.commitVersion);
+				return recordHistoryIfNeeded(commitResult, state);
 			}
 
 			// キャンセルの場合は textEditState のみクリア
@@ -143,7 +146,7 @@ export const canvasReducer = (
 
 		case "PASTE": {
 			const pasteResult = handlePaste(state, action.data);
-			return recordHistoryIfNeeded(pasteResult, state.commitVersion);
+			return recordHistoryIfNeeded(pasteResult, state);
 		}
 
 		case "CLOSE_CONTEXT_MENU": {
@@ -159,29 +162,62 @@ export const canvasReducer = (
 };
 
 /**
+ * 連続操作を 1 つの undo エントリにまとめる時間ウィンドウ（ミリ秒）。
+ * 同一 coalesceKey の操作がこの間隔以内に続く限り、past を増やさず present のみ更新する。
+ */
+const HISTORY_COALESCE_WINDOW_MS = 1000;
+
+/**
  * commitVersion が変化していれば履歴を記録し、saveVersion もインクリメントする。
  * canvasReducer のみが呼び出してよい。
+ *
+ * コミット時、各イベントハンドラが state.historyCoalesce.pending に集約キーを立てていれば、
+ * 直前コミット（recorded）が同一キー・一定時間内である限り past を増やさず present だけ
+ * 差し替えて連続操作を 1 エントリに集約する（例: 矢印キーによる連続ナッジ）。
+ * pending は履歴層がここで消費し、必ず null に戻す。
  */
 const recordHistoryIfNeeded = (
 	state: CanvasControllerState,
-	previousCommitVersion: number,
+	previousState: CanvasControllerState,
 ): CanvasControllerState => {
 	if (
-		state.commitVersion > 0 &&
-		state.commitVersion !== previousCommitVersion
+		!(
+			state.commitVersion > 0 &&
+			state.commitVersion !== previousState.commitVersion
+		)
 	) {
-		const doc = canvasToDoc(state);
-		const newPast = [...state.history.past, state.history.present].slice(-50);
-		return {
-			...state,
-			saveVersion: state.saveVersion + 1,
-			saveNonce: crypto.randomUUID(),
-			history: {
-				past: newPast,
-				present: doc,
-				future: [],
-			},
-		};
+		return state;
 	}
-	return state;
+
+	const doc = canvasToDoc(state);
+	const now = Date.now();
+
+	// ハンドラが立てた集約キー（intent）と、直前コミットの集約識別子（recorded）を突き合わせる
+	const pending = state.historyCoalesce.pending;
+	const previousRecorded = previousState.historyCoalesce.recorded;
+	const canMerge =
+		pending !== null &&
+		previousRecorded !== null &&
+		previousRecorded.key === pending &&
+		now - previousRecorded.time <= HISTORY_COALESCE_WINDOW_MS;
+
+	const past = canMerge
+		? state.history.past
+		: [...state.history.past, state.history.present].slice(-50);
+
+	return {
+		...state,
+		saveVersion: state.saveVersion + 1,
+		saveNonce: crypto.randomUUID(),
+		// pending を消費して recorded を更新（集約しないコミットは null = 集約境界）。pending は必ず null に戻す。
+		historyCoalesce: {
+			recorded: pending === null ? null : { key: pending, time: now },
+			pending: null,
+		},
+		history: {
+			past,
+			present: doc,
+			future: [],
+		},
+	};
 };

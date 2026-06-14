@@ -261,12 +261,12 @@ export class GestureRecognizer {
 			this.pressed.last = currentPos;
 			this.pressed.clientLast = currentClientPos;
 
-		const hovered = getHoveredElements(
-			e.clientX,
-			e.clientY,
-			this.pressed.targetId,
-			this.containerRef.current,
-		);
+			const hovered = getHoveredElements(
+				e.clientX,
+				e.clientY,
+				this.pressed.targetId,
+				this.containerRef.current,
+			);
 
 			if (!this.pressed.dragging) {
 				// ドラッグ開始判定

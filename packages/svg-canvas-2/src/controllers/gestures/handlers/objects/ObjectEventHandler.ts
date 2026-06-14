@@ -9,7 +9,6 @@ import type {
 	TransformedFrame,
 } from "@workspace/geometry";
 
-import { moveGroup } from "./primitives/GroupController";
 import { createMultiSelectGroup } from "./utils/createMultiSelectGroup";
 import { determineSelection } from "./utils/determineSelection";
 import { getAncestors } from "./utils/getAncestors";
@@ -28,7 +27,7 @@ import {
 import { updateAffectedGroupBounds } from "../../../ui/utils/updateAffectedGroupBounds";
 import { buildSelectedIdsWithDescendants } from "../../../utils/buildSelectedIdsWithDescendants";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
-import { objectBehaviorRegistry } from "../../registry/ObjectBehaviorRegistry";
+import { moveSelection } from "../../../utils/moveSelection";
 import type { Mods } from "../../registry/ObjectBehaviorTypes";
 
 /**
@@ -159,28 +158,17 @@ function handleObjectDrag(
 		);
 	}
 
-	// --- 全選択オブジェクトを adjustedDelta で移動 ---
-	const updatedObjects = { ...eventStartObjects };
-
-	for (const selectedId of selectedIds) {
-		const selectedObject = eventStartObjects[selectedId];
-		if (!selectedObject) {
-			continue;
-		}
-
-		if (selectedObject.type === "group") {
-			// Group: 再帰的に子も移動
-			moveGroup(selectedId, eventStartObjects, updatedObjects, adjustedDelta);
-		} else {
-			// Registry経由で形状ごとのmoveByDeltaを取得
-			const moveByDelta = objectBehaviorRegistry.getMoveByDelta(
-				selectedObject.type,
-			);
-			if (moveByDelta) {
-				updatedObjects[selectedId] = moveByDelta(selectedObject, adjustedDelta);
-			}
-		}
-	}
+	// --- 全選択オブジェクトを adjustedDelta で移動（ナッジ移動と共有）---
+	// ドラッグはドラッグ開始スナップショットを移動元にして累積 delta で移動する。
+	// 親グループの境界更新は dragEnd でまとめて行うため、ここでは行わない。
+	const eventStartMultiSelectGroup = eventStartSnapshot.multiSelectGroup;
+	const { objects: updatedObjects, multiSelectGroup: movedMultiSelectGroup } =
+		moveSelection({
+			selectedIds,
+			srcObjects: eventStartObjects,
+			srcMultiSelectGroup: eventStartMultiSelectGroup,
+			delta: adjustedDelta,
+		});
 
 	const nextState = {
 		...canvasState,
@@ -188,15 +176,9 @@ function handleObjectDrag(
 		snapFeedback,
 	};
 
-	// multiSelectGroup も同期して移動
-	const multiSelectGroup = canvasState.multiSelectGroup;
-	const eventStartMultiSelectGroup = eventStartSnapshot.multiSelectGroup;
-	if (multiSelectGroup && eventStartMultiSelectGroup) {
-		nextState.multiSelectGroup = {
-			...multiSelectGroup,
-			cx: eventStartMultiSelectGroup.cx + adjustedDelta.x,
-			cy: eventStartMultiSelectGroup.cy + adjustedDelta.y,
-		};
+	// multiSelectGroup も同期して移動（ドラッグ中に複数選択が維持されている場合のみ）
+	if (canvasState.multiSelectGroup && movedMultiSelectGroup) {
+		nextState.multiSelectGroup = movedMultiSelectGroup;
 	}
 
 	return nextState;

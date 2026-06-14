@@ -20,6 +20,7 @@ const createInitialControllerState = (
 		commitVersion: 0,
 		saveVersion: 0,
 		saveNonce: "",
+		historyCoalesce: { recorded: null, pending: null },
 		contextMenuPosition: null,
 		shapeLibraryDrag: null,
 		areaSelection: null,

@@ -19,7 +19,9 @@ const makeGroup = (overrides: Partial<GroupState>): GroupState =>
 		...overrides,
 	}) as unknown as GroupState;
 
-const makeFrame = (overrides?: Partial<TransformedFrame>): TransformedFrame => ({
+const makeFrame = (
+	overrides?: Partial<TransformedFrame>,
+): TransformedFrame => ({
 	cx: 100,
 	cy: 100,
 	width: 50,
@@ -33,7 +35,12 @@ const makeFrame = (overrides?: Partial<TransformedFrame>): TransformedFrame => (
 describe("transformFrameByGroup", () => {
 	describe("通常ケース", () => {
 		it("グループが2倍に拡大されたとき、子オブジェクトのサイズも2倍になる", () => {
-			const startGroup = makeGroup({ cx: 100, cy: 100, width: 100, height: 100 });
+			const startGroup = makeGroup({
+				cx: 100,
+				cy: 100,
+				width: 100,
+				height: 100,
+			});
 			const endGroup = makeGroup({ cx: 100, cy: 100, width: 200, height: 200 });
 			const frame = makeFrame({ cx: 100, cy: 100, width: 50, height: 50 });
 
