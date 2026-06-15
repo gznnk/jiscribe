@@ -829,7 +829,7 @@
 				"name": "サンプル: 付箋(Sticky)"
 			},
 			"x": 470,
-			"y": 380,
+			"y": 557,
 			"width": 200,
 			"height": 150,
 			"stroke": "#d7ba7d",
@@ -849,7 +849,7 @@
 			"meta": {
 				"name": "サンプル: Markdown カード"
 			},
-			"x": 907.2496000000001,
+			"x": 850,
 			"y": 557,
 			"width": 320,
 			"height": 200,
@@ -1336,413 +1336,416 @@
 		{
 			"id": "picker-panel",
 			"type": "rect",
+			"meta": {
+				"name": "カラーピッカー (背景色スウォッチを開いた状態)"
+			},
 			"x": 618,
 			"y": 332,
 			"width": 228,
 			"height": 182,
-			"fill": "#252526",
 			"stroke": "#2b2b2b",
 			"strokeWidth": 1,
-			"rx": 0,
-			"meta": {
-				"name": "カラーピッカー (背景色スウォッチを開いた状態)"
-			}
+			"fill": "#252526",
+			"rx": 0
 		},
 		{
 			"id": "picker-sw-r0-c0",
 			"type": "ellipse",
+			"meta": {
+				"name": "スウォッチ: #dc2626"
+			},
 			"cx": 642,
 			"cy": 356,
 			"rx": 12,
 			"ry": 12,
-			"fill": "#dc2626",
 			"stroke": "#3c3c3c",
 			"strokeWidth": 1,
-			"meta": {
-				"name": "スウォッチ: #dc2626"
-			}
+			"fill": "#dc2626"
 		},
 		{
 			"id": "picker-sw-r0-c1",
 			"type": "ellipse",
+			"meta": {
+				"name": "スウォッチ: #f87171"
+			},
 			"cx": 672,
 			"cy": 356,
 			"rx": 12,
 			"ry": 12,
-			"fill": "#f87171",
 			"stroke": "#3c3c3c",
 			"strokeWidth": 1,
-			"meta": {
-				"name": "スウォッチ: #f87171"
-			}
+			"fill": "#f87171"
 		},
 		{
 			"id": "picker-sw-r0-c2",
 			"type": "ellipse",
+			"meta": {
+				"name": "スウォッチ: #ec4899"
+			},
 			"cx": 702,
 			"cy": 356,
 			"rx": 12,
 			"ry": 12,
-			"fill": "#ec4899",
 			"stroke": "#3c3c3c",
 			"strokeWidth": 1,
-			"meta": {
-				"name": "スウォッチ: #ec4899"
-			}
+			"fill": "#ec4899"
 		},
 		{
 			"id": "picker-sw-r0-c3",
 			"type": "ellipse",
+			"meta": {
+				"name": "スウォッチ: #f472b6"
+			},
 			"cx": 732,
 			"cy": 356,
 			"rx": 12,
 			"ry": 12,
-			"fill": "#f472b6",
 			"stroke": "#3c3c3c",
 			"strokeWidth": 1,
-			"meta": {
-				"name": "スウォッチ: #f472b6"
-			}
+			"fill": "#f472b6"
 		},
 		{
 			"id": "picker-sw-r0-c4",
 			"type": "ellipse",
+			"meta": {
+				"name": "スウォッチ: #e879f9"
+			},
 			"cx": 762,
 			"cy": 356,
 			"rx": 12,
 			"ry": 12,
-			"fill": "#e879f9",
 			"stroke": "#3c3c3c",
 			"strokeWidth": 1,
-			"meta": {
-				"name": "スウォッチ: #e879f9"
-			}
+			"fill": "#e879f9"
 		},
 		{
 			"id": "picker-sw-r0-c5",
 			"type": "ellipse",
+			"meta": {
+				"name": "スウォッチ: #9333ea"
+			},
 			"cx": 792,
 			"cy": 356,
 			"rx": 12,
 			"ry": 12,
-			"fill": "#9333ea",
 			"stroke": "#3c3c3c",
 			"strokeWidth": 1,
-			"meta": {
-				"name": "スウォッチ: #9333ea"
-			}
+			"fill": "#9333ea"
 		},
 		{
 			"id": "picker-sw-r0-c6",
 			"type": "ellipse",
+			"meta": {
+				"name": "スウォッチ: #a855f7"
+			},
 			"cx": 822,
 			"cy": 356,
 			"rx": 12,
 			"ry": 12,
-			"fill": "#a855f7",
 			"stroke": "#3c3c3c",
 			"strokeWidth": 1,
-			"meta": {
-				"name": "スウォッチ: #a855f7"
-			}
+			"fill": "#a855f7"
 		},
 		{
 			"id": "picker-sw-r1-c0",
 			"type": "ellipse",
+			"meta": {
+				"name": "スウォッチ: #8b5cf6"
+			},
 			"cx": 642,
 			"cy": 386,
 			"rx": 12,
 			"ry": 12,
-			"fill": "#8b5cf6",
 			"stroke": "#3c3c3c",
 			"strokeWidth": 1,
-			"meta": {
-				"name": "スウォッチ: #8b5cf6"
-			}
+			"fill": "#8b5cf6"
 		},
 		{
 			"id": "picker-sw-r1-c1",
 			"type": "ellipse",
+			"meta": {
+				"name": "スウォッチ: #a78bfa"
+			},
 			"cx": 672,
 			"cy": 386,
 			"rx": 12,
 			"ry": 12,
-			"fill": "#a78bfa",
 			"stroke": "#3c3c3c",
 			"strokeWidth": 1,
-			"meta": {
-				"name": "スウォッチ: #a78bfa"
-			}
+			"fill": "#a78bfa"
 		},
 		{
 			"id": "picker-sw-r1-c2",
 			"type": "ellipse",
+			"meta": {
+				"name": "スウォッチ: #6366f1"
+			},
 			"cx": 702,
 			"cy": 386,
 			"rx": 12,
 			"ry": 12,
-			"fill": "#6366f1",
 			"stroke": "#3c3c3c",
 			"strokeWidth": 1,
-			"meta": {
-				"name": "スウォッチ: #6366f1"
-			}
+			"fill": "#6366f1"
 		},
 		{
 			"id": "picker-sw-r1-c3",
 			"type": "ellipse",
+			"meta": {
+				"name": "スウォッチ: #3b82f6"
+			},
 			"cx": 732,
 			"cy": 386,
 			"rx": 12,
 			"ry": 12,
-			"fill": "#3b82f6",
 			"stroke": "#3c3c3c",
 			"strokeWidth": 1,
-			"meta": {
-				"name": "スウォッチ: #3b82f6"
-			}
+			"fill": "#3b82f6"
 		},
 		{
 			"id": "picker-sw-r1-c4",
 			"type": "ellipse",
+			"meta": {
+				"name": "スウォッチ: #60a5fa"
+			},
 			"cx": 762,
 			"cy": 386,
 			"rx": 12,
 			"ry": 12,
-			"fill": "#60a5fa",
 			"stroke": "#3c3c3c",
 			"strokeWidth": 1,
-			"meta": {
-				"name": "スウォッチ: #60a5fa"
-			}
+			"fill": "#60a5fa"
 		},
 		{
 			"id": "picker-sw-r1-c5",
 			"type": "ellipse",
+			"meta": {
+				"name": "スウォッチ: #0ea5e9"
+			},
 			"cx": 792,
 			"cy": 386,
 			"rx": 12,
 			"ry": 12,
-			"fill": "#0ea5e9",
 			"stroke": "#3c3c3c",
 			"strokeWidth": 1,
-			"meta": {
-				"name": "スウォッチ: #0ea5e9"
-			}
+			"fill": "#0ea5e9"
 		},
 		{
 			"id": "picker-sw-r1-c6",
 			"type": "ellipse",
+			"meta": {
+				"name": "スウォッチ: #38bdf8"
+			},
 			"cx": 822,
 			"cy": 386,
 			"rx": 12,
 			"ry": 12,
-			"fill": "#38bdf8",
 			"stroke": "#3c3c3c",
 			"strokeWidth": 1,
-			"meta": {
-				"name": "スウォッチ: #38bdf8"
-			}
+			"fill": "#38bdf8"
 		},
 		{
 			"id": "picker-sw-r2-c0",
 			"type": "ellipse",
+			"meta": {
+				"name": "スウォッチ: #06b6d4"
+			},
 			"cx": 642,
 			"cy": 416,
 			"rx": 12,
 			"ry": 12,
-			"fill": "#06b6d4",
 			"stroke": "#3c3c3c",
 			"strokeWidth": 1,
-			"meta": {
-				"name": "スウォッチ: #06b6d4"
-			}
+			"fill": "#06b6d4"
 		},
 		{
 			"id": "picker-sw-r2-c1",
 			"type": "ellipse",
+			"meta": {
+				"name": "スウォッチ: #22d3ee"
+			},
 			"cx": 672,
 			"cy": 416,
 			"rx": 12,
 			"ry": 12,
-			"fill": "#22d3ee",
 			"stroke": "#3c3c3c",
 			"strokeWidth": 1,
-			"meta": {
-				"name": "スウォッチ: #22d3ee"
-			}
+			"fill": "#22d3ee"
 		},
 		{
 			"id": "picker-sw-r2-c2",
 			"type": "ellipse",
+			"meta": {
+				"name": "スウォッチ: #14b8a6"
+			},
 			"cx": 702,
 			"cy": 416,
 			"rx": 12,
 			"ry": 12,
-			"fill": "#14b8a6",
 			"stroke": "#3c3c3c",
 			"strokeWidth": 1,
-			"meta": {
-				"name": "スウォッチ: #14b8a6"
-			}
+			"fill": "#14b8a6"
 		},
 		{
 			"id": "picker-sw-r2-c3",
 			"type": "ellipse",
+			"meta": {
+				"name": "スウォッチ: #10b981"
+			},
 			"cx": 732,
 			"cy": 416,
 			"rx": 12,
 			"ry": 12,
-			"fill": "#10b981",
 			"stroke": "#3c3c3c",
 			"strokeWidth": 1,
-			"meta": {
-				"name": "スウォッチ: #10b981"
-			}
+			"fill": "#10b981"
 		},
 		{
 			"id": "picker-sw-r2-c4",
 			"type": "ellipse",
+			"meta": {
+				"name": "スウォッチ: #22c55e"
+			},
 			"cx": 762,
 			"cy": 416,
 			"rx": 12,
 			"ry": 12,
-			"fill": "#22c55e",
 			"stroke": "#3c3c3c",
 			"strokeWidth": 1,
-			"meta": {
-				"name": "スウォッチ: #22c55e"
-			}
+			"fill": "#22c55e"
 		},
 		{
 			"id": "picker-sw-r2-c5",
 			"type": "ellipse",
+			"meta": {
+				"name": "スウォッチ: #84cc16"
+			},
 			"cx": 792,
 			"cy": 416,
 			"rx": 12,
 			"ry": 12,
-			"fill": "#84cc16",
 			"stroke": "#3c3c3c",
 			"strokeWidth": 1,
-			"meta": {
-				"name": "スウォッチ: #84cc16"
-			}
+			"fill": "#84cc16"
 		},
 		{
 			"id": "picker-sw-r2-c6",
 			"type": "ellipse",
+			"meta": {
+				"name": "スウォッチ: #a3e635"
+			},
 			"cx": 822,
 			"cy": 416,
 			"rx": 12,
 			"ry": 12,
-			"fill": "#a3e635",
 			"stroke": "#3c3c3c",
 			"strokeWidth": 1,
-			"meta": {
-				"name": "スウォッチ: #a3e635"
-			}
+			"fill": "#a3e635"
 		},
 		{
 			"id": "picker-sw-r3-c0",
 			"type": "ellipse",
+			"meta": {
+				"name": "スウォッチ: #eab308"
+			},
 			"cx": 642,
 			"cy": 446,
 			"rx": 12,
 			"ry": 12,
-			"fill": "#eab308",
 			"stroke": "#3c3c3c",
 			"strokeWidth": 1,
-			"meta": {
-				"name": "スウォッチ: #eab308"
-			}
+			"fill": "#eab308"
 		},
 		{
 			"id": "picker-sw-r3-c1",
 			"type": "ellipse",
+			"meta": {
+				"name": "スウォッチ: #f59e0b"
+			},
 			"cx": 672,
 			"cy": 446,
 			"rx": 12,
 			"ry": 12,
-			"fill": "#f59e0b",
 			"stroke": "#3c3c3c",
 			"strokeWidth": 1,
-			"meta": {
-				"name": "スウォッチ: #f59e0b"
-			}
+			"fill": "#f59e0b"
 		},
 		{
 			"id": "picker-sw-r3-c2",
 			"type": "ellipse",
+			"meta": {
+				"name": "スウォッチ: #f97316"
+			},
 			"cx": 702,
 			"cy": 446,
 			"rx": 12,
 			"ry": 12,
-			"fill": "#f97316",
 			"stroke": "#3c3c3c",
 			"strokeWidth": 1,
-			"meta": {
-				"name": "スウォッチ: #f97316"
-			}
+			"fill": "#f97316"
 		},
 		{
 			"id": "picker-sw-r3-c3",
 			"type": "ellipse",
+			"meta": {
+				"name": "スウォッチ: #000000"
+			},
 			"cx": 732,
 			"cy": 446,
 			"rx": 12,
 			"ry": 12,
-			"fill": "#000000",
 			"stroke": "#3c3c3c",
 			"strokeWidth": 1,
-			"meta": {
-				"name": "スウォッチ: #000000"
-			}
+			"fill": "#000000"
 		},
 		{
 			"id": "picker-sw-r3-c4",
 			"type": "ellipse",
+			"meta": {
+				"name": "スウォッチ: #6b7280"
+			},
 			"cx": 762,
 			"cy": 446,
 			"rx": 12,
 			"ry": 12,
-			"fill": "#6b7280",
 			"stroke": "#3c3c3c",
 			"strokeWidth": 1,
-			"meta": {
-				"name": "スウォッチ: #6b7280"
-			}
+			"fill": "#6b7280"
 		},
 		{
 			"id": "picker-sw-r3-c5",
 			"type": "ellipse",
+			"meta": {
+				"name": "スウォッチ: #ffffff"
+			},
 			"cx": 792,
 			"cy": 446,
 			"rx": 12,
 			"ry": 12,
-			"fill": "#ffffff",
 			"stroke": "#3c3c3c",
 			"strokeWidth": 1,
-			"meta": {
-				"name": "スウォッチ: #ffffff"
-			}
+			"fill": "#ffffff"
 		},
 		{
 			"id": "picker-sw-r3-c6",
 			"type": "ellipse",
+			"meta": {
+				"name": "スウォッチ: 透明 (なし)"
+			},
 			"cx": 822,
 			"cy": 446,
 			"rx": 12,
 			"ry": 12,
-			"fill": "transparent",
 			"stroke": "#6b7280",
 			"strokeWidth": 1,
-			"meta": {
-				"name": "スウォッチ: 透明 (なし)"
-			}
+			"fill": "transparent"
 		},
 		{
 			"id": "picker-sw-r3-c6-slash",
 			"type": "polyline",
+			"meta": {
+				"name": "スウォッチ: 透明スラッシュ"
+			},
 			"points": [
 				{
 					"x": 814,
@@ -1754,14 +1757,14 @@
 				}
 			],
 			"stroke": "#dc2626",
-			"strokeWidth": 1.5,
-			"meta": {
-				"name": "スウォッチ: 透明スラッシュ"
-			}
+			"strokeWidth": 1.5
 		},
 		{
 			"id": "picker-divider",
 			"type": "polyline",
+			"meta": {
+				"name": "カラーピッカー区切り"
+			},
 			"points": [
 				{
 					"x": 630,
@@ -1773,31 +1776,28 @@
 				}
 			],
 			"stroke": "#3c3c3c",
-			"strokeWidth": 1,
-			"meta": {
-				"name": "カラーピッカー区切り"
-			}
+			"strokeWidth": 1
 		},
 		{
 			"id": "picker-input",
 			"type": "rect",
+			"meta": {
+				"name": "カラー入力 (CSS color)"
+			},
 			"x": 652,
 			"y": 474,
 			"width": 160,
 			"height": 28,
-			"fill": "#1e1e1e",
 			"stroke": "#3c3c3c",
 			"strokeWidth": 1,
+			"fill": "#1e1e1e",
 			"rx": 0,
 			"text": "#15293b",
 			"textType": "text",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cccccc",
-			"fontSize": 12,
-			"meta": {
-				"name": "カラー入力 (CSS color)"
-			}
+			"fontSize": 12
 		},
 		{
 			"id": "claude-panel-bg",
@@ -2314,9 +2314,5 @@
 			"startArrow": "None",
 			"endArrow": "FilledTriangle"
 		}
-	],
-	"meta": {
-		"name": "VSCode ネイティブ ダークテーマ案 (redesign) + カラーピッカー",
-		"description": "ObjectMenu を選択図形(flow-process)の下に配置し、背景色スウォッチを開いた状態のカラーピッカー(実装の ColorPickerGrid: 28色グリッド + CSS 入力欄)をダークテーマで追加した状態。"
-	}
+	]
 }
