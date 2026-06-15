@@ -102,6 +102,7 @@ export const canvasReducer = (
 				shapeDrawing: null,
 				shapeLibraryDrag: null,
 				snapFeedback: null,
+				axisLockFeedback: null,
 				objectMenuOpenId: null,
 				// 外部変更は履歴境界。recordHistoryIfNeeded を通さず past を直接積むため、
 				// 集約状態をここで明示的にリセットする（直前ナッジの recorded を残さない）。

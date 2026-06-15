@@ -59,4 +59,49 @@ test.describe("コネクター", () => {
 			canvas.page.locator('[data-id="object-menu:toggle:line-color"]'),
 		).toHaveCount(0);
 	});
+
+	test("線上のクリックでコネクターを選択できる", async ({ canvas }) => {
+		await canvas.drawShape("Rectangle", { x: 400, y: 150 }, { x: 600, y: 250 });
+		await canvas.deselect();
+		await canvas.drawShape("Rectangle", { x: 400, y: 450 }, { x: 600, y: 550 });
+		await canvas.deselect();
+
+		await canvas.selectAt({ x: 500, y: 200 });
+		await canvas.createConnector("bottomCenter", { x: 500, y: 450 });
+		await canvas.deselect();
+
+		// 縦コネクター（x=500）の中点付近をクリックして選択
+		await canvas.page.mouse.click(500, 350);
+
+		// コネクター用の ObjectMenu（線色）が出る = 選択された
+		await expect(
+			canvas.page.locator('[data-id="object-menu:toggle:line-color"]'),
+		).toBeVisible();
+	});
+
+	test("選択したコネクターを Delete で削除できる", async ({ canvas }) => {
+		await canvas.drawShape("Rectangle", { x: 400, y: 150 }, { x: 600, y: 250 });
+		await canvas.deselect();
+		await canvas.drawShape("Rectangle", { x: 400, y: 450 }, { x: 600, y: 550 });
+		await canvas.deselect();
+
+		await canvas.selectAt({ x: 500, y: 200 });
+		await canvas.createConnector("bottomCenter", { x: 500, y: 450 });
+		await canvas.deselect();
+
+		const connectorLocator = canvas.page.locator(
+			"polyline[data-kind=connector]",
+		);
+		await expect(connectorLocator).toHaveCount(1);
+
+		await canvas.page.mouse.click(500, 350);
+		await canvas.deleteSelection();
+
+		// コネクターは消え、図形 2 つは残る
+		await expect(connectorLocator).toHaveCount(0);
+		expect(
+			(await canvas.captureObjects()).filter((obj) => obj.tag === "rect")
+				.length,
+		).toBe(2);
+	});
 });

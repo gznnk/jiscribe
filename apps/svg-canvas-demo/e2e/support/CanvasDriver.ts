@@ -106,17 +106,25 @@ export class CanvasDriver {
 	 * スナップガイドは drag 中のみ DOM に存在し dragEnd でクリアされるため、
 	 * ガイドの検証は解放前のこのコールバック内で行う必要がある。
 	 * ctrl=true で Control を押しながらドラッグする（スナップ無効化の検証用）。
+	 * shift=true で Shift を押しながらドラッグする（軸固定の検証用）。
 	 */
 	async dragInspecting(
 		from: { x: number; y: number },
 		to: { x: number; y: number },
 		inspect: () => Promise<void>,
-		{ steps = 10, ctrl = false }: { steps?: number; ctrl?: boolean } = {},
+		{
+			steps = 10,
+			ctrl = false,
+			shift = false,
+		}: { steps?: number; ctrl?: boolean; shift?: boolean } = {},
 	) {
 		await this.page.mouse.move(from.x, from.y);
 		await this.page.mouse.down();
 		if (ctrl) {
 			await this.page.keyboard.down("Control");
+		}
+		if (shift) {
+			await this.page.keyboard.down("Shift");
 		}
 		await this.page.mouse.move(to.x, to.y, { steps });
 		try {
@@ -125,6 +133,9 @@ export class CanvasDriver {
 			await this.page.mouse.up();
 			if (ctrl) {
 				await this.page.keyboard.up("Control");
+			}
+			if (shift) {
+				await this.page.keyboard.up("Shift");
 			}
 		}
 	}
@@ -145,6 +156,27 @@ export class CanvasDriver {
 			return [
 				...document.querySelectorAll(
 					`[data-testid="snap-guide:${targetAxis}"]`,
+				),
+			].map((el) => Number(el.getAttribute(attr)));
+		}, axis);
+	}
+
+	/** 表示中の軸固定ガイド（指定軸）のロケーター。x=縦ガイド / y=横ガイド */
+	axisLockGuides(axis: "x" | "y") {
+		return this.page.getByTestId(`axis-lock-guide:${axis}`);
+	}
+
+	/**
+	 * 表示中の軸固定ガイド（指定軸）の整列座標を返す。
+	 * x軸ガイド（縦線）は x1、y軸ガイド（横線）は y1 が固定軸の座標。
+	 * 既定ビューポート（zoom=1・パンなし）では SVG 座標＝画面座標。
+	 */
+	async axisLockGuideCoordinates(axis: "x" | "y"): Promise<number[]> {
+		return this.page.evaluate((targetAxis) => {
+			const attr = targetAxis === "x" ? "x1" : "y1";
+			return [
+				...document.querySelectorAll(
+					`[data-testid="axis-lock-guide:${targetAxis}"]`,
 				),
 			].map((el) => Number(el.getAttribute(attr)));
 		}, axis);
@@ -228,6 +260,33 @@ export class CanvasDriver {
 		const created = after.find((obj) => !beforeIds.has(obj.id));
 		if (!created?.id) {
 			throw new Error(`${tool} で作成された図形の data-id が取得できない`);
+		}
+		return created.id;
+	}
+
+	/**
+	 * クリックだけで配置される図形（Sticky / Polygon）をツールボタンのクリックで
+	 * キャンバス中央へ即時追加し、新規 data-id を返す。
+	 * これらは対角ドラッグではなく ShapeLibraryItemHandler が即配置するため、
+	 * crosshair 待ち＋ドラッグの drawShape ではなく本メソッドを使う。
+	 */
+	async placeShape(tool: ToolTitle): Promise<string> {
+		const before = await this.captureObjects();
+		const beforeIds = new Set(before.map((obj) => obj.id));
+
+		await this.page.click(selectors.toolButton(tool));
+
+		await expect
+			.poll(async () => (await this.captureObjects()).length, {
+				message: `${tool} で新規図形が配置されること`,
+			})
+			.toBe(before.length + 1);
+
+		const created = (await this.captureObjects()).find(
+			(obj) => !beforeIds.has(obj.id),
+		);
+		if (!created?.id) {
+			throw new Error(`${tool} で配置された図形の data-id が取得できない`);
 		}
 		return created.id;
 	}
@@ -474,6 +533,7 @@ export class CanvasDriver {
 			| "bottomRight"
 			| "rotation",
 		to: { x: number; y: number },
+		{ shift = false }: { shift?: boolean } = {},
 	) {
 		const control = this.page.locator(selectors.transformControl(handle));
 		await expect(control).toBeVisible();
@@ -481,11 +541,18 @@ export class CanvasDriver {
 		if (!box) {
 			throw new Error(`変形ハンドル ${handle} の位置が取得できない`);
 		}
-		await this.drag(
-			{ x: box.x + box.width / 2, y: box.y + box.height / 2 },
-			to,
-			10,
-		);
+		const from = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+		if (!shift) {
+			await this.drag(from, to, 10);
+			return;
+		}
+		// Shift 押下中のリサイズはアスペクト比を保つ（event.mods.n 経路）
+		await this.page.mouse.move(from.x, from.y);
+		await this.page.mouse.down();
+		await this.page.keyboard.down("Shift");
+		await this.page.mouse.move(to.x, to.y, { steps: 10 });
+		await this.page.mouse.up();
+		await this.page.keyboard.up("Shift");
 	}
 
 	/** 選択中のオブジェクトを Delete キーで削除する */
@@ -501,6 +568,97 @@ export class CanvasDriver {
 	/** Redo（Ctrl+Shift+Z） */
 	async redo() {
 		await this.page.keyboard.press("Control+Shift+z");
+	}
+
+	/** 選択をコピー（Ctrl+C）。内部クリップボードに載る */
+	async copy() {
+		await this.page.keyboard.press("Control+c");
+	}
+
+	/** 選択を切り取り（Ctrl+X）。コピー＋削除 */
+	async cut() {
+		await this.page.keyboard.press("Control+x");
+	}
+
+	/** クリップボードから貼り付け（Ctrl+V） */
+	async paste() {
+		await this.page.keyboard.press("Control+v");
+	}
+
+	/** 選択を複製（Ctrl+D）。クリップボードを介さない */
+	async duplicate() {
+		await this.page.keyboard.press("Control+d");
+	}
+
+	/** 全選択（Ctrl+A） */
+	async selectAll() {
+		await this.page.keyboard.press("Control+a");
+	}
+
+	/** Escape で選択解除（テキスト編集中でないこと） */
+	async pressEscape() {
+		await this.page.keyboard.press("Escape");
+	}
+
+	/** 選択をグループ化（Ctrl+G） */
+	async group() {
+		await this.page.keyboard.press("Control+g");
+	}
+
+	/** グループを解除（Ctrl+Shift+G） */
+	async ungroup() {
+		await this.page.keyboard.press("Control+Shift+g");
+	}
+
+	/**
+	 * 矢印キーで選択図形をナッジ移動する。
+	 * large=true（Shift 併用）で大きく移動する（通常 1px / 大 10px）。
+	 */
+	async nudge(
+		direction: "up" | "down" | "left" | "right",
+		{ large = false }: { large?: boolean } = {},
+	) {
+		const arrowKey = {
+			up: "ArrowUp",
+			down: "ArrowDown",
+			left: "ArrowLeft",
+			right: "ArrowRight",
+		}[direction];
+		await this.page.keyboard.press(large ? `Shift+${arrowKey}` : arrowKey);
+	}
+
+	/** 全体をビューに合わせる（Ctrl+0） */
+	async zoomToFit() {
+		await this.page.keyboard.press("Control+0");
+	}
+
+	/** 選択をビューに合わせる（Ctrl+2） */
+	async zoomToSelection() {
+		await this.page.keyboard.press("Control+2");
+	}
+
+	/**
+	 * ObjectMenu の重なり順セクションを開いて arrange コマンドを実行する。
+	 * commandId は bringToFront / bringForward / sendBackward / sendToBack。
+	 */
+	async arrange(
+		commandId: "bringToFront" | "bringForward" | "sendBackward" | "sendToBack",
+	) {
+		await this.openObjectMenu("stack-order");
+		await this.page.click(selectors.objectMenuCommand(commandId));
+	}
+
+	/** 図形（コネクター除く）の DOM 順インデックス。SVG では後ろの要素ほど前面 */
+	async objectIndex(id: string): Promise<number> {
+		return this.page.evaluate(
+			({ objectSelector, targetId }) => {
+				const objects = [...document.querySelectorAll(objectSelector)];
+				return objects.findIndex(
+					(el) => el.getAttribute("data-id") === targetId,
+				);
+			},
+			{ objectSelector: selectors.object, targetId: id },
+		);
 	}
 
 	/** data-id で図形のロケーターを取得する */

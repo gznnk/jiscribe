@@ -26,6 +26,7 @@ import { TransformControlsLayer } from "./ui/controls/TransformControlsLayer";
 import { VertexControlsLayer } from "./ui/controls/VertexControlsLayer";
 import { TextEditorLayer } from "./ui/editors/TextEditorLayer";
 import { AreaSelectionRect } from "./ui/feedback/AreaSelectionRect";
+import { AxisLockGuide } from "./ui/feedback/AxisLockGuide";
 import { ClipboardErrorToast } from "./ui/feedback/ClipboardErrorToast";
 import { DragGhost } from "./ui/feedback/DragGhost";
 import { DrawingPreviewOverlay } from "./ui/feedback/DrawingPreviewOverlay";
@@ -197,6 +198,10 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 						<SnapGuides
 							snapFeedback={state.snapFeedback}
 							zoom={state.viewport.zoom}
+						/>
+						<AxisLockGuide
+							axisLockFeedback={state.axisLockFeedback}
+							viewport={state.viewport}
 						/>
 					</CanvasView>
 					{/* Container for HTML elements that follow canvas scroll AND zoom (elements scale with zoom) */}

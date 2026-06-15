@@ -65,6 +65,10 @@ export const selectors = {
 	objectMenuSet: (property: string, value: string) =>
 		`[data-id="object-menu:set:${property}:${value}"]`,
 
+	/** ObjectMenu のコマンドボタン（重なり順の bringToFront など） */
+	objectMenuCommand: (commandId: string) =>
+		`[data-id="object-menu:command:${commandId}"]`,
+
 	/** ObjectMenu のスライダー（range input、ドラッグで値を変える） */
 	objectMenuSlider: (property: string) =>
 		`[data-id="object-menu:slider:${property}"]`,

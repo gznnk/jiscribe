@@ -70,6 +70,7 @@ export const RedoCommand: Command = {
 			editingConnectorId: null,
 			editingEndpoint: null,
 			snapFeedback: null,
+			axisLockFeedback: null,
 			shapeDrawing: null,
 			lastDuplicate: null,
 			internalClipboard: state.internalClipboard,
