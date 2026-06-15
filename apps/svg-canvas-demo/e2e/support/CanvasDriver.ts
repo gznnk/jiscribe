@@ -106,17 +106,25 @@ export class CanvasDriver {
 	 * スナップガイドは drag 中のみ DOM に存在し dragEnd でクリアされるため、
 	 * ガイドの検証は解放前のこのコールバック内で行う必要がある。
 	 * ctrl=true で Control を押しながらドラッグする（スナップ無効化の検証用）。
+	 * shift=true で Shift を押しながらドラッグする（軸固定の検証用）。
 	 */
 	async dragInspecting(
 		from: { x: number; y: number },
 		to: { x: number; y: number },
 		inspect: () => Promise<void>,
-		{ steps = 10, ctrl = false }: { steps?: number; ctrl?: boolean } = {},
+		{
+			steps = 10,
+			ctrl = false,
+			shift = false,
+		}: { steps?: number; ctrl?: boolean; shift?: boolean } = {},
 	) {
 		await this.page.mouse.move(from.x, from.y);
 		await this.page.mouse.down();
 		if (ctrl) {
 			await this.page.keyboard.down("Control");
+		}
+		if (shift) {
+			await this.page.keyboard.down("Shift");
 		}
 		await this.page.mouse.move(to.x, to.y, { steps });
 		try {
@@ -125,6 +133,9 @@ export class CanvasDriver {
 			await this.page.mouse.up();
 			if (ctrl) {
 				await this.page.keyboard.up("Control");
+			}
+			if (shift) {
+				await this.page.keyboard.up("Shift");
 			}
 		}
 	}
@@ -145,6 +156,27 @@ export class CanvasDriver {
 			return [
 				...document.querySelectorAll(
 					`[data-testid="snap-guide:${targetAxis}"]`,
+				),
+			].map((el) => Number(el.getAttribute(attr)));
+		}, axis);
+	}
+
+	/** 表示中の軸固定ガイド（指定軸）のロケーター。x=縦ガイド / y=横ガイド */
+	axisLockGuides(axis: "x" | "y") {
+		return this.page.getByTestId(`axis-lock-guide:${axis}`);
+	}
+
+	/**
+	 * 表示中の軸固定ガイド（指定軸）の整列座標を返す。
+	 * x軸ガイド（縦線）は x1、y軸ガイド（横線）は y1 が固定軸の座標。
+	 * 既定ビューポート（zoom=1・パンなし）では SVG 座標＝画面座標。
+	 */
+	async axisLockGuideCoordinates(axis: "x" | "y"): Promise<number[]> {
+		return this.page.evaluate((targetAxis) => {
+			const attr = targetAxis === "x" ? "x1" : "y1";
+			return [
+				...document.querySelectorAll(
+					`[data-testid="axis-lock-guide:${targetAxis}"]`,
 				),
 			].map((el) => Number(el.getAttribute(attr)));
 		}, axis);
