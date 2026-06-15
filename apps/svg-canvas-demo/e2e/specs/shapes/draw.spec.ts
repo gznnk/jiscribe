@@ -39,6 +39,46 @@ test.describe("図形の描画", () => {
 		expect(created?.tag).toBe("polyline");
 	});
 
+	test("Polygon はクリックで配置され polygon 要素を作る", async ({
+		canvas,
+	}) => {
+		// Polygon は対角ドラッグではなくクリックで中央に即配置される
+		const id = await canvas.placeShape("Polygon");
+		const created = (await canvas.captureObjects()).find(
+			(obj) => obj.id === id,
+		);
+		expect(created?.tag).toBe("polygon");
+	});
+
+	test("Sticky はクリックで配置され g 要素を作る", async ({ canvas }) => {
+		// Sticky も即配置タイプ
+		const id = await canvas.placeShape("Sticky");
+		const created = (await canvas.captureObjects()).find(
+			(obj) => obj.id === id,
+		);
+		// Sticky のルートは <g data-kind="object">
+		expect(created?.tag).toBe("g");
+	});
+
+	test("Markdown は rect 要素を作り既定の Markdown 文面を持つ", async ({
+		canvas,
+	}) => {
+		const id = await canvas.drawShape(
+			"Markdown",
+			{ x: 400, y: 200 },
+			{ x: 700, y: 400 },
+		);
+		const created = (await canvas.captureObjects()).find(
+			(obj) => obj.id === id,
+		);
+		// Markdown プリセットは rect（textType: "markdown"）
+		expect(created?.tag).toBe("rect");
+		// 既定の文面が描画される（innerHTML はエスケープされるため textContent で確認）
+		await expect
+			.poll(() => canvas.page.evaluate(() => document.body.textContent ?? ""))
+			.toContain("Heading");
+	});
+
 	test("図形はドラッグで移動できる", async ({ canvas }) => {
 		const id = await canvas.drawShape(
 			"Rectangle",
