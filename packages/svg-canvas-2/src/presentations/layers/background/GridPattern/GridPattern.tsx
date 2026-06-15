@@ -1,5 +1,7 @@
 import { memo, useMemo } from "react";
 
+import { theme } from "../../../../constants/theme";
+
 type GridPatternProps = {
 	zoom: number;
 	baseGridSize?: number;
@@ -17,7 +19,7 @@ type GridPatternProps = {
 const GridPatternComponent = ({
 	zoom,
 	baseGridSize = 25,
-	color = "#f3f4f6",
+	color = theme.gridLine,
 }: GridPatternProps): React.JSX.Element => {
 	const gridConfig = useMemo(() => {
 		// Fixed grid sizes in world coordinates

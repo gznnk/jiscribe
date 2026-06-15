@@ -10,7 +10,7 @@ type AlignTopIconProps = {
 const AlignTopIconComponent: React.FC<AlignTopIconProps> = ({
 	width = 24,
 	height = 24,
-	fill = "#333333",
+	fill = "currentColor",
 	title = "Align Top",
 }) => (
 	<svg

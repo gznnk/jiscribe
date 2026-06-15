@@ -15,8 +15,8 @@ type FontColorIconProps = {
 const FontColorIconComponent: React.FC<FontColorIconProps> = ({
 	width = 24,
 	height = 24,
-	fill = "#333333",
-	underlineColor = "#333333",
+	fill = "currentColor",
+	underlineColor = "currentColor",
 	title = "Font Color",
 }) => (
 	<svg

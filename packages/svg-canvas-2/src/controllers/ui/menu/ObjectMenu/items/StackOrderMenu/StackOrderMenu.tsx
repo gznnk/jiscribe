@@ -63,10 +63,7 @@ const StackOrderMenuComponent: React.FC<StackOrderMenuProps> = ({
 									data-kind="object-menu"
 									data-id={`object-menu:command:${commandId}`}
 								>
-									<Icon
-										fill={enabled ? "#333333" : "#cccccc"}
-										title={command.label}
-									/>
+									<Icon title={command.label} />
 								</ObjectMenuButton>
 							);
 						})}

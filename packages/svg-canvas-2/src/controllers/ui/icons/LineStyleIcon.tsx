@@ -10,7 +10,7 @@ type LineStyleIconProps = {
 const LineStyleIconComponent: React.FC<LineStyleIconProps> = ({
 	width = 24,
 	height = 24,
-	fill = "#333333",
+	fill = "currentColor",
 	title = "Line Style",
 }) => (
 	<svg

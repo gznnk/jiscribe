@@ -1,12 +1,14 @@
 import styled from "@emotion/styled";
 
+import { theme } from "../constants/theme";
+
 /**
  * Styled SVG element for rendering the diagram.
  */
 export const Svg = styled.svg`
 	display: block;
 	box-sizing: border-box;
-	background-color: #ffffff;
+	background-color: ${theme.canvasBg};
 	outline: none;
 	* {
 		outline: none;

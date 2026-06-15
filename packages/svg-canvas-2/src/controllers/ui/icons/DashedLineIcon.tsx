@@ -13,7 +13,7 @@ type DashedLineIconProps = {
 const DashedLineIconComponent: React.FC<DashedLineIconProps> = ({
 	width = 24,
 	height = 24,
-	fill = "#333333",
+	fill = "currentColor",
 	title = "Dashed line",
 }) => (
 	<svg

@@ -1,5 +1,7 @@
 import styled from "@emotion/styled";
 
+import { theme } from "../constants/theme";
+
 type ViewportProps = {
 	cursor?: string;
 };
@@ -25,7 +27,7 @@ export const Container = styled.div`
 	right: 0;
 	bottom: 0;
 	overflow: hidden;
-	background-color: #ffffff;
+	background-color: ${theme.canvasBg};
 `;
 
 /**

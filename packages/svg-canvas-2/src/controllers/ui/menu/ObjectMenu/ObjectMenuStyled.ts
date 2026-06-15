@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 
-import { MENU_BOX_SHADOW } from "./ObjectMenuConstants";
+import { theme } from "../../../../constants/theme";
 
 /**
  * ObjectMenu の外枠コンテナ。
@@ -16,7 +16,7 @@ export const ObjectMenuWrapper = styled.div<{ left: number; top: number }>`
 `;
 
 /**
- * ObjectMenu の内部コンテナ（角丸・影付き）。
+ * ObjectMenu の内部コンテナ（影付き）。
  */
 export const ObjectMenuContainer = styled.div`
 	height: 40px;
@@ -26,10 +26,10 @@ export const ObjectMenuContainer = styled.div`
 	align-items: center;
 	font-size: 14px;
 	padding: 4px 8px;
-	background-color: #ffffff;
-	border: 1px solid #e5e7eb;
-	border-radius: 8px;
-	box-shadow: ${MENU_BOX_SHADOW};
+	background-color: ${theme.surface};
+	border: 1px solid ${theme.border};
+	border-radius: ${theme.radius};
+	box-shadow: ${theme.shadow};
 	pointer-events: auto;
 	user-select: none;
 `;
@@ -41,7 +41,7 @@ export const ObjectMenuDivider = styled.div`
 	width: 1px;
 	height: 16px;
 	margin: 0 8px;
-	background-color: #f3f4f6;
+	background-color: ${theme.borderSubtle};
 	align-self: center;
 `;
 
@@ -56,28 +56,43 @@ export const ObjectMenuButton = styled.button<{ isActive?: boolean }>`
 	width: 32px;
 	height: 32px;
 	padding: 0;
-	border-radius: 6px;
-	border: 1px solid ${(props) => (props.isActive ? "#6b7280" : "transparent")};
-	background: ${(props) => (props.isActive ? "#f9fafb" : "transparent")};
+	border-radius: ${theme.radius};
+	border: 1px solid
+		${(props) => (props.isActive ? theme.accent : "transparent")};
+	background: ${(props) =>
+		props.isActive ? theme.surfaceActive : "transparent"};
 	cursor: pointer;
 	user-select: none;
 	transition: all 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
 
 	&:hover {
-		background-color: #f3f4f6;
+		background-color: ${theme.surfaceHover};
 	}
 
 	svg {
-		color: #6b7280;
+		color: ${theme.iconForeground};
 		transition: color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
 	}
 
 	&:hover svg {
-		color: #374151;
+		color: ${theme.foreground};
 	}
 
 	&.active svg {
-		color: #374151;
+		color: ${theme.foreground};
+	}
+
+	&:disabled {
+		cursor: default;
+	}
+
+	&:disabled:hover {
+		background-color: transparent;
+	}
+
+	&:disabled svg,
+	&:disabled:hover svg {
+		color: ${theme.disabledForeground};
 	}
 `;
 
@@ -108,8 +123,8 @@ export const DropdownPanel = styled.div<{
 	justify-content: flex-start;
 	pointer-events: auto;
 	gap: 8px;
-	background-color: #ffffff;
-	border: 1px solid #e5e7eb;
-	border-radius: 6px;
-	box-shadow: ${MENU_BOX_SHADOW};
+	background-color: ${theme.surface};
+	border: 1px solid ${theme.border};
+	border-radius: ${theme.radius};
+	box-shadow: ${theme.shadow};
 `;

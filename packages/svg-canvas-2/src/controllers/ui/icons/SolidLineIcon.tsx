@@ -13,7 +13,7 @@ type SolidLineIconProps = {
 const SolidLineIconComponent: React.FC<SolidLineIconProps> = ({
 	width = 24,
 	height = 24,
-	fill = "#333333",
+	fill = "currentColor",
 	title = "Solid line",
 }) => (
 	<svg

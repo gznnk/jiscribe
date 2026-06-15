@@ -2,6 +2,7 @@ import { memo } from "react";
 import type React from "react";
 
 import { ContentGroup, Svg } from "./CanvasViewStyled";
+import { theme } from "../constants/theme";
 import { CanvasDefs } from "./defs/CanvasDefs";
 import type { CanvasState } from "../states/canvas/CanvasState";
 import { GridBackground } from "./layers/background/GridBackground";
@@ -37,7 +38,7 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 		>
 			<CanvasDefs />
 			{/* Grid pattern definition */}
-			<GridPattern zoom={zoom} baseGridSize={25} color="#f3f4f6" />
+			<GridPattern zoom={zoom} baseGridSize={25} color={theme.gridLine} />
 			{/* Grid background */}
 			<GridBackground
 				x={minX}

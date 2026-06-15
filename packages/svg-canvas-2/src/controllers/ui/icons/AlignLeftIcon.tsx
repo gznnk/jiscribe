@@ -10,7 +10,7 @@ type AlignLeftIconProps = {
 const AlignLeftIconComponent: React.FC<AlignLeftIconProps> = ({
 	width = 24,
 	height = 24,
-	fill = "#333333",
+	fill = "currentColor",
 	title = "Align Left",
 }) => (
 	<svg

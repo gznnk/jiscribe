@@ -1,5 +1,7 @@
 import styled from "@emotion/styled";
 
+import { theme } from "../../../../../../constants/theme";
+
 /**
  * Wrapper for the entire menu slider component.
  */
@@ -27,14 +29,14 @@ export const MenuSliderInput = styled.input`
 	&::-webkit-slider-runnable-track {
 		width: 100%;
 		height: 2px;
-		background: #333333;
+		background: ${theme.sliderTrack};
 		border-radius: 1px;
 	}
 
 	&::-moz-range-track {
 		width: 100%;
 		height: 2px;
-		background: #333333;
+		background: ${theme.sliderTrack};
 		border-radius: 1px;
 		border: none;
 	}
@@ -45,8 +47,8 @@ export const MenuSliderInput = styled.input`
 		appearance: none;
 		width: 12px;
 		height: 12px;
-		background-color: #ffffff;
-		border: 2px solid #333333;
+		background-color: ${theme.foreground};
+		border: 2px solid ${theme.accent};
 		border-radius: 50%;
 		cursor: pointer;
 		transition: all 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
@@ -56,8 +58,8 @@ export const MenuSliderInput = styled.input`
 	&::-moz-range-thumb {
 		width: 12px;
 		height: 12px;
-		background-color: #ffffff;
-		border: 2px solid #333333;
+		background-color: ${theme.foreground};
+		border: 2px solid ${theme.accent};
 		border-radius: 50%;
 		cursor: pointer;
 		transition: all 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
@@ -65,23 +67,23 @@ export const MenuSliderInput = styled.input`
 
 	/* Hover and active states */
 	&:hover::-webkit-slider-thumb {
-		border-color: #1a1a1a;
-		box-shadow: 0 0 0 3px rgba(51, 51, 51, 0.1);
+		border-color: ${theme.accent};
+		box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12);
 	}
 
 	&:hover::-moz-range-thumb {
-		border-color: #1a1a1a;
-		box-shadow: 0 0 0 3px rgba(51, 51, 51, 0.1);
+		border-color: ${theme.accent};
+		box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12);
 	}
 
 	&:active::-webkit-slider-thumb {
 		transform: scale(1.05);
-		box-shadow: 0 0 0 4px rgba(51, 51, 51, 0.15);
+		box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.18);
 	}
 
 	&:active::-moz-range-thumb {
 		transform: scale(1.05);
-		box-shadow: 0 0 0 4px rgba(51, 51, 51, 0.15);
+		box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.18);
 	}
 `;
 
@@ -101,7 +103,7 @@ export const MenuSliderFooter = styled.div`
 export const MenuSliderLabel = styled.label`
 	font-size: 12px;
 	font-weight: 600;
-	color: #333333;
+	color: ${theme.foreground};
 	user-select: none;
 `;
 
@@ -115,20 +117,20 @@ export const MenuSliderNumberInput = styled.input`
 	padding: 2px 4px;
 	text-align: center;
 	outline: none;
-	border: 1px solid #e5e7eb;
+	border: 1px solid ${theme.inputBorder};
 	border-radius: 4px;
-	background-color: #ffffff;
-	color: #374151;
+	background-color: ${theme.inputBg};
+	color: ${theme.inputFg};
 	font-size: 12px;
 	transition: all 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
 
 	&:focus {
-		border-color: #6b7280;
+		border-color: ${theme.accent};
 		box-shadow: 0 0 0 2px rgba(107, 114, 128, 0.2);
 	}
 
 	&:hover {
-		border-color: #9ca3af;
+		border-color: ${theme.foregroundMuted};
 	}
 
 	/* Hide spinner buttons */

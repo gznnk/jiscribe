@@ -1,37 +1,6 @@
 import styled from "@emotion/styled";
 
-import { MENU_BOX_SHADOW } from "../ObjectMenu/ObjectMenuConstants";
-
-/**
- * ショートカット一覧を開く「?」ボタン。
- * ビューポート右下に固定する。
- */
-export const HelpButton = styled.button`
-	position: absolute;
-	bottom: 8px;
-	right: 8px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 32px;
-	height: 32px;
-	padding: 0;
-	border-radius: 50%;
-	border: 1px solid #e5e7eb;
-	background-color: #ffffff;
-	box-shadow: ${MENU_BOX_SHADOW};
-	cursor: pointer;
-	pointer-events: auto;
-	transition: background-color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
-
-	&:hover {
-		background-color: #f3f4f6;
-	}
-
-	&:active {
-		background-color: #e5e7eb;
-	}
-`;
+import { theme } from "../../../../constants/theme";
 
 /**
  * モーダルの背景オーバーレイ。クリックで閉じる。
@@ -56,13 +25,13 @@ export const Panel = styled.div`
 	width: min(400px, calc(100% - 32px));
 	/* 検索結果の件数で大きさが変わらないよう高さを固定する */
 	height: min(560px, calc(100% - 64px));
-	background-color: #ffffff;
-	border: 1px solid #e5e7eb;
+	background-color: ${theme.surface};
+	border: 1px solid ${theme.border};
 	border-radius: 12px;
-	box-shadow: ${MENU_BOX_SHADOW};
+	box-shadow: ${theme.shadow};
 	overflow: hidden;
 	font-size: 14px;
-	color: #333333;
+	color: ${theme.foreground};
 `;
 
 export const Header = styled.div`
@@ -70,7 +39,7 @@ export const Header = styled.div`
 	align-items: center;
 	justify-content: space-between;
 	padding: 16px 20px;
-	border-bottom: 1px solid #e5e7eb;
+	border-bottom: 1px solid ${theme.border};
 `;
 
 export const Title = styled.h2`
@@ -89,14 +58,14 @@ export const CloseButton = styled.button`
 	border: none;
 	border-radius: 6px;
 	background: transparent;
-	color: #6b7280;
+	color: ${theme.foregroundMuted};
 	font-size: 20px;
 	line-height: 1;
 	cursor: pointer;
 	transition: background-color 0.15s;
 
 	&:hover {
-		background-color: #f3f4f6;
+		background-color: ${theme.surfaceHover};
 	}
 `;
 
@@ -123,7 +92,7 @@ export const CategoryTitle = styled.h3`
 	text-align: left;
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
-	color: #9ca3af;
+	color: ${theme.foregroundMuted};
 `;
 
 export const RowLabel = styled.span`
@@ -145,13 +114,13 @@ export const KeyGroup = styled.span`
 export const KeyCap = styled.kbd`
 	min-width: 22px;
 	padding: 2px 6px;
-	border: 1px solid #d1d5db;
+	border: 1px solid ${theme.borderSubtle};
 	border-bottom-width: 2px;
 	border-radius: 4px;
-	background-color: #f9fafb;
+	background-color: ${theme.surfaceHover};
 	font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 	font-size: 12px;
 	line-height: 1.4;
 	text-align: center;
-	color: #374151;
+	color: ${theme.foreground};
 `;

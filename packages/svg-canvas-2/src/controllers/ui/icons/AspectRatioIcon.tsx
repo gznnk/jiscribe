@@ -14,7 +14,7 @@ type AspectRatioIconProps = {
 const AspectRatioIconComponent: React.FC<AspectRatioIconProps> = ({
 	width = 22,
 	height = 22,
-	fill = "#333333",
+	fill = "currentColor",
 	title = "Keep Aspect Ratio",
 }) => (
 	<svg

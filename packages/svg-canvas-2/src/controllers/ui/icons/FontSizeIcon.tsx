@@ -14,7 +14,7 @@ type FontSizeIconProps = {
 const FontSizeIconComponent: React.FC<FontSizeIconProps> = ({
 	width = 24,
 	height = 24,
-	fill = "#333333",
+	fill = "currentColor",
 	title = "Font Size",
 }) => (
 	<svg

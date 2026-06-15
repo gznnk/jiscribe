@@ -1,13 +1,15 @@
 import styled from "@emotion/styled";
 
+import { theme } from "../../../../constants/theme";
+
 export const Menu = styled.div<{ left: number; top: number }>`
 	position: fixed;
 	left: ${(props) => props.left}px;
 	top: ${(props) => props.top}px;
-	background: white;
-	border: 1px solid #ddd;
-	border-radius: 4px;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+	background: ${theme.surface};
+	border: 1px solid ${theme.border};
+	border-radius: ${theme.radius};
+	box-shadow: ${theme.shadow};
 	min-width: 200px;
 	padding: 4px 0;
 	z-index: 1001;
@@ -22,18 +24,21 @@ export const MenuItem = styled.button<{ disabled?: boolean }>`
 	justify-content: space-between;
 	padding: 8px 16px;
 	border: none;
-	background: ${(props) => (props.disabled ? "#f5f5f5" : "white")};
-	color: ${(props) => (props.disabled ? "#999" : "#333")};
+	background: transparent;
+	color: ${(props) =>
+		props.disabled ? theme.disabledForeground : theme.foreground};
 	cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
 	text-align: left;
 	transition: background-color 0.15s;
 
 	&:hover {
-		background: ${(props) => (props.disabled ? "#f5f5f5" : "#f0f0f0")};
+		background: ${(props) =>
+			props.disabled ? "transparent" : theme.surfaceHover};
 	}
 
 	&:active {
-		background: ${(props) => (props.disabled ? "#f5f5f5" : "#e0e0e0")};
+		background: ${(props) =>
+			props.disabled ? "transparent" : theme.surfaceActive};
 	}
 `;
 
@@ -43,12 +48,12 @@ export const MenuItemLabel = styled.span`
 
 export const MenuItemShortcut = styled.span`
 	margin-left: 24px;
-	color: #999;
+	color: ${theme.foregroundMuted};
 	font-size: 12px;
 `;
 
 export const MenuSeparator = styled.div`
 	height: 1px;
-	background: #e0e0e0;
+	background: ${theme.borderSubtle};
 	margin: 4px 0;
 `;

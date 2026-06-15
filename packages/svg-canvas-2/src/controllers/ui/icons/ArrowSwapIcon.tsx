@@ -14,7 +14,7 @@ type ArrowSwapIconProps = {
 const ArrowSwapIconComponent: React.FC<ArrowSwapIconProps> = ({
 	width = 24,
 	height = 24,
-	fill = "#333333",
+	fill = "currentColor",
 	title = "Swap arrows",
 }) => (
 	<svg

@@ -10,7 +10,7 @@ type AlignCenterIconProps = {
 const AlignCenterIconComponent: React.FC<AlignCenterIconProps> = ({
 	width = 24,
 	height = 24,
-	fill = "#333333",
+	fill = "currentColor",
 	title = "Align Center",
 }) => (
 	<svg

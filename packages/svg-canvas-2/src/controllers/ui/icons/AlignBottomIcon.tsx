@@ -10,7 +10,7 @@ type AlignBottomIconProps = {
 const AlignBottomIconComponent: React.FC<AlignBottomIconProps> = ({
 	width = 24,
 	height = 24,
-	fill = "#333333",
+	fill = "currentColor",
 	title = "Align Bottom",
 }) => (
 	<svg

@@ -10,7 +10,7 @@ type GroupIconProps = {
 const GroupIconComponent: React.FC<GroupIconProps> = ({
 	width = 24,
 	height = 24,
-	fill = "#333333",
+	fill = "currentColor",
 	title = "Group",
 }) => (
 	<svg
@@ -44,7 +44,7 @@ const GroupIconComponent: React.FC<GroupIconProps> = ({
 			height="7"
 			stroke={fill}
 			strokeWidth="2"
-			fill="white"
+			fill="none"
 		/>
 		{/* Front square */}
 		<rect
@@ -54,7 +54,7 @@ const GroupIconComponent: React.FC<GroupIconProps> = ({
 			height="7"
 			stroke={fill}
 			strokeWidth="2"
-			fill="white"
+			fill="none"
 		/>
 	</svg>
 );

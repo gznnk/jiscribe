@@ -1,1 +1,0 @@
-export { ZoomIndicator } from "./ZoomIndicator";

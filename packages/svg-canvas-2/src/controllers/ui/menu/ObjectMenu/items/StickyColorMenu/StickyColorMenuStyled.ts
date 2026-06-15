@@ -1,5 +1,7 @@
 import styled from "@emotion/styled";
 
+import { theme } from "../../../../../../constants/theme";
+
 export const ColorPickerContainer = styled.div`
 	display: flex;
 	flex-direction: column;
@@ -26,18 +28,18 @@ export const ColorSwatch = styled.div<ColorSwatchProps>`
 	box-sizing: border-box;
 	border-radius: 4px;
 	border: ${({ selected }) =>
-		selected ? "2px solid #6b7280" : "1px solid #e5e7eb"};
+		selected ? `2px solid ${theme.accent}` : `1px solid ${theme.borderSubtle}`};
 	background: ${({ swatchColor }) =>
 		swatchColor === "transparent"
-			? "repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 50% / 8px 8px"
+			? "repeating-conic-gradient(#888 0% 25%, #444 0% 50%) 50% / 8px 8px"
 			: swatchColor};
 	cursor: pointer;
 	transition: all 0.15s ease;
 
 	&:hover {
-		border-color: #6b7280;
+		border-color: ${theme.accent};
 		transform: scale(1.1);
-		box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+		box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 	}
 
 	&:active {

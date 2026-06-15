@@ -14,7 +14,7 @@ type HelpIconProps = {
 const HelpIconComponent: React.FC<HelpIconProps> = ({
 	width = 20,
 	height = 20,
-	fill = "#333333",
+	fill = "currentColor",
 	title = "Help",
 }) => {
 	return (

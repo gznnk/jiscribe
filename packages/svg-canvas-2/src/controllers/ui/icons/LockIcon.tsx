@@ -15,7 +15,7 @@ type LockIconProps = {
 const LockIconComponent: React.FC<LockIconProps> = ({
 	width = 20,
 	height = 20,
-	fill = "#333333",
+	fill = "currentColor",
 	locked = false,
 	title,
 }) => {

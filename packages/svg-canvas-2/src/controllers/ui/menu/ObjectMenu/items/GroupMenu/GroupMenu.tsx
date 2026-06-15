@@ -33,10 +33,7 @@ const GroupMenuComponent: React.FC<GroupMenuProps> = ({ canvasState }) => {
 				data-kind="object-menu"
 				data-id={`object-menu:command:${commandId}`}
 			>
-				<GroupIcon
-					fill={enabled ? "#333333" : "#cccccc"}
-					title={command.label}
-				/>
+				<GroupIcon title={command.label} />
 			</ObjectMenuButton>
 		</MenuItemPositioner>
 	);

@@ -10,7 +10,7 @@ type ArrangeIconProps = {
 const SendBackwardIconComponent: React.FC<ArrangeIconProps> = ({
 	width = 24,
 	height = 24,
-	fill = "#333333",
+	fill = "currentColor",
 	title = "Send Backward",
 }) => (
 	<svg

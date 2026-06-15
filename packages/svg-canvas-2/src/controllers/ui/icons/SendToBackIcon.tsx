@@ -10,7 +10,7 @@ type ArrangeIconProps = {
 const SendToBackIconComponent: React.FC<ArrangeIconProps> = ({
 	width = 24,
 	height = 24,
-	fill = "#333333",
+	fill = "currentColor",
 	title = "Send to Back",
 }) => (
 	<svg

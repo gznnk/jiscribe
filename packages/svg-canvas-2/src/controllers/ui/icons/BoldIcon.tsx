@@ -14,7 +14,7 @@ type BoldIconProps = {
 const BoldIconComponent: React.FC<BoldIconProps> = ({
 	width = 24,
 	height = 24,
-	fill = "#333333",
+	fill = "currentColor",
 	title = "Bold",
 }) => (
 	<svg
