@@ -22,6 +22,14 @@ const ARROW_CODE: Record<NudgeDirection, string> = {
 	right: "ArrowRight",
 };
 
+/** 方向ごとの表示ラベル（ショートカット一覧用） */
+const DIRECTION_LABEL: Record<NudgeDirection, string> = {
+	up: "Move Up",
+	down: "Move Down",
+	left: "Move Left",
+	right: "Move Right",
+};
+
 /** 方向と移動量から単位移動ベクトルを生成する（画面座標系: 下が +y） */
 const calcNudgeDelta = (direction: NudgeDirection, step: number): Point => {
 	switch (direction) {
@@ -47,7 +55,8 @@ const createMoveCommand = (
 	const isLarge = step === NUDGE_STEP_LARGE;
 	return {
 		id: `move-${direction}${isLarge ? "-large" : ""}`,
-		label: "移動",
+		// 例: "Move Up" / "Move Up (10px)"（Shift 併用時は大きく移動）
+		label: `${DIRECTION_LABEL[direction]}${isLarge ? ` (${NUDGE_STEP_LARGE}px)` : ""}`,
 		category: "arrange",
 		shortcuts: {
 			default: [{ code: ARROW_CODE[direction], shift: isLarge }],
