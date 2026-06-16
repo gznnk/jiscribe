@@ -35,7 +35,7 @@ const BorderColorIconComponent: React.FC<BorderColorIconProps> = ({
 						cy="12"
 						r="8"
 						fill="none"
-						stroke="#ccc"
+						stroke="#444"
 						strokeWidth="4"
 						strokeDasharray="3 2"
 					/>
@@ -44,7 +44,7 @@ const BorderColorIconComponent: React.FC<BorderColorIconProps> = ({
 						cy="12"
 						r="8"
 						fill="none"
-						stroke="#fff"
+						stroke="#888"
 						strokeWidth="4"
 						strokeDasharray="3 2"
 						strokeDashoffset="3"
