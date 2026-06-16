@@ -73,7 +73,7 @@ export const ColorSwatch = styled.div<ColorSwatchProps>`
 		selected ? `2px solid ${theme.accent}` : `1px solid ${theme.borderSubtle}`};
 	background: ${({ swatchColor }) =>
 		swatchColor === "transparent"
-			? "repeating-conic-gradient(#888 0% 25%, #444 0% 50%) 50% / 8px 8px"
+			? `repeating-conic-gradient(${theme.transparentChecker} 0% 25%, transparent 0% 50%) 50% / 8px 8px`
 			: swatchColor};
 	cursor: pointer;
 	transition: all 0.15s ease;

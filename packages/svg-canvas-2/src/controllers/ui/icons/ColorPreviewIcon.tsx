@@ -1,5 +1,7 @@
 import { memo } from "react";
 
+import { theme } from "../../../constants/theme";
+
 type ColorPreviewIconProps = {
 	color: string;
 	size?: number;
@@ -37,10 +39,23 @@ const ColorPreviewIconComponent: React.FC<ColorPreviewIconProps> = ({
 						height="8"
 						patternUnits="userSpaceOnUse"
 					>
-						<rect x="0" y="0" width="4" height="4" fill="#444" />
-						<rect x="4" y="0" width="4" height="4" fill="#888" />
-						<rect x="0" y="4" width="4" height="4" fill="#888" />
-						<rect x="4" y="4" width="4" height="4" fill="#444" />
+						{/* 対角の 2 マスだけ前景色を薄く重ね、残りは透明（面が透ける）→
+						    テーマに応じて市松の濃淡が自動反転する。
+						    color-mix は presentation 属性では解決されないため style で指定する。 */}
+						<rect
+							x="0"
+							y="0"
+							width="4"
+							height="4"
+							style={{ fill: theme.transparentChecker }}
+						/>
+						<rect
+							x="4"
+							y="4"
+							width="4"
+							height="4"
+							style={{ fill: theme.transparentChecker }}
+						/>
 					</pattern>
 				</defs>
 			)}

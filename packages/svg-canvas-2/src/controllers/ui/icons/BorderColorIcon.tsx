@@ -1,5 +1,7 @@
 import { memo } from "react";
 
+import { theme } from "../../../constants/theme";
+
 type BorderColorIconProps = {
 	color: string;
 	size?: number;
@@ -28,28 +30,18 @@ const BorderColorIconComponent: React.FC<BorderColorIconProps> = ({
 		>
 			<title>{title}</title>
 			{isTransparent ? (
-				<>
-					{/* Background checkered pattern using stroke-dasharray */}
-					<circle
-						cx="12"
-						cy="12"
-						r="8"
-						fill="none"
-						stroke="#444"
-						strokeWidth="4"
-						strokeDasharray="3 2"
-					/>
-					<circle
-						cx="12"
-						cy="12"
-						r="8"
-						fill="none"
-						stroke="#888"
-						strokeWidth="4"
-						strokeDasharray="3 2"
-						strokeDashoffset="3"
-					/>
-				</>
+				/* 透明インジケータ: 破線リング。dash が前景色の薄い重ね、gap は面が透ける
+				   2 トーンになり、テーマに応じて濃淡が自動反転する。
+				   color-mix は presentation 属性では解決されないため style で指定する。 */
+				<circle
+					cx="12"
+					cy="12"
+					r="8"
+					fill="none"
+					strokeWidth="4"
+					strokeDasharray="3 2"
+					style={{ stroke: theme.transparentChecker }}
+				/>
 			) : (
 				<circle
 					cx="12"
