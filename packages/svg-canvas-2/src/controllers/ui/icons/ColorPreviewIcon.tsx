@@ -37,10 +37,10 @@ const ColorPreviewIconComponent: React.FC<ColorPreviewIconProps> = ({
 						height="8"
 						patternUnits="userSpaceOnUse"
 					>
-						<rect x="0" y="0" width="4" height="4" fill="#ccc" />
-						<rect x="4" y="0" width="4" height="4" fill="#fff" />
-						<rect x="0" y="4" width="4" height="4" fill="#fff" />
-						<rect x="4" y="4" width="4" height="4" fill="#ccc" />
+						<rect x="0" y="0" width="4" height="4" fill="#444" />
+						<rect x="4" y="0" width="4" height="4" fill="#888" />
+						<rect x="0" y="4" width="4" height="4" fill="#888" />
+						<rect x="4" y="4" width="4" height="4" fill="#444" />
 					</pattern>
 				</defs>
 			)}
@@ -48,7 +48,7 @@ const ColorPreviewIconComponent: React.FC<ColorPreviewIconProps> = ({
 				cx="12"
 				cy="12"
 				r="10"
-				stroke="#ddd"
+				stroke="rgba(128, 128, 128, 0.5)"
 				strokeWidth="1"
 				fill={isTransparent ? "url(#color-preview-transparent-pattern)" : color}
 			/>
