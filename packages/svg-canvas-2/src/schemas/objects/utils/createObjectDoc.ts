@@ -7,7 +7,7 @@ import { ELLIPSE_DOC_DEFAULTS } from "../primitives/ellipse/EllipseDoc";
 import { RECT_DOC_DEFAULTS } from "../primitives/rect/RectDoc";
 import type { ObjectType } from "../types/ObjectType";
 
-const POLY_STROKE = "#374151";
+const POLY_STROKE = "#6b7280";
 const POLY_STROKE_WIDTH = 2;
 // polyline のデフォルト半幅（左右対称の水平2点線）
 const POLYLINE_HALF_WIDTH = 80;

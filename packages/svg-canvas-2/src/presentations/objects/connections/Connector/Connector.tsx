@@ -28,7 +28,7 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 	sourceY,
 	targetX,
 	targetY,
-	stroke = "black",
+	stroke = "#6b7280",
 	strokeWidth = 1,
 	strokeDashType,
 	startArrow,

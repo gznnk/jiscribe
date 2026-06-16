@@ -125,7 +125,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			target: {
 				anchor: { kind: "free", point: { x: event.last.x, y: event.last.y } },
 			},
-			stroke: "black",
+			stroke: "#6b7280",
 			strokeWidth: 2,
 			endArrow: "ConcaveTriangle",
 		} as ConnectorState;
