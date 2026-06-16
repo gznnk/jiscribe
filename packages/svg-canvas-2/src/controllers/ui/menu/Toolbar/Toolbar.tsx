@@ -17,6 +17,10 @@ type ToolbarProps = {
 	activePresetId: string | null;
 	/** 現在のズーム倍率（1 = 100%） */
 	zoom: number;
+	/** ズームイン可能か（zoomIn コマンドの canExecute） */
+	canZoomIn: boolean;
+	/** ズームアウト可能か（zoomOut コマンドの canExecute） */
+	canZoomOut: boolean;
 };
 
 /**
@@ -39,7 +43,12 @@ const isEditableTarget = (target: EventTarget | null): boolean => {
  * - ズームの +/- は現状は見た目のみ（操作はホイール / ピンチ）。
  * - ヘルプはモーダル表示で、`?` キーでも開ける。Canvas の reducer には依存しない。
  */
-const ToolbarComponent: React.FC<ToolbarProps> = ({ activePresetId, zoom }) => {
+const ToolbarComponent: React.FC<ToolbarProps> = ({
+	activePresetId,
+	zoom,
+	canZoomIn,
+	canZoomOut,
+}) => {
 	const [isHelpOpen, setIsHelpOpen] = useState(false);
 	const closeHelp = useCallback(() => setIsHelpOpen(false), []);
 
@@ -87,12 +96,15 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({ activePresetId, zoom }) => {
 
 				{/* 右: ズーム表示・ヘルプ */}
 				<ToolbarGroup>
-					{/* TODO: ズーム操作の配線（現状はホイール / ピンチ。ここは見た目のみ） */}
+					{/* ズーム操作はコマンドシステム経由（ToolbarHandler → handleCommand）。
+					    キーボードショートカット / コンテキストメニューと同一経路。 */}
 					<ToolbarIconButton
 						type="button"
 						aria-label="Zoom out"
 						title="Zoom out"
-						data-gesture="none"
+						disabled={!canZoomOut}
+						data-kind="toolbar"
+						data-id="toolbar:command:zoomOut"
 					>
 						−
 					</ToolbarIconButton>
@@ -101,7 +113,9 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({ activePresetId, zoom }) => {
 						type="button"
 						aria-label="Zoom in"
 						title="Zoom in"
-						data-gesture="none"
+						disabled={!canZoomIn}
+						data-kind="toolbar"
+						data-id="toolbar:command:zoomIn"
 					>
 						+
 					</ToolbarIconButton>

@@ -1,0 +1,59 @@
+# 開発ガイドライン（svg-canvas-2）
+
+実装を進める中で見つかった「知らないと踏みやすい」規約・判断基準を蓄積するドキュメント。
+アーキテクチャ全体像は [architecture.md](./architecture.md)、コマンドは [commands.md](./commands.md)、
+ジェスチャー連携属性は [gesture-attributes.md](./gesture-attributes.md) を参照。
+
+## 追記のしかた
+
+- 1 つの規約 = 1 セクション。`## ` 見出しで「何をすべきか」を結論ファーストで書く。
+- 「背景（なぜ）」「適用例 / 該当コード」をセットで書く。理由が分かると応用が効く。
+- 既存の挙動・仕様に依存する規約は、依存先（ファイル・定数）へリンクしておく。
+
+---
+
+## 反復実行ボタンは click と doubleClick を等価に扱う
+
+ツールバーのズーム ± など、**同じボタンを連打して毎回実行したい**コントロールでは、
+ジェスチャーハンドラ側で `click` と `doubleClick` の**両方**を実行トリガとして扱う。
+
+```ts
+const isActivation = event.type === "click" || event.type === "doubleClick";
+if (isActivation && event.targetId?.startsWith(COMMAND_PREFIX)) {
+	return handleCommand(state, commandId);
+}
+```
+
+### 背景
+
+`GestureRecognizer` は `click` と `doubleClick` を**排他的に**発火する。
+同一 `targetId` を `DOUBLE_CLICK_THRESHOLD`（300ms）以内に連打すると、2 回目以降は
+`click` ではなく `doubleClick` になる（[GestureRecognizer.ts](../src/controllers/gestures/recognizer/GestureRecognizer.ts) の `pointerup` 判定）。
+
+この排他仕様は「シングルクリック＝選択 / ダブルクリック＝テキスト編集」のように
+**意味を変えたい**ケースのための意図的な設計で、オブジェクト/テキスト系ハンドラはこれに依存している。
+そのため**認識器側を DOM 標準の「加算式（click が毎回 + dblclick が上乗せ）」に変えるのは避ける**
+（回帰リスクが大きい）。
+
+一方、反復コマンドボタンには「ダブルクリック固有の意味」が無い。`click` だけを拾うと
+連打時に 1 回おきにスキップする（2 回目が `doubleClick` として捨てられる）ため、
+**消費側のハンドラで両者を等価に扱う**ことで「N 連打＝N 実行」を局所的・低リスクに実現する。
+
+### 該当コード
+
+- [ToolbarHandler.ts](../src/controllers/gestures/handlers/menu/ToolbarHandler.ts)
+- 関連定数: `DOUBLE_CLICK_THRESHOLD` ([GestureRecognizerConstants.ts](../src/controllers/gestures/recognizer/GestureRecognizerConstants.ts))
+
+---
+
+## 追記候補（TODO）
+
+今後ここに整理していきたいトピックのメモ。書けるものから上のセクションへ昇格させる。
+
+- UI クロームの配色は VSCode テーマトークン（`var(--vscode-*)` + ダークフォールバック）を
+  `constants/theme.ts` 経由で参照する。図形そのものの色（fill/stroke/fontColor）は
+  ドキュメントに保存されるデータなので対象外。
+- presentational なアイコン/シェイプは `theme` を直接 import しない。色は親から `currentColor`
+  で受け取るか、背景非依存の中立色（透明インジケータの `#444`/`#888` 等）を使う。
+- 実行系の操作はコマンドシステム（`commandRegistry` + `handleCommand`）に集約し、
+  キーボード / コンテキストメニュー / ツールバーが同一経路を通るようにする。
