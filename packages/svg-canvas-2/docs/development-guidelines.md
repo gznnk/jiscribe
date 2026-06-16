@@ -46,6 +46,26 @@ if (isActivation && event.targetId?.startsWith(COMMAND_PREFIX)) {
 
 ---
 
+## SVG の色は「presentation 属性」か「CSS（style / emotion）」かを使い分ける
+
+判断軸は **emotion か inline style か** ではなく、**presentation 属性で足りるか / CSS 関数の解決が要るか**。
+
+- 静的な色で CSS 関数を使わない → SVG の presentation 属性で十分（`fill="currentColor"`、`stroke="#888"` 等）。
+- `var(--vscode-*)` や `color-mix()` を使う → **presentation 属性では解決されない**。CSS プロパティとして当てる（`style={{ fill: ... }}` または emotion）。
+
+### emotion と inline style の使い分け
+
+- コンポーネントのクローム（コンテナ / ボタン / パネル / 入力など、`:hover`・状態・レイアウトを持つもの）→ emotion `styled`。
+- アイコン内部の小さな SVG 塗りで、CSS 関数解決のためだけに CSS が必要 → inline `style`。
+  アイコン群は素の SVG 属性で統一されているため、1 アイコン内で emotion と属性を混在させない。
+
+### 該当コード
+
+- `style={{ fill: theme.transparentChecker }}` … [ColorPreviewIcon.tsx](../src/controllers/ui/icons/ColorPreviewIcon.tsx)
+- `style={{ stroke: theme.transparentChecker }}` … [BorderColorIcon.tsx](../src/controllers/ui/icons/BorderColorIcon.tsx)
+
+---
+
 ## 追記候補（TODO）
 
 今後ここに整理していきたいトピックのメモ。書けるものから上のセクションへ昇格させる。
@@ -53,7 +73,13 @@ if (isActivation && event.targetId?.startsWith(COMMAND_PREFIX)) {
 - UI クロームの配色は VSCode テーマトークン（`var(--vscode-*)` + ダークフォールバック）を
   `constants/theme.ts` 経由で参照する。図形そのものの色（fill/stroke/fontColor）は
   ドキュメントに保存されるデータなので対象外。
-- presentational なアイコン/シェイプは `theme` を直接 import しない。色は親から `currentColor`
-  で受け取るか、背景非依存の中立色（透明インジケータの `#444`/`#888` 等）を使う。
+- presentational な「汎用」シェイプ（矢印・GroupIcon 等）は `theme` を直接 import しない。
+  色は親から `currentColor` で受け取る。一方、ObjectMenu 専用のカラー系アイコン
+  （ColorPreviewIcon / BorderColorIcon 等）は UI クロームなので `theme` トークン
+  （例: `transparentChecker`）の参照を許容する。
+- 透明（none）インジケータの市松は `theme.transparentChecker`（前景色を薄く重ねる）で表現し、
+  ライト / ダークで濃淡が自動反転するようにする。固定グレーは使わない。
+- 短命なアクセントオーバーレイ（スナップガイド等）は鮮やかな固定色でも両テーマで成立するため、
+  無理にテーマ化しない。色が衝突したときだけトークン化を検討する。
 - 実行系の操作はコマンドシステム（`commandRegistry` + `handleCommand`）に集約し、
   キーボード / コンテキストメニュー / ツールバーが同一経路を通るようにする。
