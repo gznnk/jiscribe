@@ -27,5 +27,6 @@ pnpm --filter @workspace/svg-canvas-2 lint
 - [アーキテクチャ](./docs/architecture.md)
 - [Commands アーキテクチャ](./docs/commands.md)
 - [ジェスチャー連携属性（data-gesture / data-kind / data-id）](./docs/gesture-attributes.md)
-- [Canvas Doc リファレンス](./docs/canvas-doc-reference.md)
+- [Canvas Doc リファレンス](./ai/reference.md)
+- [AI オーサリングガイド](./ai/ai-guide.md)
 - [Controller の変遷](./docs/controller-evolution.md)

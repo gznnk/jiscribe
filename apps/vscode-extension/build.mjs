@@ -76,7 +76,7 @@ const webviewConfig = {
 function copySchema() {
 	const src = join(
 		__dirname,
-		"../../packages/svg-canvas-2/src/schemas/canvas/jiscribe.schema.json",
+		"../../packages/svg-canvas-2/ai/jiscribe.schema.json",
 	);
 	const distDir = join(__dirname, "dist");
 	mkdirSync(distDir, { recursive: true });

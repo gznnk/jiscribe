@@ -6,7 +6,6 @@ build.mjs
 **/*.map
 tsconfig.json
 # 内部ドキュメント・開発用テストファイル
-canvas-doc-reference.md
 icon-source.png
 docs/**
 .gitignore

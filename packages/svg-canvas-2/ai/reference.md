@@ -9,6 +9,8 @@ AI がデータを生成する際や、外部ツールから `.jis.json` ファ�
 
 ```json
 {
+	"$schema": "https://schema.jiscribe.dev/v1/jiscribe.schema.json",
+	"version": 1,
 	"root": [
 		/* ObjectDoc の配列 */
 	],
@@ -20,6 +22,8 @@ AI がデータを生成する際や、外部ツールから `.jis.json` ファ�
 
 | フィールド   | 型               | 必須 | 説明                                                   |
 | ------------ | ---------------- | ---- | ------------------------------------------------------ |
+| `version`    | `1`              | ✅   | スキーマ版。常に `1`（固定値）                         |
+| `$schema`    | `string`         | -    | スキーマ URL（推奨。エディタ補完・検証が効く）         |
 | `root`       | `ObjectDoc[]`    | ✅   | キャンバス上の全オブジェクト（グループのネストも含む） |
 | `connectors` | `ConnectorDoc[]` | ✅   | 接続線（コネクター）                                   |
 
@@ -82,7 +86,7 @@ AI がデータを生成する際や、外部ツールから `.jis.json` ファ�
 	"text": "テキスト",
 	"textType": "textarea",
 	"textAlign": "center",
-	"verticalAlign": "center",
+	"verticalAlign": "middle",
 	"fontColor": "#000000",
 	"fontSize": 16,
 	"fontFamily": "Noto Sans JP",
@@ -309,7 +313,7 @@ AI がデータを生成する際や、外部ツールから `.jis.json` ファ�
 | `text`          | `string`        | `""`             | テキスト内容         |
 | `textType`      | `TextType`      | `"textarea"`     | テキスト表示形式     |
 | `textAlign`     | `TextAlign`     | `"center"`       | 水平方向の文字揃え   |
-| `verticalAlign` | `VerticalAlign` | `"center"`       | 垂直方向の文字揃え   |
+| `verticalAlign` | `VerticalAlign` | `"middle"`       | 垂直方向の文字揃え   |
 | `fontColor`     | `string`        | `"#000000"`      | 文字色（CSS カラー） |
 | `fontSize`      | `number`        | `16`             | フォントサイズ（px） |
 | `fontFamily`    | `string`        | `"Noto Sans JP"` | フォントファミリー   |
@@ -319,7 +323,7 @@ AI がデータを生成する際や、外部ツールから `.jis.json` ファ�
 
 `TextAlign`: `"left"` / `"center"` / `"right"`
 
-`VerticalAlign`: `"start"` / `"center"` / `"end"`
+`VerticalAlign`: `"top"` / `"middle"` / `"bottom"`
 
 ### Transform スタイル
 
@@ -357,6 +361,7 @@ AI がデータを生成する際や、外部ツールから `.jis.json` ファ�
 
 ```json
 {
+	"version": 1,
 	"root": [
 		{
 			"id": "start",
@@ -371,7 +376,7 @@ AI がデータを生成する際や、外部ツールから `.jis.json` ファ�
 			"rx": 8,
 			"text": "開始",
 			"textAlign": "center",
-			"verticalAlign": "center",
+			"verticalAlign": "middle",
 			"fontColor": "#1565C0",
 			"fontSize": 16
 		},
@@ -387,7 +392,7 @@ AI がデータを生成する際や、外部ツールから `.jis.json` ファ�
 			"strokeWidth": 2,
 			"text": "処理",
 			"textAlign": "center",
-			"verticalAlign": "center",
+			"verticalAlign": "middle",
 			"fontColor": "#6A1B9A",
 			"fontSize": 14
 		}
