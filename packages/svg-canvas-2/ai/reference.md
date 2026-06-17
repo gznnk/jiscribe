@@ -1,77 +1,77 @@
-# Jiscribe ドキュメント形式リファレンス（`.jis.json`）
+# Jiscribe Document Format Reference (`.jis.json`)
 
-**Jiscribe** の `.jis.json` ドキュメント形式の仕様書です。
-AI がデータを生成する際や、外部ツールから `.jis.json` ファイルを生成する際の参照用として使用してください。
-（要点をまとめた実践ガイドは [`ai-guide.md`](./ai-guide.md) を参照）
+Specification for **Jiscribe**'s `.jis.json` document format.
+Use it as a reference when an AI generates data, or when an external tool produces `.jis.json` files.
+(For a concise, practical guide, see [`ai-guide.md`](./ai-guide.md).)
 
 ---
 
-## トップレベル構造
+## Top-level structure
 
 ```json
 {
 	"$schema": "https://schema.jiscribe.dev/v1/jiscribe.schema.json",
 	"version": 1,
 	"root": [
-		/* ObjectDoc の配列 */
+		/* array of ObjectDoc */
 	],
 	"connectors": [
-		/* ConnectorDoc の配列 */
+		/* array of ConnectorDoc */
 	]
 }
 ```
 
-| フィールド   | 型               | 必須 | 説明                                                   |
-| ------------ | ---------------- | ---- | ------------------------------------------------------ |
-| `version`    | `1`              | ✅   | スキーマ版。常に `1`（固定値）                         |
-| `$schema`    | `string`         | -    | スキーマ URL（推奨。エディタ補完・検証が効く）         |
-| `root`       | `ObjectDoc[]`    | ✅   | キャンバス上の全オブジェクト（グループのネストも含む） |
-| `connectors` | `ConnectorDoc[]` | ✅   | 接続線（コネクター）                                   |
+| Field        | Type             | Required | Description                                                     |
+| ------------ | ---------------- | -------- | --------------------------------------------------------------- |
+| `version`    | `1`              | ✅       | Schema version. Always `1` (fixed value).                       |
+| `$schema`    | `string`         | -        | Schema URL (recommended; enables editor completion/validation). |
+| `root`       | `ObjectDoc[]`    | ✅       | All objects on the canvas (including nested groups).            |
+| `connectors` | `ConnectorDoc[]` | ✅       | Connectors (lines linking objects).                             |
 
 ---
 
-## ObjectDoc の共通フィールド
+## Common ObjectDoc fields
 
-すべてのオブジェクトが持つ基底フィールド。
+Base fields present on every object.
 
-| フィールド | 型       | 必須 | 説明                                           |
-| ---------- | -------- | ---- | ---------------------------------------------- |
-| `id`       | `string` | ✅   | ドキュメント内で一意の識別子                   |
-| `type`     | `string` | ✅   | オブジェクト種別（後述）                       |
-| `meta`     | `object` | -    | 任意のメタデータ（`name`, `description` など） |
+| Field  | Type     | Required | Description                                       |
+| ------ | -------- | -------- | ------------------------------------------------- |
+| `id`   | `string` | ✅       | Identifier unique within the document.            |
+| `type` | `string` | ✅       | Object type (see below).                          |
+| `meta` | `object` | -        | Arbitrary metadata (`name`, `description`, etc.). |
 
-### MetaDoc（`meta` フィールド）
+### MetaDoc (`meta` field)
 
 ```json
 {
 	"meta": {
-		"name": "メインタイトル",
-		"description": "このオブジェクトの説明"
+		"name": "Main title",
+		"description": "Description of this object"
 	}
 }
 ```
 
-`meta` には `name`・`description` の他、任意のキーを追加できます。
+In addition to `name` and `description`, `meta` may hold any custom keys.
 
 ---
 
-## オブジェクト種別一覧
+## Object types
 
-| `type`      | 説明                          | 幾何プロパティ              | スタイル                              |
-| ----------- | ----------------------------- | --------------------------- | ------------------------------------- |
-| `rect`      | 矩形                          | `x`, `y`, `width`, `height` | Stroke, Fill, Text, Transform, Radius |
-| `ellipse`   | 楕円                          | `cx`, `cy`, `rx`, `ry`      | Stroke, Fill, Text, Transform         |
-| `polyline`  | 折れ線（開いたパス）          | `points`                    | Stroke                                |
-| `polygon`   | 多角形（閉じたパス）          | `points`                    | Stroke, Fill                          |
-| `group`     | グループ（子を含む）          | なし                        | Transform                             |
-| `connector` | 接続線（`connectors` に置く） | `points`                    | Stroke                                |
-| `sticky`    | 付箋                          | `x`, `y`, `width`, `height` | Fill, Text, Transform（Stroke なし）  |
+| `type`      | Description                        | Geometry                    | Styles                                |
+| ----------- | ---------------------------------- | --------------------------- | ------------------------------------- |
+| `rect`      | Rectangle                          | `x`, `y`, `width`, `height` | Stroke, Fill, Text, Transform, Radius |
+| `ellipse`   | Ellipse                            | `cx`, `cy`, `rx`, `ry`      | Stroke, Fill, Text, Transform         |
+| `polyline`  | Polyline (open path)               | `points`                    | Stroke                                |
+| `polygon`   | Polygon (closed path)              | `points`                    | Stroke, Fill                          |
+| `group`     | Group (contains children)          | none                        | Transform                             |
+| `connector` | Connector (placed in `connectors`) | `points`                    | Stroke                                |
+| `sticky`    | Sticky note                        | `x`, `y`, `width`, `height` | Fill, Text, Transform (no Stroke)     |
 
 ---
 
-## 各オブジェクトの詳細
+## Object details
 
-### `rect`（矩形）
+### `rect` (rectangle)
 
 ```json
 {
@@ -85,7 +85,7 @@ AI がデータを生成する際や、外部ツールから `.jis.json` ファ�
 	"stroke": "#2E7D32",
 	"strokeWidth": 2,
 	"rx": 8,
-	"text": "テキスト",
+	"text": "Text",
 	"textType": "text",
 	"textAlign": "center",
 	"verticalAlign": "middle",
@@ -97,19 +97,19 @@ AI がデータを生成する際や、外部ツールから `.jis.json` ファ�
 }
 ```
 
-| フィールド | 型       | デフォルト | 説明                      |
-| ---------- | -------- | ---------- | ------------------------- |
-| `x`        | `number` | `0`        | 左上頂点の X 座標         |
-| `y`        | `number` | `0`        | 左上頂点の Y 座標         |
-| `width`    | `number` | `100`      | 幅（px）                  |
-| `height`   | `number` | `100`      | 高さ（px）                |
-| `rx`       | `number` | `0`        | 角丸半径（SVG `rx` 属性） |
+| Field    | Type     | Default | Description               |
+| -------- | -------- | ------- | ------------------------- |
+| `x`      | `number` | `0`     | X of the top-left corner. |
+| `y`      | `number` | `0`     | Y of the top-left corner. |
+| `width`  | `number` | `100`   | Width (px).               |
+| `height` | `number` | `100`   | Height (px).              |
+| `rx`     | `number` | `0`     | Corner radius (SVG `rx`). |
 
-スタイルフィールドは [Stroke スタイル](#stroke-スタイル)・[Fill スタイル](#fill-スタイル)・[Text スタイル](#text-スタイル)・[Transform スタイル](#transform-スタイル) を参照。
+For style fields, see [Stroke style](#stroke-style), [Fill style](#fill-style), [Text style](#text-style), and [Transform style](#transform-style).
 
 ---
 
-### `ellipse`（楕円）
+### `ellipse`
 
 ```json
 {
@@ -125,16 +125,16 @@ AI がデータを生成する際や、外部ツールから `.jis.json` ファ�
 }
 ```
 
-| フィールド | 型       | デフォルト | 説明               |
-| ---------- | -------- | ---------- | ------------------ |
-| `cx`       | `number` | `0`        | 中心の X 座標      |
-| `cy`       | `number` | `0`        | 中心の Y 座標      |
-| `rx`       | `number` | `50`       | 横方向の半径（px） |
-| `ry`       | `number` | `50`       | 縦方向の半径（px） |
+| Field | Type     | Default | Description             |
+| ----- | -------- | ------- | ----------------------- |
+| `cx`  | `number` | `0`     | X of the center.        |
+| `cy`  | `number` | `0`     | Y of the center.        |
+| `rx`  | `number` | `50`    | Horizontal radius (px). |
+| `ry`  | `number` | `50`    | Vertical radius (px).   |
 
 ---
 
-### `polyline`（折れ線）
+### `polyline`
 
 ```json
 {
@@ -152,15 +152,15 @@ AI がデータを生成する際や、外部ツールから `.jis.json` ファ�
 }
 ```
 
-| フィールド   | 型          | 必須 | 説明           |
-| ------------ | ----------- | ---- | -------------- |
-| `points`     | `Point[]`   | ✅   | 頂点座標の配列 |
-| `startArrow` | `ArrowType` | -    | 始点の矢印種別 |
-| `endArrow`   | `ArrowType` | -    | 終点の矢印種別 |
+| Field        | Type        | Required | Description             |
+| ------------ | ----------- | -------- | ----------------------- |
+| `points`     | `Point[]`   | ✅       | Array of vertices.      |
+| `startArrow` | `ArrowType` | -        | Arrowhead at the start. |
+| `endArrow`   | `ArrowType` | -        | Arrowhead at the end.   |
 
 ---
 
-### `polygon`（多角形）
+### `polygon`
 
 ```json
 {
@@ -177,13 +177,13 @@ AI がデータを生成する際や、外部ツールから `.jis.json` ファ�
 }
 ```
 
-| フィールド | 型        | 必須 | 説明                                 |
-| ---------- | --------- | ---- | ------------------------------------ |
-| `points`   | `Point[]` | ✅   | 頂点座標の配列（自動的に閉じられる） |
+| Field    | Type      | Required | Description                               |
+| -------- | --------- | -------- | ----------------------------------------- |
+| `points` | `Point[]` | ✅       | Array of vertices (closed automatically). |
 
 ---
 
-### `group`（グループ）
+### `group`
 
 ```json
 {
@@ -204,19 +204,19 @@ AI がデータを生成する際や、外部ツールから `.jis.json` ファ�
 }
 ```
 
-| フィールド | 型            | 必須 | 説明                 |
-| ---------- | ------------- | ---- | -------------------- |
-| `children` | `ObjectDoc[]` | ✅   | 子オブジェクトの配列 |
+| Field      | Type          | Required | Description             |
+| ---------- | ------------- | -------- | ----------------------- |
+| `children` | `ObjectDoc[]` | ✅       | Array of child objects. |
 
-グループ自身は位置・サイズを持たず、`children` の配置で決まります。
-`rotation`・`flipX`・`flipY` は Transform スタイルとして指定できます。
+A group has no position or size of its own; these are determined by its `children`.
+`rotation`, `flipX`, and `flipY` can be specified as Transform styles.
 
 ---
 
-### `sticky`（付箋）
+### `sticky` (sticky note)
 
-付箋。幾何は `rect` と同じ（左上 `x`,`y` + `width`,`height`）だが、**Stroke と Radius は持たない**。
-Fill・Text・Transform を持つ。
+A sticky note. Its geometry is the same as `rect` (top-left `x`,`y` + `width`,`height`), but it has **no Stroke and no Radius**.
+It supports Fill, Text, and Transform.
 
 ```json
 {
@@ -227,7 +227,7 @@ Fill・Text・Transform を持つ。
 	"width": 160,
 	"height": 120,
 	"fill": "#fef9c3",
-	"text": "メモ",
+	"text": "Note",
 	"textAlign": "center",
 	"verticalAlign": "middle",
 	"fontColor": "#000000",
@@ -235,21 +235,21 @@ Fill・Text・Transform を持つ。
 }
 ```
 
-| フィールド | 型       | デフォルト  | 説明              |
-| ---------- | -------- | ----------- | ----------------- |
-| `x`        | `number` | `0`         | 左上頂点の X 座標 |
-| `y`        | `number` | `0`         | 左上頂点の Y 座標 |
-| `width`    | `number` | `160`       | 幅（px）          |
-| `height`   | `number` | `120`       | 高さ（px）        |
-| `fill`     | `string` | `"#fef9c3"` | 背景色            |
+| Field    | Type     | Default     | Description               |
+| -------- | -------- | ----------- | ------------------------- |
+| `x`      | `number` | `0`         | X of the top-left corner. |
+| `y`      | `number` | `0`         | Y of the top-left corner. |
+| `width`  | `number` | `160`       | Width (px).               |
+| `height` | `number` | `120`       | Height (px).              |
+| `fill`   | `string` | `"#fef9c3"` | Background color.         |
 
-Text スタイルの既定は他図形と一部異なる（`fontColor` は `"#000000"`、`fontSize` は `14`）。
+Some Text-style defaults differ from other shapes (`fontColor` is `"#000000"`, `fontSize` is `14`).
 
 ---
 
-## ConnectorDoc（接続線）
+## ConnectorDoc (connector)
 
-`connectors` 配列に置く接続線オブジェクト。
+A connector object placed in the `connectors` array.
 
 ```json
 {
@@ -271,24 +271,24 @@ Text スタイルの既定は他図形と一部異なる（`fontColor` は `"#00
 }
 ```
 
-| フィールド   | 型            | 必須 | 説明                                       |
-| ------------ | ------------- | ---- | ------------------------------------------ |
-| `points`     | `Point[]`     | ✅   | 中間経由点の座標配列（直線は空配列。後述） |
-| `source`     | `EndpointRef` | ✅   | 始点の接続仕様                             |
-| `target`     | `EndpointRef` | ✅   | 終点の接続仕様                             |
-| `startArrow` | `ArrowType`   | -    | 始点の矢印種別                             |
-| `endArrow`   | `ArrowType`   | -    | 終点の矢印種別                             |
+| Field        | Type          | Required | Description                                                    |
+| ------------ | ------------- | -------- | -------------------------------------------------------------- |
+| `points`     | `Point[]`     | ✅       | Intermediate waypoints (empty for a straight line; see below). |
+| `source`     | `EndpointRef` | ✅       | Start endpoint spec.                                           |
+| `target`     | `EndpointRef` | ✅       | End endpoint spec.                                             |
+| `startArrow` | `ArrowType`   | -        | Arrowhead at the start.                                        |
+| `endArrow`   | `ArrowType`   | -        | Arrowhead at the end.                                          |
 
-`points` には**端点の座標を含めない**。端点は `source` / `target` の EndpointRef が正であり、
-接続先オブジェクトの移動に合わせて描画時に動的解決される。`points` は source → target 順の
-中間経由点（ワールド座標）のみを保持し、直線コネクターでは空配列にする
-（経由点による変形は将来実装予定の機能で、現時点では描画に使用されない）。
+Do **not** include endpoint coordinates in `points`. The endpoints are authoritative via `source` / `target`
+(EndpointRef) and are resolved dynamically at render time as the connected objects move. `points` holds only the
+intermediate waypoints (world coordinates) in source → target order, and is an empty array for straight connectors
+(waypoint-based routing is planned and is not yet used for rendering).
 
 ### EndpointRef
 
-接続先がオブジェクトに固定（`OwnedEndpointRef`）か、空間上の自由な点（`FreeEndpointRef`）かを選択します。
+Choose whether the endpoint is fixed to an object (`OwnedEndpointRef`) or a free point in space (`FreeEndpointRef`).
 
-#### OwnedEndpointRef（オブジェクト接続）
+#### OwnedEndpointRef (attached to an object)
 
 ```json
 {
@@ -297,16 +297,16 @@ Text スタイルの既定は他図形と一部異なる（`fontColor` は `"#00
 }
 ```
 
-`anchor.kind` の選択肢:
+Options for `anchor.kind`:
 
-| `kind`           | 追加フィールド       | 説明                 |
-| ---------------- | -------------------- | -------------------- |
-| `"center"`       | なし                 | オブジェクトの中心   |
-| `"connectPoint"` | `id: ConnectPointId` | 定義済み接続ポイント |
+| `kind`           | Extra field          | Description                 |
+| ---------------- | -------------------- | --------------------------- |
+| `"center"`       | none                 | Center of the object.       |
+| `"connectPoint"` | `id: ConnectPointId` | A predefined connect point. |
 
-`ConnectPointId` の選択肢: `"center"` / `"topCenter"` / `"rightCenter"` / `"bottomCenter"` / `"leftCenter"`
+`ConnectPointId` options: `"center"` / `"topCenter"` / `"rightCenter"` / `"bottomCenter"` / `"leftCenter"`
 
-#### FreeEndpointRef（フリーポイント接続）
+#### FreeEndpointRef (free point)
 
 ```json
 {
@@ -314,86 +314,86 @@ Text スタイルの既定は他図形と一部異なる（`fontColor` は `"#00
 }
 ```
 
-`owner` フィールドを持たず、`anchor.kind` は必ず `"free"` です。
+It has no `owner` field, and `anchor.kind` is always `"free"`.
 
 ---
 
-## 共通スタイルフィールド
+## Common style fields
 
-### Stroke スタイル
+### Stroke style
 
-`rect`, `ellipse`, `polyline`, `polygon`, `connector` に適用可能。
+Applies to `rect`, `ellipse`, `polyline`, `polygon`, `connector`.
 
-| フィールド       | 型               | デフォルト  | 説明                 |
-| ---------------- | ---------------- | ----------- | -------------------- |
-| `stroke`         | `string`         | `"#6b7280"` | 線の色（CSS カラー） |
-| `strokeWidth`    | `number`         | `2`         | 線の太さ（px）       |
-| `strokeDashType` | `StrokeDashType` | `"solid"`   | 線の破線パターン     |
+| Field            | Type             | Default     | Description             |
+| ---------------- | ---------------- | ----------- | ----------------------- |
+| `stroke`         | `string`         | `"#6b7280"` | Line color (CSS color). |
+| `strokeWidth`    | `number`         | `2`         | Line width (px).        |
+| `strokeDashType` | `StrokeDashType` | `"solid"`   | Dash pattern.           |
 
 `StrokeDashType`: `"solid"` / `"dashed"` / `"dotted"`
 
-### Fill スタイル
+### Fill style
 
-`rect`, `ellipse`, `polygon`, `sticky` に適用可能。
+Applies to `rect`, `ellipse`, `polygon`, `sticky`.
 
-| フィールド | 型       | デフォルト      | 説明                       |
-| ---------- | -------- | --------------- | -------------------------- |
-| `fill`     | `string` | `"transparent"` | 塗りつぶし色（CSS カラー） |
+| Field  | Type     | Default         | Description             |
+| ------ | -------- | --------------- | ----------------------- |
+| `fill` | `string` | `"transparent"` | Fill color (CSS color). |
 
-### Text スタイル
+### Text style
 
-`rect`, `ellipse`, `sticky` に適用可能。
+Applies to `rect`, `ellipse`, `sticky`.
 
-| フィールド      | 型              | デフォルト       | 説明                                          |
-| --------------- | --------------- | ---------------- | --------------------------------------------- |
-| `text`          | `string`        | `""`             | テキスト内容                                  |
-| `textType`      | `TextType`      | `"text"`         | テキスト表示形式                              |
-| `textAlign`     | `TextAlign`     | `"center"`       | 水平方向の文字揃え                            |
-| `verticalAlign` | `VerticalAlign` | `"middle"`       | 垂直方向の文字揃え                            |
-| `fontColor`     | `string`        | `"#6b7280"`      | 文字色（rect/ellipse。sticky は `"#000000"`） |
-| `fontSize`      | `number`        | `16`             | フォントサイズ（px）                          |
-| `fontFamily`    | `string`        | `"Noto Sans JP"` | フォントファミリー                            |
-| `fontWeight`    | `string`        | `"normal"`       | フォントウェイト                              |
+| Field           | Type            | Default          | Description                                         |
+| --------------- | --------------- | ---------------- | --------------------------------------------------- |
+| `text`          | `string`        | `""`             | Text content.                                       |
+| `textType`      | `TextType`      | `"text"`         | How text is rendered.                               |
+| `textAlign`     | `TextAlign`     | `"center"`       | Horizontal alignment.                               |
+| `verticalAlign` | `VerticalAlign` | `"middle"`       | Vertical alignment.                                 |
+| `fontColor`     | `string`        | `"#6b7280"`      | Text color (rect/ellipse; sticky uses `"#000000"`). |
+| `fontSize`      | `number`        | `16`             | Font size (px).                                     |
+| `fontFamily`    | `string`        | `"Noto Sans JP"` | Font family.                                        |
+| `fontWeight`    | `string`        | `"normal"`       | Font weight.                                        |
 
-`TextType`: `"text"`（プレーンテキスト）/ `"markdown"`（Markdown レンダリング）
+`TextType`: `"text"` (plain text) / `"markdown"` (Markdown rendering)
 
 `TextAlign`: `"left"` / `"center"` / `"right"`
 
 `VerticalAlign`: `"top"` / `"middle"` / `"bottom"`
 
-### Transform スタイル
+### Transform style
 
-`rect`, `ellipse`, `group` に適用可能。すべて省略可能。
+Applies to `rect`, `ellipse`, `group`. All optional.
 
-| フィールド        | 型        | デフォルト | 説明                             |
-| ----------------- | --------- | ---------- | -------------------------------- |
-| `rotation`        | `number`  | `0`        | 回転角度（度）                   |
-| `flipX`           | `boolean` | `false`    | 水平方向の反転                   |
-| `flipY`           | `boolean` | `false`    | 垂直方向の反転                   |
-| `lockAspectRatio` | `boolean` | `false`    | アスペクト比ロック（リサイズ時） |
-
----
-
-## ArrowType（矢印種別）
-
-`polyline` と `connector` の `startArrow`・`endArrow` で使用。
-
-| 値                  | 説明                             |
-| ------------------- | -------------------------------- |
-| `"None"`            | 矢印なし（デフォルト的な使い方） |
-| `"FilledTriangle"`  | 塗りつぶし三角形（一般的な矢印） |
-| `"ConcaveTriangle"` | くぼみ三角形                     |
-| `"OpenArrow"`       | 開放型矢印（>）                  |
-| `"HollowTriangle"`  | 中空三角形                       |
-| `"FilledDiamond"`   | 塗りつぶしひし形（UML 集約）     |
-| `"HollowDiamond"`   | 中空ひし形（UML 集約）           |
-| `"Circle"`          | 円                               |
+| Field             | Type      | Default | Description                        |
+| ----------------- | --------- | ------- | ---------------------------------- |
+| `rotation`        | `number`  | `0`     | Rotation angle (degrees).          |
+| `flipX`           | `boolean` | `false` | Horizontal flip.                   |
+| `flipY`           | `boolean` | `false` | Vertical flip.                     |
+| `lockAspectRatio` | `boolean` | `false` | Lock aspect ratio (when resizing). |
 
 ---
 
-## 完全なサンプル
+## ArrowType
 
-矩形・楕円・接続線を含む最小限のダイアグラム。
+Used by `startArrow` / `endArrow` on `polyline` and `connector`.
+
+| Value               | Description                       |
+| ------------------- | --------------------------------- |
+| `"None"`            | No arrowhead.                     |
+| `"FilledTriangle"`  | Filled triangle (common arrow).   |
+| `"ConcaveTriangle"` | Concave triangle.                 |
+| `"OpenArrow"`       | Open arrow (`>`).                 |
+| `"HollowTriangle"`  | Hollow triangle.                  |
+| `"FilledDiamond"`   | Filled diamond (UML aggregation). |
+| `"HollowDiamond"`   | Hollow diamond (UML aggregation). |
+| `"Circle"`          | Circle.                           |
+
+---
+
+## Full example
+
+A minimal diagram with a rectangle, an ellipse, and a connector.
 
 ```json
 {
@@ -410,7 +410,7 @@ Text スタイルの既定は他図形と一部異なる（`fontColor` は `"#00
 			"stroke": "#1565C0",
 			"strokeWidth": 2,
 			"rx": 8,
-			"text": "開始",
+			"text": "Start",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#1565C0",
@@ -426,7 +426,7 @@ Text スタイルの既定は他図形と一部異なる（`fontColor` は `"#00
 			"fill": "#F3E5F5",
 			"stroke": "#6A1B9A",
 			"strokeWidth": 2,
-			"text": "処理",
+			"text": "Process",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#6A1B9A",
@@ -457,4 +457,4 @@ Text スタイルの既定は他図形と一部異なる（`fontColor` は `"#00
 
 ---
 
-機械可読なスキーマ（JSON Schema）は `https://schema.jiscribe.dev/v1/jiscribe.schema.json` で公開されています。
+The machine-readable schema (JSON Schema) is published at `https://schema.jiscribe.dev/v1/jiscribe.schema.json`.

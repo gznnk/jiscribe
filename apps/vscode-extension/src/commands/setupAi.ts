@@ -14,17 +14,17 @@ import * as vscode from "vscode";
 
 // 生成ファイルであることを示すヘッダ（手編集を促さない）。
 const GENERATED_NOTICE =
-	"<!-- このファイルは Jiscribe 拡張の「Set up AI」コマンドが生成・管理しています。手で編集しても再実行で上書きされます。 -->\n\n";
+	"<!-- Generated and managed by the Jiscribe extension's “Set up AI” command. Manual edits are overwritten on re-run. -->\n\n";
 
 const SKILL_BODY = `---
 name: jiscribe
-description: Jiscribe の .jis.json キャンバス図（フローチャート・構成図・付箋など）を作成・編集するとき。
+description: Use when creating or editing Jiscribe .jis.json canvas diagrams (flowcharts, architecture diagrams, sticky notes, etc.).
 ---
 
-${GENERATED_NOTICE}Jiscribe の図データ（\`.jis.json\` / \`.jiscribe.json\`）を生成・編集するときは、必ず次に従うこと:
+${GENERATED_NOTICE}When generating or editing Jiscribe diagram data (\`.jis.json\` / \`.jiscribe.json\`), always follow this:
 
-- 記法とルール: ワークスペース直下の \`.jiscribe/ai-guide.md\` を読む。
-- 全フィールド仕様が必要なときは \`.jiscribe/jiscribe.schema.json\` を参照する。
+- Notation and rules: read \`.jiscribe/ai-guide.md\` at the workspace root.
+- For the full field-level specification, refer to \`.jiscribe/jiscribe.schema.json\`.
 `;
 
 /** dist に同梱したアセットを読み込む。 */
@@ -41,7 +41,7 @@ async function resolveTargetFolder(): Promise<vscode.Uri | undefined> {
 	const folders = vscode.workspace.workspaceFolders;
 	if (!folders || folders.length === 0) {
 		vscode.window.showErrorMessage(
-			"Set up AI: ワークスペースフォルダを開いてから実行してください。",
+			"Set up AI: Open a workspace folder before running this command.",
 		);
 		return undefined;
 	}
@@ -49,7 +49,7 @@ async function resolveTargetFolder(): Promise<vscode.Uri | undefined> {
 		return folders[0].uri;
 	}
 	const picked = await vscode.window.showWorkspaceFolderPick({
-		placeHolder: "AI 設定を配置するワークスペースフォルダを選択",
+		placeHolder: "Select the workspace folder to set up AI in",
 	});
 	return picked?.uri;
 }
@@ -89,7 +89,7 @@ async function runSetupAi(context: vscode.ExtensionContext): Promise<void> {
 		await writeFile(skillUri, new TextEncoder().encode(SKILL_BODY));
 
 		const action = await vscode.window.showInformationMessage(
-			"Set up AI: .jiscribe/ と Claude Code Skill を配置しました。Claude に「Jiscribe で図を描いて」と話しかけてください。",
+			"Set up AI: Created .jiscribe/ and the Claude Code skill. Ask Claude to “draw a Jiscribe diagram.”",
 			"Open Guide",
 		);
 		if (action === "Open Guide") {
@@ -97,7 +97,7 @@ async function runSetupAi(context: vscode.ExtensionContext): Promise<void> {
 		}
 	} catch (err) {
 		vscode.window.showErrorMessage(
-			`Set up AI に失敗しました: ${err instanceof Error ? err.message : String(err)}`,
+			`Set up AI failed: ${err instanceof Error ? err.message : String(err)}`,
 		);
 	}
 }

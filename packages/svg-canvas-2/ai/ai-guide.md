@@ -1,21 +1,21 @@
-# Jiscribe AI オーサリングガイド
+# Jiscribe AI Authoring Guide
 
-AI が Jiscribe の `.jis.json`（図のデータ）を正しく生成・編集するための実践ガイドです。
-要点に絞ってまとめています。全フィールドの網羅的な仕様は [`reference.md`](./reference.md) を参照してください。
+A practical guide for an AI to correctly generate and edit Jiscribe `.jis.json` (diagram data).
+It focuses on the essentials. For the full field-level specification, see [`reference.md`](./reference.md).
 
 ---
 
-## 1. 座標系（最初に必ず把握）
+## 1. Coordinate system (read this first)
 
-- キャンバスは**無限平面**。座標は SVG 規約で、**x は右、y は下に増える**（数学と逆＝画面座標系）。単位は **px**。
-- 座標値は任意（**負の値も可**）。「原点 (0,0) が画面左上に固定」ではない（ビューはパン・ズームする）。
-- 図形ごとに基準点が違う: **rect は左上角 `(x, y)`**、**ellipse は中心 `(cx, cy)`**（「オブジェクト早見表」参照）。
-- 重なり順（z 順）は **`root` 配列の順**＝後ろの要素ほど前面。重ねること自体は可。
-- 自動レイアウトはない。座標は自分で計算して決める（配置の指針は「レイアウト規約」を参照）。
+- The canvas is an **infinite plane**. Coordinates follow the SVG convention: **x increases to the right, y increases downward** (the opposite of math; screen coordinates). Unit is **px**.
+- Coordinate values are arbitrary (**negatives are allowed**). The origin `(0, 0)` is **not** pinned to the top-left of the screen (the view pans and zooms).
+- Each shape has its own reference point: **`rect` uses its top-left corner `(x, y)`**, **`ellipse` uses its center `(cx, cy)`** (see "Object quick reference").
+- Stacking order (z-order) follows the **order of the `root` array** — later entries are drawn on top. Overlapping is allowed.
+- There is no auto-layout. You compute coordinates yourself (see "Layout conventions").
 
-## 2. 最小構造
+## 2. Minimal structure
 
-トップレベルは必ず `version` / `root` / `connectors` を持つ（配列は空でも置く）。
+The top level must always have `version` / `root` / `connectors` (arrays may be empty).
 
 ```json
 {
@@ -26,48 +26,48 @@ AI が Jiscribe の `.jis.json`（図のデータ）を正しく生成・編集�
 }
 ```
 
-- `version`: **必須。常に `1`**（このフォーマット版の固定値）。
-- `$schema`: 省略可だが**推奨**（エディタ補完・検証が効く）。
-- `root`: 図形（rect / ellipse / polyline / polygon / group / sticky）の配列。
-- `connectors`: 接続線の配列。**connector は必ずここに置く（`root` には入れない）**。
+- `version`: **required, always `1`** (fixed value for this format version).
+- `$schema`: optional but **recommended** (enables editor completion and validation).
+- `root`: array of shapes (rect / ellipse / polyline / polygon / group / sticky).
+- `connectors`: array of connectors. **Connectors must go here (never in `root`).**
 
-## 3. MUST / MUST NOT（違反すると壊れる）
+## 3. MUST / MUST NOT (violations break the file)
 
 **MUST**
 
-- トップレベルに **`version: 1`** を含める（必須・固定値）。
-- すべてのオブジェクトに **一意の `id`** と **`type`** を付ける。
-- `rect` は `x`,`y`（左上）+ `width`,`height`。`ellipse` は `cx`,`cy`（中心）+ `rx`,`ry`（半径）。
-- `connector` は `connectors` 配列に置き、端点は `source` / `target`（EndpointRef）で表す。
-- 直線の connector は `points` を **空配列** `[]` にする。
+- Include **`version: 1`** at the top level (required, fixed value).
+- Give every object a **unique `id`** and a **`type`**.
+- `rect` uses `x`,`y` (top-left) + `width`,`height`. `ellipse` uses `cx`,`cy` (center) + `rx`,`ry` (radii).
+- Put `connector` in the `connectors` array, and express its endpoints with `source` / `target` (EndpointRef).
+- For a straight connector, set `points` to an **empty array** `[]`.
 
 **MUST NOT**
 
-- connector の `points` に **端点（始点・終点）の座標を入れない**。`points` は中間経由点のみ（通常は空配列）。
-- `group` に `x`,`y`,`width`,`height` を付けない。位置は `children` の配置で決まる。
-- 同じ `id` を 2 回使わない。
-- `connector` を `root` に入れない。
+- Do not put endpoint (start/end) coordinates in a connector's `points`. `points` holds only intermediate waypoints (usually empty).
+- Do not give a `group` `x`,`y`,`width`,`height`. Its position comes from its `children`.
+- Do not reuse the same `id`.
+- Do not put a `connector` in `root`.
 
-## 4. オブジェクト早見表
+## 4. Object quick reference
 
-| `type`                        | 必須幾何                      | 主なスタイル                                 |
-| ----------------------------- | ----------------------------- | -------------------------------------------- |
-| `rect`                        | `x`,`y`,`width`,`height`      | stroke / fill / text / `rx`(角丸) / rotation |
-| `ellipse`                     | `cx`,`cy`,`rx`,`ry`           | stroke / fill / text / rotation              |
-| `polyline`                    | `points`（開いた線）          | stroke / startArrow / endArrow               |
-| `polygon`                     | `points`（自動で閉じる）      | stroke / fill                                |
-| `group`                       | `children`                    | rotation / flipX / flipY                     |
-| `connector`（`connectors`へ） | `source`,`target`,`points:[]` | stroke / startArrow / endArrow               |
-| `sticky`                      | `x`,`y`,`width`,`height`      | fill / text（stroke・rx は無し）             |
+| `type`                        | Required geometry             | Main styles                                      |
+| ----------------------------- | ----------------------------- | ------------------------------------------------ |
+| `rect`                        | `x`,`y`,`width`,`height`      | stroke / fill / text / `rx` (rounded) / rotation |
+| `ellipse`                     | `cx`,`cy`,`rx`,`ry`           | stroke / fill / text / rotation                  |
+| `polyline`                    | `points` (open line)          | stroke / startArrow / endArrow                   |
+| `polygon`                     | `points` (auto-closed)        | stroke / fill                                    |
+| `group`                       | `children`                    | rotation / flipX / flipY                         |
+| `connector` (in `connectors`) | `source`,`target`,`points:[]` | stroke / startArrow / endArrow                   |
+| `sticky`                      | `x`,`y`,`width`,`height`      | fill / text (no stroke or rx)                    |
 
-**スタイル値**
+**Style values**
 
-- Stroke: `stroke`(色), `strokeWidth`(既定 2), `strokeDashType`: `"solid"`/`"dashed"`/`"dotted"`
-- Fill: `fill`（既定 `"transparent"`）
-- Text（rect / ellipse / sticky）: `text`, `textAlign`: `"left"`/`"center"`/`"right"`, `verticalAlign`: `"top"`/`"middle"`/`"bottom"`, `fontColor`, `fontSize`(既定 16)
-- 矢印 `startArrow`/`endArrow`: `"None"` / `"FilledTriangle"`（標準矢印）/ `"OpenArrow"` / `"HollowTriangle"` / `"FilledDiamond"` / `"HollowDiamond"` / `"ConcaveTriangle"` / `"Circle"`
+- Stroke: `stroke` (color), `strokeWidth` (default 2), `strokeDashType`: `"solid"`/`"dashed"`/`"dotted"`
+- Fill: `fill` (default `"transparent"`)
+- Text (rect / ellipse / sticky): `text`, `textAlign`: `"left"`/`"center"`/`"right"`, `verticalAlign`: `"top"`/`"middle"`/`"bottom"`, `fontColor`, `fontSize` (default 16)
+- Arrows `startArrow`/`endArrow`: `"None"` / `"FilledTriangle"` (standard arrow) / `"OpenArrow"` / `"HollowTriangle"` / `"FilledDiamond"` / `"HollowDiamond"` / `"ConcaveTriangle"` / `"Circle"`
 
-**connector の端点（EndpointRef）**
+**Connector endpoints (EndpointRef)**
 
 ```json
 "source": {
@@ -76,22 +76,22 @@ AI が Jiscribe の `.jis.json`（図のデータ）を正しく生成・編集�
 }
 ```
 
-- `anchor.kind`: `"connectPoint"`（+ `id`）/ `"center"` / `"free"`（+ `point`）
-- `connectPoint` の `id`: `"center"`/`"topCenter"`/`"rightCenter"`/`"bottomCenter"`/`"leftCenter"`
-- オブジェクトに繋がない自由点は `{ "anchor": { "kind": "free", "point": { "x": 400, "y": 200 } } }`（`owner` を持たない）
+- `anchor.kind`: `"connectPoint"` (+ `id`) / `"center"` / `"free"` (+ `point`)
+- `connectPoint` `id`: `"center"`/`"topCenter"`/`"rightCenter"`/`"bottomCenter"`/`"leftCenter"`
+- A free point not attached to any object: `{ "anchor": { "kind": "free", "point": { "x": 400, "y": 200 } } }` (no `owner`)
 
-## 5. レイアウト規約（読みやすく配置する）
+## 5. Layout conventions (for readability)
 
-これは仕様ではなく可読性のための指針。重なり自体は許容される（「座標系」参照）。
+These are guidelines for readability, not part of the spec. Overlapping itself is allowed (see "Coordinate system").
 
-- 標準ノード: `width: 160`, `height: 80`。
-- ノード間の余白: 水平 **80〜120px**、垂直 **60〜100px**。
-- フロー方向は左→右 or 上→下のどちらかに統一する。
-- 接続の向きに合わせて connectPoint を選ぶ（左→右なら source=`rightCenter`, target=`leftCenter`）。
+- Standard node: `width: 160`, `height: 80`.
+- Spacing between nodes: horizontal **80–120px**, vertical **60–100px**.
+- Keep a single flow direction (left→right or top→bottom).
+- Choose connect points to match the connection direction (for left→right, source=`rightCenter`, target=`leftCenter`).
 
-## 6. 完成例
+## 6. Worked examples
 
-### 例 A: 横並びフローチャート（rect 3 つ + 矢印）
+### Example A: horizontal flowchart (3 rects + arrows)
 
 ```json
 {
@@ -108,7 +108,7 @@ AI が Jiscribe の `.jis.json`（図のデータ）を正しく生成・編集�
 			"fill": "#E3F2FD",
 			"stroke": "#1565C0",
 			"strokeWidth": 2,
-			"text": "開始",
+			"text": "Start",
 			"fontColor": "#1565C0"
 		},
 		{
@@ -122,7 +122,7 @@ AI が Jiscribe の `.jis.json`（図のデータ）を正しく生成・編集�
 			"fill": "#F3E5F5",
 			"stroke": "#6A1B9A",
 			"strokeWidth": 2,
-			"text": "処理",
+			"text": "Process",
 			"fontColor": "#6A1B9A"
 		},
 		{
@@ -136,7 +136,7 @@ AI が Jiscribe の `.jis.json`（図のデータ）を正しく生成・編集�
 			"fill": "#E8F5E9",
 			"stroke": "#2E7D32",
 			"strokeWidth": 2,
-			"text": "完了",
+			"text": "Done",
 			"fontColor": "#2E7D32"
 		}
 	],
@@ -177,7 +177,7 @@ AI が Jiscribe の `.jis.json`（図のデータ）を正しく生成・編集�
 }
 ```
 
-### 例 B: 縦並び構成図（楕円ノード + グループ）
+### Example B: vertical architecture (ellipse node + group)
 
 ```json
 {
@@ -193,7 +193,7 @@ AI が Jiscribe の `.jis.json`（図のデータ）を正しく生成・編集�
 			"fill": "#FFF3E0",
 			"stroke": "#E65100",
 			"strokeWidth": 2,
-			"text": "クライアント",
+			"text": "Client",
 			"fontColor": "#E65100"
 		},
 		{
@@ -268,11 +268,11 @@ AI が Jiscribe の `.jis.json`（図のデータ）を正しく生成・編集�
 }
 ```
 
-## 7. よくある間違い
+## 7. Common mistakes
 
-- ❌ connector を `root` に入れる → ✅ `connectors` に入れる。
-- ❌ connector の `points` に端点座標を入れる → ✅ `points: []`、端点は `source`/`target`。
-- ❌ `group` に `x`/`y`/`width`/`height` を付ける → ✅ `children` の座標で位置を表す。
-- ❌ `ellipse` に `x`/`y`/`width`/`height` を使う → ✅ `cx`/`cy`/`rx`/`ry`。
-- ❌ 意図せず図形が重なる座標を出力 → ✅「レイアウト規約」の余白規約で間隔を空ける（重ね自体は可）。
-- ❌ `id` の重複 → ✅ すべて一意に。
+- ❌ Putting a connector in `root` → ✅ put it in `connectors`.
+- ❌ Putting endpoint coordinates in a connector's `points` → ✅ `points: []`; endpoints go in `source`/`target`.
+- ❌ Giving a `group` `x`/`y`/`width`/`height` → ✅ position it via the `children` coordinates.
+- ❌ Using `x`/`y`/`width`/`height` on an `ellipse` → ✅ use `cx`/`cy`/`rx`/`ry`.
+- ❌ Emitting coordinates that unintentionally overlap → ✅ space them per the layout conventions (overlap itself is allowed).
+- ❌ Duplicate `id`s → ✅ make them all unique.
