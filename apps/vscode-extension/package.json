@@ -67,7 +67,7 @@
 		"commands": [
 			{
 				"command": "jiscribe.newEmptyCanvas",
-				"title": "New Empty Jiscribe Canvas",
+				"title": "New Jiscribe Canvas",
 				"category": "Jiscribe"
 			},
 			{
