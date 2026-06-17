@@ -9,6 +9,7 @@ import {
 import { PRECISION } from "../../../../../constants/precision";
 import {
 	isConnectPointId,
+	isSameEndpoint,
 	type CenterAnchorSpec,
 	type ConnectPointAnchorSpec,
 	type ConnectPointId,
@@ -144,11 +145,14 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 
 	/**
 	 * エンドポイント編集のドラッグ開始処理。
-	 * 選択中のコネクターをpendingConnectorに変換し、編集対象のエンドポイントをFreeAnchorに設定。
+	 * polyline の頂点編集と同様に、pendingConnector（overlay）は使わず実体を直接編集する。
+	 * そのため objects / connectorIds は変更せず（重なり順を維持）、選択状態も保持して
+	 * ConnectorControls の端点ハンドルが実体に追従するようにする。
+	 * 実際の端点更新は handleDrag が eventStartSnapshot を基点に行う。
 	 */
 	private handleEditDragStart(
 		state: CanvasControllerState,
-		event: CanvasEvent,
+		_event: CanvasEvent,
 		parts: string[],
 	): CanvasControllerState {
 		// parts = ["connection-anchor", "edit", connectorId, endpoint]
@@ -168,39 +172,10 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			return state;
 		}
 
-		// 編集対象のエンドポイントをFreeAnchorに変換（カーソル位置追従準備）
-		const freeEndpoint: EndpointRef = {
-			anchor: {
-				kind: "free",
-				point: {
-					x: roundToDecimal(event.last.x, PRECISION.COORDINATE),
-					y: roundToDecimal(event.last.y, PRECISION.COORDINATE),
-				},
-			},
-		};
-
-		// pendingConnectorを作成（編集対象のエンドポイントをFreeに設定）
-		const connectorTyped = connector as ConnectorState;
-		const pendingConnector: ConnectorState = {
-			...connectorTyped,
-			source: endpoint === "source" ? freeEndpoint : connectorTyped.source,
-			target: endpoint === "target" ? freeEndpoint : connectorTyped.target,
-		};
-
-		// 編集元のコネクターをobjectsから削除（非表示化）
-		const { [connectorId]: _, ...remainingObjects } = state.objects;
-		const updatedConnectorIds = state.connectorIds.filter(
-			(id) => id !== connectorId,
-		);
-
 		return {
 			...state,
-			objects: remainingObjects,
-			connectorIds: updatedConnectorIds,
-			pendingConnector,
 			editingConnectorId: connectorId,
 			editingEndpoint: endpoint,
-			selectedConnectorId: null, // 編集中は選択解除
 			edgeScrollEnabled: true,
 			objectMenuOpenId: null,
 		};
@@ -233,23 +208,17 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 	}
 
 	/**
-	 * Connection anchor からのドラッグ中の処理。
-	 * コネクターの終点を更新し、hover 判定を行う。
+	 * baseConnector の編集対象エンドポイントを、現在のカーソル位置・hover 状況に応じて
+	 * 更新した新しい ConnectorState を返す。
+	 * hover 中の接続可能オブジェクトがあれば最近接アンカーへ接続（OwnedEndpointRef）、
+	 * なければカーソル位置の FreeAnchor とする。固定側・points はそのまま保持する。
 	 */
-	private handleDrag(
+	private computeEditedEndpoint(
 		state: CanvasControllerState,
 		event: CanvasEvent,
-	): CanvasControllerState {
-		const { pendingConnector } = state;
-
-		if (!pendingConnector) {
-			return state;
-		}
-
-		// Determine which endpoint is being edited from targetId
-		// Format: "connection-anchor:create:..." or "connection-anchor:edit:...:source|target"
-		const endpointToUpdate = this.getEditingEndpoint(event.targetId);
-
+		baseConnector: ConnectorState,
+		endpointToUpdate: "source" | "target",
+	): ConnectorState {
 		// Create a free endpoint at the current cursor position
 		const freeEndpoint: EndpointRef = {
 			anchor: {
@@ -261,20 +230,11 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			},
 		};
 
-		// Update the connector with the free endpoint on the correct side
-		const updatedConnector: ConnectorState = {
-			...pendingConnector,
-			source:
-				endpointToUpdate === "source" ? freeEndpoint : pendingConnector.source,
-			target:
-				endpointToUpdate === "target" ? freeEndpoint : pendingConnector.target,
-		} as ConnectorState;
-
 		// Get the fixed endpoint's object ID to exclude it from hover detection
 		const fixedEndpoint =
 			endpointToUpdate === "source"
-				? pendingConnector.target
-				: pendingConnector.source;
+				? baseConnector.target
+				: baseConnector.source;
 		const fixedObjectId = fixedEndpoint.owner?.id;
 
 		// Find the first valid hover target:
@@ -298,10 +258,10 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			? state.objects[hoveredObjectId]
 			: null;
 
-		// If hovering over a valid target, preview as connected (OwnedEndpointRef).
+		// If hovering over a valid target, connect as OwnedEndpointRef.
 		// Use the nearest connect-point (topCenter/rightCenter/bottomCenter/leftCenter)
 		// or center, whichever is closest to the current cursor position.
-		const previewEndpoint: EndpointRef = hoveredObject
+		const editedEndpoint: EndpointRef = hoveredObject
 			? {
 					owner: { type: hoveredObject.type, id: hoveredObjectId! },
 					anchor: this.calcNearestAnchor(
@@ -312,22 +272,69 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 				}
 			: freeEndpoint;
 
-		// Apply the preview endpoint to the correct side
-		const finalConnector: ConnectorState = {
-			...updatedConnector,
+		return {
+			...baseConnector,
 			source:
-				endpointToUpdate === "source"
-					? previewEndpoint
-					: updatedConnector.source,
+				endpointToUpdate === "source" ? editedEndpoint : baseConnector.source,
 			target:
-				endpointToUpdate === "target"
-					? previewEndpoint
-					: updatedConnector.target,
-		};
+				endpointToUpdate === "target" ? editedEndpoint : baseConnector.target,
+		} as ConnectorState;
+	}
+
+	/**
+	 * Connection anchor からのドラッグ中の処理。
+	 * 編集モードでは実体（objects）を直接更新し、新規作成モードでは pendingConnector を更新する。
+	 */
+	private handleDrag(
+		state: CanvasControllerState,
+		event: CanvasEvent,
+	): CanvasControllerState {
+		// Determine which endpoint is being edited from targetId
+		// Format: "connection-anchor:create:..." or "connection-anchor:edit:...:source|target"
+		const endpointToUpdate = this.getEditingEndpoint(event.targetId);
+		const { editingConnectorId } = state;
+
+		// 編集モード: polyline 頂点編集と同様に実体を直接書き換える（overlay を使わない）。
+		// 基点は eventStartSnapshot の原本コネクターなので、固定側・中間点は常に開始時の値を保つ。
+		if (editingConnectorId) {
+			const baseConnector =
+				state.eventStartSnapshot?.objects[editingConnectorId];
+			if (!baseConnector || baseConnector.type !== "connector") {
+				return state;
+			}
+
+			const updated = this.computeEditedEndpoint(
+				state,
+				event,
+				baseConnector as ConnectorState,
+				endpointToUpdate,
+			);
+
+			return {
+				...state,
+				objects: {
+					...state.objects,
+					[editingConnectorId]: { ...updated, id: editingConnectorId },
+				},
+			};
+		}
+
+		// 新規作成モード: pendingConnector を更新（実体はまだ存在しない）。
+		const { pendingConnector } = state;
+		if (!pendingConnector) {
+			return state;
+		}
+
+		const updated = this.computeEditedEndpoint(
+			state,
+			event,
+			pendingConnector,
+			endpointToUpdate,
+		);
 
 		return {
 			...state,
-			pendingConnector: finalConnector,
+			pendingConnector: updated,
 		};
 	}
 
@@ -339,8 +346,48 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 		state: CanvasControllerState,
 		event: CanvasEvent,
 	): CanvasControllerState {
-		const { pendingConnector, editingConnectorId } = state;
+		const { editingConnectorId } = state;
 
+		// 編集モード: 実体を直接編集済み。最終状態を適用してコミット判定する。
+		if (editingConnectorId) {
+			const original = state.eventStartSnapshot?.objects[editingConnectorId];
+
+			// 端点が開始時から実質変化していなければ no-op。
+			// objects を据え置く（handleDrag 中に実体は最終位置＝開始位置になっている）ことで、
+			// handleGesture の自動コミット判定（objects 参照の変化）を回避し履歴に積まれないようにする。
+			const finalConnector = this.handleDrag(state, event).objects[
+				editingConnectorId
+			];
+			const isNoOp =
+				original?.type === "connector" &&
+				finalConnector?.type === "connector" &&
+				this.isSameConnectorEndpoints(
+					original as ConnectorState,
+					finalConnector as ConnectorState,
+				);
+
+			if (isNoOp) {
+				return {
+					...state,
+					editingConnectorId: null,
+					editingEndpoint: null,
+					edgeScrollEnabled: false,
+				};
+			}
+
+			// 端点が変化した場合は実体更新を確定（commitVersion は handleGesture が
+			// objects の変化を検知して自動加算するため、ここでは増分しない）。
+			const dragResult = this.handleDrag(state, event);
+			return {
+				...dragResult,
+				editingConnectorId: null,
+				editingEndpoint: null,
+				edgeScrollEnabled: false,
+			};
+		}
+
+		// 新規作成モード: pendingConnector を確定する。
+		const { pendingConnector } = state;
 		if (!pendingConnector) {
 			return {
 				...state,
@@ -348,7 +395,6 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			};
 		}
 
-		// drag の最終状態を適用（handleDrag が既に正しい endpoint を更新済み）
 		const dragResult = this.handleDrag(state, event);
 		const finalConnector = dragResult.pendingConnector;
 		if (!finalConnector) {
@@ -359,38 +405,43 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			};
 		}
 
-		// 編集モードか新規作成モードかで処理を分岐
-		if (editingConnectorId) {
-			// 編集モード: 元のIDで上書き
-			return {
-				...dragResult,
-				objects: {
-					...dragResult.objects,
-					[editingConnectorId]: { ...finalConnector, id: editingConnectorId },
-				},
-				connectorIds: [...dragResult.connectorIds, editingConnectorId],
-				pendingConnector: null,
-				editingConnectorId: null,
-				editingEndpoint: null,
-				selectedConnectorId: editingConnectorId, // 選択を復元
-				edgeScrollEnabled: false,
-				commitVersion: state.commitVersion + 1,
-			};
-		} else {
-			// 新規作成モード（既存ロジック）
-			return {
-				...dragResult,
-				objects: {
-					...dragResult.objects,
-					[finalConnector.id]: finalConnector,
-				},
-				connectorIds: [...dragResult.connectorIds, finalConnector.id],
-				pendingConnector: null,
-				editingEndpoint: null,
-				edgeScrollEnabled: false,
-				commitVersion: state.commitVersion + 1,
-			};
+		return {
+			...dragResult,
+			objects: {
+				...dragResult.objects,
+				[finalConnector.id]: finalConnector,
+			},
+			connectorIds: [...dragResult.connectorIds, finalConnector.id],
+			pendingConnector: null,
+			editingEndpoint: null,
+			edgeScrollEnabled: false,
+			commitVersion: state.commitVersion + 1,
+		};
+	}
+
+	/**
+	 * 2 つのコネクターの端点（source / target）と中間経由点が同値かどうかを判定する。
+	 * 「アンカーをつまんで元の位置に戻した」だけの no-op 編集を検出するために使う。
+	 */
+	private isSameConnectorEndpoints(
+		srcConnector: ConnectorState,
+		clonedConnector: ConnectorState,
+	): boolean {
+		if (!isSameEndpoint(srcConnector.source, clonedConnector.source)) {
+			return false;
 		}
+		if (!isSameEndpoint(srcConnector.target, clonedConnector.target)) {
+			return false;
+		}
+
+		const srcPoints = srcConnector.points;
+		const clonedPoints = clonedConnector.points;
+		if (srcPoints.length !== clonedPoints.length) {
+			return false;
+		}
+		return srcPoints.every(
+			(p, i) => p.x === clonedPoints[i].x && p.y === clonedPoints[i].y,
+		);
 	}
 
 	/**

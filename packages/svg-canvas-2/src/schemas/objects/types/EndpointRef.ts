@@ -67,6 +67,31 @@ export const isOwnedEndpointRef = (
 	return typeof owner.id === "string" && typeof owner.type === "string";
 };
 
+const isSameAnchor = (a: AnchorSpec, b: AnchorSpec): boolean => {
+	if (a.kind !== b.kind) {
+		return false;
+	}
+	if (a.kind === "free" && b.kind === "free") {
+		return a.point.x === b.point.x && a.point.y === b.point.y;
+	}
+	if (a.kind === "connectPoint" && b.kind === "connectPoint") {
+		return a.id === b.id;
+	}
+	// center 同士（kind が一致していれば追加情報なし）
+	return true;
+};
+
+/**
+ * 2 つのエンドポイント参照が同値かどうかを判定する。
+ * owner（接続先オブジェクト）とアンカー指定の両方が一致するときのみ true。
+ */
+export const isSameEndpoint = (a: EndpointRef, b: EndpointRef): boolean => {
+	if (a.owner?.id !== b.owner?.id || a.owner?.type !== b.owner?.type) {
+		return false;
+	}
+	return isSameAnchor(a.anchor, b.anchor);
+};
+
 export const isFreeEndpointRef = (value: unknown): value is FreeEndpointRef => {
 	if (typeof value !== "object" || value === null) {
 		return false;

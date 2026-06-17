@@ -12,12 +12,17 @@ type ConnectionAnchorsLayerProps = {
 	objects: Record<string, ObjectState>;
 	zoom?: number;
 	/**
-	 * Connection drag 中の一時コネクター。
+	 * Connection drag 中の一時コネクター（新規作成時）。
 	 * これがある場合、接続ターゲット側の受け口アンカーを表示する。
 	 */
 	pendingConnector?: ConnectorState | null;
 	/**
-	 * pendingConnector のうち、現在編集中（ドラッグ中）のエンドポイント。
+	 * 既存コネクターの端点編集中の対象 ID。
+	 * 編集は実体を直接書き換えるため、受け口アンカーは objects 上の実体から導出する。
+	 */
+	editingConnectorId?: string | null;
+	/**
+	 * 現在編集中（ドラッグ中）のエンドポイント。
 	 * これにより、固定側（編集していない側）のオブジェクトにのみアンカーを表示できる。
 	 */
 	editingEndpoint?: "source" | "target" | null;
@@ -38,6 +43,7 @@ const ConnectionAnchorsLayerComponent: React.FC<
 	objects,
 	zoom = 1,
 	pendingConnector,
+	editingConnectorId,
 	editingEndpoint,
 	isTextEditing,
 }) => {
@@ -61,11 +67,20 @@ const ConnectionAnchorsLayerComponent: React.FC<
 	// - Default to "target" for backward compatibility (new creation mode)
 	const activeEditingEndpoint = editingEndpoint ?? "target";
 
+	// 受け口アンカーの導出元コネクター:
+	// - 新規作成中は pendingConnector
+	// - 既存コネクターの端点編集中は実体（objects 上の editingConnectorId）
+	const editingConnector =
+		pendingConnector ??
+		(editingConnectorId
+			? (objects[editingConnectorId] as ConnectorState | undefined)
+			: null);
+
 	// Determine which endpoint is being edited (hover target)
 	const editingEndpointRef =
 		activeEditingEndpoint === "source"
-			? pendingConnector?.source
-			: pendingConnector?.target;
+			? editingConnector?.source
+			: editingConnector?.target;
 
 	const targetObjectId = editingEndpointRef?.owner?.id;
 	const targetObject = targetObjectId ? objects[targetObjectId] : null;

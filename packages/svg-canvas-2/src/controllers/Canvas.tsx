@@ -188,6 +188,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 							objects={state.objects}
 							zoom={state.viewport.zoom}
 							pendingConnector={state.pendingConnector}
+							editingConnectorId={state.editingConnectorId}
 							editingEndpoint={state.editingEndpoint}
 							isTextEditing={!!state.textEditState}
 						/>
