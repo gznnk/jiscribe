@@ -490,4 +490,116 @@ describe("autoSelectParentGroups", () => {
 		const result = autoSelectParentGroups(state, ["rect-1", "rect-2"]);
 		expect(Array.isArray(result)).toBe(true);
 	});
+
+	// ─── ④ エッジケース・防御的入力 ──────────────────────────────
+
+	it("空入力に対して空配列を返す", () => {
+		const state = { objects: {} } as unknown as CanvasState;
+		expect(autoSelectParentGroups(state, [])).toEqual([]);
+	});
+
+	it("親を持たない単一オブジェクトはそのまま返す", () => {
+		const state = {
+			objects: {
+				"rect-solo": {
+					id: "rect-solo",
+					type: "rect",
+				} as RectState,
+			},
+		} as unknown as CanvasState;
+
+		expect(autoSelectParentGroups(state, ["rect-solo"])).toEqual(["rect-solo"]);
+	});
+
+	it("途中の階層で昇格を止める（上位グループの兄弟が未選択なら上位は昇格しない）", () => {
+		// group-1
+		//   ├─ group-2
+		//   │   ├─ rect-a
+		//   │   └─ rect-b
+		//   └─ rect-top   ← これは選択しない
+		const state = {
+			objects: {
+				"group-1": {
+					id: "group-1",
+					type: "group",
+					childIds: ["group-2", "rect-top"],
+				} as GroupState,
+				"group-2": {
+					id: "group-2",
+					type: "group",
+					parentId: "group-1",
+					childIds: ["rect-a", "rect-b"],
+				} as GroupState,
+				"rect-a": {
+					id: "rect-a",
+					type: "rect",
+					parentId: "group-2",
+				} as RectState,
+				"rect-b": {
+					id: "rect-b",
+					type: "rect",
+					parentId: "group-2",
+				} as RectState,
+				"rect-top": {
+					id: "rect-top",
+					type: "rect",
+					parentId: "group-1",
+				} as RectState,
+			},
+		} as unknown as CanvasState;
+
+		// group-2 の全子は選択されるが、group-1 の兄弟 rect-top は未選択。
+		const result = autoSelectParentGroups(state, ["rect-a", "rect-b"]);
+
+		// 昇格は group-2 で止まり、group-1 へは波及しない。
+		expect(result).toEqual(["group-2"]);
+		expect(result).not.toContain("group-1");
+	});
+
+	it("空グループ（childIds なし）は自動選択の対象にならない", () => {
+		// 親の childIds に自身が含まれない不整合データ。empty-group は子を持たない
+		// ため「全子選択済み」が成立せず、昇格してはならない。
+		const state = {
+			objects: {
+				"empty-group": {
+					id: "empty-group",
+					type: "group",
+					childIds: [] as string[],
+				} as GroupState,
+				"rect-1": {
+					id: "rect-1",
+					type: "rect",
+					parentId: "empty-group",
+				} as RectState,
+			},
+		} as unknown as CanvasState;
+
+		const result = autoSelectParentGroups(state, ["rect-1"]);
+
+		expect(result).toEqual(["rect-1"]);
+		expect(result).not.toContain("empty-group");
+	});
+
+	it("objects に存在しない ID が選択されていてもクラッシュせずそのまま返す", () => {
+		const state = { objects: {} } as unknown as CanvasState;
+		expect(autoSelectParentGroups(state, ["ghost"])).toEqual(["ghost"]);
+	});
+
+	it("parentId が存在しないグループを指していても昇格せずそのまま返す", () => {
+		// rect-1 の親 missing-group は objects に存在しない（ダングリング参照）。
+		const state = {
+			objects: {
+				"rect-1": {
+					id: "rect-1",
+					type: "rect",
+					parentId: "missing-group",
+				} as RectState,
+			},
+		} as unknown as CanvasState;
+
+		const result = autoSelectParentGroups(state, ["rect-1"]);
+
+		expect(result).toEqual(["rect-1"]);
+		expect(result).not.toContain("missing-group");
+	});
 });
