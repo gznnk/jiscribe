@@ -74,6 +74,16 @@ export const ToolbarIconButton = styled.button`
 		background-color: ${theme.surfaceActive};
 	}
 
+	&:disabled {
+		color: ${theme.disabledForeground};
+		cursor: default;
+	}
+
+	&:disabled:hover,
+	&:disabled:active {
+		background-color: transparent;
+	}
+
 	svg {
 		color: ${theme.iconForeground};
 	}

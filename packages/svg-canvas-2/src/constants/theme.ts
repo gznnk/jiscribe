@@ -54,6 +54,13 @@ export const theme = {
 	gridLine: "var(--vscode-editorIndentGuide-background, #2a2a2a)",
 	/** スライダー等のトラック色（面に対して視認できる中間グレー） */
 	sliderTrack: "var(--vscode-scrollbarSlider-background, #6e6e6e)",
+	/**
+	 * 透明（none）を示す市松模様の濃い側の色。
+	 * 前景色を薄く重ねることで、ダーク（明色の市松）/ ライト（暗色の市松）に自動追従する。
+	 * もう一方のマスは透明（面が透ける）にして 2 トーンの市松にする。
+	 */
+	transparentChecker:
+		"color-mix(in srgb, var(--vscode-foreground, #888) 22%, transparent)",
 	/** フローティング UI（メニュー・ボタン等）の角丸。VSCode のウィジェットに合わせ控えめに。 */
 	radius: "4px",
 } as const;

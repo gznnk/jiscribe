@@ -7,6 +7,7 @@ import { VertexInsertHandler } from "../gestures/handlers/controls/vertex/Vertex
 import { ContextMenuHandler } from "../gestures/handlers/menu/ContextMenuHandler";
 import { ObjectMenuHandler } from "../gestures/handlers/menu/ObjectMenuHandler";
 import { ShapeLibraryItemHandler } from "../gestures/handlers/menu/ShapeLibraryItemHandler";
+import { ToolbarHandler } from "../gestures/handlers/menu/ToolbarHandler";
 import { ConnectorEventHandler } from "../gestures/handlers/objects/ConnectorEventHandler";
 import { ObjectEventHandler } from "../gestures/handlers/objects/ObjectEventHandler";
 import { gestureHandlerRegistry } from "../gestures/registry/GestureHandlerRegistry";
@@ -36,6 +37,7 @@ export const initializeGestureHandlerRegistry = (): void => {
 
 	gestureHandlerRegistry
 		.register("shape-library-item-handler", ShapeLibraryItemHandler)
+		.register("toolbar-handler", ToolbarHandler)
 		.register("context-menu-handler", ContextMenuHandler)
 		.register("object-menu-handler", ObjectMenuHandler)
 		.register("canvas-handler", CanvasEventHandler)

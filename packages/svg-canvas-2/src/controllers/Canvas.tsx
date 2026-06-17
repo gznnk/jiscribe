@@ -7,6 +7,7 @@ import {
 	ViewportOverlay,
 	ZoomScaledOverlay,
 } from "./CanvasStyled";
+import { commandRegistry } from "./commands/CommandRegistry";
 import { CanvasViewportRefContext } from "./contexts/CanvasViewportRefContext";
 import { isGestureOptedOut } from "./gestures/recognizer/utils/isGestureOptedOut";
 import { useCanvasReducer } from "./hooks/useCanvasReducer";
@@ -137,6 +138,10 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 
 	const { minX, minY, zoom } = state.viewport;
 
+	// ズームボタンの有効/無効はコマンドの canExecute に委譲（単一の真実）。
+	const canZoomIn = commandRegistry.get("zoomIn")?.canExecute(state) ?? false;
+	const canZoomOut = commandRegistry.get("zoomOut")?.canExecute(state) ?? false;
+
 	return (
 		<CanvasViewportRefContext value={canvasRef}>
 			<Viewport
@@ -229,6 +234,8 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 					<Toolbar
 						activePresetId={state.shapeDrawing?.preset.id ?? null}
 						zoom={state.viewport.zoom}
+						canZoomIn={canZoomIn}
+						canZoomOut={canZoomOut}
 					/>
 					<ClipboardErrorToast errorVersion={clipboardWriteErrorVersion} />
 					<ContextMenu
