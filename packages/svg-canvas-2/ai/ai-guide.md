@@ -1,7 +1,7 @@
 # Jiscribe AI オーサリングガイド
 
-`.jis.json`（`CanvasDoc`）を **AI が生成・編集するための短い実践ガイド**。
-網羅的な仕様は [`reference.md`](./reference.md) を参照。このファイルは「正しく書くために最低限守ること」に絞る。
+AI が Jiscribe の `.jis.json`（図のデータ）を正しく生成・編集するための実践ガイドです。
+要点に絞ってまとめています。全フィールドの網羅的な仕様は [`reference.md`](./reference.md) を参照してください。
 
 ---
 
@@ -9,9 +9,9 @@
 
 - キャンバスは**無限平面**。座標は SVG 規約で、**x は右、y は下に増える**（数学と逆＝画面座標系）。単位は **px**。
 - 座標値は任意（**負の値も可**）。「原点 (0,0) が画面左上に固定」ではない（ビューはパン・ズームする）。
-- 図形ごとに基準点が違う: **rect は左上角 `(x, y)`**、**ellipse は中心 `(cx, cy)`**（→ §4）。
+- 図形ごとに基準点が違う: **rect は左上角 `(x, y)`**、**ellipse は中心 `(cx, cy)`**（「オブジェクト早見表」参照）。
 - 重なり順（z 順）は **`root` 配列の順**＝後ろの要素ほど前面。重ねること自体は可。
-- 自動レイアウトはない。座標は自分で計算して決める（配置の指針は → §5）。
+- 自動レイアウトはない。座標は自分で計算して決める（配置の指針は「レイアウト規約」を参照）。
 
 ## 2. 最小構造
 
@@ -64,7 +64,7 @@
 
 - Stroke: `stroke`(色), `strokeWidth`(既定 2), `strokeDashType`: `"solid"`/`"dashed"`/`"dotted"`
 - Fill: `fill`（既定 `"transparent"`）
-- Text（rect/ellipse のみ）: `text`, `textAlign`: `"left"`/`"center"`/`"right"`, `verticalAlign`: `"top"`/`"middle"`/`"bottom"`, `fontColor`, `fontSize`(既定 16)
+- Text（rect / ellipse / sticky）: `text`, `textAlign`: `"left"`/`"center"`/`"right"`, `verticalAlign`: `"top"`/`"middle"`/`"bottom"`, `fontColor`, `fontSize`(既定 16)
 - 矢印 `startArrow`/`endArrow`: `"None"` / `"FilledTriangle"`（標準矢印）/ `"OpenArrow"` / `"HollowTriangle"` / `"FilledDiamond"` / `"HollowDiamond"` / `"ConcaveTriangle"` / `"Circle"`
 
 **connector の端点（EndpointRef）**
@@ -82,7 +82,7 @@
 
 ## 5. レイアウト規約（読みやすく配置する）
 
-これは仕様ではなく可読性のための指針。重なり自体は許容される（§1）。
+これは仕様ではなく可読性のための指針。重なり自体は許容される（「座標系」参照）。
 
 - 標準ノード: `width: 160`, `height: 80`。
 - ノード間の余白: 水平 **80〜120px**、垂直 **60〜100px**。
@@ -274,5 +274,5 @@
 - ❌ connector の `points` に端点座標を入れる → ✅ `points: []`、端点は `source`/`target`。
 - ❌ `group` に `x`/`y`/`width`/`height` を付ける → ✅ `children` の座標で位置を表す。
 - ❌ `ellipse` に `x`/`y`/`width`/`height` を使う → ✅ `cx`/`cy`/`rx`/`ry`。
-- ❌ 意図せず図形が重なる座標を出力 → ✅ §5 の余白規約で間隔を空ける（重ね自体は可）。
+- ❌ 意図せず図形が重なる座標を出力 → ✅「レイアウト規約」の余白規約で間隔を空ける（重ね自体は可）。
 - ❌ `id` の重複 → ✅ すべて一意に。
