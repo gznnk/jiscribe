@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 
 import { registerExportSchemaCommand } from "./commands/exportSchema";
 import { registerNewCanvasCommands } from "./commands/newCanvas";
+import { registerSetupAiCommand } from "./commands/setupAi";
 import { DiagnosticProvider } from "./diagnostics/DiagnosticProvider";
 import { JiscribeEditorProvider } from "./editor/JiscribeEditorProvider";
 
@@ -37,6 +38,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	registerNewCanvasCommands(context);
 	registerExportSchemaCommand(context);
+	registerSetupAiCommand(context);
 }
 
 /**

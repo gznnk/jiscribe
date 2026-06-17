@@ -74,6 +74,11 @@
 				"command": "jiscribe.exportSchema",
 				"title": "Export Jiscribe Canvas Schema",
 				"category": "Jiscribe"
+			},
+			{
+				"command": "jiscribe.setupAi",
+				"title": "Set up AI",
+				"category": "Jiscribe"
 			}
 		],
 		"menus": {
@@ -95,6 +100,9 @@
 				},
 				{
 					"command": "jiscribe.exportSchema"
+				},
+				{
+					"command": "jiscribe.setupAi"
 				}
 			]
 		}
