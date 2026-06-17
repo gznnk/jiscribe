@@ -5,6 +5,24 @@ All notable changes to the Jiscribe extension are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2026-06-17
+
+### Added
+
+- **Dark Theme UI**: The canvas UI has been redesigned to follow your VS Code color theme, with a refined dark design across toolbars, menus, and icons.
+- **Axis-Locked Movement**: Hold `Shift` while dragging objects or polyline/polygon vertices to constrain movement to the X or Y axis. Viewport-wide guide lines and snapping back to the start position make precise alignment easier.
+- **Arrow Key Nudging**: Move the selected objects with the arrow keys. Repeated nudges are grouped into a single undo step.
+- **Center Snapping**: Objects now snap to the horizontal and vertical centers (`hCenter` / `vCenter`) of other shapes.
+- **Toolbar Zoom**: The zoom `+` / `-` buttons in the toolbar are now wired to the command system.
+
+### Fixed
+
+- **Connectors**: Connector endpoints are now edited directly on the connector for more reliable re-routing.
+- **Hollow Arrows**: Removed the white fill from hollow arrowheads, and the line now terminates at the base of the arrow.
+- **Context Menu**: Pasting with an empty clipboard no longer leaves the context menu open.
+- **Defaults**: New shapes now use a neutral gray for their default stroke and font color.
+- Fixed a division-by-zero error when transforming grouped frames, limited hover detection to elements inside the canvas, and made the transparency indicators and shortcut list follow the active theme.
+
 ## [0.1.2] - 2026-06-13
 
 ### Added
