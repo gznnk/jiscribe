@@ -7,9 +7,11 @@
 
 ## 1. 座標系（最初に必ず把握）
 
-- 原点 `(0, 0)` は **左上**。X は **右**、Y は **下** が正（SVG と同じ）。
-- 単位は **px**。
-- 図形は重ねないのが基本。配置は自分で計算して座標を決める（自動レイアウトはない）。
+- キャンバスは**無限平面**。座標は SVG 規約で、**x は右、y は下に増える**（数学と逆＝画面座標系）。単位は **px**。
+- 座標値は任意（**負の値も可**）。「原点 (0,0) が画面左上に固定」ではない（ビューはパン・ズームする）。
+- 図形ごとに基準点が違う: **rect は左上角 `(x, y)`**、**ellipse は中心 `(cx, cy)`**（→ §4）。
+- 重なり順（z 順）は **`root` 配列の順**＝後ろの要素ほど前面。重ねること自体は可。
+- 自動レイアウトはない。座標は自分で計算して決める（配置の指針は → §5）。
 
 ## 2. 最小構造
 
@@ -26,7 +28,7 @@
 
 - `version`: **必須。常に `1`**（このフォーマット版の固定値）。
 - `$schema`: 省略可だが**推奨**（エディタ補完・検証が効く）。
-- `root`: 図形（rect / ellipse / polyline / polygon / group）の配列。
+- `root`: 図形（rect / ellipse / polyline / polygon / group / sticky）の配列。
 - `connectors`: 接続線の配列。**connector は必ずここに置く（`root` には入れない）**。
 
 ## 3. MUST / MUST NOT（違反すると壊れる）
@@ -56,6 +58,7 @@
 | `polygon`                     | `points`（自動で閉じる）      | stroke / fill                                |
 | `group`                       | `children`                    | rotation / flipX / flipY                     |
 | `connector`（`connectors`へ） | `source`,`target`,`points:[]` | stroke / startArrow / endArrow               |
+| `sticky`                      | `x`,`y`,`width`,`height`      | fill / text（stroke・rx は無し）             |
 
 **スタイル値**
 
@@ -77,7 +80,9 @@
 - `connectPoint` の `id`: `"center"`/`"topCenter"`/`"rightCenter"`/`"bottomCenter"`/`"leftCenter"`
 - オブジェクトに繋がない自由点は `{ "anchor": { "kind": "free", "point": { "x": 400, "y": 200 } } }`（`owner` を持たない）
 
-## 5. レイアウト規約（重なりを防ぐ）
+## 5. レイアウト規約（読みやすく配置する）
+
+これは仕様ではなく可読性のための指針。重なり自体は許容される（§1）。
 
 - 標準ノード: `width: 160`, `height: 80`。
 - ノード間の余白: 水平 **80〜120px**、垂直 **60〜100px**。
@@ -269,5 +274,5 @@
 - ❌ connector の `points` に端点座標を入れる → ✅ `points: []`、端点は `source`/`target`。
 - ❌ `group` に `x`/`y`/`width`/`height` を付ける → ✅ `children` の座標で位置を表す。
 - ❌ `ellipse` に `x`/`y`/`width`/`height` を使う → ✅ `cx`/`cy`/`rx`/`ry`。
-- ❌ 図形が重なる座標を出力 → ✅ §5 の余白規約で間隔を空ける。
+- ❌ 意図せず図形が重なる座標を出力 → ✅ §5 の余白規約で間隔を空ける（重ね自体は可）。
 - ❌ `id` の重複 → ✅ すべて一意に。

@@ -1,7 +1,8 @@
-# CanvasDoc リファレンス
+# Jiscribe ドキュメント形式リファレンス（`.jis.json`）
 
-**svg-canvas-2** が扱う JSON ドキュメント形式 (`CanvasDoc`) の仕様書です。
+**Jiscribe** の `.jis.json` ドキュメント形式の仕様書です。
 AI がデータを生成する際や、外部ツールから `.jis.json` ファイルを生成する際の参照用として使用してください。
+（短い実践ガイドは [`ai-guide.md`](./ai-guide.md) を参照）
 
 ---
 
@@ -64,6 +65,7 @@ AI がデータを生成する際や、外部ツールから `.jis.json` ファ�
 | `polygon`   | 多角形（閉じたパス）          | `points`                    | Stroke, Fill                          |
 | `group`     | グループ（子を含む）          | なし                        | Transform                             |
 | `connector` | 接続線（`connectors` に置く） | `points`                    | Stroke                                |
+| `sticky`    | 付箋                          | `x`, `y`, `width`, `height` | Fill, Text, Transform（Stroke なし）  |
 
 ---
 
@@ -84,7 +86,7 @@ AI がデータを生成する際や、外部ツールから `.jis.json` ファ�
 	"strokeWidth": 2,
 	"rx": 8,
 	"text": "テキスト",
-	"textType": "textarea",
+	"textType": "text",
 	"textAlign": "center",
 	"verticalAlign": "middle",
 	"fontColor": "#000000",
@@ -99,8 +101,8 @@ AI がデータを生成する際や、外部ツールから `.jis.json` ファ�
 | ---------- | -------- | ---------- | ------------------------- |
 | `x`        | `number` | `0`        | 左上頂点の X 座標         |
 | `y`        | `number` | `0`        | 左上頂点の Y 座標         |
-| `width`    | `number` | `120`      | 幅（px）                  |
-| `height`   | `number` | `80`       | 高さ（px）                |
+| `width`    | `number` | `100`      | 幅（px）                  |
+| `height`   | `number` | `100`      | 高さ（px）                |
 | `rx`       | `number` | `0`        | 角丸半径（SVG `rx` 属性） |
 
 スタイルフィールドは [Stroke スタイル](#stroke-スタイル)・[Fill スタイル](#fill-スタイル)・[Text スタイル](#text-スタイル)・[Transform スタイル](#transform-スタイル) を参照。
@@ -128,7 +130,7 @@ AI がデータを生成する際や、外部ツールから `.jis.json` ファ�
 | `cx`       | `number` | `0`        | 中心の X 座標      |
 | `cy`       | `number` | `0`        | 中心の Y 座標      |
 | `rx`       | `number` | `50`       | 横方向の半径（px） |
-| `ry`       | `number` | `30`       | 縦方向の半径（px） |
+| `ry`       | `number` | `50`       | 縦方向の半径（px） |
 
 ---
 
@@ -211,6 +213,40 @@ AI がデータを生成する際や、外部ツールから `.jis.json` ファ�
 
 ---
 
+### `sticky`（付箋）
+
+付箋。幾何は `rect` と同じ（左上 `x`,`y` + `width`,`height`）だが、**Stroke と Radius は持たない**。
+Fill・Text・Transform を持つ。
+
+```json
+{
+	"id": "sticky-1",
+	"type": "sticky",
+	"x": 100,
+	"y": 100,
+	"width": 160,
+	"height": 120,
+	"fill": "#fef9c3",
+	"text": "メモ",
+	"textAlign": "center",
+	"verticalAlign": "middle",
+	"fontColor": "#000000",
+	"fontSize": 14
+}
+```
+
+| フィールド | 型       | デフォルト  | 説明              |
+| ---------- | -------- | ----------- | ----------------- |
+| `x`        | `number` | `0`         | 左上頂点の X 座標 |
+| `y`        | `number` | `0`         | 左上頂点の Y 座標 |
+| `width`    | `number` | `160`       | 幅（px）          |
+| `height`   | `number` | `120`       | 高さ（px）        |
+| `fill`     | `string` | `"#fef9c3"` | 背景色            |
+
+Text スタイルの既定は他図形と一部異なる（`fontColor` は `"#000000"`、`fontSize` は `14`）。
+
+---
+
 ## ConnectorDoc（接続線）
 
 `connectors` 配列に置く接続線オブジェクト。
@@ -290,7 +326,7 @@ AI がデータを生成する際や、外部ツールから `.jis.json` ファ�
 
 | フィールド       | 型               | デフォルト  | 説明                 |
 | ---------------- | ---------------- | ----------- | -------------------- |
-| `stroke`         | `string`         | `"#374151"` | 線の色（CSS カラー） |
+| `stroke`         | `string`         | `"#6b7280"` | 線の色（CSS カラー） |
 | `strokeWidth`    | `number`         | `2`         | 線の太さ（px）       |
 | `strokeDashType` | `StrokeDashType` | `"solid"`   | 線の破線パターン     |
 
@@ -298,7 +334,7 @@ AI がデータを生成する際や、外部ツールから `.jis.json` ファ�
 
 ### Fill スタイル
 
-`rect`, `ellipse`, `polygon` に適用可能。
+`rect`, `ellipse`, `polygon`, `sticky` に適用可能。
 
 | フィールド | 型       | デフォルト      | 説明                       |
 | ---------- | -------- | --------------- | -------------------------- |
@@ -306,20 +342,20 @@ AI がデータを生成する際や、外部ツールから `.jis.json` ファ�
 
 ### Text スタイル
 
-`rect`, `ellipse` に適用可能。
+`rect`, `ellipse`, `sticky` に適用可能。
 
-| フィールド      | 型              | デフォルト       | 説明                 |
-| --------------- | --------------- | ---------------- | -------------------- |
-| `text`          | `string`        | `""`             | テキスト内容         |
-| `textType`      | `TextType`      | `"textarea"`     | テキスト表示形式     |
-| `textAlign`     | `TextAlign`     | `"center"`       | 水平方向の文字揃え   |
-| `verticalAlign` | `VerticalAlign` | `"middle"`       | 垂直方向の文字揃え   |
-| `fontColor`     | `string`        | `"#000000"`      | 文字色（CSS カラー） |
-| `fontSize`      | `number`        | `16`             | フォントサイズ（px） |
-| `fontFamily`    | `string`        | `"Noto Sans JP"` | フォントファミリー   |
-| `fontWeight`    | `string`        | `"normal"`       | フォントウェイト     |
+| フィールド      | 型              | デフォルト       | 説明                                          |
+| --------------- | --------------- | ---------------- | --------------------------------------------- |
+| `text`          | `string`        | `""`             | テキスト内容                                  |
+| `textType`      | `TextType`      | `"text"`         | テキスト表示形式                              |
+| `textAlign`     | `TextAlign`     | `"center"`       | 水平方向の文字揃え                            |
+| `verticalAlign` | `VerticalAlign` | `"middle"`       | 垂直方向の文字揃え                            |
+| `fontColor`     | `string`        | `"#6b7280"`      | 文字色（rect/ellipse。sticky は `"#000000"`） |
+| `fontSize`      | `number`        | `16`             | フォントサイズ（px）                          |
+| `fontFamily`    | `string`        | `"Noto Sans JP"` | フォントファミリー                            |
+| `fontWeight`    | `string`        | `"normal"`       | フォントウェイト                              |
 
-`TextType`: `"text"`（1行）/ `"textarea"`（複数行）/ `"markdown"`（Markdown レンダリング）
+`TextType`: `"text"`（プレーンテキスト）/ `"markdown"`（Markdown レンダリング）
 
 `TextAlign`: `"left"` / `"center"` / `"right"`
 
@@ -421,22 +457,4 @@ AI がデータを生成する際や、外部ツールから `.jis.json` ファ�
 
 ---
 
-## 型定義の参照先
-
-各型の TypeScript 定義は以下のファイルにあります。
-
-| 型               | ファイル                                                                |
-| ---------------- | ----------------------------------------------------------------------- |
-| `CanvasDoc`      | `packages/svg-canvas-2/src/schemas/canvas/CanvasDoc.ts`                 |
-| `RectDoc`        | `packages/svg-canvas-2/src/schemas/objects/primitives/RectDoc.ts`       |
-| `EllipseDoc`     | `packages/svg-canvas-2/src/schemas/objects/primitives/EllipseDoc.ts`    |
-| `PolylineDoc`    | `packages/svg-canvas-2/src/schemas/objects/primitives/PolylineDoc.ts`   |
-| `PolygonDoc`     | `packages/svg-canvas-2/src/schemas/objects/primitives/PolygonDoc.ts`    |
-| `GroupDoc`       | `packages/svg-canvas-2/src/schemas/objects/primitives/GroupDoc.ts`      |
-| `ConnectorDoc`   | `packages/svg-canvas-2/src/schemas/objects/connections/ConnectorDoc.ts` |
-| `EndpointRef`    | `packages/svg-canvas-2/src/schemas/objects/types/EndpointRef.ts`        |
-| `ArrowType`      | `packages/svg-canvas-2/src/schemas/objects/types/ArrowType.ts`          |
-| `StrokeDashType` | `packages/svg-canvas-2/src/schemas/objects/types/StrokeDashType.ts`     |
-| `TextType`       | `packages/svg-canvas-2/src/schemas/objects/types/TextType.ts`           |
-| `TextAlign`      | `packages/svg-canvas-2/src/schemas/objects/types/TextAlign.ts`          |
-| `VerticalAlign`  | `packages/svg-canvas-2/src/schemas/objects/types/VerticalAlign.ts`      |
+機械可読なスキーマ（JSON Schema）は `https://schema.jiscribe.dev/v1/jiscribe.schema.json` で公開されています。
