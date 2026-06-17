@@ -139,7 +139,11 @@ const katexLite = (md: MarkdownIt): void => {
  * Includes syntax highlighting, math rendering, and link attribute handling.
  */
 const md = new MarkdownIt({
-	html: true, // Enable HTML tags in source
+	// Disable raw HTML in source as defense-in-depth against XSS: user-typed
+	// HTML tags are escaped to literal text instead of relying solely on
+	// DOMPurify (which may have known mXSS bypasses). Math (KaTeX) and code
+	// highlighting emit HTML via renderer rules, so they are unaffected.
+	html: false,
 	breaks: true, // Convert '\n' in paragraphs into <br>
 	linkify: true, // Autoconvert URL-like text to links
 
