@@ -8,6 +8,12 @@ import { ARROW_SIZE } from "../ArrowConstants";
 import type { ArrowShapeProps } from "../ArrowTypes";
 
 /**
+ * 線をこの矢印の根元で終端させるための inset（ローカル単位）。
+ * 後端の凹み（谷）が `-ARROW_SIZE * 0.9` にあるため、そこに合わせて止める。
+ */
+export const CONCAVE_TRIANGLE_INSET = ARROW_SIZE * 0.9;
+
+/**
  * ConcaveTriangle arrow shape component.
  */
 const ConcaveTriangleArrowComponent: React.FC<ArrowShapeProps> = ({

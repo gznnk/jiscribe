@@ -8,6 +8,12 @@ import { ARROW_SIZE } from "../ArrowConstants";
 import type { ArrowShapeProps } from "../ArrowTypes";
 
 /**
+ * 線をこの矢印の根元で終端させるための inset（ローカル単位）。
+ * 最大幅は円の中心（`-ARROW_SIZE/2`）。塗りで隠れる中心まで食い込ませる。
+ */
+export const CIRCLE_INSET = ARROW_SIZE / 2;
+
+/**
  * Circle arrow shape component.
  */
 const CircleArrowComponent: React.FC<ArrowShapeProps> = ({

@@ -8,6 +8,12 @@ import { ARROW_SIZE } from "../ArrowConstants";
 import type { ArrowShapeProps } from "../ArrowTypes";
 
 /**
+ * 線をこの矢印の根元で終端させるための inset（ローカル単位）。
+ * 中空なので線が内部を貫通しないよう、後端の頂点（`-ARROW_SIZE`）で止める。
+ */
+export const HOLLOW_DIAMOND_INSET = ARROW_SIZE;
+
+/**
  * HollowDiamond arrow shape component.
  */
 const HollowDiamondArrowComponent: React.FC<ArrowShapeProps> = ({
@@ -28,7 +34,7 @@ const HollowDiamondArrowComponent: React.FC<ArrowShapeProps> = ({
 	return (
 		<ArrowPolygon
 			points={points}
-			fill="white"
+			fill="none"
 			stroke={color}
 			strokeWidth={1}
 			strokeLinejoin="miter"

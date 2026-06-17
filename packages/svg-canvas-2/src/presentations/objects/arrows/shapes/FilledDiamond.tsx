@@ -8,6 +8,13 @@ import { ARROW_SIZE } from "../ArrowConstants";
 import type { ArrowShapeProps } from "../ArrowTypes";
 
 /**
+ * 線をこの矢印の根元で終端させるための inset（ローカル単位）。
+ * 最大幅は中央（`-ARROW_SIZE/2`）。後端の頂点まで引くと線が短く見えるため、
+ * 塗りで隠れる中央まで食い込ませる。
+ */
+export const FILLED_DIAMOND_INSET = ARROW_SIZE / 2;
+
+/**
  * FilledDiamond arrow shape component.
  */
 const FilledDiamondArrowComponent: React.FC<ArrowShapeProps> = ({

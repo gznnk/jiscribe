@@ -1,6 +1,7 @@
 import { memo } from "react";
 
 import { Arrow } from "../../../../../../presentations/objects/arrows/Arrow";
+import { getArrowLineInset } from "../../../../../../presentations/objects/arrows/getArrowLineInset";
 import type { ArrowType } from "../../../../../../schemas/objects/types/ArrowType";
 
 type ArrowHeadIconPreviewProps = {
@@ -15,8 +16,14 @@ const ArrowHeadIconPreviewComponent: React.FC<ArrowHeadIconPreviewProps> = ({
 	const isStart = direction === "start";
 	const type = arrowType ?? "None";
 
+	const scale = 1.5;
 	const tipX = isStart ? 1 : 23;
 	const radians = isStart ? Math.PI : 0;
+
+	// 矢印の根元まで線を短縮し、中空部の貫通・先端からの線のはみ出しを防ぐ。
+	const inset = getArrowLineInset(type) * scale;
+	const lineX1 = isStart && inset > 0 ? tipX + inset : 2;
+	const lineX2 = !isStart && inset > 0 ? tipX - inset : 22;
 
 	return (
 		<svg
@@ -28,9 +35,9 @@ const ArrowHeadIconPreviewComponent: React.FC<ArrowHeadIconPreviewProps> = ({
 			style={{ pointerEvents: "none" }}
 		>
 			<line
-				x1="2"
+				x1={lineX1}
 				y1="12"
-				x2="22"
+				x2={lineX2}
 				y2="12"
 				stroke="currentColor"
 				strokeWidth="2"
@@ -42,7 +49,7 @@ const ArrowHeadIconPreviewComponent: React.FC<ArrowHeadIconPreviewProps> = ({
 				y={12}
 				color="currentColor"
 				radians={radians}
-				scale={1.5}
+				scale={scale}
 			/>
 		</svg>
 	);

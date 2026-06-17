@@ -5,8 +5,9 @@ import { memo } from "react";
 import { ConnectorElement, ConnectorHitArea } from "./ConnectorStyled";
 import type { ArrowType } from "../../../../schemas/objects/types/ArrowType";
 import type { StrokeDashType } from "../../../../schemas/objects/types/StrokeDashType";
-import { Arrow } from "../../arrows";
+import { Arrow, getArrowLineInset } from "../../arrows";
 import { getStrokeDasharray } from "../../utils/getStrokeDasharray";
+import { insetPolylineEnds } from "../../utils/insetPolylineEnds";
 
 type ConnectorProps = {
 	id: string;
@@ -35,8 +36,20 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 	endArrow,
 	disablePointerEvents = false,
 }) => {
-	// Simple straight line between source and target points
-	const pointsAttr = `${sourceX},${sourceY} ${targetX},${targetY}`;
+	// Simple straight line between source and target points.
+	// ヒット領域はクリックしやすいよう端点まで全長を保つ。
+	const hitAreaPointsAttr = `${sourceX},${sourceY} ${targetX},${targetY}`;
+
+	// 中空矢印では線が中空部を貫通しないよう、矢印の根元で線を終端させる。
+	const [lineStart, lineEnd] = insetPolylineEnds(
+		[
+			{ x: sourceX, y: sourceY },
+			{ x: targetX, y: targetY },
+		],
+		getArrowLineInset(startArrow) * strokeWidth,
+		getArrowLineInset(endArrow) * strokeWidth,
+	);
+	const linePointsAttr = `${lineStart.x},${lineStart.y} ${lineEnd.x},${lineEnd.y}`;
 
 	// Calculate angles for arrows
 	const startAngleRadians = calcVectorAngle(targetX, targetY, sourceX, sourceY);
@@ -48,11 +61,11 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 			<ConnectorHitArea
 				data-kind="connector"
 				data-id={id}
-				points={pointsAttr}
+				points={hitAreaPointsAttr}
 				disablePointerEvents={disablePointerEvents}
 			/>
 			<ConnectorElement
-				points={pointsAttr}
+				points={linePointsAttr}
 				stroke={stroke}
 				strokeWidth={strokeWidth}
 				strokeDasharray={getStrokeDasharray(strokeDashType, strokeWidth)}

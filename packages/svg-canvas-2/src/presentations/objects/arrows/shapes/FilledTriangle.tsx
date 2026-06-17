@@ -8,6 +8,12 @@ import { ARROW_SIZE } from "../ArrowConstants";
 import type { ArrowShapeProps } from "../ArrowTypes";
 
 /**
+ * 線をこの矢印の根元で終端させるための inset（ローカル単位）。
+ * 底辺が `-ARROW_SIZE` にあるため、線は底辺で止める。
+ */
+export const FILLED_TRIANGLE_INSET = ARROW_SIZE;
+
+/**
  * FilledTriangle arrow shape component.
  */
 const FilledTriangleArrowComponent: React.FC<ArrowShapeProps> = ({

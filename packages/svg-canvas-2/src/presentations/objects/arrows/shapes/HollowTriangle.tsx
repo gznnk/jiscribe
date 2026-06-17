@@ -8,6 +8,12 @@ import { ARROW_SIZE } from "../ArrowConstants";
 import type { ArrowShapeProps } from "../ArrowTypes";
 
 /**
+ * 線をこの矢印の根元で終端させるための inset（ローカル単位）。
+ * 底辺が `-ARROW_SIZE` にあるため、線は底辺で止める（中空部の貫通も防ぐ）。
+ */
+export const HOLLOW_TRIANGLE_INSET = ARROW_SIZE;
+
+/**
  * HollowTriangle arrow shape component.
  */
 const HollowTriangleArrowComponent: React.FC<ArrowShapeProps> = ({
@@ -27,7 +33,7 @@ const HollowTriangleArrowComponent: React.FC<ArrowShapeProps> = ({
 	return (
 		<ArrowPolygon
 			points={points}
-			fill="white"
+			fill="none"
 			stroke={color}
 			strokeWidth={1}
 			strokeLinejoin="miter"

@@ -4,8 +4,9 @@ import { memo } from "react";
 
 import { PolylineElement, PolylineHitArea } from "./PolylineStyled";
 import type { PolylineState } from "../../../../states/objects/primitives/polyline/PolylineState";
-import { Arrow } from "../../arrows";
+import { Arrow, getArrowLineInset } from "../../arrows";
 import { getStrokeDasharray } from "../../utils/getStrokeDasharray";
+import { insetPolylineEnds } from "../../utils/insetPolylineEnds";
 
 type PolylineProps = PolylineState;
 
@@ -19,6 +20,15 @@ const PolylineComponent: React.FC<PolylineProps> = ({
 	endArrow,
 }) => {
 	const pointsAttr = points.map((p) => `${p.x},${p.y}`).join(" ");
+
+	// 中空矢印では線が中空部を貫通しないよう、矢印の根元で線を終端させる。
+	// 矢印自体は元の端点（先端）に描画するため、見た目上の端点位置は変わらない。
+	const linePoints = insetPolylineEnds(
+		points,
+		getArrowLineInset(startArrow) * strokeWidth,
+		getArrowLineInset(endArrow) * strokeWidth,
+	);
+	const linePointsAttr = linePoints.map((p) => `${p.x},${p.y}`).join(" ");
 
 	// Calculate angle at the start of the polyline (pointing from second point to first)
 	let startAngleRadians = 0;
@@ -47,7 +57,7 @@ const PolylineComponent: React.FC<PolylineProps> = ({
 		<>
 			<PolylineHitArea data-kind="object" data-id={id} points={pointsAttr} />
 			<PolylineElement
-				points={pointsAttr}
+				points={linePointsAttr}
 				stroke={stroke}
 				strokeWidth={strokeWidth}
 				strokeDasharray={getStrokeDasharray(strokeDashType, strokeWidth)}
