@@ -3,45 +3,6 @@ import type { GroupState } from "../../../../../states/objects/primitives/group/
 import { getTopLevelSelectedIds } from "../../../../utils/getTopLevelSelectedIds";
 
 /**
- * Collects all descendant IDs of a group using BFS.
- * Circular references in the hierarchy are detected and skipped with a warning.
- * @param state - The canvas state
- * @param groupId - The group ID to collect descendants from
- * @returns Set of all descendant IDs (children, grandchildren, etc.)
- */
-function collectAllDescendants(
-	state: CanvasState,
-	groupId: string,
-): Set<string> {
-	const descendants = new Set<string>();
-	const visited = new Set([groupId]);
-	const queue = [groupId];
-
-	while (queue.length > 0) {
-		const currentId = queue.shift()!;
-		const obj = state.objects[currentId];
-		if (!obj || obj.type !== "group") {
-			continue;
-		}
-
-		const group = obj as GroupState;
-		for (const childId of group.childIds) {
-			if (visited.has(childId)) {
-				console.warn(
-					`[collectAllDescendants] Circular reference detected at "${childId}"`,
-				);
-				continue;
-			}
-			visited.add(childId);
-			descendants.add(childId);
-			queue.push(childId);
-		}
-	}
-
-	return descendants;
-}
-
-/**
  * 選択中のオブジェクトを対象に、グループの全子が選択されていれば
  * 子を選択解除してグループ自体を選択する処理を階層の上方向へ繰り返す。
  *
@@ -49,84 +10,99 @@ function collectAllDescendants(
  *   入力: ['rect-1', 'rect-2', 'rect-3']
  *   出力: ['group-1']
  *
- * ### ループの終了保証
- * 各イテレーションで「全子が選択済み」の親を「昇格」させる。
- * 昇格した親は everPromoted に記録され、同じ親が再昇格することはない。
- * オブジェクト数は有限かつ everPromoted は単調増加するため、
- * データに循環参照があってもループは必ず終了する。
- *
  * ### 処理の流れ
  * ① 祖先が既に選択済みの子孫を除去する（不変条件の強制）。
  *   範囲選択などでグループとその子孫が同時に selectedIds に入った場合でも、
  *   子孫を取り除いて最上位アイテムだけを残す。
- * ② 全子が選択されているグループを親グループへ昇格させる（上方向へ繰り返し）。
+ * ② 「全子が選択済み」のグループをワークリスト方式で親方向へ畳み込む。
+ *   - 選択アイテムの直接の親グループを起点キューに積む。
+ *   - キューから取り出したグループの全子が選択済みなら、子を選択から外して
+ *     グループ自体を選択し（畳み込み）、そのグループの親を再検査対象として
+ *     キューに積む。
+ *   - グループが先に検査され全子未選択でスキップされても、後で子グループが
+ *     畳み込まれた時点で親が再びキューに積まれるため、処理順に依存しない。
+ *
+ * ### 計算量
+ * 各グループの畳み込みは高々 1 回（collapsed で保証）。再検査がキューに積まれる
+ * のは「いずれかの子の畳み込み」に伴う場合のみで、畳み込み回数はグループ数で
+ * 上限が決まる。各取り出しのコストは childIds 数に比例するため、全体は
+ * 関与オブジェクト数に対して線形 O(N) で収まる（旧実装の while(changed) 全走査と
+ * shift ベース BFS による O(N^2) 近傍を解消）。
  *
  * ### ループの終了保証
- * 各イテレーションで「全子が選択済み」の親を「昇格」させる。
- * 昇格した親は everPromoted に記録され、同じ親が再昇格することはない。
- * オブジェクト数は有限かつ everPromoted は単調増加するため、
- * データに循環参照があってもループは必ず終了する。
- *
- * ### 2つのガード条件（どちらも必要）
- * - `!selectedSet.has(parentId)`:
- *   そのイテレーション開始時点で既に選択中の親（ネスト内のサブグループなど）を
- *   誤って二重昇格させないためのガード。
- * - `!everPromoted.has(parentId)`:
- *   循環参照 (A→B→A) があるとき、一度昇格した親が次のイテレーションで
- *   再び昇格候補になっても無限ループしないためのガード。
+ * 畳み込みは単調増加する collapsed により高々グループ数回しか起こらず、
+ * 再キューイングもそれに連動して有限回。起点キューイングも有限。
+ * したがって parentId / childIds に循環参照があってもループは必ず終了する。
  */
 export function autoSelectParentGroups(
 	state: CanvasState,
 	selectedIds: string[],
 ): string[] {
 	// ① 祖先が既に選択済みの子孫を除去する
-	let currentSelectedIds = getTopLevelSelectedIds(selectedIds, state.objects);
-	let changed = true;
-	const everPromoted = new Set<string>();
+	const selected = new Set(getTopLevelSelectedIds(selectedIds, state.objects));
 
-	while (changed) {
-		changed = false;
-
-		// 現在の選択オブジェクトの親グループをすべて候補として収集する
-		const parentCandidates = new Set<string>();
-		for (const id of currentSelectedIds) {
-			const obj = state.objects[id];
-			if (obj?.parentId) {
-				parentCandidates.add(obj.parentId);
-			}
+	// ② 再検査対象グループのキュー。Set の挿入順で結果順序を安定させる。
+	const queue: string[] = [];
+	const queued = new Set<string>();
+	const enqueue = (groupId: string): void => {
+		if (!queued.has(groupId)) {
+			queued.add(groupId);
+			queue.push(groupId);
 		}
+	};
 
-		// このイテレーションの選択スナップショット。
-		// 同一イテレーション内で currentSelectedIds が変化しても
-		// 子の選択判定は開始時点の状態で行う。
-		const selectedSet = new Set(currentSelectedIds);
-
-		for (const parentId of parentCandidates) {
-			const parent = state.objects[parentId] as GroupState;
-			if (!parent) {
-				continue;
-			}
-
-			const allChildrenSelected =
-				parent.childIds.length > 0 &&
-				parent.childIds.every((childId) => selectedSet.has(childId));
-
-			if (
-				allChildrenSelected &&
-				!selectedSet.has(parentId) &&
-				!everPromoted.has(parentId)
-			) {
-				// 全子孫（孫以降も含む）を選択から取り除き、グループ自体を選択する
-				const allDescendants = collectAllDescendants(state, parentId);
-				currentSelectedIds = currentSelectedIds.filter(
-					(id) => !allDescendants.has(id),
-				);
-				currentSelectedIds.push(parentId);
-				everPromoted.add(parentId);
-				changed = true;
-			}
+	// 起点: 現在の選択アイテムの直接の親グループ
+	for (const id of selected) {
+		const parentId = state.objects[id]?.parentId;
+		if (parentId != null) {
+			enqueue(parentId);
 		}
 	}
 
-	return currentSelectedIds;
+	// 畳み込み済みグループ（再畳み込み・無限ループ防止）
+	const collapsed = new Set<string>();
+
+	let head = 0;
+	while (head < queue.length) {
+		const groupId = queue[head];
+		head++;
+		// 取り出したので、子の畳み込みに伴う再検査で再度積めるようにする
+		queued.delete(groupId);
+
+		if (collapsed.has(groupId)) {
+			continue;
+		}
+
+		const group = state.objects[groupId];
+		if (!group || group.type !== "group") {
+			continue;
+		}
+
+		const { childIds } = group as GroupState;
+		if (childIds.length === 0) {
+			continue;
+		}
+
+		// 全子が選択済みでなければ、まだ畳み込めない
+		if (!childIds.every((childId) => selected.has(childId))) {
+			continue;
+		}
+
+		// 畳み込み: 子を選択から外し、グループ自体を選択する。
+		// 子グループは既に自身へ畳み込まれて選択集合に入っているため、
+		// 直接の childIds を差し替えるだけで子孫の除去まで完結する。
+		for (const childId of childIds) {
+			selected.delete(childId);
+		}
+		selected.add(groupId);
+		collapsed.add(groupId);
+
+		// このグループの親が新たに「全子選択済み」になりうるため再検査する
+		const parentId = group.parentId;
+		if (parentId != null) {
+			enqueue(parentId);
+		}
+	}
+
+	return [...selected];
 }

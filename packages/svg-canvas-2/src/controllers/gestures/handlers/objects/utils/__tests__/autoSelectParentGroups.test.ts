@@ -453,4 +453,41 @@ describe("autoSelectParentGroups", () => {
 		expect(result).toContain("group-2");
 		expect(result).not.toContain("group-1-1");
 	});
+
+	// ─── ③ 異常データでの終了保証 ────────────────────────────────
+
+	it("childIds に循環参照があっても無限ループせず終了する", () => {
+		// group-a が group-b を子に持ち、group-b も group-a を子に持つ不正データ。
+		// それぞれ実体のある子（rect）も持つため、正規化で除去されずワークリスト
+		// 本体を通り、循環下でも有限時間で終了することを検証する。
+		const state = {
+			objects: {
+				"group-a": {
+					id: "group-a",
+					type: "group",
+					childIds: ["rect-1", "group-b"],
+				} as GroupState,
+				"group-b": {
+					id: "group-b",
+					type: "group",
+					parentId: "group-a",
+					childIds: ["rect-2", "group-a"],
+				} as GroupState,
+				"rect-1": {
+					id: "rect-1",
+					type: "rect",
+					parentId: "group-a",
+				} as RectState,
+				"rect-2": {
+					id: "rect-2",
+					type: "rect",
+					parentId: "group-b",
+				} as RectState,
+			},
+		} as unknown as CanvasState;
+
+		// 例外を投げず、有限時間で結果を返せること（畳み込みは各グループ高々1回）
+		const result = autoSelectParentGroups(state, ["rect-1", "rect-2"]);
+		expect(Array.isArray(result)).toBe(true);
+	});
 });
