@@ -1,25 +1,15 @@
-import {
-	calcEuclideanDistance,
-	calcFrameKeyPoints,
-	isTransformedFrame,
-	roundToDecimal,
-	type Point,
-} from "@workspace/geometry";
+import type { Point } from "@workspace/geometry";
 
-import { PRECISION } from "../../../../../constants/precision";
-import {
-	isConnectPointId,
-	isSameEndpoint,
-	type CenterAnchorSpec,
-	type ConnectPointAnchorSpec,
-	type ConnectPointId,
-	type EndpointRef,
-} from "../../../../../schemas/objects/types/EndpointRef";
+import { isConnectPointId } from "../../../../../schemas/objects/types/EndpointRef";
 import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
 import { objectMapperRegistry } from "../../../../../states/registry/ObjectMapperRegistry";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import type { ControlStrategy } from "../ControlEventHandler";
+import { computeEditedEndpoint } from "./utils/computeEditedEndpoint";
+import { findConnectableHoverTarget } from "./utils/findConnectableHoverTarget";
+import { getEditingEndpoint } from "./utils/getEditingEndpoint";
+import { isSameConnectorEndpoints } from "./utils/isSameConnectorEndpoints";
 
 /**
  * Connection anchor からのドラッグでコネクターを作成するハンドラー。
@@ -182,103 +172,37 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 	}
 
 	/**
-	 * targetId から編集中のエンドポイントを取得する。
-	 * "connection-anchor:edit:...:source" -> "source"
-	 * "connection-anchor:edit:...:target" -> "target"
-	 * "connection-anchor:create:..." -> "target" (デフォルト)
-	 */
-	private getEditingEndpoint(
-		targetId: string | undefined,
-	): "source" | "target" {
-		if (!targetId) {
-			return "target";
-		}
-
-		const parts = targetId.split(":");
-		// Format: "connection-anchor:edit:connectorId:endpoint"
-		if (parts.length === 4 && parts[1] === "edit") {
-			const endpoint = parts[3];
-			if (endpoint === "source" || endpoint === "target") {
-				return endpoint;
-			}
-		}
-
-		// Default to "target" for creation mode
-		return "target";
-	}
-
-	/**
 	 * baseConnector の編集対象エンドポイントを、現在のカーソル位置・hover 状況に応じて
 	 * 更新した新しい ConnectorState を返す。
-	 * hover 中の接続可能オブジェクトがあれば最近接アンカーへ接続（OwnedEndpointRef）、
-	 * なければカーソル位置の FreeAnchor とする。固定側・points はそのまま保持する。
+	 * hover 対象の解決（state.objects / registry 依存）だけをここで行い、
+	 * 端点の組み立ては純粋関数 computeEditedEndpoint に委譲する。
 	 */
-	private computeEditedEndpoint(
+	private buildEditedConnector(
 		state: CanvasControllerState,
 		event: CanvasEvent,
 		baseConnector: ConnectorState,
 		endpointToUpdate: "source" | "target",
 	): ConnectorState {
-		// Create a free endpoint at the current cursor position
-		const freeEndpoint: EndpointRef = {
-			anchor: {
-				kind: "free",
-				point: {
-					x: roundToDecimal(event.last.x, PRECISION.COORDINATE),
-					y: roundToDecimal(event.last.y, PRECISION.COORDINATE),
-				},
-			},
-		};
-
-		// Get the fixed endpoint's object ID to exclude it from hover detection
+		// Exclude the fixed endpoint's object from hover detection (can't connect to self)
 		const fixedEndpoint =
 			endpointToUpdate === "source"
 				? baseConnector.target
 				: baseConnector.source;
-		const fixedObjectId = fixedEndpoint.owner?.id;
 
-		// Find the first valid hover target:
-		// - Exclude the fixed endpoint's object (can't connect to self)
-		// - Only include objects with connectable feature enabled
-		const hoveredObjectId = event.hovered
-			.map((h) => h.id)
-			.find((id: string) => {
-				if (id === fixedObjectId) {
-					return false;
-				}
+		const hoveredTarget = findConnectableHoverTarget({
+			hovered: event.hovered,
+			objects: state.objects,
+			fixedObjectId: fixedEndpoint.owner?.id,
+			isConnectable: (type) =>
+				objectMapperRegistry.getFeatures(type)?.connectable === true,
+		});
 
-				const obj = state.objects[id];
-				if (!obj) {
-					return false;
-				}
-
-				return objectMapperRegistry.getFeatures(obj.type)?.connectable === true;
-			});
-		const hoveredObject = hoveredObjectId
-			? state.objects[hoveredObjectId]
-			: null;
-
-		// If hovering over a valid target, connect as OwnedEndpointRef.
-		// Use the nearest connect-point (topCenter/rightCenter/bottomCenter/leftCenter)
-		// or center, whichever is closest to the current cursor position.
-		const editedEndpoint: EndpointRef = hoveredObject
-			? {
-					owner: { type: hoveredObject.type, id: hoveredObjectId! },
-					anchor: this.calcNearestAnchor(
-						hoveredObject,
-						event.last.x,
-						event.last.y,
-					),
-				}
-			: freeEndpoint;
-
-		return {
-			...baseConnector,
-			source:
-				endpointToUpdate === "source" ? editedEndpoint : baseConnector.source,
-			target:
-				endpointToUpdate === "target" ? editedEndpoint : baseConnector.target,
-		} as ConnectorState;
+		return computeEditedEndpoint(
+			baseConnector,
+			endpointToUpdate,
+			event.last,
+			hoveredTarget,
+		);
 	}
 
 	/**
@@ -291,7 +215,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 	): CanvasControllerState {
 		// Determine which endpoint is being edited from targetId
 		// Format: "connection-anchor:create:..." or "connection-anchor:edit:...:source|target"
-		const endpointToUpdate = this.getEditingEndpoint(event.targetId);
+		const endpointToUpdate = getEditingEndpoint(event.targetId);
 		const { editingConnectorId } = state;
 
 		// 編集モード: polyline 頂点編集と同様に実体を直接書き換える（overlay を使わない）。
@@ -303,7 +227,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 				return state;
 			}
 
-			const updated = this.computeEditedEndpoint(
+			const updated = this.buildEditedConnector(
 				state,
 				event,
 				baseConnector as ConnectorState,
@@ -325,7 +249,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			return state;
 		}
 
-		const updated = this.computeEditedEndpoint(
+		const updated = this.buildEditedConnector(
 			state,
 			event,
 			pendingConnector,
@@ -361,7 +285,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			const isNoOp =
 				original?.type === "connector" &&
 				finalConnector?.type === "connector" &&
-				this.isSameConnectorEndpoints(
+				isSameConnectorEndpoints(
 					original as ConnectorState,
 					finalConnector as ConnectorState,
 				);
@@ -417,87 +341,5 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			edgeScrollEnabled: false,
 			commitVersion: state.commitVersion + 1,
 		};
-	}
-
-	/**
-	 * 2 つのコネクターの端点（source / target）と中間経由点が同値かどうかを判定する。
-	 * 「アンカーをつまんで元の位置に戻した」だけの no-op 編集を検出するために使う。
-	 */
-	private isSameConnectorEndpoints(
-		srcConnector: ConnectorState,
-		clonedConnector: ConnectorState,
-	): boolean {
-		if (!isSameEndpoint(srcConnector.source, clonedConnector.source)) {
-			return false;
-		}
-		if (!isSameEndpoint(srcConnector.target, clonedConnector.target)) {
-			return false;
-		}
-
-		const srcPoints = srcConnector.points;
-		const clonedPoints = clonedConnector.points;
-		if (srcPoints.length !== clonedPoints.length) {
-			return false;
-		}
-		return srcPoints.every(
-			(p, i) => p.x === clonedPoints[i].x && p.y === clonedPoints[i].y,
-		);
-	}
-
-	/**
-	 * カーソル位置に最も近いアンカーを返す。
-	 * フレームを持つオブジェクトは 4 中点 + center から選択し、
-	 * フレームを持たないオブジェクトは center を返す。
-	 */
-	private calcNearestAnchor(
-		obj: { cx?: number; cy?: number; [key: string]: unknown },
-		cursorX: number,
-		cursorY: number,
-	): CenterAnchorSpec | ConnectPointAnchorSpec {
-		if (!isTransformedFrame(obj)) {
-			return { kind: "center" };
-		}
-
-		const keyPoints = calcFrameKeyPoints(obj);
-
-		const candidates: Array<{
-			id: ConnectPointId | null;
-			x: number;
-			y: number;
-		}> = [
-			{ id: null, x: obj.cx, y: obj.cy },
-			{ id: "topCenter", x: keyPoints.topCenter.x, y: keyPoints.topCenter.y },
-			{
-				id: "rightCenter",
-				x: keyPoints.rightCenter.x,
-				y: keyPoints.rightCenter.y,
-			},
-			{
-				id: "bottomCenter",
-				x: keyPoints.bottomCenter.x,
-				y: keyPoints.bottomCenter.y,
-			},
-			{
-				id: "leftCenter",
-				x: keyPoints.leftCenter.x,
-				y: keyPoints.leftCenter.y,
-			},
-		];
-
-		let nearest = candidates[0];
-		let minDist = calcEuclideanDistance(cursorX, cursorY, nearest.x, nearest.y);
-
-		for (let i = 1; i < candidates.length; i++) {
-			const c = candidates[i];
-			const dist = calcEuclideanDistance(cursorX, cursorY, c.x, c.y);
-			if (dist < minDist) {
-				minDist = dist;
-				nearest = c;
-			}
-		}
-
-		return nearest.id === null
-			? { kind: "center" }
-			: { kind: "connectPoint", id: nearest.id };
 	}
 }

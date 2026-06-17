@@ -4,7 +4,6 @@ import { beforeAll, describe, expect, it } from "vitest";
 import type { CanvasDoc } from "../../../../../../schemas/canvas/CanvasDoc";
 import type { ConnectorState } from "../../../../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
-import { rectDoc } from "../../../../../reducer/__integration__/support/fixtures";
 import { createInitialControllerState } from "../../../../../reducer/createInitialControllerState";
 import { initializeObjectRegistry } from "../../../../../setup/initializeObjectRegistry";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
@@ -14,9 +13,10 @@ beforeAll(() => {
 	initializeObjectRegistry();
 });
 
-const twoRectsDoc: CanvasDoc = {
+/** 図形を持たない空ドキュメント。端点はすべて free なので rect は不要。 */
+const emptyDoc: CanvasDoc = {
 	version: 1,
-	root: [rectDoc("rect-1", 0, 0), rectDoc("rect-2", 100, 100)],
+	root: [],
 	connectors: [],
 } as unknown as CanvasDoc;
 
@@ -44,7 +44,7 @@ const freeConnector = (
 const stateWithConnectors = (
 	connectors: ConnectorState[],
 ): CanvasControllerState => {
-	const base = createInitialControllerState(twoRectsDoc);
+	const base = createInitialControllerState(emptyDoc);
 	const objects = { ...base.objects };
 	for (const c of connectors) {
 		objects[c.id] = c;

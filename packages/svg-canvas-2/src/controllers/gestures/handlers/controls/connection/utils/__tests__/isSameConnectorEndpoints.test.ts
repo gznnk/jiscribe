@@ -1,0 +1,66 @@
+import type { Point } from "@workspace/geometry";
+import { describe, expect, it } from "vitest";
+
+import type { EndpointRef } from "../../../../../../../schemas/objects/types/EndpointRef";
+import type { ConnectorState } from "../../../../../../../states/objects/connections/connector/ConnectorState";
+import { isSameConnectorEndpoints } from "../isSameConnectorEndpoints";
+
+const free = (x: number, y: number): EndpointRef => ({
+	anchor: { kind: "free", point: { x, y } },
+});
+
+const owned = (id: string): EndpointRef => ({
+	owner: { type: "rect", id },
+	anchor: { kind: "connectPoint", id: "topCenter" },
+});
+
+const connector = (
+	source: EndpointRef,
+	target: EndpointRef,
+	points: Point[] = [],
+): ConnectorState =>
+	({
+		id: "c1",
+		type: "connector",
+		points,
+		source,
+		target,
+	}) as unknown as ConnectorState;
+
+describe("isSameConnectorEndpoints", () => {
+	it("source/target/points がすべて同値なら true", () => {
+		const a = connector(free(0, 0), free(10, 10), [{ x: 5, y: 5 }]);
+		const b = connector(free(0, 0), free(10, 10), [{ x: 5, y: 5 }]);
+		expect(isSameConnectorEndpoints(a, b)).toBe(true);
+	});
+
+	it("source の free 座標が異なれば false", () => {
+		const a = connector(free(0, 0), free(10, 10));
+		const b = connector(free(1, 0), free(10, 10));
+		expect(isSameConnectorEndpoints(a, b)).toBe(false);
+	});
+
+	it("target の free 座標が異なれば false", () => {
+		const a = connector(free(0, 0), free(10, 10));
+		const b = connector(free(0, 0), free(10, 11));
+		expect(isSameConnectorEndpoints(a, b)).toBe(false);
+	});
+
+	it("owner（接続先オブジェクト）が異なれば false", () => {
+		const a = connector(owned("rect-1"), free(10, 10));
+		const b = connector(owned("rect-2"), free(10, 10));
+		expect(isSameConnectorEndpoints(a, b)).toBe(false);
+	});
+
+	it("points の数が異なれば false", () => {
+		const a = connector(free(0, 0), free(10, 10), [{ x: 5, y: 5 }]);
+		const b = connector(free(0, 0), free(10, 10), []);
+		expect(isSameConnectorEndpoints(a, b)).toBe(false);
+	});
+
+	it("points の座標が異なれば false", () => {
+		const a = connector(free(0, 0), free(10, 10), [{ x: 5, y: 5 }]);
+		const b = connector(free(0, 0), free(10, 10), [{ x: 6, y: 5 }]);
+		expect(isSameConnectorEndpoints(a, b)).toBe(false);
+	});
+});
