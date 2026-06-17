@@ -193,6 +193,13 @@ export class GestureRecognizer {
 
 		// pointerdown: 新しいジェスチャーを開始
 		if (e.type === "pointerdown") {
+			// 既にアクティブなジェスチャーがある間は、2本目以降の pointerdown を無視する。
+			// （マルチタッチ非対応。1本目のドラッグを中断・誤コミットさせないため、
+			//  pressed の上書き・ポインターキャプチャ・コールバック発火をすべて行わない）
+			if (this.pressed !== null) {
+				return;
+			}
+
 			// ポインターキャプチャを設定（data-gesture="native-pointer" の要素では設定しない）
 			// スライダーなどではブラウザのネイティブなドラッグ挙動を維持する必要がある
 			if (this.containerRef.current && !shouldSkipPointerCapture(e.target)) {
