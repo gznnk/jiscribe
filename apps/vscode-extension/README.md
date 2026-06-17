@@ -34,8 +34,6 @@ Because the files are neatly formatted JSON, you can easily review diffs in Git.
 
 ### ⚡ 4. Everything in VS Code
 
-![Landing page design built with Jiscribe](https://beta.jiscribe.dev/images/vscode/landing-page-design.png)
-
 Say goodbye to context-switching between external drawing apps and your editor. Draw system diagrams and flowcharts in a tab right next to your source code.
 
 ---
