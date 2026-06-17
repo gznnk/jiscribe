@@ -71,11 +71,6 @@
 				"category": "Jiscribe"
 			},
 			{
-				"command": "jiscribe.exportSchema",
-				"title": "Export Jiscribe Canvas Schema",
-				"category": "Jiscribe"
-			},
-			{
 				"command": "jiscribe.setupAi",
 				"title": "Set up AI",
 				"category": "Jiscribe"
@@ -87,19 +82,11 @@
 					"command": "jiscribe.newEmptyCanvas",
 					"when": "explorerResourceIsFolder",
 					"group": "jiscribe@1"
-				},
-				{
-					"command": "jiscribe.exportSchema",
-					"when": "explorerResourceIsFolder",
-					"group": "jiscribe@2"
 				}
 			],
 			"commandPalette": [
 				{
 					"command": "jiscribe.newEmptyCanvas"
-				},
-				{
-					"command": "jiscribe.exportSchema"
 				},
 				{
 					"command": "jiscribe.setupAi"

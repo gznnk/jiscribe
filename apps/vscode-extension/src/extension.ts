@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
 
-import { registerExportSchemaCommand } from "./commands/exportSchema";
 import { registerNewCanvasCommands } from "./commands/newCanvas";
 import { registerSetupAiCommand } from "./commands/setupAi";
 import { DiagnosticProvider } from "./diagnostics/DiagnosticProvider";
@@ -37,7 +36,6 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(registration);
 
 	registerNewCanvasCommands(context);
-	registerExportSchemaCommand(context);
 	registerSetupAiCommand(context);
 }
 
