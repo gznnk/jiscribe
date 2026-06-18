@@ -1,16 +1,26 @@
+import { applyEdits, modify, parse, type ParseError } from "jsonc-parser";
 import * as vscode from "vscode";
 
 /**
  * 「Set up AI」コマンド。
  *
  * ワークスペースの AI エージェントが `.jis.json` を正しく生成・編集できるよう、
- * ガイド／スキーマと各エージェント用のアダプタ（Skill / rules / instructions）を配置する。
+ * ガイド／スキーマと各エージェント用のアダプタ（Skill / rules / instructions）、
+ * および MCP サーバー設定を配置する。
  *
- * 設計方針（docs/03_ai-integration/setup_ai_design.md）:
+ * 設計方針（docs/03_ai-integration/setup_ai_design.md, mcp_design.md）:
  * - 正本は `.jiscribe/`（ai-guide.md ＋ jiscribe.schema.json）に 1 部だけ置く。
  * - 各エージェントの own-file アダプタは `.jiscribe/` を参照する薄いポインタにする。
+ * - MCP 設定（.mcp.json 等）は jsonc-parser で `jiscribe` キーのみを外科的にマージする
+ *   （コメント・整形・他サーバー定義を温存）。
  * - 我々が生成するファイルのみ上書きし、ユーザー管理ファイル（CLAUDE.md / .gitignore 等）には一切触れない。
  */
+
+// MCP サーバーの起動コマンド。
+// NOTE: `@jiscribe/mcp` は未公開。npm 公開後にこの設定がそのまま動く（mcp_design.md §8）。
+const MCP_SERVER_NAME = "jiscribe";
+const MCP_COMMAND = "npx";
+const MCP_ARGS = ["-y", "@jiscribe/mcp"];
 
 // 生成ファイルであることを示すヘッダ（手編集を促さない）。
 const GENERATED_NOTICE =
@@ -55,6 +65,16 @@ ${ADAPTER_INSTRUCTION}`;
 
 type AgentId = "claude" | "cursor" | "copilot";
 
+/** MCP 設定ファイルの場所と、サーバー定義を入れるキー。 */
+interface McpConfig {
+	/** 設定ファイルのパス要素（ワークスペース直下から）。 */
+	file: string[];
+	/** サーバー定義を格納するトップレベルキー（"mcpServers" or "servers"）。 */
+	serversKey: string;
+	/** VS Code 形式は各サーバーに `type: "stdio"` を持たせる。 */
+	includeType: boolean;
+}
+
 interface AgentTarget {
 	id: AgentId;
 	label: string;
@@ -65,6 +85,8 @@ interface AgentTarget {
 	adapterPath: string[];
 	/** アダプタの内容。 */
 	content: string;
+	/** MCP サーバー設定の配置先。 */
+	mcp: McpConfig;
 }
 
 const TARGETS: AgentTarget[] = [
@@ -75,6 +97,7 @@ const TARGETS: AgentTarget[] = [
 		markerDir: ".claude",
 		adapterPath: [".claude", "skills", "jiscribe", "SKILL.md"],
 		content: CLAUDE_SKILL,
+		mcp: { file: [".mcp.json"], serversKey: "mcpServers", includeType: false },
 	},
 	{
 		id: "cursor",
@@ -83,6 +106,11 @@ const TARGETS: AgentTarget[] = [
 		markerDir: ".cursor",
 		adapterPath: [".cursor", "rules", "jiscribe.mdc"],
 		content: CURSOR_RULE,
+		mcp: {
+			file: [".cursor", "mcp.json"],
+			serversKey: "mcpServers",
+			includeType: false,
+		},
 	},
 	{
 		id: "copilot",
@@ -91,6 +119,11 @@ const TARGETS: AgentTarget[] = [
 		markerDir: ".github",
 		adapterPath: [".github", "instructions", "jiscribe.instructions.md"],
 		content: COPILOT_INSTRUCTIONS,
+		mcp: {
+			file: [".vscode", "mcp.json"],
+			serversKey: "servers",
+			includeType: true,
+		},
 	},
 ];
 
@@ -161,6 +194,56 @@ async function writeFile(uri: vscode.Uri, content: Uint8Array): Promise<void> {
 	await vscode.workspace.fs.writeFile(uri, content);
 }
 
+/**
+ * MCP 設定ファイルへ `jiscribe` サーバー定義を外科的にマージする。
+ *
+ * jsonc-parser の modify/applyEdits を使い、コメント・整形・他サーバー定義を温存したまま
+ * `<serversKey>.jiscribe` だけを add/update する（冪等）。
+ *
+ * @returns マージできたら true。既存ファイルが壊れていて温存のためスキップした場合は false。
+ */
+async function mergeMcpConfig(
+	root: vscode.Uri,
+	mcp: McpConfig,
+): Promise<boolean> {
+	const fileUri = vscode.Uri.joinPath(root, ...mcp.file);
+
+	let text = "{}";
+	try {
+		const buf = await vscode.workspace.fs.readFile(fileUri);
+		const existing = new TextDecoder().decode(buf);
+		if (existing.trim() !== "") {
+			// 壊れた既存ファイルはユーザーの内容を守るため触らない。
+			const errors: ParseError[] = [];
+			parse(existing, errors, { allowTrailingComma: true });
+			if (errors.length > 0) {
+				return false;
+			}
+			text = existing;
+		}
+	} catch {
+		// ファイルが無い場合は空オブジェクトから作る。
+	}
+
+	const serverValue = mcp.includeType
+		? { type: "stdio", command: MCP_COMMAND, args: MCP_ARGS }
+		: { command: MCP_COMMAND, args: MCP_ARGS };
+
+	const edits = modify(text, [mcp.serversKey, MCP_SERVER_NAME], serverValue, {
+		formattingOptions: { insertSpaces: false, tabSize: 1 },
+	});
+	const updated = applyEdits(text, edits);
+
+	const dir = mcp.file.slice(0, -1);
+	if (dir.length > 0) {
+		await vscode.workspace.fs.createDirectory(
+			vscode.Uri.joinPath(root, ...dir),
+		);
+	}
+	await writeFile(fileUri, new TextEncoder().encode(updated));
+	return true;
+}
+
 async function runSetupAi(context: vscode.ExtensionContext): Promise<void> {
 	const root = await resolveTargetFolder();
 	if (!root) {
@@ -190,17 +273,27 @@ async function runSetupAi(context: vscode.ExtensionContext): Promise<void> {
 		await writeFile(guideUri, guideWithNotice);
 		await writeFile(schemaUri, schema);
 
-		// 選択された各エージェントのアダプタを配置。
+		// 選択された各エージェントのアダプタ＋MCP 設定を配置。
+		const skippedMcp: string[] = [];
 		for (const target of targets) {
 			const dir = vscode.Uri.joinPath(root, ...target.adapterPath.slice(0, -1));
 			await vscode.workspace.fs.createDirectory(dir);
 			const fileUri = vscode.Uri.joinPath(root, ...target.adapterPath);
 			await writeFile(fileUri, new TextEncoder().encode(target.content));
+
+			const merged = await mergeMcpConfig(root, target.mcp);
+			if (!merged) {
+				skippedMcp.push(target.mcp.file.join("/"));
+			}
 		}
 
 		const names = targets.map((t) => t.label).join(", ");
+		let message = `Set up AI: Configured ${names} (.jiscribe/, agent rules, and MCP server).`;
+		if (skippedMcp.length > 0) {
+			message += ` Skipped malformed MCP config: ${skippedMcp.join(", ")} (add the "jiscribe" server manually).`;
+		}
 		const action = await vscode.window.showInformationMessage(
-			`Set up AI: Created .jiscribe/ and config for ${names}. Ask your AI assistant to draw a Jiscribe diagram.`,
+			message,
 			"Open Guide",
 		);
 		if (action === "Open Guide") {
