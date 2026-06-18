@@ -7,8 +7,9 @@ import * as vscode from "vscode";
  * ガイド／スキーマと各エージェント用のアダプタ（Skill / rules / instructions）を配置する。
  *
  * 設計方針（docs/03_ai-integration/setup_ai_design.md）:
- * - 正本は `.jiscribe/`（ai-guide.md ＋ jiscribe.schema.json）に 1 部だけ置く。
- * - 各エージェントの own-file アダプタは `.jiscribe/` を参照する薄いポインタにする。
+ * - 正本は `.jiscribe/`（ai-guide.md ＋ reference.md ＋ jiscribe.schema.json）に 1 部だけ置く。
+ * - 各エージェントの own-file アダプタは `.jiscribe/ai-guide.md` を入口として指す薄いポインタにする
+ *   （詳細リファレンス・スキーマへの誘導は ai-guide が一手に担い、案内元を 1 つに保つ）。
  * - 我々が生成するファイルのみ上書きし、ユーザー管理ファイル（CLAUDE.md / .gitignore 等）には一切触れない。
  *
  * NOTE: MCP サーバー設定の自動生成は優先度を下げて一旦外している（設計は docs/03_ai-integration/mcp_design.md）。
@@ -18,11 +19,9 @@ import * as vscode from "vscode";
 const GENERATED_NOTICE =
 	"<!-- Generated and managed by the Jiscribe extension's “Set up AI” command. Manual edits are overwritten on re-run. -->";
 
-// 各アダプタ共通の本文（frontmatter を除く）。実体は `.jiscribe/` に委ねる。
-const ADAPTER_INSTRUCTION = `When generating or editing Jiscribe diagram data (\`.jis.json\` / \`.jiscribe.json\`), always follow this:
-
-- Notation and rules: read \`.jiscribe/ai-guide.md\` at the workspace root.
-- For the full field-level specification, refer to \`.jiscribe/jiscribe.schema.json\`.
+// 各アダプタ共通の本文（frontmatter を除く）。`.jiscribe/ai-guide.md` を唯一の入口にする
+// （ai-guide が詳細リファレンス・スキーマへ案内するので、ここでは多重案内しない）。
+const ADAPTER_INSTRUCTION = `When generating or editing Jiscribe diagram data (\`.jis.json\` / \`.jiscribe.json\`), read \`.jiscribe/ai-guide.md\` at the workspace root and follow it. It links to the full reference and schema.
 `;
 
 /** Claude Code Skill: .claude/skills/jiscribe/SKILL.md */
@@ -175,8 +174,9 @@ async function runSetupAi(context: vscode.ExtensionContext): Promise<void> {
 	}
 
 	try {
-		const [guide, schema] = await Promise.all([
+		const [guide, reference, schema] = await Promise.all([
 			readDistAsset(context, "ai-guide.md"),
+			readDistAsset(context, "reference.md"),
 			readDistAsset(context, "jiscribe.schema.json"),
 		]);
 
@@ -184,12 +184,15 @@ async function runSetupAi(context: vscode.ExtensionContext): Promise<void> {
 		const jiscribeDir = vscode.Uri.joinPath(root, ".jiscribe");
 		await vscode.workspace.fs.createDirectory(jiscribeDir);
 		const guideUri = vscode.Uri.joinPath(jiscribeDir, "ai-guide.md");
+		const referenceUri = vscode.Uri.joinPath(jiscribeDir, "reference.md");
 		const schemaUri = vscode.Uri.joinPath(jiscribeDir, "jiscribe.schema.json");
-		// ガイドにも生成物ヘッダを付ける（schema は JSON のため付けない）。
-		const guideWithNotice = new TextEncoder().encode(
-			`${GENERATED_NOTICE}\n\n${new TextDecoder().decode(guide)}`,
-		);
-		await writeFile(guideUri, guideWithNotice);
+		// Markdown には生成物ヘッダを付ける（schema は JSON のため付けない）。
+		const withNotice = (asset: Uint8Array): Uint8Array =>
+			new TextEncoder().encode(
+				`${GENERATED_NOTICE}\n\n${new TextDecoder().decode(asset)}`,
+			);
+		await writeFile(guideUri, withNotice(guide));
+		await writeFile(referenceUri, withNotice(reference));
 		await writeFile(schemaUri, schema);
 
 		// 選択された各エージェントのアダプタを配置。

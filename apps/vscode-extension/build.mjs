@@ -72,14 +72,19 @@ const webviewConfig = {
 // ── AI アセットのコピー ──────────────────────────────────────────────────
 // svg-canvas-2 パッケージの配布アセット（ai/）を dist/ に配置する。
 // - jiscribe.schema.json: VSCode の jsonValidation が参照し、.jis.json の補完・検証を提供する。
-// - ai-guide.md: 「Set up AI」コマンドがワークスペースへ配置するための AI オーサリングガイド。
+// - ai-guide.md: 「Set up AI」がワークスペースへ配置する AI オーサリングガイド（入口）。
+// - reference.md: ai-guide が参照する詳細リファレンス（同じ .jiscribe/ に置くためリンクが解決する）。
 // 配布元は packages/svg-canvas-2/ai/（配布アセット正本）。
 function copyAiAssets() {
 	const aiDir = join(__dirname, "../../packages/svg-canvas-2/ai");
 	const distDir = join(__dirname, "dist");
 	mkdirSync(distDir, { recursive: true });
 
-	for (const fileName of ["jiscribe.schema.json", "ai-guide.md"]) {
+	for (const fileName of [
+		"jiscribe.schema.json",
+		"ai-guide.md",
+		"reference.md",
+	]) {
 		copyFileSync(join(aiDir, fileName), join(distDir, fileName));
 		console.log(`✅ AI asset copied: ${fileName}`);
 	}
