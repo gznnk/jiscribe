@@ -69,20 +69,25 @@ const webviewConfig = {
 	},
 };
 
-// ── スキーマファイルのコピー ─────────────────────────────────────────────
-// svg-canvas-2 パッケージで定義した JSON スキーマを dist/ に配置する。
-// VSCode の jsonValidation 機能がこのスキーマを参照し、
-// .jis.json ファイルの編集時に補完・バリデーションを提供する。
-function copySchema() {
-	const src = join(
-		__dirname,
-		"../../packages/svg-canvas-2/src/schemas/canvas/jiscribe.schema.json",
-	);
+// ── AI アセットのコピー ──────────────────────────────────────────────────
+// svg-canvas-2 パッケージの配布アセット（ai/）を dist/ に配置する。
+// - jiscribe.schema.json: VSCode の jsonValidation が参照し、.jis.json の補完・検証を提供する。
+// - ai-guide.md: 「Set up AI」がワークスペースへ配置する AI オーサリングガイド（入口）。
+// - reference.md: ai-guide が参照する詳細リファレンス（同じ .jiscribe/ に置くためリンクが解決する）。
+// 配布元は packages/svg-canvas-2/ai/（配布アセット正本）。
+function copyAiAssets() {
+	const aiDir = join(__dirname, "../../packages/svg-canvas-2/ai");
 	const distDir = join(__dirname, "dist");
 	mkdirSync(distDir, { recursive: true });
-	const dest = join(distDir, "jiscribe.schema.json");
-	copyFileSync(src, dest);
-	console.log("✅ Schema copied: jiscribe.schema.json");
+
+	for (const fileName of [
+		"jiscribe.schema.json",
+		"ai-guide.md",
+		"reference.md",
+	]) {
+		copyFileSync(join(aiDir, fileName), join(distDir, fileName));
+		console.log(`✅ AI asset copied: ${fileName}`);
+	}
 }
 
 // ── メインのビルド処理 ───────────────────────────────────────────────────
@@ -94,7 +99,7 @@ async function build() {
 			rmSync(join(__dirname, "dist"), { recursive: true, force: true });
 		}
 
-		copySchema();
+		copyAiAssets();
 
 		if (isWatch) {
 			// 監視モード: ファイル変更を検知して自動的に再ビルドする

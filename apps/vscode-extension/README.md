@@ -57,20 +57,19 @@ Say goodbye to context-switching between external drawing apps and your editor. 
 
 ### Creating a New Canvas
 
-**From the Explorer sidebar** — Right-click any folder and select **New Empty Jiscribe Canvas**.
+**From the Explorer sidebar** — Right-click any folder and select **New Jiscribe Canvas**.
 
-**From the Command Palette** — Press `Ctrl+Shift+P` (`Cmd+Shift+P` on macOS), type **Jiscribe: New Empty Jiscribe Canvas**, and press Enter.
+**From the Command Palette** — Press `Ctrl+Shift+P` (`Cmd+Shift+P` on macOS), type **Jiscribe: New Jiscribe Canvas**, and press Enter.
 
 You'll be prompted for a file name. The canvas opens automatically once the file is created.
 
 ### Letting AI Generate a Canvas
 
-Because `.jis.json` is schema-backed JSON, you can have an AI assistant (e.g., Copilot, Claude) generate a diagram from a text prompt:
+Because `.jis.json` is schema-backed JSON, you can have an AI assistant generate a diagram from a text prompt:
 
-1. Right-click a folder in the Explorer → **Export Jiscribe Canvas Schema**  
-   (or use the Command Palette: **Jiscribe: Export Jiscribe Canvas Schema**).  
-   This places `jiscribe.schema.json` in your workspace so AI can read it.
-2. Ask your AI assistant to create a `.jis.json` file based on the schema and your description.
+1. Run the Command Palette command **Jiscribe: Set up AI** and pick your agents (Claude Code, Cursor, GitHub Copilot).  
+   This places an authoring guide and schema under `.jiscribe/` plus a small adapter for each selected agent, so your AI assistant knows how to write `.jis.json`.
+2. Ask your AI assistant to create a `.jis.json` diagram from your description.
 3. Open the generated file — it opens in the canvas editor automatically.
 
 > To open a `.jis.json` file as plain text, right-click the tab and select **Open With... → Text Editor**.

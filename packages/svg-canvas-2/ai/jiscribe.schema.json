@@ -124,7 +124,7 @@
 			"type": "object",
 			"properties": {
 				"stroke": {
-					"description": "Stroke color as a CSS color string. Default: \"#374151\"",
+					"description": "Stroke color as a CSS color string. Default: \"#6b7280\"",
 					"type": "string"
 				},
 				"strokeWidth": {
@@ -167,11 +167,11 @@
 					"$ref": "#/$defs/TextAlign"
 				},
 				"verticalAlign": {
-					"description": "Vertical text alignment. Default: \"center\"",
+					"description": "Vertical text alignment. Default: \"middle\"",
 					"$ref": "#/$defs/VerticalAlign"
 				},
 				"fontColor": {
-					"description": "Font color as a CSS color string. Default: \"#000000\"",
+					"description": "Font color as a CSS color string. Default: \"#6b7280\" (sticky: \"#000000\")",
 					"type": "string"
 				},
 				"fontSize": {

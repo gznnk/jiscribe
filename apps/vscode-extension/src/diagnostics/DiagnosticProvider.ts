@@ -69,7 +69,7 @@ export class DiagnosticProvider {
 				// ユーザーがなぜ Problems パネルに何も表示されないのか分からない問題があった。
 				const diagnostic = new vscode.Diagnostic(
 					new vscode.Range(0, 0, 0, 0),
-					`JSON 構文エラー: ${result.message}`,
+					`JSON syntax error: ${result.message}`,
 					vscode.DiagnosticSeverity.Error,
 				);
 				this.collection.set(document.uri, [diagnostic]);
@@ -97,7 +97,7 @@ export class DiagnosticProvider {
 				// 想定外のエラーを握りつぶさず、ファイル先頭に診断として表示する。
 				const diagnostic = new vscode.Diagnostic(
 					new vscode.Range(0, 0, 0, 0),
-					`[Jiscribe] 検証中に予期しないエラーが発生しました: ${result.message}`,
+					`[Jiscribe] Unexpected error during validation: ${result.message}`,
 					vscode.DiagnosticSeverity.Error,
 				);
 				this.collection.set(document.uri, [diagnostic]);

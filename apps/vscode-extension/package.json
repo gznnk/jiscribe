@@ -8,7 +8,7 @@
 	},
 	"homepage": "https://beta.jiscribe.dev",
 	"icon": "icon.png",
-	"version": "0.1.3",
+	"version": "0.2.0",
 	"private": true,
 	"preview": true,
 	"engines": {
@@ -67,12 +67,12 @@
 		"commands": [
 			{
 				"command": "jiscribe.newEmptyCanvas",
-				"title": "New Empty Jiscribe Canvas",
+				"title": "New Jiscribe Canvas",
 				"category": "Jiscribe"
 			},
 			{
-				"command": "jiscribe.exportSchema",
-				"title": "Export Jiscribe Canvas Schema",
+				"command": "jiscribe.setupAi",
+				"title": "Set up AI",
 				"category": "Jiscribe"
 			}
 		],
@@ -82,11 +82,6 @@
 					"command": "jiscribe.newEmptyCanvas",
 					"when": "explorerResourceIsFolder",
 					"group": "jiscribe@1"
-				},
-				{
-					"command": "jiscribe.exportSchema",
-					"when": "explorerResourceIsFolder",
-					"group": "jiscribe@2"
 				}
 			],
 			"commandPalette": [
@@ -94,7 +89,7 @@
 					"command": "jiscribe.newEmptyCanvas"
 				},
 				{
-					"command": "jiscribe.exportSchema"
+					"command": "jiscribe.setupAi"
 				}
 			]
 		}

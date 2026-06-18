@@ -1,0 +1,460 @@
+# Jiscribe Document Format Reference (`.jis.json`)
+
+Specification for **Jiscribe**'s `.jis.json` document format.
+Use it as a reference when an AI generates data, or when an external tool produces `.jis.json` files.
+(For a concise, practical guide, see [`ai-guide.md`](./ai-guide.md).)
+
+---
+
+## Top-level structure
+
+```json
+{
+	"$schema": "https://schema.jiscribe.dev/v1/jiscribe.schema.json",
+	"version": 1,
+	"root": [
+		/* array of ObjectDoc */
+	],
+	"connectors": [
+		/* array of ConnectorDoc */
+	]
+}
+```
+
+| Field        | Type             | Required | Description                                                     |
+| ------------ | ---------------- | -------- | --------------------------------------------------------------- |
+| `version`    | `1`              | ✅       | Schema version. Always `1` (fixed value).                       |
+| `$schema`    | `string`         | -        | Schema URL (recommended; enables editor completion/validation). |
+| `root`       | `ObjectDoc[]`    | ✅       | All objects on the canvas (including nested groups).            |
+| `connectors` | `ConnectorDoc[]` | ✅       | Connectors (lines linking objects).                             |
+
+---
+
+## Common ObjectDoc fields
+
+Base fields present on every object.
+
+| Field  | Type     | Required | Description                                       |
+| ------ | -------- | -------- | ------------------------------------------------- |
+| `id`   | `string` | ✅       | Identifier unique within the document.            |
+| `type` | `string` | ✅       | Object type (see below).                          |
+| `meta` | `object` | -        | Arbitrary metadata (`name`, `description`, etc.). |
+
+### MetaDoc (`meta` field)
+
+```json
+{
+	"meta": {
+		"name": "Main title",
+		"description": "Description of this object"
+	}
+}
+```
+
+In addition to `name` and `description`, `meta` may hold any custom keys.
+
+---
+
+## Object types
+
+| `type`      | Description                        | Geometry                    | Styles                                |
+| ----------- | ---------------------------------- | --------------------------- | ------------------------------------- |
+| `rect`      | Rectangle                          | `x`, `y`, `width`, `height` | Stroke, Fill, Text, Transform, Radius |
+| `ellipse`   | Ellipse                            | `cx`, `cy`, `rx`, `ry`      | Stroke, Fill, Text, Transform         |
+| `polyline`  | Polyline (open path)               | `points`                    | Stroke                                |
+| `polygon`   | Polygon (closed path)              | `points`                    | Stroke, Fill                          |
+| `group`     | Group (contains children)          | none                        | Transform                             |
+| `connector` | Connector (placed in `connectors`) | `points`                    | Stroke                                |
+| `sticky`    | Sticky note                        | `x`, `y`, `width`, `height` | Fill, Text, Transform (no Stroke)     |
+
+---
+
+## Object details
+
+### `rect` (rectangle)
+
+```json
+{
+	"id": "rect-1",
+	"type": "rect",
+	"x": 100,
+	"y": 100,
+	"width": 200,
+	"height": 120,
+	"fill": "#4CAF50",
+	"stroke": "#2E7D32",
+	"strokeWidth": 2,
+	"rx": 8,
+	"text": "Text",
+	"textType": "text",
+	"textAlign": "center",
+	"verticalAlign": "middle",
+	"fontColor": "#000000",
+	"fontSize": 16,
+	"fontFamily": "Noto Sans JP",
+	"fontWeight": "normal",
+	"rotation": 0
+}
+```
+
+| Field    | Type     | Default | Description               |
+| -------- | -------- | ------- | ------------------------- |
+| `x`      | `number` | `0`     | X of the top-left corner. |
+| `y`      | `number` | `0`     | Y of the top-left corner. |
+| `width`  | `number` | `100`   | Width (px).               |
+| `height` | `number` | `100`   | Height (px).              |
+| `rx`     | `number` | `0`     | Corner radius (SVG `rx`). |
+
+For style fields, see [Stroke style](#stroke-style), [Fill style](#fill-style), [Text style](#text-style), and [Transform style](#transform-style).
+
+---
+
+### `ellipse`
+
+```json
+{
+	"id": "ellipse-1",
+	"type": "ellipse",
+	"cx": 300,
+	"cy": 200,
+	"rx": 100,
+	"ry": 60,
+	"fill": "#2196F3",
+	"stroke": "#1565C0",
+	"strokeWidth": 2
+}
+```
+
+| Field | Type     | Default | Description             |
+| ----- | -------- | ------- | ----------------------- |
+| `cx`  | `number` | `0`     | X of the center.        |
+| `cy`  | `number` | `0`     | Y of the center.        |
+| `rx`  | `number` | `50`    | Horizontal radius (px). |
+| `ry`  | `number` | `50`    | Vertical radius (px).   |
+
+---
+
+### `polyline`
+
+```json
+{
+	"id": "polyline-1",
+	"type": "polyline",
+	"points": [
+		{ "x": 100, "y": 100 },
+		{ "x": 200, "y": 150 },
+		{ "x": 300, "y": 100 }
+	],
+	"stroke": "#374151",
+	"strokeWidth": 2,
+	"startArrow": "None",
+	"endArrow": "FilledTriangle"
+}
+```
+
+| Field        | Type        | Required | Description             |
+| ------------ | ----------- | -------- | ----------------------- |
+| `points`     | `Point[]`   | ✅       | Array of vertices.      |
+| `startArrow` | `ArrowType` | -        | Arrowhead at the start. |
+| `endArrow`   | `ArrowType` | -        | Arrowhead at the end.   |
+
+---
+
+### `polygon`
+
+```json
+{
+	"id": "polygon-1",
+	"type": "polygon",
+	"points": [
+		{ "x": 200, "y": 50 },
+		{ "x": 350, "y": 200 },
+		{ "x": 50, "y": 200 }
+	],
+	"fill": "#FFEB3B",
+	"stroke": "#F57F17",
+	"strokeWidth": 1
+}
+```
+
+| Field    | Type      | Required | Description                               |
+| -------- | --------- | -------- | ----------------------------------------- |
+| `points` | `Point[]` | ✅       | Array of vertices (closed automatically). |
+
+---
+
+### `group`
+
+```json
+{
+	"id": "group-1",
+	"type": "group",
+	"children": [
+		{
+			"id": "child-rect-1",
+			"type": "rect",
+			"x": 10,
+			"y": 10,
+			"width": 100,
+			"height": 60,
+			"fill": "#E3F2FD"
+		}
+	],
+	"rotation": 45
+}
+```
+
+| Field      | Type          | Required | Description             |
+| ---------- | ------------- | -------- | ----------------------- |
+| `children` | `ObjectDoc[]` | ✅       | Array of child objects. |
+
+A group has no position or size of its own; these are determined by its `children`.
+`rotation`, `flipX`, and `flipY` can be specified as Transform styles.
+
+---
+
+### `sticky` (sticky note)
+
+A sticky note. Its geometry is the same as `rect` (top-left `x`,`y` + `width`,`height`), but it has **no Stroke and no Radius**.
+It supports Fill, Text, and Transform.
+
+```json
+{
+	"id": "sticky-1",
+	"type": "sticky",
+	"x": 100,
+	"y": 100,
+	"width": 160,
+	"height": 120,
+	"fill": "#fef9c3",
+	"text": "Note",
+	"textAlign": "center",
+	"verticalAlign": "middle",
+	"fontColor": "#000000",
+	"fontSize": 14
+}
+```
+
+| Field    | Type     | Default     | Description               |
+| -------- | -------- | ----------- | ------------------------- |
+| `x`      | `number` | `0`         | X of the top-left corner. |
+| `y`      | `number` | `0`         | Y of the top-left corner. |
+| `width`  | `number` | `160`       | Width (px).               |
+| `height` | `number` | `120`       | Height (px).              |
+| `fill`   | `string` | `"#fef9c3"` | Background color.         |
+
+Some Text-style defaults differ from other shapes (`fontColor` is `"#000000"`, `fontSize` is `14`).
+
+---
+
+## ConnectorDoc (connector)
+
+A connector object placed in the `connectors` array.
+
+```json
+{
+	"id": "connector-1",
+	"type": "connector",
+	"points": [],
+	"source": {
+		"owner": { "type": "rect", "id": "rect-1" },
+		"anchor": { "kind": "connectPoint", "id": "rightCenter" }
+	},
+	"target": {
+		"owner": { "type": "ellipse", "id": "ellipse-1" },
+		"anchor": { "kind": "connectPoint", "id": "leftCenter" }
+	},
+	"stroke": "#374151",
+	"strokeWidth": 2,
+	"startArrow": "None",
+	"endArrow": "FilledTriangle"
+}
+```
+
+| Field        | Type          | Required | Description                                                    |
+| ------------ | ------------- | -------- | -------------------------------------------------------------- |
+| `points`     | `Point[]`     | ✅       | Intermediate waypoints (empty for a straight line; see below). |
+| `source`     | `EndpointRef` | ✅       | Start endpoint spec.                                           |
+| `target`     | `EndpointRef` | ✅       | End endpoint spec.                                             |
+| `startArrow` | `ArrowType`   | -        | Arrowhead at the start.                                        |
+| `endArrow`   | `ArrowType`   | -        | Arrowhead at the end.                                          |
+
+Do **not** include endpoint coordinates in `points`. The endpoints are authoritative via `source` / `target`
+(EndpointRef) and are resolved dynamically at render time as the connected objects move. `points` holds only the
+intermediate waypoints (world coordinates) in source → target order, and is an empty array for straight connectors
+(waypoint-based routing is planned and is not yet used for rendering).
+
+### EndpointRef
+
+Choose whether the endpoint is fixed to an object (`OwnedEndpointRef`) or a free point in space (`FreeEndpointRef`).
+
+#### OwnedEndpointRef (attached to an object)
+
+```json
+{
+	"owner": { "type": "rect", "id": "rect-1" },
+	"anchor": { "kind": "connectPoint", "id": "rightCenter" }
+}
+```
+
+Options for `anchor.kind`:
+
+| `kind`           | Extra field          | Description                 |
+| ---------------- | -------------------- | --------------------------- |
+| `"center"`       | none                 | Center of the object.       |
+| `"connectPoint"` | `id: ConnectPointId` | A predefined connect point. |
+
+`ConnectPointId` options: `"center"` / `"topCenter"` / `"rightCenter"` / `"bottomCenter"` / `"leftCenter"`
+
+#### FreeEndpointRef (free point)
+
+```json
+{
+	"anchor": { "kind": "free", "point": { "x": 400, "y": 200 } }
+}
+```
+
+It has no `owner` field, and `anchor.kind` is always `"free"`.
+
+---
+
+## Common style fields
+
+### Stroke style
+
+Applies to `rect`, `ellipse`, `polyline`, `polygon`, `connector`.
+
+| Field            | Type             | Default     | Description             |
+| ---------------- | ---------------- | ----------- | ----------------------- |
+| `stroke`         | `string`         | `"#6b7280"` | Line color (CSS color). |
+| `strokeWidth`    | `number`         | `2`         | Line width (px).        |
+| `strokeDashType` | `StrokeDashType` | `"solid"`   | Dash pattern.           |
+
+`StrokeDashType`: `"solid"` / `"dashed"` / `"dotted"`
+
+### Fill style
+
+Applies to `rect`, `ellipse`, `polygon`, `sticky`.
+
+| Field  | Type     | Default         | Description             |
+| ------ | -------- | --------------- | ----------------------- |
+| `fill` | `string` | `"transparent"` | Fill color (CSS color). |
+
+### Text style
+
+Applies to `rect`, `ellipse`, `sticky`.
+
+| Field           | Type            | Default          | Description                                         |
+| --------------- | --------------- | ---------------- | --------------------------------------------------- |
+| `text`          | `string`        | `""`             | Text content.                                       |
+| `textType`      | `TextType`      | `"text"`         | How text is rendered.                               |
+| `textAlign`     | `TextAlign`     | `"center"`       | Horizontal alignment.                               |
+| `verticalAlign` | `VerticalAlign` | `"middle"`       | Vertical alignment.                                 |
+| `fontColor`     | `string`        | `"#6b7280"`      | Text color (rect/ellipse; sticky uses `"#000000"`). |
+| `fontSize`      | `number`        | `16`             | Font size (px).                                     |
+| `fontFamily`    | `string`        | `"Noto Sans JP"` | Font family.                                        |
+| `fontWeight`    | `string`        | `"normal"`       | Font weight.                                        |
+
+`TextType`: `"text"` (plain text) / `"markdown"` (Markdown rendering)
+
+`TextAlign`: `"left"` / `"center"` / `"right"`
+
+`VerticalAlign`: `"top"` / `"middle"` / `"bottom"`
+
+### Transform style
+
+Applies to `rect`, `ellipse`, `group`. All optional.
+
+| Field             | Type      | Default | Description                        |
+| ----------------- | --------- | ------- | ---------------------------------- |
+| `rotation`        | `number`  | `0`     | Rotation angle (degrees).          |
+| `flipX`           | `boolean` | `false` | Horizontal flip.                   |
+| `flipY`           | `boolean` | `false` | Vertical flip.                     |
+| `lockAspectRatio` | `boolean` | `false` | Lock aspect ratio (when resizing). |
+
+---
+
+## ArrowType
+
+Used by `startArrow` / `endArrow` on `polyline` and `connector`.
+
+| Value               | Description                       |
+| ------------------- | --------------------------------- |
+| `"None"`            | No arrowhead.                     |
+| `"FilledTriangle"`  | Filled triangle (common arrow).   |
+| `"ConcaveTriangle"` | Concave triangle.                 |
+| `"OpenArrow"`       | Open arrow (`>`).                 |
+| `"HollowTriangle"`  | Hollow triangle.                  |
+| `"FilledDiamond"`   | Filled diamond (UML aggregation). |
+| `"HollowDiamond"`   | Hollow diamond (UML aggregation). |
+| `"Circle"`          | Circle.                           |
+
+---
+
+## Full example
+
+A minimal diagram with a rectangle, an ellipse, and a connector.
+
+```json
+{
+	"version": 1,
+	"root": [
+		{
+			"id": "start",
+			"type": "rect",
+			"x": 50,
+			"y": 100,
+			"width": 160,
+			"height": 80,
+			"fill": "#E3F2FD",
+			"stroke": "#1565C0",
+			"strokeWidth": 2,
+			"rx": 8,
+			"text": "Start",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#1565C0",
+			"fontSize": 16
+		},
+		{
+			"id": "process",
+			"type": "ellipse",
+			"cx": 380,
+			"cy": 140,
+			"rx": 80,
+			"ry": 40,
+			"fill": "#F3E5F5",
+			"stroke": "#6A1B9A",
+			"strokeWidth": 2,
+			"text": "Process",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#6A1B9A",
+			"fontSize": 14
+		}
+	],
+	"connectors": [
+		{
+			"id": "conn-1",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": { "type": "rect", "id": "start" },
+				"anchor": { "kind": "connectPoint", "id": "rightCenter" }
+			},
+			"target": {
+				"owner": { "type": "ellipse", "id": "process" },
+				"anchor": { "kind": "connectPoint", "id": "leftCenter" }
+			},
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"startArrow": "None",
+			"endArrow": "FilledTriangle"
+		}
+	]
+}
+```
+
+---
+
+The machine-readable schema (JSON Schema) is published at `https://schema.jiscribe.dev/v1/jiscribe.schema.json`.

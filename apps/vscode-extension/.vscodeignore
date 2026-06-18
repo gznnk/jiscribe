@@ -6,10 +6,13 @@ build.mjs
 **/*.map
 tsconfig.json
 # 内部ドキュメント・開発用テストファイル
-canvas-doc-reference.md
 icon-source.png
 docs/**
 .gitignore
 **/*.jis.json
 *.vsix
 sample/**
+# 「Set up AI」がこのフォルダで実行された場合の生成物（混入防止）
+.jiscribe/**
+.claude/**
+.cursor/**
