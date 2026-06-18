@@ -1,8 +1,8 @@
 import { test, expect } from "../../fixtures";
 
 /**
- * manual-test-gesture-attributes.md「5. 基本ジェスチャーの非回帰」のうち、
- * 既存 spec / driver で未カバーの項目を補う。
+ * 基本ジェスチャーの非回帰のうち、既存 spec / driver で未カバーの項目を補う。
+ * 仕様は packages/svg-canvas-2/docs/gesture-attributes.md を参照。
  * - 5-1 移動 → shapes/draw.spec.ts
  * - 5-2 リサイズ → driver/driver-transform.spec.ts（回転は本ファイル）
  * - 5-4 ホイール/ズーム・5-5 右ドラッグパン → driver/driver-input.spec.ts

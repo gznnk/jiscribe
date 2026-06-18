@@ -2,8 +2,9 @@ import { test, expect } from "../../fixtures";
 import { selectors } from "../../support/selectors";
 
 /**
- * manual-test-gesture-attributes.md「1. テキスト編集」の e2e 化。
+ * テキスト編集まわりのジェスチャー回帰の e2e 化。
  * data-gesture（none / native-wheel）によるテキスト編集まわりの回帰を検証する。
+ * 仕様は packages/svg-canvas-2/docs/gesture-attributes.md を参照。
  * 確定（1-9）・Escape キャンセル（1-10）は editing/text-edit.spec.ts でカバー済み。
  */
 test.describe("テキスト編集のジェスチャー挙動", () => {
