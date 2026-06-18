@@ -1,0 +1,651 @@
+{
+	"$schema": "https://schema.jiscribe.dev/v1/jiscribe.schema.json",
+	"version": 1,
+	"root": [
+		{
+			"id": "3a6a3025-d935-488a-a74b-ba718001594e",
+			"type": "rect",
+			"x": 202,
+			"y": 203,
+			"width": 265,
+			"height": 75,
+			"stroke": "#6b7280",
+			"strokeWidth": 2,
+			"fill": "transparent",
+			"rx": 0,
+			"text": "Index",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#6b7280",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "6eaf95bd-2e76-4f36-8f9e-86b8179a08c5",
+			"type": "rect",
+			"x": 603,
+			"y": 203,
+			"width": 265,
+			"height": 75,
+			"stroke": "#6b7280",
+			"strokeWidth": 2,
+			"fill": "transparent",
+			"rx": 0,
+			"text": "アーキテクチャ",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#6b7280",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "97694ac9-8e53-4aa5-9648-a194e3049934",
+			"type": "rect",
+			"x": 603,
+			"y": 322,
+			"width": 265,
+			"height": 75,
+			"stroke": "#6b7280",
+			"strokeWidth": 2,
+			"fill": "transparent",
+			"rx": 0,
+			"text": "ジェスチャシステム",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#6b7280",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "92df23e6-69ff-4b1f-8b86-63856a9db363",
+			"type": "rect",
+			"x": 603,
+			"y": 468,
+			"width": 265,
+			"height": 75,
+			"stroke": "#6b7280",
+			"strokeWidth": 2,
+			"fill": "transparent",
+			"rx": 0,
+			"text": "コマンドシステム",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#6b7280",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "53bf1f9e-bcdf-40ca-98b0-eb2a8bb00afa",
+			"type": "rect",
+			"x": 612,
+			"y": -66,
+			"width": 265,
+			"height": 75,
+			"stroke": "#6b7280",
+			"strokeWidth": 2,
+			"fill": "transparent",
+			"rx": 0,
+			"text": "設計思想",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#6b7280",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "00e2b975-786f-4e99-b9d6-19c2daeea833",
+			"type": "rect",
+			"x": 1003,
+			"y": -323,
+			"width": 265,
+			"height": 75,
+			"stroke": "#6b7280",
+			"strokeWidth": 2,
+			"fill": "transparent",
+			"rx": 0,
+			"text": "性能が第一",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#6b7280",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "4c0d5506-244a-4570-8de0-81c17cbf0edb",
+			"type": "rect",
+			"x": 1003,
+			"y": -200.5,
+			"width": 319,
+			"height": 75,
+			"stroke": "#6b7280",
+			"strokeWidth": 2,
+			"fill": "transparent",
+			"rx": 0,
+			"text": "可能な限り純粋関数",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#6b7280",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "b56d76e0-68fc-4b75-9147-684dfc8f0f83",
+			"type": "rect",
+			"x": 1003,
+			"y": -66,
+			"width": 347,
+			"height": 75,
+			"stroke": "#6b7280",
+			"strokeWidth": 2,
+			"fill": "transparent",
+			"rx": 0,
+			"text": "各イベントのハンドラが、キャンバス全体の状態の更新に責任を持つ",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#6b7280",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "40432a8c-7575-479f-b302-b1ce7a799f66",
+			"type": "rect",
+			"x": 1454,
+			"y": -200.5,
+			"width": 347,
+			"height": 75,
+			"stroke": "#6b7280",
+			"strokeWidth": 2,
+			"fill": "transparent",
+			"rx": 0,
+			"text": "テストを容易に",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#6b7280",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "39da020d-d30e-437c-aee7-8551dd23e68b",
+			"type": "rect",
+			"x": 1454,
+			"y": -66,
+			"width": 377,
+			"height": 94,
+			"stroke": "#6b7280",
+			"strokeWidth": 2,
+			"fill": "transparent",
+			"rx": 0,
+			"text": "状態の項目ごとにその更新の責任をもつモジュールを作る構造は、多様な状態をとるこのアプリでは難しい想定なので",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#6b7280",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "330d4949-01c0-4a95-a3df-1b2b899e36f2",
+			"type": "rect",
+			"x": 1003,
+			"y": 79.9382,
+			"width": 347,
+			"height": 123.0618,
+			"stroke": "#6b7280",
+			"strokeWidth": 2,
+			"fill": "transparent",
+			"rx": 0,
+			"text": "循環参照など不正な状態は外部から入力される窓口ではじき、内部の関数はそれを前提として、各々で構造の正当性は出来るだけチェックしない",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#6b7280",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "943c387c-d598-46a8-afbe-0dca583f5e3e",
+			"type": "rect",
+			"x": 1471.54425,
+			"y": 101.613,
+			"width": 217.6525,
+			"height": 79.7122,
+			"stroke": "#6b7280",
+			"strokeWidth": 2,
+			"fill": "transparent",
+			"rx": 0,
+			"text": "性能優先なので",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#6b7280",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "829f4048-1453-4046-9670-fa88a8f88898",
+			"type": "rect",
+			"x": 1831.0000499999999,
+			"y": 101.613,
+			"width": 217.6525,
+			"height": 79.7122,
+			"stroke": "#6b7280",
+			"strokeWidth": 2,
+			"fill": "transparent",
+			"rx": 0,
+			"text": "ただ現状は各所でチェック入れてるので、要改善",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#6b7280",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "ffdd3764-249f-4a26-8840-c0dfa8243d0b",
+			"type": "rect",
+			"x": 1057,
+			"y": 322,
+			"width": 265,
+			"height": 75,
+			"stroke": "#6b7280",
+			"strokeWidth": 2,
+			"fill": "transparent",
+			"rx": 0,
+			"text": "data-～系の話",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#6b7280",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		}
+	],
+	"connectors": [
+		{
+			"id": "ddc62fb5-1e43-4f7d-909b-88da13bee5ce",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "3a6a3025-d935-488a-a74b-ba718001594e"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "6eaf95bd-2e76-4f36-8f9e-86b8179a08c5"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#6b7280",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "066c75c1-9c11-4b1f-a8ca-9451bb1b0cbd",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "3a6a3025-d935-488a-a74b-ba718001594e"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "97694ac9-8e53-4aa5-9648-a194e3049934"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#6b7280",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "2c1d5e3a-231d-4e56-8d3c-ff50bb4a5859",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "3a6a3025-d935-488a-a74b-ba718001594e"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "92df23e6-69ff-4b1f-8b86-63856a9db363"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#6b7280",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "94470470-269a-4370-b54f-72db1eb9beca",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "3a6a3025-d935-488a-a74b-ba718001594e"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "53bf1f9e-bcdf-40ca-98b0-eb2a8bb00afa"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#6b7280",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "0e552ab9-8955-4d98-8b2a-185554e2bf4d",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "53bf1f9e-bcdf-40ca-98b0-eb2a8bb00afa"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "00e2b975-786f-4e99-b9d6-19c2daeea833"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#6b7280",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "6ac2104d-4565-4c1c-83c0-a7f125530e60",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "53bf1f9e-bcdf-40ca-98b0-eb2a8bb00afa"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "4c0d5506-244a-4570-8de0-81c17cbf0edb"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#6b7280",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "53454c26-296f-43e5-a9a0-0358b9a5e180",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "53bf1f9e-bcdf-40ca-98b0-eb2a8bb00afa"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "b56d76e0-68fc-4b75-9147-684dfc8f0f83"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#6b7280",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "56bc0836-631e-4bb0-ae01-e22230ec4eca",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "4c0d5506-244a-4570-8de0-81c17cbf0edb"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "40432a8c-7575-479f-b302-b1ce7a799f66"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#6b7280",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "d9fc7e3e-2caf-4e78-b14f-e89eaf78af28",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "b56d76e0-68fc-4b75-9147-684dfc8f0f83"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "39da020d-d30e-437c-aee7-8551dd23e68b"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#6b7280",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "7e9d4923-90fa-4274-97a4-ed831f1fa949",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "53bf1f9e-bcdf-40ca-98b0-eb2a8bb00afa"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "330d4949-01c0-4a95-a3df-1b2b899e36f2"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#6b7280",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "37b33f64-5466-4ee2-88db-9dfe0ed0ae08",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "330d4949-01c0-4a95-a3df-1b2b899e36f2"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "943c387c-d598-46a8-afbe-0dca583f5e3e"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#6b7280",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "bca633f3-df8d-4af0-83f9-1d594d6f8e89",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "943c387c-d598-46a8-afbe-0dca583f5e3e"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "829f4048-1453-4046-9670-fa88a8f88898"
+				},
+				"anchor": {
+					"kind": "center"
+				}
+			},
+			"stroke": "#6b7280",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "21be2d4e-24ae-47ac-a08c-2f6328167921",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "97694ac9-8e53-4aa5-9648-a194e3049934"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "ffdd3764-249f-4a26-8840-c0dfa8243d0b"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#6b7280",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		}
+	]
+}
