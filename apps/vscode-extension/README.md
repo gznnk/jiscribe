@@ -67,7 +67,7 @@ You'll be prompted for a file name. The canvas opens automatically once the file
 
 ### Letting AI Generate a Canvas
 
-Because `.jis.json` is schema-backed JSON, you can have an AI assistant (e.g., Copilot, Claude) generate a diagram from a text prompt:
+Because `.jis.json` is schema-backed JSON, you can have an AI assistant generate a diagram from a text prompt:
 
 1. Run the Command Palette command **Jiscribe: Set up AI** and pick your agents (Claude Code, Cursor, GitHub Copilot).  
    This places an authoring guide and schema under `.jiscribe/` plus a small adapter for each selected agent, so your AI assistant knows how to write `.jis.json`.
