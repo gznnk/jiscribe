@@ -1,8 +1,4 @@
-import { calcPolyBoundingBox, isTransformedFrame } from "@workspace/geometry";
-
-import { isPoly } from "../../../schemas/objects/types/Poly";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createMultiSelectGroup } from "../../gestures/handlers/objects/utils/createMultiSelectGroup";
@@ -10,93 +6,9 @@ import { cloneObjects } from "../../reducer/handlers/cloneObjects";
 import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWithDescendants";
 import { updateGroupBoundsFromRoot } from "../../utils/updateGroupBoundsFromRoot";
 import type { Command } from "../CommandTypes";
-
-const DUPLICATE_OFFSET = { x: 20, y: 20 };
-
-/**
- * 選択中オブジェクトの現在の中心座標を返す。
- * 複数選択: multiSelectGroup の cx/cy を使用。
- * 単一選択: オブジェクト型に応じて cx/cy またはバウンドボックス中心を算出。
- */
-function getSelectionCenter(
-	state: CanvasControllerState,
-	ids: string[],
-): { cx: number; cy: number } | null {
-	if (ids.length === 0) {
-		return null;
-	}
-
-	if (ids.length > 1) {
-		const msg = state.multiSelectGroup;
-		return msg ? { cx: msg.cx, cy: msg.cy } : null;
-	}
-
-	const obj = state.objects[ids[0]];
-	if (!obj) {
-		return null;
-	}
-
-	if (obj.type === "group") {
-		const g = obj as GroupState;
-		return { cx: g.cx, cy: g.cy };
-	}
-	if (isTransformedFrame(obj)) {
-		return { cx: obj.cx, cy: obj.cy };
-	}
-	if (isPoly(obj)) {
-		const bbox = calcPolyBoundingBox(obj.points);
-		if (!bbox) {
-			return null;
-		}
-		return {
-			cx: (bbox.left + bbox.right) / 2,
-			cy: (bbox.top + bbox.bottom) / 2,
-		};
-	}
-
-	return null;
-}
-
-/**
- * Move-aware オフセットを計算する。
- *
- * - 直前の複製で作ったオブジェクトが現在選択されている場合:
- *     ユーザーが動かした距離を次のオフセットとして使用（Figma 方式）
- *     ほとんど動いていない場合は前回のオフセットを継続
- * - それ以外: DUPLICATE_OFFSET を使用
- */
-function computeOffset(state: CanvasControllerState): { x: number; y: number } {
-	const { lastDuplicate, selectedIds } = state;
-	if (!lastDuplicate) {
-		return DUPLICATE_OFFSET;
-	}
-
-	// 選択セットが直前の複製結果と一致するか確認
-	if (lastDuplicate.newIds.length !== selectedIds.length) {
-		return DUPLICATE_OFFSET;
-	}
-	const lastSet = new Set(lastDuplicate.newIds);
-	if (!selectedIds.every((id) => lastSet.has(id))) {
-		return DUPLICATE_OFFSET;
-	}
-
-	// 現在の選択中心を取得
-	const center = getSelectionCenter(state, selectedIds);
-	if (!center) {
-		return lastDuplicate.offset;
-	}
-
-	const dx = center.cx - lastDuplicate.cx;
-	const dy = center.cy - lastDuplicate.cy;
-
-	// ほぼ動いていない（1px 未満）→ 前回オフセットを継続
-	if (Math.abs(dx) < 1 && Math.abs(dy) < 1) {
-		return lastDuplicate.offset;
-	}
-
-	// 動かした距離を新しいオフセットとして採用
-	return { x: dx, y: dy };
-}
+import { computeDuplicateOffset } from "./utils/computeDuplicateOffset";
+import { getSelectionCenter } from "./utils/getSelectionCenter";
+import { selectConnectorsInSelection } from "./utils/selectConnectorsInSelection";
 
 export const DuplicateCommand: Command = {
 	id: "duplicate",
@@ -128,22 +40,13 @@ export const DuplicateCommand: Command = {
 		}
 
 		// 両端点が選択範囲内のコネクターのみ複製（CopyCommand と同じ判定）
-		const connectorIds: string[] = [];
-		for (const connId of state.connectorIds) {
-			const conn = state.objects[connId] as ConnectorState | undefined;
-			if (!conn) {
-				continue;
-			}
-			const sourceOwnerId = conn.source.owner?.id;
-			const targetOwnerId = conn.target.owner?.id;
-			const sourceOk =
-				!sourceOwnerId || selectedIdsWithDescendants.has(sourceOwnerId);
-			const targetOk =
-				!targetOwnerId || selectedIdsWithDescendants.has(targetOwnerId);
-			if (sourceOk && targetOk) {
-				connectorIds.push(connId);
-				allObjects[connId] = conn;
-			}
+		const connectorIds = selectConnectorsInSelection(
+			state.connectorIds,
+			state.objects,
+			selectedIdsWithDescendants,
+		);
+		for (const connId of connectorIds) {
+			allObjects[connId] = state.objects[connId];
 		}
 
 		// ── 2. 配置先グループの判定 ───────────────────────────────────────────
@@ -158,7 +61,7 @@ export const DuplicateCommand: Command = {
 			allSameParent && firstParentId != null ? firstParentId : null;
 
 		// ── 3. オフセット計算（move-aware）────────────────────────────────────
-		const offset = computeOffset(state);
+		const offset = computeDuplicateOffset(state);
 
 		// ── 4. オブジェクトの複製 ─────────────────────────────────────────────
 		const { newObjects, newRootIds, newConnectorIds } = cloneObjects(
