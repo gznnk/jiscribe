@@ -11,7 +11,7 @@ const initialDoc: CanvasDoc = {
 
 export function App() {
 	useEffect(() => {
-		document.title = `SvgCanvas2 Demo [${__GIT_BRANCH__}]`;
+		document.title = `svg-canvas-2 Demo [${__GIT_BRANCH__}]`;
 	}, []);
 
 	return (

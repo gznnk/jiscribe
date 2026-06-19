@@ -5,10 +5,13 @@ svg-canvasの新しいバージョンです。
 ## 使い方
 
 ```tsx
-import { SvgCanvas2 } from "@workspace/svg-canvas-2";
+import { Canvas } from "@workspace/svg-canvas-2";
+import type { CanvasDoc } from "@workspace/svg-canvas-2";
+
+const initialDoc: CanvasDoc = { version: 1, root: [], connectors: [] };
 
 function App() {
-	return <SvgCanvas2 width={800} height={600} />;
+	return <Canvas canvasDoc={initialDoc} />;
 }
 ```
 

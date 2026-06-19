@@ -14,7 +14,7 @@
 
 ```
 packages/svg-canvas-2/src/
-├── SvgCanvas2.tsx          # パッケージエントリーポイント（UI 依存あり）
+├── index.ts                # パッケージエントリ（Canvas / CanvasDoc / parseCanvasText を re-export）
 ├── parser.ts               # パーサー専用エントリ（UI 依存なし。VSCode 拡張の Node 側向け）
 ├── schemas/                # 永続化データ型定義（Doc モデル）+ 構造/意味の検証
 │   ├── canvas/
