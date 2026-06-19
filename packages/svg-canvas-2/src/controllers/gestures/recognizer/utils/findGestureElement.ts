@@ -6,7 +6,7 @@
  *   inputValue の収穫対象にもなる（スライダーなどネイティブのドラッグ挙動が必要な入力要素向け）
  * - "native-wheel": 要素がスクロール可能な場合、wheel をネイティブスクロールに任せる
  *
- * 詳細は packages/svg-canvas-2/docs/gesture-attributes.md を参照。
+ * 詳細は packages/svg-canvas-2/docs/04-gesture-system.md を参照。
  */
 export type GestureToken = "none" | "native-pointer" | "native-wheel";
 
