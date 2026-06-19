@@ -1,9 +1,9 @@
 import { isTransformedFrame } from "@workspace/geometry";
 
-import type { ClipboardData } from "./ClipboardData";
-import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
 import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWithDescendants";
 import type { Command } from "../CommandTypes";
+import type { ClipboardData } from "./ClipboardData";
+import { selectConnectorsInSelection } from "./utils/selectConnectorsInSelection";
 
 export const CopyCommand: Command = {
 	id: "copy",
@@ -31,23 +31,14 @@ export const CopyCommand: Command = {
 			}
 		}
 
-		// Only include connectors whose both endpoints are within the selection
-		const connectorIds: string[] = [];
-		for (const connId of state.connectorIds) {
-			const conn = state.objects[connId] as ConnectorState | undefined;
-			if (!conn) {
-				continue;
-			}
-			const sourceOwnerId = conn.source.owner?.id;
-			const targetOwnerId = conn.target.owner?.id;
-			const sourceOk =
-				!sourceOwnerId || selectedIdsWithDescendants.has(sourceOwnerId);
-			const targetOk =
-				!targetOwnerId || selectedIdsWithDescendants.has(targetOwnerId);
-			if (sourceOk && targetOk) {
-				connectorIds.push(connId);
-				objects[connId] = conn;
-			}
+		// 両端点が選択範囲内のコネクターのみコピー（DuplicateCommand と同じ判定）
+		const connectorIds = selectConnectorsInSelection(
+			state.connectorIds,
+			state.objects,
+			selectedIdsWithDescendants,
+		);
+		for (const connId of connectorIds) {
+			objects[connId] = state.objects[connId];
 		}
 
 		const firstObj = state.objects[state.selectedIds[0]];
