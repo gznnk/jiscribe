@@ -3,281 +3,1001 @@
 	"version": 1,
 	"root": [
 		{
-			"id": "3a6a3025-d935-488a-a74b-ba718001594e",
+			"id": "cf3cb2d4-e48e-4ec5-8a48-a5cb117eb612",
 			"type": "rect",
-			"x": 202,
-			"y": 203,
-			"width": 265,
+			"x": 120,
+			"y": 2417.861,
+			"width": 220,
 			"height": 75,
-			"stroke": "#6b7280",
+			"stroke": "#6366f1",
 			"strokeWidth": 2,
-			"fill": "transparent",
-			"rx": 0,
+			"fill": "#4338ca",
+			"rx": 8,
 			"text": "Index",
 			"textType": "text",
 			"textAlign": "center",
 			"verticalAlign": "middle",
-			"fontColor": "#6b7280",
+			"fontColor": "#ffffff",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
 			"fontWeight": "normal"
 		},
 		{
-			"id": "6eaf95bd-2e76-4f36-8f9e-86b8179a08c5",
+			"id": "55851003-1450-48b5-a6ac-24bcedbe8bcd",
 			"type": "rect",
-			"x": 603,
-			"y": 203,
-			"width": 265,
+			"x": 600,
+			"y": 209.625,
+			"width": 260,
 			"height": 75,
-			"stroke": "#6b7280",
+			"stroke": "#4b5563",
 			"strokeWidth": 2,
-			"fill": "transparent",
-			"rx": 0,
-			"text": "アーキテクチャ",
-			"textType": "text",
-			"textAlign": "center",
-			"verticalAlign": "middle",
-			"fontColor": "#6b7280",
-			"fontSize": 16,
-			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
-		},
-		{
-			"id": "97694ac9-8e53-4aa5-9648-a194e3049934",
-			"type": "rect",
-			"x": 603,
-			"y": 322,
-			"width": 265,
-			"height": 75,
-			"stroke": "#6b7280",
-			"strokeWidth": 2,
-			"fill": "transparent",
-			"rx": 0,
-			"text": "ジェスチャシステム",
-			"textType": "text",
-			"textAlign": "center",
-			"verticalAlign": "middle",
-			"fontColor": "#6b7280",
-			"fontSize": 16,
-			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
-		},
-		{
-			"id": "92df23e6-69ff-4b1f-8b86-63856a9db363",
-			"type": "rect",
-			"x": 603,
-			"y": 468,
-			"width": 265,
-			"height": 75,
-			"stroke": "#6b7280",
-			"strokeWidth": 2,
-			"fill": "transparent",
-			"rx": 0,
-			"text": "コマンドシステム",
-			"textType": "text",
-			"textAlign": "center",
-			"verticalAlign": "middle",
-			"fontColor": "#6b7280",
-			"fontSize": 16,
-			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
-		},
-		{
-			"id": "53bf1f9e-bcdf-40ca-98b0-eb2a8bb00afa",
-			"type": "rect",
-			"x": 612,
-			"y": -66,
-			"width": 265,
-			"height": 75,
-			"stroke": "#6b7280",
-			"strokeWidth": 2,
-			"fill": "transparent",
-			"rx": 0,
+			"fill": "#1f2937",
+			"rx": 8,
 			"text": "設計思想",
 			"textType": "text",
 			"textAlign": "center",
 			"verticalAlign": "middle",
-			"fontColor": "#6b7280",
+			"fontColor": "#f3f4f6",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
 			"fontWeight": "normal"
 		},
 		{
-			"id": "00e2b975-786f-4e99-b9d6-19c2daeea833",
+			"id": "0dc3f5c4-15a4-4eed-8c96-70d3d15a171c",
 			"type": "rect",
-			"x": 1003,
-			"y": -323,
-			"width": 265,
+			"x": 1080,
+			"y": 0.0,
+			"width": 360,
 			"height": 75,
-			"stroke": "#6b7280",
+			"stroke": "#374151",
 			"strokeWidth": 2,
-			"fill": "transparent",
-			"rx": 0,
-			"text": "性能が第一",
+			"fill": "#111827",
+			"rx": 8,
+			"text": "性能を最優先する",
 			"textType": "text",
 			"textAlign": "center",
 			"verticalAlign": "middle",
-			"fontColor": "#6b7280",
+			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
 			"fontWeight": "normal"
 		},
 		{
-			"id": "4c0d5506-244a-4570-8de0-81c17cbf0edb",
+			"id": "cdb15197-10b1-4f33-a0a7-0b5b6f9afee0",
 			"type": "rect",
-			"x": 1003,
-			"y": -200.5,
-			"width": 319,
+			"x": 1080,
+			"y": 130.0,
+			"width": 360,
 			"height": 75,
-			"stroke": "#6b7280",
+			"stroke": "#374151",
 			"strokeWidth": 2,
-			"fill": "transparent",
-			"rx": 0,
-			"text": "可能な限り純粋関数",
+			"fill": "#111827",
+			"rx": 8,
+			"text": "ロジックは可能な限り純粋関数で書く",
 			"textType": "text",
 			"textAlign": "center",
 			"verticalAlign": "middle",
-			"fontColor": "#6b7280",
+			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
 			"fontWeight": "normal"
 		},
 		{
-			"id": "b56d76e0-68fc-4b75-9147-684dfc8f0f83",
+			"id": "660fd4f3-41e9-4a46-be4e-3204ff43724b",
 			"type": "rect",
-			"x": 1003,
-			"y": -66,
-			"width": 347,
+			"x": 1560,
+			"y": 130.0,
+			"width": 380,
 			"height": 75,
-			"stroke": "#6b7280",
+			"stroke": "#374151",
 			"strokeWidth": 2,
-			"fill": "transparent",
-			"rx": 0,
-			"text": "各イベントのハンドラが、キャンバス全体の状態の更新に責任を持つ",
+			"fill": "#111827",
+			"rx": 8,
+			"text": "テストを容易にするため",
 			"textType": "text",
 			"textAlign": "center",
 			"verticalAlign": "middle",
-			"fontColor": "#6b7280",
+			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
 			"fontWeight": "normal"
 		},
 		{
-			"id": "40432a8c-7575-479f-b302-b1ce7a799f66",
+			"id": "c0674d43-6ae7-4573-b644-d35f7b9e3717",
 			"type": "rect",
-			"x": 1454,
-			"y": -200.5,
-			"width": 347,
+			"x": 1080,
+			"y": 275.0,
+			"width": 360,
+			"height": 84,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "各イベントハンドラがキャンバス全体の状態更新に責任を持つ",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "be661037-ed67-4217-8cdc-acda57cbfc2b",
+			"type": "rect",
+			"x": 1560,
+			"y": 260.0,
+			"width": 380,
+			"height": 114,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "状態の項目ごとに更新責任を分割する構造は、相互に依存する多様な状態を扱う本アプリでは破綻しやすいため",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "1e8abfc6-f775-4e68-9439-100dd951ef56",
+			"type": "rect",
+			"x": 1080,
+			"y": 424.5,
+			"width": 360,
+			"height": 84,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "不正な状態（循環参照など）は外部入力の境界で弾き、内部関数は正当性を前提とする",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "9ea9bf6f-7d49-4541-b48c-aabbef36b58e",
+			"type": "rect",
+			"x": 1560,
+			"y": 424.5,
+			"width": 380,
+			"height": 84,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "各所での重複した正当性チェックを避けるのは性能優先のため",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "85c3a124-adc0-441c-ac2a-307b4a2aae4c",
+			"type": "rect",
+			"x": 2040,
+			"y": 429.0,
+			"width": 380,
 			"height": 75,
-			"stroke": "#6b7280",
+			"stroke": "#374151",
 			"strokeWidth": 2,
-			"fill": "transparent",
-			"rx": 0,
-			"text": "テストを容易に",
+			"fill": "#111827",
+			"rx": 8,
+			"text": "現状は内部各所にチェックが残っており要改善",
 			"textType": "text",
 			"textAlign": "center",
 			"verticalAlign": "middle",
-			"fontColor": "#6b7280",
+			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
 			"fontWeight": "normal"
 		},
 		{
-			"id": "39da020d-d30e-437c-aee7-8551dd23e68b",
+			"id": "edc855c1-0615-4a5b-a7f0-fc44d5dbff46",
 			"type": "rect",
-			"x": 1454,
-			"y": -66,
-			"width": 377,
-			"height": 94,
-			"stroke": "#6b7280",
-			"strokeWidth": 2,
-			"fill": "transparent",
-			"rx": 0,
-			"text": "状態の項目ごとにその更新の責任をもつモジュールを作る構造は、多様な状態をとるこのアプリでは難しい想定なので",
-			"textType": "text",
-			"textAlign": "center",
-			"verticalAlign": "middle",
-			"fontColor": "#6b7280",
-			"fontSize": 16,
-			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
-		},
-		{
-			"id": "330d4949-01c0-4a95-a3df-1b2b899e36f2",
-			"type": "rect",
-			"x": 1003,
-			"y": 79.9382,
-			"width": 347,
-			"height": 123.0618,
-			"stroke": "#6b7280",
-			"strokeWidth": 2,
-			"fill": "transparent",
-			"rx": 0,
-			"text": "循環参照など不正な状態は外部から入力される窓口ではじき、内部の関数はそれを前提として、各々で構造の正当性は出来るだけチェックしない",
-			"textType": "text",
-			"textAlign": "center",
-			"verticalAlign": "middle",
-			"fontColor": "#6b7280",
-			"fontSize": 16,
-			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
-		},
-		{
-			"id": "943c387c-d598-46a8-afbe-0dca583f5e3e",
-			"type": "rect",
-			"x": 1471.54425,
-			"y": 101.613,
-			"width": 217.6525,
-			"height": 79.7122,
-			"stroke": "#6b7280",
-			"strokeWidth": 2,
-			"fill": "transparent",
-			"rx": 0,
-			"text": "性能優先なので",
-			"textType": "text",
-			"textAlign": "center",
-			"verticalAlign": "middle",
-			"fontColor": "#6b7280",
-			"fontSize": 16,
-			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
-		},
-		{
-			"id": "829f4048-1453-4046-9670-fa88a8f88898",
-			"type": "rect",
-			"x": 1831.0000499999999,
-			"y": 101.613,
-			"width": 217.6525,
-			"height": 79.7122,
-			"stroke": "#6b7280",
-			"strokeWidth": 2,
-			"fill": "transparent",
-			"rx": 0,
-			"text": "ただ現状は各所でチェック入れてるので、要改善",
-			"textType": "text",
-			"textAlign": "center",
-			"verticalAlign": "middle",
-			"fontColor": "#6b7280",
-			"fontSize": 16,
-			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
-		},
-		{
-			"id": "ffdd3764-249f-4a26-8840-c0dfa8243d0b",
-			"type": "rect",
-			"x": 1057,
-			"y": 322,
-			"width": 265,
+			"x": 600,
+			"y": 757.5,
+			"width": 260,
 			"height": 75,
-			"stroke": "#6b7280",
+			"stroke": "#4b5563",
 			"strokeWidth": 2,
-			"fill": "transparent",
-			"rx": 0,
-			"text": "data-～系の話",
+			"fill": "#1f2937",
+			"rx": 8,
+			"text": "アーキテクチャ",
 			"textType": "text",
 			"textAlign": "center",
 			"verticalAlign": "middle",
-			"fontColor": "#6b7280",
+			"fontColor": "#f3f4f6",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "a9a4263d-c210-4c44-8762-9eddb51fad24",
+			"type": "rect",
+			"x": 1080,
+			"y": 559.0,
+			"width": 360,
+			"height": 144,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "レイヤー分離：schemas / states / controllers / presentations / registry",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "aa954db2-e611-4055-a72c-3c1d553cb11b",
+			"type": "rect",
+			"x": 1080,
+			"y": 758.0,
+			"width": 360,
+			"height": 84,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "依存は下位→上位の一方向のみ（逆依存を禁止）",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "8a997ab5-fd8e-40e8-88a3-ee3a56380625",
+			"type": "rect",
+			"x": 1080,
+			"y": 912.0,
+			"width": 360,
+			"height": 84,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "Registry パターンで形状ごとの機能を動的解決して拡張",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "767fd5c0-3e5e-4e08-be66-652aea448beb",
+			"type": "rect",
+			"x": 1560,
+			"y": 897.0,
+			"width": 380,
+			"height": 114,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "新しい形状の追加手順：Schema→State→Mapper→Controller→Component→登録",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "4e85e257-9bb9-4bea-b76f-9612b2360c15",
+			"type": "rect",
+			"x": 600,
+			"y": 1309.0,
+			"width": 260,
+			"height": 75,
+			"stroke": "#4b5563",
+			"strokeWidth": 2,
+			"fill": "#1f2937",
+			"rx": 8,
+			"text": "データモデルと永続化",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#f3f4f6",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "dc6ba61f-6938-4864-9489-62c69ebb1f0a",
+			"type": "rect",
+			"x": 1080,
+			"y": 1066.0,
+			"width": 360,
+			"height": 114,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "Doc（保存用・ツリー）↔ State（実行用・フラット）を Mapper で相互変換",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "1b31d448-ca31-4d39-af6b-c05adde3660f",
+			"type": "rect",
+			"x": 1080,
+			"y": 1235.0,
+			"width": 360,
+			"height": 84,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "CanvasMapper が全体変換を多態的に集約（registry 参照を許容）",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "4ff5fa95-b2fa-443f-9b9a-8f9cebd40ecf",
+			"type": "rect",
+			"x": 1080,
+			"y": 1374.0,
+			"width": 360,
+			"height": 84,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "永続化フォーマット .jis.json / CanvasDoc の仕様",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "b99a0bf3-03df-4421-a555-66d180fe62b6",
+			"type": "rect",
+			"x": 1080,
+			"y": 1513.0,
+			"width": 360,
+			"height": 114,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "parser の二段検証：構造（validateStructure）→ 意味（validateSemantics）で境界を防御",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "92532169-5105-45e7-9193-4964efddc435",
+			"type": "rect",
+			"x": 600,
+			"y": 1958.75,
+			"width": 260,
+			"height": 75,
+			"stroke": "#4b5563",
+			"strokeWidth": 2,
+			"fill": "#1f2937",
+			"rx": 8,
+			"text": "ジェスチャシステム",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#f3f4f6",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "da49a162-01ea-4753-8a60-27763566ece5",
+			"type": "rect",
+			"x": 1080,
+			"y": 1682.0,
+			"width": 360,
+			"height": 144,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "GestureRecognizer：pointer から gesture を認識（click / doubleClick は排他、RAF バッチ）",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "a1815cae-4038-4d2b-b057-3b4e9c2a46ce",
+			"type": "rect",
+			"x": 1080,
+			"y": 1881.0,
+			"width": 360,
+			"height": 84,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "ハンドラ構成：canvas / controls / menu / objects",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "1becab6d-a255-4b18-8355-5c19add0997b",
+			"type": "rect",
+			"x": 1080,
+			"y": 2020.0,
+			"width": 360,
+			"height": 114,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "連携属性 data-gesture / data-kind / data-id でジェスチャの可否を制御",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "035d7208-0c61-415c-9f47-75560d5a190e",
+			"type": "rect",
+			"x": 1080,
+			"y": 2189.0,
+			"width": 360,
+			"height": 84,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "反復ボタンは click と doubleClick を等価に扱う（連打＝連続実行）",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "937aff2d-0f0b-44b2-aa46-d2d3796ff464",
+			"type": "rect",
+			"x": 600,
+			"y": 2590.125,
+			"width": 260,
+			"height": 75,
+			"stroke": "#4b5563",
+			"strokeWidth": 2,
+			"fill": "#1f2937",
+			"rx": 8,
+			"text": "コマンドシステム",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#f3f4f6",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "e1520e29-3c48-4d62-a0de-021f3caf2225",
+			"type": "rect",
+			"x": 1080,
+			"y": 2328.0,
+			"width": 360,
+			"height": 114,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "CommandRegistry：ショートカット / メニュー / ツールバーが同一経路を通る",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "c4602cb1-fee9-4445-868c-6145c5415a5c",
+			"type": "rect",
+			"x": 1080,
+			"y": 2497.0,
+			"width": 360,
+			"height": 114,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "カテゴリ：selection / edit / arrange / view / text / group / arrow",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "d54ce3c1-3072-45ad-bacf-d4cfc816af33",
+			"type": "rect",
+			"x": 1080,
+			"y": 2666.0,
+			"width": 360,
+			"height": 75,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "Undo / Redo（history）",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "de605386-5724-4d6d-89df-8f5a011a4f6c",
+			"type": "rect",
+			"x": 1080,
+			"y": 2796.0,
+			"width": 360,
+			"height": 144,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "クリップボード：copy / cut / paste / duplicate（untrusted 入力検証は #40 / #46）",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "1fa89e75-198b-483f-9928-650a4003308d",
+			"type": "rect",
+			"x": 600,
+			"y": 3109.5,
+			"width": 260,
+			"height": 84,
+			"stroke": "#4b5563",
+			"strokeWidth": 2,
+			"fill": "#1f2937",
+			"rx": 8,
+			"text": "状態更新フロー（Reducer）",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#f3f4f6",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "7269f411-ee3a-46cf-a236-f2cc98b3be4a",
+			"type": "rect",
+			"x": 1080,
+			"y": 2995.0,
+			"width": 360,
+			"height": 144,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "canvasReducer のアクション：GESTURE / COMMAND / PASTE / SYNC_EXTERNAL ほか",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "9efbcb55-b035-4ac7-97f2-ef8b79431153",
+			"type": "rect",
+			"x": 1080,
+			"y": 3194.0,
+			"width": 360,
+			"height": 84,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "各ハンドラは純粋関数として新しい CanvasState を返す",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "3091677b-7ad1-416e-a41a-57b980d54c5a",
+			"type": "rect",
+			"x": 600,
+			"y": 3429.5,
+			"width": 260,
+			"height": 75,
+			"stroke": "#4b5563",
+			"strokeWidth": 2,
+			"fill": "#1f2937",
+			"rx": 8,
+			"text": "外部同期・VSCode 連携",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#f3f4f6",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "b2de7bc5-26e0-40b1-aec7-107379199955",
+			"type": "rect",
+			"x": 1080,
+			"y": 3333.0,
+			"width": 360,
+			"height": 114,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "useSyncExternalDoc / SYNC_EXTERNAL：ホスト側のファイル変更を取り込む",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "7cd905f1-4b05-4667-aa4b-178eeb84c8e5",
+			"type": "rect",
+			"x": 1080,
+			"y": 3502.0,
+			"width": 360,
+			"height": 84,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "saveNonce 折り返し時の競合（#29）",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "31748fae-59cf-4b66-81fc-68e4aa32f598",
+			"type": "rect",
+			"x": 600,
+			"y": 3829.5,
+			"width": 260,
+			"height": 75,
+			"stroke": "#4b5563",
+			"strokeWidth": 2,
+			"fill": "#1f2937",
+			"rx": 8,
+			"text": "表示・テーマ",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#f3f4f6",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "5bfacf2b-a992-4bc8-acd3-d3504250c14e",
+			"type": "rect",
+			"x": 1080,
+			"y": 3641.0,
+			"width": 360,
+			"height": 114,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "presentations は純粋描画（状態を持たず Props で受け取る Dumb Component）",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "0b078681-5e60-413d-8bfa-02a57f660e22",
+			"type": "rect",
+			"x": 1080,
+			"y": 3810.0,
+			"width": 360,
+			"height": 114,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "色は presentation 属性か CSS（var(--vscode-*) / color-mix 解決時）かを使い分ける",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "d850dc93-126f-4398-bc64-15e7cb6d7cdf",
+			"type": "rect",
+			"x": 1080,
+			"y": 3979.0,
+			"width": 360,
+			"height": 114,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "UI クロームは VSCode テーマトークンを参照し、図形データの色（fill/stroke）と区別する",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "cc8734a7-84b9-44d5-9f9c-36eb7abead8d",
+			"type": "rect",
+			"x": 600,
+			"y": 4562.75,
+			"width": 260,
+			"height": 75,
+			"stroke": "#4b5563",
+			"strokeWidth": 2,
+			"fill": "#1f2937",
+			"rx": 8,
+			"text": "テスト",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#f3f4f6",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "7e6d3a8f-712f-4c92-9f49-c48cbcf848b8",
+			"type": "rect",
+			"x": 1080,
+			"y": 4148.0,
+			"width": 360,
+			"height": 114,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "ユニットテスト：各層 co-located の __tests__/（vitest・environment node）",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "8fb0058e-947b-4702-a563-bb7d32fa77d7",
+			"type": "rect",
+			"x": 1560,
+			"y": 4148.0,
+			"width": 380,
+			"height": 114,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "対象は schemas / states / controllers / presentations の純粋関数群",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "94fd889c-e172-4af7-a995-a45dc64ba5f4",
+			"type": "rect",
+			"x": 1080,
+			"y": 4317.0,
+			"width": 360,
+			"height": 114,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "結合テスト：__integration__/ で canvasReducer 経由の振る舞いを検証",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "83e6313f-0ab3-4018-a513-cafd779c4f38",
+			"type": "rect",
+			"x": 1560,
+			"y": 4317.0,
+			"width": 380,
+			"height": 114,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "coalescing / commitSources / externalSync / undoRedo の 4 観点",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "4295398d-cd33-4858-abfd-c06f61718bb5",
+			"type": "rect",
+			"x": 1080,
+			"y": 4715.0,
+			"width": 360,
+			"height": 84,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "E2E：Playwright（apps/svg-canvas-demo/e2e）",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "ac37b638-4a2f-4375-b558-a6a72ae0f020",
+			"type": "rect",
+			"x": 1560,
+			"y": 4486.0,
+			"width": 380,
+			"height": 174,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "CanvasDriver で実 UI 操作。specs/ が CI ゲート（arrange / driver / editing / keyboard / scenario / shapes / ui）",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "f1275e2b-7a24-4de7-a94d-619bd47d9db8",
+			"type": "rect",
+			"x": 1560,
+			"y": 4715.0,
+			"width": 380,
+			"height": 114,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "e2e/demo はマーケ素材生成用で testDir 外（test:e2e:demo のみ・CI 外）",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "d25e8e6c-35e3-468e-ae29-815507401232",
+			"type": "rect",
+			"x": 1560,
+			"y": 4884.0,
+			"width": 380,
+			"height": 84,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "失敗を隠すリトライは入れず、時間待ちでなく状態待ちで安定させる",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal"
+		},
+		{
+			"id": "02fe8d8c-d859-4424-9bbb-bc4339546da4",
+			"type": "rect",
+			"x": 1080,
+			"y": 5023.0,
+			"width": 360,
+			"height": 84,
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"rx": 8,
+			"text": "循環依存チェック：madge（dep:circle）でレイヤー逆依存を検出",
+			"textType": "text",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
 			"fontWeight": "normal"
@@ -285,13 +1005,13 @@
 	],
 	"connectors": [
 		{
-			"id": "ddc62fb5-1e43-4f7d-909b-88da13bee5ce",
+			"id": "6cee743d-de2f-4277-8f0a-32df495e4748",
 			"type": "connector",
 			"points": [],
 			"source": {
 				"owner": {
 					"type": "rect",
-					"id": "3a6a3025-d935-488a-a74b-ba718001594e"
+					"id": "cf3cb2d4-e48e-4ec5-8a48-a5cb117eb612"
 				},
 				"anchor": {
 					"kind": "connectPoint",
@@ -301,25 +1021,25 @@
 			"target": {
 				"owner": {
 					"type": "rect",
-					"id": "6eaf95bd-2e76-4f36-8f9e-86b8179a08c5"
+					"id": "55851003-1450-48b5-a6ac-24bcedbe8bcd"
 				},
 				"anchor": {
 					"kind": "connectPoint",
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#6b7280",
+			"stroke": "#9ca3af",
 			"strokeWidth": 2,
 			"endArrow": "ConcaveTriangle"
 		},
 		{
-			"id": "066c75c1-9c11-4b1f-a8ca-9451bb1b0cbd",
+			"id": "f09957ff-0c62-4505-b9c9-0eecd0803756",
 			"type": "connector",
 			"points": [],
 			"source": {
 				"owner": {
 					"type": "rect",
-					"id": "3a6a3025-d935-488a-a74b-ba718001594e"
+					"id": "55851003-1450-48b5-a6ac-24bcedbe8bcd"
 				},
 				"anchor": {
 					"kind": "connectPoint",
@@ -329,25 +1049,25 @@
 			"target": {
 				"owner": {
 					"type": "rect",
-					"id": "97694ac9-8e53-4aa5-9648-a194e3049934"
+					"id": "0dc3f5c4-15a4-4eed-8c96-70d3d15a171c"
 				},
 				"anchor": {
 					"kind": "connectPoint",
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#6b7280",
+			"stroke": "#9ca3af",
 			"strokeWidth": 2,
 			"endArrow": "ConcaveTriangle"
 		},
 		{
-			"id": "2c1d5e3a-231d-4e56-8d3c-ff50bb4a5859",
+			"id": "7820632f-148a-4b5b-8960-51300068b6e8",
 			"type": "connector",
 			"points": [],
 			"source": {
 				"owner": {
 					"type": "rect",
-					"id": "3a6a3025-d935-488a-a74b-ba718001594e"
+					"id": "55851003-1450-48b5-a6ac-24bcedbe8bcd"
 				},
 				"anchor": {
 					"kind": "connectPoint",
@@ -357,25 +1077,25 @@
 			"target": {
 				"owner": {
 					"type": "rect",
-					"id": "92df23e6-69ff-4b1f-8b86-63856a9db363"
+					"id": "cdb15197-10b1-4f33-a0a7-0b5b6f9afee0"
 				},
 				"anchor": {
 					"kind": "connectPoint",
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#6b7280",
+			"stroke": "#9ca3af",
 			"strokeWidth": 2,
 			"endArrow": "ConcaveTriangle"
 		},
 		{
-			"id": "94470470-269a-4370-b54f-72db1eb9beca",
+			"id": "be04f5ea-9080-4bce-8b15-8ba0bf8f2b7b",
 			"type": "connector",
 			"points": [],
 			"source": {
 				"owner": {
 					"type": "rect",
-					"id": "3a6a3025-d935-488a-a74b-ba718001594e"
+					"id": "cdb15197-10b1-4f33-a0a7-0b5b6f9afee0"
 				},
 				"anchor": {
 					"kind": "connectPoint",
@@ -385,25 +1105,25 @@
 			"target": {
 				"owner": {
 					"type": "rect",
-					"id": "53bf1f9e-bcdf-40ca-98b0-eb2a8bb00afa"
+					"id": "660fd4f3-41e9-4a46-be4e-3204ff43724b"
 				},
 				"anchor": {
 					"kind": "connectPoint",
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#6b7280",
+			"stroke": "#9ca3af",
 			"strokeWidth": 2,
 			"endArrow": "ConcaveTriangle"
 		},
 		{
-			"id": "0e552ab9-8955-4d98-8b2a-185554e2bf4d",
+			"id": "a1da32af-2885-4113-9fdf-3dd570ae3996",
 			"type": "connector",
 			"points": [],
 			"source": {
 				"owner": {
 					"type": "rect",
-					"id": "53bf1f9e-bcdf-40ca-98b0-eb2a8bb00afa"
+					"id": "55851003-1450-48b5-a6ac-24bcedbe8bcd"
 				},
 				"anchor": {
 					"kind": "connectPoint",
@@ -413,25 +1133,25 @@
 			"target": {
 				"owner": {
 					"type": "rect",
-					"id": "00e2b975-786f-4e99-b9d6-19c2daeea833"
+					"id": "c0674d43-6ae7-4573-b644-d35f7b9e3717"
 				},
 				"anchor": {
 					"kind": "connectPoint",
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#6b7280",
+			"stroke": "#9ca3af",
 			"strokeWidth": 2,
 			"endArrow": "ConcaveTriangle"
 		},
 		{
-			"id": "6ac2104d-4565-4c1c-83c0-a7f125530e60",
+			"id": "c7f71f3a-5de5-4b89-ae53-fb3c42ac077c",
 			"type": "connector",
 			"points": [],
 			"source": {
 				"owner": {
 					"type": "rect",
-					"id": "53bf1f9e-bcdf-40ca-98b0-eb2a8bb00afa"
+					"id": "c0674d43-6ae7-4573-b644-d35f7b9e3717"
 				},
 				"anchor": {
 					"kind": "connectPoint",
@@ -441,25 +1161,25 @@
 			"target": {
 				"owner": {
 					"type": "rect",
-					"id": "4c0d5506-244a-4570-8de0-81c17cbf0edb"
+					"id": "be661037-ed67-4217-8cdc-acda57cbfc2b"
 				},
 				"anchor": {
 					"kind": "connectPoint",
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#6b7280",
+			"stroke": "#9ca3af",
 			"strokeWidth": 2,
 			"endArrow": "ConcaveTriangle"
 		},
 		{
-			"id": "53454c26-296f-43e5-a9a0-0358b9a5e180",
+			"id": "f909f7b3-72c9-447e-82f8-e185a690468e",
 			"type": "connector",
 			"points": [],
 			"source": {
 				"owner": {
 					"type": "rect",
-					"id": "53bf1f9e-bcdf-40ca-98b0-eb2a8bb00afa"
+					"id": "55851003-1450-48b5-a6ac-24bcedbe8bcd"
 				},
 				"anchor": {
 					"kind": "connectPoint",
@@ -469,25 +1189,25 @@
 			"target": {
 				"owner": {
 					"type": "rect",
-					"id": "b56d76e0-68fc-4b75-9147-684dfc8f0f83"
+					"id": "1e8abfc6-f775-4e68-9439-100dd951ef56"
 				},
 				"anchor": {
 					"kind": "connectPoint",
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#6b7280",
+			"stroke": "#9ca3af",
 			"strokeWidth": 2,
 			"endArrow": "ConcaveTriangle"
 		},
 		{
-			"id": "56bc0836-631e-4bb0-ae01-e22230ec4eca",
+			"id": "b1c7ba37-c892-4429-bb0f-0c1841764990",
 			"type": "connector",
 			"points": [],
 			"source": {
 				"owner": {
 					"type": "rect",
-					"id": "4c0d5506-244a-4570-8de0-81c17cbf0edb"
+					"id": "1e8abfc6-f775-4e68-9439-100dd951ef56"
 				},
 				"anchor": {
 					"kind": "connectPoint",
@@ -497,25 +1217,25 @@
 			"target": {
 				"owner": {
 					"type": "rect",
-					"id": "40432a8c-7575-479f-b302-b1ce7a799f66"
+					"id": "9ea9bf6f-7d49-4541-b48c-aabbef36b58e"
 				},
 				"anchor": {
 					"kind": "connectPoint",
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#6b7280",
+			"stroke": "#9ca3af",
 			"strokeWidth": 2,
 			"endArrow": "ConcaveTriangle"
 		},
 		{
-			"id": "d9fc7e3e-2caf-4e78-b14f-e89eaf78af28",
+			"id": "e490af06-4470-4457-bcb8-8d8266e4e3ca",
 			"type": "connector",
 			"points": [],
 			"source": {
 				"owner": {
 					"type": "rect",
-					"id": "b56d76e0-68fc-4b75-9147-684dfc8f0f83"
+					"id": "9ea9bf6f-7d49-4541-b48c-aabbef36b58e"
 				},
 				"anchor": {
 					"kind": "connectPoint",
@@ -525,25 +1245,25 @@
 			"target": {
 				"owner": {
 					"type": "rect",
-					"id": "39da020d-d30e-437c-aee7-8551dd23e68b"
+					"id": "85c3a124-adc0-441c-ac2a-307b4a2aae4c"
 				},
 				"anchor": {
 					"kind": "connectPoint",
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#6b7280",
+			"stroke": "#9ca3af",
 			"strokeWidth": 2,
 			"endArrow": "ConcaveTriangle"
 		},
 		{
-			"id": "7e9d4923-90fa-4274-97a4-ed831f1fa949",
+			"id": "d1e2e572-3875-40cf-b93a-47764131538d",
 			"type": "connector",
 			"points": [],
 			"source": {
 				"owner": {
 					"type": "rect",
-					"id": "53bf1f9e-bcdf-40ca-98b0-eb2a8bb00afa"
+					"id": "cf3cb2d4-e48e-4ec5-8a48-a5cb117eb612"
 				},
 				"anchor": {
 					"kind": "connectPoint",
@@ -553,25 +1273,25 @@
 			"target": {
 				"owner": {
 					"type": "rect",
-					"id": "330d4949-01c0-4a95-a3df-1b2b899e36f2"
+					"id": "edc855c1-0615-4a5b-a7f0-fc44d5dbff46"
 				},
 				"anchor": {
 					"kind": "connectPoint",
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#6b7280",
+			"stroke": "#9ca3af",
 			"strokeWidth": 2,
 			"endArrow": "ConcaveTriangle"
 		},
 		{
-			"id": "37b33f64-5466-4ee2-88db-9dfe0ed0ae08",
+			"id": "12c64932-83cf-41b4-bf0f-e48971119f02",
 			"type": "connector",
 			"points": [],
 			"source": {
 				"owner": {
 					"type": "rect",
-					"id": "330d4949-01c0-4a95-a3df-1b2b899e36f2"
+					"id": "edc855c1-0615-4a5b-a7f0-fc44d5dbff46"
 				},
 				"anchor": {
 					"kind": "connectPoint",
@@ -581,25 +1301,25 @@
 			"target": {
 				"owner": {
 					"type": "rect",
-					"id": "943c387c-d598-46a8-afbe-0dca583f5e3e"
+					"id": "a9a4263d-c210-4c44-8762-9eddb51fad24"
 				},
 				"anchor": {
 					"kind": "connectPoint",
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#6b7280",
+			"stroke": "#9ca3af",
 			"strokeWidth": 2,
 			"endArrow": "ConcaveTriangle"
 		},
 		{
-			"id": "bca633f3-df8d-4af0-83f9-1d594d6f8e89",
+			"id": "d0e9210d-2d2b-4c9e-aebc-7dfe144831c9",
 			"type": "connector",
 			"points": [],
 			"source": {
 				"owner": {
 					"type": "rect",
-					"id": "943c387c-d598-46a8-afbe-0dca583f5e3e"
+					"id": "edc855c1-0615-4a5b-a7f0-fc44d5dbff46"
 				},
 				"anchor": {
 					"kind": "connectPoint",
@@ -609,41 +1329,1050 @@
 			"target": {
 				"owner": {
 					"type": "rect",
-					"id": "829f4048-1453-4046-9670-fa88a8f88898"
-				},
-				"anchor": {
-					"kind": "center"
-				}
-			},
-			"stroke": "#6b7280",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
-		},
-		{
-			"id": "21be2d4e-24ae-47ac-a08c-2f6328167921",
-			"type": "connector",
-			"points": [],
-			"source": {
-				"owner": {
-					"type": "rect",
-					"id": "97694ac9-8e53-4aa5-9648-a194e3049934"
-				},
-				"anchor": {
-					"kind": "connectPoint",
-					"id": "rightCenter"
-				}
-			},
-			"target": {
-				"owner": {
-					"type": "rect",
-					"id": "ffdd3764-249f-4a26-8840-c0dfa8243d0b"
+					"id": "aa954db2-e611-4055-a72c-3c1d553cb11b"
 				},
 				"anchor": {
 					"kind": "connectPoint",
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#6b7280",
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "4565366d-78d2-4dd1-8773-3c77a9386017",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "edc855c1-0615-4a5b-a7f0-fc44d5dbff46"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "8a997ab5-fd8e-40e8-88a3-ee3a56380625"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "6baca3a0-6016-439a-978e-e001c6ffb7cc",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "8a997ab5-fd8e-40e8-88a3-ee3a56380625"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "767fd5c0-3e5e-4e08-be66-652aea448beb"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "f9f612be-2391-47aa-ac2d-0311e85315e1",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "cf3cb2d4-e48e-4ec5-8a48-a5cb117eb612"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "4e85e257-9bb9-4bea-b76f-9612b2360c15"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "9169de10-0318-4232-853f-9da70aa7147c",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "4e85e257-9bb9-4bea-b76f-9612b2360c15"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "dc6ba61f-6938-4864-9489-62c69ebb1f0a"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "d9a66249-b6c2-4243-8011-30f8e7068133",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "4e85e257-9bb9-4bea-b76f-9612b2360c15"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "1b31d448-ca31-4d39-af6b-c05adde3660f"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "20a146a9-1721-42ba-844b-642e2c7ab617",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "4e85e257-9bb9-4bea-b76f-9612b2360c15"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "4ff5fa95-b2fa-443f-9b9a-8f9cebd40ecf"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "ffa7dda5-b871-4313-b1c3-ed7ecc488abb",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "4e85e257-9bb9-4bea-b76f-9612b2360c15"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "b99a0bf3-03df-4421-a555-66d180fe62b6"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "9f2e7875-7787-4920-9ac0-2f2b44edf7ad",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "cf3cb2d4-e48e-4ec5-8a48-a5cb117eb612"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "92532169-5105-45e7-9193-4964efddc435"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "337c664f-06cb-48f6-a4d2-12863dab9383",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "92532169-5105-45e7-9193-4964efddc435"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "da49a162-01ea-4753-8a60-27763566ece5"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "2df893a5-faf4-4839-90f7-a77d5948de5d",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "92532169-5105-45e7-9193-4964efddc435"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "a1815cae-4038-4d2b-b057-3b4e9c2a46ce"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "3a413bb3-7a46-417b-9ba9-a9bd17176a20",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "92532169-5105-45e7-9193-4964efddc435"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "1becab6d-a255-4b18-8355-5c19add0997b"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "b20404fc-c28d-4274-b341-faa6ae153ec5",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "92532169-5105-45e7-9193-4964efddc435"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "035d7208-0c61-415c-9f47-75560d5a190e"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "79caa42f-2f1d-432e-bc4a-a9fd254ab8ea",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "cf3cb2d4-e48e-4ec5-8a48-a5cb117eb612"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "937aff2d-0f0b-44b2-aa46-d2d3796ff464"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "6e508f03-d9dc-4bba-9310-c87716b5f2d8",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "937aff2d-0f0b-44b2-aa46-d2d3796ff464"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "e1520e29-3c48-4d62-a0de-021f3caf2225"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "10ac87da-d340-4005-a189-f455e24aaeb5",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "937aff2d-0f0b-44b2-aa46-d2d3796ff464"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "c4602cb1-fee9-4445-868c-6145c5415a5c"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "c6463cc2-ec9f-4100-bf3a-49247b4f1fe8",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "937aff2d-0f0b-44b2-aa46-d2d3796ff464"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "d54ce3c1-3072-45ad-bacf-d4cfc816af33"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "cc31b624-0b1c-4a7b-877f-a9d67509f8b4",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "937aff2d-0f0b-44b2-aa46-d2d3796ff464"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "de605386-5724-4d6d-89df-8f5a011a4f6c"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "34bb6881-4b00-4ce2-9ee4-33ee1f077531",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "cf3cb2d4-e48e-4ec5-8a48-a5cb117eb612"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "1fa89e75-198b-483f-9928-650a4003308d"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "d3240895-5d8b-478c-9ab2-3162868b1732",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "1fa89e75-198b-483f-9928-650a4003308d"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "7269f411-ee3a-46cf-a236-f2cc98b3be4a"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "896bfab8-ab13-42f3-aa9b-c182ecc18472",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "1fa89e75-198b-483f-9928-650a4003308d"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "9efbcb55-b035-4ac7-97f2-ef8b79431153"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "01f599c6-b183-4f08-879c-db1cc4c7404a",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "cf3cb2d4-e48e-4ec5-8a48-a5cb117eb612"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "3091677b-7ad1-416e-a41a-57b980d54c5a"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "d0ddd73a-dcaf-43a0-b4b2-e9e37980d46f",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "3091677b-7ad1-416e-a41a-57b980d54c5a"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "b2de7bc5-26e0-40b1-aec7-107379199955"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "d0f6341e-e6e7-4dd9-b2ba-8b65eb80bd26",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "3091677b-7ad1-416e-a41a-57b980d54c5a"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "7cd905f1-4b05-4667-aa4b-178eeb84c8e5"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "15d680ae-1fba-494c-9a32-235e316e8b3f",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "cf3cb2d4-e48e-4ec5-8a48-a5cb117eb612"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "31748fae-59cf-4b66-81fc-68e4aa32f598"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "bd3471bf-b059-4a6a-842e-df371c53ca6f",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "31748fae-59cf-4b66-81fc-68e4aa32f598"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "5bfacf2b-a992-4bc8-acd3-d3504250c14e"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "ceb3e833-b729-4795-8669-2040717ab0a4",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "31748fae-59cf-4b66-81fc-68e4aa32f598"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "0b078681-5e60-413d-8bfa-02a57f660e22"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "2bfddbe6-bc50-4578-bab4-9ea3811f1a94",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "31748fae-59cf-4b66-81fc-68e4aa32f598"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "d850dc93-126f-4398-bc64-15e7cb6d7cdf"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "c4787c6e-ea93-4879-a625-8029ddcec2f3",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "cf3cb2d4-e48e-4ec5-8a48-a5cb117eb612"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "cc8734a7-84b9-44d5-9f9c-36eb7abead8d"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "94077d97-2a2b-4133-b5bb-0dcb9f830a0a",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "cc8734a7-84b9-44d5-9f9c-36eb7abead8d"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "7e6d3a8f-712f-4c92-9f49-c48cbcf848b8"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "ac44552e-35c2-4d23-acc6-efda1b774643",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "7e6d3a8f-712f-4c92-9f49-c48cbcf848b8"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "8fb0058e-947b-4702-a563-bb7d32fa77d7"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "ec05a9e1-00c5-4952-9ea6-70ea5b922fe1",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "cc8734a7-84b9-44d5-9f9c-36eb7abead8d"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "94fd889c-e172-4af7-a995-a45dc64ba5f4"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "23a4bff3-d86e-48e3-b556-d0cd8ba5cd8a",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "94fd889c-e172-4af7-a995-a45dc64ba5f4"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "83e6313f-0ab3-4018-a513-cafd779c4f38"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "e3a661eb-9f27-40f8-9902-917d6036afee",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "cc8734a7-84b9-44d5-9f9c-36eb7abead8d"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "4295398d-cd33-4858-abfd-c06f61718bb5"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "5e1c3c37-1c84-4918-9538-b97a6c08c542",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "4295398d-cd33-4858-abfd-c06f61718bb5"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "ac37b638-4a2f-4375-b558-a6a72ae0f020"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "45a92d2a-9d91-4274-8c51-c200f52cec69",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "4295398d-cd33-4858-abfd-c06f61718bb5"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "f1275e2b-7a24-4de7-a94d-619bd47d9db8"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "f9ac287d-d8f2-4dae-a22b-998af28bbcac",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "4295398d-cd33-4858-abfd-c06f61718bb5"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "d25e8e6c-35e3-468e-ae29-815507401232"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"endArrow": "ConcaveTriangle"
+		},
+		{
+			"id": "ed4ffb39-575c-46e6-9dc4-5b59d80a7bbc",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": {
+					"type": "rect",
+					"id": "cc8734a7-84b9-44d5-9f9c-36eb7abead8d"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"type": "rect",
+					"id": "02fe8d8c-d859-4424-9bbb-bc4339546da4"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"stroke": "#9ca3af",
 			"strokeWidth": 2,
 			"endArrow": "ConcaveTriangle"
 		}
