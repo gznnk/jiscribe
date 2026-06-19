@@ -18,15 +18,25 @@ describe("validateConnectorDoc", () => {
 		expect(validateConnectorDoc(o, "root")).toEqual([]);
 	});
 
-	it("free endpoint のみの有効な Connector はエラーなし", () => {
-		const o = { points: validPoints, source: freeRef, target: freeRef };
+	it("one-free（owned source + free target）の有効な Connector はエラーなし", () => {
+		const o = { points: validPoints, source: ownedRef, target: freeRef };
 		expect(validateConnectorDoc(o, "root")).toEqual([]);
+	});
+
+	it("両端 free（owner なし）はエラー（最低一方は owned 必須）", () => {
+		const o = { points: validPoints, source: freeRef, target: freeRef };
+		const errors = validateConnectorDoc(o, "root");
+		expect(
+			errors.some(
+				(e) => e.path === "root" && e.message.includes("owned endpoint"),
+			),
+		).toBe(true);
 	});
 
 	it("startArrow / endArrow が有効な値はエラーなし", () => {
 		const o = {
 			points: validPoints,
-			source: freeRef,
+			source: ownedRef,
 			target: freeRef,
 			startArrow: "None",
 			endArrow: "OpenArrow",
@@ -35,7 +45,7 @@ describe("validateConnectorDoc", () => {
 	});
 
 	it("points が空配列（直線コネクター）はエラーなし", () => {
-		const o = { points: [], source: freeRef, target: freeRef };
+		const o = { points: [], source: ownedRef, target: freeRef };
 		expect(validateConnectorDoc(o, "root")).toEqual([]);
 	});
 
