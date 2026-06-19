@@ -1,6 +1,6 @@
 # svg-canvas-demo
 
-svg-canvas-2パッケージの動作確認用デモアプリケーションです。
+canvasパッケージの動作確認用デモアプリケーションです。
 
 ## 開発
 
@@ -27,4 +27,4 @@ pnpm build:demo
 - React 19.2.0
 - TypeScript
 - Vite 7.3.0
-- @workspace/svg-canvas-2
+- @workspace/canvas

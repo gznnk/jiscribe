@@ -111,7 +111,7 @@
 		"@types/react-dom": "^19.2.3",
 		"@types/vscode": "^1.85.0",
 		"@vscode/vsce": "^3.4.2",
-		"@workspace/svg-canvas-2": "workspace:*",
+		"@workspace/canvas": "workspace:*",
 		"esbuild": "^0.24.2",
 		"react": "catalog:",
 		"react-dom": "catalog:"

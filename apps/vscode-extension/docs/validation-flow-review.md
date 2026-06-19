@@ -5,7 +5,7 @@
 
 - `apps/vscode-extension/src/diagnostics/DiagnosticProvider.ts`
 - `apps/vscode-extension/src/webview/index.tsx`
-- `packages/svg-canvas-2/src/schemas/canvas/validators/`（`parseAndValidateCanvasDoc` ほか）
+- `packages/canvas/src/schemas/canvas/validators/`（`parseAndValidateCanvasDoc` ほか）
 
 VSCode 拡張側で `.jis.json` / `.jiscribe.json` を `parseAndValidateCanvasDoc`
 で検証している現状のフローについてのレビュー結果をまとめる。
@@ -45,7 +45,7 @@ VSCode 拡張側で `.jis.json` / `.jiscribe.json` を `parseAndValidateCanvasDo
 - **`validateCanvasDocSemantics`（→ 一時 `validateCanvasDoc`）も廃止**。構造→意味を順に
   呼ぶだけの薄いラッパーだったため、`parseCanvasText` 内へインライン化。検証の構成要素は
   `validateStructure` / `validateSemantics` の 2 つだけになった。
-- **エラー表示 UI を svg-canvas-2 から拡張側へ移設**。未使用の `CanvasErrorOverlay` を削除し、
+- **エラー表示 UI を canvas から拡張側へ移設**。未使用の `CanvasErrorOverlay` を削除し、
   詳細一覧を持つ `CanvasErrorScreen` も廃止。詳細は Problems パネル（`DiagnosticProvider`）が
   担うため、Webview 側は「エラーがあること」だけを示す最小コンポーネント
   `CanvasErrorNotice`（英語表記）に置き換えた。

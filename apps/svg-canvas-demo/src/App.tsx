@@ -1,5 +1,5 @@
-import { Canvas } from "@workspace/svg-canvas-2";
-import type { CanvasDoc } from "@workspace/svg-canvas-2";
+import { Canvas } from "@workspace/canvas";
+import type { CanvasDoc } from "@workspace/canvas";
 import { useEffect } from "react";
 import "./App.css";
 
@@ -11,7 +11,7 @@ const initialDoc: CanvasDoc = {
 
 export function App() {
 	useEffect(() => {
-		document.title = `svg-canvas-2 Demo [${__GIT_BRANCH__}]`;
+		document.title = `Canvas Demo [${__GIT_BRANCH__}]`;
 	}, []);
 
 	return (

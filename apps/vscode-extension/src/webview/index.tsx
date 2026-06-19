@@ -1,8 +1,4 @@
-import {
-	Canvas,
-	parseCanvasText,
-	type CanvasDoc,
-} from "@workspace/svg-canvas-2";
+import { Canvas, parseCanvasText, type CanvasDoc } from "@workspace/canvas";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 

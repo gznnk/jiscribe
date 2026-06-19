@@ -1,6 +1,6 @@
 # svg-canvas-demo E2E テスト
 
-Playwright Test で svg-canvas-2 を実ユーザーと同じ UI 操作でテストする。
+Playwright Test で canvas を実ユーザーと同じ UI 操作でテストする。
 このドキュメントは構成ガイドと、`scripts/replay-hero-showcase.mjs`（.jis.json の UI 操作による再現）の開発過程で得たノウハウのまとめ。
 
 ## 構成

@@ -1,5 +1,5 @@
 /**
- * svg-canvas-2 の DOM 契約（data-kind / data-id）に基づくセレクタ定数。
+ * canvas の DOM 契約（data-kind / data-id）に基づくセレクタ定数。
  * 詳細は e2e/README.md の「DOM の構造とセレクタ」を参照。
  */
 

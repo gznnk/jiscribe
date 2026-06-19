@@ -16,7 +16,7 @@
 		"test:e2e:demo:headed": "playwright test -c playwright.demo.config.ts --headed"
 	},
 	"dependencies": {
-		"@workspace/svg-canvas-2": "workspace:*",
+		"@workspace/canvas": "workspace:*",
 		"katex": "catalog:",
 		"react": "catalog:",
 		"react-dom": "catalog:"

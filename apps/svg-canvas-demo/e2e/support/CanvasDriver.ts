@@ -29,7 +29,7 @@ export const AUTO_SCROLL_MARGIN = 25;
 const EMPTY_SPOT = { x: 70, y: 860 };
 
 /**
- * svg-canvas-2 を実ユーザーと同じ UI 操作で動かすドライバ。
+ * canvas を実ユーザーと同じ UI 操作で動かすドライバ。
  *
  * 方針: 失敗を隠すリトライは入れない。時間待ち（waitForTimeout）ではなく
  * 状態待ち（要素の出現・数の変化）で同期し、操作が効かなかった場合は
