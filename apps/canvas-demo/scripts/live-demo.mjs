@@ -1,5 +1,5 @@
 // ブラウザを実際に表示しながら、図形の追加・移動などを実演するデモ。
-// 実行: node apps/svg-canvas-demo/scripts/live-demo.mjs （http://localhost:5174/ が起動している前提）
+// 実行: node apps/canvas-demo/scripts/live-demo.mjs （http://localhost:5174/ が起動している前提）
 import { chromium } from "@playwright/test";
 
 const browser = await chromium.launch({

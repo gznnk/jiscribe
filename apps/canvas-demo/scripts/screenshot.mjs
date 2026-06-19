@@ -1,6 +1,6 @@
 // 任意の URL を Chromium で開いて PNG に保存する開発用スクリプト。
 // 使い方:
-//   node apps/svg-canvas-demo/scripts/screenshot.mjs <url> <out.png> [options]
+//   node apps/canvas-demo/scripts/screenshot.mjs <url> <out.png> [options]
 // オプション:
 //   --width=1440     ビューポート幅（既定 1440）
 //   --height=900     ビューポート高さ（既定 900）
@@ -10,8 +10,8 @@
 //   --wait=300       描画待ちの追加ミリ秒（既定 300）
 //
 // 例:
-//   node apps/svg-canvas-demo/scripts/screenshot.mjs http://localhost:5173 /tmp/landing.png --full
-//   node apps/svg-canvas-demo/scripts/screenshot.mjs http://localhost:5173 /tmp/hero.png --selector=.hero
+//   node apps/canvas-demo/scripts/screenshot.mjs http://localhost:5173 /tmp/landing.png --full
+//   node apps/canvas-demo/scripts/screenshot.mjs http://localhost:5173 /tmp/hero.png --selector=.hero
 
 import { chromium } from "@playwright/test";
 
@@ -34,7 +34,7 @@ const [url, out] = positional;
 
 if (!url || !out) {
 	console.error(
-		"Usage: node apps/svg-canvas-demo/scripts/screenshot.mjs <url> <out.png> [--full] [--selector=.sel] [--width=] [--height=] [--scale=] [--wait=]",
+		"Usage: node apps/canvas-demo/scripts/screenshot.mjs <url> <out.png> [--full] [--selector=.sel] [--width=] [--height=] [--scale=] [--wait=]",
 	);
 	process.exit(1);
 }

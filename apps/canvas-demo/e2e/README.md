@@ -1,4 +1,4 @@
-# svg-canvas-demo E2E テスト
+# canvas-demo E2E テスト
 
 Playwright Test で canvas を実ユーザーと同じ UI 操作でテストする。
 このドキュメントは構成ガイドと、`scripts/replay-hero-showcase.mjs`（.jis.json の UI 操作による再現）の開発過程で得たノウハウのまとめ。
@@ -6,7 +6,7 @@ Playwright Test で canvas を実ユーザーと同じ UI 操作でテストす�
 ## 構成
 
 ```
-apps/svg-canvas-demo/
+apps/canvas-demo/
 ├── playwright.config.ts        # webServer で vite dev (port 5174) を自動起動。testDir: e2e/specs
 ├── playwright.demo.config.ts   # デモ専用。本体 config を流用し testDir を e2e/demo に差し替え
 ├── e2e/
@@ -22,10 +22,10 @@ apps/svg-canvas-demo/
 実行:
 
 ```bash
-pnpm --filter svg-canvas-demo test:e2e         # ルートからは pnpm test:e2e
-pnpm --filter svg-canvas-demo test:e2e:headed  # ブラウザ表示あり
-pnpm --filter svg-canvas-demo test:e2e:ui      # Playwright UI モード
-pnpm --filter svg-canvas-demo test:e2e:demo    # マーケ素材生成デモ（hero-showcase 再現）
+pnpm --filter canvas-demo test:e2e         # ルートからは pnpm test:e2e
+pnpm --filter canvas-demo test:e2e:headed  # ブラウザ表示あり
+pnpm --filter canvas-demo test:e2e:ui      # Playwright UI モード
+pnpm --filter canvas-demo test:e2e:demo    # マーケ素材生成デモ（hero-showcase 再現）
 ```
 
 ### e2e/demo — マーケ素材生成デモ
@@ -186,9 +186,9 @@ ObjectMenu は選択図形の下に出るが、画面下端付近ではドロッ
   **意図しない移動・着色を検出**すると原因特定が速い
 - スクリーンショット（`page.screenshot`）を残すと headless でも見た目を確認できる
 
-## 参考スクリプト（apps/svg-canvas-demo/scripts/）
+## 参考スクリプト（apps/canvas-demo/scripts/）
 
-テストではなく、手動デモ・調査用。`node apps/svg-canvas-demo/scripts/<name>.mjs` で実行
+テストではなく、手動デモ・調査用。`node apps/canvas-demo/scripts/<name>.mjs` で実行
 （dev サーバーは別途起動しておく）。
 
 | ファイル                   | 内容                                                                                                                                |

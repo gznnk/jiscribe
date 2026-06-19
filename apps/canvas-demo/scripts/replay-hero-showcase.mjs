@@ -1,6 +1,6 @@
 // hero-showcase.jis.json をブラウザ上の UI 操作（ツール選択・ドラッグ・テキスト入力・
 // ObjectMenu での色設定・アンカードラッグによるコネクター接続）で再現するデモ。
-// 実行: node apps/svg-canvas-demo/scripts/replay-hero-showcase.mjs （http://localhost:5174/ が起動している前提）
+// 実行: node apps/canvas-demo/scripts/replay-hero-showcase.mjs （http://localhost:5174/ が起動している前提）
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";

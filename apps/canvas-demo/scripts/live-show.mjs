@@ -1,6 +1,6 @@
 // ブラウザを表示しながら行う全部入りデモショー。
 // ニコちゃん描画 → 回転 → リサイズパルス → コネクター接続 → バウンドボール → フィナーレ。
-// 実行: node apps/svg-canvas-demo/scripts/live-show.mjs （http://localhost:5174/ が起動している前提）
+// 実行: node apps/canvas-demo/scripts/live-show.mjs （http://localhost:5174/ が起動している前提）
 import { chromium } from "@playwright/test";
 
 const browser = await chromium.launch({ headless: false, slowMo: 30 });

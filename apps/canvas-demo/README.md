@@ -1,4 +1,4 @@
-# svg-canvas-demo
+# canvas-demo
 
 canvasパッケージの動作確認用デモアプリケーションです。
 
@@ -6,7 +6,7 @@ canvasパッケージの動作確認用デモアプリケーションです。
 
 ```bash
 # 開発サーバー起動
-pnpm --filter svg-canvas-demo dev
+pnpm --filter canvas-demo dev
 
 # または
 pnpm dev:demo
@@ -16,7 +16,7 @@ pnpm dev:demo
 
 ```bash
 # ビルド
-pnpm --filter svg-canvas-demo build
+pnpm --filter canvas-demo build
 
 # または
 pnpm build:demo

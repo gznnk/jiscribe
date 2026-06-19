@@ -40,7 +40,7 @@ src/**/__integration__/**/*.{test,spec}.{ts,tsx}
 
 ## E2E（Playwright）
 
-実ブラウザ・実 UI 操作での非回帰テスト。`apps/svg-canvas-demo/e2e/` に置く。
+実ブラウザ・実 UI 操作での非回帰テスト。`apps/canvas-demo/e2e/` に置く。
 
 - `playwright.config.ts` が vite dev（port 5174）を `webServer` で自動起動。`testDir: e2e/specs`
 - `support/CanvasDriver.ts` … 描画・選択・テキスト・色・コネクター操作の API。
@@ -49,7 +49,7 @@ src/**/__integration__/**/*.{test,spec}.{ts,tsx}
   `scenario` / `shapes` / `ui`（+ `smoke.spec.ts`）
 - `e2e/demo/` は**マーケ素材生成用**のデモ（`testDir` 外）。回帰検知ではなくスクリーンショット／録画用で、
   重く flake しやすいため通常の CI ゲートから外し `test:e2e:demo` でのみ実行する
-- 実行: `pnpm --filter svg-canvas-demo test:e2e`（`:headed` / `:ui` / `:demo` あり）
+- 実行: `pnpm --filter canvas-demo test:e2e`（`:headed` / `:ui` / `:demo` あり）
 
 設計方針: **失敗を隠すリトライは入れない**。CanvasDriver は時間待ちではなく状態待ち
 （`expect.poll` 等）で安定させ、本当の不具合を隠さない。
