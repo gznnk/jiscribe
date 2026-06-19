@@ -282,6 +282,27 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			const finalConnector = this.handleDrag(state, event).objects[
 				editingConnectorId
 			];
+
+			// 不変条件ガード: 編集確定で両端 free になる場合は編集を破棄し元に戻す。
+			// UI 側（ConnectorControls）で owned 端ハンドルを隠しているため通常は到達しないが、
+			// connector が常に「少なくとも一方 owned」であることを防御的に担保する。
+			if (
+				finalConnector?.type === "connector" &&
+				!(finalConnector as ConnectorState).source.owner &&
+				!(finalConnector as ConnectorState).target.owner
+			) {
+				return {
+					...state,
+					objects:
+						original?.type === "connector"
+							? { ...state.objects, [editingConnectorId]: original }
+							: state.objects,
+					editingConnectorId: null,
+					editingEndpoint: null,
+					edgeScrollEnabled: false,
+				};
+			}
+
 			const isNoOp =
 				original?.type === "connector" &&
 				finalConnector?.type === "connector" &&

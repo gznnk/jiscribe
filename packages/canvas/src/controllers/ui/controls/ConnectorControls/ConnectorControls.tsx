@@ -38,14 +38,18 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 	const adjustedEndpointRadius = ENDPOINT_RADIUS / zoom;
 	const adjustedEndpointStrokeWidth = ENDPOINT_STROKE_WIDTH / zoom;
 
-	// Always show handles for both endpoints
-	// Users can drag to reconnect (Owned -> Owned/Free) or adjust position (Free -> Free/Owned)
-	const showSourceHandle = true;
-	const showTargetHandle = true;
+	// コネクターの不変条件「少なくとも一方が owned」を UI 側で守る。
+	// 片端が free のときは、対になる owned 端のハンドルを隠す。
+	// 隠さないと owned 端を空中（free）へドラッグして free-free を作れてしまうため。
+	// free 端のハンドルは常に表示する（位置調整・図形への再接続のため）。
+	const sourceIsFree = !connectorState.source.owner;
+	const targetIsFree = !connectorState.target.owner;
+	const showSourceHandle = sourceIsFree || !targetIsFree;
+	const showTargetHandle = targetIsFree || !sourceIsFree;
 
 	return (
 		<g data-layer="connector-controls">
-			{/* Source endpoint handle (interactive) - only for FreeAnchor */}
+			{/* Source endpoint handle (interactive). 対が free のとき owned 端は隠す */}
 			{showSourceHandle && (
 				<circle
 					cx={points.source.x}
@@ -60,7 +64,7 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 				/>
 			)}
 
-			{/* Target endpoint handle (interactive) - only for FreeAnchor */}
+			{/* Target endpoint handle (interactive). 対が free のとき owned 端は隠す */}
 			{showTargetHandle && (
 				<circle
 					cx={points.target.x}

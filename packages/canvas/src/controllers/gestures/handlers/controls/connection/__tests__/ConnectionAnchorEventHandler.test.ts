@@ -13,24 +13,27 @@ beforeAll(() => {
 	initializeObjectRegistry();
 });
 
-/** 図形を持たない空ドキュメント。端点はすべて free なので rect は不要。 */
+/**
+ * 図形を持たない空ドキュメント。
+ * source は owner 参照のみ持たせ実体は不要（編集テストは target の free 端だけを動かす）。
+ */
 const emptyDoc: CanvasDoc = {
 	version: 1,
 	root: [],
 	connectors: [],
 } as unknown as CanvasDoc;
 
-/** free 端点を持つコネクターの ConnectorState を作る。 */
-const freeConnector = (
-	id: string,
-	source: Point,
-	target: Point,
-): ConnectorState =>
+/**
+ * owned source（host 図形に接続）+ free target の one-free コネクターを作る。
+ * connector の不変条件「少なくとも一方 owned」を満たすため source を owned にする。
+ * 端点編集テストでは target（free 端）を編集対象にする。
+ */
+const oneFreeConnector = (id: string, target: Point): ConnectorState =>
 	({
 		id,
 		type: "connector",
 		points: [],
-		source: { anchor: { kind: "free", point: source } },
+		source: { owner: { type: "rect", id: "host" }, anchor: { kind: "center" } },
 		target: { anchor: { kind: "free", point: target } },
 		stroke: "#6b7280",
 		strokeWidth: 2,
@@ -93,9 +96,9 @@ describe("ConnectionAnchorEventHandler 端点編集（実体直接編集）", ()
 
 	it("編集してもコネクターの重なり順（connectorIds）が変わらない", () => {
 		const state = stateWithConnectors([
-			freeConnector("c1", { x: 0, y: 0 }, { x: 10, y: 10 }),
-			freeConnector("c2", { x: 0, y: 0 }, { x: 20, y: 20 }),
-			freeConnector("c3", { x: 0, y: 0 }, { x: 30, y: 30 }),
+			oneFreeConnector("c1", { x: 10, y: 10 }),
+			oneFreeConnector("c2", { x: 20, y: 20 }),
+			oneFreeConnector("c3", { x: 30, y: 30 }),
 		]);
 
 		const afterStart = handler.handle(
@@ -118,7 +121,7 @@ describe("ConnectionAnchorEventHandler 端点編集（実体直接編集）", ()
 
 	it("編集中は overlay（pendingConnector）を使わず実体を直接更新する", () => {
 		const state = stateWithConnectors([
-			freeConnector("c1", { x: 0, y: 0 }, { x: 10, y: 10 }),
+			oneFreeConnector("c1", { x: 10, y: 10 }),
 		]);
 
 		const afterStart = handler.handle(
@@ -151,7 +154,7 @@ describe("ConnectionAnchorEventHandler 端点編集（実体直接編集）", ()
 
 	it("端点を元の位置に戻す no-op 編集では objects 参照を据え置く（コミットされない）", () => {
 		const state = stateWithConnectors([
-			freeConnector("c1", { x: 0, y: 0 }, { x: 10, y: 10 }),
+			oneFreeConnector("c1", { x: 10, y: 10 }),
 		]);
 
 		const afterStart = handler.handle(
@@ -177,7 +180,7 @@ describe("ConnectionAnchorEventHandler 端点編集（実体直接編集）", ()
 
 	it("端点が変化した編集では objects 参照が変わる（コミット対象）", () => {
 		const state = stateWithConnectors([
-			freeConnector("c1", { x: 0, y: 0 }, { x: 10, y: 10 }),
+			oneFreeConnector("c1", { x: 10, y: 10 }),
 		]);
 
 		const afterStart = handler.handle(
