@@ -26,5 +26,4 @@ export const rectDoc = (
 export const twoRectsDoc: CanvasDoc = {
 	version: 1,
 	root: [rectDoc("rect-1", 0, 0), rectDoc("rect-2", 100, 100)],
-	connectors: [],
 } as unknown as CanvasDoc;

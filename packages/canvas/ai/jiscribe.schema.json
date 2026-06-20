@@ -24,7 +24,7 @@
 	},
 	"$defs": {
 		"AnyObjectDoc": {
-			"description": "Any placeable object on the canvas.",
+			"description": "Any placeable object at the top level of 'root'. Connectors are allowed here.",
 			"oneOf": [
 				{ "$ref": "#/$defs/RectDoc" },
 				{ "$ref": "#/$defs/EllipseDoc" },
@@ -33,6 +33,19 @@
 				{ "$ref": "#/$defs/GroupDoc" },
 				{ "$ref": "#/$defs/StickyDoc" },
 				{ "$ref": "#/$defs/ConnectorDoc" }
+			],
+			"discriminator": { "propertyName": "type" }
+		},
+
+		"GroupChildDoc": {
+			"description": "Objects allowed inside a group's children. Connectors are top-level only (root), so they are excluded here.",
+			"oneOf": [
+				{ "$ref": "#/$defs/RectDoc" },
+				{ "$ref": "#/$defs/EllipseDoc" },
+				{ "$ref": "#/$defs/PolylineDoc" },
+				{ "$ref": "#/$defs/PolygonDoc" },
+				{ "$ref": "#/$defs/GroupDoc" },
+				{ "$ref": "#/$defs/StickyDoc" }
 			],
 			"discriminator": { "propertyName": "type" }
 		},
@@ -391,9 +404,9 @@
 				},
 				"meta": { "$ref": "#/$defs/MetaDoc" },
 				"children": {
-					"description": "Child objects inside this group.",
+					"description": "Child objects inside this group. Connectors are top-level only and not allowed here.",
 					"type": "array",
-					"items": { "$ref": "#/$defs/AnyObjectDoc" }
+					"items": { "$ref": "#/$defs/GroupChildDoc" }
 				},
 				"rotation": { "$ref": "#/$defs/TransformStyle/properties/rotation" },
 				"flipX": { "$ref": "#/$defs/TransformStyle/properties/flipX" },

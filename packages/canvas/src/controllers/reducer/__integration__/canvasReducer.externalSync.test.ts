@@ -28,7 +28,6 @@ const createState = (): CanvasControllerState =>
 const movedDoc: CanvasDoc = {
 	version: 1,
 	root: [rectDoc("rect-1", 50, 0), rectDoc("rect-2", 100, 100)],
-	connectors: [],
 } as unknown as CanvasDoc;
 
 const syncExternal = (saveNonce?: string): CanvasAction => ({

@@ -36,7 +36,19 @@ function validateObjectNode(obj: unknown, path: string): SemanticDiagnostic[] {
 			errors.push({ path: `${path}.children`, message: "must be an array" });
 		} else {
 			(o.children as unknown[]).forEach((child, i) => {
-				errors.push(...validateObjectNode(child, `${path}.children[${i}]`));
+				const childPath = `${path}.children[${i}]`;
+				// 不変条件: コネクターは root 直下のみ。group の子には置けない。
+				if (
+					isObject(child) &&
+					(child as Record<string, unknown>).type === "connector"
+				) {
+					errors.push({
+						path: childPath,
+						message:
+							"connector must be a top-level entry of 'root', not inside a group's children",
+					});
+				}
+				errors.push(...validateObjectNode(child, childPath));
 			});
 		}
 	}
@@ -59,6 +71,16 @@ export function validateStructure(doc: unknown): SemanticDiagnostic[] {
 
 	if (!isNumber(d.version) || !Number.isInteger(d.version) || d.version < 1) {
 		errors.push({ path: "version", message: "must be a positive integer" });
+	}
+
+	// 旧フォーマット（connectors を別配列で持つ）はサイレントに connector を失うため、
+	// マイグレーションはせず fail-fast で明示エラーにする（connectors は root へ統合済み）。
+	if (d.connectors !== undefined) {
+		errors.push({
+			path: "connectors",
+			message:
+				"'connectors' is no longer a top-level field; place connectors inside 'root' as \"type\": \"connector\" entries (z-order).",
+		});
 	}
 
 	if (!isArray(d.root)) {

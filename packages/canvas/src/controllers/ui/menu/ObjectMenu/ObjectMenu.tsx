@@ -119,7 +119,7 @@ const buildSystemGroups = (
 	const systemGroups: MenuSection[] = [];
 
 	// コネクター選択（selectedConnectorId）も含めて StackOrder を出すため、
-	// selectedIds ベースの isSameGroupSelection ではなく実効選択ベースで判定する。
+	// selectedIds だけでなく実効選択ベースで判定する isArrangeableSelection を使う。
 	if (isArrangeableSelection(canvasState)) {
 		systemGroups.push({
 			id: "system-stack-order",

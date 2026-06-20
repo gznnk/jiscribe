@@ -2,6 +2,7 @@ import type { Point } from "@workspace/geometry";
 import { beforeAll, describe, expect, it } from "vitest";
 
 import type { CanvasDoc } from "../../../../../../schemas/canvas/CanvasDoc";
+import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { createInitialControllerState } from "../../../../../reducer/createInitialControllerState";
@@ -20,7 +21,6 @@ beforeAll(() => {
 const emptyDoc: CanvasDoc = {
 	version: 1,
 	root: [],
-	connectors: [],
 } as unknown as CanvasDoc;
 
 /**
@@ -215,7 +215,7 @@ describe("ConnectionAnchorEventHandler 端点編集（実体直接編集）", ()
 			...base,
 			objects: {
 				...base.objects,
-				"rect-1": { id: "rect-1", type: "rect" } as unknown as ConnectorState,
+				"rect-1": { id: "rect-1", type: "rect" } as unknown as ObjectState,
 			},
 			rootIds: ["rect-1"],
 		};
