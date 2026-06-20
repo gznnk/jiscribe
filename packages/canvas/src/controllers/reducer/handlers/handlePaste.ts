@@ -9,22 +9,27 @@ export const handlePaste = (
 	state: CanvasControllerState,
 	data: ClipboardData,
 ): CanvasControllerState => {
-	const { newObjects, newRootIds, newConnectorIds } = cloneObjects(
+	// data.rootIds は z-order 済みのトップレベル（オブジェクト + コネクター）混在配列。
+	// cloneObjects は同じ順序で新 ID を返すので、そのまま前面（rootIds 末尾）へ積めばよい。
+	const { newObjects, newTopLevelIds } = cloneObjects(
 		data.rootIds,
 		data.objects,
-		data.connectorIds,
 		PASTE_OFFSET,
 	);
 
 	const mergedObjects = { ...state.objects, ...newObjects };
 
+	// 選択はコピーした図形のみ（コネクターは selectedConnectorId で別管理のため除外）。
+	const newObjectIds = newTopLevelIds.filter(
+		(id) => mergedObjects[id]?.type !== "connector",
+	);
+
 	return {
 		...state,
 		objects: mergedObjects,
-		rootIds: [...state.rootIds, ...newRootIds],
-		connectorIds: [...state.connectorIds, ...newConnectorIds],
-		selectedIds: newRootIds,
-		multiSelectGroup: createMultiSelectGroup(newRootIds, mergedObjects, null),
+		rootIds: [...state.rootIds, ...newTopLevelIds],
+		selectedIds: newObjectIds,
+		multiSelectGroup: createMultiSelectGroup(newObjectIds, mergedObjects, null),
 		contextMenuPosition: null,
 		lastDuplicate: null,
 		commitVersion: state.commitVersion + 1,

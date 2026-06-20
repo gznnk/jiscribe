@@ -60,7 +60,6 @@ describe("validateSemantics", () => {
 			const doc: CanvasDoc = {
 				version: 1,
 				root: [group("g1", [rect("r1")])],
-				connectors: [],
 			};
 			expect(validateSemantics(doc)).toEqual([]);
 		});
@@ -69,7 +68,6 @@ describe("validateSemantics", () => {
 			const doc: CanvasDoc = {
 				version: 1,
 				root: [rect("dup"), rect("dup")],
-				connectors: [],
 			};
 
 			const errors = validateSemantics(doc);
@@ -82,7 +80,6 @@ describe("validateSemantics", () => {
 			const doc: CanvasDoc = {
 				version: 1,
 				root: [group("g1", [group("g1", [])])],
-				connectors: [],
 			};
 
 			const errors = validateSemantics(doc);
@@ -94,8 +91,8 @@ describe("validateSemantics", () => {
 		it("reports a connector id that collides with an object id", () => {
 			const doc: CanvasDoc = {
 				version: 1,
-				root: [rect("x")],
-				connectors: [
+				root: [
+					rect("x"),
 					connector(
 						"x",
 						ownedEndpoint("rect", "x"),
@@ -113,8 +110,9 @@ describe("validateSemantics", () => {
 		it("accepts a connector between two connectable objects", () => {
 			const doc: CanvasDoc = {
 				version: 1,
-				root: [rect("a"), rect("b")],
-				connectors: [
+				root: [
+					rect("a"),
+					rect("b"),
 					connector(
 						"c1",
 						ownedEndpoint("rect", "a"),
@@ -128,8 +126,8 @@ describe("validateSemantics", () => {
 		it("accepts free endpoints (no owner) without cross-document checks", () => {
 			const doc: CanvasDoc = {
 				version: 1,
-				root: [rect("a")],
-				connectors: [
+				root: [
+					rect("a"),
 					connector("c1", ownedEndpoint("rect", "a"), {
 						anchor: { kind: "free", point: { x: 0, y: 0 } },
 					}),
@@ -141,8 +139,8 @@ describe("validateSemantics", () => {
 		it("flags an endpoint owner that does not exist", () => {
 			const doc: CanvasDoc = {
 				version: 1,
-				root: [rect("a")],
-				connectors: [
+				root: [
+					rect("a"),
 					connector(
 						"c1",
 						ownedEndpoint("rect", "a"),
@@ -153,15 +151,16 @@ describe("validateSemantics", () => {
 
 			const errors = validateSemantics(doc);
 			expect(errors).toHaveLength(1);
-			expect(errors[0].path).toBe("connectors[0].target");
+			expect(errors[0].path).toBe("root[1].target");
 			expect(errors[0].message).toContain("does not exist");
 		});
 
 		it("flags an endpoint pointing at a non-connectable object", () => {
 			const doc: CanvasDoc = {
 				version: 1,
-				root: [rect("a"), group("g1", [])],
-				connectors: [
+				root: [
+					rect("a"),
+					group("g1", []),
 					connector(
 						"c1",
 						ownedEndpoint("rect", "a"),
@@ -172,15 +171,15 @@ describe("validateSemantics", () => {
 
 			const errors = validateSemantics(doc);
 			expect(errors).toHaveLength(1);
-			expect(errors[0].path).toBe("connectors[0].target");
+			expect(errors[0].path).toBe("root[2].target");
 			expect(errors[0].message).toContain("not connectable");
 		});
 
 		it("flags a connector pointing at another connector as not connectable", () => {
 			const doc: CanvasDoc = {
 				version: 1,
-				root: [rect("a")],
-				connectors: [
+				root: [
+					rect("a"),
 					connector(
 						"c1",
 						ownedEndpoint("rect", "a"),
@@ -198,7 +197,7 @@ describe("validateSemantics", () => {
 			expect(
 				errors.some(
 					(e) =>
-						e.path === "connectors[1].target" &&
+						e.path === "root[2].target" &&
 						e.message.includes("not connectable"),
 				),
 			).toBe(true);
@@ -207,8 +206,8 @@ describe("validateSemantics", () => {
 		it("flags a self-loop where source and target are the same object", () => {
 			const doc: CanvasDoc = {
 				version: 1,
-				root: [rect("a")],
-				connectors: [
+				root: [
+					rect("a"),
 					connector(
 						"c1",
 						ownedEndpoint("rect", "a"),
@@ -219,7 +218,7 @@ describe("validateSemantics", () => {
 
 			const errors = validateSemantics(doc);
 			expect(errors).toHaveLength(1);
-			expect(errors[0].path).toBe("connectors[0]");
+			expect(errors[0].path).toBe("root[1]");
 			expect(errors[0].message).toContain("same object");
 		});
 	});

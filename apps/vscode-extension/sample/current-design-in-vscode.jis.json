@@ -16,9 +16,10 @@
 			"fill": "#1e1e1e",
 			"stroke": "#000000",
 			"strokeWidth": 1,
-			"meta": { "name": "VSCode ウィンドウ背景(エディタ地色)" }
+			"meta": {
+				"name": "VSCode ウィンドウ背景(エディタ地色)"
+			}
 		},
-
 		{
 			"id": "vscode-titlebar",
 			"type": "rect",
@@ -29,7 +30,9 @@
 			"fill": "#323233",
 			"stroke": "#252526",
 			"strokeWidth": 1,
-			"meta": { "name": "タイトルバー" }
+			"meta": {
+				"name": "タイトルバー"
+			}
 		},
 		{
 			"id": "vscode-titlebar-menu",
@@ -47,7 +50,9 @@
 			"verticalAlign": "middle",
 			"fontColor": "#cccccc",
 			"fontSize": 12,
-			"meta": { "name": "メニューバー" }
+			"meta": {
+				"name": "メニューバー"
+			}
 		},
 		{
 			"id": "vscode-window-controls",
@@ -65,9 +70,10 @@
 			"verticalAlign": "middle",
 			"fontColor": "#cccccc",
 			"fontSize": 12,
-			"meta": { "name": "ウィンドウ操作ボタン" }
+			"meta": {
+				"name": "ウィンドウ操作ボタン"
+			}
 		},
-
 		{
 			"id": "vscode-activitybar",
 			"type": "rect",
@@ -78,7 +84,9 @@
 			"fill": "#333333",
 			"stroke": "#2b2b2b",
 			"strokeWidth": 1,
-			"meta": { "name": "アクティビティバー" }
+			"meta": {
+				"name": "アクティビティバー"
+			}
 		},
 		{
 			"id": "activity-active-indicator",
@@ -90,7 +98,9 @@
 			"fill": "#ffffff",
 			"stroke": "transparent",
 			"strokeWidth": 0,
-			"meta": { "name": "アクティブ表示バー" }
+			"meta": {
+				"name": "アクティブ表示バー"
+			}
 		},
 		{
 			"id": "activity-icon-explorer",
@@ -103,7 +113,9 @@
 			"stroke": "#ffffff",
 			"strokeWidth": 1.5,
 			"rx": 2,
-			"meta": { "name": "Explorer アイコン(アクティブ)" }
+			"meta": {
+				"name": "Explorer アイコン(アクティブ)"
+			}
 		},
 		{
 			"id": "activity-icon-search",
@@ -115,7 +127,9 @@
 			"fill": "transparent",
 			"stroke": "#858585",
 			"strokeWidth": 1.5,
-			"meta": { "name": "Search アイコン" }
+			"meta": {
+				"name": "Search アイコン"
+			}
 		},
 		{
 			"id": "activity-icon-scm",
@@ -128,7 +142,9 @@
 			"stroke": "#858585",
 			"strokeWidth": 1.5,
 			"rx": 4,
-			"meta": { "name": "Source Control アイコン" }
+			"meta": {
+				"name": "Source Control アイコン"
+			}
 		},
 		{
 			"id": "activity-icon-debug",
@@ -141,7 +157,9 @@
 			"stroke": "#858585",
 			"strokeWidth": 1.5,
 			"rx": 4,
-			"meta": { "name": "Run & Debug アイコン" }
+			"meta": {
+				"name": "Run & Debug アイコン"
+			}
 		},
 		{
 			"id": "activity-icon-ext",
@@ -154,7 +172,9 @@
 			"stroke": "#858585",
 			"strokeWidth": 1.5,
 			"rx": 4,
-			"meta": { "name": "Extensions アイコン" }
+			"meta": {
+				"name": "Extensions アイコン"
+			}
 		},
 		{
 			"id": "activity-icon-settings",
@@ -166,9 +186,10 @@
 			"fill": "transparent",
 			"stroke": "#858585",
 			"strokeWidth": 1.5,
-			"meta": { "name": "設定 アイコン" }
+			"meta": {
+				"name": "設定 アイコン"
+			}
 		},
-
 		{
 			"id": "vscode-sidebar",
 			"type": "rect",
@@ -179,7 +200,9 @@
 			"fill": "#252526",
 			"stroke": "#1e1e1e",
 			"strokeWidth": 1,
-			"meta": { "name": "サイドバー(Explorer)" }
+			"meta": {
+				"name": "サイドバー(Explorer)"
+			}
 		},
 		{
 			"id": "sidebar-header",
@@ -197,7 +220,9 @@
 			"verticalAlign": "middle",
 			"fontColor": "#bbbbbb",
 			"fontSize": 11,
-			"meta": { "name": "Explorer 見出し" }
+			"meta": {
+				"name": "Explorer 見出し"
+			}
 		},
 		{
 			"id": "sidebar-project",
@@ -216,7 +241,9 @@
 			"fontColor": "#cccccc",
 			"fontSize": 11,
 			"fontWeight": "bold",
-			"meta": { "name": "プロジェクトルート" }
+			"meta": {
+				"name": "プロジェクトルート"
+			}
 		},
 		{
 			"id": "sidebar-item-active-bg",
@@ -228,7 +255,9 @@
 			"fill": "#37373d",
 			"stroke": "transparent",
 			"strokeWidth": 0,
-			"meta": { "name": "選択中ファイルのハイライト" }
+			"meta": {
+				"name": "選択中ファイルのハイライト"
+			}
 		},
 		{
 			"id": "sidebar-item-apps",
@@ -246,7 +275,9 @@
 			"verticalAlign": "middle",
 			"fontColor": "#cccccc",
 			"fontSize": 12,
-			"meta": { "name": "ファイルツリー: apps" }
+			"meta": {
+				"name": "ファイルツリー: apps"
+			}
 		},
 		{
 			"id": "sidebar-item-packages",
@@ -264,7 +295,9 @@
 			"verticalAlign": "middle",
 			"fontColor": "#cccccc",
 			"fontSize": 12,
-			"meta": { "name": "ファイルツリー: packages" }
+			"meta": {
+				"name": "ファイルツリー: packages"
+			}
 		},
 		{
 			"id": "sidebar-item-readme",
@@ -282,7 +315,9 @@
 			"verticalAlign": "middle",
 			"fontColor": "#cccccc",
 			"fontSize": 12,
-			"meta": { "name": "ファイルツリー: README.md" }
+			"meta": {
+				"name": "ファイルツリー: README.md"
+			}
 		},
 		{
 			"id": "sidebar-item-design",
@@ -300,7 +335,9 @@
 			"verticalAlign": "middle",
 			"fontColor": "#ffffff",
 			"fontSize": 12,
-			"meta": { "name": "ファイルツリー: design.jis.json (選択中)" }
+			"meta": {
+				"name": "ファイルツリー: design.jis.json (選択中)"
+			}
 		},
 		{
 			"id": "sidebar-item-pkgjson",
@@ -318,9 +355,10 @@
 			"verticalAlign": "middle",
 			"fontColor": "#cccccc",
 			"fontSize": 12,
-			"meta": { "name": "ファイルツリー: package.json" }
+			"meta": {
+				"name": "ファイルツリー: package.json"
+			}
 		},
-
 		{
 			"id": "vscode-tabbar",
 			"type": "rect",
@@ -331,7 +369,9 @@
 			"fill": "#2d2d2d",
 			"stroke": "#1e1e1e",
 			"strokeWidth": 1,
-			"meta": { "name": "エディタ タブバー" }
+			"meta": {
+				"name": "エディタ タブバー"
+			}
 		},
 		{
 			"id": "tab-active",
@@ -349,7 +389,9 @@
 			"verticalAlign": "middle",
 			"fontColor": "#ffffff",
 			"fontSize": 12,
-			"meta": { "name": "アクティブタブ" }
+			"meta": {
+				"name": "アクティブタブ"
+			}
 		},
 		{
 			"id": "tab-active-accent",
@@ -361,7 +403,9 @@
 			"fill": "#007acc",
 			"stroke": "transparent",
 			"strokeWidth": 0,
-			"meta": { "name": "アクティブタブ上部アクセント" }
+			"meta": {
+				"name": "アクティブタブ上部アクセント"
+			}
 		},
 		{
 			"id": "tab-inactive",
@@ -379,9 +423,10 @@
 			"verticalAlign": "middle",
 			"fontColor": "#969696",
 			"fontSize": 12,
-			"meta": { "name": "非アクティブタブ" }
+			"meta": {
+				"name": "非アクティブタブ"
+			}
 		},
-
 		{
 			"id": "jiscribe-canvas",
 			"type": "rect",
@@ -392,26 +437,41 @@
 			"fill": "#ffffff",
 			"stroke": "transparent",
 			"strokeWidth": 0,
-			"meta": { "name": "jiscribe キャンバス (メインView本体・白背景)" }
+			"meta": {
+				"name": "jiscribe キャンバス (メインView本体・白背景)"
+			}
 		},
-
 		{
 			"id": "grid-v-1",
 			"type": "polyline",
 			"points": [
-				{ "x": 360, "y": 65 },
-				{ "x": 360, "y": 798 }
+				{
+					"x": 360,
+					"y": 65
+				},
+				{
+					"x": 360,
+					"y": 798
+				}
 			],
 			"stroke": "#f0f1f3",
 			"strokeWidth": 1,
-			"meta": { "name": "グリッド縦線" }
+			"meta": {
+				"name": "グリッド縦線"
+			}
 		},
 		{
 			"id": "grid-v-2",
 			"type": "polyline",
 			"points": [
-				{ "x": 440, "y": 65 },
-				{ "x": 440, "y": 798 }
+				{
+					"x": 440,
+					"y": 65
+				},
+				{
+					"x": 440,
+					"y": 798
+				}
 			],
 			"stroke": "#f0f1f3",
 			"strokeWidth": 1
@@ -420,8 +480,14 @@
 			"id": "grid-v-3",
 			"type": "polyline",
 			"points": [
-				{ "x": 520, "y": 65 },
-				{ "x": 520, "y": 798 }
+				{
+					"x": 520,
+					"y": 65
+				},
+				{
+					"x": 520,
+					"y": 798
+				}
 			],
 			"stroke": "#f0f1f3",
 			"strokeWidth": 1
@@ -430,8 +496,14 @@
 			"id": "grid-v-4",
 			"type": "polyline",
 			"points": [
-				{ "x": 600, "y": 65 },
-				{ "x": 600, "y": 798 }
+				{
+					"x": 600,
+					"y": 65
+				},
+				{
+					"x": 600,
+					"y": 798
+				}
 			],
 			"stroke": "#f0f1f3",
 			"strokeWidth": 1
@@ -440,8 +512,14 @@
 			"id": "grid-v-5",
 			"type": "polyline",
 			"points": [
-				{ "x": 680, "y": 65 },
-				{ "x": 680, "y": 798 }
+				{
+					"x": 680,
+					"y": 65
+				},
+				{
+					"x": 680,
+					"y": 798
+				}
 			],
 			"stroke": "#f0f1f3",
 			"strokeWidth": 1
@@ -450,8 +528,14 @@
 			"id": "grid-v-6",
 			"type": "polyline",
 			"points": [
-				{ "x": 760, "y": 65 },
-				{ "x": 760, "y": 798 }
+				{
+					"x": 760,
+					"y": 65
+				},
+				{
+					"x": 760,
+					"y": 798
+				}
 			],
 			"stroke": "#f0f1f3",
 			"strokeWidth": 1
@@ -460,8 +544,14 @@
 			"id": "grid-v-7",
 			"type": "polyline",
 			"points": [
-				{ "x": 840, "y": 65 },
-				{ "x": 840, "y": 798 }
+				{
+					"x": 840,
+					"y": 65
+				},
+				{
+					"x": 840,
+					"y": 798
+				}
 			],
 			"stroke": "#f0f1f3",
 			"strokeWidth": 1
@@ -470,8 +560,14 @@
 			"id": "grid-v-8",
 			"type": "polyline",
 			"points": [
-				{ "x": 920, "y": 65 },
-				{ "x": 920, "y": 798 }
+				{
+					"x": 920,
+					"y": 65
+				},
+				{
+					"x": 920,
+					"y": 798
+				}
 			],
 			"stroke": "#f0f1f3",
 			"strokeWidth": 1
@@ -480,8 +576,14 @@
 			"id": "grid-v-9",
 			"type": "polyline",
 			"points": [
-				{ "x": 1000, "y": 65 },
-				{ "x": 1000, "y": 798 }
+				{
+					"x": 1000,
+					"y": 65
+				},
+				{
+					"x": 1000,
+					"y": 798
+				}
 			],
 			"stroke": "#f0f1f3",
 			"strokeWidth": 1
@@ -490,8 +592,14 @@
 			"id": "grid-v-10",
 			"type": "polyline",
 			"points": [
-				{ "x": 1080, "y": 65 },
-				{ "x": 1080, "y": 798 }
+				{
+					"x": 1080,
+					"y": 65
+				},
+				{
+					"x": 1080,
+					"y": 798
+				}
 			],
 			"stroke": "#f0f1f3",
 			"strokeWidth": 1
@@ -500,8 +608,14 @@
 			"id": "grid-v-11",
 			"type": "polyline",
 			"points": [
-				{ "x": 1160, "y": 65 },
-				{ "x": 1160, "y": 798 }
+				{
+					"x": 1160,
+					"y": 65
+				},
+				{
+					"x": 1160,
+					"y": 798
+				}
 			],
 			"stroke": "#f0f1f3",
 			"strokeWidth": 1
@@ -510,8 +624,14 @@
 			"id": "grid-v-12",
 			"type": "polyline",
 			"points": [
-				{ "x": 1240, "y": 65 },
-				{ "x": 1240, "y": 798 }
+				{
+					"x": 1240,
+					"y": 65
+				},
+				{
+					"x": 1240,
+					"y": 798
+				}
 			],
 			"stroke": "#f0f1f3",
 			"strokeWidth": 1
@@ -520,8 +640,14 @@
 			"id": "grid-h-1",
 			"type": "polyline",
 			"points": [
-				{ "x": 280, "y": 145 },
-				{ "x": 1280, "y": 145 }
+				{
+					"x": 280,
+					"y": 145
+				},
+				{
+					"x": 1280,
+					"y": 145
+				}
 			],
 			"stroke": "#f0f1f3",
 			"strokeWidth": 1
@@ -530,8 +656,14 @@
 			"id": "grid-h-2",
 			"type": "polyline",
 			"points": [
-				{ "x": 280, "y": 225 },
-				{ "x": 1280, "y": 225 }
+				{
+					"x": 280,
+					"y": 225
+				},
+				{
+					"x": 1280,
+					"y": 225
+				}
 			],
 			"stroke": "#f0f1f3",
 			"strokeWidth": 1
@@ -540,8 +672,14 @@
 			"id": "grid-h-3",
 			"type": "polyline",
 			"points": [
-				{ "x": 280, "y": 305 },
-				{ "x": 1280, "y": 305 }
+				{
+					"x": 280,
+					"y": 305
+				},
+				{
+					"x": 1280,
+					"y": 305
+				}
 			],
 			"stroke": "#f0f1f3",
 			"strokeWidth": 1
@@ -550,8 +688,14 @@
 			"id": "grid-h-4",
 			"type": "polyline",
 			"points": [
-				{ "x": 280, "y": 385 },
-				{ "x": 1280, "y": 385 }
+				{
+					"x": 280,
+					"y": 385
+				},
+				{
+					"x": 1280,
+					"y": 385
+				}
 			],
 			"stroke": "#f0f1f3",
 			"strokeWidth": 1
@@ -560,8 +704,14 @@
 			"id": "grid-h-5",
 			"type": "polyline",
 			"points": [
-				{ "x": 280, "y": 465 },
-				{ "x": 1280, "y": 465 }
+				{
+					"x": 280,
+					"y": 465
+				},
+				{
+					"x": 1280,
+					"y": 465
+				}
 			],
 			"stroke": "#f0f1f3",
 			"strokeWidth": 1
@@ -570,8 +720,14 @@
 			"id": "grid-h-6",
 			"type": "polyline",
 			"points": [
-				{ "x": 280, "y": 545 },
-				{ "x": 1280, "y": 545 }
+				{
+					"x": 280,
+					"y": 545
+				},
+				{
+					"x": 1280,
+					"y": 545
+				}
 			],
 			"stroke": "#f0f1f3",
 			"strokeWidth": 1
@@ -580,8 +736,14 @@
 			"id": "grid-h-7",
 			"type": "polyline",
 			"points": [
-				{ "x": 280, "y": 625 },
-				{ "x": 1280, "y": 625 }
+				{
+					"x": 280,
+					"y": 625
+				},
+				{
+					"x": 1280,
+					"y": 625
+				}
 			],
 			"stroke": "#f0f1f3",
 			"strokeWidth": 1
@@ -590,13 +752,18 @@
 			"id": "grid-h-8",
 			"type": "polyline",
 			"points": [
-				{ "x": 280, "y": 705 },
-				{ "x": 1280, "y": 705 }
+				{
+					"x": 280,
+					"y": 705
+				},
+				{
+					"x": 1280,
+					"y": 705
+				}
 			],
 			"stroke": "#f0f1f3",
 			"strokeWidth": 1
 		},
-
 		{
 			"id": "flow-start",
 			"type": "rect",
@@ -614,7 +781,9 @@
 			"verticalAlign": "middle",
 			"fontColor": "#1565c0",
 			"fontSize": 16,
-			"meta": { "name": "サンプル図形: 開始(選択中)" }
+			"meta": {
+				"name": "サンプル図形: 開始(選択中)"
+			}
 		},
 		{
 			"id": "flow-process",
@@ -632,7 +801,9 @@
 			"verticalAlign": "middle",
 			"fontColor": "#6a1b9a",
 			"fontSize": 16,
-			"meta": { "name": "サンプル図形: 処理" }
+			"meta": {
+				"name": "サンプル図形: 処理"
+			}
 		},
 		{
 			"id": "flow-done",
@@ -651,7 +822,9 @@
 			"verticalAlign": "middle",
 			"fontColor": "#2e7d32",
 			"fontSize": 16,
-			"meta": { "name": "サンプル図形: 完了" }
+			"meta": {
+				"name": "サンプル図形: 完了"
+			}
 		},
 		{
 			"id": "sticky-note",
@@ -670,7 +843,9 @@
 			"verticalAlign": "top",
 			"fontColor": "#5d4037",
 			"fontSize": 14,
-			"meta": { "name": "サンプル: 付箋(Sticky)" }
+			"meta": {
+				"name": "サンプル: 付箋(Sticky)"
+			}
 		},
 		{
 			"id": "markdown-card",
@@ -689,9 +864,10 @@
 			"verticalAlign": "top",
 			"fontColor": "#374151",
 			"fontSize": 14,
-			"meta": { "name": "サンプル: Markdown カード" }
+			"meta": {
+				"name": "サンプル: Markdown カード"
+			}
 		},
-
 		{
 			"id": "selection-outline",
 			"type": "rect",
@@ -703,9 +879,10 @@
 			"stroke": "#2563eb",
 			"strokeWidth": 1.5,
 			"rx": 12,
-			"meta": { "name": "選択枠 (開始図形を選択中の状態を表現)" }
+			"meta": {
+				"name": "選択枠 (開始図形を選択中の状態を表現)"
+			}
 		},
-
 		{
 			"id": "objectmenu-bar",
 			"type": "rect",
@@ -717,7 +894,9 @@
 			"stroke": "#e5e7eb",
 			"strokeWidth": 1,
 			"rx": 8,
-			"meta": { "name": "ObjectMenu (選択図形上に出る浮動メニュー)" }
+			"meta": {
+				"name": "ObjectMenu (選択図形上に出る浮動メニュー)"
+			}
 		},
 		{
 			"id": "objectmenu-swatch-fill",
@@ -730,7 +909,9 @@
 			"stroke": "#d1d5db",
 			"strokeWidth": 1,
 			"rx": 4,
-			"meta": { "name": "ObjectMenu: 塗り色スウォッチ" }
+			"meta": {
+				"name": "ObjectMenu: 塗り色スウォッチ"
+			}
 		},
 		{
 			"id": "objectmenu-swatch-stroke",
@@ -743,18 +924,28 @@
 			"stroke": "#1565c0",
 			"strokeWidth": 2,
 			"rx": 4,
-			"meta": { "name": "ObjectMenu: 線色スウォッチ" }
+			"meta": {
+				"name": "ObjectMenu: 線色スウォッチ"
+			}
 		},
 		{
 			"id": "objectmenu-sep-1",
 			"type": "polyline",
 			"points": [
-				{ "x": 538, "y": 108 },
-				{ "x": 538, "y": 128 }
+				{
+					"x": 538,
+					"y": 108
+				},
+				{
+					"x": 538,
+					"y": 128
+				}
 			],
 			"stroke": "#e5e7eb",
 			"strokeWidth": 1,
-			"meta": { "name": "ObjectMenu: 区切り" }
+			"meta": {
+				"name": "ObjectMenu: 区切り"
+			}
 		},
 		{
 			"id": "objectmenu-icon-font",
@@ -773,7 +964,9 @@
 			"fontColor": "#333333",
 			"fontSize": 14,
 			"fontWeight": "bold",
-			"meta": { "name": "ObjectMenu: フォント" }
+			"meta": {
+				"name": "ObjectMenu: フォント"
+			}
 		},
 		{
 			"id": "objectmenu-icon-bold",
@@ -792,14 +985,22 @@
 			"fontColor": "#333333",
 			"fontSize": 14,
 			"fontWeight": "bold",
-			"meta": { "name": "ObjectMenu: 太字" }
+			"meta": {
+				"name": "ObjectMenu: 太字"
+			}
 		},
 		{
 			"id": "objectmenu-sep-2",
 			"type": "polyline",
 			"points": [
-				{ "x": 602, "y": 108 },
-				{ "x": 602, "y": 128 }
+				{
+					"x": 602,
+					"y": 108
+				},
+				{
+					"x": 602,
+					"y": 128
+				}
 			],
 			"stroke": "#e5e7eb",
 			"strokeWidth": 1
@@ -815,7 +1016,9 @@
 			"stroke": "#333333",
 			"strokeWidth": 1.5,
 			"rx": 2,
-			"meta": { "name": "ObjectMenu: 重なり順" }
+			"meta": {
+				"name": "ObjectMenu: 重なり順"
+			}
 		},
 		{
 			"id": "objectmenu-icon-more",
@@ -833,9 +1036,10 @@
 			"verticalAlign": "middle",
 			"fontColor": "#333333",
 			"fontSize": 16,
-			"meta": { "name": "ObjectMenu: その他" }
+			"meta": {
+				"name": "ObjectMenu: その他"
+			}
 		},
-
 		{
 			"id": "shapelib-panel",
 			"type": "rect",
@@ -847,7 +1051,9 @@
 			"stroke": "#e5e7eb",
 			"strokeWidth": 1,
 			"rx": 8,
-			"meta": { "name": "ShapeLibrary (左中央の縦型ツールバー)" }
+			"meta": {
+				"name": "ShapeLibrary (左中央の縦型ツールバー)"
+			}
 		},
 		{
 			"id": "shapelib-icon-rect",
@@ -860,7 +1066,9 @@
 			"stroke": "#333333",
 			"strokeWidth": 1.5,
 			"rx": 2,
-			"meta": { "name": "ShapeLibrary: 矩形" }
+			"meta": {
+				"name": "ShapeLibrary: 矩形"
+			}
 		},
 		{
 			"id": "shapelib-icon-ellipse",
@@ -872,33 +1080,60 @@
 			"fill": "transparent",
 			"stroke": "#333333",
 			"strokeWidth": 1.5,
-			"meta": { "name": "ShapeLibrary: 楕円" }
+			"meta": {
+				"name": "ShapeLibrary: 楕円"
+			}
 		},
 		{
 			"id": "shapelib-icon-polyline",
 			"type": "polyline",
 			"points": [
-				{ "x": 298, "y": 418 },
-				{ "x": 305, "y": 408 },
-				{ "x": 312, "y": 418 },
-				{ "x": 319, "y": 408 }
+				{
+					"x": 298,
+					"y": 418
+				},
+				{
+					"x": 305,
+					"y": 408
+				},
+				{
+					"x": 312,
+					"y": 418
+				},
+				{
+					"x": 319,
+					"y": 408
+				}
 			],
 			"stroke": "#333333",
 			"strokeWidth": 1.5,
-			"meta": { "name": "ShapeLibrary: 折れ線" }
+			"meta": {
+				"name": "ShapeLibrary: 折れ線"
+			}
 		},
 		{
 			"id": "shapelib-icon-polygon",
 			"type": "polygon",
 			"points": [
-				{ "x": 308, "y": 442 },
-				{ "x": 320, "y": 458 },
-				{ "x": 296, "y": 458 }
+				{
+					"x": 308,
+					"y": 442
+				},
+				{
+					"x": 320,
+					"y": 458
+				},
+				{
+					"x": 296,
+					"y": 458
+				}
 			],
 			"fill": "transparent",
 			"stroke": "#333333",
 			"strokeWidth": 1.5,
-			"meta": { "name": "ShapeLibrary: 多角形" }
+			"meta": {
+				"name": "ShapeLibrary: 多角形"
+			}
 		},
 		{
 			"id": "shapelib-icon-sticky",
@@ -911,7 +1146,9 @@
 			"stroke": "#f9a825",
 			"strokeWidth": 1.5,
 			"rx": 1,
-			"meta": { "name": "ShapeLibrary: 付箋" }
+			"meta": {
+				"name": "ShapeLibrary: 付箋"
+			}
 		},
 		{
 			"id": "shapelib-icon-markdown",
@@ -930,9 +1167,10 @@
 			"verticalAlign": "middle",
 			"fontColor": "#333333",
 			"fontSize": 11,
-			"meta": { "name": "ShapeLibrary: Markdown" }
+			"meta": {
+				"name": "ShapeLibrary: Markdown"
+			}
 		},
-
 		{
 			"id": "zoom-indicator",
 			"type": "rect",
@@ -950,7 +1188,9 @@
 			"fontColor": "#6b7280",
 			"fontSize": 11,
 			"fontWeight": "bold",
-			"meta": { "name": "ズームインジケータ" }
+			"meta": {
+				"name": "ズームインジケータ"
+			}
 		},
 		{
 			"id": "help-button",
@@ -968,9 +1208,10 @@
 			"verticalAlign": "middle",
 			"fontColor": "#6b7280",
 			"fontSize": 16,
-			"meta": { "name": "ヘルプ(?)ボタン" }
+			"meta": {
+				"name": "ヘルプ(?)ボタン"
+			}
 		},
-
 		{
 			"id": "claude-panel-bg",
 			"type": "rect",
@@ -981,7 +1222,9 @@
 			"fill": "#1e1e1e",
 			"stroke": "#2b2b2b",
 			"strokeWidth": 1,
-			"meta": { "name": "Claude Code パネル (右 Secondary Side Bar)" }
+			"meta": {
+				"name": "Claude Code パネル (右 Secondary Side Bar)"
+			}
 		},
 		{
 			"id": "claude-panel-header",
@@ -993,7 +1236,9 @@
 			"fill": "#2d2d2d",
 			"stroke": "#1e1e1e",
 			"strokeWidth": 1,
-			"meta": { "name": "Claude Code パネル ヘッダー" }
+			"meta": {
+				"name": "Claude Code パネル ヘッダー"
+			}
 		},
 		{
 			"id": "claude-logo",
@@ -1012,7 +1257,9 @@
 			"fontColor": "#d97757",
 			"fontSize": 15,
 			"fontWeight": "bold",
-			"meta": { "name": "Claude ロゴ" }
+			"meta": {
+				"name": "Claude ロゴ"
+			}
 		},
 		{
 			"id": "claude-title",
@@ -1031,7 +1278,9 @@
 			"fontColor": "#cccccc",
 			"fontSize": 12,
 			"fontWeight": "bold",
-			"meta": { "name": "Claude Code タイトル" }
+			"meta": {
+				"name": "Claude Code タイトル"
+			}
 		},
 		{
 			"id": "claude-header-actions",
@@ -1049,9 +1298,10 @@
 			"verticalAlign": "middle",
 			"fontColor": "#858585",
 			"fontSize": 13,
-			"meta": { "name": "ヘッダー操作 (新規/メニュー/閉じる)" }
+			"meta": {
+				"name": "ヘッダー操作 (新規/メニュー/閉じる)"
+			}
 		},
-
 		{
 			"id": "msg-user1-label",
 			"type": "rect",
@@ -1068,7 +1318,9 @@
 			"verticalAlign": "middle",
 			"fontColor": "#858585",
 			"fontSize": 11,
-			"meta": { "name": "ユーザー発言1 ラベル" }
+			"meta": {
+				"name": "ユーザー発言1 ラベル"
+			}
 		},
 		{
 			"id": "msg-user1-bubble",
@@ -1081,7 +1333,9 @@
 			"stroke": "transparent",
 			"strokeWidth": 0,
 			"rx": 6,
-			"meta": { "name": "ユーザー発言1 バブル" }
+			"meta": {
+				"name": "ユーザー発言1 バブル"
+			}
 		},
 		{
 			"id": "msg-user1-text",
@@ -1099,9 +1353,10 @@
 			"verticalAlign": "middle",
 			"fontColor": "#d4d4d4",
 			"fontSize": 12,
-			"meta": { "name": "ユーザー発言1 本文" }
+			"meta": {
+				"name": "ユーザー発言1 本文"
+			}
 		},
-
 		{
 			"id": "msg-claude1-label",
 			"type": "rect",
@@ -1119,7 +1374,9 @@
 			"fontColor": "#d97757",
 			"fontSize": 11,
 			"fontWeight": "bold",
-			"meta": { "name": "Claude応答1 ラベル" }
+			"meta": {
+				"name": "Claude応答1 ラベル"
+			}
 		},
 		{
 			"id": "msg-claude1-text",
@@ -1137,7 +1394,9 @@
 			"verticalAlign": "top",
 			"fontColor": "#cccccc",
 			"fontSize": 12,
-			"meta": { "name": "Claude応答1 本文" }
+			"meta": {
+				"name": "Claude応答1 本文"
+			}
 		},
 		{
 			"id": "msg-claude1-filechip",
@@ -1156,9 +1415,10 @@
 			"verticalAlign": "middle",
 			"fontColor": "#9cdcfe",
 			"fontSize": 11,
-			"meta": { "name": "Claude応答1 ファイルチップ" }
+			"meta": {
+				"name": "Claude応答1 ファイルチップ"
+			}
 		},
-
 		{
 			"id": "msg-user2-label",
 			"type": "rect",
@@ -1175,7 +1435,9 @@
 			"verticalAlign": "middle",
 			"fontColor": "#858585",
 			"fontSize": 11,
-			"meta": { "name": "ユーザー発言2 ラベル" }
+			"meta": {
+				"name": "ユーザー発言2 ラベル"
+			}
 		},
 		{
 			"id": "msg-user2-bubble",
@@ -1188,7 +1450,9 @@
 			"stroke": "transparent",
 			"strokeWidth": 0,
 			"rx": 6,
-			"meta": { "name": "ユーザー発言2 バブル" }
+			"meta": {
+				"name": "ユーザー発言2 バブル"
+			}
 		},
 		{
 			"id": "msg-user2-text",
@@ -1206,9 +1470,10 @@
 			"verticalAlign": "middle",
 			"fontColor": "#d4d4d4",
 			"fontSize": 12,
-			"meta": { "name": "ユーザー発言2 本文" }
+			"meta": {
+				"name": "ユーザー発言2 本文"
+			}
 		},
-
 		{
 			"id": "msg-claude2-label",
 			"type": "rect",
@@ -1226,7 +1491,9 @@
 			"fontColor": "#d97757",
 			"fontSize": 11,
 			"fontWeight": "bold",
-			"meta": { "name": "Claude応答2 ラベル" }
+			"meta": {
+				"name": "Claude応答2 ラベル"
+			}
 		},
 		{
 			"id": "msg-claude2-text",
@@ -1244,7 +1511,9 @@
 			"verticalAlign": "top",
 			"fontColor": "#cccccc",
 			"fontSize": 12,
-			"meta": { "name": "Claude応答2 本文" }
+			"meta": {
+				"name": "Claude応答2 本文"
+			}
 		},
 		{
 			"id": "msg-claude2-chip",
@@ -1263,9 +1532,10 @@
 			"verticalAlign": "middle",
 			"fontColor": "#4ade80",
 			"fontSize": 11,
-			"meta": { "name": "Claude応答2 編集チップ" }
+			"meta": {
+				"name": "Claude応答2 編集チップ"
+			}
 		},
-
 		{
 			"id": "claude-model-hint",
 			"type": "rect",
@@ -1282,7 +1552,9 @@
 			"verticalAlign": "middle",
 			"fontColor": "#6b7280",
 			"fontSize": 10,
-			"meta": { "name": "モデル表示" }
+			"meta": {
+				"name": "モデル表示"
+			}
 		},
 		{
 			"id": "claude-input-box",
@@ -1295,7 +1567,9 @@
 			"stroke": "#3c3c3c",
 			"strokeWidth": 1,
 			"rx": 8,
-			"meta": { "name": "入力ボックス" }
+			"meta": {
+				"name": "入力ボックス"
+			}
 		},
 		{
 			"id": "claude-input-placeholder",
@@ -1313,7 +1587,9 @@
 			"verticalAlign": "middle",
 			"fontColor": "#858585",
 			"fontSize": 12,
-			"meta": { "name": "入力プレースホルダ" }
+			"meta": {
+				"name": "入力プレースホルダ"
+			}
 		},
 		{
 			"id": "claude-send-button",
@@ -1333,9 +1609,10 @@
 			"fontColor": "#ffffff",
 			"fontSize": 14,
 			"fontWeight": "bold",
-			"meta": { "name": "送信ボタン" }
+			"meta": {
+				"name": "送信ボタン"
+			}
 		},
-
 		{
 			"id": "vscode-statusbar",
 			"type": "rect",
@@ -1346,7 +1623,9 @@
 			"fill": "#007acc",
 			"stroke": "transparent",
 			"strokeWidth": 0,
-			"meta": { "name": "ステータスバー" }
+			"meta": {
+				"name": "ステータスバー"
+			}
 		},
 		{
 			"id": "statusbar-left",
@@ -1364,7 +1643,9 @@
 			"verticalAlign": "middle",
 			"fontColor": "#ffffff",
 			"fontSize": 12,
-			"meta": { "name": "ステータスバー左(ブランチ等)" }
+			"meta": {
+				"name": "ステータスバー左(ブランチ等)"
+			}
 		},
 		{
 			"id": "statusbar-right",
@@ -1382,21 +1663,33 @@
 			"verticalAlign": "middle",
 			"fontColor": "#ffffff",
 			"fontSize": 12,
-			"meta": { "name": "ステータスバー右(カーソル位置等)" }
-		}
-	],
-	"connectors": [
+			"meta": {
+				"name": "ステータスバー右(カーソル位置等)"
+			}
+		},
 		{
 			"id": "conn-start-process",
 			"type": "connector",
 			"points": [],
 			"source": {
-				"owner": { "type": "rect", "id": "flow-start" },
-				"anchor": { "kind": "connectPoint", "id": "rightCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "flow-start"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
 			},
 			"target": {
-				"owner": { "type": "ellipse", "id": "flow-process" },
-				"anchor": { "kind": "connectPoint", "id": "leftCenter" }
+				"owner": {
+					"type": "ellipse",
+					"id": "flow-process"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
 			},
 			"stroke": "#374151",
 			"strokeWidth": 2,
@@ -1408,12 +1701,24 @@
 			"type": "connector",
 			"points": [],
 			"source": {
-				"owner": { "type": "ellipse", "id": "flow-process" },
-				"anchor": { "kind": "connectPoint", "id": "rightCenter" }
+				"owner": {
+					"type": "ellipse",
+					"id": "flow-process"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "flow-done" },
-				"anchor": { "kind": "connectPoint", "id": "leftCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "flow-done"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
 			},
 			"stroke": "#374151",
 			"strokeWidth": 2,

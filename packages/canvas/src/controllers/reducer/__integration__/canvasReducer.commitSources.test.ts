@@ -48,7 +48,6 @@ describe("canvasReducer（結合）", () => {
 				version: 1,
 				objects: { "rect-2": state.objects["rect-2"] },
 				rootIds: ["rect-2"],
-				connectorIds: [],
 				center: { x: 105, y: 105 },
 			};
 			const paste: CanvasAction = { type: "PASTE", data: clipboard };

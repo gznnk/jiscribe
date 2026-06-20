@@ -156,7 +156,6 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 					<CanvasView
 						objects={state.objects}
 						rootIds={state.rootIds}
-						connectorIds={state.connectorIds}
 						viewport={state.viewport}
 						svgRef={svgRef}
 						textEditObjectId={state.textEditState?.objectId ?? null}

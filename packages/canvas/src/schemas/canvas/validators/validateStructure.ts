@@ -36,7 +36,19 @@ function validateObjectNode(obj: unknown, path: string): SemanticDiagnostic[] {
 			errors.push({ path: `${path}.children`, message: "must be an array" });
 		} else {
 			(o.children as unknown[]).forEach((child, i) => {
-				errors.push(...validateObjectNode(child, `${path}.children[${i}]`));
+				const childPath = `${path}.children[${i}]`;
+				// 不変条件: コネクターは root 直下のみ。group の子には置けない。
+				if (
+					isObject(child) &&
+					(child as Record<string, unknown>).type === "connector"
+				) {
+					errors.push({
+						path: childPath,
+						message:
+							"connector must be a top-level entry of 'root', not inside a group's children",
+					});
+				}
+				errors.push(...validateObjectNode(child, childPath));
 			});
 		}
 	}
@@ -49,8 +61,7 @@ export function validateStructure(doc: unknown): SemanticDiagnostic[] {
 		return [
 			{
 				path: "/",
-				message:
-					"Document must be an object with 'root' and 'connectors' fields",
+				message: "Document must be an object with a 'root' field",
 			},
 		];
 	}
@@ -62,19 +73,23 @@ export function validateStructure(doc: unknown): SemanticDiagnostic[] {
 		errors.push({ path: "version", message: "must be a positive integer" });
 	}
 
-	if (!isArray(d.root)) {
-		errors.push({ path: "root", message: "must be an array" });
-	} else {
-		(d.root as unknown[]).forEach((obj, i) => {
-			errors.push(...validateObjectNode(obj, `root[${i}]`));
+	// 旧フォーマット（connectors を別配列で持つ）はサイレントに connector を失うため、
+	// マイグレーションはせず fail-fast で明示エラーにする（connectors は root へ統合済み）。
+	if (d.connectors !== undefined) {
+		errors.push({
+			path: "connectors",
+			message:
+				"'connectors' is no longer a top-level field; place connectors inside 'root' as \"type\": \"connector\" entries (z-order).",
 		});
 	}
 
-	if (!isArray(d.connectors)) {
-		errors.push({ path: "connectors", message: "must be an array" });
+	if (!isArray(d.root)) {
+		errors.push({ path: "root", message: "must be an array" });
 	} else {
-		(d.connectors as unknown[]).forEach((obj, i) => {
-			errors.push(...validateObjectNode(obj, `connectors[${i}]`));
+		// root はオブジェクトとコネクターの混在配列。型別検証は validateObjectNode
+		// → registry が type ごとに振り分ける（connector は validateConnectorDoc）。
+		(d.root as unknown[]).forEach((obj, i) => {
+			errors.push(...validateObjectNode(obj, `root[${i}]`));
 		});
 	}
 

@@ -88,14 +88,12 @@ The JSON Schema is published at:
 {
 	"$schema": "https://schema.jiscribe.dev/v1/jiscribe.schema.json",
 	"version": 1,
-	"root": [],
-	"connectors": []
+	"root": []
 }
 ```
 
 - **`version`**: The schema version of the file format (currently `1`).
-- **`root`**: Contains all the canvas object documents (can be nested within groups).
-- **`connectors`**: Defines the connection lines between shapes.
+- **`root`**: Contains all canvas objects and connectors in z-order (back to front). Objects can be nested within groups; connectors (`"type": "connector"`) sit at the top level among the objects, and the array order is the stacking order.
 
 _(More detailed references will be available on our doc site soon!)_
 

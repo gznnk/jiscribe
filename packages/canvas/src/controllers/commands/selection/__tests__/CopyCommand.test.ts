@@ -57,7 +57,10 @@ const makeState = (params: {
 	connectorIds: string[];
 }): CanvasControllerState =>
 	({
-		...params,
+		selectedIds: params.selectedIds,
+		objects: params.objects,
+		// コネクターは独立配列ではなく rootIds に混在管理されるため rootIds へ含める。
+		rootIds: [...params.rootIds, ...params.connectorIds],
 		commitVersion: 0,
 		multiSelectGroup: null,
 		internalClipboard: null,
@@ -79,7 +82,7 @@ describe("CopyCommand — コネクター包含判定", () => {
 			connectorIds: ["conn1"],
 		});
 		const next = CopyCommand.execute(state);
-		expect(next.internalClipboard?.connectorIds).toContain("conn1");
+		expect(next.internalClipboard?.rootIds).toContain("conn1");
 	});
 
 	it("片端 owned+選択内・他端 free → コネクターを含む", () => {
@@ -92,7 +95,7 @@ describe("CopyCommand — コネクター包含判定", () => {
 			connectorIds: ["conn1"],
 		});
 		const next = CopyCommand.execute(state);
-		expect(next.internalClipboard?.connectorIds).toContain("conn1");
+		expect(next.internalClipboard?.rootIds).toContain("conn1");
 	});
 
 	it("片端 free・他端 owned+選択内 → コネクターを含む", () => {
@@ -105,7 +108,7 @@ describe("CopyCommand — コネクター包含判定", () => {
 			connectorIds: ["conn1"],
 		});
 		const next = CopyCommand.execute(state);
-		expect(next.internalClipboard?.connectorIds).toContain("conn1");
+		expect(next.internalClipboard?.rootIds).toContain("conn1");
 	});
 
 	it("両端 free → コネクターを除外（浮遊コネクター）", () => {
@@ -118,7 +121,7 @@ describe("CopyCommand — コネクター包含判定", () => {
 			connectorIds: ["conn1"],
 		});
 		const next = CopyCommand.execute(state);
-		expect(next.internalClipboard?.connectorIds).not.toContain("conn1");
+		expect(next.internalClipboard?.rootIds).not.toContain("conn1");
 	});
 
 	it("片端 owned+選択内・他端 owned+選択外 → コネクターを除外", () => {
@@ -132,7 +135,7 @@ describe("CopyCommand — コネクター包含判定", () => {
 			connectorIds: ["conn1"],
 		});
 		const next = CopyCommand.execute(state);
-		expect(next.internalClipboard?.connectorIds).not.toContain("conn1");
+		expect(next.internalClipboard?.rootIds).not.toContain("conn1");
 	});
 
 	it("片端 owned+選択外・他端 free → コネクターを除外", () => {
@@ -146,7 +149,7 @@ describe("CopyCommand — コネクター包含判定", () => {
 			connectorIds: ["conn1"],
 		});
 		const next = CopyCommand.execute(state);
-		expect(next.internalClipboard?.connectorIds).not.toContain("conn1");
+		expect(next.internalClipboard?.rootIds).not.toContain("conn1");
 	});
 
 	it("両端 owned+選択外 → コネクターを除外", () => {
@@ -161,7 +164,7 @@ describe("CopyCommand — コネクター包含判定", () => {
 			connectorIds: ["conn1"],
 		});
 		const next = CopyCommand.execute(state);
-		expect(next.internalClipboard?.connectorIds).not.toContain("conn1");
+		expect(next.internalClipboard?.rootIds).not.toContain("conn1");
 	});
 });
 

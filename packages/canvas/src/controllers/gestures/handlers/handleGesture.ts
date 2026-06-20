@@ -158,13 +158,13 @@ export const handleGesture = (
 
 	// Clear eventStartSnapshot on event end
 	if (EVENT_END_TYPES.includes(canvasEvent.type)) {
-		// Only commit if objects/rootIds/connectorIds actually changed.
+		// Only commit if objects/rootIds actually changed.
+		// （コネクターも rootIds に含まれるため rootIds の比較で検知できる）
 		// Guards against phantom undo entries when a drag produces no doc change
 		// (e.g. shape drawn below the minimum size threshold).
 		const hasDocChanges =
 			nextState.objects !== state.objects ||
-			nextState.rootIds !== state.rootIds ||
-			nextState.connectorIds !== state.connectorIds;
+			nextState.rootIds !== state.rootIds;
 
 		nextState = {
 			...nextState,

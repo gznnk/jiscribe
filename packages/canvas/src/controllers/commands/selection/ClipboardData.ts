@@ -9,8 +9,12 @@ export type ClipboardData = {
 	__type: "jiscribe-canvas-clipboard";
 	version: 1;
 	objects: Record<string, ObjectState>;
+	/**
+	 * コピーしたトップレベル要素（オブジェクト + コネクター）を z-order（背面→前面）で
+	 * 並べた ID 配列。コネクターも独立配列ではなくここに混在させる（state の rootIds と同じ表現）。
+	 * ペースト時はこの順で前面へ積み、コピー集合の相対的な重なり順を保つ。
+	 */
 	rootIds: string[];
-	connectorIds: string[];
 	center: Point;
 };
 
@@ -30,12 +34,6 @@ export const isClipboardData = (value: unknown): value is ClipboardData => {
 		return false;
 	}
 	if (!isArray(v.rootIds) || !(v.rootIds as unknown[]).every(isString)) {
-		return false;
-	}
-	if (
-		!isArray(v.connectorIds) ||
-		!(v.connectorIds as unknown[]).every(isString)
-	) {
 		return false;
 	}
 
@@ -60,9 +58,6 @@ export const isClipboardData = (value: unknown): value is ClipboardData => {
 
 	const objectKeys = new Set(Object.keys(objects));
 	if (!(v.rootIds as string[]).every((id) => objectKeys.has(id))) {
-		return false;
-	}
-	if (!(v.connectorIds as string[]).every((id) => objectKeys.has(id))) {
 		return false;
 	}
 

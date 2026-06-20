@@ -5,7 +5,6 @@ const EMPTY_CONTENT = JSON.stringify(
 		$schema: "https://schema.jiscribe.dev/v1/jiscribe.schema.json",
 		version: 1,
 		root: [],
-		connectors: [],
 	},
 	null,
 	2,

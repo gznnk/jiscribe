@@ -300,9 +300,7 @@
 			"fontColor": "#1d4ed8",
 			"fontSize": 15,
 			"fontWeight": "bold"
-		}
-	],
-	"connectors": [
+		},
 		{
 			"id": "c-user-ai",
 			"type": "connector",

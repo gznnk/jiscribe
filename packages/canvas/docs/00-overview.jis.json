@@ -1001,9 +1001,7 @@
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
 			"fontWeight": "normal"
-		}
-	],
-	"connectors": [
+		},
 		{
 			"id": "6cee743d-de2f-4277-8f0a-32df495e4748",
 			"type": "connector",

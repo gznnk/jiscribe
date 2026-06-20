@@ -11,6 +11,10 @@ import {
 import type { CanvasState } from "../../../states/canvas/CanvasState";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import {
+	connectorToState,
+	connectorToDoc,
+} from "../../../states/objects/connections/connector/ConnectorMapper";
+import {
 	groupToState,
 	groupToDoc,
 } from "../../../states/objects/primitives/group/GroupMapper";
@@ -41,6 +45,11 @@ describe("CanvasMapper", () => {
 				fill: true,
 			},
 		);
+		objectMapperRegistry.register(
+			"connector",
+			{ toState: connectorToState, toDoc: connectorToDoc },
+			{ type: "connector", geometry: "poly", stroke: true },
+		);
 	});
 
 	const createRectDoc = (id: string, x = 0, y = 0): RectDoc =>
@@ -66,6 +75,79 @@ describe("CanvasMapper", () => {
 			children,
 		}) as unknown as GroupDoc;
 
+	const createConnectorDoc = (
+		id: string,
+		source: unknown,
+		target: unknown,
+	): ObjectDoc =>
+		({
+			id,
+			type: "connector",
+			points: [],
+			source,
+			target,
+		}) as unknown as ObjectDoc;
+
+	const ownedRef = (rectId: string): unknown => ({
+		owner: { type: "rect", id: rectId },
+		anchor: { kind: "center" },
+	});
+	const freeRef = (x: number, y: number): unknown => ({
+		anchor: { kind: "free", point: { x, y } },
+	});
+
+	describe("コネクター（統一 z-order）", () => {
+		it("root のオブジェクトとコネクターの z-order を canvasToState で保つ", () => {
+			const doc: CanvasDoc = {
+				version: 1,
+				root: [
+					createRectDoc("rect-1"),
+					createConnectorDoc("conn-1", ownedRef("rect-1"), ownedRef("rect-2")),
+					createRectDoc("rect-2"),
+				],
+			} as unknown as CanvasDoc;
+
+			const state = canvasToState(doc);
+			expect(state.rootIds).toEqual(["rect-1", "conn-1", "rect-2"]);
+			expect(state.objects["conn-1"].type).toBe("connector");
+		});
+
+		it("canvasToState → canvasToDoc 往復で root の順序（コネクター混在）を保つ", () => {
+			const doc: CanvasDoc = {
+				version: 1,
+				root: [
+					createRectDoc("rect-1"),
+					createConnectorDoc("conn-1", ownedRef("rect-1"), ownedRef("rect-2")),
+					createRectDoc("rect-2"),
+				],
+			} as unknown as CanvasDoc;
+
+			const roundTripped = canvasToDoc(canvasToState(doc));
+			expect(roundTripped.root.map((o) => o.id)).toEqual([
+				"rect-1",
+				"conn-1",
+				"rect-2",
+			]);
+			expect(roundTripped.root[1].type).toBe("connector");
+		});
+
+		it("両端 free のコネクターは canvasToState で破棄される", () => {
+			const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+			const doc: CanvasDoc = {
+				version: 1,
+				root: [
+					createRectDoc("rect-1"),
+					createConnectorDoc("conn-free", freeRef(0, 0), freeRef(50, 50)),
+				],
+			} as unknown as CanvasDoc;
+
+			const state = canvasToState(doc);
+			expect(state.rootIds).toEqual(["rect-1"]);
+			expect(state.objects["conn-free"]).toBeUndefined();
+			warn.mockRestore();
+		});
+	});
+
 	describe("canvasToState", () => {
 		it("should normalize a nested tree structure into a flat map", () => {
 			// Structure:
@@ -85,7 +167,6 @@ describe("CanvasMapper", () => {
 			const canvasDoc: CanvasDoc = {
 				version: 1,
 				root: [rect1, group1],
-				connectors: [],
 			};
 
 			const state = canvasToState(canvasDoc);
@@ -136,7 +217,6 @@ describe("CanvasMapper", () => {
 			// Simulate the state created in the previous test
 			const state: CanvasState = {
 				rootIds: ["rect-1", "group-1"],
-				connectorIds: [],
 				viewport: {
 					minX: 0,
 					minY: 0,
@@ -245,7 +325,6 @@ describe("CanvasMapper", () => {
 			const state: CanvasState = {
 				objects: { "group-a": groupA, "group-b": groupB },
 				rootIds: ["group-a"],
-				connectorIds: [],
 				viewport: { minX: 0, minY: 0, width: 1000, height: 800, zoom: 1 },
 			};
 
@@ -275,7 +354,6 @@ describe("CanvasMapper", () => {
 			const state: CanvasState = {
 				objects: { "group-1": group, "rect-1": rect },
 				rootIds: ["group-1", "missing-root"],
-				connectorIds: [],
 				viewport: { minX: 0, minY: 0, width: 1000, height: 800, zoom: 1 },
 			};
 

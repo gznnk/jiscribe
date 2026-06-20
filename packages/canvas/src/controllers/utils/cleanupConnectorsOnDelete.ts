@@ -1,3 +1,4 @@
+import { getRootConnectorIds } from "./getRootConnectorIds";
 import { resolveConnectorPoints } from "../../presentations/layers/content/utils/resolveConnectorPoints";
 import type { FreeEndpointRef } from "../../schemas/objects/types/EndpointRef";
 import type { ConnectorState } from "../../states/objects/connections/connector/ConnectorState";
@@ -9,6 +10,8 @@ import type { CanvasControllerState } from "../CanvasTypes";
  * - 両端の接続先が削除対象 → コネクターも削除
  * - 片端のみ削除対象 → 削除される側のエンドポイントを Free に変換して保持（座標解決不能な場合はコネクターも削除）
  *
+ * コネクターは rootIds に混在管理されるため、削除されたコネクターは rootIds からも除去する。
+ *
  * @param state - 削除前のキャンバス状態（エンドポイント座標の解決に使用）
  * @param idsToDelete - 削除対象オブジェクトのIDセット
  */
@@ -17,12 +20,10 @@ export function cleanupConnectorsOnDelete(
 	idsToDelete: Set<string>,
 ): CanvasControllerState {
 	const updatedObjects = { ...state.objects };
-	const updatedConnectorIds = [...state.connectorIds];
+	const removedConnectorIds = new Set<string>();
 	let hasChanges = false;
 
-	for (let i = updatedConnectorIds.length - 1; i >= 0; i--) {
-		const connectorId = updatedConnectorIds[i];
-
+	for (const connectorId of getRootConnectorIds(state.objects, state.rootIds)) {
 		// 既に削除対象のコネクター自身はスキップ
 		if (idsToDelete.has(connectorId)) {
 			continue;
@@ -52,7 +53,7 @@ export function cleanupConnectorsOnDelete(
 		const targetWillBeFree = targetOwnerId == null || targetDeleted;
 		if (sourceWillBeFree && targetWillBeFree) {
 			delete updatedObjects[connectorId];
-			updatedConnectorIds.splice(i, 1);
+			removedConnectorIds.add(connectorId);
 			continue;
 		}
 
@@ -90,7 +91,7 @@ export function cleanupConnectorsOnDelete(
 
 		if (shouldDeleteConnector) {
 			delete updatedObjects[connectorId];
-			updatedConnectorIds.splice(i, 1);
+			removedConnectorIds.add(connectorId);
 			continue;
 		}
 
@@ -104,6 +105,9 @@ export function cleanupConnectorsOnDelete(
 	return {
 		...state,
 		objects: updatedObjects,
-		connectorIds: updatedConnectorIds,
+		rootIds:
+			removedConnectorIds.size > 0
+				? state.rootIds.filter((id) => !removedConnectorIds.has(id))
+				: state.rootIds,
 	};
 }

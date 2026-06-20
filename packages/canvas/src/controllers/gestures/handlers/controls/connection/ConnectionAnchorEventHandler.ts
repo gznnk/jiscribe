@@ -136,7 +136,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 	/**
 	 * エンドポイント編集のドラッグ開始処理。
 	 * polyline の頂点編集と同様に、pendingConnector（overlay）は使わず実体を直接編集する。
-	 * そのため objects / connectorIds は変更せず（重なり順を維持）、選択状態も保持して
+	 * そのため objects / rootIds は変更せず（重なり順を維持）、選択状態も保持して
 	 * ConnectorControls の端点ハンドルが実体に追従するようにする。
 	 * 実際の端点更新は handleDrag が eventStartSnapshot を基点に行う。
 	 */
@@ -356,7 +356,9 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 				...dragResult.objects,
 				[finalConnector.id]: finalConnector,
 			},
-			connectorIds: [...dragResult.connectorIds, finalConnector.id],
+			// 新規コネクターは図形と同じ扱いで最前面へ挿入する（新規作成は前面が普遍的な既定）。
+			// rootIds は背面→前面順なので末尾へ追加する。
+			rootIds: [...dragResult.rootIds, finalConnector.id],
 			pendingConnector: null,
 			editingEndpoint: null,
 			edgeScrollEnabled: false,

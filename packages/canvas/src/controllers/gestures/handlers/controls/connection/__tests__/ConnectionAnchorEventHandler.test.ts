@@ -2,6 +2,7 @@ import type { Point } from "@workspace/geometry";
 import { beforeAll, describe, expect, it } from "vitest";
 
 import type { CanvasDoc } from "../../../../../../schemas/canvas/CanvasDoc";
+import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { createInitialControllerState } from "../../../../../reducer/createInitialControllerState";
@@ -20,7 +21,6 @@ beforeAll(() => {
 const emptyDoc: CanvasDoc = {
 	version: 1,
 	root: [],
-	connectors: [],
 } as unknown as CanvasDoc;
 
 /**
@@ -41,8 +41,9 @@ const oneFreeConnector = (id: string, target: Point): ConnectorState =>
 	}) as unknown as ConnectorState;
 
 /**
- * コネクター群を objects / connectorIds に注入し、編集の基点となる
+ * コネクター群を objects / rootIds に注入し、編集の基点となる
  * eventStartSnapshot（実機では handleGesture が dragStart 時に作る）も用意した state を作る。
+ * コネクターは rootIds に混在管理されるため rootIds へ積む。
  */
 const stateWithConnectors = (
 	connectors: ConnectorState[],
@@ -55,7 +56,7 @@ const stateWithConnectors = (
 	return {
 		...base,
 		objects,
-		connectorIds: connectors.map((c) => c.id),
+		rootIds: [...base.rootIds, ...connectors.map((c) => c.id)],
 		eventStartSnapshot: {
 			objects,
 			keyPoints: {},
@@ -94,7 +95,7 @@ const dragEvent = (
 describe("ConnectionAnchorEventHandler 端点編集（実体直接編集）", () => {
 	const handler = new ConnectionAnchorEventHandler();
 
-	it("編集してもコネクターの重なり順（connectorIds）が変わらない", () => {
+	it("編集してもコネクターの重なり順（rootIds）が変わらない", () => {
 		const state = stateWithConnectors([
 			oneFreeConnector("c1", { x: 10, y: 10 }),
 			oneFreeConnector("c2", { x: 20, y: 20 }),
@@ -116,7 +117,7 @@ describe("ConnectionAnchorEventHandler 端点編集（実体直接編集）", ()
 			}),
 		);
 
-		expect(afterEnd.connectorIds).toEqual(["c1", "c2", "c3"]);
+		expect(afterEnd.rootIds).toEqual(["c1", "c2", "c3"]);
 	});
 
 	it("編集中は overlay（pendingConnector）を使わず実体を直接更新する", () => {
@@ -204,6 +205,40 @@ describe("ConnectionAnchorEventHandler 端点編集（実体直接編集）", ()
 			kind: "free",
 			point: { x: 99, y: 99 },
 		});
-		expect(afterEnd.connectorIds).toEqual(["c1"]);
+		expect(afterEnd.rootIds).toEqual(["c1"]);
+	});
+
+	it("新規作成したコネクターは rootIds の末尾（最前面）へ挿入される", () => {
+		// source となる図形を rootIds に1つ置く（前面挿入の確認用）。
+		const base = stateWithConnectors([]);
+		const state: CanvasControllerState = {
+			...base,
+			objects: {
+				...base.objects,
+				"rect-1": { id: "rect-1", type: "rect" } as unknown as ObjectState,
+			},
+			rootIds: ["rect-1"],
+		};
+
+		const afterStart = handler.handle(
+			state,
+			dragEvent("dragStart", "connection-anchor:create:rect-1:rightCenter", {
+				x: 10,
+				y: 10,
+			}),
+		);
+		const afterEnd = handler.handle(
+			afterStart,
+			dragEvent("dragEnd", "connection-anchor:create:rect-1:rightCenter", {
+				x: 80,
+				y: 80,
+			}),
+		);
+
+		// 新規コネクターは rootIds 末尾（最前面）に入り、rect-1 より上に描かれる
+		expect(afterEnd.rootIds.length).toBe(2);
+		expect(afterEnd.rootIds[0]).toBe("rect-1");
+		const newId = afterEnd.rootIds[1];
+		expect(afterEnd.objects[newId]?.type).toBe("connector");
 	});
 });

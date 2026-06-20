@@ -1,5 +1,6 @@
 import type { SemanticDiagnostic } from "./types";
 import type { ObjectDoc } from "../../objects/base/ObjectDoc";
+import type { ConnectorDoc } from "../../objects/connections/connector/ConnectorDoc";
 import type { GroupDoc } from "../../objects/primitives/group/GroupDoc";
 import type { EndpointRef } from "../../objects/types/EndpointRef";
 import type { ObjectType } from "../../objects/types/ObjectType";
@@ -10,7 +11,7 @@ import type { CanvasDoc } from "../CanvasDoc";
  * 文書全体を横断しないと判断できない整合性をチェックする。
  * （単体ノードの型・必須フィールドは validateStructure / 各 validateXxxDoc が担当）
  *
- * - A. ID の一意性: root ツリー + connectors を通じて ID が重複しないこと。
+ * - A. ID の一意性: root ツリー（connector 含む）を通じて ID が重複しないこと。
  *   CanvasDoc はネストしたツリーなので「親子の循環」は構造的に発生せず、
  *   循環に見えるケースは実質「同一 ID の別オブジェクト」= ID 重複でしかない。
  * - B. connector の参照整合性:
@@ -52,24 +53,16 @@ export function validateSemantics(doc: CanvasDoc): SemanticDiagnostic[] {
 		traverse(doc.root, "root");
 	}
 
-	if (doc.connectors) {
-		// 先に全 connector の ID を登録（重複検出 + 参照整合性で実型を引けるように）。
-		doc.connectors.forEach((connector, index) => {
-			const connPath = `connectors[${index}]`;
-			if (seenIds.has(connector.id)) {
-				errors.push({
-					path: connPath,
-					message: `Connector ID "${connector.id}" is duplicated.`,
-					id: connector.id,
-				});
+	// --- B. connector の参照整合性 ---
+	// connector は root 直下のみに存在する（group の子にはならない）。
+	// ID 一意性・id→type マップ構築は上の traverse(root) が connector も含めて済ませている。
+	if (doc.root) {
+		doc.root.forEach((obj, index) => {
+			if (obj.type !== "connector") {
+				return;
 			}
-			seenIds.add(connector.id);
-			idToType.set(connector.id, connector.type);
-		});
-
-		// --- B. connector の参照整合性 ---
-		doc.connectors.forEach((connector, index) => {
-			const connPath = `connectors[${index}]`;
+			const connector = obj as ConnectorDoc;
+			const connPath = `root[${index}]`;
 
 			errors.push(
 				...validateEndpoint(connector.source, `${connPath}.source`, idToType),

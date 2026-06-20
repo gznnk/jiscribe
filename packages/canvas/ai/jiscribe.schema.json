@@ -4,7 +4,7 @@
 	"title": "CanvasDoc",
 	"description": "Root document format for a .jis.json file used by canvas.",
 	"type": "object",
-	"required": ["version", "root", "connectors"],
+	"required": ["version", "root"],
 	"additionalProperties": false,
 	"properties": {
 		"$schema": {
@@ -17,19 +17,28 @@
 			"const": 1
 		},
 		"root": {
-			"description": "All objects on the canvas (shapes, polylines, groups). Connectors are separate.",
+			"description": "All objects on the canvas (shapes, polylines, groups, connectors) in z-order (back to front). Connectors are mixed in among the objects; array order is the stacking order.",
 			"type": "array",
 			"items": { "$ref": "#/$defs/AnyObjectDoc" }
-		},
-		"connectors": {
-			"description": "Connector (arrow) objects linking shapes on the canvas.",
-			"type": "array",
-			"items": { "$ref": "#/$defs/ConnectorDoc" }
 		}
 	},
 	"$defs": {
 		"AnyObjectDoc": {
-			"description": "Any placeable object on the canvas.",
+			"description": "Any placeable object at the top level of 'root'. Connectors are allowed here.",
+			"oneOf": [
+				{ "$ref": "#/$defs/RectDoc" },
+				{ "$ref": "#/$defs/EllipseDoc" },
+				{ "$ref": "#/$defs/PolylineDoc" },
+				{ "$ref": "#/$defs/PolygonDoc" },
+				{ "$ref": "#/$defs/GroupDoc" },
+				{ "$ref": "#/$defs/StickyDoc" },
+				{ "$ref": "#/$defs/ConnectorDoc" }
+			],
+			"discriminator": { "propertyName": "type" }
+		},
+
+		"GroupChildDoc": {
+			"description": "Objects allowed inside a group's children. Connectors are top-level only (root), so they are excluded here.",
 			"oneOf": [
 				{ "$ref": "#/$defs/RectDoc" },
 				{ "$ref": "#/$defs/EllipseDoc" },
@@ -395,9 +404,9 @@
 				},
 				"meta": { "$ref": "#/$defs/MetaDoc" },
 				"children": {
-					"description": "Child objects inside this group.",
+					"description": "Child objects inside this group. Connectors are top-level only and not allowed here.",
 					"type": "array",
-					"items": { "$ref": "#/$defs/AnyObjectDoc" }
+					"items": { "$ref": "#/$defs/GroupChildDoc" }
 				},
 				"rotation": { "$ref": "#/$defs/TransformStyle/properties/rotation" },
 				"flipX": { "$ref": "#/$defs/TransformStyle/properties/flipX" },

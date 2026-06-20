@@ -15,7 +15,6 @@ import { calculateGroupOrientedBounds } from "../utils/calculateGroupOrientedBou
 export const canvasToState = (doc: CanvasDoc): CanvasState => {
 	const objects: Record<string, ObjectState> = {};
 	const rootIds: string[] = [];
-	const connectorIds: string[] = [];
 
 	// Helper to process an object and its children recursively.
 	// Input is a validated CanvasDoc (a nested tree); since the tree is finite
@@ -58,34 +57,29 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 		return objState.id;
 	};
 
-	// Process root objects
+	// Process root objects.
+	// root はオブジェクトとコネクターの混在配列で、並び順がそのまま z-order になる。
 	doc.root.forEach((objDoc) => {
-		const id = processObject(objDoc);
-		rootIds.push(id);
-	});
-
-	// Process connectors (treated as top-level objects in this schema)
-	doc.connectors.forEach((connDoc) => {
 		// コネクターの不変条件: source / target の少なくとも一方が owned であること。
 		// 両端 free（owner なし）のコネクターは ink（polyline）相当であり connector としては
 		// 不正なので load 時に破棄する。canvasToState は load / init / undo / redo の単一経路
 		// なので、ここで担保すれば全経路で free-free が state に入らないことを保証できる。
-		if (!connDoc.source?.owner && !connDoc.target?.owner) {
-			console.warn(
-				`[canvasToState] Discarding free-free connector "${connDoc.id}" (both endpoints are free).`,
-			);
-			return;
+		if (objDoc.type === "connector") {
+			const connDoc = objDoc as ConnectorDoc;
+			if (!connDoc.source?.owner && !connDoc.target?.owner) {
+				console.warn(
+					`[canvasToState] Discarding free-free connector "${connDoc.id}" (both endpoints are free).`,
+				);
+				return;
+			}
 		}
-		// Connectors might have parentId undefined if they are properly top-level
-		// or logic might need adjustment if connectors can be in groups (unlikely in this schema)
-		const id = processObject(connDoc);
-		connectorIds.push(id);
+		const id = processObject(objDoc);
+		rootIds.push(id);
 	});
 
 	return {
 		objects,
 		rootIds,
-		connectorIds,
 		viewport: {
 			minX: 0,
 			minY: 0,
@@ -172,13 +166,10 @@ export const canvasToDoc = (state: CanvasState): CanvasDoc => {
 
 	return {
 		version: 1,
+		// root はオブジェクトとコネクターを z-order 順に混在させた単一配列。
 		root: state.rootIds.flatMap((id) => {
 			const objDoc = reconstructObject(id);
 			return objDoc ? [objDoc] : [];
-		}),
-		connectors: state.connectorIds.flatMap((id) => {
-			const objDoc = reconstructObject(id);
-			return objDoc ? [objDoc as ConnectorDoc] : [];
 		}),
 	};
 };
