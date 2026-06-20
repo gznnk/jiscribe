@@ -26,11 +26,13 @@ describe("validateConnectorDoc", () => {
 	it("両端 free（owner なし）はエラー（最低一方は owned 必須）", () => {
 		const o = { points: validPoints, source: freeRef, target: freeRef };
 		const errors = validateConnectorDoc(o, "root");
-		expect(
-			errors.some(
-				(e) => e.path === "root" && e.message.includes("owned endpoint"),
-			),
-		).toBe(true);
+		const bothFree = errors.find(
+			(e) => e.path === "root" && e.message.includes("owned endpoint"),
+		);
+		expect(bothFree).toBeDefined();
+		// このルールは JSON スキーマ（ConnectorDoc の not 制約）でも検出されるため、
+		// beyondSchema は付けない（拡張は構造エラーとしてスキーマに委ねる）。
+		expect(bothFree?.beyondSchema).toBeUndefined();
 	});
 
 	it("startArrow / endArrow が有効な値はエラーなし", () => {

@@ -1,4 +1,4 @@
-import { defineConfig } from "vitest/config";
+import { coverageConfigDefaults, defineConfig } from "vitest/config";
 
 export default defineConfig({
 	test: {
@@ -10,7 +10,11 @@ export default defineConfig({
 			"src/**/__integration__/**/*.{test,spec}.{ts,tsx}",
 		],
 		coverage: {
-			exclude: ["src/**/index.ts", "vitest.config.ts"],
+			exclude: [
+				...coverageConfigDefaults.exclude,
+				"src/**/index.ts",
+				"vitest.config.ts",
+			],
 		},
 	},
 });

@@ -186,6 +186,7 @@ export function validateStrokeStyleFields(
 		errors.push({
 			path: `${path}.stroke`,
 			message: "must be a safe CSS color value",
+			beyondSchema: true,
 		});
 	}
 	if ("strokeWidth" in o && !isNumber(o.strokeWidth)) {
@@ -209,6 +210,7 @@ export function validateFillStyleFields(
 		errors.push({
 			path: `${path}.fill`,
 			message: "must be a safe CSS color value",
+			beyondSchema: true,
 		});
 	}
 	return errors;
@@ -244,6 +246,7 @@ export function validateTextStyleFields(
 		errors.push({
 			path: `${path}.fontColor`,
 			message: "must be a safe CSS color value",
+			beyondSchema: true,
 		});
 	}
 	if ("fontSize" in o && !isNumber(o.fontSize)) {
@@ -253,12 +256,14 @@ export function validateTextStyleFields(
 		errors.push({
 			path: `${path}.fontFamily`,
 			message: "must be a safe CSS font-family value",
+			beyondSchema: true,
 		});
 	}
 	if ("fontWeight" in o && !isCssSafeValue(o.fontWeight)) {
 		errors.push({
 			path: `${path}.fontWeight`,
 			message: "must be a safe CSS font-weight value",
+			beyondSchema: true,
 		});
 	}
 	return errors;
