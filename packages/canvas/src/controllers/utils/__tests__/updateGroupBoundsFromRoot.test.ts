@@ -47,16 +47,29 @@ const makeState = (
 ): CanvasControllerState => ({ objects }) as unknown as CanvasControllerState;
 
 describe("updateGroupBoundsFromRoot", () => {
-	it("groupId が存在しない → objects が変化しない", () => {
+	it("groupId が存在しない → state をそのまま返し objects をコピーしない", () => {
 		const state = makeState({});
 		const result = updateGroupBoundsFromRoot(state, "missing");
-		expect(result.objects).toStrictEqual(state.objects);
+		// 早期リターンが効き、無駄なオブジェクトコピーが発生しない
+		expect(result).toBe(state);
+		expect(result.objects).toBe(state.objects);
 	});
 
-	it("groupId がグループでない → objects が変化しない", () => {
+	it("groupId がグループでない → state をそのまま返し objects をコピーしない", () => {
 		const state = makeState({ r1: rect("r1", 0, 0) });
 		const result = updateGroupBoundsFromRoot(state, "r1");
-		expect(result.objects).toStrictEqual(state.objects);
+		expect(result).toBe(state);
+		expect(result.objects).toBe(state.objects);
+	});
+
+	it("上に辿った最上位の祖先がグループでない → state をそのまま返す", () => {
+		// g1（group, 親は rect r1）から上に辿るとルートは rect なので更新対象なし
+		const g1 = group("g1", [], "r1");
+		const r1 = rect("r1", 0, 0);
+		const state = makeState({ g1, r1 });
+		const result = updateGroupBoundsFromRoot(state, "g1");
+		expect(result).toBe(state);
+		expect(result.objects).toBe(state.objects);
 	});
 
 	it("単一グループ（親なし）→ そのグループの境界が更新される", () => {

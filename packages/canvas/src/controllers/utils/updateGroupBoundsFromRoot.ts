@@ -30,14 +30,19 @@ export function updateGroupBoundsFromRoot(
 }
 
 /**
- * Traverses upward from the given group to find the topmost ancestor group.
+ * Traverses upward from the given object to find the topmost ancestor group.
+ *
+ * Returns the root id only when it actually resolves to a group; if the start
+ * object does not exist, or the topmost ancestor is not a group (e.g. an
+ * ungrouped shape), `undefined` is returned so the caller can early-return
+ * without copying the object map.
  */
 function findRootGroupId(
 	objects: Record<string, ObjectState>,
 	groupId: string,
 ): string | undefined {
 	let currentId: string | undefined = groupId;
-	let rootId: string | undefined = groupId;
+	let rootId: string | undefined = undefined;
 	const visited = new Set<string>();
 
 	while (currentId) {
@@ -53,6 +58,10 @@ function findRootGroupId(
 
 		rootId = currentId;
 		currentId = obj.parentId;
+	}
+
+	if (!rootId || objects[rootId]?.type !== "group") {
+		return undefined;
 	}
 
 	return rootId;
