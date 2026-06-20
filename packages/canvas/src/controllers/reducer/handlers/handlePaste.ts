@@ -21,8 +21,8 @@ export const handlePaste = (
 	return {
 		...state,
 		objects: mergedObjects,
-		rootIds: [...state.rootIds, ...newRootIds],
-		connectorIds: [...state.connectorIds, ...newConnectorIds],
+		// オブジェクトとコネクターを混在のまま前面（rootIds 末尾）へ追加する
+		rootIds: [...state.rootIds, ...newRootIds, ...newConnectorIds],
 		selectedIds: newRootIds,
 		multiSelectGroup: createMultiSelectGroup(newRootIds, mergedObjects, null),
 		contextMenuPosition: null,

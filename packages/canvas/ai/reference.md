@@ -13,20 +13,16 @@ Use it as a reference when an AI generates data, or when an external tool produc
 	"$schema": "https://schema.jiscribe.dev/v1/jiscribe.schema.json",
 	"version": 1,
 	"root": [
-		/* array of ObjectDoc */
-	],
-	"connectors": [
-		/* array of ConnectorDoc */
+		/* array of ObjectDoc and connectors, in z-order (back to front) */
 	]
 }
 ```
 
-| Field        | Type             | Required | Description                                                     |
-| ------------ | ---------------- | -------- | --------------------------------------------------------------- |
-| `version`    | `1`              | ✅       | Schema version. Always `1` (fixed value).                       |
-| `$schema`    | `string`         | -        | Schema URL (recommended; enables editor completion/validation). |
-| `root`       | `ObjectDoc[]`    | ✅       | All objects on the canvas (including nested groups).            |
-| `connectors` | `ConnectorDoc[]` | ✅       | Connectors (lines linking objects).                             |
+| Field     | Type          | Required | Description                                                                                                                                          |
+| --------- | ------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `version` | `1`           | ✅       | Schema version. Always `1` (fixed value).                                                                                                            |
+| `$schema` | `string`      | -        | Schema URL (recommended; enables editor completion/validation).                                                                                      |
+| `root`    | `ObjectDoc[]` | ✅       | All objects and connectors in z-order (back→front); array order is the stacking order. Includes nested groups; connectors sit at the top level only. |
 
 ---
 
@@ -57,15 +53,15 @@ In addition to `name` and `description`, `meta` may hold any custom keys.
 
 ## Object types
 
-| `type`      | Description                        | Geometry                    | Styles                                |
-| ----------- | ---------------------------------- | --------------------------- | ------------------------------------- |
-| `rect`      | Rectangle                          | `x`, `y`, `width`, `height` | Stroke, Fill, Text, Transform, Radius |
-| `ellipse`   | Ellipse                            | `cx`, `cy`, `rx`, `ry`      | Stroke, Fill, Text, Transform         |
-| `polyline`  | Polyline (open path)               | `points`                    | Stroke                                |
-| `polygon`   | Polygon (closed path)              | `points`                    | Stroke, Fill                          |
-| `group`     | Group (contains children)          | none                        | Transform                             |
-| `connector` | Connector (placed in `connectors`) | `points`                    | Stroke                                |
-| `sticky`    | Sticky note                        | `x`, `y`, `width`, `height` | Fill, Text, Transform (no Stroke)     |
+| `type`      | Description                  | Geometry                    | Styles                                |
+| ----------- | ---------------------------- | --------------------------- | ------------------------------------- |
+| `rect`      | Rectangle                    | `x`, `y`, `width`, `height` | Stroke, Fill, Text, Transform, Radius |
+| `ellipse`   | Ellipse                      | `cx`, `cy`, `rx`, `ry`      | Stroke, Fill, Text, Transform         |
+| `polyline`  | Polyline (open path)         | `points`                    | Stroke                                |
+| `polygon`   | Polygon (closed path)        | `points`                    | Stroke, Fill                          |
+| `group`     | Group (contains children)    | none                        | Transform                             |
+| `connector` | Connector (placed in `root`) | `points`                    | Stroke                                |
+| `sticky`    | Sticky note                  | `x`, `y`, `width`, `height` | Fill, Text, Transform (no Stroke)     |
 
 ---
 
@@ -249,7 +245,7 @@ Some Text-style defaults differ from other shapes (`fontColor` is `"#000000"`, `
 
 ## ConnectorDoc (connector)
 
-A connector object placed in the `connectors` array.
+A connector object placed in `root` (top level, mixed with the objects in z-order). At least one endpoint must reference an object (both-`free` is invalid).
 
 ```json
 {
@@ -431,9 +427,7 @@ A minimal diagram with a rectangle, an ellipse, and a connector.
 			"verticalAlign": "middle",
 			"fontColor": "#6A1B9A",
 			"fontSize": 14
-		}
-	],
-	"connectors": [
+		},
 		{
 			"id": "conn-1",
 			"type": "connector",

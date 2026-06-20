@@ -11,7 +11,9 @@ import type { CanvasControllerState } from "../CanvasTypes";
 export function getEffectiveSelectedIds(
 	state: Pick<CanvasControllerState, "selectedIds" | "selectedConnectorId">,
 ): string[] {
-	if (state.selectedConnectorId !== null) {
+	// null / undefined のどちらも「コネクター未選択」として扱う
+	// （部分的な state では selectedConnectorId が省略され undefined になりうる）。
+	if (state.selectedConnectorId != null) {
 		return [state.selectedConnectorId];
 	}
 	return state.selectedIds;

@@ -4,6 +4,7 @@ import type { CanvasControllerState } from "../../CanvasTypes";
 import { createMultiSelectGroup } from "../../gestures/handlers/objects/utils/createMultiSelectGroup";
 import { cloneObjects } from "../../reducer/handlers/cloneObjects";
 import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWithDescendants";
+import { getRootConnectorIds } from "../../utils/getRootConnectorIds";
 import { updateGroupBoundsFromRoot } from "../../utils/updateGroupBoundsFromRoot";
 import type { Command } from "../CommandTypes";
 import { computeDuplicateOffset } from "./utils/computeDuplicateOffset";
@@ -41,7 +42,7 @@ export const DuplicateCommand: Command = {
 
 		// 両端点が選択範囲内のコネクターのみ複製（CopyCommand と同じ判定）
 		const connectorIds = selectConnectorsInSelection(
-			state.connectorIds,
+			getRootConnectorIds(state.objects, state.rootIds),
 			state.objects,
 			selectedIdsWithDescendants,
 		);
@@ -98,9 +99,13 @@ export const DuplicateCommand: Command = {
 				...parentGroup,
 				childIds,
 			} as GroupState;
+			// コネクターは group の子にならないため、複製分はトップレベル rootIds へ追加する
+			if (newConnectorIds.length > 0) {
+				updatedRootIds = [...state.rootIds, ...newConnectorIds];
+			}
 		} else {
-			// ルート複製: rootIds に追加
-			updatedRootIds = [...state.rootIds, ...newRootIds];
+			// ルート複製: rootIds に追加（オブジェクト + コネクターを混在のまま前面へ）
+			updatedRootIds = [...state.rootIds, ...newRootIds, ...newConnectorIds];
 		}
 
 		// ── 6. 状態を組み立て ─────────────────────────────────────────────────
@@ -108,7 +113,6 @@ export const DuplicateCommand: Command = {
 			...state,
 			objects: mergedObjects,
 			rootIds: updatedRootIds,
-			connectorIds: [...state.connectorIds, ...newConnectorIds],
 			selectedIds: newRootIds,
 			multiSelectGroup: createMultiSelectGroup(newRootIds, mergedObjects, null),
 			commitVersion: state.commitVersion + 1,

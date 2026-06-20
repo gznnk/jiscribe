@@ -30,7 +30,6 @@
 			"fontSize": 28,
 			"fontWeight": "bold"
 		},
-
 		{
 			"id": "badge1",
 			"type": "ellipse",
@@ -82,7 +81,6 @@
 			"fontColor": "#64748b",
 			"fontSize": 13
 		},
-
 		{
 			"id": "badge2",
 			"type": "ellipse",
@@ -134,7 +132,6 @@
 			"fontColor": "#64748b",
 			"fontSize": 13
 		},
-
 		{
 			"id": "badge3",
 			"type": "ellipse",
@@ -187,7 +184,6 @@
 			"fontSize": 13,
 			"fontWeight": "bold"
 		},
-
 		{
 			"id": "badge4",
 			"type": "ellipse",
@@ -239,7 +235,6 @@
 			"fontColor": "#64748b",
 			"fontSize": 13
 		},
-
 		{
 			"id": "highlight",
 			"type": "rect",
@@ -257,23 +252,39 @@
 			"fontColor": "#065f46",
 			"fontSize": 15,
 			"fontWeight": "bold"
-		}
-	],
-	"connectors": [
+		},
 		{
 			"id": "conn-1-2",
 			"type": "connector",
 			"points": [
-				{ "x": 260, "y": 180 },
-				{ "x": 360, "y": 180 }
+				{
+					"x": 260,
+					"y": 180
+				},
+				{
+					"x": 360,
+					"y": 180
+				}
 			],
 			"source": {
-				"owner": { "type": "rect", "id": "card1" },
-				"anchor": { "kind": "connectPoint", "id": "rightCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "card1"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "card2" },
-				"anchor": { "kind": "connectPoint", "id": "leftCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "card2"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
 			},
 			"endArrow": "FilledTriangle",
 			"stroke": "#f97316",
@@ -283,16 +294,34 @@
 			"id": "conn-2-3",
 			"type": "connector",
 			"points": [
-				{ "x": 560, "y": 180 },
-				{ "x": 660, "y": 180 }
+				{
+					"x": 560,
+					"y": 180
+				},
+				{
+					"x": 660,
+					"y": 180
+				}
 			],
 			"source": {
-				"owner": { "type": "rect", "id": "card2" },
-				"anchor": { "kind": "connectPoint", "id": "rightCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "card2"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "card3" },
-				"anchor": { "kind": "connectPoint", "id": "leftCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "card3"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
 			},
 			"endArrow": "FilledTriangle",
 			"stroke": "#8b5cf6",
@@ -302,16 +331,34 @@
 			"id": "conn-3-4",
 			"type": "connector",
 			"points": [
-				{ "x": 860, "y": 180 },
-				{ "x": 960, "y": 180 }
+				{
+					"x": 860,
+					"y": 180
+				},
+				{
+					"x": 960,
+					"y": 180
+				}
 			],
 			"source": {
-				"owner": { "type": "rect", "id": "card3" },
-				"anchor": { "kind": "connectPoint", "id": "rightCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "card3"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "card4" },
-				"anchor": { "kind": "connectPoint", "id": "leftCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "card4"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
 			},
 			"endArrow": "FilledTriangle",
 			"stroke": "#10b981",

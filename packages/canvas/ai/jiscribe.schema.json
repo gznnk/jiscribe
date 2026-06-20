@@ -4,7 +4,7 @@
 	"title": "CanvasDoc",
 	"description": "Root document format for a .jis.json file used by canvas.",
 	"type": "object",
-	"required": ["version", "root", "connectors"],
+	"required": ["version", "root"],
 	"additionalProperties": false,
 	"properties": {
 		"$schema": {
@@ -17,14 +17,9 @@
 			"const": 1
 		},
 		"root": {
-			"description": "All objects on the canvas (shapes, polylines, groups). Connectors are separate.",
+			"description": "All objects on the canvas (shapes, polylines, groups, connectors) in z-order (back to front). Connectors are mixed in among the objects; array order is the stacking order.",
 			"type": "array",
 			"items": { "$ref": "#/$defs/AnyObjectDoc" }
-		},
-		"connectors": {
-			"description": "Connector (arrow) objects linking shapes on the canvas.",
-			"type": "array",
-			"items": { "$ref": "#/$defs/ConnectorDoc" }
 		}
 	},
 	"$defs": {
@@ -36,7 +31,8 @@
 				{ "$ref": "#/$defs/PolylineDoc" },
 				{ "$ref": "#/$defs/PolygonDoc" },
 				{ "$ref": "#/$defs/GroupDoc" },
-				{ "$ref": "#/$defs/StickyDoc" }
+				{ "$ref": "#/$defs/StickyDoc" },
+				{ "$ref": "#/$defs/ConnectorDoc" }
 			],
 			"discriminator": { "propertyName": "type" }
 		},

@@ -42,16 +42,14 @@ CanvasMapper は形状タイプごとの Mapper を `ObjectRegistry` から引�
 	"$schema": "https://schema.jiscribe.dev/v1/jiscribe.schema.json",
 	"version": 1,
 	"root": [
-		/* ObjectDoc のツリー（group は children を内包） */
-	],
-	"connectors": [
-		/* ConnectorDoc。owner+anchor で端点を参照 */
+		/* ObjectDoc とコネクターを z-order 順（背面→前面）で混在させた配列。
+		   group は children を内包。コネクターは group の子にはならず root 直下のみ。 */
 	],
 }
 ```
 
-- `root` … 図形（rect / ellipse / polyline / polygon / group / sticky）のツリー
-- `connectors` … コネクター。端点は `source` / `target` の `owner{type,id}` + `anchor` で対象図形を参照する（ツリーには含めず別配列）
+- `root` … 図形（rect / ellipse / polyline / polygon / group / sticky）とコネクターを混在させた単一配列。**配列順がそのまま重なり順（z-order）**になる
+- コネクター（`type: "connector"`）… 端点は `source` / `target` の `owner{type,id}` + `anchor` で対象図形を参照する。`root` 直下にのみ置かれ、group の子にはならない。少なくとも一方の端点が owned であること（両端 free は不正）
 - 形式仕様の全文は `../ai/reference.md` と `../ai/jiscribe.schema.json` を参照
 
 ## parser の二段検証（境界での防御）
@@ -73,7 +71,7 @@ type CanvasParseResult =
 1. **構造検証 `validateStructure`** — 各ノードの型・必須フィールドを検証。型別の検証は
    `objectDocValidatorRegistry` に委譲し、`group` の `children` 再帰だけは構造ルールとしてここで処理する。
 2. **意味検証 `validateSemantics`** — 文書全体を横断しないと判断できない整合性を検証。
-   - **ID の一意性**: root ツリー + connectors を通じて ID が重複しないこと。
+   - **ID の一意性**: root ツリー（コネクター含む）を通じて ID が重複しないこと。
      `CanvasDoc` はネストしたツリーなので「親子の循環」は構造的に起こり得ず、循環に見えるケースは実質「同一 ID の別オブジェクト」= ID 重複でしかない。
    - **connector の参照整合性**: owner の `id` が実在し、参照先が connectable な型であること（group / polyline / polygon / connector は不可）、source と target が同一オブジェクトを指さないこと（自己ループ禁止）。
 

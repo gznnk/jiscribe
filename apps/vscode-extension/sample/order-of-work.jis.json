@@ -19,7 +19,6 @@
 			"fontSize": 20,
 			"fontWeight": "bold"
 		},
-
 		{
 			"id": "p1-header",
 			"type": "rect",
@@ -92,7 +91,6 @@
 			"fontSize": 15,
 			"fontWeight": "bold"
 		},
-
 		{
 			"id": "i23",
 			"type": "rect",
@@ -178,7 +176,6 @@
 			"fontColor": "#92400e",
 			"fontSize": 13
 		},
-
 		{
 			"id": "i35",
 			"type": "rect",
@@ -213,7 +210,6 @@
 			"fontColor": "#92400e",
 			"fontSize": 13
 		},
-
 		{
 			"id": "i14",
 			"type": "rect",
@@ -282,7 +278,6 @@
 			"fontColor": "#1e40af",
 			"fontSize": 13
 		},
-
 		{
 			"id": "i26",
 			"type": "rect",
@@ -334,7 +329,6 @@
 			"fontColor": "#6b21a8",
 			"fontSize": 13
 		},
-
 		{
 			"id": "legend",
 			"type": "rect",
@@ -351,23 +345,39 @@
 			"verticalAlign": "middle",
 			"fontColor": "#334155",
 			"fontSize": 12
-		}
-	],
-	"connectors": [
+		},
 		{
 			"id": "c-title-p1",
 			"type": "connector",
 			"points": [
-				{ "x": 690, "y": 90 },
-				{ "x": 190, "y": 90 }
+				{
+					"x": 690,
+					"y": 90
+				},
+				{
+					"x": 190,
+					"y": 90
+				}
 			],
 			"source": {
-				"owner": { "type": "rect", "id": "title" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "title"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "p1-header" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "p1-header"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "#64748b",
 			"strokeWidth": 2,
@@ -377,16 +387,34 @@
 			"id": "c-title-p2",
 			"type": "connector",
 			"points": [
-				{ "x": 690, "y": 90 },
-				{ "x": 530, "y": 90 }
+				{
+					"x": 690,
+					"y": 90
+				},
+				{
+					"x": 530,
+					"y": 90
+				}
 			],
 			"source": {
-				"owner": { "type": "rect", "id": "title" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "title"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "p2-header" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "p2-header"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "#64748b",
 			"strokeWidth": 2,
@@ -396,16 +424,34 @@
 			"id": "c-title-p3",
 			"type": "connector",
 			"points": [
-				{ "x": 690, "y": 90 },
-				{ "x": 870, "y": 90 }
+				{
+					"x": 690,
+					"y": 90
+				},
+				{
+					"x": 870,
+					"y": 90
+				}
 			],
 			"source": {
-				"owner": { "type": "rect", "id": "title" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "title"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "p3-header" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "p3-header"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "#64748b",
 			"strokeWidth": 2,
@@ -415,16 +461,34 @@
 			"id": "c-title-p4",
 			"type": "connector",
 			"points": [
-				{ "x": 690, "y": 90 },
-				{ "x": 1210, "y": 90 }
+				{
+					"x": 690,
+					"y": 90
+				},
+				{
+					"x": 1210,
+					"y": 90
+				}
 			],
 			"source": {
-				"owner": { "type": "rect", "id": "title" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "title"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "p4-header" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "p4-header"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "#64748b",
 			"strokeWidth": 2,
@@ -435,12 +499,24 @@
 			"type": "connector",
 			"points": [],
 			"source": {
-				"owner": { "type": "rect", "id": "i35" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "i35"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "i16" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "i16"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "#2563eb",
 			"strokeWidth": 2,

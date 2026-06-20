@@ -7,7 +7,6 @@ import { CanvasDefs } from "./defs/CanvasDefs";
 import type { CanvasState } from "../states/canvas/CanvasState";
 import { GridBackground } from "./layers/background/GridBackground";
 import { GridPattern } from "./layers/background/GridPattern";
-import { ConnectorsRenderer } from "./layers/content/ConnectorsRenderer";
 import { ObjectsRenderer } from "./layers/content/ObjectsRenderer";
 
 type CanvasViewProps = {
@@ -15,12 +14,11 @@ type CanvasViewProps = {
 	children?: React.ReactNode;
 	textEditObjectId?: string | null;
 	isDrawMode?: boolean;
-} & Pick<CanvasState, "objects" | "rootIds" | "connectorIds" | "viewport">;
+} & Pick<CanvasState, "objects" | "rootIds" | "viewport">;
 
 const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 	objects,
 	rootIds,
-	connectorIds,
 	viewport,
 	svgRef,
 	children,
@@ -47,13 +45,12 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 				height={height / zoom}
 			/>
 			<ContentGroup isDrawMode={isDrawMode}>
+				{/* rootIds(z-order 順) を走査し、オブジェクトとコネクターを混在描画する */}
 				<ObjectsRenderer
 					objects={objects}
 					rootIds={rootIds}
 					textEditObjectId={textEditObjectId}
 				/>
-				{/* Connectors rendered above objects */}
-				<ConnectorsRenderer objects={objects} connectorIds={connectorIds} />
 				{/* Overlay layers injected from parent */}
 				{children}
 			</ContentGroup>

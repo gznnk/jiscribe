@@ -120,8 +120,9 @@ export const DeleteCommand: Command = {
 		let nextStateBeforeCleanup: CanvasControllerState = {
 			...state,
 			objects: updatedObjects,
-			rootIds: state.rootIds.filter((id) => !idsToDelete.has(id)),
-			connectorIds: stateAfterConnectors.connectorIds.filter(
+			// コネクターも rootIds に含まれるため、孤立コネクター除去後の rootIds から
+			// 削除対象（選択オブジェクト・子孫・選択コネクター）をまとめて除去する。
+			rootIds: stateAfterConnectors.rootIds.filter(
 				(id) => !idsToDelete.has(id),
 			),
 			selectedIds: [] as string[],

@@ -49,8 +49,7 @@ export function validateStructure(doc: unknown): SemanticDiagnostic[] {
 		return [
 			{
 				path: "/",
-				message:
-					"Document must be an object with 'root' and 'connectors' fields",
+				message: "Document must be an object with a 'root' field",
 			},
 		];
 	}
@@ -65,16 +64,10 @@ export function validateStructure(doc: unknown): SemanticDiagnostic[] {
 	if (!isArray(d.root)) {
 		errors.push({ path: "root", message: "must be an array" });
 	} else {
+		// root はオブジェクトとコネクターの混在配列。型別検証は validateObjectNode
+		// → registry が type ごとに振り分ける（connector は validateConnectorDoc）。
 		(d.root as unknown[]).forEach((obj, i) => {
 			errors.push(...validateObjectNode(obj, `root[${i}]`));
-		});
-	}
-
-	if (!isArray(d.connectors)) {
-		errors.push({ path: "connectors", message: "must be an array" });
-	} else {
-		(d.connectors as unknown[]).forEach((obj, i) => {
-			errors.push(...validateObjectNode(obj, `connectors[${i}]`));
 		});
 	}
 

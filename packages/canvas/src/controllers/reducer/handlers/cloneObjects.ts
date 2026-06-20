@@ -63,8 +63,8 @@ export function cloneObjects(
 
 		// 親が allObjects 内に存在しない場合は parentId を破棄し、ルートへ昇格させる。
 		// （外部クリップボード等で親グループ抜きの子が含まれても孤児化させない）
-		// コネクターは rootIds ではなく connectorIds で管理されるため昇格対象から除外し、
-		// parentId 破棄のみ行う（トップレベルコネクターとして整合する）。
+		// コネクターは newRootIds（オブジェクトのルート）ではなく newConnectorIds として返し、
+		// 呼び出し側が rootIds へ挿入する。ここでは昇格対象から除外し parentId 破棄のみ行う。
 		const remappedParentId =
 			srcObj.parentId !== undefined ? idRemap.get(srcObj.parentId) : undefined;
 		if (

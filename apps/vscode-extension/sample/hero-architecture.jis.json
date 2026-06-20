@@ -107,23 +107,37 @@
 			"fontColor": "#78350f",
 			"fontSize": 15,
 			"fontWeight": "bold"
-		}
-	],
-	"connectors": [
+		},
 		{
 			"id": "conn-browser-frontend",
 			"type": "connector",
 			"points": [
-				{ "x": 600, "y": 76 },
-				{ "x": 600, "y": 134 }
+				{
+					"x": 600,
+					"y": 76
+				},
+				{
+					"x": 600,
+					"y": 134
+				}
 			],
 			"source": {
-				"owner": { "type": "rect", "id": "browser" },
-				"anchor": { "kind": "center" }
+				"owner": {
+					"type": "rect",
+					"id": "browser"
+				},
+				"anchor": {
+					"kind": "center"
+				}
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "frontend" },
-				"anchor": { "kind": "center" }
+				"owner": {
+					"type": "rect",
+					"id": "frontend"
+				},
+				"anchor": {
+					"kind": "center"
+				}
 			},
 			"endArrow": "FilledTriangle",
 			"stroke": "#94a3b8",
@@ -133,16 +147,32 @@
 			"id": "conn-frontend-api",
 			"type": "connector",
 			"points": [
-				{ "x": 600, "y": 194 },
-				{ "x": 600, "y": 264 }
+				{
+					"x": 600,
+					"y": 194
+				},
+				{
+					"x": 600,
+					"y": 264
+				}
 			],
 			"source": {
-				"owner": { "type": "rect", "id": "frontend" },
-				"anchor": { "kind": "center" }
+				"owner": {
+					"type": "rect",
+					"id": "frontend"
+				},
+				"anchor": {
+					"kind": "center"
+				}
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "api" },
-				"anchor": { "kind": "center" }
+				"owner": {
+					"type": "rect",
+					"id": "api"
+				},
+				"anchor": {
+					"kind": "center"
+				}
 			},
 			"endArrow": "FilledTriangle",
 			"stroke": "#94a3b8",
@@ -152,16 +182,32 @@
 			"id": "conn-api-postgres",
 			"type": "connector",
 			"points": [
-				{ "x": 600, "y": 324 },
-				{ "x": 220, "y": 404 }
+				{
+					"x": 600,
+					"y": 324
+				},
+				{
+					"x": 220,
+					"y": 404
+				}
 			],
 			"source": {
-				"owner": { "type": "rect", "id": "api" },
-				"anchor": { "kind": "center" }
+				"owner": {
+					"type": "rect",
+					"id": "api"
+				},
+				"anchor": {
+					"kind": "center"
+				}
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "postgres" },
-				"anchor": { "kind": "center" }
+				"owner": {
+					"type": "rect",
+					"id": "postgres"
+				},
+				"anchor": {
+					"kind": "center"
+				}
 			},
 			"endArrow": "FilledTriangle",
 			"stroke": "#94a3b8",
@@ -171,16 +217,32 @@
 			"id": "conn-api-redis",
 			"type": "connector",
 			"points": [
-				{ "x": 600, "y": 324 },
-				{ "x": 600, "y": 404 }
+				{
+					"x": 600,
+					"y": 324
+				},
+				{
+					"x": 600,
+					"y": 404
+				}
 			],
 			"source": {
-				"owner": { "type": "rect", "id": "api" },
-				"anchor": { "kind": "center" }
+				"owner": {
+					"type": "rect",
+					"id": "api"
+				},
+				"anchor": {
+					"kind": "center"
+				}
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "redis" },
-				"anchor": { "kind": "center" }
+				"owner": {
+					"type": "rect",
+					"id": "redis"
+				},
+				"anchor": {
+					"kind": "center"
+				}
 			},
 			"endArrow": "FilledTriangle",
 			"stroke": "#94a3b8",
@@ -190,16 +252,32 @@
 			"id": "conn-api-auth",
 			"type": "connector",
 			"points": [
-				{ "x": 600, "y": 324 },
-				{ "x": 980, "y": 404 }
+				{
+					"x": 600,
+					"y": 324
+				},
+				{
+					"x": 980,
+					"y": 404
+				}
 			],
 			"source": {
-				"owner": { "type": "rect", "id": "api" },
-				"anchor": { "kind": "center" }
+				"owner": {
+					"type": "rect",
+					"id": "api"
+				},
+				"anchor": {
+					"kind": "center"
+				}
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "auth" },
-				"anchor": { "kind": "center" }
+				"owner": {
+					"type": "rect",
+					"id": "auth"
+				},
+				"anchor": {
+					"kind": "center"
+				}
 			},
 			"endArrow": "FilledTriangle",
 			"stroke": "#94a3b8",

@@ -58,7 +58,6 @@ export const canvasReducer = (
 				...state,
 				objects: action.payload.objects,
 				rootIds: action.payload.rootIds,
-				connectorIds: action.payload.connectorIds,
 			});
 
 			// 自己保存の折り返し: action.saveNonce が state.saveNonce と一致する場合、
@@ -72,7 +71,6 @@ export const canvasReducer = (
 					...state,
 					objects: action.payload.objects,
 					rootIds: action.payload.rootIds,
-					connectorIds: action.payload.connectorIds,
 				};
 			}
 
@@ -84,7 +82,6 @@ export const canvasReducer = (
 				...state,
 				objects: action.payload.objects,
 				rootIds: action.payload.rootIds,
-				connectorIds: action.payload.connectorIds,
 				selectedIds: [],
 				selectedConnectorId: null,
 				eventStartSnapshot: null,

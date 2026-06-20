@@ -18,48 +18,36 @@ const rectJson = `{
 
 describe("isSameCanvasDocContent", () => {
 	it("同一内容の doc（別インスタンス）は同一と判定する", () => {
-		const docA = parseDoc(
-			`{ "version": 1, "root": [${rectJson}], "connectors": [] }`,
-		);
-		const docB = parseDoc(
-			`{ "version": 1, "root": [${rectJson}], "connectors": [] }`,
-		);
+		const docA = parseDoc(`{ "version": 1, "root": [${rectJson}] }`);
+		const docB = parseDoc(`{ "version": 1, "root": [${rectJson}] }`);
 		expect(isSameCanvasDocContent(docA, docB)).toBe(true);
 	});
 
 	it("オブジェクトのプロパティ値が異なれば異なると判定する", () => {
-		const docA = parseDoc(
-			`{ "version": 1, "root": [${rectJson}], "connectors": [] }`,
-		);
+		const docA = parseDoc(`{ "version": 1, "root": [${rectJson}] }`);
 		const docB = parseDoc(
-			`{ "version": 1, "root": [${rectJson.replace('"x": 10', '"x": 11')}], "connectors": [] }`,
+			`{ "version": 1, "root": [${rectJson.replace('"x": 10', '"x": 11')}] }`,
 		);
 		expect(isSameCanvasDocContent(docA, docB)).toBe(false);
 	});
 
 	it("root の要素数が異なれば異なると判定する", () => {
-		const docA = parseDoc(
-			`{ "version": 1, "root": [${rectJson}], "connectors": [] }`,
-		);
-		const docB = parseDoc(`{ "version": 1, "root": [], "connectors": [] }`);
+		const docA = parseDoc(`{ "version": 1, "root": [${rectJson}] }`);
+		const docB = parseDoc(`{ "version": 1, "root": [] }`);
 		expect(isSameCanvasDocContent(docA, docB)).toBe(false);
 	});
 
 	it("$schema の有無・違いは比較に影響しない", () => {
 		const docA = parseDoc(
-			`{ "$schema": "./jiscribe.schema.json", "version": 1, "root": [], "connectors": [] }`,
+			`{ "$schema": "./jiscribe.schema.json", "version": 1, "root": [] }`,
 		);
-		const docB = parseDoc(`{ "version": 1, "root": [], "connectors": [] }`);
+		const docB = parseDoc(`{ "version": 1, "root": [] }`);
 		expect(isSameCanvasDocContent(docA, docB)).toBe(true);
 	});
 
 	it("トップレベルのキー順の違いは比較に影響しない", () => {
-		const docA = parseDoc(
-			`{ "connectors": [], "root": [${rectJson}], "version": 1 }`,
-		);
-		const docB = parseDoc(
-			`{ "version": 1, "root": [${rectJson}], "connectors": [] }`,
-		);
+		const docA = parseDoc(`{ "root": [${rectJson}], "version": 1 }`);
+		const docB = parseDoc(`{ "version": 1, "root": [${rectJson}] }`);
 		expect(isSameCanvasDocContent(docA, docB)).toBe(true);
 	});
 
@@ -67,10 +55,10 @@ describe("isSameCanvasDocContent", () => {
 		// この振る舞いは仕様: 呼び出し側は「同一ならスキップ」の最適化にのみ
 		// 使うため、false negative は安全側（従来どおり処理が走る）に倒れる。
 		const docA = parseDoc(
-			`{ "version": 1, "root": [{ "id": "rect-1", "type": "rect" }], "connectors": [] }`,
+			`{ "version": 1, "root": [{ "id": "rect-1", "type": "rect" }] }`,
 		);
 		const docB = parseDoc(
-			`{ "version": 1, "root": [{ "type": "rect", "id": "rect-1" }], "connectors": [] }`,
+			`{ "version": 1, "root": [{ "type": "rect", "id": "rect-1" }] }`,
 		);
 		expect(isSameCanvasDocContent(docA, docB)).toBe(false);
 	});

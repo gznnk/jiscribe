@@ -57,7 +57,10 @@ const makeState = (params: {
 	connectorIds: string[];
 }): CanvasControllerState =>
 	({
-		...params,
+		selectedIds: params.selectedIds,
+		objects: params.objects,
+		// コネクターは独立配列ではなく rootIds に混在管理されるため rootIds へ含める。
+		rootIds: [...params.rootIds, ...params.connectorIds],
 		commitVersion: 0,
 		multiSelectGroup: null,
 		internalClipboard: null,

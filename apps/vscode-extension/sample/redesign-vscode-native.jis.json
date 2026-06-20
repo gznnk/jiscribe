@@ -2253,9 +2253,7 @@
 			"verticalAlign": "middle",
 			"fontColor": "#ffffff",
 			"fontSize": 12
-		}
-	],
-	"connectors": [
+		},
 		{
 			"id": "conn-start-process",
 			"type": "connector",

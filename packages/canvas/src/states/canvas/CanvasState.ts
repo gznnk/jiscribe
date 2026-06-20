@@ -10,15 +10,12 @@ export type CanvasState = {
 	objects: Record<string, ObjectState>;
 
 	/**
-	 * Sorted list of object IDs at the root level (Z-index order).
-	 * Objects in groups are not listed here, but in the group's children array.
+	 * Sorted list of root-level IDs in Z-index order (back → front).
+	 * オブジェクトとコネクター（type === "connector"）を混在させて保持し、
+	 * 並び順がそのまま重なり順になる。group の子はここには現れず childIds 側に入る。
+	 * コネクターは group の子にはならず root 直下のみ。
 	 */
 	rootIds: string[];
-
-	/**
-	 * List of IDs for independent connectors (if managed separately from root objects).
-	 */
-	connectorIds: string[];
 
 	/**
 	 * Current viewport state.

@@ -145,7 +145,6 @@
 			"fontSize": 12,
 			"fontWeight": "normal"
 		},
-
 		{
 			"id": "s2-bg",
 			"type": "rect",
@@ -493,7 +492,6 @@
 			"fontSize": 12,
 			"fontWeight": "normal"
 		},
-
 		{
 			"id": "s3-bg",
 			"type": "rect",
@@ -830,7 +828,6 @@
 			"fontSize": 12,
 			"fontWeight": "normal"
 		},
-
 		{
 			"id": "s4-bg",
 			"type": "rect",
@@ -1209,7 +1206,6 @@
 			"fontSize": 12,
 			"fontWeight": "normal"
 		},
-
 		{
 			"id": "s5-bg",
 			"type": "rect",
@@ -1521,7 +1517,6 @@
 			"fontSize": 12,
 			"fontWeight": "normal"
 		},
-
 		{
 			"id": "s6-bg",
 			"type": "rect",
@@ -1826,6 +1821,5 @@
 			"fontSize": 12,
 			"fontWeight": "normal"
 		}
-	],
-	"connectors": []
+	]
 }

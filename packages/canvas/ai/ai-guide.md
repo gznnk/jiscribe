@@ -15,21 +15,19 @@ It focuses on the essentials. For the full field-level specification, see [`refe
 
 ## 2. Minimal structure
 
-The top level must always have `version` / `root` / `connectors` (arrays may be empty).
+The top level must always have `version` / `root` (the array may be empty).
 
 ```json
 {
 	"$schema": "https://schema.jiscribe.dev/v1/jiscribe.schema.json",
 	"version": 1,
-	"root": [],
-	"connectors": []
+	"root": []
 }
 ```
 
 - `version`: **required, always `1`** (fixed value for this format version).
 - `$schema`: optional but **recommended** (enables editor completion and validation).
-- `root`: array of shapes (rect / ellipse / polyline / polygon / group / sticky).
-- `connectors`: array of connectors. **Connectors must go here (never in `root`).**
+- `root`: array of shapes (rect / ellipse / polyline / polygon / group / sticky) **and connectors**, in z-order (back → front). The array order is the stacking order. Connectors (`"type": "connector"`) sit at the top level among the objects; they are **never** placed inside a group's `children`.
 
 ## 3. MUST / MUST NOT (violations break the file)
 
@@ -38,7 +36,8 @@ The top level must always have `version` / `root` / `connectors` (arrays may be 
 - Include **`version: 1`** at the top level (required, fixed value).
 - Give every object a **unique `id`** and a **`type`**.
 - `rect` uses `x`,`y` (top-left) + `width`,`height`. `ellipse` uses `cx`,`cy` (center) + `rx`,`ry` (radii).
-- Put `connector` in the `connectors` array, and express its endpoints with `source` / `target` (EndpointRef).
+- Put `connector` in `root` (top level, mixed with the objects), and express its endpoints with `source` / `target` (EndpointRef).
+- A connector must have **at least one owned endpoint** (`source` or `target` referencing an object). Both endpoints `free` is invalid.
 - For a straight connector, set `points` to an **empty array** `[]`.
 
 **MUST NOT**
@@ -46,19 +45,19 @@ The top level must always have `version` / `root` / `connectors` (arrays may be 
 - Do not put endpoint (start/end) coordinates in a connector's `points`. `points` holds only intermediate waypoints (usually empty).
 - Do not give a `group` `x`,`y`,`width`,`height`. Its position comes from its `children`.
 - Do not reuse the same `id`.
-- Do not put a `connector` in `root`.
+- Do not put a `connector` inside a group's `children` (connectors live at the top level of `root` only).
 
 ## 4. Object quick reference
 
-| `type`                        | Required geometry             | Main styles                                      |
-| ----------------------------- | ----------------------------- | ------------------------------------------------ |
-| `rect`                        | `x`,`y`,`width`,`height`      | stroke / fill / text / `rx` (rounded) / rotation |
-| `ellipse`                     | `cx`,`cy`,`rx`,`ry`           | stroke / fill / text / rotation                  |
-| `polyline`                    | `points` (open line)          | stroke / startArrow / endArrow                   |
-| `polygon`                     | `points` (auto-closed)        | stroke / fill                                    |
-| `group`                       | `children`                    | rotation / flipX / flipY                         |
-| `connector` (in `connectors`) | `source`,`target`,`points:[]` | stroke / startArrow / endArrow                   |
-| `sticky`                      | `x`,`y`,`width`,`height`      | fill / text (no stroke or rx)                    |
+| `type`                  | Required geometry             | Main styles                                      |
+| ----------------------- | ----------------------------- | ------------------------------------------------ |
+| `rect`                  | `x`,`y`,`width`,`height`      | stroke / fill / text / `rx` (rounded) / rotation |
+| `ellipse`               | `cx`,`cy`,`rx`,`ry`           | stroke / fill / text / rotation                  |
+| `polyline`              | `points` (open line)          | stroke / startArrow / endArrow                   |
+| `polygon`               | `points` (auto-closed)        | stroke / fill                                    |
+| `group`                 | `children`                    | rotation / flipX / flipY                         |
+| `connector` (in `root`) | `source`,`target`,`points:[]` | stroke / startArrow / endArrow                   |
+| `sticky`                | `x`,`y`,`width`,`height`      | fill / text (no stroke or rx)                    |
 
 **Style values**
 
@@ -138,9 +137,7 @@ These are guidelines for readability, not part of the spec. Overlapping itself i
 			"strokeWidth": 2,
 			"text": "Done",
 			"fontColor": "#2E7D32"
-		}
-	],
-	"connectors": [
+		},
 		{
 			"id": "c1",
 			"type": "connector",
@@ -229,9 +226,7 @@ These are guidelines for readability, not part of the spec. Overlapping itself i
 					"fontColor": "#37474F"
 				}
 			]
-		}
-	],
-	"connectors": [
+		},
 		{
 			"id": "c1",
 			"type": "connector",
@@ -270,7 +265,8 @@ These are guidelines for readability, not part of the spec. Overlapping itself i
 
 ## 7. Common mistakes
 
-- ❌ Putting a connector in `root` → ✅ put it in `connectors`.
+- ❌ Putting a connector inside a group's `children` → ✅ keep connectors at the top level of `root`.
+- ❌ A connector with both endpoints `free` (no owner) → ✅ at least one endpoint must reference an object.
 - ❌ Putting endpoint coordinates in a connector's `points` → ✅ `points: []`; endpoints go in `source`/`target`.
 - ❌ Giving a `group` `x`/`y`/`width`/`height` → ✅ position it via the `children` coordinates.
 - ❌ Using `x`/`y`/`width`/`height` on an `ellipse` → ✅ use `cx`/`cy`/`rx`/`ry`.

@@ -1,5 +1,6 @@
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
-import { isSameGroupSelection } from "../../utils/isSameGroupSelection";
+import { getEffectiveSelectedIds } from "../../utils/getEffectiveSelectedIds";
+import { isArrangeableSelection } from "../../utils/isArrangeableSelection";
 import { sortObjectIdsByZOrder } from "../../utils/sortObjectIdsByZOrder";
 import type { Command } from "../CommandTypes";
 
@@ -14,16 +15,17 @@ export const SendToBackCommand: Command = {
 	},
 
 	canExecute: (state) => {
-		return isSameGroupSelection(state);
+		return isArrangeableSelection(state);
 	},
 
 	execute: (state) => {
-		const commonParentId = state.objects[state.selectedIds[0]]?.parentId;
-		const selectedSet = new Set(state.selectedIds);
+		const selectedIds = getEffectiveSelectedIds(state);
+		const commonParentId = state.objects[selectedIds[0]]?.parentId;
+		const selectedSet = new Set(selectedIds);
 
 		// 移動後も選択オブジェクト同士の重なり順が変わらないよう、selectedIds を z-order で並び替える
 		const orderedSelectedIds = sortObjectIdsByZOrder(
-			state.selectedIds,
+			selectedIds,
 			state.objects,
 			state.rootIds,
 		);

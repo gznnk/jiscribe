@@ -13,7 +13,6 @@
 			"strokeWidth": 1,
 			"rx": 24
 		},
-
 		{
 			"id": "logo-accent",
 			"type": "rect",
@@ -65,7 +64,6 @@
 			"fontColor": "#64748b",
 			"fontSize": 14
 		},
-
 		{
 			"id": "zone-clients",
 			"type": "rect",
@@ -149,7 +147,6 @@
 			"fontSize": 16,
 			"fontWeight": "bold"
 		},
-
 		{
 			"id": "zone-edge",
 			"type": "rect",
@@ -197,7 +194,6 @@
 			"fontSize": 18,
 			"fontWeight": "bold"
 		},
-
 		{
 			"id": "zone-services",
 			"type": "rect",
@@ -317,7 +313,6 @@
 			"fontSize": 15,
 			"fontWeight": "bold"
 		},
-
 		{
 			"id": "zone-messaging",
 			"type": "rect",
@@ -365,7 +360,6 @@
 			"fontSize": 17,
 			"fontWeight": "bold"
 		},
-
 		{
 			"id": "zone-data",
 			"type": "rect",
@@ -467,13 +461,18 @@
 			"fontSize": 14,
 			"fontWeight": "bold"
 		},
-
 		{
 			"id": "legend-sync-line",
 			"type": "polyline",
 			"points": [
-				{ "x": 60, "y": 822 },
-				{ "x": 104, "y": 822 }
+				{
+					"x": 60,
+					"y": 822
+				},
+				{
+					"x": 104,
+					"y": 822
+				}
 			],
 			"stroke": "#7c3aed",
 			"strokeWidth": 3,
@@ -500,8 +499,14 @@
 			"id": "legend-async-line",
 			"type": "polyline",
 			"points": [
-				{ "x": 320, "y": 822 },
-				{ "x": 364, "y": 822 }
+				{
+					"x": 320,
+					"y": 822
+				},
+				{
+					"x": 364,
+					"y": 822
+				}
 			],
 			"stroke": "#f59e0b",
 			"strokeWidth": 3,
@@ -540,24 +545,43 @@
 			"verticalAlign": "middle",
 			"fontColor": "#94a3b8",
 			"fontSize": 13
-		}
-	],
-	"connectors": [
+		},
 		{
 			"id": "c-web-gw",
 			"type": "connector",
 			"points": [
-				{ "x": 268, "y": 214 },
-				{ "x": 268, "y": 306 },
-				{ "x": 380, "y": 306 }
+				{
+					"x": 268,
+					"y": 214
+				},
+				{
+					"x": 268,
+					"y": 306
+				},
+				{
+					"x": 380,
+					"y": 306
+				}
 			],
 			"source": {
-				"owner": { "type": "rect", "id": "cl-web" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "cl-web"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "edge-gateway" },
-				"anchor": { "kind": "connectPoint", "id": "leftCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "edge-gateway"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
 			},
 			"stroke": "#60a5fa",
 			"strokeWidth": 2.5,
@@ -567,16 +591,34 @@
 			"id": "c-mobile-gw",
 			"type": "connector",
 			"points": [
-				{ "x": 640, "y": 214 },
-				{ "x": 640, "y": 280 }
+				{
+					"x": 640,
+					"y": 214
+				},
+				{
+					"x": 640,
+					"y": 280
+				}
 			],
 			"source": {
-				"owner": { "type": "rect", "id": "cl-mobile" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "cl-mobile"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "edge-gateway" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "edge-gateway"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "#60a5fa",
 			"strokeWidth": 2.5,
@@ -586,39 +628,83 @@
 			"id": "c-admin-gw",
 			"type": "connector",
 			"points": [
-				{ "x": 1012, "y": 214 },
-				{ "x": 1012, "y": 306 },
-				{ "x": 900, "y": 306 }
+				{
+					"x": 1012,
+					"y": 214
+				},
+				{
+					"x": 1012,
+					"y": 306
+				},
+				{
+					"x": 900,
+					"y": 306
+				}
 			],
 			"source": {
-				"owner": { "type": "rect", "id": "cl-admin" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "cl-admin"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "edge-gateway" },
-				"anchor": { "kind": "connectPoint", "id": "rightCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "edge-gateway"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
 			},
 			"stroke": "#60a5fa",
 			"strokeWidth": 2.5,
 			"endArrow": "FilledTriangle"
 		},
-
 		{
 			"id": "c-gw-auth",
 			"type": "connector",
 			"points": [
-				{ "x": 640, "y": 332 },
-				{ "x": 640, "y": 372 },
-				{ "x": 152, "y": 372 },
-				{ "x": 152, "y": 404 }
+				{
+					"x": 640,
+					"y": 332
+				},
+				{
+					"x": 640,
+					"y": 372
+				},
+				{
+					"x": 152,
+					"y": 372
+				},
+				{
+					"x": 152,
+					"y": 404
+				}
 			],
 			"source": {
-				"owner": { "type": "rect", "id": "edge-gateway" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "edge-gateway"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "svc-auth" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "svc-auth"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "#a78bfa",
 			"strokeWidth": 2.5,
@@ -628,18 +714,42 @@
 			"id": "c-gw-catalog",
 			"type": "connector",
 			"points": [
-				{ "x": 640, "y": 332 },
-				{ "x": 640, "y": 372 },
-				{ "x": 396, "y": 372 },
-				{ "x": 396, "y": 404 }
+				{
+					"x": 640,
+					"y": 332
+				},
+				{
+					"x": 640,
+					"y": 372
+				},
+				{
+					"x": 396,
+					"y": 372
+				},
+				{
+					"x": 396,
+					"y": 404
+				}
 			],
 			"source": {
-				"owner": { "type": "rect", "id": "edge-gateway" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "edge-gateway"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "svc-catalog" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "svc-catalog"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "#a78bfa",
 			"strokeWidth": 2.5,
@@ -649,16 +759,34 @@
 			"id": "c-gw-cart",
 			"type": "connector",
 			"points": [
-				{ "x": 640, "y": 332 },
-				{ "x": 640, "y": 404 }
+				{
+					"x": 640,
+					"y": 332
+				},
+				{
+					"x": 640,
+					"y": 404
+				}
 			],
 			"source": {
-				"owner": { "type": "rect", "id": "edge-gateway" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "edge-gateway"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "svc-cart" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "svc-cart"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "#a78bfa",
 			"strokeWidth": 2.5,
@@ -668,18 +796,42 @@
 			"id": "c-gw-order",
 			"type": "connector",
 			"points": [
-				{ "x": 640, "y": 332 },
-				{ "x": 640, "y": 372 },
-				{ "x": 884, "y": 372 },
-				{ "x": 884, "y": 404 }
+				{
+					"x": 640,
+					"y": 332
+				},
+				{
+					"x": 640,
+					"y": 372
+				},
+				{
+					"x": 884,
+					"y": 372
+				},
+				{
+					"x": 884,
+					"y": 404
+				}
 			],
 			"source": {
-				"owner": { "type": "rect", "id": "edge-gateway" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "edge-gateway"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "svc-order" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "svc-order"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "#a78bfa",
 			"strokeWidth": 2.5,
@@ -689,40 +841,87 @@
 			"id": "c-gw-payment",
 			"type": "connector",
 			"points": [
-				{ "x": 640, "y": 332 },
-				{ "x": 640, "y": 372 },
-				{ "x": 1128, "y": 372 },
-				{ "x": 1128, "y": 404 }
+				{
+					"x": 640,
+					"y": 332
+				},
+				{
+					"x": 640,
+					"y": 372
+				},
+				{
+					"x": 1128,
+					"y": 372
+				},
+				{
+					"x": 1128,
+					"y": 404
+				}
 			],
 			"source": {
-				"owner": { "type": "rect", "id": "edge-gateway" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "edge-gateway"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "svc-payment" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "svc-payment"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "#a78bfa",
 			"strokeWidth": 2.5,
 			"endArrow": "FilledTriangle"
 		},
-
 		{
 			"id": "c-auth-bus",
 			"type": "connector",
 			"points": [
-				{ "x": 152, "y": 478 },
-				{ "x": 152, "y": 520 },
-				{ "x": 640, "y": 520 },
-				{ "x": 640, "y": 556 }
+				{
+					"x": 152,
+					"y": 478
+				},
+				{
+					"x": 152,
+					"y": 520
+				},
+				{
+					"x": 640,
+					"y": 520
+				},
+				{
+					"x": 640,
+					"y": 556
+				}
 			],
 			"source": {
-				"owner": { "type": "rect", "id": "svc-auth" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "svc-auth"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "msg-bus" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "msg-bus"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "#f59e0b",
 			"strokeWidth": 2.5,
@@ -733,18 +932,42 @@
 			"id": "c-catalog-bus",
 			"type": "connector",
 			"points": [
-				{ "x": 396, "y": 478 },
-				{ "x": 396, "y": 520 },
-				{ "x": 640, "y": 520 },
-				{ "x": 640, "y": 556 }
+				{
+					"x": 396,
+					"y": 478
+				},
+				{
+					"x": 396,
+					"y": 520
+				},
+				{
+					"x": 640,
+					"y": 520
+				},
+				{
+					"x": 640,
+					"y": 556
+				}
 			],
 			"source": {
-				"owner": { "type": "rect", "id": "svc-catalog" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "svc-catalog"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "msg-bus" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "msg-bus"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "#f59e0b",
 			"strokeWidth": 2.5,
@@ -755,16 +978,34 @@
 			"id": "c-cart-bus",
 			"type": "connector",
 			"points": [
-				{ "x": 640, "y": 478 },
-				{ "x": 640, "y": 556 }
+				{
+					"x": 640,
+					"y": 478
+				},
+				{
+					"x": 640,
+					"y": 556
+				}
 			],
 			"source": {
-				"owner": { "type": "rect", "id": "svc-cart" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "svc-cart"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "msg-bus" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "msg-bus"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "#f59e0b",
 			"strokeWidth": 2.5,
@@ -775,18 +1016,42 @@
 			"id": "c-order-bus",
 			"type": "connector",
 			"points": [
-				{ "x": 884, "y": 478 },
-				{ "x": 884, "y": 520 },
-				{ "x": 640, "y": 520 },
-				{ "x": 640, "y": 556 }
+				{
+					"x": 884,
+					"y": 478
+				},
+				{
+					"x": 884,
+					"y": 520
+				},
+				{
+					"x": 640,
+					"y": 520
+				},
+				{
+					"x": 640,
+					"y": 556
+				}
 			],
 			"source": {
-				"owner": { "type": "rect", "id": "svc-order" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "svc-order"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "msg-bus" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "msg-bus"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "#f59e0b",
 			"strokeWidth": 2.5,
@@ -797,41 +1062,88 @@
 			"id": "c-payment-bus",
 			"type": "connector",
 			"points": [
-				{ "x": 1128, "y": 478 },
-				{ "x": 1128, "y": 520 },
-				{ "x": 640, "y": 520 },
-				{ "x": 640, "y": 556 }
+				{
+					"x": 1128,
+					"y": 478
+				},
+				{
+					"x": 1128,
+					"y": 520
+				},
+				{
+					"x": 640,
+					"y": 520
+				},
+				{
+					"x": 640,
+					"y": 556
+				}
 			],
 			"source": {
-				"owner": { "type": "rect", "id": "svc-payment" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "svc-payment"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "msg-bus" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "msg-bus"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "#f59e0b",
 			"strokeWidth": 2.5,
 			"strokeDashType": "dashed",
 			"endArrow": "FilledTriangle"
 		},
-
 		{
 			"id": "c-bus-postgres",
 			"type": "connector",
 			"points": [
-				{ "x": 640, "y": 612 },
-				{ "x": 640, "y": 650 },
-				{ "x": 219, "y": 650 },
-				{ "x": 219, "y": 684 }
+				{
+					"x": 640,
+					"y": 612
+				},
+				{
+					"x": 640,
+					"y": 650
+				},
+				{
+					"x": 219,
+					"y": 650
+				},
+				{
+					"x": 219,
+					"y": 684
+				}
 			],
 			"source": {
-				"owner": { "type": "rect", "id": "msg-bus" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "msg-bus"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "db-postgres" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "db-postgres"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "#94a3b8",
 			"strokeWidth": 2.5,
@@ -841,18 +1153,42 @@
 			"id": "c-bus-redis",
 			"type": "connector",
 			"points": [
-				{ "x": 640, "y": 612 },
-				{ "x": 640, "y": 650 },
-				{ "x": 500, "y": 650 },
-				{ "x": 500, "y": 684 }
+				{
+					"x": 640,
+					"y": 612
+				},
+				{
+					"x": 640,
+					"y": 650
+				},
+				{
+					"x": 500,
+					"y": 650
+				},
+				{
+					"x": 500,
+					"y": 684
+				}
 			],
 			"source": {
-				"owner": { "type": "rect", "id": "msg-bus" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "msg-bus"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "db-redis" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "db-redis"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "#94a3b8",
 			"strokeWidth": 2.5,
@@ -862,18 +1198,42 @@
 			"id": "c-bus-elastic",
 			"type": "connector",
 			"points": [
-				{ "x": 640, "y": 612 },
-				{ "x": 640, "y": 650 },
-				{ "x": 781, "y": 650 },
-				{ "x": 781, "y": 684 }
+				{
+					"x": 640,
+					"y": 612
+				},
+				{
+					"x": 640,
+					"y": 650
+				},
+				{
+					"x": 781,
+					"y": 650
+				},
+				{
+					"x": 781,
+					"y": 684
+				}
 			],
 			"source": {
-				"owner": { "type": "rect", "id": "msg-bus" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "msg-bus"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "db-elastic" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "db-elastic"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "#94a3b8",
 			"strokeWidth": 2.5,
@@ -883,18 +1243,42 @@
 			"id": "c-bus-object",
 			"type": "connector",
 			"points": [
-				{ "x": 640, "y": 612 },
-				{ "x": 640, "y": 650 },
-				{ "x": 1062, "y": 650 },
-				{ "x": 1062, "y": 684 }
+				{
+					"x": 640,
+					"y": 612
+				},
+				{
+					"x": 640,
+					"y": 650
+				},
+				{
+					"x": 1062,
+					"y": 650
+				},
+				{
+					"x": 1062,
+					"y": 684
+				}
 			],
 			"source": {
-				"owner": { "type": "rect", "id": "msg-bus" },
-				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "msg-bus"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "bottomCenter"
+				}
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "db-object" },
-				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+				"owner": {
+					"type": "rect",
+					"id": "db-object"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "topCenter"
+				}
 			},
 			"stroke": "#94a3b8",
 			"strokeWidth": 2.5,

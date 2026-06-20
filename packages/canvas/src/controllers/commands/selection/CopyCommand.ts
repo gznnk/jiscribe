@@ -1,9 +1,10 @@
 import { isTransformedFrame } from "@workspace/geometry";
 
-import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWithDescendants";
-import type { Command } from "../CommandTypes";
 import type { ClipboardData } from "./ClipboardData";
 import { selectConnectorsInSelection } from "./utils/selectConnectorsInSelection";
+import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWithDescendants";
+import { getRootConnectorIds } from "../../utils/getRootConnectorIds";
+import type { Command } from "../CommandTypes";
 
 export const CopyCommand: Command = {
 	id: "copy",
@@ -33,7 +34,7 @@ export const CopyCommand: Command = {
 
 		// 両端点が選択範囲内のコネクターのみコピー（DuplicateCommand と同じ判定）
 		const connectorIds = selectConnectorsInSelection(
-			state.connectorIds,
+			getRootConnectorIds(state.objects, state.rootIds),
 			state.objects,
 			selectedIdsWithDescendants,
 		);

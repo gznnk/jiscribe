@@ -85,7 +85,6 @@ describe("CanvasMapper", () => {
 			const canvasDoc: CanvasDoc = {
 				version: 1,
 				root: [rect1, group1],
-				connectors: [],
 			};
 
 			const state = canvasToState(canvasDoc);
@@ -136,7 +135,6 @@ describe("CanvasMapper", () => {
 			// Simulate the state created in the previous test
 			const state: CanvasState = {
 				rootIds: ["rect-1", "group-1"],
-				connectorIds: [],
 				viewport: {
 					minX: 0,
 					minY: 0,
@@ -245,7 +243,6 @@ describe("CanvasMapper", () => {
 			const state: CanvasState = {
 				objects: { "group-a": groupA, "group-b": groupB },
 				rootIds: ["group-a"],
-				connectorIds: [],
 				viewport: { minX: 0, minY: 0, width: 1000, height: 800, zoom: 1 },
 			};
 
@@ -275,7 +272,6 @@ describe("CanvasMapper", () => {
 			const state: CanvasState = {
 				objects: { "group-1": group, "rect-1": rect },
 				rootIds: ["group-1", "missing-root"],
-				connectorIds: [],
 				viewport: { minX: 0, minY: 0, width: 1000, height: 800, zoom: 1 },
 			};
 

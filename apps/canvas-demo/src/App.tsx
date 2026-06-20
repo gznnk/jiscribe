@@ -6,7 +6,6 @@ import "./App.css";
 const initialDoc: CanvasDoc = {
 	version: 1,
 	root: [],
-	connectors: [],
 };
 
 export function App() {

@@ -1,5 +1,6 @@
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
-import { isSameGroupSelection } from "../../utils/isSameGroupSelection";
+import { getEffectiveSelectedIds } from "../../utils/getEffectiveSelectedIds";
+import { isArrangeableSelection } from "../../utils/isArrangeableSelection";
 import type { Command } from "../CommandTypes";
 
 export const BringForwardCommand: Command = {
@@ -13,17 +14,18 @@ export const BringForwardCommand: Command = {
 	},
 
 	canExecute: (state) => {
-		return isSameGroupSelection(state);
+		return isArrangeableSelection(state);
 	},
 
 	execute: (state) => {
-		const commonParentId = state.objects[state.selectedIds[0]]?.parentId;
+		const selectedIds = getEffectiveSelectedIds(state);
+		const commonParentId = state.objects[selectedIds[0]]?.parentId;
 		const sourceIds =
 			commonParentId != null
 				? (state.objects[commonParentId] as GroupState).childIds
 				: state.rootIds;
 
-		const selectedSet = new Set(state.selectedIds);
+		const selectedSet = new Set(selectedIds);
 		const updatedIds = [...sourceIds];
 		for (let i = updatedIds.length - 2; i >= 0; i--) {
 			const id = updatedIds[i];
