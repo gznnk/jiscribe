@@ -661,6 +661,27 @@ export class CanvasDriver {
 		);
 	}
 
+	/**
+	 * z-order インデックス（図形 + コネクターを含む DOM 順）。SVG では後ろの要素ほど前面。
+	 * objectIndex は [data-kind=object] のみでコネクターを含まないため、コネクターの
+	 * 重なり順を確認するときはこちらを使う（複数要素で描かれるコネクターは最初の出現位置を返す）。
+	 */
+	async zOrderIndex(id: string): Promise<number> {
+		return this.page.evaluate(
+			({ objectSelector, connectorSelector, targetId }) =>
+				[
+					...document.querySelectorAll(
+						`${objectSelector}, ${connectorSelector}`,
+					),
+				].findIndex((el) => el.getAttribute("data-id") === targetId),
+			{
+				objectSelector: selectors.object,
+				connectorSelector: selectors.connectorPolyline,
+				targetId: id,
+			},
+		);
+	}
+
 	/** data-id で図形のロケーターを取得する */
 	objectById(id: string) {
 		return this.page.locator(`[data-id="${id}"]`).first();

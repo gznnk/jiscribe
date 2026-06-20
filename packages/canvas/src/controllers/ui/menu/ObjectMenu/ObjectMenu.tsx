@@ -22,7 +22,7 @@ import {
 } from "./ObjectMenuStyled";
 import type { MenuItem, MenuSection, MenuItemProps } from "./ObjectMenuTypes";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { isSameGroupSelection } from "../../../utils/isSameGroupSelection";
+import { isArrangeableSelection } from "../../../utils/isArrangeableSelection";
 
 type ObjectMenuProps = {
 	canvasState: CanvasControllerState;
@@ -118,7 +118,9 @@ const buildSystemGroups = (
 ): MenuSection[] => {
 	const systemGroups: MenuSection[] = [];
 
-	if (isSameGroupSelection(canvasState)) {
+	// コネクター選択（selectedConnectorId）も含めて StackOrder を出すため、
+	// selectedIds ベースの isSameGroupSelection ではなく実効選択ベースで判定する。
+	if (isArrangeableSelection(canvasState)) {
 		systemGroups.push({
 			id: "system-stack-order",
 			items: [{ type: "stackOrder" }],

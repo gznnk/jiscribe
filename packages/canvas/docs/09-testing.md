@@ -21,18 +21,14 @@ src/**/__tests__/**/*.{test,spec}.{ts,tsx}
 
 ## 結合テスト（vitest）
 
-`controllers/reducer/__integration__/` に、`canvasReducer` 経由で複数ハンドラ・履歴を
-またぐ振る舞いを検証するテストを置く。`support/`（`createTestState` / `dispatch` / `fixtures`）で
-state の組み立てと dispatch を共通化する。
+複数のレイヤー / ハンドラをまたぐ振る舞いは、対象に **co-located** な `__integration__/` に置く
+（`canvasReducer` 経由に限らない）。各 `__integration__/` は state 組み立て・dispatch・fixtures を
+担う `support/` を自前に持つ。support の共通化は将来課題で、当面はフォルダごとに重複を許容する。
 
-現在の 4 観点:
-
-| ファイル                      | 検証内容                                                                        |
-| ----------------------------- | ------------------------------------------------------------------------------- |
-| `canvasReducer.coalescing`    | 連続操作の履歴集約（[状態更新フロー](./06-state-update-flow.md) の coalescing） |
-| `canvasReducer.commitSources` | どの操作で `commitVersion` / 履歴が記録されるか                                 |
-| `canvasReducer.externalSync`  | `SYNC_EXTERNAL` と saveNonce 折り返し（[外部同期](./07-external-sync.md)）      |
-| `canvasReducer.undoRedo`      | Undo / Redo による状態復元                                                      |
+| 置き場所                                | 入口            | 検証する観点                                                                                                                          |
+| --------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `controllers/reducer/__integration__/`  | `canvasReducer` | `coalescing`（履歴集約）/ `commitSources`（履歴記録源）/ `externalSync`（[外部同期](./07-external-sync.md)）/ `undoRedo`（Undo/Redo） |
+| `controllers/commands/__integration__/` | `handleCommand` | コマンドの実経路（CommandRegistry 解決 + `canExecute` + `execute`）。例: コネクター選択時の StackOrder                                |
 
 ```
 src/**/__integration__/**/*.{test,spec}.{ts,tsx}
