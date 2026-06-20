@@ -356,9 +356,9 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 				...dragResult.objects,
 				[finalConnector.id]: finalConnector,
 			},
-			// 新規コネクターは全図形の下（背面）に挿入する。
-			// rootIds は背面→前面順なので先頭へ追加する。
-			rootIds: [finalConnector.id, ...dragResult.rootIds],
+			// 新規コネクターは図形と同じ扱いで最前面へ挿入する（新規作成は前面が普遍的な既定）。
+			// rootIds は背面→前面順なので末尾へ追加する。
+			rootIds: [...dragResult.rootIds, finalConnector.id],
 			pendingConnector: null,
 			editingEndpoint: null,
 			edgeScrollEnabled: false,

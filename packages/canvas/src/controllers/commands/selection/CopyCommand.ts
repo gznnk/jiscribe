@@ -4,6 +4,7 @@ import type { ClipboardData } from "./ClipboardData";
 import { selectConnectorsInSelection } from "./utils/selectConnectorsInSelection";
 import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWithDescendants";
 import { getRootConnectorIds } from "../../utils/getRootConnectorIds";
+import { sortObjectIdsByZOrder } from "../../utils/sortObjectIdsByZOrder";
 import type { Command } from "../CommandTypes";
 
 export const CopyCommand: Command = {
@@ -50,12 +51,20 @@ export const CopyCommand: Command = {
 					? { x: firstObj.cx, y: firstObj.cy }
 					: { x: 0, y: 0 };
 
+		// コピーしたトップレベル要素（オブジェクト + コネクター）を z-order（背面→前面）に
+		// 並べてクリップボードへ載せる。ペースト時はこの順で前面へ積み、相対的な重なり順を保つ。
+		// コネクターも独立配列にせず rootIds に混在させる（state の rootIds と同じ表現）。
+		const rootIds = sortObjectIdsByZOrder(
+			[...state.selectedIds, ...connectorIds],
+			state.objects,
+			state.rootIds,
+		);
+
 		const data: ClipboardData = {
 			__type: "jiscribe-canvas-clipboard",
 			version: 1,
 			objects,
-			rootIds: [...state.selectedIds],
-			connectorIds,
+			rootIds,
 			center,
 		};
 

@@ -9,20 +9,34 @@ export const handlePaste = (
 	state: CanvasControllerState,
 	data: ClipboardData,
 ): CanvasControllerState => {
-	const { newObjects, newRootIds, newConnectorIds } = cloneObjects(
-		data.rootIds,
+	// data.rootIds はオブジェクトとコネクターの z-order 混在配列。
+	// cloneObjects は「offset を当てる対象（=非コネクター）」と「コネクター」を分けて受けるため、
+	// 型で振り分けてから渡す。
+	const objectRootIds = data.rootIds.filter(
+		(id) => data.objects[id]?.type !== "connector",
+	);
+	const connectorIds = data.rootIds.filter(
+		(id) => data.objects[id]?.type === "connector",
+	);
+
+	const { newObjects, newRootIds, idRemap } = cloneObjects(
+		objectRootIds,
 		data.objects,
-		data.connectorIds,
+		connectorIds,
 		PASTE_OFFSET,
 	);
 
 	const mergedObjects = { ...state.objects, ...newObjects };
 
+	// コピー集合の相対的な重なり順（z-order 済みの data.rootIds）を保って前面へ追加する。
+	const orderedNewIds = data.rootIds
+		.map((id) => idRemap.get(id))
+		.filter((id): id is string => id !== undefined);
+
 	return {
 		...state,
 		objects: mergedObjects,
-		// オブジェクトとコネクターを混在のまま前面（rootIds 末尾）へ追加する
-		rootIds: [...state.rootIds, ...newRootIds, ...newConnectorIds],
+		rootIds: [...state.rootIds, ...orderedNewIds],
 		selectedIds: newRootIds,
 		multiSelectGroup: createMultiSelectGroup(newRootIds, mergedObjects, null),
 		contextMenuPosition: null,

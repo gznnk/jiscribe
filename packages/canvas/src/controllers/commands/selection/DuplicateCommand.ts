@@ -5,6 +5,7 @@ import { createMultiSelectGroup } from "../../gestures/handlers/objects/utils/cr
 import { cloneObjects } from "../../reducer/handlers/cloneObjects";
 import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWithDescendants";
 import { getRootConnectorIds } from "../../utils/getRootConnectorIds";
+import { sortObjectIdsByZOrder } from "../../utils/sortObjectIdsByZOrder";
 import { updateGroupBoundsFromRoot } from "../../utils/updateGroupBoundsFromRoot";
 import type { Command } from "../CommandTypes";
 import { computeDuplicateOffset } from "./utils/computeDuplicateOffset";
@@ -65,7 +66,7 @@ export const DuplicateCommand: Command = {
 		const offset = computeDuplicateOffset(state);
 
 		// ── 4. オブジェクトの複製 ─────────────────────────────────────────────
-		const { newObjects, newRootIds, newConnectorIds } = cloneObjects(
+		const { newObjects, newRootIds, newConnectorIds, idRemap } = cloneObjects(
 			selectedIds,
 			allObjects,
 			connectorIds,
@@ -104,8 +105,17 @@ export const DuplicateCommand: Command = {
 				updatedRootIds = [...state.rootIds, ...newConnectorIds];
 			}
 		} else {
-			// ルート複製: rootIds に追加（オブジェクト + コネクターを混在のまま前面へ）
-			updatedRootIds = [...state.rootIds, ...newRootIds, ...newConnectorIds];
+			// ルート複製: コピー対象（オブジェクト + コネクター）を z-order に並べ、
+			// その順を idRemap で新 ID に写して rootIds の前面（末尾）へ追加する。
+			const order = sortObjectIdsByZOrder(
+				[...selectedIds, ...connectorIds],
+				state.objects,
+				state.rootIds,
+			);
+			const orderedNewIds = order
+				.map((id) => idRemap.get(id))
+				.filter((id): id is string => id !== undefined);
+			updatedRootIds = [...state.rootIds, ...orderedNewIds];
 		}
 
 		// ── 6. 状態を組み立て ─────────────────────────────────────────────────

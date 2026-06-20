@@ -208,8 +208,8 @@ describe("ConnectionAnchorEventHandler 端点編集（実体直接編集）", ()
 		expect(afterEnd.rootIds).toEqual(["c1"]);
 	});
 
-	it("新規作成したコネクターは rootIds の先頭（背面）へ挿入される", () => {
-		// source となる図形を rootIds に1つ置く（背面挿入の確認用）。
+	it("新規作成したコネクターは rootIds の末尾（最前面）へ挿入される", () => {
+		// source となる図形を rootIds に1つ置く（前面挿入の確認用）。
 		const base = stateWithConnectors([]);
 		const state: CanvasControllerState = {
 			...base,
@@ -235,10 +235,10 @@ describe("ConnectionAnchorEventHandler 端点編集（実体直接編集）", ()
 			}),
 		);
 
-		// 新規コネクターは rootIds 先頭（背面）に入り、rect-1 より下に描かれる
+		// 新規コネクターは rootIds 末尾（最前面）に入り、rect-1 より上に描かれる
 		expect(afterEnd.rootIds.length).toBe(2);
-		expect(afterEnd.rootIds[1]).toBe("rect-1");
-		const newId = afterEnd.rootIds[0];
+		expect(afterEnd.rootIds[0]).toBe("rect-1");
+		const newId = afterEnd.rootIds[1];
 		expect(afterEnd.objects[newId]?.type).toBe("connector");
 	});
 });
