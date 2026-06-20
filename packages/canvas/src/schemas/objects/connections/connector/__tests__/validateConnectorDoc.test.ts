@@ -30,9 +30,9 @@ describe("validateConnectorDoc", () => {
 			(e) => e.path === "root" && e.message.includes("owned endpoint"),
 		);
 		expect(bothFree).toBeDefined();
-		// JSON スキーマでは検出されない validator 専用ルールなので、拡張側が
-		// スキーマに委ねても取りこぼさないよう beyondSchema が立っていること。
-		expect(bothFree?.beyondSchema).toBe(true);
+		// このルールは JSON スキーマ（ConnectorDoc の not 制約）でも検出されるため、
+		// beyondSchema は付けない（拡張は構造エラーとしてスキーマに委ねる）。
+		expect(bothFree?.beyondSchema).toBeUndefined();
 	});
 
 	it("startArrow / endArrow が有効な値はエラーなし", () => {

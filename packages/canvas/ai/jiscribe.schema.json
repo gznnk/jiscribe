@@ -572,6 +572,14 @@
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				}
+			},
+			"$comment": "A connector must have at least one owned endpoint. Both endpoints being free (no owner) is invalid — that is an ink/polyline, not a connector.",
+			"not": {
+				"required": ["source", "target"],
+				"properties": {
+					"source": { "not": { "required": ["owner"] } },
+					"target": { "not": { "required": ["owner"] } }
+				}
 			}
 		}
 	}
