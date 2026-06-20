@@ -1,14 +1,35 @@
 import { memo } from "react";
 
+import { ELLIPSE_DOC_DEFAULTS } from "../../../../schemas/objects/primitives/ellipse/EllipseDoc";
+import { RECT_DOC_DEFAULTS } from "../../../../schemas/objects/primitives/rect/RectDoc";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import type { ShapePreset } from "../../menu/ShapeLibrary/ShapePresets";
 
 type DrawingPreviewOverlayProps = {
 	shapeDrawing: CanvasControllerState["shapeDrawing"];
 };
 
-const FILL = "rgba(120, 120, 120, 0.25)";
-const STROKE = "#000000";
 const STROKE_WIDTH = 1.5;
+
+/** DOC_DEFAULTS.stroke が型上 optional なため、最終フォールバックに使う既定 gray。 */
+const FALLBACK_STROKE = "#6b7280";
+
+/**
+ * プレビュー枠線の色を「配置後に実際に付く stroke 色」と一致させる。
+ * 配置時と同じく preset の defaultOverrides.stroke を優先し、無ければ
+ * 図形種別ごとの既定 stroke にフォールバックする。
+ */
+const resolvePreviewStroke = (preset: ShapePreset): string => {
+	const override = preset.defaultOverrides?.stroke;
+	if (typeof override === "string") {
+		return override;
+	}
+	const typeDefault =
+		preset.objectType === "ellipse"
+			? ELLIPSE_DOC_DEFAULTS.stroke
+			: RECT_DOC_DEFAULTS.stroke;
+	return typeDefault ?? FALLBACK_STROKE;
+};
 
 const DrawingPreviewOverlayComponent: React.FC<DrawingPreviewOverlayProps> = ({
 	shapeDrawing,
@@ -23,9 +44,12 @@ const DrawingPreviewOverlayComponent: React.FC<DrawingPreviewOverlayProps> = ({
 	const width = Math.abs(endX - startX);
 	const height = Math.abs(endY - startY);
 
+	const stroke = resolvePreviewStroke(shapeDrawing.preset);
+	const fill = `color-mix(in srgb, ${stroke} 18%, transparent)`;
+
 	const sharedProps = {
-		fill: FILL,
-		stroke: STROKE,
+		fill,
+		stroke,
 		strokeWidth: STROKE_WIDTH,
 		pointerEvents: "none" as const,
 	};
@@ -38,7 +62,7 @@ const DrawingPreviewOverlayComponent: React.FC<DrawingPreviewOverlayProps> = ({
 				x2={endX}
 				y2={endY}
 				fill="none"
-				stroke={STROKE}
+				stroke={stroke}
 				strokeWidth={STROKE_WIDTH}
 				pointerEvents="none"
 			/>
