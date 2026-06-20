@@ -125,9 +125,10 @@ function App() {
 							setParseError("");
 							break;
 
+						case "structure-error":
 						case "semantic-error":
-							// セマンティクスエラー（重複 ID 等）はエラー通知を表示。
-							// 詳細は Problems パネル側に出るためここでは有無のみ持つ。
+							// 構造エラー（型・必須フィールド）／セマンティクスエラー（重複 ID 等）は
+							// エラー通知を表示。詳細は Problems パネル側に出るためここでは有無のみ持つ。
 							setHasSemanticError(true);
 							setCanvasDoc(null);
 							setParseError("");

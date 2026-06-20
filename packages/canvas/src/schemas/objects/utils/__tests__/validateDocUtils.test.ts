@@ -265,6 +265,8 @@ describe("validateStrokeStyleFields", () => {
 			"root",
 		);
 		expect(errors[0].path).toBe("root.stroke");
+		// CSS-safe 検査は JSON スキーマで表現できないため beyondSchema が立つ。
+		expect(errors[0].beyondSchema).toBe(true);
 	});
 
 	it("strokeWidth が数値でない場合はエラー", () => {

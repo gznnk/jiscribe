@@ -15,6 +15,7 @@ import { objectDocValidatorRegistry } from "../../registry/ObjectDocValidatorReg
 export type CanvasParseResult =
 	| { kind: "ok"; doc: CanvasDoc }
 	| { kind: "syntax-error"; message: string }
+	| { kind: "structure-error"; diagnostics: SemanticDiagnostic[] }
 	| { kind: "semantic-error"; diagnostics: SemanticDiagnostic[] }
 	| { kind: "internal-error"; message: string };
 
@@ -50,13 +51,17 @@ export function parseCanvasText(text: string): CanvasParseResult {
 
 	try {
 		// 構造検証で弾かれた場合（= そもそも CanvasDoc として成立していない）は、
-		// 意味検証へ進まず構造エラーだけを返す。
+		// 意味検証へ進まず構造エラーだけを返す。構造エラーは JSON スキーマでも
+		// 表現できる種類のため、呼び出し側が「スキーマに委ねて二重表示を避ける」
+		// 判断ができるよう、意味エラーとは別の kind として返す。
 		const structureErrors = validateStructure(data);
-		const diagnostics =
-			structureErrors.length > 0
-				? structureErrors
-				: validateSemantics(data as CanvasDoc);
+		if (structureErrors.length > 0) {
+			return { kind: "structure-error", diagnostics: structureErrors };
+		}
 
+		// 文書全体を横断しないと判定できない整合性（重複 ID・参照切れ等）。
+		// これらは JSON スキーマでは表現できないため、構造エラーと区別する。
+		const diagnostics = validateSemantics(data as CanvasDoc);
 		if (diagnostics.length > 0) {
 			return { kind: "semantic-error", diagnostics };
 		}

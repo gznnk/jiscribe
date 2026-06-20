@@ -22,6 +22,9 @@ export const validateConnectorDoc: ObjectDocValidateFn = (o, path) => [
 					path,
 					message:
 						"connector must have at least one owned endpoint (both endpoints are free).",
+					// 両端 free はクロスフィールド不変条件で JSON スキーマでは表現しないため、
+					// 拡張側がスキーマへ委ねても取りこぼさないよう beyondSchema を立てる。
+					beyondSchema: true,
 					...(typeof o.id === "string" ? { id: o.id } : {}),
 				},
 			]

@@ -1,15 +1,25 @@
 // ルートエントリ（Canvas コンポーネント込み）ではなくパーサー専用エントリを使う。
 // これにより Node 側バンドル（extension.js）へ react / @emotion / katex などの
 // UI 依存が混入せず、拡張の起動が軽くなる。
-import { parseCanvasText } from "@workspace/canvas/parser";
+import {
+	parseCanvasText,
+	type SemanticDiagnostic,
+} from "@workspace/canvas/parser";
 import * as vscode from "vscode";
 
 /**
- * .jis.json ファイルのバリデーションエラーを VSCode の Problems パネルに表示するプロバイダ。
+ * .jis.json ファイルのセマンティクスエラーを VSCode の Problems パネルに表示するプロバイダ。
  *
- * 2段階のバリデーションを行う:
- *   1. JSON 構文チェック（JSON.parse が失敗した場合はその時点でエラー表示）
- *   2. CanvasDoc セマンティクスチェック（重複 ID・存在しない参照など）
+ * JSON 構文エラーと「スキーマで表現できる構造エラー」（型・必須フィールド・enum 等）は
+ * package.json の `jsonValidation` で登録した JSON スキーマ（VSCode 標準の JSON 言語
+ * サービス）が既に Problems パネルへ出すため、ここでは扱わない。両方で出すと同じエラーが
+ * 二重に表示されてしまうためである。
+ *
+ * このプロバイダが担当するのは「JSON スキーマでは検出されない」エラーのみ:
+ *   - セマンティクスエラー（重複 ID・存在しない参照など）
+ *   - validator 専用の構造ルール（両端 free・CSS-safe 等、beyondSchema フラグ付き）。
+ *     スキーマが検出できないため、構造エラーでもここで出さないと
+ *     「開けないのにエラーが表示されない」状態になる。
  *
  * トリガー:
  *   - ファイルを開いたとき
@@ -55,43 +65,43 @@ export class DiagnosticProvider {
 		// 前回のエラー表示をクリアしてから新しい診断を行う
 		this.collection.delete(document.uri);
 
-		// JSON 構文チェック → CanvasDoc セマンティクスチェックを共通ヘルパーへ委譲する。
-		// parseCanvasText() は例外を投げず、判別可能なユニオンで結果を返すため、
-		// すべてのケース（構文エラー・セマンティクスエラー・予期しないエラー）を
-		// 漏れなく Problems パネルへ反映できる。
+		// parseCanvasText() は例外を投げず、判別可能なユニオンで結果を返す。
+		// 構文エラー（syntax-error）と「スキーマで表現できる構造エラー」は JSON スキーマ側が
+		// Problems パネルへ出すため、ここでは出さない（二重表示の回避）。
+		// 一方、JSON スキーマでは表現できない validator 専用ルール（両端 free・CSS-safe 等、
+		// beyondSchema フラグ付き）はスキーマが検出できないため、構造エラーであっても
+		// ここで出す。出さないと「開けないのにエラーが表示されない」状態になる。
 		const result = parseCanvasText(text);
 		switch (result.kind) {
 			case "ok":
 				return;
 
-			case "syntax-error": {
-				// 以前は構文エラーを無音でスキップしていた（早期 return するだけ）ため、
-				// ユーザーがなぜ Problems パネルに何も表示されないのか分からない問題があった。
-				const diagnostic = new vscode.Diagnostic(
-					new vscode.Range(0, 0, 0, 0),
-					`JSON syntax error: ${result.message}`,
-					vscode.DiagnosticSeverity.Error,
+			case "syntax-error":
+				// JSON 構文エラーは VSCode 標準 JSON 言語サービスが担当するため何もしない。
+				return;
+
+			case "structure-error": {
+				// スキーマで表現できない validator 専用ルールだけを出す。
+				// それ以外の構造エラーは JSON スキーマが Problems パネルへ出す。
+				const beyondSchema = result.diagnostics.filter(
+					(diag) => diag.beyondSchema,
 				);
-				this.collection.set(document.uri, [diagnostic]);
+				if (beyondSchema.length === 0) {
+					return;
+				}
+				this.collection.set(
+					document.uri,
+					this.renderDiagnostics(text, document, beyondSchema),
+				);
 				return;
 			}
 
-			case "semantic-error": {
-				// diag.path / diag.id を使って対象箇所をハイライトする。
-				const diagnostics = result.diagnostics.map((diag) => {
-					const range = diag.id
-						? this.findIdRange(text, document, diag.id)
-						: new vscode.Range(0, 0, 0, 10);
-
-					return new vscode.Diagnostic(
-						range,
-						`[Jiscribe] ${diag.message} (${diag.path})`,
-						vscode.DiagnosticSeverity.Error,
-					);
-				});
-				this.collection.set(document.uri, diagnostics);
+			case "semantic-error":
+				this.collection.set(
+					document.uri,
+					this.renderDiagnostics(text, document, result.diagnostics),
+				);
 				return;
-			}
 
 			case "internal-error": {
 				// 想定外のエラーを握りつぶさず、ファイル先頭に診断として表示する。
@@ -104,6 +114,28 @@ export class DiagnosticProvider {
 				return;
 			}
 		}
+	}
+
+	/**
+	 * SemanticDiagnostic の配列を VSCode の Diagnostic 配列へ変換する。
+	 * diag.id があればその箇所をハイライトし、無ければファイル先頭にフォールバックする。
+	 */
+	private renderDiagnostics(
+		text: string,
+		document: vscode.TextDocument,
+		diagnostics: SemanticDiagnostic[],
+	): vscode.Diagnostic[] {
+		return diagnostics.map((diag) => {
+			const range = diag.id
+				? this.findIdRange(text, document, diag.id)
+				: new vscode.Range(0, 0, 0, 10);
+
+			return new vscode.Diagnostic(
+				range,
+				`[Jiscribe] ${diag.message} (${diag.path})`,
+				vscode.DiagnosticSeverity.Error,
+			);
+		});
 	}
 
 	/**
