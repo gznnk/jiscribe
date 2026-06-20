@@ -16,9 +16,6 @@ export const ConnectPointIds = [
 
 export type ConnectPointId = (typeof ConnectPointIds)[number];
 
-export const isConnectPointId = (value: unknown): value is ConnectPointId =>
-	ConnectPointIds.includes(value as ConnectPointId);
-
 export type ConnectPointAnchorSpec = {
 	kind: "connectPoint";
 	id: ConnectPointId;
@@ -53,6 +50,21 @@ export type FreeEndpointRef = {
 
 export type EndpointRef = OwnedEndpointRef | FreeEndpointRef;
 
+/**
+ * 指定された値が ConnectPointId 型かどうかを判定する。
+ *
+ * @param value 判定対象の値
+ * @returns ConnectPointId 型であれば true、それ以外は false
+ */
+export const isConnectPointId = (value: unknown): value is ConnectPointId =>
+	ConnectPointIds.includes(value as ConnectPointId);
+
+/**
+ * 指定された値が OwnedEndpointRef 型かどうかを判定する。
+ *
+ * @param value 判定対象の値
+ * @returns OwnedEndpointRef 型であれば true、それ以外は false
+ */
 export const isOwnedEndpointRef = (
 	value: unknown,
 ): value is OwnedEndpointRef => {
@@ -67,6 +79,13 @@ export const isOwnedEndpointRef = (
 	return typeof owner.id === "string" && typeof owner.type === "string";
 };
 
+/**
+ * 2 つのアンカー指定が同値かどうかを判定する。
+ *
+ * @param a 判定対象のアンカー指定
+ * @param b 判定対象のアンカー指定
+ * @returns 同値であれば true、それ以外は false
+ */
 const isSameAnchor = (a: AnchorSpec, b: AnchorSpec): boolean => {
 	if (a.kind !== b.kind) {
 		return false;
@@ -84,6 +103,10 @@ const isSameAnchor = (a: AnchorSpec, b: AnchorSpec): boolean => {
 /**
  * 2 つのエンドポイント参照が同値かどうかを判定する。
  * owner（接続先オブジェクト）とアンカー指定の両方が一致するときのみ true。
+ *
+ * @param a 判定対象のエンドポイント参照
+ * @param b 判定対象のエンドポイント参照
+ * @returns 同値であれば true、それ以外は false
  */
 export const isSameEndpoint = (a: EndpointRef, b: EndpointRef): boolean => {
 	if (a.owner?.id !== b.owner?.id || a.owner?.type !== b.owner?.type) {
@@ -92,6 +115,12 @@ export const isSameEndpoint = (a: EndpointRef, b: EndpointRef): boolean => {
 	return isSameAnchor(a.anchor, b.anchor);
 };
 
+/**
+ * 指定された値が FreeEndpointRef 型かどうかを判定する。
+ *
+ * @param value 判定対象の値
+ * @returns FreeEndpointRef 型であれば true、それ以外は false
+ */
 export const isFreeEndpointRef = (value: unknown): value is FreeEndpointRef => {
 	if (typeof value !== "object" || value === null) {
 		return false;
