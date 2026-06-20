@@ -22,29 +22,32 @@ const remapEndpointRef = (
 };
 
 /**
- * オブジェクト群を複製して新しい ID を割り当て、指定 offset だけ移動する。
+ * トップレベル要素群を複製して新しい ID を割り当て、指定 offset だけ移動する。
  *
- * - rootIds に含まれるオブジェクトのみ offset 移動を適用する
- * - parentId / childIds / connector endpoint の参照はすべて新 ID にリマップする
- * - allObjects には rootIds の子孫も含まれている必要がある
+ * - `topLevelIds` はトップレベル要素（オブジェクト + コネクター）を z-order（背面→前面）で
+ *   並べたもの。state / clipboard の `rootIds` と同じ表現を受け取る。
+ * - 非コネクターにのみ offset を適用する（コネクターは端点が所有図形に追従するため動かさない）。
+ * - parentId / childIds / connector endpoint の参照はすべて新 ID にリマップする。
+ * - `allObjects` には `topLevelIds` の子孫も含まれている必要がある。
  *
  * 入力が閉じたフォレストでない場合（外部クリップボード経由などで親が
  * allObjects に含まれない子オブジェクトがある場合）でも、必ず自己整合的な
  * フォレストを生成する:
  * - parentId が allObjects 内に解決できないオブジェクトは parentId を破棄し、
- *   ルート（newRootIds）へ昇格させる（孤児化を防ぐ）
+ *   トップレベル（newTopLevelIds）へ昇格させる（孤児化を防ぐ）
  * - グループの childIds は allObjects 内に存在する子のみへ絞り込む
  *   （存在しない子へのダングリング参照を残さない）
+ *
+ * @returns `newTopLevelIds` は `topLevelIds` と同じ順序で新 ID を並べ、昇格した孤児を末尾に足したもの。
+ *   呼び出し側で型により図形／コネクターへ振り分けられる。
  */
 export function cloneObjects(
-	rootIds: string[],
+	topLevelIds: string[],
 	allObjects: Record<string, ObjectState>,
-	connectorIds: string[],
 	offset: Point,
 ): {
 	newObjects: Record<string, ObjectState>;
-	newRootIds: string[];
-	newConnectorIds: string[];
+	newTopLevelIds: string[];
 	idRemap: Map<string, string>;
 } {
 	// ── 1. 旧 ID → 新 ID のマッピングを生成 ──────────────────────────────────
@@ -55,16 +58,15 @@ export function cloneObjects(
 
 	// ── 2. 全オブジェクトを複製: ID・parentId・childIds・接続端点を新 ID にリマップ ──
 	const clonedObjects: Record<string, ObjectState> = {};
-	// 親をリマップできず、ルートへ昇格させた新オブジェクト ID 群
+	// 親をリマップできず、トップレベルへ昇格させた新オブジェクト ID 群
 	const detachedNewIds: string[] = [];
 
 	for (const [srcId, srcObj] of Object.entries(allObjects)) {
 		const clonedId = idRemap.get(srcId)!;
 
-		// 親が allObjects 内に存在しない場合は parentId を破棄し、ルートへ昇格させる。
+		// 親が allObjects 内に存在しない場合は parentId を破棄し、トップレベルへ昇格させる。
 		// （外部クリップボード等で親グループ抜きの子が含まれても孤児化させない）
-		// コネクターは newRootIds（オブジェクトのルート）ではなく newConnectorIds として返し、
-		// 呼び出し側が rootIds へ挿入する。ここでは昇格対象から除外し parentId 破棄のみ行う。
+		// コネクターは topLevelIds で明示的に渡され newTopLevelIds に含まれるため昇格対象外。
 		const remappedParentId =
 			srcObj.parentId !== undefined ? idRemap.get(srcObj.parentId) : undefined;
 		if (
@@ -105,49 +107,44 @@ export function cloneObjects(
 		clonedObjects[clonedId] = clone;
 	}
 
-	// ── 3. ルートオブジェクトのみ offset を適用 ──────────────────────────────
-	for (const srcRootId of rootIds) {
-		const clonedRootId = idRemap.get(srcRootId);
-		if (!clonedRootId) {
+	// ── 3. offset を適用（コネクター以外のトップレベルのみ）──────────────────
+	for (const srcId of topLevelIds) {
+		const clonedId = idRemap.get(srcId);
+		if (!clonedId) {
 			continue;
 		}
-		const clone = clonedObjects[clonedRootId];
-		if (!clone) {
+		const clone = clonedObjects[clonedId];
+		// コネクターは端点が所有図形に追従するため offset しない。
+		if (!clone || clone.type === "connector") {
 			continue;
 		}
 
 		if (clone.type === "group") {
-			moveGroup(clonedRootId, clonedObjects, clonedObjects, offset);
+			moveGroup(clonedId, clonedObjects, clonedObjects, offset);
 		} else {
 			const moveByDelta = objectBehaviorRegistry.getMoveByDelta(clone.type);
 			if (moveByDelta) {
-				clonedObjects[clonedRootId] = moveByDelta(clone, offset);
+				clonedObjects[clonedId] = moveByDelta(clone, offset);
 			}
 		}
 	}
 
-	// ── 4. 呼び出し元が必要とする ID 配列を構築 ──────────────────────────────
-	// rootIds 由来のルートに加え、親をリマップできず昇格したオブジェクトも
-	// ルートとして扱う（重複排除し、rootIds の順序を優先）。
-	const newRootIds: string[] = [];
-	const newRootIdSet = new Set<string>();
-	for (const id of rootIds) {
+	// ── 4. newTopLevelIds を構築（topLevelIds の順序を保ち、昇格孤児を末尾に足す）──
+	const newTopLevelIds: string[] = [];
+	const seen = new Set<string>();
+	for (const id of topLevelIds) {
 		const clonedId = idRemap.get(id);
-		if (clonedId !== undefined && !newRootIdSet.has(clonedId)) {
-			newRootIdSet.add(clonedId);
-			newRootIds.push(clonedId);
+		if (clonedId !== undefined && !seen.has(clonedId)) {
+			seen.add(clonedId);
+			newTopLevelIds.push(clonedId);
 		}
 	}
 	for (const clonedId of detachedNewIds) {
-		if (!newRootIdSet.has(clonedId)) {
-			newRootIdSet.add(clonedId);
-			newRootIds.push(clonedId);
+		if (!seen.has(clonedId)) {
+			seen.add(clonedId);
+			newTopLevelIds.push(clonedId);
 		}
 	}
 
-	const newConnectorIds = connectorIds
-		.map((id) => idRemap.get(id)!)
-		.filter(Boolean);
-
-	return { newObjects: clonedObjects, newRootIds, newConnectorIds, idRemap };
+	return { newObjects: clonedObjects, newTopLevelIds, idRemap };
 }

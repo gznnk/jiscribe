@@ -66,21 +66,35 @@ export const DuplicateCommand: Command = {
 		const offset = computeDuplicateOffset(state);
 
 		// ── 4. オブジェクトの複製 ─────────────────────────────────────────────
-		const { newObjects, newRootIds, newConnectorIds, idRemap } = cloneObjects(
-			selectedIds,
+		// コピー対象（オブジェクト + コネクター）を z-order に並べて複製する。
+		// cloneObjects は同じ順序で新 ID を返すので、ルート複製ではそのまま前面へ積める。
+		const topLevelIds = sortObjectIdsByZOrder(
+			[...selectedIds, ...connectorIds],
+			state.objects,
+			state.rootIds,
+		);
+		const { newObjects, newTopLevelIds } = cloneObjects(
+			topLevelIds,
 			allObjects,
-			connectorIds,
 			offset,
 		);
 
 		const mergedObjects = { ...state.objects, ...newObjects };
+
+		// 新 ID を型で図形／コネクターに振り分ける。
+		const newObjectIds = newTopLevelIds.filter(
+			(id) => mergedObjects[id]?.type !== "connector",
+		);
+		const newConnectorIds = newTopLevelIds.filter(
+			(id) => mergedObjects[id]?.type === "connector",
+		);
 
 		// ── 5. 配置先グループへの組み込み ────────────────────────────────────
 		let updatedRootIds = state.rootIds;
 
 		if (targetGroupId !== null) {
 			// グループ内複製: parentId を共通親グループに設定
-			for (const newId of newRootIds) {
+			for (const newId of newObjectIds) {
 				mergedObjects[newId] = {
 					...mergedObjects[newId],
 					parentId: targetGroupId,
@@ -95,7 +109,7 @@ export const DuplicateCommand: Command = {
 				(max, id, i) => (selectedSet.has(id) ? i : max),
 				-1,
 			);
-			childIds.splice(lastSelectedIndex + 1, 0, ...newRootIds);
+			childIds.splice(lastSelectedIndex + 1, 0, ...newObjectIds);
 			mergedObjects[targetGroupId] = {
 				...parentGroup,
 				childIds,
@@ -105,17 +119,8 @@ export const DuplicateCommand: Command = {
 				updatedRootIds = [...state.rootIds, ...newConnectorIds];
 			}
 		} else {
-			// ルート複製: コピー対象（オブジェクト + コネクター）を z-order に並べ、
-			// その順を idRemap で新 ID に写して rootIds の前面（末尾）へ追加する。
-			const order = sortObjectIdsByZOrder(
-				[...selectedIds, ...connectorIds],
-				state.objects,
-				state.rootIds,
-			);
-			const orderedNewIds = order
-				.map((id) => idRemap.get(id))
-				.filter((id): id is string => id !== undefined);
-			updatedRootIds = [...state.rootIds, ...orderedNewIds];
+			// ルート複製: z-order を保った newTopLevelIds をそのまま前面（末尾）へ追加する。
+			updatedRootIds = [...state.rootIds, ...newTopLevelIds];
 		}
 
 		// ── 6. 状態を組み立て ─────────────────────────────────────────────────
@@ -123,8 +128,12 @@ export const DuplicateCommand: Command = {
 			...state,
 			objects: mergedObjects,
 			rootIds: updatedRootIds,
-			selectedIds: newRootIds,
-			multiSelectGroup: createMultiSelectGroup(newRootIds, mergedObjects, null),
+			selectedIds: newObjectIds,
+			multiSelectGroup: createMultiSelectGroup(
+				newObjectIds,
+				mergedObjects,
+				null,
+			),
 			commitVersion: state.commitVersion + 1,
 		};
 
@@ -134,12 +143,12 @@ export const DuplicateCommand: Command = {
 		}
 
 		// ── 7. lastDuplicate を更新（次回の move-aware オフセット計算用）──────
-		const newCenter = getSelectionCenter(nextState, newRootIds);
+		const newCenter = getSelectionCenter(nextState, newObjectIds);
 
 		return {
 			...nextState,
 			lastDuplicate: newCenter
-				? { newIds: newRootIds, cx: newCenter.cx, cy: newCenter.cy, offset }
+				? { newIds: newObjectIds, cx: newCenter.cx, cy: newCenter.cy, offset }
 				: null,
 		};
 	},
