@@ -5,6 +5,37 @@ All notable changes to the Jiscribe extension are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-06-20
+
+### Changed
+
+- **Connectors now share a single stacking order with shapes (breaking)**. Connectors are no longer drawn always-on-top from a separate list. They live in the same z-order as every other object, so you can send them to back or bring them to front like any shape. Selecting a connector now also shows the **Stack Order** controls in the object menu.
+
+### Removed
+
+- **The top-level `connectors` array in `.jis.json` has been removed (breaking, no migration).** Connectors are now stored inline in `root`, mixed in among the other objects, where array order is the stacking order (back to front). The document `version` stays at `1`.
+
+  To reuse a file authored before this release, merge its `connectors` entries into `root`. Appending them to the end of `root` reproduces the previous always-on-top appearance:
+
+  ```jsonc
+  // Before
+  {
+    "version": 1,
+    "root": [ /* shapes */ ],
+    "connectors": [ /* connectors */ ]
+  }
+
+  // After
+  {
+    "version": 1,
+    "root": [ /* shapes */, /* connectors */ ]
+  }
+  ```
+
+### Fixed
+
+- **Connectors with both endpoints free are now rejected.** A connector must be attached to a shape on at least one end; floating connectors are flagged in the Problems panel and dropped on load. This also fixes both-ends-free connectors being spuriously duplicated on Copy/Duplicate.
+
 ## [0.2.0] - 2026-06-18
 
 ### Added
