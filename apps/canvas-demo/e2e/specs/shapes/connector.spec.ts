@@ -95,6 +95,11 @@ test.describe("コネクター", () => {
 		await expect(connectorLocator).toHaveCount(1);
 
 		await canvas.page.mouse.click(500, 350);
+		// クリックによる選択が反映される（コネクター用 ObjectMenu が出る）のを待ってから
+		// 削除する。選択コミット前に Delete を押すと何も削除されずフレーキーになる。
+		await expect(
+			canvas.page.locator('[data-id="object-menu:toggle:line-color"]'),
+		).toBeVisible();
 		await canvas.deleteSelection();
 
 		// コネクターは消え、図形 2 つは残る
