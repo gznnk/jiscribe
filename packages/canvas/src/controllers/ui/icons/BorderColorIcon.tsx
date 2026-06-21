@@ -43,13 +43,14 @@ const BorderColorIconComponent: React.FC<BorderColorIconProps> = ({
 					style={{ stroke: theme.transparentChecker }}
 				/>
 			) : (
+				/* color は var(--vscode-*)（auto の解決結果）を取りうるため style で当てる。 */
 				<circle
 					cx="12"
 					cy="12"
 					r="8"
 					fill="none"
-					stroke={color}
 					strokeWidth="3"
+					style={{ stroke: color }}
 				/>
 			)}
 		</svg>

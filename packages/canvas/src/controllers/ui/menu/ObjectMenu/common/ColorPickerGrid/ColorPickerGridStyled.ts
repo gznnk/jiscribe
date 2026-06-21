@@ -53,6 +53,46 @@ export const ColorTextInput = styled.input<ColorTextInputProps>`
 	}
 `;
 
+type AutoOptionProps = {
+	selected: boolean;
+};
+
+/**
+ * 「自動（テーマ追従）」を選ぶ行。グリッド上部に配置し、押下で色を auto sentinel に戻す。
+ */
+export const AutoOption = styled.div<AutoOptionProps>`
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	align-self: stretch;
+	box-sizing: border-box;
+	margin-bottom: 8px;
+	padding: 4px 8px;
+	border: ${({ selected }) =>
+		selected ? `2px solid ${theme.accent}` : `1px solid ${theme.borderSubtle}`};
+	border-radius: ${theme.radius};
+	color: ${theme.foreground};
+	font-size: 12px;
+	cursor: pointer;
+	transition: all 0.15s ease;
+
+	&:hover {
+		border-color: ${theme.accent};
+	}
+`;
+
+/**
+ * 自動オプションのプレビュー円。
+ * background は auto の解決色（ロール別）を呼び出し側が style で当てる。
+ */
+export const AutoOptionDot = styled.span`
+	width: 16px;
+	height: 16px;
+	flex: none;
+	border-radius: 50%;
+	border: 1px solid ${theme.borderSubtle};
+`;
+
 export const ColorGrid = styled.div`
 	display: grid;
 	grid-template-columns: repeat(7, 24px);

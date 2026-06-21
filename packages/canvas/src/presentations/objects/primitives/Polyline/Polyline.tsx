@@ -7,6 +7,7 @@ import type { PolylineState } from "../../../../states/objects/primitives/polyli
 import { Arrow, getArrowLineInset } from "../../arrows";
 import { getStrokeDasharray } from "../../utils/getStrokeDasharray";
 import { insetPolylineEnds } from "../../utils/insetPolylineEnds";
+import { resolveAutoColor } from "../../utils/resolveAutoColor";
 
 type PolylineProps = PolylineState;
 
@@ -20,6 +21,8 @@ const PolylineComponent: React.FC<PolylineProps> = ({
 	endArrow,
 }) => {
 	const pointsAttr = points.map((p) => `${p.x},${p.y}`).join(" ");
+	// auto（テーマ追従）をテーマ前景（ink）へ解決する（issue #38）。
+	const strokeColor = resolveAutoColor(stroke, "ink");
 
 	// 中空矢印では線が中空部を貫通しないよう、矢印の根元で線を終端させる。
 	// 矢印自体は元の端点（先端）に描画するため、見た目上の端点位置は変わらない。
@@ -58,7 +61,7 @@ const PolylineComponent: React.FC<PolylineProps> = ({
 			<PolylineHitArea data-kind="object" data-id={id} points={pointsAttr} />
 			<PolylineElement
 				points={linePointsAttr}
-				stroke={stroke}
+				strokeColor={strokeColor}
 				strokeWidth={strokeWidth}
 				strokeDasharray={getStrokeDasharray(strokeDashType, strokeWidth)}
 			/>
@@ -67,7 +70,7 @@ const PolylineComponent: React.FC<PolylineProps> = ({
 					type={startArrow}
 					x={points[0].x}
 					y={points[0].y}
-					color={stroke}
+					color={strokeColor}
 					radians={startAngleRadians}
 					scale={strokeWidth}
 					dataKind="object"
@@ -79,7 +82,7 @@ const PolylineComponent: React.FC<PolylineProps> = ({
 					type={endArrow}
 					x={points[points.length - 1].x}
 					y={points[points.length - 1].y}
-					color={stroke}
+					color={strokeColor}
 					radians={endAngleRadians}
 					scale={strokeWidth}
 					dataKind="object"

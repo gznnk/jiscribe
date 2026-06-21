@@ -7,6 +7,7 @@ import { TextOverlay } from "../../base/TextOverlay";
 import type { TextEditable } from "../../base/TextOverlay";
 import { createSvgTransform } from "../../utils/createSvgTransform";
 import { getStrokeDasharray } from "../../utils/getStrokeDasharray";
+import { resolveAutoColor } from "../../utils/resolveAutoColor";
 
 type RectProps = RectState & TextEditable;
 
@@ -47,8 +48,8 @@ const RectComponent: React.FC<RectProps> = ({
 				height={height}
 				rx={rx}
 				transform={transformAttr}
-				fill={fill ?? "transparent"}
-				stroke={stroke}
+				strokeColor={resolveAutoColor(stroke, "ink")}
+				fillColor={resolveAutoColor(fill, "surface")}
 				strokeWidth={strokeWidth}
 				strokeDasharray={getStrokeDasharray(strokeDashType, strokeWidth)}
 			/>

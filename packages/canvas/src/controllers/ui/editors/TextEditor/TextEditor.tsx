@@ -3,6 +3,7 @@ import { memo, useCallback, useEffect, useLayoutEffect, useRef } from "react";
 
 import { TextArea, TextEditorWrapper } from "./TextEditorStyled";
 import { createSvgTransform } from "../../../../presentations/objects/utils/createSvgTransform";
+import { resolveAutoColor } from "../../../../presentations/objects/utils/resolveAutoColor";
 import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
 import type { TextType } from "../../../../schemas/objects/types/TextType";
 import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
@@ -47,6 +48,10 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 	onEscape,
 }) => {
 	const textAreaRef = useRef<HTMLTextAreaElement>(null);
+
+	// auto（テーマ追従）をテーマ前景（ink）へ解決する。描画側 TextOverlay と同じ resolver
+	// を使い、同じ色になるようにする（issue #38）。
+	const resolvedColor = resolveAutoColor(fontColor, "ink");
 
 	// 初回フォーカス
 	useEffect(() => {
@@ -116,7 +121,7 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 				data-gesture="native-wheel"
 				value={text}
 				textAlign={textAlign}
-				color={fontColor}
+				color={resolvedColor}
 				fontSize={fontSize}
 				fontFamily={fontFamily}
 				fontWeight={fontWeight}

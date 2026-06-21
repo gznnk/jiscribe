@@ -8,6 +8,7 @@ import type { StrokeDashType } from "../../../../schemas/objects/types/StrokeDas
 import { Arrow, getArrowLineInset } from "../../arrows";
 import { getStrokeDasharray } from "../../utils/getStrokeDasharray";
 import { insetPolylineEnds } from "../../utils/insetPolylineEnds";
+import { resolveAutoColor } from "../../utils/resolveAutoColor";
 
 type ConnectorProps = {
 	id: string;
@@ -29,13 +30,16 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 	sourceY,
 	targetX,
 	targetY,
-	stroke = "#6b7280",
+	stroke = "auto",
 	strokeWidth = 1,
 	strokeDashType,
 	startArrow,
 	endArrow,
 	disablePointerEvents = false,
 }) => {
+	// auto（テーマ追従）をテーマ前景（ink）へ解決する（issue #38）。
+	const strokeColor = resolveAutoColor(stroke, "ink");
+
 	// Simple straight line between source and target points.
 	// ヒット領域はクリックしやすいよう端点まで全長を保つ。
 	const hitAreaPointsAttr = `${sourceX},${sourceY} ${targetX},${targetY}`;
@@ -66,7 +70,7 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 			/>
 			<ConnectorElement
 				points={linePointsAttr}
-				stroke={stroke}
+				strokeColor={strokeColor}
 				strokeWidth={strokeWidth}
 				strokeDasharray={getStrokeDasharray(strokeDashType, strokeWidth)}
 			/>
@@ -75,7 +79,7 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 					type={startArrow}
 					x={sourceX}
 					y={sourceY}
-					color={stroke}
+					color={strokeColor}
 					radians={startAngleRadians}
 					scale={strokeWidth}
 					dataKind="connector"
@@ -87,7 +91,7 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 					type={endArrow}
 					x={targetX}
 					y={targetY}
-					color={stroke}
+					color={strokeColor}
 					radians={endAngleRadians}
 					scale={strokeWidth}
 					dataKind="connector"

@@ -34,7 +34,7 @@ const ConcaveTriangleArrowComponent: React.FC<ArrowShapeProps> = ({
 	return (
 		<ArrowPolygon
 			points={points}
-			fill={color}
+			fillColor={color}
 			transform={transform}
 			data-kind={dataKind}
 			data-id={dataId}

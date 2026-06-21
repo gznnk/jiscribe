@@ -2,6 +2,7 @@ import { memo, useRef } from "react";
 
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { getFirstSelectedWithProp } from "../../../../../../controllers/utils/getFirstSelectedWithProp";
+import { resolveAutoColor } from "../../../../../../presentations/objects/utils/resolveAutoColor";
 import { BorderColorIcon } from "../../../../icons/BorderColorIcon";
 import { ColorPickerGrid } from "../../common/ColorPickerGrid/ColorPickerGrid";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
@@ -53,7 +54,10 @@ const StrokeColorMenuComponent: React.FC<StrokeColorMenuProps> = ({
 				data-id={`object-menu:toggle:${SECTION_ID}`}
 				title="Stroke Color"
 			>
-				<BorderColorIcon color={currentColor} title="Stroke Color" />
+				<BorderColorIcon
+					color={resolveAutoColor(currentColor, "ink")}
+					title="Stroke Color"
+				/>
 			</ObjectMenuButton>
 			{isOpen && (
 				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>

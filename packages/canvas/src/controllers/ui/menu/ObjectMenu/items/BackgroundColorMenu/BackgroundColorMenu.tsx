@@ -2,6 +2,7 @@
 
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { getFirstSelectedWithProp } from "../../../../../../controllers/utils/getFirstSelectedWithProp";
+import { resolveAutoColor } from "../../../../../../presentations/objects/utils/resolveAutoColor";
 import { ColorPreviewIcon } from "../../../../icons/ColorPreviewIcon";
 import { ColorPickerGrid } from "../../common/ColorPickerGrid/ColorPickerGrid";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
@@ -52,7 +53,10 @@ const BackgroundColorMenuComponent: React.FC<BackgroundColorMenuProps> = ({
 				data-id={`object-menu:toggle:${SECTION_ID}`}
 				title="Background Color"
 			>
-				<ColorPreviewIcon color={currentColor} title="Background Color" />
+				<ColorPreviewIcon
+					color={resolveAutoColor(currentColor, "surface")}
+					title="Background Color"
+				/>
 			</ObjectMenuButton>
 			{isOpen && (
 				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>

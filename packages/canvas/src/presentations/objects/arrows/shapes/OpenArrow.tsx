@@ -28,8 +28,7 @@ const OpenArrowArrowComponent: React.FC<ArrowShapeProps> = ({
 	return (
 		<ArrowPolyline
 			points={points}
-			fill="none"
-			stroke={color}
+			strokeColor={color}
 			strokeWidth={1}
 			strokeLinejoin="miter"
 			transform={transform}

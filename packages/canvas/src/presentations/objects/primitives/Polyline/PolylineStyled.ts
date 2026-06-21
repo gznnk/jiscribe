@@ -1,6 +1,9 @@
 import styled from "@emotion/styled";
 
-export const PolylineElement = styled.polyline`
+import { cssSafeValue } from "../../utils/cssSafeValue";
+
+export const PolylineElement = styled.polyline<{ strokeColor: string }>`
+	stroke: ${({ strokeColor }) => cssSafeValue(strokeColor)};
 	pointer-events: none;
 	cursor: grab;
 	fill: none;

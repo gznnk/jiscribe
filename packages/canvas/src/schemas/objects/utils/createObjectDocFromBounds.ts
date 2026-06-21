@@ -1,8 +1,9 @@
+import { AUTO_COLOR } from "./autoColor";
 import type { ObjectDoc } from "../base/ObjectDoc";
 import { ELLIPSE_DOC_DEFAULTS } from "../primitives/ellipse/EllipseDoc";
 import { RECT_DOC_DEFAULTS } from "../primitives/rect/RectDoc";
 
-const POLY_STROKE = "#6b7280";
+const POLY_STROKE = AUTO_COLOR;
 const POLY_STROKE_WIDTH = 2;
 
 /**

@@ -9,6 +9,7 @@ import type { TextType } from "../../../schemas/objects/types/TextType";
 import { isTextType } from "../../../schemas/objects/types/TextType";
 import type { VerticalAlign } from "../../../schemas/objects/types/VerticalAlign";
 import { isVerticalAlign } from "../../../schemas/objects/types/VerticalAlign";
+import { isAutoColor } from "../../../schemas/objects/utils/autoColor";
 
 /**
  * Text style properties in runtime state.
@@ -74,9 +75,11 @@ export const isTextStyleState = (obj: unknown): obj is TextStyleState => {
 		}
 	}
 
-	// fontColor プロパティが存在する場合は有効な CSS カラーでなければならない
+	// fontColor プロパティが存在する場合は sentinel "auto"（テーマ追従, issue #38）
+	// または有効な CSS カラーでなければならない。"auto" を先に短絡評価することで、
+	// ブラウザ専用の isCssColor（CSS.supports）を呼ばずに済ませる。
 	if ("fontColor" in candidate && candidate.fontColor !== undefined) {
-		if (!isCssColor(candidate.fontColor)) {
+		if (!isAutoColor(candidate.fontColor) && !isCssColor(candidate.fontColor)) {
 			return false;
 		}
 	}

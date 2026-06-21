@@ -1,4 +1,5 @@
 import type { ObjectFeatures } from "../../types/ObjectFeatures";
+import { AUTO_COLOR } from "../../utils/autoColor";
 import type { CreateObjectType } from "../../utils/CreateObjectType";
 
 export const RectFeatures = {
@@ -27,14 +28,14 @@ export const RECT_DOC_DEFAULTS: Omit<RectDoc, "id"> = {
 	width: 100,
 	height: 100,
 	fill: "transparent",
-	stroke: "#6b7280",
+	stroke: AUTO_COLOR,
 	strokeWidth: 2,
 	rx: 0,
 	text: "",
 	textType: "text",
 	textAlign: "center",
 	verticalAlign: "middle",
-	fontColor: "#6b7280",
+	fontColor: AUTO_COLOR,
 	fontSize: 16,
 	fontFamily: "Noto Sans JP",
 	fontWeight: "normal",

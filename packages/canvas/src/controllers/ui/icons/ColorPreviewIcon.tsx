@@ -65,7 +65,13 @@ const ColorPreviewIconComponent: React.FC<ColorPreviewIconProps> = ({
 				r="10"
 				stroke="rgba(128, 128, 128, 0.5)"
 				strokeWidth="1"
-				fill={isTransparent ? "url(#color-preview-transparent-pattern)" : color}
+				// fill は var(--vscode-*)（auto fill のサーフェス色）を取りうる。
+				// var() は presentation 属性では解決されないため style で当てる。
+				style={{
+					fill: isTransparent
+						? "url(#color-preview-transparent-pattern)"
+						: color,
+				}}
 			/>
 		</svg>
 	);

@@ -3,6 +3,7 @@ import { memo, useRef } from "react";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { getEffectiveSelectedIds } from "../../../../../../controllers/utils/getEffectiveSelectedIds";
 import { getFirstSelectedWithProp } from "../../../../../../controllers/utils/getFirstSelectedWithProp";
+import { resolveAutoColor } from "../../../../../../presentations/objects/utils/resolveAutoColor";
 import { ColorPreviewIcon } from "../../../../icons/ColorPreviewIcon";
 import { ColorPickerGrid } from "../../common/ColorPickerGrid/ColorPickerGrid";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
@@ -53,7 +54,10 @@ const LineColorMenuComponent: React.FC<LineColorMenuProps> = ({
 				data-id={`object-menu:toggle:${SECTION_ID}`}
 				title="Line Color"
 			>
-				<ColorPreviewIcon color={currentColor} title="Line Color" />
+				<ColorPreviewIcon
+					color={resolveAutoColor(currentColor, "ink")}
+					title="Line Color"
+				/>
 			</ObjectMenuButton>
 			{isOpen && (
 				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>

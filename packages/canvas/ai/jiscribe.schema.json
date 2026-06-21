@@ -133,7 +133,7 @@
 			"type": "object",
 			"properties": {
 				"stroke": {
-					"description": "Stroke color as a CSS color string. Default: \"#6b7280\"",
+					"description": "Stroke color as a CSS color string, or \"auto\" to follow the theme foreground (resolved at render time). Default: \"auto\"",
 					"type": "string"
 				},
 				"strokeWidth": {
@@ -153,7 +153,7 @@
 			"type": "object",
 			"properties": {
 				"fill": {
-					"description": "Fill color as a CSS color string. Default: \"transparent\"",
+					"description": "Fill color as a CSS color string, or \"auto\" to follow the theme surface/panel background (resolved at render time). Default: \"transparent\"",
 					"type": "string"
 				}
 			}
@@ -180,7 +180,7 @@
 					"$ref": "#/$defs/VerticalAlign"
 				},
 				"fontColor": {
-					"description": "Font color as a CSS color string. Default: \"#6b7280\" (sticky: \"#000000\")",
+					"description": "Font color as a CSS color string, or \"auto\" to follow the theme foreground (resolved at render time). Default: \"auto\" (sticky: \"#000000\")",
 					"type": "string"
 				},
 				"fontSize": {

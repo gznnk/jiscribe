@@ -7,6 +7,7 @@ import { ForeignObjectElement, Text, TextWrapper } from "./TextOverlayStyled";
 import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
 import type { TextType } from "../../../../schemas/objects/types/TextType";
 import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
+import { resolveAutoColor } from "../../utils/resolveAutoColor";
 
 export type TextEditable = { isEditing?: boolean };
 
@@ -48,6 +49,8 @@ const TextOverlayComponent: React.FC<TextOverlayProps> = ({
 	isEditing = false,
 }) => {
 	const textRef = useRef<HTMLDivElement>(null);
+	// auto（テーマ追従）をテーマ前景（ink）へ解決する（issue #38）。
+	const resolvedColor = resolveAutoColor(fontColor, "ink");
 
 	useEffect(() => {
 		if (textRef.current && textType === "markdown" && text) {
@@ -77,7 +80,7 @@ const TextOverlayComponent: React.FC<TextOverlayProps> = ({
 				{textType === "markdown" ? (
 					<Text
 						textAlign={textAlign}
-						color={fontColor}
+						color={resolvedColor}
 						fontSize={fontSize}
 						fontFamily={fontFamily}
 						fontWeight={fontWeight}
@@ -88,7 +91,7 @@ const TextOverlayComponent: React.FC<TextOverlayProps> = ({
 				) : (
 					<Text
 						textAlign={textAlign}
-						color={fontColor}
+						color={resolvedColor}
 						fontSize={fontSize}
 						fontFamily={fontFamily}
 						fontWeight={fontWeight}

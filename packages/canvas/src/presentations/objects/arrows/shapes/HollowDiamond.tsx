@@ -34,8 +34,7 @@ const HollowDiamondArrowComponent: React.FC<ArrowShapeProps> = ({
 	return (
 		<ArrowPolygon
 			points={points}
-			fill="none"
-			stroke={color}
+			strokeColor={color}
 			strokeWidth={1}
 			strokeLinejoin="miter"
 			transform={transform}

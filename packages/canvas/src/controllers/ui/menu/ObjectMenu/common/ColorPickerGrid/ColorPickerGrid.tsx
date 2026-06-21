@@ -1,12 +1,19 @@
 ﻿import { memo, useCallback, useEffect, useRef, useState } from "react";
 
 import {
+	AutoOption,
+	AutoOptionDot,
 	ColorGrid,
 	ColorInputRow,
 	ColorPickerContainer,
 	ColorSwatch,
 	ColorTextInput,
 } from "./ColorPickerGridStyled";
+import { resolveAutoColor } from "../../../../../../presentations/objects/utils/resolveAutoColor";
+import {
+	AUTO_COLOR,
+	isAutoColor,
+} from "../../../../../../schemas/objects/utils/autoColor";
 import { PRESET_COLORS } from "../../ObjectMenuConstants";
 
 type ColorPickerGridProps = {
@@ -51,7 +58,8 @@ const ColorPickerGridComponent: React.FC<ColorPickerGridProps> = ({
 		(e: React.ChangeEvent<HTMLInputElement>) => {
 			const val = e.target.value;
 			setInputValue(val);
-			const valid = CSS.supports("color", val);
+			// "auto"（テーマ追従）は CSS.supports では無効判定になるため明示的に許容する。
+			const valid = isAutoColor(val) || CSS.supports("color", val);
 			setIsValid(valid);
 			if (valid) {
 				pendingCommit.current = true;
@@ -83,6 +91,23 @@ const ColorPickerGridComponent: React.FC<ColorPickerGridProps> = ({
 
 	return (
 		<ColorPickerContainer>
+			<AutoOption
+				selected={isAutoColor(currentColor)}
+				data-kind="object-menu"
+				data-id={`object-menu:set:${property}:${AUTO_COLOR}`}
+				title="Auto (follows theme)"
+			>
+				{/* auto の解決先を反映: fill はサーフェス色、stroke/fontColor は前景色。 */}
+				<AutoOptionDot
+					style={{
+						background: resolveAutoColor(
+							AUTO_COLOR,
+							property === "fill" ? "surface" : "ink",
+						),
+					}}
+				/>
+				Auto
+			</AutoOption>
 			<ColorGrid>
 				{PRESET_COLORS.map((preset) => (
 					<ColorSwatch

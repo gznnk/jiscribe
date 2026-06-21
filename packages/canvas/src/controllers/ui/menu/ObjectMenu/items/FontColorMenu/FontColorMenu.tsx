@@ -2,6 +2,7 @@
 
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { getFirstSelectedWithProp } from "../../../../../../controllers/utils/getFirstSelectedWithProp";
+import { resolveAutoColor } from "../../../../../../presentations/objects/utils/resolveAutoColor";
 import type { TextStyleState } from "../../../../../../states/objects/base/TextStyleState";
 import { FontColorIcon } from "../../../../icons/FontColorIcon";
 import { ColorPickerGrid } from "../../common/ColorPickerGrid/ColorPickerGrid";
@@ -50,7 +51,7 @@ const FontColorMenuComponent: React.FC<FontColorMenuProps> = ({
 				data-id={`object-menu:toggle:${SECTION_ID}`}
 				title="Font Color"
 			>
-				<FontColorIcon underlineColor={currentColor} />
+				<FontColorIcon underlineColor={resolveAutoColor(currentColor, "ink")} />
 			</ObjectMenuButton>
 			{isOpen && (
 				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>

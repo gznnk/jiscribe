@@ -1,13 +1,14 @@
 import { roundToDecimal } from "@workspace/geometry";
 import type { Point } from "@workspace/geometry";
 
+import { AUTO_COLOR } from "./autoColor";
 import { STICKY_DOC_DEFAULTS } from "../annotations/sticky/StickyDoc";
 import type { ObjectDoc } from "../base/ObjectDoc";
 import { ELLIPSE_DOC_DEFAULTS } from "../primitives/ellipse/EllipseDoc";
 import { RECT_DOC_DEFAULTS } from "../primitives/rect/RectDoc";
 import type { ObjectType } from "../types/ObjectType";
 
-const POLY_STROKE = "#6b7280";
+const POLY_STROKE = AUTO_COLOR;
 const POLY_STROKE_WIDTH = 2;
 // polyline のデフォルト半幅（左右対称の水平2点線）
 const POLYLINE_HALF_WIDTH = 80;

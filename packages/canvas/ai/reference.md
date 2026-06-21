@@ -316,40 +316,56 @@ It has no `owner` field, and `anchor.kind` is always `"free"`.
 
 ## Common style fields
 
+### Color values (`stroke` / `fontColor` / `fill`)
+
+Color fields accept either a concrete CSS color string, or the sentinel `"auto"`
+meaning "follow the theme". `"auto"` is resolved at render time (so the document
+stays portable across themes) to a theme color chosen by the field's role:
+
+- `stroke` / `fontColor` → theme **foreground** (ink), so lines and text stay legible.
+- `fill` → theme **surface** (panel background).
+
+New shapes default `stroke` and `fontColor` to `"auto"`; `fill` defaults to
+`"transparent"`. A concrete color is always shown as-is. Prefer `"auto"` (or
+simply omitting the field) unless you need a specific brand/semantic color, so the
+diagram adapts to light/dark themes.
+
 ### Stroke style
 
 Applies to `rect`, `ellipse`, `polyline`, `polygon`, `connector`.
 
-| Field            | Type             | Default     | Description             |
-| ---------------- | ---------------- | ----------- | ----------------------- |
-| `stroke`         | `string`         | `"#6b7280"` | Line color (CSS color). |
-| `strokeWidth`    | `number`         | `2`         | Line width (px).        |
-| `strokeDashType` | `StrokeDashType` | `"solid"`   | Dash pattern.           |
+| Field            | Type             | Default   | Description                                              |
+| ---------------- | ---------------- | --------- | -------------------------------------------------------- |
+| `stroke`         | `string`         | `"auto"`  | Line color (CSS color, or `"auto"` to follow the theme). |
+| `strokeWidth`    | `number`         | `2`       | Line width (px).                                         |
+| `strokeDashType` | `StrokeDashType` | `"solid"` | Dash pattern.                                            |
 
 `StrokeDashType`: `"solid"` / `"dashed"` / `"dotted"`
+
+See [Color values](#color-values-stroke--fontcolor--fill) for `"auto"`.
 
 ### Fill style
 
 Applies to `rect`, `ellipse`, `polygon`, `sticky`.
 
-| Field  | Type     | Default         | Description             |
-| ------ | -------- | --------------- | ----------------------- |
-| `fill` | `string` | `"transparent"` | Fill color (CSS color). |
+| Field  | Type     | Default         | Description                                              |
+| ------ | -------- | --------------- | -------------------------------------------------------- |
+| `fill` | `string` | `"transparent"` | Fill color (CSS color, or `"auto"` to follow the theme). |
 
 ### Text style
 
 Applies to `rect`, `ellipse`, `sticky`.
 
-| Field           | Type            | Default          | Description                                         |
-| --------------- | --------------- | ---------------- | --------------------------------------------------- |
-| `text`          | `string`        | `""`             | Text content.                                       |
-| `textType`      | `TextType`      | `"text"`         | How text is rendered.                               |
-| `textAlign`     | `TextAlign`     | `"center"`       | Horizontal alignment.                               |
-| `verticalAlign` | `VerticalAlign` | `"middle"`       | Vertical alignment.                                 |
-| `fontColor`     | `string`        | `"#6b7280"`      | Text color (rect/ellipse; sticky uses `"#000000"`). |
-| `fontSize`      | `number`        | `16`             | Font size (px).                                     |
-| `fontFamily`    | `string`        | `"Noto Sans JP"` | Font family.                                        |
-| `fontWeight`    | `string`        | `"normal"`       | Font weight.                                        |
+| Field           | Type            | Default          | Description                                                                       |
+| --------------- | --------------- | ---------------- | --------------------------------------------------------------------------------- |
+| `text`          | `string`        | `""`             | Text content.                                                                     |
+| `textType`      | `TextType`      | `"text"`         | How text is rendered.                                                             |
+| `textAlign`     | `TextAlign`     | `"center"`       | Horizontal alignment.                                                             |
+| `verticalAlign` | `VerticalAlign` | `"middle"`       | Vertical alignment.                                                               |
+| `fontColor`     | `string`        | `"auto"`         | Text color (CSS color, or `"auto"` to follow the theme; sticky uses `"#000000"`). |
+| `fontSize`      | `number`        | `16`             | Font size (px).                                                                   |
+| `fontFamily`    | `string`        | `"Noto Sans JP"` | Font family.                                                                      |
+| `fontWeight`    | `string`        | `"normal"`       | Font weight.                                                                      |
 
 `TextType`: `"text"` (plain text) / `"markdown"` (Markdown rendering)
 

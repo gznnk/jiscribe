@@ -38,7 +38,15 @@ const FontColorIconComponent: React.FC<FontColorIconProps> = ({
 		>
 			A
 		</text>
-		<rect x="4" y="20" width="16" height="2" fill={underlineColor} rx="0.5" />
+		{/* underlineColor は var(--vscode-*)（auto の解決結果）を取りうるため style で当てる。 */}
+		<rect
+			x="4"
+			y="20"
+			width="16"
+			height="2"
+			rx="0.5"
+			style={{ fill: underlineColor }}
+		/>
 	</svg>
 );
 

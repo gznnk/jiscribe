@@ -7,6 +7,7 @@ import { TextOverlay } from "../../base/TextOverlay";
 import type { TextEditable } from "../../base/TextOverlay";
 import { createSvgTransform } from "../../utils/createSvgTransform";
 import { getStrokeDasharray } from "../../utils/getStrokeDasharray";
+import { resolveAutoColor } from "../../utils/resolveAutoColor";
 
 type EllipseProps = EllipseState & TextEditable;
 
@@ -48,8 +49,8 @@ const EllipseComponent: React.FC<EllipseProps> = ({
 				rx={rx}
 				ry={ry}
 				transform={transformAttr}
-				fill={fill ?? "transparent"}
-				stroke={stroke}
+				strokeColor={resolveAutoColor(stroke, "ink")}
+				fillColor={resolveAutoColor(fill, "surface")}
 				strokeWidth={strokeWidth}
 				strokeDasharray={getStrokeDasharray(strokeDashType, strokeWidth)}
 			/>

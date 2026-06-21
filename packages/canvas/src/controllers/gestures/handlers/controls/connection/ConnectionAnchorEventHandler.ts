@@ -1,6 +1,7 @@
 import type { Point } from "@workspace/geometry";
 
 import { isConnectPointId } from "../../../../../schemas/objects/types/EndpointRef";
+import { AUTO_COLOR } from "../../../../../schemas/objects/utils/autoColor";
 import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
 import { objectMapperRegistry } from "../../../../../states/registry/ObjectMapperRegistry";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
@@ -116,7 +117,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			target: {
 				anchor: { kind: "free", point: { x: event.last.x, y: event.last.y } },
 			},
-			stroke: "#6b7280",
+			stroke: AUTO_COLOR,
 			strokeWidth: 2,
 			endArrow: "ConcaveTriangle",
 		} as ConnectorState;

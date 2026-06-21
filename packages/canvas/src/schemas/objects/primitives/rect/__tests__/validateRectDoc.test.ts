@@ -78,4 +78,14 @@ describe("validateRectDoc", () => {
 		const minimal = { x: 0, y: 0, width: 100, height: 100 };
 		expect(validateRectDoc(minimal, "root")).toEqual([]);
 	});
+
+	it('色フィールドの sentinel "auto" はエラーなし（テーマ追従）', () => {
+		const autoColored = {
+			...validRect,
+			stroke: "auto",
+			fontColor: "auto",
+			fill: "auto",
+		};
+		expect(validateRectDoc(autoColored, "root")).toEqual([]);
+	});
 });

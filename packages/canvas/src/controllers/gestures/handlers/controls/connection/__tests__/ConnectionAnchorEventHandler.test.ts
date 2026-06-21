@@ -35,7 +35,7 @@ const oneFreeConnector = (id: string, target: Point): ConnectorState =>
 		points: [],
 		source: { owner: { type: "rect", id: "host" }, anchor: { kind: "center" } },
 		target: { anchor: { kind: "free", point: target } },
-		stroke: "#6b7280",
+		stroke: "auto",
 		strokeWidth: 2,
 		endArrow: "ConcaveTriangle",
 	}) as unknown as ConnectorState;

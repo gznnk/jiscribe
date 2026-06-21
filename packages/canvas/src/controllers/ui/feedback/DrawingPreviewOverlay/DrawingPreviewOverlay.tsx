@@ -1,5 +1,6 @@
 import { memo } from "react";
 
+import { resolveAutoColor } from "../../../../presentations/objects/utils/resolveAutoColor";
 import { ELLIPSE_DOC_DEFAULTS } from "../../../../schemas/objects/primitives/ellipse/EllipseDoc";
 import { RECT_DOC_DEFAULTS } from "../../../../schemas/objects/primitives/rect/RectDoc";
 import type { CanvasControllerState } from "../../../CanvasTypes";
@@ -11,24 +12,22 @@ type DrawingPreviewOverlayProps = {
 
 const STROKE_WIDTH = 1.5;
 
-/** DOC_DEFAULTS.stroke が型上 optional なため、最終フォールバックに使う既定 gray。 */
-const FALLBACK_STROKE = "#6b7280";
-
 /**
  * プレビュー枠線の色を「配置後に実際に付く stroke 色」と一致させる。
  * 配置時と同じく preset の defaultOverrides.stroke を優先し、無ければ
  * 図形種別ごとの既定 stroke にフォールバックする。
+ * auto（テーマ追従）・未指定は currentColor へ解決し、配置後と同じテーマ前景色で表示する。
  */
 const resolvePreviewStroke = (preset: ShapePreset): string => {
 	const override = preset.defaultOverrides?.stroke;
 	if (typeof override === "string") {
-		return override;
+		return resolveAutoColor(override, "ink");
 	}
 	const typeDefault =
 		preset.objectType === "ellipse"
 			? ELLIPSE_DOC_DEFAULTS.stroke
 			: RECT_DOC_DEFAULTS.stroke;
-	return typeDefault ?? FALLBACK_STROKE;
+	return resolveAutoColor(typeDefault, "ink");
 };
 
 const DrawingPreviewOverlayComponent: React.FC<DrawingPreviewOverlayProps> = ({
@@ -47,9 +46,9 @@ const DrawingPreviewOverlayComponent: React.FC<DrawingPreviewOverlayProps> = ({
 	const stroke = resolvePreviewStroke(shapeDrawing.preset);
 	const fill = `color-mix(in srgb, ${stroke} 18%, transparent)`;
 
+	// 色は var(--vscode-*)（auto の解決結果）を含みうるため SVG 属性ではなく style で当てる。
 	const sharedProps = {
-		fill,
-		stroke,
+		style: { fill, stroke },
 		strokeWidth: STROKE_WIDTH,
 		pointerEvents: "none" as const,
 	};
@@ -62,7 +61,7 @@ const DrawingPreviewOverlayComponent: React.FC<DrawingPreviewOverlayProps> = ({
 				x2={endX}
 				y2={endY}
 				fill="none"
-				stroke={stroke}
+				style={{ stroke }}
 				strokeWidth={STROKE_WIDTH}
 				pointerEvents="none"
 			/>
