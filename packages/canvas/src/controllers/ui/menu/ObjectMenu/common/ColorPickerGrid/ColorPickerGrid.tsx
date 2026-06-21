@@ -1,15 +1,13 @@
 ﻿import { memo, useCallback, useEffect, useRef, useState } from "react";
 
 import {
-	AutoOption,
-	AutoOptionDot,
+	AutoButton,
 	ColorGrid,
 	ColorInputRow,
 	ColorPickerContainer,
 	ColorSwatch,
 	ColorTextInput,
 } from "./ColorPickerGridStyled";
-import { resolveAutoColor } from "../../../../../../presentations/objects/utils/resolveAutoColor";
 import {
 	AUTO_COLOR,
 	isAutoColor,
@@ -91,23 +89,6 @@ const ColorPickerGridComponent: React.FC<ColorPickerGridProps> = ({
 
 	return (
 		<ColorPickerContainer>
-			<AutoOption
-				selected={isAutoColor(currentColor)}
-				data-kind="object-menu"
-				data-id={`object-menu:set:${property}:${AUTO_COLOR}`}
-				title="Auto (follows theme)"
-			>
-				{/* auto の解決先を反映: fill はサーフェス色、stroke/fontColor は前景色。 */}
-				<AutoOptionDot
-					style={{
-						background: resolveAutoColor(
-							AUTO_COLOR,
-							property === "fill" ? "surface" : "ink",
-						),
-					}}
-				/>
-				Auto
-			</AutoOption>
 			<ColorGrid>
 				{PRESET_COLORS.map((preset) => (
 					<ColorSwatch
@@ -121,6 +102,15 @@ const ColorPickerGridComponent: React.FC<ColorPickerGridProps> = ({
 				))}
 			</ColorGrid>
 			<ColorInputRow>
+				<AutoButton
+					type="button"
+					selected={isAutoColor(currentColor)}
+					data-kind="object-menu"
+					data-id={`object-menu:set:${property}:${AUTO_COLOR}`}
+					title="Auto (follows theme)"
+				>
+					Auto
+				</AutoButton>
 				<ColorTextInput
 					isValid={isValid}
 					value={inputValue}

@@ -13,11 +13,40 @@ export const ColorPickerContainer = styled.div`
 
 export const ColorInputRow = styled.div`
 	display: flex;
-	justify-content: center;
+	align-items: center;
+	gap: 8px;
 	align-self: stretch;
 	margin-top: 8px;
 	padding-top: 8px;
 	border-top: 1px solid ${theme.borderSubtle};
+`;
+
+type AutoButtonProps = {
+	selected: boolean;
+};
+
+/**
+ * 入力欄の左に置く「Auto（テーマ追従）」ボタン。
+ * 押下で色を auto sentinel に戻す。選択中はアクセント色で示す。
+ */
+export const AutoButton = styled.button<AutoButtonProps>`
+	flex: none;
+	height: 28px;
+	padding: 0 10px;
+	box-sizing: border-box;
+	border: 1px solid
+		${({ selected }) => (selected ? theme.accent : theme.inputBorder)};
+	border-radius: ${theme.radius};
+	background: ${theme.inputBg};
+	color: ${({ selected }) => (selected ? theme.accent : theme.inputFg)};
+	font-size: 12px;
+	cursor: pointer;
+	user-select: none;
+	transition: all 0.15s ease;
+
+	&:hover {
+		border-color: ${theme.accent};
+	}
 `;
 
 type ColorTextInputProps = {
@@ -25,7 +54,8 @@ type ColorTextInputProps = {
 };
 
 export const ColorTextInput = styled.input<ColorTextInputProps>`
-	width: 160px;
+	flex: 1;
+	min-width: 0;
 	height: 28px;
 	padding: 0 8px;
 	box-sizing: border-box;
@@ -51,46 +81,6 @@ export const ColorTextInput = styled.input<ColorTextInputProps>`
 	::placeholder {
 		color: ${theme.inputPlaceholder};
 	}
-`;
-
-type AutoOptionProps = {
-	selected: boolean;
-};
-
-/**
- * 「自動（テーマ追従）」を選ぶ行。グリッド上部に配置し、押下で色を auto sentinel に戻す。
- */
-export const AutoOption = styled.div<AutoOptionProps>`
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	align-self: stretch;
-	box-sizing: border-box;
-	margin-bottom: 8px;
-	padding: 4px 8px;
-	border: ${({ selected }) =>
-		selected ? `2px solid ${theme.accent}` : `1px solid ${theme.borderSubtle}`};
-	border-radius: ${theme.radius};
-	color: ${theme.foreground};
-	font-size: 12px;
-	cursor: pointer;
-	transition: all 0.15s ease;
-
-	&:hover {
-		border-color: ${theme.accent};
-	}
-`;
-
-/**
- * 自動オプションのプレビュー円。
- * background は auto の解決色（ロール別）を呼び出し側が style で当てる。
- */
-export const AutoOptionDot = styled.span`
-	width: 16px;
-	height: 16px;
-	flex: none;
-	border-radius: 50%;
-	border: 1px solid ${theme.borderSubtle};
 `;
 
 export const ColorGrid = styled.div`
