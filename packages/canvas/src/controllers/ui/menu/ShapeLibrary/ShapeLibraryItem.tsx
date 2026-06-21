@@ -1,7 +1,7 @@
 import { memo } from "react";
 
 import { ShapeLibraryButton } from "./ShapeLibraryStyled";
-import type { ShapePreset } from "./ShapePresets";
+import type { ShapePreset } from "../../../../schemas/objects/types/ShapePreset";
 import { EllipseIcon } from "../../icons/EllipseIcon";
 import { MarkdownRectIcon } from "../../icons/MarkdownRectIcon";
 import { PolygonIcon } from "../../icons/PolygonIcon";

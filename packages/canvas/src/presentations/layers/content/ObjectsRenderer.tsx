@@ -4,7 +4,7 @@ import { ConnectorRenderer } from "./ConnectorRenderer";
 import type { CanvasState } from "../../../states/canvas/CanvasState";
 import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
-import { objectComponentRegistry } from "../../objects/ObjectComponentRegistry";
+import { objectComponentRegistry } from "../../objects/registry/ObjectComponentRegistry";
 
 type ObjectsRendererProps = Pick<CanvasState, "objects" | "rootIds"> & {
 	textEditObjectId?: string | null;

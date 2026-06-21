@@ -2,21 +2,42 @@ import type { FC } from "react";
 
 import { Sticky } from "../../presentations/objects/annotations/Sticky";
 import { Connector } from "../../presentations/objects/connections/Connector";
-import { objectComponentRegistry } from "../../presentations/objects/ObjectComponentRegistry";
-import { Ellipse } from "../../presentations/objects/primitives/Ellipse";
+import {
+	Ellipse,
+	EllipsePreview,
+} from "../../presentations/objects/primitives/Ellipse";
 import { Polygon } from "../../presentations/objects/primitives/Polygon";
-import { Polyline } from "../../presentations/objects/primitives/Polyline";
-import { Rect } from "../../presentations/objects/primitives/Rect";
+import {
+	Polyline,
+	PolylinePreview,
+} from "../../presentations/objects/primitives/Polyline";
+import { Rect, RectPreview } from "../../presentations/objects/primitives/Rect";
+import { objectComponentRegistry } from "../../presentations/objects/registry/ObjectComponentRegistry";
+import { shapePreviewRegistry } from "../../presentations/objects/registry/ShapePreviewRegistry";
+import type { ShapePreviewRenderer } from "../../presentations/objects/registry/ShapePreviewTypes";
 import { StickyFeatures } from "../../schemas/objects/annotations/sticky/StickyDoc";
+import { StickyShapeFactory } from "../../schemas/objects/annotations/sticky/StickyShapeFactory";
+import { StickyShapePresets } from "../../schemas/objects/annotations/sticky/StickyShapePresets";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
 import { ConnectorFeatures } from "../../schemas/objects/connections/connector/ConnectorDoc";
 import { EllipseFeatures } from "../../schemas/objects/primitives/ellipse/EllipseDoc";
+import { EllipseShapeFactory } from "../../schemas/objects/primitives/ellipse/EllipseShapeFactory";
+import { EllipseShapePresets } from "../../schemas/objects/primitives/ellipse/EllipseShapePresets";
 import { GroupFeatures } from "../../schemas/objects/primitives/group/GroupDoc";
 import { PolygonFeatures } from "../../schemas/objects/primitives/polygon/PolygonDoc";
+import { PolygonShapeFactory } from "../../schemas/objects/primitives/polygon/PolygonShapeFactory";
+import { PolygonShapePresets } from "../../schemas/objects/primitives/polygon/PolygonShapePresets";
 import { PolylineFeatures } from "../../schemas/objects/primitives/polyline/PolylineDoc";
+import { PolylineShapeFactory } from "../../schemas/objects/primitives/polyline/PolylineShapeFactory";
+import { PolylineShapePresets } from "../../schemas/objects/primitives/polyline/PolylineShapePresets";
 import { RectFeatures } from "../../schemas/objects/primitives/rect/RectDoc";
+import { RectShapeFactory } from "../../schemas/objects/primitives/rect/RectShapeFactory";
+import { RectShapePresets } from "../../schemas/objects/primitives/rect/RectShapePresets";
 import type { ObjectFeatures } from "../../schemas/objects/types/ObjectFeatures";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
+import type { ShapeFactory } from "../../schemas/objects/types/ShapeFactory";
+import type { ShapePreset } from "../../schemas/objects/types/ShapePreset";
+import { shapeFactoryRegistry } from "../../schemas/registry/ShapeFactoryRegistry";
 import {
 	stickyToDoc,
 	stickyToState,
@@ -98,6 +119,7 @@ import type { ObjectBehaviorEntry } from "../gestures/registry/ObjectBehaviorTyp
 import { StickyColorMenu } from "../ui/menu/ObjectMenu/items/StickyColorMenu";
 import { objectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
 import type { MenuSectionFactory } from "../ui/menu/ObjectMenu/ObjectMenuTypes";
+import { shapePresetRegistry } from "../ui/menu/ShapeLibrary/ShapePresetRegistry";
 
 /**
  * Initialize all object registries with definitions for every object type.
@@ -108,6 +130,9 @@ export const initializeObjectRegistry = (): void => {
 	objectBehaviorRegistry.clear();
 	objectStateValidatorRegistry.clear();
 	objectMenuRegistry.clear();
+	shapeFactoryRegistry.clear();
+	shapePreviewRegistry.clear();
+	shapePresetRegistry.clear();
 
 	// doc バリデータ（objectDocValidatorRegistry）はここでは初期化しない。
 	// 登録内容は parse 時の検証でしか使われず、parseCanvasText が必要時に
@@ -142,6 +167,11 @@ export const initializeObjectRegistry = (): void => {
 			},
 		],
 		isValidRectState,
+		{
+			factory: RectShapeFactory,
+			previewRenderer: RectPreview,
+			presets: RectShapePresets,
+		},
 	);
 
 	registerObject(
@@ -173,6 +203,11 @@ export const initializeObjectRegistry = (): void => {
 			},
 		],
 		isValidEllipseState,
+		{
+			factory: EllipseShapeFactory,
+			previewRenderer: EllipsePreview,
+			presets: EllipseShapePresets,
+		},
 	);
 
 	registerObject(
@@ -215,6 +250,10 @@ export const initializeObjectRegistry = (): void => {
 			},
 		],
 		isValidPolygonState,
+		{
+			factory: PolygonShapeFactory,
+			presets: PolygonShapePresets,
+		},
 	);
 
 	registerObject(
@@ -238,6 +277,11 @@ export const initializeObjectRegistry = (): void => {
 			},
 		],
 		isValidPolylineState,
+		{
+			factory: PolylineShapeFactory,
+			previewRenderer: PolylinePreview,
+			presets: PolylineShapePresets,
+		},
 	);
 
 	registerObject(
@@ -290,7 +334,24 @@ export const initializeObjectRegistry = (): void => {
 			},
 		],
 		isValidStickyState,
+		{
+			factory: StickyShapeFactory,
+			presets: StickyShapePresets,
+		},
 	);
+};
+
+/**
+ * ShapeLibrary（図形パレット）に関わる生成系ケイパビリティ。
+ * パレットに出さない型（group / connector）では省略する。
+ */
+type ShapeLibraryRegistration = {
+	/** doc 生成・寸法・bounds 生成を担うファクトリ */
+	factory?: ShapeFactory;
+	/** ドラッグ描画中のプレビュー描画（bounds 描画対応図形のみ） */
+	previewRenderer?: ShapePreviewRenderer;
+	/** ツールバーに並ぶプリセット（1 型につき複数可） */
+	presets?: ShapePreset[];
 };
 
 export const registerObject = <
@@ -305,10 +366,21 @@ export const registerObject = <
 	behavior: ObjectBehaviorEntry<TState>,
 	menuFactory: MenuSectionFactory<TState>,
 	validateState: ObjectStateValidateFn,
+	shapeLibrary?: ShapeLibraryRegistration,
 ): void => {
 	objectMapperRegistry.register(type, mapper, features);
 	objectComponentRegistry.register(type, component);
 	objectBehaviorRegistry.register(type, behavior);
 	objectStateValidatorRegistry.register(type, validateState);
 	objectMenuRegistry.register(type, menuFactory);
+
+	if (shapeLibrary?.factory) {
+		shapeFactoryRegistry.register(type, shapeLibrary.factory);
+	}
+	if (shapeLibrary?.previewRenderer) {
+		shapePreviewRegistry.register(type, shapeLibrary.previewRenderer);
+	}
+	shapeLibrary?.presets?.forEach((preset) => {
+		shapePresetRegistry.register(preset);
+	});
 };

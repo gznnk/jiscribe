@@ -4,6 +4,7 @@ import { collectIdsInArea } from "./utils/collectIdsInArea";
 import { PRECISION } from "../../../../constants/precision";
 import { ZOOM } from "../../../../constants/zoom";
 import { createObjectDocFromBounds } from "../../../../schemas/objects/utils/createObjectDocFromBounds";
+import { shapeFactoryRegistry } from "../../../../schemas/registry/ShapeFactoryRegistry";
 import { objectMapperRegistry } from "../../../../states/registry/ObjectMapperRegistry";
 import type { SnapFeedback } from "../../../CanvasTypes";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
@@ -121,14 +122,12 @@ export const CanvasEventHandler: GestureHandler = {
 			return nextState;
 		}
 
-		// Left-button drag in draw mode: draw rect/ellipse/polyline
+		// Left-button drag in draw mode: bounds 描画に対応する図形のみ
 		const shapeDrawing = nextState.shapeDrawing;
 		const drawingObjectType =
 			shapeDrawing !== null &&
-			(shapeDrawing.preset.objectType === "rect" ||
-				shapeDrawing.preset.objectType === "ellipse" ||
-				shapeDrawing.preset.objectType === "polyline")
-				? (shapeDrawing.preset.objectType as "rect" | "ellipse" | "polyline")
+			shapeFactoryRegistry.supportsBoundsDrawing(shapeDrawing.preset.objectType)
+				? shapeDrawing.preset.objectType
 				: null;
 		if (
 			event.button === 0 &&

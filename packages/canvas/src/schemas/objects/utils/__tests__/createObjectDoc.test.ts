@@ -1,6 +1,12 @@
-import { describe, it, expect } from "vitest";
+import { beforeAll, describe, it, expect } from "vitest";
 
+import { initializeObjectRegistry } from "../../../../controllers/setup/initializeObjectRegistry";
 import { createObjectDoc } from "../createObjectDoc";
+
+// createObjectDoc は shapeFactoryRegistry 経由で解決されるため、レジストリを初期化する
+beforeAll(() => {
+	initializeObjectRegistry();
+});
 
 const pos = { x: 100, y: 200 };
 

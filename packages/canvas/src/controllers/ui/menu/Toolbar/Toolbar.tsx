@@ -9,7 +9,7 @@ import {
 } from "./ToolbarStyled";
 import { HelpIcon } from "../../icons/HelpIcon";
 import { ShapeLibraryItem } from "../ShapeLibrary/ShapeLibraryItem";
-import { SHAPE_PRESETS } from "../ShapeLibrary/ShapePresets";
+import { shapePresetRegistry } from "../ShapeLibrary/ShapePresetRegistry";
 import { ShortcutHelpModal } from "../ShortcutHelp/ShortcutHelpModal";
 
 type ToolbarProps = {
@@ -85,7 +85,7 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 			<ToolbarContainer>
 				{/* 左: 図形ツール */}
 				<ToolbarGroup>
-					{SHAPE_PRESETS.map((preset) => (
+					{shapePresetRegistry.all().map((preset) => (
 						<ShapeLibraryItem
 							key={preset.id}
 							preset={preset}

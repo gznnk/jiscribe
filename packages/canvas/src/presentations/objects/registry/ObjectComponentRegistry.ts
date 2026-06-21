@@ -1,6 +1,6 @@
 import type { FC } from "react";
 
-import type { ObjectType } from "../../schemas/objects/types/ObjectType";
+import type { ObjectType } from "../../../schemas/objects/types/ObjectType";
 
 class ObjectComponentRegistry {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any

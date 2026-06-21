@@ -1,6 +1,12 @@
-import { describe, it, expect } from "vitest";
+import { beforeAll, describe, it, expect } from "vitest";
 
+import { initializeObjectRegistry } from "../../../../controllers/setup/initializeObjectRegistry";
 import { createObjectDocFromBounds } from "../createObjectDocFromBounds";
+
+// createObjectDocFromBounds は shapeFactoryRegistry 経由で解決されるため、レジストリを初期化する
+beforeAll(() => {
+	initializeObjectRegistry();
+});
 
 describe("createObjectDocFromBounds", () => {
 	describe("polyline", () => {

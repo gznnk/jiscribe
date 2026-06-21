@@ -1,13 +1,11 @@
 import type { BoundingBox } from "@workspace/geometry";
 
-import type { StickyDoc } from "../../../../schemas/objects/annotations/sticky/StickyDoc";
-import type { EllipseDoc } from "../../../../schemas/objects/primitives/ellipse/EllipseDoc";
-import type { RectDoc } from "../../../../schemas/objects/primitives/rect/RectDoc";
+import type { ShapePreset } from "../../../../schemas/objects/types/ShapePreset";
 import { createObjectDoc } from "../../../../schemas/objects/utils/createObjectDoc";
+import { shapeFactoryRegistry } from "../../../../schemas/registry/ShapeFactoryRegistry";
 import { objectMapperRegistry } from "../../../../states/registry/ObjectMapperRegistry";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import type { ShapePreset } from "../../../ui/menu/ShapeLibrary/ShapePresets";
-import { getShapePreset } from "../../../ui/menu/ShapeLibrary/ShapePresets";
+import { getShapePreset } from "../../../ui/menu/ShapeLibrary/ShapePresetRegistry";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import type {
 	CanvasEvent,
@@ -27,36 +25,16 @@ const parsePresetId = (targetId: string): string => targetId.split(":")[1];
 
 /**
  * プリセットからゴースト図形の半サイズを返す。
- * createObjectDoc で overrides とデフォルト値をマージした doc から寸法を取得する。
+ * 図形ごとの ShapeFactory に委譲する（型別の分岐を持たない）。
  */
 const calcShapeDimensions = (
 	preset: ShapePreset,
 ): { halfWidth: number; halfHeight: number } => {
-	const doc = createObjectDoc(
-		preset.objectType,
-		{ x: 0, y: 0 },
-		preset.defaultOverrides,
-	);
-	switch (doc.type) {
-		case "rect": {
-			const { width, height } = doc as RectDoc;
-			return { halfWidth: width / 2, halfHeight: height / 2 };
-		}
-		case "sticky": {
-			const { width, height } = doc as StickyDoc;
-			return { halfWidth: width / 2, halfHeight: height / 2 };
-		}
-		case "ellipse": {
-			const { rx, ry } = doc as EllipseDoc;
-			return { halfWidth: rx, halfHeight: ry };
-		}
-		case "polyline":
-			return { halfWidth: 80, halfHeight: 0 };
-		case "polygon":
-			return { halfWidth: 60, halfHeight: 60 };
-		default:
-			throw new Error(`Unsupported object type for menu: ${preset.objectType}`);
+	const factory = shapeFactoryRegistry.get(preset.objectType);
+	if (!factory) {
+		throw new Error(`Unsupported object type for menu: ${preset.objectType}`);
 	}
+	return factory.calcDimensions(preset.defaultOverrides);
 };
 
 /**
@@ -112,8 +90,9 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 
 		switch (event.type) {
 			case "click": {
-				// sticky / polygon はビューポート中央に配置、rect/ellipse/polyline は描画モードをトグル
-				if (preset.objectType === "sticky" || preset.objectType === "polygon") {
+				// bounds 描画に対応しない図形（sticky / polygon）はビューポート中央に配置、
+				// 対応する図形（rect / ellipse / polyline）は描画モードをトグルする
+				if (!shapeFactoryRegistry.supportsBoundsDrawing(preset.objectType)) {
 					const { minX, minY, width, height, zoom } = state.viewport;
 					const centerX = minX + width / zoom / 2;
 					const centerY = minY + height / zoom / 2;
