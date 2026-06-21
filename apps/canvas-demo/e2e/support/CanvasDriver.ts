@@ -53,13 +53,18 @@ export class CanvasDriver {
 					...document.querySelectorAll(
 						`${objectSelector}, ${connectorSelector}`,
 					),
-				].map((el) => ({
-					id: el.getAttribute("data-id"),
-					tag: el.tagName.toLowerCase(),
-					transform: el.getAttribute("transform"),
-					fill: el.getAttribute("fill"),
-					stroke: el.getAttribute("stroke"),
-				})),
+				].map((el) => {
+					// 色は SVG 属性ではなく emotion CSS で当たるため computed style で読む
+					// （issue #38 / theme 追従）。値はブラウザ正規化済みの rgb(...) 形式。
+					const style = getComputedStyle(el);
+					return {
+						id: el.getAttribute("data-id"),
+						tag: el.tagName.toLowerCase(),
+						transform: el.getAttribute("transform"),
+						fill: style.fill,
+						stroke: style.stroke,
+					};
+				}),
 			{
 				objectSelector: selectors.object,
 				connectorSelector: selectors.connectorPolyline,
@@ -685,6 +690,34 @@ export class CanvasDriver {
 	/** data-id で図形のロケーターを取得する */
 	objectById(id: string) {
 		return this.page.locator(`[data-id="${id}"]`).first();
+	}
+
+	/**
+	 * 図形の描画色（fill / stroke）を computed style から取得する。
+	 * 色は SVG presentation 属性ではなく emotion CSS で当たるため、属性ではなく
+	 * getComputedStyle で検証する必要がある（issue #38 / theme 追従）。
+	 * 戻り値はブラウザ正規化済みの `rgb(...)` / `rgba(...)` 形式。
+	 */
+	async computedColor(id: string, prop: "fill" | "stroke"): Promise<string> {
+		return this.objectById(id).evaluate(
+			(el, p) => getComputedStyle(el).getPropertyValue(p),
+			prop,
+		);
+	}
+
+	/**
+	 * CSS カラー文字列をブラウザの computed 形式（`rgb(...)` 等）へ正規化する。
+	 * computedColor の戻り値と比較するために使う（hex で書いたテストを保ちつつ照合できる）。
+	 */
+	async normalizeColor(cssColor: string): Promise<string> {
+		return this.page.evaluate((color) => {
+			const probe = document.createElement("span");
+			probe.style.color = color;
+			document.body.appendChild(probe);
+			const resolved = getComputedStyle(probe).color;
+			probe.remove();
+			return resolved;
+		}, cssColor);
 	}
 
 	/**
