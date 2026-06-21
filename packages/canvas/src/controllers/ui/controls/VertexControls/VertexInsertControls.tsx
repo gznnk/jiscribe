@@ -1,11 +1,10 @@
 import type { Point } from "@workspace/geometry";
 import { memo } from "react";
 
-const INSERT_RADIUS = 3;
-const INSERT_STROKE_WIDTH = 1.5;
-const INSERT_COLOR = "#0d99ff";
-const INSERT_FILL = "white";
-const INSERT_OPACITY = 0.6;
+const INSERT_RADIUS = 4;
+const INSERT_STROKE_WIDTH = 1;
+const INSERT_COLOR = "#6366f1";
+const INSERT_FILL = "#6366f1";
 
 type VertexInsertControlsProps = {
 	/**
@@ -32,8 +31,10 @@ type VertexInsertControlsProps = {
 /**
  * VertexInsertControls component for inserting new vertices on Polyline segments.
  *
- * This is a pure presentation component that renders visual insertion handles at segment midpoints.
- * All interaction logic should be handled by the VertexInsertHandler.
+ * This is a pure presentation component that renders a simple blue dot at each segment
+ * midpoint (matching the connector ConnectionAnchors / Miro style), signalling that a
+ * new vertex can be added there. All interaction logic should be handled by the
+ * VertexInsertHandler.
  *
  * Each insertion control has:
  * - data-kind="control" for GestureHandler to identify
@@ -73,7 +74,7 @@ const VertexInsertControlsComponent: React.FC<VertexInsertControlsProps> = ({
 	}
 
 	return (
-		<g opacity={INSERT_OPACITY}>
+		<>
 			{segmentMidpoints.map(({ point, segmentIndex }) => (
 				<circle
 					key={segmentIndex}
@@ -88,7 +89,7 @@ const VertexInsertControlsComponent: React.FC<VertexInsertControlsProps> = ({
 					style={{ cursor: "crosshair" }}
 				/>
 			))}
-		</g>
+		</>
 	);
 };
 
