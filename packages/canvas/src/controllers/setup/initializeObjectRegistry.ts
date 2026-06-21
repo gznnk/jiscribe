@@ -6,7 +6,10 @@ import {
 	Ellipse,
 	EllipsePreview,
 } from "../../presentations/objects/primitives/Ellipse";
-import { Polygon } from "../../presentations/objects/primitives/Polygon";
+import {
+	Polygon,
+	PolygonPreview,
+} from "../../presentations/objects/primitives/Polygon";
 import {
 	Polyline,
 	PolylinePreview,
@@ -252,6 +255,7 @@ export const initializeObjectRegistry = (): void => {
 		isValidPolygonState,
 		{
 			factory: PolygonShapeFactory,
+			previewRenderer: PolygonPreview,
 			presets: PolygonShapePresets,
 		},
 	);
