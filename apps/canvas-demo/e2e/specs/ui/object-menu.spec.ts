@@ -11,9 +11,13 @@ test.describe("ObjectMenu によるスタイル設定", () => {
 		await canvas.setColor("bg-color", "#6366f1");
 		await canvas.setColor("stroke-color", "#4f46e5");
 
-		const rect = canvas.objectById(id);
-		await expect(rect).toHaveAttribute("fill", "#6366f1");
-		await expect(rect).toHaveAttribute("stroke", "#4f46e5");
+		// 色は SVG 属性ではなく emotion CSS で当たるため computed style で検証する
+		expect(await canvas.computedColor(id, "fill")).toBe(
+			await canvas.normalizeColor("#6366f1"),
+		);
+		expect(await canvas.computedColor(id, "stroke")).toBe(
+			await canvas.normalizeColor("#4f46e5"),
+		);
 	});
 
 	test("transparent も設定できる", async ({ canvas }) => {
@@ -25,9 +29,9 @@ test.describe("ObjectMenu によるスタイル設定", () => {
 
 		await canvas.setColor("stroke-color", "transparent");
 
-		await expect(canvas.objectById(id)).toHaveAttribute(
-			"stroke",
-			"transparent",
+		// transparent は computed style で rgba(0, 0, 0, 0) として解決される
+		expect(await canvas.computedColor(id, "stroke")).toBe(
+			await canvas.normalizeColor("transparent"),
 		);
 	});
 
@@ -59,7 +63,9 @@ test.describe("ObjectMenu によるスタイル設定", () => {
 		await canvas.typeTextAt({ x: 500, y: 260 }, "Styled");
 		await canvas.commitText();
 
-		await expect(canvas.objectById(id)).toHaveAttribute("fill", "#dbeafe");
+		expect(await canvas.computedColor(id, "fill")).toBe(
+			await canvas.normalizeColor("#dbeafe"),
+		);
 		await expect(canvas.page.locator("body")).toContainText("Styled");
 	});
 });

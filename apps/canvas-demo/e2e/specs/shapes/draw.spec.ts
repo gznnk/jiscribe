@@ -76,7 +76,7 @@ test.describe("図形の描画", () => {
 		// 既定の文面が描画される（innerHTML はエスケープされるため textContent で確認）
 		await expect
 			.poll(() => canvas.page.evaluate(() => document.body.textContent ?? ""))
-			.toContain("Heading");
+			.toContain("Title");
 	});
 
 	test("図形はドラッグで移動できる", async ({ canvas }) => {

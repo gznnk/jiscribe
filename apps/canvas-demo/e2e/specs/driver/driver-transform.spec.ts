@@ -52,8 +52,10 @@ test.describe("ドライバ動作確認: 変形ハンドル・Undo", () => {
 		// bg-color セクションのプリセット白を選ぶ（fill プロパティ）
 		await canvas.pickColorSwatch("bg-color", "fill", "#ffffff");
 
+		// 色は SVG 属性ではなく emotion CSS で当たるため computed style で検証する
+		const expectedFill = await canvas.normalizeColor("#ffffff");
 		await expect
-			.poll(() => canvas.objectById(id).getAttribute("fill"))
-			.toBe("#ffffff");
+			.poll(() => canvas.computedColor(id, "fill"))
+			.toBe(expectedFill);
 	});
 });
