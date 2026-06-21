@@ -1,4 +1,5 @@
 import type { ObjectType } from "../../../../schemas/objects/types/ObjectType";
+import { AUTO_COLOR } from "../../../../schemas/objects/utils/autoColor";
 
 export type ShapePreset = {
 	id: string;
@@ -33,11 +34,11 @@ export const SHAPE_PRESETS: ShapePreset[] = [
 			textType: "markdown",
 			textAlign: "left",
 			verticalAlign: "top",
-			fill: "#ffffff",
-			stroke: "#d1d5db",
+			fill: AUTO_COLOR,
+			stroke: AUTO_COLOR,
 			strokeWidth: 1,
-			fontColor: "#374151",
-			text: "# Heading\n\nBody text. **Bold** · *Italic* · `Code`\n\n- Item 1\n- Item 2",
+			fontColor: AUTO_COLOR,
+			text: "# Title\n\nWrite **markdown** here.",
 		},
 	},
 ];
