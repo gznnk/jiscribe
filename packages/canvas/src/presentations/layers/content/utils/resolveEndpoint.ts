@@ -1,5 +1,5 @@
 import {
-	calcFrameKeyPoints,
+	calcFrameKeyPoint,
 	isCenterPoint,
 	isTransformedFrame,
 	type Point,
@@ -48,30 +48,15 @@ export const resolveEndpoint = (
 
 		// Check if the object has transform properties (Frame-based)
 		if (isTransformedFrame(obj)) {
-			// TODO: キャッシュを使うようにしたい
-			// Calculate all key points (corners and edge midpoints)
-			const keyPoints = calcFrameKeyPoints({
-				cx: obj.cx,
-				cy: obj.cy,
-				width: obj.width,
-				height: obj.height,
-				rotation: obj.rotation,
-				scaleX: obj.scaleX,
-				scaleY: obj.scaleY,
-			});
-
-			// Return the specified anchor point
+			// Compute only the requested edge key point (avoids calculating all 8).
+			// "center" や不正な id は default で null（center anchor は kind === "center" 経路で扱う）
 			switch (anchorId) {
 				case "topCenter":
-					return keyPoints.topCenter;
 				case "rightCenter":
-					return keyPoints.rightCenter;
 				case "bottomCenter":
-					return keyPoints.bottomCenter;
 				case "leftCenter":
-					return keyPoints.leftCenter;
+					return calcFrameKeyPoint(obj, anchorId);
 				default:
-					// Invalid anchor ID
 					return null;
 			}
 		}

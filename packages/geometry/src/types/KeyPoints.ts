@@ -14,3 +14,6 @@ export type KeyPoints = {
 	bottomLeft: Point;
 	leftCenter: Point;
 };
+
+/** KeyPoints のいずれか1点を指すキー。 */
+export type KeyPointId = keyof KeyPoints;
