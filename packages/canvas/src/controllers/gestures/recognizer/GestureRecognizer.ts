@@ -86,8 +86,9 @@ export class GestureRecognizer {
 	private lastClickTargetId: string | undefined = undefined;
 
 	// RAF queuing
-	private fifo: InternalEvent[] = [];
-	private lastMove: InternalEvent | null = null;
+	// 単一キューで時系列順を保持する。連続する pointermove は合体しつつ
+	// 末尾位置に残すことで、後続の非 move イベント（up 等）より必ず前に処理される。
+	private queue: InternalEvent[] = [];
 	private scheduled = false;
 	private rafId: number | null = null;
 
@@ -102,11 +103,18 @@ export class GestureRecognizer {
 	 * イベントをキューに追加してスケジュール
 	 */
 	private enqueue(e: InternalEvent): void {
+		// 連続する pointermove は最新の 1 件に合体する（キューの肥大化を防ぐ）。
+		// ただし末尾が同一ポインターの pointermove のときだけ置き換えることで、
+		// 間に非 move イベントを挟んだ場合は順序を崩さない。
 		if (e.type === "pointermove") {
-			this.lastMove = e;
-		} else {
-			this.fifo.push(e);
+			const tail = this.queue[this.queue.length - 1];
+			if (tail?.type === "pointermove" && tail.pointerId === e.pointerId) {
+				this.queue[this.queue.length - 1] = e;
+				this.schedule();
+				return;
+			}
 		}
+		this.queue.push(e);
 		this.schedule();
 	}
 
@@ -122,19 +130,12 @@ export class GestureRecognizer {
 			this.scheduled = false;
 			this.rafId = null;
 
-			const batch: InternalEvent[] = [];
-			while (this.fifo.length) {
-				batch.push(this.fifo.shift()!);
-			}
-			if (this.lastMove) {
-				batch.push(this.lastMove);
-				this.lastMove = null;
-			}
-
-			if (batch.length) {
-				for (const e of batch) {
-					this.feed(e);
-				}
+			// キューを退避してから feed する。feed 中の enqueue（エッジスクロール等）は
+			// 次フレーム分として新しいキューに積まれる。
+			const batch = this.queue;
+			this.queue = [];
+			for (const e of batch) {
+				this.feed(e);
 			}
 		});
 	}
@@ -332,7 +333,7 @@ export class GestureRecognizer {
 							edgeProximity.vertical,
 						);
 
-						// pointermove は lastMove（単一スロット）に上書きされるため、
+						// pointermove は末尾の move と合体されるため、
 						// キューは増加せず 1件/フレームの定常ティックになる
 						this.enqueue({
 							...e,
@@ -559,8 +560,7 @@ export class GestureRecognizer {
 			this.pressed = null;
 		}
 		// 中断後のドラッグイベントが RAF キューから発火しないよう破棄する
-		this.fifo = [];
-		this.lastMove = null;
+		this.queue = [];
 	}
 
 	/**
@@ -574,8 +574,7 @@ export class GestureRecognizer {
 			this.rafId = null;
 		}
 		this.scheduled = false;
-		this.fifo = [];
-		this.lastMove = null;
+		this.queue = [];
 		this.pressed = null;
 	}
 
