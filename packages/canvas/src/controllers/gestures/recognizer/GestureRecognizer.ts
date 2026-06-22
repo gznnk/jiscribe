@@ -89,6 +89,7 @@ export class GestureRecognizer {
 	private fifo: InternalEvent[] = [];
 	private lastMove: InternalEvent | null = null;
 	private scheduled = false;
+	private rafId: number | null = null;
 
 	constructor(config: GestureRecognizerConfig) {
 		this.gestureCallback = config.gestureCallback;
@@ -117,8 +118,9 @@ export class GestureRecognizer {
 			return;
 		}
 		this.scheduled = true;
-		requestAnimationFrame(() => {
+		this.rafId = requestAnimationFrame(() => {
 			this.scheduled = false;
+			this.rafId = null;
 
 			const batch: InternalEvent[] = [];
 			while (this.fifo.length) {
@@ -559,6 +561,22 @@ export class GestureRecognizer {
 		// 中断後のドラッグイベントが RAF キューから発火しないよう破棄する
 		this.fifo = [];
 		this.lastMove = null;
+	}
+
+	/**
+	 * インスタンスを破棄する。
+	 * コンポーネントのアンマウント時に呼び出し、保留中の RAF をキャンセルして
+	 * アンマウント後にコールバックが発火しないようにする。
+	 */
+	public dispose(): void {
+		if (this.rafId !== null) {
+			cancelAnimationFrame(this.rafId);
+			this.rafId = null;
+		}
+		this.scheduled = false;
+		this.fifo = [];
+		this.lastMove = null;
+		this.pressed = null;
 	}
 
 	/**
