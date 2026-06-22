@@ -5,6 +5,24 @@ All notable changes to the Jiscribe extension are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-06-22
+
+### Added
+
+- **Theme-following colors ("Auto")**: Stroke, fill, and font color can now be set to **Auto**, which resolves to your VS Code color theme at render time. The data itself stays theme-independent, so files stay portable and readable in both dark and light themes. Rectangles, ellipses, polygons, and new connectors now default to Auto for stroke and font color, the color picker has an **Auto** button, and the Markdown preset follows the theme too.
+- **Inline SVG objects**: A new `type: "svg"` object lets you embed complex artwork — icons, logos, gradients — that the built-in shapes can't express. SVG content is sanitized on render and falls back to a placeholder if it can't be parsed. Its natural size is derived automatically from the `viewBox`, so authored `.jis.json` only needs the SVG text and a box. SVG objects are added via AI or by hand-editing `.jis.json` (they are not in the shape library), and they don't support connections or text editing.
+- **Draw mode for Polygon**: Polygons can now be drawn by dragging out an area in the shape library, just like the other shapes, fitting a regular polygon to the region you drag.
+
+### Fixed
+
+- Text editing no longer starts on objects that have no text (SVG, polyline, polygon, connector, and group). Double-click and Enter on these no longer open a ghost text editor.
+- The drawing-preview outline now matches the color the shape will have once placed, following both the theme and the preset instead of always rendering black.
+- Fixed a group-bounds update path that never ran when the top-level object wasn't a group.
+
+### Changed
+
+- The AI authoring guide and reference now cover Auto colors and inline SVG objects, and clarify that connectors can only attach to rectangles, ellipses, and sticky notes (not polylines, polygons, groups, or other connectors), preventing AI-generated diagrams from being rejected. If you set up AI in an earlier version, re-run the **Set up AI** command to refresh the guide, reference, and schema under `.jiscribe/`.
+
 ## [0.3.0] - 2026-06-20
 
 ### Changed
