@@ -21,8 +21,6 @@ const svg = {
 	y: 0,
 	width: 100,
 	height: 100,
-	naturalWidth: 100,
-	naturalHeight: 100,
 	svgText: "<svg xmlns='http://www.w3.org/2000/svg'></svg>",
 };
 

@@ -25,8 +25,6 @@ export const svgToState: DocToStateMapper<SvgDoc, SvgState> = (doc) => {
 		...frame,
 		...transform,
 		svgText: doc.svgText,
-		naturalWidth: doc.naturalWidth,
-		naturalHeight: doc.naturalHeight,
 	} as SvgState;
 };
 
@@ -43,7 +41,5 @@ export const svgToDoc: StateToDocMapper<SvgState, SvgDoc> = (state) => {
 		...rect,
 		...transform,
 		svgText: state.svgText,
-		naturalWidth: state.naturalWidth,
-		naturalHeight: state.naturalHeight,
 	} as SvgDoc;
 };

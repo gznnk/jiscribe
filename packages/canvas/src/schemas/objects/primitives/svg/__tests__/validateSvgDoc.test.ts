@@ -11,8 +11,6 @@ const validSvg = {
 	flipX: false,
 	flipY: false,
 	svgText: "<svg xmlns='http://www.w3.org/2000/svg'></svg>",
-	naturalWidth: 200,
-	naturalHeight: 100,
 };
 
 describe("validateSvgDoc", () => {
@@ -28,11 +26,6 @@ describe("validateSvgDoc", () => {
 	it("svgText が文字列でない場合はエラー", () => {
 		const errors = validateSvgDoc({ ...validSvg, svgText: 123 }, "root");
 		expect(errors.some((e) => e.path === "root.svgText")).toBe(true);
-	});
-
-	it("naturalWidth が数値でない場合はエラー", () => {
-		const errors = validateSvgDoc({ ...validSvg, naturalWidth: null }, "root");
-		expect(errors.some((e) => e.path === "root.naturalWidth")).toBe(true);
 	});
 
 	it("rotation が数値でない場合はエラー", () => {

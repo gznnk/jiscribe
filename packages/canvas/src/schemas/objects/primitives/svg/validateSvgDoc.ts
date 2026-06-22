@@ -19,11 +19,5 @@ export const validateSvgDoc: ObjectDocValidateFn = (o, path) => [
 	...(isString(o.svgText)
 		? []
 		: [{ path: `${path}.svgText`, message: "must be a string" }]),
-	...(isNumber(o.naturalWidth)
-		? []
-		: [{ path: `${path}.naturalWidth`, message: "must be a number" }]),
-	...(isNumber(o.naturalHeight)
-		? []
-		: [{ path: `${path}.naturalHeight`, message: "must be a number" }]),
 	...validateTransformFields(o, path),
 ];

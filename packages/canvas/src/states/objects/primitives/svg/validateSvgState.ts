@@ -1,4 +1,4 @@
-import { isNumber, isObject, isString } from "@workspace/basic-validators";
+import { isObject, isString } from "@workspace/basic-validators";
 
 import type { ObjectStateValidateFn } from "../../../registry/ObjectStateValidatorRegistry";
 import {
@@ -8,7 +8,7 @@ import {
 	type StateRecord,
 } from "../../utils/validateStateUtils";
 
-/** SvgState（Frame + transform + svgText + naturalWidth/Height）を検証する。 */
+/** SvgState（Frame + transform + svgText）を検証する。 */
 export const isValidSvgState: ObjectStateValidateFn = (value) => {
 	if (!isObject(value)) {
 		return false;
@@ -18,8 +18,6 @@ export const isValidSvgState: ObjectStateValidateFn = (value) => {
 		hasValidIdAndType(o, "svg") &&
 		isValidFrameState(o) &&
 		isValidTransformState(o) &&
-		isString(o.svgText) &&
-		isNumber(o.naturalWidth) &&
-		isNumber(o.naturalHeight)
+		isString(o.svgText)
 	);
 };

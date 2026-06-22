@@ -465,19 +465,9 @@
 		},
 
 		"SvgDoc": {
-			"description": "Raw inline SVG embedded as an opaque box. Use this only for visuals that the built-in shapes cannot express (icons, logos, ready-made technical figures). The SVG is sanitized at render time (scripts, event handlers, and external references are stripped). It is NOT a connector target and has no text/stroke/fill styling of its own.",
+			"description": "Raw inline SVG embedded as an opaque box. Use this only for visuals that the built-in shapes cannot express (icons, logos, ready-made technical figures). The SVG content is scaled to fit the box (its intrinsic size is taken from the markup's viewBox automatically). The SVG is sanitized at render time (scripts, event handlers, and external references are stripped). It is NOT a connector target and has no text/stroke/fill styling of its own.",
 			"type": "object",
-			"required": [
-				"id",
-				"type",
-				"x",
-				"y",
-				"width",
-				"height",
-				"svgText",
-				"naturalWidth",
-				"naturalHeight"
-			],
+			"required": ["id", "type", "x", "y", "width", "height", "svgText"],
 			"additionalProperties": false,
 			"properties": {
 				"id": { "description": "Unique identifier.", "type": "string" },
@@ -500,18 +490,8 @@
 					"minimum": 0
 				},
 				"svgText": {
-					"description": "Inline SVG markup, starting with a <svg ...> root element. Must be self-contained: no <script>, no event handlers (on*), and no external references (href/xlink:href to URLs). These are removed when rendered.",
+					"description": "Inline SVG markup, starting with a <svg ...> root element. Include a viewBox so the content scales to fit the box (if absent, the markup's width/height, or 100x100, is used). Must be self-contained: no <script>, no event handlers (on*), and no external references (href/xlink:href to URLs). These are removed when rendered.",
 					"type": "string"
-				},
-				"naturalWidth": {
-					"description": "Intrinsic width of the SVG content (match its viewBox width). Used as the scale basis to fit the content into 'width'.",
-					"type": "number",
-					"minimum": 0
-				},
-				"naturalHeight": {
-					"description": "Intrinsic height of the SVG content (match its viewBox height). Used as the scale basis to fit the content into 'height'.",
-					"type": "number",
-					"minimum": 0
 				},
 				"rotation": { "$ref": "#/$defs/TransformStyle/properties/rotation" },
 				"flipX": { "$ref": "#/$defs/TransformStyle/properties/flipX" },
