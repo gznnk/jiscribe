@@ -302,6 +302,11 @@ Options for `anchor.kind`:
 
 `ConnectPointId` options: `"center"` / `"topCenter"` / `"rightCenter"` / `"bottomCenter"` / `"leftCenter"`
 
+`owner.type` may be **only `rect`, `ellipse`, or `sticky`** — these are the
+connectable types. A `polyline`, `polygon`, `group`, or `connector` **cannot** be
+an endpoint owner; the document is rejected if one is referenced. To anchor a
+connector near such a shape, use a `FreeEndpointRef` instead.
+
 #### FreeEndpointRef (free point)
 
 ```json

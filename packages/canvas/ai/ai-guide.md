@@ -43,6 +43,7 @@ The top level must always have `version` / `root` (the array may be empty).
 **MUST NOT**
 
 - Do not put endpoint (start/end) coordinates in a connector's `points`. `points` holds only intermediate waypoints (usually empty).
+- Do not attach a connector endpoint (`owner`) to a `polyline`, `polygon`, `group`, or `connector`. Only `rect` / `ellipse` / `sticky` are connectable; use a `free` endpoint to point near other types.
 - Do not give a `group` `x`,`y`,`width`,`height`. Its position comes from its `children`.
 - Do not reuse the same `id`.
 - Do not put a `connector` inside a group's `children` (connectors live at the top level of `root` only).
@@ -78,6 +79,7 @@ The top level must always have `version` / `root` (the array may be empty).
 
 - `anchor.kind`: `"connectPoint"` (+ `id`) / `"center"` / `"free"` (+ `point`)
 - `connectPoint` `id`: `"center"`/`"topCenter"`/`"rightCenter"`/`"bottomCenter"`/`"leftCenter"`
+- `owner` may reference **only `rect` / `ellipse` / `sticky`**. You **cannot** attach an endpoint to a `polyline`, `polygon`, `group`, or `connector`. To point an arrow at/from one of those, use a `free` endpoint placed near it instead.
 - A free point not attached to any object: `{ "anchor": { "kind": "free", "point": { "x": 400, "y": 200 } } }` (no `owner`)
 
 ## 5. Layout conventions (for readability)
@@ -268,6 +270,7 @@ These are guidelines for readability, not part of the spec. Overlapping itself i
 
 - ❌ Putting a connector inside a group's `children` → ✅ keep connectors at the top level of `root`.
 - ❌ A connector with both endpoints `free` (no owner) → ✅ at least one endpoint must reference an object.
+- ❌ Attaching a connector endpoint (`owner`) to a `polyline`/`polygon`/`group` → ✅ only `rect`/`ellipse`/`sticky` are connectable; use a `free` endpoint placed near the target instead.
 - ❌ Putting endpoint coordinates in a connector's `points` → ✅ `points: []`; endpoints go in `source`/`target`.
 - ❌ Giving a `group` `x`/`y`/`width`/`height` → ✅ position it via the `children` coordinates.
 - ❌ Using `x`/`y`/`width`/`height` on an `ellipse` → ✅ use `cx`/`cy`/`rx`/`ry`.
