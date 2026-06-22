@@ -29,6 +29,7 @@ import {
 	SNAP_THRESHOLD_PX,
 } from "./utils/snap/findSnap";
 import { ORIGIN_SNAP_PX } from "../../../../constants/axisLock";
+import { objectMapperRegistry } from "../../../../states/registry/ObjectMapperRegistry";
 import { updateAffectedGroupBounds } from "../../../ui/utils/updateAffectedGroupBounds";
 import { buildSelectedIdsWithDescendants } from "../../../utils/buildSelectedIdsWithDescendants";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
@@ -405,8 +406,12 @@ export const ObjectEventHandler: GestureHandler = {
 
 		// ダブルクリックイベントの処理
 		if (event.type === "doubleClick") {
-			// テキストを持つオブジェクトの場合はテキスト編集を開始
-			if (isTextStyleState(targetObject)) {
+			// テキストを持つ図形（features.text）のみテキスト編集を開始する。
+			// isTextStyleState は「テキスト属性に矛盾が無いか」を見る緩いガードで、
+			// テキストを一切持たない図形（svg / polyline / polygon など）も通してしまうため、
+			// プロパティ更新側（isPropertySupported）と同じ features.text を正とする。
+			const features = objectMapperRegistry.getFeatures(targetObject.type);
+			if (features?.text === true && isTextStyleState(targetObject)) {
 				return {
 					...nextState,
 					textEditState: {

@@ -1,5 +1,21 @@
+import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../../states/objects/base/TextStyleState";
+import { objectMapperRegistry } from "../../../states/registry/ObjectMapperRegistry";
 import type { Command } from "../CommandTypes";
+
+/**
+ * テキスト編集を開始できる図形か。
+ * テキストを持つ図形（features.text）のみを正とし、構造ガードで値の妥当性を補う。
+ * isTextStyleState 単体は「テキスト属性に矛盾が無いか」を見る緩いガードで、
+ * テキストを一切持たない図形（svg / polyline / polygon など）も通してしまうため、
+ * プロパティ更新側（isPropertySupported）と同じ features.text を基準に揃える。
+ */
+const canEditText = (
+	object: ObjectState | undefined,
+): object is ObjectState & { text?: string } =>
+	object != null &&
+	objectMapperRegistry.getFeatures(object.type)?.text === true &&
+	isTextStyleState(object);
 
 export const StartTextEditCommand: Command = {
 	id: "start-text-edit",
@@ -20,16 +36,14 @@ export const StartTextEditCommand: Command = {
 			return false;
 		}
 
-		const selectedId = state.selectedIds[0];
-		const selectedObject = state.objects[selectedId];
-		return selectedObject != null && isTextStyleState(selectedObject);
+		return canEditText(state.objects[state.selectedIds[0]]);
 	},
 
 	execute(state) {
 		const objectId = state.selectedIds[0];
 		const targetObject = state.objects[objectId];
 
-		if (!isTextStyleState(targetObject)) {
+		if (!canEditText(targetObject)) {
 			return state;
 		}
 
