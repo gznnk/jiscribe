@@ -56,4 +56,51 @@ test.describe("ポリゴンの頂点追加", () => {
 		const created = (await canvas.captureObjects()).find((o) => o.id === id);
 		expect(created?.tag).toBe("polygon");
 	});
+
+	test("頂点ハンドルを選んで Delete すると頂点が 1 つ減り、undo で戻る", async ({
+		canvas,
+	}) => {
+		// 既定のポリゴンは正五角形（5 頂点）。閉じた図形の最小頂点数は 3 なので 1 つは消せる。
+		const id = await canvas.drawShape(
+			"Polygon",
+			{ x: 400, y: 200 },
+			{ x: 600, y: 360 },
+		);
+		const before = await vertexCount(canvas, id);
+		expect(before).toBe(5);
+
+		// 頂点 0（真上）ハンドルをクリックして選択。選択中ハンドルの塗りは選択色になる。
+		// この塗り変化（selectedVertex のコミット）を待ってから Delete する。
+		const selectedFill = await canvas.normalizeColor("#0d99ff");
+		await canvas.page.click(`[data-id="vertex-control:${id}:0"]`);
+		await expect
+			.poll(
+				() =>
+					canvas.page
+						.locator(`[data-id="vertex-control:${id}:0"]`)
+						.evaluate((el) => getComputedStyle(el).fill),
+				{ message: "頂点が選択状態（塗りが選択色）になること" },
+			)
+			.toBe(selectedFill);
+		await canvas.deleteSelection();
+
+		// 頂点が 1 つ減り、閉じた図形（polygon）であり続ける。
+		await expect
+			.poll(() => vertexCount(canvas, id), {
+				message: "頂点削除で 4 つになること",
+			})
+			.toBe(before - 1);
+		const afterDelete = (await canvas.captureObjects()).find(
+			(o) => o.id === id,
+		);
+		expect(afterDelete?.tag).toBe("polygon");
+
+		// undo で頂点数が元へ戻る。
+		await canvas.undo();
+		await expect
+			.poll(() => vertexCount(canvas, id), {
+				message: "undo で頂点が 5 つへ戻ること",
+			})
+			.toBe(before);
+	});
 });

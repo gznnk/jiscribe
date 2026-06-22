@@ -86,4 +86,48 @@ test.describe("複数選択（Ctrl+クリック / Ctrl+A）", () => {
 			"matrix(1, 0, 0, 1, 680, 300)",
 		);
 	});
+
+	test("Ctrl+クリックは選択済みの図形を選択から外す（トグルオフ）", async ({
+		canvas,
+	}) => {
+		// 横並びの 3 矩形。A 中心 (300,260) / B 中心 (550,260) / C 中心 (800,260)。
+		const a = await canvas.drawShape(
+			"Rectangle",
+			{ x: 230, y: 200 },
+			{ x: 370, y: 320 },
+		);
+		await canvas.deselect();
+		const b = await canvas.drawShape(
+			"Rectangle",
+			{ x: 480, y: 200 },
+			{ x: 620, y: 320 },
+		);
+		await canvas.deselect();
+		const c = await canvas.drawShape(
+			"Rectangle",
+			{ x: 730, y: 200 },
+			{ x: 870, y: 320 },
+		);
+		await canvas.deselect();
+
+		// 全選択（A・B・C）してから、Ctrl+クリックで B を選択から外す。
+		await canvas.selectAll();
+		await ctrlClick(canvas, { x: 550, y: 260 });
+
+		// 残った選択（A・C）を A からドラッグ（+100,+50）。A・C は動くが、外した B は動かない。
+		await canvas.drag({ x: 300, y: 260 }, { x: 400, y: 310 });
+
+		await expect
+			.poll(() => canvas.objectById(a).getAttribute("transform"), {
+				message: "A が移動すること",
+			})
+			.toBe("matrix(1, 0, 0, 1, 400, 310)");
+		expect(await canvas.objectById(c).getAttribute("transform")).toBe(
+			"matrix(1, 0, 0, 1, 900, 310)",
+		);
+		// トグルオフした B は選択から外れているので動かない。
+		expect(await canvas.objectById(b).getAttribute("transform")).toBe(
+			"matrix(1, 0, 0, 1, 550, 260)",
+		);
+	});
 });

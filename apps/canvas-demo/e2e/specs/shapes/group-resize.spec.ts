@@ -20,6 +20,19 @@ function centerXOf(transform: string | null): number {
 	return nums[4];
 }
 
+/** "x1,y1 x2,y2 ..." 形式の points から最大 X を返す */
+function maxXOf(points: string | null): number {
+	if (!points) {
+		throw new Error("points が取得できない");
+	}
+	return Math.max(
+		...points
+			.trim()
+			.split(/\s+/)
+			.map((pair) => Number(pair.split(",")[0])),
+	);
+}
+
 test.describe("複数選択のリサイズ（比例拡大）", () => {
 	test("マルチセレクトの角ハンドルは両図形を比例拡大し、1 回の undo で両方戻る", async ({
 		canvas,
@@ -79,5 +92,55 @@ test.describe("複数選択のリサイズ（比例拡大）", () => {
 		expect(await aRect.getAttribute("width")).toBe(String(aWidthBefore));
 		expect(await bRect.getAttribute("transform")).toBe(bTransformBefore);
 		expect(await bRect.getAttribute("width")).toBe(String(bWidthBefore));
+	});
+
+	test("ポリラインを含むマルチセレクトのリサイズは points を拡大し、1 回の undo で戻る", async ({
+		canvas,
+	}) => {
+		// 矩形 + ポリライン。ポリラインは寸法ではなく points 配列でスケールされる別経路。
+		const rect = await canvas.drawShape(
+			"Rectangle",
+			{ x: 250, y: 200 },
+			{ x: 380, y: 300 },
+		);
+		await canvas.deselect();
+		const poly = await canvas.drawShape(
+			"Polyline",
+			{ x: 450, y: 200 },
+			{ x: 700, y: 300 },
+		);
+		await canvas.deselect();
+
+		const rectEl = canvas.objectById(rect);
+		const polyEl = canvas.objectById(poly);
+		const rectWidthBefore = Number(await rectEl.getAttribute("width"));
+		const polyPointsBefore = await polyEl.getAttribute("points");
+		const polyMaxXBefore = maxXOf(polyPointsBefore);
+
+		// マーキーで両方を選択（bbox: left=250 top=200 right=700 bottom=300）。
+		await canvas.drag({ x: 210, y: 160 }, { x: 760, y: 340 }, 12);
+
+		// 右下角（700,300）を外側へドラッグして拡大する。
+		await canvas.dragTransformHandle("bottomRight", { x: 1000, y: 450 });
+
+		// ポリラインの points が拡大される（最大 X が右へ伸びる）。
+		await expect
+			.poll(() => polyEl.getAttribute("points").then(maxXOf), {
+				message: "ポリラインの points が拡大されること",
+			})
+			.toBeGreaterThan(polyMaxXBefore);
+		// 矩形も一緒に拡大している。
+		expect(Number(await rectEl.getAttribute("width"))).toBeGreaterThan(
+			rectWidthBefore,
+		);
+
+		// 1 回の undo でポリラインの points が元へ戻る（履歴 1 エントリ）。
+		await canvas.undo();
+		await expect
+			.poll(() => polyEl.getAttribute("points"), {
+				message: "1 回の undo でポリラインの points が元へ戻ること",
+			})
+			.toBe(polyPointsBefore);
+		expect(Number(await rectEl.getAttribute("width"))).toBe(rectWidthBefore);
 	});
 });
