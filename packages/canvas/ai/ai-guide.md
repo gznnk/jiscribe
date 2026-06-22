@@ -27,7 +27,7 @@ The top level must always have `version` / `root` (the array may be empty).
 
 - `version`: **required, always `1`** (fixed value for this format version).
 - `$schema`: optional but **recommended** (enables editor completion and validation).
-- `root`: array of shapes (rect / ellipse / polyline / polygon / group / sticky) **and connectors**, in z-order (back → front). The array order is the stacking order. Connectors (`"type": "connector"`) sit at the top level among the objects; they are **never** placed inside a group's `children`.
+- `root`: array of shapes (rect / ellipse / polyline / polygon / group / sticky / svg) **and connectors**, in z-order (back → front). The array order is the stacking order. Connectors (`"type": "connector"`) sit at the top level among the objects; they are **never** placed inside a group's `children`.
 
 ## 3. MUST / MUST NOT (violations break the file)
 
@@ -43,22 +43,23 @@ The top level must always have `version` / `root` (the array may be empty).
 **MUST NOT**
 
 - Do not put endpoint (start/end) coordinates in a connector's `points`. `points` holds only intermediate waypoints (usually empty).
-- Do not attach a connector endpoint (`owner`) to a `polyline`, `polygon`, `group`, or `connector`. Only `rect` / `ellipse` / `sticky` are connectable; use a `free` endpoint to point near other types.
+- Do not attach a connector endpoint (`owner`) to a `polyline`, `polygon`, `group`, `svg`, or `connector`. Only `rect` / `ellipse` / `sticky` are connectable; use a `free` endpoint to point near other types.
 - Do not give a `group` `x`,`y`,`width`,`height`. Its position comes from its `children`.
 - Do not reuse the same `id`.
 - Do not put a `connector` inside a group's `children` (connectors live at the top level of `root` only).
 
 ## 4. Object quick reference
 
-| `type`                  | Required geometry             | Main styles                                      |
-| ----------------------- | ----------------------------- | ------------------------------------------------ |
-| `rect`                  | `x`,`y`,`width`,`height`      | stroke / fill / text / `rx` (rounded) / rotation |
-| `ellipse`               | `cx`,`cy`,`rx`,`ry`           | stroke / fill / text / rotation                  |
-| `polyline`              | `points` (open line)          | stroke / startArrow / endArrow                   |
-| `polygon`               | `points` (auto-closed)        | stroke / fill                                    |
-| `group`                 | `children`                    | rotation / flipX / flipY                         |
-| `connector` (in `root`) | `source`,`target`,`points:[]` | stroke / startArrow / endArrow                   |
-| `sticky`                | `x`,`y`,`width`,`height`      | fill / text (no stroke or rx)                    |
+| `type`                  | Required geometry                                                   | Main styles                                      |
+| ----------------------- | ------------------------------------------------------------------- | ------------------------------------------------ |
+| `rect`                  | `x`,`y`,`width`,`height`                                            | stroke / fill / text / `rx` (rounded) / rotation |
+| `ellipse`               | `cx`,`cy`,`rx`,`ry`                                                 | stroke / fill / text / rotation                  |
+| `polyline`              | `points` (open line)                                                | stroke / startArrow / endArrow                   |
+| `polygon`               | `points` (auto-closed)                                              | stroke / fill                                    |
+| `group`                 | `children`                                                          | rotation / flipX / flipY                         |
+| `connector` (in `root`) | `source`,`target`,`points:[]`                                       | stroke / startArrow / endArrow                   |
+| `sticky`                | `x`,`y`,`width`,`height`                                            | fill / text (no stroke or rx)                    |
+| `svg`                   | `x`,`y`,`width`,`height` + `svgText`,`naturalWidth`,`naturalHeight` | rotation only (opaque box; no stroke/fill/text)  |
 
 **Style values**
 
@@ -79,8 +80,32 @@ The top level must always have `version` / `root` (the array may be empty).
 
 - `anchor.kind`: `"connectPoint"` (+ `id`) / `"center"` / `"free"` (+ `point`)
 - `connectPoint` `id`: `"center"`/`"topCenter"`/`"rightCenter"`/`"bottomCenter"`/`"leftCenter"`
-- `owner` may reference **only `rect` / `ellipse` / `sticky`**. You **cannot** attach an endpoint to a `polyline`, `polygon`, `group`, or `connector`. To point an arrow at/from one of those, use a `free` endpoint placed near it instead.
+- `owner` may reference **only `rect` / `ellipse` / `sticky`**. You **cannot** attach an endpoint to a `polyline`, `polygon`, `group`, `svg`, or `connector`. To point an arrow at/from one of those, use a `free` endpoint placed near it instead.
 - A free point not attached to any object: `{ "anchor": { "kind": "free", "point": { "x": 400, "y": 200 } } }` (no `owner`)
+
+### Raw SVG (`svg`) — escape hatch for complex visuals
+
+Use `svg` **only** when the built-in shapes (rect / ellipse / polyline / polygon) genuinely cannot express what you need — e.g. icons, logos, gradients, or ready-made technical figures. Prefer the built-in shapes for ordinary boxes, nodes, and arrows; they stay editable, themeable, and connectable.
+
+- It is an **opaque box**: `x`,`y` (top-left) + `width`,`height` define where/how big it is drawn. The SVG content is scaled to fit that box.
+- `svgText` holds the **inline SVG markup** (must start with `<svg ...>`). `naturalWidth` / `naturalHeight` are the SVG's intrinsic size — set them to its `viewBox` width/height so the content scales correctly.
+- The markup must be **self-contained**: no `<script>`, no event handlers (`on*`), and no external references (`href`/`xlink:href` to URLs). These are stripped at render time, so anything relying on them will not show. Inline `<defs>` / gradients / `<path>` are fine.
+- `svg` has **no** text / stroke / fill / `rx` of its own (style lives inside the markup), and it is **not connectable** — point connectors near it with a `free` endpoint.
+- When you place **multiple** `svg` objects, give every internal `id` (gradients, filters, clip paths, etc.) a **document-unique** name (e.g. `grad-logo1`, not `grad`). All markup shares one DOM, so duplicate ids make `url(#id)` references resolve to the wrong (first) definition.
+
+```json
+{
+	"id": "logo-1",
+	"type": "svg",
+	"x": 160,
+	"y": 120,
+	"width": 120,
+	"height": 120,
+	"naturalWidth": 100,
+	"naturalHeight": 100,
+	"svgText": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><circle cx=\"50\" cy=\"50\" r=\"45\" fill=\"#6d28d9\"/><path d=\"M50 22 L59 43 L82 43 L63 57 L70 78 L50 65 L30 78 L37 57 L18 43 L41 43 Z\" fill=\"#fff\"/></svg>"
+}
+```
 
 ## 5. Layout conventions (for readability)
 
@@ -270,7 +295,8 @@ These are guidelines for readability, not part of the spec. Overlapping itself i
 
 - ❌ Putting a connector inside a group's `children` → ✅ keep connectors at the top level of `root`.
 - ❌ A connector with both endpoints `free` (no owner) → ✅ at least one endpoint must reference an object.
-- ❌ Attaching a connector endpoint (`owner`) to a `polyline`/`polygon`/`group` → ✅ only `rect`/`ellipse`/`sticky` are connectable; use a `free` endpoint placed near the target instead.
+- ❌ Attaching a connector endpoint (`owner`) to a `polyline`/`polygon`/`group`/`svg` → ✅ only `rect`/`ellipse`/`sticky` are connectable; use a `free` endpoint placed near the target instead.
+- ❌ Reaching for `svg` for ordinary boxes/nodes/arrows → ✅ use the built-in shapes; keep `svg` for visuals they cannot express.
 - ❌ Putting endpoint coordinates in a connector's `points` → ✅ `points: []`; endpoints go in `source`/`target`.
 - ❌ Giving a `group` `x`/`y`/`width`/`height` → ✅ position it via the `children` coordinates.
 - ❌ Using `x`/`y`/`width`/`height` on an `ellipse` → ✅ use `cx`/`cy`/`rx`/`ry`.

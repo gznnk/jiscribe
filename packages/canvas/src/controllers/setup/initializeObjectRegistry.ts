@@ -15,6 +15,7 @@ import {
 	PolylinePreview,
 } from "../../presentations/objects/primitives/Polyline";
 import { Rect, RectPreview } from "../../presentations/objects/primitives/Rect";
+import { Svg } from "../../presentations/objects/primitives/Svg";
 import { objectComponentRegistry } from "../../presentations/objects/registry/ObjectComponentRegistry";
 import { shapePreviewRegistry } from "../../presentations/objects/registry/ShapePreviewRegistry";
 import type { ShapePreviewRenderer } from "../../presentations/objects/registry/ShapePreviewTypes";
@@ -36,6 +37,7 @@ import { PolylineShapePresets } from "../../schemas/objects/primitives/polyline/
 import { RectFeatures } from "../../schemas/objects/primitives/rect/RectDoc";
 import { RectShapeFactory } from "../../schemas/objects/primitives/rect/RectShapeFactory";
 import { RectShapePresets } from "../../schemas/objects/primitives/rect/RectShapePresets";
+import { SvgFeatures } from "../../schemas/objects/primitives/svg/SvgDoc";
 import type { ObjectFeatures } from "../../schemas/objects/types/ObjectFeatures";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 import type { ShapeFactory } from "../../schemas/objects/types/ShapeFactory";
@@ -79,6 +81,11 @@ import {
 	rectToState,
 } from "../../states/objects/primitives/rect/RectMapper";
 import { isValidRectState } from "../../states/objects/primitives/rect/validateRectState";
+import {
+	svgToDoc,
+	svgToState,
+} from "../../states/objects/primitives/svg/SvgMapper";
+import { isValidSvgState } from "../../states/objects/primitives/svg/validateSvgState";
 import { objectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import type { ObjectStateValidateFn } from "../../states/registry/ObjectStateValidatorRegistry";
 import { objectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
@@ -117,6 +124,11 @@ import {
 	rotateByGroup as rectRotateByGroup,
 	transformByGroup as rectTransformByGroup,
 } from "../gestures/handlers/objects/primitives/RectController";
+import {
+	moveByDelta as svgMoveByDelta,
+	rotateByGroup as svgRotateByGroup,
+	transformByGroup as svgTransformByGroup,
+} from "../gestures/handlers/objects/primitives/SvgController";
 import { objectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
 import type { ObjectBehaviorEntry } from "../gestures/registry/ObjectBehaviorTypes";
 import { StickyColorMenu } from "../ui/menu/ObjectMenu/items/StickyColorMenu";
@@ -342,6 +354,27 @@ export const initializeObjectRegistry = (): void => {
 			factory: StickyShapeFactory,
 			presets: StickyShapePresets,
 		},
+	);
+
+	// SVG は ShapeLibrary からは生成しない（AI / .jis.json 直書きでのみ追加）。
+	// そのため shapeLibrary（factory / preview / presets）は登録しない。
+	registerObject(
+		"svg",
+		{ toDoc: svgToDoc, toState: svgToState },
+		SvgFeatures,
+		Svg,
+		{
+			moveByDelta: svgMoveByDelta,
+			transformByGroup: svgTransformByGroup,
+			rotateByGroup: svgRotateByGroup,
+		},
+		(_state) => [
+			{
+				id: "transform",
+				items: [{ type: "aspectRatio" }],
+			},
+		],
+		isValidSvgState,
 	);
 };
 

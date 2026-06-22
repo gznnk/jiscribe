@@ -32,6 +32,7 @@
 				{ "$ref": "#/$defs/PolygonDoc" },
 				{ "$ref": "#/$defs/GroupDoc" },
 				{ "$ref": "#/$defs/StickyDoc" },
+				{ "$ref": "#/$defs/SvgDoc" },
 				{ "$ref": "#/$defs/ConnectorDoc" }
 			],
 			"discriminator": { "propertyName": "type" }
@@ -45,7 +46,8 @@
 				{ "$ref": "#/$defs/PolylineDoc" },
 				{ "$ref": "#/$defs/PolygonDoc" },
 				{ "$ref": "#/$defs/GroupDoc" },
-				{ "$ref": "#/$defs/StickyDoc" }
+				{ "$ref": "#/$defs/StickyDoc" },
+				{ "$ref": "#/$defs/SvgDoc" }
 			],
 			"discriminator": { "propertyName": "type" }
 		},
@@ -453,6 +455,64 @@
 				"fontSize": { "$ref": "#/$defs/TextStyle/properties/fontSize" },
 				"fontFamily": { "$ref": "#/$defs/TextStyle/properties/fontFamily" },
 				"fontWeight": { "$ref": "#/$defs/TextStyle/properties/fontWeight" },
+				"rotation": { "$ref": "#/$defs/TransformStyle/properties/rotation" },
+				"flipX": { "$ref": "#/$defs/TransformStyle/properties/flipX" },
+				"flipY": { "$ref": "#/$defs/TransformStyle/properties/flipY" },
+				"lockAspectRatio": {
+					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				}
+			}
+		},
+
+		"SvgDoc": {
+			"description": "Raw inline SVG embedded as an opaque box. Use this only for visuals that the built-in shapes cannot express (icons, logos, ready-made technical figures). The SVG is sanitized at render time (scripts, event handlers, and external references are stripped). It is NOT a connector target and has no text/stroke/fill styling of its own.",
+			"type": "object",
+			"required": [
+				"id",
+				"type",
+				"x",
+				"y",
+				"width",
+				"height",
+				"svgText",
+				"naturalWidth",
+				"naturalHeight"
+			],
+			"additionalProperties": false,
+			"properties": {
+				"id": { "description": "Unique identifier.", "type": "string" },
+				"type": {
+					"description": "Must be \"svg\".",
+					"type": "string",
+					"const": "svg"
+				},
+				"meta": { "$ref": "#/$defs/MetaDoc" },
+				"x": { "description": "Left-edge X coordinate.", "type": "number" },
+				"y": { "description": "Top-edge Y coordinate.", "type": "number" },
+				"width": {
+					"description": "Display width in pixels (the box the SVG is fitted into).",
+					"type": "number",
+					"minimum": 0
+				},
+				"height": {
+					"description": "Display height in pixels (the box the SVG is fitted into).",
+					"type": "number",
+					"minimum": 0
+				},
+				"svgText": {
+					"description": "Inline SVG markup, starting with a <svg ...> root element. Must be self-contained: no <script>, no event handlers (on*), and no external references (href/xlink:href to URLs). These are removed when rendered.",
+					"type": "string"
+				},
+				"naturalWidth": {
+					"description": "Intrinsic width of the SVG content (match its viewBox width). Used as the scale basis to fit the content into 'width'.",
+					"type": "number",
+					"minimum": 0
+				},
+				"naturalHeight": {
+					"description": "Intrinsic height of the SVG content (match its viewBox height). Used as the scale basis to fit the content into 'height'.",
+					"type": "number",
+					"minimum": 0
+				},
 				"rotation": { "$ref": "#/$defs/TransformStyle/properties/rotation" },
 				"flipX": { "$ref": "#/$defs/TransformStyle/properties/flipX" },
 				"flipY": { "$ref": "#/$defs/TransformStyle/properties/flipY" },

@@ -53,15 +53,16 @@ In addition to `name` and `description`, `meta` may hold any custom keys.
 
 ## Object types
 
-| `type`      | Description                  | Geometry                    | Styles                                |
-| ----------- | ---------------------------- | --------------------------- | ------------------------------------- |
-| `rect`      | Rectangle                    | `x`, `y`, `width`, `height` | Stroke, Fill, Text, Transform, Radius |
-| `ellipse`   | Ellipse                      | `cx`, `cy`, `rx`, `ry`      | Stroke, Fill, Text, Transform         |
-| `polyline`  | Polyline (open path)         | `points`                    | Stroke                                |
-| `polygon`   | Polygon (closed path)        | `points`                    | Stroke, Fill                          |
-| `group`     | Group (contains children)    | none                        | Transform                             |
-| `connector` | Connector (placed in `root`) | `points`                    | Stroke                                |
-| `sticky`    | Sticky note                  | `x`, `y`, `width`, `height` | Fill, Text, Transform (no Stroke)     |
+| `type`      | Description                  | Geometry                                                                 | Styles                                |
+| ----------- | ---------------------------- | ------------------------------------------------------------------------ | ------------------------------------- |
+| `rect`      | Rectangle                    | `x`, `y`, `width`, `height`                                              | Stroke, Fill, Text, Transform, Radius |
+| `ellipse`   | Ellipse                      | `cx`, `cy`, `rx`, `ry`                                                   | Stroke, Fill, Text, Transform         |
+| `polyline`  | Polyline (open path)         | `points`                                                                 | Stroke                                |
+| `polygon`   | Polygon (closed path)        | `points`                                                                 | Stroke, Fill                          |
+| `group`     | Group (contains children)    | none                                                                     | Transform                             |
+| `connector` | Connector (placed in `root`) | `points`                                                                 | Stroke                                |
+| `sticky`    | Sticky note                  | `x`, `y`, `width`, `height`                                              | Fill, Text, Transform (no Stroke)     |
+| `svg`       | Raw inline SVG (opaque box)  | `x`, `y`, `width`, `height` + `svgText`, `naturalWidth`, `naturalHeight` | Transform only (rotation/flip)        |
 
 ---
 
@@ -243,6 +244,43 @@ Some Text-style defaults differ from other shapes (`fontColor` is `"#000000"`, `
 
 ---
 
+### `svg` (raw inline SVG)
+
+An **escape hatch** for visuals the built-in shapes cannot express (icons, logos, gradients, ready-made figures). It is an **opaque box**: its geometry is the same as `rect` (top-left `x`,`y` + `width`,`height`), and the SVG content is scaled to fit that box. It has **no Stroke / Fill / Text / Radius** of its own (styling lives inside the markup) and is **not connectable**. Only Transform (rotation/flip) applies.
+
+The markup is sanitized at render time: `<script>`, event handlers (`on*`), and external references (`href`/`xlink:href` to URLs) are stripped. Keep the SVG self-contained (inline `<defs>`, gradients, `<path>` are fine). If the markup is missing or fails to parse, a placeholder error icon is shown instead.
+
+Prefer the built-in shapes for ordinary diagrams; reach for `svg` only when necessary.
+
+```json
+{
+	"id": "svg-1",
+	"type": "svg",
+	"x": 160,
+	"y": 120,
+	"width": 120,
+	"height": 120,
+	"naturalWidth": 100,
+	"naturalHeight": 100,
+	"svgText": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><circle cx=\"50\" cy=\"50\" r=\"45\" fill=\"#6d28d9\"/></svg>",
+	"rotation": 0
+}
+```
+
+| Field           | Type     | Default | Description                                                                                               |
+| --------------- | -------- | ------- | --------------------------------------------------------------------------------------------------------- |
+| `x`             | `number` | —       | X of the top-left corner. Required.                                                                       |
+| `y`             | `number` | —       | Y of the top-left corner. Required.                                                                       |
+| `width`         | `number` | —       | Display width (px) — the box the SVG is fitted into. Required.                                            |
+| `height`        | `number` | —       | Display height (px) — the box the SVG is fitted into. Required.                                           |
+| `svgText`       | `string` | —       | Inline SVG markup, starting with `<svg ...>`. Must be self-contained (no script/handlers/URLs). Required. |
+| `naturalWidth`  | `number` | —       | Intrinsic width of the SVG content (match its `viewBox` width); used as the scale basis. Required.        |
+| `naturalHeight` | `number` | —       | Intrinsic height of the SVG content (match its `viewBox` height); used as the scale basis. Required.      |
+
+For Transform fields (`rotation` / `flipX` / `flipY` / `lockAspectRatio`), see [Transform style](#transform-style).
+
+---
+
 ## ConnectorDoc (connector)
 
 A connector object placed in `root` (top level, mixed with the objects in z-order). At least one endpoint must reference an object (both-`free` is invalid).
@@ -303,9 +341,9 @@ Options for `anchor.kind`:
 `ConnectPointId` options: `"center"` / `"topCenter"` / `"rightCenter"` / `"bottomCenter"` / `"leftCenter"`
 
 `owner.type` may be **only `rect`, `ellipse`, or `sticky`** — these are the
-connectable types. A `polyline`, `polygon`, `group`, or `connector` **cannot** be
-an endpoint owner; the document is rejected if one is referenced. To anchor a
-connector near such a shape, use a `FreeEndpointRef` instead.
+connectable types. A `polyline`, `polygon`, `group`, `svg`, or `connector`
+**cannot** be an endpoint owner; the document is rejected if one is referenced. To
+anchor a connector near such a shape, use a `FreeEndpointRef` instead.
 
 #### FreeEndpointRef (free point)
 

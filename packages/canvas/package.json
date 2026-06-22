@@ -31,6 +31,7 @@
 		"@workspace/geometry": "workspace:*",
 		"@workspace/markdown": "workspace:*",
 		"@workspace/utility-types": "workspace:*",
+		"dompurify": "catalog:",
 		"react": "catalog:",
 		"react-dom": "catalog:"
 	},

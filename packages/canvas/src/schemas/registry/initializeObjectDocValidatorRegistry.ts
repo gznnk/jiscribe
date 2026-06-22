@@ -13,6 +13,8 @@ import { PolylineFeatures } from "../objects/primitives/polyline/PolylineDoc";
 import { validatePolylineDoc } from "../objects/primitives/polyline/validatePolylineDoc";
 import { RectFeatures } from "../objects/primitives/rect/RectDoc";
 import { validateRectDoc } from "../objects/primitives/rect/validateRectDoc";
+import { SvgFeatures } from "../objects/primitives/svg/SvgDoc";
+import { validateSvgDoc } from "../objects/primitives/svg/validateSvgDoc";
 
 /**
  * 型ごとの doc バリデータと features を {@link objectDocValidatorRegistry} に登録する。
@@ -58,4 +60,5 @@ export const initializeObjectDocValidatorRegistry = (): void => {
 		validateStickyDoc,
 		StickyFeatures,
 	);
+	objectDocValidatorRegistry.register("svg", validateSvgDoc, SvgFeatures);
 };
