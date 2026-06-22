@@ -873,7 +873,7 @@
 			"strokeWidth": 2,
 			"fill": "#111827",
 			"rx": 8,
-			"text": "結合テスト：__integration__/ で canvasReducer 経由の振る舞いを検証",
+			"text": "sociable ユニット：__tests__/ で canvasReducer / handleCommand 経由の振る舞いを検証",
 			"textType": "text",
 			"textAlign": "center",
 			"verticalAlign": "middle",
