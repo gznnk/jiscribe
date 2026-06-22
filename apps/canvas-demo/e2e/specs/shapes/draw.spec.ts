@@ -39,11 +39,13 @@ test.describe("図形の描画", () => {
 		expect(created?.tag).toBe("polyline");
 	});
 
-	test("Polygon はクリックで配置され polygon 要素を作る", async ({
-		canvas,
-	}) => {
-		// Polygon は対角ドラッグではなくクリックで中央に即配置される
-		const id = await canvas.placeShape("Polygon");
+	test("Polygon はドラッグで polygon 要素を作る", async ({ canvas }) => {
+		// Polygon も Draw モードに対応し、対角ドラッグで領域にフィットして配置される
+		const id = await canvas.drawShape(
+			"Polygon",
+			{ x: 400, y: 200 },
+			{ x: 600, y: 320 },
+		);
 		const created = (await canvas.captureObjects()).find(
 			(obj) => obj.id === id,
 		);
