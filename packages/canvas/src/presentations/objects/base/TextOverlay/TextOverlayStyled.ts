@@ -3,7 +3,6 @@ import styled from "@emotion/styled";
 import { TEXT_LINE_HEIGHT } from "../../../../constants/textLineHeight";
 import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
 import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
-import { cssSafeValue } from "../../utils/cssSafeValue";
 
 const VerticalAlignMap: Record<
 	VerticalAlign,
@@ -45,10 +44,10 @@ type TextProps = {
 export const Text = styled.div<TextProps>`
 	width: 100%;
 	text-align: ${(props) => TextAlignMap[props.textAlign]};
-	color: ${(props) => cssSafeValue(props.color)};
+	color: ${(props) => props.color};
 	font-size: ${(props) => props.fontSize}px;
-	font-family: ${(props) => cssSafeValue(props.fontFamily)};
-	font-weight: ${(props) => cssSafeValue(props.fontWeight)};
+	font-family: ${(props) => props.fontFamily};
+	font-weight: ${(props) => props.fontWeight};
 	line-height: ${TEXT_LINE_HEIGHT};
 	border: none;
 	outline: none;

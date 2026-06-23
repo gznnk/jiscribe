@@ -1,11 +1,9 @@
 import styled from "@emotion/styled";
 
-import { cssSafeValue } from "../../utils/cssSafeValue";
-
 /**
  * 矢印シェイプの色プロパティ。
  * 塗り矢印は `fillColor`、中空矢印は `strokeColor` を渡す（未指定側は `none`）。
- * 値は解決済み（auto はテーマ前景へ解決済み）で、emotion へ補間するため sink で無害化する。
+ * 値は解決済み（auto はテーマ前景へ解決済み）。CSS 安全性は外部入力の境界で担保される。
  */
 type ArrowColorProps = {
 	fillColor?: string;
@@ -13,8 +11,8 @@ type ArrowColorProps = {
 };
 
 const arrowColor = ({ fillColor, strokeColor }: ArrowColorProps): string => `
-	fill: ${fillColor ? cssSafeValue(fillColor) : "none"};
-	stroke: ${strokeColor ? cssSafeValue(strokeColor) : "none"};
+	fill: ${fillColor ? fillColor : "none"};
+	stroke: ${strokeColor ? strokeColor : "none"};
 `;
 
 /**

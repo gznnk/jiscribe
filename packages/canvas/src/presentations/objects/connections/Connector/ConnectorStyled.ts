@@ -1,7 +1,5 @@
 import styled from "@emotion/styled";
 
-import { cssSafeValue } from "../../utils/cssSafeValue";
-
 export const ConnectorHitArea = styled.polyline<{
 	disablePointerEvents?: boolean;
 }>`
@@ -21,7 +19,7 @@ type ConnectorElementProps = {
 };
 
 export const ConnectorElement = styled.polyline<ConnectorElementProps>`
-	stroke: ${({ strokeColor }) => cssSafeValue(strokeColor)};
+	stroke: ${({ strokeColor }) => strokeColor};
 	pointer-events: none;
 	cursor: grab;
 	fill: none;
