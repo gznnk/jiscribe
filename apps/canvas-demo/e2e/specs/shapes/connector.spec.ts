@@ -71,7 +71,7 @@ test.describe("コネクター", () => {
 		await canvas.deselect();
 
 		// 縦コネクター（x=500）の中点付近をクリックして選択
-		await canvas.page.mouse.click(500, 350);
+		await canvas.clickAt({ x: 500, y: 350 });
 
 		// コネクター用の ObjectMenu（線色）が出る = 選択された
 		await expect(
@@ -94,7 +94,7 @@ test.describe("コネクター", () => {
 		);
 		await expect(connectorLocator).toHaveCount(1);
 
-		await canvas.page.mouse.click(500, 350);
+		await canvas.clickAt({ x: 500, y: 350 });
 		// クリックによる選択が反映される（コネクター用 ObjectMenu が出る）のを待ってから
 		// 削除する。選択コミット前に Delete を押すと何も削除されずフレーキーになる。
 		await expect(

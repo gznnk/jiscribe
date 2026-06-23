@@ -17,7 +17,11 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 
 const TOLERANCE_PX = 2;
 
-/** 図形の画面上の中心座標を boundingBox から求める */
+/**
+ * 図形の中心座標をコンテンツ座標で求める。
+ * boundingBox は画面座標を返すため toContent() でドライバ入力系（wheel 等）と
+ * 同じコンテンツ座標へ変換する。
+ */
 async function screenCenter(
 	canvas: CanvasDriver,
 	id: string,
@@ -26,7 +30,10 @@ async function screenCenter(
 	if (!box) {
 		throw new Error(`図形 ${id} の boundingBox が取得できない`);
 	}
-	return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+	return canvas.toContent({
+		x: box.x + box.width / 2,
+		y: box.y + box.height / 2,
+	});
 }
 
 /** 図形の画面上の幅 */

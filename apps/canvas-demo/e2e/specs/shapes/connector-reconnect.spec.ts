@@ -24,8 +24,9 @@ async function dragControlTo(
 	if (!box) {
 		throw new Error(`コントロール ${dataId} の位置が取得できない`);
 	}
+	// box は画面座標。drag はコンテンツ座標を取るので toContent で揃える。
 	await canvas.drag(
-		{ x: box.x + box.width / 2, y: box.y + box.height / 2 },
+		canvas.toContent({ x: box.x + box.width / 2, y: box.y + box.height / 2 }),
 		to,
 		12,
 	);
@@ -56,7 +57,7 @@ async function placeAbcAndConnect(canvas: CanvasDriver): Promise<string> {
 
 /** コネクターを選択し、target 端点を C(830,490) の中心へドラッグして張り替える */
 async function reconnectTargetToC(canvas: CanvasDriver, connectorId: string) {
-	await canvas.page.mouse.click(500, 350);
+	await canvas.clickAt({ x: 500, y: 350 });
 	await expect(
 		canvas.page.locator(
 			`[data-id="connection-anchor:edit:${connectorId}:target"]`,

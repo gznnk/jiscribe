@@ -7,12 +7,34 @@ type ViewportProps = {
 };
 
 /**
- * Root viewport container that takes up full available space.
+ * Outermost container that takes up full available space and stacks the
+ * toolbar above the canvas viewport (flex column).
+ *
+ * ジェスチャー認識器の pointerHandlers / pointer capture はこの要素に張る。
+ * ツールバー（data-kind="toolbar" / "menu-item"）とキャンバス領域の双方を
+ * 内包させることで、ツールバー操作も同一のジェスチャー経路を通す。
+ */
+export const CanvasRoot = styled.div`
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+`;
+
+/**
+ * Canvas drawing region that sits below the toolbar (flex child filling the
+ * remaining space).
+ *
+ * エッジスクロールの判定はこの要素の矩形（useContainerResize での計測）と、
+ * 内包する SVG の画面位置（getScreenCTM）に従う。ツールバーの下に限定する
+ * ことで、上端のエッジ帯が「見えているキャンバスの上端」に一致する。
  */
 export const Viewport = styled.div<ViewportProps>`
 	position: relative;
-	width: 100%;
-	height: 100%;
+	flex: 1 1 auto;
+	min-height: 0;
 	overflow: hidden;
 	${(props) => props.cursor && `cursor: ${props.cursor};`}
 `;

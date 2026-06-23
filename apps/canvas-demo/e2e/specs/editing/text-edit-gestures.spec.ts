@@ -58,8 +58,13 @@ test.describe("テキスト編集のジェスチャー挙動", () => {
 		if (!box) {
 			throw new Error("textarea の位置が取得できない");
 		}
+		// box は画面座標。drag はコンテンツ座標を取るので toContent で揃える。
 		const y = box.y + box.height / 2;
-		await canvas.drag({ x: box.x + 6, y }, { x: box.x + box.width - 6, y }, 10);
+		await canvas.drag(
+			canvas.toContent({ x: box.x + 6, y }),
+			canvas.toContent({ x: box.x + box.width - 6, y }),
+			10,
+		);
 
 		// 図形は動いていない
 		expect(await canvas.objectById(id).getAttribute("transform")).toBe(

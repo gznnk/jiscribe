@@ -25,8 +25,8 @@ export type ObjectSnapshot = {
  */
 export const AUTO_SCROLL_MARGIN = 25;
 
-/** 図形のない場所。選択解除やテキスト確定のクリックに使う */
-const EMPTY_SPOT = { x: 70, y: 860 };
+/** 図形のない場所。選択解除やテキスト確定のクリックに使う（コンテンツ座標） */
+const EMPTY_SPOT = { x: 70, y: 820 };
 
 /**
  * canvas を実ユーザーと同じ UI 操作で動かすドライバ。
@@ -36,6 +36,20 @@ const EMPTY_SPOT = { x: 70, y: 860 };
  * そのままテストを失敗させてプロダクトの問題として顕在化させる。
  */
 export class CanvasDriver {
+	/**
+	 * キャンバス領域（SVG）の画面上の原点（左上）。
+	 *
+	 * テストはすべて「コンテンツ座標」（= 画面座標 − 原点）で記述する。上部の
+	 * ツールバーがレイアウト上の領域を占めるため、キャンバスは画面 y=ツールバー高さ
+	 * から始まり、画面座標 = コンテンツ座標 + 原点 で対応づく。pan / zoom は viewBox を
+	 * 変えるだけで SVG 要素自体の画面位置は動かさないため、この原点は一度測れば不変。
+	 *
+	 * boundingBox() 由来の座標は画面座標なので、ドライバへ渡す前に toContent() で
+	 * コンテンツ座標へ変換すること。
+	 */
+	private originX = 0;
+	private originY = 0;
+
 	constructor(readonly page: Page) {}
 
 	async goto() {
@@ -43,6 +57,42 @@ export class CanvasDriver {
 		await expect(
 			this.page.locator(selectors.toolButton("Rectangle")),
 		).toBeVisible();
+		// キャンバス領域（data-kind="canvas"）の画面オフセットを測る。flex 子なので
+		// マウント直後から実サイズを持ち、左上はツールバー高さ分だけ下にずれる。
+		const origin = await this.page.evaluate(() => {
+			const el = document.querySelector('[data-kind="canvas"]');
+			const rect = el?.getBoundingClientRect();
+			return { x: rect?.left ?? 0, y: rect?.top ?? 0 };
+		});
+		this.originX = origin.x;
+		this.originY = origin.y;
+	}
+
+	/**
+	 * コンテンツ座標 → 画面座標。ドライバ内部の入力系で使うほか、CDP で生の画面座標を
+	 * 送るテスト（マルチタッチ等）がコンテンツ座標を画面座標へ変換するのにも使う。
+	 */
+	toScreen(point: { x: number; y: number }): { x: number; y: number } {
+		return { x: point.x + this.originX, y: point.y + this.originY };
+	}
+
+	/**
+	 * 画面座標 → コンテンツ座標。boundingBox() で得た座標をドライバへ渡す前に通す。
+	 */
+	toContent(point: { x: number; y: number }): { x: number; y: number } {
+		return { x: point.x - this.originX, y: point.y - this.originY };
+	}
+
+	/** 画面座標での中間イベント付きドラッグ（内部用・座標変換しない） */
+	private async dragScreen(
+		fromScreen: { x: number; y: number },
+		toScreen: { x: number; y: number },
+		steps = 8,
+	) {
+		await this.page.mouse.move(fromScreen.x, fromScreen.y);
+		await this.page.mouse.down();
+		await this.page.mouse.move(toScreen.x, toScreen.y, { steps });
+		await this.page.mouse.up();
 	}
 
 	/** 図形・コネクターのスナップショットを取得する */
@@ -72,16 +122,16 @@ export class CanvasDriver {
 		);
 	}
 
-	/** 中間イベント付きのドラッグ。ジェスチャー認識には steps が必要 */
+	/**
+	 * 中間イベント付きのドラッグ（コンテンツ座標）。ジェスチャー認識には steps が必要。
+	 * boundingBox 由来の座標を渡す場合は事前に toContent() で変換すること。
+	 */
 	async drag(
 		from: { x: number; y: number },
 		to: { x: number; y: number },
 		steps = 8,
 	) {
-		await this.page.mouse.move(from.x, from.y);
-		await this.page.mouse.down();
-		await this.page.mouse.move(to.x, to.y, { steps });
-		await this.page.mouse.up();
+		await this.dragScreen(this.toScreen(from), this.toScreen(to), steps);
 	}
 
 	/**
@@ -96,7 +146,8 @@ export class CanvasDriver {
 			ctrl = false,
 		}: { deltaX?: number; deltaY?: number; ctrl?: boolean },
 	) {
-		await this.page.mouse.move(point.x, point.y);
+		const screen = this.toScreen(point);
+		await this.page.mouse.move(screen.x, screen.y);
 		if (ctrl) {
 			await this.page.keyboard.down("Control");
 		}
@@ -123,7 +174,9 @@ export class CanvasDriver {
 			shift = false,
 		}: { steps?: number; ctrl?: boolean; shift?: boolean } = {},
 	) {
-		await this.page.mouse.move(from.x, from.y);
+		const fromScreen = this.toScreen(from);
+		const toScreen = this.toScreen(to);
+		await this.page.mouse.move(fromScreen.x, fromScreen.y);
 		await this.page.mouse.down();
 		if (ctrl) {
 			await this.page.keyboard.down("Control");
@@ -131,7 +184,7 @@ export class CanvasDriver {
 		if (shift) {
 			await this.page.keyboard.down("Shift");
 		}
-		await this.page.mouse.move(to.x, to.y, { steps });
+		await this.page.mouse.move(toScreen.x, toScreen.y, { steps });
 		try {
 			await inspect();
 		} finally {
@@ -193,9 +246,11 @@ export class CanvasDriver {
 		to: { x: number; y: number },
 		steps = 8,
 	) {
-		await this.page.mouse.move(from.x, from.y);
+		const fromScreen = this.toScreen(from);
+		const toScreen = this.toScreen(to);
+		await this.page.mouse.move(fromScreen.x, fromScreen.y);
 		await this.page.mouse.down({ button: "right" });
-		await this.page.mouse.move(to.x, to.y, { steps });
+		await this.page.mouse.move(toScreen.x, toScreen.y, { steps });
 		await this.page.mouse.up({ button: "right" });
 	}
 
@@ -298,26 +353,39 @@ export class CanvasDriver {
 
 	/** 図形をクリックで選択し、ObjectMenu の表示を待つ */
 	async selectAt(point: { x: number; y: number }) {
-		await this.page.mouse.click(point.x, point.y);
+		const screen = this.toScreen(point);
+		await this.page.mouse.click(screen.x, screen.y);
 		await expect(this.page.locator(selectors.control).first()).toBeVisible();
+	}
+
+	/**
+	 * コンテンツ座標を左クリックする（選択状態のアサーションはしない）。
+	 * コネクターなど selectAt の制御ハンドル前提が当てはまらない対象の選択に使う。
+	 */
+	async clickAt(point: { x: number; y: number }) {
+		const screen = this.toScreen(point);
+		await this.page.mouse.click(screen.x, screen.y);
 	}
 
 	/** 空きスペースをクリックして選択解除（テキスト編集中なら確定）する */
 	async deselect() {
-		await this.page.mouse.click(EMPTY_SPOT.x, EMPTY_SPOT.y);
+		const screen = this.toScreen(EMPTY_SPOT);
+		await this.page.mouse.click(screen.x, screen.y);
 		await expect(this.page.locator(selectors.control)).toHaveCount(0);
 	}
 
 	/** ダブルクリックでテキストエディタを開き、タイプする。確定は commitText() */
 	async typeTextAt(point: { x: number; y: number }, text: string) {
-		await this.page.mouse.dblclick(point.x, point.y);
+		const screen = this.toScreen(point);
+		await this.page.mouse.dblclick(screen.x, screen.y);
 		await expect(this.page.locator(selectors.textEditor)).toBeVisible();
 		await this.page.keyboard.type(text);
 	}
 
 	/** テキスト編集を外側クリックで確定する（Escape はキャンセルなので使わない） */
 	async commitText() {
-		await this.page.mouse.click(EMPTY_SPOT.x, EMPTY_SPOT.y);
+		const screen = this.toScreen(EMPTY_SPOT);
+		await this.page.mouse.click(screen.x, screen.y);
 		await expect(this.page.locator(selectors.textEditor)).toHaveCount(0);
 	}
 
@@ -428,9 +496,10 @@ export class CanvasDriver {
 		if (!box) {
 			throw new Error(`スライダー ${property} の位置が取得できない`);
 		}
+		// box は画面座標。dragScreen で画面座標のまま操作する。
 		const startX = box.x + box.width / 2;
 		const y = box.y + box.height / 2;
-		await this.drag({ x: startX, y }, { x: startX + dx, y }, 10);
+		await this.dragScreen({ x: startX, y }, { x: startX + dx, y }, 10);
 	}
 
 	/**
@@ -476,9 +545,10 @@ export class CanvasDriver {
 		if (!box) {
 			throw new Error(`アンカー ${sourceAnchorId} の位置が取得できない`);
 		}
-		await this.drag(
+		// box は画面座標、dropPoint はコンテンツ座標。dragScreen に画面座標で揃える。
+		await this.dragScreen(
 			{ x: box.x + box.width / 2, y: box.y + box.height / 2 },
-			dropPoint,
+			this.toScreen(dropPoint),
 			12,
 		);
 
@@ -501,7 +571,8 @@ export class CanvasDriver {
 
 	/** 指定座標を右クリックして自前のコンテキストメニューを開く */
 	async openContextMenu(point: { x: number; y: number }) {
-		await this.page.mouse.click(point.x, point.y, { button: "right" });
+		const screen = this.toScreen(point);
+		await this.page.mouse.click(screen.x, screen.y, { button: "right" });
 		await expect(
 			this.page.locator(selectors.contextMenuAny).first(),
 		).toBeVisible();
@@ -546,9 +617,11 @@ export class CanvasDriver {
 		if (!box) {
 			throw new Error(`変形ハンドル ${handle} の位置が取得できない`);
 		}
+		// box（ハンドル位置）は画面座標、to はコンテンツ座標。画面座標で揃える。
 		const from = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+		const toScreen = this.toScreen(to);
 		if (!shift && !ctrl) {
-			await this.drag(from, to, 10);
+			await this.dragScreen(from, toScreen, 10);
 			return;
 		}
 		// Shift 押下中のリサイズはアスペクト比を保つ（event.mods.shift 経路）。
@@ -562,7 +635,7 @@ export class CanvasDriver {
 		if (ctrl) {
 			await this.page.keyboard.down("Control");
 		}
-		await this.page.mouse.move(to.x, to.y, { steps: 10 });
+		await this.page.mouse.move(toScreen.x, toScreen.y, { steps: 10 });
 		await this.page.mouse.up();
 		if (shift) {
 			await this.page.keyboard.up("Shift");
