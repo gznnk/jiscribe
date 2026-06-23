@@ -41,7 +41,7 @@ export const isClipboardData = (value: unknown): value is ClipboardData => {
 		return false;
 	}
 	const objects = v.objects as Record<string, unknown>;
-	for (const obj of Object.values(objects)) {
+	for (const [key, obj] of Object.entries(objects)) {
 		if (!isObject(obj)) {
 			return false;
 		}
@@ -54,6 +54,12 @@ export const isClipboardData = (value: unknown): value is ClipboardData => {
 		if (!objectStateValidatorRegistry.validate(o.type, o)) {
 			return false;
 		}
+		// `objects` は id をキーとするマップ（CopyCommand）。childIds / endpoint owner /
+		// rootIds はオブジェクト id で参照を解決するため、キーと id が一致していなければ
+		// 自己完結性（後述）が成立しない。改竄でキー≠id にされたデータをここで弾く。
+		if (o.id !== key) {
+			return false;
+		}
 	}
 
 	const objectKeys = new Set(Object.keys(objects));
@@ -61,5 +67,46 @@ export const isClipboardData = (value: unknown): value is ClipboardData => {
 		return false;
 	}
 
+	// 参照整合性（自己完結性）: クリップボードは untrusted 入力（任意アプリが書ける）。
+	// rootIds と同様に、group の childIds・connector endpoint の owner.id が `objects` の
+	// キー集合に閉じていることを検証する。これを通すと cloneObjects の id リマップ
+	// フォールバック（`?? id`）が untrusted 経路で発火し、貼り付け先キャンバスの
+	// 既存オブジェクトを新グループの子・接続先として取り込む参照ハイジャックになりうる。
+	if (!isSelfContained(objects, objectKeys)) {
+		return false;
+	}
+
 	return true;
 };
+
+/**
+ * group の childIds と connector endpoint の owner.id が、すべて `objects` の
+ * キー集合（= 自分自身が含むオブジェクト）に閉じているかを検証する。
+ * 各オブジェクトの型別妥当性は呼び出し前に検証済みのため、ここでは参照先の存在のみ見る。
+ */
+function isSelfContained(
+	objects: Record<string, unknown>,
+	objectKeys: Set<string>,
+): boolean {
+	for (const obj of Object.values(objects)) {
+		const o = obj as Record<string, unknown>;
+
+		if (o.type === "group") {
+			const childIds = o.childIds as string[];
+			if (!childIds.every((childId) => objectKeys.has(childId))) {
+				return false;
+			}
+		} else if (o.type === "connector") {
+			const sourceOwnerId = (o.source as { owner?: { id?: string } }).owner?.id;
+			const targetOwnerId = (o.target as { owner?: { id?: string } }).owner?.id;
+			if (sourceOwnerId !== undefined && !objectKeys.has(sourceOwnerId)) {
+				return false;
+			}
+			if (targetOwnerId !== undefined && !objectKeys.has(targetOwnerId)) {
+				return false;
+			}
+		}
+	}
+
+	return true;
+}

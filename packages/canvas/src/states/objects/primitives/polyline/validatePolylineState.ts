@@ -17,7 +17,7 @@ export const isValidPolylineState: ObjectStateValidateFn = (value) => {
 	const o = value as StateRecord;
 	return (
 		hasValidIdAndType(o, "polyline") &&
-		isValidPolyState(o) &&
+		isValidPolyState(o, 2) &&
 		isValidStrokeStyleState(o) &&
 		isValidArrowFields(o)
 	);
