@@ -165,4 +165,43 @@ describe("isClipboardData", () => {
 			expect(isClipboardData(data)).toBe(false);
 		});
 	});
+
+	describe("非循環性（#46）", () => {
+		it("自己参照する group の childIds は false", () => {
+			// childIds:["g1"] は自己完結（g1 は objects 内）だが循環。
+			// 未ガードの再帰消費者で無限再帰 → スタックオーバーフロー（DoS）になる。
+			const data = baseClipboard({ g1: group("g1", ["g1"]) }, ["g1"]);
+			expect(isClipboardData(data)).toBe(false);
+		});
+
+		it("相互参照する group の childIds は false", () => {
+			const objects = {
+				g1: group("g1", ["g2"]),
+				g2: group("g2", ["g1"]),
+			};
+			const data = baseClipboard(objects, ["g1"]);
+			expect(isClipboardData(data)).toBe(false);
+		});
+
+		it("深いネストでも循環があれば false", () => {
+			const objects = {
+				g1: group("g1", ["g2"]),
+				g2: group("g2", ["g3"]),
+				g3: group("g3", ["g1"]),
+			};
+			const data = baseClipboard(objects, ["g1"]);
+			expect(isClipboardData(data)).toBe(false);
+		});
+
+		it("循環しないネストグループ（DAG）は true", () => {
+			// g1 と g2 が同じ子 r1 を共有しても、循環でなければ通過する。
+			const objects = {
+				r1: rect("r1"),
+				g2: group("g2", ["r1"]),
+				g1: group("g1", ["g2", "r1"]),
+			};
+			const data = baseClipboard(objects, ["g1"]);
+			expect(isClipboardData(data)).toBe(true);
+		});
+	});
 });
