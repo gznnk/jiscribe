@@ -5,13 +5,10 @@ import type { CanvasControllerState } from "../../../../../../controllers/Canvas
 import { getFirstSelectedWithProp } from "../../../../../../controllers/utils/getFirstSelectedWithProp";
 import type { TextStyleState } from "../../../../../../states/objects/base/TextStyleState";
 import { FontSizeIcon } from "../../../../icons/FontSizeIcon";
+import { DropdownPanel } from "../../common/DropdownPanel";
 import { MenuSlider } from "../../common/MenuSlider";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
-import {
-	ObjectMenuButton,
-	DropdownPanel,
-	MenuItemPositioner,
-} from "../../ObjectMenuStyled";
+import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
 
 const SECTION_ID = "font-size";
 const DEFAULT_FONT_SIZE = 14;

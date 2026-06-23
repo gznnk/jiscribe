@@ -8,12 +8,9 @@ import {
 } from "./StickyColorMenuStyled";
 import { getFirstSelectedWithProp } from "../../../../../../controllers/utils/getFirstSelectedWithProp";
 import { ColorPreviewIcon } from "../../../../icons/ColorPreviewIcon";
+import { DropdownPanel } from "../../common/DropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
-import {
-	DropdownPanel,
-	MenuItemPositioner,
-	ObjectMenuButton,
-} from "../../ObjectMenuStyled";
+import { MenuItemPositioner, ObjectMenuButton } from "../../ObjectMenuStyled";
 import type { MenuItemProps } from "../../ObjectMenuTypes";
 
 const SECTION_ID = "sticky-color";

@@ -9,13 +9,10 @@ import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
 import { DottedLineIcon } from "../../../../icons/DottedLineIcon";
 import { LineStyleIcon } from "../../../../icons/LineStyleIcon";
 import { SolidLineIcon } from "../../../../icons/SolidLineIcon";
+import { DropdownPanel } from "../../common/DropdownPanel";
 import { MenuSlider } from "../../common/MenuSlider";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
-import {
-	DropdownPanel,
-	MenuItemPositioner,
-	ObjectMenuButton,
-} from "../../ObjectMenuStyled";
+import { MenuItemPositioner, ObjectMenuButton } from "../../ObjectMenuStyled";
 
 const SECTION_ID = "line-style";
 

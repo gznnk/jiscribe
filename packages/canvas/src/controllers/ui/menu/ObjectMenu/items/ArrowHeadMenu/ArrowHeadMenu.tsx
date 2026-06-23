@@ -7,12 +7,9 @@ import { getEffectiveSelectedIds } from "../../../../../../controllers/utils/get
 import { ArrowTypes } from "../../../../../../schemas/objects/types/ArrowType";
 import type { ArrowType } from "../../../../../../schemas/objects/types/ArrowType";
 import { ArrowSwapIcon } from "../../../../icons/ArrowSwapIcon";
+import { DropdownPanel } from "../../common/DropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
-import {
-	ObjectMenuButton,
-	DropdownPanel,
-	MenuItemPositioner,
-} from "../../ObjectMenuStyled";
+import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
 
 const SECTION_ID_START = "arrow-head-start";
 const SECTION_ID_END = "arrow-head-end";

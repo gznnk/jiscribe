@@ -5,12 +5,9 @@ import { getFirstSelectedWithProp } from "../../../../../../controllers/utils/ge
 import { resolveAutoColor } from "../../../../../../presentations/objects/utils/resolveAutoColor";
 import { ColorPreviewIcon } from "../../../../icons/ColorPreviewIcon";
 import { ColorPickerGrid } from "../../common/ColorPickerGrid/ColorPickerGrid";
+import { DropdownPanel } from "../../common/DropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
-import {
-	ObjectMenuButton,
-	DropdownPanel,
-	MenuItemPositioner,
-} from "../../ObjectMenuStyled";
+import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
 
 const SECTION_ID = "bg-color";
 

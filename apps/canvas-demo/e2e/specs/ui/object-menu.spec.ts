@@ -1,4 +1,5 @@
 import { test, expect } from "../../fixtures";
+import { selectors } from "../../support/selectors";
 
 test.describe("ObjectMenu によるスタイル設定", () => {
 	test("背景色と枠線色を CSS カラー入力で設定できる", async ({ canvas }) => {
@@ -49,6 +50,24 @@ test.describe("ObjectMenu によるスタイル設定", () => {
 			"stroke-dasharray",
 			/.+/,
 		);
+	});
+
+	test("サブメニューの背景をクリックしても閉じない", async ({ canvas }) => {
+		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
+
+		// カラーピッカーのサブメニューを開く
+		await canvas.openObjectMenu("bg-color");
+		const colorInput = canvas.page.locator(selectors.cssColorInput);
+		await expect(colorInput).toBeVisible();
+
+		// パネルの余白（ボタン以外の背景部分）をクリックする。
+		// ColorPickerContainer の padding 領域に当たる左上角を狙う。
+		const panel = canvas.page.locator('[data-id="object-menu:panel"]');
+		await panel.click({ position: { x: 6, y: 6 } });
+
+		// サブメニューは開いたまま、図形の選択も維持されること
+		await expect(colorInput).toBeVisible();
+		await expect(canvas.page.locator(selectors.control).first()).toBeVisible();
 	});
 
 	test("色設定はテキスト編集後も保持される", async ({ canvas }) => {

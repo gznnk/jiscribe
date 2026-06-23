@@ -199,7 +199,13 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 
 	return (
 		<ObjectMenuWrapper left={x} top={y}>
-			<ObjectMenuContainer ref={menuRef}>{items}</ObjectMenuContainer>
+			<ObjectMenuContainer
+				ref={menuRef}
+				data-kind="object-menu"
+				data-id="object-menu:bar"
+			>
+				{items}
+			</ObjectMenuContainer>
 		</ObjectMenuWrapper>
 	);
 };
