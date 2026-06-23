@@ -5,13 +5,14 @@ import { theme } from "../../../../constants/theme";
 /**
  * 上部に張り付く全幅の統合ツールバーのコンテナ。
  * 左に図形ツール、右にズーム表示・ヘルプを配置する。
+ *
+ * CanvasRoot（flex column）の最初の子としてレイアウトされ、キャンバス領域の
+ * 上に積まれる（重ねるのではなく場所を占める）。
  */
 export const ToolbarContainer = styled.div`
-	position: absolute;
-	top: 0;
-	left: 0;
-	right: 0;
-	height: 40px;
+	position: relative;
+	flex: 0 0 40px;
+	width: 100%;
 	box-sizing: border-box;
 	display: flex;
 	flex-direction: row;

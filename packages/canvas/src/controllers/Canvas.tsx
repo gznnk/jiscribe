@@ -1,6 +1,7 @@
 ﻿import { memo, useCallback, useRef } from "react";
 
 import {
+	CanvasRoot,
 	Container,
 	ScrollSyncedOverlay,
 	Viewport,
@@ -83,6 +84,10 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	onUndo,
 	onRedo,
 }) => {
+	// rootRef: ジェスチャー面（ツールバー＋キャンバス領域）。pointerHandlers と
+	// pointer capture を張る。canvasRef: キャンバス領域のみ。寸法計測・wheel・
+	// メニュー境界に使い、エッジスクロールをツールバー下の領域に揃える。
+	const rootRef = useRef<HTMLDivElement>(null);
 	const canvasRef = useRef<HTMLDivElement>(null);
 	const svgRef = useRef<SVGSVGElement>(null);
 
@@ -96,7 +101,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	const { pointerHandlers, wheelHandler, resetGestureState } =
 		useGestureRecognizer({
 			dispatch,
-			containerRef: canvasRef,
+			containerRef: rootRef,
 			svgRef,
 			canvasState: state,
 		});
@@ -154,107 +159,111 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 
 	return (
 		<CanvasViewportRefContext value={canvasRef}>
-			<Viewport
-				data-id="canvas"
-				data-kind="canvas"
-				ref={canvasRef}
+			<CanvasRoot
+				ref={rootRef}
 				onContextMenu={handleContextMenu}
-				cursor={state.shapeDrawing ? "crosshair" : undefined}
 				{...pointerHandlers}
 			>
-				<Container>
-					<CanvasView
-						objects={state.objects}
-						rootIds={state.rootIds}
-						viewport={state.viewport}
-						svgRef={svgRef}
-						textEditObjectId={state.textEditState?.objectId ?? null}
-						isDrawMode={!!state.shapeDrawing}
-					>
-						<PendingConnectorOverlay
-							pendingConnector={state.pendingConnector}
+				<Toolbar
+					activePresetId={state.shapeDrawing?.preset.id ?? null}
+					zoom={state.viewport.zoom}
+					canZoomIn={canZoomIn}
+					canZoomOut={canZoomOut}
+				/>
+				<Viewport
+					data-id="canvas"
+					data-kind="canvas"
+					ref={canvasRef}
+					cursor={state.shapeDrawing ? "crosshair" : undefined}
+				>
+					<Container>
+						<CanvasView
 							objects={state.objects}
-						/>
-						<SelectionOverlay
-							selectedIds={state.selectedIds}
-							objects={state.objects}
-							multiSelectGroup={state.multiSelectGroup}
-						/>
-						<ConnectorControlsLayer
-							selectedConnectorId={state.selectedConnectorId}
-							objects={state.objects}
-							zoom={state.viewport.zoom}
-						/>
-						<TransformControlsLayer
-							selectedIds={state.selectedIds}
-							objects={state.objects}
-							multiSelectGroup={state.multiSelectGroup}
-							zoom={state.viewport.zoom}
-							isTextEditing={!!state.textEditState}
-						/>
-						<ConnectionAnchorsLayer
-							selectedIds={state.selectedIds}
-							objects={state.objects}
-							zoom={state.viewport.zoom}
-							pendingConnector={state.pendingConnector}
-							editingConnectorId={state.editingConnectorId}
-							editingEndpoint={state.editingEndpoint}
-							isTextEditing={!!state.textEditState}
-						/>
-						<VertexControlsLayer
-							selectedIds={state.selectedIds}
-							objects={state.objects}
-							zoom={state.viewport.zoom}
-							selectedVertex={state.selectedVertex}
-						/>
-						<DragGhost shapeLibraryDrag={state.shapeLibraryDrag} />
-						<DrawingPreviewOverlay shapeDrawing={state.shapeDrawing} />
-						<AreaSelectionRect areaSelection={state.areaSelection} />
-						<SnapGuides
-							snapFeedback={state.snapFeedback}
-							zoom={state.viewport.zoom}
-						/>
-						<AxisLockGuide
-							axisLockFeedback={state.axisLockFeedback}
+							rootIds={state.rootIds}
 							viewport={state.viewport}
-						/>
-					</CanvasView>
-					{/* Container for HTML elements that follow canvas scroll AND zoom (elements scale with zoom) */}
-					<ZoomScaledOverlay left={-minX} top={-minY} zoom={zoom}>
-						<TextEditorLayer
-							textEditState={state.textEditState}
-							objects={state.objects}
-							onTextChange={(text) =>
-								dispatch({ type: "UPDATE_TEXT_EDIT", text })
-							}
-							onEscape={() =>
-								dispatch({ type: "END_TEXT_EDIT", commit: false })
-							}
-						/>
-					</ZoomScaledOverlay>
-					{/* Container for HTML elements with fixed size (position follows zoom, but size does not) */}
-					<ScrollSyncedOverlay left={-minX} top={-minY} zoom={zoom}>
-						<ObjectMenu
+							svgRef={svgRef}
+							textEditObjectId={state.textEditState?.objectId ?? null}
+							isDrawMode={!!state.shapeDrawing}
+						>
+							<PendingConnectorOverlay
+								pendingConnector={state.pendingConnector}
+								objects={state.objects}
+							/>
+							<SelectionOverlay
+								selectedIds={state.selectedIds}
+								objects={state.objects}
+								multiSelectGroup={state.multiSelectGroup}
+							/>
+							<ConnectorControlsLayer
+								selectedConnectorId={state.selectedConnectorId}
+								objects={state.objects}
+								zoom={state.viewport.zoom}
+							/>
+							<TransformControlsLayer
+								selectedIds={state.selectedIds}
+								objects={state.objects}
+								multiSelectGroup={state.multiSelectGroup}
+								zoom={state.viewport.zoom}
+								isTextEditing={!!state.textEditState}
+							/>
+							<ConnectionAnchorsLayer
+								selectedIds={state.selectedIds}
+								objects={state.objects}
+								zoom={state.viewport.zoom}
+								pendingConnector={state.pendingConnector}
+								editingConnectorId={state.editingConnectorId}
+								editingEndpoint={state.editingEndpoint}
+								isTextEditing={!!state.textEditState}
+							/>
+							<VertexControlsLayer
+								selectedIds={state.selectedIds}
+								objects={state.objects}
+								zoom={state.viewport.zoom}
+								selectedVertex={state.selectedVertex}
+							/>
+							<DragGhost shapeLibraryDrag={state.shapeLibraryDrag} />
+							<DrawingPreviewOverlay shapeDrawing={state.shapeDrawing} />
+							<AreaSelectionRect areaSelection={state.areaSelection} />
+							<SnapGuides
+								snapFeedback={state.snapFeedback}
+								zoom={state.viewport.zoom}
+							/>
+							<AxisLockGuide
+								axisLockFeedback={state.axisLockFeedback}
+								viewport={state.viewport}
+							/>
+						</CanvasView>
+						{/* Container for HTML elements that follow canvas scroll AND zoom (elements scale with zoom) */}
+						<ZoomScaledOverlay left={-minX} top={-minY} zoom={zoom}>
+							<TextEditorLayer
+								textEditState={state.textEditState}
+								objects={state.objects}
+								onTextChange={(text) =>
+									dispatch({ type: "UPDATE_TEXT_EDIT", text })
+								}
+								onEscape={() =>
+									dispatch({ type: "END_TEXT_EDIT", commit: false })
+								}
+							/>
+						</ZoomScaledOverlay>
+						{/* Container for HTML elements with fixed size (position follows zoom, but size does not) */}
+						<ScrollSyncedOverlay left={-minX} top={-minY} zoom={zoom}>
+							<ObjectMenu
+								canvasState={state}
+								onPropertyUpdate={handleMenuPropertyUpdate}
+							/>
+						</ScrollSyncedOverlay>
+					</Container>
+					<ViewportOverlay>
+						<ClipboardErrorToast errorVersion={clipboardWriteErrorVersion} />
+						<ContextMenu
+							position={state.contextMenuPosition}
 							canvasState={state}
-							onPropertyUpdate={handleMenuPropertyUpdate}
+							callbacks={{ paste: handlePaste }}
 						/>
-					</ScrollSyncedOverlay>
-				</Container>
-				<ViewportOverlay>
-					<Toolbar
-						activePresetId={state.shapeDrawing?.preset.id ?? null}
-						zoom={state.viewport.zoom}
-						canZoomIn={canZoomIn}
-						canZoomOut={canZoomOut}
-					/>
-					<ClipboardErrorToast errorVersion={clipboardWriteErrorVersion} />
-					<ContextMenu
-						position={state.contextMenuPosition}
-						canvasState={state}
-						callbacks={{ paste: handlePaste }}
-					/>
-				</ViewportOverlay>
-			</Viewport>
+					</ViewportOverlay>
+				</Viewport>
+			</CanvasRoot>
 		</CanvasViewportRefContext>
 	);
 };
