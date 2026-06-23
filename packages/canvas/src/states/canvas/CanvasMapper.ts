@@ -10,6 +10,11 @@ import { calculateGroupOrientedBounds } from "../utils/calculateGroupOrientedBou
 /**
  * Converts CanvasDoc (tree structure) to CanvasState (flat structure).
  * This process normalizes the object tree into a flat map for O(1) access.
+ *
+ * **呼び出し側の責務**: `doc` は `parseCanvasText`（二段検証）を通した正当な doc で
+ * あること。ここでは ID 一意・参照整合・非循環を再検証せず前提とする（防御コストを
+ * 内部に持たない方針 → docs/01-design-philosophy.md 原則4）。検証は外部入力の境界
+ * （host / `SYNC_EXTERNAL` の入口）で担保する。
  */
 export const canvasToState = (doc: CanvasDoc): CanvasState => {
 	const objects: Record<string, ObjectState> = {};

@@ -41,11 +41,11 @@ src/**/__tests__/**/*.{test,spec}.{ts,tsx}
 
 ### ファイル命名規則
 
-| 形式                       | 用途                                                                 | 例                                  |
-| -------------------------- | -------------------------------------------------------------------- | ----------------------------------- |
-| `<SUT>.test.ts`            | デフォルト。テスト対象ファイルと 1:1 で co-located                    | `validateRectDoc.test.ts`           |
-| `<SUT>.<facet>.test.ts`    | 1 つの SUT が大きく、**観点（facet）ごとにファイルを分割**したいとき  | `canvasReducer.coalescing.test.ts`  |
-| `<scenario>.test.ts`       | 特定の入口に紐づかない sociable な**回帰シナリオ**                    | `copyPasteDuplicateOrder.test.ts`   |
+| 形式                    | 用途                                                                 | 例                                 |
+| ----------------------- | -------------------------------------------------------------------- | ---------------------------------- |
+| `<SUT>.test.ts`         | デフォルト。テスト対象ファイルと 1:1 で co-located                   | `validateRectDoc.test.ts`          |
+| `<SUT>.<facet>.test.ts` | 1 つの SUT が大きく、**観点（facet）ごとにファイルを分割**したいとき | `canvasReducer.coalescing.test.ts` |
+| `<scenario>.test.ts`    | 特定の入口に紐づかない sociable な**回帰シナリオ**                   | `copyPasteDuplicateOrder.test.ts`  |
 
 - `<facet>` は振る舞いの局面を表す名詞（`coalescing` / `undoRedo` / `externalSync` など）。
   **solitary な純粋関数テストでは facet 命名を使わない**（観点分割は sociable / 大きい SUT に限る）
@@ -55,10 +55,10 @@ src/**/__tests__/**/*.{test,spec}.{ts,tsx}
 
 #### 主な sociable テスト
 
-| 置き場所                            | 入口            | 検証する観点                                                                                                                          |
-| ----------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `controllers/reducer/__tests__/`    | `canvasReducer` | `coalescing`（履歴集約）/ `commitSources`（履歴記録源）/ `externalSync`（[外部同期](./07-external-sync.md)）/ `undoRedo`（Undo/Redo） |
-| `controllers/commands/__tests__/`   | `handleCommand` | コマンドの実経路（CommandRegistry 解決 + `canExecute` + `execute`）。例: コネクター選択時の StackOrder                                |
+| 置き場所                          | 入口            | 検証する観点                                                                                                                          |
+| --------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `controllers/reducer/__tests__/`  | `canvasReducer` | `coalescing`（履歴集約）/ `commitSources`（履歴記録源）/ `externalSync`（[外部同期](./07-external-sync.md)）/ `undoRedo`（Undo/Redo） |
+| `controllers/commands/__tests__/` | `handleCommand` | コマンドの実経路（CommandRegistry 解決 + `canExecute` + `execute`）。例: コネクター選択時の StackOrder                                |
 
 ## E2E（Playwright）
 

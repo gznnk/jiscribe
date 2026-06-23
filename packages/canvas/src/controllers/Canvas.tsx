@@ -43,6 +43,15 @@ import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 initializeRegistries();
 
 type CanvasProps = {
+	/**
+	 * 表示する CanvasDoc。
+	 *
+	 * **呼び出し側の責務**: 必ず `parseCanvasText`（二段検証）を通した正当な doc を
+	 * 渡すこと。Canvas は内部で再検証せず、ID 一意・参照整合・非循環を前提に動作する。
+	 * 未検証の doc（壊れた参照や循環を含む）を渡すと内部走査がハングしうる。
+	 * 検証は外部入力の境界（host）で行う方針
+	 * → packages/canvas/docs/01-design-philosophy.md 原則4。
+	 */
 	canvasDoc: CanvasDoc;
 	/**
 	 * Nonce from the most recent incoming sync message.
