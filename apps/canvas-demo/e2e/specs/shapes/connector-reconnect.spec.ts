@@ -63,10 +63,20 @@ async function reconnectTargetToC(canvas: CanvasDriver, connectorId: string) {
 			`[data-id="connection-anchor:edit:${connectorId}:target"]`,
 		),
 	).toBeVisible();
+	const pointsBefore = await canvas
+		.objectById(connectorId)
+		.getAttribute("points");
 	await dragControlTo(canvas, `connection-anchor:edit:${connectorId}:target`, {
 		x: 830,
 		y: 490,
 	});
+	// 再接続が commit されて points が C 追従へ変わるまで待つ。dragEnd の状態反映は
+	// 非同期なので、ここで同期しないと直後の undo が commit を追い越して空振りする。
+	await expect
+		.poll(() => canvas.objectById(connectorId).getAttribute("points"), {
+			message: "再接続が反映されコネクターの points が変わること",
+		})
+		.not.toBe(pointsBefore);
 }
 
 test.describe("コネクターの再接続", () => {

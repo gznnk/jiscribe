@@ -16,16 +16,6 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
  * 観測可能な不変条件（オブジェクト数・polyline の有無・points の追従）で検証する。
  */
 
-/** Ctrl を押しながらクリックして選択に追加する */
-async function ctrlClick(
-	canvas: CanvasDriver,
-	point: { x: number; y: number },
-) {
-	await canvas.page.keyboard.down("Control");
-	await canvas.page.mouse.click(point.x, point.y);
-	await canvas.page.keyboard.up("Control");
-}
-
 const CONNECTOR = "polyline[data-kind=connector]";
 
 /** 上下に並ぶ 2 つの矩形を縦コネクターで結ぶ。各 data-id を返す */
@@ -96,7 +86,7 @@ test.describe("接続図形の削除とコネクター整合性", () => {
 
 		// 2 つの矩形をまとめて選択（コネクター自身は選択しない）
 		await canvas.selectAt({ x: 500, y: 200 });
-		await ctrlClick(canvas, { x: 500, y: 500 });
+		await canvas.ctrlClickAt({ x: 500, y: 500 });
 		await canvas.deleteSelection();
 
 		// 両端が消えるとコネクターも cleanup される → 空になる

@@ -367,6 +367,17 @@ export class CanvasDriver {
 		await this.page.mouse.click(screen.x, screen.y);
 	}
 
+	/**
+	 * Ctrl を押しながらコンテンツ座標をクリックし、選択に追加／トグルする。
+	 * 生の page.mouse.click は座標変換を通らないため、追加選択はこのメソッドを使う。
+	 */
+	async ctrlClickAt(point: { x: number; y: number }) {
+		const screen = this.toScreen(point);
+		await this.page.keyboard.down("Control");
+		await this.page.mouse.click(screen.x, screen.y);
+		await this.page.keyboard.up("Control");
+	}
+
 	/** 空きスペースをクリックして選択解除（テキスト編集中なら確定）する */
 	async deselect() {
 		const screen = this.toScreen(EMPTY_SPOT);

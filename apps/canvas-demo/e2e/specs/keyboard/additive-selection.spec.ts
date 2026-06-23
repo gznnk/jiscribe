@@ -1,5 +1,4 @@
 import { test, expect } from "../../fixtures";
-import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
  * Ctrl/Meta+クリックによる追加選択（additive selection）の検証。
@@ -11,17 +10,8 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
  * リファクタで壊れやすいため、「まとめて動く」という観測可能な振る舞いで守る。
  *
  * 追加選択は Ctrl/Meta+クリック（Shift は移動時の軸固定なので使わない）。
+ * 追加選択は座標変換を通す canvas.ctrlClickAt を使う。
  */
-
-/** Ctrl を押しながらクリックして選択に追加／トグルする */
-async function ctrlClick(
-	canvas: CanvasDriver,
-	point: { x: number; y: number },
-) {
-	await canvas.page.keyboard.down("Control");
-	await canvas.page.mouse.click(point.x, point.y);
-	await canvas.page.keyboard.up("Control");
-}
 
 test.describe("複数選択（Ctrl+クリック / Ctrl+A）", () => {
 	test("Ctrl+クリックで選択に追加し、まとめて移動できる", async ({
@@ -43,7 +33,7 @@ test.describe("複数選択（Ctrl+クリック / Ctrl+A）", () => {
 
 		// A を選択 → Ctrl+クリックで B を追加
 		await canvas.selectAt({ x: 370, y: 260 });
-		await ctrlClick(canvas, { x: 630, y: 260 });
+		await canvas.ctrlClickAt({ x: 630, y: 260 });
 
 		// A をドラッグ（+50,+40）すると、追加選択された B も同じだけ動く
 		await canvas.drag({ x: 370, y: 260 }, { x: 420, y: 300 });
@@ -112,7 +102,7 @@ test.describe("複数選択（Ctrl+クリック / Ctrl+A）", () => {
 
 		// 全選択（A・B・C）してから、Ctrl+クリックで B を選択から外す。
 		await canvas.selectAll();
-		await ctrlClick(canvas, { x: 550, y: 260 });
+		await canvas.ctrlClickAt({ x: 550, y: 260 });
 
 		// 残った選択（A・C）を A からドラッグ（+100,+50）。A・C は動くが、外した B は動かない。
 		await canvas.drag({ x: 300, y: 260 }, { x: 400, y: 310 });
