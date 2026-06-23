@@ -27,7 +27,11 @@ async function dragControlBy(
 	if (!box) {
 		throw new Error(`コントロール ${dataId} の位置が取得できない`);
 	}
-	const from = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+	// box は画面座標。コンテンツ座標へ変換してから相対量を足す。
+	const from = canvas.toContent({
+		x: box.x + box.width / 2,
+		y: box.y + box.height / 2,
+	});
 	await canvas.drag(from, { x: from.x + delta.dx, y: from.y + delta.dy }, 10);
 }
 

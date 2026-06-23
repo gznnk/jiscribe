@@ -29,30 +29,32 @@ async function buildConnector(canvas: CanvasDriver): Promise<string> {
 /**
  * 描画用ポリライン（data-kind なし）の computed style を読む。
  * 描画要素は矢印分だけ端を inset するため当たり判定用とは points が一致しない。
- * キャンバス上のポリラインはコネクターの当たり判定用（data-kind 付き）と描画用のみのため、
- * data-kind なしのポリラインを描画要素として直接特定する。
+ * キャンバス上のポリラインはコネクターの当たり判定用（data-kind 付き）と描画用のみだが、
+ * ツールバーの図形アイコン（Polyline ツール等）も <polyline>（data-kind なし）で
+ * 描かれDOM 上はキャンバス内容より前に並ぶため、ボタン内のアイコンを除外して描画要素を特定する。
  */
 async function visualStyle(
 	canvas: CanvasDriver,
 	prop: "stroke" | "stroke-dasharray",
 ): Promise<string> {
-	const visual = canvas.page.locator("polyline:not([data-kind])").first();
-	return visual.evaluate(
-		(el, p) => getComputedStyle(el).getPropertyValue(p),
-		prop,
-	);
+	return canvas.page.evaluate((p) => {
+		const visual = [
+			...document.querySelectorAll("polyline:not([data-kind])"),
+		].find((el) => !el.closest("button"));
+		return visual ? getComputedStyle(visual).getPropertyValue(p) : "";
+	}, prop);
 }
 
-/** すべての描画用ポリライン（data-kind なし）の指定プロパティ computed style 一覧 */
+/** すべての描画用ポリライン（data-kind なし・ツールバーアイコン除く）の computed style 一覧 */
 async function allVisualStyles(
 	canvas: CanvasDriver,
 	prop: "stroke" | "stroke-dasharray",
 ): Promise<string[]> {
 	return canvas.page.evaluate(
 		(p) =>
-			[...document.querySelectorAll("polyline:not([data-kind])")].map((el) =>
-				getComputedStyle(el).getPropertyValue(p),
-			),
+			[...document.querySelectorAll("polyline:not([data-kind])")]
+				.filter((el) => !el.closest("button"))
+				.map((el) => getComputedStyle(el).getPropertyValue(p)),
 		prop,
 	);
 }
@@ -64,7 +66,7 @@ test.describe("コネクターのスタイル", () => {
 		await buildConnector(canvas);
 
 		// 線上をクリックして選択（コネクター用 ObjectMenu が出る）
-		await canvas.page.mouse.click(500, 350);
+		await canvas.clickAt({ x: 500, y: 350 });
 		await expect(
 			canvas.page.locator('[data-id="object-menu:toggle:line-color"]'),
 		).toBeVisible();
@@ -87,7 +89,7 @@ test.describe("コネクターのスタイル", () => {
 	}) => {
 		await buildConnector(canvas);
 
-		await canvas.page.mouse.click(500, 350);
+		await canvas.clickAt({ x: 500, y: 350 });
 		await expect(
 			canvas.page.locator('[data-id="object-menu:toggle:line-style"]'),
 		).toBeVisible();
@@ -109,7 +111,7 @@ test.describe("コネクターのスタイル", () => {
 		await buildConnector(canvas);
 
 		// コネクターを選択して線色を設定する。
-		await canvas.page.mouse.click(500, 350);
+		await canvas.clickAt({ x: 500, y: 350 });
 		await expect(
 			canvas.page.locator('[data-id="object-menu:toggle:line-color"]'),
 		).toBeVisible();

@@ -13,7 +13,10 @@ import { selectors } from "../../support/selectors";
  * 出るので、それらの不変条件で守る。
  */
 
-/** 図形の画面上の中心（boundingBox から）。回転しても中心＝回転軸なので一致する */
+/**
+ * 図形の中心をコンテンツ座標で返す（回転しても中心＝回転軸なので一致する）。
+ * boundingBox は画面座標なので toContent() でドライバ入力系と同じ座標へ変換する。
+ */
 async function screenCenterOf(
 	canvas: CanvasDriver,
 	id: string,
@@ -22,7 +25,10 @@ async function screenCenterOf(
 	if (!box) {
 		throw new Error(`図形 ${id} の boundingBox が取得できない`);
 	}
-	return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+	return canvas.toContent({
+		x: box.x + box.width / 2,
+		y: box.y + box.height / 2,
+	});
 }
 
 /** transform="matrix(a, b, c, d, e, f)" の (e,f)＝中心座標を取り出す */
@@ -65,10 +71,11 @@ test.describe("回転後のリサイズ", () => {
 		if (!handleBox) {
 			throw new Error("bottomCenter ハンドルの位置が取得できない");
 		}
-		const handleCenter = {
+		// handleBox は画面座標。center（コンテンツ座標）と揃えるため変換する。
+		const handleCenter = canvas.toContent({
 			x: handleBox.x + handleBox.width / 2,
 			y: handleBox.y + handleBox.height / 2,
-		};
+		});
 		const dx = handleCenter.x - center.x;
 		const dy = handleCenter.y - center.y;
 		const len = Math.hypot(dx, dy) || 1;

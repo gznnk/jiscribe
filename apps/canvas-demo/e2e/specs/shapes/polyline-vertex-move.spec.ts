@@ -22,8 +22,9 @@ async function dragControl(
 	if (!box) {
 		throw new Error(`コントロール ${dataId} の位置が取得できない`);
 	}
+	// box は画面座標。drag はコンテンツ座標を取るので toContent で揃える。
 	await canvas.drag(
-		{ x: box.x + box.width / 2, y: box.y + box.height / 2 },
+		canvas.toContent({ x: box.x + box.width / 2, y: box.y + box.height / 2 }),
 		to,
 		10,
 	);
