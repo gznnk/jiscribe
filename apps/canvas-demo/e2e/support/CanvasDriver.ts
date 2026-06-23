@@ -538,7 +538,7 @@ export class CanvasDriver {
 			| "bottomRight"
 			| "rotation",
 		to: { x: number; y: number },
-		{ shift = false }: { shift?: boolean } = {},
+		{ shift = false, ctrl = false }: { shift?: boolean; ctrl?: boolean } = {},
 	) {
 		const control = this.page.locator(selectors.transformControl(handle));
 		await expect(control).toBeVisible();
@@ -547,17 +547,29 @@ export class CanvasDriver {
 			throw new Error(`変形ハンドル ${handle} の位置が取得できない`);
 		}
 		const from = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
-		if (!shift) {
+		if (!shift && !ctrl) {
 			await this.drag(from, to, 10);
 			return;
 		}
-		// Shift 押下中のリサイズはアスペクト比を保つ（event.mods.n 経路）
+		// Shift 押下中のリサイズはアスペクト比を保つ（event.mods.shift 経路）。
+		// Ctrl 押下中のリサイズはスナップを無効化する（event.mods.ctrl 経路）。
+		// 押下はドラッグ開始（mouse.down）後に行い、解放前まで保持する。
 		await this.page.mouse.move(from.x, from.y);
 		await this.page.mouse.down();
-		await this.page.keyboard.down("Shift");
+		if (shift) {
+			await this.page.keyboard.down("Shift");
+		}
+		if (ctrl) {
+			await this.page.keyboard.down("Control");
+		}
 		await this.page.mouse.move(to.x, to.y, { steps: 10 });
 		await this.page.mouse.up();
-		await this.page.keyboard.up("Shift");
+		if (shift) {
+			await this.page.keyboard.up("Shift");
+		}
+		if (ctrl) {
+			await this.page.keyboard.up("Control");
+		}
 	}
 
 	/** 選択中のオブジェクトを Delete キーで削除する */

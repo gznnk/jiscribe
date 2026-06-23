@@ -43,6 +43,20 @@ async function visualStyle(
 	);
 }
 
+/** すべての描画用ポリライン（data-kind なし）の指定プロパティ computed style 一覧 */
+async function allVisualStyles(
+	canvas: CanvasDriver,
+	prop: "stroke" | "stroke-dasharray",
+): Promise<string[]> {
+	return canvas.page.evaluate(
+		(p) =>
+			[...document.querySelectorAll("polyline:not([data-kind])")].map((el) =>
+				getComputedStyle(el).getPropertyValue(p),
+			),
+		prop,
+	);
+}
+
 test.describe("コネクターのスタイル", () => {
 	test("線色を設定すると描画要素に反映され、選択解除後も保持される", async ({
 		canvas,
@@ -87,5 +101,44 @@ test.describe("コネクターのスタイル", () => {
 				message: "破線化で dasharray が設定されること",
 			})
 			.not.toBe("none");
+	});
+
+	test("線色はコピー＆ペーストで複製コネクターにも引き継がれる", async ({
+		canvas,
+	}) => {
+		await buildConnector(canvas);
+
+		// コネクターを選択して線色を設定する。
+		await canvas.page.mouse.click(500, 350);
+		await expect(
+			canvas.page.locator('[data-id="object-menu:toggle:line-color"]'),
+		).toBeVisible();
+		const customStroke = await canvas.normalizeColor("#e11d48");
+		await canvas.setColor("line-color", "#e11d48");
+		await expect.poll(() => visualStyle(canvas, "stroke")).toBe(customStroke);
+		await canvas.deselect();
+
+		// 全選択してコピー＆ペースト → コネクターが 2 本になる。
+		await canvas.selectAll();
+		await canvas.copy();
+		await canvas.paste();
+		await expect
+			.poll(
+				async () =>
+					(await canvas.captureObjects()).filter((o) => o.tag === "polyline")
+						.length,
+				{ message: "コピペでコネクターが 2 本になること" },
+			)
+			.toBe(2);
+
+		// 選択を外す（選択中コネクターのハイライト用ポリラインを描画から消す）。
+		await canvas.deselect();
+
+		// 設定した線色を持つ描画用ポリラインがちょうど 2 本（元＋複製）あること。
+		// 画面上には UI の装飾ポリライン（別色）も存在するため、全数ではなく
+		// 「設定色に一致する本数」で数える。クローンがスタイルを落とすと 1 本になり落ちる。
+		const strokes = await allVisualStyles(canvas, "stroke");
+		const styledCount = strokes.filter((s) => s === customStroke).length;
+		expect(styledCount).toBe(2);
 	});
 });

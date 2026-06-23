@@ -72,6 +72,45 @@ test.describe("グループの複製・削除", () => {
 		]);
 	});
 
+	test("グループをコピー＆ペーストするとメンバーごと複製され、複製もグループ化される", async ({
+		canvas,
+	}) => {
+		const { a, b } = await drawAndGroupPair(canvas);
+
+		// Ctrl+D（DuplicateCommand）とは別経路の clipboard コピー＆ペースト（handlePaste）。
+		// グループ化直後はグループが選択済み。コピーして貼り付ける。
+		await canvas.copy();
+		await canvas.paste();
+
+		await expect
+			.poll(async () => (await canvas.captureObjects()).length, {
+				message: "メンバー 2 つが複製されて合計 4 になること",
+			})
+			.toBe(4);
+
+		// 貼り付け直後は貼り付けグループが選択された状態。複製は元から +20,+20 ずれる
+		// （複製グループは A クローン中心 390,280 を含む）。これをドラッグすると複製メンバー
+		// だけがまとめて動き、元の A・B は動かない＝貼り付けでもグループ構造が保たれている。
+		await canvas.drag({ x: 390, y: 280 }, { x: 490, y: 320 });
+
+		expect(await canvas.objectById(a).getAttribute("transform")).toBe(
+			"matrix(1, 0, 0, 1, 370, 260)",
+		);
+		expect(await canvas.objectById(b).getAttribute("transform")).toBe(
+			"matrix(1, 0, 0, 1, 630, 260)",
+		);
+
+		// 貼り付けた 2 つは「グループとして」一緒に動く（390,280→490,320 / 650,280→750,320）。
+		const cloneTransforms = (await canvas.captureObjects())
+			.filter((obj) => obj.id !== a && obj.id !== b)
+			.map((obj) => obj.transform)
+			.sort();
+		expect(cloneTransforms).toEqual([
+			"matrix(1, 0, 0, 1, 490, 320)",
+			"matrix(1, 0, 0, 1, 750, 320)",
+		]);
+	});
+
 	test("グループを削除すると全メンバーが消え、undo で復元されグループも保たれる", async ({
 		canvas,
 	}) => {
