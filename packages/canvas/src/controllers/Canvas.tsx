@@ -11,10 +11,10 @@ import { commandRegistry } from "./commands/CommandRegistry";
 import { CanvasViewportRefContext } from "./contexts/CanvasViewportRefContext";
 import { isGestureOptedOut } from "./gestures/recognizer/utils/isGestureOptedOut";
 import { useCanvasReducer } from "./hooks/useCanvasReducer";
+import { useCanvasWheel } from "./hooks/useCanvasWheel";
 import { useClipboardPaste } from "./hooks/useClipboardPaste";
 import { useClipboardWrite } from "./hooks/useClipboardWrite";
 import { useContainerResize } from "./hooks/useContainerResize";
-import { useDocumentWheel } from "./hooks/useDocumentWheel";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useNotifySaveRequest } from "./hooks/useNotifySaveRequest";
@@ -113,8 +113,9 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 		resetGestureState,
 	});
 
-	// Use wheel handler from GestureRecognizer
-	useDocumentWheel(svgRef, wheelHandler);
+	// Use wheel handler from GestureRecognizer.
+	// canvasRef（コンテナ要素）にスコープし、キャンバス外の wheel は奪わない。
+	useCanvasWheel(canvasRef, wheelHandler);
 
 	// Container resize handling
 	useContainerResize(canvasRef, dispatch);
