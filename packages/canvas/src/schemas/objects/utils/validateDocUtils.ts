@@ -13,17 +13,59 @@ import { isTextAlign } from "../types/TextAlign";
 import { isTextType } from "../types/TextType";
 import { isVerticalAlign } from "../types/VerticalAlign";
 
+/**
+ * 必須の数値フィールドを検証する。number であること、`min` 指定時は下限も満たすこと。
+ * 下限はスキーマの `minimum` 制約（width/height/半径 ≥ 0 など）に対応する。
+ */
+export function validateRequiredNumber(
+	o: Record<string, unknown>,
+	path: string,
+	key: string,
+	min?: number,
+): SemanticDiagnostic[] {
+	const value = o[key];
+	if (!isNumber(value)) {
+		return [{ path: `${path}.${key}`, message: "must be a number" }];
+	}
+	if (min !== undefined && value < min) {
+		return [{ path: `${path}.${key}`, message: `must be >= ${min}` }];
+	}
+	return [];
+}
+
+/**
+ * 任意の数値フィールドを検証する。存在する場合のみ number / 下限を検証し、
+ * 未指定（キー無し・undefined）はエラーにしない。
+ */
+function validateOptionalNumber(
+	o: Record<string, unknown>,
+	path: string,
+	key: string,
+	min?: number,
+): SemanticDiagnostic[] {
+	if (!(key in o) || o[key] === undefined) {
+		return [];
+	}
+	return validateRequiredNumber(o, path, key, min);
+}
+
 export function validatePolyFields(
 	o: Record<string, unknown>,
 	path: string,
+	minPoints = 2,
 ): SemanticDiagnostic[] {
 	if (!isPoly(o)) {
 		return [
 			{ path: `${path}.points`, message: "must be a valid points array" },
 		];
 	}
-	if (o.points.length < 2) {
-		return [{ path: `${path}.points`, message: "must have at least 2 points" }];
+	if (o.points.length < minPoints) {
+		return [
+			{
+				path: `${path}.points`,
+				message: `must have at least ${minPoints} points`,
+			},
+		];
 	}
 	return [];
 }
@@ -189,9 +231,8 @@ export function validateStrokeStyleFields(
 			beyondSchema: true,
 		});
 	}
-	if ("strokeWidth" in o && !isNumber(o.strokeWidth)) {
-		errors.push({ path: `${path}.strokeWidth`, message: "must be a number" });
-	}
+	// strokeWidth はスキーマ上 minimum: 0
+	errors.push(...validateOptionalNumber(o, path, "strokeWidth", 0));
 	if ("strokeDashType" in o && !isStrokeDashType(o.strokeDashType)) {
 		errors.push({
 			path: `${path}.strokeDashType`,
@@ -249,9 +290,8 @@ export function validateTextStyleFields(
 			beyondSchema: true,
 		});
 	}
-	if ("fontSize" in o && !isNumber(o.fontSize)) {
-		errors.push({ path: `${path}.fontSize`, message: "must be a number" });
-	}
+	// fontSize はスキーマ上 minimum: 1
+	errors.push(...validateOptionalNumber(o, path, "fontSize", 1));
 	if ("fontFamily" in o && !isCssSafeValue(o.fontFamily)) {
 		errors.push({
 			path: `${path}.fontFamily`,
@@ -273,11 +313,8 @@ export function validateRadiusStyleFields(
 	o: Record<string, unknown>,
 	path: string,
 ): SemanticDiagnostic[] {
-	const errors: SemanticDiagnostic[] = [];
-	if ("rx" in o && !isNumber(o.rx)) {
-		errors.push({ path: `${path}.rx`, message: "must be a number" });
-	}
-	return errors;
+	// 角丸半径 rx はスキーマ上 minimum: 0
+	return validateOptionalNumber(o, path, "rx", 0);
 }
 
 export function validateArrowFields(

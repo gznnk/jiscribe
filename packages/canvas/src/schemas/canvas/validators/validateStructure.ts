@@ -1,9 +1,4 @@
-import {
-	isArray,
-	isNumber,
-	isObject,
-	isString,
-} from "@workspace/basic-validators";
+import { isArray, isObject, isString } from "@workspace/basic-validators";
 
 import type { SemanticDiagnostic } from "./types";
 import { objectDocValidatorRegistry } from "../../registry/ObjectDocValidatorRegistry";
@@ -87,8 +82,10 @@ export function validateStructure(doc: unknown): SemanticDiagnostic[] {
 	const d = doc as Record<string, unknown>;
 	const errors: SemanticDiagnostic[] = [];
 
-	if (!isNumber(d.version) || !Number.isInteger(d.version) || d.version < 1) {
-		errors.push({ path: "version", message: "must be a positive integer" });
+	// スキーマは version を const 1 と定義する。フォーマットは v1 のみで v2+ の
+	// ハンドリングは無いため、未知バージョンはサイレントに進めず境界で弾く。
+	if (d.version !== 1) {
+		errors.push({ path: "version", message: "must be 1" });
 	}
 
 	// 旧フォーマット（connectors を別配列で持つ）はサイレントに connector を失うため、
