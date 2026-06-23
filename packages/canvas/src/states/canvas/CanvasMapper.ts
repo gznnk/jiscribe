@@ -1,6 +1,5 @@
 ﻿import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
-import type { ConnectorDoc } from "../../schemas/objects/connections/connector/ConnectorDoc";
 import type { GroupDoc } from "../../schemas/objects/primitives/group/GroupDoc";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
@@ -59,20 +58,9 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 
 	// Process root objects.
 	// root はオブジェクトとコネクターの混在配列で、並び順がそのまま z-order になる。
+	// コネクターの不変条件（少なくとも一方の端点が owned）は境界の validateSemantics が
+	// 担保済みのため、ここでの再検証は行わない。
 	doc.root.forEach((objDoc) => {
-		// コネクターの不変条件: source / target の少なくとも一方が owned であること。
-		// 両端 free（owner なし）のコネクターは ink（polyline）相当であり connector としては
-		// 不正なので load 時に破棄する。canvasToState は load / init / undo / redo の単一経路
-		// なので、ここで担保すれば全経路で free-free が state に入らないことを保証できる。
-		if (objDoc.type === "connector") {
-			const connDoc = objDoc as ConnectorDoc;
-			if (!connDoc.source?.owner && !connDoc.target?.owner) {
-				console.warn(
-					`[canvasToState] Discarding free-free connector "${connDoc.id}" (both endpoints are free).`,
-				);
-				return;
-			}
-		}
 		const id = processObject(objDoc);
 		rootIds.push(id);
 	});
@@ -96,22 +84,10 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
  */
 export const canvasToDoc = (state: CanvasState): CanvasDoc => {
 	// Helper to reconstruct an object tree from an ID.
-	// `ancestorIds` tracks the IDs on the current recursion path so a circular
-	// `childIds` graph in the flat state cannot cause an infinite recursion.
-	// 未発見 ID は throw せず null を返してスキップする。flat state の index
-	// （rootIds / connectorIds / childIds）が state.objects と食い違っても、
-	// 描画・保存経路を巻き込んでクラッシュさせず、欠落のみ warn で通知する。
-	const reconstructObject = (
-		id: string,
-		ancestorIds: Set<string> = new Set(),
-	): ObjectDoc | null => {
+	// flat state は内部で常に整合（index と objects が一致、childIds は acyclic）して
+	// いるため、未発見 ID や循環に対する防御は持たない。
+	const reconstructObject = (id: string): ObjectDoc => {
 		const objState = state.objects[id];
-		if (!objState) {
-			console.warn(
-				`[canvasToDoc] Object with ID "${id}" not found in state; skipping`,
-			);
-			return null;
-		}
 
 		// 1. Convert the state back to doc using the registry
 		// Note: The individual mappers (e.g. GroupMapper) currently expect
@@ -146,19 +122,10 @@ export const canvasToDoc = (state: CanvasState): CanvasDoc => {
 			const groupState = objState as GroupState;
 			const groupDoc = objDoc as GroupDoc;
 
-			const childAncestorIds = new Set(ancestorIds).add(id);
-
 			// Reconstruct children recursively
-			groupDoc.children = groupState.childIds.flatMap((childId) => {
-				if (ancestorIds.has(childId) || childId === id) {
-					console.warn(
-						`[canvasToDoc] Circular reference detected at "${childId}"; skipping`,
-					);
-					return [];
-				}
-				const childDoc = reconstructObject(childId, childAncestorIds);
-				return childDoc ? [childDoc] : [];
-			});
+			groupDoc.children = groupState.childIds.map((childId) =>
+				reconstructObject(childId),
+			);
 		}
 
 		return objDoc;
@@ -167,9 +134,6 @@ export const canvasToDoc = (state: CanvasState): CanvasDoc => {
 	return {
 		version: 1,
 		// root はオブジェクトとコネクターを z-order 順に混在させた単一配列。
-		root: state.rootIds.flatMap((id) => {
-			const objDoc = reconstructObject(id);
-			return objDoc ? [objDoc] : [];
-		}),
+		root: state.rootIds.map((id) => reconstructObject(id)),
 	};
 };

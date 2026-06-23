@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
@@ -15,10 +15,6 @@ const group = (id: string, childIds: string[], parentId?: string): GroupState =>
 	({ id, type: "group", childIds, parentId }) as unknown as GroupState;
 
 describe("collectDescendantIds", () => {
-	afterEach(() => {
-		vi.restoreAllMocks();
-	});
-
 	// ─── 基本ケース ────────────────────────────────────────────────
 
 	it("グループでないオブジェクトの場合は空配列を返す", () => {
@@ -99,67 +95,5 @@ describe("collectDescendantIds", () => {
 		const result = collectDescendantIds("group-1", objects, existing);
 		expect(result).toEqual(["rect-1", "rect-2"]);
 		expect(result).toBe(existing); // 同じ配列の参照を返す
-	});
-
-	// ─── 循環参照 ─────────────────────────────────────────────────
-
-	it("直接の自己参照（自分が自分の子）でも無限ループしない", () => {
-		const objects: Objects = {
-			// group-1 の childIds に自分自身を含む不正データ
-			"group-1": group("group-1", ["group-1", "rect-1"]),
-			"rect-1": rect("rect-1", "group-1"),
-		};
-		const result = collectDescendantIds("group-1", objects);
-		expect(result).toContain("rect-1");
-		expect(result).not.toContain("group-1"); // 自己参照はスキップされる
-	});
-
-	it("2ノード間の循環参照（A→B→A）でも無限ループしない", () => {
-		const objects: Objects = {
-			"group-a": group("group-a", ["group-b"]),
-			"group-b": group("group-b", ["group-a", "rect-1"], "group-a"),
-			"rect-1": rect("rect-1", "group-b"),
-		};
-		const result = collectDescendantIds("group-a", objects);
-		expect(result).toContain("group-b");
-		expect(result).toContain("rect-1");
-		// group-a は循環参照でスキップされ、重複して含まれない
-		expect(result.filter((id) => id === "group-a")).toHaveLength(0);
-	});
-
-	it("3ノードの循環参照（A→B→C→A）でも無限ループしない", () => {
-		const objects: Objects = {
-			"g-a": group("g-a", ["g-b"]),
-			"g-b": group("g-b", ["g-c"], "g-a"),
-			"g-c": group("g-c", ["g-a", "rect-1"], "g-b"), // g-a を参照して循環
-			"rect-1": rect("rect-1", "g-c"),
-		};
-		const result = collectDescendantIds("g-a", objects);
-		expect(result).toContain("g-b");
-		expect(result).toContain("g-c");
-		expect(result).toContain("rect-1");
-		expect(result.filter((id) => id === "g-a")).toHaveLength(0);
-	});
-
-	it("循環参照を検出したとき console.warn を呼ぶ", () => {
-		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-		const objects: Objects = {
-			"group-a": group("group-a", ["group-b"]),
-			"group-b": group("group-b", ["group-a"], "group-a"),
-		};
-		collectDescendantIds("group-a", objects);
-		expect(warnSpy).toHaveBeenCalledWith(
-			expect.stringContaining("Circular reference detected"),
-		);
-	});
-
-	it("循環参照がなければ console.warn を呼ばない", () => {
-		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-		const objects: Objects = {
-			"group-1": group("group-1", ["rect-1"]),
-			"rect-1": rect("rect-1", "group-1"),
-		};
-		collectDescendantIds("group-1", objects);
-		expect(warnSpy).not.toHaveBeenCalled();
 	});
 });

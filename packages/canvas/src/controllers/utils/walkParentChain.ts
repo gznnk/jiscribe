@@ -6,10 +6,9 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
  *
  * The starting object's own ID is NOT included in the result.
  *
- * Circular references (self-reference such as `A.parentId === A`, or short
- * cycles such as `A.parentId === B`, `B.parentId === A`) are detected via a
- * visited set: traversal stops and a warning is emitted instead of looping
- * forever.
+ * The parent chain is a validated tree (acyclic) by the time it reaches internal
+ * code, so traversal terminates at the root (`parentId == null`) without a cycle
+ * guard.
  *
  * @param startId - ID of the object whose ancestors are collected.
  * @param objects - Flat map of all object states.
@@ -20,17 +19,9 @@ export function walkParentChain(
 	objects: Record<string, ObjectState>,
 ): string[] {
 	const chain: string[] = [];
-	const visited = new Set<string>([startId]);
 
 	let currentParentId = objects[startId]?.parentId;
 	while (currentParentId != null) {
-		if (visited.has(currentParentId)) {
-			console.warn(
-				`[walkParentChain] Circular reference detected at "${currentParentId}"`,
-			);
-			break;
-		}
-		visited.add(currentParentId);
 		chain.push(currentParentId);
 		currentParentId = objects[currentParentId]?.parentId;
 	}

@@ -21,19 +21,4 @@ describe("walkParentChain", () => {
 	it("returns an empty array for an unknown id", () => {
 		expect(walkParentChain("unknown", objects)).toEqual([]);
 	});
-
-	it("stops on a self-referential parentId", () => {
-		const cyclic: Record<string, ObjectState> = {
-			a: { id: "a", parentId: "a" } as ObjectState,
-		};
-		expect(walkParentChain("a", cyclic)).toEqual([]);
-	});
-
-	it("stops on a two-node cycle without looping forever", () => {
-		const cyclic: Record<string, ObjectState> = {
-			a: { id: "a", parentId: "b" } as ObjectState,
-			b: { id: "b", parentId: "a" } as ObjectState,
-		};
-		expect(walkParentChain("a", cyclic)).toEqual(["b"]);
-	});
 });

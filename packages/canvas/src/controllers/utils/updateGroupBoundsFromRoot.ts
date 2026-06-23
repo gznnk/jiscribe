@@ -21,7 +21,7 @@ export function updateGroupBoundsFromRoot(
 	}
 
 	const updatedObjects = { ...state.objects };
-	updateGroupsFromRoot(updatedObjects, rootGroupId, new Set());
+	updateGroupsFromRoot(updatedObjects, rootGroupId);
 
 	return {
 		...state,
@@ -43,14 +43,8 @@ function findRootGroupId(
 ): string | undefined {
 	let currentId: string | undefined = groupId;
 	let rootId: string | undefined = undefined;
-	const visited = new Set<string>();
 
 	while (currentId) {
-		if (visited.has(currentId)) {
-			break;
-		}
-		visited.add(currentId);
-
 		const obj: ObjectState | undefined = objects[currentId];
 		if (!obj) {
 			break;
@@ -71,22 +65,13 @@ function findRootGroupId(
  * Recursively updates all groups in the subtree rooted at the given group.
  * Processes children first to ensure correct bottom-up bounds propagation.
  *
- * `visited` guards against circular references in the group hierarchy so that
- * a corrupted `childIds`/`parentId` graph cannot cause a stack overflow.
+ * The group hierarchy is a validated tree (acyclic) by the time it reaches
+ * internal code, so recursion terminates without a cycle guard.
  */
 function updateGroupsFromRoot(
 	objects: Record<string, ObjectState>,
 	groupId: string,
-	visited: Set<string>,
 ): void {
-	if (visited.has(groupId)) {
-		console.warn(
-			`[updateGroupsFromRoot] Circular reference detected at "${groupId}"`,
-		);
-		return;
-	}
-	visited.add(groupId);
-
 	const group = objects[groupId];
 	if (!group || group.type !== "group") {
 		return;
@@ -97,7 +82,7 @@ function updateGroupsFromRoot(
 	for (const childId of groupState.childIds ?? []) {
 		const child = objects[childId];
 		if (child?.type === "group") {
-			updateGroupsFromRoot(objects, childId, visited);
+			updateGroupsFromRoot(objects, childId);
 		}
 	}
 

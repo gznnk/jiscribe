@@ -3,7 +3,9 @@ import { isGroupState } from "../../states/objects/primitives/group/GroupState";
 
 /**
  * Collects all descendant IDs for a given object ID using BFS.
- * Circular references in the hierarchy are detected and skipped with a warning.
+ *
+ * The object map is a validated tree (ID-unique, acyclic) by the time it reaches
+ * internal code, so no cycle guard is needed.
  *
  * @param id - The root object ID to start from
  * @param objects - Flat map of all objects
@@ -15,7 +17,6 @@ export function collectDescendantIds(
 	objects: Record<string, ObjectState>,
 	result: string[] = [],
 ): string[] {
-	const visited = new Set([id]);
 	const queue = [id];
 
 	while (queue.length > 0) {
@@ -26,13 +27,6 @@ export function collectDescendantIds(
 		}
 
 		for (const childId of obj.childIds) {
-			if (visited.has(childId)) {
-				console.warn(
-					`[collectDescendantIds] Circular reference detected at "${childId}"`,
-				);
-				continue;
-			}
-			visited.add(childId);
 			result.push(childId);
 			queue.push(childId);
 		}

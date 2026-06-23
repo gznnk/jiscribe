@@ -140,17 +140,4 @@ describe("findLowestCommonAncestor", () => {
 			findLowestCommonAncestor(["rect-1", "rect-2"], objects),
 		).toBeUndefined();
 	});
-
-	// ─── 循環参照ガード ───────────────────────────────────────────────
-
-	it("循環参照を含んでいても無限ループせずに値を返す", () => {
-		// rect-1.parentId = group-a, group-a.parentId = group-b, group-b.parentId = group-a（循環）
-		const objects: Objects = {
-			"group-a": group("group-a", ["rect-1"], "group-b"),
-			"group-b": group("group-b", ["group-a"], "group-a"),
-			"rect-1": rect("rect-1", "group-a"),
-		};
-		// 無限ループにならず有限時間で返ることが要点
-		expect(() => findLowestCommonAncestor(["rect-1"], objects)).not.toThrow();
-	});
 });
