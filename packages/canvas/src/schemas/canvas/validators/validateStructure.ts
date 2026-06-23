@@ -25,6 +25,17 @@ function validateObjectNode(obj: unknown, path: string): SemanticDiagnostic[] {
 		return errors;
 	}
 
+	// 未登録（未知）の type はここで弾く。これを通すと検証は ok を返すが、
+	// canvasToState の mapper 解決で例外になりエディタごとクラッシュする。
+	// レジストリに features があれば登録済み。
+	if (objectDocValidatorRegistry.getFeatures(o.type as string) === undefined) {
+		errors.push({
+			path: `${path}.type`,
+			message: `Unknown object type "${o.type as string}".`,
+		});
+		return errors;
+	}
+
 	// 型ごとのバリデーションをレジストリへ委譲
 	errors.push(
 		...objectDocValidatorRegistry.validate(o.type as string, o, path),
@@ -34,6 +45,13 @@ function validateObjectNode(obj: unknown, path: string): SemanticDiagnostic[] {
 	if (o.type === "group") {
 		if (!isArray(o.children)) {
 			errors.push({ path: `${path}.children`, message: "must be an array" });
+		} else if ((o.children as unknown[]).length === 0) {
+			// 空 group は bounds が定まらない退化状態。生成経路では必ず子を持つため、
+			// 空の children は破損由来とみなして境界で弾く。
+			errors.push({
+				path: `${path}.children`,
+				message: "group must have at least one child",
+			});
 		} else {
 			(o.children as unknown[]).forEach((child, i) => {
 				const childPath = `${path}.children[${i}]`;

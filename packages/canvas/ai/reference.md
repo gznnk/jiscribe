@@ -201,9 +201,9 @@ For style fields, see [Stroke style](#stroke-style), [Fill style](#fill-style), 
 }
 ```
 
-| Field      | Type          | Required | Description             |
-| ---------- | ------------- | -------- | ----------------------- |
-| `children` | `ObjectDoc[]` | ✅       | Array of child objects. |
+| Field      | Type          | Required | Description                                              |
+| ---------- | ------------- | -------- | -------------------------------------------------------- |
+| `children` | `ObjectDoc[]` | ✅       | Array of child objects. Must contain at least one child. |
 
 A group has no position or size of its own; these are determined by its `children`.
 `rotation`, `flipX`, and `flipY` can be specified as Transform styles.

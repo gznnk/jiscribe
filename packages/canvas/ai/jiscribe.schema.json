@@ -406,8 +406,9 @@
 				},
 				"meta": { "$ref": "#/$defs/MetaDoc" },
 				"children": {
-					"description": "Child objects inside this group. Connectors are top-level only and not allowed here.",
+					"description": "Child objects inside this group. Connectors are top-level only and not allowed here. A group must contain at least one child.",
 					"type": "array",
+					"minItems": 1,
 					"items": { "$ref": "#/$defs/GroupChildDoc" }
 				},
 				"rotation": { "$ref": "#/$defs/TransformStyle/properties/rotation" },
