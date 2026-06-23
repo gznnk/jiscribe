@@ -147,4 +147,57 @@ describe("validateConnectorDoc", () => {
 		const errors = validateConnectorDoc(o, "root");
 		expect(errors.some((e) => e.path === "root.strokeDashType")).toBe(true);
 	});
+
+	// ─── 強化 ───
+	it("endArrow が不正な値はエラー", () => {
+		const o = {
+			points: validPoints,
+			source: ownedRef,
+			target: freeRef,
+			endArrow: "diamond",
+		};
+		const errors = validateConnectorDoc(o, "root");
+		expect(errors.some((e) => e.path === "root.endArrow")).toBe(true);
+	});
+
+	it("stroke に CSS breakout 文字列はエラー（beyondSchema）", () => {
+		const o = {
+			points: validPoints,
+			source: ownedRef,
+			target: freeRef,
+			stroke: "a;b",
+		};
+		const hit = validateConnectorDoc(o, "root").find(
+			(e) => e.path === "root.stroke",
+		);
+		expect(hit).toBeDefined();
+		expect(hit?.beyondSchema).toBe(true);
+	});
+
+	it("waypoint points が配列でない（Point[] 不正）はエラー", () => {
+		const o = { points: "x", source: ownedRef, target: freeRef };
+		expect(
+			validateConnectorDoc(o, "root").some((e) => e.path === "root.points"),
+		).toBe(true);
+	});
+
+	it("owned endpoint で anchor が欠落（オブジェクトでない）はエラー", () => {
+		const badRef = { owner: { id: "rect-1", type: "rect" } };
+		const errors = validateConnectorDoc(
+			{ points: validPoints, source: badRef, target: freeRef },
+			"root",
+		);
+		expect(errors.some((e) => e.path === "root.source.anchor")).toBe(true);
+	});
+
+	it("free endpoint で point.y が数値でない場合はエラー", () => {
+		const badRef = { anchor: { kind: "free", point: { x: 0, y: "0" } } };
+		const errors = validateConnectorDoc(
+			{ points: validPoints, source: ownedRef, target: badRef },
+			"root",
+		);
+		expect(errors.some((e) => e.path === "root.target.anchor.point.y")).toBe(
+			true,
+		);
+	});
 });

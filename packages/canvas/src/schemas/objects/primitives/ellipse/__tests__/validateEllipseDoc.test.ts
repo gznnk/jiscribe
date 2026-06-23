@@ -63,4 +63,69 @@ describe("validateEllipseDoc", () => {
 		const minimal = { cx: 0, cy: 0, rx: 10, ry: 10 };
 		expect(validateEllipseDoc(minimal, "root")).toEqual([]);
 	});
+
+	// ─── 強化 ───
+	it.each(["textAlign", "verticalAlign"])("%s が不正な値はエラー", (key) => {
+		const errors = validateEllipseDoc(
+			{ ...validEllipse, [key]: "bogus" },
+			"root",
+		);
+		expect(errors.some((e) => e.path === `root.${key}`)).toBe(true);
+	});
+
+	it.each(["strokeWidth", "fontSize"])("%s が数値でない場合はエラー", (key) => {
+		const errors = validateEllipseDoc({ ...validEllipse, [key]: "1" }, "root");
+		expect(errors.some((e) => e.path === `root.${key}`)).toBe(true);
+	});
+
+	it("rotation が数値でない場合はエラー", () => {
+		const errors = validateEllipseDoc(
+			{ ...validEllipse, rotation: "0" },
+			"root",
+		);
+		expect(errors.some((e) => e.path === "root.rotation")).toBe(true);
+	});
+
+	it.each(["flipX", "flipY"])("%s が boolean でない場合はエラー", (key) => {
+		const errors = validateEllipseDoc({ ...validEllipse, [key]: 1 }, "root");
+		expect(errors.some((e) => e.path === `root.${key}`)).toBe(true);
+	});
+
+	it.each(["stroke", "fill", "fontColor", "fontFamily", "fontWeight"])(
+		"%s に CSS breakout 文字列はエラー（beyondSchema）",
+		(key) => {
+			const errors = validateEllipseDoc(
+				{ ...validEllipse, [key]: "a;b" },
+				"root",
+			);
+			const hit = errors.find((e) => e.path === `root.${key}`);
+			expect(hit).toBeDefined();
+			expect(hit?.beyondSchema).toBe(true);
+		},
+	);
+
+	// ─── 強化: 数値下限 ───
+	it.each(["rx", "ry"])("半径 %s が負数はエラー（>= 0）", (key) => {
+		const errors = validateEllipseDoc({ ...validEllipse, [key]: -1 }, "root");
+		expect(
+			errors.some(
+				(e) => e.path === `root.${key}` && e.message.includes(">= 0"),
+			),
+		).toBe(true);
+	});
+
+	it("cx / cy は負数でも許容（中心座標に下限なし）", () => {
+		expect(
+			validateEllipseDoc({ ...validEllipse, cx: -10, cy: -20 }, "root"),
+		).toEqual([]);
+	});
+
+	it('色の sentinel "auto" は許容される', () => {
+		expect(
+			validateEllipseDoc(
+				{ ...validEllipse, stroke: "auto", fill: "auto", fontColor: "auto" },
+				"root",
+			),
+		).toEqual([]);
+	});
 });

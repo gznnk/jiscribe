@@ -6,6 +6,7 @@ import {
 	validateFillStyleFields,
 	validatePolyFields,
 	validateRadiusStyleFields,
+	validateRequiredNumber,
 	validateStrokeStyleFields,
 	validateTextStyleFields,
 	validateTransformFields,
@@ -55,6 +56,29 @@ describe("validatePolyFields", () => {
 
 	it("空配列はエラー", () => {
 		expect(validatePolyFields({ points: [] }, "root")).toHaveLength(1);
+	});
+
+	it("minPoints=3 のとき 2 点はエラー（polygon 用）", () => {
+		const o = {
+			points: [
+				{ x: 0, y: 0 },
+				{ x: 10, y: 0 },
+			],
+		};
+		const errors = validatePolyFields(o, "root", 3);
+		expect(errors).toHaveLength(1);
+		expect(errors[0].message).toContain("at least 3 points");
+	});
+
+	it("minPoints=3 のとき 3 点はエラーなし", () => {
+		const o = {
+			points: [
+				{ x: 0, y: 0 },
+				{ x: 10, y: 0 },
+				{ x: 5, y: 10 },
+			],
+		};
+		expect(validatePolyFields(o, "root", 3)).toEqual([]);
 	});
 
 	it("エラーパスに path が反映される", () => {
@@ -429,6 +453,12 @@ describe("validateRadiusStyleFields", () => {
 		const errors = validateRadiusStyleFields({ rx: "8px" }, "root");
 		expect(errors[0].path).toBe("root.rx");
 	});
+
+	it("rx が負数はエラー（>= 0）", () => {
+		const errors = validateRadiusStyleFields({ rx: -1 }, "root");
+		expect(errors[0].path).toBe("root.rx");
+		expect(errors[0].message).toContain(">= 0");
+	});
 });
 
 // ─── validateArrowFields ──────────────────────────────────────────
@@ -467,5 +497,53 @@ describe("validateArrowFields", () => {
 		for (const t of validTypes) {
 			expect(validateArrowFields({ startArrow: t }, "root")).toEqual([]);
 		}
+	});
+});
+
+// ─── validateRequiredNumber ───────────────────────────────────────
+
+describe("validateRequiredNumber", () => {
+	it("数値ならエラーなし", () => {
+		expect(validateRequiredNumber({ w: 5 }, "root", "w")).toEqual([]);
+	});
+
+	it("数値でない（欠落含む）はエラー", () => {
+		expect(validateRequiredNumber({}, "root", "w")).toEqual([
+			{ path: "root.w", message: "must be a number" },
+		]);
+		expect(
+			validateRequiredNumber({ w: "5" }, "root", "w")[0].message,
+		).toContain("must be a number");
+	});
+
+	it("min 指定時、下限未満はエラー・境界はエラーなし", () => {
+		expect(
+			validateRequiredNumber({ w: -1 }, "root", "w", 0)[0].message,
+		).toContain(">= 0");
+		expect(validateRequiredNumber({ w: 0 }, "root", "w", 0)).toEqual([]);
+		expect(
+			validateRequiredNumber({ w: 0 }, "root", "w", 1)[0].message,
+		).toContain(">= 1");
+		expect(validateRequiredNumber({ w: 1 }, "root", "w", 1)).toEqual([]);
+	});
+});
+
+// ─── 任意数値フィールドの下限（style util 経由） ──────────────────
+
+describe("数値スタイルフィールドの下限", () => {
+	it("strokeWidth が負数はエラー（>= 0）、未指定は許容", () => {
+		expect(
+			validateStrokeStyleFields({ strokeWidth: -1 }, "root")[0].message,
+		).toContain(">= 0");
+		expect(validateStrokeStyleFields({}, "root")).toEqual([]);
+		expect(validateStrokeStyleFields({ strokeWidth: 0 }, "root")).toEqual([]);
+	});
+
+	it("fontSize が 1 未満はエラー（>= 1）、未指定は許容", () => {
+		expect(
+			validateTextStyleFields({ fontSize: 0 }, "root")[0].message,
+		).toContain(">= 1");
+		expect(validateTextStyleFields({}, "root")).toEqual([]);
+		expect(validateTextStyleFields({ fontSize: 1 }, "root")).toEqual([]);
 	});
 });

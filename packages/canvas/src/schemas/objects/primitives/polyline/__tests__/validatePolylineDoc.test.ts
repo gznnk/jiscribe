@@ -52,4 +52,34 @@ describe("validatePolylineDoc", () => {
 	it("オプション項目がない場合はエラーなし", () => {
 		expect(validatePolylineDoc(validPoints, "root")).toEqual([]);
 	});
+
+	// polyline は開いたパスなので最低 2 点（polygon と異なり 2 点は許容）。
+	it("points が 1 点のみはエラー（at least 2 points）", () => {
+		const errors = validatePolylineDoc({ points: [{ x: 0, y: 0 }] }, "root");
+		expect(
+			errors.some(
+				(e) =>
+					e.path === "root.points" && e.message.includes("at least 2 points"),
+			),
+		).toBe(true);
+	});
+
+	it("points が 2 点はエラーなし", () => {
+		expect(validatePolylineDoc(validPoints, "root")).toEqual([]);
+	});
+
+	it("points 要素が Point でない（数値配列）はエラー", () => {
+		const errors = validatePolylineDoc({ points: [1, 2] }, "root");
+		expect(errors.some((e) => e.path === "root.points")).toBe(true);
+	});
+
+	it("stroke に CSS breakout 文字列はエラー（beyondSchema）", () => {
+		const errors = validatePolylineDoc(
+			{ ...validPoints, stroke: "a;b" },
+			"root",
+		);
+		const hit = errors.find((e) => e.path === "root.stroke");
+		expect(hit).toBeDefined();
+		expect(hit?.beyondSchema).toBe(true);
+	});
 });
