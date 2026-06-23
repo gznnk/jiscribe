@@ -64,22 +64,32 @@ export function validateSemantics(doc: CanvasDoc): SemanticDiagnostic[] {
 			const connector = obj as ConnectorDoc;
 			const connPath = `root[${index}]`;
 
-			errors.push(
-				...validateEndpoint(connector.source, `${connPath}.source`, idToType),
+			const sourceErrors = validateEndpoint(
+				connector.source,
+				`${connPath}.source`,
+				idToType,
 			);
-			errors.push(
-				...validateEndpoint(connector.target, `${connPath}.target`, idToType),
+			const targetErrors = validateEndpoint(
+				connector.target,
+				`${connPath}.target`,
+				idToType,
 			);
+			errors.push(...sourceErrors, ...targetErrors);
 
 			// 自己ループ禁止: 両端が同一オブジェクトを指す接続は未サポート。
-			const sourceOwnerId = connector.source?.owner?.id;
-			const targetOwnerId = connector.target?.owner?.id;
-			if (sourceOwnerId != null && sourceOwnerId === targetOwnerId) {
-				errors.push({
-					path: connPath,
-					message: `Connector source and target refer to the same object "${sourceOwnerId}".`,
-					id: connector.id,
-				});
+			// ただし参照切れ・非接続可の端点があるときは、そちらが主因なので
+			// self-loop は重ねて報告しない（存在しない id を「同一オブジェクト」と
+			// 述べる誤解を招くメッセージを避ける）。両端が正当なときだけ判定する。
+			if (sourceErrors.length === 0 && targetErrors.length === 0) {
+				const sourceOwnerId = connector.source?.owner?.id;
+				const targetOwnerId = connector.target?.owner?.id;
+				if (sourceOwnerId != null && sourceOwnerId === targetOwnerId) {
+					errors.push({
+						path: connPath,
+						message: `Connector source and target refer to the same object "${sourceOwnerId}".`,
+						id: connector.id,
+					});
+				}
 			}
 		});
 	}
