@@ -76,6 +76,15 @@ export const isClipboardData = (value: unknown): value is ClipboardData => {
 		return false;
 	}
 
+	// 非循環性: 循環する childIds（自己参照・相互参照）は untrusted クリップボードから
+	// 注入されると、再帰消費者（ObjectsRenderer の描画、createMultiSelectGroup の bounds
+	// 計算、hasSelectedDescendants の選択判定など）で無限再帰 → スタックオーバーフロー
+	// → タブクラッシュ（DoS）を引き起こす。ガードは外部境界でのみ行う方針のため、
+	// ここで循環を弾いて以降の消費者が非循環を前提にできるようにする。
+	if (!isAcyclicChildIds(objects)) {
+		return false;
+	}
+
 	return true;
 };
 
@@ -108,5 +117,50 @@ function isSelfContained(
 		}
 	}
 
+	return true;
+}
+
+/**
+ * group の childIds が成すグラフが非循環（DAG）であることを検証する。
+ * 参照先の存在は isSelfContained で検証済みのため、ここでは循環の有無のみ見る。
+ * DFS で探索中（VISITING）のノードへ再到達したら循環とみなす。各ノードは確定
+ * （VISITED）後に再訪しないため、検証関数自体は循環データでも有限回で停止する。
+ */
+function isAcyclicChildIds(objects: Record<string, unknown>): boolean {
+	const VISITING = 1;
+	const VISITED = 2;
+	const states = new Map<string, number>();
+
+	const visit = (id: string): boolean => {
+		const state = states.get(id);
+		if (state === VISITED) {
+			return true;
+		}
+		if (state === VISITING) {
+			return false; // 探索中のノードへ再到達 = 循環
+		}
+
+		const obj = objects[id] as Record<string, unknown> | undefined;
+		// group 以外（または未知 id）は子を持たない葉として扱う
+		if (!obj || obj.type !== "group") {
+			states.set(id, VISITED);
+			return true;
+		}
+
+		states.set(id, VISITING);
+		for (const childId of obj.childIds as string[]) {
+			if (!visit(childId)) {
+				return false;
+			}
+		}
+		states.set(id, VISITED);
+		return true;
+	};
+
+	for (const id of Object.keys(objects)) {
+		if (!visit(id)) {
+			return false;
+		}
+	}
 	return true;
 }
