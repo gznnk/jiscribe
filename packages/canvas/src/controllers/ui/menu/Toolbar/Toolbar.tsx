@@ -108,7 +108,15 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 					>
 						−
 					</ToolbarIconButton>
-					<ZoomReadout>{Math.round(zoom * 100)}%</ZoomReadout>
+					<ZoomReadout
+						type="button"
+						aria-label="Reset zoom to 100%"
+						title="Reset zoom to 100%"
+						data-kind="toolbar"
+						data-id="toolbar:command:resetZoom"
+					>
+						{Math.round(zoom * 100)}%
+					</ZoomReadout>
 					<ToolbarIconButton
 						type="button"
 						aria-label="Zoom in"

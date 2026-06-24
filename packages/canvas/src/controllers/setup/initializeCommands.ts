@@ -16,6 +16,7 @@ import { DeselectAllCommand } from "../commands/selection/DeselectAllCommand";
 import { DuplicateCommand } from "../commands/selection/DuplicateCommand";
 import { SelectAllCommand } from "../commands/selection/SelectAllCommand";
 import { StartTextEditCommand } from "../commands/text/StartTextEditCommand";
+import { ResetZoomCommand } from "../commands/view/ResetZoomCommand";
 import { ZoomInCommand } from "../commands/view/ZoomInCommand";
 import { ZoomOutCommand } from "../commands/view/ZoomOutCommand";
 import { ZoomToFitCommand } from "../commands/view/ZoomToFitCommand";
@@ -54,6 +55,7 @@ export const initializeCommands = (): void => {
 		// View commands
 		.register(ZoomInCommand)
 		.register(ZoomOutCommand)
+		.register(ResetZoomCommand)
 		.register(ZoomToFitCommand)
 		.register(ZoomToSelectionCommand);
 };
