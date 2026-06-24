@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { Viewport } from "../../../../states/canvas/Viewport";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import type { PolylineState } from "../../../../states/objects/primitives/polyline/PolylineState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { ZoomToSelectionCommand } from "../ZoomToSelectionCommand";
 
@@ -17,6 +18,12 @@ const makeRect = (id: string, cx: number, cy: number): ObjectState =>
 		scaleX: 1,
 		scaleY: 1,
 	}) as ObjectState;
+
+const makePolyline = (
+	id: string,
+	points: { x: number; y: number }[],
+): PolylineState =>
+	({ id, type: "polyline", points }) as unknown as PolylineState;
 
 const makeState = (params: {
 	selectedIds: string[];
@@ -65,6 +72,25 @@ describe("ZoomToSelectionCommand", () => {
 		const next = ZoomToSelectionCommand.execute(state);
 		// 200x200 → 904/200 = 4.52
 		expect(next.viewport.zoom).toBeCloseTo(4.52, 2);
+	});
+
+	it("片軸サイズ 0（水平な直線）でも有効な軸にフィットする", () => {
+		// 水平ポリライン: 幅 200・高さ 0。高さ 0 を理由にフォールバック(zoom=1)しない
+		const state = makeState({
+			selectedIds: ["line"],
+			objects: {
+				line: makePolyline("line", [
+					{ x: 400, y: 500 },
+					{ x: 600, y: 500 },
+				]),
+			},
+		});
+		const next = ZoomToSelectionCommand.execute(state);
+		// 幅 200 → 904/200 = 4.52 にフィット（高さ軸は候補から除外）
+		expect(next.viewport.zoom).toBeCloseTo(4.52, 2);
+		const center = centerOf(next.viewport);
+		expect(center.x).toBeCloseTo(500, 2);
+		expect(center.y).toBeCloseTo(500, 2);
 	});
 
 	describe("canExecute", () => {
