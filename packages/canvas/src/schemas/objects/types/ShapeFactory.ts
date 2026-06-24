@@ -40,6 +40,6 @@ export type ShapeFactory = {
 	): ObjectDoc | null;
 };
 
-/** overrides の数値フィールドを取り出し、無ければ既定値を返す小ヘルパ。 */
+/** overrides の数値フィールドを取り出し、有限数でなければ既定値を返す小ヘルパ。 */
 export const numberOverride = (value: unknown, fallback: number): number =>
-	typeof value === "number" ? value : fallback;
+	Number.isFinite(value) ? (value as number) : fallback;

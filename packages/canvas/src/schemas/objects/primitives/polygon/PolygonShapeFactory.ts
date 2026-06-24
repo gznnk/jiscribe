@@ -33,6 +33,11 @@ export const PolygonShapeFactory: ShapeFactory = {
 	createDoc(position, overrides) {
 		return {
 			type: "polygon",
+			stroke: POLY_STROKE,
+			strokeWidth: POLY_STROKE_WIDTH,
+			fill: "transparent",
+			...overrides,
+			// id と幾何（points）は factory が決める。overrides では上書きさせない。
 			id: crypto.randomUUID(),
 			points: buildPolygonPoints(
 				position.x,
@@ -40,10 +45,6 @@ export const PolygonShapeFactory: ShapeFactory = {
 				POLYGON_RADIUS,
 				POLYGON_RADIUS,
 			),
-			stroke: POLY_STROKE,
-			strokeWidth: POLY_STROKE_WIDTH,
-			fill: "transparent",
-			...overrides,
 		} as ObjectDoc;
 	},
 
@@ -59,6 +60,11 @@ export const PolygonShapeFactory: ShapeFactory = {
 		}
 		return {
 			type: "polygon",
+			stroke: POLY_STROKE,
+			strokeWidth: POLY_STROKE_WIDTH,
+			fill: "transparent",
+			...overrides,
+			// id と幾何（points）は factory が決める。overrides では上書きさせない。
 			id: crypto.randomUUID(),
 			points: buildPolygonPoints(
 				(x1 + x2) / 2,
@@ -66,10 +72,6 @@ export const PolygonShapeFactory: ShapeFactory = {
 				width / 2,
 				height / 2,
 			),
-			stroke: POLY_STROKE,
-			strokeWidth: POLY_STROKE_WIDTH,
-			fill: "transparent",
-			...overrides,
 		} as ObjectDoc;
 	},
 };

@@ -11,14 +11,15 @@ export const PolylineShapeFactory: ShapeFactory = {
 	createDoc(position, overrides) {
 		return {
 			type: "polyline",
+			stroke: POLY_STROKE,
+			strokeWidth: POLY_STROKE_WIDTH,
+			...overrides,
+			// id と幾何（points）は factory が決める。overrides では上書きさせない。
 			id: crypto.randomUUID(),
 			points: [
 				{ x: position.x - POLYLINE_HALF_WIDTH, y: position.y },
 				{ x: position.x + POLYLINE_HALF_WIDTH, y: position.y },
 			],
-			stroke: POLY_STROKE,
-			strokeWidth: POLY_STROKE_WIDTH,
-			...overrides,
 		} as ObjectDoc;
 	},
 
@@ -35,14 +36,15 @@ export const PolylineShapeFactory: ShapeFactory = {
 		}
 		return {
 			type: "polyline",
+			stroke: POLY_STROKE,
+			strokeWidth: POLY_STROKE_WIDTH,
+			...overrides,
+			// id と幾何（points）は factory が決める。overrides では上書きさせない。
 			id: crypto.randomUUID(),
 			points: [
 				{ x: x1, y: y1 },
 				{ x: x2, y: y2 },
 			],
-			stroke: POLY_STROKE,
-			strokeWidth: POLY_STROKE_WIDTH,
-			...overrides,
 		} as ObjectDoc;
 	},
 };
