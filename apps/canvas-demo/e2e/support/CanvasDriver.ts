@@ -817,6 +817,53 @@ export class CanvasDriver {
 	}
 
 	/**
+	 * 図形に重なって描画されたテキスト（TextOverlay）の computed スタイルを返す。
+	 * テキストは foreignObject > div(wrapper) > div(text) として描かれる。
+	 * rect / ellipse は図形要素（data-id）と foreignObject が fragment で「隣接」するが、
+	 * Sticky は `<g data-id>` の「子」として foreignObject を持つ。どちらでも拾えるよう、
+	 * まず data-id 要素の子孫から、無ければ後続兄弟から foreignObject を探す。
+	 * font-size / color / font-weight / text-align は text 側、縦アライメント（align-items）は
+	 * wrapper 側に当たるため両方を読む。テキストが無い・編集中で TextOverlay が
+	 * 描かれていないときは null を返す。
+	 */
+	async textStyleOf(id: string): Promise<{
+		fontSize: string;
+		color: string;
+		fontWeight: string;
+		textAlign: string;
+		verticalAlign: string;
+	} | null> {
+		return this.page.evaluate((targetId) => {
+			const shape = document.querySelector(`[data-id="${targetId}"]`);
+			if (!shape) {
+				return null;
+			}
+			// まず子孫（Sticky の `<g>` 配下）、無ければ後続兄弟（rect/ellipse の fragment）。
+			let foreignObject: Element | null = shape.querySelector("foreignObject");
+			if (!foreignObject) {
+				let sibling = shape.nextElementSibling;
+				while (sibling && sibling.tagName.toLowerCase() !== "foreignobject") {
+					sibling = sibling.nextElementSibling;
+				}
+				foreignObject = sibling;
+			}
+			const wrapper = foreignObject?.firstElementChild as HTMLElement | null;
+			const textDiv = wrapper?.firstElementChild as HTMLElement | null;
+			if (!wrapper || !textDiv) {
+				return null;
+			}
+			const textStyle = getComputedStyle(textDiv);
+			return {
+				fontSize: textStyle.fontSize,
+				color: textStyle.color,
+				fontWeight: textStyle.fontWeight,
+				textAlign: textStyle.textAlign,
+				verticalAlign: getComputedStyle(wrapper).alignItems,
+			};
+		}, id);
+	}
+
+	/**
 	 * ポリラインの描画要素のロケーターを取得する。
 	 * ポリラインは当たり判定用（data-id 付き・透明）と描画用（stroke 等のスタイル付き）の
 	 * 2要素で構成されるため、スタイルの検証は描画側に対して行う必要がある。
