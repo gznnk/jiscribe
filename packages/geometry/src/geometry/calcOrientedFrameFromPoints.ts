@@ -1,3 +1,4 @@
+import { calcPolyBoundingBox } from "./calcPolyBoundingBox";
 import { degreesToRadians } from "../common/degreesToRadians";
 import { nanToZero } from "../common/nanToZero";
 import { calcAffineTransformedPoint } from "../transform/calcAffineTransformedPoint";
@@ -30,10 +31,8 @@ export const calcOrientedFrameFromPoints = (
 		return null;
 	}
 
-	const left = Math.min(...points.map((p) => p.x));
-	const top = Math.min(...points.map((p) => p.y));
-	const right = Math.max(...points.map((p) => p.x));
-	const bottom = Math.max(...points.map((p) => p.y));
+	// points は空でないため calcPolyBoundingBox は必ず非 null を返す
+	const { left, top, right, bottom } = calcPolyBoundingBox(points)!;
 
 	const x = nanToZero((left + right) / 2);
 	const y = nanToZero((top + bottom) / 2);
@@ -44,10 +43,12 @@ export const calcOrientedFrameFromPoints = (
 		calcInverseAffineTransformedPoint(p.x, p.y, scaleX, scaleY, radians, x, y),
 	);
 
-	const inverseLeft = Math.min(...inversePoints.map((p) => p.x));
-	const inverseTop = Math.min(...inversePoints.map((p) => p.y));
-	const inverseRight = Math.max(...inversePoints.map((p) => p.x));
-	const inverseBottom = Math.max(...inversePoints.map((p) => p.y));
+	const {
+		left: inverseLeft,
+		top: inverseTop,
+		right: inverseRight,
+		bottom: inverseBottom,
+	} = calcPolyBoundingBox(inversePoints)!;
 
 	const width = inverseRight - inverseLeft;
 	const height = inverseBottom - inverseTop;
