@@ -32,9 +32,21 @@ export function sortObjectIdsByZOrder(
 		return map.get(childId) ?? -1;
 	};
 
+	// ルートからのパスはコンパレータ内で何度も参照されるため、
+	// 比較ごとの再計算・配列アロケートを避けて ID ごとに一度だけ算出してキャッシュする
+	const pathCache = new Map<string, string[]>();
+	const getPath = (id: string): string[] => {
+		let path = pathCache.get(id);
+		if (!path) {
+			path = getPathFromRoot(id, objects);
+			pathCache.set(id, path);
+		}
+		return path;
+	};
+
 	return [...ids].sort((idA, idB) => {
-		const pathA = getPathFromRoot(idA, objects);
-		const pathB = getPathFromRoot(idB, objects);
+		const pathA = getPath(idA);
+		const pathB = getPath(idB);
 		const minPathLength = Math.min(pathA.length, pathB.length);
 
 		for (let depthIndex = 0; depthIndex < minPathLength; depthIndex++) {

@@ -36,6 +36,53 @@ function sortObjectIdsByZOrderNaive(
 	});
 }
 
+// --- Map indexOf optimization only (before path cache) ---
+function sortObjectIdsByZOrderMapOnly(
+	ids: string[],
+	objects: Record<string, ObjectState>,
+	rootIds: string[],
+): string[] {
+	const rootIndexMap = new Map(rootIds.map((id, i) => [id, i]));
+	const childIndexCache = new Map<string, Map<string, number>>();
+
+	const getChildIndex = (parentId: string, childId: string): number => {
+		let map = childIndexCache.get(parentId);
+		if (!map) {
+			const group = objects[parentId] as GroupState;
+			map = new Map(group.childIds.map((id, i) => [id, i]));
+			childIndexCache.set(parentId, map);
+		}
+		return map.get(childId) ?? -1;
+	};
+
+	return [...ids].sort((idA, idB) => {
+		// パスキャッシュなし: 比較のたびに getPathFromRoot を再計算する
+		const pathA = getPathFromRoot(idA, objects);
+		const pathB = getPathFromRoot(idB, objects);
+		const minPathLength = Math.min(pathA.length, pathB.length);
+
+		for (let depthIndex = 0; depthIndex < minPathLength; depthIndex++) {
+			const nodeIdA = pathA[depthIndex];
+			const nodeIdB = pathB[depthIndex];
+
+			if (nodeIdA !== nodeIdB) {
+				if (depthIndex === 0) {
+					return (
+						(rootIndexMap.get(nodeIdA) ?? -1) -
+						(rootIndexMap.get(nodeIdB) ?? -1)
+					);
+				}
+				const commonParentId = pathA[depthIndex - 1];
+				return (
+					getChildIndex(commonParentId, nodeIdA) -
+					getChildIndex(commonParentId, nodeIdB)
+				);
+			}
+		}
+		return pathA.length - pathB.length;
+	});
+}
+
 // --- test data builders ---
 
 /** フラット構造: すべてルートレベルに n 個のオブジェクト */
@@ -75,6 +122,46 @@ function buildNested(n: number): {
 		parentId: undefined,
 		childIds,
 	} as unknown as GroupState;
+
+	const rootIds = ["group0"];
+	// 逆順（ワーストケース）
+	return { ids: [...childIds].reverse(), objects, rootIds };
+}
+
+/** 深いネスト: depth 階層のグループチェーンに n 個の葉を最深部へぶら下げる */
+function buildDeep(
+	n: number,
+	depth: number,
+): {
+	ids: string[];
+	objects: Record<string, ObjectState>;
+	rootIds: string[];
+} {
+	const objects: Record<string, ObjectState> = {};
+
+	// group0 -> group1 -> ... -> group{depth-1} の単一チェーンを作る
+	for (let d = 0; d < depth; d++) {
+		const id = `group${d}`;
+		objects[id] = {
+			id,
+			type: "group",
+			parentId: d === 0 ? undefined : `group${d - 1}`,
+			childIds: [d === depth - 1 ? "" : `group${d + 1}`],
+		} as unknown as GroupState;
+	}
+
+	const deepestGroupId = `group${depth - 1}`;
+	const childIds: string[] = [];
+	for (let i = 0; i < n; i++) {
+		const id = `leaf${i}`;
+		objects[id] = {
+			id,
+			type: "rect",
+			parentId: deepestGroupId,
+		} as ObjectState;
+		childIds.push(id);
+	}
+	(objects[deepestGroupId] as unknown as GroupState).childIds = childIds;
 
 	const rootIds = ["group0"];
 	// 逆順（ワーストケース）
@@ -133,6 +220,34 @@ describe("sortObjectIdsByZOrder — ネスト構造", () => {
 		sortObjectIdsByZOrderNaive(large.ids, large.objects, large.rootIds);
 	});
 	bench("Map    1000 children", () => {
+		sortObjectIdsByZOrder(large.ids, large.objects, large.rootIds);
+	});
+});
+
+describe("sortObjectIdsByZOrder — 深いネスト構造（パスキャッシュ効果）", () => {
+	// depth を深くするほど getPathFromRoot のコストが上がり、パスキャッシュが効く
+	const small = buildDeep(50, 10);
+	const medium = buildDeep(200, 10);
+	const large = buildDeep(1000, 10);
+
+	bench("Map(path再計算)  50 leaves / depth 10", () => {
+		sortObjectIdsByZOrderMapOnly(small.ids, small.objects, small.rootIds);
+	});
+	bench("Map(pathキャッシュ) 50 leaves / depth 10", () => {
+		sortObjectIdsByZOrder(small.ids, small.objects, small.rootIds);
+	});
+
+	bench("Map(path再計算)  200 leaves / depth 10", () => {
+		sortObjectIdsByZOrderMapOnly(medium.ids, medium.objects, medium.rootIds);
+	});
+	bench("Map(pathキャッシュ) 200 leaves / depth 10", () => {
+		sortObjectIdsByZOrder(medium.ids, medium.objects, medium.rootIds);
+	});
+
+	bench("Map(path再計算)  1000 leaves / depth 10", () => {
+		sortObjectIdsByZOrderMapOnly(large.ids, large.objects, large.rootIds);
+	});
+	bench("Map(pathキャッシュ) 1000 leaves / depth 10", () => {
 		sortObjectIdsByZOrder(large.ids, large.objects, large.rootIds);
 	});
 });
