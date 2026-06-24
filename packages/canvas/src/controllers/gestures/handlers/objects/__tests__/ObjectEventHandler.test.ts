@@ -61,7 +61,7 @@ const makeDragState = (cx = 0, cy = 0): CanvasControllerState => {
 		eventStartSnapshot: {
 			objects: { "rect-1": rect },
 			keyPoints: { "rect-1": makeKeyPoints(cx, cy) },
-			snapCandidates: null,
+			snapCandidates: { x: [], y: [] },
 			selectedIds: ["rect-1"],
 			selectedIdsWithDescendants: new Set(["rect-1"]),
 			multiSelectGroup: null,

@@ -134,7 +134,10 @@ function handleObjectDrag(
 	let adjustedDelta = constrainedDelta;
 	let snapFeedback: SnapFeedback = { x: [], y: [] };
 
+	// スナップ候補は dragStart 時にキャッシュ済みの全オブジェクト分を参照のみで使う。
+	// 除外（選択中＋全子孫）は配列をフィルタせず、Set を findSnap に渡して内部で弾く。
 	const snapCandidates = eventStartSnapshot.snapCandidates;
+	const excludeIds = eventStartSnapshot.selectedIdsWithDescendants;
 	const snapSourceId =
 		selectedIds.length > 1
 			? eventStartSnapshot.multiSelectGroup?.id
@@ -143,7 +146,7 @@ function handleObjectDrag(
 		? eventStartSnapshot.keyPoints[snapSourceId]
 		: undefined;
 
-	if (snapCandidates && snapSourceKeyPoints && !mods.ctrl && !snapToOrigin) {
+	if (snapSourceKeyPoints && !mods.ctrl && !snapToOrigin) {
 		const bbox = calcKeyPointsBoundingBox(snapSourceKeyPoints);
 		const selectedBBox = {
 			left: bbox.left + constrainedDelta.x,
@@ -152,21 +155,12 @@ function handleObjectDrag(
 			bottom: bbox.bottom + constrainedDelta.y,
 		};
 
-		// 現在の selectedIds + 全子孫を除外（dragStart後の選択変更・グループ子図形も対応）
-		// dragStart 時にキャッシュ済みの値を優先して使用し、フォールバックとして再計算する
-		const excludeIds =
-			eventStartSnapshot.selectedIdsWithDescendants ??
-			buildSelectedIdsWithDescendants(selectedIds, eventStartObjects);
-		const filteredCandidates = {
-			x: snapCandidates.x.filter((c) => !excludeIds.has(c.objectId)),
-			y: snapCandidates.y.filter((c) => !excludeIds.has(c.objectId)),
-		};
 		// 中央（中点）もドラッグ側エッジ値に含め、中央↔中央 / 中央↔エッジ を吸着可能にする
 		const selectedCenterX = (selectedBBox.left + selectedBBox.right) / 2;
 		const selectedCenterY = (selectedBBox.top + selectedBBox.bottom) / 2;
 		// 固定軸はスナップ補正でも動かさないよう、その軸のエッジ値を空にしてスキップする
 		const result = findSnap(
-			filteredCandidates,
+			snapCandidates,
 			SNAP_THRESHOLD_PX / zoom,
 			lockedAxis === "x"
 				? []
@@ -174,6 +168,7 @@ function handleObjectDrag(
 			lockedAxis === "y"
 				? []
 				: [selectedBBox.top, selectedCenterY, selectedBBox.bottom],
+			excludeIds,
 		);
 		adjustedDelta = {
 			x: constrainedDelta.x + result.delta.x,
@@ -189,7 +184,8 @@ function handleObjectDrag(
 			actualBBox,
 			result.xResult,
 			result.yResult,
-			filteredCandidates,
+			snapCandidates,
+			excludeIds,
 		);
 	}
 
@@ -304,7 +300,8 @@ function handleObjectDragStart(
 		}
 	}
 
-	// dragStart 確定後の selectedIds で excludeIds をキャッシュする
+	// dragStart 確定後の selectedIds で除外集合を再キャッシュする
+	// （handleGesture 構築時の選択から変わった場合に snapshot を最新化する）
 	const selectedIdsWithDescendants = canvasState.eventStartSnapshot
 		? buildSelectedIdsWithDescendants(
 				selectedIds,

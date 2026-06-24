@@ -36,7 +36,6 @@ import type {
 	CanvasControllerState,
 	SnapFeedback,
 } from "../../../../CanvasTypes";
-import { buildSelectedIdsWithDescendants } from "../../../../utils/buildSelectedIdsWithDescendants";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import {
@@ -215,9 +214,8 @@ export class TransformControlHandler implements ControlStrategy {
 
 		// ── スナップ補正 ────────────────────────────────────────────────────
 		let snapFeedback: SnapFeedback = { x: [], y: [] };
-		const snapCandidates = eventStartSnapshot.snapCandidates;
 
-		if (snapCandidates && !event.mods.ctrl) {
+		if (!event.mods.ctrl) {
 			const tentativeBBox = calcTentativeBBox(
 				resizeResult,
 				startFrame,
@@ -287,23 +285,18 @@ export class TransformControlHandler implements ControlStrategy {
 				const snapY = yEdge !== null && ySens > SENSITIVITY;
 
 				if (snapX || snapY) {
-					const excludeIds =
-						eventStartSnapshot.selectedIdsWithDescendants ??
-						buildSelectedIdsWithDescendants(
-							state.selectedIds,
-							eventStartSnapshot.objects,
-						);
-					const filteredCandidates = {
-						x: snapCandidates.x.filter((c) => !excludeIds.has(c.objectId)),
-						y: snapCandidates.y.filter((c) => !excludeIds.has(c.objectId)),
-					};
+					// スナップ候補は dragStart 時にキャッシュ済みの全オブジェクト分を参照のみで使い、
+					// 除外（選択中＋全子孫）は Set を findSnap に渡して内部で弾く。
+					const snapCandidates = eventStartSnapshot.snapCandidates;
+					const excludeIds = eventStartSnapshot.selectedIdsWithDescendants;
 
 					const zoom = state.viewport.zoom;
 					const findSnapResult = findSnap(
-						filteredCandidates,
+						snapCandidates,
 						SNAP_THRESHOLD_PX / zoom,
 						snapX && xEdge ? [tentativeBBox[xEdge]] : [],
 						snapY && yEdge ? [tentativeBBox[yEdge]] : [],
+						excludeIds,
 					);
 
 					const cursorDelta = calcSnapCursorDelta(
@@ -340,7 +333,8 @@ export class TransformControlHandler implements ControlStrategy {
 						actualBBox,
 						findSnapResult.xResult,
 						findSnapResult.yResult,
-						filteredCandidates,
+						snapCandidates,
+						excludeIds,
 					);
 				}
 			}

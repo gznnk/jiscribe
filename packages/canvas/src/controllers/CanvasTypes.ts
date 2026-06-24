@@ -129,11 +129,14 @@ export type EventStartSnapshot = {
 	objects: Record<string, ObjectState>;
 	/** オブジェクト ID → FrameKeyPoints の断面（multiSelectGroup.id も含む）*/
 	keyPoints: Record<string, FrameKeyPoints>;
-	/** スナップ候補（dragStart 時に事前計算）*/
+	/** スナップ候補（dragStart 時に事前計算・全オブジェクト分。除外は findSnap に Set で渡す）*/
 	snapCandidates: SnapCandidates;
 	/** ドラッグ開始時の選択 ID 一覧 */
 	selectedIds: string[];
-	/** 選択オブジェクト＋全子孫の ID セット（dragStart 時に事前計算）*/
+	/**
+	 * 選択オブジェクト＋全子孫の ID セット（dragStart 時に事前計算）。
+	 * スナップの除外集合として findSnap / buildSnapFeedback に渡す。
+	 */
 	selectedIdsWithDescendants: ReadonlySet<string>;
 	/** 複数選択グループ（null の場合は複数選択なし）*/
 	multiSelectGroup: GroupState | null;
