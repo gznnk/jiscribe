@@ -8,18 +8,24 @@ const makeState = (objects: Record<string, unknown>): CanvasState =>
 
 describe("hasSelectedDescendants", () => {
 	it("childIds が空のとき false を返す", () => {
-		expect(hasSelectedDescendants(makeState({}), [], ["sel"])).toBe(false);
+		expect(hasSelectedDescendants(makeState({}), [], new Set(["sel"]))).toBe(
+			false,
+		);
 	});
 
 	describe("直接の子", () => {
 		it("直接の子が選択済みのとき true を返す", () => {
 			const state = makeState({ child: { type: "rect" } });
-			expect(hasSelectedDescendants(state, ["child"], ["child"])).toBe(true);
+			expect(hasSelectedDescendants(state, ["child"], new Set(["child"]))).toBe(
+				true,
+			);
 		});
 
 		it("直接の子が選択されていないとき false を返す", () => {
 			const state = makeState({ child: { type: "rect" } });
-			expect(hasSelectedDescendants(state, ["child"], ["other"])).toBe(false);
+			expect(hasSelectedDescendants(state, ["child"], new Set(["other"]))).toBe(
+				false,
+			);
 		});
 	});
 
@@ -29,9 +35,9 @@ describe("hasSelectedDescendants", () => {
 				group: { type: "group", childIds: ["grandchild"] },
 				grandchild: { type: "rect" },
 			});
-			expect(hasSelectedDescendants(state, ["group"], ["grandchild"])).toBe(
-				true,
-			);
+			expect(
+				hasSelectedDescendants(state, ["group"], new Set(["grandchild"])),
+			).toBe(true);
 		});
 
 		it("孫が選択されていないとき false を返す", () => {
@@ -39,9 +45,9 @@ describe("hasSelectedDescendants", () => {
 				group: { type: "group", childIds: ["grandchild"] },
 				grandchild: { type: "rect" },
 			});
-			expect(hasSelectedDescendants(state, ["group"], ["unrelated"])).toBe(
-				false,
-			);
+			expect(
+				hasSelectedDescendants(state, ["group"], new Set(["unrelated"])),
+			).toBe(false);
 		});
 
 		it("深くネストした子孫が選択されているとき true を返す", () => {
@@ -50,7 +56,9 @@ describe("hasSelectedDescendants", () => {
 				g2: { type: "group", childIds: ["deep"] },
 				deep: { type: "rect" },
 			});
-			expect(hasSelectedDescendants(state, ["g1"], ["deep"])).toBe(true);
+			expect(hasSelectedDescendants(state, ["g1"], new Set(["deep"]))).toBe(
+				true,
+			);
 		});
 	});
 
@@ -61,7 +69,9 @@ describe("hasSelectedDescendants", () => {
 				b: { type: "rect" },
 				c: { type: "rect" },
 			});
-			expect(hasSelectedDescendants(state, ["a", "b", "c"], ["b"])).toBe(true);
+			expect(
+				hasSelectedDescendants(state, ["a", "b", "c"], new Set(["b"])),
+			).toBe(true);
 		});
 
 		it("どの子も選択されていなければ false を返す", () => {
@@ -69,7 +79,9 @@ describe("hasSelectedDescendants", () => {
 				a: { type: "rect" },
 				b: { type: "rect" },
 			});
-			expect(hasSelectedDescendants(state, ["a", "b"], ["x", "y"])).toBe(false);
+			expect(
+				hasSelectedDescendants(state, ["a", "b"], new Set(["x", "y"])),
+			).toBe(false);
 		});
 	});
 });

@@ -138,7 +138,10 @@ export function determineSelection(
 				// (svg-canvas lines 157-200)
 
 				if (canvasState.selectedIds.length > 0) {
-					// Find common ancestor with other selected items
+					// Find common ancestor with other selected items.
+					// Build the membership Set once here so the recursive
+					// hasSelectedDescendants checks stay O(subtree) per ancestor.
+					const selectedSet = new Set(canvasState.selectedIds);
 					const reversedAncestors = [...ancestors].reverse();
 					const commonAncestorIdx = reversedAncestors.findIndex(
 						(ancestorId) => {
@@ -152,7 +155,7 @@ export function determineSelection(
 							return hasSelectedDescendants(
 								canvasState,
 								group.childIds,
-								canvasState.selectedIds,
+								selectedSet,
 							);
 						},
 					);

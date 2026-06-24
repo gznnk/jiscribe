@@ -7,17 +7,18 @@ import type { GroupState } from "../../../../../states/objects/primitives/group/
  *
  * @param state - Canvas state
  * @param childIds - Direct child IDs to check
- * @param selectedIds - Currently selected IDs
+ * @param selectedIds - Currently selected IDs (Set for O(1) membership lookup;
+ *   build it once at the call site and pass it through the recursion)
  * @returns true if any descendant is selected
  */
 export function hasSelectedDescendants(
 	state: CanvasState,
 	childIds: string[],
-	selectedIds: string[],
+	selectedIds: ReadonlySet<string>,
 ): boolean {
 	for (const childId of childIds) {
 		// Check if this child is selected
-		if (selectedIds.includes(childId)) {
+		if (selectedIds.has(childId)) {
 			return true;
 		}
 
