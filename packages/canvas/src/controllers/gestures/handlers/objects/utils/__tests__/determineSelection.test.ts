@@ -120,6 +120,44 @@ describe("determineSelection", () => {
 		});
 	});
 
+	describe("共通祖先（hasSelectedDescendants 経由）", () => {
+		// group-top
+		//   ├ group-a ─ rect-a
+		//   └ group-b ─ rect-b
+		// rect-b を選択した状態で rect-a をクリックすると、共通祖先 group-top の
+		// 別サブツリーに選択中アイテムがあるため、rect-a と同階層の group-a に揃える。
+		const commonAncestorObjects: Record<string, ObjectState> = {
+			"group-top": groupObj("group-top", ["group-a", "group-b"]),
+			"group-a": groupObj("group-a", ["rect-a"], "group-top"),
+			"group-b": groupObj("group-b", ["rect-b"], "group-top"),
+			"rect-a": rectObj("rect-a", "group-a"),
+			"rect-b": rectObj("rect-b", "group-b"),
+		};
+
+		it("別サブツリーの子孫が選択済みのとき共通祖先の一段下を選択する", () => {
+			const state = makeState(["rect-b"], commonAncestorObjects);
+			const result = determineSelection(
+				rectObj("rect-a", "group-a"),
+				state,
+				noMods,
+			);
+			expect(result).toEqual(["group-a"]);
+		});
+
+		it("どのサブツリーにも選択中アイテムがないとき最上位祖先を選択する", () => {
+			const state = makeState(["root-rect"], {
+				...commonAncestorObjects,
+				"root-rect": rectObj("root-rect"),
+			});
+			const result = determineSelection(
+				rectObj("rect-a", "group-a"),
+				state,
+				noMods,
+			);
+			expect(result).toEqual(["group-top"]);
+		});
+	});
+
 	describe("autoSelectParentGroups の統合", () => {
 		it("グループの全子が選択されると親グループが選択される", () => {
 			const state = makeState(["rect1"], baseObjects);
