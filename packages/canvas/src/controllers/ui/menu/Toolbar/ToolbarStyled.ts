@@ -91,19 +91,32 @@ export const ToolbarIconButton = styled.button`
 `;
 
 /**
- * ズーム率の表示。
+ * ズーム率の表示。クリックで 100% に戻すボタンを兼ねる。
  */
-export const ZoomReadout = styled.div`
+export const ZoomReadout = styled.button`
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	height: 32px;
 	min-width: 44px;
 	padding: 0 4px;
+	border: 1px solid transparent;
+	border-radius: ${theme.radius};
+	background: transparent;
 	font-size: 11px;
 	font-weight: 500;
 	line-height: 1;
 	text-align: center;
 	color: ${theme.foregroundMuted};
+	cursor: pointer;
 	user-select: none;
+	transition: background-color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+
+	&:hover {
+		background-color: ${theme.surfaceHover};
+	}
+
+	&:active {
+		background-color: ${theme.surfaceActive};
+	}
 `;
