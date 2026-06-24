@@ -738,6 +738,16 @@ export class CanvasDriver {
 		await this.page.keyboard.press("Control+2");
 	}
 
+	/** キーボードでズームイン（Ctrl+=）。ビューポート中心を基点に拡大する */
+	async zoomIn() {
+		await this.page.keyboard.press("Control+Equal");
+	}
+
+	/** キーボードでズームアウト（Ctrl+-）。ビューポート中心を基点に縮小する */
+	async zoomOut() {
+		await this.page.keyboard.press("Control+Minus");
+	}
+
 	/**
 	 * ObjectMenu の重なり順セクションを開いて arrange コマンドを実行する。
 	 * commandId は bringToFront / bringForward / sendBackward / sendToBack。
