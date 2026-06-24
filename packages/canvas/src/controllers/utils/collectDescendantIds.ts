@@ -19,8 +19,13 @@ export function collectDescendantIds(
 ): string[] {
 	const queue = [id];
 
-	while (queue.length > 0) {
-		const currentId = queue.shift()!;
+	// head インデックス方式で BFS する。queue.shift() は配列全体を前詰めするため
+	// 1 回 O(n)（全体で O(n^2)）になるが、head を進めるだけなら全体で O(n) に収まる。
+	// autoSelectParentGroups と同一パターン。
+	let head = 0;
+	while (head < queue.length) {
+		const currentId = queue[head];
+		head++;
 		const obj = objects[currentId];
 		if (!obj || !isGroupState(obj)) {
 			continue;
