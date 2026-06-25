@@ -11,15 +11,28 @@ import { selectors } from "../../support/selectors";
  * scrollDelta/zoom（world 単位）しか動かないため、zoom≠1 では last が zoom 倍ずれ、
  * リサイズがカーソルから乖離していた（移動は delta 経由のため影響なし）。
  *
- * 検証は world 寸法の増分で測る:
- *   - 修正後: 幅Δ = scrollDelta × scale（= scrollDelta / zoom）
- *   - 退行時: 幅Δ = scrollDelta（生px。scale を掛け忘れる分 1/scale 倍に膨らむ）
- * zoom=1 では両者が一致して退行が隠れるため、scale を十分小さく（< 0.6）してから測る。
+ * 検証は「bottomRight の world 幅増分（deltaW）」を「実ビューポート移動量（viewBox の
+ * minX 増分 = worldShift）」と比べる:
+ *   - 修正後: deltaW ≈ worldShift（ハンドルが実移動量に追従する）
+ *   - 退行時: deltaW ≈ scrollDelta（生px。worldShift の zoom 倍に膨らむ）
+ *
+ * 期待値を viewBox から直接測る理由: viewport.width は実 SVG 幅ではなく固定値（1000）の
+ * ため、`scrollDelta × (viewBox幅/SVG画面幅)` は SVG が 1000px 幅で描画される環境でしか
+ * 実移動量に一致しない。worldShift（minX 増分）は描画幅に依存せず常に実移動量と等しい。
  */
 
 const TOLERANCE_PX = 14;
 
-/** 画面 1px が表す world 長（viewBox 幅 ÷ SVG 画面幅）。zoom=1 で 1、ズームインで < 1。 */
+/** viewBox の minX（world 座標。水平スクロールでこの値が動く）。 */
+async function viewBoxMinX(canvas: CanvasDriver): Promise<number> {
+	const raw = await canvas.getViewBox();
+	if (!raw) {
+		throw new Error("viewBox が取得できない");
+	}
+	return Number(raw.trim().split(/\s+/)[0]);
+}
+
+/** 画面 1px が表す world 長（viewBox 幅 ÷ SVG 画面幅）。zoom を上げるほど小さくなる。 */
 async function worldPerScreenPixel(canvas: CanvasDriver): Promise<number> {
 	const raw = await canvas.getViewBox();
 	if (!raw) {
@@ -58,7 +71,7 @@ async function handleScreenCenter(
 }
 
 test.describe("ズーム下・リサイズ中のスクロール（#72）", () => {
-	test("ドラッグ保持中のホイールスクロールで bottomRight は world で scrollDelta×scale だけ動く（生pxではない）", async ({
+	test("ドラッグ保持中のホイールスクロールで bottomRight は実ビューポート移動量に追従する（生pxではない）", async ({
 		canvas,
 	}) => {
 		const id = await canvas.drawShape(
@@ -86,9 +99,9 @@ test.describe("ズーム下・リサイズ中のスクロール（#72）", () =>
 			await canvas.wheel(center, { deltaY: -200, ctrl: true });
 		}
 
-		const scale = await worldPerScreenPixel(canvas);
-		// scale が 1 に近いと zoom=1 と区別できず退行が隠れるため、十分小さいことを先に固める。
-		expect(scale).toBeLessThan(0.6);
+		// zoom が 1 に近いと worldShift ≈ scrollDelta となり退行が隠れるため、
+		// 先に十分ズームインできていることを固める（scale が小さい = zoom が高い）。
+		expect(await worldPerScreenPixel(canvas)).toBeLessThan(0.6);
 
 		// bottomRight ハンドルでリサイズを開始し、保持したままにする。
 		const handle = await handleScreenCenter(canvas, "bottomRight");
@@ -107,6 +120,7 @@ test.describe("ズーム下・リサイズ中のスクロール（#72）", () =>
 				})
 				.toBeGreaterThan(worldWInit + 5);
 			const widthBefore = Number(await rect.getAttribute("width"));
+			const minXBefore = await viewBoxMinX(canvas);
 
 			// カーソルは動かさず、ドラッグ保持中にホイールで水平スクロールする。
 			// deltaX>0 で viewport.minX が scrollDelta/zoom 増え、固定カーソル下の world は
@@ -122,11 +136,14 @@ test.describe("ズーム下・リサイズ中のスクロール（#72）", () =>
 			const widthAfter = Number(await rect.getAttribute("width"));
 			const deltaW = widthAfter - widthBefore;
 
-			// 修正後: 幅Δ ≈ scrollDelta × scale（= 実ビューポート移動量）。
-			expect(Math.abs(deltaW - scrollDelta * scale)).toBeLessThanOrEqual(
-				TOLERANCE_PX,
-			);
-			// 退行（生px加算）なら 幅Δ ≈ scrollDelta となり、ここで必ず落ちる。
+			// 実ビューポート移動量（world 単位）。修正後はこれと bottomRight の増分が一致する。
+			const worldShift = (await viewBoxMinX(canvas)) - minXBefore;
+
+			// 修正後: bottomRight の増分 ≈ 実ビューポート移動量。
+			// （viewBox から直接測るため SVG の描画ピクセル幅に依存しない）
+			expect(Math.abs(deltaW - worldShift)).toBeLessThanOrEqual(TOLERANCE_PX);
+			// 退行（生px加算）なら deltaW ≈ scrollDelta（worldShift の zoom 倍）となり、
+			// worldShift（< scrollDelta）から TOLERANCE 以上ずれてここで落ちる。
 			expect(deltaW).toBeLessThan(scrollDelta * 0.85);
 		} finally {
 			await canvas.page.mouse.up();
