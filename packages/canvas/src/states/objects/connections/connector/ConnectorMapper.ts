@@ -19,12 +19,9 @@ export const connectorToState: DocToStateMapper<
 
 	return {
 		...base,
-		// points は中間経由点のみを保持する仕様だが、過去バージョンが作成時の端点座標を
-		// 書き込んでいたため既存ファイルには陳腐化した座標が残っている。
-		// 経由点による変形機能は未実装で正当な経由点データは存在しないため、
-		// 読み込み時に無条件でクリアして陳腐データを掃除する。
-		// TODO: 変形機能の実装時に doc.points を引き継ぐよう戻すこと
-		points: [] as Point[],
+		// points は source → target 順の中間経由点（waypoint）のみを保持する。
+		// 描画はこの経由点を通る折れ線になる（端点の正は source / target の EndpointRef）。
+		points: (doc.points ?? []) as Point[],
 		source: doc.source,
 		target: doc.target,
 		stroke: doc.stroke,

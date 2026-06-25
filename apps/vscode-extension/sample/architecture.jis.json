@@ -674,8 +674,12 @@
 			"type": "connector",
 			"points": [
 				{
-					"x": 100,
-					"y": 560
+					"x": 95,
+					"y": 146
+				},
+				{
+					"x": 95,
+					"y": 600
 				}
 			],
 			"source": {
@@ -873,7 +877,16 @@
 		{
 			"id": "c9",
 			"type": "connector",
-			"points": [],
+			"points": [
+				{
+					"x": 880.0,
+					"y": 800.0
+				},
+				{
+					"x": 880.0,
+					"y": 740.0
+				}
+			],
 			"source": {
 				"owner": {
 					"type": "rect",
@@ -985,7 +998,16 @@
 		{
 			"id": "c13",
 			"type": "connector",
-			"points": [],
+			"points": [
+				{
+					"x": 680.0,
+					"y": 1117.5
+				},
+				{
+					"x": 910.0,
+					"y": 1117.5
+				}
+			],
 			"source": {
 				"owner": {
 					"type": "rect",
@@ -1014,39 +1036,14 @@
 		{
 			"id": "c14",
 			"type": "connector",
-			"points": [],
-			"source": {
-				"owner": {
-					"type": "rect",
-					"id": "ctrl_obj"
-				},
-				"anchor": {
-					"kind": "connectPoint",
-					"id": "bottomCenter"
-				}
-			},
-			"target": {
-				"owner": {
-					"type": "rect",
-					"id": "registry"
-				},
-				"anchor": {
-					"kind": "connectPoint",
-					"id": "leftCenter"
-				}
-			},
-			"stroke": "#94a3b8",
-			"strokeWidth": 2,
-			"endArrow": "OpenArrow",
-			"strokeDashType": "dashed"
-		},
-		{
-			"id": "c15",
-			"type": "connector",
 			"points": [
 				{
 					"x": 1715,
-					"y": 1248
+					"y": 600
+				},
+				{
+					"x": 1715,
+					"y": 1250
 				}
 			],
 			"source": {
@@ -1075,9 +1072,18 @@
 			"strokeDashType": "dashed"
 		},
 		{
-			"id": "c16",
+			"id": "c15",
 			"type": "connector",
-			"points": [],
+			"points": [
+				{
+					"x": 910.0,
+					"y": 1350.0
+				},
+				{
+					"x": 830.0,
+					"y": 1350.0
+				}
+			],
 			"source": {
 				"owner": {
 					"type": "rect",
@@ -1104,9 +1110,18 @@
 			"strokeDashType": "dashed"
 		},
 		{
-			"id": "c17",
+			"id": "c16",
 			"type": "connector",
-			"points": [],
+			"points": [
+				{
+					"x": 340.0,
+					"y": 1555.0
+				},
+				{
+					"x": 390.0,
+					"y": 1555.0
+				}
+			],
 			"source": {
 				"owner": {
 					"type": "rect",
@@ -1133,9 +1148,18 @@
 			"strokeDashType": "dashed"
 		},
 		{
-			"id": "c18",
+			"id": "c17",
 			"type": "connector",
-			"points": [],
+			"points": [
+				{
+					"x": 830.0,
+					"y": 1555.0
+				},
+				{
+					"x": 950.0,
+					"y": 1555.0
+				}
+			],
 			"source": {
 				"owner": {
 					"type": "rect",
@@ -1162,9 +1186,18 @@
 			"strokeDashType": "dashed"
 		},
 		{
-			"id": "c19",
+			"id": "c18",
 			"type": "connector",
-			"points": [],
+			"points": [
+				{
+					"x": 55,
+					"y": 1475
+				},
+				{
+					"x": 55,
+					"y": 1215
+				}
+			],
 			"source": {
 				"owner": {
 					"type": "rect",
@@ -1172,7 +1205,7 @@
 				},
 				"anchor": {
 					"kind": "connectPoint",
-					"id": "topCenter"
+					"id": "leftCenter"
 				}
 			},
 			"target": {
@@ -1182,7 +1215,7 @@
 				},
 				"anchor": {
 					"kind": "connectPoint",
-					"id": "bottomCenter"
+					"id": "leftCenter"
 				}
 			},
 			"stroke": "#ef4444",
