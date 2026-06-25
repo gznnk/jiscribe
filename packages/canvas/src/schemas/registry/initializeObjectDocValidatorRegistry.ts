@@ -3,6 +3,8 @@ import { StickyFeatures } from "../objects/annotations/sticky/StickyDoc";
 import { validateStickyDoc } from "../objects/annotations/sticky/validateStickyDoc";
 import { ConnectorFeatures } from "../objects/connections/connector/ConnectorDoc";
 import { validateConnectorDoc } from "../objects/connections/connector/validateConnectorDoc";
+import { DiamondFeatures } from "../objects/primitives/diamond/DiamondDoc";
+import { validateDiamondDoc } from "../objects/primitives/diamond/validateDiamondDoc";
 import { EllipseFeatures } from "../objects/primitives/ellipse/EllipseDoc";
 import { validateEllipseDoc } from "../objects/primitives/ellipse/validateEllipseDoc";
 import { GroupFeatures } from "../objects/primitives/group/GroupDoc";
@@ -38,6 +40,11 @@ export const initializeObjectDocValidatorRegistry = (): void => {
 		"ellipse",
 		validateEllipseDoc,
 		EllipseFeatures,
+	);
+	objectDocValidatorRegistry.register(
+		"diamond",
+		validateDiamondDoc,
+		DiamondFeatures,
 	);
 	objectDocValidatorRegistry.register("group", validateGroupDoc, GroupFeatures);
 	objectDocValidatorRegistry.register(

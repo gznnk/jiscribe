@@ -1,6 +1,7 @@
 export const ObjectTypes = [
 	"rect",
 	"ellipse",
+	"diamond",
 	"polyline",
 	"polygon",
 	"group",

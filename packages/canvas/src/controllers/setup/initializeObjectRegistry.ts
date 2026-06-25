@@ -3,6 +3,10 @@ import type { FC } from "react";
 import { Sticky } from "../../presentations/objects/annotations/Sticky";
 import { Connector } from "../../presentations/objects/connections/Connector";
 import {
+	Diamond,
+	DiamondPreview,
+} from "../../presentations/objects/primitives/Diamond";
+import {
 	Ellipse,
 	EllipsePreview,
 } from "../../presentations/objects/primitives/Ellipse";
@@ -24,6 +28,9 @@ import { StickyShapeFactory } from "../../schemas/objects/annotations/sticky/Sti
 import { StickyShapePresets } from "../../schemas/objects/annotations/sticky/StickyShapePresets";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
 import { ConnectorFeatures } from "../../schemas/objects/connections/connector/ConnectorDoc";
+import { DiamondFeatures } from "../../schemas/objects/primitives/diamond/DiamondDoc";
+import { DiamondShapeFactory } from "../../schemas/objects/primitives/diamond/DiamondShapeFactory";
+import { DiamondShapePresets } from "../../schemas/objects/primitives/diamond/DiamondShapePresets";
 import { EllipseFeatures } from "../../schemas/objects/primitives/ellipse/EllipseDoc";
 import { EllipseShapeFactory } from "../../schemas/objects/primitives/ellipse/EllipseShapeFactory";
 import { EllipseShapePresets } from "../../schemas/objects/primitives/ellipse/EllipseShapePresets";
@@ -56,6 +63,11 @@ import {
 	connectorToState,
 } from "../../states/objects/connections/connector/ConnectorMapper";
 import { isValidConnectorState } from "../../states/objects/connections/connector/validateConnectorState";
+import {
+	diamondToDoc,
+	diamondToState,
+} from "../../states/objects/primitives/diamond/DiamondMapper";
+import { isValidDiamondState } from "../../states/objects/primitives/diamond/validateDiamondState";
 import {
 	ellipseToDoc,
 	ellipseToState,
@@ -99,6 +111,11 @@ import {
 	rotateByGroup as connectorRotateByGroup,
 	transformByGroup as connectorTransformByGroup,
 } from "../gestures/handlers/objects/connections/ConnectorController";
+import {
+	moveByDelta as diamondMoveByDelta,
+	rotateByGroup as diamondRotateByGroup,
+	transformByGroup as diamondTransformByGroup,
+} from "../gestures/handlers/objects/primitives/DiamondController";
 import {
 	moveByDelta as ellipseMoveByDelta,
 	rotateByGroup as ellipseRotateByGroup,
@@ -222,6 +239,42 @@ export const initializeObjectRegistry = (): void => {
 			factory: EllipseShapeFactory,
 			previewRenderer: EllipsePreview,
 			presets: EllipseShapePresets,
+		},
+	);
+
+	registerObject(
+		"diamond",
+		{ toDoc: diamondToDoc, toState: diamondToState },
+		DiamondFeatures,
+		Diamond,
+		{
+			moveByDelta: diamondMoveByDelta,
+			transformByGroup: diamondTransformByGroup,
+			rotateByGroup: diamondRotateByGroup,
+		},
+		(_state) => [
+			{
+				id: "style",
+				items: [
+					{ type: "backgroundColor" },
+					{ type: "borderColor" },
+					{ type: "borderStyle", radius: false },
+				],
+			},
+			{
+				id: "text",
+				items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+			},
+			{
+				id: "transform",
+				items: [{ type: "aspectRatio" }],
+			},
+		],
+		isValidDiamondState,
+		{
+			factory: DiamondShapeFactory,
+			previewRenderer: DiamondPreview,
+			presets: DiamondShapePresets,
 		},
 	);
 

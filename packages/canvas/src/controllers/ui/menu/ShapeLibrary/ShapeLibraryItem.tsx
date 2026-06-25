@@ -2,6 +2,7 @@ import { memo } from "react";
 
 import { ShapeLibraryButton } from "./ShapeLibraryStyled";
 import type { ShapePreset } from "../../../../schemas/objects/types/ShapePreset";
+import { DiamondIcon } from "../../icons/DiamondIcon";
 import { EllipseIcon } from "../../icons/EllipseIcon";
 import { MarkdownRectIcon } from "../../icons/MarkdownRectIcon";
 import { PolygonIcon } from "../../icons/PolygonIcon";
@@ -24,6 +25,8 @@ const getIcon = (presetId: string) => {
 			return <MarkdownRectIcon width={ICON_SIZE} height={ICON_SIZE} />;
 		case "ellipse":
 			return <EllipseIcon width={ICON_SIZE} height={ICON_SIZE} />;
+		case "diamond":
+			return <DiamondIcon width={ICON_SIZE} height={ICON_SIZE} />;
 		case "sticky":
 			return <StickyIcon width={ICON_SIZE} height={ICON_SIZE} />;
 		case "polyline":
