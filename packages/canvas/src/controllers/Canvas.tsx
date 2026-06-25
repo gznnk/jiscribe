@@ -198,6 +198,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 								selectedConnectorId={state.selectedConnectorId}
 								objects={state.objects}
 								zoom={state.viewport.zoom}
+								selectedVertex={state.selectedVertex}
 							/>
 							<TransformControlsLayer
 								selectedIds={state.selectedIds}
