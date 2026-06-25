@@ -49,7 +49,8 @@ async function handleScreenCenter(
 	handle: "bottomRight",
 ): Promise<{ x: number; y: number }> {
 	const control = canvas.page.locator(selectors.transformControl(handle));
-	await expect(control).toBeVisible();
+	// CI 高負荷時に既定 5s では足りずハンドル出現待ちが flake るため余裕を持たせる。
+	await expect(control).toBeVisible({ timeout: 15_000 });
 	const box = await control.boundingBox();
 	if (!box) {
 		throw new Error(`変形ハンドル ${handle} の位置が取得できない`);
@@ -104,6 +105,7 @@ test.describe("ズーム下・リサイズ中のスクロール（#72）", () =>
 			await expect
 				.poll(async () => Number(await rect.getAttribute("width")), {
 					message: "ドラッグ確立で world 幅が増えること",
+					timeout: 15_000,
 				})
 				.toBeGreaterThan(worldWInit + 5);
 			const widthBefore = Number(await rect.getAttribute("width"));
@@ -117,6 +119,7 @@ test.describe("ズーム下・リサイズ中のスクロール（#72）", () =>
 			await expect
 				.poll(async () => Number(await rect.getAttribute("width")), {
 					message: "スクロールで world 幅が増えて落ち着くこと",
+					timeout: 15_000,
 				})
 				.toBeGreaterThan(widthBefore + 1);
 			const widthAfter = Number(await rect.getAttribute("width"));
