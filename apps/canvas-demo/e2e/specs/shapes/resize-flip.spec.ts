@@ -93,4 +93,53 @@ test.describe("リサイズの反転（フリップ）", () => {
 		expect(size.width).toBeGreaterThan(0);
 		expect(size.height).toBeGreaterThan(0);
 	});
+
+	// 反転は scaleX/scaleY を行列の符号で表す経路で、Rectangle と同じだが既存テストは
+	// Rectangle のみだった。Ellipse でも非矩形の両軸反転が同じ経路で効くことを守る。
+	// Ellipse は width/height 属性を持たない（rx/ry）ため、「壊れていない」検証は
+	// boundingBox の面積で行う。（Polygon は scale を points 側へ畳み込むため別経路で、
+	// 行列符号では測れない。ここでは対象外とする。）
+	test("Ellipse: 右ハンドルを左辺の外まで引くと水平反転する（scaleX 符号反転）", async ({
+		canvas,
+	}) => {
+		const id = await canvas.drawShape(
+			"Ellipse",
+			{ x: 400, y: 200 },
+			{ x: 560, y: 300 },
+		);
+		expect((await matrixOf(canvas, id)).a).toBeGreaterThan(0);
+
+		await canvas.dragTransformHandle(
+			"rightCenter",
+			{ x: 320, y: 250 },
+			{ ctrl: true },
+		);
+
+		expect((await matrixOf(canvas, id)).a).toBeLessThan(0); // 水平反転
+		const box = await canvas.objectById(id).boundingBox();
+		expect(box?.width ?? 0).toBeGreaterThan(0); // 面積を保つ（壊れていない）
+		expect(box?.height ?? 0).toBeGreaterThan(0);
+	});
+
+	test("Ellipse: 下ハンドルを上辺の外まで引くと垂直反転する（scaleY 符号反転）", async ({
+		canvas,
+	}) => {
+		const id = await canvas.drawShape(
+			"Ellipse",
+			{ x: 400, y: 200 },
+			{ x: 560, y: 300 },
+		);
+		expect((await matrixOf(canvas, id)).d).toBeGreaterThan(0);
+
+		await canvas.dragTransformHandle(
+			"bottomCenter",
+			{ x: 480, y: 140 },
+			{ ctrl: true },
+		);
+
+		expect((await matrixOf(canvas, id)).d).toBeLessThan(0); // 垂直反転
+		const box = await canvas.objectById(id).boundingBox();
+		expect(box?.width ?? 0).toBeGreaterThan(0);
+		expect(box?.height ?? 0).toBeGreaterThan(0);
+	});
 });

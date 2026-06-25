@@ -49,4 +49,46 @@ test.describe("キーボード: クリップボード", () => {
 			.poll(async () => (await canvas.captureObjects()).length)
 			.toBe(1);
 	});
+
+	test("Ctrl+V の後 Undo で複製が消え、Redo で戻る", async ({ canvas }) => {
+		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
+		const before = (await canvas.captureObjects()).length;
+
+		await canvas.copy();
+		await canvas.paste();
+		await expect
+			.poll(async () => (await canvas.captureObjects()).length)
+			.toBe(before + 1);
+
+		// ペーストは履歴に積まれるので、undo で複製だけが消える（元図形は残る）。
+		await canvas.undo();
+		await expect
+			.poll(async () => (await canvas.captureObjects()).length)
+			.toBe(before);
+
+		await canvas.redo();
+		await expect
+			.poll(async () => (await canvas.captureObjects()).length)
+			.toBe(before + 1);
+	});
+
+	test("Ctrl+D の後 Undo で複製が消え、Redo で戻る", async ({ canvas }) => {
+		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
+		const before = (await canvas.captureObjects()).length;
+
+		await canvas.duplicate();
+		await expect
+			.poll(async () => (await canvas.captureObjects()).length)
+			.toBe(before + 1);
+
+		await canvas.undo();
+		await expect
+			.poll(async () => (await canvas.captureObjects()).length)
+			.toBe(before);
+
+		await canvas.redo();
+		await expect
+			.poll(async () => (await canvas.captureObjects()).length)
+			.toBe(before + 1);
+	});
 });

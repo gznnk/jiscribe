@@ -85,6 +85,27 @@ test.describe("ObjectMenu によるテキストスタイル設定", () => {
 			.toBe("right");
 	});
 
+	test("水平整列を left / center に切り替えると text-align が追従する", async ({
+		canvas,
+	}) => {
+		const id = await drawLabeledRect(canvas);
+
+		// 既定の描画は center。まず left にして追従（center→left）を確認する。
+		expect((await canvas.textStyleOf(id))?.textAlign).toBe("center");
+
+		await canvas.openObjectMenu("alignment");
+		await canvas.page.click(selectors.objectMenuSet("textAlign", "left"));
+		await expect
+			.poll(async () => (await canvas.textStyleOf(id))?.textAlign)
+			.toBe("left");
+
+		// セクションは開いたままなので、続けて center へ戻せる（left→center の遷移も検証）。
+		await canvas.page.click(selectors.objectMenuSet("textAlign", "center"));
+		await expect
+			.poll(async () => (await canvas.textStyleOf(id))?.textAlign)
+			.toBe("center");
+	});
+
 	test("縦整列を top にすると wrapper の align-items が追従する", async ({
 		canvas,
 	}) => {
