@@ -16,8 +16,11 @@ const freeEndpoint = (x: number, y: number): EndpointRef =>
 const centerEndpoint = (type: string, id: string): EndpointRef =>
 	({ owner: { type, id }, anchor: { kind: "center" } }) as EndpointRef;
 
-const connector = (source: EndpointRef, target: EndpointRef): ConnectorState =>
-	({ source, target }) as unknown as ConnectorState;
+const connector = (
+	source: EndpointRef,
+	target: EndpointRef,
+	points: { x: number; y: number }[] = [],
+): ConnectorState => ({ source, target, points }) as unknown as ConnectorState;
 
 const rectObj = (
 	id: string,
@@ -46,6 +49,35 @@ describe("resolveConnectorPoints", () => {
 			expect(result).not.toBeNull();
 			expect(result?.source).toEqual({ x: 10, y: 20 });
 			expect(result?.target).toEqual({ x: 50, y: 80 });
+			expect(result?.waypoints).toEqual([]);
+		});
+	});
+
+	describe("経由点（waypoint）", () => {
+		it("中間経由点をそのまま waypoints として返す", () => {
+			const conn = connector(freeEndpoint(0, 0), freeEndpoint(100, 0), [
+				{ x: 40, y: 60 },
+				{ x: 70, y: 60 },
+			]);
+			const result = resolveConnectorPoints(conn, null, null);
+			expect(result?.waypoints).toEqual([
+				{ x: 40, y: 60 },
+				{ x: 70, y: 60 },
+			]);
+		});
+
+		it("center アンカーの輪郭調整は最初の経由点へ向く", () => {
+			// rect は原点中心 100x100。経由点を真下に置くと source は下辺 (0, 50) 付近へ出る。
+			const src = rectObj("r1", 0, 0, 100, 100);
+			const conn = connector(
+				centerEndpoint("rect", "r1"),
+				freeEndpoint(300, 0),
+				[{ x: 0, y: 300 }],
+			);
+			const result = resolveConnectorPoints(conn, src, null);
+			expect(result).not.toBeNull();
+			expect(result?.source.x).toBeCloseTo(0, 0);
+			expect(result?.source.y).toBeCloseTo(50, 0);
 		});
 	});
 

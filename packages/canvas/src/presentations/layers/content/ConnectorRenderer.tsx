@@ -14,20 +14,17 @@ export const ConnectorRenderer: React.FC<ConnectorRendererProps> = ({
 	objects,
 	disablePointerEvents = false,
 }) => {
-	const points = useResolvedConnectorPoints(connectorState, objects);
+	const resolved = useResolvedConnectorPoints(connectorState, objects);
 
 	// Skip rendering if endpoints cannot be resolved
-	if (!points) {
+	if (!resolved) {
 		return null;
 	}
 
 	return (
 		<Connector
 			id={connectorState.id}
-			sourceX={points.source.x}
-			sourceY={points.source.y}
-			targetX={points.target.x}
-			targetY={points.target.y}
+			points={resolved.points}
 			stroke={connectorState.stroke}
 			strokeWidth={connectorState.strokeWidth}
 			strokeDashType={connectorState.strokeDashType}
