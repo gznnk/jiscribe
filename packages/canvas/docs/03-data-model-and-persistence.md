@@ -48,7 +48,7 @@ CanvasMapper は形状タイプごとの Mapper を `ObjectRegistry` から引�
 }
 ```
 
-- `root` … 図形（rect / ellipse / polyline / polygon / group / sticky）とコネクターを混在させた単一配列。**配列順がそのまま重なり順（z-order）**になる
+- `root` … 図形（rect / ellipse / diamond / polyline / polygon / group / sticky）とコネクターを混在させた単一配列。**配列順がそのまま重なり順（z-order）**になる
 - コネクター（`type: "connector"`）… 端点は `source` / `target` の `owner{type,id}` + `anchor` で対象図形を参照する。`root` 直下にのみ置かれ、group の子にはならない。少なくとも一方の端点が owned であること（両端 free は不正）
 - 色フィールド（`stroke` / `fontColor` / `fill`）… 具体的な CSS 色のほか、sentinel 値 `"auto"`（テーマ追従）を取りうる。`"auto"` は描画時にテーマ前景色へ解決される（[表示・テーマ](./08-presentation-and-theme.md) 参照）。新規図形の `stroke` / `fontColor` の既定値は `"auto"`
 - 形式仕様の全文は `../ai/reference.md` と `../ai/jiscribe.schema.json` を参照

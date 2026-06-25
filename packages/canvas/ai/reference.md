@@ -57,6 +57,7 @@ In addition to `name` and `description`, `meta` may hold any custom keys.
 | ----------- | ---------------------------- | --------------------------------------- | ------------------------------------- |
 | `rect`      | Rectangle                    | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform, Radius |
 | `ellipse`   | Ellipse                      | `cx`, `cy`, `rx`, `ry`                  | Stroke, Fill, Text, Transform         |
+| `diamond`   | Diamond (decision/branch)    | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `polyline`  | Polyline (open path)         | `points`                                | Stroke                                |
 | `polygon`   | Polygon (closed path)        | `points`                                | Stroke, Fill                          |
 | `group`     | Group (contains children)    | none                                    | Transform                             |
@@ -128,6 +129,38 @@ For style fields, see [Stroke style](#stroke-style), [Fill style](#fill-style), 
 | `cy`  | `number` | `0`     | Y of the center.        |
 | `rx`  | `number` | `50`    | Horizontal radius (px). |
 | `ry`  | `number` | `50`    | Vertical radius (px).   |
+
+---
+
+### `diamond`
+
+A diamond (rhombus), typically used for **decision / branch nodes in flowcharts**.
+Uses the same rect-based geometry (top-left `x`,`y` + `width`,`height`) as `rect`;
+only the rendering is a diamond. Text is laid out within the full bounding box
+(not clipped to the diamond interior), and it is **connectable** like `rect`.
+It has **no Radius** (`rx`).
+
+```json
+{
+	"id": "decision-1",
+	"type": "diamond",
+	"x": 200,
+	"y": 150,
+	"width": 160,
+	"height": 100,
+	"fill": "#FFF3E0",
+	"stroke": "#EF6C00",
+	"strokeWidth": 2,
+	"text": "OK?"
+}
+```
+
+| Field    | Type     | Default | Description                       |
+| -------- | -------- | ------- | --------------------------------- |
+| `x`      | `number` | `0`     | X of the bounding box's top-left. |
+| `y`      | `number` | `0`     | Y of the bounding box's top-left. |
+| `width`  | `number` | `120`   | Bounding-box width (px).          |
+| `height` | `number` | `80`    | Bounding-box height (px).         |
 
 ---
 
@@ -336,8 +369,8 @@ Options for `anchor.kind`:
 
 `ConnectPointId` options: `"center"` / `"topCenter"` / `"rightCenter"` / `"bottomCenter"` / `"leftCenter"`
 
-`owner.type` may be **only `rect`, `ellipse`, or `sticky`** — these are the
-connectable types. A `polyline`, `polygon`, `group`, `svg`, or `connector`
+`owner.type` may be **only `rect`, `ellipse`, `diamond`, or `sticky`** — these are
+the connectable types. A `polyline`, `polygon`, `group`, `svg`, or `connector`
 **cannot** be an endpoint owner; the document is rejected if one is referenced. To
 anchor a connector near such a shape, use a `FreeEndpointRef` instead.
 
@@ -371,7 +404,7 @@ diagram adapts to light/dark themes.
 
 ### Stroke style
 
-Applies to `rect`, `ellipse`, `polyline`, `polygon`, `connector`.
+Applies to `rect`, `ellipse`, `diamond`, `polyline`, `polygon`, `connector`.
 
 | Field            | Type             | Default   | Description                                              |
 | ---------------- | ---------------- | --------- | -------------------------------------------------------- |
@@ -385,7 +418,7 @@ See [Color values](#color-values-stroke--fontcolor--fill) for `"auto"`.
 
 ### Fill style
 
-Applies to `rect`, `ellipse`, `polygon`, `sticky`.
+Applies to `rect`, `ellipse`, `diamond`, `polygon`, `sticky`.
 
 | Field  | Type     | Default         | Description                                              |
 | ------ | -------- | --------------- | -------------------------------------------------------- |
@@ -393,7 +426,7 @@ Applies to `rect`, `ellipse`, `polygon`, `sticky`.
 
 ### Text style
 
-Applies to `rect`, `ellipse`, `sticky`.
+Applies to `rect`, `ellipse`, `diamond`, `sticky`.
 
 | Field           | Type            | Default          | Description                                                                       |
 | --------------- | --------------- | ---------------- | --------------------------------------------------------------------------------- |
@@ -414,7 +447,7 @@ Applies to `rect`, `ellipse`, `sticky`.
 
 ### Transform style
 
-Applies to `rect`, `ellipse`, `group`. All optional.
+Applies to `rect`, `ellipse`, `diamond`, `group`. All optional.
 
 | Field             | Type      | Default | Description                        |
 | ----------------- | --------- | ------- | ---------------------------------- |

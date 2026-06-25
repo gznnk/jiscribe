@@ -38,7 +38,7 @@ packages/canvas/src/
 └── constants/              # theme.ts / precision.ts など
 ```
 
-形状ごと（rect / ellipse / group / polygon / polyline / connector / sticky）に、
+形状ごと（rect / ellipse / diamond / group / polygon / polyline / connector / sticky）に、
 `states/objects/.../<shape>/` と `controllers/gestures/handlers/objects/...`、
 `presentations/objects/...` が対応する。
 

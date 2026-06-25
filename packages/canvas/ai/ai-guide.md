@@ -9,7 +9,7 @@ It focuses on the essentials. For the full field-level specification, see [`refe
 
 - The canvas is an **infinite plane**. Coordinates follow the SVG convention: **x increases to the right, y increases downward** (the opposite of math; screen coordinates). Unit is **px**.
 - Coordinate values are arbitrary (**negatives are allowed**). The origin `(0, 0)` is **not** pinned to the top-left of the screen (the view pans and zooms).
-- Each shape has its own reference point: **`rect` uses its top-left corner `(x, y)`**, **`ellipse` uses its center `(cx, cy)`** (see "Object quick reference").
+- Each shape has its own reference point: **`rect` and `diamond` use their top-left corner `(x, y)`**, **`ellipse` uses its center `(cx, cy)`** (see "Object quick reference").
 - Stacking order (z-order) follows the **order of the `root` array** — later entries are drawn on top. Overlapping is allowed.
 - There is no auto-layout. You compute coordinates yourself (see "Layout conventions").
 
@@ -27,7 +27,7 @@ The top level must always have `version` / `root` (the array may be empty).
 
 - `version`: **required, always `1`** (fixed value for this format version).
 - `$schema`: optional but **recommended** (enables editor completion and validation).
-- `root`: array of shapes (rect / ellipse / polyline / polygon / group / sticky / svg) **and connectors**, in z-order (back → front). The array order is the stacking order. Connectors (`"type": "connector"`) sit at the top level among the objects; they are **never** placed inside a group's `children`.
+- `root`: array of shapes (rect / ellipse / diamond / polyline / polygon / group / sticky / svg) **and connectors**, in z-order (back → front). The array order is the stacking order. Connectors (`"type": "connector"`) sit at the top level among the objects; they are **never** placed inside a group's `children`.
 
 ## 3. MUST / MUST NOT (violations break the file)
 
@@ -35,7 +35,7 @@ The top level must always have `version` / `root` (the array may be empty).
 
 - Include **`version: 1`** at the top level (required, fixed value).
 - Give every object a **unique `id`** and a **`type`**.
-- `rect` uses `x`,`y` (top-left) + `width`,`height`. `ellipse` uses `cx`,`cy` (center) + `rx`,`ry` (radii).
+- `rect` uses `x`,`y` (top-left) + `width`,`height`. `ellipse` uses `cx`,`cy` (center) + `rx`,`ry` (radii). `diamond` uses `x`,`y` (top-left) + `width`,`height`, same as `rect`.
 - Put `connector` in `root` (top level, mixed with the objects), and express its endpoints with `source` / `target` (EndpointRef).
 - A connector must have **at least one owned endpoint** (`source` or `target` referencing an object). Both endpoints `free` is invalid.
 - For a straight connector, set `points` to an **empty array** `[]`.
@@ -43,7 +43,7 @@ The top level must always have `version` / `root` (the array may be empty).
 **MUST NOT**
 
 - Do not put endpoint (start/end) coordinates in a connector's `points`. `points` holds only intermediate waypoints (usually empty).
-- Do not attach a connector endpoint (`owner`) to a `polyline`, `polygon`, `group`, `svg`, or `connector`. Only `rect` / `ellipse` / `sticky` are connectable; use a `free` endpoint to point near other types.
+- Do not attach a connector endpoint (`owner`) to a `polyline`, `polygon`, `group`, `svg`, or `connector`. Only `rect` / `ellipse` / `diamond` / `sticky` are connectable; use a `free` endpoint to point near other types.
 - Do not give a `group` `x`,`y`,`width`,`height`. Its position comes from its `children`.
 - Do not reuse the same `id`.
 - Do not put a `connector` inside a group's `children` (connectors live at the top level of `root` only).
@@ -54,6 +54,7 @@ The top level must always have `version` / `root` (the array may be empty).
 | ----------------------- | ------------------------------------ | ------------------------------------------------ |
 | `rect`                  | `x`,`y`,`width`,`height`             | stroke / fill / text / `rx` (rounded) / rotation |
 | `ellipse`               | `cx`,`cy`,`rx`,`ry`                  | stroke / fill / text / rotation                  |
+| `diamond`               | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (decision node)  |
 | `polyline`              | `points` (open line)                 | stroke / startArrow / endArrow                   |
 | `polygon`               | `points` (auto-closed)               | stroke / fill                                    |
 | `group`                 | `children`                           | rotation / flipX / flipY                         |
@@ -66,7 +67,7 @@ The top level must always have `version` / `root` (the array may be empty).
 - Colors (`stroke` / `fontColor` / `fill`): a CSS color string, or `"auto"` to follow the editor theme. `"auto"` is the default for `stroke` / `fontColor` (resolved to the theme foreground) and adapts to light/dark; `fill` defaults to `"transparent"`. Prefer `"auto"` (or omit the field) unless a specific color is needed.
 - Stroke: `stroke` (color, default `"auto"`), `strokeWidth` (default 2), `strokeDashType`: `"solid"`/`"dashed"`/`"dotted"`
 - Fill: `fill` (default `"transparent"`)
-- Text (rect / ellipse / sticky): `text`, `textAlign`: `"left"`/`"center"`/`"right"`, `verticalAlign`: `"top"`/`"middle"`/`"bottom"`, `fontColor` (default `"auto"`), `fontSize` (default 16)
+- Text (rect / ellipse / diamond / sticky): `text`, `textAlign`: `"left"`/`"center"`/`"right"`, `verticalAlign`: `"top"`/`"middle"`/`"bottom"`, `fontColor` (default `"auto"`), `fontSize` (default 16). For `diamond`, text is placed within the full bounding box (not clipped to the diamond interior).
 - Arrows `startArrow`/`endArrow`: `"None"` / `"FilledTriangle"` (standard arrow) / `"OpenArrow"` / `"HollowTriangle"` / `"FilledDiamond"` / `"HollowDiamond"` / `"ConcaveTriangle"` / `"Circle"`
 
 **Connector endpoints (EndpointRef)**
@@ -80,7 +81,7 @@ The top level must always have `version` / `root` (the array may be empty).
 
 - `anchor.kind`: `"connectPoint"` (+ `id`) / `"center"` / `"free"` (+ `point`)
 - `connectPoint` `id`: `"center"`/`"topCenter"`/`"rightCenter"`/`"bottomCenter"`/`"leftCenter"`
-- `owner` may reference **only `rect` / `ellipse` / `sticky`**. You **cannot** attach an endpoint to a `polyline`, `polygon`, `group`, `svg`, or `connector`. To point an arrow at/from one of those, use a `free` endpoint placed near it instead.
+- `owner` may reference **only `rect` / `ellipse` / `diamond` / `sticky`**. You **cannot** attach an endpoint to a `polyline`, `polygon`, `group`, `svg`, or `connector`. To point an arrow at/from one of those, use a `free` endpoint placed near it instead.
 - A free point not attached to any object: `{ "anchor": { "kind": "free", "point": { "x": 400, "y": 200 } } }` (no `owner`)
 
 ### Raw SVG (`svg`) — escape hatch for complex visuals
@@ -293,7 +294,7 @@ These are guidelines for readability, not part of the spec. Overlapping itself i
 
 - ❌ Putting a connector inside a group's `children` → ✅ keep connectors at the top level of `root`.
 - ❌ A connector with both endpoints `free` (no owner) → ✅ at least one endpoint must reference an object.
-- ❌ Attaching a connector endpoint (`owner`) to a `polyline`/`polygon`/`group`/`svg` → ✅ only `rect`/`ellipse`/`sticky` are connectable; use a `free` endpoint placed near the target instead.
+- ❌ Attaching a connector endpoint (`owner`) to a `polyline`/`polygon`/`group`/`svg` → ✅ only `rect`/`ellipse`/`diamond`/`sticky` are connectable; use a `free` endpoint placed near the target instead.
 - ❌ Reaching for `svg` for ordinary boxes/nodes/arrows → ✅ use the built-in shapes; keep `svg` for visuals they cannot express.
 - ❌ Putting endpoint coordinates in a connector's `points` → ✅ `points: []`; endpoints go in `source`/`target`.
 - ❌ Giving a `group` `x`/`y`/`width`/`height` → ✅ position it via the `children` coordinates.

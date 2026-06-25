@@ -364,7 +364,7 @@ describe("validateSemantics（実レジストリの connectable）", () => {
 		],
 	});
 
-	it.each(["rect", "ellipse", "sticky"])(
+	it.each(["rect", "ellipse", "diamond", "sticky"])(
 		"%s は接続可（エラーなし）",
 		(type) => {
 			expect(validateSemantics(targetDoc(type))).toEqual([]);
