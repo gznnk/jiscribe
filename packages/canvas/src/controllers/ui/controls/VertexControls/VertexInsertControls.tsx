@@ -26,6 +26,14 @@ type VertexInsertControlsProps = {
 	 * @default 1
 	 */
 	zoom?: number;
+	/**
+	 * Control ID prefix, routing the gesture to the matching handler.
+	 * Polyline/polygon use `"vertex-insert"` (default, → VertexInsertHandler);
+	 * connectors pass `"connector-vertex-insert"` (→ ConnectorVertexInsertHandler),
+	 * because the inserted point maps to a different array index (see those handlers).
+	 * @default "vertex-insert"
+	 */
+	controlIdPrefix?: string;
 };
 
 /**
@@ -34,17 +42,18 @@ type VertexInsertControlsProps = {
  * This is a pure presentation component that renders a simple blue dot at each segment
  * midpoint (matching the connector ConnectionAnchors / Miro style), signalling that a
  * new vertex can be added there. All interaction logic should be handled by the
- * VertexInsertHandler.
+ * insert handler matching `controlIdPrefix`.
  *
  * Each insertion control has:
  * - data-kind="control" for GestureHandler to identify
- * - data-id="vertex-insert:<objectId>:<segmentIndex>" for identifying which segment was interacted with
+ * - data-id="<controlIdPrefix>:<objectId>:<segmentIndex>" for identifying which segment was interacted with
  */
 const VertexInsertControlsComponent: React.FC<VertexInsertControlsProps> = ({
 	objectId,
 	points,
 	closed = false,
 	zoom = 1,
+	controlIdPrefix = "vertex-insert",
 }) => {
 	// Adjust sizes based on zoom level to maintain consistent visual size
 	const adjustedRadius = INSERT_RADIUS / zoom;
@@ -85,7 +94,7 @@ const VertexInsertControlsComponent: React.FC<VertexInsertControlsProps> = ({
 					stroke={INSERT_COLOR}
 					strokeWidth={adjustedStrokeWidth}
 					data-kind="control"
-					data-id={`vertex-insert:${objectId}:${segmentIndex}`}
+					data-id={`${controlIdPrefix}:${objectId}:${segmentIndex}`}
 					style={{ cursor: "crosshair" }}
 				/>
 			))}

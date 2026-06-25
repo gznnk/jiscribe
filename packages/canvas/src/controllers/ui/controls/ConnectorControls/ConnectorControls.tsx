@@ -3,6 +3,8 @@ import { memo } from "react";
 import { useResolvedConnectorPoints } from "../../../../presentations/layers/content/utils/useResolvedConnectorPoints";
 import type { CanvasState } from "../../../../states/canvas/CanvasState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
+import type { CanvasControllerState } from "../../../CanvasTypes";
+import { VertexControls, VertexInsertControls } from "../VertexControls";
 
 const ENDPOINT_RADIUS = 4;
 const ENDPOINT_STROKE_WIDTH = 1;
@@ -13,24 +15,30 @@ type ConnectorControlsProps = {
 	connectorState: ConnectorState;
 	objects: CanvasState["objects"];
 	zoom?: number;
+	selectedVertex?: CanvasControllerState["selectedVertex"];
 };
 
 /**
- * Renders the selection outline and endpoint handles for a selected connector.
- * Placed in the controllers layer so selection visuals are decoupled from the connector itself.
+ * Renders the editing controls for a selected connector:
+ * - 端点ハンドル（source / target）: ドラッグで図形へ再接続する
+ *   （data-id="connection-anchor:edit:<id>:source|target" → ConnectionAnchorEventHandler）
+ * - waypoint 移動ハンドル: 既存の経由点を動かす
+ *   （data-id="vertex-control:<id>:<i>" → VertexControlHandler を流用）
+ * - waypoint 挿入ハンドル: 解決済みパス [source, ...waypoints, target] の各セグメント中点。
+ *   ドラッグで新しい経由点を追加する
+ *   （data-id="connector-vertex-insert:<id>:<segment>" → ConnectorVertexInsertHandler）
  *
- * Endpoint handles allow reconnection via drag:
- * - data-kind="control" for GestureHandler routing
- * - data-id="connection-anchor:edit:<id>:source|target" for identifying which endpoint
+ * Placed in the controllers layer so selection visuals are decoupled from the connector itself.
  */
 const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 	connectorState,
 	objects,
 	zoom = 1,
+	selectedVertex = null,
 }) => {
-	const points = useResolvedConnectorPoints(connectorState, objects);
+	const resolved = useResolvedConnectorPoints(connectorState, objects);
 
-	if (!points) {
+	if (!resolved) {
 		return null;
 	}
 
@@ -47,13 +55,37 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 	const showSourceHandle = sourceIsFree || !targetIsFree;
 	const showTargetHandle = targetIsFree || !sourceIsFree;
 
+	// 移動ハンドルは中間経由点（waypoints）に、挿入ハンドルは端点込みの
+	// フル解決パスの各セグメント中点に出す。
+	const waypoints = connectorState.points;
+	const selectedVertexIndex =
+		selectedVertex?.objectId === connectorState.id
+			? selectedVertex.vertexIndex
+			: null;
+
 	return (
 		<g data-layer="connector-controls">
+			{/* waypoint 挿入ハンドル（端点込みパスのセグメント中点）。端点ハンドルの下に描く */}
+			<VertexInsertControls
+				objectId={connectorState.id}
+				points={resolved.points}
+				controlIdPrefix="connector-vertex-insert"
+				zoom={zoom}
+			/>
+
+			{/* waypoint 移動ハンドル */}
+			<VertexControls
+				objectId={connectorState.id}
+				points={waypoints}
+				zoom={zoom}
+				selectedVertexIndex={selectedVertexIndex}
+			/>
+
 			{/* Source endpoint handle (interactive). 対が free のとき owned 端は隠す */}
 			{showSourceHandle && (
 				<circle
-					cx={points.source.x}
-					cy={points.source.y}
+					cx={resolved.source.x}
+					cy={resolved.source.y}
 					r={adjustedEndpointRadius}
 					fill={ENDPOINT_FILL}
 					stroke={ENDPOINT_COLOR}
@@ -67,8 +99,8 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 			{/* Target endpoint handle (interactive). 対が free のとき owned 端は隠す */}
 			{showTargetHandle && (
 				<circle
-					cx={points.target.x}
-					cy={points.target.y}
+					cx={resolved.target.x}
+					cy={resolved.target.y}
 					r={adjustedEndpointRadius}
 					fill={ENDPOINT_FILL}
 					stroke={ENDPOINT_COLOR}

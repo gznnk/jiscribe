@@ -1,5 +1,6 @@
 import { CanvasEventHandler } from "../gestures/handlers/canvas/CanvasEventHandler";
 import { ConnectionAnchorEventHandler } from "../gestures/handlers/controls/connection/ConnectionAnchorEventHandler";
+import { ConnectorVertexInsertHandler } from "../gestures/handlers/controls/connection/ConnectorVertexInsertHandler";
 import { ControlEventHandler } from "../gestures/handlers/controls/ControlEventHandler";
 import { TransformControlHandler } from "../gestures/handlers/controls/transform/TransformControlHandler";
 import { VertexControlHandler } from "../gestures/handlers/controls/vertex/VertexControlHandler";
@@ -24,6 +25,7 @@ export const initializeGestureHandlerRegistry = (): void => {
 	const vertexControlHandler = new VertexControlHandler();
 	const vertexInsertHandler = new VertexInsertHandler();
 	const connectionAnchorEventHandler = new ConnectionAnchorEventHandler();
+	const connectorVertexInsertHandler = new ConnectorVertexInsertHandler();
 	// 将来: const pathControlHandler = new PathControlHandler();
 
 	// ControlEventHandler をストラテジ配列でインスタンス化
@@ -32,6 +34,7 @@ export const initializeGestureHandlerRegistry = (): void => {
 		vertexControlHandler,
 		vertexInsertHandler,
 		connectionAnchorEventHandler,
+		connectorVertexInsertHandler,
 		// 将来: pathControlHandler,
 	]);
 
