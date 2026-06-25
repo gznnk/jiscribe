@@ -42,6 +42,8 @@ describe("ConnectorMapper", () => {
 				{ x: 100, y: 50 },
 				{ x: 200, y: 0 },
 			]);
+			// routing は未指定なら undefined のまま引き継ぐ。
+			expect(state.routing).toBeUndefined();
 			expect(state.stroke).toBe("#000000");
 			expect(state.strokeWidth).toBe(2);
 			expect(state.source).toEqual({
@@ -188,6 +190,7 @@ describe("ConnectorMapper", () => {
 				],
 				stroke: "#000000",
 				strokeWidth: 2,
+				routing: "orthogonal",
 				source: {
 					owner: { type: "rect", id: "rect-1" },
 					anchor: { kind: "center" },
@@ -207,6 +210,8 @@ describe("ConnectorMapper", () => {
 			expect(convertedDoc.type).toBe(originalDoc.type);
 			// points（中間経由点）は往復で保持される。
 			expect(convertedDoc.points).toEqual(originalDoc.points);
+			// routing も往復で保持される。
+			expect(convertedDoc.routing).toBe("orthogonal");
 			expect(convertedDoc.stroke).toBe(originalDoc.stroke);
 			expect(convertedDoc.strokeWidth).toBe(originalDoc.strokeWidth);
 			expect(convertedDoc.source).toEqual(originalDoc.source);

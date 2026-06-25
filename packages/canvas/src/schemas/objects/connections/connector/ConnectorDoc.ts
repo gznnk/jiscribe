@@ -1,4 +1,5 @@
 import type { ArrowType } from "../../types/ArrowType";
+import type { ConnectorRouting } from "../../types/ConnectorRouting";
 import type { EndpointRef } from "../../types/EndpointRef";
 import type { ObjectFeatures } from "../../types/ObjectFeatures";
 import type { CreateObjectType } from "../../utils/CreateObjectType";
@@ -19,7 +20,10 @@ declare const ConnectorDocBrand: unique symbol;
  * `points` のセマンティクス: source → target 順の**中間経由点（waypoint）のみ**を
  * ワールド座標で保持する。端点座標は含めない（端点の正は `source` / `target` の
  * EndpointRef であり、owned アンカーは描画時に動的解決される）。
- * 直線コネクターは空配列。経由点による変形は将来実装予定。
+ * 直線コネクターは空配列。
+ *
+ * `routing` が `"orthogonal"` のときは経路を描画時に自動生成し、`points` は使わない
+ * （常に空・派生値は永続化しない）。省略時は `"straight"`。
  */
 export type ConnectorDoc = CreateObjectType<
 	typeof ConnectorFeatures,
@@ -27,6 +31,7 @@ export type ConnectorDoc = CreateObjectType<
 	{
 		source: EndpointRef;
 		target: EndpointRef;
+		routing?: ConnectorRouting;
 		startArrow?: ArrowType;
 		endArrow?: ArrowType;
 	}

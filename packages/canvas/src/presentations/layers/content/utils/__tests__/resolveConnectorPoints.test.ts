@@ -16,11 +16,23 @@ const freeEndpoint = (x: number, y: number): EndpointRef =>
 const centerEndpoint = (type: string, id: string): EndpointRef =>
 	({ owner: { type, id }, anchor: { kind: "center" } }) as EndpointRef;
 
+const connectPointEndpoint = (
+	type: string,
+	id: string,
+	anchorId: string,
+): EndpointRef =>
+	({
+		owner: { type, id },
+		anchor: { kind: "connectPoint", id: anchorId },
+	}) as EndpointRef;
+
 const connector = (
 	source: EndpointRef,
 	target: EndpointRef,
 	points: { x: number; y: number }[] = [],
-): ConnectorState => ({ source, target, points }) as unknown as ConnectorState;
+	routing?: "straight" | "orthogonal",
+): ConnectorState =>
+	({ source, target, points, routing }) as unknown as ConnectorState;
 
 const rectObj = (
 	id: string,
@@ -129,6 +141,87 @@ describe("resolveConnectorPoints", () => {
 			// 中心から中心への方向なので adjustToOutline が null を返す
 			const result = resolveConnectorPoints(conn, src, src);
 			expect(result).toBeNull();
+		});
+	});
+
+	describe("routing === orthogonal", () => {
+		const allOrthogonal = (pts: { x: number; y: number }[]): boolean =>
+			pts.every((p, i) =>
+				i === 0 ? true : p.x === pts[i - 1].x || p.y === pts[i - 1].y,
+			);
+
+		it("connectPoint 端点から水平/垂直だけの経路を生成し、waypoints に中間点を返す", () => {
+			const src = rectObj("r1", 100, 100, 100, 60); // 右辺中央 = (150,100)
+			const tgt = rectObj("r2", 400, 300, 100, 60); // 左辺中央 = (350,300)
+			const conn = connector(
+				connectPointEndpoint("rect", "r1", "rightCenter"),
+				connectPointEndpoint("rect", "r2", "leftCenter"),
+				[],
+				"orthogonal",
+			);
+			const result = resolveConnectorPoints(conn, src, tgt);
+			expect(result).not.toBeNull();
+			const path = [result!.source, ...result!.waypoints, result!.target];
+			expect(result?.source).toEqual({ x: 150, y: 100 });
+			expect(result?.target).toEqual({ x: 350, y: 300 });
+			expect(allOrthogonal(path)).toBe(true);
+			// 直線ではなく曲がりがある（縦ずれがあるため）
+			expect(result!.waypoints.length).toBeGreaterThan(0);
+		});
+
+		it("connectPoint の退出方向が図形の回転に追従する", () => {
+			const conn = connector(
+				connectPointEndpoint("rect", "r1", "rightCenter"),
+				freeEndpoint(400, 400),
+				[],
+				"orthogonal",
+			);
+			const firstSegment = (
+				r: NonNullable<ReturnType<typeof resolveConnectorPoints>>,
+			) => {
+				const p1 = r.waypoints[0] ?? r.target;
+				return { dx: p1.x - r.source.x, dy: p1.y - r.source.y };
+			};
+
+			const noRot = resolveConnectorPoints(
+				conn,
+				rectObj("r1", 100, 100, 100, 60),
+				null,
+			);
+			const rotated = resolveConnectorPoints(
+				conn,
+				{ ...rectObj("r1", 100, 100, 100, 60), rotation: 90 } as ObjectState,
+				null,
+			);
+
+			// 回転なし: 右辺なので最初の一歩は水平
+			const a = firstSegment(noRot!);
+			expect(a.dy).toBe(0);
+			expect(a.dx).not.toBe(0);
+			// 回転90°: 右辺が縦を向くので最初の一歩は垂直
+			const b = firstSegment(rotated!);
+			expect(b.dx).toBe(0);
+			expect(b.dy).not.toBe(0);
+		});
+
+		it("図形を動かすと経路が再計算される（移動追従）", () => {
+			const conn = connector(
+				connectPointEndpoint("rect", "r1", "rightCenter"),
+				connectPointEndpoint("rect", "r2", "leftCenter"),
+				[],
+				"orthogonal",
+			);
+			const before = resolveConnectorPoints(
+				conn,
+				rectObj("r1", 100, 100, 100, 60),
+				rectObj("r2", 400, 300, 100, 60),
+			);
+			const after = resolveConnectorPoints(
+				conn,
+				rectObj("r1", 100, 100, 100, 60),
+				rectObj("r2", 400, 500, 100, 60), // target を下へ移動
+			);
+			expect(after?.target).not.toEqual(before?.target);
 		});
 	});
 });

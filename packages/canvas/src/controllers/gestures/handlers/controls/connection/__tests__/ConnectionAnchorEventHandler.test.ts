@@ -241,4 +241,26 @@ describe("ConnectionAnchorEventHandler 端点編集（実体直接編集）", ()
 		const newId = afterEnd.rootIds[1];
 		expect(afterEnd.objects[newId]?.type).toBe("connector");
 	});
+
+	it("新規コネクターは既定で routing = orthogonal で作られる", () => {
+		const base = stateWithConnectors([]);
+		const state: CanvasControllerState = {
+			...base,
+			objects: {
+				...base.objects,
+				"rect-1": { id: "rect-1", type: "rect" } as unknown as ObjectState,
+			},
+			rootIds: ["rect-1"],
+		};
+
+		const afterStart = handler.handle(
+			state,
+			dragEvent("dragStart", "connection-anchor:create:rect-1:rightCenter", {
+				x: 10,
+				y: 10,
+			}),
+		);
+
+		expect(afterStart.pendingConnector?.routing).toBe("orthogonal");
+	});
 });

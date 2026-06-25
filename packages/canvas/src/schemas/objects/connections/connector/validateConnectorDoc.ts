@@ -1,4 +1,5 @@
 import type { ObjectDocValidateFn } from "../../../registry/ObjectDocValidatorRegistry";
+import { isConnectorRouting } from "../../types/ConnectorRouting";
 import { isOwnedEndpointRef } from "../../types/EndpointRef";
 import {
 	validateArrowFields,
@@ -14,6 +15,18 @@ export const validateConnectorDoc: ObjectDocValidateFn = (o, path) => [
 	...validateArrowFields(o, path),
 	...validateEndpointRef(o.source, `${path}.source`),
 	...validateEndpointRef(o.target, `${path}.target`),
+	// routing は任意。指定する場合は既知の値のみ許容する。
+	...("routing" in o &&
+	o.routing !== undefined &&
+	!isConnectorRouting(o.routing)
+		? [
+				{
+					path: `${path}.routing`,
+					message: `connector.routing must be one of "straight" | "orthogonal".`,
+					...(typeof o.id === "string" ? { id: o.id } : {}),
+				},
+			]
+		: []),
 	// 不変条件: connector は少なくとも一方の端点が owned であること。
 	// 両端 free（owner なし）は ink(polyline) 相当で connector としては不正。
 	...(!isOwnedEndpointRef(o.source) && !isOwnedEndpointRef(o.target)

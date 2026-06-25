@@ -117,6 +117,8 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			target: {
 				anchor: { kind: "free", point: { x: event.last.x, y: event.last.y } },
 			},
+			// 新規コネクターは既定で自動直交ルーティング（既存ファイルの省略時は straight のまま）。
+			routing: "orthogonal",
 			stroke: AUTO_COLOR,
 			strokeWidth: 2,
 			endArrow: "ConcaveTriangle",

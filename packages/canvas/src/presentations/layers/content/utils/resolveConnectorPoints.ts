@@ -2,6 +2,7 @@ import type { Point } from "@workspace/geometry";
 
 import { adjustToOutline } from "./adjustToOutline";
 import { resolveEndpoint } from "./resolveEndpoint";
+import { resolveOrthogonalRoute } from "./resolveOrthogonalRoute";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
 
@@ -55,6 +56,23 @@ export const resolveConnectorPoints = (
 		if (!targetPoint) {
 			return null;
 		}
+	}
+
+	// 自動直交ルーティング: 経路を描画時に算出し waypoints として返す（手動 points は使わない）。
+	if (connectorState.routing === "orthogonal") {
+		const path = resolveOrthogonalRoute(
+			connectorState.source.anchor,
+			connectorState.target.anchor,
+			sourcePoint,
+			targetPoint,
+			sourceObj,
+			targetObj,
+		);
+		return {
+			source: path[0],
+			target: path[path.length - 1],
+			waypoints: path.slice(1, -1),
+		};
 	}
 
 	return { source: sourcePoint, target: targetPoint, waypoints };

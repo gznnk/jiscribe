@@ -23,3 +23,6 @@ export * from "./RectKeyPoints";
 export * from "./EllipseKeyPoints";
 export * from "./FrameKeyPoints";
 export * from "./BoxFeatures";
+
+// Direction
+export * from "./OrthogonalDirection";

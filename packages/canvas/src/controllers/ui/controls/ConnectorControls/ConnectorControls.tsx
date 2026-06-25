@@ -57,6 +57,8 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 
 	// 移動ハンドルは中間経由点（waypoints）に、挿入ハンドルは端点込みの
 	// フル解決パスの各セグメント中点に出す。
+	// orthogonal（自動ルーティング）では経路が計算値のため、手動ハンドルは出さない。
+	const isOrthogonal = connectorState.routing === "orthogonal";
 	const waypoints = connectorState.points;
 	const selectedVertexIndex =
 		selectedVertex?.objectId === connectorState.id
@@ -66,20 +68,24 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 	return (
 		<g data-layer="connector-controls">
 			{/* waypoint 挿入ハンドル（端点込みパスのセグメント中点）。端点ハンドルの下に描く */}
-			<VertexInsertControls
-				objectId={connectorState.id}
-				points={resolved.points}
-				controlIdPrefix="connector-vertex-insert"
-				zoom={zoom}
-			/>
+			{!isOrthogonal && (
+				<VertexInsertControls
+					objectId={connectorState.id}
+					points={resolved.points}
+					controlIdPrefix="connector-vertex-insert"
+					zoom={zoom}
+				/>
+			)}
 
 			{/* waypoint 移動ハンドル */}
-			<VertexControls
-				objectId={connectorState.id}
-				points={waypoints}
-				zoom={zoom}
-				selectedVertexIndex={selectedVertexIndex}
-			/>
+			{!isOrthogonal && (
+				<VertexControls
+					objectId={connectorState.id}
+					points={waypoints}
+					zoom={zoom}
+					selectedVertexIndex={selectedVertexIndex}
+				/>
+			)}
 
 			{/* Source endpoint handle (interactive). 対が free のとき owned 端は隠す */}
 			{showSourceHandle && (
