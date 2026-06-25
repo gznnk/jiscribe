@@ -52,3 +52,47 @@ describe("コピー/複製でコネクターの相対 z 順を保つ", () => {
 		expect(appendedTypes(after, 3)).toEqual(["rect", "connector", "rect"]);
 	});
 });
+
+/**
+ * selectedIds を非空にするペーストは、相互排他のコネクター/頂点選択を
+ * 解除しなければならない（#71 の回帰防止）。残ると SwapArrows / Delete などが
+ * 画面に出ていない旧コネクター/旧頂点に作用する。
+ */
+describe("ペーストで選択の相互排他を維持する", () => {
+	it("コネクター選択中にペーストすると selectedConnectorId が null になる", () => {
+		const state = createCommandState(twoRectsWithConnectorDoc, {
+			selectedIds: [],
+			selectedConnectorId: "conn-1",
+			rootIds: ["rect-1", "conn-1", "rect-2"],
+		});
+		const clipboard = CopyCommand.execute(
+			createCommandState(twoRectsWithConnectorDoc, {
+				selectedIds: ["rect-1"],
+				rootIds: ["rect-1", "conn-1", "rect-2"],
+			}),
+		).internalClipboard;
+		expect(clipboard).not.toBeNull();
+
+		const after = handlePaste(state, clipboard!);
+		expect(after.selectedConnectorId).toBeNull();
+		expect(after.selectedIds.length).toBeGreaterThan(0);
+	});
+
+	it("頂点選択中にペーストすると selectedVertex が null になる", () => {
+		const state = createCommandState(twoRectsWithConnectorDoc, {
+			selectedIds: [],
+			selectedVertex: { objectId: "rect-1", vertexIndex: 0 },
+			rootIds: ["rect-1", "conn-1", "rect-2"],
+		});
+		const clipboard = CopyCommand.execute(
+			createCommandState(twoRectsWithConnectorDoc, {
+				selectedIds: ["rect-1"],
+				rootIds: ["rect-1", "conn-1", "rect-2"],
+			}),
+		).internalClipboard;
+		expect(clipboard).not.toBeNull();
+
+		const after = handlePaste(state, clipboard!);
+		expect(after.selectedVertex).toBeNull();
+	});
+});
