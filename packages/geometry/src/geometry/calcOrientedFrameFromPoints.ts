@@ -1,7 +1,8 @@
+import { calcPolyBoundingBox } from "./calcPolyBoundingBox";
 import { degreesToRadians } from "../common/degreesToRadians";
 import { nanToZero } from "../common/nanToZero";
-import { calcAffineTransformedPoint } from "../transform/calcAffineTransformedPoint";
-import { calcInverseAffineTransformedPoint } from "../transform/calcInverseAffineTransformedPoint";
+import { applyAffineWithTrig } from "../transform/applyAffineWithTrig";
+import { applyInverseAffineWithTrig } from "../transform/applyInverseAffineWithTrig";
 import type { Point } from "../types/Point";
 import type { TransformedFrame } from "../types/TransformedFrame";
 
@@ -30,24 +31,35 @@ export const calcOrientedFrameFromPoints = (
 		return null;
 	}
 
-	const left = Math.min(...points.map((p) => p.x));
-	const top = Math.min(...points.map((p) => p.y));
-	const right = Math.max(...points.map((p) => p.x));
-	const bottom = Math.max(...points.map((p) => p.y));
+	// points は空でないため calcPolyBoundingBox は必ず非 null を返す
+	const { left, top, right, bottom } = calcPolyBoundingBox(points)!;
 
 	const x = nanToZero((left + right) / 2);
 	const y = nanToZero((top + bottom) / 2);
 
 	const radians = degreesToRadians(rotation);
+	const cosTheta = Math.cos(radians);
+	const sinTheta = Math.sin(radians);
 
 	const inversePoints = points.map((p) =>
-		calcInverseAffineTransformedPoint(p.x, p.y, scaleX, scaleY, radians, x, y),
+		applyInverseAffineWithTrig(
+			p.x,
+			p.y,
+			scaleX,
+			scaleY,
+			cosTheta,
+			sinTheta,
+			x,
+			y,
+		),
 	);
 
-	const inverseLeft = Math.min(...inversePoints.map((p) => p.x));
-	const inverseTop = Math.min(...inversePoints.map((p) => p.y));
-	const inverseRight = Math.max(...inversePoints.map((p) => p.x));
-	const inverseBottom = Math.max(...inversePoints.map((p) => p.y));
+	const {
+		left: inverseLeft,
+		top: inverseTop,
+		right: inverseRight,
+		bottom: inverseBottom,
+	} = calcPolyBoundingBox(inversePoints)!;
 
 	const width = inverseRight - inverseLeft;
 	const height = inverseBottom - inverseTop;
@@ -55,12 +67,13 @@ export const calcOrientedFrameFromPoints = (
 	const inverseCenterX = (inverseLeft + inverseRight) / 2;
 	const inverseCenterY = (inverseTop + inverseBottom) / 2;
 
-	const centerPoint = calcAffineTransformedPoint(
+	const centerPoint = applyAffineWithTrig(
 		inverseCenterX,
 		inverseCenterY,
 		scaleX,
 		scaleY,
-		radians,
+		cosTheta,
+		sinTheta,
 		x,
 		y,
 	);

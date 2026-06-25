@@ -1,5 +1,5 @@
 import { degreesToRadians } from "../common/degreesToRadians";
-import { calcAffineTransformedPoint } from "../transform/calcAffineTransformedPoint";
+import { applyAffineWithTrig } from "../transform/applyAffineWithTrig";
 import type { BoundingBox } from "../types/BoundingBox";
 import type { TransformedFrame } from "../types/TransformedFrame";
 
@@ -23,44 +23,50 @@ export const calcBoundingBox = (frame: TransformedFrame): BoundingBox => {
 	// For elements with rotation, calculate all four corners and find bounding box
 	if (rotation !== 0) {
 		const radians = degreesToRadians(rotation);
+		const cosTheta = Math.cos(radians);
+		const sinTheta = Math.sin(radians);
 
 		// Calculate all four corners
-		const topLeft = calcAffineTransformedPoint(
+		const topLeft = applyAffineWithTrig(
 			-halfWidth,
 			-halfHeight,
 			scaleX,
 			scaleY,
-			radians,
+			cosTheta,
+			sinTheta,
 			cx,
 			cy,
 		);
 
-		const bottomLeft = calcAffineTransformedPoint(
+		const bottomLeft = applyAffineWithTrig(
 			-halfWidth,
 			halfHeight,
 			scaleX,
 			scaleY,
-			radians,
+			cosTheta,
+			sinTheta,
 			cx,
 			cy,
 		);
 
-		const topRight = calcAffineTransformedPoint(
+		const topRight = applyAffineWithTrig(
 			halfWidth,
 			-halfHeight,
 			scaleX,
 			scaleY,
-			radians,
+			cosTheta,
+			sinTheta,
 			cx,
 			cy,
 		);
 
-		const bottomRight = calcAffineTransformedPoint(
+		const bottomRight = applyAffineWithTrig(
 			halfWidth,
 			halfHeight,
 			scaleX,
 			scaleY,
-			radians,
+			cosTheta,
+			sinTheta,
 			cx,
 			cy,
 		);

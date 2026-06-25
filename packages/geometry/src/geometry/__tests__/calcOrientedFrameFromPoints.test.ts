@@ -50,4 +50,22 @@ describe("calcOrientedFrameFromPoints", () => {
 		expect(result.scaleX).toBe(2);
 		expect(result.scaleY).toBe(0.5);
 	});
+
+	// リグレッション: Math.min/max のスプレッド展開は大規模点群で
+	// RangeError(Maximum call stack size exceeded) を起こしうるため、
+	// 単一ループ化により数万点でもクラッシュしないことを保証する。
+	it("数万点でもRangeErrorを起こさず正しいAABBを返す", () => {
+		const count = 200_000;
+		const points = Array.from({ length: count }, (_, i) => ({
+			x: i,
+			y: count - i,
+		}));
+		const result = calcOrientedFrameFromPoints(points);
+		assert(result !== null);
+		// x: 0..count-1, y: 1..count
+		expect(result.cx).toBeCloseTo((count - 1) / 2);
+		expect(result.cy).toBeCloseTo((count + 1) / 2);
+		expect(result.width).toBeCloseTo(count - 1);
+		expect(result.height).toBeCloseTo(count - 1);
+	});
 });
