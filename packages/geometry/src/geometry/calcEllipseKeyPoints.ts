@@ -1,5 +1,5 @@
 import { degreesToRadians } from "../common/degreesToRadians";
-import { calcAffineTransformedPoint } from "../transform/calcAffineTransformedPoint";
+import { applyAffineWithTrig } from "../transform/applyAffineWithTrig";
 import type { EllipseKeyPoints } from "../types/EllipseKeyPoints";
 import type { TransformedEllipse } from "../types/TransformedEllipse";
 
@@ -15,83 +15,93 @@ export const calcEllipseKeyPoints = (
 	const { cx, cy, rx, ry, rotation, scaleX, scaleY } = geometry;
 
 	const radians = degreesToRadians(rotation);
+	const cosTheta = Math.cos(radians);
+	const sinTheta = Math.sin(radians);
 
-	const topCenter = calcAffineTransformedPoint(
+	const topCenter = applyAffineWithTrig(
 		0,
 		-ry,
 		scaleX,
 		scaleY,
-		radians,
+		cosTheta,
+		sinTheta,
 		cx,
 		cy,
 	);
 
-	const rightCenter = calcAffineTransformedPoint(
+	const rightCenter = applyAffineWithTrig(
 		rx,
 		0,
 		scaleX,
 		scaleY,
-		radians,
+		cosTheta,
+		sinTheta,
 		cx,
 		cy,
 	);
 
-	const bottomCenter = calcAffineTransformedPoint(
+	const bottomCenter = applyAffineWithTrig(
 		0,
 		ry,
 		scaleX,
 		scaleY,
-		radians,
+		cosTheta,
+		sinTheta,
 		cx,
 		cy,
 	);
 
-	const leftCenter = calcAffineTransformedPoint(
+	const leftCenter = applyAffineWithTrig(
 		-rx,
 		0,
 		scaleX,
 		scaleY,
-		radians,
+		cosTheta,
+		sinTheta,
 		cx,
 		cy,
 	);
 
-	const topLeft = calcAffineTransformedPoint(
+	const topLeft = applyAffineWithTrig(
 		-rx,
 		-ry,
 		scaleX,
 		scaleY,
-		radians,
+		cosTheta,
+		sinTheta,
 		cx,
 		cy,
 	);
 
-	const topRight = calcAffineTransformedPoint(
+	const topRight = applyAffineWithTrig(
 		rx,
 		-ry,
 		scaleX,
 		scaleY,
-		radians,
+		cosTheta,
+		sinTheta,
 		cx,
 		cy,
 	);
 
-	const bottomRight = calcAffineTransformedPoint(
+	const bottomRight = applyAffineWithTrig(
 		rx,
 		ry,
 		scaleX,
 		scaleY,
-		radians,
+		cosTheta,
+		sinTheta,
 		cx,
 		cy,
 	);
 
-	const bottomLeft = calcAffineTransformedPoint(
+	const bottomLeft = applyAffineWithTrig(
 		-rx,
 		ry,
 		scaleX,
 		scaleY,
-		radians,
+		cosTheta,
+		sinTheta,
 		cx,
 		cy,
 	);

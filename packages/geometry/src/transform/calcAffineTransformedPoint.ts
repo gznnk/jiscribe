@@ -1,3 +1,4 @@
+import { applyAffineWithTrig } from "./applyAffineWithTrig";
 import type { Point } from "../types/Point";
 
 /**
@@ -30,13 +31,15 @@ export const calcAffineTransformedPoint = (
 		};
 	}
 
-	// Calculate trigonometric values once
-	const cosTheta = Math.cos(theta);
-	const sinTheta = Math.sin(theta);
-
-	// Apply affine transformation with pre-computed values
-	const transformedX = sx * cosTheta * px - sy * sinTheta * py + tx;
-	const transformedY = sx * sinTheta * px + sy * cosTheta * py + ty;
-
-	return { x: transformedX, y: transformedY };
+	// Calculate trigonometric values once, then delegate to the shared core
+	return applyAffineWithTrig(
+		px,
+		py,
+		sx,
+		sy,
+		Math.cos(theta),
+		Math.sin(theta),
+		tx,
+		ty,
+	);
 };

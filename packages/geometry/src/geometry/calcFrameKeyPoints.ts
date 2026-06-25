@@ -1,5 +1,5 @@
 import { degreesToRadians } from "../common/degreesToRadians";
-import { calcAffineTransformedPoint } from "../transform/calcAffineTransformedPoint";
+import { applyAffineWithTrig } from "../transform/applyAffineWithTrig";
 import type { FrameKeyPoints } from "../types/FrameKeyPoints";
 import type { TransformedFrame } from "../types/TransformedFrame";
 
@@ -32,79 +32,89 @@ export const calcFrameKeyPoints = (frame: TransformedFrame): FrameKeyPoints => {
 		};
 	}
 
-	// With rotation - calculate once and reuse
+	// With rotation - compute cos/sin once and reuse across all 8 key points
 	const radians = degreesToRadians(rotation);
+	const cosTheta = Math.cos(radians);
+	const sinTheta = Math.sin(radians);
 
 	return {
-		topLeft: calcAffineTransformedPoint(
+		topLeft: applyAffineWithTrig(
 			-halfWidth,
 			-halfHeight,
 			scaleX,
 			scaleY,
-			radians,
+			cosTheta,
+			sinTheta,
 			cx,
 			cy,
 		),
-		topCenter: calcAffineTransformedPoint(
+		topCenter: applyAffineWithTrig(
 			0,
 			-halfHeight,
 			scaleX,
 			scaleY,
-			radians,
+			cosTheta,
+			sinTheta,
 			cx,
 			cy,
 		),
-		topRight: calcAffineTransformedPoint(
+		topRight: applyAffineWithTrig(
 			halfWidth,
 			-halfHeight,
 			scaleX,
 			scaleY,
-			radians,
+			cosTheta,
+			sinTheta,
 			cx,
 			cy,
 		),
-		rightCenter: calcAffineTransformedPoint(
+		rightCenter: applyAffineWithTrig(
 			halfWidth,
 			0,
 			scaleX,
 			scaleY,
-			radians,
+			cosTheta,
+			sinTheta,
 			cx,
 			cy,
 		),
-		bottomRight: calcAffineTransformedPoint(
+		bottomRight: applyAffineWithTrig(
 			halfWidth,
 			halfHeight,
 			scaleX,
 			scaleY,
-			radians,
+			cosTheta,
+			sinTheta,
 			cx,
 			cy,
 		),
-		bottomCenter: calcAffineTransformedPoint(
+		bottomCenter: applyAffineWithTrig(
 			0,
 			halfHeight,
 			scaleX,
 			scaleY,
-			radians,
+			cosTheta,
+			sinTheta,
 			cx,
 			cy,
 		),
-		bottomLeft: calcAffineTransformedPoint(
+		bottomLeft: applyAffineWithTrig(
 			-halfWidth,
 			halfHeight,
 			scaleX,
 			scaleY,
-			radians,
+			cosTheta,
+			sinTheta,
 			cx,
 			cy,
 		),
-		leftCenter: calcAffineTransformedPoint(
+		leftCenter: applyAffineWithTrig(
 			-halfWidth,
 			0,
 			scaleX,
 			scaleY,
-			radians,
+			cosTheta,
+			sinTheta,
 			cx,
 			cy,
 		),

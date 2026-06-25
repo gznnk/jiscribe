@@ -1,5 +1,5 @@
 import { degreesToRadians } from "../common/degreesToRadians";
-import { calcAffineTransformedPoint } from "../transform/calcAffineTransformedPoint";
+import { applyAffineWithTrig } from "../transform/applyAffineWithTrig";
 import type { RectKeyPoints } from "../types/RectKeyPoints";
 import type { TransformedRect } from "../types/TransformedRect";
 
@@ -43,83 +43,93 @@ export const calcRectKeyPoints = (geometry: TransformedRect): RectKeyPoints => {
 	}
 
 	const radians = degreesToRadians(rotation);
+	const cosTheta = Math.cos(radians);
+	const sinTheta = Math.sin(radians);
 
-	const topLeft = calcAffineTransformedPoint(
+	const topLeft = applyAffineWithTrig(
 		-halfWidth,
 		-halfHeight,
 		scaleX,
 		scaleY,
-		radians,
+		cosTheta,
+		sinTheta,
 		tx,
 		ty,
 	);
 
-	const bottomLeft = calcAffineTransformedPoint(
+	const bottomLeft = applyAffineWithTrig(
 		-halfWidth,
 		halfHeight,
 		scaleX,
 		scaleY,
-		radians,
+		cosTheta,
+		sinTheta,
 		tx,
 		ty,
 	);
 
-	const topRight = calcAffineTransformedPoint(
+	const topRight = applyAffineWithTrig(
 		halfWidth,
 		-halfHeight,
 		scaleX,
 		scaleY,
-		radians,
+		cosTheta,
+		sinTheta,
 		tx,
 		ty,
 	);
 
-	const bottomRight = calcAffineTransformedPoint(
+	const bottomRight = applyAffineWithTrig(
 		halfWidth,
 		halfHeight,
 		scaleX,
 		scaleY,
-		radians,
+		cosTheta,
+		sinTheta,
 		tx,
 		ty,
 	);
 
-	const topCenter = calcAffineTransformedPoint(
+	const topCenter = applyAffineWithTrig(
 		0,
 		-halfHeight,
 		scaleX,
 		scaleY,
-		radians,
+		cosTheta,
+		sinTheta,
 		tx,
 		ty,
 	);
 
-	const leftCenter = calcAffineTransformedPoint(
+	const leftCenter = applyAffineWithTrig(
 		-halfWidth,
 		0,
 		scaleX,
 		scaleY,
-		radians,
+		cosTheta,
+		sinTheta,
 		tx,
 		ty,
 	);
 
-	const rightCenter = calcAffineTransformedPoint(
+	const rightCenter = applyAffineWithTrig(
 		halfWidth,
 		0,
 		scaleX,
 		scaleY,
-		radians,
+		cosTheta,
+		sinTheta,
 		tx,
 		ty,
 	);
 
-	const bottomCenter = calcAffineTransformedPoint(
+	const bottomCenter = applyAffineWithTrig(
 		0,
 		halfHeight,
 		scaleX,
 		scaleY,
-		radians,
+		cosTheta,
+		sinTheta,
 		tx,
 		ty,
 	);
