@@ -341,12 +341,21 @@ export class GestureRecognizer {
 					}
 				}
 
-				// Apply scroll delta to current position and delta
+				// Apply scroll delta to current position and delta.
+				// scrollDelta は生ピクセル。ビューポートは scrollDelta/zoom（SVG単位）だけ
+				// 動く（CanvasEventHandler の scroll 処理）ため、カーソルの SVG 座標である
+				// currentPos(=last) にも delta と同じく /zoom した量を加算する。
+				// 生ピクセルを加算すると zoom≠1 で last が zoom 倍ずれ、last を直接
+				// カーソル位置として使う Transform/Vertex/範囲選択がカーソルから乖離する（#72）。
 				if (scrollDelta) {
-					currentPos.x += scrollDelta.deltaX;
-					currentPos.y += scrollDelta.deltaY;
-					delta.x += scrollDelta.deltaX / canvasState.viewport.zoom;
-					delta.y += scrollDelta.deltaY / canvasState.viewport.zoom;
+					const svgScrollDeltaX =
+						scrollDelta.deltaX / canvasState.viewport.zoom;
+					const svgScrollDeltaY =
+						scrollDelta.deltaY / canvasState.viewport.zoom;
+					currentPos.x += svgScrollDeltaX;
+					currentPos.y += svgScrollDeltaY;
+					delta.x += svgScrollDeltaX;
+					delta.y += svgScrollDeltaY;
 				}
 
 				// For sliders, read current value from the target element
