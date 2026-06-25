@@ -29,6 +29,11 @@ export const handlePaste = (
 		objects: mergedObjects,
 		rootIds: [...state.rootIds, ...newTopLevelIds],
 		selectedIds: newObjectIds,
+		// 図形選択を非空にするため、相互排他のコネクター/頂点選択を解除する
+		// （他の selectedIds 変更経路と同様。解除しないと SwapArrows / Delete などが
+		// 画面に出ていない旧コネクター/旧頂点に作用する）
+		selectedConnectorId: null,
+		selectedVertex: null,
 		multiSelectGroup: createMultiSelectGroup(newObjectIds, mergedObjects, null),
 		contextMenuPosition: null,
 		lastDuplicate: null,

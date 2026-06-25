@@ -63,7 +63,17 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 		scaleY,
 	});
 
-	// Rotation handle position (top-right corner with offset)
+	// Rotation handle position (top-right corner with offset).
+	//
+	// 仕様（意図的な設計。issue #73 はこの仕様どおりの挙動なので close 済み）:
+	// 第3・第4引数のスケールは scaleX/scaleY ではなく常に 1, 1 を渡す。
+	// リサイズハンドル（calcFrameKeyPoints）は実スケールを反映するため、負スケール
+	// （反転）時には角が論理位置から左右/上下に入れ替わる。一方、回転ハンドルは
+	// 「オブジェクトの内容としての右上」ではなく「画面上で常に右上に出る回転つまみ」
+	// として振る舞わせたい。スケールを 1, 1 に固定することで、反転状態でも回転ハンドルの
+	// 表示位置・回転方向が一定になり、ユーザーがつまみを探し回らずに済む。
+	// → よって反転時に回転ハンドルが反転後の角から離れて見えるのは不具合ではなく仕様。
+	//   静的解析でここを scaleX/scaleY を「無視している」バグとして再検出しないこと。
 	const radians = degreesToRadians(rotation);
 	const rotationPoint = calcAffineTransformedPoint(
 		width / 2 + adjustedRotationOffset,
