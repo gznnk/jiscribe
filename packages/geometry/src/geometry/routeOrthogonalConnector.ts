@@ -1,6 +1,4 @@
 import { isLineIntersectingBox } from "./isLineIntersectingBox";
-import { oppositeDirection } from "./oppositeDirection";
-import { segmentDirection } from "./segmentDirection";
 import { calcManhattanDistance } from "../points/calcManhattanDistance";
 import type { BoxFeatures } from "../types/BoxFeatures";
 import type { OrthogonalDirection } from "../types/OrthogonalDirection";
@@ -32,6 +30,10 @@ const DEFAULT_MARGIN = 20;
  * 非回転の図形では face 中心が AABB の辺上にあるため、辺 + margin は
  * 「face 中心 + margin」と一致し、従来挙動と変わらない。回転した図形では face 中心が
  * AABB の内側に入るので、固定 margin だけでは AABB を出られずめり込んでいたのを解消する。
+ *
+ * 前提: `point` は退出方向の辺の上にあること（connectPoint＝辺の中央なら厳密に成立）。
+ * center アンカー等で `point` が辺上に無い場合、スタブ脚（point → stub）が直交軸方向に
+ * AABB をかすめうる（v1 の近似。実害は connectPoint 主体なら小さい）。
  */
 const stubPoint = (
 	point: Point,
@@ -208,25 +210,24 @@ const TURN_WEIGHT = 1_000;
 const SYMMETRY_BONUS = 1_500;
 
 /**
- * ルート評価。貫通・逆走は**ハード制約**として段階比較（前段が優先）、
- * 曲がり数・長さ・対称性は**柔らかい美観**として 1 つの重み付き和にまとめる。
- * かつての桁違いマジック係数（1e6 / 1e4）で順位を擬似表現するのをやめ、
- * 「ハードは辞書式・ソフトは加点」に分離した。
+ * ルート評価。図形貫通は**ハード制約**として最優先で比較し、曲がり数・長さ・対称性は
+ * **柔らかい美観**として 1 つの重み付き和にまとめる（ハードは辞書式・ソフトは加点）。
+ *
+ * 逆走（スタブの押し出し方向に逆らって図形側へ戻る）の専用ペナルティは持たない。
+ * 角数をフルパス（スタブ脚込み）で測るため、逆走は必ず折り返しの 1 角として `aesthetic`
+ * に現れて自然に不利になる（スタブ脚があるのは box を持つ端点のみで、free 端点では
+ * そもそも逆走が定義されない）。
  */
 type RouteCost = {
 	/** 図形を貫通する回数（最優先で 0 にしたい）。 */
 	crossings: number;
-	/** 退出方向へ逆走する回数（次に避けたい）。 */
-	backtracks: number;
 	/** 曲がり数×weight + 経路長 − 対称ボーナス（小さいほど良い）。 */
 	aesthetic: number;
 };
 
-/** 負: a が良い / 正: b が良い。crossings → backtracks → aesthetic の順。 */
+/** 負: a が良い / 正: b が良い。crossings → aesthetic の順。 */
 const compareCost = (a: RouteCost, b: RouteCost): number =>
-	a.crossings - b.crossings ||
-	a.backtracks - b.backtracks ||
-	a.aesthetic - b.aesthetic;
+	a.crossings - b.crossings || a.aesthetic - b.aesthetic;
 
 const directionsFace = (
 	a: OrthogonalDirection,
@@ -235,35 +236,6 @@ const directionsFace = (
 	x: (a === "right" && b === "left") || (a === "left" && b === "right"),
 	y: (a === "down" && b === "up") || (a === "up" && b === "down"),
 });
-
-/**
- * エルボがスタブの押し出し方向に逆らう（図形側へ戻る）回数。
- * 端点が外向き `direction` を持つとき、最初のセグメントが退出方向の逆へ、
- * 最後のセグメントが進入の逆（＝target の外向き方向）へ進むのを backtrack とみなす。
- */
-const countBacktracks = (
-	elbow: Point[],
-	source: OrthogonalConnectorEndpoint,
-	target: OrthogonalConnectorEndpoint,
-): number => {
-	let count = 0;
-	if (source.box && elbow.length >= 2) {
-		const first = segmentDirection(elbow[0], elbow[1]);
-		if (first && first === oppositeDirection(source.direction)) {
-			count++;
-		}
-	}
-	if (target.box && elbow.length >= 2) {
-		const last = segmentDirection(
-			elbow[elbow.length - 2],
-			elbow[elbow.length - 1],
-		);
-		if (last && last === target.direction) {
-			count++;
-		}
-	}
-	return count;
-};
 
 /**
  * 2 端点間を水平/垂直セグメントだけで結ぶ直交経路を生成する。
@@ -275,8 +247,9 @@ const countBacktracks = (
  *    各 box の外周 ± margin）から列挙する。中点チャネルは S/Z 字、box 外周チャネルは
  *    図形の回り込みを表現する。
  * 3. 各候補を `compareCost` の**辞書式**で評価して最良を選ぶ:
- *    図形貫通 → 退出方向への逆走 → 美観（曲がり数×weight + 長さ − 対称ボーナス）。
- *    角数・長さは「実際に描かれるフルパス（スタブ脚込み）」で測る。
+ *    図形貫通 → 美観（曲がり数×weight + 長さ − 対称ボーナス）。
+ *    角数・長さは「実際に描かれるフルパス（スタブ脚込み）」で測るため、逆走は折り返しの
+ *    余分な角として自然に不利になる（専用ペナルティは持たない）。
  *
  * 戻り値は端点を含むフルパス `[source.point, …, target.point]`（共線・重複は畳み済み）。
  * **両端の図形のみ**を回避対象とし、間にある他図形は考慮しない（v1）。
@@ -284,10 +257,6 @@ const countBacktracks = (
  * 未対応 / 将来の拡張余地（旧 svg-canvas にあって本実装に無いもの）:
  * - **角丸 / 曲線レンダリング**（旧 `pathType` の Rounded / Curve）。本実装は角が直角のみ。
  *   角の描画スタイルは別機能として後回し。
- * - **逆走の扱い**。本実装は backtrack をスコアのペナルティ項（`countBacktracks`）で
- *   抑えているが、svg-canvas は退出方向を尊重してパスを構築するため構造的に逆走が
- *   生まれない。将来 `generatePathFromFrameToPoint` 的な「方向尊重の構築」へ寄せれば、
- *   backtrack 項を削れて更に簡潔にできる余地がある。
  */
 export const routeOrthogonalConnector = (
 	source: OrthogonalConnectorEndpoint,
@@ -321,10 +290,13 @@ export const routeOrthogonalConnector = (
 	);
 
 	// ── ステップ3: 評価して最良を選ぶ ──
-	// コストは compareCost の辞書式（貫通 → 逆走 → 美観）で比較する。
+	// コストは compareCost の辞書式（貫通 → 美観）で比較する。
 	let bestPath: Point[] | null = null;
 	let bestCost: RouteCost | null = null;
 	for (const { elbow, symmetric } of candidates) {
+		// simplify を 2 回呼ぶのは入力が違うため:
+		// - simplifiedElbow: スタブ脚を含まない（貫通判定はスタブ脚を除くため）。
+		// - fullPath: スタブ脚込み（角数・長さは実際に描かれる線で測るため）。
 		const simplifiedElbow = simplify(elbow);
 		// 角数・長さは「実際に描かれるフルパス（スタブ脚込み）」で測る。
 		// エルボ単体だと、スタブ脚と最初/最後の向きが噛み合わずに増える角を見落とす
@@ -335,14 +307,16 @@ export const routeOrthogonalConnector = (
 			// 図形貫通の判定はエルボ部分のみ（source→stub / stub→target の脚は必ず
 			// 面から外へ出る正当な交差なので除く）。
 			crossings: countBoxCrossings(simplifiedElbow, source.box, target.box),
-			backtracks: countBacktracks(simplifiedElbow, source, target),
 			// 柔らかい美観: 曲がり数を重視（×weight）、同程度なら短く、向かい合いは
-			// 対称(S字)を一段優先。
+			// 対称(S字)を一段優先。逆走は角数に必ず現れるので別項は持たない。
 			aesthetic:
 				turns * TURN_WEIGHT +
 				pathLength(fullPath) -
 				(symmetric ? SYMMETRY_BONUS : 0),
 		};
+		// 厳密比較なので同コストのときは先に評価した候補を保持する。
+		// 候補は x チャネル（水平始まり H→V→H）→ y チャネルの順に並ぶため、
+		// 完全な同点では水平始まりが優先される（決定的だが任意）。
 		if (!bestCost || compareCost(cost, bestCost) < 0) {
 			bestCost = cost;
 			bestPath = fullPath;
