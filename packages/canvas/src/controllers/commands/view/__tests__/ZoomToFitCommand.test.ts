@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { Viewport } from "../../../../states/canvas/Viewport";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
+import type { PolylineState } from "../../../../states/objects/primitives/polyline/PolylineState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { ZoomToFitCommand } from "../ZoomToFitCommand";
 
@@ -21,6 +22,12 @@ const makeRect = (id: string, cx: number, cy: number): ObjectState =>
 
 const makeGroup = (id: string, childIds: string[]): GroupState =>
 	({ id, type: "group", childIds }) as GroupState;
+
+const makePolyline = (
+	id: string,
+	points: { x: number; y: number }[],
+): PolylineState =>
+	({ id, type: "polyline", points }) as unknown as PolylineState;
 
 const makeState = (
 	objects: Record<string, ObjectState>,
@@ -71,6 +78,21 @@ describe("ZoomToFitCommand", () => {
 
 	it("収まる図形が無い場合は state をそのまま返す", () => {
 		const state = makeState({ g: makeGroup("g", []) });
+		expect(ZoomToFitCommand.execute(state)).toBe(state);
+	});
+
+	it("ゼロサイズ対象のみ（両軸サイズ 0 の退化 Poly）は現在ビューを維持する（no-op）", () => {
+		// 単一点に潰れた Poly だけのキャンバスは contentWidth=contentHeight=0。
+		// zoom 候補が無いため 100% へジャンプせず現在のビューポートを維持する。
+		const state = makeState(
+			{
+				dot: makePolyline("dot", [
+					{ x: 500, y: 500 },
+					{ x: 500, y: 500 },
+				]),
+			},
+			{ minX: 123, minY: 456, zoom: 2 },
+		);
 		expect(ZoomToFitCommand.execute(state)).toBe(state);
 	});
 
