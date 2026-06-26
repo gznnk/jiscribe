@@ -1,6 +1,7 @@
 import { memo } from "react";
 
 import { useResolvedConnectorPoints } from "../../../../presentations/layers/content/utils/useResolvedConnectorPoints";
+import { isOrthogonalRouting } from "../../../../schemas/objects/types/ConnectorRouting";
 import type { CanvasState } from "../../../../states/canvas/CanvasState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
@@ -58,7 +59,8 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 	// 移動ハンドルは中間経由点（waypoints）に、挿入ハンドルは端点込みの
 	// フル解決パスの各セグメント中点に出す。
 	// orthogonal（自動ルーティング）では経路が計算値のため、手動ハンドルは出さない。
-	const isOrthogonal = connectorState.routing === "orthogonal";
+	// routing 省略時は orthogonal が既定。
+	const isOrthogonal = isOrthogonalRouting(connectorState.routing);
 	const waypoints = connectorState.points;
 	const selectedVertexIndex =
 		selectedVertex?.objectId === connectorState.id

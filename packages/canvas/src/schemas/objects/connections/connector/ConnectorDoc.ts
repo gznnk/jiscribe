@@ -22,8 +22,8 @@ declare const ConnectorDocBrand: unique symbol;
  * EndpointRef であり、owned アンカーは描画時に動的解決される）。
  * 直線コネクターは空配列。
  *
- * `routing` が `"orthogonal"` のときは経路を描画時に自動生成し、`points` は使わない
- * （常に空・派生値は永続化しない）。省略時は `"straight"`。
+ * `routing` が `"orthogonal"`（省略時の既定）のときは経路を描画時に自動生成し、
+ * `points` は使わない（常に空・派生値は永続化しない）。直線にしたい場合のみ `"straight"` を明示する。
  */
 export type ConnectorDoc = CreateObjectType<
 	typeof ConnectorFeatures,

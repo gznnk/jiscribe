@@ -2,6 +2,7 @@ import type { Point } from "@workspace/geometry";
 import { beforeAll, describe, expect, it } from "vitest";
 
 import type { CanvasDoc } from "../../../../../../schemas/canvas/CanvasDoc";
+import { isOrthogonalRouting } from "../../../../../../schemas/objects/types/ConnectorRouting";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
@@ -242,7 +243,7 @@ describe("ConnectionAnchorEventHandler 端点編集（実体直接編集）", ()
 		expect(afterEnd.objects[newId]?.type).toBe("connector");
 	});
 
-	it("新規コネクターは既定で routing = orthogonal で作られる", () => {
+	it("新規コネクターは routing を省略する（省略時の既定 orthogonal に従う）", () => {
 		const base = stateWithConnectors([]);
 		const state: CanvasControllerState = {
 			...base,
@@ -261,6 +262,10 @@ describe("ConnectionAnchorEventHandler 端点編集（実体直接編集）", ()
 			}),
 		);
 
-		expect(afterStart.pendingConnector?.routing).toBe("orthogonal");
+		// 明示フィールドは持たず（省略）、既定解釈で orthogonal になる。
+		expect(afterStart.pendingConnector?.routing).toBeUndefined();
+		expect(isOrthogonalRouting(afterStart.pendingConnector?.routing)).toBe(
+			true,
+		);
 	});
 });

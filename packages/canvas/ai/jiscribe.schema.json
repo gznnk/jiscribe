@@ -655,9 +655,14 @@
 				},
 				"meta": { "$ref": "#/$defs/MetaDoc" },
 				"points": {
-					"description": "Ordered list of intermediate waypoints from source to target, in world coordinates. Endpoint coordinates are NOT included; they are defined by source/target and resolved dynamically. An empty array means a straight connector.",
+					"description": "Ordered list of intermediate waypoints from source to target, in world coordinates. Endpoint coordinates are NOT included; they are defined by source/target and resolved dynamically. Used only with \"routing\": \"straight\". Ignored under the default \"orthogonal\" routing (the path is derived at render time), so keep it an empty array unless you set \"routing\": \"straight\".",
 					"type": "array",
 					"items": { "$ref": "#/$defs/Point" }
+				},
+				"routing": {
+					"description": "How the path between endpoints is computed. \"orthogonal\" auto-generates a horizontal/vertical path at render time from the endpoint shapes (and ignores \"points\"). \"straight\" connects the endpoints with a straight line through any manual \"points\" waypoints. Optional; omitting it means \"orthogonal\" (the default). Set \"straight\" explicitly only when you want a straight line.",
+					"type": "string",
+					"enum": ["straight", "orthogonal"]
 				},
 				"source": {
 					"description": "Where the connector starts.",

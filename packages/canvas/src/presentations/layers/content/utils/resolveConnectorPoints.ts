@@ -3,6 +3,7 @@ import type { Point } from "@workspace/geometry";
 import { adjustToOutline } from "./adjustToOutline";
 import { resolveEndpoint } from "./resolveEndpoint";
 import { resolveOrthogonalRoute } from "./resolveOrthogonalRoute";
+import { isOrthogonalRouting } from "../../../../schemas/objects/types/ConnectorRouting";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
 
@@ -59,7 +60,8 @@ export const resolveConnectorPoints = (
 	}
 
 	// 自動直交ルーティング: 経路を描画時に算出し waypoints として返す（手動 points は使わない）。
-	if (connectorState.routing === "orthogonal") {
+	// routing 省略時は orthogonal が既定。直線にしたい場合のみ "straight" を明示する。
+	if (isOrthogonalRouting(connectorState.routing)) {
 		const path = resolveOrthogonalRoute(
 			connectorState.source.anchor,
 			connectorState.target.anchor,

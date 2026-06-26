@@ -1,5 +1,6 @@
 import { isObject } from "@workspace/basic-validators";
 
+import { isConnectorRouting } from "../../../../schemas/objects/types/ConnectorRouting";
 import type { ObjectStateValidateFn } from "../../../registry/ObjectStateValidatorRegistry";
 import {
 	hasOwnedEndpoint,
@@ -23,6 +24,8 @@ export const isValidConnectorState: ObjectStateValidateFn = (value) => {
 	const o = value as StateRecord;
 	return (
 		hasValidIdAndType(o, "connector") &&
+		// routing は任意。指定する場合は既知の値（straight | orthogonal）のみ許容する。
+		(o.routing === undefined || isConnectorRouting(o.routing)) &&
 		isValidWaypointState(o) &&
 		isValidStrokeStyleState(o) &&
 		isValidArrowFields(o) &&

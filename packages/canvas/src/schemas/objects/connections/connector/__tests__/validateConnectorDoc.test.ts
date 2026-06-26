@@ -200,4 +200,27 @@ describe("validateConnectorDoc", () => {
 			true,
 		);
 	});
+
+	it("routing が straight / orthogonal はエラーなし", () => {
+		const straight = {
+			points: validPoints,
+			source: ownedRef,
+			target: freeRef,
+			routing: "straight",
+		};
+		const orthogonal = { ...straight, routing: "orthogonal" };
+		expect(validateConnectorDoc(straight, "root")).toEqual([]);
+		expect(validateConnectorDoc(orthogonal, "root")).toEqual([]);
+	});
+
+	it("routing が未知の値はエラー", () => {
+		const o = {
+			points: validPoints,
+			source: ownedRef,
+			target: freeRef,
+			routing: "diagonal",
+		};
+		const errors = validateConnectorDoc(o, "root");
+		expect(errors.some((e) => e.path === "root.routing")).toBe(true);
+	});
 });

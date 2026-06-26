@@ -38,7 +38,8 @@ The top level must always have `version` / `root` (the array may be empty).
 - `rect` uses `x`,`y` (top-left) + `width`,`height`. `ellipse` uses `cx`,`cy` (center) + `rx`,`ry` (radii). `diamond` uses `x`,`y` (top-left) + `width`,`height`, same as `rect`.
 - Put `connector` in `root` (top level, mixed with the objects), and express its endpoints with `source` / `target` (EndpointRef).
 - A connector must have **at least one owned endpoint** (`source` or `target` referencing an object). Both endpoints `free` is invalid.
-- For a straight connector, set `points` to an **empty array** `[]`.
+- Leave `points` as an **empty array** `[]` unless you set `"routing": "straight"` and want manual bends.
+- Optional `routing`: omitted ⇒ `"orthogonal"` (default) — a right-angle (horizontal/vertical) path auto-generated at render time that **ignores `points`** (keep them `[]`). Set `"routing": "straight"` to draw a straight line through `points` instead. For flowchart-style wiring, just omit `routing`.
 
 **MUST NOT**
 
@@ -58,7 +59,7 @@ The top level must always have `version` / `root` (the array may be empty).
 | `polyline`              | `points` (open line)                 | stroke / startArrow / endArrow                   |
 | `polygon`               | `points` (auto-closed)               | stroke / fill                                    |
 | `group`                 | `children`                           | rotation / flipX / flipY                         |
-| `connector` (in `root`) | `source`,`target`,`points:[]`        | stroke / startArrow / endArrow                   |
+| `connector` (in `root`) | `source`,`target`,`points:[]`        | stroke / startArrow / endArrow / routing         |
 | `sticky`                | `x`,`y`,`width`,`height`             | fill / text (no stroke or rx)                    |
 | `svg`                   | `x`,`y`,`width`,`height` + `svgText` | rotation only (opaque box; no stroke/fill/text)  |
 

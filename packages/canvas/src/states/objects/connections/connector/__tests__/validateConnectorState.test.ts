@@ -66,4 +66,20 @@ describe("isValidConnectorState", () => {
 			isValidConnectorState({ ...validConnector, endArrow: "diamond" }),
 		).toBe(false);
 	});
+
+	it("routing は省略・straight・orthogonal を許容する", () => {
+		expect(isValidConnectorState(validConnector)).toBe(true);
+		expect(
+			isValidConnectorState({ ...validConnector, routing: "straight" }),
+		).toBe(true);
+		expect(
+			isValidConnectorState({ ...validConnector, routing: "orthogonal" }),
+		).toBe(true);
+	});
+
+	it("未知の routing 値は false", () => {
+		expect(
+			isValidConnectorState({ ...validConnector, routing: "diagonal" }),
+		).toBe(false);
+	});
 });

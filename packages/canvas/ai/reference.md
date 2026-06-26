@@ -334,18 +334,27 @@ A connector object placed in `root` (top level, mixed with the objects in z-orde
 }
 ```
 
-| Field        | Type          | Required | Description                                                    |
-| ------------ | ------------- | -------- | -------------------------------------------------------------- |
-| `points`     | `Point[]`     | ✅       | Intermediate waypoints (empty for a straight line; see below). |
-| `source`     | `EndpointRef` | ✅       | Start endpoint spec.                                           |
-| `target`     | `EndpointRef` | ✅       | End endpoint spec.                                             |
-| `startArrow` | `ArrowType`   | -        | Arrowhead at the start.                                        |
-| `endArrow`   | `ArrowType`   | -        | Arrowhead at the end.                                          |
+| Field        | Type                          | Required | Description                                                                 |
+| ------------ | ----------------------------- | -------- | --------------------------------------------------------------------------- |
+| `points`     | `Point[]`                     | ✅       | Intermediate waypoints; used only with `"routing": "straight"` (see below). |
+| `routing`    | `"straight"` / `"orthogonal"` | -        | How the path is computed. Omitted ⇒ `"orthogonal"` (default). See below.    |
+| `source`     | `EndpointRef`                 | ✅       | Start endpoint spec.                                                        |
+| `target`     | `EndpointRef`                 | ✅       | End endpoint spec.                                                          |
+| `startArrow` | `ArrowType`                   | -        | Arrowhead at the start.                                                     |
+| `endArrow`   | `ArrowType`                   | -        | Arrowhead at the end.                                                       |
 
 Do **not** include endpoint coordinates in `points`. The endpoints are authoritative via `source` / `target`
 (EndpointRef) and are resolved dynamically at render time as the connected objects move. `points` holds only the
-intermediate waypoints (world coordinates) in source → target order, and is an empty array for straight connectors
-(waypoint-based routing is planned and is not yet used for rendering).
+intermediate waypoints (world coordinates) in source → target order, and is empty for an orthogonal connector
+(its path is derived) or for a straight connector with no manual bends.
+
+**Routing.** `routing` selects how the path between the endpoints is drawn:
+
+- `"orthogonal"` (**the default when omitted**): a horizontal/vertical (right-angle) path auto-generated at
+  render time from the endpoint shapes. It follows the objects as they move and **ignores `points`** (keep
+  `points` empty). This is the recommended style for flowchart-style wiring — just omit `routing`.
+- `"straight"`: a straight line through the manual `points` waypoints. Set `"routing": "straight"` explicitly
+  when you want a straight line.
 
 ### EndpointRef
 

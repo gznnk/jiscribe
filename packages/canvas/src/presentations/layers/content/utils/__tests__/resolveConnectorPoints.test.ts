@@ -56,7 +56,12 @@ const rectObj = (
 describe("resolveConnectorPoints", () => {
 	describe("free-free コネクター", () => {
 		it("両端 free → そのまま座標を返す", () => {
-			const conn = connector(freeEndpoint(10, 20), freeEndpoint(50, 80));
+			const conn = connector(
+				freeEndpoint(10, 20),
+				freeEndpoint(50, 80),
+				[],
+				"straight",
+			);
 			const result = resolveConnectorPoints(conn, null, null);
 			expect(result).not.toBeNull();
 			expect(result?.source).toEqual({ x: 10, y: 20 });
@@ -67,10 +72,15 @@ describe("resolveConnectorPoints", () => {
 
 	describe("経由点（waypoint）", () => {
 		it("中間経由点をそのまま waypoints として返す", () => {
-			const conn = connector(freeEndpoint(0, 0), freeEndpoint(100, 0), [
-				{ x: 40, y: 60 },
-				{ x: 70, y: 60 },
-			]);
+			const conn = connector(
+				freeEndpoint(0, 0),
+				freeEndpoint(100, 0),
+				[
+					{ x: 40, y: 60 },
+					{ x: 70, y: 60 },
+				],
+				"straight",
+			);
 			const result = resolveConnectorPoints(conn, null, null);
 			expect(result?.waypoints).toEqual([
 				{ x: 40, y: 60 },
@@ -85,6 +95,7 @@ describe("resolveConnectorPoints", () => {
 				centerEndpoint("rect", "r1"),
 				freeEndpoint(300, 0),
 				[{ x: 0, y: 300 }],
+				"straight",
 			);
 			const result = resolveConnectorPoints(conn, src, null);
 			expect(result).not.toBeNull();
@@ -99,6 +110,8 @@ describe("resolveConnectorPoints", () => {
 			const conn = connector(
 				centerEndpoint("rect", "r1"),
 				freeEndpoint(200, 0),
+				[],
+				"straight",
 			);
 			const result = resolveConnectorPoints(conn, src, null);
 			expect(result).not.toBeNull();
@@ -112,6 +125,8 @@ describe("resolveConnectorPoints", () => {
 			const conn = connector(
 				freeEndpoint(-200, 0),
 				centerEndpoint("rect", "r2"),
+				[],
+				"straight",
 			);
 			const result = resolveConnectorPoints(conn, null, tgt);
 			expect(result).not.toBeNull();
@@ -222,6 +237,22 @@ describe("resolveConnectorPoints", () => {
 				rectObj("r2", 400, 500, 100, 60), // target を下へ移動
 			);
 			expect(after?.target).not.toEqual(before?.target);
+		});
+
+		it("routing 省略時は orthogonal が既定（直交経路を生成する）", () => {
+			const src = rectObj("r1", 100, 100, 100, 60); // 右辺中央 = (150,100)
+			const tgt = rectObj("r2", 400, 300, 100, 60); // 左辺中央 = (350,300)
+			// routing を渡さない（undefined）。
+			const conn = connector(
+				connectPointEndpoint("rect", "r1", "rightCenter"),
+				connectPointEndpoint("rect", "r2", "leftCenter"),
+			);
+			const result = resolveConnectorPoints(conn, src, tgt);
+			expect(result).not.toBeNull();
+			const path = [result!.source, ...result!.waypoints, result!.target];
+			expect(allOrthogonal(path)).toBe(true);
+			// 縦ずれがあるため曲がり（中間点）が生まれる = 直線ではない。
+			expect(result!.waypoints.length).toBeGreaterThan(0);
 		});
 	});
 });
