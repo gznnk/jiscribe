@@ -89,8 +89,15 @@ export const ZoomToFitCommand: Command = {
 			contentWidth > 0 ? availableW / contentWidth : null,
 			contentHeight > 0 ? availableH / contentHeight : null,
 		].filter((v): v is number => v !== null);
-		let newZoom = zoomCandidates.length > 0 ? Math.min(...zoomCandidates) : 1;
-		newZoom = Math.max(ZOOM.MIN, Math.min(ZOOM.MAX, newZoom));
+		// 両軸ともサイズ 0（単一点 Poly や退化 Frame など）でフィットできる広がりが
+		// 無い退化対象は、現在のビューポートを維持する（「対象なし」の no-op ガードと整合）。
+		if (zoomCandidates.length === 0) {
+			return state;
+		}
+		const newZoom = Math.max(
+			ZOOM.MIN,
+			Math.min(ZOOM.MAX, Math.min(...zoomCandidates)),
+		);
 
 		const newMinX = contentCx - viewport.width / (2 * newZoom);
 		const newMinY = contentCy - viewport.height / (2 * newZoom);

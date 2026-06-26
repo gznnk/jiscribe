@@ -93,6 +93,22 @@ describe("ZoomToSelectionCommand", () => {
 		expect(center.y).toBeCloseTo(500, 2);
 	});
 
+	it("両軸サイズ 0（全頂点一致の退化 Poly）は現在ビューを維持する（no-op）", () => {
+		// 単一点に潰れた Poly は contentWidth=contentHeight=0。zoom 候補が無いため
+		// 100% へのスナップ＋再センタリングをせず、現在のビューポートを維持する。
+		const state = makeState({
+			selectedIds: ["dot"],
+			objects: {
+				dot: makePolyline("dot", [
+					{ x: 500, y: 500 },
+					{ x: 500, y: 500 },
+				]),
+			},
+			viewport: { minX: 123, minY: 456, zoom: 2 },
+		});
+		expect(ZoomToSelectionCommand.execute(state)).toBe(state);
+	});
+
 	describe("canExecute", () => {
 		it("選択があれば実行可能", () => {
 			expect(
