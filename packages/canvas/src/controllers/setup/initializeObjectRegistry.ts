@@ -158,6 +158,7 @@ import { PolygonIcon } from "../ui/icons/PolygonIcon";
 import { PolylineIcon } from "../ui/icons/PolylineIcon";
 import { RectIcon } from "../ui/icons/RectIcon";
 import { StickyIcon } from "../ui/icons/StickyIcon";
+import { RoutingMenu } from "../ui/menu/ObjectMenu/items/RoutingMenu";
 import { StickyColorMenu } from "../ui/menu/ObjectMenu/items/StickyColorMenu";
 import { objectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
 import type { MenuSectionFactory } from "../ui/menu/ObjectMenu/ObjectMenuTypes";
@@ -382,6 +383,12 @@ export const initializeObjectRegistry = (): void => {
 			{
 				id: "arrowHead",
 				items: [{ type: "arrowHead" }],
+			},
+			{
+				id: "routing",
+				items: [
+					{ type: "custom", id: "connector-routing", component: RoutingMenu },
+				],
 			},
 			{
 				id: "line",

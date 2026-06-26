@@ -5,6 +5,10 @@ import { SendBackwardCommand } from "../commands/arrange/SendBackwardCommand";
 import { SendToBackCommand } from "../commands/arrange/SendToBackCommand";
 import { SwapArrowsCommand } from "../commands/arrow/SwapArrowsCommand";
 import { commandRegistry } from "../commands/CommandRegistry";
+import {
+	SetRoutingOrthogonalCommand,
+	SetRoutingStraightCommand,
+} from "../commands/connector/SetConnectorRoutingCommand";
 import { GroupCommand } from "../commands/group/GroupCommand";
 import { UngroupCommand } from "../commands/group/UngroupCommand";
 import { RedoCommand } from "../commands/history/RedoCommand";
@@ -47,6 +51,9 @@ export const initializeCommands = (): void => {
 		.registerAll(moveCommands)
 		// Arrow commands
 		.register(SwapArrowsCommand)
+		// Connector routing commands
+		.register(SetRoutingStraightCommand)
+		.register(SetRoutingOrthogonalCommand)
 		// Group commands
 		.register(GroupCommand)
 		.register(UngroupCommand)
