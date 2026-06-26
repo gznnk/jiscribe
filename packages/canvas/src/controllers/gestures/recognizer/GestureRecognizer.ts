@@ -68,6 +68,10 @@ export type Pressed = {
 	mods: Mods;
 	dragging: boolean; // DRAG_THRESHOLD を超えてドラッグと確定したか
 	button: number;
+	// エッジスクロールを武装したか。ドラッグ中にカーソルが一度エッジゾーンの外へ
+	// 出てから true になる。ShapeLibrary など端に接した UI から掴むと開始点が必ず
+	// エッジゾーン内になるため、1フレーム目からスクロールが暴発するのを防ぐ。
+	edgeScrollArmed: boolean;
 };
 
 /**
@@ -275,6 +279,7 @@ export class GestureRecognizer {
 				mods,
 				dragging: false,
 				button: e.button,
+				edgeScrollArmed: false,
 			};
 
 			this.gestureCallback({
@@ -373,7 +378,14 @@ export class GestureRecognizer {
 						currentPos.x,
 						currentPos.y,
 					);
-					if (edgeProximity.isNearEdge) {
+
+					// 一度でもエッジゾーンの外へ出たら武装する。これにより端に接した
+					// ライブラリ等から掴んだ直後（まだ内部へ入っていない間）の暴発を防ぐ。
+					if (!edgeProximity.isNearEdge) {
+						this.pressed.edgeScrollArmed = true;
+					}
+
+					if (this.pressed.edgeScrollArmed && edgeProximity.isNearEdge) {
 						scrollDelta = calculateScrollDelta(
 							edgeProximity.horizontal,
 							edgeProximity.vertical,
