@@ -1,4 +1,12 @@
+import type { ComponentType } from "react";
+
 import type { ObjectType } from "./ObjectType";
+
+/** ShapeLibrary のアイコンコンポーネントが受け取る props。 */
+export type ShapeIconProps = {
+	width?: number;
+	height?: number;
+};
 
 /**
  * ShapeLibrary（ツールバー）に並ぶ図形パレットの 1 項目。
@@ -18,4 +26,9 @@ export type ShapePreset = {
 	 * 並べるなど、登録順序に依存しない表示順をプリセット側で宣言する。
 	 */
 	order?: number;
+	/**
+	 * ツールバーに表示するアイコン。プリセットデータ（schemas）は UI を
+	 * 持たないため、`registerObject()` 時に UI 層（controllers）が注入する。
+	 */
+	icon?: ComponentType<ShapeIconProps>;
 };

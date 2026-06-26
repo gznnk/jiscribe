@@ -1,4 +1,4 @@
-import type { FC } from "react";
+import type { ComponentType, FC } from "react";
 
 import { Sticky } from "../../presentations/objects/annotations/Sticky";
 import { Connector } from "../../presentations/objects/connections/Connector";
@@ -48,7 +48,10 @@ import { SvgFeatures } from "../../schemas/objects/primitives/svg/SvgDoc";
 import type { ObjectFeatures } from "../../schemas/objects/types/ObjectFeatures";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 import type { ShapeFactory } from "../../schemas/objects/types/ShapeFactory";
-import type { ShapePreset } from "../../schemas/objects/types/ShapePreset";
+import type {
+	ShapeIconProps,
+	ShapePreset,
+} from "../../schemas/objects/types/ShapePreset";
 import { shapeFactoryRegistry } from "../../schemas/registry/ShapeFactoryRegistry";
 import {
 	stickyToDoc,
@@ -148,6 +151,13 @@ import {
 } from "../gestures/handlers/objects/primitives/SvgController";
 import { objectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
 import type { ObjectBehaviorEntry } from "../gestures/registry/ObjectBehaviorTypes";
+import { DiamondIcon } from "../ui/icons/DiamondIcon";
+import { EllipseIcon } from "../ui/icons/EllipseIcon";
+import { MarkdownRectIcon } from "../ui/icons/MarkdownRectIcon";
+import { PolygonIcon } from "../ui/icons/PolygonIcon";
+import { PolylineIcon } from "../ui/icons/PolylineIcon";
+import { RectIcon } from "../ui/icons/RectIcon";
+import { StickyIcon } from "../ui/icons/StickyIcon";
 import { StickyColorMenu } from "../ui/menu/ObjectMenu/items/StickyColorMenu";
 import { objectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
 import type { MenuSectionFactory } from "../ui/menu/ObjectMenu/ObjectMenuTypes";
@@ -203,6 +213,7 @@ export const initializeObjectRegistry = (): void => {
 			factory: RectShapeFactory,
 			previewRenderer: RectPreview,
 			presets: RectShapePresets,
+			presetIcons: { rect: RectIcon, "rect-markdown": MarkdownRectIcon },
 		},
 	);
 
@@ -239,6 +250,7 @@ export const initializeObjectRegistry = (): void => {
 			factory: EllipseShapeFactory,
 			previewRenderer: EllipsePreview,
 			presets: EllipseShapePresets,
+			presetIcons: { ellipse: EllipseIcon },
 		},
 	);
 
@@ -275,6 +287,7 @@ export const initializeObjectRegistry = (): void => {
 			factory: DiamondShapeFactory,
 			previewRenderer: DiamondPreview,
 			presets: DiamondShapePresets,
+			presetIcons: { diamond: DiamondIcon },
 		},
 	);
 
@@ -322,6 +335,7 @@ export const initializeObjectRegistry = (): void => {
 			factory: PolygonShapeFactory,
 			previewRenderer: PolygonPreview,
 			presets: PolygonShapePresets,
+			presetIcons: { polygon: PolygonIcon },
 		},
 	);
 
@@ -350,6 +364,7 @@ export const initializeObjectRegistry = (): void => {
 			factory: PolylineShapeFactory,
 			previewRenderer: PolylinePreview,
 			presets: PolylineShapePresets,
+			presetIcons: { polyline: PolylineIcon },
 		},
 	);
 
@@ -406,6 +421,7 @@ export const initializeObjectRegistry = (): void => {
 		{
 			factory: StickyShapeFactory,
 			presets: StickyShapePresets,
+			presetIcons: { sticky: StickyIcon },
 		},
 	);
 
@@ -442,6 +458,11 @@ type ShapeLibraryRegistration = {
 	previewRenderer?: ShapePreviewRenderer;
 	/** ツールバーに並ぶプリセット（1 型につき複数可） */
 	presets?: ShapePreset[];
+	/**
+	 * プリセット ID ごとのツールバーアイコン。
+	 * 登録時に対応するプリセットへ注入される。
+	 */
+	presetIcons?: Record<string, ComponentType<ShapeIconProps>>;
 };
 
 export const registerObject = <
@@ -471,6 +492,7 @@ export const registerObject = <
 		shapePreviewRegistry.register(type, shapeLibrary.previewRenderer);
 	}
 	shapeLibrary?.presets?.forEach((preset) => {
-		shapePresetRegistry.register(preset);
+		const icon = shapeLibrary.presetIcons?.[preset.id];
+		shapePresetRegistry.register(icon ? { ...preset, icon } : preset);
 	});
 };
