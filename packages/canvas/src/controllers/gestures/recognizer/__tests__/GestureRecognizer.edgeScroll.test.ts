@@ -26,7 +26,9 @@ import type {
  */
 
 const STEP = 10; // AUTO_SCROLL_STEP_SIZE 相当（px）
-const CLIENT_X = 210; // 端で静止させるカーソルのクライアント X（不変）
+const CLIENT_X = 790; // 端で静止させるカーソルのクライアント X（右端近傍・不変）
+// 武装（arm-on-leave）用の内部クライアント X。ここから掴むと開始点はエッジ外。
+const CLIENT_X_INTERIOR = 400;
 
 // getSvgPoint モックと canvasStateRef が共有する可変 viewport。
 const sim = vi.hoisted(() => ({
@@ -45,12 +47,20 @@ vi.mock("../utils", () => ({
 	getInputValue: () => undefined,
 	isGestureOptedOut: () => false,
 	shouldSkipPointerCapture: () => false,
-	// 常に右端に近接しているものとして扱い、エッジスクロールを発生させ続ける。
-	detectEdgeProximity: () => ({
-		isNearEdge: true,
-		horizontal: "right" as const,
-		vertical: null,
-	}),
+	// 位置依存の近接判定。右端から AUTO_SCROLL_THRESHOLD(=20px) 以内を near とする。
+	// 内部（左寄り）では near=false になり、arm-on-leave の武装を再現できる。
+	detectEdgeProximity: (
+		vp: { minX: number; width: number; zoom: number },
+		svgX: number,
+	) => {
+		const rightWorld = vp.minX + vp.width / vp.zoom;
+		const isNearEdge = rightWorld - svgX < 20 / vp.zoom;
+		return {
+			isNearEdge,
+			horizontal: isNearEdge ? ("right" as const) : null,
+			vertical: null,
+		};
+	},
 	calculateScrollDelta: () => ({ deltaX: STEP, deltaY: 0 }),
 }));
 
@@ -168,12 +178,16 @@ const runEdgeScroll = (frames: number): Sample[] => {
 	const { events, dispatch } = setup();
 	const { zoom } = sim.viewport;
 
-	// pressed
-	dispatch(makeEvent("pointerdown", 200, 100, 0));
+	// pressed（内部）
+	dispatch(makeEvent("pointerdown", CLIENT_X_INTERIOR, 100, 0));
 	flushRaf();
 
-	// ドラッグ開始（しきい値超え）。dragStart にはまだ scrollDelta は適用されない。
-	dispatch(makeEvent("pointermove", CLIENT_X, 100, 16));
+	// ドラッグ開始（しきい値超え・内部）。dragStart にはまだ scrollDelta は適用されない。
+	dispatch(makeEvent("pointermove", CLIENT_X_INTERIOR + 20, 100, 16));
+	flushRaf();
+
+	// 内部で 1 drag。エッジ外なので edgeScrollArmed が立つ（武装）。
+	dispatch(makeEvent("pointermove", CLIENT_X_INTERIOR + 40, 100, 24));
 	flushRaf();
 
 	// 端で静止したまま最初の drag を 1 つ流す。以降は enqueue が自走するので
@@ -326,5 +340,39 @@ describe("GestureRecognizer スクロール中の drag.last（#72 回帰 / エ�
 		for (let i = 1; i < samples.length; i++) {
 			expect(samples[i].lastX - samples[i - 1].lastX).toBeCloseTo(STEP / zoom);
 		}
+	});
+});
+
+describe("GestureRecognizer arm-on-leave（端に接した UI から掴んだ直後の暴発防止）", () => {
+	// ShapeLibrary など端に接した UI から掴むと、開始点が必ずエッジゾーン内になる。
+	// 一度もエッジ外へ出ていない間はスクロールを発火させない。
+	it("開始時エッジゾーン内のまま動かしてもスクロールしない", () => {
+		const { events, dispatch } = setup();
+
+		// 端（clientX=800）で掴み、エッジゾーン内（clientX>780）に留まったまま動かす。
+		// ドラッグ閾値は超えるがゾーン外へは出ない。
+		dispatch(makeEvent("pointerdown", 800, 100, 0));
+		flushRaf();
+		dispatch(makeEvent("pointermove", 786, 100, 16)); // dragStart（端のまま）
+		flushRaf();
+		dispatch(makeEvent("pointermove", 795, 100, 32)); // drag（端のまま）
+		flushRaf();
+		// 自走していれば追加フレームでスクロールが続くはずだが、未武装なので何も起きない。
+		flushRaf();
+		flushRaf();
+
+		const drags = events.filter((e) => e.type === "drag");
+		expect(drags.length).toBeGreaterThan(0);
+		for (const drag of drags) {
+			expect(drag.scrollDelta).toBeUndefined();
+		}
+	});
+
+	// 一度エッジ外へ出れば武装され、その後エッジに触れるとスクロールが始まる。
+	it("一度内部へ出てから端へ戻るとスクロールが始まる", () => {
+		// runEdgeScroll は内部で 1 drag 挟んでから端へ移動する経路を辿る。
+		const samples = runEdgeScroll(6);
+		expect(samples.length).toBeGreaterThanOrEqual(4);
+		expect(samples[0].deltaX).not.toBe(0);
 	});
 });
