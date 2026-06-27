@@ -1,9 +1,9 @@
 import type { Point } from "@workspace/geometry";
 import { useMemo } from "react";
 
-import { resolveConnectorPoints } from "./resolveConnectorPoints";
-import type { CanvasState } from "../../../../../states/canvas/CanvasState";
-import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
+import type { CanvasState } from "../../../../states/canvas/CanvasState";
+import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
+import { resolveConnectorPoints } from "../utils/endpoints";
 
 /**
  * 解決済みのコネクター座標。

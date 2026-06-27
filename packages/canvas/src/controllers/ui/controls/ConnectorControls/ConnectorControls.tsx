@@ -1,6 +1,6 @@
 import { memo } from "react";
 
-import { useResolvedConnectorPoints } from "../../../../presentations/layers/content/utils/endpoints";
+import { useResolvedConnectorPoints } from "../../../../presentations/layers/content/hooks/useResolvedConnectorPoints";
 import { isOrthogonalRouting } from "../../../../schemas/objects/types/ConnectorRouting";
 import type { CanvasState } from "../../../../states/canvas/CanvasState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
