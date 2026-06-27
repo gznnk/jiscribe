@@ -73,6 +73,45 @@ describe("countBoxCrossings", () => {
 			),
 		).toBe(0);
 	});
+
+	it("垂直セグメントの貫通も 1 と数える", () => {
+		// x=100 は (left50, right150) の内側、y は top70/bottom130 を跨ぐ
+		expect(
+			countBoxCrossings(
+				[
+					{ x: 100, y: 0 },
+					{ x: 100, y: 200 },
+				],
+				box,
+				null,
+			),
+		).toBe(1);
+	});
+
+	it("辺にちょうど乗る/接するだけのセグメントは数えない（接触は貫通でない）", () => {
+		// 上辺 y=70 に乗る水平線
+		expect(
+			countBoxCrossings(
+				[
+					{ x: 0, y: 70 },
+					{ x: 200, y: 70 },
+				],
+				box,
+				null,
+			),
+		).toBe(0);
+		// 左辺 x=50 で止まる（跨がない）水平線
+		expect(
+			countBoxCrossings(
+				[
+					{ x: 0, y: 100 },
+					{ x: 50, y: 100 },
+				],
+				box,
+				null,
+			),
+		).toBe(0);
+	});
 });
 
 describe("compareCost", () => {

@@ -5,6 +5,46 @@ import {
 	type Point,
 } from "@workspace/geometry";
 
+/**
+ * 軸並行セグメントが box の内部を貫通するか。
+ *
+ * 直交ルーティングのエルボは常に水平/垂直セグメントなので、汎用の
+ * `isLineIntersectingBox`（辺タプルと内部ベクトルを毎回確保する）を呼ばずに、
+ * アロケーション無しで判定する。ホットパス（ドラッグ追従の経路再計算）で効く。
+ *
+ * セマンティクスは `isLineIntersectingBox`（辺との真の交差・接触は除外）と一致させる:
+ * 水平セグメントは「y が上下辺の内側」かつ「x 範囲が左 or 右辺を跨ぐ」とき貫通。
+ * 境界に乗るだけ（接触）は厳密不等号で除外する。非軸並行が来た場合は汎用版へ委譲する。
+ */
+const segmentCrossesBox = (p1: Point, p2: Point, box: BoxFeatures): boolean => {
+	if (p1.y === p2.y) {
+		const y = p1.y;
+		if (y <= box.top || y >= box.bottom) {
+			return false;
+		}
+		const xMin = Math.min(p1.x, p2.x);
+		const xMax = Math.max(p1.x, p2.x);
+		return (
+			(xMin < box.left && box.left < xMax) ||
+			(xMin < box.right && box.right < xMax)
+		);
+	}
+	if (p1.x === p2.x) {
+		const x = p1.x;
+		if (x <= box.left || x >= box.right) {
+			return false;
+		}
+		const yMin = Math.min(p1.y, p2.y);
+		const yMax = Math.max(p1.y, p2.y);
+		return (
+			(yMin < box.top && box.top < yMax) ||
+			(yMin < box.bottom && box.bottom < yMax)
+		);
+	}
+	// 直交ルーティングでは起きないが、防御的に汎用判定へフォールバック。
+	return isLineIntersectingBox(p1, p2, box);
+};
+
 /** フルパスの総延長（マンハッタン距離）。 */
 export const pathLength = (points: Point[]): number => {
 	let total = 0;
@@ -54,10 +94,10 @@ export const countBoxCrossings = (
 	for (let i = 0; i < elbow.length - 1; i++) {
 		const p1 = elbow[i];
 		const p2 = elbow[i + 1];
-		if (sourceBox && isLineIntersectingBox(p1, p2, sourceBox)) {
+		if (sourceBox && segmentCrossesBox(p1, p2, sourceBox)) {
 			crossings++;
 		}
-		if (targetBox && isLineIntersectingBox(p1, p2, targetBox)) {
+		if (targetBox && segmentCrossesBox(p1, p2, targetBox)) {
 			crossings++;
 		}
 	}
