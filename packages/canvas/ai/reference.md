@@ -356,6 +356,12 @@ intermediate waypoints (world coordinates) in source → target order, and is em
 - `"straight"`: a straight line through the manual `points` waypoints. Set `"routing": "straight"` explicitly
   when you want a straight line.
 
+**Self-loops.** A connector may connect an object to itself — `source` and `target` whose `owner.id` is the
+same object (typically with different anchors, e.g. `topCenter` → `rightCenter`). This is useful for
+self-transitions in state machines. A self-loop is always rendered as a rectangular orthogonal loop around the
+object regardless of `routing`, so leave `routing` omitted and `points` empty (`"straight"` is ignored for
+self-loops).
+
 ### EndpointRef
 
 Choose whether the endpoint is fixed to an object (`OwnedEndpointRef`) or a free point in space (`FreeEndpointRef`).

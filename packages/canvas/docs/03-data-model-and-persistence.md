@@ -74,7 +74,7 @@ type CanvasParseResult =
 2. **意味検証 `validateSemantics`** — 文書全体を横断しないと判断できない整合性を検証。
    - **ID の一意性**: root ツリー（コネクター含む）を通じて ID が重複しないこと。
      `CanvasDoc` はネストしたツリーなので「親子の循環」は構造的に起こり得ず、循環に見えるケースは実質「同一 ID の別オブジェクト」= ID 重複でしかない。
-   - **connector の参照整合性**: owner の `id` が実在し、参照先が connectable な型であること（group / polyline / polygon / connector は不可）、source と target が同一オブジェクトを指さないこと（自己ループ禁止）。
+   - **connector の参照整合性**: owner の `id` が実在し、参照先が connectable な型であること（group / polyline / polygon / connector は不可）。source と target が同一オブジェクトを指す自己ループは許可され、専用の直交ルートで矩形ループとして描画される（`resolveConnectorPoints` / `routeSelfLoop` を参照）。
 
 検証に使う `objectDocValidatorRegistry` は parse 時にだけ必要なため、`parseCanvasText` が
 未初期化なら冪等に初期化する。これにより呼び出し側はエントリ取り違えによる誤検知を構造的に避けられる。

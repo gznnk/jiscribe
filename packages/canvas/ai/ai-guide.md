@@ -40,6 +40,7 @@ The top level must always have `version` / `root` (the array may be empty).
 - A connector must have **at least one owned endpoint** (`source` or `target` referencing an object). Both endpoints `free` is invalid.
 - Leave `points` as an **empty array** `[]` unless you set `"routing": "straight"` and want manual bends.
 - Optional `routing`: omitted ⇒ `"orthogonal"` (default) — a right-angle (horizontal/vertical) path auto-generated at render time that **ignores `points`** (keep them `[]`). Set `"routing": "straight"` to draw a straight line through `points` instead. For flowchart-style wiring, just omit `routing`.
+- A connector may **loop back to the same object** (`source` and `target` referencing the same `owner.id`) — useful for self-transitions in state machines. Point the two endpoints at different anchors (e.g. `topCenter` and `rightCenter`); it is always drawn as a rectangular orthogonal loop, so leave `routing` omitted and `points` `[]` (a `"straight"` self-loop is ignored).
 
 **MUST NOT**
 
