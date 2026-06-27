@@ -1,7 +1,7 @@
 import { beforeAll, describe, it, expect } from "vitest";
 
-import { initializeObjectRegistry } from "../../../../../controllers/setup/initializeObjectRegistry";
-import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
+import { initializeObjectRegistry } from "../../../../../../controllers/setup/initializeObjectRegistry";
+import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import { adjustToOutline } from "../adjustToOutline";
 
 beforeAll(() => {

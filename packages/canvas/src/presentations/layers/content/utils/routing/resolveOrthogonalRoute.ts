@@ -1,15 +1,15 @@
 import {
 	calcFrameBoxFeatures,
 	isTransformedFrame,
-	routeOrthogonalConnector,
 	snapToDirection,
-	type OrthogonalConnectorEndpoint,
 	type OrthogonalDirection,
 	type Point,
 } from "@workspace/geometry";
 
-import type { AnchorSpec } from "../../../../schemas/objects/types/EndpointRef";
-import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import { routeOrthogonalConnector } from "./routeOrthogonalConnector";
+import type { OrthogonalConnectorEndpoint } from "./types";
+import type { AnchorSpec } from "../../../../../schemas/objects/types/EndpointRef";
+import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 
 /**
  * 端点の外向き方向を決める。

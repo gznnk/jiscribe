@@ -1,4 +1,4 @@
-import { useResolvedConnectorPoints } from "./utils/useResolvedConnectorPoints";
+import { useResolvedConnectorPoints } from "./utils/endpoints";
 import type { CanvasState } from "../../../states/canvas/CanvasState";
 import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
 import { Connector } from "../../objects/connections/Connector";

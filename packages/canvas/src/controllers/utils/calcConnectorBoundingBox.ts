@@ -1,6 +1,6 @@
 import type { BoundingBox } from "@workspace/geometry";
 
-import { resolveConnectorPoints } from "../../presentations/layers/content/utils/resolveConnectorPoints";
+import { resolveConnectorPoints } from "../../presentations/layers/content/utils/endpoints";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../states/objects/connections/connector/ConnectorState";
 

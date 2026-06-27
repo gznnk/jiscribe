@@ -1,5 +1,5 @@
 import { getRootConnectorIds } from "./getRootConnectorIds";
-import { resolveConnectorPoints } from "../../presentations/layers/content/utils/resolveConnectorPoints";
+import { resolveConnectorPoints } from "../../presentations/layers/content/utils/endpoints";
 import type { FreeEndpointRef } from "../../schemas/objects/types/EndpointRef";
 import type { ConnectorState } from "../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../CanvasTypes";

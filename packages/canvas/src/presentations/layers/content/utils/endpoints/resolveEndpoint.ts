@@ -5,8 +5,8 @@ import {
 	type Point,
 } from "@workspace/geometry";
 
-import type { EndpointRef } from "../../../../schemas/objects/types/EndpointRef";
-import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import type { EndpointRef } from "../../../../../schemas/objects/types/EndpointRef";
+import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 
 /**
  * Resolves an EndpointRef to a Point coordinate using a single object instead of the entire objects map.

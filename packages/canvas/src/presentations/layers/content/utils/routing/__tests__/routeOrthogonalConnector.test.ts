@@ -1,12 +1,11 @@
+import {
+	calcFrameBoxFeatures,
+	isLineIntersectingBox,
+	type BoxFeatures,
+} from "@workspace/geometry";
 import { describe, it, expect } from "vitest";
 
-import type { BoxFeatures } from "../../types/BoxFeatures";
-import { calcFrameBoxFeatures } from "../calcFrameBoxFeatures";
-import { isLineIntersectingBox } from "../isLineIntersectingBox";
-import {
-	routeOrthogonalConnector,
-	type OrthogonalConnectorEndpoint,
-} from "../routeOrthogonalConnector";
+import { routeOrthogonalConnector, type OrthogonalConnectorEndpoint } from "..";
 
 /** 中心 (cx,cy)・幅高さの軸並行 box を作る。 */
 const boxAt = (cx: number, cy: number, w = 100, h = 60): BoxFeatures =>

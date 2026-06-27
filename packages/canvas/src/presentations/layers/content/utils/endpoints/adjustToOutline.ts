@@ -6,8 +6,8 @@ import {
 	type TransformedEllipse,
 } from "@workspace/geometry";
 
-import type { ObjectState } from "../../../../states/objects/base/ObjectState";
-import { objectMapperRegistry } from "../../../../states/registry/ObjectMapperRegistry";
+import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
+import { objectMapperRegistry } from "../../../../../states/registry/ObjectMapperRegistry";
 
 /**
  * Adjusts a center anchor endpoint to the outline point on a rect or ellipse geometry object.

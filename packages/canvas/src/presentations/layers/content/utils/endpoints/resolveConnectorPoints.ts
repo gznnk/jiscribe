@@ -2,10 +2,10 @@ import type { Point } from "@workspace/geometry";
 
 import { adjustToOutline } from "./adjustToOutline";
 import { resolveEndpoint } from "./resolveEndpoint";
-import { resolveOrthogonalRoute } from "./resolveOrthogonalRoute";
-import { isOrthogonalRouting } from "../../../../schemas/objects/types/ConnectorRouting";
-import type { ObjectState } from "../../../../states/objects/base/ObjectState";
-import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
+import { isOrthogonalRouting } from "../../../../../schemas/objects/types/ConnectorRouting";
+import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
+import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
+import { resolveOrthogonalRoute } from "../routing";
 
 /**
  * Pure function: Resolves connector endpoints to actual coordinates.

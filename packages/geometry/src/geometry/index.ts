@@ -15,7 +15,6 @@ export * from "./createLinearX2yFunction";
 export * from "./createLinearY2xFunction";
 export * from "./isLineIntersectingBox";
 export * from "./snapToDirection";
-export * from "./routeOrthogonalConnector";
 export * from "./doSegmentsIntersect";
 export * from "./convertRectToFrame";
 export * from "./convertFrameToRect";

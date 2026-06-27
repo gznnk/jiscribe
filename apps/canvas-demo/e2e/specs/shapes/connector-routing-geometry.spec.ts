@@ -9,7 +9,7 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
  * ——端点が接続図形の辺に正確に乗るか、全セグメントが直角か、図形を貫通しないか、
  * 直線経路を塞ぐと回り込んで折れ点が増えるか——は未検証だった。
  *
- * routeOrthogonalConnector（packages/geometry）の出力が DOM の polyline points に
+ * routeOrthogonalConnector（packages/canvas）の出力が DOM の polyline points に
  * そのまま反映されることを、座標オフセットに依存しない不変条件で守る。アサーションは
  * すべて「図形のワールド AABB を実行時に読み取り、それと points を突き合わせる」形にして
  * いるため、content 座標とワールド座標のマッピングに依存しない。
