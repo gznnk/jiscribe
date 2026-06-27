@@ -8,20 +8,18 @@ import type { ConnectorState } from "../../../../../states/objects/connections/c
 import { resolveOrthogonalRoute } from "../routing";
 
 /**
- * Pure function: Resolves connector endpoints to actual coordinates.
- * Handles both endpoint resolution and outline adjustment for center anchors.
- *
- * This function takes individual objects instead of the entire objects map,
- * enabling better memoization in React components.
+ * コネクターの両端点を実座標へ解決する純関数。端点解決と、center アンカーの輪郭調整を
+ * まとめて行う。objects マップ全体ではなく対象図形を個別に受け取り、React コンポーネント
+ * 側のメモ化を効かせる。
  *
  * `waypoints` は source → target 順の中間経由点（ワールド座標）をそのまま返す。
  * 折れ線として描く際の端点アウトライン調整は、隣接する経由点（無ければ反対側の端点）に
  * 向けて行う。
  *
- * @param connectorState - The connector state to resolve
- * @param sourceObj - The source endpoint's owner object (or null if not found)
- * @param targetObj - The target endpoint's owner object (or null if not found)
- * @returns Resolved source / target points and intermediate waypoints, or null if resolution fails
+ * @param connectorState - 解決対象のコネクター状態。両端点・routing・手動 points を持つ
+ * @param sourceObj - source 端点の owner 図形。未参照（free 端点）や未発見なら null/undefined
+ * @param targetObj - target 端点の owner 図形。未参照（free 端点）や未発見なら null/undefined
+ * @returns 解決した source / target 点と中間経由点 waypoints。解決に失敗した場合は null
  */
 export const resolveConnectorPoints = (
 	connectorState: ConnectorState,

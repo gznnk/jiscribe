@@ -9,17 +9,17 @@ import type { EndpointRef } from "../../../../../schemas/objects/types/EndpointR
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 
 /**
- * Resolves an EndpointRef to a Point coordinate using a single object instead of the entire objects map.
- * This enables better memoization since only the specific object is a dependency.
+ * EndpointRef を Point 座標へ解決する。objects マップ全体ではなく対象オブジェクト 1 つ
+ * だけを受け取るため、その図形だけを依存に持つメモ化が効く。
  *
- * Supports:
- * - FreeAnchor: Returns the specified point directly
- * - CenterAnchor: Returns the center point (cx, cy) of the referenced object
- * - ConnectPointAnchor: Returns the specified connection point (e.g., topCenter, rightCenter)
+ * 対応するアンカー種別:
+ * - free: 指定された点をそのまま返す
+ * - center: 参照図形の中心点 (cx, cy) を返す
+ * - connectPoint: 指定された接続点（topCenter / rightCenter など辺の中央）を返す
  *
- * @param endpoint - The endpoint reference to resolve
- * @param obj - The object referenced by the endpoint (or null if not found)
- * @returns The resolved point, or null if it cannot be resolved
+ * @param endpoint - 解決対象の端点参照。アンカー種別（free / center / connectPoint）を持つ
+ * @param obj - endpoint が参照する図形の状態。未参照（free）や未発見なら null/undefined
+ * @returns 解決した座標。解決できない場合は null
  */
 export const resolveEndpoint = (
 	endpoint: EndpointRef,

@@ -18,6 +18,12 @@ export const DEFAULT_MARGIN = 20;
  * 前提: `point` は退出方向の辺の上にあること（connectPoint＝辺の中央なら厳密に成立）。
  * center アンカー等で `point` が辺上に無い場合、スタブ脚（point → stub）が直交軸方向に
  * AABB をかすめうる（v1 の近似。実害は connectPoint 主体なら小さい）。
+ *
+ * @param point - 端点座標（退出方向の辺上にある前提）
+ * @param direction - 線が図形から外へ出る直交方向
+ * @param box - 図形の軸並行バウンディングボックス
+ * @param margin - 辺からの押し出し距離（px）
+ * @returns 退出方向へ押し出したスタブ点（直交軸の座標は据え置き）
  */
 export const stubPoint = (
 	point: Point,

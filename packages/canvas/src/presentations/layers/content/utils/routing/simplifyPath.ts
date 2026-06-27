@@ -4,6 +4,9 @@ import type { Point } from "@workspace/geometry";
  * 重複点と「通過するだけの」共線中間点を畳む。
  * 折り返し（逆走）する点は畳まない——スタブの押し出し方向を保つため、
  * 中間点が両隣の間（単調）にあるときだけ除去する。
+ *
+ * @param points - 直交パスの点列（端点を含む）
+ * @returns 重複点と通過点を畳んだ点列（端点と逆走点は保持）
  */
 export const simplifyPath = (points: Point[]): Point[] => {
 	// パス1: 連続する重複点を落とす（長さ0セグメントを消す）。

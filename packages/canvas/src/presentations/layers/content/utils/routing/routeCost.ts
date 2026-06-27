@@ -15,6 +15,11 @@ import {
  * セマンティクスは `isLineIntersectingBox`（辺との真の交差・接触は除外）と一致させる:
  * 水平セグメントは「y が上下辺の内側」かつ「x 範囲が左 or 右辺を跨ぐ」とき貫通。
  * 境界に乗るだけ（接触）は厳密不等号で除外する。非軸並行が来た場合は汎用版へ委譲する。
+ *
+ * @param p1 - セグメントの始点
+ * @param p2 - セグメントの終点
+ * @param box - 判定対象の軸並行バウンディングボックス
+ * @returns セグメントが box 内部を貫通するなら true（辺との接触は false）
  */
 const segmentCrossesBox = (p1: Point, p2: Point, box: BoxFeatures): boolean => {
 	if (p1.y === p2.y) {
@@ -45,7 +50,12 @@ const segmentCrossesBox = (p1: Point, p2: Point, box: BoxFeatures): boolean => {
 	return isLineIntersectingBox(p1, p2, box);
 };
 
-/** フルパスの総延長（マンハッタン距離）。 */
+/**
+ * フルパスの総延長（マンハッタン距離の和）。
+ *
+ * @param points - 経路の点列
+ * @returns 全セグメント長の合計
+ */
 export const pathLength = (points: Point[]): number => {
 	let total = 0;
 	for (let i = 1; i < points.length; i++) {
@@ -66,6 +76,9 @@ export const pathLength = (points: Point[]): number => {
  * スタブを出した直後に同じ線分を逆走して戻るスパイク（図形の縁から線が生えて見える
  * 不自然な経路）がこれに当たる。`simplifyPath` は退出方向を保つためこの逆走点を温存するので、
  * コスト評価側で明示的に数えてペナルティをかける。
+ *
+ * @param points - 評価するフルパスの点列
+ * @returns 折り返し（逆走）している中間角の数
  */
 export const countReversals = (points: Point[]): number => {
 	let reversals = 0;
@@ -84,7 +97,14 @@ export const countReversals = (points: Point[]): number => {
 	return reversals;
 };
 
-/** エルボ（スタブ間）が図形を貫通する回数。スタブ脚は含めない。 */
+/**
+ * エルボ（スタブ間）が図形を貫通する回数。スタブ脚は含めない。
+ *
+ * @param elbow - スタブ間のエルボ点列（スタブ脚は含めない）
+ * @param sourceBox - 始点図形の AABB（free 端点は null）
+ * @param targetBox - 終点図形の AABB（free 端点は null）
+ * @returns エルボが両図形を貫通する合計回数
+ */
 export const countBoxCrossings = (
 	elbow: Point[],
 	sourceBox: BoxFeatures | null,
@@ -140,6 +160,13 @@ export type RouteCost = {
  * - 角数・長さは「実際に描かれるフルパス（スタブ脚込み）」で測る。エルボ単体だと、
  *   スタブ脚と最初/最後の向きが噛み合わずに増える角を見落とす（例: 右へ出た直後に下へ
  *   折れるエルボは見かけ1角でもフルパスでは2角）。`fullPath` を渡す。
+ *
+ * @param fullPath - 実際に描かれるフルパス（スタブ脚込み）。角数・長さの計測に使う
+ * @param simplifiedElbow - スタブ間のエルボのみ（脚を除く）。図形貫通の判定に使う
+ * @param sourceBox - 始点図形の AABB（free 端点は null）
+ * @param targetBox - 終点図形の AABB（free 端点は null）
+ * @param symmetric - 中点で折れる対称（S/Z 字）ルートか。true なら美観を加点
+ * @returns 貫通回数（ハード制約）と美観スコア（ソフト）の組
  */
 export const calcRouteCost = (
 	fullPath: Point[],
@@ -161,6 +188,12 @@ export const calcRouteCost = (
 	};
 };
 
-/** 負: a が良い / 正: b が良い。crossings → aesthetic の順（辞書式）。 */
+/**
+ * 2 つのコストを辞書式（crossings → aesthetic）で比較する。
+ *
+ * @param a - 比較対象のコスト
+ * @param b - 比較対象のコスト
+ * @returns 負: a が良い / 正: b が良い / 0: 同等
+ */
 export const compareCost = (a: RouteCost, b: RouteCost): number =>
 	a.crossings - b.crossings || a.aesthetic - b.aesthetic;
