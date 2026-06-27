@@ -12,7 +12,10 @@ import type {
  */
 export const ConnectorEventHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {
-		return event.targetKind === "connector" && event.type === "click";
+		return (
+			event.targetKind === "connector" &&
+			(event.type === "click" || event.type === "pressed")
+		);
 	},
 
 	handle(
@@ -24,24 +27,29 @@ export const ConnectorEventHandler: GestureHandler = {
 			return state;
 		}
 
-		const nextState = commitTextEditIfNeeded(state);
+		let nextState = commitTextEditIfNeeded(state);
 
-		const connectorId = event.targetId;
-		if (!connectorId) {
-			return nextState;
+		// コネクター上の押下でコンテキストメニューを閉じる（button は冒頭でガード済み、選択は click で行う）
+		if (event.type === "pressed") {
+			nextState = { ...nextState, contextMenuPosition: null };
 		}
 
+		// クリックでコネクターを選択（図形選択は解除して排他を保証）
 		// すでに同じコネクターが選択済みの場合は変化なし
-		if (nextState.selectedConnectorId === connectorId) {
-			return nextState;
+		const connectorId = event.targetId;
+		if (
+			event.type === "click" &&
+			connectorId &&
+			nextState.selectedConnectorId !== connectorId
+		) {
+			nextState = {
+				...nextState,
+				selectedConnectorId: connectorId,
+				selectedIds: [],
+				multiSelectGroup: null,
+			};
 		}
 
-		return {
-			...nextState,
-			selectedConnectorId: connectorId,
-			// 図形選択は解除して排他を保証
-			selectedIds: [],
-			multiSelectGroup: null,
-		};
+		return nextState;
 	},
 };

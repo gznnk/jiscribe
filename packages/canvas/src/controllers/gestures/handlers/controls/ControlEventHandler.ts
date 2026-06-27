@@ -56,7 +56,15 @@ export class ControlEventHandler implements GestureHandler {
 		event: CanvasEvent,
 	): CanvasControllerState {
 		// Commit text editing if active
-		const nextState = commitTextEditIfNeeded(state);
+		let nextState = commitTextEditIfNeeded(state);
+
+		// コントロール上の押下でコンテキストメニューを閉じる
+		// （メニュー表示中は通常コントロールに到達しないが、対象ごとのハンドラで挙動を揃える）
+		if (event.type === "pressed") {
+			if (event.button === 0) {
+				nextState = { ...nextState, contextMenuPosition: null };
+			}
+		}
 
 		// 各ストラテジを試して、最初に supports() が true を返したものを使用
 		for (const strategy of this.strategies.values()) {
