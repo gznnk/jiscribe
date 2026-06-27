@@ -8,7 +8,8 @@ import type { ConnectorState } from "../../states/objects/connections/connector/
  * Connector 全体のバウンディングボックスを計算する。
  *
  * resolveConnectorPoints でアウトライン調整込みの端点を動的解決し、
- * 中間経由点（points）も含めた範囲を返す。
+ * 中間経由点（waypoints）も含めた範囲を返す。
+ * 直交ルーティングでは曲がり点が waypoints に入るため、これも範囲に含める。
  * 端点が解決できない場合（参照先オブジェクトの消失など）は null を返す。
  */
 export const calcConnectorBoundingBox = (
@@ -32,7 +33,7 @@ export const calcConnectorBoundingBox = (
 	let top = Infinity;
 	let bottom = -Infinity;
 
-	for (const p of [resolved.source, resolved.target, ...connector.points]) {
+	for (const p of [resolved.source, ...resolved.waypoints, resolved.target]) {
 		left = Math.min(left, p.x);
 		right = Math.max(right, p.x);
 		top = Math.min(top, p.y);
