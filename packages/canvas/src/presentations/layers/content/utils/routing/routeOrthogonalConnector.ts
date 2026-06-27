@@ -3,11 +3,12 @@ import type { Point } from "@workspace/geometry";
 import { directionsFace, elbowCandidates } from "./elbowCandidates";
 import { calcRouteCost, compareCost, type RouteCost } from "./routeCost";
 import { simplifyPath } from "./simplifyPath";
-import { DEFAULT_MARGIN, stubPoint } from "./stub";
+import { stubPoint } from "./stub";
 import type {
 	OrthogonalConnectorEndpoint,
 	RouteOrthogonalConnectorOptions,
 } from "./types";
+import { DEFAULT_CONNECTOR_MARGIN } from "../../../../../constants/connectorRouting";
 
 /**
  * 2 端点間を水平/垂直セグメントだけで結ぶ直交経路を生成する。
@@ -30,7 +31,7 @@ import type {
  *
  * @param source - 始点の端点（座標・外向き方向・回避用 AABB）
  * @param target - 終点の端点（座標・外向き方向・回避用 AABB）
- * @param options - margin（スタブ長, px）などの調整オプション。省略時は DEFAULT_MARGIN
+ * @param options - margin（スタブ長, px）などの調整オプション。省略時は DEFAULT_CONNECTOR_MARGIN
  * @returns 端点を含む直交フルパス `[source.point, …, target.point]`（共線・重複は畳み済み）
  */
 export const routeOrthogonalConnector = (
@@ -38,7 +39,7 @@ export const routeOrthogonalConnector = (
 	target: OrthogonalConnectorEndpoint,
 	options: RouteOrthogonalConnectorOptions = {},
 ): Point[] => {
-	const margin = options.margin ?? DEFAULT_MARGIN;
+	const margin = options.margin ?? DEFAULT_CONNECTOR_MARGIN;
 
 	// ── ステップ1: スタブ ──
 	// 各端点を退出方向へ margin だけ押し出した点。線は必ずこのスタブを通って図形面に

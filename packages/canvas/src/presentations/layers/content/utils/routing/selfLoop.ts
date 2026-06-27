@@ -1,11 +1,12 @@
 import type { Point } from "@workspace/geometry";
 
 import { simplifyPath } from "./simplifyPath";
-import { DEFAULT_MARGIN, stubPoint } from "./stub";
+import { stubPoint } from "./stub";
 import type {
 	OrthogonalConnectorEndpoint,
 	RouteOrthogonalConnectorOptions,
 } from "./types";
+import { DEFAULT_CONNECTOR_MARGIN } from "../../../../../constants/connectorRouting";
 
 /** 周辺パラメータ比較の許容誤差（px）。角と端点の重なり判定に使う。 */
 const EPS = 1e-6;
@@ -25,7 +26,7 @@ const EPS = 1e-6;
  *
  * @param source - 始点の端点（座標・外向き方向・回避用 AABB）
  * @param target - 終点の端点（自己ループなので box は source と同一図形）
- * @param options - margin（リングの膨らみ, px）などの調整オプション。省略時は DEFAULT_MARGIN
+ * @param options - margin（リングの膨らみ, px）などの調整オプション。省略時は DEFAULT_CONNECTOR_MARGIN
  * @returns 端点を含む直交フルパス `[source.point, …, target.point]`（共線・重複は畳み済み）
  */
 export const routeSelfLoop = (
@@ -33,7 +34,7 @@ export const routeSelfLoop = (
 	target: OrthogonalConnectorEndpoint,
 	options: RouteOrthogonalConnectorOptions = {},
 ): Point[] => {
-	const margin = options.margin ?? DEFAULT_MARGIN;
+	const margin = options.margin ?? DEFAULT_CONNECTOR_MARGIN;
 	const box = source.box ?? target.box;
 
 	// box が無い（free 端点）自己ループは想定外。退化を避けて直結で返す。

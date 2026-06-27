@@ -48,14 +48,16 @@ describe("routeSelfLoop", () => {
 	});
 
 	it("隣り合う辺（右→下）は共有の角（右下）を回るループになる", () => {
-		const path = routeSelfLoop(endpoints.right, endpoints.bottom);
+		const path = routeSelfLoop(endpoints.right, endpoints.bottom, {
+			margin: 20,
+		});
 		// 右辺の外（x=170）と下辺の外（y=150）まで膨らみ、右下角 (170,150) を通る。
 		expect(path).toContainEqual({ x: 170, y: 150 });
 		expect(anyPointStrictlyInsideBox(path)).toBe(false);
 	});
 
 	it("向かい合う辺（右→左）は図形の片側を回り込む", () => {
-		const path = routeSelfLoop(endpoints.right, endpoints.left);
+		const path = routeSelfLoop(endpoints.right, endpoints.left, { margin: 20 });
 		expect(path[0]).toEqual({ x: 150, y: 100 });
 		expect(path[path.length - 1]).toEqual({ x: 50, y: 100 });
 		expect(allSegmentsOrthogonal(path)).toBe(true);
@@ -67,7 +69,7 @@ describe("routeSelfLoop", () => {
 	});
 
 	it("上→右でも図形を貫通せず端点に接続する", () => {
-		const path = routeSelfLoop(endpoints.top, endpoints.right);
+		const path = routeSelfLoop(endpoints.top, endpoints.right, { margin: 20 });
 		expect(path[0]).toEqual({ x: 100, y: 70 });
 		expect(path[path.length - 1]).toEqual({ x: 150, y: 100 });
 		expect(allSegmentsOrthogonal(path)).toBe(true);

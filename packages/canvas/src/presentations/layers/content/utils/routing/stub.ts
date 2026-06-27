@@ -4,9 +4,6 @@ import type {
 	Point,
 } from "@workspace/geometry";
 
-/** 図形の面から線を押し出す既定のスタブ長（px）。 */
-export const DEFAULT_MARGIN = 20;
-
 /**
  * 端点のスタブ点を返す。退出方向の軸では**バウンディングボックスの辺 + margin**まで
  * 押し出し（回転した図形でも AABB の外へ確実に出す）、直交軸は端点座標を保つ。

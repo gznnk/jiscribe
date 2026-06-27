@@ -1,7 +1,7 @@
 import { calcFrameBoxFeatures, type BoxFeatures } from "@workspace/geometry";
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_MARGIN, stubPoint } from "../stub";
+import { stubPoint } from "../stub";
 
 // 中心 (100,100) 100x60 → AABB: left50 right150 top70 bottom130
 const box: BoxFeatures = calcFrameBoxFeatures({
@@ -40,9 +40,5 @@ describe("stubPoint", () => {
 			x: 190,
 			y: 100,
 		});
-	});
-
-	it("DEFAULT_MARGIN は 20", () => {
-		expect(DEFAULT_MARGIN).toBe(20);
 	});
 });

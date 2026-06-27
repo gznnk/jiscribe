@@ -84,10 +84,10 @@ describe("calcConnectorBoundingBox", () => {
 		const bbox = calcConnectorBoundingBox(connector, { r1: src, r2: tgt });
 
 		// 端点だけなら {left:50, right:350, top:100, bottom:300} になるが、
-		// 直交経路のスタブ（辺 + margin 20）が両側へふくらむため左右に広がる。
+		// 直交経路のスタブ（辺 + margin 30）が両側へふくらむため左右に広がる。
 		expect(bbox).not.toBeNull();
-		expect(bbox!.left).toBe(30); // target 左辺 50 - margin 20
-		expect(bbox!.right).toBe(370); // source 右辺 350 + margin 20
+		expect(bbox!.left).toBe(20); // target 左辺 50 - margin 30
+		expect(bbox!.right).toBe(380); // source 右辺 350 + margin 30
 		expect(bbox!.left).toBeLessThan(50);
 		expect(bbox!.right).toBeGreaterThan(350);
 		expect(bbox!.top).toBeLessThanOrEqual(100);
