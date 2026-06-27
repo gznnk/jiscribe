@@ -25,6 +25,24 @@ const allSegmentsOrthogonal = (points: { x: number; y: number }[]): boolean =>
 		i === 0 ? true : p.x === points[i - 1].x || p.y === points[i - 1].y,
 	);
 
+/** 同一軸上で進行方向が反転する「折り返し（逆走スパイク）」の数。 */
+const countReversals = (points: { x: number; y: number }[]): number => {
+	let reversals = 0;
+	for (let i = 1; i < points.length - 1; i++) {
+		const a = points[i - 1];
+		const b = points[i];
+		const c = points[i + 1];
+		const reverseH =
+			a.y === b.y && b.y === c.y && (b.x - a.x) * (c.x - b.x) < 0;
+		const reverseV =
+			a.x === b.x && b.x === c.x && (b.y - a.y) * (c.y - b.y) < 0;
+		if (reverseH || reverseV) {
+			reversals++;
+		}
+	}
+	return reversals;
+};
+
 describe("routeOrthogonalConnector", () => {
 	it("フルパスは端点を含み、全セグメントが水平/垂直", () => {
 		const source: OrthogonalConnectorEndpoint = {
@@ -232,6 +250,28 @@ describe("routeOrthogonalConnector", () => {
 			{ x: 320, y: 100 },
 			{ x: 320, y: 230 },
 		]);
+	});
+
+	it("出口方向の裏側にある端点へはスタブを逆走せず回り込む（#77 折り返しスパイク回避）", () => {
+		// source は右へ出るが target は左後方にある。素朴だと右へ 20 出た直後に
+		// 同じ線分を逆走して戻るスパイクになりがちな配置。
+		const source: OrthogonalConnectorEndpoint = {
+			point: { x: 150, y: 100 }, // 右辺中央 → 右へ出る
+			direction: "right",
+			box: boxAt(100, 100),
+		};
+		const target: OrthogonalConnectorEndpoint = {
+			point: { x: 150, y: 0 }, // 左辺中央。source の左後方・上にある
+			direction: "left",
+			box: boxAt(200, 0),
+		};
+		const path = routeOrthogonalConnector(source, target);
+		expect(allSegmentsOrthogonal(path)).toBe(true);
+		// 折り返し（逆走スパイク）が無い
+		expect(countReversals(path)).toBe(0);
+		// source の最初の一歩はスタブ分まっすぐ右へ（途中で折れない）
+		expect(path[1].y).toBe(path[0].y);
+		expect(path[1].x).toBeGreaterThan(path[0].x);
 	});
 
 	it("margin を変えるとスタブの押し出し量が変わる", () => {

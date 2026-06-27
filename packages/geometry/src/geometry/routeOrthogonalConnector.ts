@@ -183,6 +183,31 @@ const pathLength = (points: Point[]): number => {
 	return total;
 };
 
+/**
+ * フルパス中の「折り返し（逆走）」角の数を数える。
+ *
+ * 同一軸上で進行方向が反転する中間点（a→b と b→c が共線かつ逆向き）を折り返しとみなす。
+ * スタブを出した直後に同じ線分を逆走して戻るスパイク（図形の縁から線が生えて見える
+ * 不自然な経路）がこれに当たる。`simplify` は退出方向を保つためこの逆走点を温存するので、
+ * コスト評価側で明示的に数えてペナルティをかける。
+ */
+const countReversals = (points: Point[]): number => {
+	let reversals = 0;
+	for (let i = 1; i < points.length - 1; i++) {
+		const a = points[i - 1];
+		const b = points[i];
+		const c = points[i + 1];
+		const reverseH =
+			a.y === b.y && b.y === c.y && (b.x - a.x) * (c.x - b.x) < 0;
+		const reverseV =
+			a.x === b.x && b.x === c.x && (b.y - a.y) * (c.y - b.y) < 0;
+		if (reverseH || reverseV) {
+			reversals++;
+		}
+	}
+	return reversals;
+};
+
 /** エルボ（スタブ間）が図形を貫通する回数。スタブ脚は含めない。 */
 const countBoxCrossings = (
 	elbow: Point[],
@@ -208,20 +233,26 @@ const countBoxCrossings = (
 const TURN_WEIGHT = 1_000;
 // 向かい合う端点では、中点で折れる対称（S/Z 字）を 1 曲がり分強めに優先する。
 const SYMMETRY_BONUS = 1_500;
+// 折り返し（スタブ直後に同じ線分を逆走するスパイク）は強く避ける。1 折り返し =
+// 10 曲がり相当。回り込み（曲がり数増）より常に不利にし、出口方向の裏側にある端点へは
+// 一度スタブ分まっすぐ出てから回り込ませる。回り込みようがない配置では全候補が等しく
+// 加点されるため、相対比較に影響せず自然にフォールバックする（貫通とは独立＝ソフト制約）。
+const REVERSAL_PENALTY = 10_000;
 
 /**
  * ルート評価。図形貫通は**ハード制約**として最優先で比較し、曲がり数・長さ・対称性は
  * **柔らかい美観**として 1 つの重み付き和にまとめる（ハードは辞書式・ソフトは加点）。
  *
- * 逆走（スタブの押し出し方向に逆らって図形側へ戻る）の専用ペナルティは持たない。
- * 角数をフルパス（スタブ脚込み）で測るため、逆走は必ず折り返しの 1 角として `aesthetic`
- * に現れて自然に不利になる（スタブ脚があるのは box を持つ端点のみで、free 端点では
- * そもそも逆走が定義されない）。
+ * 逆走（スタブの押し出し方向に逆らって同じ線分を戻る折り返し）は `REVERSAL_PENALTY` で
+ * 明示的に強く減点する。角数はフルパス（スタブ脚込み）で測るため逆走も 1 角として現れるが、
+ * それだけだと回り込み（角数増）の方が高コストになりスパイクが選ばれてしまうため、
+ * 専用ペナルティで回り込みを優先させる。回り込みようがない配置では全候補が等しく加点され、
+ * 相対比較に影響しないので破綻しない。
  */
 type RouteCost = {
 	/** 図形を貫通する回数（最優先で 0 にしたい）。 */
 	crossings: number;
-	/** 曲がり数×weight + 経路長 − 対称ボーナス（小さいほど良い）。 */
+	/** 曲がり数×weight + 経路長 + 折り返し×penalty − 対称ボーナス（小さいほど良い）。 */
 	aesthetic: number;
 };
 
@@ -308,10 +339,11 @@ export const routeOrthogonalConnector = (
 			// 面から外へ出る正当な交差なので除く）。
 			crossings: countBoxCrossings(simplifiedElbow, source.box, target.box),
 			// 柔らかい美観: 曲がり数を重視（×weight）、同程度なら短く、向かい合いは
-			// 対称(S字)を一段優先。逆走は角数に必ず現れるので別項は持たない。
+			// 対称(S字)を一段優先。スタブ直後の逆走スパイクは別項で強く減点し、回り込みを優先。
 			aesthetic:
 				turns * TURN_WEIGHT +
-				pathLength(fullPath) -
+				pathLength(fullPath) +
+				countReversals(fullPath) * REVERSAL_PENALTY -
 				(symmetric ? SYMMETRY_BONUS : 0),
 		};
 		// 厳密比較なので同コストのときは先に評価した候補を保持する。
