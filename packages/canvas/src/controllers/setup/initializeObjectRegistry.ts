@@ -384,6 +384,8 @@ export const initializeObjectRegistry = (): void => {
 				id: "arrowHead",
 				items: [{ type: "arrowHead" }],
 			},
+			// 自己ループは orthogonal 専用のため RoutingMenu が null を描画する。
+			// 空になったセクションは ObjectMenuSection の `:empty` で畳まれる。
 			{
 				id: "routing",
 				items: [

@@ -17,7 +17,7 @@ import { StackOrderMenu } from "./items/StackOrderMenu";
 import { StrokeColorMenu } from "./items/StrokeColorMenu";
 import {
 	ObjectMenuContainer,
-	ObjectMenuDivider,
+	ObjectMenuSection,
 	ObjectMenuWrapper,
 } from "./ObjectMenuStyled";
 import type { MenuItem, MenuSection, MenuItemProps } from "./ObjectMenuTypes";
@@ -175,10 +175,11 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 	// objectGroups と systemGroups の両方に同じアイテムタイプが含まれる場合があるため、
 	// 先に出現したものを優先し、重複レンダリングを防ぐ
 	const renderedItemKeys = new Set<string>();
-	const items: React.ReactNode[] = [];
 
-	allGroups.forEach((group, gi) => {
-		// 未レンダリングのアイテムのみ抽出する
+	// 各グループを ObjectMenuSection で包む。区切り線は CSS（::before）で描き、
+	// 中身が空のセクション（custom が null を返す / 全アイテムが重複スキップ）は
+	// `:empty` で区切り線ごと自動的に畳まれる。
+	const sections = allGroups.map((group) => {
 		const groupItems: React.ReactNode[] = [];
 		group.items.forEach((item) => {
 			const key = item.type === "custom" ? item.id : item.type;
@@ -188,13 +189,7 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 			renderedItemKeys.add(key);
 			groupItems.push(renderItem(item, itemProps));
 		});
-
-		items.push(...groupItems);
-
-		// グループ間にセパレータを挿入（最終グループ、または全アイテムが重複スキップされたグループの後ろには挿入しない）
-		if (gi < allGroups.length - 1 && groupItems.length > 0) {
-			items.push(<ObjectMenuDivider key={`sep-${gi}`} />);
-		}
+		return <ObjectMenuSection key={group.id}>{groupItems}</ObjectMenuSection>;
 	});
 
 	return (
@@ -204,7 +199,7 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 				data-kind="object-menu"
 				data-id="object-menu:bar"
 			>
-				{items}
+				{sections}
 			</ObjectMenuContainer>
 		</ObjectMenuWrapper>
 	);

@@ -62,7 +62,7 @@ const getSelectedRouting = (state: CanvasControllerState): ConnectorRouting => {
 
 /**
  * 選択中コネクターが自己ループかどうか。自己ループは orthogonal 専用のため
- * routing トグル自体を出さない（straight に切り替えると破綻するため）。
+ * routing トグルを描画しない（straight に切り替えると破綻するため）。
  */
 const isSelectedConnectorSelfLoop = (state: CanvasControllerState): boolean => {
 	const id = state.selectedConnectorId;
@@ -77,6 +77,9 @@ const isSelectedConnectorSelfLoop = (state: CanvasControllerState): boolean => {
  * コネクターの routing（直線 / 直角）を切り替えるメニュー項目。
  * バー上のボタンは現在の routing アイコンを表示し、クリックで選択肢を横並びに展開する。
  * 各選択肢は `object-menu:command:setRouting*` を発火して SetConnectorRoutingCommand に委譲する。
+ *
+ * 自己ループは orthogonal 固定なので null を返す。空になったセクションは
+ * ObjectMenuSection の `:empty` で区切り線ごと畳まれる。
  */
 const RoutingMenuComponent: React.FC<MenuItemProps> = ({ canvasState }) => {
 	const menuItemRef = useRef<HTMLDivElement>(null);
@@ -87,7 +90,7 @@ const RoutingMenuComponent: React.FC<MenuItemProps> = ({ canvasState }) => {
 		isOpen,
 	);
 
-	// 自己ループは orthogonal 固定のため routing トグルを表示しない。
+	// フックを呼び切った後に早期 return する（フック順序を一定に保つ）。
 	if (isSelectedConnectorSelfLoop(canvasState)) {
 		return null;
 	}

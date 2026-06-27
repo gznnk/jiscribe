@@ -35,14 +35,32 @@ export const ObjectMenuContainer = styled.div`
 `;
 
 /**
- * メニュー内の区切り線。
+ * メニューのセクション（グループ）コンテナ。
+ *
+ * 区切り線は独立要素ではなく `::before`（CSS ボーダー）で描く。これにより、
+ * 中身が何も描画されないセクション（例: custom コンポーネントが `null` を返す、
+ * 全アイテムが重複でスキップされる）は `:empty` で**区切り線ごと**自動的に畳まれる。
+ *
+ * 注意: 純 CSS には「直前の*可視*兄弟」を見る手段がないため、構造上の先頭セクションが
+ * 空になった場合のみ先頭に区切り線が残りうる（現在のメニュー構成では先頭は常に可視）。
  */
-export const ObjectMenuDivider = styled.div`
-	width: 1px;
-	height: 16px;
-	margin: 0 8px;
-	background-color: ${theme.borderSubtle};
-	align-self: center;
+export const ObjectMenuSection = styled.div`
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+
+	&:empty {
+		display: none;
+	}
+
+	&:not(:first-child)::before {
+		content: "";
+		width: 1px;
+		height: 16px;
+		margin: 0 8px;
+		background-color: ${theme.borderSubtle};
+		align-self: center;
+	}
 `;
 
 /**
