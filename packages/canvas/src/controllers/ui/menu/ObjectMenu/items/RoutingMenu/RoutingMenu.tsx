@@ -4,6 +4,8 @@ import { RoutingMenuRow } from "./RoutingMenuStyled";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { isOrthogonalRouting } from "../../../../../../schemas/objects/types/ConnectorRouting";
 import type { ConnectorRouting } from "../../../../../../schemas/objects/types/ConnectorRouting";
+import type { ConnectorState } from "../../../../../../states/objects/connections/connector/ConnectorState";
+import { isSelfLoopConnector } from "../../../../../../states/objects/connections/connector/isSelfLoopConnector";
 import { OrthogonalConnectorIcon } from "../../../../icons/OrthogonalConnectorIcon";
 import { StraightConnectorIcon } from "../../../../icons/StraightConnectorIcon";
 import { DropdownPanel } from "../../common/DropdownPanel";
@@ -59,6 +61,19 @@ const getSelectedRouting = (state: CanvasControllerState): ConnectorRouting => {
 };
 
 /**
+ * 選択中コネクターが自己ループかどうか。自己ループは orthogonal 専用のため
+ * routing トグル自体を出さない（straight に切り替えると破綻するため）。
+ */
+const isSelectedConnectorSelfLoop = (state: CanvasControllerState): boolean => {
+	const id = state.selectedConnectorId;
+	const connector = id !== null ? state.objects[id] : undefined;
+	if (!connector || connector.type !== "connector") {
+		return false;
+	}
+	return isSelfLoopConnector(connector as ConnectorState);
+};
+
+/**
  * コネクターの routing（直線 / 直角）を切り替えるメニュー項目。
  * バー上のボタンは現在の routing アイコンを表示し、クリックで選択肢を横並びに展開する。
  * 各選択肢は `object-menu:command:setRouting*` を発火して SetConnectorRoutingCommand に委譲する。
@@ -71,6 +86,11 @@ const RoutingMenuComponent: React.FC<MenuItemProps> = ({ canvasState }) => {
 		menuItemRef,
 		isOpen,
 	);
+
+	// 自己ループは orthogonal 固定のため routing トグルを表示しない。
+	if (isSelectedConnectorSelfLoop(canvasState)) {
+		return null;
+	}
 
 	const CurrentIcon =
 		currentRouting === "orthogonal"

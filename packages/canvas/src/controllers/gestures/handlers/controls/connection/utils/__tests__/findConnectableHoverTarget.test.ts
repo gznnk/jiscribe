@@ -20,23 +20,18 @@ describe("findConnectableHoverTarget", () => {
 		const result = findConnectableHoverTarget({
 			hovered: [{ id: "rect-1", kind: "object" }],
 			objects,
-			fixedObjectId: undefined,
 			isConnectable,
 		});
 		expect(result).toEqual({ id: "rect-1", object: objects["rect-1"] });
 	});
 
-	it("固定側オブジェクト（fixedObjectId）は自己接続になるため除外する", () => {
+	it("固定側と同一のオブジェクトも対象に含める（自己ループ許可）", () => {
 		const result = findConnectableHoverTarget({
-			hovered: [
-				{ id: "rect-1", kind: "object" },
-				{ id: "rect-2", kind: "object" },
-			],
+			hovered: [{ id: "rect-1", kind: "object" }],
 			objects,
-			fixedObjectId: "rect-1",
 			isConnectable,
 		});
-		expect(result).toEqual({ id: "rect-2", object: objects["rect-2"] });
+		expect(result).toEqual({ id: "rect-1", object: objects["rect-1"] });
 	});
 
 	it("connectable でないオブジェクトは飛ばす", () => {
@@ -46,7 +41,6 @@ describe("findConnectableHoverTarget", () => {
 				{ id: "rect-2", kind: "object" },
 			],
 			objects,
-			fixedObjectId: undefined,
 			isConnectable,
 		});
 		expect(result).toEqual({ id: "rect-2", object: objects["rect-2"] });
@@ -59,7 +53,6 @@ describe("findConnectableHoverTarget", () => {
 				{ id: "rect-1", kind: "object" },
 			],
 			objects,
-			fixedObjectId: undefined,
 			isConnectable,
 		});
 		expect(result).toEqual({ id: "rect-1", object: objects["rect-1"] });
@@ -69,7 +62,6 @@ describe("findConnectableHoverTarget", () => {
 		const result = findConnectableHoverTarget({
 			hovered: [{ id: "connector-1", kind: "object" }],
 			objects,
-			fixedObjectId: undefined,
 			isConnectable,
 		});
 		expect(result).toBeNull();

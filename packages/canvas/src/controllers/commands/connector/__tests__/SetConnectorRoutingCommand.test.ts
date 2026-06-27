@@ -9,16 +9,30 @@ import {
 	SetRoutingStraightCommand,
 } from "../SetConnectorRoutingCommand";
 
+/** 既定は両端 free（自己ループでない）。owners を渡すと owned 端点になる。 */
 const makeConnector = (
 	id: string,
 	routing: "straight" | "orthogonal" | undefined,
 	points: Point[],
+	owners?: { sourceId?: string; targetId?: string },
 ): ConnectorState =>
 	({
 		id,
 		type: "connector",
 		routing,
 		points,
+		source: owners?.sourceId
+			? {
+					owner: { type: "rect", id: owners.sourceId },
+					anchor: { kind: "center" },
+				}
+			: { anchor: { kind: "free", point: { x: 0, y: 0 } } },
+		target: owners?.targetId
+			? {
+					owner: { type: "rect", id: owners.targetId },
+					anchor: { kind: "center" },
+				}
+			: { anchor: { kind: "free", point: { x: 10, y: 10 } } },
 	}) as unknown as ConnectorState;
 
 const makeRect = (id: string): ObjectState =>
@@ -115,6 +129,20 @@ describe("SetConnectorRoutingCommand", () => {
 			});
 			expect(SetRoutingStraightCommand.canExecute(state)).toBe(false);
 			expect(SetRoutingOrthogonalCommand.canExecute(state)).toBe(false);
+		});
+
+		it("自己ループは straight 不可・orthogonal 可（直交専用）", () => {
+			const state = makeState({
+				selectedConnectorId: "c1",
+				objects: {
+					c1: makeConnector("c1", undefined, [], {
+						sourceId: "r1",
+						targetId: "r1",
+					}),
+				},
+			});
+			expect(SetRoutingStraightCommand.canExecute(state)).toBe(false);
+			expect(SetRoutingOrthogonalCommand.canExecute(state)).toBe(true);
 		});
 	});
 });

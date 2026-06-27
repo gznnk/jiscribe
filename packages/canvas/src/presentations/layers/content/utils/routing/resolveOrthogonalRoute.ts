@@ -7,6 +7,7 @@ import {
 } from "@workspace/geometry";
 
 import { routeOrthogonalConnector } from "./routeOrthogonalConnector";
+import { routeSelfLoop } from "./selfLoop";
 import type { OrthogonalConnectorEndpoint } from "./types";
 import type { AnchorSpec } from "../../../../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
@@ -60,8 +61,31 @@ export const resolveOrthogonalRoute = (
 	targetPoint: Point,
 	sourceObj: ObjectState | null | undefined,
 	targetObj: ObjectState | null | undefined,
-): Point[] =>
-	routeOrthogonalConnector(
-		buildEndpoint(sourceAnchor, sourcePoint, targetPoint, sourceObj),
-		buildEndpoint(targetAnchor, targetPoint, sourcePoint, targetObj),
+): Point[] => {
+	const source = buildEndpoint(
+		sourceAnchor,
+		sourcePoint,
+		targetPoint,
+		sourceObj,
 	);
+	const target = buildEndpoint(
+		targetAnchor,
+		targetPoint,
+		sourcePoint,
+		targetObj,
+	);
+
+	// 自己ループ（両端が同一図形）は専用の矩形ループルートを使う。
+	// 通常の直交ルータは両端を別々の障害物として扱うため、同一図形では退化しうる。
+	if (
+		sourceObj &&
+		targetObj &&
+		sourceObj.id === targetObj.id &&
+		source.box &&
+		target.box
+	) {
+		return routeSelfLoop(source, target);
+	}
+
+	return routeOrthogonalConnector(source, target);
+};

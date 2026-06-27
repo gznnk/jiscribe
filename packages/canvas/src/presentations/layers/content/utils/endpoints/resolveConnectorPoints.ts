@@ -59,9 +59,14 @@ export const resolveConnectorPoints = (
 		}
 	}
 
+	// 自己ループ（両端が同一図形）は直線では退化するため、routing 指定に関わらず
+	// 専用の矩形ループルート（直交）を使う。
+	const isSelfLoop =
+		!!sourceObj && !!targetObj && sourceObj.id === targetObj.id;
+
 	// 自動直交ルーティング: 経路を描画時に算出し waypoints として返す（手動 points は使わない）。
 	// routing 省略時は orthogonal が既定。直線にしたい場合のみ "straight" を明示する。
-	if (isOrthogonalRouting(connectorState.routing)) {
+	if (isSelfLoop || isOrthogonalRouting(connectorState.routing)) {
 		const path = resolveOrthogonalRoute(
 			connectorState.source.anchor,
 			connectorState.target.anchor,

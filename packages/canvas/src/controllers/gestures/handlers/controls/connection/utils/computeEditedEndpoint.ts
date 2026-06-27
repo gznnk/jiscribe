@@ -13,6 +13,9 @@ import type { ConnectorState } from "../../../../../../states/objects/connection
  * - なければカーソル位置（丸め済み）の FreeAnchor とする
  * 固定側エンドポイント・中間経由点（points）はそのまま保持する。
  *
+ * hover 対象が固定側と同一オブジェクトのとき（自己ループ）は、固定側と同じアンカーや
+ * center を候補から外し、必ず別の辺中点へ接続させる（center 同士・同一辺の退化を防ぐ）。
+ *
  * hover 対象の解決（state.objects / registry 依存）は呼び出し側で行い、
  * 解決済みの hoveredTarget を渡すことでこの関数を純粋に保つ。
  */
@@ -21,14 +24,32 @@ export function computeEditedEndpoint(
 	endpointToUpdate: "source" | "target",
 	cursor: Point,
 	hoveredTarget: { id: string; object: ObjectState } | null,
+	fixedEndpoint?: EndpointRef,
 ): ConnectorState {
+	const isSelfLoop =
+		hoveredTarget != null && fixedEndpoint?.owner?.id === hoveredTarget.id;
+	const exclude = isSelfLoop
+		? {
+				center: true,
+				connectPointId:
+					fixedEndpoint?.anchor.kind === "connectPoint"
+						? fixedEndpoint.anchor.id
+						: undefined,
+			}
+		: undefined;
+
 	const editedEndpoint: EndpointRef = hoveredTarget
 		? {
 				owner: {
 					type: hoveredTarget.object.type,
 					id: hoveredTarget.id,
 				},
-				anchor: calcNearestAnchor(hoveredTarget.object, cursor.x, cursor.y),
+				anchor: calcNearestAnchor(
+					hoveredTarget.object,
+					cursor.x,
+					cursor.y,
+					exclude,
+				),
 			}
 		: {
 				anchor: {

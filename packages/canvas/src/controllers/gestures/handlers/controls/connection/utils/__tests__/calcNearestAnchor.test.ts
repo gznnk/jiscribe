@@ -50,4 +50,34 @@ describe("calcNearestAnchor", () => {
 			id: "leftCenter",
 		});
 	});
+
+	describe("exclude（自己ループ用の候補除外）", () => {
+		it("center を除外すると中心付近でも最近接の辺中点を選ぶ", () => {
+			const result = calcNearestAnchor(frame, 100, 100, { center: true });
+			expect(result.kind).toBe("connectPoint");
+		});
+
+		it("指定 connectPoint を除外するとその辺は選ばれない", () => {
+			// 下辺の外側だが bottomCenter を除外 → 別の辺中点になる。
+			const result = calcNearestAnchor(frame, 100, 200, {
+				center: true,
+				connectPointId: "bottomCenter",
+			});
+			expect(result.kind).toBe("connectPoint");
+			if (result.kind === "connectPoint") {
+				expect(result.id).not.toBe("bottomCenter");
+			}
+		});
+
+		it("center と 1 辺を除外しても残り 3 辺から選べる", () => {
+			const result = calcNearestAnchor(frame, 0, 100, {
+				center: true,
+				connectPointId: "leftCenter",
+			});
+			expect(result.kind).toBe("connectPoint");
+			if (result.kind === "connectPoint") {
+				expect(result.id).not.toBe("leftCenter");
+			}
+		});
+	});
 });

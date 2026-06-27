@@ -11,14 +11,29 @@ import type {
 } from "../../../../../../schemas/objects/types/EndpointRef";
 
 /**
+ * 候補から除外するアンカーの指定。自己ループで「固定側と同じアンカー」や
+ * center 同士の退化を避けるために使う。
+ */
+export type AnchorExclusion = {
+	/** center を候補から除外する。 */
+	center?: boolean;
+	/** この connectPoint を候補から除外する。 */
+	connectPointId?: ConnectPointId;
+};
+
+/**
  * カーソル位置に最も近いアンカーを返す。
  * フレームを持つオブジェクトは 4 中点 + center から選択し、
  * フレームを持たないオブジェクトは center を返す。
+ *
+ * `exclude` を渡すと該当アンカーを候補から外す（自己ループ時に固定側アンカーや
+ * center を避けて、必ず別の辺中点へ接続させるために使う）。
  */
 export function calcNearestAnchor(
 	obj: { cx?: number; cy?: number; [key: string]: unknown },
 	cursorX: number,
 	cursorY: number,
+	exclude?: AnchorExclusion,
 ): CenterAnchorSpec | ConnectPointAnchorSpec {
 	if (!isTransformedFrame(obj)) {
 		return { kind: "center" };
@@ -26,7 +41,7 @@ export function calcNearestAnchor(
 
 	const keyPoints = calcFrameKeyPoints(obj);
 
-	const candidates: Array<{
+	const allCandidates: Array<{
 		id: ConnectPointId | null;
 		x: number;
 		y: number;
@@ -49,6 +64,19 @@ export function calcNearestAnchor(
 			y: keyPoints.leftCenter.y,
 		},
 	];
+
+	const candidates = allCandidates.filter((c) => {
+		if (c.id === null) {
+			return !exclude?.center;
+		}
+		return c.id !== exclude?.connectPointId;
+	});
+
+	// 除外で候補が空になることはない（連結点 5 個から最大 2 個しか除かない）が、
+	// 防御的に center へフォールバックする。
+	if (candidates.length === 0) {
+		return { kind: "center" };
+	}
 
 	let nearest = candidates[0];
 	let minDist = calcEuclideanDistance(cursorX, cursorY, nearest.x, nearest.y);

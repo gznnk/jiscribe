@@ -1,6 +1,7 @@
 import { isOrthogonalRouting } from "../../../schemas/objects/types/ConnectorRouting";
 import type { ConnectorRouting } from "../../../schemas/objects/types/ConnectorRouting";
 import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
+import { isSelfLoopConnector } from "../../../states/objects/connections/connector/isSelfLoopConnector";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { Command } from "../CommandTypes";
 
@@ -11,6 +12,21 @@ import type { Command } from "../CommandTypes";
 const isConnectorSelected = (state: CanvasControllerState): boolean =>
 	state.selectedConnectorId !== null &&
 	state.objects[state.selectedConnectorId]?.type === "connector";
+
+/**
+ * straight へ切り替え可能なのは「単一コネクター選択かつ自己ループでない」ときだけ。
+ * 自己ループは直線では破綻するため orthogonal 専用扱いにする。
+ */
+const canSetStraight = (state: CanvasControllerState): boolean => {
+	if (!isConnectorSelected(state)) {
+		return false;
+	}
+	const connector = state.objects[state.selectedConnectorId as string];
+	return (
+		connector?.type === "connector" &&
+		!isSelfLoopConnector(connector as ConnectorState)
+	);
+};
 
 /**
  * 選択中コネクターの routing を差し替える。
@@ -66,7 +82,7 @@ export const SetRoutingStraightCommand: Command = {
 	id: "setRoutingStraight",
 	label: "Straight Routing",
 	category: "edit",
-	canExecute: isConnectorSelected,
+	canExecute: canSetStraight,
 	execute: (state) => applyConnectorRouting(state, "straight"),
 };
 

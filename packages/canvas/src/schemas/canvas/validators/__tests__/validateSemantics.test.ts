@@ -227,7 +227,8 @@ describe("validateSemantics", () => {
 			).toBe(true);
 		});
 
-		it("flags a self-loop where source and target are the same object", () => {
+		it("accepts a self-loop where source and target are the same object", () => {
+			// 自己ループは許可: 専用の直交ルートで矩形ループとして描画される。
 			const doc: CanvasDoc = {
 				version: 1,
 				root: [
@@ -240,10 +241,7 @@ describe("validateSemantics", () => {
 				],
 			};
 
-			const errors = validateSemantics(doc);
-			expect(errors).toHaveLength(1);
-			expect(errors[0].path).toBe("root[1]");
-			expect(errors[0].message).toContain("same object");
+			expect(validateSemantics(doc)).toEqual([]);
 		});
 
 		it("source 側の参照切れも path 付きで報告する", () => {
@@ -282,8 +280,8 @@ describe("validateSemantics", () => {
 			]);
 		});
 
-		it("参照切れの端点があるとき self-loop は重ねて報告しない", () => {
-			// owner が存在しないのに「同一オブジェクト」と述べる誤解を避ける。
+		it("両端が同一の参照切れ owner を指すなら両方とも does not exist で報告する", () => {
+			// 自己ループ自体は許可だが、参照先が実在しない端点は依然エラー。
 			const doc: CanvasDoc = {
 				version: 1,
 				root: [
@@ -298,10 +296,13 @@ describe("validateSemantics", () => {
 			expect(errors.every((e) => e.message.includes("does not exist"))).toBe(
 				true,
 			);
-			expect(errors.some((e) => e.message.includes("same object"))).toBe(false);
+			expect(errors.map((e) => e.path)).toEqual([
+				"root[0].source",
+				"root[0].target",
+			]);
 		});
 
-		it("非接続可の端点があるとき self-loop は重ねて報告しない", () => {
+		it("両端が同一の非接続可 owner を指すなら not connectable で報告する", () => {
 			const doc: CanvasDoc = {
 				version: 1,
 				root: [
@@ -314,10 +315,27 @@ describe("validateSemantics", () => {
 				],
 			};
 			const errors = validateSemantics(doc);
-			expect(errors.some((e) => e.message.includes("same object"))).toBe(false);
+			expect(errors.every((e) => e.message.includes("not connectable"))).toBe(
+				true,
+			);
 		});
 
-		it("両端 free（owner なし）は self-loop と判定しない", () => {
+		it("両端が同一の接続可 owner を指す自己ループはエラーなし", () => {
+			const doc: CanvasDoc = {
+				version: 1,
+				root: [
+					rect("a"),
+					connector(
+						"c1",
+						ownedEndpoint("rect", "a"),
+						ownedEndpoint("rect", "a"),
+					),
+				],
+			};
+			expect(validateSemantics(doc)).toEqual([]);
+		});
+
+		it("両端 free（owner なし）はエラーなし", () => {
 			const freeEndpoint = { anchor: { kind: "free", point: { x: 0, y: 0 } } };
 			const doc: CanvasDoc = {
 				version: 1,

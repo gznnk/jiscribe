@@ -87,4 +87,68 @@ describe("computeEditedEndpoint", () => {
 		});
 		expect(result.target).toEqual(free(10, 10));
 	});
+
+	describe("自己ループ（固定側と同一オブジェクト）", () => {
+		// 固定側 source が rect-1 の bottomCenter に接続済みのコネクター。
+		const selfLoopBase = (): ConnectorState =>
+			({
+				id: "c1",
+				type: "connector",
+				points: [],
+				source: {
+					owner: { type: "rect", id: "rect-1" },
+					anchor: { kind: "connectPoint", id: "bottomCenter" },
+				},
+				target: free(10, 10),
+			}) as unknown as ConnectorState;
+
+		const fixedSource: EndpointRef = {
+			owner: { type: "rect", id: "rect-1" },
+			anchor: { kind: "connectPoint", id: "bottomCenter" },
+		};
+
+		it("固定側と同じオブジェクトへ戻すと固定側アンカーは選ばれない", () => {
+			// カーソルを下辺の外側（本来 bottomCenter が最近接）に置いても、
+			// 固定側が bottomCenter のため除外され別の辺中点になる。
+			const result = computeEditedEndpoint(
+				selfLoopBase(),
+				"target",
+				{ x: 100, y: 200 },
+				{ id: "rect-1", object: rectFrame },
+				fixedSource,
+			);
+			expect(result.target.owner).toEqual({ type: "rect", id: "rect-1" });
+			const anchor = result.target.anchor;
+			expect(anchor.kind).toBe("connectPoint");
+			if (anchor.kind === "connectPoint") {
+				expect(anchor.id).not.toBe("bottomCenter");
+			}
+		});
+
+		it("自己ループでは center が選ばれない（中心付近のカーソルでも辺中点になる）", () => {
+			const result = computeEditedEndpoint(
+				selfLoopBase(),
+				"target",
+				{ x: 100, y: 100 }, // 図形中心付近
+				{ id: "rect-1", object: rectFrame },
+				fixedSource,
+			);
+			expect(result.target.anchor.kind).toBe("connectPoint");
+		});
+
+		it("別オブジェクトへの接続では除外は働かない（最近接をそのまま選ぶ）", () => {
+			const other = { ...rectFrame, id: "rect-2" } as unknown as ObjectState;
+			const result = computeEditedEndpoint(
+				selfLoopBase(),
+				"target",
+				{ x: 100, y: 200 },
+				{ id: "rect-2", object: other },
+				fixedSource,
+			);
+			expect(result.target).toEqual({
+				owner: { type: "rect", id: "rect-2" },
+				anchor: { kind: "connectPoint", id: "bottomCenter" },
+			});
+		});
+	});
 });

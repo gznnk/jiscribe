@@ -186,16 +186,17 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 		baseConnector: ConnectorState,
 		endpointToUpdate: "source" | "target",
 	): ConnectorState {
-		// Exclude the fixed endpoint's object from hover detection (can't connect to self)
+		// 固定側エンドポイント（編集していない方）。自己ループ時に同一アンカーを避けるため
+		// computeEditedEndpoint へ渡す。
 		const fixedEndpoint =
 			endpointToUpdate === "source"
 				? baseConnector.target
 				: baseConnector.source;
 
+		// 同一オブジェクトも hover 対象に含める（自己ループ許可）。
 		const hoveredTarget = findConnectableHoverTarget({
 			hovered: event.hovered,
 			objects: state.objects,
-			fixedObjectId: fixedEndpoint.owner?.id,
 			isConnectable: (type) =>
 				objectMapperRegistry.getFeatures(type)?.connectable === true,
 		});
@@ -205,6 +206,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			endpointToUpdate,
 			event.last,
 			hoveredTarget,
+			fixedEndpoint,
 		);
 	}
 
