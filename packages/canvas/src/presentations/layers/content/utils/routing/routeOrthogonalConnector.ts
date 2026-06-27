@@ -27,6 +27,11 @@ import type {
  * 未対応 / 将来の拡張余地（旧 svg-canvas にあって本実装に無いもの）:
  * - **角丸 / 曲線レンダリング**（旧 `pathType` の Rounded / Curve）。本実装は角が直角のみ。
  *   角の描画スタイルは別機能として後回し。
+ *
+ * @param source - 始点の端点（座標・外向き方向・回避用 AABB）
+ * @param target - 終点の端点（座標・外向き方向・回避用 AABB）
+ * @param options - margin（スタブ長, px）などの調整オプション。省略時は DEFAULT_MARGIN
+ * @returns 端点を含む直交フルパス `[source.point, …, target.point]`（共線・重複は畳み済み）
  */
 export const routeOrthogonalConnector = (
 	source: OrthogonalConnectorEndpoint,

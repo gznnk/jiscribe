@@ -22,6 +22,11 @@ const EPS = 1e-6;
  *
  * 戻り値は端点を含むフルパス `[source.point, …, target.point]`（共線・重複は畳み済み）。
  * 両端は同一図形なので box は一致する前提（source.box を採用）。
+ *
+ * @param source - 始点の端点（座標・外向き方向・回避用 AABB）
+ * @param target - 終点の端点（自己ループなので box は source と同一図形）
+ * @param options - margin（リングの膨らみ, px）などの調整オプション。省略時は DEFAULT_MARGIN
+ * @returns 端点を含む直交フルパス `[source.point, …, target.point]`（共線・重複は畳み済み）
  */
 export const routeSelfLoop = (
 	source: OrthogonalConnectorEndpoint,
@@ -87,6 +92,12 @@ type RingRect = { left: number; top: number; right: number; bottom: number };
  * 範囲: top 辺 [0, W] → right 辺 [W, W+H] → bottom 辺 [W+H, 2W+H] → left 辺 [2W+H, 2W+2H]。
  * 角は隣り合う 2 辺どちらの式でも同じ値になる。点はリング辺上にある前提だが、
  * 念のため各座標をリング範囲へクランプする。
+ *
+ * @param p - リング辺上の点
+ * @param ring - リング矩形（AABB + margin）
+ * @param width - リング矩形の幅
+ * @param height - リング矩形の高さ
+ * @returns 左上から時計回りに測った外周上のスカラー位置
  */
 const perimeterParam = (
 	p: Point,
@@ -110,7 +121,16 @@ const perimeterParam = (
 	return 2 * width + height + (ring.bottom - clampY);
 };
 
-/** 周辺パラメータからリング外周上の座標へ戻す。 */
+/**
+ * 周辺パラメータからリング外周上の座標へ戻す。
+ *
+ * @param param - 外周上のスカラー位置（perimeter で正規化される）
+ * @param ring - リング矩形
+ * @param width - リング矩形の幅
+ * @param height - リング矩形の高さ
+ * @param perimeter - リング外周長（2W + 2H）
+ * @returns 外周上の座標
+ */
 const pointAtParam = (
 	param: number,
 	ring: RingRect,
@@ -134,6 +154,15 @@ const pointAtParam = (
 /**
  * source から target へ指定方向（時計回り / 反時計回り）にリング外周を辿るとき、
  * その弧の内側に来る角を通過順に返す。
+ *
+ * @param sourceParam - 始点スタブの外周パラメータ
+ * @param targetParam - 終点スタブの外周パラメータ
+ * @param clockwise - 辿る向き（true: 時計回り / false: 反時計回り）
+ * @param ring - リング矩形
+ * @param width - リング矩形の幅
+ * @param height - リング矩形の高さ
+ * @param perimeter - リング外周長
+ * @returns 弧の内側に来る角を通過順に並べた点列
  */
 const arcCorners = (
 	sourceParam: number,
@@ -162,7 +191,12 @@ const arcCorners = (
 		.map((x) => pointAtParam(x.param, ring, width, height, perimeter));
 };
 
-/** 直交パスの総延長（セグメント長の和）。 */
+/**
+ * 直交パスの総延長（セグメント長の和）。
+ *
+ * @param points - 経路の点列
+ * @returns 全セグメント長の合計
+ */
 const pathLength = (points: Point[]): number => {
 	let total = 0;
 	for (let i = 1; i < points.length; i++) {

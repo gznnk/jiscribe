@@ -10,6 +10,7 @@ const uniqueNumbers = (ns: number[]): number[] => [...new Set(ns)];
 const boxXChannels = (box: BoxFeatures | null, margin: number): number[] =>
 	box ? [box.left - margin, box.right + margin] : [];
 
+/** box の外側クリアランス y チャネル（上下辺から margin 外）。free は空。 */
 const boxYChannels = (box: BoxFeatures | null, margin: number): number[] =>
 	box ? [box.top - margin, box.bottom + margin] : [];
 
@@ -19,7 +20,13 @@ export type ElbowCandidate = {
 	symmetric: boolean;
 };
 
-/** 端点の退出方向が軸上で正面に向かい合うか（x: 左右、y: 上下）。 */
+/**
+ * 端点の退出方向が軸上で正面に向かい合うかを判定する（x: 左右、y: 上下）。
+ *
+ * @param a - 一方の端点の外向き方向
+ * @param b - もう一方の端点の外向き方向
+ * @returns 各軸で向かい合うか（x: 左右で対向、y: 上下で対向）
+ */
 export const directionsFace = (
 	a: OrthogonalDirection,
 	b: OrthogonalDirection,
@@ -38,6 +45,15 @@ export const directionsFace = (
  *
  * `facingX` / `facingY`（端点が軸上で向かい合う）のとき、その軸の**中点**で折れる
  * 候補に `symmetric` フラグを立て、呼び出し側で S/Z 字を優先できるようにする。
+ *
+ * @param a - 始点側スタブの座標
+ * @param b - 終点側スタブの座標
+ * @param sourceBox - 始点図形の回避用 AABB（free 端点は null）
+ * @param targetBox - 終点図形の回避用 AABB（free 端点は null）
+ * @param margin - 図形面からの押し出し距離（px）。box 外周チャネルの算出に使う
+ * @param facingX - 端点が x 軸（左右）で向かい合うか。true なら x=中点折れに symmetric を立てる
+ * @param facingY - 端点が y 軸（上下）で向かい合うか。true なら y=中点折れに symmetric を立てる
+ * @returns エルボ候補の配列（各候補は折れ点列 elbow と対称フラグ symmetric を持つ）
  */
 export const elbowCandidates = (
 	a: Point,

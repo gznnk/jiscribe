@@ -10,14 +10,14 @@ import type { ObjectState } from "../../../../../states/objects/base/ObjectState
 import { objectMapperRegistry } from "../../../../../states/registry/ObjectMapperRegistry";
 
 /**
- * Adjusts a center anchor endpoint to the outline point on a rect or ellipse geometry object.
- * Should only be called when the anchor is a center anchor.
- * This version takes a single object instead of the entire objects map for better memoization.
+ * center アンカーの端点を、rect / ellipse 図形の輪郭（アウトライン）上の点へ寄せる。
+ * center アンカーのときだけ呼ぶこと。objects マップ全体ではなく対象図形 1 つを受け取り、
+ * その図形だけを依存に持つメモ化を効かせる。
  *
- * @param point - The resolved point (typically the center)
- * @param toward - The point to direct the outline intersection toward
- * @param obj - The object referenced by the endpoint (or null if not found)
- * @returns The adjusted point (outline point for rect/ellipse geometry), null if toward is inside the shape, or original point for non-rect/ellipse
+ * @param point - 解決済みの端点（通常は図形の中心）
+ * @param toward - 輪郭との交点を求める際に「線が向かう先」として使う点
+ * @param obj - 端点が参照する図形の状態。未参照なら null/undefined（その場合は point をそのまま返す）
+ * @returns 輪郭上へ寄せた点（rect/ellipse 図形の場合）。toward が図形内部にあるなど交点が無ければ null。rect/ellipse 以外の図形は調整せず元の point
  */
 export const adjustToOutline = (
 	point: Point,
