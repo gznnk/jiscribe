@@ -32,16 +32,25 @@ export const ObjectMenuHandler: GestureHandler = {
 	},
 
 	handle(state, event) {
+		let nextState = state;
+
+		// ObjectMenu 上の押下でコンテキストメニューを閉じる（押下自体は項目操作を行わない）
+		if (event.type === "pressed") {
+			if (event.button === 0) {
+				nextState = { ...nextState, contextMenuPosition: null };
+			}
+		}
+
 		// スライダー操作: drag / dragEnd
 		if (event.targetId?.startsWith("object-menu:slider:")) {
-			// pressed, dragStart, click イベントは何もせず状態を維持
+			// pressed, dragStart, click イベントは何もせず状態を維持（値更新は drag / dragEnd）
 			if (
 				event.type === "pressed" ||
 				event.type === "dragStart" ||
 				event.type === "click" ||
 				event.type === "doubleClick"
 			) {
-				return state;
+				return nextState;
 			}
 
 			// 入力値が存在しない場合は何もしない
@@ -123,6 +132,6 @@ export const ObjectMenuHandler: GestureHandler = {
 			}
 		}
 
-		return state;
+		return nextState;
 	},
 };

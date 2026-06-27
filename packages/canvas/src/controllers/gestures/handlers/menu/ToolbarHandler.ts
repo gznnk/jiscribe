@@ -28,12 +28,21 @@ export const ToolbarHandler: GestureHandler = {
 	},
 
 	handle(state, event) {
+		let nextState = state;
+
+		// ツールバー上の押下でコンテキストメニューを閉じる
+		if (event.type === "pressed") {
+			if (event.button === 0) {
+				nextState = { ...nextState, contextMenuPosition: null };
+			}
+		}
+
 		const isActivation = event.type === "click" || event.type === "doubleClick";
 		if (isActivation && event.targetId?.startsWith(COMMAND_PREFIX)) {
 			const commandId = event.targetId.slice(COMMAND_PREFIX.length);
-			return handleCommand(state, commandId);
+			return handleCommand(nextState, commandId);
 		}
 
-		return state;
+		return nextState;
 	},
 };

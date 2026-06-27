@@ -78,14 +78,23 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 	},
 
 	handle(state, event) {
+		let nextState = state;
+
+		// メニューアイテム上の押下でコンテキストメニューを閉じる（押下自体は配置・描画を行わない）
+		if (event.type === "pressed") {
+			if (event.button === 0) {
+				nextState = { ...nextState, contextMenuPosition: null };
+			}
+		}
+
 		if (!event.targetId) {
-			return state;
+			return nextState;
 		}
 
 		const presetId = parsePresetId(event.targetId);
 		const preset = getShapePreset(presetId);
 		if (!preset) {
-			return state;
+			return nextState;
 		}
 
 		switch (event.type) {
@@ -106,9 +115,9 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 				}
 
 				// 描画モード ON: テキスト編集をコミットし、選択状態を解除する
-				const nextState = commitTextEditIfNeeded(state);
+				const committed = commitTextEditIfNeeded(state);
 				return {
-					...nextState,
+					...committed,
 					shapeDrawing: { preset, preview: null },
 					selectedIds: [],
 					selectedConnectorId: null,
@@ -119,9 +128,9 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 
 			case "dragStart": {
 				// テキスト編集をコミットし、選択状態を解除してからD&Dを開始する
-				const nextState = commitTextEditIfNeeded(state);
+				const committed = commitTextEditIfNeeded(state);
 				return {
-					...nextState,
+					...committed,
 					selectedIds: [],
 					selectedConnectorId: null,
 					multiSelectGroup: null,
@@ -201,16 +210,16 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 					return state;
 				}
 				const position = drag.ghostPosition ?? event.last;
-				const nextState = addObjectToState(state, drag.preset, position);
+				const placed = addObjectToState(state, drag.preset, position);
 				return {
-					...nextState,
+					...placed,
 					shapeLibraryDrag: null,
 					edgeScrollEnabled: false,
 				};
 			}
 
 			default:
-				return state;
+				return nextState;
 		}
 	},
 };

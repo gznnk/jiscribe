@@ -391,6 +391,17 @@ export const ObjectEventHandler: GestureHandler = {
 			return nextState;
 		}
 
+		// Pointer Down の処理
+		if (event.type === "pressed") {
+			if (event.button === 0) {
+				// 左クリック押下時はコンテキストメニューを閉じる
+				nextState = {
+					...nextState,
+					contextMenuPosition: null,
+				};
+			}
+		}
+
 		// クリックイベントの処理
 		if (event.type === "click") {
 			return handleObjectClick(
