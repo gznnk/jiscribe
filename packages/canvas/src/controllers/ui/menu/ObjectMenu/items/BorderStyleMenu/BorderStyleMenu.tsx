@@ -4,9 +4,10 @@ import {
 	BorderStyleMenuWrapper,
 	BorderStyleSection,
 } from "./BorderStyleMenuStyled";
+import { getSelectedCornerRadius } from "./utils/getSelectedCornerRadius";
+import { getSelectedStrokeDashType } from "./utils/getSelectedStrokeDashType";
+import { getSelectedStrokeWidth } from "./utils/getSelectedStrokeWidth";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
-import { getFirstSelectedWithProp } from "../../../../../../controllers/utils/getFirstSelectedWithProp";
-import type { StrokeDashType } from "../../../../../../schemas/objects/types/StrokeDashType";
 import { DashedCircleIcon } from "../../../../icons/DashedCircleIcon";
 import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
 import { DottedLineIcon } from "../../../../icons/DottedLineIcon";
@@ -18,48 +19,18 @@ import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
 
 const SECTION_ID = "border-style";
 
-// Constants for border styling
+// Slider bounds for border styling
 const MIN_STROKE_WIDTH = 0;
 const MAX_STROKE_WIDTH = 100;
-const DEFAULT_STROKE_WIDTH = 2;
 
 const MIN_CORNER_RADIUS = 0;
 const MAX_CORNER_RADIUS = 999;
-const DEFAULT_CORNER_RADIUS = 0;
 
 type BorderStyleMenuProps = {
 	canvasState: CanvasControllerState;
 	/** Whether to show corner radius control */
 	showRadius?: boolean;
 	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
-};
-
-const getSelectedStrokeWidth = (state: CanvasControllerState): number => {
-	const obj = getFirstSelectedWithProp(
-		state.selectedIds,
-		state.objects,
-		"strokeWidth",
-	);
-	const v = (obj as Record<string, unknown>)?.strokeWidth;
-	return typeof v === "number" ? v : DEFAULT_STROKE_WIDTH;
-};
-
-const getSelectedStrokeDashType = (
-	state: CanvasControllerState,
-): StrokeDashType | undefined => {
-	const obj = getFirstSelectedWithProp(
-		state.selectedIds,
-		state.objects,
-		"strokeDashType",
-	);
-	const v = (obj as Record<string, unknown>)?.strokeDashType;
-	return typeof v === "string" ? (v as StrokeDashType) : undefined;
-};
-
-const getSelectedCornerRadius = (state: CanvasControllerState): number => {
-	const obj = getFirstSelectedWithProp(state.selectedIds, state.objects, "rx");
-	const v = (obj as Record<string, unknown>)?.rx;
-	return typeof v === "number" ? v : DEFAULT_CORNER_RADIUS;
 };
 
 /**

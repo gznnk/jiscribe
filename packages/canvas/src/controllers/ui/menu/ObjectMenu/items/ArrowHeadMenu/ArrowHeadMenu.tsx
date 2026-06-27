@@ -2,10 +2,9 @@
 
 import { ArrowHeadIconPreview } from "./ArrowHeadIconPreview";
 import { ArrowSelectorGrid, ArrowTypeButton } from "./ArrowHeadMenuStyled";
+import { getSelectedArrowType } from "./utils/getSelectedArrowType";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
-import { getEffectiveSelectedIds } from "../../../../../../controllers/utils/getEffectiveSelectedIds";
 import { ArrowTypes } from "../../../../../../schemas/objects/types/ArrowType";
-import type { ArrowType } from "../../../../../../schemas/objects/types/ArrowType";
 import { ArrowSwapIcon } from "../../../../icons/ArrowSwapIcon";
 import { DropdownPanel } from "../../common/DropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
@@ -16,26 +15,6 @@ const SECTION_ID_END = "arrow-head-end";
 
 type ArrowHeadMenuProps = {
 	canvasState: CanvasControllerState;
-};
-
-/**
- * 選択中オブジェクトの矢印タイプを取得する。
- * Connector が選択されている場合は selectedConnectorId から取得する。
- */
-const getSelectedArrowType = (
-	state: CanvasControllerState,
-	property: "startArrow" | "endArrow",
-): ArrowType => {
-	for (const id of getEffectiveSelectedIds(state)) {
-		const obj = state.objects[id];
-		if (obj && property in obj) {
-			const value = (obj as Record<string, unknown>)[property];
-			if (typeof value === "string") {
-				return value as ArrowType;
-			}
-		}
-	}
-	return "None";
 };
 
 /**
