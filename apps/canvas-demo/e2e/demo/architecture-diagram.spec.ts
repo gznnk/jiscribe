@@ -5,8 +5,9 @@
  * 生成するためのデモ。通常の test:e2e（testDir: e2e/specs）からは外してあり、
  * playwright.demo.config.ts 経由（pnpm test:e2e:demo）でのみ実行する。
  *
- * 拡張に同梱している hero-showcase.jis.json（クラウドネイティブ EC の参照アーキ：
- * 17 コンポーネント + 17 コネクター）を「正本」として読み込み、CanvasDriver の
+ * ランディングのデモギャラリーにある cloud-native-commerce.jis.json（クラウド
+ * ネイティブ EC の参照アーキ：17 コンポーネント + 17 コネクター）を「正本」として
+ * 読み込み、CanvasDriver の
  * テスト済み操作（描画・着色・テキスト・コネクター）だけで丸ごと描き起こす。
  * scripts/replay-hero-showcase.mjs と同じ図を、リトライで失敗を隠さない E2E
  * ドライバで再現する位置づけ。最終状態はスクリーンショットとして添付する。
@@ -24,7 +25,7 @@ import { selectors } from "../support/selectors";
 
 const docPath = fileURLToPath(
 	new URL(
-		"../../../vscode-extension/sample/hero-showcase.jis.json",
+		"../../../landing/public/demo/diagrams/cloud-native-commerce.jis.json",
 		import.meta.url,
 	),
 );
@@ -36,7 +37,7 @@ const polylineCount = doc.root.filter(
 ).length;
 
 test.describe("デモ: アーキテクチャ図", () => {
-	test("hero-showcase のアーキテクチャ図を UI 操作だけで再現できる", async ({
+	test("cloud-native-commerce のアーキテクチャ図を UI 操作だけで再現できる", async ({
 		canvas,
 	}, testInfo) => {
 		// 50 近い実 UI 操作を直列に行うため、既定の 30s では足りない。
