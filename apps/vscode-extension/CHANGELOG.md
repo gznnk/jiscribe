@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Context menus** close more predictably: submenu background clicks no longer dismiss the menu, and a press now closes an open context menu consistently across handlers.
 - Wheel/zoom event handling is scoped to the canvas container instead of the whole document, so scrolling outside the canvas no longer zooms it.
 - Hardened `.jis.json` loading: documents are validated against the schema's numeric and structural constraints, and unknown object types, empty groups, cyclic clipboard data, and connectors with invalid endpoints are rejected up front. Several rendering-lifecycle issues (stale animation frames after unmount, frame-ordering) were also fixed.
+- **Schema validation no longer silently breaks in restricted/untrusted workspaces.** Generated `.jis.json` files no longer embed a `$schema` URL pointing at `https://schema.jiscribe.dev/...`. VS Code prefers an in-document `$schema` over the extension's bundled schema and tries to download it, which fails in untrusted/restricted workspaces (`Unable to load schema from 'https://schema.jiscribe.dev/v1/jiscribe.schema.json': Location ... is untrusted.`) — leaving the file with no validation at all. Validation now always uses the schema bundled with the extension, so it works offline and regardless of workspace trust. Existing files keep working; the `$schema` key is dropped the next time they are saved.
 
 ### Changed
 

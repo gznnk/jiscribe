@@ -2,7 +2,6 @@ import * as vscode from "vscode";
 
 const EMPTY_CONTENT = JSON.stringify(
 	{
-		$schema: "https://schema.jiscribe.dev/v1/jiscribe.schema.json",
 		version: 1,
 		root: [],
 	},

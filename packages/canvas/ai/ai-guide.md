@@ -19,14 +19,12 @@ The top level must always have `version` / `root` (the array may be empty).
 
 ```json
 {
-	"$schema": "https://schema.jiscribe.dev/v1/jiscribe.schema.json",
 	"version": 1,
 	"root": []
 }
 ```
 
 - `version`: **required, always `1`** (fixed value for this format version).
-- `$schema`: optional but **recommended** (enables editor completion and validation).
 - `root`: array of shapes (rect / ellipse / diamond / polyline / polygon / group / sticky / svg) **and connectors**, in z-order (back → front). The array order is the stacking order. Connectors (`"type": "connector"`) sit at the top level among the objects; they are **never** placed inside a group's `children`.
 
 ## 3. MUST / MUST NOT (violations break the file)

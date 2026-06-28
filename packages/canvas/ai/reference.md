@@ -10,7 +10,6 @@ Use it as a reference when an AI generates data, or when an external tool produc
 
 ```json
 {
-	"$schema": "https://schema.jiscribe.dev/v1/jiscribe.schema.json",
 	"version": 1,
 	"root": [
 		/* array of ObjectDoc and connectors, in z-order (back to front) */
@@ -21,7 +20,6 @@ Use it as a reference when an AI generates data, or when an external tool produc
 | Field     | Type          | Required | Description                                                                                                                                          |
 | --------- | ------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `version` | `1`           | ✅       | Schema version. Always `1` (fixed value).                                                                                                            |
-| `$schema` | `string`      | -        | Schema URL (recommended; enables editor completion/validation).                                                                                      |
 | `root`    | `ObjectDoc[]` | ✅       | All objects and connectors in z-order (back→front); array order is the stacking order. Includes nested groups; connectors sit at the top level only. |
 
 ---

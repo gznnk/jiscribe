@@ -63,12 +63,6 @@ function App() {
 	const [hasSemanticError, setHasSemanticError] = useState(false);
 	const [parseError, setParseError] = useState<string>("");
 
-	// ファイルから読み込んだ $schema を保持する。
-	// Canvas の onCommit が返す doc（canvasToDoc の出力）には $schema が含まれないため、
-	// 書き込み時にここから復元しないと保存のたびに $schema がファイルから消えてしまう。
-	// $schema は描画ステートとは無関係なファイルメタデータなので、Webview 側で保持・付与する。
-	const schemaRef = useRef<string | undefined>(undefined);
-
 	// debounce した関数は、コンポーネントの再レンダリングをまたいで
 	// 同じ関数インスタンスを維持する必要がある（再生成するとタイマーがリセットされる）。
 	// useRef で関数インスタンスを保持し、useCallback で安定した参照を返す。
@@ -84,12 +78,7 @@ function App() {
 	);
 
 	const handleCommit = useCallback((doc: CanvasDoc, saveNonce: string) => {
-		// 読み込み時に保持した $schema を先頭キーとして復元してから書き込む
-		const docWithSchema: CanvasDoc =
-			schemaRef.current !== undefined
-				? { $schema: schemaRef.current, ...doc }
-				: doc;
-		debouncedPostRef.current(docWithSchema, saveNonce);
+		debouncedPostRef.current(doc, saveNonce);
 	}, []);
 
 	const handleUndo = useCallback(() => {
@@ -118,7 +107,6 @@ function App() {
 					const result = parseCanvasText(message.data);
 					switch (result.kind) {
 						case "ok":
-							schemaRef.current = result.doc.$schema;
 							setSyncNonce(message.saveNonce);
 							setCanvasDoc(result.doc);
 							setHasSemanticError(false);
