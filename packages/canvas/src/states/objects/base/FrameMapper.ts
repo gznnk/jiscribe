@@ -12,67 +12,78 @@ import type { ObjectState } from "./ObjectState";
 import {
 	mapTransformDocToState,
 	mapTransformStateToDoc,
+	TRANSFORM_DOC_KEYS,
+	TRANSFORM_STATE_KEYS,
 } from "./TransformMapper";
 import type { TransformState } from "./TransformState";
 import type { ObjectDoc } from "../../../schemas/objects/base/ObjectDoc";
 import type { TransformDoc } from "../../../schemas/objects/base/TransformDoc";
 import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
 
-const STROKE_KEYS = ["stroke", "strokeWidth", "strokeDashType"] as const;
-const FILL_KEYS = ["fill"] as const;
-const RADIUS_KEYS = ["rx"] as const;
-const TEXT_KEYS = [
-	"text",
-	"textType",
-	"textAlign",
-	"verticalAlign",
-	"fontColor",
-	"fontSize",
-	"fontFamily",
-	"fontWeight",
+/** ObjectMapper.toState/toDoc が生成する基底フィールド（meta は変換が必要）。 */
+const BASE_KEYS = ["id", "type", "meta"] as const;
+
+/** geometry の Doc 表現（rect: x/y/w/h, ellipse: cx/cy/rx/ry）が占有するキー。 */
+const GEOMETRY_DOC_KEYS = [
+	"x",
+	"y",
+	"cx",
+	"cy",
+	"rx",
+	"ry",
+	"width",
+	"height",
 ] as const;
 
-/**
- * features に応じて素通しコピーすべきスタイルフィールド名を集める。
- * Doc と State でフィールド名・型は同一なので、両方向で同じキー集合を使える。
- */
-const collectStyleKeys = (features: ObjectFeatures): string[] => [
-	...(features.stroke ? STROKE_KEYS : []),
-	...(features.fill ? FILL_KEYS : []),
-	...(features.radius ? RADIUS_KEYS : []),
-	...(features.text ? TEXT_KEYS : []),
-];
+/** geometry の State 表現（Frame: cx/cy/w/h）が占有するキー。 */
+const GEOMETRY_STATE_KEYS = ["cx", "cy", "width", "height"] as const;
 
-const pick = (
+/**
+ * Doc → State 変換で「geometry/transform マッパーが作り直す」ため
+ * そのまま素通ししてはいけない Doc 側フィールド。これ以外はすべて透過する。
+ */
+const DOC_DERIVED_KEYS: ReadonlySet<string> = new Set([
+	...BASE_KEYS,
+	...GEOMETRY_DOC_KEYS,
+	...TRANSFORM_DOC_KEYS,
+]);
+
+/** 同上の State 側フィールド。 */
+const STATE_DERIVED_KEYS: ReadonlySet<string> = new Set([
+	...BASE_KEYS,
+	...GEOMETRY_STATE_KEYS,
+	...TRANSFORM_STATE_KEYS,
+]);
+
+/** derived（geometry/transform/base）以外のフィールドを素通しで取り出す。 */
+const passthrough = (
 	src: Record<string, unknown>,
-	keys: readonly string[],
+	derivedKeys: ReadonlySet<string>,
 ): Record<string, unknown> => {
-	const picked: Record<string, unknown> = {};
-	for (const key of keys) {
-		picked[key] = src[key];
+	const rest: Record<string, unknown> = {};
+	for (const [key, value] of Object.entries(src)) {
+		if (!derivedKeys.has(key)) {
+			rest[key] = value;
+		}
 	}
-	return picked;
+	return rest;
 };
 
 /**
  * Frame 系オブジェクト（geometry: "rect" | "ellipse" + transform を持つ図形）の
  * Doc↔State マッパーを features から生成する。
  *
- * - geometry 変換は `features.geometry` で rect / ellipse を切り替える
- * - コピーするスタイル項目は features（stroke / fill / radius / text）から決まる
- * - svg の `svgText` のような図形固有の素通しフィールドは `extraKeys` で渡す
- *
- * これにより rect / diamond / ellipse / sticky / svg などの変換ロジックを
- * 1 か所に集約でき、図形ごとには features と追加キーを宣言するだけで済む。
+ * Doc と State の違いは geometry 表現と transform 表現だけで、それ以外
+ * （stroke / fill / text / radius / svgText …）は名前・型が同一の素通しフィールド。
+ * そのため本マッパーは geometry/transform の変換だけを担い、残りは透過する。
+ * スタイル項目のカタログを持たないので、フィールドや features を増やしても無改修。
  */
 export const createFrameMapper = <
 	TDoc extends ObjectDoc,
 	TState extends ObjectState,
 >(
 	features: ObjectFeatures,
-	extraKeys: readonly string[] = [],
 ): ObjectMapperType<TDoc, TState> => {
-	const copyKeys = [...collectStyleKeys(features), ...extraKeys];
 	const isEllipse = features.geometry === "ellipse";
 
 	return {
@@ -85,9 +96,12 @@ export const createFrameMapper = <
 				: {};
 			return {
 				...ObjectMapper.toState(doc),
+				...passthrough(
+					doc as unknown as Record<string, unknown>,
+					DOC_DERIVED_KEYS,
+				),
 				...frame,
 				...transform,
-				...pick(doc as unknown as Record<string, unknown>, copyKeys),
 			} as unknown as TState;
 		},
 
@@ -100,9 +114,12 @@ export const createFrameMapper = <
 				: {};
 			return {
 				...ObjectMapper.toDoc(state),
+				...passthrough(
+					state as unknown as Record<string, unknown>,
+					STATE_DERIVED_KEYS,
+				),
 				...geometry,
 				...transform,
-				...pick(state as unknown as Record<string, unknown>, copyKeys),
 			} as unknown as TDoc;
 		},
 	};
