@@ -59,6 +59,7 @@ type GeometryState<T extends ObjectFeatures> = //
  * >;
  * ```
  */
+// TODO: ファイル名含め先頭小文字にしたい
 export type CreateObjectState<
 	T extends ObjectFeatures,
 	S extends symbol,

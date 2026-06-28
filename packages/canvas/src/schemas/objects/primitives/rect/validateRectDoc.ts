@@ -1,21 +1,7 @@
+import { RectFeatures } from "./RectDoc";
 import type { ObjectDocValidateFn } from "../../../registry/ObjectDocValidatorRegistry";
-import {
-	validateFillStyleFields,
-	validateRadiusStyleFields,
-	validateRequiredNumber,
-	validateStrokeStyleFields,
-	validateTextStyleFields,
-	validateTransformFields,
-} from "../../utils/validateDocUtils";
+import { createFrameDocValidator } from "../../utils/createFrameDocValidator";
 
-export const validateRectDoc: ObjectDocValidateFn = (o, path) => [
-	...validateRequiredNumber(o, path, "x"),
-	...validateRequiredNumber(o, path, "y"),
-	...validateRequiredNumber(o, path, "width", 0),
-	...validateRequiredNumber(o, path, "height", 0),
-	...validateTransformFields(o, path),
-	...validateStrokeStyleFields(o, path),
-	...validateFillStyleFields(o, path),
-	...validateTextStyleFields(o, path),
-	...validateRadiusStyleFields(o, path),
-];
+/** RectDoc を検証する（Frame 系共通ロジックを features から生成）。 */
+export const validateRectDoc: ObjectDocValidateFn =
+	createFrameDocValidator(RectFeatures);
