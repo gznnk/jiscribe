@@ -39,3 +39,61 @@ export const stubPoint = (
 			return { x: box.right + margin, y: point.y };
 	}
 };
+
+/**
+ * 退出方向に沿った相手端点までの前方距離（符号付き）。
+ * 正なら相手は退出方向の前方に、負なら後方（裏側）にある。
+ *
+ * @param point - 自端点座標
+ * @param direction - 自端点の外向き方向
+ * @param other - 相手端点座標
+ * @returns 退出方向への前方距離（前方が正）
+ */
+const forwardDistance = (
+	point: Point,
+	direction: OrthogonalDirection,
+	other: Point,
+): number => {
+	switch (direction) {
+		case "up":
+			return point.y - other.y;
+		case "down":
+			return other.y - point.y;
+		case "left":
+			return point.x - other.x;
+		case "right":
+			return other.x - point.x;
+	}
+};
+
+/**
+ * 近接して向かい合う端点同士で、スタブの押し出しが相手側を追い越して
+ * 無駄な回り込み（ぐるっと回る経路）を誘発するのを防ぐためのスタブ長クランプ。
+ *
+ * 相手端点が退出方向の**前方**にあるときだけ、スタブ長を「相手までの前方距離の半分」に
+ * 制限する。両端が同様にクランプされると 2 本のスタブはちょうど中間で出会い、
+ * 余分な折れ込みを作らずに済む（整列していれば直線、ずれていれば中間で 1 度折れる Z）。
+ *
+ * - 前方距離 ≥ 2×margin（＝既定 60px 以上離れている）では `margin/2` 以上が確保されるため
+ *   フル margin のまま変化しない（しきい値で不連続にならず滑らかに切り替わる）。
+ * - 相手が後方（裏側）にある配置（前方距離 ≤ 0）はクランプしない。一度まっすぐ出てから
+ *   回り込む必要があるため、スタブを削ると逆走スパイクを招く（#77 参照）。
+ *
+ * @param point - 自端点座標
+ * @param direction - 自端点の外向き方向
+ * @param other - 相手端点座標
+ * @param margin - 既定のスタブ長（px）
+ * @returns クランプ後のスタブ長（px）
+ */
+export const clampStubMargin = (
+	point: Point,
+	direction: OrthogonalDirection,
+	other: Point,
+	margin: number,
+): number => {
+	const forward = forwardDistance(point, direction, other);
+	if (forward <= 0) {
+		return margin;
+	}
+	return Math.min(margin, forward / 2);
+};

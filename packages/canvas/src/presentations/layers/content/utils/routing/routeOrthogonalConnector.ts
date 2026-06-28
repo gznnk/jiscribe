@@ -3,7 +3,7 @@ import type { Point } from "@workspace/geometry";
 import { directionsFace, elbowCandidates } from "./elbowCandidates";
 import { calcRouteCost, compareCost, type RouteCost } from "./routeCost";
 import { simplifyPath } from "./simplifyPath";
-import { stubPoint } from "./stub";
+import { clampStubMargin, stubPoint } from "./stub";
 import type {
 	OrthogonalConnectorEndpoint,
 	RouteOrthogonalConnectorOptions,
@@ -44,11 +44,27 @@ export const routeOrthogonalConnector = (
 	// ── ステップ1: スタブ ──
 	// 各端点を退出方向へ margin だけ押し出した点。線は必ずこのスタブを通って図形面に
 	// 直交して出入りする。図形を持つ端点だけスタブを出す（free 端点はその場から結ぶ）。
+	//
+	// 近接して向かい合う配置では、フル margin のスタブが相手側を追い越して無駄な回り込みを
+	// 招くため、相手端点までの前方距離に応じてスタブ長を縮める（clampStubMargin）。
+	// チャネル算出（elbowCandidates）には縮めない margin を使い、回り込み経路の表現力は保つ。
+	const sourceMargin = clampStubMargin(
+		source.point,
+		source.direction,
+		target.point,
+		margin,
+	);
+	const targetMargin = clampStubMargin(
+		target.point,
+		target.direction,
+		source.point,
+		margin,
+	);
 	const sourceStub = source.box
-		? stubPoint(source.point, source.direction, source.box, margin)
+		? stubPoint(source.point, source.direction, source.box, sourceMargin)
 		: source.point;
 	const targetStub = target.box
-		? stubPoint(target.point, target.direction, target.box, margin)
+		? stubPoint(target.point, target.direction, target.box, targetMargin)
 		: target.point;
 
 	// ── ステップ2: 候補生成 ──

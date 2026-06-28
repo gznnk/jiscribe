@@ -273,6 +273,47 @@ describe("routeOrthogonalConnector", () => {
 		expect(path[1].x).toBeGreaterThan(path[0].x);
 	});
 
+	it("近接して向かい合う整列配置は回り込まず直線になる（margin×2 未満）", () => {
+		// gap=40（< margin×2=60）。フル margin だとスタブが互いを追い越し、
+		// 上下へぐるっと回る経路になりがちな配置。スタブを縮めて直線に畳む。
+		const source: OrthogonalConnectorEndpoint = {
+			point: { x: 150, y: 200 }, // 右辺中央
+			direction: "right",
+			box: boxAt(100, 200),
+		};
+		const target: OrthogonalConnectorEndpoint = {
+			point: { x: 190, y: 200 }, // 左辺中央（gap=40）
+			direction: "left",
+			box: boxAt(240, 200),
+		};
+		const path = routeOrthogonalConnector(source, target);
+		expect(path).toEqual([
+			{ x: 150, y: 200 },
+			{ x: 190, y: 200 },
+		]);
+	});
+
+	it("近接して向かい合う縦ずれ配置は中間で 1 度折れる Z になる（回り込まない）", () => {
+		// gap=40、y が 60 ずれ。回り込み（複数の折れ＋逆走）ではなく、ギャップ中央で
+		// 折れる素直な Z（4 点・折り返しゼロ）になる。
+		const source: OrthogonalConnectorEndpoint = {
+			point: { x: 150, y: 200 },
+			direction: "right",
+			box: boxAt(100, 200),
+		};
+		const target: OrthogonalConnectorEndpoint = {
+			point: { x: 190, y: 260 },
+			direction: "left",
+			box: boxAt(240, 260),
+		};
+		const path = routeOrthogonalConnector(source, target);
+		expect(path).toHaveLength(4);
+		expect(path[1].x).toBe(path[2].x); // ギャップ中央の縦ジョグ
+		expect(path[1].x).toBe(170); // 150 と 190 の中点
+		expect(countReversals(path)).toBe(0);
+		expect(allSegmentsOrthogonal(path)).toBe(true);
+	});
+
 	it("margin を変えるとスタブの押し出し量が変わる", () => {
 		const source: OrthogonalConnectorEndpoint = {
 			point: { x: 150, y: 100 },
