@@ -5,6 +5,28 @@ All notable changes to the Jiscribe extension are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-06-28
+
+### Added
+
+- **Routed connectors with waypoints**: Connectors are now drawn as multi-segment polylines instead of a single straight line. You can drag a connector's mid-point to add a waypoint, and move existing waypoints, to route a line around other shapes by hand.
+- **Automatic orthogonal routing**: Connectors can route themselves with clean right-angle (orthogonal) segments that avoid the shapes they attach to. Routing is now switchable per connector from the object menu (orthogonal or straight), and **orthogonal is the default** for newly created connectors.
+- **Self-loop connectors**: A connector can now attach both ends to the same shape, drawn as a loop back to itself — useful for state diagrams and retry/feedback flows.
+- **Diamond shape**: Added a diamond primitive for flowchart decision/branch nodes. It is available in the shape library and can be drawn like the other shapes.
+- **Click zoom to reset**: Clicking the zoom-percentage readout in the toolbar resets the view to 100%.
+
+### Fixed
+
+- **Zoom to Fit / Zoom to Selection** no longer misbehaves on degenerate selections: a zero-area selection is now a no-op, and a perfectly horizontal or vertical line (zero on one axis) now frames correctly instead of failing to fit.
+- **Edge auto-scroll** no longer fires spuriously when you grab an object near the canvas edge; scrolling now arms only after the pointer leaves the canvas.
+- **Context menus** close more predictably: submenu background clicks no longer dismiss the menu, and a press now closes an open context menu consistently across handlers.
+- Wheel/zoom event handling is scoped to the canvas container instead of the whole document, so scrolling outside the canvas no longer zooms it.
+- Hardened `.jis.json` loading: documents are validated against the schema's numeric and structural constraints, and unknown object types, empty groups, cyclic clipboard data, and connectors with invalid endpoints are rejected up front. Several rendering-lifecycle issues (stale animation frames after unmount, frame-ordering) were also fixed.
+
+### Changed
+
+- New connectors default to **orthogonal** routing, and the bundled AI authoring guide, reference, and schema now cover diamonds, connector routing, waypoints, and self-loops. The document `version` stays at `1` (these additions are backward-compatible). If you set up AI in an earlier version, re-run the **Set up AI** command to refresh the assets under `.jiscribe/`.
+
 ## [0.4.0] - 2026-06-22
 
 ### Added
