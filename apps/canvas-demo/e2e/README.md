@@ -31,7 +31,7 @@ pnpm --filter canvas-demo test:e2e:demo    # マーケ素材生成デモ（hero-
 ### e2e/demo — マーケ素材生成デモ
 
 回帰検知ではなく、スクリーンショット／録画などの素材を作るためのデモ。CanvasDriver の
-テスト済み操作だけを合成し、`vscode-extension/sample/hero-showcase.jis.json`（17 部品＋17 結線の
+テスト済み操作だけを合成し、`landing/public/demo/diagrams/cloud-native-commerce.jis.json`（17 部品＋17 結線の
 参照アーキテクチャ図）を UI 操作だけで丸ごと描き起こす。`scripts/replay-hero-showcase.mjs` と
 同じ図を、失敗を隠さない E2E ドライバで再現する位置づけ。重く（約 40s）コネクター選択が
 flake しやすいため、通常の `test:e2e`（CI ゲート）からは外して `test:e2e:demo` で明示実行する。
