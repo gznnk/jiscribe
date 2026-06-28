@@ -20,35 +20,32 @@ import type { ObjectDoc } from "../../../schemas/objects/base/ObjectDoc";
 import type { TransformDoc } from "../../../schemas/objects/base/TransformDoc";
 import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
 
-/** ObjectMapper.toState/toDoc が生成する基底フィールド（meta は変換が必要）。 */
-const BASE_KEYS = ["id", "type", "meta"] as const;
+/**
+ * ObjectMapper.toState/toDoc が生成・管理する基底フィールド。素通ししない。
+ * - id/type/meta は ObjectMapper が変換して付与する
+ * - parentId は CanvasMapper が runtime 正規化として State に付与する flat 階層情報で、
+ *   Doc（階層は children のネストで表現）には出してはならない
+ */
+const BASE_KEYS = ["id", "type", "meta", "parentId"] as const;
 
-/** geometry の Doc 表現（rect: x/y/w/h, ellipse: cx/cy/rx/ry）が占有するキー。 */
-const GEOMETRY_DOC_KEYS = [
-	"x",
-	"y",
-	"cx",
-	"cy",
-	"rx",
-	"ry",
-	"width",
-	"height",
-] as const;
+/**
+ * geometry の Doc 表現が占有するキー。geometry ごとに異なる点に注意:
+ * rect 系は x/y/width/height。ellipse は cx/cy/rx/ry。
+ *
+ * とくに rect 系では `rx` は geometry ではなく角丸の radius スタイルなので、
+ * ここに含めてはならない（含めると pass-through で角丸が落ちる）。rx を
+ * geometry として扱うのは ellipse（x 半径）だけ。
+ */
+const RECT_GEOMETRY_DOC_KEYS = ["x", "y", "width", "height"] as const;
+const ELLIPSE_GEOMETRY_DOC_KEYS = ["cx", "cy", "rx", "ry"] as const;
 
-/** geometry の State 表現（Frame: cx/cy/w/h）が占有するキー。 */
+/** geometry の State 表現（Frame: cx/cy/w/h）が占有するキー。geometry 非依存。 */
 const GEOMETRY_STATE_KEYS = ["cx", "cy", "width", "height"] as const;
 
 /**
- * Doc → State 変換で「geometry/transform マッパーが作り直す」ため
- * そのまま素通ししてはいけない Doc 側フィールド。これ以外はすべて透過する。
+ * State → Doc 変換で geometry/transform マッパーが作り直すため素通ししない State 側キー。
+ * State の geometry は常に Frame なので geometry に依存しない。
  */
-const DOC_DERIVED_KEYS: ReadonlySet<string> = new Set([
-	...BASE_KEYS,
-	...GEOMETRY_DOC_KEYS,
-	...TRANSFORM_DOC_KEYS,
-]);
-
-/** 同上の State 側フィールド。 */
 const STATE_DERIVED_KEYS: ReadonlySet<string> = new Set([
 	...BASE_KEYS,
 	...GEOMETRY_STATE_KEYS,
@@ -86,6 +83,12 @@ export const createFrameMapper = <
 ): ObjectMapperType<TDoc, TState> => {
 	const isEllipse = features.geometry === "ellipse";
 
+	const docDerivedKeys: ReadonlySet<string> = new Set([
+		...BASE_KEYS,
+		...(isEllipse ? ELLIPSE_GEOMETRY_DOC_KEYS : RECT_GEOMETRY_DOC_KEYS),
+		...TRANSFORM_DOC_KEYS,
+	]);
+
 	return {
 		toState: (doc) => {
 			const frame: Frame = isEllipse
@@ -98,7 +101,7 @@ export const createFrameMapper = <
 				...ObjectMapper.toState(doc),
 				...passthrough(
 					doc as unknown as Record<string, unknown>,
-					DOC_DERIVED_KEYS,
+					docDerivedKeys,
 				),
 				...frame,
 				...transform,
