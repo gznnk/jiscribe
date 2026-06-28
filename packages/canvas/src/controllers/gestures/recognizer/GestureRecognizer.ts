@@ -1,11 +1,9 @@
 import type { Point } from "@workspace/geometry/src/types/Point";
 import type React from "react";
 
-import {
-	DOUBLE_CLICK_THRESHOLD,
-	DRAG_THRESHOLD,
-} from "./GestureRecognizerConstants";
+import { DRAG_THRESHOLD } from "./GestureRecognizerConstants";
 import type {
+	ClickSnapshot,
 	GestureCallback,
 	GestureRecognizerConfig,
 	Mods,
@@ -18,6 +16,7 @@ import {
 	getInputValue,
 	getKindAndId,
 	getSvgPoint,
+	isDoubleClick,
 	isGestureOptedOut,
 	shouldSkipPointerCapture,
 } from "./utils";
@@ -125,9 +124,12 @@ export class GestureRecognizer {
 	// 進行中ジェスチャーの状態（非ドラッグ中は null）
 	private pressed: Pressed | null = null;
 
-	// ダブルクリック判定用。直近の単一クリックの時刻と対象 ID を覚えておく
-	private lastClickTime = 0;
-	private lastClickTargetId: string | undefined = undefined;
+	// ダブルクリック判定用。直近の単一クリックのスナップショットを覚えておく。
+	// null = まだ単一クリックを記録していない（doubleClick の基準が無い）状態。
+	// targetId は背景クリックで undefined になりうるため、「未記録」を undefined で
+	// 表すと初回クリックが undefined===undefined で doubleClick に化ける。null と
+	// undefined を分けることで、基準が無いときは決して doubleClick にしない（isDoubleClick）。
+	private lastClick: ClickSnapshot | null = null;
 
 	// RAF バッチ用キュー。
 	// 単一キューで時系列順を保持する。連続する pointermove は合体しつつ
@@ -463,22 +465,18 @@ export class GestureRecognizer {
 			if (this.pressed.dragging) {
 				eventType = "dragEnd";
 			} else {
-				// ダブルクリック判定: 同一ターゲットへの連続クリックが時間しきい値内か。
-				const isDoubleClick =
-					this.pressed.targetId === this.lastClickTargetId &&
-					time - this.lastClickTime < DOUBLE_CLICK_THRESHOLD;
+				const currentClick: ClickSnapshot = {
+					time,
+					targetId: this.pressed.targetId,
+					clientPos: this.pressed.clientStart,
+				};
+				const doubleClick = isDoubleClick(this.lastClick, currentClick);
 
-				eventType = isDoubleClick ? "doubleClick" : "click";
+				eventType = doubleClick ? "doubleClick" : "click";
 
 				// 直近クリック情報は single click のときだけ更新する。
-				// doubleClick 成立時はリセットし、3 連打目が再び doubleClick になるのを防ぐ。
-				if (isDoubleClick) {
-					this.lastClickTime = 0;
-					this.lastClickTargetId = undefined;
-				} else {
-					this.lastClickTime = time;
-					this.lastClickTargetId = this.pressed.targetId;
-				}
+				// doubleClick 成立時は null に戻し、3 連打目が再び doubleClick になるのを防ぐ。
+				this.lastClick = doubleClick ? null : currentClick;
 			}
 
 			// スライダー等は対象要素から最終値を読む（data-gesture="native-pointer"）

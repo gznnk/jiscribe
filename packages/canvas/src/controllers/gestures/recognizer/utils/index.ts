@@ -5,6 +5,7 @@ export { getHoveredElements } from "./getHoveredElements";
 export { getInputValue } from "./getInputValue";
 export { getKindAndId } from "./getKindAndId";
 export { getSvgPoint } from "./getSvgPoint";
+export { isDoubleClick } from "./isDoubleClick";
 export { isGestureOptedOut } from "./isGestureOptedOut";
 export { shouldSkipPointerCapture } from "./shouldSkipPointerCapture";
 export { shouldUseNativeWheel } from "./shouldUseNativeWheel";
