@@ -5,9 +5,9 @@ import { createFrameMapper } from "../../base/FrameMapper";
 
 /**
  * SvgDoc ↔ SvgState 変換（Frame 系共通ロジックを features から生成）。
- * svgText は geometry/transform 以外の素通しフィールドとして自動で透過される。
+ * svgText は図形固有の素通しフィールドなので allow-list の extra キーとして渡す。
  */
 export const { toState: svgToState, toDoc: svgToDoc } = createFrameMapper<
 	SvgDoc,
 	SvgState
->(SvgFeatures);
+>(SvgFeatures, ["svgText"] satisfies readonly (keyof SvgDoc)[]);

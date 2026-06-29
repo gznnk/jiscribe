@@ -5,10 +5,11 @@ import type { RectState } from "../../primitives/rect/RectState";
 
 /**
  * pass-through 方式の回帰テスト。
- * CanvasMapper は全 State に runtime 正規化として parentId を付与するが、
- * これは Doc（nested tree。階層は children で表現）に出てはならない。
- * allow-list だった旧実装は明示列挙で落としていたため、deny-list 化で
- * 漏れないことを保証する。
+ * createFrameMapper は features 由来のスタイルキー＋extra キーだけを allow-list で
+ * 拾う。CanvasMapper が全 State に付与する runtime 専用の parentId や、State 専用の
+ * minWidth/minHeight は allow-list に含まれないため、Doc（階層は children で表現する
+ * nested tree）へ漏れないことを保証する。逆に rect の角丸 rx は radius スタイルとして
+ * allow-list に含まれるため往復で保持されることも固定する。
  */
 describe("FrameMapper pass-through: runtime 専用フィールドを Doc に漏らさない", () => {
 	it("rect の角丸 rx（radius スタイル）は doc↔state を往復しても保持される", () => {
