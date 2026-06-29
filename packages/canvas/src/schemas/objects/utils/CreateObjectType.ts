@@ -50,6 +50,7 @@ type GeometryDoc<T extends ObjectFeatures> = //
  * >;
  * ```
  */
+// TODO: ファイル名含め先頭小文字にしたい
 export type CreateObjectType<
 	T extends ObjectFeatures,
 	S extends symbol,

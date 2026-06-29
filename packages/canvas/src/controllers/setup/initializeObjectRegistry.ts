@@ -104,26 +104,12 @@ import { isValidSvgState } from "../../states/objects/primitives/svg/validateSvg
 import { objectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import type { ObjectStateValidateFn } from "../../states/registry/ObjectStateValidatorRegistry";
 import { objectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
-import {
-	moveByDelta as stickyMoveByDelta,
-	rotateByGroup as stickyRotateByGroup,
-	transformByGroup as stickyTransformByGroup,
-} from "../gestures/handlers/objects/annotations/StickyController";
+import { createFrameBehavior } from "../gestures/handlers/objects/base/FrameController";
 import {
 	moveByDelta as connectorMoveByDelta,
 	rotateByGroup as connectorRotateByGroup,
 	transformByGroup as connectorTransformByGroup,
 } from "../gestures/handlers/objects/connections/ConnectorController";
-import {
-	moveByDelta as diamondMoveByDelta,
-	rotateByGroup as diamondRotateByGroup,
-	transformByGroup as diamondTransformByGroup,
-} from "../gestures/handlers/objects/primitives/DiamondController";
-import {
-	moveByDelta as ellipseMoveByDelta,
-	rotateByGroup as ellipseRotateByGroup,
-	transformByGroup as ellipseTransformByGroup,
-} from "../gestures/handlers/objects/primitives/EllipseController";
 import {
 	moveByDelta as groupMoveByDelta,
 	rotateByGroup as groupRotateByGroup,
@@ -139,16 +125,6 @@ import {
 	rotateByGroup as polylineRotateByGroup,
 	transformByGroup as polylineTransformByGroup,
 } from "../gestures/handlers/objects/primitives/PolylineController";
-import {
-	moveByDelta as rectMoveByDelta,
-	rotateByGroup as rectRotateByGroup,
-	transformByGroup as rectTransformByGroup,
-} from "../gestures/handlers/objects/primitives/RectController";
-import {
-	moveByDelta as svgMoveByDelta,
-	rotateByGroup as svgRotateByGroup,
-	transformByGroup as svgTransformByGroup,
-} from "../gestures/handlers/objects/primitives/SvgController";
 import { objectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
 import type { ObjectBehaviorEntry } from "../gestures/registry/ObjectBehaviorTypes";
 import { DiamondIcon } from "../ui/icons/DiamondIcon";
@@ -186,11 +162,7 @@ export const initializeObjectRegistry = (): void => {
 		{ toDoc: rectToDoc, toState: rectToState },
 		RectFeatures,
 		Rect,
-		{
-			moveByDelta: rectMoveByDelta,
-			transformByGroup: rectTransformByGroup,
-			rotateByGroup: rectRotateByGroup,
-		},
+		createFrameBehavior(),
 		(_state) => [
 			{
 				id: "style",
@@ -223,11 +195,7 @@ export const initializeObjectRegistry = (): void => {
 		{ toDoc: ellipseToDoc, toState: ellipseToState },
 		EllipseFeatures,
 		Ellipse,
-		{
-			moveByDelta: ellipseMoveByDelta,
-			transformByGroup: ellipseTransformByGroup,
-			rotateByGroup: ellipseRotateByGroup,
-		},
+		createFrameBehavior(),
 		(_state) => [
 			{
 				id: "style",
@@ -260,11 +228,7 @@ export const initializeObjectRegistry = (): void => {
 		{ toDoc: diamondToDoc, toState: diamondToState },
 		DiamondFeatures,
 		Diamond,
-		{
-			moveByDelta: diamondMoveByDelta,
-			transformByGroup: diamondTransformByGroup,
-			rotateByGroup: diamondRotateByGroup,
-		},
+		createFrameBehavior(),
 		(_state) => [
 			{
 				id: "style",
@@ -405,11 +369,7 @@ export const initializeObjectRegistry = (): void => {
 		{ toDoc: stickyToDoc, toState: stickyToState },
 		StickyFeatures,
 		Sticky,
-		{
-			moveByDelta: stickyMoveByDelta,
-			transformByGroup: stickyTransformByGroup,
-			rotateByGroup: stickyRotateByGroup,
-		},
+		createFrameBehavior(),
 		(_state: StickyState) => [
 			{
 				id: "style",
@@ -441,11 +401,7 @@ export const initializeObjectRegistry = (): void => {
 		{ toDoc: svgToDoc, toState: svgToState },
 		SvgFeatures,
 		Svg,
-		{
-			moveByDelta: svgMoveByDelta,
-			transformByGroup: svgTransformByGroup,
-			rotateByGroup: svgRotateByGroup,
-		},
+		createFrameBehavior(),
 		(_state) => [
 			{
 				id: "transform",

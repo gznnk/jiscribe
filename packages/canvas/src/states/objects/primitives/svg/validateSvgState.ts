@@ -1,23 +1,11 @@
-import { isObject, isString } from "@workspace/basic-validators";
+import { isString } from "@workspace/basic-validators";
 
+import { SvgFeatures } from "../../../../schemas/objects/primitives/svg/SvgDoc";
 import type { ObjectStateValidateFn } from "../../../registry/ObjectStateValidatorRegistry";
-import {
-	hasValidIdAndType,
-	isValidFrameState,
-	isValidTransformState,
-	type StateRecord,
-} from "../../utils/validateStateUtils";
+import { createFrameStateValidator } from "../../utils/createFrameStateValidator";
 
-/** SvgState（Frame + transform + svgText）を検証する。 */
-export const isValidSvgState: ObjectStateValidateFn = (value) => {
-	if (!isObject(value)) {
-		return false;
-	}
-	const o = value as StateRecord;
-	return (
-		hasValidIdAndType(o, "svg") &&
-		isValidFrameState(o) &&
-		isValidTransformState(o) &&
-		isString(o.svgText)
-	);
-};
+/** SvgState を検証する（Frame 系共通 + svgText を features から生成）。 */
+export const isValidSvgState: ObjectStateValidateFn = createFrameStateValidator(
+	SvgFeatures,
+	(o) => isString(o.svgText),
+);
