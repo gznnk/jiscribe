@@ -13,12 +13,18 @@ export const TRANSFORM_DOC_KEYS = [
 	"lockAspectRatio",
 ] as const;
 
-/** TransformState が占有するフィールド名（State 表現）。 */
+/**
+ * TransformState が占有するフィールド名（State 表現）。
+ * minWidth/minHeight は State 専用の UI 制約で TransformDoc には存在しないため、
+ * pass-through で Doc に漏らさないようここに含める（parentId と同型の穴を塞ぐ）。
+ */
 export const TRANSFORM_STATE_KEYS = [
 	"rotation",
 	"scaleX",
 	"scaleY",
 	"lockAspectRatio",
+	"minWidth",
+	"minHeight",
 ] as const;
 
 /**

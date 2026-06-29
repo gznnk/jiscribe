@@ -16,13 +16,14 @@ import type { ObjectStateValidateFn } from "../../registry/ObjectStateValidatorR
 /**
  * Frame 系オブジェクト（geometry: "rect" | "ellipse"）の state バリデータを
  * features から生成する。id/type・Frame・transform・stroke/fill/text/radius を
- * features に応じて検証し、図形固有の追加検証（svg の svgText など）は `extra` で渡す。
+ * features に応じて検証し、図形固有の追加検証（svg の svgText など）は
+ * `isExtraValid` で渡す（boolean を返す述語）。
  *
  * boolean を返す型ガード方式なので、各検証は && で短絡する。
  */
 export const createFrameStateValidator = (
 	features: ObjectFeatures,
-	extra?: (o: StateRecord) => boolean,
+	isExtraValid?: (o: StateRecord) => boolean,
 ): ObjectStateValidateFn => {
 	return (value) => {
 		if (!isObject(value)) {
@@ -37,7 +38,7 @@ export const createFrameStateValidator = (
 			(!features.fill || isValidFillStyleState(o)) &&
 			(!features.text || isValidTextStyleState(o)) &&
 			(!features.radius || isValidRadiusStyleState(o)) &&
-			(extra === undefined || extra(o))
+			(isExtraValid === undefined || isExtraValid(o))
 		);
 	};
 };

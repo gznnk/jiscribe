@@ -48,4 +48,25 @@ describe("FrameMapper pass-through: runtime 専用フィールドを Doc に漏�
 
 		expect("parentId" in doc).toBe(false);
 	});
+
+	it("rectToDoc は State 専用の minWidth/minHeight を Doc に含めない", () => {
+		const state = {
+			id: "rect-1",
+			type: "rect",
+			cx: 50,
+			cy: 50,
+			width: 100,
+			height: 100,
+			rotation: 0,
+			scaleX: 1,
+			scaleY: 1,
+			minWidth: 20,
+			minHeight: 10,
+		} as unknown as RectState;
+
+		const doc = rectToDoc(state) as Record<string, unknown>;
+
+		expect("minWidth" in doc).toBe(false);
+		expect("minHeight" in doc).toBe(false);
+	});
 });

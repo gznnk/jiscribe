@@ -70,6 +70,23 @@ describe("createFrameBehavior().moveByDelta", () => {
 		});
 		expect(result.width).toBe(33);
 	});
+
+	// 図形固有の pass-through フィールド（svg の svgText 等）が move で失われない
+	// ことを明示的に固定する。統合前 SvgController.test.ts が持っていた保証の引き継ぎ。
+	it("図形固有フィールド（svgText / text）を保持する", () => {
+		const src = makeFrame({} as Partial<FrameState>);
+		const withFields = {
+			...src,
+			svgText: "<svg id='a'/>",
+			text: "label",
+		} as FrameState;
+		const result = behavior.moveByDelta(withFields, { x: 2, y: 2 }) as Record<
+			string,
+			unknown
+		>;
+		expect(result.svgText).toBe("<svg id='a'/>");
+		expect(result.text).toBe("label");
+	});
 });
 
 describe("createFrameBehavior() group 変形の委譲", () => {
