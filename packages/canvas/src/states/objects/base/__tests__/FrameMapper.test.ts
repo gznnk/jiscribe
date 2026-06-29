@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { stickyToState } from "../../annotations/sticky/StickyMapper";
 import { rectToDoc, rectToState } from "../../primitives/rect/RectMapper";
 import type { RectState } from "../../primitives/rect/RectState";
 
@@ -69,5 +70,49 @@ describe("FrameMapper pass-through: runtime 専用フィールドを Doc に漏�
 
 		expect("minWidth" in doc).toBe(false);
 		expect("minHeight" in doc).toBe(false);
+	});
+});
+
+/**
+ * allow-list の取り込み契約（Doc→State 方向）。
+ * createFrameMapper は「拾うキーを明示列挙し、それ以外は通さない」。未知フィールドや
+ * features で無効なスタイル群は、たとえ doc に存在しても state へ持ち込まれないことを固定する。
+ */
+describe("FrameMapper allow-list: 拾うべきキー以外は State に持ち込まない", () => {
+	it("doc に紛れた未知フィールドは state に出ない", () => {
+		const doc = {
+			id: "rect-1",
+			type: "rect",
+			x: 0,
+			y: 0,
+			width: 100,
+			height: 100,
+			bogusField: "should-be-dropped",
+		} as unknown as Parameters<typeof rectToState>[0];
+
+		const state = rectToState(doc) as Record<string, unknown>;
+
+		expect("bogusField" in state).toBe(false);
+	});
+
+	it("stroke 無効な図形（sticky）は doc.stroke を state に持ち込まない", () => {
+		const doc = {
+			id: "sticky-1",
+			type: "sticky",
+			x: 0,
+			y: 0,
+			width: 100,
+			height: 100,
+			fill: "#ffff00",
+			stroke: "#000000",
+			strokeWidth: 4,
+		} as unknown as Parameters<typeof stickyToState>[0];
+
+		const state = stickyToState(doc) as Record<string, unknown>;
+
+		// fill は features.fill=true なので拾い、stroke 系は features.stroke=false なので落とす。
+		expect(state.fill).toBe("#ffff00");
+		expect("stroke" in state).toBe(false);
+		expect("strokeWidth" in state).toBe(false);
 	});
 });
