@@ -36,8 +36,6 @@ type BorderStyleMenuProps = {
 /**
  * Border style menu component.
  * Controls stroke width, stroke dash type, and corner radius.
- *
- * Based on svg-canvas's BorderStyleMenu but adapted for canvas architecture.
  */
 const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 	canvasState,

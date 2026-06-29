@@ -1,1 +1,0 @@
-export { BackgroundColorMenu } from "./BackgroundColorMenu";

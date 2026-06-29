@@ -1,1 +1,0 @@
-export { TransformControl } from "./TransformControl";

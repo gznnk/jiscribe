@@ -29,7 +29,7 @@ const getSelectedStrokeColor = (state: CanvasControllerState): string => {
 
 /**
  * ライン色メニュー（polyline / connector 用）。
- * svg-canvas の LineColorMenu に合わせて塗りつぶし円アイコンを使用する。
+ * 塗りつぶし円アイコンを使用する。
  */
 const LineColorMenuComponent: React.FC<LineColorMenuProps> = ({
 	canvasState,

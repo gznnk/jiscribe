@@ -30,7 +30,6 @@ type ObjectMenuPosition = {
  * ScrollSyncedOverlay 内に配置されるため、座標はキャンバス座標系のまま返す。
  * オーバーレイ自体がスクロール追従するので viewport offset は不要。
  *
- * Based on svg-canvas's useDiagramMenuDisplay but adapted for canvas architecture.
  * - Automatically positions menu above object if it would overflow bottom viewport boundary
  * - Adjusts horizontal position to fit within left/right viewport boundaries
  * - Measures actual menu dimensions from DOM for accurate positioning

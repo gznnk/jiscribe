@@ -34,7 +34,6 @@ export function determineSelection(
 
 	if (!isGroupedItem) {
 		// ========== Non-grouped item selection logic ==========
-		// (svg-canvas lines 68-80)
 
 		if (!isCurrentlySelected) {
 			// Not selected: select it
@@ -49,7 +48,6 @@ export function determineSelection(
 		}
 	} else {
 		// ========== Grouped item selection logic ==========
-		// (svg-canvas lines 82-202)
 
 		// Find if any ancestor is selected
 		const selectedAncestorIdx = ancestors.findIndex((ancestorId) =>
@@ -59,7 +57,6 @@ export function determineSelection(
 
 		if (isAncestorSelected) {
 			// --- Case 1: An ancestor is selected ---
-			// (svg-canvas lines 83-133)
 
 			const selectedAncestorId = ancestors[selectedAncestorIdx];
 			const isParentSelected = selectedAncestorIdx === ancestors.length - 1;
@@ -100,7 +97,6 @@ export function determineSelection(
 			// Check for siblings and common ancestors
 
 			// Check if any sibling is selected (same parent has selected children)
-			// (svg-canvas lines 135-155)
 			// IMPORTANT: We need to check if:
 			// 1. The clicked item is a direct child of this ancestor (parent.childIds.includes(id))
 			// 2. AND this ancestor has other selected children
@@ -135,7 +131,6 @@ export function determineSelection(
 				}
 			} else {
 				// --- Case 3: Check for common ancestor with other selections ---
-				// (svg-canvas lines 157-200)
 
 				if (canvasState.selectedIds.length > 0) {
 					// Find common ancestor with other selected items.
@@ -151,7 +146,6 @@ export function determineSelection(
 							}
 							const group = ancestor as GroupState;
 							// Check if this ancestor contains any selected items (at any depth)
-							// This matches svg-canvas's getSelectedDiagrams behavior
 							return hasSelectedDescendants(
 								canvasState,
 								group.childIds,
@@ -231,7 +225,6 @@ export function determineSelection(
 	}
 
 	// ========== Auto-select parent groups if all children are selected ==========
-	// (svg-canvas lines 264-311)
 	selectedIds = autoSelectParentGroups(canvasState, selectedIds);
 
 	return selectedIds;
