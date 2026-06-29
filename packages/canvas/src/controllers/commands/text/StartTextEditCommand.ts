@@ -31,6 +31,11 @@ export const StartTextEditCommand: Command = {
 			return false;
 		}
 
+		// コネクター単一選択（selectedConnectorId）はラベル編集を許可する。
+		if (state.selectedConnectorId && state.selectedIds.length === 0) {
+			return state.objects[state.selectedConnectorId]?.type === "connector";
+		}
+
 		// 単一選択のみ
 		if (state.selectedIds.length !== 1) {
 			return false;
@@ -40,6 +45,21 @@ export const StartTextEditCommand: Command = {
 	},
 
 	execute(state) {
+		// コネクター選択時はラベル（label.text）の編集を開始する。
+		if (state.selectedConnectorId && state.selectedIds.length === 0) {
+			const connector = state.objects[state.selectedConnectorId];
+			if (connector?.type !== "connector") {
+				return state;
+			}
+			return {
+				...state,
+				textEditState: {
+					objectId: state.selectedConnectorId,
+					text: (connector as { label?: { text?: string } }).label?.text ?? "",
+				},
+			};
+		}
+
 		const objectId = state.selectedIds[0];
 		const targetObject = state.objects[objectId];
 

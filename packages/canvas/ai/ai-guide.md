@@ -58,7 +58,7 @@ The top level must always have `version` / `root` (the array may be empty).
 | `polyline`              | `points` (open line)                 | stroke / startArrow / endArrow                   |
 | `polygon`               | `points` (auto-closed)               | stroke / fill                                    |
 | `group`                 | `children`                           | rotation / flipX / flipY                         |
-| `connector` (in `root`) | `source`,`target`,`points:[]`        | stroke / startArrow / endArrow / routing         |
+| `connector` (in `root`) | `source`,`target`,`points:[]`        | stroke / startArrow / endArrow / routing / label |
 | `sticky`                | `x`,`y`,`width`,`height`             | fill / text (no stroke or rx)                    |
 | `svg`                   | `x`,`y`,`width`,`height` + `svgText` | rotation only (opaque box; no stroke/fill/text)  |
 
@@ -68,6 +68,7 @@ The top level must always have `version` / `root` (the array may be empty).
 - Stroke: `stroke` (color, default `"auto"`), `strokeWidth` (default 2), `strokeDashType`: `"solid"`/`"dashed"`/`"dotted"`
 - Fill: `fill` (default `"transparent"`)
 - Text (rect / ellipse / diamond / sticky): `text`, `textAlign`: `"left"`/`"center"`/`"right"`, `verticalAlign`: `"top"`/`"middle"`/`"bottom"`, `fontColor` (default `"auto"`), `fontSize` (default 16). For `diamond`, text is placed within the full bounding box (not clipped to the diamond interior).
+- Connector label (edge label, e.g. `"Yes"`/`"No"`): a connector has **no** top-level `text`. Put the annotation in a nested `label` object: `"label": { "text": "Yes" }`. Optional fields: `position` (0–1 along the path, default 0.5 = midpoint), `offset` (perpendicular shift, default 0), `fontColor` (default `"auto"`), `fontSize` (default 16), `fontWeight`. Plain text only; the label is drawn horizontally at the midpoint by default. Omit `label` for no label.
 - Arrows `startArrow`/`endArrow`: `"None"` / `"FilledTriangle"` (standard arrow) / `"OpenArrow"` / `"HollowTriangle"` / `"FilledDiamond"` / `"HollowDiamond"` / `"ConcaveTriangle"` / `"Circle"`
 
 **Connector endpoints (EndpointRef)**
@@ -297,6 +298,7 @@ These are guidelines for readability, not part of the spec. Overlapping itself i
 - ❌ Attaching a connector endpoint (`owner`) to a `polyline`/`polygon`/`group`/`svg` → ✅ only `rect`/`ellipse`/`diamond`/`sticky` are connectable; use a `free` endpoint placed near the target instead.
 - ❌ Reaching for `svg` for ordinary boxes/nodes/arrows → ✅ use the built-in shapes; keep `svg` for visuals they cannot express.
 - ❌ Putting endpoint coordinates in a connector's `points` → ✅ `points: []`; endpoints go in `source`/`target`.
+- ❌ Putting a connector's edge label in a top-level `text` field → ✅ use a nested `label`: `"label": { "text": "Yes" }`.
 - ❌ Giving a `group` `x`/`y`/`width`/`height` → ✅ position it via the `children` coordinates.
 - ❌ Using `x`/`y`/`width`/`height` on an `ellipse` → ✅ use `cx`/`cy`/`rx`/`ry`.
 - ❌ Emitting coordinates that unintentionally overlap → ✅ space them per the layout conventions (overlap itself is allowed).

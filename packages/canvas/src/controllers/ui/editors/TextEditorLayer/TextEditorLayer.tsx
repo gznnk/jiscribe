@@ -1,8 +1,12 @@
 import type { TransformedFrame } from "@workspace/geometry";
 import { memo } from "react";
 
+import { resolveConnectorPoints } from "../../../../presentations/layers/content/utils/endpoints";
+import { calcConnectorLabelAnchor } from "../../../../presentations/layers/content/utils/label/calcConnectorLabelAnchor";
 import { isTextStyleState } from "../../../../states/objects/base/TextStyleState";
+import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { ConnectorLabelEditor } from "../ConnectorLabelEditor";
 import { TextEditor } from "../TextEditor";
 
 type TextEditorLayerProps = {
@@ -23,7 +27,47 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 	}
 
 	const targetObject = objects[textEditState.objectId];
-	if (!targetObject || !isTextStyleState(targetObject)) {
+	if (!targetObject) {
+		return null;
+	}
+
+	// TODO: もうちょい綺麗な書き方にしたい
+	// コネクターは bbox を持たないため、経路の中点（ラベルアンカー）に専用エディタを出す。
+	if (targetObject.type === "connector") {
+		const connector = targetObject as ConnectorState;
+		const sourceObj = connector.source.owner
+			? objects[connector.source.owner.id]
+			: null;
+		const targetObj = connector.target.owner
+			? objects[connector.target.owner.id]
+			: null;
+		const resolved = resolveConnectorPoints(connector, sourceObj, targetObj);
+		if (!resolved) {
+			return null;
+		}
+		const points = [resolved.source, ...resolved.waypoints, resolved.target];
+		const anchor = calcConnectorLabelAnchor(
+			points,
+			connector.label?.position,
+			connector.label?.offset,
+		);
+		if (!anchor) {
+			return null;
+		}
+		return (
+			<ConnectorLabelEditor
+				anchor={anchor}
+				text={textEditState.text}
+				fontColor={connector.label?.fontColor}
+				fontSize={connector.label?.fontSize}
+				fontWeight={connector.label?.fontWeight}
+				onChange={onTextChange}
+				onEscape={onEscape}
+			/>
+		);
+	}
+
+	if (!isTextStyleState(targetObject)) {
 		return null;
 	}
 

@@ -88,4 +88,51 @@ describe("commitTextEditIfNeeded", () => {
 		const originalObj = originalObjects["r1"] as unknown as { text: string };
 		expect(originalObj.text).toBe("original");
 	});
+
+	// ─── コネクターラベル（label.text） ───
+	const connectorObj = (id: string, label?: { text: string }) =>
+		({ id, type: "connector", ...(label ? { label } : {}) }) as unknown;
+
+	it("コネクター: ラベル未設定から text を入力 → label.text を作成しコミット", () => {
+		const c = connectorObj("c1");
+		const state = makeState({
+			objects: { c1: c as CanvasControllerState["objects"][string] },
+			textEditState: { objectId: "c1", text: "Yes" },
+			commitVersion: 1,
+		});
+		const result = commitTextEditIfNeeded(state);
+		expect(result.textEditState).toBeNull();
+		expect(result.commitVersion).toBe(2);
+		const updated = result.objects["c1"] as unknown as {
+			label?: { text: string };
+		};
+		expect(updated.label?.text).toBe("Yes");
+	});
+
+	it("コネクター: 既存ラベルを空文字でコミット → label を取り除く", () => {
+		const c = connectorObj("c1", { text: "Yes" });
+		const state = makeState({
+			objects: { c1: c as CanvasControllerState["objects"][string] },
+			textEditState: { objectId: "c1", text: "" },
+			commitVersion: 1,
+		});
+		const result = commitTextEditIfNeeded(state);
+		expect(result.commitVersion).toBe(2);
+		const updated = result.objects["c1"] as unknown as {
+			label?: { text: string };
+		};
+		expect(updated.label).toBeUndefined();
+	});
+
+	it("コネクター: ラベルが変化していない → commitVersion は増えない", () => {
+		const c = connectorObj("c1", { text: "Yes" });
+		const state = makeState({
+			objects: { c1: c as CanvasControllerState["objects"][string] },
+			textEditState: { objectId: "c1", text: "Yes" },
+			commitVersion: 7,
+		});
+		const result = commitTextEditIfNeeded(state);
+		expect(result.textEditState).toBeNull();
+		expect(result.commitVersion).toBe(7);
+	});
 });

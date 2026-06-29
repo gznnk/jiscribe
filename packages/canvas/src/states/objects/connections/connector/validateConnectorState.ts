@@ -1,4 +1,4 @@
-import { isObject } from "@workspace/basic-validators";
+import { isNumber, isObject, isString } from "@workspace/basic-validators";
 
 import { isConnectorRouting } from "../../../../schemas/objects/types/ConnectorRouting";
 import type { ObjectStateValidateFn } from "../../../registry/ObjectStateValidatorRegistry";
@@ -11,6 +11,28 @@ import {
 	isValidWaypointState,
 	type StateRecord,
 } from "../../utils/validateStateUtils";
+
+/**
+ * label（ネストした注記）の構造を検証する。未指定はラベル無しとして許容する。
+ * text は string 必須、位置・スタイルは存在時のみ型を確認する。
+ */
+export const isValidConnectorLabelState = (label: unknown): boolean => {
+	if (label === undefined) {
+		return true;
+	}
+	if (!isObject(label)) {
+		return false;
+	}
+	const l = label as StateRecord;
+	return (
+		isString(l.text) &&
+		(l.position === undefined || isNumber(l.position)) &&
+		(l.offset === undefined || isNumber(l.offset)) &&
+		(l.fontColor === undefined || isString(l.fontColor)) &&
+		(l.fontSize === undefined || isNumber(l.fontSize)) &&
+		(l.fontWeight === undefined || isString(l.fontWeight))
+	);
+};
 
 /**
  * ConnectorState（waypoint + stroke + 矢印端 + source/target 端点）を検証する。
@@ -29,6 +51,7 @@ export const isValidConnectorState: ObjectStateValidateFn = (value) => {
 		isValidWaypointState(o) &&
 		isValidStrokeStyleState(o) &&
 		isValidArrowFields(o) &&
+		isValidConnectorLabelState(o.label) &&
 		isObject(o.source) &&
 		isObject(o.target) &&
 		isValidEndpointRefState(o.source) &&

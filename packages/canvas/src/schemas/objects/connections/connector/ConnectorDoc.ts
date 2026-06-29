@@ -1,3 +1,4 @@
+import type { TextStyleDoc } from "../../base/TextStyleDoc";
 import type { ArrowType } from "../../types/ArrowType";
 import type { ConnectorRouting } from "../../types/ConnectorRouting";
 import type { EndpointRef } from "../../types/EndpointRef";
@@ -10,6 +11,29 @@ export const ConnectorFeatures = {
 	stroke: true,
 	connectable: false,
 } as const satisfies ObjectFeatures;
+
+/**
+ * コネクターに付ける注記（ラベル）。
+ *
+ * 図形の本文テキスト（features.text のフラットな TextStyleDoc）とは別物として
+ * **ネストした 1 オブジェクト**で持つ。理由は (1) 経路上の配置を表す
+ * `position` / `offset` が connector 固有で、帰属を構造で明示したい
+ * (2) 線上の短いタグに整列や markdown は不要、という点。スタイルは
+ * 色・サイズ・太さのみ TextStyleDoc から借りる（整列・textType は持たない）。
+ *
+ * `text` が空文字のラベルは「無し」と等価で、保存時に取り除かれる。
+ */
+export type ConnectorLabel = Pick<
+	TextStyleDoc,
+	"fontColor" | "fontSize" | "fontWeight"
+> & {
+	/** ラベル文字列。空なら非表示（ラベル無し）。 */
+	text: string;
+	/** 経路に沿った位置。0（source）〜1（target）の比率。既定 0.5（中点）。 */
+	position?: number;
+	/** 経路に対する垂直方向の符号付きオフセット（ワールド単位）。既定 0。 */
+	offset?: number;
+};
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare const ConnectorDocBrand: unique symbol;
@@ -34,5 +58,7 @@ export type ConnectorDoc = CreateObjectType<
 		routing?: ConnectorRouting;
 		startArrow?: ArrowType;
 		endArrow?: ArrowType;
+		/** コネクター上の注記。省略時はラベル無し。 */
+		label?: ConnectorLabel;
 	}
 >;

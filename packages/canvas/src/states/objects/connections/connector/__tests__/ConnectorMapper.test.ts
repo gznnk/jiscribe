@@ -219,5 +219,31 @@ describe("ConnectorMapper", () => {
 			expect(convertedDoc.startArrow).toBe(originalDoc.startArrow);
 			expect(convertedDoc.endArrow).toBe(originalDoc.endArrow);
 		});
+
+		it("should preserve the label through round-trip conversion", () => {
+			const originalDoc: ConnectorDoc = {
+				id: "connector-label",
+				type: "connector",
+				points: [],
+				source: {
+					owner: { type: "rect", id: "rect-1" },
+					anchor: { kind: "center" },
+				},
+				target: {
+					anchor: { kind: "free", point: { x: 50, y: 50 } },
+				},
+				label: { text: "Yes", position: 0.4, offset: 6, fontSize: 14 },
+			} as unknown as ConnectorDoc;
+
+			const state = connectorToState(originalDoc);
+			expect(state.label).toEqual({
+				text: "Yes",
+				position: 0.4,
+				offset: 6,
+				fontSize: 14,
+			});
+			const convertedDoc = connectorToDoc(state);
+			expect(convertedDoc.label).toEqual(originalDoc.label);
+		});
 	});
 });
