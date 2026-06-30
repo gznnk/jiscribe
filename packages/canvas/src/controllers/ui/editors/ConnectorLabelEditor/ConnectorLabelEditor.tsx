@@ -9,6 +9,7 @@ import {
 import {
 	calcConnectorLabelBox,
 	CONNECTOR_LABEL_DEFAULTS,
+	resolveLabelFill,
 } from "../../../../presentations/objects/connections/ConnectorLabel";
 import { resolveAutoColor } from "../../../../presentations/objects/utils/resolveAutoColor";
 
@@ -19,6 +20,10 @@ type ConnectorLabelEditorProps = {
 	fontColor?: string;
 	fontSize?: number;
 	fontWeight?: string;
+	fill?: string;
+	stroke?: string;
+	strokeWidth?: number;
+	strokeDashType?: string;
 	onChange: (text: string) => void;
 	onEscape?: () => void;
 };
@@ -29,6 +34,10 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 	fontColor,
 	fontSize = CONNECTOR_LABEL_DEFAULTS.fontSize,
 	fontWeight = CONNECTOR_LABEL_DEFAULTS.fontWeight,
+	fill,
+	stroke,
+	strokeWidth = 0,
+	strokeDashType = "solid",
 	onChange,
 	onEscape,
 }) => {
@@ -36,13 +45,15 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 	const fontFamily = CONNECTOR_LABEL_DEFAULTS.fontFamily;
 	// auto（テーマ追従）をテーマ前景（ink）へ解決する。描画側と同じ resolver で色を揃える。
 	const color = resolveAutoColor(fontColor, "ink");
+	const background = resolveLabelFill(fill);
+	const borderColor = resolveAutoColor(stroke, "ink");
 
 	// 幅は計測でクランプ（横伸長）。高さは textarea の scrollHeight に追従させる。
-	const { width } = calcConnectorLabelBox(text, {
-		fontSize,
-		fontFamily,
-		fontWeight,
-	});
+	const { width } = calcConnectorLabelBox(
+		text,
+		{ fontSize, fontFamily, fontWeight },
+		strokeWidth,
+	);
 
 	// 初回フォーカスして末尾にキャレットを置く。
 	useEffect(() => {
@@ -95,6 +106,10 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 			left={anchor.x}
 			top={anchor.y}
 			width={width}
+			background={background}
+			borderWidth={strokeWidth}
+			borderColor={borderColor}
+			borderStyle={strokeDashType}
 			onPointerDown={handleWrapperPointerDown}
 		>
 			<ConnectorLabelTextArea

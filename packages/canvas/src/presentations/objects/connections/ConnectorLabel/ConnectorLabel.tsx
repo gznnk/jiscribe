@@ -2,11 +2,12 @@ import type { Point } from "@workspace/geometry";
 import type React from "react";
 import { memo } from "react";
 
+import { LabelBox } from "./ConnectorLabelStyled";
 import {
 	calcConnectorLabelBox,
 	CONNECTOR_LABEL_DEFAULTS,
-} from "./connectorLabelLayout";
-import { LabelBox } from "./ConnectorLabelStyled";
+} from "./utils/connectorLabelLayout";
+import { resolveLabelFill } from "./utils/resolveLabelFill";
 import { resolveAutoColor } from "../../utils/resolveAutoColor";
 
 type ConnectorLabelProps = {
@@ -18,6 +19,14 @@ type ConnectorLabelProps = {
 	fontColor?: string;
 	fontSize?: number;
 	fontWeight?: string;
+	/** 背景色（省略/auto はキャンバス地色＝knockout）。 */
+	fill?: string;
+	/** 枠線色。 */
+	stroke?: string;
+	/** 枠線太さ（省略/0 で枠線なし）。 */
+	strokeWidth?: number;
+	/** 枠線スタイル（solid / dashed / dotted）。省略時は solid。 */
+	strokeDashType?: string;
 	disablePointerEvents?: boolean;
 };
 
@@ -28,6 +37,10 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 	fontColor,
 	fontSize = CONNECTOR_LABEL_DEFAULTS.fontSize,
 	fontWeight = CONNECTOR_LABEL_DEFAULTS.fontWeight,
+	fill,
+	stroke,
+	strokeWidth = 0,
+	strokeDashType = "solid",
 	disablePointerEvents = false,
 }) => {
 	if (text === "") {
@@ -37,12 +50,14 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 	const fontFamily = CONNECTOR_LABEL_DEFAULTS.fontFamily;
 	// auto（テーマ追従）をテーマ前景（ink）へ解決する（issue #38）。
 	const color = resolveAutoColor(fontColor, "ink");
+	const background = resolveLabelFill(fill);
+	const borderColor = resolveAutoColor(stroke, "ink");
 
-	const { width, height } = calcConnectorLabelBox(text, {
-		fontSize,
-		fontFamily,
-		fontWeight,
-	});
+	const { width, height } = calcConnectorLabelBox(
+		text,
+		{ fontSize, fontFamily, fontWeight },
+		strokeWidth,
+	);
 
 	// アンカーを中心に水平配置する（回転しない）。
 	return (
@@ -61,6 +76,10 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 				fontSize={fontSize}
 				fontFamily={fontFamily}
 				fontWeight={fontWeight}
+				background={background}
+				borderWidth={strokeWidth}
+				borderColor={borderColor}
+				borderStyle={strokeDashType}
 			>
 				{text}
 			</LabelBox>

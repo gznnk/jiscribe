@@ -106,6 +106,102 @@ describe("handlePropertyUpdate", () => {
 		});
 	});
 
+	describe("コネクターラベルのネストスタイル（label.*）", () => {
+		const connWithLabel = (id: string): ObjectState =>
+			({
+				...(connObj(id) as unknown as object),
+				label: { text: "Yes" },
+			}) as unknown as ObjectState;
+
+		it("label.fill → connector.label.fill にネスト更新される", () => {
+			const c1 = connWithLabel("c1");
+			const state = makeState({
+				selectedConnectorId: "c1",
+				objects: { c1 },
+			});
+			const result = handlePropertyUpdate(state, "label.fill", "#ff0000");
+			const updated = result.objects["c1"] as unknown as {
+				label: { text: string; fill: string };
+			};
+			expect(updated.label.fill).toBe("#ff0000");
+			// 既存の text は保持される
+			expect(updated.label.text).toBe("Yes");
+		});
+
+		it("label.stroke → label.stroke にネスト更新される", () => {
+			const c1 = connWithLabel("c1");
+			const state = makeState({
+				selectedConnectorId: "c1",
+				objects: { c1 },
+			});
+			const result = handlePropertyUpdate(state, "label.stroke", "#00ff00");
+			const updated = result.objects["c1"] as unknown as {
+				label: { stroke: string };
+			};
+			expect(updated.label.stroke).toBe("#00ff00");
+		});
+
+		it("label.strokeDashType → 文字列のままネスト更新される", () => {
+			const c1 = connWithLabel("c1");
+			const state = makeState({
+				selectedConnectorId: "c1",
+				objects: { c1 },
+			});
+			const result = handlePropertyUpdate(
+				state,
+				"label.strokeDashType",
+				"dashed",
+			);
+			const updated = result.objects["c1"] as unknown as {
+				label: { strokeDashType: string };
+			};
+			expect(updated.label.strokeDashType).toBe("dashed");
+		});
+
+		it("label.strokeWidth は数値化して更新される", () => {
+			const c1 = connWithLabel("c1");
+			const state = makeState({
+				selectedConnectorId: "c1",
+				objects: { c1 },
+			});
+			const result = handlePropertyUpdate(state, "label.strokeWidth", "2");
+			const updated = result.objects["c1"] as unknown as {
+				label: { strokeWidth: number };
+			};
+			expect(updated.label.strokeWidth).toBe(2);
+		});
+
+		it("label.strokeWidth に非数値 → 同一参照を返す", () => {
+			const c1 = connWithLabel("c1");
+			const state = makeState({
+				selectedConnectorId: "c1",
+				objects: { c1 },
+			});
+			expect(handlePropertyUpdate(state, "label.strokeWidth", "x")).toBe(state);
+		});
+
+		it("ラベル未設定のコネクターへの label.* → 同一参照を返す", () => {
+			const c1 = connObj("c1");
+			const state = makeState({
+				selectedConnectorId: "c1",
+				objects: { c1 },
+			});
+			expect(handlePropertyUpdate(state, "label.fill", "#ff0000")).toBe(state);
+		});
+
+		it("元の objects は変更されない（イミュータブル）", () => {
+			const c1 = connWithLabel("c1");
+			const state = makeState({
+				selectedConnectorId: "c1",
+				objects: { c1 },
+			});
+			handlePropertyUpdate(state, "label.fill", "#ff0000");
+			expect(
+				(c1 as unknown as { label: { fill?: string } }).label.fill,
+			).toBeUndefined();
+		});
+	});
+
 	describe("selectedIds あり（通常選択時）", () => {
 		it("rect に fill を適用 → fill が更新される", () => {
 			const r1 = rectObj("r1");

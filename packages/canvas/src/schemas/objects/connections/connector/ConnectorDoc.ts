@@ -1,3 +1,5 @@
+import type { FillStyleDoc } from "../../base/FillStyleDoc";
+import type { StrokeStyleDoc } from "../../base/StrokeStyleDoc";
 import type { TextStyleDoc } from "../../base/TextStyleDoc";
 import type { ArrowType } from "../../types/ArrowType";
 import type { ConnectorRouting } from "../../types/ConnectorRouting";
@@ -22,18 +24,23 @@ export const ConnectorFeatures = {
  * 色・サイズ・太さのみ TextStyleDoc から借りる（整列・textType は持たない）。
  *
  * `text` が空文字のラベルは「無し」と等価で、保存時に取り除かれる。
+ *
+ * 背景・枠線は図形と同じ語彙を借りる（`fill` / `stroke` / `strokeWidth`）。
+ * `fill` 省略時はキャンバス地色で線を隠す knockout を維持し、`strokeWidth` 省略時は枠線なし。
  */
 export type ConnectorLabel = Pick<
 	TextStyleDoc,
 	"fontColor" | "fontSize" | "fontWeight"
-> & {
-	/** ラベル文字列。空なら非表示（ラベル無し）。 */
-	text: string;
-	/** 経路に沿った位置。0（source）〜1（target）の比率。既定 0.5（中点）。 */
-	position?: number;
-	/** 経路に対する垂直方向の符号付きオフセット（ワールド単位）。既定 0。 */
-	offset?: number;
-};
+> &
+	Pick<FillStyleDoc, "fill"> &
+	Pick<StrokeStyleDoc, "stroke" | "strokeWidth" | "strokeDashType"> & {
+		/** ラベル文字列。空なら非表示（ラベル無し）。 */
+		text: string;
+		/** 経路に沿った位置。0（source）〜1（target）の比率。既定 0.5（中点）。 */
+		position?: number;
+		/** 経路に対する垂直方向の符号付きオフセット（ワールド単位）。既定 0。 */
+		offset?: number;
+	};
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare const ConnectorDocBrand: unique symbol;

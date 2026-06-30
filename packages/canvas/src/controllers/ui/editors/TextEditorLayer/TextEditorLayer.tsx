@@ -61,6 +61,10 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 				fontColor={connector.label?.fontColor}
 				fontSize={connector.label?.fontSize}
 				fontWeight={connector.label?.fontWeight}
+				fill={connector.label?.fill}
+				stroke={connector.label?.stroke}
+				strokeWidth={connector.label?.strokeWidth}
+				strokeDashType={connector.label?.strokeDashType}
 				onChange={onTextChange}
 				onEscape={onEscape}
 			/>

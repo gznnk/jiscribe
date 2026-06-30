@@ -707,7 +707,23 @@
 						},
 						"fontColor": { "$ref": "#/$defs/TextStyle/properties/fontColor" },
 						"fontSize": { "$ref": "#/$defs/TextStyle/properties/fontSize" },
-						"fontWeight": { "$ref": "#/$defs/TextStyle/properties/fontWeight" }
+						"fontWeight": { "$ref": "#/$defs/TextStyle/properties/fontWeight" },
+						"fill": {
+							"description": "Label background color (CSS color, or \"auto\"). Omitted/\"auto\" uses the canvas background to mask the line behind the label (knockout). Use \"transparent\" to let the line show through.",
+							"$ref": "#/$defs/FillStyle/properties/fill"
+						},
+						"stroke": {
+							"description": "Label border color (CSS color, or \"auto\"). Only visible when strokeWidth > 0.",
+							"$ref": "#/$defs/StrokeStyle/properties/stroke"
+						},
+						"strokeWidth": {
+							"description": "Label border width in pixels. Default 0 (no border).",
+							"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
+						},
+						"strokeDashType": {
+							"description": "Label border line style: \"solid\" (default), \"dashed\", or \"dotted\". Only visible when strokeWidth > 0.",
+							"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+						}
 					}
 				}
 			},

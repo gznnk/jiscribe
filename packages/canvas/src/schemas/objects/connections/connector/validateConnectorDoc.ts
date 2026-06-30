@@ -8,6 +8,7 @@ import type { SemanticDiagnostic } from "../../../canvas/validators/types";
 import type { ObjectDocValidateFn } from "../../../registry/ObjectDocValidatorRegistry";
 import { isConnectorRouting } from "../../types/ConnectorRouting";
 import { isOwnedEndpointRef } from "../../types/EndpointRef";
+import { isStrokeDashType } from "../../types/StrokeDashType";
 import {
 	validateArrowFields,
 	validateEndpointRef,
@@ -73,6 +74,28 @@ function validateConnectorLabelFields(
 			path: `${labelPath}.fontWeight`,
 			message: "must be a safe CSS font-weight value",
 			beyondSchema: true,
+		});
+	}
+	// 背景（fill）・枠線（stroke 色 + strokeWidth 太さ）。図形と同じ語彙。
+	if ("fill" in l && !isCssSafeValue(l.fill)) {
+		errors.push({
+			path: `${labelPath}.fill`,
+			message: "must be a safe CSS color value",
+			beyondSchema: true,
+		});
+	}
+	if ("stroke" in l && !isCssSafeValue(l.stroke)) {
+		errors.push({
+			path: `${labelPath}.stroke`,
+			message: "must be a safe CSS color value",
+			beyondSchema: true,
+		});
+	}
+	errors.push(...validateOptionalNumber(l, labelPath, "strokeWidth", 0));
+	if ("strokeDashType" in l && !isStrokeDashType(l.strokeDashType)) {
+		errors.push({
+			path: `${labelPath}.strokeDashType`,
+			message: "must be one of: solid, dashed, dotted",
 		});
 	}
 	return errors;

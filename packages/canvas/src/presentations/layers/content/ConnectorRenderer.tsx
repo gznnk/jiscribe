@@ -54,6 +54,10 @@ export const ConnectorRenderer: React.FC<ConnectorRendererProps> = ({
 					fontColor={label.fontColor}
 					fontSize={label.fontSize}
 					fontWeight={label.fontWeight}
+					fill={label.fill}
+					stroke={label.stroke}
+					strokeWidth={label.strokeWidth}
+					strokeDashType={label.strokeDashType}
 					disablePointerEvents={disablePointerEvents}
 				/>
 			)}

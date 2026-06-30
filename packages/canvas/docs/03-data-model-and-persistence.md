@@ -59,8 +59,10 @@ CanvasMapper は形状タイプごとの Mapper を `ObjectRegistry` から引�
 
 - **図形（rect / ellipse / diamond / sticky）** … `text` / `textAlign` / `fontColor` … を
   **トップ階層にフラット**で持つ（`features.text` が `TextStyleDoc` を合成する）。
-- **コネクター** … 注記を `label: { text, position, offset, fontColor, fontSize, fontWeight }` の
-  **ネストした 1 オブジェクト**で持つ（`features.text` は立てない）。
+- **コネクター** … 注記を
+  `label: { text, position, offset, fontColor, fontSize, fontWeight, fill, stroke, strokeWidth, strokeDashType }`
+  の **ネストした 1 オブジェクト**で持つ（`features.text` は立てない）。背景 `fill`・枠線
+  `stroke`/`strokeWidth`/`strokeDashType` は図形と同じ語彙を借りるが、`label` の中にネストする点が異なる。
 
 この差は層の都合ではなく、**役割（ロール）の違い**を映したもの。図形の `text` は「その図形の
 _本文_」（中心的・ほぼ主役・ボックス内整列あり）。コネクターの文字は「辺に付く _注記_（edge label）」
@@ -81,6 +83,16 @@ _本文_」（中心的・ほぼ主役・ボックス内整列あり）。コネ
   **第二の動機**が出た時点で着手すれば改修コストが正当化される。
 - **完全対称は本質的に取れない**。仮に全部ネストしても、キー名は図形＝本文（`text`）、
   コネクター＝注記（`label`）で **意味が違う**ため、ある種の非対称は概念上どうしても残る。
+
+**スタイリング UI のネスト対応（ドット記法）**: スタイリングのプロパティ更新配管
+（メニュー項目 → `MENU_PROPERTY_UPDATE` / `object-menu:set:` → `handlePropertyUpdate`）は
+トップ階層プロパティ前提でできている。ラベルの背景・枠線（`label.fill` / `label.stroke` /
+`label.strokeWidth`）はネストのため、この配管に **ドット記法のプロパティ名のまま相乗り**させる。
+2 経路とも収束点は `handlePropertyUpdate` の 1 か所なので、そこ（connector 分岐）だけが
+`label.` プレフィックスを検出して `connector.label` へネスト merge する。共有 UI
+（`ColorPickerGrid` / `MenuSlider`）と `commit`（ライブプレビュー＋履歴 1 件）の機微を再実装せずに
+再利用するための割り切りで、フラット配管全体には波及させない。専用アクションを増やす案は、この
+commit 機微を二重持ちすることになるため採らない。
 
 ## parser の二段検証（境界での防御）
 

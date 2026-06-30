@@ -6,4 +6,5 @@ export {
 	CONNECTOR_LABEL_MIN_WIDTH,
 	type ConnectorLabelBox,
 	type ConnectorLabelFont,
-} from "./connectorLabelLayout";
+} from "./utils/connectorLabelLayout";
+export { resolveLabelFill } from "./utils/resolveLabelFill";

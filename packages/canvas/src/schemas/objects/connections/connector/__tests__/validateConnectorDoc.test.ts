@@ -306,4 +306,64 @@ describe("validateConnectorDoc", () => {
 		const errors = validateConnectorDoc(o, "root");
 		expect(errors.some((e) => e.path === "root.label")).toBe(true);
 	});
+
+	it("label に背景（fill）・枠線（stroke/strokeWidth）を指定してもエラーなし", () => {
+		const o = {
+			points: validPoints,
+			source: ownedRef,
+			target: freeRef,
+			label: { text: "Yes", fill: "#fff", stroke: "auto", strokeWidth: 2 },
+		};
+		expect(validateConnectorDoc(o, "root")).toEqual([]);
+	});
+
+	it("label.fill に CSS breakout 文字列はエラー（beyondSchema）", () => {
+		const o = {
+			points: validPoints,
+			source: ownedRef,
+			target: freeRef,
+			label: { text: "x", fill: "a;b" },
+		};
+		const hit = validateConnectorDoc(o, "root").find(
+			(e) => e.path === "root.label.fill",
+		);
+		expect(hit).toBeDefined();
+		expect(hit?.beyondSchema).toBe(true);
+	});
+
+	it("label.strokeWidth が負値はエラー", () => {
+		const o = {
+			points: validPoints,
+			source: ownedRef,
+			target: freeRef,
+			label: { text: "x", strokeWidth: -1 },
+		};
+		const errors = validateConnectorDoc(o, "root");
+		expect(errors.some((e) => e.path === "root.label.strokeWidth")).toBe(true);
+	});
+
+	it("label.strokeDashType が dashed/dotted/solid はエラーなし", () => {
+		for (const dash of ["solid", "dashed", "dotted"]) {
+			const o = {
+				points: validPoints,
+				source: ownedRef,
+				target: freeRef,
+				label: { text: "x", strokeDashType: dash },
+			};
+			expect(validateConnectorDoc(o, "root")).toEqual([]);
+		}
+	});
+
+	it("label.strokeDashType が未知の値はエラー", () => {
+		const o = {
+			points: validPoints,
+			source: ownedRef,
+			target: freeRef,
+			label: { text: "x", strokeDashType: "double" },
+		};
+		const errors = validateConnectorDoc(o, "root");
+		expect(errors.some((e) => e.path === "root.label.strokeDashType")).toBe(
+			true,
+		);
+	});
 });

@@ -134,6 +134,11 @@ import { PolygonIcon } from "../ui/icons/PolygonIcon";
 import { PolylineIcon } from "../ui/icons/PolylineIcon";
 import { RectIcon } from "../ui/icons/RectIcon";
 import { StickyIcon } from "../ui/icons/StickyIcon";
+import {
+	LabelBackgroundColorMenu,
+	LabelBorderColorMenu,
+	LabelBorderStyleMenu,
+} from "../ui/menu/ObjectMenu/items/LabelStyleMenu";
 import { RoutingMenu } from "../ui/menu/ObjectMenu/items/RoutingMenu";
 import { StickyColorMenu } from "../ui/menu/ObjectMenu/items/StickyColorMenu";
 import { objectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
@@ -343,7 +348,7 @@ export const initializeObjectRegistry = (): void => {
 			transformByGroup: connectorTransformByGroup,
 			rotateByGroup: connectorRotateByGroup,
 		},
-		(_state) => [
+		(state) => [
 			{
 				id: "arrowHead",
 				items: [{ type: "arrowHead" }],
@@ -360,6 +365,32 @@ export const initializeObjectRegistry = (): void => {
 				id: "line",
 				items: [{ type: "lineColor" }, { type: "lineStyle" }],
 			},
+			// ラベルの背景色・枠線色・枠線スタイル（図形と同じ 3 つ並び）。
+			// ラベル（label.text）があるときだけ出す。
+			...(state.label?.text
+				? [
+						{
+							id: "label-style",
+							items: [
+								{
+									type: "custom" as const,
+									id: "label-bg-color",
+									component: LabelBackgroundColorMenu,
+								},
+								{
+									type: "custom" as const,
+									id: "label-border-color",
+									component: LabelBorderColorMenu,
+								},
+								{
+									type: "custom" as const,
+									id: "label-border-style",
+									component: LabelBorderStyleMenu,
+								},
+							],
+						},
+					]
+				: []),
 		],
 		isValidConnectorState,
 	);

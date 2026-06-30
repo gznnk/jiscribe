@@ -380,17 +380,21 @@ label.
 }
 ```
 
-| Field        | Type     | Required | Description                                                                     |
-| ------------ | -------- | -------- | ------------------------------------------------------------------------------- |
-| `text`       | `string` | ✅       | Label text. Plain text only (no markdown); use `"\n"` for multiple lines.       |
-| `position`   | `number` | -        | Position along the path, `0` (source) – `1` (target). Default `0.5` (midpoint). |
-| `offset`     | `number` | -        | Signed perpendicular offset from the path in world units. Default `0`.          |
-| `fontColor`  | `string` | -        | Label color (CSS color or `"auto"`). Default `"auto"`.                          |
-| `fontSize`   | `number` | -        | Font size in px. Default `16`.                                                  |
-| `fontWeight` | `string` | -        | CSS font-weight (e.g. `"bold"`).                                                |
+| Field            | Type     | Required | Description                                                                                                                            |
+| ---------------- | -------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `text`           | `string` | ✅       | Label text. Plain text only (no markdown); use `"\n"` for multiple lines.                                                              |
+| `position`       | `number` | -        | Position along the path, `0` (source) – `1` (target). Default `0.5` (midpoint).                                                        |
+| `offset`         | `number` | -        | Signed perpendicular offset from the path in world units. Default `0`.                                                                 |
+| `fontColor`      | `string` | -        | Label color (CSS color or `"auto"`). Default `"auto"`.                                                                                 |
+| `fontSize`       | `number` | -        | Font size in px. Default `16`.                                                                                                         |
+| `fontWeight`     | `string` | -        | CSS font-weight (e.g. `"bold"`).                                                                                                       |
+| `fill`           | `string` | -        | Background color (CSS color or `"auto"`). Omitted/`"auto"` = canvas background (knockout); `"transparent"` lets the line show through. |
+| `stroke`         | `string` | -        | Border color (CSS color or `"auto"`). Only visible when `strokeWidth > 0`.                                                             |
+| `strokeWidth`    | `number` | -        | Border width in px. Default `0` (no border).                                                                                           |
+| `strokeDashType` | `string` | -        | Border line style: `"solid"` (default), `"dashed"`, `"dotted"`. Visible when `strokeWidth > 0`.                                        |
 
-The label is drawn horizontally (never rotated), centered on its anchor point, with a background that masks the
-line behind it for legibility.
+The label is drawn horizontally (never rotated), centered on its anchor point. By default its background masks the
+line behind it for legibility; `fill` / `stroke` / `strokeWidth` customize the background and border.
 
 ### EndpointRef
 

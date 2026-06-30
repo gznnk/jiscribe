@@ -1,4 +1,4 @@
-import { TEXT_LINE_HEIGHT } from "../../../../constants/textLineHeight";
+import { TEXT_LINE_HEIGHT } from "../../../../../constants/textLineHeight";
 
 /** ラベル既定スタイル（ConnectorLabel が値を持たないときのフォールバック）。 */
 export const CONNECTOR_LABEL_DEFAULTS = {
@@ -56,26 +56,34 @@ export type ConnectorLabelBox = { width: number; height: number };
  *
  * 幅は最長行 + 左右パディングを最小・最大幅でクランプ。高さは最大幅で折り返した
  * 行数（明示改行 + 自動折り返し）を見積もって算出するため、横伸長・折り返しの
- * 両方で表示が欠けない。
+ * 両方で表示が欠けない。`borderWidth` は border-box の内側を削るぶん寸法に上乗せする。
  */
 export const calcConnectorLabelBox = (
 	text: string,
 	font: ConnectorLabelFont,
+	borderWidth = 0,
 ): ConnectorLabelBox => {
 	const lines = text.length === 0 ? [""] : text.split("\n");
 	const lineWidths = measureLineWidths(lines, font);
 	const maxLineWidth = lineWidths.reduce((max, w) => Math.max(max, w), 0);
 
-	const width = Math.min(
-		CONNECTOR_LABEL_MAX_WIDTH,
-		Math.max(
-			CONNECTOR_LABEL_MIN_WIDTH,
-			maxLineWidth + CONNECTOR_LABEL_PADDING_X * 2,
-		),
-	);
+	// 枠線は border-box の内側を削るため、テキストが欠けないよう左右・上下に枠線分を足す。
+	const border = borderWidth * 2;
+
+	const width =
+		Math.min(
+			CONNECTOR_LABEL_MAX_WIDTH,
+			Math.max(
+				CONNECTOR_LABEL_MIN_WIDTH,
+				maxLineWidth + CONNECTOR_LABEL_PADDING_X * 2,
+			),
+		) + border;
 
 	// 折り返し後の表示行数を見積もる（各論理行が利用可能幅を超えた分だけ増える）。
-	const availableWidth = Math.max(1, width - CONNECTOR_LABEL_PADDING_X * 2);
+	const availableWidth = Math.max(
+		1,
+		width - CONNECTOR_LABEL_PADDING_X * 2 - border,
+	);
 	const visualLineCount = lineWidths.reduce(
 		(count, w) => count + Math.max(1, Math.ceil(w / availableWidth)),
 		0,
@@ -83,7 +91,8 @@ export const calcConnectorLabelBox = (
 
 	const height =
 		visualLineCount * font.fontSize * TEXT_LINE_HEIGHT +
-		CONNECTOR_LABEL_PADDING_Y * 2;
+		CONNECTOR_LABEL_PADDING_Y * 2 +
+		border;
 
 	return { width, height };
 };

@@ -78,4 +78,74 @@ test.describe("コネクターのラベル", () => {
 		await canvas.commitText();
 		await expect(labelLocator).toHaveCount(0);
 	});
+
+	test("スタイリングUIでラベルの背景色を変更できる（label.fill）", async ({
+		canvas,
+	}) => {
+		await canvas.drawShape("Rectangle", { x: 300, y: 150 }, { x: 500, y: 250 });
+		await canvas.deselect();
+		await canvas.drawShape("Rectangle", { x: 700, y: 300 }, { x: 900, y: 400 });
+		await canvas.deselect();
+
+		await canvas.selectAt({ x: 400, y: 200 });
+		const connectorId = await canvas.createConnector("rightCenter", {
+			x: 715,
+			y: 350,
+		});
+		await canvas.deselect();
+
+		// ラベルを付ける（label-style メニューはラベルがある時だけ出る）。
+		const onLine = await pointOnConnector(canvas, connectorId);
+		await canvas.typeTextAt(onLine, "Yes");
+		await canvas.commitText();
+
+		// コネクターを選択してラベル背景色メニューを開き、背景色スウォッチを押す。
+		await canvas.clickAt(onLine);
+		await canvas.openObjectMenu("label-bg-color");
+		await canvas.page.click(selectors.objectMenuSet("label.fill", "#dc2626"));
+
+		// ラベルボックスの背景がドット記法経由で更新される（label.fill → #dc2626）。
+		const labelBox = canvas.page
+			.locator(`foreignObject[data-kind=connector][data-id="${connectorId}"]`)
+			.locator("div")
+			.first();
+		await expect(labelBox).toHaveCSS("background-color", "rgb(220, 38, 38)");
+	});
+
+	test("スタイリングUIでラベルの枠線スタイル（太さ・破線）を変更できる", async ({
+		canvas,
+	}) => {
+		await canvas.drawShape("Rectangle", { x: 300, y: 150 }, { x: 500, y: 250 });
+		await canvas.deselect();
+		await canvas.drawShape("Rectangle", { x: 700, y: 300 }, { x: 900, y: 400 });
+		await canvas.deselect();
+
+		await canvas.selectAt({ x: 400, y: 200 });
+		const connectorId = await canvas.createConnector("rightCenter", {
+			x: 715,
+			y: 350,
+		});
+		await canvas.deselect();
+
+		const onLine = await pointOnConnector(canvas, connectorId);
+		await canvas.typeTextAt(onLine, "Yes");
+		await canvas.commitText();
+
+		// 枠線スタイルメニューを開き、太さを 2 にして破線を選ぶ。
+		await canvas.clickAt(onLine);
+		await canvas.openObjectMenu("label-border-style");
+		await canvas.page
+			.locator('[data-testid="menu-number-input:label.strokeWidth"]')
+			.fill("2");
+		await canvas.page.click(
+			selectors.objectMenuSet("label.strokeDashType", "dashed"),
+		);
+
+		const labelBox = canvas.page
+			.locator(`foreignObject[data-kind=connector][data-id="${connectorId}"]`)
+			.locator("div")
+			.first();
+		await expect(labelBox).toHaveCSS("border-top-style", "dashed");
+		await expect(labelBox).toHaveCSS("border-top-width", "2px");
+	});
 });

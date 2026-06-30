@@ -1,6 +1,7 @@
 import { isNumber, isObject, isString } from "@workspace/basic-validators";
 
 import { isConnectorRouting } from "../../../../schemas/objects/types/ConnectorRouting";
+import { isStrokeDashType } from "../../../../schemas/objects/types/StrokeDashType";
 import type { ObjectStateValidateFn } from "../../../registry/ObjectStateValidatorRegistry";
 import {
 	hasOwnedEndpoint,
@@ -30,7 +31,11 @@ export const isValidConnectorLabelState = (label: unknown): boolean => {
 		(l.offset === undefined || isNumber(l.offset)) &&
 		(l.fontColor === undefined || isString(l.fontColor)) &&
 		(l.fontSize === undefined || isNumber(l.fontSize)) &&
-		(l.fontWeight === undefined || isString(l.fontWeight))
+		(l.fontWeight === undefined || isString(l.fontWeight)) &&
+		(l.fill === undefined || isString(l.fill)) &&
+		(l.stroke === undefined || isString(l.stroke)) &&
+		(l.strokeWidth === undefined || isNumber(l.strokeWidth)) &&
+		(l.strokeDashType === undefined || isStrokeDashType(l.strokeDashType))
 	);
 };
 

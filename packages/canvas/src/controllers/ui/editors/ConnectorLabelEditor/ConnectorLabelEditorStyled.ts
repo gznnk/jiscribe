@@ -1,29 +1,38 @@
 import styled from "@emotion/styled";
 
 import { TEXT_LINE_HEIGHT } from "../../../../constants/textLineHeight";
-import { theme } from "../../../../constants/theme";
 import {
 	CONNECTOR_LABEL_PADDING_X,
 	CONNECTOR_LABEL_PADDING_Y,
-} from "../../../../presentations/objects/connections/ConnectorLabel/connectorLabelLayout";
+} from "../../../../presentations/objects/connections/ConnectorLabel/utils/connectorLabelLayout";
 
 type WrapperProps = {
 	left: number;
 	top: number;
 	width: number;
+	background: string;
+	borderWidth: number;
+	borderColor: string;
+	borderStyle: string;
 };
 
 /**
  * アンカー（経路上のラベル位置）を中心に配置するラッパー。
  * 幅は計測値で与え、translate(-50%, -50%) で中央追従させる。高さは中身に追従する。
+ * 背景・枠線は表示側 LabelBox と揃え、編集中も見た目が一致するようにする。
  */
 export const ConnectorLabelEditorWrapper = styled.div<WrapperProps>`
 	position: absolute;
 	left: ${(props) => props.left}px;
 	top: ${(props) => props.top}px;
 	width: ${(props) => props.width}px;
+	box-sizing: border-box;
 	transform: translate(-50%, -50%);
-	background: ${theme.canvasBg};
+	background: ${(props) => props.background};
+	border: ${(props) =>
+		props.borderWidth > 0
+			? `${props.borderWidth}px ${props.borderStyle} ${props.borderColor}`
+			: "none"};
 	border-radius: 2px;
 	pointer-events: auto;
 `;

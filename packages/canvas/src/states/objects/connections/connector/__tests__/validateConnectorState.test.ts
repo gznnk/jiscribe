@@ -121,6 +121,29 @@ describe("isValidConnectorLabelState", () => {
 		).toBe(true);
 	});
 
+	it("背景（fill）・枠線（stroke/strokeWidth/strokeDashType）を正しい型で持てば true", () => {
+		expect(
+			isValidConnectorLabelState({
+				text: "Yes",
+				fill: "#ffffff",
+				stroke: "auto",
+				strokeWidth: 2,
+				strokeDashType: "dashed",
+			}),
+		).toBe(true);
+	});
+
+	it("fill / stroke / strokeWidth / strokeDashType の型が合わないと false", () => {
+		expect(isValidConnectorLabelState({ text: "x", fill: 0 })).toBe(false);
+		expect(isValidConnectorLabelState({ text: "x", stroke: 1 })).toBe(false);
+		expect(isValidConnectorLabelState({ text: "x", strokeWidth: "2" })).toBe(
+			false,
+		);
+		expect(
+			isValidConnectorLabelState({ text: "x", strokeDashType: "double" }),
+		).toBe(false);
+	});
+
 	it("オブジェクトでない（文字列・null）は false", () => {
 		expect(isValidConnectorLabelState("Yes")).toBe(false);
 		expect(isValidConnectorLabelState(null)).toBe(false);
