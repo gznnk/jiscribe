@@ -1,4 +1,4 @@
-﻿import { doSegmentsIntersect } from "./doSegmentsIntersect";
+import { doSegmentsIntersectByCoords } from "./doSegmentsIntersectByCoords";
 import type { BoxFeatures } from "../types/BoxFeatures";
 import type { Point } from "../types/Point";
 
@@ -15,26 +15,39 @@ export const isLineIntersectingBox = (
 	p2: Point,
 	box: BoxFeatures,
 ): boolean => {
-	const boxEdges: [Point, Point][] = [
-		[
-			{ x: box.left, y: box.top },
-			{ x: box.right, y: box.top },
-		], // Top edge
-		[
-			{ x: box.right, y: box.top },
-			{ x: box.right, y: box.bottom },
-		], // Right edge
-		[
-			{ x: box.right, y: box.bottom },
-			{ x: box.left, y: box.bottom },
-		], // Bottom edge
-		[
-			{ x: box.left, y: box.bottom },
-			{ x: box.left, y: box.top },
-		], // Left edge
-	];
+	const { left, top, right, bottom } = box;
+	const { x: x1, y: y1 } = p1;
+	const { x: x2, y: y2 } = p2;
 
-	return boxEdges.some(([q1, q2]) =>
-		doSegmentsIntersect(p1, p2, q1, q2, false),
+	// 4 辺との交差を、辺タプルや Point を確保せず座標のまま判定する。
+	return (
+		// Top edge
+		doSegmentsIntersectByCoords(x1, y1, x2, y2, left, top, right, top, false) ||
+		// Right edge
+		doSegmentsIntersectByCoords(
+			x1,
+			y1,
+			x2,
+			y2,
+			right,
+			top,
+			right,
+			bottom,
+			false,
+		) ||
+		// Bottom edge
+		doSegmentsIntersectByCoords(
+			x1,
+			y1,
+			x2,
+			y2,
+			right,
+			bottom,
+			left,
+			bottom,
+			false,
+		) ||
+		// Left edge
+		doSegmentsIntersectByCoords(x1, y1, x2, y2, left, bottom, left, top, false)
 	);
 };

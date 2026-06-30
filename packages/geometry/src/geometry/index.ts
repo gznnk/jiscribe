@@ -11,6 +11,7 @@ export * from "./calcDimensionsWithMinSize";
 export * from "./isLineIntersectingBox";
 export * from "./snapToDirection";
 export * from "./doSegmentsIntersect";
+export * from "./doSegmentsIntersectByCoords";
 export * from "./convertRectToFrame";
 export * from "./convertFrameToRect";
 export * from "./convertTransformedRectToFrame";
