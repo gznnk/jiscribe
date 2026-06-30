@@ -1,7 +1,7 @@
 import { roundToDecimal } from "@workspace/geometry";
 
 import { PRECISION } from "../../../constants/precision";
-import { ZOOM } from "../../../constants/zoom";
+import { ZOOM, stepZoomOut } from "../../../constants/zoom";
 import type { Command } from "../CommandTypes";
 
 export const ZoomOutCommand: Command = {
@@ -18,7 +18,7 @@ export const ZoomOutCommand: Command = {
 
 	execute: (state) => {
 		const { viewport } = state;
-		const newZoom = Math.max(ZOOM.MIN, viewport.zoom * ZOOM.OUT_FACTOR);
+		const newZoom = stepZoomOut(viewport.zoom);
 
 		const centerX = viewport.minX + viewport.width / (2 * viewport.zoom);
 		const centerY = viewport.minY + viewport.height / (2 * viewport.zoom);
