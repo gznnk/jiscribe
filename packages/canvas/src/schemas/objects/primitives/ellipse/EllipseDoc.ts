@@ -1,6 +1,6 @@
+import type { CreateObjectType } from "../../types/CreateObjectType";
 import type { ObjectFeatures } from "../../types/ObjectFeatures";
 import { AUTO_COLOR } from "../../utils/autoColor";
-import type { CreateObjectType } from "../../utils/CreateObjectType";
 
 export const EllipseFeatures = {
 	type: "ellipse",

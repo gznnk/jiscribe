@@ -3,9 +3,9 @@ import type { StrokeStyleDoc } from "../../base/StrokeStyleDoc";
 import type { TextStyleDoc } from "../../base/TextStyleDoc";
 import type { ArrowType } from "../../types/ArrowType";
 import type { ConnectorRouting } from "../../types/ConnectorRouting";
+import type { CreateObjectType } from "../../types/CreateObjectType";
 import type { EndpointRef } from "../../types/EndpointRef";
 import type { ObjectFeatures } from "../../types/ObjectFeatures";
-import type { CreateObjectType } from "../../utils/CreateObjectType";
 
 export const ConnectorFeatures = {
 	type: "connector",

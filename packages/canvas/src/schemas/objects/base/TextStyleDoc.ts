@@ -1,7 +1,7 @@
-import { exhaustiveKeysOf } from "../types/exhaustiveKeys";
 import type { TextAlign } from "../types/TextAlign";
 import type { TextType } from "../types/TextType";
 import type { VerticalAlign } from "../types/VerticalAlign";
+import { exhaustiveKeysOf } from "../utils/exhaustiveKeys";
 
 /**
  * Properties related to text styling and content.

@@ -5,7 +5,7 @@ import type {
 import type { ArrowType } from "../../../../schemas/objects/types/ArrowType";
 import type { ConnectorRouting } from "../../../../schemas/objects/types/ConnectorRouting";
 import type { EndpointRef } from "../../../../schemas/objects/types/EndpointRef";
-import type { CreateObjectState } from "../../utils/CreateObjectState";
+import type { CreateObjectState } from "../../types/CreateObjectState";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare const ConnectorStateBrand: unique symbol;

@@ -1,5 +1,5 @@
-import { exhaustiveKeysOf } from "../types/exhaustiveKeys";
 import type { StrokeDashType } from "../types/StrokeDashType";
+import { exhaustiveKeysOf } from "../utils/exhaustiveKeys";
 
 /**
  * Properties related to stroke (outline) styling.

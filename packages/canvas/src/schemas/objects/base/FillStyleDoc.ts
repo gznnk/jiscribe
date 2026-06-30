@@ -1,4 +1,4 @@
-import { exhaustiveKeysOf } from "../types/exhaustiveKeys";
+import { exhaustiveKeysOf } from "../utils/exhaustiveKeys";
 
 /**
  * Properties related to fill styling.

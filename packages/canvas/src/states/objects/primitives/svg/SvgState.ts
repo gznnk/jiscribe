@@ -2,7 +2,7 @@ import type {
 	SvgExtraDoc,
 	SvgFeatures,
 } from "../../../../schemas/objects/primitives/svg/SvgDoc";
-import type { CreateObjectState } from "../../utils/CreateObjectState";
+import type { CreateObjectState } from "../../types/CreateObjectState";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare const SvgStateBrand: unique symbol;
