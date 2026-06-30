@@ -6,7 +6,6 @@ export * from "./calcOrientedFrameFromPoints";
 export * from "./calcFrameBoxFeatures";
 export * from "./calcPolyBoundingBox";
 export * from "./calcPolyKeyPoints";
-export * from "./calcRectKeyPoints";
 export * from "./calcProjectionOntoLine";
 export * from "./calcDimensionsWithMinSize";
 export * from "./isLineIntersectingBox";
