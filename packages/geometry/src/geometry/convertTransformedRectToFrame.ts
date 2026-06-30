@@ -1,7 +1,6 @@
 import type { TransformedFrame } from "../types/TransformedFrame";
 import type { TransformedRect } from "../types/TransformedRect";
 
-// TODO: いらなくなるかも
 /**
  * Converts a TransformedRect (top-left based) to a TransformedFrame (center based).
  *
