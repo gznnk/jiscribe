@@ -1,6 +1,6 @@
-import { cloneObjects } from "./cloneObjects";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ClipboardData } from "../../commands/selection/ClipboardData";
+import { cloneObjects } from "../../utils/cloneObjects";
 import { createMultiSelectGroup } from "../../utils/createMultiSelectGroup";
 
 const PASTE_OFFSET = { x: 20, y: 20 };

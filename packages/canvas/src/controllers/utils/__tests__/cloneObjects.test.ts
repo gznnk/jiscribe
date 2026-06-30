@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { cloneObjects } from "../cloneObjects";
 
 const ZERO = { x: 0, y: 0 };
