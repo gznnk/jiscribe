@@ -181,6 +181,23 @@ describe("commitTextEditIfNeeded", () => {
 		expect(updated.label?.fontWeight).toBe("bold");
 	});
 
+	it("コネクター: ラベル更新時は元の objects を変更しない（イミュータブル）", () => {
+		const styledLabel = { text: "Yes", fill: "#dc2626" };
+		const c = { id: "c1", type: "connector", label: styledLabel } as unknown;
+		const originalObjects = {
+			c1: c as CanvasControllerState["objects"][string],
+		};
+		const state = makeState({
+			objects: originalObjects,
+			textEditState: { objectId: "c1", text: "No" },
+		});
+		commitTextEditIfNeeded(state);
+		const originalConnector = originalObjects["c1"] as unknown as {
+			label: { text: string };
+		};
+		expect(originalConnector.label.text).toBe("Yes");
+	});
+
 	it("コネクター: ラベルが変化していない → commitVersion は増えない", () => {
 		const c = connectorObj("c1", { text: "Yes" });
 		const state = makeState({
