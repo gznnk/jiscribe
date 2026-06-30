@@ -1,5 +1,5 @@
-import { collectDescendantIds } from "./collectDescendantIds";
-import type { ObjectState } from "../../states/objects/base/ObjectState";
+import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
+import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
 
 /**
  * selectedIds から指定プロパティを持つ最初のオブジェクトを返す。

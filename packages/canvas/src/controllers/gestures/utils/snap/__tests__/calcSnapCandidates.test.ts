@@ -1,7 +1,7 @@
 import type { FrameKeyPoints } from "@workspace/geometry";
 import { describe, it, expect } from "vitest";
 
-import type { ObjectState } from "../../../../../../../states/objects/base/ObjectState";
+import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import { calcSnapCandidates } from "../calcSnapCandidates";
 
 /** 軸並行な BBox から FrameKeyPoints を生成するヘルパー。 */

@@ -2,7 +2,6 @@
 
 import { AlignmentMenuContent, AlignmentRow } from "./AlignmentMenuStyled";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
-import { getFirstSelectedWithProp } from "../../../../../../controllers/utils/getFirstSelectedWithProp";
 import type { TextStyleState } from "../../../../../../states/objects/base/TextStyleState";
 import { AlignBottomIcon } from "../../../../icons/AlignBottomIcon";
 import { AlignCenterIcon } from "../../../../icons/AlignCenterIcon";
@@ -13,6 +12,7 @@ import { AlignTopIcon } from "../../../../icons/AlignTopIcon";
 import { DropdownPanel } from "../../common/DropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
 import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
+import { getFirstSelectedWithProp } from "../../utils/getFirstSelectedWithProp";
 
 const SECTION_ID = "alignment";
 

@@ -39,14 +39,14 @@ import type {
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import {
-	transformChildren,
-	rotateChildren,
-} from "../../objects/primitives/GroupController";
-import {
 	buildSnapFeedback,
 	findSnap,
 	SNAP_THRESHOLD_PX,
-} from "../../objects/utils/snap/findSnap";
+} from "../../../utils/snap/findSnap";
+import {
+	transformChildren,
+	rotateChildren,
+} from "../../objects/primitives/GroupController";
 import type { ControlStrategy } from "../ControlEventHandler";
 
 /**

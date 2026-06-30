@@ -1,9 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import type {
-	SnapCandidate,
-	SnapCandidates,
-} from "../../../../../../CanvasTypes";
+import type { SnapCandidate, SnapCandidates } from "../../../../CanvasTypes";
 import { buildSnapFeedback, findSnap, SNAP_THRESHOLD_PX } from "../findSnap";
 
 /** ターゲット候補（スナップ先）を作るヘルパー。 */

@@ -1,5 +1,5 @@
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
-import { updateGroupBounds } from "../../../../../ui/utils/updateGroupBounds";
+import { updateGroupBounds } from "../../../../../utils/updateGroupBounds";
 
 /**
  * Updates the bounding frame of a single group without affecting parent groups.

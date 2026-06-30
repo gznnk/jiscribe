@@ -1,5 +1,5 @@
-import { updateGroupBounds } from "../../../controllers/ui/utils/updateGroupBounds";
-import type { CanvasControllerState } from "../../CanvasTypes";
+import { updateGroupBounds } from "./updateGroupBounds";
+import type { CanvasControllerState } from "../CanvasTypes";
 
 /**
  * Updates the bounding frames of all parent groups affected by moving the selected objects.

@@ -1,7 +1,6 @@
 ﻿import { memo, useRef } from "react";
 
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
-import { getFirstSelectedWithProp } from "../../../../../../controllers/utils/getFirstSelectedWithProp";
 import { resolveAutoColor } from "../../../../../../presentations/objects/utils/resolveAutoColor";
 import type { TextStyleState } from "../../../../../../states/objects/base/TextStyleState";
 import { FontColorIcon } from "../../../../icons/FontColorIcon";
@@ -9,6 +8,7 @@ import { ColorPickerGrid } from "../../common/ColorPickerGrid/ColorPickerGrid";
 import { DropdownPanel } from "../../common/DropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
 import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
+import { getFirstSelectedWithProp } from "../../utils/getFirstSelectedWithProp";
 
 const SECTION_ID = "font-color";
 const DEFAULT_FONT_COLOR = "#333333";

@@ -5,11 +5,11 @@ import {
 	type BoundingBox,
 } from "@workspace/geometry";
 
-import { isPoly } from "../../../schemas/objects/types/Poly";
+import { isPoly } from "../../schemas/objects/types/Poly";
 import {
 	isGroupState,
 	type GroupState,
-} from "../../../states/objects/primitives/group/GroupState";
+} from "../../states/objects/primitives/group/GroupState";
 
 /**
  * グループの子要素を再帰的に走査してバウンディングボックスを計算する
