@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 
-import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
+import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
+import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
 import { getFirstSelectedWithProp } from "../getFirstSelectedWithProp";
 
 const rect = (id: string, extra?: Record<string, unknown>): ObjectState =>

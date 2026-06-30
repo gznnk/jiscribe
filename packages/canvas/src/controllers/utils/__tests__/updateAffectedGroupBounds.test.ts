@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 
-import type { ObjectState } from "../../../../states/objects/base/ObjectState";
-import type { CanvasControllerState } from "../../../CanvasTypes";
+import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import type { CanvasControllerState } from "../../CanvasTypes";
 import { updateAffectedGroupBounds } from "../updateAffectedGroupBounds";
 
 const rect = (

@@ -1,6 +1,6 @@
 import type { CanvasControllerState } from "../../../../../../../controllers/CanvasTypes";
-import { getFirstSelectedWithProp } from "../../../../../../../controllers/utils/getFirstSelectedWithProp";
 import type { StrokeDashType } from "../../../../../../../schemas/objects/types/StrokeDashType";
+import { getFirstSelectedWithProp } from "../../../utils/getFirstSelectedWithProp";
 
 /**
  * 選択中オブジェクトの strokeDashType を取得する。

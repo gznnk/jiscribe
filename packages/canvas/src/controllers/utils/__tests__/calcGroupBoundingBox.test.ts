@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
+import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import { calcGroupBoundingBox } from "../calcGroupBoundingBox";
 
 const rect = (

@@ -1,16 +1,16 @@
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../CanvasTypes";
-import { createMultiSelectGroup } from "../../gestures/handlers/objects/utils/createMultiSelectGroup";
+import { computeDuplicateOffset } from "./utils/computeDuplicateOffset";
+import { getSelectionCenter } from "./utils/getSelectionCenter";
+import { selectConnectorsInSelection } from "./utils/selectConnectorsInSelection";
 import { cloneObjects } from "../../reducer/handlers/cloneObjects";
 import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWithDescendants";
+import { createMultiSelectGroup } from "../../utils/createMultiSelectGroup";
 import { getRootConnectorIds } from "../../utils/getRootConnectorIds";
 import { sortObjectIdsByZOrder } from "../../utils/sortObjectIdsByZOrder";
 import { updateGroupBoundsFromRoot } from "../../utils/updateGroupBoundsFromRoot";
 import type { Command } from "../CommandTypes";
-import { computeDuplicateOffset } from "./utils/computeDuplicateOffset";
-import { getSelectionCenter } from "./utils/getSelectionCenter";
-import { selectConnectorsInSelection } from "./utils/selectConnectorsInSelection";
 
 export const DuplicateCommand: Command = {
 	id: "duplicate",

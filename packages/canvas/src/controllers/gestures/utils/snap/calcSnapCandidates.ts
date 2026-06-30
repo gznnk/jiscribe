@@ -1,8 +1,8 @@
 import { calcKeyPointsBoundingBox } from "@workspace/geometry";
 import type { FrameKeyPoints } from "@workspace/geometry";
 
-import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
-import type { SnapCandidate, SnapCandidates } from "../../../../../CanvasTypes";
+import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import type { SnapCandidate, SnapCandidates } from "../../../CanvasTypes";
 
 /**
  * 全 Frame オブジェクトからスナップ候補を生成する。

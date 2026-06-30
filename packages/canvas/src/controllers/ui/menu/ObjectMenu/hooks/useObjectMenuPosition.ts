@@ -10,7 +10,7 @@ import type { ConnectorState } from "../../../../../states/objects/connections/c
 import { isGroupState } from "../../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { calcConnectorBoundingBox } from "../../../../utils/calcConnectorBoundingBox";
-import { calcGroupBoundingBox } from "../../../utils/calcGroupBoundingBox";
+import { calcGroupBoundingBox } from "../../../../utils/calcGroupBoundingBox";
 
 /** ObjectMenu とオブジェクト間の距離 (px) */
 const DISTANCE_FROM_OBJECT = 40;
