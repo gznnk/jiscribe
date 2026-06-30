@@ -41,6 +41,40 @@ async function pointOnConnector(
 	};
 }
 
+/** ラベルボックス（foreignObject 内側の LabelBox div）のロケーター。 */
+function labelBoxOf(canvas: CanvasDriver, connectorId: string) {
+	return canvas.page
+		.locator(`foreignObject[data-kind=connector][data-id="${connectorId}"]`)
+		.locator("div")
+		.first();
+}
+
+/**
+ * 2つの矩形を結ぶコネクターを作り、ラベルを付けて返す。
+ * （多くのテストで同じ前置きを踏むためのヘルパ。）
+ */
+async function setupConnectorWithLabel(
+	canvas: CanvasDriver,
+	text: string,
+): Promise<{ connectorId: string; onLine: Vec }> {
+	await canvas.drawShape("Rectangle", { x: 300, y: 150 }, { x: 500, y: 250 });
+	await canvas.deselect();
+	await canvas.drawShape("Rectangle", { x: 700, y: 300 }, { x: 900, y: 400 });
+	await canvas.deselect();
+
+	await canvas.selectAt({ x: 400, y: 200 });
+	const connectorId = await canvas.createConnector("rightCenter", {
+		x: 715,
+		y: 350,
+	});
+	await canvas.deselect();
+
+	const onLine = await pointOnConnector(canvas, connectorId);
+	await canvas.typeTextAt(onLine, text);
+	await canvas.commitText();
+	return { connectorId, onLine };
+}
+
 test.describe("コネクターのラベル", () => {
 	test("ダブルクリックでラベルを追加・再編集・削除できる", async ({
 		canvas,
@@ -179,5 +213,247 @@ test.describe("コネクターのラベル", () => {
 			.locator("div")
 			.first();
 		await expect(labelBox).toHaveCSS("font-weight", "700");
+	});
+
+	test("コネクター選択中に Enter でラベル編集を開始でき、Escape でキャンセルできる", async ({
+		canvas,
+	}) => {
+		const { connectorId, onLine } = await setupConnectorWithLabel(
+			canvas,
+			"Yes",
+		);
+
+		// 線をクリックしてコネクターを選択 → Enter でラベル編集開始（StartTextEditCommand）。
+		// 単一クリックはダブルクリック判定のため認識が遅延するので、選択が確定した
+		// シグナル（ラベルスタイルメニューの出現）を待ってから Enter を送る。
+		await canvas.clickAt(onLine);
+		await expect(
+			canvas.page.locator(selectors.objectMenuToggle("label-bg-color")),
+		).toBeVisible();
+		await canvas.page.keyboard.press("Enter");
+		await expect(canvas.page.locator(selectors.textEditor)).toBeVisible();
+		// 既存ラベルがプリフィルされる。
+		await expect(canvas.textArea()).toHaveValue("Yes");
+
+		// Escape はキャンセル。テキストを書き換えても破棄され、元のラベルが残る。
+		await canvas.textArea().fill("Changed");
+		await canvas.cancelText();
+		await expect(labelBoxOf(canvas, connectorId)).toContainText("Yes");
+	});
+
+	test("スタイリングUIでラベルの文字色を変更できる（label.fontColor）", async ({
+		canvas,
+	}) => {
+		const { connectorId, onLine } = await setupConnectorWithLabel(
+			canvas,
+			"Yes",
+		);
+
+		await canvas.clickAt(onLine);
+		await canvas.openObjectMenu("label-font-color");
+		await canvas.page.click(
+			selectors.objectMenuSet("label.fontColor", "#3b82f6"),
+		);
+
+		await expect(labelBoxOf(canvas, connectorId)).toHaveCSS(
+			"color",
+			"rgb(59, 130, 246)",
+		);
+	});
+
+	test("スタイリングUIでラベルのフォントサイズを変更できる（label.fontSize）", async ({
+		canvas,
+	}) => {
+		const { connectorId, onLine } = await setupConnectorWithLabel(
+			canvas,
+			"Yes",
+		);
+
+		await canvas.clickAt(onLine);
+		await canvas.openObjectMenu("label-font-size");
+		await canvas.setNumberInput("label.fontSize", 28);
+
+		await expect(labelBoxOf(canvas, connectorId)).toHaveCSS(
+			"font-size",
+			"28px",
+		);
+	});
+
+	test("スタイリングUIでラベルの枠線色を変更できる（label.stroke）", async ({
+		canvas,
+	}) => {
+		const { connectorId, onLine } = await setupConnectorWithLabel(
+			canvas,
+			"Yes",
+		);
+
+		// 枠線は太さ > 0 のときだけ見えるので、まず太さを与えてから色を選ぶ。
+		await canvas.clickAt(onLine);
+		await canvas.openObjectMenu("label-border-style");
+		await canvas.setNumberInput("label.strokeWidth", 3);
+		await canvas.openObjectMenu("label-border-color");
+		await canvas.page.click(selectors.objectMenuSet("label.stroke", "#3b82f6"));
+
+		const labelBox = labelBoxOf(canvas, connectorId);
+		await expect(labelBox).toHaveCSS("border-top-width", "3px");
+		await expect(labelBox).toHaveCSS("border-top-color", "rgb(59, 130, 246)");
+	});
+
+	test("太字はトグルで解除できる（bold → normal で 400 に戻る）", async ({
+		canvas,
+	}) => {
+		const { connectorId, onLine } = await setupConnectorWithLabel(
+			canvas,
+			"Yes",
+		);
+		const labelBox = labelBoxOf(canvas, connectorId);
+
+		await canvas.clickAt(onLine);
+		await canvas.page.click(
+			selectors.objectMenuSet("label.fontWeight", "bold"),
+		);
+		await expect(labelBox).toHaveCSS("font-weight", "700");
+
+		// 太字ボタンは状態で data-id が反転する直接トグル。もう一度押すと normal に戻る。
+		await canvas.page.click(
+			selectors.objectMenuSet("label.fontWeight", "normal"),
+		);
+		await expect(labelBox).toHaveCSS("font-weight", "400");
+	});
+
+	test("複数スタイルを適用後、テキストを再編集してもスタイルが保持される", async ({
+		canvas,
+	}) => {
+		const { connectorId, onLine } = await setupConnectorWithLabel(
+			canvas,
+			"Yes",
+		);
+		const labelBox = labelBoxOf(canvas, connectorId);
+
+		// 太字＋背景色を適用。
+		await canvas.clickAt(onLine);
+		await canvas.page.click(
+			selectors.objectMenuSet("label.fontWeight", "bold"),
+		);
+		await canvas.openObjectMenu("label-bg-color");
+		await canvas.page.click(selectors.objectMenuSet("label.fill", "#dc2626"));
+		await expect(labelBox).toHaveCSS("font-weight", "700");
+		await expect(labelBox).toHaveCSS("background-color", "rgb(220, 38, 38)");
+
+		// 再編集してテキストだけ変更（空文字でないので label は維持されるはず）。
+		const screen = canvas.toScreen(onLine);
+		await canvas.page.mouse.dblclick(screen.x, screen.y);
+		await expect(canvas.textArea()).toHaveValue("Yes");
+		await canvas.textArea().fill("No");
+		await canvas.commitText();
+
+		await expect(labelBox).toContainText("No");
+		await expect(labelBox).toHaveCSS("font-weight", "700");
+		await expect(labelBox).toHaveCSS("background-color", "rgb(220, 38, 38)");
+	});
+
+	test("ラベル（テキスト・スタイル）がコピー＆ペーストで引き継がれる", async ({
+		canvas,
+	}) => {
+		const { connectorId, onLine } = await setupConnectorWithLabel(
+			canvas,
+			"Yes",
+		);
+
+		// ラベルに背景色を付けてからコピペし、複製側にテキスト＋スタイルが残るか見る。
+		await canvas.clickAt(onLine);
+		await canvas.openObjectMenu("label-bg-color");
+		await canvas.page.click(selectors.objectMenuSet("label.fill", "#dc2626"));
+		await expect(labelBoxOf(canvas, connectorId)).toHaveCSS(
+			"background-color",
+			"rgb(220, 38, 38)",
+		);
+
+		// メニューを閉じ、フォーカスをキャンバスへ戻してから全選択＆コピペ。
+		await canvas.deselect();
+		await canvas.selectAll();
+		await canvas.copy();
+		await canvas.paste();
+
+		// コネクターが 2 本になるのを待ち、複製側の id を得る。
+		await expect
+			.poll(
+				async () =>
+					(await canvas.page.locator(selectors.connectorPolyline).all()).length,
+			)
+			.toBeGreaterThanOrEqual(2);
+		const allIds = await canvas.page.evaluate((sel) => {
+			return [...document.querySelectorAll(sel)]
+				.map((el) => el.getAttribute("data-id"))
+				.filter((id): id is string => id !== null);
+		}, selectors.connectorPolyline);
+		const clonedId = allIds.find((id) => id !== connectorId);
+		if (!clonedId) {
+			throw new Error("複製されたコネクターの data-id が取得できない");
+		}
+
+		const clonedLabel = labelBoxOf(canvas, clonedId);
+		await expect(clonedLabel).toContainText("Yes");
+		await expect(clonedLabel).toHaveCSS("background-color", "rgb(220, 38, 38)");
+	});
+
+	test("ラベルのスタイル変更は Undo で元に戻る", async ({ canvas }) => {
+		const { connectorId, onLine } = await setupConnectorWithLabel(
+			canvas,
+			"Yes",
+		);
+		const labelBox = labelBoxOf(canvas, connectorId);
+
+		await canvas.clickAt(onLine);
+		await canvas.openObjectMenu("label-bg-color");
+		await canvas.page.click(selectors.objectMenuSet("label.fill", "#dc2626"));
+		await expect(labelBox).toHaveCSS("background-color", "rgb(220, 38, 38)");
+
+		// 入力欄にフォーカスが残らないよう選択解除してから Undo。
+		await canvas.deselect();
+		await canvas.undo();
+
+		// 背景色が赤でなくなる（既定＝キャンバス地色へ戻る）。ラベル自体は残る。
+		await expect(labelBox).toContainText("Yes");
+		await expect(labelBox).not.toHaveCSS(
+			"background-color",
+			"rgb(220, 38, 38)",
+		);
+	});
+
+	test("ラベルが無いコネクターにはラベルスタイルメニューが出ない", async ({
+		canvas,
+	}) => {
+		await canvas.drawShape("Rectangle", { x: 300, y: 150 }, { x: 500, y: 250 });
+		await canvas.deselect();
+		await canvas.drawShape("Rectangle", { x: 700, y: 300 }, { x: 900, y: 400 });
+		await canvas.deselect();
+
+		await canvas.selectAt({ x: 400, y: 200 });
+		const connectorId = await canvas.createConnector("rightCenter", {
+			x: 715,
+			y: 350,
+		});
+		await canvas.deselect();
+
+		// ラベル未設定のコネクターを選択 → label 系メニューは現れない。
+		// 先に line-style トグルの出現で「選択済み」を確認してから label トグルの不在を検証する。
+		const onLine = await pointOnConnector(canvas, connectorId);
+		await canvas.clickAt(onLine);
+		await expect(
+			canvas.page.locator(selectors.objectMenuToggle("line-style")),
+		).toBeVisible();
+		await expect(
+			canvas.page.locator(selectors.objectMenuToggle("label-bg-color")),
+		).toHaveCount(0);
+
+		// ラベルを付けて選択し直すと現れる。選択解除を挟んで連続クリックの合体を避ける。
+		await canvas.deselect();
+		await canvas.typeTextAt(onLine, "Yes");
+		await canvas.commitText();
+		await canvas.clickAt(onLine);
+		await expect(
+			canvas.page.locator(selectors.objectMenuToggle("label-bg-color")),
+		).toBeVisible();
 	});
 });
