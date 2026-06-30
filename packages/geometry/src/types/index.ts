@@ -19,7 +19,6 @@ export * from "./TransformedEllipse";
 
 // Key points and features
 export * from "./KeyPoints";
-export * from "./RectKeyPoints";
 export * from "./FrameKeyPoints";
 export * from "./BoxFeatures";
 
