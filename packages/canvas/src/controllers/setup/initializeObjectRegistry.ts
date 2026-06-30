@@ -136,8 +136,11 @@ import { RectIcon } from "../ui/icons/RectIcon";
 import { StickyIcon } from "../ui/icons/StickyIcon";
 import {
 	LabelBackgroundColorMenu,
+	LabelBoldMenu,
 	LabelBorderColorMenu,
 	LabelBorderStyleMenu,
+	LabelFontColorMenu,
+	LabelFontSizeMenu,
 } from "../ui/menu/ObjectMenu/items/LabelStyleMenu";
 import { RoutingMenu } from "../ui/menu/ObjectMenu/items/RoutingMenu";
 import { StickyColorMenu } from "../ui/menu/ObjectMenu/items/StickyColorMenu";
@@ -365,8 +368,8 @@ export const initializeObjectRegistry = (): void => {
 				id: "line",
 				items: [{ type: "lineColor" }, { type: "lineStyle" }],
 			},
-			// ラベルの背景色・枠線色・枠線スタイル（図形と同じ 3 つ並び）。
-			// ラベル（label.text）があるときだけ出す。
+			// ラベルのスタイル。ラベル（label.text）があるときだけ出す。
+			// 図形に倣い、背景/枠線（style）と文字（text）でセクションを分ける。
 			...(state.label?.text
 				? [
 						{
@@ -386,6 +389,26 @@ export const initializeObjectRegistry = (): void => {
 									type: "custom" as const,
 									id: "label-border-style",
 									component: LabelBorderStyleMenu,
+								},
+							],
+						},
+						{
+							id: "label-text",
+							items: [
+								{
+									type: "custom" as const,
+									id: "label-font-size",
+									component: LabelFontSizeMenu,
+								},
+								{
+									type: "custom" as const,
+									id: "label-font-color",
+									component: LabelFontColorMenu,
+								},
+								{
+									type: "custom" as const,
+									id: "label-bold",
+									component: LabelBoldMenu,
 								},
 							],
 						},

@@ -148,4 +148,36 @@ test.describe("コネクターのラベル", () => {
 		await expect(labelBox).toHaveCSS("border-top-style", "dashed");
 		await expect(labelBox).toHaveCSS("border-top-width", "2px");
 	});
+
+	test("スタイリングUIでラベルを太字にできる（label.fontWeight）", async ({
+		canvas,
+	}) => {
+		await canvas.drawShape("Rectangle", { x: 300, y: 150 }, { x: 500, y: 250 });
+		await canvas.deselect();
+		await canvas.drawShape("Rectangle", { x: 700, y: 300 }, { x: 900, y: 400 });
+		await canvas.deselect();
+
+		await canvas.selectAt({ x: 400, y: 200 });
+		const connectorId = await canvas.createConnector("rightCenter", {
+			x: 715,
+			y: 350,
+		});
+		await canvas.deselect();
+
+		const onLine = await pointOnConnector(canvas, connectorId);
+		await canvas.typeTextAt(onLine, "Yes");
+		await canvas.commitText();
+
+		// 太字トグルはドロップダウン無しの直接ボタン（gesture 経路の set）。
+		await canvas.clickAt(onLine);
+		await canvas.page.click(
+			selectors.objectMenuSet("label.fontWeight", "bold"),
+		);
+
+		const labelBox = canvas.page
+			.locator(`foreignObject[data-kind=connector][data-id="${connectorId}"]`)
+			.locator("div")
+			.first();
+		await expect(labelBox).toHaveCSS("font-weight", "700");
+	});
 });

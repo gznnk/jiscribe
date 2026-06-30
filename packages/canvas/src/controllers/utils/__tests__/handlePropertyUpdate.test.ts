@@ -158,6 +158,47 @@ describe("handlePropertyUpdate", () => {
 			expect(updated.label.strokeDashType).toBe("dashed");
 		});
 
+		it("label.fontSize は数値化して更新される", () => {
+			const c1 = connWithLabel("c1");
+			const state = makeState({
+				selectedConnectorId: "c1",
+				objects: { c1 },
+			});
+			const result = handlePropertyUpdate(state, "label.fontSize", "20");
+			const updated = result.objects["c1"] as unknown as {
+				label: { fontSize: number };
+			};
+			expect(updated.label.fontSize).toBe(20);
+		});
+
+		it("label.fontColor / label.fontWeight は文字列のまま更新される", () => {
+			const c1 = connWithLabel("c1");
+			const state = makeState({
+				selectedConnectorId: "c1",
+				objects: { c1 },
+			});
+			const afterColor = handlePropertyUpdate(
+				state,
+				"label.fontColor",
+				"#123456",
+			);
+			expect(
+				(
+					afterColor.objects["c1"] as unknown as {
+						label: { fontColor: string };
+					}
+				).label.fontColor,
+			).toBe("#123456");
+			const afterBold = handlePropertyUpdate(state, "label.fontWeight", "bold");
+			expect(
+				(
+					afterBold.objects["c1"] as unknown as {
+						label: { fontWeight: string };
+					}
+				).label.fontWeight,
+			).toBe("bold");
+		});
+
 		it("label.strokeWidth は数値化して更新される", () => {
 			const c1 = connWithLabel("c1");
 			const state = makeState({

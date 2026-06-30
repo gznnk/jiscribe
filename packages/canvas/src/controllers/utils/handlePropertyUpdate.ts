@@ -15,14 +15,20 @@ const LABEL_STYLE_PROPERTIES = new Set([
 	"label.stroke",
 	"label.strokeWidth",
 	"label.strokeDashType",
+	"label.fontColor",
+	"label.fontSize",
+	"label.fontWeight",
 ]);
+
+// 数値として保存する label サブキー（それ以外は文字列のまま）。
+const LABEL_NUMERIC_KEYS = new Set(["strokeWidth", "fontSize"]);
 
 const isLabelStyleProperty = (property: string): boolean =>
 	LABEL_STYLE_PROPERTIES.has(property);
 
 /**
  * `label.*` プロパティを connector.label へネスト merge する。
- * ラベル未設定（text 無し）なら何もしない。strokeWidth のみ数値化する。
+ * ラベル未設定（text 無し）なら何もしない。数値サブキー（strokeWidth/fontSize）は数値化する。
  */
 const updateConnectorLabelStyle = (
 	state: CanvasControllerState,
@@ -37,7 +43,7 @@ const updateConnectorLabelStyle = (
 
 	const key = property.slice("label.".length);
 	let parsed: string | number = value;
-	if (key === "strokeWidth") {
+	if (LABEL_NUMERIC_KEYS.has(key)) {
 		const n = Number(value);
 		if (isNaN(n)) {
 			return state;
