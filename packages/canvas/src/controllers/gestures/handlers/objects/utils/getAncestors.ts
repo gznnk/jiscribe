@@ -5,8 +5,6 @@ import { walkParentChain } from "../../../../utils/walkParentChain";
  * Gets all ancestor IDs of an object, ordered from root to leaf (outermost to innermost).
  * Returns an empty array if the object is at root level.
  *
- * This matches the behavior of svg-canvas's getAncestorItemsById.
- *
  * Circular references in the hierarchy are detected and broken by the shared
  * {@link walkParentChain} utility (visited-set guard).
  *

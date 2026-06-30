@@ -1,1 +1,0 @@
-export { ArrowHeadMenu } from "./ArrowHeadMenu";

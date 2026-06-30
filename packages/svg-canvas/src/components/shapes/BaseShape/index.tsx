@@ -1,1 +1,0 @@
-export { BaseShape } from "./BaseShape";

@@ -1,6 +1,6 @@
 # @workspace/canvas
 
-svg-canvasの新しいバージョンです。
+jiscribe の SVG キャンバス実装です。
 
 ## 使い方
 

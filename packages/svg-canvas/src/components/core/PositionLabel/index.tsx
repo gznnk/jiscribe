@@ -1,1 +1,0 @@
-export { PositionLabel } from "./PositionLabel";
