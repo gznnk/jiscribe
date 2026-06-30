@@ -1,12 +1,11 @@
-// TODO: move to controllers/utils
 import type { Point } from "@workspace/geometry";
 
-import type { EndpointRef } from "../../../schemas/objects/types/EndpointRef";
-import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
-import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
-import { moveGroup } from "../../gestures/handlers/objects/primitives/GroupController";
-import { objectBehaviorRegistry } from "../../gestures/registry/ObjectBehaviorRegistry";
+import type { EndpointRef } from "../../schemas/objects/types/EndpointRef";
+import type { ObjectState } from "../../states/objects/base/ObjectState";
+import type { ConnectorState } from "../../states/objects/connections/connector/ConnectorState";
+import type { GroupState } from "../../states/objects/primitives/group/GroupState";
+import { moveGroup } from "../gestures/handlers/objects/primitives/GroupController";
+import { objectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
 
 const remapEndpointRef = (
 	ref: EndpointRef,
