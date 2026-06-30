@@ -109,7 +109,7 @@ describe("commitTextEditIfNeeded", () => {
 		expect(updated.label?.text).toBe("Yes");
 	});
 
-	it("コネクター: 既存ラベルを空文字でコミット → label を取り除く", () => {
+	it("コネクター: 素のラベル（text のみ）を空文字でコミット → label を取り除く", () => {
 		const c = connectorObj("c1", { text: "Yes" });
 		const state = makeState({
 			objects: { c1: c as CanvasControllerState["objects"][string] },
@@ -122,6 +122,63 @@ describe("commitTextEditIfNeeded", () => {
 			label?: { text: string };
 		};
 		expect(updated.label).toBeUndefined();
+	});
+
+	it("コネクター: スタイル付きラベルを空文字でコミット → label は残し text だけ空にする", () => {
+		// text 以外（スタイル・配置）を持つラベルは、空文字にしても捨てない。
+		const styledLabel = {
+			text: "Yes",
+			fill: "#dc2626",
+			fontWeight: "bold",
+			position: 0.3,
+		};
+		const c = {
+			id: "c1",
+			type: "connector",
+			label: styledLabel,
+		} as unknown;
+		const state = makeState({
+			objects: { c1: c as CanvasControllerState["objects"][string] },
+			textEditState: { objectId: "c1", text: "" },
+			commitVersion: 1,
+		});
+		const result = commitTextEditIfNeeded(state);
+		expect(result.commitVersion).toBe(2);
+		const updated = result.objects["c1"] as unknown as {
+			label?: {
+				text: string;
+				fill?: string;
+				fontWeight?: string;
+				position?: number;
+			};
+		};
+		expect(updated.label).toBeDefined();
+		expect(updated.label?.text).toBe("");
+		// スタイル・配置は維持される（再入力で復元できる）。
+		expect(updated.label?.fill).toBe("#dc2626");
+		expect(updated.label?.fontWeight).toBe("bold");
+		expect(updated.label?.position).toBe(0.3);
+	});
+
+	it("コネクター: スタイル付きラベルを空にした後、テキストを再入力 → スタイルが復元される", () => {
+		const styledLabel = { text: "", fill: "#dc2626", fontWeight: "bold" };
+		const c = {
+			id: "c1",
+			type: "connector",
+			label: styledLabel,
+		} as unknown;
+		const state = makeState({
+			objects: { c1: c as CanvasControllerState["objects"][string] },
+			textEditState: { objectId: "c1", text: "No" },
+			commitVersion: 1,
+		});
+		const result = commitTextEditIfNeeded(state);
+		const updated = result.objects["c1"] as unknown as {
+			label?: { text: string; fill?: string; fontWeight?: string };
+		};
+		expect(updated.label?.text).toBe("No");
+		expect(updated.label?.fill).toBe("#dc2626");
+		expect(updated.label?.fontWeight).toBe("bold");
 	});
 
 	it("コネクター: ラベルが変化していない → commitVersion は増えない", () => {

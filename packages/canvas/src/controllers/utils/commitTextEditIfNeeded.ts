@@ -4,8 +4,10 @@ import type { ConnectorState } from "../../states/objects/connections/connector/
 import type { CanvasControllerState } from "../CanvasTypes";
 
 /**
- * コネクターのラベル編集をコミットする。テキストは `label.text`（ネスト）に書き戻し、
- * 空文字なら label ごと取り除く（ラベル無しと等価）。
+ * コネクターのラベル編集をコミットする。テキストは `label.text`（ネスト）に書き戻す。
+ * 空文字にしてもスタイル・配置は捨てず、再入力で復元できるよう label を残して
+ * テキストだけ空にする。ただしテキストしか持たない素のラベルは残す意味がないので
+ * 丸ごと取り除く（空ラベルのゴミを残さない＝ラベル無しに戻す）。
  */
 function commitConnectorLabel(
 	state: CanvasControllerState,
@@ -19,9 +21,18 @@ function commitConnectorLabel(
 
 	let nextConnector: ConnectorState;
 	if (text === "") {
-		// label を取り除く（残りのスタイル等も含めて破棄＝ラベル無し）。
-		const { label: _removed, ...rest } = connector;
-		nextConnector = rest as ConnectorState;
+		// text 以外（スタイル・配置）が残っていれば label を保持し text だけ空にする。
+		const { text: _clearedText, ...labelWithoutText } = connector.label ?? {};
+		if (Object.keys(labelWithoutText).length === 0) {
+			// 素のラベル（text のみ）は丸ごと取り除いてラベル無しに戻す。
+			const { label: _removed, ...rest } = connector;
+			nextConnector = rest as ConnectorState;
+		} else {
+			nextConnector = {
+				...connector,
+				label: { ...labelWithoutText, text: "" },
+			} as ConnectorState;
+		}
 	} else {
 		nextConnector = {
 			...connector,

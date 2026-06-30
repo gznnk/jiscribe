@@ -8,7 +8,8 @@ import { selectors } from "../../support/selectors";
  * - 線上のダブルクリックでラベル編集を開始できる
  * - 入力・確定すると経路上に水平ラベルが描かれる（foreignObject[data-kind=connector]）
  * - 再度ダブルクリックすると既存テキストがプリフィルされる
- * - 空文字で確定するとラベルが取り除かれる
+ * - 素のラベルは空文字で確定すると取り除かれる
+ * - スタイル付きラベルは空文字にしてもスタイルを保持し、再入力で復元できる
  */
 
 type Vec = { x: number; y: number };
@@ -419,6 +420,41 @@ test.describe("コネクターのラベル", () => {
 			"background-color",
 			"rgb(220, 38, 38)",
 		);
+	});
+
+	test("スタイル付きラベルを空文字で消しても、再入力でスタイルが復元される", async ({
+		canvas,
+	}) => {
+		const { connectorId, onLine } = await setupConnectorWithLabel(
+			canvas,
+			"Yes",
+		);
+		const labelBox = labelBoxOf(canvas, connectorId);
+
+		// 背景色を付ける。
+		await canvas.clickAt(onLine);
+		await canvas.openObjectMenu("label-bg-color");
+		await canvas.page.click(selectors.objectMenuSet("label.fill", "#dc2626"));
+		await expect(labelBox).toHaveCSS("background-color", "rgb(220, 38, 38)");
+
+		// テキストを空にして確定 → ラベルは見た目上消える（text="" で非表示）。
+		const screen = canvas.toScreen(onLine);
+		await canvas.page.mouse.dblclick(screen.x, screen.y);
+		await expect(canvas.textArea()).toHaveValue("Yes");
+		await canvas.textArea().fill("");
+		await canvas.commitText();
+		await expect(labelBox).toHaveCount(0);
+
+		// 線を再びダブルクリックしてテキストを入れ直す（プリフィルは空）。
+		await canvas.page.mouse.dblclick(screen.x, screen.y);
+		await expect(canvas.page.locator(selectors.textEditor)).toBeVisible();
+		await expect(canvas.textArea()).toHaveValue("");
+		await canvas.page.keyboard.type("Back");
+		await canvas.commitText();
+
+		// テキストが戻り、以前の背景色スタイルも復元されている。
+		await expect(labelBox).toContainText("Back");
+		await expect(labelBox).toHaveCSS("background-color", "rgb(220, 38, 38)");
 	});
 
 	test("ラベルが無いコネクターにはラベルスタイルメニューが出ない", async ({
