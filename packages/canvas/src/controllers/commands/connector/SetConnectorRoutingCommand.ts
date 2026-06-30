@@ -1,8 +1,8 @@
 import { isOrthogonalRouting } from "../../../schemas/objects/types/ConnectorRouting";
 import type { ConnectorRouting } from "../../../schemas/objects/types/ConnectorRouting";
 import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
-import { isSelfLoopConnector } from "../../../states/objects/connections/connector/isSelfLoopConnector";
 import type { CanvasControllerState } from "../../CanvasTypes";
+import { isSelfLoopConnector } from "../../utils/isSelfLoopConnector";
 import type { Command } from "../CommandTypes";
 
 /**

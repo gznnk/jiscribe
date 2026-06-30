@@ -1,4 +1,4 @@
-import type { EndpointRef } from "../../../../schemas/objects/types/EndpointRef";
+import type { EndpointRef } from "../../schemas/objects/types/EndpointRef";
 
 /**
  * コネクターが自己ループ（両端が同一オブジェクトに接続）かどうかを判定する。
