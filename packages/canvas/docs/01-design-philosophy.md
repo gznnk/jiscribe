@@ -1,79 +1,98 @@
-# 設計思想
+> 🌐 日本語版: [01-design-philosophy.ja.md](./01-design-philosophy.ja.md)
 
-canvas のコードを読む・書くうえでの判断基準。実装の細部で迷ったときは、
-この 4 つの原則に立ち返って判断する。各原則は以降のドキュメントで具体化される。
+# Design Philosophy
 
-## 1. 性能を最優先する
+The criteria for reading and writing canvas code. When you're unsure about an
+implementation detail, come back to these four principles to make the call.
+Each principle is made concrete in the documents that follow.
 
-キャンバスは「ドラッグ中に毎フレーム状態を再計算する」ような高頻度更新を伴う。
-そのため、設計判断が分かれる場面では**性能を最優先**する。これが他の原則
-（防御的チェックの置き場所、状態の正規化など）の根拠になっている。
+## 1. Prioritize performance above all
 
-具体例:
+A canvas involves high-frequency updates such as "recomputing state on every frame
+during a drag." For that reason, whenever a design decision could go either way,
+**prioritize performance**. This is the rationale behind the other principles
+(where to place defensive checks, how to normalize state, and so on).
 
-- State はフラット（ID キーの `Record`）に正規化し、編集操作での探索・更新を速くする
-  → [データモデルと永続化](./03-data-model-and-persistence.md)
-- keyPoints / snapCandidates は参照比較ベースでキャッシュし、変化したオブジェクトだけ再計算する
-  （`handleGesture` の `dragStart` 時のキャッシュ更新）
-- 正当性チェックは内部の各所で重複させず、入力の境界に寄せる（原則 4）
+Concrete examples:
 
-## 2. ロジックは可能な限り純粋関数で書く
+- State is normalized into a flat shape (an ID-keyed `Record`) to speed up lookups
+  and updates during editing operations
+  → [Data Model and Persistence](./03-data-model-and-persistence.md)
+- keyPoints / snapCandidates are cached on a reference-comparison basis, and only
+  the objects that changed are recomputed
+  (the cache update on `dragStart` in `handleGesture`)
+- Validity checks are not duplicated throughout the internals; they are concentrated
+  at the input boundary (Principle 4)
 
-状態更新ロジック（各 EventHandler / Controller / Command）は、
-**入力 state を受け取って新しい state を返す純粋関数**として実装する。
+## 2. Write logic as pure functions wherever possible
+
+State-update logic (each EventHandler / Controller / Command) is implemented as a
+**pure function that takes an input state and returns a new state**.
 
 ```ts
-execute: (state: CanvasState) => CanvasState; // 副作用なし
+execute: (state: CanvasState) => CanvasState; // no side effects
 ```
 
-### なぜ
+### Why
 
-テストを容易にするため。純粋関数なら、DOM もブラウザも介さずに
-「入力 state → 期待する出力 state」を直接検証できる。これは
-[テスト](./09-testing.md) のユニット／結合テストが node 環境で完結することの土台でもある。
+To make testing easy. With pure functions, you can directly verify
+"input state → expected output state" without going through the DOM or a browser.
+This is also the foundation that lets the unit and integration tests in
+[Testing](./09-testing.md) run entirely in a node environment.
 
-## 3. 各イベントハンドラがキャンバス全体の状態更新に責任を持つ
+## 3. Each event handler is responsible for updating the entire canvas state
 
-1 つのジェスチャー（例: ドラッグ）に対して、担当の EventHandler が
-**`CanvasState` 全体の次の状態を返す**。選択・移動・スナップ・履歴フラグなど、
-そのジェスチャーが引き起こす変化を 1 か所で組み立てる。
+For a single gesture (e.g., a drag), the responsible EventHandler **returns the next
+state of the entire `CanvasState`**. Selection, movement, snapping, history flags, and
+any other changes the gesture triggers are all assembled in one place.
 
-### なぜ
+### Why
 
-「状態の項目ごとに更新責任を分割する」構造（例: 選択担当・移動担当・スナップ担当が
-別々に部分更新する）は、相互に依存する多様な状態を扱う本アプリでは破綻しやすい。
-ある項目の更新が別の項目の前提を崩し、整合性を保つための調整コードが分散してしまう。
-ハンドラ単位で全体の遷移を組み立てることで、状態間の依存をその場で完結させる。
+A structure that "splits update responsibility per state field" (e.g., separate
+owners for selection, movement, and snapping each applying partial updates) tends to
+break down in an application like this that handles diverse, interdependent state.
+An update to one field can invalidate the assumptions of another, and the adjustment
+code needed to keep things consistent ends up scattered. By assembling the whole
+transition at the handler level, dependencies between pieces of state are resolved
+right where they arise.
 
-詳細は [状態更新フロー（Reducer）](./06-state-update-flow.md) を参照。
+For details, see [State Update Flow (Reducer)](./06-state-update-flow.md).
 
-## 4. 不正な状態は外部入力の境界で弾き、内部関数は正当性を前提とする
+## 4. Reject invalid state at the external-input boundary; internal functions assume validity
 
-循環参照・壊れた参照・型不整合といった**不正な状態は、外部入力を受け取る境界で弾く**。
-境界を通過したデータは正当であることを前提に、内部の関数は防御的チェックを省く。
+**Invalid state** such as circular references, broken references, and type mismatches
+**is rejected at the boundary that receives external input**. Data that has passed the
+boundary is assumed to be valid, so internal functions omit defensive checks.
 
-境界にあたるのは parser（`parseCanvasText` の二段検証）であり、外部入力を `Canvas` へ
-渡す前に host（VSCode 拡張・Web アプリ等）がここを通す責務を負う。`SYNC_EXTERNAL` /
-`canvasToState`（初期マウント・外部同期・Undo/Redo の復元）は検証済みの `CanvasDoc` を
-受け取る前提で**再検証せず**、`canvasToState` で軽量に state へ写すだけにする
-→ [データモデルと永続化](./03-data-model-and-persistence.md)。
+The boundary is the parser (the two-stage validation of `parseCanvasText`), and it is
+the host's responsibility (VSCode extension, web app, etc.) to route external input
+through it before passing it to `Canvas`. `SYNC_EXTERNAL` / `canvasToState`
+(initial mount, external sync, and Undo/Redo restoration) assume they receive an
+already-validated `CanvasDoc`, so they **do not re-validate**; `canvasToState` simply
+maps it into state cheaply
+→ [Data Model and Persistence](./03-data-model-and-persistence.md).
 
-### なぜ
+### Why
 
-各所で重複した正当性チェックを行うと、高頻度な内部処理にコストが乗る（原則 1）。
-検証を境界に一元化すれば、内部は「正当な state しか来ない」前提で軽量に書ける。
+Performing duplicated validity checks in many places adds cost to high-frequency
+internal processing (Principle 1). By centralizing validation at the boundary, the
+internals can be written cheaply on the assumption that "only valid state ever arrives."
 
-> **状況**: 内部各所に残っていた防御的チェック（木構造の循環ガード、参照整合の
-> 再検証、欠落 ID の握り潰しなど）は撤去済みで、内部関数は「正当な state しか来ない」
-> 前提で書かれている。
+> **Status**: The defensive checks that used to be scattered throughout the internals
+> (cycle guards for the tree structure, re-validation of referential integrity,
+> silently swallowing missing IDs, and so on) have been removed, and internal functions
+> are written on the assumption that "only valid state ever arrives."
 >
-> **境界の所在**: 検証の境界は parser（`parseCanvasText`）に一元化し、`Canvas` は
-> 再検証しない。`Canvas` へ渡す `CanvasDoc` を `parseCanvasText` に通すのは **host の責務**
-> であり（→ `Canvas.tsx` の `canvasDoc` prop コメント）、`SYNC_EXTERNAL` / `canvasToState`
-> の入口で再検証しないのは重複検証を避けるための**意図的な設計判断**。`Canvas` は検証済み
-> doc を渡す契約に依存するため、host 側で `parseCanvasText` を必ず通すこと。
+> **Where the boundary lives**: The validation boundary is centralized in the parser
+> (`parseCanvasText`), and `Canvas` does not re-validate. Routing the `CanvasDoc` passed
+> to `Canvas` through `parseCanvasText` is **the host's responsibility**
+> (→ see the comment on the `canvasDoc` prop in `Canvas.tsx`), and not re-validating at
+> the entry point of `SYNC_EXTERNAL` / `canvasToState` is an **intentional design decision**
+> to avoid redundant validation. Because `Canvas` relies on the contract that it is handed
+> a validated doc, the host must always route input through `parseCanvasText`.
 >
-> **CSS インジェクション**（stroke / fill / fontColor / fontFamily / fontWeight）も同じ
-> 方針で境界に寄せる。doc 経路は `validateDocUtils` の `isCssSafeValue`、クリップボード経路は
-> state 検証（`validateStateUtils` / `isCssColor`）で弾く。presentation（emotion styled）側の
-> sink 防御は重複のため設けない。
+> **CSS injection** (stroke / fill / fontColor / fontFamily / fontWeight) is handled at the
+> boundary under the same policy. The doc path is rejected by `isCssSafeValue` in
+> `validateDocUtils`, and the clipboard path by state validation
+> (`validateStateUtils` / `isCssColor`). No sink-side defense is added on the presentation
+> (emotion styled) side, as it would be redundant.
