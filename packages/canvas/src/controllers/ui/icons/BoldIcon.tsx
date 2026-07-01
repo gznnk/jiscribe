@@ -8,8 +8,8 @@ type BoldIconProps = {
 };
 
 /**
- * 太字アイコン。
- * "B" の文字を太字で表示する。
+ * Bold icon.
+ * Displays the letter "B" in bold.
  */
 const BoldIconComponent: React.FC<BoldIconProps> = ({
 	width = 24,

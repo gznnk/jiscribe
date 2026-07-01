@@ -18,7 +18,7 @@ type Props = {
 };
 
 /**
- * ラベルの文字色メニュー（図形の Font Color と同じ並び）。値はネストの `label.fontColor`。
+ * Font color menu for the label (same layout as the shape's Font Color). The value is the nested `label.fontColor`.
  */
 const LabelFontColorMenuComponent: React.FC<Props> = ({
 	canvasState,

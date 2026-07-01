@@ -45,7 +45,7 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 				height={height / zoom}
 			/>
 			<ContentGroup isDrawMode={isDrawMode}>
-				{/* rootIds(z-order 順) を走査し、オブジェクトとコネクターを混在描画する */}
+				{/* Traverse rootIds (in z-order) and render objects and connectors interleaved */}
 				<ObjectsRenderer
 					objects={objects}
 					rootIds={rootIds}

@@ -14,7 +14,7 @@ import { resolveAutoColor } from "../../utils/resolveAutoColor";
 
 type ConnectorProps = {
 	id: string;
-	/** source → ...waypoints → target 順の解決済み座標列。最低 2 点。 */
+	/** Resolved coordinate sequence in source -> ...waypoints -> target order. At least 2 points. */
 	points: readonly Point[];
 	stroke?: string;
 	strokeWidth?: number;
@@ -34,10 +34,10 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 	endArrow,
 	disablePointerEvents = false,
 }) => {
-	// auto（テーマ追従）をテーマ前景（ink）へ解決する（issue #38）。
+	// Resolve auto (theme-following) to the theme foreground (ink) (issue #38).
 	const strokeColor = resolveAutoColor(stroke, "ink");
 
-	// 折れ線。端点と一致する陳腐な経由点を畳んでから描画する。
+	// Polyline. Collapse redundant waypoints coinciding with endpoints before drawing.
 	const polyPoints = dedupePoints(points);
 	if (polyPoints.length < 2) {
 		return null;
@@ -46,10 +46,10 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 	const start = polyPoints[0];
 	const end = polyPoints[lastIdx];
 
-	// ヒット領域はクリックしやすいよう端点まで全長を保つ。
+	// The hit area keeps its full length up to the endpoints for easier clicking.
 	const hitAreaPointsAttr = toPointsAttr(polyPoints);
 
-	// 中空矢印では線が中空部を貫通しないよう、矢印の根元で線を終端させる。
+	// For hollow arrows, terminate the line at the arrow base so it does not pass through the hollow part.
 	const insetPoints = insetPolylineEnds(
 		polyPoints,
 		getArrowLineInset(startArrow) * strokeWidth,
@@ -57,7 +57,7 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 	);
 	const linePointsAttr = toPointsAttr(insetPoints);
 
-	// 矢印は端の隣接点に向けて角度を取る（折れ線でも端セグメントに沿う）。
+	// Orient arrows toward the point adjacent to the endpoint (following the end segment even for polylines).
 	const startAngleRadians = calcVectorAngle(
 		polyPoints[1].x,
 		polyPoints[1].y,
@@ -114,4 +114,5 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 	);
 };
 
+/** Renders a connector as a polyline with optional start/end arrows. */
 export const Connector = memo(ConnectorComponent);

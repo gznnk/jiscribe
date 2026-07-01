@@ -8,9 +8,10 @@ import { ARROW_SIZE } from "../ArrowConstants";
 import type { ArrowShapeProps } from "../ArrowTypes";
 
 /**
- * 線をこの矢印の根元で終端させるための inset（ローカル単位）。
- * 最大幅は中央（`-ARROW_SIZE/2`）。後端の頂点まで引くと線が短く見えるため、
- * 塗りで隠れる中央まで食い込ませる。
+ * Inset (in local units) for terminating the line at this arrow's base.
+ * The widest point is the center (`-ARROW_SIZE/2`). Pulling the line back to the
+ * trailing vertex would make it look too short, so the line is inset to the
+ * center where it is hidden by the fill.
  */
 export const FILLED_DIAMOND_INSET = ARROW_SIZE / 2;
 

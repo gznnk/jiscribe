@@ -10,7 +10,7 @@ import type { SemanticDiagnostic } from "../../canvas/validators/types";
 import type { ObjectDocValidateFn } from "../../registry/ObjectDocValidatorRegistry";
 import type { ObjectFeatures } from "../types/ObjectFeatures";
 
-/** geometry の必須座標フィールドを features.geometry に応じて検証する。 */
+/** Validates the required geometry coordinate fields according to features.geometry. */
 const validateGeometryFields = (
 	o: Record<string, unknown>,
 	path: string,
@@ -31,12 +31,13 @@ const validateGeometryFields = (
 			];
 
 /**
- * Frame 系オブジェクト（geometry: "rect" | "ellipse"）の doc バリデータを
- * features から生成する。geometry / transform / stroke / fill / text / radius を
- * features に応じて合成し、図形固有の追加検証（svg の svgText など）は `extra` で渡す。
+ * Builds a doc validator for Frame-based objects (geometry: "rect" | "ellipse")
+ * from features. Composes geometry / transform / stroke / fill / text / radius
+ * according to features, and shape-specific extra checks (such as svg's svgText)
+ * are passed via `extra`.
  *
- * 検証すべきフィールドの知識は validateDocUtils のビルダー側に集約され、
- * ここは「どのビルダーを features に従って呼ぶか」だけを担う。
+ * Knowledge of which fields to validate lives in the validateDocUtils builders;
+ * this function is only responsible for calling the right builders per features.
  */
 export const createFrameDocValidator =
 	(

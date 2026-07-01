@@ -3,8 +3,8 @@ import styled from "@emotion/styled";
 import { theme } from "../../../../constants/theme";
 
 /**
- * ObjectMenu の外枠コンテナ。
- * ScrollSyncedOverlay 内でキャンバス座標に配置される。
+ * Outer container of the ObjectMenu.
+ * Positioned in canvas coordinates inside ScrollSyncedOverlay.
  */
 export const ObjectMenuWrapper = styled.div<{ left: number; top: number }>`
 	position: absolute;
@@ -16,7 +16,7 @@ export const ObjectMenuWrapper = styled.div<{ left: number; top: number }>`
 `;
 
 /**
- * ObjectMenu の内部コンテナ（影付き）。
+ * Inner container of the ObjectMenu (with shadow).
  */
 export const ObjectMenuContainer = styled.div`
 	height: 40px;
@@ -35,14 +35,16 @@ export const ObjectMenuContainer = styled.div`
 `;
 
 /**
- * メニューのセクション（グループ）コンテナ。
+ * Section (group) container of the menu.
  *
- * 区切り線は独立要素ではなく `::before`（CSS ボーダー）で描く。これにより、
- * 中身が何も描画されないセクション（例: custom コンポーネントが `null` を返す、
- * 全アイテムが重複でスキップされる）は `:empty` で**区切り線ごと**自動的に畳まれる。
+ * The divider is drawn with `::before` (a CSS border) rather than a standalone element.
+ * This way, a section that renders nothing (e.g. a custom component returns `null`, or all
+ * items are skipped as duplicates) is automatically collapsed **along with its divider**
+ * via `:empty`.
  *
- * 注意: 純 CSS には「直前の*可視*兄弟」を見る手段がないため、構造上の先頭セクションが
- * 空になった場合のみ先頭に区切り線が残りうる（現在のメニュー構成では先頭は常に可視）。
+ * Note: pure CSS has no way to look at the "previous *visible* sibling", so a divider can
+ * remain at the start only if the structurally first section becomes empty (in the current
+ * menu configuration the first section is always visible).
  */
 export const ObjectMenuSection = styled.div`
 	display: flex;
@@ -64,7 +66,7 @@ export const ObjectMenuSection = styled.div`
 `;
 
 /**
- * メニューボタン共通スタイル。
+ * Shared menu button style.
  */
 export const ObjectMenuButton = styled.button<{ isActive?: boolean }>`
 	display: flex;
@@ -115,8 +117,8 @@ export const ObjectMenuButton = styled.button<{ isActive?: boolean }>`
 `;
 
 /**
- * メニューボタンの位置基準コンテナ（relative）。
- * ドロップダウンの基準位置になる。
+ * Positioning container for a menu button (relative).
+ * Serves as the anchor position for the dropdown.
  */
 export const MenuItemPositioner = styled.div`
 	position: relative;

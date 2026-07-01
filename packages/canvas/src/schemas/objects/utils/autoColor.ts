@@ -1,13 +1,15 @@
 /**
- * 図形の色（stroke / fontColor / fill）が「テーマに従う（未指定）」状態であることを示す
- * sentinel 値。具体色と同じ string フィールドに `"auto"` として保存され、ポータビリティを
- * 損なわない（「テーマに従う」という曖昧さのない意味を持つ）。
+ * Sentinel value indicating that a shape's color (stroke / fontColor / fill)
+ * is in the "follow the theme (unspecified)" state. Stored as `"auto"` in the
+ * same string field as concrete colors without harming portability (it carries
+ * the unambiguous meaning of "follow the theme").
  *
- * 描画時に `presentations` 側の `resolveAutoColor` で `currentColor`（= テーマ前景）へ
- * 解決される。データ層・State 層では `"auto"` のまま保持する（保存値を壊さないため）。
+ * At render time it is resolved to `currentColor` (= theme foreground) by
+ * `resolveAutoColor` on the `presentations` side. The data and State layers keep
+ * it as `"auto"` (to avoid corrupting the stored value).
  */
 export const AUTO_COLOR = "auto";
 
-/** 色の値が auto sentinel（テーマ追従）かどうかを判定する。 */
+/** Determines whether a color value is the auto sentinel (theme-following). */
 export const isAutoColor = (value: unknown): value is typeof AUTO_COLOR =>
 	value === AUTO_COLOR;

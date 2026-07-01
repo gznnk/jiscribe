@@ -14,9 +14,11 @@ type DrawingPreviewOverlayProps = {
 const STROKE_WIDTH = 1.5;
 
 /**
- * プレビュー枠線の色を「配置後に実際に付く stroke 色」と一致させる。
- * 配置時と同じファクトリで doc を生成し、その stroke を採用する。
- * auto（テーマ追従）・未指定は currentColor へ解決し、配置後と同じテーマ前景色で表示する。
+ * Match the preview outline color to the stroke color that will actually be
+ * applied after placement. Generate a doc with the same factory used at
+ * placement time and adopt its stroke. auto (theme-following) and unspecified
+ * values resolve to currentColor, so the preview shows the same theme
+ * foreground color as after placement.
  */
 const resolvePreviewStroke = (preset: ShapePreset): string => {
 	const doc = shapeFactoryRegistry

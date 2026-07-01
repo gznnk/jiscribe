@@ -3,11 +3,11 @@ import styled from "@emotion/styled";
 import { theme } from "../../../../constants/theme";
 
 /**
- * 上部に張り付く全幅の統合ツールバーのコンテナ。
- * 左に図形ツール、右にズーム表示・ヘルプを配置する。
+ * Container for the full-width integrated toolbar pinned to the top.
+ * Places shape tools on the left and the zoom readout / help on the right.
  *
- * CanvasRoot（flex column）の最初の子としてレイアウトされ、キャンバス領域の
- * 上に積まれる（重ねるのではなく場所を占める）。
+ * Laid out as the first child of CanvasRoot (a flex column), stacked above the
+ * canvas area (occupying space rather than overlaying it).
  */
 export const ToolbarContainer = styled.div`
 	position: relative;
@@ -28,7 +28,7 @@ export const ToolbarContainer = styled.div`
 `;
 
 /**
- * ツールバー内のボタングループ（左寄せ / 右寄せ）。
+ * Button group within the toolbar (left-aligned / right-aligned).
  */
 export const ToolbarGroup = styled.div`
 	display: flex;
@@ -38,7 +38,7 @@ export const ToolbarGroup = styled.div`
 `;
 
 /**
- * ツールバー内の縦区切り線。
+ * Vertical divider within the toolbar.
  */
 export const ToolbarDivider = styled.div`
 	width: 1px;
@@ -49,7 +49,7 @@ export const ToolbarDivider = styled.div`
 `;
 
 /**
- * ツールバーのアイコンボタン（ズーム・ヘルプ用）。
+ * Toolbar icon button (for zoom / help).
  */
 export const ToolbarIconButton = styled.button`
 	display: flex;
@@ -91,7 +91,7 @@ export const ToolbarIconButton = styled.button`
 `;
 
 /**
- * ズーム率の表示。クリックで 100% に戻すボタンを兼ねる。
+ * Zoom-level readout. Doubles as a button that resets to 100% on click.
  */
 export const ZoomReadout = styled.button`
 	display: flex;

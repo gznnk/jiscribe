@@ -10,9 +10,9 @@ export type RadiusStyleDoc = {
 };
 
 /**
- * RadiusStyleDoc/State が占有するフィールド名（Doc/State で同一）。
- * Frame 系マッパーが radius グループを allow-list で素通しする際に参照する。
- * rect の rx は geometry ではなく角丸スタイルなので、ここで pass-through される。
+ * Field names occupied by RadiusStyleDoc/State (identical for Doc/State).
+ * Referenced when Frame mappers pass the radius group through via an allow-list.
+ * A rect's rx is a rounded-corner style rather than geometry, so it is passed through here.
  */
 export const RADIUS_STYLE_KEYS = exhaustiveKeysOf<RadiusStyleDoc>()([
 	"rx",

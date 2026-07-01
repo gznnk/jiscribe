@@ -3,6 +3,6 @@ import type { DiamondDoc } from "../../../../schemas/objects/primitives/diamond/
 import { DiamondFeatures } from "../../../../schemas/objects/primitives/diamond/DiamondDoc";
 import { createFrameMapper } from "../../base/FrameMapper";
 
-/** DiamondDoc ↔ DiamondState 変換（Frame 系共通ロジックを features から生成）。 */
+/** DiamondDoc ↔ DiamondState conversion (Frame-family shared logic generated from features). */
 export const { toState: diamondToState, toDoc: diamondToDoc } =
 	createFrameMapper<DiamondDoc, DiamondState>(DiamondFeatures);

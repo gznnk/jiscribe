@@ -1,14 +1,14 @@
-// パーサー専用のエントリポイント。
+// Parser-only entry point.
 //
-// ルートの index.ts は Canvas（React コンポーネント）を export しているため、
-// それを import すると react / @emotion / katex などの UI 依存がバンドルに含まれる。
-// VSCode 拡張の Node 側（DiagnosticProvider）のように「テキストを CanvasDoc に
-// パースしたいだけ」の利用者は、このエントリを使うことで UI 依存を取り込まずに済む。
+// The root index.ts exports Canvas (a React component), so importing it pulls UI
+// dependencies such as react / @emotion / katex into the bundle. Consumers that only
+// want to parse text into a CanvasDoc — like the Node side of the VSCode extension
+// (DiagnosticProvider) — can use this entry to avoid bringing in those UI dependencies.
 //
-// import 例: `import { parseCanvasText } from "@workspace/canvas/parser";`
+// Import example: `import { parseCanvasText } from "@workspace/canvas/parser";`
 //
-// 検証に必要な objectDocValidatorRegistry の初期化は parseCanvasText が必要時に
-// 遅延実行するため、このエントリ側で初期化処理を行う必要はない。
+// parseCanvasText lazily initializes the objectDocValidatorRegistry needed for
+// validation on demand, so no initialization is required on this entry side.
 export type { CanvasDoc } from "./schemas/canvas/CanvasDoc";
 export { parseCanvasText } from "./schemas/canvas/validators";
 export type {

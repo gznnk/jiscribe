@@ -6,6 +6,11 @@ import { cleanupGroups } from "../../utils/cleanupGroups";
 import { updateGroupBoundsFromRoot } from "../../utils/updateGroupBoundsFromRoot";
 import type { Command } from "../CommandTypes";
 
+/**
+ * Command that deletes the current selection. Prioritizes vertex deletion when a
+ * vertex is selected; otherwise removes selected objects (with group descendants)
+ * and the selected connector, then cleans up connectors and groups.
+ */
 export const DeleteCommand: Command = {
 	id: "delete",
 	label: "Delete",
@@ -23,8 +28,9 @@ export const DeleteCommand: Command = {
 	},
 
 	execute: (state) => {
-		// selectedVertex がある場合は頂点削除を優先する。
-		// selectedIds にオブジェクトが残っていても、この分岐でリターンしてオブジェクト削除に落ちないようにする。
+		// When a selectedVertex exists, prioritize vertex deletion.
+		// Even if selectedIds still contains objects, return from this branch so we
+		// don't fall through to object deletion.
 		if (state.selectedVertex !== null) {
 			const { objectId, vertexIndex } = state.selectedVertex;
 			const poly = state.objects[objectId];
@@ -36,7 +42,7 @@ export const DeleteCommand: Command = {
 			const points = poly.points;
 			const minPoints = poly.type === "polygon" ? 3 : 2;
 
-			// 最小頂点数以下は削除しない
+			// Do not delete below the minimum vertex count
 			if (points.length <= minPoints) {
 				return state;
 			}
@@ -62,12 +68,13 @@ export const DeleteCommand: Command = {
 			return nextState;
 		}
 
-		// 削除対象IDを収集（グループの場合は子孫も再帰的に含める）
+		// Collect the IDs to delete (for groups, recursively include descendants)
 		const idsToDelete = new Set<string>();
 
-		// idsToDelete は訪問済みセットも兼ねる。子孫を辿る前に id を追加するため、
-		// childIds が自身や祖先を参照する循環参照（例: childId === groupId）でも
-		// 先頭の has チェックで再帰が打ち切られ、スタックオーバーフローを防ぐ。
+		// idsToDelete also serves as the visited set. Since the id is added before
+		// traversing its descendants, even a cyclic reference where childIds points
+		// back to itself or an ancestor (e.g. childId === groupId) is cut off by the
+		// leading has check, preventing a stack overflow.
 		const collectIds = (id: string) => {
 			if (idsToDelete.has(id)) {
 				return;
@@ -85,22 +92,22 @@ export const DeleteCommand: Command = {
 			collectIds(id);
 		}
 
-		// 選択中のコネクターも削除対象に追加
+		// Also add the selected connector to the deletion targets
 		if (state.selectedConnectorId != null) {
 			idsToDelete.add(state.selectedConnectorId);
 		}
 
-		// コネクターの整理（削除前の状態で座標解決するため先に実行）
+		// Clean up connectors (run first so coordinates resolve against the pre-delete state)
 		const stateAfterConnectors = cleanupConnectorsOnDelete(state, idsToDelete);
 
 		const updatedObjects = { ...stateAfterConnectors.objects };
 
-		// 削除対象オブジェクトを objects から除去
+		// Remove the target objects from objects
 		for (const id of idsToDelete) {
 			delete updatedObjects[id];
 		}
 
-		// 選択オブジェクトのうち、親が削除されない場合は親の childIds から除去
+		// For selected objects whose parent is not being deleted, remove them from the parent's childIds
 		const affectedParentIds = new Set<string>();
 		for (const id of state.selectedIds) {
 			const obj = state.objects[id];
@@ -120,8 +127,9 @@ export const DeleteCommand: Command = {
 		let nextStateBeforeCleanup: CanvasControllerState = {
 			...state,
 			objects: updatedObjects,
-			// コネクターも rootIds に含まれるため、孤立コネクター除去後の rootIds から
-			// 削除対象（選択オブジェクト・子孫・選択コネクター）をまとめて除去する。
+			// Connectors are also included in rootIds, so from the rootIds left after
+			// orphaned-connector cleanup, remove all deletion targets at once
+			// (selected objects, descendants, and the selected connector).
 			rootIds: stateAfterConnectors.rootIds.filter(
 				(id) => !idsToDelete.has(id),
 			),
@@ -132,8 +140,8 @@ export const DeleteCommand: Command = {
 			commitVersion: state.commitVersion + 1,
 		};
 
-		// 削除による葉オブジェクトの消失を全祖先グループに反映する（cleanupGroups の前に行う）。
-		// cleanup 後だと解除されたグループの ID が消えて updateGroupBoundsFromRoot が空振りするケースがある。
+		// Propagate the loss of leaf objects to all ancestor groups (do this before cleanupGroups).
+		// After cleanup, an ungrouped group's ID may be gone, causing updateGroupBoundsFromRoot to no-op.
 		for (const parentId of affectedParentIds) {
 			nextStateBeforeCleanup = updateGroupBoundsFromRoot(
 				nextStateBeforeCleanup,
@@ -141,7 +149,7 @@ export const DeleteCommand: Command = {
 			);
 		}
 
-		// グループのクリーンアップ（空グループの削除、1個グループの解除）
+		// Group cleanup (delete empty groups, dissolve single-child groups)
 		return cleanupGroups(nextStateBeforeCleanup);
 	},
 };

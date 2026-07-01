@@ -3,8 +3,8 @@ import styled from "@emotion/styled";
 import { theme } from "../../../../../../constants/theme";
 
 /**
- * ドロップダウンパネルの styled 本体。ボタンの下または上に中央揃えで表示される。
- * offsetX はキャンバス領域からのはみ出しを防ぐための水平方向の補正量（px）。
+ * Styled root of the dropdown panel. Rendered centered below or above the button.
+ * offsetX is the horizontal correction (px) applied to keep it within the canvas area.
  */
 export const DropdownPanelRoot = styled.div<{
 	placement?: "down" | "up";

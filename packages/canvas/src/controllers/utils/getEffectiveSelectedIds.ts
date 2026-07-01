@@ -1,18 +1,18 @@
 import type { CanvasControllerState } from "../CanvasTypes";
 
 /**
- * 選択状態に応じた実効的な選択IDリストを返す。
- * Connector が選択されている場合（selectedConnectorId != null）は
- * selectedIds の代わりに [selectedConnectorId] を返す。
+ * Returns the effective list of selected IDs based on the selection state.
+ * When a connector is selected (selectedConnectorId != null), returns
+ * [selectedConnectorId] instead of selectedIds.
  *
- * useMemo 内では { selectedIds, selectedConnectorId } を渡すことで
- * state 全体への依存を避けられる。
+ * Inside useMemo, passing { selectedIds, selectedConnectorId } avoids depending
+ * on the whole state.
  */
 export function getEffectiveSelectedIds(
 	state: Pick<CanvasControllerState, "selectedIds" | "selectedConnectorId">,
 ): string[] {
-	// null / undefined のどちらも「コネクター未選択」として扱う
-	// （部分的な state では selectedConnectorId が省略され undefined になりうる）。
+	// Treat both null and undefined as "no connector selected"
+	// (in a partial state, selectedConnectorId may be omitted and become undefined).
 	if (state.selectedConnectorId != null) {
 		return [state.selectedConnectorId];
 	}

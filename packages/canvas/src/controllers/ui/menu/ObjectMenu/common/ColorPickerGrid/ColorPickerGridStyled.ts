@@ -26,8 +26,8 @@ type AutoButtonProps = {
 };
 
 /**
- * 入力欄の左に置く「Auto（テーマ追従）」ボタン。
- * 押下で色を auto sentinel に戻す。選択中はアクセント色で示す。
+ * "Auto (follow theme)" button placed to the left of the input field.
+ * Pressing it resets the color to the auto sentinel. Shown in the accent color when selected.
  */
 export const AutoButton = styled.button<AutoButtonProps>`
 	flex: none;

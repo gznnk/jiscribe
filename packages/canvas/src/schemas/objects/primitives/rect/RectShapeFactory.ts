@@ -1,5 +1,5 @@
 import { RECT_DOC_DEFAULTS } from "./RectDoc";
 import { createFrameShapeFactory } from "../../utils/createFrameShapeFactory";
 
-/** Rect の生成ファクトリ（Frame 系共通ロジックを defaults から生成）。 */
+/** Factory for creating Rect shapes (Frame-family shared logic generated from defaults). */
 export const RectShapeFactory = createFrameShapeFactory(RECT_DOC_DEFAULTS);

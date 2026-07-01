@@ -1,9 +1,11 @@
 /**
- * Shift ドラッグの軸固定に関する定数
+ * Constants for axis locking during Shift-drag.
  */
 
 /**
- * 軸固定中、開始位置（原点）へ吸着する距離のしきい値（スクリーン px）。
- * フリー軸の移動量がこれ以下なら開始位置にスナップし、両軸ガイドを表示する。
+ * Distance threshold (screen px) for snapping to the start position (origin)
+ * while the axis is locked.
+ * If the movement along the free axis is at or below this value, it snaps to the
+ * start position and shows guides for both axes.
  */
 export const ORIGIN_SNAP_PX = 6;

@@ -2,7 +2,7 @@ import { RectElement } from "./RectStyled";
 import type { RectState } from "../../../../states/objects/primitives/rect/RectState";
 import { createFrameObject } from "../../base/createFrameObject";
 
-/** Rect の表示（Frame 系共通ロジックは createFrameObject に集約、形状だけ差し替え）。 */
+/** Renders a Rect (Frame-family shared logic lives in createFrameObject; only the shape is swapped in). */
 export const Rect = createFrameObject<RectState>((state, shape) => (
 	<RectElement
 		{...shape}

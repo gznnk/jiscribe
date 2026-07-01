@@ -1,9 +1,9 @@
 import styled from "@emotion/styled";
 
 type DiamondElementProps = {
-	/** 解決済みの stroke 色（auto はテーマ前景へ解決済み）。 */
+	/** Resolved stroke color (auto is resolved to the theme foreground). */
 	strokeColor: string;
-	/** 解決済みの fill 色（auto はテーマサーフェスへ解決済み）。 */
+	/** Resolved fill color (auto is resolved to the theme surface). */
 	fillColor: string;
 };
 

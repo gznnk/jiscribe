@@ -1,13 +1,14 @@
 /**
- * コネクタの直交ルーティングに関する定数
+ * Constants for orthogonal connector routing.
  */
 
 /**
- * 図形の面から線を押し出す既定のスタブ長（px）。
+ * Default stub length (px) by which the line is pushed out from a shape's face.
  *
- * 端点を退出方向へこの距離だけ押し出してから折れを許可するため、値が大きいほど
- * 矢印の根元の直線部が長くなる。スタブ長だけでなく、図形を回り込むときの
- * クリアランス幅（`elbowCandidates` の box 外周 ± margin、`selfLoop` のリングの
- * 膨らみ）にも共用される。
+ * The endpoint is pushed out along its exit direction by this distance before
+ * bends are allowed, so larger values produce a longer straight segment at the
+ * arrow's root. It is also reused as the clearance width when routing around a
+ * shape (the box outline ± margin in `elbowCandidates`, and the ring bulge in
+ * `selfLoop`).
  */
 export const DEFAULT_CONNECTOR_MARGIN = 30;

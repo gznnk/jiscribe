@@ -1,11 +1,11 @@
 import type { Point } from "@workspace/geometry";
 
 /**
- * クライアント座標をSVG座標に変換する
- * @param svg SVG要素
- * @param clientX クライアントX座標
- * @param clientY クライアントY座標
- * @returns SVG座標系でのポイント
+ * Converts client coordinates to SVG coordinates.
+ * @param svg The SVG element
+ * @param clientX The client X coordinate
+ * @param clientY The client Y coordinate
+ * @returns The point in the SVG coordinate system
  */
 export const getSvgPoint = (
 	svg: SVGSVGElement | null,

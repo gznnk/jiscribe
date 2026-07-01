@@ -13,19 +13,19 @@ import { shapePresetRegistry } from "../ShapeLibrary/ShapePresetRegistry";
 import { ShortcutHelpModal } from "../ShortcutHelp/ShortcutHelpModal";
 
 type ToolbarProps = {
-	/** 現在ドロー中のシェイププリセット ID（ツールのアクティブ表示用） */
+	/** ID of the shape preset currently being drawn (for the tool's active state) */
 	activePresetId: string | null;
-	/** 現在のズーム倍率（1 = 100%） */
+	/** Current zoom factor (1 = 100%) */
 	zoom: number;
-	/** ズームイン可能か（zoomIn コマンドの canExecute） */
+	/** Whether zooming in is possible (canExecute of the zoomIn command) */
 	canZoomIn: boolean;
-	/** ズームアウト可能か（zoomOut コマンドの canExecute） */
+	/** Whether zooming out is possible (canExecute of the zoomOut command) */
 	canZoomOut: boolean;
 };
 
 /**
- * 入力系の要素にフォーカスがある場合は true。
- * グローバルショートカット（`?`）の誤発火を防ぐために使う。
+ * Returns true when an input element currently holds focus.
+ * Used to prevent the global shortcut (`?`) from firing accidentally.
  */
 const isEditableTarget = (target: EventTarget | null): boolean => {
 	return (
@@ -36,12 +36,12 @@ const isEditableTarget = (target: EventTarget | null): boolean => {
 };
 
 /**
- * 上部中央の統合ツールバー。
- * 図形ツール（ShapeLibrary）・ズーム表示・ヘルプ（?）を 1 本のバーにまとめる。
+ * Unified toolbar centered at the top.
+ * Combines the shape tools (ShapeLibrary), zoom readout, and help (?) into a single bar.
  *
- * - 図形ツールはジェスチャーシステム（data-kind="menu-item"）経由で動作する。
- * - ズームの +/- は現状は見た目のみ（操作はホイール / ピンチ）。
- * - ヘルプはモーダル表示で、`?` キーでも開ける。Canvas の reducer には依存しない。
+ * - Shape tools operate through the gesture system (data-kind="menu-item").
+ * - Zoom +/- is currently visual only (actual control is via wheel / pinch).
+ * - Help is shown as a modal and can also be opened with the `?` key. It does not depend on the Canvas reducer.
  */
 const ToolbarComponent: React.FC<ToolbarProps> = ({
 	activePresetId,
@@ -54,7 +54,7 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
-			// 開いているときは Escape で閉じる（入力欄にフォーカスがあっても閉じられる）
+			// While open, close on Escape (works even when an input holds focus)
 			if (isHelpOpen) {
 				if (event.key === "Escape") {
 					event.preventDefault();
@@ -63,7 +63,7 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 				return;
 			}
 
-			// `?`（多くの配列で Shift + /）で開く。修飾キー併用時・入力中は無視する
+			// Open on `?` (Shift + / on most layouts). Ignore when modifier keys are held or while typing
 			if (
 				event.key === "?" &&
 				!event.ctrlKey &&
@@ -83,7 +83,7 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 	return (
 		<>
 			<ToolbarContainer>
-				{/* 左: 図形ツール */}
+				{/* Left: shape tools */}
 				<ToolbarGroup>
 					{shapePresetRegistry.all().map((preset) => (
 						<ShapeLibraryItem
@@ -94,10 +94,10 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 					))}
 				</ToolbarGroup>
 
-				{/* 右: ズーム表示・ヘルプ */}
+				{/* Right: zoom readout and help */}
 				<ToolbarGroup>
-					{/* ズーム操作はコマンドシステム経由（ToolbarHandler → handleCommand）。
-					    キーボードショートカット / コンテキストメニューと同一経路。 */}
+					{/* Zoom actions go through the command system (ToolbarHandler → handleCommand),
+					    the same path as keyboard shortcuts and the context menu. */}
 					<ToolbarIconButton
 						type="button"
 						aria-label="Zoom out"
@@ -135,8 +135,8 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 						aria-label="Show keyboard shortcuts"
 						title="Keyboard shortcuts"
 						data-id="shortcut-help:open"
-						// data-gesture="none" を付けないと pointerdown が
-						// ジェスチャーシステムに捕捉され click が発火しない
+						// Without data-gesture="none", pointerdown is captured by
+						// the gesture system and click never fires
 						data-gesture="none"
 						onClick={() => setIsHelpOpen(true)}
 					>

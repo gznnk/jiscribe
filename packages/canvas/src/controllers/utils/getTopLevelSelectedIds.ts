@@ -1,13 +1,14 @@
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 
 /**
- * selectedIds の中から「祖先も選択済み」の子孫を除いた最上位アイテムのみを返す。
+ * Returns only the top-level items from selectedIds, excluding descendants whose
+ * ancestor is also selected.
  *
- * 例: [GroupA, Rect1, Rect2] で Rect1・Rect2 が GroupA の子の場合
- *   → [GroupA] を返す（Rect1・Rect2 は除外）
+ * Example: for [GroupA, Rect1, Rect2] where Rect1 and Rect2 are children of GroupA
+ *   → returns [GroupA] (Rect1 and Rect2 are excluded)
  *
- * グループとその子孫が混在する選択（範囲選択など）に対して
- * グループ化操作を正しく適用するために使用する。
+ * Used to correctly apply grouping operations to a selection that mixes a group and
+ * its descendants (e.g. area selection).
  */
 export function getTopLevelSelectedIds(
 	selectedIds: string[],

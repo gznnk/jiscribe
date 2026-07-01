@@ -3,45 +3,44 @@ import type { GroupState } from "../../../../../states/objects/primitives/group/
 import { getTopLevelSelectedIds } from "../../../../utils/getTopLevelSelectedIds";
 
 /**
- * 選択中のオブジェクトを対象に、グループの全子が選択されていれば
- * 子を選択解除してグループ自体を選択する処理を階層の上方向へ繰り返す。
+ * For the selected objects, when all children of a group are selected, deselect the children
+ * and select the group itself, repeating this upward through the hierarchy.
  *
- * 例: group-1 の子 [rect-1, rect-2, rect-3] がすべて選択されている場合
- *   入力: ['rect-1', 'rect-2', 'rect-3']
- *   出力: ['group-1']
+ * Example: when all children [rect-1, rect-2, rect-3] of group-1 are selected
+ *   Input:  ['rect-1', 'rect-2', 'rect-3']
+ *   Output: ['group-1']
  *
- * ### 処理の流れ
- * ① 祖先が既に選択済みの子孫を除去する（不変条件の強制）。
- *   範囲選択などでグループとその子孫が同時に selectedIds に入った場合でも、
- *   子孫を取り除いて最上位アイテムだけを残す。
- * ② 「全子が選択済み」のグループをワークリスト方式で親方向へ畳み込む。
- *   - 選択アイテムの直接の親グループを起点キューに積む。
- *   - キューから取り出したグループの全子が選択済みなら、子を選択から外して
- *     グループ自体を選択し（畳み込み）、そのグループの親を再検査対象として
- *     キューに積む。
- *   - グループが先に検査され全子未選択でスキップされても、後で子グループが
- *     畳み込まれた時点で親が再びキューに積まれるため、処理順に依存しない。
+ * ### Flow
+ * ① Remove descendants whose ancestor is already selected (enforcing the invariant).
+ *   Even if a group and its descendants both end up in selectedIds (e.g. via area selection),
+ *   drop the descendants and keep only the top-level items.
+ * ② Fold groups whose "all children are selected" upward toward the parents, worklist-style.
+ *   - Enqueue the direct parent group of each selected item as a starting point.
+ *   - If all children of a group taken from the queue are selected, remove the children from the
+ *     selection and select the group itself (fold), then enqueue that group's parent for re-inspection.
+ *   - Even if a group is inspected first and skipped because not all children are selected, its parent
+ *     is enqueued again once a child group is later folded, so the result is order-independent.
  *
- * ### 計算量
- * 各グループの畳み込みは高々 1 回（collapsed で保証）。再検査がキューに積まれる
- * のは「いずれかの子の畳み込み」に伴う場合のみで、畳み込み回数はグループ数で
- * 上限が決まる。各取り出しのコストは childIds 数に比例するため、全体は
- * 関与オブジェクト数に対して線形 O(N) で収まる（旧実装の while(changed) 全走査と
- * shift ベース BFS による O(N^2) 近傍を解消）。
+ * ### Complexity
+ * Each group is folded at most once (guaranteed by collapsed). A re-inspection is enqueued only
+ * upon "folding one of the children", so the number of folds is bounded by the number of groups.
+ * Each dequeue's cost is proportional to the childIds count, so overall it stays linear O(N) in the
+ * number of involved objects (resolving the old implementation's while(changed) full scan and the
+ * O(N^2)-ish neighborhood of shift-based BFS).
  *
- * ### ループの終了保証
- * 畳み込みは単調増加する collapsed により高々グループ数回しか起こらず、
- * 再キューイングもそれに連動して有限回。起点キューイングも有限。
- * したがって parentId / childIds に循環参照があってもループは必ず終了する。
+ * ### Termination guarantee
+ * Folding happens at most as many times as the number of groups due to the monotonically increasing
+ * collapsed set, and re-enqueuing is bounded accordingly. Initial enqueuing is finite too.
+ * Therefore the loop always terminates even if parentId / childIds contain circular references.
  */
 export function autoSelectParentGroups(
 	state: CanvasState,
 	selectedIds: string[],
 ): string[] {
-	// ① 祖先が既に選択済みの子孫を除去する
+	// ① Remove descendants whose ancestor is already selected
 	const selected = new Set(getTopLevelSelectedIds(selectedIds, state.objects));
 
-	// ② 再検査対象グループのキュー。Set の挿入順で結果順序を安定させる。
+	// ② Queue of groups to re-inspect. The Set's insertion order keeps the result order stable.
 	const queue: string[] = [];
 	const queued = new Set<string>();
 	const enqueue = (groupId: string): void => {
@@ -51,7 +50,7 @@ export function autoSelectParentGroups(
 		}
 	};
 
-	// 起点: 現在の選択アイテムの直接の親グループ
+	// Starting points: the direct parent groups of the current selected items
 	for (const id of selected) {
 		const parentId = state.objects[id]?.parentId;
 		if (parentId != null) {
@@ -59,14 +58,14 @@ export function autoSelectParentGroups(
 		}
 	}
 
-	// 畳み込み済みグループ（再畳み込み・無限ループ防止）
+	// Already-folded groups (prevents re-folding / infinite loops)
 	const collapsed = new Set<string>();
 
 	let head = 0;
 	while (head < queue.length) {
 		const groupId = queue[head];
 		head++;
-		// 取り出したので、子の畳み込みに伴う再検査で再度積めるようにする
+		// Dequeued, so allow re-enqueuing during re-inspection triggered by a child fold
 		queued.delete(groupId);
 
 		if (collapsed.has(groupId)) {
@@ -83,21 +82,21 @@ export function autoSelectParentGroups(
 			continue;
 		}
 
-		// 全子が選択済みでなければ、まだ畳み込めない
+		// If not all children are selected, it cannot be folded yet
 		if (!childIds.every((childId) => selected.has(childId))) {
 			continue;
 		}
 
-		// 畳み込み: 子を選択から外し、グループ自体を選択する。
-		// 子グループは既に自身へ畳み込まれて選択集合に入っているため、
-		// 直接の childIds を差し替えるだけで子孫の除去まで完結する。
+		// Fold: remove the children from the selection and select the group itself.
+		// Since a child group has already been folded into itself and is in the selection set,
+		// replacing only the direct childIds completes the descendant removal as well.
 		for (const childId of childIds) {
 			selected.delete(childId);
 		}
 		selected.add(groupId);
 		collapsed.add(groupId);
 
-		// このグループの親が新たに「全子選択済み」になりうるため再検査する
+		// This group's parent may newly become "all children selected", so re-inspect it
 		const parentId = group.parentId;
 		if (parentId != null) {
 			enqueue(parentId);

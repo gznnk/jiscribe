@@ -21,7 +21,7 @@ export const DiamondPreview: ShapePreviewRenderer = ({
 		`${centerX},${y + height}`,
 		`${x},${centerY}`,
 	].join(" ");
-	// 色は var(--vscode-*)（auto の解決結果）を含みうるため SVG 属性ではなく style で当てる。
+	// Colors may include var(--vscode-*) (the resolved result of auto), so apply them via style rather than SVG attributes.
 	return (
 		<polygon
 			points={points}

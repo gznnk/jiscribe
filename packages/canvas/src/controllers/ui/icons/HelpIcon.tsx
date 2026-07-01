@@ -8,8 +8,8 @@ type HelpIconProps = {
 };
 
 /**
- * ヘルプ（はてなマーク）アイコン。
- * キーボードショートカット一覧を開くボタンなどに使う。
+ * Help (question mark) icon.
+ * Used for buttons such as opening the keyboard shortcut list.
  */
 const HelpIconComponent: React.FC<HelpIconProps> = ({
 	width = 20,

@@ -5,8 +5,8 @@ import { getFirstSelectedWithProp } from "../../../utils/getFirstSelectedWithPro
 export const DEFAULT_STROKE_WIDTH = 2;
 
 /**
- * 選択中（コネクター選択時はそのコネクター）の strokeWidth を取得する。
- * 数値を持つものがなければ既定値を返す。
+ * Gets the strokeWidth of the selection (or the connector when a connector is selected).
+ * Returns the default value if nothing carries a numeric strokeWidth.
  */
 export const getSelectedStrokeWidth = (
 	state: CanvasControllerState,

@@ -10,7 +10,7 @@ type SnapGuidesProps = {
 const STROKE = "#3b82f6";
 const STROKE_WIDTH = 1;
 const STROKE_DASHARRAY = "4, 3";
-/** ガイド線を両端から伸ばすスクリーンピクセル数 */
+/** Number of screen pixels to extend the guide line beyond each endpoint */
 const EXTENSION_PX = 16;
 
 const SnapGuidesComponent: React.FC<SnapGuidesProps> = ({
@@ -25,8 +25,8 @@ const SnapGuidesComponent: React.FC<SnapGuidesProps> = ({
 
 	return (
 		<>
-			{/* x軸スナップ: 縦ガイド線（left/right/center 各々に出る場合あり）*/}
-			{/* 整列X座標は line の x1(=x2) がそのまま保持する。data-testid は軸の列挙のみ担う */}
+			{/* X-axis snap: vertical guide lines (may appear for each of left/right/center) */}
+			{/* The aligned X coordinate is held directly by the line's x1 (=x2). data-testid only enumerates the axis. */}
 			{snapFeedback.x.map((guide) => (
 				<line
 					key={guide.coordinate}
@@ -41,7 +41,7 @@ const SnapGuidesComponent: React.FC<SnapGuidesProps> = ({
 					pointerEvents="none"
 				/>
 			))}
-			{/* y軸スナップ: 横ガイド線（top/bottom/center 各々に出る場合あり）*/}
+			{/* Y-axis snap: horizontal guide lines (may appear for each of top/bottom/center) */}
 			{snapFeedback.y.map((guide) => (
 				<line
 					key={guide.coordinate}

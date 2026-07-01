@@ -9,8 +9,8 @@ import {
 } from "../../utils/validateStateUtils";
 
 /**
- * GroupState（transform + childIds）を検証する。
- * 境界フレーム（Frame）はキャッシュ値で省略されうるため必須とはしない。
+ * Validates a GroupState (transform + childIds).
+ * The bounding frame (Frame) may be omitted as a cached value, so it is not required.
  */
 export const isValidGroupState: ObjectStateValidateFn = (value) => {
 	if (!isObject(value)) {

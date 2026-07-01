@@ -12,7 +12,7 @@ export const ZoomInCommand: Command = {
 		mac: [
 			{ code: "Equal", meta: true }, // US/EU: Cmd+=
 			{ code: "Semicolon", meta: true }, // JIS: Cmd+;
-			{ key: "+", meta: true }, // 任意レイアウト: Shift+「+になるキー」
+			{ key: "+", meta: true }, // Any layout: Shift + "the key that produces +"
 		],
 		win: [
 			{ code: "Equal", ctrl: true },

@@ -19,9 +19,9 @@ export function collectDescendantIds(
 ): string[] {
 	const queue = [id];
 
-	// head インデックス方式で BFS する。queue.shift() は配列全体を前詰めするため
-	// 1 回 O(n)（全体で O(n^2)）になるが、head を進めるだけなら全体で O(n) に収まる。
-	// autoSelectParentGroups と同一パターン。
+	// BFS using a head-index approach. queue.shift() shifts the whole array
+	// forward, so it is O(n) per call (O(n^2) overall), whereas just advancing
+	// head keeps the total at O(n). Same pattern as autoSelectParentGroups.
 	let head = 0;
 	while (head < queue.length) {
 		const currentId = queue[head];

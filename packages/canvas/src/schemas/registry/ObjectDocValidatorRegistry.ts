@@ -35,12 +35,12 @@ class ObjectDocValidatorRegistry {
 		return this.entries.get(type as ObjectType)?.features;
 	}
 
-	/** 指定した型が connector の端点として接続可能かを返す。未登録型は false。 */
+	/** Returns whether the given type can be connected as a connector endpoint. Unregistered types return false. */
 	isConnectable(type: string): boolean {
 		return this.entries.get(type as ObjectType)?.features.connectable === true;
 	}
 
-	/** 登録が空かどうか。parseCanvasText の遅延初期化要否の判定に使う。 */
+	/** Whether the registry is empty. Used to decide whether parseCanvasText needs lazy initialization. */
 	isEmpty(): boolean {
 		return this.entries.size === 0;
 	}

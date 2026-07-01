@@ -24,8 +24,8 @@ export const SelectAllCommand: Command = {
 				state.objects,
 				state.multiSelectGroup,
 			),
-			// selectedIds と selectedConnectorId / selectedVertex は排他。
-			// 解除しないと SwapArrows や handlePropertyUpdate の分岐が崩れる
+			// selectedIds is mutually exclusive with selectedConnectorId / selectedVertex.
+			// Without clearing them, the branching in SwapArrows and handlePropertyUpdate breaks.
 			selectedConnectorId: null,
 			selectedVertex: null,
 			objectMenuOpenId: null,

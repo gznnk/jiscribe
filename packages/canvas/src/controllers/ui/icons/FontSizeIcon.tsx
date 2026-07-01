@@ -8,8 +8,8 @@ type FontSizeIconProps = {
 };
 
 /**
- * フォントサイズアイコン。
- * 大きい "T" と小さい "T" を組み合わせて表示する。
+ * Font size icon.
+ * Displays a large "T" combined with a small "T".
  */
 const FontSizeIconComponent: React.FC<FontSizeIconProps> = ({
 	width = 24,

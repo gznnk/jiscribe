@@ -50,10 +50,10 @@ import {
 import type { ControlStrategy } from "../ControlEventHandler";
 
 /**
- * Transform control の操作（リサイズと回転）を処理する。
+ * Handles transform-control operations (resize and rotation).
  *
- * Control ID フォーマット: "transform-control:<anchorType>"
- * 例: "transform-control:bottomRight"
+ * Control ID format: "transform-control:<anchorType>"
+ * Example: "transform-control:bottomRight"
  */
 export class TransformControlHandler implements ControlStrategy {
 	readonly controlType = "transform-control";
@@ -68,7 +68,7 @@ export class TransformControlHandler implements ControlStrategy {
 			return false;
 		}
 
-		// transform-control かどうかをチェック
+		// Check whether it is a transform-control
 		return targetId.startsWith("transform-control:");
 	}
 
@@ -86,7 +86,7 @@ export class TransformControlHandler implements ControlStrategy {
 			return state;
 		}
 
-		// "transform-control:bottomRight" からアンカータイプをパース
+		// Parse the anchor type from "transform-control:bottomRight"
 		const parts = targetControlId.split(":");
 		if (parts.length !== 2 || parts[0] !== "transform-control") {
 			return state;
@@ -94,7 +94,7 @@ export class TransformControlHandler implements ControlStrategy {
 
 		const anchorType = parts[1] as TransformAnchorType;
 
-		// ジェスチャータイプに応じて適切なハンドラーにルーティング
+		// Route to the appropriate handler based on the gesture type
 		let nextState = state;
 
 		if (event.type === "dragStart") {
@@ -109,7 +109,7 @@ export class TransformControlHandler implements ControlStrategy {
 	}
 
 	/**
-	 * Transform control アンカーでのドラッグ開始を処理する。
+	 * Handles drag start on a transform-control anchor.
 	 */
 	private handleDragStart(
 		state: CanvasControllerState,
@@ -124,31 +124,31 @@ export class TransformControlHandler implements ControlStrategy {
 	}
 
 	/**
-	 * Transform control アンカーでのドラッグを処理する。
+	 * Handles dragging on a transform-control anchor.
 	 */
 	private handleDrag(
 		state: CanvasControllerState,
 		event: CanvasEvent,
 		anchorType: TransformAnchorType,
 	): CanvasControllerState {
-		// 回転は別処理
+		// Rotation is handled separately
 		if (anchorType === "rotation") {
 			return this.handleRotationDrag(state, event);
 		}
 
-		// リサイズ処理の共通前処理
+		// Common preprocessing for resize handling
 		const eventStartSnapshot = state.eventStartSnapshot;
 		if (!eventStartSnapshot) {
 			return state;
 		}
 
-		// 対象のフレームを決定（複数選択時は multiSelectGroup、単一選択時は選択オブジェクト）
+		// Determine the target frame (multiSelectGroup for multi-selection, the selected object for single selection)
 		let startFrame: (TransformedFrame & TransformState) | null = null;
 		let selectedId: string | null = null;
 		const isMultiSelect = state.selectedIds.length > 1;
 
 		if (isMultiSelect) {
-			// 複数選択の場合は multiSelectGroup を使用
+			// For multi-selection, use multiSelectGroup
 			const multiSelectGroup = eventStartSnapshot.multiSelectGroup;
 			if (
 				multiSelectGroup &&
@@ -158,7 +158,7 @@ export class TransformControlHandler implements ControlStrategy {
 				startFrame = multiSelectGroup as TransformedFrame & TransformState;
 			}
 		} else if (state.selectedIds.length === 1) {
-			// 単一選択の場合
+			// For single selection
 			selectedId = state.selectedIds[0];
 			const startObject = eventStartSnapshot.objects[selectedId];
 			if (
@@ -174,12 +174,12 @@ export class TransformControlHandler implements ControlStrategy {
 			return state;
 		}
 
-		// 逆アフィン変換されたカーソル位置を計算（オブジェクトのローカル空間内）
+		// Compute the inverse affine-transformed cursor position (in the object's local space)
 		const radians = degreesToRadians(startFrame.rotation);
 
-		// ワールド空間でのカーソル位置
+		// Cursor position in world space
 
-		// keyPoints から取得、なければ計算
+		// Get from keyPoints, or compute if absent
 		const startFrameKeyPointsId = isMultiSelect
 			? eventStartSnapshot.multiSelectGroup?.id
 			: selectedId;
@@ -196,7 +196,7 @@ export class TransformControlHandler implements ControlStrategy {
 		const doKeepProportion =
 			(lockAspectRatio || event.mods.shift) && aspectRatio !== undefined;
 
-		// アンカー固有のリサイズ処理にルーティング
+		// Route to anchor-specific resize handling
 		let resizeResult = this.calculateResize(
 			anchorType,
 			startFrame,
@@ -212,7 +212,7 @@ export class TransformControlHandler implements ControlStrategy {
 			return state;
 		}
 
-		// ── スナップ補正 ────────────────────────────────────────────────────
+		// ── Snap correction ─────────────────────────────────────────────────
 		let snapFeedback: SnapFeedback = { x: [], y: [] };
 
 		if (!event.mods.ctrl) {
@@ -225,7 +225,7 @@ export class TransformControlHandler implements ControlStrategy {
 			const yEdge = getAnchorYSnapEdge(anchorType, resizeResult.scaleY);
 
 			if (xEdge !== null || yEdge !== null) {
-				// 数値ヤコビアン: カーソルをε動かした場合のBBox変化を計算
+				// Numerical Jacobian: compute the BBox change when the cursor moves by ε
 				const ε = 1.0;
 				const resPlusDx = this.calculateResize(
 					anchorType,
@@ -273,7 +273,7 @@ export class TransformControlHandler implements ControlStrategy {
 					},
 				} as const;
 
-				// 感度が低い辺のスナップはスキップ
+				// Skip snapping for low-sensitivity edges
 				const SENSITIVITY = 0.3;
 				const xSens = xEdge
 					? Math.max(Math.abs(J[xEdge].dx), Math.abs(J[xEdge].dy))
@@ -285,8 +285,8 @@ export class TransformControlHandler implements ControlStrategy {
 				const snapY = yEdge !== null && ySens > SENSITIVITY;
 
 				if (snapX || snapY) {
-					// スナップ候補は dragStart 時にキャッシュ済みの全オブジェクト分を参照のみで使い、
-					// 除外（選択中＋全子孫）は Set を findSnap に渡して内部で弾く。
+					// Snap candidates use the cached set of all objects from dragStart by reference only;
+					// exclusions (selection + all descendants) are passed to findSnap as a Set and filtered internally.
 					const snapCandidates = eventStartSnapshot.snapCandidates;
 					const excludeIds = eventStartSnapshot.selectedIdsWithDescendants;
 
@@ -323,7 +323,7 @@ export class TransformControlHandler implements ControlStrategy {
 						}
 					}
 
-					// スナップ後の実際のBBoxでガイド線を生成
+					// Generate guide lines from the actual BBox after snapping
 					const actualBBox = calcTentativeBBox(
 						resizeResult,
 						startFrame,
@@ -350,7 +350,7 @@ export class TransformControlHandler implements ControlStrategy {
 			scaleY: newScaleY,
 		} = resizeResult;
 
-		// 新しい中心をワールド空間に変換
+		// Transform the new center into world space
 		const newCenter = calcAffineTransformedPoint(
 			inversedCenterX,
 			inversedCenterY,
@@ -361,7 +361,7 @@ export class TransformControlHandler implements ControlStrategy {
 			startFrame.cy,
 		);
 
-		// 新しい寸法と中心でオブジェクト/グループを更新
+		// Update the object/group with the new dimensions and center
 		const updatedFrame = {
 			...startFrame,
 			width: roundToDecimal(Math.abs(newWidth), PRECISION.SIZE),
@@ -372,7 +372,7 @@ export class TransformControlHandler implements ControlStrategy {
 			scaleY: newScaleY,
 		};
 
-		// eventStartSnapshot から更新されたオブジェクトマップを作成
+		// Build the updated object map from eventStartSnapshot
 		const updatedObjects = {
 			...eventStartSnapshot.objects,
 		};
@@ -380,7 +380,7 @@ export class TransformControlHandler implements ControlStrategy {
 		let nextState: CanvasControllerState;
 
 		if (isMultiSelect) {
-			// 複数選択の場合: multiSelectGroup を基準に各選択オブジェクトを変換
+			// Multi-selection: transform each selected object relative to multiSelectGroup
 			const startGroup = startFrame as GroupState;
 			const updatedGroup: GroupState = {
 				...startGroup,
@@ -395,7 +395,7 @@ export class TransformControlHandler implements ControlStrategy {
 			);
 			Object.assign(updatedObjects, groupChildrenUpdates);
 
-			// multiSelectGroup も更新
+			// Update multiSelectGroup as well
 			nextState = {
 				...state,
 				objects: updatedObjects,
@@ -403,7 +403,7 @@ export class TransformControlHandler implements ControlStrategy {
 				snapFeedback,
 			};
 
-			// multiSelectGroup のバウンディングボックスを再計算（drag中はこれのみ更新）
+			// Recompute the bounding box of multiSelectGroup (only this is updated during drag)
 			const recalculatedBounds = calcMultiSelectGroupBounds(
 				state.selectedIds,
 				nextState.objects,
@@ -419,7 +419,7 @@ export class TransformControlHandler implements ControlStrategy {
 				};
 			}
 		} else {
-			// 単一選択の場合: 選択オブジェクト自身を更新
+			// Single selection: update the selected object itself
 			if (!selectedId) {
 				return state;
 			}
@@ -435,7 +435,7 @@ export class TransformControlHandler implements ControlStrategy {
 			};
 			updatedObjects[selectedId] = updatedObject;
 
-			// グループの場合、子オブジェクトも変換する
+			// If it is a group, also transform the child objects
 			if (updatedObject.type === "group") {
 				const groupChildrenUpdates = transformChildren(
 					startObject as GroupState,
@@ -452,8 +452,8 @@ export class TransformControlHandler implements ControlStrategy {
 				snapFeedback,
 			};
 
-			// 単一グループ選択の場合のみ、そのグループ自身の境界を更新（drag中）
-			// 親グループの更新はdragEndで行う
+			// Only for a single group selection, update that group's own bounds (during drag).
+			// Parent group updates happen on dragEnd.
 			if (updatedObject.type === "group") {
 				return updateSingleGroupBounds(nextState, selectedId);
 			}
@@ -463,7 +463,7 @@ export class TransformControlHandler implements ControlStrategy {
 	}
 
 	/**
-	 * アンカータイプに応じたリサイズ計算を行う。
+	 * Performs the resize calculation according to the anchor type.
 	 */
 	private calculateResize(
 		anchorType: TransformAnchorType,
@@ -569,7 +569,7 @@ export class TransformControlHandler implements ControlStrategy {
 	}
 
 	/**
-	 * 右下アンカーのリサイズ計算。
+	 * Resize calculation for the bottom-right anchor.
 	 */
 	private calculateBottomRightResize(
 		startFrame: TransformedFrame & TransformState,
@@ -589,7 +589,7 @@ export class TransformControlHandler implements ControlStrategy {
 				)
 			: { x: cursorX, y: cursorY };
 
-		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
+		// Transform the cursor into the object's local space (rotation only, no scale)
 		const inversedCursor = calcInverseAffineTransformedPoint(
 			constrained.x,
 			constrained.y,
@@ -643,7 +643,7 @@ export class TransformControlHandler implements ControlStrategy {
 	}
 
 	/**
-	 * 左上アンカーのリサイズ計算。
+	 * Resize calculation for the top-left anchor.
 	 */
 	private calculateTopLeftResize(
 		startFrame: TransformedFrame & TransformState,
@@ -663,7 +663,7 @@ export class TransformControlHandler implements ControlStrategy {
 				)
 			: { x: cursorX, y: cursorY };
 
-		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
+		// Transform the cursor into the object's local space (rotation only, no scale)
 		const inversedCursor = calcInverseAffineTransformedPoint(
 			constrained.x,
 			constrained.y,
@@ -719,7 +719,7 @@ export class TransformControlHandler implements ControlStrategy {
 	}
 
 	/**
-	 * 右上アンカーのリサイズ計算。
+	 * Resize calculation for the top-right anchor.
 	 */
 	private calculateTopRightResize(
 		startFrame: TransformedFrame & TransformState,
@@ -739,7 +739,7 @@ export class TransformControlHandler implements ControlStrategy {
 				)
 			: { x: cursorX, y: cursorY };
 
-		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
+		// Transform the cursor into the object's local space (rotation only, no scale)
 		const inversedCursor = calcInverseAffineTransformedPoint(
 			constrained.x,
 			constrained.y,
@@ -795,7 +795,7 @@ export class TransformControlHandler implements ControlStrategy {
 	}
 
 	/**
-	 * 左下アンカーのリサイズ計算。
+	 * Resize calculation for the bottom-left anchor.
 	 */
 	private calculateBottomLeftResize(
 		startFrame: TransformedFrame & TransformState,
@@ -815,7 +815,7 @@ export class TransformControlHandler implements ControlStrategy {
 				)
 			: { x: cursorX, y: cursorY };
 
-		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
+		// Transform the cursor into the object's local space (rotation only, no scale)
 		const inversedCursor = calcInverseAffineTransformedPoint(
 			constrained.x,
 			constrained.y,
@@ -869,7 +869,7 @@ export class TransformControlHandler implements ControlStrategy {
 	}
 
 	/**
-	 * 上中央アンカーのリサイズ計算。
+	 * Resize calculation for the top-center anchor.
 	 */
 	private calculateTopCenterResize(
 		startFrame: TransformedFrame & TransformState,
@@ -887,7 +887,7 @@ export class TransformControlHandler implements ControlStrategy {
 			{ x: cursorX, y: cursorY },
 		);
 
-		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
+		// Transform the cursor into the object's local space (rotation only, no scale)
 		const inversedCursor = calcInverseAffineTransformedPoint(
 			constrained.x,
 			constrained.y,
@@ -943,7 +943,7 @@ export class TransformControlHandler implements ControlStrategy {
 	}
 
 	/**
-	 * 右中央アンカーのリサイズ計算。
+	 * Resize calculation for the right-center anchor.
 	 */
 	private calculateRightCenterResize(
 		startFrame: TransformedFrame & TransformState,
@@ -961,7 +961,7 @@ export class TransformControlHandler implements ControlStrategy {
 			{ x: cursorX, y: cursorY },
 		);
 
-		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
+		// Transform the cursor into the object's local space (rotation only, no scale)
 		const inversedCursor = calcInverseAffineTransformedPoint(
 			constrained.x,
 			constrained.y,
@@ -1016,7 +1016,7 @@ export class TransformControlHandler implements ControlStrategy {
 	}
 
 	/**
-	 * 下中央アンカーのリサイズ計算。
+	 * Resize calculation for the bottom-center anchor.
 	 */
 	private calculateBottomCenterResize(
 		startFrame: TransformedFrame & TransformState,
@@ -1034,7 +1034,7 @@ export class TransformControlHandler implements ControlStrategy {
 			{ x: cursorX, y: cursorY },
 		);
 
-		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
+		// Transform the cursor into the object's local space (rotation only, no scale)
 		const inversedCursor = calcInverseAffineTransformedPoint(
 			constrained.x,
 			constrained.y,
@@ -1090,7 +1090,7 @@ export class TransformControlHandler implements ControlStrategy {
 	}
 
 	/**
-	 * 左中央アンカーのリサイズ計算。
+	 * Resize calculation for the left-center anchor.
 	 */
 	private calculateLeftCenterResize(
 		startFrame: TransformedFrame & TransformState,
@@ -1108,7 +1108,7 @@ export class TransformControlHandler implements ControlStrategy {
 			{ x: cursorX, y: cursorY },
 		);
 
-		// カーソルをオブジェクトのローカル空間に変換（回転のみ、スケールなし）
+		// Transform the cursor into the object's local space (rotation only, no scale)
 		const inversedCursor = calcInverseAffineTransformedPoint(
 			constrained.x,
 			constrained.y,
@@ -1163,17 +1163,17 @@ export class TransformControlHandler implements ControlStrategy {
 	}
 
 	/**
-	 * Transform control アンカーでのドラッグ終了を処理する。
+	 * Handles drag end on a transform-control anchor.
 	 */
 	private handleDragEnd(
 		state: CanvasControllerState,
 		event: CanvasEvent,
 		anchorType: TransformAnchorType,
 	): CanvasControllerState {
-		// ドラッグ中の状態更新を適用して最終状態を計算
+		// Apply the drag-time state update to compute the final state
 		let nextState = this.handleDrag({ ...state }, event, anchorType);
 
-		// dragEnd時に選択中のオブジェクトとその親グループの境界を更新
+		// On dragEnd, update the bounds of the selected objects and their parent groups
 		for (const selectedId of nextState.selectedIds) {
 			const obj = nextState.objects[selectedId];
 			if (obj && (obj.type === "group" || obj.parentId)) {
@@ -1188,7 +1188,7 @@ export class TransformControlHandler implements ControlStrategy {
 	}
 
 	/**
-	 * rotation アンカーのドラッグを処理（回転ハンドル）。
+	 * Handles dragging on the rotation anchor (rotation handle).
 	 */
 	private handleRotationDrag(
 		state: CanvasControllerState,
@@ -1199,19 +1199,19 @@ export class TransformControlHandler implements ControlStrategy {
 			return state;
 		}
 
-		// 対象のフレームを決定（複数選択時は multiSelectGroup、単一選択時は選択オブジェクト）
+		// Determine the target frame (multiSelectGroup for multi-selection, the selected object for single selection)
 		let startFrame: TransformedFrame | null = null;
 		let selectedId: string | null = null;
 		const isMultiSelect = state.selectedIds.length > 1;
 
 		if (isMultiSelect) {
-			// 複数選択の場合は multiSelectGroup を使用
+			// For multi-selection, use multiSelectGroup
 			const multiSelectGroup = eventStartSnapshot.multiSelectGroup;
 			if (multiSelectGroup && isTransformedFrame(multiSelectGroup)) {
 				startFrame = multiSelectGroup;
 			}
 		} else if (state.selectedIds.length === 1) {
-			// 単一選択の場合
+			// For single selection
 			selectedId = state.selectedIds[0];
 			const startObject = eventStartSnapshot.objects[selectedId];
 			if (startObject && isTransformedFrame(startObject)) {
@@ -1223,11 +1223,11 @@ export class TransformControlHandler implements ControlStrategy {
 			return state;
 		}
 
-		// ワールド空間でのカーソル位置
+		// Cursor position in world space
 		const cursorX = event.last.x;
 		const cursorY = event.last.y;
 
-		// 中心点からカーソルへのベクトル角度を計算
+		// Compute the angle of the vector from the center point to the cursor
 		const radian = calcVectorAngle(
 			startFrame.cx,
 			startFrame.cy,
@@ -1235,7 +1235,7 @@ export class TransformControlHandler implements ControlStrategy {
 			cursorY,
 		);
 
-		// 回転ポイントの基準角度を計算（右上方向）
+		// Compute the reference angle of the rotation point (toward the top-right)
 		const rotatePointRadian = calcVectorAngle(
 			startFrame.cx,
 			startFrame.cy,
@@ -1243,12 +1243,12 @@ export class TransformControlHandler implements ControlStrategy {
 			startFrame.cy - startFrame.height,
 		);
 
-		// 新しい回転角度を計算（0-360度、整数に丸める）
+		// Compute the new rotation angle (0-360 degrees, rounded to an integer)
 		const newRotation = normalizeAngle(
 			roundToDecimal(radiansToDegrees(radian - rotatePointRadian), 0),
 		);
 
-		// eventStartSnapshot から更新されたオブジェクトマップを作成
+		// Build the updated object map from eventStartSnapshot
 		const updatedObjects = {
 			...eventStartSnapshot.objects,
 		};
@@ -1256,7 +1256,7 @@ export class TransformControlHandler implements ControlStrategy {
 		let nextState: CanvasControllerState;
 
 		if (isMultiSelect) {
-			// 複数選択の場合: multiSelectGroup を基準に各選択オブジェクトを回転
+			// Multi-selection: rotate each selected object relative to multiSelectGroup
 			const startGroup = startFrame as GroupState;
 			const updatedGroup: GroupState = {
 				...startGroup,
@@ -1271,16 +1271,16 @@ export class TransformControlHandler implements ControlStrategy {
 			);
 			Object.assign(updatedObjects, rotatedChildren);
 
-			// multiSelectGroup も更新
+			// Update multiSelectGroup as well
 			nextState = {
 				...state,
 				objects: updatedObjects,
 				multiSelectGroup: updatedGroup,
 			};
 
-			// drag中は親グループの更新はしない（dragEndで行う）
+			// Parent group updates are not done during drag (done on dragEnd)
 		} else {
-			// 単一選択の場合: 選択オブジェクト自身を回転
+			// Single selection: rotate the selected object itself
 			if (!selectedId) {
 				return state;
 			}
@@ -1296,7 +1296,7 @@ export class TransformControlHandler implements ControlStrategy {
 			};
 			updatedObjects[selectedId] = updatedObject;
 
-			// グループの場合、子オブジェクトも回転させる
+			// If it is a group, also rotate the child objects
 			if (updatedObject.type === "group") {
 				const rotatedChildren = rotateChildren(
 					startObject as GroupState,
@@ -1312,8 +1312,8 @@ export class TransformControlHandler implements ControlStrategy {
 				objects: updatedObjects,
 			};
 
-			// 単一グループ選択の場合のみ、そのグループ自身の境界を更新（drag中）
-			// 親グループの更新はdragEndで行う
+			// Only for a single group selection, update that group's own bounds (during drag).
+			// Parent group updates happen on dragEnd.
 			if (updatedObject.type === "group") {
 				return updateSingleGroupBounds(nextState, selectedId);
 			}

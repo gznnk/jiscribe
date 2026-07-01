@@ -27,9 +27,9 @@ const getSelectedStrokeColor = (state: CanvasControllerState): string => {
 };
 
 /**
- * ストローク色メニュー。
- * 選択中オブジェクトの stroke プロパティをカラーピッカーで変更する。
- * BorderColor と LineColor の両方を統合したメニュー。
+ * Stroke color menu.
+ * Changes the stroke property of the selected object via a color picker.
+ * Unifies both the BorderColor and LineColor menus.
  */
 const StrokeColorMenuComponent: React.FC<StrokeColorMenuProps> = ({
 	canvasState,

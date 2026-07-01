@@ -23,11 +23,12 @@ type FitOptions = {
 };
 
 /**
- * 全コンテンツ（group を除く全オブジェクト）を収める Viewport を算出する純関数。
+ * Pure function that computes a Viewport fitting all content (every object
+ * except groups).
  *
- * `ZoomToFitCommand`（Ctrl+0）と読み取り専用の `CanvasThumbnail` が共有し、
- * フィット挙動がドリフトしないようにする。フィットできる広がりが無い
- * （オブジェクト無し／全て退化）場合は `null` を返す。
+ * Shared by `ZoomToFitCommand` (Ctrl+0) and the read-only `CanvasThumbnail` so
+ * the fit behavior does not drift. Returns `null` when there is no extent to
+ * fit (no objects / all degenerate).
  */
 export const calcFitViewport = (
 	objects: Record<string, ObjectState>,
@@ -43,8 +44,9 @@ export const calcFitViewport = (
 			continue;
 		}
 
-		// コネクター: points は中間経由点のみのため、動的解決した端点 + 経由点で
-		// バウンドを計算する（free 端点はここでしか拾えない）。
+		// Connector: points holds only intermediate waypoints, so compute the
+		// bounds from the dynamically resolved endpoints plus the waypoints
+		// (free endpoints can only be captured here).
 		if (obj.type === "connector") {
 			const bbox = calcConnectorBoundingBox(obj as ConnectorState, objects);
 			if (bbox) {
@@ -89,7 +91,7 @@ export const calcFitViewport = (
 		contentWidth > 0 ? availableW / contentWidth : null,
 		contentHeight > 0 ? availableH / contentHeight : null,
 	].filter((v): v is number => v !== null);
-	// 両軸ともサイズ 0（単一点 Poly や退化 Frame など）はフィット不能 → null。
+	// Zero size on both axes (single-point Poly, degenerate Frame, etc.) cannot be fit -> null.
 	if (zoomCandidates.length === 0) {
 		return null;
 	}

@@ -56,7 +56,7 @@ function sortObjectIdsByZOrderMapOnly(
 	};
 
 	return [...ids].sort((idA, idB) => {
-		// パスキャッシュなし: 比較のたびに getPathFromRoot を再計算する
+		// No path cache: recompute getPathFromRoot on every comparison
 		const pathA = getPathFromRoot(idA, objects);
 		const pathB = getPathFromRoot(idB, objects);
 		const minPathLength = Math.min(pathA.length, pathB.length);
@@ -85,7 +85,7 @@ function sortObjectIdsByZOrderMapOnly(
 
 // --- test data builders ---
 
-/** フラット構造: すべてルートレベルに n 個のオブジェクト */
+/** Flat structure: n objects all at the root level */
 function buildFlat(n: number): {
 	ids: string[];
 	objects: Record<string, ObjectState>;
@@ -98,11 +98,11 @@ function buildFlat(n: number): {
 		objects[id] = { id, type: "rect", parentId: undefined } as ObjectState;
 		rootIds.push(id);
 	}
-	// 逆順（ワーストケース）
+	// Reversed (worst case)
 	return { ids: [...rootIds].reverse(), objects, rootIds };
 }
 
-/** 2階層: 1つのグループに n 個の子 */
+/** Two levels: one group with n children */
 function buildNested(n: number): {
 	ids: string[];
 	objects: Record<string, ObjectState>;
@@ -124,11 +124,11 @@ function buildNested(n: number): {
 	} as unknown as GroupState;
 
 	const rootIds = ["group0"];
-	// 逆順（ワーストケース）
+	// Reversed (worst case)
 	return { ids: [...childIds].reverse(), objects, rootIds };
 }
 
-/** 深いネスト: depth 階層のグループチェーンに n 個の葉を最深部へぶら下げる */
+/** Deep nesting: a group chain of `depth` levels with n leaves hung off the deepest level */
 function buildDeep(
 	n: number,
 	depth: number,
@@ -139,7 +139,7 @@ function buildDeep(
 } {
 	const objects: Record<string, ObjectState> = {};
 
-	// group0 -> group1 -> ... -> group{depth-1} の単一チェーンを作る
+	// Build a single chain group0 -> group1 -> ... -> group{depth-1}
 	for (let d = 0; d < depth; d++) {
 		const id = `group${d}`;
 		objects[id] = {
@@ -164,7 +164,7 @@ function buildDeep(
 	(objects[deepestGroupId] as unknown as GroupState).childIds = childIds;
 
 	const rootIds = ["group0"];
-	// 逆順（ワーストケース）
+	// Reversed (worst case)
 	return { ids: [...childIds].reverse(), objects, rootIds };
 }
 
@@ -225,7 +225,7 @@ describe("sortObjectIdsByZOrder — ネスト構造", () => {
 });
 
 describe("sortObjectIdsByZOrder — 深いネスト構造（パスキャッシュ効果）", () => {
-	// depth を深くするほど getPathFromRoot のコストが上がり、パスキャッシュが効く
+	// The deeper the depth, the more getPathFromRoot costs, so the path cache pays off
 	const small = buildDeep(50, 10);
 	const medium = buildDeep(200, 10);
 	const large = buildDeep(1000, 10);

@@ -11,8 +11,8 @@ import type { PolygonState } from "../../../../../states/objects/primitives/poly
 import type { PolylineState } from "../../../../../states/objects/primitives/polyline/PolylineState";
 
 /**
- * Poly系（Polygon, Polyline）のグループ変形処理
- * 各頂点をグループの変形に合わせて変換する
+ * Group transform handling for Poly-family shapes (Polygon, Polyline).
+ * Transforms each vertex according to the group's transform.
  */
 export function transformPolyByGroup<T extends PolygonState | PolylineState>(
 	poly: T,
@@ -24,9 +24,9 @@ export function transformPolyByGroup<T extends PolygonState | PolylineState>(
 	const groupScaleY =
 		transformRootGroupEndState.height / transformRootGroupStartState.height;
 
-	// 各頂点を変換
+	// Transform each vertex
 	const transformedPoints = poly.points.map((point) => {
-		// 1. グループの回転を解除（ローカル座標系に変換）
+		// 1. Undo the group's rotation (convert to the local coordinate system)
 		const inversedPoint = calcRotatedPoint(
 			point.x,
 			point.y,
@@ -35,7 +35,7 @@ export function transformPolyByGroup<T extends PolygonState | PolylineState>(
 			degreesToRadians(-transformRootGroupStartState.rotation),
 		);
 
-		// 2. グループ内部のローカル座標系でオフセットを計算し、スケールを適用
+		// 2. Compute the offset in the group's internal local coordinate system and apply scale
 		const localOffsetX =
 			(inversedPoint.x - transformRootGroupStartState.cx) *
 			transformRootGroupStartState.scaleX *
@@ -45,11 +45,11 @@ export function transformPolyByGroup<T extends PolygonState | PolylineState>(
 			transformRootGroupStartState.scaleY *
 			transformRootGroupEndState.scaleY;
 
-		// 3. グループのスケール変化を適用
+		// 3. Apply the group's scale change
 		const dx = localOffsetX * groupScaleX;
 		const dy = localOffsetY * groupScaleY;
 
-		// 4. 新しいグループの回転を適用（絶対座標系に戻す）
+		// 4. Apply the new group rotation (convert back to the absolute coordinate system)
 		const newPoint = calcRotatedPoint(
 			transformRootGroupEndState.cx + dx,
 			transformRootGroupEndState.cy + dy,
@@ -71,13 +71,13 @@ export function transformPolyByGroup<T extends PolygonState | PolylineState>(
 }
 
 /**
- * Poly系（Polygon, Polyline）のグループ回転処理
- * 各頂点をグループの中心を基準に回転する
+ * Group rotation handling for Poly-family shapes (Polygon, Polyline).
+ * Rotates each vertex around the group's center.
  *
- * @param poly - 回転対象のPoly
- * @param rotationRootGroup - 回転の基準となるグループの状態
- * @param endGroupRotation - グループの最終的な回転角度
- * @returns 回転後のPoly
+ * @param poly - The Poly to rotate
+ * @param rotationRootGroup - State of the group that anchors the rotation
+ * @param endGroupRotation - The group's final rotation angle
+ * @returns The rotated Poly
  */
 export function rotatePolyByGroup<T extends PolygonState | PolylineState>(
 	poly: T,
@@ -86,7 +86,7 @@ export function rotatePolyByGroup<T extends PolygonState | PolylineState>(
 ): T {
 	const rotationDelta = endGroupRotation - rotationRootGroup.rotation;
 
-	// 各頂点を回転中心を基準に回転
+	// Rotate each vertex around the rotation center
 	const rotatedPoints = poly.points.map((point) => {
 		const rotatedPoint = calcRotatedPoint(
 			point.x,

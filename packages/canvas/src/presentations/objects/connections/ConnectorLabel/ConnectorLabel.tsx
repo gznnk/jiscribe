@@ -11,21 +11,21 @@ import { resolveLabelFill } from "./utils/resolveLabelFill";
 import { resolveAutoColor } from "../../utils/resolveAutoColor";
 
 type ConnectorLabelProps = {
-	/** 親コネクターの id（ヒット時に編集を開始できるよう data 属性に載せる）。 */
+	/** Parent connector id (placed in a data attribute so a hit can start editing). */
 	id: string;
-	/** ラベルアンカー（経路上のワールド座標）。 */
+	/** Label anchor (world coordinates on the path). */
 	anchor: Point;
 	text: string;
 	fontColor?: string;
 	fontSize?: number;
 	fontWeight?: string;
-	/** 背景色（省略/auto はキャンバス地色＝knockout）。 */
+	/** Background color (omitted/auto uses the canvas background = knockout). */
 	fill?: string;
-	/** 枠線色。 */
+	/** Border color. */
 	stroke?: string;
-	/** 枠線太さ（省略/0 で枠線なし）。 */
+	/** Border width (omitted/0 means no border). */
 	strokeWidth?: number;
-	/** 枠線スタイル（solid / dashed / dotted）。省略時は solid。 */
+	/** Border style (solid / dashed / dotted). Defaults to solid when omitted. */
 	strokeDashType?: string;
 	disablePointerEvents?: boolean;
 };
@@ -48,7 +48,7 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 	}
 
 	const fontFamily = CONNECTOR_LABEL_DEFAULTS.fontFamily;
-	// auto（テーマ追従）をテーマ前景（ink）へ解決する（issue #38）。
+	// Resolve auto (theme-following) to the theme foreground (ink) (issue #38).
 	const color = resolveAutoColor(fontColor, "ink");
 	const background = resolveLabelFill(fill);
 	const borderColor = resolveAutoColor(stroke, "ink");
@@ -59,14 +59,14 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 		strokeWidth,
 	);
 
-	// アンカーを中心に水平配置する（回転しない）。
+	// Lay out horizontally centered on the anchor (no rotation).
 	return (
 		<foreignObject
 			x={anchor.x - width / 2}
 			y={anchor.y - height / 2}
 			width={width}
 			height={height}
-			// 線上のラベルをダブルクリックしても編集を開始できるよう connector として扱う。
+			// Treat as connector so double-clicking the on-line label can start editing.
 			data-kind="connector"
 			data-id={id}
 			pointerEvents={disablePointerEvents ? "none" : "auto"}
@@ -87,4 +87,8 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 	);
 };
 
+/**
+ * Renders a connector's label as a horizontally centered box at the given
+ * anchor on the path. Returns null for empty text.
+ */
 export const ConnectorLabel = memo(ConnectorLabelComponent);

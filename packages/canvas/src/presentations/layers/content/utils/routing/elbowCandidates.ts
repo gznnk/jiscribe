@@ -6,26 +6,26 @@ import type {
 
 const uniqueNumbers = (ns: number[]): number[] => [...new Set(ns)];
 
-/** box の外側クリアランス x チャネル（左右辺から margin 外）。free は空。 */
+/** The box's outer clearance x channels (margin outside the left/right edges). Empty when free. */
 const boxXChannels = (box: BoxFeatures | null, margin: number): number[] =>
 	box ? [box.left - margin, box.right + margin] : [];
 
-/** box の外側クリアランス y チャネル（上下辺から margin 外）。free は空。 */
+/** The box's outer clearance y channels (margin outside the top/bottom edges). Empty when free. */
 const boxYChannels = (box: BoxFeatures | null, margin: number): number[] =>
 	box ? [box.top - margin, box.bottom + margin] : [];
 
 export type ElbowCandidate = {
 	elbow: Point[];
-	/** 向かい合う端点に対して「中点」で折れる対称（S/Z 字）ルートか。 */
+	/** Whether it is a symmetric (S/Z-shaped) route bending at the "midpoint" for facing endpoints. */
 	symmetric: boolean;
 };
 
 /**
- * 端点の退出方向が軸上で正面に向かい合うかを判定する（x: 左右、y: 上下）。
+ * Determines whether the endpoints' exit directions face each other head-on per axis (x: left/right, y: up/down).
  *
- * @param a - 一方の端点の外向き方向
- * @param b - もう一方の端点の外向き方向
- * @returns 各軸で向かい合うか（x: 左右で対向、y: 上下で対向）
+ * @param a - One endpoint's outward direction
+ * @param b - The other endpoint's outward direction
+ * @returns Whether they face on each axis (x: opposed left/right, y: opposed up/down)
  */
 export const directionsFace = (
 	a: OrthogonalDirection,
@@ -36,24 +36,25 @@ export const directionsFace = (
 });
 
 /**
- * スタブ間のエルボ候補を生成する。
+ * Generates elbow candidates between stubs.
  *
- * 縦チャネル x ／横チャネル y の候補集合（両スタブ・中点に加え、**各 box の外周
- * クリアランス（辺 ± margin）**）を通る Z 字を列挙する。box の外周チャネルを含める
- * ことで、図形を回り込む経路が候補に入り、固定スタブだけでは表現できず図形へ
- * めり込んでいた折れ方を解消する。L 字・直線は `simplifyPath` で自然に畳まれて出る。
+ * Enumerates Z shapes passing through the candidate set of vertical channels x / horizontal channels y
+ * (both stubs and the midpoint, plus **each box's perimeter clearance (edge ± margin)**). Including
+ * the box perimeter channels brings wrap-around routes into the candidates, resolving the bends that
+ * could not be expressed with fixed stubs alone and used to embed into shapes. L shapes and straight
+ * lines emerge naturally, collapsed by `simplifyPath`.
  *
- * `facingX` / `facingY`（端点が軸上で向かい合う）のとき、その軸の**中点**で折れる
- * 候補に `symmetric` フラグを立て、呼び出し側で S/Z 字を優先できるようにする。
+ * When `facingX` / `facingY` (endpoints face each other on the axis), the candidate that bends at that
+ * axis's **midpoint** gets the `symmetric` flag, so the caller can prefer S/Z shapes.
  *
- * @param a - 始点側スタブの座標
- * @param b - 終点側スタブの座標
- * @param sourceBox - 始点図形の回避用 AABB（free 端点は null）
- * @param targetBox - 終点図形の回避用 AABB（free 端点は null）
- * @param margin - 図形面からの押し出し距離（px）。box 外周チャネルの算出に使う
- * @param facingX - 端点が x 軸（左右）で向かい合うか。true なら x=中点折れに symmetric を立てる
- * @param facingY - 端点が y 軸（上下）で向かい合うか。true なら y=中点折れに symmetric を立てる
- * @returns エルボ候補の配列（各候補は折れ点列 elbow と対称フラグ symmetric を持つ）
+ * @param a - Coordinate of the source-side stub
+ * @param b - Coordinate of the target-side stub
+ * @param sourceBox - AABB to avoid for the source shape (null for a free endpoint)
+ * @param targetBox - AABB to avoid for the target shape (null for a free endpoint)
+ * @param margin - Push-out distance from the shape face (px). Used to compute the box perimeter channels
+ * @param facingX - Whether the endpoints face on the x axis (left/right). If true, set symmetric on x=midpoint bend
+ * @param facingY - Whether the endpoints face on the y axis (up/down). If true, set symmetric on y=midpoint bend
+ * @returns An array of elbow candidates (each has the bend point sequence elbow and the symmetric flag)
  */
 export const elbowCandidates = (
 	a: Point,
@@ -66,11 +67,11 @@ export const elbowCandidates = (
 ): ElbowCandidate[] => {
 	const midX = Math.round((a.x + b.x) / 2);
 	const midY = Math.round((a.y + b.y) / 2);
-	// 折れ位置の候補となる「チャネル」座標を集める。
-	// - 両スタブ端の x/y（L 字＝最短の折れ）
-	// - 中点 midX/midY（S/Z 字の対称な折れ）
-	// - 各 box の外周（辺 ± margin）（図形を回り込む折れ。直線スタブだけでは表現不可）
-	// 重複は除く（同じチャネルは1度だけ評価すればよい）。
+	// Collect the "channel" coordinates that are candidate bend positions.
+	// - x/y of both stub ends (L shape = shortest bend)
+	// - the midpoint midX/midY (symmetric S/Z-shaped bend)
+	// - each box's perimeter (edge ± margin) (wrap-around bend; not expressible with straight stubs alone)
+	// Duplicates are removed (the same channel only needs to be evaluated once).
 	const xs = uniqueNumbers([
 		a.x,
 		b.x,
@@ -87,17 +88,17 @@ export const elbowCandidates = (
 	]);
 
 	const candidates: ElbowCandidate[] = [];
-	// 縦チャネル x を1本通る経路（水平→垂直→水平）。x が両端や中点と一致すれば
-	// 余分な点は simplifyPath で畳まれて L 字／直線になる。
-	// 横に向かい合う配置では x=midX が中央で折れる S 字。
+	// A route through one vertical channel x (horizontal→vertical→horizontal). If x coincides with an
+	// end or the midpoint, the extra points are collapsed by simplifyPath into an L shape / straight line.
+	// In horizontally facing layouts, x=midX is an S shape bending in the center.
 	for (const x of xs) {
 		candidates.push({
 			elbow: [a, { x, y: a.y }, { x, y: b.y }, b],
 			symmetric: facingX && x === midX,
 		});
 	}
-	// 横チャネル y を1本通る経路（垂直→水平→垂直）。縦に向かい合う配置では
-	// y=midY が中央で折れる S 字。
+	// A route through one horizontal channel y (vertical→horizontal→vertical). In vertically facing
+	// layouts, y=midY is an S shape bending in the center.
 	for (const y of ys) {
 		candidates.push({
 			elbow: [a, { x: a.x, y }, { x: b.x, y }, b],

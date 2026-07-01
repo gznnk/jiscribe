@@ -19,8 +19,9 @@ export const connectorToState: DocToStateMapper<
 
 	return {
 		...base,
-		// points は source → target 順の中間経由点（waypoint）のみを保持する。
-		// 描画はこの経由点を通る折れ線になる（端点の正は source / target の EndpointRef）。
+		// points holds only the intermediate waypoints in source → target order.
+		// Rendering produces a polyline passing through these waypoints (the
+		// authoritative endpoints are the source / target EndpointRefs).
 		points: (doc.points ?? []) as Point[],
 		source: doc.source,
 		target: doc.target,

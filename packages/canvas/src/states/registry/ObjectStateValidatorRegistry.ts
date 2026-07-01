@@ -1,17 +1,17 @@
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 
 /**
- * 型別の `ObjectState` 検証関数。クリップボード由来の untrusted オブジェクトを
- * 受け取り、その型として妥当かを boolean で返す（type guard 方式）。
+ * Per-type `ObjectState` validation function. Takes an untrusted object (e.g. from
+ * the clipboard) and returns a boolean for whether it is valid as that type (type-guard style).
  */
 export type ObjectStateValidateFn = (value: unknown) => boolean;
 
 /**
- * `ObjectState` の型別バリデータを登録するレジストリ。
- * スキーマ側 `ObjectDocValidatorRegistry` の state 版で、登録は
- * `initializeObjectRegistry()` の `registerObject()` 経由で行う。
+ * Registry for per-type `ObjectState` validators.
+ * This is the state-side counterpart of the schema-side `ObjectDocValidatorRegistry`;
+ * registration happens via `registerObject()` inside `initializeObjectRegistry()`.
  *
- * 主用途は `isClipboardData` でのクリップボードデータの厳格検証。
+ * Its main use is strict clipboard-data validation in `isClipboardData`.
  */
 class ObjectStateValidatorRegistry {
 	private readonly entries = new Map<ObjectType, ObjectStateValidateFn>();
@@ -21,8 +21,8 @@ class ObjectStateValidatorRegistry {
 	}
 
 	/**
-	 * 指定した型のバリデータで検証する。
-	 * 未登録の型は厳格に拒否する（クリップボード検証では未知の型を信頼しない）。
+	 * Validates the value with the validator for the given type.
+	 * Unregistered types are strictly rejected (clipboard validation does not trust unknown types).
 	 */
 	validate(type: string, value: unknown): boolean {
 		const validate = this.entries.get(type as ObjectType);

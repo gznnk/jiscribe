@@ -1,5 +1,6 @@
 import type { ShapePreviewRenderer } from "../../registry/ShapePreviewTypes";
 
+/** Preview renderer for a Polyline shape while it is being drawn. */
 export const PolylinePreview: ShapePreviewRenderer = ({
 	startX,
 	startY,
@@ -8,7 +9,7 @@ export const PolylinePreview: ShapePreviewRenderer = ({
 	stroke,
 	strokeWidth,
 }) => (
-	// polyline は塗りなし・線のみ。
+	// A polyline has no fill, only a line.
 	<line
 		x1={startX}
 		y1={startY}

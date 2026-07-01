@@ -3,8 +3,8 @@ import type { ConnectorState } from "../../../../../../../states/objects/connect
 import { isSelfLoopConnector } from "../../../../../../utils/isSelfLoopConnector";
 
 /**
- * 選択中コネクターが自己ループかどうか。自己ループは orthogonal 専用のため
- * routing トグルを描画しない（straight に切り替えると破綻するため）。
+ * Whether the selected connector is a self-loop. Self-loops are orthogonal-only,
+ * so the routing toggle is not rendered (switching to straight would break them).
  */
 export const isSelectedConnectorSelfLoop = (
 	state: CanvasControllerState,

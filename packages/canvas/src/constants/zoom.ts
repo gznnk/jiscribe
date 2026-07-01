@@ -6,30 +6,31 @@ export const ZOOM = {
 	MIN: 0.1,
 	/** Maximum zoom level (1000%) */
 	MAX: 10,
-	/** Zoom step factor when zooming in（ホイール用の連続ズーム） */
+	/** Zoom step factor when zooming in (continuous zoom for the mouse wheel) */
 	IN_FACTOR: 1.1,
-	/** Zoom step factor when zooming out（ホイール用の連続ズーム） */
+	/** Zoom step factor when zooming out (continuous zoom for the mouse wheel) */
 	OUT_FACTOR: 0.9,
 } as const;
 
 /**
- * Zoom In / Zoom Out コマンド（キーボード・ツールバー）が吸着する固定段。
- * Miro のように常に同じ値（…/75/100/125/150/…）へスナップし、
- * ズームイン→ズームアウトで必ず元の段（100% など）へ戻れるようにする。
+ * Fixed zoom stops that the Zoom In / Zoom Out commands (keyboard and toolbar)
+ * snap to. Like Miro, always snaps to the same values (…/75/100/125/150/…) so
+ * that zooming in then out always returns to the original stop (e.g. 100%).
  *
- * 昇順で保持する。両端は {@link ZOOM.MIN} / {@link ZOOM.MAX} と一致させる。
+ * Kept in ascending order. The endpoints match {@link ZOOM.MIN} / {@link ZOOM.MAX}.
  */
 export const ZOOM_STOPS = [
 	0.1, 0.125, 0.16, 0.25, 0.33, 0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6, 8,
 	10,
 ] as const;
 
-/** 浮動小数の段一致を許容するための比較イプシロン。 */
+/** Comparison epsilon that tolerates floating-point matches against a stop. */
 const ZOOM_STEP_EPSILON = 1e-4;
 
 /**
- * 現在のズーム値より一段上の固定段を返す。
- * 段の途中にいる場合は直近の上の段へ、最上段なら {@link ZOOM.MAX} に丸める。
+ * Returns the next fixed stop above the current zoom value.
+ * When between stops, snaps to the nearest stop above; at the top stop, clamps
+ * to {@link ZOOM.MAX}.
  */
 export function stepZoomIn(currentZoom: number): number {
 	const nextStop = ZOOM_STOPS.find(
@@ -39,8 +40,9 @@ export function stepZoomIn(currentZoom: number): number {
 }
 
 /**
- * 現在のズーム値より一段下の固定段を返す。
- * 段の途中にいる場合は直近の下の段へ、最下段なら {@link ZOOM.MIN} に丸める。
+ * Returns the next fixed stop below the current zoom value.
+ * When between stops, snaps to the nearest stop below; at the bottom stop,
+ * clamps to {@link ZOOM.MIN}.
  */
 export function stepZoomOut(currentZoom: number): number {
 	for (let i = ZOOM_STOPS.length - 1; i >= 0; i--) {

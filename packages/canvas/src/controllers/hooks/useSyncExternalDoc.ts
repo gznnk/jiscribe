@@ -7,23 +7,24 @@ import type { CanvasAction } from "../reducer/CanvasActions";
 import { isSameCanvasDocContent } from "../utils/isSameCanvasDocContent";
 
 export type UseSyncExternalDocParams = {
-	/** 親から渡される最新の CanvasDoc */
+	/** The latest CanvasDoc passed from the parent */
 	canvasDoc: CanvasDoc;
-	/** 直近の同期メッセージの nonce（fold-back 保存の検出に使う） */
+	/** Nonce of the most recent sync message (used to detect fold-back saves) */
 	syncNonce: string | undefined;
-	/** Canvas の現在 state（内容比較に使う） */
+	/** Canvas's current state (used for content comparison) */
 	canvasState: CanvasControllerState;
-	/** Canvas reducer の dispatch */
+	/** Canvas reducer dispatch */
 	dispatch: Dispatch<CanvasAction>;
-	/** 同期前に進行中のジェスチャーを破棄するコールバック */
+	/** Callback that discards any in-progress gesture before syncing */
 	resetGestureState: () => void;
 };
 
 /**
- * 外部からの canvasDoc 変更を Canvas state へ同期するカスタムフック
+ * Custom hook that syncs external canvasDoc changes into the Canvas state.
  *
- * マウント直後の初回は reducer の初期化で同じ canvasDoc を使用済みのためスキップする
- * （SYNC_EXTERNAL を dispatch すると冗長な履歴エントリが生まれてしまう）。
+ * The very first run right after mount is skipped because the reducer already
+ * initialized from the same canvasDoc (dispatching SYNC_EXTERNAL would create a
+ * redundant history entry).
  */
 export const useSyncExternalDoc = ({
 	canvasDoc,

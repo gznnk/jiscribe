@@ -1,4 +1,4 @@
-// コネクター端点の解決（アンカー→ワールド座標・輪郭調整）の公開 API。
-// resolveEndpoint / adjustToOutline は内部ヘルパなので公開しない。
-// React フックは presentations/layers/content/hooks/ に分離した。
+// Public API for resolving connector endpoints (anchor -> world coordinates, outline adjustment).
+// resolveEndpoint / adjustToOutline are internal helpers and are not exported.
+// React hooks are separated into presentations/layers/content/hooks/.
 export { resolveConnectorPoints } from "./resolveConnectorPoints";

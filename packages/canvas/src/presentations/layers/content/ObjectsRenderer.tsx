@@ -11,11 +11,12 @@ type ObjectsRendererProps = Pick<CanvasState, "objects" | "rootIds"> & {
 };
 
 /**
- * rootIds（z-order 順）を走査してコンテンツを描画する統一レンダラー。
- * オブジェクトとコネクターを混在した同一順序で描くため、配列順がそのまま重なり順になる。
- * - group → 子を再帰展開（group の子に connector は来ない）
- * - connector → 端点解決が必要なので専用の ConnectorRenderer で描画
- * - それ以外 → レジストリのコンポーネント
+ * Unified renderer that traverses rootIds (in z-order) to draw content.
+ * Objects and connectors are drawn in the same mixed order, so the array order
+ * is the stacking order as-is.
+ * - group → expand children recursively (a group's children never include a connector)
+ * - connector → drawn by the dedicated ConnectorRenderer since it needs endpoint resolution
+ * - otherwise → the component from the registry
  */
 const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 	objects,
@@ -28,14 +29,14 @@ const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 			return;
 		}
 
-		// Groupの場合は子要素を再帰的に配列に追加
+		// For a group, add its children to the array recursively
 		if (objState.type === "group") {
 			const groupState = objState as GroupState;
 			groupState.childIds.forEach((childId) => renderObject(childId, result));
 			return;
 		}
 
-		// コネクターは端点（source/target）の動的解決が必要なため専用レンダラーで描く。
+		// Connectors need dynamic resolution of their endpoints (source/target), so draw them with the dedicated renderer.
 		if (objState.type === "connector") {
 			result.push(
 				<ConnectorRenderer
@@ -48,13 +49,13 @@ const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 			return;
 		}
 
-		// 通常のオブジェクトはレジストリからコンポーネントを取得して配列に追加
+		// For a regular object, get the component from the registry and add it to the array
 		const ObjectComponent = objectComponentRegistry.get(objState.type);
 		if (!ObjectComponent) {
 			return;
 		}
 
-		// テキスト編集中の場合は isEditing prop を追加
+		// When text editing, add the isEditing prop
 		const isEditing = id === textEditObjectId;
 		result.push(
 			<ObjectComponent key={id} {...objState} isEditing={isEditing} />,

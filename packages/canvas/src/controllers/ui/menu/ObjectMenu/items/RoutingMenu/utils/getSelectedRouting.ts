@@ -3,8 +3,8 @@ import { isOrthogonalRouting } from "../../../../../../../schemas/objects/types/
 import type { ConnectorRouting } from "../../../../../../../schemas/objects/types/ConnectorRouting";
 
 /**
- * 選択中コネクターの現在の routing を返す。
- * routing 省略時の既定は orthogonal。
+ * Returns the current routing of the selected connector.
+ * Defaults to orthogonal when routing is omitted.
  */
 export const getSelectedRouting = (
 	state: CanvasControllerState,

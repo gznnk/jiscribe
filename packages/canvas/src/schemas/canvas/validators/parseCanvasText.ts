@@ -6,11 +6,11 @@ import { initializeObjectDocValidatorRegistry } from "../../registry/initializeO
 import { objectDocValidatorRegistry } from "../../registry/ObjectDocValidatorRegistry";
 
 /**
- * Canvas ドキュメント文字列のパース結果。
+ * Result of parsing a Canvas document string.
  *
- * JSON 構文エラー / セマンティクスエラー / 検証中の予期しない例外 / 正常 を
- * 判別可能なユニオンで表現する。例外を制御フローに使わず、呼び出し側は
- * `switch (result.kind)` で全ケースを漏れなく扱える。
+ * Represents JSON syntax error / semantic error / unexpected exception during validation / success
+ * as a discriminated union. Exceptions are not used for control flow, so callers can handle every
+ * case exhaustively via `switch (result.kind)`.
  */
 export type CanvasParseResult =
 	| { kind: "ok"; doc: CanvasDoc }
@@ -20,21 +20,21 @@ export type CanvasParseResult =
 	| { kind: "internal-error"; message: string };
 
 /**
- * Canvas ドキュメント文字列を JSON 構文 → 構造・意味の 2 段階で検証し、
- * 結果を {@link CanvasParseResult} として返す。
+ * Validates a Canvas document string in two stages — JSON syntax → structure/semantics —
+ * and returns the result as a {@link CanvasParseResult}.
  *
- * 例外を投げず判別可能なユニオンを返すため、拡張側・Webview 側の双方が
- * 同一ロジックを共有でき、予期しないエラーの取りこぼしも `internal-error`
- * として明示的に扱える。
+ * Since it returns a discriminated union instead of throwing, both the extension and the Webview
+ * can share the same logic, and unexpected errors are also handled explicitly as `internal-error`
+ * rather than being missed.
  *
- * @param text パース対象の JSON 文字列
+ * @param text the JSON string to parse
  */
 export function parseCanvasText(text: string): CanvasParseResult {
-	// validateStructure / validateSemantics は型別検証・接続可能性判定を
-	// objectDocValidatorRegistry に委譲する。このレジストリは「parse 時の検証」で
-	// しか使われないため、ここで未初期化なら埋める（冪等: 既に埋まっていれば何もしない）。
-	// こうすることで呼び出し側（UI エントリ / パーサー専用エントリ）が初期化を
-	// 気にする必要がなくなり、エントリ取り違えによる誤検知を構造的に防ぐ。
+	// validateStructure / validateSemantics delegate per-type validation and connectability checks to
+	// objectDocValidatorRegistry. Since this registry is used only for "validation at parse time",
+	// populate it here if it is uninitialized (idempotent: does nothing if already populated).
+	// This frees callers (the UI entry / the parser-only entry) from having to worry about
+	// initialization and structurally prevents false positives from picking the wrong entry point.
 	if (objectDocValidatorRegistry.isEmpty()) {
 		initializeObjectDocValidatorRegistry();
 	}
@@ -50,24 +50,25 @@ export function parseCanvasText(text: string): CanvasParseResult {
 	}
 
 	try {
-		// 構造検証で弾かれた場合（= そもそも CanvasDoc として成立していない）は、
-		// 意味検証へ進まず構造エラーだけを返す。構造エラーは JSON スキーマでも
-		// 表現できる種類のため、呼び出し側が「スキーマに委ねて二重表示を避ける」
-		// 判断ができるよう、意味エラーとは別の kind として返す。
+		// If structure validation rejects it (= it does not even hold up as a CanvasDoc), return only
+		// the structure errors without proceeding to semantic validation. Structure errors are the kind
+		// that a JSON schema can also express, so they are returned as a kind distinct from semantic
+		// errors, allowing callers to decide to "defer to the schema and avoid double display".
 		const structureErrors = validateStructure(data);
 		if (structureErrors.length > 0) {
 			return { kind: "structure-error", diagnostics: structureErrors };
 		}
 
-		// 文書全体を横断しないと判定できない整合性（重複 ID・参照切れ等）。
-		// これらは JSON スキーマでは表現できないため、構造エラーと区別する。
+		// Consistency that can only be determined by traversing the whole document (duplicate IDs,
+		// broken references, etc.). These cannot be expressed by a JSON schema, so they are distinguished
+		// from structure errors.
 		const diagnostics = validateSemantics(data as CanvasDoc);
 		if (diagnostics.length > 0) {
 			return { kind: "semantic-error", diagnostics };
 		}
 		return { kind: "ok", doc: data as CanvasDoc };
 	} catch (e) {
-		// バリデータ内部の想定外エラー。握りつぶさず呼び出し側へ伝える。
+		// An unexpected error inside the validator. Propagate it to the caller rather than swallowing it.
 		return {
 			kind: "internal-error",
 			message: e instanceof Error ? e.message : "Unexpected validation error",

@@ -2,10 +2,11 @@ import type { ConnectorLabel } from "../../../../../../../schemas/objects/connec
 import type { CanvasControllerState } from "../../../../../../CanvasTypes";
 
 /**
- * 選択中コネクター（selectedConnectorId）のラベルを返す。
- * ラベル系メニュー項目（LabelStyleMenu）が現在値を読むための共通ヘルパ。
- * 図形の getFirstSelectedWithProp に相当するが、connector は selectedConnectorId 経由かつ
- * スタイルが label にネストするため別経路で取る。
+ * Returns the label of the selected connector (selectedConnectorId).
+ * A shared helper for label-related menu items (LabelStyleMenu) to read the current value.
+ * Equivalent to getFirstSelectedWithProp for shapes, but a connector is accessed via
+ * selectedConnectorId and its style is nested under label, so it is retrieved via a
+ * separate path.
  */
 export const getSelectedConnectorLabel = (
 	state: CanvasControllerState,

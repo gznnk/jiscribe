@@ -1,5 +1,6 @@
-// 直交ルーティングの公開 API。内部のステージモジュール（stub / elbowCandidates /
-// simplifyPath / routeCost）はテストから直接 import するが、外部にはここだけを見せる。
+// Public API for orthogonal routing. Internal stage modules (stub / elbowCandidates /
+// simplifyPath / routeCost) are imported directly from tests, but only this module is
+// exposed externally.
 export { routeOrthogonalConnector } from "./routeOrthogonalConnector";
 export { routeSelfLoop } from "./selfLoop";
 export { resolveOrthogonalRoute } from "./resolveOrthogonalRoute";

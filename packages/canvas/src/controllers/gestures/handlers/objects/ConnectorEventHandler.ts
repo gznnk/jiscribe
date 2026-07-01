@@ -16,7 +16,7 @@ export const ConnectorEventHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {
 		return (
 			event.targetKind === "connector" &&
-			// TODO: ここではじく必要はもうないかも
+			// TODO: this filtering may no longer be necessary here
 			(event.type === "click" ||
 				event.type === "pressed" ||
 				event.type === "doubleClick")
@@ -34,8 +34,8 @@ export const ConnectorEventHandler: GestureHandler = {
 
 		const connectorId = event.targetId;
 
-		// ダブルクリックでラベル編集を開始する。編集中の同一コネクターへの再ダブルクリックは
-		// コミットせず編集を継続する（図形のテキスト編集と同じ扱い）。
+		// A double click starts label editing. Re-double-clicking the same connector while
+		// already editing continues editing without committing (same as shape text editing).
 		if (event.type === "doubleClick") {
 			if (!connectorId) {
 				return state;
@@ -60,13 +60,13 @@ export const ConnectorEventHandler: GestureHandler = {
 
 		let nextState = commitTextEditIfNeeded(state);
 
-		// コネクター上の押下でコンテキストメニューを閉じる（button は冒頭でガード済み、選択は click で行う）
+		// A press on a connector closes the context menu (button is guarded above, selection happens on click)
 		if (event.type === "pressed") {
 			nextState = { ...nextState, contextMenuPosition: null };
 		}
 
-		// クリックでコネクターを選択（図形選択は解除して排他を保証）
-		// すでに同じコネクターが選択済みの場合は変化なし
+		// A click selects the connector (clearing shape selection to enforce exclusivity)
+		// No change if the same connector is already selected
 		if (
 			event.type === "click" &&
 			connectorId &&

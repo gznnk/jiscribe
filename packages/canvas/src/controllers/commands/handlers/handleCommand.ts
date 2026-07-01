@@ -2,9 +2,9 @@ import type { CanvasControllerState } from "../../CanvasTypes";
 import { commandRegistry } from "../CommandRegistry";
 
 /**
- * COMMAND アクションを処理する。
- * CommandRegistry に登録された Command を実行し、新しい CanvasControllerState を返す。
- * 履歴記録は canvasReducer に委譲する。
+ * Handles a COMMAND action.
+ * Executes the Command registered in CommandRegistry and returns a new CanvasControllerState.
+ * History recording is delegated to canvasReducer.
  */
 export const handleCommand = (
 	state: CanvasControllerState,

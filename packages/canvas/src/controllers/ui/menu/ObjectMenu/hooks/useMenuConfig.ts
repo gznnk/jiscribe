@@ -9,9 +9,9 @@ const itemKey = (section: MenuItem): string =>
 	section.type === "custom" ? section.id : section.type;
 
 /**
- * 複数オブジェクト型のアイテムリストを AND 結合する。
- * 全型に共通するアイテムのみを残す。
- * borderStyle は全型が radius: true の場合のみ radius を有効にする。
+ * AND-merges the item lists of multiple object types.
+ * Keeps only the items common to all types.
+ * For borderStyle, radius is enabled only when every type has radius: true.
  */
 const mergeItems = (arrays: MenuItem[][]): MenuItem[] => {
 	if (arrays.length === 1) {
@@ -29,7 +29,7 @@ const mergeItems = (arrays: MenuItem[][]): MenuItem[] => {
 			if (section.type !== "borderStyle") {
 				return section;
 			}
-			// radius は全型が true の場合のみ表示する
+			// Show radius only when every type has it set to true
 			const allRadius = arrays.every((arr) => {
 				const found = arr.find((s) => s.type === "borderStyle");
 				return found?.type === "borderStyle" && found.radius === true;
@@ -39,8 +39,9 @@ const mergeItems = (arrays: MenuItem[][]): MenuItem[] => {
 };
 
 /**
- * 複数オブジェクト型のセクションリストを AND 結合する。
- * 全型に共通する id のセクションのみを残し、各セクション内のアイテムも AND 結合する。
+ * AND-merges the section lists of multiple object types.
+ * Keeps only sections whose id is common to all types, and AND-merges the items
+ * within each section as well.
  */
 const mergeSections = (arrays: MenuSection[][]): MenuSection[] => {
 	if (arrays.length === 0) {
@@ -64,16 +65,17 @@ const mergeSections = (arrays: MenuSection[][]): MenuSection[] => {
 };
 
 /**
- * 選択中オブジェクトから表示すべきメニューグループを計算する。
+ * Computes the menu sections to display from the current selection.
  *
- * Connector が選択されている場合（selectedConnectorId != null）はその型のグループを返す。
- * グループオブジェクトが選択されている場合は子孫の実オブジェクト型を展開し、
- * 複数の型が混在する場合は共通するグループ・セクションのみを表示する（AND 結合）。
+ * When a connector is selected (selectedConnectorId != null), returns the groups for
+ * its type. When group objects are selected, expands the descendant concrete object
+ * types; if multiple types are mixed, only the common groups and sections are shown
+ * (AND-merge).
  */
 export const getMenuGroups = (state: CanvasControllerState): MenuSection[] => {
 	const { selectedIds, selectedConnectorId, objects } = state;
 
-	// Connector 選択時は selectedIds の代わりに connector のグループを返す
+	// When a connector is selected, return the connector's groups instead of selectedIds
 	if (selectedConnectorId !== null) {
 		const connector = objects[selectedConnectorId];
 		if (!connector) {
@@ -86,8 +88,8 @@ export const getMenuGroups = (state: CanvasControllerState): MenuSection[] => {
 		return [];
 	}
 
-	// 選択中オブジェクトに含まれる実オブジェクト型を収集する。
-	// group型は子孫の実オブジェクト型に展開する。
+	// Collect the concrete object types contained in the selection.
+	// group types are expanded into their descendant concrete object types.
 	const types = new Set<string>();
 	for (const id of selectedIds) {
 		const obj = objects[id];
@@ -110,7 +112,7 @@ export const getMenuGroups = (state: CanvasControllerState): MenuSection[] => {
 		return [];
 	}
 
-	// 各型の代表インスタンスでメニューグループを取得し、AND 結合する
+	// Get the menu groups using a representative instance of each type, then AND-merge them
 	const groupArrays = [...types].map((type) => {
 		const representative = Object.values(objects).find((o) => o?.type === type);
 		return representative
@@ -121,6 +123,7 @@ export const getMenuGroups = (state: CanvasControllerState): MenuSection[] => {
 	return mergeSections(groupArrays);
 };
 
+/** Memoized hook wrapper around {@link getMenuGroups}, recomputing only when the selection changes. */
 export const useMenuGroups = (state: CanvasControllerState): MenuSection[] => {
 	const { selectedIds, selectedConnectorId, objects } = state;
 

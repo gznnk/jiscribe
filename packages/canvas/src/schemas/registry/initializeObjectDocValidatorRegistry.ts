@@ -19,19 +19,22 @@ import { SvgFeatures } from "../objects/primitives/svg/SvgDoc";
 import { validateSvgDoc } from "../objects/primitives/svg/validateSvgDoc";
 
 /**
- * 型ごとの doc バリデータと features を {@link objectDocValidatorRegistry} に登録する。
+ * Registers each type's doc validator and features into
+ * {@link objectDocValidatorRegistry}.
  *
- * これは「テキストを CanvasDoc にパース・検証するだけ」に必要な、スキーマ層だけで
- * 完結する初期化。React / @emotion などの UI 依存を一切取り込まないため、VSCode 拡張の
- * Node 側（パーサー専用エントリ `./parser`）からも安全に呼べる。
+ * This is a schema-layer-only initialization, all that is needed to "just parse
+ * and validate text into a CanvasDoc". It pulls in no UI dependencies such as
+ * React / @emotion, so it can be safely called from the Node side of the VSCode
+ * extension (the parser-only entry `./parser`).
  *
- * UI 側（{@link import("../../controllers/setup/initializeObjectRegistry")}）は、
- * コンポーネント・ジェスチャ・メニューなどの他レジストリと併せてこの関数を呼ぶことで、
- * doc バリデータ登録の単一情報源をここに集約する。
+ * The UI side ({@link import("../../controllers/setup/initializeObjectRegistry")})
+ * calls this function alongside the other registries (components, gestures,
+ * menus, etc.), centralizing the single source of truth for doc validator
+ * registration here.
  *
- * 新しいオブジェクト型を追加する場合は、ここへの登録も忘れないこと
- * （ここが空だと {@link import("../canvas/validators/validateSemantics").validateSemantics}
- * の接続可能性判定が全て false になり、誤検知が発生する）。
+ * When adding a new object type, do not forget to register it here (if this is
+ * empty, {@link import("../canvas/validators/validateSemantics").validateSemantics}
+ * reports every connectability check as false, producing false positives).
  */
 export const initializeObjectDocValidatorRegistry = (): void => {
 	objectDocValidatorRegistry.clear();

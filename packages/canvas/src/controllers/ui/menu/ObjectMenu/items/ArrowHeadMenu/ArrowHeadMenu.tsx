@@ -18,9 +18,9 @@ type ArrowHeadMenuProps = {
 };
 
 /**
- * 矢印メニュー。
- * Start 矢印ボタン → 入れ替えボタン → End 矢印ボタン の3要素をインラインに並べる。
- * 各ボタンをクリックするとそれぞれの矢印セレクターが展開する。
+ * Arrow head menu.
+ * Lays out three inline elements: Start arrow button -> swap button -> End arrow button.
+ * Clicking each button expands its respective arrow selector.
  */
 const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 	canvasState,

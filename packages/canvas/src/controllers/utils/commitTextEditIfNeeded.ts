@@ -7,25 +7,25 @@ import type { ConnectorState } from "../../states/objects/connections/connector/
 import type { CanvasControllerState } from "../CanvasTypes";
 
 /**
- * 編集セッションを終了するだけ（オブジェクトは変更しない）。
+ * Ends the editing session only (does not modify any object).
  *
- * @param state - 現在のキャンバスコントローラー状態
- * @returns textEditState をクリアした新しい状態
+ * @param state - the current canvas controller state
+ * @returns a new state with textEditState cleared
  */
 function clearTextEdit(state: CanvasControllerState): CanvasControllerState {
 	return { ...state, textEditState: null };
 }
 
 /**
- * コネクターのラベル編集をコミットする。テキストは `label.text`（ネスト）に書き戻す。
- * 空文字にしてもスタイル・配置は捨てず、再入力で復元できるよう label を残して
- * テキストだけ空にする。ただしテキストしか持たない素のラベルは残す意味がないので
- * 丸ごと取り除く（空ラベルのゴミを残さない＝ラベル無しに戻す）。
+ * Commits a connector's label edit. The text is written back to `label.text` (nested).
+ * Even when cleared to an empty string, the style/placement is not discarded: the label is kept
+ * with only its text emptied, so re-entering text can restore it. However, a bare label that holds
+ * only text is not worth keeping, so it is removed entirely (leaving no empty-label junk = back to no label).
  *
- * @param state - 現在のキャンバスコントローラー状態
- * @param connector - ラベルを更新する対象のコネクター
- * @param text - 書き戻す編集後のテキスト
- * @returns ラベルを反映した新しい状態（変化が無ければ textEditState のみクリア）
+ * @param state - the current canvas controller state
+ * @param connector - the connector whose label is being updated
+ * @param text - the edited text to write back
+ * @returns a new state reflecting the label (if unchanged, only clears textEditState)
  */
 function commitConnectorLabel(
 	state: CanvasControllerState,
@@ -39,10 +39,10 @@ function commitConnectorLabel(
 
 	let nextConnector: ConnectorState;
 	if (text === "") {
-		// text 以外（スタイル・配置）が残っていれば label を保持し text だけ空にする。
+		// If anything besides text remains (style/placement), keep the label and empty only its text.
 		const { text: _clearedText, ...labelWithoutText } = connector.label ?? {};
 		if (Object.keys(labelWithoutText).length === 0) {
-			// 素のラベル（text のみ）は丸ごと取り除いてラベル無しに戻す。
+			// A bare label (text only) is removed entirely, reverting to no label.
 			const { label: _removed, ...rest } = connector;
 			nextConnector = rest as ConnectorState;
 		} else {
@@ -70,13 +70,13 @@ function commitConnectorLabel(
 }
 
 /**
- * テキストを持つ図形（rect など）の本文テキストをコミットする。
- * 変化が無ければ編集セッションを閉じるだけで commitVersion は据え置く。
+ * Commits the body text of a text-bearing shape (rect, etc.).
+ * If unchanged, it only closes the editing session and leaves commitVersion untouched.
  *
- * @param state - 現在のキャンバスコントローラー状態
- * @param target - テキストを更新する対象の図形
- * @param text - 書き戻す編集後のテキスト
- * @returns テキストを反映した新しい状態（変化が無ければ textEditState のみクリア）
+ * @param state - the current canvas controller state
+ * @param target - the shape whose text is being updated
+ * @param text - the edited text to write back
+ * @returns a new state reflecting the text (if unchanged, only clears textEditState)
  */
 function commitTextStyleText(
 	state: CanvasControllerState,
@@ -99,11 +99,11 @@ function commitTextStyleText(
 }
 
 /**
- * 編集中のテキストセッションがあればコミットする。
- * 対象の種別ごとに専用のコミット関数へ振り分けるだけのディスパッチャ。
+ * Commits the active text editing session, if any.
+ * A dispatcher that simply routes to a dedicated commit function per target kind.
  *
- * @param state - 現在のキャンバスコントローラー状態
- * @returns テキストを反映した新しい状態（編集中でなければ元の状態をそのまま返す）
+ * @param state - the current canvas controller state
+ * @returns a new state reflecting the text (if not editing, returns the original state unchanged)
  */
 export function commitTextEditIfNeeded(
 	state: CanvasControllerState,
@@ -118,7 +118,7 @@ export function commitTextEditIfNeeded(
 	if (!targetObject) {
 		return clearTextEdit(state);
 	}
-	// コネクターは本文テキストでなくネストした label.text を更新する。
+	// Connectors update the nested label.text rather than a body text.
 	if (targetObject.type === "connector") {
 		return commitConnectorLabel(state, targetObject as ConnectorState, text);
 	}

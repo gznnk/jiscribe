@@ -1,14 +1,17 @@
 import { calcEuclideanDistance, type Point } from "@workspace/geometry";
 
 /**
- * 折れ線（解決済みコネクター経路）上のラベルアンカー座標を求める。
+ * Computes the label anchor coordinates along a polyline (resolved connector
+ * path).
  *
- * `position` は経路長に対する比率（0 = source 端、1 = target 端、既定 0.5 = 中点）。
- * `offset` は経路の進行方向に対して左向き（(-dy, dx)）を正とする符号付きの
- * 垂直距離（ワールド単位、既定 0）。比率で持つことで、直交ルーティングの
- * 再計算で経路が変わってもラベルが線に追従する。
+ * `position` is a ratio over the path length (0 = source end, 1 = target end,
+ * default 0.5 = midpoint). `offset` is a signed perpendicular distance (world
+ * units, default 0) that is positive toward the left of the path's direction
+ * of travel ((-dy, dx)). Storing it as a ratio keeps the label attached to the
+ * line even when the path changes on an orthogonal-routing recomputation.
  *
- * @param points source → ...waypoints → target 順の解決済み座標列（最低 2 点）
+ * @param points Resolved coordinate list in source → ...waypoints → target
+ *   order (at least 2 points)
  */
 export const calcConnectorLabelAnchor = (
 	points: readonly Point[],
@@ -19,7 +22,7 @@ export const calcConnectorLabelAnchor = (
 		return points.length === 1 ? { ...points[0] } : null;
 	}
 
-	// 各セグメント長と総長を求める。
+	// Compute each segment length and the total length.
 	const segmentLengths: number[] = [];
 	let totalLength = 0;
 	for (let i = 0; i < points.length - 1; i++) {
@@ -33,7 +36,7 @@ export const calcConnectorLabelAnchor = (
 		totalLength += length;
 	}
 
-	// 退化（総長 0）の経路は始点を返す。
+	// A degenerate path (total length 0) returns the start point.
 	if (totalLength === 0) {
 		return { ...points[0] };
 	}
@@ -41,7 +44,7 @@ export const calcConnectorLabelAnchor = (
 	const clampedPosition = Math.min(1, Math.max(0, position));
 	let remaining = clampedPosition * totalLength;
 
-	// remaining を消費して該当セグメントと内分位置を特定する。
+	// Consume `remaining` to locate the target segment and interpolation position.
 	let segmentIndex = 0;
 	while (
 		segmentIndex < segmentLengths.length - 1 &&
@@ -63,7 +66,7 @@ export const calcConnectorLabelAnchor = (
 		return { x, y };
 	}
 
-	// 進行方向に対する左向き法線 (-dy, dx) を単位化してオフセットを適用する。
+	// Normalize the left-facing normal (-dy, dx) of the direction of travel and apply the offset.
 	const dirX = (end.x - start.x) / segmentLength;
 	const dirY = (end.y - start.y) / segmentLength;
 	return { x: x - dirY * offset, y: y + dirX * offset };

@@ -1,6 +1,6 @@
 import type { ShapePreviewRenderer } from "../../registry/ShapePreviewTypes";
 
-// PolygonShapeFactory と同じ頂点数。bounds から正多角形を内接させてプレビューする。
+// Same vertex count as PolygonShapeFactory. Previews a regular polygon inscribed in the bounds.
 const POLYGON_SIDES = 5;
 
 export const PolygonPreview: ShapePreviewRenderer = ({
@@ -22,7 +22,7 @@ export const PolygonPreview: ShapePreviewRenderer = ({
 		return `${cx + rx * Math.cos(angle)},${cy + ry * Math.sin(angle)}`;
 	}).join(" ");
 
-	// 色は var(--vscode-*)（auto の解決結果）を含みうるため SVG 属性ではなく style で当てる。
+	// Colors may contain var(--vscode-*) (the result of resolving auto), so apply them via style rather than SVG attributes.
 	return (
 		<polygon
 			points={pointsAttr}

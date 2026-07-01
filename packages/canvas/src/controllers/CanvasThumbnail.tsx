@@ -7,23 +7,25 @@ import { canvasToState } from "../states/canvas/CanvasMapper";
 
 type CanvasThumbnailProps = {
 	/**
-	 * 表示する CanvasDoc。`Canvas` と同じく `parseCanvasText`（二段検証）を通した
-	 * 正当な doc を渡すこと（内部で再検証しない → docs/01 原則4）。
+	 * The CanvasDoc to display. As with `Canvas`, pass a valid doc that has gone
+	 * through `parseCanvasText` (two-stage validation); it is not re-validated
+	 * internally (see docs/01 principle 4).
 	 */
 	canvasDoc: CanvasDoc;
-	/** SVG の幅（viewBox 基準の論理 px）。CSS で伸縮させる前提の基準値。 */
+	/** SVG width (logical px based on viewBox). Baseline value assuming CSS scaling. */
 	width?: number;
-	/** SVG の高さ（論理 px）。width との比がサムネのアスペクト比になる。 */
+	/** SVG height (logical px). The ratio to width sets the thumbnail's aspect ratio. */
 	height?: number;
-	/** コンテンツ周囲に残す余白（px）。 */
+	/** Margin (px) kept around the content. */
 	padding?: number;
 };
 
 /**
- * doc を「全体が収まるよう」に静的描画する読み取り専用キャンバス。
+ * Read-only canvas that statically renders a doc so the whole thing fits.
  *
- * リデューサもジェスチャーも持たず、純表示の {@link CanvasView} に doc を流すだけ。
- * ギャラリーのサムネイル等、対話不要で軽量・高精細な表示に使う。
+ * Has neither a reducer nor gestures; it simply feeds the doc into the
+ * display-only {@link CanvasView}. Used for lightweight, high-fidelity,
+ * non-interactive displays such as gallery thumbnails.
  */
 const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 	canvasDoc,

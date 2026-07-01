@@ -8,8 +8,8 @@ import { ARROW_SIZE } from "../ArrowConstants";
 import type { ArrowShapeProps } from "../ArrowTypes";
 
 /**
- * 線をこの矢印の根元で終端させるための inset（ローカル単位）。
- * 中空なので線が内部を貫通しないよう、後端の頂点（`-ARROW_SIZE`）で止める。
+ * Inset (in local units) for terminating the line at the base of this arrow.
+ * Since the shape is hollow, the line stops at the trailing vertex (`-ARROW_SIZE`) so it does not pass through the interior.
  */
 export const HOLLOW_DIAMOND_INSET = ARROW_SIZE;
 

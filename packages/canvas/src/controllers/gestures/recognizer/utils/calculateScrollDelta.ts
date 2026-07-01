@@ -2,13 +2,13 @@ import { AUTO_SCROLL_STEP_SIZE } from "../GestureRecognizerConstants";
 import type { ScrollDelta } from "../GestureRecognizerTypes";
 
 /**
- * エッジ近接方向に基づいてスクロールデルタ値を計算
- * この純粋関数は、カーソルがどのエッジに近いかに基づいて、
- * 各方向にどれだけスクロールするかを決定します。
+ * Computes the scroll delta based on edge proximity.
+ * This pure function decides how much to scroll in each direction based on which
+ * edge the cursor is near.
  *
- * @param horizontal - 水平方向のエッジ近接 ("left" | "right" | null)
- * @param vertical - 垂直方向のエッジ近接 ("top" | "bottom" | null)
- * @returns deltaXとdeltaYを含むスクロール値オブジェクト
+ * @param horizontal - Horizontal edge proximity ("left" | "right" | null)
+ * @param vertical - Vertical edge proximity ("top" | "bottom" | null)
+ * @returns A scroll value object containing deltaX and deltaY
  */
 export const calculateScrollDelta = (
 	horizontal: "left" | "right" | null,

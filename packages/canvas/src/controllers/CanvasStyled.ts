@@ -10,9 +10,9 @@ type ViewportProps = {
  * Outermost container that takes up full available space and stacks the
  * toolbar above the canvas viewport (flex column).
  *
- * ジェスチャー認識器の pointerHandlers / pointer capture はこの要素に張る。
- * ツールバー（data-kind="toolbar" / "menu-item"）とキャンバス領域の双方を
- * 内包させることで、ツールバー操作も同一のジェスチャー経路を通す。
+ * The gesture recognizer's pointerHandlers / pointer capture are attached to this element.
+ * By containing both the toolbar (data-kind="toolbar" / "menu-item") and the canvas region,
+ * toolbar interactions also flow through the same gesture path.
  */
 export const CanvasRoot = styled.div`
 	position: relative;
@@ -27,9 +27,10 @@ export const CanvasRoot = styled.div`
  * Canvas drawing region that sits below the toolbar (flex child filling the
  * remaining space).
  *
- * エッジスクロールの判定はこの要素の矩形（useContainerResize での計測）と、
- * 内包する SVG の画面位置（getScreenCTM）に従う。ツールバーの下に限定する
- * ことで、上端のエッジ帯が「見えているキャンバスの上端」に一致する。
+ * Edge-scroll detection is based on this element's rectangle (measured via
+ * useContainerResize) and the screen position of the contained SVG (getScreenCTM).
+ * Constraining it below the toolbar makes the top edge band align with the
+ * "visible top of the canvas".
  */
 export const Viewport = styled.div<ViewportProps>`
 	position: relative;

@@ -6,16 +6,16 @@ import { isSelfLoopConnector } from "../../utils/isSelfLoopConnector";
 import type { Command } from "../CommandTypes";
 
 /**
- * 選択中の対象が単一コネクターのときだけ実行可能。
- * routing 切替は selectedConnectorId のコネクターに対してのみ意味を持つ。
+ * Executable only when the current selection is a single connector.
+ * Routing switching is only meaningful for the connector referenced by selectedConnectorId.
  */
 const isConnectorSelected = (state: CanvasControllerState): boolean =>
 	state.selectedConnectorId !== null &&
 	state.objects[state.selectedConnectorId]?.type === "connector";
 
 /**
- * straight へ切り替え可能なのは「単一コネクター選択かつ自己ループでない」ときだけ。
- * 自己ループは直線では破綻するため orthogonal 専用扱いにする。
+ * Switching to straight is possible only when a single connector is selected and it is not a self-loop.
+ * A self-loop breaks down as a straight line, so it is treated as orthogonal-only.
  */
 const canSetStraight = (state: CanvasControllerState): boolean => {
 	if (!isConnectorSelected(state)) {
@@ -29,17 +29,17 @@ const canSetStraight = (state: CanvasControllerState): boolean => {
 };
 
 /**
- * 選択中コネクターの routing を差し替える。
+ * Replace the routing of the selected connector.
  *
- * `orthogonal` は経路を描画時に算出する派生値であり、ドキュメントの不変条件として
- * `points`（手動 waypoint）は常に空に保つ。そのため orthogonal へ切り替える際は
- * 既存の waypoint を破棄する。`straight` へ切り替えるときは既存 waypoint を温存する。
+ * `orthogonal` is a derived value whose path is computed at render time, and as a document
+ * invariant `points` (manual waypoints) is always kept empty. So when switching to orthogonal,
+ * existing waypoints are discarded. When switching to `straight`, existing waypoints are preserved.
  *
- * waypoint 移動ハンドルが消えるため、選択中 waypoint（selectedVertex）もクリアする。
+ * Since the waypoint move handles disappear, the selected waypoint (selectedVertex) is also cleared.
  *
- * 実効 routing が変わらない場合は no-op。再クリックで無駄な履歴エントリを作らず、
- * 既定（routing 省略 = orthogonal）のコネクターに冗長な `routing: "orthogonal"` を
- * 書き込んでドキュメントを汚さないため。
+ * No-op if the effective routing does not change. This avoids creating a wasteful history entry
+ * on re-click and avoids polluting the document by writing a redundant `routing: "orthogonal"`
+ * onto a connector whose default (routing omitted = orthogonal) already applies.
  */
 const applyConnectorRouting = (
 	state: CanvasControllerState,

@@ -102,14 +102,14 @@ export function moveGroup(
 }
 
 /**
- * グループの子要素を再帰的に変形する
- * registry経由で各形状のtransformByGroupを呼び出す
+ * Recursively transforms a group's children.
+ * Calls each shape's transformByGroup via the registry.
  *
- * @param rootGroupStart - 変形前のルートグループ状態
- * @param rootGroupEnd - 変形後のルートグループ状態
- * @param targetGroup - 変形対象のグループ（ルートまたはネストされたグループ）
- * @param allObjects - 全オブジェクトの状態
- * @returns 変形後のオブジェクト群
+ * @param rootGroupStart - Root group state before the transform
+ * @param rootGroupEnd - Root group state after the transform
+ * @param targetGroup - The group to transform (root or a nested group)
+ * @param allObjects - State of all objects
+ * @returns The transformed objects
  */
 export function transformChildren(
 	rootGroupStart: GroupState,
@@ -125,7 +125,7 @@ export function transformChildren(
 			continue;
 		}
 
-		// registry経由で形状ごとのtransform関数を取得
+		// Get the per-shape transform function via the registry
 		const transformByGroupFn = objectBehaviorRegistry.getTransformByGroup(
 			child.type,
 		);
@@ -138,7 +138,7 @@ export function transformChildren(
 			);
 		}
 
-		// 子がGroupの場合は再帰的に子の子も変形
+		// If the child is a Group, recursively transform its children too
 		if (child.type === "group") {
 			const nestedTransformed = transformChildren(
 				rootGroupStart,
@@ -154,14 +154,14 @@ export function transformChildren(
 }
 
 /**
- * グループの子要素を再帰的に回転する
- * registry経由で各形状のrotateByGroupを呼び出す
+ * Recursively rotates a group's children.
+ * Calls each shape's rotateByGroup via the registry.
  *
- * @param rotationRootGroup - 回転の基準となるグループ状態
- * @param endGroupRotation - 終了時のグループ回転角度
- * @param targetGroup - 回転対象のグループ（ルートまたはネストされたグループ）
- * @param allObjects - 全オブジェクトの状態
- * @returns 回転後のオブジェクト群
+ * @param rotationRootGroup - The group state used as the rotation reference
+ * @param endGroupRotation - The group's rotation angle at the end
+ * @param targetGroup - The group to rotate (root or a nested group)
+ * @param allObjects - State of all objects
+ * @returns The rotated objects
  */
 export function rotateChildren(
 	rotationRootGroup: GroupState,
@@ -177,7 +177,7 @@ export function rotateChildren(
 			continue;
 		}
 
-		// registry経由で形状ごとのrotate関数を取得
+		// Get the per-shape rotate function via the registry
 		const rotateByGroupFn = objectBehaviorRegistry.getRotateByGroup(child.type);
 
 		if (rotateByGroupFn) {
@@ -188,7 +188,7 @@ export function rotateChildren(
 			);
 		}
 
-		// 子がGroupの場合は再帰的に子の子も回転
+		// If the child is a Group, recursively rotate its children too
 		if (child.type === "group") {
 			const nestedRotated = rotateChildren(
 				rotationRootGroup,

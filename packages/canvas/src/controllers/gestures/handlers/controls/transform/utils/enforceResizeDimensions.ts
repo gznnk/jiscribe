@@ -3,7 +3,7 @@ import { calcNonZeroSign, nanToZero } from "@workspace/geometry";
 
 import type { TransformState } from "../../../../../../states/objects/base/TransformState";
 
-/** アスペクト比を維持した高さを計算する。 */
+/** Computes the height while preserving the aspect ratio. */
 export function calcHeightWithAspectRatio(
 	width: number,
 	aspectRatio: number,
@@ -11,7 +11,7 @@ export function calcHeightWithAspectRatio(
 	return nanToZero(width / aspectRatio);
 }
 
-/** アスペクト比を維持した幅を計算する。 */
+/** Computes the width while preserving the aspect ratio. */
 export function calcWidthWithAspectRatio(
 	height: number,
 	aspectRatio: number,
@@ -19,7 +19,7 @@ export function calcWidthWithAspectRatio(
 	return nanToZero(height * aspectRatio);
 }
 
-/** 寸法が最小値を下回る場合に調整する。 */
+/** Adjusts dimensions when they fall below the minimum values. */
 export function enforceResizeDimensions(
 	startFrame: TransformedFrame & TransformState,
 	newWidth: number,

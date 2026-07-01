@@ -4,9 +4,10 @@ import { AUTO_COLOR } from "../../utils/autoColor";
 
 const POLY_STROKE = AUTO_COLOR;
 const POLY_STROKE_WIDTH = 2;
-// polyline のデフォルト半幅（左右対称の水平 2 点線）
+// Default half-width for a polyline (a symmetric horizontal two-point line)
 const POLYLINE_HALF_WIDTH = 80;
 
+/** Shape factory for polyline objects (creation from a position or from drag bounds). */
 export const PolylineShapeFactory: ShapeFactory = {
 	createDoc(position, overrides) {
 		return {
@@ -14,7 +15,7 @@ export const PolylineShapeFactory: ShapeFactory = {
 			stroke: POLY_STROKE,
 			strokeWidth: POLY_STROKE_WIDTH,
 			...overrides,
-			// id と幾何（points）は factory が決める。overrides では上書きさせない。
+			// The id and geometry (points) are determined by the factory; overrides cannot replace them.
 			id: crypto.randomUUID(),
 			points: [
 				{ x: position.x - POLYLINE_HALF_WIDTH, y: position.y },
@@ -39,7 +40,7 @@ export const PolylineShapeFactory: ShapeFactory = {
 			stroke: POLY_STROKE,
 			strokeWidth: POLY_STROKE_WIDTH,
 			...overrides,
-			// id と幾何（points）は factory が決める。overrides では上書きさせない。
+			// The id and geometry (points) are determined by the factory; overrides cannot replace them.
 			id: crypto.randomUUID(),
 			points: [
 				{ x: x1, y: y1 },

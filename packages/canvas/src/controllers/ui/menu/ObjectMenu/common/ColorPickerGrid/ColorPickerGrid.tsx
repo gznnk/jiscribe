@@ -15,19 +15,19 @@ import {
 import { PRESET_COLORS } from "../../ObjectMenuConstants";
 
 type ColorPickerGridProps = {
-	/** 現在選択中の色 */
+	/** Currently selected color */
 	currentColor: string;
-	/** プロパティ名 (例: "fill", "stroke") */
+	/** Property name (e.g. "fill", "stroke") */
 	property: string;
 	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
 };
 
 /**
- * カラーピッカーグリッド。
- * プリセットカラーのスウォッチ（4×7 グリッド）と CSS カラーテキスト入力を表示する。
- * 各スウォッチは data-kind="object-menu" を持ち、ジェスチャーシステム経由でプロパティ更新を行う。
- * テキスト入力は onChange でリアルタイムプレビュー（commit: false）、
- * onBlur / Enter でコミット（commit: true）する。
+ * Color picker grid.
+ * Displays preset color swatches (4×7 grid) and a CSS color text input.
+ * Each swatch has data-kind="object-menu" and updates the property through the gesture system.
+ * The text input previews in real time on onChange (commit: false), and
+ * commits on onBlur / Enter (commit: true).
  */
 const ColorPickerGridComponent: React.FC<ColorPickerGridProps> = ({
 	currentColor,
@@ -36,14 +36,14 @@ const ColorPickerGridComponent: React.FC<ColorPickerGridProps> = ({
 }) => {
 	const [inputValue, setInputValue] = useState(currentColor);
 	const [isValid, setIsValid] = useState(true);
-	// レンダー後に useEffect から最新の inputValue を参照するためのref
+	// Ref for referencing the latest inputValue from useEffect after render.
 	const inputValueRef = useRef(inputValue);
 	inputValueRef.current = inputValue;
-	// ユーザーが有効な編集をしてまだコミットしていない状態かどうか
+	// Whether the user has made a valid edit that has not yet been committed.
 	const pendingCommit = useRef(false);
 
-	// currentColor がユーザーの入力と異なる場合のみ外部変更（プリセット等）として扱い入力欄をリセットする。
-	// commit:false のプレビューも currentColor を更新するが、その場合は inputValue と一致するためスキップする。
+	// Only treat it as an external change (preset, etc.) and reset the input when currentColor differs from the user's input.
+	// A commit:false preview also updates currentColor, but in that case it matches inputValue and is skipped.
 	useEffect(() => {
 		if (currentColor !== inputValueRef.current) {
 			setInputValue(currentColor);
@@ -56,7 +56,7 @@ const ColorPickerGridComponent: React.FC<ColorPickerGridProps> = ({
 		(e: React.ChangeEvent<HTMLInputElement>) => {
 			const val = e.target.value;
 			setInputValue(val);
-			// "auto"（テーマ追従）は CSS.supports では無効判定になるため明示的に許容する。
+			// "auto" (follows theme) is considered invalid by CSS.supports, so allow it explicitly.
 			const valid = isAutoColor(val) || CSS.supports("color", val);
 			setIsValid(valid);
 			if (valid) {

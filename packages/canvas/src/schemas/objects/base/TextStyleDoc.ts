@@ -27,8 +27,8 @@ export type TextStyleDoc = {
 };
 
 /**
- * TextStyleDoc/State が占有するフィールド名（Doc/State で同一）。
- * Frame 系マッパーが text グループを allow-list で素通しする際に参照する。
+ * Field names owned by TextStyleDoc/State (identical for Doc and State).
+ * Referenced by Frame mappers to pass the text group through via an allow-list.
  */
 export const TEXT_STYLE_KEYS = exhaustiveKeysOf<TextStyleDoc>()([
 	"text",

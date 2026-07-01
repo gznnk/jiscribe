@@ -2,6 +2,6 @@ import { EllipseFeatures } from "../../../../schemas/objects/primitives/ellipse/
 import type { ObjectStateValidateFn } from "../../../registry/ObjectStateValidatorRegistry";
 import { createFrameStateValidator } from "../../utils/createFrameStateValidator";
 
-/** EllipseState を検証する（Frame 系共通ロジックを features から生成）。 */
+/** Validates EllipseState (Frame-family common logic generated from features). */
 export const isValidEllipseState: ObjectStateValidateFn =
 	createFrameStateValidator(EllipseFeatures);

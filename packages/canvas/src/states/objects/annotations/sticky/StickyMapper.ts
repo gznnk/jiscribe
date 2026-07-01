@@ -3,7 +3,7 @@ import type { StickyDoc } from "../../../../schemas/objects/annotations/sticky/S
 import { StickyFeatures } from "../../../../schemas/objects/annotations/sticky/StickyDoc";
 import { createFrameMapper } from "../../base/FrameMapper";
 
-/** StickyDoc ↔ StickyState 変換（Frame 系共通ロジックを features から生成）。 */
+/** StickyDoc ↔ StickyState conversion (Frame-family shared logic generated from features). */
 export const { toState: stickyToState, toDoc: stickyToDoc } = createFrameMapper<
 	StickyDoc,
 	StickyState

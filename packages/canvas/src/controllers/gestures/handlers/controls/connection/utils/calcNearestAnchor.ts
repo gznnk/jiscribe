@@ -11,23 +11,25 @@ import type {
 } from "../../../../../../schemas/objects/types/EndpointRef";
 
 /**
- * 候補から除外するアンカーの指定。自己ループで「固定側と同じアンカー」や
- * center 同士の退化を避けるために使う。
+ * Specifies anchors to exclude from the candidate set. Used to avoid a
+ * self-loop connecting to "the same anchor as the fixed side" or degenerating
+ * into a center-to-center pair.
  */
 export type AnchorExclusion = {
-	/** center を候補から除外する。 */
+	/** Exclude center from the candidates. */
 	center?: boolean;
-	/** この connectPoint を候補から除外する。 */
+	/** Exclude this connectPoint from the candidates. */
 	connectPointId?: ConnectPointId;
 };
 
 /**
- * カーソル位置に最も近いアンカーを返す。
- * フレームを持つオブジェクトは 4 中点 + center から選択し、
- * フレームを持たないオブジェクトは center を返す。
+ * Returns the anchor nearest to the cursor position.
+ * Objects with a frame choose from the 4 edge midpoints + center; objects
+ * without a frame return center.
  *
- * `exclude` を渡すと該当アンカーを候補から外す（自己ループ時に固定側アンカーや
- * center を避けて、必ず別の辺中点へ接続させるために使う）。
+ * Passing `exclude` drops the matching anchor from the candidates (used in a
+ * self-loop to avoid the fixed-side anchor or center so the connection always
+ * lands on a different edge midpoint).
  */
 export function calcNearestAnchor(
 	obj: { cx?: number; cy?: number; [key: string]: unknown },
@@ -72,8 +74,8 @@ export function calcNearestAnchor(
 		return c.id !== exclude?.connectPointId;
 	});
 
-	// 除外で候補が空になることはない（連結点 5 個から最大 2 個しか除かない）が、
-	// 防御的に center へフォールバックする。
+	// Exclusion never empties the candidates (at most 2 of the 5 anchors are
+	// removed), but fall back to center defensively.
 	if (candidates.length === 0) {
 		return { kind: "center" };
 	}

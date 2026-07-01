@@ -21,13 +21,13 @@ type ConnectorControlsProps = {
 
 /**
  * Renders the editing controls for a selected connector:
- * - 端点ハンドル（source / target）: ドラッグで図形へ再接続する
- *   （data-id="connection-anchor:edit:<id>:source|target" → ConnectionAnchorEventHandler）
- * - waypoint 移動ハンドル: 既存の経由点を動かす
- *   （data-id="vertex-control:<id>:<i>" → VertexControlHandler を流用）
- * - waypoint 挿入ハンドル: 解決済みパス [source, ...waypoints, target] の各セグメント中点。
- *   ドラッグで新しい経由点を追加する
- *   （data-id="connector-vertex-insert:<id>:<segment>" → ConnectorVertexInsertHandler）
+ * - Endpoint handles (source / target): drag to reconnect to a shape
+ *   (data-id="connection-anchor:edit:<id>:source|target" → ConnectionAnchorEventHandler)
+ * - Waypoint move handles: move existing waypoints
+ *   (data-id="vertex-control:<id>:<i>" → reuses VertexControlHandler)
+ * - Waypoint insert handles: the midpoint of each segment of the resolved path [source, ...waypoints, target].
+ *   Drag to add a new waypoint
+ *   (data-id="connector-vertex-insert:<id>:<segment>" → ConnectorVertexInsertHandler)
  *
  * Placed in the controllers layer so selection visuals are decoupled from the connector itself.
  */
@@ -47,19 +47,19 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 	const adjustedEndpointRadius = ENDPOINT_RADIUS / zoom;
 	const adjustedEndpointStrokeWidth = ENDPOINT_STROKE_WIDTH / zoom;
 
-	// コネクターの不変条件「少なくとも一方が owned」を UI 側で守る。
-	// 片端が free のときは、対になる owned 端のハンドルを隠す。
-	// 隠さないと owned 端を空中（free）へドラッグして free-free を作れてしまうため。
-	// free 端のハンドルは常に表示する（位置調整・図形への再接続のため）。
+	// Enforce the connector invariant "at least one endpoint is owned" on the UI side.
+	// When one endpoint is free, hide the handle of the paired owned endpoint.
+	// Otherwise the owned endpoint could be dragged into empty space (free), creating a free-free connector.
+	// The free endpoint's handle is always shown (for repositioning and reconnecting to a shape).
 	const sourceIsFree = !connectorState.source.owner;
 	const targetIsFree = !connectorState.target.owner;
 	const showSourceHandle = sourceIsFree || !targetIsFree;
 	const showTargetHandle = targetIsFree || !sourceIsFree;
 
-	// 移動ハンドルは中間経由点（waypoints）に、挿入ハンドルは端点込みの
-	// フル解決パスの各セグメント中点に出す。
-	// orthogonal（自動ルーティング）では経路が計算値のため、手動ハンドルは出さない。
-	// routing 省略時は orthogonal が既定。
+	// Move handles are placed at the waypoints; insert handles are placed at the midpoint of each
+	// segment of the fully resolved path (endpoints included).
+	// For orthogonal (automatic routing) the path is computed, so no manual handles are shown.
+	// When routing is omitted, orthogonal is the default.
 	const isOrthogonal = isOrthogonalRouting(connectorState.routing);
 	const waypoints = connectorState.points;
 	const selectedVertexIndex =
@@ -69,7 +69,7 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 
 	return (
 		<g data-layer="connector-controls">
-			{/* waypoint 挿入ハンドル（端点込みパスのセグメント中点）。端点ハンドルの下に描く */}
+			{/* Waypoint insert handles (segment midpoints of the endpoint-inclusive path). Drawn beneath the endpoint handles */}
 			{!isOrthogonal && (
 				<VertexInsertControls
 					objectId={connectorState.id}
@@ -79,7 +79,7 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 				/>
 			)}
 
-			{/* waypoint 移動ハンドル */}
+			{/* Waypoint move handles */}
 			{!isOrthogonal && (
 				<VertexControls
 					objectId={connectorState.id}
@@ -89,7 +89,7 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 				/>
 			)}
 
-			{/* Source endpoint handle (interactive). 対が free のとき owned 端は隠す */}
+			{/* Source endpoint handle (interactive). Hidden for the owned endpoint when its pair is free */}
 			{showSourceHandle && (
 				<circle
 					cx={resolved.source.x}
@@ -104,7 +104,7 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 				/>
 			)}
 
-			{/* Target endpoint handle (interactive). 対が free のとき owned 端は隠す */}
+			{/* Target endpoint handle (interactive). Hidden for the owned endpoint when its pair is free */}
 			{showTargetHandle && (
 				<circle
 					cx={resolved.target.x}

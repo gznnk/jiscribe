@@ -12,11 +12,11 @@ import {
 } from "../../states/objects/primitives/group/GroupState";
 
 /**
- * グループの子要素を再帰的に走査してバウンディングボックスを計算する
+ * Recursively traverses a group's children to compute its bounding box.
  *
- * @param group - バウンディングボックスを計算するグループ
- * @param objects - オブジェクトマップ
- * @returns バウンディングボックス、または有効な子要素がない場合は null
+ * @param group - The group whose bounding box is computed
+ * @param objects - The object map
+ * @returns The bounding box, or null if there are no valid children
  */
 export function calcGroupBoundingBox(
 	group: GroupState,
@@ -43,7 +43,7 @@ export function calcGroupBoundingBox(
 				continue;
 			}
 		} else if (isPoly(child)) {
-			// Poly系（Polyline, Polygon）の場合、points配列からバウンディングボックスを計算
+			// For Poly types (Polyline, Polygon), compute the bounding box from the points array
 			bbox = calcPolyBoundingBox(child.points);
 			if (!bbox) {
 				continue;

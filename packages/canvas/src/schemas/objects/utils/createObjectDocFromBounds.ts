@@ -3,10 +3,11 @@ import type { ObjectDoc } from "../base/ObjectDoc";
 import type { ObjectType } from "../types/ObjectType";
 
 /**
- * 描画ドラッグの開始点・終点からオブジェクト Doc を生成する。
- * 最小サイズ未満、または bounds 描画に対応しない図形の場合は null を返す。
+ * Create an object Doc from the start and end points of a draw drag.
+ * Returns null if the size is below the minimum, or the shape does not support
+ * bounds-based drawing.
  *
- * 生成ロジックは図形ごとの `ShapeFactory.createDocFromBounds` に委譲する。
+ * The creation logic is delegated to each shape's `ShapeFactory.createDocFromBounds`.
  */
 export const createObjectDocFromBounds = (
 	type: ObjectType,

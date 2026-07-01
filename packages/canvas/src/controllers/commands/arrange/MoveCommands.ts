@@ -5,12 +5,12 @@ import { moveSelection } from "../../utils/moveSelection";
 import { updateAffectedGroupBounds } from "../../utils/updateAffectedGroupBounds";
 import type { Command } from "../CommandTypes";
 
-/** 通常移動量（キャンバス座標 px） */
+/** Normal move distance (canvas coordinates, px) */
 const NUDGE_STEP = 1;
-/** Shift 併用時の移動量（キャンバス座標 px） */
+/** Move distance when Shift is held (canvas coordinates, px) */
 const NUDGE_STEP_LARGE = 10;
 
-/** 連続ナッジの集約キーの接頭辞（選択対象が変われば別操作とみなす） */
+/** Prefix of the coalesce key for consecutive nudges (a changed selection counts as a separate operation) */
 const MOVE_COALESCE_PREFIX = "move";
 
 export type NudgeDirection = "up" | "down" | "left" | "right";
@@ -22,7 +22,7 @@ const ARROW_CODE: Record<NudgeDirection, string> = {
 	right: "ArrowRight",
 };
 
-/** 方向ごとの表示ラベル（ショートカット一覧用） */
+/** Display label per direction (for the shortcuts list) */
 const DIRECTION_LABEL: Record<NudgeDirection, string> = {
 	up: "Move Up",
 	down: "Move Down",
@@ -30,7 +30,7 @@ const DIRECTION_LABEL: Record<NudgeDirection, string> = {
 	right: "Move Right",
 };
 
-/** 方向と移動量から単位移動ベクトルを生成する（画面座標系: 下が +y） */
+/** Builds a move vector from a direction and distance (screen coordinates: down is +y) */
 const calcNudgeDelta = (direction: NudgeDirection, step: number): Point => {
 	switch (direction) {
 		case "up":
@@ -45,8 +45,8 @@ const calcNudgeDelta = (direction: NudgeDirection, step: number): Point => {
 };
 
 /**
- * 矢印キーによる選択図形の移動（ナッジ）コマンドを生成するファクトリ。
- * 方向 × 通常/Shift（大きく移動）の組み合わせごとに 1 コマンドを作る。
+ * Factory that creates a nudge command (moving the selection via arrow keys).
+ * Produces one command per direction × normal/Shift (larger move) combination.
  */
 const createMoveCommand = (
 	direction: NudgeDirection,
@@ -55,13 +55,13 @@ const createMoveCommand = (
 	const isLarge = step === NUDGE_STEP_LARGE;
 	return {
 		id: `move-${direction}${isLarge ? "-large" : ""}`,
-		// 例: "Move Up" / "Move Up (10px)"（Shift 併用時は大きく移動）
+		// e.g. "Move Up" / "Move Up (10px)" (larger move when Shift is held)
 		label: `${DIRECTION_LABEL[direction]}${isLarge ? ` (${NUDGE_STEP_LARGE}px)` : ""}`,
 		category: "arrange",
 		shortcuts: {
 			default: [{ code: ARROW_CODE[direction], shift: isLarge }],
 		},
-		// テキスト編集中はキャレット移動を優先するため無効化する
+		// Disabled during text editing so caret movement takes priority
 		canExecute: (state: CanvasControllerState) =>
 			state.selectedIds.length > 0 && state.textEditState === null,
 		execute: (state: CanvasControllerState) => {
@@ -71,14 +71,15 @@ const createMoveCommand = (
 				srcMultiSelectGroup: state.multiSelectGroup,
 				delta: calcNudgeDelta(direction, step),
 			});
-			// ナッジは確定操作なので、毎回 親グループの境界も再計算してコミットする
+			// A nudge is a committing operation, so recompute and commit the parent group bounds each time
 			const moved = updateAffectedGroupBounds(
 				{ ...state, objects, multiSelectGroup },
 				state.selectedIds,
 			);
-			// 同じ選択への連続ナッジ（キーリピートを含む）を 1 つの undo にまとめる。
-			// 選択 ID をキーに含めるため、対象が変われば自動的に別エントリになる。
-			// pending は commit と同時にのみ立てる（履歴層が消費して null に戻す）。
+			// Coalesce consecutive nudges to the same selection (including key repeat) into
+			// a single undo. Since the selection IDs are part of the key, a changed target
+			// automatically becomes a separate entry.
+			// pending is set only together with a commit (the history layer consumes it and resets to null).
 			return {
 				...moved,
 				commitVersion: state.commitVersion + 1,
@@ -93,7 +94,7 @@ const createMoveCommand = (
 
 const NUDGE_DIRECTIONS: NudgeDirection[] = ["up", "down", "left", "right"];
 
-/** 上下左右 × 通常/Shift の 8 つの移動コマンド */
+/** The 8 move commands: up/down/left/right × normal/Shift */
 export const moveCommands: Command[] = NUDGE_DIRECTIONS.flatMap((direction) => [
 	createMoveCommand(direction, NUDGE_STEP),
 	createMoveCommand(direction, NUDGE_STEP_LARGE),

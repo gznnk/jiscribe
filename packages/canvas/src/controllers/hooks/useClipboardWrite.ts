@@ -3,12 +3,12 @@ import { useEffect, useState } from "react";
 import type { ClipboardData } from "../commands/selection/ClipboardData";
 
 /**
- * internalClipboard の変更（Copy / Cut）を OS クリップボードへ書き込むカスタムフック
+ * Custom hook that writes changes to the internal clipboard (Copy / Cut) to the OS clipboard.
  *
- * 副作用を Command.execute の外に置くことで、コマンドの純粋関数契約を維持する。
+ * Keeping this side effect outside Command.execute preserves the pure-function contract of commands.
  *
- * @param internalClipboard - Canvas 内部クリップボードの現在値
- * @returns 書き込み失敗のたびにインクリメントされるエラーバージョン
+ * @param internalClipboard - current value of the Canvas internal clipboard
+ * @returns an error version that increments on each write failure
  */
 export const useClipboardWrite = (
 	internalClipboard: ClipboardData | null,

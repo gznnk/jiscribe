@@ -2,18 +2,18 @@ import type { ComponentType } from "react";
 
 import type { ObjectType } from "./ObjectType";
 
-/** ShapeLibrary のアイコンコンポーネントが受け取る props。 */
+/** Props received by a ShapeLibrary icon component. */
 export type ShapeIconProps = {
 	width?: number;
 	height?: number;
 };
 
 /**
- * ShapeLibrary（ツールバー）に並ぶ図形パレットの 1 項目。
+ * A single item in the shape palette shown in the ShapeLibrary (toolbar).
  *
- * プリセットは図形型と 1:1 ではない（例: "rect" と "rect-markdown" は
- * どちらも rect 型のバリアント）。生成は常に objectType の `ShapeFactory` に
- * defaultOverrides を渡して行う。
+ * Presets are not 1:1 with shape types (e.g. "rect" and "rect-markdown" are
+ * both variants of the rect type). Creation always goes through the
+ * objectType's `ShapeFactory`, passing defaultOverrides.
  */
 export type ShapePreset = {
 	id: string;
@@ -21,14 +21,15 @@ export type ShapePreset = {
 	label: string;
 	defaultOverrides?: Record<string, unknown>;
 	/**
-	 * ツールバーでの表示順。小さいほど左に並ぶ。
-	 * 同値・未指定どうしは登録順を保つ。基本図形を前・バリアントを後ろに
-	 * 並べるなど、登録順序に依存しない表示順をプリセット側で宣言する。
+	 * Display order in the toolbar. Smaller values are placed further left.
+	 * Equal or unspecified values preserve registration order. Lets the preset
+	 * declare a display order independent of registration order, e.g. basic
+	 * shapes first and variants after.
 	 */
 	order?: number;
 	/**
-	 * ツールバーに表示するアイコン。プリセットデータ（schemas）は UI を
-	 * 持たないため、`registerObject()` 時に UI 層（controllers）が注入する。
+	 * Icon shown in the toolbar. Since preset data (schemas) has no UI, it is
+	 * injected by the UI layer (controllers) at `registerObject()` time.
 	 */
 	icon?: ComponentType<ShapeIconProps>;
 };

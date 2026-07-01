@@ -19,10 +19,10 @@ import {
 import type { ControlStrategy } from "../ControlEventHandler";
 
 /**
- * Vertex control の操作（頂点の移動）を処理する。
+ * Handles vertex control interactions (moving a vertex).
  *
- * Control ID フォーマット: "vertex-control:<objectId>:<vertexIndex>"
- * 例: "vertex-control:poly-1:0"
+ * Control ID format: "vertex-control:<objectId>:<vertexIndex>"
+ * Example: "vertex-control:poly-1:0"
  */
 export class VertexControlHandler implements ControlStrategy {
 	readonly controlType = "vertex-control";
@@ -37,7 +37,7 @@ export class VertexControlHandler implements ControlStrategy {
 			return false;
 		}
 
-		// vertex-control かどうかをチェック
+		// Check whether this is a vertex-control
 		return targetId.startsWith("vertex-control:");
 	}
 
@@ -55,7 +55,7 @@ export class VertexControlHandler implements ControlStrategy {
 			return state;
 		}
 
-		// "vertex-control:poly-1:0" からオブジェクトIDと頂点インデックスをパース
+		// Parse the object ID and vertex index from "vertex-control:poly-1:0"
 		const parts = targetControlId.split(":");
 		if (parts.length !== 3 || parts[0] !== "vertex-control") {
 			return state;
@@ -68,7 +68,7 @@ export class VertexControlHandler implements ControlStrategy {
 			return state;
 		}
 
-		// ジェスチャータイプに応じて適切なハンドラーにルーティング
+		// Route to the appropriate handler based on the gesture type
 		let nextState = state;
 
 		if (event.type === "click") {
@@ -85,7 +85,7 @@ export class VertexControlHandler implements ControlStrategy {
 	}
 
 	/**
-	 * Vertex control のクリックを処理する。クリックされた頂点を選択状態にする。
+	 * Handles a vertex control click. Selects the clicked vertex.
 	 */
 	private handleClick(
 		state: CanvasControllerState,
@@ -105,7 +105,7 @@ export class VertexControlHandler implements ControlStrategy {
 	}
 
 	/**
-	 * Vertex control でのドラッグ開始を処理する。
+	 * Handles the start of a drag on a vertex control.
 	 */
 	private handleDragStart(
 		state: CanvasControllerState,
@@ -120,7 +120,7 @@ export class VertexControlHandler implements ControlStrategy {
 	}
 
 	/**
-	 * Vertex control でのドラッグを処理する。
+	 * Handles a drag on a vertex control.
 	 */
 	private handleDrag(
 		state: CanvasControllerState,
@@ -138,7 +138,7 @@ export class VertexControlHandler implements ControlStrategy {
 			return state;
 		}
 
-		// 範囲外の頂点インデックスへの書き込みを防ぐ
+		// Prevent writing to an out-of-range vertex index
 		if (vertexIndex >= startObject.points.length) {
 			return state;
 		}
@@ -146,9 +146,9 @@ export class VertexControlHandler implements ControlStrategy {
 		const startPoint = startObject.points[vertexIndex];
 		const zoom = state.viewport.zoom;
 
-		// --- Shift による軸固定 ---
-		// 開始頂点位置を基準に、移動量の大きい軸方向へのみ動かす（小さい軸を固定）。
-		// 累積量で判定するため、ドラッグ中に優位軸が入れ替われば固定軸も追従する。
+		// --- Axis lock via Shift ---
+		// Relative to the starting vertex position, move only along the axis with the larger displacement (lock the smaller axis).
+		// Since the decision is based on the cumulative amount, the locked axis follows if the dominant axis swaps during the drag.
 		const dx = event.last.x - startPoint.x;
 		const dy = event.last.y - startPoint.y;
 		const lockedAxis: "x" | "y" | null = event.mods.shift
@@ -157,12 +157,12 @@ export class VertexControlHandler implements ControlStrategy {
 				: "x"
 			: null;
 
-		// 軸固定中、フリー軸の移動量がわずかなら開始頂点へ吸着し、両軸ガイドを出す。
+		// While axis-locked, if the free-axis displacement is tiny, snap to the starting vertex and show both-axis guides.
 		const freeAxisDelta = lockedAxis === "x" ? dy : dx;
 		const snapToOrigin =
 			lockedAxis !== null && Math.abs(freeAxisDelta) <= ORIGIN_SNAP_PX / zoom;
 
-		// 軸固定を反映したカーソル位置（固定軸・原点スナップは開始頂点座標に置き換える）
+		// Cursor position reflecting the axis lock (the locked axis / origin snap is replaced with the starting vertex coordinate)
 		let cursorX = event.last.x;
 		let cursorY = event.last.y;
 		if (lockedAxis === "x" || snapToOrigin) {
@@ -172,7 +172,7 @@ export class VertexControlHandler implements ControlStrategy {
 			cursorY = startPoint.y;
 		}
 
-		// --- オブジェクト間スナップ補正（固定軸・原点スナップ中はスキップ）---
+		// --- Snap correction between objects (skipped while axis-locked / origin-snapping) ---
 		const snapCandidates = eventStartSnapshot.snapCandidates;
 		let snapFeedback: SnapFeedback = { x: [], y: [] };
 
@@ -199,8 +199,8 @@ export class VertexControlHandler implements ControlStrategy {
 			);
 		}
 
-		// --- Shift 軸固定のフィードバック（ビューポート全体ガイド）---
-		// 固定軸は開始頂点の座標を通る線。原点スナップ中は両軸（十字）を出す。
+		// --- Shift axis-lock feedback (full-viewport guides) ---
+		// The locked axis is a line through the starting vertex's coordinate. During origin snap, show both axes (a crosshair).
 		let axisLockFeedback: AxisLockFeedback | null = null;
 		if (lockedAxis) {
 			if (snapToOrigin) {
@@ -212,13 +212,13 @@ export class VertexControlHandler implements ControlStrategy {
 			}
 		}
 
-		// 新しい頂点位置を計算
+		// Compute the new vertex position
 		const newPosition: Point = {
 			x: roundToDecimal(cursorX, PRECISION.COORDINATE),
 			y: roundToDecimal(cursorY, PRECISION.COORDINATE),
 		};
 
-		// 頂点位置を更新
+		// Update the vertex position
 		const newPoints = [...startObject.points];
 		newPoints[vertexIndex] = newPosition;
 
@@ -239,7 +239,7 @@ export class VertexControlHandler implements ControlStrategy {
 	}
 
 	/**
-	 * Vertex control でのドラッグ終了を処理する。
+	 * Handles the end of a drag on a vertex control.
 	 */
 	private handleDragEnd(
 		state: CanvasControllerState,
@@ -247,10 +247,10 @@ export class VertexControlHandler implements ControlStrategy {
 		objectId: string,
 		vertexIndex: number,
 	): CanvasControllerState {
-		// ドラッグ中の状態更新を適用して最終状態を計算
+		// Apply the drag-time state update to compute the final state
 		let nextState = this.handleDrag({ ...state }, event, objectId, vertexIndex);
 
-		// グループに所属している場合はグループの枠を更新する
+		// If it belongs to a group, update the group's bounds
 		const updatedObject = nextState.objects[objectId];
 		if (updatedObject?.parentId) {
 			nextState = updateGroupBoundsFromRoot(nextState, updatedObject.parentId);

@@ -3,8 +3,8 @@ import styled from "@emotion/styled";
 import { theme } from "../../../../../../constants/theme";
 
 /**
- * 矢印セレクター グリッド（3列）。
- * DropdownPanel 内に配置する。
+ * Arrow selector grid (3 columns).
+ * Placed inside a DropdownPanel.
  */
 export const ArrowSelectorGrid = styled.div`
 	display: grid;
@@ -14,8 +14,8 @@ export const ArrowSelectorGrid = styled.div`
 `;
 
 /**
- * 矢印タイプ選択ボタン。
- * SVGプレビューを表示する。
+ * Arrow type selection button.
+ * Displays an SVG preview.
  */
 export const ArrowTypeButton = styled.button<{ isActive?: boolean }>`
 	display: flex;

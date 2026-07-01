@@ -6,12 +6,12 @@ import type { ConnectorState } from "../../../../states/objects/connections/conn
 import { resolveConnectorPoints } from "../utils/endpoints";
 
 /**
- * 解決済みのコネクター座標。
+ * Resolved connector coordinates.
  *
- * `source` / `target` は端点（owned アンカーはアウトライン調整済み）。
- * `points` は折れ線描画用の点列で、`source → ...waypoints → target` の順に並ぶ
- * （`points[0]` が `source`、末尾が `target`）。中間経由点（waypoints）は
- * `points` に畳み込んであるため個別には公開しない。
+ * `source` / `target` are the endpoints (owned anchors are outline-adjusted).
+ * `points` is the point list for polyline rendering, ordered `source → ...waypoints → target`
+ * (`points[0]` is `source`, the last entry is `target`). The intermediate waypoints are folded
+ * into `points`, so they are not exposed separately.
  */
 export type ResolvedConnectorPoints = {
 	source: Point;
@@ -26,9 +26,10 @@ export type ResolvedConnectorPoints = {
  * so the memoization only re-runs when those specific objects change, not when any object
  * in the canvas changes.
  *
- * 折れ線描画用の点列 `points`（source → ...waypoints → target）も同じ useMemo 内で
- * 組み立てて返す。これにより `points` の参照が安定し、`memo` 済みの `Connector` が
- * 無関係な再描画で再レンダリングされない（端点をスカラーで渡していた頃と同じ挙動）。
+ * The polyline point list `points` (source → ...waypoints → target) is assembled and
+ * returned inside the same useMemo. This keeps the `points` reference stable so the
+ * memoized `Connector` does not re-render on unrelated redraws (matching the behavior
+ * from when endpoints were passed as scalars).
  *
  * @param connectorState - The connector state to resolve
  * @param objects - Map of all objects in the canvas

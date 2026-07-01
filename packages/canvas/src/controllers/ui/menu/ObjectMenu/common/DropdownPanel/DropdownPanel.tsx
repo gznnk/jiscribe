@@ -4,14 +4,15 @@ import type { ComponentPropsWithoutRef } from "react";
 import { DropdownPanelRoot } from "./DropdownPanelStyled";
 
 /**
- * ドロップダウンパネル。ボタンの下または上に中央揃えで表示される。
+ * Dropdown panel. Displayed center-aligned below or above the button.
  *
- * パネルの余白・ボタン間のギャップ・枠線部分をクリックしても、ジェスチャーの
- * 祖先探索（closest("[data-kind]")）が Viewport（data-kind="canvas"）まで遡って
- * 選択解除・メニュー閉じが発火しないよう、パネル自身を object-menu ターゲットとして
- * 宣言する。ObjectMenuHandler は未知の actionId では何もしないため、背景クリックは
- * no-op となりメニューと選択が維持される。内側のボタンは自身の data-kind を持つので
- * closest が先にボタンを拾い、従来どおり動作する。
+ * Declares the panel itself as an object-menu target so that clicking the
+ * panel's padding, the gaps between buttons, or the border area does not let
+ * the gesture ancestor lookup (closest("[data-kind]")) climb up to the Viewport
+ * (data-kind="canvas") and fire deselection / menu close. ObjectMenuHandler does
+ * nothing for unknown actionIds, so a background click is a no-op and the menu
+ * and selection are retained. Inner buttons have their own data-kind, so closest
+ * picks up the button first and they behave as before.
  */
 export const DropdownPanel = forwardRef<
 	HTMLDivElement,
