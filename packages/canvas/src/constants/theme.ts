@@ -1,66 +1,67 @@
 /**
- * VSCode テーマ追従用のスタイルトークン。
+ * Style tokens for following the VSCode theme.
  *
- * VSCode の Webview では `--vscode-*` CSS 変数がテーマ（Dark / Light / High Contrast）
- * に応じて自動注入される。各トークンはその変数を参照しつつ、変数が存在しない環境
- * （単体デモ・Storybook 等）向けにダーク基調のフォールバック値を持つ。
+ * In VSCode webviews, `--vscode-*` CSS variables are auto-injected according to the theme
+ * (Dark / Light / High Contrast). Each token references those variables while holding a
+ * dark-toned fallback value for environments where the variables do not exist
+ * (standalone demo, Storybook, etc.).
  *
- * これにより、VSCode 上では利用者のテーマに自動で馴染み、デモ環境では
- * モックで確認したダークテーマと同じ見た目になる。
+ * As a result, it automatically blends with the user's theme in VSCode, and in the demo
+ * environment it looks the same as the dark theme verified with mocks.
  *
- * 注意: ここで扱うのは UI クローム（メニュー・ツールバー・選択枠など）の配色のみ。
- * 図形そのものの色（fill/stroke/fontColor）はドキュメントに保存されるデータであり、
- * テーマトークンの対象外。
+ * Note: this only covers the colors of the UI chrome (menus, toolbars, selection frames, etc.).
+ * The colors of the shapes themselves (fill/stroke/fontColor) are data saved in the document
+ * and are not the subject of theme tokens.
  */
 export const theme = {
-	/** キャンバスの地色（エディタ背景） */
+	/** Canvas base color (editor background) */
 	canvasBg: "var(--vscode-editor-background, #1e1e1e)",
-	/** メニュー・ツールバーなど浮動 UI の面 */
+	/** Surface of floating UI such as menus and toolbars */
 	surface: "var(--vscode-editorWidget-background, #252526)",
-	/** ボタン等のホバー面 */
+	/** Hover surface for buttons, etc. */
 	surfaceHover:
 		"var(--vscode-toolbar-hoverBackground, rgba(255, 255, 255, 0.08))",
-	/** ボタン等のアクティブ面 */
+	/** Active surface for buttons, etc. */
 	surfaceActive:
 		"var(--vscode-toolbar-activeBackground, rgba(255, 255, 255, 0.12))",
-	/** 浮動 UI の外枠線 */
+	/** Outer border of floating UI */
 	border: "var(--vscode-editorWidget-border, #2b2b2b)",
-	/** 区切り線など控えめな線 */
+	/** Subtle lines such as separators */
 	borderSubtle: "var(--vscode-panel-border, #3c3c3c)",
-	/** 主要テキスト・アイコン色 */
+	/** Primary text/icon color */
 	foreground: "var(--vscode-foreground, #cccccc)",
-	/** 補助テキスト色 */
+	/** Secondary text color */
 	foregroundMuted: "var(--vscode-descriptionForeground, #8b8b8b)",
-	/** 非活性テキスト色（前景色を大きく減光し、無効状態を明確にする） */
+	/** Disabled text color (dims the foreground heavily to make the disabled state clear) */
 	disabledForeground:
 		"var(--vscode-disabledForeground, rgba(204, 204, 204, 0.4))",
-	/** アイコン色 */
+	/** Icon color */
 	iconForeground: "var(--vscode-icon-foreground, #c5c5c5)",
-	/** アクセント（選択・フォーカス） */
+	/** Accent (selection/focus) */
 	accent: "var(--vscode-focusBorder, #007acc)",
-	/** 入力欄の背景 */
+	/** Input field background */
 	inputBg: "var(--vscode-input-background, #1e1e1e)",
-	/** 入力欄の文字色 */
+	/** Input field text color */
 	inputFg: "var(--vscode-input-foreground, #cccccc)",
-	/** 入力欄の枠線 */
+	/** Input field border */
 	inputBorder: "var(--vscode-input-border, #3c3c3c)",
-	/** 入力欄のプレースホルダ色 */
+	/** Input field placeholder color */
 	inputPlaceholder: "var(--vscode-input-placeholderForeground, #989898)",
-	/** エラー文字色 */
+	/** Error text color */
 	errorFg: "var(--vscode-errorForeground, #f48771)",
-	/** 浮動 UI のドロップシャドウ */
+	/** Drop shadow for floating UI */
 	shadow: "0 2px 8px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.36))",
-	/** グリッド線の色 */
+	/** Grid line color */
 	gridLine: "var(--vscode-editorIndentGuide-background, #2a2a2a)",
-	/** スライダー等のトラック色（面に対して視認できる中間グレー） */
+	/** Track color for sliders, etc. (a mid gray visible against the surface) */
 	sliderTrack: "var(--vscode-scrollbarSlider-background, #6e6e6e)",
 	/**
-	 * 透明（none）を示す市松模様の濃い側の色。
-	 * 前景色を薄く重ねることで、ダーク（明色の市松）/ ライト（暗色の市松）に自動追従する。
-	 * もう一方のマスは透明（面が透ける）にして 2 トーンの市松にする。
+	 * The darker color of the checkerboard indicating transparency (none).
+	 * Overlaying the foreground faintly makes it auto-follow dark (light checker) / light (dark checker).
+	 * The other cell is transparent (the surface shows through) to make a two-tone checker.
 	 */
 	transparentChecker:
 		"color-mix(in srgb, var(--vscode-foreground, #888) 22%, transparent)",
-	/** フローティング UI（メニュー・ボタン等）の角丸。VSCode のウィジェットに合わせ控えめに。 */
+	/** Corner radius of floating UI (menus, buttons, etc.). Kept subtle to match VSCode widgets. */
 	radius: "4px",
 } as const;

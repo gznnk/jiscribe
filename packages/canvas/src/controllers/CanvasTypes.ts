@@ -14,20 +14,20 @@ import type { GroupState } from "../states/objects/primitives/group/GroupState";
 // ---------------------------------------------------------------------------
 
 /**
- * 連続操作を 1 つの undo エントリにまとめるための集約状態。
- * recorded は履歴層が、pending は各イベントハンドラが責務を持つ（役割で分離）。
+ * Coalescing state for merging consecutive operations into a single undo entry.
+ * The history layer owns `recorded`; each event handler owns `pending` (separated by role).
  */
 export type HistoryCoalesce = {
 	/**
-	 * 直前コミットの集約識別子（key とコミット時刻）。
-	 * recordHistoryIfNeeded のみが書き、ハンドラからは read-only。
-	 * null は集約境界（次のコミットは必ず新規エントリになる）。
+	 * Coalesce identifier of the previous commit (key and commit time).
+	 * Written only by recordHistoryIfNeeded; read-only from handlers.
+	 * null is a coalesce boundary (the next commit always becomes a new entry).
 	 */
 	recorded: { key: string; time: number } | null;
 	/**
-	 * 各ハンドラが「集約したい時だけ」セットする集約キー（intent）。
-	 * recordHistoryIfNeeded がコミット時に消費し、必ず null に戻す。
-	 * 何を同じ操作の連続とみなすかをキーに織り込む（例: "move:<選択ID>"）。
+	 * Coalesce key (intent) that each handler sets only when it wants to coalesce.
+	 * Consumed by recordHistoryIfNeeded on commit and always reset to null.
+	 * The key encodes what counts as a continuation of the same operation (e.g. "move:<selectedId>").
 	 */
 	pending: string | null;
 };
@@ -41,7 +41,7 @@ export type KeyPointsCacheEntry = {
 	keyPoints: FrameKeyPoints;
 };
 
-/** オブジェクトID → keyPoints のキャッシュ。CanvasControllerState に保持し、handleGesture で更新する。 */
+/** Cache of object ID → keyPoints. Held in CanvasControllerState and updated in handleGesture. */
 export type KeyPointsCache = Record<string, KeyPointsCacheEntry>;
 
 // ---------------------------------------------------------------------------
@@ -57,90 +57,90 @@ export type SnapEdge =
 	| "vCenter";
 
 /**
- * スナップ候補点。
- * x候補: left/right エッジ + hCenter（中央のX座標）。coordinate はX座標、perpendicularMin/Max はそのオブジェクトのtop/bottom。
- * y候補: top/bottom エッジ + vCenter（中央のY座標）。coordinate はY座標、perpendicularMin/Max はそのオブジェクトのleft/right。
+ * A snap candidate point.
+ * x candidates: left/right edges + hCenter (center X coordinate). `coordinate` is the X coordinate; perpendicularMin/Max are that object's top/bottom.
+ * y candidates: top/bottom edges + vCenter (center Y coordinate). `coordinate` is the Y coordinate; perpendicularMin/Max are that object's left/right.
  */
 export type SnapCandidate = {
 	objectId: string;
 	coordinate: number;
 	edge: SnapEdge;
-	/** ガイド線の垂直方向範囲（開始）*/
+	/** Perpendicular range of the guide line (start) */
 	perpendicularMin: number;
-	/** ガイド線の垂直方向範囲（終了）*/
+	/** Perpendicular range of the guide line (end) */
 	perpendicularMax: number;
 };
 
 export type SnapCandidates = {
-	/** left/right エッジ候補（coordinate 昇順ソート済み）*/
+	/** left/right edge candidates (sorted ascending by coordinate) */
 	x: SnapCandidate[];
-	/** top/bottom エッジ候補（coordinate 昇順ソート済み）*/
+	/** top/bottom edge candidates (sorted ascending by coordinate) */
 	y: SnapCandidate[];
 };
 
 export type SnapAxisFeedback = {
-	/** スナップ座標（ガイド線の位置）*/
+	/** Snap coordinate (position of the guide line) */
 	coordinate: number;
-	/** ガイド線の垂直方向開始（x-snap: Y座標、y-snap: X座標）*/
+	/** Perpendicular start of the guide line (x-snap: Y coordinate, y-snap: X coordinate) */
 	lineStart: number;
-	/** ガイド線の垂直方向終了 */
+	/** Perpendicular end of the guide line */
 	lineEnd: number;
 	sourceObjectIds: string[];
 };
 
 export type SnapFeedback = {
-	/** X軸スナップ（縦ガイド線）。left/right が各々候補と一致した場合に複数になる */
+	/** X-axis snaps (vertical guide lines). Multiple when left/right each match a candidate */
 	x: SnapAxisFeedback[];
-	/** Y軸スナップ（横ガイド線）。top/bottom が各々候補と一致した場合に複数になる */
+	/** Y-axis snaps (horizontal guide lines). Multiple when top/bottom each match a candidate */
 	y: SnapAxisFeedback[];
 };
 
 /**
- * Shift ドラッグの軸固定フィードバック。
- * ビューポート全体に伸びるガイド線を表す（SnapFeedback と同じく x=縦線 / y=横線）。
- * 通常はどちらか一方のみ。原点スナップ中は両方を設定して十字に表示する。
+ * Axis-lock feedback for Shift dragging.
+ * Represents guide lines spanning the whole viewport (like SnapFeedback, x=vertical / y=horizontal).
+ * Normally only one of the two. During origin snapping both are set to display a crosshair.
  */
 export type AxisLockFeedback = {
-	/** 縦ガイド線の X 座標（SVG 座標）。X 固定（縦移動）または原点スナップ時に設定 */
+	/** X coordinate of the vertical guide line (SVG coordinates). Set on X lock (vertical move) or origin snap */
 	x?: number;
-	/** 横ガイド線の Y 座標（SVG 座標）。Y 固定（横移動）または原点スナップ時に設定 */
+	/** Y coordinate of the horizontal guide line (SVG coordinates). Set on Y lock (horizontal move) or origin snap */
 	y?: number;
 };
 
 /**
- * 履歴スタックの状態
+ * State of the history stack.
  */
 export type HistoryState = {
-	/** 過去の状態（Undoスタック） */
+	/** Past states (undo stack) */
 	past: CanvasDoc[];
-	/** 現在の状態 */
+	/** Current state */
 	present: CanvasDoc;
-	/** 未来の状態（Redoスタック） */
+	/** Future states (redo stack) */
 	future: CanvasDoc[];
 };
 
 /**
- * ジェスチャー開始時（dragStart）のスナップショット。
- * ドラッグ中の計算に必要なデータを事前計算・キャッシュする専用型。
- * dragStart で生成され、dragEnd で null にクリアされる。
+ * Snapshot at gesture start (dragStart).
+ * A dedicated type that pre-computes and caches the data needed for calculations during a drag.
+ * Created on dragStart and cleared to null on dragEnd.
  */
 export type EventStartSnapshot = {
-	/** ドラッグ開始時のオブジェクトマップ */
+	/** Object map at drag start */
 	objects: Record<string, ObjectState>;
-	/** オブジェクト ID → FrameKeyPoints の断面（multiSelectGroup.id も含む）*/
+	/** Slice of object ID → FrameKeyPoints (also includes multiSelectGroup.id) */
 	keyPoints: Record<string, FrameKeyPoints>;
-	/** スナップ候補（dragStart 時に事前計算・全オブジェクト分。除外は findSnap に Set で渡す）*/
+	/** Snap candidates (pre-computed at dragStart for all objects. Exclusions are passed to findSnap as a Set) */
 	snapCandidates: SnapCandidates;
-	/** ドラッグ開始時の選択 ID 一覧 */
+	/** List of selected IDs at drag start */
 	selectedIds: string[];
 	/**
-	 * 選択オブジェクト＋全子孫の ID セット（dragStart 時に事前計算）。
-	 * スナップの除外集合として findSnap / buildSnapFeedback に渡す。
+	 * ID set of the selected objects plus all their descendants (pre-computed at dragStart).
+	 * Passed to findSnap / buildSnapFeedback as the snap exclusion set.
 	 */
 	selectedIdsWithDescendants: ReadonlySet<string>;
-	/** 複数選択グループ（null の場合は複数選択なし）*/
+	/** Multi-selection group (null when there is no multi-selection) */
 	multiSelectGroup: GroupState | null;
-	/** ドラッグ開始時の viewport（grab scroll の基準点）*/
+	/** Viewport at drag start (reference point for grab scrolling) */
 	viewport: Viewport;
 };
 
@@ -164,14 +164,14 @@ export type CanvasControllerState = CanvasState & {
 	eventStartSnapshot: EventStartSnapshot | null;
 
 	/**
-	 * keyPoints の永続キャッシュ。dragStart のたびに参照比較で差分のみ再計算する。
-	 * CanvasDoc には含まれず、履歴管理の対象外。
+	 * Persistent cache of keyPoints. On each dragStart, only the diff is recomputed via reference comparison.
+	 * Not included in CanvasDoc and not subject to history management.
 	 */
 	keyPointsCache: KeyPointsCache;
 
 	/**
-	 * snapCandidates のキャッシュ。keyPointsCache が変化した dragStart のみ再計算する。
-	 * null の場合は未計算（次の dragStart で必ず計算される）。
+	 * Cache of snapCandidates. Recomputed only on a dragStart where keyPointsCache changed.
+	 * null means not yet computed (it will always be computed on the next dragStart).
 	 */
 	snapCandidatesCache: SnapCandidates | null;
 
@@ -200,8 +200,8 @@ export type CanvasControllerState = CanvasState & {
 	saveNonce: string;
 
 	/**
-	 * 履歴エントリの集約（連続したナッジ＝矢印キー移動などを 1 つの undo にまとめる）に使う状態。
-	 * CanvasDoc には含めない transient な内部シグナル。
+	 * State used to coalesce history entries (merging consecutive nudges, e.g. arrow-key moves, into a single undo).
+	 * A transient internal signal not included in CanvasDoc.
 	 */
 	historyCoalesce: HistoryCoalesce;
 
@@ -212,31 +212,31 @@ export type CanvasControllerState = CanvasState & {
 	contextMenuPosition: { clientX: number; clientY: number } | null;
 
 	/**
-	 * ShapeLibrary からのドラッグ中状態。
-	 * dragStart で設定し、dragEnd で図形を追加後に null にクリアする。
-	 * null でない間はドラッグ進行中を意味する。
+	 * In-progress drag state from the ShapeLibrary.
+	 * Set on dragStart and cleared to null after adding the shape on dragEnd.
+	 * While non-null it means a drag is in progress.
 	 */
 	shapeLibraryDrag: {
-		/** ドラッグ中の図形プリセット */
+		/** Shape preset being dragged */
 		preset: ShapePreset;
-		/** ゴースト表示位置（SVG座標・スナップ済み）*/
+		/** Ghost display position (SVG coordinates, snapped) */
 		ghostPosition: Point;
-		/** ゴースト図形の半サイズ（dragStart 時にキャッシュ）*/
+		/** Half size of the ghost shape (cached at dragStart) */
 		shapeDimensions: { halfWidth: number; halfHeight: number };
 	} | null;
 
 	/**
-	 * 描画モード中の状態。
-	 * ShapeLibrary の Rect/Ellipse ボタンをクリックすると設定され、
-	 * 描画完了・Escape・キャンバスクリック時に null にクリアされる。
-	 * - null: 描画モード OFF
-	 * - preview が null: 描画モード ON（ドラッグ未開始）
-	 * - preview が non-null: ドラッグ中（プレビュー表示中）
+	 * State while in drawing mode.
+	 * Set when the Rect/Ellipse button in the ShapeLibrary is clicked, and
+	 * cleared to null on drawing completion, Escape, or a canvas click.
+	 * - null: drawing mode OFF
+	 * - preview is null: drawing mode ON (drag not started)
+	 * - preview is non-null: dragging (preview displayed)
 	 */
 	shapeDrawing: {
-		/** 描画中の図形プリセット */
+		/** Shape preset being drawn */
 		preset: ShapePreset;
-		/** ドラッグ中のプレビュー矩形（SVG座標）。ドラッグ開始前は null */
+		/** Preview rectangle during the drag (SVG coordinates). null before the drag starts */
 		preview: {
 			startX: number;
 			startY: number;
@@ -246,8 +246,8 @@ export type CanvasControllerState = CanvasState & {
 	} | null;
 
 	/**
-	 * 範囲選択中の矩形（SVG座標）。
-	 * Canvas上で左ドラッグ時に設定され、dragEnd / Escape で null にクリアする。
+	 * The area-selection rectangle in progress (SVG coordinates).
+	 * Set on a left-drag over the canvas and cleared to null on dragEnd / Escape.
 	 */
 	areaSelection: {
 		startX: number;
@@ -257,22 +257,22 @@ export type CanvasControllerState = CanvasState & {
 	} | null;
 
 	/**
-	 * ObjectMenu 内で現在展開中のセクション ID。
-	 * null なら全セクション閉じた状態。
+	 * ID of the section currently expanded within the ObjectMenu.
+	 * null means all sections are collapsed.
 	 */
 	objectMenuOpenId: string | null;
 
 	/**
-	 * 複数選択されたオブジェクトがグループ化されている場合の、グループ状態。
-	 * multiSelectGroup が null でない場合、selectedIds 内のオブジェクトは全てこのグループの子として扱われる。
-	 * グループ化された選択状態を管理するために使用される。
-	 * グループ化されていない場合は null。
+	 * The group state when multi-selected objects are grouped.
+	 * When multiSelectGroup is non-null, all objects in selectedIds are treated as children of this group.
+	 * Used to manage the grouped selection state.
+	 * null when not grouped.
 	 */
 	multiSelectGroup: GroupState | null;
 
 	/**
-	 * テキスト編集中の状態。
-	 * null の場合はテキスト編集していない。
+	 * State while editing text.
+	 * null when not editing text.
 	 */
 	textEditState: {
 		objectId: string;
@@ -280,22 +280,22 @@ export type CanvasControllerState = CanvasState & {
 	} | null;
 
 	/**
-	 * コネクター作成中の一時的な状態。
-	 * connection-anchor からドラッグ中に設定され、dragEnd で確定または破棄される。
+	 * Temporary state while creating a connector.
+	 * Set while dragging from a connection-anchor and committed or discarded on dragEnd.
 	 */
 	pendingConnector: ConnectorState | null;
 
 	/**
-	 * 現在選択中のコネクターID。
-	 * selectedIds（図形専用）とは独立して管理し、相互排他を保証する。
-	 * null の場合はコネクターが選択されていない。
+	 * ID of the currently selected connector.
+	 * Managed independently from selectedIds (shapes only), guaranteeing mutual exclusion.
+	 * null when no connector is selected.
 	 */
 	selectedConnectorId: string | null;
 
 	/**
-	 * 現在選択中の頂点。
-	 * polyline/polygon が1つ選択されているときのみ有効。
-	 * null の場合は頂点が選択されていない。
+	 * The currently selected vertex.
+	 * Only valid when exactly one polyline/polygon is selected.
+	 * null when no vertex is selected.
 	 */
 	selectedVertex: {
 		objectId: string;
@@ -303,49 +303,50 @@ export type CanvasControllerState = CanvasState & {
 	} | null;
 
 	/**
-	 * 編集中のコネクターID。
-	 * エンドポイントをドラッグ編集している場合に設定され、pendingConnector と組み合わせて使用される。
-	 * 新規作成時は null、編集時は元のコネクターIDが設定される。
-	 * dragEnd で null にクリアする。
+	 * ID of the connector being edited.
+	 * Set when dragging to edit an endpoint, used together with pendingConnector.
+	 * null on new creation; the original connector ID on edit.
+	 * Cleared to null on dragEnd.
 	 */
 	editingConnectorId: string | null;
 
 	/**
-	 * pendingConnector のうち、現在編集中（ドラッグ中）のエンドポイント。
-	 * 新規作成時は "target"（source は固定、target を動かす）。
-	 * 編集時は "source" または "target"（ドラッグしているハンドル側）。
-	 * これにより、UI層で固定側のオブジェクトにのみアンカーを表示できる。
-	 * dragEnd で null にクリアする。
+	 * The endpoint of pendingConnector currently being edited (dragged).
+	 * On new creation, "target" (source is fixed, target moves).
+	 * On edit, "source" or "target" (the handle side being dragged).
+	 * This lets the UI layer show an anchor only on the fixed side's object.
+	 * Cleared to null on dragEnd.
 	 */
 	editingEndpoint: "source" | "target" | null;
 
 	/**
-	 * ドラッグ中のスナップフィードバック。
-	 * スナップしている間のみ non-null。dragEnd でクリアする。
+	 * Snap feedback during a drag.
+	 * non-null only while snapping. Cleared on dragEnd.
 	 */
 	snapFeedback: SnapFeedback | null;
 
 	/**
-	 * Shift ドラッグによる軸固定フィードバック。
-	 * 軸固定中のみ non-null。dragEnd でクリアする。
-	 * ビューポート全体に伸びるガイド線を AxisLockGuide が描画する。
+	 * Axis-lock feedback from Shift dragging.
+	 * non-null only while axis-locked. Cleared on dragEnd.
+	 * AxisLockGuide draws guide lines spanning the whole viewport.
 	 */
 	axisLockFeedback: AxisLockFeedback | null;
 
 	/**
-	 * インターナルクリップボード。
-	 * navigator.clipboard への書き込み成否に関わらず、CopyCommand 実行時に同期的にセットされる。
-	 * Cut 後に navigator.clipboard が利用不可でもペーストできるよう保証するためのフォールバック。
+	 * Internal clipboard.
+	 * Set synchronously when CopyCommand runs, regardless of whether the write to
+	 * navigator.clipboard succeeds. A fallback that guarantees paste works even when
+	 * navigator.clipboard is unavailable after a Cut.
 	 */
 	internalClipboard: ClipboardData | null;
 
 	/**
-	 * 直前の Duplicate 操作の記録。Move-aware オフセット計算に使用。
-	 * - newIds: 複製で生成した新しいオブジェクト ID
-	 * - cx/cy: 生成直後の選択中心座標
-	 * - offset: その複製で使用したオフセット
-	 * 次の Duplicate 時に selectedIds == newIds なら delta を計算し、
-	 * 動かしていなければ offset を再利用、動かしていれば delta を新 offset として採用する。
+	 * Record of the previous Duplicate operation. Used for move-aware offset calculation.
+	 * - newIds: new object IDs created by the duplicate
+	 * - cx/cy: selection center coordinates immediately after creation
+	 * - offset: the offset used by that duplicate
+	 * On the next Duplicate, if selectedIds == newIds, compute the delta:
+	 * if unmoved, reuse offset; if moved, adopt the delta as the new offset.
 	 */
 	lastDuplicate: {
 		newIds: string[];

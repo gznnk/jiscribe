@@ -1,11 +1,11 @@
 import { findGestureElement } from "./findGestureElement";
 
 /**
- * data-gesture="native-pointer" を持つ入力要素から値を取得する。
- * スライダーなど、ジェスチャーイベント経由で値を伝える要素が対象。
+ * Read the value from an input element that has data-gesture="native-pointer".
+ * Targets elements such as sliders that propagate their value via gesture events.
  *
- * @param target - イベントの target
- * @returns 入力値。対象外の要素の場合は undefined
+ * @param target - the event target
+ * @returns the input value, or undefined if the element does not qualify
  */
 export const getInputValue = (
 	target: EventTarget | null,

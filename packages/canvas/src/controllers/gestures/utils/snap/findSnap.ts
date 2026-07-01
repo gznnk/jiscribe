@@ -9,20 +9,20 @@ import type {
 
 export const SNAP_THRESHOLD_PX = 8;
 
-/** 浮動小数点誤差吸収用 epsilon（SVG単位）*/
+/** Epsilon for absorbing floating-point error (SVG units) */
 const SNAP_EPSILON = 0.5;
 
 /**
- * 除外なしを表す共有の空セット。excludeIds 省略時のデフォルトに使い、
- * 呼び出し毎の Set 生成を避ける。
+ * Shared empty set representing "no exclusions". Used as the default when excludeIds is
+ * omitted, avoiding creating a Set on each call.
  */
 const NO_EXCLUDE: ReadonlySet<string> = new Set();
 
 type SnapDelta = { x: number; y: number };
 
 /**
- * findNearest の戻り値。スナップした候補・座標・元エッジ値を保持する。
- * buildSnapFeedback に渡してガイド線を生成するために使う。
+ * Return value of findNearest. Holds the snapped candidates, coordinate, and original edge value.
+ * Used by passing to buildSnapFeedback to generate guide lines.
  */
 export type SnapAxisResult = {
 	candidates: SnapCandidate[];
@@ -37,7 +37,7 @@ export type FindSnapResult = {
 };
 
 /**
- * ソート済み配列から coordinate >= value となる最小インデックス（lower bound）を返す。
+ * Returns the smallest index (lower bound) in the sorted array where coordinate >= value.
  */
 const lowerBound = (candidates: SnapCandidate[], value: number): number => {
 	let lo = 0;
@@ -54,8 +54,8 @@ const lowerBound = (candidates: SnapCandidate[], value: number): number => {
 };
 
 /**
- * snapCoordinate の ±SNAP_EPSILON に入る非除外候補を、ソート済み配列から二分探索で集める。
- * 丸め誤差を吸収して同一スナップ線に束ねる（厳密等価だと別経路算出の極近座標がまとまらない）。
+ * Collects non-excluded candidates within ±SNAP_EPSILON of snapCoordinate from the sorted array via binary search.
+ * Absorbs rounding error to bundle them onto the same snap line (with strict equality, near-identical coordinates from separate computations would not group).
  */
 const collectWithinEpsilon = (
 	candidates: SnapCandidate[],
@@ -77,10 +77,10 @@ const collectWithinEpsilon = (
 };
 
 /**
- * ソート済み候補配列から、threshold 以内で最近接の候補グループを返す。
- * 候補は coordinate 昇順ソート済みである前提で、各 edgeValue を二分探索する
- * （O(edges × log candidates)）。excludeIds に含まれる objectId の候補は除外する。
- * 同一座標の候補はまとめて返す（複数オブジェクトへの同時スナップ対応）。
+ * Returns the nearest candidate group within threshold from the sorted candidate array.
+ * Assumes candidates are sorted ascending by coordinate and binary-searches each edgeValue
+ * (O(edges × log candidates)). Candidates whose objectId is in excludeIds are excluded.
+ * Candidates at the same coordinate are returned together (supporting simultaneous snapping to multiple objects).
  */
 const findNearest = (
 	candidates: SnapCandidate[],
@@ -95,12 +95,12 @@ const findNearest = (
 	for (const edgeValue of edges) {
 		const insert = lowerBound(candidates, edgeValue);
 
-		// 挿入位置の左側（coordinate <= edgeValue）で最初の非除外候補
+		// First non-excluded candidate to the left of the insert position (coordinate <= edgeValue)
 		let left = insert - 1;
 		while (left >= 0 && excludeIds.has(candidates[left].objectId)) {
 			left--;
 		}
-		// 挿入位置の右側（coordinate >= edgeValue）で最初の非除外候補
+		// First non-excluded candidate to the right of the insert position (coordinate >= edgeValue)
 		let right = insert;
 		while (
 			right < candidates.length &&
@@ -109,8 +109,8 @@ const findNearest = (
 			right++;
 		}
 
-		// 左右で近い方を採用。同距離なら座標の小さい左側を優先し、
-		// 線形探索版（昇順走査・strict less）のタイブレークを維持する。
+		// Take whichever of left/right is closer. On a tie, prefer the smaller-coordinate left side,
+		// preserving the tiebreak of the linear-scan version (ascending scan, strict less).
 		const leftDist =
 			left >= 0 ? edgeValue - candidates[left].coordinate : Infinity;
 		const rightDist =
@@ -141,15 +141,15 @@ const findNearest = (
 };
 
 /**
- * スナップ後の各エッジについて、候補と一致するガイドを収集する。
- * 一次スナップで合わせたエッジは必ず一致し、もう一方のエッジはオブジェクトの
- * 幅/高さがちょうど2つのスナップ線の間に収まる場合のみ一致する。
+ * For each edge after snapping, collects the guides that match a candidate.
+ * The edge aligned by the primary snap always matches; the other edge matches only when the
+ * object's width/height fits exactly between two snap lines.
  *
- * @param snappedEdges - スナップ後のエッジ座標（x軸なら[left, right]）
- * @param candidates - ソート済みスナップ候補
- * @param perpendicularMin - ガイド線垂直方向のグループ側範囲（開始）
- * @param perpendicularMax - ガイド線垂直方向のグループ側範囲（終了）
- * @param excludeIds - ガイド対象から除外する objectId（ドラッグ中の自身など）
+ * @param snappedEdges - Edge coordinates after snapping (for the x-axis, [left, right])
+ * @param candidates - Sorted snap candidates
+ * @param perpendicularMin - The group-side perpendicular range of the guide line (start)
+ * @param perpendicularMax - The group-side perpendicular range of the guide line (end)
+ * @param excludeIds - objectIds to exclude from the guides (e.g. the object being dragged)
  */
 const collectAxisFeedbacks = (
 	snappedEdges: number[],
@@ -160,7 +160,7 @@ const collectAxisFeedbacks = (
 ): SnapAxisFeedback[] => {
 	const feedbacks: SnapAxisFeedback[] = [];
 
-	// 同一値の重複を排除（点スナップで left=right になる場合など）
+	// Deduplicate identical values (e.g. when left=right in point snapping)
 	const uniqueEdges = [...new Set(snappedEdges)];
 
 	for (const edgeValue of uniqueEdges) {
@@ -187,14 +187,13 @@ const collectAxisFeedbacks = (
 };
 
 /**
- * スナップ後の実際の BBox からガイド線フィードバックを生成する。
- * findSnap で得た xResult/yResult と、スナップ適用後の実際の BBox を渡す。
- * Drag では groupBBox + delta が actualBBox に相当し、
- * 変形スナップでは calculateResize 再実行後の BBox を渡すことで
- * ガイド線位置を実際の図形形状に合わせる。
- * 点スナップ（頂点）では left=right=x, top=bottom=y の BBox を渡す。
+ * Generates guide-line feedback from the actual BBox after snapping.
+ * Pass the xResult/yResult obtained from findSnap and the actual BBox after snapping is applied.
+ * For Drag, groupBBox + delta corresponds to actualBBox; for transform snapping, passing the BBox
+ * after re-running calculateResize aligns the guide-line positions with the actual shape.
+ * For point snapping (vertices), pass a BBox with left=right=x, top=bottom=y.
  *
- * @param excludeIds - ガイド対象から除外する objectId（省略時は除外なし）
+ * @param excludeIds - objectIds to exclude from the guides (default: no exclusions)
  */
 export const buildSnapFeedback = (
 	actualBBox: BoundingBox,
@@ -203,8 +202,8 @@ export const buildSnapFeedback = (
 	candidates: SnapCandidates,
 	excludeIds: ReadonlySet<string> = NO_EXCLUDE,
 ): SnapFeedback => {
-	// 中央（中点）も含めてガイド対象に。中央が候補と一致したときに青破線を描画する。
-	// 点スナップ（left=right）では collectAxisFeedbacks 内の Set 重複排除で吸収される。
+	// Include the center (midpoint) in the guides too. Draw a blue dashed line when the center matches a candidate.
+	// For point snapping (left=right), it is absorbed by the Set deduplication inside collectAxisFeedbacks.
 	const centerX = (actualBBox.left + actualBBox.right) / 2;
 	const centerY = (actualBBox.top + actualBBox.bottom) / 2;
 	return {
@@ -230,14 +229,14 @@ export const buildSnapFeedback = (
 };
 
 /**
- * エッジ値リストとスナップ候補を比較し、スナップ補正量と軸ごとのスナップ結果を返す。
- * ガイド線は buildSnapFeedback に実際のBBoxを渡して生成すること。
+ * Compares an edge-value list with the snap candidates and returns the snap correction amount and per-axis snap results.
+ * Generate the guide lines by passing the actual BBox to buildSnapFeedback.
  *
- * @param candidates - dragStart 時に計算されたスナップ候補（coordinate 昇順ソート済み）
- * @param thresholdSvg - スナップ閾値（SVG 座標単位）= SNAP_THRESHOLD_PX / zoom
- * @param xEdgeValues - X軸スナップ対象の座標値リスト。空配列でX軸スナップをスキップ
- * @param yEdgeValues - Y軸スナップ対象の座標値リスト。空配列でY軸スナップをスキップ
- * @param excludeIds - スナップ対象から除外する objectId（ドラッグ中の自身など。省略時は除外なし）
+ * @param candidates - Snap candidates computed at dragStart (sorted ascending by coordinate)
+ * @param thresholdSvg - Snap threshold (SVG coordinate units) = SNAP_THRESHOLD_PX / zoom
+ * @param xEdgeValues - List of coordinate values to snap on the X axis. An empty array skips X-axis snapping
+ * @param yEdgeValues - List of coordinate values to snap on the Y axis. An empty array skips Y-axis snapping
+ * @param excludeIds - objectIds to exclude from snapping (e.g. the object being dragged; default: no exclusions)
  */
 export const findSnap = (
 	candidates: SnapCandidates,

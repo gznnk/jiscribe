@@ -14,22 +14,22 @@ import { getStrokeDasharray } from "../utils/getStrokeDasharray";
 import { resolveAutoColor } from "../utils/resolveAutoColor";
 
 /**
- * Frame 系図形の SVG 要素（rect / polygon / ellipse …）に共通で渡る属性。
- * `draw` はこれをスタイル付き要素へスプレッドし、geometry 属性だけを足す。
+ * Attributes passed in common to the SVG element of Frame-based shapes (rect / polygon / ellipse …).
+ * `draw` spreads these onto the styled element and only adds the geometry attributes.
  */
 export type FrameShapeProps = {
 	"data-kind": "object";
 	"data-id": string;
 	transform: string;
-	/** 解決済みの stroke 色（auto はテーマ前景へ解決済み）。 */
+	/** Resolved stroke color (auto is resolved to the theme foreground). */
 	strokeColor: string;
-	/** 解決済みの fill 色（auto はテーマサーフェスへ解決済み）。 */
+	/** Resolved fill color (auto is resolved to the theme surface). */
 	fillColor: string;
 	strokeWidth?: number;
 	strokeDasharray?: string;
 };
 
-/** createFrameObject が読み取る state の最小形（geometry + transform + 各スタイル）。 */
+/** The minimal state shape that createFrameObject reads (geometry + transform + the various styles). */
 type FrameRenderState = ObjectState &
 	TransformedFrame &
 	StrokeStyleState &
@@ -37,14 +37,15 @@ type FrameRenderState = ObjectState &
 	TextStyleState;
 
 /**
- * Frame 系図形（stroke + fill + text + 単一 SVG 形状を持つ rect / diamond / ellipse など）の
- * 表示コンポーネントを生成する。
+ * Create the display component for Frame-based shapes (rect / diamond / ellipse, etc. that have
+ * stroke + fill + text + a single SVG shape).
  *
- * これらは transform 適用・色解決（auto）・破線・テキストオーバーレイ・memo まで完全に同一で、
- * 違いは描画する SVG 形状だけ。そのため共通部分をここに集約し、図形ごとには形状を返す
- * `draw` 関数だけを渡す。`draw` は state（width/height/rx 等）と共通属性 `shape` を受け取る。
+ * These are completely identical down to transform application, color resolution (auto), dashes,
+ * text overlay, and memo; the only difference is the SVG shape drawn. So the common part is
+ * consolidated here, and each shape only passes a `draw` function that returns its shape. `draw`
+ * receives the state (width/height/rx, etc.) and the shared attributes `shape`.
  *
- * 影付き sticky や DOMPurify を挟む svg は描画構造が異なるため対象外。
+ * Shadowed stickies and svg wrapped by DOMPurify are out of scope because their draw structure differs.
  */
 export const createFrameObject = <TState extends FrameRenderState>(
 	draw: (state: TState, shape: FrameShapeProps) => ReactNode,

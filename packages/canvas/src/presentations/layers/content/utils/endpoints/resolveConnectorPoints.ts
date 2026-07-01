@@ -8,18 +8,18 @@ import type { ConnectorState } from "../../../../../states/objects/connections/c
 import { resolveOrthogonalRoute } from "../routing";
 
 /**
- * コネクターの両端点を実座標へ解決する純関数。端点解決と、center アンカーの輪郭調整を
- * まとめて行う。objects マップ全体ではなく対象図形を個別に受け取り、React コンポーネント
- * 側のメモ化を効かせる。
+ * Pure function that resolves both endpoints of a connector to actual coordinates. It handles
+ * endpoint resolution and the outline adjustment for center anchors together. It takes the target
+ * shapes individually rather than the whole objects map, so React component memoization stays effective.
  *
- * `waypoints` は source → target 順の中間経由点（ワールド座標）をそのまま返す。
- * 折れ線として描く際の端点アウトライン調整は、隣接する経由点（無ければ反対側の端点）に
- * 向けて行う。
+ * `waypoints` returns the intermediate points (in world coordinates) in source → target order as-is.
+ * When drawing as a polyline, endpoint outline adjustment aims toward the adjacent waypoint (or the
+ * opposite endpoint if there is none).
  *
- * @param connectorState - 解決対象のコネクター状態。両端点・routing・手動 points を持つ
- * @param sourceObj - source 端点の owner 図形。未参照（free 端点）や未発見なら null/undefined
- * @param targetObj - target 端点の owner 図形。未参照（free 端点）や未発見なら null/undefined
- * @returns 解決した source / target 点と中間経由点 waypoints。解決に失敗した場合は null
+ * @param connectorState - The connector state to resolve. Carries both endpoints, routing, and manual points
+ * @param sourceObj - The owner shape of the source endpoint. null/undefined if unreferenced (free endpoint) or not found
+ * @param targetObj - The owner shape of the target endpoint. null/undefined if unreferenced (free endpoint) or not found
+ * @returns The resolved source / target points and intermediate waypoints, or null if resolution fails
  */
 export const resolveConnectorPoints = (
 	connectorState: ConnectorState,
@@ -34,11 +34,11 @@ export const resolveConnectorPoints = (
 		return null;
 	}
 
-	// 中間経由点（waypoint）。折れ線は source → ...waypoints → target を通る。
+	// Intermediate waypoints. The polyline passes through source → ...waypoints → target.
 	const waypoints = connectorState.points ?? [];
 
-	// center アンカーのアウトライン調整は「線が次に向かう点」へ向ける。
-	// 経由点があれば最初／最後の経由点、無ければ反対側の端点を使う。
+	// Outline adjustment for center anchors aims toward "the point the line heads to next".
+	// Use the first/last waypoint if present, otherwise the opposite endpoint.
 	const sourceToward = waypoints[0] ?? targetPoint;
 	const targetToward = waypoints[waypoints.length - 1] ?? sourcePoint;
 
@@ -57,13 +57,13 @@ export const resolveConnectorPoints = (
 		}
 	}
 
-	// 自己ループ（両端が同一図形）は直線では退化するため、routing 指定に関わらず
-	// 専用の矩形ループルート（直交）を使う。
+	// A self-loop (both endpoints on the same shape) degenerates as a straight line, so regardless
+	// of the routing setting, use the dedicated rectangular loop route (orthogonal).
 	const isSelfLoop =
 		!!sourceObj && !!targetObj && sourceObj.id === targetObj.id;
 
-	// 自動直交ルーティング: 経路を描画時に算出し waypoints として返す（手動 points は使わない）。
-	// routing 省略時は orthogonal が既定。直線にしたい場合のみ "straight" を明示する。
+	// Automatic orthogonal routing: compute the path at render time and return it as waypoints (manual points are not used).
+	// When routing is omitted, orthogonal is the default. Specify "straight" explicitly only when a straight line is wanted.
 	if (isSelfLoop || isOrthogonalRouting(connectorState.routing)) {
 		const path = resolveOrthogonalRoute(
 			connectorState.source.anchor,

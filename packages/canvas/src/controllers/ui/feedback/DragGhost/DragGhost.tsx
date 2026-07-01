@@ -14,8 +14,8 @@ type DragGhostProps = {
 const GHOST_ID = "drag-ghost";
 
 /**
- * ゴースト要素を生成する。
- * レンダル中にコンポーネント変数を生成しないよう、React.createElement を使用する。
+ * Creates the ghost element.
+ * Uses React.createElement to avoid creating a component variable during render.
  */
 const createGhostElement = (
 	preset: ShapePreset,
@@ -37,6 +37,10 @@ const createGhostElement = (
 	return React.createElement(component, ghostState);
 };
 
+/**
+ * Renders a semi-transparent ghost of the shape being dragged from the shape library.
+ * Renders nothing when no drag is in progress.
+ */
 const DragGhostComponent: React.FC<DragGhostProps> = ({ shapeLibraryDrag }) => {
 	if (!shapeLibraryDrag) {
 		return null;

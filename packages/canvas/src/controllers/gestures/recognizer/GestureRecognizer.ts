@@ -50,70 +50,74 @@ export type WheelInternalEvent = InternalEventBase & {
 export type InternalEvent = PointerInternalEvent | WheelInternalEvent;
 
 /**
- * 進行中のジェスチャー（pointerdown〜pointerup の間）の保持状態。
- * pointerdown で生成し、pointerup / pointercancel / リセットで null に戻す。
- * null = 非ドラッグ中。start 系はジェスチャー開始時点の値を固定保持する。
+ * Held state for an in-progress gesture (between pointerdown and pointerup).
+ * Created on pointerdown and reset to null on pointerup / pointercancel / reset.
+ * null = not dragging. The `start` fields retain the values fixed at gesture start.
  */
 export type Pressed = {
 	pointerId: number;
-	start: Point; // 開始位置（SVG / world 座標）
-	last: Point; // 直近位置（SVG / world 座標）
-	clientStart: Point; // 開始位置（クライアント / 画面座標）
-	clientLast: Point; // 直近位置（クライアント / 画面座標）
+	start: Point; // start position (SVG / world coordinates)
+	last: Point; // most recent position (SVG / world coordinates)
+	clientStart: Point; // start position (client / screen coordinates)
+	clientLast: Point; // most recent position (client / screen coordinates)
 	time: number;
 	target: EventTarget | null;
 	targetId?: string;
 	targetKind?: string;
 	mods: Mods;
-	dragging: boolean; // DRAG_THRESHOLD を超えてドラッグと確定したか
+	dragging: boolean; // whether the move has exceeded DRAG_THRESHOLD and been confirmed as a drag
 	button: number;
-	// エッジスクロールを武装したか。ドラッグ中にカーソルが一度エッジゾーンの外へ
-	// 出てから true になる。ShapeLibrary など端に接した UI から掴むと開始点が必ず
-	// エッジゾーン内になるため、1フレーム目からスクロールが暴発するのを防ぐ。
+	// Whether edge scrolling has been armed. Becomes true once the cursor has
+	// left the edge zone during a drag. When grabbing from a UI touching the
+	// edge (e.g. ShapeLibrary), the start point is always inside the edge zone,
+	// so this prevents scrolling from firing spuriously on the first frame.
 	edgeScrollArmed: boolean;
 };
 
 /**
- * 生の DOM イベント（pointer / wheel）を、意味のあるジェスチャー
- * （pressed / dragStart / drag / dragEnd / click / doubleClick / wheel）へ変換し、
- * gestureCallback で 1 件ずつ通知するクラス。
+ * Converts raw DOM events (pointer / wheel) into meaningful gestures
+ * (pressed / dragStart / drag / dragEnd / click / doubleClick / wheel)
+ * and notifies them one at a time via gestureCallback.
  *
- * ## 処理パイプライン
+ * ## Processing pipeline
  *
- *   DOM イベント
- *     → getHandlers() / getWheelHandler() が enqueue()（内部型へ変換しキューへ積む）
- *     → schedule() が「1 フレーム 1 回」の requestAnimationFrame を張る
- *     → RAF コールバックがキューを退避し、各イベントを feed() で処理
- *     → feed() が pressed 状態を進め、対応する Gesture を gestureCallback へ渡す
+ *   DOM event
+ *     → getHandlers() / getWheelHandler() call enqueue() (convert to internal type and push onto the queue)
+ *     → schedule() sets up a "once per frame" requestAnimationFrame
+ *     → the RAF callback drains the queue and processes each event via feed()
+ *     → feed() advances the pressed state and passes the corresponding Gesture to gestureCallback
  *
- * RAF で束ねる狙いは 2 つ。(1) 連続する pointermove を最新 1 件に合体させ、1 フレーム
- * 1 ドラッグに間引く（enqueue の合体ロジック）。(2) 同一フレームに来た down→move→up 等の
- * 順序を保証する（単一キューで時系列を維持）。
+ * Batching via RAF has two goals. (1) Coalesce consecutive pointermove events into
+ * the latest one, thinning to one drag per frame (the coalescing logic in enqueue).
+ * (2) Guarantee the ordering of down→move→up etc. arriving in the same frame
+ * (a single queue preserves chronological order).
  *
- * ## 状態機械（pressed フィールドが中心）
+ * ## State machine (centered on the pressed field)
  *
- *   pointerdown             : pressed を生成（dragging=false）。pressed イベントを発火
- *   pointermove（未ドラッグ）: 移動量が DRAG_THRESHOLD を超えたら dragging=true にして dragStart
- *   pointermove（ドラッグ中）: drag を発火（必要に応じてスクロールも適用。後述）
- *   pointerup               : dragging なら dragEnd、そうでなければ click / doubleClick
- *   pointercancel           : ドラッグ中なら dragEnd で締め、pressed を破棄
+ *   pointerdown            : create pressed (dragging=false). Fire the pressed event.
+ *   pointermove (not dragging): if the move exceeds DRAG_THRESHOLD, set dragging=true and fire dragStart
+ *   pointermove (dragging) : fire drag (also applying scroll when needed; see below)
+ *   pointerup              : dragEnd if dragging, otherwise click / doubleClick
+ *   pointercancel          : if dragging, close out with dragEnd, then discard pressed
  *
- * ## 座標系（world と screen の 2 トリプル）
+ * ## Coordinate systems (two triples: world and screen)
  *
- * 各 Gesture は 2 系統の座標を持つ。
- *   - start / last / delta                   … SVG（world）座標。図形操作のほぼ全ハンドラが使う
- *   - clientStart / clientLast / clientDelta  … クライアント（画面）座標
- * 画面座標が要るのは reducer が DOM を持たない一部の場面だけ。例: 右クリックの
- * コンテキストメニュー位置（clientLast）、グラブスクロールの pan 量（clientDelta）。
- * world 座標はパン中に動くので、viewport 非依存な pan には screen 差分が要る、という住み分け。
- * （clientStart は現状 clientDelta を算出する内部用途のみで、イベントの読み手はいない）
+ * Each Gesture carries two sets of coordinates.
+ *   - start / last / delta                   … SVG (world) coordinates. Used by nearly all shape-operation handlers.
+ *   - clientStart / clientLast / clientDelta  … client (screen) coordinates
+ * Screen coordinates are only needed in a few places where the reducer has no DOM.
+ * Examples: the right-click context menu position (clientLast) and the pan amount
+ * for grab scrolling (clientDelta). Since world coordinates shift during panning,
+ * viewport-independent panning needs the screen delta — hence the split.
+ * (clientStart is currently only used internally to compute clientDelta; no event reader consumes it.)
  *
- * ## ドラッグ中スクロール
+ * ## Scrolling during a drag
  *
- * ドラッグ中のホイール（toWheelEvent が pointermove 化）とエッジスクロールは、どちらも
- * drag 経路の scrollDelta として合流する。ビューポートは scrollDelta/zoom だけ動くため、
- * last・delta にも /zoom した量を加算して整合させる（#72）。エッジスクロールは、カーソルが
- * 端で静止していても続くよう、自分のイベントを enqueue() で次フレームへ積み直して自走する。
+ * Wheel events during a drag (turned into pointermove by toWheelEvent) and edge
+ * scrolling both merge into the drag path as scrollDelta. Since the viewport moves
+ * only by scrollDelta/zoom, the /zoom-scaled amount is also added to last and delta
+ * to keep them consistent (#72). Edge scrolling re-enqueues its own event for the
+ * next frame via enqueue() so it keeps running even when the cursor is held still at the edge.
  */
 export class GestureRecognizer {
 	private gestureCallback: GestureCallback;
@@ -121,19 +125,21 @@ export class GestureRecognizer {
 	private svgRef: React.RefObject<SVGSVGElement | null>;
 	private canvasStateRef: React.RefObject<CanvasControllerState>;
 
-	// 進行中ジェスチャーの状態（非ドラッグ中は null）
+	// State of the in-progress gesture (null when not dragging)
 	private pressed: Pressed | null = null;
 
-	// ダブルクリック判定用。直近の単一クリックのスナップショットを覚えておく。
-	// null = まだ単一クリックを記録していない（doubleClick の基準が無い）状態。
-	// targetId は背景クリックで undefined になりうるため、「未記録」を undefined で
-	// 表すと初回クリックが undefined===undefined で doubleClick に化ける。null と
-	// undefined を分けることで、基準が無いときは決して doubleClick にしない（isDoubleClick）。
+	// Used for double-click detection. Remembers a snapshot of the most recent single click.
+	// null = no single click has been recorded yet (no baseline for doubleClick).
+	// Since targetId can be undefined on a background click, representing "not recorded"
+	// with undefined would make the first click turn into a doubleClick via
+	// undefined===undefined. Distinguishing null from undefined ensures we never
+	// treat a click as a doubleClick when there is no baseline (isDoubleClick).
 	private lastClick: ClickSnapshot | null = null;
 
-	// RAF バッチ用キュー。
-	// 単一キューで時系列順を保持する。連続する pointermove は合体しつつ
-	// 末尾位置に残すことで、後続の非 move イベント（up 等）より必ず前に処理される。
+	// Queue for RAF batching.
+	// A single queue preserves chronological order. Consecutive pointermove events are
+	// coalesced while kept at the tail position, so they are always processed before any
+	// following non-move event (e.g. up).
 	private queue: InternalEvent[] = [];
 	private scheduled = false;
 	private rafId: number | null = null;
@@ -146,12 +152,12 @@ export class GestureRecognizer {
 	}
 
 	/**
-	 * イベントをキューに追加してスケジュール
+	 * Add an event to the queue and schedule processing.
 	 */
 	private enqueue(e: InternalEvent): void {
-		// 連続する pointermove は最新の 1 件に合体する（キューの肥大化を防ぐ）。
-		// ただし末尾が同一ポインターの pointermove のときだけ置き換えることで、
-		// 間に非 move イベントを挟んだ場合は順序を崩さない。
+		// Coalesce consecutive pointermove events into the latest one (to prevent the queue from bloating).
+		// Only replace when the tail is a pointermove for the same pointer, so ordering
+		// is preserved when a non-move event is interleaved.
 		if (e.type === "pointermove") {
 			const tail = this.queue[this.queue.length - 1];
 			if (tail?.type === "pointermove" && tail.pointerId === e.pointerId) {
@@ -165,7 +171,7 @@ export class GestureRecognizer {
 	}
 
 	/**
-	 * requestAnimationFrameを使ってイベント処理をスケジュール
+	 * Schedule event processing using requestAnimationFrame.
 	 */
 	private schedule(): void {
 		if (this.scheduled) {
@@ -176,8 +182,8 @@ export class GestureRecognizer {
 			this.scheduled = false;
 			this.rafId = null;
 
-			// キューを退避してから feed する。feed 中の enqueue（エッジスクロール等）は
-			// 次フレーム分として新しいキューに積まれる。
+			// Drain the queue before feeding. Any enqueue during feed (e.g. edge
+			// scrolling) is pushed onto a fresh queue for the next frame.
 			const batch = this.queue;
 			this.queue = [];
 			for (const e of batch) {
@@ -187,14 +193,14 @@ export class GestureRecognizer {
 	}
 
 	/**
-	 * キューから取り出した内部イベントを 1 件処理する。
-	 * まずこのイベント時点の座標スナップショット（world / screen）と修飾キーを採り、
-	 * 以降はイベント種別ごとに分岐して対応する Gesture を発火する。
-	 * 分岐は wheel（ドラッグ外）/ pointerdown / pointermove / pointerup / pointercancel。
+	 * Process one internal event taken from the queue.
+	 * First captures a coordinate snapshot (world / screen) and the modifier keys at
+	 * this event's moment, then branches by event type to fire the corresponding Gesture.
+	 * Branches: wheel (outside a drag) / pointerdown / pointermove / pointerup / pointercancel.
 	 */
 	private feed(e: InternalEvent): void {
-		// currentPos は world 座標（getSvgPoint が現在の viewBox を反映して算出）。
-		// currentClientPos は画面座標そのもの。
+		// currentPos is world coordinates (getSvgPoint computes them reflecting the current viewBox).
+		// currentClientPos is the screen coordinates as-is.
 		const currentPos = getSvgPoint(this.svgRef.current, e.clientX, e.clientY);
 		const currentClientPos = { x: e.clientX, y: e.clientY };
 		const mods: Mods = {
@@ -209,9 +215,9 @@ export class GestureRecognizer {
 		const time = e.timeStamp;
 		const inputValue = getInputValue(e.target);
 
-		// wheel: ドラッグ外のホイールイベント
+		// wheel: wheel event outside a drag
 		if (e.type === "wheel") {
-			// ドラッグ中はpointermoveとして処理されるため、ここではドラッグ外の処理
+			// During a drag it is handled as pointermove, so this only handles the non-drag case
 			const hovered = getHoveredElements(
 				e.clientX,
 				e.clientY,
@@ -219,8 +225,8 @@ export class GestureRecognizer {
 				this.containerRef.current,
 			);
 
-			// ドラッグ外の処理なので、targetIdとtargetKindをcanvasに固定
-			// 将来的にオブジェクト上でのホイール操作をサポートする場合はここを変更
+			// Since this is the non-drag case, fix targetId and targetKind to canvas.
+			// Change here if wheel operations over objects are supported in the future.
 			this.gestureCallback({
 				type: "wheel",
 				target: e.target,
@@ -245,17 +251,17 @@ export class GestureRecognizer {
 			return;
 		}
 
-		// pointerdown: 新しいジェスチャーを開始
+		// pointerdown: start a new gesture
 		if (e.type === "pointerdown") {
-			// 既にアクティブなジェスチャーがある間は、2本目以降の pointerdown を無視する。
-			// （マルチタッチ非対応。1本目のドラッグを中断・誤コミットさせないため、
-			//  pressed の上書き・ポインターキャプチャ・コールバック発火をすべて行わない）
+			// While a gesture is already active, ignore any second-or-later pointerdown.
+			// (Multi-touch is not supported. To avoid interrupting or mis-committing the
+			//  first drag, we skip overwriting pressed, setting pointer capture, and firing callbacks.)
 			if (this.pressed !== null) {
 				return;
 			}
 
-			// ポインターキャプチャを設定（data-gesture="native-pointer" の要素では設定しない）
-			// スライダーなどではブラウザのネイティブなドラッグ挙動を維持する必要がある
+			// Set pointer capture (not set on data-gesture="native-pointer" elements).
+			// Sliders and the like need to keep the browser's native drag behavior.
 			if (this.containerRef.current && !shouldSkipPointerCapture(e.target)) {
 				this.containerRef.current.setPointerCapture(e.pointerId);
 			}
@@ -267,7 +273,7 @@ export class GestureRecognizer {
 				this.containerRef.current,
 			);
 
-			// pressed 状態をセット
+			// Set the pressed state
 			this.pressed = {
 				pointerId: e.pointerId,
 				start: currentPos,
@@ -304,12 +310,12 @@ export class GestureRecognizer {
 			return;
 		}
 
-		// 以降の処理は pressed 状態かつ同じポインターの場合のみ
+		// The remaining processing only applies when pressed and for the same pointer
 		if (!this.pressed || this.pressed.pointerId !== e.pointerId) {
 			return;
 		}
 
-		// 開始位置からの移動量（world / screen）。pressed 確定後の各分岐で共有する。
+		// Movement from the start position (world / screen). Shared across the branches after pressed is confirmed.
 		const delta = {
 			x: currentPos.x - this.pressed.start.x,
 			y: currentPos.y - this.pressed.start.y,
@@ -319,7 +325,7 @@ export class GestureRecognizer {
 			y: currentClientPos.y - this.pressed.clientStart.y,
 		};
 
-		// pointermove: ドラッグ判定と処理
+		// pointermove: drag detection and handling
 		if (e.type === "pointermove") {
 			this.pressed.last = currentPos;
 			this.pressed.clientLast = currentClientPos;
@@ -332,11 +338,11 @@ export class GestureRecognizer {
 			);
 
 			if (!this.pressed.dragging) {
-				// ドラッグ開始判定
+				// Drag-start detection
 				const distanceSquared = delta.x ** 2 + delta.y ** 2;
 				if (distanceSquared >= DRAG_THRESHOLD) {
 					this.pressed.dragging = true;
-					// スライダー等は対象要素から現在値を読む（data-gesture="native-pointer"）
+					// Sliders and the like read the current value from the target element (data-gesture="native-pointer")
 					const dragStartInputValue = getInputValue(this.pressed.target);
 					this.gestureCallback({
 						type: "dragStart",
@@ -367,7 +373,7 @@ export class GestureRecognizer {
 				// Check if this pointermove has deltaX/deltaY (converted from wheel event)
 				const isWheel = e.deltaX !== undefined || e.deltaY !== undefined;
 
-				// ドラッグ中のホイールイベントの場合はスクロールデルタを取得
+				// For a wheel event during a drag, obtain the scroll delta
 				if (isWheel) {
 					scrollDelta = {
 						deltaX: e.deltaX ?? 0,
@@ -381,8 +387,9 @@ export class GestureRecognizer {
 						currentPos.y,
 					);
 
-					// 一度でもエッジゾーンの外へ出たら武装する。これにより端に接した
-					// ライブラリ等から掴んだ直後（まだ内部へ入っていない間）の暴発を防ぐ。
+					// Arm once the cursor has left the edge zone at least once. This prevents
+					// spurious firing right after grabbing from a library etc. touching the
+					// edge (while still inside the edge zone).
 					if (!edgeProximity.isNearEdge) {
 						this.pressed.edgeScrollArmed = true;
 					}
@@ -393,20 +400,21 @@ export class GestureRecognizer {
 							edgeProximity.vertical,
 						);
 
-						// pointermove は末尾の move と合体されるため、
-						// キューは増加せず 1件/フレームの定常ティックになる
+						// Since pointermove is coalesced with the tail move,
+						// the queue does not grow and becomes a steady tick of 1 per frame
 						this.enqueue({
 							...e,
 						});
 					}
 				}
 
-				// スクロール量を現在位置（=last）と移動量（delta）へ反映する。
-				// scrollDelta は生ピクセル。ビューポートは scrollDelta/zoom（SVG単位）だけ
-				// 動く（CanvasEventHandler の scroll 処理）ため、カーソルの SVG 座標である
-				// currentPos(=last) にも delta と同じく /zoom した量を加算する。
-				// 生ピクセルを加算すると zoom≠1 で last が zoom 倍ずれ、last を直接
-				// カーソル位置として使う Transform/Vertex/範囲選択がカーソルから乖離する（#72）。
+				// Reflect the scroll amount into the current position (=last) and the movement (delta).
+				// scrollDelta is in raw pixels. The viewport moves only by scrollDelta/zoom
+				// (SVG units) (the scroll handling in CanvasEventHandler), so the /zoom-scaled
+				// amount is also added to currentPos(=last), the cursor's SVG coordinate, just like delta.
+				// Adding raw pixels would offset last by a factor of zoom when zoom≠1, causing
+				// Transform/Vertex/area-selection — which use last directly as the cursor position —
+				// to diverge from the cursor (#72).
 				if (scrollDelta) {
 					const svgScrollDeltaX =
 						scrollDelta.deltaX / canvasState.viewport.zoom;
@@ -418,7 +426,7 @@ export class GestureRecognizer {
 					delta.y += svgScrollDeltaY;
 				}
 
-				// スライダー等は対象要素から現在値を読む（data-gesture="native-pointer"）
+				// Sliders and the like read the current value from the target element (data-gesture="native-pointer")
 				const dragInputValue = getInputValue(this.pressed.target);
 
 				this.gestureCallback({
@@ -443,9 +451,9 @@ export class GestureRecognizer {
 			return;
 		}
 
-		// pointerup: ジェスチャー終了
+		// pointerup: gesture end
 		if (e.type === "pointerup") {
-			// ポインターキャプチャを解放（data-gesture="native-pointer" の要素では何もしない）
+			// Release pointer capture (does nothing on data-gesture="native-pointer" elements)
 			if (
 				this.containerRef.current &&
 				!shouldSkipPointerCapture(this.pressed.target)
@@ -460,7 +468,7 @@ export class GestureRecognizer {
 				this.containerRef.current,
 			);
 
-			// 終了種別を決める: ドラッグ済みなら dragEnd、未ドラッグなら click / doubleClick。
+			// Decide the end type: dragEnd if dragged, otherwise click / doubleClick.
 			let eventType: "dragEnd" | "doubleClick" | "click";
 			if (this.pressed.dragging) {
 				eventType = "dragEnd";
@@ -474,12 +482,12 @@ export class GestureRecognizer {
 
 				eventType = doubleClick ? "doubleClick" : "click";
 
-				// 直近クリック情報は single click のときだけ更新する。
-				// doubleClick 成立時は null に戻し、3 連打目が再び doubleClick になるのを防ぐ。
+				// Update the last-click info only on a single click.
+				// Reset to null when a doubleClick occurs, to prevent a third rapid click from becoming another doubleClick.
 				this.lastClick = doubleClick ? null : currentClick;
 			}
 
-			// スライダー等は対象要素から最終値を読む（data-gesture="native-pointer"）
+			// Sliders and the like read the final value from the target element (data-gesture="native-pointer")
 			const finalInputValue = getInputValue(this.pressed.target);
 
 			this.gestureCallback({
@@ -503,9 +511,9 @@ export class GestureRecognizer {
 			return;
 		}
 
-		// pointercancel: ジェスチャーを中断
+		// pointercancel: abort the gesture
 		if (e.type === "pointercancel") {
-			// ポインターキャプチャを解放（data-gesture="native-pointer" の要素では何もしない）
+			// Release pointer capture (does nothing on data-gesture="native-pointer" elements)
 			if (
 				this.containerRef.current &&
 				!shouldSkipPointerCapture(this.pressed.target)
@@ -521,7 +529,7 @@ export class GestureRecognizer {
 			);
 
 			if (this.pressed.dragging) {
-				// スライダー等は対象要素から最終値を読む（data-gesture="native-pointer"）
+				// Sliders and the like read the final value from the target element (data-gesture="native-pointer")
 				const cancelInputValue = getInputValue(this.pressed.target);
 
 				this.gestureCallback({
@@ -547,7 +555,7 @@ export class GestureRecognizer {
 	}
 
 	/**
-	 * React.PointerEventを内部型に変換
+	 * Convert a React.PointerEvent into the internal type.
 	 */
 	private toPointerEvent(
 		e: React.PointerEvent<HTMLElement>,
@@ -568,11 +576,11 @@ export class GestureRecognizer {
 	}
 
 	/**
-	 * WheelEventを内部型に変換
-	 * ドラッグ中の場合は pointermove として変換し、それ以外は wheel として変換
+	 * Convert a WheelEvent into the internal type.
+	 * During a drag it is converted to pointermove; otherwise it is converted to wheel.
 	 */
 	private toWheelEvent(e: WheelEvent): InternalEvent {
-		// ドラッグ中は pointermove に変換して deltaX/deltaY を保持
+		// During a drag, convert to pointermove and retain deltaX/deltaY
 		if (this.pressed?.dragging) {
 			return {
 				type: "pointermove",
@@ -591,7 +599,7 @@ export class GestureRecognizer {
 			};
 		}
 
-		// ドラッグ外は wheel として変換
+		// Outside a drag, convert to wheel
 		return {
 			type: "wheel",
 			clientX: e.clientX,
@@ -609,9 +617,9 @@ export class GestureRecognizer {
 	}
 
 	/**
-	 * ドラッグ状態を外部から強制リセットする。
-	 * SYNC_EXTERNAL など外部変更でキャンバス状態が差し替わる際に呼び出す。
-	 * pressed が null の場合（非ドラッグ中）は何もしない。
+	 * Forcibly reset the drag state from the outside.
+	 * Called when the canvas state is swapped out by an external change such as SYNC_EXTERNAL.
+	 * Does nothing when pressed is null (not dragging).
 	 */
 	public resetGestureState(): void {
 		if (this.pressed !== null) {
@@ -624,14 +632,14 @@ export class GestureRecognizer {
 			}
 			this.pressed = null;
 		}
-		// 中断後のドラッグイベントが RAF キューから発火しないよう破棄する
+		// Discard so that drag events after the abort do not fire from the RAF queue
 		this.queue = [];
 	}
 
 	/**
-	 * インスタンスを破棄する。
-	 * コンポーネントのアンマウント時に呼び出し、保留中の RAF をキャンセルして
-	 * アンマウント後にコールバックが発火しないようにする。
+	 * Dispose of the instance.
+	 * Called on component unmount to cancel any pending RAF so that callbacks
+	 * do not fire after unmount.
 	 */
 	public dispose(): void {
 		if (this.rafId !== null) {
@@ -644,14 +652,14 @@ export class GestureRecognizer {
 	}
 
 	/**
-	 * パイプラインの入口。React 要素に貼るポインターイベントハンドラ群を返す。
-	 * 各ハンドラは生イベントを内部型へ変換して enqueue するだけで、認識は RAF 後の feed が担う。
+	 * The pipeline entry point. Returns the pointer event handlers to attach to a React element.
+	 * Each handler only converts the raw event to the internal type and enqueues it; recognition is done by feed after RAF.
 	 */
 	public getHandlers(): PointerEventHandlers {
 		return {
 			onPointerDown: (e) => {
-				// data-gesture="none" の要素由来のイベントはジェスチャーの起点にしない
-				// （テキスト編集中の textarea やメニュー内の入力欄など）
+				// Events originating from data-gesture="none" elements do not start a gesture
+				// (e.g. a textarea during text editing or an input field inside a menu)
 				if (isGestureOptedOut(e.target)) {
 					return;
 				}
@@ -664,8 +672,8 @@ export class GestureRecognizer {
 	}
 
 	/**
-	 * パイプラインの入口（ホイール用）。コンテナの wheel リスナに繋ぐ。
-	 * ドラッグ中は toWheelEvent が pointermove 化するため、スクロールも drag 経路で扱える。
+	 * The pipeline entry point (for wheel). Wire this to the container's wheel listener.
+	 * During a drag, toWheelEvent turns it into pointermove, so scrolling can also be handled via the drag path.
 	 */
 	public getWheelHandler(): (e: WheelEvent) => void {
 		return (e: WheelEvent) => this.enqueue(this.toWheelEvent(e));

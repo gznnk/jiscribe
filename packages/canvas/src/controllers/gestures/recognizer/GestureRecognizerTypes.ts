@@ -30,9 +30,10 @@ export type ScrollDelta = {
 };
 
 /**
- * doubleClick 判定の基準にする直近クリックのスナップショット。
- * GestureRecognizer が単一クリックごとに保持し、次のクリックと突き合わせる。
- * clientPos は距離判定用で、zoom 非依存にするため client（画面）座標で持つ。
+ * Snapshot of the most recent click, used as the reference for doubleClick detection.
+ * GestureRecognizer retains it on each single click and compares it against the next click.
+ * clientPos is used for distance comparison and is held in client (screen) coordinates
+ * to make it zoom-independent.
  */
 export type ClickSnapshot = {
 	time: number;

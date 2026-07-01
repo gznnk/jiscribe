@@ -12,22 +12,22 @@ import type { CanvasControllerState } from "../../../CanvasTypes";
 import { ConnectorLabelEditor } from "../ConnectorLabelEditor";
 import { TextEditor } from "../TextEditor";
 
-/** 編集欄の入力・終了を親（Canvas）へ伝えるハンドラ。種別を問わず共通。 */
+/** Handlers that report editor input and exit to the parent (Canvas). Common across all types. */
 type EditorHandlers = {
 	onChange: (text: string) => void;
 	onEscape: () => void;
 };
 
 /**
- * コネクターのラベル編集欄を描画する。コネクターは bbox を持たないため、
- * 経路の中点（ラベルアンカー）に専用エディタを出す。経路やアンカーが
- * 解決できない場合は何も描画しない。
+ * Renders the label editor for a connector. Since a connector has no bbox, the
+ * dedicated editor is placed at the path midpoint (the label anchor). Renders
+ * nothing if the path or anchor cannot be resolved.
  *
- * @param connector - ラベルを編集する対象のコネクター
- * @param objects - 端点を解決するための全オブジェクト
- * @param text - 編集中のテキスト
- * @param handlers - 入力・終了ハンドラ
- * @returns ラベル編集欄、または描画できない場合は null
+ * @param connector - The connector whose label is being edited
+ * @param objects - All objects, used to resolve endpoints
+ * @param text - The text being edited
+ * @param handlers - Input and exit handlers
+ * @returns The label editor, or null if it cannot be rendered
  */
 function renderConnectorLabelEditor(
 	connector: ConnectorState,
@@ -74,13 +74,13 @@ function renderConnectorLabelEditor(
 }
 
 /**
- * テキストを持つ図形（rect など）の本文編集欄を、図形の bbox に重ねて描画する。
+ * Renders the body text editor for a shape that has text (such as rect), overlaid on the shape's bbox.
  *
- * @param target - テキストを編集する対象の図形（ジオメトリを持つ）
- * @param objectId - 対象図形の ID
- * @param text - 編集中のテキスト
- * @param handlers - 入力・終了ハンドラ
- * @returns テキスト編集欄
+ * @param target - The shape being edited (carries geometry)
+ * @param objectId - ID of the target shape
+ * @param text - The text being edited
+ * @param handlers - Input and exit handlers
+ * @returns The text editor
  */
 function renderTextEditor(
 	target: TextStyleState & TransformedFrame,
@@ -120,8 +120,8 @@ type TextEditorLayerProps = {
 };
 
 /**
- * 編集中のテキストセッションがあれば、対象の種別ごとに専用の編集欄へ振り分ける。
- * コミット側の commitTextEditIfNeeded と対になる描画側のディスパッチャ。
+ * If there is an active text-editing session, dispatches to the dedicated editor for the target's type.
+ * The render-side dispatcher that pairs with commitTextEditIfNeeded on the commit side.
  */
 const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 	textEditState,
@@ -150,7 +150,7 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 	}
 
 	if (isTextStyleState(targetObject)) {
-		// テキストを持つ図形はジオメトリ（cx/cy/width...）も併せ持つ。
+		// Shapes with text also carry geometry (cx/cy/width...).
 		const geometryObject = targetObject as typeof targetObject &
 			TransformedFrame;
 		return renderTextEditor(

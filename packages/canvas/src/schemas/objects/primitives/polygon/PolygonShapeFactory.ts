@@ -7,13 +7,14 @@ import { AUTO_COLOR } from "../../utils/autoColor";
 
 const POLY_STROKE = AUTO_COLOR;
 const POLY_STROKE_WIDTH = 2;
-// polygon のデフォルト外接円半径と頂点数
+// Default circumscribed-circle radius and vertex count for a polygon
 const POLYGON_RADIUS = 60;
 const POLYGON_SIDES = 5;
 
 /**
- * 中心 (cx, cy)・半径 (rx, ry) の外接楕円に内接する正多角形の頂点を生成する。
- * 先頭の頂点は真上（-90°）に置き、createDoc と createDocFromBounds で共有する。
+ * Generates the vertices of a regular polygon inscribed in the circumscribed
+ * ellipse with center (cx, cy) and radii (rx, ry). The first vertex is placed
+ * straight up (-90°). Shared by createDoc and createDocFromBounds.
  */
 const buildPolygonPoints = (
 	cx: number,
@@ -29,6 +30,10 @@ const buildPolygonPoints = (
 		};
 	});
 
+/**
+ * Shape factory for regular-polygon objects. Produces docs whose geometry is a
+ * list of vertices inscribed in a circumscribed ellipse.
+ */
 export const PolygonShapeFactory: ShapeFactory = {
 	createDoc(position, overrides) {
 		return {
@@ -37,7 +42,7 @@ export const PolygonShapeFactory: ShapeFactory = {
 			strokeWidth: POLY_STROKE_WIDTH,
 			fill: "transparent",
 			...overrides,
-			// id と幾何（points）は factory が決める。overrides では上書きさせない。
+			// The id and geometry (points) are decided by the factory; not overridable via overrides.
 			id: crypto.randomUUID(),
 			points: buildPolygonPoints(
 				position.x,
@@ -64,7 +69,7 @@ export const PolygonShapeFactory: ShapeFactory = {
 			strokeWidth: POLY_STROKE_WIDTH,
 			fill: "transparent",
 			...overrides,
-			// id と幾何（points）は factory が決める。overrides では上書きさせない。
+			// The id and geometry (points) are decided by the factory; not overridable via overrides.
 			id: crypto.randomUUID(),
 			points: buildPolygonPoints(
 				(x1 + x2) / 2,

@@ -11,7 +11,8 @@ import { createSvgTransform } from "../../utils/createSvgTransform";
 type SvgProps = SvgState;
 
 /**
- * 長さ属性を数値として読む。単位なし / px のみ受け付け、% や em などは undefined。
+ * Reads a length attribute as a number. Accepts unitless / px only; % or em etc.
+ * return undefined.
  */
 const parseLength = (value: string | null): number | undefined => {
 	if (value === null || /%\s*$/.test(value)) {
@@ -22,9 +23,10 @@ const parseLength = (value: string | null): number | undefined => {
 };
 
 /**
- * 注入する SVG 要素をサニタイズして生成する。
- * viewBox が無ければ width/height 属性（無ければ既定値 100）から viewBox を合成し、
- * preserveAspectRatio="none" で box にぴったり伸縮させる。
+ * Sanitizes and builds the SVG element to inject.
+ * If there is no viewBox, synthesizes one from the width/height attributes
+ * (defaulting to 100), and uses preserveAspectRatio="none" to stretch it to fit
+ * the box exactly.
  */
 const buildSvgElement = (svgText: string): SVGElement => {
 	let sanitized = DOMPurify.sanitize(svgText, { NAMESPACE: SVG_NAMESPACE });
@@ -58,10 +60,10 @@ const SvgComponent: React.FC<SvgProps> = ({
 }) => {
 	const contentRef = useRef<SVGGElement>(null);
 
-	// 中身のパース・サニタイズは svgText が変わったときだけ行う（リサイズでは再パースしない）。
+	// Parse and sanitize the content only when svgText changes (do not re-parse on resize).
 	const svgElement = useMemo(() => buildSvgElement(svgText), [svgText]);
 
-	// box ジオメトリ（位置・サイズ）を注入要素へ反映する。リサイズ時は属性更新のみ。
+	// Apply the box geometry (position/size) to the injected element. On resize, only update attributes.
 	useEffect(() => {
 		const group = contentRef.current;
 		if (!group) {
@@ -92,4 +94,5 @@ const SvgComponent: React.FC<SvgProps> = ({
 	);
 };
 
+/** Renders an SVG object: sanitizes and injects its svgText, then transforms it to fit the box. */
 export const Svg = memo(SvgComponent);

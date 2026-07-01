@@ -4,8 +4,8 @@ import { getFirstSelectedWithProp } from "../../../utils/getFirstSelectedWithPro
 export const DEFAULT_CORNER_RADIUS = 0;
 
 /**
- * 選択中オブジェクトの角丸半径 (rx) を取得する。
- * 数値を持つものがなければ既定値を返す。
+ * Gets the corner radius (rx) of the selected object.
+ * Returns the default value if none holds a numeric rx.
  */
 export const getSelectedCornerRadius = (
 	state: CanvasControllerState,

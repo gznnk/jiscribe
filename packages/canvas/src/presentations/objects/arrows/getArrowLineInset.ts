@@ -7,20 +7,21 @@ import { HOLLOW_TRIANGLE_INSET } from "./shapes/HollowTriangle";
 import type { ArrowType } from "../../../schemas/objects/types/ArrowType";
 
 /**
- * 矢印種別ごとの「線を終端させるべき根元」までの距離（ローカル単位）。
+ * The distance (in local units) up to the "root where the line should terminate" for each arrow type.
  *
- * コネクタ/ポリラインの線は端点（矢印の先端）まで引かれるため、そのままだと
- *   1. 中空矢印では線が中空部を貫通して見える
- *   2. 線が太いと先端の細い部分から線幅分はみ出す
- * 線をこの距離だけ手前で終端させることで、背景色に依存せず両方を解消する。
+ * A connector/polyline line is drawn all the way to the endpoint (the arrow tip), so left as-is:
+ *   1. With hollow arrows, the line appears to pass through the hollow interior.
+ *   2. With a thick line, it spills over by the line width from the narrow tip.
+ * Terminating the line this distance short resolves both, independent of background color.
  *
- * `Record<ArrowType, number>` で全種別を網羅しているため、矢印種別が増えたときに
- * inset の定義漏れをコンパイルエラーで検知できる。各値は対応するシェイプの定数を参照する
- * （形状と inset を同じファイルで管理し、形を変えたら inset も追従させるため）。
+ * `Record<ArrowType, number>` covers every type, so a missing inset definition when an
+ * arrow type is added is caught as a compile error. Each value references the corresponding
+ * shape's constant (keeping the shape and its inset in the same file so the inset follows
+ * when the shape changes).
  *
- * 短縮しない種別:
- *   - None: 矢印が無い
- *   - OpenArrow: body を持たず先端（端点）で線と接続するため、短縮すると隙間ができる
+ * Types that are not shortened:
+ *   - None: no arrow
+ *   - OpenArrow: has no body and connects to the line at the tip (endpoint), so shortening would leave a gap
  */
 const ARROW_LINE_INSETS: Record<ArrowType, number> = {
 	FilledTriangle: FILLED_TRIANGLE_INSET,
@@ -34,8 +35,9 @@ const ARROW_LINE_INSETS: Record<ArrowType, number> = {
 };
 
 /**
- * 矢印種別に応じた線の inset（ローカル単位）を返す。実距離は呼び出し側で
- * 矢印スケール（= strokeWidth）を掛ける。`undefined` / 短縮不要な種別は 0。
+ * Returns the line inset (in local units) for the given arrow type. The caller
+ * multiplies by the arrow scale (= strokeWidth) for the actual distance.
+ * `undefined` and types that need no shortening return 0.
  */
 export const getArrowLineInset = (type: ArrowType | undefined): number =>
 	type === undefined ? 0 : ARROW_LINE_INSETS[type];

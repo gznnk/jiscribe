@@ -14,7 +14,7 @@ export const ConnectorHitArea = styled.polyline<{
 `;
 
 type ConnectorElementProps = {
-	/** 解決済みの stroke 色（auto はテーマ前景へ解決済み）。 */
+	/** Resolved stroke color (auto is already resolved to the theme foreground). */
 	strokeColor: string;
 };
 

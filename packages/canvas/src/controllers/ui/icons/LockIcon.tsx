@@ -9,8 +9,8 @@ type LockIconProps = {
 };
 
 /**
- * ロック/アンロックアイコン。
- * lockAspectRatio の状態を視覚的に示す。
+ * Lock/unlock icon.
+ * Visually indicates the lockAspectRatio state.
  */
 const LockIconComponent: React.FC<LockIconProps> = ({
 	width = 20,

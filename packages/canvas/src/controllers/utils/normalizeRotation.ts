@@ -3,10 +3,10 @@ import { normalizeAngle, roundToDecimal } from "@workspace/geometry";
 import { PRECISION } from "../../constants/precision";
 
 /**
- * 回転角度を0～360度の範囲に正規化し、指定された精度で丸める
+ * Normalizes a rotation angle to the 0-360 degree range and rounds it to the configured precision.
  *
- * @param degrees - 正規化する角度（度数）
- * @returns 0～360度の範囲に正規化され、丸められた角度
+ * @param degrees - The angle to normalize (in degrees)
+ * @returns The angle normalized to the 0-360 degree range and rounded
  *
  * @example
  * ```typescript

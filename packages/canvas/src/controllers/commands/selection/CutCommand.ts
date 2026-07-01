@@ -2,6 +2,10 @@ import { CopyCommand } from "./CopyCommand";
 import { DeleteCommand } from "./DeleteCommand";
 import type { Command } from "../CommandTypes";
 
+/**
+ * Cut command: copies the current selection to the clipboard and then deletes it.
+ * Composes CopyCommand and DeleteCommand.
+ */
 export const CutCommand: Command = {
 	id: "cut",
 	label: "Cut",
@@ -15,9 +19,9 @@ export const CutCommand: Command = {
 	canExecute: (state) => state.selectedIds.length > 0,
 
 	execute: (state) => {
-		// selectedVertex をクリアしてから合成する。
-		// そのままだと CopyCommand は polyline 全体をコピーするのに
-		// DeleteCommand が頂点 1 個だけを削除する非対称な結果になる。
+		// Clear selectedVertex before composing.
+		// Otherwise CopyCommand copies the entire polyline while DeleteCommand
+		// deletes only a single vertex, producing an asymmetric result.
 		const stateWithClipboard = CopyCommand.execute({
 			...state,
 			selectedVertex: null,

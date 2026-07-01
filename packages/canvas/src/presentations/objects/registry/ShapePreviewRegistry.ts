@@ -2,10 +2,10 @@ import type { ShapePreviewRenderer } from "./ShapePreviewTypes";
 import type { ObjectType } from "../../../schemas/objects/types/ObjectType";
 
 /**
- * ドラッグ描画中のプレビュー描画関数を図形型ごとに管理するレジストリ。
- * 登録は `initializeObjectRegistry()` の `registerObject()` 経由で行う。
+ * Registry that manages the preview render function for each shape type during a draw drag.
+ * Registration happens via `registerObject()` inside `initializeObjectRegistry()`.
  *
- * 登録されるのはドラッグ描画対応図形（rect / ellipse / polyline）のみ。
+ * Only shapes that support draw dragging (rect / ellipse / polyline) are registered.
  */
 class ShapePreviewRegistry {
 	private readonly renderers = new Map<ObjectType, ShapePreviewRenderer>();

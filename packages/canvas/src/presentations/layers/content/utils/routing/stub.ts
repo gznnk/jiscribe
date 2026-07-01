@@ -5,22 +5,25 @@ import type {
 } from "@workspace/geometry";
 
 /**
- * 端点のスタブ点を返す。退出方向の軸では**バウンディングボックスの辺 + margin**まで
- * 押し出し（回転した図形でも AABB の外へ確実に出す）、直交軸は端点座標を保つ。
+ * Returns the endpoint's stub point. Along the exit-direction axis it pushes out to the
+ * **bounding box edge + margin** (reliably exiting the AABB even for rotated shapes), while the
+ * orthogonal axis keeps the endpoint coordinate.
  *
- * 非回転の図形では face 中心が AABB の辺上にあるため、辺 + margin は
- * 「face 中心 + margin」と一致し、従来挙動と変わらない。回転した図形では face 中心が
- * AABB の内側に入るので、固定 margin だけでは AABB を出られずめり込んでいたのを解消する。
+ * For non-rotated shapes the face center lies on the AABB edge, so "edge + margin" coincides with
+ * "face center + margin", matching the previous behavior. For rotated shapes the face center moves
+ * inside the AABB, which previously caused a fixed margin alone to fail to exit the AABB and embed
+ * into it; this resolves that.
  *
- * 前提: `point` は退出方向の辺の上にあること（connectPoint＝辺の中央なら厳密に成立）。
- * center アンカー等で `point` が辺上に無い場合、スタブ脚（point → stub）が直交軸方向に
- * AABB をかすめうる（v1 の近似。実害は connectPoint 主体なら小さい）。
+ * Assumption: `point` lies on the edge in the exit direction (holds exactly for connectPoint = edge
+ * center). If `point` is not on the edge (e.g. a center anchor), the stub leg (point → stub) can
+ * graze the AABB along the orthogonal axis (a v1 approximation; the real impact is small when
+ * connectPoint is the norm).
  *
- * @param point - 端点座標（退出方向の辺上にある前提）
- * @param direction - 線が図形から外へ出る直交方向
- * @param box - 図形の軸並行バウンディングボックス
- * @param margin - 辺からの押し出し距離（px）
- * @returns 退出方向へ押し出したスタブ点（直交軸の座標は据え置き）
+ * @param point - The endpoint coordinate (assumed to be on the exit-direction edge)
+ * @param direction - The orthogonal direction in which the line exits the shape
+ * @param box - The shape's axis-aligned bounding box
+ * @param margin - The push-out distance from the edge (px)
+ * @returns The stub point pushed out along the exit direction (the orthogonal-axis coordinate is left unchanged)
  */
 export const stubPoint = (
 	point: Point,
@@ -41,13 +44,13 @@ export const stubPoint = (
 };
 
 /**
- * 退出方向に沿った相手端点までの前方距離（符号付き）。
- * 正なら相手は退出方向の前方に、負なら後方（裏側）にある。
+ * The forward (signed) distance to the other endpoint along the exit direction.
+ * Positive means the other is ahead in the exit direction; negative means behind (on the far side).
  *
- * @param point - 自端点座標
- * @param direction - 自端点の外向き方向
- * @param other - 相手端点座標
- * @returns 退出方向への前方距離（前方が正）
+ * @param point - This endpoint's coordinate
+ * @param direction - This endpoint's outward direction
+ * @param other - The other endpoint's coordinate
+ * @returns The forward distance along the exit direction (ahead is positive)
  */
 const forwardDistance = (
 	point: Point,
@@ -67,23 +70,25 @@ const forwardDistance = (
 };
 
 /**
- * 近接して向かい合う端点同士で、スタブの押し出しが相手側を追い越して
- * 無駄な回り込み（ぐるっと回る経路）を誘発するのを防ぐためのスタブ長クランプ。
+ * Stub-length clamp that prevents, for close facing endpoints, the stub push-out from
+ * overshooting the other side and inducing a wasteful wrap-around (a route that loops all the way around).
  *
- * 相手端点が退出方向の**前方**にあるときだけ、スタブ長を「相手までの前方距離の半分」に
- * 制限する。両端が同様にクランプされると 2 本のスタブはちょうど中間で出会い、
- * 余分な折れ込みを作らずに済む（整列していれば直線、ずれていれば中間で 1 度折れる Z）。
+ * Only when the other endpoint is **ahead** in the exit direction, the stub length is limited to
+ * "half the forward distance to the other". When both ends are clamped the same way, the two stubs
+ * meet exactly at the midpoint, avoiding extra bends (a straight line if aligned, a Z bending once
+ * at the midpoint if offset).
  *
- * - 前方距離 ≥ 2×margin（＝既定 60px 以上離れている）では `margin/2` 以上が確保されるため
- *   フル margin のまま変化しない（しきい値で不連続にならず滑らかに切り替わる）。
- * - 相手が後方（裏側）にある配置（前方距離 ≤ 0）はクランプしない。一度まっすぐ出てから
- *   回り込む必要があるため、スタブを削ると逆走スパイクを招く（#77 参照）。
+ * - At forward distance ≥ 2×margin (i.e. more than the default 60px apart), at least `margin/2` is
+ *   secured, so it stays at the full margin (switching smoothly without a discontinuity at the threshold).
+ * - Layouts where the other is behind (on the far side) (forward distance ≤ 0) are not clamped.
+ *   Since the route must first go straight out and then wrap around, trimming the stub would induce a
+ *   reversal spike (see #77).
  *
- * @param point - 自端点座標
- * @param direction - 自端点の外向き方向
- * @param other - 相手端点座標
- * @param margin - 既定のスタブ長（px）
- * @returns クランプ後のスタブ長（px）
+ * @param point - This endpoint's coordinate
+ * @param direction - This endpoint's outward direction
+ * @param other - The other endpoint's coordinate
+ * @param margin - The default stub length (px)
+ * @returns The clamped stub length (px)
  */
 export const clampStubMargin = (
 	point: Point,

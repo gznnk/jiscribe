@@ -4,11 +4,12 @@ import { objectMapperRegistry } from "../../../states/registry/ObjectMapperRegis
 import type { Command } from "../CommandTypes";
 
 /**
- * テキスト編集を開始できる図形か。
- * テキストを持つ図形（features.text）のみを正とし、構造ガードで値の妥当性を補う。
- * isTextStyleState 単体は「テキスト属性に矛盾が無いか」を見る緩いガードで、
- * テキストを一切持たない図形（svg / polyline / polygon など）も通してしまうため、
- * プロパティ更新側（isPropertySupported）と同じ features.text を基準に揃える。
+ * Whether the shape can start text editing.
+ * Only shapes that hold text (features.text) qualify; the structural guard
+ * supplements this by checking value validity. isTextStyleState alone is a loose
+ * guard that only checks the text attributes are internally consistent, so it would
+ * also pass shapes with no text at all (svg / polyline / polygon, etc.); this aligns
+ * on the same features.text criterion used by the property-update side (isPropertySupported).
  */
 const canEditText = (
 	object: ObjectState | undefined,
@@ -26,17 +27,17 @@ export const StartTextEditCommand: Command = {
 	},
 
 	canExecute(state) {
-		// 既にテキスト編集中の場合は実行不可
+		// Cannot execute while text editing is already in progress
 		if (state.textEditState) {
 			return false;
 		}
 
-		// コネクター単一選択（selectedConnectorId）はラベル編集を許可する。
+		// A single connector selection (selectedConnectorId) allows label editing.
 		if (state.selectedConnectorId && state.selectedIds.length === 0) {
 			return state.objects[state.selectedConnectorId]?.type === "connector";
 		}
 
-		// 単一選択のみ
+		// Single selection only
 		if (state.selectedIds.length !== 1) {
 			return false;
 		}
@@ -45,7 +46,7 @@ export const StartTextEditCommand: Command = {
 	},
 
 	execute(state) {
-		// コネクター選択時はラベル（label.text）の編集を開始する。
+		// When a connector is selected, start editing its label (label.text).
 		if (state.selectedConnectorId && state.selectedIds.length === 0) {
 			const connector = state.objects[state.selectedConnectorId];
 			if (connector?.type !== "connector") {

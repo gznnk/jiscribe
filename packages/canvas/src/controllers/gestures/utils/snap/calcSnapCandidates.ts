@@ -5,12 +5,12 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { SnapCandidate, SnapCandidates } from "../../../CanvasTypes";
 
 /**
- * 全 Frame オブジェクトからスナップ候補を生成する。
- * dragStart 時に keyPointsCache（事前計算済み）を渡して呼ぶこと。
- * 除外（選択中・子孫）は呼び出し側で filteredCandidates としてフィルタすること。
+ * Generates snap candidates from all Frame objects.
+ * Call it at dragStart with a precomputed keyPointsCache.
+ * Exclusions (selected / descendants) must be applied by the caller as filteredCandidates.
  *
- * @param objects - オブジェクトマップ
- * @param keyPointsCache - 事前計算済みの keyPoints キャッシュ（EventStartSnapshot から渡す）
+ * @param objects - Object map
+ * @param keyPointsCache - Precomputed keyPoints cache (passed from EventStartSnapshot)
  */
 export const calcSnapCandidates = (
 	objects: Record<string, ObjectState>,
@@ -34,8 +34,8 @@ export const calcSnapCandidates = (
 		const centerX = (left + right) / 2;
 		const centerY = (top + bottom) / 2;
 
-		// x 候補: left / right エッジ + hCenter（中央のX座標）
-		// perpendicularMin/Max は Y 方向の範囲（ガイド縦線の延伸用）
+		// x candidates: left / right edges + hCenter (center X coordinate)
+		// perpendicularMin/Max is the Y range (used to extend the vertical guide line)
 		xCandidates.push(
 			{
 				objectId: id,
@@ -60,8 +60,8 @@ export const calcSnapCandidates = (
 			},
 		);
 
-		// y 候補: top / bottom エッジ + vCenter（中央のY座標）
-		// perpendicularMin/Max は X 方向の範囲（ガイド横線の延伸用）
+		// y candidates: top / bottom edges + vCenter (center Y coordinate)
+		// perpendicularMin/Max is the X range (used to extend the horizontal guide line)
 		yCandidates.push(
 			{
 				objectId: id,

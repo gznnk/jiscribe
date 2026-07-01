@@ -10,8 +10,8 @@ type Props = {
 };
 
 /**
- * ラベルの太字メニュー（図形の Bold と同じトグル）。
- * `label.fontWeight` を bold / normal で切り替える。data-id 直叩き（gesture 経路）で更新する。
+ * Label bold menu (same toggle as the shape's Bold).
+ * Toggles `label.fontWeight` between bold / normal. Updates via a direct data-id (gesture path).
  */
 const LabelBoldMenuComponent: React.FC<Props> = ({ canvasState }) => {
 	const isBold = getSelectedConnectorLabel(canvasState)?.fontWeight === "bold";

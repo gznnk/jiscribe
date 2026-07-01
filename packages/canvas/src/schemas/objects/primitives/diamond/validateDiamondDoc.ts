@@ -2,6 +2,6 @@ import { DiamondFeatures } from "./DiamondDoc";
 import type { ObjectDocValidateFn } from "../../../registry/ObjectDocValidatorRegistry";
 import { createFrameDocValidator } from "../../utils/createFrameDocValidator";
 
-/** DiamondDoc を検証する（Frame 系共通ロジックを features から生成）。 */
+/** Validates a DiamondDoc (Frame-family shared logic generated from features). */
 export const validateDiamondDoc: ObjectDocValidateFn =
 	createFrameDocValidator(DiamondFeatures);

@@ -7,6 +7,7 @@ import type { CreateObjectType } from "../../types/CreateObjectType";
 import type { EndpointRef } from "../../types/EndpointRef";
 import type { ObjectFeatures } from "../../types/ObjectFeatures";
 
+/** Feature descriptor for the connector object type (poly geometry, strokeable, not connectable). */
 export const ConnectorFeatures = {
 	type: "connector",
 	geometry: "poly",
@@ -15,18 +16,19 @@ export const ConnectorFeatures = {
 } as const satisfies ObjectFeatures;
 
 /**
- * コネクターに付ける注記（ラベル）。
+ * Annotation (label) attached to a connector.
  *
- * 図形の本文テキスト（features.text のフラットな TextStyleDoc）とは別物として
- * **ネストした 1 オブジェクト**で持つ。理由は (1) 経路上の配置を表す
- * `position` / `offset` が connector 固有で、帰属を構造で明示したい
- * (2) 線上の短いタグに整列や markdown は不要、という点。スタイルは
- * 色・サイズ・太さのみ TextStyleDoc から借りる（整列・textType は持たない）。
+ * Held as a **single nested object**, distinct from a shape's body text (the flat TextStyleDoc at
+ * features.text). The reasons are: (1) `position` / `offset`, which describe placement along the
+ * path, are connector-specific and we want the structure to make ownership explicit; (2) a short
+ * tag on a line needs no alignment or markdown. Only color, size, and weight are borrowed from
+ * TextStyleDoc for the style (no alignment or textType).
  *
- * `text` が空文字のラベルは「無し」と等価で、保存時に取り除かれる。
+ * A label whose `text` is an empty string is equivalent to "none" and is removed on save.
  *
- * 背景・枠線は図形と同じ語彙を借りる（`fill` / `stroke` / `strokeWidth`）。
- * `fill` 省略時はキャンバス地色で線を隠す knockout を維持し、`strokeWidth` 省略時は枠線なし。
+ * Background and border borrow the same vocabulary as shapes (`fill` / `stroke` / `strokeWidth`).
+ * When `fill` is omitted, the knockout that hides the line with the canvas background color is kept;
+ * when `strokeWidth` is omitted, there is no border.
  */
 export type ConnectorLabel = Pick<
 	TextStyleDoc,
@@ -34,11 +36,11 @@ export type ConnectorLabel = Pick<
 > &
 	Pick<FillStyleDoc, "fill"> &
 	Pick<StrokeStyleDoc, "stroke" | "strokeWidth" | "strokeDashType"> & {
-		/** ラベル文字列。空なら非表示（ラベル無し）。 */
+		/** The label string. Empty means hidden (no label). */
 		text: string;
-		/** 経路に沿った位置。0（source）〜1（target）の比率。既定 0.5（中点）。 */
+		/** Position along the path, as a ratio from 0 (source) to 1 (target). Default 0.5 (midpoint). */
 		position?: number;
-		/** 経路に対する垂直方向の符号付きオフセット（ワールド単位）。既定 0。 */
+		/** Signed offset perpendicular to the path (world units). Default 0. */
 		offset?: number;
 	};
 
@@ -46,15 +48,16 @@ export type ConnectorLabel = Pick<
 declare const ConnectorDocBrand: unique symbol;
 
 /**
- * コネクター（接続線）の Doc。
+ * Doc for a connector (connection line).
  *
- * `points` のセマンティクス: source → target 順の**中間経由点（waypoint）のみ**を
- * ワールド座標で保持する。端点座標は含めない（端点の正は `source` / `target` の
- * EndpointRef であり、owned アンカーは描画時に動的解決される）。
- * 直線コネクターは空配列。
+ * Semantics of `points`: holds **only the intermediate waypoints** in source → target order, in
+ * world coordinates. Endpoint coordinates are not included (the source of truth for endpoints is the
+ * `source` / `target` EndpointRef, and owned anchors are dynamically resolved at render time).
+ * A straight connector has an empty array.
  *
- * `routing` が `"orthogonal"`（省略時の既定）のときは経路を描画時に自動生成し、
- * `points` は使わない（常に空・派生値は永続化しない）。直線にしたい場合のみ `"straight"` を明示する。
+ * When `routing` is `"orthogonal"` (the default when omitted), the path is auto-generated at render
+ * time and `points` is unused (always empty; derived values are not persisted). Specify `"straight"`
+ * explicitly only when a straight line is desired.
  */
 export type ConnectorDoc = CreateObjectType<
 	typeof ConnectorFeatures,
@@ -65,7 +68,7 @@ export type ConnectorDoc = CreateObjectType<
 		routing?: ConnectorRouting;
 		startArrow?: ArrowType;
 		endArrow?: ArrowType;
-		/** コネクター上の注記。省略時はラベル無し。 */
+		/** Annotation on the connector. Omitted means no label. */
 		label?: ConnectorLabel;
 	}
 >;

@@ -6,21 +6,22 @@ import type {
 } from "../../registry/GestureHandlerTypes";
 
 /**
- * コントロールストラテジは、特定のコントロールタイプを処理する GestureHandler。
- * 各ストラテジは自身が処理するコントロールタイプを controlType プロパティで公開する。
+ * A control strategy is a GestureHandler that handles a specific control type.
+ * Each strategy exposes the control type it handles via the `controlType` property.
  *
- * 例: TransformControlHandler (controlType: "transform-control")
- *     PathControlHandler (controlType: "path-control")
+ * Examples: TransformControlHandler (controlType: "transform-control")
+ *           PathControlHandler (controlType: "path-control")
  */
 export type ControlStrategy = GestureHandler & {
 	readonly controlType: string;
 };
 
 /**
- * すべてのコントロールレベルイベントのメインハンドラー。
- * コントロールストラテジを Map で管理し、Control ID から適切なストラテジにルーティングする。
+ * Main handler for all control-level events.
+ * Manages control strategies in a Map and routes events to the appropriate
+ * strategy based on the control type.
  *
- * 使用例:
+ * Usage:
  * ```typescript
  * const handler = new ControlEventHandler([
  *   transformControlHandler,
@@ -32,16 +33,16 @@ export class ControlEventHandler implements GestureHandler {
 	private strategies = new Map<string, ControlStrategy>();
 
 	/**
-	 * 指定されたストラテジで新しい ControlEventHandler を作成する。
+	 * Creates a new ControlEventHandler with the given strategies.
 	 *
-	 * @param strategies - 登録するコントロールストラテジハンドラーの配列
+	 * @param strategies - Array of control strategy handlers to register
 	 *
-	 * 各ストラテジは以下を満たす必要がある:
-	 * 1. GestureHandler インターフェースを実装
-	 * 2. 自身を識別するための controlType プロパティを持つ
+	 * Each strategy must:
+	 * 1. Implement the GestureHandler interface
+	 * 2. Have a controlType property to identify itself
 	 */
 	constructor(strategies: ControlStrategy[]) {
-		// すべてのストラテジを登録
+		// Register all strategies
 		for (const strategy of strategies) {
 			this.strategies.set(strategy.controlType, strategy);
 		}
@@ -58,22 +59,23 @@ export class ControlEventHandler implements GestureHandler {
 		// Commit text editing if active
 		let nextState = commitTextEditIfNeeded(state);
 
-		// コントロール上の押下でコンテキストメニューを閉じる
-		// （メニュー表示中は通常コントロールに到達しないが、対象ごとのハンドラで挙動を揃える）
+		// Close the context menu on a press over a control.
+		// (Controls are normally unreachable while the menu is open, but this keeps
+		//  behavior consistent across the per-target handlers.)
 		if (event.type === "pressed") {
 			if (event.button === 0) {
 				nextState = { ...nextState, contextMenuPosition: null };
 			}
 		}
 
-		// 各ストラテジを試して、最初に supports() が true を返したものを使用
+		// Try each strategy and use the first one whose supports() returns true
 		for (const strategy of this.strategies.values()) {
 			if (strategy.supports(event)) {
 				return strategy.handle(nextState, event);
 			}
 		}
 
-		// どのストラテジも対応しない場合は状態をそのまま返す
+		// If no strategy handles the event, return the state unchanged
 		return nextState;
 	}
 }

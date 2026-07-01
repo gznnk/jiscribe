@@ -20,22 +20,22 @@ import { gestureHandlerRegistry } from "../gestures/registry/GestureHandlerRegis
 export const initializeGestureHandlerRegistry = (): void => {
 	gestureHandlerRegistry.clear();
 
-	// コントロールストラテジの作成
+	// Create control strategies
 	const transformControlHandler = new TransformControlHandler();
 	const vertexControlHandler = new VertexControlHandler();
 	const vertexInsertHandler = new VertexInsertHandler();
 	const connectionAnchorEventHandler = new ConnectionAnchorEventHandler();
 	const connectorVertexInsertHandler = new ConnectorVertexInsertHandler();
-	// 将来: const pathControlHandler = new PathControlHandler();
+	// Future: const pathControlHandler = new PathControlHandler();
 
-	// ControlEventHandler をストラテジ配列でインスタンス化
+	// Instantiate ControlEventHandler with the strategy array
 	const controlEventHandler = new ControlEventHandler([
 		transformControlHandler,
 		vertexControlHandler,
 		vertexInsertHandler,
 		connectionAnchorEventHandler,
 		connectorVertexInsertHandler,
-		// 将来: pathControlHandler,
+		// Future: pathControlHandler,
 	]);
 
 	gestureHandlerRegistry

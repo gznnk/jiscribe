@@ -1,9 +1,10 @@
 /**
  * Line height shared by text display (TextOverlay) and text editing (TextEditor).
  *
- * textarea はフォーム要素のため line-height を祖先から継承せず UA デフォルト
- * （normal ≈ 1.2）になる。一方 div は継承するため、明示しないとホストアプリの
- * グローバル CSS 次第で表示と編集の行送りがズレる。両者に同じ値を明示することで
- * 編集中もテキスト位置が一致する。
+ * Because a textarea is a form element, it does not inherit line-height from its
+ * ancestors and instead uses the UA default (normal ≈ 1.2). A div, on the other
+ * hand, does inherit, so without an explicit value the line spacing of display and
+ * editing can diverge depending on the host app's global CSS. Setting the same
+ * value explicitly on both keeps text position consistent while editing.
  */
 export const TEXT_LINE_HEIGHT = 1.5;

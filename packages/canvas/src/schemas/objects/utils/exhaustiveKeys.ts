@@ -1,10 +1,11 @@
 /**
- * 型 T の全キーを網羅した配列だけを受け付けるビルダーを返す。
+ * Returns a builder that accepts only an array covering every key of type T.
  *
- * `satisfies readonly (keyof T)[]` は「存在しないキーを混ぜない」ことしか保証せず、
- * 取りこぼした（短い）配列も通してしまう。本ヘルパーで配列を構築すると、T にフィールドを
- * 足してキー配列へ追従し忘れたときにコンパイルエラーになり、Frame 系マッパーの allow-list
- * pass-through 漏れを未然に防ぐ。戻り値はそのままキー定数として使うため、未使用判定も生じない。
+ * `satisfies readonly (keyof T)[]` only guarantees "no non-existent keys are mixed in"
+ * and still accepts an array that misses (is shorter than) the full key set. Building the
+ * array with this helper produces a compile error when a field is added to T but the key
+ * array is not kept in sync, preventing allow-list pass-through gaps in the Frame mappers.
+ * The return value is used directly as a key constant, so it never becomes unused.
  *
  * @example
  * export const STROKE_STYLE_KEYS = exhaustiveKeysOf<StrokeStyleDoc>()([

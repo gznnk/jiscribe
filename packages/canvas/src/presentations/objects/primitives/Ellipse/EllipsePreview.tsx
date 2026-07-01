@@ -1,5 +1,6 @@
 import type { ShapePreviewRenderer } from "../../registry/ShapePreviewTypes";
 
+/** Preview renderer for an Ellipse shape while it is being drawn. */
 export const EllipsePreview: ShapePreviewRenderer = ({
 	startX,
 	startY,
@@ -13,7 +14,7 @@ export const EllipsePreview: ShapePreviewRenderer = ({
 	const y = Math.min(startY, endY);
 	const width = Math.abs(endX - startX);
 	const height = Math.abs(endY - startY);
-	// 色は var(--vscode-*)（auto の解決結果）を含みうるため SVG 属性ではなく style で当てる。
+	// Colors may contain var(--vscode-*) (the resolved result of auto), so apply them via style rather than SVG attributes.
 	return (
 		<ellipse
 			cx={x + width / 2}

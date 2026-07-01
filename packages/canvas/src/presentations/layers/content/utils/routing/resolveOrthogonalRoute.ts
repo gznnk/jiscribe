@@ -13,18 +13,18 @@ import type { AnchorSpec } from "../../../../../schemas/objects/types/EndpointRe
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 
 /**
- * 端点の外向き方向を決める。
+ * Determines an endpoint's outward direction.
  *
- * connectPoint（辺の中央）は「図形中心 → 解決済み端点」が外向き法線になる。
- * この端点座標は回転・反転込みで解決されているため、中心からのベクトルをスナップ
- * するだけで**図形の回転に自動追従**する（固定の up/right マップは使わない）。
- * center / free など中心情報が無いケースは相手端点へ向かう向きにフォールバックする。
+ * For connectPoint (edge center), "shape center → resolved endpoint" is the outward normal.
+ * Since this endpoint coordinate is resolved including rotation/flip, snapping the vector from the
+ * center **automatically follows the shape's rotation** (no fixed up/right map is used).
+ * Cases without center info such as center / free fall back to the direction toward the other endpoint.
  *
- * @param anchor - 端点のアンカー指定。種別で外向き方向の決め方が変わる
- * @param point - 解決済みの端点座標
- * @param other - 反対側の端点座標（中心情報が無いときのフォールバック先）
- * @param obj - 端点が参照する図形。connectPoint かつ frame 形状のときだけ使う
- * @returns その端点で線が図形から外へ出る直交方向
+ * @param anchor - The endpoint's anchor spec. The kind changes how the outward direction is determined
+ * @param point - The resolved endpoint coordinate
+ * @param other - The opposite endpoint's coordinate (fallback target when there is no center info)
+ * @param obj - The shape referenced by the endpoint. Used only when connectPoint and a frame shape
+ * @returns The orthogonal direction in which the line exits the shape at that endpoint
  */
 const endpointDirection = (
 	anchor: AnchorSpec,
@@ -43,13 +43,13 @@ const endpointDirection = (
 };
 
 /**
- * 直交ルータ用の端点記述子を組み立てる。解決済み座標に、外向き方向と回避用 AABB を付与する。
+ * Assembles an endpoint descriptor for the orthogonal router. Attaches the outward direction and an AABB to avoid to the resolved coordinate.
  *
- * @param anchor - 端点のアンカー指定
- * @param point - 解決済みの端点座標
- * @param other - 反対側の端点座標（外向き方向のフォールバックに使う）
- * @param obj - 端点が参照する図形。frame 形状なら回避用 AABB を計算する。free 端点は null/undefined
- * @returns 座標・外向き方向・回避用 AABB（free 端点は box=null）をまとめた端点
+ * @param anchor - The endpoint's anchor spec
+ * @param point - The resolved endpoint coordinate
+ * @param other - The opposite endpoint's coordinate (used for the outward-direction fallback)
+ * @param obj - The shape referenced by the endpoint. If a frame shape, compute the AABB to avoid. free endpoints are null/undefined
+ * @returns An endpoint bundling coordinate, outward direction, and AABB to avoid (box=null for a free endpoint)
  */
 const buildEndpoint = (
 	anchor: AnchorSpec,
@@ -59,23 +59,24 @@ const buildEndpoint = (
 ): OrthogonalConnectorEndpoint => ({
 	point,
 	direction: endpointDirection(anchor, point, other, obj),
-	// owned かつ frame 形状なら回避用の AABB を渡す。free 端点は null。
+	// If owned and a frame shape, pass the AABB to avoid. free endpoints are null.
 	box: obj && isTransformedFrame(obj) ? calcFrameBoxFeatures(obj) : null,
 });
 
 /**
- * routing === "orthogonal" のコネクターの描画パスを生成する。
+ * Generates the render path for a connector with routing === "orthogonal".
  *
- * 解決済みの端点座標（center アンカーはアウトライン調整済み）と接続図形の形状から、
- * 水平/垂直セグメントだけの経路を返す（端点込みフルパス）。両端の図形のみ回避する。
+ * From the resolved endpoint coordinates (center anchors are outline-adjusted) and the connected
+ * shapes, returns a route of horizontal/vertical segments only (full path including endpoints).
+ * Only the shapes at both ends are avoided.
  *
- * @param sourceAnchor - source 端点のアンカー指定（外向き方向の決定に使う）
- * @param targetAnchor - target 端点のアンカー指定
- * @param sourcePoint - 解決済みの source 端点座標（center はアウトライン調整済み）
- * @param targetPoint - 解決済みの target 端点座標
- * @param sourceObj - source 端点の owner 図形。frame 形状なら回避対象。free 端点は null/undefined
- * @param targetObj - target 端点の owner 図形
- * @returns 端点を含む直交フルパス `[source, …, target]`
+ * @param sourceAnchor - The source endpoint's anchor spec (used to determine the outward direction)
+ * @param targetAnchor - The target endpoint's anchor spec
+ * @param sourcePoint - The resolved source endpoint coordinate (center is outline-adjusted)
+ * @param targetPoint - The resolved target endpoint coordinate
+ * @param sourceObj - The owner shape of the source endpoint. If a frame shape, it is avoided. free endpoints are null/undefined
+ * @param targetObj - The owner shape of the target endpoint
+ * @returns The orthogonal full path including endpoints `[source, …, target]`
  */
 export const resolveOrthogonalRoute = (
 	sourceAnchor: AnchorSpec,
@@ -98,8 +99,8 @@ export const resolveOrthogonalRoute = (
 		targetObj,
 	);
 
-	// 自己ループ（両端が同一図形）は専用の矩形ループルートを使う。
-	// 通常の直交ルータは両端を別々の障害物として扱うため、同一図形では退化しうる。
+	// A self-loop (both ends the same shape) uses a dedicated rectangular-loop route.
+	// The normal orthogonal router treats both ends as separate obstacles, so it can degenerate for the same shape.
 	if (
 		sourceObj &&
 		targetObj &&

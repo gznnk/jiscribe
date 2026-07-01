@@ -2,33 +2,33 @@ import type { Point } from "@workspace/geometry";
 
 import type { ObjectDoc } from "../base/ObjectDoc";
 
-/** ゴースト表示用の図形の半サイズ（中央からのオフセット）。 */
+/** Half-size of a shape for ghost display (offset from the center). */
 export type ShapeDimensions = { halfWidth: number; halfHeight: number };
 
 /**
- * 図形の「生成」に関する知識をまとめたファクトリ。
- * 図形ごとに 1 つ実装し、`shapeFactoryRegistry` に型で登録する。
+ * A factory that encapsulates the knowledge of how to create a shape.
+ * Implement one per shape and register it by type in `shapeFactoryRegistry`.
  *
- * `createObjectDoc` などの switch 分岐をこのファクトリへ移すことで、
- * 各呼び出し側が全図形を知らなくても生成できるようになる。
+ * By moving switch branches such as `createObjectDoc` into this factory,
+ * each caller can create shapes without knowing about every shape type.
  */
 export type ShapeFactory = {
 	/**
-	 * 中央基準の position から ObjectDoc を生成する。
-	 * クリックによる中央配置・ドラッグ&ドロップ配置で使う。
+	 * Create an ObjectDoc from a center-based position.
+	 * Used for click-based center placement and drag-and-drop placement.
 	 */
 	createDoc(position: Point, overrides?: Record<string, unknown>): ObjectDoc;
 
 	/**
-	 * ゴースト表示用の半サイズ（overrides 適用後）を返す。
+	 * Return the half-size for ghost display (after overrides are applied).
 	 */
 	calcDimensions(overrides?: Record<string, unknown>): ShapeDimensions;
 
 	/**
-	 * 2 点 bounds から ObjectDoc を生成する。最小サイズ未満は null を返す。
+	 * Create an ObjectDoc from a two-point bounds. Returns null if below the minimum size.
 	 *
-	 * このメソッドの「有無」が「ドラッグ描画できる図形か」を表す。
-	 * 持たない図形（sticky / polygon など）はクリックで中央配置になる。
+	 * The presence of this method indicates whether the shape can be drag-drawn.
+	 * Shapes without it (sticky / polygon, etc.) are center-placed on click.
 	 */
 	createDocFromBounds?(
 		x1: number,
@@ -40,6 +40,6 @@ export type ShapeFactory = {
 	): ObjectDoc | null;
 };
 
-/** overrides の数値フィールドを取り出し、有限数でなければ既定値を返す小ヘルパ。 */
+/** Small helper that reads a numeric field from overrides, returning the fallback if it is not a finite number. */
 export const numberOverride = (value: unknown, fallback: number): number =>
 	Number.isFinite(value) ? (value as number) : fallback;

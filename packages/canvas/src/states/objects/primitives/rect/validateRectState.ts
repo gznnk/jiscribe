@@ -2,6 +2,6 @@ import { RectFeatures } from "../../../../schemas/objects/primitives/rect/RectDo
 import type { ObjectStateValidateFn } from "../../../registry/ObjectStateValidatorRegistry";
 import { createFrameStateValidator } from "../../utils/createFrameStateValidator";
 
-/** RectState を検証する（Frame 系共通ロジックを features から生成）。 */
+/** Validates RectState (Frame-family common logic generated from features). */
 export const isValidRectState: ObjectStateValidateFn =
 	createFrameStateValidator(RectFeatures);

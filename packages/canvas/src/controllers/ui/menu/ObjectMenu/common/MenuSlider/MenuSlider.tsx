@@ -33,10 +33,10 @@ const MenuSliderComponent: React.FC<MenuSliderProps> = ({
 }) => {
 	const [sliderValue, setSliderValue] = useState(value);
 	const [inputValue, setInputValue] = useState(String(value));
-	// レンダー後に useEffect から最新の inputValue を参照するための ref
+	// ref used so useEffect can read the latest inputValue after render
 	const inputValueRef = useRef(inputValue);
 	inputValueRef.current = inputValue;
-	// ユーザーが有効な編集をしてまだコミットしていない状態かどうか
+	// whether the user has made a valid edit that has not yet been committed
 	const pendingCommit = useRef(false);
 
 	const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -88,8 +88,9 @@ const MenuSliderComponent: React.FC<MenuSliderProps> = ({
 		[commitNumberInput, inputValue],
 	);
 
-	// value がユーザーの入力と異なる場合のみ外部変更（スライダー操作等）として扱い入力欄をリセットする。
-	// commit:false のプレビューも value を更新するが、その場合は inputValue と一致するためスキップする。
+	// Reset the input only when `value` differs from the user's input, treating it as an external
+	// change (e.g. slider drag). A commit:false preview also updates `value`, but in that case it
+	// matches inputValue and is skipped.
 	useEffect(() => {
 		if (String(value) !== inputValueRef.current) {
 			setSliderValue(value);

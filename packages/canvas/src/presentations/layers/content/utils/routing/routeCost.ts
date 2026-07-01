@@ -6,20 +6,22 @@ import {
 } from "@workspace/geometry";
 
 /**
- * 軸並行セグメントが box の内部を貫通するか。
+ * Whether an axis-aligned segment passes through the interior of a box.
  *
- * 直交ルーティングのエルボは常に水平/垂直セグメントなので、汎用の
- * `isLineIntersectingBox`（辺タプルと内部ベクトルを毎回確保する）を呼ばずに、
- * アロケーション無しで判定する。ホットパス（ドラッグ追従の経路再計算）で効く。
+ * Elbows in orthogonal routing are always horizontal/vertical segments, so this
+ * decides without allocation instead of calling the general
+ * `isLineIntersectingBox` (which allocates edge tuples and an inner vector each time).
+ * This matters on the hot path (path recomputation while following a drag).
  *
- * セマンティクスは `isLineIntersectingBox`（辺との真の交差・接触は除外）と一致させる:
- * 水平セグメントは「y が上下辺の内側」かつ「x 範囲が左 or 右辺を跨ぐ」とき貫通。
- * 境界に乗るだけ（接触）は厳密不等号で除外する。非軸並行が来た場合は汎用版へ委譲する。
+ * The semantics match `isLineIntersectingBox` (true edge crossings and touches are excluded):
+ * a horizontal segment passes through when "y is inside the top/bottom edges" and
+ * "the x range straddles the left or right edge". Merely lying on a boundary (touching)
+ * is excluded via strict inequalities. If a non-axis-aligned segment comes in, delegate to the general version.
  *
- * @param p1 - セグメントの始点
- * @param p2 - セグメントの終点
- * @param box - 判定対象の軸並行バウンディングボックス
- * @returns セグメントが box 内部を貫通するなら true（辺との接触は false）
+ * @param p1 - Segment start point
+ * @param p2 - Segment end point
+ * @param box - The axis-aligned bounding box to test against
+ * @returns true if the segment passes through the box interior (touching an edge is false)
  */
 const segmentCrossesBox = (p1: Point, p2: Point, box: BoxFeatures): boolean => {
 	if (p1.y === p2.y) {
@@ -46,15 +48,15 @@ const segmentCrossesBox = (p1: Point, p2: Point, box: BoxFeatures): boolean => {
 			(yMin < box.bottom && box.bottom < yMax)
 		);
 	}
-	// 直交ルーティングでは起きないが、防御的に汎用判定へフォールバック。
+	// Does not occur in orthogonal routing, but fall back to the general check defensively.
 	return isLineIntersectingBox(p1, p2, box);
 };
 
 /**
- * フルパスの総延長（マンハッタン距離の和）。
+ * Total length of the full path (sum of Manhattan distances).
  *
- * @param points - 経路の点列
- * @returns 全セグメント長の合計
+ * @param points - The path's point sequence
+ * @returns The sum of all segment lengths
  */
 export const pathLength = (points: Point[]): number => {
 	let total = 0;
@@ -70,15 +72,16 @@ export const pathLength = (points: Point[]): number => {
 };
 
 /**
- * フルパス中の「折り返し（逆走）」角の数を数える。
+ * Counts the number of "reversal (backtrack)" corners in the full path.
  *
- * 同一軸上で進行方向が反転する中間点（a→b と b→c が共線かつ逆向き）を折り返しとみなす。
- * スタブを出した直後に同じ線分を逆走して戻るスパイク（図形の縁から線が生えて見える
- * 不自然な経路）がこれに当たる。`simplifyPath` は退出方向を保つためこの逆走点を温存するので、
- * コスト評価側で明示的に数えてペナルティをかける。
+ * A midpoint where the direction of travel reverses on the same axis (a→b and b→c are
+ * collinear and opposite) is treated as a reversal. This corresponds to a spike where the
+ * path backtracks along the same segment right after emitting a stub (an unnatural route that
+ * looks like a line sprouting from the shape's edge). Since `simplifyPath` preserves the exit
+ * direction and keeps these backtrack points, the cost evaluation counts them explicitly and penalizes them.
  *
- * @param points - 評価するフルパスの点列
- * @returns 折り返し（逆走）している中間角の数
+ * @param points - The full path's point sequence to evaluate
+ * @returns The number of reversing (backtracking) intermediate corners
  */
 export const countReversals = (points: Point[]): number => {
 	let reversals = 0;
@@ -98,12 +101,12 @@ export const countReversals = (points: Point[]): number => {
 };
 
 /**
- * エルボ（スタブ間）が図形を貫通する回数。スタブ脚は含めない。
+ * The number of times the elbow (between stubs) passes through the shapes. Excludes the stub legs.
  *
- * @param elbow - スタブ間のエルボ点列（スタブ脚は含めない）
- * @param sourceBox - 始点図形の AABB（free 端点は null）
- * @param targetBox - 終点図形の AABB（free 端点は null）
- * @returns エルボが両図形を貫通する合計回数
+ * @param elbow - The elbow point sequence between stubs (excludes the stub legs)
+ * @param sourceBox - AABB of the source shape (null for a free endpoint)
+ * @param targetBox - AABB of the target shape (null for a free endpoint)
+ * @returns The total number of times the elbow passes through both shapes
  */
 export const countBoxCrossings = (
 	elbow: Point[],
@@ -124,49 +127,54 @@ export const countBoxCrossings = (
 	return crossings;
 };
 
-// 美観（aesthetic）の柔らかいトレードオフ用の重み。ここだけが調整つまみ。
-// 1 曲がりは ~1000px の遠回りと釣り合う。
+// Weights for the soft trade-off of aesthetics. These are the only tuning knobs.
+// 1 turn is worth about a ~1000px detour.
 const TURN_WEIGHT = 1_000;
-// 向かい合う端点では、中点で折れる対称（S/Z 字）を 1 曲がり分強めに優先する。
+// For facing endpoints, prefer the symmetric (S/Z-shaped) route that bends at the midpoint, by roughly 1 turn's worth.
 const SYMMETRY_BONUS = 1_500;
-// 折り返し（スタブ直後に同じ線分を逆走するスパイク）は強く避ける。1 折り返し =
-// 10 曲がり相当。回り込み（曲がり数増）より常に不利にし、出口方向の裏側にある端点へは
-// 一度スタブ分まっすぐ出てから回り込ませる。回り込みようがない配置では全候補が等しく
-// 加点されるため、相対比較に影響せず自然にフォールバックする（貫通とは独立＝ソフト制約）。
+// Strongly avoid reversals (a spike that backtracks along the same segment right after a stub).
+// 1 reversal = about 10 turns' worth. Always make it worse than going around (more turns) so that
+// for an endpoint on the far side of the exit direction, the route first goes straight out by the
+// stub length and then wraps around. In layouts with no way to wrap around, all candidates are
+// penalized equally, so it does not affect relative comparison and falls back naturally
+// (independent of crossings = a soft constraint).
 const REVERSAL_PENALTY = 10_000;
 
 /**
- * ルート評価。図形貫通は**ハード制約**として最優先で比較し、曲がり数・長さ・対称性は
- * **柔らかい美観**として 1 つの重み付き和にまとめる（ハードは辞書式・ソフトは加点）。
+ * Route evaluation. Shape crossings are compared first as a **hard constraint**, while turn count,
+ * length, and symmetry are combined into a single weighted sum as **soft aesthetics**
+ * (hard is lexicographic, soft is additive).
  *
- * 逆走（スタブの押し出し方向に逆らって同じ線分を戻る折り返し）は `REVERSAL_PENALTY` で
- * 明示的に強く減点する。角数はフルパス（スタブ脚込み）で測るため逆走も 1 角として現れるが、
- * それだけだと回り込み（角数増）の方が高コストになりスパイクが選ばれてしまうため、
- * 専用ペナルティで回り込みを優先させる。回り込みようがない配置では全候補が等しく加点され、
- * 相対比較に影響しないので破綻しない。
+ * Reversals (backtracks that go back along the same segment against the stub's push-out direction)
+ * are penalized explicitly and strongly via `REVERSAL_PENALTY`. Turn count is measured on the full
+ * path (including stub legs), so a reversal also appears as one corner; but that alone would make
+ * wrapping around (more corners) cost more and cause the spike to be chosen, so a dedicated penalty
+ * prioritizes wrapping around. In layouts with no way to wrap around, all candidates are penalized
+ * equally, so it does not affect relative comparison and does not break.
  */
 export type RouteCost = {
-	/** 図形を貫通する回数（最優先で 0 にしたい）。 */
+	/** The number of shape crossings (we most want this to be 0). */
 	crossings: number;
-	/** 曲がり数×weight + 経路長 + 折り返し×penalty − 対称ボーナス（小さいほど良い）。 */
+	/** turns×weight + path length + reversals×penalty − symmetry bonus (smaller is better). */
 	aesthetic: number;
 };
 
 /**
- * 1 候補のコストを算出する。
+ * Computes the cost of one candidate.
  *
- * - 貫通判定は**エルボ部分のみ**（source→stub / stub→target の脚は必ず面から外へ出る
- *   正当な交差なので除く）。`simplifiedElbow` を渡す。
- * - 角数・長さは「実際に描かれるフルパス（スタブ脚込み）」で測る。エルボ単体だと、
- *   スタブ脚と最初/最後の向きが噛み合わずに増える角を見落とす（例: 右へ出た直後に下へ
- *   折れるエルボは見かけ1角でもフルパスでは2角）。`fullPath` を渡す。
+ * - Crossing detection uses **only the elbow part** (the source→stub / stub→target legs always
+ *   exit the face outward as legitimate crossings, so they are excluded). Pass `simplifiedElbow`.
+ * - Turn count and length are measured on the "full path actually drawn (including stub legs)".
+ *   With the elbow alone, corners added when the stub legs don't line up with the first/last
+ *   direction are missed (e.g. an elbow that exits right and immediately bends down is 1 apparent
+ *   corner but 2 corners on the full path). Pass `fullPath`.
  *
- * @param fullPath - 実際に描かれるフルパス（スタブ脚込み）。角数・長さの計測に使う
- * @param simplifiedElbow - スタブ間のエルボのみ（脚を除く）。図形貫通の判定に使う
- * @param sourceBox - 始点図形の AABB（free 端点は null）
- * @param targetBox - 終点図形の AABB（free 端点は null）
- * @param symmetric - 中点で折れる対称（S/Z 字）ルートか。true なら美観を加点
- * @returns 貫通回数（ハード制約）と美観スコア（ソフト）の組
+ * @param fullPath - The full path actually drawn (including stub legs). Used to measure turn count and length
+ * @param simplifiedElbow - Only the elbow between stubs (excludes the legs). Used to detect shape crossings
+ * @param sourceBox - AABB of the source shape (null for a free endpoint)
+ * @param targetBox - AABB of the target shape (null for a free endpoint)
+ * @param symmetric - Whether it is a symmetric (S/Z-shaped) route bending at the midpoint. If true, add an aesthetic bonus
+ * @returns A pair of crossing count (hard constraint) and aesthetic score (soft)
  */
 export const calcRouteCost = (
 	fullPath: Point[],
@@ -178,8 +186,9 @@ export const calcRouteCost = (
 	const turns = Math.max(fullPath.length - 2, 0);
 	return {
 		crossings: countBoxCrossings(simplifiedElbow, sourceBox, targetBox),
-		// 柔らかい美観: 曲がり数を重視（×weight）、同程度なら短く、向かい合いは
-		// 対称(S字)を一段優先。スタブ直後の逆走スパイクは別項で強く減点し、回り込みを優先。
+		// Soft aesthetics: emphasize turn count (×weight), prefer shorter when comparable, and for
+		// facing cases prefer symmetric (S-shaped) by one step. Reversal spikes right after a stub
+		// are penalized strongly in a separate term, prioritizing wrapping around.
 		aesthetic:
 			turns * TURN_WEIGHT +
 			pathLength(fullPath) +
@@ -189,11 +198,11 @@ export const calcRouteCost = (
 };
 
 /**
- * 2 つのコストを辞書式（crossings → aesthetic）で比較する。
+ * Compares two costs lexicographically (crossings → aesthetic).
  *
- * @param a - 比較対象のコスト
- * @param b - 比較対象のコスト
- * @returns 負: a が良い / 正: b が良い / 0: 同等
+ * @param a - A cost to compare
+ * @param b - A cost to compare
+ * @returns negative: a is better / positive: b is better / 0: equal
  */
 export const compareCost = (a: RouteCost, b: RouteCost): number =>
 	a.crossings - b.crossings || a.aesthetic - b.aesthetic;

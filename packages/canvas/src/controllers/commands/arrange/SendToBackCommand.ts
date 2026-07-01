@@ -23,7 +23,7 @@ export const SendToBackCommand: Command = {
 		const commonParentId = state.objects[selectedIds[0]]?.parentId;
 		const selectedSet = new Set(selectedIds);
 
-		// 移動後も選択オブジェクト同士の重なり順が変わらないよう、selectedIds を z-order で並び替える
+		// Sort selectedIds by z-order so the stacking order among selected objects is preserved after the move
 		const orderedSelectedIds = sortObjectIdsByZOrder(
 			selectedIds,
 			state.objects,

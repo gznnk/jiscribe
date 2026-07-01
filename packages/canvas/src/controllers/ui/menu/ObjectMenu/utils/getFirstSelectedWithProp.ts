@@ -2,8 +2,8 @@ import type { ObjectState } from "../../../../../states/objects/base/ObjectState
 import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
 
 /**
- * selectedIds から指定プロパティを持つ最初のオブジェクトを返す。
- * グループが含まれる場合は子孫まで再帰的に探索する。
+ * Returns the first object among `selectedIds` that has the given property.
+ * When a group is included, recurses into its descendants.
  */
 export function getFirstSelectedWithProp(
 	selectedIds: string[],

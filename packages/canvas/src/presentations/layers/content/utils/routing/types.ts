@@ -5,10 +5,10 @@ import type {
 } from "@workspace/geometry";
 
 /**
- * 直交ルータの端点。
- * - `point`: 解決済みの端点座標（図形の辺上 or free 点）
- * - `direction`: その端点で線が図形から**外向きに出る**方向
- * - `box`: 接続図形の軸並行バウンディングボックス（free 端点は null）
+ * An endpoint for the orthogonal router.
+ * - `point`: the resolved endpoint coordinate (on a shape's edge or a free point)
+ * - `direction`: the direction in which the line exits **outward** from the shape at this endpoint
+ * - `box`: the axis-aligned bounding box of the connected shape (null for a free endpoint)
  */
 export type OrthogonalConnectorEndpoint = {
 	point: Point;
@@ -16,7 +16,8 @@ export type OrthogonalConnectorEndpoint = {
 	box: BoxFeatures | null;
 };
 
+/** Options for the orthogonal connector router. */
 export type RouteOrthogonalConnectorOptions = {
-	/** 図形の面から線を押し出す距離（スタブ長, px）。 */
+	/** Distance by which the line is pushed out from a shape's face (stub length, px). */
 	margin?: number;
 };

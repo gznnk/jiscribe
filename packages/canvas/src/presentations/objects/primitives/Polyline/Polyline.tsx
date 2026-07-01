@@ -21,11 +21,12 @@ const PolylineComponent: React.FC<PolylineProps> = ({
 	endArrow,
 }) => {
 	const pointsAttr = points.map((p) => `${p.x},${p.y}`).join(" ");
-	// auto（テーマ追従）をテーマ前景（ink）へ解決する（issue #38）。
+	// Resolve auto (theme-following) to the theme foreground (ink) (issue #38).
 	const strokeColor = resolveAutoColor(stroke, "ink");
 
-	// 中空矢印では線が中空部を貫通しないよう、矢印の根元で線を終端させる。
-	// 矢印自体は元の端点（先端）に描画するため、見た目上の端点位置は変わらない。
+	// For hollow arrows, terminate the line at the arrow's base so it does not
+	// pass through the hollow area. The arrow itself is drawn at the original
+	// endpoint (tip), so the visible endpoint position is unchanged.
 	const linePoints = insetPolylineEnds(
 		points,
 		getArrowLineInset(startArrow) * strokeWidth,

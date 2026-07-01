@@ -21,24 +21,24 @@ const remapEndpointRef = (
 };
 
 /**
- * トップレベル要素群を複製して新しい ID を割り当て、指定 offset だけ移動する。
+ * Clones a set of top-level elements, assigns fresh IDs, and moves them by the given offset.
  *
- * - `topLevelIds` はトップレベル要素（オブジェクト + コネクター）を z-order（背面→前面）で
- *   並べたもの。state / clipboard の `rootIds` と同じ表現を受け取る。
- * - 非コネクターにのみ offset を適用する（コネクターは端点が所有図形に追従するため動かさない）。
- * - parentId / childIds / connector endpoint の参照はすべて新 ID にリマップする。
- * - `allObjects` には `topLevelIds` の子孫も含まれている必要がある。
+ * - `topLevelIds` are the top-level elements (objects + connectors) ordered by z-order
+ *   (back → front). Accepts the same representation as state / clipboard `rootIds`.
+ * - The offset is applied only to non-connectors (connectors are not moved, since their
+ *   endpoints follow their owning shapes).
+ * - All parentId / childIds / connector endpoint references are remapped to the new IDs.
+ * - `allObjects` must also include the descendants of `topLevelIds`.
  *
- * 入力が閉じたフォレストでない場合（外部クリップボード経由などで親が
- * allObjects に含まれない子オブジェクトがある場合）でも、必ず自己整合的な
- * フォレストを生成する:
- * - parentId が allObjects 内に解決できないオブジェクトは parentId を破棄し、
- *   トップレベル（newTopLevelIds）へ昇格させる（孤児化を防ぐ）
- * - グループの childIds は allObjects 内に存在する子のみへ絞り込む
- *   （存在しない子へのダングリング参照を残さない）
+ * Even when the input is not a closed forest (e.g. via an external clipboard, where a child
+ * object's parent is not present in allObjects), this always produces a self-consistent forest:
+ * - Objects whose parentId cannot be resolved within allObjects have their parentId dropped and
+ *   are promoted to the top level (newTopLevelIds), preventing orphans.
+ * - A group's childIds are narrowed to only the children that exist within allObjects
+ *   (no dangling references to nonexistent children are left behind).
  *
- * @returns `newTopLevelIds` は `topLevelIds` と同じ順序で新 ID を並べ、昇格した孤児を末尾に足したもの。
- *   呼び出し側で型により図形／コネクターへ振り分けられる。
+ * @returns `newTopLevelIds` lists the new IDs in the same order as `topLevelIds`, with promoted
+ *   orphans appended at the end. The caller dispatches them to shapes/connectors by type.
  */
 export function cloneObjects(
 	topLevelIds: string[],
@@ -49,23 +49,23 @@ export function cloneObjects(
 	newTopLevelIds: string[];
 	idRemap: Map<string, string>;
 } {
-	// ── 1. 旧 ID → 新 ID のマッピングを生成 ──────────────────────────────────
+	// ── 1. Build the old ID → new ID mapping ──────────────────────────────────
 	const idRemap = new Map<string, string>();
 	for (const srcId of Object.keys(allObjects)) {
 		idRemap.set(srcId, crypto.randomUUID());
 	}
 
-	// ── 2. 全オブジェクトを複製: ID・parentId・childIds・接続端点を新 ID にリマップ ──
+	// ── 2. Clone all objects: remap ID / parentId / childIds / connection endpoints to new IDs ──
 	const clonedObjects: Record<string, ObjectState> = {};
-	// 親をリマップできず、トップレベルへ昇格させた新オブジェクト ID 群
+	// New object IDs whose parent could not be remapped and that were promoted to the top level
 	const detachedNewIds: string[] = [];
 
 	for (const [srcId, srcObj] of Object.entries(allObjects)) {
 		const clonedId = idRemap.get(srcId)!;
 
-		// 親が allObjects 内に存在しない場合は parentId を破棄し、トップレベルへ昇格させる。
-		// （外部クリップボード等で親グループ抜きの子が含まれても孤児化させない）
-		// コネクターは topLevelIds で明示的に渡され newTopLevelIds に含まれるため昇格対象外。
+		// If the parent does not exist within allObjects, drop parentId and promote to the top level.
+		// (Prevents orphaning when children arrive without their parent group, e.g. via external clipboard.)
+		// Connectors are passed explicitly in topLevelIds and included in newTopLevelIds, so they are not promoted.
 		const remappedParentId =
 			srcObj.parentId !== undefined ? idRemap.get(srcObj.parentId) : undefined;
 		if (
@@ -82,7 +82,7 @@ export function cloneObjects(
 			parentId: remappedParentId,
 		};
 
-		// グループ: childIds を新 ID にリマップ（クローン集合に存在する子のみ残す）
+		// Group: remap childIds to new IDs (keep only children present in the clone set)
 		if (srcObj.type === "group") {
 			const srcGroup = srcObj as GroupState;
 			clone = {
@@ -93,7 +93,7 @@ export function cloneObjects(
 			} as GroupState;
 		}
 
-		// コネクター: 接続端点のオーナー ID を新 ID にリマップ
+		// Connector: remap the endpoint owner IDs to new IDs
 		if (srcObj.type === "connector") {
 			const srcConn = srcObj as ConnectorState;
 			clone = {
@@ -106,14 +106,14 @@ export function cloneObjects(
 		clonedObjects[clonedId] = clone;
 	}
 
-	// ── 3. offset を適用（コネクター以外のトップレベルのみ）──────────────────
+	// ── 3. Apply the offset (top-level non-connectors only) ──────────────────
 	for (const srcId of topLevelIds) {
 		const clonedId = idRemap.get(srcId);
 		if (!clonedId) {
 			continue;
 		}
 		const clone = clonedObjects[clonedId];
-		// コネクターは端点が所有図形に追従するため offset しない。
+		// Connectors are not offset, since their endpoints follow their owning shapes.
 		if (!clone || clone.type === "connector") {
 			continue;
 		}
@@ -128,7 +128,7 @@ export function cloneObjects(
 		}
 	}
 
-	// ── 4. newTopLevelIds を構築（topLevelIds の順序を保ち、昇格孤児を末尾に足す）──
+	// ── 4. Build newTopLevelIds (preserve topLevelIds order, append promoted orphans at the end) ──
 	const newTopLevelIds: string[] = [];
 	const seen = new Set<string>();
 	for (const id of topLevelIds) {

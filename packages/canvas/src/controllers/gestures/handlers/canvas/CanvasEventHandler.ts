@@ -29,7 +29,7 @@ export const CanvasEventHandler: GestureHandler = {
 
 	handle(state, event) {
 		// Zoom handling
-		// テキスト編集中もズームで編集を中断しないよう、commitTextEditIfNeeded より前に処理する
+		// Handle before commitTextEditIfNeeded so zooming does not interrupt an active text edit.
 		if (event.type === "zoom" && event.zoomDelta != null) {
 			const deltaY = event.zoomDelta;
 			const zoomDelta = deltaY > 0 ? ZOOM.OUT_FACTOR : ZOOM.IN_FACTOR;
@@ -59,7 +59,7 @@ export const CanvasEventHandler: GestureHandler = {
 		}
 
 		// Scroll handling (wheel scroll + edge scroll)
-		// ズームと同様、テキスト編集を中断せずビューポートのみ更新する
+		// As with zoom, update only the viewport without interrupting text editing.
 		if (event.type === "scroll" && event.scrollDelta) {
 			const { deltaX, deltaY } = event.scrollDelta;
 			const svgDeltaX = deltaX / state.viewport.zoom;
@@ -122,7 +122,7 @@ export const CanvasEventHandler: GestureHandler = {
 			return nextState;
 		}
 
-		// Left-button drag in draw mode: bounds 描画に対応する図形のみ
+		// Left-button drag in draw mode: only shapes that support bounds drawing
 		const shapeDrawing = nextState.shapeDrawing;
 		const drawingObjectType =
 			shapeDrawing !== null &&
@@ -203,7 +203,7 @@ export const CanvasEventHandler: GestureHandler = {
 			}
 
 			if (event.type === "dragEnd" && nextState.shapeDrawing?.preview) {
-				// drag イベントで endX/endY はスナップ済みのため、preview の値をそのまま使う
+				// endX/endY are already snapped during the drag event, so use the preview values as-is.
 				const { startX, startY, endX, endY } = nextState.shapeDrawing.preview;
 				const doc = createObjectDocFromBounds(
 					drawingObjectType,
@@ -315,11 +315,11 @@ export const CanvasEventHandler: GestureHandler = {
 				selectedIds: [],
 				selectedConnectorId: null,
 				selectedVertex: null,
-				// コンテキストメニューが開いている場合は閉じる
+				// Close the context menu if it is open
 				contextMenuPosition: null,
-				// ObjectMenu の展開をリセット
+				// Reset the ObjectMenu expansion
 				objectMenuOpenId: null,
-				// マルチセレクトグループをリセット
+				// Reset the multi-select group
 				multiSelectGroup: null,
 			};
 		}

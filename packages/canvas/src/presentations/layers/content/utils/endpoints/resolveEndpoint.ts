@@ -9,17 +9,21 @@ import type { EndpointRef } from "../../../../../schemas/objects/types/EndpointR
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 
 /**
- * EndpointRef を Point 座標へ解決する。objects マップ全体ではなく対象オブジェクト 1 つ
- * だけを受け取るため、その図形だけを依存に持つメモ化が効く。
+ * Resolves an EndpointRef to a Point coordinate. It takes a single target
+ * object rather than the whole objects map, so memoization keyed only on that
+ * shape works.
  *
- * 対応するアンカー種別:
- * - free: 指定された点をそのまま返す
- * - center: 参照図形の中心点 (cx, cy) を返す
- * - connectPoint: 指定された接続点（topCenter / rightCenter など辺の中央）を返す
+ * Supported anchor kinds:
+ * - free: returns the specified point as-is
+ * - center: returns the referenced shape's center point (cx, cy)
+ * - connectPoint: returns the specified connection point (an edge midpoint such
+ *   as topCenter / rightCenter)
  *
- * @param endpoint - 解決対象の端点参照。アンカー種別（free / center / connectPoint）を持つ
- * @param obj - endpoint が参照する図形の状態。未参照（free）や未発見なら null/undefined
- * @returns 解決した座標。解決できない場合は null
+ * @param endpoint - The endpoint reference to resolve. Carries the anchor kind
+ *   (free / center / connectPoint)
+ * @param obj - State of the shape the endpoint references. null/undefined when
+ *   unreferenced (free) or not found
+ * @returns The resolved coordinate, or null if it cannot be resolved
  */
 export const resolveEndpoint = (
 	endpoint: EndpointRef,
@@ -49,7 +53,7 @@ export const resolveEndpoint = (
 		// Check if the object has transform properties (Frame-based)
 		if (isTransformedFrame(obj)) {
 			// Compute only the requested edge key point (avoids calculating all 8).
-			// "center" や不正な id は default で null（center anchor は kind === "center" 経路で扱う）
+			// "center" or an invalid id falls through to null (a center anchor is handled by the kind === "center" path)
 			switch (anchorId) {
 				case "topCenter":
 				case "rightCenter":

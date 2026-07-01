@@ -28,8 +28,8 @@ type RoutingOption = {
 };
 
 /**
- * orthogonal を先頭に置く（routing 省略時の既定 = orthogonal）。
- * commandId は SetConnectorRoutingCommand の登録 id と一致させる。
+ * Place orthogonal first (the default when routing is omitted = orthogonal).
+ * commandId must match the registered id of SetConnectorRoutingCommand.
  */
 const ROUTING_OPTIONS: RoutingOption[] = [
 	{
@@ -47,12 +47,13 @@ const ROUTING_OPTIONS: RoutingOption[] = [
 ];
 
 /**
- * コネクターの routing（直線 / 直角）を切り替えるメニュー項目。
- * バー上のボタンは現在の routing アイコンを表示し、クリックで選択肢を横並びに展開する。
- * 各選択肢は `object-menu:command:setRouting*` を発火して SetConnectorRoutingCommand に委譲する。
+ * Menu item for switching a connector's routing (straight / orthogonal).
+ * The button on the bar shows the current routing icon, and clicking it expands the
+ * options in a horizontal row. Each option fires `object-menu:command:setRouting*`,
+ * delegating to SetConnectorRoutingCommand.
  *
- * 自己ループは orthogonal 固定なので null を返す。空になったセクションは
- * ObjectMenuSection の `:empty` で区切り線ごと畳まれる。
+ * Self-loops are fixed to orthogonal, so this returns null. An emptied section is
+ * collapsed along with its divider via ObjectMenuSection's `:empty`.
  */
 const RoutingMenuComponent: React.FC<MenuItemProps> = ({ canvasState }) => {
 	const menuItemRef = useRef<HTMLDivElement>(null);
@@ -63,7 +64,7 @@ const RoutingMenuComponent: React.FC<MenuItemProps> = ({ canvasState }) => {
 		isOpen,
 	);
 
-	// フックを呼び切った後に早期 return する（フック順序を一定に保つ）。
+	// Early-return only after all hooks have been called (to keep hook order stable).
 	if (isSelectedConnectorSelfLoop(canvasState)) {
 		return null;
 	}

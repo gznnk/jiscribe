@@ -52,7 +52,7 @@ export type UpdateTextEditAction = {
  */
 export type EndTextEditAction = {
 	type: "END_TEXT_EDIT";
-	commit: boolean; // true: 確定, false: キャンセル
+	commit: boolean; // true: commit, false: cancel
 };
 
 /**
@@ -60,7 +60,7 @@ export type EndTextEditAction = {
  */
 export type UndoAction = {
 	type: "UNDO";
-	doc: CanvasDoc; // 復元するドキュメント
+	doc: CanvasDoc; // document to restore
 };
 
 /**
@@ -68,7 +68,7 @@ export type UndoAction = {
  */
 export type RedoAction = {
 	type: "REDO";
-	doc: CanvasDoc; // 復元するドキュメント
+	doc: CanvasDoc; // document to restore
 };
 
 /**
@@ -78,7 +78,7 @@ export type MenuPropertyUpdateAction = {
 	type: "MENU_PROPERTY_UPDATE";
 	property: string;
 	value: string;
-	/** true: 履歴記録あり（blur/Enter）、false: プレビューのみ */
+	/** true: recorded in history (blur/Enter), false: preview only */
 	commit: boolean;
 };
 

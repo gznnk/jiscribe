@@ -20,7 +20,7 @@ const ArrowHeadIconPreviewComponent: React.FC<ArrowHeadIconPreviewProps> = ({
 	const tipX = isStart ? 1 : 23;
 	const radians = isStart ? Math.PI : 0;
 
-	// 矢印の根元まで線を短縮し、中空部の貫通・先端からの線のはみ出しを防ぐ。
+	// Shorten the line to the base of the arrowhead to prevent it from passing through the hollow interior or protruding past the tip.
 	const inset = getArrowLineInset(type) * scale;
 	const lineX1 = isStart && inset > 0 ? tipX + inset : 2;
 	const lineX2 = !isStart && inset > 0 ? tipX - inset : 22;

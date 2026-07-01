@@ -18,16 +18,17 @@ import {
 } from "../../utils/validateDocUtils";
 
 /**
- * Connector の `label`（ネストした注記）を検証する。
- * 図形本文の TextStyleDoc と異なり、線上の短いタグ用にフィールドを絞る
- * （`text` 必須、配置 `position`/`offset`、スタイルは色・サイズ・太さのみ）。
- * 未指定（キー無し）はラベル無しとして許容する。connector 専用のため呼び出し元に同居させる。
+ * Validates a connector's `label` (a nested annotation).
+ * Unlike a shape body's TextStyleDoc, the fields are narrowed for a short tag placed on
+ * the line (`text` required, placement `position`/`offset`, and only color/size/weight
+ * styling). Unspecified (no key) is allowed as "no label". Kept alongside its caller
+ * since it is connector-specific.
  */
 function validateConnectorLabelFields(
 	o: Record<string, unknown>,
 	path: string,
 ): SemanticDiagnostic[] {
-	// 図形の本文テキストと取り違えてトップレベル `text` を書く誤りを明示的に弾く。
+	// Explicitly reject the mistake of writing a top-level `text` by confusing it with a shape's body text.
 	const errors: SemanticDiagnostic[] = [];
 	if ("text" in o) {
 		errors.push({
@@ -76,7 +77,7 @@ function validateConnectorLabelFields(
 			beyondSchema: true,
 		});
 	}
-	// 背景（fill）・枠線（stroke 色 + strokeWidth 太さ）。図形と同じ語彙。
+	// Background (fill) and border (stroke color + strokeWidth). Same vocabulary as shapes.
 	if ("fill" in l && !isCssSafeValue(l.fill)) {
 		errors.push({
 			path: `${labelPath}.fill`,
@@ -101,7 +102,12 @@ function validateConnectorLabelFields(
 	return errors;
 }
 
-// points は中間経由点のみ（端点は source/target が持つ）のため空配列を許容する
+/**
+ * Validates a ConnectorDoc: waypoints, stroke style, arrows, label, both endpoints,
+ * optional routing, and the invariant that at least one endpoint is owned.
+ * `points` holds only intermediate waypoints (endpoints live on source/target), so an
+ * empty array is allowed.
+ */
 export const validateConnectorDoc: ObjectDocValidateFn = (o, path) => [
 	...validateWaypointFields(o, path),
 	...validateStrokeStyleFields(o, path),
@@ -109,7 +115,7 @@ export const validateConnectorDoc: ObjectDocValidateFn = (o, path) => [
 	...validateConnectorLabelFields(o, path),
 	...validateEndpointRef(o.source, `${path}.source`),
 	...validateEndpointRef(o.target, `${path}.target`),
-	// routing は任意。指定する場合は既知の値のみ許容する。
+	// routing is optional; if specified, only known values are allowed.
 	...("routing" in o &&
 	o.routing !== undefined &&
 	!isConnectorRouting(o.routing)
@@ -121,17 +127,18 @@ export const validateConnectorDoc: ObjectDocValidateFn = (o, path) => [
 				},
 			]
 		: []),
-	// 不変条件: connector は少なくとも一方の端点が owned であること。
-	// 両端 free（owner なし）は ink(polyline) 相当で connector としては不正。
+	// Invariant: a connector must have at least one owned endpoint.
+	// Both endpoints free (no owner) is equivalent to ink(polyline) and invalid as a connector.
 	...(!isOwnedEndpointRef(o.source) && !isOwnedEndpointRef(o.target)
 		? [
 				{
 					path,
 					message:
 						"connector must have at least one owned endpoint (both endpoints are free).",
-					// このルールは JSON スキーマ（ConnectorDoc の not 制約）でも表現済みのため、
-					// beyondSchema は付けない（拡張は構造エラーとしてスキーマに委ね二重表示を回避）。
-					// validator 側にも残すのは、スキーマを持たない webview / MCP のため。
+					// This rule is also expressed in the JSON schema (ConnectorDoc's not constraint),
+					// so beyondSchema is not attached (leave the extension to the schema as a structural
+					// error to avoid double-reporting).
+					// It is kept in the validator as well for the webview / MCP that have no schema.
 					...(typeof o.id === "string" ? { id: o.id } : {}),
 				},
 			]

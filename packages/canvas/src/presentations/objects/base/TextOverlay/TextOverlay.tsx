@@ -49,15 +49,15 @@ const TextOverlayComponent: React.FC<TextOverlayProps> = ({
 	isEditing = false,
 }) => {
 	const textRef = useRef<HTMLDivElement>(null);
-	// auto（テーマ追従）をテーマ前景（ink）へ解決する（issue #38）。
+	// Resolve auto (theme-following) to the theme foreground (ink) (issue #38).
 	const resolvedColor = resolveAutoColor(fontColor, "ink");
 
 	useEffect(() => {
 		if (textRef.current && textType === "markdown" && text) {
 			// Clear the previous content
 			textRef.current.innerHTML = "";
-			// XSS サニタイズは @workspace/markdown の renderMarkdown 内で DOMPurify により担保される。
-			// サニタイズの維持責務は @workspace/markdown 側にある。
+			// XSS sanitization is guaranteed by DOMPurify inside @workspace/markdown's renderMarkdown.
+			// Responsibility for maintaining sanitization lies with @workspace/markdown.
 			textRef.current.innerHTML = renderMarkdown(text);
 		}
 	}, [text, textType, isEditing]);

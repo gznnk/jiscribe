@@ -11,10 +11,12 @@ import { calculateGroupOrientedBounds } from "../utils/calculateGroupOrientedBou
  * Converts CanvasDoc (tree structure) to CanvasState (flat structure).
  * This process normalizes the object tree into a flat map for O(1) access.
  *
- * **呼び出し側の責務**: `doc` は `parseCanvasText`（二段検証）を通した正当な doc で
- * あること。ここでは ID 一意・参照整合・非循環を再検証せず前提とする（防御コストを
- * 内部に持たない方針 → docs/01-design-philosophy.md 原則4）。検証は外部入力の境界
- * （host / `SYNC_EXTERNAL` の入口）で担保する。
+ * **Caller's responsibility**: `doc` must be a valid doc that has passed
+ * `parseCanvasText` (two-stage validation). This function assumes—without
+ * re-checking—that IDs are unique, references are consistent, and the tree is
+ * acyclic (the policy of not carrying defensive cost internally →
+ * docs/01-design-philosophy.md principle 4). Validation is guaranteed at the
+ * external-input boundary (host / the `SYNC_EXTERNAL` entry point).
  */
 export const canvasToState = (doc: CanvasDoc): CanvasState => {
 	const objects: Record<string, ObjectState> = {};
@@ -62,9 +64,10 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 	};
 
 	// Process root objects.
-	// root はオブジェクトとコネクターの混在配列で、並び順がそのまま z-order になる。
-	// コネクターの不変条件（少なくとも一方の端点が owned）は境界の validateSemantics が
-	// 担保済みのため、ここでの再検証は行わない。
+	// root is a mixed array of objects and connectors, and its order is the
+	// z-order as-is. The connector invariant (at least one endpoint is owned)
+	// is already guaranteed by validateSemantics at the boundary, so it is not
+	// re-checked here.
 	doc.root.forEach((objDoc) => {
 		const id = processObject(objDoc);
 		rootIds.push(id);
@@ -89,8 +92,9 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
  */
 export const canvasToDoc = (state: CanvasState): CanvasDoc => {
 	// Helper to reconstruct an object tree from an ID.
-	// flat state は内部で常に整合（index と objects が一致、childIds は acyclic）して
-	// いるため、未発見 ID や循環に対する防御は持たない。
+	// The flat state is always internally consistent (index matches objects,
+	// childIds are acyclic), so it carries no defense against missing IDs or
+	// cycles.
 	const reconstructObject = (id: string): ObjectDoc => {
 		const objState = state.objects[id];
 
@@ -138,7 +142,7 @@ export const canvasToDoc = (state: CanvasState): CanvasDoc => {
 
 	return {
 		version: 1,
-		// root はオブジェクトとコネクターを z-order 順に混在させた単一配列。
+		// root is a single array mixing objects and connectors in z-order.
 		root: state.rootIds.map((id) => reconstructObject(id)),
 	};
 };

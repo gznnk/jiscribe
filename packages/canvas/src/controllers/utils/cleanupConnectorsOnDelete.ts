@@ -5,15 +5,15 @@ import type { ConnectorState } from "../../states/objects/connections/connector/
 import type { CanvasControllerState } from "../CanvasTypes";
 
 /**
- * 図形削除に伴うコネクターの整理を行う。
+ * Clean up connectors that are affected by shape deletion.
  *
- * - 両端の接続先が削除対象 → コネクターも削除
- * - 片端のみ削除対象 → 削除される側のエンドポイントを Free に変換して保持（座標解決不能な場合はコネクターも削除）
+ * - Both endpoints connect to deleted shapes → the connector is deleted too
+ * - Only one endpoint connects to a deleted shape → convert the deleted side's endpoint to Free and keep it (if the coordinate cannot be resolved, delete the connector too)
  *
- * コネクターは rootIds に混在管理されるため、削除されたコネクターは rootIds からも除去する。
+ * Since connectors are managed intermixed in rootIds, deleted connectors are also removed from rootIds.
  *
- * @param state - 削除前のキャンバス状態（エンドポイント座標の解決に使用）
- * @param idsToDelete - 削除対象オブジェクトのIDセット
+ * @param state - The canvas state before deletion (used to resolve endpoint coordinates)
+ * @param idsToDelete - The set of IDs of objects to delete
  */
 export function cleanupConnectorsOnDelete(
 	state: CanvasControllerState,
@@ -24,7 +24,7 @@ export function cleanupConnectorsOnDelete(
 	let hasChanges = false;
 
 	for (const connectorId of getRootConnectorIds(state.objects, state.rootIds)) {
-		// 既に削除対象のコネクター自身はスキップ
+		// Skip connectors that are themselves already marked for deletion
 		if (idsToDelete.has(connectorId)) {
 			continue;
 		}
@@ -48,7 +48,7 @@ export function cleanupConnectorsOnDelete(
 
 		hasChanges = true;
 
-		// 削除後に接続先が残らない場合（既に Free だった端 + 削除される端）はコネクターも削除
+		// If no connection target remains after deletion (an already-Free end + a deleted end), delete the connector too
 		const sourceWillBeFree = sourceOwnerId == null || sourceDeleted;
 		const targetWillBeFree = targetOwnerId == null || targetDeleted;
 		if (sourceWillBeFree && targetWillBeFree) {
@@ -57,9 +57,9 @@ export function cleanupConnectorsOnDelete(
 			continue;
 		}
 
-		// 片端削除 → 削除される側を Free に変換
-		// resolveConnectorPoints で center アンカーのアウトライン調整を含む視覚上の座標を取得。
-		// 削除前の state.objects を使うため両端のオブジェクトがまだ存在している。
+		// One endpoint deleted → convert the deleted side to Free
+		// Use resolveConnectorPoints to get the visual coordinates, including outline adjustment for center anchors.
+		// Since it uses the pre-deletion state.objects, both endpoint objects still exist.
 		const sourceObj =
 			sourceOwnerId != null ? state.objects[sourceOwnerId] : null;
 		const targetObj =

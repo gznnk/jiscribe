@@ -22,6 +22,6 @@ export function getAncestors(
 	state: CanvasControllerState,
 	objectId: string,
 ): string[] {
-	// walkParentChain は [parent, ..., root] を返すので、root→leaf 順に反転する。
+	// walkParentChain returns [parent, ..., root], so reverse it into root->leaf order.
 	return walkParentChain(objectId, state.objects).reverse();
 }

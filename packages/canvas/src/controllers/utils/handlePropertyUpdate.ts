@@ -6,9 +6,9 @@ import { objectMapperRegistry } from "../../states/registry/ObjectMapperRegistry
 import type { CanvasControllerState } from "../CanvasTypes";
 
 /**
- * コネクターラベルのネストしたスタイル更新を表すドット記法のプロパティ群。
- * フラットなトップ階層プロパティ配管にドット記法のまま相乗りし、収束点の
- * handlePropertyUpdate（connector 分岐）だけがネスト解釈する。
+ * Dot-notation properties that represent nested style updates on a connector label.
+ * They ride along the flat top-level property plumbing in dot notation, and only the
+ * convergence point handlePropertyUpdate (connector branch) interprets them as nested.
  */
 const LABEL_STYLE_PROPERTIES = new Set([
 	"label.fill",
@@ -20,15 +20,15 @@ const LABEL_STYLE_PROPERTIES = new Set([
 	"label.fontWeight",
 ]);
 
-// 数値として保存する label サブキー（それ以外は文字列のまま）。
+// Label subkeys stored as numbers (others stay as strings).
 const LABEL_NUMERIC_KEYS = new Set(["strokeWidth", "fontSize"]);
 
 const isLabelStyleProperty = (property: string): boolean =>
 	LABEL_STYLE_PROPERTIES.has(property);
 
 /**
- * `label.*` プロパティを connector.label へネスト merge する。
- * ラベル未設定（text 無し）なら何もしない。数値サブキー（strokeWidth/fontSize）は数値化する。
+ * Nested-merges a `label.*` property into connector.label.
+ * Does nothing if the label is unset (no text). Numeric subkeys (strokeWidth/fontSize) are coerced to numbers.
  */
 const updateConnectorLabelStyle = (
 	state: CanvasControllerState,
@@ -120,9 +120,9 @@ const parsePropertyValue = (property: string, value: string): unknown => {
 };
 
 /**
- * 選択中の全オブジェクトに対してプロパティを更新する。
- * Connector が選択されている場合（selectedConnectorId != null）はその Connector を更新する。
- * lockAspectRatio かつ複数選択時は multiSelectGroup のみ更新。
+ * Updates a property on all selected objects.
+ * If a connector is selected (selectedConnectorId != null), updates that connector.
+ * For lockAspectRatio with a multi-selection, updates only the multiSelectGroup.
  */
 export const handlePropertyUpdate = (
 	state: CanvasControllerState,
@@ -131,15 +131,15 @@ export const handlePropertyUpdate = (
 ): CanvasControllerState => {
 	const { selectedIds, selectedConnectorId, objects, multiSelectGroup } = state;
 
-	// Connector 選択時（selectedIds は空）
+	// Connector selected (selectedIds is empty)
 	if (selectedIds.length === 0 && selectedConnectorId !== null) {
 		const connector = objects[selectedConnectorId];
 		if (!connector) {
 			return state;
 		}
 
-		// ラベルのネストスタイル（label.fill / label.stroke / label.strokeWidth）は
-		// トップ階層でなく connector.label へ書く。
+		// Nested label styles (label.fill / label.stroke / label.strokeWidth) are
+		// written to connector.label rather than the top level.
 		if (isLabelStyleProperty(property)) {
 			return updateConnectorLabelStyle(
 				state,
@@ -179,7 +179,7 @@ export const handlePropertyUpdate = (
 		return state;
 	}
 
-	// lockAspectRatio かつ複数選択時は multiSelectGroup のみ更新
+	// For lockAspectRatio with a multi-selection, update only the multiSelectGroup
 	if (property === "lockAspectRatio" && multiSelectGroup) {
 		const parsedValue = parsePropertyValue(property, value) as boolean;
 		return {
@@ -194,13 +194,13 @@ export const handlePropertyUpdate = (
 	const updatedObjects = { ...objects };
 	let changed = false;
 
-	// property/value の組み合わせは全オブジェクトで共通なので一度だけ変換
+	// The property/value pair is common to all objects, so parse it once
 	const parsedValue = parsePropertyValue(property, value);
 	if (parsedValue === null) {
 		return state;
 	}
 
-	// ルートレベルの選択オブジェクトに対してプロパティを更新
+	// Update the property on the root-level selected objects
 	for (const id of selectedIds) {
 		const obj = objects[id];
 		if (!obj) {
@@ -224,7 +224,7 @@ export const handlePropertyUpdate = (
 		changed = true;
 	}
 
-	// Recursively update descendants of selected groups (lockAspectRatio は除外)
+	// Recursively update descendants of selected groups (excluding lockAspectRatio)
 	if (property !== "lockAspectRatio") {
 		for (const id of selectedIds) {
 			const descendantIds = collectDescendantIds(id, objects);

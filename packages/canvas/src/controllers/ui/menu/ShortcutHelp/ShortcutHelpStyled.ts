@@ -3,7 +3,7 @@ import styled from "@emotion/styled";
 import { theme } from "../../../../constants/theme";
 
 /**
- * モーダルの背景オーバーレイ。クリックで閉じる。
+ * The modal's background overlay. Click to close.
  */
 export const Backdrop = styled.div`
 	position: absolute;
@@ -17,13 +17,13 @@ export const Backdrop = styled.div`
 `;
 
 /**
- * モーダル本体のパネル。
+ * The modal body panel.
  */
 export const Panel = styled.div`
 	display: flex;
 	flex-direction: column;
 	width: min(400px, calc(100% - 32px));
-	/* 検索結果の件数で大きさが変わらないよう高さを固定する */
+	/* Fix the height so the size does not change with the number of search results */
 	height: min(560px, calc(100% - 64px));
 	background-color: ${theme.surface};
 	border: 1px solid ${theme.border};
@@ -74,7 +74,7 @@ export const Body = styled.div`
 	min-height: 0;
 	padding: 8px 20px 20px;
 	overflow-y: auto;
-	/* コマンド名（左列）とショートカット（右列）を全行で揃える */
+	/* Align command names (left column) and shortcuts (right column) across all rows */
 	display: grid;
 	grid-template-columns: 1fr auto;
 	align-items: center;
@@ -83,7 +83,7 @@ export const Body = styled.div`
 `;
 
 export const CategoryTitle = styled.h3`
-	/* 2 列にまたがる見出し */
+	/* Heading spanning both columns */
 	grid-column: 1 / -1;
 	justify-self: start;
 	margin: 16px 0 8px;
@@ -104,7 +104,7 @@ export const RowLabel = styled.span`
 
 export const KeyGroup = styled.span`
 	grid-column: 2;
-	/* 右列内で左揃え → 全行の先頭キーが同じ x で揃う */
+	/* Left-align within the right column -> the leading key of every row aligns at the same x */
 	justify-self: start;
 	display: flex;
 	align-items: center;

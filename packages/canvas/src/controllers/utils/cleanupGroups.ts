@@ -4,14 +4,14 @@ import type { GroupState } from "../../states/objects/primitives/group/GroupStat
 import type { CanvasControllerState } from "../CanvasTypes";
 
 /**
- * グループのクリーンアップを行う
+ * Cleans up groups.
  *
- * - グループ内の図形が0個 → グループを削除
- * - グループ内の図形が1個 → グループ化を解除し、図形を親グループ（またはルート）に移動
- * - グループ内の図形が2個以上 → グループを維持
+ * - 0 shapes in a group → delete the group
+ * - 1 shape in a group → ungroup and move the shape to the parent group (or root)
+ * - 2 or more shapes in a group → keep the group
  *
- * @param state - 現在のキャンバスコントローラー状態
- * @returns クリーンアップ後のキャンバスコントローラー状態
+ * @param state - the current canvas controller state
+ * @returns the canvas controller state after cleanup
  */
 export const cleanupGroups = (
 	state: CanvasControllerState,
@@ -20,14 +20,14 @@ export const cleanupGroups = (
 	const updatedRootIds = [...state.rootIds];
 	const groupsToProcess = new Set<string>();
 
-	// すべてのグループをクリーンアップ対象として収集
+	// Collect all groups as cleanup candidates
 	for (const [id, obj] of Object.entries(updatedObjects)) {
 		if (obj?.type === "group") {
 			groupsToProcess.add(id);
 		}
 	}
 
-	// 何も変更がなくなるまで繰り返す（ネストしたグループの場合に備えて）
+	// Repeat until nothing changes (to handle nested groups)
 	let hasChanges = true;
 	while (hasChanges) {
 		hasChanges = false;
@@ -42,12 +42,12 @@ export const cleanupGroups = (
 			const childCount = group.childIds.length;
 
 			if (childCount === 0) {
-				// グループ内が空 → グループを削除
+				// Group is empty → delete the group
 				hasChanges = true;
 				groupsToProcess.delete(groupId);
 
 				if (group.parentId != null) {
-					// 親グループから除去
+					// Remove from the parent group
 					const parent = updatedObjects[group.parentId];
 					if (parent?.type === "group") {
 						const parentGroup = parent as GroupState;
@@ -58,7 +58,7 @@ export const cleanupGroups = (
 							),
 						} as GroupState;
 
-						// 除去後の親の bounds を更新
+						// Update the parent's bounds after removal
 						const updatedParent = updateGroupBounds(
 							updatedObjects,
 							group.parentId,
@@ -67,21 +67,21 @@ export const cleanupGroups = (
 							updatedObjects[group.parentId] = updatedParent;
 						}
 
-						// 親も再チェック対象に
+						// Re-queue the parent for checking
 						groupsToProcess.add(group.parentId);
 					}
 				} else {
-					// ルートから除去
+					// Remove from root
 					const index = updatedRootIds.indexOf(groupId);
 					if (index !== -1) {
 						updatedRootIds.splice(index, 1);
 					}
 				}
 
-				// オブジェクトを削除
+				// Delete the object
 				delete updatedObjects[groupId];
 			} else if (childCount === 1) {
-				// グループ内が1個 → グループ化を解除
+				// One shape in the group → ungroup
 				hasChanges = true;
 				groupsToProcess.delete(groupId);
 
@@ -92,7 +92,7 @@ export const cleanupGroups = (
 				}
 
 				if (group.parentId != null) {
-					// 親グループに子を移動
+					// Move the child into the parent group
 					const parent = updatedObjects[group.parentId];
 					if (parent?.type === "group") {
 						const parentGroup = parent as GroupState;
@@ -103,7 +103,7 @@ export const cleanupGroups = (
 							),
 						} as GroupState;
 
-						// 移動後の親の bounds を更新
+						// Update the parent's bounds after the move
 						const updatedParent = updateGroupBounds(
 							updatedObjects,
 							group.parentId,
@@ -112,33 +112,33 @@ export const cleanupGroups = (
 							updatedObjects[group.parentId] = updatedParent;
 						}
 
-						// 親も再チェック対象に
+						// Re-queue the parent for checking
 						groupsToProcess.add(group.parentId);
 					}
 
-					// 子の親を更新
+					// Update the child's parent
 					updatedObjects[childId] = {
 						...child,
 						parentId: group.parentId,
 					} as ObjectState;
 				} else {
-					// ルートに子を移動
+					// Move the child to root
 					const index = updatedRootIds.indexOf(groupId);
 					if (index !== -1) {
 						updatedRootIds[index] = childId;
 					}
 
-					// 子の親を解除
+					// Detach the child's parent
 					updatedObjects[childId] = {
 						...child,
 						parentId: undefined,
 					} as ObjectState;
 				}
 
-				// グループを削除
+				// Delete the group
 				delete updatedObjects[groupId];
 			} else {
-				// 2個以上 → クリーンアップ完了
+				// 2 or more → cleanup complete
 				groupsToProcess.delete(groupId);
 			}
 		}

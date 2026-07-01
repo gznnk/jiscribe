@@ -7,6 +7,10 @@ import { getRootConnectorIds } from "../../utils/getRootConnectorIds";
 import { sortObjectIdsByZOrder } from "../../utils/sortObjectIdsByZOrder";
 import type { Command } from "../CommandTypes";
 
+/**
+ * Command that copies the current selection (including descendants and fully
+ * enclosed connectors) into the internal clipboard, preserving z-order.
+ */
 export const CopyCommand: Command = {
 	id: "copy",
 	label: "Copy",
@@ -33,7 +37,7 @@ export const CopyCommand: Command = {
 			}
 		}
 
-		// 両端点が選択範囲内のコネクターのみコピー（DuplicateCommand と同じ判定）
+		// Copy only connectors whose both endpoints are within the selection (same test as DuplicateCommand)
 		const connectorIds = selectConnectorsInSelection(
 			getRootConnectorIds(state.objects, state.rootIds),
 			state.objects,
@@ -51,9 +55,10 @@ export const CopyCommand: Command = {
 					? { x: firstObj.cx, y: firstObj.cy }
 					: { x: 0, y: 0 };
 
-		// コピーしたトップレベル要素（オブジェクト + コネクター）を z-order（背面→前面）に
-		// 並べてクリップボードへ載せる。ペースト時はこの順で前面へ積み、相対的な重なり順を保つ。
-		// コネクターも独立配列にせず rootIds に混在させる（state の rootIds と同じ表現）。
+		// Order the copied top-level elements (objects + connectors) by z-order (back → front)
+		// and place them on the clipboard. On paste they are stacked to the front in this order,
+		// preserving their relative stacking. Connectors are kept mixed into rootIds rather than a
+		// separate array (same representation as state's rootIds).
 		const rootIds = sortObjectIdsByZOrder(
 			[...state.selectedIds, ...connectorIds],
 			state.objects,

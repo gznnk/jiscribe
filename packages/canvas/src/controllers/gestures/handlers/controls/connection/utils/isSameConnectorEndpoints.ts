@@ -2,8 +2,10 @@ import { isSameEndpoint } from "../../../../../../schemas/objects/types/Endpoint
 import type { ConnectorState } from "../../../../../../states/objects/connections/connector/ConnectorState";
 
 /**
- * 2 つのコネクターの端点（source / target）と中間経由点が同値かどうかを判定する。
- * 「アンカーをつまんで元の位置に戻した」だけの no-op 編集を検出するために使う。
+ * Determines whether two connectors have equal endpoints (source / target) and
+ * intermediate waypoints.
+ * Used to detect no-op edits where an anchor was grabbed and dropped back at its
+ * original position.
  */
 export function isSameConnectorEndpoints(
 	srcConnector: ConnectorState,

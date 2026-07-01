@@ -4,10 +4,11 @@ import { type Dispatch, type RefObject, useEffect, useRef } from "react";
 import type { CanvasAction } from "../reducer/CanvasActions";
 
 /**
- * コンテナ要素のサイズ変更を監視し、変更時に CONTAINER_RESIZE アクションを dispatch するHook
+ * Hook that observes size changes of a container element and dispatches a
+ * CONTAINER_RESIZE action whenever the size changes.
  *
- * @param containerRef - 監視対象のコンテナ要素への参照
- * @param dispatch - Canvas reducer の dispatch
+ * @param containerRef - Reference to the container element to observe
+ * @param dispatch - The Canvas reducer's dispatch
  *
  * @example
  * ```tsx
@@ -30,7 +31,7 @@ export function useContainerResize(
 		}
 
 		const updateDimensions = (width: number, height: number) => {
-			// 値が変更された場合のみ dispatch を実行
+			// Only dispatch when the value has actually changed
 			if (
 				!lastDimensions.current ||
 				lastDimensions.current.width !== width ||
@@ -51,7 +52,7 @@ export function useContainerResize(
 
 		resizeObserver.observe(container);
 
-		// 初期サイズを設定
+		// Set the initial size
 		const rect = container.getBoundingClientRect();
 		updateDimensions(rect.width, rect.height);
 

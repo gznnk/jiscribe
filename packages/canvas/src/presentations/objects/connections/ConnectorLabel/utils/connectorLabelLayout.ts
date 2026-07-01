@@ -1,6 +1,6 @@
 import { TEXT_LINE_HEIGHT } from "../../../../../constants/textLineHeight";
 
-/** ラベル既定スタイル（ConnectorLabel が値を持たないときのフォールバック）。 */
+/** Default label style (fallback when the ConnectorLabel has no value). */
 export const CONNECTOR_LABEL_DEFAULTS = {
 	fontColor: "auto",
 	fontSize: 16,
@@ -8,11 +8,11 @@ export const CONNECTOR_LABEL_DEFAULTS = {
 	fontWeight: "normal",
 } as const;
 
-/** テキスト周りの内側余白（背景 knockout を含むボックスのパディング）。 */
+/** Inner padding around the text (padding of the box including the background knockout). */
 export const CONNECTOR_LABEL_PADDING_X = 6;
 export const CONNECTOR_LABEL_PADDING_Y = 2;
 
-/** ラベルボックスの最小・最大幅（コンテンツ幅 + パディング後の値、ワールド単位）。 */
+/** Minimum and maximum label box width (content width + padding, in world units). */
 export const CONNECTOR_LABEL_MIN_WIDTH = 16;
 export const CONNECTOR_LABEL_MAX_WIDTH = 240;
 
@@ -22,7 +22,7 @@ export type ConnectorLabelFont = {
 	fontWeight: string;
 };
 
-// 計測専用のオフスクリーン canvas（DOM レイアウトを発生させず幅を測る）。
+// Offscreen canvas dedicated to measurement (measures width without triggering DOM layout).
 let measureCanvas: HTMLCanvasElement | null = null;
 
 const getMeasureContext = (): CanvasRenderingContext2D | null => {
@@ -35,14 +35,14 @@ const getMeasureContext = (): CanvasRenderingContext2D | null => {
 	return measureCanvas.getContext("2d");
 };
 
-/** 改行で分割した各行の幅を測る。canvas 2d を使い DOM レイアウトを起こさない。 */
+/** Measure the width of each line split by newline. Uses canvas 2d to avoid triggering DOM layout. */
 const measureLineWidths = (
 	lines: readonly string[],
 	font: ConnectorLabelFont,
 ): number[] => {
 	const ctx = getMeasureContext();
 	if (!ctx) {
-		// 計測不能（非ブラウザ環境）では文字数からの粗い近似でフォールバックする。
+		// When measurement is unavailable (non-browser environment), fall back to a rough estimate from character count.
 		return lines.map((line) => line.length * font.fontSize * 0.6);
 	}
 	ctx.font = `${font.fontWeight} ${font.fontSize}px ${font.fontFamily}`;
@@ -52,11 +52,13 @@ const measureLineWidths = (
 export type ConnectorLabelBox = { width: number; height: number };
 
 /**
- * ラベルボックスの寸法（パディング込み）を求める。
+ * Compute the label box dimensions (including padding).
  *
- * 幅は最長行 + 左右パディングを最小・最大幅でクランプ。高さは最大幅で折り返した
- * 行数（明示改行 + 自動折り返し）を見積もって算出するため、横伸長・折り返しの
- * 両方で表示が欠けない。`borderWidth` は border-box の内側を削るぶん寸法に上乗せする。
+ * Width is the longest line + horizontal padding, clamped to the min/max width. Height is
+ * computed by estimating the number of lines wrapped at the max width (explicit newlines +
+ * automatic wrapping), so display is not clipped under either horizontal stretch or
+ * wrapping. `borderWidth` is added to the dimensions to compensate for the border-box
+ * eating into the inner area.
  */
 export const calcConnectorLabelBox = (
 	text: string,
@@ -67,7 +69,7 @@ export const calcConnectorLabelBox = (
 	const lineWidths = measureLineWidths(lines, font);
 	const maxLineWidth = lineWidths.reduce((max, w) => Math.max(max, w), 0);
 
-	// 枠線は border-box の内側を削るため、テキストが欠けないよう左右・上下に枠線分を足す。
+	// The border eats into the inside of the border-box, so add the border amount horizontally and vertically to avoid clipping the text.
 	const border = borderWidth * 2;
 
 	const width =
@@ -79,7 +81,7 @@ export const calcConnectorLabelBox = (
 			),
 		) + border;
 
-	// 折り返し後の表示行数を見積もる（各論理行が利用可能幅を超えた分だけ増える）。
+	// Estimate the displayed line count after wrapping (each logical line grows by the amount it exceeds the available width).
 	const availableWidth = Math.max(
 		1,
 		width - CONNECTOR_LABEL_PADDING_X * 2 - border,

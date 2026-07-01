@@ -51,19 +51,19 @@ export type FreeEndpointRef = {
 export type EndpointRef = OwnedEndpointRef | FreeEndpointRef;
 
 /**
- * 指定された値が ConnectPointId 型かどうかを判定する。
+ * Determines whether the given value is a ConnectPointId.
  *
- * @param value 判定対象の値
- * @returns ConnectPointId 型であれば true、それ以外は false
+ * @param value The value to test
+ * @returns true if the value is a ConnectPointId, false otherwise
  */
 export const isConnectPointId = (value: unknown): value is ConnectPointId =>
 	ConnectPointIds.includes(value as ConnectPointId);
 
 /**
- * 指定された値が OwnedEndpointRef 型かどうかを判定する。
+ * Determines whether the given value is an OwnedEndpointRef.
  *
- * @param value 判定対象の値
- * @returns OwnedEndpointRef 型であれば true、それ以外は false
+ * @param value The value to test
+ * @returns true if the value is an OwnedEndpointRef, false otherwise
  */
 export const isOwnedEndpointRef = (
 	value: unknown,
@@ -80,11 +80,11 @@ export const isOwnedEndpointRef = (
 };
 
 /**
- * 2 つのアンカー指定が同値かどうかを判定する。
+ * Determines whether two anchor specs are equivalent.
  *
- * @param a 判定対象のアンカー指定
- * @param b 判定対象のアンカー指定
- * @returns 同値であれば true、それ以外は false
+ * @param a The first anchor spec to compare
+ * @param b The second anchor spec to compare
+ * @returns true if they are equivalent, false otherwise
  */
 const isSameAnchor = (a: AnchorSpec, b: AnchorSpec): boolean => {
 	if (a.kind !== b.kind) {
@@ -96,17 +96,17 @@ const isSameAnchor = (a: AnchorSpec, b: AnchorSpec): boolean => {
 	if (a.kind === "connectPoint" && b.kind === "connectPoint") {
 		return a.id === b.id;
 	}
-	// center 同士（kind が一致していれば追加情報なし）
+	// Both center (no extra information once kind matches)
 	return true;
 };
 
 /**
- * 2 つのエンドポイント参照が同値かどうかを判定する。
- * owner（接続先オブジェクト）とアンカー指定の両方が一致するときのみ true。
+ * Determines whether two endpoint references are equivalent.
+ * Returns true only when both the owner (connected object) and the anchor spec match.
  *
- * @param a 判定対象のエンドポイント参照
- * @param b 判定対象のエンドポイント参照
- * @returns 同値であれば true、それ以外は false
+ * @param a The first endpoint reference to compare
+ * @param b The second endpoint reference to compare
+ * @returns true if they are equivalent, false otherwise
  */
 export const isSameEndpoint = (a: EndpointRef, b: EndpointRef): boolean => {
 	if (a.owner?.id !== b.owner?.id || a.owner?.type !== b.owner?.type) {
@@ -116,10 +116,10 @@ export const isSameEndpoint = (a: EndpointRef, b: EndpointRef): boolean => {
 };
 
 /**
- * 指定された値が FreeEndpointRef 型かどうかを判定する。
+ * Determines whether the given value is a FreeEndpointRef.
  *
- * @param value 判定対象の値
- * @returns FreeEndpointRef 型であれば true、それ以外は false
+ * @param value The value to test
+ * @returns true if the value is a FreeEndpointRef, false otherwise
  */
 export const isFreeEndpointRef = (value: unknown): value is FreeEndpointRef => {
 	if (typeof value !== "object" || value === null) {

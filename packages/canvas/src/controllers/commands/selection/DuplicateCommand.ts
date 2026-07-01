@@ -27,7 +27,7 @@ export const DuplicateCommand: Command = {
 	execute: (state) => {
 		const { selectedIds } = state;
 
-		// ── 1. 複製対象オブジェクトの収集 ─────────────────────────────────────
+		// ── 1. Collect the objects to duplicate ─────────────────────────────────────
 		const selectedIdsWithDescendants = buildSelectedIdsWithDescendants(
 			selectedIds,
 			state.objects,
@@ -41,7 +41,7 @@ export const DuplicateCommand: Command = {
 			}
 		}
 
-		// 両端点が選択範囲内のコネクターのみ複製（CopyCommand と同じ判定）
+		// Only duplicate connectors whose both endpoints are within the selection (same check as CopyCommand)
 		const connectorIds = selectConnectorsInSelection(
 			getRootConnectorIds(state.objects, state.rootIds),
 			state.objects,
@@ -51,23 +51,23 @@ export const DuplicateCommand: Command = {
 			allObjects[connId] = state.objects[connId];
 		}
 
-		// ── 2. 配置先グループの判定 ───────────────────────────────────────────
-		// 全選択オブジェクトが同一の parentId を持つ場合はその親グループ内に複製する。
-		// parentId が undefined（ルートレベル）の場合は null として扱う。
+		// ── 2. Determine the destination group ───────────────────────────────────────────
+		// If all selected objects share the same parentId, duplicate inside that parent group.
+		// A parentId of undefined (root level) is treated as null.
 		const firstParentId = state.objects[selectedIds[0]]?.parentId;
 		const allSameParent = selectedIds.every(
 			(id) => state.objects[id]?.parentId === firstParentId,
 		);
-		// targetGroupId: string → グループ内複製, null → ルート複製
+		// targetGroupId: string → duplicate within group, null → duplicate at root
 		const targetGroupId: string | null =
 			allSameParent && firstParentId != null ? firstParentId : null;
 
-		// ── 3. オフセット計算（move-aware）────────────────────────────────────
+		// ── 3. Compute the offset (move-aware) ────────────────────────────────────
 		const offset = computeDuplicateOffset(state);
 
-		// ── 4. オブジェクトの複製 ─────────────────────────────────────────────
-		// コピー対象（オブジェクト + コネクター）を z-order に並べて複製する。
-		// cloneObjects は同じ順序で新 ID を返すので、ルート複製ではそのまま前面へ積める。
+		// ── 4. Duplicate the objects ─────────────────────────────────────────────
+		// Sort the copy targets (objects + connectors) by z-order and duplicate them.
+		// cloneObjects returns the new IDs in the same order, so for a root duplicate they can be stacked to the front as-is.
 		const topLevelIds = sortObjectIdsByZOrder(
 			[...selectedIds, ...connectorIds],
 			state.objects,
@@ -81,7 +81,7 @@ export const DuplicateCommand: Command = {
 
 		const mergedObjects = { ...state.objects, ...newObjects };
 
-		// 新 ID を型で図形／コネクターに振り分ける。
+		// Split the new IDs into shapes and connectors by type.
 		const newObjectIds = newTopLevelIds.filter(
 			(id) => mergedObjects[id]?.type !== "connector",
 		);
@@ -89,11 +89,11 @@ export const DuplicateCommand: Command = {
 			(id) => mergedObjects[id]?.type === "connector",
 		);
 
-		// ── 5. 配置先グループへの組み込み ────────────────────────────────────
+		// ── 5. Insert into the destination group ────────────────────────────────────
 		let updatedRootIds = state.rootIds;
 
 		if (targetGroupId !== null) {
-			// グループ内複製: parentId を共通親グループに設定
+			// In-group duplicate: set parentId to the common parent group
 			for (const newId of newObjectIds) {
 				mergedObjects[newId] = {
 					...mergedObjects[newId],
@@ -101,7 +101,7 @@ export const DuplicateCommand: Command = {
 				};
 			}
 
-			// 親グループの childIds に新オブジェクトを挿入（選択の最後の位置の直後）
+			// Insert the new objects into the parent group's childIds (right after the last selected position)
 			const parentGroup = mergedObjects[targetGroupId] as GroupState;
 			const childIds = [...parentGroup.childIds];
 			const selectedSet = new Set(selectedIds);
@@ -114,16 +114,16 @@ export const DuplicateCommand: Command = {
 				...parentGroup,
 				childIds,
 			} as GroupState;
-			// コネクターは group の子にならないため、複製分はトップレベル rootIds へ追加する
+			// Connectors are never children of a group, so add the duplicated ones to the top-level rootIds
 			if (newConnectorIds.length > 0) {
 				updatedRootIds = [...state.rootIds, ...newConnectorIds];
 			}
 		} else {
-			// ルート複製: z-order を保った newTopLevelIds をそのまま前面（末尾）へ追加する。
+			// Root duplicate: append newTopLevelIds (z-order preserved) to the front (end) as-is.
 			updatedRootIds = [...state.rootIds, ...newTopLevelIds];
 		}
 
-		// ── 6. 状態を組み立て ─────────────────────────────────────────────────
+		// ── 6. Assemble the state ─────────────────────────────────────────────────
 		let nextState: CanvasControllerState = {
 			...state,
 			objects: mergedObjects,
@@ -137,12 +137,12 @@ export const DuplicateCommand: Command = {
 			commitVersion: state.commitVersion + 1,
 		};
 
-		// グループ内複製の場合は親グループのバウンドを再計算
+		// For an in-group duplicate, recompute the parent group's bounds
 		if (targetGroupId !== null) {
 			nextState = updateGroupBoundsFromRoot(nextState, targetGroupId);
 		}
 
-		// ── 7. lastDuplicate を更新（次回の move-aware オフセット計算用）──────
+		// ── 7. Update lastDuplicate (for the next move-aware offset calculation) ──────
 		const newCenter = getSelectionCenter(nextState, newObjectIds);
 
 		return {

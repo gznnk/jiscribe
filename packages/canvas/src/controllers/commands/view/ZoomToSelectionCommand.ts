@@ -73,15 +73,16 @@ export const ZoomToSelectionCommand: Command = {
 		const availableW = viewport.width - 2 * PADDING_PX;
 		const availableH = viewport.height - 2 * PADDING_PX;
 
-		// 幅・高さを個別に候補化し、有効な軸（サイズ > 0）だけでフィット倍率を取る。
-		// こうすることで水平/垂直な直線（片軸サイズが 0）でも軸方向にフィットできる
-		// （ZoomToFit と同じ算出ロジック）。
+		// Treat width and height as separate candidates and derive the fit ratio from only
+		// the valid axes (size > 0). This lets horizontal/vertical lines (with one axis of
+		// size 0) still fit along their axis (same calculation logic as ZoomToFit).
 		const zoomCandidates = [
 			contentWidth > 0 ? availableW / contentWidth : null,
 			contentHeight > 0 ? availableH / contentHeight : null,
 		].filter((v): v is number => v !== null);
-		// 両軸ともサイズ 0（単一点 Poly や退化 Frame など）でフィットできる広がりが
-		// 無い退化対象は、現在のビューポートを維持する（「対象なし」の no-op ガードと整合）。
+		// For degenerate targets with no extent to fit (both axes size 0, e.g. a single-point
+		// Poly or a degenerate Frame), keep the current viewport (consistent with the
+		// "no target" no-op guard).
 		if (zoomCandidates.length === 0) {
 			return state;
 		}

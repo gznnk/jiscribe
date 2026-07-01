@@ -5,7 +5,7 @@ type PolygonIconProps = {
 	height?: number;
 };
 
-// 正五角形の頂点座標（viewBox 0 0 24 24、中心 12,13、半径 9）
+// Vertex coordinates of a regular pentagon (viewBox 0 0 24 24, center 12,13, radius 9)
 const POINTS = Array.from({ length: 5 }, (_, i) => {
 	const angle = (2 * Math.PI * i) / 5 - Math.PI / 2;
 	const x = 12 + 9 * Math.cos(angle);

@@ -49,11 +49,11 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 }) => {
 	const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
-	// auto（テーマ追従）をテーマ前景（ink）へ解決する。描画側 TextOverlay と同じ resolver
-	// を使い、同じ色になるようにする（issue #38）。
+	// Resolve auto (theme-following) to the theme foreground (ink). Use the same
+	// resolver as the rendering-side TextOverlay so the color matches (issue #38).
 	const resolvedColor = resolveAutoColor(fontColor, "ink");
 
-	// 初回フォーカス
+	// Initial focus
 	useEffect(() => {
 		const el = textAreaRef.current;
 		if (!el) {
@@ -63,7 +63,7 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		el.setSelectionRange(el.value.length, el.value.length);
 	}, []);
 
-	// テキスト量に合わせて高さを更新（縦方向アライメントはラッパーの flex で適用）
+	// Update the height to match the text amount (vertical alignment is applied via the wrapper's flex)
 	useLayoutEffect(() => {
 		const el = textAreaRef.current;
 		if (!el) {
@@ -77,8 +77,8 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		onChange(e.target.value);
 	};
 
-	// テキスト外の余白クリックでフォーカスが外れないようにする。
-	// ジェスチャーシステムからの除外は data-gesture="none" が担う。
+	// Prevent losing focus when clicking the margin outside the text.
+	// Exclusion from the gesture system is handled by data-gesture="none".
 	const handleWrapperPointerDown = useCallback(
 		(e: React.PointerEvent<HTMLDivElement>) => {
 			if (e.target === e.currentTarget) {
@@ -133,4 +133,5 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 	);
 };
 
+/** In-place textarea overlay for editing an object's text, positioned and transformed to match the object. */
 export const TextEditor = memo(TextEditorComponent);

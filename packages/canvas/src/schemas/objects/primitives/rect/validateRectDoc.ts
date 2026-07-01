@@ -2,6 +2,6 @@ import { RectFeatures } from "./RectDoc";
 import type { ObjectDocValidateFn } from "../../../registry/ObjectDocValidatorRegistry";
 import { createFrameDocValidator } from "../../utils/createFrameDocValidator";
 
-/** RectDoc を検証する（Frame 系共通ロジックを features から生成）。 */
+/** Validates a RectDoc (Frame-family shared logic generated from features). */
 export const validateRectDoc: ObjectDocValidateFn =
 	createFrameDocValidator(RectFeatures);

@@ -118,8 +118,8 @@ const buildSystemGroups = (
 ): MenuSection[] => {
 	const systemGroups: MenuSection[] = [];
 
-	// コネクター選択（selectedConnectorId）も含めて StackOrder を出すため、
-	// selectedIds だけでなく実効選択ベースで判定する isArrangeableSelection を使う。
+	// To show StackOrder including connector selection (selectedConnectorId), use
+	// isArrangeableSelection, which judges by the effective selection rather than selectedIds alone.
 	if (isArrangeableSelection(canvasState)) {
 		systemGroups.push({
 			id: "system-stack-order",
@@ -131,8 +131,8 @@ const buildSystemGroups = (
 	const singleSelected =
 		selectedIds.length === 1 ? objects[selectedIds[0]] : undefined;
 
-	// グループは multiSelectGroup と同様に自身が lockAspectRatio を保持するため、
-	// 子孫の型構成に依らずアスペクト比メニューを表示する
+	// Like multiSelectGroup, a group holds its own lockAspectRatio, so show the
+	// aspect-ratio menu regardless of the type composition of its descendants
 	if (canvasState.multiSelectGroup || singleSelected?.type === "group") {
 		systemGroups.push({
 			id: "system-aspect-ratio",
@@ -153,8 +153,8 @@ const buildSystemGroups = (
 };
 
 /**
- * 選択中オブジェクトの下に表示されるフローティングメニュー。
- * ScrollSyncedOverlay 内に配置され、キャンバススクロールに追従する。
+ * Floating menu displayed below the selected object.
+ * Placed inside ScrollSyncedOverlay and follows canvas scrolling.
  */
 const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 	canvasState,
@@ -172,13 +172,13 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 
 	const itemProps: MenuItemProps = { canvasState, onPropertyUpdate };
 
-	// objectGroups と systemGroups の両方に同じアイテムタイプが含まれる場合があるため、
-	// 先に出現したものを優先し、重複レンダリングを防ぐ
+	// Since both objectGroups and systemGroups may contain the same item type,
+	// prefer the first occurrence and prevent duplicate rendering
 	const renderedItemKeys = new Set<string>();
 
-	// 各グループを ObjectMenuSection で包む。区切り線は CSS（::before）で描き、
-	// 中身が空のセクション（custom が null を返す / 全アイテムが重複スキップ）は
-	// `:empty` で区切り線ごと自動的に畳まれる。
+	// Wrap each group in an ObjectMenuSection. Dividers are drawn in CSS (::before), and
+	// empty sections (custom returns null / all items skipped as duplicates) are
+	// automatically collapsed along with their divider via `:empty`.
 	const sections = allGroups.map((group) => {
 		const groupItems: React.ReactNode[] = [];
 		group.items.forEach((item) => {

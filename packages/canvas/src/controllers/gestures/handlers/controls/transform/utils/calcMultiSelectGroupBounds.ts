@@ -13,8 +13,8 @@ import type { ObjectState } from "../../../../../../states/objects/base/ObjectSt
 import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
 
 /**
- * multiSelectGroup のバウンディングボックスを計算する（回転を考慮）
- * existingGroup が指定されている場合は、その rotation/scale を考慮した Oriented Bounding Box を計算する
+ * Computes the bounding box of the multiSelectGroup (accounting for rotation).
+ * When existingGroup is given, computes an Oriented Bounding Box that accounts for its rotation/scale.
  */
 export function calcMultiSelectGroupBounds(
 	selectedIds: string[],
@@ -25,20 +25,20 @@ export function calcMultiSelectGroupBounds(
 		return null;
 	}
 
-	// existingGroup が指定されている場合は、rotation/scale を考慮した OBB を計算
+	// When existingGroup is given, compute an OBB that accounts for its rotation/scale
 	if (existingGroup) {
-		// 子要素のすべての点を収集
+		// Collect all points of the children
 		const allPoints = collectChildPoints(allObjects, selectedIds);
 		if (allPoints.length === 0) {
 			return null;
 		}
 
-		// グループのtransformを取得
+		// Get the group's transform
 		const groupRotation = existingGroup.rotation ?? 0;
 		const groupScaleX = existingGroup.scaleX ?? 1;
 		const groupScaleY = existingGroup.scaleY ?? 1;
 
-		// 点群からグループのtransformを持つOriented Bounding Boxを計算
+		// Compute an Oriented Bounding Box with the group's transform from the point set
 		const obb = calcOrientedFrameFromPoints(
 			allPoints,
 			groupScaleX,
@@ -58,7 +58,7 @@ export function calcMultiSelectGroupBounds(
 		};
 	}
 
-	// existingGroup がない場合は、軸平行バウンディングボックスを計算
+	// When there is no existingGroup, compute an axis-aligned bounding box
 	const bounds = {
 		minX: Infinity,
 		maxX: -Infinity,
@@ -80,7 +80,7 @@ export function calcMultiSelectGroupBounds(
 }
 
 /**
- * 再帰的に子要素を辿ってBoundingBoxを更新
+ * Recursively traverses the children to update the bounding box.
  */
 function collectBounds(
 	objects: Record<string, ObjectState>,
@@ -103,7 +103,7 @@ function collectBounds(
 			bounds.minY = Math.min(bounds.minY, box.top);
 			bounds.maxY = Math.max(bounds.maxY, box.bottom);
 		} else if (isPoly(child)) {
-			// Poly系（Polyline, Polygon）の場合、points配列から直接バウンディングボックスを計算
+			// For Poly-based shapes (Polyline, Polygon), compute the bounding box directly from the points array
 			const bbox = calcPolyBoundingBox(child.points);
 			if (bbox) {
 				bounds.minX = Math.min(bounds.minX, bbox.left);
@@ -116,8 +116,8 @@ function collectBounds(
 }
 
 /**
- * 子要素のすべての点を再帰的に収集
- * Frame系はコーナー点、Poly系は頂点を収集
+ * Recursively collects all points of the children.
+ * Frame-based shapes contribute corner points; Poly-based shapes contribute vertices.
  */
 function collectChildPoints(
 	objects: Record<string, ObjectState>,
@@ -135,10 +135,10 @@ function collectChildPoints(
 			const nestedGroup = child as GroupState;
 			points.push(...collectChildPoints(objects, nestedGroup.childIds));
 		} else if (isTransformedFrame(child)) {
-			// TransformedFrameを持つオブジェクトの場合はコーナー点を追加
+			// For objects with a TransformedFrame, add their corner points
 			points.push(...getFrameCornerPoints(child));
 		} else if (isPoly(child)) {
-			// Poly系の場合はpoints配列を直接追加
+			// For Poly-based shapes, add the points array directly
 			points.push(...child.points);
 		}
 	}
@@ -147,7 +147,7 @@ function collectChildPoints(
 }
 
 /**
- * TransformedFrame の4つのコーナー点を取得
+ * Gets the four corner points of a TransformedFrame.
  */
 function getFrameCornerPoints(frame: TransformedFrame): Point[] {
 	const { cx, cy, width, height, rotation = 0, scaleX = 1, scaleY = 1 } = frame;
@@ -155,15 +155,15 @@ function getFrameCornerPoints(frame: TransformedFrame): Point[] {
 	const halfWidth = width / 2;
 	const halfHeight = height / 2;
 
-	// ローカル座標系での4つのコーナー
+	// The four corners in the local coordinate system
 	const localCorners: Point[] = [
-		{ x: -halfWidth, y: -halfHeight }, // 左上
-		{ x: halfWidth, y: -halfHeight }, // 右上
-		{ x: halfWidth, y: halfHeight }, // 右下
-		{ x: -halfWidth, y: halfHeight }, // 左下
+		{ x: -halfWidth, y: -halfHeight }, // top-left
+		{ x: halfWidth, y: -halfHeight }, // top-right
+		{ x: halfWidth, y: halfHeight }, // bottom-right
+		{ x: -halfWidth, y: halfHeight }, // bottom-left
 	];
 
-	// アフィン変換を適用してグローバル座標系に変換
+	// Apply the affine transform to convert to the global coordinate system
 	const radians = degreesToRadians(rotation);
 	return localCorners.map((corner) =>
 		calcAffineTransformedPoint(

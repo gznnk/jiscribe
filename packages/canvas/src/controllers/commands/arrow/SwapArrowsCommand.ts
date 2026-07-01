@@ -17,7 +17,7 @@ export const SwapArrowsCommand: Command = {
 	},
 
 	execute: (state) => {
-		// Connector 選択時（selectedIds より優先 — getEffectiveSelectedIds と同じ優先順位）
+		// When a connector is selected (takes priority over selectedIds — same precedence as getEffectiveSelectedIds)
 		if (state.selectedConnectorId !== null) {
 			const connector = state.objects[state.selectedConnectorId] as
 				| ConnectorState
@@ -41,7 +41,7 @@ export const SwapArrowsCommand: Command = {
 			};
 		}
 
-		// Polyline 選択時
+		// When polylines are selected
 		const updatedObjects = { ...state.objects };
 		let changed = false;
 

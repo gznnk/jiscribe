@@ -15,38 +15,38 @@ import { isTextStyleState } from "../base/TextStyleState";
 import { isTransformState } from "../base/TransformState";
 
 /**
- * クリップボード由来の `ObjectState`（= 任意の untrusted オブジェクト）を型別に検証する
- * ための共通ヘルパー群。boolean を返す型ガード方式で、state 層の既存ガード
- * （`isTransformState` / `isTextStyleState` / `isGroupState` 等）と整合させている。
+ * Shared helpers for validating clipboard-derived `ObjectState` (= arbitrary untrusted objects)
+ * by type. They use the type-guard style returning boolean, consistent with the state layer's
+ * existing guards (`isTransformState` / `isTextStyleState` / `isGroupState`, etc.).
  *
- * style 文字列（stroke / fill / fontFamily / fontWeight）には Step 1 の `isCssSafeValue`
- * を適用し、CSS インジェクションを境界で弾く。色の厳密な妥当性（`isCssColor` =
- * `CSS.supports`）はブラウザ専用のため `isTextStyleState` 側に委ねる。
+ * Step 1's `isCssSafeValue` is applied to style strings (stroke / fill / fontFamily / fontWeight)
+ * to reject CSS injection at the boundary. Strict color validity (`isCssColor` = `CSS.supports`)
+ * is browser-only and is left to `isTextStyleState`.
  */
 export type StateRecord = Record<string, unknown>;
 
 /**
- * 必須の数値フィールドを検証する。number であること、`min` 指定時は下限も満たすこと。
- * 下限はスキーマの `minimum` 制約（width/height/半径 ≥ 0 など）に対応する。
- * Doc 側 `validateRequiredNumber`（validateDocUtils）の boolean 版。
+ * Validates a required numeric field: it must be a number and, when `min` is given, meet the lower bound.
+ * The lower bound corresponds to the schema's `minimum` constraint (width/height/radius ≥ 0, etc.).
+ * The boolean version of the Doc-side `validateRequiredNumber` (validateDocUtils).
  */
 const isValidRequiredNumber = (value: unknown, min?: number): boolean =>
 	isNumber(value) && (min === undefined || value >= min);
 
 /**
- * 任意の数値フィールドを検証する。未指定（undefined）はエラーにせず、
- * 存在する場合のみ number / 下限を検証する。Doc 側 `validateOptionalNumber` の boolean 版。
+ * Validates an optional numeric field. Absence (undefined) is not an error;
+ * number / lower bound is validated only when present. The boolean version of the Doc-side `validateOptionalNumber`.
  */
 const isValidOptionalNumber = (value: unknown, min?: number): boolean =>
 	value === undefined || isValidRequiredNumber(value, min);
 
-/** id が非空文字列で、type が期待値に一致するかを検証する。 */
+/** Validates that id is a non-empty string and type matches the expected value. */
 export const hasValidIdAndType = (o: StateRecord, type: ObjectType): boolean =>
 	isString(o.id) && o.id.length > 0 && o.type === type;
 
 /**
- * Frame ジオメトリ（cx / cy / width / height が数値）を検証する。
- * width / height はスキーマ上 minimum: 0（位置 cx / cy は下限なし）。
+ * Validates Frame geometry (cx / cy / width / height are numbers).
+ * width / height have minimum: 0 in the schema (positions cx / cy have no lower bound).
  */
 export const isValidFrameState = (o: StateRecord): boolean =>
 	isNumber(o.cx) &&
@@ -55,36 +55,36 @@ export const isValidFrameState = (o: StateRecord): boolean =>
 	isValidRequiredNumber(o.height, 0);
 
 /**
- * Poly ジオメトリ（points 配列）を検証する。`minPoints` は最小点数で、
- * Doc 側 `validatePolyFields` の minPoints に対応する（polyline: 2 / polygon: 3）。
+ * Validates Poly geometry (the points array). `minPoints` is the minimum point count,
+ * corresponding to minPoints of the Doc-side `validatePolyFields` (polyline: 2 / polygon: 3).
  */
 export const isValidPolyState = (o: StateRecord, minPoints: number): boolean =>
 	isPoly(o) && o.points.length >= minPoints;
 
 /**
- * connector の中間経由点（waypoint）を検証する。端点は source / target が持つため
- * points は経由点のみで、空配列も許容する（Doc 側 `validateWaypointFields` に対応）。
+ * Validates a connector's intermediate waypoints. Since the endpoints are held by source / target,
+ * points holds only waypoints, and an empty array is allowed too (corresponds to the Doc-side `validateWaypointFields`).
  */
 export const isValidWaypointState = (o: StateRecord): boolean => isPoly(o);
 
 /**
- * connector の不変条件: 少なくとも一方の端点が owned であること。
- * 両端 free（owner なし）は ink(polyline) 相当で connector としては不正。
- * Doc 側 `validateConnectorDoc` の同名ルールに対応する。
+ * Connector invariant: at least one endpoint must be owned.
+ * Both ends free (no owner) is equivalent to ink(polyline) and invalid as a connector.
+ * Corresponds to the same-named rule in the Doc-side `validateConnectorDoc`.
  */
 export const hasOwnedEndpoint = (source: unknown, target: unknown): boolean =>
 	isOwnedEndpointRef(source) || isOwnedEndpointRef(target);
 
-/** TransformState（rotation / scaleX / scaleY が数値）を検証する。 */
+/** Validates TransformState (rotation / scaleX / scaleY are numbers). */
 export const isValidTransformState = (o: StateRecord): boolean =>
 	isTransformState(o);
 
-/** StrokeStyleState の任意フィールドを、存在すれば型・安全性で検証する。 */
+/** Validates StrokeStyleState's optional fields for type/safety when present. */
 export const isValidStrokeStyleState = (o: StateRecord): boolean => {
 	if ("stroke" in o && o.stroke !== undefined && !isCssSafeValue(o.stroke)) {
 		return false;
 	}
-	// strokeWidth はスキーマ上 minimum: 0
+	// strokeWidth has minimum: 0 in the schema
 	if (!isValidOptionalNumber(o.strokeWidth, 0)) {
 		return false;
 	}
@@ -98,13 +98,13 @@ export const isValidStrokeStyleState = (o: StateRecord): boolean => {
 	return true;
 };
 
-/** FillStyleState の fill を、存在すれば CSS 安全性で検証する。 */
+/** Validates FillStyleState's fill for CSS safety when present. */
 export const isValidFillStyleState = (o: StateRecord): boolean =>
 	!("fill" in o) || o.fill === undefined || isCssSafeValue(o.fill);
 
 /**
- * TextStyleState の妥当性に加え、fontFamily / fontWeight の CSS インジェクション
- * 安全性を検証する（`isTextStyleState` は両者を `isString` でしか見ないため補う）。
+ * In addition to TextStyleState validity, validates the CSS-injection safety of
+ * fontFamily / fontWeight (supplementing `isTextStyleState`, which only checks both via `isString`).
  */
 export const isValidTextStyleState = (o: StateRecord): boolean => {
 	if (!isTextStyleState(o)) {
@@ -124,18 +124,18 @@ export const isValidTextStyleState = (o: StateRecord): boolean => {
 	) {
 		return false;
 	}
-	// fontSize はスキーマ上 minimum: 1（isTextStyleState は number までしか見ない）
+	// fontSize has minimum: 1 in the schema (isTextStyleState only checks up to number)
 	if (!isValidOptionalNumber(o.fontSize, 1)) {
 		return false;
 	}
 	return true;
 };
 
-/** RadiusStyleState の rx を、存在すれば数値（スキーマ上 minimum: 0）で検証する。 */
+/** Validates RadiusStyleState's rx as a number (minimum: 0 in the schema) when present. */
 export const isValidRadiusStyleState = (o: StateRecord): boolean =>
 	isValidOptionalNumber(o.rx, 0);
 
-/** 矢印端（startArrow / endArrow）を、存在すれば ArrowType で検証する。 */
+/** Validates arrow ends (startArrow / endArrow) as ArrowType when present. */
 export const isValidArrowFields = (o: StateRecord): boolean => {
 	if (
 		"startArrow" in o &&
@@ -151,14 +151,15 @@ export const isValidArrowFields = (o: StateRecord): boolean => {
 };
 
 /**
- * childIds が非空の文字列配列かを検証する。
- * 空 group は bounds が定まらない退化状態で、生成経路では必ず子を持つため、
- * 空配列は破損由来とみなして弾く（Doc 側 validateStructure の空 children 拒否に対応）。
- * 子 ID が `objects` に実在するか（自己完結性）は isClipboardData が横断検証する。
+ * Validates that childIds is a non-empty array of strings.
+ * An empty group is a degenerate state where bounds are undefined, and creation paths always
+ * produce children, so an empty array is treated as corruption and rejected (corresponds to the
+ * empty-children rejection in the Doc-side validateStructure).
+ * Whether the child IDs actually exist in `objects` (self-containedness) is cross-validated by isClipboardData.
  */
 export const isValidChildIds = (o: StateRecord): boolean =>
 	isArray(o.childIds) && o.childIds.length > 0 && o.childIds.every(isString);
 
-/** connector の端点参照（EndpointRef）が妥当かを検証する。 */
+/** Validates that a connector's endpoint reference (EndpointRef) is valid. */
 export const isValidEndpointRefState = (ref: unknown): boolean =>
 	validateEndpointRef(ref, "").length === 0;

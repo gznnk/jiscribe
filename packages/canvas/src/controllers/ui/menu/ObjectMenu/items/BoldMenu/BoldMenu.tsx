@@ -11,8 +11,8 @@ type BoldMenuProps = {
 };
 
 /**
- * 太字メニュー。
- * 選択中のテキストオブジェクトの fontWeight をトグルする。
+ * Bold menu.
+ * Toggles the fontWeight of the selected text object.
  */
 const BoldMenuComponent: React.FC<BoldMenuProps> = ({ canvasState }) => {
 	const { selectedIds, objects } = canvasState;

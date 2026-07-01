@@ -8,26 +8,26 @@ import { objectDocValidatorRegistry } from "../../registry/ObjectDocValidatorReg
 import type { CanvasDoc } from "../CanvasDoc";
 
 /**
- * 文書全体を横断しないと判断できない整合性をチェックする。
- * （単体ノードの型・必須フィールドは validateStructure / 各 validateXxxDoc が担当）
+ * Checks consistency that can only be determined by traversing the whole document.
+ * (Per-node types and required fields are handled by validateStructure / each validateXxxDoc.)
  *
- * - A. ID の一意性: root ツリー（connector 含む）を通じて ID が重複しないこと。
- *   CanvasDoc はネストしたツリーなので「親子の循環」は構造的に発生せず、
- *   循環に見えるケースは実質「同一 ID の別オブジェクト」= ID 重複でしかない。
- * - B. connector の参照整合性:
- *   - owned 端点の owner.id が実在すること
- *   - 参照先が connectable な型であること（group/polyline/polygon/connector は不可）
+ * - A. ID uniqueness: IDs must not be duplicated across the root tree (including connectors).
+ *   Because CanvasDoc is a nested tree, a parent/child cycle cannot occur structurally;
+ *   any case that looks like a cycle is really "a different object with the same ID" = an ID duplicate.
+ * - B. Connector referential integrity:
+ *   - The owner.id of an owned endpoint must exist
+ *   - The referenced object must be a connectable type (group/polyline/polygon/connector are not allowed)
  *
- * 自己ループ（source と target が同一オブジェクト）は許可する。専用の直交ルートで
- * 矩形ループとして描画される（resolveConnectorPoints / routeSelfLoop を参照）。
+ * Self-loops (source and target are the same object) are allowed. They are drawn as a
+ * rectangular loop using a dedicated orthogonal route (see resolveConnectorPoints / routeSelfLoop).
  */
 export function validateSemantics(doc: CanvasDoc): SemanticDiagnostic[] {
 	const errors: SemanticDiagnostic[] = [];
 	const seenIds = new Set<string>();
-	// 参照整合性で参照先の実型を引くための id → type マップ。
+	// id → type map, used to look up the actual type of a reference target during referential-integrity checks.
 	const idToType = new Map<string, ObjectType>();
 
-	// --- A. root ツリーの ID 一意性 + id→type マップ構築 ---
+	// --- A. ID uniqueness across the root tree + build the id→type map ---
 	const traverse = (objects: ObjectDoc[], currentPath: string) => {
 		objects.forEach((obj, index) => {
 			const objPath = `${currentPath}[${index}]`;
@@ -55,9 +55,9 @@ export function validateSemantics(doc: CanvasDoc): SemanticDiagnostic[] {
 		traverse(doc.root, "root");
 	}
 
-	// --- B. connector の参照整合性 ---
-	// connector は root 直下のみに存在する（group の子にはならない）。
-	// ID 一意性・id→type マップ構築は上の traverse(root) が connector も含めて済ませている。
+	// --- B. Connector referential integrity ---
+	// Connectors exist only directly under root (never as children of a group).
+	// ID uniqueness and the id→type map are already handled by traverse(root) above, connectors included.
 	if (doc.root) {
 		doc.root.forEach((obj, index) => {
 			if (obj.type !== "connector") {
@@ -84,8 +84,8 @@ export function validateSemantics(doc: CanvasDoc): SemanticDiagnostic[] {
 }
 
 /**
- * owned 端点（owner あり）について、参照先の存在と接続可能性を検証する。
- * free 端点（owner なし）は横断的に検証する対象がないため何も返さない。
+ * For an owned endpoint (has an owner), validates that the reference target exists and is connectable.
+ * A free endpoint (no owner) has nothing to validate across the document, so it returns nothing.
  */
 function validateEndpoint(
 	endpoint: EndpointRef | undefined,

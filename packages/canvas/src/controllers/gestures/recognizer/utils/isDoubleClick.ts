@@ -5,21 +5,22 @@ import {
 import type { ClickSnapshot } from "../GestureRecognizerTypes";
 
 /**
- * 今回のクリックが doubleClick の成立条件をすべて満たすか判定する。
+ * Determine whether the current click satisfies all conditions to count as a doubleClick.
  *
- * 条件:
- *   1. 直前の単一クリックが記録済み（previous !== null）
- *   2. 同一ターゲット（targetId 一致。背景はどちらも undefined で一致する）
- *   3. 時間しきい値内（DOUBLE_CLICK_THRESHOLD）
- *   4. 画面距離しきい値内（DOUBLE_CLICK_DISTANCE_THRESHOLD）
+ * Conditions:
+ *   1. A prior single click is recorded (previous !== null)
+ *   2. Same target (matching targetId; the background matches as both are undefined)
+ *   3. Within the time threshold (DOUBLE_CLICK_THRESHOLD)
+ *   4. Within the screen distance threshold (DOUBLE_CLICK_DISTANCE_THRESHOLD)
  *
- * previous が null（基準未記録）の間は決して doubleClick にしない。背景は targetId が
- * 常に undefined で一致してしまうため、位置で別クリックを切り分けるのは距離判定が担う。
- * 距離は DRAG_THRESHOLD 判定と同じく平方のまま比較する（sqrt を避ける）。
+ * Never treat it as a doubleClick while previous is null (no baseline recorded). Because the
+ * background always has an undefined targetId that matches, distinguishing separate clicks
+ * by position is handled by the distance check. Distance is compared squared, as in the
+ * DRAG_THRESHOLD check, to avoid sqrt.
  *
- * @param previous - 直前の単一クリック。未記録なら null
- * @param current - 今回のクリック
- * @returns doubleClick として扱うべきなら true
+ * @param previous - The prior single click, or null if none recorded
+ * @param current - The current click
+ * @returns true if it should be treated as a doubleClick
  */
 export const isDoubleClick = (
 	previous: ClickSnapshot | null,

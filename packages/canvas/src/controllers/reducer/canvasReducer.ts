@@ -7,6 +7,10 @@ import { handleGesture } from "../gestures/handlers/handleGesture";
 import { commitTextEditIfNeeded } from "../utils/commitTextEditIfNeeded";
 import { handlePropertyUpdate } from "../utils/handlePropertyUpdate";
 
+/**
+ * Root reducer for the canvas controller. Dispatches each CanvasAction to the appropriate
+ * handler and, for mutating actions, records history when the commit version changes.
+ */
 export const canvasReducer = (
 	state: CanvasControllerState,
 	action: CanvasAction,
@@ -34,15 +38,15 @@ export const canvasReducer = (
 		}
 
 		case "MENU_PROPERTY_UPDATE": {
-			// ObjectMenu からのプロパティ更新には2経路ある。
-			// (1) このケース: number-input など React の onChange イベント経由で Canvas.tsx の onPropertyUpdate コールバックから dispatch される
-			// (2) ObjectMenuHandler: gesture システム経由（set: / slider:）。こちらはここを通らない
+			// Property updates from the ObjectMenu take two paths.
+			// (1) This case: dispatched from Canvas.tsx's onPropertyUpdate callback via React onChange events (e.g. number-input).
+			// (2) ObjectMenuHandler: via the gesture system (set: / slider:). That path does not go through here.
 			const updated = handlePropertyUpdate(
 				state,
 				action.property,
 				action.value,
 			);
-			// プロパティ変更後は頂点選択を解除する（Delete キーがオブジェクト削除として機能するように）
+			// Clear the vertex selection after a property change (so the Delete key acts as object deletion)
 			const updatedWithVertexCleared = { ...updated, selectedVertex: null };
 			if (!action.commit) {
 				return updatedWithVertexCleared;
@@ -60,9 +64,9 @@ export const canvasReducer = (
 				rootIds: action.payload.rootIds,
 			});
 
-			// 自己保存の折り返し: action.saveNonce が state.saveNonce と一致する場合、
-			// この SYNC_EXTERNAL は自分が送ったデータがエコーバックされたものなので
-			// オブジェクト参照だけ更新し、past/future（history）は変更しない。
+			// Self-save round-trip: if action.saveNonce matches state.saveNonce, this SYNC_EXTERNAL
+			// is our own data being echoed back, so only update the object references and leave
+			// past/future (history) unchanged.
 			if (
 				action.saveNonce !== undefined &&
 				action.saveNonce === state.saveNonce
@@ -74,10 +78,10 @@ export const canvasReducer = (
 				};
 			}
 
-			// 外部からの本物の変更: 現在の present を past に記録してから present を更新する。
-			// future はクリア（外部変更後に古い状態へ redo されるのを防ぐ）。
-			// オブジェクトが差し替わるため、選択状態・進行中の操作など全ての UI state もクリアする。
-			// viewport のみ維持（ユーザーの現在の視点を保持するため）。
+			// A genuine external change: record the current present into past, then update present.
+			// Clear future (to prevent redoing to an old state after the external change).
+			// Since the objects are swapped out, clear all UI state as well (selection, in-progress operations, etc.).
+			// Only viewport is kept (to preserve the user's current view).
 			return {
 				...state,
 				objects: action.payload.objects,
@@ -101,8 +105,9 @@ export const canvasReducer = (
 				snapFeedback: null,
 				axisLockFeedback: null,
 				objectMenuOpenId: null,
-				// 外部変更は履歴境界。recordHistoryIfNeeded を通さず past を直接積むため、
-				// 集約状態をここで明示的にリセットする（直前ナッジの recorded を残さない）。
+				// An external change is a history boundary. Since past is pushed directly without going
+				// through recordHistoryIfNeeded, explicitly reset the coalesce state here (do not carry
+				// over the recorded value from a preceding nudge).
 				historyCoalesce: { recorded: null, pending: null },
 				history: {
 					past: [...state.history.past, state.history.present].slice(-50),
@@ -135,7 +140,7 @@ export const canvasReducer = (
 				return recordHistoryIfNeeded(commitResult, state);
 			}
 
-			// キャンセルの場合は textEditState のみクリア
+			// On cancel, clear only textEditState
 			return {
 				...state,
 				textEditState: null,
@@ -160,19 +165,20 @@ export const canvasReducer = (
 };
 
 /**
- * 連続操作を 1 つの undo エントリにまとめる時間ウィンドウ（ミリ秒）。
- * 同一 coalesceKey の操作がこの間隔以内に続く限り、past を増やさず present のみ更新する。
+ * Time window (milliseconds) for coalescing consecutive operations into a single undo entry.
+ * As long as operations with the same coalesceKey continue within this interval, only present is
+ * updated without growing past.
  */
 const HISTORY_COALESCE_WINDOW_MS = 1000;
 
 /**
- * commitVersion が変化していれば履歴を記録し、saveVersion もインクリメントする。
- * canvasReducer のみが呼び出してよい。
+ * Records history if commitVersion has changed, and also increments saveVersion.
+ * Only canvasReducer may call this.
  *
- * コミット時、各イベントハンドラが state.historyCoalesce.pending に集約キーを立てていれば、
- * 直前コミット（recorded）が同一キー・一定時間内である限り past を増やさず present だけ
- * 差し替えて連続操作を 1 エントリに集約する（例: 矢印キーによる連続ナッジ）。
- * pending は履歴層がここで消費し、必ず null に戻す。
+ * On commit, if an event handler has set a coalesce key in state.historyCoalesce.pending, then as
+ * long as the previous commit (recorded) has the same key and is within the time window, present is
+ * swapped without growing past, coalescing consecutive operations into a single entry (e.g. repeated
+ * arrow-key nudges). pending is consumed by the history layer here and always reset to null.
  */
 const recordHistoryIfNeeded = (
 	state: CanvasControllerState,
@@ -190,7 +196,7 @@ const recordHistoryIfNeeded = (
 	const doc = canvasToDoc(state);
 	const now = Date.now();
 
-	// ハンドラが立てた集約キー（intent）と、直前コミットの集約識別子（recorded）を突き合わせる
+	// Match the coalesce key set by the handler (intent) against the previous commit's coalesce id (recorded)
 	const pending = state.historyCoalesce.pending;
 	const previousRecorded = previousState.historyCoalesce.recorded;
 	const canMerge =
@@ -207,7 +213,7 @@ const recordHistoryIfNeeded = (
 		...state,
 		saveVersion: state.saveVersion + 1,
 		saveNonce: crypto.randomUUID(),
-		// pending を消費して recorded を更新（集約しないコミットは null = 集約境界）。pending は必ず null に戻す。
+		// Consume pending and update recorded (a non-coalescing commit becomes null = coalesce boundary). pending is always reset to null.
 		historyCoalesce: {
 			recorded: pending === null ? null : { key: pending, time: now },
 			pending: null,

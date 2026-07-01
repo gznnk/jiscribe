@@ -8,13 +8,14 @@ import {
 import type { CanvasAction } from "../reducer/CanvasActions";
 
 /**
- * ペースト処理を組み立て、キーボードショートカット（Ctrl+V / Cmd+V）に登録するカスタムフック
+ * Custom hook that builds the paste handler and registers it to the keyboard
+ * shortcut (Ctrl+V / Cmd+V).
  *
- * OS クリップボードの読み取りを試み、失敗時は internalClipboard にフォールバックする。
+ * It tries to read the OS clipboard and falls back to internalClipboard on failure.
  *
- * @param internalClipboard - OS クリップボードが読めない場合のフォールバック
- * @param dispatch - Canvas reducer の dispatch
- * @returns ペースト処理コールバック（コンテキストメニューなどから再利用できる）
+ * @param internalClipboard - Fallback used when the OS clipboard cannot be read
+ * @param dispatch - Canvas reducer dispatch
+ * @returns The paste handler callback (reusable from the context menu and elsewhere)
  */
 export const useClipboardPaste = (
 	internalClipboard: ClipboardData | null,
@@ -33,15 +34,16 @@ export const useClipboardPaste = (
 		}
 		data ??= internalClipboard;
 		if (!data) {
-			// ペースト対象が無くても、メニュー経由のクリックならメニューは閉じる。
-			// PASTE は dispatch されないため、ここで明示的に閉じないと開いたままになる。
+			// Even when there is nothing to paste, close the menu if this came from a
+			// menu click. PASTE is not dispatched, so without explicitly closing here
+			// the menu would stay open.
 			dispatch({ type: "CLOSE_CONTEXT_MENU" });
 			return;
 		}
 		dispatch({ type: "PASTE", data });
 	}, [dispatch, internalClipboard]);
 
-	// Ctrl+V / Cmd+V でペースト
+	// Paste with Ctrl+V / Cmd+V
 	useEffect(() => {
 		const handler = (e: KeyboardEvent) => {
 			if (

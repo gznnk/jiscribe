@@ -5,12 +5,16 @@ import { createMultiSelectGroup } from "../../utils/createMultiSelectGroup";
 
 const PASTE_OFFSET = { x: 20, y: 20 };
 
+/**
+ * Pastes clipboard data by cloning its objects (offset by PASTE_OFFSET) and
+ * selecting the pasted shapes, bumping the commit version.
+ */
 export const handlePaste = (
 	state: CanvasControllerState,
 	data: ClipboardData,
 ): CanvasControllerState => {
-	// data.rootIds は z-order 済みのトップレベル（オブジェクト + コネクター）混在配列。
-	// cloneObjects は同じ順序で新 ID を返すので、そのまま前面（rootIds 末尾）へ積めばよい。
+	// data.rootIds is a z-ordered top-level array mixing objects and connectors.
+	// cloneObjects returns new IDs in the same order, so we can push them to the front (end of rootIds) as-is.
 	const { newObjects, newTopLevelIds } = cloneObjects(
 		data.rootIds,
 		data.objects,
@@ -19,7 +23,7 @@ export const handlePaste = (
 
 	const mergedObjects = { ...state.objects, ...newObjects };
 
-	// 選択はコピーした図形のみ（コネクターは selectedConnectorId で別管理のため除外）。
+	// Select only the copied shapes (connectors are managed separately via selectedConnectorId, so exclude them).
 	const newObjectIds = newTopLevelIds.filter(
 		(id) => mergedObjects[id]?.type !== "connector",
 	);
@@ -29,9 +33,9 @@ export const handlePaste = (
 		objects: mergedObjects,
 		rootIds: [...state.rootIds, ...newTopLevelIds],
 		selectedIds: newObjectIds,
-		// 図形選択を非空にするため、相互排他のコネクター/頂点選択を解除する
-		// （他の selectedIds 変更経路と同様。解除しないと SwapArrows / Delete などが
-		// 画面に出ていない旧コネクター/旧頂点に作用する）
+		// Clear the mutually exclusive connector/vertex selection so the shape selection is non-empty
+		// (same as other selectedIds mutation paths; without clearing, SwapArrows / Delete etc.
+		// would act on the old connector/vertex that is no longer on screen).
 		selectedConnectorId: null,
 		selectedVertex: null,
 		multiSelectGroup: createMultiSelectGroup(newObjectIds, mergedObjects, null),

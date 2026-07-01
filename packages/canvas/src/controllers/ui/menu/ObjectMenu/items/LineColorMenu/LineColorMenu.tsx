@@ -28,8 +28,8 @@ const getSelectedStrokeColor = (state: CanvasControllerState): string => {
 };
 
 /**
- * ライン色メニュー（polyline / connector 用）。
- * 塗りつぶし円アイコンを使用する。
+ * Line color menu (for polyline / connector).
+ * Uses a filled-circle icon.
  */
 const LineColorMenuComponent: React.FC<LineColorMenuProps> = ({
 	canvasState,

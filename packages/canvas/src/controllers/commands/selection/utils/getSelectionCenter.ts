@@ -5,9 +5,9 @@ import type { GroupState } from "../../../../states/objects/primitives/group/Gro
 import type { CanvasControllerState } from "../../../CanvasTypes";
 
 /**
- * 選択中オブジェクトの現在の中心座標を返す。
- * 複数選択: multiSelectGroup の cx/cy を使用。
- * 単一選択: オブジェクト型に応じて cx/cy またはバウンドボックス中心を算出。
+ * Returns the current center coordinates of the selected objects.
+ * Multiple selection: uses the cx/cy of multiSelectGroup.
+ * Single selection: computes cx/cy or the bounding box center depending on the object type.
  */
 export function getSelectionCenter(
 	state: CanvasControllerState,

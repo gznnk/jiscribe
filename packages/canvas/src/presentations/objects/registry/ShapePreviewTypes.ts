@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 
 /**
- * ドラッグ描画中のプレビュー要素を描くために必要な情報。
- * stroke / fill は呼び出し側で resolveAutoColor 済みの値が渡る。
+ * Information needed to draw the preview element while drag-drawing.
+ * stroke / fill are passed already resolved via resolveAutoColor by the caller.
  */
 export type ShapePreviewProps = {
 	startX: number;
@@ -15,7 +15,7 @@ export type ShapePreviewProps = {
 };
 
 /**
- * 図形種別ごとのプレビュー描画関数。
- * 「線か矩形か楕円か」という図形固有の描画だけを担う。
+ * Preview rendering function per shape type.
+ * Handles only the shape-specific drawing (line vs. rectangle vs. ellipse).
  */
 export type ShapePreviewRenderer = (props: ShapePreviewProps) => ReactNode;

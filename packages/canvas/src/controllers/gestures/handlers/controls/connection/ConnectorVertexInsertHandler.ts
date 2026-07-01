@@ -16,24 +16,25 @@ import {
 import type { ControlStrategy } from "../ControlEventHandler";
 
 /**
- * コネクターの中間経由点（waypoint）をセグメントへ挿入する操作を処理する。
+ * Handles inserting an intermediate waypoint into a connector segment.
  *
- * Control ID フォーマット: "connector-vertex-insert:<connectorId>:<segmentIndex>"
+ * Control ID format: "connector-vertex-insert:<connectorId>:<segmentIndex>"
  *
- * `segmentIndex` は描画パス `[source, ...waypoints, target]`（端点込み）のセグメント番号。
- * 端点は `points`（waypoints のみ）に含まれないため、挿入位置は polyline 用の
- * VertexInsertHandler（`splice(segmentIndex + 1)`）と 1 ずれ、`splice(segmentIndex)` になる。
+ * `segmentIndex` is the segment number of the rendered path `[source, ...waypoints, target]`
+ * (endpoints included). Because endpoints are not part of `points` (waypoints only), the insertion
+ * position differs by 1 from the polyline VertexInsertHandler (`splice(segmentIndex + 1)`), becoming
+ * `splice(segmentIndex)`.
  *
- * - segment 0 = source → waypoints[0]  → waypoints の先頭に挿入
- * - segment k = waypoints[k-1] → waypoints[k] → waypoints[k] の位置に挿入
- * - segment n = waypoints[n-1] → target → waypoints の末尾に追加
+ * - segment 0 = source → waypoints[0]  → insert at the front of waypoints
+ * - segment k = waypoints[k-1] → waypoints[k] → insert at the position of waypoints[k]
+ * - segment n = waypoints[n-1] → target → append at the end of waypoints
  *
- * これにより直線コネクター（waypoints が空、セグメント 1 本）にも最初の曲げ点を打てる。
+ * This allows placing the first bend point even on a straight connector (empty waypoints, a single segment).
  *
- * 動作:
- * - dragStart: 指定セグメントに新しい waypoint を挿入
- * - drag: 挿入した waypoint を移動（スナップ補正あり）
- * - dragEnd: 最終位置を確定
+ * Behavior:
+ * - dragStart: insert a new waypoint into the specified segment
+ * - drag: move the inserted waypoint (with snap correction)
+ * - dragEnd: commit the final position
  */
 export class ConnectorVertexInsertHandler implements ControlStrategy {
 	readonly controlType = "connector-vertex-insert";
@@ -83,8 +84,8 @@ export class ConnectorVertexInsertHandler implements ControlStrategy {
 	}
 
 	/**
-	 * 指定セグメントの位置（segmentIndex）に新しい waypoint を挿入し、
-	 * 後続の drag が新頂点を参照できるよう eventStartSnapshot も更新する。
+	 * Inserts a new waypoint at the specified segment position (segmentIndex) and also updates
+	 * eventStartSnapshot so that subsequent drags can reference the new vertex.
 	 */
 	private handleDragStart(
 		state: CanvasControllerState,
@@ -98,7 +99,7 @@ export class ConnectorVertexInsertHandler implements ControlStrategy {
 		}
 
 		const currentPoints = connector.points;
-		// パスのセグメント数は waypoints.length + 1。範囲外は無視する。
+		// The number of path segments is waypoints.length + 1. Ignore out-of-range indices.
 		if (segmentIndex < 0 || segmentIndex > currentPoints.length) {
 			return state;
 		}
@@ -135,7 +136,7 @@ export class ConnectorVertexInsertHandler implements ControlStrategy {
 	}
 
 	/**
-	 * 挿入した waypoint（インデックス = segmentIndex）を移動する。
+	 * Moves the inserted waypoint (index = segmentIndex).
 	 */
 	private handleDrag(
 		state: CanvasControllerState,
@@ -148,7 +149,7 @@ export class ConnectorVertexInsertHandler implements ControlStrategy {
 			return state;
 		}
 
-		// dragStart で挿入済みの waypoint を含む snapshot から開始状態を取得する。
+		// Get the starting state from the snapshot that already includes the waypoint inserted at dragStart.
 		const startConnector = eventStartSnapshot.objects[connectorId];
 		if (!isPoly(startConnector) || startConnector.type !== "connector") {
 			return state;
@@ -159,7 +160,7 @@ export class ConnectorVertexInsertHandler implements ControlStrategy {
 			return state;
 		}
 
-		// --- オブジェクト間スナップ補正 ---
+		// --- Snap correction between objects ---
 		let cursorX = event.last.x;
 		let cursorY = event.last.y;
 		const snapCandidates = eventStartSnapshot.snapCandidates;
@@ -209,7 +210,7 @@ export class ConnectorVertexInsertHandler implements ControlStrategy {
 	}
 
 	/**
-	 * 最終位置を確定する。
+	 * Commits the final position.
 	 */
 	private handleDragEnd(
 		state: CanvasControllerState,

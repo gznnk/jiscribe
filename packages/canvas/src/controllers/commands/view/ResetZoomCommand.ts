@@ -3,21 +3,21 @@ import { roundToDecimal } from "@workspace/geometry";
 import { PRECISION } from "../../../constants/precision";
 import type { Command } from "../CommandTypes";
 
-/** リセット先のズーム倍率（100%） */
+/** Target zoom factor to reset to (100%). */
 const RESET_ZOOM = 1;
 
 /**
- * ズームを 100% に戻すコマンド。
- * ビューポートの中心は保ったまま倍率だけを 1 に揃える。
- * ツールバーのズーム値表示クリックから実行される。
+ * Command that resets the zoom back to 100%.
+ * Keeps the viewport center fixed and only sets the factor to 1.
+ * Triggered by clicking the zoom value display in the toolbar.
  */
 export const ResetZoomCommand: Command = {
 	id: "resetZoom",
 	label: "Reset Zoom",
 	category: "view",
 
-	// 既に 100% でも押下できてよい（中心保持の no-op になるだけ）。
-	// 見た目上の非活性状態を作らないため、常に実行可能とする。
+	// Allowed to trigger even when already at 100% (just a center-preserving no-op).
+	// Always executable so it never appears disabled.
 	canExecute: () => true,
 
 	execute: (state) => {

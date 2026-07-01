@@ -3,9 +3,9 @@ import { getEffectiveSelectedIds } from "../../../../../../../controllers/utils/
 import type { ArrowType } from "../../../../../../../schemas/objects/types/ArrowType";
 
 /**
- * 選択中オブジェクトの矢印タイプを取得する。
- * Connector が選択されている場合は selectedConnectorId から取得する。
- * いずれの選択オブジェクトも該当プロパティを持たない場合は "None" を返す。
+ * Gets the arrow type of the selected object.
+ * When a connector is selected, it is read from selectedConnectorId.
+ * Returns "None" if none of the selected objects have the property.
  */
 export const getSelectedArrowType = (
 	state: CanvasControllerState,

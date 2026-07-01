@@ -1,7 +1,7 @@
 import styled from "@emotion/styled";
 
 /**
- * ルーティング選択肢を横並びにするリスト。DropdownPanel 内に配置する。
+ * A row that lays out the routing options horizontally. Placed inside a DropdownPanel.
  */
 export const RoutingMenuRow = styled.div`
 	display: flex;

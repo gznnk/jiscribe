@@ -1,24 +1,25 @@
 /**
- * data-gesture 属性に指定できるトークン。
+ * Tokens that can be set on the data-gesture attribute.
  *
- * - "none": ジェスチャーシステムの起点にならない（pointerdown を無視、右クリックもネイティブに任せる）
- * - "native-pointer": ジェスチャーに参加するがポインタキャプチャを行わない。
- *   inputValue の収穫対象にもなる（スライダーなどネイティブのドラッグ挙動が必要な入力要素向け）
- * - "native-wheel": 要素がスクロール可能な場合、wheel をネイティブスクロールに任せる
+ * - "none": does not originate a gesture (ignores pointerdown, and leaves right-click to native)
+ * - "native-pointer": participates in gestures but does not capture the pointer.
+ *   Also becomes a target for inputValue harvesting (for input elements such as sliders that
+ *   need native drag behavior)
+ * - "native-wheel": leaves wheel to native scrolling when the element is scrollable
  *
- * 詳細は packages/canvas/docs/04-gesture-system.md を参照。
+ * See packages/canvas/docs/04-gesture-system.md for details.
  */
 export type GestureToken = "none" | "native-pointer" | "native-wheel";
 
 /**
- * 対象要素またはその祖先から、指定した data-gesture トークンを持つ要素を探す。
+ * From the target element or its ancestors, find the element carrying the given data-gesture token.
  *
- * data-gesture は空白区切りのトークンリストとして扱い、
- * [data-gesture~="token"] セレクタで closest 探索する（data-kind と同じ祖先遡り規約）。
+ * data-gesture is treated as a whitespace-separated token list, searched with `closest`
+ * using the [data-gesture~="token"] selector (the same ancestor-walking convention as data-kind).
  *
- * @param target - イベントの target
- * @param token - 探すトークン
- * @returns トークンを持つ最も近い要素。なければ null
+ * @param target - The event target
+ * @param token - The token to look for
+ * @returns The nearest element carrying the token, or null if none
  */
 export const findGestureElement = (
 	target: EventTarget | null,

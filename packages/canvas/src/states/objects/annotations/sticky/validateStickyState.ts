@@ -2,6 +2,6 @@ import { StickyFeatures } from "../../../../schemas/objects/annotations/sticky/S
 import type { ObjectStateValidateFn } from "../../../registry/ObjectStateValidatorRegistry";
 import { createFrameStateValidator } from "../../utils/createFrameStateValidator";
 
-/** StickyState を検証する（Frame 系共通ロジックを features から生成）。 */
+/** Validates a StickyState (Frame-family shared logic generated from features). */
 export const isValidStickyState: ObjectStateValidateFn =
 	createFrameStateValidator(StickyFeatures);

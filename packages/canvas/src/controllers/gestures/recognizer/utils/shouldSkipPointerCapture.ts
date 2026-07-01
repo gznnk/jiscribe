@@ -1,13 +1,14 @@
 import { findGestureElement } from "./findGestureElement";
 
 /**
- * ポインタキャプチャを行わずブラウザのネイティブなポインタ挙動を維持すべきか判定する。
+ * Determines whether pointer capture should be skipped to preserve the browser's
+ * native pointer behavior.
  *
- * data-gesture="native-pointer" を持つ要素（スライダーなど）では、
- * キャプチャするとネイティブのドラッグ挙動が壊れるためキャプチャしない。
+ * For elements with data-gesture="native-pointer" (such as sliders), capturing
+ * would break the native drag behavior, so capture is skipped.
  *
- * @param target - イベントの target
- * @returns ポインタキャプチャを行わない場合 true
+ * @param target - The event target
+ * @returns true if pointer capture should be skipped
  */
 export const shouldSkipPointerCapture = (
 	target: EventTarget | null,

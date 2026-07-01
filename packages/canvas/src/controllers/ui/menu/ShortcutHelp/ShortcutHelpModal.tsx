@@ -19,7 +19,7 @@ import {
 	getPlatformShortcuts,
 } from "../../../commands/CommandUtils";
 
-/** カテゴリの表示順 */
+/** Display order of categories */
 const CATEGORY_ORDER: NonNullable<Command["category"]>[] = [
 	"edit",
 	"selection",
@@ -27,7 +27,7 @@ const CATEGORY_ORDER: NonNullable<Command["category"]>[] = [
 	"view",
 ];
 
-/** カテゴリの表示見出し */
+/** Display headings of categories */
 const CATEGORY_LABELS: Record<string, string> = {
 	edit: "Edit",
 	selection: "Selection",
@@ -47,8 +47,8 @@ type CategoryGroup = {
 };
 
 /**
- * commandRegistry からショートカット付きコマンドを取り出し、
- * カテゴリ順にグルーピングする。
+ * Pulls shortcut-bearing commands from the commandRegistry and groups them by
+ * category order.
  */
 const buildGroups = (): CategoryGroup[] => {
 	const allCommands = commandRegistry.getAll();
@@ -60,7 +60,7 @@ const buildGroups = (): CategoryGroup[] => {
 			if (command.category !== category || command.shortcuts === undefined) {
 				continue;
 			}
-			// プラットフォーム別ショートカットの先頭を代表として表示する
+			// Show the first platform-specific shortcut as the representative
 			const binding = getPlatformShortcuts(command.shortcuts)[0];
 			if (binding === undefined) {
 				continue;
@@ -80,6 +80,10 @@ type ShortcutHelpModalProps = {
 	onClose: () => void;
 };
 
+/**
+ * Modal that lists keyboard shortcuts grouped by command category.
+ * Closes on backdrop click or the close button.
+ */
 export const ShortcutHelpModal: React.FC<ShortcutHelpModalProps> = ({
 	onClose,
 }) => {
@@ -89,7 +93,7 @@ export const ShortcutHelpModal: React.FC<ShortcutHelpModalProps> = ({
 		<Backdrop
 			data-gesture="none"
 			onPointerDown={(event) => {
-				// パネル外（背景）のクリックでのみ閉じる
+				// Close only when clicking outside the panel (the backdrop)
 				if (event.target === event.currentTarget) {
 					onClose();
 				}
@@ -107,7 +111,7 @@ export const ShortcutHelpModal: React.FC<ShortcutHelpModalProps> = ({
 						×
 					</CloseButton>
 				</Header>
-				{/* native-wheel: スクロール可能なときは canvas ではなく自身をネイティブスクロール */}
+				{/* native-wheel: when scrollable, natively scroll itself rather than the canvas */}
 				<Body data-gesture="native-wheel">
 					{groups.map((group) => (
 						<Fragment key={group.category}>

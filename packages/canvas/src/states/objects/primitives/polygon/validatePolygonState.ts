@@ -10,8 +10,8 @@ import {
 } from "../../utils/validateStateUtils";
 
 /**
- * PolygonState（Poly + stroke + fill）を検証する。
- * polygon は閉じた多角形のため最低 3 点必要（polyline の 2 点とは異なる）。
+ * Validates a PolygonState (Poly + stroke + fill).
+ * A polygon is a closed shape, so it requires at least 3 points (unlike a polyline's 2).
  */
 export const isValidPolygonState: ObjectStateValidateFn = (value) => {
 	if (!isObject(value)) {

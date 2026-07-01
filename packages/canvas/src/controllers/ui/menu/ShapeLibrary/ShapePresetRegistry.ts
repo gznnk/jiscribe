@@ -1,11 +1,11 @@
 import type { ShapePreset } from "../../../../schemas/objects/types/ShapePreset";
 
 /**
- * ShapeLibrary（ツールバー）に並ぶ図形プリセットを管理するレジストリ。
- * 登録は `initializeObjectRegistry()` の `registerObject()` 経由で行う。
+ * Registry that manages the shape presets shown in the ShapeLibrary (toolbar).
+ * Registration happens via `registerObject()` in `initializeObjectRegistry()`.
  *
- * - `all()` は登録順を保持して返す（= ツールバーの表示順）。
- * - プリセットは図形型と 1:N（例: rect は "rect" と "rect-markdown" を持つ）。
+ * - `all()` returns them preserving registration order (= toolbar display order).
+ * - Presets have a 1:N relationship with shape types (e.g. rect has "rect" and "rect-markdown").
  */
 class ShapePresetRegistry {
 	private readonly ordered: ShapePreset[] = [];
@@ -17,8 +17,9 @@ class ShapePresetRegistry {
 	}
 
 	/**
-	 * 表示順に並べたプリセット一覧。
-	 * `order` 昇順、同値・未指定は登録順を保つ（Array.prototype.sort は安定）。
+	 * The list of presets sorted by display order.
+	 * Ascending by `order`; ties and unspecified values keep registration order
+	 * (Array.prototype.sort is stable).
 	 */
 	all(): readonly ShapePreset[] {
 		return [...this.ordered].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
@@ -36,6 +37,6 @@ class ShapePresetRegistry {
 
 export const shapePresetRegistry = new ShapePresetRegistry();
 
-/** プリセット ID からプリセットを取得する。未登録なら undefined。 */
+/** Retrieves a preset by its ID. Returns undefined if not registered. */
 export const getShapePreset = (id: string): ShapePreset | undefined =>
 	shapePresetRegistry.get(id);

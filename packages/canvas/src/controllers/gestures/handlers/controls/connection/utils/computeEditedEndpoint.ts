@@ -7,17 +7,19 @@ import type { ObjectState } from "../../../../../../states/objects/base/ObjectSt
 import type { ConnectorState } from "../../../../../../states/objects/connections/connector/ConnectorState";
 
 /**
- * baseConnector の編集対象エンドポイントを、カーソル位置・接続先 hover に応じて
- * 更新した新しい ConnectorState を返す純粋関数。
- * - hoveredTarget があれば最近接アンカーへ接続（OwnedEndpointRef）
- * - なければカーソル位置（丸め済み）の FreeAnchor とする
- * 固定側エンドポイント・中間経由点（points）はそのまま保持する。
+ * Pure function that returns a new ConnectorState with the connector's edited
+ * endpoint updated according to the cursor position and the hovered target.
+ * - If hoveredTarget exists, connect to its nearest anchor (OwnedEndpointRef).
+ * - Otherwise use a FreeAnchor at the (rounded) cursor position.
+ * The fixed endpoint and intermediate waypoints (points) are kept as-is.
  *
- * hover 対象が固定側と同一オブジェクトのとき（自己ループ）は、固定側と同じアンカーや
- * center を候補から外し、必ず別の辺中点へ接続させる（center 同士・同一辺の退化を防ぐ）。
+ * When the hover target is the same object as the fixed side (self-loop), the
+ * fixed side's anchor and center are excluded from the candidates so the connector
+ * always attaches to a different edge midpoint (prevents center-to-center / same-edge
+ * degeneration).
  *
- * hover 対象の解決（state.objects / registry 依存）は呼び出し側で行い、
- * 解決済みの hoveredTarget を渡すことでこの関数を純粋に保つ。
+ * Resolving the hover target (which depends on state.objects / registry) is done by
+ * the caller; passing the already-resolved hoveredTarget keeps this function pure.
  */
 export function computeEditedEndpoint(
 	baseConnector: ConnectorState,

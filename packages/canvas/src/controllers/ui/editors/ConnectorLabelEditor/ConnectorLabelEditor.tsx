@@ -14,7 +14,7 @@ import {
 import { resolveAutoColor } from "../../../../presentations/objects/utils/resolveAutoColor";
 
 type ConnectorLabelEditorProps = {
-	/** ラベルアンカー（経路上のワールド座標）。ここを中心に編集欄を出す。 */
+	/** Label anchor (world coordinates on the route). The editor is centered here. */
 	anchor: Point;
 	text: string;
 	fontColor?: string;
@@ -43,19 +43,19 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 }) => {
 	const textAreaRef = useRef<HTMLTextAreaElement>(null);
 	const fontFamily = CONNECTOR_LABEL_DEFAULTS.fontFamily;
-	// auto（テーマ追従）をテーマ前景（ink）へ解決する。描画側と同じ resolver で色を揃える。
+	// Resolve auto (theme-following) to the theme foreground (ink). Use the same resolver as the rendering side to match colors.
 	const color = resolveAutoColor(fontColor, "ink");
 	const background = resolveLabelFill(fill);
 	const borderColor = resolveAutoColor(stroke, "ink");
 
-	// 幅は計測でクランプ（横伸長）。高さは textarea の scrollHeight に追従させる。
+	// Width is clamped by measurement (horizontal expansion). Height follows the textarea's scrollHeight.
 	const { width } = calcConnectorLabelBox(
 		text,
 		{ fontSize, fontFamily, fontWeight },
 		strokeWidth,
 	);
 
-	// 初回フォーカスして末尾にキャレットを置く。
+	// Focus initially and place the caret at the end.
 	useEffect(() => {
 		const el = textAreaRef.current;
 		if (!el) {
@@ -65,7 +65,7 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 		el.setSelectionRange(el.value.length, el.value.length);
 	}, []);
 
-	// テキスト量に合わせて高さを更新（横幅は計測でラッパーに与える）。
+	// Update the height to match the text amount (the width is given to the wrapper via measurement).
 	useLayoutEffect(() => {
 		const el = textAreaRef.current;
 		if (!el) {
@@ -87,7 +87,7 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 		}
 	};
 
-	// 余白クリックでフォーカスが外れないようにする（ジェスチャー除外は data-gesture="none"）。
+	// Prevent losing focus when clicking the margin (gesture exclusion is via data-gesture="none").
 	const handleWrapperPointerDown = useCallback(
 		(e: React.PointerEvent<HTMLDivElement>) => {
 			if (e.target === e.currentTarget) {
@@ -127,4 +127,5 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 	);
 };
 
+/** In-place textarea overlay for editing a connector's label, anchored on the connector route. */
 export const ConnectorLabelEditor = memo(ConnectorLabelEditorComponent);

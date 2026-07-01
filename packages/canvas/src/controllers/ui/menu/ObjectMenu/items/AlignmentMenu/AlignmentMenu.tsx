@@ -33,9 +33,9 @@ const verticalAlignments = [
 ] as const;
 
 /**
- * テキスト整列メニュー。
- * 選択中のテキストオブジェクトの textAlign と verticalAlign を変更する。
- * 各ボタンは data 属性経由でジェスチャーシステムと連携する。
+ * Text alignment menu.
+ * Changes textAlign and verticalAlign of the selected text object.
+ * Each button coordinates with the gesture system via data attributes.
  */
 const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 	canvasState,
