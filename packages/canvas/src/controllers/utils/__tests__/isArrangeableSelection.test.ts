@@ -15,22 +15,22 @@ const makeState = (
 	}) as unknown as CanvasControllerState;
 
 describe("isArrangeableSelection", () => {
-	it("選択なしのとき false を返す", () => {
+	it("returns false when nothing is selected", () => {
 		expect(isArrangeableSelection(makeState([], {}))).toBe(false);
 	});
 
-	describe("オブジェクト選択（selectedIds）", () => {
-		it("ルート単一は true", () => {
+	describe("object selection (selectedIds)", () => {
+		it("a single root is true", () => {
 			expect(isArrangeableSelection(makeState(["a"], { a: {} }))).toBe(true);
 		});
 
-		it("ルート複数は true", () => {
+		it("multiple roots is true", () => {
 			expect(
 				isArrangeableSelection(makeState(["a", "b"], { a: {}, b: {} })),
 			).toBe(true);
 		});
 
-		it("同一グループ内の複数は true", () => {
+		it("multiple items within the same group is true", () => {
 			const state = makeState(["c1", "c2"], {
 				c1: { parentId: "g" },
 				c2: { parentId: "g" },
@@ -38,7 +38,7 @@ describe("isArrangeableSelection", () => {
 			expect(isArrangeableSelection(state)).toBe(true);
 		});
 
-		it("異なるグループにまたがると false", () => {
+		it("spanning different groups is false", () => {
 			const state = makeState(["c1", "c2"], {
 				c1: { parentId: "g1" },
 				c2: { parentId: "g2" },
@@ -46,7 +46,7 @@ describe("isArrangeableSelection", () => {
 			expect(isArrangeableSelection(state)).toBe(false);
 		});
 
-		it("ルートとグループ内が混在すると false", () => {
+		it("mixing root and in-group items is false", () => {
 			const state = makeState(["r", "c"], {
 				r: {},
 				c: { parentId: "g" },
@@ -55,8 +55,8 @@ describe("isArrangeableSelection", () => {
 		});
 	});
 
-	describe("コネクター選択（selectedConnectorId）", () => {
-		it("コネクター単一選択は true（StackOrder を出す条件）", () => {
+	describe("connector selection (selectedConnectorId)", () => {
+		it("a single connector selection is true (the condition for showing StackOrder)", () => {
 			const state = makeState([], { conn: { type: "connector" } }, "conn");
 			expect(isArrangeableSelection(state)).toBe(true);
 		});

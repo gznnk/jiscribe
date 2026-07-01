@@ -28,7 +28,7 @@ const connector = (
 ): ConnectorDoc =>
 	({ id, type: "connector", source, target }) as unknown as ConnectorDoc;
 
-// connectable 判定は registry の features を参照するため、テスト用に最小登録する。
+// connectable checks read the registry's features, so register a minimal set for tests.
 const noopValidate = () => [];
 const features = (type: string, connectable: boolean): ObjectFeatures =>
 	({ type, geometry: "rect", connectable }) as unknown as ObjectFeatures;
@@ -57,7 +57,7 @@ describe("validateSemantics", () => {
 		objectDocValidatorRegistry.clear();
 	});
 
-	describe("A. ID の一意性", () => {
+	describe("A. ID uniqueness", () => {
 		it("returns no errors for a valid tree", () => {
 			const doc: CanvasDoc = {
 				version: 1,
@@ -78,7 +78,7 @@ describe("validateSemantics", () => {
 		});
 
 		it("reports an id reused within its own ancestor chain as a duplicate", () => {
-			// ネストツリーでは循環は構造的に起きないため、同一 ID は重複として扱う。
+			// In a nested tree, cycles cannot occur structurally, so a reused ID is treated as a duplicate.
 			const doc: CanvasDoc = {
 				version: 1,
 				root: [group("g1", [group("g1", [])])],
@@ -107,7 +107,7 @@ describe("validateSemantics", () => {
 			expect(errors.some((e) => e.message.includes("duplicated"))).toBe(true);
 		});
 
-		it("深くネストした重複 id を正しい path で報告する", () => {
+		it("reports a deeply nested duplicate id with the correct path", () => {
 			const doc: CanvasDoc = {
 				version: 1,
 				root: [rect("dup"), group("g", [group("g2", [rect("dup")])])],
@@ -118,7 +118,7 @@ describe("validateSemantics", () => {
 			expect(hit?.id).toBe("dup");
 		});
 
-		it("3つ同一 id があれば重複は 2 件報告される", () => {
+		it("reports 2 duplicates when the same id appears 3 times", () => {
 			const doc: CanvasDoc = {
 				version: 1,
 				root: [rect("a"), rect("a"), rect("a")],
@@ -130,7 +130,7 @@ describe("validateSemantics", () => {
 		});
 	});
 
-	describe("B. connector の参照整合性", () => {
+	describe("B. connector reference integrity", () => {
 		it("accepts a connector between two connectable objects", () => {
 			const doc: CanvasDoc = {
 				version: 1,
@@ -228,7 +228,7 @@ describe("validateSemantics", () => {
 		});
 
 		it("accepts a self-loop where source and target are the same object", () => {
-			// 自己ループは許可: 専用の直交ルートで矩形ループとして描画される。
+			// Self-loops are allowed: rendered as a rectangular loop via a dedicated orthogonal route.
 			const doc: CanvasDoc = {
 				version: 1,
 				root: [
@@ -244,7 +244,7 @@ describe("validateSemantics", () => {
 			expect(validateSemantics(doc)).toEqual([]);
 		});
 
-		it("source 側の参照切れも path 付きで報告する", () => {
+		it("reports a dangling reference on the source side with a path", () => {
 			const doc: CanvasDoc = {
 				version: 1,
 				root: [
@@ -262,7 +262,7 @@ describe("validateSemantics", () => {
 			expect(errors[0].message).toContain("does not exist");
 		});
 
-		it("両端とも不正なら 2 件報告される（source / target）", () => {
+		it("reports 2 errors when both endpoints are invalid (source / target)", () => {
 			const doc: CanvasDoc = {
 				version: 1,
 				root: [
@@ -280,8 +280,8 @@ describe("validateSemantics", () => {
 			]);
 		});
 
-		it("両端が同一の参照切れ owner を指すなら両方とも does not exist で報告する", () => {
-			// 自己ループ自体は許可だが、参照先が実在しない端点は依然エラー。
+		it("reports both endpoints as does not exist when they point to the same dangling owner", () => {
+			// The self-loop itself is allowed, but endpoints pointing to a nonexistent owner are still errors.
 			const doc: CanvasDoc = {
 				version: 1,
 				root: [
@@ -302,7 +302,7 @@ describe("validateSemantics", () => {
 			]);
 		});
 
-		it("両端が同一の非接続可 owner を指すなら not connectable で報告する", () => {
+		it("reports not connectable when both endpoints point to the same non-connectable owner", () => {
 			const doc: CanvasDoc = {
 				version: 1,
 				root: [
@@ -320,7 +320,7 @@ describe("validateSemantics", () => {
 			);
 		});
 
-		it("両端が同一の接続可 owner を指す自己ループはエラーなし", () => {
+		it("reports no error for a self-loop where both endpoints point to the same connectable owner", () => {
 			const doc: CanvasDoc = {
 				version: 1,
 				root: [
@@ -335,7 +335,7 @@ describe("validateSemantics", () => {
 			expect(validateSemantics(doc)).toEqual([]);
 		});
 
-		it("両端 free（owner なし）はエラーなし", () => {
+		it("reports no error when both endpoints are free (no owner)", () => {
 			const freeEndpoint = { anchor: { kind: "free", point: { x: 0, y: 0 } } };
 			const doc: CanvasDoc = {
 				version: 1,
@@ -344,7 +344,7 @@ describe("validateSemantics", () => {
 			expect(validateSemantics(doc)).toEqual([]);
 		});
 
-		it("group の子（ネスト）を参照するコネクターは有効", () => {
+		it("accepts a connector referencing a group's (nested) child", () => {
 			const doc: CanvasDoc = {
 				version: 1,
 				root: [
@@ -362,10 +362,10 @@ describe("validateSemantics", () => {
 	});
 });
 
-// 上の describe はモックレジストリで connectable を仮定する。こちらは
-// 実レジストリ（production の features）で connectable 判定を検証し、
-// 誰かが Features.connectable を反転させた場合の回帰を防ぐ。
-describe("validateSemantics（実レジストリの connectable）", () => {
+// The describe above assumes connectable via a mock registry. This one verifies
+// connectable checks against the real registry (production features) to guard
+// against regressions if someone flips Features.connectable.
+describe("validateSemantics (connectable via the real registry)", () => {
 	beforeEach(() => {
 		initializeObjectDocValidatorRegistry();
 	});
@@ -383,14 +383,14 @@ describe("validateSemantics（実レジストリの connectable）", () => {
 	});
 
 	it.each(["rect", "ellipse", "diamond", "sticky"])(
-		"%s は接続可（エラーなし）",
+		"%s is connectable (no error)",
 		(type) => {
 			expect(validateSemantics(targetDoc(type))).toEqual([]);
 		},
 	);
 
 	it.each(["polyline", "polygon", "svg", "group"])(
-		"%s は非接続可（not connectable）",
+		"%s is not connectable (not connectable)",
 		(type) => {
 			const errors = validateSemantics(targetDoc(type));
 			expect(

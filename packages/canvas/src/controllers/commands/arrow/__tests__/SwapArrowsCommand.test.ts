@@ -40,8 +40,8 @@ const makeState = (params: {
 	}) as unknown as CanvasControllerState;
 
 describe("SwapArrowsCommand", () => {
-	describe("コネクター選択時", () => {
-		it("start/end の矢印を入れ替える", () => {
+	describe("when a connector is selected", () => {
+		it("swaps the start/end arrows", () => {
 			const state = makeState({
 				selectedIds: [],
 				selectedConnectorId: "c1",
@@ -54,7 +54,7 @@ describe("SwapArrowsCommand", () => {
 			expect(next.commitVersion).toBe(1);
 		});
 
-		it("未指定の矢印は None として扱って入れ替える", () => {
+		it("treats an unspecified arrow as None when swapping", () => {
 			const state = makeState({
 				selectedIds: [],
 				selectedConnectorId: "c1",
@@ -68,8 +68,8 @@ describe("SwapArrowsCommand", () => {
 		});
 	});
 
-	describe("ポリライン選択時", () => {
-		it("選択中の各ポリラインで矢印を入れ替える", () => {
+	describe("when polylines are selected", () => {
+		it("swaps the arrows for each selected polyline", () => {
 			const state = makeState({
 				selectedIds: ["p1"],
 				objects: { p1: makePolyline("p1", "Triangle", "None") },
@@ -81,7 +81,7 @@ describe("SwapArrowsCommand", () => {
 			expect(poly.endArrow).toBe("Triangle");
 		});
 
-		it("ポリライン以外が混在しても対象だけ入れ替える", () => {
+		it("swaps only the applicable targets even when non-polylines are mixed in", () => {
 			const state = makeState({
 				selectedIds: ["p1", "r1"],
 				objects: {
@@ -93,11 +93,11 @@ describe("SwapArrowsCommand", () => {
 			const poly = next.objects["p1"] as PolylineState;
 			expect(poly.startArrow).toBe("None");
 			expect(poly.endArrow).toBe("Triangle");
-			// rect は変化しない（参照そのまま）
+			// the rect is unchanged (same reference)
 			expect(next.objects["r1"]).toBe(state.objects["r1"]);
 		});
 
-		it("対象ポリラインが無ければ state をそのまま返す", () => {
+		it("returns the state unchanged when there are no target polylines", () => {
 			const state = makeState({
 				selectedIds: ["r1"],
 				objects: { r1: makeRect("r1") },
@@ -107,7 +107,7 @@ describe("SwapArrowsCommand", () => {
 	});
 
 	describe("canExecute", () => {
-		it("選択コネクターがあれば実行可能", () => {
+		it("is executable when a connector is selected", () => {
 			const state = makeState({
 				selectedIds: [],
 				selectedConnectorId: "c1",
@@ -116,7 +116,7 @@ describe("SwapArrowsCommand", () => {
 			expect(SwapArrowsCommand.canExecute(state)).toBe(true);
 		});
 
-		it("選択にポリラインが含まれれば実行可能", () => {
+		it("is executable when the selection contains a polyline", () => {
 			const state = makeState({
 				selectedIds: ["p1"],
 				objects: { p1: makePolyline("p1", "None", "None") },
@@ -124,7 +124,7 @@ describe("SwapArrowsCommand", () => {
 			expect(SwapArrowsCommand.canExecute(state)).toBe(true);
 		});
 
-		it("矢印を持たない選択のみなら実行不可", () => {
+		it("is not executable when the selection has no arrow-bearing objects", () => {
 			const state = makeState({
 				selectedIds: ["r1"],
 				objects: { r1: makeRect("r1") },

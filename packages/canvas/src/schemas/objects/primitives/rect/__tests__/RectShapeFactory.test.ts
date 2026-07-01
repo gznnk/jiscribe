@@ -5,7 +5,7 @@ import { RectShapeFactory } from "../RectShapeFactory";
 
 describe("RectShapeFactory", () => {
 	describe("createDoc", () => {
-		it("position を中央に既定サイズの rect を生成する", () => {
+		it("creates a default-sized rect centered on the position", () => {
 			const doc = RectShapeFactory.createDoc({ x: 100, y: 100 }) as Record<
 				string,
 				unknown
@@ -13,14 +13,14 @@ describe("RectShapeFactory", () => {
 
 			expect(doc.type).toBe("rect");
 			expect(doc.id).toEqual(expect.any(String));
-			// 既定 100x100 を中央寄せ → 左上は (50, 50)
+			// Default 100x100 centered → top-left is (50, 50)
 			expect(doc.x).toBe(50);
 			expect(doc.y).toBe(50);
 			expect(doc.width).toBe(RECT_DOC_DEFAULTS.width);
 			expect(doc.height).toBe(RECT_DOC_DEFAULTS.height);
 		});
 
-		it("overrides の width/height を中央寄せの計算に反映する", () => {
+		it("applies overridden width/height in the centering calculation", () => {
 			const doc = RectShapeFactory.createDoc(
 				{ x: 100, y: 100 },
 				{ width: 40, height: 20 },
@@ -32,7 +32,7 @@ describe("RectShapeFactory", () => {
 			expect(doc.y).toBe(90); // 100 - 20 / 2
 		});
 
-		it("生成ごとに異なる id を振る", () => {
+		it("assigns a different id on each creation", () => {
 			const a = RectShapeFactory.createDoc({ x: 0, y: 0 });
 			const b = RectShapeFactory.createDoc({ x: 0, y: 0 });
 			expect(a.id).not.toBe(b.id);
@@ -40,14 +40,14 @@ describe("RectShapeFactory", () => {
 	});
 
 	describe("calcDimensions", () => {
-		it("既定の半サイズを返す", () => {
+		it("returns the default half-size", () => {
 			expect(RectShapeFactory.calcDimensions()).toEqual({
 				halfWidth: RECT_DOC_DEFAULTS.width / 2,
 				halfHeight: RECT_DOC_DEFAULTS.height / 2,
 			});
 		});
 
-		it("overrides を反映した半サイズを返す", () => {
+		it("returns the half-size reflecting overrides", () => {
 			expect(
 				RectShapeFactory.calcDimensions({ width: 40, height: 20 }),
 			).toEqual({ halfWidth: 20, halfHeight: 10 });
@@ -55,7 +55,7 @@ describe("RectShapeFactory", () => {
 	});
 
 	describe("createDocFromBounds", () => {
-		it("2 点から正規化した左上原点とサイズを生成する", () => {
+		it("creates a normalized top-left origin and size from 2 points", () => {
 			const doc = RectShapeFactory.createDocFromBounds?.(
 				30,
 				40,
@@ -69,7 +69,7 @@ describe("RectShapeFactory", () => {
 			expect(doc.height).toBe(30);
 		});
 
-		it("最小サイズ未満なら null を返す", () => {
+		it("returns null when below the minimum size", () => {
 			expect(RectShapeFactory.createDocFromBounds?.(0, 0, 3, 3)).toBeNull();
 		});
 	});

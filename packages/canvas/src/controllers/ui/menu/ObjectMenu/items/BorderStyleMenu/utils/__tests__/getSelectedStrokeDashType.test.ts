@@ -14,16 +14,16 @@ const state = (
 	({ objects, selectedIds }) as unknown as CanvasControllerState;
 
 describe("getSelectedStrokeDashType", () => {
-	it("選択なし → undefined", () => {
+	it("no selection → undefined", () => {
 		expect(getSelectedStrokeDashType(state({}, []))).toBeUndefined();
 	});
 
-	it("strokeDashType を持つ → その値", () => {
+	it("has strokeDashType → its value", () => {
 		const s = state({ a: obj("a", { strokeDashType: "dashed" }) }, ["a"]);
 		expect(getSelectedStrokeDashType(s)).toBe("dashed");
 	});
 
-	it("strokeDashType が文字列でない → undefined", () => {
+	it("strokeDashType is not a string → undefined", () => {
 		const s = state({ a: obj("a", { strokeDashType: 1 }) }, ["a"]);
 		expect(getSelectedStrokeDashType(s)).toBeUndefined();
 	});

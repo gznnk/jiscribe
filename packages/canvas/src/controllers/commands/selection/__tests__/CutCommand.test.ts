@@ -39,7 +39,7 @@ const makeState = (params: {
 	}) as unknown as CanvasControllerState;
 
 describe("CutCommand", () => {
-	it("選択をクリップボードへ退避してから削除する（コピー + 削除の合成）", () => {
+	it("stashes the selection to the clipboard and then deletes it (copy + delete combined)", () => {
 		const state = makeState({
 			selectedIds: ["a"],
 			objects: { a: makeRect("a"), b: makeRect("b") },
@@ -47,18 +47,18 @@ describe("CutCommand", () => {
 		});
 		const next = CutCommand.execute(state);
 
-		// コピー: クリップボードに退避
+		// copy: stashed to the clipboard
 		expect(next.internalClipboard?.rootIds).toEqual(["a"]);
 		expect(next.internalClipboard?.objects["a"]).toBeDefined();
 
-		// 削除: キャンバスからは消える
+		// delete: removed from the canvas
 		expect(next.objects["a"]).toBeUndefined();
 		expect(next.rootIds).toEqual(["b"]);
 		expect(next.selectedIds).toEqual([]);
 	});
 
 	describe("canExecute", () => {
-		it("選択があれば実行可能", () => {
+		it("is executable when there is a selection", () => {
 			const state = makeState({
 				selectedIds: ["a"],
 				objects: { a: makeRect("a") },
@@ -67,7 +67,7 @@ describe("CutCommand", () => {
 			expect(CutCommand.canExecute(state)).toBe(true);
 		});
 
-		it("選択が無ければ実行不可", () => {
+		it("is not executable when there is no selection", () => {
 			expect(
 				CutCommand.canExecute(
 					makeState({ selectedIds: [], objects: {}, rootIds: [] }),

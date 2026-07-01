@@ -7,7 +7,7 @@ import { describe, it, expect } from "vitest";
 
 import { routeOrthogonalConnector, type OrthogonalConnectorEndpoint } from "..";
 
-/** 中心 (cx,cy)・幅高さの軸並行 box を作る。 */
+/** Creates an axis-aligned box centered at (cx,cy) with the given width and height. */
 const boxAt = (cx: number, cy: number, w = 100, h = 60): BoxFeatures =>
 	calcFrameBoxFeatures({
 		cx,
@@ -24,7 +24,7 @@ const allSegmentsOrthogonal = (points: { x: number; y: number }[]): boolean =>
 		i === 0 ? true : p.x === points[i - 1].x || p.y === points[i - 1].y,
 	);
 
-/** 同一軸上で進行方向が反転する「折り返し（逆走スパイク）」の数。 */
+/** The number of reversals (backtracking spikes) where the travel direction flips along the same axis. */
 const countReversals = (points: { x: number; y: number }[]): number => {
 	let reversals = 0;
 	for (let i = 1; i < points.length - 1; i++) {
@@ -43,14 +43,14 @@ const countReversals = (points: { x: number; y: number }[]): number => {
 };
 
 describe("routeOrthogonalConnector", () => {
-	it("フルパスは端点を含み、全セグメントが水平/垂直", () => {
+	it("the full path includes the endpoints and every segment is horizontal/vertical", () => {
 		const source: OrthogonalConnectorEndpoint = {
-			point: { x: 150, y: 100 }, // box 右辺中央
+			point: { x: 150, y: 100 }, // right-edge center of box
 			direction: "right",
 			box: boxAt(100, 100),
 		};
 		const target: OrthogonalConnectorEndpoint = {
-			point: { x: 450, y: 300 }, // box 左辺中央
+			point: { x: 450, y: 300 }, // left-edge center of box
 			direction: "left",
 			box: boxAt(500, 300),
 		};
@@ -61,8 +61,8 @@ describe("routeOrthogonalConnector", () => {
 		expect(path.length).toBeGreaterThanOrEqual(2);
 	});
 
-	it("水平に整列した左右接続は段差のない経路になる（曲がり最小）", () => {
-		// 同じ y、右辺→左辺。スタブを出すと一直線に畳まれるのが理想。
+	it("a horizontally aligned left-right connection produces a step-free route (minimal bends)", () => {
+		// same y, right edge → left edge. Ideally the stubs collapse into a straight line.
 		const source: OrthogonalConnectorEndpoint = {
 			point: { x: 150, y: 200 },
 			direction: "right",
@@ -74,7 +74,7 @@ describe("routeOrthogonalConnector", () => {
 			box: boxAt(500, 200),
 		};
 		const path = routeOrthogonalConnector(source, target);
-		// y が一定（曲がりゼロ）
+		// y is constant (zero bends)
 		expect(path.every((p) => p.y === 200)).toBe(true);
 		expect(path).toEqual([
 			{ x: 150, y: 200 },
@@ -82,21 +82,21 @@ describe("routeOrthogonalConnector", () => {
 		]);
 	});
 
-	it("経路はどちらの図形も貫通しない", () => {
+	it("the route does not pass through either shape", () => {
 		const sourceBox = boxAt(100, 100);
 		const targetBox = boxAt(300, 260);
 		const source: OrthogonalConnectorEndpoint = {
-			point: { x: 100, y: 130 }, // 下辺中央
+			point: { x: 100, y: 130 }, // bottom-edge center
 			direction: "down",
 			box: sourceBox,
 		};
 		const target: OrthogonalConnectorEndpoint = {
-			point: { x: 250, y: 260 }, // 左辺中央
+			point: { x: 250, y: 260 }, // left-edge center
 			direction: "left",
 			box: targetBox,
 		};
 		const path = routeOrthogonalConnector(source, target);
-		// 端のスタブ脚を除く中間セグメントが box を貫通しない
+		// intermediate segments (excluding the end stub legs) do not pass through the box
 		for (let i = 1; i < path.length - 2; i++) {
 			expect(isLineIntersectingBox(path[i], path[i + 1], sourceBox)).toBe(
 				false,
@@ -107,7 +107,7 @@ describe("routeOrthogonalConnector", () => {
 		}
 	});
 
-	it("free 端点（box=null）はスタブを出さずその点から結ぶ", () => {
+	it("a free endpoint (box=null) connects from that point without emitting a stub", () => {
 		const source: OrthogonalConnectorEndpoint = {
 			point: { x: 150, y: 100 },
 			direction: "right",
@@ -123,42 +123,42 @@ describe("routeOrthogonalConnector", () => {
 		expect(allSegmentsOrthogonal(path)).toBe(true);
 	});
 
-	it("退出方向を尊重する（右向きアンカーは右へ抜けてから曲がる）", () => {
-		// target が source の真下にあり、素朴だと左へ折り返しがちな配置。
+	it("respects the exit direction (a rightward anchor exits right before turning)", () => {
+		// target is directly below source, an arrangement that naively tends to backtrack left.
 		const source: OrthogonalConnectorEndpoint = {
-			point: { x: 150, y: 100 }, // 右辺中央
+			point: { x: 150, y: 100 }, // right-edge center
 			direction: "right",
 			box: boxAt(100, 100),
 		};
 		const target: OrthogonalConnectorEndpoint = {
-			point: { x: 100, y: 270 }, // 上辺中央
+			point: { x: 100, y: 270 }, // top-edge center
 			direction: "up",
 			box: boxAt(100, 300),
 		};
 		const path = routeOrthogonalConnector(source, target);
-		// source からの最初の一歩は右（+x）方向
+		// the first step from source goes rightward (+x)
 		expect(path[1].x).toBeGreaterThan(path[0].x);
 		expect(path[1].y).toBe(path[0].y);
 	});
 
-	it("回り込みが必要な配置でも図形にめり込まない（box を貫通しない）", () => {
-		// source の右に大きな target box があり、その「右辺」へ入る＝回り込み必須。
-		// 固定スタブだけだと box を突っ切ってしまうケース。
+	it("does not cut into a shape even when a detour is required (does not pass through the box)", () => {
+		// there is a large target box to the right of source, and entering its "right edge" requires a detour.
+		// with only fixed stubs, this is a case that would slice through the box.
 		const sourceBox = boxAt(120, 200, 100, 60);
 		const targetBox = boxAt(300, 200, 120, 160);
 		const source: OrthogonalConnectorEndpoint = {
-			point: { x: 170, y: 200 }, // 右辺中央
+			point: { x: 170, y: 200 }, // right-edge center
 			direction: "right",
 			box: sourceBox,
 		};
 		const target: OrthogonalConnectorEndpoint = {
-			point: { x: 360, y: 200 }, // 右辺中央（回り込んで入る）
+			point: { x: 360, y: 200 }, // right-edge center (entered via detour)
 			direction: "right",
 			box: targetBox,
 		};
 		const path = routeOrthogonalConnector(source, target);
 		expect(allSegmentsOrthogonal(path)).toBe(true);
-		// 端のスタブ脚を除く全セグメントがどちらの box も貫通しない
+		// every segment except the end stub legs passes through neither box
 		for (let i = 1; i < path.length - 2; i++) {
 			expect(isLineIntersectingBox(path[i], path[i + 1], sourceBox)).toBe(
 				false,
@@ -169,10 +169,10 @@ describe("routeOrthogonalConnector", () => {
 		}
 	});
 
-	it("face 中心が AABB の内側でも（回転図形）退出後に AABB へめり込まない", () => {
-		// 回転した図形では face 中心がバウンディングボックスの内側に来る。
-		// point.x(170) < AABB 右辺(200)。固定 20px だとスタブ x=190 が AABB 内に留まり、
-		// 上へ折れる縦セグメントが AABB を貫通してしまう。AABB 辺基準なら x=220 で外に出る。
+	it("does not cut into the AABB after exiting even when the face center is inside the AABB (rotated shape)", () => {
+		// for a rotated shape, the face center falls inside the bounding box.
+		// point.x(170) < AABB right edge(200). With a fixed 20px, the stub x=190 stays inside the AABB,
+		// and the upward vertical segment passes through the AABB. Based on the AABB edge, x=220 exits outside.
 		const box = boxAt(100, 100, 200, 200); // AABB: x[0,200], y[0,200]
 		const source: OrthogonalConnectorEndpoint = {
 			point: { x: 170, y: 100 },
@@ -180,19 +180,19 @@ describe("routeOrthogonalConnector", () => {
 			box,
 		};
 		const target: OrthogonalConnectorEndpoint = {
-			point: { x: 250, y: 0 }, // 右上の box 左辺（右へ出てから上へ折れる配置）
+			point: { x: 250, y: 0 }, // left edge of the top-right box (arrangement that exits right then turns up)
 			direction: "left",
 			box: boxAt(300, 0, 100, 60),
 		};
 		const path = routeOrthogonalConnector(source, target);
-		// 退出脚（最初のセグメント）以外は source の AABB を貫通しない
+		// apart from the exit leg (first segment), nothing passes through source's AABB
 		for (let i = 1; i < path.length - 1; i++) {
 			expect(isLineIntersectingBox(path[i], path[i + 1], box)).toBe(false);
 		}
 	});
 
-	it("向かい合う左右配置＋縦ずれは中点で折れる S/Z 字になる", () => {
-		// 右辺→左辺で向かい合い、y がずれている。片寄せ L ではなく中点で折れる対称ルート。
+	it("facing left-right arrangement with a vertical offset bends at the midpoint into an S/Z shape", () => {
+		// facing right edge → left edge with a y offset. A symmetric route bending at the midpoint, not a lopsided L.
 		const source: OrthogonalConnectorEndpoint = {
 			point: { x: 170, y: 130 },
 			direction: "right",
@@ -204,15 +204,15 @@ describe("routeOrthogonalConnector", () => {
 			box: boxAt(360, 270, 100, 60),
 		};
 		const path = routeOrthogonalConnector(source, target);
-		// source → (jogX, sy) → (jogX, ty) → target の S 字
+		// S shape: source → (jogX, sy) → (jogX, ty) → target
 		expect(path).toHaveLength(4);
-		expect(path[1].x).toBe(path[2].x); // 中央の縦ジョグ
-		// ジョグ x は両端のほぼ中点（片寄せ L なら端の近くになる）
+		expect(path[1].x).toBe(path[2].x); // central vertical jog
+		// the jog x is roughly the midpoint of the two ends (a lopsided L would be near an end)
 		const mid = (path[0].x + path[3].x) / 2;
 		expect(Math.abs(path[1].x - mid)).toBeLessThanOrEqual(20);
 	});
 
-	it("向かい合う上下配置＋横ずれも中点で折れる S/Z 字になる", () => {
+	it("facing top-bottom arrangement with a horizontal offset also bends at the midpoint into an S/Z shape", () => {
 		const source: OrthogonalConnectorEndpoint = {
 			point: { x: 130, y: 150 },
 			direction: "down",
@@ -225,25 +225,25 @@ describe("routeOrthogonalConnector", () => {
 		};
 		const path = routeOrthogonalConnector(source, target);
 		expect(path).toHaveLength(4);
-		expect(path[1].y).toBe(path[2].y); // 中央の横ジョグ
+		expect(path[1].y).toBe(path[2].y); // central horizontal jog
 		const mid = (path[0].y + path[3].y) / 2;
 		expect(Math.abs(path[1].y - mid)).toBeLessThanOrEqual(20);
 	});
 
-	it("右辺→上辺（左上→右下の斜め配置）は 2 線分・1 角の L 字になる", () => {
-		// 退出(右)と進入(上)が噛み合う配置。階段状(3角)ではなく素直な L であるべき。
+	it("right edge → top edge (top-left → bottom-right diagonal arrangement) forms a 2-segment, 1-corner L shape", () => {
+		// exit (right) and entry (up) mesh. It should be a plain L, not a staircase (3 corners).
 		const source: OrthogonalConnectorEndpoint = {
-			point: { x: 150, y: 100 }, // 左上 box の右辺中央
+			point: { x: 150, y: 100 }, // right-edge center of the top-left box
 			direction: "right",
 			box: boxAt(100, 100, 100, 60),
 		};
 		const target: OrthogonalConnectorEndpoint = {
-			point: { x: 320, y: 230 }, // 右下 box の上辺中央
+			point: { x: 320, y: 230 }, // top-edge center of the bottom-right box
 			direction: "up",
 			box: boxAt(320, 260, 100, 60),
 		};
 		const path = routeOrthogonalConnector(source, target);
-		// 角は 1 つ（点は 3 つ）。右へ進んでから下へ折れる。
+		// one corner (three points). Goes right, then turns down.
 		expect(path).toEqual([
 			{ x: 150, y: 100 },
 			{ x: 320, y: 100 },
@@ -251,38 +251,38 @@ describe("routeOrthogonalConnector", () => {
 		]);
 	});
 
-	it("出口方向の裏側にある端点へはスタブを逆走せず回り込む（#77 折り返しスパイク回避）", () => {
-		// source は右へ出るが target は左後方にある。素朴だと右へ 20 出た直後に
-		// 同じ線分を逆走して戻るスパイクになりがちな配置。
+	it("detours to an endpoint behind the exit direction without backtracking the stub (#77 reversal-spike avoidance)", () => {
+		// source exits right but target is behind and to the left. Naively, this arrangement tends to
+		// produce a spike that goes 20 right and then backtracks along the same segment.
 		const source: OrthogonalConnectorEndpoint = {
-			point: { x: 150, y: 100 }, // 右辺中央 → 右へ出る
+			point: { x: 150, y: 100 }, // right-edge center → exits right
 			direction: "right",
 			box: boxAt(100, 100),
 		};
 		const target: OrthogonalConnectorEndpoint = {
-			point: { x: 150, y: 0 }, // 左辺中央。source の左後方・上にある
+			point: { x: 150, y: 0 }, // left-edge center. Behind source, to the left and above
 			direction: "left",
 			box: boxAt(200, 0),
 		};
 		const path = routeOrthogonalConnector(source, target);
 		expect(allSegmentsOrthogonal(path)).toBe(true);
-		// 折り返し（逆走スパイク）が無い
+		// no reversal (backtracking spike)
 		expect(countReversals(path)).toBe(0);
-		// source の最初の一歩はスタブ分まっすぐ右へ（途中で折れない）
+		// source's first step goes straight right for the stub length (no bend partway)
 		expect(path[1].y).toBe(path[0].y);
 		expect(path[1].x).toBeGreaterThan(path[0].x);
 	});
 
-	it("近接して向かい合う整列配置は回り込まず直線になる（margin×2 未満）", () => {
-		// gap=40（< margin×2=60）。フル margin だとスタブが互いを追い越し、
-		// 上下へぐるっと回る経路になりがちな配置。スタブを縮めて直線に畳む。
+	it("a close, facing, aligned arrangement becomes a straight line without detouring (gap < margin×2)", () => {
+		// gap=40 (< margin×2=60). With full margin the stubs overshoot each other,
+		// an arrangement that tends to loop around the top or bottom. Shorten the stubs and collapse to a straight line.
 		const source: OrthogonalConnectorEndpoint = {
-			point: { x: 150, y: 200 }, // 右辺中央
+			point: { x: 150, y: 200 }, // right-edge center
 			direction: "right",
 			box: boxAt(100, 200),
 		};
 		const target: OrthogonalConnectorEndpoint = {
-			point: { x: 190, y: 200 }, // 左辺中央（gap=40）
+			point: { x: 190, y: 200 }, // left-edge center (gap=40)
 			direction: "left",
 			box: boxAt(240, 200),
 		};
@@ -293,9 +293,9 @@ describe("routeOrthogonalConnector", () => {
 		]);
 	});
 
-	it("近接して向かい合う縦ずれ配置は中間で 1 度折れる Z になる（回り込まない）", () => {
-		// gap=40、y が 60 ずれ。回り込み（複数の折れ＋逆走）ではなく、ギャップ中央で
-		// 折れる素直な Z（4 点・折り返しゼロ）になる。
+	it("a close, facing, vertically offset arrangement becomes a Z that bends once in the middle (no detour)", () => {
+		// gap=40, y offset of 60. Rather than a detour (multiple bends + reversal), it becomes a
+		// plain Z bending at the center of the gap (4 points, zero reversals).
 		const source: OrthogonalConnectorEndpoint = {
 			point: { x: 150, y: 200 },
 			direction: "right",
@@ -308,25 +308,25 @@ describe("routeOrthogonalConnector", () => {
 		};
 		const path = routeOrthogonalConnector(source, target);
 		expect(path).toHaveLength(4);
-		expect(path[1].x).toBe(path[2].x); // ギャップ中央の縦ジョグ
-		expect(path[1].x).toBe(170); // 150 と 190 の中点
+		expect(path[1].x).toBe(path[2].x); // vertical jog at the center of the gap
+		expect(path[1].x).toBe(170); // midpoint of 150 and 190
 		expect(countReversals(path)).toBe(0);
 		expect(allSegmentsOrthogonal(path)).toBe(true);
 	});
 
-	it("margin を変えるとスタブの押し出し量が変わる", () => {
+	it("changing margin changes how far the stub is pushed out", () => {
 		const source: OrthogonalConnectorEndpoint = {
 			point: { x: 150, y: 100 },
 			direction: "right",
 			box: boxAt(100, 100),
 		};
 		const target: OrthogonalConnectorEndpoint = {
-			point: { x: 150, y: 400 }, // 真下方向（縦ずれ）。L 字になる。
+			point: { x: 150, y: 400 }, // directly below (vertical offset). Forms an L shape.
 			direction: "left",
 			box: boxAt(200, 400),
 		};
 		const path = routeOrthogonalConnector(source, target, { margin: 40 });
-		// source 右へ 40 押し出した x=190 を経由する
+		// passes through x=190, source pushed 40 to the right
 		expect(path.some((p) => p.x === 190)).toBe(true);
 	});
 });

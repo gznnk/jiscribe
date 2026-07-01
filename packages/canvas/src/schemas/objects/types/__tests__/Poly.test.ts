@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { isPoly } from "../Poly";
 
 describe("isPoly", () => {
-	it("有効な Point 配列を持つオブジェクトを受け入れる", () => {
+	it("accepts an object with a valid Point array", () => {
 		expect(
 			isPoly({
 				points: [
@@ -14,24 +14,24 @@ describe("isPoly", () => {
 		).toBe(true);
 	});
 
-	it("points が空配列でも受け入れる（every は true）", () => {
+	it("accepts an empty points array (every returns true)", () => {
 		expect(isPoly({ points: [] })).toBe(true);
 	});
 
-	it("points プロパティが無ければ拒否する", () => {
+	it("rejects when the points property is absent", () => {
 		expect(isPoly({})).toBe(false);
 	});
 
-	it("points が配列でなければ拒否する", () => {
+	it("rejects when points is not an array", () => {
 		expect(isPoly({ points: "nope" })).toBe(false);
 	});
 
-	it("要素に Point でないものが含まれれば拒否する", () => {
+	it("rejects when an element is not a Point", () => {
 		expect(isPoly({ points: [{ x: 0, y: 0 }, { x: 1 }] })).toBe(false);
 		expect(isPoly({ points: [null] })).toBe(false);
 	});
 
-	it("オブジェクト以外を拒否する", () => {
+	it("rejects non-objects", () => {
 		expect(isPoly(null)).toBe(false);
 		expect(isPoly(undefined)).toBe(false);
 		expect(isPoly([])).toBe(false);

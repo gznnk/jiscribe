@@ -29,18 +29,18 @@ const poly = (id: string, points: Array<{ x: number; y: number }>) =>
 	({ id, type: "polyline", points }) as unknown;
 
 describe("calcGroupBoundingBox", () => {
-	it("childIds が空のとき null を返す", () => {
+	it("returns null when childIds is empty", () => {
 		const g = group("g", []);
 		expect(calcGroupBoundingBox(g, {})).toBeNull();
 	});
 
-	it("存在しない childId のみのとき null を返す", () => {
+	it("returns null when only nonexistent childIds are present", () => {
 		const g = group("g", ["missing"]);
 		expect(calcGroupBoundingBox(g, {})).toBeNull();
 	});
 
-	describe("単一の矩形子要素", () => {
-		it("rotation=0 の rect のバウンディングボックスを正しく計算する", () => {
+	describe("single rectangle child", () => {
+		it("correctly computes the bounding box of a rect with rotation=0", () => {
 			const child = rect("r", 100, 100, 100, 50);
 			const g = group("g", ["r"]);
 			const result = calcGroupBoundingBox(g, { r: child });
@@ -48,8 +48,8 @@ describe("calcGroupBoundingBox", () => {
 		});
 	});
 
-	describe("複数の矩形子要素", () => {
-		it("2つの rect の合成バウンディングボックスを返す", () => {
+	describe("multiple rectangle children", () => {
+		it("returns the combined bounding box of two rects", () => {
 			const r1 = rect("r1", 50, 50, 40, 40);
 			const r2 = rect("r2", 150, 150, 40, 40);
 			const g = group("g", ["r1", "r2"]);
@@ -60,8 +60,8 @@ describe("calcGroupBoundingBox", () => {
 		});
 	});
 
-	describe("ネストしたグループ", () => {
-		it("ネストしたグループを再帰的に処理してバウンディングボックスを返す", () => {
+	describe("nested groups", () => {
+		it("recursively processes nested groups and returns the bounding box", () => {
 			const child = rect("r", 100, 100, 100, 100);
 			const innerGroup = group("inner", ["r"]);
 			const outerGroup = group("outer", ["inner"]);
@@ -71,7 +71,7 @@ describe("calcGroupBoundingBox", () => {
 			expect(result).toEqual({ left: 50, top: 50, right: 150, bottom: 150 });
 		});
 
-		it("空のネストグループは無視される", () => {
+		it("empty nested groups are ignored", () => {
 			const child = rect("r", 100, 100, 100, 100);
 			const emptyInner = group("empty", []);
 			const outerGroup = group("outer", ["empty", "r"]);
@@ -81,8 +81,8 @@ describe("calcGroupBoundingBox", () => {
 		});
 	});
 
-	describe("Poly 子要素", () => {
-		it("polyline の points からバウンディングボックスを計算する", () => {
+	describe("Poly children", () => {
+		it("computes the bounding box from a polyline's points", () => {
 			const p = poly("pl", [
 				{ x: 10, y: 20 },
 				{ x: 50, y: 80 },
@@ -93,7 +93,7 @@ describe("calcGroupBoundingBox", () => {
 			expect(result).toEqual({ left: 10, top: 10, right: 50, bottom: 80 });
 		});
 
-		it("points が空の polyline は無視される", () => {
+		it("a polyline with empty points is ignored", () => {
 			const emptyPoly = poly("pl", []);
 			const g = group("g", ["pl"]);
 			expect(calcGroupBoundingBox(g, { pl: emptyPoly })).toBeNull();

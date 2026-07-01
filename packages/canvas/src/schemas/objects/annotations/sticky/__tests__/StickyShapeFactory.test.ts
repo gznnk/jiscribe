@@ -5,7 +5,7 @@ import { StickyShapeFactory } from "../StickyShapeFactory";
 
 describe("StickyShapeFactory", () => {
 	describe("createDoc", () => {
-		it("position を中央に既定サイズの sticky を生成する", () => {
+		it("creates a default-sized sticky centered on the position", () => {
 			const doc = StickyShapeFactory.createDoc({ x: 100, y: 100 }) as Record<
 				string,
 				unknown
@@ -19,7 +19,7 @@ describe("StickyShapeFactory", () => {
 			expect(doc.y).toBe(100 - STICKY_DOC_DEFAULTS.height / 2);
 		});
 
-		it("overrides の width/height を中央寄せに反映する", () => {
+		it("applies overridden width/height while keeping it centered", () => {
 			const doc = StickyShapeFactory.createDoc(
 				{ x: 50, y: 50 },
 				{ width: 20, height: 10 },
@@ -31,7 +31,7 @@ describe("StickyShapeFactory", () => {
 	});
 
 	describe("calcDimensions", () => {
-		it("既定の半サイズを返す", () => {
+		it("returns the default half-size", () => {
 			expect(StickyShapeFactory.calcDimensions()).toEqual({
 				halfWidth: STICKY_DOC_DEFAULTS.width / 2,
 				halfHeight: STICKY_DOC_DEFAULTS.height / 2,
@@ -39,7 +39,7 @@ describe("StickyShapeFactory", () => {
 		});
 	});
 
-	it("createDocFromBounds を持たない（クリック中央配置のみ）", () => {
+	it("does not have createDocFromBounds (click-to-center placement only)", () => {
 		expect(StickyShapeFactory.createDocFromBounds).toBeUndefined();
 	});
 });

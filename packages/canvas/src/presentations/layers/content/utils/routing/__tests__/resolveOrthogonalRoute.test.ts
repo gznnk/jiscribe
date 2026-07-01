@@ -5,7 +5,7 @@ import type { AnchorSpec } from "../../../../../../schemas/objects/types/Endpoin
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import { resolveOrthogonalRoute } from "../resolveOrthogonalRoute";
 
-/** isTransformedFrame を満たす無回転の Frame 系 state。 */
+/** An unrotated Frame-family state that satisfies isTransformedFrame. */
 const frameObj = (
 	id: string,
 	cx: number,
@@ -31,7 +31,7 @@ const connectPoint = (id: string): AnchorSpec =>
 const center: AnchorSpec = { kind: "center" };
 const free = (point: Point): AnchorSpec => ({ kind: "free", point });
 
-/** 各セグメントが水平 or 垂直（軸並行）であることを検証する。 */
+/** Verifies that each segment is horizontal or vertical (axis-aligned). */
 const expectOrthogonal = (path: Point[]): void => {
 	for (let i = 1; i < path.length; i++) {
 		const horizontal = path[i].y === path[i - 1].y;
@@ -41,7 +41,7 @@ const expectOrthogonal = (path: Point[]): void => {
 };
 
 describe("resolveOrthogonalRoute", () => {
-	it("free 端点同士でも端点を結ぶ直交フルパスを返す", () => {
+	it("returns a full orthogonal path connecting the endpoints even for two free endpoints", () => {
 		const source: Point = { x: 0, y: 0 };
 		const target: Point = { x: 100, y: 100 };
 
@@ -60,9 +60,9 @@ describe("resolveOrthogonalRoute", () => {
 		expectOrthogonal(path);
 	});
 
-	it("connectPoint 端点は図形の外向き法線（中心→端点）方向へスタブを出す", () => {
-		// source: cx=100 の右辺中央(150,100) → 外向き right
-		// target: cx=400 の左辺中央(350,100) → 外向き left
+	it("connectPoint endpoints emit stubs along the shape's outward normal (center → endpoint)", () => {
+		// source: right-edge center (150,100) of cx=100 → outward right
+		// target: left-edge center (350,100) of cx=400 → outward left
 		const sourceObj = frameObj("r1", 100, 100, 100, 60);
 		const targetObj = frameObj("r2", 400, 100, 100, 60);
 		const sourcePoint: Point = { x: 150, y: 100 };
@@ -80,17 +80,17 @@ describe("resolveOrthogonalRoute", () => {
 		expect(path[0]).toEqual(sourcePoint);
 		expect(path.at(-1)).toEqual(targetPoint);
 		expectOrthogonal(path);
-		// 最初のセグメントは図形面から外（右）へ押し出される
+		// the first segment is pushed out (rightward) from the shape's face
 		expect(path[1].x).toBeGreaterThan(sourcePoint.x);
-		// 最後のセグメントは target 面へ左から接近する
+		// the last segment approaches the target face from the left
 		expect(path.at(-2)!.x).toBeLessThan(targetPoint.x);
 	});
 
-	it("connectPoint の外向き方向は中心→端点で決まり、図形の回転に追従する", () => {
-		// 回転した図形でも、解決済み端点が中心の上にあれば外向きは up になる。
-		// anchor.id は固定マップに使われないことを示すため無関係な値を渡す。
+	it("the connectPoint outward direction is determined by center → endpoint and follows the shape's rotation", () => {
+		// even for a rotated shape, if the resolved endpoint is above the center, outward is up.
+		// pass an unrelated anchor.id to show it is not used for a fixed mapping.
 		const rotated = frameObj("r1", 100, 100, 100, 60, 90);
-		const sourcePoint: Point = { x: 100, y: 40 }; // 中心(100,100)の上
+		const sourcePoint: Point = { x: 100, y: 40 }; // above the center (100,100)
 		const targetPoint: Point = { x: 100, y: 400 };
 
 		const path = resolveOrthogonalRoute(
@@ -104,15 +104,15 @@ describe("resolveOrthogonalRoute", () => {
 
 		expect(path[0]).toEqual(sourcePoint);
 		expectOrthogonal(path);
-		// 端点が中心の上にあるため、スタブは上（-y）へ出る
+		// since the endpoint is above the center, the stub emerges upward (-y)
 		expect(path[1].y).toBeLessThan(sourcePoint.y);
 	});
 
-	it("center 端点は法線を使わず、相手端点へ向かう方向にフォールバックする", () => {
-		// center は connectPoint 分岐に入らないため、外向きは「相手端点へ向かう向き」。
+	it("center endpoints don't use the normal and fall back to the direction toward the other endpoint", () => {
+		// center does not enter the connectPoint branch, so outward is "the direction toward the other endpoint".
 		const sourceObj = frameObj("r1", 0, 0, 100, 60);
-		const sourcePoint: Point = { x: 50, y: 0 }; // 右辺上（アウトライン調整済み想定）
-		const targetPoint: Point = { x: 300, y: 0 }; // 右方向
+		const sourcePoint: Point = { x: 50, y: 0 }; // on the right edge (assumed outline-adjusted)
+		const targetPoint: Point = { x: 300, y: 0 }; // to the right
 
 		const path = resolveOrthogonalRoute(
 			center,
@@ -126,14 +126,14 @@ describe("resolveOrthogonalRoute", () => {
 		expect(path[0]).toEqual(sourcePoint);
 		expect(path.at(-1)).toEqual(targetPoint);
 		expectOrthogonal(path);
-		// 相手（右）へ向かうので最初のスタブは右へ
+		// heading toward the other endpoint (right), so the first stub goes right
 		expect(path[1].x).toBeGreaterThan(sourcePoint.x);
 	});
 
-	it("両端が同一図形なら自己ループ専用ルートで回り込むパスを返す", () => {
+	it("when both ends are the same shape, returns a wrap-around path via the dedicated self-loop route", () => {
 		const obj = frameObj("r1", 100, 100, 100, 60);
-		const sourcePoint: Point = { x: 100, y: 70 }; // 上辺中央
-		const targetPoint: Point = { x: 150, y: 100 }; // 右辺中央
+		const sourcePoint: Point = { x: 100, y: 70 }; // top-edge center
+		const targetPoint: Point = { x: 150, y: 100 }; // right-edge center
 
 		const path = resolveOrthogonalRoute(
 			connectPoint("topCenter"),
@@ -147,12 +147,12 @@ describe("resolveOrthogonalRoute", () => {
 		expect(path[0]).toEqual(sourcePoint);
 		expect(path.at(-1)).toEqual(targetPoint);
 		expectOrthogonal(path);
-		// 同一図形を回り込むため、直結ではなく中間の曲がり点を持つ
+		// wrapping around the same shape, so it has intermediate bends rather than a direct connection
 		expect(path.length).toBeGreaterThan(2);
 	});
 
-	it("同一 id でも box が無い（free 端点）場合は自己ループにせず通常ルートを使う", () => {
-		// free 端点は box=null。自己ループ分岐は box 必須なので通常ルータへ。
+	it("uses the normal route instead of a self-loop when there is no box (free endpoints), even with the same id", () => {
+		// free endpoints have box=null. The self-loop branch requires a box, so it goes to the normal router.
 		const sourcePoint: Point = { x: 0, y: 0 };
 		const targetPoint: Point = { x: 0, y: 0 };
 
@@ -165,7 +165,7 @@ describe("resolveOrthogonalRoute", () => {
 			null,
 		);
 
-		// 端点が一致 → 退化したパス（畳まれて単一点 or 2点）
+		// endpoints coincide → degenerate path (collapsed to a single point or 2 points)
 		expect(path[0]).toEqual(sourcePoint);
 		expect(path.at(-1)).toEqual(targetPoint);
 	});

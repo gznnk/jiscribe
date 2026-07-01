@@ -16,8 +16,8 @@ beforeAll(() => {
 });
 
 /**
- * 図形を持たない空ドキュメント。
- * source は owner 参照のみ持たせ実体は不要（編集テストは target の free 端だけを動かす）。
+ * An empty document with no shapes.
+ * The source only carries an owner reference and needs no actual shape (editing tests move only the target's free endpoint).
  */
 const emptyDoc: CanvasDoc = {
 	version: 1,
@@ -25,9 +25,9 @@ const emptyDoc: CanvasDoc = {
 } as unknown as CanvasDoc;
 
 /**
- * owned source（host 図形に接続）+ free target の one-free コネクターを作る。
- * connector の不変条件「少なくとも一方 owned」を満たすため source を owned にする。
- * 端点編集テストでは target（free 端）を編集対象にする。
+ * Build a one-free connector with an owned source (connected to a host shape) + a free target.
+ * The source is owned so the connector invariant "at least one endpoint owned" holds.
+ * Endpoint-editing tests target the target (the free endpoint).
  */
 const oneFreeConnector = (id: string, target: Point): ConnectorState =>
 	({
@@ -42,9 +42,9 @@ const oneFreeConnector = (id: string, target: Point): ConnectorState =>
 	}) as unknown as ConnectorState;
 
 /**
- * コネクター群を objects / rootIds に注入し、編集の基点となる
- * eventStartSnapshot（実機では handleGesture が dragStart 時に作る）も用意した state を作る。
- * コネクターは rootIds に混在管理されるため rootIds へ積む。
+ * Build a state that injects connectors into objects / rootIds and also prepares the
+ * eventStartSnapshot that serves as the editing baseline (in the real app, handleGesture creates it on dragStart).
+ * Connectors are managed intermixed in rootIds, so push them onto rootIds.
  */
 const stateWithConnectors = (
 	connectors: ConnectorState[],
@@ -70,7 +70,7 @@ const stateWithConnectors = (
 	};
 };
 
-/** ドラッグ系の CanvasEvent を作る。 */
+/** Build a drag-type CanvasEvent. */
 const dragEvent = (
 	type: "dragStart" | "dragEnd",
 	targetId: string,
@@ -93,10 +93,10 @@ const dragEvent = (
 		button: 0,
 	}) as unknown as CanvasEvent;
 
-describe("ConnectionAnchorEventHandler 端点編集（実体直接編集）", () => {
+describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)", () => {
 	const handler = new ConnectionAnchorEventHandler();
 
-	it("編集してもコネクターの重なり順（rootIds）が変わらない", () => {
+	it("does not change the connector's stacking order (rootIds) when editing", () => {
 		const state = stateWithConnectors([
 			oneFreeConnector("c1", { x: 10, y: 10 }),
 			oneFreeConnector("c2", { x: 20, y: 20 }),
@@ -121,7 +121,7 @@ describe("ConnectionAnchorEventHandler 端点編集（実体直接編集）", ()
 		expect(afterEnd.rootIds).toEqual(["c1", "c2", "c3"]);
 	});
 
-	it("編集中は overlay（pendingConnector）を使わず実体を直接更新する", () => {
+	it("updates the entity directly during editing without using an overlay (pendingConnector)", () => {
 		const state = stateWithConnectors([
 			oneFreeConnector("c1", { x: 10, y: 10 }),
 		]);
@@ -133,11 +133,11 @@ describe("ConnectionAnchorEventHandler 端点編集（実体直接編集）", ()
 				y: 10,
 			}),
 		);
-		// dragStart では pendingConnector を作らず、編集対象だけ記録する
+		// On dragStart, no pendingConnector is created; only the edit target is recorded
 		expect(afterStart.pendingConnector).toBeNull();
 		expect(afterStart.editingConnectorId).toBe("c1");
 
-		// dragEnd で実体（objects["c1"]）の target が直接動く
+		// On dragEnd, the entity's (objects["c1"]) target moves directly
 		const afterEnd = handler.handle(
 			afterStart,
 			dragEvent("dragEnd", "connection-anchor:edit:c1:target", {
@@ -154,7 +154,7 @@ describe("ConnectionAnchorEventHandler 端点編集（実体直接編集）", ()
 		expect(afterEnd.editingConnectorId).toBeNull();
 	});
 
-	it("端点を元の位置に戻す no-op 編集では objects 参照を据え置く（コミットされない）", () => {
+	it("keeps the objects reference for a no-op edit that returns the endpoint to its original position (no commit)", () => {
 		const state = stateWithConnectors([
 			oneFreeConnector("c1", { x: 10, y: 10 }),
 		]);
@@ -166,7 +166,7 @@ describe("ConnectionAnchorEventHandler 端点編集（実体直接編集）", ()
 				y: 10,
 			}),
 		);
-		// dragEnd を元の target 位置（10,10）で確定 → 端点は変化なし
+		// Confirm dragEnd at the original target position (10,10) -> the endpoint is unchanged
 		const afterEnd = handler.handle(
 			afterStart,
 			dragEvent("dragEnd", "connection-anchor:edit:c1:target", {
@@ -175,12 +175,12 @@ describe("ConnectionAnchorEventHandler 端点編集（実体直接編集）", ()
 			}),
 		);
 
-		// objects 参照が変わらない＝handleGesture の自動コミット判定が走らない
+		// The objects reference is unchanged = handleGesture's auto-commit check does not fire
 		expect(afterEnd.objects).toBe(state.objects);
 		expect(afterEnd.editingConnectorId).toBeNull();
 	});
 
-	it("端点が変化した編集では objects 参照が変わる（コミット対象）", () => {
+	it("changes the objects reference for an edit that moves the endpoint (subject to commit)", () => {
 		const state = stateWithConnectors([
 			oneFreeConnector("c1", { x: 10, y: 10 }),
 		]);
@@ -209,8 +209,8 @@ describe("ConnectionAnchorEventHandler 端点編集（実体直接編集）", ()
 		expect(afterEnd.rootIds).toEqual(["c1"]);
 	});
 
-	it("新規作成したコネクターは rootIds の末尾（最前面）へ挿入される", () => {
-		// source となる図形を rootIds に1つ置く（前面挿入の確認用）。
+	it("inserts a newly created connector at the end of rootIds (frontmost)", () => {
+		// Place one shape to serve as the source in rootIds (to verify front insertion).
 		const base = stateWithConnectors([]);
 		const state: CanvasControllerState = {
 			...base,
@@ -236,14 +236,14 @@ describe("ConnectionAnchorEventHandler 端点編集（実体直接編集）", ()
 			}),
 		);
 
-		// 新規コネクターは rootIds 末尾（最前面）に入り、rect-1 より上に描かれる
+		// The new connector goes to the end of rootIds (frontmost) and is drawn above rect-1
 		expect(afterEnd.rootIds.length).toBe(2);
 		expect(afterEnd.rootIds[0]).toBe("rect-1");
 		const newId = afterEnd.rootIds[1];
 		expect(afterEnd.objects[newId]?.type).toBe("connector");
 	});
 
-	it("新規コネクターは routing を省略する（省略時の既定 orthogonal に従う）", () => {
+	it("omits routing on a new connector (follows the default orthogonal when omitted)", () => {
 		const base = stateWithConnectors([]);
 		const state: CanvasControllerState = {
 			...base,
@@ -262,7 +262,7 @@ describe("ConnectionAnchorEventHandler 端点編集（実体直接編集）", ()
 			}),
 		);
 
-		// 明示フィールドは持たず（省略）、既定解釈で orthogonal になる。
+		// No explicit field (omitted); the default interpretation makes it orthogonal.
 		expect(afterStart.pendingConnector?.routing).toBeUndefined();
 		expect(isOrthogonalRouting(afterStart.pendingConnector?.routing)).toBe(
 			true,

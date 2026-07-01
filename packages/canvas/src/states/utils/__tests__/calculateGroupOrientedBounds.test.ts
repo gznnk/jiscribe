@@ -4,9 +4,9 @@ import type { ObjectState } from "../../objects/base/ObjectState";
 import { calculateGroupOrientedBounds } from "../calculateGroupOrientedBounds";
 
 /**
- * テスト用に最小限のフィールドだけを持つオブジェクトを構築するヘルパー群。
- * calculateGroupOrientedBounds が参照するのは type / childIds と
- * Frame・Poly のジオメトリフィールドのみなので、それ以外は省略する。
+ * Helpers that build objects with only the minimal fields needed for testing.
+ * calculateGroupOrientedBounds only references type / childIds and the
+ * geometry fields of Frame and Poly, so everything else is omitted.
  */
 const makeObjects = (
 	entries: Record<string, Partial<ObjectState> & { type: string }>,
@@ -57,53 +57,53 @@ const makePoly = (id: string, points: { x: number; y: number }[]) =>
 	}) as unknown as ObjectState;
 
 describe("calculateGroupOrientedBounds", () => {
-	it("グループが存在しない場合は null を返す", () => {
+	it("returns null when the group does not exist", () => {
 		const result = calculateGroupOrientedBounds(makeObjects({}), "missing");
 		expect(result).toBeNull();
 	});
 
-	it("対象オブジェクトが group 型でない場合は null を返す", () => {
+	it("returns null when the target object is not of group type", () => {
 		const objects = makeObjects({
 			r1: { id: "r1", type: "rect" },
 		});
 		expect(calculateGroupOrientedBounds(objects, "r1")).toBeNull();
 	});
 
-	it("子要素が空の場合は null を返す", () => {
+	it("returns null when there are no children", () => {
 		const objects = {
 			g: makeGroup([]),
 		};
 		expect(calculateGroupOrientedBounds(objects, "g")).toBeNull();
 	});
 
-	it("子要素がすべて存在しない ID の場合は null を返す", () => {
+	it("returns null when all child IDs are nonexistent", () => {
 		const objects = {
 			g: makeGroup(["ghost1", "ghost2"]),
 		};
 		expect(calculateGroupOrientedBounds(objects, "g")).toBeNull();
 	});
 
-	it("ジオメトリを持たない子のみの場合は null を返す", () => {
+	it("returns null when only children without geometry are present", () => {
 		const objects = {
 			g: makeGroup(["c1"]),
-			// frame でも poly でもない（geometry を持たない）子
+			// a child that is neither frame nor poly (has no geometry)
 			c1: { id: "c1", type: "connector" } as unknown as ObjectState,
 		};
 		expect(calculateGroupOrientedBounds(objects, "g")).toBeNull();
 	});
 
-	it("Frame 系の子要素のコーナー点から OBB を計算する", () => {
+	it("computes the OBB from the corner points of Frame-style children", () => {
 		const objects = {
 			g: makeGroup(["f1", "f2"]),
-			// (-5,-5)〜(5,5)
+			// (-5,-5) to (5,5)
 			f1: makeFrame("f1", { cx: 0, cy: 0, width: 10, height: 10 }),
-			// (15,-5)〜(25,5)
+			// (15,-5) to (25,5)
 			f2: makeFrame("f2", { cx: 20, cy: 0, width: 10, height: 10 }),
 		};
 
 		const result = calculateGroupOrientedBounds(objects, "g");
 
-		// 合成範囲 x:[-5,25] y:[-5,5]
+		// combined range x:[-5,25] y:[-5,5]
 		expect(result).not.toBeNull();
 		expect(result?.cx).toBeCloseTo(10);
 		expect(result?.cy).toBeCloseTo(0);
@@ -114,7 +114,7 @@ describe("calculateGroupOrientedBounds", () => {
 		expect(result?.scaleY).toBe(1);
 	});
 
-	it("存在しない子 ID は無視し、残りの子から OBB を計算する", () => {
+	it("ignores nonexistent child IDs and computes the OBB from the remaining children", () => {
 		const objects = {
 			g: makeGroup(["ghost", "f1"]),
 			f1: makeFrame("f1", { cx: 0, cy: 0, width: 10, height: 10 }),
@@ -128,7 +128,7 @@ describe("calculateGroupOrientedBounds", () => {
 		expect(result?.height).toBeCloseTo(10);
 	});
 
-	it("Poly 系の子要素は points 配列から OBB を計算する", () => {
+	it("computes the OBB from the points array for Poly-style children", () => {
 		const objects = {
 			g: makeGroup(["p1"]),
 			p1: makePoly("p1", [
@@ -147,7 +147,7 @@ describe("calculateGroupOrientedBounds", () => {
 		expect(result?.height).toBeCloseTo(20);
 	});
 
-	it("Frame と Poly が混在しても全点を含む OBB を計算する", () => {
+	it("computes an OBB containing all points even when Frame and Poly are mixed", () => {
 		const objects = {
 			g: makeGroup(["f1", "p1"]),
 			f1: makeFrame("f1", { cx: 0, cy: 0, width: 10, height: 10 }),
@@ -163,7 +163,7 @@ describe("calculateGroupOrientedBounds", () => {
 		expect(result?.height).toBeCloseTo(105);
 	});
 
-	it("ネストしたグループの子要素も再帰的に収集する", () => {
+	it("recursively collects children of nested groups", () => {
 		const objects = {
 			g: makeGroup(["inner", "f1"]),
 			inner: {
@@ -181,13 +181,13 @@ describe("calculateGroupOrientedBounds", () => {
 
 		const result = calculateGroupOrientedBounds(objects, "g");
 
-		// ネストした f2 も含めて x:[-5,25] y:[-5,5]
+		// including the nested f2, x:[-5,25] y:[-5,5]
 		expect(result?.cx).toBeCloseTo(10);
 		expect(result?.width).toBeCloseTo(30);
 		expect(result?.height).toBeCloseTo(10);
 	});
 
-	it("グループの rotation / scale を OBB の transform として保持する", () => {
+	it("preserves the group's rotation / scale as the OBB's transform", () => {
 		const objects = {
 			g: makeGroup(["f1"], { rotation: 90, scaleX: 2, scaleY: 3 }),
 			f1: makeFrame("f1", { cx: 0, cy: 0, width: 10, height: 10 }),
@@ -200,10 +200,10 @@ describe("calculateGroupOrientedBounds", () => {
 		expect(result?.scaleY).toBe(3);
 	});
 
-	it("回転した Frame 子要素はコーナー点を回転させて包含する", () => {
+	it("encloses a rotated Frame child by rotating its corner points", () => {
 		const objects = {
 			g: makeGroup(["f1"]),
-			// 90度回転させると幅と高さが入れ替わる
+			// rotating 90 degrees swaps width and height
 			f1: makeFrame("f1", {
 				cx: 0,
 				cy: 0,
@@ -215,7 +215,7 @@ describe("calculateGroupOrientedBounds", () => {
 
 		const result = calculateGroupOrientedBounds(objects, "g");
 
-		// 回転後の AABB は width:10 height:20
+		// the AABB after rotation is width:10 height:20
 		expect(result?.width).toBeCloseTo(10);
 		expect(result?.height).toBeCloseTo(20);
 	});

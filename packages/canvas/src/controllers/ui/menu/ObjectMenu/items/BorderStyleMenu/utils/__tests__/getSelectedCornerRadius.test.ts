@@ -17,16 +17,16 @@ const state = (
 	({ objects, selectedIds }) as unknown as CanvasControllerState;
 
 describe("getSelectedCornerRadius", () => {
-	it("選択なし → 既定値", () => {
+	it("no selection → default value", () => {
 		expect(getSelectedCornerRadius(state({}, []))).toBe(DEFAULT_CORNER_RADIUS);
 	});
 
-	it("rx を持つ → その値", () => {
+	it("has rx → its value", () => {
 		const s = state({ a: obj("a", { rx: 12 }) }, ["a"]);
 		expect(getSelectedCornerRadius(s)).toBe(12);
 	});
 
-	it("rx が数値でない → 既定値", () => {
+	it("rx is not a number → default value", () => {
 		const s = state({ a: obj("a", { rx: "round" }) }, ["a"]);
 		expect(getSelectedCornerRadius(s)).toBe(DEFAULT_CORNER_RADIUS);
 	});

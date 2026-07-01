@@ -24,8 +24,8 @@ const makeGroup = (id: string, childIds: string[]): GroupState =>
 	({ id, type: "group", parentId: undefined, childIds }) as GroupState;
 
 describe("SendBackwardCommand", () => {
-	describe("ルート直下の選択", () => {
-		it("単一選択を 1 つ背面へ（隣と入れ替え）移動する", () => {
+	describe("selection at the root level", () => {
+		it("moves a single selection one step back (swapping with its neighbor)", () => {
 			const state = makeState({
 				selectedIds: ["c"],
 				objects: { a: makeRect("a"), b: makeRect("b"), c: makeRect("c") },
@@ -38,7 +38,7 @@ describe("SendBackwardCommand", () => {
 			]);
 		});
 
-		it("最背面の要素は移動しない", () => {
+		it("does not move the backmost element", () => {
 			const state = makeState({
 				selectedIds: ["a"],
 				objects: { a: makeRect("a"), b: makeRect("b"), c: makeRect("c") },
@@ -51,7 +51,7 @@ describe("SendBackwardCommand", () => {
 			]);
 		});
 
-		it("連続する選択ブロックは塊として 1 つ後退する", () => {
+		it("moves a contiguous selection block back as a single unit", () => {
 			const state = makeState({
 				selectedIds: ["b", "c"],
 				objects: {
@@ -70,7 +70,7 @@ describe("SendBackwardCommand", () => {
 			]);
 		});
 
-		it("commitVersion を増分する", () => {
+		it("increments commitVersion", () => {
 			const state = makeState({
 				selectedIds: ["b"],
 				objects: { a: makeRect("a"), b: makeRect("b") },
@@ -80,8 +80,8 @@ describe("SendBackwardCommand", () => {
 		});
 	});
 
-	describe("同一グループ内の選択", () => {
-		it("childIds 内で 1 つ背面へ移動し rootIds は変えない", () => {
+	describe("selection within the same group", () => {
+		it("moves one step back within childIds without changing rootIds", () => {
 			const state = makeState({
 				selectedIds: ["c3"],
 				objects: {
@@ -103,7 +103,7 @@ describe("SendBackwardCommand", () => {
 	});
 
 	describe("canExecute", () => {
-		it("同一親に属する選択は実行可能", () => {
+		it("is executable when the selection shares the same parent", () => {
 			const state = makeState({
 				selectedIds: ["a", "b"],
 				objects: { a: makeRect("a"), b: makeRect("b") },
@@ -112,7 +112,7 @@ describe("SendBackwardCommand", () => {
 			expect(SendBackwardCommand.canExecute(state)).toBe(true);
 		});
 
-		it("選択が無ければ実行不可", () => {
+		it("is not executable when there is no selection", () => {
 			expect(
 				SendBackwardCommand.canExecute(
 					makeState({ selectedIds: [], objects: {}, rootIds: [] }),

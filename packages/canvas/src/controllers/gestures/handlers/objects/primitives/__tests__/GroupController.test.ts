@@ -27,7 +27,7 @@ const makeGroup = (overrides?: Partial<GroupState>): GroupState =>
 	}) as unknown as GroupState;
 
 describe("GroupController.moveByDelta", () => {
-	it("group 自身は移動せず state をそのまま返す（子孫は moveGroup が担当）", () => {
+	it("the group itself does not move and the state is returned as-is (descendants are handled by moveGroup)", () => {
 		const group = makeGroup({ cx: 100, cy: 100 });
 		const result = moveByDelta(group, { x: 10, y: 20 });
 		expect(result).toBe(group);
@@ -36,8 +36,8 @@ describe("GroupController.moveByDelta", () => {
 	});
 });
 
-describe("GroupController group 変形の委譲", () => {
-	it("transformByGroup は transformGroupByGroup に委譲する", () => {
+describe("GroupController delegation of group transforms", () => {
+	it("transformByGroup delegates to transformGroupByGroup", () => {
 		const group = makeGroup();
 		const start = makeGroup({ id: "root", width: 200 });
 		const end = makeGroup({ id: "root", width: 400 });
@@ -46,7 +46,7 @@ describe("GroupController group 変形の委譲", () => {
 		);
 	});
 
-	it("rotateByGroup は rotateGroupByGroup に委譲する", () => {
+	it("rotateByGroup delegates to rotateGroupByGroup", () => {
 		const group = makeGroup();
 		const root = makeGroup({ id: "root", rotation: 0 });
 		expect(rotateByGroup(group, root, 90)).toEqual(

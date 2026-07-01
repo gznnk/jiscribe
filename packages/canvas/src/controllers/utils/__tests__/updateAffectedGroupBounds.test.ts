@@ -47,24 +47,24 @@ const makeState = (
 ): CanvasControllerState => ({ objects }) as unknown as CanvasControllerState;
 
 describe("updateAffectedGroupBounds", () => {
-	it("ルートレベルの選択（親グループなし）→ 同一参照を返す", () => {
+	it("root-level selection (no parent group) → returns the same reference", () => {
 		const objects = { r1: rect("r1", 100, 100) };
 		const state = makeState(objects);
 		const result = updateAffectedGroupBounds(state, ["r1"]);
 		expect(result).toBe(state);
 	});
 
-	it("selectedIds が空 → 同一参照を返す", () => {
+	it("empty selectedIds → returns the same reference", () => {
 		const state = makeState({});
 		expect(updateAffectedGroupBounds(state, [])).toBe(state);
 	});
 
-	it("存在しない ID → 同一参照を返す", () => {
+	it("nonexistent ID → returns the same reference", () => {
 		const state = makeState({});
 		expect(updateAffectedGroupBounds(state, ["missing"])).toBe(state);
 	});
 
-	it("1 階層のグループ → 親グループの境界が更新される", () => {
+	it("single-level group → the parent group's bounds are updated", () => {
 		const r1 = rect("r1", 100, 100, "g1");
 		const g1 = group("g1", ["r1"]);
 		const state = makeState({ g1, r1 });
@@ -81,26 +81,26 @@ describe("updateAffectedGroupBounds", () => {
 		expect(updatedG1.height).toBeCloseTo(20);
 	});
 
-	it("2 階層のネストグループ → 全祖先が更新される", () => {
+	it("two-level nested group → all ancestors are updated", () => {
 		const r1 = rect("r1", 50, 50, "inner");
 		const inner = group("inner", ["r1"], "outer");
 		const outer = group("outer", ["inner"]);
 		const state = makeState({ r1, inner, outer });
 		const result = updateAffectedGroupBounds(state, ["r1"]);
-		// inner も outer も更新されていることを確認
+		// verify that both inner and outer are updated
 		const updatedInner = result.objects["inner"] as unknown as { cx: number };
 		const updatedOuter = result.objects["outer"] as unknown as { cx: number };
 		expect(updatedInner.cx).toBeCloseTo(50);
 		expect(updatedOuter.cx).toBeCloseTo(50);
 	});
 
-	it("元の state.objects は変更されない（イミュータブル）", () => {
+	it("the original state.objects is not mutated (immutable)", () => {
 		const r1 = rect("r1", 100, 100, "g1");
 		const g1 = group("g1", ["r1"]);
 		const originalObjects = { g1, r1 };
 		const state = makeState(originalObjects);
 		updateAffectedGroupBounds(state, ["r1"]);
 		const originalG1 = originalObjects["g1"] as unknown as { cx: number };
-		expect(originalG1.cx).toBe(0); // 元の値が変わっていない
+		expect(originalG1.cx).toBe(0); // the original value is unchanged
 	});
 });

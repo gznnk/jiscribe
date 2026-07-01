@@ -24,8 +24,8 @@ const makeGroup = (id: string, childIds: string[]): GroupState =>
 	({ id, type: "group", parentId: undefined, childIds }) as GroupState;
 
 describe("BringForwardCommand", () => {
-	describe("ルート直下の選択", () => {
-		it("単一選択を 1 つ前面へ（隣と入れ替え）移動する", () => {
+	describe("selection at the root level", () => {
+		it("moves a single selection one step forward (swapping with its neighbor)", () => {
 			const state = makeState({
 				selectedIds: ["a"],
 				objects: { a: makeRect("a"), b: makeRect("b"), c: makeRect("c") },
@@ -38,7 +38,7 @@ describe("BringForwardCommand", () => {
 			]);
 		});
 
-		it("最前面の要素は移動しない", () => {
+		it("does not move the frontmost element", () => {
 			const state = makeState({
 				selectedIds: ["c"],
 				objects: { a: makeRect("a"), b: makeRect("b"), c: makeRect("c") },
@@ -51,7 +51,7 @@ describe("BringForwardCommand", () => {
 			]);
 		});
 
-		it("連続する選択ブロックは塊として 1 つ前進する", () => {
+		it("advances a contiguous selection block forward as a single unit", () => {
 			const state = makeState({
 				selectedIds: ["b", "c"],
 				objects: {
@@ -62,7 +62,7 @@ describe("BringForwardCommand", () => {
 				},
 				rootIds: ["a", "b", "c", "d"],
 			});
-			// b,c の塊が d の前面側へ。隣接 selected 同士は入れ替えない
+			// the b,c block moves in front of d; adjacent selected items are not swapped
 			expect(BringForwardCommand.execute(state).rootIds).toEqual([
 				"a",
 				"d",
@@ -71,7 +71,7 @@ describe("BringForwardCommand", () => {
 			]);
 		});
 
-		it("commitVersion を増分する", () => {
+		it("increments commitVersion", () => {
 			const state = makeState({
 				selectedIds: ["a"],
 				objects: { a: makeRect("a"), b: makeRect("b") },
@@ -81,8 +81,8 @@ describe("BringForwardCommand", () => {
 		});
 	});
 
-	describe("同一グループ内の選択", () => {
-		it("childIds 内で 1 つ前面へ移動し rootIds は変えない", () => {
+	describe("selection within the same group", () => {
+		it("moves one step forward within childIds without changing rootIds", () => {
 			const state = makeState({
 				selectedIds: ["c1"],
 				objects: {
@@ -104,7 +104,7 @@ describe("BringForwardCommand", () => {
 	});
 
 	describe("canExecute", () => {
-		it("同一親に属する選択は実行可能", () => {
+		it("is executable when the selection shares the same parent", () => {
 			const state = makeState({
 				selectedIds: ["a", "b"],
 				objects: { a: makeRect("a"), b: makeRect("b") },
@@ -113,7 +113,7 @@ describe("BringForwardCommand", () => {
 			expect(BringForwardCommand.canExecute(state)).toBe(true);
 		});
 
-		it("選択が無ければ実行不可", () => {
+		it("is not executable when there is no selection", () => {
 			expect(
 				BringForwardCommand.canExecute(
 					makeState({ selectedIds: [], objects: {}, rootIds: [] }),
@@ -121,7 +121,7 @@ describe("BringForwardCommand", () => {
 			).toBe(false);
 		});
 
-		it("親が異なる混在選択は実行不可", () => {
+		it("is not executable for a mixed selection with different parents", () => {
 			const state = makeState({
 				selectedIds: ["a", "c1"],
 				objects: {

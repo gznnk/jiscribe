@@ -5,11 +5,11 @@ import { isTransformState } from "../TransformState";
 const validTransform = { rotation: 0, scaleX: 1, scaleY: 1 };
 
 describe("isTransformState", () => {
-	it("rotation/scaleX/scaleY が揃った Transform を受け入れる", () => {
+	it("accepts a Transform with rotation/scaleX/scaleY all present", () => {
 		expect(isTransformState(validTransform)).toBe(true);
 	});
 
-	it("lockAspectRatio が boolean なら受け入れる", () => {
+	it("accepts lockAspectRatio when it is a boolean", () => {
 		expect(isTransformState({ ...validTransform, lockAspectRatio: true })).toBe(
 			true,
 		);
@@ -18,24 +18,24 @@ describe("isTransformState", () => {
 		).toBe(true);
 	});
 
-	it("lockAspectRatio が undefined なら無視して受け入れる", () => {
+	it("ignores lockAspectRatio and accepts when it is undefined", () => {
 		expect(
 			isTransformState({ ...validTransform, lockAspectRatio: undefined }),
 		).toBe(true);
 	});
 
-	it("lockAspectRatio が boolean 以外なら拒否する", () => {
+	it("rejects lockAspectRatio when it is not a boolean", () => {
 		expect(
 			isTransformState({ ...validTransform, lockAspectRatio: "yes" }),
 		).toBe(false);
 	});
 
-	it("Transform の必須プロパティが欠けていれば拒否する", () => {
+	it("rejects when a required Transform property is missing", () => {
 		expect(isTransformState({ scaleX: 1, scaleY: 1 })).toBe(false);
 		expect(isTransformState({ rotation: 0, scaleY: 1 })).toBe(false);
 	});
 
-	it("オブジェクト以外は拒否する", () => {
+	it("rejects non-objects", () => {
 		expect(isTransformState(null)).toBe(false);
 		expect(isTransformState(undefined)).toBe(false);
 		expect(isTransformState(42)).toBe(false);

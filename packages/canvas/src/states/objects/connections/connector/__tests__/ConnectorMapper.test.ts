@@ -36,13 +36,13 @@ describe("ConnectorMapper", () => {
 
 			expect(state.id).toBe("connector-1");
 			expect(state.type).toBe("connector");
-			// points（中間経由点）は読み込み時にそのまま引き継ぐ。
+			// points (intermediate waypoints) are carried over as-is on load.
 			expect(state.points).toEqual([
 				{ x: 0, y: 0 },
 				{ x: 100, y: 50 },
 				{ x: 200, y: 0 },
 			]);
-			// routing は未指定なら undefined のまま引き継ぐ。
+			// routing stays undefined and is carried over when unspecified.
 			expect(state.routing).toBeUndefined();
 			expect(state.stroke).toBe("#000000");
 			expect(state.strokeWidth).toBe(2);
@@ -79,7 +79,7 @@ describe("ConnectorMapper", () => {
 
 			expect(state.id).toBe("connector-2");
 			expect(state.type).toBe("connector");
-			// points（中間経由点）は読み込み時にそのまま引き継ぐ。
+			// points (intermediate waypoints) are carried over as-is on load.
 			expect(state.points).toEqual([
 				{ x: 0, y: 0 },
 				{ x: 50, y: 50 },
@@ -208,9 +208,9 @@ describe("ConnectorMapper", () => {
 
 			expect(convertedDoc.id).toBe(originalDoc.id);
 			expect(convertedDoc.type).toBe(originalDoc.type);
-			// points（中間経由点）は往復で保持される。
+			// points (intermediate waypoints) are preserved across the round-trip.
 			expect(convertedDoc.points).toEqual(originalDoc.points);
-			// routing も往復で保持される。
+			// routing is also preserved across the round-trip.
 			expect(convertedDoc.routing).toBe("orthogonal");
 			expect(convertedDoc.stroke).toBe(originalDoc.stroke);
 			expect(convertedDoc.strokeWidth).toBe(originalDoc.strokeWidth);

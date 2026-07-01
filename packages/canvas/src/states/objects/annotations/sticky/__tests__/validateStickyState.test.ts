@@ -17,24 +17,24 @@ const validSticky = {
 };
 
 describe("isValidStickyState", () => {
-	it("有効な Sticky は true", () => {
+	it("returns true for a valid Sticky", () => {
 		expect(isValidStickyState(validSticky)).toBe(true);
 	});
 
-	it("type 不一致 / 必須ジオメトリ欠落は false", () => {
+	it("returns false on type mismatch / missing required geometry", () => {
 		expect(isValidStickyState({ ...validSticky, type: "rect" })).toBe(false);
 		expect(isValidStickyState({ ...validSticky, cx: undefined })).toBe(false);
 	});
 
-	it("width / height が負数は false（minimum: 0）", () => {
+	it("returns false when width / height is negative (minimum: 0)", () => {
 		expect(isValidStickyState({ ...validSticky, width: -1 })).toBe(false);
 	});
 
-	it("fontSize < 1 は false（>= 1）", () => {
+	it("returns false when fontSize < 1 (>= 1)", () => {
 		expect(isValidStickyState({ ...validSticky, fontSize: 0 })).toBe(false);
 	});
 
-	it("CSS インジェクションを含む fontFamily は false", () => {
+	it("returns false for a fontFamily containing CSS injection", () => {
 		expect(
 			isValidStickyState({ ...validSticky, fontFamily: "Arial; } body {" }),
 		).toBe(false);

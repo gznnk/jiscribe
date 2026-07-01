@@ -7,8 +7,9 @@ import type {
 } from "../GestureRecognizerTypes";
 import type * as RecognizerUtils from "../utils";
 
-// DOM レイアウト依存のユーティリティ（getSvgPoint / getHoveredElements など）は
-// node 環境では動かないため、順序ロジックの検証に必要な範囲で決定的なスタブに差し替える。
+// DOM-layout-dependent utilities (getSvgPoint / getHoveredElements, etc.) do not work in
+// the node environment, so replace them with deterministic stubs to the extent needed to
+// verify the ordering logic.
 vi.mock("../utils", async (importActual) => {
 	const actual = await importActual<typeof RecognizerUtils>();
 	return {
@@ -27,7 +28,7 @@ vi.mock("../utils", async (importActual) => {
 	};
 });
 
-/** 保留中の RAF コールバックを手動で flush できるようにする */
+/** Allows manually flushing pending RAF callbacks */
 let rafCallbacks: FrameRequestCallback[] = [];
 
 const flushRaf = (): void => {
@@ -121,10 +122,10 @@ const setup = () => {
 };
 
 describe("GestureRecognizer batch ordering (#42)", () => {
-	it("同一フレームの down→move→up は drag として成立し、click にならない", () => {
+	it("down->move->up within the same frame becomes a drag, not a click", () => {
 		const { events, dispatch } = setup();
 
-		// 3 イベントを flush 前に投入し、同一フレーム合体を再現する
+		// Dispatch 3 events before flushing to reproduce same-frame coalescing
 		dispatch(makeEvent("pointerdown", 0, 0, 0));
 		dispatch(makeEvent("pointermove", 5, 0, 8)); // 5px > DRAG_THRESHOLD(3px)
 		dispatch(makeEvent("pointerup", 5, 0, 16));
@@ -137,7 +138,7 @@ describe("GestureRecognizer batch ordering (#42)", () => {
 		expect(types).toEqual(["pressed", "dragStart", "dragEnd"]);
 	});
 
-	it("move を伴わない down→up（同一フレーム）は click になる", () => {
+	it("down->up without a move (same frame) becomes a click", () => {
 		const { events, dispatch } = setup();
 
 		dispatch(makeEvent("pointerdown", 0, 0, 0));
@@ -148,7 +149,7 @@ describe("GestureRecognizer batch ordering (#42)", () => {
 		expect(types).toEqual(["pressed", "click"]);
 	});
 
-	it("フレームをまたぐ通常ドラッグも引き続き成立する", () => {
+	it("a normal drag spanning multiple frames still works", () => {
 		const { events, dispatch } = setup();
 
 		dispatch(makeEvent("pointerdown", 0, 0, 0));
@@ -164,12 +165,12 @@ describe("GestureRecognizer batch ordering (#42)", () => {
 		expect(types).toEqual(["pressed", "dragStart", "drag", "dragEnd"]);
 	});
 
-	it("同一フレームに複数の move が来ても最新位置に合体し、順序は保たれる", () => {
+	it("multiple moves in the same frame coalesce to the latest position while order is preserved", () => {
 		const { events, dispatch } = setup();
 
 		dispatch(makeEvent("pointerdown", 0, 0, 0));
 		dispatch(makeEvent("pointermove", 4, 0, 4));
-		dispatch(makeEvent("pointermove", 30, 0, 8)); // 最新の move
+		dispatch(makeEvent("pointermove", 30, 0, 8)); // latest move
 		dispatch(makeEvent("pointerup", 30, 0, 16));
 		flushRaf();
 
@@ -180,7 +181,7 @@ describe("GestureRecognizer batch ordering (#42)", () => {
 			"dragStart",
 			"dragEnd",
 		]);
-		// 合体後は最新 move の位置（x=30）で dragStart が発火する
+		// After coalescing, dragStart fires at the latest move position (x=30)
 		expect(dragStart?.last.x).toBe(30);
 		expect(dragEnd?.last.x).toBe(30);
 	});

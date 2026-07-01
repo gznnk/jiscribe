@@ -8,7 +8,7 @@ import {
 	countReversals,
 } from "../routeCost";
 
-// 中心 (100,100) 100x60 → AABB: left50 right150 top70 bottom130
+// center (100,100) 100x60 → AABB: left50 right150 top70 bottom130
 const box: BoxFeatures = calcFrameBoxFeatures({
 	cx: 100,
 	cy: 100,
@@ -20,7 +20,7 @@ const box: BoxFeatures = calcFrameBoxFeatures({
 });
 
 describe("countReversals", () => {
-	it("同一軸で逆走する中間点を折り返しとして数える", () => {
+	it("counts intermediate points that reverse along the same axis as reversals", () => {
 		expect(
 			countReversals([
 				{ x: 0, y: 0 },
@@ -30,7 +30,7 @@ describe("countReversals", () => {
 		).toBe(1);
 	});
 
-	it("直進・直角は折り返しではない", () => {
+	it("going straight or turning at a right angle is not a reversal", () => {
 		expect(
 			countReversals([
 				{ x: 0, y: 0 },
@@ -48,7 +48,7 @@ describe("countReversals", () => {
 });
 
 describe("countBoxCrossings", () => {
-	it("box を貫通するセグメントを数える", () => {
+	it("counts segments that pass through the box", () => {
 		expect(
 			countBoxCrossings(
 				[
@@ -61,7 +61,7 @@ describe("countBoxCrossings", () => {
 		).toBe(1);
 	});
 
-	it("box の外を通るセグメントは数えない", () => {
+	it("does not count segments that pass outside the box", () => {
 		expect(
 			countBoxCrossings(
 				[
@@ -74,8 +74,8 @@ describe("countBoxCrossings", () => {
 		).toBe(0);
 	});
 
-	it("垂直セグメントの貫通も 1 と数える", () => {
-		// x=100 は (left50, right150) の内側、y は top70/bottom130 を跨ぐ
+	it("also counts a vertical segment crossing as 1", () => {
+		// x=100 is inside (left50, right150), y crosses top70/bottom130
 		expect(
 			countBoxCrossings(
 				[
@@ -88,8 +88,8 @@ describe("countBoxCrossings", () => {
 		).toBe(1);
 	});
 
-	it("辺にちょうど乗る/接するだけのセグメントは数えない（接触は貫通でない）", () => {
-		// 上辺 y=70 に乗る水平線
+	it("does not count segments that merely lie on or touch an edge (touching is not crossing)", () => {
+		// horizontal line lying on the top edge y=70
 		expect(
 			countBoxCrossings(
 				[
@@ -100,7 +100,7 @@ describe("countBoxCrossings", () => {
 				null,
 			),
 		).toBe(0);
-		// 左辺 x=50 で止まる（跨がない）水平線
+		// horizontal line that stops at the left edge x=50 (does not cross)
 		expect(
 			countBoxCrossings(
 				[
@@ -115,14 +115,14 @@ describe("countBoxCrossings", () => {
 });
 
 describe("compareCost", () => {
-	it("貫通数が最優先（美観がどれだけ良くても貫通ありは負ける）", () => {
+	it("crossing count takes top priority (any crossing loses no matter how good the aesthetics)", () => {
 		const crossing = { crossings: 1, aesthetic: 0 };
 		const clean = { crossings: 0, aesthetic: 9_999 };
-		// compareCost(a,b) < 0 なら a が良い
+		// compareCost(a,b) < 0 means a is better
 		expect(compareCost(clean, crossing)).toBeLessThan(0);
 	});
 
-	it("貫通数が同じなら美観で比較する", () => {
+	it("compares by aesthetics when the crossing count is equal", () => {
 		expect(
 			compareCost(
 				{ crossings: 0, aesthetic: 10 },
@@ -133,8 +133,8 @@ describe("compareCost", () => {
 });
 
 describe("calcRouteCost", () => {
-	it("折り返しを含む経路は REVERSAL_PENALTY で大きく不利になる", () => {
-		// 同じ「1 角」でも、逆走スパイクの方が回り込みより大幅に高コスト
+	it("a route with a reversal is heavily penalized by REVERSAL_PENALTY", () => {
+		// even for the same single corner, a reversal spike costs far more than a detour
 		const spike = [
 			{ x: 0, y: 0 },
 			{ x: 20, y: 0 },
@@ -149,11 +149,11 @@ describe("calcRouteCost", () => {
 		const cleanCost = calcRouteCost(clean, clean, null, null, false);
 		expect(spikeCost.crossings).toBe(0);
 		expect(cleanCost.crossings).toBe(0);
-		// ペナルティ（10,000）分、spike の aesthetic が桁違いに大きい
+		// by the penalty (10,000), spike's aesthetic is dramatically larger
 		expect(spikeCost.aesthetic).toBeGreaterThan(cleanCost.aesthetic + 9_000);
 	});
 
-	it("crossings は simplifiedElbow の貫通数を反映する", () => {
+	it("crossings reflects the crossing count of simplifiedElbow", () => {
 		const elbow = [
 			{ x: 0, y: 100 },
 			{ x: 200, y: 100 },

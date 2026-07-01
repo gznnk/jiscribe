@@ -15,14 +15,14 @@ const validPolyline = {
 };
 
 describe("isValidPolylineState", () => {
-	it("有効な Polyline（2 点以上）は true", () => {
+	it("valid Polyline (2 or more points) is true", () => {
 		expect(isValidPolylineState(validPolyline)).toBe(true);
 		expect(isValidPolylineState({ ...validPolyline, points: pts(5) })).toBe(
 			true,
 		);
 	});
 
-	it("points が 1 点のみ / 欠落は false（最低 2 点）", () => {
+	it("points with only 1 point / missing is false (minimum 2 points)", () => {
 		expect(isValidPolylineState({ ...validPolyline, points: pts(1) })).toBe(
 			false,
 		);
@@ -31,13 +31,13 @@ describe("isValidPolylineState", () => {
 		);
 	});
 
-	it("不正な ArrowType は false", () => {
+	it("invalid ArrowType is false", () => {
 		expect(
 			isValidPolylineState({ ...validPolyline, endArrow: "diamond" }),
 		).toBe(false);
 	});
 
-	it("CSS インジェクションを含む stroke は false", () => {
+	it("stroke containing CSS injection is false", () => {
 		expect(
 			isValidPolylineState({ ...validPolyline, stroke: "red; } body {" }),
 		).toBe(false);

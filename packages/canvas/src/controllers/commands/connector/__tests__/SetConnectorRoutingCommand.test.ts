@@ -9,7 +9,7 @@ import {
 	SetRoutingStraightCommand,
 } from "../SetConnectorRoutingCommand";
 
-/** 既定は両端 free（自己ループでない）。owners を渡すと owned 端点になる。 */
+/** By default both ends are free (not a self-loop). Passing owners makes the endpoints owned. */
 const makeConnector = (
 	id: string,
 	routing: "straight" | "orthogonal" | undefined,
@@ -52,7 +52,7 @@ const makeState = (params: {
 
 describe("SetConnectorRoutingCommand", () => {
 	describe("SetRoutingOrthogonalCommand", () => {
-		it("orthogonal へ切り替えると手動 waypoint(points) を破棄する", () => {
+		it("discards manual waypoints (points) when switching to orthogonal", () => {
 			const waypoints: Point[] = [{ x: 10, y: 20 }];
 			const state = makeState({
 				selectedConnectorId: "c1",
@@ -65,14 +65,14 @@ describe("SetConnectorRoutingCommand", () => {
 
 			expect(conn.routing).toBe("orthogonal");
 			expect(conn.points).toEqual([]);
-			// waypoint ハンドルが消えるため選択中 waypoint はクリアする
+			// the waypoint handles disappear, so the selected waypoint is cleared
 			expect(next.selectedVertex).toBeNull();
 			expect(next.commitVersion).toBe(1);
 		});
 	});
 
 	describe("SetRoutingStraightCommand", () => {
-		it("straight へ切り替えても既存 waypoint を温存する", () => {
+		it("preserves existing waypoints when switching to straight", () => {
 			const waypoints: Point[] = [{ x: 10, y: 20 }];
 			const state = makeState({
 				selectedConnectorId: "c1",
@@ -88,8 +88,8 @@ describe("SetConnectorRoutingCommand", () => {
 		});
 	});
 
-	describe("実効 routing が変わらない場合", () => {
-		it("既定(routing 省略)へ orthogonal を適用しても no-op（冗長な値を書き込まない）", () => {
+	describe("when the effective routing does not change", () => {
+		it("applying orthogonal to the default (routing omitted) is a no-op (writes no redundant value)", () => {
 			const state = makeState({
 				selectedConnectorId: "c1",
 				objects: { c1: makeConnector("c1", undefined, []) },
@@ -97,13 +97,13 @@ describe("SetConnectorRoutingCommand", () => {
 
 			const next = SetRoutingOrthogonalCommand.execute(state);
 
-			// state 参照そのまま（履歴エントリも作らない）
+			// same state reference (no history entry is created)
 			expect(next).toBe(state);
 			const conn = next.objects["c1"] as ConnectorState;
 			expect(conn.routing).toBeUndefined();
 		});
 
-		it("straight へ straight を再適用しても no-op", () => {
+		it("re-applying straight to straight is a no-op", () => {
 			const state = makeState({
 				selectedConnectorId: "c1",
 				objects: { c1: makeConnector("c1", "straight", [{ x: 1, y: 2 }]) },
@@ -113,7 +113,7 @@ describe("SetConnectorRoutingCommand", () => {
 	});
 
 	describe("canExecute", () => {
-		it("コネクターが選択されていれば実行可能", () => {
+		it("is executable when a connector is selected", () => {
 			const state = makeState({
 				selectedConnectorId: "c1",
 				objects: { c1: makeConnector("c1", undefined, []) },
@@ -122,7 +122,7 @@ describe("SetConnectorRoutingCommand", () => {
 			expect(SetRoutingOrthogonalCommand.canExecute(state)).toBe(true);
 		});
 
-		it("コネクター未選択なら実行不可", () => {
+		it("is not executable when no connector is selected", () => {
 			const state = makeState({
 				selectedConnectorId: null,
 				objects: { r1: makeRect("r1") },
@@ -131,7 +131,7 @@ describe("SetConnectorRoutingCommand", () => {
 			expect(SetRoutingOrthogonalCommand.canExecute(state)).toBe(false);
 		});
 
-		it("自己ループは straight 不可・orthogonal 可（直交専用）", () => {
+		it("self-loops cannot be straight but can be orthogonal (orthogonal only)", () => {
 			const state = makeState({
 				selectedConnectorId: "c1",
 				objects: {

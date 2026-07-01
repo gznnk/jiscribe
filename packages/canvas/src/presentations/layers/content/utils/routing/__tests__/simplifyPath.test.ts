@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { simplifyPath } from "../simplifyPath";
 
 describe("simplifyPath", () => {
-	it("連続する重複点を畳む（長さ0セグメントを消す）", () => {
+	it("collapses consecutive duplicate points (removes zero-length segments)", () => {
 		expect(
 			simplifyPath([
 				{ x: 0, y: 0 },
@@ -16,7 +16,7 @@ describe("simplifyPath", () => {
 		]);
 	});
 
-	it("単調な共線の中間点は畳む（通過するだけの点を消す）", () => {
+	it("collapses monotonic collinear intermediate points (removes pass-through points)", () => {
 		expect(
 			simplifyPath([
 				{ x: 0, y: 0 },
@@ -29,7 +29,7 @@ describe("simplifyPath", () => {
 		]);
 	});
 
-	it("角（直交する折れ）は残す", () => {
+	it("keeps corners (orthogonal bends)", () => {
 		const L = [
 			{ x: 0, y: 0 },
 			{ x: 100, y: 0 },
@@ -38,8 +38,8 @@ describe("simplifyPath", () => {
 		expect(simplifyPath(L)).toEqual(L);
 	});
 
-	it("折り返し（逆走）する中間点は畳まず温存する", () => {
-		// 0→100→50 は同一軸で逆走。スタブの押し出し方向を保つため残す。
+	it("preserves reversal (backtracking) intermediate points without collapsing them", () => {
+		// 0→100→50 backtracks along the same axis. Kept to preserve the stub's push-out direction.
 		const spike = [
 			{ x: 0, y: 0 },
 			{ x: 100, y: 0 },
@@ -48,7 +48,7 @@ describe("simplifyPath", () => {
 		expect(simplifyPath(spike)).toEqual(spike);
 	});
 
-	it("2 点以下はそのまま返す", () => {
+	it("returns 2 or fewer points as-is", () => {
 		expect(
 			simplifyPath([
 				{ x: 0, y: 0 },

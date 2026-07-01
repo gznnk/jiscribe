@@ -17,26 +17,26 @@ const makeState = (viewport: Partial<Viewport>): CanvasControllerState =>
 		},
 	}) as unknown as CanvasControllerState;
 
-// ビューポート中心（コンテンツ座標）を求める
+// Compute the viewport center (in content coordinates)
 const centerOf = (viewport: Viewport) => ({
 	x: viewport.minX + viewport.width / (2 * viewport.zoom),
 	y: viewport.minY + viewport.height / (2 * viewport.zoom),
 });
 
 describe("ZoomInCommand", () => {
-	it("zoom を一段上の固定段（100% → 125%）へ吸着する", () => {
+	it("snaps zoom to the next fixed step up (100% -> 125%)", () => {
 		const state = makeState({ zoom: 1 });
 		const next = ZoomInCommand.execute(state);
 		expect(next.viewport.zoom).toBe(1.25);
 	});
 
-	it("段の途中（116%）からは直近の上の段（125%）へ吸着する", () => {
+	it("snaps to the nearest step up (125%) from a mid-step value (116%)", () => {
 		const state = makeState({ zoom: 1.16 });
 		const next = ZoomInCommand.execute(state);
 		expect(next.viewport.zoom).toBe(1.25);
 	});
 
-	it("ズーム後もビューポート中心を維持する", () => {
+	it("keeps the viewport center after zooming", () => {
 		const state = makeState({ minX: 100, minY: 200, zoom: 2 });
 		const before = centerOf(state.viewport);
 		const after = centerOf(ZoomInCommand.execute(state).viewport);
@@ -44,18 +44,18 @@ describe("ZoomInCommand", () => {
 		expect(after.y).toBeCloseTo(before.y, 3);
 	});
 
-	it("MAX を超えない", () => {
+	it("does not exceed MAX", () => {
 		const state = makeState({ zoom: ZOOM.MAX });
 		const next = ZoomInCommand.execute(state);
 		expect(next.viewport.zoom).toBe(ZOOM.MAX);
 	});
 
 	describe("canExecute", () => {
-		it("MAX 未満なら実行可能", () => {
+		it("is executable when below MAX", () => {
 			expect(ZoomInCommand.canExecute(makeState({ zoom: 1 }))).toBe(true);
 		});
 
-		it("MAX に達していたら実行不可", () => {
+		it("is not executable when MAX is reached", () => {
 			expect(ZoomInCommand.canExecute(makeState({ zoom: ZOOM.MAX }))).toBe(
 				false,
 			);

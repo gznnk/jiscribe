@@ -28,8 +28,8 @@ const group = (id: string, childIds: string[]) => ({
 });
 
 /**
- * source を owner（owned 端点）、target を free にした connector。
- * connector は少なくとも一方の端点が owned である必要があるため、テストの最小形。
+ * A connector with source as owner (owned endpoint) and target as free.
+ * A connector requires at least one endpoint to be owned, so this is the minimal test form.
  */
 const connector = (id: string, sourceOwnerId: string) => ({
 	id,
@@ -64,13 +64,13 @@ describe("isClipboardData", () => {
 		objectStateValidatorRegistry.clear();
 	});
 
-	describe("基本構造", () => {
-		it("妥当なクリップボードデータは true", () => {
+	describe("basic structure", () => {
+		it("valid clipboard data is true", () => {
 			const data = baseClipboard({ r1: rect("r1") }, ["r1"]);
 			expect(isClipboardData(data)).toBe(true);
 		});
 
-		it("__type / version / center / rootIds が不正なら false", () => {
+		it("is false when __type / version / center / rootIds are invalid", () => {
 			const ok = baseClipboard({ r1: rect("r1") }, ["r1"]);
 			expect(isClipboardData({ ...ok, __type: "other" })).toBe(false);
 			expect(isClipboardData({ ...ok, version: 2 })).toBe(false);
@@ -79,27 +79,27 @@ describe("isClipboardData", () => {
 			expect(isClipboardData(null)).toBe(false);
 		});
 
-		it("rootIds が objects に存在しない id を含むなら false", () => {
+		it("is false when rootIds contains an id not present in objects", () => {
 			const data = baseClipboard({ r1: rect("r1") }, ["r1", "missing"]);
 			expect(isClipboardData(data)).toBe(false);
 		});
 
-		it("マップのキーとオブジェクト id が不一致なら false", () => {
-			// キー "kX" だが id は "r1"。参照は id で解決するため自己完結性が崩れる。
+		it("is false when the map key and the object id do not match", () => {
+			// key "kX" but id "r1". Since references resolve by id, self-containment breaks.
 			const data = baseClipboard({ kX: rect("r1") }, ["r1"]);
 			expect(isClipboardData(data)).toBe(false);
 		});
 	});
 
-	describe("型別検証の委譲", () => {
-		it("構造不正（width 欠落）は false", () => {
+	describe("delegation of per-type validation", () => {
+		it("structurally invalid (missing width) is false", () => {
 			const broken = { ...rect("r1"), width: undefined };
 			expect(isClipboardData(baseClipboard({ r1: broken }, ["r1"]))).toBe(
 				false,
 			);
 		});
 
-		it("CSS インジェクションを含む stroke は false", () => {
+		it("a stroke containing a CSS injection is false", () => {
 			const malicious = {
 				...rect("r1"),
 				stroke: "red; } body { background: url(x)",
@@ -109,22 +109,22 @@ describe("isClipboardData", () => {
 			);
 		});
 
-		it("未登録の型は false", () => {
+		it("an unregistered type is false", () => {
 			const unknown = { id: "x1", type: "evil", cx: 0, cy: 0 };
 			expect(isClipboardData(baseClipboard({ x1: unknown }, ["x1"]))).toBe(
 				false,
 			);
 		});
 
-		it("レジストリ未初期化（空）の場合は既知の型でも false", () => {
+		it("is false even for a known type when the registry is uninitialized (empty)", () => {
 			objectStateValidatorRegistry.clear();
 			const data = baseClipboard({ r1: rect("r1") }, ["r1"]);
 			expect(isClipboardData(data)).toBe(false);
 		});
 	});
 
-	describe("参照整合性（自己完結性 / #40）", () => {
-		it("childIds / endpoint が自己完結する group・connector は true", () => {
+	describe("referential integrity (self-containment / #40)", () => {
+		it("groups/connectors whose childIds / endpoints are self-contained are true", () => {
 			const objects = {
 				r1: rect("r1"),
 				g1: group("g1", ["r1"]),
@@ -134,21 +134,21 @@ describe("isClipboardData", () => {
 			expect(isClipboardData(data)).toBe(true);
 		});
 
-		it("group の childIds が objects に存在しない id を指すなら false（参照ハイジャック）", () => {
-			// "ghost" は objects に無い。貼り付け先キャンバスの既存 id を取り込みうる。
+		it("is false when a group's childIds point to an id not in objects (reference hijacking)", () => {
+			// "ghost" is not in objects. It could hijack an existing id on the paste-target canvas.
 			const objects = { r1: rect("r1"), g1: group("g1", ["r1", "ghost"]) };
 			const data = baseClipboard(objects, ["g1"]);
 			expect(isClipboardData(data)).toBe(false);
 		});
 
-		it("connector の endpoint owner が objects に存在しない id を指すなら false", () => {
-			// owner "ghost" は objects に無い。既存オブジェクトへ勝手に bind しうる。
+		it("is false when a connector's endpoint owner points to an id not in objects", () => {
+			// owner "ghost" is not in objects. It could bind arbitrarily to an existing object.
 			const objects = { c1: connector("c1", "ghost") };
 			const data = baseClipboard(objects, ["c1"]);
 			expect(isClipboardData(data)).toBe(false);
 		});
 
-		it("両端 free の connector は false（少なくとも一方が owned 必須）", () => {
+		it("a connector with both ends free is false (at least one must be owned)", () => {
 			const floating = {
 				id: "c1",
 				type: "connector",
@@ -160,21 +160,21 @@ describe("isClipboardData", () => {
 			expect(isClipboardData(data)).toBe(false);
 		});
 
-		it("空 childIds の group は false", () => {
+		it("a group with empty childIds is false", () => {
 			const data = baseClipboard({ g1: group("g1", []) }, ["g1"]);
 			expect(isClipboardData(data)).toBe(false);
 		});
 	});
 
-	describe("非循環性（#46）", () => {
-		it("自己参照する group の childIds は false", () => {
-			// childIds:["g1"] は自己完結（g1 は objects 内）だが循環。
-			// 未ガードの再帰消費者で無限再帰 → スタックオーバーフロー（DoS）になる。
+	describe("acyclicity (#46)", () => {
+		it("a group with self-referencing childIds is false", () => {
+			// childIds:["g1"] is self-contained (g1 is in objects) but cyclic.
+			// An unguarded recursive consumer would infinitely recurse → stack overflow (DoS).
 			const data = baseClipboard({ g1: group("g1", ["g1"]) }, ["g1"]);
 			expect(isClipboardData(data)).toBe(false);
 		});
 
-		it("相互参照する group の childIds は false", () => {
+		it("groups with mutually referencing childIds are false", () => {
 			const objects = {
 				g1: group("g1", ["g2"]),
 				g2: group("g2", ["g1"]),
@@ -183,7 +183,7 @@ describe("isClipboardData", () => {
 			expect(isClipboardData(data)).toBe(false);
 		});
 
-		it("深いネストでも循環があれば false", () => {
+		it("is false when there is a cycle even in deep nesting", () => {
 			const objects = {
 				g1: group("g1", ["g2"]),
 				g2: group("g2", ["g3"]),
@@ -193,8 +193,8 @@ describe("isClipboardData", () => {
 			expect(isClipboardData(data)).toBe(false);
 		});
 
-		it("循環しないネストグループ（DAG）は true", () => {
-			// g1 と g2 が同じ子 r1 を共有しても、循環でなければ通過する。
+		it("non-cyclic nested groups (a DAG) are true", () => {
+			// even if g1 and g2 share the same child r1, it passes as long as it's not cyclic.
 			const objects = {
 				r1: rect("r1"),
 				g2: group("g2", ["r1"]),

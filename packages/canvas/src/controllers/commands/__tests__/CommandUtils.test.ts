@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { formatShortcutTokens } from "../CommandUtils";
 
-/** getPlatform() の判定を navigator.userAgent 経由で固定する */
+/** Pin getPlatform()'s detection via navigator.userAgent */
 const stubPlatform = (platform: "mac" | "win"): void => {
 	const userAgent =
 		platform === "mac"
@@ -16,7 +16,7 @@ afterEach(() => {
 });
 
 describe("formatShortcutTokens", () => {
-	it("Windows では修飾キーを単語で返す", () => {
+	it("returns modifier keys as words on Windows", () => {
 		stubPlatform("win");
 		expect(formatShortcutTokens({ code: "KeyZ", ctrl: true })).toEqual([
 			"Ctrl",
@@ -24,14 +24,14 @@ describe("formatShortcutTokens", () => {
 		]);
 	});
 
-	it("Windows では shift を含めて順序通りに返す", () => {
+	it("includes shift and returns in order on Windows", () => {
 		stubPlatform("win");
 		expect(
 			formatShortcutTokens({ code: "KeyZ", ctrl: true, shift: true }),
 		).toEqual(["Ctrl", "Shift", "Z"]);
 	});
 
-	it("Mac では修飾キーを記号で返す", () => {
+	it("returns modifier keys as symbols on Mac", () => {
 		stubPlatform("mac");
 		expect(formatShortcutTokens({ code: "KeyZ", meta: true })).toEqual([
 			"⌘",
@@ -39,7 +39,7 @@ describe("formatShortcutTokens", () => {
 		]);
 	});
 
-	it("key ベースの記号キーはそのまま末尾に置く", () => {
+	it("places key-based symbol keys at the end as-is", () => {
 		stubPlatform("win");
 		expect(formatShortcutTokens({ key: "=", ctrl: true })).toEqual([
 			"Ctrl",
@@ -47,7 +47,7 @@ describe("formatShortcutTokens", () => {
 		]);
 	});
 
-	it("矢印キーは記号に変換する", () => {
+	it("converts arrow keys to symbols", () => {
 		stubPlatform("win");
 		expect(formatShortcutTokens({ code: "ArrowUp" })).toEqual(["↑"]);
 	});

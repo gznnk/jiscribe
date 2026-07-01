@@ -34,14 +34,14 @@ const rectObj = (cx: number, cy: number): ObjectState =>
 
 describe("resolveEndpoint", () => {
 	describe("FreeAnchor", () => {
-		it("指定した点をそのまま返す", () => {
+		it("returns the specified point as-is", () => {
 			expect(resolveEndpoint(freeEndpoint(10, 20), null)).toEqual({
 				x: 10,
 				y: 20,
 			});
 		});
 
-		it("obj が null でも点を返す", () => {
+		it("returns the point even when obj is null", () => {
 			expect(resolveEndpoint(freeEndpoint(5, 15), null)).toEqual({
 				x: 5,
 				y: 15,
@@ -50,15 +50,15 @@ describe("resolveEndpoint", () => {
 	});
 
 	describe("CenterAnchor", () => {
-		it("obj が null のとき null を返す", () => {
+		it("returns null when obj is null", () => {
 			expect(resolveEndpoint(centerEndpoint(), null)).toBeNull();
 		});
 
-		it("obj が undefined のとき null を返す", () => {
+		it("returns null when obj is undefined", () => {
 			expect(resolveEndpoint(centerEndpoint(), undefined)).toBeNull();
 		});
 
-		it("cx/cy を持つオブジェクトのとき { x: cx, y: cy } を返す", () => {
+		it("returns { x: cx, y: cy } for an object with cx/cy", () => {
 			const obj = rectObj(100, 200);
 			expect(resolveEndpoint(centerEndpoint(), obj)).toEqual({
 				x: 100,
@@ -68,20 +68,20 @@ describe("resolveEndpoint", () => {
 	});
 
 	describe("ConnectPointAnchor", () => {
-		it("obj が null のとき null を返す", () => {
+		it("returns null when obj is null", () => {
 			expect(
 				resolveEndpoint(connectPointEndpoint("topCenter"), null),
 			).toBeNull();
 		});
 
-		it("TransformedFrame でないオブジェクトのとき null を返す", () => {
+		it("returns null for an object that is not a TransformedFrame", () => {
 			const nonFrame = { id: "x", type: "polyline" } as unknown as ObjectState;
 			expect(
 				resolveEndpoint(connectPointEndpoint("topCenter"), nonFrame),
 			).toBeNull();
 		});
 
-		it("rotation=0 のとき topCenter は (cx, cy - height/2) に対応する", () => {
+		it("topCenter maps to (cx, cy - height/2) when rotation=0", () => {
 			const obj = rectObj(100, 100);
 			const result = resolveEndpoint(connectPointEndpoint("topCenter"), obj);
 			expect(result).not.toBeNull();
@@ -89,28 +89,28 @@ describe("resolveEndpoint", () => {
 			expect(result!.y).toBeCloseTo(75);
 		});
 
-		it("rotation=0 のとき bottomCenter は (cx, cy + height/2) に対応する", () => {
+		it("bottomCenter maps to (cx, cy + height/2) when rotation=0", () => {
 			const obj = rectObj(100, 100);
 			const result = resolveEndpoint(connectPointEndpoint("bottomCenter"), obj);
 			expect(result!.x).toBeCloseTo(100);
 			expect(result!.y).toBeCloseTo(125);
 		});
 
-		it("rotation=0 のとき leftCenter は (cx - width/2, cy) に対応する", () => {
+		it("leftCenter maps to (cx - width/2, cy) when rotation=0", () => {
 			const obj = rectObj(100, 100);
 			const result = resolveEndpoint(connectPointEndpoint("leftCenter"), obj);
 			expect(result!.x).toBeCloseTo(50);
 			expect(result!.y).toBeCloseTo(100);
 		});
 
-		it("rotation=0 のとき rightCenter は (cx + width/2, cy) に対応する", () => {
+		it("rightCenter maps to (cx + width/2, cy) when rotation=0", () => {
 			const obj = rectObj(100, 100);
 			const result = resolveEndpoint(connectPointEndpoint("rightCenter"), obj);
 			expect(result!.x).toBeCloseTo(150);
 			expect(result!.y).toBeCloseTo(100);
 		});
 
-		it("無効な anchorId のとき null を返す", () => {
+		it("returns null for an invalid anchorId", () => {
 			const obj = rectObj(100, 100);
 			expect(
 				resolveEndpoint(connectPointEndpoint("invalidPoint"), obj),

@@ -20,22 +20,22 @@ const makeTarget = (params: {
 };
 
 describe("getInputValue", () => {
-	it("native-pointer 要素の value を返す", () => {
+	it("returns the value of a native-pointer element", () => {
 		const target = makeTarget({ tokens: ["native-pointer"], value: "42" });
 		expect(getInputValue(target)).toBe("42");
 	});
 
-	it("native-pointer トークンを持たないとき undefined を返す", () => {
+	it("returns undefined when it lacks the native-pointer token", () => {
 		const target = makeTarget({ tokens: ["none"], value: "42" });
 		expect(getInputValue(target)).toBeUndefined();
 	});
 
-	it("value を持たない要素のとき undefined を返す", () => {
+	it("returns undefined for an element without a value", () => {
 		const target = makeTarget({ tokens: ["native-pointer"] });
 		expect(getInputValue(target)).toBeUndefined();
 	});
 
-	it("target が null のとき undefined を返す", () => {
+	it("returns undefined when target is null", () => {
 		expect(getInputValue(null)).toBeUndefined();
 	});
 });

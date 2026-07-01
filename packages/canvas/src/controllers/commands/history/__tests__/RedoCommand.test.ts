@@ -40,7 +40,7 @@ const makeState = (params: {
 	}) as unknown as CanvasControllerState;
 
 describe("RedoCommand", () => {
-	it("future の先頭を復元し present を進める", () => {
+	it("restores the head of future and advances present", () => {
 		const state = makeState({
 			past: [],
 			present: docPrev,
@@ -48,15 +48,15 @@ describe("RedoCommand", () => {
 		});
 		const next = RedoCommand.execute(state);
 
-		// docNext（r1, r2）が復元される
+		// docNext (r1, r2) is restored
 		expect(Object.keys(next.objects).sort()).toEqual(["r1", "r2"]);
 		expect(next.history.present).toBe(docNext);
-		// 進めた present は past へ積まれる
+		// the advanced-from present is pushed onto past
 		expect(next.history.past).toEqual([docPrev]);
 		expect(next.history.future).toEqual([]);
 	});
 
-	it("選択を解除し saveVersion を増分・commitVersion は据え置く", () => {
+	it("clears the selection, increments saveVersion, and leaves commitVersion unchanged", () => {
 		const state = makeState({ past: [], present: docPrev, future: [docNext] });
 		const next = RedoCommand.execute(state);
 		expect(next.selectedIds).toEqual([]);
@@ -64,13 +64,13 @@ describe("RedoCommand", () => {
 		expect(next.commitVersion).toBe(5);
 	});
 
-	it("future が空なら state をそのまま返す", () => {
+	it("returns the state unchanged when future is empty", () => {
 		const state = makeState({ past: [], present: docPrev, future: [] });
 		expect(RedoCommand.execute(state)).toBe(state);
 	});
 
 	describe("canExecute", () => {
-		it("future があれば実行可能", () => {
+		it("is executable when there is a future", () => {
 			expect(
 				RedoCommand.canExecute(
 					makeState({ past: [], present: docPrev, future: [docNext] }),
@@ -78,7 +78,7 @@ describe("RedoCommand", () => {
 			).toBe(true);
 		});
 
-		it("future が空なら実行不可", () => {
+		it("is not executable when future is empty", () => {
 			expect(
 				RedoCommand.canExecute(
 					makeState({ past: [], present: docPrev, future: [] }),
@@ -86,7 +86,7 @@ describe("RedoCommand", () => {
 			).toBe(false);
 		});
 
-		it("ドラッグ中は実行不可", () => {
+		it("is not executable during a drag", () => {
 			expect(
 				RedoCommand.canExecute(
 					makeState({
@@ -99,7 +99,7 @@ describe("RedoCommand", () => {
 			).toBe(false);
 		});
 
-		it("テキスト編集中は実行不可", () => {
+		it("is not executable while editing text", () => {
 			expect(
 				RedoCommand.canExecute(
 					makeState({

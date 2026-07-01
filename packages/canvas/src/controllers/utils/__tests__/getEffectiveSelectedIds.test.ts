@@ -9,7 +9,7 @@ type MinState = Pick<
 >;
 
 describe("getEffectiveSelectedIds", () => {
-	it("selectedConnectorId が null のとき selectedIds をそのまま返す", () => {
+	it("returns selectedIds as-is when selectedConnectorId is null", () => {
 		const state: MinState = {
 			selectedIds: ["a", "b"],
 			selectedConnectorId: null,
@@ -17,12 +17,12 @@ describe("getEffectiveSelectedIds", () => {
 		expect(getEffectiveSelectedIds(state)).toEqual(["a", "b"]);
 	});
 
-	it("selectedConnectorId が null で selectedIds が空のとき [] を返す", () => {
+	it("returns [] when selectedConnectorId is null and selectedIds is empty", () => {
 		const state: MinState = { selectedIds: [], selectedConnectorId: null };
 		expect(getEffectiveSelectedIds(state)).toEqual([]);
 	});
 
-	it("selectedConnectorId が設定されているとき [connectorId] を返す", () => {
+	it("returns [connectorId] when selectedConnectorId is set", () => {
 		const state: MinState = {
 			selectedIds: ["a", "b"],
 			selectedConnectorId: "conn-1",
@@ -30,7 +30,7 @@ describe("getEffectiveSelectedIds", () => {
 		expect(getEffectiveSelectedIds(state)).toEqual(["conn-1"]);
 	});
 
-	it("connector 選択時は selectedIds を無視する", () => {
+	it("ignores selectedIds when a connector is selected", () => {
 		const state: MinState = {
 			selectedIds: ["a", "b", "c"],
 			selectedConnectorId: "conn-x",

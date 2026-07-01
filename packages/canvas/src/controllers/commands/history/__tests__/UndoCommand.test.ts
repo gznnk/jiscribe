@@ -5,7 +5,7 @@ import type { CanvasControllerState } from "../../../CanvasTypes";
 import { initializeObjectRegistry } from "../../../setup/initializeObjectRegistry";
 import { UndoCommand } from "../UndoCommand";
 
-// canvasToState が objectMapperRegistry を使うため初期化する
+// canvasToState uses objectMapperRegistry, so initialize it
 beforeAll(() => {
 	initializeObjectRegistry();
 });
@@ -41,7 +41,7 @@ const makeState = (params: {
 	}) as unknown as CanvasControllerState;
 
 describe("UndoCommand", () => {
-	it("直前の履歴を復元し present を巻き戻す", () => {
+	it("restores the previous history entry and rolls present back", () => {
 		const state = makeState({
 			past: [docPrev],
 			present: docCurrent,
@@ -49,15 +49,15 @@ describe("UndoCommand", () => {
 		});
 		const next = UndoCommand.execute(state);
 
-		// docPrev（r1 のみ）が復元される
+		// docPrev (r1 only) is restored
 		expect(Object.keys(next.objects)).toEqual(["r1"]);
 		expect(next.history.present).toBe(docPrev);
 		expect(next.history.past).toEqual([]);
-		// 巻き戻した present は future へ退避される
+		// the rolled-back present is stashed into future
 		expect(next.history.future).toEqual([docCurrent]);
 	});
 
-	it("選択を解除し saveVersion を増分・commitVersion は据え置く", () => {
+	it("clears the selection, increments saveVersion, and leaves commitVersion unchanged", () => {
 		const state = makeState({
 			past: [docPrev],
 			present: docCurrent,
@@ -66,11 +66,11 @@ describe("UndoCommand", () => {
 		const next = UndoCommand.execute(state);
 		expect(next.selectedIds).toEqual([]);
 		expect(next.saveVersion).toBe(1);
-		// 履歴復元はコミットではないので commitVersion は変えない
+		// restoring history is not a commit, so commitVersion is not changed
 		expect(next.commitVersion).toBe(5);
 	});
 
-	it("viewport は維持する", () => {
+	it("preserves the viewport", () => {
 		const state = makeState({
 			past: [docPrev],
 			present: docCurrent,
@@ -79,13 +79,13 @@ describe("UndoCommand", () => {
 		expect(UndoCommand.execute(state).viewport).toEqual(state.viewport);
 	});
 
-	it("past が空なら state をそのまま返す", () => {
+	it("returns the state unchanged when past is empty", () => {
 		const state = makeState({ past: [], present: docCurrent, future: [] });
 		expect(UndoCommand.execute(state)).toBe(state);
 	});
 
 	describe("canExecute", () => {
-		it("past があれば実行可能", () => {
+		it("is executable when there is a past", () => {
 			expect(
 				UndoCommand.canExecute(
 					makeState({ past: [docPrev], present: docCurrent, future: [] }),
@@ -93,7 +93,7 @@ describe("UndoCommand", () => {
 			).toBe(true);
 		});
 
-		it("past が空なら実行不可", () => {
+		it("is not executable when past is empty", () => {
 			expect(
 				UndoCommand.canExecute(
 					makeState({ past: [], present: docCurrent, future: [] }),
@@ -101,7 +101,7 @@ describe("UndoCommand", () => {
 			).toBe(false);
 		});
 
-		it("ドラッグ中は実行不可", () => {
+		it("is not executable during a drag", () => {
 			expect(
 				UndoCommand.canExecute(
 					makeState({
@@ -114,7 +114,7 @@ describe("UndoCommand", () => {
 			).toBe(false);
 		});
 
-		it("テキスト編集中は実行不可", () => {
+		it("is not executable while editing text", () => {
 			expect(
 				UndoCommand.canExecute(
 					makeState({

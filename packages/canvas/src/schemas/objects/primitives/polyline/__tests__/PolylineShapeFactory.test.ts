@@ -6,7 +6,7 @@ type Pt = { x: number; y: number };
 
 describe("PolylineShapeFactory", () => {
 	describe("createDoc", () => {
-		it("position を中心に左右対称な水平 2 点線を生成する", () => {
+		it("creates a symmetric horizontal 2-point line centered on the position", () => {
 			const doc = PolylineShapeFactory.createDoc({ x: 100, y: 50 }) as Record<
 				string,
 				unknown
@@ -21,7 +21,7 @@ describe("PolylineShapeFactory", () => {
 			]);
 		});
 
-		it("overrides で stroke を差し替えられる", () => {
+		it("can replace stroke via overrides", () => {
 			const doc = PolylineShapeFactory.createDoc(
 				{ x: 0, y: 0 },
 				{ stroke: "#00ff00" },
@@ -30,7 +30,7 @@ describe("PolylineShapeFactory", () => {
 			expect(doc.stroke).toBe("#00ff00");
 		});
 
-		it("overrides では id と points を上書きできない（factory 管理）", () => {
+		it("cannot override id and points via overrides (factory-managed)", () => {
 			const doc = PolylineShapeFactory.createDoc(
 				{ x: 100, y: 50 },
 				{ id: "forced-id", points: [{ x: 0, y: 0 }] },
@@ -43,7 +43,7 @@ describe("PolylineShapeFactory", () => {
 	});
 
 	describe("calcDimensions", () => {
-		it("水平線なので halfHeight は 0 を返す", () => {
+		it("returns halfHeight 0 since it is a horizontal line", () => {
 			expect(PolylineShapeFactory.calcDimensions()).toEqual({
 				halfWidth: 80,
 				halfHeight: 0,
@@ -52,7 +52,7 @@ describe("PolylineShapeFactory", () => {
 	});
 
 	describe("createDocFromBounds", () => {
-		it("2 点をそのまま端点とする線分を生成する", () => {
+		it("creates a segment using the 2 points directly as endpoints", () => {
 			const doc = PolylineShapeFactory.createDocFromBounds?.(
 				10,
 				20,
@@ -66,8 +66,8 @@ describe("PolylineShapeFactory", () => {
 			]);
 		});
 
-		it("2 点間距離が最小サイズ未満なら null を返す", () => {
-			// 距離 √(3²+0²)=3 < 5
+		it("returns null when the distance between the 2 points is below the minimum size", () => {
+			// distance √(3²+0²)=3 < 5
 			expect(PolylineShapeFactory.createDocFromBounds?.(0, 0, 3, 0)).toBeNull();
 		});
 	});

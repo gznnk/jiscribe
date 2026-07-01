@@ -25,36 +25,36 @@ const makeFrame = (
 	}) as TransformedFrame & TransformState;
 
 describe("calcHeightWithAspectRatio", () => {
-	it("width=100, ratio=2 のとき 50 を返す", () => {
+	it("returns 50 for width=100, ratio=2", () => {
 		expect(calcHeightWithAspectRatio(100, 2)).toBe(50);
 	});
 
-	it("width=100, ratio=0.5 のとき 200 を返す", () => {
+	it("returns 200 for width=100, ratio=0.5", () => {
 		expect(calcHeightWithAspectRatio(100, 0.5)).toBe(200);
 	});
 
-	it("width=0 のとき 0 を返す", () => {
+	it("returns 0 for width=0", () => {
 		expect(calcHeightWithAspectRatio(0, 2)).toBe(0);
 	});
 });
 
 describe("calcWidthWithAspectRatio", () => {
-	it("height=50, ratio=2 のとき 100 を返す", () => {
+	it("returns 100 for height=50, ratio=2", () => {
 		expect(calcWidthWithAspectRatio(50, 2)).toBe(100);
 	});
 
-	it("height=100, ratio=0.5 のとき 50 を返す", () => {
+	it("returns 50 for height=100, ratio=0.5", () => {
 		expect(calcWidthWithAspectRatio(100, 0.5)).toBe(50);
 	});
 
-	it("height=0 のとき 0 を返す", () => {
+	it("returns 0 for height=0", () => {
 		expect(calcWidthWithAspectRatio(0, 2)).toBe(0);
 	});
 });
 
 describe("enforceResizeDimensions", () => {
-	describe("最小値内（クランプ不要）", () => {
-		it("幅・高さが両方最小値以上のとき、入力値をそのまま返す", () => {
+	describe("within minimums (no clamping needed)", () => {
+		it("returns the input values as-is when both width and height are at least the minimum", () => {
 			const frame = makeFrame(10, 10);
 			expect(enforceResizeDimensions(frame, 50, 50, undefined, false)).toEqual({
 				width: 50,
@@ -62,7 +62,7 @@ describe("enforceResizeDimensions", () => {
 			});
 		});
 
-		it("最小値が未設定（undefined）のとき、どんな値も通過する", () => {
+		it("passes any value through when the minimum is unset (undefined)", () => {
 			const frame = makeFrame(undefined, undefined);
 			expect(enforceResizeDimensions(frame, 1, 1, undefined, false)).toEqual({
 				width: 1,
@@ -71,8 +71,8 @@ describe("enforceResizeDimensions", () => {
 		});
 	});
 
-	describe("アスペクト比なし（shouldKeepProportion=false）", () => {
-		it("幅が最小値未満のとき幅だけクランプする", () => {
+	describe("no aspect ratio (shouldKeepProportion=false)", () => {
+		it("clamps only the width when the width is below the minimum", () => {
 			const frame = makeFrame(20, 20);
 			expect(enforceResizeDimensions(frame, 5, 50, undefined, false)).toEqual({
 				width: 20,
@@ -80,7 +80,7 @@ describe("enforceResizeDimensions", () => {
 			});
 		});
 
-		it("高さが最小値未満のとき高さだけクランプする", () => {
+		it("clamps only the height when the height is below the minimum", () => {
 			const frame = makeFrame(20, 20);
 			expect(enforceResizeDimensions(frame, 50, 5, undefined, false)).toEqual({
 				width: 50,
@@ -88,7 +88,7 @@ describe("enforceResizeDimensions", () => {
 			});
 		});
 
-		it("幅・高さ両方が最小値未満のとき両方クランプする", () => {
+		it("clamps both when both width and height are below the minimum", () => {
 			const frame = makeFrame(20, 30);
 			expect(enforceResizeDimensions(frame, 5, 5, undefined, false)).toEqual({
 				width: 20,
@@ -96,24 +96,24 @@ describe("enforceResizeDimensions", () => {
 			});
 		});
 
-		it("負の幅は符号を保って最小値に切り上げる", () => {
+		it("rounds a negative width up to the minimum while preserving its sign", () => {
 			const frame = makeFrame(20, 20);
 			const result = enforceResizeDimensions(frame, -5, 50, undefined, false);
 			expect(result.width).toBe(-20);
 		});
 	});
 
-	describe("アスペクト比あり（shouldKeepProportion=true）", () => {
-		it("最小値から導出した幅・高さを返す（ratio=2の場合）", () => {
+	describe("with aspect ratio (shouldKeepProportion=true)", () => {
+		it("returns the width/height derived from the minimums (for ratio=2)", () => {
 			const frame = makeFrame(10, 10);
-			// ratio=2 → minWidthFromHeight = 10*2 = 20 > minWidth=10
-			// → adjustedHeight = minHeight = 10, adjustedWidth = 20
+			// ratio=2 -> minWidthFromHeight = 10*2 = 20 > minWidth=10
+			// -> adjustedHeight = minHeight = 10, adjustedWidth = 20
 			const result = enforceResizeDimensions(frame, 5, 5, 2, true);
 			expect(result.width).toBe(20);
 			expect(result.height).toBe(10);
 		});
 
-		it("aspectRatio=undefined のとき比率なしと同等の動作をする", () => {
+		it("behaves the same as no ratio when aspectRatio=undefined", () => {
 			const frame = makeFrame(20, 20);
 			expect(enforceResizeDimensions(frame, 5, 5, undefined, true)).toEqual({
 				width: 20,

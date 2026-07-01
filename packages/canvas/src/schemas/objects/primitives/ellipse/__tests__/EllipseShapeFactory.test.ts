@@ -5,7 +5,7 @@ import { EllipseShapeFactory } from "../EllipseShapeFactory";
 
 describe("EllipseShapeFactory", () => {
 	describe("createDoc", () => {
-		it("position を中心に既定半径の ellipse を生成する", () => {
+		it("creates an ellipse with default radii centered on the position", () => {
 			const doc = EllipseShapeFactory.createDoc({ x: 100, y: 80 }) as Record<
 				string,
 				unknown
@@ -19,7 +19,7 @@ describe("EllipseShapeFactory", () => {
 			expect(doc.ry).toBe(ELLIPSE_DOC_DEFAULTS.ry);
 		});
 
-		it("overrides で半径を差し替えられる", () => {
+		it("can replace the radii via overrides", () => {
 			const doc = EllipseShapeFactory.createDoc(
 				{ x: 0, y: 0 },
 				{ rx: 10, ry: 5 },
@@ -31,14 +31,14 @@ describe("EllipseShapeFactory", () => {
 	});
 
 	describe("calcDimensions", () => {
-		it("半径をそのまま半サイズとして返す", () => {
+		it("returns the radii directly as the half-size", () => {
 			expect(EllipseShapeFactory.calcDimensions()).toEqual({
 				halfWidth: ELLIPSE_DOC_DEFAULTS.rx,
 				halfHeight: ELLIPSE_DOC_DEFAULTS.ry,
 			});
 		});
 
-		it("overrides の rx/ry を反映する", () => {
+		it("applies overridden rx/ry", () => {
 			expect(EllipseShapeFactory.calcDimensions({ rx: 12, ry: 8 })).toEqual({
 				halfWidth: 12,
 				halfHeight: 8,
@@ -47,7 +47,7 @@ describe("EllipseShapeFactory", () => {
 	});
 
 	describe("createDocFromBounds", () => {
-		it("2 点の中心と半径を算出する", () => {
+		it("computes the center and radii from 2 points", () => {
 			const doc = EllipseShapeFactory.createDocFromBounds?.(
 				0,
 				0,
@@ -61,7 +61,7 @@ describe("EllipseShapeFactory", () => {
 			expect(doc.ry).toBe(10);
 		});
 
-		it("最小サイズ未満なら null を返す", () => {
+		it("returns null when below the minimum size", () => {
 			expect(EllipseShapeFactory.createDocFromBounds?.(0, 0, 2, 2)).toBeNull();
 		});
 	});

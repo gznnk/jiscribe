@@ -41,7 +41,7 @@ const rectObj = (
 	}) as unknown as ObjectState;
 
 describe("calcConnectorBoundingBox", () => {
-	it("free 端点のみのコネクターは両端点からバウンドを計算する", () => {
+	it("a connector with only free endpoints computes its bound from both endpoints", () => {
 		const bbox = calcConnectorBoundingBox(
 			freeConnector({ routing: "straight" }),
 			{},
@@ -50,7 +50,7 @@ describe("calcConnectorBoundingBox", () => {
 		expect(bbox).toEqual({ left: 10, right: 110, top: 20, bottom: 70 });
 	});
 
-	it("straight ルーティングで中間経由点がバウンドを広げる場合は経由点も含める", () => {
+	it("with straight routing, includes intermediate waypoints when they widen the bound", () => {
 		const connector = freeConnector({
 			routing: "straight",
 			points: [
@@ -64,9 +64,9 @@ describe("calcConnectorBoundingBox", () => {
 		expect(bbox).toEqual({ left: -50, right: 110, top: 20, bottom: 200 });
 	});
 
-	it("直交ルーティングの曲がり点（waypoints）も範囲に含める", () => {
-		// 互いに外側へ向かう connectPoint 同士。経路は両端の図形を回り込むため、
-		// 曲がり点が端点の x 範囲（50〜350）の外へふくらむ。
+	it("includes the bend points (waypoints) of orthogonal routing in the range", () => {
+		// connectPoints that face outward from each other. Since the route wraps around the
+		// shapes at both ends, the bend points bulge outside the endpoints' x range (50-350).
 		const src = rectObj("r1", 300, 100, 100, 60); // rightCenter = (350, 100)
 		const tgt = rectObj("r2", 100, 300, 100, 60); // leftCenter = (50, 300)
 		const connector = freeConnector({
@@ -83,18 +83,18 @@ describe("calcConnectorBoundingBox", () => {
 
 		const bbox = calcConnectorBoundingBox(connector, { r1: src, r2: tgt });
 
-		// 端点だけなら {left:50, right:350, top:100, bottom:300} になるが、
-		// 直交経路のスタブ（辺 + margin 30）が両側へふくらむため左右に広がる。
+		// With endpoints alone it would be {left:50, right:350, top:100, bottom:300}, but
+		// the orthogonal route's stubs (edge + margin 30) bulge out on both sides, widening it.
 		expect(bbox).not.toBeNull();
-		expect(bbox!.left).toBe(20); // target 左辺 50 - margin 30
-		expect(bbox!.right).toBe(380); // source 右辺 350 + margin 30
+		expect(bbox!.left).toBe(20); // target left edge 50 - margin 30
+		expect(bbox!.right).toBe(380); // source right edge 350 + margin 30
 		expect(bbox!.left).toBeLessThan(50);
 		expect(bbox!.right).toBeGreaterThan(350);
 		expect(bbox!.top).toBeLessThanOrEqual(100);
 		expect(bbox!.bottom).toBeGreaterThanOrEqual(300);
 	});
 
-	it("owned 端点の参照先が存在しない場合は null を返す", () => {
+	it("returns null when an owned endpoint's referenced object does not exist", () => {
 		const connector = freeConnector({
 			source: {
 				owner: { type: "rect", id: "missing-rect" },

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { stubPoint } from "../stub";
 
-// 中心 (100,100) 100x60 → AABB: left50 right150 top70 bottom130
+// center (100,100) 100x60 → AABB: left50 right150 top70 bottom130
 const box: BoxFeatures = calcFrameBoxFeatures({
 	cx: 100,
 	cy: 100,
@@ -15,7 +15,7 @@ const box: BoxFeatures = calcFrameBoxFeatures({
 });
 
 describe("stubPoint", () => {
-	it("退出方向の軸だけ AABB 辺 + margin へ押し出し、直交軸は端点座標を保つ", () => {
+	it("pushes only the exit-direction axis out to the AABB edge + margin, keeping the endpoint coordinate on the orthogonal axis", () => {
 		expect(stubPoint({ x: 150, y: 100 }, "right", box, 20)).toEqual({
 			x: 170, // right(150) + 20
 			y: 100,
@@ -34,8 +34,8 @@ describe("stubPoint", () => {
 		});
 	});
 
-	it("margin は辺基準で適用される（端点が辺上に無くても軸方向は辺 + margin）", () => {
-		// point.x=120 でも right 退出は box.right(150)+margin にスナップする
+	it("margin is applied relative to the edge (even if the endpoint is not on the edge, the axis snaps to edge + margin)", () => {
+		// even with point.x=120, exiting right snaps to box.right(150)+margin
 		expect(stubPoint({ x: 120, y: 100 }, "right", box, 40)).toEqual({
 			x: 190,
 			y: 100,

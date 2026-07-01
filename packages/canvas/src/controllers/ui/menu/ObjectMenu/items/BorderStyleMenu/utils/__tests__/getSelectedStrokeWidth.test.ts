@@ -17,21 +17,21 @@ const state = (
 	({ objects, selectedIds }) as unknown as CanvasControllerState;
 
 describe("getSelectedStrokeWidth", () => {
-	it("選択なし → 既定値", () => {
+	it("no selection → default value", () => {
 		expect(getSelectedStrokeWidth(state({}, []))).toBe(DEFAULT_STROKE_WIDTH);
 	});
 
-	it("strokeWidth を持つ → その値", () => {
+	it("has strokeWidth → its value", () => {
 		const s = state({ a: obj("a", { strokeWidth: 5 }) }, ["a"]);
 		expect(getSelectedStrokeWidth(s)).toBe(5);
 	});
 
-	it("strokeWidth=0 もそのまま返す", () => {
+	it("returns strokeWidth=0 as-is", () => {
 		const s = state({ a: obj("a", { strokeWidth: 0 }) }, ["a"]);
 		expect(getSelectedStrokeWidth(s)).toBe(0);
 	});
 
-	it("strokeWidth が数値でない → 既定値", () => {
+	it("strokeWidth is not a number → default value", () => {
 		const s = state({ a: obj("a", { strokeWidth: "thick" }) }, ["a"]);
 		expect(getSelectedStrokeWidth(s)).toBe(DEFAULT_STROKE_WIDTH);
 	});

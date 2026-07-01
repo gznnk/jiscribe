@@ -12,11 +12,11 @@ const objects: Record<string, ObjectState> = {
 	"connector-1": obj("connector-1", "connector"),
 };
 
-/** connector 以外を接続可能とみなす簡易 predicate。 */
+/** A simple predicate treating anything but connectors as connectable. */
 const isConnectable = (type: ObjectType): boolean => type !== "connector";
 
 describe("findConnectableHoverTarget", () => {
-	it("接続可能な最初の hover 対象を返す", () => {
+	it("returns the first connectable hover target", () => {
 		const result = findConnectableHoverTarget({
 			hovered: [{ id: "rect-1", kind: "object" }],
 			objects,
@@ -25,7 +25,7 @@ describe("findConnectableHoverTarget", () => {
 		expect(result).toEqual({ id: "rect-1", object: objects["rect-1"] });
 	});
 
-	it("固定側と同一のオブジェクトも対象に含める（自己ループ許可）", () => {
+	it("includes the same object as the fixed side (self-loop allowed)", () => {
 		const result = findConnectableHoverTarget({
 			hovered: [{ id: "rect-1", kind: "object" }],
 			objects,
@@ -34,7 +34,7 @@ describe("findConnectableHoverTarget", () => {
 		expect(result).toEqual({ id: "rect-1", object: objects["rect-1"] });
 	});
 
-	it("connectable でないオブジェクトは飛ばす", () => {
+	it("skips non-connectable objects", () => {
 		const result = findConnectableHoverTarget({
 			hovered: [
 				{ id: "connector-1", kind: "object" },
@@ -46,7 +46,7 @@ describe("findConnectableHoverTarget", () => {
 		expect(result).toEqual({ id: "rect-2", object: objects["rect-2"] });
 	});
 
-	it("objects に存在しない hover id は無視する", () => {
+	it("ignores hover ids not present in objects", () => {
 		const result = findConnectableHoverTarget({
 			hovered: [
 				{ id: "ghost", kind: "object" },
@@ -58,7 +58,7 @@ describe("findConnectableHoverTarget", () => {
 		expect(result).toEqual({ id: "rect-1", object: objects["rect-1"] });
 	});
 
-	it("該当がなければ null を返す", () => {
+	it("returns null when there is no match", () => {
 		const result = findConnectableHoverTarget({
 			hovered: [{ id: "connector-1", kind: "object" }],
 			objects,

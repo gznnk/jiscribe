@@ -5,7 +5,7 @@ import type { GroupState } from "../../../states/objects/primitives/group/GroupS
 import { initializeObjectRegistry } from "../../setup/initializeObjectRegistry";
 import { moveSelection } from "../moveSelection";
 
-// moveByDelta は objectBehaviorRegistry 経由で解決されるため、レジストリを初期化する
+// moveByDelta is resolved via objectBehaviorRegistry, so initialize the registry
 beforeAll(() => {
 	initializeObjectRegistry();
 });
@@ -37,7 +37,7 @@ const makeGroup = (
 	}) as unknown as GroupState;
 
 describe("moveSelection", () => {
-	it("非グループ図形を delta だけ平行移動する", () => {
+	it("translates a non-group shape by delta", () => {
 		const srcObjects = { r1: makeRect("r1", 100, 100) };
 
 		const { objects } = moveSelection({
@@ -50,7 +50,7 @@ describe("moveSelection", () => {
 		expect(objects.r1).toMatchObject({ cx: 110, cy: 95 });
 	});
 
-	it("srcObjects を変更せずクローンを返す", () => {
+	it("returns a clone without mutating srcObjects", () => {
 		const srcObjects = { r1: makeRect("r1", 0, 0) };
 
 		const { objects } = moveSelection({
@@ -64,7 +64,7 @@ describe("moveSelection", () => {
 		expect(objects).not.toBe(srcObjects);
 	});
 
-	it("選択外のオブジェクトはそのまま残す", () => {
+	it("leaves objects outside the selection as-is", () => {
 		const srcObjects = {
 			r1: makeRect("r1", 0, 0),
 			r2: makeRect("r2", 50, 50),
@@ -81,7 +81,7 @@ describe("moveSelection", () => {
 		expect(objects.r2).toBe(srcObjects.r2);
 	});
 
-	it("存在しない選択 ID は黙ってスキップする", () => {
+	it("silently skips nonexistent selected IDs", () => {
 		const srcObjects = { r1: makeRect("r1", 0, 0) };
 
 		const { objects } = moveSelection({
@@ -95,7 +95,7 @@ describe("moveSelection", () => {
 		expect(objects.r1).toMatchObject({ cx: 1, cy: 1 });
 	});
 
-	it("グループは子孫も再帰的に移動する", () => {
+	it("a group recursively moves its descendants too", () => {
 		const srcObjects = {
 			g1: makeGroup("g1", 50, 50, ["r1"]),
 			r1: makeRect("r1", 30, 30),
@@ -112,7 +112,7 @@ describe("moveSelection", () => {
 		expect(objects.r1).toMatchObject({ cx: 50, cy: 30 });
 	});
 
-	it("multiSelectGroup の中心も delta だけ同期する", () => {
+	it("also syncs the multiSelectGroup's center by delta", () => {
 		const srcMultiSelectGroup = makeGroup("ms", 10, 20, ["r1"]);
 
 		const { multiSelectGroup } = moveSelection({
@@ -123,11 +123,11 @@ describe("moveSelection", () => {
 		});
 
 		expect(multiSelectGroup).toMatchObject({ cx: 15, cy: 27 });
-		// 元の multiSelectGroup は変更しない
+		// the original multiSelectGroup is not mutated
 		expect(srcMultiSelectGroup).toMatchObject({ cx: 10, cy: 20 });
 	});
 
-	it("multiSelectGroup が null なら null を返す", () => {
+	it("returns null when multiSelectGroup is null", () => {
 		const { multiSelectGroup } = moveSelection({
 			selectedIds: [],
 			srcObjects: {},

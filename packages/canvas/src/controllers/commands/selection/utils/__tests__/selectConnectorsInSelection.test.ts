@@ -5,7 +5,7 @@ import type { ConnectorState } from "../../../../../states/objects/connections/c
 import { selectConnectorsInSelection } from "../selectConnectorsInSelection";
 
 // ---------------------------------------------------------------------------
-// テスト用フィクスチャ
+// Test fixtures
 // ---------------------------------------------------------------------------
 
 const makeConnector = (
@@ -47,11 +47,11 @@ const makeObjects = (
 };
 
 // ---------------------------------------------------------------------------
-// テスト
+// Tests
 // ---------------------------------------------------------------------------
 
 describe("selectConnectorsInSelection", () => {
-	it("両端 owned+選択内 → 含む", () => {
+	it("both ends owned + in selection → included", () => {
 		const conn = makeConnector("c1", "r1", "r2");
 		const result = selectConnectorsInSelection(
 			["c1"],
@@ -61,7 +61,7 @@ describe("selectConnectorsInSelection", () => {
 		expect(result).toEqual(["c1"]);
 	});
 
-	it("片端 owned+選択内・他端 free → 含む", () => {
+	it("one end owned + in selection, other end free → included", () => {
 		const conn = makeConnector("c1", "r1", null);
 		const result = selectConnectorsInSelection(
 			["c1"],
@@ -71,7 +71,7 @@ describe("selectConnectorsInSelection", () => {
 		expect(result).toEqual(["c1"]);
 	});
 
-	it("片端 free・他端 owned+選択内 → 含む", () => {
+	it("one end free, other end owned + in selection → included", () => {
 		const conn = makeConnector("c1", null, "r1");
 		const result = selectConnectorsInSelection(
 			["c1"],
@@ -81,7 +81,7 @@ describe("selectConnectorsInSelection", () => {
 		expect(result).toEqual(["c1"]);
 	});
 
-	it("両端 free（浮遊コネクター）→ 除外", () => {
+	it("both ends free (floating connector) → excluded", () => {
 		const conn = makeConnector("c1", null, null);
 		const result = selectConnectorsInSelection(
 			["c1"],
@@ -91,37 +91,37 @@ describe("selectConnectorsInSelection", () => {
 		expect(result).toEqual([]);
 	});
 
-	it("片端 owned+選択内・他端 owned+選択外 → 除外", () => {
+	it("one end owned + in selection, other end owned + out of selection → excluded", () => {
 		const conn = makeConnector("c1", "r1", "r2");
 		const result = selectConnectorsInSelection(
 			["c1"],
 			makeObjects([conn]),
-			new Set(["r1"]), // r2 は選択外
+			new Set(["r1"]), // r2 is out of selection
 		);
 		expect(result).toEqual([]);
 	});
 
-	it("片端 owned+選択外・他端 free → 除外", () => {
+	it("one end owned + out of selection, other end free → excluded", () => {
 		const conn = makeConnector("c1", "r2", null);
 		const result = selectConnectorsInSelection(
 			["c1"],
 			makeObjects([conn]),
-			new Set(["r1"]), // r2 は選択外
+			new Set(["r1"]), // r2 is out of selection
 		);
 		expect(result).toEqual([]);
 	});
 
-	it("両端 owned+選択外 → 除外", () => {
+	it("both ends owned + out of selection → excluded", () => {
 		const conn = makeConnector("c1", "r2", "r3");
 		const result = selectConnectorsInSelection(
 			["c1"],
 			makeObjects([conn]),
-			new Set(["r1"]), // r2, r3 は選択外
+			new Set(["r1"]), // r2, r3 are out of selection
 		);
 		expect(result).toEqual([]);
 	});
 
-	it("存在しないコネクター ID はスキップする", () => {
+	it("skips non-existent connector IDs", () => {
 		const result = selectConnectorsInSelection(
 			["missing"],
 			{},
@@ -130,7 +130,7 @@ describe("selectConnectorsInSelection", () => {
 		expect(result).toEqual([]);
 	});
 
-	it("複数コネクターを入力順を維持して返す", () => {
+	it("returns multiple connectors preserving input order", () => {
 		const included1 = makeConnector("c1", "r1", "r2");
 		const floating = makeConnector("c2", null, null);
 		const included2 = makeConnector("c3", "r1", null);

@@ -93,8 +93,8 @@ describe("CanvasMapper", () => {
 		anchor: { kind: "center" },
 	});
 
-	describe("コネクター（統一 z-order）", () => {
-		it("root のオブジェクトとコネクターの z-order を canvasToState で保つ", () => {
+	describe("connectors (unified z-order)", () => {
+		it("preserves the z-order of root objects and connectors in canvasToState", () => {
 			const doc: CanvasDoc = {
 				version: 1,
 				root: [
@@ -109,7 +109,7 @@ describe("CanvasMapper", () => {
 			expect(state.objects["conn-1"].type).toBe("connector");
 		});
 
-		it("canvasToState → canvasToDoc 往復で root の順序（コネクター混在）を保つ", () => {
+		it("preserves root order (with connectors mixed in) across a canvasToState → canvasToDoc round trip", () => {
 			const doc: CanvasDoc = {
 				version: 1,
 				root: [

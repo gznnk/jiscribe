@@ -49,12 +49,12 @@ const centerOf = (viewport: Viewport) => ({
 });
 
 describe("ZoomToSelectionCommand", () => {
-	it("選択オブジェクトのバウンド中心へ寄せる（非選択は無視）", () => {
+	it("centers on the bounds of selected objects (ignoring unselected ones)", () => {
 		const state = makeState({
 			selectedIds: ["a"],
 			objects: {
 				a: makeRect("a", 500, 500),
-				// 遠方の非選択オブジェクトは中心計算に影響しない
+				// A far-away unselected object does not affect the center calculation
 				b: makeRect("b", 5000, 5000),
 			},
 		});
@@ -64,7 +64,7 @@ describe("ZoomToSelectionCommand", () => {
 		expect(center.y).toBeCloseTo(500, 2);
 	});
 
-	it("選択コンテンツが収まる倍率を選ぶ（48px パディング込み）", () => {
+	it("picks a zoom level that fits the selected content (including 48px padding)", () => {
 		const state = makeState({
 			selectedIds: ["a"],
 			objects: { a: makeRect("a", 500, 500) },
@@ -74,8 +74,8 @@ describe("ZoomToSelectionCommand", () => {
 		expect(next.viewport.zoom).toBeCloseTo(4.52, 2);
 	});
 
-	it("片軸サイズ 0（水平な直線）でも有効な軸にフィットする", () => {
-		// 水平ポリライン: 幅 200・高さ 0。高さ 0 を理由にフォールバック(zoom=1)しない
+	it("fits to the valid axis even when one axis has size 0 (a horizontal line)", () => {
+		// Horizontal polyline: width 200, height 0. Does not fall back (zoom=1) just because height is 0
 		const state = makeState({
 			selectedIds: ["line"],
 			objects: {
@@ -86,16 +86,16 @@ describe("ZoomToSelectionCommand", () => {
 			},
 		});
 		const next = ZoomToSelectionCommand.execute(state);
-		// 幅 200 → 904/200 = 4.52 にフィット（高さ軸は候補から除外）
+		// Fits to width 200 -> 904/200 = 4.52 (the height axis is excluded from candidates)
 		expect(next.viewport.zoom).toBeCloseTo(4.52, 2);
 		const center = centerOf(next.viewport);
 		expect(center.x).toBeCloseTo(500, 2);
 		expect(center.y).toBeCloseTo(500, 2);
 	});
 
-	it("両軸サイズ 0（全頂点一致の退化 Poly）は現在ビューを維持する（no-op）", () => {
-		// 単一点に潰れた Poly は contentWidth=contentHeight=0。zoom 候補が無いため
-		// 100% へのスナップ＋再センタリングをせず、現在のビューポートを維持する。
+	it("keeps the current view when both axes have size 0 (a degenerate poly with all vertices identical) (no-op)", () => {
+		// A poly collapsed to a single point has contentWidth=contentHeight=0. With no zoom
+		// candidate, it keeps the current viewport instead of snapping to 100% and recentering.
 		const state = makeState({
 			selectedIds: ["dot"],
 			objects: {
@@ -110,7 +110,7 @@ describe("ZoomToSelectionCommand", () => {
 	});
 
 	describe("canExecute", () => {
-		it("選択があれば実行可能", () => {
+		it("is executable when there is a selection", () => {
 			expect(
 				ZoomToSelectionCommand.canExecute(
 					makeState({
@@ -121,7 +121,7 @@ describe("ZoomToSelectionCommand", () => {
 			).toBe(true);
 		});
 
-		it("選択が無ければ実行不可", () => {
+		it("is not executable when there is no selection", () => {
 			expect(
 				ZoomToSelectionCommand.canExecute(
 					makeState({ selectedIds: [], objects: {} }),

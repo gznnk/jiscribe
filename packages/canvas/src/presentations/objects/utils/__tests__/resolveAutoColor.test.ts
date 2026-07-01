@@ -4,30 +4,30 @@ import { theme } from "../../../../constants/theme";
 import { resolveAutoColor } from "../resolveAutoColor";
 
 describe("resolveAutoColor", () => {
-	it('ink ロールの "auto" はテーマ前景（theme.foreground）へ解決する', () => {
+	it('resolves "auto" for the ink role to the theme foreground (theme.foreground)', () => {
 		expect(resolveAutoColor("auto", "ink")).toBe(theme.foreground);
 	});
 
-	it('surface ロールの "auto" はテーマのサーフェス（theme.surface）へ解決する', () => {
+	it('resolves "auto" for the surface role to the theme surface (theme.surface)', () => {
 		expect(resolveAutoColor("auto", "surface")).toBe(theme.surface);
 	});
 
-	it("具体色はロールに関わらずそのまま返す", () => {
+	it("returns a concrete color as-is regardless of role", () => {
 		expect(resolveAutoColor("#6b7280", "ink")).toBe("#6b7280");
 		expect(resolveAutoColor("#fef9c3", "surface")).toBe("#fef9c3");
 		expect(resolveAutoColor("transparent", "surface")).toBe("transparent");
 	});
 
-	it("未指定はロール既定（ink: 前景 / surface: transparent）を返す", () => {
+	it("returns the role default when unspecified (ink: foreground / surface: transparent)", () => {
 		expect(resolveAutoColor(undefined, "ink")).toBe(theme.foreground);
 		expect(resolveAutoColor(undefined, "surface")).toBe("transparent");
 	});
 
-	it("未指定は fallback 指定があればそれを優先する", () => {
+	it("prefers the fallback over the role default when unspecified", () => {
 		expect(resolveAutoColor(undefined, "ink", "red")).toBe("red");
 	});
 
-	it('"auto" は fallback 指定があってもロールトークンを優先する', () => {
+	it('"auto" prefers the role token even when a fallback is given', () => {
 		expect(resolveAutoColor("auto", "surface", "red")).toBe(theme.surface);
 	});
 });

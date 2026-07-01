@@ -3,7 +3,7 @@ import { beforeAll, describe, it, expect } from "vitest";
 import { initializeObjectRegistry } from "../../../../controllers/setup/initializeObjectRegistry";
 import { createObjectDoc } from "../createObjectDoc";
 
-// createObjectDoc は shapeFactoryRegistry 経由で解決されるため、レジストリを初期化する
+// createObjectDoc resolves via shapeFactoryRegistry, so initialize the registry
 beforeAll(() => {
 	initializeObjectRegistry();
 });
@@ -11,7 +11,7 @@ beforeAll(() => {
 const pos = { x: 100, y: 200 };
 
 describe("createObjectDoc", () => {
-	it("生成された Doc は id（UUID）を持つ", () => {
+	it("the generated Doc has an id (UUID)", () => {
 		const doc = createObjectDoc("rect", pos);
 		expect(doc.id).toMatch(
 			/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
@@ -19,7 +19,7 @@ describe("createObjectDoc", () => {
 	});
 
 	describe("rect", () => {
-		it("position を中心として x, y が設定される", () => {
+		it("sets x, y centered on the position", () => {
 			const doc = createObjectDoc("rect", pos);
 			const r = doc as unknown as {
 				x: number;
@@ -33,11 +33,11 @@ describe("createObjectDoc", () => {
 			expect(r.y).toBeCloseTo(pos.y - r.height / 2);
 		});
 
-		it("type は 'rect'", () => {
+		it("type is 'rect'", () => {
 			expect(createObjectDoc("rect", pos).type).toBe("rect");
 		});
 
-		it("overrides で width/height を上書きできる", () => {
+		it("width/height can be overridden via overrides", () => {
 			const doc = createObjectDoc("rect", pos, { width: 50, height: 30 });
 			const r = doc as unknown as {
 				x: number;
@@ -53,20 +53,20 @@ describe("createObjectDoc", () => {
 	});
 
 	describe("ellipse", () => {
-		it("position が cx/cy に設定される", () => {
+		it("sets the position as cx/cy", () => {
 			const doc = createObjectDoc("ellipse", pos);
 			const e = doc as unknown as { cx: number; cy: number };
 			expect(e.cx).toBe(pos.x);
 			expect(e.cy).toBe(pos.y);
 		});
 
-		it("type は 'ellipse'", () => {
+		it("type is 'ellipse'", () => {
 			expect(createObjectDoc("ellipse", pos).type).toBe("ellipse");
 		});
 	});
 
 	describe("sticky", () => {
-		it("position を中心として x, y が設定される", () => {
+		it("sets x, y centered on the position", () => {
 			const doc = createObjectDoc("sticky", pos);
 			const s = doc as unknown as {
 				x: number;
@@ -78,40 +78,40 @@ describe("createObjectDoc", () => {
 			expect(s.y).toBeCloseTo(pos.y - s.height / 2);
 		});
 
-		it("type は 'sticky'", () => {
+		it("type is 'sticky'", () => {
 			expect(createObjectDoc("sticky", pos).type).toBe("sticky");
 		});
 	});
 
 	describe("polyline", () => {
-		it("position を中心とした水平な 2 点を持つ", () => {
+		it("has 2 horizontal points centered on the position", () => {
 			const doc = createObjectDoc("polyline", pos);
 			const pl = doc as unknown as { points: Array<{ x: number; y: number }> };
 			expect(pl.points).toHaveLength(2);
 			expect(pl.points[0].y).toBe(pos.y);
 			expect(pl.points[1].y).toBe(pos.y);
-			// 左点 < 中心 < 右点
+			// left point < center < right point
 			expect(pl.points[0].x).toBeLessThan(pos.x);
 			expect(pl.points[1].x).toBeGreaterThan(pos.x);
 		});
 
-		it("type は 'polyline'", () => {
+		it("type is 'polyline'", () => {
 			expect(createObjectDoc("polyline", pos).type).toBe("polyline");
 		});
 	});
 
 	describe("polygon", () => {
-		it("5 頂点を持つ", () => {
+		it("has 5 vertices", () => {
 			const doc = createObjectDoc("polygon", pos);
 			const pg = doc as unknown as { points: Array<{ x: number; y: number }> };
 			expect(pg.points).toHaveLength(5);
 		});
 
-		it("type は 'polygon'", () => {
+		it("type is 'polygon'", () => {
 			expect(createObjectDoc("polygon", pos).type).toBe("polygon");
 		});
 
-		it("各頂点が position を中心とした円上にある（許容誤差あり）", () => {
+		it("each vertex lies on a circle centered on the position (within tolerance)", () => {
 			const RADIUS = 60;
 			const doc = createObjectDoc("polygon", pos);
 			const pg = doc as unknown as { points: Array<{ x: number; y: number }> };
@@ -122,8 +122,8 @@ describe("createObjectDoc", () => {
 		});
 	});
 
-	describe("未対応 type", () => {
-		it("connector などサポートしていない type → Error をスロー", () => {
+	describe("unsupported type", () => {
+		it("throws an Error for unsupported types such as connector", () => {
 			expect(() =>
 				createObjectDoc(
 					"connector" as Parameters<typeof createObjectDoc>[0],

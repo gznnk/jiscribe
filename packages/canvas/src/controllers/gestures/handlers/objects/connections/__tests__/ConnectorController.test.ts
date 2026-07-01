@@ -8,8 +8,8 @@ import {
 	transformByGroup,
 } from "../ConnectorController";
 
-// コネクターのジオメトリは端点から描画時に解決されるため、behavior はすべて no-op。
-// この不変条件（state をそのまま返す）が崩れていないことを担保する。
+// A connector's geometry is resolved from its endpoints at render time, so all behaviors are no-ops.
+// This guarantees that the invariant (returning the state as-is) has not been broken.
 const makeConnector = (): ConnectorState =>
 	({
 		id: "connector-1",
@@ -31,18 +31,18 @@ const group = {
 	childIds: [],
 } as unknown as GroupState;
 
-describe("ConnectorController behavior は全て no-op", () => {
-	it("moveByDelta は state をそのまま返す", () => {
+describe("ConnectorController behaviors are all no-ops", () => {
+	it("moveByDelta returns the state as-is", () => {
 		const state = makeConnector();
 		expect(moveByDelta(state, { x: 10, y: 10 })).toBe(state);
 	});
 
-	it("transformByGroup は state をそのまま返す", () => {
+	it("transformByGroup returns the state as-is", () => {
 		const state = makeConnector();
 		expect(transformByGroup(state, group, group)).toBe(state);
 	});
 
-	it("rotateByGroup は state をそのまま返す", () => {
+	it("rotateByGroup returns the state as-is", () => {
 		const state = makeConnector();
 		expect(rotateByGroup(state, group, 90)).toBe(state);
 	});

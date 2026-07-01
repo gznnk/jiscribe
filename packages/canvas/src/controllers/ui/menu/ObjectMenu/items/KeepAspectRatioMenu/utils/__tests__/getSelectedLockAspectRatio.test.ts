@@ -16,11 +16,11 @@ const state = (over: Partial<CanvasControllerState>): CanvasControllerState =>
 	}) as unknown as CanvasControllerState;
 
 describe("getSelectedLockAspectRatio", () => {
-	it("選択なし → false", () => {
+	it("no selection → false", () => {
 		expect(getSelectedLockAspectRatio(state({}))).toBe(false);
 	});
 
-	it("単一選択で lockAspectRatio=true → true", () => {
+	it("single selection with lockAspectRatio=true → true", () => {
 		const s = state({
 			objects: { a: obj("a", { lockAspectRatio: true }) },
 			selectedIds: ["a"],
@@ -28,7 +28,7 @@ describe("getSelectedLockAspectRatio", () => {
 		expect(getSelectedLockAspectRatio(s)).toBe(true);
 	});
 
-	it("単一選択で lockAspectRatio が boolean でない → false", () => {
+	it("single selection where lockAspectRatio is not a boolean → false", () => {
 		const s = state({
 			objects: { a: obj("a", { lockAspectRatio: "yes" }) },
 			selectedIds: ["a"],
@@ -36,7 +36,7 @@ describe("getSelectedLockAspectRatio", () => {
 		expect(getSelectedLockAspectRatio(s)).toBe(false);
 	});
 
-	it("multiSelectGroup があればそちらを優先する", () => {
+	it("prefers multiSelectGroup when present", () => {
 		const s = state({
 			objects: { a: obj("a", { lockAspectRatio: false }) },
 			selectedIds: ["a"],
@@ -47,7 +47,7 @@ describe("getSelectedLockAspectRatio", () => {
 		expect(getSelectedLockAspectRatio(s)).toBe(true);
 	});
 
-	it("multiSelectGroup に lockAspectRatio が無ければ false", () => {
+	it("false when multiSelectGroup has no lockAspectRatio", () => {
 		const s = state({
 			multiSelectGroup: {} as CanvasControllerState["multiSelectGroup"],
 		});

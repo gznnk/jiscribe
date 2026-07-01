@@ -9,17 +9,17 @@ import {
 } from "../EndpointRef";
 
 describe("isConnectPointId", () => {
-	it.each(ConnectPointIds)("ConnectPointId %s を受け入れる", (id) => {
+	it.each(ConnectPointIds)("accepts the ConnectPointId %s", (id) => {
 		expect(isConnectPointId(id)).toBe(true);
 	});
 
-	it("不正な文字列を拒否する", () => {
+	it("rejects invalid strings", () => {
 		expect(isConnectPointId("top")).toBe(false);
 		expect(isConnectPointId("")).toBe(false);
 		expect(isConnectPointId("Center")).toBe(false);
 	});
 
-	it("非文字列型を拒否する", () => {
+	it("rejects non-string types", () => {
 		expect(isConnectPointId(null)).toBe(false);
 		expect(isConnectPointId(undefined)).toBe(false);
 		expect(isConnectPointId(42)).toBe(false);
@@ -28,7 +28,7 @@ describe("isConnectPointId", () => {
 });
 
 describe("isOwnedEndpointRef", () => {
-	it("center アンカーの OwnedEndpointRef を受け入れる", () => {
+	it("accepts an OwnedEndpointRef with a center anchor", () => {
 		expect(
 			isOwnedEndpointRef({
 				owner: { id: "obj1", type: "rect" },
@@ -37,7 +37,7 @@ describe("isOwnedEndpointRef", () => {
 		).toBe(true);
 	});
 
-	it("connectPoint アンカーの OwnedEndpointRef を受け入れる", () => {
+	it("accepts an OwnedEndpointRef with a connectPoint anchor", () => {
 		expect(
 			isOwnedEndpointRef({
 				owner: { id: "obj2", type: "ellipse" },
@@ -46,7 +46,7 @@ describe("isOwnedEndpointRef", () => {
 		).toBe(true);
 	});
 
-	it("owner が無いオブジェクトを拒否する", () => {
+	it("rejects an object without an owner", () => {
 		expect(
 			isOwnedEndpointRef({
 				anchor: { kind: "center" },
@@ -54,7 +54,7 @@ describe("isOwnedEndpointRef", () => {
 		).toBe(false);
 	});
 
-	it("owner が null のオブジェクトを拒否する", () => {
+	it("rejects an object whose owner is null", () => {
 		expect(
 			isOwnedEndpointRef({
 				owner: null,
@@ -63,7 +63,7 @@ describe("isOwnedEndpointRef", () => {
 		).toBe(false);
 	});
 
-	it("owner.id が文字列でない場合を拒否する", () => {
+	it("rejects when owner.id is not a string", () => {
 		expect(
 			isOwnedEndpointRef({
 				owner: { id: 123, type: "rect" },
@@ -72,7 +72,7 @@ describe("isOwnedEndpointRef", () => {
 		).toBe(false);
 	});
 
-	it("owner.type が文字列でない場合を拒否する", () => {
+	it("rejects when owner.type is not a string", () => {
 		expect(
 			isOwnedEndpointRef({
 				owner: { id: "obj1", type: null },
@@ -81,18 +81,18 @@ describe("isOwnedEndpointRef", () => {
 		).toBe(false);
 	});
 
-	it("null を拒否する", () => {
+	it("rejects null", () => {
 		expect(isOwnedEndpointRef(null)).toBe(false);
 	});
 
-	it("非オブジェクト型を拒否する", () => {
+	it("rejects non-object types", () => {
 		expect(isOwnedEndpointRef("string")).toBe(false);
 		expect(isOwnedEndpointRef(42)).toBe(false);
 	});
 });
 
 describe("isFreeEndpointRef", () => {
-	it("free アンカーの FreeEndpointRef を受け入れる", () => {
+	it("accepts a FreeEndpointRef with a free anchor", () => {
 		expect(
 			isFreeEndpointRef({
 				anchor: { kind: "free", point: { x: 10, y: 20 } },
@@ -100,7 +100,7 @@ describe("isFreeEndpointRef", () => {
 		).toBe(true);
 	});
 
-	it("owner が undefined の場合も受け入れる", () => {
+	it("also accepts when owner is undefined", () => {
 		expect(
 			isFreeEndpointRef({
 				owner: undefined,
@@ -109,7 +109,7 @@ describe("isFreeEndpointRef", () => {
 		).toBe(true);
 	});
 
-	it("owner が存在する場合を拒否する", () => {
+	it("rejects when an owner is present", () => {
 		expect(
 			isFreeEndpointRef({
 				owner: { id: "obj1", type: "rect" },
@@ -118,7 +118,7 @@ describe("isFreeEndpointRef", () => {
 		).toBe(false);
 	});
 
-	it("anchor.kind が free でない場合を拒否する", () => {
+	it("rejects when anchor.kind is not free", () => {
 		expect(
 			isFreeEndpointRef({
 				anchor: { kind: "center" },
@@ -126,11 +126,11 @@ describe("isFreeEndpointRef", () => {
 		).toBe(false);
 	});
 
-	it("anchor が無いオブジェクトを拒否する", () => {
+	it("rejects an object without an anchor", () => {
 		expect(isFreeEndpointRef({})).toBe(false);
 	});
 
-	it("anchor が null のオブジェクトを拒否する", () => {
+	it("rejects an object whose anchor is null", () => {
 		expect(
 			isFreeEndpointRef({
 				anchor: null,
@@ -138,18 +138,18 @@ describe("isFreeEndpointRef", () => {
 		).toBe(false);
 	});
 
-	it("null を拒否する", () => {
+	it("rejects null", () => {
 		expect(isFreeEndpointRef(null)).toBe(false);
 	});
 
-	it("非オブジェクト型を拒否する", () => {
+	it("rejects non-object types", () => {
 		expect(isFreeEndpointRef("string")).toBe(false);
 	});
 });
 
 describe("isSameEndpoint", () => {
-	describe("OwnedEndpointRef 同士の比較", () => {
-		it("owner と center アンカーが同じなら true", () => {
+	describe("comparing two OwnedEndpointRefs", () => {
+		it("returns true when owner and center anchor are the same", () => {
 			expect(
 				isSameEndpoint(
 					{ owner: { id: "a", type: "rect" }, anchor: { kind: "center" } },
@@ -158,7 +158,7 @@ describe("isSameEndpoint", () => {
 			).toBe(true);
 		});
 
-		it("owner と connectPoint アンカーが同じなら true", () => {
+		it("returns true when owner and connectPoint anchor are the same", () => {
 			expect(
 				isSameEndpoint(
 					{
@@ -173,7 +173,7 @@ describe("isSameEndpoint", () => {
 			).toBe(true);
 		});
 
-		it("owner.id が異なれば false", () => {
+		it("returns false when owner.id differs", () => {
 			expect(
 				isSameEndpoint(
 					{ owner: { id: "a", type: "rect" }, anchor: { kind: "center" } },
@@ -182,7 +182,7 @@ describe("isSameEndpoint", () => {
 			).toBe(false);
 		});
 
-		it("owner.type が異なれば false", () => {
+		it("returns false when owner.type differs", () => {
 			expect(
 				isSameEndpoint(
 					{ owner: { id: "a", type: "rect" }, anchor: { kind: "center" } },
@@ -191,7 +191,7 @@ describe("isSameEndpoint", () => {
 			).toBe(false);
 		});
 
-		it("connectPoint の id が異なれば false", () => {
+		it("returns false when the connectPoint id differs", () => {
 			expect(
 				isSameEndpoint(
 					{
@@ -206,7 +206,7 @@ describe("isSameEndpoint", () => {
 			).toBe(false);
 		});
 
-		it("アンカーの kind が異なれば false", () => {
+		it("returns false when the anchor kind differs", () => {
 			expect(
 				isSameEndpoint(
 					{ owner: { id: "a", type: "rect" }, anchor: { kind: "center" } },
@@ -219,8 +219,8 @@ describe("isSameEndpoint", () => {
 		});
 	});
 
-	describe("FreeEndpointRef 同士の比較", () => {
-		it("同じ座標なら true", () => {
+	describe("comparing two FreeEndpointRefs", () => {
+		it("returns true for the same coordinates", () => {
 			expect(
 				isSameEndpoint(
 					{ anchor: { kind: "free", point: { x: 5, y: 10 } } },
@@ -229,7 +229,7 @@ describe("isSameEndpoint", () => {
 			).toBe(true);
 		});
 
-		it("座標が異なれば false", () => {
+		it("returns false when coordinates differ", () => {
 			expect(
 				isSameEndpoint(
 					{ anchor: { kind: "free", point: { x: 5, y: 10 } } },
@@ -239,8 +239,8 @@ describe("isSameEndpoint", () => {
 		});
 	});
 
-	describe("OwnedEndpointRef と FreeEndpointRef の混在", () => {
-		it("owner の有無が異なれば false", () => {
+	describe("mixing OwnedEndpointRef and FreeEndpointRef", () => {
+		it("returns false when one has an owner and the other does not", () => {
 			expect(
 				isSameEndpoint(
 					{ owner: { id: "a", type: "rect" }, anchor: { kind: "center" } },

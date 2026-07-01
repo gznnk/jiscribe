@@ -21,21 +21,21 @@ const validConnector = {
 };
 
 describe("isValidConnectorState", () => {
-	it("owned + free / owned + owned は true", () => {
+	it("owned + free / owned + owned is true", () => {
 		expect(isValidConnectorState(validConnector)).toBe(true);
 		expect(isValidConnectorState({ ...validConnector, target: ownedRef })).toBe(
 			true,
 		);
 	});
 
-	it("中間経由点（points）は空配列でも true、点を持っても true", () => {
+	it("intermediate waypoints (points) are true whether empty array or populated", () => {
 		expect(isValidConnectorState({ ...validConnector, points: [] })).toBe(true);
 		expect(
 			isValidConnectorState({ ...validConnector, points: [{ x: 5, y: 5 }] }),
 		).toBe(true);
 	});
 
-	it("両端 free は false（少なくとも一方が owned 必須）", () => {
+	it("both ends free is false (at least one must be owned)", () => {
 		expect(
 			isValidConnectorState({
 				...validConnector,
@@ -45,7 +45,7 @@ describe("isValidConnectorState", () => {
 		).toBe(false);
 	});
 
-	it("source / target が欠落は false", () => {
+	it("missing source / target is false", () => {
 		expect(
 			isValidConnectorState({ ...validConnector, source: undefined }),
 		).toBe(false);
@@ -54,7 +54,7 @@ describe("isValidConnectorState", () => {
 		).toBe(false);
 	});
 
-	it("owner.id が文字列でない端点は false", () => {
+	it("endpoint whose owner.id is not a string is false", () => {
 		const badRef = {
 			owner: { id: 123, type: "rect" },
 			anchor: { kind: "center" },
@@ -64,13 +64,13 @@ describe("isValidConnectorState", () => {
 		);
 	});
 
-	it("不正な ArrowType は false", () => {
+	it("invalid ArrowType is false", () => {
 		expect(
 			isValidConnectorState({ ...validConnector, endArrow: "diamond" }),
 		).toBe(false);
 	});
 
-	it("routing は省略・straight・orthogonal を許容する", () => {
+	it("routing allows omitted, straight, and orthogonal", () => {
 		expect(isValidConnectorState(validConnector)).toBe(true);
 		expect(
 			isValidConnectorState({ ...validConnector, routing: "straight" }),
@@ -80,13 +80,13 @@ describe("isValidConnectorState", () => {
 		).toBe(true);
 	});
 
-	it("未知の routing 値は false", () => {
+	it("unknown routing value is false", () => {
 		expect(
 			isValidConnectorState({ ...validConnector, routing: "diagonal" }),
 		).toBe(false);
 	});
 
-	it("label が不正な構造のコネクターは false（label 検証の配線確認）", () => {
+	it("connector with malformed label structure is false (verifies label validation is wired in)", () => {
 		expect(
 			isValidConnectorState({ ...validConnector, label: { text: 123 } }),
 		).toBe(false);
@@ -100,18 +100,18 @@ describe("isValidConnectorState", () => {
 });
 
 describe("isValidConnectorLabelState", () => {
-	it("未指定（undefined）はラベル無しとして true", () => {
+	it("unspecified (undefined) is treated as no label and is true", () => {
 		expect(isValidConnectorLabelState(undefined)).toBe(true);
 	});
 
-	it("text のみの最小ラベルは true", () => {
+	it("minimal label with only text is true", () => {
 		expect(isValidConnectorLabelState({ text: "Yes" })).toBe(true);
 	});
 
-	it("位置・スタイルを正しい型で持てば true", () => {
+	it("is true when position and style have correct types", () => {
 		expect(
 			isValidConnectorLabelState({
-				text: "成功",
+				text: "Success",
 				position: 0.25,
 				offset: -8,
 				fontColor: "#2E7D32",
@@ -121,7 +121,7 @@ describe("isValidConnectorLabelState", () => {
 		).toBe(true);
 	});
 
-	it("背景（fill）・枠線（stroke/strokeWidth/strokeDashType）を正しい型で持てば true", () => {
+	it("is true when background (fill) and border (stroke/strokeWidth/strokeDashType) have correct types", () => {
 		expect(
 			isValidConnectorLabelState({
 				text: "Yes",
@@ -133,7 +133,7 @@ describe("isValidConnectorLabelState", () => {
 		).toBe(true);
 	});
 
-	it("fill / stroke / strokeWidth / strokeDashType の型が合わないと false", () => {
+	it("is false when fill / stroke / strokeWidth / strokeDashType have wrong types", () => {
 		expect(isValidConnectorLabelState({ text: "x", fill: 0 })).toBe(false);
 		expect(isValidConnectorLabelState({ text: "x", stroke: 1 })).toBe(false);
 		expect(isValidConnectorLabelState({ text: "x", strokeWidth: "2" })).toBe(
@@ -144,17 +144,17 @@ describe("isValidConnectorLabelState", () => {
 		).toBe(false);
 	});
 
-	it("オブジェクトでない（文字列・null）は false", () => {
+	it("non-object (string, null) is false", () => {
 		expect(isValidConnectorLabelState("Yes")).toBe(false);
 		expect(isValidConnectorLabelState(null)).toBe(false);
 	});
 
-	it("text が無い／文字列でないと false", () => {
+	it("is false when text is missing or not a string", () => {
 		expect(isValidConnectorLabelState({})).toBe(false);
 		expect(isValidConnectorLabelState({ text: 123 })).toBe(false);
 	});
 
-	it("存在する場合に型が合わないフィールドは false", () => {
+	it("fields with wrong types when present are false", () => {
 		expect(isValidConnectorLabelState({ text: "x", position: "0.5" })).toBe(
 			false,
 		);

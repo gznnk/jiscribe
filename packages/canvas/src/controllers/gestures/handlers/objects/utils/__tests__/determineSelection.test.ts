@@ -28,10 +28,10 @@ const makeState = (
 const noMods: Mods = { ctrl: false, meta: false, shift: false, alt: false };
 const ctrlMods: Mods = { ctrl: true, meta: false, shift: false, alt: false };
 
-// 共通のオブジェクトセット
-// root-rect: ルートレベルの矩形
-// group1: rect1, rect2 を含むグループ
-// group2: group1 を含むネストグループ
+// Shared object set
+// root-rect: a root-level rectangle
+// group1: a group containing rect1, rect2
+// group2: a nested group containing group1
 const baseObjects = {
 	"root-rect": rectObj("root-rect"),
 	group1: groupObj("group1", ["rect1", "rect2"]),
@@ -46,26 +46,26 @@ const nestedObjects = {
 };
 
 describe("determineSelection", () => {
-	describe("ルートレベルのオブジェクト（非グループ）", () => {
-		it("未選択のとき [id] を返す", () => {
+	describe("root-level objects (non-group)", () => {
+		it("returns [id] when unselected", () => {
 			const state = makeState([], baseObjects);
 			const result = determineSelection(rectObj("root-rect"), state, noMods);
 			expect(result).toEqual(["root-rect"]);
 		});
 
-		it("すでに選択済みで Ctrl なしのとき null を返す（変更なし）", () => {
+		it("returns null when already selected and without Ctrl (no change)", () => {
 			const state = makeState(["root-rect"], baseObjects);
 			const result = determineSelection(rectObj("root-rect"), state, noMods);
 			expect(result).toBeNull();
 		});
 
-		it("すでに選択済みで Ctrl ありのとき選択解除（[]）を返す", () => {
+		it("returns a deselection ([]) when already selected and with Ctrl", () => {
 			const state = makeState(["root-rect"], baseObjects);
 			const result = determineSelection(rectObj("root-rect"), state, ctrlMods);
 			expect(result).toEqual([]);
 		});
 
-		it("未選択で Ctrl あり・他に選択中アイテムがあるとき追加選択する", () => {
+		it("adds to selection when unselected, with Ctrl, and other items are selected", () => {
 			const state = makeState(["root-rect"], {
 				"root-rect": rectObj("root-rect"),
 				"other-rect": rectObj("other-rect"),
@@ -77,8 +77,8 @@ describe("determineSelection", () => {
 		});
 	});
 
-	describe("グループ内のオブジェクト", () => {
-		it("祖先が未選択・他の選択なし → 最上位グループを選択する", () => {
+	describe("objects inside a group", () => {
+		it("ancestor unselected, nothing else selected -> selects the topmost group", () => {
 			const state = makeState([], nestedObjects);
 			const result = determineSelection(
 				rectObj("rect1", "group1"),
@@ -88,7 +88,7 @@ describe("determineSelection", () => {
 			expect(result).toEqual(["group2"]);
 		});
 
-		it("直近の親グループが選択済み・子は未選択 → 子を選択する", () => {
+		it("immediate parent group selected, child unselected -> selects the child", () => {
 			const state = makeState(["group1"], baseObjects);
 			const result = determineSelection(
 				rectObj("rect1", "group1"),
@@ -98,7 +98,7 @@ describe("determineSelection", () => {
 			expect(result).toEqual(["rect1"]);
 		});
 
-		it("直近の親グループが選択済み・子はすでに選択済み → null（変更なし）", () => {
+		it("immediate parent group selected, child already selected -> null (no change)", () => {
 			const state = makeState(["group1", "rect1"], baseObjects);
 			const result = determineSelection(
 				rectObj("rect1", "group1"),
@@ -108,7 +108,7 @@ describe("determineSelection", () => {
 			expect(result).toBeNull();
 		});
 
-		it("兄弟が選択済みのとき自分も同レベルで選択する", () => {
+		it("selects itself at the same level when a sibling is already selected", () => {
 			const state = makeState(["rect1"], baseObjects);
 			const result = determineSelection(
 				rectObj("rect2", "group1"),
@@ -120,12 +120,12 @@ describe("determineSelection", () => {
 		});
 	});
 
-	describe("共通祖先（hasSelectedDescendants 経由）", () => {
+	describe("common ancestor (via hasSelectedDescendants)", () => {
 		// group-top
 		//   ├ group-a ─ rect-a
 		//   └ group-b ─ rect-b
-		// rect-b を選択した状態で rect-a をクリックすると、共通祖先 group-top の
-		// 別サブツリーに選択中アイテムがあるため、rect-a と同階層の group-a に揃える。
+		// Clicking rect-a while rect-b is selected: since another subtree of the common
+		// ancestor group-top has a selected item, align to group-a at the same level as rect-a.
 		const commonAncestorObjects: Record<string, ObjectState> = {
 			"group-top": groupObj("group-top", ["group-a", "group-b"]),
 			"group-a": groupObj("group-a", ["rect-a"], "group-top"),
@@ -134,7 +134,7 @@ describe("determineSelection", () => {
 			"rect-b": rectObj("rect-b", "group-b"),
 		};
 
-		it("別サブツリーの子孫が選択済みのとき共通祖先の一段下を選択する", () => {
+		it("selects one level below the common ancestor when a descendant of another subtree is selected", () => {
 			const state = makeState(["rect-b"], commonAncestorObjects);
 			const result = determineSelection(
 				rectObj("rect-a", "group-a"),
@@ -144,7 +144,7 @@ describe("determineSelection", () => {
 			expect(result).toEqual(["group-a"]);
 		});
 
-		it("どのサブツリーにも選択中アイテムがないとき最上位祖先を選択する", () => {
+		it("selects the topmost ancestor when no subtree has a selected item", () => {
 			const state = makeState(["root-rect"], {
 				...commonAncestorObjects,
 				"root-rect": rectObj("root-rect"),
@@ -158,10 +158,10 @@ describe("determineSelection", () => {
 		});
 	});
 
-	describe("autoSelectParentGroups の統合", () => {
-		it("グループの全子が選択されると親グループが選択される", () => {
+	describe("integration with autoSelectParentGroups", () => {
+		it("selects the parent group when all children of a group are selected", () => {
 			const state = makeState(["rect1"], baseObjects);
-			// rect2 を Ctrl で追加選択 → rect1 + rect2 で group1 の全子が揃う → group1 に昇格
+			// Add rect2 with Ctrl -> rect1 + rect2 completes group1's children -> promote to group1
 			const result = determineSelection(
 				rectObj("rect2", "group1"),
 				state,

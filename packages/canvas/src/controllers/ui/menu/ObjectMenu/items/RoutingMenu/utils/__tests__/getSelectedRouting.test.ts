@@ -14,21 +14,21 @@ const state = (
 	({ objects, selectedConnectorId }) as unknown as CanvasControllerState;
 
 describe("getSelectedRouting", () => {
-	it("コネクター未選択 → 既定の orthogonal", () => {
+	it("no connector selected -> default orthogonal", () => {
 		expect(getSelectedRouting(state({}, null))).toBe("orthogonal");
 	});
 
-	it("routing 省略 → orthogonal", () => {
+	it("routing omitted -> orthogonal", () => {
 		const s = state({ c: connector("c") }, "c");
 		expect(getSelectedRouting(s)).toBe("orthogonal");
 	});
 
-	it("routing が 'straight' → straight", () => {
+	it("routing is 'straight' -> straight", () => {
 		const s = state({ c: connector("c", { routing: "straight" }) }, "c");
 		expect(getSelectedRouting(s)).toBe("straight");
 	});
 
-	it("routing が 'orthogonal' → orthogonal", () => {
+	it("routing is 'orthogonal' -> orthogonal", () => {
 		const s = state({ c: connector("c", { routing: "orthogonal" }) }, "c");
 		expect(getSelectedRouting(s)).toBe("orthogonal");
 	});

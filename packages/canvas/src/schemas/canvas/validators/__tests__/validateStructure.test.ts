@@ -4,13 +4,13 @@ import { initializeObjectDocValidatorRegistry } from "../../../registry/initiali
 import type { SemanticDiagnostic } from "../types";
 import { validateStructure } from "../validateStructure";
 
-// validateStructure は型別検証・既知 type 判定をレジストリへ委譲する。
-// 本番では parseCanvasText が初期化を保証するため、単体テストでも同じ前提を揃える。
+// validateStructure delegates per-type validation and known-type checks to the registry.
+// In production parseCanvasText guarantees initialization, so we set up the same precondition in unit tests.
 beforeAll(() => {
 	initializeObjectDocValidatorRegistry();
 });
 
-// ─── フィクスチャヘルパー ─────────────────────────────────────────
+// ─── Fixture helpers ─────────────────────────────────────────
 const rect = (id: string, over: Record<string, unknown> = {}) => ({
 	id,
 	type: "rect",
@@ -64,78 +64,78 @@ const has = (
 	substr: string,
 ): boolean => errors.some((e) => e.path === path && e.message.includes(substr));
 
-// ─── ドキュメント直下の構造 ───────────────────────────────────────
-describe("validateStructure: ドキュメント直下", () => {
+// ─── Top-level document structure ───────────────────────────────────────
+describe("validateStructure: top-level document", () => {
 	it.each([
 		["null", null],
-		["配列", []],
-		["文字列", "x"],
-		["数値", 42],
-	])("非オブジェクト（%s）は '/' エラー", (_label, input) => {
+		["array", []],
+		["string", "x"],
+		["number", 42],
+	])("a non-object (%s) yields a '/' error", (_label, input) => {
 		const errors = validateStructure(input);
 		expect(has(errors, "/", "must be an object")).toBe(true);
 	});
 
-	it("version 欠落はエラー", () => {
+	it("a missing version is an error", () => {
 		expect(has(validateStructure({ root: [] }), "version", "must be 1")).toBe(
 			true,
 		);
 	});
 
 	it.each([
-		["文字列 '1'", "1"],
-		["v2（厳格化: フォーマットは v1 のみ）", 2],
-		["小数 1.5", 1.5],
+		["string '1'", "1"],
+		["v2 (strict: only v1 format is supported)", 2],
+		["decimal 1.5", 1.5],
 		["0", 0],
-		["負数", -1],
-	])("version が不正（%s）はエラー", (_label, version) => {
+		["negative", -1],
+	])("an invalid version (%s) is an error", (_label, version) => {
 		const errors = validateStructure({ version, root: [] });
 		expect(has(errors, "version", "must be 1")).toBe(true);
 	});
 
-	it("version=1 + 空 root は構造エラーなし（空キャンバスは正当）", () => {
+	it("version=1 + empty root yields no structural error (an empty canvas is valid)", () => {
 		expect(validateStructure(doc([]))).toEqual([]);
 	});
 
 	it.each([
-		["欠落", {}],
-		["オブジェクト", { root: {} }],
-		["文字列", { root: "x" }],
-	])("root が配列でない（%s）はエラー", (_label, partial) => {
+		["missing", {}],
+		["object", { root: {} }],
+		["string", { root: "x" }],
+	])("root not being an array (%s) is an error", (_label, partial) => {
 		const errors = validateStructure({ version: 1, ...partial });
 		expect(has(errors, "root", "must be an array")).toBe(true);
 	});
 
-	it("複数の不備は蓄積される（version + root）", () => {
+	it("multiple defects accumulate (version + root)", () => {
 		const errors = validateStructure({ version: 2, root: 5 });
 		expect(has(errors, "version", "must be 1")).toBe(true);
 		expect(has(errors, "root", "must be an array")).toBe(true);
 	});
 });
 
-// ─── 旧フォーマット connectors フィールド ─────────────────────────
-describe("validateStructure: 旧 connectors フィールド", () => {
-	it("top-level connectors があると fail-fast でエラー", () => {
+// ─── Legacy connectors field ─────────────────────────
+describe("validateStructure: legacy connectors field", () => {
+	it("fails fast with an error when a top-level connectors field is present", () => {
 		const errors = validateStructure({ version: 1, root: [], connectors: [] });
 		expect(errors.some((e) => e.path === "connectors")).toBe(true);
 	});
 
-	it("connectors キーが無ければエラーにならない", () => {
+	it("is not an error when the connectors key is absent", () => {
 		expect(
 			validateStructure(doc([])).some((e) => e.path === "connectors"),
 		).toBe(false);
 	});
 });
 
-// ─── ノード共通フィールド（validateObjectNode） ───────────────────
-describe("validateStructure: ノード共通フィールド", () => {
+// ─── Common node fields (validateObjectNode) ───────────────────
+describe("validateStructure: common node fields", () => {
 	it.each([
 		["null", null],
-		["文字列", "x"],
-		["数値", 1],
-		["配列", []],
+		["string", "x"],
+		["number", 1],
+		["array", []],
 	])(
-		"root 要素が非オブジェクト（%s）は 'must be an object'",
+		"a non-object root element (%s) is 'must be an object'",
 		(_label, node) => {
 			const errors = validateStructure(doc([node]));
 			expect(has(errors, "root[0]", "must be an object")).toBe(true);
@@ -143,37 +143,37 @@ describe("validateStructure: ノード共通フィールド", () => {
 	);
 
 	it.each([
-		["欠落", {}],
-		["空文字", { id: "" }],
-		["数値", { id: 1 }],
-	])("id が不正（%s）は non-empty string エラー", (_label, idPart) => {
+		["missing", {}],
+		["empty string", { id: "" }],
+		["number", { id: 1 }],
+	])("an invalid id (%s) is a non-empty string error", (_label, idPart) => {
 		const errors = validateStructure(doc([{ type: "rect", ...idPart }]));
 		expect(has(errors, "root[0].id", "non-empty string")).toBe(true);
 	});
 
-	it("type 欠落は type エラーのみで型別検証は走らない（早期 return）", () => {
-		// width を壊しても、type が無いので rect 検証へ進まない
+	it("a missing type yields only a type error and skips per-type validation (early return)", () => {
+		// Even with a broken width, without a type it does not proceed to rect validation
 		const errors = validateStructure(doc([{ id: "x", width: "bad" }]));
 		expect(has(errors, "root[0].type", "must be a string")).toBe(true);
 		expect(errors.some((e) => e.path === "root[0].width")).toBe(false);
 	});
 
-	it("type が数値は type エラー", () => {
+	it("a numeric type is a type error", () => {
 		const errors = validateStructure(doc([{ id: "x", type: 1 }]));
 		expect(has(errors, "root[0].type", "must be a string")).toBe(true);
 	});
 });
 
-// ─── 未知 type ────────────────────────────────────────────────────
-describe("validateStructure: 未知の type", () => {
-	it("root 直下の未知 type を Unknown object type エラーにする", () => {
+// ─── Unknown type ────────────────────────────────────────────────────
+describe("validateStructure: unknown type", () => {
+	it("yields an Unknown object type error for an unknown type at the root", () => {
 		const errors = validateStructure(doc([{ id: "x1", type: "rectangle" }]));
 		expect(has(errors, "root[0].type", 'Unknown object type "rectangle"')).toBe(
 			true,
 		);
 	});
 
-	it("group の子の未知 type も弾く", () => {
+	it("also rejects an unknown type in a group's children", () => {
 		const errors = validateStructure(
 			doc([group("g1", [{ id: "c1", type: "nope" }])]),
 		);
@@ -182,7 +182,7 @@ describe("validateStructure: 未知の type", () => {
 		).toBe(true);
 	});
 
-	it("既知 type は Unknown エラーを出さない", () => {
+	it("does not emit an Unknown error for a known type", () => {
 		const errors = validateStructure(doc([group("g1", [rect("r1")])]));
 		expect(errors.some((e) => e.message.includes("Unknown object type"))).toBe(
 			false,
@@ -190,40 +190,40 @@ describe("validateStructure: 未知の type", () => {
 	});
 });
 
-// ─── 型別検証への委譲 ─────────────────────────────────────────────
-describe("validateStructure: 型別検証への委譲", () => {
-	it("rect の width 欠落が structure 経由で浮く", () => {
+// ─── Delegation to per-type validation ─────────────────────────────────────────────
+describe("validateStructure: delegation to per-type validation", () => {
+	it("surfaces a missing rect width via structure validation", () => {
 		const errors = validateStructure(
 			doc([{ id: "r", type: "rect", x: 0, y: 0, height: 10 }]),
 		);
 		expect(has(errors, "root[0].width", "must be a number")).toBe(true);
 	});
 
-	it("ellipse の cx 欠落が浮く", () => {
+	it("surfaces a missing ellipse cx", () => {
 		const errors = validateStructure(
 			doc([{ id: "e", type: "ellipse", cy: 0, rx: 5, ry: 5 }]),
 		);
 		expect(has(errors, "root[0].cx", "must be a number")).toBe(true);
 	});
 
-	it("正しい rect は型別エラーなし", () => {
+	it("yields no per-type error for a valid rect", () => {
 		expect(validateStructure(doc([rect("r")]))).toEqual([]);
 	});
 });
 
-// ─── group の children ────────────────────────────────────────────
-describe("validateStructure: group の children", () => {
-	it("children 欠落は 'must be an array'", () => {
+// ─── group children ────────────────────────────────────────────
+describe("validateStructure: group children", () => {
+	it("missing children is 'must be an array'", () => {
 		const errors = validateStructure(doc([{ id: "g1", type: "group" }]));
 		expect(has(errors, "root[0].children", "must be an array")).toBe(true);
 	});
 
-	it("空 children はエラー", () => {
+	it("empty children is an error", () => {
 		const errors = validateStructure(doc([group("g1", [])]));
 		expect(has(errors, "root[0].children", "at least one child")).toBe(true);
 	});
 
-	it("ネストした空 group も弾く", () => {
+	it("also rejects a nested empty group", () => {
 		const errors = validateStructure(
 			doc([group("g1", [rect("r1"), group("g2", [])])]),
 		);
@@ -232,12 +232,12 @@ describe("validateStructure: group の children", () => {
 		).toBe(true);
 	});
 
-	it("子が非オブジェクトは 'must be an object'", () => {
+	it("a non-object child is 'must be an object'", () => {
 		const errors = validateStructure(doc([group("g1", [null])]));
 		expect(has(errors, "root[0].children[0]", "must be an object")).toBe(true);
 	});
 
-	it("子の型別エラーが正しい path で浮く", () => {
+	it("surfaces a child's per-type error at the correct path", () => {
 		const errors = validateStructure(
 			doc([group("g1", [{ id: "r", type: "rect", x: 0, y: 0, width: 10 }])]),
 		);
@@ -246,7 +246,7 @@ describe("validateStructure: group の children", () => {
 		);
 	});
 
-	it("深いネスト（group>group>rect）の path が正確", () => {
+	it("computes an accurate path for deep nesting (group>group>rect)", () => {
 		const errors = validateStructure(
 			doc([
 				group("g1", [
@@ -259,28 +259,28 @@ describe("validateStructure: group の children", () => {
 		).toBe(true);
 	});
 
-	it("子を持つ group はエラーにならない", () => {
+	it("a group with children is not an error", () => {
 		expect(validateStructure(doc([group("g1", [rect("r1")])]))).toEqual([]);
 	});
 });
 
-// ─── コネクターは top-level のみ ──────────────────────────────────
-describe("validateStructure: コネクターの配置", () => {
+// ─── Connectors are top-level only ──────────────────────────────────
+describe("validateStructure: connector placement", () => {
 	const conn = connector("c1", ownedRef("r1"), ownedRef("r2"));
 
-	it("group の children にコネクターがあるとエラー", () => {
+	it("is an error when a connector appears in a group's children", () => {
 		const errors = validateStructure(doc([group("g1", [conn])]));
 		expect(has(errors, "root[0].children[0]", "top-level")).toBe(true);
 	});
 
-	it("root 直下のコネクターは『group 内』エラーにならない", () => {
+	it("a connector at the root does not yield an 'inside a group' error", () => {
 		const errors = validateStructure(doc([conn]));
 		expect(errors.some((e) => e.message.includes("inside a group"))).toBe(
 			false,
 		);
 	});
 
-	it("両端 free のコネクターは型別検証で弾かれる（境界で free-free を拒否）", () => {
+	it("a connector with both endpoints free is rejected by per-type validation (free-free rejected at the boundary)", () => {
 		const freeRef = (x: number, y: number) => ({
 			anchor: { kind: "free", point: { x, y } },
 		});
@@ -291,9 +291,9 @@ describe("validateStructure: コネクターの配置", () => {
 	});
 });
 
-// ─── 正常系（happy path） ────────────────────────────────────────
-describe("validateStructure: 正常系", () => {
-	it("rect / ellipse / polyline / group(子あり) / connector の混在は無エラー", () => {
+// ─── Happy path ────────────────────────────────────────
+describe("validateStructure: happy path", () => {
+	it("a mix of rect / ellipse / polyline / group (with children) / connector has no errors", () => {
 		const valid = doc([
 			rect("r1"),
 			ellipse("e1"),

@@ -5,15 +5,16 @@ import { rectToDoc, rectToState } from "../../primitives/rect/RectMapper";
 import type { RectState } from "../../primitives/rect/RectState";
 
 /**
- * pass-through 方式の回帰テスト。
- * createFrameMapper は features 由来のスタイルキー＋extra キーだけを allow-list で
- * 拾う。CanvasMapper が全 State に付与する runtime 専用の parentId や、State 専用の
- * minWidth/minHeight は allow-list に含まれないため、Doc（階層は children で表現する
- * nested tree）へ漏れないことを保証する。逆に rect の角丸 rx は radius スタイルとして
- * allow-list に含まれるため往復で保持されることも固定する。
+ * Regression test for the pass-through approach.
+ * createFrameMapper only picks up feature-derived style keys plus extra keys via an
+ * allow-list. The runtime-only parentId that CanvasMapper attaches to every State, and
+ * the State-only minWidth/minHeight, are not in the allow-list, so this guarantees they
+ * do not leak into the Doc (a nested tree where hierarchy is expressed via children).
+ * Conversely, rect's rounded-corner rx is included in the allow-list as a radius style,
+ * so this also pins down that it is preserved across the round-trip.
  */
-describe("FrameMapper pass-through: runtime 専用フィールドを Doc に漏らさない", () => {
-	it("rect の角丸 rx（radius スタイル）は doc↔state を往復しても保持される", () => {
+describe("FrameMapper pass-through: does not leak runtime-only fields into the Doc", () => {
+	it("preserves rect's rounded-corner rx (radius style) across a doc↔state round-trip", () => {
 		const doc = {
 			id: "rect-1",
 			type: "rect",
@@ -31,7 +32,7 @@ describe("FrameMapper pass-through: runtime 専用フィールドを Doc に漏�
 		expect(roundTripped.rx).toBe(12);
 	});
 
-	it("rectToDoc は parentId を Doc に含めない", () => {
+	it("rectToDoc does not include parentId in the Doc", () => {
 		const state = {
 			id: "rect-1",
 			type: "rect",
@@ -51,7 +52,7 @@ describe("FrameMapper pass-through: runtime 専用フィールドを Doc に漏�
 		expect("parentId" in doc).toBe(false);
 	});
 
-	it("rectToDoc は State 専用の minWidth/minHeight を Doc に含めない", () => {
+	it("rectToDoc does not include the State-only minWidth/minHeight in the Doc", () => {
 		const state = {
 			id: "rect-1",
 			type: "rect",
@@ -74,12 +75,13 @@ describe("FrameMapper pass-through: runtime 専用フィールドを Doc に漏�
 });
 
 /**
- * allow-list の取り込み契約（Doc→State 方向）。
- * createFrameMapper は「拾うキーを明示列挙し、それ以外は通さない」。未知フィールドや
- * features で無効なスタイル群は、たとえ doc に存在しても state へ持ち込まれないことを固定する。
+ * The allow-list intake contract (Doc→State direction).
+ * createFrameMapper "explicitly enumerates the keys to pick up and lets nothing else
+ * through". This pins down that unknown fields and style groups disabled by features are
+ * not carried into the state even if they exist on the doc.
  */
-describe("FrameMapper allow-list: 拾うべきキー以外は State に持ち込まない", () => {
-	it("doc に紛れた未知フィールドは state に出ない", () => {
+describe("FrameMapper allow-list: does not carry keys other than the ones to pick up into the State", () => {
+	it("does not surface unknown fields sneaked into the doc in the state", () => {
 		const doc = {
 			id: "rect-1",
 			type: "rect",
@@ -95,7 +97,7 @@ describe("FrameMapper allow-list: 拾うべきキー以外は State に持ち込
 		expect("bogusField" in state).toBe(false);
 	});
 
-	it("stroke 無効な図形（sticky）は doc.stroke を state に持ち込まない", () => {
+	it("does not carry doc.stroke into the state for a shape with stroke disabled (sticky)", () => {
 		const doc = {
 			id: "sticky-1",
 			type: "sticky",
@@ -110,7 +112,7 @@ describe("FrameMapper allow-list: 拾うべきキー以外は State に持ち込
 
 		const state = stickyToState(doc) as Record<string, unknown>;
 
-		// fill は features.fill=true なので拾い、stroke 系は features.stroke=false なので落とす。
+		// fill is picked up since features.fill=true, and stroke fields are dropped since features.stroke=false.
 		expect(state.fill).toBe("#ffff00");
 		expect("stroke" in state).toBe(false);
 		expect("strokeWidth" in state).toBe(false);

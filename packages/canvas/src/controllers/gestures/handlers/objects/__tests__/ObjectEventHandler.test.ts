@@ -6,7 +6,7 @@ import { initializeObjectRegistry } from "../../../../setup/initializeObjectRegi
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { ObjectEventHandler } from "../ObjectEventHandler";
 
-// moveByDelta は objectBehaviorRegistry 経由で解決されるため、レジストリを初期化する
+// moveByDelta is resolved through objectBehaviorRegistry, so initialize the registry.
 beforeAll(() => {
 	initializeObjectRegistry();
 });
@@ -23,7 +23,7 @@ const makeRect = (id: string, cx: number, cy: number): ObjectState =>
 		height: SIZE,
 	}) as unknown as ObjectState;
 
-/** rect の4隅＋中点から keyPoints を作る（calcKeyPointsBoundingBox は4隅のみ参照）*/
+/** Build keyPoints from the rect's four corners plus midpoints (calcKeyPointsBoundingBox only reads the four corners). */
 const makeKeyPoints = (cx: number, cy: number) => {
 	const half = SIZE / 2;
 	const left = cx - half;
@@ -43,9 +43,9 @@ const makeKeyPoints = (cx: number, cy: number) => {
 };
 
 /**
- * ドラッグ中の state を組み立てる。snapCandidates を null にしてスナップ補正を無効化し、
- * Shift 軸固定ロジックだけを検証できるようにする。keyPoints は軸固定フィードバックの
- * 線位置（中心座標）算出に使われる。
+ * Build the state during a drag. Disable snap correction by leaving snapCandidates empty,
+ * so that only the Shift axis-lock logic is exercised. keyPoints are used to compute the
+ * line position (center coordinates) of the axis-lock feedback.
  */
 const makeDragState = (cx = 0, cy = 0): CanvasControllerState => {
 	const rect = makeRect("rect-1", cx, cy);
@@ -86,8 +86,8 @@ const makeDragEvent = (
 const movedRect = (state: CanvasControllerState) =>
 	state.objects["rect-1"] as unknown as { cx: number; cy: number };
 
-describe("ObjectEventHandler - Shift 軸固定ドラッグ", () => {
-	it("Shift なしでは両軸が移動し、軸固定フィードバックは出ない", () => {
+describe("ObjectEventHandler - Shift axis-lock drag", () => {
+	it("without Shift, both axes move and no axis-lock feedback appears", () => {
 		const next = ObjectEventHandler.handle(
 			makeDragState(),
 			makeDragEvent({ x: 30, y: 12 }, false),
@@ -96,7 +96,7 @@ describe("ObjectEventHandler - Shift 軸固定ドラッグ", () => {
 		expect(next.axisLockFeedback).toBeNull();
 	});
 
-	it("Shift + 横方向優位（|dx| >= |dy|）では Y を固定し X だけ動く", () => {
+	it("Shift + horizontal dominant (|dx| >= |dy|) locks Y and moves only X", () => {
 		const next = ObjectEventHandler.handle(
 			makeDragState(),
 			makeDragEvent({ x: 30, y: 12 }, true),
@@ -104,7 +104,7 @@ describe("ObjectEventHandler - Shift 軸固定ドラッグ", () => {
 		expect(movedRect(next)).toMatchObject({ cx: 30, cy: 0 });
 	});
 
-	it("Shift + 縦方向優位（|dy| > |dx|）では X を固定し Y だけ動く", () => {
+	it("Shift + vertical dominant (|dy| > |dx|) locks X and moves only Y", () => {
 		const next = ObjectEventHandler.handle(
 			makeDragState(),
 			makeDragEvent({ x: 8, y: 25 }, true),
@@ -112,16 +112,16 @@ describe("ObjectEventHandler - Shift 軸固定ドラッグ", () => {
 		expect(movedRect(next)).toMatchObject({ cx: 0, cy: 25 });
 	});
 
-	it("累積 delta の優位軸が入れ替わると固定軸も追従する", () => {
-		// 1 回目: 横優位 → X 移動・Y 固定
+	it("the locked axis follows when the dominant axis of the accumulated delta swaps", () => {
+		// First: horizontal dominant -> X moves, Y locked
 		const afterX = ObjectEventHandler.handle(
 			makeDragState(),
 			makeDragEvent({ x: 20, y: 5 }, true),
 		);
 		expect(movedRect(afterX)).toMatchObject({ cx: 20, cy: 0 });
 
-		// 2 回目: 同じドラッグの続きで縦優位に切り替わる → X 固定・Y 移動
-		// drag は eventStartSnapshot 起点の累積 delta なので、開始 state から再評価される
+		// Second: still the same drag, now switches to vertical dominant -> X locked, Y moves
+		// drag uses the accumulated delta from eventStartSnapshot, so it is re-evaluated from the start state
 		const afterY = ObjectEventHandler.handle(
 			afterX,
 			makeDragEvent({ x: 6, y: 40 }, true),
@@ -129,8 +129,8 @@ describe("ObjectEventHandler - Shift 軸固定ドラッグ", () => {
 		expect(movedRect(afterY)).toMatchObject({ cx: 0, cy: 40 });
 	});
 
-	describe("軸固定フィードバック", () => {
-		it("横移動（Y 固定）では中心 Y を通る横線（y のみ）を返す", () => {
+	describe("axis-lock feedback", () => {
+		it("horizontal move (Y locked) returns a horizontal line through center Y (y only)", () => {
 			const next = ObjectEventHandler.handle(
 				makeDragState(20, 30),
 				makeDragEvent({ x: 50, y: 8 }, true),
@@ -138,7 +138,7 @@ describe("ObjectEventHandler - Shift 軸固定ドラッグ", () => {
 			expect(next.axisLockFeedback).toEqual({ y: 30 });
 		});
 
-		it("縦移動（X 固定）では中心 X を通る縦線（x のみ）を返す", () => {
+		it("vertical move (X locked) returns a vertical line through center X (x only)", () => {
 			const next = ObjectEventHandler.handle(
 				makeDragState(20, 30),
 				makeDragEvent({ x: 8, y: 50 }, true),
@@ -146,7 +146,7 @@ describe("ObjectEventHandler - Shift 軸固定ドラッグ", () => {
 			expect(next.axisLockFeedback).toEqual({ x: 20 });
 		});
 
-		it("優位軸が入れ替わるとフィードバックの軸も切り替わる", () => {
+		it("the feedback axis switches when the dominant axis swaps", () => {
 			const afterX = ObjectEventHandler.handle(
 				makeDragState(20, 30),
 				makeDragEvent({ x: 40, y: 5 }, true),
@@ -161,9 +161,9 @@ describe("ObjectEventHandler - Shift 軸固定ドラッグ", () => {
 		});
 	});
 
-	describe("原点スナップ（軸固定中・開始位置付近）", () => {
-		it("フリー軸の移動量がしきい値以下なら開始位置へ吸着する", () => {
-			// |dx|=4 が優位 → Y 固定・X がフリー軸。X 移動量 4 <= 6px(zoom=1) なので原点吸着
+	describe("origin snap (during axis lock, near start position)", () => {
+		it("snaps to the start position when the free-axis movement is within the threshold", () => {
+			// |dx|=4 dominant -> Y locked, X is the free axis. X movement 4 <= 6px (zoom=1), so it snaps to origin
 			const next = ObjectEventHandler.handle(
 				makeDragState(20, 30),
 				makeDragEvent({ x: 4, y: 3 }, true),
@@ -171,7 +171,7 @@ describe("ObjectEventHandler - Shift 軸固定ドラッグ", () => {
 			expect(movedRect(next)).toMatchObject({ cx: 20, cy: 30 });
 		});
 
-		it("原点スナップ中は両軸（十字）のガイドを返す", () => {
+		it("returns a both-axis (crosshair) guide while origin-snapped", () => {
 			const next = ObjectEventHandler.handle(
 				makeDragState(20, 30),
 				makeDragEvent({ x: 4, y: 3 }, true),
@@ -179,8 +179,8 @@ describe("ObjectEventHandler - Shift 軸固定ドラッグ", () => {
 			expect(next.axisLockFeedback).toEqual({ x: 20, y: 30 });
 		});
 
-		it("しきい値を超えると吸着が外れ片軸固定に戻る", () => {
-			// X 移動量 8 > 6px → 原点を抜けて Y 固定の横移動
+		it("beyond the threshold the snap releases and returns to single-axis lock", () => {
+			// X movement 8 > 6px -> leaves the origin and does a Y-locked horizontal move
 			const next = ObjectEventHandler.handle(
 				makeDragState(20, 30),
 				makeDragEvent({ x: 8, y: 3 }, true),
@@ -189,7 +189,7 @@ describe("ObjectEventHandler - Shift 軸固定ドラッグ", () => {
 			expect(next.axisLockFeedback).toEqual({ y: 30 });
 		});
 
-		it("Shift なしでは原点付近でも吸着しない", () => {
+		it("without Shift there is no snap even near the origin", () => {
 			const next = ObjectEventHandler.handle(
 				makeDragState(20, 30),
 				makeDragEvent({ x: 4, y: 3 }, false),

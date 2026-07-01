@@ -10,7 +10,7 @@ const validPoints = {
 };
 
 describe("validatePolylineDoc", () => {
-	it("有効な Polyline はエラーなし", () => {
+	it("yields no error for a valid Polyline", () => {
 		const o = {
 			...validPoints,
 			stroke: "#000",
@@ -21,11 +21,11 @@ describe("validatePolylineDoc", () => {
 		expect(validatePolylineDoc(o, "root")).toEqual([]);
 	});
 
-	it("points が不正な場合はエラー", () => {
+	it("is an error when points is invalid", () => {
 		expect(validatePolylineDoc({ points: [] }, "root")).toHaveLength(1);
 	});
 
-	it("startArrow が不正な値はエラー", () => {
+	it("is an error when startArrow has an invalid value", () => {
 		const errors = validatePolylineDoc(
 			{ ...validPoints, startArrow: "arrow" },
 			"root",
@@ -33,7 +33,7 @@ describe("validatePolylineDoc", () => {
 		expect(errors.some((e) => e.path === "root.startArrow")).toBe(true);
 	});
 
-	it("endArrow が不正な値はエラー", () => {
+	it("is an error when endArrow has an invalid value", () => {
 		const errors = validatePolylineDoc(
 			{ ...validPoints, endArrow: "diamond" },
 			"root",
@@ -41,7 +41,7 @@ describe("validatePolylineDoc", () => {
 		expect(errors.some((e) => e.path === "root.endArrow")).toBe(true);
 	});
 
-	it("strokeDashType が不正な値はエラー", () => {
+	it("is an error when strokeDashType has an invalid value", () => {
 		const errors = validatePolylineDoc(
 			{ ...validPoints, strokeDashType: "double" },
 			"root",
@@ -49,12 +49,12 @@ describe("validatePolylineDoc", () => {
 		expect(errors.some((e) => e.path === "root.strokeDashType")).toBe(true);
 	});
 
-	it("オプション項目がない場合はエラーなし", () => {
+	it("yields no error when optional fields are absent", () => {
 		expect(validatePolylineDoc(validPoints, "root")).toEqual([]);
 	});
 
-	// polyline は開いたパスなので最低 2 点（polygon と異なり 2 点は許容）。
-	it("points が 1 点のみはエラー（at least 2 points）", () => {
+	// A polyline is an open path, so it requires at least 2 points (unlike polygon, 2 points are allowed).
+	it("is an error when points has only 1 point (at least 2 points)", () => {
 		const errors = validatePolylineDoc({ points: [{ x: 0, y: 0 }] }, "root");
 		expect(
 			errors.some(
@@ -64,16 +64,16 @@ describe("validatePolylineDoc", () => {
 		).toBe(true);
 	});
 
-	it("points が 2 点はエラーなし", () => {
+	it("yields no error when points has 2 points", () => {
 		expect(validatePolylineDoc(validPoints, "root")).toEqual([]);
 	});
 
-	it("points 要素が Point でない（数値配列）はエラー", () => {
+	it("is an error when a points element is not a Point (numeric array)", () => {
 		const errors = validatePolylineDoc({ points: [1, 2] }, "root");
 		expect(errors.some((e) => e.path === "root.points")).toBe(true);
 	});
 
-	it("stroke に CSS breakout 文字列はエラー（beyondSchema）", () => {
+	it("is an error (beyondSchema) when stroke contains a CSS breakout string", () => {
 		const errors = validatePolylineDoc(
 			{ ...validPoints, stroke: "a;b" },
 			"root",

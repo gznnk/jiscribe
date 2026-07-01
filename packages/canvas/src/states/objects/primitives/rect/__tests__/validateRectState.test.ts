@@ -20,7 +20,7 @@ const validRect = {
 };
 
 describe("isValidRectState", () => {
-	it("有効な Rect は true / 最小構成も true", () => {
+	it("valid Rect is true / minimal config is also true", () => {
 		expect(isValidRectState(validRect)).toBe(true);
 		expect(
 			isValidRectState({
@@ -37,32 +37,32 @@ describe("isValidRectState", () => {
 		).toBe(true);
 	});
 
-	it("type 不一致 / id 空は false", () => {
+	it("type mismatch / empty id is false", () => {
 		expect(isValidRectState({ ...validRect, type: "ellipse" })).toBe(false);
 		expect(isValidRectState({ ...validRect, id: "" })).toBe(false);
 	});
 
-	it("必須ジオメトリ欠落は false", () => {
+	it("missing required geometry is false", () => {
 		expect(isValidRectState({ ...validRect, width: undefined })).toBe(false);
 		expect(isValidRectState({ ...validRect, scaleY: undefined })).toBe(false);
 	});
 
 	it.each(["width", "height", "rx", "strokeWidth"])(
-		"%s が負数は false（スキーマ minimum: 0）",
+		"%s being negative is false (schema minimum: 0)",
 		(key) => {
 			expect(isValidRectState({ ...validRect, [key]: -1 })).toBe(false);
 		},
 	);
 
-	it("cx / cy は負数でも true（位置に下限なし）", () => {
+	it("cx / cy is true even when negative (no lower bound on position)", () => {
 		expect(isValidRectState({ ...validRect, cx: -100, cy: -50 })).toBe(true);
 	});
 
-	it("fontSize < 1 は false（>= 1）", () => {
+	it("fontSize < 1 is false (>= 1)", () => {
 		expect(isValidRectState({ ...validRect, fontSize: 0 })).toBe(false);
 	});
 
-	it("CSS インジェクションを含む stroke / fill は false", () => {
+	it("stroke / fill containing CSS injection is false", () => {
 		expect(isValidRectState({ ...validRect, stroke: "red; } body {" })).toBe(
 			false,
 		);

@@ -16,27 +16,27 @@ const makeState = (overrides: Partial<MinState> = {}): CanvasControllerState =>
 		...overrides,
 	}) as unknown as CanvasControllerState;
 
-// テキストプロパティを持つオブジェクト（isTextStyleState を通過する）
+// object with a text property (passes isTextStyleState)
 const textObj = (id: string, text: string) =>
 	({ id, type: "rect", text }) as unknown;
 
 describe("commitTextEditIfNeeded", () => {
-	it("textEditState が null → 同一参照を返す", () => {
+	it("textEditState is null -> returns the same reference", () => {
 		const state = makeState({ textEditState: null });
 		expect(commitTextEditIfNeeded(state)).toBe(state);
 	});
 
-	it("textEditState がある → 対象オブジェクトが存在しない → textEditState をクリアして返す", () => {
+	it("textEditState present -> target object does not exist -> clears textEditState and returns", () => {
 		const state = makeState({
 			textEditState: { objectId: "missing", text: "hello" },
 		});
 		const result = commitTextEditIfNeeded(state);
 		expect(result.textEditState).toBeNull();
-		expect(result.commitVersion).toBe(0); // コミットバージョンは変化しない
+		expect(result.commitVersion).toBe(0); // the commit version does not change
 	});
 
-	it("textEditState がある → 対象オブジェクトの text が数値（isTextStyleState を通過しない）→ textEditState をクリア", () => {
-		// isTextStyleState は text: string でなければ false を返す
+	it("textEditState present -> target object's text is a number (fails isTextStyleState) -> clears textEditState", () => {
+		// isTextStyleState returns false unless text is a string
 		const invalidTextObj = { id: "r1", type: "rect", text: 123 };
 		const state = makeState({
 			objects: {
@@ -49,7 +49,7 @@ describe("commitTextEditIfNeeded", () => {
 		expect(result.commitVersion).toBe(0);
 	});
 
-	it("text が変化していない → textEditState をクリアするが commitVersion は増えない", () => {
+	it("text unchanged -> clears textEditState but does not bump commitVersion", () => {
 		const obj = textObj("r1", "same text");
 		const state = makeState({
 			objects: { r1: obj as CanvasControllerState["objects"][string] },
@@ -61,7 +61,7 @@ describe("commitTextEditIfNeeded", () => {
 		expect(result.commitVersion).toBe(5);
 	});
 
-	it("text が変化している → テキストを更新し commitVersion をインクリメント", () => {
+	it("text changed -> updates the text and increments commitVersion", () => {
 		const obj = textObj("r1", "old text");
 		const state = makeState({
 			objects: { r1: obj as CanvasControllerState["objects"][string] },
@@ -75,7 +75,7 @@ describe("commitTextEditIfNeeded", () => {
 		expect(updatedObj.text).toBe("new text");
 	});
 
-	it("text 更新時は元の objects を変更しない（イミュータブル）", () => {
+	it("does not mutate the original objects when updating text (immutable)", () => {
 		const obj = textObj("r1", "original");
 		const originalObjects = {
 			r1: obj as CanvasControllerState["objects"][string],
@@ -89,11 +89,11 @@ describe("commitTextEditIfNeeded", () => {
 		expect(originalObj.text).toBe("original");
 	});
 
-	// ─── コネクターラベル（label.text） ───
+	// ─── connector label (label.text) ───
 	const connectorObj = (id: string, label?: { text: string }) =>
 		({ id, type: "connector", ...(label ? { label } : {}) }) as unknown;
 
-	it("コネクター: ラベル未設定から text を入力 → label.text を作成しコミット", () => {
+	it("connector: entering text from no label -> creates label.text and commits", () => {
 		const c = connectorObj("c1");
 		const state = makeState({
 			objects: { c1: c as CanvasControllerState["objects"][string] },
@@ -109,7 +109,7 @@ describe("commitTextEditIfNeeded", () => {
 		expect(updated.label?.text).toBe("Yes");
 	});
 
-	it("コネクター: 素のラベル（text のみ）を空文字でコミット → label を取り除く", () => {
+	it("connector: committing a bare label (text only) with an empty string -> removes the label", () => {
 		const c = connectorObj("c1", { text: "Yes" });
 		const state = makeState({
 			objects: { c1: c as CanvasControllerState["objects"][string] },
@@ -124,8 +124,8 @@ describe("commitTextEditIfNeeded", () => {
 		expect(updated.label).toBeUndefined();
 	});
 
-	it("コネクター: スタイル付きラベルを空文字でコミット → label は残し text だけ空にする", () => {
-		// text 以外（スタイル・配置）を持つラベルは、空文字にしても捨てない。
+	it("connector: committing a styled label with an empty string -> keeps the label and only empties text", () => {
+		// a label carrying more than text (style/placement) is not discarded even when emptied.
 		const styledLabel = {
 			text: "Yes",
 			fill: "#dc2626",
@@ -154,13 +154,13 @@ describe("commitTextEditIfNeeded", () => {
 		};
 		expect(updated.label).toBeDefined();
 		expect(updated.label?.text).toBe("");
-		// スタイル・配置は維持される（再入力で復元できる）。
+		// style/placement is preserved (recoverable on re-entry).
 		expect(updated.label?.fill).toBe("#dc2626");
 		expect(updated.label?.fontWeight).toBe("bold");
 		expect(updated.label?.position).toBe(0.3);
 	});
 
-	it("コネクター: スタイル付きラベルを空にした後、テキストを再入力 → スタイルが復元される", () => {
+	it("connector: after emptying a styled label, re-entering text -> the style is restored", () => {
 		const styledLabel = { text: "", fill: "#dc2626", fontWeight: "bold" };
 		const c = {
 			id: "c1",
@@ -181,7 +181,7 @@ describe("commitTextEditIfNeeded", () => {
 		expect(updated.label?.fontWeight).toBe("bold");
 	});
 
-	it("コネクター: ラベル更新時は元の objects を変更しない（イミュータブル）", () => {
+	it("connector: does not mutate the original objects when updating the label (immutable)", () => {
 		const styledLabel = { text: "Yes", fill: "#dc2626" };
 		const c = { id: "c1", type: "connector", label: styledLabel } as unknown;
 		const originalObjects = {
@@ -198,7 +198,7 @@ describe("commitTextEditIfNeeded", () => {
 		expect(originalConnector.label.text).toBe("Yes");
 	});
 
-	it("コネクター: ラベルが変化していない → commitVersion は増えない", () => {
+	it("connector: label unchanged -> commitVersion does not increase", () => {
 		const c = connectorObj("c1", { text: "Yes" });
 		const state = makeState({
 			objects: { c1: c as CanvasControllerState["objects"][string] },

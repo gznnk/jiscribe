@@ -18,7 +18,7 @@ const baseConnector = (): ConnectorState =>
 		target: free(10, 10),
 	}) as unknown as ConnectorState;
 
-/** 非回転・等倍のフレーム（中心 100,100 / 幅40 / 高20）を持つ rect オブジェクト。 */
+/** A rect object with an unrotated, unscaled frame (center 100,100 / width 40 / height 20). */
 const rectFrame = {
 	id: "rect-1",
 	type: "rect",
@@ -32,7 +32,7 @@ const rectFrame = {
 } as unknown as ObjectState;
 
 describe("computeEditedEndpoint", () => {
-	it("hover 対象が無ければ target をカーソル位置の free アンカーにする", () => {
+	it("makes target a free anchor at the cursor position when there is no hover target", () => {
 		const result = computeEditedEndpoint(
 			baseConnector(),
 			"target",
@@ -43,12 +43,12 @@ describe("computeEditedEndpoint", () => {
 			kind: "free",
 			point: { x: 80, y: 80 },
 		});
-		// 固定側（source）と中間点は保持
+		// The fixed side (source) and waypoints are preserved
 		expect(result.source).toEqual(free(0, 0));
 		expect(result.points).toEqual([{ x: 5, y: 5 }]);
 	});
 
-	it("free アンカーの座標は PRECISION.COORDINATE で丸める", () => {
+	it("rounds free anchor coordinates by PRECISION.COORDINATE", () => {
 		const result = computeEditedEndpoint(
 			baseConnector(),
 			"target",
@@ -61,11 +61,11 @@ describe("computeEditedEndpoint", () => {
 		});
 	});
 
-	it("hover 対象があれば最近接アンカーへ owner 接続する", () => {
+	it("owner-connects to the nearest anchor when there is a hover target", () => {
 		const result = computeEditedEndpoint(
 			baseConnector(),
 			"target",
-			{ x: 100, y: 200 }, // フレーム下辺の外側
+			{ x: 100, y: 200 }, // outside the frame's bottom edge
 			{ id: "rect-1", object: rectFrame },
 		);
 		expect(result.target).toEqual({
@@ -74,7 +74,7 @@ describe("computeEditedEndpoint", () => {
 		});
 	});
 
-	it("source を編集対象にすると target は据え置く", () => {
+	it("leaves target unchanged when source is the edit target", () => {
 		const result = computeEditedEndpoint(
 			baseConnector(),
 			"source",
@@ -88,8 +88,8 @@ describe("computeEditedEndpoint", () => {
 		expect(result.target).toEqual(free(10, 10));
 	});
 
-	describe("自己ループ（固定側と同一オブジェクト）", () => {
-		// 固定側 source が rect-1 の bottomCenter に接続済みのコネクター。
+	describe("self-loop (same object as the fixed side)", () => {
+		// A connector whose fixed source is already connected to rect-1's bottomCenter.
 		const selfLoopBase = (): ConnectorState =>
 			({
 				id: "c1",
@@ -107,9 +107,9 @@ describe("computeEditedEndpoint", () => {
 			anchor: { kind: "connectPoint", id: "bottomCenter" },
 		};
 
-		it("固定側と同じオブジェクトへ戻すと固定側アンカーは選ばれない", () => {
-			// カーソルを下辺の外側（本来 bottomCenter が最近接）に置いても、
-			// 固定側が bottomCenter のため除外され別の辺中点になる。
+		it("does not select the fixed side's anchor when returning to the same object as the fixed side", () => {
+			// Even with the cursor outside the bottom edge (where bottomCenter would normally be nearest),
+			// bottomCenter is excluded because it is the fixed side, so a different edge midpoint is chosen.
 			const result = computeEditedEndpoint(
 				selfLoopBase(),
 				"target",
@@ -125,18 +125,18 @@ describe("computeEditedEndpoint", () => {
 			}
 		});
 
-		it("自己ループでは center が選ばれない（中心付近のカーソルでも辺中点になる）", () => {
+		it("does not select center in a self-loop (an edge midpoint is chosen even for a cursor near the center)", () => {
 			const result = computeEditedEndpoint(
 				selfLoopBase(),
 				"target",
-				{ x: 100, y: 100 }, // 図形中心付近
+				{ x: 100, y: 100 }, // near the shape center
 				{ id: "rect-1", object: rectFrame },
 				fixedSource,
 			);
 			expect(result.target.anchor.kind).toBe("connectPoint");
 		});
 
-		it("別オブジェクトへの接続では除外は働かない（最近接をそのまま選ぶ）", () => {
+		it("exclusion does not apply when connecting to a different object (picks the nearest as-is)", () => {
 			const other = { ...rectFrame, id: "rect-2" } as unknown as ObjectState;
 			const result = computeEditedEndpoint(
 				selfLoopBase(),

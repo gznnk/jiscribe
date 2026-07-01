@@ -15,8 +15,8 @@ const makePoly = (id: string, points: Point[]) =>
 	}) as unknown;
 
 /**
- * 頂点ドラッグ中の state を組み立てる。snapCandidates を null にしてオブジェクト間
- * スナップを無効化し、Shift 軸固定ロジックだけを検証できるようにする。
+ * Build a state during a vertex drag. Set snapCandidates to null to disable
+ * inter-object snapping so that only the Shift axis-lock logic can be verified.
  */
 const makeDragState = (points: Point[]): CanvasControllerState => {
 	const poly = makePoly("poly-1", points);
@@ -55,8 +55,8 @@ const makeDragEvent = (
 const vertexAt = (state: CanvasControllerState, index: number) =>
 	(state.objects["poly-1"] as unknown as { points: Point[] }).points[index];
 
-describe("VertexControlHandler - Shift 軸固定", () => {
-	it("Shift なしではカーソル位置どおりに頂点が動き、フィードバックは出ない", () => {
+describe("VertexControlHandler - Shift axis lock", () => {
+	it("without Shift, the vertex follows the cursor position and no feedback is shown", () => {
 		const next = handler.handle(
 			makeDragState([
 				{ x: 0, y: 0 },
@@ -68,7 +68,7 @@ describe("VertexControlHandler - Shift 軸固定", () => {
 		expect(next.axisLockFeedback).toBeNull();
 	});
 
-	it("Shift + 横方向優位では Y を開始位置に固定し X だけ動く", () => {
+	it("with Shift and horizontal dominance, locks Y to the start position and moves only X", () => {
 		const next = handler.handle(
 			makeDragState([
 				{ x: 20, y: 30 },
@@ -80,7 +80,7 @@ describe("VertexControlHandler - Shift 軸固定", () => {
 		expect(next.axisLockFeedback).toEqual({ y: 30 });
 	});
 
-	it("Shift + 縦方向優位では X を開始位置に固定し Y だけ動く", () => {
+	it("with Shift and vertical dominance, locks X to the start position and moves only Y", () => {
 		const next = handler.handle(
 			makeDragState([
 				{ x: 20, y: 30 },
@@ -92,27 +92,27 @@ describe("VertexControlHandler - Shift 軸固定", () => {
 		expect(next.axisLockFeedback).toEqual({ x: 20 });
 	});
 
-	describe("原点スナップ（開始頂点付近）", () => {
-		it("フリー軸の移動量がしきい値以下なら開始頂点へ吸着し両軸ガイドを出す", () => {
+	describe("origin snap (near the start vertex)", () => {
+		it("snaps to the start vertex and shows both-axis guides when the free-axis movement is within the threshold", () => {
 			const next = handler.handle(
 				makeDragState([
 					{ x: 20, y: 30 },
 					{ x: 100, y: 0 },
 				]),
-				// dx=4(優位/フリー軸), dy=3 → 4 <= 6px(zoom=1) で原点吸着
+				// dx=4 (dominant/free axis), dy=3 -> 4 <= 6px (zoom=1), snaps to origin
 				makeDragEvent({ x: 24, y: 33 }, true),
 			);
 			expect(vertexAt(next, 0)).toEqual({ x: 20, y: 30 });
 			expect(next.axisLockFeedback).toEqual({ x: 20, y: 30 });
 		});
 
-		it("しきい値を超えると吸着が外れ片軸固定に戻る", () => {
+		it("beyond the threshold, snapping releases and it returns to single-axis lock", () => {
 			const next = handler.handle(
 				makeDragState([
 					{ x: 20, y: 30 },
 					{ x: 100, y: 0 },
 				]),
-				// dx=8 > 6px → Y 固定の横移動
+				// dx=8 > 6px -> horizontal movement with Y locked
 				makeDragEvent({ x: 28, y: 33 }, true),
 			);
 			expect(vertexAt(next, 0)).toEqual({ x: 28, y: 30 });

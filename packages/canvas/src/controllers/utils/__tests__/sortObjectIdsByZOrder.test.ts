@@ -42,25 +42,25 @@ const objects: Record<string, ObjectState> = {
 const rootIds = ["group1", "rect4"];
 
 describe("sortObjectIdsByZOrder", () => {
-	it("同一の親を持つ兄弟を childIds の順にソートする", () => {
+	it("sorts siblings with the same parent by childIds order", () => {
 		expect(sortObjectIdsByZOrder(["rect2", "rect1"], objects, rootIds)).toEqual(
 			["rect1", "rect2"],
 		);
 	});
 
-	it("同一の祖先を持つ別グループ配下の要素を正しい順にソートする", () => {
+	it("sorts elements under different groups sharing a common ancestor in the correct order", () => {
 		expect(sortObjectIdsByZOrder(["rect3", "rect1"], objects, rootIds)).toEqual(
 			["rect1", "rect3"],
 		);
 	});
 
-	it("異なるルート要素に属する要素を rootIds の順にソートする", () => {
+	it("sorts elements belonging to different root elements by rootIds order", () => {
 		expect(sortObjectIdsByZOrder(["rect4", "rect2"], objects, rootIds)).toEqual(
 			["rect2", "rect4"],
 		);
 	});
 
-	it("グループを含む混在リストを階層順にソートする", () => {
+	it("sorts a mixed list including groups in hierarchical order", () => {
 		expect(
 			sortObjectIdsByZOrder(
 				["rect4", "group1", "rect3", "group2", "rect1"],
@@ -70,7 +70,7 @@ describe("sortObjectIdsByZOrder", () => {
 		).toEqual(["group1", "group2", "rect1", "rect3", "rect4"]);
 	});
 
-	it("既にソート済みの場合は順序を変えない", () => {
+	it("does not change the order when already sorted", () => {
 		const sorted = [
 			"group1",
 			"group2",
@@ -83,17 +83,17 @@ describe("sortObjectIdsByZOrder", () => {
 		expect(sortObjectIdsByZOrder(sorted, objects, rootIds)).toEqual(sorted);
 	});
 
-	it("空配列を渡すと空配列を返す", () => {
+	it("returns an empty array when passed an empty array", () => {
 		expect(sortObjectIdsByZOrder([], objects, rootIds)).toEqual([]);
 	});
 
-	it("1要素の配列はそのまま返す", () => {
+	it("returns a single-element array as-is", () => {
 		expect(sortObjectIdsByZOrder(["rect1"], objects, rootIds)).toEqual([
 			"rect1",
 		]);
 	});
 
-	it("元の配列を破壊しない", () => {
+	it("does not mutate the original array", () => {
 		const input = ["rect4", "rect2", "rect1"];
 		const copy = [...input];
 		sortObjectIdsByZOrder(input, objects, rootIds);

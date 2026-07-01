@@ -3,15 +3,15 @@ import { describe, it, expect } from "vitest";
 import { toPointsAttr } from "../toPointsAttr";
 
 describe("toPointsAttr", () => {
-	it("空配列は空文字列を返す", () => {
+	it("returns an empty string for an empty array", () => {
 		expect(toPointsAttr([])).toBe("");
 	});
 
-	it("1点は 'x,y' を返す", () => {
+	it("returns 'x,y' for a single point", () => {
 		expect(toPointsAttr([{ x: 3, y: 4 }])).toBe("3,4");
 	});
 
-	it("複数点をスペース区切りの 'x,y' 列にする", () => {
+	it("turns multiple points into a space-separated 'x,y' list", () => {
 		expect(
 			toPointsAttr([
 				{ x: 0, y: 0 },
@@ -21,7 +21,7 @@ describe("toPointsAttr", () => {
 		).toBe("0,0 100,50 200,0");
 	});
 
-	it("小数座標もそのまま文字列化する", () => {
+	it("stringifies fractional coordinates as-is", () => {
 		expect(
 			toPointsAttr([
 				{ x: 1.5, y: -2.25 },

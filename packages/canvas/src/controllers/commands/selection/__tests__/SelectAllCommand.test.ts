@@ -32,7 +32,7 @@ const makeState = (params: {
 	}) as unknown as CanvasControllerState;
 
 describe("SelectAllCommand", () => {
-	it("rootIds 全体を選択する", () => {
+	it("selects all of rootIds", () => {
 		const state = makeState({
 			rootIds: ["a", "b"],
 			objects: { a: makeRect("a", 0, 0), b: makeRect("b", 200, 200) },
@@ -41,7 +41,7 @@ describe("SelectAllCommand", () => {
 		expect(next.selectedIds).toEqual(["a", "b"]);
 	});
 
-	it("複数選択時は multiSelectGroup を生成する", () => {
+	it("creates a multiSelectGroup for a multi-selection", () => {
 		const state = makeState({
 			rootIds: ["a", "b"],
 			objects: { a: makeRect("a", 0, 0), b: makeRect("b", 200, 200) },
@@ -49,7 +49,7 @@ describe("SelectAllCommand", () => {
 		expect(SelectAllCommand.execute(state).multiSelectGroup).not.toBeNull();
 	});
 
-	it("コネクター選択・頂点選択を排他的にクリアする", () => {
+	it("clears the mutually-exclusive connector and vertex selections", () => {
 		const state = makeState({
 			rootIds: ["a", "b"],
 			objects: { a: makeRect("a", 0, 0), b: makeRect("b", 200, 200) },
@@ -61,7 +61,7 @@ describe("SelectAllCommand", () => {
 	});
 
 	describe("canExecute", () => {
-		it("ルートにオブジェクトがあれば実行可能", () => {
+		it("is executable when there are objects at the root", () => {
 			const state = makeState({
 				rootIds: ["a"],
 				objects: { a: makeRect("a", 0, 0) },
@@ -69,7 +69,7 @@ describe("SelectAllCommand", () => {
 			expect(SelectAllCommand.canExecute(state)).toBe(true);
 		});
 
-		it("空キャンバスでは実行不可", () => {
+		it("is not executable on an empty canvas", () => {
 			expect(
 				SelectAllCommand.canExecute(makeState({ rootIds: [], objects: {} })),
 			).toBe(false);

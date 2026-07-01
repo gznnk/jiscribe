@@ -25,7 +25,7 @@ const makeTarget = (params: {
 };
 
 describe("shouldUseNativeWheel", () => {
-	it("Ctrl 押下時（ズーム操作）はスクロール可能でも false を返す", () => {
+	it("returns false while Ctrl is held (zoom operation) even when scrollable", () => {
 		const target = makeTarget({
 			hasNativeWheelAncestor: true,
 			scrollHeight: 200,
@@ -34,20 +34,20 @@ describe("shouldUseNativeWheel", () => {
 		expect(shouldUseNativeWheel(target, true)).toBe(false);
 	});
 
-	it("target が null のとき false を返す", () => {
+	it("returns false when target is null", () => {
 		expect(shouldUseNativeWheel(null, false)).toBe(false);
 	});
 
-	it("closest を持たない target（document など）のとき false を返す", () => {
+	it("returns false for a target without closest (such as document)", () => {
 		expect(shouldUseNativeWheel({} as EventTarget, false)).toBe(false);
 	});
 
-	it("native-wheel 要素の外側のとき false を返す", () => {
+	it("returns false when outside a native-wheel element", () => {
 		const target = makeTarget({ hasNativeWheelAncestor: false });
 		expect(shouldUseNativeWheel(target, false)).toBe(false);
 	});
 
-	it("native-wheel 要素内でも内容があふれていないとき false を返す", () => {
+	it("returns false when inside a native-wheel element but the content does not overflow", () => {
 		const target = makeTarget({
 			hasNativeWheelAncestor: true,
 			scrollHeight: 100,
@@ -56,7 +56,7 @@ describe("shouldUseNativeWheel", () => {
 		expect(shouldUseNativeWheel(target, false)).toBe(false);
 	});
 
-	it("native-wheel 要素内で内容があふれているとき true を返す", () => {
+	it("returns true when inside a native-wheel element and the content overflows", () => {
 		const target = makeTarget({
 			hasNativeWheelAncestor: true,
 			scrollHeight: 200,

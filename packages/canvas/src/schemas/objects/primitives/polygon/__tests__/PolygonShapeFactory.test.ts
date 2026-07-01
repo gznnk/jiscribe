@@ -6,7 +6,7 @@ type Pt = { x: number; y: number };
 
 describe("PolygonShapeFactory", () => {
 	describe("createDoc", () => {
-		it("中心の周りに 5 頂点の正多角形を生成し、先頭頂点を真上に置く", () => {
+		it("creates a regular 5-vertex polygon around the center with the first vertex straight up", () => {
 			const doc = PolygonShapeFactory.createDoc({ x: 100, y: 100 }) as Record<
 				string,
 				unknown
@@ -16,12 +16,12 @@ describe("PolygonShapeFactory", () => {
 			expect(doc.type).toBe("polygon");
 			expect(doc.id).toEqual(expect.any(String));
 			expect(points).toHaveLength(5);
-			// 先頭頂点は -90°（真上）→ x は中心、y は中心 - 半径(60)
+			// The first vertex is at -90° (straight up) → x is the center, y is center - radius(60)
 			expect(points[0].x).toBe(100);
 			expect(points[0].y).toBe(40);
 		});
 
-		it("overrides で fill/stroke を差し替えられる", () => {
+		it("can replace fill/stroke via overrides", () => {
 			const doc = PolygonShapeFactory.createDoc(
 				{ x: 0, y: 0 },
 				{ fill: "#ff0000" },
@@ -30,7 +30,7 @@ describe("PolygonShapeFactory", () => {
 			expect(doc.fill).toBe("#ff0000");
 		});
 
-		it("overrides では id と points を上書きできない（factory 管理）", () => {
+		it("cannot override id and points via overrides (factory-managed)", () => {
 			const doc = PolygonShapeFactory.createDoc(
 				{ x: 100, y: 100 },
 				{ id: "forced-id", points: [{ x: 0, y: 0 }] },
@@ -43,7 +43,7 @@ describe("PolygonShapeFactory", () => {
 	});
 
 	describe("calcDimensions", () => {
-		it("既定外接半径を半サイズとして返す", () => {
+		it("returns the default circumradius as the half-size", () => {
 			expect(PolygonShapeFactory.calcDimensions()).toEqual({
 				halfWidth: 60,
 				halfHeight: 60,
@@ -52,7 +52,7 @@ describe("PolygonShapeFactory", () => {
 	});
 
 	describe("createDocFromBounds", () => {
-		it("bounds の中心・半サイズに収まる 5 頂点を生成する", () => {
+		it("creates 5 vertices fitting the bounds' center and half-size", () => {
 			const doc = PolygonShapeFactory.createDocFromBounds?.(
 				0,
 				0,
@@ -62,12 +62,12 @@ describe("PolygonShapeFactory", () => {
 			const points = doc.points as Pt[];
 
 			expect(points).toHaveLength(5);
-			// 中心 (50,100)・縦半径 100 → 先頭頂点は真上
+			// Center (50,100), vertical radius 100 → the first vertex is straight up
 			expect(points[0].x).toBe(50);
 			expect(points[0].y).toBe(0);
 		});
 
-		it("最小サイズ未満なら null を返す", () => {
+		it("returns null when below the minimum size", () => {
 			expect(PolygonShapeFactory.createDocFromBounds?.(0, 0, 3, 3)).toBeNull();
 		});
 	});

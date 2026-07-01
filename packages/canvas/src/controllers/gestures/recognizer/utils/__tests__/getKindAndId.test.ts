@@ -26,21 +26,21 @@ const makeElNoMatch = (): Element =>
 	}) as unknown as Element;
 
 describe("getKindAndId", () => {
-	it("[data-kind] を持つ要素がないとき null を返す", () => {
+	it("returns null when there is no element with [data-kind]", () => {
 		expect(getKindAndId(makeElNoMatch())).toBeNull();
 	});
 
-	it("[data-kind] はあるが data-id がないとき null を返す", () => {
+	it("returns null when [data-kind] is present but data-id is missing", () => {
 		const el = makeEl("rect", undefined);
 		expect(getKindAndId(el)).toBeNull();
 	});
 
-	it("[data-kind] も data-id もあるとき { kind, id } を返す", () => {
+	it("returns { kind, id } when both [data-kind] and data-id are present", () => {
 		const el = makeEl("rect", "obj-1");
 		expect(getKindAndId(el)).toEqual({ kind: "rect", id: "obj-1" });
 	});
 
-	it("kind='control'・id='ctrl-2' のとき正しい値を返す", () => {
+	it("returns the correct values when kind='control' and id='ctrl-2'", () => {
 		const el = makeEl("control", "ctrl-2");
 		expect(getKindAndId(el)).toEqual({ kind: "control", id: "ctrl-2" });
 	});

@@ -3,52 +3,52 @@ import { describe, it, expect } from "vitest";
 import { getStrokeDasharray } from "../getStrokeDasharray";
 
 describe("getStrokeDasharray", () => {
-	describe("solid / 未指定", () => {
-		it("undefined のとき undefined を返す", () => {
+	describe("solid / unspecified", () => {
+		it("returns undefined when undefined", () => {
 			expect(getStrokeDasharray(undefined)).toBeUndefined();
 		});
 
-		it("'solid' のとき undefined を返す", () => {
+		it("returns undefined for 'solid'", () => {
 			expect(getStrokeDasharray("solid")).toBeUndefined();
 		});
 
-		it("strokeWidth を渡しても solid は undefined を返す", () => {
+		it("solid returns undefined even when strokeWidth is passed", () => {
 			expect(getStrokeDasharray("solid", 5)).toBeUndefined();
 		});
 	});
 
 	describe("dashed", () => {
-		it("strokeWidth=1 のとき '4 4' を返す", () => {
+		it("returns '4 4' when strokeWidth=1", () => {
 			expect(getStrokeDasharray("dashed", 1)).toBe("4 4");
 		});
 
-		it("strokeWidth=2 のとき '8 8' を返す", () => {
+		it("returns '8 8' when strokeWidth=2", () => {
 			expect(getStrokeDasharray("dashed", 2)).toBe("8 8");
 		});
 
-		it("strokeWidth=0.5 のとき '2 2' を返す", () => {
+		it("returns '2 2' when strokeWidth=0.5", () => {
 			expect(getStrokeDasharray("dashed", 0.5)).toBe("2 2");
 		});
 
-		it("strokeWidth 省略時はデフォルト 1 が適用される", () => {
+		it("the default of 1 is applied when strokeWidth is omitted", () => {
 			expect(getStrokeDasharray("dashed")).toBe("4 4");
 		});
 	});
 
 	describe("dotted", () => {
-		it("strokeWidth=1 のとき '1 2' を返す", () => {
+		it("returns '1 2' when strokeWidth=1", () => {
 			expect(getStrokeDasharray("dotted", 1)).toBe("1 2");
 		});
 
-		it("strokeWidth=3 のとき '3 6' を返す", () => {
+		it("returns '3 6' when strokeWidth=3", () => {
 			expect(getStrokeDasharray("dotted", 3)).toBe("3 6");
 		});
 
-		it("strokeWidth=2 のとき '2 4' を返す", () => {
+		it("returns '2 4' when strokeWidth=2", () => {
 			expect(getStrokeDasharray("dotted", 2)).toBe("2 4");
 		});
 
-		it("strokeWidth 省略時はデフォルト 1 が適用される", () => {
+		it("the default of 1 is applied when strokeWidth is omitted", () => {
 			expect(getStrokeDasharray("dotted")).toBe("1 2");
 		});
 	});
