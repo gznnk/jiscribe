@@ -105,7 +105,12 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 					const { minX, minY, width, height, zoom } = state.viewport;
 					const centerX = minX + width / zoom / 2;
 					const centerY = minY + height / zoom / 2;
-					return addObjectToState(state, preset, { x: centerX, y: centerY });
+					const placed = addObjectToState(state, preset, {
+						x: centerX,
+						y: centerY,
+					});
+					// 描画モード中に描画非対応の図形を押下した場合は描画モードをクリアする
+					return { ...placed, shapeDrawing: null };
 				}
 
 				const isActive = state.shapeDrawing?.preset.id === presetId;
@@ -128,9 +133,11 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 
 			case "dragStart": {
 				// テキスト編集をコミットし、選択状態を解除してからD&Dを開始する
+				// D&D 開始時は（図形の種類を問わず）描画モードをクリアする
 				const committed = commitTextEditIfNeeded(state);
 				return {
 					...committed,
+					shapeDrawing: null,
 					selectedIds: [],
 					selectedConnectorId: null,
 					multiSelectGroup: null,
