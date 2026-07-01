@@ -13,16 +13,25 @@ export function calcPolyBoundingBox(
 		return null;
 	}
 
-	let minX = Infinity;
-	let minY = Infinity;
-	let maxX = -Infinity;
-	let maxY = -Infinity;
+	let minX = points[0].x;
+	let maxX = points[0].x;
+	let minY = points[0].y;
+	let maxY = points[0].y;
 
-	for (const point of points) {
-		minX = Math.min(minX, point.x);
-		maxX = Math.max(maxX, point.x);
-		minY = Math.min(minY, point.y);
-		maxY = Math.max(maxY, point.y);
+	for (let i = 1; i < points.length; i++) {
+		const { x, y } = points[i];
+		if (x < minX) {
+			minX = x;
+		}
+		if (x > maxX) {
+			maxX = x;
+		}
+		if (y < minY) {
+			minY = y;
+		}
+		if (y > maxY) {
+			maxY = y;
+		}
 	}
 
 	return { left: minX, top: minY, right: maxX, bottom: maxY };
