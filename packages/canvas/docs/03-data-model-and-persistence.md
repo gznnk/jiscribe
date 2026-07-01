@@ -1,94 +1,100 @@
-# データモデルと永続化
+> 🌐 日本語版: [03-data-model-and-persistence.ja.md](./03-data-model-and-persistence.ja.md)
 
-canvas はデータを 2 つの形で持つ。**Doc**（保存用・ツリー）と
-**State**（実行用・フラット）で、両者を Mapper が相互変換する。
-この分離は [設計思想](./01-design-philosophy.md) の「性能優先」と「境界での防御」に基づく。
+# Data Model and Persistence
 
-## Doc と State
+canvas holds data in two forms: **Doc** (for persistence; a tree) and
+**State** (for runtime use; flat), with a Mapper converting between them.
+This separation follows the "performance first" and "defense at the boundary" principles of the [Design Philosophy](./01-design-philosophy.md).
 
-|      | Doc（schemas/）                          | State（states/）                            |
-| ---- | ---------------------------------------- | ------------------------------------------- |
-| 用途 | 永続化・ファイル I/O                     | ランタイム編集                              |
-| 形   | ツリー（`GroupDoc.children` に子を内包） | フラット（`objects` は ID キーの `Record`） |
-| 例   | `RectDoc`, `GroupDoc`, `ConnectorDoc`    | `RectState`, `GroupState`, `ConnectorState` |
+## Doc and State
 
-ツリーは人間にもファイル差分にも読みやすい一方、編集時の探索・更新には不向き。
-そこで実行時はフラットに正規化し、ID で O(1) アクセスできるようにする。
+|         | Doc (schemas/)                             | State (states/)                             |
+| ------- | ------------------------------------------ | ------------------------------------------- |
+| Purpose | Persistence / file I/O                     | Runtime editing                             |
+| Form    | Tree (`GroupDoc.children` nests its child) | Flat (`objects` is a `Record` keyed by ID)  |
+| Example | `RectDoc`, `GroupDoc`, `ConnectorDoc`      | `RectState`, `GroupState`, `ConnectorState` |
 
-## Mapper による相互変換
+A tree is easy for both humans and file diffs to read, but poorly suited to
+lookups and updates during editing. So at runtime we normalize it into a flat
+form that allows O(1) access by ID.
 
-形状ごとに State と Mapper を共配置する（[アーキテクチャ](./02-architecture.md) の「共配置」）。
-各 Mapper は **自身のプロパティのみ** を変換し、子要素の再帰は行わない。
+## Conversion via Mappers
+
+State and Mapper are colocated per shape (the "colocation" of the [Architecture](./02-architecture.md)).
+Each Mapper converts **only its own properties** and does not recurse into child elements.
 
 ```
 states/objects/primitives/rect/
-├── RectState.ts      # State 型
+├── RectState.ts      # State type
 ├── RectMapper.ts     # Doc ↔ State
 └── __tests__/
 ```
 
-全体変換は `states/canvas/CanvasMapper.ts` が一元管理する（`canvasToState` / `canvasToDoc`）。
-CanvasMapper は形状タイプごとの Mapper を `ObjectRegistry` から引いて多態的に呼び出すため、
-**`states/` の中で唯一 `registry/` を参照してよい例外**になっている（理由は
-[アーキテクチャ](./02-architecture.md#registry-層) を参照）。ツリー ↔ フラットの
-構造変換（親子関係の展開・再構築）はこの一点に集約し、個々の Mapper には漏らさない。
+The overall conversion is managed centrally by `states/canvas/CanvasMapper.ts` (`canvasToState` / `canvasToDoc`).
+Because CanvasMapper looks up the Mapper for each shape type from the `ObjectRegistry` and invokes it polymorphically,
+it is the **one exception within `states/` that may reference `registry/`** (see
+[Architecture](./02-architecture.md#registry-layer) for the reasoning). The structural
+conversion between tree and flat (expanding and reconstructing parent-child relationships)
+is concentrated at this single point and never leaks into the individual Mappers.
 
-## 永続化フォーマット（`.jis.json` / `CanvasDoc`）
+## Persistence Format (`.jis.json` / `CanvasDoc`)
 
-保存形式は `CanvasDoc`（`schemas/canvas/CanvasDoc.ts`）。
+The saved format is `CanvasDoc` (`schemas/canvas/CanvasDoc.ts`).
 
 ```jsonc
 {
 	"$schema": "https://schema.jiscribe.dev/v1/jiscribe.schema.json",
 	"version": 1,
 	"root": [
-		/* ObjectDoc とコネクターを z-order 順（背面→前面）で混在させた配列。
-		   group は children を内包。コネクターは group の子にはならず root 直下のみ。 */
+		/* An array mixing ObjectDocs and connectors in z-order (back to front).
+		   A group nests its children. Connectors are never children of a group and
+		   live only directly under root. */
 	],
 }
 ```
 
-- `root` … 図形（rect / ellipse / diamond / polyline / polygon / group / sticky）とコネクターを混在させた単一配列。**配列順がそのまま重なり順（z-order）**になる
-- コネクター（`type: "connector"`）… 端点は `source` / `target` の `owner{type,id}` + `anchor` で対象図形を参照する。`root` 直下にのみ置かれ、group の子にはならない。少なくとも一方の端点が owned であること（両端 free は不正）
-- 色フィールド（`stroke` / `fontColor` / `fill`）… 具体的な CSS 色のほか、sentinel 値 `"auto"`（テーマ追従）を取りうる。`"auto"` は描画時にテーマ前景色へ解決される（[表示・テーマ](./08-presentation-and-theme.md) 参照）。新規図形の `stroke` / `fontColor` の既定値は `"auto"`
-- 形式仕様の全文は `../ai/reference.md` と `../ai/jiscribe.schema.json` を参照
+- `root` … A single array mixing shapes (rect / ellipse / diamond / polyline / polygon / group / sticky) and connectors. **The array order is itself the stacking order (z-order).**
+- Connector (`type: "connector"`) … Each endpoint references its target shape via `source` / `target` using an `owner{type,id}` plus an `anchor`. Connectors are placed only directly under `root` and are never children of a group. At least one endpoint must be owned (a connector with both ends free is invalid).
+- Color fields (`stroke` / `fontColor` / `fill`) … In addition to a concrete CSS color, they may take the sentinel value `"auto"` (follow the theme). `"auto"` is resolved to the theme's foreground color at render time (see [Presentation and Theme](./08-presentation-and-theme.md)). The default `stroke` / `fontColor` for a new shape is `"auto"`.
+- For the full format specification, see `../ai/reference.md` and `../ai/jiscribe.schema.json`.
 
-## parser の二段検証（境界での防御）
+## The Parser's Two-Stage Validation (Defense at the Boundary)
 
-外部から渡る JSON 文字列は、`parseCanvasText`（`schemas/canvas/validators/`）が
-**例外を投げずに判別可能なユニオン**で結果を返す。これにより拡張側・Webview 側が
-同一ロジックを共有し、エラーの取りこぼしを防ぐ。
+For JSON strings coming from outside, `parseCanvasText` (`schemas/canvas/validators/`)
+returns its result as a **discriminated union without throwing exceptions**. This lets the
+extension side and the Webview side share the same logic and prevents errors from slipping through.
 
 ```ts
 type CanvasParseResult =
 	| { kind: "ok"; doc: CanvasDoc }
-	| { kind: "syntax-error"; message: string } // JSON.parse 失敗
+	| { kind: "syntax-error"; message: string } // JSON.parse failed
 	| { kind: "semantic-error"; diagnostics: SemanticDiagnostic[] }
-	| { kind: "internal-error"; message: string }; // 検証中の予期しない例外
+	| { kind: "internal-error"; message: string }; // unexpected exception during validation
 ```
 
-検証は 2 段階。構造が成立していなければ意味検証へ進まない。
+Validation happens in two stages. If the structure does not hold, semantic validation is not reached.
 
-1. **構造検証 `validateStructure`** — 各ノードの型・必須フィールドを検証。型別の検証は
-   `objectDocValidatorRegistry` に委譲し、`group` の `children` 再帰だけは構造ルールとしてここで処理する。
-2. **意味検証 `validateSemantics`** — 文書全体を横断しないと判断できない整合性を検証。
-   - **ID の一意性**: root ツリー（コネクター含む）を通じて ID が重複しないこと。
-     `CanvasDoc` はネストしたツリーなので「親子の循環」は構造的に起こり得ず、循環に見えるケースは実質「同一 ID の別オブジェクト」= ID 重複でしかない。
-   - **connector の参照整合性**: owner の `id` が実在し、参照先が connectable な型であること（group / polyline / polygon / connector は不可）。source と target が同一オブジェクトを指す自己ループは許可され、専用の直交ルートで矩形ループとして描画される（`resolveConnectorPoints` / `routeSelfLoop` を参照）。
+1. **Structural validation `validateStructure`** — Validates each node's type and required fields.
+   Type-specific validation is delegated to `objectDocValidatorRegistry`, and only the recursion into a
+   `group`'s `children` is handled here as a structural rule.
+2. **Semantic validation `validateSemantics`** — Validates consistency that can only be judged by
+   traversing the entire document.
+   - **Uniqueness of IDs**: IDs must not be duplicated across the root tree (including connectors).
+     Because `CanvasDoc` is a nested tree, a "parent-child cycle" cannot occur structurally; any case that looks like a cycle is effectively "different objects sharing the same ID" — that is, nothing more than an ID duplication.
+   - **Referential integrity of connectors**: an owner's `id` must exist, and the referenced target must be of a connectable type (group / polyline / polygon / connector are not allowed). A self-loop where source and target point to the same object is permitted and is drawn as a rectangular loop via a dedicated orthogonal route (see `resolveConnectorPoints` / `routeSelfLoop`).
 
-検証に使う `objectDocValidatorRegistry` は parse 時にだけ必要なため、`parseCanvasText` が
-未初期化なら冪等に初期化する。これにより呼び出し側はエントリ取り違えによる誤検知を構造的に避けられる。
+The `objectDocValidatorRegistry` used for validation is needed only at parse time, so `parseCanvasText`
+initializes it idempotently if it is uninitialized. This structurally lets callers avoid false positives caused by picking the wrong entry point.
 
-### パーサー専用エントリ
+### A Parser-Only Entry Point
 
-`parser.ts` は UI 依存（react / emotion / katex）を含まない別エントリ。
-「テキストを `CanvasDoc` にパースしたいだけ」の利用者（VSCode 拡張の Node 側 DiagnosticProvider など）向け。
+`parser.ts` is a separate entry point that includes no UI dependencies (react / emotion / katex).
+It is aimed at consumers who "just want to parse text into a `CanvasDoc`" (such as the DiagnosticProvider on the Node side of the VSCode extension).
 
 ```ts
 import { parseCanvasText } from "@workspace/canvas/parser";
 ```
 
-この境界を通った Doc は正当であることを前提に、内部関数は防御的チェックを省く
-（[設計思想](./01-design-philosophy.md) の原則 4）。外部同期の入口での検証は
-[外部同期・VSCode 連携](./07-external-sync.md) を参照。
-</content>
+Assuming that any Doc that has passed this boundary is valid, internal functions omit defensive checks
+(principle 4 of the [Design Philosophy](./01-design-philosophy.md)). For validation at the entry point of external sync, see
+[External Sync / VSCode Integration](./07-external-sync.md).

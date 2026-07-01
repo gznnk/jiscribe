@@ -1,84 +1,87 @@
-# コマンドシステム
+> 🌐 日本語版: [05-command-system.ja.md](./05-command-system.ja.md)
 
-ショートカットキー・コンテキストメニュー・ツールバーから実行される操作を、
-Command パターンで一元管理するしくみ。
+# Command System
 
-## CommandRegistry：3 つの入口が同一経路を通る
+A mechanism that centrally manages the operations triggered from keyboard shortcuts,
+context menus, and toolbars using the Command pattern.
 
-操作ロジックを `Command` に集約し、ショートカット / メニュー / ツールバーのどれから呼ばれても
-**同じ Command を `dispatch({ type: "COMMAND", commandId })` で実行する**。
+## CommandRegistry: three entry points share the same path
+
+Operation logic is consolidated into `Command` objects, and no matter whether it is invoked
+from a shortcut, menu, or toolbar, **the same Command is executed via `dispatch({ type: "COMMAND", commandId })`**.
 
 ```
-ショートカットキー ┐
-コンテキストメニュー ┼─ dispatch({type:"COMMAND", commandId}) ─→ canvasReducer
-ツールバー         ┘        │
+Keyboard shortcut  ┐
+Context menu        ┼─ dispatch({type:"COMMAND", commandId}) ─→ canvasReducer
+Toolbar            ┘        │
                             ▼
                   handleCommand(state, commandId)
                             │
-                  commandRegistry.get(id) → Command.execute(state) ⇒ 新しい state
+                  commandRegistry.get(id) → Command.execute(state) ⇒ new state
 ```
 
-これにより操作ロジックの重複がなくなり（DRY）、`GESTURE` と同じ Reducer パターンに
-統合される（[状態更新フロー](./06-state-update-flow.md)）。
+This eliminates duplication of operation logic (DRY) and unifies the flow with the same Reducer
+pattern used for `GESTURE` (see [State Update Flow](./06-state-update-flow.md)).
 
-### Command 型
+### Command type
 
 ```ts
 type Command = {
 	id: string;
 	label: string;
 	category?: "edit" | "view" | "arrange" | "selection";
-	canExecute: (state: CanvasState) => boolean; // メニューの有効/無効化に使用
-	execute: (state: CanvasState) => CanvasState; // 純粋関数（副作用なし）
-	shortcuts?: PlatformKeyBindings; // mac / win / default を個別指定可
+	canExecute: (state: CanvasState) => boolean; // used to enable/disable menu items
+	execute: (state: CanvasState) => CanvasState; // pure function (no side effects)
+	shortcuts?: PlatformKeyBindings; // mac / win / default can be specified individually
 };
 ```
 
-`execute` が純粋関数なので、Command 単体でテストできる（[テスト](./09-testing.md)）。
-`canExecute` で実行可否を動的に判定し、メニュー項目の有効/無効や UI 表示に使う。
+Because `execute` is a pure function, each Command can be tested in isolation (see [Testing](./09-testing.md)).
+`canExecute` dynamically determines whether a command can run and is used to enable/disable menu items and control UI display.
 
-### 主要コンポーネント
+### Key components
 
-- `CommandRegistry`（`commands/CommandRegistry.ts`）… `register` / `get` / `getAll` / `findByShortcut`
-- `handleCommand`（`commands/handlers/handleCommand.ts`）… `get` → `canExecute` → `execute` を仲介
-- `useKeyboardShortcuts`（`hooks/`）… keydown を `findByShortcut` で解決して dispatch（入力フィールド上では無効化）
-- `CommandUtils`… プラットフォーム判定・`getPlatformShortcuts` / `formatShortcut`（`⌘A` ↔ `Ctrl+A`）
-- 登録は `setup/`（`initializeCommands`）でまとめて行う
+- `CommandRegistry` (`commands/CommandRegistry.ts`) — `register` / `get` / `getAll` / `findByShortcut`
+- `handleCommand` (`commands/handlers/handleCommand.ts`) — mediates `get` → `canExecute` → `execute`
+- `useKeyboardShortcuts` (`hooks/`) — resolves keydown events via `findByShortcut` and dispatches (disabled while an input field is focused)
+- `CommandUtils` — platform detection, `getPlatformShortcuts` / `formatShortcut` (`⌘A` ↔ `Ctrl+A`)
+- Registration is done all at once in `setup/` (`initializeCommands`)
 
-## カテゴリと収録コマンド
+## Categories and included commands
 
-コマンドは目的別にディレクトリ分割されている（`controllers/commands/`）。
+Commands are split into directories by purpose (`controllers/commands/`).
 
-| ディレクトリ | コマンド                                                                  |
-| ------------ | ------------------------------------------------------------------------- |
-| `selection/` | SelectAll / DeselectAll / Delete / Cut / Copy / Paste / Duplicate         |
-| `arrange/`   | BringToFront / BringForward / SendBackward / SendToBack（`MoveCommands`） |
-| `arrow/`     | SwapArrows（コネクター端点の入れ替え）                                    |
-| `group/`     | Group / Ungroup                                                           |
-| `history/`   | Undo / Redo                                                               |
-| `text/`      | StartTextEdit                                                             |
-| `view/`      | ZoomIn / ZoomOut / ZoomToFit / ZoomToSelection                            |
+| Directory    | Commands                                                                 |
+| ------------ | ------------------------------------------------------------------------ |
+| `selection/` | SelectAll / DeselectAll / Delete / Cut / Copy / Paste / Duplicate        |
+| `arrange/`   | BringToFront / BringForward / SendBackward / SendToBack (`MoveCommands`) |
+| `arrow/`     | SwapArrows (swap connector endpoints)                                    |
+| `group/`     | Group / Ungroup                                                          |
+| `history/`   | Undo / Redo                                                              |
+| `text/`      | StartTextEdit                                                            |
+| `view/`      | ZoomIn / ZoomOut / ZoomToFit / ZoomToSelection                           |
 
-> なお `Command.category` フィールドが現状取り得る値は `selection` / `edit` / `arrange` / `view` の 4 つで、
-> UI 上のグルーピングに使う。ディレクトリ構成（上表）の方が細かいのは、実装上の整理単位だからである。
+> Note that the values `Command.category` can currently take are the four `selection` / `edit` / `arrange` / `view`,
+> which are used for grouping in the UI. The directory structure (table above) is more fine-grained because it
+> is the organizational unit at the implementation level.
 
-## Undo / Redo（history）
+## Undo / Redo (history)
 
-履歴は `CanvasState` の `history`（`past` / `present` / `future`）として持つ。
-コミットが必要な操作で `commitVersion` が進むと、`canvasReducer` が `present` を
-`past` に積んで履歴を記録する。連続操作（連続ナッジ等）は時間ウィンドウ内で 1 エントリに
-集約される。記録・集約の詳細は [状態更新フロー](./06-state-update-flow.md) を参照。
+History is held as `history` (`past` / `present` / `future`) within `CanvasState`.
+When `commitVersion` advances on an operation that requires a commit, `canvasReducer` pushes `present`
+onto `past` and records the history. Consecutive operations (such as repeated nudges) are collapsed into a
+single entry within a time window. See [State Update Flow](./06-state-update-flow.md) for the details of
+recording and collapsing.
 
-`Undo` / `Redo` コマンド自体は、復元対象の `CanvasDoc` を載せた専用アクション
-（`UNDO` / `REDO`）として dispatch される。
+The `Undo` / `Redo` commands themselves are dispatched as dedicated actions (`UNDO` / `REDO`) carrying the
+`CanvasDoc` to be restored.
 
-## クリップボード：copy / cut / paste / duplicate
+## Clipboard: copy / cut / paste / duplicate
 
-`copy` / `cut` はシステムクリップボードへ書き出し（`useClipboardWrite`）、`paste` は
-読み出して `PASTE` アクションで適用する（`useClipboardPaste` → `handlePaste`）。
-`duplicate` はクリップボードを介さずに選択を複製する。
+`copy` / `cut` write to the system clipboard (`useClipboardWrite`), while `paste` reads from it and applies
+the content via the `PASTE` action (`useClipboardPaste` → `handlePaste`).
+`duplicate` clones the selection without going through the clipboard.
 
-> **untrusted 入力の検証**: クリップボード経由で外部から入る JSON は信頼できないため、
-> 貼り付け時に検証して不正なデータを弾く必要がある（[設計思想](./01-design-philosophy.md) の
-> 「境界での防御」）。関連 issue: **#40 / #46**。
-> </content>
+> **Validating untrusted input**: JSON coming from outside via the clipboard cannot be trusted, so it must be
+> validated on paste to reject malformed data (see "Defense at the boundary" in
+> [Design Philosophy](./01-design-philosophy.md)). Related issues: **#40 / #46**.

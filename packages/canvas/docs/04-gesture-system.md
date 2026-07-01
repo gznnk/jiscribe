@@ -1,105 +1,109 @@
-# ジェスチャシステム
+> 🌐 日本語版: [04-gesture-system.ja.md](./04-gesture-system.ja.md)
 
-ポインタ／ホイールイベントを高レベルなジェスチャーに変換し、適切なハンドラへ振り分けるしくみ。
-ジェスチャーが起こした状態変化がどう反映されるかは [状態更新フロー](./06-state-update-flow.md) を参照。
+# Gesture System
 
-## GestureRecognizer：pointer から gesture を認識
+The mechanism that converts pointer/wheel events into high-level gestures and dispatches them to the appropriate handlers.
+For how the state changes triggered by gestures are reflected, see [State Update Flow](./06-state-update-flow.md).
 
-生の pointer / wheel イベントはキャンバスのルート（`Viewport`）に集約され、
-`GestureRecognizer`（`controllers/gestures/recognizer/`）が `Gesture` に変換する。
+## GestureRecognizer: Recognizing gestures from pointers
 
-`GestureType` は次の 7 種:
+Raw pointer/wheel events are aggregated at the canvas root (`Viewport`), and
+the `GestureRecognizer` (`controllers/gestures/recognizer/`) converts them into a `Gesture`.
+
+There are seven `GestureType`s:
 
 ```
 pressed | dragStart | drag | dragEnd | click | doubleClick | wheel
 ```
 
-`Gesture` は SVG 座標とクライアント座標の両方（`start` / `last` / `delta`）、修飾キー
-（`mods`）、ホバー要素、`targetId` / `targetKind`、`inputValue`（`native-pointer` 要素の値）
-などを載せる。
+A `Gesture` carries both SVG and client coordinates (`start` / `last` / `delta`), modifier keys
+(`mods`), the hovered element, `targetId` / `targetKind`, `inputValue` (the value of a `native-pointer` element),
+and more.
 
-ポイント:
+Key points:
 
-- **click / doubleClick は排他**: 同一 `targetId` を `DOUBLE_CLICK_THRESHOLD`（300ms）以内に
-  連打すると、2 回目以降は `click` ではなく `doubleClick` になる。「シングル＝選択 /
-  ダブル＝テキスト編集」のように**意味を変えたい**ケースのための意図的な設計で、
-  オブジェクト／テキスト系ハンドラはこれに依存している（DOM 標準の加算式に変えると回帰リスクが大きい）。
-- **RAF バッチ**: 高頻度な pointermove は `requestAnimationFrame` でまとめて 1 つの `drag` に集約し、
-  毎フレーム以上の状態更新が走らないようにする（[設計思想](./01-design-philosophy.md) の性能優先）。
+- **click and doubleClick are mutually exclusive**: If the same `targetId` is tapped repeatedly within
+  `DOUBLE_CLICK_THRESHOLD` (300ms), the second and subsequent events become `doubleClick` instead of `click`.
+  This is a deliberate design for cases where you want to **change the meaning** of the interaction, such as
+  "single = select / double = text editing", and object- and text-related handlers depend on it (switching to
+  the DOM-standard cumulative counting model would carry a large regression risk).
+- **RAF batching**: High-frequency pointermove events are batched into a single `drag` via `requestAnimationFrame`,
+  so that no more than one state update per frame is triggered (see the performance priority in [Design Philosophy](./01-design-philosophy.md)).
 
-## ハンドラ構成：canvas / controls / menu / objects
+## Handler composition: canvas / controls / menu / objects
 
-`handleGesture`（`controllers/gestures/handlers/handleGesture.ts`）がルーター。
-`Gesture` を `CanvasEvent` に変換し（`wheel` は `ctrl` の有無で `zoom` / `scroll` に分岐）、
-`gestureHandlerRegistry` 経由で対象ハンドラへ渡す。各ハンドラは `targetKind` で
-自分が処理すべきイベントかを判定する。
+`handleGesture` (`controllers/gestures/handlers/handleGesture.ts`) is the router.
+It converts a `Gesture` into a `CanvasEvent` (`wheel` branches into `zoom` / `scroll` depending on whether `ctrl` is held)
+and passes it to the target handler via `gestureHandlerRegistry`. Each handler uses `targetKind` to
+determine whether it should process the event.
 
-| ハンドラ群  | 対象                                                                   | 主なファイル                                                                                       |
-| ----------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `canvas/`   | キャンバス全体（空白ドラッグ＝範囲選択、パン、ズーム）                 | `CanvasEventHandler.ts`                                                                            |
-| `controls/` | 変形コントロール（リサイズ・回転・頂点・接続）                         | `ControlEventHandler.ts`, `transform/`, `vertex/`, `connection/`                                   |
-| `menu/`     | コンテキストメニュー・オブジェクトメニュー・ツールバー・図形ライブラリ | `ContextMenuHandler.ts`, `ObjectMenuHandler.ts`, `ToolbarHandler.ts`, `ShapeLibraryItemHandler.ts` |
-| `objects/`  | 図形・コネクター本体（移動・選択・テキスト編集起動）                   | `ObjectEventHandler.ts`, `ConnectorEventHandler.ts`, 形状別 Controller                             |
+| Handler group | Target                                                               | Main files                                                                                         |
+| ------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `canvas/`     | The entire canvas (empty-space drag = range selection, pan, zoom)    | `CanvasEventHandler.ts`                                                                            |
+| `controls/`   | Transform controls (resize, rotate, vertex, connection)              | `ControlEventHandler.ts`, `transform/`, `vertex/`, `connection/`                                   |
+| `menu/`       | Context menu, object menu, toolbar, shape library                    | `ContextMenuHandler.ts`, `ObjectMenuHandler.ts`, `ToolbarHandler.ts`, `ShapeLibraryItemHandler.ts` |
+| `objects/`    | Shapes and connectors themselves (move, select, launch text editing) | `ObjectEventHandler.ts`, `ConnectorEventHandler.ts`, shape-specific Controllers                    |
 
-`handleGesture` は `dragStart` で `eventStartSnapshot`（操作開始時の objects / keyPoints /
-snapCandidates 等）を保存し、`dragEnd` でクリアする。`dragEnd` 時に doc が実際に変化していれば
-`commitVersion` を進め、履歴記録のトリガにする（詳細は [状態更新フロー](./06-state-update-flow.md)）。
+On `dragStart`, `handleGesture` saves `eventStartSnapshot` (the objects / keyPoints /
+snapCandidates, etc. at the start of the operation), and clears it on `dragEnd`. If the doc has actually changed
+on `dragEnd`, it advances `commitVersion`, triggering history recording (see [State Update Flow](./06-state-update-flow.md) for details).
 
-## 連携属性 `data-gesture` / `data-kind` / `data-id`
+## Linking attributes `data-gesture` / `data-kind` / `data-id`
 
-キャンバス上の DOM 要素は `data-*` 属性でジェスチャーシステムと連携する。
-テキスト編集中の `textarea` やメニュー内の入力欄など、**ブラウザ標準動作をそのまま使いたい要素**を
-宣言的に扱うための規約。
+DOM elements on the canvas interoperate with the gesture system through `data-*` attributes.
+This convention allows **elements that should retain native browser behavior**—such as the `textarea` used during
+text editing or the input fields inside menus—to be handled declaratively.
 
 ### `data-gesture`
 
-ジェスチャーとの関わり方を宣言する。**空白区切りのトークンリスト**を取り、各トークンは
-`[data-gesture~="token"]` で**祖先方向に `closest` 探索**される。
+Declares how an element relates to gestures. It takes a **space-separated token list**, and each token is
+**searched toward ancestors via `closest`** using `[data-gesture~="token"]`.
 
-| トークン         | 意味                                                                                                                              | 主な付与先                                                                                             |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `none`           | ジェスチャーの起点にしない。pointerdown を無視し、contextmenu もネイティブに任せる                                                | テキスト編集の `textarea` ラッパー、メニュー内の数値・カラー入力、コンテキストメニューの callback 項目 |
-| `native-pointer` | ジェスチャーには参加するが**ポインタキャプチャを行わない**。`inputValue` 収穫の対象にもなる                                       | スライダー（range input）                                                                              |
-| `native-wheel`   | 要素がスクロール可能（`scrollHeight > clientHeight`）なら wheel をネイティブスクロールに任せる（Ctrl 押下時はズームのため対象外） | テキスト編集の `textarea`                                                                              |
+| Token            | Meaning                                                                                                                                | Primary targets                                                                                                |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `none`           | Does not become the origin of a gesture. Ignores pointerdown and leaves contextmenu to the native handler                              | The `textarea` wrapper for text editing, numeric/color inputs inside menus, callback items in the context menu |
+| `native-pointer` | Participates in gestures but **does not perform pointer capture**. Also becomes a target for `inputValue` harvesting                   | Sliders (range input)                                                                                          |
+| `native-wheel`   | If the element is scrollable (`scrollHeight > clientHeight`), leaves wheel to native scrolling (excluded while Ctrl is held, for zoom) | The `textarea` for text editing                                                                                |
 
-併用例: `data-gesture="none native-wheel"`（ジェスチャー対象外かつネイティブスクロール）。
+Combined example: `data-gesture="none native-wheel"` (excluded from gestures and uses native scrolling).
 
-読み取り箇所:
+Where they are read:
 
-- `none` → `isGestureOptedOut`（`GestureRecognizer.getHandlers()` の onPointerDown、`Canvas.tsx` の handleContextMenu）
-- `native-pointer` → `shouldSkipPointerCapture`（キャプチャ抑止）と `getInputValue`（値の収穫）
-- `native-wheel` → `shouldUseNativeWheel`（`useDocumentWheel`）
+- `none` → `isGestureOptedOut` (onPointerDown in `GestureRecognizer.getHandlers()`, handleContextMenu in `Canvas.tsx`)
+- `native-pointer` → `shouldSkipPointerCapture` (suppresses capture) and `getInputValue` (harvests the value)
+- `native-wheel` → `shouldUseNativeWheel` (`useDocumentWheel`)
 
-判定ユーティリティはいずれも `findGestureElement(target, token)` を土台にし、
-`controllers/gestures/recognizer/utils/` に配置している。
+All of these decision utilities are built on `findGestureElement(target, token)` and
+are located in `controllers/gestures/recognizer/utils/`.
 
 ### `data-kind` / `data-id`
 
-ジェスチャーの**対象を識別する**属性。`getKindAndId` が `closest("[data-kind]")` で最も近い要素を探し、
-`{ kind, id }` を解決してイベントに載せる。`data-id` のフォーマット例（ObjectMenu）:
+Attributes that **identify the target** of a gesture. `getKindAndId` finds the nearest element via `closest("[data-kind]")`,
+resolves `{ kind, id }`, and attaches it to the event. Example `data-id` formats (ObjectMenu):
 
-- `object-menu:toggle:{sectionId}` — セクション開閉
-- `object-menu:set:{property}:{value}` — プロパティ更新
-- `object-menu:slider:{property}` — スライダー更新
-- `object-menu:command:{commandId}` — コマンド実行
+- `object-menu:toggle:{sectionId}` — expand/collapse a section
+- `object-menu:set:{property}:{value}` — update a property
+- `object-menu:slider:{property}` — update a slider
+- `object-menu:command:{commandId}` — execute a command
 
-### なぜトークン化したか
+### Why we tokenized it
 
-旧実装はこの「ジェスチャーから逃がす」処理が 3 つの仕組み（各所の `e.stopPropagation()`、
-`data-interactive`、`data-native-wheel`）に分散し、選択基準がマークアップから読めなかった。
-関わり方は排他ではなく組み合わせ得る関心事（例: テキスト編集領域はジェスチャー対象外かつ
-ネイティブホイールを使う）なので、空白区切りトークン + `closest` 探索に一本化した。
+The old implementation scattered this "opt out of gestures" logic across three mechanisms (`e.stopPropagation()` calls
+in various places, `data-interactive`, and `data-native-wheel`), and the selection criteria could not be read from the markup.
+Since how an element relates to gestures is not exclusive but rather a set of concerns that can be combined (for example, a
+text-editing area is both excluded from gestures and uses native wheel scrolling), we unified everything into a
+space-separated token list plus `closest` search.
 
-### 新しいインタラクティブ要素を追加するとき
+### When adding a new interactive element
 
-1. ブラウザ標準の操作で完結する要素 → `data-gesture="none"`
-2. ジェスチャー経由で値を伝えつつネイティブのポインタ挙動も必要 → `data-gesture="native-pointer"` + `data-kind` / `data-id`
-3. スクロール可能で内部スクロールを優先したい → `data-gesture="native-wheel"`
+1. An element that is fully served by standard browser interaction → `data-gesture="none"`
+2. Needs to convey a value via gestures while also requiring native pointer behavior → `data-gesture="native-pointer"` + `data-kind` / `data-id`
+3. Scrollable and you want to prioritize internal scrolling → `data-gesture="native-wheel"`
 
-## 反復ボタンは click と doubleClick を等価に扱う
+## Repeat buttons treat click and doubleClick equivalently
 
-ツールバーのズーム ± など、**同じボタンを連打して毎回実行したい**コントロールでは、
-ハンドラ側で `click` と `doubleClick` の**両方**を実行トリガにする。
+For controls where you want to **repeatedly tap the same button and have it fire every time**, such as the toolbar's
+zoom ± buttons, the handler uses **both** `click` and `doubleClick` as execution triggers.
 
 ```ts
 const isActivation = event.type === "click" || event.type === "doubleClick";
@@ -108,11 +112,10 @@ if (isActivation && event.targetId?.startsWith(COMMAND_PREFIX)) {
 }
 ```
 
-理由は前述の排他仕様。反復コマンドボタンには「ダブルクリック固有の意味」が無いため、
-`click` だけを拾うと連打時に 1 回おきにスキップする（2 回目が `doubleClick` として捨てられる）。
-認識器の排他仕様はオブジェクト／テキスト系が依存しているので変えず、**消費側ハンドラで両者を
-等価に扱う**ことで「N 連打＝N 実行」を局所的・低リスクに実現する。
+The reason is the exclusivity spec described above. Since a repeat command button has no "doubleClick-specific meaning,"
+picking up only `click` would skip every other tap during rapid tapping (the second event is discarded as a `doubleClick`).
+Because the object- and text-related handlers depend on the recognizer's exclusivity spec, we leave it unchanged and instead
+**treat both events equivalently in the consuming handler**, achieving "N taps = N executions" locally and with low risk.
 
-- 該当: `controllers/gestures/handlers/menu/ToolbarHandler.ts`
-- 関連定数: `DOUBLE_CLICK_THRESHOLD`（`recognizer/GestureRecognizerConstants.ts`）
-  </content>
+- Applies to: `controllers/gestures/handlers/menu/ToolbarHandler.ts`
+- Related constant: `DOUBLE_CLICK_THRESHOLD` (`recognizer/GestureRecognizerConstants.ts`)

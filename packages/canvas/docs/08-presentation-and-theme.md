@@ -1,104 +1,112 @@
-# 表示・テーマ
+> 🌐 日本語版: [08-presentation-and-theme.ja.md](./08-presentation-and-theme.ja.md)
 
-描画層（presentations）の役割と、色の扱い方の規約。
+# Presentation and Theme
 
-## presentations は純粋描画（Dumb Component）
+The role of the rendering layer (presentations) and the conventions for handling color.
 
-`presentations/` のコンポーネントは **State を Props で受け取り SVG を描画するだけ**で、
-状態を持たずロジックも持たない。イベントハンドラは Props 経由で受け取る。
-依存は `presentations → states`（型参照）のみで、`controllers` には依存しない
-（[アーキテクチャ](./02-architecture.md) の禁止事項）。
+## presentations are pure rendering (Dumb Components)
 
-構成:
+Components under `presentations/` **only receive State via Props and render SVG**;
+they hold no state and contain no logic. Event handlers are received through Props.
+Their only dependency is `presentations → states` (type references); they do not depend
+on `controllers` (a prohibition from [Architecture](./02-architecture.md)).
 
-- `layers/` … 描画の重なり順（`background` / `content`）
-- `objects/` … 形状別コンポーネント（`primitives/` / `connections/` / `annotations/`、`base/TextOverlay`、`arrows/`）
-- `defs/` … SVG `defs`（フィルター等）
+Structure:
 
-「純粋描画に徹する」ことで、表示は state の関数として決まり、テストや再利用がしやすくなる。
+- `layers/` … render stacking order (`background` / `content`)
+- `objects/` … per-shape components (`primitives/` / `connections/` / `annotations/`, `base/TextOverlay`, `arrows/`)
+- `defs/` … SVG `defs` (filters, etc.)
 
-## 色は「presentation 属性」か「CSS」かを使い分ける
+By committing to pure rendering, the presentation is determined purely as a function of state, making it easy to test and reuse.
 
-判断軸は emotion か inline style かではなく、**presentation 属性で足りるか / CSS 関数の解決が要るか**。
+## Choose between "presentation attribute" and "CSS" for color
 
-- 静的な色で CSS 関数を使わない → SVG の presentation 属性で十分（`fill="currentColor"`、`stroke="#888"` 等）。
-- `var(--vscode-*)` や `color-mix()` を使う → **presentation 属性では解決されない**。
-  CSS プロパティとして当てる（`style={{ fill: ... }}` または emotion）。
+The deciding factor is not emotion vs. inline style, but rather **whether a presentation attribute suffices, or whether CSS-function resolution is required**.
 
-### emotion と inline style の使い分け
+- Static colors that do not use CSS functions → an SVG presentation attribute is enough (`fill="currentColor"`, `stroke="#888"`, etc.).
+- Using `var(--vscode-*)` or `color-mix()` → **these are not resolved by presentation attributes**.
+  Apply them as CSS properties (`style={{ fill: ... }}` or emotion).
 
-- コンポーネントのクローム（コンテナ / ボタン / パネル / 入力など、`:hover`・状態・レイアウトを持つもの）→ emotion `styled`。
-- アイコン内部の小さな SVG 塗りで、CSS 関数解決のためだけに CSS が必要 → inline `style`。
-  アイコン群は素の SVG 属性で統一されているため、1 アイコン内で emotion と属性を混在させない。
+### Choosing between emotion and inline style
 
-該当コード例:
+- Component chrome (containers / buttons / panels / inputs, etc.—anything with `:hover`, state, or layout) → emotion `styled`.
+- Small SVG fills inside icons, where CSS is needed solely for CSS-function resolution → inline `style`.
+  Since the icon set is unified around plain SVG attributes, do not mix emotion and attributes within a single icon.
+
+Relevant code examples:
 
 - `style={{ fill: theme.transparentChecker }}` … `controllers/ui/icons/ColorPreviewIcon.tsx`
 - `style={{ stroke: theme.transparentChecker }}` … `controllers/ui/icons/BorderColorIcon.tsx`
 
-## UI クロームは VSCode テーマトークン、図形データの色とは区別する
+## Distinguish UI chrome (VSCode theme tokens) from shape-data colors
 
-色には性質の異なる 2 種類があり、出所を必ず分ける。
+There are two kinds of color with different natures, and their origins must always be kept separate.
 
-|            | UI クローム                                  | 図形データ                                     |
-| ---------- | -------------------------------------------- | ---------------------------------------------- |
-| 例         | メニュー・ツールバー・選択枠・スナップガイド | 図形の `fill` / `stroke` / `fontColor`         |
-| 出所       | `constants/theme.ts` のテーマトークン        | ドキュメント（`.jis.json`）に保存される値      |
-| テーマ追従 | する（VSCode のテーマに自動で馴染む）        | しない（ユーザーが指定したデータ）※auto を除く |
+|               | UI chrome                                      | Shape data                                   |
+| ------------- | ---------------------------------------------- | -------------------------------------------- |
+| Examples      | menus, toolbars, selection frames, snap guides | a shape's `fill` / `stroke` / `fontColor`    |
+| Origin        | theme tokens in `constants/theme.ts`           | values saved in the document (`.jis.json`)   |
+| Follows theme | yes (automatically adapts to the VSCode theme) | no (data specified by the user) ※except auto |
 
-### `"auto"`（テーマ追従色）— 図形データの例外（issue #38）
+### `"auto"` (theme-following color) — an exception in shape data (issue #38)
 
-図形データの色には例外として sentinel 値 `"auto"` を許容する。`"auto"` は「具体色未指定 ＝
-テーマに従う」という曖昧さのない**データ上の意味**で、保存値がテーマ依存にならないため
-ポータビリティを壊さない。新規図形の `stroke` / `fontColor` の既定値はこの `"auto"`。
+As an exception, shape-data colors permit the sentinel value `"auto"`. `"auto"` carries the
+unambiguous **data-level meaning** of "no concrete color specified = follow the theme," and because
+the saved value does not become theme-dependent, it does not break portability. The default `stroke` /
+`fontColor` for new shapes is this `"auto"`.
 
-- **保存**: `.jis.json`・State には `"auto"` のまま保持する。Mapper では変換しない。
-- **解決**: 描画時に `presentations/objects/utils/resolveAutoColor.ts` が**ロール（役割）ごと**に
-  テーマ色へ解決する（後述）。
-- **明示色**: ユーザーがカラーピッカーで具体色を選ぶと、その時点で具体値として保存され、以後は
-  従来どおりテーマ非依存で表示される（後方互換）。
+- **Storage**: `.jis.json` and State retain `"auto"` as-is. The Mapper does not convert it.
+- **Resolution**: at render time, `presentations/objects/utils/resolveAutoColor.ts` resolves it to a
+  theme color **per role** (described below).
+- **Explicit color**: once the user picks a concrete color in the color picker, it is saved as a concrete
+  value at that point and thereafter displayed theme-independently as before (backward compatible).
 
-#### auto はロール（役割）ごとのテーマトークンへ解決する
+#### auto resolves to a theme token per role
 
-`"auto"` が「従うべき色」はフィールドの役割で決まる。解決は `resolveAutoColor(value, role)`
-（`presentations/objects/utils/resolveAutoColor.ts`）の **1 関数に集約**する。
+The color that `"auto"` "should follow" is determined by the field's role. Resolution is **consolidated
+into a single function**, `resolveAutoColor(value, role)` (`presentations/objects/utils/resolveAutoColor.ts`).
 
-| ロール           | 対象フィールド         | 解決先（テーマトークン）                                   |
-| ---------------- | ---------------------- | ---------------------------------------------------------- |
-| 前景（ink）      | `stroke` / `fontColor` | `theme.foreground`（`var(--vscode-foreground)`）           |
-| サーフェス（面） | `fill`                 | `theme.surface`（`var(--vscode-editorWidget-background)`） |
+| Role             | Target fields          | Resolves to (theme token)                                 |
+| ---------------- | ---------------------- | --------------------------------------------------------- |
+| Foreground (ink) | `stroke` / `fontColor` | `theme.foreground` (`var(--vscode-foreground)`)           |
+| Surface          | `fill`                 | `theme.surface` (`var(--vscode-editorWidget-background)`) |
 
-**単一ルール**: 「auto はロールのテーマトークンへ解決し、色は CSS で当てる」。`var(--vscode-*)` は
-SVG presentation 属性では解決されないため、stroke / fill / arrow の color も含め**色は属性では当てない**。
+**Single rule**: "auto resolves to the role's theme token, and color is applied via CSS." Because
+`var(--vscode-*)` is not resolved by SVG presentation attributes, **color is never applied via attributes**,
+including stroke / fill / arrow color.
 
-- 図形要素は emotion `styled`（`RectElement` 等）なので、解決済みの色を **`strokeColor` / `fillColor`
-  props で渡し、styled 定義側で CSS として補間**する。emotion はテンプレートに文字列補間するが、
-  補間する色・フォント値の CSS 安全性（インジェクション防御）は**外部入力の境界**（`parseCanvasText`
-  の二段検証 / クリップボードの state 検証）で担保済みのため、sink 側での無害化は行わない（原則 4）。
-- styled を持たない素の SVG 要素（描画プレビュー等の `<rect>` / アイコン）では inline `style` で当てる。
+- Since shape elements are emotion `styled` (`RectElement`, etc.), the resolved color is **passed via the
+  `strokeColor` / `fillColor` props and interpolated as CSS on the styled-definition side**. emotion
+  interpolates strings into the template, but the CSS safety (injection defense) of the interpolated color
+  and font values is already guaranteed at the **external-input boundary** (`parseCanvasText`'s two-stage
+  validation / clipboard state validation), so no sanitization is performed at the sink (Principle 4).
+- For plain SVG elements without styled (render previews' `<rect>`, icons, etc.), apply it via inline `style`.
 
-これにより解決値の種類も適用方法も全フィールドで一貫する。`currentColor` や `ContentGroup` への
-`color` 設定による暗黙解決には依存しない（以前あった「前景は currentColor、面は token」「属性 vs
-style」という 2 方式混在を解消）。
+This makes both the kind of resolved value and the method of applying it consistent across all fields.
+It does not rely on implicit resolution via `currentColor` or a `color` setting on `ContentGroup`
+(eliminating the previous coexistence of two schemes: "foreground uses currentColor, surface uses a token"
+and "attribute vs. style").
 
-- 「面＋前景」の組（fill:auto + fontColor:auto）は VSCode の surface↔foreground ペアと同じく
-  可読性が保たれる。`fill` の既定は `"transparent"`（塗りなし）のままで、`"auto"` は別オプション。
-- Sticky の `fontColor` は固定の色付き背景を持つため `"auto"` にせず `#000000` を据え置く。
-- UI クロームのカラープレビューアイコンは、図形データの解決（`resolveAutoColor`）とは層が異なり、
-  chrome の慣用どおり `currentColor`（chrome 前景）で auto を示す。
+- The "surface + foreground" pairing (fill:auto + fontColor:auto) preserves readability, just like VSCode's
+  surface↔foreground pair. The default for `fill` remains `"transparent"` (no fill), and `"auto"` is a
+  separate option.
+- Since Sticky has a fixed colored background, its `fontColor` is not set to `"auto"` and stays at `#000000`.
+- The color preview icon in the UI chrome is at a different layer from shape-data resolution
+  (`resolveAutoColor`); following chrome convention, it indicates auto with `currentColor` (the chrome foreground).
 
-`theme`（`constants/theme.ts`）は `--vscode-*` CSS 変数を参照しつつ、変数が無い環境
-（単体デモ・Storybook 等）向けにダーク基調のフォールバック値を持つ。これにより
-VSCode 上では利用者のテーマに馴染み、デモ環境ではダークテーマと同じ見た目になる。
+`theme` (`constants/theme.ts`) references `--vscode-*` CSS variables while also holding dark-based fallback
+values for environments where those variables are absent (standalone demos, Storybook, etc.). As a result,
+it blends into the user's theme in VSCode and looks like the dark theme in demo environments.
 
-### 細則
+### Details
 
-- presentational な「汎用」シェイプ（矢印・GroupIcon 等）は `theme` を直接 import しない。
-  図形データ色の auto 解決は描画層の `resolveAutoColor`（唯一の theme 結合点）に委ね、シェイプは
-  解決済みの色を props/`style` で受け取るだけにする。一方 ObjectMenu 専用のカラー系アイコン
-  （ColorPreviewIcon / BorderColorIcon 等）は UI クロームなので `theme` トークンの参照を許容する。
-- 透明（none）インジケータの市松は `theme.transparentChecker`（前景色を薄く重ねる）で表現し、
-  ライト / ダークで濃淡が自動反転するようにする。固定グレーは使わない。
-- 短命なアクセントオーバーレイ（スナップガイド等）は鮮やかな固定色でも両テーマで成立するため、
-  無理にテーマ化しない。色が衝突したときだけトークン化を検討する。
-  </content>
+- Presentational "generic" shapes (arrows, GroupIcon, etc.) do not import `theme` directly. Auto resolution
+  of shape-data colors is delegated to the rendering layer's `resolveAutoColor` (the single point of theme
+  coupling), and shapes merely receive the resolved color via props/`style`. On the other hand,
+  ObjectMenu-specific color icons (ColorPreviewIcon / BorderColorIcon, etc.) are UI chrome, so referencing
+  `theme` tokens is permitted.
+- The checkerboard of the transparent (none) indicator is expressed with `theme.transparentChecker`
+  (the foreground color lightly overlaid), so its shading automatically inverts between light and dark.
+  Do not use a fixed gray.
+- Short-lived accent overlays (snap guides, etc.) work in both themes even with a vivid fixed color, so do
+  not force them into the theme. Consider tokenizing only when a color conflict arises.

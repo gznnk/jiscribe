@@ -1,54 +1,59 @@
-# 外部同期・VSCode 連携
+> 🌐 日本語版: [07-external-sync.ja.md](./07-external-sync.ja.md)
 
-canvas は VSCode 拡張の Webview として動くとき、ホスト（拡張側）が持つ
-ファイル内容と双方向に同期する。ここでは「ホスト → キャンバス」の取り込みと、
-「キャンバス → ホスト」保存の折り返しで起きる競合の扱いを説明する。
+# External Sync / VSCode Integration
 
-## 取り込み：useSyncExternalDoc / SYNC_EXTERNAL
+When the canvas runs as a VSCode extension Webview, it synchronizes bidirectionally
+with the file contents held by the host (the extension side). This document explains
+how "host → canvas" ingestion works, and how conflicts that arise from the
+round-trip of "canvas → host" saves are handled.
 
-親（ホスト）から最新の `CanvasDoc` が Props で渡る。`useSyncExternalDoc`
-（`controllers/hooks/useSyncExternalDoc.ts`）がその変更を検知し、`canvasToState` で
-State に変換して `SYNC_EXTERNAL` を dispatch する。
+## Ingestion: useSyncExternalDoc / SYNC_EXTERNAL
 
-スキップ条件:
+The parent (host) passes the latest `CanvasDoc` in via Props. `useSyncExternalDoc`
+(`controllers/hooks/useSyncExternalDoc.ts`) detects that change, converts it to
+State with `canvasToState`, and dispatches `SYNC_EXTERNAL`.
 
-- **初回マウント**: reducer の初期化で同じ doc を使用済みなので skip
-  （dispatch すると冗長な履歴エントリが生まれる）。
-- **内容が同一の doc**: `isSameCanvasDocContent` で現在の `history.present` と比較し、
-  同一なら skip。進行中のジェスチャー中断・UI state クリア・無意味な履歴エントリを避ける。
+Skip conditions:
 
-取り込み前に `resetGestureState()` で進行中のジェスチャーを破棄する。
+- **Initial mount**: The reducer's initialization already used the same doc, so this is skipped
+  (dispatching here would produce a redundant history entry).
+- **Doc with identical content**: `isSameCanvasDocContent` compares against the current `history.present`,
+  and if they are identical the sync is skipped. This avoids aborting an in-progress gesture, clearing UI state, or creating a meaningless history entry.
 
-`SYNC_EXTERNAL` を受けた reducer 側の扱い（履歴境界として past を直接積み、
-選択・進行中操作をリセットし viewport のみ維持）は [状態更新フロー](./06-state-update-flow.md) を参照。
+Before ingestion, `resetGestureState()` discards any in-progress gesture.
 
-外部から入る doc は信頼できないため、本来は parser の二段検証を境界で通す
-（[データモデルと永続化](./03-data-model-and-persistence.md)、[設計思想](./01-design-philosophy.md) 原則 4）。
+For how the reducer handles `SYNC_EXTERNAL` (pushing `past` directly as a history boundary,
+resetting selection and in-progress operations while preserving only the viewport),
+see [State Update Flow](./06-state-update-flow.md).
 
-## 保存通知：useNotifySaveRequest
+Because docs coming from external sources cannot be trusted, they should ideally pass through
+the parser's two-stage validation at the boundary
+(see [Data Model and Persistence](./03-data-model-and-persistence.md) and [Design Philosophy](./01-design-philosophy.md), Principle 4).
 
-コミット（commit / undo / redo）で `saveVersion` が進むと、`useNotifySaveRequest`
-（`controllers/hooks/useNotifySaveRequest.ts`）が親へ `onCommit(doc, saveNonce)` を通知する。
-この effect は `saveVersion` のみに依存するので、`saveVersion` が増えた**まさにその render の
-state**（= 永続化すべき state）をクロージャで捕える。`onCommit` は ref 経由で呼び、
-親が毎 render 新しい関数を渡しても再発火しないようにしている。
+## Save Notification: useNotifySaveRequest
 
-## saveNonce による折り返し競合の回避（#29）
+When a commit (commit / undo / redo) advances `saveVersion`, `useNotifySaveRequest`
+(`controllers/hooks/useNotifySaveRequest.ts`) notifies the parent via `onCommit(doc, saveNonce)`.
+Because this effect depends only on `saveVersion`, it captures in a closure the **state of the very
+render in which `saveVersion` incremented** (i.e., the state that should be persisted). `onCommit` is
+invoked through a ref so that it does not re-fire even when the parent passes a new function on every render.
 
-問題: キャンバスが保存 → ホストがファイルを書き換え → その変更が `canvasDoc` として
-**自分自身にエコーバック**される。これを通常の外部変更として扱うと、自分が今行った操作が
-履歴境界として積み直され、UI state がリセットされてしまう。
+## Avoiding Round-Trip Conflicts with saveNonce (#29)
 
-対策: 保存時に `saveNonce` を発行して `onCommit` で渡し、ホストはそれをそのまま
-`SYNC_EXTERNAL` の `saveNonce` として返す。reducer は
+The problem: the canvas saves → the host rewrites the file → that change is **echoed back to the
+canvas itself** as `canvasDoc`. If this were treated as an ordinary external change, the operation
+the canvas just performed would be re-pushed as a history boundary, and the UI state would be reset.
 
-- `action.saveNonce === state.saveNonce`（自分の保存のエコーバック）
-  → オブジェクト参照だけ更新し、`past` / `future`（履歴）は変更しない。
-- 一致しない（外部からの本物の変更）
-  → 履歴境界として処理（past に積み、UI state リセット）。
+The solution: on save, issue a `saveNonce` and pass it via `onCommit`; the host returns it unchanged
+as the `saveNonce` of `SYNC_EXTERNAL`. The reducer then behaves as follows:
 
-これにより、自己保存の折り返しと外部からの実変更を区別できる。
+- `action.saveNonce === state.saveNonce` (echo-back of the canvas's own save)
+  → Update only the object references; leave `past` / `future` (the history) unchanged.
+- Not matching (a genuine external change)
+  → Process it as a history boundary (push onto `past`, reset UI state).
 
-> **既知の課題（#29）**: saveNonce が一巡（折り返し）するタイミングでの競合。
-> nonce の発行・突き合わせの境界ケースとして追跡中。
+This makes it possible to distinguish a self-save round-trip from a real external change.
+
+> **Known issue (#29)**: A conflict at the moment when the saveNonce completes a full round-trip.
+> Tracked as a boundary case of nonce issuance and matching.
 > </content>
