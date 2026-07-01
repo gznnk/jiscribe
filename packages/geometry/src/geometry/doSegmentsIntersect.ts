@@ -1,17 +1,5 @@
-﻿import type { Point } from "../types/Point";
-
-/**
- * Calculates the cross product of two 2D vectors.
- */
-const crossProduct = (p: Point, q: Point): number => p.x * q.y - p.y * q.x;
-
-/**
- * Subtracts two 2D points to create a vector.
- */
-const subtract = (p: Point, q: Point): Point => ({
-	x: p.x - q.x,
-	y: p.y - q.y,
-});
+import { doSegmentsIntersectByCoords } from "./doSegmentsIntersectByCoords";
+import type { Point } from "../types/Point";
 
 /**
  * Determines if two line segments intersect.
@@ -31,22 +19,15 @@ export const doSegmentsIntersect = (
 	q1: Point,
 	q2: Point,
 	inclusive = true,
-): boolean => {
-	const r = subtract(p2, p1);
-	const s = subtract(q2, q1);
-	const denominator = crossProduct(r, s);
-
-	if (denominator === 0) {
-		return false;
-	} // Parallel or colinear 竊・always non-intersecting
-
-	const qp = subtract(q1, p1);
-	const t = crossProduct(qp, s) / denominator;
-	const u = crossProduct(qp, r) / denominator;
-
-	if (inclusive) {
-		return t >= 0 && t <= 1 && u >= 0 && u <= 1;
-	}
-
-	return t > 0 && t < 1 && u > 0 && u < 1;
-};
+): boolean =>
+	doSegmentsIntersectByCoords(
+		p1.x,
+		p1.y,
+		p2.x,
+		p2.y,
+		q1.x,
+		q1.y,
+		q2.x,
+		q2.y,
+		inclusive,
+	);

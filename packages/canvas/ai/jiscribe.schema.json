@@ -684,6 +684,47 @@
 				"strokeWidth": { "$ref": "#/$defs/StrokeStyle/properties/strokeWidth" },
 				"strokeDashType": {
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+				},
+				"label": {
+					"description": "Optional text annotation drawn on the connector (an edge label such as \"Yes\"/\"No\"). A connector has NO top-level text; put the label here. Omit it for no label.",
+					"type": "object",
+					"required": ["text"],
+					"additionalProperties": false,
+					"properties": {
+						"text": {
+							"description": "Label text. Plain text only (no markdown). Multiple lines are allowed with \"\\n\".",
+							"type": "string"
+						},
+						"position": {
+							"description": "Where the label sits along the path, as a fraction of the path length from source (0) to target (1). Optional; defaults to 0.5 (midpoint).",
+							"type": "number",
+							"minimum": 0,
+							"maximum": 1
+						},
+						"offset": {
+							"description": "Signed perpendicular offset from the path in world units (left of the source→target direction is positive). Optional; defaults to 0.",
+							"type": "number"
+						},
+						"fontColor": { "$ref": "#/$defs/TextStyle/properties/fontColor" },
+						"fontSize": { "$ref": "#/$defs/TextStyle/properties/fontSize" },
+						"fontWeight": { "$ref": "#/$defs/TextStyle/properties/fontWeight" },
+						"fill": {
+							"description": "Label background color (CSS color, or \"auto\"). Omitted/\"auto\" uses the canvas background to mask the line behind the label (knockout). Use \"transparent\" to let the line show through.",
+							"$ref": "#/$defs/FillStyle/properties/fill"
+						},
+						"stroke": {
+							"description": "Label border color (CSS color, or \"auto\"). Only visible when strokeWidth > 0.",
+							"$ref": "#/$defs/StrokeStyle/properties/stroke"
+						},
+						"strokeWidth": {
+							"description": "Label border width in pixels. Default 0 (no border).",
+							"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
+						},
+						"strokeDashType": {
+							"description": "Label border line style: \"solid\" (default), \"dashed\", or \"dotted\". Only visible when strokeWidth > 0.",
+							"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+						}
+					}
 				}
 			},
 			"$comment": "A connector must have at least one owned endpoint. Both endpoints being free (no owner) is invalid — that is an ink/polyline, not a connector.",

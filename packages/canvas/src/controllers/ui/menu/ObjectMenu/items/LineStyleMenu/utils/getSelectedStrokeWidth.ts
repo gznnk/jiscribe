@@ -1,6 +1,6 @@
 import type { CanvasControllerState } from "../../../../../../../controllers/CanvasTypes";
 import { getEffectiveSelectedIds } from "../../../../../../../controllers/utils/getEffectiveSelectedIds";
-import { getFirstSelectedWithProp } from "../../../../../../../controllers/utils/getFirstSelectedWithProp";
+import { getFirstSelectedWithProp } from "../../../utils/getFirstSelectedWithProp";
 
 export const DEFAULT_STROKE_WIDTH = 2;
 

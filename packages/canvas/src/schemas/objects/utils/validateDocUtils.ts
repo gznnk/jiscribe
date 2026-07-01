@@ -37,7 +37,7 @@ export function validateRequiredNumber(
  * 任意の数値フィールドを検証する。存在する場合のみ number / 下限を検証し、
  * 未指定（キー無し・undefined）はエラーにしない。
  */
-function validateOptionalNumber(
+export function validateOptionalNumber(
 	o: Record<string, unknown>,
 	path: string,
 	key: string,

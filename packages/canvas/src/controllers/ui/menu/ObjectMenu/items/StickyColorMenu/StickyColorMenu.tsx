@@ -6,12 +6,12 @@ import {
 	ColorPickerContainer,
 	ColorSwatch,
 } from "./StickyColorMenuStyled";
-import { getFirstSelectedWithProp } from "../../../../../../controllers/utils/getFirstSelectedWithProp";
 import { ColorPreviewIcon } from "../../../../icons/ColorPreviewIcon";
 import { DropdownPanel } from "../../common/DropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
 import { MenuItemPositioner, ObjectMenuButton } from "../../ObjectMenuStyled";
 import type { MenuItemProps } from "../../ObjectMenuTypes";
+import { getFirstSelectedWithProp } from "../../utils/getFirstSelectedWithProp";
 
 const SECTION_ID = "sticky-color";
 

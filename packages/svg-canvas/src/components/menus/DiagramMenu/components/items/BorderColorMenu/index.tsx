@@ -1,1 +1,0 @@
-export { BorderColorMenu } from "./BorderColorMenu";

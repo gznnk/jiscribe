@@ -143,14 +143,6 @@ type KeyPoints = {
 type RectKeyPoints = KeyPoints;
 ```
 
-#### `EllipseKeyPoints`
-
-楕円のキーポイント。
-
-```typescript
-type EllipseKeyPoints = KeyPoints;
-```
-
 #### `FrameKeyPoints`
 
 フレームのキーポイント。

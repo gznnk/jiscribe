@@ -58,6 +58,34 @@ The saved format is `CanvasDoc` (`schemas/canvas/CanvasDoc.ts`).
 - Color fields (`stroke` / `fontColor` / `fill`) … In addition to a concrete CSS color, they may take the sentinel value `"auto"` (follow the theme). `"auto"` is resolved to the theme's foreground color at render time (see [Presentation and Theme](./08-presentation-and-theme.md)). The default `stroke` / `fontColor` for a new shape is `"auto"`.
 - For the full format specification, see `../ai/reference.md` and `../ai/jiscribe.schema.json`.
 
+### Text Model Asymmetry (a shape's `text` vs. a connector's `label`)
+
+The storage shape of the text-bearing fields is **intentionally asymmetric** between shapes and connectors.
+
+- **Shapes (rect / ellipse / diamond / sticky)** … hold `text` / `textAlign` / `fontColor` … **flat at the top level** (`features.text` composes `TextStyleDoc`).
+- **Connectors** … hold their annotation as a **single nested object**
+  `label: { text, position, offset, fontColor, fontSize, fontWeight, fill, stroke, strokeWidth, strokeDashType }`
+  (no `features.text`). The background `fill` and border `stroke` / `strokeWidth` / `strokeDashType` borrow the same vocabulary as shapes, but differ in that they are nested inside `label`.
+
+This difference does not reflect layer convenience but a **difference in role**. A shape's `text` is "the _body_ of that shape" (central, essentially the main actor, with in-box alignment). A connector's text is "an _annotation_ attached to an edge (edge label)" (optional, secondary, with no notion of alignment), and it additionally has **connector-specific placement axes**: `position` (a ratio along the route) and `offset` (perpendicular distance). Reusing a flat form would introduce distortions: (1) these connector-specific fields would mix in with the other keys and their ownership would become unreadable; (2) a short tag on a line would carry irrelevant `textAlign` / `verticalAlign` / `textType`. The judgment is that **different things may take different shapes** (forcing them to match would be "false consistency"). Even from the perspective of the AI that generates the JSON, this is consistent with the premise that each type has different capabilities (the capability table in `../ai/ai-guide.md`), so the cost of confusion is low.
+
+Guidance for when this asymmetry bothers you:
+
+- **The fix is to "raise," not "lower."** If you want symmetry, the right approach is not to flatten the connector (which revives the distortions above: specific fields floating loose, irrelevant fields attached), but to **align shapes to the `label` nesting as well**. Since the policy is that backward compatibility is unnecessary (we are the only users), this is technically feasible.
+- **But do not do it until a second reason appears.** Nesting shape text is a large-scale change that ripples across rect/ellipse/diamond/sticky, `TextOverlay`, the text editor, styling, and the validators as a whole, and all it buys right now is visual symmetry. Undertake it once a **second motivation** appears — a shape needing multiple text regions or badges, a label needing a different placement concept, etc. — at which point the rework cost is justified.
+- **Perfect symmetry is inherently unattainable.** Even if everything were nested, the key names would still **differ in meaning** — shape = body (`text`), connector = annotation (`label`) — so some asymmetry conceptually remains no matter what.
+
+**Nesting support in the styling UI (dot notation)**: The styling property-update plumbing
+(menu item → `MENU_PROPERTY_UPDATE` / `object-menu:set:` → `handlePropertyUpdate`) assumes
+top-level properties. Because the label's background and border (`label.fill` / `label.stroke` /
+`label.strokeWidth`) are nested, they **ride on this plumbing as-is using dot-notation property names**.
+Since both routes converge at the single point `handlePropertyUpdate`, only that point (the connector
+branch) detects the `label.` prefix and merges it into `connector.label` as a nested value. This is a
+pragmatic compromise to reuse the shared UI (`ColorPickerGrid` / `MenuSlider`) and the `commit`
+subtleties (live preview + a single history entry) without reimplementing them; it is not propagated
+across the entire flat plumbing. Adding a dedicated action is rejected because it would duplicate these
+commit subtleties.
+
 ## The Parser's Two-Stage Validation (Defense at the Boundary)
 
 For JSON strings coming from outside, `parseCanvasText` (`schemas/canvas/validators/`)

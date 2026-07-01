@@ -8,14 +8,14 @@ import { shapeFactoryRegistry } from "../../../../schemas/registry/ShapeFactoryR
 import { objectMapperRegistry } from "../../../../states/registry/ObjectMapperRegistry";
 import type { SnapFeedback } from "../../../CanvasTypes";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
+import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
 import type { GestureHandler } from "../../registry/GestureHandlerTypes";
-import { autoSelectParentGroups } from "../objects/utils/autoSelectParentGroups";
-import { createMultiSelectGroup } from "../objects/utils/createMultiSelectGroup";
 import {
 	SNAP_THRESHOLD_PX,
 	buildSnapFeedback,
 	findSnap,
-} from "../objects/utils/snap/findSnap";
+} from "../../utils/snap/findSnap";
+import { autoSelectParentGroups } from "../objects/utils/autoSelectParentGroups";
 
 /**
  * Handles events that occur on the canvas.

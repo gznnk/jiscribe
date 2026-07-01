@@ -5,22 +5,27 @@ import type {
 	Gesture,
 	GestureRecognizerConfig,
 } from "../GestureRecognizerTypes";
+import type * as RecognizerUtils from "../utils";
 
 // DOM レイアウト依存のユーティリティ（getSvgPoint / getHoveredElements など）は
 // node 環境では動かないため、順序ロジックの検証に必要な範囲で決定的なスタブに差し替える。
-vi.mock("../utils", () => ({
-	getSvgPoint: (_svg: unknown, clientX: number, clientY: number) => ({
-		x: clientX,
-		y: clientY,
-	}),
-	getKindAndId: () => ({ id: "obj-1", kind: "rect" }),
-	getHoveredElements: () => [],
-	getInputValue: () => undefined,
-	isGestureOptedOut: () => false,
-	shouldSkipPointerCapture: () => false,
-	detectEdgeProximity: () => ({ isNearEdge: false }),
-	calculateScrollDelta: () => ({ deltaX: 0, deltaY: 0 }),
-}));
+vi.mock("../utils", async (importActual) => {
+	const actual = await importActual<typeof RecognizerUtils>();
+	return {
+		...actual,
+		getSvgPoint: (_svg: unknown, clientX: number, clientY: number) => ({
+			x: clientX,
+			y: clientY,
+		}),
+		getKindAndId: () => ({ id: "obj-1", kind: "rect" }),
+		getHoveredElements: () => [],
+		getInputValue: () => undefined,
+		isGestureOptedOut: () => false,
+		shouldSkipPointerCapture: () => false,
+		detectEdgeProximity: () => ({ isNearEdge: false }),
+		calculateScrollDelta: () => ({ deltaX: 0, deltaY: 0 }),
+	};
+});
 
 /** 保留中の RAF コールバックを手動で flush できるようにする */
 let rafCallbacks: FrameRequestCallback[] = [];

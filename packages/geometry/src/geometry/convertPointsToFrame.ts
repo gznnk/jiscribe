@@ -1,7 +1,6 @@
 import type { Point } from "../types/Point";
 import type { TransformedFrame } from "../types/TransformedFrame";
 
-// TODO: いらなくなるかも
 /**
  * Converts an array of Points to a TransformedFrame (center based).
  * The frame will encompass all points.

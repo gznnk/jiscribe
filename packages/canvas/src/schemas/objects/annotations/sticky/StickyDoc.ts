@@ -1,5 +1,5 @@
+import type { CreateObjectType } from "../../types/CreateObjectType";
 import type { ObjectFeatures } from "../../types/ObjectFeatures";
-import type { CreateObjectType } from "../../utils/CreateObjectType";
 
 export const StickyFeatures = {
 	type: "sticky",

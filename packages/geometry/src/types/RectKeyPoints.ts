@@ -1,7 +1,0 @@
-import type { KeyPoints } from "./KeyPoints";
-
-/**
- * Defines the coordinates for key points of a rectangle.
- * Includes corner points and mid-points for each side to support manipulation and connection.
- */
-export type RectKeyPoints = KeyPoints;

@@ -1,4 +1,4 @@
-import { createMultiSelectGroup } from "../../gestures/handlers/objects/utils/createMultiSelectGroup";
+import { createMultiSelectGroup } from "../../utils/createMultiSelectGroup";
 import type { Command } from "../CommandTypes";
 
 export const SelectAllCommand: Command = {

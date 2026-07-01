@@ -15,7 +15,7 @@ import {
 	SNAP_THRESHOLD_PX,
 	buildSnapFeedback,
 	findSnap,
-} from "../objects/utils/snap/findSnap";
+} from "../../utils/snap/findSnap";
 
 /**
  * targetId からプリセット ID を抽出する。

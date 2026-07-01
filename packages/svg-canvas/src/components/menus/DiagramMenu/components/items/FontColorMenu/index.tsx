@@ -1,1 +1,0 @@
-export { FontColorMenu } from "./FontColorMenu";

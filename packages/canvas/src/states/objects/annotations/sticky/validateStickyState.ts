@@ -1,26 +1,7 @@
-import { isObject } from "@workspace/basic-validators";
-
+import { StickyFeatures } from "../../../../schemas/objects/annotations/sticky/StickyDoc";
 import type { ObjectStateValidateFn } from "../../../registry/ObjectStateValidatorRegistry";
-import {
-	hasValidIdAndType,
-	isValidFillStyleState,
-	isValidFrameState,
-	isValidTextStyleState,
-	isValidTransformState,
-	type StateRecord,
-} from "../../utils/validateStateUtils";
+import { createFrameStateValidator } from "../../utils/createFrameStateValidator";
 
-/** StickyState（Frame + transform + fill + text）を検証する。 */
-export const isValidStickyState: ObjectStateValidateFn = (value) => {
-	if (!isObject(value)) {
-		return false;
-	}
-	const o = value as StateRecord;
-	return (
-		hasValidIdAndType(o, "sticky") &&
-		isValidFrameState(o) &&
-		isValidTransformState(o) &&
-		isValidFillStyleState(o) &&
-		isValidTextStyleState(o)
-	);
-};
+/** StickyState を検証する（Frame 系共通ロジックを features から生成）。 */
+export const isValidStickyState: ObjectStateValidateFn =
+	createFrameStateValidator(StickyFeatures);

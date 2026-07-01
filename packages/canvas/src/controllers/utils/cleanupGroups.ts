@@ -1,7 +1,7 @@
+import { updateGroupBounds } from "./updateGroupBounds";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { GroupState } from "../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../CanvasTypes";
-import { updateGroupBounds } from "../ui/utils/updateGroupBounds";
 
 /**
  * グループのクリーンアップを行う

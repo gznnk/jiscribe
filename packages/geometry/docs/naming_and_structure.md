@@ -14,7 +14,7 @@
   - `calcBoundingBox(points)` - 点集合のバウンディングボックスを計算します。
   - `calcDistance(p1, p2)` - 2点間の距離を計算します。
   - `calcRotatedPoint(point, center, angle)` - 回転後の点の座標を計算します。
-  - `calcCloserPoint(ref, p1, p2)` - 基準点に近い方の点を計算（選択）します。
+  - `calcManhattanDistance(p1, p2)` - 2点間のマンハッタン距離を計算します。
 
 ### 2. 生成関数 (`create...`)
 

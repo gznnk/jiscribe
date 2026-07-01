@@ -2,7 +2,7 @@ import type { Frame } from "@workspace/geometry";
 import type { Prettify } from "@workspace/utility-types/src/Prettify";
 
 import type { GroupFeatures } from "../../../../schemas/objects/primitives/group/GroupDoc";
-import type { CreateObjectState } from "../../utils/CreateObjectState";
+import type { CreateObjectState } from "../../types/CreateObjectState";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare const GroupStateBrand: unique symbol;

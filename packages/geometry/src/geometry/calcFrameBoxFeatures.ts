@@ -1,33 +1,20 @@
-import { calcRectKeyPoints } from "./calcRectKeyPoints";
+import { calcBoundingBox } from "./calcBoundingBox";
 import type { BoxFeatures } from "../types/BoxFeatures";
 import type { TransformedFrame } from "../types/TransformedFrame";
 
-// TODO: この関数は calcBoundingBox と似ているので、統合を検討すること
 /**
  * Calculates the bounding box features of a transformed frame.
  * Takes into account rotation and scaling.
+ *
+ * `BoxFeatures` は `calcBoundingBox` が返す軸並行バウンディングボックスに、
+ * center と四隅（いずれも AABB から導出される点）を加えたもの。AABB 算出は
+ * calcBoundingBox に委ね、ここではその拡張だけを担う。
  *
  * @param frame - Transformed frame shape parameters
  * @returns The bounding box features
  */
 export const calcFrameBoxFeatures = (frame: TransformedFrame): BoxFeatures => {
-	const { cx, cy, width, height, rotation, scaleX, scaleY } = frame;
-	const rectGeometry = {
-		x: cx - width / 2,
-		y: cy - height / 2,
-		width,
-		height,
-		rotation,
-		scaleX,
-		scaleY,
-	};
-	const { topLeft, bottomLeft, topRight, bottomRight } =
-		calcRectKeyPoints(rectGeometry);
-
-	const left = Math.min(topLeft.x, bottomLeft.x, topRight.x, bottomRight.x);
-	const top = Math.min(topLeft.y, bottomLeft.y, topRight.y, bottomRight.y);
-	const right = Math.max(topLeft.x, bottomLeft.x, topRight.x, bottomRight.x);
-	const bottom = Math.max(topLeft.y, bottomLeft.y, topRight.y, bottomRight.y);
+	const { top, left, right, bottom } = calcBoundingBox(frame);
 
 	return {
 		top,

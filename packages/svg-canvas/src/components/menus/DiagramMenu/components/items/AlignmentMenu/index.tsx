@@ -1,1 +1,0 @@
-export { AlignmentMenu } from "./AlignmentMenu";

@@ -1,1 +1,0 @@
-export { MidpointHandles } from "./MidpointHandles";
