@@ -9,7 +9,7 @@ import {
 	type StateRecord,
 } from "../../utils/validateStateUtils";
 
-/** PolylineState（Poly + stroke + 矢印端）を検証する。 */
+/** Validates PolylineState (Poly + stroke + arrow endpoints). */
 export const isValidPolylineState: ObjectStateValidateFn = (value) => {
 	if (!isObject(value)) {
 		return false;

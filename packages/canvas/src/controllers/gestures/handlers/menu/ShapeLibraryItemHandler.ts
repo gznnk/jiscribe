@@ -18,14 +18,14 @@ import {
 } from "../../utils/snap/findSnap";
 
 /**
- * targetId からプリセット ID を抽出する。
- * フォーマット: "menu-item:<presetId>"
+ * Extracts the preset ID from a targetId.
+ * Format: "menu-item:<presetId>"
  */
 const parsePresetId = (targetId: string): string => targetId.split(":")[1];
 
 /**
- * プリセットからゴースト図形の半サイズを返す。
- * 図形ごとの ShapeFactory に委譲する（型別の分岐を持たない）。
+ * Returns the half-size of the ghost shape for a preset.
+ * Delegates to each shape's ShapeFactory (no per-type branching here).
  */
 const calcShapeDimensions = (
 	preset: ShapePreset,
@@ -38,11 +38,11 @@ const calcShapeDimensions = (
 };
 
 /**
- * プリセットに従って図形を state に追加し、新しい CanvasControllerState を返す。
+ * Adds a shape to the state according to the preset and returns a new CanvasControllerState.
  *
- * オブジェクト追加は常に doc を変更するため commitVersion を増分する。
- * これにより click 経由（中央配置）でも履歴記録・保存が行われる。
- * dragEnd 経由では handleGesture が同値で上書きするため二重増分にはならない。
+ * Adding an object always modifies the doc, so commitVersion is incremented.
+ * This ensures history recording and saving happen even via click (center placement).
+ * Via dragEnd, handleGesture overwrites with the same value, so there is no double increment.
  */
 const addObjectToState = (
 	state: CanvasControllerState,
@@ -69,8 +69,8 @@ const addObjectToState = (
 };
 
 /**
- * ShapeLibrary アイテムのジェスチャーハンドラー。
- * ShapeLibrary からのドラッグ（エッジスクロール対応）と押下による中央配置を処理する。
+ * Gesture handler for ShapeLibrary items.
+ * Handles dragging from the ShapeLibrary (with edge scrolling) and center placement on press.
  */
 export const ShapeLibraryItemHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {
@@ -80,7 +80,7 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 	handle(state, event) {
 		let nextState = state;
 
-		// メニューアイテム上の押下でコンテキストメニューを閉じる（押下自体は配置・描画を行わない）
+		// Pressing on a menu item closes the context menu (the press itself does not place or draw)
 		if (event.type === "pressed") {
 			if (event.button === 0) {
 				nextState = { ...nextState, contextMenuPosition: null };
@@ -99,8 +99,8 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 
 		switch (event.type) {
 			case "click": {
-				// bounds 描画に対応しない図形（sticky / polygon）はビューポート中央に配置、
-				// 対応する図形（rect / ellipse / polyline）は描画モードをトグルする
+				// Shapes that don't support bounds drawing (sticky / polygon) are placed at the viewport center;
+				// shapes that do (rect / ellipse / polyline) toggle drawing mode
 				if (!shapeFactoryRegistry.supportsBoundsDrawing(preset.objectType)) {
 					const { minX, minY, width, height, zoom } = state.viewport;
 					const centerX = minX + width / zoom / 2;
@@ -109,7 +109,7 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 						x: centerX,
 						y: centerY,
 					});
-					// 描画モード中に描画非対応の図形を押下した場合は描画モードをクリアする
+					// If a non-drawable shape is pressed while in drawing mode, clear drawing mode
 					return { ...placed, shapeDrawing: null };
 				}
 
@@ -119,7 +119,7 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 					return { ...state, shapeDrawing: null };
 				}
 
-				// 描画モード ON: テキスト編集をコミットし、選択状態を解除する
+				// Drawing mode ON: commit any text edit and clear the selection
 				const committed = commitTextEditIfNeeded(state);
 				return {
 					...committed,
@@ -132,8 +132,8 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 			}
 
 			case "dragStart": {
-				// テキスト編集をコミットし、選択状態を解除してからD&Dを開始する
-				// D&D 開始時は（図形の種類を問わず）描画モードをクリアする
+				// Commit any text edit and clear the selection before starting drag-and-drop
+				// On drag-and-drop start, clear drawing mode (regardless of shape type)
 				const committed = commitTextEditIfNeeded(state);
 				return {
 					...committed,
@@ -175,7 +175,7 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 				};
 
 				const zoom = state.viewport.zoom;
-				// 中央（中点）もドラッグ側エッジ値に含め、中央↔中央 / 中央↔エッジ を吸着可能にする
+				// Include the center (midpoint) among the drag-side edge values so center↔center / center↔edge can snap
 				const rawCenterX = (rawBBox.left + rawBBox.right) / 2;
 				const rawCenterY = (rawBBox.top + rawBBox.bottom) / 2;
 				const result = findSnap(
@@ -211,7 +211,7 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 			}
 
 			case "dragEnd": {
-				// 最後にスナップ済みの ghostPosition を配置座標として使用する
+				// Use the last snapped ghostPosition as the placement coordinate
 				const drag = state.shapeLibraryDrag;
 				if (!drag) {
 					return state;

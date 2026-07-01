@@ -7,9 +7,10 @@ import { canvasReducer } from "../reducer/canvasReducer";
 import { createInitialControllerState } from "../reducer/createInitialControllerState";
 
 /**
- * Canvas の状態管理用 reducer を初期 state の構築込みでセットアップするカスタムフック
+ * Custom hook that sets up the canvas state-management reducer, including
+ * construction of the initial state.
  *
- * @param canvasDoc - 初期 state の構築に使う CanvasDoc（マウント時のみ参照される）
+ * @param canvasDoc - The CanvasDoc used to build the initial state (only read at mount time)
  */
 export const useCanvasReducer = (
 	canvasDoc: CanvasDoc,

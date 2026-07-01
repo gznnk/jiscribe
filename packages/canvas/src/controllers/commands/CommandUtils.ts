@@ -1,6 +1,6 @@
 import type { KeyBinding, PlatformKeyBindings } from "./CommandTypes";
 
-// User-Agent Client Hints API の型定義（実験的API）
+// Type definitions for the User-Agent Client Hints API (experimental API)
 interface NavigatorUAData {
 	readonly platform: string;
 	readonly mobile: boolean;
@@ -11,12 +11,12 @@ interface NavigatorWithUserAgentData extends Navigator {
 }
 
 /**
- * 現在のプラットフォームを判定
- * User-Agent Client Hints API（推奨）を優先的に使用し、
- * サポートされていない場合は navigator.userAgent にフォールバック
+ * Determines the current platform.
+ * Prefers the User-Agent Client Hints API (recommended) and falls back to
+ * navigator.userAgent when it is not supported.
  */
 export const getPlatform = (): "mac" | "win" => {
-	// User-Agent Client Hints API（Chromium系ブラウザでサポート）
+	// User-Agent Client Hints API (supported in Chromium-based browsers)
 	const nav = navigator as NavigatorWithUserAgentData;
 	if (nav.userAgentData?.platform) {
 		return nav.userAgentData.platform.toLowerCase().includes("mac")
@@ -24,14 +24,13 @@ export const getPlatform = (): "mac" | "win" => {
 			: "win";
 	}
 
-	// フォールバック: navigator.userAgent で判定（Mac / iPhone / iPad を検出）
+	// Fallback: determine via navigator.userAgent (detects Mac / iPhone / iPad)
 	return /mac|iphone|ipad|ipod/i.test(navigator.userAgent) ? "mac" : "win";
 };
 
 /**
- * プラットフォームに応じたショートカット配列を取得
- * 現在のプラットフォーム用のショートカットが定義されていればそれを返し、
- * なければデフォルトを返す
+ * Gets the shortcut array for the current platform.
+ * Returns the shortcuts defined for the current platform if present, otherwise the default.
  */
 export const getPlatformShortcuts = (
 	bindings: PlatformKeyBindings,
@@ -40,7 +39,7 @@ export const getPlatformShortcuts = (
 	return bindings[platform] ?? bindings.default;
 };
 
-/** event.code → 表示文字列のマッピング */
+/** Mapping from event.code to display string */
 const CODE_DISPLAY_MAP: Record<string, string> = {
 	KeyA: "A",
 	KeyB: "B",
@@ -102,7 +101,7 @@ const CODE_DISPLAY_MAP: Record<string, string> = {
 };
 
 /**
- * KeyBinding を人間が読みやすい文字列に変換
+ * Converts a KeyBinding into a human-readable string.
  * @example formatShortcut({ code: "KeyA", meta: true }) => "⌘A" (Mac)
  * @example formatShortcut({ code: "KeyA", ctrl: true }) => "Ctrl+A" (Windows)
  */
@@ -133,8 +132,8 @@ export const formatShortcut = (binding: KeyBinding): string => {
 };
 
 /**
- * KeyBinding を構成キーごとのトークン配列に分割
- * ショートカット一覧などで各キーを個別の <kbd> チップとして描画する用途に使う
+ * Splits a KeyBinding into an array of tokens, one per constituent key.
+ * Used to render each key as a separate <kbd> chip, e.g. in a shortcuts list.
  * @example formatShortcutTokens({ code: "KeyZ", ctrl: true }) => ["Ctrl", "Z"] (Windows)
  * @example formatShortcutTokens({ code: "KeyZ", meta: true }) => ["⌘", "Z"] (Mac)
  */

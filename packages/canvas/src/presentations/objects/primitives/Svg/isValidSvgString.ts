@@ -1,8 +1,8 @@
 import { isString } from "@workspace/basic-validators";
 
 /**
- * 文字列が（パース可能で）ルートが <svg> な有効な SVG かを判定する。
- * サニタイズ後の文字列に対して使い、不正なら呼び出し側でエラーアイコンへ差し替える。
+ * Determines whether a string is valid SVG (parseable and rooted at <svg>).
+ * Used on the sanitized string; if invalid, the caller swaps in an error icon.
  */
 export const isValidSvgString = (svgString: string): boolean => {
 	if (!isString(svgString) || svgString.length === 0) {

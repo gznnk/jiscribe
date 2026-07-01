@@ -5,19 +5,31 @@ import { isPoint } from "@workspace/geometry";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { objectStateValidatorRegistry } from "../../../states/registry/ObjectStateValidatorRegistry";
 
+/**
+ * Serialized payload written to and read from the system clipboard on copy/paste.
+ * Carries a self-contained set of top-level elements plus their descendants, keyed by id,
+ * along with their z-order and the copy-time center used to position the paste.
+ */
 export type ClipboardData = {
 	__type: "jiscribe-canvas-clipboard";
 	version: 1;
 	objects: Record<string, ObjectState>;
 	/**
-	 * コピーしたトップレベル要素（オブジェクト + コネクター）を z-order（背面→前面）で
-	 * 並べた ID 配列。コネクターも独立配列ではなくここに混在させる（state の rootIds と同じ表現）。
-	 * ペースト時はこの順で前面へ積み、コピー集合の相対的な重なり順を保つ。
+	 * IDs of the copied top-level elements (objects + connectors), ordered by z-order
+	 * (back → front). Connectors are mixed in here rather than kept in a separate array
+	 * (same representation as state's rootIds).
+	 * On paste, elements are stacked toward the front in this order, preserving the
+	 * relative stacking order of the copied set.
 	 */
 	rootIds: string[];
 	center: Point;
 };
 
+/**
+ * Type guard for {@link ClipboardData}. Treats the value as untrusted input and validates
+ * type, version, per-object schema, key↔id consistency, referential self-containment, and
+ * acyclicity of group childIds before accepting it.
+ */
 export const isClipboardData = (value: unknown): value is ClipboardData => {
 	if (!isObject(value)) {
 		return false;
@@ -49,14 +61,14 @@ export const isClipboardData = (value: unknown): value is ClipboardData => {
 		if (!isString(o.type)) {
 			return false;
 		}
-		// 型別の厳格検証はレジストリへ委譲する（id / 各種フィールド・CSS 安全性を含む）。
-		// 未登録の型は拒否される。レジストリは initializeObjectRegistry() で初期化される。
+		// Strict per-type validation is delegated to the registry (covers id / various fields / CSS safety).
+		// Unregistered types are rejected. The registry is initialized via initializeObjectRegistry().
 		if (!objectStateValidatorRegistry.validate(o.type, o)) {
 			return false;
 		}
-		// `objects` は id をキーとするマップ（CopyCommand）。childIds / endpoint owner /
-		// rootIds はオブジェクト id で参照を解決するため、キーと id が一致していなければ
-		// 自己完結性（後述）が成立しない。改竄でキー≠id にされたデータをここで弾く。
+		// `objects` is a map keyed by id (CopyCommand). childIds / endpoint owner /
+		// rootIds resolve references by object id, so self-containment (below) does not hold
+		// unless the key matches the id. Reject tampered data where key ≠ id here.
 		if (o.id !== key) {
 			return false;
 		}
@@ -67,20 +79,20 @@ export const isClipboardData = (value: unknown): value is ClipboardData => {
 		return false;
 	}
 
-	// 参照整合性（自己完結性）: クリップボードは untrusted 入力（任意アプリが書ける）。
-	// rootIds と同様に、group の childIds・connector endpoint の owner.id が `objects` の
-	// キー集合に閉じていることを検証する。これを通すと cloneObjects の id リマップ
-	// フォールバック（`?? id`）が untrusted 経路で発火し、貼り付け先キャンバスの
-	// 既存オブジェクトを新グループの子・接続先として取り込む参照ハイジャックになりうる。
+	// Referential integrity (self-containment): the clipboard is untrusted input (any app can write it).
+	// As with rootIds, verify that group childIds and connector endpoint owner.id are closed within
+	// the `objects` key set. Letting these through could trigger cloneObjects' id-remap fallback
+	// (`?? id`) on the untrusted path, causing a reference hijack that pulls existing objects on the
+	// destination canvas in as children of a new group or as connection targets.
 	if (!isSelfContained(objects, objectKeys)) {
 		return false;
 	}
 
-	// 非循環性: 循環する childIds（自己参照・相互参照）は untrusted クリップボードから
-	// 注入されると、再帰消費者（ObjectsRenderer の描画、createMultiSelectGroup の bounds
-	// 計算、hasSelectedDescendants の選択判定など）で無限再帰 → スタックオーバーフロー
-	// → タブクラッシュ（DoS）を引き起こす。ガードは外部境界でのみ行う方針のため、
-	// ここで循環を弾いて以降の消費者が非循環を前提にできるようにする。
+	// Acyclicity: cyclic childIds (self-references / mutual references) injected from an untrusted
+	// clipboard cause infinite recursion in recursive consumers (ObjectsRenderer's rendering,
+	// createMultiSelectGroup's bounds computation, hasSelectedDescendants' selection check, etc.),
+	// leading to stack overflow → tab crash (DoS). Since guarding is done only at the external
+	// boundary, reject cycles here so downstream consumers can assume acyclicity.
 	if (!isAcyclicChildIds(objects)) {
 		return false;
 	}
@@ -89,9 +101,10 @@ export const isClipboardData = (value: unknown): value is ClipboardData => {
 };
 
 /**
- * group の childIds と connector endpoint の owner.id が、すべて `objects` の
- * キー集合（= 自分自身が含むオブジェクト）に閉じているかを検証する。
- * 各オブジェクトの型別妥当性は呼び出し前に検証済みのため、ここでは参照先の存在のみ見る。
+ * Verifies that all group childIds and connector endpoint owner.id values are closed
+ * within the `objects` key set (= the objects it itself contains).
+ * Per-type validity of each object is already verified before this call, so here we only
+ * check the existence of referenced targets.
  */
 function isSelfContained(
 	objects: Record<string, unknown>,
@@ -121,10 +134,11 @@ function isSelfContained(
 }
 
 /**
- * group の childIds が成すグラフが非循環（DAG）であることを検証する。
- * 参照先の存在は isSelfContained で検証済みのため、ここでは循環の有無のみ見る。
- * DFS で探索中（VISITING）のノードへ再到達したら循環とみなす。各ノードは確定
- * （VISITED）後に再訪しないため、検証関数自体は循環データでも有限回で停止する。
+ * Verifies that the graph formed by group childIds is acyclic (a DAG).
+ * Existence of referenced targets is already verified by isSelfContained, so here we only
+ * check for cycles. Reaching a node that is currently being visited (VISITING) again is treated
+ * as a cycle. Since each node is not revisited after being finalized (VISITED), the validation
+ * function itself terminates in a finite number of steps even on cyclic data.
  */
 function isAcyclicChildIds(objects: Record<string, unknown>): boolean {
 	const VISITING = 1;
@@ -137,11 +151,11 @@ function isAcyclicChildIds(objects: Record<string, unknown>): boolean {
 			return true;
 		}
 		if (state === VISITING) {
-			return false; // 探索中のノードへ再到達 = 循環
+			return false; // reached a node still being visited = cycle
 		}
 
 		const obj = objects[id] as Record<string, unknown> | undefined;
-		// group 以外（または未知 id）は子を持たない葉として扱う
+		// non-group (or unknown id) is treated as a leaf with no children
 		if (!obj || obj.type !== "group") {
 			states.set(id, VISITED);
 			return true;

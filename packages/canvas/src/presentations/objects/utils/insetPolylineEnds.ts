@@ -1,18 +1,21 @@
 import type { Point } from "@workspace/geometry";
 
 /**
- * ポリライン/線分の両端を、矢印の根元に合わせて内側へ短縮する。
+ * Shrink both ends of a polyline/line segment inward to meet the base of the arrowhead.
  *
- * 先頭点は2番目の点へ向けて `startInset`、末尾点は末尾から2番目の点へ向けて
- * `endInset` だけ移動した新しい点列を返す。各 inset は絶対距離（既にスケール済み）で渡す。
- * 矢印が無い／短縮不要な端には 0 を渡す。
+ * Returns a new point list where the first point is moved by `startInset` toward the
+ * second point, and the last point is moved by `endInset` toward the second-to-last
+ * point. Each inset is passed as an absolute distance (already scaled). Pass 0 for ends
+ * that have no arrowhead or need no shrinking.
  *
- * これにより中空矢印が `fill="none"` でも線が中空部を貫通せず、また線が太いときに
- * 矢印の先端から線幅分はみ出すのも防げる。矢印自体は元の端点（先端）に描画するため、
- * 見た目上の端点位置は変わらない。
+ * This keeps the line from passing through the hollow of a hollow arrowhead even when
+ * `fill="none"`, and prevents the line from sticking out past the arrow tip by the line
+ * width when the stroke is thick. The arrowhead itself is drawn at the original endpoint
+ * (tip), so the visible endpoint position does not change.
  *
- * 退行（線分の反転）を防ぐため、移動量は対象セグメント長を超えないようクランプする。
- * 2点のみで両端に inset がある場合は、合計がセグメント長を超えないよう比例配分する。
+ * To prevent degeneration (segment reversal), the move distance is clamped so it does not
+ * exceed the target segment length. When there are only two points and both ends are inset,
+ * the total is distributed proportionally so it does not exceed the segment length.
  */
 export const insetPolylineEnds = (
 	points: readonly Point[],
@@ -29,7 +32,7 @@ export const insetPolylineEnds = (
 
 	const lastIdx = result.length - 1;
 
-	// 2点のみで両端を短縮する場合は同一セグメントを分け合うため、合計をクランプする。
+	// When shrinking both ends of a two-point segment, they share the same segment, so clamp the total.
 	if (result.length === 2) {
 		const segmentLength = Math.hypot(
 			result[1].x - result[0].x,
@@ -52,8 +55,8 @@ export const insetPolylineEnds = (
 };
 
 /**
- * `point` を `toward` 方向へ `distance` だけ移動する（in-place）。
- * 移動量はセグメント長を超えないようクランプする。
+ * Move `point` toward `toward` by `distance` (in-place).
+ * The move distance is clamped so it does not exceed the segment length.
  */
 const movePointToward = (
 	point: { x: number; y: number },

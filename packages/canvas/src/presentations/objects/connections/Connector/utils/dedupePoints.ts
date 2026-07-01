@@ -1,18 +1,20 @@
 import type { Point } from "@workspace/geometry";
 
-/** これより近い連続点どうしは同一とみなして畳む距離（px）。 */
+/** Consecutive points closer than this distance (px) are treated as identical and collapsed. */
 const COINCIDENT_EPSILON = 0.5;
 
 /**
- * 連続するほぼ同一の点を畳んだ新しい点列を返す。
+ * Returns a new point list with consecutive nearly-identical points collapsed.
  *
- * 折れ線コネクターでは、陳腐な経由点（旧バージョンが書き込んだ端点座標など）が
- * 端点と重なることがある。そのまま描くと長さ 0 のセグメントが生まれ、端の矢印角度が
- * 退化してしまう。直前の点との距離が `COINCIDENT_EPSILON` 以下の点は捨て、実質的な
- * 折れ線（重なりのケースでは直線）へ戻す。
+ * In polyline connectors, stale waypoints (such as endpoint coordinates written by
+ * an older version) can overlap an endpoint. Drawing them as-is produces zero-length
+ * segments and degenerates the arrow angle at the end. Points within `COINCIDENT_EPSILON`
+ * of the previous point are dropped, restoring the effective polyline (a straight line
+ * in the overlapping case).
  *
- * 直前の点とだけ比較するため、離れたあと再び同じ座標へ戻る点は畳まれず残る。
- * 入力は変更せず、各点も新しいオブジェクトとして複製して返す。
+ * Because only the immediately preceding point is compared, a point that moves away and
+ * later returns to the same coordinate is not collapsed and remains.
+ * The input is not mutated; each point is returned as a freshly cloned object.
  */
 export const dedupePoints = (points: readonly Point[]): Point[] => {
 	const result: Point[] = [];

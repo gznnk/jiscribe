@@ -2,9 +2,9 @@ import { canvasToState } from "../../../states/canvas/CanvasMapper";
 import type { Command } from "../CommandTypes";
 
 /**
- * Redo コマンド
- * ショートカット: Ctrl/Cmd+Shift+Z または Ctrl/Cmd+Y
- * 履歴から次の状態を復元する
+ * Redo command.
+ * Shortcut: Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y
+ * Restores the next state from history.
  */
 export const RedoCommand: Command = {
 	id: "redo",
@@ -27,14 +27,14 @@ export const RedoCommand: Command = {
 	},
 
 	canExecute: (state) => {
-		// ドラッグ中、テキスト編集中は実行不可
+		// Not executable while dragging or editing text
 		if (state.eventStartSnapshot !== null) {
 			return false;
 		}
 		if (state.textEditState !== null) {
 			return false;
 		}
-		// 履歴がない場合は実行不可
+		// Not executable when there is no history
 		return state.history.future.length > 0;
 	},
 
@@ -57,7 +57,7 @@ export const RedoCommand: Command = {
 			commitVersion: state.commitVersion, // Don't update - this is history restoration, not a new commit
 			saveVersion: state.saveVersion + 1,
 			saveNonce: crypto.randomUUID(),
-			historyCoalesce: { recorded: null, pending: null }, // 履歴ナビゲーションは集約境界
+			historyCoalesce: { recorded: null, pending: null }, // History navigation is a coalescing boundary
 			contextMenuPosition: null,
 			shapeLibraryDrag: null,
 			areaSelection: null,

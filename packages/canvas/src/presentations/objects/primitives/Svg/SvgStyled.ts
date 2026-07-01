@@ -1,11 +1,11 @@
 import styled from "@emotion/styled";
 
-/** 注入された SVG 内容を保持するグループ。中身はヒットテスト対象にしない。 */
+/** Group holding the injected SVG content. Its contents are excluded from hit testing. */
 export const SvgContentGroup = styled.g`
 	pointer-events: none;
 `;
 
-/** ポインタイベントを受けるための透明な矩形。 */
+/** Transparent rectangle that receives pointer events. */
 export const SvgHitRect = styled.rect`
 	fill: transparent;
 	pointer-events: auto;

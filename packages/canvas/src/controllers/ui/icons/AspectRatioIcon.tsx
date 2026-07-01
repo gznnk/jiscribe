@@ -8,8 +8,8 @@ type AspectRatioIconProps = {
 };
 
 /**
- * アスペクト比アイコン。
- * 矩形と対角の両端矢印で「比率維持」を示す。
+ * Aspect ratio icon.
+ * Indicates "keep ratio" with a rectangle and a diagonal double-headed arrow.
  */
 const AspectRatioIconComponent: React.FC<AspectRatioIconProps> = ({
 	width = 22,

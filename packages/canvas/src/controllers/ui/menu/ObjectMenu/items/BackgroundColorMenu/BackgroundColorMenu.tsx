@@ -27,8 +27,8 @@ const getSelectedFillColor = (state: CanvasControllerState): string => {
 };
 
 /**
- * 背景色メニュー。
- * 選択中オブジェクトの fill プロパティをカラーピッカーで変更する。
+ * Background color menu.
+ * Changes the fill property of the selected object via a color picker.
  */
 const BackgroundColorMenuComponent: React.FC<BackgroundColorMenuProps> = ({
 	canvasState,

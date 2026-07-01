@@ -14,12 +14,12 @@ import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatur
 import type { ObjectStateValidateFn } from "../../registry/ObjectStateValidatorRegistry";
 
 /**
- * Frame 系オブジェクト（geometry: "rect" | "ellipse"）の state バリデータを
- * features から生成する。id/type・Frame・transform・stroke/fill/text/radius を
- * features に応じて検証し、図形固有の追加検証（svg の svgText など）は
- * `isExtraValid` で渡す（boolean を返す述語）。
+ * Builds a state validator for Frame-type objects (geometry: "rect" | "ellipse")
+ * from its features. Validates id/type, Frame, transform, and stroke/fill/text/radius
+ * according to the features. Shape-specific extra validation (e.g. svg's svgText)
+ * is passed via `isExtraValid` (a boolean-returning predicate).
  *
- * boolean を返す型ガード方式なので、各検証は && で短絡する。
+ * Since it is a boolean type-guard approach, each check short-circuits with &&.
  */
 export const createFrameStateValidator = (
 	features: ObjectFeatures,

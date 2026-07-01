@@ -2,7 +2,7 @@ import { type RefObject, useLayoutEffect, useState } from "react";
 
 import { useCanvasViewportRef } from "../../../contexts/CanvasViewportRefContext";
 
-/** キャンバス領域の端からの最小マージン (px) */
+/** Minimum margin from the edges of the canvas area (px) */
 const VIEWPORT_MARGIN = 8;
 
 type ContextMenuPosition = {
@@ -16,16 +16,17 @@ type AdjustedMenuPosition = {
 };
 
 /**
- * 1 軸分のメニュー表示座標を算出する。
+ * Computes the menu's display coordinate for a single axis.
  *
- * クリック座標から正方向（右・下）に展開すると表示領域からはみ出る場合は
- * 負方向（左・上）へ反転し、それでも収まらない場合は表示領域内にクランプする。
+ * If expanding in the positive direction (right/down) from the click coordinate would overflow the
+ * display area, flip to the negative direction (left/up); if it still does not fit, clamp within the
+ * display area.
  *
- * @param clickCoord - クリック座標（clientX または clientY）
- * @param menuSize - メニューの実寸（幅または高さ）
- * @param areaStartCoord - 表示領域の始端座標（left または top）
- * @param areaEndCoord - 表示領域の終端座標（right または bottom）
- * @returns 補正後の座標（left または top）
+ * @param clickCoord - click coordinate (clientX or clientY)
+ * @param menuSize - actual size of the menu (width or height)
+ * @param areaStartCoord - start coordinate of the display area (left or top)
+ * @param areaEndCoord - end coordinate of the display area (right or bottom)
+ * @returns the adjusted coordinate (left or top)
  */
 function calcAdjustedAxisCoord(
 	clickCoord: number,
@@ -35,12 +36,12 @@ function calcAdjustedAxisCoord(
 ): number {
 	let adjustedCoord = clickCoord;
 
-	// 正方向にはみ出る場合は負方向へ反転
+	// If it overflows in the positive direction, flip to the negative direction
 	if (clickCoord + menuSize > areaEndCoord - VIEWPORT_MARGIN) {
 		adjustedCoord = clickCoord - menuSize;
 	}
 
-	// 反転してもはみ出る場合は表示領域内にクランプ
+	// If it still overflows after flipping, clamp within the display area
 	const maxCoord = areaEndCoord - VIEWPORT_MARGIN - menuSize;
 	if (adjustedCoord > maxCoord) {
 		adjustedCoord = maxCoord;
@@ -53,19 +54,19 @@ function calcAdjustedAxisCoord(
 }
 
 /**
- * コンテキストメニューがキャンバス領域からはみ出さないよう表示座標を補正する。
+ * Adjusts the context menu's display coordinates so it does not overflow the canvas area.
  *
- * メニューは position: fixed（ブラウザビューポート座標）で配置されるため、
- * 境界にはキャンバスルート要素（CanvasViewportRefContext 経由で取得）の
- * getBoundingClientRect()（同じ座標系）を使う。
- * state.viewport はキャンバス内部のスクロール・zoom 状態なのでここでは使えない。
+ * Because the menu is positioned with position: fixed (browser viewport coordinates), boundaries
+ * use the canvas root element's getBoundingClientRect() (same coordinate system), obtained via
+ * CanvasViewportRefContext.
+ * state.viewport is the canvas's internal scroll/zoom state and cannot be used here.
  *
- * メニューの高さは項目数に依存するため、レンダリング後の実 DOM を
- * useLayoutEffect で実測してから補正する（ペイント前に反映されるためちらつきは生じない）。
+ * Since the menu's height depends on the number of items, it is measured from the real DOM after
+ * rendering using useLayoutEffect before adjusting (applied before paint, so no flicker occurs).
  *
- * @param position - 右クリック時のクリック座標
- * @param menuRef - メニュー要素の ref（実寸の計測に使用）
- * @returns 補正後の表示座標
+ * @param position - the click coordinate at right-click time
+ * @param menuRef - ref of the menu element (used to measure its actual size)
+ * @returns the adjusted display coordinates
  */
 export function useContextMenuPosition(
 	position: ContextMenuPosition,
@@ -88,8 +89,8 @@ export function useContextMenuPosition(
 		const { width: menuWidth, height: menuHeight } =
 			menuElement.getBoundingClientRect();
 
-		// キャンバス領域の矩形（ブラウザビューポート座標）。
-		// Provider 外や ref 未設定の場合はブラウザウィンドウ全体にフォールバックする
+		// Rectangle of the canvas area (browser viewport coordinates).
+		// Falls back to the whole browser window when outside the provider or the ref is unset.
 		const viewportElement = viewportRef?.current ?? null;
 		const areaRect = viewportElement
 			? viewportElement.getBoundingClientRect()

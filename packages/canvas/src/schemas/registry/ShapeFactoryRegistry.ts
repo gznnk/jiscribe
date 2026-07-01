@@ -2,12 +2,12 @@ import type { ObjectType } from "../objects/types/ObjectType";
 import type { ShapeFactory } from "../objects/types/ShapeFactory";
 
 /**
- * 図形型ごとの `ShapeFactory` を管理するレジストリ。
- * 登録は `initializeObjectRegistry()` の `registerObject()` 経由で行う。
+ * Registry that manages the `ShapeFactory` for each shape type.
+ * Registration happens via `registerObject()` in `initializeObjectRegistry()`.
  *
- * 新しい図形を追加するときは、その図形フォルダに `ShapeFactory` を作って
- * `registerObject(..., { shapeFactory })` で登録するだけでよい。
- * `createObjectDoc` 等の呼び出し側は無編集で新図形に対応する。
+ * To add a new shape, just create a `ShapeFactory` in that shape's folder and
+ * register it with `registerObject(..., { shapeFactory })`. Callers such as
+ * `createObjectDoc` support the new shape without any edits.
  */
 class ShapeFactoryRegistry {
 	private readonly entries = new Map<ObjectType, ShapeFactory>();
@@ -21,8 +21,8 @@ class ShapeFactoryRegistry {
 	}
 
 	/**
-	 * ドラッグ描画（bounds 指定での生成）に対応する図形か。
-	 * `createDocFromBounds` の有無で判定する。
+	 * Whether the shape supports drag-drawing (creation from given bounds).
+	 * Determined by the presence of `createDocFromBounds`.
 	 */
 	supportsBoundsDrawing(type: ObjectType): boolean {
 		return this.entries.get(type)?.createDocFromBounds !== undefined;

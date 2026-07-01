@@ -9,9 +9,9 @@ type ColorPreviewIconProps = {
 };
 
 /**
- * カラープレビューアイコン（塗りつぶし円）。
- * 現在の色を示す塗りつぶし円を表示する。
- * transparent の場合はチェッカーパターンを表示する。
+ * Color preview icon (a filled circle).
+ * Displays a filled circle indicating the current color.
+ * When transparent, displays a checker pattern instead.
  */
 const ColorPreviewIconComponent: React.FC<ColorPreviewIconProps> = ({
 	color,
@@ -39,9 +39,10 @@ const ColorPreviewIconComponent: React.FC<ColorPreviewIconProps> = ({
 						height="8"
 						patternUnits="userSpaceOnUse"
 					>
-						{/* 対角の 2 マスだけ前景色を薄く重ね、残りは透明（面が透ける）→
-						    テーマに応じて市松の濃淡が自動反転する。
-						    color-mix は presentation 属性では解決されないため style で指定する。 */}
+						{/* Overlay the foreground color faintly on only the two diagonal cells,
+						    leaving the rest transparent (the surface shows through) → the checker
+						    contrast auto-inverts with the theme.
+						    color-mix is not resolved in presentation attributes, so specify it via style. */}
 						<rect
 							x="0"
 							y="0"
@@ -65,8 +66,8 @@ const ColorPreviewIconComponent: React.FC<ColorPreviewIconProps> = ({
 				r="10"
 				stroke="rgba(128, 128, 128, 0.5)"
 				strokeWidth="1"
-				// fill は var(--vscode-*)（auto fill のサーフェス色）を取りうる。
-				// var() は presentation 属性では解決されないため style で当てる。
+				// fill may hold var(--vscode-*) (the auto-fill surface color).
+				// var() is not resolved in presentation attributes, so apply it via style.
 				style={{
 					fill: isTransparent
 						? "url(#color-preview-transparent-pattern)"

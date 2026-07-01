@@ -2,14 +2,14 @@ import { collectDescendantIds } from "./collectDescendantIds";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 
 /**
- * 選択中の ID 群 + それぞれの全子孫 ID を含む Set を構築する。
+ * Builds a Set containing the selected IDs plus all of their descendant IDs.
  *
- * dragStart 時に一度だけ計算して eventStartState にキャッシュすることで、
- * drag 中の毎フレームでの再計算を避ける。
+ * Computed once at dragStart and cached in eventStartState to avoid recomputing
+ * it on every frame during the drag.
  *
- * @param selectedIds - 選択中のオブジェクト ID 一覧
- * @param objects - フラットなオブジェクトマップ
- * @returns selectedIds と全子孫 ID を含む ReadonlySet
+ * @param selectedIds - List of currently selected object IDs
+ * @param objects - Flat object map
+ * @returns A ReadonlySet containing selectedIds and all descendant IDs
  */
 export function buildSelectedIdsWithDescendants(
 	selectedIds: readonly string[],

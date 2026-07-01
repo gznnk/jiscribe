@@ -5,12 +5,13 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../states/objects/connections/connector/ConnectorState";
 
 /**
- * Connector 全体のバウンディングボックスを計算する。
+ * Computes the bounding box of an entire connector.
  *
- * resolveConnectorPoints でアウトライン調整込みの端点を動的解決し、
- * 中間経由点（waypoints）も含めた範囲を返す。
- * 直交ルーティングでは曲がり点が waypoints に入るため、これも範囲に含める。
- * 端点が解決できない場合（参照先オブジェクトの消失など）は null を返す。
+ * Dynamically resolves the endpoints (including outline adjustment) via
+ * resolveConnectorPoints and returns a range that also covers the intermediate
+ * waypoints. In orthogonal routing the bend points are included in the waypoints,
+ * so they are covered by the range as well.
+ * Returns null if the endpoints cannot be resolved (e.g. a referenced object was removed).
  */
 export const calcConnectorBoundingBox = (
 	connector: ConnectorState,

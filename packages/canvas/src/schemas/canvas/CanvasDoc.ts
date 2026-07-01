@@ -5,9 +5,10 @@ export type CanvasDoc = CanvasDocV1;
 export type CanvasDocAny = CanvasDocV1;
 
 /**
- * root は z-order（背面→前面）を表す単一のトップレベル配列。
- * オブジェクトとコネクター（type === "connector"）を混在させて保持し、
- * 並び順がそのまま重なり順になる。コネクターは group の子にはならず root 直下のみ。
+ * `root` is a single top-level array representing z-order (back → front).
+ * It holds objects and connectors (type === "connector") mixed together, so the
+ * order is directly the stacking order. Connectors are never group children and
+ * exist only directly under root.
  */
 export type CanvasDocV1 = {
 	$schema?: string;

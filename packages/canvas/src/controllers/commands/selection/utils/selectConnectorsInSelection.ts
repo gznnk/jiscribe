@@ -3,22 +3,22 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
 
 /**
- * 選択範囲に含めるべきコネクター ID を抽出する。
+ * Extracts the connector IDs that should be included in the selection.
  *
- * 判定ルール: free 端は包含をブロックしないが、
- * 「少なくとも 1 端が owned かつ選択範囲内」であることを要求する。
+ * Rule: a free endpoint does not block inclusion, but at least one endpoint must be
+ * both owned and inside the selection.
  *
- * - 両端 owned+選択内 → 含む
- * - 片端 owned+選択内 / 他端 free → 含む
- * - 両端 free（浮遊コネクター）→ 除外
- * - owned だが選択範囲外の端を持つ → 除外
+ * - Both endpoints owned + in selection → included
+ * - One endpoint owned + in selection / other free → included
+ * - Both endpoints free (floating connector) → excluded
+ * - Has an owned endpoint that is outside the selection → excluded
  *
- * Copy / Duplicate の両方で同一判定を使うために共有する。
+ * Shared so that Copy and Duplicate use the same criterion.
  *
- * @param connectorIds - 走査対象のコネクター ID 一覧
- * @param objects - フラットなオブジェクトマップ
- * @param selectedIdsWithDescendants - 選択中 ID + 全子孫を含む集合
- * @returns 包含すべきコネクター ID の配列（入力順を維持）
+ * @param connectorIds - List of connector IDs to scan
+ * @param objects - Flat object map
+ * @param selectedIdsWithDescendants - Set of selected IDs plus all descendants
+ * @returns Array of connector IDs to include (preserving input order)
  */
 export function selectConnectorsInSelection(
 	connectorIds: readonly string[],
@@ -39,11 +39,11 @@ export function selectConnectorsInSelection(
 		const targetSelected =
 			isOwnedEndpointRef(conn.target) &&
 			selectedIdsWithDescendants.has(conn.target.owner.id);
-		// owned だが選択範囲外の端を持つコネクターは除外
+		// Exclude connectors with an owned endpoint that lies outside the selection
 		if ((sourceOwned && !sourceSelected) || (targetOwned && !targetSelected)) {
 			continue;
 		}
-		// 少なくとも 1 端が owned かつ選択範囲内であること（両端 free を除外）
+		// Require at least one endpoint that is owned and inside the selection (exclude both-free)
 		if (!sourceSelected && !targetSelected) {
 			continue;
 		}

@@ -9,8 +9,8 @@ export type FillStyleDoc = {
 };
 
 /**
- * FillStyleDoc/State が占有するフィールド名（Doc/State で同一）。
- * Frame 系マッパーが fill グループを allow-list で素通しする際に参照する。
+ * Field names owned by FillStyleDoc/State (identical for Doc and State).
+ * Referenced by Frame mappers to pass the fill group through via an allow-list.
  */
 export const FILL_STYLE_KEYS = exhaustiveKeysOf<FillStyleDoc>()([
 	"fill",

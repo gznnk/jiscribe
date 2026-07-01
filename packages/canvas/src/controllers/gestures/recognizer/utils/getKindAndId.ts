@@ -1,6 +1,6 @@
 /**
- * 要素から最も近い [data-kind] を持つ要素の id と kind を取得
- * id が存在しない場合は null を返す
+ * Gets the id and kind from the nearest ancestor element carrying [data-kind].
+ * Returns null when no id is present.
  */
 export const getKindAndId = (
 	el: Element,

@@ -161,9 +161,9 @@ export const initializeObjectRegistry = (): void => {
 	shapePreviewRegistry.clear();
 	shapePresetRegistry.clear();
 
-	// doc バリデータ（objectDocValidatorRegistry）はここでは初期化しない。
-	// 登録内容は parse 時の検証でしか使われず、parseCanvasText が必要時に
-	// 遅延初期化する（schemas/registry/initializeObjectDocValidatorRegistry）。
+	// The doc validators (objectDocValidatorRegistry) are not initialized here.
+	// Their registrations are used only during parse-time validation, and parseCanvasText
+	// lazily initializes them when needed (schemas/registry/initializeObjectDocValidatorRegistry).
 
 	registerObject(
 		"rect",
@@ -356,8 +356,8 @@ export const initializeObjectRegistry = (): void => {
 				id: "arrowHead",
 				items: [{ type: "arrowHead" }],
 			},
-			// 自己ループは orthogonal 専用のため RoutingMenu が null を描画する。
-			// 空になったセクションは ObjectMenuSection の `:empty` で畳まれる。
+			// Self-loops are orthogonal-only, so RoutingMenu renders null.
+			// The resulting empty section is collapsed via ObjectMenuSection's `:empty`.
 			{
 				id: "routing",
 				items: [
@@ -368,8 +368,8 @@ export const initializeObjectRegistry = (): void => {
 				id: "line",
 				items: [{ type: "lineColor" }, { type: "lineStyle" }],
 			},
-			// ラベルのスタイル。ラベル（label.text）があるときだけ出す。
-			// 図形に倣い、背景/枠線（style）と文字（text）でセクションを分ける。
+			// Label styles. Shown only when a label (label.text) is present.
+			// Following the shapes, split into background/border (style) and text (text) sections.
 			...(state.label?.text
 				? [
 						{
@@ -448,8 +448,8 @@ export const initializeObjectRegistry = (): void => {
 		},
 	);
 
-	// SVG は ShapeLibrary からは生成しない（AI / .jis.json 直書きでのみ追加）。
-	// そのため shapeLibrary（factory / preview / presets）は登録しない。
+	// SVG is not created from the ShapeLibrary (only added via AI / direct .jis.json authoring).
+	// Therefore shapeLibrary (factory / preview / presets) is not registered.
 	registerObject(
 		"svg",
 		{ toDoc: svgToDoc, toState: svgToState },
@@ -467,23 +467,27 @@ export const initializeObjectRegistry = (): void => {
 };
 
 /**
- * ShapeLibrary（図形パレット）に関わる生成系ケイパビリティ。
- * パレットに出さない型（group / connector）では省略する。
+ * Creation-related capabilities for the ShapeLibrary (shape palette).
+ * Omitted for types not shown in the palette (group / connector).
  */
 type ShapeLibraryRegistration = {
-	/** doc 生成・寸法・bounds 生成を担うファクトリ */
+	/** Factory responsible for doc creation, dimensions, and bounds generation */
 	factory?: ShapeFactory;
-	/** ドラッグ描画中のプレビュー描画（bounds 描画対応図形のみ） */
+	/** Preview rendering during drag drawing (only for shapes that support bounds drawing) */
 	previewRenderer?: ShapePreviewRenderer;
-	/** ツールバーに並ぶプリセット（1 型につき複数可） */
+	/** Presets shown in the toolbar (multiple allowed per type) */
 	presets?: ShapePreset[];
 	/**
-	 * プリセット ID ごとのツールバーアイコン。
-	 * 登録時に対応するプリセットへ注入される。
+	 * Toolbar icon per preset ID.
+	 * Injected into the corresponding preset at registration time.
 	 */
 	presetIcons?: Record<string, ComponentType<ShapeIconProps>>;
 };
 
+/**
+ * Registers a single object type across all registries (mapper, component, behavior,
+ * state validator, and menu) in one call, and optionally its ShapeLibrary capabilities.
+ */
 export const registerObject = <
 	TDoc extends ObjectDoc,
 	TState extends ObjectState,

@@ -1,9 +1,10 @@
 import styled from "@emotion/styled";
 
 /**
- * 矢印シェイプの色プロパティ。
- * 塗り矢印は `fillColor`、中空矢印は `strokeColor` を渡す（未指定側は `none`）。
- * 値は解決済み（auto はテーマ前景へ解決済み）。CSS 安全性は外部入力の境界で担保される。
+ * Color properties for arrow shapes.
+ * Filled arrows pass `fillColor`, hollow arrows pass `strokeColor` (the unset
+ * side becomes `none`). Values are already resolved (auto is resolved to the
+ * theme foreground). CSS safety is guaranteed at the external-input boundary.
  */
 type ArrowColorProps = {
 	fillColor?: string;

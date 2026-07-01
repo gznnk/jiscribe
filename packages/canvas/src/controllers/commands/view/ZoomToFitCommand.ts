@@ -21,8 +21,8 @@ export const ZoomToFitCommand: Command = {
 			height: state.viewport.height,
 			padding: PADDING_PX,
 		});
-		// 退化対象（フィットできる広がりが無い）は現在のビューポートを維持する
-		// （「対象なし」の no-op ガードと整合）。
+		// For degenerate targets (no extent to fit to), keep the current viewport
+		// (consistent with the "no targets" no-op guard).
 		if (!fitted) {
 			return state;
 		}

@@ -20,9 +20,9 @@ function validateObjectNode(obj: unknown, path: string): SemanticDiagnostic[] {
 		return errors;
 	}
 
-	// 未登録（未知）の type はここで弾く。これを通すと検証は ok を返すが、
-	// canvasToState の mapper 解決で例外になりエディタごとクラッシュする。
-	// レジストリに features があれば登録済み。
+	// Reject unregistered (unknown) types here. Letting one through makes validation
+	// return ok, but then mapper resolution in canvasToState throws and crashes the
+	// whole editor. A type is registered if the registry has features for it.
 	if (objectDocValidatorRegistry.getFeatures(o.type as string) === undefined) {
 		errors.push({
 			path: `${path}.type`,
@@ -31,18 +31,19 @@ function validateObjectNode(obj: unknown, path: string): SemanticDiagnostic[] {
 		return errors;
 	}
 
-	// 型ごとのバリデーションをレジストリへ委譲
+	// Delegate per-type validation to the registry
 	errors.push(
 		...objectDocValidatorRegistry.validate(o.type as string, o, path),
 	);
 
-	// group の children 再帰は構造的ルールなので validateStructure 側で処理する
+	// Group children recursion is a structural rule, so handle it here in validateStructure
 	if (o.type === "group") {
 		if (!isArray(o.children)) {
 			errors.push({ path: `${path}.children`, message: "must be an array" });
 		} else if ((o.children as unknown[]).length === 0) {
-			// 空 group は bounds が定まらない退化状態。生成経路では必ず子を持つため、
-			// 空の children は破損由来とみなして境界で弾く。
+			// An empty group is a degenerate state with undefined bounds. Since the
+			// creation paths always produce children, empty children is treated as
+			// corruption and rejected at the boundary.
 			errors.push({
 				path: `${path}.children`,
 				message: "group must have at least one child",
@@ -50,7 +51,7 @@ function validateObjectNode(obj: unknown, path: string): SemanticDiagnostic[] {
 		} else {
 			(o.children as unknown[]).forEach((child, i) => {
 				const childPath = `${path}.children[${i}]`;
-				// 不変条件: コネクターは root 直下のみ。group の子には置けない。
+				// Invariant: connectors live only directly under root; they cannot be a group's child.
 				if (
 					isObject(child) &&
 					(child as Record<string, unknown>).type === "connector"
@@ -69,6 +70,13 @@ function validateObjectNode(obj: unknown, path: string): SemanticDiagnostic[] {
 	return errors;
 }
 
+/**
+ * Validates the structural rules of a CanvasDoc: the version constant, the removal of
+ * the legacy top-level `connectors` field, and each entry in `root` (delegating
+ * per-type checks to the registry and recursing into group children).
+ *
+ * @returns A list of diagnostics; empty when the document is structurally valid.
+ */
 export function validateStructure(doc: unknown): SemanticDiagnostic[] {
 	if (!isObject(doc)) {
 		return [
@@ -82,14 +90,16 @@ export function validateStructure(doc: unknown): SemanticDiagnostic[] {
 	const d = doc as Record<string, unknown>;
 	const errors: SemanticDiagnostic[] = [];
 
-	// スキーマは version を const 1 と定義する。フォーマットは v1 のみで v2+ の
-	// ハンドリングは無いため、未知バージョンはサイレントに進めず境界で弾く。
+	// The schema defines version as const 1. Only the v1 format exists and there is
+	// no handling for v2+, so unknown versions are not silently accepted but rejected
+	// at the boundary.
 	if (d.version !== 1) {
 		errors.push({ path: "version", message: "must be 1" });
 	}
 
-	// 旧フォーマット（connectors を別配列で持つ）はサイレントに connector を失うため、
-	// マイグレーションはせず fail-fast で明示エラーにする（connectors は root へ統合済み）。
+	// The old format (connectors held in a separate array) would silently lose
+	// connectors, so rather than migrating, fail fast with an explicit error
+	// (connectors are now integrated into root).
 	if (d.connectors !== undefined) {
 		errors.push({
 			path: "connectors",
@@ -101,8 +111,9 @@ export function validateStructure(doc: unknown): SemanticDiagnostic[] {
 	if (!isArray(d.root)) {
 		errors.push({ path: "root", message: "must be an array" });
 	} else {
-		// root はオブジェクトとコネクターの混在配列。型別検証は validateObjectNode
-		// → registry が type ごとに振り分ける（connector は validateConnectorDoc）。
+		// root is a mixed array of objects and connectors. Per-type validation goes
+		// through validateObjectNode → the registry dispatches by type (connector uses
+		// validateConnectorDoc).
 		(d.root as unknown[]).forEach((obj, i) => {
 			errors.push(...validateObjectNode(obj, `root[${i}]`));
 		});

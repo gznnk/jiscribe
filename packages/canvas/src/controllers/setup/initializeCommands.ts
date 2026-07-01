@@ -27,7 +27,7 @@ import { ZoomToFitCommand } from "../commands/view/ZoomToFitCommand";
 import { ZoomToSelectionCommand } from "../commands/view/ZoomToSelectionCommand";
 
 /**
- * コマンドをレジストリに登録
+ * Registers commands into the registry.
  */
 export const initializeCommands = (): void => {
 	commandRegistry
@@ -47,7 +47,7 @@ export const initializeCommands = (): void => {
 		.register(BringForwardCommand)
 		.register(SendBackwardCommand)
 		.register(SendToBackCommand)
-		// Move (nudge) commands: 上下左右 × 通常/Shift の 8 コマンド
+		// Move (nudge) commands: 8 commands (up/down/left/right x normal/Shift)
 		.registerAll(moveCommands)
 		// Arrow commands
 		.register(SwapArrowsCommand)

@@ -3,11 +3,12 @@ import type { ObjectFeatures } from "../../types/ObjectFeatures";
 import { AUTO_COLOR } from "../../utils/autoColor";
 
 /**
- * フローチャートの条件分岐に使うひし形。
+ * A diamond used for conditional branches in flowcharts.
  *
- * ジオメトリは rect（x/y/width/height）を採用し、描画だけを菱形ポリゴンに差し替える。
- * これにより Frame ベースの変形・テキスト（BoundingBox 全体に配置）・コネクター外形接続を
- * すべて Rect と同じ仕組みで再利用できる。菱形に角丸は不要なので radius は持たない。
+ * It adopts rect geometry (x/y/width/height) and only swaps the rendering for a
+ * diamond polygon. This lets it reuse Frame-based transforms, text (placed across the
+ * entire bounding box), and connector outline connections with the same mechanism as Rect.
+ * A diamond needs no rounded corners, so it has no radius.
  */
 export const DiamondFeatures = {
 	type: "diamond",

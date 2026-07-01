@@ -7,42 +7,42 @@ import { objectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegis
 
 export type MoveSelectionParams = {
 	/**
-	 * 移動対象の選択 ID 一覧
+	 * The selected IDs to move
 	 */
 	selectedIds: string[];
 	/**
-	 * 移動元のオブジェクトマップ。
-	 * ドラッグ時はドラッグ開始スナップショット、コマンド時は現在の state.objects を渡す。
+	 * The source object map.
+	 * On drag, pass the drag-start snapshot; on command, pass the current state.objects.
 	 */
 	srcObjects: Record<string, ObjectState>;
 	/**
-	 * 移動元の multiSelectGroup（位置・プロパティの基準）。
-	 * null の場合は複数選択グループなし。
+	 * The source multiSelectGroup (the reference for position and properties).
+	 * null when there is no multi-selection group.
 	 */
 	srcMultiSelectGroup: GroupState | null;
 	/**
-	 * 移動量。ドラッグ時はスナップ補正済みの累積 delta、コマンド時は 1 回分の delta
+	 * The movement amount. On drag, the snap-corrected cumulative delta; on command, a single delta
 	 */
 	delta: Point;
 };
 
 export type MoveSelectionResult = {
-	/** 移動後のオブジェクトマップ（srcObjects のクローン） */
+	/** The object map after moving (a clone of srcObjects) */
 	objects: Record<string, ObjectState>;
-	/** 平行移動後の multiSelectGroup（src が null なら null） */
+	/** The translated multiSelectGroup (null if src was null) */
 	multiSelectGroup: GroupState | null;
 };
 
 /**
- * 選択中のオブジェクトをまとめて delta だけ平行移動する純粋関数。
+ * Pure function that translates all selected objects together by delta.
  *
- * ドラッグ移動・矢印キー移動（ナッジ）の両方が共有する移動ロジック。
- * - グループは子孫を再帰的に移動する
- * - その他の図形は形状ごとの moveByDelta（Registry 経由）で移動する
- * - multiSelectGroup の中心（cx/cy）も同期する
+ * Shared movement logic for both drag movement and arrow-key movement (nudge).
+ * - Groups move their descendants recursively
+ * - Other shapes move via their per-shape moveByDelta (through the Registry)
+ * - The multiSelectGroup center (cx/cy) is synchronized as well
  *
- * 親グループのバウンディングボックス更新・snapFeedback・commitVersion の扱いは
- * 文脈ごとに異なるため、呼び出し側の責務とする（ここでは触らない）。
+ * Updating the parent group's bounding box, snapFeedback, and commitVersion is left to the
+ * caller since it differs by context (not touched here).
  */
 export function moveSelection(
 	params: MoveSelectionParams,
@@ -58,7 +58,7 @@ export function moveSelection(
 		}
 
 		if (selectedObject.type === "group") {
-			// Group: 子孫も再帰的に移動（read: srcObjects / write: objects）
+			// Group: move descendants recursively too (read: srcObjects / write: objects)
 			moveGroup(selectedId, srcObjects, objects, delta);
 		} else {
 			const moveByDelta = objectBehaviorRegistry.getMoveByDelta(

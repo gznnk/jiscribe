@@ -7,12 +7,12 @@ import type { GroupState } from "../../../../../states/objects/primitives/group/
 import type { ObjectBehaviorEntry } from "../../../registry/ObjectBehaviorTypes";
 
 /**
- * Frame 系オブジェクト（rect / ellipse / diamond / svg / sticky など、
- * geometry: "rect" + transform を持つ図形）共通の振る舞いを生成する。
+ * Creates the shared behavior for Frame-based objects (rect / ellipse / diamond /
+ * svg / sticky, i.e. shapes with geometry: "rect" + transform).
  *
- * これらの図形は移動・グループ変形・グループ回転がすべて同一で、
- * cx/cy を delta だけ動かし、変形・回転は `FrameTransform` に委譲する。
- * 図形ごとに違うのは表示だけなので、Controller はこの 1 つに集約する。
+ * These shapes share identical move, group-transform, and group-rotation behavior:
+ * cx/cy are shifted by delta, and transform/rotation are delegated to `FrameTransform`.
+ * Since only their rendering differs per shape, the controller is consolidated into this one.
  */
 export const createFrameBehavior = <
 	TState extends ObjectState & TransformedFrame,

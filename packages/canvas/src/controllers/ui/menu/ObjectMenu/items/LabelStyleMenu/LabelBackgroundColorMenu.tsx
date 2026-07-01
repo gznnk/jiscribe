@@ -18,8 +18,8 @@ type Props = {
 };
 
 /**
- * ラベルの背景色メニュー（図形の Background Color と同じ並び）。
- * 値はネストの `label.fill`。省略/auto はキャンバス地色（knockout）に解決される。
+ * Label background color menu (same layout as the shape's Background Color).
+ * The value is the nested `label.fill`. Omitted/auto resolves to the canvas background color (knockout).
  */
 const LabelBackgroundColorMenuComponent: React.FC<Props> = ({
 	canvasState,

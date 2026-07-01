@@ -17,15 +17,15 @@ import {
 import type { ControlStrategy } from "../ControlEventHandler";
 
 /**
- * Vertex insert control の操作（セグメントへの頂点追加）を処理する。
+ * Handles vertex-insert control operations (adding a vertex to a segment).
  *
- * Control ID フォーマット: "vertex-insert:<objectId>:<segmentIndex>"
- * 例: "vertex-insert:poly-1:0" (points[0]とpoints[1]の間のセグメント)
+ * Control ID format: "vertex-insert:<objectId>:<segmentIndex>"
+ * Example: "vertex-insert:poly-1:0" (the segment between points[0] and points[1])
  *
- * 動作:
- * - dragStart: 指定されたセグメントに新しい頂点を追加
- * - drag: 新しく追加された頂点を移動
- * - dragEnd: 最終位置を確定
+ * Behavior:
+ * - dragStart: add a new vertex to the specified segment
+ * - drag: move the newly added vertex
+ * - dragEnd: commit the final position
  */
 export class VertexInsertHandler implements ControlStrategy {
 	readonly controlType = "vertex-insert";
@@ -40,7 +40,7 @@ export class VertexInsertHandler implements ControlStrategy {
 			return false;
 		}
 
-		// vertex-insert かどうかをチェック
+		// Check whether it is a vertex-insert
 		return targetId.startsWith("vertex-insert:");
 	}
 
@@ -58,7 +58,7 @@ export class VertexInsertHandler implements ControlStrategy {
 			return state;
 		}
 
-		// "vertex-insert:poly-1:0" からオブジェクトIDとセグメントインデックスをパース
+		// Parse the object ID and segment index from "vertex-insert:poly-1:0"
 		const parts = targetControlId.split(":");
 		if (parts.length !== 3 || parts[0] !== "vertex-insert") {
 			return state;
@@ -71,7 +71,7 @@ export class VertexInsertHandler implements ControlStrategy {
 			return state;
 		}
 
-		// dragStart で頂点を追加し、drag/dragEnd でその頂点を移動する
+		// Add a vertex on dragStart, then move that vertex on drag/dragEnd
 		if (event.type === "dragStart") {
 			return this.handleDragStart(state, event, objectId, segmentIndex);
 		} else if (event.type === "drag") {
@@ -84,8 +84,8 @@ export class VertexInsertHandler implements ControlStrategy {
 	}
 
 	/**
-	 * Vertex insert control でのドラッグ開始を処理する。
-	 * 新しい頂点を追加し、eventStartSnapshotを更新して次のdragイベントで参照できるようにする。
+	 * Handles drag start on the vertex-insert control.
+	 * Adds a new vertex and updates eventStartSnapshot so the next drag event can reference it.
 	 */
 	private handleDragStart(
 		state: CanvasControllerState,
@@ -102,13 +102,13 @@ export class VertexInsertHandler implements ControlStrategy {
 			return state;
 		}
 
-		// ドラッグ開始位置に新しい頂点を追加
+		// Add a new vertex at the drag start position
 		const newPosition: Point = {
 			x: roundToDecimal(event.last.x, PRECISION.COORDINATE),
 			y: roundToDecimal(event.last.y, PRECISION.COORDINATE),
 		};
 
-		// 頂点を挿入（segmentIndex + 1の位置に追加）
+		// Insert the vertex (added at the segmentIndex + 1 position)
 		const newPoints = [...currentObject.points];
 		newPoints.splice(segmentIndex + 1, 0, newPosition);
 
@@ -117,7 +117,7 @@ export class VertexInsertHandler implements ControlStrategy {
 			points: newPoints,
 		};
 
-		// 更新されたobjectsを含む新しい状態を作成
+		// Create a new state with the updated objects
 		const updatedObjects = {
 			...state.objects,
 			[objectId]: updatedObject,
@@ -130,7 +130,7 @@ export class VertexInsertHandler implements ControlStrategy {
 			edgeScrollEnabled: true,
 		};
 
-		// eventStartSnapshotを更新して、dragイベントで新しい頂点を含む状態を参照できるようにする
+		// Update eventStartSnapshot so the drag event can reference the state including the new vertex
 		if (state.eventStartSnapshot) {
 			nextState.eventStartSnapshot = {
 				...state.eventStartSnapshot,
@@ -142,8 +142,8 @@ export class VertexInsertHandler implements ControlStrategy {
 	}
 
 	/**
-	 * Vertex insert control でのドラッグを処理する。
-	 * 新しく追加された頂点（segmentIndex + 1の位置）を移動する。
+	 * Handles dragging on the vertex-insert control.
+	 * Moves the newly added vertex (at the segmentIndex + 1 position).
 	 */
 	private handleDrag(
 		state: CanvasControllerState,
@@ -156,23 +156,23 @@ export class VertexInsertHandler implements ControlStrategy {
 			return state;
 		}
 
-		// dragStartで更新されたeventStartSnapshotから開始オブジェクトを取得
-		// （新しく追加された頂点を含む状態）
+		// Get the start object from the eventStartSnapshot updated on dragStart
+		// (the state including the newly added vertex)
 		const startObject = eventStartSnapshot.objects[objectId];
 		if (!isPoly(startObject)) {
 			return state;
 		}
 
-		// 新しく追加された頂点のインデックスは segmentIndex + 1
+		// The index of the newly added vertex is segmentIndex + 1
 		const newVertexIndex = segmentIndex + 1;
 
-		// 範囲外の頂点インデックスへの書き込みを防ぐ
-		// （dragStart で頂点が挿入されていれば必ず範囲内に収まる）
+		// Prevent writing to an out-of-range vertex index
+		// (always in range if a vertex was inserted on dragStart)
 		if (newVertexIndex >= startObject.points.length) {
 			return state;
 		}
 
-		// スナップ補正
+		// Snap correction
 		let cursorX = event.last.x;
 		let cursorY = event.last.y;
 		const snapCandidates = eventStartSnapshot.snapCandidates;
@@ -202,13 +202,13 @@ export class VertexInsertHandler implements ControlStrategy {
 			);
 		}
 
-		// 新しい頂点位置を計算
+		// Compute the new vertex position
 		const newPosition: Point = {
 			x: roundToDecimal(cursorX, PRECISION.COORDINATE),
 			y: roundToDecimal(cursorY, PRECISION.COORDINATE),
 		};
 
-		// 頂点位置を更新
+		// Update the vertex position
 		const newPoints = [...startObject.points];
 		newPoints[newVertexIndex] = newPosition;
 
@@ -228,8 +228,8 @@ export class VertexInsertHandler implements ControlStrategy {
 	}
 
 	/**
-	 * Vertex insert control でのドラッグ終了を処理する。
-	 * 最終位置を確定し、グループの枠を更新する。
+	 * Handles drag end on the vertex-insert control.
+	 * Commits the final position and updates the group's bounds.
 	 */
 	private handleDragEnd(
 		state: CanvasControllerState,
@@ -237,7 +237,7 @@ export class VertexInsertHandler implements ControlStrategy {
 		objectId: string,
 		segmentIndex: number,
 	): CanvasControllerState {
-		// ドラッグ中の状態更新を適用して最終状態を計算
+		// Apply the drag-time state update to compute the final state
 		let nextState = this.handleDrag(
 			{ ...state },
 			event,
@@ -245,7 +245,7 @@ export class VertexInsertHandler implements ControlStrategy {
 			segmentIndex,
 		);
 
-		// グループに所属している場合はグループの枠を更新する
+		// If it belongs to a group, update the group's bounds
 		const updatedObject = nextState.objects[objectId];
 		if (updatedObject?.parentId) {
 			nextState = updateGroupBoundsFromRoot(nextState, updatedObject.parentId);

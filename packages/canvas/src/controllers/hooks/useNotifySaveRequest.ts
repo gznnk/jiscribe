@@ -5,10 +5,11 @@ import { canvasToDoc } from "../../states/canvas/CanvasMapper";
 import type { CanvasControllerState } from "../CanvasTypes";
 
 /**
- * 保存が必要になったとき（commit や undo/redo の後）に親コンポーネントへ通知するカスタムフック
+ * Custom hook that notifies the parent component when a save is required
+ * (after a commit or undo/redo).
  *
- * @param state - Canvas の現在 state
- * @param onCommit - 保存時に呼ばれるコールバック（CanvasDoc と saveNonce を受け取る）
+ * @param state - The current Canvas state
+ * @param onCommit - Callback invoked on save, receiving the CanvasDoc and saveNonce
  */
 export const useNotifySaveRequest = (
 	state: CanvasControllerState,

@@ -3,15 +3,17 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { GroupState } from "../../states/objects/primitives/group/GroupState";
 
 /**
- * オブジェクトIDの配列を、キャンバス上のZオーダー（背面から前面）に従ってソートして返します。
+ * Sorts an array of object IDs by their z-order on the canvas (back to front)
+ * and returns the result.
  *
- * 各オブジェクトについてのルートからのパスを取得し、先頭（ルート側）から階層ごとに
- * インデックスを比較することで、キャンバス上の正確な Zオーダーを算出します。
+ * For each object it obtains the path from the root and compares indices level
+ * by level starting from the front (root side), yielding the exact z-order on
+ * the canvas.
  *
- * @param ids - ソート対象のオブジェクト ID 一覧
- * @param objects - キャンバス上の全オブジェクトマップ
- * @param rootIds - キャンバスのルート ID リスト
- * @returns Zオーダーでソートされたオブジェクト ID の配列
+ * @param ids - The object IDs to sort
+ * @param objects - Map of all objects on the canvas
+ * @param rootIds - The canvas's list of root IDs
+ * @returns The object IDs sorted by z-order
  */
 export function sortObjectIdsByZOrder(
 	ids: string[],
@@ -19,7 +21,7 @@ export function sortObjectIdsByZOrder(
 	rootIds: string[],
 ): string[] {
 	const rootIndexMap = new Map(rootIds.map((id, i) => [id, i]));
-	// childIds の indexOf を O(1) にするため、比較時に都度 Map を生成してキャッシュする
+	// To make indexOf over childIds O(1), build and cache a Map on demand during comparison
 	const childIndexCache = new Map<string, Map<string, number>>();
 
 	const getChildIndex = (parentId: string, childId: string): number => {
@@ -32,8 +34,9 @@ export function sortObjectIdsByZOrder(
 		return map.get(childId) ?? -1;
 	};
 
-	// ルートからのパスはコンパレータ内で何度も参照されるため、
-	// 比較ごとの再計算・配列アロケートを避けて ID ごとに一度だけ算出してキャッシュする
+	// The path from root is referenced many times inside the comparator, so
+	// compute and cache it once per ID to avoid recomputation and array
+	// allocation on every comparison
 	const pathCache = new Map<string, string[]>();
 	const getPath = (id: string): string[] => {
 		let path = pathCache.get(id);

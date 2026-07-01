@@ -1,19 +1,19 @@
 import type { CanvasControllerState } from "../../../../../../../controllers/CanvasTypes";
 
 /**
- * 選択中オブジェクトの lockAspectRatio 値を取得する。
- * 複数選択時は multiSelectGroup の値を優先、単一選択時は選択オブジェクトの値を返す。
- * いずれも持たない場合は false。
+ * Gets the lockAspectRatio value of the selected object(s).
+ * For a multi-selection the multiSelectGroup value takes precedence; for a single
+ * selection the selected object's value is returned. Defaults to false when neither has one.
  */
 export const getSelectedLockAspectRatio = (
 	state: CanvasControllerState,
 ): boolean => {
-	// 複数選択時はmultiSelectGroupの値を使用
+	// For a multi-selection, use the multiSelectGroup value
 	if (state.multiSelectGroup) {
 		return state.multiSelectGroup.lockAspectRatio ?? false;
 	}
 
-	// 単一選択時は選択オブジェクトの値を使用
+	// For a single selection, use the selected object's value
 	for (const id of state.selectedIds) {
 		const obj = state.objects[id];
 		if (

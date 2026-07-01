@@ -10,6 +10,7 @@ import type { CreateObjectState } from "../../types/CreateObjectState";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare const ConnectorStateBrand: unique symbol;
 
+/** Runtime state for a connector, linking a source and target endpoint. */
 export type ConnectorState = CreateObjectState<
 	typeof ConnectorFeatures,
 	typeof ConnectorStateBrand,
@@ -19,7 +20,7 @@ export type ConnectorState = CreateObjectState<
 		routing?: ConnectorRouting;
 		startArrow?: ArrowType;
 		endArrow?: ArrowType;
-		// ラベルはテキスト属性のため Doc と同形のまま保持する（変換不要）。
+		// The label is a text attribute, so it is kept in the same shape as the Doc (no conversion needed).
 		label?: ConnectorLabel;
 	}
 >;

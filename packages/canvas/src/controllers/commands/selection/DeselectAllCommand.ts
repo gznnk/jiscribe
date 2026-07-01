@@ -11,7 +11,7 @@ export const DeselectAllCommand: Command = {
 	},
 
 	canExecute: (state) => {
-		// オブジェクトドラッグ中（範囲選択以外のドラッグ）は無効化
+		// Disabled while dragging an object (any drag other than area selection)
 		if (state.eventStartSnapshot !== null && state.areaSelection === null) {
 			return false;
 		}
@@ -29,7 +29,7 @@ export const DeselectAllCommand: Command = {
 			...state,
 			selectedIds: [],
 			selectedConnectorId: null,
-			// 解除しないと不可視の頂点選択が残り、Delete キーで意図しない頂点削除が起きる
+			// Without clearing it, an invisible vertex selection lingers and the Delete key deletes an unintended vertex
 			selectedVertex: null,
 			multiSelectGroup: null,
 			areaSelection: null,

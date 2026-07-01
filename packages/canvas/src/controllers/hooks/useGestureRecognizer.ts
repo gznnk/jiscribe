@@ -22,26 +22,32 @@ export type UseGestureRecognizerReturn = {
 	resetGestureState: () => void;
 };
 
+/**
+ * Creates and owns a single {@link GestureRecognizer} instance, wiring recognized
+ * gestures to the reducer via `dispatch` and returning stable pointer/wheel handlers.
+ * The instance is created once and disposed on unmount.
+ */
 export const useGestureRecognizer = ({
 	dispatch,
 	containerRef,
 	svgRef,
 	canvasState,
 }: UseGestureRecognizerParams): UseGestureRecognizerReturn => {
-	// GestureRecognizerインスタンスをrefで保持
+	// Hold the GestureRecognizer instance in a ref
 	const recognizerRef = useRef<GestureRecognizer | null>(null);
 
-	// canvasStateの最新値を常に保持するRef
+	// Ref that always holds the latest canvasState
 	const canvasStateRef = useRef<CanvasControllerState>(canvasState);
-	canvasStateRef.current = canvasState; // レンダリングごとに最新値を設定
+	canvasStateRef.current = canvasState; // Set the latest value on every render
 
-	// インスタンスは ref への遅延初期化で「生成は1回だけ」を保証する。
-	// （useMemo は React が記憶値を破棄して再計算しうるため、生成＝破棄の対が
-	//  崩れてインスタンスがリークする恐れがある。ref なら破棄されない）
-	// dispatch は useReducer 由来で同一性が保証されるため、初回クロージャで安全に束縛できる。
+	// Lazily initialize the instance into the ref to guarantee "created only once".
+	// (useMemo may discard its memoized value and recompute, breaking the create/dispose
+	//  pairing and risking a leaked instance; a ref is never discarded.)
+	// dispatch has stable identity since it comes from useReducer, so it can be safely
+	// bound in the initial closure.
 	if (recognizerRef.current === null) {
-		// 認識されたジェスチャーは GESTURE アクションとして reducer へ送る
-		// （GestureRecognizer クラス自体はコールバック契約のまま React に依存しない）
+		// Recognized gestures are dispatched to the reducer as GESTURE actions
+		// (the GestureRecognizer class itself stays React-independent via the callback contract)
 		const gestureCallback: GestureCallback = (gesture) => {
 			dispatch({ type: "GESTURE", gesture });
 		};
@@ -53,10 +59,10 @@ export const useGestureRecognizer = ({
 		});
 	}
 
-	// アンマウント時に保留中の RAF をキャンセルし、
-	// アンマウント後にジェスチャーコールバックが発火しないようにする。
-	// 破棄後は ref を null に戻し、再マウント時に確実に再生成されるようにする
-	// （StrictMode の mount→unmount→mount でも生成と破棄が常に対になる）。
+	// On unmount, cancel any pending RAF so the gesture callback does not fire after
+	// unmount. After disposal, reset the ref to null so it is reliably recreated on
+	// remount (keeping create/dispose paired even across StrictMode's
+	// mount→unmount→mount).
 	useEffect(() => {
 		return () => {
 			recognizerRef.current?.dispose();
@@ -64,7 +70,7 @@ export const useGestureRecognizer = ({
 		};
 	}, []);
 
-	// handlers のオブジェクト同一性を維持し、子コンポーネントへ渡す props を安定させる
+	// Keep the handlers object identity stable so the props passed to child components stay stable
 	const handlers = useMemo<UseGestureRecognizerReturn>(
 		() => ({
 			pointerHandlers: recognizerRef.current!.getHandlers(),

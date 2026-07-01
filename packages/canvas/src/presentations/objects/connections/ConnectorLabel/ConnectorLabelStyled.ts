@@ -11,19 +11,20 @@ type LabelBoxProps = {
 	fontSize: number;
 	fontFamily: string;
 	fontWeight: string;
-	/** 解決済み背景色（省略/auto はキャンバス地色）。 */
+	/** Resolved background color (omitted/auto uses the canvas background color). */
 	background: string;
-	/** 枠線太さ（0 で枠線なし）。 */
+	/** Border width (0 means no border). */
 	borderWidth: number;
-	/** 解決済み枠線色。 */
+	/** Resolved border color. */
 	borderColor: string;
-	/** 枠線スタイル（CSS border-style: solid / dashed / dotted）。 */
+	/** Border style (CSS border-style: solid / dashed / dotted). */
 	borderStyle: string;
 };
 
 /**
- * ラベル本体。線の上に水平で描き、背景（knockout）で線を隠して可読性を保つ。
- * テキスト量に応じた寸法は foreignObject 側で与えるため、ここでは中身いっぱいに広げる。
+ * The label body. Drawn horizontally over the line, with a background (knockout)
+ * that hides the line to preserve readability. Dimensions based on text amount
+ * are provided by the foreignObject, so here it expands to fill its content box.
  */
 export const LabelBox = styled.div<LabelBoxProps>`
 	display: flex;

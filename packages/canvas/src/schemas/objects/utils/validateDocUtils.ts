@@ -14,8 +14,8 @@ import { isTextType } from "../types/TextType";
 import { isVerticalAlign } from "../types/VerticalAlign";
 
 /**
- * 必須の数値フィールドを検証する。number であること、`min` 指定時は下限も満たすこと。
- * 下限はスキーマの `minimum` 制約（width/height/半径 ≥ 0 など）に対応する。
+ * Validate a required numeric field: it must be a number and, when `min` is given, meet the lower bound.
+ * The lower bound corresponds to the schema's `minimum` constraint (width/height/radius ≥ 0, etc.).
  */
 export function validateRequiredNumber(
 	o: Record<string, unknown>,
@@ -34,8 +34,8 @@ export function validateRequiredNumber(
 }
 
 /**
- * 任意の数値フィールドを検証する。存在する場合のみ number / 下限を検証し、
- * 未指定（キー無し・undefined）はエラーにしない。
+ * Validate an optional numeric field: validate number / lower bound only when present,
+ * and do not error when unspecified (key absent / undefined).
  */
 export function validateOptionalNumber(
 	o: Record<string, unknown>,
@@ -49,6 +49,10 @@ export function validateOptionalNumber(
 	return validateRequiredNumber(o, path, key, min);
 }
 
+/**
+ * Validate a `points` array: it must be a valid poly and have at least `minPoints` points.
+ * Used for polyline/polygon shapes that require endpoint coordinates in their points array.
+ */
 export function validatePolyFields(
 	o: Record<string, unknown>,
 	path: string,
@@ -71,9 +75,9 @@ export function validatePolyFields(
 }
 
 /**
- * Connector の points（中間経由点）を検証する。
- * 端点座標は source/target の EndpointRef が持つため、
- * polyline/polygon と異なり空配列（= 直線コネクター）を許容する。
+ * Validate a connector's points (intermediate waypoints).
+ * Since endpoint coordinates are held by the source/target EndpointRef, an empty array
+ * (= a straight connector) is allowed, unlike polyline/polygon.
  */
 export function validateWaypointFields(
 	o: Record<string, unknown>,
@@ -87,6 +91,10 @@ export function validateWaypointFields(
 	return [];
 }
 
+/**
+ * Validate a connector EndpointRef, dispatching to owned or free endpoint validation
+ * based on whether an `owner` is present. Non-object refs are treated as valid (no-op).
+ */
 export function validateEndpointRef(
 	ref: unknown,
 	path: string,
@@ -96,7 +104,7 @@ export function validateEndpointRef(
 	}
 	const r = ref as Record<string, unknown>;
 
-	// owner の有無で OwnedEndpointRef / FreeEndpointRef を判別
+	// Distinguish OwnedEndpointRef / FreeEndpointRef by the presence of owner
 	const hasOwner = "owner" in r && r.owner != null;
 	return hasOwner
 		? validateOwnedEndpointRef(r, path)
@@ -202,6 +210,7 @@ function validateFreeAnchor(
 	return errors;
 }
 
+/** Validate optional transform fields: `rotation` (number), `flipX`/`flipY` (boolean). */
 export function validateTransformFields(
 	o: Record<string, unknown>,
 	path: string,
@@ -219,6 +228,7 @@ export function validateTransformFields(
 	return errors;
 }
 
+/** Validate optional stroke style fields: `stroke` (safe CSS color), `strokeWidth` (≥ 0), `strokeDashType`. */
 export function validateStrokeStyleFields(
 	o: Record<string, unknown>,
 	path: string,
@@ -231,7 +241,7 @@ export function validateStrokeStyleFields(
 			beyondSchema: true,
 		});
 	}
-	// strokeWidth はスキーマ上 minimum: 0
+	// strokeWidth has minimum: 0 in the schema
 	errors.push(...validateOptionalNumber(o, path, "strokeWidth", 0));
 	if ("strokeDashType" in o && !isStrokeDashType(o.strokeDashType)) {
 		errors.push({
@@ -242,6 +252,7 @@ export function validateStrokeStyleFields(
 	return errors;
 }
 
+/** Validate the optional `fill` field as a safe CSS color value. */
 export function validateFillStyleFields(
 	o: Record<string, unknown>,
 	path: string,
@@ -257,6 +268,10 @@ export function validateFillStyleFields(
 	return errors;
 }
 
+/**
+ * Validate optional text style fields: `text`, `textType`, `textAlign`, `verticalAlign`,
+ * `fontColor` (safe CSS color), `fontSize` (≥ 1), `fontFamily`/`fontWeight` (safe CSS values).
+ */
 export function validateTextStyleFields(
 	o: Record<string, unknown>,
 	path: string,
@@ -290,7 +305,7 @@ export function validateTextStyleFields(
 			beyondSchema: true,
 		});
 	}
-	// fontSize はスキーマ上 minimum: 1
+	// fontSize has minimum: 1 in the schema
 	errors.push(...validateOptionalNumber(o, path, "fontSize", 1));
 	if ("fontFamily" in o && !isCssSafeValue(o.fontFamily)) {
 		errors.push({
@@ -309,14 +324,16 @@ export function validateTextStyleFields(
 	return errors;
 }
 
+/** Validate the optional corner-radius field `rx` (≥ 0). */
 export function validateRadiusStyleFields(
 	o: Record<string, unknown>,
 	path: string,
 ): SemanticDiagnostic[] {
-	// 角丸半径 rx はスキーマ上 minimum: 0
+	// The corner radius rx has minimum: 0 in the schema
 	return validateOptionalNumber(o, path, "rx", 0);
 }
 
+/** Validate optional arrowhead fields `startArrow`/`endArrow` as valid ArrowType values. */
 export function validateArrowFields(
 	o: Record<string, unknown>,
 	path: string,

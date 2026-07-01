@@ -1,6 +1,6 @@
 /**
- * Transform control のアンカータイプ。
- * TransformControls.tsx の data-id 値に対応する:
+ * Anchor type of a transform control.
+ * Corresponds to the data-id value in TransformControls.tsx:
  * "transform-control:<anchorType>"
  */
 export type TransformAnchorType =

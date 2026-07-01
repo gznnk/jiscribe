@@ -14,8 +14,9 @@ import {
 } from "../../utils/validateStateUtils";
 
 /**
- * label（ネストした注記）の構造を検証する。未指定はラベル無しとして許容する。
- * text は string 必須、位置・スタイルは存在時のみ型を確認する。
+ * Validates the structure of `label` (a nested annotation). Omitting it is
+ * allowed and treated as no label. `text` is a required string; position and
+ * style fields are type-checked only when present.
  */
 export const isValidConnectorLabelState = (label: unknown): boolean => {
 	if (label === undefined) {
@@ -40,9 +41,10 @@ export const isValidConnectorLabelState = (label: unknown): boolean => {
 };
 
 /**
- * ConnectorState（waypoint + stroke + 矢印端 + source/target 端点）を検証する。
- * points は中間経由点のみで端点は source/target が持つため空配列を許容し、
- * 不変条件として少なくとも一方の端点が owned であることを要求する。
+ * Validates a ConnectorState (waypoints + stroke + arrow ends + source/target
+ * endpoints). `points` holds only intermediate waypoints while the endpoints
+ * are held by source/target, so an empty array is allowed; the invariant
+ * requires at least one of the endpoints to be owned.
  */
 export const isValidConnectorState: ObjectStateValidateFn = (value) => {
 	if (!isObject(value)) {
@@ -51,7 +53,7 @@ export const isValidConnectorState: ObjectStateValidateFn = (value) => {
 	const o = value as StateRecord;
 	return (
 		hasValidIdAndType(o, "connector") &&
-		// routing は任意。指定する場合は既知の値（straight | orthogonal）のみ許容する。
+		// routing is optional. When specified, only known values (straight | orthogonal) are allowed.
 		(o.routing === undefined || isConnectorRouting(o.routing)) &&
 		isValidWaypointState(o) &&
 		isValidStrokeStyleState(o) &&

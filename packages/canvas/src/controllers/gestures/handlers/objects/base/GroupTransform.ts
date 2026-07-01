@@ -2,15 +2,15 @@ import { transformFrameByGroup, rotateFrameByGroup } from "./FrameTransform";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
 
 /**
- * Group系のグループ変形処理（再帰）
- * GroupもFrame系として変形
+ * Recursive group-driven transform for Group objects.
+ * A Group is transformed the same way as a Frame.
  */
 export function transformGroupByGroup(
 	group: GroupState,
 	transformRootGroupStartState: GroupState,
 	transformRootGroupEndState: GroupState,
 ): GroupState {
-	// GroupもFrame系として変形
+	// A Group is transformed as a Frame
 	return transformFrameByGroup(
 		group,
 		transformRootGroupStartState,
@@ -19,14 +19,14 @@ export function transformGroupByGroup(
 }
 
 /**
- * Group系のグループ回転処理（再帰）
- * GroupもFrame系として回転
+ * Recursive group-driven rotation for Group objects.
+ * A Group is rotated the same way as a Frame.
  */
 export function rotateGroupByGroup(
 	group: GroupState,
 	rotationRootGroup: GroupState,
 	endGroupRotation: number,
 ): GroupState {
-	// GroupもFrame系として回転
+	// A Group is rotated as a Frame
 	return rotateFrameByGroup(group, rotationRootGroup, endGroupRotation);
 }

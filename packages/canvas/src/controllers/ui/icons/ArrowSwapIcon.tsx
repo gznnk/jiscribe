@@ -8,7 +8,7 @@ type ArrowSwapIconProps = {
 };
 
 /**
- * 矢印の Start / End を入れ替えるアイコン。
+ * Icon for swapping the arrow's Start / End.
  */
 const ArrowSwapIconComponent: React.FC<ArrowSwapIconProps> = ({
 	width = 24,

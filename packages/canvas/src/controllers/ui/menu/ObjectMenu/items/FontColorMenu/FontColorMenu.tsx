@@ -19,10 +19,10 @@ type FontColorMenuProps = {
 };
 
 /**
- * フォントカラーメニュー。
- * 選択中のテキストオブジェクトのフォントカラーを変更する。
- * ColorPickerGrid が data 属性経由でジェスチャーシステムと連携するため、
- * このコンポーネントは現在の色を取得して表示するだけ。
+ * Font color menu.
+ * Changes the font color of the selected text object.
+ * Since ColorPickerGrid coordinates with the gesture system via data attributes,
+ * this component only retrieves and displays the current color.
  */
 const FontColorMenuComponent: React.FC<FontColorMenuProps> = ({
 	canvasState,

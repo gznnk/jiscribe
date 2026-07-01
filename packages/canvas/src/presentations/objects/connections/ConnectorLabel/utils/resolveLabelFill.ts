@@ -2,9 +2,11 @@ import { theme } from "../../../../../constants/theme";
 import { AUTO_COLOR } from "../../../../../schemas/objects/utils/autoColor";
 
 /**
- * ラベル背景（fill）の描画色を解決する。
- * 省略時・`"auto"` 時はキャンバス地色（knockout で線を隠す既定）。具体色はそのまま
- * （`"transparent"` を選べば線が透ける）。表示と編集で同じ結果にするため共通化する。
+ * Resolves the render color for the label background (fill).
+ * When omitted or `"auto"`, uses the canvas background color (the default that
+ * knocks out the line behind it). A concrete color is used as-is (choosing
+ * `"transparent"` lets the line show through). Shared so display and editing
+ * produce the same result.
  */
 export const resolveLabelFill = (fill?: string): string =>
 	fill === undefined || fill === AUTO_COLOR ? theme.canvasBg : fill;

@@ -5,11 +5,12 @@ import type { ConnectorState } from "../../../states/objects/connections/connect
 import { Connector } from "../../objects/connections/Connector";
 import { ConnectorLabel } from "../../objects/connections/ConnectorLabel";
 
+/** Renders a connector along with its optional static label. */
 type ConnectorRendererProps = {
 	connectorState: ConnectorState;
 	objects: CanvasState["objects"];
 	disablePointerEvents?: boolean;
-	/** テキスト編集中のオブジェクト id。自身が編集中ならラベル表示を抑止する。 */
+	/** Id of the object currently being text-edited. Suppresses the label if this connector is being edited. */
 	textEditObjectId?: string | null;
 };
 
@@ -27,7 +28,7 @@ export const ConnectorRenderer: React.FC<ConnectorRendererProps> = ({
 	}
 
 	const label = connectorState.label;
-	// 編集中は ConnectorLabelEditor が同じ位置に出るため静的ラベルは描かない。
+	// While editing, ConnectorLabelEditor appears at the same position, so don't draw the static label.
 	const isEditing = textEditObjectId === connectorState.id;
 	const labelAnchor =
 		label && label.text !== "" && !isEditing

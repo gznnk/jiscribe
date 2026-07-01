@@ -9,9 +9,9 @@ type BorderColorIconProps = {
 };
 
 /**
- * ボーダーカラーアイコン（中空の円）。
- * 現在のストローク色を示す中空の円を表示する。
- * transparent の場合はチェッカーパターンのストロークを表示する。
+ * Border color icon (a hollow circle).
+ * Displays a hollow circle indicating the current stroke color.
+ * For transparent, displays a checker-pattern stroke.
  */
 const BorderColorIconComponent: React.FC<BorderColorIconProps> = ({
 	color,
@@ -30,9 +30,10 @@ const BorderColorIconComponent: React.FC<BorderColorIconProps> = ({
 		>
 			<title>{title}</title>
 			{isTransparent ? (
-				/* 透明インジケータ: 破線リング。dash が前景色の薄い重ね、gap は面が透ける
-				   2 トーンになり、テーマに応じて濃淡が自動反転する。
-				   color-mix は presentation 属性では解決されないため style で指定する。 */
+				/* Transparent indicator: a dashed ring. The dash is a faint overlay of the
+				   foreground color and the gap shows through, producing two tones whose
+				   contrast auto-inverts with the theme.
+				   color-mix is not resolved in presentation attributes, so specify it via style. */
 				<circle
 					cx="12"
 					cy="12"
@@ -43,7 +44,7 @@ const BorderColorIconComponent: React.FC<BorderColorIconProps> = ({
 					style={{ stroke: theme.transparentChecker }}
 				/>
 			) : (
-				/* color は var(--vscode-*)（auto の解決結果）を取りうるため style で当てる。 */
+				/* color may be var(--vscode-*) (the resolved result of auto), so apply it via style. */
 				<circle
 					cx="12"
 					cy="12"

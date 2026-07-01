@@ -5,8 +5,8 @@ import type {
 } from "../../registry/GestureHandlerTypes";
 
 /**
- * コンテキストメニュー項目のクリックを処理する GestureHandler
- * targetKind が "context-menu" の場合に処理を行う
+ * GestureHandler that processes clicks on context menu items.
+ * Handles events whose targetKind is "context-menu".
  */
 export const ContextMenuHandler: GestureHandler = {
 	supports(event: CanvasEvent) {
@@ -15,13 +15,13 @@ export const ContextMenuHandler: GestureHandler = {
 
 	handle(state, event) {
 		if (event.type === "click" && event.targetId) {
-			// targetId から "context-menu:" プレフィックスを除去してコマンドIDを取得
+			// Strip the "context-menu:" prefix from targetId to get the command ID
 			const commandId = event.targetId.replace("context-menu:", "");
 
-			// COMMAND アクションを実行
+			// Execute the COMMAND action
 			const nextState = handleCommand(state, commandId);
 
-			// コンテキストメニューを閉じる
+			// Close the context menu
 			return {
 				...nextState,
 				contextMenuPosition: null,

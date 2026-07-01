@@ -17,9 +17,11 @@ type WrapperProps = {
 };
 
 /**
- * アンカー（経路上のラベル位置）を中心に配置するラッパー。
- * 幅は計測値で与え、translate(-50%, -50%) で中央追従させる。高さは中身に追従する。
- * 背景・枠線は表示側 LabelBox と揃え、編集中も見た目が一致するようにする。
+ * Wrapper centered on the anchor (the label position along the route).
+ * The width is given as a measured value and centered via translate(-50%, -50%);
+ * the height follows its content.
+ * Background and border match the display-side LabelBox so the appearance stays
+ * consistent while editing.
  */
 export const ConnectorLabelEditorWrapper = styled.div<WrapperProps>`
 	position: absolute;
@@ -44,6 +46,10 @@ type TextAreaProps = {
 	fontWeight: string;
 };
 
+/**
+ * Textarea for editing the connector label, styled to match the displayed label
+ * text (font, size, alignment, and line wrapping) with a transparent background.
+ */
 export const ConnectorLabelTextArea = styled.textarea<TextAreaProps>`
 	display: block;
 	width: 100%;

@@ -20,7 +20,7 @@ type Props = {
 };
 
 /**
- * ラベルのフォントサイズメニュー（図形の Font Size と同じ並び）。値はネストの `label.fontSize`。
+ * Font size menu for the label (same layout as the shape's Font Size). The value is the nested `label.fontSize`.
  */
 const LabelFontSizeMenuComponent: React.FC<Props> = ({
 	canvasState,

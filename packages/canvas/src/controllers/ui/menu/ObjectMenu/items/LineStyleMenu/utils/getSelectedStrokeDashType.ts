@@ -4,8 +4,8 @@ import type { StrokeDashType } from "../../../../../../../schemas/objects/types/
 import { getFirstSelectedWithProp } from "../../../utils/getFirstSelectedWithProp";
 
 /**
- * 選択中（コネクター選択時はそのコネクター）の strokeDashType を取得する。
- * 該当する文字列値がなければ undefined を返す。
+ * Gets the strokeDashType of the selection (or the connector when a connector is selected).
+ * Returns undefined if no matching string value exists.
  */
 export const getSelectedStrokeDashType = (
 	state: CanvasControllerState,

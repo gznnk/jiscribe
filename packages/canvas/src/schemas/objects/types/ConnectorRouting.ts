@@ -1,10 +1,13 @@
 /**
  * Available connector routing modes.
  *
- * - `orthogonal`: 端点と接続図形の形状から、描画時に水平/垂直の経路を自動生成する。
- *   `points` は使わず常に空（経路は派生値で永続化しない）。**既定値**（`routing` 省略時はこれ）。
- * - `straight`: 端点を直線で結び、`points`（手動 waypoint）があればそれを通る折れ線。
- *   直線にしたい場合のみ明示的に指定する。
+ * - `orthogonal`: Automatically generates a horizontal/vertical route at render
+ *   time from the endpoints and the shapes of the connected objects. `points` is
+ *   unused and always empty (the route is a derived value and is not persisted).
+ *   **Default** (used when `routing` is omitted).
+ * - `straight`: Connects the endpoints with a straight line, or a polyline
+ *   passing through `points` (manual waypoints) if present. Specify explicitly
+ *   only when a straight line is desired.
  */
 export const ConnectorRoutings = ["straight", "orthogonal"] as const;
 
@@ -14,8 +17,8 @@ export const isConnectorRouting = (value: unknown): value is ConnectorRouting =>
 	ConnectorRoutings.includes(value as ConnectorRouting);
 
 /**
- * routing の既定を解釈する。`routing` 省略（undefined）時は `orthogonal` 扱い。
- * 明示的に `"straight"` のときだけ直線ルーティングになる。
+ * Interprets the routing default. When `routing` is omitted (undefined) it is
+ * treated as `orthogonal`; routing is straight only when explicitly `"straight"`.
  */
 export const isOrthogonalRouting = (
 	routing: ConnectorRouting | undefined,

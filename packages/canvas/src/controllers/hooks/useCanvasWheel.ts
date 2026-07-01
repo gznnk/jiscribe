@@ -3,20 +3,20 @@ import { type RefObject, useEffect } from "react";
 import { shouldUseNativeWheel } from "../gestures/recognizer/utils/shouldUseNativeWheel";
 
 /**
- * キャンバスのコンテナ要素上の wheel イベントを監視し、コールバックを実行する Hook。
+ * Hook that listens for wheel events on the canvas container element and runs a callback.
  *
- * リスナーは `document` ではなくコンテナ要素にスコープする。これにより、
- * - キャンバス外（ホストページのサイドパネル・ツールバー・本文など）で起きた
- *   wheel はネイティブスクロールのまま奪わない
- * - 複数の Canvas を同一ページに置いても、各 Canvas は自分の領域内の wheel
- *   だけを処理する（「アクティブな Canvas」を別途管理する必要がない）
+ * The listener is scoped to the container element rather than `document`, so that:
+ * - Wheel events that occur outside the canvas (the host page's side panels,
+ *   toolbars, body, etc.) are not hijacked and keep their native scrolling.
+ * - Multiple Canvases can be placed on the same page, each handling only the wheel
+ *   events within its own area (no need to separately track an "active Canvas").
  *
- * data-gesture="native-wheel" を持つスクロール可能要素（編集中の textarea など）
- * 上ではネイティブスクロールに任せ、preventDefault しない。
- * Ctrl 押下時はズーム操作のため常にキャンバス側で処理する。
+ * Over scrollable elements marked with data-gesture="native-wheel" (such as a textarea
+ * being edited), native scrolling is left in place and preventDefault is not called.
+ * When Ctrl is held, the event is always handled by the canvas as a zoom operation.
  *
- * @param containerRef - キャンバスのコンテナ要素への参照
- * @param onWheel - wheel イベント発生時に呼ばれるコールバック関数
+ * @param containerRef - Reference to the canvas container element
+ * @param onWheel - Callback invoked when a wheel event occurs
  */
 export function useCanvasWheel(
 	containerRef: RefObject<HTMLElement | null>,
@@ -29,8 +29,8 @@ export function useCanvasWheel(
 		}
 
 		const onContainerWheel = (e: WheelEvent) => {
-			// スクロール可能な data-gesture="native-wheel" 要素（編集中の textarea など）上では
-			// ネイティブスクロールに任せ、キャンバスのスクロールは行わない
+			// Over a scrollable data-gesture="native-wheel" element (such as a textarea
+			// being edited), leave native scrolling in place and skip canvas scrolling
 			if (shouldUseNativeWheel(e.target, e.ctrlKey)) {
 				return;
 			}
@@ -38,8 +38,8 @@ export function useCanvasWheel(
 			onWheel(e);
 		};
 
-		// capture: true でコンテナ内のどの要素で起きた wheel も子孫より先に捕捉する。
-		// passive: false は preventDefault を呼ぶために必須。
+		// capture: true captures wheel events on any element within the container
+		// before its descendants. passive: false is required to call preventDefault.
 		container.addEventListener("wheel", onContainerWheel, {
 			passive: false,
 			capture: true,

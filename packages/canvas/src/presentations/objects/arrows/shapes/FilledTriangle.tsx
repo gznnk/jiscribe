@@ -8,8 +8,8 @@ import { ARROW_SIZE } from "../ArrowConstants";
 import type { ArrowShapeProps } from "../ArrowTypes";
 
 /**
- * 線をこの矢印の根元で終端させるための inset（ローカル単位）。
- * 底辺が `-ARROW_SIZE` にあるため、線は底辺で止める。
+ * Inset (in local units) used to terminate the line at this arrow's base.
+ * Since the base sits at `-ARROW_SIZE`, stop the line at the base.
  */
 export const FILLED_TRIANGLE_INSET = ARROW_SIZE;
 

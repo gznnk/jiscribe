@@ -1,6 +1,10 @@
 import type { Viewport } from "./Viewport";
 import type { ObjectState } from "../objects/base/ObjectState";
 
+/**
+ * Normalized runtime state of the canvas: all objects, their root-level
+ * stacking order, and the current viewport.
+ */
 export type CanvasState = {
 	/**
 	 * Map of all objects in the canvas, normalized by ID.
@@ -11,9 +15,10 @@ export type CanvasState = {
 
 	/**
 	 * Sorted list of root-level IDs in Z-index order (back → front).
-	 * オブジェクトとコネクター（type === "connector"）を混在させて保持し、
-	 * 並び順がそのまま重なり順になる。group の子はここには現れず childIds 側に入る。
-	 * コネクターは group の子にはならず root 直下のみ。
+	 * Holds objects and connectors (type === "connector") mixed together, so the
+	 * order is directly the stacking order. Group children do not appear here; they
+	 * live in childIds instead. Connectors are never group children and exist only
+	 * directly under root.
 	 */
 	rootIds: string[];
 

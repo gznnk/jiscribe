@@ -45,13 +45,14 @@ initializeRegistries();
 
 type CanvasProps = {
 	/**
-	 * 表示する CanvasDoc。
+	 * The CanvasDoc to display.
 	 *
-	 * **呼び出し側の責務**: 必ず `parseCanvasText`（二段検証）を通した正当な doc を
-	 * 渡すこと。Canvas は内部で再検証せず、ID 一意・参照整合・非循環を前提に動作する。
-	 * 未検証の doc（壊れた参照や循環を含む）を渡すと内部走査がハングしうる。
-	 * 検証は外部入力の境界（host）で行う方針
-	 * → packages/canvas/docs/01-design-philosophy.md 原則4。
+	 * **Caller responsibility**: always pass a valid doc that has gone through
+	 * `parseCanvasText` (two-stage validation). Canvas does not re-validate
+	 * internally and assumes unique IDs, referential integrity, and acyclicity.
+	 * Passing an unvalidated doc (with broken references or cycles) can hang
+	 * internal traversals. Validation is done at the external-input boundary (host)
+	 * → see packages/canvas/docs/01-design-philosophy.md principle 4.
 	 */
 	canvasDoc: CanvasDoc;
 	/**
@@ -84,9 +85,9 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	onUndo,
 	onRedo,
 }) => {
-	// rootRef: ジェスチャー面（ツールバー＋キャンバス領域）。pointerHandlers と
-	// pointer capture を張る。canvasRef: キャンバス領域のみ。寸法計測・wheel・
-	// メニュー境界に使い、エッジスクロールをツールバー下の領域に揃える。
+	// rootRef: the gesture surface (toolbar + canvas area). Attaches pointerHandlers
+	// and pointer capture. canvasRef: the canvas area only. Used for size measurement,
+	// wheel, and menu bounds, aligning edge scrolling to the area below the toolbar.
 	const rootRef = useRef<HTMLDivElement>(null);
 	const canvasRef = useRef<HTMLDivElement>(null);
 	const svgRef = useRef<SVGSVGElement>(null);
@@ -119,7 +120,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	});
 
 	// Use wheel handler from GestureRecognizer.
-	// canvasRef（コンテナ要素）にスコープし、キャンバス外の wheel は奪わない。
+	// Scoped to canvasRef (the container element) so wheel events outside the canvas are not captured.
 	useCanvasWheel(canvasRef, wheelHandler);
 
 	// Container resize handling
@@ -141,8 +142,8 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	// Context menu handling
 	const handleContextMenu = useCallback(
 		(e: React.MouseEvent<HTMLDivElement>) => {
-			// data-gesture="none" の要素（テキスト編集中の textarea など）では
-			// ブラウザ標準のコンテキストメニューを表示する
+			// For data-gesture="none" elements (e.g. the textarea during text editing),
+			// show the browser's native context menu.
 			if (isGestureOptedOut(e.target)) {
 				return;
 			}
@@ -153,7 +154,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 
 	const { minX, minY, zoom } = state.viewport;
 
-	// ズームボタンの有効/無効はコマンドの canExecute に委譲（単一の真実）。
+	// Zoom button enabled/disabled state is delegated to the command's canExecute (single source of truth).
 	const canZoomIn = commandRegistry.get("zoomIn")?.canExecute(state) ?? false;
 	const canZoomOut = commandRegistry.get("zoomOut")?.canExecute(state) ?? false;
 

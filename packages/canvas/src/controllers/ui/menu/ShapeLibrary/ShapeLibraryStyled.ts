@@ -3,8 +3,8 @@ import styled from "@emotion/styled";
 import { theme } from "../../../../constants/theme";
 
 /**
- * シェイプライブラリの各アイテムボタン。
- * 統合ツールバー（Toolbar）内に配置される。
+ * Individual item button in the shape library.
+ * Placed inside the unified toolbar (Toolbar).
  */
 export const ShapeLibraryButton = styled.button<{ isActive?: boolean }>`
 	display: flex;

@@ -8,8 +8,8 @@ type ArrowHeadIconProps = {
 };
 
 /**
- * 矢印メニュー用のアイコン。
- * 直線と矢印先端を表示する。
+ * Icon for the arrow menu.
+ * Displays a straight line with an arrowhead.
  */
 const ArrowHeadIconComponent: React.FC<ArrowHeadIconProps> = ({
 	width = 24,

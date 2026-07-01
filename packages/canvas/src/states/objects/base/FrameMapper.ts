@@ -23,9 +23,10 @@ import type { TransformDoc } from "../../../schemas/objects/base/TransformDoc";
 import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
 
 /**
- * features で有効なスタイルグループの pass-through キーを集める。
- * stroke / fill / text / radius は Doc/State でフィールド名が同一なので方向に依存しない。
- * geometry と transform は変換器（convert* / mapTransform*）が作り直すため、ここには含めない。
+ * Collects the pass-through keys for the style groups enabled in `features`.
+ * stroke / fill / text / radius share the same field names between Doc and State,
+ * so they are direction-independent. geometry and transform are excluded here since
+ * the converters (convert* / mapTransform*) rebuild them.
  */
 const collectStyleKeys = (features: ObjectFeatures): readonly string[] => [
 	...(features.stroke ? STROKE_STYLE_KEYS : []),
@@ -34,7 +35,7 @@ const collectStyleKeys = (features: ObjectFeatures): readonly string[] => [
 	...(features.radius ? RADIUS_STYLE_KEYS : []),
 ];
 
-/** src が自身で持つキーのうち、allow-list `keys` に含まれるものだけを取り出す。 */
+/** Extracts only the keys that `src` owns and that are included in the allow-list `keys`. */
 const pick = (
 	src: Record<string, unknown>,
 	keys: readonly string[],
@@ -49,18 +50,19 @@ const pick = (
 };
 
 /**
- * Frame 系オブジェクト（geometry: "rect" | "ellipse" + transform を持つ図形）の
- * Doc↔State マッパーを features から生成する。
+ * Generates a Doc↔State mapper from `features` for Frame-family objects
+ * (shapes with geometry: "rect" | "ellipse" + transform).
  *
- * Doc と State の違いは geometry 表現と transform 表現だけ。それ以外
- * （stroke / fill / text / radius / svgText …）は名前・型が同一なので、本マッパーは
- * geometry/transform だけを変換し、残りは **allow-list で明示的に拾って** 素通しする。
+ * The only differences between Doc and State are the geometry and transform
+ * representations. Everything else (stroke / fill / text / radius / svgText …) shares
+ * the same names and types, so this mapper converts only geometry/transform and passes
+ * the rest through by **explicitly picking them via an allow-list**.
  *
- * 拾うキーは features で有効なスタイルグループ（`collectStyleKeys`）＋図形固有の
- * `extraKeys`（svg の svgText など）。allow-list なので id/parentId/minWidth といった
- * runtime 専用フィールドが Doc に漏れることは構造的に起こらない。各キー配列は
- * `AssertExhaustiveKeys` で対応する型に束縛されており、フィールド追加時の取りこぼしは
- * コンパイルエラーになる。
+ * The picked keys are the style groups enabled in `features` (`collectStyleKeys`) plus
+ * shape-specific `extraKeys` (such as svg's svgText). Because it is an allow-list,
+ * runtime-only fields like id/parentId/minWidth cannot structurally leak into the Doc.
+ * Each key array is bound to its corresponding type via `AssertExhaustiveKeys`, so
+ * missing a field when one is added becomes a compile error.
  */
 export const createFrameMapper = <
 	TDoc extends ObjectDoc,

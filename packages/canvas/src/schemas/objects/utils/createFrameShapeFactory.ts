@@ -2,7 +2,7 @@ import type { ObjectDoc } from "../base/ObjectDoc";
 import type { ShapeFactory } from "../types/ShapeFactory";
 import { numberOverride } from "../types/ShapeFactory";
 
-/** Frame 系（geometry: "rect" / 左上原点）図形の DOC_DEFAULTS が満たす最小形。 */
+/** Minimal shape that DOC_DEFAULTS of Frame-family shapes (geometry: "rect" / top-left origin) must satisfy. */
 type FrameDefaults = { width: number; height: number } & Record<
 	string,
 	unknown
@@ -10,18 +10,21 @@ type FrameDefaults = { width: number; height: number } & Record<
 
 type FrameShapeFactoryOptions = {
 	/**
-	 * 2 点 bounds からのドラッグ描画に対応するか（既定 true）。
-	 * false の図形（sticky など）は createDocFromBounds を持たず、クリックで中央配置になる。
+	 * Whether drag-drawing from a two-point bounds is supported (default true).
+	 * Shapes set to false (such as sticky) have no createDocFromBounds and are
+	 * center-placed on click.
 	 */
 	supportsBounds?: boolean;
 };
 
 /**
- * Frame 系（geometry: "rect"、左上原点の x/y/width/height）図形の `ShapeFactory` を
- * DEFAULTS から生成する。rect / diamond / sticky など、生成ロジックが defaults と
- * bounds 対応の有無しか違わない図形を 1 か所に集約する。
+ * Builds a `ShapeFactory` from DEFAULTS for Frame-family shapes
+ * (geometry: "rect", top-left origin x/y/width/height). Consolidates shapes
+ * such as rect / diamond / sticky whose creation logic differs only in the
+ * defaults and whether bounds are supported.
  *
- * 中心基準の ellipse（cx/cy/rx/ry）は配置計算が異なるため対象外。
+ * Center-based ellipses (cx/cy/rx/ry) are out of scope because their placement
+ * calculation differs.
  */
 export const createFrameShapeFactory = (
 	defaults: FrameDefaults,

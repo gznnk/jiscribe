@@ -2,12 +2,13 @@ import type { CanvasControllerState } from "../CanvasTypes";
 import { getEffectiveSelectedIds } from "./getEffectiveSelectedIds";
 
 /**
- * arrange（重なり順変更）コマンドの実行可否を判定する。
+ * Determines whether the arrange (z-order change) command can be executed.
  *
- * オブジェクト選択（selectedIds）に加えてコネクター選択（selectedConnectorId）も
- * 対象にするため、getEffectiveSelectedIds 経由の実効選択で判定する。
- * 実効選択が空でなく、かつ全要素が同じ親（同一グループ内 or すべてルート）に
- * 属するときに true。コネクターは常に root 直下なので単独で常に true になる。
+ * Because it targets connector selection (selectedConnectorId) in addition to object
+ * selection (selectedIds), the check uses the effective selection via getEffectiveSelectedIds.
+ * Returns true when the effective selection is non-empty and all elements share the same
+ * parent (within the same group, or all at root). A connector is always directly under root,
+ * so on its own it is always true.
  */
 export function isArrangeableSelection(state: CanvasControllerState): boolean {
 	const ids = getEffectiveSelectedIds(state);

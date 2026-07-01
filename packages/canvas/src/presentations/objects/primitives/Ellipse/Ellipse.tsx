@@ -2,7 +2,7 @@ import { EllipseElement } from "./EllipseStyled";
 import type { EllipseState } from "../../../../states/objects/primitives/ellipse/EllipseState";
 import { createFrameObject } from "../../base/createFrameObject";
 
-/** Ellipse の表示（Frame 系共通ロジックは createFrameObject に集約、形状だけ差し替え）。 */
+/** Renders an Ellipse (Frame-family shared logic lives in createFrameObject; only the shape is swapped in). */
 export const Ellipse = createFrameObject<EllipseState>((state, shape) => (
 	<EllipseElement
 		{...shape}

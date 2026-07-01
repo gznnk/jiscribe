@@ -2,9 +2,9 @@ import { canvasToState } from "../../../states/canvas/CanvasMapper";
 import type { Command } from "../CommandTypes";
 
 /**
- * Undo コマンド
- * ショートカット: Ctrl/Cmd+Z
- * 履歴から前の状態を復元する
+ * Undo command.
+ * Shortcut: Ctrl/Cmd+Z
+ * Restores the previous state from history.
  */
 export const UndoCommand: Command = {
 	id: "undo",
@@ -18,14 +18,14 @@ export const UndoCommand: Command = {
 	},
 
 	canExecute: (state) => {
-		// ドラッグ中、テキスト編集中は実行不可
+		// Not executable while dragging or editing text
 		if (state.eventStartSnapshot !== null) {
 			return false;
 		}
 		if (state.textEditState !== null) {
 			return false;
 		}
-		// 履歴がない場合は実行不可
+		// Not executable when there is no history
 		return state.history.past.length > 0;
 	},
 
@@ -48,7 +48,7 @@ export const UndoCommand: Command = {
 			commitVersion: state.commitVersion, // Don't update - this is history restoration, not a new commit
 			saveVersion: state.saveVersion + 1,
 			saveNonce: crypto.randomUUID(),
-			historyCoalesce: { recorded: null, pending: null }, // 履歴ナビゲーションは集約境界
+			historyCoalesce: { recorded: null, pending: null }, // History navigation is a coalescing boundary
 			contextMenuPosition: null,
 			shapeLibraryDrag: null,
 			areaSelection: null,

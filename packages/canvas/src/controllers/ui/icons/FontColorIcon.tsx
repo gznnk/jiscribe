@@ -9,8 +9,8 @@ type FontColorIconProps = {
 };
 
 /**
- * フォントカラーアイコン。
- * "A" の文字と下部にカラーバーを表示する。
+ * Font color icon.
+ * Displays the letter "A" with a color bar underneath.
  */
 const FontColorIconComponent: React.FC<FontColorIconProps> = ({
 	width = 24,
@@ -38,7 +38,7 @@ const FontColorIconComponent: React.FC<FontColorIconProps> = ({
 		>
 			A
 		</text>
-		{/* underlineColor は var(--vscode-*)（auto の解決結果）を取りうるため style で当てる。 */}
+		{/* underlineColor may be var(--vscode-*) (the resolved result of auto), so apply it via style. */}
 		<rect
 			x="4"
 			y="20"

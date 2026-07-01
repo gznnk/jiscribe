@@ -18,8 +18,8 @@ type Props = {
 };
 
 /**
- * ラベルの枠線色メニュー（図形の Border Color と同じ並び）。
- * 値はネストの `label.stroke`。枠線は `label.strokeWidth > 0` のときだけ見える。
+ * Label border color menu (same layout as the shape's Border Color).
+ * The value is the nested `label.stroke`. The border is only visible when `label.strokeWidth > 0`.
  */
 const LabelBorderColorMenuComponent: React.FC<Props> = ({
 	canvasState,

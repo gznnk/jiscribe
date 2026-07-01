@@ -3,10 +3,10 @@ import { canvasToDoc, canvasToState } from "../../states/canvas/CanvasMapper";
 import type { CanvasControllerState } from "../CanvasTypes";
 
 /**
- * CanvasDoc から初期 CanvasControllerState を構築する。
+ * Builds the initial CanvasControllerState from a CanvasDoc.
  *
- * production（useCanvasReducer）と結合テストの両方がこれを共有することで、
- * 初期 state のデフォルト値がドリフトしないようにする。
+ * Both production (useCanvasReducer) and integration tests share this so the
+ * default values of the initial state do not drift apart.
  */
 export const createInitialControllerState = (
 	initialDoc: CanvasDoc,

@@ -21,8 +21,8 @@ type FontSizeMenuProps = {
 };
 
 /**
- * フォントサイズメニュー。
- * 選択中のテキストオブジェクトのフォントサイズを変更する。
+ * Font size menu.
+ * Changes the font size of the selected text object.
  */
 const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 	canvasState,

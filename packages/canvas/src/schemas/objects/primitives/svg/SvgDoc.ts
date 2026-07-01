@@ -9,14 +9,15 @@ export const SvgFeatures = {
 } as const satisfies ObjectFeatures;
 
 /**
- * SVG オブジェクト固有のフィールド。
- * 中身は不透明な「インライン SVG マークアップ」で、描画時にサニタイズされる。
+ * Fields specific to SVG objects.
+ * The content is opaque "inline SVG markup" that is sanitized at render time.
  *
- * 原寸（スケール基準）は描画時に SVG の viewBox（無ければ width/height 属性、
- * それも無ければ既定値）から自動導出するため、doc には持たせない。
+ * The natural (scale-reference) size is not stored on the doc; it is derived
+ * automatically at render time from the SVG's viewBox (falling back to the
+ * width/height attributes, then to a default).
  */
 export type SvgExtraDoc = {
-	/** サニタイズ前のインライン SVG 文字列。外部参照は描画時に除去される。 */
+	/** The raw, unsanitized inline SVG string. External references are stripped at render time. */
 	svgText: string;
 };
 

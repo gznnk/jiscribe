@@ -1,8 +1,9 @@
 /**
- * Control の targetId から編集中のエンドポイントを取得する。
+ * Gets the endpoint being edited from a control's targetId.
  * "connection-anchor:edit:connectorId:source" -> "source"
  * "connection-anchor:edit:connectorId:target" -> "target"
- * 新規作成（"connection-anchor:create:..."）やフォーマット不一致は "target"（デフォルト）。
+ * Creation mode ("connection-anchor:create:...") or a format mismatch falls back
+ * to "target" (the default).
  */
 export function getEditingEndpoint(
 	targetId: string | undefined,

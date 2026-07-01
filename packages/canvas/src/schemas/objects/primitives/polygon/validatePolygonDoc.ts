@@ -5,8 +5,8 @@ import {
 	validateStrokeStyleFields,
 } from "../../utils/validateDocUtils";
 
-// polygon は閉じた多角形のため最低 3 点必要（スキーマも minItems: 3）。
-// polyline と異なり 2 点は退化した線分なので弾く。
+// A polygon is a closed shape, so it requires at least 3 points (the schema also enforces minItems: 3).
+// Unlike a polyline, 2 points form a degenerate line segment and are rejected.
 export const validatePolygonDoc: ObjectDocValidateFn = (o, path) => [
 	...validatePolyFields(o, path, 3),
 	...validateStrokeStyleFields(o, path),

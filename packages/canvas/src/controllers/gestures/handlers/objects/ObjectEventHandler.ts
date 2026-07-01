@@ -37,8 +37,8 @@ import {
 } from "../../utils/snap/findSnap";
 
 /**
- * オブジェクトのクリック処理
- * 階層的な選択ロジックを適用し、選択状態を更新する
+ * Handles a click on an object.
+ * Applies hierarchical selection logic and updates the selection state.
  */
 function handleObjectClick(
 	canvasState: CanvasControllerState,
@@ -51,15 +51,15 @@ function handleObjectClick(
 		return canvasState;
 	}
 
-	// 階層的選択ロジックで新しい選択を決定
+	// Determine the new selection via hierarchical selection logic
 	const selectedIds = determineSelection(targetObject, canvasState, mods);
 
-	// 変更がない場合は現在の状態を返す
+	// Return the current state if there is no change
 	if (selectedIds === null) {
 		return canvasState;
 	}
 
-	// 複数選択の場合は multiSelectGroup を作成
+	// For multi-selection, create a multiSelectGroup
 	let multiSelectGroup = null;
 	if (1 < selectedIds.length) {
 		multiSelectGroup = createMultiSelectGroup(
@@ -73,18 +73,18 @@ function handleObjectClick(
 		...canvasState,
 		selectedIds,
 		multiSelectGroup,
-		// コネクター選択を解除して排他を保証
+		// Clear the connector selection to guarantee mutual exclusion
 		selectedConnectorId: null,
-		// 頂点選択を解除
+		// Clear the vertex selection
 		selectedVertex: null,
-		// 選択変化時にサブメニューを閉じる
+		// Close the submenu on selection change
 		objectMenuOpenId: null,
 	};
 }
 
 /**
- * オブジェクトのドラッグ処理
- * Registry経由で各形状のmoveByDeltaを動的に解決
+ * Handles dragging an object.
+ * Resolves each shape's moveByDelta dynamically via the registry.
  */
 function handleObjectDrag(
 	canvasState: CanvasControllerState,
@@ -105,10 +105,11 @@ function handleObjectDrag(
 	const eventStartObjects = eventStartSnapshot.objects;
 	const selectedIds = canvasState.selectedIds;
 
-	// --- Shift による軸固定 ---
-	// Shift 押下中は移動を一方の軸へ固定する。固定する軸（lockedAxis）は累積 delta の
-	// 絶対値が小さい方とし、絶対値が大きい方向にのみ動かす。累積量で判定するため、
-	// ドラッグ中に大きい方が入れ替われば固定軸も追従する。
+	// --- Axis lock via Shift ---
+	// While Shift is held, movement is locked to one axis. The locked axis (lockedAxis)
+	// is the one with the smaller absolute cumulative delta, and movement occurs only
+	// along the direction with the larger absolute value. Since it is judged by the
+	// cumulative amount, the locked axis follows if the larger direction swaps during the drag.
 	const lockedAxis: "x" | "y" | null = mods.shift
 		? Math.abs(delta.x) >= Math.abs(delta.y)
 			? "y"
@@ -117,8 +118,8 @@ function handleObjectDrag(
 
 	const zoom = canvasState.viewport.zoom;
 
-	// 軸固定中、フリー軸（移動する側）の移動量がわずかなら開始位置へ吸着する。
-	// 開始位置に揃っていることを両軸ガイドで示すため、後段で feedback を両軸に設定する。
+	// While axis-locked, if the free axis (the moving side) has only a slight movement, snap to the start position.
+	// To indicate alignment with the start position via both-axis guides, feedback is set on both axes later.
 	const freeAxisDelta = lockedAxis === "x" ? delta.y : delta.x;
 	const snapToOrigin =
 		lockedAxis !== null && Math.abs(freeAxisDelta) <= ORIGIN_SNAP_PX / zoom;
@@ -130,12 +131,12 @@ function handleObjectDrag(
 				y: lockedAxis === "y" ? 0 : delta.y,
 			};
 
-	// --- スナップ補正 ---
+	// --- Snap correction ---
 	let adjustedDelta = constrainedDelta;
 	let snapFeedback: SnapFeedback = { x: [], y: [] };
 
-	// スナップ候補は dragStart 時にキャッシュ済みの全オブジェクト分を参照のみで使う。
-	// 除外（選択中＋全子孫）は配列をフィルタせず、Set を findSnap に渡して内部で弾く。
+	// Snap candidates use the cached set of all objects from dragStart by reference only.
+	// Exclusions (selection + all descendants) are not filtered out of the array; a Set is passed to findSnap and filtered internally.
 	const snapCandidates = eventStartSnapshot.snapCandidates;
 	const excludeIds = eventStartSnapshot.selectedIdsWithDescendants;
 	const snapSourceId =
@@ -155,10 +156,10 @@ function handleObjectDrag(
 			bottom: bbox.bottom + constrainedDelta.y,
 		};
 
-		// 中央（中点）もドラッグ側エッジ値に含め、中央↔中央 / 中央↔エッジ を吸着可能にする
+		// Include the center (midpoint) in the drag-side edge values too, to enable center↔center / center↔edge snapping
 		const selectedCenterX = (selectedBBox.left + selectedBBox.right) / 2;
 		const selectedCenterY = (selectedBBox.top + selectedBBox.bottom) / 2;
-		// 固定軸はスナップ補正でも動かさないよう、その軸のエッジ値を空にしてスキップする
+		// To keep the locked axis unmoved even by snap correction, empty that axis's edge values to skip it
 		const result = findSnap(
 			snapCandidates,
 			SNAP_THRESHOLD_PX / zoom,
@@ -189,11 +190,11 @@ function handleObjectDrag(
 		);
 	}
 
-	// --- Shift 軸固定のフィードバック ---
-	// 移動できる軸方向を示すガイド線（ビューポート全体に伸びる線）の位置を決める。
-	// 通常は固定軸に応じて 1 本（縦移動=縦線 x / 横移動=横線 y）。
-	// 原点スナップ中は開始位置に揃っていることを示すため両軸（x・y）を出す。
-	// 実描画は専用コンポーネント AxisLockGuide が担う。
+	// --- Shift axis-lock feedback ---
+	// Determine the position of the guide line (a line spanning the whole viewport) indicating the movable axis direction.
+	// Normally one line depending on the locked axis (vertical move = vertical line x / horizontal move = horizontal line y).
+	// During origin snap, both axes (x and y) are shown to indicate alignment with the start position.
+	// The actual drawing is handled by the dedicated AxisLockGuide component.
 	let axisLockFeedback: AxisLockFeedback | null = null;
 	if (lockedAxis && snapSourceKeyPoints) {
 		const baseBBox = calcKeyPointsBoundingBox(snapSourceKeyPoints);
@@ -202,17 +203,17 @@ function handleObjectDrag(
 		if (snapToOrigin) {
 			axisLockFeedback = { x: centerX, y: centerY };
 		} else if (lockedAxis === "y") {
-			// 横移動: 中心 Y を通る横線
+			// Horizontal move: horizontal line through the center Y
 			axisLockFeedback = { y: centerY };
 		} else {
-			// 縦移動: 中心 X を通る縦線
+			// Vertical move: vertical line through the center X
 			axisLockFeedback = { x: centerX };
 		}
 	}
 
-	// --- 全選択オブジェクトを adjustedDelta で移動（ナッジ移動と共有）---
-	// ドラッグはドラッグ開始スナップショットを移動元にして累積 delta で移動する。
-	// 親グループの境界更新は dragEnd でまとめて行うため、ここでは行わない。
+	// --- Move all selected objects by adjustedDelta (shared with nudge move) ---
+	// Dragging moves by the cumulative delta from the drag-start snapshot as the source.
+	// Parent group bounds updates are done together on dragEnd, not here.
 	const eventStartMultiSelectGroup = eventStartSnapshot.multiSelectGroup;
 	const { objects: updatedObjects, multiSelectGroup: movedMultiSelectGroup } =
 		moveSelection({
@@ -229,7 +230,7 @@ function handleObjectDrag(
 		axisLockFeedback,
 	};
 
-	// multiSelectGroup も同期して移動（ドラッグ中に複数選択が維持されている場合のみ）
+	// Move multiSelectGroup in sync as well (only when multi-selection is maintained during the drag)
 	if (canvasState.multiSelectGroup && movedMultiSelectGroup) {
 		nextState.multiSelectGroup = movedMultiSelectGroup;
 	}
@@ -238,7 +239,7 @@ function handleObjectDrag(
 }
 
 /**
- * ドラッグ開始時の選択処理
+ * Handles selection at the start of a drag.
  */
 function handleObjectDragStart(
 	canvasState: CanvasControllerState,
@@ -254,7 +255,7 @@ function handleObjectDragStart(
 
 	const { id } = targetObject;
 
-	// 選択状態の判定
+	// Determine the selection state
 	const isCurrentlySelected = canvasState.selectedIds.includes(id);
 	const ancestors = getAncestors(canvasState, id);
 	const isAncestorSelected = ancestors.some((ancestorId) =>
@@ -263,20 +264,20 @@ function handleObjectDragStart(
 
 	let selectedIds: string[];
 	let newMultiSelectGroup = canvasState.multiSelectGroup;
-	// eventStartSnapshot に設定する multiSelectGroup と keyPoints の更新分
+	// The multiSelectGroup and keyPoints updates to set on eventStartSnapshot
 	let eventStartMultiSelectGroup =
 		canvasState.eventStartSnapshot?.multiSelectGroup ?? null;
 	let keyPoints = canvasState.eventStartSnapshot?.keyPoints ?? {};
 
 	if (isCurrentlySelected || isAncestorSelected) {
-		// すでに選択済み: 現在の選択を維持
+		// Already selected: keep the current selection
 		selectedIds = canvasState.selectedIds;
 	} else {
-		// 未選択: 階層的選択ロジックを適用
+		// Not selected: apply hierarchical selection logic
 		const newSelection = determineSelection(targetObject, canvasState, mods);
 		selectedIds = newSelection ?? canvasState.selectedIds;
 
-		// 選択中の図形が増えたのに伴い multiSelectGroup を作成・更新する
+		// Create/update multiSelectGroup as the number of selected shapes increases
 		const eventStartObjects =
 			canvasState.eventStartSnapshot?.objects ?? canvasState.objects;
 		newMultiSelectGroup =
@@ -289,7 +290,7 @@ function handleObjectDragStart(
 				: null;
 		eventStartMultiSelectGroup = newMultiSelectGroup;
 
-		// 新しい multiSelectGroup の keyPoints も追加する
+		// Also add the keyPoints of the new multiSelectGroup
 		if (newMultiSelectGroup && isTransformedFrame(newMultiSelectGroup)) {
 			keyPoints = {
 				...keyPoints,
@@ -300,8 +301,8 @@ function handleObjectDragStart(
 		}
 	}
 
-	// dragStart 確定後の selectedIds で除外集合を再キャッシュする
-	// （handleGesture 構築時の選択から変わった場合に snapshot を最新化する）
+	// Re-cache the exclusion set with the selectedIds finalized after dragStart
+	// (refresh the snapshot if the selection changed from what it was when handleGesture was built)
 	const selectedIdsWithDescendants = canvasState.eventStartSnapshot
 		? buildSelectedIdsWithDescendants(
 				selectedIds,
@@ -309,17 +310,17 @@ function handleObjectDragStart(
 			)
 		: null;
 
-	// 選択状態を更新し、エッジスクロールを有効化
+	// Update the selection state and enable edge scrolling
 	const nextState = {
 		...canvasState,
 		selectedIds,
 		multiSelectGroup: newMultiSelectGroup,
 		edgeScrollEnabled: true,
-		// コネクター選択を解除して排他を保証
+		// Clear the connector selection to guarantee mutual exclusion
 		selectedConnectorId: null,
-		// 頂点選択を解除
+		// Clear the vertex selection
 		selectedVertex: null,
-		// ドラッグ開始時にオブジェクトメニューのドロップダウンを閉じる
+		// Close the object menu dropdown at drag start
 		objectMenuOpenId: null,
 		eventStartSnapshot: canvasState.eventStartSnapshot
 			? {
@@ -331,12 +332,12 @@ function handleObjectDragStart(
 			: null,
 	};
 
-	// ドラッグ処理を実行
+	// Run the drag handling
 	return handleObjectDrag(nextState, delta, button, mods);
 }
 
 /**
- * ドラッグ終了時の処理
+ * Handles the end of a drag.
  */
 function handleObjectDragEnd(
 	canvasState: CanvasControllerState,
@@ -344,16 +345,16 @@ function handleObjectDragEnd(
 	button: number,
 	mods: Mods,
 ): CanvasControllerState {
-	// エッジスクロールを無効化
+	// Disable edge scrolling
 	const nextState = {
 		...canvasState,
 		edgeScrollEnabled: false,
 	};
 
-	// 最終的なドラッグ処理
+	// Final drag handling
 	const resultState = handleObjectDrag(nextState, delta, button, mods);
 
-	// 親グループのバウンディングボックスを更新
+	// Update the parent groups' bounding boxes
 	return updateAffectedGroupBounds(resultState, resultState.selectedIds);
 }
 
@@ -361,7 +362,7 @@ function handleObjectDragEnd(
  * Handles events that occur on objects (not on canvas).
  * This is the main entry point for object-level event handling.
  *
- * Registry経由で各形状の処理を動的に解決するため、形状に依存しない。
+ * Shape-agnostic, since each shape's handling is resolved dynamically via the registry.
  *
  * Note: eventStartSnapshot is managed by handleGesture(), not here.
  */
@@ -371,8 +372,8 @@ export const ObjectEventHandler: GestureHandler = {
 	},
 
 	handle(state, event) {
-		// 現在編集中のオブジェクト自身への doubleClick のみ commit をスキップ（編集継続のため）
-		// それ以外（非テキストオブジェクトへの doubleClick を含む）は commit してクリアする
+		// Skip commit only for a doubleClick on the object currently being edited (to continue editing).
+		// Otherwise (including a doubleClick on a non-text object), commit and clear.
 		let nextState = state;
 		const isDoubleClickOnCurrentEditTarget =
 			event.type === "doubleClick" &&
@@ -391,10 +392,10 @@ export const ObjectEventHandler: GestureHandler = {
 			return nextState;
 		}
 
-		// Pointer Down の処理
+		// Handle Pointer Down
 		if (event.type === "pressed") {
 			if (event.button === 0) {
-				// 左クリック押下時はコンテキストメニューを閉じる
+				// Close the context menu on left-click press
 				nextState = {
 					...nextState,
 					contextMenuPosition: null,
@@ -402,7 +403,7 @@ export const ObjectEventHandler: GestureHandler = {
 			}
 		}
 
-		// クリックイベントの処理
+		// Handle the click event
 		if (event.type === "click") {
 			return handleObjectClick(
 				nextState,
@@ -412,12 +413,13 @@ export const ObjectEventHandler: GestureHandler = {
 			);
 		}
 
-		// ダブルクリックイベントの処理
+		// Handle the double-click event
 		if (event.type === "doubleClick") {
-			// テキストを持つ図形（features.text）のみテキスト編集を開始する。
-			// isTextStyleState は「テキスト属性に矛盾が無いか」を見る緩いガードで、
-			// テキストを一切持たない図形（svg / polyline / polygon など）も通してしまうため、
-			// プロパティ更新側（isPropertySupported）と同じ features.text を正とする。
+			// Start text editing only for shapes that have text (features.text).
+			// isTextStyleState is a loose guard that only checks whether the text attributes
+			// are consistent, so it also lets through shapes with no text at all
+			// (svg / polyline / polygon, etc.). Treat the same features.text used by the
+			// property-update side (isPropertySupported) as authoritative.
 			const features = objectMapperRegistry.getFeatures(targetObject.type);
 			if (features?.text === true && isTextStyleState(targetObject)) {
 				return {
@@ -431,7 +433,7 @@ export const ObjectEventHandler: GestureHandler = {
 			return nextState;
 		}
 
-		// ドラッグイベントの処理
+		// Handle the drag events
 		const objectStartState =
 			nextState.eventStartSnapshot?.objects[targetObjectId];
 		if (!objectStartState) {

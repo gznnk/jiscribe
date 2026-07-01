@@ -12,23 +12,23 @@ import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { calcConnectorBoundingBox } from "../../../../utils/calcConnectorBoundingBox";
 import { calcGroupBoundingBox } from "../../../../utils/calcGroupBoundingBox";
 
-/** ObjectMenu とオブジェクト間の距離 (px) */
+/** Distance between the ObjectMenu and the object (px) */
 const DISTANCE_FROM_OBJECT = 40;
 
 type ObjectMenuPosition = {
-	/** メニューを表示すべきか */
+	/** Whether the menu should be rendered */
 	shouldRender: boolean;
-	/** キャンバス座標系での x 座標 */
+	/** x coordinate in the canvas coordinate system */
 	x: number;
-	/** キャンバス座標系での y 座標 */
+	/** y coordinate in the canvas coordinate system */
 	y: number;
 };
 
 /**
- * 選択中オブジェクトの下にメニューを配置するための座標を計算する。
+ * Computes the coordinates for positioning the menu below the selected object(s).
  *
- * ScrollSyncedOverlay 内に配置されるため、座標はキャンバス座標系のまま返す。
- * オーバーレイ自体がスクロール追従するので viewport offset は不要。
+ * Since the menu lives inside ScrollSyncedOverlay, coordinates are returned in the
+ * canvas coordinate system. The overlay itself follows scrolling, so no viewport offset is needed.
  *
  * - Automatically positions menu above object if it would overflow bottom viewport boundary
  * - Adjusts horizontal position to fit within left/right viewport boundaries
@@ -64,8 +64,8 @@ export function useObjectMenuPosition(
 		if (contextMenuPosition !== null) {
 			return false;
 		}
-		// eventStartSnapshot が null でない場合でも、objectMenuOpenId が null でない場合は表示を続ける
-		// （スライダーのドラッグ中にメニューを表示し続けるため）
+		// Even when eventStartSnapshot is non-null, keep showing the menu if objectMenuOpenId is non-null
+		// (so the menu stays visible while dragging a slider)
 		if (eventStartSnapshot !== null && objectMenuOpenId === null) {
 			return false;
 		}
@@ -94,7 +94,7 @@ export function useObjectMenuPosition(
 			return { shouldRender: false, x: 0, y: 0 };
 		}
 
-		// 選択オブジェクト全体のバウンディングボックスを計算
+		// Compute the bounding box of all selected objects
 		let minX = Infinity;
 		let minY = Infinity;
 		let maxX = -Infinity;
@@ -126,16 +126,16 @@ export function useObjectMenuPosition(
 
 			let bbox;
 			if (isTransformedFrame(obj)) {
-				// rect, ellipse など Frame を持つオブジェクト
+				// Objects with a Frame, such as rect and ellipse
 				bbox = calcBoundingBox(obj);
 			} else if (isGroupState(obj)) {
-				// グループの場合、子要素から再帰的にバウンディングボックスを計算
+				// For a group, compute the bounding box recursively from its children
 				bbox = calcGroupBoundingBox(obj, objects);
 				if (!bbox) {
 					continue;
 				}
 			} else if (isPoly(obj)) {
-				// polyline, polygon など points 配列を持つオブジェクト
+				// Objects with a points array, such as polyline and polygon
 				const polyBbox = calcPolyBoundingBox(obj.points);
 				if (!polyBbox) {
 					continue;
@@ -164,9 +164,9 @@ export function useObjectMenuPosition(
 			minY: vpMinY,
 		} = viewport;
 
-		// 選択全体の中央 X、下端 Y を計算
-		// ScrollSyncedOverlay の座標系に合わせるため、キャンバス座標に zoom を掛ける
-		// （詳細は CanvasStyled.ts の ScrollSyncedOverlay のコメントを参照）
+		// Compute the center X and bottom Y of the whole selection
+		// Multiply canvas coordinates by zoom to match the ScrollSyncedOverlay coordinate system
+		// (see the ScrollSyncedOverlay comment in CanvasStyled.ts for details)
 		const objectCenterX = ((minX + maxX) / 2) * zoom;
 		const objectBottomY = maxY * zoom;
 		const objectTopY = minY * zoom;
@@ -207,8 +207,8 @@ export function useObjectMenuPosition(
 			menuCenterX = viewportMinX + menuHalfWidth;
 		}
 
-		// 左端座標を px で直接計算することで translateX(-50%) を不要にし、
-		// サブピクセルレンダリングによるアイコンのぼやけを防ぐ
+		// Compute the left-edge coordinate directly in px to avoid translateX(-50%),
+		// preventing icon blur from sub-pixel rendering
 		const menuX = menuCenterX - menuHalfWidth;
 
 		return {

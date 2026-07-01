@@ -3,13 +3,15 @@ import type { ObjectState } from "../../../../../../states/objects/base/ObjectSt
 import type { HoveredElement } from "../../../../recognizer/GestureRecognizerTypes";
 
 /**
- * hover 中の要素から、エンドポイント接続先として有効な最初のオブジェクトを返す。
- * - connectable 判定（isConnectable）が真のオブジェクトのみ対象にする
+ * Returns the first hovered object that is a valid endpoint connection target.
+ * - Only objects for which the connectable check (isConnectable) is true are considered.
  *
- * 固定側エンドポイントと同一のオブジェクトも対象に含める（自己ループを許可するため）。
- * 同一オブジェクトでの「固定側と同じアンカー」回避は computeEditedEndpoint が担う。
+ * The object identical to the fixed-side endpoint is also included as a target (to allow
+ * self-loops). Avoiding "the same anchor as the fixed side" on the same object is handled
+ * by computeEditedEndpoint.
  *
- * registry へ直接依存させず isConnectable を注入することで、純粋関数として単体テストできる。
+ * By injecting isConnectable instead of depending on the registry directly, this stays a
+ * pure function and can be unit tested.
  */
 export function findConnectableHoverTarget(args: {
 	hovered: HoveredElement[];

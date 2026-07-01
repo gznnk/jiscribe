@@ -2,8 +2,8 @@ import { getKindAndId } from "./getKindAndId";
 import type { HoveredElement } from "../GestureRecognizerTypes";
 
 /**
- * 座標上のホバー要素を取得（重複除外、指定IDの除外）
- * rootElement を渡すとキャンバス外の要素を除外できる
+ * Get the hovered elements at a coordinate (deduplicated, excluding a given ID).
+ * Passing rootElement excludes elements outside the canvas.
  */
 export const getHoveredElements = (
 	x: number,
@@ -28,13 +28,13 @@ export const getHoveredElements = (
 			continue;
 		}
 
-		// 重複チェック: 既に同じ id が存在する場合はスキップ
+		// Deduplication: skip if the same id already exists
 		if (seenIds.has(item.id)) {
 			continue;
 		}
 		seenIds.add(item.id);
 
-		// excludeId と同じ場合は hovered に追加しない
+		// Do not add to hovered when it matches excludeId
 		if (excludeId && item.id === excludeId) {
 			continue;
 		}

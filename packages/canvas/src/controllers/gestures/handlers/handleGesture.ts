@@ -64,7 +64,7 @@ export const handleGesture = (
 
 	// Save eventStartSnapshot on event start
 	if (EVENT_START_TYPES.includes(canvasEvent.type)) {
-		// state.keyPointsCache を読み取り、参照比較で変化があったオブジェクトのみ再計算する
+		// Read state.keyPointsCache and recompute only the objects that changed by reference comparison
 		const oldCache = state.keyPointsCache;
 		const newCache: KeyPointsCache = {};
 		let cacheChanged = false;
@@ -73,11 +73,11 @@ export const handleGesture = (
 		for (const [id, obj] of Object.entries(state.objects)) {
 			const cached = oldCache[id];
 			if (cached && cached.stateRef === obj) {
-				// キャッシュヒット: 参照が同じなので keyPoints も同じ
+				// Cache hit: same reference, so keyPoints are unchanged
 				newCache[id] = cached;
 				keyPoints[id] = cached.keyPoints;
 			} else {
-				// キャッシュミス: 再計算
+				// Cache miss: recompute
 				let computed: FrameKeyPoints | undefined;
 				if (isTransformedFrame(obj)) {
 					computed = calcFrameKeyPoints(obj as TransformedFrame);
@@ -92,30 +92,30 @@ export const handleGesture = (
 					keyPoints[id] = computed;
 					cacheChanged = true;
 				}
-				// Frame を持たないオブジェクト（connector 等）は newCache に含めない
+				// Objects without a frame (e.g. connectors) are not included in newCache
 			}
 		}
 
-		// 削除されたオブジェクトのエントリを検出（newCache は state.objects から構築するため自動的に除外される）
+		// Detect deleted-object entries (newCache is built from state.objects, so they are excluded automatically)
 		if (Object.keys(newCache).length !== Object.keys(oldCache).length) {
 			cacheChanged = true;
 		}
 
-		// multiSelectGroup の keyPoints（選択状態に依存するため毎回計算）
+		// keyPoints for multiSelectGroup (recomputed every time since it depends on selection state)
 		if (state.multiSelectGroup && isTransformedFrame(state.multiSelectGroup)) {
 			keyPoints[state.multiSelectGroup.id] = calcFrameKeyPoints(
 				state.multiSelectGroup as TransformedFrame,
 			);
 		}
 
-		// snapCandidates は keyPointsCache が変化した場合のみ再計算する
+		// Recompute snapCandidates only when keyPointsCache changed
 		const snapCandidatesCache =
 			cacheChanged || !state.snapCandidatesCache
 				? calcSnapCandidates(state.objects, keyPoints)
 				: state.snapCandidatesCache;
 
-		// 選択オブジェクト＋全子孫のIDセットを事前計算する（毎 drag event での再計算を避けるため）
-		// dragStart 後に handler が selectedIds を変更した場合は、ObjectEventHandler が上書きする
+		// Precompute the ID set of selected objects plus all descendants (to avoid recomputing on every drag event)
+		// If a handler changes selectedIds after dragStart, ObjectEventHandler overwrites it
 		const selectedIdsWithDescendants = buildSelectedIdsWithDescendants(
 			state.selectedIds,
 			state.objects,
@@ -159,7 +159,7 @@ export const handleGesture = (
 	// Clear eventStartSnapshot on event end
 	if (EVENT_END_TYPES.includes(canvasEvent.type)) {
 		// Only commit if objects/rootIds actually changed.
-		// （コネクターも rootIds に含まれるため rootIds の比較で検知できる）
+		// (connectors are also part of rootIds, so comparing rootIds detects them)
 		// Guards against phantom undo entries when a drag produces no doc change
 		// (e.g. shape drawn below the minimum size threshold).
 		const hasDocChanges =

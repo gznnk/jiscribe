@@ -47,58 +47,58 @@ export const isTextStyleState = (obj: unknown): obj is TextStyleState => {
 
 	const candidate = obj as Record<string, unknown>;
 
-	// text プロパティが存在する場合は string でなければならない
+	// If the text property is present, it must be a string
 	if ("text" in candidate && candidate.text !== undefined) {
 		if (!isString(candidate.text)) {
 			return false;
 		}
 	}
 
-	// textType プロパティが存在する場合は有効な値でなければならない
+	// If the textType property is present, it must be a valid value
 	if ("textType" in candidate && candidate.textType !== undefined) {
 		if (!isTextType(candidate.textType)) {
 			return false;
 		}
 	}
 
-	// textAlign プロパティが存在する場合は有効な値でなければならない
+	// If the textAlign property is present, it must be a valid value
 	if ("textAlign" in candidate && candidate.textAlign !== undefined) {
 		if (!isTextAlign(candidate.textAlign)) {
 			return false;
 		}
 	}
 
-	// verticalAlign プロパティが存在する場合は有効な値でなければならない
+	// If the verticalAlign property is present, it must be a valid value
 	if ("verticalAlign" in candidate && candidate.verticalAlign !== undefined) {
 		if (!isVerticalAlign(candidate.verticalAlign)) {
 			return false;
 		}
 	}
 
-	// fontColor プロパティが存在する場合は sentinel "auto"（テーマ追従, issue #38）
-	// または有効な CSS カラーでなければならない。"auto" を先に短絡評価することで、
-	// ブラウザ専用の isCssColor（CSS.supports）を呼ばずに済ませる。
+	// If the fontColor property is present, it must be the sentinel "auto"
+	// (theme-following, issue #38) or a valid CSS color. Short-circuiting on
+	// "auto" first avoids calling the browser-only isCssColor (CSS.supports).
 	if ("fontColor" in candidate && candidate.fontColor !== undefined) {
 		if (!isAutoColor(candidate.fontColor) && !isCssColor(candidate.fontColor)) {
 			return false;
 		}
 	}
 
-	// fontSize プロパティが存在する場合は number でなければならない
+	// If the fontSize property is present, it must be a number
 	if ("fontSize" in candidate && candidate.fontSize !== undefined) {
 		if (!isNumber(candidate.fontSize)) {
 			return false;
 		}
 	}
 
-	// fontFamily プロパティが存在する場合は string でなければならない
+	// If the fontFamily property is present, it must be a string
 	if ("fontFamily" in candidate && candidate.fontFamily !== undefined) {
 		if (!isString(candidate.fontFamily)) {
 			return false;
 		}
 	}
 
-	// fontWeight プロパティが存在する場合は string でなければならない
+	// If the fontWeight property is present, it must be a string
 	if ("fontWeight" in candidate && candidate.fontWeight !== undefined) {
 		if (!isString(candidate.fontWeight)) {
 			return false;

@@ -8,7 +8,7 @@ import {
 import type { TransformState } from "../../../../../../states/objects/base/TransformState";
 import type { TransformAnchorType } from "../TransformAnchorType";
 
-/** アンカーとscaleXからスナップ対象のX辺を返す。反転時はleft/rightを入れ替える。 */
+/** Returns the X edge to snap against from the anchor and scaleX. When flipped, left/right are swapped. */
 export function getAnchorXSnapEdge(
 	anchorType: TransformAnchorType,
 	scaleX: number,
@@ -28,7 +28,7 @@ export function getAnchorXSnapEdge(
 	}
 }
 
-/** アンカーとscaleYからスナップ対象のY辺を返す。反転時はtop/bottomを入れ替える。 */
+/** Returns the Y edge to snap against from the anchor and scaleY. When flipped, top/bottom are swapped. */
 export function getAnchorYSnapEdge(
 	anchorType: TransformAnchorType,
 	scaleY: number,
@@ -48,7 +48,7 @@ export function getAnchorYSnapEdge(
 	}
 }
 
-/** 1辺のスナップ量を支配的なカーソル軸で解く。 */
+/** Solves the snap amount for a single edge along the dominant cursor axis. */
 function solveEdgeCursorDelta(
 	j: { dx: number; dy: number },
 	snapDelta: number,
@@ -60,8 +60,9 @@ function solveEdgeCursorDelta(
 }
 
 /**
- * AABBエッジのスナップ量からカーソル補正量を逆算する。
- * xEdge/yEdge が両方ある場合は2x2線形系を解き、行列式が小さい場合は感度の高い辺のみ解く。
+ * Back-computes the cursor correction from the AABB edge snap amounts.
+ * When both xEdge and yEdge are present, solves the 2x2 linear system; when the
+ * determinant is small, solves only the more sensitive edge.
  */
 export function calcSnapCursorDelta(
 	J: Record<"left" | "right" | "top" | "bottom", { dx: number; dy: number }>,
@@ -87,7 +88,7 @@ export function calcSnapCursorDelta(
 				dy: (snapAabbDy * a - snapAabbDx * c) / det,
 			};
 		}
-		// 行列式が小さい→感度の高い辺のみ
+		// Small determinant -> use only the more sensitive edge
 		const xSens = Math.max(Math.abs(a), Math.abs(b));
 		const ySens = Math.max(Math.abs(c), Math.abs(d));
 		if (xSens >= ySens) {
@@ -104,7 +105,7 @@ export function calcSnapCursorDelta(
 	return { dx: 0, dy: 0 };
 }
 
-/** リサイズ仮結果から変換後の AABB を計算する。 */
+/** Computes the transformed AABB from a tentative resize result. */
 export function calcTentativeBBox(
 	resizeResult: {
 		width: number;

@@ -10,8 +10,8 @@ import type { GroupState } from "../../../../../states/objects/primitives/group/
 import { normalizeRotation } from "../../../../utils/normalizeRotation";
 
 /**
- * Frame系（Rect, Ellipse, Group等）のグループ変形処理
- * 現在のtransformGroupChildrenのロジックをFrame系として抽出
+ * Group transform handling for Frame-based shapes (Rect, Ellipse, Group, etc.).
+ * Extracted from the current transformGroupChildren logic as the Frame-based path.
  */
 export function transformFrameByGroup<T extends TransformedFrame>(
 	frame: T,
@@ -35,7 +35,7 @@ export function transformFrameByGroup<T extends TransformedFrame>(
 		degreesToRadians(-transformRootGroupStartState.rotation),
 	);
 
-	// グループ内部のローカル座標系（グループの回転を０にした座標系）で、子オブジェクトの中心座標のオフセットを計算
+	// Compute the child's center offset in the group's internal local coordinate system (the frame with the group's rotation set to 0)
 	const childOffsetXInLocalSpace =
 		(inversedChildStartCenter.x - transformRootGroupStartState.cx) *
 		transformRootGroupStartState.scaleX *
@@ -45,11 +45,11 @@ export function transformFrameByGroup<T extends TransformedFrame>(
 		transformRootGroupStartState.scaleY *
 		transformRootGroupEndState.scaleY;
 
-	// 子オブジェクトの新しい中心座標を計算
+	// Compute the child's new center coordinate
 	const dx = childOffsetXInLocalSpace * groupScaleX;
 	const dy = childOffsetYInLocalSpace * groupScaleY;
 
-	// 絶対座標系での子オブジェクトの新しい中心座標を計算
+	// Compute the child's new center coordinate in the absolute coordinate system
 	const newChildCenter = calcRotatedPoint(
 		transformRootGroupEndState.cx + dx,
 		transformRootGroupEndState.cy + dy,
@@ -58,11 +58,11 @@ export function transformFrameByGroup<T extends TransformedFrame>(
 		degreesToRadians(transformRootGroupEndState.rotation),
 	);
 
-	// 子オブジェクトのグループローカル座標系での回転角度（度数）
+	// The child's rotation angle in the group-local coordinate system (degrees)
 	const childRelativeRotationDeg =
 		(frame.rotation - transformRootGroupStartState.rotation + 360) % 360;
 
-	// 最適化: 角度差が0度、90度、180度、270度（平行・直角）の場合はシンプルな計算
+	// Optimization: for angle differences of 0, 90, 180, or 270 degrees (parallel/orthogonal), use a simple computation
 	let newWidth: number;
 	let newHeight: number;
 
@@ -70,33 +70,33 @@ export function transformFrameByGroup<T extends TransformedFrame>(
 		Math.abs(childRelativeRotationDeg) < 0.001 ||
 		Math.abs(childRelativeRotationDeg - 180) < 0.001
 	) {
-		// 0度または180度: 平行
+		// 0 or 180 degrees: parallel
 		newWidth = frame.width * groupScaleX;
 		newHeight = frame.height * groupScaleY;
 	} else if (
 		Math.abs(childRelativeRotationDeg - 90) < 0.001 ||
 		Math.abs(childRelativeRotationDeg - 270) < 0.001
 	) {
-		// 90度または270度: 直角
+		// 90 or 270 degrees: orthogonal
 		newWidth = frame.width * groupScaleY;
 		newHeight = frame.height * groupScaleX;
 	} else {
-		// 一般的な角度: 三角関数で厳密計算
+		// General angle: exact computation via trigonometric functions
 		const childRelativeRotation = degreesToRadians(childRelativeRotationDeg);
 		const cosTheta = Math.cos(childRelativeRotation);
 		const sinTheta = Math.sin(childRelativeRotation);
 
-		// グループの拡縮を子オブジェクトの回転を考慮してwidth/heightに分解
-		// 子オブジェクトのwidth軸方向の単位ベクトル: (cos(θ), sin(θ))
-		// このベクトルがグループのscaleで変形される: (scaleX * cos(θ), scaleY * sin(θ))
-		// 変形後のベクトルの長さが新しいwidthのスケール係数
+		// Decompose the group's scaling into width/height, accounting for the child's rotation.
+		// Unit vector along the child's width axis: (cos(θ), sin(θ))
+		// This vector is transformed by the group's scale: (scaleX * cos(θ), scaleY * sin(θ))
+		// The length of the transformed vector is the new width's scale factor
 		const widthScaleX = groupScaleX * cosTheta;
 		const widthScaleY = groupScaleY * sinTheta;
 		const widthScale = Math.sqrt(
 			widthScaleX * widthScaleX + widthScaleY * widthScaleY,
 		);
 
-		// 同様にheight軸方向（width軸に対して90度回転）: (-sin(θ), cos(θ))
+		// Likewise for the height axis (rotated 90 degrees from the width axis): (-sin(θ), cos(θ))
 		const heightScaleX = groupScaleX * -sinTheta;
 		const heightScaleY = groupScaleY * cosTheta;
 		const heightScale = Math.sqrt(
@@ -107,12 +107,12 @@ export function transformFrameByGroup<T extends TransformedFrame>(
 		newHeight = frame.height * heightScale;
 	}
 
-	// 回転角度の計算（グループの回転変化を子にも適用）
+	// Compute the rotation angle (apply the group's rotation change to the child as well)
 	const rotationDelta =
 		transformRootGroupEndState.rotation - transformRootGroupStartState.rotation;
 	const newRotation = normalizeRotation(frame.rotation + rotationDelta);
 
-	// scaleX/scaleYの計算（1 or -1 の反転）
+	// Compute scaleX/scaleY (a flip of 1 or -1)
 	const newScaleX =
 		frame.scaleX *
 		transformRootGroupStartState.scaleX *
@@ -135,12 +135,12 @@ export function transformFrameByGroup<T extends TransformedFrame>(
 }
 
 /**
- * Frame系（Rect, Ellipse, Group等）のグループ回転処理
+ * Group rotation handling for Frame-based shapes (Rect, Ellipse, Group, etc.).
  *
- * @param frame - 回転対象のFrame
- * @param rotationRootGroup - 回転の基準となるグループの状態
- * @param endGroupRotation - グループの最終的な回転角度
- * @returns 回転後のFrame
+ * @param frame - the Frame to rotate
+ * @param rotationRootGroup - the state of the group serving as the rotation reference
+ * @param endGroupRotation - the group's final rotation angle
+ * @returns the rotated Frame
  */
 export function rotateFrameByGroup<T extends TransformedFrame>(
 	frame: T,
@@ -149,7 +149,7 @@ export function rotateFrameByGroup<T extends TransformedFrame>(
 ): T {
 	const rotationDelta = endGroupRotation - rotationRootGroup.rotation;
 
-	// 回転中心を基準に子オブジェクトの中心座標を回転
+	// Rotate the child's center coordinate about the rotation center
 	const rotatedCenter = calcRotatedPoint(
 		frame.cx,
 		frame.cy,

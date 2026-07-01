@@ -8,8 +8,9 @@ import { ARROW_SIZE } from "../ArrowConstants";
 import type { ArrowShapeProps } from "../ArrowTypes";
 
 /**
- * 線をこの矢印の根元で終端させるための inset（ローカル単位）。
- * 後端の凹み（谷）が `-ARROW_SIZE * 0.9` にあるため、そこに合わせて止める。
+ * Inset (in local units) used to terminate the line at this arrow's base.
+ * Since the concave notch (valley) at the tail sits at `-ARROW_SIZE * 0.9`,
+ * stop the line there.
  */
 export const CONCAVE_TRIANGLE_INSET = ARROW_SIZE * 0.9;
 

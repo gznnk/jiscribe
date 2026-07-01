@@ -8,17 +8,18 @@ type AxisLockGuideProps = {
 	viewport: Viewport;
 };
 
-// 見た目はスナップガイド（SnapGuides）と揃える
+// Match the appearance of the snap guides (SnapGuides)
 const STROKE = "#3b82f6";
 const STROKE_WIDTH = 1;
 const STROKE_DASHARRAY = "4, 3";
 
 /**
- * Shift ドラッグの軸固定ガイド線。
- * 移動できる軸方向を示す線を、ビューポート全体に渡って描画する。
- * - x（縦線）: X 固定（縦移動）時に表示
- * - y（横線）: Y 固定（横移動）時に表示
- * - 原点スナップ中は x・y の両方が入り、十字に表示される
+ * Axis-lock guide lines for Shift drag.
+ * Draws lines across the whole viewport indicating the axis along which
+ * movement is allowed.
+ * - x (vertical line): shown when locked to X (vertical movement)
+ * - y (horizontal line): shown when locked to Y (horizontal movement)
+ * - while snapping to the origin, both x and y are present, forming a cross
  */
 const AxisLockGuideComponent: React.FC<AxisLockGuideProps> = ({
 	axisLockFeedback,
@@ -29,7 +30,7 @@ const AxisLockGuideComponent: React.FC<AxisLockGuideProps> = ({
 	}
 
 	const { minX, minY, width, height, zoom } = viewport;
-	// 可視 SVG 範囲（CanvasView の viewBox: minX minY width/zoom height/zoom と一致）
+	// Visible SVG range (matches CanvasView's viewBox: minX minY width/zoom height/zoom)
 	const left = minX;
 	const right = minX + width / zoom;
 	const top = minY;

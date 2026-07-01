@@ -25,21 +25,21 @@ export const GroupCommand: Command = {
 		const selectedSet = new Set(selectedIds);
 		const lockAspectRatio = state.multiSelectGroup?.lockAspectRatio ?? false;
 
-		// 新グループをどのグループの直下に配置するかを LCA（最近共通祖先）で決める。
-		// 例: group-A 配下の rect-1 と rect-2 を選択した場合、LCA は group-A になり、
-		// 新グループは group-A の子として挿入される。
-		// 選択アイテムが共通の祖先グループを持たない場合は undefined（ルートに配置）。
+		// Decide which group the new group is placed directly under, using the LCA (lowest common ancestor).
+		// Example: selecting rect-1 and rect-2 under group-A yields an LCA of group-A, and the
+		// new group is inserted as a child of group-A.
+		// If the selected items share no common ancestor group, it is undefined (placed at the root).
 		const lcaId = findLowestCommonAncestor(selectedIds, state.objects);
 
-		// グループ化後も図形の重なり順が変わらないよう、selectedIds を z-order で並び替える
+		// Sort selectedIds by z-order so the shapes' stacking order is preserved after grouping
 		const childIds = sortObjectIdsByZOrder(
 			selectedIds,
 			state.objects,
 			state.rootIds,
 		);
 
-		// 新グループのバウンドを計算するため、仮のグループオブジェクトを作成して
-		// calculateGroupOrientedBounds に渡す（この時点では cx/cy/width/height は仮の 0）
+		// To compute the new group's bounds, create a temporary group object and pass it to
+		// calculateGroupOrientedBounds (at this point cx/cy/width/height are provisional 0s)
 		const tempGroup = {
 			id: groupId,
 			type: "group",
@@ -60,7 +60,7 @@ export const GroupCommand: Command = {
 			groupId,
 		);
 
-		// 計算したバウンドを反映した確定版グループを作成する
+		// Create the finalized group with the computed bounds applied
 		const newGroup = {
 			...tempGroup,
 			cx: bounds?.cx ?? 0,
@@ -69,7 +69,7 @@ export const GroupCommand: Command = {
 			height: bounds?.height ?? 0,
 		} as unknown as GroupState;
 
-		// objects に新グループを追加し、各子アイテムの parentId を新グループに付け替える
+		// Add the new group to objects and reassign each child item's parentId to the new group
 		const updatedObjects = { ...state.objects, [groupId]: newGroup };
 		for (const childId of childIds) {
 			updatedObjects[childId] = {
@@ -78,8 +78,8 @@ export const GroupCommand: Command = {
 			};
 		}
 
-		// 各選択アイテムをそれぞれの元の親グループの childIds から取り除く。
-		// 取り除いた親グループのバウンド更新が後で必要になるため affectedParentIds に記録する。
+		// Remove each selected item from its original parent group's childIds.
+		// Record the affected parents in affectedParentIds since their bounds must be updated later.
 		const affectedParentIds = new Set<string>();
 		for (const id of selectedIds) {
 			const parentId = state.objects[id]?.parentId;
@@ -98,7 +98,7 @@ export const GroupCommand: Command = {
 		let updatedRootIds = state.rootIds;
 
 		if (lcaId != null) {
-			// ── LCA が存在する場合: 新グループを LCA の childIds の末尾（最前面）に追加する ──────────────
+			// ── LCA exists: append the new group to the end of the LCA's childIds (frontmost) ──────────────
 			const currentLcaChildIds = (updatedObjects[lcaId] as GroupState).childIds;
 
 			updatedObjects[lcaId] = {
@@ -106,11 +106,11 @@ export const GroupCommand: Command = {
 				childIds: [...currentLcaChildIds, groupId],
 			} as GroupState;
 
-			// LCA 自体が選択アイテムの影響を受けて rootIds から消えることはないため、
-			// rootにいる要素が選択対象に含まれていれば取り除く
+			// The LCA itself is never removed from rootIds by the selected items, so
+			// remove any selected items that were at the root
 			updatedRootIds = state.rootIds.filter((id) => !selectedSet.has(id));
 		} else {
-			// ── LCA が存在しない場合: 新グループをルートの末尾（最前面）に配置する ──────────────
+			// ── No LCA: place the new group at the end of the root (frontmost) ──────────────
 			updatedObjects[groupId] = {
 				...(updatedObjects[groupId] as GroupState),
 				parentId: undefined,
@@ -120,8 +120,8 @@ export const GroupCommand: Command = {
 			updatedRootIds = [...currentRootIds, groupId];
 		}
 
-		// 選択アイテムを取り出した副作用で空や単体になったグループ（LCA を含む）を整理する。
-		// LCA 自体も1件になれば cleanupGroups が解体する（これは正しい挙動）。
+		// Clean up groups (including the LCA) that became empty or singletons as a side effect of removing the selected items.
+		// If the LCA itself is reduced to one item, cleanupGroups dissolves it (this is correct behavior).
 		let nextState: CanvasControllerState = {
 			...state,
 			objects: updatedObjects,

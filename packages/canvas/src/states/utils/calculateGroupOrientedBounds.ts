@@ -11,14 +11,14 @@ import type { ObjectState } from "../objects/base/ObjectState";
 import type { GroupState } from "../objects/primitives/group/GroupState";
 
 /**
- * グループの子要素すべてを含む Oriented Bounding Box (OBB) を計算
+ * Computes an Oriented Bounding Box (OBB) that contains all of a group's children.
  *
- * グループの rotation を考慮した向き付きバウンディングボックスを返します。
- * 子要素はグローバル座標系で定義されており、グループの transform は表示目的のみです。
+ * Returns an oriented bounding box that accounts for the group's rotation.
+ * Children are defined in the global coordinate system; the group's transform is display-only.
  *
- * @param objects - オブジェクトマップ
- * @param groupId - グループのID
- * @returns Oriented Bounding Box（TransformedFrame形式）、子要素がない場合はnull
+ * @param objects - the object map
+ * @param groupId - the group's ID
+ * @returns the Oriented Bounding Box (as a TransformedFrame), or null if there are no children
  */
 export function calculateGroupOrientedBounds(
 	objects: Record<string, ObjectState>,
@@ -31,19 +31,19 @@ export function calculateGroupOrientedBounds(
 
 	const groupState = group as GroupState;
 
-	// 子要素のすべての点を収集（再帰的にネストされたグループも展開）
+	// Collect all points of the children (recursively expanding nested groups)
 	const allPoints = collectChildPoints(objects, groupState.childIds);
 
 	if (allPoints.length === 0) {
 		return null;
 	}
 
-	// グループのtransformを取得
+	// Get the group's transform
 	const groupRotation = groupState.rotation ?? 0;
 	const groupScaleX = groupState.scaleX ?? 1;
 	const groupScaleY = groupState.scaleY ?? 1;
 
-	// 点群からグループのtransformを持つOriented Bounding Boxを計算
+	// Compute an Oriented Bounding Box with the group's transform from the point set
 	return calcOrientedFrameFromPoints(
 		allPoints,
 		groupScaleX,
@@ -53,8 +53,8 @@ export function calculateGroupOrientedBounds(
 }
 
 /**
- * 子要素のすべての点を再帰的に収集
- * Frame系はコーナー点、Poly系は頂点を収集
+ * Recursively collects all points of the children.
+ * Frame-based shapes contribute corner points; Poly-based shapes contribute vertices.
  */
 function collectChildPoints(
 	objects: Record<string, ObjectState>,
@@ -69,14 +69,14 @@ function collectChildPoints(
 		}
 
 		if (child.type === "group") {
-			// グループの場合は再帰的に子を収集
+			// For a group, recursively collect its children
 			const nestedGroup = child as GroupState;
 			points.push(...collectChildPoints(objects, nestedGroup.childIds));
 		} else if (isTransformedFrame(child)) {
-			// TransformedFrameを持つオブジェクトの場合はコーナー点を追加
+			// For objects with a TransformedFrame, add their corner points
 			points.push(...getFrameCornerPoints(child));
 		} else if (isPoly(child)) {
-			// Poly系の場合はpoints配列を直接追加
+			// For Poly-based shapes, add the points array directly
 			points.push(...child.points);
 		}
 	}
@@ -85,7 +85,7 @@ function collectChildPoints(
 }
 
 /**
- * TransformedFrame の4つのコーナー点を取得
+ * Gets the four corner points of a TransformedFrame.
  */
 function getFrameCornerPoints(frame: TransformedFrame): Point[] {
 	const { cx, cy, width, height, rotation = 0, scaleX = 1, scaleY = 1 } = frame;
@@ -93,15 +93,15 @@ function getFrameCornerPoints(frame: TransformedFrame): Point[] {
 	const halfWidth = width / 2;
 	const halfHeight = height / 2;
 
-	// ローカル座標系での4つのコーナー
+	// The four corners in the local coordinate system
 	const localCorners: Point[] = [
-		{ x: -halfWidth, y: -halfHeight }, // 左上
-		{ x: halfWidth, y: -halfHeight }, // 右上
-		{ x: halfWidth, y: halfHeight }, // 右下
-		{ x: -halfWidth, y: halfHeight }, // 左下
+		{ x: -halfWidth, y: -halfHeight }, // top-left
+		{ x: halfWidth, y: -halfHeight }, // top-right
+		{ x: halfWidth, y: halfHeight }, // bottom-right
+		{ x: -halfWidth, y: halfHeight }, // bottom-left
 	];
 
-	// アフィン変換を適用してグローバル座標系に変換
+	// Apply the affine transform to convert to the global coordinate system
 	const radians = degreesToRadians(rotation);
 	return localCorners.map((corner) =>
 		calcAffineTransformedPoint(

@@ -8,26 +8,28 @@ import type {
 } from "./types";
 import { DEFAULT_CONNECTOR_MARGIN } from "../../../../../constants/connectorRouting";
 
-/** 周辺パラメータ比較の許容誤差（px）。角と端点の重なり判定に使う。 */
+/** Tolerance for perimeter-parameter comparisons (px). Used for corner/endpoint overlap detection. */
 const EPS = 1e-6;
 
 /**
- * 同一図形の 2 辺を結ぶ自己ループの直交パスを生成する。
+ * Generates the orthogonal path of a self-loop connecting two edges of the same shape.
  *
- * 図形の AABB を `margin` だけ外側へ広げた**リング矩形**を考え、各端点をその面から
- * リング辺へ押し出した**スタブ**を作る。リング外周を「短く回る方向」に辿って両スタブを
- * 結ぶことで、図形を貫通しない矩形ループになる:
- * - 隣り合う辺 → 共有する角を 1 つ回る L 字
- * - 同じ辺（呼び出し側で別アンカーに限定される前提）→ その辺から膨らむ U 字
- * - 向かい合う辺 → 図形の片側（右回り）を回り込む
+ * Consider a **ring rectangle** formed by expanding the shape's AABB outward by `margin`, and
+ * create a **stub** by pushing each endpoint out from its face onto the ring edge. Connecting the
+ * two stubs by traversing the ring perimeter in the "shorter direction" yields a rectangular loop
+ * that does not pass through the shape:
+ * - Adjacent edges → an L shape going around one shared corner
+ * - Same edge (assumed the caller restricts to distinct anchors) → a U shape bulging from that edge
+ * - Facing edges → wrapping around one side of the shape (clockwise)
  *
- * 戻り値は端点を含むフルパス `[source.point, …, target.point]`（共線・重複は畳み済み）。
- * 両端は同一図形なので box は一致する前提（source.box を採用）。
+ * The return value is the full path including endpoints `[source.point, …, target.point]`
+ * (collinear/duplicate points already collapsed).
+ * Both ends belong to the same shape, so the boxes are assumed identical (source.box is used).
  *
- * @param source - 始点の端点（座標・外向き方向・回避用 AABB）
- * @param target - 終点の端点（自己ループなので box は source と同一図形）
- * @param options - margin（リングの膨らみ, px）などの調整オプション。省略時は DEFAULT_CONNECTOR_MARGIN
- * @returns 端点を含む直交フルパス `[source.point, …, target.point]`（共線・重複は畳み済み）
+ * @param source - The source endpoint (coordinate, outward direction, AABB to avoid)
+ * @param target - The target endpoint (a self-loop, so the box is the same shape as source)
+ * @param options - Tuning options such as margin (ring bulge, px). Defaults to DEFAULT_CONNECTOR_MARGIN
+ * @returns The orthogonal full path including endpoints `[source.point, …, target.point]` (collinear/duplicate points already collapsed)
  */
 export const routeSelfLoop = (
 	source: OrthogonalConnectorEndpoint,
@@ -37,7 +39,7 @@ export const routeSelfLoop = (
 	const margin = options.margin ?? DEFAULT_CONNECTOR_MARGIN;
 	const box = source.box ?? target.box;
 
-	// box が無い（free 端点）自己ループは想定外。退化を避けて直結で返す。
+	// A self-loop with no box (free endpoint) is unexpected. Avoid degeneracy and return a direct connection.
 	if (!box) {
 		return simplifyPath([source.point, target.point]);
 	}
@@ -45,7 +47,7 @@ export const routeSelfLoop = (
 	const sourceStub = stubPoint(source.point, source.direction, box, margin);
 	const targetStub = stubPoint(target.point, target.direction, box, margin);
 
-	// リング矩形（AABB + margin）。スタブはこの矩形の辺上に乗る。
+	// Ring rectangle (AABB + margin). Stubs lie on the edges of this rectangle.
 	const ring: RingRect = {
 		left: box.left - margin,
 		top: box.top - margin,
@@ -56,7 +58,7 @@ export const routeSelfLoop = (
 	const height = ring.bottom - ring.top;
 	const perimeter = 2 * width + 2 * height;
 
-	// リング外周をスタブ間で短く回る方向に辿り、通過する角を列挙する。
+	// Traverse the ring perimeter in the shorter direction between the stubs and enumerate the corners passed.
 	const sourceParam = perimeterParam(sourceStub, ring, width, height);
 	const targetParam = perimeterParam(targetStub, ring, width, height);
 
@@ -89,16 +91,16 @@ export const routeSelfLoop = (
 type RingRect = { left: number; top: number; right: number; bottom: number };
 
 /**
- * リング矩形の外周上の点を、左上から時計回りに測ったスカラー位置へ変換する。
- * 範囲: top 辺 [0, W] → right 辺 [W, W+H] → bottom 辺 [W+H, 2W+H] → left 辺 [2W+H, 2W+2H]。
- * 角は隣り合う 2 辺どちらの式でも同じ値になる。点はリング辺上にある前提だが、
- * 念のため各座標をリング範囲へクランプする。
+ * Converts a point on the ring rectangle's perimeter into a scalar position measured clockwise from the top-left.
+ * Range: top edge [0, W] → right edge [W, W+H] → bottom edge [W+H, 2W+H] → left edge [2W+H, 2W+2H].
+ * A corner yields the same value under either adjacent edge's formula. The point is assumed to be on
+ * a ring edge, but each coordinate is clamped to the ring range just in case.
  *
- * @param p - リング辺上の点
- * @param ring - リング矩形（AABB + margin）
- * @param width - リング矩形の幅
- * @param height - リング矩形の高さ
- * @returns 左上から時計回りに測った外周上のスカラー位置
+ * @param p - A point on a ring edge
+ * @param ring - The ring rectangle (AABB + margin)
+ * @param width - The ring rectangle's width
+ * @param height - The ring rectangle's height
+ * @returns The scalar position along the perimeter measured clockwise from the top-left
  */
 const perimeterParam = (
 	p: Point,
@@ -118,19 +120,19 @@ const perimeterParam = (
 	if (Math.abs(p.y - ring.bottom) <= EPS) {
 		return width + height + (ring.right - clampX);
 	}
-	// 残りは left 辺。
+	// The rest is the left edge.
 	return 2 * width + height + (ring.bottom - clampY);
 };
 
 /**
- * 周辺パラメータからリング外周上の座標へ戻す。
+ * Converts a perimeter parameter back into a coordinate on the ring perimeter.
  *
- * @param param - 外周上のスカラー位置（perimeter で正規化される）
- * @param ring - リング矩形
- * @param width - リング矩形の幅
- * @param height - リング矩形の高さ
- * @param perimeter - リング外周長（2W + 2H）
- * @returns 外周上の座標
+ * @param param - The scalar position along the perimeter (normalized by perimeter)
+ * @param ring - The ring rectangle
+ * @param width - The ring rectangle's width
+ * @param height - The ring rectangle's height
+ * @param perimeter - The ring perimeter length (2W + 2H)
+ * @returns The coordinate on the perimeter
  */
 const pointAtParam = (
 	param: number,
@@ -153,17 +155,17 @@ const pointAtParam = (
 };
 
 /**
- * source から target へ指定方向（時計回り / 反時計回り）にリング外周を辿るとき、
- * その弧の内側に来る角を通過順に返す。
+ * When traversing the ring perimeter from source to target in the given direction
+ * (clockwise / counter-clockwise), returns the corners that lie inside that arc in traversal order.
  *
- * @param sourceParam - 始点スタブの外周パラメータ
- * @param targetParam - 終点スタブの外周パラメータ
- * @param clockwise - 辿る向き（true: 時計回り / false: 反時計回り）
- * @param ring - リング矩形
- * @param width - リング矩形の幅
- * @param height - リング矩形の高さ
- * @param perimeter - リング外周長
- * @returns 弧の内側に来る角を通過順に並べた点列
+ * @param sourceParam - Perimeter parameter of the source stub
+ * @param targetParam - Perimeter parameter of the target stub
+ * @param clockwise - Traversal direction (true: clockwise / false: counter-clockwise)
+ * @param ring - The ring rectangle
+ * @param width - The ring rectangle's width
+ * @param height - The ring rectangle's height
+ * @param perimeter - The ring perimeter length
+ * @returns The corners inside the arc, in traversal order
  */
 const arcCorners = (
 	sourceParam: number,
@@ -174,7 +176,7 @@ const arcCorners = (
 	height: number,
 	perimeter: number,
 ): Point[] => {
-	// 角の周辺パラメータ: TL(0) / TR(W) / BR(W+H) / BL(2W+H)。
+	// Perimeter parameters of the corners: TL(0) / TR(W) / BR(W+H) / BL(2W+H).
 	const cornerParams = [0, width, width + height, 2 * width + height];
 	const arc = clockwise
 		? (targetParam - sourceParam + perimeter) % perimeter
@@ -193,10 +195,10 @@ const arcCorners = (
 };
 
 /**
- * 直交パスの総延長（セグメント長の和）。
+ * Total length of an orthogonal path (sum of segment lengths).
  *
- * @param points - 経路の点列
- * @returns 全セグメント長の合計
+ * @param points - The path's point sequence
+ * @returns The sum of all segment lengths
  */
 const pathLength = (points: Point[]): number => {
 	let total = 0;

@@ -1,71 +1,71 @@
 import type { CanvasControllerState } from "../CanvasTypes";
 
 /**
- * キーボードショートカットの定義
+ * Definition of a keyboard shortcut.
  */
 export type KeyBinding = {
 	/**
-	 * 物理キーコード（例: "KeyZ", "Delete", "Digit0"）— レイアウト非依存
-	 * 文字キー・数字キーなど JIS/US で同じ位置にあるキーに使用
-	 * code を指定した場合は shift も厳密にチェックされる
+	 * Physical key code (e.g. "KeyZ", "Delete", "Digit0") — layout-independent.
+	 * Used for keys that sit at the same position across JIS/US, such as letter and digit keys.
+	 * When code is specified, shift is also checked strictly.
 	 */
 	code?: string;
 	/**
-	 * 文字キー値（例: "[", "]", "=", "+"）— レイアウト依存
-	 * 記号キーなど JIS/US でキー位置が異なる場合に使用
-	 * key を指定した場合は shift チェックをスキップ（文字に shift が内包されるため）
+	 * Character key value (e.g. "[", "]", "=", "+") — layout-dependent.
+	 * Used for symbol keys whose position differs between JIS/US.
+	 * When key is specified, the shift check is skipped (shift is already implied by the character).
 	 */
 	key?: string;
-	/** Ctrl キー */
+	/** Ctrl key */
 	ctrl?: boolean;
-	/** Shift キー — code ベースの場合のみ有効 */
+	/** Shift key — effective only for the code-based form */
 	shift?: boolean;
-	/** Alt キー */
+	/** Alt key */
 	alt?: boolean;
-	/** Cmd キー (Mac) */
+	/** Cmd key (Mac) */
 	meta?: boolean;
 };
 
 /**
- * プラットフォーム別のキーボードショートカット定義
- * Mac (⌘) と Windows/Linux (Ctrl) で異なるショートカットを設定可能
- * 各プラットフォームに複数のショートカットを登録できる
+ * Platform-specific keyboard shortcut definitions.
+ * Allows different shortcuts for Mac (⌘) and Windows/Linux (Ctrl).
+ * Multiple shortcuts can be registered per platform.
  */
 export type PlatformKeyBindings = {
-	/** Mac用のショートカット配列（metaキーを使用） */
+	/** Shortcut array for Mac (uses the meta key) */
 	mac?: KeyBinding[];
-	/** Windows/Linux用のショートカット配列（ctrlキーを使用） */
+	/** Shortcut array for Windows/Linux (uses the ctrl key) */
 	win?: KeyBinding[];
-	/** 明示的に指定されていないプラットフォーム用のデフォルト */
+	/** Default for platforms not explicitly specified */
 	default: KeyBinding[];
 };
 
 /**
- * コマンドの定義
- * ショートカットキーとコンテキストメニューから実行される操作
+ * Definition of a command.
+ * An operation executed via a keyboard shortcut or the context menu.
  */
 export type Command = {
-	/** コマンドの一意識別子 */
+	/** Unique identifier of the command */
 	id: string;
-	/** メニュー表示用ラベル */
+	/** Label shown in the menu */
 	label: string;
-	/** コマンドのカテゴリ */
+	/** Category of the command */
 	category?: "edit" | "view" | "arrange" | "selection";
 
 	/**
-	 * コマンドが実行可能かどうかを判定
-	 * メニュー項目の有効/無効化に使用
+	 * Determines whether the command can be executed.
+	 * Used to enable/disable the menu item.
 	 */
 	canExecute: (state: CanvasControllerState) => boolean;
 
 	/**
-	 * コマンドを実行し、新しい CanvasControllerState を返す
-	 * 純粋関数として実装（副作用なし）
+	 * Executes the command and returns a new CanvasControllerState.
+	 * Implemented as a pure function (no side effects).
 	 */
 	execute: (state: CanvasControllerState) => CanvasControllerState;
 
 	/**
-	 * プラットフォーム別キーボードショートカット
+	 * Platform-specific keyboard shortcuts.
 	 */
 	shortcuts?: PlatformKeyBindings;
 };

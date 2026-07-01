@@ -26,9 +26,9 @@ type Props = {
 };
 
 /**
- * ラベルの枠線スタイルメニュー（図形の Border Style と同じ並び）。
- * 実線/破線/点線（`label.strokeDashType`）と枠線太さ（`label.strokeWidth`）を扱う。
- * ラベルは角丸 `rx` を持たないため Corner Radius は出さない。
+ * Label border style menu (same layout as the shape's Border Style).
+ * Handles solid/dashed/dotted (`label.strokeDashType`) and border width (`label.strokeWidth`).
+ * Labels have no corner radius `rx`, so Corner Radius is not shown.
  */
 const LabelBorderStyleMenuComponent: React.FC<Props> = ({
 	canvasState,

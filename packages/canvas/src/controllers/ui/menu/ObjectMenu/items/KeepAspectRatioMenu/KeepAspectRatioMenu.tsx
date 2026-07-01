@@ -10,9 +10,9 @@ type KeepAspectRatioMenuProps = {
 };
 
 /**
- * アスペクト比ロックメニュー。
- * 選択中オブジェクトの lockAspectRatio プロパティをトグルする。
- * ドロップダウンなし — ボタンクリックで直接トグル。
+ * Aspect ratio lock menu.
+ * Toggles the lockAspectRatio property of the selected object.
+ * No dropdown — the button click toggles it directly.
  */
 const KeepAspectRatioMenuComponent: React.FC<KeepAspectRatioMenuProps> = ({
 	canvasState,

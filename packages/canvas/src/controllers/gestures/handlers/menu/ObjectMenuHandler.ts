@@ -6,25 +6,25 @@ import type {
 } from "../../registry/GestureHandlerTypes";
 
 /**
- * ObjectMenu 項目の操作を処理する GestureHandler。
- * targetKind が "object-menu" の場合に処理を行う。
+ * GestureHandler that processes ObjectMenu item interactions.
+ * Handles events when targetKind is "object-menu".
  *
- * ObjectMenu からのプロパティ更新には2経路ある。
- * (1) このハンドラー: gesture システム経由（set: / slider:）。大半のプロパティ変更はここを通る
- * (2) canvasReducer の MENU_PROPERTY_UPDATE ケース: number-input など React の onChange 経由。ここは通らない
- * selectedVertex のクリアなど両経路で共通して必要な処理は、それぞれに追加すること。
+ * Property updates from the ObjectMenu take two paths:
+ * (1) This handler: via the gesture system (set: / slider:). Most property changes go through here.
+ * (2) The MENU_PROPERTY_UPDATE case in canvasReducer: via React onChange (e.g. number-input). Does not go through here.
+ * Logic needed by both paths (such as clearing selectedVertex) must be added to each of them.
  *
- * 処理するイベント:
- * - click: メニュー項目のクリック
- * - drag: スライダーのリアルタイム更新（履歴記録なし）
- * - dragEnd: スライダーの最終値確定 + 履歴記録
+ * Events handled:
+ * - click: menu item click
+ * - drag: real-time slider update (no history recording)
+ * - dragEnd: commit the slider's final value + record history
  *
- * targetId のフォーマット:
- * - `object-menu:toggle:{sectionId}` → セクションの開閉を切り替え
- * - `object-menu:set:{property}:{value}` → 選択オブジェクトのプロパティを更新
- * - `object-menu:command:{commandId}` → コマンドを実行
- * - `object-menu:slider:{property}` → スライダーによるプロパティ更新
- * - `object-menu:number-input:{property}` → 数値入力によるプロパティ更新
+ * targetId formats:
+ * - `object-menu:toggle:{sectionId}` → toggle a section open/closed
+ * - `object-menu:set:{property}:{value}` → update a property of the selected object
+ * - `object-menu:command:{commandId}` → execute a command
+ * - `object-menu:slider:{property}` → property update via slider
+ * - `object-menu:number-input:{property}` → property update via numeric input
  */
 export const ObjectMenuHandler: GestureHandler = {
 	supports(event: CanvasEvent) {
@@ -34,16 +34,16 @@ export const ObjectMenuHandler: GestureHandler = {
 	handle(state, event) {
 		let nextState = state;
 
-		// ObjectMenu 上の押下でコンテキストメニューを閉じる（押下自体は項目操作を行わない）
+		// A press on the ObjectMenu closes the context menu (the press itself performs no item action)
 		if (event.type === "pressed") {
 			if (event.button === 0) {
 				nextState = { ...nextState, contextMenuPosition: null };
 			}
 		}
 
-		// スライダー操作: drag / dragEnd
+		// Slider interaction: drag / dragEnd
 		if (event.targetId?.startsWith("object-menu:slider:")) {
-			// pressed, dragStart, click イベントは何もせず状態を維持（値更新は drag / dragEnd）
+			// pressed, dragStart, and click events do nothing and keep the state (values update on drag / dragEnd)
 			if (
 				event.type === "pressed" ||
 				event.type === "dragStart" ||
@@ -53,20 +53,20 @@ export const ObjectMenuHandler: GestureHandler = {
 				return nextState;
 			}
 
-			// 入力値が存在しない場合は何もしない
+			// Do nothing if there is no input value
 			if (event.inputValue === undefined) {
 				console.warn("[ObjectMenuHandler] No input value found");
 				return state;
 			}
 
-			// targetId から "object-menu:slider:" プレフィックスを除去してプロパティ名を取得
+			// Strip the "object-menu:slider:" prefix from targetId to get the property name
 			const property = event.targetId.slice("object-menu:slider:".length);
 			if (!property) {
 				console.warn("[ObjectMenuHandler] No property found in targetId");
 				return state;
 			}
 
-			// drag イベント: リアルタイム更新（履歴記録なし、メニュー維持）
+			// drag event: real-time update (no history recording, menu stays open)
 			if (event.type === "drag") {
 				const newState = handlePropertyUpdate(
 					state,
@@ -76,7 +76,7 @@ export const ObjectMenuHandler: GestureHandler = {
 				return { ...newState, selectedVertex: null };
 			}
 
-			// dragEnd イベント: 最終値確定（履歴記録は handleGesture に委譲）
+			// dragEnd event: commit the final value (history recording is delegated to handleGesture)
 			if (event.type === "dragEnd") {
 				const newState = handlePropertyUpdate(
 					state,
@@ -93,12 +93,12 @@ export const ObjectMenuHandler: GestureHandler = {
 			return state;
 		}
 
-		// メニュー項目のクリック
+		// Menu item click
 		if (event.type === "click" && event.targetId) {
-			// targetId から "object-menu:" プレフィックスを除去してアクションを取得
+			// Strip the "object-menu:" prefix from targetId to get the action
 			const actionId = event.targetId.slice("object-menu:".length);
 
-			// toggle ボタン: セクションの開閉を切り替える
+			// toggle button: toggle a section open/closed
 			if (actionId.startsWith("toggle:")) {
 				const sectionId = actionId.slice("toggle:".length);
 				return {
@@ -108,7 +108,7 @@ export const ObjectMenuHandler: GestureHandler = {
 				};
 			}
 
-			// プロパティ更新: set:{property}:{value}
+			// Property update: set:{property}:{value}
 			if (actionId.startsWith("set:")) {
 				const rest = actionId.slice("set:".length);
 				const colonIndex = rest.indexOf(":");
@@ -116,7 +116,7 @@ export const ObjectMenuHandler: GestureHandler = {
 					const property = rest.slice(0, colonIndex);
 					const value = rest.slice(colonIndex + 1);
 					const newState = handlePropertyUpdate(state, property, value);
-					// 履歴記録は handleGesture に委譲するため、commitVersion のみ更新
+					// History recording is delegated to handleGesture, so only update commitVersion
 					return {
 						...newState,
 						selectedVertex: null,
@@ -125,7 +125,7 @@ export const ObjectMenuHandler: GestureHandler = {
 				}
 			}
 
-			// コマンドボタン: command:{commandId}
+			// Command button: command:{commandId}
 			if (actionId.startsWith("command:")) {
 				const commandId = actionId.slice("command:".length);
 				return handleCommand(state, commandId);

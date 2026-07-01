@@ -12,18 +12,19 @@ type ConnectionAnchorsLayerProps = {
 	objects: Record<string, ObjectState>;
 	zoom?: number;
 	/**
-	 * Connection drag 中の一時コネクター（新規作成時）。
-	 * これがある場合、接続ターゲット側の受け口アンカーを表示する。
+	 * Temporary connector during a connection drag (new creation).
+	 * When present, the target-side receiving anchors are shown.
 	 */
 	pendingConnector?: ConnectorState | null;
 	/**
-	 * 既存コネクターの端点編集中の対象 ID。
-	 * 編集は実体を直接書き換えるため、受け口アンカーは objects 上の実体から導出する。
+	 * ID of the connector whose endpoint is being edited.
+	 * Editing mutates the entity directly, so the receiving anchors are derived
+	 * from the entity in `objects`.
 	 */
 	editingConnectorId?: string | null;
 	/**
-	 * 現在編集中（ドラッグ中）のエンドポイント。
-	 * これにより、固定側（編集していない側）のオブジェクトにのみアンカーを表示できる。
+	 * The endpoint currently being edited (dragged).
+	 * This lets anchors be shown only on the fixed-side (not-being-edited) object.
 	 */
 	editingEndpoint?: "source" | "target" | null;
 	isTextEditing: boolean;
@@ -67,9 +68,9 @@ const ConnectionAnchorsLayerComponent: React.FC<
 	// - Default to "target" for backward compatibility (new creation mode)
 	const activeEditingEndpoint = editingEndpoint ?? "target";
 
-	// 受け口アンカーの導出元コネクター:
-	// - 新規作成中は pendingConnector
-	// - 既存コネクターの端点編集中は実体（objects 上の editingConnectorId）
+	// Source connector for deriving the receiving anchors:
+	// - during new creation, pendingConnector
+	// - during endpoint editing of an existing connector, the entity (editingConnectorId in objects)
 	const editingConnector =
 		pendingConnector ??
 		(editingConnectorId

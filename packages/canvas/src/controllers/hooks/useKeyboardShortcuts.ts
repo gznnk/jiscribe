@@ -6,16 +6,16 @@ import type { CanvasAction } from "../reducer/CanvasActions";
 
 export type UseKeyboardShortcutsParams = {
 	canvasState: CanvasControllerState;
-	/** Canvas reducer の dispatch（実行可能なコマンドを COMMAND アクションとして送る） */
+	/** Canvas reducer dispatch (sends executable commands as COMMAND actions). */
 	dispatch: Dispatch<CanvasAction>;
-	/** 提供時、Ctrl+Z を Canvas 内部の UndoCommand ではなくこのコールバックで処理する */
+	/** When provided, handle Ctrl+Z with this callback instead of the Canvas-internal UndoCommand. */
 	onUndo?: () => void;
-	/** 提供時、Ctrl+Shift+Z / Ctrl+Y を Canvas 内部の RedoCommand ではなくこのコールバックで処理する */
+	/** When provided, handle Ctrl+Shift+Z / Ctrl+Y with this callback instead of the Canvas-internal RedoCommand. */
 	onRedo?: () => void;
 };
 
 /**
- * キーボードショートカットを処理するカスタムフック
+ * Custom hook that handles keyboard shortcuts.
  */
 export const useKeyboardShortcuts = ({
 	canvasState,
@@ -28,7 +28,7 @@ export const useKeyboardShortcuts = ({
 
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
-			// 入力フィールドなどでは無効化
+			// Disabled while focus is in input fields and similar elements
 			if (
 				event.target instanceof HTMLInputElement ||
 				event.target instanceof HTMLTextAreaElement ||
@@ -42,12 +42,12 @@ export const useKeyboardShortcuts = ({
 				return;
 			}
 
-			// バインディングが存在する場合はブラウザデフォルト動作を常に止める
+			// Always suppress the browser default action when a binding exists
 			event.preventDefault();
 			event.stopPropagation();
 
-			// undo/redo は外部コールバックが提供されている場合、canExecute を確認せず委譲する
-			// （利用可否は VSCode など外部の管理者が判断するため）
+			// When an external callback is provided, delegate undo/redo without checking
+			// canExecute (availability is decided by an external owner such as VSCode).
 			if (command.id === "undo" && onUndo) {
 				onUndo();
 				return;
@@ -61,7 +61,7 @@ export const useKeyboardShortcuts = ({
 			}
 		};
 
-		// document にイベントリスナーを登録（グローバルショートカット）
+		// Register the event listener on document (global shortcuts)
 		document.addEventListener("keydown", handleKeyDown);
 		return () => {
 			document.removeEventListener("keydown", handleKeyDown);

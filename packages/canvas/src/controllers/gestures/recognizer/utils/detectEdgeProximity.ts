@@ -2,7 +2,7 @@ import type { Viewport } from "../../../../states/canvas/Viewport";
 import { AUTO_SCROLL_THRESHOLD } from "../GestureRecognizerConstants";
 
 /**
- * エッジ近接情報
+ * Edge-proximity information.
  */
 export type EdgeProximity = {
 	isNearEdge: boolean;
@@ -11,12 +11,12 @@ export type EdgeProximity = {
 };
 
 /**
- * カーソルがビューポートのエッジ近くにいるかを検出
+ * Detects whether the cursor is near an edge of the viewport.
  *
- * @param viewport - 現在のビューポート
- * @param svgX - カーソルのX座標（SVG座標）
- * @param svgY - カーソルのY座標（SVG座標）
- * @returns エッジ近接情報
+ * @param viewport - The current viewport
+ * @param svgX - Cursor X coordinate (SVG coordinates)
+ * @param svgY - Cursor Y coordinate (SVG coordinates)
+ * @returns Edge-proximity information
  */
 export const detectEdgeProximity = (
 	viewport: Viewport,
@@ -25,7 +25,7 @@ export const detectEdgeProximity = (
 ): EdgeProximity => {
 	const { minX, minY, width, height, zoom } = viewport;
 
-	// AUTO_SCROLL_THRESHOLDはピクセル単位なので、SVG座標系に変換
+	// AUTO_SCROLL_THRESHOLD is in pixels, so convert it to the SVG coordinate system
 	const thresholdInSvg = AUTO_SCROLL_THRESHOLD / zoom;
 
 	// Calculate distances from each edge in SVG coordinates

@@ -1,6 +1,6 @@
 /**
- * Tailwind CSS ベースのプリセットカラー。
- * ColorPickerGrid で使用する 4×7 = 28 色のカラーパレット。
+ * Tailwind CSS-based preset colors.
+ * The 4x7 = 28-color palette used by ColorPickerGrid.
  */
 export type ColorPreset = {
 	value: string;

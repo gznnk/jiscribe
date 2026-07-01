@@ -13,11 +13,11 @@ import { getEditingEndpoint } from "./utils/getEditingEndpoint";
 import { isSameConnectorEndpoints } from "./utils/isSameConnectorEndpoints";
 
 /**
- * Connection anchor からのドラッグでコネクターを作成するハンドラー。
- * ControlEventHandler に ControlStrategy として登録する。
+ * Handler that creates a connector by dragging from a connection anchor.
+ * Registered with ControlEventHandler as a ControlStrategy.
  *
- * Control ID フォーマット: "connection-anchor:<objectId>:<anchorPosition>"
- * 例: "connection-anchor:rect-1:topCenter"
+ * Control ID format: "connection-anchor:<objectId>:<anchorPosition>"
+ * Example: "connection-anchor:rect-1:topCenter"
  */
 export class ConnectionAnchorEventHandler implements ControlStrategy {
 	readonly controlType = "connection-anchor";
@@ -32,7 +32,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			return false;
 		}
 
-		// connection-anchor で始まるコントロールをサポート（create/edit 両方）
+		// Support controls starting with connection-anchor (both create/edit)
 		return targetId.startsWith("connection-anchor:");
 	}
 
@@ -50,7 +50,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			return state;
 		}
 
-		// Control ID をパース: "connection-anchor:<mode>:..."
+		// Parse the Control ID: "connection-anchor:<mode>:..."
 		const parts = targetControlId.split(":");
 		if (parts.length < 2 || parts[0] !== "connection-anchor") {
 			return state;
@@ -58,23 +58,23 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 
 		const mode = parts[1]; // "create" or "edit"
 
-		// ジェスチャータイプに応じて処理
+		// Handle based on the gesture type
 		if (event.type === "dragStart") {
 			return mode === "edit"
 				? this.handleEditDragStart(state, event, parts)
 				: this.handleCreateDragStart(state, event, parts);
 		} else if (event.type === "drag") {
-			return this.handleDrag(state, event); // 新規・編集共通
+			return this.handleDrag(state, event); // shared by create/edit
 		} else if (event.type === "dragEnd") {
-			return this.handleDragEnd(state, event); // 新規・編集共通
+			return this.handleDragEnd(state, event); // shared by create/edit
 		}
 
 		return state;
 	}
 
 	/**
-	 * Connection anchor でのドラッグ開始を処理する（新規作成モード）。
-	 * 新しいコネクターの作成を開始する。
+	 * Handles drag start on a connection anchor (create mode).
+	 * Starts creating a new connector.
 	 */
 	private handleCreateDragStart(
 		state: CanvasControllerState,
@@ -105,7 +105,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 		const pendingConnector: ConnectorState = {
 			id: connectorId,
 			type: "connector",
-			// points は中間経由点のみ（端点は source/target が持つ）。新規作成時は直線なので空
+			// points holds only intermediate waypoints (endpoints are held by source/target). Empty on new creation since it is a straight line
 			points: [] as Point[],
 			source: {
 				owner: { type: sourceObject.type, id: sourceObjectId },
@@ -117,8 +117,8 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			target: {
 				anchor: { kind: "free", point: { x: event.last.x, y: event.last.y } },
 			},
-			// routing は省略する。省略時は orthogonal（自動直交ルーティング）が既定。
-			// 直線にしたい場合のみ "straight" を明示する。
+			// routing is omitted. When omitted, orthogonal (automatic orthogonal routing) is the default.
+			// Specify "straight" explicitly only when a straight line is wanted.
 			stroke: AUTO_COLOR,
 			strokeWidth: 2,
 			endArrow: "ConcaveTriangle",
@@ -127,7 +127,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 		return {
 			...state,
 			pendingConnector,
-			editingEndpoint: "target", // 新規作成時は常に target を編集
+			editingEndpoint: "target", // on new creation, always edit target
 			edgeScrollEnabled: true,
 			// Clear any selection to avoid confusion
 			selectedIds: [],
@@ -137,11 +137,11 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 	}
 
 	/**
-	 * エンドポイント編集のドラッグ開始処理。
-	 * polyline の頂点編集と同様に、pendingConnector（overlay）は使わず実体を直接編集する。
-	 * そのため objects / rootIds は変更せず（重なり順を維持）、選択状態も保持して
-	 * ConnectorControls の端点ハンドルが実体に追従するようにする。
-	 * 実際の端点更新は handleDrag が eventStartSnapshot を基点に行う。
+	 * Handles drag start for endpoint editing.
+	 * Like polyline vertex editing, edits the entity directly without using pendingConnector (overlay).
+	 * Therefore objects / rootIds are left unchanged (preserving z-order), and the selection is kept
+	 * so that ConnectorControls' endpoint handles follow the entity.
+	 * The actual endpoint update is performed by handleDrag based on eventStartSnapshot.
 	 */
 	private handleEditDragStart(
 		state: CanvasControllerState,
@@ -175,10 +175,10 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 	}
 
 	/**
-	 * baseConnector の編集対象エンドポイントを、現在のカーソル位置・hover 状況に応じて
-	 * 更新した新しい ConnectorState を返す。
-	 * hover 対象の解決（state.objects / registry 依存）だけをここで行い、
-	 * 端点の組み立ては純粋関数 computeEditedEndpoint に委譲する。
+	 * Returns a new ConnectorState with baseConnector's edited endpoint updated
+	 * according to the current cursor position and hover state.
+	 * Only the hover-target resolution (which depends on state.objects / registry) is done here;
+	 * the endpoint assembly is delegated to the pure function computeEditedEndpoint.
 	 */
 	private buildEditedConnector(
 		state: CanvasControllerState,
@@ -186,14 +186,14 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 		baseConnector: ConnectorState,
 		endpointToUpdate: "source" | "target",
 	): ConnectorState {
-		// 固定側エンドポイント（編集していない方）。自己ループ時に同一アンカーを避けるため
-		// computeEditedEndpoint へ渡す。
+		// The fixed endpoint (the one not being edited). Passed to computeEditedEndpoint
+		// to avoid the same anchor on a self-loop.
 		const fixedEndpoint =
 			endpointToUpdate === "source"
 				? baseConnector.target
 				: baseConnector.source;
 
-		// 同一オブジェクトも hover 対象に含める（自己ループ許可）。
+		// Include the same object as a hover target too (self-loops allowed).
 		const hoveredTarget = findConnectableHoverTarget({
 			hovered: event.hovered,
 			objects: state.objects,
@@ -211,8 +211,8 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 	}
 
 	/**
-	 * Connection anchor からのドラッグ中の処理。
-	 * 編集モードでは実体（objects）を直接更新し、新規作成モードでは pendingConnector を更新する。
+	 * Handles dragging from a connection anchor.
+	 * In edit mode, updates the entity (objects) directly; in create mode, updates pendingConnector.
 	 */
 	private handleDrag(
 		state: CanvasControllerState,
@@ -223,8 +223,8 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 		const endpointToUpdate = getEditingEndpoint(event.targetId);
 		const { editingConnectorId } = state;
 
-		// 編集モード: polyline 頂点編集と同様に実体を直接書き換える（overlay を使わない）。
-		// 基点は eventStartSnapshot の原本コネクターなので、固定側・中間点は常に開始時の値を保つ。
+		// Edit mode: rewrite the entity directly, like polyline vertex editing (no overlay).
+		// The base is the original connector from eventStartSnapshot, so the fixed side and intermediate points always keep their start-time values.
 		if (editingConnectorId) {
 			const baseConnector =
 				state.eventStartSnapshot?.objects[editingConnectorId];
@@ -248,7 +248,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			};
 		}
 
-		// 新規作成モード: pendingConnector を更新（実体はまだ存在しない）。
+		// Create mode: update pendingConnector (the entity does not exist yet).
 		const { pendingConnector } = state;
 		if (!pendingConnector) {
 			return state;
@@ -268,8 +268,8 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 	}
 
 	/**
-	 * Connection anchor でのドラッグ終了を処理する。
-	 * hover 中のオブジェクトがあればコネクターを確定し、なければ FreeAnchor として確定。
+	 * Handles drag end on a connection anchor.
+	 * If there is a hovered object, commit the connector to it; otherwise commit as a FreeAnchor.
 	 */
 	private handleDragEnd(
 		state: CanvasControllerState,
@@ -277,20 +277,20 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 	): CanvasControllerState {
 		const { editingConnectorId } = state;
 
-		// 編集モード: 実体を直接編集済み。最終状態を適用してコミット判定する。
+		// Edit mode: the entity has been edited directly. Apply the final state and decide whether to commit.
 		if (editingConnectorId) {
 			const original = state.eventStartSnapshot?.objects[editingConnectorId];
 
-			// 端点が開始時から実質変化していなければ no-op。
-			// objects を据え置く（handleDrag 中に実体は最終位置＝開始位置になっている）ことで、
-			// handleGesture の自動コミット判定（objects 参照の変化）を回避し履歴に積まれないようにする。
+			// If the endpoint has not effectively changed since the start, it is a no-op.
+			// Leaving objects as-is (during handleDrag the entity ends at final position = start position)
+			// avoids handleGesture's auto-commit detection (a change in the objects reference) so nothing is pushed to history.
 			const finalConnector = this.handleDrag(state, event).objects[
 				editingConnectorId
 			];
 
-			// 不変条件ガード: 編集確定で両端 free になる場合は編集を破棄し元に戻す。
-			// UI 側（ConnectorControls）で owned 端ハンドルを隠しているため通常は到達しないが、
-			// connector が常に「少なくとも一方 owned」であることを防御的に担保する。
+			// Invariant guard: if committing the edit would make both ends free, discard the edit and revert.
+			// Normally unreachable since the UI (ConnectorControls) hides the owned-end handle, but this
+			// defensively guarantees a connector always has "at least one owned end".
 			if (
 				finalConnector?.type === "connector" &&
 				!(finalConnector as ConnectorState).source.owner &&
@@ -325,8 +325,8 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 				};
 			}
 
-			// 端点が変化した場合は実体更新を確定（commitVersion は handleGesture が
-			// objects の変化を検知して自動加算するため、ここでは増分しない）。
+			// If the endpoint changed, commit the entity update (commitVersion is auto-incremented
+			// by handleGesture detecting the objects change, so it is not incremented here).
 			const dragResult = this.handleDrag(state, event);
 			return {
 				...dragResult,
@@ -336,7 +336,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			};
 		}
 
-		// 新規作成モード: pendingConnector を確定する。
+		// Create mode: commit pendingConnector.
 		const { pendingConnector } = state;
 		if (!pendingConnector) {
 			return {
@@ -361,8 +361,8 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 				...dragResult.objects,
 				[finalConnector.id]: finalConnector,
 			},
-			// 新規コネクターは図形と同じ扱いで最前面へ挿入する（新規作成は前面が普遍的な既定）。
-			// rootIds は背面→前面順なので末尾へ追加する。
+			// Insert a new connector at the front, treated like a shape (front is the universal default for new creation).
+			// rootIds is in back→front order, so append to the end.
 			rootIds: [...dragResult.rootIds, finalConnector.id],
 			pendingConnector: null,
 			editingEndpoint: null,
