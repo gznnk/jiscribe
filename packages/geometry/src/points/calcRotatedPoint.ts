@@ -1,3 +1,4 @@
+import { calcRotatedPointWithTrig } from "./calcRotatedPointWithTrig";
 import type { Point } from "../types/Point";
 
 /**
@@ -16,14 +17,5 @@ export const calcRotatedPoint = (
 	cx: number,
 	cy: number,
 	theta: number,
-): Point => {
-	const cosTheta = Math.cos(theta);
-	const sinTheta = Math.sin(theta);
-	const dx = px - cx;
-	const dy = py - cy;
-
-	const x = cx + (dx * cosTheta - dy * sinTheta);
-	const y = cy + (dx * sinTheta + dy * cosTheta);
-
-	return { x, y };
-};
+): Point =>
+	calcRotatedPointWithTrig(px, py, cx, cy, Math.cos(theta), Math.sin(theta));
