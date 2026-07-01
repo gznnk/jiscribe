@@ -1,58 +1,70 @@
-# 状態更新フロー（Reducer）
+> 🌐 日本語版: [06-state-update-flow.ja.md](./06-state-update-flow.ja.md)
 
-`CanvasState` のすべての更新は `canvasReducer`（`controllers/reducer/canvasReducer.ts`）を
-通る。各ジェスチャー・コマンドはここで純粋関数のハンドラへ振り分けられ、新しい state を返す。
-この「全体の遷移を 1 か所で組み立てる」方針は [設計思想](./01-design-philosophy.md) の原則 3 に基づく。
+# State Update Flow (Reducer)
 
-## アクション一覧
+Every update to `CanvasState` passes through `canvasReducer`
+(`controllers/reducer/canvasReducer.ts`). This is where each gesture and command is
+dispatched to a pure-function handler that returns the new state.
+This "assemble the entire transition in one place" policy follows principle 3 of the
+[Design Philosophy](./01-design-philosophy.md).
 
-`CanvasAction`（`controllers/reducer/CanvasActions.ts`）は次のユニオン。
+## Action List
 
-| アクション                           | 役割                                            | 委譲先                                                         |
-| ------------------------------------ | ----------------------------------------------- | -------------------------------------------------------------- |
-| `GESTURE`                            | ポインタ/ホイール由来のジェスチャー             | `handleGesture` → [ジェスチャシステム](./04-gesture-system.md) |
-| `COMMAND`                            | ショートカット/メニュー/ツールバーのコマンド    | `handleCommand` → [コマンドシステム](./05-command-system.md)   |
-| `PASTE`                              | クリップボードデータの適用                      | `handlePaste`                                                  |
-| `MENU_PROPERTY_UPDATE`               | ObjectMenu の入力（プレビュー / コミット）      | `handlePropertyUpdate`                                         |
-| `SYNC_EXTERNAL`                      | 外部（ホスト）からの doc 取り込み               | → [外部同期](./07-external-sync.md)                            |
-| `CONTAINER_RESIZE`                   | ビューポート寸法の更新                          | （インライン）                                                 |
-| `UPDATE_TEXT_EDIT` / `END_TEXT_EDIT` | テキスト編集中の更新 / 確定・キャンセル         | `commitTextEditIfNeeded`                                       |
-| `UNDO` / `REDO`                      | 履歴からの復元（復元対象 `CanvasDoc` を載せる） | （履歴）                                                       |
-| `CLOSE_CONTEXT_MENU`                 | コンテキストメニューを閉じるだけ                | （インライン）                                                 |
+`CanvasAction` (`controllers/reducer/CanvasActions.ts`) is the following union.
 
-各ハンドラ（`handleGesture` / `handleCommand` / `handlePaste` …）は
-**`(state) => state` の純粋関数**として実装され、副作用を持たない。
-これがユニット／結合テストを node 環境で完結させる土台になる（[テスト](./09-testing.md)）。
+| Action                               | Role                                                    | Delegates to                                               |
+| ------------------------------------ | ------------------------------------------------------- | ---------------------------------------------------------- |
+| `GESTURE`                            | Gestures originating from pointer/wheel input           | `handleGesture` → [Gesture System](./04-gesture-system.md) |
+| `COMMAND`                            | Commands from shortcuts/menus/toolbar                   | `handleCommand` → [Command System](./05-command-system.md) |
+| `PASTE`                              | Applying clipboard data                                 | `handlePaste`                                              |
+| `MENU_PROPERTY_UPDATE`               | ObjectMenu input (preview / commit)                     | `handlePropertyUpdate`                                     |
+| `SYNC_EXTERNAL`                      | Importing a doc from the external host                  | → [External Sync](./07-external-sync.md)                   |
+| `CONTAINER_RESIZE`                   | Updating viewport dimensions                            | (inline)                                                   |
+| `UPDATE_TEXT_EDIT` / `END_TEXT_EDIT` | Updates during text editing / commit or cancel          | `commitTextEditIfNeeded`                                   |
+| `UNDO` / `REDO`                      | Restoring from history (carries the target `CanvasDoc`) | (history)                                                  |
+| `CLOSE_CONTEXT_MENU`                 | Simply closing the context menu                         | (inline)                                                   |
 
-## 履歴記録（commitVersion）
+Each handler (`handleGesture` / `handleCommand` / `handlePaste`, …) is implemented as a
+**pure function of the form `(state) => state`** with no side effects.
+This is the foundation that lets unit and integration tests run entirely in a node
+environment ([Testing](./09-testing.md)).
 
-「永続化・undo の対象になる変更」が起きたハンドラは、結果 state の `commitVersion` を
-インクリメントする。`canvasReducer` は対象アクションの後に `recordHistoryIfNeeded` を呼び、
-**`commitVersion` が前の state から変化していれば** 履歴を記録する（同時に `saveVersion` も進める）。
+## History Recording (commitVersion)
 
-- ジェスチャーの場合、`handleGesture` が `dragEnd` 時に doc が実際に変化したときだけ
-  `commitVersion` を進める。これにより「最小サイズ未満で描画をやめた」ような
-  doc 変化のないドラッグで幽霊 undo エントリが生まれるのを防ぐ。
-- `MENU_PROPERTY_UPDATE` は `commit: false`（プレビュー）なら履歴を記録せず、
-  `commit: true`（blur / Enter）でのみ `commitVersion` を進める。
+A handler that produces a "change subject to persistence and undo" increments the
+`commitVersion` of the resulting state. After the relevant action, `canvasReducer` calls
+`recordHistoryIfNeeded`, which records history **if `commitVersion` has changed from the
+previous state** (advancing `saveVersion` at the same time).
 
-履歴は `state.history`（`past` / `present` / `future`）。`past` は直近 50 件に丸める。
+- For gestures, `handleGesture` advances `commitVersion` only when the doc actually
+  changed on `dragEnd`. This prevents ghost undo entries from being created by drags that
+  produce no doc change, such as "drawing was abandoned below the minimum size."
+- `MENU_PROPERTY_UPDATE` does not record history when `commit: false` (preview); it only
+  advances `commitVersion` when `commit: true` (blur / Enter).
 
-## 連続操作の集約（coalescing）
+History lives in `state.history` (`past` / `present` / `future`). `past` is trimmed to
+the most recent 50 entries.
 
-矢印キーによる連続ナッジのような操作を 1 つの undo エントリにまとめるため、
-履歴記録には集約のしくみがある。
+## Coalescing Consecutive Operations
 
-- 各ハンドラは「この操作はまとめてよい」という意図を `state.historyCoalesce.pending`（集約キー）に立てる。
-- `recordHistoryIfNeeded` は、直前コミットの識別子（`recorded`）と `pending` が
-  **同一キーかつ一定時間内**（`HISTORY_COALESCE_WINDOW_MS = 1000ms`）であれば、
-  `past` を増やさず `present` だけを差し替える。
-- `pending` は履歴層がここで消費し、必ず `null` に戻す。
+To merge consecutive operations, such as repeated nudges with the arrow keys, into a
+single undo entry, history recording has a coalescing mechanism.
 
-## SYNC_EXTERNAL と履歴境界
+- Each handler signals its intent that "this operation may be merged" by setting
+  `state.historyCoalesce.pending` (the coalescing key).
+- If the identifier of the previous commit (`recorded`) and `pending` are the **same key
+  and within a fixed time window** (`HISTORY_COALESCE_WINDOW_MS = 1000ms`),
+  `recordHistoryIfNeeded` replaces only `present` without growing `past`.
+- The history layer consumes `pending` here and always resets it to `null`.
 
-外部からの変更は履歴の境界として扱う。`recordHistoryIfNeeded` を通さずに
-`past` を直接積み（`present` を `past` に移して新 doc を `present` に）、`future` をクリアする。
-あわせて選択・進行中の操作など UI state も明示的にリセットする（viewport のみ維持）。
-自己保存のエコーバック（saveNonce 一致）の扱いは [外部同期・VSCode 連携](./07-external-sync.md) を参照。
+## SYNC_EXTERNAL and History Boundaries
+
+External changes are treated as history boundaries. Rather than going through
+`recordHistoryIfNeeded`, `past` is pushed directly (moving `present` into `past` and
+setting the new doc as `present`), and `future` is cleared.
+UI state such as selection and in-progress operations is also explicitly reset (only the
+viewport is preserved).
+For how the self-save echo-back (matching saveNonce) is handled, see
+[External Sync / VSCode Integration](./07-external-sync.md).
 </content>
+</invoke>
