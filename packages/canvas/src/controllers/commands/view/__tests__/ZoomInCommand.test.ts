@@ -24,10 +24,16 @@ const centerOf = (viewport: Viewport) => ({
 });
 
 describe("ZoomInCommand", () => {
-	it("zoom を IN_FACTOR 倍する", () => {
+	it("zoom を一段上の固定段（100% → 125%）へ吸着する", () => {
 		const state = makeState({ zoom: 1 });
 		const next = ZoomInCommand.execute(state);
-		expect(next.viewport.zoom).toBe(ZOOM.IN_FACTOR);
+		expect(next.viewport.zoom).toBe(1.25);
+	});
+
+	it("段の途中（116%）からは直近の上の段（125%）へ吸着する", () => {
+		const state = makeState({ zoom: 1.16 });
+		const next = ZoomInCommand.execute(state);
+		expect(next.viewport.zoom).toBe(1.25);
 	});
 
 	it("ズーム後もビューポート中心を維持する", () => {
