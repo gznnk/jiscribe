@@ -1,8 +1,8 @@
 import type { Point } from "@workspace/geometry";
 
 import type { CanvasControllerState } from "../../CanvasTypes";
-import { updateAffectedGroupBounds } from "../../ui/utils/updateAffectedGroupBounds";
 import { moveSelection } from "../../utils/moveSelection";
+import { updateAffectedGroupBounds } from "../../utils/updateAffectedGroupBounds";
 import type { Command } from "../CommandTypes";
 
 /** 通常移動量（キャンバス座標 px） */

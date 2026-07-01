@@ -42,6 +42,7 @@ const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 					key={id}
 					connectorState={objState as ConnectorState}
 					objects={objects}
+					textEditObjectId={textEditObjectId}
 				/>,
 			);
 			return;

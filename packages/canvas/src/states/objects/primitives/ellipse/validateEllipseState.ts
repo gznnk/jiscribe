@@ -1,28 +1,7 @@
-import { isObject } from "@workspace/basic-validators";
-
+import { EllipseFeatures } from "../../../../schemas/objects/primitives/ellipse/EllipseDoc";
 import type { ObjectStateValidateFn } from "../../../registry/ObjectStateValidatorRegistry";
-import {
-	hasValidIdAndType,
-	isValidFillStyleState,
-	isValidFrameState,
-	isValidStrokeStyleState,
-	isValidTextStyleState,
-	isValidTransformState,
-	type StateRecord,
-} from "../../utils/validateStateUtils";
+import { createFrameStateValidator } from "../../utils/createFrameStateValidator";
 
-/** EllipseState（Frame + transform + stroke + fill + text）を検証する。 */
-export const isValidEllipseState: ObjectStateValidateFn = (value) => {
-	if (!isObject(value)) {
-		return false;
-	}
-	const o = value as StateRecord;
-	return (
-		hasValidIdAndType(o, "ellipse") &&
-		isValidFrameState(o) &&
-		isValidTransformState(o) &&
-		isValidStrokeStyleState(o) &&
-		isValidFillStyleState(o) &&
-		isValidTextStyleState(o)
-	);
-};
+/** EllipseState を検証する（Frame 系共通ロジックを features から生成）。 */
+export const isValidEllipseState: ObjectStateValidateFn =
+	createFrameStateValidator(EllipseFeatures);

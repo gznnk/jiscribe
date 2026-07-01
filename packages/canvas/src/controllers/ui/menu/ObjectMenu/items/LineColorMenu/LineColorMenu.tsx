@@ -2,13 +2,13 @@ import { memo, useRef } from "react";
 
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { getEffectiveSelectedIds } from "../../../../../../controllers/utils/getEffectiveSelectedIds";
-import { getFirstSelectedWithProp } from "../../../../../../controllers/utils/getFirstSelectedWithProp";
 import { resolveAutoColor } from "../../../../../../presentations/objects/utils/resolveAutoColor";
 import { ColorPreviewIcon } from "../../../../icons/ColorPreviewIcon";
 import { ColorPickerGrid } from "../../common/ColorPickerGrid/ColorPickerGrid";
 import { DropdownPanel } from "../../common/DropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
 import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
+import { getFirstSelectedWithProp } from "../../utils/getFirstSelectedWithProp";
 
 const SECTION_ID = "line-color";
 
@@ -29,7 +29,7 @@ const getSelectedStrokeColor = (state: CanvasControllerState): string => {
 
 /**
  * ライン色メニュー（polyline / connector 用）。
- * svg-canvas の LineColorMenu に合わせて塗りつぶし円アイコンを使用する。
+ * 塗りつぶし円アイコンを使用する。
  */
 const LineColorMenuComponent: React.FC<LineColorMenuProps> = ({
 	canvasState,

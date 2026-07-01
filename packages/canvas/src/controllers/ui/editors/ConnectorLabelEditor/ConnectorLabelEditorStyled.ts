@@ -1,0 +1,65 @@
+import styled from "@emotion/styled";
+
+import { TEXT_LINE_HEIGHT } from "../../../../constants/textLineHeight";
+import {
+	CONNECTOR_LABEL_PADDING_X,
+	CONNECTOR_LABEL_PADDING_Y,
+} from "../../../../presentations/objects/connections/ConnectorLabel/utils/connectorLabelLayout";
+
+type WrapperProps = {
+	left: number;
+	top: number;
+	width: number;
+	background: string;
+	borderWidth: number;
+	borderColor: string;
+	borderStyle: string;
+};
+
+/**
+ * アンカー（経路上のラベル位置）を中心に配置するラッパー。
+ * 幅は計測値で与え、translate(-50%, -50%) で中央追従させる。高さは中身に追従する。
+ * 背景・枠線は表示側 LabelBox と揃え、編集中も見た目が一致するようにする。
+ */
+export const ConnectorLabelEditorWrapper = styled.div<WrapperProps>`
+	position: absolute;
+	left: ${(props) => props.left}px;
+	top: ${(props) => props.top}px;
+	width: ${(props) => props.width}px;
+	box-sizing: border-box;
+	transform: translate(-50%, -50%);
+	background: ${(props) => props.background};
+	border: ${(props) =>
+		props.borderWidth > 0
+			? `${props.borderWidth}px ${props.borderStyle} ${props.borderColor}`
+			: "none"};
+	border-radius: 2px;
+	pointer-events: auto;
+`;
+
+type TextAreaProps = {
+	color: string;
+	fontSize: number;
+	fontFamily: string;
+	fontWeight: string;
+};
+
+export const ConnectorLabelTextArea = styled.textarea<TextAreaProps>`
+	display: block;
+	width: 100%;
+	box-sizing: border-box;
+	padding: ${CONNECTOR_LABEL_PADDING_Y}px ${CONNECTOR_LABEL_PADDING_X}px;
+	color: ${(props) => props.color};
+	font-size: ${(props) => props.fontSize}px;
+	font-family: ${(props) => props.fontFamily};
+	font-weight: ${(props) => props.fontWeight};
+	line-height: ${TEXT_LINE_HEIGHT};
+	text-align: center;
+	white-space: pre-wrap;
+	word-break: break-word;
+	background: transparent;
+	border: none;
+	outline: none;
+	overflow: hidden;
+	resize: none;
+`;

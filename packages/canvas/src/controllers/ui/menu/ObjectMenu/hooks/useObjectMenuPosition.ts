@@ -10,7 +10,7 @@ import type { ConnectorState } from "../../../../../states/objects/connections/c
 import { isGroupState } from "../../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { calcConnectorBoundingBox } from "../../../../utils/calcConnectorBoundingBox";
-import { calcGroupBoundingBox } from "../../../utils/calcGroupBoundingBox";
+import { calcGroupBoundingBox } from "../../../../utils/calcGroupBoundingBox";
 
 /** ObjectMenu とオブジェクト間の距離 (px) */
 const DISTANCE_FROM_OBJECT = 40;
@@ -30,7 +30,6 @@ type ObjectMenuPosition = {
  * ScrollSyncedOverlay 内に配置されるため、座標はキャンバス座標系のまま返す。
  * オーバーレイ自体がスクロール追従するので viewport offset は不要。
  *
- * Based on svg-canvas's useDiagramMenuDisplay but adapted for canvas architecture.
  * - Automatically positions menu above object if it would overflow bottom viewport boundary
  * - Adjusts horizontal position to fit within left/right viewport boundaries
  * - Measures actual menu dimensions from DOM for accurate positioning

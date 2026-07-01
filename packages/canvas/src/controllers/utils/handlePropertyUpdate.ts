@@ -1,8 +1,67 @@
 import { collectDescendantIds } from "./collectDescendantIds";
 import type { ObjectFeatures } from "../../schemas/objects/types/ObjectFeatures";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
+import type { ConnectorState } from "../../states/objects/connections/connector/ConnectorState";
 import { objectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import type { CanvasControllerState } from "../CanvasTypes";
+
+/**
+ * コネクターラベルのネストしたスタイル更新を表すドット記法のプロパティ群。
+ * フラットなトップ階層プロパティ配管にドット記法のまま相乗りし、収束点の
+ * handlePropertyUpdate（connector 分岐）だけがネスト解釈する。
+ */
+const LABEL_STYLE_PROPERTIES = new Set([
+	"label.fill",
+	"label.stroke",
+	"label.strokeWidth",
+	"label.strokeDashType",
+	"label.fontColor",
+	"label.fontSize",
+	"label.fontWeight",
+]);
+
+// 数値として保存する label サブキー（それ以外は文字列のまま）。
+const LABEL_NUMERIC_KEYS = new Set(["strokeWidth", "fontSize"]);
+
+const isLabelStyleProperty = (property: string): boolean =>
+	LABEL_STYLE_PROPERTIES.has(property);
+
+/**
+ * `label.*` プロパティを connector.label へネスト merge する。
+ * ラベル未設定（text 無し）なら何もしない。数値サブキー（strokeWidth/fontSize）は数値化する。
+ */
+const updateConnectorLabelStyle = (
+	state: CanvasControllerState,
+	connector: ConnectorState,
+	property: string,
+	value: string,
+): CanvasControllerState => {
+	const label = connector.label;
+	if (!label) {
+		return state;
+	}
+
+	const key = property.slice("label.".length);
+	let parsed: string | number = value;
+	if (LABEL_NUMERIC_KEYS.has(key)) {
+		const n = Number(value);
+		if (isNaN(n)) {
+			return state;
+		}
+		parsed = n;
+	}
+
+	return {
+		...state,
+		objects: {
+			...state.objects,
+			[connector.id]: {
+				...connector,
+				label: { ...label, [key]: parsed },
+			} as ObjectState,
+		},
+	};
+};
 
 const isPropertySupported = (
 	features: ObjectFeatures,
@@ -77,6 +136,17 @@ export const handlePropertyUpdate = (
 		const connector = objects[selectedConnectorId];
 		if (!connector) {
 			return state;
+		}
+
+		// ラベルのネストスタイル（label.fill / label.stroke / label.strokeWidth）は
+		// トップ階層でなく connector.label へ書く。
+		if (isLabelStyleProperty(property)) {
+			return updateConnectorLabelStyle(
+				state,
+				connector as ConnectorState,
+				property,
+				value,
+			);
 		}
 
 		const features = objectMapperRegistry.getFeatures(connector.type);

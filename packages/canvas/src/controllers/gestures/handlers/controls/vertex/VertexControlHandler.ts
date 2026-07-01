@@ -15,7 +15,7 @@ import {
 	buildSnapFeedback,
 	findSnap,
 	SNAP_THRESHOLD_PX,
-} from "../../objects/utils/snap/findSnap";
+} from "../../../utils/snap/findSnap";
 import type { ControlStrategy } from "../ControlEventHandler";
 
 /**

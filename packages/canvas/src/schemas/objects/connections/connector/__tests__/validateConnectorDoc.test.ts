@@ -223,4 +223,147 @@ describe("validateConnectorDoc", () => {
 		const errors = validateConnectorDoc(o, "root");
 		expect(errors.some((e) => e.path === "root.routing")).toBe(true);
 	});
+
+	// ─── label（コネクターラベル） ───
+	it("label.text のみの有効なラベルはエラーなし", () => {
+		const o = {
+			points: validPoints,
+			source: ownedRef,
+			target: freeRef,
+			label: { text: "Yes" },
+		};
+		expect(validateConnectorDoc(o, "root")).toEqual([]);
+	});
+
+	it("label に position/offset/フォントを指定してもエラーなし", () => {
+		const o = {
+			points: validPoints,
+			source: ownedRef,
+			target: freeRef,
+			label: {
+				text: "成功",
+				position: 0.25,
+				offset: 8,
+				fontColor: "#2E7D32",
+				fontSize: 14,
+				fontWeight: "bold",
+			},
+		};
+		expect(validateConnectorDoc(o, "root")).toEqual([]);
+	});
+
+	it("トップレベル text はエラー（label.text を使うべき）", () => {
+		const o = {
+			points: validPoints,
+			source: ownedRef,
+			target: freeRef,
+			text: "Yes",
+		};
+		const errors = validateConnectorDoc(o, "root");
+		expect(errors.some((e) => e.path === "root.text")).toBe(true);
+	});
+
+	it("label.text が文字列でない場合はエラー", () => {
+		const o = {
+			points: validPoints,
+			source: ownedRef,
+			target: freeRef,
+			label: { text: 123 },
+		};
+		const errors = validateConnectorDoc(o, "root");
+		expect(errors.some((e) => e.path === "root.label.text")).toBe(true);
+	});
+
+	it("label.position が範囲外（>1）はエラー", () => {
+		const o = {
+			points: validPoints,
+			source: ownedRef,
+			target: freeRef,
+			label: { text: "x", position: 1.5 },
+		};
+		const errors = validateConnectorDoc(o, "root");
+		expect(errors.some((e) => e.path === "root.label.position")).toBe(true);
+	});
+
+	it("label.fontSize が下限未満（<1）はエラー", () => {
+		const o = {
+			points: validPoints,
+			source: ownedRef,
+			target: freeRef,
+			label: { text: "x", fontSize: 0 },
+		};
+		const errors = validateConnectorDoc(o, "root");
+		expect(errors.some((e) => e.path === "root.label.fontSize")).toBe(true);
+	});
+
+	it("label が object でない場合はエラー", () => {
+		const o = {
+			points: validPoints,
+			source: ownedRef,
+			target: freeRef,
+			label: "Yes",
+		};
+		const errors = validateConnectorDoc(o, "root");
+		expect(errors.some((e) => e.path === "root.label")).toBe(true);
+	});
+
+	it("label に背景（fill）・枠線（stroke/strokeWidth）を指定してもエラーなし", () => {
+		const o = {
+			points: validPoints,
+			source: ownedRef,
+			target: freeRef,
+			label: { text: "Yes", fill: "#fff", stroke: "auto", strokeWidth: 2 },
+		};
+		expect(validateConnectorDoc(o, "root")).toEqual([]);
+	});
+
+	it("label.fill に CSS breakout 文字列はエラー（beyondSchema）", () => {
+		const o = {
+			points: validPoints,
+			source: ownedRef,
+			target: freeRef,
+			label: { text: "x", fill: "a;b" },
+		};
+		const hit = validateConnectorDoc(o, "root").find(
+			(e) => e.path === "root.label.fill",
+		);
+		expect(hit).toBeDefined();
+		expect(hit?.beyondSchema).toBe(true);
+	});
+
+	it("label.strokeWidth が負値はエラー", () => {
+		const o = {
+			points: validPoints,
+			source: ownedRef,
+			target: freeRef,
+			label: { text: "x", strokeWidth: -1 },
+		};
+		const errors = validateConnectorDoc(o, "root");
+		expect(errors.some((e) => e.path === "root.label.strokeWidth")).toBe(true);
+	});
+
+	it("label.strokeDashType が dashed/dotted/solid はエラーなし", () => {
+		for (const dash of ["solid", "dashed", "dotted"]) {
+			const o = {
+				points: validPoints,
+				source: ownedRef,
+				target: freeRef,
+				label: { text: "x", strokeDashType: dash },
+			};
+			expect(validateConnectorDoc(o, "root")).toEqual([]);
+		}
+	});
+
+	it("label.strokeDashType が未知の値はエラー", () => {
+		const o = {
+			points: validPoints,
+			source: ownedRef,
+			target: freeRef,
+			label: { text: "x", strokeDashType: "double" },
+		};
+		const errors = validateConnectorDoc(o, "root");
+		expect(errors.some((e) => e.path === "root.label.strokeDashType")).toBe(
+			true,
+		);
+	});
 });

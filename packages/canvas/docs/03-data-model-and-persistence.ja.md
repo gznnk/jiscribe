@@ -55,6 +55,47 @@ CanvasMapper は形状タイプごとの Mapper を `ObjectRegistry` から引�
 - 色フィールド（`stroke` / `fontColor` / `fill`）… 具体的な CSS 色のほか、sentinel 値 `"auto"`（テーマ追従）を取りうる。`"auto"` は描画時にテーマ前景色へ解決される（[表示・テーマ](./08-presentation-and-theme.ja.md) 参照）。新規図形の `stroke` / `fontColor` の既定値は `"auto"`
 - 形式仕様の全文は `../ai/reference.md` と `../ai/jiscribe.schema.json` を参照
 
+### テキストモデルの非対称（図形の `text` とコネクターの `label`）
+
+文字を持つフィールドの格納形が、図形とコネクターで **意図的に非対称** になっている。
+
+- **図形（rect / ellipse / diamond / sticky）** … `text` / `textAlign` / `fontColor` … を
+  **トップ階層にフラット**で持つ（`features.text` が `TextStyleDoc` を合成する）。
+- **コネクター** … 注記を
+  `label: { text, position, offset, fontColor, fontSize, fontWeight, fill, stroke, strokeWidth, strokeDashType }`
+  の **ネストした 1 オブジェクト**で持つ（`features.text` は立てない）。背景 `fill`・枠線
+  `stroke`/`strokeWidth`/`strokeDashType` は図形と同じ語彙を借りるが、`label` の中にネストする点が異なる。
+
+この差は層の都合ではなく、**役割（ロール）の違い**を映したもの。図形の `text` は「その図形の
+_本文_」（中心的・ほぼ主役・ボックス内整列あり）。コネクターの文字は「辺に付く _注記_（edge label）」
+（任意・副次的・整列概念なし）で、さらに `position`（経路に沿った比率）/ `offset`（垂直距離）という
+**コネクター固有の配置軸**を持つ。フラットに流用すると (1) これら固有フィールドが他キーと混ざって
+帰属が読めない (2) 線の短いタグに無関係な `textAlign` / `verticalAlign` / `textType` が付く、という
+歪みが出る。**違うものは違う形でよい**（無理に揃えるのは「偽の一貫性」）という判断。これは JSON を
+生成する AI から見ても、型ごとに能力が違う前提（`../ai/ai-guide.md` の能力表）と整合し、混乱コストは低い。
+
+この非対称が気になった場合の指針:
+
+- **解は「下げる」ではなく「上げる」**。対称性を取りたいなら、コネクターを平らにする（固有フィールドが
+  浮く・無関係フィールドが付く前述の歪みが復活する）のではなく、**図形側も `label` ネストに寄せて
+  揃える**のが筋。後方互換は不要方針（自分しか使っていない）なので技術的には可能。
+- **ただし second reason が出るまでやらない**。図形テキストのネスト化は rect/ellipse/diamond/sticky・
+  `TextOverlay`・テキストエディタ・スタイリング・バリデータ全体に波及する大改修で、いま得られるのは
+  見た目の対称性だけ。図形に複数テキスト領域やバッジが要る、ラベルにも別の配置概念が要る、等の
+  **第二の動機**が出た時点で着手すれば改修コストが正当化される。
+- **完全対称は本質的に取れない**。仮に全部ネストしても、キー名は図形＝本文（`text`）、
+  コネクター＝注記（`label`）で **意味が違う**ため、ある種の非対称は概念上どうしても残る。
+
+**スタイリング UI のネスト対応（ドット記法）**: スタイリングのプロパティ更新配管
+（メニュー項目 → `MENU_PROPERTY_UPDATE` / `object-menu:set:` → `handlePropertyUpdate`）は
+トップ階層プロパティ前提でできている。ラベルの背景・枠線（`label.fill` / `label.stroke` /
+`label.strokeWidth`）はネストのため、この配管に **ドット記法のプロパティ名のまま相乗り**させる。
+2 経路とも収束点は `handlePropertyUpdate` の 1 か所なので、そこ（connector 分岐）だけが
+`label.` プレフィックスを検出して `connector.label` へネスト merge する。共有 UI
+（`ColorPickerGrid` / `MenuSlider`）と `commit`（ライブプレビュー＋履歴 1 件）の機微を再実装せずに
+再利用するための割り切りで、フラット配管全体には波及させない。専用アクションを増やす案は、この
+commit 機微を二重持ちすることになるため採らない。
+
 ## parser の二段検証（境界での防御）
 
 外部から渡る JSON 文字列は、`parseCanvasText`（`schemas/canvas/validators/`）が

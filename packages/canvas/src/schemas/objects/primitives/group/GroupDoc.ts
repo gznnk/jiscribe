@@ -1,6 +1,6 @@
 import type { ObjectDoc } from "../../base/ObjectDoc";
+import type { CreateObjectType } from "../../types/CreateObjectType";
 import type { ObjectFeatures } from "../../types/ObjectFeatures";
-import type { CreateObjectType } from "../../utils/CreateObjectType";
 
 export const GroupFeatures = {
 	type: "group",

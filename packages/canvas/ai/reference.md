@@ -340,6 +340,7 @@ A connector object placed in `root` (top level, mixed with the objects in z-orde
 | `target`     | `EndpointRef`                 | ✅       | End endpoint spec.                                                          |
 | `startArrow` | `ArrowType`                   | -        | Arrowhead at the start.                                                     |
 | `endArrow`   | `ArrowType`                   | -        | Arrowhead at the end.                                                       |
+| `label`      | `ConnectorLabel`              | -        | Optional edge label drawn on the connector. See below.                      |
 
 Do **not** include endpoint coordinates in `points`. The endpoints are authoritative via `source` / `target`
 (EndpointRef) and are resolved dynamically at render time as the connected objects move. `points` holds only the
@@ -359,6 +360,41 @@ same object (typically with different anchors, e.g. `topCenter` → `rightCenter
 self-transitions in state machines. A self-loop is always rendered as a rectangular orthogonal loop around the
 object regardless of `routing`, so leave `routing` omitted and `points` empty (`"straight"` is ignored for
 self-loops).
+
+**Label (`label`).** A connector has **no** top-level `text` field — unlike shapes, its annotation lives in a
+nested `label` object (an "edge label" such as `"Yes"` / `"No"` on a decision branch). Omit `label` for no
+label.
+
+```json
+{
+	"type": "connector",
+	"source": {
+		"owner": { "type": "diamond", "id": "d1" },
+		"anchor": { "kind": "connectPoint", "id": "rightCenter" }
+	},
+	"target": {
+		"owner": { "type": "rect", "id": "r1" },
+		"anchor": { "kind": "connectPoint", "id": "leftCenter" }
+	},
+	"label": { "text": "Yes" }
+}
+```
+
+| Field            | Type     | Required | Description                                                                                                                            |
+| ---------------- | -------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `text`           | `string` | ✅       | Label text. Plain text only (no markdown); use `"\n"` for multiple lines.                                                              |
+| `position`       | `number` | -        | Position along the path, `0` (source) – `1` (target). Default `0.5` (midpoint).                                                        |
+| `offset`         | `number` | -        | Signed perpendicular offset from the path in world units. Default `0`.                                                                 |
+| `fontColor`      | `string` | -        | Label color (CSS color or `"auto"`). Default `"auto"`.                                                                                 |
+| `fontSize`       | `number` | -        | Font size in px. Default `16`.                                                                                                         |
+| `fontWeight`     | `string` | -        | CSS font-weight (e.g. `"bold"`).                                                                                                       |
+| `fill`           | `string` | -        | Background color (CSS color or `"auto"`). Omitted/`"auto"` = canvas background (knockout); `"transparent"` lets the line show through. |
+| `stroke`         | `string` | -        | Border color (CSS color or `"auto"`). Only visible when `strokeWidth > 0`.                                                             |
+| `strokeWidth`    | `number` | -        | Border width in px. Default `0` (no border).                                                                                           |
+| `strokeDashType` | `string` | -        | Border line style: `"solid"` (default), `"dashed"`, `"dotted"`. Visible when `strokeWidth > 0`.                                        |
+
+The label is drawn horizontally (never rotated), centered on its anchor point. By default its background masks the
+line behind it for legibility; `fill` / `stroke` / `strokeWidth` customize the background and border.
 
 ### EndpointRef
 

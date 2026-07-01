@@ -9,7 +9,6 @@ type ArrowSwapIconProps = {
 
 /**
  * 矢印の Start / End を入れ替えるアイコン。
- * 元の svg-canvas から移植した SVG パスを使用。
  */
 const ArrowSwapIconComponent: React.FC<ArrowSwapIconProps> = ({
 	width = 24,

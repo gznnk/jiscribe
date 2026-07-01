@@ -1,7 +1,6 @@
 import type { TransformedEllipse } from "../types/TransformedEllipse";
 import type { TransformedFrame } from "../types/TransformedFrame";
 
-// TODO: いらなくなるかも
 /**
  * Converts a TransformedEllipse (center/radii based) to a TransformedFrame (center/dimensions based).
  *

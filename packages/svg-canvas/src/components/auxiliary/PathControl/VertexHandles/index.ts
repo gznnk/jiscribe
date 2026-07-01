@@ -1,1 +1,0 @@
-export { VertexHandles } from "./VertexHandles";

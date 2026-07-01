@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { isValidConnectorState } from "../validateConnectorState";
+import {
+	isValidConnectorLabelState,
+	isValidConnectorState,
+} from "../validateConnectorState";
 
 const ownedRef = {
 	owner: { id: "r1", type: "rect" },
@@ -81,5 +84,87 @@ describe("isValidConnectorState", () => {
 		expect(
 			isValidConnectorState({ ...validConnector, routing: "diagonal" }),
 		).toBe(false);
+	});
+
+	it("label が不正な構造のコネクターは false（label 検証の配線確認）", () => {
+		expect(
+			isValidConnectorState({ ...validConnector, label: { text: 123 } }),
+		).toBe(false);
+		expect(
+			isValidConnectorState({
+				...validConnector,
+				label: { text: "Yes", position: 0.5 },
+			}),
+		).toBe(true);
+	});
+});
+
+describe("isValidConnectorLabelState", () => {
+	it("未指定（undefined）はラベル無しとして true", () => {
+		expect(isValidConnectorLabelState(undefined)).toBe(true);
+	});
+
+	it("text のみの最小ラベルは true", () => {
+		expect(isValidConnectorLabelState({ text: "Yes" })).toBe(true);
+	});
+
+	it("位置・スタイルを正しい型で持てば true", () => {
+		expect(
+			isValidConnectorLabelState({
+				text: "成功",
+				position: 0.25,
+				offset: -8,
+				fontColor: "#2E7D32",
+				fontSize: 14,
+				fontWeight: "bold",
+			}),
+		).toBe(true);
+	});
+
+	it("背景（fill）・枠線（stroke/strokeWidth/strokeDashType）を正しい型で持てば true", () => {
+		expect(
+			isValidConnectorLabelState({
+				text: "Yes",
+				fill: "#ffffff",
+				stroke: "auto",
+				strokeWidth: 2,
+				strokeDashType: "dashed",
+			}),
+		).toBe(true);
+	});
+
+	it("fill / stroke / strokeWidth / strokeDashType の型が合わないと false", () => {
+		expect(isValidConnectorLabelState({ text: "x", fill: 0 })).toBe(false);
+		expect(isValidConnectorLabelState({ text: "x", stroke: 1 })).toBe(false);
+		expect(isValidConnectorLabelState({ text: "x", strokeWidth: "2" })).toBe(
+			false,
+		);
+		expect(
+			isValidConnectorLabelState({ text: "x", strokeDashType: "double" }),
+		).toBe(false);
+	});
+
+	it("オブジェクトでない（文字列・null）は false", () => {
+		expect(isValidConnectorLabelState("Yes")).toBe(false);
+		expect(isValidConnectorLabelState(null)).toBe(false);
+	});
+
+	it("text が無い／文字列でないと false", () => {
+		expect(isValidConnectorLabelState({})).toBe(false);
+		expect(isValidConnectorLabelState({ text: 123 })).toBe(false);
+	});
+
+	it("存在する場合に型が合わないフィールドは false", () => {
+		expect(isValidConnectorLabelState({ text: "x", position: "0.5" })).toBe(
+			false,
+		);
+		expect(isValidConnectorLabelState({ text: "x", offset: "0" })).toBe(false);
+		expect(isValidConnectorLabelState({ text: "x", fontSize: "14" })).toBe(
+			false,
+		);
+		expect(isValidConnectorLabelState({ text: "x", fontColor: 0 })).toBe(false);
+		expect(isValidConnectorLabelState({ text: "x", fontWeight: 700 })).toBe(
+			false,
+		);
 	});
 });

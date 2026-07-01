@@ -3,7 +3,6 @@ import type { GroupState } from "../../../../../states/objects/primitives/group/
 
 /**
  * Recursively checks if any descendants (at any depth) are selected.
- * This matches svg-canvas's getSelectedDiagrams behavior.
  *
  * @param state - Canvas state
  * @param childIds - Direct child IDs to check

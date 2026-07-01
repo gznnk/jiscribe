@@ -1,10 +1,10 @@
 ﻿import { memo } from "react";
 
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
-import { getFirstSelectedWithProp } from "../../../../../../controllers/utils/getFirstSelectedWithProp";
 import type { TextStyleState } from "../../../../../../states/objects/base/TextStyleState";
 import { BoldIcon } from "../../../../icons/BoldIcon";
 import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
+import { getFirstSelectedWithProp } from "../../utils/getFirstSelectedWithProp";
 
 type BoldMenuProps = {
 	canvasState: CanvasControllerState;

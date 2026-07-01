@@ -25,8 +25,8 @@ import { DEFAULT_CONNECTOR_MARGIN } from "../../../../../constants/connectorRout
  * 戻り値は端点を含むフルパス `[source.point, …, target.point]`（共線・重複は畳み済み）。
  * **両端の図形のみ**を回避対象とし、間にある他図形は考慮しない（v1）。
  *
- * 未対応 / 将来の拡張余地（旧 svg-canvas にあって本実装に無いもの）:
- * - **角丸 / 曲線レンダリング**（旧 `pathType` の Rounded / Curve）。本実装は角が直角のみ。
+ * 未対応 / 将来の拡張余地:
+ * - **角丸 / 曲線レンダリング**（`pathType` の Rounded / Curve 相当）。本実装は角が直角のみ。
  *   角の描画スタイルは別機能として後回し。
  *
  * @param source - 始点の端点（座標・外向き方向・回避用 AABB）

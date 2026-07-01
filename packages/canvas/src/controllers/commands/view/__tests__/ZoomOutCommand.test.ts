@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { ZOOM } from "../../../../constants/zoom";
 import type { Viewport } from "../../../../states/canvas/Viewport";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { ZoomInCommand } from "../ZoomInCommand";
 import { ZoomOutCommand } from "../ZoomOutCommand";
 
 const makeState = (viewport: Partial<Viewport>): CanvasControllerState =>
@@ -23,10 +24,16 @@ const centerOf = (viewport: Viewport) => ({
 });
 
 describe("ZoomOutCommand", () => {
-	it("zoom を OUT_FACTOR 倍する", () => {
+	it("zoom を一段下の固定段（100% → 75%）へ吸着する", () => {
 		const state = makeState({ zoom: 1 });
 		const next = ZoomOutCommand.execute(state);
-		expect(next.viewport.zoom).toBe(ZOOM.OUT_FACTOR);
+		expect(next.viewport.zoom).toBe(0.75);
+	});
+
+	it("ズームイン後にズームアウトすると元の段（100%）へ戻る", () => {
+		const zoomedIn = ZoomInCommand.execute(makeState({ zoom: 1 }));
+		const back = ZoomOutCommand.execute(zoomedIn);
+		expect(back.viewport.zoom).toBe(1);
 	});
 
 	it("ズーム後もビューポート中心を維持する", () => {

@@ -9,32 +9,32 @@ import type {
 	TransformedFrame,
 } from "@workspace/geometry";
 
-import { createMultiSelectGroup } from "./utils/createMultiSelectGroup";
 import { determineSelection } from "./utils/determineSelection";
 import { getAncestors } from "./utils/getAncestors";
+import { ORIGIN_SNAP_PX } from "../../../../constants/axisLock";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../../../states/objects/base/TextStyleState";
+import { objectMapperRegistry } from "../../../../states/registry/ObjectMapperRegistry";
 import type {
 	AxisLockFeedback,
 	CanvasControllerState,
 	SnapFeedback,
 } from "../../../CanvasTypes";
+import { buildSelectedIdsWithDescendants } from "../../../utils/buildSelectedIdsWithDescendants";
+import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
+import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
+import { moveSelection } from "../../../utils/moveSelection";
+import { updateAffectedGroupBounds } from "../../../utils/updateAffectedGroupBounds";
 import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
+import type { Mods } from "../../registry/ObjectBehaviorTypes";
 import {
 	buildSnapFeedback,
 	findSnap,
 	SNAP_THRESHOLD_PX,
-} from "./utils/snap/findSnap";
-import { ORIGIN_SNAP_PX } from "../../../../constants/axisLock";
-import { objectMapperRegistry } from "../../../../states/registry/ObjectMapperRegistry";
-import { updateAffectedGroupBounds } from "../../../ui/utils/updateAffectedGroupBounds";
-import { buildSelectedIdsWithDescendants } from "../../../utils/buildSelectedIdsWithDescendants";
-import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
-import { moveSelection } from "../../../utils/moveSelection";
-import type { Mods } from "../../registry/ObjectBehaviorTypes";
+} from "../../utils/snap/findSnap";
 
 /**
  * オブジェクトのクリック処理

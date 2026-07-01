@@ -3,7 +3,7 @@
  * キャンバス上に再構築する。新しいプリミティブは足さず、drawShape / setColor /
  * typeTextAt / createConnector / setStrokeDashType の合成のみで成立させる。
  *
- * 狙い: 拡張に同梱しているヒーロー画像（hero-showcase.jis.json）と同じ図を、
+ * 狙い: ランディングのデモギャラリーにある図（cloud-native-commerce.jis.json）と同じ図を、
  * AI が UI を操作するだけで描き起こせる、というマーケ訴求をそのままテストにする。
  */
 

@@ -1,7 +1,7 @@
 import type { CanvasControllerState } from "../../../../../../../controllers/CanvasTypes";
 import { getEffectiveSelectedIds } from "../../../../../../../controllers/utils/getEffectiveSelectedIds";
-import { getFirstSelectedWithProp } from "../../../../../../../controllers/utils/getFirstSelectedWithProp";
 import type { StrokeDashType } from "../../../../../../../schemas/objects/types/StrokeDashType";
+import { getFirstSelectedWithProp } from "../../../utils/getFirstSelectedWithProp";
 
 /**
  * 選択中（コネクター選択時はそのコネクター）の strokeDashType を取得する。

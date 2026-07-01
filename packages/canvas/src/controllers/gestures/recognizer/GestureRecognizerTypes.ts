@@ -29,6 +29,17 @@ export type ScrollDelta = {
 	deltaY: number;
 };
 
+/**
+ * doubleClick 判定の基準にする直近クリックのスナップショット。
+ * GestureRecognizer が単一クリックごとに保持し、次のクリックと突き合わせる。
+ * clientPos は距離判定用で、zoom 非依存にするため client（画面）座標で持つ。
+ */
+export type ClickSnapshot = {
+	time: number;
+	targetId: string | undefined;
+	clientPos: Point;
+};
+
 export type Gesture = {
 	type: GestureType;
 	target: EventTarget | null;

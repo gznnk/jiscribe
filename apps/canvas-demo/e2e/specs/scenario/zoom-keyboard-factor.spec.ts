@@ -1,16 +1,17 @@
 import { test, expect } from "../../fixtures";
 
 /**
- * キーボードズーム（Ctrl+= / Ctrl+-）の「等比ステップ」を精密に守る。
+ * キーボードズーム（Ctrl+= / Ctrl+-）の「固定段への吸着」を精密に守る。
  *
  * 既存の zoom-keyboard.spec は「縮む／広がる」方向と中心保持までしか見ていない。
- * 実装（ZoomInCommand/ZoomOutCommand）は zoom を毎回 ZOOM.IN_FACTOR=1.1 /
- * ZOOM.OUT_FACTOR=0.9 で「掛ける」等比ズームで、viewBox 幅は width/zoom なので
- * 1 ステップごとに一定倍率で変化する。これを加算ステップに変えてしまう退行や、
- * 倍率がステップで揺らぐ退行は方向・中心チェックだけでは捕まらない。
+ * 実装（ZoomInCommand/ZoomOutCommand）は Miro のように固定段
+ * （…/75/100/125/150/…、constants/zoom.ts の ZOOM_STOPS）へスナップし、
+ * ズームイン→ズームアウトで必ず元の段（100% など）へ戻れる。
+ * 等比（毎回 ×1.1/×0.9）へ戻す退行や、段がずれて 100% に戻らなくなる退行は
+ * 方向・中心チェックだけでは捕まらないので、ここで段の値そのものを固める。
  *
- * ここでは「連続ステップの倍率が一定」かつ「2 ステップ後はちょうど factor² 倍」まで
- * 踏み込んで固める。viewBox 幅は width/round(zoom,4) なので倍率は ~1e-4 精度で正確。
+ * 初期ズームは 100%（CanvasMapper の zoom:1）。viewBox 幅は width/round(zoom,4)
+ * なので zoom = vb0.width / vb.width で ~1e-4 精度で復元できる。
  */
 
 type ViewBox = { minX: number; minY: number; width: number; height: number };
@@ -26,12 +27,11 @@ function parseViewBox(raw: string | null): ViewBox {
 const centerX = (vb: ViewBox): number => vb.minX + vb.width / 2;
 const centerY = (vb: ViewBox): number => vb.minY + vb.height / 2;
 
-/** ZOOM.IN_FACTOR / ZOOM.OUT_FACTOR（constants/zoom.ts）と一致させる */
-const IN_FACTOR = 1.1;
-const OUT_FACTOR = 0.9;
+/** 初期ズーム 100% を基準にした現在ズーム倍率。 */
+const zoomOf = (vb0: ViewBox, vb: ViewBox): number => vb0.width / vb.width;
 
-test.describe("キーボードズームの等比ステップ", () => {
-	test("Ctrl+= は毎ステップ viewBox 幅を 1/1.1 倍にし、2 ステップで 1/1.21 倍になる", async ({
+test.describe("キーボードズームの固定段吸着", () => {
+	test("Ctrl+= は 100% → 125% → 150% と固定段へ吸着する", async ({
 		canvas,
 	}) => {
 		const vb0 = parseViewBox(await canvas.getViewBox());
@@ -48,23 +48,18 @@ test.describe("キーボードズームの等比ステップ", () => {
 			.toBeLessThan(vb1.width);
 		const vb2 = parseViewBox(await canvas.getViewBox());
 
-		// 1 ステップ目の倍率＝ 1/1.1。
-		expect(vb1.width / vb0.width).toBeCloseTo(1 / IN_FACTOR, 3);
-		// 2 ステップ目も同じ倍率（＝等比。加算なら倍率が変わって落ちる）。
-		expect(vb2.width / vb1.width).toBeCloseTo(1 / IN_FACTOR, 3);
-		// 2 ステップ後はちょうど factor² 倍。
-		expect(vb2.width / vb0.width).toBeCloseTo(1 / (IN_FACTOR * IN_FACTOR), 3);
-		// 高さも同じ倍率で連動する。
-		expect(vb2.height / vb0.height).toBeCloseTo(1 / (IN_FACTOR * IN_FACTOR), 3);
+		// 100% から一段上＝125%、さらに一段上＝150%。
+		expect(zoomOf(vb0, vb1)).toBeCloseTo(1.25, 3);
+		expect(zoomOf(vb0, vb2)).toBeCloseTo(1.5, 3);
+		// 高さも同じ段で連動する。
+		expect(vb0.height / vb2.height).toBeCloseTo(1.5, 3);
 
 		// 中心基点：画面中心の world 座標はステップを通じて不動。
 		expect(centerX(vb2)).toBeCloseTo(centerX(vb0), 0);
 		expect(centerY(vb2)).toBeCloseTo(centerY(vb0), 0);
 	});
 
-	test("Ctrl+- は毎ステップ viewBox 幅を 1/0.9 倍にし、2 ステップで 1/0.81 倍になる", async ({
-		canvas,
-	}) => {
+	test("Ctrl+- は 100% → 75% → 50% と固定段へ吸着する", async ({ canvas }) => {
 		const vb0 = parseViewBox(await canvas.getViewBox());
 
 		await canvas.zoomOut();
@@ -79,15 +74,32 @@ test.describe("キーボードズームの等比ステップ", () => {
 			.toBeGreaterThan(vb1.width);
 		const vb2 = parseViewBox(await canvas.getViewBox());
 
-		expect(vb1.width / vb0.width).toBeCloseTo(1 / OUT_FACTOR, 3);
-		expect(vb2.width / vb1.width).toBeCloseTo(1 / OUT_FACTOR, 3);
-		expect(vb2.width / vb0.width).toBeCloseTo(1 / (OUT_FACTOR * OUT_FACTOR), 3);
-		expect(vb2.height / vb0.height).toBeCloseTo(
-			1 / (OUT_FACTOR * OUT_FACTOR),
-			3,
-		);
+		// 100% から一段下＝75%、さらに一段下＝50%。
+		expect(zoomOf(vb0, vb1)).toBeCloseTo(0.75, 3);
+		expect(zoomOf(vb0, vb2)).toBeCloseTo(0.5, 3);
+		expect(vb0.height / vb2.height).toBeCloseTo(0.5, 3);
 
 		expect(centerX(vb2)).toBeCloseTo(centerX(vb0), 0);
 		expect(centerY(vb2)).toBeCloseTo(centerY(vb0), 0);
+	});
+
+	test("ズームイン後にズームアウトするとちょうど 100% へ戻る", async ({
+		canvas,
+	}) => {
+		const vb0 = parseViewBox(await canvas.getViewBox());
+
+		await canvas.zoomIn();
+		await expect
+			.poll(async () => parseViewBox(await canvas.getViewBox()).width)
+			.toBeLessThan(vb0.width);
+
+		await canvas.zoomOut();
+		await expect
+			.poll(async () => zoomOf(vb0, parseViewBox(await canvas.getViewBox())))
+			.toBeCloseTo(1, 3);
+
+		// 等比だと 1.0×1.1×0.9=0.99 で 100% に戻らない。固定段なら必ず 100%。
+		const vbBack = parseViewBox(await canvas.getViewBox());
+		expect(zoomOf(vb0, vbBack)).toBeCloseTo(1, 3);
 	});
 });
