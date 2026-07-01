@@ -51,6 +51,23 @@ describe("calcOrientedFrameFromPoints", () => {
 		expect(result.scaleY).toBe(0.5);
 	});
 
+	it("90度回転時は逆変換後AABCから幅・高さが入れ替わる", () => {
+		// 100x60 の矩形。rotation=90 の逆変換で軸が入れ替わり width=60, height=100 になる。
+		// 中心は不変（50, 30）。
+		const points = [
+			{ x: 0, y: 0 },
+			{ x: 100, y: 0 },
+			{ x: 100, y: 60 },
+			{ x: 0, y: 60 },
+		];
+		const result = calcOrientedFrameFromPoints(points, 1, 1, 90);
+		assert(result !== null);
+		expect(result.cx).toBeCloseTo(50);
+		expect(result.cy).toBeCloseTo(30);
+		expect(result.width).toBeCloseTo(60);
+		expect(result.height).toBeCloseTo(100);
+	});
+
 	// リグレッション: Math.min/max のスプレッド展開は大規模点群で
 	// RangeError(Maximum call stack size exceeded) を起こしうるため、
 	// 単一ループ化により数万点でもクラッシュしないことを保証する。
