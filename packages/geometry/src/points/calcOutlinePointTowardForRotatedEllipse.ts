@@ -1,4 +1,4 @@
-import { calcRotatedPoint } from "./calcRotatedPoint";
+import { calcRotatedPointWithTrig } from "./calcRotatedPointWithTrig";
 import { degreesToRadians } from "../common/degreesToRadians";
 import type { Point } from "../types/Point";
 import type { TransformedEllipse } from "../types/TransformedEllipse";
@@ -19,21 +19,18 @@ export function calcOutlinePointTowardForRotatedEllipse(
 		return null;
 	}
 
-	// Convert rotation from degrees to radians
+	// Compute cos/sin once and reuse for both rotation directions below.
 	const rotationRad = degreesToRadians(rotation);
+	const cos = Math.cos(rotationRad);
+	const sin = Math.sin(rotationRad);
 
-	// world -> local (centered, unrotated)
-	// Rotate the target point around the center by -rotation
-	const towardLocal = calcRotatedPoint(
-		toward.x,
-		toward.y,
-		cx,
-		cy,
-		-rotationRad,
-	);
-
-	const dx = towardLocal.x - cx;
-	const dy = towardLocal.y - cy;
+	// world -> local (centered, unrotated): rotate `toward` around center by
+	// -rotation. cos(-θ)=cos and sin(-θ)=-sin, so we reuse the same cos/sin and
+	// keep the local offset as plain numbers (no Point allocation).
+	const wx = toward.x - cx;
+	const wy = toward.y - cy;
+	const dx = wx * cos + wy * sin;
+	const dy = -wx * sin + wy * cos;
 	if (dx === 0 && dy === 0) {
 		return null;
 	}
@@ -50,11 +47,14 @@ export function calcOutlinePointTowardForRotatedEllipse(
 		return null;
 	}
 
-	const pLocal: Point = { x: dx / denom, y: dy / denom };
-
-	// local -> world
-	// The pLocal is in local coordinates (offset from center)
-	// We need to rotate it back and add to center
-	const localPoint = { x: cx + pLocal.x, y: cy + pLocal.y };
-	return calcRotatedPoint(localPoint.x, localPoint.y, cx, cy, rotationRad);
+	// local -> world: scale the offset onto the outline (÷denom) and rotate it
+	// back around center by +rotation.
+	return calcRotatedPointWithTrig(
+		cx + dx / denom,
+		cy + dy / denom,
+		cx,
+		cy,
+		cos,
+		sin,
+	);
 }

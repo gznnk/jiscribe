@@ -1,4 +1,4 @@
-import { calcRotatedPoint } from "./calcRotatedPoint";
+import { calcRotatedPointWithTrig } from "./calcRotatedPointWithTrig";
 import { degreesToRadians } from "../common/degreesToRadians";
 import type { Point } from "../types/Point";
 import type { TransformedFrame } from "../types/TransformedFrame";
@@ -19,21 +19,18 @@ export function calcOutlinePointTowardForRotatedFrame(
 		return null;
 	}
 
-	// Convert rotation from degrees to radians
+	// Compute cos/sin once and reuse for both rotation directions below.
 	const rotationRad = degreesToRadians(rotation);
+	const cos = Math.cos(rotationRad);
+	const sin = Math.sin(rotationRad);
 
-	// world -> local (centered, unrotated)
-	// Rotate the target point around the center by -rotation
-	const towardLocal = calcRotatedPoint(
-		toward.x,
-		toward.y,
-		cx,
-		cy,
-		-rotationRad,
-	);
-
-	const dx = towardLocal.x - cx;
-	const dy = towardLocal.y - cy;
+	// world -> local (centered, unrotated): rotate `toward` around center by
+	// -rotation. cos(-θ)=cos and sin(-θ)=-sin, so we reuse the same cos/sin and
+	// keep the local offset as plain numbers (no Point allocation).
+	const wx = toward.x - cx;
+	const wy = toward.y - cy;
+	const dx = wx * cos + wy * sin;
+	const dy = -wx * sin + wy * cos;
 	if (dx === 0 && dy === 0) {
 		return null;
 	}
@@ -48,22 +45,30 @@ export function calcOutlinePointTowardForRotatedFrame(
 	}
 
 	const eps = 1e-9;
-	const candidates: { t: number; p: Point }[] = [];
+	// Track the smallest positive t (first hit on the ray) and its local hit point
+	// directly, avoiding a candidates array and per-candidate objects.
+	let bestT = Infinity;
+	let bestX = 0;
+	let bestY = 0;
 
 	// Intersect with vertical sides x = ±hx
 	if (Math.abs(dx) > eps) {
 		const t1 = -hx / dx;
-		if (t1 > 0) {
+		if (t1 > 0 && t1 < bestT) {
 			const y = t1 * dy;
 			if (y >= -hy - eps && y <= hy + eps) {
-				candidates.push({ t: t1, p: { x: -hx, y } });
+				bestT = t1;
+				bestX = -hx;
+				bestY = y;
 			}
 		}
 		const t2 = hx / dx;
-		if (t2 > 0) {
+		if (t2 > 0 && t2 < bestT) {
 			const y = t2 * dy;
 			if (y >= -hy - eps && y <= hy + eps) {
-				candidates.push({ t: t2, p: { x: hx, y } });
+				bestT = t2;
+				bestX = hx;
+				bestY = y;
 			}
 		}
 	}
@@ -71,35 +76,29 @@ export function calcOutlinePointTowardForRotatedFrame(
 	// Intersect with horizontal sides y = ±hy
 	if (Math.abs(dy) > eps) {
 		const t1 = -hy / dy;
-		if (t1 > 0) {
+		if (t1 > 0 && t1 < bestT) {
 			const x = t1 * dx;
 			if (x >= -hx - eps && x <= hx + eps) {
-				candidates.push({ t: t1, p: { x, y: -hy } });
+				bestT = t1;
+				bestX = x;
+				bestY = -hy;
 			}
 		}
 		const t2 = hy / dy;
-		if (t2 > 0) {
+		if (t2 > 0 && t2 < bestT) {
 			const x = t2 * dx;
 			if (x >= -hx - eps && x <= hx + eps) {
-				candidates.push({ t: t2, p: { x, y: hy } });
+				bestT = t2;
+				bestX = x;
+				bestY = hy;
 			}
 		}
 	}
 
-	// pick smallest positive t (first hit on the ray)
-	let best = candidates[0];
-	for (const c of candidates) {
-		if (!best || c.t < best.t) {
-			best = c;
-		}
-	}
-	if (!best) {
+	if (bestT === Infinity) {
 		return null;
 	}
 
-	// local -> world
-	// The best.p is in local coordinates (offset from center)
-	// We need to rotate it back and add to center
-	const localPoint = { x: cx + best.p.x, y: cy + best.p.y };
-	return calcRotatedPoint(localPoint.x, localPoint.y, cx, cy, rotationRad);
+	// local -> world: rotate the hit point back around center by +rotation.
+	return calcRotatedPointWithTrig(cx + bestX, cy + bestY, cx, cy, cos, sin);
 }

@@ -49,6 +49,17 @@ describe("calcOutlinePointTowardForRotatedEllipse", () => {
 		expect(result!.y).toBeCloseTo(-30);
 	});
 
+	it("90度回転時は右外側のtowardが回転後の縁（ry=30）に当たる", () => {
+		// rx=50, ry=30 を 90度回転すると、ローカルの ry(30) が世界座標の水平方向の縁になる
+		const result = calcOutlinePointTowardForRotatedEllipse(
+			{ ...baseEllipse, rotation: 90 },
+			{ x: 200, y: 0 },
+		);
+		expect(result).not.toBeNull();
+		expect(result!.x).toBeCloseTo(30);
+		expect(result!.y).toBeCloseTo(0);
+	});
+
 	it("rx/ryが0以下の場合はnullを返す", () => {
 		const result = calcOutlinePointTowardForRotatedEllipse(
 			{ ...baseEllipse, rx: 0 },
