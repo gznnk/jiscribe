@@ -1,12 +1,6 @@
-import {
-	calcBoundingBox,
-	calcPolyBoundingBox,
-	isTransformedFrame,
-	type BoundingBox,
-} from "@workspace/geometry";
-
-import { isPoly } from "../../../../../schemas/objects/types/Poly";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
+import { isConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
+import { calcObjectBoundingBox } from "../../../../utils/calcObjectBoundingBox";
 
 /**
  * Collects the IDs of objects fully contained within the area-selection rectangle.
@@ -26,18 +20,12 @@ export function collectIdsInArea(
 			continue;
 		}
 
-		let bbox: BoundingBox | null;
-
-		if (isTransformedFrame(obj)) {
-			// Frame-based objects (Rect, Ellipse, Group, Sticky)
-			bbox = calcBoundingBox(obj);
-		} else if (isPoly(obj) && obj.type !== "connector") {
-			// Poly-based objects (Polyline, Polygon)
-			bbox = calcPolyBoundingBox(obj.points);
-		} else {
-			// Skip unsupported types
+		// Connectors follow the shapes they attach to; marquee selects shapes only.
+		if (isConnectorState(obj)) {
 			continue;
 		}
+
+		const bbox = calcObjectBoundingBox(obj, objects);
 
 		// null check (e.g. empty Poly)
 		if (!bbox) {

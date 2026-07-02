@@ -1,8 +1,35 @@
-import type { BoundingBox } from "@workspace/geometry";
+import { calcPolyBoundingBox } from "@workspace/geometry";
+import type { BoundingBox, Point } from "@workspace/geometry";
 
 import { resolveConnectorPoints } from "../../presentations/layers/content/utils/endpoints";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../states/objects/connections/connector/ConnectorState";
+
+/**
+ * Collects every point along a connector: the dynamically resolved endpoints
+ * (including outline adjustment) plus the intermediate waypoints.
+ *
+ * Returns null if the endpoints cannot be resolved (e.g. a referenced object
+ * was removed).
+ */
+export const collectConnectorPoints = (
+	connector: ConnectorState,
+	objects: Record<string, ObjectState>,
+): Point[] | null => {
+	const sourceObj = connector.source.owner
+		? objects[connector.source.owner.id]
+		: undefined;
+	const targetObj = connector.target.owner
+		? objects[connector.target.owner.id]
+		: undefined;
+
+	const resolved = resolveConnectorPoints(connector, sourceObj, targetObj);
+	if (!resolved) {
+		return null;
+	}
+
+	return [resolved.source, ...resolved.waypoints, resolved.target];
+};
 
 /**
  * Computes the bounding box of an entire connector.
@@ -17,29 +44,10 @@ export const calcConnectorBoundingBox = (
 	connector: ConnectorState,
 	objects: Record<string, ObjectState>,
 ): BoundingBox | null => {
-	const sourceObj = connector.source.owner
-		? objects[connector.source.owner.id]
-		: undefined;
-	const targetObj = connector.target.owner
-		? objects[connector.target.owner.id]
-		: undefined;
-
-	const resolved = resolveConnectorPoints(connector, sourceObj, targetObj);
-	if (!resolved) {
+	const connectorPoints = collectConnectorPoints(connector, objects);
+	if (!connectorPoints) {
 		return null;
 	}
 
-	let left = Infinity;
-	let right = -Infinity;
-	let top = Infinity;
-	let bottom = -Infinity;
-
-	for (const p of [resolved.source, ...resolved.waypoints, resolved.target]) {
-		left = Math.min(left, p.x);
-		right = Math.max(right, p.x);
-		top = Math.min(top, p.y);
-		bottom = Math.max(bottom, p.y);
-	}
-
-	return { left, right, top, bottom };
+	return calcPolyBoundingBox(connectorPoints);
 };

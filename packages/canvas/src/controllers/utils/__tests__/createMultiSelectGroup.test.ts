@@ -1,9 +1,14 @@
-import { describe, it, expect } from "vitest";
+import { beforeAll, describe, it, expect } from "vitest";
 
 import { MULTI_SELECT_GROUP } from "../../../constants/multiSelectGroup";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
+import { initializeObjectRegistry } from "../../setup/initializeObjectRegistry";
 import { createMultiSelectGroup } from "../createMultiSelectGroup";
+
+beforeAll(() => {
+	initializeObjectRegistry();
+});
 
 const rect = (
 	id: string,
@@ -86,6 +91,50 @@ describe("createMultiSelectGroup", () => {
 		const r2 = rect("r2", 50, 0, 10, 10);
 		const result = createMultiSelectGroup(["r1", "r2"], { r1, r2 });
 		expect(result?.lockAspectRatio).toBe(true);
+	});
+
+	it("a selection containing a connector includes its resolved endpoints in the bounds", () => {
+		const r1 = rect("r1", 300, 300, 100, 100); // 250..350 both axes
+		const connector: ObjectState = {
+			id: "c1",
+			type: "connector",
+			points: [],
+			routing: "straight",
+			source: { anchor: { kind: "free", point: { x: 10, y: 20 } } },
+			target: { anchor: { kind: "free", point: { x: 110, y: 70 } } },
+		} as unknown as ObjectState;
+		const result = createMultiSelectGroup(["r1", "c1"], { r1, c1: connector });
+		expect(result).not.toBeNull();
+		// Union of rect (250..350) and connector endpoints (10..110 / 20..70)
+		expect(result?.cx).toBeCloseTo((10 + 350) / 2);
+		expect(result?.cy).toBeCloseTo((20 + 350) / 2);
+		expect(result?.width).toBeCloseTo(340);
+		expect(result?.height).toBeCloseTo(330);
+	});
+
+	it("a connector inside a selected group contributes its resolved endpoints", () => {
+		const connector: ObjectState = {
+			id: "c1",
+			type: "connector",
+			points: [],
+			routing: "straight",
+			source: { anchor: { kind: "free", point: { x: 0, y: 0 } } },
+			target: { anchor: { kind: "free", point: { x: 100, y: 100 } } },
+		} as unknown as ObjectState;
+		const g: ObjectState = {
+			id: "g",
+			type: "group",
+			childIds: ["c1"],
+		} as unknown as ObjectState;
+		const r2 = rect("r2", 300, 50, 20, 20); // 290..310 x, 40..60 y
+		const result = createMultiSelectGroup(["g", "r2"], {
+			c1: connector,
+			g,
+			r2,
+		});
+		expect(result).not.toBeNull();
+		expect(result?.cx).toBeCloseTo((0 + 310) / 2);
+		expect(result?.cy).toBeCloseTo((0 + 100) / 2);
 	});
 
 	it("nested groups -> computed from the grandchild elements' bounding boxes", () => {

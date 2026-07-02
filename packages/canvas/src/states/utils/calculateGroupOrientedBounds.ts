@@ -1,7 +1,6 @@
 import {
-	calcAffineTransformedPoint,
+	calcFrameCornerPoints,
 	calcOrientedFrameFromPoints,
-	degreesToRadians,
 	isTransformedFrame,
 } from "@workspace/geometry";
 import type { Point, TransformedFrame } from "@workspace/geometry";
@@ -74,7 +73,7 @@ function collectChildPoints(
 			points.push(...collectChildPoints(objects, nestedGroup.childIds));
 		} else if (isTransformedFrame(child)) {
 			// For objects with a TransformedFrame, add their corner points
-			points.push(...getFrameCornerPoints(child));
+			points.push(...calcFrameCornerPoints(child));
 		} else if (isPoly(child)) {
 			// For Poly-based shapes, add the points array directly
 			points.push(...child.points);
@@ -82,36 +81,4 @@ function collectChildPoints(
 	}
 
 	return points;
-}
-
-/**
- * Gets the four corner points of a TransformedFrame.
- */
-function getFrameCornerPoints(frame: TransformedFrame): Point[] {
-	const { cx, cy, width, height, rotation = 0, scaleX = 1, scaleY = 1 } = frame;
-
-	const halfWidth = width / 2;
-	const halfHeight = height / 2;
-
-	// The four corners in the local coordinate system
-	const localCorners: Point[] = [
-		{ x: -halfWidth, y: -halfHeight }, // top-left
-		{ x: halfWidth, y: -halfHeight }, // top-right
-		{ x: halfWidth, y: halfHeight }, // bottom-right
-		{ x: -halfWidth, y: halfHeight }, // bottom-left
-	];
-
-	// Apply the affine transform to convert to the global coordinate system
-	const radians = degreesToRadians(rotation);
-	return localCorners.map((corner) =>
-		calcAffineTransformedPoint(
-			corner.x,
-			corner.y,
-			scaleX,
-			scaleY,
-			radians,
-			cx,
-			cy,
-		),
-	);
 }

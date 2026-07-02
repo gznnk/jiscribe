@@ -99,6 +99,7 @@ describe("calcFitViewport", () => {
 			rotation: 0,
 			scaleX: 1,
 			scaleY: 1,
+			childIds: [],
 		} as unknown as ObjectState;
 
 		expect(
@@ -117,6 +118,7 @@ describe("calcFitViewport", () => {
 			rotation: 0,
 			scaleX: 1,
 			scaleY: 1,
+			childIds: ["r1"],
 		} as unknown as ObjectState;
 		const rect = rectObj("r1", 100, 100, 200, 100);
 
