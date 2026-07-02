@@ -7,9 +7,9 @@ import type { RectState } from "../../../../../../states/objects/primitives/rect
 import { autoSelectParentGroups } from "../autoSelectParentGroups";
 
 describe("autoSelectParentGroups", () => {
-	// ─── ① 子孫除去（不変条件の強制） ────────────────────────────
+	// ─── (1) Descendant removal (enforcing the invariant) ────────────────────────────
 
-	it("グループとその子が混在するとき、子を除去してグループだけを残す", () => {
+	it("when a group and its children are mixed, removes the children and keeps only the group", () => {
 		const state = {
 			objects: {
 				"group-1": {
@@ -30,7 +30,7 @@ describe("autoSelectParentGroups", () => {
 			},
 		} as unknown as CanvasState;
 
-		// 範囲選択などで group-1 とその子 rect-1, rect-2 が混在した場合
+		// When group-1 and its children rect-1, rect-2 are mixed, e.g. via range selection
 		const result = autoSelectParentGroups(state, [
 			"group-1",
 			"rect-1",
@@ -39,7 +39,7 @@ describe("autoSelectParentGroups", () => {
 		expect(result).toEqual(["group-1"]);
 	});
 
-	it("複数グループと各自の子が混在するとき、それぞれのグループだけが残る", () => {
+	it("when multiple groups and their respective children are mixed, only each group remains", () => {
 		const state = {
 			objects: {
 				"group-a": {
@@ -88,7 +88,7 @@ describe("autoSelectParentGroups", () => {
 		expect(result).toContain("group-b");
 	});
 
-	// ─── ② 昇格（全子選択 → 親グループへ） ──────────────────────
+	// ─── (2) Promotion (all children selected -> parent group) ──────────────────────
 
 	it("should select parent group when all children are selected", () => {
 		const state = {
@@ -454,14 +454,14 @@ describe("autoSelectParentGroups", () => {
 		expect(result).not.toContain("group-1-1");
 	});
 
-	// ─── ④ エッジケース・防御的入力 ──────────────────────────────
+	// ─── (4) Edge cases and defensive input ──────────────────────────────
 
-	it("空入力に対して空配列を返す", () => {
+	it("returns an empty array for empty input", () => {
 		const state = { objects: {} } as unknown as CanvasState;
 		expect(autoSelectParentGroups(state, [])).toEqual([]);
 	});
 
-	it("親を持たない単一オブジェクトはそのまま返す", () => {
+	it("returns a single object with no parent as-is", () => {
 		const state = {
 			objects: {
 				"rect-solo": {
@@ -474,12 +474,12 @@ describe("autoSelectParentGroups", () => {
 		expect(autoSelectParentGroups(state, ["rect-solo"])).toEqual(["rect-solo"]);
 	});
 
-	it("途中の階層で昇格を止める（上位グループの兄弟が未選択なら上位は昇格しない）", () => {
+	it("stops promotion at an intermediate level (does not promote the upper group if its siblings are unselected)", () => {
 		// group-1
 		//   ├─ group-2
 		//   │   ├─ rect-a
 		//   │   └─ rect-b
-		//   └─ rect-top   ← これは選択しない
+		//   └─ rect-top   <- this one is not selected
 		const state = {
 			objects: {
 				"group-1": {
@@ -511,17 +511,17 @@ describe("autoSelectParentGroups", () => {
 			},
 		} as unknown as CanvasState;
 
-		// group-2 の全子は選択されるが、group-1 の兄弟 rect-top は未選択。
+		// All children of group-2 are selected, but group-1's sibling rect-top is not.
 		const result = autoSelectParentGroups(state, ["rect-a", "rect-b"]);
 
-		// 昇格は group-2 で止まり、group-1 へは波及しない。
+		// Promotion stops at group-2 and does not propagate to group-1.
 		expect(result).toEqual(["group-2"]);
 		expect(result).not.toContain("group-1");
 	});
 
-	it("空グループ（childIds なし）は自動選択の対象にならない", () => {
-		// 親の childIds に自身が含まれない不整合データ。empty-group は子を持たない
-		// ため「全子選択済み」が成立せず、昇格してはならない。
+	it("an empty group (no childIds) is not a target for auto-selection", () => {
+		// Inconsistent data where the child is not listed in the parent's childIds. empty-group has
+		// no children, so "all children selected" never holds and it must not be promoted.
 		const state = {
 			objects: {
 				"empty-group": {
@@ -543,13 +543,13 @@ describe("autoSelectParentGroups", () => {
 		expect(result).not.toContain("empty-group");
 	});
 
-	it("objects に存在しない ID が選択されていてもクラッシュせずそのまま返す", () => {
+	it("returns as-is without crashing even if a selected ID does not exist in objects", () => {
 		const state = { objects: {} } as unknown as CanvasState;
 		expect(autoSelectParentGroups(state, ["ghost"])).toEqual(["ghost"]);
 	});
 
-	it("parentId が存在しないグループを指していても昇格せずそのまま返す", () => {
-		// rect-1 の親 missing-group は objects に存在しない（ダングリング参照）。
+	it("returns as-is without promoting even if parentId points to a non-existent group", () => {
+		// rect-1's parent missing-group does not exist in objects (a dangling reference).
 		const state = {
 			objects: {
 				"rect-1": {

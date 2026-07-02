@@ -4,7 +4,7 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { cleanupGroups } from "../cleanupGroups";
 
-// 最小限の state ファクトリ
+// minimal state factory
 const makeState = (
 	objects: Record<string, ObjectState>,
 	rootIds: string[],
@@ -34,7 +34,7 @@ const group = (
 	}) as unknown as ObjectState;
 
 describe("cleanupGroups", () => {
-	it("グループがない → 同一参照相当（objects/rootIds に変化なし）", () => {
+	it("no groups -> effectively same reference (no change to objects/rootIds)", () => {
 		const r1 = rect("r1");
 		const state = makeState({ r1 }, ["r1"]);
 		const result = cleanupGroups(state);
@@ -42,7 +42,7 @@ describe("cleanupGroups", () => {
 		expect(result.rootIds).toEqual(["r1"]);
 	});
 
-	it("子が 2 件以上のグループ → そのまま残る", () => {
+	it("a group with 2 or more children -> stays as is", () => {
 		const r1 = rect("r1", "g1");
 		const r2 = rect("r2", "g1");
 		const g1 = group("g1", ["r1", "r2"]);
@@ -52,8 +52,8 @@ describe("cleanupGroups", () => {
 		expect(result.rootIds).toContain("g1");
 	});
 
-	describe("空グループ（childCount=0）", () => {
-		it("ルートの空グループ → 削除される", () => {
+	describe("empty group (childCount=0)", () => {
+		it("an empty group at the root -> is deleted", () => {
 			const g1 = group("g1", []);
 			const state = makeState({ g1 }, ["g1"]);
 			const result = cleanupGroups(state);
@@ -61,21 +61,21 @@ describe("cleanupGroups", () => {
 			expect(result.rootIds).not.toContain("g1");
 		});
 
-		it("親グループ内の空サブグループ → サブグループのみ削除、親は残る（子が減るため再チェック対象）", () => {
+		it("an empty subgroup inside a parent group -> only the subgroup is deleted, parent remains (rechecked as its child count drops)", () => {
 			const r1 = rect("r1", "outer");
 			const empty = group("empty", [], "outer");
 			const outer = group("outer", ["empty", "r1"]);
 			const state = makeState({ outer, empty, r1 }, ["outer"]);
 			const result = cleanupGroups(state);
 			expect(result.objects["empty"]).toBeUndefined();
-			// outer は r1 1件のみになるので ungroup される
+			// outer is left with just r1, so it gets ungrouped
 			expect(result.objects["outer"]).toBeUndefined();
 			expect(result.rootIds).toContain("r1");
 		});
 	});
 
-	describe("子が 1 件のグループ（ungroup）", () => {
-		it("ルートの単子グループ → グループ削除・子がルートに昇格", () => {
+	describe("a group with 1 child (ungroup)", () => {
+		it("a single-child group at the root -> group deleted, child promoted to root", () => {
 			const r1 = rect("r1", "g1");
 			const g1 = group("g1", ["r1"]);
 			const state = makeState({ g1, r1 }, ["g1"]);
@@ -88,7 +88,7 @@ describe("cleanupGroups", () => {
 			expect(updatedR1.parentId).toBeUndefined();
 		});
 
-		it("親グループ内の単子サブグループ → サブグループ削除・子が親グループに移動", () => {
+		it("a single-child subgroup inside a parent group -> subgroup deleted, child moved to the parent group", () => {
 			const r1 = rect("r1", "inner");
 			const r2 = rect("r2", "outer");
 			const inner = group("inner", ["r1"], "outer");
@@ -108,9 +108,9 @@ describe("cleanupGroups", () => {
 		});
 	});
 
-	describe("ネスト連鎖（複数回クリーンアップが必要なケース）", () => {
-		it("空グループを含む単子グループ → 両方削除される", () => {
-			// outer(1子=inner) → inner(0子) → inner 削除 → outer 0子 → outer も削除
+	describe("nested chain (cases requiring multiple cleanup passes)", () => {
+		it("a single-child group containing an empty group -> both are deleted", () => {
+			// outer(1 child=inner) -> inner(0 children) -> inner deleted -> outer 0 children -> outer also deleted
 			const inner = group("inner", [], "outer");
 			const outer = group("outer", ["inner"]);
 			const state = makeState({ outer, inner }, ["outer"]);

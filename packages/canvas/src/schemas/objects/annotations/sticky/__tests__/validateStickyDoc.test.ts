@@ -22,21 +22,21 @@ const validSticky = {
 };
 
 describe("validateStickyDoc", () => {
-	it("有効な Sticky はエラーなし", () => {
+	it("yields no error for a valid Sticky", () => {
 		expect(validateStickyDoc(validSticky, "root")).toEqual([]);
 	});
 
-	it("必須の x が数値でない場合はエラー", () => {
+	it("is an error when the required x is not a number", () => {
 		const errors = validateStickyDoc({ ...validSticky, x: "0" }, "root");
 		expect(errors.some((e) => e.path === "root.x")).toBe(true);
 	});
 
-	it("必須の y が数値でない場合はエラー", () => {
+	it("is an error when the required y is not a number", () => {
 		const errors = validateStickyDoc({ ...validSticky, y: null }, "root");
 		expect(errors.some((e) => e.path === "root.y")).toBe(true);
 	});
 
-	it("必須の width が数値でない場合はエラー", () => {
+	it("is an error when the required width is not a number", () => {
 		const errors = validateStickyDoc(
 			{ ...validSticky, width: undefined },
 			"root",
@@ -44,7 +44,7 @@ describe("validateStickyDoc", () => {
 		expect(errors.some((e) => e.path === "root.width")).toBe(true);
 	});
 
-	it("必須の height が数値でない場合はエラー", () => {
+	it("is an error when the required height is not a number", () => {
 		const errors = validateStickyDoc(
 			{ ...validSticky, height: "120px" },
 			"root",
@@ -52,7 +52,7 @@ describe("validateStickyDoc", () => {
 		expect(errors.some((e) => e.path === "root.height")).toBe(true);
 	});
 
-	it("textAlign が不正な値はエラー", () => {
+	it("is an error when textAlign has an invalid value", () => {
 		const errors = validateStickyDoc(
 			{ ...validSticky, textAlign: "justify" },
 			"root",
@@ -60,7 +60,7 @@ describe("validateStickyDoc", () => {
 		expect(errors.some((e) => e.path === "root.textAlign")).toBe(true);
 	});
 
-	it("verticalAlign が不正な値はエラー", () => {
+	it("is an error when verticalAlign has an invalid value", () => {
 		const errors = validateStickyDoc(
 			{ ...validSticky, verticalAlign: "baseline" },
 			"root",
@@ -68,7 +68,7 @@ describe("validateStickyDoc", () => {
 		expect(errors.some((e) => e.path === "root.verticalAlign")).toBe(true);
 	});
 
-	it("fill が string でない場合はエラー", () => {
+	it("is an error when fill is not a string", () => {
 		const errors = validateStickyDoc(
 			{ ...validSticky, fill: 0xfef9c3 },
 			"root",
@@ -76,13 +76,13 @@ describe("validateStickyDoc", () => {
 		expect(errors.some((e) => e.path === "root.fill")).toBe(true);
 	});
 
-	it("オプション項目がない場合はエラーなし", () => {
+	it("yields no error when optional fields are absent", () => {
 		const minimal = { x: 0, y: 0, width: 160, height: 120 };
 		expect(validateStickyDoc(minimal, "root")).toEqual([]);
 	});
 
-	// ─── 強化 ───
-	it("fontSize が数値でない場合はエラー", () => {
+	// ─── Additional coverage ───
+	it("is an error when fontSize is not a number", () => {
 		const errors = validateStickyDoc(
 			{ ...validSticky, fontSize: "14" },
 			"root",
@@ -90,18 +90,18 @@ describe("validateStickyDoc", () => {
 		expect(errors.some((e) => e.path === "root.fontSize")).toBe(true);
 	});
 
-	it("rotation が数値でない場合はエラー", () => {
+	it("is an error when rotation is not a number", () => {
 		const errors = validateStickyDoc({ ...validSticky, rotation: "0" }, "root");
 		expect(errors.some((e) => e.path === "root.rotation")).toBe(true);
 	});
 
-	it.each(["flipX", "flipY"])("%s が boolean でない場合はエラー", (key) => {
+	it.each(["flipX", "flipY"])("is an error when %s is not a boolean", (key) => {
 		const errors = validateStickyDoc({ ...validSticky, [key]: 1 }, "root");
 		expect(errors.some((e) => e.path === `root.${key}`)).toBe(true);
 	});
 
 	it.each(["fill", "fontColor", "fontFamily", "fontWeight"])(
-		"%s に CSS breakout 文字列はエラー（beyondSchema）",
+		"is an error (beyondSchema) when %s contains a CSS breakout string",
 		(key) => {
 			const errors = validateStickyDoc(
 				{ ...validSticky, [key]: "a;b" },
@@ -113,24 +113,27 @@ describe("validateStickyDoc", () => {
 		},
 	);
 
-	it("sticky は stroke を持たないため stroke は検証しない", () => {
-		// sticky は枠線スタイルを持たないので、不正な stroke でも素通り
+	it("does not validate stroke since sticky has no stroke", () => {
+		// sticky has no border style, so even an invalid stroke passes through
 		expect(
 			validateStickyDoc({ ...validSticky, stroke: "a;b" }, "root"),
 		).toEqual([]);
 	});
 
-	// ─── 強化: 数値下限 ───
-	it.each(["width", "height"])("%s が負数はエラー（>= 0）", (key) => {
-		const errors = validateStickyDoc({ ...validSticky, [key]: -1 }, "root");
-		expect(
-			errors.some(
-				(e) => e.path === `root.${key}` && e.message.includes(">= 0"),
-			),
-		).toBe(true);
-	});
+	// ─── Additional coverage: numeric lower bounds ───
+	it.each(["width", "height"])(
+		"is an error when %s is negative (>= 0)",
+		(key) => {
+			const errors = validateStickyDoc({ ...validSticky, [key]: -1 }, "root");
+			expect(
+				errors.some(
+					(e) => e.path === `root.${key}` && e.message.includes(">= 0"),
+				),
+			).toBe(true);
+		},
+	);
 
-	it("fontSize < 1 はエラー（>= 1）", () => {
+	it("is an error when fontSize < 1 (>= 1)", () => {
 		const errors = validateStickyDoc({ ...validSticky, fontSize: 0 }, "root");
 		expect(
 			errors.some(
@@ -139,7 +142,7 @@ describe("validateStickyDoc", () => {
 		).toBe(true);
 	});
 
-	it('色の sentinel "auto" は許容される', () => {
+	it('accepts the color sentinel "auto"', () => {
 		expect(
 			validateStickyDoc(
 				{ ...validSticky, fill: "auto", fontColor: "auto" },

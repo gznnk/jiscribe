@@ -44,7 +44,7 @@ const makeState = (params: {
 	}) as unknown as CanvasControllerState;
 
 describe("GroupCommand", () => {
-	it("ルートの 2 要素を 1 つの新グループへまとめる", () => {
+	it("combines two root elements into a single new group", () => {
 		const state = makeState({
 			selectedIds: ["a", "b"],
 			objects: { a: makeRect("a", 0, 0), b: makeRect("b", 200, 0) },
@@ -52,22 +52,22 @@ describe("GroupCommand", () => {
 		});
 		const next = GroupCommand.execute(state);
 
-		// rootIds は新グループ 1 つだけになる
+		// rootIds becomes just the single new group
 		expect(next.rootIds).toHaveLength(1);
 		const groupId = next.rootIds[0];
 		const group = next.objects[groupId] as GroupState;
 		expect(group.type).toBe("group");
-		// z-order を保った子 ID を持つ
+		// holds child IDs preserving z-order
 		expect(group.childIds).toEqual(["a", "b"]);
-		// 子の parentId が新グループを指す
+		// the children's parentId points to the new group
 		expect(next.objects["a"]?.parentId).toBe(groupId);
 		expect(next.objects["b"]?.parentId).toBe(groupId);
-		// 新グループが選択される
+		// the new group is selected
 		expect(next.selectedIds).toEqual([groupId]);
 		expect(next.commitVersion).toBe(1);
 	});
 
-	it("新グループのバウンドが子を内包する", () => {
+	it("the new group's bounds contain its children", () => {
 		const state = makeState({
 			selectedIds: ["a", "b"],
 			objects: { a: makeRect("a", 0, 0), b: makeRect("b", 200, 0) },
@@ -75,13 +75,13 @@ describe("GroupCommand", () => {
 		});
 		const next = GroupCommand.execute(state);
 		const group = next.objects[next.rootIds[0]] as GroupState;
-		// a(0..100幅) と b(150..250) を含む → 幅は 0 より大きい
+		// contains a (0..100 wide) and b (150..250) → width is greater than 0
 		expect(group.width).toBeGreaterThan(0);
 		expect(group.height).toBeGreaterThan(0);
 	});
 
 	describe("canExecute", () => {
-		it("2 要素以上の選択で実行可能", () => {
+		it("is executable with a selection of two or more elements", () => {
 			const state = makeState({
 				selectedIds: ["a", "b"],
 				objects: { a: makeRect("a", 0, 0), b: makeRect("b", 0, 0) },
@@ -90,7 +90,7 @@ describe("GroupCommand", () => {
 			expect(GroupCommand.canExecute(state)).toBe(true);
 		});
 
-		it("単一選択では実行不可", () => {
+		it("is not executable with a single selection", () => {
 			const state = makeState({
 				selectedIds: ["a"],
 				objects: { a: makeRect("a", 0, 0) },

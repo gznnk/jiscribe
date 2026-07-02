@@ -37,7 +37,7 @@ const buildState = (root: unknown[]) =>
 	createInitialControllerState({ version: 1, root } as unknown as CanvasDoc);
 
 describe("cleanupConnectorsOnDelete", () => {
-	it("削除対象がコネクターに無関係なら state を据え置く（同一参照）", () => {
+	it("leaves state untouched (same reference) when the deletion target is unrelated to connectors", () => {
 		const state = buildState([
 			rectDoc("r1", 0, 0),
 			rectDoc("r2", 100, 0),
@@ -47,7 +47,7 @@ describe("cleanupConnectorsOnDelete", () => {
 		expect(after).toBe(state);
 	});
 
-	it("両端の図形を削除するとコネクターも削除され rootIds からも消える", () => {
+	it("deleting the shapes at both ends also deletes the connector and removes it from rootIds", () => {
 		const state = buildState([
 			rectDoc("r1", 0, 0),
 			rectDoc("r2", 100, 0),
@@ -58,7 +58,7 @@ describe("cleanupConnectorsOnDelete", () => {
 		expect(after.rootIds).not.toContain("c1");
 	});
 
-	it("片端の図形だけ削除すると、その端が free 化しコネクターは残る", () => {
+	it("deleting the shape at only one end turns that end free and keeps the connector", () => {
 		const state = buildState([
 			rectDoc("r1", 0, 0),
 			rectDoc("r2", 100, 0),
@@ -68,12 +68,12 @@ describe("cleanupConnectorsOnDelete", () => {
 		const c1 = after.objects["c1"] as ConnectorState | undefined;
 		expect(c1).toBeDefined();
 		expect(after.rootIds).toContain("c1");
-		// 削除された target(r2)側が free 化、source は owned のまま
+		// the deleted target (r2) side turns free, while source stays owned
 		expect(c1?.target.owner).toBeUndefined();
 		expect(c1?.source.owner?.id).toBe("r1");
 	});
 
-	it("owned+free のコネクターで owned 図形を削除すると両端 free になりコネクター削除", () => {
+	it("on an owned+free connector, deleting the owned shape makes both ends free and deletes the connector", () => {
 		const state = buildState([
 			rectDoc("r1", 0, 0),
 			connDoc("c1", owned("r1"), free(200, 0)),

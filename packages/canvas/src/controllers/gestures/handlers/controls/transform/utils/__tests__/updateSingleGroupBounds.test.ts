@@ -42,18 +42,18 @@ const makeState = (
 ): CanvasControllerState => ({ objects }) as unknown as CanvasControllerState;
 
 describe("updateSingleGroupBounds", () => {
-	it("groupId が存在しない → 同一参照を返す", () => {
+	it("groupId does not exist -> returns the same reference", () => {
 		const state = makeState({});
 		expect(updateSingleGroupBounds(state, "missing")).toBe(state);
 	});
 
-	it("groupId がグループでない → 同一参照を返す", () => {
+	it("groupId is not a group -> returns the same reference", () => {
 		const r1 = rect("r1", 0, 0);
 		const state = makeState({ r1 });
 		expect(updateSingleGroupBounds(state, "r1")).toBe(state);
 	});
 
-	it("グループの bounds が更新される", () => {
+	it("updates the group's bounds", () => {
 		const r1 = rect("r1", 100, 80, "g1");
 		const g1 = group("g1", ["r1"]);
 		const state = makeState({ g1, r1 });
@@ -70,7 +70,7 @@ describe("updateSingleGroupBounds", () => {
 		expect(updatedG1.height).toBeCloseTo(30);
 	});
 
-	it("グループ以外の objects は変更されない", () => {
+	it("does not modify non-group objects", () => {
 		const r1 = rect("r1", 100, 80, "g1");
 		const r2 = rect("r2", 200, 200);
 		const g1 = group("g1", ["r1"]);
@@ -79,7 +79,7 @@ describe("updateSingleGroupBounds", () => {
 		expect(result.objects["r2"]).toBe(r2);
 	});
 
-	it("元の state.objects は変更されない（イミュータブル）", () => {
+	it("does not modify the original state.objects (immutable)", () => {
 		const r1 = rect("r1", 100, 80, "g1");
 		const g1 = group("g1", ["r1"]);
 		const originalObjects = { g1, r1 };

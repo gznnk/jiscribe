@@ -54,8 +54,8 @@ const rectObj = (
 	}) as unknown as ObjectState;
 
 describe("resolveConnectorPoints", () => {
-	describe("free-free コネクター", () => {
-		it("両端 free → そのまま座標を返す", () => {
+	describe("free-free connector", () => {
+		it("both ends free → returns coordinates as-is", () => {
 			const conn = connector(
 				freeEndpoint(10, 20),
 				freeEndpoint(50, 80),
@@ -70,8 +70,8 @@ describe("resolveConnectorPoints", () => {
 		});
 	});
 
-	describe("経由点（waypoint）", () => {
-		it("中間経由点をそのまま waypoints として返す", () => {
+	describe("waypoints", () => {
+		it("returns intermediate waypoints as-is", () => {
 			const conn = connector(
 				freeEndpoint(0, 0),
 				freeEndpoint(100, 0),
@@ -88,8 +88,8 @@ describe("resolveConnectorPoints", () => {
 			]);
 		});
 
-		it("center アンカーの輪郭調整は最初の経由点へ向く", () => {
-			// rect は原点中心 100x100。経由点を真下に置くと source は下辺 (0, 50) 付近へ出る。
+		it("center anchor outline adjustment faces the first waypoint", () => {
+			// rect is 100x100 centered at the origin. Placing a waypoint directly below makes source emerge near the bottom edge (0, 50).
 			const src = rectObj("r1", 0, 0, 100, 100);
 			const conn = connector(
 				centerEndpoint("rect", "r1"),
@@ -104,8 +104,8 @@ describe("resolveConnectorPoints", () => {
 		});
 	});
 
-	describe("center アンカー", () => {
-		it("center-free → source が rect の輪郭点に調整される", () => {
+	describe("center anchor", () => {
+		it("center-free → source is adjusted to the rect's outline point", () => {
 			const src = rectObj("r1", 0, 0, 100, 100);
 			const conn = connector(
 				centerEndpoint("rect", "r1"),
@@ -115,12 +115,12 @@ describe("resolveConnectorPoints", () => {
 			);
 			const result = resolveConnectorPoints(conn, src, null);
 			expect(result).not.toBeNull();
-			// source は右方向の輪郭点 (50, 0) 付近
+			// source is near the rightward outline point (50, 0)
 			expect(result?.source.x).toBeCloseTo(50, 0);
 			expect(result?.source.y).toBeCloseTo(0, 0);
 		});
 
-		it("free-center → target が rect の輪郭点に調整される", () => {
+		it("free-center → target is adjusted to the rect's outline point", () => {
 			const tgt = rectObj("r2", 0, 0, 100, 100);
 			const conn = connector(
 				freeEndpoint(-200, 0),
@@ -130,30 +130,30 @@ describe("resolveConnectorPoints", () => {
 			);
 			const result = resolveConnectorPoints(conn, null, tgt);
 			expect(result).not.toBeNull();
-			// target は左方向の輪郭点 (-50, 0) 付近
+			// target is near the leftward outline point (-50, 0)
 			expect(result?.target.x).toBeCloseTo(-50, 0);
 		});
 	});
 
-	describe("解決不能ケース", () => {
-		it("center アンカーで owner オブジェクトが null → source が解決できず null", () => {
+	describe("unresolvable cases", () => {
+		it("center anchor with null owner object → source cannot be resolved, so null", () => {
 			const conn = connector(
 				centerEndpoint("rect", "r1"),
 				freeEndpoint(100, 0),
 			);
 			const result = resolveConnectorPoints(conn, null, null);
-			// center アンカーで obj が null → resolveEndpoint が null を返す → null
+			// center anchor with null obj → resolveEndpoint returns null → null
 			expect(result).toBeNull();
 		});
 
-		it("両端が center かつ互いに内側 → adjustToOutline が null を返す → null", () => {
-			// 同じ rect の中心同士（within shape）→ 両端とも null になる可能性
+		it("both ends center and mutually interior → adjustToOutline returns null → null", () => {
+			// center to center of the same rect (within shape) → both ends may become null
 			const src = rectObj("r1", 0, 0, 200, 200);
 			const conn = connector(
 				centerEndpoint("rect", "r1"),
 				centerEndpoint("rect", "r1"),
 			);
-			// 中心から中心への方向なので adjustToOutline が null を返す
+			// the direction from center to center makes adjustToOutline return null
 			const result = resolveConnectorPoints(conn, src, src);
 			expect(result).toBeNull();
 		});
@@ -165,9 +165,9 @@ describe("resolveConnectorPoints", () => {
 				i === 0 ? true : p.x === pts[i - 1].x || p.y === pts[i - 1].y,
 			);
 
-		it("connectPoint 端点から水平/垂直だけの経路を生成し、waypoints に中間点を返す", () => {
-			const src = rectObj("r1", 100, 100, 100, 60); // 右辺中央 = (150,100)
-			const tgt = rectObj("r2", 400, 300, 100, 60); // 左辺中央 = (350,300)
+		it("generates a route using only horizontal/vertical segments from connectPoint endpoints and returns intermediate points as waypoints", () => {
+			const src = rectObj("r1", 100, 100, 100, 60); // right-edge center = (150,100)
+			const tgt = rectObj("r2", 400, 300, 100, 60); // left-edge center = (350,300)
 			const conn = connector(
 				connectPointEndpoint("rect", "r1", "rightCenter"),
 				connectPointEndpoint("rect", "r2", "leftCenter"),
@@ -180,11 +180,11 @@ describe("resolveConnectorPoints", () => {
 			expect(result?.source).toEqual({ x: 150, y: 100 });
 			expect(result?.target).toEqual({ x: 350, y: 300 });
 			expect(allOrthogonal(path)).toBe(true);
-			// 直線ではなく曲がりがある（縦ずれがあるため）
+			// there is a bend rather than a straight line (because of the vertical offset)
 			expect(result!.waypoints.length).toBeGreaterThan(0);
 		});
 
-		it("connectPoint の退出方向が図形の回転に追従する", () => {
+		it("the connectPoint exit direction follows the shape's rotation", () => {
 			const conn = connector(
 				connectPointEndpoint("rect", "r1", "rightCenter"),
 				freeEndpoint(400, 400),
@@ -209,17 +209,17 @@ describe("resolveConnectorPoints", () => {
 				null,
 			);
 
-			// 回転なし: 右辺なので最初の一歩は水平
+			// no rotation: right edge, so the first step is horizontal
 			const a = firstSegment(noRot!);
 			expect(a.dy).toBe(0);
 			expect(a.dx).not.toBe(0);
-			// 回転90°: 右辺が縦を向くので最初の一歩は垂直
+			// 90° rotation: the right edge faces vertically, so the first step is vertical
 			const b = firstSegment(rotated!);
 			expect(b.dx).toBe(0);
 			expect(b.dy).not.toBe(0);
 		});
 
-		it("図形を動かすと経路が再計算される（移動追従）", () => {
+		it("moving a shape recalculates the route (follows movement)", () => {
 			const conn = connector(
 				connectPointEndpoint("rect", "r1", "rightCenter"),
 				connectPointEndpoint("rect", "r2", "leftCenter"),
@@ -234,15 +234,15 @@ describe("resolveConnectorPoints", () => {
 			const after = resolveConnectorPoints(
 				conn,
 				rectObj("r1", 100, 100, 100, 60),
-				rectObj("r2", 400, 500, 100, 60), // target を下へ移動
+				rectObj("r2", 400, 500, 100, 60), // move target downward
 			);
 			expect(after?.target).not.toEqual(before?.target);
 		});
 
-		it("routing 省略時は orthogonal が既定（直交経路を生成する）", () => {
-			const src = rectObj("r1", 100, 100, 100, 60); // 右辺中央 = (150,100)
-			const tgt = rectObj("r2", 400, 300, 100, 60); // 左辺中央 = (350,300)
-			// routing を渡さない（undefined）。
+		it("orthogonal is the default when routing is omitted (generates an orthogonal route)", () => {
+			const src = rectObj("r1", 100, 100, 100, 60); // right-edge center = (150,100)
+			const tgt = rectObj("r2", 400, 300, 100, 60); // left-edge center = (350,300)
+			// routing is not passed (undefined).
 			const conn = connector(
 				connectPointEndpoint("rect", "r1", "rightCenter"),
 				connectPointEndpoint("rect", "r2", "leftCenter"),
@@ -251,7 +251,7 @@ describe("resolveConnectorPoints", () => {
 			expect(result).not.toBeNull();
 			const path = [result!.source, ...result!.waypoints, result!.target];
 			expect(allOrthogonal(path)).toBe(true);
-			// 縦ずれがあるため曲がり（中間点）が生まれる = 直線ではない。
+			// the vertical offset produces a bend (intermediate point) = not a straight line.
 			expect(result!.waypoints.length).toBeGreaterThan(0);
 		});
 	});

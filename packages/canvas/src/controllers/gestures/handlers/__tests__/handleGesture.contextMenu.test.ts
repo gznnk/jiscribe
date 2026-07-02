@@ -20,8 +20,8 @@ const emptyDoc: CanvasDoc = {
 } as unknown as CanvasDoc;
 
 /**
- * コンテキストメニューが開いている state を作る。
- * 図形 a とコネクター c を 1 つずつ持たせ、各対象上の pressed を再現できるようにする。
+ * Build a state with the context menu open.
+ * Includes one shape `a` and one connector `c` so that pressed events on each target can be reproduced.
  */
 const openMenuState = (): CanvasControllerState => {
 	const base = createInitialControllerState(emptyDoc);
@@ -44,13 +44,13 @@ const pressedOn = (targetKind: string, targetId: string): Gesture =>
 		mods: { shift: false, alt: false, ctrl: false, meta: false },
 	}) as unknown as Gesture;
 
-describe("handleGesture - コンテキストメニューの自動クローズ", () => {
-	it("図形上の左クリック押下でメニューを閉じる", () => {
+describe("handleGesture - context menu auto-close", () => {
+	it("closes the menu on left-click press over a shape", () => {
 		const nextState = handleGesture(openMenuState(), pressedOn("object", "a"));
 		expect(nextState.contextMenuPosition).toBeNull();
 	});
 
-	it("コネクター上の左クリック押下でメニューを閉じる", () => {
+	it("closes the menu on left-click press over a connector", () => {
 		const nextState = handleGesture(
 			openMenuState(),
 			pressedOn("connector", "c"),
@@ -58,7 +58,7 @@ describe("handleGesture - コンテキストメニューの自動クローズ", 
 		expect(nextState.contextMenuPosition).toBeNull();
 	});
 
-	it("コントロール上の左クリック押下でメニューを閉じる", () => {
+	it("closes the menu on left-click press over a control", () => {
 		const nextState = handleGesture(
 			openMenuState(),
 			pressedOn("control", "transform-control:nw"),
@@ -66,7 +66,7 @@ describe("handleGesture - コンテキストメニューの自動クローズ", 
 		expect(nextState.contextMenuPosition).toBeNull();
 	});
 
-	it("ツールバー上の左クリック押下でメニューを閉じる", () => {
+	it("closes the menu on left-click press over the toolbar", () => {
 		const nextState = handleGesture(
 			openMenuState(),
 			pressedOn("toolbar", "toolbar:command:zoomIn"),
@@ -74,7 +74,7 @@ describe("handleGesture - コンテキストメニューの自動クローズ", 
 		expect(nextState.contextMenuPosition).toBeNull();
 	});
 
-	it("シェイプライブラリ項目上の左クリック押下でメニューを閉じる", () => {
+	it("closes the menu on left-click press over a shape library item", () => {
 		const nextState = handleGesture(
 			openMenuState(),
 			pressedOn("menu-item", "menu-item:rect"),
@@ -82,7 +82,7 @@ describe("handleGesture - コンテキストメニューの自動クローズ", 
 		expect(nextState.contextMenuPosition).toBeNull();
 	});
 
-	it("ObjectMenu 上の左クリック押下でメニューを閉じる", () => {
+	it("closes the menu on left-click press over the ObjectMenu", () => {
 		const nextState = handleGesture(
 			openMenuState(),
 			pressedOn("object-menu", "object-menu:command:group"),
@@ -90,7 +90,7 @@ describe("handleGesture - コンテキストメニューの自動クローズ", 
 		expect(nextState.contextMenuPosition).toBeNull();
 	});
 
-	it("メニュー項目（context-menu）の押下では閉じない（click を届かせるため）", () => {
+	it("does not close on press over a menu item (context-menu) so the click can go through", () => {
 		const nextState = handleGesture(
 			openMenuState(),
 			pressedOn("context-menu", "context-menu:copy"),

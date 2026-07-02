@@ -36,7 +36,7 @@ describe("StartTextEditCommand", () => {
 		initializeObjectRegistry();
 	});
 
-	it("text を持つ rect は編集を開始できる", () => {
+	it("a rect that supports text can start editing", () => {
 		const state = stateWithSelection("rect-1");
 		expect(StartTextEditCommand.canExecute?.(state)).toBe(true);
 		expect(StartTextEditCommand.execute(state).textEditState?.objectId).toBe(
@@ -44,10 +44,10 @@ describe("StartTextEditCommand", () => {
 		);
 	});
 
-	it("text を持たない svg は編集を開始しない", () => {
+	it("an svg that does not support text does not start editing", () => {
 		const state = stateWithSelection("svg-1");
 		expect(StartTextEditCommand.canExecute?.(state)).toBe(false);
-		// 編集に入らない場合は state をそのまま返す
+		// returns the state unchanged when editing is not entered
 		expect(StartTextEditCommand.execute(state)).toBe(state);
 	});
 });

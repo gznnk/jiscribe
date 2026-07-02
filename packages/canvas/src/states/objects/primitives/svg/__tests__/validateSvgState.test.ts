@@ -16,20 +16,20 @@ const validSvg = {
 };
 
 describe("isValidSvgState", () => {
-	it("有効な Svg は true", () => {
+	it("valid Svg is true", () => {
 		expect(isValidSvgState(validSvg)).toBe(true);
 	});
 
-	it("type 不一致 / 必須ジオメトリ欠落は false", () => {
+	it("type mismatch / missing required geometry is false", () => {
 		expect(isValidSvgState({ ...validSvg, type: "rect" })).toBe(false);
 		expect(isValidSvgState({ ...validSvg, width: undefined })).toBe(false);
 	});
 
-	it("width / height が負数は false（minimum: 0）", () => {
+	it("negative width / height is false (minimum: 0)", () => {
 		expect(isValidSvgState({ ...validSvg, height: -1 })).toBe(false);
 	});
 
-	it("svgText が文字列でない / 欠落は false", () => {
+	it("svgText that is not a string / missing is false", () => {
 		expect(isValidSvgState({ ...validSvg, svgText: undefined })).toBe(false);
 		expect(isValidSvgState({ ...validSvg, svgText: 123 })).toBe(false);
 	});

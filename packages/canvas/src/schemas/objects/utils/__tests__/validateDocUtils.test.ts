@@ -15,7 +15,7 @@ import {
 // ─── validatePolyFields ───────────────────────────────────────────
 
 describe("validatePolyFields", () => {
-	it("有効な points 配列はエラーなし", () => {
+	it("a valid points array has no errors", () => {
 		const o = {
 			points: [
 				{ x: 0, y: 0 },
@@ -25,7 +25,7 @@ describe("validatePolyFields", () => {
 		expect(validatePolyFields(o, "root")).toEqual([]);
 	});
 
-	it("3点以上でもエラーなし", () => {
+	it("no errors even with 3 or more points", () => {
 		const o = {
 			points: [
 				{ x: 0, y: 0 },
@@ -36,29 +36,29 @@ describe("validatePolyFields", () => {
 		expect(validatePolyFields(o, "root")).toEqual([]);
 	});
 
-	it("points フィールドがない場合はエラー", () => {
+	it("errors when the points field is missing", () => {
 		expect(validatePolyFields({}, "root")).toHaveLength(1);
 	});
 
-	it("points が配列でない場合はエラー", () => {
+	it("errors when points is not an array", () => {
 		expect(validatePolyFields({ points: "invalid" }, "root")).toHaveLength(1);
 	});
 
-	it("点が { x, y } でない場合はエラー", () => {
+	it("errors when a point is not { x, y }", () => {
 		const o = { points: [{ x: 0 }, { x: 10, y: 10 }] };
 		expect(validatePolyFields(o, "root")).toHaveLength(1);
 	});
 
-	it("1点しかない場合はエラー（2点以上必要）", () => {
+	it("errors when there is only 1 point (at least 2 required)", () => {
 		const o = { points: [{ x: 0, y: 0 }] };
 		expect(validatePolyFields(o, "root")).toHaveLength(1);
 	});
 
-	it("空配列はエラー", () => {
+	it("errors for an empty array", () => {
 		expect(validatePolyFields({ points: [] }, "root")).toHaveLength(1);
 	});
 
-	it("minPoints=3 のとき 2 点はエラー（polygon 用）", () => {
+	it("with minPoints=3, 2 points is an error (for polygon)", () => {
 		const o = {
 			points: [
 				{ x: 0, y: 0 },
@@ -70,7 +70,7 @@ describe("validatePolyFields", () => {
 		expect(errors[0].message).toContain("at least 3 points");
 	});
 
-	it("minPoints=3 のとき 3 点はエラーなし", () => {
+	it("with minPoints=3, 3 points has no errors", () => {
 		const o = {
 			points: [
 				{ x: 0, y: 0 },
@@ -81,7 +81,7 @@ describe("validatePolyFields", () => {
 		expect(validatePolyFields(o, "root", 3)).toEqual([]);
 	});
 
-	it("エラーパスに path が反映される", () => {
+	it("the path is reflected in the error path", () => {
 		const errors = validatePolyFields({}, "obj[0]");
 		expect(errors[0].path).toBe("obj[0].points");
 	});
@@ -91,7 +91,7 @@ describe("validatePolyFields", () => {
 
 describe("validateEndpointRef", () => {
 	// null / undefined
-	it("null / undefined はエラーなし", () => {
+	it("null / undefined has no errors", () => {
 		expect(validateEndpointRef(null, "root")).toEqual([]);
 		expect(validateEndpointRef(undefined, "root")).toEqual([]);
 	});
@@ -99,7 +99,7 @@ describe("validateEndpointRef", () => {
 	// ── OwnedEndpointRef ──────────────────────────────────────────
 
 	describe("OwnedEndpointRef", () => {
-		it("center anchor はエラーなし", () => {
+		it("center anchor has no errors", () => {
 			const ref = {
 				owner: { id: "rect-1", type: "rect" },
 				anchor: { kind: "center" },
@@ -107,7 +107,7 @@ describe("validateEndpointRef", () => {
 			expect(validateEndpointRef(ref, "root")).toEqual([]);
 		});
 
-		it("connectPoint anchor（有効な id）はエラーなし", () => {
+		it("connectPoint anchor (with a valid id) has no errors", () => {
 			const ref = {
 				owner: { id: "rect-1", type: "rect" },
 				anchor: { kind: "connectPoint", id: "topCenter" },
@@ -115,7 +115,7 @@ describe("validateEndpointRef", () => {
 			expect(validateEndpointRef(ref, "root")).toEqual([]);
 		});
 
-		it("owner.id が string でない場合はエラー", () => {
+		it("errors when owner.id is not a string", () => {
 			const ref = {
 				owner: { id: 123, type: "rect" },
 				anchor: { kind: "center" },
@@ -124,7 +124,7 @@ describe("validateEndpointRef", () => {
 			expect(errors.some((e) => e.path === "root.owner.id")).toBe(true);
 		});
 
-		it("owner.type が string でない場合はエラー", () => {
+		it("errors when owner.type is not a string", () => {
 			const ref = {
 				owner: { id: "rect-1", type: 42 },
 				anchor: { kind: "center" },
@@ -133,13 +133,13 @@ describe("validateEndpointRef", () => {
 			expect(errors.some((e) => e.path === "root.owner.type")).toBe(true);
 		});
 
-		it("anchor が存在しない場合はエラー", () => {
+		it("errors when anchor is missing", () => {
 			const ref = { owner: { id: "rect-1", type: "rect" } };
 			const errors = validateEndpointRef(ref, "root");
 			expect(errors.some((e) => e.path === "root.anchor")).toBe(true);
 		});
 
-		it("anchor.kind が free の場合はエラー（owned には不正）", () => {
+		it("errors when anchor.kind is free (invalid for owned)", () => {
 			const ref = {
 				owner: { id: "rect-1", type: "rect" },
 				anchor: { kind: "free", point: { x: 0, y: 0 } },
@@ -148,7 +148,7 @@ describe("validateEndpointRef", () => {
 			expect(errors.some((e) => e.path === "root.anchor.kind")).toBe(true);
 		});
 
-		it("anchor.kind が不正な値はエラー", () => {
+		it("errors for an invalid anchor.kind value", () => {
 			const ref = {
 				owner: { id: "rect-1", type: "rect" },
 				anchor: { kind: "unknown" },
@@ -157,7 +157,7 @@ describe("validateEndpointRef", () => {
 			expect(errors.some((e) => e.path === "root.anchor.kind")).toBe(true);
 		});
 
-		it("connectPoint anchor で id が不正な値はエラー", () => {
+		it("errors for an invalid id in a connectPoint anchor", () => {
 			const ref = {
 				owner: { id: "rect-1", type: "rect" },
 				anchor: { kind: "connectPoint", id: "invalid" },
@@ -166,7 +166,7 @@ describe("validateEndpointRef", () => {
 			expect(errors.some((e) => e.path === "root.anchor.id")).toBe(true);
 		});
 
-		it("全 ConnectPointId はエラーなし", () => {
+		it("all ConnectPointIds have no errors", () => {
 			const ids = [
 				"center",
 				"topCenter",
@@ -187,12 +187,12 @@ describe("validateEndpointRef", () => {
 	// ── FreeEndpointRef ───────────────────────────────────────────
 
 	describe("FreeEndpointRef", () => {
-		it("有効な free anchor はエラーなし", () => {
+		it("a valid free anchor has no errors", () => {
 			const ref = { anchor: { kind: "free", point: { x: 10, y: 20 } } };
 			expect(validateEndpointRef(ref, "root")).toEqual([]);
 		});
 
-		it("owner が null の場合も free endpoint として扱いエラーなし", () => {
+		it("treats owner === null as a free endpoint with no errors", () => {
 			const ref = {
 				owner: null,
 				anchor: { kind: "free", point: { x: 0, y: 0 } },
@@ -200,30 +200,30 @@ describe("validateEndpointRef", () => {
 			expect(validateEndpointRef(ref, "root")).toEqual([]);
 		});
 
-		it("anchor がない場合はエラー", () => {
+		it("errors when anchor is missing", () => {
 			const errors = validateEndpointRef({}, "root");
 			expect(errors.some((e) => e.path === "root.anchor")).toBe(true);
 		});
 
-		it("anchor.kind が free でない場合はエラー", () => {
+		it("errors when anchor.kind is not free", () => {
 			const ref = { anchor: { kind: "center" } };
 			const errors = validateEndpointRef(ref, "root");
 			expect(errors.some((e) => e.path === "root.anchor.kind")).toBe(true);
 		});
 
-		it("anchor.point がない場合はエラー", () => {
+		it("errors when anchor.point is missing", () => {
 			const ref = { anchor: { kind: "free" } };
 			const errors = validateEndpointRef(ref, "root");
 			expect(errors.some((e) => e.path === "root.anchor.point")).toBe(true);
 		});
 
-		it("anchor.point.x が数値でない場合はエラー", () => {
+		it("errors when anchor.point.x is not a number", () => {
 			const ref = { anchor: { kind: "free", point: { x: "10", y: 0 } } };
 			const errors = validateEndpointRef(ref, "root");
 			expect(errors.some((e) => e.path === "root.anchor.point.x")).toBe(true);
 		});
 
-		it("anchor.point.y が数値でない場合はエラー", () => {
+		it("errors when anchor.point.y is not a number", () => {
 			const ref = { anchor: { kind: "free", point: { x: 0, y: "20" } } };
 			const errors = validateEndpointRef(ref, "root");
 			expect(errors.some((e) => e.path === "root.anchor.point.y")).toBe(true);
@@ -234,34 +234,34 @@ describe("validateEndpointRef", () => {
 // ─── validateTransformFields ──────────────────────────────────────
 
 describe("validateTransformFields", () => {
-	it("transform フィールドがない場合はエラーなし", () => {
+	it("no errors when the transform fields are missing", () => {
 		expect(validateTransformFields({}, "root")).toEqual([]);
 	});
 
-	it("有効な transform フィールドはエラーなし", () => {
+	it("valid transform fields have no errors", () => {
 		const o = { rotation: 45, flipX: false, flipY: true };
 		expect(validateTransformFields(o, "root")).toEqual([]);
 	});
 
-	it("rotation が数値でない場合はエラー", () => {
+	it("errors when rotation is not a number", () => {
 		const errors = validateTransformFields({ rotation: "45deg" }, "root");
 		expect(errors).toHaveLength(1);
 		expect(errors[0].path).toBe("root.rotation");
 	});
 
-	it("flipX が boolean でない場合はエラー", () => {
+	it("errors when flipX is not a boolean", () => {
 		const errors = validateTransformFields({ flipX: 1 }, "root");
 		expect(errors).toHaveLength(1);
 		expect(errors[0].path).toBe("root.flipX");
 	});
 
-	it("flipY が boolean でない場合はエラー", () => {
+	it("errors when flipY is not a boolean", () => {
 		const errors = validateTransformFields({ flipY: "true" }, "root");
 		expect(errors).toHaveLength(1);
 		expect(errors[0].path).toBe("root.flipY");
 	});
 
-	it("rotation が 0 はエラーなし", () => {
+	it("rotation === 0 has no errors", () => {
 		expect(validateTransformFields({ rotation: 0 }, "root")).toEqual([]);
 	});
 });
@@ -269,36 +269,36 @@ describe("validateTransformFields", () => {
 // ─── validateStrokeStyleFields ────────────────────────────────────
 
 describe("validateStrokeStyleFields", () => {
-	it("stroke フィールドがない場合はエラーなし", () => {
+	it("no errors when the stroke fields are missing", () => {
 		expect(validateStrokeStyleFields({}, "root")).toEqual([]);
 	});
 
-	it("有効な stroke フィールドはエラーなし", () => {
+	it("valid stroke fields have no errors", () => {
 		const o = { stroke: "#000", strokeWidth: 2, strokeDashType: "solid" };
 		expect(validateStrokeStyleFields(o, "root")).toEqual([]);
 	});
 
-	it("stroke が string でない場合はエラー", () => {
+	it("errors when stroke is not a string", () => {
 		const errors = validateStrokeStyleFields({ stroke: 123 }, "root");
 		expect(errors[0].path).toBe("root.stroke");
 	});
 
-	it("stroke が CSS インジェクションを含む場合はエラー", () => {
+	it("errors when stroke contains a CSS injection", () => {
 		const errors = validateStrokeStyleFields(
 			{ stroke: "red; } body { background: url(http://evil) " },
 			"root",
 		);
 		expect(errors[0].path).toBe("root.stroke");
-		// CSS-safe 検査は JSON スキーマで表現できないため beyondSchema が立つ。
+		// The CSS-safe check cannot be expressed in the JSON schema, so beyondSchema is set.
 		expect(errors[0].beyondSchema).toBe(true);
 	});
 
-	it("strokeWidth が数値でない場合はエラー", () => {
+	it("errors when strokeWidth is not a number", () => {
 		const errors = validateStrokeStyleFields({ strokeWidth: "2px" }, "root");
 		expect(errors[0].path).toBe("root.strokeWidth");
 	});
 
-	it("strokeDashType が不正な値はエラー", () => {
+	it("errors for an invalid strokeDashType value", () => {
 		const errors = validateStrokeStyleFields(
 			{ strokeDashType: "double" },
 			"root",
@@ -306,7 +306,7 @@ describe("validateStrokeStyleFields", () => {
 		expect(errors[0].path).toBe("root.strokeDashType");
 	});
 
-	it("strokeDashType: dashed / dotted はエラーなし", () => {
+	it("strokeDashType: dashed / dotted has no errors", () => {
 		expect(
 			validateStrokeStyleFields({ strokeDashType: "dashed" }, "root"),
 		).toEqual([]);
@@ -319,22 +319,22 @@ describe("validateStrokeStyleFields", () => {
 // ─── validateFillStyleFields ──────────────────────────────────────
 
 describe("validateFillStyleFields", () => {
-	it("fill がない場合はエラーなし", () => {
+	it("no errors when fill is missing", () => {
 		expect(validateFillStyleFields({}, "root")).toEqual([]);
 	});
 
-	it("fill が string はエラーなし", () => {
+	it("fill as a string has no errors", () => {
 		expect(validateFillStyleFields({ fill: "transparent" }, "root")).toEqual(
 			[],
 		);
 	});
 
-	it("fill が string でない場合はエラー", () => {
+	it("errors when fill is not a string", () => {
 		const errors = validateFillStyleFields({ fill: 0xff0000 }, "root");
 		expect(errors[0].path).toBe("root.fill");
 	});
 
-	it("fill に CSS ブレイクアウトを含む場合はエラー", () => {
+	it("errors when fill contains a CSS breakout", () => {
 		const errors = validateFillStyleFields(
 			{ fill: "url(http://evil/x)" },
 			"root",
@@ -346,11 +346,11 @@ describe("validateFillStyleFields", () => {
 // ─── validateTextStyleFields ──────────────────────────────────────
 
 describe("validateTextStyleFields", () => {
-	it("text フィールドがない場合はエラーなし", () => {
+	it("no errors when the text fields are missing", () => {
 		expect(validateTextStyleFields({}, "root")).toEqual([]);
 	});
 
-	it("有効なテキストフィールドはエラーなし", () => {
+	it("valid text fields have no errors", () => {
 		const o = {
 			text: "hello",
 			textType: "text",
@@ -364,17 +364,17 @@ describe("validateTextStyleFields", () => {
 		expect(validateTextStyleFields(o, "root")).toEqual([]);
 	});
 
-	it("textAlign が不正な値はエラー", () => {
+	it("errors for an invalid textAlign value", () => {
 		const errors = validateTextStyleFields({ textAlign: "justify" }, "root");
 		expect(errors[0].path).toBe("root.textAlign");
 	});
 
-	it("textAlign: left / right はエラーなし", () => {
+	it("textAlign: left / right has no errors", () => {
 		expect(validateTextStyleFields({ textAlign: "left" }, "root")).toEqual([]);
 		expect(validateTextStyleFields({ textAlign: "right" }, "root")).toEqual([]);
 	});
 
-	it("verticalAlign が不正な値はエラー", () => {
+	it("errors for an invalid verticalAlign value", () => {
 		const errors = validateTextStyleFields(
 			{ verticalAlign: "baseline" },
 			"root",
@@ -382,7 +382,7 @@ describe("validateTextStyleFields", () => {
 		expect(errors[0].path).toBe("root.verticalAlign");
 	});
 
-	it("verticalAlign: top / bottom はエラーなし", () => {
+	it("verticalAlign: top / bottom has no errors", () => {
 		expect(validateTextStyleFields({ verticalAlign: "top" }, "root")).toEqual(
 			[],
 		);
@@ -391,28 +391,28 @@ describe("validateTextStyleFields", () => {
 		).toEqual([]);
 	});
 
-	it("textType: markdown はエラーなし", () => {
+	it("textType: markdown has no errors", () => {
 		expect(validateTextStyleFields({ textType: "markdown" }, "root")).toEqual(
 			[],
 		);
 	});
 
-	it("textType が不正な値はエラー", () => {
+	it("errors for an invalid textType value", () => {
 		const errors = validateTextStyleFields({ textType: "html" }, "root");
 		expect(errors[0].path).toBe("root.textType");
 	});
 
-	it("fontSize が数値でない場合はエラー", () => {
+	it("errors when fontSize is not a number", () => {
 		const errors = validateTextStyleFields({ fontSize: "16px" }, "root");
 		expect(errors[0].path).toBe("root.fontSize");
 	});
 
-	it("fontColor が string でない場合はエラー", () => {
+	it("errors when fontColor is not a string", () => {
 		const errors = validateTextStyleFields({ fontColor: 0 }, "root");
 		expect(errors[0].path).toBe("root.fontColor");
 	});
 
-	it("fontColor に CSS ブレイクアウトを含む場合はエラー", () => {
+	it("errors when fontColor contains a CSS breakout", () => {
 		const errors = validateTextStyleFields(
 			{ fontColor: "#000; } body {" },
 			"root",
@@ -420,7 +420,7 @@ describe("validateTextStyleFields", () => {
 		expect(errors[0].path).toBe("root.fontColor");
 	});
 
-	it("fontFamily に CSS ブレイクアウトを含む場合はエラー", () => {
+	it("errors when fontFamily contains a CSS breakout", () => {
 		const errors = validateTextStyleFields(
 			{ fontFamily: "Arial; } body { display: none" },
 			"root",
@@ -428,7 +428,7 @@ describe("validateTextStyleFields", () => {
 		expect(errors[0].path).toBe("root.fontFamily");
 	});
 
-	it("fontWeight に CSS ブレイクアウトを含む場合はエラー", () => {
+	it("errors when fontWeight contains a CSS breakout", () => {
 		const errors = validateTextStyleFields(
 			{ fontWeight: "bold } html {" },
 			"root",
@@ -440,21 +440,21 @@ describe("validateTextStyleFields", () => {
 // ─── validateRadiusStyleFields ────────────────────────────────────
 
 describe("validateRadiusStyleFields", () => {
-	it("rx がない場合はエラーなし", () => {
+	it("no errors when rx is missing", () => {
 		expect(validateRadiusStyleFields({}, "root")).toEqual([]);
 	});
 
-	it("rx が数値はエラーなし", () => {
+	it("rx as a number has no errors", () => {
 		expect(validateRadiusStyleFields({ rx: 8 }, "root")).toEqual([]);
 		expect(validateRadiusStyleFields({ rx: 0 }, "root")).toEqual([]);
 	});
 
-	it("rx が数値でない場合はエラー", () => {
+	it("errors when rx is not a number", () => {
 		const errors = validateRadiusStyleFields({ rx: "8px" }, "root");
 		expect(errors[0].path).toBe("root.rx");
 	});
 
-	it("rx が負数はエラー（>= 0）", () => {
+	it("errors when rx is negative (>= 0)", () => {
 		const errors = validateRadiusStyleFields({ rx: -1 }, "root");
 		expect(errors[0].path).toBe("root.rx");
 		expect(errors[0].message).toContain(">= 0");
@@ -464,26 +464,26 @@ describe("validateRadiusStyleFields", () => {
 // ─── validateArrowFields ──────────────────────────────────────────
 
 describe("validateArrowFields", () => {
-	it("arrow フィールドがない場合はエラーなし", () => {
+	it("no errors when the arrow fields are missing", () => {
 		expect(validateArrowFields({}, "root")).toEqual([]);
 	});
 
-	it("有効な ArrowType はエラーなし", () => {
+	it("valid ArrowTypes have no errors", () => {
 		const o = { startArrow: "FilledTriangle", endArrow: "None" };
 		expect(validateArrowFields(o, "root")).toEqual([]);
 	});
 
-	it("startArrow が不正な値はエラー", () => {
+	it("errors for an invalid startArrow value", () => {
 		const errors = validateArrowFields({ startArrow: "arrow" }, "root");
 		expect(errors[0].path).toBe("root.startArrow");
 	});
 
-	it("endArrow が不正な値はエラー", () => {
+	it("errors for an invalid endArrow value", () => {
 		const errors = validateArrowFields({ endArrow: "diamond" }, "root");
 		expect(errors[0].path).toBe("root.endArrow");
 	});
 
-	it("全 ArrowType 値はエラーなし", () => {
+	it("all ArrowType values have no errors", () => {
 		const validTypes = [
 			"FilledTriangle",
 			"ConcaveTriangle",
@@ -503,11 +503,11 @@ describe("validateArrowFields", () => {
 // ─── validateRequiredNumber ───────────────────────────────────────
 
 describe("validateRequiredNumber", () => {
-	it("数値ならエラーなし", () => {
+	it("no errors for a number", () => {
 		expect(validateRequiredNumber({ w: 5 }, "root", "w")).toEqual([]);
 	});
 
-	it("数値でない（欠落含む）はエラー", () => {
+	it("errors for non-numbers (including missing)", () => {
 		expect(validateRequiredNumber({}, "root", "w")).toEqual([
 			{ path: "root.w", message: "must be a number" },
 		]);
@@ -516,7 +516,7 @@ describe("validateRequiredNumber", () => {
 		).toContain("must be a number");
 	});
 
-	it("min 指定時、下限未満はエラー・境界はエラーなし", () => {
+	it("with min set, below the bound errors and the boundary has no errors", () => {
 		expect(
 			validateRequiredNumber({ w: -1 }, "root", "w", 0)[0].message,
 		).toContain(">= 0");
@@ -528,10 +528,10 @@ describe("validateRequiredNumber", () => {
 	});
 });
 
-// ─── 任意数値フィールドの下限（style util 経由） ──────────────────
+// ─── Lower bounds for optional number fields (via style utils) ────
 
-describe("数値スタイルフィールドの下限", () => {
-	it("strokeWidth が負数はエラー（>= 0）、未指定は許容", () => {
+describe("lower bounds for numeric style fields", () => {
+	it("negative strokeWidth errors (>= 0), unspecified is allowed", () => {
 		expect(
 			validateStrokeStyleFields({ strokeWidth: -1 }, "root")[0].message,
 		).toContain(">= 0");
@@ -539,7 +539,7 @@ describe("数値スタイルフィールドの下限", () => {
 		expect(validateStrokeStyleFields({ strokeWidth: 0 }, "root")).toEqual([]);
 	});
 
-	it("fontSize が 1 未満はエラー（>= 1）、未指定は許容", () => {
+	it("fontSize below 1 errors (>= 1), unspecified is allowed", () => {
 		expect(
 			validateTextStyleFields({ fontSize: 0 }, "root")[0].message,
 		).toContain(">= 1");

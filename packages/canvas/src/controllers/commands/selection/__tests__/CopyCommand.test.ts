@@ -6,7 +6,7 @@ import type { CanvasControllerState } from "../../../CanvasTypes";
 import { CopyCommand } from "../CopyCommand";
 
 // ---------------------------------------------------------------------------
-// テスト用フィクスチャ
+// Test fixtures
 // ---------------------------------------------------------------------------
 
 const makeRect = (id: string): ObjectState =>
@@ -59,7 +59,7 @@ const makeState = (params: {
 	({
 		selectedIds: params.selectedIds,
 		objects: params.objects,
-		// コネクターは独立配列ではなく rootIds に混在管理されるため rootIds へ含める。
+		// connectors are managed interleaved in rootIds rather than a separate array, so include them in rootIds.
 		rootIds: [...params.rootIds, ...params.connectorIds],
 		commitVersion: 0,
 		multiSelectGroup: null,
@@ -67,11 +67,11 @@ const makeState = (params: {
 	}) as unknown as CanvasControllerState;
 
 // ---------------------------------------------------------------------------
-// テスト
+// Tests
 // ---------------------------------------------------------------------------
 
-describe("CopyCommand — コネクター包含判定", () => {
-	it("両端 owned+選択内 → コネクターを含む", () => {
+describe("CopyCommand — connector inclusion decision", () => {
+	it("both ends owned + in selection → includes the connector", () => {
 		const r1 = makeRect("r1");
 		const r2 = makeRect("r2");
 		const conn = makeConnector("conn1", "r1", "r2");
@@ -85,7 +85,7 @@ describe("CopyCommand — コネクター包含判定", () => {
 		expect(next.internalClipboard?.rootIds).toContain("conn1");
 	});
 
-	it("片端 owned+選択内・他端 free → コネクターを含む", () => {
+	it("one end owned + in selection, other end free → includes the connector", () => {
 		const r1 = makeRect("r1");
 		const conn = makeConnector("conn1", "r1", null);
 		const state = makeState({
@@ -98,7 +98,7 @@ describe("CopyCommand — コネクター包含判定", () => {
 		expect(next.internalClipboard?.rootIds).toContain("conn1");
 	});
 
-	it("片端 free・他端 owned+選択内 → コネクターを含む", () => {
+	it("one end free, other end owned + in selection → includes the connector", () => {
 		const r1 = makeRect("r1");
 		const conn = makeConnector("conn1", null, "r1");
 		const state = makeState({
@@ -111,7 +111,7 @@ describe("CopyCommand — コネクター包含判定", () => {
 		expect(next.internalClipboard?.rootIds).toContain("conn1");
 	});
 
-	it("両端 free → コネクターを除外（浮遊コネクター）", () => {
+	it("both ends free → excludes the connector (floating connector)", () => {
 		const r1 = makeRect("r1");
 		const conn = makeConnector("conn1", null, null);
 		const state = makeState({
@@ -124,12 +124,12 @@ describe("CopyCommand — コネクター包含判定", () => {
 		expect(next.internalClipboard?.rootIds).not.toContain("conn1");
 	});
 
-	it("片端 owned+選択内・他端 owned+選択外 → コネクターを除外", () => {
+	it("one end owned + in selection, other end owned + out of selection → excludes the connector", () => {
 		const r1 = makeRect("r1");
 		const r2 = makeRect("r2");
 		const conn = makeConnector("conn1", "r1", "r2");
 		const state = makeState({
-			selectedIds: ["r1"], // r2 は選択していない
+			selectedIds: ["r1"], // r2 is not selected
 			objects: { r1, r2, conn1: conn },
 			rootIds: ["r1", "r2"],
 			connectorIds: ["conn1"],
@@ -138,10 +138,10 @@ describe("CopyCommand — コネクター包含判定", () => {
 		expect(next.internalClipboard?.rootIds).not.toContain("conn1");
 	});
 
-	it("片端 owned+選択外・他端 free → コネクターを除外", () => {
+	it("one end owned + out of selection, other end free → excludes the connector", () => {
 		const r1 = makeRect("r1");
 		const r2 = makeRect("r2");
-		const conn = makeConnector("conn1", "r2", null); // r2 は選択していない
+		const conn = makeConnector("conn1", "r2", null); // r2 is not selected
 		const state = makeState({
 			selectedIds: ["r1"],
 			objects: { r1, r2, conn1: conn },
@@ -152,11 +152,11 @@ describe("CopyCommand — コネクター包含判定", () => {
 		expect(next.internalClipboard?.rootIds).not.toContain("conn1");
 	});
 
-	it("両端 owned+選択外 → コネクターを除外", () => {
+	it("both ends owned + out of selection → excludes the connector", () => {
 		const r1 = makeRect("r1");
 		const r2 = makeRect("r2");
 		const r3 = makeRect("r3");
-		const conn = makeConnector("conn1", "r2", "r3"); // r2, r3 は選択していない
+		const conn = makeConnector("conn1", "r2", "r3"); // r2, r3 are not selected
 		const state = makeState({
 			selectedIds: ["r1"],
 			objects: { r1, r2, r3, conn1: conn },
@@ -168,8 +168,8 @@ describe("CopyCommand — コネクター包含判定", () => {
 	});
 });
 
-describe("CopyCommand — クリップボード基本挙動", () => {
-	it("選択オブジェクトが internalClipboard の objects と rootIds に含まれる", () => {
+describe("CopyCommand — basic clipboard behavior", () => {
+	it("selected objects are included in internalClipboard's objects and rootIds", () => {
 		const r1 = makeRect("r1");
 		const state = makeState({
 			selectedIds: ["r1"],
@@ -182,7 +182,7 @@ describe("CopyCommand — クリップボード基本挙動", () => {
 		expect(next.internalClipboard?.objects["r1"]).toBeDefined();
 	});
 
-	it("canExecute は selectedIds が空のとき false", () => {
+	it("canExecute is false when selectedIds is empty", () => {
 		const state = makeState({
 			selectedIds: [],
 			objects: {},
@@ -192,7 +192,7 @@ describe("CopyCommand — クリップボード基本挙動", () => {
 		expect(CopyCommand.canExecute(state)).toBe(false);
 	});
 
-	it("canExecute は selectedIds がある場合 true", () => {
+	it("canExecute is true when there are selectedIds", () => {
 		const r1 = makeRect("r1");
 		const state = makeState({
 			selectedIds: ["r1"],

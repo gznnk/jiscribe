@@ -27,7 +27,7 @@ const makePoly = (points: { x: number; y: number }[]): PolylineState =>
 	}) as unknown as PolylineState;
 
 describe("transformPolyByGroup", () => {
-	it("グループ未変形（start=end）なら頂点は不変", () => {
+	it("vertices are unchanged when the group is not transformed (start=end)", () => {
 		const group = makeGroup({});
 		const poly = makePoly([
 			{ x: 10, y: 0 },
@@ -42,7 +42,7 @@ describe("transformPolyByGroup", () => {
 		expect(result.points[1].y).toBeCloseTo(5);
 	});
 
-	it("グループ幅が 2 倍になると中心からの距離も 2 倍になる", () => {
+	it("when the group width doubles, the distance from center also doubles", () => {
 		const start = makeGroup({ width: 100 });
 		const end = makeGroup({ width: 200 });
 		const poly = makePoly([{ x: 10, y: 0 }]);
@@ -53,7 +53,7 @@ describe("transformPolyByGroup", () => {
 		expect(result.points[0].y).toBeCloseTo(0);
 	});
 
-	it("points 以外のフィールドは保持する", () => {
+	it("preserves fields other than points", () => {
 		const group = makeGroup({});
 		const poly = makePoly([{ x: 1, y: 1 }]);
 
@@ -65,18 +65,18 @@ describe("transformPolyByGroup", () => {
 });
 
 describe("rotatePolyByGroup", () => {
-	it("グループ中心まわりに rotationDelta だけ各頂点を回転する", () => {
+	it("rotates each vertex by rotationDelta around the group center", () => {
 		const group = makeGroup({ cx: 0, cy: 0, rotation: 0 });
 		const poly = makePoly([{ x: 10, y: 0 }]);
 
-		// 0° → 90°：(10,0) は (0,10) へ
+		// 0deg -> 90deg: (10,0) becomes (0,10)
 		const result = rotatePolyByGroup(poly, group, 90);
 
 		expect(result.points[0].x).toBeCloseTo(0);
 		expect(result.points[0].y).toBeCloseTo(10);
 	});
 
-	it("rotationDelta が 0 なら頂点は不変", () => {
+	it("vertices are unchanged when rotationDelta is 0", () => {
 		const group = makeGroup({ rotation: 45 });
 		const poly = makePoly([{ x: 3, y: 7 }]);
 

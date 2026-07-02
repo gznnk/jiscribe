@@ -35,7 +35,7 @@ const makeGroup = (overrides?: Partial<GroupState>): GroupState =>
 	}) as unknown as GroupState;
 
 describe("PolylineController.moveByDelta", () => {
-	it("全頂点を delta だけ移動する", () => {
+	it("moves all vertices by delta", () => {
 		const result = moveByDelta(
 			makePolyline([
 				{ x: -80, y: 0 },
@@ -49,15 +49,15 @@ describe("PolylineController.moveByDelta", () => {
 		]);
 	});
 
-	it("元の state を破壊しない", () => {
+	it("does not mutate the original state", () => {
 		const src = makePolyline([{ x: 0, y: 0 }]);
 		moveByDelta(src, { x: 5, y: 5 });
 		expect(src.points[0]).toEqual({ x: 0, y: 0 });
 	});
 });
 
-describe("PolylineController group 変形の委譲", () => {
-	it("transformByGroup は transformPolyByGroup に委譲する", () => {
+describe("PolylineController delegation of group transforms", () => {
+	it("transformByGroup delegates to transformPolyByGroup", () => {
 		const polyline = makePolyline([{ x: 10, y: 0 }]);
 		const start = makeGroup({ width: 100 });
 		const end = makeGroup({ width: 200 });
@@ -66,7 +66,7 @@ describe("PolylineController group 変形の委譲", () => {
 		);
 	});
 
-	it("rotateByGroup は rotatePolyByGroup に委譲する", () => {
+	it("rotateByGroup delegates to rotatePolyByGroup", () => {
 		const polyline = makePolyline([{ x: 10, y: 0 }]);
 		const group = makeGroup({ rotation: 0 });
 		expect(rotateByGroup(polyline, group, 90)).toEqual(

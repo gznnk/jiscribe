@@ -4,7 +4,7 @@ import { describe, it, expect } from "vitest";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import { calcSnapCandidates } from "../calcSnapCandidates";
 
-/** 軸並行な BBox から FrameKeyPoints を生成するヘルパー。 */
+/** Helper that generates FrameKeyPoints from an axis-aligned BBox. */
 const makeKeyPoints = (
 	left: number,
 	top: number,
@@ -25,11 +25,11 @@ const makeKeyPoints = (
 	};
 };
 
-/** type だけを参照する関数なので最小のスタブで足りる。 */
+/** The function only reads `type`, so a minimal stub is enough. */
 const rectStub = { type: "rect" } as unknown as ObjectState;
 
 describe("calcSnapCandidates", () => {
-	it("各オブジェクトに left/right/hCenter と top/bottom/vCenter を生成する", () => {
+	it("generates left/right/hCenter and top/bottom/vCenter for each object", () => {
 		const objects = { a: rectStub };
 		const keyPoints = { a: makeKeyPoints(10, 20, 30, 60) };
 
@@ -54,7 +54,7 @@ describe("calcSnapCandidates", () => {
 		);
 	});
 
-	it("hCenter/vCenter の perpendicular 範囲はオブジェクトの対辺と一致する", () => {
+	it("the perpendicular range of hCenter/vCenter matches the object's opposite edges", () => {
 		const objects = { a: rectStub };
 		const keyPoints = { a: makeKeyPoints(10, 20, 30, 60) };
 
@@ -73,7 +73,7 @@ describe("calcSnapCandidates", () => {
 		});
 	});
 
-	it("group は候補に含めない", () => {
+	it("does not include groups in the candidates", () => {
 		const objects = {
 			g: { type: "group" } as unknown as ObjectState,
 		};
@@ -85,7 +85,7 @@ describe("calcSnapCandidates", () => {
 		expect(y).toHaveLength(0);
 	});
 
-	it("候補は coordinate 昇順にソートされる", () => {
+	it("candidates are sorted in ascending order of coordinate", () => {
 		const objects = { a: rectStub };
 		const keyPoints = { a: makeKeyPoints(10, 20, 30, 60) };
 

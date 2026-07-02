@@ -13,9 +13,9 @@ const group = (id: string, childIds: string[], parentId?: string): GroupState =>
 	({ id, type: "group", childIds, parentId }) as unknown as GroupState;
 
 describe("findLowestCommonAncestor", () => {
-	// ─── 共通祖先なし（root 兄弟同士） ────────────────────────────────
+	// ─── no common ancestor (root-level siblings) ────────────────────────────────
 
-	it("ルートレベルの兄弟同士には共通祖先がない", () => {
+	it("root-level siblings have no common ancestor", () => {
 		const objects: Objects = {
 			"rect-1": rect("rect-1"),
 			"rect-2": rect("rect-2"),
@@ -25,13 +25,13 @@ describe("findLowestCommonAncestor", () => {
 		).toBeUndefined();
 	});
 
-	it("空配列を渡すと undefined を返す", () => {
+	it("returns undefined when passed an empty array", () => {
 		expect(findLowestCommonAncestor([], {})).toBeUndefined();
 	});
 
-	// ─── 同一グループ内の兄弟 ─────────────────────────────────────────
+	// ─── siblings within the same group ─────────────────────────────────────────
 
-	it("同一グループ内の兄弟の LCA はそのグループ", () => {
+	it("the LCA of siblings within the same group is that group", () => {
 		const objects: Objects = {
 			"group-1": group("group-1", ["rect-1", "rect-2"]),
 			"rect-1": rect("rect-1", "group-1"),
@@ -42,9 +42,9 @@ describe("findLowestCommonAncestor", () => {
 		);
 	});
 
-	// ─── 異なる深さ ────────────────────────────────────────────────────
+	// ─── different depths ────────────────────────────────────────────────────
 
-	it("子と孫の LCA は共通の親グループ", () => {
+	it("the LCA of a child and a grandchild is the common parent group", () => {
 		// group-1
 		//   ├─ rect-1
 		//   └─ group-2
@@ -60,7 +60,7 @@ describe("findLowestCommonAncestor", () => {
 		);
 	});
 
-	it("異なるサブグループ内の要素の LCA は共通の祖先グループ", () => {
+	it("the LCA of elements in different subgroups is the common ancestor group", () => {
 		// group-outer
 		//   ├─ group-a
 		//   │   └─ rect-a
@@ -78,9 +78,9 @@ describe("findLowestCommonAncestor", () => {
 		);
 	});
 
-	// ─── 片方が LCA 自身 ───────────────────────────────────────────────
+	// ─── one side is the LCA itself ───────────────────────────────────────────────
 
-	it("グループとその内部の要素の LCA はそのグループの親", () => {
+	it("the LCA of a group and an element inside it is that group's parent", () => {
 		// group-outer
 		//   └─ group-1
 		//       └─ rect-1
@@ -89,15 +89,15 @@ describe("findLowestCommonAncestor", () => {
 			"group-1": group("group-1", ["rect-1"], "group-outer"),
 			"rect-1": rect("rect-1", "group-1"),
 		};
-		// group-1 と rect-1（group-1の子）の LCA は group-outer
+		// the LCA of group-1 and rect-1 (a child of group-1) is group-outer
 		expect(findLowestCommonAncestor(["group-1", "rect-1"], objects)).toBe(
 			"group-outer",
 		);
 	});
 
-	// ─── 3つ以上の要素 ────────────────────────────────────────────────
+	// ─── three or more elements ────────────────────────────────────────────────
 
-	it("3つの要素の LCA を返す", () => {
+	it("returns the LCA of three elements", () => {
 		// group-1
 		//   ├─ rect-1
 		//   ├─ rect-2
@@ -113,7 +113,7 @@ describe("findLowestCommonAncestor", () => {
 		).toBe("group-1");
 	});
 
-	it("3階層ネストで最深の共通祖先を返す", () => {
+	it("returns the deepest common ancestor across three levels of nesting", () => {
 		// group-root
 		//   └─ group-mid
 		//       ├─ rect-1
@@ -124,13 +124,13 @@ describe("findLowestCommonAncestor", () => {
 			"rect-1": rect("rect-1", "group-mid"),
 			"rect-2": rect("rect-2", "group-mid"),
 		};
-		// LCA は group-root ではなく group-mid（より深い共通祖先）
+		// the LCA is group-mid, not group-root (the deeper common ancestor)
 		expect(findLowestCommonAncestor(["rect-1", "rect-2"], objects)).toBe(
 			"group-mid",
 		);
 	});
 
-	it("片方がルートレベル、もう片方がグループ内だと共通祖先なし", () => {
+	it("no common ancestor when one is root-level and the other is inside a group", () => {
 		const objects: Objects = {
 			"group-1": group("group-1", ["rect-1"]),
 			"rect-1": rect("rect-1", "group-1"),

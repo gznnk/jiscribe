@@ -24,19 +24,19 @@ const centerOf = (viewport: Viewport) => ({
 });
 
 describe("ZoomOutCommand", () => {
-	it("zoom を一段下の固定段（100% → 75%）へ吸着する", () => {
+	it("snaps zoom to the next fixed step down (100% -> 75%)", () => {
 		const state = makeState({ zoom: 1 });
 		const next = ZoomOutCommand.execute(state);
 		expect(next.viewport.zoom).toBe(0.75);
 	});
 
-	it("ズームイン後にズームアウトすると元の段（100%）へ戻る", () => {
+	it("returns to the original step (100%) after zooming in then out", () => {
 		const zoomedIn = ZoomInCommand.execute(makeState({ zoom: 1 }));
 		const back = ZoomOutCommand.execute(zoomedIn);
 		expect(back.viewport.zoom).toBe(1);
 	});
 
-	it("ズーム後もビューポート中心を維持する", () => {
+	it("keeps the viewport center after zooming", () => {
 		const state = makeState({ minX: 100, minY: 200, zoom: 2 });
 		const before = centerOf(state.viewport);
 		const after = centerOf(ZoomOutCommand.execute(state).viewport);
@@ -44,18 +44,18 @@ describe("ZoomOutCommand", () => {
 		expect(after.y).toBeCloseTo(before.y, 3);
 	});
 
-	it("MIN を下回らない", () => {
+	it("does not go below MIN", () => {
 		const state = makeState({ zoom: ZOOM.MIN });
 		const next = ZoomOutCommand.execute(state);
 		expect(next.viewport.zoom).toBe(ZOOM.MIN);
 	});
 
 	describe("canExecute", () => {
-		it("MIN より大きければ実行可能", () => {
+		it("is executable when greater than MIN", () => {
 			expect(ZoomOutCommand.canExecute(makeState({ zoom: 1 }))).toBe(true);
 		});
 
-		it("MIN に達していたら実行不可", () => {
+		it("is not executable when MIN is reached", () => {
 			expect(ZoomOutCommand.canExecute(makeState({ zoom: ZOOM.MIN }))).toBe(
 				false,
 			);

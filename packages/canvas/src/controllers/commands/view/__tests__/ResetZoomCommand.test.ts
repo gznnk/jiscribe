@@ -22,13 +22,13 @@ const centerOf = (viewport: Viewport) => ({
 });
 
 describe("ResetZoomCommand", () => {
-	it("zoom を 100%（1）に戻す", () => {
+	it("resets zoom back to 100% (1)", () => {
 		const state = makeState({ zoom: 3.5 });
 		const next = ResetZoomCommand.execute(state);
 		expect(next.viewport.zoom).toBe(1);
 	});
 
-	it("リセット後もビューポート中心を維持する", () => {
+	it("keeps the viewport center after reset", () => {
 		const state = makeState({ minX: 100, minY: 200, zoom: 3.5 });
 		const before = centerOf(state.viewport);
 		const after = centerOf(ResetZoomCommand.execute(state).viewport);
@@ -36,7 +36,7 @@ describe("ResetZoomCommand", () => {
 		expect(after.y).toBeCloseTo(before.y, 3);
 	});
 
-	it("既に 100% でも中心保持の no-op として処理する", () => {
+	it("treats an already 100% state as a center-preserving no-op", () => {
 		const state = makeState({ minX: 100, minY: 200, zoom: 1 });
 		const next = ResetZoomCommand.execute(state);
 		expect(next.viewport.zoom).toBe(1);
@@ -44,7 +44,7 @@ describe("ResetZoomCommand", () => {
 		expect(next.viewport.minY).toBe(200);
 	});
 
-	it("canExecute は常に true", () => {
+	it("canExecute is always true", () => {
 		expect(ResetZoomCommand.canExecute(makeState({ zoom: 1 }))).toBe(true);
 		expect(ResetZoomCommand.canExecute(makeState({ zoom: 5 }))).toBe(true);
 	});

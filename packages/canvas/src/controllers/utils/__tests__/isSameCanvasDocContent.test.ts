@@ -3,8 +3,8 @@ import { describe, it, expect } from "vitest";
 import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
 import { isSameCanvasDocContent } from "../isSameCanvasDocContent";
 
-// 実際の入力経路（ファイル → JSON.parse）に合わせ、JSON 文字列から doc を生成する。
-// これによりテストごとにキーの挿入順を厳密に制御できる。
+// Match the real input path (file -> JSON.parse) by building the doc from a JSON string.
+// This lets each test tightly control the key insertion order.
 const parseDoc = (json: string): CanvasDoc => JSON.parse(json) as CanvasDoc;
 
 const rectJson = `{
@@ -17,13 +17,13 @@ const rectJson = `{
 }`;
 
 describe("isSameCanvasDocContent", () => {
-	it("同一内容の doc（別インスタンス）は同一と判定する", () => {
+	it("docs with identical content (different instances) are judged the same", () => {
 		const docA = parseDoc(`{ "version": 1, "root": [${rectJson}] }`);
 		const docB = parseDoc(`{ "version": 1, "root": [${rectJson}] }`);
 		expect(isSameCanvasDocContent(docA, docB)).toBe(true);
 	});
 
-	it("オブジェクトのプロパティ値が異なれば異なると判定する", () => {
+	it("judged different when an object's property value differs", () => {
 		const docA = parseDoc(`{ "version": 1, "root": [${rectJson}] }`);
 		const docB = parseDoc(
 			`{ "version": 1, "root": [${rectJson.replace('"x": 10', '"x": 11')}] }`,
@@ -31,13 +31,13 @@ describe("isSameCanvasDocContent", () => {
 		expect(isSameCanvasDocContent(docA, docB)).toBe(false);
 	});
 
-	it("root の要素数が異なれば異なると判定する", () => {
+	it("judged different when the number of root elements differs", () => {
 		const docA = parseDoc(`{ "version": 1, "root": [${rectJson}] }`);
 		const docB = parseDoc(`{ "version": 1, "root": [] }`);
 		expect(isSameCanvasDocContent(docA, docB)).toBe(false);
 	});
 
-	it("$schema の有無・違いは比較に影響しない", () => {
+	it("the presence or difference of $schema does not affect the comparison", () => {
 		const docA = parseDoc(
 			`{ "$schema": "./jiscribe.schema.json", "version": 1, "root": [] }`,
 		);
@@ -45,15 +45,15 @@ describe("isSameCanvasDocContent", () => {
 		expect(isSameCanvasDocContent(docA, docB)).toBe(true);
 	});
 
-	it("トップレベルのキー順の違いは比較に影響しない", () => {
+	it("a difference in top-level key order does not affect the comparison", () => {
 		const docA = parseDoc(`{ "root": [${rectJson}], "version": 1 }`);
 		const docB = parseDoc(`{ "version": 1, "root": [${rectJson}] }`);
 		expect(isSameCanvasDocContent(docA, docB)).toBe(true);
 	});
 
-	it("オブジェクト内のキー順が異なると、内容が同じでも異なると判定する（既知の false negative）", () => {
-		// この振る舞いは仕様: 呼び出し側は「同一ならスキップ」の最適化にのみ
-		// 使うため、false negative は安全側（従来どおり処理が走る）に倒れる。
+	it("differing key order within an object is judged different even if content matches (known false negative)", () => {
+		// This behavior is by design: callers use it only for a "skip if identical" optimization,
+		// so a false negative fails safe (processing runs as before).
 		const docA = parseDoc(
 			`{ "version": 1, "root": [{ "id": "rect-1", "type": "rect" }] }`,
 		);

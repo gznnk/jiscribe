@@ -9,17 +9,17 @@ const orthogonal = (pts: Point[]): boolean =>
 	);
 
 describe("directionsFace", () => {
-	it("左右が正面に向かい合うと x:true", () => {
+	it("x:true when left and right face each other head-on", () => {
 		expect(directionsFace("right", "left")).toEqual({ x: true, y: false });
 		expect(directionsFace("left", "right")).toEqual({ x: true, y: false });
 	});
 
-	it("上下が正面に向かい合うと y:true", () => {
+	it("y:true when up and down face each other head-on", () => {
 		expect(directionsFace("up", "down")).toEqual({ x: false, y: true });
 		expect(directionsFace("down", "up")).toEqual({ x: false, y: true });
 	});
 
-	it("噛み合わない向きはどちらも false", () => {
+	it("directions that don't mesh are both false", () => {
 		expect(directionsFace("right", "up")).toEqual({ x: false, y: false });
 		expect(directionsFace("right", "right")).toEqual({ x: false, y: false });
 	});
@@ -29,11 +29,11 @@ describe("elbowCandidates", () => {
 	const a: Point = { x: 0, y: 0 };
 	const b: Point = { x: 100, y: 40 };
 
-	it("free 端点では両スタブ端と中点の x/y チャネルを列挙する", () => {
-		// box=null なので xs={0,100,50}, ys={0,40,20} → 各3本＝計6候補
+	it("with free endpoints, enumerates the x/y channels of both stub ends and the midpoint", () => {
+		// box=null, so xs={0,100,50}, ys={0,40,20} → 3 each = 6 candidates total
 		const candidates = elbowCandidates(a, b, null, null, 20, false, false);
 		expect(candidates).toHaveLength(6);
-		// すべて [a, 角, 角, b] の4点で水平/垂直のみ
+		// all are 4-point [a, corner, corner, b] paths with only horizontal/vertical segments
 		for (const { elbow } of candidates) {
 			expect(elbow).toHaveLength(4);
 			expect(elbow[0]).toEqual(a);
@@ -42,9 +42,9 @@ describe("elbowCandidates", () => {
 		}
 	});
 
-	it("facingX のとき midX で折れる候補に symmetric が立つ", () => {
+	it("when facingX, the candidate that bends at midX has symmetric set", () => {
 		const candidates = elbowCandidates(a, b, null, null, 20, true, false);
-		// midX = 50 の縦チャネル候補が symmetric
+		// the vertical-channel candidate at midX = 50 is symmetric
 		const symmetric = candidates.filter((c) => c.symmetric);
 		expect(symmetric).toHaveLength(1);
 		expect(symmetric[0].elbow).toEqual([
@@ -55,8 +55,8 @@ describe("elbowCandidates", () => {
 		]);
 	});
 
-	it("box があると外周クリアランス（辺 ± margin）チャネルが候補に加わる", () => {
-		// 同条件で box 付きの方が候補数が増える（回り込みチャネルが入る）
+	it("with a box, the outer-clearance channels (edge ± margin) are added to the candidates", () => {
+		// under the same conditions, the version with a box has more candidates (detour channels are included)
 		const sourceBox = {
 			left: -50,
 			right: 50,

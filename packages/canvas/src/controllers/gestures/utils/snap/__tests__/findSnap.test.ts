@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import type { SnapCandidate, SnapCandidates } from "../../../../CanvasTypes";
 import { buildSnapFeedback, findSnap, SNAP_THRESHOLD_PX } from "../findSnap";
 
-/** ターゲット候補（スナップ先）を作るヘルパー。 */
+/** Helper that builds a target candidate (a snap target). */
 const xCandidate = (
 	coordinate: number,
 	edge: SnapCandidate["edge"],
@@ -16,63 +16,63 @@ const xCandidate = (
 	perpendicularMax: 100,
 });
 
-describe("findSnap - 中央スナップ", () => {
-	const threshold = SNAP_THRESHOLD_PX; // zoom=1 相当
+describe("findSnap - center snap", () => {
+	const threshold = SNAP_THRESHOLD_PX; // equivalent to zoom=1
 
-	it("中央↔中央: ドラッグ中心が他オブジェクトの中央線へ吸着する", () => {
+	it("center↔center: the drag center snaps to another object's center line", () => {
 		const candidates: SnapCandidates = {
 			x: [xCandidate(100, "hCenter")],
 			y: [],
 		};
-		// ドラッグ中の BBox: left=86, right=110 → centerX=98（候補100まで距離2）
+		// BBox being dragged: left=86, right=110 → centerX=98 (distance 2 to candidate 100)
 		const result = findSnap(candidates, threshold, [86, 98, 110], []);
 
 		expect(result.delta.x).toBe(2); // 98 → 100
 		expect(result.xResult?.snapCoordinate).toBe(100);
 	});
 
-	it("中央↔エッジ: ドラッグ中心が他オブジェクトのエッジへ吸着する", () => {
+	it("center↔edge: the drag center snaps to another object's edge", () => {
 		const candidates: SnapCandidates = {
 			x: [xCandidate(50, "left")],
 			y: [],
 		};
-		// centerX=52 → 候補50まで距離2
+		// centerX=52 → distance 2 to candidate 50
 		const result = findSnap(candidates, threshold, [40, 52, 64], []);
 
 		expect(result.delta.x).toBe(-2); // 52 → 50
 	});
 
-	it("エッジ↔中央: ドラッグエッジが他オブジェクトの中央線へ吸着する", () => {
+	it("edge↔center: the drag edge snaps to another object's center line", () => {
 		const candidates: SnapCandidates = {
 			x: [xCandidate(200, "hCenter")],
 			y: [],
 		};
-		// left=203 → 候補200まで距離3、centerX=233 / right=263 は範囲外
+		// left=203 → distance 3 to candidate 200; centerX=233 / right=263 are out of range
 		const result = findSnap(candidates, threshold, [203, 233, 263], []);
 
 		expect(result.delta.x).toBe(-3); // 203 → 200
 	});
 
-	it("最近接が優先される（中央より近いエッジがあればエッジを選ぶ）", () => {
-		// findSnap は coordinate 昇順ソート済みの候補を前提とする（calcSnapCandidates が保証）
+	it("the nearest wins (picks an edge if it is closer than the center)", () => {
+		// findSnap assumes candidates already sorted ascending by coordinate (guaranteed by calcSnapCandidates)
 		const candidates: SnapCandidates = {
 			x: [xCandidate(91, "left"), xCandidate(100, "hCenter")],
 			y: [],
 		};
-		// left=90 → 候補91まで距離1、centerX=98 → 候補100まで距離2
+		// left=90 → distance 1 to candidate 91; centerX=98 → distance 2 to candidate 100
 		const result = findSnap(candidates, threshold, [90, 98, 106], []);
 
-		expect(result.xResult?.snapCoordinate).toBe(91); // より近いエッジ
+		expect(result.xResult?.snapCoordinate).toBe(91); // the closer edge
 		expect(result.delta.x).toBe(1);
 	});
 
-	it("buildSnapFeedback: 中央一致時に中央線のガイドを生成する", () => {
+	it("buildSnapFeedback: generates a center-line guide when the centers align", () => {
 		const candidates: SnapCandidates = {
 			x: [xCandidate(100, "hCenter")],
 			y: [],
 		};
 		const result = findSnap(candidates, threshold, [86, 98, 110], []);
-		// スナップ適用後の BBox（centerX=100 になる）
+		// BBox after the snap is applied (centerX becomes 100)
 		const actualBBox = { left: 88, right: 112, top: 0, bottom: 24 };
 
 		const feedback = buildSnapFeedback(
@@ -88,11 +88,11 @@ describe("findSnap - 中央スナップ", () => {
 	});
 });
 
-describe("findSnap - 除外集合（excludeIds）", () => {
+describe("findSnap - exclusion set (excludeIds)", () => {
 	const threshold = SNAP_THRESHOLD_PX;
 
-	it("excludeIds の objectId はスナップ対象から除外される", () => {
-		// 最近接(101)はドラッグ中の自身なので除外し、次に近い 110 へ吸着する
+	it("objectIds in excludeIds are excluded from snapping", () => {
+		// The nearest (101) is the dragged object itself, so exclude it and snap to the next nearest, 110
 		const candidates: SnapCandidates = {
 			x: [xCandidate(101, "left", "self"), xCandidate(110, "left", "other")],
 			y: [],
@@ -109,7 +109,7 @@ describe("findSnap - 除外集合（excludeIds）", () => {
 		expect(result.delta.x).toBe(7);
 	});
 
-	it("除外により threshold 内に候補が無くなればスナップしない", () => {
+	it("does not snap when the exclusion leaves no candidate within the threshold", () => {
 		const candidates: SnapCandidates = {
 			x: [xCandidate(101, "left", "self")],
 			y: [],
@@ -126,7 +126,7 @@ describe("findSnap - 除外集合（excludeIds）", () => {
 		expect(result.delta.x).toBe(0);
 	});
 
-	it("buildSnapFeedback も excludeIds の候補をガイドから除外する", () => {
+	it("buildSnapFeedback also excludes excludeIds candidates from the guides", () => {
 		const candidates: SnapCandidates = {
 			x: [xCandidate(100, "left", "self"), xCandidate(100, "left", "other")],
 			y: [],
@@ -153,40 +153,40 @@ describe("findSnap - 除外集合（excludeIds）", () => {
 	});
 });
 
-describe("findSnap - 二分探索（多数候補・タイブレーク）", () => {
+describe("findSnap - binary search (many candidates, tie-breaking)", () => {
 	const threshold = SNAP_THRESHOLD_PX;
 
-	it("多数のソート済み候補から最近接を選ぶ", () => {
+	it("picks the nearest from many sorted candidates", () => {
 		const coords = [0, 50, 100, 150, 200, 250, 300, 350, 400];
 		const candidates: SnapCandidates = {
 			x: coords.map((c) => xCandidate(c, "left", `obj-${c}`)),
 			y: [],
 		};
-		// 203 に最も近いのは 200（距離3）
+		// The nearest to 203 is 200 (distance 3)
 		const result = findSnap(candidates, threshold, [203], []);
 
 		expect(result.xResult?.snapCoordinate).toBe(200);
 		expect(result.delta.x).toBe(-3);
 	});
 
-	it("同距離なら座標の小さい候補を優先する（線形版のタイブレーク維持）", () => {
+	it("prefers the smaller coordinate on a tie (preserving the linear version's tie-break)", () => {
 		const candidates: SnapCandidates = {
 			x: [xCandidate(98, "left"), xCandidate(102, "right")],
 			y: [],
 		};
-		// 100 の左右に等距離(2)の候補。小さい 98 を選ぶ
+		// Candidates equidistant (2) on both sides of 100; pick the smaller, 98
 		const result = findSnap(candidates, threshold, [100], []);
 
 		expect(result.xResult?.snapCoordinate).toBe(98);
 		expect(result.delta.x).toBe(-2);
 	});
 
-	it("threshold 丁度（=）は吸着しない（strict less）", () => {
+	it("does not snap exactly at the threshold (= is strict less)", () => {
 		const candidates: SnapCandidates = {
 			x: [xCandidate(100, "left")],
 			y: [],
 		};
-		// 距離が threshold と同値なら吸着しない
+		// Does not snap when the distance equals the threshold
 		const result = findSnap(candidates, threshold, [100 + threshold], []);
 
 		expect(result.xResult).toBeNull();

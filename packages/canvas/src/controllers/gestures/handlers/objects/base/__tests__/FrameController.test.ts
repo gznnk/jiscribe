@@ -47,7 +47,7 @@ const makeGroup = (overrides?: Partial<GroupState>): GroupState =>
 const behavior = createFrameBehavior<FrameState>();
 
 describe("createFrameBehavior().moveByDelta", () => {
-	it("cx/cy を delta だけ移動する", () => {
+	it("moves cx/cy by delta", () => {
 		const result = behavior.moveByDelta(makeFrame({ cx: 50, cy: 50 }), {
 			x: 10,
 			y: -5,
@@ -56,14 +56,14 @@ describe("createFrameBehavior().moveByDelta", () => {
 		expect(result.cy).toBe(45);
 	});
 
-	it("元の state を破壊しない", () => {
+	it("does not mutate the original state", () => {
 		const src = makeFrame({ cx: 0, cy: 0 });
 		behavior.moveByDelta(src, { x: 5, y: 5 });
 		expect(src.cx).toBe(0);
 		expect(src.cy).toBe(0);
 	});
 
-	it("他フィールドを保持する", () => {
+	it("preserves other fields", () => {
 		const result = behavior.moveByDelta(makeFrame({ width: 33 }), {
 			x: 1,
 			y: 1,
@@ -71,9 +71,9 @@ describe("createFrameBehavior().moveByDelta", () => {
 		expect(result.width).toBe(33);
 	});
 
-	// 図形固有の pass-through フィールド（svg の svgText 等）が move で失われない
-	// ことを明示的に固定する。統合前 SvgController.test.ts が持っていた保証の引き継ぎ。
-	it("図形固有フィールド（svgText / text）を保持する", () => {
+	// Explicitly pin that shape-specific pass-through fields (such as svg's svgText) are
+	// not lost by move. Carries over the guarantee that the pre-merge SvgController.test.ts held.
+	it("preserves shape-specific fields (svgText / text)", () => {
 		const src = makeFrame({} as Partial<FrameState>);
 		const withFields = {
 			...src,
@@ -89,8 +89,8 @@ describe("createFrameBehavior().moveByDelta", () => {
 	});
 });
 
-describe("createFrameBehavior() group 変形の委譲", () => {
-	it("transformByGroup は transformFrameByGroup に委譲する", () => {
+describe("createFrameBehavior() delegation of group transforms", () => {
+	it("transformByGroup delegates to transformFrameByGroup", () => {
 		const frame = makeFrame();
 		const start = makeGroup({ width: 200 });
 		const end = makeGroup({ width: 400 });
@@ -99,7 +99,7 @@ describe("createFrameBehavior() group 変形の委譲", () => {
 		);
 	});
 
-	it("rotateByGroup は rotateFrameByGroup に委譲する", () => {
+	it("rotateByGroup delegates to rotateFrameByGroup", () => {
 		const frame = makeFrame();
 		const group = makeGroup({ rotation: 0 });
 		expect(behavior.rotateByGroup(frame, group, 90)).toEqual(

@@ -19,30 +19,31 @@ const createState = (): CanvasControllerState =>
 	createTestState(twoRectsDoc, { selectedIds: ["rect-1"] });
 
 /**
- * 各イベント源が「履歴を記録するか」を 1 箇所で俯瞰するテスト。
- * recordHistoryIfNeeded を通る経路（COMMAND/PASTE/MENU/END_TEXT_EDIT）が
- * commitVersion 変化時にだけ past を積むことを確認する。
- * GESTURE も canvasReducer 上は COMMAND と同一の recordHistoryIfNeeded 配管を
- * 共有するため、ここでは個別のジェスチャ構築はせず代表経路で代替する。
+ * A test that surveys in one place whether each event source "records history".
+ * Verifies that the paths going through recordHistoryIfNeeded
+ * (COMMAND/PASTE/MENU/END_TEXT_EDIT) only push onto past when commitVersion changes.
+ * GESTURE also shares the same recordHistoryIfNeeded plumbing as COMMAND in
+ * canvasReducer, so here we do not build individual gestures and instead use a
+ * representative path as a substitute.
  */
-describe("canvasReducer（結合）", () => {
-	describe("コミット源ごとの履歴記録", () => {
-		it("COMMAND（削除）は履歴を記録する", () => {
+describe("canvasReducer (integration)", () => {
+	describe("history recording per commit source", () => {
+		it("COMMAND (delete) records history", () => {
 			const state = createState();
 			const after = runCommands(state, "delete");
 			expect(after.history.past).toHaveLength(1);
 		});
 
-		it("canExecute=false のコマンド（空 past での undo）は記録しない", () => {
+		it("a command with canExecute=false (undo with empty past) does not record", () => {
 			const state = createState();
 			const after = runCommands(state, "undo");
 			expect(after.history.past).toHaveLength(0);
-			expect(after).toBe(state); // 状態は不変
+			expect(after).toBe(state); // state is unchanged
 		});
 
-		it("PASTE は履歴を記録する", () => {
+		it("PASTE records history", () => {
 			const state = createState();
-			// 実 state のオブジェクトを使ってバリデータを通る ClipboardData を組む
+			// Build ClipboardData that passes validation using the real state's objects
 			const clipboard: ClipboardData = {
 				__type: "jiscribe-canvas-clipboard",
 				version: 1,
@@ -55,7 +56,7 @@ describe("canvasReducer（結合）", () => {
 			expect(after.history.past).toHaveLength(1);
 		});
 
-		it("MENU_PROPERTY_UPDATE は commit:true で記録し commit:false（プレビュー）では記録しない", () => {
+		it("MENU_PROPERTY_UPDATE records with commit:true and does not record with commit:false (preview)", () => {
 			const state = createState();
 
 			const preview = canvasReducer(state, {
@@ -75,7 +76,7 @@ describe("canvasReducer（結合）", () => {
 			expect(committed.history.past).toHaveLength(1);
 		});
 
-		it("END_TEXT_EDIT は確定でテキストが変わったとき記録する", () => {
+		it("END_TEXT_EDIT records when the text changes on commit", () => {
 			const state = createTestState(twoRectsDoc, {
 				selectedIds: ["rect-1"],
 				textEditState: { objectId: "rect-1", text: "hello" },
@@ -88,7 +89,7 @@ describe("canvasReducer（結合）", () => {
 			expect(after.textEditState).toBeNull();
 		});
 
-		it("END_TEXT_EDIT のキャンセルは記録せず textEditState だけクリアする", () => {
+		it("cancelling END_TEXT_EDIT does not record and only clears textEditState", () => {
 			const state = createTestState(twoRectsDoc, {
 				selectedIds: ["rect-1"],
 				textEditState: { objectId: "rect-1", text: "hello" },
@@ -101,16 +102,16 @@ describe("canvasReducer（結合）", () => {
 			expect(after.textEditState).toBeNull();
 		});
 
-		it("END_TEXT_EDIT 確定でもテキストが変わっていなければ記録しない", () => {
+		it("END_TEXT_EDIT does not record on commit if the text has not changed", () => {
 			let state = createTestState(twoRectsDoc, {
 				selectedIds: ["rect-1"],
 				textEditState: { objectId: "rect-1", text: "hello" },
 			});
-			// 1 回目: テキストが変わるので記録される
+			// First time: the text changes, so it is recorded
 			state = canvasReducer(state, { type: "END_TEXT_EDIT", commit: true });
 			expect(state.history.past).toHaveLength(1);
 
-			// 同じテキストでもう一度確定 → 差分なしで commitVersion が上がらず記録されない
+			// Commit again with the same text → no diff, so commitVersion does not increase and nothing is recorded
 			state = {
 				...state,
 				textEditState: { objectId: "rect-1", text: "hello" },
@@ -120,9 +121,9 @@ describe("canvasReducer（結合）", () => {
 			expect(state.textEditState).toBeNull();
 		});
 
-		it("MENU_PROPERTY_UPDATE は preview → commit と続けても記録は 1 回だけ", () => {
+		it("MENU_PROPERTY_UPDATE records only once even when preview → commit follow in sequence", () => {
 			let state = createState();
-			// プレビュー（commit:false）は記録しない
+			// Preview (commit:false) does not record
 			state = canvasReducer(state, {
 				type: "MENU_PROPERTY_UPDATE",
 				property: "fill",
@@ -131,7 +132,7 @@ describe("canvasReducer（結合）", () => {
 			});
 			expect(state.history.past).toHaveLength(0);
 
-			// 確定（commit:true）で初めて 1 エントリ積まれる（プレビュー分は二重に積まれない）
+			// Only on commit (commit:true) is one entry pushed (the preview is not double-counted)
 			state = canvasReducer(state, {
 				type: "MENU_PROPERTY_UPDATE",
 				property: "fill",

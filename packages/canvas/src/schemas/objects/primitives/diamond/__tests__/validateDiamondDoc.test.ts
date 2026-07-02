@@ -24,16 +24,16 @@ const validDiamond = {
 };
 
 describe("validateDiamondDoc", () => {
-	it("有効な Diamond はエラーなし", () => {
+	it("yields no error for a valid Diamond", () => {
 		expect(validateDiamondDoc(validDiamond, "root")).toEqual([]);
 	});
 
-	it.each(["x", "y"])("%s が数値でない場合はエラー", (key) => {
+	it.each(["x", "y"])("is an error when %s is not a number", (key) => {
 		const errors = validateDiamondDoc({ ...validDiamond, [key]: "0" }, "root");
 		expect(errors.some((e) => e.path === `root.${key}`)).toBe(true);
 	});
 
-	it.each(["width", "height"])("%s が数値でない場合はエラー", (key) => {
+	it.each(["width", "height"])("is an error when %s is not a number", (key) => {
 		const errors = validateDiamondDoc(
 			{ ...validDiamond, [key]: "10px" },
 			"root",
@@ -41,22 +41,25 @@ describe("validateDiamondDoc", () => {
 		expect(errors.some((e) => e.path === `root.${key}`)).toBe(true);
 	});
 
-	it.each(["width", "height"])("%s が負数はエラー（>= 0）", (key) => {
-		const errors = validateDiamondDoc({ ...validDiamond, [key]: -1 }, "root");
-		expect(
-			errors.some(
-				(e) => e.path === `root.${key}` && e.message.includes(">= 0"),
-			),
-		).toBe(true);
-	});
+	it.each(["width", "height"])(
+		"is an error when %s is negative (>= 0)",
+		(key) => {
+			const errors = validateDiamondDoc({ ...validDiamond, [key]: -1 }, "root");
+			expect(
+				errors.some(
+					(e) => e.path === `root.${key}` && e.message.includes(">= 0"),
+				),
+			).toBe(true);
+		},
+	);
 
-	it("x / y は負数でも許容（座標に下限なし）", () => {
+	it("allows negative x / y (coordinates have no lower bound)", () => {
 		expect(
 			validateDiamondDoc({ ...validDiamond, x: -10, y: -20 }, "root"),
 		).toEqual([]);
 	});
 
-	it("textType が不正な値はエラー", () => {
+	it("is an error when textType has an invalid value", () => {
 		const errors = validateDiamondDoc(
 			{ ...validDiamond, textType: "html" },
 			"root",
@@ -64,13 +67,13 @@ describe("validateDiamondDoc", () => {
 		expect(errors.some((e) => e.path === "root.textType")).toBe(true);
 	});
 
-	it("オプション項目がない場合はエラーなし", () => {
+	it("yields no error when optional fields are absent", () => {
 		const minimal = { x: 0, y: 0, width: 10, height: 10 };
 		expect(validateDiamondDoc(minimal, "root")).toEqual([]);
 	});
 
 	it.each(["stroke", "fill", "fontColor", "fontFamily", "fontWeight"])(
-		"%s に CSS breakout 文字列はエラー（beyondSchema）",
+		"is an error (beyondSchema) when %s contains a CSS breakout string",
 		(key) => {
 			const errors = validateDiamondDoc(
 				{ ...validDiamond, [key]: "a;b" },
@@ -82,7 +85,7 @@ describe("validateDiamondDoc", () => {
 		},
 	);
 
-	it('色の sentinel "auto" は許容される', () => {
+	it('accepts the color sentinel "auto"', () => {
 		expect(
 			validateDiamondDoc(
 				{ ...validDiamond, stroke: "auto", fill: "auto", fontColor: "auto" },

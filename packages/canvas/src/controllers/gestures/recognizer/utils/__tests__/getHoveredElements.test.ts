@@ -30,7 +30,7 @@ let mockElementsFromPoint: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
 	mockElementsFromPoint = vi.fn().mockReturnValue([]);
-	// document はノード環境に存在しないため globalThis に差し込む
+	// document does not exist in the node environment, so inject it into globalThis
 	vi.stubGlobal("document", { elementsFromPoint: mockElementsFromPoint });
 });
 
@@ -39,28 +39,28 @@ afterEach(() => {
 });
 
 describe("getHoveredElements", () => {
-	it("data-kind/data-id を持つ要素を返す", () => {
+	it("returns elements that have data-kind/data-id", () => {
 		const el = makeEl("rect", "obj-1");
 		mockElementsFromPoint.mockReturnValue([el]);
 
 		expect(getHoveredElements(0, 0)).toEqual([{ kind: "rect", id: "obj-1" }]);
 	});
 
-	it("data-kind/data-id を持たない要素はスキップする", () => {
+	it("skips elements that lack data-kind/data-id", () => {
 		const noAttrs = makeEl(undefined, undefined);
 		mockElementsFromPoint.mockReturnValue([noAttrs]);
 
 		expect(getHoveredElements(0, 0)).toEqual([]);
 	});
 
-	it("kind='canvas' の要素はスキップする", () => {
+	it("skips elements with kind='canvas'", () => {
 		const canvasEl = makeEl("canvas", "canvas");
 		mockElementsFromPoint.mockReturnValue([canvasEl]);
 
 		expect(getHoveredElements(0, 0)).toEqual([]);
 	});
 
-	it("同じ id の要素が複数あれば最初の1件のみ返す", () => {
+	it("returns only the first element when multiple share the same id", () => {
 		const el1 = makeEl("rect", "dup");
 		const el2 = makeEl("rect", "dup");
 		mockElementsFromPoint.mockReturnValue([el1, el2]);
@@ -68,14 +68,14 @@ describe("getHoveredElements", () => {
 		expect(getHoveredElements(0, 0)).toHaveLength(1);
 	});
 
-	it("excludeId と一致する id の要素は除外する", () => {
+	it("excludes elements whose id matches excludeId", () => {
 		const el = makeEl("rect", "obj-1");
 		mockElementsFromPoint.mockReturnValue([el]);
 
 		expect(getHoveredElements(0, 0, "obj-1")).toEqual([]);
 	});
 
-	it("rootElement を渡すとキャンバス外の要素を除外する", () => {
+	it("excludes elements outside the canvas when rootElement is passed", () => {
 		const inside = makeEl("rect", "inside");
 		const outside = makeEl("rect", "outside");
 		const root = makeRoot(inside);
@@ -86,7 +86,7 @@ describe("getHoveredElements", () => {
 		]);
 	});
 
-	it("rootElement が null のとき全要素を対象にする", () => {
+	it("targets all elements when rootElement is null", () => {
 		const el = makeEl("rect", "obj-1");
 		mockElementsFromPoint.mockReturnValue([el]);
 

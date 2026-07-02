@@ -14,14 +14,14 @@ beforeAll(() => {
 	initializeCommands();
 });
 
-/** rect-1 と rect-2 の「間」にコネクターがいる z-order の選択状態。 */
+/** A selection whose z-order has the connector "between" rect-1 and rect-2. */
 const betweenState = (): CanvasControllerState =>
 	createCommandState(twoRectsWithConnectorDoc, {
 		selectedIds: ["rect-1", "rect-2"],
 		rootIds: ["rect-1", "conn-1", "rect-2"],
 	});
 
-/** rootIds の末尾（複製/ペーストで追加された分）の型列。 */
+/** The type sequence at the tail of rootIds (the items added by duplicate/paste). */
 const appendedTypes = (
 	after: CanvasControllerState,
 	originalLen: number,
@@ -29,22 +29,22 @@ const appendedTypes = (
 	after.rootIds.slice(originalLen).map((id) => after.objects[id]?.type ?? "");
 
 /**
- * コピー/複製では、コピー集合の相対的な重なり順を保ったまま前面へ追加される。
- * 「2図形の間にいるコネクター」が、複製後も間に留まることを検証する
- * （単純連結だとコネクターが前面に飛ぶ不具合の回帰防止）。
+ * Copy/duplicate adds items to the front while preserving the copy set's relative stack order.
+ * Verifies that a "connector sitting between two shapes" stays between them after duplication
+ * (regression guard against the bug where a naive concat pushes the connector to the front).
  */
-describe("コピー/複製でコネクターの相対 z 順を保つ", () => {
-	it("複製（duplicate）: コネクターが2図形の間に保たれる", () => {
+describe("preserves connectors' relative z order on copy/duplicate", () => {
+	it("duplicate: connector is kept between the two shapes", () => {
 		const after = runCommand(betweenState(), "duplicate");
 		expect(after.rootIds).toHaveLength(6);
 		expect(appendedTypes(after, 3)).toEqual(["rect", "connector", "rect"]);
 	});
 
-	it("コピー→ペースト: コネクターが2図形の間に保たれる", () => {
+	it("copy → paste: connector is kept between the two shapes", () => {
 		const state = betweenState();
 		const clipboard = CopyCommand.execute(state).internalClipboard;
 		expect(clipboard).not.toBeNull();
-		// クリップボードは z-order 済み（コネクター混在）
+		// clipboard is already z-ordered (with the connector interleaved)
 		expect(clipboard?.rootIds).toEqual(["rect-1", "conn-1", "rect-2"]);
 
 		const after = handlePaste(state, clipboard!);
@@ -54,12 +54,12 @@ describe("コピー/複製でコネクターの相対 z 順を保つ", () => {
 });
 
 /**
- * selectedIds を非空にするペーストは、相互排他のコネクター/頂点選択を
- * 解除しなければならない（#71 の回帰防止）。残ると SwapArrows / Delete などが
- * 画面に出ていない旧コネクター/旧頂点に作用する。
+ * A paste that makes selectedIds non-empty must clear the mutually-exclusive
+ * connector/vertex selection (regression guard for #71). Otherwise SwapArrows / Delete
+ * and the like would act on an old connector/vertex that is no longer on screen.
  */
-describe("ペーストで選択の相互排他を維持する", () => {
-	it("コネクター選択中にペーストすると selectedConnectorId が null になる", () => {
+describe("maintains selection mutual exclusivity on paste", () => {
+	it("pasting while a connector is selected sets selectedConnectorId to null", () => {
 		const state = createCommandState(twoRectsWithConnectorDoc, {
 			selectedIds: [],
 			selectedConnectorId: "conn-1",
@@ -78,7 +78,7 @@ describe("ペーストで選択の相互排他を維持する", () => {
 		expect(after.selectedIds.length).toBeGreaterThan(0);
 	});
 
-	it("頂点選択中にペーストすると selectedVertex が null になる", () => {
+	it("pasting while a vertex is selected sets selectedVertex to null", () => {
 		const state = createCommandState(twoRectsWithConnectorDoc, {
 			selectedIds: [],
 			selectedVertex: { objectId: "rect-1", vertexIndex: 0 },

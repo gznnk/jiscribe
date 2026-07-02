@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import { insetPolylineEnds } from "../insetPolylineEnds";
 
 describe("insetPolylineEnds", () => {
-	it("inset が 0 のときは元の点列をそのまま返す（コピー）", () => {
+	it("returns the original point sequence as-is (a copy) when inset is 0", () => {
 		const points = [
 			{ x: 0, y: 0 },
 			{ x: 100, y: 0 },
@@ -14,12 +14,12 @@ describe("insetPolylineEnds", () => {
 		expect(result[0]).not.toBe(points[0]);
 	});
 
-	it("点が1つ以下のときはそのまま返す", () => {
+	it("returns as-is when there is one or zero points", () => {
 		expect(insetPolylineEnds([{ x: 1, y: 2 }], 5, 5)).toEqual([{ x: 1, y: 2 }]);
 		expect(insetPolylineEnds([], 5, 5)).toEqual([]);
 	});
 
-	it("startInset だけ先頭点を2番目の点へ向けて移動する", () => {
+	it("startInset moves only the first point toward the second point", () => {
 		const result = insetPolylineEnds(
 			[
 				{ x: 0, y: 0 },
@@ -32,7 +32,7 @@ describe("insetPolylineEnds", () => {
 		expect(result[1]).toEqual({ x: 100, y: 0 });
 	});
 
-	it("endInset だけ末尾点を末尾から2番目の点へ向けて移動する", () => {
+	it("endInset moves only the last point toward the second-to-last point", () => {
 		const result = insetPolylineEnds(
 			[
 				{ x: 0, y: 0 },
@@ -45,8 +45,8 @@ describe("insetPolylineEnds", () => {
 		expect(result[1]).toEqual({ x: 82, y: 0 });
 	});
 
-	it("斜め方向にも正しく適用する", () => {
-		// (0,0)-(30,40) は長さ 50。inset 9 → ratio 9/50
+	it("applies correctly in a diagonal direction too", () => {
+		// (0,0)-(30,40) has length 50. inset 9 → ratio 9/50
 		const result = insetPolylineEnds(
 			[
 				{ x: 0, y: 0 },
@@ -60,8 +60,8 @@ describe("insetPolylineEnds", () => {
 		expect(result[1]).toEqual({ x: 30, y: 40 });
 	});
 
-	it("2点で inset 合計がセグメント長を超える場合は比例配分でクランプする", () => {
-		// 長さ 12、両端 inset 9（合計 18 > 12）→ 各 6 にクランプ
+	it("clamps proportionally when the total inset exceeds the segment length for two points", () => {
+		// length 12, inset 9 at both ends (total 18 > 12) → clamped to 6 each
 		const result = insetPolylineEnds(
 			[
 				{ x: 0, y: 0 },
@@ -74,7 +74,7 @@ describe("insetPolylineEnds", () => {
 		expect(result[1].x).toBeCloseTo(6);
 	});
 
-	it("多点ポリラインでは先頭・末尾セグメントのみ短縮し中間点は不変", () => {
+	it("for a multi-point polyline, shortens only the first and last segments, leaving intermediate points unchanged", () => {
 		const result = insetPolylineEnds(
 			[
 				{ x: 0, y: 0 },
@@ -89,8 +89,8 @@ describe("insetPolylineEnds", () => {
 		expect(result[2]).toEqual({ x: 91, y: 0 });
 	});
 
-	it("inset がセグメント長を超える場合でも反転せずセグメント端で止まる（多点）", () => {
-		// 先頭セグメント長 5 < inset 9 → 隣接点で止まる
+	it("stops at the segment end without flipping when inset exceeds the segment length (multi-point)", () => {
+		// first segment length 5 < inset 9 → stops at the adjacent point
 		const result = insetPolylineEnds(
 			[
 				{ x: 0, y: 0 },
@@ -103,7 +103,7 @@ describe("insetPolylineEnds", () => {
 		expect(result[0]).toEqual({ x: 5, y: 0 });
 	});
 
-	it("長さ0のセグメントでは移動しない", () => {
+	it("does not move on a zero-length segment", () => {
 		const result = insetPolylineEnds(
 			[
 				{ x: 5, y: 5 },

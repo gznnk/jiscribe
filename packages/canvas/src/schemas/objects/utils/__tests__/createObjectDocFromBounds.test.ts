@@ -3,25 +3,25 @@ import { beforeAll, describe, it, expect } from "vitest";
 import { initializeObjectRegistry } from "../../../../controllers/setup/initializeObjectRegistry";
 import { createObjectDocFromBounds } from "../createObjectDocFromBounds";
 
-// createObjectDocFromBounds は shapeFactoryRegistry 経由で解決されるため、レジストリを初期化する
+// createObjectDocFromBounds resolves via shapeFactoryRegistry, so initialize the registry
 beforeAll(() => {
 	initializeObjectRegistry();
 });
 
 describe("createObjectDocFromBounds", () => {
 	describe("polyline", () => {
-		it("距離が minSize 未満 → null", () => {
+		it("distance below minSize → null", () => {
 			// (0,0)→(2,2): dist ≈ 2.83 < 5(minSize)
 			expect(createObjectDocFromBounds("polyline", 0, 0, 2, 2)).toBeNull();
 		});
 
-		it("距離がちょうど minSize（= 5）→ null にならない（dist < minSize の厳密な判定）", () => {
-			// (0,0)→(3,4): dist = 5 → 5 < 5 = false → null でない
+		it("distance exactly minSize (= 5) → not null (strict dist < minSize check)", () => {
+			// (0,0)→(3,4): dist = 5 → 5 < 5 = false → not null
 			const doc = createObjectDocFromBounds("polyline", 0, 0, 3, 4);
 			expect(doc).not.toBeNull();
 		});
 
-		it("距離が minSize より大きい → polyline Doc を返す", () => {
+		it("distance greater than minSize → returns a polyline Doc", () => {
 			const doc = createObjectDocFromBounds("polyline", 0, 0, 10, 0);
 			expect(doc).not.toBeNull();
 			expect(doc?.type).toBe("polyline");
@@ -31,14 +31,14 @@ describe("createObjectDocFromBounds", () => {
 			]);
 		});
 
-		it("overrides が適用される", () => {
+		it("applies overrides", () => {
 			const doc = createObjectDocFromBounds("polyline", 0, 0, 10, 0, {
 				stroke: "#ff0000",
 			});
 			expect((doc as { stroke?: string })?.stroke).toBe("#ff0000");
 		});
 
-		it("id は crypto.randomUUID() が返す UUID 形式", () => {
+		it("id is in the UUID format returned by crypto.randomUUID()", () => {
 			const doc = createObjectDocFromBounds("polyline", 0, 0, 10, 0);
 			expect(doc?.id).toMatch(
 				/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
@@ -47,15 +47,15 @@ describe("createObjectDocFromBounds", () => {
 	});
 
 	describe("rect", () => {
-		it("幅が minSize 未満 → null", () => {
+		it("width below minSize → null", () => {
 			expect(createObjectDocFromBounds("rect", 0, 0, 3, 100)).toBeNull();
 		});
 
-		it("高さが minSize 未満 → null", () => {
+		it("height below minSize → null", () => {
 			expect(createObjectDocFromBounds("rect", 0, 0, 100, 3)).toBeNull();
 		});
 
-		it("有効なサイズ → rect Doc を返す", () => {
+		it("valid size → returns a rect Doc", () => {
 			const doc = createObjectDocFromBounds("rect", 10, 20, 60, 80);
 			expect(doc).not.toBeNull();
 			expect(doc?.type).toBe("rect");
@@ -71,7 +71,7 @@ describe("createObjectDocFromBounds", () => {
 			expect(r.height).toBe(60);
 		});
 
-		it("x1 > x2 でも正しく min を使って x を設定する", () => {
+		it("sets x correctly using min even when x1 > x2", () => {
 			const doc = createObjectDocFromBounds("rect", 60, 80, 10, 20);
 			const r = doc as unknown as {
 				x: number;
@@ -85,14 +85,14 @@ describe("createObjectDocFromBounds", () => {
 			expect(r.height).toBe(60);
 		});
 
-		it("overrides は RECT_DOC_DEFAULTS を上書きする", () => {
+		it("overrides take precedence over RECT_DOC_DEFAULTS", () => {
 			const doc = createObjectDocFromBounds("rect", 0, 0, 100, 100, {
 				fill: "blue",
 			});
 			expect((doc as { fill?: string })?.fill).toBe("blue");
 		});
 
-		it("カスタム minSize を指定できる", () => {
+		it("a custom minSize can be specified", () => {
 			// minSize=20 → width=15 < 20 → null
 			expect(
 				createObjectDocFromBounds("rect", 0, 0, 15, 100, {}, 20),
@@ -101,7 +101,7 @@ describe("createObjectDocFromBounds", () => {
 	});
 
 	describe("ellipse", () => {
-		it("有効なサイズ → ellipse Doc を返す", () => {
+		it("valid size → returns an ellipse Doc", () => {
 			const doc = createObjectDocFromBounds("ellipse", 0, 0, 40, 20);
 			expect(doc).not.toBeNull();
 			expect(doc?.type).toBe("ellipse");

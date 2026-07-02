@@ -7,21 +7,21 @@ const makeState = (objects: Record<string, unknown>): CanvasState =>
 	({ objects }) as unknown as CanvasState;
 
 describe("hasSelectedDescendants", () => {
-	it("childIds が空のとき false を返す", () => {
+	it("returns false when childIds is empty", () => {
 		expect(hasSelectedDescendants(makeState({}), [], new Set(["sel"]))).toBe(
 			false,
 		);
 	});
 
-	describe("直接の子", () => {
-		it("直接の子が選択済みのとき true を返す", () => {
+	describe("direct children", () => {
+		it("returns true when a direct child is selected", () => {
 			const state = makeState({ child: { type: "rect" } });
 			expect(hasSelectedDescendants(state, ["child"], new Set(["child"]))).toBe(
 				true,
 			);
 		});
 
-		it("直接の子が選択されていないとき false を返す", () => {
+		it("returns false when no direct child is selected", () => {
 			const state = makeState({ child: { type: "rect" } });
 			expect(hasSelectedDescendants(state, ["child"], new Set(["other"]))).toBe(
 				false,
@@ -29,8 +29,8 @@ describe("hasSelectedDescendants", () => {
 		});
 	});
 
-	describe("ネスト（孫要素）", () => {
-		it("孫が選択済みのとき true を返す", () => {
+	describe("nesting (grandchildren)", () => {
+		it("returns true when a grandchild is selected", () => {
 			const state = makeState({
 				group: { type: "group", childIds: ["grandchild"] },
 				grandchild: { type: "rect" },
@@ -40,7 +40,7 @@ describe("hasSelectedDescendants", () => {
 			).toBe(true);
 		});
 
-		it("孫が選択されていないとき false を返す", () => {
+		it("returns false when no grandchild is selected", () => {
 			const state = makeState({
 				group: { type: "group", childIds: ["grandchild"] },
 				grandchild: { type: "rect" },
@@ -50,7 +50,7 @@ describe("hasSelectedDescendants", () => {
 			).toBe(false);
 		});
 
-		it("深くネストした子孫が選択されているとき true を返す", () => {
+		it("returns true when a deeply nested descendant is selected", () => {
 			const state = makeState({
 				g1: { type: "group", childIds: ["g2"] },
 				g2: { type: "group", childIds: ["deep"] },
@@ -62,8 +62,8 @@ describe("hasSelectedDescendants", () => {
 		});
 	});
 
-	describe("複数の childIds", () => {
-		it("選択済みの子が1件でもあれば true を返す", () => {
+	describe("multiple childIds", () => {
+		it("returns true if at least one child is selected", () => {
 			const state = makeState({
 				a: { type: "rect" },
 				b: { type: "rect" },
@@ -74,7 +74,7 @@ describe("hasSelectedDescendants", () => {
 			).toBe(true);
 		});
 
-		it("どの子も選択されていなければ false を返す", () => {
+		it("returns false if no child is selected", () => {
 			const state = makeState({
 				a: { type: "rect" },
 				b: { type: "rect" },

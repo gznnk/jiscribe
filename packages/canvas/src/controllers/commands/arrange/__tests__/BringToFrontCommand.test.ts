@@ -19,8 +19,8 @@ const makeGroup = (id: string, childIds: string[]): GroupState =>
 	({ id, type: "group", parentId: undefined, childIds }) as GroupState;
 
 describe("BringToFrontCommand", () => {
-	describe("ルート直下の選択", () => {
-		it("単一選択を rootIds の末尾（最前面）へ移動する", () => {
+	describe("selection at the root level", () => {
+		it("moves a single selection to the end of rootIds (the front)", () => {
 			const state = makeState({
 				selectedIds: ["a"],
 				objects: { a: makeRect("a"), b: makeRect("b"), c: makeRect("c") },
@@ -30,9 +30,9 @@ describe("BringToFrontCommand", () => {
 			expect(nextState.rootIds).toEqual(["b", "c", "a"]);
 		});
 
-		it("複数選択を選択順ではなく元の z 順を保って末尾へ移動する", () => {
+		it("moves a multi-selection to the end preserving original z order, not selection order", () => {
 			const state = makeState({
-				// 前面側の c → 背面側の a の順で選択
+				// selected in order: frontmost c → backmost a
 				selectedIds: ["c", "a"],
 				objects: {
 					a: makeRect("a"),
@@ -43,11 +43,11 @@ describe("BringToFrontCommand", () => {
 				rootIds: ["a", "b", "c", "d"],
 			});
 			const nextState = BringToFrontCommand.execute(state);
-			// 選択順 [c, a] ではなく rootIds 内の相対順 [a, c] を維持する
+			// keeps the relative order within rootIds [a, c], not the selection order [c, a]
 			expect(nextState.rootIds).toEqual(["b", "d", "a", "c"]);
 		});
 
-		it("非選択オブジェクト同士の順序を変えない", () => {
+		it("does not change the order among unselected objects", () => {
 			const state = makeState({
 				selectedIds: ["b"],
 				objects: {
@@ -62,7 +62,7 @@ describe("BringToFrontCommand", () => {
 			expect(nextState.rootIds).toEqual(["a", "c", "d", "b"]);
 		});
 
-		it("commitVersion を増分する", () => {
+		it("increments commitVersion", () => {
 			const state = makeState({
 				selectedIds: ["a"],
 				objects: { a: makeRect("a"), b: makeRect("b") },
@@ -73,10 +73,10 @@ describe("BringToFrontCommand", () => {
 		});
 	});
 
-	describe("同一グループ内の選択", () => {
-		it("複数選択を元の z 順を保って childIds の末尾へ移動する", () => {
+	describe("selection within the same group", () => {
+		it("moves a multi-selection to the end of childIds preserving original z order", () => {
 			const state = makeState({
-				// 前面側の child3 → 背面側の child1 の順で選択
+				// selected in order: frontmost child3 → backmost child1
 				selectedIds: ["child3", "child1"],
 				objects: {
 					group1: makeGroup("group1", ["child1", "child2", "child3"]),
@@ -88,9 +88,9 @@ describe("BringToFrontCommand", () => {
 			});
 			const nextState = BringToFrontCommand.execute(state);
 			const updatedGroup = nextState.objects["group1"] as GroupState;
-			// 選択順 [child3, child1] ではなく childIds 内の相対順 [child1, child3] を維持する
+			// keeps the relative order within childIds [child1, child3], not the selection order [child3, child1]
 			expect(updatedGroup.childIds).toEqual(["child2", "child1", "child3"]);
-			// rootIds は変更しない
+			// rootIds is not changed
 			expect(nextState.rootIds).toEqual(["group1"]);
 		});
 	});

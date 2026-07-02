@@ -50,15 +50,15 @@ const connObj = (id: string): ObjectState =>
 	}) as unknown as ObjectState;
 
 describe("handlePropertyUpdate", () => {
-	describe("selectedIds が空で selectedConnectorId も null", () => {
-		it("→ 同一参照を返す", () => {
+	describe("selectedIds is empty and selectedConnectorId is null", () => {
+		it("-> returns the same reference", () => {
 			const state = makeState();
 			expect(handlePropertyUpdate(state, "fill", "#ff0000")).toBe(state);
 		});
 	});
 
-	describe("selectedConnectorId あり（コネクター選択時）", () => {
-		it("サポートされるプロパティ（stroke）→ コネクターが更新される", () => {
+	describe("selectedConnectorId present (connector selected)", () => {
+		it("supported property (stroke) -> the connector is updated", () => {
 			const c1 = connObj("c1");
 			const state = makeState({
 				selectedConnectorId: "c1",
@@ -69,7 +69,7 @@ describe("handlePropertyUpdate", () => {
 			expect(updated.stroke).toBe("#ff0000");
 		});
 
-		it("サポートされないプロパティ（fill on connector）→ 同一参照を返す", () => {
+		it("unsupported property (fill on connector) -> returns the same reference", () => {
 			const c1 = connObj("c1");
 			const state = makeState({
 				selectedConnectorId: "c1",
@@ -78,12 +78,12 @@ describe("handlePropertyUpdate", () => {
 			expect(handlePropertyUpdate(state, "fill", "#ff0000")).toBe(state);
 		});
 
-		it("オブジェクトが存在しない → 同一参照を返す", () => {
+		it("object does not exist -> returns the same reference", () => {
 			const state = makeState({ selectedConnectorId: "missing" });
 			expect(handlePropertyUpdate(state, "stroke", "#ff0000")).toBe(state);
 		});
 
-		it("strokeWidth は数値に変換して適用される", () => {
+		it("strokeWidth is converted to a number and applied", () => {
 			const c1 = connObj("c1");
 			const state = makeState({
 				selectedConnectorId: "c1",
@@ -96,7 +96,7 @@ describe("handlePropertyUpdate", () => {
 			expect(updated.strokeWidth).toBe(3);
 		});
 
-		it("strokeWidth に非数値 → 同一参照を返す", () => {
+		it("non-numeric strokeWidth -> returns the same reference", () => {
 			const c1 = connObj("c1");
 			const state = makeState({
 				selectedConnectorId: "c1",
@@ -106,14 +106,14 @@ describe("handlePropertyUpdate", () => {
 		});
 	});
 
-	describe("コネクターラベルのネストスタイル（label.*）", () => {
+	describe("connector label nested styles (label.*)", () => {
 		const connWithLabel = (id: string): ObjectState =>
 			({
 				...(connObj(id) as unknown as object),
 				label: { text: "Yes" },
 			}) as unknown as ObjectState;
 
-		it("label.fill → connector.label.fill にネスト更新される", () => {
+		it("label.fill -> nested-updated on connector.label.fill", () => {
 			const c1 = connWithLabel("c1");
 			const state = makeState({
 				selectedConnectorId: "c1",
@@ -124,11 +124,11 @@ describe("handlePropertyUpdate", () => {
 				label: { text: string; fill: string };
 			};
 			expect(updated.label.fill).toBe("#ff0000");
-			// 既存の text は保持される
+			// the existing text is preserved
 			expect(updated.label.text).toBe("Yes");
 		});
 
-		it("label.stroke → label.stroke にネスト更新される", () => {
+		it("label.stroke -> nested-updated on label.stroke", () => {
 			const c1 = connWithLabel("c1");
 			const state = makeState({
 				selectedConnectorId: "c1",
@@ -141,7 +141,7 @@ describe("handlePropertyUpdate", () => {
 			expect(updated.label.stroke).toBe("#00ff00");
 		});
 
-		it("label.strokeDashType → 文字列のままネスト更新される", () => {
+		it("label.strokeDashType -> nested-updated, kept as a string", () => {
 			const c1 = connWithLabel("c1");
 			const state = makeState({
 				selectedConnectorId: "c1",
@@ -158,7 +158,7 @@ describe("handlePropertyUpdate", () => {
 			expect(updated.label.strokeDashType).toBe("dashed");
 		});
 
-		it("label.fontSize は数値化して更新される", () => {
+		it("label.fontSize is numeric-converted and updated", () => {
 			const c1 = connWithLabel("c1");
 			const state = makeState({
 				selectedConnectorId: "c1",
@@ -171,7 +171,7 @@ describe("handlePropertyUpdate", () => {
 			expect(updated.label.fontSize).toBe(20);
 		});
 
-		it("label.fontColor / label.fontWeight は文字列のまま更新される", () => {
+		it("label.fontColor / label.fontWeight are updated, kept as strings", () => {
 			const c1 = connWithLabel("c1");
 			const state = makeState({
 				selectedConnectorId: "c1",
@@ -199,7 +199,7 @@ describe("handlePropertyUpdate", () => {
 			).toBe("bold");
 		});
 
-		it("label.strokeWidth は数値化して更新される", () => {
+		it("label.strokeWidth is numeric-converted and updated", () => {
 			const c1 = connWithLabel("c1");
 			const state = makeState({
 				selectedConnectorId: "c1",
@@ -212,7 +212,7 @@ describe("handlePropertyUpdate", () => {
 			expect(updated.label.strokeWidth).toBe(2);
 		});
 
-		it("label.strokeWidth に非数値 → 同一参照を返す", () => {
+		it("non-numeric label.strokeWidth -> returns the same reference", () => {
 			const c1 = connWithLabel("c1");
 			const state = makeState({
 				selectedConnectorId: "c1",
@@ -221,7 +221,7 @@ describe("handlePropertyUpdate", () => {
 			expect(handlePropertyUpdate(state, "label.strokeWidth", "x")).toBe(state);
 		});
 
-		it("ラベル未設定のコネクターへの label.* → 同一参照を返す", () => {
+		it("label.* on a connector with no label -> returns the same reference", () => {
 			const c1 = connObj("c1");
 			const state = makeState({
 				selectedConnectorId: "c1",
@@ -230,7 +230,7 @@ describe("handlePropertyUpdate", () => {
 			expect(handlePropertyUpdate(state, "label.fill", "#ff0000")).toBe(state);
 		});
 
-		it("元の objects は変更されない（イミュータブル）", () => {
+		it("the original objects are not mutated (immutable)", () => {
 			const c1 = connWithLabel("c1");
 			const state = makeState({
 				selectedConnectorId: "c1",
@@ -243,8 +243,8 @@ describe("handlePropertyUpdate", () => {
 		});
 	});
 
-	describe("selectedIds あり（通常選択時）", () => {
-		it("rect に fill を適用 → fill が更新される", () => {
+	describe("selectedIds present (normal selection)", () => {
+		it("applying fill to a rect -> fill is updated", () => {
 			const r1 = rectObj("r1");
 			const state = makeState({
 				selectedIds: ["r1"],
@@ -255,7 +255,7 @@ describe("handlePropertyUpdate", () => {
 			expect(updated.fill).toBe("#123456");
 		});
 
-		it("サポートされないプロパティ → 同一参照を返す", () => {
+		it("unsupported property -> returns the same reference", () => {
 			const r1 = rectObj("r1");
 			const state = makeState({
 				selectedIds: ["r1"],
@@ -264,7 +264,7 @@ describe("handlePropertyUpdate", () => {
 			expect(handlePropertyUpdate(state, "startArrow", "triangle")).toBe(state);
 		});
 
-		it("複数選択 → 全オブジェクトが更新される", () => {
+		it("multiple selection -> all objects are updated", () => {
 			const r1 = rectObj("r1");
 			const r2 = rectObj("r2");
 			const state = makeState({
@@ -280,7 +280,7 @@ describe("handlePropertyUpdate", () => {
 			);
 		});
 
-		it("lockAspectRatio かつ multiSelectGroup あり → multiSelectGroup のみ更新", () => {
+		it("lockAspectRatio with a multiSelectGroup present -> only multiSelectGroup is updated", () => {
 			const r1 = rectObj("r1");
 			const multiGroup = {
 				lockAspectRatio: true,
@@ -292,11 +292,11 @@ describe("handlePropertyUpdate", () => {
 			});
 			const result = handlePropertyUpdate(state, "lockAspectRatio", "false");
 			expect(result.multiSelectGroup?.lockAspectRatio).toBe(false);
-			// rect 自体は変わらない
+			// the rect itself does not change
 			expect(result.objects["r1"]).toBe(r1);
 		});
 
-		it("元の objects は変更されない（イミュータブル）", () => {
+		it("the original objects are not mutated (immutable)", () => {
 			const r1 = rectObj("r1");
 			const originalFill = (r1 as unknown as { fill: string }).fill;
 			const state = makeState({ selectedIds: ["r1"], objects: { r1 } });

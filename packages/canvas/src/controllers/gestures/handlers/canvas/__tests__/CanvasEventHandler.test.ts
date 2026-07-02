@@ -38,8 +38,8 @@ const makeEvent = (overrides: Record<string, unknown>): CanvasEvent =>
 	}) as unknown as CanvasEvent;
 
 describe("CanvasEventHandler", () => {
-	describe("テキスト編集中のスクロール / ズーム", () => {
-		it("scroll はテキスト編集を中断せずビューポートのみ更新する", () => {
+	describe("scroll / zoom while editing text", () => {
+		it("scroll updates only the viewport without interrupting text editing", () => {
 			const state = makeState();
 			const event = makeEvent({
 				type: "scroll",
@@ -56,7 +56,7 @@ describe("CanvasEventHandler", () => {
 			expect(nextState.viewport.minY).toBe(20);
 		});
 
-		it("scroll はズーム率でスケールしたデルタでビューポートを更新する", () => {
+		it("scroll updates the viewport with a delta scaled by the zoom level", () => {
 			const state = makeState({
 				viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 2 },
 			} as Partial<CanvasControllerState>);
@@ -71,7 +71,7 @@ describe("CanvasEventHandler", () => {
 			expect(nextState.viewport.minY).toBe(10);
 		});
 
-		it("zoom はテキスト編集を中断せずズーム率のみ更新する", () => {
+		it("zoom updates only the zoom level without interrupting text editing", () => {
 			const state = makeState();
 			const event = makeEvent({
 				type: "zoom",
@@ -89,8 +89,8 @@ describe("CanvasEventHandler", () => {
 		});
 	});
 
-	describe("テキスト編集中のクリック", () => {
-		it("pressed はテキストをコミットして編集を終了する", () => {
+	describe("click while editing text", () => {
+		it("pressed commits the text and ends editing", () => {
 			const state = makeState();
 			const event = makeEvent({ type: "pressed", button: 0 });
 

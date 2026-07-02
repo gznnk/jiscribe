@@ -16,15 +16,15 @@ const makeTarget = (tokens: string[]): EventTarget => {
 };
 
 describe("shouldSkipPointerCapture", () => {
-	it('data-gesture="native-pointer" を持つとき true を返す', () => {
+	it('returns true when it has data-gesture="native-pointer"', () => {
 		expect(shouldSkipPointerCapture(makeTarget(["native-pointer"]))).toBe(true);
 	});
 
-	it("native-pointer トークンを持たないとき false を返す", () => {
+	it("returns false when it does not have the native-pointer token", () => {
 		expect(shouldSkipPointerCapture(makeTarget(["none"]))).toBe(false);
 	});
 
-	it("target が null のとき false を返す", () => {
+	it("returns false when target is null", () => {
 		expect(shouldSkipPointerCapture(null)).toBe(false);
 	});
 });

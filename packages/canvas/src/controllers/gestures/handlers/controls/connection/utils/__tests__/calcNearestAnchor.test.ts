@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { calcNearestAnchor } from "../calcNearestAnchor";
 
-/** 非回転・等倍のフレーム（中心 100,100 / 幅40 / 高20）。 */
+/** An unrotated, unscaled frame (center 100,100 / width 40 / height 20). */
 const frame = {
 	cx: 100,
 	cy: 100,
@@ -15,50 +15,50 @@ const frame = {
 // keyPoints: top(100,90) right(120,100) bottom(100,110) left(80,100)
 
 describe("calcNearestAnchor", () => {
-	it("フレームを持たないオブジェクトは center を返す", () => {
+	it("returns center for an object without a frame", () => {
 		expect(calcNearestAnchor({}, 0, 0)).toEqual({ kind: "center" });
 	});
 
-	it("中心付近のカーソルでは center を返す", () => {
+	it("returns center for a cursor near the center", () => {
 		expect(calcNearestAnchor(frame, 100, 100)).toEqual({ kind: "center" });
 	});
 
-	it("上辺の外側では topCenter が最近接になる", () => {
+	it("topCenter is nearest outside the top edge", () => {
 		expect(calcNearestAnchor(frame, 100, 70)).toEqual({
 			kind: "connectPoint",
 			id: "topCenter",
 		});
 	});
 
-	it("右辺の外側では rightCenter が最近接になる", () => {
+	it("rightCenter is nearest outside the right edge", () => {
 		expect(calcNearestAnchor(frame, 200, 100)).toEqual({
 			kind: "connectPoint",
 			id: "rightCenter",
 		});
 	});
 
-	it("下辺の外側では bottomCenter が最近接になる", () => {
+	it("bottomCenter is nearest outside the bottom edge", () => {
 		expect(calcNearestAnchor(frame, 100, 200)).toEqual({
 			kind: "connectPoint",
 			id: "bottomCenter",
 		});
 	});
 
-	it("左辺の外側では leftCenter が最近接になる", () => {
+	it("leftCenter is nearest outside the left edge", () => {
 		expect(calcNearestAnchor(frame, 0, 100)).toEqual({
 			kind: "connectPoint",
 			id: "leftCenter",
 		});
 	});
 
-	describe("exclude（自己ループ用の候補除外）", () => {
-		it("center を除外すると中心付近でも最近接の辺中点を選ぶ", () => {
+	describe("exclude (candidate exclusion for self-loops)", () => {
+		it("picks the nearest edge midpoint even near the center when center is excluded", () => {
 			const result = calcNearestAnchor(frame, 100, 100, { center: true });
 			expect(result.kind).toBe("connectPoint");
 		});
 
-		it("指定 connectPoint を除外するとその辺は選ばれない", () => {
-			// 下辺の外側だが bottomCenter を除外 → 別の辺中点になる。
+		it("does not select an edge when its connectPoint is excluded", () => {
+			// Outside the bottom edge, but bottomCenter is excluded -> a different edge midpoint.
 			const result = calcNearestAnchor(frame, 100, 200, {
 				center: true,
 				connectPointId: "bottomCenter",
@@ -69,7 +69,7 @@ describe("calcNearestAnchor", () => {
 			}
 		});
 
-		it("center と 1 辺を除外しても残り 3 辺から選べる", () => {
+		it("can still choose from the remaining 3 edges when center and 1 edge are excluded", () => {
 			const result = calcNearestAnchor(frame, 0, 100, {
 				center: true,
 				connectPointId: "leftCenter",

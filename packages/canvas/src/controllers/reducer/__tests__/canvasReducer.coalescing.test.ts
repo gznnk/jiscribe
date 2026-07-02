@@ -12,73 +12,73 @@ beforeAll(() => {
 	initializeCommands();
 });
 
-// rect-1 を選択した状態から開始する（cx=5,cy=5）
+// Start with rect-1 selected (cx=5, cy=5)
 const createState = (): CanvasControllerState =>
 	createTestState(twoRectsDoc, { selectedIds: ["rect-1"] });
 
 const cxOf = (state: CanvasControllerState) =>
 	(state.objects["rect-1"] as unknown as { cx: number }).cx;
 
-describe("canvasReducer（結合）", () => {
-	describe("履歴の集約（連続ナッジ）", () => {
-		it("連続したナッジは past を増やさず 1 エントリにまとめる", () => {
+describe("canvasReducer (integration)", () => {
+	describe("history coalescing (consecutive nudges)", () => {
+		it("consecutive nudges are merged into a single entry without growing past", () => {
 			let state = createState();
 			state = runCommands(state, "move-right");
-			// 1 回目: 移動前の状態が past に積まれる
+			// First time: the pre-move state is pushed onto past
 			expect(state.history.past).toHaveLength(1);
 
 			state = runCommands(state, "move-right", "move-right");
-			// 2・3 回目は集約され past は増えない
+			// The 2nd and 3rd are coalesced, so past does not grow
 			expect(state.history.past).toHaveLength(1);
 			expect(cxOf(state)).toBe(8); // 5 + 1 * 3
 		});
 
-		it("集約後の 1 回の undo でナッジ前まで戻る", () => {
+		it("a single undo after coalescing reverts to before the nudges", () => {
 			let state = createState();
 			state = runCommands(state, "move-right", "move-right");
 			expect(cxOf(state)).toBe(7);
 
 			state = runCommands(state, "undo");
-			expect(cxOf(state)).toBe(5); // ナッジ前まで一括で戻る
+			expect(cxOf(state)).toBe(5); // reverts all the way to before the nudges
 			expect(state.history.past).toHaveLength(0);
 		});
 
-		it("別操作（削除）を挟むと集約境界になり別エントリになる", () => {
+		it("interposing another operation (delete) becomes a coalescing boundary, producing a separate entry", () => {
 			let state = createState();
 			state = runCommands(state, "move-right", "move-right");
 			expect(state.history.past).toHaveLength(1);
 
 			state = runCommands(state, "delete");
-			// 削除は pending を立てないため past が増え、recorded も集約境界（null）になる
+			// Delete does not set pending, so past grows and recorded also becomes a coalescing boundary (null)
 			expect(state.history.past).toHaveLength(2);
 			expect(state.historyCoalesce.recorded).toBeNull();
 			expect(state.historyCoalesce.pending).toBeNull();
 		});
 
-		it("方向が違っても連続ナッジとして集約される", () => {
+		it("nudges in different directions are still coalesced as consecutive nudges", () => {
 			let state = createState();
 			state = runCommands(state, "move-right", "move-up", "move-left-large");
 			expect(state.history.past).toHaveLength(1);
 		});
 
-		it("別の図形を選択してナッジすると別の undo エントリになる（選択を跨いで集約しない）", () => {
-			let state = createState(); // rect-1 を選択
+		it("nudging after selecting a different shape produces a separate undo entry (no coalescing across selections)", () => {
+			let state = createState(); // rect-1 selected
 			state = runCommands(state, "move-right", "move-right");
 			expect(state.history.past).toHaveLength(1);
 
-			// 別の図形を選択（クリック選択を模擬。集約キーが move:rect-2 に変わる）
+			// Select a different shape (simulating a click selection; the coalescing key changes to move:rect-2)
 			state = { ...state, selectedIds: ["rect-2"] };
 			state = runCommands(state, "move-right");
 			expect(state.history.past).toHaveLength(2);
 		});
 
-		it("集約ウィンドウ（1000ms）を超えた同一方向ナッジは別エントリになる", () => {
+		it("a same-direction nudge beyond the coalescing window (1000ms) produces a separate entry", () => {
 			vi.useFakeTimers();
 			let state = createState();
 			state = runCommands(state, "move-right");
 			expect(state.history.past).toHaveLength(1);
 
-			// 同じキー（move:rect-1）でも、前回コミットから 1000ms 超過すると集約されない
+			// Even with the same key (move:rect-1), it is not coalesced once 1000ms has elapsed since the last commit
 			vi.advanceTimersByTime(1500);
 			state = runCommands(state, "move-right");
 			expect(state.history.past).toHaveLength(2);

@@ -9,19 +9,19 @@ import type {
 import type * as RecognizerUtils from "../utils";
 
 /**
- * GestureRecognizer の振る舞い網羅テスト。
+ * Behavior coverage test for GestureRecognizer.
  *
- * batchOrdering / edgeScroll テストが扱わない経路を補う:
- *   - click / doubleClick の判定（しきい値・3連打抑止・ターゲット差）
- *   - マルチタッチ（2本目の pointerdown 無視）
- *   - pointercancel（ドラッグ中 dragEnd / 未ドラッグは無音）
- *   - ドラッグ外 wheel の wheel ジェスチャー化
- *   - mods / button / targetKind の透過
- *   - isGestureOptedOut による起点抑止
- *   - resetGestureState / dispose のライフサイクル
+ * Covers paths that the batchOrdering / edgeScroll tests do not:
+ *   - click / doubleClick decisions (threshold, triple-tap suppression, target difference)
+ *   - multitouch (ignoring the second pointerdown)
+ *   - pointercancel (dragEnd while dragging / silent when not dragging)
+ *   - turning a wheel outside a drag into a wheel gesture
+ *   - propagation of mods / button / targetKind
+ *   - origin suppression via isGestureOptedOut
+ *   - lifecycle of resetGestureState / dispose
  *
- * DOM 依存ユーティリティは決定的スタブへ差し替える。getKindAndId は
- * mockUtil 経由でテストごとに戻り値（= targetId/targetKind の有無）を切り替える。
+ * DOM-dependent utilities are replaced with deterministic stubs. getKindAndId's return value
+ * (= presence of targetId/targetKind) is switched per test via mockUtil.
  */
 
 const mockUtil = vi.hoisted(() => ({
@@ -33,9 +33,9 @@ const mockUtil = vi.hoisted(() => ({
 	inputValue: undefined as string | undefined,
 }));
 
-// DOM/レイアウト依存のユーティリティだけ決定的スタブへ差し替え、純粋ロジック
-// （isDoubleClick など）は実物を使う。doubleClick の距離・時間判定を結線レベルで
-// 検証したいため、ここで実装を mock してしまわないこと。
+// Replace only the DOM/layout-dependent utilities with deterministic stubs; use the real
+// pure logic (isDoubleClick, etc.). We want to verify doubleClick's distance/time decisions
+// at the wiring level, so do not mock that implementation here.
 vi.mock("../utils", async (importActual) => {
 	const actual = await importActual<typeof RecognizerUtils>();
 	return {
@@ -183,7 +183,7 @@ const setup = () => {
 };
 
 describe("GestureRecognizer click / doubleClick", () => {
-	it("同一ターゲットへ DOUBLE_CLICK_THRESHOLD 内に 2 回クリックすると doubleClick", () => {
+	it("two clicks on the same target within DOUBLE_CLICK_THRESHOLD produce doubleClick", () => {
 		const { dispatch, types } = setup();
 
 		dispatch(makeEvent("pointerdown", 0, 0, 1000));
@@ -196,7 +196,7 @@ describe("GestureRecognizer click / doubleClick", () => {
 		expect(types()).toEqual(["pressed", "click", "pressed", "doubleClick"]);
 	});
 
-	it("しきい値を超えて間隔が空くと 2 回目も click", () => {
+	it("the second is also a click when the interval exceeds the threshold", () => {
 		const { dispatch, types } = setup();
 
 		dispatch(makeEvent("pointerdown", 0, 0, 1000));
@@ -209,10 +209,10 @@ describe("GestureRecognizer click / doubleClick", () => {
 		expect(types()).toEqual(["pressed", "click", "pressed", "click"]);
 	});
 
-	it("3 連打目は doubleClick にならない（連続 doubleClick 抑止）", () => {
+	it("the third tap is not a doubleClick (consecutive doubleClick suppression)", () => {
 		const { dispatch, events } = setup();
 
-		// 3 回連続クリック（すべて 100ms 間隔）
+		// Three consecutive clicks (all 100ms apart)
 		for (let i = 0; i < 3; i++) {
 			const t = 1000 + i * 100;
 			dispatch(makeEvent("pointerdown", 0, 0, t));
@@ -223,7 +223,7 @@ describe("GestureRecognizer click / doubleClick", () => {
 		const finals = events.filter(
 			(e) => e.type === "click" || e.type === "doubleClick",
 		);
-		// click（1回目）→ doubleClick（2回目）→ click（3回目はリセット済みで doubleClick にならない）
+		// click (1st) -> doubleClick (2nd) -> click (3rd is reset, so not a doubleClick)
 		expect(finals.map((e) => e.type)).toEqual([
 			"click",
 			"doubleClick",
@@ -231,7 +231,7 @@ describe("GestureRecognizer click / doubleClick", () => {
 		]);
 	});
 
-	it("ターゲットが異なれば時間内でも click のまま", () => {
+	it("stays a click even within the time window if the target differs", () => {
 		const { dispatch, types } = setup();
 
 		mockUtil.kindAndId = { id: "obj-1", kind: "rect" };
@@ -247,23 +247,23 @@ describe("GestureRecognizer click / doubleClick", () => {
 		expect(types()).toEqual(["pressed", "click", "pressed", "click"]);
 	});
 
-	it("DRAG_THRESHOLD 未満の微小移動を挟んでも click として成立する", () => {
+	it("still counts as a click even with a tiny move below DRAG_THRESHOLD in between", () => {
 		const { dispatch, types } = setup();
 
 		dispatch(makeEvent("pointerdown", 0, 0, 1000));
-		dispatch(makeEvent("pointermove", 1, 0, 1004)); // 1px < 3px(threshold)
+		dispatch(makeEvent("pointermove", 1, 0, 1004)); // 1px < 3px (threshold)
 		dispatch(makeEvent("pointerup", 1, 0, 1008));
 		flushRaf();
 
 		expect(types()).toEqual(["pressed", "click"]);
 	});
 
-	it("背景（targetId undefined）への最初の 1 クリックは timeStamp が小さくても click", () => {
+	it("the first click on the background (targetId undefined) is a click even with a small timeStamp", () => {
 		const { dispatch, types } = setup();
 
-		// 回帰: かつては直近クリック未記録を undefined で表していたため、targetId が
-		// undefined（背景）かつ timeStamp < 閾値だと初回クリックが doubleClick に化けた。
-		// lastClick=null（基準未記録）を分けたことで初回は必ず click になる。
+		// Regression: previously "no recent click recorded" was represented as undefined, so when
+		// targetId was undefined (background) and timeStamp < threshold, the first click turned into
+		// a doubleClick. Separating lastClick=null (no baseline recorded) ensures the first is always a click.
 		mockUtil.kindAndId = null;
 		dispatch(makeEvent("pointerdown", 0, 0, 100));
 		dispatch(makeEvent("pointerup", 0, 0, 100));
@@ -272,7 +272,7 @@ describe("GestureRecognizer click / doubleClick", () => {
 		expect(types()).toEqual(["pressed", "click"]);
 	});
 
-	it("doubleClick 成立直後の 3 連打目は背景でも click（基準リセット）", () => {
+	it("the third tap right after a doubleClick is a click even on the background (baseline reset)", () => {
 		const { dispatch, events } = setup();
 
 		mockUtil.kindAndId = null;
@@ -294,22 +294,22 @@ describe("GestureRecognizer click / doubleClick", () => {
 	});
 });
 
-describe("GestureRecognizer マルチタッチ抑止", () => {
-	it("ジェスチャー進行中の 2 本目 pointerdown は無視される", () => {
+describe("GestureRecognizer multitouch suppression", () => {
+	it("a second pointerdown during an ongoing gesture is ignored", () => {
 		const { dispatch, events, types } = setup();
 
 		dispatch(makeEvent("pointerdown", 0, 0, 1000, { pointerId: 1 }));
 		flushRaf();
-		// 2 本目を別 pointerId で投入 → pressed は発火しない
+		// Dispatch a second one with a different pointerId -> pressed does not fire
 		dispatch(makeEvent("pointerdown", 50, 50, 1010, { pointerId: 2 }));
 		flushRaf();
 
 		expect(types()).toEqual(["pressed"]);
-		// 1 本目の pressed のみ
+		// Only the first pointer's pressed
 		expect(events.filter((e) => e.type === "pressed")).toHaveLength(1);
 	});
 
-	it("2 本目ポインターの move / up も無視される", () => {
+	it("the second pointer's move / up are also ignored", () => {
 		const { dispatch, types } = setup();
 
 		dispatch(makeEvent("pointerdown", 0, 0, 1000, { pointerId: 1 }));
@@ -318,7 +318,7 @@ describe("GestureRecognizer マルチタッチ抑止", () => {
 		dispatch(makeEvent("pointermove", 90, 90, 1020, { pointerId: 2 }));
 		dispatch(makeEvent("pointerup", 90, 90, 1030, { pointerId: 2 }));
 		flushRaf();
-		// 1 本目を離すと click として成立する（2本目に汚染されていない）
+		// Releasing the first pointer yields a click (not polluted by the second)
 		dispatch(makeEvent("pointerup", 0, 0, 1040, { pointerId: 1 }));
 		flushRaf();
 
@@ -327,7 +327,7 @@ describe("GestureRecognizer マルチタッチ抑止", () => {
 });
 
 describe("GestureRecognizer pointercancel", () => {
-	it("ドラッグ中の pointercancel は dragEnd で締める", () => {
+	it("pointercancel during a drag closes it with dragEnd", () => {
 		const { dispatch, types } = setup();
 
 		dispatch(makeEvent("pointerdown", 0, 0, 1000));
@@ -340,7 +340,7 @@ describe("GestureRecognizer pointercancel", () => {
 		expect(types()).toEqual(["pressed", "dragStart", "dragEnd"]);
 	});
 
-	it("未ドラッグの pointercancel は何も発火しない（click にもならない）", () => {
+	it("pointercancel without a drag fires nothing (not even a click)", () => {
 		const { dispatch, types } = setup();
 
 		dispatch(makeEvent("pointerdown", 0, 0, 1000));
@@ -351,7 +351,7 @@ describe("GestureRecognizer pointercancel", () => {
 		expect(types()).toEqual(["pressed"]);
 	});
 
-	it("pointercancel 後は pressed が破棄され、続く up は無視される", () => {
+	it("after pointercancel, pressed is discarded and the following up is ignored", () => {
 		const { dispatch, types } = setup();
 
 		dispatch(makeEvent("pointerdown", 0, 0, 1000));
@@ -365,8 +365,8 @@ describe("GestureRecognizer pointercancel", () => {
 	});
 });
 
-describe("GestureRecognizer wheel（ドラッグ外）", () => {
-	it("ドラッグ外 wheel は wheel ジェスチャーになり targetId が canvas へ固定される", () => {
+describe("GestureRecognizer wheel (outside a drag)", () => {
+	it("a wheel outside a drag becomes a wheel gesture with targetId fixed to canvas", () => {
 		const { wheelHandler, events } = setup();
 
 		wheelHandler(makeWheelEvent(100, 200, 5, -12, 1000));
@@ -378,14 +378,14 @@ describe("GestureRecognizer wheel（ドラッグ外）", () => {
 		expect(wheel.targetId).toBe("canvas");
 		expect(wheel.targetKind).toBe("canvas");
 		expect(wheel.scrollDelta).toEqual({ deltaX: 5, deltaY: -12 });
-		// wheel はカーソル位置を start/last に据え、delta は 0
+		// wheel sets the cursor position as start/last, with delta of 0
 		expect(wheel.start).toEqual({ x: 100, y: 200 });
 		expect(wheel.delta).toEqual({ x: 0, y: 0 });
 	});
 });
 
-describe("GestureRecognizer ドラッグ中 wheel → スクロール", () => {
-	it("ドラッグ中の wheel は drag の scrollDelta として合流する", () => {
+describe("GestureRecognizer wheel during a drag -> scroll", () => {
+	it("a wheel during a drag merges into the drag's scrollDelta", () => {
 		const { dispatch, wheelHandler, events } = setup();
 
 		dispatch(makeEvent("pointerdown", 100, 100, 1000));
@@ -401,8 +401,8 @@ describe("GestureRecognizer ドラッグ中 wheel → スクロール", () => {
 	});
 });
 
-describe("GestureRecognizer 透過プロパティ（mods / button / targetKind）", () => {
-	it("修飾キーが pressed に透過される", () => {
+describe("GestureRecognizer propagated properties (mods / button / targetKind)", () => {
+	it("modifier keys are propagated to pressed", () => {
 		const { dispatch, events } = setup();
 
 		dispatch(
@@ -420,7 +420,7 @@ describe("GestureRecognizer 透過プロパティ（mods / button / targetKind�
 		});
 	});
 
-	it("button（右クリック=2）が一連のジェスチャーへ透過される", () => {
+	it("button (right click = 2) is propagated through the whole gesture sequence", () => {
 		const { dispatch, events } = setup();
 
 		dispatch(makeEvent("pointerdown", 0, 0, 1000, { button: 2 }));
@@ -433,7 +433,7 @@ describe("GestureRecognizer 透過プロパティ（mods / button / targetKind�
 		}
 	});
 
-	it("targetKind が pressed に透過される", () => {
+	it("targetKind is propagated to pressed", () => {
 		const { dispatch, events } = setup();
 
 		mockUtil.kindAndId = { id: "node-7", kind: "ellipse" };
@@ -446,7 +446,7 @@ describe("GestureRecognizer 透過プロパティ（mods / button / targetKind�
 });
 
 describe("GestureRecognizer isGestureOptedOut", () => {
-	it("opt-out 要素由来の pointerdown は起点にならない", () => {
+	it("a pointerdown originating from an opt-out element is not a gesture origin", () => {
 		const { dispatch, events } = setup();
 
 		mockUtil.optedOut = true;
@@ -458,27 +458,27 @@ describe("GestureRecognizer isGestureOptedOut", () => {
 	});
 });
 
-describe("GestureRecognizer ライフサイクル", () => {
-	it("resetGestureState は保留中のドラッグを破棄する", () => {
+describe("GestureRecognizer lifecycle", () => {
+	it("resetGestureState discards a pending drag", () => {
 		const { dispatch, recognizer, types } = setup();
 
 		dispatch(makeEvent("pointerdown", 0, 0, 1000));
 		flushRaf();
-		// move をキューに積むが flush 前にリセット
+		// Queue a move but reset before flushing
 		dispatch(makeEvent("pointermove", 50, 0, 1016));
 		recognizer.resetGestureState();
 		flushRaf();
-		// pressed は破棄済みなので後続 up も無視される
+		// pressed is already discarded, so the following up is ignored too
 		dispatch(makeEvent("pointerup", 50, 0, 1032));
 		flushRaf();
 
 		expect(types()).toEqual(["pressed"]);
 	});
 
-	it("dispose は保留中の RAF をキャンセルしコールバックを発火させない", () => {
+	it("dispose cancels pending RAFs and does not fire the callback", () => {
 		const { dispatch, recognizer, events } = setup();
 
-		dispatch(makeEvent("pointerdown", 0, 0, 1000)); // RAF を 1 つ予約
+		dispatch(makeEvent("pointerdown", 0, 0, 1000)); // Schedule one RAF
 		recognizer.dispose();
 		flushRaf();
 
@@ -487,19 +487,19 @@ describe("GestureRecognizer ライフサイクル", () => {
 	});
 });
 
-// しきい値の境界精度は isDoubleClick の solitary テストが担保する。ここでは
-// recognizer が pointerdown 位置を正しくスナップショットして判定に渡せているか
-// （= パイプラインの結線）を、近い／遠いの代表ケースで確認する。
-describe("GestureRecognizer doubleClick 距離しきい値（結線）", () => {
+// The boundary precision of the threshold is covered by isDoubleClick's solitary test. Here we
+// check, with representative near/far cases, that the recognizer correctly snapshots the
+// pointerdown position and passes it to the decision (= pipeline wiring).
+describe("GestureRecognizer doubleClick distance threshold (wiring)", () => {
 	const finalsOf = (events: Gesture[]) =>
 		events
 			.filter((e) => e.type === "click" || e.type === "doubleClick")
 			.map((e) => e.type);
 
-	it("時間内でも大きく離れて再クリックすると別 click", () => {
+	it("re-clicking far away within the time window is a separate click", () => {
 		const { dispatch, events } = setup();
 
-		// 同一ターゲット・時間内だが、2 クリックが大きく離れている。
+		// Same target and within the time window, but the two clicks are far apart.
 		dispatch(makeEvent("pointerdown", 0, 0, 1000));
 		dispatch(makeEvent("pointerup", 0, 0, 1000));
 		flushRaf();
@@ -510,24 +510,24 @@ describe("GestureRecognizer doubleClick 距離しきい値（結線）", () => {
 		expect(finalsOf(events)).toEqual(["click", "click"]);
 	});
 
-	it("背景（targetId undefined）でも距離が近ければ doubleClick になる", () => {
+	it("even on the background (targetId undefined), a close distance produces a doubleClick", () => {
 		const { dispatch, events } = setup();
 
 		mockUtil.kindAndId = null;
 		dispatch(makeEvent("pointerdown", 200, 200, 1000));
 		dispatch(makeEvent("pointerup", 200, 200, 1000));
 		flushRaf();
-		dispatch(makeEvent("pointerdown", 202, 201, 1100)); // 距離 √5 < 5px
+		dispatch(makeEvent("pointerdown", 202, 201, 1100)); // distance sqrt(5) < 5px
 		dispatch(makeEvent("pointerup", 202, 201, 1100));
 		flushRaf();
 
 		expect(finalsOf(events)).toEqual(["click", "doubleClick"]);
 	});
 
-	it("回帰: 別位置の 2 連続背景クリックは doubleClick に合体しない", () => {
+	it("regression: two consecutive background clicks at different positions do not coalesce into a doubleClick", () => {
 		const { dispatch, events } = setup();
 
-		// targetId は両方 undefined だが、位置が大きく離れているため距離判定で別 click。
+		// Both targetIds are undefined, but the positions are far apart, so the distance check yields separate clicks.
 		mockUtil.kindAndId = null;
 		dispatch(makeEvent("pointerdown", 0, 0, 1000));
 		dispatch(makeEvent("pointerup", 0, 0, 1000));

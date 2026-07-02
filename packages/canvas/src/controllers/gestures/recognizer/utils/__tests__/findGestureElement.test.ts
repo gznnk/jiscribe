@@ -3,9 +3,9 @@ import { describe, expect, it } from "vitest";
 import { findGestureElement } from "../findGestureElement";
 
 /**
- * data-gesture のトークン集合を持つ要素を模した EventTarget を作る。
- * closest は [data-gesture~="token"] 形式のセレクタを解釈し、
- * tokens に該当トークンが含まれていれば自身を返す。
+ * Create an EventTarget mimicking an element with a set of data-gesture tokens.
+ * closest interprets selectors of the form [data-gesture~="token"] and returns
+ * itself if the token is included in tokens.
  */
 const makeTarget = (tokens: string[]): EventTarget => {
 	const el = {
@@ -21,25 +21,25 @@ const makeTarget = (tokens: string[]): EventTarget => {
 };
 
 describe("findGestureElement", () => {
-	it("target が null のとき null を返す", () => {
+	it("returns null when target is null", () => {
 		expect(findGestureElement(null, "none")).toBeNull();
 	});
 
-	it("closest を持たない target（document など）のとき null を返す", () => {
+	it("returns null when target has no closest (e.g. document)", () => {
 		expect(findGestureElement({} as EventTarget, "none")).toBeNull();
 	});
 
-	it("指定トークンを持つとき要素を返す", () => {
+	it("returns the element when it has the specified token", () => {
 		const target = makeTarget(["none"]);
 		expect(findGestureElement(target, "none")).toBe(target);
 	});
 
-	it("指定トークンを持たないとき null を返す", () => {
+	it("returns null when it does not have the specified token", () => {
 		const target = makeTarget(["native-wheel"]);
 		expect(findGestureElement(target, "none")).toBeNull();
 	});
 
-	it("複数トークンのうち該当するものを見つける", () => {
+	it("finds the matching one among multiple tokens", () => {
 		const target = makeTarget(["none", "native-wheel"]);
 		expect(findGestureElement(target, "native-wheel")).toBe(target);
 	});

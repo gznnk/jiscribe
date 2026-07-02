@@ -19,16 +19,16 @@ const state = (
 	}) as unknown as CanvasControllerState;
 
 describe("getSelectedArrowType", () => {
-	it("選択なし → 'None'", () => {
+	it("no selection → 'None'", () => {
 		expect(getSelectedArrowType(state({}, []), "startArrow")).toBe("None");
 	});
 
-	it("選択オブジェクトが該当プロパティを持つ → その値", () => {
+	it("the selected object has the relevant property → its value", () => {
 		const s = state({ a: obj("a", { startArrow: "Triangle" }) }, ["a"]);
 		expect(getSelectedArrowType(s, "startArrow")).toBe("Triangle");
 	});
 
-	it("property ごとに独立して取得する", () => {
+	it("retrieves each property independently", () => {
 		const s = state(
 			{ a: obj("a", { startArrow: "Triangle", endArrow: "Circle" }) },
 			["a"],
@@ -37,17 +37,17 @@ describe("getSelectedArrowType", () => {
 		expect(getSelectedArrowType(s, "endArrow")).toBe("Circle");
 	});
 
-	it("該当プロパティを持たない → 'None'", () => {
+	it("does not have the relevant property → 'None'", () => {
 		const s = state({ a: obj("a") }, ["a"]);
 		expect(getSelectedArrowType(s, "endArrow")).toBe("None");
 	});
 
-	it("値が文字列でない → 飛ばして 'None'", () => {
+	it("value is not a string → skipped, 'None'", () => {
 		const s = state({ a: obj("a", { startArrow: 123 }) }, ["a"]);
 		expect(getSelectedArrowType(s, "startArrow")).toBe("None");
 	});
 
-	it("複数選択 → 最初に見つかった値を返す", () => {
+	it("multiple selection → returns the first value found", () => {
 		const s = state(
 			{
 				a: obj("a"),
@@ -58,7 +58,7 @@ describe("getSelectedArrowType", () => {
 		expect(getSelectedArrowType(s, "startArrow")).toBe("Diamond");
 	});
 
-	it("コネクター選択時は selectedConnectorId から取得する", () => {
+	it("retrieves from selectedConnectorId when a connector is selected", () => {
 		const s = state(
 			{
 				a: obj("a", { startArrow: "Triangle" }),

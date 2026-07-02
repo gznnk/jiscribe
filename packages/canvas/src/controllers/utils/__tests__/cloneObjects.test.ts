@@ -5,12 +5,12 @@ import { cloneObjects } from "../cloneObjects";
 
 const ZERO = { x: 0, y: 0 };
 
-// テストでは remap ロジックに集中するため、最小限の形状で ObjectState を組み立てる。
+// To focus the tests on the remap logic, build ObjectState with minimal shapes.
 const objects = (map: Record<string, unknown>): Record<string, ObjectState> =>
 	map as Record<string, ObjectState>;
 
 describe("cloneObjects", () => {
-	it("グループの childIds と子の parentId を新 ID へ整合的にリマップする", () => {
+	it("consistently remaps a group's childIds and its children's parentId to the new IDs", () => {
 		const { newObjects, newTopLevelIds, idRemap } = cloneObjects(
 			["G"],
 			objects({
@@ -30,8 +30,8 @@ describe("cloneObjects", () => {
 		expect(newObjects[newC].parentId).toBe(newG);
 	});
 
-	it("親が複製集合に存在しない子は parentId を破棄しトップレベルへ昇格させる（孤児化を防ぐ）", () => {
-		// C の親 EXTERNAL は allObjects に含まれず、C 自身も topLevelIds に含まれない。
+	it("a child whose parent is not in the clone set has its parentId dropped and is promoted to top level (prevents orphaning)", () => {
+		// C's parent EXTERNAL is not in allObjects, and C itself is not in topLevelIds.
 		const { newObjects, newTopLevelIds, idRemap } = cloneObjects(
 			[],
 			objects({
@@ -43,11 +43,11 @@ describe("cloneObjects", () => {
 		const newC = idRemap.get("C")!;
 
 		expect(newObjects[newC].parentId).toBeUndefined();
-		// 孤児にならず、トップレベルとして到達可能になっている
+		// not orphaned; reachable as a top-level object
 		expect(newTopLevelIds).toEqual([newC]);
 	});
 
-	it("childIds が複製集合に存在しない子を参照している場合は除外する（ダングリング参照を残さない）", () => {
+	it("excludes childIds that reference children not in the clone set (leaves no dangling references)", () => {
 		const { newObjects, idRemap } = cloneObjects(
 			["G"],
 			objects({
@@ -65,7 +65,7 @@ describe("cloneObjects", () => {
 		).toEqual([newC]);
 	});
 
-	it("コネクターも topLevelIds の一員として入力順で返し、端点のオーナー ID をリマップする", () => {
+	it("returns connectors as members of topLevelIds in input order and remaps their endpoint owner IDs", () => {
 		const { newObjects, newTopLevelIds, idRemap } = cloneObjects(
 			["A", "CONN"],
 			objects({
@@ -84,20 +84,20 @@ describe("cloneObjects", () => {
 		const newA = idRemap.get("A")!;
 		const newConn = idRemap.get("CONN")!;
 
-		// 入力順（オブジェクト → コネクター）を保って返る。昇格ではなく topLevelIds 由来。
+		// returned preserving input order (object -> connector); from topLevelIds, not promotion.
 		expect(newTopLevelIds).toEqual([newA, newConn]);
 		expect(newObjects[newConn].parentId).toBeUndefined();
 		const conn = newObjects[newConn] as unknown as {
 			source: { owner: { id: string } };
 			target: { owner: { id: string } };
 		};
-		// 集合内のオーナーは新 ID、集合外のオーナーは元 ID のまま維持される
+		// owners inside the set get new IDs; owners outside the set keep their original IDs
 		expect(conn.source.owner.id).toBe(newA);
 		expect(conn.target.owner.id).toBe("EXTERNAL");
 	});
 
-	it("topLevelIds 由来のルートと昇格したルートが重複しても二重登録しない", () => {
-		// 内部コピー相当: 選択した子 C は topLevelIds に含まれるが、親 G は集合外。
+	it("does not double-register when a topLevelIds root and a promoted root overlap", () => {
+		// equivalent to an internal copy: the selected child C is in topLevelIds, but parent G is outside the set.
 		const { newTopLevelIds, idRemap } = cloneObjects(
 			["C"],
 			objects({

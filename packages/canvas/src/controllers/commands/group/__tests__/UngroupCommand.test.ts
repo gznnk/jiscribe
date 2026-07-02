@@ -62,7 +62,7 @@ const makeState = (params: {
 	}) as unknown as CanvasControllerState;
 
 describe("UngroupCommand", () => {
-	it("ルートのグループを解体し子をルートへ昇格する", () => {
+	it("dissolves a root group and promotes its children to the root", () => {
 		const state = makeState({
 			selectedIds: ["g"],
 			objects: {
@@ -74,19 +74,19 @@ describe("UngroupCommand", () => {
 		});
 		const next = UngroupCommand.execute(state);
 
-		// グループは消える
+		// the group is removed
 		expect(next.objects["g"]).toBeUndefined();
-		// 子は rootIds 上のグループ位置に展開される
+		// the children are expanded in place of the group within rootIds
 		expect(next.rootIds).toEqual(["a", "b"]);
-		// 子の parentId が解除される
+		// the children's parentId is cleared
 		expect(next.objects["a"]?.parentId).toBeUndefined();
 		expect(next.objects["b"]?.parentId).toBeUndefined();
-		// 解体した子が選択される
+		// the dissolved children are selected
 		expect(next.selectedIds).toEqual(["a", "b"]);
 		expect(next.commitVersion).toBe(1);
 	});
 
-	it("ネストしたグループは親グループの childIds 内で展開される", () => {
+	it("a nested group is expanded within its parent group's childIds", () => {
 		const state = makeState({
 			selectedIds: ["inner"],
 			objects: {
@@ -101,20 +101,20 @@ describe("UngroupCommand", () => {
 		const next = UngroupCommand.execute(state);
 
 		expect(next.objects["inner"]).toBeUndefined();
-		// inner が outer.childIds の位置に展開される
+		// inner is expanded in place within outer.childIds
 		expect((next.objects["outer"] as GroupState).childIds).toEqual([
 			"a",
 			"b",
 			"c",
 		]);
-		// 子は outer を親に持つ
+		// the children have outer as their parent
 		expect(next.objects["a"]?.parentId).toBe("outer");
 		expect(next.objects["b"]?.parentId).toBe("outer");
 		expect(next.rootIds).toEqual(["outer"]);
 	});
 
 	describe("canExecute", () => {
-		it("選択がすべてグループなら実行可能", () => {
+		it("is executable when the selection is all groups", () => {
 			const state = makeState({
 				selectedIds: ["g"],
 				objects: { g: makeGroup("g", ["a"]), a: makeRect("a", 0, 0, "g") },
@@ -123,7 +123,7 @@ describe("UngroupCommand", () => {
 			expect(UngroupCommand.canExecute(state)).toBe(true);
 		});
 
-		it("グループ以外を含む選択は実行不可", () => {
+		it("is not executable for a selection containing non-groups", () => {
 			const state = makeState({
 				selectedIds: ["g", "a"],
 				objects: { g: makeGroup("g", []), a: makeRect("a", 0, 0) },
@@ -132,7 +132,7 @@ describe("UngroupCommand", () => {
 			expect(UngroupCommand.canExecute(state)).toBe(false);
 		});
 
-		it("選択が無ければ実行不可", () => {
+		it("is not executable when there is no selection", () => {
 			expect(
 				UngroupCommand.canExecute(
 					makeState({ selectedIds: [], objects: {}, rootIds: [] }),

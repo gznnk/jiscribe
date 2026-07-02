@@ -13,16 +13,16 @@ const makeState = (
 	}) as unknown as CanvasControllerState;
 
 describe("getSelectedConnectorLabel", () => {
-	it("コネクター未選択（selectedConnectorId が null）→ undefined", () => {
+	it("no connector selected (selectedConnectorId is null) → undefined", () => {
 		expect(getSelectedConnectorLabel(makeState({}))).toBeUndefined();
 	});
 
-	it("選択 id はあるが対象が存在しない → undefined", () => {
+	it("a selected id exists but the target does not → undefined", () => {
 		const state = makeState({ selectedConnectorId: "missing" });
 		expect(getSelectedConnectorLabel(state)).toBeUndefined();
 	});
 
-	it("ラベルを持つコネクター → その label を返す", () => {
+	it("a connector with a label → returns its label", () => {
 		const label = { text: "Yes", fill: "#fff" };
 		const state = makeState({
 			selectedConnectorId: "c1",
@@ -33,7 +33,7 @@ describe("getSelectedConnectorLabel", () => {
 		expect(getSelectedConnectorLabel(state)).toEqual(label);
 	});
 
-	it("ラベルを持たないコネクター → undefined", () => {
+	it("a connector without a label → undefined", () => {
 		const state = makeState({
 			selectedConnectorId: "c1",
 			objects: {

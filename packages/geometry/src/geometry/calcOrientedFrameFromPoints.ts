@@ -2,7 +2,6 @@ import { calcPolyBoundingBox } from "./calcPolyBoundingBox";
 import { degreesToRadians } from "../common/degreesToRadians";
 import { nanToZero } from "../common/nanToZero";
 import { applyAffineWithTrig } from "../transform/applyAffineWithTrig";
-import { applyInverseAffineWithTrig } from "../transform/applyInverseAffineWithTrig";
 import type { Point } from "../types/Point";
 import type { TransformedFrame } from "../types/TransformedFrame";
 
@@ -41,25 +40,30 @@ export const calcOrientedFrameFromPoints = (
 	const cosTheta = Math.cos(radians);
 	const sinTheta = Math.sin(radians);
 
-	const inversePoints = points.map((p) =>
-		applyInverseAffineWithTrig(
-			p.x,
-			p.y,
-			scaleX,
-			scaleY,
-			cosTheta,
-			sinTheta,
-			x,
-			y,
-		),
-	);
-
-	const {
-		left: inverseLeft,
-		top: inverseTop,
-		right: inverseRight,
-		bottom: inverseBottom,
-	} = calcPolyBoundingBox(inversePoints)!;
+	// 逆変換後の点群の AABB を、中間配列や Point を確保せずワンパスで求める。
+	// 各点の変換式は applyInverseAffineWithTrig と同一（ホットパスのためインライン展開）。
+	let inverseLeft = Infinity;
+	let inverseTop = Infinity;
+	let inverseRight = -Infinity;
+	let inverseBottom = -Infinity;
+	for (const p of points) {
+		const translatedX = p.x - x;
+		const translatedY = p.y - y;
+		const ix = (cosTheta * translatedX + sinTheta * translatedY) / scaleX;
+		const iy = (-sinTheta * translatedX + cosTheta * translatedY) / scaleY;
+		if (ix < inverseLeft) {
+			inverseLeft = ix;
+		}
+		if (ix > inverseRight) {
+			inverseRight = ix;
+		}
+		if (iy < inverseTop) {
+			inverseTop = iy;
+		}
+		if (iy > inverseBottom) {
+			inverseBottom = iy;
+		}
+	}
 
 	const width = inverseRight - inverseLeft;
 	const height = inverseBottom - inverseTop;

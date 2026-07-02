@@ -14,9 +14,9 @@ const group = (id: string, childIds: string[], parentId?: string): GroupState =>
 	({ id, type: "group", childIds, parentId }) as unknown as GroupState;
 
 describe("getTopLevelSelectedIds", () => {
-	// ─── 基本ケース ────────────────────────────────────────────────
+	// ─── basic cases ────────────────────────────────────────────────
 
-	it("祖先が選択されていないアイテムはそのまま返す", () => {
+	it("returns items as-is when no ancestor is selected", () => {
 		const objects: Objects = {
 			"rect-1": rect("rect-1"),
 			"rect-2": rect("rect-2"),
@@ -27,18 +27,18 @@ describe("getTopLevelSelectedIds", () => {
 		]);
 	});
 
-	it("空配列を渡すと空配列を返す", () => {
+	it("returns an empty array when passed an empty array", () => {
 		expect(getTopLevelSelectedIds([], {})).toEqual([]);
 	});
 
-	it("1件だけの選択はそのまま返す", () => {
+	it("a single-item selection is returned as-is", () => {
 		const objects: Objects = { "rect-1": rect("rect-1") };
 		expect(getTopLevelSelectedIds(["rect-1"], objects)).toEqual(["rect-1"]);
 	});
 
-	// ─── 祖先と子孫が混在する選択 ─────────────────────────────────
+	// ─── selections mixing ancestors and descendants ─────────────────────────────────
 
-	it("グループとその直接の子が混在するとき、子を除外してグループだけを返す", () => {
+	it("when a group and its direct children are mixed, excludes the children and returns only the group", () => {
 		const objects: Objects = {
 			"group-a": group("group-a", ["rect-1", "rect-2"]),
 			"rect-1": rect("rect-1", "group-a"),
@@ -51,18 +51,18 @@ describe("getTopLevelSelectedIds", () => {
 		expect(result).toEqual(["group-a"]);
 	});
 
-	it("グループと子の一部が混在するとき、その子だけを除外する", () => {
+	it("when a group and some of its children are mixed, excludes only those children", () => {
 		const objects: Objects = {
 			"group-a": group("group-a", ["rect-1", "rect-2"]),
 			"rect-1": rect("rect-1", "group-a"),
 			"rect-2": rect("rect-2", "group-a"),
 		};
-		// rect-2 は選択されていない → group-a + rect-1 の混在
+		// rect-2 is not selected -> a mix of group-a + rect-1
 		const result = getTopLevelSelectedIds(["group-a", "rect-1"], objects);
 		expect(result).toEqual(["group-a"]);
 	});
 
-	it("グループと孫（2階層下）が混在するとき、孫を除外する", () => {
+	it("when a group and a grandchild (two levels down) are mixed, excludes the grandchild", () => {
 		const objects: Objects = {
 			"group-outer": group("group-outer", ["group-inner"]),
 			"group-inner": group("group-inner", ["rect-1"], "group-outer"),
@@ -75,9 +75,9 @@ describe("getTopLevelSelectedIds", () => {
 		expect(result).toEqual(["group-outer"]);
 	});
 
-	// ─── 複数グループの混在 ────────────────────────────────────────
+	// ─── multiple groups mixed ────────────────────────────────────────
 
-	it("複数グループとそれぞれの子が混在するとき、各グループだけを返す", () => {
+	it("when multiple groups and their respective children are mixed, returns only each group", () => {
 		const objects: Objects = {
 			"group-a": group("group-a", ["rect-1", "rect-2"]),
 			"group-b": group("group-b", ["rect-3", "rect-4"]),
@@ -93,7 +93,7 @@ describe("getTopLevelSelectedIds", () => {
 		expect(result).toEqual(["group-a", "group-b"]);
 	});
 
-	it("グループAとグループBの子が混在し、グループAの子のみ除外する", () => {
+	it("with children of group A and group B mixed, excludes only group A's children", () => {
 		const objects: Objects = {
 			"group-a": group("group-a", ["rect-1", "rect-2"]),
 			"group-b": group("group-b", ["rect-3", "rect-4"]),
@@ -101,7 +101,7 @@ describe("getTopLevelSelectedIds", () => {
 			"rect-2": rect("rect-2", "group-a"),
 			"rect-3": rect("rect-3", "group-b"),
 		};
-		// group-b は選択されていないので rect-3 はそのまま残る
+		// group-b is not selected, so rect-3 stays as-is
 		const result = getTopLevelSelectedIds(
 			["group-a", "rect-1", "rect-2", "rect-3"],
 			objects,
@@ -109,9 +109,9 @@ describe("getTopLevelSelectedIds", () => {
 		expect(result).toEqual(["group-a", "rect-3"]);
 	});
 
-	// ─── 祖先が選択されていないケース ─────────────────────────────
+	// ─── cases where no ancestor is selected ─────────────────────────────
 
-	it("グループの子だけが選択されているとき（グループ自体は未選択）、子をそのまま返す", () => {
+	it("when only a group's children are selected (the group itself is not), returns the children as-is", () => {
 		const objects: Objects = {
 			"group-a": group("group-a", ["rect-1", "rect-2"]),
 			"rect-1": rect("rect-1", "group-a"),
@@ -121,21 +121,21 @@ describe("getTopLevelSelectedIds", () => {
 		expect(result).toEqual(["rect-1", "rect-2"]);
 	});
 
-	it("ネストしたグループの一部の子孫だけが選択されているとき、そのまま返す", () => {
+	it("when only some descendants of a nested group are selected, returns them as-is", () => {
 		const objects: Objects = {
 			"group-outer": group("group-outer", ["group-inner"]),
 			"group-inner": group("group-inner", ["rect-1", "rect-2"], "group-outer"),
 			"rect-1": rect("rect-1", "group-inner"),
 			"rect-2": rect("rect-2", "group-inner"),
 		};
-		// どの祖先も選択されていない → フィルタなし
+		// no ancestor is selected -> no filtering
 		const result = getTopLevelSelectedIds(["rect-1", "rect-2"], objects);
 		expect(result).toEqual(["rect-1", "rect-2"]);
 	});
 
-	// ─── 順序の保持 ────────────────────────────────────────────────
+	// ─── order preservation ────────────────────────────────────────────────
 
-	it("入力の順序を保持して返す", () => {
+	it("returns results preserving input order", () => {
 		const objects: Objects = {
 			"group-a": group("group-a", ["rect-1"]),
 			"group-b": group("group-b", ["rect-2"]),

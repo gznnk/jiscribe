@@ -26,31 +26,31 @@ const validRect = {
 };
 
 describe("validateRectDoc", () => {
-	it("有効な Rect はエラーなし", () => {
+	it("yields no error for a valid Rect", () => {
 		expect(validateRectDoc(validRect, "root")).toEqual([]);
 	});
 
-	it("必須の x が数値でない場合はエラー", () => {
+	it("is an error when the required x is not a number", () => {
 		const errors = validateRectDoc({ ...validRect, x: "10" }, "root");
 		expect(errors.some((e) => e.path === "root.x")).toBe(true);
 	});
 
-	it("必須の y が数値でない場合はエラー", () => {
+	it("is an error when the required y is not a number", () => {
 		const errors = validateRectDoc({ ...validRect, y: null }, "root");
 		expect(errors.some((e) => e.path === "root.y")).toBe(true);
 	});
 
-	it("必須の width が数値でない場合はエラー", () => {
+	it("is an error when the required width is not a number", () => {
 		const errors = validateRectDoc({ ...validRect, width: "100px" }, "root");
 		expect(errors.some((e) => e.path === "root.width")).toBe(true);
 	});
 
-	it("必須の height が数値でない場合はエラー", () => {
+	it("is an error when the required height is not a number", () => {
 		const errors = validateRectDoc({ ...validRect, height: undefined }, "root");
 		expect(errors.some((e) => e.path === "root.height")).toBe(true);
 	});
 
-	it("textAlign が不正な値はエラー", () => {
+	it("is an error when textAlign has an invalid value", () => {
 		const errors = validateRectDoc(
 			{ ...validRect, textAlign: "justify" },
 			"root",
@@ -58,7 +58,7 @@ describe("validateRectDoc", () => {
 		expect(errors.some((e) => e.path === "root.textAlign")).toBe(true);
 	});
 
-	it("verticalAlign が不正な値はエラー", () => {
+	it("is an error when verticalAlign has an invalid value", () => {
 		const errors = validateRectDoc(
 			{ ...validRect, verticalAlign: "baseline" },
 			"root",
@@ -66,7 +66,7 @@ describe("validateRectDoc", () => {
 		expect(errors.some((e) => e.path === "root.verticalAlign")).toBe(true);
 	});
 
-	it("strokeDashType が不正な値はエラー", () => {
+	it("is an error when strokeDashType has an invalid value", () => {
 		const errors = validateRectDoc(
 			{ ...validRect, strokeDashType: "double" },
 			"root",
@@ -74,12 +74,12 @@ describe("validateRectDoc", () => {
 		expect(errors.some((e) => e.path === "root.strokeDashType")).toBe(true);
 	});
 
-	it("オプション項目がない場合はエラーなし", () => {
+	it("yields no error when optional fields are absent", () => {
 		const minimal = { x: 0, y: 0, width: 100, height: 100 };
 		expect(validateRectDoc(minimal, "root")).toEqual([]);
 	});
 
-	it('色フィールドの sentinel "auto" はエラーなし（テーマ追従）', () => {
+	it('yields no error for the color field sentinel "auto" (follows the theme)', () => {
 		const autoColored = {
 			...validRect,
 			stroke: "auto",
@@ -89,9 +89,9 @@ describe("validateRectDoc", () => {
 		expect(validateRectDoc(autoColored, "root")).toEqual([]);
 	});
 
-	// ─── 強化: CSS インジェクション安全性（beyondSchema） ───
+	// ─── Additional coverage: CSS injection safety (beyondSchema) ───
 	it.each(["stroke", "fill", "fontColor", "fontFamily", "fontWeight"])(
-		"%s に CSS breakout 文字列はエラー（beyondSchema フラグ付き）",
+		"is an error (with the beyondSchema flag) when %s contains a CSS breakout string",
 		(key) => {
 			const errors = validateRectDoc(
 				{ ...validRect, [key]: "red; color: blue" },
@@ -104,34 +104,34 @@ describe("validateRectDoc", () => {
 	);
 
 	it.each(["url(x)", "a{b}", "a/*c*/", "<svg>", "a\\b"])(
-		"fill の危険な断片 %s はエラー",
+		"is an error when fill contains the dangerous fragment %s",
 		(bad) => {
 			const errors = validateRectDoc({ ...validRect, fill: bad }, "root");
 			expect(errors.some((e) => e.path === "root.fill")).toBe(true);
 		},
 	);
 
-	// ─── 強化: 数値スタイルフィールド ───
+	// ─── Additional coverage: numeric style fields ───
 	it.each(["strokeWidth", "fontSize", "rx"])(
-		"%s が数値でない場合はエラー",
+		"is an error when %s is not a number",
 		(key) => {
 			const errors = validateRectDoc({ ...validRect, [key]: "3" }, "root");
 			expect(errors.some((e) => e.path === `root.${key}`)).toBe(true);
 		},
 	);
 
-	// ─── 強化: transform フィールド ───
-	it("rotation が数値でない場合はエラー", () => {
+	// ─── Additional coverage: transform fields ───
+	it("is an error when rotation is not a number", () => {
 		const errors = validateRectDoc({ ...validRect, rotation: "0" }, "root");
 		expect(errors.some((e) => e.path === "root.rotation")).toBe(true);
 	});
 
-	it.each(["flipX", "flipY"])("%s が boolean でない場合はエラー", (key) => {
+	it.each(["flipX", "flipY"])("is an error when %s is not a boolean", (key) => {
 		const errors = validateRectDoc({ ...validRect, [key]: "false" }, "root");
 		expect(errors.some((e) => e.path === `root.${key}`)).toBe(true);
 	});
 
-	it("複数の不正フィールドはすべて報告される", () => {
+	it("reports all invalid fields", () => {
 		const errors = validateRectDoc(
 			{ ...validRect, x: "a", fill: "a;b", fontSize: "z" },
 			"root",
@@ -141,9 +141,9 @@ describe("validateRectDoc", () => {
 		expect(errors.some((e) => e.path === "root.fontSize")).toBe(true);
 	});
 
-	// ─── 強化: 数値下限（スキーマ minimum と一致） ───
+	// ─── Additional coverage: numeric lower bounds (matching schema minimum) ───
 	it.each(["width", "height", "rx", "strokeWidth"])(
-		"%s が負数はエラー（>= 0）",
+		"is an error when %s is negative (>= 0)",
 		(key) => {
 			const errors = validateRectDoc({ ...validRect, [key]: -1 }, "root");
 			expect(
@@ -154,13 +154,13 @@ describe("validateRectDoc", () => {
 		},
 	);
 
-	it("width/height = 0 は許容（minimum: 0）", () => {
+	it("allows width/height = 0 (minimum: 0)", () => {
 		expect(
 			validateRectDoc({ ...validRect, width: 0, height: 0 }, "root"),
 		).toEqual([]);
 	});
 
-	it("fontSize < 1 はエラー（>= 1）", () => {
+	it("is an error when fontSize < 1 (>= 1)", () => {
 		const errors = validateRectDoc({ ...validRect, fontSize: 0 }, "root");
 		expect(
 			errors.some(
@@ -169,13 +169,13 @@ describe("validateRectDoc", () => {
 		).toBe(true);
 	});
 
-	it("x / y は負数でも許容（位置に下限なし）", () => {
+	it("allows negative x / y (positions have no lower bound)", () => {
 		expect(validateRectDoc({ ...validRect, x: -100, y: -50 }, "root")).toEqual(
 			[],
 		);
 	});
 
-	it('色の sentinel "auto" は minimum 強化後も許容される', () => {
+	it('still accepts the color sentinel "auto" after the minimum tightening', () => {
 		expect(
 			validateRectDoc(
 				{ ...validRect, stroke: "auto", fill: "auto", fontColor: "auto" },

@@ -25,20 +25,20 @@ const rect = (
 	}) as unknown as ObjectState;
 
 describe("createMultiSelectGroup", () => {
-	it("selectedIds が 0 件 → null", () => {
+	it("0 selectedIds -> null", () => {
 		expect(createMultiSelectGroup([], {})).toBeNull();
 	});
 
-	it("selectedIds が 1 件 → null", () => {
+	it("1 selectedId -> null", () => {
 		const objects = { r1: rect("r1", 50, 50, 40, 40) };
 		expect(createMultiSelectGroup(["r1"], objects)).toBeNull();
 	});
 
-	it("有効なオブジェクトが見つからない（全部 missing）→ null", () => {
+	it("no valid objects found (all missing) -> null", () => {
 		expect(createMultiSelectGroup(["a", "b"], {})).toBeNull();
 	});
 
-	it("2 件の rect → 正しい cx/cy/width/height を持つ GroupState を返す", () => {
+	it("two rects -> returns a GroupState with the correct cx/cy/width/height", () => {
 		const r1 = rect("r1", 50, 50, 40, 40); // left=30, right=70, top=30, bottom=70
 		const r2 = rect("r2", 150, 150, 40, 40); // left=130, right=170, top=130, bottom=170
 		const objects = { r1, r2 };
@@ -50,21 +50,21 @@ describe("createMultiSelectGroup", () => {
 		expect(result?.height).toBeCloseTo(140);
 	});
 
-	it("返された GroupState は MULTI_SELECT_GROUP.ID を持つ", () => {
+	it("the returned GroupState has MULTI_SELECT_GROUP.ID", () => {
 		const r1 = rect("r1", 0, 0, 10, 10);
 		const r2 = rect("r2", 100, 0, 10, 10);
 		const result = createMultiSelectGroup(["r1", "r2"], { r1, r2 });
 		expect(result?.id).toBe(MULTI_SELECT_GROUP.ID);
 	});
 
-	it("返された GroupState の childIds は selectedIds", () => {
+	it("the returned GroupState's childIds are the selectedIds", () => {
 		const r1 = rect("r1", 0, 0, 10, 10);
 		const r2 = rect("r2", 100, 0, 10, 10);
 		const result = createMultiSelectGroup(["r1", "r2"], { r1, r2 });
 		expect(result?.childIds).toEqual(["r1", "r2"]);
 	});
 
-	it("rotation=0 / scaleX=1 / scaleY=1 で返る", () => {
+	it("returns with rotation=0 / scaleX=1 / scaleY=1", () => {
 		const r1 = rect("r1", 0, 0, 10, 10);
 		const r2 = rect("r2", 50, 0, 10, 10);
 		const result = createMultiSelectGroup(["r1", "r2"], { r1, r2 });
@@ -73,7 +73,7 @@ describe("createMultiSelectGroup", () => {
 		expect(result?.scaleY).toBe(1);
 	});
 
-	it("existingMultiSelectGroup の lockAspectRatio を引き継ぐ", () => {
+	it("inherits lockAspectRatio from existingMultiSelectGroup", () => {
 		const r1 = rect("r1", 0, 0, 10, 10);
 		const r2 = rect("r2", 50, 0, 10, 10);
 		const existing = { lockAspectRatio: false } as GroupState;
@@ -81,14 +81,14 @@ describe("createMultiSelectGroup", () => {
 		expect(result?.lockAspectRatio).toBe(false);
 	});
 
-	it("existingMultiSelectGroup がない場合 lockAspectRatio はデフォルト true", () => {
+	it("lockAspectRatio defaults to true when there is no existingMultiSelectGroup", () => {
 		const r1 = rect("r1", 0, 0, 10, 10);
 		const r2 = rect("r2", 50, 0, 10, 10);
 		const result = createMultiSelectGroup(["r1", "r2"], { r1, r2 });
 		expect(result?.lockAspectRatio).toBe(true);
 	});
 
-	it("ネストしたグループ → 孫要素のバウンディングボックスで計算される", () => {
+	it("nested groups -> computed from the grandchild elements' bounding boxes", () => {
 		const r1 = rect("r1", 0, 0, 20, 20);
 		const innerGroup: ObjectState = {
 			id: "inner",
@@ -99,8 +99,8 @@ describe("createMultiSelectGroup", () => {
 		const objects = { r1, r2, inner: innerGroup };
 		const result = createMultiSelectGroup(["inner", "r2"], objects);
 		expect(result).not.toBeNull();
-		// inner の子 r1: cx=0,cy=0,w=20,h=20 → left=-10, right=10
-		// r2: cx=100,cy=0,w=20,h=20 → left=90, right=110
+		// inner's child r1: cx=0,cy=0,w=20,h=20 -> left=-10, right=10
+		// r2: cx=100,cy=0,w=20,h=20 -> left=90, right=110
 		expect(result?.cx).toBeCloseTo(50);
 	});
 });

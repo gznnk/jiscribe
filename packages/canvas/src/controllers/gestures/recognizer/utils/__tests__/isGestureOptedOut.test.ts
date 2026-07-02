@@ -16,15 +16,15 @@ const makeTarget = (tokens: string[]): EventTarget => {
 };
 
 describe("isGestureOptedOut", () => {
-	it('data-gesture="none" を持つとき true を返す', () => {
+	it('returns true when it has data-gesture="none"', () => {
 		expect(isGestureOptedOut(makeTarget(["none"]))).toBe(true);
 	});
 
-	it("none トークンを持たないとき false を返す", () => {
+	it("returns false when it does not have the none token", () => {
 		expect(isGestureOptedOut(makeTarget(["native-pointer"]))).toBe(false);
 	});
 
-	it("target が null のとき false を返す", () => {
+	it("returns false when target is null", () => {
 		expect(isGestureOptedOut(null)).toBe(false);
 	});
 });

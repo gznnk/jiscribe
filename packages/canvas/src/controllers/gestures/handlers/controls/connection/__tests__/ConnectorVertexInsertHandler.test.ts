@@ -10,7 +10,7 @@ import { ConnectorVertexInsertHandler } from "../ConnectorVertexInsertHandler";
 
 const insertHandler = new ConnectorVertexInsertHandler();
 
-/** supports() 検証用に targetKind / targetId だけ持つ最小イベント。 */
+/** A minimal event carrying only targetKind / targetId, for verifying supports(). */
 const controlEvent = (
 	targetId: string | undefined,
 	targetKind = "control",
@@ -71,21 +71,21 @@ const pointsOf = (state: CanvasControllerState, id = "conn-1") =>
 	(state.objects[id] as unknown as { points: Point[] }).points;
 
 describe("ConnectorVertexInsertHandler", () => {
-	it("直線コネクター（waypoint なし）の唯一のセグメントに最初の曲げ点を打てる", () => {
+	it("can drop the first bend point on the only segment of a straight connector (no waypoints)", () => {
 		const state = makeState([]);
 		const next = insertHandler.handle(
 			state,
 			insertEvent("dragStart", { x: 50, y: 50 }, 0),
 		);
 		expect(pointsOf(next)).toEqual([{ x: 50, y: 50 }]);
-		// 後続 drag 用に eventStartSnapshot も更新されている
+		// eventStartSnapshot is also updated for the subsequent drag
 		expect(pointsOf(next.eventStartSnapshot as never)).toEqual([
 			{ x: 50, y: 50 },
 		]);
 	});
 
-	it("セグメント番号は端点込みパス基準で、waypoints へ splice(segmentIndex) で挿入する", () => {
-		// 描画パス [source, w0, w1, target] のセグメント 1 (w0→w1) に挿入
+	it("segment index is based on the endpoint-inclusive path; inserts into waypoints via splice(segmentIndex)", () => {
+		// Insert into segment 1 (w0->w1) of the drawing path [source, w0, w1, target]
 		const state = makeState([
 			{ x: 0, y: 0 },
 			{ x: 100, y: 0 },
@@ -101,7 +101,7 @@ describe("ConnectorVertexInsertHandler", () => {
 		]);
 	});
 
-	it("最終セグメント（segmentIndex = waypoints.length）では末尾へ追加する", () => {
+	it("appends to the end for the last segment (segmentIndex = waypoints.length)", () => {
 		const state = makeState([{ x: 0, y: 0 }]);
 		const next = insertHandler.handle(
 			state,
@@ -113,7 +113,7 @@ describe("ConnectorVertexInsertHandler", () => {
 		]);
 	});
 
-	it("dragStart で挿入した点を drag で移動できる", () => {
+	it("can move a point inserted on dragStart via drag", () => {
 		const started = insertHandler.handle(
 			makeState([]),
 			insertEvent("dragStart", { x: 50, y: 50 }, 0),
@@ -125,7 +125,7 @@ describe("ConnectorVertexInsertHandler", () => {
 		expect(pointsOf(dragged)).toEqual([{ x: 70, y: 90 }]);
 	});
 
-	it("dragEnd で edgeScroll を無効化して確定する", () => {
+	it("disables edgeScroll and confirms on dragEnd", () => {
 		const started = insertHandler.handle(
 			makeState([]),
 			insertEvent("dragStart", { x: 50, y: 50 }, 0),
@@ -138,7 +138,7 @@ describe("ConnectorVertexInsertHandler", () => {
 		expect(ended.edgeScrollEnabled).toBe(false);
 	});
 
-	it("左クリック以外（button !== 0）は無視する", () => {
+	it("ignores non-left clicks (button !== 0)", () => {
 		const state = makeState([]);
 		const next = insertHandler.handle(
 			state,
@@ -147,7 +147,7 @@ describe("ConnectorVertexInsertHandler", () => {
 		expect(pointsOf(next)).toEqual([]);
 	});
 
-	it("コネクター以外のオブジェクトには作用しない", () => {
+	it("has no effect on non-connector objects", () => {
 		const state = makeState([]);
 		state.objects["conn-1"] = { id: "conn-1", type: "rect" } as never;
 		const next = insertHandler.handle(
@@ -157,8 +157,8 @@ describe("ConnectorVertexInsertHandler", () => {
 		expect(next).toBe(state);
 	});
 
-	it("セグメント数を超える segmentIndex は無視する（パスは waypoints.length + 1 本）", () => {
-		// waypoint 0 個 → セグメントは 1 本（index 0 のみ）。index 5 は範囲外。
+	it("ignores a segmentIndex beyond the number of segments (the path has waypoints.length + 1 segments)", () => {
+		// 0 waypoints -> 1 segment (index 0 only). index 5 is out of range.
 		const state = makeState([]);
 		const next = insertHandler.handle(
 			state,
@@ -168,11 +168,11 @@ describe("ConnectorVertexInsertHandler", () => {
 	});
 });
 
-describe("ConnectorVertexInsertHandler.supports / ルーティング衝突", () => {
+describe("ConnectorVertexInsertHandler.supports / routing conflicts", () => {
 	const vertexInsert = new VertexInsertHandler();
 	const connectionAnchor = new ConnectionAnchorEventHandler();
 
-	it("connector-vertex-insert: の control イベントだけを supports する", () => {
+	it("supports only connector-vertex-insert: control events", () => {
 		expect(
 			insertHandler.supports(controlEvent("connector-vertex-insert:c:0")),
 		).toBe(true);
@@ -190,24 +190,24 @@ describe("ConnectorVertexInsertHandler.supports / ルーティング衝突", () 
 		).toBe(false);
 	});
 
-	it("紛らわしい prefix の兄弟ハンドラは connector-vertex-insert を奪わない", () => {
-		// ControlEventHandler は supports() が true の最初のストラテジへ流すため、
-		// 接頭辞が部分一致する VertexInsertHandler / ConnectionAnchorEventHandler が
-		// 誤って掴まないことを固定する。
+	it("sibling handlers with confusing prefixes do not steal connector-vertex-insert", () => {
+		// ControlEventHandler routes to the first strategy whose supports() is true, so
+		// pin down that the prefix-partially-matching VertexInsertHandler / ConnectionAnchorEventHandler
+		// do not grab it by mistake.
 		const event = controlEvent("connector-vertex-insert:c:0");
 		expect(vertexInsert.supports(event)).toBe(false);
 		expect(connectionAnchor.supports(event)).toBe(false);
-		// 逆向き: 自分は他者のコントロールを掴まない
+		// Reverse: this handler does not grab others' controls
 		expect(insertHandler.supports(controlEvent("vertex-control:c:0"))).toBe(
 			false,
 		);
 	});
 });
 
-describe("VertexControlHandler によるコネクター waypoint 移動（流用確認）", () => {
+describe("moving a connector waypoint via VertexControlHandler (reuse check)", () => {
 	const moveHandler = new VertexControlHandler();
 
-	it('"vertex-control:<connectorId>:<i>" の drag で waypoint を動かせる', () => {
+	it('can move a waypoint via a drag on "vertex-control:<connectorId>:<i>"', () => {
 		const state = makeState([
 			{ x: 0, y: 0 },
 			{ x: 100, y: 0 },

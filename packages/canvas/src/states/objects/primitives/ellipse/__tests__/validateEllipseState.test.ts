@@ -18,27 +18,27 @@ const validEllipse = {
 };
 
 describe("isValidEllipseState", () => {
-	it("有効な Ellipse は true", () => {
+	it("valid Ellipse is true", () => {
 		expect(isValidEllipseState(validEllipse)).toBe(true);
 	});
 
-	it("type 不一致 / 必須ジオメトリ欠落は false", () => {
+	it("type mismatch / missing required geometry is false", () => {
 		expect(isValidEllipseState({ ...validEllipse, type: "rect" })).toBe(false);
 		expect(isValidEllipseState({ ...validEllipse, height: undefined })).toBe(
 			false,
 		);
 	});
 
-	it("width / height が負数は false（minimum: 0）", () => {
+	it("negative width / height is false (minimum: 0)", () => {
 		expect(isValidEllipseState({ ...validEllipse, width: -1 })).toBe(false);
 		expect(isValidEllipseState({ ...validEllipse, height: -1 })).toBe(false);
 	});
 
-	it("fontSize < 1 は false（>= 1）", () => {
+	it("fontSize < 1 is false (>= 1)", () => {
 		expect(isValidEllipseState({ ...validEllipse, fontSize: 0 })).toBe(false);
 	});
 
-	it("CSS インジェクションを含む fill は false", () => {
+	it("fill containing CSS injection is false", () => {
 		expect(isValidEllipseState({ ...validEllipse, fill: "a; } body {" })).toBe(
 			false,
 		);

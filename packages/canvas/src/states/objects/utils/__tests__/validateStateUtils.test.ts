@@ -17,10 +17,10 @@ import {
 
 describe("validateStateUtils", () => {
 	describe("hasValidIdAndType", () => {
-		it("非空 id と一致する type は true", () => {
+		it("non-empty id and matching type is true", () => {
 			expect(hasValidIdAndType({ id: "a", type: "rect" }, "rect")).toBe(true);
 		});
-		it("空 id / 型不一致 / id 非文字列は false", () => {
+		it("empty id / type mismatch / non-string id is false", () => {
 			expect(hasValidIdAndType({ id: "", type: "rect" }, "rect")).toBe(false);
 			expect(hasValidIdAndType({ id: "a", type: "ellipse" }, "rect")).toBe(
 				false,
@@ -30,17 +30,17 @@ describe("validateStateUtils", () => {
 	});
 
 	describe("isValidFrameState", () => {
-		it("cx/cy/width/height が数値なら true", () => {
+		it("is true when cx/cy/width/height are numbers", () => {
 			expect(isValidFrameState({ cx: 0, cy: 0, width: 10, height: 10 })).toBe(
 				true,
 			);
 		});
-		it("cx/cy は負値でも true（位置に下限なし）", () => {
+		it("is true even when cx/cy are negative (no lower bound on position)", () => {
 			expect(isValidFrameState({ cx: -5, cy: -5, width: 10, height: 10 })).toBe(
 				true,
 			);
 		});
-		it("width/height が負値なら false（スキーマ minimum: 0）", () => {
+		it("is false when width/height are negative (schema minimum: 0)", () => {
 			expect(isValidFrameState({ cx: 0, cy: 0, width: -1, height: 10 })).toBe(
 				false,
 			);
@@ -48,7 +48,7 @@ describe("validateStateUtils", () => {
 				false,
 			);
 		});
-		it("いずれか欠落/非数値なら false", () => {
+		it("is false when any field is missing / non-numeric", () => {
 			expect(isValidFrameState({ cx: 0, cy: 0, width: 10 })).toBe(false);
 			expect(isValidFrameState({ cx: 0, cy: 0, width: "10", height: 10 })).toBe(
 				false,
@@ -57,49 +57,49 @@ describe("validateStateUtils", () => {
 	});
 
 	describe("isValidTransformState", () => {
-		it("rotation/scaleX/scaleY が数値なら true", () => {
+		it("is true when rotation/scaleX/scaleY are numbers", () => {
 			expect(isValidTransformState({ rotation: 0, scaleX: 1, scaleY: 1 })).toBe(
 				true,
 			);
 		});
-		it("欠落なら false", () => {
+		it("is false when a field is missing", () => {
 			expect(isValidTransformState({ rotation: 0, scaleX: 1 })).toBe(false);
 		});
 	});
 
 	describe("isValidStrokeStyleState", () => {
-		it("妥当な stroke はエラーなし", () => {
+		it("valid stroke has no errors", () => {
 			expect(isValidStrokeStyleState({ stroke: "#000", strokeWidth: 2 })).toBe(
 				true,
 			);
 			expect(isValidStrokeStyleState({})).toBe(true);
 		});
-		it("strokeWidth が負値なら false（スキーマ minimum: 0）", () => {
+		it("is false when strokeWidth is negative (schema minimum: 0)", () => {
 			expect(isValidStrokeStyleState({ strokeWidth: -1 })).toBe(false);
 		});
-		it("strokeWidth が 0 は true", () => {
+		it("strokeWidth of 0 is true", () => {
 			expect(isValidStrokeStyleState({ strokeWidth: 0 })).toBe(true);
 		});
-		it("CSS インジェクションを含む stroke は false", () => {
+		it("stroke containing CSS injection is false", () => {
 			expect(isValidStrokeStyleState({ stroke: "red; } body {" })).toBe(false);
 		});
-		it("不正な strokeDashType は false", () => {
+		it("invalid strokeDashType is false", () => {
 			expect(isValidStrokeStyleState({ strokeDashType: "double" })).toBe(false);
 		});
 	});
 
 	describe("isValidFillStyleState", () => {
-		it("妥当な fill / 省略は true", () => {
+		it("valid fill / omitted is true", () => {
 			expect(isValidFillStyleState({ fill: "transparent" })).toBe(true);
 			expect(isValidFillStyleState({})).toBe(true);
 		});
-		it("インジェクションを含む fill は false", () => {
+		it("fill containing injection is false", () => {
 			expect(isValidFillStyleState({ fill: "url(http://evil/x)" })).toBe(false);
 		});
 	});
 
 	describe("isValidTextStyleState", () => {
-		it("テキスト無し/妥当なフォントは true", () => {
+		it("no text / valid font is true", () => {
 			expect(isValidTextStyleState({})).toBe(true);
 			expect(
 				isValidTextStyleState({
@@ -108,13 +108,13 @@ describe("validateStateUtils", () => {
 				}),
 			).toBe(true);
 		});
-		it("fontSize が 1 以上なら true、1 未満は false（スキーマ minimum: 1）", () => {
+		it("fontSize >= 1 is true, < 1 is false (schema minimum: 1)", () => {
 			expect(isValidTextStyleState({ fontSize: 1 })).toBe(true);
 			expect(isValidTextStyleState({ fontSize: 12 })).toBe(true);
 			expect(isValidTextStyleState({ fontSize: 0 })).toBe(false);
 			expect(isValidTextStyleState({ fontSize: -3 })).toBe(false);
 		});
-		it("fontFamily / fontWeight のインジェクションは false", () => {
+		it("injection in fontFamily / fontWeight is false", () => {
 			expect(isValidTextStyleState({ fontFamily: "Arial; } body {" })).toBe(
 				false,
 			);
@@ -125,37 +125,37 @@ describe("validateStateUtils", () => {
 	});
 
 	describe("isValidRadiusStyleState", () => {
-		it("rx が数値 / 省略は true", () => {
+		it("rx as a number / omitted is true", () => {
 			expect(isValidRadiusStyleState({ rx: 4 })).toBe(true);
 			expect(isValidRadiusStyleState({ rx: 0 })).toBe(true);
 			expect(isValidRadiusStyleState({})).toBe(true);
 		});
-		it("rx が負値なら false（スキーマ minimum: 0）", () => {
+		it("is false when rx is negative (schema minimum: 0)", () => {
 			expect(isValidRadiusStyleState({ rx: -1 })).toBe(false);
 		});
-		it("rx が非数値なら false", () => {
+		it("is false when rx is non-numeric", () => {
 			expect(isValidRadiusStyleState({ rx: "4" })).toBe(false);
 		});
 	});
 
 	describe("isValidArrowFields", () => {
-		it("妥当な ArrowType / 省略は true", () => {
+		it("valid ArrowType / omitted is true", () => {
 			expect(isValidArrowFields({ startArrow: "None" })).toBe(true);
 			expect(isValidArrowFields({})).toBe(true);
 		});
-		it("不正な ArrowType は false", () => {
+		it("invalid ArrowType is false", () => {
 			expect(isValidArrowFields({ endArrow: "diamond" })).toBe(false);
 		});
 	});
 
 	describe("isValidChildIds", () => {
-		it("非空の文字列配列は true", () => {
+		it("non-empty string array is true", () => {
 			expect(isValidChildIds({ childIds: ["a", "b"] })).toBe(true);
 		});
-		it("空配列は false（空 group は退化状態として弾く）", () => {
+		it("empty array is false (reject empty group as a degenerate state)", () => {
 			expect(isValidChildIds({ childIds: [] })).toBe(false);
 		});
-		it("非配列/非文字列要素は false", () => {
+		it("non-array / non-string elements is false", () => {
 			expect(isValidChildIds({ childIds: "a" })).toBe(false);
 			expect(isValidChildIds({ childIds: ["a", 1] })).toBe(false);
 		});
@@ -165,25 +165,25 @@ describe("validateStateUtils", () => {
 		const pts = (n: number) =>
 			Array.from({ length: n }, (_v, i) => ({ x: i, y: i }));
 
-		it("minPoints を満たす points 配列は true", () => {
+		it("points array meeting minPoints is true", () => {
 			expect(isValidPolyState({ points: pts(2) }, 2)).toBe(true);
 			expect(isValidPolyState({ points: pts(3) }, 3)).toBe(true);
 		});
-		it("minPoints 未満は false（polyline:2 / polygon:3 の閾値）", () => {
+		it("below minPoints is false (thresholds polyline:2 / polygon:3)", () => {
 			expect(isValidPolyState({ points: pts(1) }, 2)).toBe(false);
 			expect(isValidPolyState({ points: pts(2) }, 3)).toBe(false);
 		});
-		it("points 無しは false", () => {
+		it("no points is false", () => {
 			expect(isValidPolyState({}, 2)).toBe(false);
 		});
 	});
 
 	describe("isValidWaypointState", () => {
-		it("空配列の経由点も true（端点は source/target が持つ）", () => {
+		it("empty waypoint array is also true (endpoints are held by source/target)", () => {
 			expect(isValidWaypointState({ points: [] })).toBe(true);
 			expect(isValidWaypointState({ points: [{ x: 0, y: 0 }] })).toBe(true);
 		});
-		it("points 無しは false", () => {
+		it("no points is false", () => {
 			expect(isValidWaypointState({})).toBe(false);
 		});
 	});
@@ -195,12 +195,12 @@ describe("validateStateUtils", () => {
 		};
 		const free = { anchor: { kind: "free", point: { x: 0, y: 0 } } };
 
-		it("いずれかの端点が owned なら true", () => {
+		it("is true when either endpoint is owned", () => {
 			expect(hasOwnedEndpoint(owned, free)).toBe(true);
 			expect(hasOwnedEndpoint(free, owned)).toBe(true);
 			expect(hasOwnedEndpoint(owned, owned)).toBe(true);
 		});
-		it("両端 free なら false", () => {
+		it("is false when both endpoints are free", () => {
 			expect(hasOwnedEndpoint(free, free)).toBe(false);
 		});
 	});

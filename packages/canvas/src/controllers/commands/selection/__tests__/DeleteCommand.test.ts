@@ -7,7 +7,7 @@ import type { CanvasControllerState } from "../../../CanvasTypes";
 import { initializeObjectRegistry } from "../../../setup/initializeObjectRegistry";
 import { DeleteCommand } from "../DeleteCommand";
 
-// グループのバウンド再計算が objectBehaviorRegistry 経由になるため初期化する
+// group bounds recalculation goes through objectBehaviorRegistry, so initialize it
 beforeAll(() => {
 	initializeObjectRegistry();
 });
@@ -63,8 +63,8 @@ const makeState = (params: {
 	}) as unknown as CanvasControllerState;
 
 describe("DeleteCommand", () => {
-	describe("オブジェクト削除", () => {
-		it("選択オブジェクトを objects と rootIds から除去し選択を解除する", () => {
+	describe("object deletion", () => {
+		it("removes selected objects from objects and rootIds and clears the selection", () => {
 			const state = makeState({
 				selectedIds: ["b"],
 				objects: { a: makeRect("a"), b: makeRect("b") },
@@ -77,7 +77,7 @@ describe("DeleteCommand", () => {
 			expect(next.commitVersion).toBe(1);
 		});
 
-		it("グループ選択時は子孫も再帰的に削除する", () => {
+		it("recursively deletes descendants when a group is selected", () => {
 			const state = makeState({
 				selectedIds: ["g"],
 				objects: {
@@ -94,8 +94,8 @@ describe("DeleteCommand", () => {
 			expect(next.rootIds).toEqual([]);
 		});
 
-		it("グループ内の 1 子を削除すると親 childIds から外れる", () => {
-			// 残り 2 子なのでグループは解体されない
+		it("deleting one child in a group removes it from the parent's childIds", () => {
+			// 2 children remain, so the group is not dissolved
 			const state = makeState({
 				selectedIds: ["c1"],
 				objects: {
@@ -112,8 +112,8 @@ describe("DeleteCommand", () => {
 		});
 	});
 
-	describe("頂点削除", () => {
-		it("最小頂点数を超えるポリラインは指定頂点を削除する", () => {
+	describe("vertex deletion", () => {
+		it("deletes the specified vertex from a polyline above the minimum vertex count", () => {
 			const poly = makePolyline("p", [
 				{ x: 0, y: 0 },
 				{ x: 10, y: 0 },
@@ -132,11 +132,11 @@ describe("DeleteCommand", () => {
 				{ x: 20, y: 0 },
 			]);
 			expect(next.selectedVertex).toBeNull();
-			// オブジェクト自体は残る（頂点削除が優先される）
+			// the object itself remains (vertex deletion takes priority)
 			expect(next.objects["p"]).toBeDefined();
 		});
 
-		it("最小頂点数（polyline は 2）では頂点を削除せず state を据え置く", () => {
+		it("at the minimum vertex count (2 for a polyline), does not delete a vertex and leaves state unchanged", () => {
 			const poly = makePolyline("p", [
 				{ x: 0, y: 0 },
 				{ x: 10, y: 0 },
@@ -150,7 +150,7 @@ describe("DeleteCommand", () => {
 			expect(DeleteCommand.execute(state)).toBe(state);
 		});
 
-		it("頂点選択対象が poly でない場合は selectedVertex のみ解除する", () => {
+		it("clears only selectedVertex when the vertex-selection target is not a polyline", () => {
 			const state = makeState({
 				selectedIds: ["r"],
 				objects: { r: makeRect("r") },
@@ -159,13 +159,13 @@ describe("DeleteCommand", () => {
 			});
 			const next = DeleteCommand.execute(state);
 			expect(next.selectedVertex).toBeNull();
-			// オブジェクト削除には落ちない
+			// does not fall through to object deletion
 			expect(next.objects["r"]).toBeDefined();
 		});
 	});
 
 	describe("canExecute", () => {
-		it("オブジェクト選択があれば実行可能", () => {
+		it("is executable when there is an object selection", () => {
 			const state = makeState({
 				selectedIds: ["a"],
 				objects: { a: makeRect("a") },
@@ -174,7 +174,7 @@ describe("DeleteCommand", () => {
 			expect(DeleteCommand.canExecute(state)).toBe(true);
 		});
 
-		it("頂点選択があれば実行可能", () => {
+		it("is executable when there is a vertex selection", () => {
 			const state = makeState({
 				selectedIds: [],
 				objects: {},
@@ -184,7 +184,7 @@ describe("DeleteCommand", () => {
 			expect(DeleteCommand.canExecute(state)).toBe(true);
 		});
 
-		it("コネクター選択があれば実行可能", () => {
+		it("is executable when there is a connector selection", () => {
 			const state = makeState({
 				selectedIds: [],
 				objects: {},
@@ -194,7 +194,7 @@ describe("DeleteCommand", () => {
 			expect(DeleteCommand.canExecute(state)).toBe(true);
 		});
 
-		it("何も選択していなければ実行不可", () => {
+		it("is not executable when nothing is selected", () => {
 			expect(
 				DeleteCommand.canExecute(
 					makeState({ selectedIds: [], objects: {}, rootIds: [] }),

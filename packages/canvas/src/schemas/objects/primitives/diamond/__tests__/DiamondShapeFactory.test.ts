@@ -5,7 +5,7 @@ import { DiamondShapeFactory } from "../DiamondShapeFactory";
 
 describe("DiamondShapeFactory", () => {
 	describe("createDoc", () => {
-		it("position を中心に既定サイズの diamond を生成する", () => {
+		it("creates a default-sized diamond centered on the position", () => {
 			const doc = DiamondShapeFactory.createDoc({ x: 100, y: 80 }) as Record<
 				string,
 				unknown
@@ -13,14 +13,14 @@ describe("DiamondShapeFactory", () => {
 
 			expect(doc.type).toBe("diamond");
 			expect(doc.id).toEqual(expect.any(String));
-			// 左上座標は中心からサイズの半分を引いた位置
+			// The top-left coordinate is the center minus half the size
 			expect(doc.x).toBe(100 - DIAMOND_DOC_DEFAULTS.width / 2);
 			expect(doc.y).toBe(80 - DIAMOND_DOC_DEFAULTS.height / 2);
 			expect(doc.width).toBe(DIAMOND_DOC_DEFAULTS.width);
 			expect(doc.height).toBe(DIAMOND_DOC_DEFAULTS.height);
 		});
 
-		it("overrides でサイズを差し替えられる", () => {
+		it("can replace the size via overrides", () => {
 			const doc = DiamondShapeFactory.createDoc(
 				{ x: 0, y: 0 },
 				{ width: 40, height: 20 },
@@ -34,14 +34,14 @@ describe("DiamondShapeFactory", () => {
 	});
 
 	describe("calcDimensions", () => {
-		it("サイズの半分を半サイズとして返す", () => {
+		it("returns half the size as the half-size", () => {
 			expect(DiamondShapeFactory.calcDimensions()).toEqual({
 				halfWidth: DIAMOND_DOC_DEFAULTS.width / 2,
 				halfHeight: DIAMOND_DOC_DEFAULTS.height / 2,
 			});
 		});
 
-		it("overrides の width/height を反映する", () => {
+		it("applies overridden width/height", () => {
 			expect(
 				DiamondShapeFactory.calcDimensions({ width: 24, height: 16 }),
 			).toEqual({
@@ -52,7 +52,7 @@ describe("DiamondShapeFactory", () => {
 	});
 
 	describe("createDocFromBounds", () => {
-		it("2 点から左上座標とサイズを算出する", () => {
+		it("computes the top-left coordinate and size from 2 points", () => {
 			const doc = DiamondShapeFactory.createDocFromBounds?.(
 				10,
 				20,
@@ -66,7 +66,7 @@ describe("DiamondShapeFactory", () => {
 			expect(doc.height).toBe(40);
 		});
 
-		it("最小サイズ未満なら null を返す", () => {
+		it("returns null when below the minimum size", () => {
 			expect(DiamondShapeFactory.createDocFromBounds?.(0, 0, 2, 2)).toBeNull();
 		});
 	});

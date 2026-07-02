@@ -20,22 +20,22 @@ const group = (
 	}) as unknown as GroupState;
 
 describe("getFirstSelectedWithProp", () => {
-	it("selectedIds が空 → undefined", () => {
+	it("selectedIds is empty -> undefined", () => {
 		expect(getFirstSelectedWithProp([], {}, "fill")).toBeUndefined();
 	});
 
-	it("選択オブジェクト自体がプロパティを持つ → そのオブジェクトを返す", () => {
+	it("selected object itself has the property -> returns that object", () => {
 		const r = rect("r1", { fill: "#fff" });
 		const result = getFirstSelectedWithProp(["r1"], { r1: r }, "fill");
 		expect(result).toBe(r);
 	});
 
-	it("選択オブジェクトがプロパティを持たない → undefined", () => {
+	it("selected object lacks the property -> undefined", () => {
 		const r = rect("r1");
 		expect(getFirstSelectedWithProp(["r1"], { r1: r }, "fill")).toBeUndefined();
 	});
 
-	it("存在しない ID は飛ばして次を探す", () => {
+	it("skips nonexistent IDs and looks at the next one", () => {
 		const r = rect("r2", { fill: "#000" });
 		const result = getFirstSelectedWithProp(
 			["missing", "r2"],
@@ -45,7 +45,7 @@ describe("getFirstSelectedWithProp", () => {
 		expect(result).toBe(r);
 	});
 
-	it("グループ自体はプロパティを持たないが子孫が持つ → 子孫を返す", () => {
+	it("group itself lacks the property but a descendant has it -> returns the descendant", () => {
 		const child = rect("child", { fill: "#f00" });
 		const g = group("g1", ["child"]);
 		const objects = { g1: g as unknown as ObjectState, child };
@@ -53,14 +53,14 @@ describe("getFirstSelectedWithProp", () => {
 		expect(result).toBe(child);
 	});
 
-	it("複数選択時は selectedIds の順で最初に見つかったものを返す", () => {
+	it("with multiple selected, returns the first match in selectedIds order", () => {
 		const r1 = rect("r1", { fill: "#aaa" });
 		const r2 = rect("r2", { fill: "#bbb" });
 		const result = getFirstSelectedWithProp(["r1", "r2"], { r1, r2 }, "fill");
 		expect(result).toBe(r1);
 	});
 
-	it("どのオブジェクトもプロパティを持たない → undefined", () => {
+	it("no object has the property -> undefined", () => {
 		const objects = {
 			r1: rect("r1"),
 			g: group("g", ["r1"]) as unknown as ObjectState,

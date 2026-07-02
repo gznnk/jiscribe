@@ -19,16 +19,16 @@ const state = (
 	}) as unknown as CanvasControllerState;
 
 describe("getSelectedStrokeDashType (LineStyle)", () => {
-	it("選択なし → undefined", () => {
+	it("no selection → undefined", () => {
 		expect(getSelectedStrokeDashType(state({}, []))).toBeUndefined();
 	});
 
-	it("strokeDashType を持つ → その値", () => {
+	it("has strokeDashType → its value", () => {
 		const s = state({ a: obj("a", { strokeDashType: "dotted" }) }, ["a"]);
 		expect(getSelectedStrokeDashType(s)).toBe("dotted");
 	});
 
-	it("コネクター選択時はそのコネクターから取得する", () => {
+	it("retrieves from the connector when a connector is selected", () => {
 		const s = state(
 			{
 				a: obj("a", { strokeDashType: "solid" }),

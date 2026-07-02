@@ -11,23 +11,23 @@ const validPoints = {
 };
 
 describe("validatePolygonDoc", () => {
-	it("有効な Polygon はエラーなし", () => {
+	it("yields no error for a valid Polygon", () => {
 		const o = { ...validPoints, stroke: "#000", strokeWidth: 1, fill: "#eee" };
 		expect(validatePolygonDoc(o, "root")).toEqual([]);
 	});
 
-	it("points が不正な場合はエラー", () => {
+	it("is an error when points is invalid", () => {
 		expect(validatePolygonDoc({}, "root")).toHaveLength(1);
 	});
 
-	it("points が 1 点のみはエラー", () => {
+	it("is an error when points has only 1 point", () => {
 		const errors = validatePolygonDoc({ points: [{ x: 0, y: 0 }] }, "root");
 		expect(errors).toHaveLength(1);
 	});
 
-	// polygon は閉じた多角形なので最低 3 点（スキーマ minItems:3 と一致）。
-	// polyline と異なり 2 点は退化線分として弾く。
-	it("points が 2 点のみはエラー（at least 3 points）", () => {
+	// A polygon is a closed shape, so it requires at least 3 points (matching schema minItems:3).
+	// Unlike polyline, 2 points are rejected as a degenerate segment.
+	it("is an error when points has only 2 points (at least 3 points)", () => {
 		const errors = validatePolygonDoc(
 			{
 				points: [
@@ -45,11 +45,11 @@ describe("validatePolygonDoc", () => {
 		).toBe(true);
 	});
 
-	it("points が 3 点はエラーなし", () => {
+	it("yields no error when points has 3 points", () => {
 		expect(validatePolygonDoc(validPoints, "root")).toEqual([]);
 	});
 
-	it("strokeWidth が数値でない場合はエラー", () => {
+	it("is an error when strokeWidth is not a number", () => {
 		const errors = validatePolygonDoc(
 			{ ...validPoints, strokeWidth: "1px" },
 			"root",
@@ -57,7 +57,7 @@ describe("validatePolygonDoc", () => {
 		expect(errors.some((e) => e.path === "root.strokeWidth")).toBe(true);
 	});
 
-	it("fill が string でない場合はエラー", () => {
+	it("is an error when fill is not a string", () => {
 		const errors = validatePolygonDoc(
 			{ ...validPoints, fill: 0xff0000 },
 			"root",
@@ -66,7 +66,7 @@ describe("validatePolygonDoc", () => {
 	});
 
 	it.each(["stroke", "fill"])(
-		"%s に CSS breakout 文字列はエラー（beyondSchema）",
+		"is an error (beyondSchema) when %s contains a CSS breakout string",
 		(key) => {
 			const errors = validatePolygonDoc(
 				{ ...validPoints, [key]: "a;b" },

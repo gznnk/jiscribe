@@ -7,37 +7,37 @@ import type {
 } from "../GestureRecognizerTypes";
 
 /**
- * Issue #72 の検証テスト。
+ * Verification test for Issue #72.
  *
- * エッジスクロール中、recognizer は `currentPos`（= drag.last）に生ピクセルの
- * scrollDelta を、`delta` には scrollDelta/zoom を加算する（GestureRecognizer.ts:346-349）。
- * このテストは実機の 1 フレームループを忠実に再現し、`event.last` が
- * 「描画されるカーソルのワールド座標」からどれだけズレるかを毎フレーム実測する。
+ * During edge scrolling, the recognizer adds the raw-pixel scrollDelta to `currentPos`
+ * (= drag.last) and scrollDelta/zoom to `delta` (GestureRecognizer.ts:346-349).
+ * This test faithfully reproduces the real one-frame loop and measures, each frame, how far
+ * `event.last` deviates from "the world coordinate of the cursor as painted".
  *
- * 再現する実機ループ:
- *   1. recognizer が getSvgPoint（= getScreenCTM 逆変換）で現 viewport を反映した
- *      カーソルのワールド座標を得る。
- *   2. drag を発火（last / delta / scrollDelta）。
- *   3. CanvasEventHandler が scroll 派生イベントで viewport.minX += scrollDelta/zoom。
- *   4. 次フレームの getSvgPoint は更新後 viewport を反映する。
+ * The reproduced real loop:
+ *   1. The recognizer gets the cursor's world coordinate reflecting the current viewport via
+ *      getSvgPoint (= inverse getScreenCTM transform).
+ *   2. Fire a drag (last / delta / scrollDelta).
+ *   3. CanvasEventHandler does viewport.minX += scrollDelta/zoom via a scroll-derived event.
+ *   4. The next frame's getSvgPoint reflects the updated viewport.
  *
- * sim.viewport を getSvgPoint モックと canvasStateRef で共有し、各フレーム後に
- * reducer 相当の viewport 更新を手で行うことで上記を再現する。
+ * sim.viewport is shared between the getSvgPoint mock and canvasStateRef, and after each frame
+ * we perform the reducer-equivalent viewport update by hand to reproduce the above.
  */
 
-const STEP = 10; // AUTO_SCROLL_STEP_SIZE 相当（px）
-const CLIENT_X = 790; // 端で静止させるカーソルのクライアント X（右端近傍・不変）
-// 武装（arm-on-leave）用の内部クライアント X。ここから掴むと開始点はエッジ外。
+const STEP = 10; // Equivalent to AUTO_SCROLL_STEP_SIZE (px)
+const CLIENT_X = 790; // Client X of the cursor held at the edge (near the right edge, unchanged)
+// Interior client X for arming (arm-on-leave). Grabbing here puts the start point outside the edge.
 const CLIENT_X_INTERIOR = 400;
 
-// getSvgPoint モックと canvasStateRef が共有する可変 viewport。
+// Mutable viewport shared between the getSvgPoint mock and canvasStateRef.
 const sim = vi.hoisted(() => ({
 	viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 2 },
 }));
 
 vi.mock("../utils", () => ({
-	// viewBox = `minX minY width/zoom height/zoom` を画面サイズ width×height に描く際の
-	// getScreenCTM 逆変換: world = minX + clientX / zoom。viewport を反映する点が肝。
+	// Inverse getScreenCTM transform when drawing viewBox = `minX minY width/zoom height/zoom`
+	// onto screen size width x height: world = minX + clientX / zoom. The key point is that it reflects the viewport.
 	getSvgPoint: (_svg: unknown, clientX: number, clientY: number) => ({
 		x: sim.viewport.minX + clientX / sim.viewport.zoom,
 		y: sim.viewport.minY + clientY / sim.viewport.zoom,
@@ -47,8 +47,8 @@ vi.mock("../utils", () => ({
 	getInputValue: () => undefined,
 	isGestureOptedOut: () => false,
 	shouldSkipPointerCapture: () => false,
-	// 位置依存の近接判定。右端から AUTO_SCROLL_THRESHOLD(=20px) 以内を near とする。
-	// 内部（左寄り）では near=false になり、arm-on-leave の武装を再現できる。
+	// Position-dependent proximity check. Within AUTO_SCROLL_THRESHOLD (=20px) of the right edge is near.
+	// In the interior (toward the left), near=false, which reproduces arm-on-leave arming.
 	detectEdgeProximity: (
 		vp: { minX: number; width: number; zoom: number },
 		svgX: number,
@@ -67,8 +67,8 @@ vi.mock("../utils", () => ({
 let rafCallbacks: FrameRequestCallback[] = [];
 
 const flushRaf = (): void => {
-	// 退避してから実行する。flush 中の enqueue/schedule は次フレーム分として
-	// 新しい rafCallbacks に積まれ、この呼び出しでは実行されない（= 1 flush = 1 フレーム）。
+	// Save first, then run. Enqueue/schedule during flush is pushed onto the new rafCallbacks as
+	// the next frame's batch and is not run in this call (= 1 flush = 1 frame).
 	const pending = rafCallbacks;
 	rafCallbacks = [];
 	for (const cb of pending) {
@@ -134,7 +134,7 @@ const setup = () => {
 		canvasStateRef: {
 			current: {
 				edgeScrollEnabled: true,
-				// getSvgPoint と同じ可変 viewport を参照させる（zoom / minX を共有）。
+				// Reference the same mutable viewport as getSvgPoint (share zoom / minX).
 				viewport: sim.viewport,
 			},
 		} as GestureRecognizerConfig["canvasStateRef"],
@@ -159,39 +159,39 @@ const setup = () => {
 };
 
 type Sample = {
-	/** recognizer が出した drag.last.x（ハンドラがカーソル位置として消費する値） */
+	/** drag.last.x emitted by the recognizer (the value the handler consumes as cursor position) */
 	lastX: number;
-	/** recognizer が出した drag.delta.x */
+	/** drag.delta.x emitted by the recognizer */
 	deltaX: number;
-	/** drag.start.x（ドラッグ開始時のワールド座標・不変） */
+	/** drag.start.x (world coordinate at drag start, unchanged) */
 	startX: number;
-	/** この drag に伴いビューポートが scrollDelta/zoom だけ動いた後に、
-	 *  固定クライアント座標のカーソルが描画されるワールド座標 */
+	/** The world coordinate at which the cursor at fixed client coordinates is painted,
+	 *  after the viewport has moved by scrollDelta/zoom as a result of this drag */
 	cursorWorldWhenPainted: number;
 };
 
 /**
- * pointerdown → 端へドラッグ開始 → 端で静止したままエッジスクロールを N フレーム回し、
- * 各フレームの drag を実機ループ（drag 消費 → viewport 更新）として記録する。
+ * pointerdown -> start dragging to the edge -> hold at the edge and run edge scroll for N frames,
+ * recording each frame's drag as the real loop (consume drag -> update viewport).
  */
 const runEdgeScroll = (frames: number): Sample[] => {
 	const { events, dispatch } = setup();
 	const { zoom } = sim.viewport;
 
-	// pressed（内部）
+	// pressed (interior)
 	dispatch(makeEvent("pointerdown", CLIENT_X_INTERIOR, 100, 0));
 	flushRaf();
 
-	// ドラッグ開始（しきい値超え・内部）。dragStart にはまだ scrollDelta は適用されない。
+	// Start dragging (over threshold, interior). scrollDelta is not yet applied to dragStart.
 	dispatch(makeEvent("pointermove", CLIENT_X_INTERIOR + 20, 100, 16));
 	flushRaf();
 
-	// 内部で 1 drag。エッジ外なので edgeScrollArmed が立つ（武装）。
+	// One drag in the interior. Being outside the edge sets edgeScrollArmed (armed).
 	dispatch(makeEvent("pointermove", CLIENT_X_INTERIOR + 40, 100, 24));
 	flushRaf();
 
-	// 端で静止したまま最初の drag を 1 つ流す。以降は enqueue が自走するので
-	// flushRaf を繰り返すだけで毎フレームのエッジスクロールが続く。
+	// Hold at the edge and emit the first drag. From then on the enqueue self-runs, so
+	// merely repeating flushRaf keeps edge scrolling going each frame.
 	dispatch(makeEvent("pointermove", CLIENT_X, 100, 32));
 
 	const samples: Sample[] = [];
@@ -207,7 +207,7 @@ const runEdgeScroll = (frames: number): Sample[] => {
 		seen = drags.length;
 
 		const scrollDeltaX = drag.scrollDelta?.deltaX ?? 0;
-		// reducer 相当: ビューポートを scrollDelta/zoom だけ動かす（CanvasEventHandler.ts:65）。
+		// reducer-equivalent: move the viewport by scrollDelta/zoom (CanvasEventHandler.ts:65).
 		sim.viewport.minX += scrollDeltaX / zoom;
 
 		samples.push({
@@ -222,9 +222,9 @@ const runEdgeScroll = (frames: number): Sample[] => {
 };
 
 /**
- * pointerdown → ドラッグ開始 → 端で静止したまま「ドラッグ中の wheel スクロール」を
- * N フレーム回す（isWheel 分岐: GestureRecognizer.ts:312-322）。
- * wheel 経路は enqueue で自走しないため、各フレームで wheel を 1 回ずつ流す。
+ * pointerdown -> start dragging -> hold at the edge and run "wheel scrolling during a drag" for
+ * N frames (isWheel branch: GestureRecognizer.ts:312-322).
+ * The wheel path does not self-run via enqueue, so emit one wheel per frame.
  */
 const runWheelScroll = (frames: number): Sample[] => {
 	const { events, dispatch, wheelHandler } = setup();
@@ -232,7 +232,7 @@ const runWheelScroll = (frames: number): Sample[] => {
 
 	dispatch(makeEvent("pointerdown", 200, 100, 0));
 	flushRaf();
-	// ドラッグ開始（dragging=true）。toWheelEvent は dragging 中のみ pointermove 化する。
+	// Start dragging (dragging=true). toWheelEvent turns into a pointermove only while dragging.
 	dispatch(makeEvent("pointermove", CLIENT_X, 100, 16));
 	flushRaf();
 
@@ -241,7 +241,7 @@ const runWheelScroll = (frames: number): Sample[] => {
 	let t = 32;
 
 	for (let i = 0; i < frames; i++) {
-		// 端で静止したカーソル上でホイールを回す（deltaX = STEP）。
+		// Spin the wheel over the cursor held at the edge (deltaX = STEP).
 		wheelHandler({
 			clientX: CLIENT_X,
 			clientY: 100,
@@ -278,12 +278,12 @@ const runWheelScroll = (frames: number): Sample[] => {
 	return samples;
 };
 
-describe("GestureRecognizer スクロール中の drag.last（#72 回帰 / エッジ・ホイール共通）", () => {
-	// 修正前: currentPos に生ピクセル scrollDelta を加算していたため、last は
-	// カーソル描画位置から定数 s−s/zoom（zoom2 で 5 ワールド単位 = 10px）先行していた。
-	// Transform/Vertex/範囲選択は last を直接カーソル位置として使うため、この先行が
-	// 画面上のズレとして現れていた（#72）。修正後は last が /zoom 揃えになり 0 になる。
-	it("zoom≠1: last はカーソル描画位置に一致する（先行オフセットが無い）", () => {
+describe("GestureRecognizer drag.last during scroll (#72 regression / common to edge and wheel)", () => {
+	// Before the fix: raw-pixel scrollDelta was added to currentPos, so last led the cursor paint
+	// position by a constant s - s/zoom (at zoom 2, 5 world units = 10px).
+	// Transform/Vertex/range selection use last directly as the cursor position, so this lead
+	// showed up as an on-screen offset (#72). After the fix, last aligns to /zoom and becomes 0.
+	it("zoom != 1: last matches the cursor paint position (no leading offset)", () => {
 		const samples = runEdgeScroll(6);
 		expect(samples.length).toBeGreaterThanOrEqual(4);
 
@@ -292,19 +292,19 @@ describe("GestureRecognizer スクロール中の drag.last（#72 回帰 / エ�
 		}
 	});
 
-	it("last の毎フレーム伸びは s/zoom（= 実ビューポート移動量）であり zoom 倍速ではない", () => {
+	it("last's per-frame growth is s/zoom (= actual viewport movement), not zoom-times faster", () => {
 		const samples = runEdgeScroll(6);
 		const zoom = 2;
 
 		for (let i = 1; i < samples.length; i++) {
 			const growth = samples[i].lastX - samples[i - 1].lastX;
-			// issue 主張の「zoom 倍速（= STEP）」ではなく STEP/zoom で進む。
+			// Advances by STEP/zoom, not the "zoom-times faster (= STEP)" claimed in the issue.
 			expect(growth).toBeCloseTo(STEP / zoom);
 			expect(growth).not.toBeCloseTo(STEP);
 		}
 	});
 
-	it("不変条件 last === start + delta が保たれる", () => {
+	it("the invariant last === start + delta is preserved", () => {
 		const samples = runEdgeScroll(6);
 
 		for (const s of samples) {
@@ -312,7 +312,7 @@ describe("GestureRecognizer スクロール中の drag.last（#72 回帰 / エ�
 		}
 	});
 
-	it("zoom=1: オフセットは 0 で不変条件も保たれる", () => {
+	it("zoom=1: the offset is 0 and the invariant is preserved", () => {
 		sim.viewport.zoom = 1;
 		const samples = runEdgeScroll(6);
 		expect(samples.length).toBeGreaterThanOrEqual(4);
@@ -323,9 +323,9 @@ describe("GestureRecognizer スクロール中の drag.last（#72 回帰 / エ�
 		}
 	});
 
-	// 344-350 のブロックは isWheel 分岐（ドラッグ中のホイール）とエッジスクロールの
-	// 共通合流点。ホイール経路でも先行オフセットが無いことを確認する。
-	it("ドラッグ中ホイールでもエッジスクロールと同一: last がカーソルに一致する", () => {
+	// The block at 344-350 is the common merge point of the isWheel branch (wheel during a drag)
+	// and edge scroll. Confirm there is no leading offset on the wheel path either.
+	it("wheel during a drag behaves identically to edge scroll: last matches the cursor", () => {
 		const samples = runWheelScroll(6);
 		expect(samples.length).toBeGreaterThanOrEqual(4);
 
@@ -336,28 +336,28 @@ describe("GestureRecognizer スクロール中の drag.last（#72 回帰 / エ�
 			expect(s.lastX - (s.startX + s.deltaX)).toBeCloseTo(0);
 		}
 
-		// 毎フレームの伸びは s/zoom（zoom 倍速ではない）。
+		// Per-frame growth is s/zoom (not zoom-times faster).
 		for (let i = 1; i < samples.length; i++) {
 			expect(samples[i].lastX - samples[i - 1].lastX).toBeCloseTo(STEP / zoom);
 		}
 	});
 });
 
-describe("GestureRecognizer arm-on-leave（端に接した UI から掴んだ直後の暴発防止）", () => {
-	// ShapeLibrary など端に接した UI から掴むと、開始点が必ずエッジゾーン内になる。
-	// 一度もエッジ外へ出ていない間はスクロールを発火させない。
-	it("開始時エッジゾーン内のまま動かしてもスクロールしない", () => {
+describe("GestureRecognizer arm-on-leave (preventing runaway right after grabbing from edge-adjacent UI)", () => {
+	// Grabbing from edge-adjacent UI such as ShapeLibrary always places the start point inside the
+	// edge zone. Do not trigger scrolling until the pointer has left the edge zone at least once.
+	it("does not scroll even while moving inside the edge zone from the start", () => {
 		const { events, dispatch } = setup();
 
-		// 端（clientX=800）で掴み、エッジゾーン内（clientX>780）に留まったまま動かす。
-		// ドラッグ閾値は超えるがゾーン外へは出ない。
+		// Grab at the edge (clientX=800) and move while staying inside the edge zone (clientX>780).
+		// The drag threshold is exceeded but the pointer never leaves the zone.
 		dispatch(makeEvent("pointerdown", 800, 100, 0));
 		flushRaf();
-		dispatch(makeEvent("pointermove", 786, 100, 16)); // dragStart（端のまま）
+		dispatch(makeEvent("pointermove", 786, 100, 16)); // dragStart (still at the edge)
 		flushRaf();
-		dispatch(makeEvent("pointermove", 795, 100, 32)); // drag（端のまま）
+		dispatch(makeEvent("pointermove", 795, 100, 32)); // drag (still at the edge)
 		flushRaf();
-		// 自走していれば追加フレームでスクロールが続くはずだが、未武装なので何も起きない。
+		// If it self-ran, additional frames would keep scrolling, but since it is not armed, nothing happens.
 		flushRaf();
 		flushRaf();
 
@@ -368,9 +368,9 @@ describe("GestureRecognizer arm-on-leave（端に接した UI から掴んだ直
 		}
 	});
 
-	// 一度エッジ外へ出れば武装され、その後エッジに触れるとスクロールが始まる。
-	it("一度内部へ出てから端へ戻るとスクロールが始まる", () => {
-		// runEdgeScroll は内部で 1 drag 挟んでから端へ移動する経路を辿る。
+	// Once the pointer leaves the edge it is armed, and scrolling starts when it later touches the edge.
+	it("scrolling starts after leaving to the interior and returning to the edge", () => {
+		// runEdgeScroll follows a path that inserts one interior drag before moving to the edge.
 		const samples = runEdgeScroll(6);
 		expect(samples.length).toBeGreaterThanOrEqual(4);
 		expect(samples[0].deltaX).not.toBe(0);

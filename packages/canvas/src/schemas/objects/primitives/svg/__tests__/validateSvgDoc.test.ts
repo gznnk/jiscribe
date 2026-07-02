@@ -14,41 +14,41 @@ const validSvg = {
 };
 
 describe("validateSvgDoc", () => {
-	it("有効な Svg はエラーなし", () => {
+	it("yields no error for a valid Svg", () => {
 		expect(validateSvgDoc(validSvg, "root")).toEqual([]);
 	});
 
-	it("必須の x が数値でない場合はエラー", () => {
+	it("is an error when the required x is not a number", () => {
 		const errors = validateSvgDoc({ ...validSvg, x: "10" }, "root");
 		expect(errors.some((e) => e.path === "root.x")).toBe(true);
 	});
 
-	it("svgText が文字列でない場合はエラー", () => {
+	it("is an error when svgText is not a string", () => {
 		const errors = validateSvgDoc({ ...validSvg, svgText: 123 }, "root");
 		expect(errors.some((e) => e.path === "root.svgText")).toBe(true);
 	});
 
-	it("rotation が数値でない場合はエラー", () => {
+	it("is an error when rotation is not a number", () => {
 		const errors = validateSvgDoc({ ...validSvg, rotation: "0" }, "root");
 		expect(errors.some((e) => e.path === "root.rotation")).toBe(true);
 	});
 
-	// ─── 強化 ───
+	// ─── Additional coverage ───
 	it.each(["y", "width", "height"])(
-		"必須の %s が数値でない場合はエラー",
+		"is an error when the required %s is not a number",
 		(key) => {
 			const errors = validateSvgDoc({ ...validSvg, [key]: "1" }, "root");
 			expect(errors.some((e) => e.path === `root.${key}`)).toBe(true);
 		},
 	);
 
-	it.each(["flipX", "flipY"])("%s が boolean でない場合はエラー", (key) => {
+	it.each(["flipX", "flipY"])("is an error when %s is not a boolean", (key) => {
 		const errors = validateSvgDoc({ ...validSvg, [key]: 1 }, "root");
 		expect(errors.some((e) => e.path === `root.${key}`)).toBe(true);
 	});
 
-	it("transform 以外のスタイル（stroke/fill）は検証しない（svg は素のボックス）", () => {
-		// svg は stroke/fill/text を持たないため、これらが不正でもエラーにならない
+	it("does not validate styles other than transform (stroke/fill) (svg is a plain box)", () => {
+		// svg has no stroke/fill/text, so invalid values here do not produce errors
 		const errors = validateSvgDoc(
 			{ ...validSvg, stroke: "a;b", fill: 123 },
 			"root",
@@ -56,24 +56,27 @@ describe("validateSvgDoc", () => {
 		expect(errors).toEqual([]);
 	});
 
-	it("複数の必須フィールド欠落はすべて報告される", () => {
+	it("reports all missing required fields", () => {
 		const errors = validateSvgDoc({ rotation: 0 }, "root");
 		for (const key of ["x", "y", "width", "height", "svgText"]) {
 			expect(errors.some((e) => e.path === `root.${key}`)).toBe(true);
 		}
 	});
 
-	// ─── 強化: 数値下限 ───
-	it.each(["width", "height"])("%s が負数はエラー（>= 0）", (key) => {
-		const errors = validateSvgDoc({ ...validSvg, [key]: -1 }, "root");
-		expect(
-			errors.some(
-				(e) => e.path === `root.${key}` && e.message.includes(">= 0"),
-			),
-		).toBe(true);
-	});
+	// ─── Additional coverage: numeric lower bounds ───
+	it.each(["width", "height"])(
+		"is an error when %s is negative (>= 0)",
+		(key) => {
+			const errors = validateSvgDoc({ ...validSvg, [key]: -1 }, "root");
+			expect(
+				errors.some(
+					(e) => e.path === `root.${key}` && e.message.includes(">= 0"),
+				),
+			).toBe(true);
+		},
+	);
 
-	it("x / y は負数でも許容（位置に下限なし）", () => {
+	it("allows negative x / y (positions have no lower bound)", () => {
 		expect(validateSvgDoc({ ...validSvg, x: -5, y: -5 }, "root")).toEqual([]);
 	});
 });

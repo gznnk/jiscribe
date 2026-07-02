@@ -51,8 +51,8 @@ const centerOf = (viewport: Viewport) => ({
 });
 
 describe("ZoomToFitCommand", () => {
-	it("全オブジェクトのバウンドが収まる中心へ寄せる", () => {
-		// rect は cx=500,cy=500,200x200 → bbox 400..600。コンテンツ中心は (500,500)
+	it("centers so that the bounds of all objects fit", () => {
+		// rect is cx=500,cy=500,200x200 -> bbox 400..600. Content center is (500,500)
 		const state = makeState({ a: makeRect("a", 500, 500) });
 		const next = ZoomToFitCommand.execute(state);
 		const center = centerOf(next.viewport);
@@ -60,14 +60,14 @@ describe("ZoomToFitCommand", () => {
 		expect(center.y).toBeCloseTo(500, 2);
 	});
 
-	it("コンテンツがビューポートに収まる倍率を選ぶ（48px パディング込み）", () => {
+	it("picks a zoom level that fits the content in the viewport (including 48px padding)", () => {
 		const state = makeState({ a: makeRect("a", 500, 500) });
 		const next = ZoomToFitCommand.execute(state);
 		// contentWidth=200, availableW = 1000 - 2*48 = 904 → 904/200 = 4.52
 		expect(next.viewport.zoom).toBeCloseTo(4.52, 2);
 	});
 
-	it("グループ自身はバウンド計算から除外される（子で代替）", () => {
+	it("excludes the group itself from bounds calculation (uses children instead)", () => {
 		const state = makeState({
 			g: makeGroup("g", ["a"]),
 			a: makeRect("a", 500, 500),
@@ -76,14 +76,14 @@ describe("ZoomToFitCommand", () => {
 		expect(next.viewport.zoom).toBeCloseTo(4.52, 2);
 	});
 
-	it("収まる図形が無い場合は state をそのまま返す", () => {
+	it("returns state unchanged when there are no fittable shapes", () => {
 		const state = makeState({ g: makeGroup("g", []) });
 		expect(ZoomToFitCommand.execute(state)).toBe(state);
 	});
 
-	it("ゼロサイズ対象のみ（両軸サイズ 0 の退化 Poly）は現在ビューを維持する（no-op）", () => {
-		// 単一点に潰れた Poly だけのキャンバスは contentWidth=contentHeight=0。
-		// zoom 候補が無いため 100% へジャンプせず現在のビューポートを維持する。
+	it("keeps the current view when only zero-size targets exist (a degenerate poly with 0 size on both axes) (no-op)", () => {
+		// A canvas with only a poly collapsed to a single point has contentWidth=contentHeight=0.
+		// With no zoom candidate, it keeps the current viewport instead of jumping to 100%.
 		const state = makeState(
 			{
 				dot: makePolyline("dot", [
@@ -97,13 +97,13 @@ describe("ZoomToFitCommand", () => {
 	});
 
 	describe("canExecute", () => {
-		it("オブジェクトがあれば実行可能", () => {
+		it("is executable when objects exist", () => {
 			expect(
 				ZoomToFitCommand.canExecute(makeState({ a: makeRect("a", 0, 0) })),
 			).toBe(true);
 		});
 
-		it("オブジェクトが無ければ実行不可", () => {
+		it("is not executable when there are no objects", () => {
 			expect(ZoomToFitCommand.canExecute(makeState({}))).toBe(false);
 		});
 	});

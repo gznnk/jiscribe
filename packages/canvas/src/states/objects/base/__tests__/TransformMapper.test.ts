@@ -9,7 +9,7 @@ import type { TransformState } from "../TransformState";
 
 describe("TransformMapper", () => {
 	describe("mapTransformDocToState", () => {
-		it("rotation 未指定は 0 に、flip 未指定は scale 1 になる", () => {
+		it("unspecified rotation becomes 0, and unspecified flip becomes scale 1", () => {
 			const state = mapTransformDocToState({} as TransformDoc);
 
 			expect(state.rotation).toBe(0);
@@ -17,7 +17,7 @@ describe("TransformMapper", () => {
 			expect(state.scaleY).toBe(1);
 		});
 
-		it("flipX/flipY=true は scaleX/scaleY=-1 に変換する", () => {
+		it("converts flipX/flipY=true to scaleX/scaleY=-1", () => {
 			const state = mapTransformDocToState({
 				flipX: true,
 				flipY: true,
@@ -27,7 +27,7 @@ describe("TransformMapper", () => {
 			expect(state.scaleY).toBe(-1);
 		});
 
-		it("rotation と lockAspectRatio を保持する", () => {
+		it("preserves rotation and lockAspectRatio", () => {
 			const state = mapTransformDocToState({
 				rotation: 45,
 				lockAspectRatio: true,
@@ -39,7 +39,7 @@ describe("TransformMapper", () => {
 	});
 
 	describe("mapTransformStateToDoc", () => {
-		it("rotation 0 は省略し、正の scale は flip を省略する", () => {
+		it("omits rotation when 0, and omits flip for positive scale", () => {
 			const doc = mapTransformStateToDoc({
 				rotation: 0,
 				scaleX: 1,
@@ -51,7 +51,7 @@ describe("TransformMapper", () => {
 			expect(doc.flipY).toBeUndefined();
 		});
 
-		it("負の scaleX/scaleY は flipX/flipY=true に変換する", () => {
+		it("converts negative scaleX/scaleY to flipX/flipY=true", () => {
 			const doc = mapTransformStateToDoc({
 				rotation: 90,
 				scaleX: -1,
@@ -63,7 +63,7 @@ describe("TransformMapper", () => {
 			expect(doc.flipY).toBe(true);
 		});
 
-		it("lockAspectRatio を保持する", () => {
+		it("preserves lockAspectRatio", () => {
 			const doc = mapTransformStateToDoc({
 				rotation: 0,
 				scaleX: 1,
@@ -76,7 +76,7 @@ describe("TransformMapper", () => {
 	});
 
 	describe("round-trip", () => {
-		it("Doc→State→Doc で rotation と flip が保たれる", () => {
+		it("preserves rotation and flip through Doc→State→Doc", () => {
 			const src: TransformDoc = {
 				rotation: 30,
 				flipX: true,

@@ -13,29 +13,29 @@ const ownedRef = {
 const freeRef = { anchor: { kind: "free", point: { x: 0, y: 0 } } };
 
 describe("validateConnectorDoc", () => {
-	it("owned endpoint のみの有効な Connector はエラーなし", () => {
+	it("yields no error for a valid Connector with only owned endpoints", () => {
 		const o = { points: validPoints, source: ownedRef, target: ownedRef };
 		expect(validateConnectorDoc(o, "root")).toEqual([]);
 	});
 
-	it("one-free（owned source + free target）の有効な Connector はエラーなし", () => {
+	it("yields no error for a valid one-free Connector (owned source + free target)", () => {
 		const o = { points: validPoints, source: ownedRef, target: freeRef };
 		expect(validateConnectorDoc(o, "root")).toEqual([]);
 	});
 
-	it("両端 free（owner なし）はエラー（最低一方は owned 必須）", () => {
+	it("is an error when both endpoints are free (no owner) (at least one must be owned)", () => {
 		const o = { points: validPoints, source: freeRef, target: freeRef };
 		const errors = validateConnectorDoc(o, "root");
 		const bothFree = errors.find(
 			(e) => e.path === "root" && e.message.includes("owned endpoint"),
 		);
 		expect(bothFree).toBeDefined();
-		// このルールは JSON スキーマ（ConnectorDoc の not 制約）でも検出されるため、
-		// beyondSchema は付けない（拡張は構造エラーとしてスキーマに委ねる）。
+		// This rule is also caught by the JSON schema (ConnectorDoc's not constraint),
+		// so beyondSchema is not attached (the extension defers structural errors to the schema).
 		expect(bothFree?.beyondSchema).toBeUndefined();
 	});
 
-	it("startArrow / endArrow が有効な値はエラーなし", () => {
+	it("yields no error when startArrow / endArrow have valid values", () => {
 		const o = {
 			points: validPoints,
 			source: ownedRef,
@@ -46,19 +46,19 @@ describe("validateConnectorDoc", () => {
 		expect(validateConnectorDoc(o, "root")).toEqual([]);
 	});
 
-	it("points が空配列（直線コネクター）はエラーなし", () => {
+	it("yields no error when points is an empty array (straight connector)", () => {
 		const o = { points: [], source: ownedRef, target: freeRef };
 		expect(validateConnectorDoc(o, "root")).toEqual([]);
 	});
 
-	it("points が不正な場合はエラー", () => {
+	it("is an error when points is invalid", () => {
 		const o = { points: [{ x: 0 }], source: freeRef, target: freeRef };
 		expect(
 			validateConnectorDoc(o, "root").some((e) => e.path === "root.points"),
 		).toBe(true);
 	});
 
-	it("source の owner.id が数値はエラー", () => {
+	it("is an error when source's owner.id is a number", () => {
 		const badRef = {
 			owner: { id: 123, type: "rect" },
 			anchor: { kind: "center" },
@@ -70,7 +70,7 @@ describe("validateConnectorDoc", () => {
 		expect(errors.some((e) => e.path === "root.source.owner.id")).toBe(true);
 	});
 
-	it("target の owner.type が数値はエラー", () => {
+	it("is an error when target's owner.type is a number", () => {
 		const badRef = {
 			owner: { id: "rect-1", type: 42 },
 			anchor: { kind: "center" },
@@ -82,7 +82,7 @@ describe("validateConnectorDoc", () => {
 		expect(errors.some((e) => e.path === "root.target.owner.type")).toBe(true);
 	});
 
-	it("source の connectPoint anchor（有効な id）はエラーなし", () => {
+	it("yields no error for source's connectPoint anchor (valid id)", () => {
 		const ref = {
 			owner: { id: "rect-1", type: "rect" },
 			anchor: { kind: "connectPoint", id: "leftCenter" },
@@ -91,7 +91,7 @@ describe("validateConnectorDoc", () => {
 		expect(validateConnectorDoc(o, "root")).toEqual([]);
 	});
 
-	it("source の connectPoint anchor で id が不正はエラー", () => {
+	it("is an error when source's connectPoint anchor has an invalid id", () => {
 		const badRef = {
 			owner: { id: "rect-1", type: "rect" },
 			anchor: { kind: "connectPoint", id: "invalid" },
@@ -103,7 +103,7 @@ describe("validateConnectorDoc", () => {
 		expect(errors.some((e) => e.path === "root.source.anchor.id")).toBe(true);
 	});
 
-	it("source の anchor.kind が free（owned には不正）はエラー", () => {
+	it("is an error when source's anchor.kind is free (invalid for owned)", () => {
 		const badRef = {
 			owner: { id: "rect-1", type: "rect" },
 			anchor: { kind: "free", point: { x: 0, y: 0 } },
@@ -115,7 +115,7 @@ describe("validateConnectorDoc", () => {
 		expect(errors.some((e) => e.path === "root.source.anchor.kind")).toBe(true);
 	});
 
-	it("target の free anchor で point.x が数値でない場合はエラー", () => {
+	it("is an error when target's free anchor has a non-numeric point.x", () => {
 		const badRef = { anchor: { kind: "free", point: { x: "0", y: 0 } } };
 		const errors = validateConnectorDoc(
 			{ points: validPoints, source: freeRef, target: badRef },
@@ -126,7 +126,7 @@ describe("validateConnectorDoc", () => {
 		);
 	});
 
-	it("startArrow が不正な値はエラー", () => {
+	it("is an error when startArrow has an invalid value", () => {
 		const o = {
 			points: validPoints,
 			source: freeRef,
@@ -137,7 +137,7 @@ describe("validateConnectorDoc", () => {
 		expect(errors.some((e) => e.path === "root.startArrow")).toBe(true);
 	});
 
-	it("strokeDashType が不正な値はエラー", () => {
+	it("is an error when strokeDashType has an invalid value", () => {
 		const o = {
 			points: validPoints,
 			source: freeRef,
@@ -148,8 +148,8 @@ describe("validateConnectorDoc", () => {
 		expect(errors.some((e) => e.path === "root.strokeDashType")).toBe(true);
 	});
 
-	// ─── 強化 ───
-	it("endArrow が不正な値はエラー", () => {
+	// ─── Additional coverage ───
+	it("is an error when endArrow has an invalid value", () => {
 		const o = {
 			points: validPoints,
 			source: ownedRef,
@@ -160,7 +160,7 @@ describe("validateConnectorDoc", () => {
 		expect(errors.some((e) => e.path === "root.endArrow")).toBe(true);
 	});
 
-	it("stroke に CSS breakout 文字列はエラー（beyondSchema）", () => {
+	it("is an error (beyondSchema) when stroke contains a CSS breakout string", () => {
 		const o = {
 			points: validPoints,
 			source: ownedRef,
@@ -174,14 +174,14 @@ describe("validateConnectorDoc", () => {
 		expect(hit?.beyondSchema).toBe(true);
 	});
 
-	it("waypoint points が配列でない（Point[] 不正）はエラー", () => {
+	it("is an error when waypoint points is not an array (invalid Point[])", () => {
 		const o = { points: "x", source: ownedRef, target: freeRef };
 		expect(
 			validateConnectorDoc(o, "root").some((e) => e.path === "root.points"),
 		).toBe(true);
 	});
 
-	it("owned endpoint で anchor が欠落（オブジェクトでない）はエラー", () => {
+	it("is an error when an owned endpoint's anchor is missing (not an object)", () => {
 		const badRef = { owner: { id: "rect-1", type: "rect" } };
 		const errors = validateConnectorDoc(
 			{ points: validPoints, source: badRef, target: freeRef },
@@ -190,7 +190,7 @@ describe("validateConnectorDoc", () => {
 		expect(errors.some((e) => e.path === "root.source.anchor")).toBe(true);
 	});
 
-	it("free endpoint で point.y が数値でない場合はエラー", () => {
+	it("is an error when a free endpoint's point.y is not a number", () => {
 		const badRef = { anchor: { kind: "free", point: { x: 0, y: "0" } } };
 		const errors = validateConnectorDoc(
 			{ points: validPoints, source: ownedRef, target: badRef },
@@ -201,7 +201,7 @@ describe("validateConnectorDoc", () => {
 		);
 	});
 
-	it("routing が straight / orthogonal はエラーなし", () => {
+	it("yields no error when routing is straight / orthogonal", () => {
 		const straight = {
 			points: validPoints,
 			source: ownedRef,
@@ -213,7 +213,7 @@ describe("validateConnectorDoc", () => {
 		expect(validateConnectorDoc(orthogonal, "root")).toEqual([]);
 	});
 
-	it("routing が未知の値はエラー", () => {
+	it("is an error when routing has an unknown value", () => {
 		const o = {
 			points: validPoints,
 			source: ownedRef,
@@ -224,8 +224,8 @@ describe("validateConnectorDoc", () => {
 		expect(errors.some((e) => e.path === "root.routing")).toBe(true);
 	});
 
-	// ─── label（コネクターラベル） ───
-	it("label.text のみの有効なラベルはエラーなし", () => {
+	// ─── label (connector label) ───
+	it("yields no error for a valid label with only label.text", () => {
 		const o = {
 			points: validPoints,
 			source: ownedRef,
@@ -235,13 +235,13 @@ describe("validateConnectorDoc", () => {
 		expect(validateConnectorDoc(o, "root")).toEqual([]);
 	});
 
-	it("label に position/offset/フォントを指定してもエラーなし", () => {
+	it("yields no error when the label specifies position/offset/font", () => {
 		const o = {
 			points: validPoints,
 			source: ownedRef,
 			target: freeRef,
 			label: {
-				text: "成功",
+				text: "Success",
 				position: 0.25,
 				offset: 8,
 				fontColor: "#2E7D32",
@@ -252,7 +252,7 @@ describe("validateConnectorDoc", () => {
 		expect(validateConnectorDoc(o, "root")).toEqual([]);
 	});
 
-	it("トップレベル text はエラー（label.text を使うべき）", () => {
+	it("is an error for top-level text (should use label.text)", () => {
 		const o = {
 			points: validPoints,
 			source: ownedRef,
@@ -263,7 +263,7 @@ describe("validateConnectorDoc", () => {
 		expect(errors.some((e) => e.path === "root.text")).toBe(true);
 	});
 
-	it("label.text が文字列でない場合はエラー", () => {
+	it("is an error when label.text is not a string", () => {
 		const o = {
 			points: validPoints,
 			source: ownedRef,
@@ -274,7 +274,7 @@ describe("validateConnectorDoc", () => {
 		expect(errors.some((e) => e.path === "root.label.text")).toBe(true);
 	});
 
-	it("label.position が範囲外（>1）はエラー", () => {
+	it("is an error when label.position is out of range (>1)", () => {
 		const o = {
 			points: validPoints,
 			source: ownedRef,
@@ -285,7 +285,7 @@ describe("validateConnectorDoc", () => {
 		expect(errors.some((e) => e.path === "root.label.position")).toBe(true);
 	});
 
-	it("label.fontSize が下限未満（<1）はエラー", () => {
+	it("is an error when label.fontSize is below the lower bound (<1)", () => {
 		const o = {
 			points: validPoints,
 			source: ownedRef,
@@ -296,7 +296,7 @@ describe("validateConnectorDoc", () => {
 		expect(errors.some((e) => e.path === "root.label.fontSize")).toBe(true);
 	});
 
-	it("label が object でない場合はエラー", () => {
+	it("is an error when label is not an object", () => {
 		const o = {
 			points: validPoints,
 			source: ownedRef,
@@ -307,7 +307,7 @@ describe("validateConnectorDoc", () => {
 		expect(errors.some((e) => e.path === "root.label")).toBe(true);
 	});
 
-	it("label に背景（fill）・枠線（stroke/strokeWidth）を指定してもエラーなし", () => {
+	it("yields no error when the label specifies a background (fill) and border (stroke/strokeWidth)", () => {
 		const o = {
 			points: validPoints,
 			source: ownedRef,
@@ -317,7 +317,7 @@ describe("validateConnectorDoc", () => {
 		expect(validateConnectorDoc(o, "root")).toEqual([]);
 	});
 
-	it("label.fill に CSS breakout 文字列はエラー（beyondSchema）", () => {
+	it("is an error (beyondSchema) when label.fill contains a CSS breakout string", () => {
 		const o = {
 			points: validPoints,
 			source: ownedRef,
@@ -331,7 +331,7 @@ describe("validateConnectorDoc", () => {
 		expect(hit?.beyondSchema).toBe(true);
 	});
 
-	it("label.strokeWidth が負値はエラー", () => {
+	it("is an error when label.strokeWidth is negative", () => {
 		const o = {
 			points: validPoints,
 			source: ownedRef,
@@ -342,7 +342,7 @@ describe("validateConnectorDoc", () => {
 		expect(errors.some((e) => e.path === "root.label.strokeWidth")).toBe(true);
 	});
 
-	it("label.strokeDashType が dashed/dotted/solid はエラーなし", () => {
+	it("yields no error when label.strokeDashType is dashed/dotted/solid", () => {
 		for (const dash of ["solid", "dashed", "dotted"]) {
 			const o = {
 				points: validPoints,
@@ -354,7 +354,7 @@ describe("validateConnectorDoc", () => {
 		}
 	});
 
-	it("label.strokeDashType が未知の値はエラー", () => {
+	it("is an error when label.strokeDashType has an unknown value", () => {
 		const o = {
 			points: validPoints,
 			source: ownedRef,

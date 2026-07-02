@@ -8,7 +8,7 @@ import {
 } from "../computeDuplicateOffset";
 
 // ---------------------------------------------------------------------------
-// テスト用フィクスチャ
+// Test fixtures
 // ---------------------------------------------------------------------------
 
 const makeRect = (id: string, cx: number, cy: number): ObjectState =>
@@ -37,16 +37,16 @@ const makeState = (
 	}) as unknown as CanvasControllerState;
 
 // ---------------------------------------------------------------------------
-// テスト
+// Tests
 // ---------------------------------------------------------------------------
 
 describe("computeDuplicateOffset", () => {
-	it("lastDuplicate が無い → 既定オフセット", () => {
+	it("no lastDuplicate → default offset", () => {
 		const state = makeState({ selectedIds: ["r1"], objects: {} });
 		expect(computeDuplicateOffset(state)).toEqual(DUPLICATE_OFFSET);
 	});
 
-	it("選択数が直前の複製結果と異なる → 既定オフセット", () => {
+	it("selection count differs from the previous duplication result → default offset", () => {
 		const r1 = makeRect("r1", 0, 0);
 		const state = makeState({
 			selectedIds: ["r1"],
@@ -61,7 +61,7 @@ describe("computeDuplicateOffset", () => {
 		expect(computeDuplicateOffset(state)).toEqual(DUPLICATE_OFFSET);
 	});
 
-	it("選択 ID が直前の複製結果と一致しない → 既定オフセット", () => {
+	it("selected IDs do not match the previous duplication result → default offset", () => {
 		const r1 = makeRect("r1", 0, 0);
 		const state = makeState({
 			selectedIds: ["r1"],
@@ -76,7 +76,7 @@ describe("computeDuplicateOffset", () => {
 		expect(computeDuplicateOffset(state)).toEqual(DUPLICATE_OFFSET);
 	});
 
-	it("選択一致 + 1px 以上移動 → 移動量を新オフセットとして採用", () => {
+	it("selection matches + moved 1px or more → adopts the movement as the new offset", () => {
 		const r1 = makeRect("r1", 30, 50);
 		const state = makeState({
 			selectedIds: ["r1"],
@@ -91,7 +91,7 @@ describe("computeDuplicateOffset", () => {
 		expect(computeDuplicateOffset(state)).toEqual({ x: 20, y: 40 });
 	});
 
-	it("選択一致 + ほぼ未移動（1px 未満）→ 前回オフセットを継続", () => {
+	it("selection matches + barely moved (less than 1px) → keeps the previous offset", () => {
 		const r1 = makeRect("r1", 10.5, 10.5);
 		const state = makeState({
 			selectedIds: ["r1"],
@@ -106,7 +106,7 @@ describe("computeDuplicateOffset", () => {
 		expect(computeDuplicateOffset(state)).toEqual({ x: 7, y: 7 });
 	});
 
-	it("選択一致だが中心が取得できない → 前回オフセットを継続", () => {
+	it("selection matches but the center cannot be obtained → keeps the previous offset", () => {
 		const state = makeState({
 			selectedIds: ["gone"],
 			objects: {},

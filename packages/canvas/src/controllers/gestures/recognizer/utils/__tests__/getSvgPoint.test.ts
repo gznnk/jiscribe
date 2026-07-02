@@ -3,14 +3,14 @@ import { describe, it, expect, vi } from "vitest";
 import { getSvgPoint } from "../getSvgPoint";
 
 describe("getSvgPoint", () => {
-	describe("svg が null", () => {
-		it("クライアント座標をそのまま返す", () => {
+	describe("svg is null", () => {
+		it("returns the client coordinates as-is", () => {
 			expect(getSvgPoint(null, 30, 50)).toEqual({ x: 30, y: 50 });
 		});
 	});
 
-	describe("svg が存在する", () => {
-		it("getScreenCTM が null → クライアント座標にフォールバック", () => {
+	describe("svg exists", () => {
+		it("falls back to client coordinates when getScreenCTM is null", () => {
 			const mockSvg = {
 				createSVGPoint: () => ({ x: 0, y: 0 }),
 				getScreenCTM: () => null,
@@ -18,7 +18,7 @@ describe("getSvgPoint", () => {
 			expect(getSvgPoint(mockSvg, 10, 20)).toEqual({ x: 10, y: 20 });
 		});
 
-		it("matrixTransform の返り値がそのまま結果になる", () => {
+		it("the return value of matrixTransform becomes the result directly", () => {
 			const transformedPoint = { x: 42, y: 99 };
 			const ctmMock = { inverse: vi.fn().mockReturnValue({}) };
 			const svgWithTransform = {

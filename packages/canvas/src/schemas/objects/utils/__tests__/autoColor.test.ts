@@ -3,15 +3,15 @@ import { describe, it, expect } from "vitest";
 import { AUTO_COLOR, isAutoColor } from "../autoColor";
 
 describe("autoColor", () => {
-	it('AUTO_COLOR は "auto"', () => {
+	it('AUTO_COLOR is "auto"', () => {
 		expect(AUTO_COLOR).toBe("auto");
 	});
 
-	it("isAutoColor は sentinel のみ true", () => {
+	it("isAutoColor is true only for the sentinel", () => {
 		expect(isAutoColor("auto")).toBe(true);
 	});
 
-	it("具体色・その他の値は false", () => {
+	it("concrete colors and other values are false", () => {
 		expect(isAutoColor("#6b7280")).toBe(false);
 		expect(isAutoColor("transparent")).toBe(false);
 		expect(isAutoColor("currentColor")).toBe(false);

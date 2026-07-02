@@ -6,7 +6,7 @@ import type { SvgState } from "../SvgState";
 
 describe("SvgMapper", () => {
 	describe("svgToState", () => {
-		it("rect 系の x/y/width/height を frame の cx/cy へ変換し svgText を保持する", () => {
+		it("converts rect-style x/y/width/height into frame cx/cy and preserves svgText", () => {
 			const doc = {
 				id: "svg-1",
 				type: "svg",
@@ -33,7 +33,7 @@ describe("SvgMapper", () => {
 			expect(state.svgText).toBe("<svg></svg>");
 		});
 
-		it("transform 未指定時は rotation 0 / scale 1 になる", () => {
+		it("defaults to rotation 0 / scale 1 when transform is unspecified", () => {
 			const doc = {
 				id: "svg-2",
 				type: "svg",
@@ -53,7 +53,7 @@ describe("SvgMapper", () => {
 	});
 
 	describe("svgToDoc", () => {
-		it("frame の cx/cy を rect の x/y へ戻し svgText を保持する", () => {
+		it("converts frame cx/cy back into rect x/y and preserves svgText", () => {
 			const state = {
 				id: "svg-1",
 				type: "svg",
@@ -83,7 +83,7 @@ describe("SvgMapper", () => {
 	});
 
 	describe("round-trip", () => {
-		it("Doc→State→Doc で位置・サイズ・svgText が保たれる", () => {
+		it("preserves position, size, and svgText through Doc→State→Doc", () => {
 			const src = {
 				id: "svg-rt",
 				type: "svg",

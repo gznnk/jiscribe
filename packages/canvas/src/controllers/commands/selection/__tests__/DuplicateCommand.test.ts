@@ -6,7 +6,7 @@ import type { CanvasControllerState } from "../../../CanvasTypes";
 import { initializeObjectRegistry } from "../../../setup/initializeObjectRegistry";
 import { DuplicateCommand } from "../DuplicateCommand";
 
-// cloneObjects が objectBehaviorRegistry（moveByDelta）を使うため初期化する
+// cloneObjects uses objectBehaviorRegistry (moveByDelta), so initialize it
 beforeAll(() => {
 	initializeObjectRegistry();
 });
@@ -57,7 +57,7 @@ const makeState = (params: {
 	}) as unknown as CanvasControllerState;
 
 describe("DuplicateCommand", () => {
-	it("ルート選択を既定オフセット(+20,+20)で複製し前面へ積む", () => {
+	it("duplicates a root selection at the default offset (+20,+20) and stacks it in front", () => {
 		const state = makeState({
 			selectedIds: ["a"],
 			objects: { a: makeRect("a", 100, 100) },
@@ -67,7 +67,7 @@ describe("DuplicateCommand", () => {
 
 		expect(Object.keys(next.objects)).toHaveLength(2);
 		expect(next.rootIds).toHaveLength(2);
-		// 元 a はそのまま残り、新 ID が末尾（最前面）
+		// the original a remains, and the new ID is at the end (frontmost)
 		expect(next.rootIds[0]).toBe("a");
 		const newId = next.rootIds[1];
 		expect(newId).not.toBe("a");
@@ -77,7 +77,7 @@ describe("DuplicateCommand", () => {
 		expect(cloned.cy).toBe(120);
 	});
 
-	it("複製物を選択状態にし lastDuplicate を記録する", () => {
+	it("selects the duplicate and records lastDuplicate", () => {
 		const state = makeState({
 			selectedIds: ["a"],
 			objects: { a: makeRect("a", 100, 100) },
@@ -90,7 +90,7 @@ describe("DuplicateCommand", () => {
 		expect(next.commitVersion).toBe(1);
 	});
 
-	it("グループ内選択は同じ親グループ内に複製する", () => {
+	it("duplicates an in-group selection within the same parent group", () => {
 		const state = makeState({
 			selectedIds: ["c1"],
 			objects: {
@@ -102,16 +102,16 @@ describe("DuplicateCommand", () => {
 		});
 		const next = DuplicateCommand.execute(state);
 		const newId = next.selectedIds[0];
-		// 新オブジェクトの親はグループ g
+		// the new object's parent is group g
 		expect(next.objects[newId]?.parentId).toBe("g");
-		// 親グループの childIds に追加されている
+		// it is added to the parent group's childIds
 		expect((next.objects["g"] as GroupState).childIds).toContain(newId);
-		// rootIds は g のまま（グループ内複製はトップレベルに出さない）
+		// rootIds stays as g (in-group duplication is not promoted to the top level)
 		expect(next.rootIds).toEqual(["g"]);
 	});
 
 	describe("canExecute", () => {
-		it("選択があれば実行可能", () => {
+		it("is executable when there is a selection", () => {
 			const state = makeState({
 				selectedIds: ["a"],
 				objects: { a: makeRect("a", 0, 0) },
@@ -120,7 +120,7 @@ describe("DuplicateCommand", () => {
 			expect(DuplicateCommand.canExecute(state)).toBe(true);
 		});
 
-		it("選択が無ければ実行不可", () => {
+		it("is not executable when there is no selection", () => {
 			expect(
 				DuplicateCommand.canExecute(
 					makeState({ selectedIds: [], objects: {}, rootIds: [] }),

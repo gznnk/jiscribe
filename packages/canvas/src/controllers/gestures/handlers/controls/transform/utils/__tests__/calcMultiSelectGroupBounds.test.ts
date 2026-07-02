@@ -24,21 +24,21 @@ const rect = (
 	}) as unknown as ObjectState;
 
 describe("calcMultiSelectGroupBounds", () => {
-	it("selectedIds が 0 件 → null", () => {
+	it("0 selectedIds -> null", () => {
 		expect(calcMultiSelectGroupBounds([], {})).toBeNull();
 	});
 
-	it("selectedIds が 1 件 → null", () => {
+	it("1 selectedId -> null", () => {
 		const objects = { r1: rect("r1", 50, 50, 40, 40) };
 		expect(calcMultiSelectGroupBounds(["r1"], objects)).toBeNull();
 	});
 
-	it("有効なオブジェクトが見つからない → null", () => {
+	it("no valid objects found -> null", () => {
 		expect(calcMultiSelectGroupBounds(["a", "b"], {})).toBeNull();
 	});
 
-	describe("existingGroup なし（AABB 計算）", () => {
-		it("2 件の rect → AABB の cx/cy/width/height を返す", () => {
+	describe("without existingGroup (AABB calculation)", () => {
+		it("2 rects -> returns the AABB's cx/cy/width/height", () => {
 			const r1 = rect("r1", 50, 50, 40, 40); // left=30, right=70, top=30, bottom=70
 			const r2 = rect("r2", 150, 150, 40, 40); // left=130, right=170, top=130, bottom=170
 			const result = calcMultiSelectGroupBounds(["r1", "r2"], { r1, r2 });
@@ -49,7 +49,7 @@ describe("calcMultiSelectGroupBounds", () => {
 			expect(result?.height).toBeCloseTo(140);
 		});
 
-		it("ネストしたグループ → 孫要素の点で計算する", () => {
+		it("nested group -> computes from the grandchild elements' points", () => {
 			const r1 = rect("r1", 0, 0, 20, 20);
 			const innerGroup: ObjectState = {
 				id: "inner",
@@ -64,8 +64,8 @@ describe("calcMultiSelectGroupBounds", () => {
 		});
 	});
 
-	describe("existingGroup あり（OBB 計算）", () => {
-		it("rotation=0 の existingGroup → AABB と同じ結果になる", () => {
+	describe("with existingGroup (OBB calculation)", () => {
+		it("existingGroup with rotation=0 -> same result as AABB", () => {
 			const r1 = rect("r1", 50, 50, 40, 40);
 			const r2 = rect("r2", 150, 150, 40, 40);
 			const existingGroup = {
@@ -83,7 +83,7 @@ describe("calcMultiSelectGroupBounds", () => {
 			expect(result?.cy).toBeCloseTo(100);
 		});
 
-		it("existingGroup が null → AABB 計算にフォールバック", () => {
+		it("existingGroup is null -> falls back to AABB calculation", () => {
 			const r1 = rect("r1", 50, 50, 40, 40);
 			const r2 = rect("r2", 150, 150, 40, 40);
 			const result = calcMultiSelectGroupBounds(["r1", "r2"], { r1, r2 }, null);

@@ -14,32 +14,32 @@ const font: ConnectorLabelFont = {
 };
 
 describe("calcConnectorLabelBox", () => {
-	it("空文字は最小幅・正の高さになる", () => {
+	it("an empty string yields the minimum width and a positive height", () => {
 		const box = calcConnectorLabelBox("", font);
 		expect(box.width).toBe(CONNECTOR_LABEL_MIN_WIDTH);
 		expect(box.height).toBeGreaterThan(0);
 	});
 
-	it("十分に長い 1 行は最大幅にクランプされる", () => {
+	it("a sufficiently long single line is clamped to the maximum width", () => {
 		const box = calcConnectorLabelBox("x".repeat(1000), font);
 		expect(box.width).toBe(CONNECTOR_LABEL_MAX_WIDTH);
 	});
 
-	it("行数が増えると高さが増える", () => {
+	it("height increases as the line count increases", () => {
 		const single = calcConnectorLabelBox("A", font);
 		const triple = calcConnectorLabelBox("A\nB\nC", font);
 		expect(triple.height).toBeGreaterThan(single.height);
 	});
 
-	it("枠線幅は寸法に上下左右ぶん（2×borderWidth）上乗せされる", () => {
-		// 折り返さない短文では枠線分だけ純粋に増える。
+	it("the border width is added to the dimensions on all four sides (2×borderWidth)", () => {
+		// for short text that does not wrap, the increase is purely the border amount.
 		const noBorder = calcConnectorLabelBox("Yes", font, 0);
 		const border3 = calcConnectorLabelBox("Yes", font, 3);
 		expect(border3.width - noBorder.width).toBe(6);
 		expect(border3.height - noBorder.height).toBe(6);
 	});
 
-	it("寸法は有限の正数を返す", () => {
+	it("returns finite positive dimensions", () => {
 		const box = calcConnectorLabelBox("Label", font);
 		expect(Number.isFinite(box.width)).toBe(true);
 		expect(Number.isFinite(box.height)).toBe(true);

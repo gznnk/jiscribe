@@ -33,8 +33,8 @@ const makeFrame = (
 });
 
 describe("transformFrameByGroup", () => {
-	describe("通常ケース", () => {
-		it("グループが2倍に拡大されたとき、子オブジェクトのサイズも2倍になる", () => {
+	describe("normal cases", () => {
+		it("when the group is scaled 2x, the child object's size also doubles", () => {
 			const startGroup = makeGroup({
 				cx: 100,
 				cy: 100,
@@ -50,7 +50,7 @@ describe("transformFrameByGroup", () => {
 			expect(result.height).toBe(100);
 		});
 
-		it("グループのwidthのみ2倍に変化したとき、子オブジェクトのwidthも2倍になる", () => {
+		it("when only the group's width changes to 2x, the child object's width also doubles", () => {
 			const startGroup = makeGroup({ cx: 0, cy: 0, width: 100, height: 100 });
 			const endGroup = makeGroup({ cx: 0, cy: 0, width: 200, height: 100 });
 			const frame = makeFrame({ cx: 0, cy: 0, width: 50, height: 50 });
@@ -62,8 +62,8 @@ describe("transformFrameByGroup", () => {
 		});
 	});
 
-	describe("ゼロ除算ガード（issue #12）", () => {
-		it("startGroupのwidthが0のとき、NaN/InfinityではなくgroupScaleX=1として扱う", () => {
+	describe("division-by-zero guard (issue #12)", () => {
+		it("when startGroup's width is 0, treats groupScaleX as 1 rather than NaN/Infinity", () => {
 			const startGroup = makeGroup({ cx: 0, cy: 0, width: 0, height: 100 });
 			const endGroup = makeGroup({ cx: 0, cy: 0, width: 50, height: 100 });
 			const frame = makeFrame({ cx: 0, cy: 0, width: 50, height: 50 });
@@ -76,7 +76,7 @@ describe("transformFrameByGroup", () => {
 			expect(Number.isFinite(result.height)).toBe(true);
 		});
 
-		it("startGroupのheightが0のとき、NaN/InfinityではなくgroupScaleY=1として扱う", () => {
+		it("when startGroup's height is 0, treats groupScaleY as 1 rather than NaN/Infinity", () => {
 			const startGroup = makeGroup({ cx: 0, cy: 0, width: 100, height: 0 });
 			const endGroup = makeGroup({ cx: 0, cy: 0, width: 100, height: 50 });
 			const frame = makeFrame({ cx: 0, cy: 0, width: 50, height: 50 });
@@ -89,7 +89,7 @@ describe("transformFrameByGroup", () => {
 			expect(Number.isFinite(result.height)).toBe(true);
 		});
 
-		it("startGroupのwidthとheightが両方0のとき、すべての値が有限数になる", () => {
+		it("when both startGroup's width and height are 0, all values are finite numbers", () => {
 			const startGroup = makeGroup({ cx: 0, cy: 0, width: 0, height: 0 });
 			const endGroup = makeGroup({ cx: 0, cy: 0, width: 50, height: 50 });
 			const frame = makeFrame({ cx: 0, cy: 0, width: 50, height: 50 });

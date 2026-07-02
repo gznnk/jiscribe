@@ -9,14 +9,14 @@ import { initializeObjectRegistry } from "../../setup/initializeObjectRegistry";
 import { isArrangeableSelection } from "../../utils/isArrangeableSelection";
 
 beforeAll(() => {
-	// canvasToState（doc→state）に object/connector の Mapper、handleCommand に Command が要る
+	// canvasToState (doc→state) needs object/connector Mappers, and handleCommand needs Commands
 	initializeObjectRegistry();
 	initializeCommands();
 });
 
 /**
- * コネクターは selectedConnectorId で選択され、selectedIds とは排他。
- * rootIds の並びでコネクターの初期 z 位置を指定する。
+ * Connectors are selected via selectedConnectorId, which is mutually exclusive with selectedIds.
+ * The order of rootIds specifies the connector's initial z position.
  */
 const withConnectorSelected = (rootIds: string[]): CanvasControllerState =>
 	createCommandState(twoRectsWithConnectorDoc, {
@@ -25,11 +25,12 @@ const withConnectorSelected = (rootIds: string[]): CanvasControllerState =>
 	});
 
 /**
- * ObjectMenu の StackOrder クリックと同じ入口（ObjectMenuHandler → handleCommand）で、
- * コネクター選択時にも重なり順コマンドが効くことを結合検証する。
+ * Integration test verifying that stack-order commands work even when a connector
+ * is selected, going through the same entry point as an ObjectMenu StackOrder click
+ * (ObjectMenuHandler → handleCommand).
  */
-describe("コネクター選択時の重なり順（StackOrder / handleCommand 経由）", () => {
-	it("StackOrder メニューが表示される条件（isArrangeableSelection）を満たす", () => {
+describe("stack order when a connector is selected (via StackOrder / handleCommand)", () => {
+	it("satisfies the condition (isArrangeableSelection) for showing the StackOrder menu", () => {
 		expect(
 			isArrangeableSelection(
 				withConnectorSelected(["rect-1", "rect-2", "conn-1"]),
@@ -37,7 +38,7 @@ describe("コネクター選択時の重なり順（StackOrder / handleCommand �
 		).toBe(true);
 	});
 
-	it("sendToBack: コネクターを最背面へ", () => {
+	it("sendToBack: moves the connector to the back", () => {
 		expect(
 			runCommand(
 				withConnectorSelected(["rect-1", "rect-2", "conn-1"]),
@@ -46,7 +47,7 @@ describe("コネクター選択時の重なり順（StackOrder / handleCommand �
 		).toEqual(["conn-1", "rect-1", "rect-2"]);
 	});
 
-	it("bringToFront: コネクターを最前面へ", () => {
+	it("bringToFront: moves the connector to the front", () => {
 		expect(
 			runCommand(
 				withConnectorSelected(["conn-1", "rect-1", "rect-2"]),
@@ -55,7 +56,7 @@ describe("コネクター選択時の重なり順（StackOrder / handleCommand �
 		).toEqual(["rect-1", "rect-2", "conn-1"]);
 	});
 
-	it("sendBackward: コネクターを1つ背面へ", () => {
+	it("sendBackward: moves the connector back by one", () => {
 		expect(
 			runCommand(
 				withConnectorSelected(["rect-1", "conn-1", "rect-2"]),
@@ -64,7 +65,7 @@ describe("コネクター選択時の重なり順（StackOrder / handleCommand �
 		).toEqual(["conn-1", "rect-1", "rect-2"]);
 	});
 
-	it("bringForward: コネクターを1つ前面へ", () => {
+	it("bringForward: moves the connector forward by one", () => {
 		expect(
 			runCommand(
 				withConnectorSelected(["rect-1", "conn-1", "rect-2"]),

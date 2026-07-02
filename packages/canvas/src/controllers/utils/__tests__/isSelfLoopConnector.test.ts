@@ -12,25 +12,25 @@ const free = (x: number, y: number) => ({
 });
 
 describe("isSelfLoopConnector", () => {
-	it("両端が同一 owner なら true", () => {
+	it("true when both ends share the same owner", () => {
 		expect(
 			isSelfLoopConnector({ source: owned("r1"), target: owned("r1") }),
 		).toBe(true);
 	});
 
-	it("両端が別 owner なら false", () => {
+	it("false when the ends have different owners", () => {
 		expect(
 			isSelfLoopConnector({ source: owned("r1"), target: owned("r2") }),
 		).toBe(false);
 	});
 
-	it("片方が free なら false", () => {
+	it("false when one end is free", () => {
 		expect(
 			isSelfLoopConnector({ source: owned("r1"), target: free(10, 10) }),
 		).toBe(false);
 	});
 
-	it("両端 free なら false（owner が無いので同一とみなさない）", () => {
+	it("false when both ends are free (no owner, so not treated as identical)", () => {
 		expect(
 			isSelfLoopConnector({ source: free(0, 0), target: free(10, 10) }),
 		).toBe(false);

@@ -6,11 +6,11 @@ import { getRootConnectorIds } from "../getRootConnectorIds";
 const obj = (type: string) => ({ type }) as ObjectState;
 
 describe("getRootConnectorIds", () => {
-	it("空の rootIds → []", () => {
+	it("empty rootIds -> []", () => {
 		expect(getRootConnectorIds({}, [])).toEqual([]);
 	});
 
-	it("connector のみ → z-order 順で全件返す", () => {
+	it("connectors only -> returns all in z-order", () => {
 		const objects = {
 			c1: obj("connector"),
 			c2: obj("connector"),
@@ -18,7 +18,7 @@ describe("getRootConnectorIds", () => {
 		expect(getRootConnectorIds(objects, ["c1", "c2"])).toEqual(["c1", "c2"]);
 	});
 
-	it("connector 以外のみ → []", () => {
+	it("non-connectors only -> []", () => {
 		const objects = {
 			r1: obj("rect"),
 			e1: obj("ellipse"),
@@ -26,7 +26,7 @@ describe("getRootConnectorIds", () => {
 		expect(getRootConnectorIds(objects, ["r1", "e1"])).toEqual([]);
 	});
 
-	it("混在 → connector のみ rootIds の順序を維持して返す", () => {
+	it("mixed -> returns only connectors, preserving rootIds order", () => {
 		const objects = {
 			r1: obj("rect"),
 			c1: obj("connector"),
@@ -39,7 +39,7 @@ describe("getRootConnectorIds", () => {
 		]);
 	});
 
-	it("objects に存在しない ID は除外される", () => {
+	it("IDs not present in objects are excluded", () => {
 		expect(getRootConnectorIds({}, ["missing"])).toEqual([]);
 	});
 });

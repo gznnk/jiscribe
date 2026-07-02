@@ -6,7 +6,7 @@ import type { CanvasControllerState } from "../../../CanvasTypes";
 import { initializeObjectRegistry } from "../../../setup/initializeObjectRegistry";
 import { moveCommands } from "../MoveCommands";
 
-// moveByDelta は objectBehaviorRegistry 経由で解決されるため、レジストリを初期化する
+// moveByDelta is resolved through objectBehaviorRegistry, so initialize the registry
 beforeAll(() => {
 	initializeObjectRegistry();
 });
@@ -45,7 +45,7 @@ const makeState = (params: {
 	}) as unknown as CanvasControllerState;
 
 describe("moveCommands", () => {
-	it("上下左右 × 通常/Shift の 8 コマンドを生成する", () => {
+	it("generates 8 commands (up/down/left/right × normal/Shift)", () => {
 		expect(moveCommands.map((c) => c.id).sort()).toEqual(
 			[
 				"move-down",
@@ -60,7 +60,7 @@ describe("moveCommands", () => {
 		);
 	});
 
-	it("全コマンドが execute で選択 ID を含む集約キー（pending）を立てる（対象が変われば別操作）", () => {
+	it("every command sets a coalesce key (pending) containing the selected IDs on execute (a different target means a separate operation)", () => {
 		const stateA = makeState({
 			selectedIds: ["a"],
 			objects: { a: makeRect("a", 0, 0) },
@@ -75,22 +75,22 @@ describe("moveCommands", () => {
 		}
 	});
 
-	describe("ショートカット", () => {
-		it("通常コマンドは shift なしの矢印キーにバインドされる", () => {
+	describe("shortcuts", () => {
+		it("normal commands are bound to arrow keys without shift", () => {
 			expect(commandById("move-up").shortcuts?.default).toEqual([
 				{ code: "ArrowUp", shift: false },
 			]);
 		});
 
-		it("Shift コマンドは shift ありの矢印キーにバインドされる", () => {
+		it("Shift commands are bound to arrow keys with shift", () => {
 			expect(commandById("move-right-large").shortcuts?.default).toEqual([
 				{ code: "ArrowRight", shift: true },
 			]);
 		});
 	});
 
-	describe("execute（移動量）", () => {
-		it("move-right は cx を +1 する（画面座標）", () => {
+	describe("execute (movement amount)", () => {
+		it("move-right increments cx by 1 (screen coordinates)", () => {
 			const state = makeState({
 				selectedIds: ["a"],
 				objects: { a: makeRect("a", 50, 50) },
@@ -101,7 +101,7 @@ describe("moveCommands", () => {
 			expect(rect.cy).toBe(50);
 		});
 
-		it("move-up は cy を -1 する（画面座標では上が負）", () => {
+		it("move-up decrements cy by 1 (up is negative in screen coordinates)", () => {
 			const state = makeState({
 				selectedIds: ["a"],
 				objects: { a: makeRect("a", 50, 50) },
@@ -111,7 +111,7 @@ describe("moveCommands", () => {
 			expect(rect.cy).toBe(49);
 		});
 
-		it("Shift コマンドは 10px 移動する", () => {
+		it("Shift commands move by 10px", () => {
 			const state = makeState({
 				selectedIds: ["a"],
 				objects: { a: makeRect("a", 50, 50) },
@@ -121,7 +121,7 @@ describe("moveCommands", () => {
 			expect(rect.cy).toBe(60);
 		});
 
-		it("複数選択をまとめて同じ delta で移動する", () => {
+		it("moves a multi-selection together by the same delta", () => {
 			const state = makeState({
 				selectedIds: ["a", "b"],
 				objects: { a: makeRect("a", 0, 0), b: makeRect("b", 100, 100) },
@@ -131,7 +131,7 @@ describe("moveCommands", () => {
 			expect((next.objects["b"] as unknown as { cx: number }).cx).toBe(99);
 		});
 
-		it("multiSelectGroup の中心も同期して移動する", () => {
+		it("moves the multiSelectGroup center in sync as well", () => {
 			const multiSelectGroup = {
 				id: "ms",
 				type: "group",
@@ -148,7 +148,7 @@ describe("moveCommands", () => {
 			expect(next.multiSelectGroup?.cy).toBe(50);
 		});
 
-		it("commitVersion を増分する", () => {
+		it("increments commitVersion", () => {
 			const state = makeState({
 				selectedIds: ["a"],
 				objects: { a: makeRect("a", 0, 0) },
@@ -159,7 +159,7 @@ describe("moveCommands", () => {
 	});
 
 	describe("canExecute", () => {
-		it("選択がある通常時は実行可能", () => {
+		it("is executable in the normal case when there is a selection", () => {
 			const state = makeState({
 				selectedIds: ["a"],
 				objects: { a: makeRect("a", 0, 0) },
@@ -167,12 +167,12 @@ describe("moveCommands", () => {
 			expect(commandById("move-up").canExecute(state)).toBe(true);
 		});
 
-		it("選択がない場合は実行不可", () => {
+		it("is not executable when there is no selection", () => {
 			const state = makeState({ selectedIds: [], objects: {} });
 			expect(commandById("move-up").canExecute(state)).toBe(false);
 		});
 
-		it("テキスト編集中はキャレット移動を優先して実行不可", () => {
+		it("is not executable while editing text, prioritizing caret movement", () => {
 			const state = makeState({
 				selectedIds: ["a"],
 				objects: { a: makeRect("a", 0, 0) },

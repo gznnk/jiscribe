@@ -18,27 +18,27 @@ const validDiamond = {
 };
 
 describe("isValidDiamondState", () => {
-	it("有効な Diamond は true", () => {
+	it("valid Diamond is true", () => {
 		expect(isValidDiamondState(validDiamond)).toBe(true);
 	});
 
-	it("type 不一致 / 必須ジオメトリ欠落は false", () => {
+	it("type mismatch / missing required geometry is false", () => {
 		expect(isValidDiamondState({ ...validDiamond, type: "rect" })).toBe(false);
 		expect(isValidDiamondState({ ...validDiamond, height: undefined })).toBe(
 			false,
 		);
 	});
 
-	it("width / height が負数は false（minimum: 0）", () => {
+	it("negative width / height is false (minimum: 0)", () => {
 		expect(isValidDiamondState({ ...validDiamond, width: -1 })).toBe(false);
 		expect(isValidDiamondState({ ...validDiamond, height: -1 })).toBe(false);
 	});
 
-	it("fontSize < 1 は false（>= 1）", () => {
+	it("fontSize < 1 is false (>= 1)", () => {
 		expect(isValidDiamondState({ ...validDiamond, fontSize: 0 })).toBe(false);
 	});
 
-	it("CSS インジェクションを含む fill は false", () => {
+	it("fill containing CSS injection is false", () => {
 		expect(isValidDiamondState({ ...validDiamond, fill: "a; } body {" })).toBe(
 			false,
 		);

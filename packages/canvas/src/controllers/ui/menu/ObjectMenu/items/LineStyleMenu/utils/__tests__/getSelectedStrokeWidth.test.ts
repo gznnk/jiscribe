@@ -22,21 +22,21 @@ const state = (
 	}) as unknown as CanvasControllerState;
 
 describe("getSelectedStrokeWidth (LineStyle)", () => {
-	it("選択なし → 既定値", () => {
+	it("no selection → default value", () => {
 		expect(getSelectedStrokeWidth(state({}, []))).toBe(DEFAULT_STROKE_WIDTH);
 	});
 
-	it("strokeWidth を持つ → その値", () => {
+	it("has strokeWidth → its value", () => {
 		const s = state({ a: obj("a", { strokeWidth: 8 }) }, ["a"]);
 		expect(getSelectedStrokeWidth(s)).toBe(8);
 	});
 
-	it("strokeWidth が数値でない → 既定値", () => {
+	it("strokeWidth is not a number → default value", () => {
 		const s = state({ a: obj("a", { strokeWidth: null }) }, ["a"]);
 		expect(getSelectedStrokeWidth(s)).toBe(DEFAULT_STROKE_WIDTH);
 	});
 
-	it("コネクター選択時はそのコネクターから取得する", () => {
+	it("retrieves from the connector when a connector is selected", () => {
 		const s = state(
 			{
 				a: obj("a", { strokeWidth: 1 }),

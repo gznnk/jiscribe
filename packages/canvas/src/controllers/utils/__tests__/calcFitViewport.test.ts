@@ -9,7 +9,7 @@ beforeAll(() => {
 	initializeObjectRegistry();
 });
 
-/** 軸並行（無回転）の Frame 系 state。bbox は left=cx-w/2 … で自明。 */
+/** Axis-aligned (unrotated) Frame-family state. bbox is trivial: left=cx-w/2, etc. */
 const rectObj = (
 	id: string,
 	cx: number,
@@ -29,7 +29,7 @@ const rectObj = (
 		scaleY: 1,
 	}) as unknown as ObjectState;
 
-/** Frame 条件を満たさない純 Poly state（isPoly 分岐を通す）。 */
+/** Pure Poly state that does not satisfy the Frame condition (exercises the isPoly branch). */
 const polylineObj = (
 	id: string,
 	points: { x: number; y: number }[],
@@ -44,12 +44,12 @@ const toRecord = (objects: ObjectState[]): Record<string, ObjectState> =>
 	Object.fromEntries(objects.map((obj) => [obj.id, obj]));
 
 describe("calcFitViewport", () => {
-	it("オブジェクトが無ければ null を返す", () => {
+	it("returns null when there are no objects", () => {
 		expect(calcFitViewport({}, { width: 800, height: 600 })).toBeNull();
 	});
 
-	it("単一矩形をビューポート中央に収め、zoom と原点を算出する", () => {
-		// bbox: left=0, right=200, top=50, bottom=150 → 中心(100,100)、200x100
+	it("fits a single rectangle to the viewport center and computes zoom and origin", () => {
+		// bbox: left=0, right=200, top=50, bottom=150 -> center (100,100), 200x100
 		const objects = toRecord([rectObj("r1", 100, 100, 200, 100)]);
 
 		const viewport = calcFitViewport(objects, {
@@ -58,7 +58,7 @@ describe("calcFitViewport", () => {
 			padding: 50,
 		});
 
-		// 横: (800-100)/200=3.5, 縦: (600-100)/100=5 → 制約の厳しい 3.5
+		// horizontal: (800-100)/200=3.5, vertical: (600-100)/100=5 -> the tighter 3.5
 		expect(viewport).not.toBeNull();
 		expect(viewport!.zoom).toBeCloseTo(3.5, 4);
 		expect(viewport!.width).toBe(800);
@@ -68,7 +68,7 @@ describe("calcFitViewport", () => {
 		expect(viewport!.minY).toBeCloseTo(100 - 600 / 7, 3);
 	});
 
-	it("複数オブジェクトの和集合バウンドにフィットする", () => {
+	it("fits to the union bound of multiple objects", () => {
 		const objects = toRecord([
 			rectObj("r1", 50, 50, 100, 100), // left0 top0 right100 bottom100
 			rectObj("r2", 350, 250, 100, 100), // left300 top200 right400 bottom300
@@ -80,15 +80,15 @@ describe("calcFitViewport", () => {
 			padding: 0,
 		});
 
-		// 和集合: 400x300、中心(200,150)
-		// 横 800/400=2, 縦 600/300=2 → 2
+		// union: 400x300, center (200,150)
+		// horizontal 800/400=2, vertical 600/300=2 -> 2
 		expect(viewport).not.toBeNull();
 		expect(viewport!.zoom).toBeCloseTo(2, 4);
 		expect(viewport!.minX).toBeCloseTo(200 - 800 / 4, 3);
 		expect(viewport!.minY).toBeCloseTo(150 - 600 / 4, 3);
 	});
 
-	it("group は対象外（group のみなら null）", () => {
+	it("groups are excluded (null if only a group)", () => {
 		const group = {
 			id: "g1",
 			type: "group",
@@ -106,7 +106,7 @@ describe("calcFitViewport", () => {
 		).toBeNull();
 	});
 
-	it("group を無視し、内包する非 group オブジェクトだけでフィットする", () => {
+	it("ignores the group and fits using only the non-group objects it contains", () => {
 		const group = {
 			id: "g1",
 			type: "group",
@@ -131,11 +131,11 @@ describe("calcFitViewport", () => {
 			padding: 50,
 		});
 
-		// group の巨大バウンドに引きずられず、rect 単体と同じ結果になる
+		// not dragged by the group's huge bound; same result as the rect alone
 		expect(withGroup).toEqual(rectOnly);
 	});
 
-	it("Poly（polyline）のバウンドも含める", () => {
+	it("includes the bound of a Poly (polyline)", () => {
 		const objects = toRecord([
 			polylineObj("p1", [
 				{ x: 0, y: 0 },
@@ -149,14 +149,14 @@ describe("calcFitViewport", () => {
 			padding: 50,
 		});
 
-		// bbox 200x100、中心(100,50) → 矩形ケースと同じ zoom
+		// bbox 200x100, center (100,50) -> same zoom as the rectangle case
 		expect(viewport).not.toBeNull();
 		expect(viewport!.zoom).toBeCloseTo(3.5, 4);
 		expect(viewport!.minX).toBeCloseTo(100 - 800 / 7, 3);
 		expect(viewport!.minY).toBeCloseTo(50 - 600 / 7, 3);
 	});
 
-	it("free 端点コネクターのバウンドも含める", () => {
+	it("includes the bound of a free-endpoint connector", () => {
 		const connector = {
 			id: "c1",
 			type: "connector",
@@ -176,7 +176,7 @@ describe("calcFitViewport", () => {
 		expect(viewport!.zoom).toBeCloseTo(3.5, 4);
 	});
 
-	it("コンテンツが小さく拡大率が上限を超える場合は ZOOM.MAX にクランプする", () => {
+	it("clamps to ZOOM.MAX when content is small and the zoom exceeds the upper limit", () => {
 		const objects = toRecord([rectObj("r1", 0, 0, 10, 10)]);
 
 		const viewport = calcFitViewport(objects, {
@@ -185,12 +185,12 @@ describe("calcFitViewport", () => {
 			padding: 0,
 		});
 
-		// 横 80, 縦 60 → どちらも ZOOM.MAX(10) を超える
+		// horizontal 80, vertical 60 -> both exceed ZOOM.MAX(10)
 		expect(viewport).not.toBeNull();
 		expect(viewport!.zoom).toBe(ZOOM.MAX);
 	});
 
-	it("コンテンツが巨大で拡大率が下限を下回る場合は ZOOM.MIN にクランプする", () => {
+	it("clamps to ZOOM.MIN when content is huge and the zoom falls below the lower limit", () => {
 		const objects = toRecord([rectObj("r1", 0, 0, 100_000, 100_000)]);
 
 		const viewport = calcFitViewport(objects, {
@@ -203,14 +203,14 @@ describe("calcFitViewport", () => {
 		expect(viewport!.zoom).toBe(ZOOM.MIN);
 	});
 
-	it("両軸サイズ 0 の退化コンテンツ（単一点 Poly）は null を返す", () => {
+	it("degenerate content with zero size on both axes (single-point Poly) returns null", () => {
 		const objects = toRecord([polylineObj("p1", [{ x: 42, y: 42 }])]);
 
 		expect(calcFitViewport(objects, { width: 800, height: 600 })).toBeNull();
 	});
 
-	it("片軸のみ広がりがある場合でも、その軸の拡大率でフィットする", () => {
-		// 水平な 2 点ポリライン: width=200, height=0
+	it("fits by the zoom of the spanning axis even when only one axis has extent", () => {
+		// horizontal 2-point polyline: width=200, height=0
 		const objects = toRecord([
 			polylineObj("p1", [
 				{ x: 0, y: 50 },
@@ -224,7 +224,7 @@ describe("calcFitViewport", () => {
 			padding: 0,
 		});
 
-		// height=0 は候補から除外され、横 800/200=4 が採用される
+		// height=0 is excluded from the candidates, so horizontal 800/200=4 is used
 		expect(viewport).not.toBeNull();
 		expect(viewport!.zoom).toBeCloseTo(4, 4);
 	});

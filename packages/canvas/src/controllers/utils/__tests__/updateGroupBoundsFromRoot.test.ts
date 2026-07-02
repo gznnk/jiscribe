@@ -47,23 +47,23 @@ const makeState = (
 ): CanvasControllerState => ({ objects }) as unknown as CanvasControllerState;
 
 describe("updateGroupBoundsFromRoot", () => {
-	it("groupId が存在しない → state をそのまま返し objects をコピーしない", () => {
+	it("groupId does not exist → returns state as-is without copying objects", () => {
 		const state = makeState({});
 		const result = updateGroupBoundsFromRoot(state, "missing");
-		// 早期リターンが効き、無駄なオブジェクトコピーが発生しない
+		// the early return kicks in, so no wasteful object copy occurs
 		expect(result).toBe(state);
 		expect(result.objects).toBe(state.objects);
 	});
 
-	it("groupId がグループでない → state をそのまま返し objects をコピーしない", () => {
+	it("groupId is not a group → returns state as-is without copying objects", () => {
 		const state = makeState({ r1: rect("r1", 0, 0) });
 		const result = updateGroupBoundsFromRoot(state, "r1");
 		expect(result).toBe(state);
 		expect(result.objects).toBe(state.objects);
 	});
 
-	it("上に辿った最上位の祖先がグループでない → state をそのまま返す", () => {
-		// g1（group, 親は rect r1）から上に辿るとルートは rect なので更新対象なし
+	it("the topmost ancestor traced upward is not a group → returns state as-is", () => {
+		// tracing up from g1 (group, whose parent is rect r1), the root is a rect, so nothing to update
 		const g1 = group("g1", [], "r1");
 		const r1 = rect("r1", 0, 0);
 		const state = makeState({ g1, r1 });
@@ -72,7 +72,7 @@ describe("updateGroupBoundsFromRoot", () => {
 		expect(result.objects).toBe(state.objects);
 	});
 
-	it("単一グループ（親なし）→ そのグループの境界が更新される", () => {
+	it("single group (no parent) → that group's bounds are updated", () => {
 		const r1 = rect("r1", 80, 60, "g1");
 		const g1 = group("g1", ["r1"]);
 		const state = makeState({ g1, r1 });
@@ -89,12 +89,12 @@ describe("updateGroupBoundsFromRoot", () => {
 		expect(updatedG1.height).toBeCloseTo(20);
 	});
 
-	it("ネストグループ → ルートから辿って全グループを更新する", () => {
+	it("nested groups → traces from the root and updates all groups", () => {
 		const r1 = rect("r1", 50, 50, "inner");
 		const inner = group("inner", ["r1"], "outer");
 		const outer = group("outer", ["inner"]);
 		const state = makeState({ r1, inner, outer });
-		// inner の groupId を渡しても、outer がルートなので outer から更新される
+		// even passing inner's groupId, since outer is the root, updating starts from outer
 		const result = updateGroupBoundsFromRoot(state, "inner");
 		const updatedInner = result.objects["inner"] as unknown as {
 			cx: number;
@@ -108,7 +108,7 @@ describe("updateGroupBoundsFromRoot", () => {
 		expect(updatedOuter.cx).toBeCloseTo(50);
 	});
 
-	it("元の state.objects は変更されない（イミュータブル）", () => {
+	it("the original state.objects is not mutated (immutable)", () => {
 		const r1 = rect("r1", 100, 100, "g1");
 		const g1 = group("g1", ["r1"]);
 		const originalObjects = { g1, r1 };
