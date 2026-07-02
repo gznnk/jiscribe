@@ -1,6 +1,5 @@
+import { isBoolean } from "@workspace/basic-validators";
 import { isTransform, type Transform } from "@workspace/geometry";
-
-import { isBoolean } from "../../../../../basic-validators/src";
 
 /**
  * Transform properties for objects in State layer.
