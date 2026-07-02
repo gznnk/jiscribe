@@ -71,8 +71,9 @@ type Command = {
 `past` に積んで履歴を記録する。連続操作（連続ナッジ等）は時間ウィンドウ内で 1 エントリに
 集約される。記録・集約の詳細は [状態更新フロー](./06-state-update-flow.ja.md) を参照。
 
-`Undo` / `Redo` コマンド自体は、復元対象の `CanvasDoc` を載せた専用アクション
-（`UNDO` / `REDO`）として dispatch される。
+`Undo` / `Redo` は通常のコマンドで、他のコマンドと同様に `COMMAND` アクション（`handleCommand`）
+経由で実行され、その `execute` が `past` / `future` から `present` を復元する（専用の
+`UNDO` / `REDO` アクションは存在しない）。
 
 ## クリップボード：copy / cut / paste / duplicate
 

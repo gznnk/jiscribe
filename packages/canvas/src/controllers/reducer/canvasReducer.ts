@@ -6,6 +6,7 @@ import { handleCommand } from "../commands/handlers/handleCommand";
 import { handleGesture } from "../gestures/handlers/handleGesture";
 import { commitTextEditIfNeeded } from "../utils/commitTextEditIfNeeded";
 import { handlePropertyUpdate } from "../utils/handlePropertyUpdate";
+import { resetUiState } from "../utils/resetUiState";
 
 /**
  * Root reducer for the canvas controller. Dispatches each CanvasAction to the appropriate
@@ -86,25 +87,7 @@ export const canvasReducer = (
 				...state,
 				objects: action.payload.objects,
 				rootIds: action.payload.rootIds,
-				selectedIds: [],
-				selectedConnectorId: null,
-				eventStartSnapshot: null,
-				keyPointsCache: {},
-				snapCandidatesCache: null,
-				edgeScrollEnabled: false,
-				textEditState: null,
-				pendingConnector: null,
-				editingConnectorId: null,
-				editingEndpoint: null,
-				contextMenuPosition: null,
-				areaSelection: null,
-				multiSelectGroup: null,
-				selectedVertex: null,
-				shapeDrawing: null,
-				shapeLibraryDrag: null,
-				snapFeedback: null,
-				axisLockFeedback: null,
-				objectMenuOpenId: null,
+				...resetUiState(),
 				// An external change is a history boundary. Since past is pushed directly without going
 				// through recordHistoryIfNeeded, explicitly reset the coalesce state here (do not carry
 				// over the recorded value from a preceding nudge).

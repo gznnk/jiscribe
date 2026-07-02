@@ -15,13 +15,12 @@ This "assemble the entire transition in one place" policy follows principle 3 of
 | Action                               | Role                                                    | Delegates to                                               |
 | ------------------------------------ | ------------------------------------------------------- | ---------------------------------------------------------- |
 | `GESTURE`                            | Gestures originating from pointer/wheel input           | `handleGesture` → [Gesture System](./04-gesture-system.md) |
-| `COMMAND`                            | Commands from shortcuts/menus/toolbar                   | `handleCommand` → [Command System](./05-command-system.md) |
+| `COMMAND`                            | Commands from shortcuts/menus/toolbar (incl. undo/redo) | `handleCommand` → [Command System](./05-command-system.md) |
 | `PASTE`                              | Applying clipboard data                                 | `handlePaste`                                              |
 | `MENU_PROPERTY_UPDATE`               | ObjectMenu input (preview / commit)                     | `handlePropertyUpdate`                                     |
 | `SYNC_EXTERNAL`                      | Importing a doc from the external host                  | → [External Sync](./07-external-sync.md)                   |
 | `CONTAINER_RESIZE`                   | Updating viewport dimensions                            | (inline)                                                   |
 | `UPDATE_TEXT_EDIT` / `END_TEXT_EDIT` | Updates during text editing / commit or cancel          | `commitTextEditIfNeeded`                                   |
-| `UNDO` / `REDO`                      | Restoring from history (carries the target `CanvasDoc`) | (history)                                                  |
 | `CLOSE_CONTEXT_MENU`                 | Simply closing the context menu                         | (inline)                                                   |
 
 Each handler (`handleGesture` / `handleCommand` / `handlePaste`, …) is implemented as a
