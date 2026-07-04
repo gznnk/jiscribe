@@ -1,5 +1,5 @@
 {
-	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
 	"$id": "https://schema.jiscribe.dev/v1/jiscribe.schema.json",
 	"title": "CanvasDoc",
 	"description": "Root document format for a .jis.json file used by canvas.\n\nCoordinate system: every position and size (x/y, cx/cy, width/height, rx/ry, points, waypoints) is expressed in CSS pixels (px) within a single shared world-coordinate space. The origin (0,0) is the top-left corner; X increases to the right and Y increases downward (screen convention, NOT math convention). Angles (rotation) are in degrees and turn clockwise. There is no fixed canvas boundary and coordinates may be negative, but for a new document keep the primary content near the origin — roughly x in [0, 1600] and y in [0, 1200] — so it lands inside the initial viewport.",
