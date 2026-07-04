@@ -1,8 +1,7 @@
 import type { BoundingBox, TransformedFrame } from "@workspace/geometry";
 import {
 	calcAffineTransformedPoint,
-	calcFrameKeyPoints,
-	calcKeyPointsBoundingBox,
+	calcBoundingBox,
 } from "@workspace/geometry";
 
 import type { TransformState } from "../../../../../../states/objects/base/TransformState";
@@ -125,12 +124,11 @@ export function calcTentativeBBox(
 		startFrame.cx,
 		startFrame.cy,
 	);
-	const kp = calcFrameKeyPoints({
+	return calcBoundingBox({
 		...startFrame,
 		cx: newCenter.x,
 		cy: newCenter.y,
 		width: Math.abs(resizeResult.width),
 		height: Math.abs(resizeResult.height),
 	});
-	return calcKeyPointsBoundingBox(kp);
 }
