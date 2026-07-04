@@ -1,6 +1,7 @@
 import type { Point } from "@workspace/geometry";
 
 import { directionsFace, elbowCandidates } from "./elbowCandidates";
+import { calcPathSignature } from "./pathSignature";
 import { calcRouteCost, compareCost, type RouteCost } from "./routeCost";
 import { simplifyPath } from "./simplifyPath";
 import { clampStubMargin, stubPoint } from "./stub";
@@ -21,6 +22,8 @@ import { DEFAULT_CONNECTOR_MARGIN } from "../../../../../constants/connectorRout
  *    channel represents S/Z shapes; the box-perimeter channels represent wrapping around shapes.
  * 3. `calcRouteCost` / `compareCost`: evaluate each candidate **lexicographically** and pick the best:
  *    shape crossings → aesthetics (turns×weight + length + reversals×penalty − symmetry bonus).
+ *    When `options.previousPathSignature` is given, the candidate matching the previous frame's
+ *    topology gets a hysteresis bonus, so cost-tied shapes do not flip while an owner is dragged.
  *
  * The return value is the full path including endpoints `[source.point, …, target.point]`
  * (collinear/duplicate points already collapsed).
@@ -86,6 +89,7 @@ export const routeOrthogonalConnector = (
 
 	// ── Step 3: evaluate and pick the best ──
 	// Compare costs lexicographically via compareCost (crossings → aesthetics).
+	const previousPathSignature = options.previousPathSignature ?? null;
 	let bestPath: Point[] | null = null;
 	let bestCost: RouteCost | null = null;
 	for (const { elbow, symmetric } of candidates) {
@@ -98,12 +102,16 @@ export const routeOrthogonalConnector = (
 			...simplifiedElbow,
 			target.point,
 		]);
+		const matchesPreviousRoute =
+			previousPathSignature !== null &&
+			calcPathSignature(fullPath) === previousPathSignature;
 		const cost = calcRouteCost(
 			fullPath,
 			simplifiedElbow,
 			source.box,
 			target.box,
 			symmetric,
+			matchesPreviousRoute,
 		);
 		// Since the comparison is strict, on equal cost the earlier-evaluated candidate is kept.
 		// Candidates are ordered x channels (horizontal-start H→V→H) → y channels, so on a perfect

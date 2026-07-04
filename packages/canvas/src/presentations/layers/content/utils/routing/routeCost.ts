@@ -139,6 +139,13 @@ const SYMMETRY_BONUS = 1_500;
 // penalized equally, so it does not affect relative comparison and falls back naturally
 // (independent of crossings = a soft constraint).
 const REVERSAL_PENALTY = 10_000;
+// Hysteresis bonus for the candidate whose topology matches the route drawn on the previous frame.
+// Many layouts have exact cost ties (e.g. wrapping over the top vs. under the bottom is the same
+// Manhattan length), so a memoryless pick flips arbitrarily while the owner is dragged. The bonus
+// keeps the previous shape through ties and near-ties, and is deliberately smaller than TURN_WEIGHT
+// so a genuinely better route (fewer turns, or beyond ~500px shorter) still wins immediately.
+// Crossings stay a hard constraint, so a previous route that now pierces a shape is abandoned.
+const PREVIOUS_ROUTE_BONUS = 500;
 
 /**
  * Route evaluation. Shape crossings are compared first as a **hard constraint**, while turn count,
@@ -155,7 +162,7 @@ const REVERSAL_PENALTY = 10_000;
 export type RouteCost = {
 	/** The number of shape crossings (we most want this to be 0). */
 	crossings: number;
-	/** turns×weight + path length + reversals×penalty − symmetry bonus (smaller is better). */
+	/** turns×weight + path length + reversals×penalty − symmetry bonus − previous-route bonus (smaller is better). */
 	aesthetic: number;
 };
 
@@ -174,6 +181,7 @@ export type RouteCost = {
  * @param sourceBox - AABB of the source shape (null for a free endpoint)
  * @param targetBox - AABB of the target shape (null for a free endpoint)
  * @param symmetric - Whether it is a symmetric (S/Z-shaped) route bending at the midpoint. If true, add an aesthetic bonus
+ * @param matchesPreviousRoute - Whether the candidate's topology matches the previous frame's route. If true, add the hysteresis bonus
  * @returns A pair of crossing count (hard constraint) and aesthetic score (soft)
  */
 export const calcRouteCost = (
@@ -182,6 +190,7 @@ export const calcRouteCost = (
 	sourceBox: BoxFeatures | null,
 	targetBox: BoxFeatures | null,
 	symmetric: boolean,
+	matchesPreviousRoute: boolean = false,
 ): RouteCost => {
 	const turns = Math.max(fullPath.length - 2, 0);
 	return {
@@ -193,7 +202,8 @@ export const calcRouteCost = (
 			turns * TURN_WEIGHT +
 			pathLength(fullPath) +
 			countReversals(fullPath) * REVERSAL_PENALTY -
-			(symmetric ? SYMMETRY_BONUS : 0),
+			(symmetric ? SYMMETRY_BONUS : 0) -
+			(matchesPreviousRoute ? PREVIOUS_ROUTE_BONUS : 0),
 	};
 };
 

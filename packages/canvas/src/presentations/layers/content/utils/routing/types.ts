@@ -20,4 +20,10 @@ export type OrthogonalConnectorEndpoint = {
 export type RouteOrthogonalConnectorOptions = {
 	/** Distance by which the line is pushed out from a shape's face (stub length, px). */
 	margin?: number;
+	/**
+	 * Topology signature (`calcPathSignature`) of the route drawn on the previous frame.
+	 * Candidates matching it get a hysteresis bonus so the route does not flip between
+	 * cost-tied shapes while an owner shape is dragged. Omit/null for a memoryless pick.
+	 */
+	previousPathSignature?: string | null;
 };

@@ -1,9 +1,11 @@
 import type { Point } from "@workspace/geometry";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import type { AnchorSpec } from "../../../../../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
+import { calcPathSignature } from "../pathSignature";
 import { resolveOrthogonalRoute } from "../resolveOrthogonalRoute";
+import { clearRouteMemory } from "../routeMemory";
 
 /** An unrotated Frame-family state that satisfies isTransformedFrame. */
 const frameObj = (
@@ -168,5 +170,55 @@ describe("resolveOrthogonalRoute", () => {
 		// endpoints coincide → degenerate path (collapsed to a single point or 2 points)
 		expect(path[0]).toEqual(sourcePoint);
 		expect(path.at(-1)).toEqual(targetPoint);
+	});
+
+	describe("route hysteresis keyed by connectorId", () => {
+		beforeEach(() => {
+			clearRouteMemory();
+		});
+
+		// Source exits right, target sits behind (to the left): the route wraps around, and the
+		// over-top vs. under-bottom wraps are exact cost ties. Dragging the target vertically
+		// across the source's midline flips a memoryless pick; the id-keyed memory must hold it.
+		const routeWrapAround = (
+			targetCy: number,
+			connectorId: string | null,
+		): Point[] =>
+			resolveOrthogonalRoute(
+				connectPoint("right"),
+				connectPoint("left"),
+				{ x: 100, y: 50 },
+				{ x: -300, y: targetCy },
+				frameObj("src", 50, 50, 100, 100),
+				frameObj("tgt", -250, targetCy, 100, 100),
+				connectorId,
+			);
+
+		it("keeps the same topology across a monotone drag through the cost-tie window", () => {
+			const signatures = new Set<string>();
+			for (let targetCy = 20; targetCy <= 80; targetCy += 5) {
+				signatures.add(calcPathSignature(routeWrapAround(targetCy, "conn-1")));
+			}
+			expect(signatures.size).toBe(1);
+		});
+
+		it("memory is isolated per connector id", () => {
+			// Establish opposite topologies on two connectors by approaching from opposite sides,
+			// then evaluate both at the same tie geometry: each keeps its own shape.
+			routeWrapAround(20, "conn-upper");
+			routeWrapAround(80, "conn-lower");
+			const upper = calcPathSignature(routeWrapAround(50, "conn-upper"));
+			const lower = calcPathSignature(routeWrapAround(50, "conn-lower"));
+			expect(upper).not.toBe(lower);
+		});
+
+		it("routes memorylessly when connectorId is omitted", () => {
+			// Without an id, the same geometry always yields the same (order-determined) result,
+			// and nothing is remembered.
+			const first = routeWrapAround(50, null);
+			routeWrapAround(20, "conn-x");
+			const second = routeWrapAround(50, null);
+			expect(second).toEqual(first);
+		});
 	});
 });
