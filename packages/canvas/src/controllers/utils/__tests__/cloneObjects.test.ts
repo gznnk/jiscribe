@@ -76,6 +76,7 @@ describe("cloneObjects", () => {
 					parentId: "EXTERNAL",
 					source: { owner: { id: "A" } },
 					target: { owner: { id: "EXTERNAL" } },
+					points: [],
 				},
 			}),
 			ZERO,
@@ -94,6 +95,49 @@ describe("cloneObjects", () => {
 		// owners inside the set get new IDs; owners outside the set keep their original IDs
 		expect(conn.source.owner.id).toBe(newA);
 		expect(conn.target.owner.id).toBe("EXTERNAL");
+	});
+
+	it("translates a connector's free endpoint and waypoints by the offset while owned endpoints follow their shape", () => {
+		const { newObjects, idRemap } = cloneObjects(
+			["A", "CONN"],
+			objects({
+				A: { id: "A", type: "rect" },
+				CONN: {
+					id: "CONN",
+					type: "connector",
+					source: { owner: { id: "A" }, anchor: { kind: "center" } },
+					target: { anchor: { kind: "free", point: { x: 100, y: 50 } } },
+					// straight-routing waypoints hold absolute coordinates
+					points: [
+						{ x: 40, y: 10 },
+						{ x: 70, y: 30 },
+					],
+				},
+			}),
+			{ x: 20, y: 20 },
+		);
+
+		const newA = idRemap.get("A")!;
+		const newConn = idRemap.get("CONN")!;
+		const conn = newObjects[newConn] as unknown as {
+			source: { owner: { id: string }; anchor: { kind: string } };
+			target: { anchor: { kind: string; point: { x: number; y: number } } };
+			points: { x: number; y: number }[];
+		};
+
+		// owned endpoint keeps following its shape (only its owner id is remapped)
+		expect(conn.source.owner.id).toBe(newA);
+		expect(conn.source.anchor).toEqual({ kind: "center" });
+		// free endpoint's absolute point is translated by the offset
+		expect(conn.target.anchor).toEqual({
+			kind: "free",
+			point: { x: 120, y: 70 },
+		});
+		// absolute waypoints are translated by the offset
+		expect(conn.points).toEqual([
+			{ x: 60, y: 30 },
+			{ x: 90, y: 50 },
+		]);
 	});
 
 	it("does not double-register when a topLevelIds root and a promoted root overlap", () => {
