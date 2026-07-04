@@ -1,5 +1,7 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
+import { resolveDocSnapshot } from "../../../states/canvas/DocSnapshot";
+import { objectMapperRegistry } from "../../../states/registry/ObjectMapperRegistry";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestState } from "./support/createTestState";
 import { runCommands } from "./support/dispatch";
@@ -70,6 +72,40 @@ describe("canvasReducer (integration)", () => {
 			state = { ...state, selectedIds: ["rect-2"] };
 			state = runCommands(state, "move-right");
 			expect(state.history.past).toHaveLength(2);
+		});
+
+		it("nudge commits never rebuild the Doc tree (history snapshots stay lazy)", () => {
+			let state = createState();
+			const toDocSpy = vi.spyOn(objectMapperRegistry, "toDoc");
+
+			// Simulates key repeat: neither the first commit nor the coalesced
+			// followers may pay the O(N) canvasToDoc cost (issue #125)
+			state = runCommands(state, "move-right", "move-right", "move-right");
+			expect(toDocSpy).not.toHaveBeenCalled();
+			toDocSpy.mockRestore();
+
+			// The lazy present still resolves to the committed positions
+			const presentDoc = resolveDocSnapshot(state.history.present);
+			expect(presentDoc.root[0]).toMatchObject({ id: "rect-1", x: 3 });
+		});
+
+		it("past snapshots resolve to their historical states even after later edits", () => {
+			vi.useFakeTimers();
+			let state = createState();
+			state = runCommands(state, "move-right");
+
+			// Beyond the coalescing window: the next nudge becomes a separate entry
+			vi.advanceTimersByTime(1500);
+			state = runCommands(state, "move-right");
+			expect(state.history.past).toHaveLength(2);
+
+			// Each snapshot reflects the state at its own commit, proving later
+			// (immutable) updates cannot leak into stored history entries
+			const initialDoc = resolveDocSnapshot(state.history.past[0]);
+			const firstNudgeDoc = resolveDocSnapshot(state.history.past[1]);
+			expect(initialDoc.root[0]).toMatchObject({ id: "rect-1", x: 0 });
+			expect(firstNudgeDoc.root[0]).toMatchObject({ id: "rect-1", x: 1 });
+			expect(cxOf(state)).toBe(7);
 		});
 
 		it("a same-direction nudge beyond the coalescing window (1000ms) produces a separate entry", () => {

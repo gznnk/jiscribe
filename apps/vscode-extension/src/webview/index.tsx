@@ -1,5 +1,5 @@
 import { Canvas, parseCanvasText, type CanvasDoc } from "@workspace/canvas";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 
 import { CanvasErrorNotice } from "./CanvasErrorNotice";
@@ -24,28 +24,6 @@ declare const acquireVsCodeApi: () => {
 const vscode = acquireVsCodeApi();
 
 /**
- * デバウンス関数。
- * 連続して呼び出されたとき、最後の呼び出しから ms ミリ秒後に1回だけ fn を実行する。
- *
- * Canvas の編集操作（ドラッグ・リサイズ等）は高頻度で発生するため、
- * そのたびに JSON.stringify してファイルへ書き込むとパフォーマンスが低下する。
- * デバウンスを挟むことで書き込み頻度を制限する（#11 修正）。
- *
- * @param fn  デバウンス対象の関数
- * @param ms  待機時間（ミリ秒）
- */
-function debounce<Args extends unknown[]>(
-	fn: (...args: Args) => void,
-	ms: number,
-): (...args: Args) => void {
-	let timerId: ReturnType<typeof setTimeout> | undefined;
-	return (...args: Args) => {
-		clearTimeout(timerId);
-		timerId = setTimeout(() => fn(...args), ms);
-	};
-}
-
-/**
  * Canvas エディタのルートコンポーネント。
  *
  * 状態の種類:
@@ -63,22 +41,15 @@ function App() {
 	const [hasSemanticError, setHasSemanticError] = useState(false);
 	const [parseError, setParseError] = useState<string>("");
 
-	// debounce した関数は、コンポーネントの再レンダリングをまたいで
-	// 同じ関数インスタンスを維持する必要がある（再生成するとタイマーがリセットされる）。
-	// useRef で関数インスタンスを保持し、useCallback で安定した参照を返す。
-	const debouncedPostRef = useRef(
-		debounce((doc: CanvasDoc, saveNonce: string) => {
-			const message: WebviewToExtensionMessage = {
-				type: "update",
-				data: JSON.stringify(doc, null, 2),
-				saveNonce,
-			};
-			vscode.postMessage(message);
-		}, 150),
-	);
-
+	// 高頻度コミット（キーリピート等）の間引きは Canvas 側の保存スケジューラが
+	// 担うため（#125）、ここではデバウンスせずそのまま Extension へ送る。
 	const handleCommit = useCallback((doc: CanvasDoc, saveNonce: string) => {
-		debouncedPostRef.current(doc, saveNonce);
+		const message: WebviewToExtensionMessage = {
+			type: "update",
+			data: JSON.stringify(doc, null, 2),
+			saveNonce,
+		};
+		vscode.postMessage(message);
 	}, []);
 
 	const handleUndo = useCallback(() => {

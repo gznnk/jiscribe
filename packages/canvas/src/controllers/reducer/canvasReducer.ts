@@ -1,5 +1,5 @@
 import type { CanvasAction } from "./CanvasActions";
-import { canvasToDoc } from "../../states/canvas/CanvasMapper";
+import { createDocSnapshotFromState } from "../../states/canvas/DocSnapshot";
 import type { CanvasControllerState } from "../CanvasTypes";
 import { handlePaste } from "./handlers/handlePaste";
 import { handleCommand } from "../commands/handlers/handleCommand";
@@ -59,12 +59,6 @@ export const canvasReducer = (
 		}
 
 		case "SYNC_EXTERNAL": {
-			const newDoc = canvasToDoc({
-				...state,
-				objects: action.payload.objects,
-				rootIds: action.payload.rootIds,
-			});
-
 			// Self-save round-trip: if action.saveNonce matches state.saveNonce, this SYNC_EXTERNAL
 			// is our own data being echoed back, so only update the object references and leave
 			// past/future (history) unchanged.
@@ -94,7 +88,7 @@ export const canvasReducer = (
 				historyCoalesce: { recorded: null, pending: null },
 				history: {
 					past: [...state.history.past, state.history.present].slice(-50),
-					present: newDoc,
+					present: createDocSnapshotFromState(action.payload),
 					future: [],
 				},
 			};
@@ -176,7 +170,6 @@ const recordHistoryIfNeeded = (
 		return state;
 	}
 
-	const doc = canvasToDoc(state);
 	const now = Date.now();
 
 	// Match the coalesce key set by the handler (intent) against the previous commit's coalesce id (recorded)
@@ -203,7 +196,10 @@ const recordHistoryIfNeeded = (
 		},
 		history: {
 			past,
-			present: doc,
+			// Lazy snapshot: the Doc tree is not rebuilt here. During a coalesce
+			// merge past is untouched too, so a key-repeat commit does zero
+			// O(N) conversion work.
+			present: createDocSnapshotFromState(state),
 			future: [],
 		},
 	};

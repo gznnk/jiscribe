@@ -2,6 +2,7 @@ import { type Dispatch, useEffect, useRef } from "react";
 
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import { canvasToState } from "../../states/canvas/CanvasMapper";
+import { resolveDocSnapshot } from "../../states/canvas/DocSnapshot";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasAction } from "../reducer/CanvasActions";
 import { isSameCanvasDocContent } from "../utils/isSameCanvasDocContent";
@@ -51,7 +52,12 @@ export const useSyncExternalDoc = ({
 		// save echoed back): skip entirely. Proceeding would interrupt an
 		// in-progress gesture, clear all UI state, and push a redundant history
 		// entry even though nothing changed.
-		if (isSameCanvasDocContent(canvasDoc, stateRef.current.history.present)) {
+		if (
+			isSameCanvasDocContent(
+				canvasDoc,
+				resolveDocSnapshot(stateRef.current.history.present),
+			)
+		) {
 			return;
 		}
 		const newState = canvasToState(canvasDoc);
