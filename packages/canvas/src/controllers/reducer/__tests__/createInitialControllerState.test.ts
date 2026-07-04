@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
 import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
+import { resolveDocSnapshot } from "../../../states/canvas/DocSnapshot";
 import { initializeObjectRegistry } from "../../setup/initializeObjectRegistry";
 import { createInitialControllerState } from "../createInitialControllerState";
 
@@ -41,7 +42,8 @@ describe("createInitialControllerState", () => {
 
 		expect(state.history.past).toEqual([]);
 		expect(state.history.future).toEqual([]);
-		expect(state.history.present.root).toHaveLength(1);
+		// The initial present wraps the original doc verbatim (no round-trip conversion)
+		expect(resolveDocSnapshot(state.history.present)).toBe(docWithRect);
 	});
 
 	it("returns an independent state on each call (does not share caches, etc.)", () => {

@@ -89,8 +89,12 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 /**
  * Converts CanvasState (flat structure) to CanvasDoc (tree structure).
  * This reconstructs the tree for serialization/storage.
+ * Only the object map and root order are read, so any state carrying those
+ * two fields (e.g. a DocSnapshot source) can be converted.
  */
-export const canvasToDoc = (state: CanvasState): CanvasDoc => {
+export const canvasToDoc = (
+	state: Pick<CanvasState, "objects" | "rootIds">,
+): CanvasDoc => {
 	// Helper to reconstruct an object tree from an ID.
 	// The flat state is always internally consistent (index matches objects,
 	// childIds are acyclic), so it carries no defense against missing IDs or

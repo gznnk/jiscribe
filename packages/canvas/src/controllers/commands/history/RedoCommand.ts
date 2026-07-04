@@ -1,4 +1,5 @@
 import { canvasToState } from "../../../states/canvas/CanvasMapper";
+import { resolveDocSnapshot } from "../../../states/canvas/DocSnapshot";
 import { resetUiState } from "../../utils/resetUiState";
 import type { Command } from "../CommandTypes";
 
@@ -44,8 +45,10 @@ export const RedoCommand: Command = {
 			return state;
 		}
 
-		const docToRestore = state.history.future[0];
-		const restoredState = canvasToState(docToRestore);
+		// Resolve only the entry being restored; entries that merely move between
+		// stacks stay as unresolved snapshots.
+		const snapshotToRestore = state.history.future[0];
+		const restoredState = canvasToState(resolveDocSnapshot(snapshotToRestore));
 
 		return {
 			...restoredState,
@@ -58,7 +61,7 @@ export const RedoCommand: Command = {
 			internalClipboard: state.internalClipboard,
 			history: {
 				past: [...state.history.past, state.history.present],
-				present: docToRestore,
+				present: snapshotToRestore,
 				future: state.history.future.slice(1),
 			},
 		};

@@ -1,8 +1,8 @@
 import type { FrameKeyPoints, Point } from "@workspace/geometry";
 
-import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { ShapePreset } from "../schemas/objects/types/ShapePreset";
 import type { CanvasState } from "../states/canvas/CanvasState";
+import type { DocSnapshot } from "../states/canvas/DocSnapshot";
 import type { Viewport } from "../states/canvas/Viewport";
 import type { ClipboardData } from "./commands/selection/ClipboardData";
 import type { ObjectState } from "../states/objects/base/ObjectState";
@@ -109,14 +109,17 @@ export type AxisLockFeedback = {
 
 /**
  * State of the history stack.
+ * Entries are lazy DocSnapshots: the Doc tree is materialized only when an
+ * entry is actually read (undo/redo restore, save notification, external-sync
+ * comparison), not on every commit.
  */
 export type HistoryState = {
 	/** Past states (undo stack) */
-	past: CanvasDoc[];
+	past: DocSnapshot[];
 	/** Current state */
-	present: CanvasDoc;
+	present: DocSnapshot;
 	/** Future states (redo stack) */
-	future: CanvasDoc[];
+	future: DocSnapshot[];
 };
 
 /**

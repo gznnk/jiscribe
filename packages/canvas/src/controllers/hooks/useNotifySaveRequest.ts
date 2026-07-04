@@ -1,12 +1,22 @@
 import { useEffect, useRef } from "react";
 
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
-import { canvasToDoc } from "../../states/canvas/CanvasMapper";
+import { resolveDocSnapshot } from "../../states/canvas/DocSnapshot";
 import type { CanvasControllerState } from "../CanvasTypes";
+import {
+	createSaveRequestScheduler,
+	type SaveRequestScheduler,
+} from "../utils/createSaveRequestScheduler";
 
 /**
  * Custom hook that notifies the parent component when a save is required
  * (after a commit or undo/redo).
+ *
+ * The Doc is read from history.present (resolved lazily, shared with the
+ * history layer) instead of converting the state a second time. Delivery
+ * timing is delegated to the scheduler: commits inside a coalesce chain
+ * (key-repeat nudges) are deferred and flushed on a boundary event —
+ * keyup / window blur / unmount — everything else notifies immediately.
  *
  * @param state - The current Canvas state
  * @param onCommit - Callback invoked on save, receiving the CanvasDoc and saveNonce
@@ -22,12 +32,57 @@ export const useNotifySaveRequest = (
 		onCommitRef.current = onCommit;
 	});
 
-	// Depends only on saveVersion: the closure captures the state of exactly the
-	// render in which saveVersion was bumped, which is the state to persist.
+	// Always-fresh mirror of state so a deferred (debounced) notification
+	// delivers the latest committed Doc, not the one from the render that
+	// scheduled it.
+	const stateRef = useRef(state);
 	useEffect(() => {
-		if (state.saveVersion > 0) {
-			onCommitRef.current?.(canvasToDoc(state), state.saveNonce);
+		stateRef.current = state;
+	});
+
+	const schedulerRef = useRef<SaveRequestScheduler | null>(null);
+	if (schedulerRef.current === null) {
+		schedulerRef.current = createSaveRequestScheduler();
+	}
+
+	// Depends only on saveVersion: every bump is one save request. Whether the
+	// commit is part of a coalesce chain is read from historyCoalesce.recorded,
+	// which recordHistoryIfNeeded sets exactly for coalescing commits.
+	useEffect(() => {
+		if (state.saveVersion === 0) {
+			return;
 		}
+		schedulerRef.current?.schedule(
+			state.historyCoalesce.recorded !== null,
+			() => {
+				const latestState = stateRef.current;
+				onCommitRef.current?.(
+					resolveDocSnapshot(latestState.history.present),
+					latestState.saveNonce,
+				);
+			},
+		);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [state.saveVersion]);
+
+	// Mount-only effect: deferred saves are flushed by boundary events, not by
+	// time — keyup ends a key-repeat chain (the only coalescing source today)
+	// and window blur means no further keyup will arrive. flush is a no-op
+	// without a pending save, so listening to every key is safe. Unmount also
+	// flushes so the last chain is not lost. This must NOT live in the effect
+	// above — its cleanup runs on every saveVersion change, which would flush
+	// per repeat and defeat the deferral.
+	useEffect(() => {
+		const scheduler = schedulerRef.current;
+		const flushPendingSave = () => {
+			scheduler?.flush();
+		};
+		document.addEventListener("keyup", flushPendingSave);
+		window.addEventListener("blur", flushPendingSave);
+		return () => {
+			document.removeEventListener("keyup", flushPendingSave);
+			window.removeEventListener("blur", flushPendingSave);
+			flushPendingSave();
+		};
+	}, []);
 };

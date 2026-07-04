@@ -1,5 +1,6 @@
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
-import { canvasToDoc, canvasToState } from "../../states/canvas/CanvasMapper";
+import { canvasToState } from "../../states/canvas/CanvasMapper";
+import { createDocSnapshotFromDoc } from "../../states/canvas/DocSnapshot";
 import type { CanvasControllerState } from "../CanvasTypes";
 import { resetUiState } from "../utils/resetUiState";
 
@@ -23,7 +24,9 @@ export const createInitialControllerState = (
 		internalClipboard: null,
 		history: {
 			past: [],
-			present: canvasToDoc(baseState),
+			// The original doc is kept verbatim (no round-trip through canvasToDoc),
+			// so the initial present compares byte-for-byte against the host's doc.
+			present: createDocSnapshotFromDoc(initialDoc),
 			future: [],
 		},
 	};
