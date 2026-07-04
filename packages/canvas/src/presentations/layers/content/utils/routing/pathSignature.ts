@@ -6,9 +6,9 @@ import type { Point } from "@workspace/geometry";
  *
  * The signature ignores coordinates, so it stays identical while a route keeps its shape and only
  * stretches with the shapes' movement, and changes exactly when the route's bend structure changes
- * (e.g. wrapping over the top vs. under the bottom). The router uses it as the identity for
- * hysteresis: "is this candidate the same shape as the route drawn on the previous frame?"
- * (see `routeOrthogonalConnector`).
+ * (e.g. wrapping over the top vs. under the bottom). The router uses its alphabetical order as an
+ * intrinsic tie-breaking key: exact cost ties are decided by the route's own shape instead of by
+ * candidate enumeration order, which keeps the pick stable while shapes move (see `compareRouteChoices`).
  *
  * Zero-length segments are skipped defensively (normally `simplifyPath` has already collapsed them).
  * Non-axis-aligned segments do not occur in orthogonal paths; if one appears, the dominant axis is used.

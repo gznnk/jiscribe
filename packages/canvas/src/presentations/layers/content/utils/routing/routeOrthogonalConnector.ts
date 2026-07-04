@@ -2,7 +2,11 @@ import type { Point } from "@workspace/geometry";
 
 import { directionsFace, elbowCandidates } from "./elbowCandidates";
 import { calcPathSignature } from "./pathSignature";
-import { calcRouteCost, compareCost, type RouteCost } from "./routeCost";
+import {
+	calcRouteCost,
+	compareRouteChoices,
+	type RouteChoice,
+} from "./routeCost";
 import { simplifyPath } from "./simplifyPath";
 import { clampStubMargin, stubPoint } from "./stub";
 import type {
@@ -20,10 +24,12 @@ import { DEFAULT_CONNECTOR_MARGIN } from "../../../../../constants/connectorRout
  * 2. `elbowCandidates`: enumerate **elbow candidates** connecting the stubs from bend-position
  *    "channels" (both stub ends, the midpoint, and each box's perimeter ± margin). The midpoint
  *    channel represents S/Z shapes; the box-perimeter channels represent wrapping around shapes.
- * 3. `calcRouteCost` / `compareCost`: evaluate each candidate **lexicographically** and pick the best:
- *    shape crossings → aesthetics (turns×weight + length + reversals×penalty − symmetry bonus).
- *    When `options.previousPathSignature` is given, the candidate matching the previous frame's
- *    topology gets a hysteresis bonus, so cost-tied shapes do not flip while an owner is dragged.
+ * 3. `calcRouteCost` / `compareRouteChoices`: evaluate each candidate under a **total order** and
+ *    pick the best: shape crossings → aesthetics (turns×weight + length + reversals×penalty −
+ *    symmetry bonus) → topology signature → concrete path. The trailing intrinsic keys make the
+ *    result independent of candidate enumeration order, so cost-tied shapes (e.g. wrapping over
+ *    vs. under equal-sized boxes) do not flip while an owner shape is dragged (route stability
+ *    without memory).
  *
  * The return value is the full path including endpoints `[source.point, …, target.point]`
  * (collinear/duplicate points already collapsed).
@@ -88,10 +94,10 @@ export const routeOrthogonalConnector = (
 	);
 
 	// ── Step 3: evaluate and pick the best ──
-	// Compare costs lexicographically via compareCost (crossings → aesthetics).
-	const previousPathSignature = options.previousPathSignature ?? null;
-	let bestPath: Point[] | null = null;
-	let bestCost: RouteCost | null = null;
+	// Compare candidates under the total order compareRouteChoices (crossings → aesthetics →
+	// intrinsic tie-breaking keys). Ties are decided by the route's own shape, never by
+	// enumeration order, so the result is stable while the shapes move (see routeCost).
+	let best: RouteChoice | null = null;
 	for (const { elbow, symmetric } of candidates) {
 		// simplifyPath is called twice because the inputs differ:
 		// - simplifiedElbow: excludes the stub legs (crossing detection excludes the stub legs).
@@ -102,29 +108,25 @@ export const routeOrthogonalConnector = (
 			...simplifiedElbow,
 			target.point,
 		]);
-		const matchesPreviousRoute =
-			previousPathSignature !== null &&
-			calcPathSignature(fullPath) === previousPathSignature;
-		const cost = calcRouteCost(
-			fullPath,
-			simplifiedElbow,
-			source.box,
-			target.box,
-			symmetric,
-			matchesPreviousRoute,
-		);
-		// Since the comparison is strict, on equal cost the earlier-evaluated candidate is kept.
-		// Candidates are ordered x channels (horizontal-start H→V→H) → y channels, so on a perfect
-		// tie the horizontal-start one is preferred (deterministic but arbitrary).
-		if (!bestCost || compareCost(cost, bestCost) < 0) {
-			bestCost = cost;
-			bestPath = fullPath;
+		const choice: RouteChoice = {
+			cost: calcRouteCost(
+				fullPath,
+				simplifiedElbow,
+				source.box,
+				target.box,
+				symmetric,
+			),
+			signature: calcPathSignature(fullPath),
+			path: fullPath,
+		};
+		if (!best || compareRouteChoices(choice, best) < 0) {
+			best = choice;
 		}
 	}
 
 	// If candidates are empty (theoretically impossible, but defensively), return a simple direct stub connection.
 	return (
-		bestPath ??
+		best?.path ??
 		simplifyPath([source.point, sourceStub, targetStub, target.point])
 	);
 };

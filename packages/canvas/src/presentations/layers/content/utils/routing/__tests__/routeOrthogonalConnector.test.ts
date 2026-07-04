@@ -331,10 +331,13 @@ describe("routeOrthogonalConnector", () => {
 		expect(path.some((p) => p.x === 190)).toBe(true);
 	});
 
-	describe("hysteresis (previousPathSignature)", () => {
-		// Target behind the source's exit direction: the route must wrap around, and wrapping over
-		// the top vs. under the bottom has the exact same Manhattan cost. A memoryless pick flips
-		// arbitrarily as the boxes move; the previous frame's topology must win the tie.
+	describe("route stability under cost ties (total order)", () => {
+		// Target behind the source's exit direction: the route must wrap around, and for
+		// equal-sized boxes wrapping over the top vs. under the bottom has the exact same
+		// Manhattan cost for every vertical offset (the constraining box swaps roles). The tie
+		// must be broken by a key intrinsic to the route's shape — if it fell back to candidate
+		// enumeration order, the winner would flip arbitrarily while the owner is dragged,
+		// because the enumerated channel set shifts with the boxes.
 		const wrapAroundEndpoints = (targetCy: number) => {
 			const source: OrthogonalConnectorEndpoint = {
 				point: { x: 100, y: 50 }, // right-edge center
@@ -349,51 +352,33 @@ describe("routeOrthogonalConnector", () => {
 			return { source, target };
 		};
 
-		it("a cost-tied wrap-around keeps the previous topology (both directions)", () => {
-			const { source, target } = wrapAroundEndpoints(30);
-			const overTop = routeOrthogonalConnector(source, target, {
-				previousPathSignature: "RULDR",
-			});
-			const underBottom = routeOrthogonalConnector(source, target, {
-				previousPathSignature: "RDLUR",
-			});
-			expect(calcPathSignature(overTop)).toBe("RULDR");
-			expect(calcPathSignature(underBottom)).toBe("RDLUR");
-		});
-
 		it("the topology stays fixed while the owner is dragged through the tie window", () => {
-			// Drag the target vertically across the source's midline. Without memory the winner
-			// flips several times in this window; with memory it must never change.
-			let previousPathSignature: string | null = null;
+			// Drag the target vertically across the source's midline (the whole window is a tie).
 			const signatures = new Set<string>();
-			for (let targetCy = 20; targetCy <= 80; targetCy += 5) {
+			for (let targetCy = 20; targetCy <= 80; targetCy += 1) {
 				const { source, target } = wrapAroundEndpoints(targetCy);
-				const path = routeOrthogonalConnector(source, target, {
-					previousPathSignature,
-				});
-				previousPathSignature = calcPathSignature(path);
-				signatures.add(previousPathSignature);
+				signatures.add(
+					calcPathSignature(routeOrthogonalConnector(source, target)),
+				);
 			}
 			expect(signatures.size).toBe(1);
 		});
 
-		it("a clearly better route (fewer turns) still wins over the previous topology", () => {
-			// Horizontally aligned facing boxes: a straight line is possible. Even if the previous
-			// frame drew an S shape, the 2-turn advantage exceeds the hysteresis bonus.
-			const source: OrthogonalConnectorEndpoint = {
-				point: { x: 150, y: 200 },
-				direction: "right",
-				box: boxAt(100, 200),
-			};
-			const target: OrthogonalConnectorEndpoint = {
-				point: { x: 450, y: 200 },
-				direction: "left",
-				box: boxAt(500, 200),
-			};
-			const path = routeOrthogonalConnector(source, target, {
-				previousPathSignature: "RDR",
+		it("1px jitter on the symmetric midline does not flip the topology", () => {
+			// Hand tremor while hovering exactly at the symmetric configuration: the tie-breaking
+			// convention is constant, so the topology must not oscillate.
+			const jittered = [50, 51, 50, 49, 50, 51].map((targetCy) => {
+				const { source, target } = wrapAroundEndpoints(targetCy);
+				return calcPathSignature(routeOrthogonalConnector(source, target));
 			});
-			expect(calcPathSignature(path)).toBe("R");
+			expect(new Set(jittered).size).toBe(1);
+		});
+
+		it("the pick is deterministic: the same geometry always yields the same path", () => {
+			const { source, target } = wrapAroundEndpoints(30);
+			const first = routeOrthogonalConnector(source, target);
+			const second = routeOrthogonalConnector(source, target);
+			expect(second).toEqual(first);
 		});
 	});
 });

@@ -139,13 +139,6 @@ const SYMMETRY_BONUS = 1_500;
 // penalized equally, so it does not affect relative comparison and falls back naturally
 // (independent of crossings = a soft constraint).
 const REVERSAL_PENALTY = 10_000;
-// Hysteresis bonus for the candidate whose topology matches the route drawn on the previous frame.
-// Many layouts have exact cost ties (e.g. wrapping over the top vs. under the bottom is the same
-// Manhattan length), so a memoryless pick flips arbitrarily while the owner is dragged. The bonus
-// keeps the previous shape through ties and near-ties, and is deliberately smaller than TURN_WEIGHT
-// so a genuinely better route (fewer turns, or beyond ~500px shorter) still wins immediately.
-// Crossings stay a hard constraint, so a previous route that now pierces a shape is abandoned.
-const PREVIOUS_ROUTE_BONUS = 500;
 
 /**
  * Route evaluation. Shape crossings are compared first as a **hard constraint**, while turn count,
@@ -162,7 +155,7 @@ const PREVIOUS_ROUTE_BONUS = 500;
 export type RouteCost = {
 	/** The number of shape crossings (we most want this to be 0). */
 	crossings: number;
-	/** turns×weight + path length + reversals×penalty − symmetry bonus − previous-route bonus (smaller is better). */
+	/** turns×weight + path length + reversals×penalty − symmetry bonus (smaller is better). */
 	aesthetic: number;
 };
 
@@ -181,7 +174,6 @@ export type RouteCost = {
  * @param sourceBox - AABB of the source shape (null for a free endpoint)
  * @param targetBox - AABB of the target shape (null for a free endpoint)
  * @param symmetric - Whether it is a symmetric (S/Z-shaped) route bending at the midpoint. If true, add an aesthetic bonus
- * @param matchesPreviousRoute - Whether the candidate's topology matches the previous frame's route. If true, add the hysteresis bonus
  * @returns A pair of crossing count (hard constraint) and aesthetic score (soft)
  */
 export const calcRouteCost = (
@@ -190,7 +182,6 @@ export const calcRouteCost = (
 	sourceBox: BoxFeatures | null,
 	targetBox: BoxFeatures | null,
 	symmetric: boolean,
-	matchesPreviousRoute: boolean = false,
 ): RouteCost => {
 	const turns = Math.max(fullPath.length - 2, 0);
 	return {
@@ -202,8 +193,7 @@ export const calcRouteCost = (
 			turns * TURN_WEIGHT +
 			pathLength(fullPath) +
 			countReversals(fullPath) * REVERSAL_PENALTY -
-			(symmetric ? SYMMETRY_BONUS : 0) -
-			(matchesPreviousRoute ? PREVIOUS_ROUTE_BONUS : 0),
+			(symmetric ? SYMMETRY_BONUS : 0),
 	};
 };
 
@@ -216,3 +206,60 @@ export const calcRouteCost = (
  */
 export const compareCost = (a: RouteCost, b: RouteCost): number =>
 	a.crossings - b.crossings || a.aesthetic - b.aesthetic;
+
+/**
+ * A route candidate as seen by the total-order comparison: the cost plus the intrinsic
+ * tie-breaking keys (topology signature and the concrete path).
+ */
+export type RouteChoice = {
+	/** The candidate's cost (crossings → aesthetic, the primary keys). */
+	cost: RouteCost;
+	/** The candidate's topology signature (`calcPathSignature` of the full path). */
+	signature: string;
+	/** The candidate's full path (the final tie-breaking key). */
+	path: Point[];
+};
+
+/**
+ * Compares two point sequences lexicographically (x → y per point, then length).
+ * Used as the final tie-breaking key; it is visually continuous, because two same-topology
+ * candidates can only swap the winner at the moment their paths coincide.
+ *
+ * @param a - A path to compare
+ * @param b - A path to compare
+ * @returns negative: a first / positive: b first / 0: identical paths
+ */
+const comparePaths = (a: Point[], b: Point[]): number => {
+	const sharedLength = Math.min(a.length, b.length);
+	for (let i = 0; i < sharedLength; i++) {
+		if (a[i].x !== b[i].x) {
+			return a[i].x - b[i].x;
+		}
+		if (a[i].y !== b[i].y) {
+			return a[i].y - b[i].y;
+		}
+	}
+	return a.length - b.length;
+};
+
+/**
+ * **Total order** over route candidates: crossings → aesthetic → topology signature
+ * (alphabetical) → concrete path (lexicographical).
+ *
+ * The point of the trailing keys is route **stability without memory**. Layouts with exact cost
+ * ties are common and can persist across a whole drag (e.g. for equal-sized boxes, wrapping over
+ * the top and under the bottom have identical Manhattan length for *every* vertical offset — the
+ * constraining box swaps roles). If ties were left to candidate enumeration order, the winner
+ * would flip arbitrarily while an owner moves, because the enumerated channel set shifts with the
+ * boxes. The signature is intrinsic to the route's shape and independent of the geometry, so
+ * inside a tie region the same convention wins every frame, and route changes happen only at
+ * genuine cost crossings.
+ *
+ * @param a - A candidate to compare
+ * @param b - A candidate to compare
+ * @returns negative: a is better / positive: b is better / 0: identical candidates
+ */
+export const compareRouteChoices = (a: RouteChoice, b: RouteChoice): number =>
+	compareCost(a.cost, b.cost) ||
+	(a.signature < b.signature ? -1 : a.signature > b.signature ? 1 : 0) ||
+	comparePaths(a.path, b.path);

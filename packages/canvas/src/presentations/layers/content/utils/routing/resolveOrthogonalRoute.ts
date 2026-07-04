@@ -6,8 +6,6 @@ import {
 	type Point,
 } from "@workspace/geometry";
 
-import { calcPathSignature } from "./pathSignature";
-import { getLastRouteSignature, setLastRouteSignature } from "./routeMemory";
 import { routeOrthogonalConnector } from "./routeOrthogonalConnector";
 import { routeSelfLoop } from "./selfLoop";
 import type { OrthogonalConnectorEndpoint } from "./types";
@@ -78,9 +76,6 @@ const buildEndpoint = (
  * @param targetPoint - The resolved target endpoint coordinate
  * @param sourceObj - The owner shape of the source endpoint. If a frame shape, it is avoided. free endpoints are null/undefined
  * @param targetObj - The owner shape of the target endpoint
- * @param connectorId - The connector's object id, used as the key for route hysteresis (the
- *   previous frame's topology is preferred among cost-tied candidates so the route does not flip
- *   while an owner is dragged). null/omitted routes memorylessly
  * @returns The orthogonal full path including endpoints `[source, …, target]`
  */
 export const resolveOrthogonalRoute = (
@@ -90,7 +85,6 @@ export const resolveOrthogonalRoute = (
 	targetPoint: Point,
 	sourceObj: ObjectState | null | undefined,
 	targetObj: ObjectState | null | undefined,
-	connectorId?: string | null,
 ): Point[] => {
 	const source = buildEndpoint(
 		sourceAnchor,
@@ -106,9 +100,7 @@ export const resolveOrthogonalRoute = (
 	);
 
 	// A self-loop (both ends the same shape) uses a dedicated rectangular-loop route.
-	// The normal orthogonal router treats both ends as separate obstacles, so it can degenerate for
-	// the same shape. Self-loops are anchored to the shape itself, so translation never changes the
-	// relative geometry — no hysteresis is needed.
+	// The normal orthogonal router treats both ends as separate obstacles, so it can degenerate for the same shape.
 	if (
 		sourceObj &&
 		targetObj &&
@@ -119,17 +111,5 @@ export const resolveOrthogonalRoute = (
 		return routeSelfLoop(source, target);
 	}
 
-	// Route with hysteresis: prefer the topology drawn on the previous frame among cost-tied
-	// candidates, then remember the chosen topology for the next frame. The memory is keyed by
-	// connector id so rendering and bounding-box calculation stay consistent.
-	const previousPathSignature = connectorId
-		? getLastRouteSignature(connectorId)
-		: null;
-	const path = routeOrthogonalConnector(source, target, {
-		previousPathSignature,
-	});
-	if (connectorId) {
-		setLastRouteSignature(connectorId, calcPathSignature(path));
-	}
-	return path;
+	return routeOrthogonalConnector(source, target);
 };

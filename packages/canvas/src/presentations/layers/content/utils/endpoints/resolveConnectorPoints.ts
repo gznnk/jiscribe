@@ -72,9 +72,6 @@ export const resolveConnectorPoints = (
 			targetPoint,
 			sourceObj,
 			targetObj,
-			// Keyed route hysteresis: keep the previous frame's topology among cost-tied candidates
-			// so bends do not flip while an owner shape is dragged.
-			connectorState.id,
 		);
 		return {
 			source: path[0],
