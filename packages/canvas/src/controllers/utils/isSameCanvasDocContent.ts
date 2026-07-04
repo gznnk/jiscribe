@@ -2,8 +2,8 @@ import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 
 /**
  * Determines whether two CanvasDocs are identical in terms of rendered content.
- * $schema is excluded from the comparison since it is file metadata unrelated
- * to the render state.
+ * $schema is excluded from the comparison: it is a retired, non-round-tripped
+ * legacy field (see CanvasDoc.$schema), so it never reflects render state.
  *
  * Implemented as a JSON string comparison with a fixed key order. The top-level
  * key order is fixed here, but each object inside root (including connectors) is
