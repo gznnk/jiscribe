@@ -1,4 +1,6 @@
-﻿import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
+﻿import type { Point } from "@workspace/geometry";
+
+import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
 import type { GroupDoc } from "../../schemas/objects/primitives/group/GroupDoc";
 import type { CanvasState } from "../../states/canvas/CanvasState";
@@ -21,6 +23,12 @@ import { calculateGroupOrientedBounds } from "../utils/calculateGroupOrientedBou
 export const canvasToState = (doc: CanvasDoc): CanvasState => {
 	const objects: Record<string, ObjectState> = {};
 	const rootIds: string[] = [];
+
+	// Memo shared across this single bottom-up pass: group ID → collected child
+	// points. Lets a parent group reuse a nested group's points instead of
+	// re-traversing its subtree, keeping the whole pass O(N) instead of
+	// O(N × nesting depth). See calculateGroupOrientedBounds.
+	const groupPointCache = new Map<string, Point[]>();
 
 	// Helper to process an object and its children recursively.
 	// Input is a validated CanvasDoc (a nested tree); since the tree is finite
@@ -48,7 +56,11 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 			);
 
 			// Calculate and cache the group's bounding frame
-			const bounds = calculateGroupOrientedBounds(objects, groupState.id);
+			const bounds = calculateGroupOrientedBounds(
+				objects,
+				groupState.id,
+				groupPointCache,
+			);
 			if (bounds) {
 				objects[groupState.id] = {
 					...groupState,
