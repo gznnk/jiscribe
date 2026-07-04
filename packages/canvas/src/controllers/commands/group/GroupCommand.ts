@@ -1,3 +1,4 @@
+import { isConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import { calculateGroupOrientedBounds } from "../../../states/utils/calculateGroupOrientedBounds";
 import type { CanvasControllerState } from "../../CanvasTypes";
@@ -17,11 +18,20 @@ export const GroupCommand: Command = {
 		default: [{ code: "KeyG", ctrl: true }],
 	},
 
-	canExecute: (state) => state.selectedIds.length >= 2,
+	// Connectors are never groupable (they follow their endpoints, not a group transform),
+	// so only shape-type selections count toward the "2 or more" requirement.
+	canExecute: (state) =>
+		state.selectedIds.filter((id) => !isConnectorState(state.objects[id]))
+			.length >= 2,
 
 	execute: (state) => {
 		const groupId = crypto.randomUUID();
-		const { selectedIds } = state;
+		// Defensively drop connectors here too: even if a selection path leaks a connector
+		// into selectedIds, it must not be pulled into the group (calculateGroupOrientedBounds
+		// would treat it as a Poly and use its waypoints only, yielding a wrong OBB).
+		const selectedIds = state.selectedIds.filter(
+			(id) => !isConnectorState(state.objects[id]),
+		);
 		const selectedSet = new Set(selectedIds);
 		const lockAspectRatio = state.multiSelectGroup?.lockAspectRatio ?? false;
 
