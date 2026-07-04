@@ -1,43 +1,8 @@
 import type { PolygonState } from "./PolygonState";
+import { PolygonFeatures } from "../../../../schemas/objects/primitives/polygon/PolygonDoc";
 import type { PolygonDoc } from "../../../../schemas/objects/primitives/polygon/PolygonDoc";
-import type {
-	DocToStateMapper,
-	StateToDocMapper,
-} from "../../base/MapperTypes";
-import { ObjectMapper } from "../../base/ObjectMapper";
+import { createPolyMapper } from "../../base/PolyMapper";
 
-/**
- * Converts PolygonDoc to PolygonState.
- */
-export const polygonToState: DocToStateMapper<PolygonDoc, PolygonState> = (
-	doc,
-) => {
-	const base = ObjectMapper.toState(doc);
-
-	return {
-		...base,
-		points: doc.points,
-		stroke: doc.stroke,
-		strokeWidth: doc.strokeWidth,
-		strokeDashType: doc.strokeDashType,
-		fill: doc.fill,
-	} as PolygonState;
-};
-
-/**
- * Converts PolygonState to PolygonDoc.
- */
-export const polygonToDoc: StateToDocMapper<PolygonState, PolygonDoc> = (
-	state,
-) => {
-	const base = ObjectMapper.toDoc(state);
-
-	return {
-		...base,
-		points: state.points,
-		stroke: state.stroke,
-		strokeWidth: state.strokeWidth,
-		strokeDashType: state.strokeDashType,
-		fill: state.fill,
-	} as PolygonDoc;
-};
+/** PolygonDoc ↔ PolygonState conversion (Poly-family common logic generated from features). */
+export const { toState: polygonToState, toDoc: polygonToDoc } =
+	createPolyMapper<PolygonDoc, PolygonState>(PolygonFeatures);
