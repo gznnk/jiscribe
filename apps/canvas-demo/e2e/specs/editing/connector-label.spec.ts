@@ -457,6 +457,43 @@ test.describe("コネクターのラベル", () => {
 		await expect(labelBox).toHaveCSS("background-color", "rgb(220, 38, 38)");
 	});
 
+	test("編集中に同じコネクターを再ダブルクリックしてもコミットが積まれない（#102）", async ({
+		canvas,
+	}) => {
+		const { connectorId, onLine } = await setupConnectorWithLabel(
+			canvas,
+			"Yes",
+		);
+		const labelBox = labelBoxOf(canvas, connectorId);
+		await expect(labelBox).toContainText("Yes");
+
+		const screen = canvas.toScreen(onLine);
+
+		// ラベル編集を開始し、テキストを書き換える（まだ確定しない）。
+		await canvas.page.mouse.dblclick(screen.x, screen.y);
+		await expect(canvas.page.locator(selectors.textEditor)).toBeVisible();
+		await expect(canvas.textArea()).toHaveValue("Yes");
+		await canvas.textArea().fill("No");
+
+		// 確定せずに同じコネクターを再ダブルクリック → 編集継続（コミットしない）。
+		// 修正前は先頭の pressed で "No" が一度コミットされ、Undo 履歴に余分な
+		// エントリが積まれていた（#102）。コミットが無ければ、再オープンの
+		// プリフィルは保存済みの "Yes" のまま（未確定の "No" は残らない）。
+		await canvas.page.mouse.dblclick(screen.x, screen.y);
+		await expect(canvas.page.locator(selectors.textEditor)).toBeVisible();
+		await expect(canvas.textArea()).toHaveValue("Yes");
+
+		// 無変更（"Yes"）のまま確定 → 履歴は増えない。
+		await canvas.commitText();
+		await expect(labelBox).toContainText("Yes");
+
+		// ラベル追加は 1 コミットのみなので、Undo 1 回でラベルごと取り消される。
+		// 余分なコミットが積まれていれば、1 回の Undo では "Yes" が残ってしまう。
+		await canvas.deselect();
+		await canvas.undo();
+		await expect(labelBox).toHaveCount(0);
+	});
+
 	test("ラベルが無いコネクターにはラベルスタイルメニューが出ない", async ({
 		canvas,
 	}) => {
