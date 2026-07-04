@@ -7,7 +7,6 @@ export type CenterAnchorSpec = {
 };
 
 export const ConnectPointIds = [
-	"center",
 	"topCenter",
 	"rightCenter",
 	"bottomCenter",

@@ -167,13 +167,7 @@ describe("validateEndpointRef", () => {
 		});
 
 		it("all ConnectPointIds have no errors", () => {
-			const ids = [
-				"center",
-				"topCenter",
-				"rightCenter",
-				"bottomCenter",
-				"leftCenter",
-			];
+			const ids = ["topCenter", "rightCenter", "bottomCenter", "leftCenter"];
 			for (const id of ids) {
 				const ref = {
 					owner: { id: "rect-1", type: "rect" },
@@ -181,6 +175,15 @@ describe("validateEndpointRef", () => {
 				};
 				expect(validateEndpointRef(ref, "root")).toEqual([]);
 			}
+		});
+
+		it("errors for a connectPoint anchor with id 'center' (center is a CenterAnchorSpec, not a connect point)", () => {
+			const ref = {
+				owner: { id: "rect-1", type: "rect" },
+				anchor: { kind: "connectPoint", id: "center" },
+			};
+			const errors = validateEndpointRef(ref, "root");
+			expect(errors.some((e) => e.path === "root.anchor.id")).toBe(true);
 		});
 	});
 

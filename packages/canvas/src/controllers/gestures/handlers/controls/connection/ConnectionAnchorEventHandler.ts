@@ -1,6 +1,5 @@
 import type { Point } from "@workspace/geometry";
 
-import { isConnectPointId } from "../../../../../schemas/objects/types/EndpointRef";
 import { AUTO_COLOR } from "../../../../../schemas/objects/utils/autoColor";
 import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
 import { objectMapperRegistry } from "../../../../../states/registry/ObjectMapperRegistry";
@@ -11,6 +10,7 @@ import { computeEditedEndpoint } from "./utils/computeEditedEndpoint";
 import { findConnectableHoverTarget } from "./utils/findConnectableHoverTarget";
 import { getEditingEndpoint } from "./utils/getEditingEndpoint";
 import { isSameConnectorEndpoints } from "./utils/isSameConnectorEndpoints";
+import { isAnchorHandleId } from "../../../../ui/controls/ConnectionAnchorTypes";
 
 /**
  * Handler that creates a connector by dragging from a connection anchor.
@@ -94,7 +94,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 		}
 
 		// Validate anchor position
-		if (!isConnectPointId(anchorPosition)) {
+		if (!isAnchorHandleId(anchorPosition)) {
 			return state;
 		}
 

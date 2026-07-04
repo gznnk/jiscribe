@@ -53,7 +53,8 @@ export const resolveEndpoint = (
 		// Check if the object has transform properties (Frame-based)
 		if (isTransformedFrame(obj)) {
 			// Compute only the requested edge key point (avoids calculating all 8).
-			// "center" or an invalid id falls through to null (a center anchor is handled by the kind === "center" path)
+			// The center is never a connectPoint id (it is its own kind === "center"
+			// anchor); an unknown id falls through to null.
 			switch (anchorId) {
 				case "topCenter":
 				case "rightCenter":

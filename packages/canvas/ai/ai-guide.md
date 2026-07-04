@@ -81,7 +81,7 @@ The top level must always have `version` / `root` (the array may be empty).
 ```
 
 - `anchor.kind`: `"connectPoint"` (+ `id`) / `"center"` / `"free"` (+ `point`)
-- `connectPoint` `id`: `"center"`/`"topCenter"`/`"rightCenter"`/`"bottomCenter"`/`"leftCenter"`
+- `connectPoint` `id`: `"topCenter"`/`"rightCenter"`/`"bottomCenter"`/`"leftCenter"` (for the center, use `"kind": "center"` instead — it is not a `connectPoint` id)
 - `owner` may reference **only `rect` / `ellipse` / `diamond` / `sticky`**. You **cannot** attach an endpoint to a `polyline`, `polygon`, `group`, `svg`, or `connector`. To point an arrow at/from one of those, use a `free` endpoint placed near it instead.
 - A free point not attached to any object: `{ "anchor": { "kind": "free", "point": { "x": 400, "y": 200 } } }` (no `owner`)
 

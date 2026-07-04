@@ -121,15 +121,9 @@
 		},
 
 		"ConnectPointId": {
-			"description": "Named connection point on a shape.",
+			"description": "Named connection point on a shape's edge. The geometric center is not a connect point; use CenterAnchorSpec (\"kind\": \"center\") for the center.",
 			"type": "string",
-			"enum": [
-				"center",
-				"topCenter",
-				"rightCenter",
-				"bottomCenter",
-				"leftCenter"
-			]
+			"enum": ["topCenter", "rightCenter", "bottomCenter", "leftCenter"]
 		},
 
 		"StrokeStyle": {
