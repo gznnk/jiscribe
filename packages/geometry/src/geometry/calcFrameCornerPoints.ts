@@ -1,5 +1,5 @@
 import { degreesToRadians } from "../common/degreesToRadians";
-import { calcAffineTransformedPoint } from "../transform/calcAffineTransformedPoint";
+import { applyAffineWithTrig } from "../transform/applyAffineWithTrig";
 import type { Point, TransformedFrame } from "../types";
 
 /**
@@ -15,25 +15,64 @@ export function calcFrameCornerPoints(frame: TransformedFrame): Point[] {
 	const halfWidth = width / 2;
 	const halfHeight = height / 2;
 
-	// The four corners in the local coordinate system
-	const localCorners: Point[] = [
-		{ x: -halfWidth, y: -halfHeight }, // top-left
-		{ x: halfWidth, y: -halfHeight }, // top-right
-		{ x: halfWidth, y: halfHeight }, // bottom-right
-		{ x: -halfWidth, y: halfHeight }, // bottom-left
-	];
+	// No rotation - optimized path when rotation is 0
+	if (rotation === 0) {
+		const scaledHalfWidth = scaleX * halfWidth;
+		const scaledHalfHeight = scaleY * halfHeight;
 
-	// Apply the affine transform to convert to the global coordinate system
+		return [
+			{ x: cx - scaledHalfWidth, y: cy - scaledHalfHeight }, // top-left
+			{ x: cx + scaledHalfWidth, y: cy - scaledHalfHeight }, // top-right
+			{ x: cx + scaledHalfWidth, y: cy + scaledHalfHeight }, // bottom-right
+			{ x: cx - scaledHalfWidth, y: cy + scaledHalfHeight }, // bottom-left
+		];
+	}
+
+	// With rotation - compute cos/sin once and reuse across all four corners
 	const radians = degreesToRadians(rotation);
-	return localCorners.map((corner) =>
-		calcAffineTransformedPoint(
-			corner.x,
-			corner.y,
+	const cosTheta = Math.cos(radians);
+	const sinTheta = Math.sin(radians);
+
+	return [
+		applyAffineWithTrig(
+			-halfWidth,
+			-halfHeight,
 			scaleX,
 			scaleY,
-			radians,
+			cosTheta,
+			sinTheta,
 			cx,
 			cy,
-		),
-	);
+		), // top-left
+		applyAffineWithTrig(
+			halfWidth,
+			-halfHeight,
+			scaleX,
+			scaleY,
+			cosTheta,
+			sinTheta,
+			cx,
+			cy,
+		), // top-right
+		applyAffineWithTrig(
+			halfWidth,
+			halfHeight,
+			scaleX,
+			scaleY,
+			cosTheta,
+			sinTheta,
+			cx,
+			cy,
+		), // bottom-right
+		applyAffineWithTrig(
+			-halfWidth,
+			halfHeight,
+			scaleX,
+			scaleY,
+			cosTheta,
+			sinTheta,
+			cx,
+			cy,
+		), // bottom-left
+	];
 }
