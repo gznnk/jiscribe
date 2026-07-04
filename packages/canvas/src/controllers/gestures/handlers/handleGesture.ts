@@ -11,6 +11,7 @@ import type {
 	EventStartSnapshot,
 	KeyPointsCache,
 } from "../../CanvasTypes";
+import { buildObjectBBoxes } from "../../utils/buildObjectBBoxes";
 import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWithDescendants";
 import type { Gesture } from "../recognizer/GestureRecognizerTypes";
 import { gestureHandlerRegistry } from "../registry/GestureHandlerRegistry";
@@ -121,9 +122,14 @@ export const handleGesture = (
 			state.objects,
 		);
 
+		// Flatten keyPoints into per-object root-level bboxes (groups = union of children),
+		// so the marquee drag hot path never recomputes bboxes per frame (issue #124).
+		const bboxes = buildObjectBBoxes(state.objects, keyPoints);
+
 		const eventStartSnapshot: EventStartSnapshot = {
 			objects: state.objects,
 			keyPoints,
+			bboxes,
 			snapCandidates: snapCandidatesCache,
 			selectedIds: state.selectedIds,
 			selectedIdsWithDescendants,

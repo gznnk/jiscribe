@@ -61,6 +61,7 @@ const stateWithConnectors = (
 		eventStartSnapshot: {
 			objects,
 			keyPoints: {},
+			bboxes: {},
 			snapCandidates: { x: [], y: [] },
 			selectedIds: [],
 			selectedIdsWithDescendants: new Set(),

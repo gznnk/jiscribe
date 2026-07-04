@@ -137,6 +137,26 @@ describe("createMultiSelectGroup", () => {
 		expect(result?.cy).toBeCloseTo((0 + 100) / 2);
 	});
 
+	it("uses precomputed bboxes for bounds when supplied (marquee hot path)", () => {
+		const r1 = rect("r1", 50, 50, 40, 40); // 30..70
+		const r2 = rect("r2", 150, 150, 40, 40); // 130..170
+		const precomputedBBoxes = {
+			r1: { left: 30, top: 30, right: 70, bottom: 70 },
+			r2: { left: 130, top: 130, right: 170, bottom: 170 },
+		};
+		const result = createMultiSelectGroup(
+			["r1", "r2"],
+			{ r1, r2 },
+			null,
+			precomputedBBoxes,
+		);
+		// Same result as the recursive-traversal path.
+		expect(result?.cx).toBeCloseTo(100);
+		expect(result?.cy).toBeCloseTo(100);
+		expect(result?.width).toBeCloseTo(140);
+		expect(result?.height).toBeCloseTo(140);
+	});
+
 	it("nested groups -> computed from the grandchild elements' bounding boxes", () => {
 		const r1 = rect("r1", 0, 0, 20, 20);
 		const innerGroup: ObjectState = {

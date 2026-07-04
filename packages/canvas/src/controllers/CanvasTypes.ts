@@ -1,4 +1,4 @@
-import type { FrameKeyPoints, Point } from "@workspace/geometry";
+import type { BoundingBox, FrameKeyPoints, Point } from "@workspace/geometry";
 
 import type { ShapePreset } from "../schemas/objects/types/ShapePreset";
 import type { CanvasState } from "../states/canvas/CanvasState";
@@ -132,6 +132,13 @@ export type EventStartSnapshot = {
 	objects: Record<string, ObjectState>;
 	/** Slice of object ID → FrameKeyPoints (also includes multiSelectGroup.id) */
 	keyPoints: Record<string, FrameKeyPoints>;
+	/**
+	 * Flat "object ID → root-level bounding box" map derived from keyPoints once at dragStart.
+	 * Groups hold the union of their children; connectors and objects without a valid extent are absent.
+	 * Consumed by the marquee hot path (collectIdsInArea / createMultiSelectGroup) so it never
+	 * recomputes bboxes per drag frame.
+	 */
+	bboxes: Record<string, BoundingBox>;
 	/** Snap candidates (pre-computed at dragStart for all objects. Exclusions are passed to findSnap as a Set) */
 	snapCandidates: SnapCandidates;
 	/** List of selected IDs at drag start */

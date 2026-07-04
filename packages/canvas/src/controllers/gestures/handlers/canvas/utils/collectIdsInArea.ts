@@ -1,13 +1,15 @@
-import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
-import { isConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
-import { calcObjectBoundingBox } from "../../../../utils/calcObjectBoundingBox";
+import type { BoundingBox } from "@workspace/geometry";
 
 /**
  * Collects the IDs of objects fully contained within the area-selection rectangle.
- * Traverses all objects (including group children).
+ *
+ * Operates over a precomputed "id → root-level bbox" map (see {@link buildObjectBBoxes}),
+ * built once at dragStart, so the marquee drag hot path is pure O(N) containment testing
+ * with no per-frame bbox recomputation. The map already excludes connectors and objects
+ * without a valid extent.
  */
 export function collectIdsInArea(
-	objects: Record<string, ObjectState>,
+	bboxes: Record<string, BoundingBox>,
 	areaMinX: number,
 	areaMinY: number,
 	areaMaxX: number,
@@ -15,23 +17,7 @@ export function collectIdsInArea(
 ): string[] {
 	const result: string[] = [];
 
-	for (const obj of Object.values(objects)) {
-		if (!obj) {
-			continue;
-		}
-
-		// Connectors follow the shapes they attach to; marquee selects shapes only.
-		if (isConnectorState(obj)) {
-			continue;
-		}
-
-		const bbox = calcObjectBoundingBox(obj, objects);
-
-		// null check (e.g. empty Poly)
-		if (!bbox) {
-			continue;
-		}
-
+	for (const [id, bbox] of Object.entries(bboxes)) {
 		// Check whether it is fully contained
 		if (
 			bbox.left >= areaMinX &&
@@ -39,7 +25,7 @@ export function collectIdsInArea(
 			bbox.top >= areaMinY &&
 			bbox.bottom <= areaMaxY
 		) {
-			result.push(obj.id);
+			result.push(id);
 		}
 	}
 
