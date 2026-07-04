@@ -15,7 +15,8 @@ import {
  * The Doc is read from history.present (resolved lazily, shared with the
  * history layer) instead of converting the state a second time. Delivery
  * timing is delegated to the scheduler: commits inside a coalesce chain
- * (key-repeat nudges) are debounced, everything else notifies immediately.
+ * (key-repeat nudges) are deferred and flushed on a boundary event —
+ * keyup / window blur / unmount — everything else notifies immediately.
  *
  * @param state - The current Canvas state
  * @param onCommit - Callback invoked on save, receiving the CanvasDoc and saveNonce
@@ -64,14 +65,24 @@ export const useNotifySaveRequest = (
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [state.saveVersion]);
 
-	// Mount-only effect: flush a pending deferred save on unmount so the last
-	// nudges of a chain are not lost. This must NOT live in the effect above —
-	// its cleanup runs on every saveVersion change, which would flush per
-	// repeat and defeat the debounce.
+	// Mount-only effect: deferred saves are flushed by boundary events, not by
+	// time — keyup ends a key-repeat chain (the only coalescing source today)
+	// and window blur means no further keyup will arrive. flush is a no-op
+	// without a pending save, so listening to every key is safe. Unmount also
+	// flushes so the last chain is not lost. This must NOT live in the effect
+	// above — its cleanup runs on every saveVersion change, which would flush
+	// per repeat and defeat the deferral.
 	useEffect(() => {
 		const scheduler = schedulerRef.current;
-		return () => {
+		const flushPendingSave = () => {
 			scheduler?.flush();
+		};
+		document.addEventListener("keyup", flushPendingSave);
+		window.addEventListener("blur", flushPendingSave);
+		return () => {
+			document.removeEventListener("keyup", flushPendingSave);
+			window.removeEventListener("blur", flushPendingSave);
+			flushPendingSave();
 		};
 	}, []);
 };

@@ -1,16 +1,24 @@
-/** Trailing debounce applied while a coalesce chain is running (< the 1000ms coalesce window). */
-const SAVE_DEBOUNCE_MS = 500;
+/**
+ * Backstop for a deferred save whose boundary event never arrives (e.g. a
+ * coalescing command dispatched programmatically, with no keyup to follow).
+ * Deliberately long: normal key-repeat chains are flushed by the caller on
+ * keyup/blur/unmount, so this timer firing mid-chain would only happen on
+ * event-less paths. Time is the fallback here, not the boundary — which keeps
+ * delivery independent of OS key-repeat delay settings.
+ */
+const SAVE_BACKSTOP_MS = 2000;
 
 export type SaveRequestScheduler = {
 	/**
 	 * Called on every save request (saveVersion bump).
 	 * A non-coalescing request cancels any pending timer and notifies
 	 * immediately (the latest state includes everything a pending save would
-	 * have covered). A coalescing request defers notification with a trailing
-	 * debounce, firing once the chain has been quiet for the debounce interval.
+	 * have covered). A coalescing request defers notification until flush() —
+	 * the caller invokes it on a boundary event (keyup/blur/unmount) — with a
+	 * trailing backstop timer for paths that never get one.
 	 */
 	schedule: (isCoalescing: boolean, notify: () => void) => void;
-	/** Fires a pending deferred notification immediately (e.g. on unmount). No-op when nothing is pending. */
+	/** Fires a pending deferred notification immediately. No-op when nothing is pending. */
 	flush: () => void;
 };
 
@@ -19,12 +27,8 @@ export type SaveRequestScheduler = {
  *
  * Key-repeat nudges commit at ~30Hz; notifying (and materializing the Doc) on
  * every repeat is the hot path of issue #125. While the commits are part of a
- * coalesce chain, delivery is debounced; discrete commits keep today's
+ * coalesce chain, delivery waits for flush(); discrete commits keep today's
  * immediate delivery.
- *
- * A continuous chain (a held key) delivers nothing until it stops — accepted
- * trade-off: only an abrupt teardown that skips the unmount flush can lose the
- * chain, and normal unmounts do flush.
  *
  * Extracted from useNotifySaveRequest so the timing rules are testable with
  * fake timers, without rendering the hook.
@@ -55,7 +59,7 @@ export const createSaveRequestScheduler = (): SaveRequestScheduler => {
 			const deferredNotify = pendingNotify;
 			pendingNotify = null;
 			deferredNotify?.();
-		}, SAVE_DEBOUNCE_MS);
+		}, SAVE_BACKSTOP_MS);
 	};
 
 	const flush = () => {

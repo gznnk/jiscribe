@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createSaveRequestScheduler } from "../createSaveRequestScheduler";
 
-// The scheduler's trailing timer (setTimeout) is faked here
+// The scheduler's backstop timer (setTimeout) is faked here
 beforeEach(() => {
 	vi.useFakeTimers();
 });
@@ -20,50 +20,62 @@ describe("createSaveRequestScheduler", () => {
 		expect(notify).toHaveBeenCalledTimes(1);
 	});
 
-	it("defers a coalescing save with a 500ms trailing debounce", () => {
+	it("defers a coalescing save until flush (the boundary event)", () => {
 		const scheduler = createSaveRequestScheduler();
 		const notify = vi.fn();
 
 		scheduler.schedule(true, notify);
 		expect(notify).not.toHaveBeenCalled();
 
-		vi.advanceTimersByTime(499);
+		scheduler.flush();
+		expect(notify).toHaveBeenCalledTimes(1);
+	});
+
+	it("without a boundary event, the 2000ms backstop delivers the save", () => {
+		const scheduler = createSaveRequestScheduler();
+		const notify = vi.fn();
+
+		scheduler.schedule(true, notify);
+		vi.advanceTimersByTime(1999);
 		expect(notify).not.toHaveBeenCalled();
 		vi.advanceTimersByTime(1);
 		expect(notify).toHaveBeenCalledTimes(1);
 	});
 
-	it("a subsequent coalescing save resets the debounce and only the latest notify fires", () => {
+	it("a subsequent coalescing save resets the backstop and only the latest notify fires", () => {
 		const scheduler = createSaveRequestScheduler();
 		const firstNotify = vi.fn();
 		const secondNotify = vi.fn();
 
 		scheduler.schedule(true, firstNotify);
-		vi.advanceTimersByTime(400);
+		vi.advanceTimersByTime(1500);
 		scheduler.schedule(true, secondNotify);
-		vi.advanceTimersByTime(400);
+		vi.advanceTimersByTime(1500);
 		expect(firstNotify).not.toHaveBeenCalled();
 		expect(secondNotify).not.toHaveBeenCalled();
 
-		vi.advanceTimersByTime(100);
+		vi.advanceTimersByTime(500);
 		expect(firstNotify).not.toHaveBeenCalled();
 		expect(secondNotify).toHaveBeenCalledTimes(1);
 	});
 
-	it("a continuous chain delivers nothing until it stops, then exactly once", () => {
+	it("a continuous chain delivers nothing until flush, then exactly once", () => {
 		const scheduler = createSaveRequestScheduler();
 		const notify = vi.fn();
 
 		// Simulates a held arrow key: a coalescing save every 100ms keeps
-		// resetting the trailing timer, so nothing fires mid-chain
+		// resetting the backstop, so nothing fires mid-chain
 		for (let repeat = 0; repeat < 30; repeat += 1) {
 			scheduler.schedule(true, notify);
 			vi.advanceTimersByTime(100);
 		}
 		expect(notify).not.toHaveBeenCalled();
 
-		// The key is released: the trailing debounce delivers the final state once
-		vi.advanceTimersByTime(400);
+		// The key is released (keyup): the boundary flush delivers the final
+		// state once, and the cancelled backstop must not deliver again
+		scheduler.flush();
+		expect(notify).toHaveBeenCalledTimes(1);
+		vi.advanceTimersByTime(2000);
 		expect(notify).toHaveBeenCalledTimes(1);
 	});
 
@@ -77,21 +89,8 @@ describe("createSaveRequestScheduler", () => {
 		expect(immediateNotify).toHaveBeenCalledTimes(1);
 
 		// The deferred one is dropped (the immediate save already covers its content)
-		vi.advanceTimersByTime(1000);
+		vi.advanceTimersByTime(2000);
 		expect(deferredNotify).not.toHaveBeenCalled();
-	});
-
-	it("flush delivers a pending save immediately and exactly once", () => {
-		const scheduler = createSaveRequestScheduler();
-		const notify = vi.fn();
-
-		scheduler.schedule(true, notify);
-		scheduler.flush();
-		expect(notify).toHaveBeenCalledTimes(1);
-
-		// The cancelled timer must not deliver a second time
-		vi.advanceTimersByTime(1000);
-		expect(notify).toHaveBeenCalledTimes(1);
 	});
 
 	it("flush with nothing pending is a no-op", () => {
