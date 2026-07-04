@@ -51,6 +51,11 @@ describe("validateConnectorDoc", () => {
 		expect(validateConnectorDoc(o, "root")).toEqual([]);
 	});
 
+	it("yields no error when points is omitted (optional, defaults to [])", () => {
+		const o = { source: ownedRef, target: freeRef };
+		expect(validateConnectorDoc(o, "root")).toEqual([]);
+	});
+
 	it("is an error when points is invalid", () => {
 		const o = { points: [{ x: 0 }], source: freeRef, target: freeRef };
 		expect(

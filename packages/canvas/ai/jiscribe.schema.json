@@ -634,7 +634,7 @@
 		"ConnectorDoc": {
 			"description": "Connector (arrow) linking two endpoints.",
 			"type": "object",
-			"required": ["id", "type", "points", "source", "target"],
+			"required": ["id", "type", "source", "target"],
 			"additionalProperties": false,
 			"properties": {
 				"id": { "description": "Unique identifier.", "type": "string" },
@@ -645,9 +645,10 @@
 				},
 				"meta": { "$ref": "#/$defs/MetaDoc" },
 				"points": {
-					"description": "Ordered list of intermediate waypoints from source to target, in world coordinates. Endpoint coordinates are NOT included; they are defined by source/target and resolved dynamically. Used only with \"routing\": \"straight\". Ignored under the default \"orthogonal\" routing (the path is derived at render time), so keep it an empty array unless you set \"routing\": \"straight\".",
+					"description": "Ordered list of intermediate waypoints from source to target, in world coordinates. Endpoint coordinates are NOT included; they are defined by source/target and resolved dynamically. Used only with \"routing\": \"straight\". Ignored under the default \"orthogonal\" routing (the path is derived at render time). Optional; omit it (defaults to an empty array) unless you set \"routing\": \"straight\" and want to route through explicit waypoints.",
 					"type": "array",
-					"items": { "$ref": "#/$defs/Point" }
+					"items": { "$ref": "#/$defs/Point" },
+					"default": []
 				},
 				"routing": {
 					"description": "How the path between endpoints is computed. \"orthogonal\" auto-generates a horizontal/vertical path at render time from the endpoint shapes (and ignores \"points\"). \"straight\" connects the endpoints with a straight line through any manual \"points\" waypoints. Optional; omitting it means \"orthogonal\" (the default). Set \"straight\" explicitly only when you want a straight line.",

@@ -77,12 +77,17 @@ export function validatePolyFields(
 /**
  * Validate a connector's points (intermediate waypoints).
  * Since endpoint coordinates are held by the source/target EndpointRef, an empty array
- * (= a straight connector) is allowed, unlike polyline/polygon.
+ * (= a straight connector) is allowed, unlike polyline/polygon. `points` is optional and
+ * defaults to an empty array, so an absent key is also valid; only a present-but-malformed
+ * value is an error.
  */
 export function validateWaypointFields(
 	o: Record<string, unknown>,
 	path: string,
 ): SemanticDiagnostic[] {
+	if (!("points" in o) || o.points === undefined) {
+		return [];
+	}
 	if (!isPoly(o)) {
 		return [
 			{ path: `${path}.points`, message: "must be a valid points array" },
