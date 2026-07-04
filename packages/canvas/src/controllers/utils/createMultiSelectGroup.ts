@@ -1,3 +1,6 @@
+import type { BoundingBox } from "@workspace/geometry";
+
+import { calcUnionBoundingBox } from "./buildObjectBBoxes";
 import { calcObjectsBoundingBox } from "./calcObjectBoundingBox";
 import { MULTI_SELECT_GROUP } from "../../constants/multiSelectGroup";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
@@ -13,17 +16,24 @@ import type { GroupState } from "../../states/objects/primitives/group/GroupStat
  * @param selectedIds - IDs of the currently selected objects
  * @param allObjects - All objects, used to resolve children and geometry
  * @param existingMultiSelectGroup - Prior multi-select group, whose lockAspectRatio is preserved
+ * @param precomputedBBoxes - Optional "id → root-level bbox" map (from EventStartSnapshot).
+ *   When supplied, bounds are the union of the selected ids' precomputed bboxes instead of a
+ *   fresh recursive traversal — used by the marquee hot path. selectedIds there are always
+ *   top-level shapes/groups present in the map, so the union is identical to the traversal.
  */
 export function createMultiSelectGroup(
 	selectedIds: string[],
 	allObjects: Record<string, ObjectState>,
 	existingMultiSelectGroup?: GroupState | null,
+	precomputedBBoxes?: Record<string, BoundingBox>,
 ): GroupState | null {
 	if (selectedIds.length <= 1) {
 		return null; // Do not group when one or fewer objects are selected
 	}
 
-	const bounds = calcObjectsBoundingBox(selectedIds, allObjects);
+	const bounds = precomputedBBoxes
+		? calcUnionBoundingBox(selectedIds, precomputedBBoxes)
+		: calcObjectsBoundingBox(selectedIds, allObjects);
 
 	// No valid points were found
 	if (!bounds) {

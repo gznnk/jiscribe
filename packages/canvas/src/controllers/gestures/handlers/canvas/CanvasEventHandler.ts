@@ -270,8 +270,11 @@ export const CanvasEventHandler: GestureHandler = {
 				const areaMaxX = Math.max(area.startX, endX);
 				const areaMaxY = Math.max(area.startY, endY);
 
+				// bboxes were built once at dragStart; objects do not move during a marquee,
+				// so containment is a pure O(N) scan with no per-frame bbox recomputation (#124).
+				const bboxes = nextState.eventStartSnapshot?.bboxes ?? {};
 				const hitIds = collectIdsInArea(
-					nextState.objects,
+					bboxes,
 					areaMinX,
 					areaMinY,
 					areaMaxX,
@@ -286,6 +289,7 @@ export const CanvasEventHandler: GestureHandler = {
 						selectedIds,
 						nextState.objects,
 						state.multiSelectGroup,
+						bboxes,
 					);
 				}
 
