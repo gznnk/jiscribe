@@ -5,6 +5,32 @@ All notable changes to the Jiscribe extension are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 2026-07-04
+
+### Added
+
+- **Connector labels**: Connectors can now carry a text label — double-click a connector to add or edit one. Labels support text styling (color, size, bold) plus a background color and border style, all editable from the object menu. Clearing the label text keeps its styling and placement, so re-typing later restores the same look.
+- **Keyboard zoom snaps to fixed steps**: Zoom In / Zoom Out now snap to fixed zoom stops (…, 50%, 75%, 100%, 125%, 150%, …) instead of multiplying by a ratio, so zooming in and back out always returns you to exactly 100%. Wheel zoom remains continuous.
+
+### Fixed
+
+- **Connector routes no longer flicker while dragging an attached shape.** Route selection is now fully deterministic — ties between equally good routes (including mirror-symmetric ones) are broken by a fixed total ordering, so bend points stay put during drags instead of oscillating between equivalent routes.
+- **Connector endpoints no longer drift** from the shapes they attach to: bounding-box composition was unified into a single implementation shared by rendering, Zoom to Fit / Zoom to Selection, and multi-select bounds, so they can no longer disagree.
+- **Drawing mode now exits when you switch intent**: starting a drag & drop from the shape library, or pressing a shape that doesn't support click-to-draw (e.g. Sticky), now clears the active drawing mode instead of leaving the crosshair armed.
+- **Rounded rectangles keep their corner radius** when a document is loaded (the `rx` style was dropped during state construction), and the internal `parentId` bookkeeping field no longer leaks into saved `.jis.json` files.
+- Double-click detection no longer fires false positives.
+
+### Changed
+
+- **BREAKING (file format)**: A connector endpoint's `owner` is now just `{ "id": "..." }` — the redundant `type` field was removed and is no longer accepted by schema validation. To migrate an existing `.jis.json`, delete the `type` key from every connector `source`/`target` `owner`. The connectable-type rule (rect / ellipse / diamond / sticky) is still enforced, now purely via reference resolution.
+- **BREAKING (file format)**: `"center"` is no longer a valid `connectPoint` id (it never resolved to anything); connect points are now only the four side midpoints. Center attachment remains available via the center anchor.
+- `connector.points` is now optional and defaults to `[]`, so hand-written or AI-generated documents no longer need to spell out an empty waypoint list.
+- The bundled AI authoring assets (guide, reference, JSON schema) were updated for all of the above and strengthened for better first-shot generation. If you use AI authoring, re-run the **Set up AI** command to refresh the assets under `.jiscribe/`.
+
+### Performance
+
+- Geometry hot paths — bounding boxes, intersection tests, and rotated-endpoint resolution — allocate less and do less redundant trigonometry, which smooths out dragging and routing on large documents.
+
 ## [0.5.0] - 2026-06-28
 
 ### Added
