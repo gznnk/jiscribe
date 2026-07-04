@@ -268,7 +268,6 @@
 			],
 			"source": {
 				"owner": {
-					"type": "rect",
 					"id": "card1"
 				},
 				"anchor": {
@@ -278,7 +277,6 @@
 			},
 			"target": {
 				"owner": {
-					"type": "rect",
 					"id": "card2"
 				},
 				"anchor": {
@@ -305,7 +303,6 @@
 			],
 			"source": {
 				"owner": {
-					"type": "rect",
 					"id": "card2"
 				},
 				"anchor": {
@@ -315,7 +312,6 @@
 			},
 			"target": {
 				"owner": {
-					"type": "rect",
 					"id": "card3"
 				},
 				"anchor": {
@@ -342,7 +338,6 @@
 			],
 			"source": {
 				"owner": {
-					"type": "rect",
 					"id": "card3"
 				},
 				"anchor": {
@@ -352,7 +347,6 @@
 			},
 			"target": {
 				"owner": {
-					"type": "rect",
 					"id": "card4"
 				},
 				"anchor": {

@@ -72,11 +72,11 @@ describe("calcConnectorBoundingBox", () => {
 		const connector = freeConnector({
 			routing: "orthogonal",
 			source: {
-				owner: { type: "rect", id: "r1" },
+				owner: { id: "r1" },
 				anchor: { kind: "connectPoint", id: "rightCenter" },
 			},
 			target: {
-				owner: { type: "rect", id: "r2" },
+				owner: { id: "r2" },
 				anchor: { kind: "connectPoint", id: "leftCenter" },
 			},
 		});
@@ -97,7 +97,7 @@ describe("calcConnectorBoundingBox", () => {
 	it("returns null when an owned endpoint's referenced object does not exist", () => {
 		const connector = freeConnector({
 			source: {
-				owner: { type: "rect", id: "missing-rect" },
+				owner: { id: "missing-rect" },
 				anchor: { kind: "center" },
 			},
 		});

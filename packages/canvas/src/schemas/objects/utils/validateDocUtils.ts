@@ -124,9 +124,6 @@ function validateOwnedEndpointRef(
 		if (!isString(owner.id)) {
 			errors.push({ path: `${path}.owner.id`, message: "must be a string" });
 		}
-		if (!isString(owner.type)) {
-			errors.push({ path: `${path}.owner.type`, message: "must be a string" });
-		}
 	}
 
 	errors.push(...validateNonFreeAnchor(r.anchor, path));

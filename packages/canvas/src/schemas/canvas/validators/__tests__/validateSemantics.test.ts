@@ -16,8 +16,8 @@ const rect = (id: string): RectDoc =>
 const group = (id: string, children: unknown[]): GroupDoc =>
 	({ id, type: "group", children }) as unknown as GroupDoc;
 
-const ownedEndpoint = (type: string, id: string) => ({
-	owner: { type, id },
+const ownedEndpoint = (id: string) => ({
+	owner: { id },
 	anchor: { kind: "center" },
 });
 
@@ -95,11 +95,7 @@ describe("validateSemantics", () => {
 				version: 1,
 				root: [
 					rect("x"),
-					connector(
-						"x",
-						ownedEndpoint("rect", "x"),
-						ownedEndpoint("rect", "x"),
-					),
+					connector("x", ownedEndpoint("x"), ownedEndpoint("x")),
 				],
 			};
 
@@ -137,11 +133,7 @@ describe("validateSemantics", () => {
 				root: [
 					rect("a"),
 					rect("b"),
-					connector(
-						"c1",
-						ownedEndpoint("rect", "a"),
-						ownedEndpoint("rect", "b"),
-					),
+					connector("c1", ownedEndpoint("a"), ownedEndpoint("b")),
 				],
 			};
 			expect(validateSemantics(doc)).toEqual([]);
@@ -152,7 +144,7 @@ describe("validateSemantics", () => {
 				version: 1,
 				root: [
 					rect("a"),
-					connector("c1", ownedEndpoint("rect", "a"), {
+					connector("c1", ownedEndpoint("a"), {
 						anchor: { kind: "free", point: { x: 0, y: 0 } },
 					}),
 				],
@@ -165,11 +157,7 @@ describe("validateSemantics", () => {
 				version: 1,
 				root: [
 					rect("a"),
-					connector(
-						"c1",
-						ownedEndpoint("rect", "a"),
-						ownedEndpoint("rect", "missing"),
-					),
+					connector("c1", ownedEndpoint("a"), ownedEndpoint("missing")),
 				],
 			};
 
@@ -185,11 +173,7 @@ describe("validateSemantics", () => {
 				root: [
 					rect("a"),
 					group("g1", []),
-					connector(
-						"c1",
-						ownedEndpoint("rect", "a"),
-						ownedEndpoint("group", "g1"),
-					),
+					connector("c1", ownedEndpoint("a"), ownedEndpoint("g1")),
 				],
 			};
 
@@ -204,16 +188,8 @@ describe("validateSemantics", () => {
 				version: 1,
 				root: [
 					rect("a"),
-					connector(
-						"c1",
-						ownedEndpoint("rect", "a"),
-						ownedEndpoint("rect", "a"),
-					),
-					connector(
-						"c2",
-						ownedEndpoint("rect", "a"),
-						ownedEndpoint("connector", "c1"),
-					),
+					connector("c1", ownedEndpoint("a"), ownedEndpoint("a")),
+					connector("c2", ownedEndpoint("a"), ownedEndpoint("c1")),
 				],
 			};
 
@@ -233,11 +209,7 @@ describe("validateSemantics", () => {
 				version: 1,
 				root: [
 					rect("a"),
-					connector(
-						"c1",
-						ownedEndpoint("rect", "a"),
-						ownedEndpoint("rect", "a"),
-					),
+					connector("c1", ownedEndpoint("a"), ownedEndpoint("a")),
 				],
 			};
 
@@ -249,11 +221,7 @@ describe("validateSemantics", () => {
 				version: 1,
 				root: [
 					rect("a"),
-					connector(
-						"c1",
-						ownedEndpoint("rect", "missing"),
-						ownedEndpoint("rect", "a"),
-					),
+					connector("c1", ownedEndpoint("missing"), ownedEndpoint("a")),
 				],
 			};
 			const errors = validateSemantics(doc);
@@ -265,13 +233,7 @@ describe("validateSemantics", () => {
 		it("reports 2 errors when both endpoints are invalid (source / target)", () => {
 			const doc: CanvasDoc = {
 				version: 1,
-				root: [
-					connector(
-						"c1",
-						ownedEndpoint("rect", "m1"),
-						ownedEndpoint("rect", "m2"),
-					),
-				],
+				root: [connector("c1", ownedEndpoint("m1"), ownedEndpoint("m2"))],
 			};
 			const errors = validateSemantics(doc);
 			expect(errors.map((e) => e.path)).toEqual([
@@ -284,13 +246,7 @@ describe("validateSemantics", () => {
 			// The self-loop itself is allowed, but endpoints pointing to a nonexistent owner are still errors.
 			const doc: CanvasDoc = {
 				version: 1,
-				root: [
-					connector(
-						"c1",
-						ownedEndpoint("rect", "z"),
-						ownedEndpoint("rect", "z"),
-					),
-				],
+				root: [connector("c1", ownedEndpoint("z"), ownedEndpoint("z"))],
 			};
 			const errors = validateSemantics(doc);
 			expect(errors.every((e) => e.message.includes("does not exist"))).toBe(
@@ -307,11 +263,7 @@ describe("validateSemantics", () => {
 				version: 1,
 				root: [
 					group("g1", []),
-					connector(
-						"c1",
-						ownedEndpoint("group", "g1"),
-						ownedEndpoint("group", "g1"),
-					),
+					connector("c1", ownedEndpoint("g1"), ownedEndpoint("g1")),
 				],
 			};
 			const errors = validateSemantics(doc);
@@ -325,11 +277,7 @@ describe("validateSemantics", () => {
 				version: 1,
 				root: [
 					rect("a"),
-					connector(
-						"c1",
-						ownedEndpoint("rect", "a"),
-						ownedEndpoint("rect", "a"),
-					),
+					connector("c1", ownedEndpoint("a"), ownedEndpoint("a")),
 				],
 			};
 			expect(validateSemantics(doc)).toEqual([]);
@@ -350,11 +298,7 @@ describe("validateSemantics", () => {
 				root: [
 					group("g", [rect("gr")]),
 					rect("a"),
-					connector(
-						"c1",
-						ownedEndpoint("rect", "gr"),
-						ownedEndpoint("rect", "a"),
-					),
+					connector("c1", ownedEndpoint("gr"), ownedEndpoint("a")),
 				],
 			};
 			expect(validateSemantics(doc)).toEqual([]);
@@ -378,7 +322,7 @@ describe("validateSemantics (connectable via the real registry)", () => {
 		root: [
 			rect("a"),
 			{ id: "t", type } as unknown as ObjectDoc,
-			connector("c", ownedEndpoint("rect", "a"), ownedEndpoint(type, "t")),
+			connector("c", ownedEndpoint("a"), ownedEndpoint("t")),
 		],
 	});
 

@@ -10,7 +10,7 @@ const free = (x: number, y: number): EndpointRef => ({
 });
 
 const owned = (id: string): EndpointRef => ({
-	owner: { type: "rect", id },
+	owner: { id },
 	anchor: { kind: "connectPoint", id: "topCenter" },
 });
 

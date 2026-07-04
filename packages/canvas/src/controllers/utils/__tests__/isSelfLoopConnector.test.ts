@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { isSelfLoopConnector } from "../isSelfLoopConnector";
 
 const owned = (id: string) => ({
-	owner: { type: "rect" as const, id },
+	owner: { id },
 	anchor: { kind: "center" as const },
 });
 

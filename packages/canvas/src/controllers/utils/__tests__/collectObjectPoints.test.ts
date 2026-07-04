@@ -116,7 +116,7 @@ describe("collectObjectPoints", () => {
 	it("returns an empty array for an unresolvable connector", () => {
 		const connector = freeConnector({
 			source: {
-				owner: { type: "rect", id: "missing-rect" },
+				owner: { id: "missing-rect" },
 				anchor: { kind: "center" },
 			},
 		});

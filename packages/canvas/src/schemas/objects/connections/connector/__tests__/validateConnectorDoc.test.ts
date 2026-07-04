@@ -7,7 +7,7 @@ const validPoints = [
 	{ x: 100, y: 100 },
 ];
 const ownedRef = {
-	owner: { id: "rect-1", type: "rect" },
+	owner: { id: "rect-1" },
 	anchor: { kind: "center" },
 };
 const freeRef = { anchor: { kind: "free", point: { x: 0, y: 0 } } };
@@ -60,7 +60,7 @@ describe("validateConnectorDoc", () => {
 
 	it("is an error when source's owner.id is a number", () => {
 		const badRef = {
-			owner: { id: 123, type: "rect" },
+			owner: { id: 123 },
 			anchor: { kind: "center" },
 		};
 		const errors = validateConnectorDoc(
@@ -70,21 +70,9 @@ describe("validateConnectorDoc", () => {
 		expect(errors.some((e) => e.path === "root.source.owner.id")).toBe(true);
 	});
 
-	it("is an error when target's owner.type is a number", () => {
-		const badRef = {
-			owner: { id: "rect-1", type: 42 },
-			anchor: { kind: "center" },
-		};
-		const errors = validateConnectorDoc(
-			{ points: validPoints, source: freeRef, target: badRef },
-			"root",
-		);
-		expect(errors.some((e) => e.path === "root.target.owner.type")).toBe(true);
-	});
-
 	it("yields no error for source's connectPoint anchor (valid id)", () => {
 		const ref = {
-			owner: { id: "rect-1", type: "rect" },
+			owner: { id: "rect-1" },
 			anchor: { kind: "connectPoint", id: "leftCenter" },
 		};
 		const o = { points: validPoints, source: ref, target: freeRef };
@@ -93,7 +81,7 @@ describe("validateConnectorDoc", () => {
 
 	it("is an error when source's connectPoint anchor has an invalid id", () => {
 		const badRef = {
-			owner: { id: "rect-1", type: "rect" },
+			owner: { id: "rect-1" },
 			anchor: { kind: "connectPoint", id: "invalid" },
 		};
 		const errors = validateConnectorDoc(
@@ -105,7 +93,7 @@ describe("validateConnectorDoc", () => {
 
 	it("is an error when source's anchor.kind is free (invalid for owned)", () => {
 		const badRef = {
-			owner: { id: "rect-1", type: "rect" },
+			owner: { id: "rect-1" },
 			anchor: { kind: "free", point: { x: 0, y: 0 } },
 		};
 		const errors = validateConnectorDoc(
@@ -182,7 +170,7 @@ describe("validateConnectorDoc", () => {
 	});
 
 	it("is an error when an owned endpoint's anchor is missing (not an object)", () => {
-		const badRef = { owner: { id: "rect-1", type: "rect" } };
+		const badRef = { owner: { id: "rect-1" } };
 		const errors = validateConnectorDoc(
 			{ points: validPoints, source: badRef, target: freeRef },
 			"root",

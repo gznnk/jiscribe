@@ -75,7 +75,7 @@ The top level must always have `version` / `root` (the array may be empty).
 
 ```json
 "source": {
-  "owner": { "type": "rect", "id": "node-a" },
+  "owner": { "id": "node-a" },
   "anchor": { "kind": "connectPoint", "id": "rightCenter" }
 }
 ```
@@ -171,11 +171,11 @@ These are guidelines for readability, not part of the spec. Overlapping itself i
 			"type": "connector",
 			"points": [],
 			"source": {
-				"owner": { "type": "rect", "id": "start" },
+				"owner": { "id": "start" },
 				"anchor": { "kind": "connectPoint", "id": "rightCenter" }
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "process" },
+				"owner": { "id": "process" },
 				"anchor": { "kind": "connectPoint", "id": "leftCenter" }
 			},
 			"stroke": "#374151",
@@ -187,11 +187,11 @@ These are guidelines for readability, not part of the spec. Overlapping itself i
 			"type": "connector",
 			"points": [],
 			"source": {
-				"owner": { "type": "rect", "id": "process" },
+				"owner": { "id": "process" },
 				"anchor": { "kind": "connectPoint", "id": "rightCenter" }
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "end" },
+				"owner": { "id": "end" },
 				"anchor": { "kind": "connectPoint", "id": "leftCenter" }
 			},
 			"stroke": "#374151",
@@ -260,11 +260,11 @@ These are guidelines for readability, not part of the spec. Overlapping itself i
 			"type": "connector",
 			"points": [],
 			"source": {
-				"owner": { "type": "ellipse", "id": "client" },
+				"owner": { "id": "client" },
 				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "api" },
+				"owner": { "id": "api" },
 				"anchor": { "kind": "connectPoint", "id": "topCenter" }
 			},
 			"stroke": "#374151",
@@ -276,11 +276,11 @@ These are guidelines for readability, not part of the spec. Overlapping itself i
 			"type": "connector",
 			"points": [],
 			"source": {
-				"owner": { "type": "rect", "id": "api" },
+				"owner": { "id": "api" },
 				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
 			},
 			"target": {
-				"owner": { "type": "rect", "id": "db" },
+				"owner": { "id": "db" },
 				"anchor": { "kind": "connectPoint", "id": "topCenter" }
 			},
 			"stroke": "#374151",

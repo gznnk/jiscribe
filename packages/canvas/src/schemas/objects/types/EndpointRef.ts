@@ -1,7 +1,5 @@
 import type { Point } from "@workspace/geometry";
 
-import type { ObjectType } from "./ObjectType";
-
 export type CenterAnchorSpec = {
 	kind: "center";
 };
@@ -33,7 +31,6 @@ export type AnchorSpec =
 export type AnchorKind = AnchorSpec["kind"];
 
 export type OwnerRef = {
-	type: ObjectType;
 	id: string;
 };
 
@@ -75,7 +72,7 @@ export const isOwnedEndpointRef = (
 		return false;
 	}
 	const owner = v.owner as Record<string, unknown>;
-	return typeof owner.id === "string" && typeof owner.type === "string";
+	return typeof owner.id === "string";
 };
 
 /**
@@ -108,7 +105,7 @@ const isSameAnchor = (a: AnchorSpec, b: AnchorSpec): boolean => {
  * @returns true if they are equivalent, false otherwise
  */
 export const isSameEndpoint = (a: EndpointRef, b: EndpointRef): boolean => {
-	if (a.owner?.id !== b.owner?.id || a.owner?.type !== b.owner?.type) {
+	if (a.owner?.id !== b.owner?.id) {
 		return false;
 	}
 	return isSameAnchor(a.anchor, b.anchor);

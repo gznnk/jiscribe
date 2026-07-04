@@ -316,7 +316,6 @@
 			],
 			"source": {
 				"owner": {
-					"type": "ellipse",
 					"id": "user"
 				},
 				"anchor": {
@@ -326,7 +325,6 @@
 			},
 			"target": {
 				"owner": {
-					"type": "rect",
 					"id": "ai"
 				},
 				"anchor": {
@@ -353,7 +351,6 @@
 			],
 			"source": {
 				"owner": {
-					"type": "rect",
 					"id": "ai"
 				},
 				"anchor": {
@@ -363,7 +360,6 @@
 			},
 			"target": {
 				"owner": {
-					"type": "rect",
 					"id": "jis-file"
 				},
 				"anchor": {
@@ -398,7 +394,6 @@
 			],
 			"source": {
 				"owner": {
-					"type": "rect",
 					"id": "jis-file"
 				},
 				"anchor": {
@@ -408,7 +403,6 @@
 			},
 			"target": {
 				"owner": {
-					"type": "rect",
 					"id": "filewatcher"
 				},
 				"anchor": {
@@ -435,7 +429,6 @@
 			],
 			"source": {
 				"owner": {
-					"type": "rect",
 					"id": "filewatcher"
 				},
 				"anchor": {
@@ -445,7 +438,6 @@
 			},
 			"target": {
 				"owner": {
-					"type": "rect",
 					"id": "parser"
 				},
 				"anchor": {
@@ -472,7 +464,6 @@
 			],
 			"source": {
 				"owner": {
-					"type": "rect",
 					"id": "parser"
 				},
 				"anchor": {
@@ -482,7 +473,6 @@
 			},
 			"target": {
 				"owner": {
-					"type": "rect",
 					"id": "validator"
 				},
 				"anchor": {
@@ -509,7 +499,6 @@
 			],
 			"source": {
 				"owner": {
-					"type": "rect",
 					"id": "json-schema"
 				},
 				"anchor": {
@@ -519,7 +508,6 @@
 			},
 			"target": {
 				"owner": {
-					"type": "rect",
 					"id": "validator"
 				},
 				"anchor": {
@@ -555,7 +543,6 @@
 			],
 			"source": {
 				"owner": {
-					"type": "rect",
 					"id": "validator"
 				},
 				"anchor": {
@@ -565,7 +552,6 @@
 			},
 			"target": {
 				"owner": {
-					"type": "rect",
 					"id": "canvasdoc"
 				},
 				"anchor": {
@@ -600,7 +586,6 @@
 			],
 			"source": {
 				"owner": {
-					"type": "rect",
 					"id": "canvasdoc"
 				},
 				"anchor": {
@@ -610,7 +595,6 @@
 			},
 			"target": {
 				"owner": {
-					"type": "rect",
 					"id": "svg-engine"
 				},
 				"anchor": {
@@ -637,7 +621,6 @@
 			],
 			"source": {
 				"owner": {
-					"type": "rect",
 					"id": "svg-engine"
 				},
 				"anchor": {
@@ -647,7 +630,6 @@
 			},
 			"target": {
 				"owner": {
-					"type": "rect",
 					"id": "layout-calc"
 				},
 				"anchor": {
@@ -674,7 +656,6 @@
 			],
 			"source": {
 				"owner": {
-					"type": "rect",
 					"id": "layout-calc"
 				},
 				"anchor": {
@@ -684,7 +665,6 @@
 			},
 			"target": {
 				"owner": {
-					"type": "rect",
 					"id": "conn-resolver"
 				},
 				"anchor": {
@@ -719,7 +699,6 @@
 			],
 			"source": {
 				"owner": {
-					"type": "rect",
 					"id": "svg-engine"
 				},
 				"anchor": {
@@ -729,7 +708,6 @@
 			},
 			"target": {
 				"owner": {
-					"type": "rect",
 					"id": "webview"
 				},
 				"anchor": {
@@ -764,7 +742,6 @@
 			],
 			"source": {
 				"owner": {
-					"type": "rect",
 					"id": "conn-resolver"
 				},
 				"anchor": {
@@ -774,7 +751,6 @@
 			},
 			"target": {
 				"owner": {
-					"type": "rect",
 					"id": "webview"
 				},
 				"anchor": {

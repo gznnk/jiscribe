@@ -101,7 +101,7 @@ describe("validateEndpointRef", () => {
 	describe("OwnedEndpointRef", () => {
 		it("center anchor has no errors", () => {
 			const ref = {
-				owner: { id: "rect-1", type: "rect" },
+				owner: { id: "rect-1" },
 				anchor: { kind: "center" },
 			};
 			expect(validateEndpointRef(ref, "root")).toEqual([]);
@@ -109,7 +109,7 @@ describe("validateEndpointRef", () => {
 
 		it("connectPoint anchor (with a valid id) has no errors", () => {
 			const ref = {
-				owner: { id: "rect-1", type: "rect" },
+				owner: { id: "rect-1" },
 				anchor: { kind: "connectPoint", id: "topCenter" },
 			};
 			expect(validateEndpointRef(ref, "root")).toEqual([]);
@@ -117,31 +117,22 @@ describe("validateEndpointRef", () => {
 
 		it("errors when owner.id is not a string", () => {
 			const ref = {
-				owner: { id: 123, type: "rect" },
+				owner: { id: 123 },
 				anchor: { kind: "center" },
 			};
 			const errors = validateEndpointRef(ref, "root");
 			expect(errors.some((e) => e.path === "root.owner.id")).toBe(true);
 		});
 
-		it("errors when owner.type is not a string", () => {
-			const ref = {
-				owner: { id: "rect-1", type: 42 },
-				anchor: { kind: "center" },
-			};
-			const errors = validateEndpointRef(ref, "root");
-			expect(errors.some((e) => e.path === "root.owner.type")).toBe(true);
-		});
-
 		it("errors when anchor is missing", () => {
-			const ref = { owner: { id: "rect-1", type: "rect" } };
+			const ref = { owner: { id: "rect-1" } };
 			const errors = validateEndpointRef(ref, "root");
 			expect(errors.some((e) => e.path === "root.anchor")).toBe(true);
 		});
 
 		it("errors when anchor.kind is free (invalid for owned)", () => {
 			const ref = {
-				owner: { id: "rect-1", type: "rect" },
+				owner: { id: "rect-1" },
 				anchor: { kind: "free", point: { x: 0, y: 0 } },
 			};
 			const errors = validateEndpointRef(ref, "root");
@@ -150,7 +141,7 @@ describe("validateEndpointRef", () => {
 
 		it("errors for an invalid anchor.kind value", () => {
 			const ref = {
-				owner: { id: "rect-1", type: "rect" },
+				owner: { id: "rect-1" },
 				anchor: { kind: "unknown" },
 			};
 			const errors = validateEndpointRef(ref, "root");
@@ -159,7 +150,7 @@ describe("validateEndpointRef", () => {
 
 		it("errors for an invalid id in a connectPoint anchor", () => {
 			const ref = {
-				owner: { id: "rect-1", type: "rect" },
+				owner: { id: "rect-1" },
 				anchor: { kind: "connectPoint", id: "invalid" },
 			};
 			const errors = validateEndpointRef(ref, "root");
@@ -170,7 +161,7 @@ describe("validateEndpointRef", () => {
 			const ids = ["topCenter", "rightCenter", "bottomCenter", "leftCenter"];
 			for (const id of ids) {
 				const ref = {
-					owner: { id: "rect-1", type: "rect" },
+					owner: { id: "rect-1" },
 					anchor: { kind: "connectPoint", id },
 				};
 				expect(validateEndpointRef(ref, "root")).toEqual([]);
@@ -179,7 +170,7 @@ describe("validateEndpointRef", () => {
 
 		it("errors for a connectPoint anchor with id 'center' (center is a CenterAnchorSpec, not a connect point)", () => {
 			const ref = {
-				owner: { id: "rect-1", type: "rect" },
+				owner: { id: "rect-1" },
 				anchor: { kind: "connectPoint", id: "center" },
 			};
 			const errors = validateEndpointRef(ref, "root");

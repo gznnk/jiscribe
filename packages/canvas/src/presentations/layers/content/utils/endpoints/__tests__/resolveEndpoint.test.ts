@@ -9,13 +9,13 @@ const freeEndpoint = (x: number, y: number): EndpointRef =>
 
 const centerEndpoint = (): EndpointRef =>
 	({
-		owner: { type: "rect", id: "obj-1" },
+		owner: { id: "obj-1" },
 		anchor: { kind: "center" },
 	}) as EndpointRef;
 
 const connectPointEndpoint = (id: string): EndpointRef =>
 	({
-		owner: { type: "rect", id: "obj-1" },
+		owner: { id: "obj-1" },
 		anchor: { kind: "connectPoint", id },
 	}) as EndpointRef;
 

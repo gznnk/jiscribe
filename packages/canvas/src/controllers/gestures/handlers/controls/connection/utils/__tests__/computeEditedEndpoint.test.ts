@@ -69,7 +69,7 @@ describe("computeEditedEndpoint", () => {
 			{ id: "rect-1", object: rectFrame },
 		);
 		expect(result.target).toEqual({
-			owner: { type: "rect", id: "rect-1" },
+			owner: { id: "rect-1" },
 			anchor: { kind: "connectPoint", id: "bottomCenter" },
 		});
 	});
@@ -96,14 +96,14 @@ describe("computeEditedEndpoint", () => {
 				type: "connector",
 				points: [],
 				source: {
-					owner: { type: "rect", id: "rect-1" },
+					owner: { id: "rect-1" },
 					anchor: { kind: "connectPoint", id: "bottomCenter" },
 				},
 				target: free(10, 10),
 			}) as unknown as ConnectorState;
 
 		const fixedSource: EndpointRef = {
-			owner: { type: "rect", id: "rect-1" },
+			owner: { id: "rect-1" },
 			anchor: { kind: "connectPoint", id: "bottomCenter" },
 		};
 
@@ -117,7 +117,7 @@ describe("computeEditedEndpoint", () => {
 				{ id: "rect-1", object: rectFrame },
 				fixedSource,
 			);
-			expect(result.target.owner).toEqual({ type: "rect", id: "rect-1" });
+			expect(result.target.owner).toEqual({ id: "rect-1" });
 			const anchor = result.target.anchor;
 			expect(anchor.kind).toBe("connectPoint");
 			if (anchor.kind === "connectPoint") {
@@ -146,7 +146,7 @@ describe("computeEditedEndpoint", () => {
 				fixedSource,
 			);
 			expect(result.target).toEqual({
-				owner: { type: "rect", id: "rect-2" },
+				owner: { id: "rect-2" },
 				anchor: { kind: "connectPoint", id: "bottomCenter" },
 			});
 		});

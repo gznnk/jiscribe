@@ -102,7 +102,7 @@ describe("calcMultiSelectGroupBounds", () => {
 				points: [{ x: 9999, y: 9999 }],
 				routing: "straight",
 				source: {
-					owner: { type: "rect", id: "missing-rect" },
+					owner: { id: "missing-rect" },
 					anchor: { kind: "center" },
 				},
 				target: { anchor: { kind: "free", point: { x: 0, y: 0 } } },

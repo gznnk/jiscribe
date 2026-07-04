@@ -21,11 +21,11 @@ describe("ConnectorMapper", () => {
 				stroke: "#000000",
 				strokeWidth: 2,
 				source: {
-					owner: { type: "rect", id: "rect-1" },
+					owner: { id: "rect-1" },
 					anchor: { kind: "center" },
 				},
 				target: {
-					owner: { type: "rect", id: "rect-2" },
+					owner: { id: "rect-2" },
 					anchor: { kind: "center" },
 				},
 				startArrow: "OpenArrow",
@@ -47,11 +47,11 @@ describe("ConnectorMapper", () => {
 			expect(state.stroke).toBe("#000000");
 			expect(state.strokeWidth).toBe(2);
 			expect(state.source).toEqual({
-				owner: { type: "rect", id: "rect-1" },
+				owner: { id: "rect-1" },
 				anchor: { kind: "center" },
 			});
 			expect(state.target).toEqual({
-				owner: { type: "rect", id: "rect-2" },
+				owner: { id: "rect-2" },
 				anchor: { kind: "center" },
 			});
 			expect(state.startArrow).toBe("OpenArrow");
@@ -108,11 +108,11 @@ describe("ConnectorMapper", () => {
 				stroke: "#000000",
 				strokeWidth: 2,
 				source: {
-					owner: { type: "rect", id: "rect-1" },
+					owner: { id: "rect-1" },
 					anchor: { kind: "center" },
 				},
 				target: {
-					owner: { type: "rect", id: "rect-2" },
+					owner: { id: "rect-2" },
 					anchor: { kind: "center" },
 				},
 				startArrow: "OpenArrow",
@@ -131,11 +131,11 @@ describe("ConnectorMapper", () => {
 			expect(doc.stroke).toBe("#000000");
 			expect(doc.strokeWidth).toBe(2);
 			expect(doc.source).toEqual({
-				owner: { type: "rect", id: "rect-1" },
+				owner: { id: "rect-1" },
 				anchor: { kind: "center" },
 			});
 			expect(doc.target).toEqual({
-				owner: { type: "rect", id: "rect-2" },
+				owner: { id: "rect-2" },
 				anchor: { kind: "center" },
 			});
 			expect(doc.startArrow).toBe("OpenArrow");
@@ -192,11 +192,11 @@ describe("ConnectorMapper", () => {
 				strokeWidth: 2,
 				routing: "orthogonal",
 				source: {
-					owner: { type: "rect", id: "rect-1" },
+					owner: { id: "rect-1" },
 					anchor: { kind: "center" },
 				},
 				target: {
-					owner: { type: "rect", id: "rect-2" },
+					owner: { id: "rect-2" },
 					anchor: { kind: "connectPoint", id: "topCenter" },
 				},
 				startArrow: "OpenArrow",
@@ -226,7 +226,7 @@ describe("ConnectorMapper", () => {
 				type: "connector",
 				points: [],
 				source: {
-					owner: { type: "rect", id: "rect-1" },
+					owner: { id: "rect-1" },
 					anchor: { kind: "center" },
 				},
 				target: {

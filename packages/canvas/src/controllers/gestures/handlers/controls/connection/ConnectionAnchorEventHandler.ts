@@ -108,7 +108,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			// points holds only intermediate waypoints (endpoints are held by source/target). Empty on new creation since it is a straight line
 			points: [] as Point[],
 			source: {
-				owner: { type: sourceObject.type, id: sourceObjectId },
+				owner: { id: sourceObjectId },
 				anchor:
 					anchorPosition === "center"
 						? { kind: "center" }

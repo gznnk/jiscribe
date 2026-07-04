@@ -122,11 +122,11 @@ describe("parseCanvasText", () => {
 					type: "connector",
 					points: [],
 					source: {
-						owner: { type: "rect", id: "a" },
+						owner: { id: "a" },
 						anchor: { kind: "center" },
 					},
 					target: {
-						owner: { type: "group", id: "g" },
+						owner: { id: "g" },
 						anchor: { kind: "center" },
 					},
 				},

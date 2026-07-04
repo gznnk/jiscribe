@@ -178,7 +178,7 @@ describe("calcObjectBoundingBox", () => {
 		it("returns null when an owned endpoint's referenced object does not exist", () => {
 			const connector = freeConnector({
 				source: {
-					owner: { type: "rect", id: "missing-rect" },
+					owner: { id: "missing-rect" },
 					anchor: { kind: "center" },
 				},
 			});

@@ -27,8 +27,8 @@ const makeConnector = (id: string, points: Point[]) =>
 		id,
 		type: "connector",
 		points,
-		source: { owner: { type: "rect", id: "a" }, anchor: { kind: "center" } },
-		target: { owner: { type: "rect", id: "b" }, anchor: { kind: "center" } },
+		source: { owner: { id: "a" }, anchor: { kind: "center" } },
+		target: { owner: { id: "b" }, anchor: { kind: "center" } },
 	}) as unknown;
 
 const makeState = (points: Point[]): CanvasControllerState => {

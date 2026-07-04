@@ -6,7 +6,7 @@ import {
 } from "../validateConnectorState";
 
 const ownedRef = {
-	owner: { id: "r1", type: "rect" },
+	owner: { id: "r1" },
 	anchor: { kind: "center" },
 };
 const freeRef = { anchor: { kind: "free", point: { x: 0, y: 0 } } };
@@ -56,7 +56,7 @@ describe("isValidConnectorState", () => {
 
 	it("endpoint whose owner.id is not a string is false", () => {
 		const badRef = {
-			owner: { id: 123, type: "rect" },
+			owner: { id: 123 },
 			anchor: { kind: "center" },
 		};
 		expect(isValidConnectorState({ ...validConnector, source: badRef })).toBe(

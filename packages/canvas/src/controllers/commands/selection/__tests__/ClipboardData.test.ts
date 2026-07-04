@@ -36,7 +36,7 @@ const connector = (id: string, sourceOwnerId: string) => ({
 	type: "connector",
 	points: [],
 	source: {
-		owner: { id: sourceOwnerId, type: "rect" },
+		owner: { id: sourceOwnerId },
 		anchor: { kind: "center" },
 	},
 	target: { anchor: { kind: "free", point: { x: 1, y: 1 } } },

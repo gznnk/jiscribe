@@ -588,15 +588,11 @@
 		},
 
 		"OwnerRef": {
-			"description": "Reference to an object on the canvas.",
+			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / ellipse / diamond / sticky (NOT polyline / polygon / group / svg / connector).",
 			"type": "object",
-			"required": ["type", "id"],
+			"required": ["id"],
 			"additionalProperties": false,
 			"properties": {
-				"type": {
-					"description": "Type of the target object.",
-					"type": "string"
-				},
 				"id": { "description": "ID of the target object.", "type": "string" }
 			}
 		},
