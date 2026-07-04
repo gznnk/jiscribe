@@ -13,6 +13,10 @@ describe("isConnectPointId", () => {
 		expect(isConnectPointId(id)).toBe(true);
 	});
 
+	it("rejects 'center' (the center is not a connect point)", () => {
+		expect(isConnectPointId("center")).toBe(false);
+	});
+
 	it("rejects invalid strings", () => {
 		expect(isConnectPointId("top")).toBe(false);
 		expect(isConnectPointId("")).toBe(false);
@@ -31,7 +35,7 @@ describe("isOwnedEndpointRef", () => {
 	it("accepts an OwnedEndpointRef with a center anchor", () => {
 		expect(
 			isOwnedEndpointRef({
-				owner: { id: "obj1", type: "rect" },
+				owner: { id: "obj1" },
 				anchor: { kind: "center" },
 			}),
 		).toBe(true);
@@ -40,7 +44,7 @@ describe("isOwnedEndpointRef", () => {
 	it("accepts an OwnedEndpointRef with a connectPoint anchor", () => {
 		expect(
 			isOwnedEndpointRef({
-				owner: { id: "obj2", type: "ellipse" },
+				owner: { id: "obj2" },
 				anchor: { kind: "connectPoint", id: "topCenter" },
 			}),
 		).toBe(true);
@@ -66,16 +70,7 @@ describe("isOwnedEndpointRef", () => {
 	it("rejects when owner.id is not a string", () => {
 		expect(
 			isOwnedEndpointRef({
-				owner: { id: 123, type: "rect" },
-				anchor: { kind: "center" },
-			}),
-		).toBe(false);
-	});
-
-	it("rejects when owner.type is not a string", () => {
-		expect(
-			isOwnedEndpointRef({
-				owner: { id: "obj1", type: null },
+				owner: { id: 123 },
 				anchor: { kind: "center" },
 			}),
 		).toBe(false);
@@ -112,7 +107,7 @@ describe("isFreeEndpointRef", () => {
 	it("rejects when an owner is present", () => {
 		expect(
 			isFreeEndpointRef({
-				owner: { id: "obj1", type: "rect" },
+				owner: { id: "obj1" },
 				anchor: { kind: "free", point: { x: 0, y: 0 } },
 			}),
 		).toBe(false);
@@ -152,8 +147,8 @@ describe("isSameEndpoint", () => {
 		it("returns true when owner and center anchor are the same", () => {
 			expect(
 				isSameEndpoint(
-					{ owner: { id: "a", type: "rect" }, anchor: { kind: "center" } },
-					{ owner: { id: "a", type: "rect" }, anchor: { kind: "center" } },
+					{ owner: { id: "a" }, anchor: { kind: "center" } },
+					{ owner: { id: "a" }, anchor: { kind: "center" } },
 				),
 			).toBe(true);
 		});
@@ -162,11 +157,11 @@ describe("isSameEndpoint", () => {
 			expect(
 				isSameEndpoint(
 					{
-						owner: { id: "a", type: "rect" },
+						owner: { id: "a" },
 						anchor: { kind: "connectPoint", id: "topCenter" },
 					},
 					{
-						owner: { id: "a", type: "rect" },
+						owner: { id: "a" },
 						anchor: { kind: "connectPoint", id: "topCenter" },
 					},
 				),
@@ -176,17 +171,8 @@ describe("isSameEndpoint", () => {
 		it("returns false when owner.id differs", () => {
 			expect(
 				isSameEndpoint(
-					{ owner: { id: "a", type: "rect" }, anchor: { kind: "center" } },
-					{ owner: { id: "b", type: "rect" }, anchor: { kind: "center" } },
-				),
-			).toBe(false);
-		});
-
-		it("returns false when owner.type differs", () => {
-			expect(
-				isSameEndpoint(
-					{ owner: { id: "a", type: "rect" }, anchor: { kind: "center" } },
-					{ owner: { id: "a", type: "ellipse" }, anchor: { kind: "center" } },
+					{ owner: { id: "a" }, anchor: { kind: "center" } },
+					{ owner: { id: "b" }, anchor: { kind: "center" } },
 				),
 			).toBe(false);
 		});
@@ -195,11 +181,11 @@ describe("isSameEndpoint", () => {
 			expect(
 				isSameEndpoint(
 					{
-						owner: { id: "a", type: "rect" },
+						owner: { id: "a" },
 						anchor: { kind: "connectPoint", id: "topCenter" },
 					},
 					{
-						owner: { id: "a", type: "rect" },
+						owner: { id: "a" },
 						anchor: { kind: "connectPoint", id: "bottomCenter" },
 					},
 				),
@@ -209,10 +195,10 @@ describe("isSameEndpoint", () => {
 		it("returns false when the anchor kind differs", () => {
 			expect(
 				isSameEndpoint(
-					{ owner: { id: "a", type: "rect" }, anchor: { kind: "center" } },
+					{ owner: { id: "a" }, anchor: { kind: "center" } },
 					{
-						owner: { id: "a", type: "rect" },
-						anchor: { kind: "connectPoint", id: "center" },
+						owner: { id: "a" },
+						anchor: { kind: "connectPoint", id: "topCenter" },
 					},
 				),
 			).toBe(false);
@@ -243,7 +229,7 @@ describe("isSameEndpoint", () => {
 		it("returns false when one has an owner and the other does not", () => {
 			expect(
 				isSameEndpoint(
-					{ owner: { id: "a", type: "rect" }, anchor: { kind: "center" } },
+					{ owner: { id: "a" }, anchor: { kind: "center" } },
 					{ anchor: { kind: "free", point: { x: 0, y: 0 } } },
 				),
 			).toBe(false);

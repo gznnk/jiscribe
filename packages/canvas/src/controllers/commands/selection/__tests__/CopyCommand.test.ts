@@ -30,14 +30,14 @@ const makeConnector = (
 	const source =
 		sourceOwnerId != null
 			? {
-					owner: { id: sourceOwnerId, type: "rect" as const },
+					owner: { id: sourceOwnerId },
 					anchor: { kind: "center" as const },
 				}
 			: { anchor: { kind: "free" as const, point: { x: 0, y: 0 } } };
 	const target =
 		targetOwnerId != null
 			? {
-					owner: { id: targetOwnerId, type: "rect" as const },
+					owner: { id: targetOwnerId },
 					anchor: { kind: "center" as const },
 				}
 			: { anchor: { kind: "free" as const, point: { x: 100, y: 100 } } };

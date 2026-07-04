@@ -190,7 +190,7 @@ describe("validateStateUtils", () => {
 
 	describe("hasOwnedEndpoint", () => {
 		const owned = {
-			owner: { id: "r1", type: "rect" },
+			owner: { id: "r1" },
 			anchor: { kind: "center" },
 		};
 		const free = { anchor: { kind: "free", point: { x: 0, y: 0 } } };

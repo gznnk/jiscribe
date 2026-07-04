@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import type { AnchorSpec } from "../../../../../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
+import { calcPathSignature } from "../pathSignature";
 import { resolveOrthogonalRoute } from "../resolveOrthogonalRoute";
 
 /** An unrotated Frame-family state that satisfies isTransformedFrame. */
@@ -168,5 +169,29 @@ describe("resolveOrthogonalRoute", () => {
 		// endpoints coincide → degenerate path (collapsed to a single point or 2 points)
 		expect(path[0]).toEqual(sourcePoint);
 		expect(path.at(-1)).toEqual(targetPoint);
+	});
+
+	describe("route stability under cost ties", () => {
+		// Source exits right, target sits behind (to the left): the route wraps around, and for
+		// equal-sized boxes the over-top vs. under-bottom wraps are exact cost ties for every
+		// vertical offset. The total-order tie-breaking must keep the topology fixed while the
+		// target is dragged across the source's midline.
+		const routeWrapAround = (targetCy: number): Point[] =>
+			resolveOrthogonalRoute(
+				connectPoint("right"),
+				connectPoint("left"),
+				{ x: 100, y: 50 },
+				{ x: -300, y: targetCy },
+				frameObj("src", 50, 50, 100, 100),
+				frameObj("tgt", -250, targetCy, 100, 100),
+			);
+
+		it("keeps the same topology across a monotone drag through the cost-tie window", () => {
+			const signatures = new Set<string>();
+			for (let targetCy = 20; targetCy <= 80; targetCy += 1) {
+				signatures.add(calcPathSignature(routeWrapAround(targetCy)));
+			}
+			expect(signatures.size).toBe(1);
+		});
 	});
 });

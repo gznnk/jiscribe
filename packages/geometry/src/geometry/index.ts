@@ -1,4 +1,5 @@
 ﻿export * from "./calcBoundingBox";
+export * from "./calcFrameCornerPoints";
 export * from "./calcKeyPointsBoundingBox";
 export * from "./calcFrameKeyPoint";
 export * from "./calcFrameKeyPoints";

@@ -26,7 +26,7 @@ const connDoc = (id: string, source: unknown, target: unknown): unknown => ({
 	target,
 });
 const owned = (rectId: string): unknown => ({
-	owner: { type: "rect", id: rectId },
+	owner: { id: rectId },
 	anchor: { kind: "center" },
 });
 const free = (x: number, y: number): unknown => ({

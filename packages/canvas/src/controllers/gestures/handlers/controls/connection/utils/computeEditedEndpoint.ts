@@ -42,10 +42,7 @@ export function computeEditedEndpoint(
 
 	const editedEndpoint: EndpointRef = hoveredTarget
 		? {
-				owner: {
-					type: hoveredTarget.object.type,
-					id: hoveredTarget.id,
-				},
+				owner: { id: hoveredTarget.id },
 				anchor: calcNearestAnchor(
 					hoveredTarget.object,
 					cursor.x,

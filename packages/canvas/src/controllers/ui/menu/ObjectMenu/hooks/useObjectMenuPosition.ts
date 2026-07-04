@@ -1,16 +1,7 @@
-import {
-	calcBoundingBox,
-	calcPolyBoundingBox,
-	isTransformedFrame,
-} from "@workspace/geometry";
 import { type RefObject, useLayoutEffect, useMemo, useState } from "react";
 
-import { isPoly } from "../../../../../schemas/objects/types/Poly";
-import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
-import { isGroupState } from "../../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
-import { calcConnectorBoundingBox } from "../../../../utils/calcConnectorBoundingBox";
-import { calcGroupBoundingBox } from "../../../../utils/calcGroupBoundingBox";
+import { calcObjectsBoundingBox } from "../../../../utils/calcObjectBoundingBox";
 
 /** Distance between the ObjectMenu and the object (px) */
 const DISTANCE_FROM_OBJECT = 40;
@@ -95,66 +86,17 @@ export function useObjectMenuPosition(
 		}
 
 		// Compute the bounding box of all selected objects
-		let minX = Infinity;
-		let minY = Infinity;
-		let maxX = -Infinity;
-		let maxY = -Infinity;
-		let hasValidObject = false;
+		const targetIds =
+			selectedConnectorId !== null
+				? [selectedConnectorId, ...selectedIds]
+				: selectedIds;
+		const bounds = calcObjectsBoundingBox(targetIds, objects);
 
-		if (selectedConnectorId !== null) {
-			const connector = objects[selectedConnectorId];
-			if (connector) {
-				const bbox = calcConnectorBoundingBox(
-					connector as ConnectorState,
-					objects,
-				);
-				if (bbox) {
-					minX = Math.min(minX, bbox.left);
-					minY = Math.min(minY, bbox.top);
-					maxX = Math.max(maxX, bbox.right);
-					maxY = Math.max(maxY, bbox.bottom);
-					hasValidObject = true;
-				}
-			}
-		}
-
-		for (const id of selectedIds) {
-			const obj = objects[id];
-			if (!obj) {
-				continue;
-			}
-
-			let bbox;
-			if (isTransformedFrame(obj)) {
-				// Objects with a Frame, such as rect and ellipse
-				bbox = calcBoundingBox(obj);
-			} else if (isGroupState(obj)) {
-				// For a group, compute the bounding box recursively from its children
-				bbox = calcGroupBoundingBox(obj, objects);
-				if (!bbox) {
-					continue;
-				}
-			} else if (isPoly(obj)) {
-				// Objects with a points array, such as polyline and polygon
-				const polyBbox = calcPolyBoundingBox(obj.points);
-				if (!polyBbox) {
-					continue;
-				}
-				bbox = polyBbox;
-			} else {
-				continue;
-			}
-
-			minX = Math.min(minX, bbox.left);
-			minY = Math.min(minY, bbox.top);
-			maxX = Math.max(maxX, bbox.right);
-			maxY = Math.max(maxY, bbox.bottom);
-			hasValidObject = true;
-		}
-
-		if (!hasValidObject) {
+		if (!bounds) {
 			return { shouldRender: false, x: 0, y: 0 };
 		}
+
+		const { left: minX, top: minY, right: maxX, bottom: maxY } = bounds;
 
 		const {
 			zoom,

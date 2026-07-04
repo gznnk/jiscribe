@@ -2,7 +2,7 @@
 	"$schema": "http://json-schema.org/draft-07/schema#",
 	"$id": "https://schema.jiscribe.dev/v1/jiscribe.schema.json",
 	"title": "CanvasDoc",
-	"description": "Root document format for a .jis.json file used by canvas.",
+	"description": "Root document format for a .jis.json file used by canvas.\n\nCoordinate system: every position and size (x/y, cx/cy, width/height, rx/ry, points, waypoints) is expressed in CSS pixels (px) within a single shared world-coordinate space. The origin (0,0) is the top-left corner; X increases to the right and Y increases downward (screen convention, NOT math convention). Angles (rotation) are in degrees and turn clockwise. There is no fixed canvas boundary and coordinates may be negative, but for a new document keep the primary content near the origin — roughly x in [0, 1600] and y in [0, 1200] — so it lands inside the initial viewport.",
 	"type": "object",
 	"required": ["version", "root"],
 	"additionalProperties": false,
@@ -36,7 +36,7 @@
 				{ "$ref": "#/$defs/SvgDoc" },
 				{ "$ref": "#/$defs/ConnectorDoc" }
 			],
-			"discriminator": { "propertyName": "type" }
+			"$comment": "Branches are tagged by the \"type\" field; each branch pins it with a const, which is what selects the matching branch."
 		},
 
 		"GroupChildDoc": {
@@ -51,7 +51,7 @@
 				{ "$ref": "#/$defs/StickyDoc" },
 				{ "$ref": "#/$defs/SvgDoc" }
 			],
-			"discriminator": { "propertyName": "type" }
+			"$comment": "Branches are tagged by the \"type\" field; each branch pins it with a const, which is what selects the matching branch."
 		},
 
 		"MetaDoc": {
@@ -121,15 +121,9 @@
 		},
 
 		"ConnectPointId": {
-			"description": "Named connection point on a shape.",
+			"description": "Named connection point on a shape's edge. The geometric center is not a connect point; use CenterAnchorSpec (\"kind\": \"center\") for the center.",
 			"type": "string",
-			"enum": [
-				"center",
-				"topCenter",
-				"rightCenter",
-				"bottomCenter",
-				"leftCenter"
-			]
+			"enum": ["topCenter", "rightCenter", "bottomCenter", "leftCenter"]
 		},
 
 		"StrokeStyle": {
@@ -138,16 +132,19 @@
 			"properties": {
 				"stroke": {
 					"description": "Stroke color as a CSS color string, or \"auto\" to follow the theme foreground (resolved at render time). Default: \"auto\"",
-					"type": "string"
+					"type": "string",
+					"default": "auto"
 				},
 				"strokeWidth": {
 					"description": "Stroke width in pixels. Default: 2",
 					"type": "number",
-					"minimum": 0
+					"minimum": 0,
+					"default": 2
 				},
 				"strokeDashType": {
 					"description": "Dash pattern. Default: \"solid\"",
-					"$ref": "#/$defs/StrokeDashType"
+					"allOf": [{ "$ref": "#/$defs/StrokeDashType" }],
+					"default": "solid"
 				}
 			}
 		},
@@ -158,7 +155,8 @@
 			"properties": {
 				"fill": {
 					"description": "Fill color as a CSS color string, or \"auto\" to follow the theme surface/panel background (resolved at render time). Default: \"transparent\"",
-					"type": "string"
+					"type": "string",
+					"default": "transparent"
 				}
 			}
 		},
@@ -169,36 +167,44 @@
 			"properties": {
 				"text": {
 					"description": "Text content to display. Default: \"\"",
-					"type": "string"
+					"type": "string",
+					"default": ""
 				},
 				"textType": {
 					"description": "How text is rendered. Default: \"text\"",
-					"$ref": "#/$defs/TextType"
+					"allOf": [{ "$ref": "#/$defs/TextType" }],
+					"default": "text"
 				},
 				"textAlign": {
 					"description": "Horizontal text alignment. Default: \"center\"",
-					"$ref": "#/$defs/TextAlign"
+					"allOf": [{ "$ref": "#/$defs/TextAlign" }],
+					"default": "center"
 				},
 				"verticalAlign": {
 					"description": "Vertical text alignment. Default: \"middle\"",
-					"$ref": "#/$defs/VerticalAlign"
+					"allOf": [{ "$ref": "#/$defs/VerticalAlign" }],
+					"default": "middle"
 				},
 				"fontColor": {
-					"description": "Font color as a CSS color string, or \"auto\" to follow the theme foreground (resolved at render time). Default: \"auto\" (sticky: \"#000000\")",
-					"type": "string"
+					"description": "Font color as a CSS color string, or \"auto\" to follow the theme foreground (resolved at render time). Default: \"auto\". NOTE: sticky notes override this default to \"#000000\" — see StickyDoc.fontColor.",
+					"type": "string",
+					"default": "auto"
 				},
 				"fontSize": {
 					"description": "Font size in pixels. Default: 16",
 					"type": "number",
-					"minimum": 1
+					"minimum": 1,
+					"default": 16
 				},
 				"fontFamily": {
 					"description": "Font family. Default: \"Noto Sans JP\"",
-					"type": "string"
+					"type": "string",
+					"default": "Noto Sans JP"
 				},
 				"fontWeight": {
 					"description": "Font weight (e.g. \"normal\", \"bold\", \"700\"). Default: \"normal\"",
-					"type": "string"
+					"type": "string",
+					"default": "normal"
 				}
 			}
 		},
@@ -208,20 +214,24 @@
 			"type": "object",
 			"properties": {
 				"rotation": {
-					"description": "Rotation angle in degrees. Default: 0",
-					"type": "number"
+					"description": "Rotation angle in degrees (clockwise). Default: 0",
+					"type": "number",
+					"default": 0
 				},
 				"flipX": {
 					"description": "Horizontal flip. Default: false",
-					"type": "boolean"
+					"type": "boolean",
+					"default": false
 				},
 				"flipY": {
 					"description": "Vertical flip. Default: false",
-					"type": "boolean"
+					"type": "boolean",
+					"default": false
 				},
 				"lockAspectRatio": {
 					"description": "Lock aspect ratio during resize. Default: false",
-					"type": "boolean"
+					"type": "boolean",
+					"default": false
 				}
 			}
 		},
@@ -254,7 +264,8 @@
 				"rx": {
 					"description": "Corner radius (SVG rx). Default: 0",
 					"type": "number",
-					"minimum": 0
+					"minimum": 0,
+					"default": 0
 				},
 				"stroke": { "$ref": "#/$defs/StrokeStyle/properties/stroke" },
 				"strokeWidth": { "$ref": "#/$defs/StrokeStyle/properties/strokeWidth" },
@@ -510,7 +521,11 @@
 				"verticalAlign": {
 					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
 				},
-				"fontColor": { "$ref": "#/$defs/TextStyle/properties/fontColor" },
+				"fontColor": {
+					"description": "Font color as a CSS color string, or \"auto\" to follow the theme foreground. Sticky notes override the usual \"auto\" default with \"#000000\" (black), because a sticky is drawn on a light paper-colored background. Default: \"#000000\"",
+					"type": "string",
+					"default": "#000000"
+				},
 				"fontSize": { "$ref": "#/$defs/TextStyle/properties/fontSize" },
 				"fontFamily": { "$ref": "#/$defs/TextStyle/properties/fontFamily" },
 				"fontWeight": { "$ref": "#/$defs/TextStyle/properties/fontWeight" },
@@ -594,15 +609,11 @@
 		},
 
 		"OwnerRef": {
-			"description": "Reference to an object on the canvas.",
+			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / ellipse / diamond / sticky (NOT polyline / polygon / group / svg / connector).",
 			"type": "object",
-			"required": ["type", "id"],
+			"required": ["id"],
 			"additionalProperties": false,
 			"properties": {
-				"type": {
-					"description": "Type of the target object.",
-					"type": "string"
-				},
 				"id": { "description": "ID of the target object.", "type": "string" }
 			}
 		},
@@ -644,7 +655,7 @@
 		"ConnectorDoc": {
 			"description": "Connector (arrow) linking two endpoints.",
 			"type": "object",
-			"required": ["id", "type", "points", "source", "target"],
+			"required": ["id", "type", "source", "target"],
 			"additionalProperties": false,
 			"properties": {
 				"id": { "description": "Unique identifier.", "type": "string" },
@@ -655,9 +666,10 @@
 				},
 				"meta": { "$ref": "#/$defs/MetaDoc" },
 				"points": {
-					"description": "Ordered list of intermediate waypoints from source to target, in world coordinates. Endpoint coordinates are NOT included; they are defined by source/target and resolved dynamically. Used only with \"routing\": \"straight\". Ignored under the default \"orthogonal\" routing (the path is derived at render time), so keep it an empty array unless you set \"routing\": \"straight\".",
+					"description": "Ordered list of intermediate waypoints from source to target, in world coordinates. Endpoint coordinates are NOT included; they are defined by source/target and resolved dynamically. Used only with \"routing\": \"straight\". Ignored under the default \"orthogonal\" routing (the path is derived at render time). Optional; omit it (defaults to an empty array) unless you set \"routing\": \"straight\" and want to route through explicit waypoints.",
 					"type": "array",
-					"items": { "$ref": "#/$defs/Point" }
+					"items": { "$ref": "#/$defs/Point" },
+					"default": []
 				},
 				"routing": {
 					"description": "How the path between endpoints is computed. \"orthogonal\" auto-generates a horizontal/vertical path at render time from the endpoint shapes (and ignores \"points\"). \"straight\" connects the endpoints with a straight line through any manual \"points\" waypoints. Optional; omitting it means \"orthogonal\" (the default). Set \"straight\" explicitly only when you want a straight line.",
@@ -686,7 +698,7 @@
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
 				"label": {
-					"description": "Optional text annotation drawn on the connector (an edge label such as \"Yes\"/\"No\"). A connector has NO top-level text; put the label here. Omit it for no label.",
+					"description": "Optional text annotation drawn on the connector (an edge label such as \"Yes\"/\"No\"). A connector has NO top-level text; put the label here. Omit it for no label. Typography is a SUBSET of the shape text vocabulary: only fontColor, fontSize, and fontWeight apply. A label has NO textType (it is always plain text, never markdown), textAlign, verticalAlign, or fontFamily — do not add those keys here.",
 					"type": "object",
 					"required": ["text"],
 					"additionalProperties": false,

@@ -24,3 +24,24 @@ export type ConnectorState = CreateObjectState<
 		label?: ConnectorLabel;
 	}
 >;
+
+/**
+ * Type guard to check if an object is ConnectorState.
+ *
+ * Connectors structurally pass isPoly (their points array holds only
+ * intermediate waypoints), so callers computing geometry must check this
+ * guard before isPoly to resolve the endpoints correctly.
+ *
+ * @param obj - The object to check
+ * @returns True if the object is ConnectorState, false otherwise
+ */
+export const isConnectorState = (obj: unknown): obj is ConnectorState => {
+	return (
+		typeof obj === "object" &&
+		obj !== null &&
+		"type" in obj &&
+		obj.type === "connector" &&
+		"source" in obj &&
+		"target" in obj
+	);
+};

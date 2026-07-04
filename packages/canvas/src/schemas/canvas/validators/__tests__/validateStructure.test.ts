@@ -42,7 +42,7 @@ const group = (id: string, children: unknown[]) => ({
 	children,
 });
 const ownedRef = (ownerId: string) => ({
-	owner: { type: "rect", id: ownerId },
+	owner: { id: ownerId },
 	anchor: { kind: "center" },
 });
 const connector = (id: string, source: unknown, target: unknown) => ({

@@ -1,13 +1,10 @@
-import { calcPolyBoundingBox, isTransformedFrame } from "@workspace/geometry";
-
-import { isPoly } from "../../../../schemas/objects/types/Poly";
-import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { calcObjectBoundingBox } from "../../../utils/calcObjectBoundingBox";
 
 /**
  * Returns the current center coordinates of the selected objects.
  * Multiple selection: uses the cx/cy of multiSelectGroup.
- * Single selection: computes cx/cy or the bounding box center depending on the object type.
+ * Single selection: uses the center of the object's bounding box.
  */
 export function getSelectionCenter(
 	state: CanvasControllerState,
@@ -27,23 +24,13 @@ export function getSelectionCenter(
 		return null;
 	}
 
-	if (obj.type === "group") {
-		const g = obj as GroupState;
-		return { cx: g.cx, cy: g.cy };
-	}
-	if (isTransformedFrame(obj)) {
-		return { cx: obj.cx, cy: obj.cy };
-	}
-	if (isPoly(obj)) {
-		const bbox = calcPolyBoundingBox(obj.points);
-		if (!bbox) {
-			return null;
-		}
-		return {
-			cx: (bbox.left + bbox.right) / 2,
-			cy: (bbox.top + bbox.bottom) / 2,
-		};
+	const bbox = calcObjectBoundingBox(obj, state.objects);
+	if (!bbox) {
+		return null;
 	}
 
-	return null;
+	return {
+		cx: (bbox.left + bbox.right) / 2,
+		cy: (bbox.top + bbox.bottom) / 2,
+	};
 }

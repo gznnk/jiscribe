@@ -1,16 +1,9 @@
-import {
-	calcAffineTransformedPoint,
-	calcBoundingBox,
-	calcOrientedFrameFromPoints,
-	calcPolyBoundingBox,
-	degreesToRadians,
-	isTransformedFrame,
-} from "@workspace/geometry";
-import type { Point, TransformedFrame } from "@workspace/geometry";
+import { calcOrientedFrameFromPoints } from "@workspace/geometry";
 
-import { isPoly } from "../../../../../../schemas/objects/types/Poly";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
+import { calcObjectsBoundingBox } from "../../../../../utils/calcObjectBoundingBox";
+import { collectObjectPoints } from "../../../../../utils/collectObjectPoints";
 
 /**
  * Computes the bounding box of the multiSelectGroup (accounting for rotation).
@@ -27,8 +20,11 @@ export function calcMultiSelectGroupBounds(
 
 	// When existingGroup is given, compute an OBB that accounts for its rotation/scale
 	if (existingGroup) {
-		// Collect all points of the children
-		const allPoints = collectChildPoints(allObjects, selectedIds);
+		// Collect all points of the selected objects (recursively expanding groups)
+		const allPoints = selectedIds.flatMap((selectedId) => {
+			const obj = allObjects[selectedId];
+			return obj ? collectObjectPoints(obj, allObjects) : [];
+		});
 		if (allPoints.length === 0) {
 			return null;
 		}
@@ -59,121 +55,15 @@ export function calcMultiSelectGroupBounds(
 	}
 
 	// When there is no existingGroup, compute an axis-aligned bounding box
-	const bounds = {
-		minX: Infinity,
-		maxX: -Infinity,
-		minY: Infinity,
-		maxY: -Infinity,
-	};
-	collectBounds(allObjects, selectedIds, bounds);
-
-	if (!isFinite(bounds.minX)) {
+	const bounds = calcObjectsBoundingBox(selectedIds, allObjects);
+	if (!bounds) {
 		return null;
 	}
 
-	const cx = (bounds.minX + bounds.maxX) / 2;
-	const cy = (bounds.minY + bounds.maxY) / 2;
-	const width = bounds.maxX - bounds.minX;
-	const height = bounds.maxY - bounds.minY;
-
-	return { cx, cy, width, height };
-}
-
-/**
- * Recursively traverses the children to update the bounding box.
- */
-function collectBounds(
-	objects: Record<string, ObjectState>,
-	childIds: string[],
-	bounds: { minX: number; maxX: number; minY: number; maxY: number },
-): void {
-	for (const childId of childIds) {
-		const child = objects[childId];
-		if (!child) {
-			continue;
-		}
-
-		if (child.type === "group") {
-			const nestedGroup = child as GroupState;
-			collectBounds(objects, nestedGroup.childIds, bounds);
-		} else if (isTransformedFrame(child)) {
-			const box = calcBoundingBox(child);
-			bounds.minX = Math.min(bounds.minX, box.left);
-			bounds.maxX = Math.max(bounds.maxX, box.right);
-			bounds.minY = Math.min(bounds.minY, box.top);
-			bounds.maxY = Math.max(bounds.maxY, box.bottom);
-		} else if (isPoly(child)) {
-			// For Poly-based shapes (Polyline, Polygon), compute the bounding box directly from the points array
-			const bbox = calcPolyBoundingBox(child.points);
-			if (bbox) {
-				bounds.minX = Math.min(bounds.minX, bbox.left);
-				bounds.maxX = Math.max(bounds.maxX, bbox.right);
-				bounds.minY = Math.min(bounds.minY, bbox.top);
-				bounds.maxY = Math.max(bounds.maxY, bbox.bottom);
-			}
-		}
-	}
-}
-
-/**
- * Recursively collects all points of the children.
- * Frame-based shapes contribute corner points; Poly-based shapes contribute vertices.
- */
-function collectChildPoints(
-	objects: Record<string, ObjectState>,
-	childIds: string[],
-): Point[] {
-	const points: Point[] = [];
-
-	for (const childId of childIds) {
-		const child = objects[childId];
-		if (!child) {
-			continue;
-		}
-
-		if (child.type === "group") {
-			const nestedGroup = child as GroupState;
-			points.push(...collectChildPoints(objects, nestedGroup.childIds));
-		} else if (isTransformedFrame(child)) {
-			// For objects with a TransformedFrame, add their corner points
-			points.push(...getFrameCornerPoints(child));
-		} else if (isPoly(child)) {
-			// For Poly-based shapes, add the points array directly
-			points.push(...child.points);
-		}
-	}
-
-	return points;
-}
-
-/**
- * Gets the four corner points of a TransformedFrame.
- */
-function getFrameCornerPoints(frame: TransformedFrame): Point[] {
-	const { cx, cy, width, height, rotation = 0, scaleX = 1, scaleY = 1 } = frame;
-
-	const halfWidth = width / 2;
-	const halfHeight = height / 2;
-
-	// The four corners in the local coordinate system
-	const localCorners: Point[] = [
-		{ x: -halfWidth, y: -halfHeight }, // top-left
-		{ x: halfWidth, y: -halfHeight }, // top-right
-		{ x: halfWidth, y: halfHeight }, // bottom-right
-		{ x: -halfWidth, y: halfHeight }, // bottom-left
-	];
-
-	// Apply the affine transform to convert to the global coordinate system
-	const radians = degreesToRadians(rotation);
-	return localCorners.map((corner) =>
-		calcAffineTransformedPoint(
-			corner.x,
-			corner.y,
-			scaleX,
-			scaleY,
-			radians,
-			cx,
-			cy,
-		),
-	);
+	return {
+		cx: (bounds.left + bounds.right) / 2,
+		cy: (bounds.top + bounds.bottom) / 2,
+		width: bounds.right - bounds.left,
+		height: bounds.bottom - bounds.top,
+	};
 }

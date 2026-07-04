@@ -24,11 +24,11 @@ export const twoRectsWithConnectorDoc: CanvasDoc = {
 			type: "connector",
 			points: [],
 			source: {
-				owner: { type: "rect", id: "rect-1" },
+				owner: { id: "rect-1" },
 				anchor: { kind: "center" },
 			},
 			target: {
-				owner: { type: "rect", id: "rect-2" },
+				owner: { id: "rect-2" },
 				anchor: { kind: "center" },
 			},
 		},

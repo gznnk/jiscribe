@@ -13,16 +13,12 @@ beforeAll(() => {
 const freeEndpoint = (x: number, y: number): EndpointRef =>
 	({ anchor: { kind: "free", point: { x, y } } }) as EndpointRef;
 
-const centerEndpoint = (type: string, id: string): EndpointRef =>
-	({ owner: { type, id }, anchor: { kind: "center" } }) as EndpointRef;
+const centerEndpoint = (id: string): EndpointRef =>
+	({ owner: { id }, anchor: { kind: "center" } }) as EndpointRef;
 
-const connectPointEndpoint = (
-	type: string,
-	id: string,
-	anchorId: string,
-): EndpointRef =>
+const connectPointEndpoint = (id: string, anchorId: string): EndpointRef =>
 	({
-		owner: { type, id },
+		owner: { id },
 		anchor: { kind: "connectPoint", id: anchorId },
 	}) as EndpointRef;
 
@@ -92,7 +88,7 @@ describe("resolveConnectorPoints", () => {
 			// rect is 100x100 centered at the origin. Placing a waypoint directly below makes source emerge near the bottom edge (0, 50).
 			const src = rectObj("r1", 0, 0, 100, 100);
 			const conn = connector(
-				centerEndpoint("rect", "r1"),
+				centerEndpoint("r1"),
 				freeEndpoint(300, 0),
 				[{ x: 0, y: 300 }],
 				"straight",
@@ -108,7 +104,7 @@ describe("resolveConnectorPoints", () => {
 		it("center-free → source is adjusted to the rect's outline point", () => {
 			const src = rectObj("r1", 0, 0, 100, 100);
 			const conn = connector(
-				centerEndpoint("rect", "r1"),
+				centerEndpoint("r1"),
 				freeEndpoint(200, 0),
 				[],
 				"straight",
@@ -124,7 +120,7 @@ describe("resolveConnectorPoints", () => {
 			const tgt = rectObj("r2", 0, 0, 100, 100);
 			const conn = connector(
 				freeEndpoint(-200, 0),
-				centerEndpoint("rect", "r2"),
+				centerEndpoint("r2"),
 				[],
 				"straight",
 			);
@@ -137,10 +133,7 @@ describe("resolveConnectorPoints", () => {
 
 	describe("unresolvable cases", () => {
 		it("center anchor with null owner object → source cannot be resolved, so null", () => {
-			const conn = connector(
-				centerEndpoint("rect", "r1"),
-				freeEndpoint(100, 0),
-			);
+			const conn = connector(centerEndpoint("r1"), freeEndpoint(100, 0));
 			const result = resolveConnectorPoints(conn, null, null);
 			// center anchor with null obj → resolveEndpoint returns null → null
 			expect(result).toBeNull();
@@ -149,10 +142,7 @@ describe("resolveConnectorPoints", () => {
 		it("both ends center and mutually interior → adjustToOutline returns null → null", () => {
 			// center to center of the same rect (within shape) → both ends may become null
 			const src = rectObj("r1", 0, 0, 200, 200);
-			const conn = connector(
-				centerEndpoint("rect", "r1"),
-				centerEndpoint("rect", "r1"),
-			);
+			const conn = connector(centerEndpoint("r1"), centerEndpoint("r1"));
 			// the direction from center to center makes adjustToOutline return null
 			const result = resolveConnectorPoints(conn, src, src);
 			expect(result).toBeNull();
@@ -169,8 +159,8 @@ describe("resolveConnectorPoints", () => {
 			const src = rectObj("r1", 100, 100, 100, 60); // right-edge center = (150,100)
 			const tgt = rectObj("r2", 400, 300, 100, 60); // left-edge center = (350,300)
 			const conn = connector(
-				connectPointEndpoint("rect", "r1", "rightCenter"),
-				connectPointEndpoint("rect", "r2", "leftCenter"),
+				connectPointEndpoint("r1", "rightCenter"),
+				connectPointEndpoint("r2", "leftCenter"),
 				[],
 				"orthogonal",
 			);
@@ -186,7 +176,7 @@ describe("resolveConnectorPoints", () => {
 
 		it("the connectPoint exit direction follows the shape's rotation", () => {
 			const conn = connector(
-				connectPointEndpoint("rect", "r1", "rightCenter"),
+				connectPointEndpoint("r1", "rightCenter"),
 				freeEndpoint(400, 400),
 				[],
 				"orthogonal",
@@ -221,8 +211,8 @@ describe("resolveConnectorPoints", () => {
 
 		it("moving a shape recalculates the route (follows movement)", () => {
 			const conn = connector(
-				connectPointEndpoint("rect", "r1", "rightCenter"),
-				connectPointEndpoint("rect", "r2", "leftCenter"),
+				connectPointEndpoint("r1", "rightCenter"),
+				connectPointEndpoint("r2", "leftCenter"),
 				[],
 				"orthogonal",
 			);
@@ -244,8 +234,8 @@ describe("resolveConnectorPoints", () => {
 			const tgt = rectObj("r2", 400, 300, 100, 60); // left-edge center = (350,300)
 			// routing is not passed (undefined).
 			const conn = connector(
-				connectPointEndpoint("rect", "r1", "rightCenter"),
-				connectPointEndpoint("rect", "r2", "leftCenter"),
+				connectPointEndpoint("r1", "rightCenter"),
+				connectPointEndpoint("r2", "leftCenter"),
 			);
 			const result = resolveConnectorPoints(conn, src, tgt);
 			expect(result).not.toBeNull();

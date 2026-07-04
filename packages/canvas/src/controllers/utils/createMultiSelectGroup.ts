@@ -1,11 +1,5 @@
-import {
-	calcBoundingBox,
-	calcPolyBoundingBox,
-	isTransformedFrame,
-} from "@workspace/geometry";
-
+import { calcObjectsBoundingBox } from "./calcObjectBoundingBox";
 import { MULTI_SELECT_GROUP } from "../../constants/multiSelectGroup";
-import { isPoly } from "../../schemas/objects/types/Poly";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { GroupState } from "../../states/objects/primitives/group/GroupState";
 
@@ -29,25 +23,18 @@ export function createMultiSelectGroup(
 		return null; // Do not group when one or fewer objects are selected
 	}
 
-	// Compute the bounding box recursively
-	const bounds = {
-		minX: Infinity,
-		maxX: -Infinity,
-		minY: Infinity,
-		maxY: -Infinity,
-	};
-	collectBounds(allObjects, selectedIds, bounds);
+	const bounds = calcObjectsBoundingBox(selectedIds, allObjects);
 
 	// No valid points were found
-	if (!isFinite(bounds.minX)) {
+	if (!bounds) {
 		return null;
 	}
 
 	// Compute center, width, and height from the bounding box
-	const cx = (bounds.minX + bounds.maxX) / 2;
-	const cy = (bounds.minY + bounds.maxY) / 2;
-	const width = bounds.maxX - bounds.minX;
-	const height = bounds.maxY - bounds.minY;
+	const cx = (bounds.left + bounds.right) / 2;
+	const cy = (bounds.top + bounds.bottom) / 2;
+	const width = bounds.right - bounds.left;
+	const height = bounds.bottom - bounds.top;
 
 	// Preserve the existing lockAspectRatio, defaulting to true
 	const lockAspectRatio = existingMultiSelectGroup?.lockAspectRatio ?? true;
@@ -67,42 +54,4 @@ export function createMultiSelectGroup(
 		childIds: selectedIds,
 		lockAspectRatio,
 	} as unknown as GroupState;
-}
-
-/**
- * Recursively traverse children and update the bounding box.
- */
-function collectBounds(
-	objects: Record<string, ObjectState>,
-	childIds: string[],
-	bounds: { minX: number; maxX: number; minY: number; maxY: number },
-): void {
-	for (const childId of childIds) {
-		const child = objects[childId];
-		if (!child) {
-			continue;
-		}
-
-		if (child.type === "group") {
-			// For a group, process its children recursively
-			const nestedGroup = child as GroupState;
-			collectBounds(objects, nestedGroup.childIds, bounds);
-		} else if (isTransformedFrame(child)) {
-			// Get the TransformedFrame's bounding box and expand the range
-			const box = calcBoundingBox(child);
-			bounds.minX = Math.min(bounds.minX, box.left);
-			bounds.maxX = Math.max(bounds.maxX, box.right);
-			bounds.minY = Math.min(bounds.minY, box.top);
-			bounds.maxY = Math.max(bounds.maxY, box.bottom);
-		} else if (isPoly(child)) {
-			// For Poly-based shapes (Polyline, Polygon), compute the bounding box directly from the points array
-			const bbox = calcPolyBoundingBox(child.points);
-			if (bbox) {
-				bounds.minX = Math.min(bounds.minX, bbox.left);
-				bounds.maxX = Math.max(bounds.maxX, bbox.right);
-				bounds.minY = Math.min(bounds.minY, bbox.top);
-				bounds.maxY = Math.max(bounds.maxY, bbox.bottom);
-			}
-		}
-	}
 }

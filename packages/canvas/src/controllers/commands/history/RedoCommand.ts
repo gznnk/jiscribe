@@ -1,4 +1,5 @@
 import { canvasToState } from "../../../states/canvas/CanvasMapper";
+import { resetUiState } from "../../utils/resetUiState";
 import type { Command } from "../CommandTypes";
 
 /**
@@ -48,31 +49,12 @@ export const RedoCommand: Command = {
 
 		return {
 			...restoredState,
+			...resetUiState(),
 			viewport: state.viewport, // Preserve viewport
-			selectedIds: [],
-			eventStartSnapshot: null,
-			keyPointsCache: {},
-			snapCandidatesCache: null,
-			edgeScrollEnabled: false,
 			commitVersion: state.commitVersion, // Don't update - this is history restoration, not a new commit
 			saveVersion: state.saveVersion + 1,
 			saveNonce: crypto.randomUUID(),
 			historyCoalesce: { recorded: null, pending: null }, // History navigation is a coalescing boundary
-			contextMenuPosition: null,
-			shapeLibraryDrag: null,
-			areaSelection: null,
-			objectMenuOpenId: null,
-			multiSelectGroup: null,
-			textEditState: null,
-			pendingConnector: null,
-			selectedConnectorId: null,
-			selectedVertex: null,
-			editingConnectorId: null,
-			editingEndpoint: null,
-			snapFeedback: null,
-			axisLockFeedback: null,
-			shapeDrawing: null,
-			lastDuplicate: null,
 			internalClipboard: state.internalClipboard,
 			history: {
 				past: [...state.history.past, state.history.present],

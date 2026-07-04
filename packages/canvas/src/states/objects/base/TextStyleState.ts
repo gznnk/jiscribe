@@ -1,8 +1,5 @@
-import {
-	isCssColor,
-	isNumber,
-	isString,
-} from "../../../../../basic-validators/src";
+import { isCssColor, isNumber, isString } from "@workspace/basic-validators";
+
 import type { TextAlign } from "../../../schemas/objects/types/TextAlign";
 import { isTextAlign } from "../../../schemas/objects/types/TextAlign";
 import type { TextType } from "../../../schemas/objects/types/TextType";

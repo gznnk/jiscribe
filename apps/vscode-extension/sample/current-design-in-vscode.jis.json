@@ -1673,7 +1673,6 @@
 			"points": [],
 			"source": {
 				"owner": {
-					"type": "rect",
 					"id": "flow-start"
 				},
 				"anchor": {
@@ -1683,7 +1682,6 @@
 			},
 			"target": {
 				"owner": {
-					"type": "ellipse",
 					"id": "flow-process"
 				},
 				"anchor": {
@@ -1702,7 +1700,6 @@
 			"points": [],
 			"source": {
 				"owner": {
-					"type": "ellipse",
 					"id": "flow-process"
 				},
 				"anchor": {
@@ -1712,7 +1709,6 @@
 			},
 			"target": {
 				"owner": {
-					"type": "rect",
 					"id": "flow-done"
 				},
 				"anchor": {

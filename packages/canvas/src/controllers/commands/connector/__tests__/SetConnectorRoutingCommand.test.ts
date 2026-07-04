@@ -23,13 +23,13 @@ const makeConnector = (
 		points,
 		source: owners?.sourceId
 			? {
-					owner: { type: "rect", id: owners.sourceId },
+					owner: { id: owners.sourceId },
 					anchor: { kind: "center" },
 				}
 			: { anchor: { kind: "free", point: { x: 0, y: 0 } } },
 		target: owners?.targetId
 			? {
-					owner: { type: "rect", id: owners.targetId },
+					owner: { id: owners.targetId },
 					anchor: { kind: "center" },
 				}
 			: { anchor: { kind: "free", point: { x: 10, y: 10 } } },

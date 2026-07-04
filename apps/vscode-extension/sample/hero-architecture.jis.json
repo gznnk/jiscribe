@@ -123,7 +123,6 @@
 			],
 			"source": {
 				"owner": {
-					"type": "rect",
 					"id": "browser"
 				},
 				"anchor": {
@@ -132,7 +131,6 @@
 			},
 			"target": {
 				"owner": {
-					"type": "rect",
 					"id": "frontend"
 				},
 				"anchor": {
@@ -158,7 +156,6 @@
 			],
 			"source": {
 				"owner": {
-					"type": "rect",
 					"id": "frontend"
 				},
 				"anchor": {
@@ -167,7 +164,6 @@
 			},
 			"target": {
 				"owner": {
-					"type": "rect",
 					"id": "api"
 				},
 				"anchor": {
@@ -193,7 +189,6 @@
 			],
 			"source": {
 				"owner": {
-					"type": "rect",
 					"id": "api"
 				},
 				"anchor": {
@@ -202,7 +197,6 @@
 			},
 			"target": {
 				"owner": {
-					"type": "rect",
 					"id": "postgres"
 				},
 				"anchor": {
@@ -228,7 +222,6 @@
 			],
 			"source": {
 				"owner": {
-					"type": "rect",
 					"id": "api"
 				},
 				"anchor": {
@@ -237,7 +230,6 @@
 			},
 			"target": {
 				"owner": {
-					"type": "rect",
 					"id": "redis"
 				},
 				"anchor": {
@@ -263,7 +255,6 @@
 			],
 			"source": {
 				"owner": {
-					"type": "rect",
 					"id": "api"
 				},
 				"anchor": {
@@ -272,7 +263,6 @@
 			},
 			"target": {
 				"owner": {
-					"type": "rect",
 					"id": "auth"
 				},
 				"anchor": {

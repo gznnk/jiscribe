@@ -1,10 +1,15 @@
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import type { Viewport } from "../../../../states/canvas/Viewport";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { PolylineState } from "../../../../states/objects/primitives/polyline/PolylineState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { initializeObjectRegistry } from "../../../setup/initializeObjectRegistry";
 import { ZoomToSelectionCommand } from "../ZoomToSelectionCommand";
+
+beforeAll(() => {
+	initializeObjectRegistry();
+});
 
 const makeRect = (id: string, cx: number, cy: number): ObjectState =>
 	({
@@ -87,6 +92,31 @@ describe("ZoomToSelectionCommand", () => {
 		});
 		const next = ZoomToSelectionCommand.execute(state);
 		// Fits to width 200 -> 904/200 = 4.52 (the height axis is excluded from candidates)
+		expect(next.viewport.zoom).toBeCloseTo(4.52, 2);
+		const center = centerOf(next.viewport);
+		expect(center.x).toBeCloseTo(500, 2);
+		expect(center.y).toBeCloseTo(500, 2);
+	});
+
+	it("fits a selected connector using its resolved endpoints, not just its waypoints", () => {
+		// A straight connector has an empty points array; fitting must use the
+		// resolved endpoints (400,500)-(600,500) -> width 200 centered at (500,500).
+		const connector: ObjectState = {
+			id: "c1",
+			type: "connector",
+			points: [],
+			routing: "straight",
+			source: { anchor: { kind: "free", point: { x: 400, y: 500 } } },
+			target: { anchor: { kind: "free", point: { x: 600, y: 500 } } },
+		} as unknown as ObjectState;
+		const state = makeState({
+			selectedIds: ["c1"],
+			objects: { c1: connector },
+			viewport: { minX: 123, minY: 456, zoom: 2 },
+		});
+		const next = ZoomToSelectionCommand.execute(state);
+		// Previously the connector fell into the isPoly branch (empty points -> no-op)
+		expect(next).not.toBe(state);
 		expect(next.viewport.zoom).toBeCloseTo(4.52, 2);
 		const center = centerOf(next.viewport);
 		expect(center.x).toBeCloseTo(500, 2);

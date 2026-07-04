@@ -83,10 +83,23 @@ describe("getSelectionCenter", () => {
 		expect(getSelectionCenter(state, ["r1", "r2"])).toBeNull();
 	});
 
-	it("single group → cx/cy", () => {
+	it("single group → center of the children's union bounding box", () => {
+		const r = makeRect("r1", 30, 40);
+		const g = {
+			...makeGroup("g1", 999, 999), // stored frame is ignored; children win
+			childIds: ["r1"],
+		} as unknown as ObjectState;
+		const state = makeState({
+			selectedIds: ["g1"],
+			objects: { g1: g, r1: r },
+		});
+		expect(getSelectionCenter(state, ["g1"])).toEqual({ cx: 30, cy: 40 });
+	});
+
+	it("single group without valid children → null", () => {
 		const g = makeGroup("g1", 10, 20);
 		const state = makeState({ selectedIds: ["g1"], objects: { g1: g } });
-		expect(getSelectionCenter(state, ["g1"])).toEqual({ cx: 10, cy: 20 });
+		expect(getSelectionCenter(state, ["g1"])).toBeNull();
 	});
 
 	it("single rect (TransformedFrame) → cx/cy", () => {

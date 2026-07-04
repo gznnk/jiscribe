@@ -1,6 +1,5 @@
 import type { Dimensions } from "@workspace/geometry";
 
-import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { ClipboardData } from "../commands/selection/ClipboardData";
 import type { Gesture } from "../gestures/recognizer/GestureRecognizerTypes";
@@ -56,22 +55,6 @@ export type EndTextEditAction = {
 };
 
 /**
- * Undo action - restores previous state from history
- */
-export type UndoAction = {
-	type: "UNDO";
-	doc: CanvasDoc; // document to restore
-};
-
-/**
- * Redo action - restores next state from history
- */
-export type RedoAction = {
-	type: "REDO";
-	doc: CanvasDoc; // document to restore
-};
-
-/**
  * Menu property update action - handles real-time preview and commit from ObjectMenu inputs
  */
 export type MenuPropertyUpdateAction = {
@@ -109,8 +92,6 @@ export type CanvasAction =
 	| CommandAction
 	| UpdateTextEditAction
 	| EndTextEditAction
-	| UndoAction
-	| RedoAction
 	| MenuPropertyUpdateAction
 	| PasteAction
 	| CloseContextMenuAction;

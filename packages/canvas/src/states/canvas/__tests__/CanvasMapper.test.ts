@@ -89,7 +89,7 @@ describe("CanvasMapper", () => {
 		}) as unknown as ObjectDoc;
 
 	const ownedRef = (rectId: string): unknown => ({
-		owner: { type: "rect", id: rectId },
+		owner: { id: rectId },
 		anchor: { kind: "center" },
 	});
 

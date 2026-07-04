@@ -32,6 +32,9 @@ const connector = (id: string): ObjectState =>
 		id,
 		type: "connector",
 		points: [{ x: 0, y: 0 }],
+		routing: "straight",
+		source: { anchor: { kind: "free", point: { x: 10, y: 10 } } },
+		target: { anchor: { kind: "free", point: { x: 40, y: 40 } } },
 	}) as unknown as ObjectState;
 
 describe("collectIdsInArea", () => {

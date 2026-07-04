@@ -318,11 +318,11 @@ A connector object placed in `root` (top level, mixed with the objects in z-orde
 	"type": "connector",
 	"points": [],
 	"source": {
-		"owner": { "type": "rect", "id": "rect-1" },
+		"owner": { "id": "rect-1" },
 		"anchor": { "kind": "connectPoint", "id": "rightCenter" }
 	},
 	"target": {
-		"owner": { "type": "ellipse", "id": "ellipse-1" },
+		"owner": { "id": "ellipse-1" },
 		"anchor": { "kind": "connectPoint", "id": "leftCenter" }
 	},
 	"stroke": "#374151",
@@ -369,11 +369,11 @@ label.
 {
 	"type": "connector",
 	"source": {
-		"owner": { "type": "diamond", "id": "d1" },
+		"owner": { "id": "d1" },
 		"anchor": { "kind": "connectPoint", "id": "rightCenter" }
 	},
 	"target": {
-		"owner": { "type": "rect", "id": "r1" },
+		"owner": { "id": "r1" },
 		"anchor": { "kind": "connectPoint", "id": "leftCenter" }
 	},
 	"label": { "text": "Yes" }
@@ -404,7 +404,7 @@ Choose whether the endpoint is fixed to an object (`OwnedEndpointRef`) or a free
 
 ```json
 {
-	"owner": { "type": "rect", "id": "rect-1" },
+	"owner": { "id": "rect-1" },
 	"anchor": { "kind": "connectPoint", "id": "rightCenter" }
 }
 ```
@@ -416,10 +416,10 @@ Options for `anchor.kind`:
 | `"center"`       | none                 | Center of the object.       |
 | `"connectPoint"` | `id: ConnectPointId` | A predefined connect point. |
 
-`ConnectPointId` options: `"center"` / `"topCenter"` / `"rightCenter"` / `"bottomCenter"` / `"leftCenter"`
+`ConnectPointId` options: `"topCenter"` / `"rightCenter"` / `"bottomCenter"` / `"leftCenter"`. For the center, use `{ "kind": "center" }` (not a `connectPoint`).
 
-`owner.type` may be **only `rect`, `ellipse`, `diamond`, or `sticky`** — these are
-the connectable types. A `polyline`, `polygon`, `group`, `svg`, or `connector`
+The object referenced by `owner.id` may be **only a `rect`, `ellipse`, `diamond`, or
+`sticky`** — these are the connectable types. A `polyline`, `polygon`, `group`, `svg`, or `connector`
 **cannot** be an endpoint owner; the document is rejected if one is referenced. To
 anchor a connector near such a shape, use a `FreeEndpointRef` instead.
 
@@ -570,11 +570,11 @@ A minimal diagram with a rectangle, an ellipse, and a connector.
 			"type": "connector",
 			"points": [],
 			"source": {
-				"owner": { "type": "rect", "id": "start" },
+				"owner": { "id": "start" },
 				"anchor": { "kind": "connectPoint", "id": "rightCenter" }
 			},
 			"target": {
-				"owner": { "type": "ellipse", "id": "process" },
+				"owner": { "id": "process" },
 				"anchor": { "kind": "connectPoint", "id": "leftCenter" }
 			},
 			"stroke": "#374151",

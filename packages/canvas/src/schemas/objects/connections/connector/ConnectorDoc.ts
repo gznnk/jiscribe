@@ -1,3 +1,6 @@
+import type { Point } from "@workspace/geometry";
+import type { Prettify } from "@workspace/utility-types";
+
 import type { FillStyleDoc } from "../../base/FillStyleDoc";
 import type { StrokeStyleDoc } from "../../base/StrokeStyleDoc";
 import type { TextStyleDoc } from "../../base/TextStyleDoc";
@@ -58,17 +61,30 @@ declare const ConnectorDocBrand: unique symbol;
  * When `routing` is `"orthogonal"` (the default when omitted), the path is auto-generated at render
  * time and `points` is unused (always empty; derived values are not persisted). Specify `"straight"`
  * explicitly only when a straight line is desired.
+ *
+ * Unlike polyline/polygon — whose `points` *is* the shape and is required — a connector's waypoints
+ * are optional here (unspecified means none). The shared `Poly` geometry types them as required, so
+ * we override just this key back to optional; `ConnectorMapper` normalizes an absent value to `[]`,
+ * keeping `ConnectorState.points` always present (Doc optional → State required).
  */
-export type ConnectorDoc = CreateObjectType<
-	typeof ConnectorFeatures,
-	typeof ConnectorDocBrand,
-	{
-		source: EndpointRef;
-		target: EndpointRef;
-		routing?: ConnectorRouting;
-		startArrow?: ArrowType;
-		endArrow?: ArrowType;
-		/** Annotation on the connector. Omitted means no label. */
-		label?: ConnectorLabel;
+export type ConnectorDoc = Prettify<
+	Omit<
+		CreateObjectType<
+			typeof ConnectorFeatures,
+			typeof ConnectorDocBrand,
+			{
+				source: EndpointRef;
+				target: EndpointRef;
+				routing?: ConnectorRouting;
+				startArrow?: ArrowType;
+				endArrow?: ArrowType;
+				/** Annotation on the connector. Omitted means no label. */
+				label?: ConnectorLabel;
+			}
+		>,
+		"points"
+	> & {
+		/** Intermediate waypoints (source → target). Omitted means none (a straight connector). */
+		points?: Point[];
 	}
 >;

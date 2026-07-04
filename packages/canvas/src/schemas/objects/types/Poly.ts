@@ -1,6 +1,5 @@
 import { isArray, isObject } from "@workspace/basic-validators";
-import { isPoint } from "@workspace/geometry";
-import type { Point } from "@workspace/geometry/src/types/Point";
+import { isPoint, type Point } from "@workspace/geometry";
 
 /**
  * Poly shape defined by an array of points.

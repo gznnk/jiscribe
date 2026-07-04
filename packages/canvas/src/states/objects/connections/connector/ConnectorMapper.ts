@@ -1,5 +1,3 @@
-import type { Point } from "@workspace/geometry";
-
 import type { ConnectorState } from "./ConnectorState";
 import type { ConnectorDoc } from "../../../../schemas/objects/connections/connector/ConnectorDoc";
 import type {
@@ -22,7 +20,8 @@ export const connectorToState: DocToStateMapper<
 		// points holds only the intermediate waypoints in source → target order.
 		// Rendering produces a polyline passing through these waypoints (the
 		// authoritative endpoints are the source / target EndpointRefs).
-		points: (doc.points ?? []) as Point[],
+		// Doc-side points is optional; normalize an absent value to [] so State always has it.
+		points: doc.points ?? [],
 		source: doc.source,
 		target: doc.target,
 		routing: doc.routing,
