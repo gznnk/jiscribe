@@ -10,17 +10,16 @@
 
 `CanvasAction`（`controllers/reducer/CanvasActions.ts`）は次のユニオン。
 
-| アクション                           | 役割                                            | 委譲先                                                            |
-| ------------------------------------ | ----------------------------------------------- | ----------------------------------------------------------------- |
-| `GESTURE`                            | ポインタ/ホイール由来のジェスチャー             | `handleGesture` → [ジェスチャシステム](./04-gesture-system.ja.md) |
-| `COMMAND`                            | ショートカット/メニュー/ツールバーのコマンド    | `handleCommand` → [コマンドシステム](./05-command-system.ja.md)   |
-| `PASTE`                              | クリップボードデータの適用                      | `handlePaste`                                                     |
-| `MENU_PROPERTY_UPDATE`               | ObjectMenu の入力（プレビュー / コミット）      | `handlePropertyUpdate`                                            |
-| `SYNC_EXTERNAL`                      | 外部（ホスト）からの doc 取り込み               | → [外部同期](./07-external-sync.ja.md)                            |
-| `CONTAINER_RESIZE`                   | ビューポート寸法の更新                          | （インライン）                                                    |
-| `UPDATE_TEXT_EDIT` / `END_TEXT_EDIT` | テキスト編集中の更新 / 確定・キャンセル         | `commitTextEditIfNeeded`                                          |
-| `UNDO` / `REDO`                      | 履歴からの復元（復元対象 `CanvasDoc` を載せる） | （履歴）                                                          |
-| `CLOSE_CONTEXT_MENU`                 | コンテキストメニューを閉じるだけ                | （インライン）                                                    |
+| アクション                           | 役割                                                           | 委譲先                                                            |
+| ------------------------------------ | -------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `GESTURE`                            | ポインタ/ホイール由来のジェスチャー                            | `handleGesture` → [ジェスチャシステム](./04-gesture-system.ja.md) |
+| `COMMAND`                            | ショートカット/メニュー/ツールバーのコマンド（undo/redo 含む） | `handleCommand` → [コマンドシステム](./05-command-system.ja.md)   |
+| `PASTE`                              | クリップボードデータの適用                                     | `handlePaste`                                                     |
+| `MENU_PROPERTY_UPDATE`               | ObjectMenu の入力（プレビュー / コミット）                     | `handlePropertyUpdate`                                            |
+| `SYNC_EXTERNAL`                      | 外部（ホスト）からの doc 取り込み                              | → [外部同期](./07-external-sync.ja.md)                            |
+| `CONTAINER_RESIZE`                   | ビューポート寸法の更新                                         | （インライン）                                                    |
+| `UPDATE_TEXT_EDIT` / `END_TEXT_EDIT` | テキスト編集中の更新 / 確定・キャンセル                        | `commitTextEditIfNeeded`                                          |
+| `CLOSE_CONTEXT_MENU`                 | コンテキストメニューを閉じるだけ                               | （インライン）                                                    |
 
 各ハンドラ（`handleGesture` / `handleCommand` / `handlePaste` …）は
 **`(state) => state` の純粋関数**として実装され、副作用を持たない。

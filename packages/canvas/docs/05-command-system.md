@@ -73,8 +73,9 @@ onto `past` and records the history. Consecutive operations (such as repeated nu
 single entry within a time window. See [State Update Flow](./06-state-update-flow.md) for the details of
 recording and collapsing.
 
-The `Undo` / `Redo` commands themselves are dispatched as dedicated actions (`UNDO` / `REDO`) carrying the
-`CanvasDoc` to be restored.
+`Undo` / `Redo` are ordinary commands: like every other command they run through the `COMMAND` action
+(`handleCommand`), and their `execute` restores `present` from `past` / `future` (there is no dedicated
+`UNDO` / `REDO` action).
 
 ## Clipboard: copy / cut / paste / duplicate
 

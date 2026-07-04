@@ -1,5 +1,5 @@
 import type { Frame } from "@workspace/geometry";
-import type { Prettify } from "@workspace/utility-types/src/Prettify";
+import type { Prettify } from "@workspace/utility-types";
 
 import type { GroupFeatures } from "../../../../schemas/objects/primitives/group/GroupDoc";
 import type { CreateObjectState } from "../../types/CreateObjectState";
