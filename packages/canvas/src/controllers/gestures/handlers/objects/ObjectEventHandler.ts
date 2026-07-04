@@ -372,13 +372,18 @@ export const ObjectEventHandler: GestureHandler = {
 	},
 
 	handle(state, event) {
-		// Skip commit only for a doubleClick on the object currently being edited (to continue editing).
-		// Otherwise (including a doubleClick on a non-text object), commit and clear.
+		// Skip commit for any tap (pressed / click / doubleClick) on the object currently being edited
+		// so editing continues. A re-double-click arrives as `pressed → click → pressed → doubleClick`;
+		// committing on the leading pressed would clear textEditState and make the doubleClick re-edit
+		// path below unreachable. Drag and non-target taps still commit as before.
 		let nextState = state;
-		const isDoubleClickOnCurrentEditTarget =
-			event.type === "doubleClick" &&
-			state.textEditState?.objectId === event.targetId;
-		if (!isDoubleClickOnCurrentEditTarget) {
+		const isTapOnCurrentEditTarget =
+			(event.type === "pressed" ||
+				event.type === "click" ||
+				event.type === "doubleClick") &&
+			state.textEditState != null &&
+			state.textEditState.objectId === event.targetId;
+		if (!isTapOnCurrentEditTarget) {
 			nextState = commitTextEditIfNeeded(state);
 		}
 

@@ -86,6 +86,96 @@ const makeDragEvent = (
 const movedRect = (state: CanvasControllerState) =>
 	state.objects["rect-1"] as unknown as { cx: number; cy: number };
 
+const makeTextRect = (id: string, text: string): ObjectState =>
+	({
+		id,
+		type: "rect",
+		cx: 0,
+		cy: 0,
+		width: SIZE,
+		height: SIZE,
+		text,
+	}) as unknown as ObjectState;
+
+/** State while editing `editingId`'s text, with a pending (uncommitted) `pendingText`. */
+const makeEditState = (
+	editingId: string,
+	objectText: string,
+	pendingText: string,
+): CanvasControllerState =>
+	({
+		objects: {
+			[editingId]: makeTextRect(editingId, objectText),
+			"rect-2": makeTextRect("rect-2", "other"),
+		},
+		rootIds: [editingId, "rect-2"],
+		selectedIds: [],
+		selectedConnectorId: null,
+		selectedVertex: null,
+		multiSelectGroup: null,
+		textEditState: { objectId: editingId, text: pendingText },
+		commitVersion: 5,
+		contextMenuPosition: { x: 1, y: 1 },
+		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
+	}) as unknown as CanvasControllerState;
+
+const makeTapEvent = (
+	type: "pressed" | "click" | "doubleClick",
+	targetId: string,
+): CanvasEvent =>
+	({
+		type,
+		targetKind: "object",
+		targetId,
+		button: 0,
+		mods: { shift: false, alt: false, ctrl: false, meta: false },
+	}) as unknown as CanvasEvent;
+
+describe("ObjectEventHandler - text edit commit skipping", () => {
+	it("a pressed on the object being edited does not commit (continues editing)", () => {
+		const next = ObjectEventHandler.handle(
+			makeEditState("rect-1", "old", "new"),
+			makeTapEvent("pressed", "rect-1"),
+		);
+		// textEditState is preserved (uncommitted) and the object text is untouched.
+		expect(next.textEditState).toEqual({ objectId: "rect-1", text: "new" });
+		expect((next.objects["rect-1"] as unknown as { text: string }).text).toBe(
+			"old",
+		);
+		expect(next.commitVersion).toBe(5);
+	});
+
+	it("re-double-clicking the same object (pressed -> doubleClick) does not add an extra commit", () => {
+		const afterPressed = ObjectEventHandler.handle(
+			makeEditState("rect-1", "old", "new"),
+			makeTapEvent("pressed", "rect-1"),
+		);
+		const afterDouble = ObjectEventHandler.handle(
+			afterPressed,
+			makeTapEvent("doubleClick", "rect-1"),
+		);
+		// Editing continues, no commit happened along the way.
+		expect(afterDouble.textEditState?.objectId).toBe("rect-1");
+		expect(
+			(afterDouble.objects["rect-1"] as unknown as { text: string }).text,
+		).toBe("old");
+		expect(afterDouble.commitVersion).toBe(5);
+	});
+
+	it("a pressed on a different object commits the pending edit", () => {
+		const next = ObjectEventHandler.handle(
+			makeEditState("rect-1", "old", "new"),
+			makeTapEvent("pressed", "rect-2"),
+		);
+		// The edit is committed to rect-1 and the session is cleared.
+		expect((next.objects["rect-1"] as unknown as { text: string }).text).toBe(
+			"new",
+		);
+		expect(next.textEditState).toBeNull();
+		expect(next.commitVersion).toBe(6);
+	});
+});
+
 describe("ObjectEventHandler - Shift axis-lock drag", () => {
 	it("without Shift, both axes move and no axis-lock feedback appears", () => {
 		const next = ObjectEventHandler.handle(

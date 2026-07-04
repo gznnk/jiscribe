@@ -34,14 +34,22 @@ export const ConnectorEventHandler: GestureHandler = {
 
 		const connectorId = event.targetId;
 
+		// A tap (pressed / click / doubleClick) on the connector currently being edited must not
+		// commit: a re-double-click arrives as `pressed → click → pressed → doubleClick`, so
+		// committing on the leading pressed would clear textEditState and make the doubleClick
+		// re-edit guard below unreachable. Skipping the commit keeps editing continuous.
+		const isEditingSameTarget =
+			!!connectorId && state.textEditState?.objectId === connectorId;
+
 		// A double click starts label editing. Re-double-clicking the same connector while
 		// already editing continues editing without committing (same as shape text editing).
 		if (event.type === "doubleClick") {
 			if (!connectorId) {
 				return state;
 			}
-			const isReEditingSame = state.textEditState?.objectId === connectorId;
-			const baseState = isReEditingSame ? state : commitTextEditIfNeeded(state);
+			const baseState = isEditingSameTarget
+				? state
+				: commitTextEditIfNeeded(state);
 			const connector = baseState.objects[connectorId];
 			if (connector?.type !== "connector") {
 				return baseState;
@@ -58,7 +66,7 @@ export const ConnectorEventHandler: GestureHandler = {
 			};
 		}
 
-		let nextState = commitTextEditIfNeeded(state);
+		let nextState = isEditingSameTarget ? state : commitTextEditIfNeeded(state);
 
 		// A press on a connector closes the context menu (button is guarded above, selection happens on click)
 		if (event.type === "pressed") {
