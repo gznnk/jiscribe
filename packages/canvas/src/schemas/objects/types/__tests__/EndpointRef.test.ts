@@ -13,6 +13,10 @@ describe("isConnectPointId", () => {
 		expect(isConnectPointId(id)).toBe(true);
 	});
 
+	it("rejects 'center' (the center is not a connect point)", () => {
+		expect(isConnectPointId("center")).toBe(false);
+	});
+
 	it("rejects invalid strings", () => {
 		expect(isConnectPointId("top")).toBe(false);
 		expect(isConnectPointId("")).toBe(false);
@@ -212,7 +216,7 @@ describe("isSameEndpoint", () => {
 					{ owner: { id: "a", type: "rect" }, anchor: { kind: "center" } },
 					{
 						owner: { id: "a", type: "rect" },
-						anchor: { kind: "connectPoint", id: "center" },
+						anchor: { kind: "connectPoint", id: "topCenter" },
 					},
 				),
 			).toBe(false);

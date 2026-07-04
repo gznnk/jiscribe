@@ -1,10 +1,10 @@
 import { isTransformedFrame } from "@workspace/geometry";
 import { memo } from "react";
 
-import type { ConnectPointId } from "../../../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
 import { ConnectionAnchors } from "../ConnectionAnchors";
+import type { AnchorHandleId } from "../ConnectionAnchorTypes";
 import { ConnectionTargetAnchors } from "../ConnectionTargetAnchors";
 
 type ConnectionAnchorsLayerProps = {
@@ -92,7 +92,7 @@ const ConnectionAnchorsLayerComponent: React.FC<
 		isTransformedFrame(targetObject);
 
 	// Determine the active anchor on the hover target
-	let activeAnchorId: ConnectPointId | null = null;
+	let activeAnchorId: AnchorHandleId | null = null;
 	if (editingEndpointRef && targetObjectId) {
 		const anchor = editingEndpointRef.anchor;
 		if (anchor.kind === "center") {

@@ -416,7 +416,7 @@ Options for `anchor.kind`:
 | `"center"`       | none                 | Center of the object.       |
 | `"connectPoint"` | `id: ConnectPointId` | A predefined connect point. |
 
-`ConnectPointId` options: `"center"` / `"topCenter"` / `"rightCenter"` / `"bottomCenter"` / `"leftCenter"`
+`ConnectPointId` options: `"topCenter"` / `"rightCenter"` / `"bottomCenter"` / `"leftCenter"`. For the center, use `{ "kind": "center" }` (not a `connectPoint`).
 
 `owner.type` may be **only `rect`, `ellipse`, `diamond`, or `sticky`** — these are
 the connectable types. A `polyline`, `polygon`, `group`, `svg`, or `connector`
