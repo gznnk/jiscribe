@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import { resolveDocSnapshot } from "../../states/canvas/DocSnapshot";
@@ -34,11 +34,21 @@ export const useNotifySaveRequest = (
 
 	// Always-fresh mirror of state so a deferred (debounced) notification
 	// delivers the latest committed Doc, not the one from the render that
-	// scheduled it.
+	// scheduled it. Must be a layout effect: the keyup/blur flush below runs
+	// synchronously inside the DOM event, and a passive-effect mirror could
+	// still hold the previous commit at that point — the flush would then
+	// deliver a stale doc/nonce that the host echoes back as an "external"
+	// change, reverting the user's last commit.
 	const stateRef = useRef(state);
-	useEffect(() => {
+	useLayoutEffect(() => {
 		stateRef.current = state;
 	});
+
+	// A boundary flush can run before the schedule effect of the commit it just
+	// delivered (stateRef is updated in a layout effect, the schedule below in a
+	// passive one). That commit's own schedule must not deliver it a second
+	// time, so every saveNonce is delivered at most once.
+	const lastDeliveredNonceRef = useRef<string | null>(null);
 
 	const schedulerRef = useRef<SaveRequestScheduler | null>(null);
 	if (schedulerRef.current === null) {
@@ -56,6 +66,10 @@ export const useNotifySaveRequest = (
 			state.historyCoalesce.recorded !== null,
 			() => {
 				const latestState = stateRef.current;
+				if (latestState.saveNonce === lastDeliveredNonceRef.current) {
+					return;
+				}
+				lastDeliveredNonceRef.current = latestState.saveNonce;
 				onCommitRef.current?.(
 					resolveDocSnapshot(latestState.history.present),
 					latestState.saveNonce,
