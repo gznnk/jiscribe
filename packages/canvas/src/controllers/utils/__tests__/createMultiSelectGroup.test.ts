@@ -1,5 +1,6 @@
 import { beforeAll, describe, it, expect } from "vitest";
 
+import { MIN_GROUP_DIMENSION } from "../../../constants/groupDimensions";
 import { MULTI_SELECT_GROUP } from "../../../constants/multiSelectGroup";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
@@ -155,6 +156,29 @@ describe("createMultiSelectGroup", () => {
 		expect(result?.cy).toBeCloseTo(100);
 		expect(result?.width).toBeCloseTo(140);
 		expect(result?.height).toBeCloseTo(140);
+	});
+
+	it("collinear selection -> width/height are clamped to MIN_GROUP_DIMENSION (issue #35)", () => {
+		// two horizontal polylines on the same y → the selection AABB's height is 0.
+		// The multi-select group's size is a divisor when scaling the selection,
+		// so it must never be zero.
+		const polyline = (
+			id: string,
+			points: { x: number; y: number }[],
+		): ObjectState =>
+			({ id, type: "polyline", points }) as unknown as ObjectState;
+		const p1 = polyline("p1", [
+			{ x: 0, y: 50 },
+			{ x: 40, y: 50 },
+		]);
+		const p2 = polyline("p2", [
+			{ x: 60, y: 50 },
+			{ x: 100, y: 50 },
+		]);
+		const result = createMultiSelectGroup(["p1", "p2"], { p1, p2 });
+		expect(result).not.toBeNull();
+		expect(result?.width).toBeCloseTo(100);
+		expect(result?.height).toBe(MIN_GROUP_DIMENSION);
 	});
 
 	it("nested groups -> computed from the grandchild elements' bounding boxes", () => {

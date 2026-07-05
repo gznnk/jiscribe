@@ -1,5 +1,6 @@
 import { calcOrientedFrameFromPoints } from "@workspace/geometry";
 
+import { MIN_GROUP_DIMENSION } from "../../../../../../constants/groupDimensions";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
 import { calcObjectsBoundingBox } from "../../../../../utils/calcObjectBoundingBox";
@@ -46,11 +47,13 @@ export function calcMultiSelectGroupBounds(
 			return null;
 		}
 
+		// GroupState invariant: a degenerate axis (collinear selection) must not
+		// produce a zero-size group — its size is a divisor in transformFrameByGroup
 		return {
 			cx: obb.cx,
 			cy: obb.cy,
-			width: obb.width,
-			height: obb.height,
+			width: Math.max(obb.width, MIN_GROUP_DIMENSION),
+			height: Math.max(obb.height, MIN_GROUP_DIMENSION),
 		};
 	}
 
@@ -63,7 +66,7 @@ export function calcMultiSelectGroupBounds(
 	return {
 		cx: (bounds.left + bounds.right) / 2,
 		cy: (bounds.top + bounds.bottom) / 2,
-		width: bounds.right - bounds.left,
-		height: bounds.bottom - bounds.top,
+		width: Math.max(bounds.right - bounds.left, MIN_GROUP_DIMENSION),
+		height: Math.max(bounds.bottom - bounds.top, MIN_GROUP_DIMENSION),
 	};
 }

@@ -20,11 +20,19 @@ export function updateGroupBounds(
 
 	const bounds = calculateGroupOrientedBounds(objects, groupId);
 
+	// bounds is null only when the group has no geometry-bearing children
+	// (e.g. it was emptied and is awaiting cleanupGroups). Keep the previous
+	// frame in that case: resetting to a zero-size frame at the origin would
+	// break the GroupState invariant (width/height > 0) and flash a bogus frame.
+	if (!bounds) {
+		return group as GroupState;
+	}
+
 	return {
 		...group,
-		cx: bounds?.cx ?? 0,
-		cy: bounds?.cy ?? 0,
-		width: bounds?.width ?? 0,
-		height: bounds?.height ?? 0,
+		cx: bounds.cx,
+		cy: bounds.cy,
+		width: bounds.width,
+		height: bounds.height,
 	} as GroupState;
 }

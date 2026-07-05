@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 
+import { MIN_GROUP_DIMENSION } from "../../../constants/groupDimensions";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import { updateGroupBounds } from "../updateGroupBounds";
@@ -47,15 +48,35 @@ describe("updateGroupBounds", () => {
 		expect(updateGroupBounds(objects, "r1")).toBeUndefined();
 	});
 
-	it("group with no children → cx=0, cy=0, width=0, height=0", () => {
-		const g = group("g1", []);
+	it("group with no children → keeps the previous frame (GroupState invariant, issue #35)", () => {
+		// An emptied group is awaiting cleanupGroups; resetting its frame to a
+		// zero-size box at the origin would break the width/height > 0 invariant.
+		const g = {
+			...group("g1", []),
+			cx: 10,
+			cy: 20,
+			width: 30,
+			height: 40,
+		} as unknown as GroupState;
 		const objects = { g1: g as unknown as ObjectState };
 		const result = updateGroupBounds(objects, "g1");
 		expect(result).toBeDefined();
-		expect(result?.cx).toBe(0);
-		expect(result?.cy).toBe(0);
-		expect(result?.width).toBe(0);
-		expect(result?.height).toBe(0);
+		expect(result?.cx).toBe(10);
+		expect(result?.cy).toBe(20);
+		expect(result?.width).toBe(30);
+		expect(result?.height).toBe(40);
+	});
+
+	it("degenerate children (zero-height) → the axis is clamped to MIN_GROUP_DIMENSION (issue #35)", () => {
+		const child = rect("r1", 50, 50, 100, 0);
+		const g = group("g1", ["r1"]);
+		const objects: Record<string, ObjectState> = {
+			g1: g as unknown as ObjectState,
+			r1: child,
+		};
+		const result = updateGroupBounds(objects, "g1");
+		expect(result?.width).toBeCloseTo(100);
+		expect(result?.height).toBe(MIN_GROUP_DIMENSION);
 	});
 
 	it("group with one child → computes cx/cy/width/height from the child's bounds", () => {

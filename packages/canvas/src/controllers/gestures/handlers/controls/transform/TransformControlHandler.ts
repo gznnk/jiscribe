@@ -13,6 +13,7 @@ import { calcAnchorResize } from "./utils/calcAnchorResize";
 import { calcMultiSelectGroupBounds } from "./utils/calcMultiSelectGroupBounds";
 import { handleRotationDrag } from "./utils/handleRotationDrag";
 import { updateSingleGroupBounds } from "./utils/updateSingleGroupBounds";
+import { MIN_GROUP_DIMENSION } from "../../../../../constants/groupDimensions";
 import { PRECISION } from "../../../../../constants/precision";
 import type { TransformState } from "../../../../../states/objects/base/TransformState";
 import { isTransformState } from "../../../../../states/objects/base/TransformState";
@@ -122,6 +123,7 @@ export class TransformControlHandler implements ControlStrategy {
 		// Determine the target frame (multiSelectGroup for multi-selection, the selected object for single selection)
 		let startFrame: (TransformedFrame & TransformState) | null = null;
 		let selectedId: string | null = null;
+		let isGroupTarget = false;
 		const isMultiSelect = state.selectedIds.length > 1;
 
 		if (isMultiSelect) {
@@ -133,6 +135,7 @@ export class TransformControlHandler implements ControlStrategy {
 				isTransformState(multiSelectGroup)
 			) {
 				startFrame = multiSelectGroup as TransformedFrame & TransformState;
+				isGroupTarget = true;
 			}
 		} else if (state.selectedIds.length === 1) {
 			// For single selection
@@ -144,11 +147,23 @@ export class TransformControlHandler implements ControlStrategy {
 				isTransformState(startObject)
 			) {
 				startFrame = startObject as TransformedFrame & TransformState;
+				isGroupTarget = startObject.type === "group";
 			}
 		}
 
 		if (!startFrame) {
 			return state;
+		}
+
+		// GroupState invariant: a group's width/height are divisors when scaling
+		// its children (transformFrameByGroup), so a resize must never drive them
+		// to 0 — floor the minimum dimensions before enforceResizeDimensions runs.
+		if (isGroupTarget) {
+			startFrame = {
+				...startFrame,
+				minWidth: Math.max(startFrame.minWidth ?? 0, MIN_GROUP_DIMENSION),
+				minHeight: Math.max(startFrame.minHeight ?? 0, MIN_GROUP_DIMENSION),
+			};
 		}
 
 		// Compute the inverse affine-transformed cursor position (in the object's local space)
