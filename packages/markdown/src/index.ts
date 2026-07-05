@@ -1,5 +1,5 @@
 import DOMPurify from "dompurify";
-import hljs from "highlight.js";
+import hljs from "highlight.js/lib/common";
 import katex from "katex";
 import MarkdownIt from "markdown-it";
 import linkAttr from "markdown-it-link-attributes";
