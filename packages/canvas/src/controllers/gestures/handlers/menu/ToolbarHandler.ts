@@ -24,7 +24,13 @@ const COMMAND_PREFIX = "command:";
 
 export const ToolbarHandler: GestureHandler = {
 	supports(event: CanvasEvent) {
-		return event.targetKind === "menu" && event.targetId === "toolbar";
+		// Left button only: other buttons fall through to CanvasEventHandler's
+		// canvas-level right-button behavior (#110)
+		return (
+			event.button === 0 &&
+			event.targetKind === "menu" &&
+			event.targetId === "toolbar"
+		);
 	},
 
 	handle(state, event) {
@@ -32,9 +38,7 @@ export const ToolbarHandler: GestureHandler = {
 
 		// Close the context menu on a press over the toolbar
 		if (event.type === "pressed") {
-			if (event.button === 0) {
-				nextState = { ...nextState, contextMenuPosition: null };
-			}
+			nextState = { ...nextState, contextMenuPosition: null };
 		}
 
 		const isActivation = event.type === "click" || event.type === "doubleClick";

@@ -27,7 +27,13 @@ import type {
  */
 export const ObjectMenuHandler: GestureHandler = {
 	supports(event: CanvasEvent) {
-		return event.targetKind === "menu" && event.targetId === "object-menu";
+		// Left button only: other buttons fall through to CanvasEventHandler's
+		// canvas-level right-button behavior (#110)
+		return (
+			event.button === 0 &&
+			event.targetKind === "menu" &&
+			event.targetId === "object-menu"
+		);
 	},
 
 	handle(state, event) {
@@ -35,9 +41,7 @@ export const ObjectMenuHandler: GestureHandler = {
 
 		// A press on the ObjectMenu closes the context menu (the press itself performs no item action)
 		if (event.type === "pressed") {
-			if (event.button === 0) {
-				nextState = { ...nextState, contextMenuPosition: null };
-			}
+			nextState = { ...nextState, contextMenuPosition: null };
 		}
 
 		// Slider interaction: drag / dragEnd

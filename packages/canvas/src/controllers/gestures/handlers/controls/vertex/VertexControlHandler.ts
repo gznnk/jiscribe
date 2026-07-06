@@ -45,11 +45,6 @@ export class VertexControlHandler implements ControlStrategy {
 		state: CanvasControllerState,
 		event: CanvasEvent,
 	): CanvasControllerState {
-		// Only handle left-click (button 0)
-		if (event.button !== 0) {
-			return state;
-		}
-
 		// targetId = objectId, targetPart = "vertex:<vertexIndex>"
 		const objectId = event.targetId;
 		const targetPart = event.targetPart;

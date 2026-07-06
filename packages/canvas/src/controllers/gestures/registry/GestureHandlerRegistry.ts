@@ -38,6 +38,14 @@ export class GestureHandlerRegistry {
 	}
 
 	/**
+	 * Returns the names of all registered handlers in registration order.
+	 * Used by the routing-exclusivity test to enumerate handlers (#110).
+	 */
+	getHandlerNames(): string[] {
+		return [...this.handlers.keys()];
+	}
+
+	/**
 	 * Processes a canvas event by routing it to the first handler that supports it.
 	 * @param state - The current canvas controller state
 	 * @param event - The canvas event to process

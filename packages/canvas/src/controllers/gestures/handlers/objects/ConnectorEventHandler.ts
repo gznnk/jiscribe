@@ -25,6 +25,9 @@ import type {
 export const ConnectorEventHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {
 		return (
+			// Left button only: other buttons fall through to CanvasEventHandler's
+			// canvas-level right-button behavior (#110)
+			event.button === 0 &&
 			event.targetKind === "connector" &&
 			// TODO: this filtering may no longer be necessary here
 			(event.type === "click" ||
@@ -37,11 +40,6 @@ export const ConnectorEventHandler: GestureHandler = {
 		state: CanvasControllerState,
 		event: CanvasEvent,
 	): CanvasControllerState {
-		// Only left-click (button 0)
-		if (event.button !== 0) {
-			return state;
-		}
-
 		const connectorId = event.targetId;
 		let nextState = commitTextEditIfNeeded(state);
 
@@ -74,7 +72,7 @@ export const ConnectorEventHandler: GestureHandler = {
 			};
 		}
 
-		// A press on a connector closes the context menu (button is guarded above, selection happens on click)
+		// A press on a connector closes the context menu (button is guarded in supports, selection happens on click)
 		if (event.type === "pressed") {
 			nextState = { ...nextState, contextMenuPosition: null };
 		}

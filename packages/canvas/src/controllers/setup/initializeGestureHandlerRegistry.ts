@@ -16,6 +16,12 @@ import { gestureHandlerRegistry } from "../gestures/registry/GestureHandlerRegis
 /**
  * Initialize the GestureHandlerRegistry with all gesture handlers.
  * Registers handlers for canvas, object, and control events.
+ *
+ * The handlers' supports() are mutually exclusive: each requires its own
+ * targetKind (and targetId for menus) plus the left button, and only
+ * CanvasEventHandler takes right-button events. Registration order therefore
+ * never decides routing; the exclusivity is pinned by
+ * initializeGestureHandlerRegistry.exclusivity.test.ts (#110).
  */
 export const initializeGestureHandlerRegistry = (): void => {
 	gestureHandlerRegistry.clear();

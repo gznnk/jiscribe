@@ -54,11 +54,6 @@ export class TransformControlHandler implements ControlStrategy {
 		state: CanvasControllerState,
 		event: CanvasEvent,
 	): CanvasControllerState {
-		// Only handle left-click (button 0)
-		if (event.button !== 0) {
-			return state;
-		}
-
 		const targetPart = event.targetPart;
 		if (!targetPart) {
 			return state;

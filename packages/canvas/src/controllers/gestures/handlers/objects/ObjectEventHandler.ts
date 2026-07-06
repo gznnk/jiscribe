@@ -44,13 +44,7 @@ function handleObjectClick(
 	canvasState: CanvasControllerState,
 	targetObject: ObjectState,
 	mods: Mods,
-	button: number,
 ): CanvasControllerState {
-	// Only handle left-click (button 0)
-	if (button !== 0) {
-		return canvasState;
-	}
-
 	// Determine the new selection via hierarchical selection logic
 	const selectedIds = determineSelection(targetObject, canvasState, mods);
 
@@ -89,14 +83,8 @@ function handleObjectClick(
 function handleObjectDrag(
 	canvasState: CanvasControllerState,
 	delta: Point,
-	button: number,
 	mods: Mods,
 ): CanvasControllerState {
-	// Only handle left-click drag (button 0)
-	if (button !== 0) {
-		return canvasState;
-	}
-
 	const eventStartSnapshot = canvasState.eventStartSnapshot;
 	if (!eventStartSnapshot) {
 		return canvasState;
@@ -246,13 +234,7 @@ function handleObjectDragStart(
 	targetObject: ObjectState,
 	delta: Point,
 	mods: Mods,
-	button: number,
 ): CanvasControllerState {
-	// Only handle left-click drag (button 0)
-	if (button !== 0) {
-		return canvasState;
-	}
-
 	const { id } = targetObject;
 
 	// Determine the selection state
@@ -333,7 +315,7 @@ function handleObjectDragStart(
 	};
 
 	// Run the drag handling
-	return handleObjectDrag(nextState, delta, button, mods);
+	return handleObjectDrag(nextState, delta, mods);
 }
 
 /**
@@ -342,7 +324,6 @@ function handleObjectDragStart(
 function handleObjectDragEnd(
 	canvasState: CanvasControllerState,
 	delta: Point,
-	button: number,
 	mods: Mods,
 ): CanvasControllerState {
 	// Disable edge scrolling
@@ -352,7 +333,7 @@ function handleObjectDragEnd(
 	};
 
 	// Final drag handling
-	const resultState = handleObjectDrag(nextState, delta, button, mods);
+	const resultState = handleObjectDrag(nextState, delta, mods);
 
 	// Update the parent groups' bounding boxes
 	return updateAffectedGroupBounds(resultState, resultState.selectedIds);
@@ -368,7 +349,9 @@ function handleObjectDragEnd(
  */
 export const ObjectEventHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {
-		return event.targetKind === "object";
+		// Left button only: other buttons fall through to CanvasEventHandler's
+		// canvas-level right-button behavior (#110)
+		return event.targetKind === "object" && event.button === 0;
 	},
 
 	handle(state, event) {
@@ -389,23 +372,16 @@ export const ObjectEventHandler: GestureHandler = {
 
 		// Handle Pointer Down
 		if (event.type === "pressed") {
-			if (event.button === 0) {
-				// Close the context menu on left-click press
-				nextState = {
-					...nextState,
-					contextMenuPosition: null,
-				};
-			}
+			// Close the context menu on press
+			nextState = {
+				...nextState,
+				contextMenuPosition: null,
+			};
 		}
 
 		// Handle the click event
 		if (event.type === "click") {
-			return handleObjectClick(
-				nextState,
-				targetObject,
-				event.mods,
-				event.button,
-			);
+			return handleObjectClick(nextState, targetObject, event.mods);
 		}
 
 		// Handle the double-click event
@@ -441,17 +417,11 @@ export const ObjectEventHandler: GestureHandler = {
 				objectStartState,
 				event.delta,
 				event.mods,
-				event.button,
 			);
 		} else if (event.type === "drag") {
-			return handleObjectDrag(nextState, event.delta, event.button, event.mods);
+			return handleObjectDrag(nextState, event.delta, event.mods);
 		} else if (event.type === "dragEnd") {
-			return handleObjectDragEnd(
-				nextState,
-				event.delta,
-				event.button,
-				event.mods,
-			);
+			return handleObjectDragEnd(nextState, event.delta, event.mods);
 		}
 
 		return nextState;

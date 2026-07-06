@@ -49,7 +49,9 @@ export class ControlEventHandler implements GestureHandler {
 	}
 
 	supports(event: CanvasEvent): boolean {
-		return event.targetKind === "control";
+		// Left button only: other buttons fall through to CanvasEventHandler's
+		// canvas-level right-button behavior (#110)
+		return event.targetKind === "control" && event.button === 0;
 	}
 
 	handle(
@@ -63,9 +65,7 @@ export class ControlEventHandler implements GestureHandler {
 		// (Controls are normally unreachable while the menu is open, but this keeps
 		//  behavior consistent across the per-target handlers.)
 		if (event.type === "pressed") {
-			if (event.button === 0) {
-				nextState = { ...nextState, contextMenuPosition: null };
-			}
+			nextState = { ...nextState, contextMenuPosition: null };
 		}
 
 		// Try each strategy and use the first one whose supports() returns true

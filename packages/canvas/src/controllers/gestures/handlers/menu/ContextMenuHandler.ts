@@ -13,7 +13,13 @@ import type {
  */
 export const ContextMenuHandler: GestureHandler = {
 	supports(event: CanvasEvent) {
-		return event.targetKind === "menu" && event.targetId === "context-menu";
+		// Left button only: other buttons fall through to CanvasEventHandler's
+		// canvas-level right-button behavior (#110)
+		return (
+			event.button === 0 &&
+			event.targetKind === "menu" &&
+			event.targetId === "context-menu"
+		);
 	},
 
 	handle(state, event) {
