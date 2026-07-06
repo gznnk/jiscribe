@@ -4,16 +4,15 @@ import { theme } from "../../../../../../constants/theme";
 
 /**
  * Styled root of the dropdown panel. Rendered centered below or above the button.
- * offsetX is the horizontal correction (px) applied to keep it within the canvas area.
+ *
+ * Placement (top/bottom) and the horizontal correction (translateX with
+ * offsetX) are measured values that can change every frame while the menu
+ * follows the selection, so DropdownPanel applies them via the `style` prop
+ * instead of emotion interpolation (see #131).
  */
-export const DropdownPanelRoot = styled.div<{
-	placement?: "down" | "up";
-	offsetX?: number;
-}>`
+export const DropdownPanelRoot = styled.div`
 	position: absolute;
 	left: 50%;
-	${(props) => (props.placement === "up" ? "bottom: 40px;" : "top: 40px;")}
-	transform: translateX(calc(-50% + ${(props) => props.offsetX ?? 0}px));
 	z-index: 1100;
 	display: flex;
 	align-items: center;

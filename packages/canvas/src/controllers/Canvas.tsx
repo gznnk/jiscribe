@@ -236,7 +236,13 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 							/>
 						</CanvasView>
 						{/* Container for HTML elements that follow canvas scroll AND zoom (elements scale with zoom) */}
-						<ZoomScaledOverlay left={-minX} top={-minY} zoom={zoom}>
+						<ZoomScaledOverlay
+							style={{
+								left: -minX * zoom,
+								top: -minY * zoom,
+								transform: `scale(${zoom})`,
+							}}
+						>
 							<TextEditorLayer
 								textEditState={state.textEditState}
 								objects={state.objects}
@@ -249,7 +255,9 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 							/>
 						</ZoomScaledOverlay>
 						{/* Container for HTML elements with fixed size (position follows zoom, but size does not) */}
-						<ScrollSyncedOverlay left={-minX} top={-minY} zoom={zoom}>
+						<ScrollSyncedOverlay
+							style={{ left: -minX * zoom, top: -minY * zoom }}
+						>
 							<ObjectMenu
 								canvasState={state}
 								onPropertyUpdate={handleMenuPropertyUpdate}

@@ -102,22 +102,22 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 		<ConnectorLabelEditorWrapper
 			data-testid="text-editor"
 			data-gesture="none"
-			left={anchor.x}
-			top={anchor.y}
-			width={width}
-			background={background}
-			borderWidth={strokeWidth}
-			borderColor={borderColor}
-			borderStyle={strokeDashType}
+			style={{
+				left: anchor.x,
+				top: anchor.y,
+				width,
+				background,
+				border:
+					strokeWidth > 0
+						? `${strokeWidth}px ${strokeDashType} ${borderColor}`
+						: "none",
+			}}
 			onPointerDown={handleWrapperPointerDown}
 		>
 			<ConnectorLabelTextArea
 				data-gesture="native-wheel"
 				value={text}
-				color={color}
-				fontSize={fontSize}
-				fontFamily={fontFamily}
-				fontWeight={fontWeight}
+				style={{ color, fontSize, fontFamily, fontWeight }}
 				ref={textAreaRef}
 				onChange={handleChange}
 				onKeyDown={handleKeyDown}

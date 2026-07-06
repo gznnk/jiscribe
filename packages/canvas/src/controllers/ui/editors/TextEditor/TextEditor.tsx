@@ -8,6 +8,15 @@ import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
 import type { TextType } from "../../../../schemas/objects/types/TextType";
 import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
 
+const VerticalAlignMap: Record<
+	VerticalAlign,
+	React.CSSProperties["alignItems"]
+> = {
+	top: "flex-start",
+	middle: "center",
+	bottom: "flex-end",
+} as const;
+
 type TextEditorProps = {
 	objectId: string;
 	text: string;
@@ -108,22 +117,26 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		<TextEditorWrapper
 			data-testid="text-editor"
 			data-gesture="none"
-			left={x}
-			top={y}
-			width={width}
-			height={height}
-			transform={transform}
-			verticalAlign={verticalAlign}
+			style={{
+				left: x,
+				top: y,
+				width,
+				height,
+				transform,
+				alignItems: VerticalAlignMap[verticalAlign],
+			}}
 			onPointerDown={handleWrapperPointerDown}
 		>
 			<TextArea
 				data-gesture="native-wheel"
 				value={text}
-				textAlign={textAlign}
-				color={resolvedColor}
-				fontSize={fontSize}
-				fontFamily={fontFamily}
-				fontWeight={fontWeight}
+				style={{
+					textAlign,
+					color: resolvedColor,
+					fontSize,
+					fontFamily,
+					fontWeight,
+				}}
 				ref={textAreaRef}
 				onChange={handleChange}
 				onKeyDown={handleKeyDown}

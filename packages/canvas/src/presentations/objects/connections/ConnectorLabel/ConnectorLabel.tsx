@@ -82,14 +82,17 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 			pointerEvents={disablePointerEvents ? "none" : "auto"}
 		>
 			<LabelBox
-				color={color}
-				fontSize={fontSize}
-				fontFamily={fontFamily}
-				fontWeight={fontWeight}
-				background={background}
-				borderWidth={strokeWidth}
-				borderColor={borderColor}
-				borderStyle={strokeDashType}
+				style={{
+					color,
+					fontSize,
+					fontFamily,
+					fontWeight,
+					background,
+					border:
+						strokeWidth > 0
+							? `${strokeWidth}px ${strokeDashType} ${borderColor}`
+							: "none",
+				}}
 			>
 				{text}
 			</LabelBox>
