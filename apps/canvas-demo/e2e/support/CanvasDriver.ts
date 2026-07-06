@@ -262,15 +262,19 @@ export class CanvasDriver {
 		return this.page.evaluate(
 			(controlSelector) =>
 				[...document.querySelectorAll(controlSelector)]
-					.map((el) => el.getAttribute("data-id"))
-					.filter((id): id is string => id !== null),
+					.map((el) => {
+						const id = el.getAttribute("data-id");
+						const part = el.getAttribute("data-part");
+						return id === null ? null : part === null ? id : `${id}/${part}`;
+					})
+					.filter((descriptor): descriptor is string => descriptor !== null),
 			selectors.control,
 		);
 	}
 
-	/** 特定のコントロールが表示されているか */
-	async isControlVisible(controlId: string): Promise<boolean> {
-		return (await this.visibleControlIds()).includes(controlId);
+	/** 特定のコントロールが表示されているか（記述子は "<data-id>/<data-part>"） */
+	async isControlVisible(controlDescriptor: string): Promise<boolean> {
+		return (await this.visibleControlIds()).includes(controlDescriptor);
 	}
 
 	/** いずれかのコントロールが表示されているか（選択状態の簡易判定） */

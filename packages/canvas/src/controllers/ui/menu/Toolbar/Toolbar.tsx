@@ -39,7 +39,7 @@ const isEditableTarget = (target: EventTarget | null): boolean => {
  * Unified toolbar centered at the top.
  * Combines the shape tools (ShapeLibrary), zoom readout, and help (?) into a single bar.
  *
- * - Shape tools operate through the gesture system (data-kind="menu-item").
+ * - Shape tools operate through the gesture system (data-kind="menu").
  * - Zoom +/- is currently visual only (actual control is via wheel / pinch).
  * - Help is shown as a modal and can also be opened with the `?` key. It does not depend on the Canvas reducer.
  */
@@ -103,8 +103,9 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 						aria-label="Zoom out"
 						title="Zoom out"
 						disabled={!canZoomOut}
-						data-kind="toolbar"
-						data-id="toolbar:command:zoomOut"
+						data-kind="menu"
+						data-id="toolbar"
+						data-part="command:zoomOut"
 					>
 						−
 					</ToolbarIconButton>
@@ -112,8 +113,9 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 						type="button"
 						aria-label="Reset zoom to 100%"
 						title="Reset zoom to 100%"
-						data-kind="toolbar"
-						data-id="toolbar:command:resetZoom"
+						data-kind="menu"
+						data-id="toolbar"
+						data-part="command:resetZoom"
 					>
 						{Math.round(zoom * 100)}%
 					</ZoomReadout>
@@ -122,8 +124,9 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 						aria-label="Zoom in"
 						title="Zoom in"
 						disabled={!canZoomIn}
-						data-kind="toolbar"
-						data-id="toolbar:command:zoomIn"
+						data-kind="menu"
+						data-id="toolbar"
+						data-part="command:zoomIn"
 					>
 						+
 					</ToolbarIconButton>

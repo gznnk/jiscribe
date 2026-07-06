@@ -64,7 +64,7 @@ test.describe("コネクター再接続のライブプレビュー", () => {
 		// コネクターを選択して target 端点ハンドルを出す。
 		await canvas.clickAt({ x: 500, y: 350 });
 		const handle = canvas.page.locator(
-			`[data-id="connection-anchor:edit:${connectorId}:target"]`,
+			`[data-id="${connectorId}"][data-part="endpoint:target"]`,
 		);
 		await expect(handle).toBeVisible();
 		const box = await handle.boundingBox();

@@ -17,8 +17,9 @@ const ShapeLibraryItemComponent: React.FC<ShapeLibraryItemProps> = ({
 	const Icon = preset.icon;
 	return (
 		<ShapeLibraryButton
-			data-kind="menu-item"
-			data-id={`menu-item:${preset.id}`}
+			data-kind="menu"
+			data-id="shape-library"
+			data-part={`item:${preset.id}`}
 			title={preset.label}
 			isActive={isActive}
 		>

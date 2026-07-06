@@ -24,8 +24,9 @@ const KeepAspectRatioMenuComponent: React.FC<KeepAspectRatioMenuProps> = ({
 		<MenuItemPositioner>
 			<ObjectMenuButton
 				isActive={isLocked}
-				data-kind="object-menu"
-				data-id={`object-menu:set:lockAspectRatio:${nextValue}`}
+				data-kind="menu"
+				data-id="object-menu"
+				data-part={`set:lockAspectRatio:${nextValue}`}
 				title={isLocked ? "Unlock Aspect Ratio" : "Lock Aspect Ratio"}
 			>
 				<AspectRatioIcon

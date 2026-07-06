@@ -1,10 +1,12 @@
 /**
  * Gets the id and kind from the nearest ancestor element carrying [data-kind].
  * Returns null when no id is present.
+ * part carries the same element's optional [data-part], which distinguishes a
+ * sub-area of the target (e.g. a connector's label box vs. its line).
  */
 export const getKindAndId = (
 	el: Element,
-): { id: string; kind: string } | null => {
+): { id: string; kind: string; part?: string } | null => {
 	const kindEl = el.closest("[data-kind]");
 	if (!kindEl) {
 		return null;
@@ -20,5 +22,7 @@ export const getKindAndId = (
 		return null;
 	}
 
-	return { id, kind };
+	const part = kindEl.getAttribute("data-part") ?? undefined;
+
+	return { id, kind, part };
 };

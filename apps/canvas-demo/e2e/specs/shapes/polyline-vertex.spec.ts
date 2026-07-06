@@ -21,17 +21,17 @@ async function vertexCount(canvas: CanvasDriver, id: string): Promise<number> {
 	return points ? points.trim().split(/\s+/).length : 0;
 }
 
-/** data-id を持つコントロールの中心からドラッグする */
+/** コントロール（CSS セレクタ）の中心からドラッグする */
 async function dragControl(
 	canvas: CanvasDriver,
-	dataId: string,
+	controlSelector: string,
 	to: { x: number; y: number },
 ) {
-	const control = canvas.page.locator(`[data-id="${dataId}"]`);
+	const control = canvas.page.locator(controlSelector);
 	await expect(control).toBeVisible();
 	const box = await control.boundingBox();
 	if (!box) {
-		throw new Error(`コントロール ${dataId} の位置が取得できない`);
+		throw new Error(`コントロール ${controlSelector} の位置が取得できない`);
 	}
 	// box は画面座標。drag はコンテンツ座標を取るので toContent で揃える。
 	await canvas.drag(
@@ -52,7 +52,11 @@ test.describe("ポリラインの頂点編集", () => {
 		expect(await vertexCount(canvas, id)).toBe(2);
 
 		// セグメント0の中点ハンドルを下へドラッグ → 中央に頂点が挿入される
-		await dragControl(canvas, `vertex-insert:${id}:0`, { x: 450, y: 420 });
+		await dragControl(
+			canvas,
+			`[data-id="${id}"][data-part="vertex-insert:0"]`,
+			{ x: 450, y: 420 },
+		);
 
 		await expect
 			.poll(() => vertexCount(canvas, id), {
@@ -70,18 +74,22 @@ test.describe("ポリラインの頂点編集", () => {
 			{ x: 600, y: 300 },
 		);
 		// まず中点をドラッグして 3 点にする（挿入頂点は index 1）
-		await dragControl(canvas, `vertex-insert:${id}:0`, { x: 450, y: 420 });
+		await dragControl(
+			canvas,
+			`[data-id="${id}"][data-part="vertex-insert:0"]`,
+			{ x: 450, y: 420 },
+		);
 		await expect.poll(() => vertexCount(canvas, id)).toBe(3);
 
 		// 中間頂点ハンドルをクリックして選択。選択中ハンドルの塗りは選択色になる。
 		// この塗り変化（＝selectedVertex のコミット）を待ってから Delete する。
 		const selectedFill = await canvas.normalizeColor("#0d99ff");
-		await canvas.page.click(`[data-id="vertex-control:${id}:1"]`);
+		await canvas.page.click(`[data-id="${id}"][data-part="vertex:1"]`);
 		await expect
 			.poll(
 				() =>
 					canvas.page
-						.locator(`[data-id="vertex-control:${id}:1"]`)
+						.locator(`[data-id="${id}"][data-part="vertex:1"]`)
 						.evaluate((el) => getComputedStyle(el).fill),
 				{ message: "頂点が選択状態（塗りが選択色）になること" },
 			)

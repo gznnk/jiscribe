@@ -40,8 +40,9 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 		<MenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-kind="object-menu"
-				data-id={`object-menu:toggle:${SECTION_ID}`}
+				data-kind="menu"
+				data-id="object-menu"
+				data-part={`toggle:${SECTION_ID}`}
 				title="Line Style"
 			>
 				<LineStyleIcon title="Line Style" />
@@ -52,24 +53,27 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 						<LineStyleSection>
 							<ObjectMenuButton
 								isActive={!strokeDashType || strokeDashType === "solid"}
-								data-kind="object-menu"
-								data-id="object-menu:set:strokeDashType:solid"
+								data-kind="menu"
+								data-id="object-menu"
+								data-part="set:strokeDashType:solid"
 								title="Solid line"
 							>
 								<SolidLineIcon title="Solid line" />
 							</ObjectMenuButton>
 							<ObjectMenuButton
 								isActive={strokeDashType === "dashed"}
-								data-kind="object-menu"
-								data-id="object-menu:set:strokeDashType:dashed"
+								data-kind="menu"
+								data-id="object-menu"
+								data-part="set:strokeDashType:dashed"
 								title="Dashed line"
 							>
 								<DashedLineIcon title="Dashed line" />
 							</ObjectMenuButton>
 							<ObjectMenuButton
 								isActive={strokeDashType === "dotted"}
-								data-kind="object-menu"
-								data-id="object-menu:set:strokeDashType:dotted"
+								data-kind="menu"
+								data-id="object-menu"
+								data-part="set:strokeDashType:dotted"
 								title="Dotted line"
 							>
 								<DottedLineIcon title="Dotted line" />

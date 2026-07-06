@@ -34,14 +34,14 @@ async function readVertices(
 
 async function dragControl(
 	canvas: CanvasDriver,
-	dataId: string,
+	controlSelector: string,
 	to: { x: number; y: number },
 ) {
-	const control = canvas.page.locator(`[data-id="${dataId}"]`);
+	const control = canvas.page.locator(controlSelector);
 	await expect(control).toBeVisible();
 	const box = await control.boundingBox();
 	if (!box) {
-		throw new Error(`コントロール ${dataId} の位置が取得できない`);
+		throw new Error(`コントロール ${controlSelector} の位置が取得できない`);
 	}
 	await canvas.drag(
 		canvas.toContent({ x: box.x + box.width / 2, y: box.y + box.height / 2 }),
@@ -75,7 +75,10 @@ test.describe("ポリライン頂点移動の移動先座標", () => {
 		);
 
 		// 右端の頂点(index 1)を (650,180) へ動かす（ハンドルは頂点上なのでオフセット 0）。
-		await dragControl(canvas, `vertex-control:${id}:1`, { x: 650, y: 180 });
+		await dragControl(canvas, `[data-id="${id}"][data-part="vertex:1"]`, {
+			x: 650,
+			y: 180,
+		});
 
 		await expect
 			.poll(async () => (await readVertices(canvas, id))[1]?.y, {

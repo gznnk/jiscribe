@@ -51,8 +51,9 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 			<MenuItemPositioner ref={startRef}>
 				<ObjectMenuButton
 					isActive={isStartOpen}
-					data-kind="object-menu"
-					data-id={`object-menu:toggle:${SECTION_ID_START}`}
+					data-kind="menu"
+					data-id="object-menu"
+					data-part={`toggle:${SECTION_ID_START}`}
 					title="Start Arrow"
 				>
 					<ArrowHeadIconPreview arrowType={currentStart} direction="start" />
@@ -68,8 +69,9 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 								<ArrowTypeButton
 									key={`start-${type}`}
 									isActive={currentStart === type}
-									data-kind="object-menu"
-									data-id={`object-menu:set:startArrow:${type}`}
+									data-kind="menu"
+									data-id="object-menu"
+									data-part={`set:startArrow:${type}`}
 									title={type}
 								>
 									<ArrowHeadIconPreview arrowType={type} direction="start" />
@@ -82,8 +84,9 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 
 			{/* Swap Button */}
 			<ObjectMenuButton
-				data-kind="object-menu"
-				data-id="object-menu:command:swapArrows"
+				data-kind="menu"
+				data-id="object-menu"
+				data-part="command:swapArrows"
 				title="Swap arrows"
 			>
 				<ArrowSwapIcon fill="currentColor" width={24} height={24} />
@@ -93,8 +96,9 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 			<MenuItemPositioner ref={endRef}>
 				<ObjectMenuButton
 					isActive={isEndOpen}
-					data-kind="object-menu"
-					data-id={`object-menu:toggle:${SECTION_ID_END}`}
+					data-kind="menu"
+					data-id="object-menu"
+					data-part={`toggle:${SECTION_ID_END}`}
 					title="End Arrow"
 				>
 					<ArrowHeadIconPreview arrowType={currentEnd} direction="end" />
@@ -110,8 +114,9 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 								<ArrowTypeButton
 									key={`end-${type}`}
 									isActive={currentEnd === type}
-									data-kind="object-menu"
-									data-id={`object-menu:set:endArrow:${type}`}
+									data-kind="menu"
+									data-id="object-menu"
+									data-part={`set:endArrow:${type}`}
 									title={type}
 								>
 									<ArrowHeadIconPreview arrowType={type} direction="end" />

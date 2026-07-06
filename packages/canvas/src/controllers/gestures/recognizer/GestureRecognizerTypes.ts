@@ -22,6 +22,7 @@ export type GestureType =
 export type HoveredElement = {
 	id: string;
 	kind: string;
+	part?: string;
 };
 
 export type ScrollDelta = {
@@ -38,6 +39,7 @@ export type ScrollDelta = {
 export type ClickSnapshot = {
 	time: number;
 	targetId: string | undefined;
+	targetPart: string | undefined;
 	clientPos: Point;
 };
 
@@ -46,6 +48,7 @@ export type Gesture = {
 	target: EventTarget | null;
 	targetId?: string;
 	targetKind?: string;
+	targetPart?: string; // Sub-area of the target ([data-part]), e.g. "label" for a connector's label box
 	start: Point; // SVG coordinates
 	last: Point; // SVG coordinates
 	delta: Point; // SVG coordinates

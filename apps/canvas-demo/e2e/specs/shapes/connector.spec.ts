@@ -56,7 +56,7 @@ test.describe("コネクター", () => {
 
 		// コネクター用の ObjectMenu（線色）が出ていない = 選択されていない
 		await expect(
-			canvas.page.locator('[data-id="object-menu:toggle:line-color"]'),
+			canvas.page.locator('[data-part="toggle:line-color"]'),
 		).toHaveCount(0);
 	});
 
@@ -75,7 +75,7 @@ test.describe("コネクター", () => {
 
 		// コネクター用の ObjectMenu（線色）が出る = 選択された
 		await expect(
-			canvas.page.locator('[data-id="object-menu:toggle:line-color"]'),
+			canvas.page.locator('[data-part="toggle:line-color"]'),
 		).toBeVisible();
 	});
 
@@ -98,7 +98,7 @@ test.describe("コネクター", () => {
 		// クリックによる選択が反映される（コネクター用 ObjectMenu が出る）のを待ってから
 		// 削除する。選択コミット前に Delete を押すと何も削除されずフレーキーになる。
 		await expect(
-			canvas.page.locator('[data-id="object-menu:toggle:line-color"]'),
+			canvas.page.locator('[data-part="toggle:line-color"]'),
 		).toBeVisible();
 		await canvas.deleteSelection();
 

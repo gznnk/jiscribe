@@ -80,7 +80,8 @@ const makeDragEvent = (last: { x: number; y: number }): CanvasEvent =>
 	({
 		type: "drag",
 		targetKind: "control",
-		targetId: "transform-control:rotation",
+		targetId: "transform",
+		targetPart: "rotation",
 		button: 0,
 		last,
 		mods: { shift: false, alt: false, ctrl: false, meta: false },

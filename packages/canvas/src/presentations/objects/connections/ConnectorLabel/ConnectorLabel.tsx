@@ -66,9 +66,12 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 			y={anchor.y - height / 2}
 			width={width}
 			height={height}
-			// Treat as connector so double-clicking the on-line label can start editing.
+			// Treat as connector so a hit resolves to the parent connector.
+			// data-part marks this as the label box: with a committed label, only a
+			// double click here (not on the bare line) starts editing.
 			data-kind="connector"
 			data-id={id}
+			data-part="label"
 			pointerEvents={disablePointerEvents ? "none" : "auto"}
 		>
 			<LabelBox

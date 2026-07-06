@@ -75,12 +75,14 @@ const stateWithConnectors = (
 const dragEvent = (
 	type: "dragStart" | "dragEnd",
 	targetId: string,
+	targetPart: string,
 	last: Point,
 ): CanvasEvent =>
 	({
 		type,
 		target: null,
 		targetId,
+		targetPart,
 		targetKind: "control",
 		start: { x: 0, y: 0 },
 		last,
@@ -106,14 +108,14 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 
 		const afterStart = handler.handle(
 			state,
-			dragEvent("dragStart", "connection-anchor:edit:c1:target", {
+			dragEvent("dragStart", "c1", "endpoint:target", {
 				x: 10,
 				y: 10,
 			}),
 		);
 		const afterEnd = handler.handle(
 			afterStart,
-			dragEvent("dragEnd", "connection-anchor:edit:c1:target", {
+			dragEvent("dragEnd", "c1", "endpoint:target", {
 				x: 50,
 				y: 50,
 			}),
@@ -129,7 +131,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 
 		const afterStart = handler.handle(
 			state,
-			dragEvent("dragStart", "connection-anchor:edit:c1:target", {
+			dragEvent("dragStart", "c1", "endpoint:target", {
 				x: 10,
 				y: 10,
 			}),
@@ -141,7 +143,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 		// On dragEnd, the entity's (objects["c1"]) target moves directly
 		const afterEnd = handler.handle(
 			afterStart,
-			dragEvent("dragEnd", "connection-anchor:edit:c1:target", {
+			dragEvent("dragEnd", "c1", "endpoint:target", {
 				x: 80,
 				y: 80,
 			}),
@@ -162,7 +164,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 
 		const afterStart = handler.handle(
 			state,
-			dragEvent("dragStart", "connection-anchor:edit:c1:target", {
+			dragEvent("dragStart", "c1", "endpoint:target", {
 				x: 10,
 				y: 10,
 			}),
@@ -170,7 +172,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 		// Confirm dragEnd at the original target position (10,10) -> the endpoint is unchanged
 		const afterEnd = handler.handle(
 			afterStart,
-			dragEvent("dragEnd", "connection-anchor:edit:c1:target", {
+			dragEvent("dragEnd", "c1", "endpoint:target", {
 				x: 10,
 				y: 10,
 			}),
@@ -188,14 +190,14 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 
 		const afterStart = handler.handle(
 			state,
-			dragEvent("dragStart", "connection-anchor:edit:c1:target", {
+			dragEvent("dragStart", "c1", "endpoint:target", {
 				x: 10,
 				y: 10,
 			}),
 		);
 		const afterEnd = handler.handle(
 			afterStart,
-			dragEvent("dragEnd", "connection-anchor:edit:c1:target", {
+			dragEvent("dragEnd", "c1", "endpoint:target", {
 				x: 99,
 				y: 99,
 			}),
@@ -224,14 +226,14 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 
 		const afterStart = handler.handle(
 			state,
-			dragEvent("dragStart", "connection-anchor:create:rect-1:rightCenter", {
+			dragEvent("dragStart", "rect-1", "anchor:rightCenter", {
 				x: 10,
 				y: 10,
 			}),
 		);
 		const afterEnd = handler.handle(
 			afterStart,
-			dragEvent("dragEnd", "connection-anchor:create:rect-1:rightCenter", {
+			dragEvent("dragEnd", "rect-1", "anchor:rightCenter", {
 				x: 80,
 				y: 80,
 			}),
@@ -257,7 +259,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 
 		const afterStart = handler.handle(
 			state,
-			dragEvent("dragStart", "connection-anchor:create:rect-1:rightCenter", {
+			dragEvent("dragStart", "rect-1", "anchor:rightCenter", {
 				x: 10,
 				y: 10,
 			}),

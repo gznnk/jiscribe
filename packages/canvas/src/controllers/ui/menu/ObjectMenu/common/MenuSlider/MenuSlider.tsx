@@ -121,8 +121,9 @@ const MenuSliderComponent: React.FC<MenuSliderProps> = ({
 				max={max}
 				value={sliderValue}
 				onChange={handleSliderChange}
-				data-kind="object-menu"
-				data-id={`object-menu:slider:${property}`}
+				data-kind="menu"
+				data-id="object-menu"
+				data-part={`slider:${property}`}
 				data-gesture="native-pointer"
 			/>
 		</MenuSliderWrapper>

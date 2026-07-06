@@ -198,7 +198,7 @@ async function selectConnectorById(
 	midpoints.sort((a, b) => distance(a, targetEnd) - distance(b, targetEnd));
 
 	const lineColorToggle = canvas.page.locator(
-		'[data-id="object-menu:toggle:line-color"]',
+		'[data-part="toggle:line-color"]',
 	);
 	for (const mid of midpoints) {
 		await canvas.page.mouse.click(mid.x, mid.y);

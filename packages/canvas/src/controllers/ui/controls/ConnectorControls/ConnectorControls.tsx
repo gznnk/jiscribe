@@ -22,12 +22,12 @@ type ConnectorControlsProps = {
 /**
  * Renders the editing controls for a selected connector:
  * - Endpoint handles (source / target): drag to reconnect to a shape
- *   (data-id="connection-anchor:edit:<id>:source|target" → ConnectionAnchorEventHandler)
+ *   (data-id=<id> + data-part="endpoint:source|target" → ConnectionAnchorEventHandler)
  * - Waypoint move handles: move existing waypoints
- *   (data-id="vertex-control:<id>:<i>" → reuses VertexControlHandler)
+ *   (data-id=<id> + data-part="vertex:<i>" → reuses VertexControlHandler)
  * - Waypoint insert handles: the midpoint of each segment of the resolved path [source, ...waypoints, target].
  *   Drag to add a new waypoint
- *   (data-id="connector-vertex-insert:<id>:<segment>" → ConnectorVertexInsertHandler)
+ *   (data-id=<id> + data-part="waypoint-insert:<segment>" → ConnectorVertexInsertHandler)
  *
  * Placed in the controllers layer so selection visuals are decoupled from the connector itself.
  */
@@ -74,7 +74,7 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 				<VertexInsertControls
 					objectId={connectorState.id}
 					points={resolved.points}
-					controlIdPrefix="connector-vertex-insert"
+					insertPartSubtype="waypoint-insert"
 					zoom={zoom}
 				/>
 			)}
@@ -99,7 +99,8 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 					stroke={ENDPOINT_COLOR}
 					strokeWidth={adjustedEndpointStrokeWidth}
 					data-kind="control"
-					data-id={`connection-anchor:edit:${connectorState.id}:source`}
+					data-id={connectorState.id}
+					data-part="endpoint:source"
 					style={{ cursor: "move" }}
 				/>
 			)}
@@ -114,7 +115,8 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 					stroke={ENDPOINT_COLOR}
 					strokeWidth={adjustedEndpointStrokeWidth}
 					data-kind="control"
-					data-id={`connection-anchor:edit:${connectorState.id}:target`}
+					data-id={connectorState.id}
+					data-part="endpoint:target"
 					style={{ cursor: "move" }}
 				/>
 			)}

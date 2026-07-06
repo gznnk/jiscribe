@@ -49,7 +49,7 @@ test.describe("コネクターの重なり順（StackOrder メニュー）", () 
 
 		// 修正点: コネクター選択でも StackOrder セクションが表示される
 		await expect(
-			canvas.page.locator('[data-id="object-menu:toggle:stack-order"]'),
+			canvas.page.locator('[data-part="toggle:stack-order"]'),
 		).toBeVisible();
 
 		// 最背面へ → 両矩形より前（上）にいた状態から、両矩形より後ろ（下）へ

@@ -49,8 +49,9 @@ const LabelBorderStyleMenuComponent: React.FC<Props> = ({
 		<MenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-kind="object-menu"
-				data-id={`object-menu:toggle:${SECTION_ID}`}
+				data-kind="menu"
+				data-id="object-menu"
+				data-part={`toggle:${SECTION_ID}`}
 				title="Label Border Style"
 			>
 				<DashedCircleIcon title="Label Border Style" />
@@ -61,24 +62,27 @@ const LabelBorderStyleMenuComponent: React.FC<Props> = ({
 						<BorderStyleSection>
 							<ObjectMenuButton
 								isActive={!strokeDashType || strokeDashType === "solid"}
-								data-kind="object-menu"
-								data-id="object-menu:set:label.strokeDashType:solid"
+								data-kind="menu"
+								data-id="object-menu"
+								data-part="set:label.strokeDashType:solid"
 								title="Solid line"
 							>
 								<SolidLineIcon title="Solid line" />
 							</ObjectMenuButton>
 							<ObjectMenuButton
 								isActive={strokeDashType === "dashed"}
-								data-kind="object-menu"
-								data-id="object-menu:set:label.strokeDashType:dashed"
+								data-kind="menu"
+								data-id="object-menu"
+								data-part="set:label.strokeDashType:dashed"
 								title="Dashed line"
 							>
 								<DashedLineIcon title="Dashed line" />
 							</ObjectMenuButton>
 							<ObjectMenuButton
 								isActive={strokeDashType === "dotted"}
-								data-kind="object-menu"
-								data-id="object-menu:set:label.strokeDashType:dotted"
+								data-kind="menu"
+								data-id="object-menu"
+								data-part="set:label.strokeDashType:dotted"
 								title="Dotted line"
 							>
 								<DottedLineIcon title="Dotted line" />

@@ -46,7 +46,8 @@ const makeDragEvent = (
 	({
 		type: "drag",
 		targetKind: "control",
-		targetId: `vertex-control:poly-1:${vertexIndex}`,
+		targetId: "poly-1",
+		targetPart: `vertex:${vertexIndex}`,
 		button: 0,
 		last,
 		mods: { shift, alt: false, ctrl: false, meta: false },

@@ -7,7 +7,7 @@ import type {
 
 /**
  * GestureHandler that processes ObjectMenu item interactions.
- * Handles events when targetKind is "object-menu".
+ * Handles events with targetKind "menu" and targetId "object-menu".
  *
  * Property updates from the ObjectMenu take two paths:
  * (1) This handler: via the gesture system (set: / slider:). Most property changes go through here.
@@ -19,16 +19,15 @@ import type {
  * - drag: real-time slider update (no history recording)
  * - dragEnd: commit the slider's final value + record history
  *
- * targetId formats:
- * - `object-menu:toggle:{sectionId}` → toggle a section open/closed
- * - `object-menu:set:{property}:{value}` → update a property of the selected object
- * - `object-menu:command:{commandId}` → execute a command
- * - `object-menu:slider:{property}` → property update via slider
- * - `object-menu:number-input:{property}` → property update via numeric input
+ * targetPart formats (absent = the menu chrome itself, e.g. bar / panel background):
+ * - `toggle:{sectionId}` → toggle a section open/closed
+ * - `set:{property}:{value}` → update a property of the selected object
+ * - `command:{commandId}` → execute a command
+ * - `slider:{property}` → property update via slider
  */
 export const ObjectMenuHandler: GestureHandler = {
 	supports(event: CanvasEvent) {
-		return event.targetKind === "object-menu";
+		return event.targetKind === "menu" && event.targetId === "object-menu";
 	},
 
 	handle(state, event) {
@@ -42,7 +41,7 @@ export const ObjectMenuHandler: GestureHandler = {
 		}
 
 		// Slider interaction: drag / dragEnd
-		if (event.targetId?.startsWith("object-menu:slider:")) {
+		if (event.targetPart?.startsWith("slider:")) {
 			// pressed, dragStart, and click events do nothing and keep the state (values update on drag / dragEnd)
 			if (
 				event.type === "pressed" ||
@@ -59,10 +58,10 @@ export const ObjectMenuHandler: GestureHandler = {
 				return state;
 			}
 
-			// Strip the "object-menu:slider:" prefix from targetId to get the property name
-			const property = event.targetId.slice("object-menu:slider:".length);
+			// Strip the "slider:" prefix from targetPart to get the property name
+			const property = event.targetPart.slice("slider:".length);
 			if (!property) {
-				console.warn("[ObjectMenuHandler] No property found in targetId");
+				console.warn("[ObjectMenuHandler] No property found in targetPart");
 				return state;
 			}
 
@@ -94,9 +93,8 @@ export const ObjectMenuHandler: GestureHandler = {
 		}
 
 		// Menu item click
-		if (event.type === "click" && event.targetId) {
-			// Strip the "object-menu:" prefix from targetId to get the action
-			const actionId = event.targetId.slice("object-menu:".length);
+		if (event.type === "click" && event.targetPart) {
+			const actionId = event.targetPart;
 
 			// toggle button: toggle a section open/closed
 			if (actionId.startsWith("toggle:")) {

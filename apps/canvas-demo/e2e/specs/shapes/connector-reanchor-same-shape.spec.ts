@@ -82,13 +82,17 @@ async function endPoint(canvas: CanvasDriver, id: string): Promise<Vec> {
 	return points[points.length - 1];
 }
 
-/** data-id コントロールの中心からコンテンツ座標 `to` へドラッグする */
-async function dragControlTo(canvas: CanvasDriver, dataId: string, to: Vec) {
-	const control = canvas.page.locator(`[data-id="${dataId}"]`);
+/** コントロール（CSS セレクタ）の中心からコンテンツ座標 `to` へドラッグする */
+async function dragControlTo(
+	canvas: CanvasDriver,
+	controlSelector: string,
+	to: Vec,
+) {
+	const control = canvas.page.locator(controlSelector);
 	await expect(control).toBeVisible();
 	const box = await control.boundingBox();
 	if (!box) {
-		throw new Error(`コントロール ${dataId} の位置が取得できない`);
+		throw new Error(`コントロール ${controlSelector} の位置が取得できない`);
 	}
 	await canvas.drag(
 		canvas.toContent({ x: box.x + box.width / 2, y: box.y + box.height / 2 }),
@@ -125,14 +129,18 @@ test.describe("同じ図形の別の辺への再アンカー", () => {
 		// コネクター（両端 owned の縦線）を選択して target ハンドルを出す。
 		await canvas.clickAt({ x: 500, y: 350 });
 		await expect(
-			canvas.page.locator(`[data-id="connection-anchor:edit:${id}:target"]`),
+			canvas.page.locator(`[data-id="${id}"][data-part="endpoint:target"]`),
 		).toBeVisible();
 
 		// target ハンドルを B の右辺中央付近へドラッグ → rightCenter へ再アンカー。
-		await dragControlTo(canvas, `connection-anchor:edit:${id}:target`, {
-			x: 590,
-			y: 500,
-		});
+		await dragControlTo(
+			canvas,
+			`[data-id="${id}"][data-part="endpoint:target"]`,
+			{
+				x: 590,
+				y: 500,
+			},
+		);
 		await canvas.deselect();
 
 		// target が B の右辺中央へ移った（上辺からは離れた）。

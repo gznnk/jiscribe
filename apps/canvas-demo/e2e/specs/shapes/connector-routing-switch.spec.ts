@@ -74,7 +74,7 @@ async function selectConnector(canvas: CanvasDriver, connectorId: string) {
 	}
 	await canvas.clickAt(best.mid);
 	await expect(
-		canvas.page.locator('[data-id="object-menu:toggle:connector-routing"]'),
+		canvas.page.locator('[data-part="toggle:connector-routing"]'),
 	).toBeVisible();
 }
 
@@ -85,7 +85,7 @@ async function selectConnector(canvas: CanvasDriver, connectorId: string) {
  */
 async function ensureRoutingMenuOpen(canvas: CanvasDriver) {
 	const anyOption = canvas.page.locator(
-		'[data-id="object-menu:command:setRoutingStraight"]',
+		'[data-part="command:setRoutingStraight"]',
 	);
 	if (!(await anyOption.isVisible())) {
 		await canvas.openObjectMenu("connector-routing");
@@ -104,7 +104,7 @@ async function setRouting(
 	await ensureRoutingMenuOpen(canvas);
 	const commandId =
 		routing === "orthogonal" ? "setRoutingOrthogonal" : "setRoutingStraight";
-	await canvas.page.click(`[data-id="object-menu:command:${commandId}"]`);
+	await canvas.page.click(`[data-part="command:${commandId}"]`);
 }
 
 /** 斜めに離した 2 矩形を rightCenter→target でつなぎ、コネクター ID を返す（選択解除済み） */
@@ -174,10 +174,10 @@ test.describe("コネクターの routing 切替（ObjectMenu）", () => {
 		await selectConnector(canvas, connectorId);
 
 		const orthogonalOption = canvas.page.locator(
-			'[data-id="object-menu:command:setRoutingOrthogonal"]',
+			'[data-part="command:setRoutingOrthogonal"]',
 		);
 		const straightOption = canvas.page.locator(
-			'[data-id="object-menu:command:setRoutingStraight"]',
+			'[data-part="command:setRoutingStraight"]',
 		);
 
 		// active 状態は ObjectMenuButton の isActive スタイル（border-color=accent / 非活性は
@@ -198,9 +198,7 @@ test.describe("コネクターの routing 切替（ObjectMenu）", () => {
 		).not.toBe(straightBorderInitial);
 
 		// straight へ切替 → 反映を points で確認してから、active が straight 側へ移ること。
-		await canvas.page.click(
-			'[data-id="object-menu:command:setRoutingStraight"]',
-		);
+		await canvas.page.click('[data-part="command:setRoutingStraight"]');
 		await expect
 			.poll(async () => (await readPoints(canvas, connectorId)).length, {
 				message: "straight 切替が反映されること",
