@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { Toast } from "./ClipboardErrorToastStyled";
+import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 
 const DISPLAY_DURATION_MS = 4000;
 
@@ -11,6 +12,7 @@ type ClipboardErrorToastProps = {
 export const ClipboardErrorToast = ({
 	errorVersion,
 }: ClipboardErrorToastProps) => {
+	const messages = useCanvasMessages();
 	const [visible, setVisible] = useState(false);
 	const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const isFirstRender = useRef(true);
@@ -43,9 +45,5 @@ export const ClipboardErrorToast = ({
 		};
 	}, []);
 
-	return (
-		<Toast visible={visible}>
-			クリップボードへの書き込みに失敗しました。アプリ内のペーストは利用できます。
-		</Toast>
-	);
+	return <Toast visible={visible}>{messages.clipboardWriteError}</Toast>;
 };

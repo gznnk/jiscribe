@@ -7,6 +7,7 @@ import {
 	ToolbarIconButton,
 	ZoomReadout,
 } from "./ToolbarStyled";
+import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import { HelpIcon } from "../../icons/HelpIcon";
 import { ShapeLibraryItem } from "../ShapeLibrary/ShapeLibraryItem";
 import { shapePresetRegistry } from "../ShapeLibrary/ShapePresetRegistry";
@@ -49,6 +50,7 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 	canZoomIn,
 	canZoomOut,
 }) => {
+	const messages = useCanvasMessages();
 	const [isHelpOpen, setIsHelpOpen] = useState(false);
 	const closeHelp = useCallback(() => setIsHelpOpen(false), []);
 
@@ -100,8 +102,8 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 					    the same path as keyboard shortcuts and the context menu. */}
 					<ToolbarIconButton
 						type="button"
-						aria-label="Zoom out"
-						title="Zoom out"
+						aria-label={messages.toolbarZoomOut}
+						title={messages.toolbarZoomOut}
 						disabled={!canZoomOut}
 						data-kind="menu"
 						data-id="toolbar"
@@ -111,8 +113,8 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 					</ToolbarIconButton>
 					<ZoomReadout
 						type="button"
-						aria-label="Reset zoom to 100%"
-						title="Reset zoom to 100%"
+						aria-label={messages.toolbarResetZoom}
+						title={messages.toolbarResetZoom}
 						data-kind="menu"
 						data-id="toolbar"
 						data-part="command:resetZoom"
@@ -121,8 +123,8 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 					</ZoomReadout>
 					<ToolbarIconButton
 						type="button"
-						aria-label="Zoom in"
-						title="Zoom in"
+						aria-label={messages.toolbarZoomIn}
+						title={messages.toolbarZoomIn}
 						disabled={!canZoomIn}
 						data-kind="menu"
 						data-id="toolbar"
@@ -135,8 +137,8 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 
 					<ToolbarIconButton
 						type="button"
-						aria-label="Show keyboard shortcuts"
-						title="Keyboard shortcuts"
+						aria-label={messages.toolbarShowShortcutHelp}
+						title={messages.toolbarShortcutHelp}
 						data-testid="shortcut-help:open"
 						// Without data-gesture="none", pointerdown is captured by
 						// the gesture system and click never fires

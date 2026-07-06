@@ -3,6 +3,8 @@
 import { StackOrderMenuRow } from "./StackOrderMenuStyled";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { commandRegistry } from "../../../../../commands/CommandRegistry";
+import { getCommandLabel } from "../../../../../messages/CanvasMessages";
+import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { BringForwardIcon } from "../../../../icons/BringForwardIcon";
 import { BringToFrontIcon } from "../../../../icons/BringToFrontIcon";
 import { SendBackwardIcon } from "../../../../icons/SendBackwardIcon";
@@ -28,6 +30,7 @@ const arrangeCommands = [
 const StackOrderMenuComponent: React.FC<StackOrderMenuProps> = ({
 	canvasState,
 }) => {
+	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
@@ -62,7 +65,7 @@ const StackOrderMenuComponent: React.FC<StackOrderMenuProps> = ({
 									data-id="object-menu"
 									data-part={`command:${commandId}`}
 								>
-									<Icon title={command.label} />
+									<Icon title={getCommandLabel(messages, command)} />
 								</ObjectMenuButton>
 							);
 						})}

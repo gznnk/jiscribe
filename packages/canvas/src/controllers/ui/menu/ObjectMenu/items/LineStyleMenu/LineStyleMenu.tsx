@@ -4,6 +4,7 @@ import { LineStyleMenuWrapper, LineStyleSection } from "./LineStyleMenuStyled";
 import { getSelectedStrokeDashType } from "./utils/getSelectedStrokeDashType";
 import { getSelectedStrokeWidth } from "./utils/getSelectedStrokeWidth";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
+import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
 import { DottedLineIcon } from "../../../../icons/DottedLineIcon";
 import { LineStyleIcon } from "../../../../icons/LineStyleIcon";
@@ -27,6 +28,7 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 	canvasState,
 	onPropertyUpdate,
 }) => {
+	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const strokeWidth = getSelectedStrokeWidth(canvasState);
@@ -43,9 +45,9 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 				data-kind="menu"
 				data-id="object-menu"
 				data-part={`toggle:${SECTION_ID}`}
-				title="Line Style"
+				title={messages.menuLineStyle}
 			>
-				<LineStyleIcon title="Line Style" />
+				<LineStyleIcon title={messages.menuLineStyle} />
 			</ObjectMenuButton>
 			{isOpen && (
 				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>
@@ -56,32 +58,32 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 								data-kind="menu"
 								data-id="object-menu"
 								data-part="set:strokeDashType:solid"
-								title="Solid line"
+								title={messages.menuSolidLine}
 							>
-								<SolidLineIcon title="Solid line" />
+								<SolidLineIcon title={messages.menuSolidLine} />
 							</ObjectMenuButton>
 							<ObjectMenuButton
 								isActive={strokeDashType === "dashed"}
 								data-kind="menu"
 								data-id="object-menu"
 								data-part="set:strokeDashType:dashed"
-								title="Dashed line"
+								title={messages.menuDashedLine}
 							>
-								<DashedLineIcon title="Dashed line" />
+								<DashedLineIcon title={messages.menuDashedLine} />
 							</ObjectMenuButton>
 							<ObjectMenuButton
 								isActive={strokeDashType === "dotted"}
 								data-kind="menu"
 								data-id="object-menu"
 								data-part="set:strokeDashType:dotted"
-								title="Dotted line"
+								title={messages.menuDottedLine}
 							>
-								<DottedLineIcon title="Dotted line" />
+								<DottedLineIcon title={messages.menuDottedLine} />
 							</ObjectMenuButton>
 						</LineStyleSection>
 
 						<MenuSlider
-							label="Line Width"
+							label={messages.menuLineWidth}
 							value={strokeWidth}
 							min={MIN_STROKE_WIDTH}
 							max={MAX_STROKE_WIDTH}

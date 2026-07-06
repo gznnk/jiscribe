@@ -18,6 +18,12 @@ import {
 	formatShortcutTokens,
 	getPlatformShortcuts,
 } from "../../../commands/CommandUtils";
+import {
+	getCommandLabel,
+	type CanvasMessages,
+	type CanvasMessageStrings,
+} from "../../../messages/CanvasMessages";
+import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 
 /** Display order of categories */
 const CATEGORY_ORDER: NonNullable<Command["category"]>[] = [
@@ -27,12 +33,12 @@ const CATEGORY_ORDER: NonNullable<Command["category"]>[] = [
 	"view",
 ];
 
-/** Display headings of categories */
-const CATEGORY_LABELS: Record<string, string> = {
-	edit: "Edit",
-	selection: "Selection",
-	arrange: "Arrange",
-	view: "View",
+/** Message key of each category heading */
+const CATEGORY_MESSAGE_KEYS: Record<string, keyof CanvasMessageStrings> = {
+	edit: "shortcutHelpCategoryEdit",
+	selection: "shortcutHelpCategorySelection",
+	arrange: "shortcutHelpCategoryArrange",
+	view: "shortcutHelpCategoryView",
 };
 
 type ShortcutEntry = {
@@ -50,7 +56,7 @@ type CategoryGroup = {
  * Pulls shortcut-bearing commands from the commandRegistry and groups them by
  * category order.
  */
-const buildGroups = (): CategoryGroup[] => {
+const buildGroups = (messages: CanvasMessages): CategoryGroup[] => {
 	const allCommands = commandRegistry.getAll();
 
 	return CATEGORY_ORDER.map((category) => {
@@ -67,7 +73,7 @@ const buildGroups = (): CategoryGroup[] => {
 			}
 			entries.push({
 				id: command.id,
-				label: command.label,
+				label: getCommandLabel(messages, command),
 				tokens: formatShortcutTokens(binding),
 			});
 		}
@@ -87,7 +93,8 @@ type ShortcutHelpModalProps = {
 export const ShortcutHelpModal: React.FC<ShortcutHelpModalProps> = ({
 	onClose,
 }) => {
-	const groups = useMemo(() => buildGroups(), []);
+	const messages = useCanvasMessages();
+	const groups = useMemo(() => buildGroups(messages), [messages]);
 
 	return (
 		<Backdrop
@@ -101,10 +108,10 @@ export const ShortcutHelpModal: React.FC<ShortcutHelpModalProps> = ({
 		>
 			<Panel data-testid="shortcut-help">
 				<Header>
-					<Title>Keyboard Shortcuts</Title>
+					<Title>{messages.shortcutHelpTitle}</Title>
 					<CloseButton
 						type="button"
-						aria-label="Close"
+						aria-label={messages.shortcutHelpClose}
 						data-testid="shortcut-help:close"
 						onClick={onClose}
 					>
@@ -116,7 +123,9 @@ export const ShortcutHelpModal: React.FC<ShortcutHelpModalProps> = ({
 					{groups.map((group) => (
 						<Fragment key={group.category}>
 							<CategoryTitle>
-								{CATEGORY_LABELS[group.category] ?? group.category}
+								{CATEGORY_MESSAGE_KEYS[group.category]
+									? messages[CATEGORY_MESSAGE_KEYS[group.category]]
+									: group.category}
 							</CategoryTitle>
 							{group.entries.map((entry) => (
 								<Fragment key={entry.id}>

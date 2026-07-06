@@ -15,6 +15,8 @@ import {
 	formatShortcut,
 	getPlatformShortcuts,
 } from "../../../commands/CommandUtils";
+import { getCommandLabel } from "../../../messages/CanvasMessages";
+import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 
 type CommandMenuItem =
 	| { type: "command"; commandId: string }
@@ -45,6 +47,7 @@ const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 	callbacks,
 }) => {
 	const menuRef = useRef<HTMLDivElement>(null);
+	const messages = useCanvasMessages();
 	const { left, top } = useContextMenuPosition(position, menuRef);
 
 	const menuItems: CommandMenuItem[] = [
@@ -54,7 +57,7 @@ const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 		{
 			type: "callback",
 			id: "paste",
-			label: "Paste",
+			label: messages.contextMenuPaste,
 			shortcuts: {
 				mac: [{ code: "KeyV", meta: true }],
 				default: [{ code: "KeyV", ctrl: true }],
@@ -127,7 +130,9 @@ const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 								data-id="context-menu"
 								data-part={`command:${command.id}`}
 							>
-								<MenuItemLabel>{command.label}</MenuItemLabel>
+								<MenuItemLabel>
+									{getCommandLabel(messages, command)}
+								</MenuItemLabel>
 								{firstShortcut && (
 									<MenuItemShortcut>
 										{formatShortcut(firstShortcut)}

@@ -8,6 +8,7 @@ import { getSelectedCornerRadius } from "./utils/getSelectedCornerRadius";
 import { getSelectedStrokeDashType } from "./utils/getSelectedStrokeDashType";
 import { getSelectedStrokeWidth } from "./utils/getSelectedStrokeWidth";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
+import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { DashedCircleIcon } from "../../../../icons/DashedCircleIcon";
 import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
 import { DottedLineIcon } from "../../../../icons/DottedLineIcon";
@@ -42,6 +43,7 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 	showRadius = true,
 	onPropertyUpdate,
 }) => {
+	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const strokeWidth = getSelectedStrokeWidth(canvasState);
@@ -59,9 +61,9 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 				data-kind="menu"
 				data-id="object-menu"
 				data-part={`toggle:${SECTION_ID}`}
-				title="Border Style"
+				title={messages.menuBorderStyle}
 			>
-				<DashedCircleIcon title="Border Style" />
+				<DashedCircleIcon title={messages.menuBorderStyle} />
 			</ObjectMenuButton>
 			{isOpen && (
 				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>
@@ -73,32 +75,32 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 								data-kind="menu"
 								data-id="object-menu"
 								data-part="set:strokeDashType:solid"
-								title="Solid line"
+								title={messages.menuSolidLine}
 							>
-								<SolidLineIcon title="Solid line" />
+								<SolidLineIcon title={messages.menuSolidLine} />
 							</ObjectMenuButton>
 							<ObjectMenuButton
 								isActive={strokeDashType === "dashed"}
 								data-kind="menu"
 								data-id="object-menu"
 								data-part="set:strokeDashType:dashed"
-								title="Dashed line"
+								title={messages.menuDashedLine}
 							>
-								<DashedLineIcon title="Dashed line" />
+								<DashedLineIcon title={messages.menuDashedLine} />
 							</ObjectMenuButton>
 							<ObjectMenuButton
 								isActive={strokeDashType === "dotted"}
 								data-kind="menu"
 								data-id="object-menu"
 								data-part="set:strokeDashType:dotted"
-								title="Dotted line"
+								title={messages.menuDottedLine}
 							>
-								<DottedLineIcon title="Dotted line" />
+								<DottedLineIcon title={messages.menuDottedLine} />
 							</ObjectMenuButton>
 						</BorderStyleSection>
 
 						<MenuSlider
-							label="Border Width"
+							label={messages.menuBorderWidth}
 							value={strokeWidth}
 							min={MIN_STROKE_WIDTH}
 							max={MAX_STROKE_WIDTH}
@@ -108,7 +110,7 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 
 						{showRadius && (
 							<MenuSlider
-								label="Corner Radius"
+								label={messages.menuCornerRadius}
 								value={cornerRadius}
 								min={MIN_CORNER_RADIUS}
 								max={MAX_CORNER_RADIUS}

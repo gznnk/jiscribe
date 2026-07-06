@@ -2,6 +2,8 @@
 
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { commandRegistry } from "../../../../../commands/CommandRegistry";
+import { getCommandLabel } from "../../../../../messages/CanvasMessages";
+import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { GroupIcon } from "../../../../icons/GroupIcon";
 import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
 
@@ -10,6 +12,7 @@ type GroupMenuProps = {
 };
 
 const GroupMenuComponent: React.FC<GroupMenuProps> = ({ canvasState }) => {
+	const messages = useCanvasMessages();
 	// Determine if the single selected item is a group (→ show ungroup)
 	const singleSelected =
 		canvasState.selectedIds.length === 1
@@ -34,7 +37,7 @@ const GroupMenuComponent: React.FC<GroupMenuProps> = ({ canvasState }) => {
 				data-id="object-menu"
 				data-part={`command:${commandId}`}
 			>
-				<GroupIcon title={command.label} />
+				<GroupIcon title={getCommandLabel(messages, command)} />
 			</ObjectMenuButton>
 		</MenuItemPositioner>
 	);

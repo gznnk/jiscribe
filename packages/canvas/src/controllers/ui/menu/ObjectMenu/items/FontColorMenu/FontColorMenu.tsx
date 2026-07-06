@@ -3,6 +3,7 @@
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { resolveAutoColor } from "../../../../../../presentations/objects/utils/resolveAutoColor";
 import type { TextStyleState } from "../../../../../../states/objects/base/TextStyleState";
+import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { FontColorIcon } from "../../../../icons/FontColorIcon";
 import { ColorPickerGrid } from "../../common/ColorPickerGrid/ColorPickerGrid";
 import { DropdownPanel } from "../../common/DropdownPanel";
@@ -28,6 +29,7 @@ const FontColorMenuComponent: React.FC<FontColorMenuProps> = ({
 	canvasState,
 	onPropertyUpdate,
 }) => {
+	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
@@ -47,7 +49,7 @@ const FontColorMenuComponent: React.FC<FontColorMenuProps> = ({
 				data-kind="menu"
 				data-id="object-menu"
 				data-part={`toggle:${SECTION_ID}`}
-				title="Font Color"
+				title={messages.menuFontColor}
 			>
 				<FontColorIcon underlineColor={resolveAutoColor(currentColor, "ink")} />
 			</ObjectMenuButton>

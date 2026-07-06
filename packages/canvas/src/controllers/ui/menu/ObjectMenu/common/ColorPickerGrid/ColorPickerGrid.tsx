@@ -12,6 +12,7 @@ import {
 	AUTO_COLOR,
 	isAutoColor,
 } from "../../../../../../schemas/objects/utils/autoColor";
+import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { PRESET_COLORS } from "../../ObjectMenuConstants";
 
 type ColorPickerGridProps = {
@@ -34,6 +35,7 @@ const ColorPickerGridComponent: React.FC<ColorPickerGridProps> = ({
 	property,
 	onPropertyUpdate,
 }) => {
+	const messages = useCanvasMessages();
 	const [inputValue, setInputValue] = useState(currentColor);
 	const [isValid, setIsValid] = useState(true);
 	// Ref for referencing the latest inputValue from useEffect after render.
@@ -98,7 +100,7 @@ const ColorPickerGridComponent: React.FC<ColorPickerGridProps> = ({
 						data-kind="menu"
 						data-id="object-menu"
 						data-part={`set:${property}:${preset.value}`}
-						title={preset.name}
+						title={messages.colorNames[preset.name] ?? preset.name}
 					/>
 				))}
 			</ColorGrid>
@@ -109,9 +111,9 @@ const ColorPickerGridComponent: React.FC<ColorPickerGridProps> = ({
 					data-kind="menu"
 					data-id="object-menu"
 					data-part={`set:${property}:${AUTO_COLOR}`}
-					title="Auto (follows theme)"
+					title={messages.colorPickerAutoTitle}
 				>
-					Auto
+					{messages.colorPickerAuto}
 				</AutoButton>
 				<ColorTextInput
 					isValid={isValid}
@@ -121,7 +123,7 @@ const ColorPickerGridComponent: React.FC<ColorPickerGridProps> = ({
 					onKeyDown={handleKeyDown}
 					data-gesture="none"
 					maxLength={32}
-					placeholder="CSS color"
+					placeholder={messages.colorPickerCssColorPlaceholder}
 					spellCheck={false}
 				/>
 			</ColorInputRow>

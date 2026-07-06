@@ -4,6 +4,8 @@ import { RoutingMenuRow } from "./RoutingMenuStyled";
 import { getSelectedRouting } from "./utils/getSelectedRouting";
 import { isSelectedConnectorSelfLoop } from "./utils/isSelectedConnectorSelfLoop";
 import type { ConnectorRouting } from "../../../../../../schemas/objects/types/ConnectorRouting";
+import type { CanvasMessageStrings } from "../../../../../messages/CanvasMessages";
+import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { OrthogonalConnectorIcon } from "../../../../icons/OrthogonalConnectorIcon";
 import { StraightConnectorIcon } from "../../../../icons/StraightConnectorIcon";
 import { DropdownPanel } from "../../common/DropdownPanel";
@@ -23,7 +25,7 @@ type IconComponent = React.FC<{
 type RoutingOption = {
 	routing: ConnectorRouting;
 	commandId: string;
-	label: string;
+	messageKey: keyof CanvasMessageStrings;
 	Icon: IconComponent;
 };
 
@@ -35,13 +37,13 @@ const ROUTING_OPTIONS: RoutingOption[] = [
 	{
 		routing: "orthogonal",
 		commandId: "setRoutingOrthogonal",
-		label: "Orthogonal",
+		messageKey: "menuRoutingOrthogonal",
 		Icon: OrthogonalConnectorIcon,
 	},
 	{
 		routing: "straight",
 		commandId: "setRoutingStraight",
-		label: "Straight",
+		messageKey: "menuRoutingStraight",
 		Icon: StraightConnectorIcon,
 	},
 ];
@@ -56,6 +58,7 @@ const ROUTING_OPTIONS: RoutingOption[] = [
  * collapsed along with its divider via ObjectMenuSection's `:empty`.
  */
 const RoutingMenuComponent: React.FC<MenuItemProps> = ({ canvasState }) => {
+	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const currentRouting = getSelectedRouting(canvasState);
@@ -81,23 +84,23 @@ const RoutingMenuComponent: React.FC<MenuItemProps> = ({ canvasState }) => {
 				data-kind="menu"
 				data-id="object-menu"
 				data-part={`toggle:${SECTION_ID}`}
-				title="Connector Routing"
+				title={messages.menuConnectorRouting}
 			>
-				<CurrentIcon title="Connector Routing" />
+				<CurrentIcon title={messages.menuConnectorRouting} />
 			</ObjectMenuButton>
 			{isOpen && (
 				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>
 					<RoutingMenuRow>
-						{ROUTING_OPTIONS.map(({ routing, commandId, label, Icon }) => (
+						{ROUTING_OPTIONS.map(({ routing, commandId, messageKey, Icon }) => (
 							<ObjectMenuButton
 								key={routing}
 								isActive={routing === currentRouting}
 								data-kind="menu"
 								data-id="object-menu"
 								data-part={`command:${commandId}`}
-								title={label}
+								title={messages[messageKey]}
 							>
-								<Icon title={label} />
+								<Icon title={messages[messageKey]} />
 							</ObjectMenuButton>
 						))}
 					</RoutingMenuRow>

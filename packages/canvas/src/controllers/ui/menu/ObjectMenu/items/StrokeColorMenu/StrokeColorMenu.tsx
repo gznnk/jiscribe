@@ -2,6 +2,7 @@ import { memo, useRef } from "react";
 
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { resolveAutoColor } from "../../../../../../presentations/objects/utils/resolveAutoColor";
+import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { BorderColorIcon } from "../../../../icons/BorderColorIcon";
 import { ColorPickerGrid } from "../../common/ColorPickerGrid/ColorPickerGrid";
 import { DropdownPanel } from "../../common/DropdownPanel";
@@ -35,6 +36,7 @@ const StrokeColorMenuComponent: React.FC<StrokeColorMenuProps> = ({
 	canvasState,
 	onPropertyUpdate,
 }) => {
+	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const currentColor = getSelectedStrokeColor(canvasState);
@@ -50,11 +52,11 @@ const StrokeColorMenuComponent: React.FC<StrokeColorMenuProps> = ({
 				data-kind="menu"
 				data-id="object-menu"
 				data-part={`toggle:${SECTION_ID}`}
-				title="Stroke Color"
+				title={messages.menuStrokeColor}
 			>
 				<BorderColorIcon
 					color={resolveAutoColor(currentColor, "ink")}
-					title="Stroke Color"
+					title={messages.menuStrokeColor}
 				/>
 			</ObjectMenuButton>
 			{isOpen && (

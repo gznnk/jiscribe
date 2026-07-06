@@ -3,6 +3,7 @@ import { memo, useRef } from "react";
 import { getSelectedConnectorLabel } from "./utils/getSelectedConnectorLabel";
 import { CONNECTOR_LABEL_DEFAULTS } from "../../../../../../presentations/objects/connections/ConnectorLabel";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { FontSizeIcon } from "../../../../icons/FontSizeIcon";
 import { DropdownPanel } from "../../common/DropdownPanel";
 import { MenuSlider } from "../../common/MenuSlider";
@@ -26,6 +27,7 @@ const LabelFontSizeMenuComponent: React.FC<Props> = ({
 	canvasState,
 	onPropertyUpdate,
 }) => {
+	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
@@ -44,7 +46,7 @@ const LabelFontSizeMenuComponent: React.FC<Props> = ({
 				data-kind="menu"
 				data-id="object-menu"
 				data-part={`toggle:${SECTION_ID}`}
-				title="Label Font Size"
+				title={messages.menuLabelFontSize}
 			>
 				<FontSizeIcon />
 			</ObjectMenuButton>
@@ -52,7 +54,7 @@ const LabelFontSizeMenuComponent: React.FC<Props> = ({
 				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>
 					<FontSizeMenuWrapper>
 						<MenuSlider
-							label="Font Size"
+							label={messages.menuFontSize}
 							value={fontSize}
 							min={MIN_FONT_SIZE}
 							max={MAX_FONT_SIZE}

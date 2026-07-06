@@ -2,6 +2,7 @@
 
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { resolveAutoColor } from "../../../../../../presentations/objects/utils/resolveAutoColor";
+import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { ColorPreviewIcon } from "../../../../icons/ColorPreviewIcon";
 import { ColorPickerGrid } from "../../common/ColorPickerGrid/ColorPickerGrid";
 import { DropdownPanel } from "../../common/DropdownPanel";
@@ -34,6 +35,7 @@ const BackgroundColorMenuComponent: React.FC<BackgroundColorMenuProps> = ({
 	canvasState,
 	onPropertyUpdate,
 }) => {
+	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const currentColor = getSelectedFillColor(canvasState);
@@ -49,11 +51,11 @@ const BackgroundColorMenuComponent: React.FC<BackgroundColorMenuProps> = ({
 				data-kind="menu"
 				data-id="object-menu"
 				data-part={`toggle:${SECTION_ID}`}
-				title="Background Color"
+				title={messages.menuBackgroundColor}
 			>
 				<ColorPreviewIcon
 					color={resolveAutoColor(currentColor, "surface")}
-					title="Background Color"
+					title={messages.menuBackgroundColor}
 				/>
 			</ObjectMenuButton>
 			{isOpen && (

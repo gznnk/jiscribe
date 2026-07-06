@@ -2,6 +2,7 @@
 
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import type { TextStyleState } from "../../../../../../states/objects/base/TextStyleState";
+import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { BoldIcon } from "../../../../icons/BoldIcon";
 import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
 import { getFirstSelectedWithProp } from "../../utils/getFirstSelectedWithProp";
@@ -15,6 +16,7 @@ type BoldMenuProps = {
  * Toggles the fontWeight of the selected text object.
  */
 const BoldMenuComponent: React.FC<BoldMenuProps> = ({ canvasState }) => {
+	const messages = useCanvasMessages();
 	const { selectedIds, objects } = canvasState;
 	const obj = getFirstSelectedWithProp(selectedIds, objects, "fontWeight");
 	const isBold = (obj as TextStyleState | undefined)?.fontWeight === "bold";
@@ -26,7 +28,7 @@ const BoldMenuComponent: React.FC<BoldMenuProps> = ({ canvasState }) => {
 				data-kind="menu"
 				data-id="object-menu"
 				data-part={`set:fontWeight:${isBold ? "normal" : "bold"}`}
-				title="Bold"
+				title={messages.menuBold}
 			>
 				<BoldIcon />
 			</ObjectMenuButton>
