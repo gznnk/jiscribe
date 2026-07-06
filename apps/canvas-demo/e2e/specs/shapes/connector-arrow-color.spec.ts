@@ -69,7 +69,7 @@ test.describe("コネクターの矢印色の追従", () => {
 		const red = "#e11d48";
 		await canvas.clickAt({ x: 610, y: 250 });
 		await expect(
-			canvas.page.locator('[data-id="object-menu:toggle:line-color"]'),
+			canvas.page.locator('[data-part="toggle:line-color"]'),
 		).toBeVisible();
 		await canvas.setColor("line-color", red);
 		await canvas.deselect();

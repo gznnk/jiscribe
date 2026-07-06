@@ -231,11 +231,11 @@ test.describe("コネクターの自己ループ（同一図形への接続）",
 
 		// コネクター用 ObjectMenu は出る（線色トグルで確認）が、routing 切替は隠れる。
 		await expect(
-			canvas.page.locator('[data-id="object-menu:toggle:line-color"]'),
+			canvas.page.locator('[data-part="toggle:line-color"]'),
 			"コネクターの ObjectMenu が表示されること",
 		).toBeVisible();
 		await expect(
-			canvas.page.locator('[data-id="object-menu:toggle:connector-routing"]'),
+			canvas.page.locator('[data-part="toggle:connector-routing"]'),
 			"自己ループでは routing 切替メニューが出ないこと",
 		).toHaveCount(0);
 	});

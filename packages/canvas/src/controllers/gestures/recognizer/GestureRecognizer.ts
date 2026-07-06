@@ -482,6 +482,7 @@ export class GestureRecognizer {
 				const currentClick: ClickSnapshot = {
 					time,
 					targetId: this.pressed.targetId,
+					targetPart: this.pressed.targetPart,
 					clientPos: this.pressed.clientStart,
 				};
 				const doubleClick = isDoubleClick(this.lastClick, currentClick);

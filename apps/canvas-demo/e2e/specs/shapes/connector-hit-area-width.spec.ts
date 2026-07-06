@@ -32,7 +32,7 @@ function parsePoints(attr: string | null): Vec[] {
 
 /** コネクター選択時に出る ObjectMenu（線色トグル）のロケーター */
 function lineColorToggle(canvas: CanvasDriver) {
-	return canvas.page.locator('[data-id="object-menu:toggle:line-color"]');
+	return canvas.page.locator('[data-part="toggle:line-color"]');
 }
 
 /** 左右に並べた 2 矩形を rightCenter → leftCenter で結び、水平な直線コネクターを作る。 */

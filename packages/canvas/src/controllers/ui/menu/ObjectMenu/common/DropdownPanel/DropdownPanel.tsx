@@ -20,8 +20,9 @@ export const DropdownPanel = forwardRef<
 >((props, ref) => (
 	<DropdownPanelRoot
 		ref={ref}
-		data-kind="object-menu"
-		data-id="object-menu:panel"
+		data-kind="menu"
+		data-id="object-menu"
+		data-part="panel"
 		{...props}
 	/>
 ));

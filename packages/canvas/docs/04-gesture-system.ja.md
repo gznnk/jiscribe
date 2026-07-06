@@ -115,7 +115,7 @@ snapCandidates 等）を保存し、`dragEnd` でクリアする。`dragEnd` 時
 | `control` + `connection-anchor:edit:<id>:…`          | `control` / `<connectorId>` / `endpoint:<source\|target>`                   |
 | `toolbar` + `toolbar:command:zoomIn`                 | `menu` / `toolbar` / `command:zoomIn`                                       |
 | `object-menu` + `object-menu:set:fill:red` 等        | `menu` / `object-menu` / `set:fill:red`（toggle / slider / command も同様） |
-| `object-menu` + `object-menu:bar` / `:panel`         | `menu` / `object-menu` / part 無し（メニューの地）                          |
+| `object-menu` + `object-menu:bar` / `:panel`         | `menu` / `object-menu` / バーは part 無し・パネルは `panel`                 |
 | `context-menu` + `context-menu:<cmdId>`              | `menu` / `context-menu` / `command:<cmdId>`（動詞を常置）                   |
 | `menu-item` + `menu-item:<presetId>`                 | `menu` / `shape-library` / `item:<presetId>`                                |
 | `text-editor` 等ハンドラ無しの kind                  | `data-kind` を剥がし `data-gesture="none"` へ                               |

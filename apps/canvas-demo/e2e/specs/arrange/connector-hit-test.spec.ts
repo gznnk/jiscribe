@@ -21,9 +21,7 @@ test.describe("コネクターのヒットテスト（z-order 連動）", () => 
 		await canvas.createConnector("bottomCenter", { x: 500, y: 450 });
 		await canvas.deselect();
 
-		const lineColor = canvas.page.locator(
-			'[data-id="object-menu:toggle:line-color"]',
-		);
+		const lineColor = canvas.page.locator('[data-part="toggle:line-color"]');
 
 		// 新規コネクターは最前面 → 重なり点クリックでコネクターが選ばれる
 		await canvas.selectAt({ x: 500, y: 350 });

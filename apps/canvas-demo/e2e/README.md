@@ -73,15 +73,17 @@ await page.goto("http://localhost:5174/", { waitUntil: "networkidle" });
 | `menu-number-input:{property}`  | ObjectMenu の数値入力欄     | gesture を経由しないフォーム要素                                                                 |
 | `snap-guide:x` / `snap-guide:y` | スナップガイド線（縦 / 横） | `pointerEvents: none` の装飾。drag 中のみ存在。整列座標は line の `x1`（x軸）/ `y1`（y軸）が保持 |
 
-| data-kind     | 意味                                    | data-id の形式                    |
-| ------------- | --------------------------------------- | --------------------------------- |
-| `canvas`      | キャンバス本体（DIV）                   | `canvas`                          |
-| `menu-item`   | 左ツールバーのボタン                    | `menu-item:re` など（先頭数文字） |
-| `object`      | 図形（rect / ellipse / polyline …）     | UUID                              |
-| `connector`   | コネクター（polyline + 矢印の polygon） | UUID                              |
-| `control`     | 選択時のハンドル類                      | 下表参照                          |
-| `object-menu` | 選択時のフローティングメニュー          | 下表参照                          |
-| `text-editor` | テキスト編集中の TEXTAREA               | `textarea`                        |
+| data-kind     | 意味                                   | data-id / data-part                                                                         |
+| ------------- | -------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `canvas`      | キャンバス本体（DIV）                  | id: `canvas`                                                                                |
+| `object`      | 図形（rect / ellipse / polyline …）    | id: UUID                                                                                    |
+| `connector`   | コネクター（polyline + 矢印 + ラベル） | id: UUID。ラベルボックスは part: `label`                                                    |
+| `control`     | 選択時のハンドル類                     | 下表参照                                                                                    |
+| `menu`        | メニュー UI 全般                       | id: `toolbar` / `object-menu` / `context-menu` / `shape-library`。ボタンは part（下表参照） |
+| `text-editor` | テキスト編集中の TEXTAREA              | id: `textarea`                                                                              |
+
+kind / id / part の3軸文法は `packages/canvas/docs/04-gesture-system.md` を参照。
+図形ライブラリのボタンは part: `item:<presetId>`（例 `item:rect`）。
 
 ツールバーは `button[title="Rectangle"]` のように `title` 属性でも特定できる
 （Rectangle / Ellipse / Polyline / Polygon / Sticky / Markdown）。
@@ -94,17 +96,17 @@ await page.goto("http://localhost:5174/", { waitUntil: "networkidle" });
 | `transform-control:rotation`                                      | 回転ハンドル（topRight の外側 +15,-15 付近）                                                                                              |
 | `connection-anchor:create:<uuid>:<anchorId>`                      | コネクター作成アンカー。`anchorId` は `topCenter` / `bottomCenter` / `leftCenter` / `rightCenter`。**辺の中点から 20px 外側**に表示される |
 
-### object-menu の data-id
+### object-menu（data-id="object-menu"）の data-part
 
-| data-id                                                      | 開くもの                                                                              |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
-| `object-menu:toggle:bg-color`                                | 背景色（property: `fill`）                                                            |
-| `object-menu:toggle:stroke-color`                            | 枠線色（`stroke`）                                                                    |
-| `object-menu:toggle:line-color`                              | 線色（`stroke`、線・コネクター用）                                                    |
-| `object-menu:toggle:font-color`                              | 文字色（`fontColor`）                                                                 |
-| `object-menu:toggle:line-style` / `border-style`             | 線種・線幅（・角丸）                                                                  |
-| `object-menu:toggle:font-size` / `alignment` / `stack-order` | フォントサイズ / 配置 / 重なり順                                                      |
-| `object-menu:set:<property>:<value>`                         | 即時設定ボタン（例: `object-menu:set:strokeDashType:dashed`、プリセット色スウォッチ） |
+| data-part                                        | 開くもの                                                                  |
+| ------------------------------------------------ | ------------------------------------------------------------------------- |
+| `toggle:bg-color`                                | 背景色（property: `fill`）                                                |
+| `toggle:stroke-color`                            | 枠線色（`stroke`）                                                        |
+| `toggle:line-color`                              | 線色（`stroke`、線・コネクター用）                                        |
+| `toggle:font-color`                              | 文字色（`fontColor`）                                                     |
+| `toggle:line-style` / `border-style`             | 線種・線幅（・角丸）                                                      |
+| `toggle:font-size` / `alignment` / `stack-order` | フォントサイズ / 配置 / 重なり順                                          |
+| `set:<property>:<value>`                         | 即時設定ボタン（例: `set:strokeDashType:dashed`、プリセット色スウォッチ） |
 
 カラーピッカーには **CSS カラーのテキスト入力欄**（`input[placeholder="CSS color"]`）があり、
 任意の hex や `transparent` を入力して **Enter で確定**できる。プリセットにない色はこれで設定する。

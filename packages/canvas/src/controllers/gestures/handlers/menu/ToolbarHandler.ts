@@ -6,10 +6,10 @@ import type {
 
 /**
  * GestureHandler that processes button interactions on the top toolbar.
- * Handles events when targetKind is "toolbar".
+ * Handles events with targetKind "menu" and targetId "toolbar".
  *
- * targetId format:
- * - `toolbar:command:{commandId}` → execute the command (canExecute is judged inside handleCommand)
+ * targetPart format:
+ * - `command:{commandId}` → execute the command (canExecute is judged inside handleCommand)
  *
  * Actions (zoom, etc.) are consolidated into the command system and go through the same
  * path (handleCommand) as keyboard shortcuts and the context menu.
@@ -20,11 +20,11 @@ import type {
  * commands (zoom ±, etc.) have no double-click-specific meaning, so doubleClick is also
  * treated as a single execution. This makes "rapid clicking = execute every time" hold.
  */
-const COMMAND_PREFIX = "toolbar:command:";
+const COMMAND_PREFIX = "command:";
 
 export const ToolbarHandler: GestureHandler = {
 	supports(event: CanvasEvent) {
-		return event.targetKind === "toolbar";
+		return event.targetKind === "menu" && event.targetId === "toolbar";
 	},
 
 	handle(state, event) {
@@ -38,8 +38,8 @@ export const ToolbarHandler: GestureHandler = {
 		}
 
 		const isActivation = event.type === "click" || event.type === "doubleClick";
-		if (isActivation && event.targetId?.startsWith(COMMAND_PREFIX)) {
-			const commandId = event.targetId.slice(COMMAND_PREFIX.length);
+		if (isActivation && event.targetPart?.startsWith(COMMAND_PREFIX)) {
+			const commandId = event.targetPart.slice(COMMAND_PREFIX.length);
 			return handleCommand(nextState, commandId);
 		}
 

@@ -25,7 +25,7 @@ type ColorPickerGridProps = {
 /**
  * Color picker grid.
  * Displays preset color swatches (4×7 grid) and a CSS color text input.
- * Each swatch has data-kind="object-menu" and updates the property through the gesture system.
+ * Each swatch has data-kind="menu" and updates the property through the gesture system.
  * The text input previews in real time on onChange (commit: false), and
  * commits on onBlur / Enter (commit: true).
  */
@@ -95,8 +95,9 @@ const ColorPickerGridComponent: React.FC<ColorPickerGridProps> = ({
 						key={preset.value}
 						swatchColor={preset.value}
 						selected={preset.value.toLowerCase() === currentColor.toLowerCase()}
-						data-kind="object-menu"
-						data-id={`object-menu:set:${property}:${preset.value}`}
+						data-kind="menu"
+						data-id="object-menu"
+						data-part={`set:${property}:${preset.value}`}
 						title={preset.name}
 					/>
 				))}
@@ -105,8 +106,9 @@ const ColorPickerGridComponent: React.FC<ColorPickerGridProps> = ({
 				<AutoButton
 					type="button"
 					selected={isAutoColor(currentColor)}
-					data-kind="object-menu"
-					data-id={`object-menu:set:${property}:${AUTO_COLOR}`}
+					data-kind="menu"
+					data-id="object-menu"
+					data-part={`set:${property}:${AUTO_COLOR}`}
 					title="Auto (follows theme)"
 				>
 					Auto

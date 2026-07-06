@@ -124,8 +124,9 @@ const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 							<MenuItem
 								key={command.id}
 								disabled={!enabled}
-								data-kind="context-menu"
-								data-id={`context-menu:${command.id}`}
+								data-kind="menu"
+								data-id="context-menu"
+								data-part={`command:${command.id}`}
 							>
 								<MenuItemLabel>{command.label}</MenuItemLabel>
 								{firstShortcut && (

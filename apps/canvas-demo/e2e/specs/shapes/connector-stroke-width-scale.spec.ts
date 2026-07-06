@@ -143,7 +143,7 @@ test.describe("コネクターの線幅と矢印・インセットの連動", ()
 		// line-style メニューを開いて strokeWidth を 6 に変更。
 		await canvas.clickAt({ x: 610, y: 250 });
 		await expect(
-			canvas.page.locator('[data-id="object-menu:toggle:line-style"]'),
+			canvas.page.locator('[data-part="toggle:line-style"]'),
 		).toBeVisible();
 		await canvas.openObjectMenu("line-style");
 		await canvas.setNumberInput("strokeWidth", 6);

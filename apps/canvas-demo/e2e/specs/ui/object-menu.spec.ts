@@ -62,7 +62,9 @@ test.describe("ObjectMenu によるスタイル設定", () => {
 
 		// パネルの余白（ボタン以外の背景部分）をクリックする。
 		// ColorPickerContainer の padding 領域に当たる左上角を狙う。
-		const panel = canvas.page.locator('[data-id="object-menu:panel"]');
+		const panel = canvas.page.locator(
+			'[data-id="object-menu"][data-part="panel"]',
+		);
 		await panel.click({ position: { x: 6, y: 6 } });
 
 		// サブメニューは開いたまま、図形の選択も維持されること

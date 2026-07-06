@@ -9,7 +9,9 @@ import type { ClickSnapshot } from "../GestureRecognizerTypes";
  *
  * Conditions:
  *   1. A prior single click is recorded (previous !== null)
- *   2. Same target (matching targetId; the background matches as both are undefined)
+ *   2. Same target (matching targetId AND targetPart; the background matches as both are
+ *      undefined). Different parts of one target — e.g. two buttons of the same menu, or a
+ *      connector's line vs its label box — are separate click targets, not a double click.
  *   3. Within the time threshold (DOUBLE_CLICK_THRESHOLD)
  *   4. Within the screen distance threshold (DOUBLE_CLICK_DISTANCE_THRESHOLD)
  *
@@ -36,6 +38,7 @@ export const isDoubleClick = (
 
 	return (
 		previous.targetId === current.targetId &&
+		previous.targetPart === current.targetPart &&
 		current.time - previous.time < DOUBLE_CLICK_THRESHOLD &&
 		clientDistanceSquared < DOUBLE_CLICK_DISTANCE_THRESHOLD
 	);

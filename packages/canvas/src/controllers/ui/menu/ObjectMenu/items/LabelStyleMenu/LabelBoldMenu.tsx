@@ -20,8 +20,9 @@ const LabelBoldMenuComponent: React.FC<Props> = ({ canvasState }) => {
 		<MenuItemPositioner>
 			<ObjectMenuButton
 				isActive={isBold}
-				data-kind="object-menu"
-				data-id={`object-menu:set:label.fontWeight:${isBold ? "normal" : "bold"}`}
+				data-kind="menu"
+				data-id="object-menu"
+				data-part={`set:label.fontWeight:${isBold ? "normal" : "bold"}`}
 				title="Label Bold"
 			>
 				<BoldIcon />

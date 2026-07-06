@@ -116,7 +116,7 @@ The grammar above is the target. The current deviations below are to be migrated
 | `control` + `connection-anchor:edit:<id>:…`          | `control` / `<connectorId>` / `endpoint:<source\|target>`                    |
 | `toolbar` + `toolbar:command:zoomIn`                 | `menu` / `toolbar` / `command:zoomIn`                                        |
 | `object-menu` + `object-menu:set:fill:red` etc.      | `menu` / `object-menu` / `set:fill:red` (same for toggle / slider / command) |
-| `object-menu` + `object-menu:bar` / `:panel`         | `menu` / `object-menu` / no part (the menu chrome itself)                    |
+| `object-menu` + `object-menu:bar` / `:panel`         | `menu` / `object-menu` / bar has no part, panel is `panel`                   |
 | `context-menu` + `context-menu:<cmdId>`              | `menu` / `context-menu` / `command:<cmdId>` (verb always present)            |
 | `menu-item` + `menu-item:<presetId>`                 | `menu` / `shape-library` / `item:<presetId>`                                 |
 | handler-less kinds such as `text-editor`             | drop `data-kind`, use `data-gesture="none"`                                  |

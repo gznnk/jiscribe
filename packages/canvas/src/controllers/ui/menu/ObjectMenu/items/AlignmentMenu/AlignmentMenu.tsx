@@ -58,8 +58,9 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 		<MenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-kind="object-menu"
-				data-id={`object-menu:toggle:${SECTION_ID}`}
+				data-kind="menu"
+				data-id="object-menu"
+				data-part={`toggle:${SECTION_ID}`}
 				title="Text Alignment"
 			>
 				<AlignLeftIcon />
@@ -72,8 +73,9 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 								<ObjectMenuButton
 									key={value}
 									isActive={textAlign === value}
-									data-kind="object-menu"
-									data-id={`object-menu:set:textAlign:${value}`}
+									data-kind="menu"
+									data-id="object-menu"
+									data-part={`set:textAlign:${value}`}
 									title={title}
 								>
 									<Icon />
@@ -85,8 +87,9 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 								<ObjectMenuButton
 									key={value}
 									isActive={verticalAlign === value}
-									data-kind="object-menu"
-									data-id={`object-menu:set:verticalAlign:${value}`}
+									data-kind="menu"
+									data-id="object-menu"
+									data-part={`set:verticalAlign:${value}`}
 									title={title}
 								>
 									<Icon />
