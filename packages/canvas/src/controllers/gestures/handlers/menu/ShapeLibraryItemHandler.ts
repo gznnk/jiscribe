@@ -74,7 +74,13 @@ const addObjectToState = (
  */
 export const ShapeLibraryItemHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {
-		return event.targetKind === "menu" && event.targetId === "shape-library";
+		// Left button only: other buttons fall through to CanvasEventHandler's
+		// canvas-level right-button behavior (#110)
+		return (
+			event.button === 0 &&
+			event.targetKind === "menu" &&
+			event.targetId === "shape-library"
+		);
 	},
 
 	handle(state, event) {
@@ -82,9 +88,7 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 
 		// Pressing on a menu item closes the context menu (the press itself does not place or draw)
 		if (event.type === "pressed") {
-			if (event.button === 0) {
-				nextState = { ...nextState, contextMenuPosition: null };
-			}
+			nextState = { ...nextState, contextMenuPosition: null };
 		}
 
 		if (!event.targetPart) {
