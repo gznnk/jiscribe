@@ -3,7 +3,7 @@ import {
 	calcOrientedFrameFromPoints,
 	isTransformedFrame,
 } from "@workspace/geometry";
-import type { Point, TransformedFrame } from "@workspace/geometry";
+import type { Point, Transform, TransformedFrame } from "@workspace/geometry";
 
 import { MIN_GROUP_DIMENSION } from "../../constants/groupDimensions";
 import { isPoly } from "../../schemas/objects/types/Poly";
@@ -50,21 +50,55 @@ export function calculateGroupOrientedBounds(
 	// counts as a (zero-point) child of its parent.
 	pointCache?.set(groupId, allPoints);
 
-	if (allPoints.length === 0) {
+	// Compute the OBB with the group's transform
+	return calcClampedOrientedBounds(allPoints, {
+		rotation: groupState.rotation ?? 0,
+		scaleX: groupState.scaleX ?? 1,
+		scaleY: groupState.scaleY ?? 1,
+	});
+}
+
+/**
+ * Computes an Oriented Bounding Box (OBB) directly from child IDs and a transform,
+ * without requiring a group object in the map.
+ *
+ * Use this when the group does not exist yet (e.g. GroupCommand computing the
+ * bounds of a group it is about to create) — it avoids injecting a placeholder
+ * group with fake frame values into the object map.
+ *
+ * @param objects - the object map (children are resolved from here)
+ * @param childIds - IDs of the children to enclose
+ * @param transform - the transform the resulting OBB should carry
+ * @returns the Oriented Bounding Box (as a TransformedFrame), or null if no child contributes geometry
+ */
+export function calculateOrientedBoundsFromChildIds(
+	objects: Record<string, ObjectState>,
+	childIds: string[],
+	transform: Transform,
+): TransformedFrame | null {
+	return calcClampedOrientedBounds(
+		collectChildPoints(objects, childIds),
+		transform,
+	);
+}
+
+/**
+ * Computes the OBB of a point set with the given transform, clamped to the
+ * GroupState minimum dimensions.
+ */
+function calcClampedOrientedBounds(
+	points: Point[],
+	transform: Transform,
+): TransformedFrame | null {
+	if (points.length === 0) {
 		return null;
 	}
 
-	// Get the group's transform
-	const groupRotation = groupState.rotation ?? 0;
-	const groupScaleX = groupState.scaleX ?? 1;
-	const groupScaleY = groupState.scaleY ?? 1;
-
-	// Compute an Oriented Bounding Box with the group's transform from the point set
 	const obb = calcOrientedFrameFromPoints(
-		allPoints,
-		groupScaleX,
-		groupScaleY,
-		groupRotation,
+		points,
+		transform.scaleX,
+		transform.scaleY,
+		transform.rotation,
 	);
 	if (!obb) {
 		return null;
