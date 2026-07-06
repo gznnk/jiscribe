@@ -41,14 +41,22 @@ src/**/__tests__/**/*.{test,spec}.{ts,tsx}
 
 ### File naming conventions
 
-| Form                    | Purpose                                                               | Example                            |
-| ----------------------- | --------------------------------------------------------------------- | ---------------------------------- |
-| `<SUT>.test.ts`         | Default. Co-located 1:1 with the file under test                      | `validateRectDoc.test.ts`          |
-| `<SUT>.<facet>.test.ts` | When a single SUT is large and you want to **split files per facet**  | `canvasReducer.coalescing.test.ts` |
-| `<scenario>.test.ts`    | A sociable **regression scenario** not tied to a specific entry point | `copyPasteDuplicateOrder.test.ts`  |
+| Form                    | Purpose                                                                                    | Example                            |
+| ----------------------- | ------------------------------------------------------------------------------------------ | ---------------------------------- |
+| `<SUT>.test.ts`         | Default. Co-located 1:1 with the file under test                                           | `validateRectDoc.test.ts`          |
+| `<SUT>.<facet>.test.ts` | When a single SUT is large and you want to **split files per facet**                       | `canvasReducer.coalescing.test.ts` |
+| `<scenario>.test.ts`    | A sociable **cross-cutting regression scenario** that does not belong to a single SUT file | `copyPasteDuplicateOrder.test.ts`  |
 
 - `<facet>` is a noun describing an aspect of behavior (`coalescing` / `undoRedo` / `externalSync`, etc.).
   **Do not use facet naming for solitary pure-function tests** (facet splitting is limited to sociable / large SUTs)
+- Choosing between `<SUT>` naming and `<scenario>` naming is decided **not by whether an entry point exists, but by what the file name refers to**.
+  If the file name refers to a single SUT's contract, use `<SUT>(.<facet>)`; if it refers to an invariant spanning multiple modules, use `<scenario>`.
+  Even when a scenario test goes through a specific entry point (`handleCommand`, etc.), do not prefix the file name with the entry point
+  — when the test fails, the place to open is the code implementing the invariant, not the entry point, and there may be more than one entry point
+  (e.g. `copyPasteDuplicateOrder` drives both `handleCommand` and `handlePaste`).
+  The entry point is conveyed by the folder location (table below) and the doc comment at the top of the test
+- Tests of `handleCommand`'s own contract (Registry resolution, the `canExecute` gate, etc.) use normal SUT naming
+  as `handlers/__tests__/handleCommand.test.ts`, not scenario naming
 - Sociable tests place their `support/` — responsible for state assembly, dispatch, and fixtures — under `__tests__/support/`.
   Sharing `support/` is a future task; for now we **tolerate duplication per folder**
   (`controllers/reducer/__tests__/support/` and `controllers/commands/__tests__/support/` are separate)
