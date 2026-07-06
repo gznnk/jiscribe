@@ -49,6 +49,17 @@ describe("calcOutlinePointTowardForRotatedEllipse", () => {
 		expect(result!.y).toBeCloseTo(-30);
 	});
 
+	it("回転なしで中心が原点以外・斜め方向でも正しい交点を返す", () => {
+		// 中心(10,20)からオフセット(100,60): 正規化距離8 → 交点はオフセット÷√8
+		const result = calcOutlinePointTowardForRotatedEllipse(
+			{ ...baseEllipse, cx: 10, cy: 20 },
+			{ x: 110, y: 80 },
+		);
+		expect(result).not.toBeNull();
+		expect(result!.x).toBeCloseTo(10 + 100 / Math.sqrt(8));
+		expect(result!.y).toBeCloseTo(20 + 60 / Math.sqrt(8));
+	});
+
 	it("90度回転時は右外側のtowardが回転後の縁（ry=30）に当たる", () => {
 		// rx=50, ry=30 を 90度回転すると、ローカルの ry(30) が世界座標の水平方向の縁になる
 		const result = calcOutlinePointTowardForRotatedEllipse(

@@ -49,6 +49,17 @@ describe("calcOutlinePointTowardForRotatedFrame", () => {
 		expect(result!.y).toBeCloseTo(-30);
 	});
 
+	it("回転なしで中心が原点以外・斜め方向でも正しい交点を返す", () => {
+		// 中心(10,20)から(210,140)へのレイ: 方向(200,120)、右辺(x=60)到達時に y=50 で角に当たる
+		const result = calcOutlinePointTowardForRotatedFrame(
+			{ ...baseFrame, cx: 10, cy: 20 },
+			{ x: 210, y: 140 },
+		);
+		expect(result).not.toBeNull();
+		expect(result!.x).toBeCloseTo(60);
+		expect(result!.y).toBeCloseTo(50);
+	});
+
 	it("90度回転時は右外側のtowardが回転後の縁（x=半高=30）に当たる", () => {
 		// 100x60 を 90度回転すると、ローカル半高(30)が世界座標の水平方向の縁になる
 		const result = calcOutlinePointTowardForRotatedFrame(

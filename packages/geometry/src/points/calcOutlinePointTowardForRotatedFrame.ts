@@ -19,18 +19,27 @@ export function calcOutlinePointTowardForRotatedFrame(
 		return null;
 	}
 
-	// Compute cos/sin once and reuse for both rotation directions below.
-	const rotationRad = degreesToRadians(rotation);
-	const cos = Math.cos(rotationRad);
-	const sin = Math.sin(rotationRad);
+	// Fast path: rotation === 0 (the vast majority of shapes) needs no trig —
+	// the world offset is already the local offset.
+	const isRotated = rotation !== 0;
+	let cos = 1;
+	let sin = 0;
+	let dx = toward.x - cx;
+	let dy = toward.y - cy;
+	if (isRotated) {
+		// Compute cos/sin once and reuse for both rotation directions below.
+		const rotationRad = degreesToRadians(rotation);
+		cos = Math.cos(rotationRad);
+		sin = Math.sin(rotationRad);
 
-	// world -> local (centered, unrotated): rotate `toward` around center by
-	// -rotation. cos(-θ)=cos and sin(-θ)=-sin, so we reuse the same cos/sin and
-	// keep the local offset as plain numbers (no Point allocation).
-	const wx = toward.x - cx;
-	const wy = toward.y - cy;
-	const dx = wx * cos + wy * sin;
-	const dy = -wx * sin + wy * cos;
+		// world -> local (centered, unrotated): rotate `toward` around center by
+		// -rotation. cos(-θ)=cos and sin(-θ)=-sin, so we reuse the same cos/sin and
+		// keep the local offset as plain numbers (no Point allocation).
+		const wx = dx;
+		const wy = dy;
+		dx = wx * cos + wy * sin;
+		dy = -wx * sin + wy * cos;
+	}
 	if (dx === 0 && dy === 0) {
 		return null;
 	}
@@ -100,5 +109,8 @@ export function calcOutlinePointTowardForRotatedFrame(
 	}
 
 	// local -> world: rotate the hit point back around center by +rotation.
+	if (!isRotated) {
+		return { x: cx + bestX, y: cy + bestY };
+	}
 	return calcRotatedPointWithTrig(cx + bestX, cy + bestY, cx, cy, cos, sin);
 }
