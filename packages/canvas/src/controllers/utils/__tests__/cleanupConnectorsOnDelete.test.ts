@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 
 import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
 import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
+import { deepFreezeState } from "../../__tests__/support/deepFreezeState";
 import { createInitialControllerState } from "../../reducer/createInitialControllerState";
 import { initializeObjectRegistry } from "../../setup/initializeObjectRegistry";
 import { cleanupConnectorsOnDelete } from "../cleanupConnectorsOnDelete";
@@ -34,7 +35,9 @@ const free = (x: number, y: number): unknown => ({
 });
 
 const buildState = (root: unknown[]) =>
-	createInitialControllerState({ version: 1, root } as unknown as CanvasDoc);
+	deepFreezeState(
+		createInitialControllerState({ version: 1, root } as unknown as CanvasDoc),
+	);
 
 describe("cleanupConnectorsOnDelete", () => {
 	it("leaves state untouched (same reference) when the deletion target is unrelated to connectors", () => {

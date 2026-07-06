@@ -1,4 +1,4 @@
-import { type Dispatch, useCallback, useEffect } from "react";
+import { type Dispatch, type RefObject, useCallback, useEffect } from "react";
 
 import { getPlatform } from "../commands/CommandUtils";
 import {
@@ -13,11 +13,14 @@ import type { CanvasAction } from "../reducer/CanvasActions";
  *
  * It tries to read the OS clipboard and falls back to internalClipboard on failure.
  *
+ * @param containerRef - Focusable canvas root the keydown listener is scoped to
+ *   (same multi-Canvas rationale as useKeyboardShortcuts)
  * @param internalClipboard - Fallback used when the OS clipboard cannot be read
  * @param dispatch - Canvas reducer dispatch
  * @returns The paste handler callback (reusable from the context menu and elsewhere)
  */
 export const useClipboardPaste = (
+	containerRef: RefObject<HTMLElement | null>,
 	internalClipboard: ClipboardData | null,
 	dispatch: Dispatch<CanvasAction>,
 ): (() => Promise<void>) => {
@@ -45,6 +48,11 @@ export const useClipboardPaste = (
 
 	// Paste with Ctrl+V / Cmd+V
 	useEffect(() => {
+		const container = containerRef.current;
+		if (!container) {
+			return;
+		}
+
 		const handler = (e: KeyboardEvent) => {
 			if (
 				e.target instanceof HTMLInputElement ||
@@ -65,9 +73,9 @@ export const useClipboardPaste = (
 				e.stopPropagation();
 			}
 		};
-		document.addEventListener("keydown", handler);
-		return () => document.removeEventListener("keydown", handler);
-	}, [handlePaste]);
+		container.addEventListener("keydown", handler);
+		return () => container.removeEventListener("keydown", handler);
+	}, [containerRef, handlePaste]);
 
 	return handlePaste;
 };

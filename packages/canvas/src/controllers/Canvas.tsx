@@ -11,6 +11,7 @@ import {
 import { commandRegistry } from "./commands/CommandRegistry";
 import { CanvasViewportRefContext } from "./contexts/CanvasViewportRefContext";
 import { isGestureOptedOut } from "./gestures/recognizer/utils/isGestureOptedOut";
+import { useCanvasFocusScope } from "./hooks/useCanvasFocusScope";
 import { useCanvasReducer } from "./hooks/useCanvasReducer";
 import { useCanvasWheel } from "./hooks/useCanvasWheel";
 import { useClipboardPaste } from "./hooks/useClipboardPaste";
@@ -85,6 +86,12 @@ type CanvasProps = {
 	 * can pass a Japanese dictionary based on `vscode.env.language`).
 	 */
 	messages?: Partial<CanvasMessages>;
+	/**
+	 * Focus the canvas on mount so keyboard shortcuts work immediately (default true).
+	 * Shortcuts are scoped to the focused Canvas; set false when embedding multiple
+	 * Canvases (or when the host manages focus) so mounting does not steal focus.
+	 */
+	autoFocus?: boolean;
 };
 
 const CanvasComponent: React.FC<CanvasProps> = ({
@@ -94,6 +101,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	onUndo,
 	onRedo,
 	messages,
+	autoFocus = true,
 }) => {
 	// Merged UI strings (English defaults + host overrides), distributed via context
 	const mergedMessages = useMemo(
@@ -142,11 +150,26 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	// Container resize handling
 	useContainerResize(canvasRef, dispatch);
 
-	// Keyboard shortcuts handling
-	useKeyboardShortcuts({ canvasState: state, dispatch, onUndo, onRedo });
+	// Keyboard shortcuts handling — scoped to the focusable canvas root (rootRef),
+	// so with multiple Canvases on a page only the focused one handles shortcuts.
+	useKeyboardShortcuts({
+		containerRef: rootRef,
+		canvasState: state,
+		dispatch,
+		onUndo,
+		onRedo,
+	});
 
 	// Paste handling (keyboard shortcut + context menu)
-	const handlePaste = useClipboardPaste(state.internalClipboard, dispatch);
+	const handlePaste = useClipboardPaste(
+		rootRef,
+		state.internalClipboard,
+		dispatch,
+	);
+
+	// Focus management for the keyboard scope: initial focus (autoFocus) and
+	// reclaiming focus when it silently falls to body (focused element unmounted).
+	useCanvasFocusScope(rootRef, autoFocus);
 
 	const handleMenuPropertyUpdate = useCallback(
 		(property: string, value: string, commit: boolean) => {
@@ -179,6 +202,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 			<CanvasViewportRefContext value={canvasRef}>
 				<CanvasRoot
 					ref={rootRef}
+					tabIndex={0}
 					onContextMenu={handleContextMenu}
 					{...pointerHandlers}
 				>

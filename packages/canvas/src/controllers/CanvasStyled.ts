@@ -13,6 +13,12 @@ type ViewportProps = {
  * The gesture recognizer's pointerHandlers / pointer capture are attached to this element.
  * By containing both the toolbar (data-kind="menu") and the canvas region,
  * toolbar interactions also flow through the same gesture path.
+ *
+ * Also the keyboard scope: Canvas.tsx renders this with tabIndex so it can hold
+ * focus, and keydown listeners (shortcuts / paste) are attached here instead of
+ * `document` — only the focused Canvas handles shortcuts when multiple Canvases
+ * share a page. The focus ring is suppressed since focus is a routing concern
+ * here, not a visual one.
  */
 export const CanvasRoot = styled.div`
 	position: relative;
@@ -21,6 +27,7 @@ export const CanvasRoot = styled.div`
 	width: 100%;
 	height: 100%;
 	overflow: hidden;
+	outline: none;
 `;
 
 /**

@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 
 import type { CanvasDoc } from "../../../../schemas/canvas/CanvasDoc";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createInitialControllerState } from "../../../reducer/createInitialControllerState";
 import { initializeCommands } from "../../../setup/initializeCommands";
@@ -22,7 +23,7 @@ const emptyDoc: CanvasDoc = {
 } as unknown as CanvasDoc;
 
 const baseState = (): CanvasControllerState =>
-	createInitialControllerState(emptyDoc);
+	deepFreezeState(createInitialControllerState(emptyDoc));
 
 const CLICK_CLIENT_POS = { x: 200, y: 150 };
 
