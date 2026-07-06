@@ -5,6 +5,7 @@ import {
 } from "@workspace/geometry";
 import type { Point, TransformedFrame } from "@workspace/geometry";
 
+import { MIN_GROUP_DIMENSION } from "../../constants/groupDimensions";
 import { isPoly } from "../../schemas/objects/types/Poly";
 import type { ObjectState } from "../objects/base/ObjectState";
 import type { GroupState } from "../objects/primitives/group/GroupState";
@@ -59,12 +60,25 @@ export function calculateGroupOrientedBounds(
 	const groupScaleY = groupState.scaleY ?? 1;
 
 	// Compute an Oriented Bounding Box with the group's transform from the point set
-	return calcOrientedFrameFromPoints(
+	const obb = calcOrientedFrameFromPoints(
 		allPoints,
 		groupScaleX,
 		groupScaleY,
 		groupRotation,
 	);
+	if (!obb) {
+		return null;
+	}
+
+	// GroupState invariant: width/height must never be 0 (they are divisors in
+	// transformFrameByGroup). Collinear children (e.g. two horizontal polylines
+	// on the same y) produce a degenerate axis, so clamp it to the minimum.
+	// The center stays put; the box just grows symmetrically on that axis.
+	return {
+		...obb,
+		width: Math.max(obb.width, MIN_GROUP_DIMENSION),
+		height: Math.max(obb.height, MIN_GROUP_DIMENSION),
+	};
 }
 
 /**

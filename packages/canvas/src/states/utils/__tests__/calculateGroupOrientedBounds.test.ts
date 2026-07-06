@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { MIN_GROUP_DIMENSION } from "../../../constants/groupDimensions";
 import type { ObjectState } from "../../objects/base/ObjectState";
 import { calculateGroupOrientedBounds } from "../calculateGroupOrientedBounds";
 
@@ -218,5 +219,55 @@ describe("calculateGroupOrientedBounds", () => {
 		// the AABB after rotation is width:10 height:20
 		expect(result?.width).toBeCloseTo(10);
 		expect(result?.height).toBeCloseTo(20);
+	});
+
+	describe("minimum dimension clamp (GroupState invariant, issue #35)", () => {
+		it("clamps a degenerate axis to MIN_GROUP_DIMENSION when all children are collinear", () => {
+			// two horizontal polylines on the same y → point spread has height 0
+			const objects = {
+				g: makeGroup(["p1", "p2"]),
+				p1: makePoly("p1", [
+					{ x: 0, y: 50 },
+					{ x: 40, y: 50 },
+				]),
+				p2: makePoly("p2", [
+					{ x: 60, y: 50 },
+					{ x: 100, y: 50 },
+				]),
+			};
+
+			const result = calculateGroupOrientedBounds(objects, "g");
+
+			expect(result?.width).toBeCloseTo(100);
+			expect(result?.height).toBe(MIN_GROUP_DIMENSION);
+			// the center stays put; the box only grows symmetrically
+			expect(result?.cx).toBeCloseTo(50);
+			expect(result?.cy).toBeCloseTo(50);
+		});
+
+		it("clamps both axes when all child points coincide", () => {
+			const objects = {
+				g: makeGroup(["p1", "p2"]),
+				p1: makePoly("p1", [{ x: 30, y: 30 }]),
+				p2: makePoly("p2", [{ x: 30, y: 30 }]),
+			};
+
+			const result = calculateGroupOrientedBounds(objects, "g");
+
+			expect(result?.width).toBe(MIN_GROUP_DIMENSION);
+			expect(result?.height).toBe(MIN_GROUP_DIMENSION);
+		});
+
+		it("does not alter non-degenerate bounds", () => {
+			const objects = {
+				g: makeGroup(["f1"]),
+				f1: makeFrame("f1", { cx: 0, cy: 0, width: 20, height: 10 }),
+			};
+
+			const result = calculateGroupOrientedBounds(objects, "g");
+
+			expect(result?.width).toBeCloseTo(20);
+			expect(result?.height).toBeCloseTo(10);
+		});
 	});
 });

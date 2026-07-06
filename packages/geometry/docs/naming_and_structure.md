@@ -12,9 +12,11 @@
 - **形式:** `calc[Subject][Action/Result]`
 - **例:**
   - `calcBoundingBox(points)` - 点集合のバウンディングボックスを計算します。
-  - `calcDistance(p1, p2)` - 2点間の距離を計算します。
-  - `calcRotatedPoint(point, center, angle)` - 回転後の点の座標を計算します。
-  - `calcManhattanDistance(p1, p2)` - 2点間のマンハッタン距離を計算します。
+  - `calcEuclideanDistance(x1, y1, x2, y2)` - 2点間のユークリッド距離を計算します。
+  - `calcManhattanDistance(x1, y1, x2, y2)` - 2点間のマンハッタン距離を計算します。
+  - `calcRotatedPoint(px, py, cx, cy, theta)` - 中心 `(cx, cy)` まわりに `theta`（ラジアン）だけ回転した点の座標を計算します。
+
+> 座標は `Point` オブジェクトではなくフラットなスカラー（`x`, `y`）で受け渡すのがこのライブラリの規約。引数の順序・型を新設・変更する際はこの規約に合わせること。
 
 ### 2. 生成関数 (`create...`)
 

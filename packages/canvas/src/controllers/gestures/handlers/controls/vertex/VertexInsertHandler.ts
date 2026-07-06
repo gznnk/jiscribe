@@ -235,13 +235,9 @@ export class VertexInsertHandler implements ControlStrategy {
 		objectId: string,
 		segmentIndex: number,
 	): CanvasControllerState {
-		// Apply the drag-time state update to compute the final state
-		let nextState = this.handleDrag(
-			{ ...state },
-			event,
-			objectId,
-			segmentIndex,
-		);
+		// Apply the drag-time state update to compute the final state.
+		// handleDrag never mutates its argument, so the state can be passed as is.
+		let nextState = this.handleDrag(state, event, objectId, segmentIndex);
 
 		// If it belongs to a group, update the group's bounds
 		const updatedObject = nextState.objects[objectId];

@@ -2,6 +2,7 @@ import type { BoundingBox } from "@workspace/geometry";
 
 import { calcUnionBoundingBox } from "./buildObjectBBoxes";
 import { calcObjectsBoundingBox } from "./calcObjectBoundingBox";
+import { MIN_GROUP_DIMENSION } from "../../constants/groupDimensions";
 import { MULTI_SELECT_GROUP } from "../../constants/multiSelectGroup";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { GroupState } from "../../states/objects/primitives/group/GroupState";
@@ -40,11 +41,15 @@ export function createMultiSelectGroup(
 		return null;
 	}
 
-	// Compute center, width, and height from the bounding box
+	// Compute center, width, and height from the bounding box.
+	// GroupState invariant: clamp width/height to the minimum so a collinear
+	// selection (e.g. two horizontal lines on the same y) never yields a
+	// zero-size group — the group's size is a divisor when scaling the
+	// selection (transformFrameByGroup).
 	const cx = (bounds.left + bounds.right) / 2;
 	const cy = (bounds.top + bounds.bottom) / 2;
-	const width = bounds.right - bounds.left;
-	const height = bounds.bottom - bounds.top;
+	const width = Math.max(bounds.right - bounds.left, MIN_GROUP_DIMENSION);
+	const height = Math.max(bounds.bottom - bounds.top, MIN_GROUP_DIMENSION);
 
 	// Preserve the existing lockAspectRatio, defaulting to true
 	const lockAspectRatio = existingMultiSelectGroup?.lockAspectRatio ?? true;

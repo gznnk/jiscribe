@@ -80,6 +80,54 @@ describe("GroupCommand", () => {
 		expect(group.height).toBeGreaterThan(0);
 	});
 
+	describe("zero-size prevention (GroupState invariant, issue #35)", () => {
+		const makePolyline = (
+			id: string,
+			points: { x: number; y: number }[],
+		): ObjectState =>
+			({
+				id,
+				type: "polyline",
+				points,
+			}) as unknown as ObjectState;
+
+		it("clamps a degenerate axis when grouping collinear children", () => {
+			// two horizontal polylines on the same y → the OBB's height would be 0
+			const state = makeState({
+				selectedIds: ["p1", "p2"],
+				objects: {
+					p1: makePolyline("p1", [
+						{ x: 0, y: 50 },
+						{ x: 40, y: 50 },
+					]),
+					p2: makePolyline("p2", [
+						{ x: 60, y: 50 },
+						{ x: 100, y: 50 },
+					]),
+				},
+				rootIds: ["p1", "p2"],
+			});
+			const next = GroupCommand.execute(state);
+			const group = next.objects[next.rootIds[0]] as GroupState;
+			expect(group.type).toBe("group");
+			expect(group.width).toBeGreaterThan(0);
+			expect(group.height).toBeGreaterThan(0);
+		});
+
+		it("does not create a group when no child contributes geometry", () => {
+			// objects with neither a frame nor points yield null bounds → abort
+			const noGeometry = (id: string): ObjectState =>
+				({ id, type: "mystery" }) as unknown as ObjectState;
+			const state = makeState({
+				selectedIds: ["a", "b"],
+				objects: { a: noGeometry("a"), b: noGeometry("b") },
+				rootIds: ["a", "b"],
+			});
+			const next = GroupCommand.execute(state);
+			expect(next).toBe(state);
+		});
+	});
+
 	describe("canExecute", () => {
 		it("is executable with a selection of two or more elements", () => {
 			const state = makeState({

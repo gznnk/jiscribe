@@ -70,13 +70,21 @@ export const GroupCommand: Command = {
 			groupId,
 		);
 
+		// GroupState invariant: never create a group without a valid (> 0) frame.
+		// bounds is null only when no selected shape contributes geometry, which
+		// canExecute should already rule out — abort instead of creating a
+		// zero-size group (the divisor in transformFrameByGroup).
+		if (!bounds) {
+			return state;
+		}
+
 		// Create the finalized group with the computed bounds applied
 		const newGroup = {
 			...tempGroup,
-			cx: bounds?.cx ?? 0,
-			cy: bounds?.cy ?? 0,
-			width: bounds?.width ?? 0,
-			height: bounds?.height ?? 0,
+			cx: bounds.cx,
+			cy: bounds.cy,
+			width: bounds.width,
+			height: bounds.height,
 		} as unknown as GroupState;
 
 		// Add the new group to objects and reassign each child item's parentId to the new group
