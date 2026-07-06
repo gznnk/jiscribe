@@ -3,6 +3,7 @@ import { useEffect, useLayoutEffect, useRef } from "react";
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import { resolveDocSnapshot } from "../../states/canvas/DocSnapshot";
 import type { CanvasControllerState } from "../CanvasTypes";
+import { createNonceDeliveryGuard } from "../utils/createNonceDeliveryGuard";
 import {
 	createSaveRequestScheduler,
 	type SaveRequestScheduler,
@@ -47,8 +48,13 @@ export const useNotifySaveRequest = (
 	// A boundary flush can run before the schedule effect of the commit it just
 	// delivered (stateRef is updated in a layout effect, the schedule below in a
 	// passive one). That commit's own schedule must not deliver it a second
-	// time, so every saveNonce is delivered at most once.
-	const lastDeliveredNonceRef = useRef<string | null>(null);
+	// time, so every saveNonce is delivered at most once (see the guard's doc).
+	const deliveryGuardRef = useRef<ReturnType<
+		typeof createNonceDeliveryGuard
+	> | null>(null);
+	if (deliveryGuardRef.current === null) {
+		deliveryGuardRef.current = createNonceDeliveryGuard();
+	}
 
 	const schedulerRef = useRef<SaveRequestScheduler | null>(null);
 	if (schedulerRef.current === null) {
@@ -66,10 +72,9 @@ export const useNotifySaveRequest = (
 			state.historyCoalesce.recorded !== null,
 			() => {
 				const latestState = stateRef.current;
-				if (latestState.saveNonce === lastDeliveredNonceRef.current) {
+				if (!deliveryGuardRef.current?.shouldDeliver(latestState.saveNonce)) {
 					return;
 				}
-				lastDeliveredNonceRef.current = latestState.saveNonce;
 				onCommitRef.current?.(
 					resolveDocSnapshot(latestState.history.present),
 					latestState.saveNonce,
