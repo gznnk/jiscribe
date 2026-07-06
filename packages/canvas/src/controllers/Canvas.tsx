@@ -1,4 +1,4 @@
-﻿import { memo, useCallback, useEffect, useRef } from "react";
+﻿import { memo, useCallback, useRef } from "react";
 
 import {
 	CanvasRoot,
@@ -11,6 +11,7 @@ import {
 import { commandRegistry } from "./commands/CommandRegistry";
 import { CanvasViewportRefContext } from "./contexts/CanvasViewportRefContext";
 import { isGestureOptedOut } from "./gestures/recognizer/utils/isGestureOptedOut";
+import { useCanvasFocusScope } from "./hooks/useCanvasFocusScope";
 import { useCanvasReducer } from "./hooks/useCanvasReducer";
 import { useCanvasWheel } from "./hooks/useCanvasWheel";
 import { useClipboardPaste } from "./hooks/useClipboardPaste";
@@ -150,33 +151,9 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 		dispatch,
 	);
 
-	// Initial focus so shortcuts work before the first click (opt-out via autoFocus).
-	useEffect(() => {
-		if (autoFocus) {
-			rootRef.current?.focus();
-		}
-	}, [autoFocus]);
-
-	// Keep the keyboard scope alive when a focused element inside the canvas
-	// unmounts (a menu control re-rendered by undo/redo, the text-edit textarea
-	// closing, etc.). The browser silently moves focus to body WITHOUT firing
-	// focusout in that case, which would leave the container-scoped shortcuts
-	// dead until the next click. So: track focus ownership via focusin/focusout
-	// (which DO fire on real focus moves), and after each commit reclaim focus
-	// when the flag says "still ours" while activeElement has fallen to body —
-	// a contradiction only the silent unmount path produces.
-	const hasFocusWithinRef = useRef(false);
-	const handleRootFocus = useCallback(() => {
-		hasFocusWithinRef.current = true;
-	}, []);
-	const handleRootBlur = useCallback(() => {
-		hasFocusWithinRef.current = false;
-	}, []);
-	useEffect(() => {
-		if (hasFocusWithinRef.current && document.activeElement === document.body) {
-			rootRef.current?.focus();
-		}
-	});
+	// Focus management for the keyboard scope: initial focus (autoFocus) and
+	// reclaiming focus when it silently falls to body (focused element unmounted).
+	useCanvasFocusScope(rootRef, autoFocus);
 
 	const handleMenuPropertyUpdate = useCallback(
 		(property: string, value: string, commit: boolean) => {
@@ -210,8 +187,6 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 				ref={rootRef}
 				tabIndex={0}
 				onContextMenu={handleContextMenu}
-				onFocus={handleRootFocus}
-				onBlur={handleRootBlur}
 				{...pointerHandlers}
 			>
 				<Toolbar
