@@ -46,6 +46,7 @@ export type Gesture = {
 	target: EventTarget | null;
 	targetId?: string;
 	targetKind?: string;
+	targetPart?: string; // Sub-area of the target ([data-part]), e.g. "label" for a connector's label box
 	start: Point; // SVG coordinates
 	last: Point; // SVG coordinates
 	delta: Point; // SVG coordinates

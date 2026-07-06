@@ -64,6 +64,7 @@ export type Pressed = {
 	target: EventTarget | null;
 	targetId?: string;
 	targetKind?: string;
+	targetPart?: string;
 	mods: Mods;
 	dragging: boolean; // whether the move has exceeded DRAG_THRESHOLD and been confirmed as a drag
 	button: number;
@@ -212,6 +213,7 @@ export class GestureRecognizer {
 		const target = getKindAndId(e.target as Element);
 		const targetId = target?.id;
 		const targetKind = target?.kind;
+		const targetPart = target?.part;
 		const time = e.timeStamp;
 		const inputValue = getInputValue(e.target);
 
@@ -284,6 +286,7 @@ export class GestureRecognizer {
 				target: e.target,
 				targetId,
 				targetKind,
+				targetPart,
 				mods,
 				dragging: false,
 				button: e.button,
@@ -295,6 +298,7 @@ export class GestureRecognizer {
 				target: e.target,
 				targetId,
 				targetKind,
+				targetPart,
 				start: currentPos,
 				last: currentPos,
 				delta: { x: 0, y: 0 },
@@ -349,6 +353,7 @@ export class GestureRecognizer {
 						target: this.pressed.target,
 						targetId: this.pressed.targetId,
 						targetKind: this.pressed.targetKind,
+						targetPart: this.pressed.targetPart,
 						start: this.pressed.start,
 						last: currentPos,
 						delta,
@@ -434,6 +439,7 @@ export class GestureRecognizer {
 					target: this.pressed.target,
 					targetId: this.pressed.targetId,
 					targetKind: this.pressed.targetKind,
+					targetPart: this.pressed.targetPart,
 					start: this.pressed.start,
 					last: currentPos,
 					delta,
@@ -495,6 +501,7 @@ export class GestureRecognizer {
 				target: this.pressed.target,
 				targetId: this.pressed.targetId,
 				targetKind: this.pressed.targetKind,
+				targetPart: this.pressed.targetPart,
 				start: this.pressed.start,
 				last: currentPos,
 				delta,
@@ -537,6 +544,7 @@ export class GestureRecognizer {
 					target: this.pressed.target,
 					targetId: this.pressed.targetId,
 					targetKind: this.pressed.targetKind,
+					targetPart: this.pressed.targetPart,
 					start: this.pressed.start,
 					last: currentPos,
 					delta,
