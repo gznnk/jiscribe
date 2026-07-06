@@ -7,7 +7,7 @@ import type {
 } from "../GestureRecognizerTypes";
 import type * as RecognizerUtils from "../utils";
 
-// DOM-layout-dependent utilities (getSvgPoint / getHoveredElements, etc.) do not work in
+// DOM-layout-dependent utilities (getSvgPoint / createGetHovered, etc.) do not work in
 // the node environment, so replace them with deterministic stubs to the extent needed to
 // verify the ordering logic.
 vi.mock("../utils", async (importActual) => {
@@ -19,10 +19,11 @@ vi.mock("../utils", async (importActual) => {
 			y: clientY,
 		}),
 		getKindAndId: () => ({ id: "obj-1", kind: "rect" }),
-		getHoveredElements: () => [],
+		createGetHovered: () => () => [],
 		getInputValue: () => undefined,
+		readInputValue: () => undefined,
 		isGestureOptedOut: () => false,
-		shouldSkipPointerCapture: () => false,
+		isNativePointerTarget: () => false,
 		detectEdgeProximity: () => ({ isNearEdge: false }),
 		calculateScrollDelta: () => ({ deltaX: 0, deltaY: 0 }),
 	};

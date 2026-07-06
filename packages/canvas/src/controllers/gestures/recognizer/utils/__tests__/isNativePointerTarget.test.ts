@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { shouldSkipPointerCapture } from "../shouldSkipPointerCapture";
+import { isNativePointerTarget } from "../isNativePointerTarget";
 
 const makeTarget = (tokens: string[]): EventTarget => {
 	const el = {
@@ -15,16 +15,16 @@ const makeTarget = (tokens: string[]): EventTarget => {
 	return el as unknown as EventTarget;
 };
 
-describe("shouldSkipPointerCapture", () => {
+describe("isNativePointerTarget", () => {
 	it('returns true when it has data-gesture="native-pointer"', () => {
-		expect(shouldSkipPointerCapture(makeTarget(["native-pointer"]))).toBe(true);
+		expect(isNativePointerTarget(makeTarget(["native-pointer"]))).toBe(true);
 	});
 
 	it("returns false when it does not have the native-pointer token", () => {
-		expect(shouldSkipPointerCapture(makeTarget(["none"]))).toBe(false);
+		expect(isNativePointerTarget(makeTarget(["none"]))).toBe(false);
 	});
 
 	it("returns false when target is null", () => {
-		expect(shouldSkipPointerCapture(null)).toBe(false);
+		expect(isNativePointerTarget(null)).toBe(false);
 	});
 });

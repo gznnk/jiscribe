@@ -17,8 +17,8 @@ pressed | dragStart | drag | dragEnd | click | doubleClick | wheel
 ```
 
 `Gesture` は SVG 座標とクライアント座標の両方（`start` / `last` / `delta`）、修飾キー
-（`mods`）、ホバー要素、`targetId` / `targetKind`、`inputValue`（`native-pointer` 要素の値）
-などを載せる。
+（`mods`）、ホバー要素（`getHovered()`：遅延評価＋メモ化のヒットテスト）、`targetId` / `targetKind`、
+`inputValue`（`native-pointer` 要素の値）などを載せる。
 
 ポイント:
 
@@ -70,7 +70,7 @@ snapCandidates 等）を保存し、`dragEnd` でクリアする。`dragEnd` 時
 読み取り箇所:
 
 - `none` → `isGestureOptedOut`（`GestureRecognizer.getHandlers()` の onPointerDown、`Canvas.tsx` の handleContextMenu）
-- `native-pointer` → `shouldSkipPointerCapture`（キャプチャ抑止）と `getInputValue`（値の収穫）
+- `native-pointer` → `isNativePointerTarget`（キャプチャ抑止と `inputValue` 収穫の対象判定。pointerdown 時に一度だけ判定し `Pressed` に保持）
 - `native-wheel` → `shouldUseNativeWheel`（`useDocumentWheel`）
 
 判定ユーティリティはいずれも `findGestureElement(target, token)` を土台にし、

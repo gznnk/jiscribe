@@ -17,8 +17,8 @@ pressed | dragStart | drag | dragEnd | click | doubleClick | wheel
 ```
 
 A `Gesture` carries both SVG and client coordinates (`start` / `last` / `delta`), modifier keys
-(`mods`), the hovered element, `targetId` / `targetKind`, `inputValue` (the value of a `native-pointer` element),
-and more.
+(`mods`), the hovered elements (`getHovered()`, a lazy + memoized hit test), `targetId` / `targetKind`,
+`inputValue` (the value of a `native-pointer` element), and more.
 
 Key points:
 
@@ -72,7 +72,7 @@ Combined example: `data-gesture="none native-wheel"` (excluded from gestures and
 Where they are read:
 
 - `none` → `isGestureOptedOut` (onPointerDown in `GestureRecognizer.getHandlers()`, handleContextMenu in `Canvas.tsx`)
-- `native-pointer` → `shouldSkipPointerCapture` (suppresses capture) and `getInputValue` (harvests the value)
+- `native-pointer` → `isNativePointerTarget` (suppresses capture and enables `inputValue` harvesting; decided once at pointerdown and held on `Pressed`)
 - `native-wheel` → `shouldUseNativeWheel` (`useDocumentWheel`)
 
 All of these decision utilities are built on `findGestureElement(target, token)` and

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-import { getHoveredElements } from "../getHoveredElements";
+import { createGetHovered, getHoveredElements } from "../getHoveredElements";
 
 const makeEl = (kind?: string, id?: string, part?: string): Element => {
 	const attrs: Record<string, string | undefined> = {
@@ -103,5 +103,37 @@ describe("getHoveredElements", () => {
 		expect(getHoveredElements(0, 0, undefined, null)).toEqual([
 			{ kind: "rect", id: "obj-1" },
 		]);
+	});
+});
+
+describe("createGetHovered", () => {
+	it("does not hit-test until the getter is first called (lazy)", () => {
+		createGetHovered(0, 0);
+
+		expect(mockElementsFromPoint).not.toHaveBeenCalled();
+	});
+
+	it("hit-tests only once across repeated calls (memoized)", () => {
+		const el = makeEl("rect", "obj-1");
+		mockElementsFromPoint.mockReturnValue([el]);
+		const getHovered = createGetHovered(0, 0);
+
+		const first = getHovered();
+		const second = getHovered();
+
+		expect(first).toEqual([{ kind: "rect", id: "obj-1" }]);
+		expect(second).toBe(first);
+		expect(mockElementsFromPoint).toHaveBeenCalledTimes(1);
+	});
+
+	it("passes exclude / rootElement through to getHoveredElements", () => {
+		const inside = makeEl("rect", "inside");
+		const origin = makeEl("rect", "origin");
+		const outside = makeEl("rect", "outside");
+		const root = makeRoot(inside, origin);
+		mockElementsFromPoint.mockReturnValue([inside, origin, outside]);
+		const getHovered = createGetHovered(0, 0, { id: "origin" }, root);
+
+		expect(getHovered()).toEqual([{ kind: "rect", id: "inside" }]);
 	});
 });

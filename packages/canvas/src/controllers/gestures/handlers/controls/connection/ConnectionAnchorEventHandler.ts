@@ -178,7 +178,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 
 		// Include the same object as a hover target too (self-loops allowed).
 		const hoveredTarget = findConnectableHoverTarget({
-			hovered: event.hovered,
+			hovered: event.getHovered(),
 			objects: state.objects,
 			isConnectable: (type) =>
 				objectMapperRegistry.getFeatures(type)?.connectable === true,

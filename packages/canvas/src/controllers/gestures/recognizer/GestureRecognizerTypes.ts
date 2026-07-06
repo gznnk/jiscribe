@@ -56,7 +56,10 @@ export type Gesture = {
 	clientLast: Point; // Client (screen) coordinates
 	clientDelta: Point; // Client (screen) coordinates
 	mods: Mods;
-	hovered: HoveredElement[];
+	// Lazy + memoized hover state. document.elementsFromPoint forces a layout flush,
+	// and during drags only connection-anchor handling reads it, so the hit test runs
+	// only when a handler actually calls this (at most once per gesture event) (#123).
+	getHovered: () => HoveredElement[];
 	time: number;
 	button: number;
 	zoomDelta?: number; // Optional zoom delta (deltaY from wheel event, zoom events only)

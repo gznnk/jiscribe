@@ -2,6 +2,24 @@ import { getKindAndId } from "./getKindAndId";
 import type { HoveredElement } from "../GestureRecognizerTypes";
 
 /**
+ * Returns a memoized getter over getHoveredElements. document.elementsFromPoint
+ * is a full hit test that forces a layout flush, yet most gesture consumers never
+ * read the hover state (during drags only connection-anchor handling does), so the
+ * Gesture carries this lazy getter instead of an eagerly computed array (#123).
+ * The result is memoized so repeated reads within one gesture event hit-test once.
+ */
+export const createGetHovered = (
+	x: number,
+	y: number,
+	exclude?: { id: string; part?: string },
+	rootElement?: Element | null,
+): (() => HoveredElement[]) => {
+	let memoizedHovered: HoveredElement[] | null = null;
+	return () =>
+		(memoizedHovered ??= getHoveredElements(x, y, exclude, rootElement));
+};
+
+/**
  * Get the hovered elements at a coordinate (deduplicated, excluding the drag
  * origin). Passing rootElement excludes elements outside the canvas.
  *

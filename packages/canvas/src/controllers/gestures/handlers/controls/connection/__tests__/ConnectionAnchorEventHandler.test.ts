@@ -91,7 +91,7 @@ const dragEvent = (
 		clientLast: { x: 0, y: 0 },
 		clientDelta: { x: 0, y: 0 },
 		mods: { shift: false, ctrl: false, alt: false, meta: false },
-		hovered: [],
+		getHovered: () => [],
 		time: 0,
 		button: 0,
 	}) as unknown as CanvasEvent;

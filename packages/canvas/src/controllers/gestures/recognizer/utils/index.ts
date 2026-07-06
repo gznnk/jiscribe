@@ -1,11 +1,11 @@
 export { calculateScrollDelta } from "./calculateScrollDelta";
 export { detectEdgeProximity, type EdgeProximity } from "./detectEdgeProximity";
 export { findGestureElement, type GestureToken } from "./findGestureElement";
-export { getHoveredElements } from "./getHoveredElements";
-export { getInputValue } from "./getInputValue";
+export { createGetHovered, getHoveredElements } from "./getHoveredElements";
+export { getInputValue, readInputValue } from "./getInputValue";
 export { getKindAndId } from "./getKindAndId";
 export { getSvgPoint } from "./getSvgPoint";
 export { isDoubleClick } from "./isDoubleClick";
 export { isGestureOptedOut } from "./isGestureOptedOut";
-export { shouldSkipPointerCapture } from "./shouldSkipPointerCapture";
+export { isNativePointerTarget } from "./isNativePointerTarget";
 export { shouldUseNativeWheel } from "./shouldUseNativeWheel";
