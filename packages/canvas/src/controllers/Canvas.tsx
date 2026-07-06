@@ -1,4 +1,4 @@
-﻿import { memo, useCallback, useRef } from "react";
+﻿import { memo, useCallback, useEffect, useRef } from "react";
 
 import {
 	CanvasRoot,
@@ -76,6 +76,12 @@ type CanvasProps = {
 	 * of Canvas's internal redo stack.
 	 */
 	onRedo?: () => void;
+	/**
+	 * Focus the canvas on mount so keyboard shortcuts work immediately (default true).
+	 * Shortcuts are scoped to the focused Canvas; set false when embedding multiple
+	 * Canvases (or when the host manages focus) so mounting does not steal focus.
+	 */
+	autoFocus?: boolean;
 };
 
 const CanvasComponent: React.FC<CanvasProps> = ({
@@ -84,6 +90,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	onCommit,
 	onUndo,
 	onRedo,
+	autoFocus = true,
 }) => {
 	// rootRef: the gesture surface (toolbar + canvas area). Attaches pointerHandlers
 	// and pointer capture. canvasRef: the canvas area only. Used for size measurement,
@@ -126,11 +133,50 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	// Container resize handling
 	useContainerResize(canvasRef, dispatch);
 
-	// Keyboard shortcuts handling
-	useKeyboardShortcuts({ canvasState: state, dispatch, onUndo, onRedo });
+	// Keyboard shortcuts handling — scoped to the focusable canvas root (rootRef),
+	// so with multiple Canvases on a page only the focused one handles shortcuts.
+	useKeyboardShortcuts({
+		containerRef: rootRef,
+		canvasState: state,
+		dispatch,
+		onUndo,
+		onRedo,
+	});
 
 	// Paste handling (keyboard shortcut + context menu)
-	const handlePaste = useClipboardPaste(state.internalClipboard, dispatch);
+	const handlePaste = useClipboardPaste(
+		rootRef,
+		state.internalClipboard,
+		dispatch,
+	);
+
+	// Initial focus so shortcuts work before the first click (opt-out via autoFocus).
+	useEffect(() => {
+		if (autoFocus) {
+			rootRef.current?.focus();
+		}
+	}, [autoFocus]);
+
+	// Keep the keyboard scope alive when a focused element inside the canvas
+	// unmounts (a menu control re-rendered by undo/redo, the text-edit textarea
+	// closing, etc.). The browser silently moves focus to body WITHOUT firing
+	// focusout in that case, which would leave the container-scoped shortcuts
+	// dead until the next click. So: track focus ownership via focusin/focusout
+	// (which DO fire on real focus moves), and after each commit reclaim focus
+	// when the flag says "still ours" while activeElement has fallen to body —
+	// a contradiction only the silent unmount path produces.
+	const hasFocusWithinRef = useRef(false);
+	const handleRootFocus = useCallback(() => {
+		hasFocusWithinRef.current = true;
+	}, []);
+	const handleRootBlur = useCallback(() => {
+		hasFocusWithinRef.current = false;
+	}, []);
+	useEffect(() => {
+		if (hasFocusWithinRef.current && document.activeElement === document.body) {
+			rootRef.current?.focus();
+		}
+	});
 
 	const handleMenuPropertyUpdate = useCallback(
 		(property: string, value: string, commit: boolean) => {
@@ -162,7 +208,10 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 		<CanvasViewportRefContext value={canvasRef}>
 			<CanvasRoot
 				ref={rootRef}
+				tabIndex={0}
 				onContextMenu={handleContextMenu}
+				onFocus={handleRootFocus}
+				onBlur={handleRootBlur}
 				{...pointerHandlers}
 			>
 				<Toolbar

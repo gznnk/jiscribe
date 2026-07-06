@@ -1,10 +1,16 @@
-import { type Dispatch, useEffect, useRef } from "react";
+import { type Dispatch, type RefObject, useEffect, useRef } from "react";
 
 import type { CanvasControllerState } from "../CanvasTypes";
 import { commandRegistry } from "../commands/CommandRegistry";
 import type { CanvasAction } from "../reducer/CanvasActions";
 
 export type UseKeyboardShortcutsParams = {
+	/**
+	 * Focusable canvas root element (tabIndex-ed) the keydown listener is scoped to.
+	 * Scoping to the container instead of `document` means only the focused Canvas
+	 * handles shortcuts, so multiple Canvases on one page never double-execute.
+	 */
+	containerRef: RefObject<HTMLElement | null>;
 	canvasState: CanvasControllerState;
 	/** Canvas reducer dispatch (sends executable commands as COMMAND actions). */
 	dispatch: Dispatch<CanvasAction>;
@@ -18,6 +24,7 @@ export type UseKeyboardShortcutsParams = {
  * Custom hook that handles keyboard shortcuts.
  */
 export const useKeyboardShortcuts = ({
+	containerRef,
 	canvasState,
 	dispatch,
 	onUndo,
@@ -27,6 +34,11 @@ export const useKeyboardShortcuts = ({
 	canvasStateRef.current = canvasState;
 
 	useEffect(() => {
+		const container = containerRef.current;
+		if (!container) {
+			return;
+		}
+
 		const handleKeyDown = (event: KeyboardEvent) => {
 			// Disabled while focus is in input fields and similar elements
 			if (
@@ -61,10 +73,11 @@ export const useKeyboardShortcuts = ({
 			}
 		};
 
-		// Register the event listener on document (global shortcuts)
-		document.addEventListener("keydown", handleKeyDown);
+		// Scoped to the container: keydown reaches here only while focus is inside
+		// this Canvas (the root is focusable via tabIndex).
+		container.addEventListener("keydown", handleKeyDown);
 		return () => {
-			document.removeEventListener("keydown", handleKeyDown);
+			container.removeEventListener("keydown", handleKeyDown);
 		};
-	}, [dispatch, onUndo, onRedo]);
+	}, [containerRef, dispatch, onUndo, onRedo]);
 };
