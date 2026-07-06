@@ -44,11 +44,6 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 		state: CanvasControllerState,
 		event: CanvasEvent,
 	): CanvasControllerState {
-		// Only handle left-click (button 0)
-		if (event.button !== 0) {
-			return state;
-		}
-
 		if (!event.targetId || !event.targetPart) {
 			return state;
 		}

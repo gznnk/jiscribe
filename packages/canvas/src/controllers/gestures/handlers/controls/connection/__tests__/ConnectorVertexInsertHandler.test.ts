@@ -141,14 +141,8 @@ describe("ConnectorVertexInsertHandler", () => {
 		expect(ended.edgeScrollEnabled).toBe(false);
 	});
 
-	it("ignores non-left clicks (button !== 0)", () => {
-		const state = makeState([]);
-		const next = insertHandler.handle(
-			state,
-			insertEvent("dragStart", { x: 50, y: 50 }, 0, 2),
-		);
-		expect(pointsOf(next)).toEqual([]);
-	});
+	// Non-left buttons never reach the strategies: ControlEventHandler.supports
+	// requires button === 0, pinned by the routing-exclusivity test (#110).
 
 	it("has no effect on non-connector objects", () => {
 		const state = makeState([]);
