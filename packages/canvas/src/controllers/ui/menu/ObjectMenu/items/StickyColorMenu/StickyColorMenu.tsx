@@ -38,8 +38,9 @@ const StickyColorMenuComponent: React.FC<MenuItemProps> = ({ canvasState }) => {
 		<MenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-kind="object-menu"
-				data-id={`object-menu:toggle:${SECTION_ID}`}
+				data-kind="menu"
+				data-id="object-menu"
+				data-part={`toggle:${SECTION_ID}`}
 				title="Background Color"
 			>
 				<ColorPreviewIcon color={currentColor} title="Background Color" />
@@ -55,8 +56,9 @@ const StickyColorMenuComponent: React.FC<MenuItemProps> = ({ canvasState }) => {
 									selected={
 										preset.value.toLowerCase() === currentColor.toLowerCase()
 									}
-									data-kind="object-menu"
-									data-id={`object-menu:set:fill:${preset.value}`}
+									data-kind="menu"
+									data-id="object-menu"
+									data-part={`set:fill:${preset.value}`}
 									title={preset.name}
 								/>
 							))}

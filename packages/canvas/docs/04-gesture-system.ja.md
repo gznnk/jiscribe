@@ -47,7 +47,7 @@ pressed | dragStart | drag | dragEnd | click | doubleClick | wheel
 snapCandidates 等）を保存し、`dragEnd` でクリアする。`dragEnd` 時に doc が実際に変化していれば
 `commitVersion` を進め、履歴記録のトリガにする（詳細は [状態更新フロー](./06-state-update-flow.ja.md)）。
 
-## 連携属性 `data-gesture` / `data-kind` / `data-id`
+## 連携属性 `data-gesture` / `data-kind` / `data-id` / `data-part`
 
 キャンバス上の DOM 要素は `data-*` 属性でジェスチャーシステムと連携する。
 テキスト編集中の `textarea` やメニュー内の入力欄など、**ブラウザ標準動作をそのまま使いたい要素**を
@@ -75,15 +75,56 @@ snapCandidates 等）を保存し、`dragEnd` でクリアする。`dragEnd` 時
 判定ユーティリティはいずれも `findGestureElement(target, token)` を土台にし、
 `controllers/gestures/recognizer/utils/` に配置している。
 
-### `data-kind` / `data-id`
+### `data-kind` / `data-id` / `data-part`
 
 ジェスチャーの**対象を識別する**属性。`getKindAndId` が `closest("[data-kind]")` で最も近い要素を探し、
-`{ kind, id }` を解決してイベントに載せる。`data-id` のフォーマット例（ObjectMenu）:
+`{ kind, id, part }` を解決してイベントの `targetKind` / `targetId` / `targetPart` に載せる。
 
-- `object-menu:toggle:{sectionId}` — セクション開閉
-- `object-menu:set:{property}:{value}` — プロパティ更新
-- `object-menu:slider:{property}` — スライダー更新
-- `object-menu:command:{commandId}` — コマンド実行
+3 属性はそれぞれ 1 軸を担い、`kind`（粗）→ `part` 接頭辞（細）の 2 段ルーティングツリーを成す（issue #81）:
+
+| 属性        | 意味                                    | 文法                                                                  |
+| ----------- | --------------------------------------- | --------------------------------------------------------------------- |
+| `data-kind` | **ドメイン** — ハンドラ群と 1:1         | `object` / `connector` / `canvas` / `control` / `menu` のいずれか     |
+| `data-id`   | **識別子** — どのターゲットか           | 実体の UUID、またはシングルトン部品名。**パースしない（コロン禁止）** |
+| `data-part` | **サブ要素** — ターゲット内のどの部品か | `<subtype>[:<args...>]`。無印 = ターゲット本体そのもの                |
+
+原則:
+
+- ルーティングは `kind` → ハンドラ、`part` 接頭辞 → ストラテジ。`id` は lookup にだけ使い、決してパースしない
+- 実体のサブタイプ（rect / connector / …）は DOM に書かず `objects[id].type` で解決する
+- `part`（args 含む）は常に**サブ要素の識別子**であり、`id` が実体の識別子であることと対をなす。
+  動詞に見える part（`set:fill:red`）は「fill を赤にするボタン」という部品名であって、
+  part はコマンド伝達チャネルではない
+- `data-kind` はジェスチャーハンドラを持つ要素にだけ付ける。「インタラクティブだが
+  ジェスチャー対象外」はハンドラ無しの kind ではなく `data-gesture="none"` で表現する
+
+例: コネクターのラベルボックスは `data-kind="connector" data-id={connectorId} data-part="label"`。
+ラベルがあるコネクターは、線ではなくラベルボックスのダブルクリックだけがラベル編集を開始する。
+
+#### 移行状況（issue #81）
+
+上の文法はターゲット。現状は以下の乖離が残っており、段階的に移行する:
+
+| 現在                                                 | 整理後 (kind / id / part)                                                       |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `control` + `transform-control:bottomRight`          | `control` / `transform` / `resize:bottomRight`                                  |
+| `control` + `vertex-control:<objId>:<i>`             | `control` / `<objId>` / `vertex:<i>`                                            |
+| `control` + `vertex-insert:<objId>:<seg>`            | `control` / `<objId>` / `vertex-insert:<seg>`                                   |
+| `control` + `connector-vertex-insert:<id>:<seg>`     | `control` / `<connectorId>` / `waypoint-insert:<seg>`（part の subtype で分離） |
+| `control` + `connection-anchor:create:<objId>:<pos>` | `control` / `<objId>` / `anchor:<pos>`                                          |
+| `control` + `connection-anchor:edit:<id>:…`          | `control` / `<connectorId>` / `endpoint:<source\|target>`                       |
+| `toolbar` + `toolbar:command:zoomIn`                 | `menu` / `toolbar` / `command:zoomIn`                                           |
+| `object-menu` + `object-menu:set:fill:red` 等        | `menu` / `object-menu` / `set:fill:red`（toggle / slider / command も同様）     |
+| `object-menu` + `object-menu:bar` / `:panel`         | `menu` / `object-menu` / バーは part 無し・パネルは `panel`                     |
+| `context-menu` + `context-menu:<cmdId>`              | `menu` / `context-menu` / `command:<cmdId>`（動詞を常置）                       |
+| `menu-item` + `menu-item:<presetId>`                 | `menu` / `shape-library` / `item:<presetId>`                                    |
+| `text-editor` 等ハンドラ無しの kind                  | `data-kind` を剥がし `data-gesture="none"` へ                                   |
+
+移行時の注意:
+
+- ダブルクリック判定は `targetId` 比較なので、id が実体 UUID に統一されると別 part への連続
+  クリックが合体する。判定を `(targetId, targetPart)` の組にする修正が必須
+- `HoveredElement`（`{ id, kind }`）にも `part` を追加して語彙を揃える
 
 ### なぜトークン化したか
 

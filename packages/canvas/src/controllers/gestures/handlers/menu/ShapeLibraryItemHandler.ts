@@ -18,10 +18,10 @@ import {
 } from "../../utils/snap/findSnap";
 
 /**
- * Extracts the preset ID from a targetId.
- * Format: "menu-item:<presetId>"
+ * Extracts the preset ID from a targetPart.
+ * Format: "item:<presetId>"
  */
-const parsePresetId = (targetId: string): string => targetId.split(":")[1];
+const parsePresetId = (targetPart: string): string => targetPart.split(":")[1];
 
 /**
  * Returns the half-size of the ghost shape for a preset.
@@ -74,7 +74,7 @@ const addObjectToState = (
  */
 export const ShapeLibraryItemHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {
-		return event.targetKind === "menu-item";
+		return event.targetKind === "menu" && event.targetId === "shape-library";
 	},
 
 	handle(state, event) {
@@ -87,11 +87,11 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 			}
 		}
 
-		if (!event.targetId) {
+		if (!event.targetPart) {
 			return nextState;
 		}
 
-		const presetId = parsePresetId(event.targetId);
+		const presetId = parsePresetId(event.targetPart);
 		const preset = getShapePreset(presetId);
 		if (!preset) {
 			return nextState;

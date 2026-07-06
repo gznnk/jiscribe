@@ -51,15 +51,16 @@ type Command = {
 
 コマンドは目的別にディレクトリ分割されている（`controllers/commands/`）。
 
-| ディレクトリ | コマンド                                                                  |
-| ------------ | ------------------------------------------------------------------------- |
-| `selection/` | SelectAll / DeselectAll / Delete / Cut / Copy / Paste / Duplicate         |
-| `arrange/`   | BringToFront / BringForward / SendBackward / SendToBack（`MoveCommands`） |
-| `arrow/`     | SwapArrows（コネクター端点の入れ替え）                                    |
-| `group/`     | Group / Ungroup                                                           |
-| `history/`   | Undo / Redo                                                               |
-| `text/`      | StartTextEdit                                                             |
-| `view/`      | ZoomIn / ZoomOut / ZoomToFit / ZoomToSelection                            |
+| ディレクトリ | コマンド                                                                                                                         |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| `selection/` | SelectAll / DeselectAll / Delete / Cut / Copy / Duplicate                                                                        |
+| `arrange/`   | `MoveCommands`（矢印キーの nudge: 上下左右 × 通常/Shift の 8 コマンド）/ BringToFront / BringForward / SendBackward / SendToBack |
+| `arrow/`     | SwapArrows（コネクター端点の入れ替え）                                                                                           |
+| `connector/` | SetRoutingStraight / SetRoutingOrthogonal（コネクターの経路切り替え）                                                            |
+| `group/`     | Group / Ungroup                                                                                                                  |
+| `history/`   | Undo / Redo                                                                                                                      |
+| `text/`      | StartTextEdit                                                                                                                    |
+| `view/`      | ZoomIn / ZoomOut / ZoomToFit / ZoomToSelection / ResetZoom                                                                       |
 
 > なお `Command.category` フィールドが現状取り得る値は `selection` / `edit` / `arrange` / `view` の 4 つで、
 > UI 上のグルーピングに使う。ディレクトリ構成（上表）の方が細かいのは、実装上の整理単位だからである。

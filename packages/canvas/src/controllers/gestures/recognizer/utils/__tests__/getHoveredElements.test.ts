@@ -2,10 +2,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import { getHoveredElements } from "../getHoveredElements";
 
-const makeEl = (kind?: string, id?: string): Element => {
+const makeEl = (kind?: string, id?: string, part?: string): Element => {
 	const attrs: Record<string, string | undefined> = {
 		"data-kind": kind,
 		"data-id": id,
+		"data-part": part,
 	};
 	const el: Partial<Element> = {
 		closest: (selector: string) => {
@@ -68,11 +69,20 @@ describe("getHoveredElements", () => {
 		expect(getHoveredElements(0, 0)).toHaveLength(1);
 	});
 
-	it("excludes elements whose id matches excludeId", () => {
+	it("excludes the drag origin element (matching id and part)", () => {
 		const el = makeEl("rect", "obj-1");
 		mockElementsFromPoint.mockReturnValue([el]);
 
-		expect(getHoveredElements(0, 0, "obj-1")).toEqual([]);
+		expect(getHoveredElements(0, 0, { id: "obj-1" })).toEqual([]);
+	});
+
+	it("does not exclude an element sharing the origin's id but with a different part (self-loop: dragging from an anchor must still hover the shape itself)", () => {
+		const shape = makeEl("object", "obj-1");
+		mockElementsFromPoint.mockReturnValue([shape]);
+
+		expect(
+			getHoveredElements(0, 0, { id: "obj-1", part: "anchor:rightCenter" }),
+		).toEqual([{ kind: "object", id: "obj-1" }]);
 	});
 
 	it("excludes elements outside the canvas when rootElement is passed", () => {

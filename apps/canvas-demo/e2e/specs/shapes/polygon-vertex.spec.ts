@@ -15,17 +15,17 @@ async function vertexCount(canvas: CanvasDriver, id: string): Promise<number> {
 	return points ? points.trim().split(/\s+/).length : 0;
 }
 
-/** data-id を持つコントロールの中心から相対量だけドラッグする */
+/** コントロール（CSS セレクタ）の中心から相対量だけドラッグする */
 async function dragControlBy(
 	canvas: CanvasDriver,
-	dataId: string,
+	controlSelector: string,
 	delta: { dx: number; dy: number },
 ) {
-	const control = canvas.page.locator(`[data-id="${dataId}"]`);
+	const control = canvas.page.locator(controlSelector);
 	await expect(control).toBeVisible();
 	const box = await control.boundingBox();
 	if (!box) {
-		throw new Error(`コントロール ${dataId} の位置が取得できない`);
+		throw new Error(`コントロール ${controlSelector} の位置が取得できない`);
 	}
 	// box は画面座標。コンテンツ座標へ変換してから相対量を足す。
 	const from = canvas.toContent({
@@ -49,7 +49,11 @@ test.describe("ポリゴンの頂点追加", () => {
 		expect(before).toBeGreaterThanOrEqual(3); // 閉じた図形は最低 3 頂点
 
 		// セグメント0の中点ハンドルを外側へドラッグ → 頂点が 1 つ挿入される
-		await dragControlBy(canvas, `vertex-insert:${id}:0`, { dx: 0, dy: 80 });
+		await dragControlBy(
+			canvas,
+			`[data-id="${id}"][data-part="vertex-insert:0"]`,
+			{ dx: 0, dy: 80 },
+		);
 
 		await expect
 			.poll(() => vertexCount(canvas, id), {
@@ -76,12 +80,12 @@ test.describe("ポリゴンの頂点追加", () => {
 		// 頂点 0（真上）ハンドルをクリックして選択。選択中ハンドルの塗りは選択色になる。
 		// この塗り変化（selectedVertex のコミット）を待ってから Delete する。
 		const selectedFill = await canvas.normalizeColor("#0d99ff");
-		await canvas.page.click(`[data-id="vertex-control:${id}:0"]`);
+		await canvas.page.click(`[data-id="${id}"][data-part="vertex:0"]`);
 		await expect
 			.poll(
 				() =>
 					canvas.page
-						.locator(`[data-id="vertex-control:${id}:0"]`)
+						.locator(`[data-id="${id}"][data-part="vertex:0"]`)
 						.evaluate((el) => getComputedStyle(el).fill),
 				{ message: "頂点が選択状態（塗りが選択色）になること" },
 			)

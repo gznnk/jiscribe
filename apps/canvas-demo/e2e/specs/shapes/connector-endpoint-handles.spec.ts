@@ -5,7 +5,7 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
  * 選択中コネクターの「端点編集ハンドル」が経路の端点に正確に重なることを検証する spec。
  *
  * コネクターを選択すると、両端に再接続用の編集ハンドル
- * （connection-anchor:edit:<id>:source / :target）が出る。connector-reconnect.spec は
+ * （data-id=<id> + data-part="endpoint:source/target"）が出る。connector-reconnect.spec は
  * このハンドルを掴んでドラッグする操作を守るが、ハンドル自体が *経路の端点に乗っているか*
  * は未検証だった。ハンドルが端点からずれると「線の端を掴んだつもりが掴めない／別の場所が
  * 動く」操作バグになる。
@@ -36,16 +36,16 @@ function distance(a: Vec, b: Vec): number {
 	return Math.hypot(a.x - b.x, a.y - b.y);
 }
 
-/** data-id を持つコントロールの中心をコンテンツ座標で返す（zoom=1 ではワールド座標と一致） */
+/** コントロール（CSS セレクタ）の中心をコンテンツ座標で返す（zoom=1 ではワールド座標と一致） */
 async function controlContentCenter(
 	canvas: CanvasDriver,
-	dataId: string,
+	controlSelector: string,
 ): Promise<Vec> {
-	const loc = canvas.page.locator(`[data-id="${dataId}"]`);
+	const loc = canvas.page.locator(controlSelector);
 	await expect(loc).toBeVisible();
 	const box = await loc.boundingBox();
 	if (!box) {
-		throw new Error(`コントロール ${dataId} の位置が取得できない`);
+		throw new Error(`コントロール ${controlSelector} の位置が取得できない`);
 	}
 	return canvas.toContent({
 		x: box.x + box.width / 2,
@@ -100,11 +100,11 @@ test.describe("コネクターの端点編集ハンドル", () => {
 		// 端点編集ハンドルが両端に出る。
 		const sourceHandle = await controlContentCenter(
 			canvas,
-			`connection-anchor:edit:${connectorId}:source`,
+			`[data-id="${connectorId}"][data-part="endpoint:source"]`,
 		);
 		const targetHandle = await controlContentCenter(
 			canvas,
-			`connection-anchor:edit:${connectorId}:target`,
+			`[data-id="${connectorId}"][data-part="endpoint:target"]`,
 		);
 
 		// 各ハンドルの中心が経路の端点に一致する。

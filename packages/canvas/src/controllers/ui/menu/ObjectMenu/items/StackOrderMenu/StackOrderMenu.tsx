@@ -39,8 +39,9 @@ const StackOrderMenuComponent: React.FC<StackOrderMenuProps> = ({
 		<MenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-kind="object-menu"
-				data-id={`object-menu:toggle:${SECTION_ID}`}
+				data-kind="menu"
+				data-id="object-menu"
+				data-part={`toggle:${SECTION_ID}`}
 			>
 				<StackOrderIcon />
 			</ObjectMenuButton>
@@ -57,8 +58,9 @@ const StackOrderMenuComponent: React.FC<StackOrderMenuProps> = ({
 								<ObjectMenuButton
 									key={commandId}
 									disabled={!enabled}
-									data-kind="object-menu"
-									data-id={`object-menu:command:${commandId}`}
+									data-kind="menu"
+									data-id="object-menu"
+									data-part={`command:${commandId}`}
 								>
 									<Icon title={command.label} />
 								</ObjectMenuButton>

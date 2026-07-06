@@ -11,7 +11,7 @@ type ViewportProps = {
  * toolbar above the canvas viewport (flex column).
  *
  * The gesture recognizer's pointerHandlers / pointer capture are attached to this element.
- * By containing both the toolbar (data-kind="toolbar" / "menu-item") and the canvas region,
+ * By containing both the toolbar (data-kind="menu") and the canvas region,
  * toolbar interactions also flow through the same gesture path.
  */
 export const CanvasRoot = styled.div`

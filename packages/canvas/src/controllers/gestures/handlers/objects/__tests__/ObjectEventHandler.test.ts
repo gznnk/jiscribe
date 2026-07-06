@@ -131,21 +131,20 @@ const makeTapEvent = (
 		mods: { shift: false, alt: false, ctrl: false, meta: false },
 	}) as unknown as CanvasEvent;
 
-describe("ObjectEventHandler - text edit commit skipping", () => {
-	it("a pressed on the object being edited does not commit (continues editing)", () => {
+describe("ObjectEventHandler - text edit commit", () => {
+	it("a pressed on the object being edited commits the pending edit (the editing overlay covers the shape, so a gesture-visible tap is outside it)", () => {
 		const next = ObjectEventHandler.handle(
 			makeEditState("rect-1", "old", "new"),
 			makeTapEvent("pressed", "rect-1"),
 		);
-		// textEditState is preserved (uncommitted) and the object text is untouched.
-		expect(next.textEditState).toEqual({ objectId: "rect-1", text: "new" });
 		expect((next.objects["rect-1"] as unknown as { text: string }).text).toBe(
-			"old",
+			"new",
 		);
-		expect(next.commitVersion).toBe(5);
+		expect(next.textEditState).toBeNull();
+		expect(next.commitVersion).toBe(6);
 	});
 
-	it("re-double-clicking the same object (pressed -> doubleClick) does not add an extra commit", () => {
+	it("a double click after the pressed commit re-opens editing prefilled with the committed text (exactly one commit)", () => {
 		const afterPressed = ObjectEventHandler.handle(
 			makeEditState("rect-1", "old", "new"),
 			makeTapEvent("pressed", "rect-1"),
@@ -154,12 +153,12 @@ describe("ObjectEventHandler - text edit commit skipping", () => {
 			afterPressed,
 			makeTapEvent("doubleClick", "rect-1"),
 		);
-		// Editing continues, no commit happened along the way.
-		expect(afterDouble.textEditState?.objectId).toBe("rect-1");
-		expect(
-			(afterDouble.objects["rect-1"] as unknown as { text: string }).text,
-		).toBe("old");
-		expect(afterDouble.commitVersion).toBe(5);
+		// The pending text was committed by the pressed and prefilled again — not lost.
+		expect(afterDouble.textEditState).toEqual({
+			objectId: "rect-1",
+			text: "new",
+		});
+		expect(afterDouble.commitVersion).toBe(6);
 	});
 
 	it("a pressed on a different object commits the pending edit", () => {

@@ -35,12 +35,17 @@ const openMenuState = (): CanvasControllerState => {
 	};
 };
 
-const pressedOn = (targetKind: string, targetId: string): Gesture =>
+const pressedOn = (
+	targetKind: string,
+	targetId: string,
+	targetPart?: string,
+): Gesture =>
 	({
 		type: "pressed",
 		button: 0,
 		targetKind,
 		targetId,
+		targetPart,
 		mods: { shift: false, alt: false, ctrl: false, meta: false },
 	}) as unknown as Gesture;
 
@@ -61,7 +66,7 @@ describe("handleGesture - context menu auto-close", () => {
 	it("closes the menu on left-click press over a control", () => {
 		const nextState = handleGesture(
 			openMenuState(),
-			pressedOn("control", "transform-control:nw"),
+			pressedOn("control", "transform", "resize:topLeft"),
 		);
 		expect(nextState.contextMenuPosition).toBeNull();
 	});
@@ -69,7 +74,7 @@ describe("handleGesture - context menu auto-close", () => {
 	it("closes the menu on left-click press over the toolbar", () => {
 		const nextState = handleGesture(
 			openMenuState(),
-			pressedOn("toolbar", "toolbar:command:zoomIn"),
+			pressedOn("menu", "toolbar", "command:zoomIn"),
 		);
 		expect(nextState.contextMenuPosition).toBeNull();
 	});
@@ -77,7 +82,7 @@ describe("handleGesture - context menu auto-close", () => {
 	it("closes the menu on left-click press over a shape library item", () => {
 		const nextState = handleGesture(
 			openMenuState(),
-			pressedOn("menu-item", "menu-item:rect"),
+			pressedOn("menu", "shape-library", "item:rect"),
 		);
 		expect(nextState.contextMenuPosition).toBeNull();
 	});
@@ -85,7 +90,7 @@ describe("handleGesture - context menu auto-close", () => {
 	it("closes the menu on left-click press over the ObjectMenu", () => {
 		const nextState = handleGesture(
 			openMenuState(),
-			pressedOn("object-menu", "object-menu:command:group"),
+			pressedOn("menu", "object-menu", "command:group"),
 		);
 		expect(nextState.contextMenuPosition).toBeNull();
 	});
@@ -93,7 +98,7 @@ describe("handleGesture - context menu auto-close", () => {
 	it("does not close on press over a menu item (context-menu) so the click can go through", () => {
 		const nextState = handleGesture(
 			openMenuState(),
-			pressedOn("context-menu", "context-menu:copy"),
+			pressedOn("menu", "context-menu", "command:copy"),
 		);
 		expect(nextState.contextMenuPosition).toEqual({
 			clientX: 100,

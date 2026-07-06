@@ -49,7 +49,7 @@ const ROUTING_OPTIONS: RoutingOption[] = [
 /**
  * Menu item for switching a connector's routing (straight / orthogonal).
  * The button on the bar shows the current routing icon, and clicking it expands the
- * options in a horizontal row. Each option fires `object-menu:command:setRouting*`,
+ * options in a horizontal row. Each option fires `command:setRouting*`,
  * delegating to SetConnectorRoutingCommand.
  *
  * Self-loops are fixed to orthogonal, so this returns null. An emptied section is
@@ -78,8 +78,9 @@ const RoutingMenuComponent: React.FC<MenuItemProps> = ({ canvasState }) => {
 		<MenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-kind="object-menu"
-				data-id={`object-menu:toggle:${SECTION_ID}`}
+				data-kind="menu"
+				data-id="object-menu"
+				data-part={`toggle:${SECTION_ID}`}
 				title="Connector Routing"
 			>
 				<CurrentIcon title="Connector Routing" />
@@ -91,8 +92,9 @@ const RoutingMenuComponent: React.FC<MenuItemProps> = ({ canvasState }) => {
 							<ObjectMenuButton
 								key={routing}
 								isActive={routing === currentRouting}
-								data-kind="object-menu"
-								data-id={`object-menu:command:${commandId}`}
+								data-kind="menu"
+								data-id="object-menu"
+								data-part={`command:${commandId}`}
 								title={label}
 							>
 								<Icon title={label} />

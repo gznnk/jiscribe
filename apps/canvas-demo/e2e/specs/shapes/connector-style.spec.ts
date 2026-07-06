@@ -68,7 +68,7 @@ test.describe("コネクターのスタイル", () => {
 		// 線上をクリックして選択（コネクター用 ObjectMenu が出る）
 		await canvas.clickAt({ x: 500, y: 350 });
 		await expect(
-			canvas.page.locator('[data-id="object-menu:toggle:line-color"]'),
+			canvas.page.locator('[data-part="toggle:line-color"]'),
 		).toBeVisible();
 
 		const customStroke = await canvas.normalizeColor("#e11d48");
@@ -91,7 +91,7 @@ test.describe("コネクターのスタイル", () => {
 
 		await canvas.clickAt({ x: 500, y: 350 });
 		await expect(
-			canvas.page.locator('[data-id="object-menu:toggle:line-style"]'),
+			canvas.page.locator('[data-part="toggle:line-style"]'),
 		).toBeVisible();
 
 		// 既定はソリッド（dasharray なし）
@@ -113,7 +113,7 @@ test.describe("コネクターのスタイル", () => {
 		// コネクターを選択して線色を設定する。
 		await canvas.clickAt({ x: 500, y: 350 });
 		await expect(
-			canvas.page.locator('[data-id="object-menu:toggle:line-color"]'),
+			canvas.page.locator('[data-part="toggle:line-color"]'),
 		).toBeVisible();
 		const customStroke = await canvas.normalizeColor("#e11d48");
 		await canvas.setColor("line-color", "#e11d48");

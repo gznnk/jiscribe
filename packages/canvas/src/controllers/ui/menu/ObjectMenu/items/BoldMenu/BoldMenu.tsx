@@ -23,8 +23,9 @@ const BoldMenuComponent: React.FC<BoldMenuProps> = ({ canvasState }) => {
 		<MenuItemPositioner>
 			<ObjectMenuButton
 				isActive={isBold}
-				data-kind="object-menu"
-				data-id={`object-menu:set:fontWeight:${isBold ? "normal" : "bold"}`}
+				data-kind="menu"
+				data-id="object-menu"
+				data-part={`set:fontWeight:${isBold ? "normal" : "bold"}`}
 				title="Bold"
 			>
 				<BoldIcon />

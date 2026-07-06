@@ -19,8 +19,8 @@ import type { ControlStrategy } from "../ControlEventHandler";
 /**
  * Handles vertex-insert control operations (adding a vertex to a segment).
  *
- * Control ID format: "vertex-insert:<objectId>:<segmentIndex>"
- * Example: "vertex-insert:poly-1:0" (the segment between points[0] and points[1])
+ * Target format: data-id=<objectId>, data-part="vertex-insert:<segmentIndex>"
+ * Example: data-part="vertex-insert:0" (the segment between points[0] and points[1])
  *
  * Behavior:
  * - dragStart: add a new vertex to the specified segment
@@ -35,13 +35,13 @@ export class VertexInsertHandler implements ControlStrategy {
 			return false;
 		}
 
-		const targetId = event.targetId;
-		if (!targetId) {
+		const targetPart = event.targetPart;
+		if (!targetPart) {
 			return false;
 		}
 
 		// Check whether it is a vertex-insert
-		return targetId.startsWith("vertex-insert:");
+		return targetPart.startsWith("vertex-insert:");
 	}
 
 	handle(
@@ -53,19 +53,17 @@ export class VertexInsertHandler implements ControlStrategy {
 			return state;
 		}
 
-		const targetControlId = event.targetId;
-		if (!targetControlId) {
+		// targetId = objectId, targetPart = "vertex-insert:<segmentIndex>"
+		const objectId = event.targetId;
+		const targetPart = event.targetPart;
+		if (!objectId || !targetPart) {
 			return state;
 		}
 
-		// Parse the object ID and segment index from "vertex-insert:poly-1:0"
-		const parts = targetControlId.split(":");
-		if (parts.length !== 3 || parts[0] !== "vertex-insert") {
-			return state;
-		}
-
-		const objectId = parts[1];
-		const segmentIndex = parseInt(parts[2], 10);
+		const segmentIndex = parseInt(
+			targetPart.slice("vertex-insert:".length),
+			10,
+		);
 
 		if (isNaN(segmentIndex) || segmentIndex < 0) {
 			return state;
@@ -237,13 +235,9 @@ export class VertexInsertHandler implements ControlStrategy {
 		objectId: string,
 		segmentIndex: number,
 	): CanvasControllerState {
-		// Apply the drag-time state update to compute the final state
-		let nextState = this.handleDrag(
-			{ ...state },
-			event,
-			objectId,
-			segmentIndex,
-		);
+		// Apply the drag-time state update to compute the final state.
+		// handleDrag never mutates its argument, so the state can be passed as is.
+		let nextState = this.handleDrag(state, event, objectId, segmentIndex);
 
 		// If it belongs to a group, update the group's bounds
 		const updatedObject = nextState.objects[objectId];

@@ -4,23 +4,23 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 /**
  * ポリライン頂点の「移動」と undo / redo。
  *
- * polyline-vertex は頂点の挿入・削除を守るが、既存頂点ハンドル（vertex-control）を
+ * polyline-vertex は頂点の挿入・削除を守るが、既存頂点ハンドル（part=vertex）を
  * ドラッグして座標を動かす経路（VertexControlHandler の drag）は未カバーだった。
  * 頂点移動は points 配列の 1 要素だけを書き換える編集で、履歴エントリを作り損ねると
  * 「頂点を動かしたのに undo で戻せない」非対称な退行になる。points 文字列の往復で守る。
  */
 
-/** data-id を持つコントロールの中心からドラッグする */
+/** コントロール（CSS セレクタ）の中心からドラッグする */
 async function dragControl(
 	canvas: CanvasDriver,
-	dataId: string,
+	controlSelector: string,
 	to: { x: number; y: number },
 ) {
-	const control = canvas.page.locator(`[data-id="${dataId}"]`);
+	const control = canvas.page.locator(controlSelector);
 	await expect(control).toBeVisible();
 	const box = await control.boundingBox();
 	if (!box) {
-		throw new Error(`コントロール ${dataId} の位置が取得できない`);
+		throw new Error(`コントロール ${controlSelector} の位置が取得できない`);
 	}
 	// box は画面座標。drag はコンテンツ座標を取るので toContent で揃える。
 	await canvas.drag(
@@ -43,7 +43,10 @@ test.describe("ポリライン頂点の移動", () => {
 		const before = await canvas.objectById(id).getAttribute("points");
 
 		// 右端の頂点（index 1）を斜め上へドラッグして動かす。
-		await dragControl(canvas, `vertex-control:${id}:1`, { x: 650, y: 180 });
+		await dragControl(canvas, `[data-id="${id}"][data-part="vertex:1"]`, {
+			x: 650,
+			y: 180,
+		});
 
 		await expect
 			.poll(() => canvas.objectById(id).getAttribute("points"), {

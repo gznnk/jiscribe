@@ -64,6 +64,7 @@ export type Pressed = {
 	target: EventTarget | null;
 	targetId?: string;
 	targetKind?: string;
+	targetPart?: string;
 	mods: Mods;
 	dragging: boolean; // whether the move has exceeded DRAG_THRESHOLD and been confirmed as a drag
 	button: number;
@@ -212,6 +213,7 @@ export class GestureRecognizer {
 		const target = getKindAndId(e.target as Element);
 		const targetId = target?.id;
 		const targetKind = target?.kind;
+		const targetPart = target?.part;
 		const time = e.timeStamp;
 		const inputValue = getInputValue(e.target);
 
@@ -221,7 +223,7 @@ export class GestureRecognizer {
 			const hovered = getHoveredElements(
 				e.clientX,
 				e.clientY,
-				targetId,
+				targetId === undefined ? undefined : { id: targetId, part: targetPart },
 				this.containerRef.current,
 			);
 
@@ -269,7 +271,7 @@ export class GestureRecognizer {
 			const hovered = getHoveredElements(
 				e.clientX,
 				e.clientY,
-				targetId,
+				targetId === undefined ? undefined : { id: targetId, part: targetPart },
 				this.containerRef.current,
 			);
 
@@ -284,6 +286,7 @@ export class GestureRecognizer {
 				target: e.target,
 				targetId,
 				targetKind,
+				targetPart,
 				mods,
 				dragging: false,
 				button: e.button,
@@ -295,6 +298,7 @@ export class GestureRecognizer {
 				target: e.target,
 				targetId,
 				targetKind,
+				targetPart,
 				start: currentPos,
 				last: currentPos,
 				delta: { x: 0, y: 0 },
@@ -333,7 +337,9 @@ export class GestureRecognizer {
 			const hovered = getHoveredElements(
 				e.clientX,
 				e.clientY,
-				this.pressed.targetId,
+				this.pressed.targetId === undefined
+					? undefined
+					: { id: this.pressed.targetId, part: this.pressed.targetPart },
 				this.containerRef.current,
 			);
 
@@ -349,6 +355,7 @@ export class GestureRecognizer {
 						target: this.pressed.target,
 						targetId: this.pressed.targetId,
 						targetKind: this.pressed.targetKind,
+						targetPart: this.pressed.targetPart,
 						start: this.pressed.start,
 						last: currentPos,
 						delta,
@@ -434,6 +441,7 @@ export class GestureRecognizer {
 					target: this.pressed.target,
 					targetId: this.pressed.targetId,
 					targetKind: this.pressed.targetKind,
+					targetPart: this.pressed.targetPart,
 					start: this.pressed.start,
 					last: currentPos,
 					delta,
@@ -464,7 +472,9 @@ export class GestureRecognizer {
 			const hovered = getHoveredElements(
 				e.clientX,
 				e.clientY,
-				this.pressed.targetId,
+				this.pressed.targetId === undefined
+					? undefined
+					: { id: this.pressed.targetId, part: this.pressed.targetPart },
 				this.containerRef.current,
 			);
 
@@ -476,6 +486,7 @@ export class GestureRecognizer {
 				const currentClick: ClickSnapshot = {
 					time,
 					targetId: this.pressed.targetId,
+					targetPart: this.pressed.targetPart,
 					clientPos: this.pressed.clientStart,
 				};
 				const doubleClick = isDoubleClick(this.lastClick, currentClick);
@@ -495,6 +506,7 @@ export class GestureRecognizer {
 				target: this.pressed.target,
 				targetId: this.pressed.targetId,
 				targetKind: this.pressed.targetKind,
+				targetPart: this.pressed.targetPart,
 				start: this.pressed.start,
 				last: currentPos,
 				delta,
@@ -524,7 +536,9 @@ export class GestureRecognizer {
 			const hovered = getHoveredElements(
 				e.clientX,
 				e.clientY,
-				this.pressed.targetId,
+				this.pressed.targetId === undefined
+					? undefined
+					: { id: this.pressed.targetId, part: this.pressed.targetPart },
 				this.containerRef.current,
 			);
 
@@ -537,6 +551,7 @@ export class GestureRecognizer {
 					target: this.pressed.target,
 					targetId: this.pressed.targetId,
 					targetKind: this.pressed.targetKind,
+					targetPart: this.pressed.targetPart,
 					start: this.pressed.start,
 					last: currentPos,
 					delta,

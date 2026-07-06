@@ -21,8 +21,8 @@ import type { ControlStrategy } from "../ControlEventHandler";
 /**
  * Handles vertex control interactions (moving a vertex).
  *
- * Control ID format: "vertex-control:<objectId>:<vertexIndex>"
- * Example: "vertex-control:poly-1:0"
+ * Target format: data-id=<objectId>, data-part="vertex:<vertexIndex>"
+ * Example: data-part="vertex:0"
  */
 export class VertexControlHandler implements ControlStrategy {
 	readonly controlType = "vertex-control";
@@ -32,13 +32,13 @@ export class VertexControlHandler implements ControlStrategy {
 			return false;
 		}
 
-		const targetId = event.targetId;
-		if (!targetId) {
+		const targetPart = event.targetPart;
+		if (!targetPart) {
 			return false;
 		}
 
-		// Check whether this is a vertex-control
-		return targetId.startsWith("vertex-control:");
+		// Check whether this is a vertex control
+		return targetPart.startsWith("vertex:");
 	}
 
 	handle(
@@ -50,19 +50,14 @@ export class VertexControlHandler implements ControlStrategy {
 			return state;
 		}
 
-		const targetControlId = event.targetId;
-		if (!targetControlId) {
+		// targetId = objectId, targetPart = "vertex:<vertexIndex>"
+		const objectId = event.targetId;
+		const targetPart = event.targetPart;
+		if (!objectId || !targetPart) {
 			return state;
 		}
 
-		// Parse the object ID and vertex index from "vertex-control:poly-1:0"
-		const parts = targetControlId.split(":");
-		if (parts.length !== 3 || parts[0] !== "vertex-control") {
-			return state;
-		}
-
-		const objectId = parts[1];
-		const vertexIndex = parseInt(parts[2], 10);
+		const vertexIndex = parseInt(targetPart.slice("vertex:".length), 10);
 
 		if (isNaN(vertexIndex) || vertexIndex < 0) {
 			return state;
@@ -247,8 +242,9 @@ export class VertexControlHandler implements ControlStrategy {
 		objectId: string,
 		vertexIndex: number,
 	): CanvasControllerState {
-		// Apply the drag-time state update to compute the final state
-		let nextState = this.handleDrag({ ...state }, event, objectId, vertexIndex);
+		// Apply the drag-time state update to compute the final state.
+		// handleDrag never mutates its argument, so the state can be passed as is.
+		let nextState = this.handleDrag(state, event, objectId, vertexIndex);
 
 		// If it belongs to a group, update the group's bounds
 		const updatedObject = nextState.objects[objectId];
