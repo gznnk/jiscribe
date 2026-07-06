@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
 import type { CanvasDoc } from "../../../../schemas/canvas/CanvasDoc";
+import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
 import { createInitialControllerState } from "../../../reducer/createInitialControllerState";
 import { initializeObjectRegistry } from "../../../setup/initializeObjectRegistry";
 import { StartTextEditCommand } from "../StartTextEditCommand";
@@ -26,10 +27,11 @@ const svg = {
 
 const doc = { version: 1, root: [rect, svg] } as unknown as CanvasDoc;
 
-const stateWithSelection = (selectedId: string) => ({
-	...createInitialControllerState(doc),
-	selectedIds: [selectedId],
-});
+const stateWithSelection = (selectedId: string) =>
+	deepFreezeState({
+		...createInitialControllerState(doc),
+		selectedIds: [selectedId],
+	});
 
 describe("StartTextEditCommand", () => {
 	beforeAll(() => {

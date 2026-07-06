@@ -5,6 +5,7 @@ import type { CanvasDoc } from "../../../../../../schemas/canvas/CanvasDoc";
 import { isOrthogonalRouting } from "../../../../../../schemas/objects/types/ConnectorRouting";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../../../states/objects/connections/connector/ConnectorState";
+import { deepFreezeState } from "../../../../../__tests__/support/deepFreezeState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { createInitialControllerState } from "../../../../../reducer/createInitialControllerState";
 import { initializeObjectRegistry } from "../../../../../setup/initializeObjectRegistry";
@@ -54,7 +55,7 @@ const stateWithConnectors = (
 	for (const c of connectors) {
 		objects[c.id] = c;
 	}
-	return {
+	return deepFreezeState({
 		...base,
 		objects,
 		rootIds: [...base.rootIds, ...connectors.map((c) => c.id)],
@@ -68,7 +69,7 @@ const stateWithConnectors = (
 			multiSelectGroup: null,
 			viewport: base.viewport,
 		},
-	};
+	});
 };
 
 /** Build a drag-type CanvasEvent. */

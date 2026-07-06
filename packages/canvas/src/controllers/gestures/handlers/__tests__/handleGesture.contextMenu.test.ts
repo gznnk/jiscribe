@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 
 import type { CanvasDoc } from "../../../../schemas/canvas/CanvasDoc";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createInitialControllerState } from "../../../reducer/createInitialControllerState";
 import { initializeGestureHandlerRegistry } from "../../../setup/initializeGestureHandlerRegistry";
@@ -27,12 +28,12 @@ const openMenuState = (): CanvasControllerState => {
 	const base = createInitialControllerState(emptyDoc);
 	const rect = { id: "a", type: "rect" } as unknown as ObjectState;
 	const connector = { id: "c", type: "connector" } as unknown as ObjectState;
-	return {
+	return deepFreezeState({
 		...base,
 		objects: { ...base.objects, a: rect, c: connector },
 		rootIds: [...base.rootIds, "a", "c"],
 		contextMenuPosition: { clientX: 100, clientY: 100 },
-	};
+	});
 };
 
 const pressedOn = (

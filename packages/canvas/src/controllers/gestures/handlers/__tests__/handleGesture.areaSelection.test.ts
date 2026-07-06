@@ -3,6 +3,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { MULTI_SELECT_GROUP } from "../../../../constants/multiSelectGroup";
 import type { CanvasDoc } from "../../../../schemas/canvas/CanvasDoc";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createInitialControllerState } from "../../../reducer/createInitialControllerState";
 import { initializeGestureHandlerRegistry } from "../../../setup/initializeGestureHandlerRegistry";
@@ -48,11 +49,11 @@ const stateWithRects = (): CanvasControllerState => {
 		r2: rect("r2", 150, 150, 40, 40), // bbox 130..170
 		far: rect("far", 900, 900, 40, 40), // bbox 880..920 — outside
 	};
-	return {
+	return deepFreezeState({
 		...base,
 		objects,
 		rootIds: [...base.rootIds, "r1", "r2", "far"],
-	};
+	});
 };
 
 const dragGesture = (
