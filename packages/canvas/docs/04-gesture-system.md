@@ -48,7 +48,7 @@ On `dragStart`, `handleGesture` saves `eventStartSnapshot` (the objects / keyPoi
 snapCandidates, etc. at the start of the operation), and clears it on `dragEnd`. If the doc has actually changed
 on `dragEnd`, it advances `commitVersion`, triggering history recording (see [State Update Flow](./06-state-update-flow.md) for details).
 
-## Linking attributes `data-gesture` / `data-kind` / `data-id`
+## Linking attributes `data-gesture` / `data-kind` / `data-id` / `data-part`
 
 DOM elements on the canvas interoperate with the gesture system through `data-*` attributes.
 This convention allows **elements that should retain native browser behavior**—such as the `textarea` used during
@@ -76,15 +76,56 @@ Where they are read:
 All of these decision utilities are built on `findGestureElement(target, token)` and
 are located in `controllers/gestures/recognizer/utils/`.
 
-### `data-kind` / `data-id`
+### `data-kind` / `data-id` / `data-part`
 
 Attributes that **identify the target** of a gesture. `getKindAndId` finds the nearest element via `closest("[data-kind]")`,
-resolves `{ kind, id }`, and attaches it to the event. Example `data-id` formats (ObjectMenu):
+resolves `{ kind, id, part }`, and attaches it to the event as `targetKind` / `targetId` / `targetPart`.
 
-- `object-menu:toggle:{sectionId}` — expand/collapse a section
-- `object-menu:set:{property}:{value}` — update a property
-- `object-menu:slider:{property}` — update a slider
-- `object-menu:command:{commandId}` — execute a command
+Each attribute carries exactly one axis, forming the two-level routing tree `kind` (coarse) → `part` prefix (fine) (issue #81):
+
+| Attribute   | Meaning                                     | Grammar                                                                 |
+| ----------- | ------------------------------------------- | ----------------------------------------------------------------------- |
+| `data-kind` | **Domain** — 1:1 with a handler group       | one of `object` / `connector` / `canvas` / `control` / `menu`           |
+| `data-id`   | **Identity** — which target                 | an entity UUID or a singleton widget name. **Never parsed — no colons** |
+| `data-part` | **Sub-element** — which piece of the target | `<subtype>[:<args...>]`; absent = the target's body itself              |
+
+Rules:
+
+- Routing is `kind` → handler, then `part` prefix → strategy. `id` is used only for lookup, never parsed.
+- An entity's subtype (rect / connector / …) is never encoded in the DOM; resolve it via `objects[id].type`.
+- `part` (args included) is always the **identifier of a sub-element**, parallel to `id` being the identifier
+  of the entity. A verb-looking part (`set:fill:red`) names the button by what it does; `part` is not a
+  command channel.
+- `data-kind` is present only on elements that have a gesture handler. "Interactive but not a gesture
+  target" is expressed with `data-gesture="none"`, not with a handler-less kind.
+
+Example: a connector's label box is `data-kind="connector" data-id={connectorId} data-part="label"`.
+With a committed label, only a double click on the label box (not the bare line) starts label editing.
+
+#### Migration status (issue #81)
+
+The grammar above is the target. The current deviations below are to be migrated stepwise:
+
+| Current                                              | Target (kind / id / part)                                                    |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `control` + `transform-control:bottomRight`          | `control` / `transform` / `resize:bottomRight`                               |
+| `control` + `vertex-control:<objId>:<i>`             | `control` / `<objId>` / `vertex:<i>`                                         |
+| `control` + `vertex-insert:<objId>:<seg>`            | `control` / `<objId>` / `vertex-insert:<seg>`                                |
+| `control` + `connector-vertex-insert:<id>:<seg>`     | merged into the above (poly vs connector resolved via `objects[id].type`)    |
+| `control` + `connection-anchor:create:<objId>:<pos>` | `control` / `<objId>` / `anchor:<pos>`                                       |
+| `control` + `connection-anchor:edit:<id>:…`          | `control` / `<connectorId>` / `endpoint:<source\|target>`                    |
+| `toolbar` + `toolbar:command:zoomIn`                 | `menu` / `toolbar` / `command:zoomIn`                                        |
+| `object-menu` + `object-menu:set:fill:red` etc.      | `menu` / `object-menu` / `set:fill:red` (same for toggle / slider / command) |
+| `object-menu` + `object-menu:bar` / `:panel`         | `menu` / `object-menu` / no part (the menu chrome itself)                    |
+| `context-menu` + `context-menu:<cmdId>`              | `menu` / `context-menu` / `command:<cmdId>` (verb always present)            |
+| `menu-item` + `menu-item:<presetId>`                 | `menu` / `shape-library` / `item:<presetId>`                                 |
+| handler-less kinds such as `text-editor`             | drop `data-kind`, use `data-gesture="none"`                                  |
+
+Migration cautions:
+
+- `isDoubleClick` compares `targetId`; once ids collapse to entity UUIDs shared across parts, consecutive
+  clicks on different parts would coalesce. The comparison must become the pair `(targetId, targetPart)`.
+- `HoveredElement` (`{ id, kind }`) needs `part` as well, to keep the vocabulary uniform.
 
 ### Why we tokenized it
 
