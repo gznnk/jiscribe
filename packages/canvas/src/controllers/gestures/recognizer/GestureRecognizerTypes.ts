@@ -22,6 +22,7 @@ export type GestureType =
 export type HoveredElement = {
 	id: string;
 	kind: string;
+	part?: string;
 };
 
 export type ScrollDelta = {

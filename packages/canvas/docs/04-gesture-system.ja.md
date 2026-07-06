@@ -105,20 +105,20 @@ snapCandidates 等）を保存し、`dragEnd` でクリアする。`dragEnd` 時
 
 上の文法はターゲット。現状は以下の乖離が残っており、段階的に移行する:
 
-| 現在                                                 | 整理後 (kind / id / part)                                                   |
-| ---------------------------------------------------- | --------------------------------------------------------------------------- |
-| `control` + `transform-control:bottomRight`          | `control` / `transform` / `resize:bottomRight`                              |
-| `control` + `vertex-control:<objId>:<i>`             | `control` / `<objId>` / `vertex:<i>`                                        |
-| `control` + `vertex-insert:<objId>:<seg>`            | `control` / `<objId>` / `vertex-insert:<seg>`                               |
-| `control` + `connector-vertex-insert:<id>:<seg>`     | 同上に統合（poly / connector は `objects[id].type` で分岐）                 |
-| `control` + `connection-anchor:create:<objId>:<pos>` | `control` / `<objId>` / `anchor:<pos>`                                      |
-| `control` + `connection-anchor:edit:<id>:…`          | `control` / `<connectorId>` / `endpoint:<source\|target>`                   |
-| `toolbar` + `toolbar:command:zoomIn`                 | `menu` / `toolbar` / `command:zoomIn`                                       |
-| `object-menu` + `object-menu:set:fill:red` 等        | `menu` / `object-menu` / `set:fill:red`（toggle / slider / command も同様） |
-| `object-menu` + `object-menu:bar` / `:panel`         | `menu` / `object-menu` / バーは part 無し・パネルは `panel`                 |
-| `context-menu` + `context-menu:<cmdId>`              | `menu` / `context-menu` / `command:<cmdId>`（動詞を常置）                   |
-| `menu-item` + `menu-item:<presetId>`                 | `menu` / `shape-library` / `item:<presetId>`                                |
-| `text-editor` 等ハンドラ無しの kind                  | `data-kind` を剥がし `data-gesture="none"` へ                               |
+| 現在                                                 | 整理後 (kind / id / part)                                                       |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `control` + `transform-control:bottomRight`          | `control` / `transform` / `resize:bottomRight`                                  |
+| `control` + `vertex-control:<objId>:<i>`             | `control` / `<objId>` / `vertex:<i>`                                            |
+| `control` + `vertex-insert:<objId>:<seg>`            | `control` / `<objId>` / `vertex-insert:<seg>`                                   |
+| `control` + `connector-vertex-insert:<id>:<seg>`     | `control` / `<connectorId>` / `waypoint-insert:<seg>`（part の subtype で分離） |
+| `control` + `connection-anchor:create:<objId>:<pos>` | `control` / `<objId>` / `anchor:<pos>`                                          |
+| `control` + `connection-anchor:edit:<id>:…`          | `control` / `<connectorId>` / `endpoint:<source\|target>`                       |
+| `toolbar` + `toolbar:command:zoomIn`                 | `menu` / `toolbar` / `command:zoomIn`                                           |
+| `object-menu` + `object-menu:set:fill:red` 等        | `menu` / `object-menu` / `set:fill:red`（toggle / slider / command も同様）     |
+| `object-menu` + `object-menu:bar` / `:panel`         | `menu` / `object-menu` / バーは part 無し・パネルは `panel`                     |
+| `context-menu` + `context-menu:<cmdId>`              | `menu` / `context-menu` / `command:<cmdId>`（動詞を常置）                       |
+| `menu-item` + `menu-item:<presetId>`                 | `menu` / `shape-library` / `item:<presetId>`                                    |
+| `text-editor` 等ハンドラ無しの kind                  | `data-kind` を剥がし `data-gesture="none"` へ                                   |
 
 移行時の注意:
 

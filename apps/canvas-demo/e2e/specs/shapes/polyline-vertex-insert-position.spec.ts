@@ -34,14 +34,14 @@ async function readVertices(
 /** data-id コントロールの中心からコンテンツ座標 to へドラッグする */
 async function dragControl(
 	canvas: CanvasDriver,
-	dataId: string,
+	controlSelector: string,
 	to: { x: number; y: number },
 ) {
-	const control = canvas.page.locator(`[data-id="${dataId}"]`);
+	const control = canvas.page.locator(controlSelector);
 	await expect(control).toBeVisible();
 	const box = await control.boundingBox();
 	if (!box) {
-		throw new Error(`コントロール ${dataId} の位置が取得できない`);
+		throw new Error(`コントロール ${controlSelector} の位置が取得できない`);
 	}
 	await canvas.drag(
 		canvas.toContent({ x: box.x + box.width / 2, y: box.y + box.height / 2 }),
@@ -77,7 +77,11 @@ test.describe("ポリライン頂点挿入の位置と順序", () => {
 		expect(before).toHaveLength(2);
 
 		// 中点ハンドルを (450,420) へドラッグして頂点を挿入する。
-		await dragControl(canvas, `vertex-insert:${id}:0`, { x: 450, y: 420 });
+		await dragControl(
+			canvas,
+			`[data-id="${id}"][data-part="vertex-insert:0"]`,
+			{ x: 450, y: 420 },
+		);
 
 		await expect
 			.poll(() => readVertices(canvas, id).then((v) => v.length))

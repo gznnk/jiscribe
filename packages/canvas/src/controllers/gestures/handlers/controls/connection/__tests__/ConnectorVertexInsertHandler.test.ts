@@ -13,12 +13,14 @@ const insertHandler = new ConnectorVertexInsertHandler();
 /** A minimal event carrying only targetKind / targetId, for verifying supports(). */
 const controlEvent = (
 	targetId: string | undefined,
+	targetPart: string | undefined,
 	targetKind = "control",
 ): CanvasEvent =>
 	({
 		type: "dragStart",
 		targetKind,
 		targetId,
+		targetPart,
 		button: 0,
 	}) as unknown as CanvasEvent;
 
@@ -61,7 +63,8 @@ const insertEvent = (
 	({
 		type,
 		targetKind: "control",
-		targetId: `connector-vertex-insert:conn-1:${segmentIndex}`,
+		targetId: "conn-1",
+		targetPart: `waypoint-insert:${segmentIndex}`,
 		button,
 		last,
 		mods: { shift: false, alt: false, ctrl: false, meta: false },
@@ -172,42 +175,38 @@ describe("ConnectorVertexInsertHandler.supports / routing conflicts", () => {
 	const vertexInsert = new VertexInsertHandler();
 	const connectionAnchor = new ConnectionAnchorEventHandler();
 
-	it("supports only connector-vertex-insert: control events", () => {
-		expect(
-			insertHandler.supports(controlEvent("connector-vertex-insert:c:0")),
-		).toBe(true);
-		expect(insertHandler.supports(controlEvent("vertex-insert:c:0"))).toBe(
+	it("supports only waypoint-insert: control events", () => {
+		expect(insertHandler.supports(controlEvent("c", "waypoint-insert:0"))).toBe(
+			true,
+		);
+		expect(insertHandler.supports(controlEvent("c", "vertex-insert:0"))).toBe(
 			false,
 		);
+		expect(insertHandler.supports(controlEvent("c", "endpoint:source"))).toBe(
+			false,
+		);
+		expect(insertHandler.supports(controlEvent("c", undefined))).toBe(false);
 		expect(
-			insertHandler.supports(controlEvent("connection-anchor:edit:c:source")),
-		).toBe(false);
-		expect(insertHandler.supports(controlEvent(undefined))).toBe(false);
-		expect(
-			insertHandler.supports(
-				controlEvent("connector-vertex-insert:c:0", "object"),
-			),
+			insertHandler.supports(controlEvent("c", "waypoint-insert:0", "object")),
 		).toBe(false);
 	});
 
-	it("sibling handlers with confusing prefixes do not steal connector-vertex-insert", () => {
+	it("sibling handlers with confusing part subtypes do not steal waypoint-insert", () => {
 		// ControlEventHandler routes to the first strategy whose supports() is true, so
-		// pin down that the prefix-partially-matching VertexInsertHandler / ConnectionAnchorEventHandler
+		// pin down that VertexInsertHandler / ConnectionAnchorEventHandler
 		// do not grab it by mistake.
-		const event = controlEvent("connector-vertex-insert:c:0");
+		const event = controlEvent("c", "waypoint-insert:0");
 		expect(vertexInsert.supports(event)).toBe(false);
 		expect(connectionAnchor.supports(event)).toBe(false);
 		// Reverse: this handler does not grab others' controls
-		expect(insertHandler.supports(controlEvent("vertex-control:c:0"))).toBe(
-			false,
-		);
+		expect(insertHandler.supports(controlEvent("c", "vertex:0"))).toBe(false);
 	});
 });
 
 describe("moving a connector waypoint via VertexControlHandler (reuse check)", () => {
 	const moveHandler = new VertexControlHandler();
 
-	it('can move a waypoint via a drag on "vertex-control:<connectorId>:<i>"', () => {
+	it('can move a waypoint via a drag on data-id=<connectorId> + data-part="vertex:<i>"', () => {
 		const state = makeState([
 			{ x: 0, y: 0 },
 			{ x: 100, y: 0 },
@@ -215,7 +214,8 @@ describe("moving a connector waypoint via VertexControlHandler (reuse check)", (
 		const event = {
 			type: "drag",
 			targetKind: "control",
-			targetId: "vertex-control:conn-1:1",
+			targetId: "conn-1",
+			targetPart: "vertex:1",
 			button: 0,
 			last: { x: 120, y: 40 },
 			mods: { shift: false, alt: false, ctrl: false, meta: false },

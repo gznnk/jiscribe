@@ -37,7 +37,7 @@ type TransformControlsProps = {
  *
  * Each anchor has:
  * - data-kind="control" for GestureHandler to identify
- * - data-id="transform-control:<anchorType>" for identifying which anchor was interacted with
+ * - data-id="transform" + data-part="resize:<anchorType>" / "rotation" for identifying which anchor was interacted with
  */
 const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 	frame,
@@ -111,7 +111,8 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 				stroke={ANCHOR_COLOR}
 				strokeWidth={adjustedStrokeWidth}
 				data-kind="control"
-				data-id="transform-control:topLeft"
+				data-id="transform"
+				data-part="resize:topLeft"
 				style={{ cursor: cursors.topLeft }}
 			/>
 			<circle
@@ -122,7 +123,8 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 				stroke={ANCHOR_COLOR}
 				strokeWidth={adjustedStrokeWidth}
 				data-kind="control"
-				data-id="transform-control:topRight"
+				data-id="transform"
+				data-part="resize:topRight"
 				style={{ cursor: cursors.topRight }}
 			/>
 			<circle
@@ -133,7 +135,8 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 				stroke={ANCHOR_COLOR}
 				strokeWidth={adjustedStrokeWidth}
 				data-kind="control"
-				data-id="transform-control:bottomLeft"
+				data-id="transform"
+				data-part="resize:bottomLeft"
 				style={{ cursor: cursors.bottomLeft }}
 			/>
 			<circle
@@ -144,7 +147,8 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 				stroke={ANCHOR_COLOR}
 				strokeWidth={adjustedStrokeWidth}
 				data-kind="control"
-				data-id="transform-control:bottomRight"
+				data-id="transform"
+				data-part="resize:bottomRight"
 				style={{ cursor: cursors.bottomRight }}
 			/>
 
@@ -157,7 +161,8 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 				stroke={ANCHOR_COLOR}
 				strokeWidth={adjustedStrokeWidth}
 				data-kind="control"
-				data-id="transform-control:topCenter"
+				data-id="transform"
+				data-part="resize:topCenter"
 				style={{ cursor: cursors.topCenter }}
 			/>
 			<circle
@@ -168,7 +173,8 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 				stroke={ANCHOR_COLOR}
 				strokeWidth={adjustedStrokeWidth}
 				data-kind="control"
-				data-id="transform-control:rightCenter"
+				data-id="transform"
+				data-part="resize:rightCenter"
 				style={{ cursor: cursors.rightCenter }}
 			/>
 			<circle
@@ -179,7 +185,8 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 				stroke={ANCHOR_COLOR}
 				strokeWidth={adjustedStrokeWidth}
 				data-kind="control"
-				data-id="transform-control:bottomCenter"
+				data-id="transform"
+				data-part="resize:bottomCenter"
 				style={{ cursor: cursors.bottomCenter }}
 			/>
 			<circle
@@ -190,7 +197,8 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 				stroke={ANCHOR_COLOR}
 				strokeWidth={adjustedStrokeWidth}
 				data-kind="control"
-				data-id="transform-control:leftCenter"
+				data-id="transform"
+				data-part="resize:leftCenter"
 				style={{ cursor: cursors.leftCenter }}
 			/>
 
@@ -206,7 +214,8 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 				r={adjustedRotationHitRadius}
 				fill="transparent"
 				data-kind="control"
-				data-id="transform-control:rotation"
+				data-id="transform"
+				data-part="rotation"
 				style={{ cursor: "grab" }}
 			/>
 		</g>

@@ -59,7 +59,7 @@ test.describe("ビューポートのパン", () => {
 		// 変換が壊れていればここは空振りし、selectAt がコントロール待ちで失敗する。
 		const screen = { x: 500 - vbAfter.minX, y: 300 - vbAfter.minY };
 		await canvas.selectAt(screen);
-		expect(await canvas.isControlVisible("transform-control:bottomRight")).toBe(
+		expect(await canvas.isControlVisible("transform/resize:bottomRight")).toBe(
 			true,
 		);
 	});

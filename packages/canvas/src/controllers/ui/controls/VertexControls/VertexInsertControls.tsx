@@ -27,13 +27,13 @@ type VertexInsertControlsProps = {
 	 */
 	zoom?: number;
 	/**
-	 * Control ID prefix, routing the gesture to the matching handler.
+	 * data-part subtype, routing the gesture to the matching handler.
 	 * Polyline/polygon use `"vertex-insert"` (default, → VertexInsertHandler);
-	 * connectors pass `"connector-vertex-insert"` (→ ConnectorVertexInsertHandler),
+	 * connectors pass `"waypoint-insert"` (→ ConnectorVertexInsertHandler),
 	 * because the inserted point maps to a different array index (see those handlers).
 	 * @default "vertex-insert"
 	 */
-	controlIdPrefix?: string;
+	insertPartSubtype?: string;
 };
 
 /**
@@ -42,18 +42,18 @@ type VertexInsertControlsProps = {
  * This is a pure presentation component that renders a simple blue dot at each segment
  * midpoint (matching the connector ConnectionAnchors / Miro style), signalling that a
  * new vertex can be added there. All interaction logic should be handled by the
- * insert handler matching `controlIdPrefix`.
+ * insert handler matching `insertPartSubtype`.
  *
  * Each insertion control has:
  * - data-kind="control" for GestureHandler to identify
- * - data-id="<controlIdPrefix>:<objectId>:<segmentIndex>" for identifying which segment was interacted with
+ * - data-id=<objectId> + data-part="<insertPartSubtype>:<segmentIndex>" for identifying which segment was interacted with
  */
 const VertexInsertControlsComponent: React.FC<VertexInsertControlsProps> = ({
 	objectId,
 	points,
 	closed = false,
 	zoom = 1,
-	controlIdPrefix = "vertex-insert",
+	insertPartSubtype = "vertex-insert",
 }) => {
 	// Adjust sizes based on zoom level to maintain consistent visual size
 	const adjustedRadius = INSERT_RADIUS / zoom;
@@ -94,7 +94,8 @@ const VertexInsertControlsComponent: React.FC<VertexInsertControlsProps> = ({
 					stroke={INSERT_COLOR}
 					strokeWidth={adjustedStrokeWidth}
 					data-kind="control"
-					data-id={`${controlIdPrefix}:${objectId}:${segmentIndex}`}
+					data-id={objectId}
+					data-part={`${insertPartSubtype}:${segmentIndex}`}
 					style={{ cursor: "crosshair" }}
 				/>
 			))}

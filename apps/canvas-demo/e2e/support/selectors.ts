@@ -51,11 +51,13 @@ export const selectors = {
 			| "bottomCenter"
 			| "bottomRight"
 			| "rotation",
-	) => `[data-id="transform-control:${handle}"]`,
+	) =>
+		handle === "rotation"
+			? `[data-id="transform"][data-part="rotation"]`
+			: `[data-id="transform"][data-part="resize:${handle}"]`,
 
 	/** コネクター作成アンカー（辺の中点から 20px 外側に表示される） */
-	createAnchor: (anchorId: AnchorId) =>
-		`[data-id^="connection-anchor:create"][data-id$=":${anchorId}"]`,
+	createAnchor: (anchorId: AnchorId) => `[data-part="anchor:${anchorId}"]`,
 
 	/** ObjectMenu のドロップダウンを開くトグルボタン */
 	objectMenuToggle: (sectionId: string) => `[data-part="toggle:${sectionId}"]`,

@@ -223,7 +223,7 @@ export class GestureRecognizer {
 			const hovered = getHoveredElements(
 				e.clientX,
 				e.clientY,
-				targetId,
+				targetId === undefined ? undefined : { id: targetId, part: targetPart },
 				this.containerRef.current,
 			);
 
@@ -271,7 +271,7 @@ export class GestureRecognizer {
 			const hovered = getHoveredElements(
 				e.clientX,
 				e.clientY,
-				targetId,
+				targetId === undefined ? undefined : { id: targetId, part: targetPart },
 				this.containerRef.current,
 			);
 
@@ -337,7 +337,9 @@ export class GestureRecognizer {
 			const hovered = getHoveredElements(
 				e.clientX,
 				e.clientY,
-				this.pressed.targetId,
+				this.pressed.targetId === undefined
+					? undefined
+					: { id: this.pressed.targetId, part: this.pressed.targetPart },
 				this.containerRef.current,
 			);
 
@@ -470,7 +472,9 @@ export class GestureRecognizer {
 			const hovered = getHoveredElements(
 				e.clientX,
 				e.clientY,
-				this.pressed.targetId,
+				this.pressed.targetId === undefined
+					? undefined
+					: { id: this.pressed.targetId, part: this.pressed.targetPart },
 				this.containerRef.current,
 			);
 
@@ -532,7 +536,9 @@ export class GestureRecognizer {
 			const hovered = getHoveredElements(
 				e.clientX,
 				e.clientY,
-				this.pressed.targetId,
+				this.pressed.targetId === undefined
+					? undefined
+					: { id: this.pressed.targetId, part: this.pressed.targetPart },
 				this.containerRef.current,
 			);
 

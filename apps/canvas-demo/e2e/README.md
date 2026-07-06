@@ -88,13 +88,15 @@ kind / id / part の3軸文法は `packages/canvas/docs/04-gesture-system.md` �
 ツールバーは `button[title="Rectangle"]` のように `title` 属性でも特定できる
 （Rectangle / Ellipse / Polyline / Polygon / Sticky / Markdown）。
 
-### control の data-id
+### control の data-id / data-part
 
-| data-id                                                           | 役割                                                                                                                                      |
-| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `transform-control:topLeft` 〜 `bottomRight`, `topCenter` 等8方向 | リサイズハンドル（8px 四方）                                                                                                              |
-| `transform-control:rotation`                                      | 回転ハンドル（topRight の外側 +15,-15 付近）                                                                                              |
-| `connection-anchor:create:<uuid>:<anchorId>`                      | コネクター作成アンカー。`anchorId` は `topCenter` / `bottomCenter` / `leftCenter` / `rightCenter`。**辺の中点から 20px 外側**に表示される |
+| data-id / data-part                                                     | 役割                                                                                                                                      |
+| ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| id: `transform`, part: `resize:topLeft` 〜 `resize:bottomRight` 等8方向 | リサイズハンドル（8px 四方）                                                                                                              |
+| id: `transform`, part: `rotation`                                       | 回転ハンドル（topRight の外側 +15,-15 付近）                                                                                              |
+| id: `<uuid>`, part: `anchor:<anchorId>`                                 | コネクター作成アンカー。`anchorId` は `topCenter` / `bottomCenter` / `leftCenter` / `rightCenter`。**辺の中点から 20px 外側**に表示される |
+| id: `<uuid>`, part: `vertex:<i>` / `vertex-insert:<seg>`                | polyline / polygon の頂点移動・挿入ハンドル（コネクターの waypoint 移動も `vertex:<i>`）                                                  |
+| id: `<uuid>`, part: `endpoint:source\|target` / `waypoint-insert:<seg>` | コネクターの端点再接続・waypoint 挿入ハンドル                                                                                             |
 
 ### object-menu（data-id="object-menu"）の data-part
 

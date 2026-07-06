@@ -106,20 +106,20 @@ With a committed label, only a double click on the label box (not the bare line)
 
 The grammar above is the target. The current deviations below are to be migrated stepwise:
 
-| Current                                              | Target (kind / id / part)                                                    |
-| ---------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `control` + `transform-control:bottomRight`          | `control` / `transform` / `resize:bottomRight`                               |
-| `control` + `vertex-control:<objId>:<i>`             | `control` / `<objId>` / `vertex:<i>`                                         |
-| `control` + `vertex-insert:<objId>:<seg>`            | `control` / `<objId>` / `vertex-insert:<seg>`                                |
-| `control` + `connector-vertex-insert:<id>:<seg>`     | merged into the above (poly vs connector resolved via `objects[id].type`)    |
-| `control` + `connection-anchor:create:<objId>:<pos>` | `control` / `<objId>` / `anchor:<pos>`                                       |
-| `control` + `connection-anchor:edit:<id>:…`          | `control` / `<connectorId>` / `endpoint:<source\|target>`                    |
-| `toolbar` + `toolbar:command:zoomIn`                 | `menu` / `toolbar` / `command:zoomIn`                                        |
-| `object-menu` + `object-menu:set:fill:red` etc.      | `menu` / `object-menu` / `set:fill:red` (same for toggle / slider / command) |
-| `object-menu` + `object-menu:bar` / `:panel`         | `menu` / `object-menu` / bar has no part, panel is `panel`                   |
-| `context-menu` + `context-menu:<cmdId>`              | `menu` / `context-menu` / `command:<cmdId>` (verb always present)            |
-| `menu-item` + `menu-item:<presetId>`                 | `menu` / `shape-library` / `item:<presetId>`                                 |
-| handler-less kinds such as `text-editor`             | drop `data-kind`, use `data-gesture="none"`                                  |
+| Current                                              | Target (kind / id / part)                                                         |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `control` + `transform-control:bottomRight`          | `control` / `transform` / `resize:bottomRight`                                    |
+| `control` + `vertex-control:<objId>:<i>`             | `control` / `<objId>` / `vertex:<i>`                                              |
+| `control` + `vertex-insert:<objId>:<seg>`            | `control` / `<objId>` / `vertex-insert:<seg>`                                     |
+| `control` + `connector-vertex-insert:<id>:<seg>`     | `control` / `<connectorId>` / `waypoint-insert:<seg>` (separated by part subtype) |
+| `control` + `connection-anchor:create:<objId>:<pos>` | `control` / `<objId>` / `anchor:<pos>`                                            |
+| `control` + `connection-anchor:edit:<id>:…`          | `control` / `<connectorId>` / `endpoint:<source\|target>`                         |
+| `toolbar` + `toolbar:command:zoomIn`                 | `menu` / `toolbar` / `command:zoomIn`                                             |
+| `object-menu` + `object-menu:set:fill:red` etc.      | `menu` / `object-menu` / `set:fill:red` (same for toggle / slider / command)      |
+| `object-menu` + `object-menu:bar` / `:panel`         | `menu` / `object-menu` / bar has no part, panel is `panel`                        |
+| `context-menu` + `context-menu:<cmdId>`              | `menu` / `context-menu` / `command:<cmdId>` (verb always present)                 |
+| `menu-item` + `menu-item:<presetId>`                 | `menu` / `shape-library` / `item:<presetId>`                                      |
+| handler-less kinds such as `text-editor`             | drop `data-kind`, use `data-gesture="none"`                                       |
 
 Migration cautions:
 

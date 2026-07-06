@@ -43,9 +43,9 @@ test.describe("ドライバ動作確認: 入力プリミティブ", () => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
 
 		const ids = await canvas.visibleControlIds();
-		expect(ids).toContain("transform-control:bottomRight");
-		expect(ids).toContain("transform-control:rotation");
-		expect(await canvas.isControlVisible("transform-control:topLeft")).toBe(
+		expect(ids).toContain("transform/resize:bottomRight");
+		expect(ids).toContain("transform/rotation");
+		expect(await canvas.isControlVisible("transform/resize:topLeft")).toBe(
 			true,
 		);
 		expect(await canvas.hasAnyControl()).toBe(true);

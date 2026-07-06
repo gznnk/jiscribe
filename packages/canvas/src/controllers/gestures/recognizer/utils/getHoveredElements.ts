@@ -2,13 +2,19 @@ import { getKindAndId } from "./getKindAndId";
 import type { HoveredElement } from "../GestureRecognizerTypes";
 
 /**
- * Get the hovered elements at a coordinate (deduplicated, excluding a given ID).
- * Passing rootElement excludes elements outside the canvas.
+ * Get the hovered elements at a coordinate (deduplicated, excluding the drag
+ * origin). Passing rootElement excludes elements outside the canvas.
+ *
+ * The exclusion matches the origin element's full identity (id AND part), not
+ * the id alone: a control whose data-id is its owner entity's UUID (e.g. a
+ * connection anchor, data-part="anchor:<pos>") must not blind the hover
+ * detection to the entity itself — otherwise dropping a self-loop connector
+ * onto its own shape would never find the shape.
  */
 export const getHoveredElements = (
 	x: number,
 	y: number,
-	excludeId?: string,
+	exclude?: { id: string; part?: string },
 	rootElement?: Element | null,
 ): HoveredElement[] => {
 	const allElements = document.elementsFromPoint(x, y);
@@ -34,8 +40,8 @@ export const getHoveredElements = (
 		}
 		seenIds.add(item.id);
 
-		// Do not add to hovered when it matches excludeId
-		if (excludeId && item.id === excludeId) {
+		// Do not add the drag origin element itself to hovered
+		if (exclude && item.id === exclude.id && item.part === exclude.part) {
 			continue;
 		}
 		hovered.push(item);

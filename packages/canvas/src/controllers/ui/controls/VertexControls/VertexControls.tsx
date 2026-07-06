@@ -38,7 +38,7 @@ type VertexControlsProps = {
  *
  * Each vertex has:
  * - data-kind="control" for GestureHandler to identify
- * - data-id="vertex-control:<objectId>:<vertexIndex>" for identifying which vertex was interacted with
+ * - data-id=<objectId> + data-part="vertex:<vertexIndex>" for identifying which vertex was interacted with
  */
 const VertexControlsComponent: React.FC<VertexControlsProps> = ({
 	objectId,
@@ -78,7 +78,8 @@ const VertexControlsComponent: React.FC<VertexControlsProps> = ({
 								isSelected ? adjustedStrokeWidth * 1.5 : adjustedStrokeWidth
 							}
 							data-kind="control"
-							data-id={`vertex-control:${objectId}:${index}`}
+							data-id={objectId}
+							data-part={`vertex:${index}`}
 							style={{ cursor: "move" }}
 						/>
 					</Fragment>

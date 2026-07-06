@@ -29,8 +29,8 @@ import type { ControlStrategy } from "../ControlEventHandler";
 /**
  * Handles transform-control operations (resize and rotation).
  *
- * Control ID format: "transform-control:<anchorType>"
- * Example: "transform-control:bottomRight"
+ * Target format: data-id="transform", data-part="resize:<anchorType>" / "rotation"
+ * Example: data-part="resize:bottomRight"
  */
 export class TransformControlHandler implements ControlStrategy {
 	readonly controlType = "transform-control";
@@ -40,13 +40,13 @@ export class TransformControlHandler implements ControlStrategy {
 			return false;
 		}
 
-		const targetId = event.targetId;
-		if (!targetId) {
+		const targetPart = event.targetPart;
+		if (!targetPart) {
 			return false;
 		}
 
-		// Check whether it is a transform-control
-		return targetId.startsWith("transform-control:");
+		// Resize handles and the rotation handle of the transform frame
+		return targetPart.startsWith("resize:") || targetPart === "rotation";
 	}
 
 	handle(
@@ -58,18 +58,17 @@ export class TransformControlHandler implements ControlStrategy {
 			return state;
 		}
 
-		const targetControlId = event.targetId;
-		if (!targetControlId) {
+		const targetPart = event.targetPart;
+		if (!targetPart) {
 			return state;
 		}
 
-		// Parse the anchor type from "transform-control:bottomRight"
-		const parts = targetControlId.split(":");
-		if (parts.length !== 2 || parts[0] !== "transform-control") {
-			return state;
-		}
-
-		const anchorType = parts[1] as TransformAnchorType;
+		// Parse the anchor type from "resize:<anchorType>" / "rotation"
+		const anchorType = (
+			targetPart === "rotation"
+				? "rotation"
+				: targetPart.slice("resize:".length)
+		) as TransformAnchorType;
 
 		// Route to the appropriate handler based on the gesture type
 		let nextState = state;

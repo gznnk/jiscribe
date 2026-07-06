@@ -66,7 +66,7 @@ describe("handleGesture - context menu auto-close", () => {
 	it("closes the menu on left-click press over a control", () => {
 		const nextState = handleGesture(
 			openMenuState(),
-			pressedOn("control", "transform-control:nw"),
+			pressedOn("control", "transform", "resize:topLeft"),
 		);
 		expect(nextState.contextMenuPosition).toBeNull();
 	});
