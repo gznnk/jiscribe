@@ -93,8 +93,7 @@ const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 							<MenuItem
 								key={item.id}
 								disabled={!enabled}
-								data-kind="context-menu-callback"
-								data-id={item.id}
+								data-testid={`context-menu-callback:${item.id}`}
 								data-gesture="none"
 								onClick={enabled ? callbacks[item.id] : undefined}
 							>

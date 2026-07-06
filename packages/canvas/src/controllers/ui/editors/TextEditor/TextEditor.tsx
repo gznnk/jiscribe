@@ -106,8 +106,7 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 
 	return (
 		<TextEditorWrapper
-			data-kind="text-editor"
-			data-id="textarea"
+			data-testid="text-editor"
 			data-gesture="none"
 			left={x}
 			top={y}

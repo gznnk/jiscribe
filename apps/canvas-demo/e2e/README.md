@@ -68,10 +68,12 @@ await page.goto("http://localhost:5174/", { waitUntil: "networkidle" });
 
 ### data-testid 一覧
 
-| data-testid                     | 要素                        | 補足                                                                                             |
-| ------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------ |
-| `menu-number-input:{property}`  | ObjectMenu の数値入力欄     | gesture を経由しないフォーム要素                                                                 |
-| `snap-guide:x` / `snap-guide:y` | スナップガイド線（縦 / 横） | `pointerEvents: none` の装飾。drag 中のみ存在。整列座標は line の `x1`（x軸）/ `y1`（y軸）が保持 |
+| data-testid                     | 要素                                 | 補足                                                                                             |
+| ------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `menu-number-input:{property}`  | ObjectMenu の数値入力欄              | gesture を経由しないフォーム要素                                                                 |
+| `text-editor`                   | テキスト編集オーバーレイ             | 図形・コネクターラベル共通。内側の TEXTAREA は `[data-testid="text-editor"] textarea`            |
+| `context-menu-callback:{id}`    | コンテキストメニューの callback 項目 | paste など、gesture を経由しない項目                                                             |
+| `snap-guide:x` / `snap-guide:y` | スナップガイド線（縦 / 横）          | `pointerEvents: none` の装飾。drag 中のみ存在。整列座標は line の `x1`（x軸）/ `y1`（y軸）が保持 |
 
 | data-kind     | 意味                                   | data-id / data-part                                                                         |
 | ------------- | -------------------------------------- | ------------------------------------------------------------------------------------------- |

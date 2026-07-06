@@ -22,8 +22,9 @@ pressed | dragStart | drag | dragEnd | click | doubleClick | wheel
 
 ポイント:
 
-- **click / doubleClick は排他**: 同一 `targetId` を `DOUBLE_CLICK_THRESHOLD`（300ms）以内に
-  連打すると、2 回目以降は `click` ではなく `doubleClick` になる。「シングル＝選択 /
+- **click / doubleClick は排他**: 同一ターゲット（`(targetId, targetPart)` の組）を
+  `DOUBLE_CLICK_THRESHOLD`（300ms）以内に連打すると、2 回目以降は `click` ではなく `doubleClick` になる。
+  同一ターゲット内の別 part（同じメニューの別ボタン、コネクターの線とラベルボックス）は別のクリック対象。「シングル＝選択 /
   ダブル＝テキスト編集」のように**意味を変えたい**ケースのための意図的な設計で、
   オブジェクト／テキスト系ハンドラはこれに依存している（DOM 標準の加算式に変えると回帰リスクが大きい）。
 - **RAF バッチ**: 高頻度な pointermove は `requestAnimationFrame` でまとめて 1 つの `drag` に集約し、
@@ -101,30 +102,11 @@ snapCandidates 等）を保存し、`dragEnd` でクリアする。`dragEnd` 時
 例: コネクターのラベルボックスは `data-kind="connector" data-id={connectorId} data-part="label"`。
 ラベルがあるコネクターは、線ではなくラベルボックスのダブルクリックだけがラベル編集を開始する。
 
-#### 移行状況（issue #81）
+#### 移行（issue #81）— 完了
 
-上の文法はターゲット。現状は以下の乖離が残っており、段階的に移行する:
-
-| 現在                                                 | 整理後 (kind / id / part)                                                       |
-| ---------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `control` + `transform-control:bottomRight`          | `control` / `transform` / `resize:bottomRight`                                  |
-| `control` + `vertex-control:<objId>:<i>`             | `control` / `<objId>` / `vertex:<i>`                                            |
-| `control` + `vertex-insert:<objId>:<seg>`            | `control` / `<objId>` / `vertex-insert:<seg>`                                   |
-| `control` + `connector-vertex-insert:<id>:<seg>`     | `control` / `<connectorId>` / `waypoint-insert:<seg>`（part の subtype で分離） |
-| `control` + `connection-anchor:create:<objId>:<pos>` | `control` / `<objId>` / `anchor:<pos>`                                          |
-| `control` + `connection-anchor:edit:<id>:…`          | `control` / `<connectorId>` / `endpoint:<source\|target>`                       |
-| `toolbar` + `toolbar:command:zoomIn`                 | `menu` / `toolbar` / `command:zoomIn`                                           |
-| `object-menu` + `object-menu:set:fill:red` 等        | `menu` / `object-menu` / `set:fill:red`（toggle / slider / command も同様）     |
-| `object-menu` + `object-menu:bar` / `:panel`         | `menu` / `object-menu` / バーは part 無し・パネルは `panel`                     |
-| `context-menu` + `context-menu:<cmdId>`              | `menu` / `context-menu` / `command:<cmdId>`（動詞を常置）                       |
-| `menu-item` + `menu-item:<presetId>`                 | `menu` / `shape-library` / `item:<presetId>`                                    |
-| `text-editor` 等ハンドラ無しの kind                  | `data-kind` を剥がし `data-gesture="none"` へ                                   |
-
-移行時の注意:
-
-- ダブルクリック判定は `targetId` 比較なので、id が実体 UUID に統一されると別 part への連続
-  クリックが合体する。判定を `(targetId, targetPart)` の組にする修正が必須
-- `HoveredElement`（`{ id, kind }`）にも `part` を追加して語彙を揃える
+上の文法は全面適用済み。menu 系 kind は `menu` に統合、control の id は実体 UUID（サブ要素は
+`part`）、ハンドラ無しのマーカー kind は撤去した——テスト用フックだけが必要な要素は
+`data-kind` / `data-id` ではなく `data-testid` を使う。
 
 ### なぜトークン化したか
 

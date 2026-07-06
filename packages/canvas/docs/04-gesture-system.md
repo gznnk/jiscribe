@@ -22,8 +22,10 @@ and more.
 
 Key points:
 
-- **click and doubleClick are mutually exclusive**: If the same `targetId` is tapped repeatedly within
-  `DOUBLE_CLICK_THRESHOLD` (300ms), the second and subsequent events become `doubleClick` instead of `click`.
+- **click and doubleClick are mutually exclusive**: If the same target — the `(targetId, targetPart)` pair —
+  is tapped repeatedly within `DOUBLE_CLICK_THRESHOLD` (300ms), the second and subsequent events become
+  `doubleClick` instead of `click`. Different parts of one target (two buttons of the same menu, a
+  connector's line vs its label box) are separate click targets.
   This is a deliberate design for cases where you want to **change the meaning** of the interaction, such as
   "single = select / double = text editing", and object- and text-related handlers depend on it (switching to
   the DOM-standard cumulative counting model would carry a large regression risk).
@@ -102,30 +104,11 @@ Rules:
 Example: a connector's label box is `data-kind="connector" data-id={connectorId} data-part="label"`.
 With a committed label, only a double click on the label box (not the bare line) starts label editing.
 
-#### Migration status (issue #81)
+#### Migration (issue #81) — completed
 
-The grammar above is the target. The current deviations below are to be migrated stepwise:
-
-| Current                                              | Target (kind / id / part)                                                         |
-| ---------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `control` + `transform-control:bottomRight`          | `control` / `transform` / `resize:bottomRight`                                    |
-| `control` + `vertex-control:<objId>:<i>`             | `control` / `<objId>` / `vertex:<i>`                                              |
-| `control` + `vertex-insert:<objId>:<seg>`            | `control` / `<objId>` / `vertex-insert:<seg>`                                     |
-| `control` + `connector-vertex-insert:<id>:<seg>`     | `control` / `<connectorId>` / `waypoint-insert:<seg>` (separated by part subtype) |
-| `control` + `connection-anchor:create:<objId>:<pos>` | `control` / `<objId>` / `anchor:<pos>`                                            |
-| `control` + `connection-anchor:edit:<id>:…`          | `control` / `<connectorId>` / `endpoint:<source\|target>`                         |
-| `toolbar` + `toolbar:command:zoomIn`                 | `menu` / `toolbar` / `command:zoomIn`                                             |
-| `object-menu` + `object-menu:set:fill:red` etc.      | `menu` / `object-menu` / `set:fill:red` (same for toggle / slider / command)      |
-| `object-menu` + `object-menu:bar` / `:panel`         | `menu` / `object-menu` / bar has no part, panel is `panel`                        |
-| `context-menu` + `context-menu:<cmdId>`              | `menu` / `context-menu` / `command:<cmdId>` (verb always present)                 |
-| `menu-item` + `menu-item:<presetId>`                 | `menu` / `shape-library` / `item:<presetId>`                                      |
-| handler-less kinds such as `text-editor`             | drop `data-kind`, use `data-gesture="none"`                                       |
-
-Migration cautions:
-
-- `isDoubleClick` compares `targetId`; once ids collapse to entity UUIDs shared across parts, consecutive
-  clicks on different parts would coalesce. The comparison must become the pair `(targetId, targetPart)`.
-- `HoveredElement` (`{ id, kind }`) needs `part` as well, to keep the vocabulary uniform.
+The grammar above is fully in effect: menu kinds are consolidated into `menu`, control ids are entity
+UUIDs (with `part` carrying the sub-element), and handler-less marker kinds were removed — elements
+that only need a test hook use `data-testid` instead of `data-kind` / `data-id`.
 
 ### Why we tokenized it
 

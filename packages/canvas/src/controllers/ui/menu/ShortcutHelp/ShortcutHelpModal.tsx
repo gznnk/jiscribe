@@ -99,13 +99,13 @@ export const ShortcutHelpModal: React.FC<ShortcutHelpModalProps> = ({
 				}
 			}}
 		>
-			<Panel data-id="shortcut-help">
+			<Panel data-testid="shortcut-help">
 				<Header>
 					<Title>Keyboard Shortcuts</Title>
 					<CloseButton
 						type="button"
 						aria-label="Close"
-						data-id="shortcut-help:close"
+						data-testid="shortcut-help:close"
 						onClick={onClose}
 					>
 						×
@@ -120,7 +120,7 @@ export const ShortcutHelpModal: React.FC<ShortcutHelpModalProps> = ({
 							</CategoryTitle>
 							{group.entries.map((entry) => (
 								<Fragment key={entry.id}>
-									<RowLabel data-id={`shortcut-help:${entry.id}`}>
+									<RowLabel data-testid={`shortcut-help:${entry.id}`}>
 										{entry.label}
 									</RowLabel>
 									<KeyGroup>

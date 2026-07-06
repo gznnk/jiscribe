@@ -137,7 +137,7 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 						type="button"
 						aria-label="Show keyboard shortcuts"
 						title="Keyboard shortcuts"
-						data-id="shortcut-help:open"
+						data-testid="shortcut-help:open"
 						// Without data-gesture="none", pointerdown is captured by
 						// the gesture system and click never fires
 						data-gesture="none"

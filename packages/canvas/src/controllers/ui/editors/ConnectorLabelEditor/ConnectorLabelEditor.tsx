@@ -100,8 +100,7 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 
 	return (
 		<ConnectorLabelEditorWrapper
-			data-kind="text-editor"
-			data-id="connector-label"
+			data-testid="text-editor"
 			data-gesture="none"
 			left={anchor.x}
 			top={anchor.y}
