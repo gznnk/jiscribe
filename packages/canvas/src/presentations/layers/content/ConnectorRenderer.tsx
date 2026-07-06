@@ -1,6 +1,8 @@
+import { memo, useMemo } from "react";
+
 import { useResolvedConnectorPoints } from "./hooks/useResolvedConnectorPoints";
 import { calcConnectorLabelAnchor } from "./utils/label/calcConnectorLabelAnchor";
-import type { CanvasState } from "../../../states/canvas/CanvasState";
+import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
 import { Connector } from "../../objects/connections/Connector";
 import { ConnectorLabel } from "../../objects/connections/ConnectorLabel";
@@ -8,32 +10,49 @@ import { ConnectorLabel } from "../../objects/connections/ConnectorLabel";
 /** Renders a connector along with its optional static label. */
 type ConnectorRendererProps = {
 	connectorState: ConnectorState;
-	objects: CanvasState["objects"];
+	/** Owner shape of the source endpoint. null if unreferenced (free endpoint) or not found. */
+	sourceObj: ObjectState | null;
+	/** Owner shape of the target endpoint. null if unreferenced (free endpoint) or not found. */
+	targetObj: ObjectState | null;
 	disablePointerEvents?: boolean;
 	/** Id of the object currently being text-edited. Suppresses the label if this connector is being edited. */
 	textEditObjectId?: string | null;
 };
 
-export const ConnectorRenderer: React.FC<ConnectorRendererProps> = ({
+const ConnectorRendererComponent: React.FC<ConnectorRendererProps> = ({
 	connectorState,
-	objects,
+	sourceObj,
+	targetObj,
 	disablePointerEvents = false,
 	textEditObjectId = null,
 }) => {
-	const resolved = useResolvedConnectorPoints(connectorState, objects);
+	const resolved = useResolvedConnectorPoints(
+		connectorState,
+		sourceObj,
+		targetObj,
+	);
+
+	const label = connectorState.label;
+	// While editing, ConnectorLabelEditor appears at the same position, so don't draw the static label.
+	const isEditing = textEditObjectId === connectorState.id;
+	// Memoized so the anchor Point keeps its identity across unrelated re-renders
+	// and does not break ConnectorLabel's memo.
+	const labelAnchor = useMemo(
+		() =>
+			resolved && label && label.text !== "" && !isEditing
+				? calcConnectorLabelAnchor(
+						resolved.points,
+						label.position,
+						label.offset,
+					)
+				: null,
+		[resolved, label, isEditing],
+	);
 
 	// Skip rendering if endpoints cannot be resolved
 	if (!resolved) {
 		return null;
 	}
-
-	const label = connectorState.label;
-	// While editing, ConnectorLabelEditor appears at the same position, so don't draw the static label.
-	const isEditing = textEditObjectId === connectorState.id;
-	const labelAnchor =
-		label && label.text !== "" && !isEditing
-			? calcConnectorLabelAnchor(resolved.points, label.position, label.offset)
-			: null;
 
 	return (
 		<>
@@ -65,3 +84,9 @@ export const ConnectorRenderer: React.FC<ConnectorRendererProps> = ({
 		</>
 	);
 };
+
+/**
+ * Memoized with narrow props (connectorState / sourceObj / targetObj instead of the
+ * whole objects map) so commits that touch unrelated objects skip this subtree entirely.
+ */
+export const ConnectorRenderer = memo(ConnectorRendererComponent);

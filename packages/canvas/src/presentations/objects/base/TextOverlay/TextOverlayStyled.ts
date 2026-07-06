@@ -1,53 +1,26 @@
 import styled from "@emotion/styled";
 
 import { TEXT_LINE_HEIGHT } from "../../../../constants/textLineHeight";
-import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
-import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
 
-const VerticalAlignMap: Record<
-	VerticalAlign,
-	React.CSSProperties["alignItems"]
-> = {
-	top: "flex-start",
-	middle: "center",
-	bottom: "flex-end",
-} as const;
-
-const TextAlignMap: Record<TextAlign, React.CSSProperties["textAlign"]> = {
-	left: "left",
-	center: "center",
-	right: "right",
-} as const;
-
-type TextWrapperProps = {
-	verticalAlign: VerticalAlign;
-};
-
-export const TextWrapper = styled.div<TextWrapperProps>`
+/**
+ * Vertical alignment (align-items) is a per-instance value passed via the
+ * `style` prop instead of emotion interpolation (see #131).
+ */
+export const TextWrapper = styled.div`
 	display: flex;
 	width: 100%;
 	height: 100%;
 	overflow: hidden;
-	align-items: ${(props) => VerticalAlignMap[props.verticalAlign]};
 `;
 
-type TextProps = {
-	textAlign: TextAlign;
-	color: string;
-	fontSize: number;
-	fontFamily: string;
-	fontWeight: string;
-	wordBreak: string;
-	whiteSpace: string;
-};
-
-export const Text = styled.div<TextProps>`
+/**
+ * Per-instance text styles (text-align / color / font-size / font-family /
+ * font-weight / word-break / white-space) are passed via the `style` prop
+ * instead of emotion interpolation (see #131). Only the static markdown
+ * element styles live here.
+ */
+export const Text = styled.div`
 	width: 100%;
-	text-align: ${(props) => TextAlignMap[props.textAlign]};
-	color: ${(props) => props.color};
-	font-size: ${(props) => props.fontSize}px;
-	font-family: ${(props) => props.fontFamily};
-	font-weight: ${(props) => props.fontWeight};
 	line-height: ${TEXT_LINE_HEIGHT};
 	border: none;
 	outline: none;
@@ -55,8 +28,6 @@ export const Text = styled.div<TextProps>`
 	pointer-events: none;
 	user-select: none;
 	overflow: hidden;
-	word-break: ${(props) => props.wordBreak};
-	white-space: ${(props) => props.whiteSpace};
 	padding: 2px 6px;
 	box-sizing: border-box;
 

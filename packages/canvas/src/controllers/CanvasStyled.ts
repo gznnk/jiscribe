@@ -54,15 +54,6 @@ export const Container = styled.div`
 `;
 
 /**
- * Props for scroll-synced overlay containers.
- */
-type ScrollSyncedOverlayProps = {
-	left: number;
-	top: number;
-	zoom: number;
-};
-
-/**
  * Container for HTML elements with fixed size that follow canvas content position.
  * Elements inside maintain their original size regardless of zoom level,
  * but their position tracks the zoomed canvas coordinates.
@@ -78,33 +69,26 @@ type ScrollSyncedOverlayProps = {
  *   3. Final screen position: -minX * zoom + cx * zoom = (cx - minX) * zoom ✓
  *
  * Note: Child elements must multiply their canvas coordinates by zoom for positioning.
+ *
+ * left / top change every frame during pan/zoom, so they are passed via the
+ * `style` prop instead of emotion interpolation (which would insert a new CSS
+ * rule per value — see #131).
  */
-export const ScrollSyncedOverlay = styled.div<ScrollSyncedOverlayProps>`
+export const ScrollSyncedOverlay = styled.div`
 	position: absolute;
-	left: ${(props) => props.left * props.zoom}px;
-	top: ${(props) => props.top * props.zoom}px;
 	pointer-events: none;
 `;
-
-/**
- * Props for zoom-scaled overlay containers.
- */
-type ZoomScaledOverlayProps = {
-	left: number;
-	top: number;
-	zoom: number;
-};
 
 /**
  * Container for HTML elements that follow canvas scroll AND zoom.
  * Used for elements that should scale with the canvas zoom level.
  * Example: Text editors that appear directly on objects.
+ *
+ * left / top / scale change every frame during pan/zoom, so they are passed
+ * via the `style` prop instead of emotion interpolation (see #131).
  */
-export const ZoomScaledOverlay = styled.div<ZoomScaledOverlayProps>`
+export const ZoomScaledOverlay = styled.div`
 	position: absolute;
-	left: ${(props) => props.left * props.zoom}px;
-	top: ${(props) => props.top * props.zoom}px;
-	transform: scale(${(props) => props.zoom});
 	transform-origin: top left;
 	pointer-events: none;
 `;

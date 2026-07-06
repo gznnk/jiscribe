@@ -9,6 +9,15 @@ import type { TextType } from "../../../../schemas/objects/types/TextType";
 import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
 import { resolveAutoColor } from "../../utils/resolveAutoColor";
 
+const VerticalAlignMap: Record<
+	VerticalAlign,
+	React.CSSProperties["alignItems"]
+> = {
+	top: "flex-start",
+	middle: "center",
+	bottom: "flex-end",
+} as const;
+
 export type TextEditable = { isEditing?: boolean };
 
 type TextOverlayProps = {
@@ -76,27 +85,31 @@ const TextOverlayComponent: React.FC<TextOverlayProps> = ({
 			transform={transform}
 			pointerEvents="none"
 		>
-			<TextWrapper verticalAlign={verticalAlign}>
+			<TextWrapper style={{ alignItems: VerticalAlignMap[verticalAlign] }}>
 				{textType === "markdown" ? (
 					<Text
-						textAlign={textAlign}
-						color={resolvedColor}
-						fontSize={fontSize}
-						fontFamily={fontFamily}
-						fontWeight={fontWeight}
-						wordBreak="normal"
-						whiteSpace="normal"
+						style={{
+							textAlign,
+							color: resolvedColor,
+							fontSize,
+							fontFamily,
+							fontWeight,
+							wordBreak: "normal",
+							whiteSpace: "normal",
+						}}
 						ref={textRef}
 					/>
 				) : (
 					<Text
-						textAlign={textAlign}
-						color={resolvedColor}
-						fontSize={fontSize}
-						fontFamily={fontFamily}
-						fontWeight={fontWeight}
-						wordBreak="break-word"
-						whiteSpace="pre-wrap"
+						style={{
+							textAlign,
+							color: resolvedColor,
+							fontSize,
+							fontFamily,
+							fontWeight,
+							wordBreak: "break-word",
+							whiteSpace: "pre-wrap",
+						}}
 					>
 						{text}
 					</Text>
