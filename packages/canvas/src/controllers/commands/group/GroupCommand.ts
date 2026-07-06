@@ -1,6 +1,6 @@
 import { isConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
-import { calculateGroupOrientedBounds } from "../../../states/utils/calculateGroupOrientedBounds";
+import { calculateOrientedBoundsFromChildIds } from "../../../states/utils/calculateGroupOrientedBounds";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { cleanupGroups } from "../../utils/cleanupGroups";
 import { findLowestCommonAncestor } from "../../utils/findLowestCommonAncestor";
@@ -27,7 +27,7 @@ export const GroupCommand: Command = {
 	execute: (state) => {
 		const groupId = crypto.randomUUID();
 		// Defensively drop connectors here too: even if a selection path leaks a connector
-		// into selectedIds, it must not be pulled into the group (calculateGroupOrientedBounds
+		// into selectedIds, it must not be pulled into the group (the bounds calculation
 		// would treat it as a Poly and use its waypoints only, yielding a wrong OBB).
 		const selectedIds = state.selectedIds.filter(
 			(id) => !isConnectorState(state.objects[id]),
@@ -48,26 +48,16 @@ export const GroupCommand: Command = {
 			state.rootIds,
 		);
 
-		// To compute the new group's bounds, create a temporary group object and pass it to
-		// calculateGroupOrientedBounds (at this point cx/cy/width/height are provisional 0s)
-		const tempGroup = {
-			id: groupId,
-			type: "group",
-			parentId: lcaId,
-			rotation: 0,
-			scaleX: 1,
-			scaleY: 1,
+		// Compute the new group's bounds directly from its children-to-be
+		// (the group does not exist yet, so no placeholder object is needed)
+		const bounds = calculateOrientedBoundsFromChildIds(
+			state.objects,
 			childIds,
-			cx: 0,
-			cy: 0,
-			width: 0,
-			height: 0,
-			lockAspectRatio,
-		} as unknown as GroupState;
-
-		const bounds = calculateGroupOrientedBounds(
-			{ ...state.objects, [groupId]: tempGroup },
-			groupId,
+			{
+				rotation: 0,
+				scaleX: 1,
+				scaleY: 1,
+			},
 		);
 
 		// GroupState invariant: never create a group without a valid (> 0) frame.
@@ -78,13 +68,20 @@ export const GroupCommand: Command = {
 			return state;
 		}
 
-		// Create the finalized group with the computed bounds applied
+		// Create the group with the computed bounds
 		const newGroup = {
-			...tempGroup,
+			id: groupId,
+			type: "group",
+			parentId: lcaId,
+			rotation: 0,
+			scaleX: 1,
+			scaleY: 1,
+			childIds,
 			cx: bounds.cx,
 			cy: bounds.cy,
 			width: bounds.width,
 			height: bounds.height,
+			lockAspectRatio,
 		} as unknown as GroupState;
 
 		// Add the new group to objects and reassign each child item's parentId to the new group
