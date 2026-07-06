@@ -37,7 +37,13 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 	zoom = 1,
 	selectedVertex = null,
 }) => {
-	const resolved = useResolvedConnectorPoints(connectorState, objects);
+	const sourceObjId = connectorState.source.owner?.id;
+	const targetObjId = connectorState.target.owner?.id;
+	const resolved = useResolvedConnectorPoints(
+		connectorState,
+		sourceObjId ? (objects[sourceObjId] ?? null) : null,
+		targetObjId ? (objects[targetObjId] ?? null) : null,
+	);
 
 	if (!resolved) {
 		return null;

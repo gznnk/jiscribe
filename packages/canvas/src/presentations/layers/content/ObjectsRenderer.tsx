@@ -38,11 +38,18 @@ const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 
 		// Connectors need dynamic resolution of their endpoints (source/target), so draw them with the dedicated renderer.
 		if (objState.type === "connector") {
+			const connectorState = objState as ConnectorState;
+			// Extract only the endpoint owners here so ConnectorRenderer's memo works:
+			// their identities are stable across commits that touch unrelated objects,
+			// unlike the objects map itself.
+			const sourceObjId = connectorState.source.owner?.id;
+			const targetObjId = connectorState.target.owner?.id;
 			result.push(
 				<ConnectorRenderer
 					key={id}
-					connectorState={objState as ConnectorState}
-					objects={objects}
+					connectorState={connectorState}
+					sourceObj={sourceObjId ? (objects[sourceObjId] ?? null) : null}
+					targetObj={targetObjId ? (objects[targetObjId] ?? null) : null}
 					textEditObjectId={textEditObjectId}
 				/>,
 			);

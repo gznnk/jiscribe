@@ -1,6 +1,6 @@
 import type { Point } from "@workspace/geometry";
 import type React from "react";
-import { memo } from "react";
+import { memo, useMemo } from "react";
 
 import { LabelBox } from "./ConnectorLabelStyled";
 import {
@@ -43,21 +43,28 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 	strokeDashType = "solid",
 	disablePointerEvents = false,
 }) => {
+	const fontFamily = CONNECTOR_LABEL_DEFAULTS.fontFamily;
+
+	// Memoized so dragging the connector (anchor changes every frame, text does not)
+	// skips the per-line measureText.
+	const { width, height } = useMemo(
+		() =>
+			calcConnectorLabelBox(
+				text,
+				{ fontSize, fontFamily, fontWeight },
+				strokeWidth,
+			),
+		[text, fontSize, fontFamily, fontWeight, strokeWidth],
+	);
+
 	if (text === "") {
 		return null;
 	}
 
-	const fontFamily = CONNECTOR_LABEL_DEFAULTS.fontFamily;
 	// Resolve auto (theme-following) to the theme foreground (ink) (issue #38).
 	const color = resolveAutoColor(fontColor, "ink");
 	const background = resolveLabelFill(fill);
 	const borderColor = resolveAutoColor(stroke, "ink");
-
-	const { width, height } = calcConnectorLabelBox(
-		text,
-		{ fontSize, fontFamily, fontWeight },
-		strokeWidth,
-	);
 
 	// Lay out horizontally centered on the anchor (no rotation).
 	return (

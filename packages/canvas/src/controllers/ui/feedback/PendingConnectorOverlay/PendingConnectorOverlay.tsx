@@ -15,10 +15,13 @@ const PendingConnectorOverlayComponent: React.FC<
 		return null;
 	}
 
+	const sourceObjId = pendingConnector.source.owner?.id;
+	const targetObjId = pendingConnector.target.owner?.id;
 	return (
 		<ConnectorRenderer
 			connectorState={pendingConnector}
-			objects={objects}
+			sourceObj={sourceObjId ? (objects[sourceObjId] ?? null) : null}
+			targetObj={targetObjId ? (objects[targetObjId] ?? null) : null}
 			disablePointerEvents={true}
 		/>
 	);
