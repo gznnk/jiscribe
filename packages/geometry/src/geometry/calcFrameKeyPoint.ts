@@ -24,32 +24,48 @@ export const calcFrameKeyPoint = (
 	const halfHeight = height / 2;
 
 	// 該当 key point のフレームローカル座標（中心原点）を求める
-	const local = ((): readonly [number, number] => {
-		switch (keyPointId) {
-			case "topLeft":
-				return [-halfWidth, -halfHeight];
-			case "topCenter":
-				return [0, -halfHeight];
-			case "topRight":
-				return [halfWidth, -halfHeight];
-			case "rightCenter":
-				return [halfWidth, 0];
-			case "bottomRight":
-				return [halfWidth, halfHeight];
-			case "bottomCenter":
-				return [0, halfHeight];
-			case "bottomLeft":
-				return [-halfWidth, halfHeight];
-			case "leftCenter":
-				return [-halfWidth, 0];
-		}
-	})();
+	let localX: number;
+	let localY: number;
+	switch (keyPointId) {
+		case "topLeft":
+			localX = -halfWidth;
+			localY = -halfHeight;
+			break;
+		case "topCenter":
+			localX = 0;
+			localY = -halfHeight;
+			break;
+		case "topRight":
+			localX = halfWidth;
+			localY = -halfHeight;
+			break;
+		case "rightCenter":
+			localX = halfWidth;
+			localY = 0;
+			break;
+		case "bottomRight":
+			localX = halfWidth;
+			localY = halfHeight;
+			break;
+		case "bottomCenter":
+			localX = 0;
+			localY = halfHeight;
+			break;
+		case "bottomLeft":
+			localX = -halfWidth;
+			localY = halfHeight;
+			break;
+		case "leftCenter":
+			localX = -halfWidth;
+			localY = 0;
+			break;
+	}
 
 	// calcAffineTransformedPoint は rotation === 0 を内部で最適化する
 	const radians = degreesToRadians(rotation);
 	return calcAffineTransformedPoint(
-		local[0],
-		local[1],
+		localX,
+		localY,
 		scaleX,
 		scaleY,
 		radians,
