@@ -190,7 +190,7 @@ export class TransformControlHandler implements ControlStrategy {
 		// Snap correction
 		let snapFeedback: SnapFeedback = { x: [], y: [] };
 
-		if (!event.mods.ctrl) {
+		if (eventStartSnapshot.snapCandidates && !event.mods.ctrl) {
 			// Snap candidates use the cached set of all objects from dragStart by reference only;
 			// exclusions (selection + all descendants) are passed to findSnap as a Set and filtered internally.
 			const snapped = applyResizeSnap({

@@ -55,6 +55,20 @@ const makeDragEvent = (
 const vertexAt = (state: CanvasControllerState, index: number) =>
 	(state.objects["poly-1"] as unknown as { points: Point[] }).points[index];
 
+/**
+ * Recursively freeze a state so any mutation inside the handler throws
+ * (strict mode). Guards the "handlers never mutate their input" contract.
+ */
+const deepFreeze = <T>(target: T): T => {
+	if (target && typeof target === "object" && !Object.isFrozen(target)) {
+		Object.freeze(target);
+		for (const value of Object.values(target)) {
+			deepFreeze(value);
+		}
+	}
+	return target;
+};
+
 describe("VertexControlHandler - Shift axis lock", () => {
 	it("without Shift, the vertex follows the cursor position and no feedback is shown", () => {
 		const next = handler.handle(
@@ -118,5 +132,27 @@ describe("VertexControlHandler - Shift axis lock", () => {
 			expect(vertexAt(next, 0)).toEqual({ x: 28, y: 30 });
 			expect(next.axisLockFeedback).toEqual({ y: 30 });
 		});
+	});
+});
+
+describe("VertexControlHandler - handleDragEnd", () => {
+	it("computes the final state from a deep-frozen input without mutating it", () => {
+		const state = deepFreeze(
+			makeDragState([
+				{ x: 0, y: 0 },
+				{ x: 100, y: 0 },
+			]),
+		);
+		const event = {
+			...makeDragEvent({ x: 30, y: 12 }, false),
+			type: "dragEnd",
+		} as CanvasEvent;
+
+		const next = handler.handle(state, event);
+
+		expect(vertexAt(next, 0)).toEqual({ x: 30, y: 12 });
+		expect(next.edgeScrollEnabled).toBe(false);
+		// The frozen input state must be left untouched
+		expect(vertexAt(state, 0)).toEqual({ x: 0, y: 0 });
 	});
 });
