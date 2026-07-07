@@ -4,6 +4,7 @@ import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
+import { isLeftButton } from "../utils/isLeftButton";
 
 /**
  * GestureHandler that processes ObjectMenu item interactions.
@@ -27,12 +28,10 @@ import type {
  */
 export const ObjectMenuHandler: GestureHandler = {
 	supports(event: CanvasEvent) {
-		// Left button only: other buttons fall through to CanvasEventHandler's
-		// canvas-level middle/right-button behavior (#110, #159)
 		return (
-			event.button === 0 &&
 			event.targetKind === "menu" &&
-			event.targetId === "object-menu"
+			event.targetId === "object-menu" &&
+			isLeftButton(event)
 		);
 	},
 

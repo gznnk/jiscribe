@@ -16,6 +16,7 @@ import {
 	buildSnapFeedback,
 	findSnap,
 } from "../../utils/snap/findSnap";
+import { isLeftButton } from "../utils/isLeftButton";
 
 /**
  * Extracts the preset ID from a targetPart.
@@ -75,12 +76,10 @@ const addObjectToState = (
  */
 export const ShapeLibraryItemHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {
-		// Left button only: other buttons fall through to CanvasEventHandler's
-		// canvas-level middle/right-button behavior (#110, #159)
 		return (
-			event.button === 0 &&
 			event.targetKind === "menu" &&
-			event.targetId === "shape-library"
+			event.targetId === "shape-library" &&
+			isLeftButton(event)
 		);
 	},
 

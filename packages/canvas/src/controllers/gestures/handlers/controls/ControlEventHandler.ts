@@ -4,6 +4,7 @@ import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
+import { isLeftButton } from "../utils/isLeftButton";
 
 /**
  * A control strategy is a GestureHandler that handles a specific control type.
@@ -49,9 +50,7 @@ export class ControlEventHandler implements GestureHandler {
 	}
 
 	supports(event: CanvasEvent): boolean {
-		// Left button only: other buttons fall through to CanvasEventHandler's
-		// canvas-level middle/right-button behavior (#110, #159)
-		return event.targetKind === "control" && event.button === 0;
+		return event.targetKind === "control" && isLeftButton(event);
 	}
 
 	handle(

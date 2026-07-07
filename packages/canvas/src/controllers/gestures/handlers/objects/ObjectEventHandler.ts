@@ -35,6 +35,7 @@ import {
 	findSnap,
 	SNAP_THRESHOLD_PX,
 } from "../../utils/snap/findSnap";
+import { isLeftButton } from "../utils/isLeftButton";
 
 /**
  * Handles a click on an object.
@@ -349,9 +350,7 @@ function handleObjectDragEnd(
  */
 export const ObjectEventHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {
-		// Left button only: other buttons fall through to CanvasEventHandler's
-		// canvas-level middle/right-button behavior (#110, #159)
-		return event.targetKind === "object" && event.button === 0;
+		return event.targetKind === "object" && isLeftButton(event);
 	},
 
 	handle(state, event) {

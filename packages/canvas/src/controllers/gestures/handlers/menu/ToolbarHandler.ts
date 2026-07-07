@@ -3,6 +3,7 @@ import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
+import { isLeftButton } from "../utils/isLeftButton";
 
 /**
  * GestureHandler that processes button interactions on the top toolbar.
@@ -24,12 +25,10 @@ const COMMAND_PREFIX = "command:";
 
 export const ToolbarHandler: GestureHandler = {
 	supports(event: CanvasEvent) {
-		// Left button only: other buttons fall through to CanvasEventHandler's
-		// canvas-level middle/right-button behavior (#110, #159)
 		return (
-			event.button === 0 &&
 			event.targetKind === "menu" &&
-			event.targetId === "toolbar"
+			event.targetId === "toolbar" &&
+			isLeftButton(event)
 		);
 	},
 

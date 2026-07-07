@@ -5,6 +5,7 @@ import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
+import { isLeftButton } from "../utils/isLeftButton";
 
 /**
  * Handles click events on connectors.
@@ -25,9 +26,7 @@ import type {
 export const ConnectorEventHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {
 		return (
-			// Left button only: other buttons fall through to CanvasEventHandler's
-			// canvas-level middle/right-button behavior (#110, #159)
-			event.button === 0 &&
+			isLeftButton(event) &&
 			event.targetKind === "connector" &&
 			// TODO: this filtering may no longer be necessary here
 			(event.type === "click" ||
