@@ -212,6 +212,8 @@ export const CanvasEventHandler: GestureHandler = {
 					endX,
 					endY,
 					nextState.shapeDrawing.preset.defaultOverrides,
+					undefined,
+					nextState.docDefaults,
 				);
 
 				if (doc) {

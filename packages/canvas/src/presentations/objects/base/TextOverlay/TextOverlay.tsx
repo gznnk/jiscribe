@@ -7,6 +7,7 @@ import { ForeignObjectElement, Text, TextWrapper } from "./TextOverlayStyled";
 import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
 import type { TextType } from "../../../../schemas/objects/types/TextType";
 import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
+import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 import { resolveAutoColor } from "../../utils/resolveAutoColor";
 
 const VerticalAlignMap: Record<
@@ -53,11 +54,15 @@ const TextOverlayComponent: React.FC<TextOverlayProps> = ({
 	verticalAlign = "middle",
 	fontColor = "#000000",
 	fontSize = 16,
-	fontFamily = "Noto Sans JP",
+	fontFamily,
 	fontWeight = "normal",
 	isEditing = false,
 }) => {
 	const textRef = useRef<HTMLDivElement>(null);
+	// Docs of text-bearing shapes always carry fontFamily; the theme font is a
+	// safety net for callers that omit it.
+	const { fontFamily: themeFontFamily } = useCanvasTheme();
+	const resolvedFontFamily = fontFamily ?? themeFontFamily;
 	// Resolve auto (theme-following) to the theme foreground (ink) (issue #38).
 	const resolvedColor = resolveAutoColor(fontColor, "ink");
 
@@ -92,7 +97,7 @@ const TextOverlayComponent: React.FC<TextOverlayProps> = ({
 							textAlign,
 							color: resolvedColor,
 							fontSize,
-							fontFamily,
+							fontFamily: resolvedFontFamily,
 							fontWeight,
 							wordBreak: "normal",
 							whiteSpace: "normal",
@@ -105,7 +110,7 @@ const TextOverlayComponent: React.FC<TextOverlayProps> = ({
 							textAlign,
 							color: resolvedColor,
 							fontSize,
-							fontFamily,
+							fontFamily: resolvedFontFamily,
 							fontWeight,
 							wordBreak: "break-word",
 							whiteSpace: "pre-wrap",

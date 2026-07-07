@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 
 import { CanvasErrorNotice } from "./CanvasErrorNotice";
+import { vscodeCanvasTheme } from "./vscodeCanvasTheme";
 import type {
 	ExtensionToWebviewMessage,
 	WebviewToExtensionMessage,
@@ -159,6 +160,7 @@ function App() {
 					onCommit={handleCommit}
 					onUndo={handleUndo}
 					onRedo={handleRedo}
+					theme={vscodeCanvasTheme}
 				/>
 			</div>
 		);

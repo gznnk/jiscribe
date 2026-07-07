@@ -21,7 +21,7 @@ export const DiamondPreview: ShapePreviewRenderer = ({
 		`${centerX},${y + height}`,
 		`${x},${centerY}`,
 	].join(" ");
-	// Colors may include var(--vscode-*) (the resolved result of auto), so apply them via style rather than SVG attributes.
+	// Colors may include var(--jiscribe-*) (the resolved result of auto), so apply them via style rather than SVG attributes.
 	return (
 		<polygon
 			points={points}

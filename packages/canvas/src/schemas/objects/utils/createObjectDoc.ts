@@ -2,6 +2,7 @@ import type { Point } from "@workspace/geometry";
 
 import { shapeFactoryRegistry } from "../../registry/ShapeFactoryRegistry";
 import type { ObjectDoc } from "../base/ObjectDoc";
+import type { DocCreationDefaults } from "../types/DocCreationDefaults";
 import type { ObjectType } from "../types/ObjectType";
 
 /**
@@ -14,16 +15,18 @@ import type { ObjectType } from "../types/ObjectType";
  * @param type - The shape type to create
  * @param position - Placement position (center-based coordinate)
  * @param overrides - Overrides for the default values
+ * @param docDefaults - Theme-derived creation defaults (e.g. fontFamily)
  * @returns The created ObjectDoc
  */
 export const createObjectDoc = (
 	type: ObjectType,
 	position: Point,
 	overrides?: Record<string, unknown>,
+	docDefaults?: DocCreationDefaults,
 ): ObjectDoc => {
 	const factory = shapeFactoryRegistry.get(type);
 	if (!factory) {
 		throw new Error(`Unsupported object type for menu: ${type}`);
 	}
-	return factory.createDoc(position, overrides);
+	return factory.createDoc(position, overrides, docDefaults);
 };

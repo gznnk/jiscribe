@@ -1,3 +1,4 @@
+import { DEFAULT_FONT_FAMILY } from "../../../../constants/defaultFontFamily";
 import type { CreateObjectType } from "../../types/CreateObjectType";
 import type { ObjectFeatures } from "../../types/ObjectFeatures";
 
@@ -33,6 +34,6 @@ export const STICKY_DOC_DEFAULTS: Omit<StickyDoc, "id"> = {
 	verticalAlign: "middle",
 	fontColor: "#000000",
 	fontSize: 14,
-	fontFamily: "Noto Sans JP",
+	fontFamily: DEFAULT_FONT_FAMILY,
 	fontWeight: "normal",
 } as const as StickyDoc;

@@ -1,10 +1,16 @@
 import type { Point } from "@workspace/geometry";
 import { memo } from "react";
 
-const INSERT_RADIUS = 4;
-const INSERT_STROKE_WIDTH = 1;
-const INSERT_COLOR = "#6366f1";
-const INSERT_FILL = "#6366f1";
+import { theme } from "../../../../constants/theme";
+import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
+
+// Handle colors may hold var(--jiscribe-*), so they are applied via style
+// (fill/stroke) rather than SVG presentation attributes.
+const insertHandleStyle = {
+	fill: theme.connectionAccent,
+	stroke: theme.connectionAccent,
+	cursor: "crosshair",
+} as const;
 
 type VertexInsertControlsProps = {
 	/**
@@ -55,9 +61,11 @@ const VertexInsertControlsComponent: React.FC<VertexInsertControlsProps> = ({
 	zoom = 1,
 	insertPartSubtype = "vertex-insert",
 }) => {
+	const { handleDimensions } = useCanvasTheme();
+
 	// Adjust sizes based on zoom level to maintain consistent visual size
-	const adjustedRadius = INSERT_RADIUS / zoom;
-	const adjustedStrokeWidth = INSERT_STROKE_WIDTH / zoom;
+	const adjustedRadius = handleDimensions.anchorRadius / zoom;
+	const adjustedStrokeWidth = handleDimensions.anchorStrokeWidth / zoom;
 
 	// Calculate midpoints for each segment
 	const segmentMidpoints: { point: Point; segmentIndex: number }[] = [];
@@ -90,13 +98,11 @@ const VertexInsertControlsComponent: React.FC<VertexInsertControlsProps> = ({
 					cx={point.x}
 					cy={point.y}
 					r={adjustedRadius}
-					fill={INSERT_FILL}
-					stroke={INSERT_COLOR}
 					strokeWidth={adjustedStrokeWidth}
 					data-kind="control"
 					data-id={objectId}
 					data-part={`${insertPartSubtype}:${segmentIndex}`}
-					style={{ cursor: "crosshair" }}
+					style={insertHandleStyle}
 				/>
 			))}
 		</>

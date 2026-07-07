@@ -1,5 +1,6 @@
 import styled from "@emotion/styled";
 
+import { scrollbarStyles } from "../../../../constants/scrollbarStyles";
 import { theme } from "../../../../constants/theme";
 
 /**
@@ -74,6 +75,7 @@ export const Body = styled.div`
 	min-height: 0;
 	padding: 8px 20px 20px;
 	overflow-y: auto;
+	${scrollbarStyles}
 	/* Align command names (left column) and shortcuts (right column) across all rows */
 	display: grid;
 	grid-template-columns: 1fr auto;

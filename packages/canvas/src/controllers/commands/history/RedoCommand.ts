@@ -58,6 +58,7 @@ export const RedoCommand: Command = {
 			saveVersion: state.saveVersion + 1,
 			saveNonce: crypto.randomUUID(),
 			historyCoalesce: { recorded: null, pending: null }, // History navigation is a coalescing boundary
+			docDefaults: state.docDefaults,
 			internalClipboard: state.internalClipboard,
 			history: {
 				past: [...state.history.past, state.history.present],

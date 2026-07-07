@@ -1,10 +1,11 @@
+import { DEFAULT_FONT_FAMILY } from "../../../../../constants/defaultFontFamily";
 import { TEXT_LINE_HEIGHT } from "../../../../../constants/textLineHeight";
 
 /** Default label style (fallback when the ConnectorLabel has no value). */
 export const CONNECTOR_LABEL_DEFAULTS = {
 	fontColor: "auto",
 	fontSize: 16,
-	fontFamily: "Noto Sans JP",
+	fontFamily: DEFAULT_FONT_FAMILY,
 	fontWeight: "normal",
 } as const;
 

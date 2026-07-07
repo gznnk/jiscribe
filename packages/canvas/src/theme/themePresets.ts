@@ -1,0 +1,97 @@
+import type { CanvasTheme } from "./CanvasTheme";
+import { DEFAULT_FONT_FAMILY } from "../constants/defaultFontFamily";
+
+/**
+ * Derives the transparency checker from the injected foreground so it
+ * auto-follows dark (light checker) / light (dark checker) themes.
+ */
+const TRANSPARENT_CHECKER =
+	"color-mix(in srgb, var(--jiscribe-foreground, #888) 22%, transparent)";
+
+/** Handle colors are brand accents that read well on both light and dark. */
+const HANDLE_COLORS = {
+	handleAccent: "#0d99ff",
+	handleFill: "#ffffff",
+	connectionAccent: "#6366f1",
+} as const;
+
+/** Handle sizes shared by the standard themes. */
+const HANDLE_DIMENSIONS = {
+	anchorRadius: 4,
+	anchorStrokeWidth: 1,
+	rotationHandleOffset: 15,
+	rotationIconSize: 20,
+	rotationHitRadius: 7,
+	connectionAnchorOffset: 20,
+} as const;
+
+/**
+ * Standard dark theme. Also the built-in default: token values double as the
+ * `var(--jiscribe-*, <fallback>)` fallbacks baked into `constants/theme.ts`,
+ * so fragments rendered outside a themed root (e.g. exported SVG) fall back
+ * to these colors.
+ */
+export const darkCanvasTheme: CanvasTheme = {
+	tokens: {
+		canvasBg: "#1e1e1e",
+		surface: "#252526",
+		surfaceHover: "rgba(255, 255, 255, 0.08)",
+		surfaceActive: "rgba(255, 255, 255, 0.12)",
+		border: "#2b2b2b",
+		borderSubtle: "#3c3c3c",
+		foreground: "#cccccc",
+		foregroundMuted: "#8b8b8b",
+		disabledForeground: "rgba(204, 204, 204, 0.4)",
+		iconForeground: "#c5c5c5",
+		accent: "#007acc",
+		inputBg: "#1e1e1e",
+		inputFg: "#cccccc",
+		inputBorder: "#3c3c3c",
+		inputPlaceholder: "#989898",
+		errorFg: "#f48771",
+		shadow: "0 2px 8px rgba(0, 0, 0, 0.36)",
+		gridLine: "#2a2a2a",
+		sliderTrack: "#6e6e6e",
+		transparentChecker: TRANSPARENT_CHECKER,
+		radius: "4px",
+		...HANDLE_COLORS,
+		scrollbarTrack: "transparent",
+		scrollbarThumb: "#d1d5db",
+		scrollbarThumbHover: "#9ca3af",
+	},
+	handleDimensions: HANDLE_DIMENSIONS,
+	fontFamily: DEFAULT_FONT_FAMILY,
+};
+
+/** Standard light theme. */
+export const lightCanvasTheme: CanvasTheme = {
+	tokens: {
+		canvasBg: "#ffffff",
+		surface: "#f3f3f3",
+		surfaceHover: "rgba(0, 0, 0, 0.06)",
+		surfaceActive: "rgba(0, 0, 0, 0.1)",
+		border: "#c8c8c8",
+		borderSubtle: "#d4d4d4",
+		foreground: "#3b3b3b",
+		foregroundMuted: "#6e6e6e",
+		disabledForeground: "rgba(59, 59, 59, 0.4)",
+		iconForeground: "#424242",
+		accent: "#005fb8",
+		inputBg: "#ffffff",
+		inputFg: "#3b3b3b",
+		inputBorder: "#c8c8c8",
+		inputPlaceholder: "#767676",
+		errorFg: "#a1260d",
+		shadow: "0 2px 8px rgba(0, 0, 0, 0.16)",
+		gridLine: "#e5e5e5",
+		sliderTrack: "#b0b0b0",
+		transparentChecker: TRANSPARENT_CHECKER,
+		radius: "4px",
+		...HANDLE_COLORS,
+		scrollbarTrack: "transparent",
+		scrollbarThumb: "#c6c6c6",
+		scrollbarThumbHover: "#a8a8a8",
+	},
+	handleDimensions: HANDLE_DIMENSIONS,
+	fontFamily: DEFAULT_FONT_FAMILY,
+};

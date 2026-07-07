@@ -1,5 +1,6 @@
 import type { BoundingBox, FrameKeyPoints, Point } from "@workspace/geometry";
 
+import type { DocCreationDefaults } from "../schemas/objects/types/DocCreationDefaults";
 import type { ShapePreset } from "../schemas/objects/types/ShapePreset";
 import type { CanvasState } from "../states/canvas/CanvasState";
 import type { DocSnapshot } from "../states/canvas/DocSnapshot";
@@ -341,6 +342,13 @@ export type CanvasControllerState = CanvasState & {
 	 * AxisLockGuide draws guide lines spanning the whole viewport.
 	 */
 	axisLockFeedback: AxisLockFeedback | null;
+
+	/**
+	 * Theme-derived defaults for newly created objects (e.g. fontFamily).
+	 * Injected from the Canvas `theme` prop and kept in sync via
+	 * SET_DOC_DEFAULTS; gesture handlers read it when creating docs.
+	 */
+	docDefaults: DocCreationDefaults;
 
 	/**
 	 * Internal clipboard.

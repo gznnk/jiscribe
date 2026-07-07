@@ -44,7 +44,7 @@ const BorderColorIconComponent: React.FC<BorderColorIconProps> = ({
 					style={{ stroke: theme.transparentChecker }}
 				/>
 			) : (
-				/* color may be var(--vscode-*) (the resolved result of auto), so apply it via style. */
+				/* color may be var(--jiscribe-*) (the resolved result of auto), so apply it via style. */
 				<circle
 					cx="12"
 					cy="12"

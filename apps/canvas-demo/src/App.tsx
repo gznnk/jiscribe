@@ -1,6 +1,11 @@
-import { Canvas, parseCanvasText } from "@workspace/canvas";
+import {
+	Canvas,
+	darkCanvasTheme,
+	lightCanvasTheme,
+	parseCanvasText,
+} from "@workspace/canvas";
 import type { CanvasDoc } from "@workspace/canvas";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 
 const initialDoc: CanvasDoc = {
@@ -44,9 +49,18 @@ function MultiCanvasApp() {
 }
 
 export function App() {
+	const [themeName, setThemeName] = useState<"dark" | "light">("dark");
+
 	useEffect(() => {
 		document.title = `Canvas Demo [${__GIT_BRANCH__}]`;
 	}, []);
+
+	// ページ背景（キャンバス外の余白）もテーマに追従させる
+	useEffect(() => {
+		document.documentElement.style.colorScheme = themeName;
+		document.body.style.backgroundColor =
+			themeName === "dark" ? "#242424" : "#ffffff";
+	}, [themeName]);
 
 	if (new URLSearchParams(window.location.search).has("multi")) {
 		return <MultiCanvasApp />;
@@ -54,7 +68,32 @@ export function App() {
 
 	return (
 		<div className="app">
-			<Canvas canvasDoc={initialDoc} />
+			<Canvas
+				canvasDoc={initialDoc}
+				theme={themeName === "dark" ? darkCanvasTheme : lightCanvasTheme}
+			/>
+			<button
+				type="button"
+				data-testid="theme-toggle"
+				onClick={() =>
+					setThemeName((current) => (current === "dark" ? "light" : "dark"))
+				}
+				title="Toggle theme"
+				style={{
+					position: "fixed",
+					right: 12,
+					bottom: 12,
+					zIndex: 1000,
+					padding: "4px 10px",
+					borderRadius: 4,
+					border: "1px solid #888",
+					background: themeName === "dark" ? "#252526" : "#f3f3f3",
+					color: themeName === "dark" ? "#cccccc" : "#3b3b3b",
+					cursor: "pointer",
+				}}
+			>
+				{themeName === "dark" ? "Light" : "Dark"}
+			</button>
 		</div>
 	);
 }

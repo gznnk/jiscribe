@@ -53,6 +53,7 @@ const addObjectToState = (
 		preset.objectType,
 		position,
 		preset.defaultOverrides,
+		state.docDefaults,
 	);
 	const objectState = objectMapperRegistry.toState(doc);
 

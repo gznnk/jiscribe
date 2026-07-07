@@ -1,5 +1,6 @@
 import type { Dimensions } from "@workspace/geometry";
 
+import type { DocCreationDefaults } from "../../schemas/objects/types/DocCreationDefaults";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { ClipboardData } from "../commands/selection/ClipboardData";
 import type { Gesture } from "../gestures/recognizer/GestureRecognizerTypes";
@@ -74,6 +75,15 @@ export type PasteAction = {
 };
 
 /**
+ * Set doc-creation defaults action - keeps state.docDefaults in sync when the
+ * host swaps themes at runtime (e.g. changing the default fontFamily).
+ */
+export type SetDocDefaultsAction = {
+	type: "SET_DOC_DEFAULTS";
+	docDefaults: DocCreationDefaults;
+};
+
+/**
  * Close context menu action - clears the context menu without any other change.
  * Used by callback menu items (e.g. paste with empty clipboard) that bypass the
  * gesture system and would otherwise leave the menu open.
@@ -94,4 +104,5 @@ export type CanvasAction =
 	| EndTextEditAction
 	| MenuPropertyUpdateAction
 	| PasteAction
+	| SetDocDefaultsAction
 	| CloseContextMenuAction;

@@ -7,6 +7,7 @@ import { resolveAutoColor } from "../../../../presentations/objects/utils/resolv
 import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
 import type { TextType } from "../../../../schemas/objects/types/TextType";
 import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
+import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 
 const VerticalAlignMap: Record<
 	VerticalAlign,
@@ -51,12 +52,16 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 	verticalAlign = "middle",
 	fontColor = "#000000",
 	fontSize = 16,
-	fontFamily = "Noto Sans JP",
+	fontFamily,
 	fontWeight = "normal",
 	onChange,
 	onEscape,
 }) => {
 	const textAreaRef = useRef<HTMLTextAreaElement>(null);
+	// Docs of text-bearing shapes always carry fontFamily; the theme font is a
+	// safety net for callers that omit it.
+	const { fontFamily: themeFontFamily } = useCanvasTheme();
+	const resolvedFontFamily = fontFamily ?? themeFontFamily;
 
 	// Resolve auto (theme-following) to the theme foreground (ink). Use the same
 	// resolver as the rendering-side TextOverlay so the color matches (issue #38).
@@ -80,7 +85,7 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		}
 		el.style.height = "0px";
 		el.style.height = `${el.scrollHeight}px`;
-	}, [text, width, height, fontSize, fontFamily, fontWeight]);
+	}, [text, width, height, fontSize, resolvedFontFamily, fontWeight]);
 
 	const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		onChange(e.target.value);
@@ -134,7 +139,7 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 					textAlign,
 					color: resolvedColor,
 					fontSize,
-					fontFamily,
+					fontFamily: resolvedFontFamily,
 					fontWeight,
 				}}
 				ref={textAreaRef}

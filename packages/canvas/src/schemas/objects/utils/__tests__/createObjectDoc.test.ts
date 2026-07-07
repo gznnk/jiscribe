@@ -133,3 +133,29 @@ describe("createObjectDoc", () => {
 		});
 	});
 });
+
+describe("createObjectDoc with docDefaults (theme creation defaults)", () => {
+	const docDefaults = { fontFamily: "serif" };
+
+	it("applies the theme fontFamily to text-bearing shapes", () => {
+		const doc = createObjectDoc("rect", pos, undefined, docDefaults);
+		expect((doc as unknown as { fontFamily: string }).fontFamily).toBe("serif");
+	});
+
+	it("overrides still win over the theme fontFamily", () => {
+		const doc = createObjectDoc(
+			"rect",
+			pos,
+			{ fontFamily: "monospace" },
+			docDefaults,
+		);
+		expect((doc as unknown as { fontFamily: string }).fontFamily).toBe(
+			"monospace",
+		);
+	});
+
+	it("does not add fontFamily to shapes that do not support it (polyline)", () => {
+		const doc = createObjectDoc("polyline", pos, undefined, docDefaults);
+		expect("fontFamily" in doc).toBe(false);
+	});
+});

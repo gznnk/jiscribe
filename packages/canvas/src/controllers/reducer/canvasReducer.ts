@@ -27,6 +27,15 @@ export const canvasReducer = (
 			return recordHistoryIfNeeded(commandResult, state);
 		}
 
+		case "SET_DOC_DEFAULTS": {
+			// No-op when unchanged so the mount-time sync dispatch does not
+			// produce a new state object.
+			if (state.docDefaults.fontFamily === action.docDefaults.fontFamily) {
+				return state;
+			}
+			return { ...state, docDefaults: action.docDefaults };
+		}
+
 		case "CONTAINER_RESIZE": {
 			return {
 				...state,

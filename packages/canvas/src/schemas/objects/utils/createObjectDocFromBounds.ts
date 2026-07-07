@@ -1,5 +1,6 @@
 import { shapeFactoryRegistry } from "../../registry/ShapeFactoryRegistry";
 import type { ObjectDoc } from "../base/ObjectDoc";
+import type { DocCreationDefaults } from "../types/DocCreationDefaults";
 import type { ObjectType } from "../types/ObjectType";
 
 /**
@@ -17,10 +18,19 @@ export const createObjectDocFromBounds = (
 	y2: number,
 	overrides?: Record<string, unknown>,
 	minSize = 5,
+	docDefaults?: DocCreationDefaults,
 ): ObjectDoc | null => {
 	const factory = shapeFactoryRegistry.get(type);
 	if (!factory?.createDocFromBounds) {
 		return null;
 	}
-	return factory.createDocFromBounds(x1, y1, x2, y2, overrides, minSize);
+	return factory.createDocFromBounds(
+		x1,
+		y1,
+		x2,
+		y2,
+		overrides,
+		minSize,
+		docDefaults,
+	);
 };

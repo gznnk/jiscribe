@@ -1,4 +1,6 @@
+import { DEFAULT_FONT_FAMILY } from "../../constants/defaultFontFamily";
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
+import type { DocCreationDefaults } from "../../schemas/objects/types/DocCreationDefaults";
 import { canvasToState } from "../../states/canvas/CanvasMapper";
 import { createDocSnapshotFromDoc } from "../../states/canvas/DocSnapshot";
 import type { CanvasControllerState } from "../CanvasTypes";
@@ -12,11 +14,13 @@ import { resetUiState } from "../utils/resetUiState";
  */
 export const createInitialControllerState = (
 	initialDoc: CanvasDoc,
+	docDefaults: DocCreationDefaults = { fontFamily: DEFAULT_FONT_FAMILY },
 ): CanvasControllerState => {
 	const baseState = canvasToState(initialDoc);
 	return {
 		...baseState,
 		...resetUiState(),
+		docDefaults,
 		commitVersion: 0,
 		saveVersion: 0,
 		saveNonce: "",

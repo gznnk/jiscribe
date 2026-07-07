@@ -12,6 +12,7 @@ import {
 	resolveLabelFill,
 } from "../../../../presentations/objects/connections/ConnectorLabel";
 import { resolveAutoColor } from "../../../../presentations/objects/utils/resolveAutoColor";
+import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 
 type ConnectorLabelEditorProps = {
 	/** Label anchor (world coordinates on the route). The editor is centered here. */
@@ -42,7 +43,9 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 	onEscape,
 }) => {
 	const textAreaRef = useRef<HTMLTextAreaElement>(null);
-	const fontFamily = CONNECTOR_LABEL_DEFAULTS.fontFamily;
+	// Labels have no per-doc fontFamily; follow the host theme so the editor
+	// measures and renders with the same font as ConnectorLabel.
+	const { fontFamily } = useCanvasTheme();
 	// Resolve auto (theme-following) to the theme foreground (ink). Use the same resolver as the rendering side to match colors.
 	const color = resolveAutoColor(fontColor, "ink");
 	const background = resolveLabelFill(fill);

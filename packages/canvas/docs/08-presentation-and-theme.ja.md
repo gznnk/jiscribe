@@ -24,7 +24,7 @@
 判断軸は emotion か inline style かではなく、**presentation 属性で足りるか / CSS 関数の解決が要るか**。
 
 - 静的な色で CSS 関数を使わない → SVG の presentation 属性で十分（`fill="currentColor"`、`stroke="#888"` 等）。
-- `var(--vscode-*)` や `color-mix()` を使う → **presentation 属性では解決されない**。
+- `var(--jiscribe-*)` や `color-mix()` を使う → **presentation 属性では解決されない**。
   CSS プロパティとして当てる（`style={{ fill: ... }}` または emotion）。
 
 ### emotion と inline style の使い分け
@@ -38,7 +38,7 @@
 - `style={{ fill: theme.transparentChecker }}` … `controllers/ui/icons/ColorPreviewIcon.tsx`
 - `style={{ stroke: theme.transparentChecker }}` … `controllers/ui/icons/BorderColorIcon.tsx`
 
-## UI クロームは VSCode テーマトークン、図形データの色とは区別する
+## UI クロームはテーマトークン、図形データの色とは区別する
 
 色には性質の異なる 2 種類があり、出所を必ず分ける。
 
@@ -46,7 +46,7 @@
 | ---------- | -------------------------------------------- | ---------------------------------------------- |
 | 例         | メニュー・ツールバー・選択枠・スナップガイド | 図形の `fill` / `stroke` / `fontColor`         |
 | 出所       | `constants/theme.ts` のテーマトークン        | ドキュメント（`.jis.json`）に保存される値      |
-| テーマ追従 | する（VSCode のテーマに自動で馴染む）        | しない（ユーザーが指定したデータ）※auto を除く |
+| テーマ追従 | する（ホストが注入したテーマに従う）         | しない（ユーザーが指定したデータ）※auto を除く |
 
 ### `"auto"`（テーマ追従色）— 図形データの例外（issue #38）
 
@@ -65,12 +65,12 @@
 `"auto"` が「従うべき色」はフィールドの役割で決まる。解決は `resolveAutoColor(value, role)`
 （`presentations/objects/utils/resolveAutoColor.ts`）の **1 関数に集約**する。
 
-| ロール           | 対象フィールド         | 解決先（テーマトークン）                                   |
-| ---------------- | ---------------------- | ---------------------------------------------------------- |
-| 前景（ink）      | `stroke` / `fontColor` | `theme.foreground`（`var(--vscode-foreground)`）           |
-| サーフェス（面） | `fill`                 | `theme.surface`（`var(--vscode-editorWidget-background)`） |
+| ロール           | 対象フィールド         | 解決先（テーマトークン）                           |
+| ---------------- | ---------------------- | -------------------------------------------------- |
+| 前景（ink）      | `stroke` / `fontColor` | `theme.foreground`（`var(--jiscribe-foreground)`） |
+| サーフェス（面） | `fill`                 | `theme.surface`（`var(--jiscribe-surface)`）       |
 
-**単一ルール**: 「auto はロールのテーマトークンへ解決し、色は CSS で当てる」。`var(--vscode-*)` は
+**単一ルール**: 「auto はロールのテーマトークンへ解決し、色は CSS で当てる」。`var(--jiscribe-*)` は
 SVG presentation 属性では解決されないため、stroke / fill / arrow の color も含め**色は属性では当てない**。
 
 - 図形要素は emotion `styled`（`RectElement` 等）なので、解決済みの色を **`strokeColor` / `fillColor`
@@ -89,9 +89,38 @@ style」という 2 方式混在を解消）。
 - UI クロームのカラープレビューアイコンは、図形データの解決（`resolveAutoColor`）とは層が異なり、
   chrome の慣用どおり `currentColor`（chrome 前景）で auto を示す。
 
-`theme`（`constants/theme.ts`）は `--vscode-*` CSS 変数を参照しつつ、変数が無い環境
-（単体デモ・Storybook 等）向けにダーク基調のフォールバック値を持つ。これにより
-VSCode 上では利用者のテーマに馴染み、デモ環境ではダークテーマと同じ見た目になる。
+## ホストによるテーマ注入（issue #150）
+
+テーマはホストが注入する中立な仕組みで、canvas 自体は VSCode を知らない。
+
+- **中立トークン**: `theme`（`constants/theme.ts`）は中立な `--jiscribe-*` CSS カスタムプロパティを
+  参照し、フォールバックにはダークプリセット値を持つ（`var(--jiscribe-foreground, #cccccc)`）。
+  テーマは CSS 解決時に決まるため、emotion スタイルは静的なモジュール定数のままでよい。
+- **注入**: ホストは Canvas / CanvasThumbnail の `theme` prop に `CanvasTheme`
+  （`theme/CanvasTheme.ts`）を渡す。Canvas ルートが `theme.tokens` を `--jiscribe-*`
+  カスタムプロパティとして注入する（`theme/themeCssVars.ts`）。カスタムプロパティは継承されるため、
+  配下のすべてのスタイルが解決できる。
+- **2 つの伝搬経路**: CSS で消費するトークンはカスタムプロパティ経由。JS で消費する値
+  （ズーム補正計算に使うハンドル寸法、canvas でのテキスト計測と新規図形の既定に使う
+  `fontFamily`）は `CanvasThemeContext`（`useCanvasTheme()`）経由で、`var(...)` 文字列ではなく
+  具体値でなければならない。既定 fontFamily は `state.docDefaults` → `ShapeFactory` を通じて
+  doc 生成にも届く（`pickSupportedDocDefaults` が DOC_DEFAULTS に `fontFamily` を宣言する図形に
+  だけ適用する）。
+  - **fontFamily だけ Context と state の 2 経路を持つ理由**: 2 つの消費者の構造的制約が逆向き
+    だから。描画側は reducer なしで動く必要がある（`CanvasThumbnail` は reducer を持たないが
+    コネクターラベルの計測にフォントが要る）→ 既定値付き Context。生成側は React の外で動く
+    （ジェスチャーハンドラは reducer 内の純粋関数 `(state, gesture) → state` で、`useContext` が
+    届かない）→ コントローラ state。どちらも Canvas.tsx の同じ `theme` prop から導出され
+    （state 側は `SET_DOC_DEFAULTS` で同期）、真実の源は 1 つ。却下した代替案: GESTURE アクション
+    への添付（レコグナイザ層にテーマの関心が漏れる）、モジュールレベルの可変既定値（隠れ状態に
+    なり、1 ページ複数 Canvas の別テーマが壊れる）。経路を統一するには doc 生成を reducer の外に
+    出すことになるが、reducer の決定性と state 遷移テストのしやすさを失ってまでやる価値はない。
+- **標準テーマ**: `darkCanvasTheme`（既定。その値はトークンのフォールバックを兼ねる）と
+  `lightCanvasTheme` をパッケージから export する（`theme/themePresets.ts`）。
+- **VSCode マッピング層**: VSCode ホスト側（このパッケージではない）が、トークン値として
+  `var(--vscode-..., <ダークフォールバック>)` 文字列を渡すことで `--vscode-*` を中立トークンへ
+  マップする（`apps/vscode-extension/src/webview/vscodeCanvasTheme.ts`）。VSCode 結合はこの 1 枚
+  だけで、ホスト側に置かれている。
 
 ### 細則
 
@@ -103,4 +132,3 @@ VSCode 上では利用者のテーマに馴染み、デモ環境ではダーク�
   ライト / ダークで濃淡が自動反転するようにする。固定グレーは使わない。
 - 短命なアクセントオーバーレイ（スナップガイド等）は鮮やかな固定色でも両テーマで成立するため、
   無理にテーマ化しない。色が衝突したときだけトークン化を検討する。
-  </content>

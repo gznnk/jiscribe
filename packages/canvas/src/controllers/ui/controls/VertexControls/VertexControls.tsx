@@ -1,13 +1,12 @@
 import type { Point } from "@workspace/geometry";
 import { Fragment, memo } from "react";
 
-const VERTEX_RADIUS = 4;
+import { theme } from "../../../../constants/theme";
+import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
+
 const VERTEX_RING_RADIUS = 7;
-const VERTEX_STROKE_WIDTH = 1;
 const VERTEX_RING_STROKE_WIDTH = 1.5;
 const VERTEX_RING_OPACITY = 0.6;
-const VERTEX_COLOR = "#0d99ff";
-const VERTEX_FILL = "white";
 
 type VertexControlsProps = {
 	/**
@@ -46,9 +45,10 @@ const VertexControlsComponent: React.FC<VertexControlsProps> = ({
 	zoom = 1,
 	selectedVertexIndex = null,
 }) => {
-	const adjustedVertexRadius = VERTEX_RADIUS / zoom;
+	const { handleDimensions } = useCanvasTheme();
+	const adjustedVertexRadius = handleDimensions.anchorRadius / zoom;
 	const adjustedRingRadius = VERTEX_RING_RADIUS / zoom;
-	const adjustedStrokeWidth = VERTEX_STROKE_WIDTH / zoom;
+	const adjustedStrokeWidth = handleDimensions.anchorStrokeWidth / zoom;
 
 	return (
 		<g>
@@ -62,25 +62,26 @@ const VertexControlsComponent: React.FC<VertexControlsProps> = ({
 								cy={point.y}
 								r={adjustedRingRadius}
 								fill="none"
-								stroke={VERTEX_COLOR}
 								strokeWidth={VERTEX_RING_STROKE_WIDTH / zoom}
 								strokeOpacity={VERTEX_RING_OPACITY}
-								style={{ pointerEvents: "none" }}
+								style={{ stroke: theme.handleAccent, pointerEvents: "none" }}
 							/>
 						)}
 						<circle
 							cx={point.x}
 							cy={point.y}
 							r={adjustedVertexRadius}
-							fill={isSelected ? VERTEX_COLOR : VERTEX_FILL}
-							stroke={isSelected ? VERTEX_FILL : VERTEX_COLOR}
 							strokeWidth={
 								isSelected ? adjustedStrokeWidth * 1.5 : adjustedStrokeWidth
 							}
 							data-kind="control"
 							data-id={objectId}
 							data-part={`vertex:${index}`}
-							style={{ cursor: "move" }}
+							style={{
+								fill: isSelected ? theme.handleAccent : theme.handleFill,
+								stroke: isSelected ? theme.handleFill : theme.handleAccent,
+								cursor: "move",
+							}}
 						/>
 					</Fragment>
 				);

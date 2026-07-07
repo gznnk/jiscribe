@@ -8,6 +8,7 @@ import {
 	CONNECTOR_LABEL_DEFAULTS,
 } from "./utils/connectorLabelLayout";
 import { resolveLabelFill } from "./utils/resolveLabelFill";
+import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 import { resolveAutoColor } from "../../utils/resolveAutoColor";
 
 type ConnectorLabelProps = {
@@ -43,7 +44,9 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
 	strokeDashType = "solid",
 	disablePointerEvents = false,
 }) => {
-	const fontFamily = CONNECTOR_LABEL_DEFAULTS.fontFamily;
+	// Labels have no per-doc fontFamily; follow the host theme (concrete font
+	// string, usable for canvas text measurement).
+	const { fontFamily } = useCanvasTheme();
 
 	// Memoized so dragging the connector (anchor changes every frame, text does not)
 	// skips the per-line measureText.
