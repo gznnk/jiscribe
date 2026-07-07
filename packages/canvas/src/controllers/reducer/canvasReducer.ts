@@ -68,21 +68,11 @@ export const canvasReducer = (
 		}
 
 		case "SYNC_EXTERNAL": {
-			// Self-save round-trip: if action.saveNonce matches state.saveNonce, this SYNC_EXTERNAL
-			// is our own data being echoed back, so only update the object references and leave
-			// past/future (history) unchanged.
-			if (
-				action.saveNonce !== undefined &&
-				action.saveNonce === state.saveNonce
-			) {
-				return {
-					...state,
-					objects: action.payload.objects,
-					rootIds: action.payload.rootIds,
-				};
-			}
-
-			// A genuine external change: record the current present into past, then update present.
+			// Only genuine external changes reach here: fold-backs of our own saves
+			// are recognized by the self-save nonce tracker and dropped before dispatch
+			// (see useSyncExternalDoc), so they never touch history or UI state.
+			//
+			// Record the current present into past, then update present.
 			// Clear future (to prevent redoing to an old state after the external change).
 			// Since the objects are swapped out, clear all UI state as well (selection, in-progress operations, etc.).
 			// Only viewport is kept (to preserve the user's current view).

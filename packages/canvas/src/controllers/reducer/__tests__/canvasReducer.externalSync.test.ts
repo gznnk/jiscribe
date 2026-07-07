@@ -16,7 +16,6 @@ beforeAll(() => {
 const createState = (): CanvasControllerState =>
 	createTestState(twoRectsDoc, {
 		selectedIds: ["rect-1"],
-		saveNonce: "nonce-self",
 		// Reproduce a situation where a coalescing marker remains from the previous operation
 		historyCoalesce: {
 			recorded: { key: "move:rect-1", time: Date.now() },
@@ -30,10 +29,12 @@ const movedDoc: CanvasDoc = {
 	root: [rectDoc("rect-1", 50, 0), rectDoc("rect-2", 100, 100)],
 } as unknown as CanvasDoc;
 
-const syncExternal = (saveNonce?: string): CanvasAction => ({
+// Fold-backs of our own saves are filtered out upstream (useSyncExternalDoc via
+// the self-save nonce tracker), so every SYNC_EXTERNAL the reducer sees is a
+// genuine external change.
+const syncExternal = (): CanvasAction => ({
 	type: "SYNC_EXTERNAL",
 	payload: canvasToState(movedDoc),
-	saveNonce,
 });
 
 const cxOf = (state: CanvasControllerState) =>
@@ -41,37 +42,18 @@ const cxOf = (state: CanvasControllerState) =>
 
 describe("canvasReducer (integration)", () => {
 	describe("SYNC_EXTERNAL", () => {
-		it("a self-echo with a matching saveNonce only updates objects and preserves history", () => {
+		it("a genuine external change pushes present onto past", () => {
 			const state = createState();
-			const after = canvasReducer(state, syncExternal("nonce-self"));
-
-			// objects are replaced by the external payload
-			expect(cxOf(after)).toBe(55);
-			// history is never touched (nothing pushed onto past)
-			expect(after.history).toBe(state.history);
-			// coalescing state and selection are also preserved
-			expect(after.historyCoalesce).toBe(state.historyCoalesce);
-			expect(after.selectedIds).toEqual(["rect-1"]);
-		});
-
-		it("a genuine external change with a non-matching saveNonce pushes present onto past", () => {
-			const state = createState();
-			const after = canvasReducer(state, syncExternal("nonce-other"));
+			const after = canvasReducer(state, syncExternal());
 
 			expect(cxOf(after)).toBe(55);
 			expect(after.history.past).toHaveLength(1);
 			expect(after.history.future).toHaveLength(0);
 		});
 
-		it("treats it as an external change even when saveNonce is omitted", () => {
-			const state = createState();
-			const after = canvasReducer(state, syncExternal(undefined));
-			expect(after.history.past).toHaveLength(1);
-		});
-
 		it("an external change acts as a history boundary and resets selection and coalescing state", () => {
 			const state = createState();
-			const after = canvasReducer(state, syncExternal("nonce-other"));
+			const after = canvasReducer(state, syncExternal());
 
 			expect(after.selectedIds).toEqual([]);
 			expect(after.historyCoalesce.recorded).toBeNull();

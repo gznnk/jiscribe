@@ -20,6 +20,7 @@ import { useContainerResize } from "./hooks/useContainerResize";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useNotifySaveRequest } from "./hooks/useNotifySaveRequest";
+import { useSelfSaveNonceTracker } from "./hooks/useSelfSaveNonceTracker";
 import { useSyncExternalDoc } from "./hooks/useSyncExternalDoc";
 import { mergeCanvasMessages } from "./messages/CanvasMessages";
 import type { CanvasMessages } from "./messages/CanvasMessages";
@@ -64,8 +65,9 @@ type CanvasProps = {
 	 */
 	canvasDoc: CanvasDoc;
 	/**
-	 * Nonce from the most recent incoming sync message.
-	 * Passed through to SYNC_EXTERNAL so the reducer can detect fold-back saves.
+	 * Nonce from the most recent incoming sync message. Matched against the
+	 * delivered save nonces so a fold-back of our own save is recognized and
+	 * dropped instead of being treated as an external change (see useSyncExternalDoc).
 	 */
 	syncNonce?: string;
 	/**
@@ -162,8 +164,13 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 			canvasState: state,
 		});
 
+	// Shared between the save-delivery and external-sync hooks: matches each
+	// delivered save against its fold-back so overlapping saves that fold back
+	// out of order are still recognized as self-saves (issue #29).
+	const selfSaveNonceTracker = useSelfSaveNonceTracker();
+
 	// Notify parent component when a save is required (after commit or undo/redo)
-	useNotifySaveRequest(state, onCommit);
+	useNotifySaveRequest(state, onCommit, selfSaveNonceTracker);
 
 	// Sync external canvasDoc changes
 	useSyncExternalDoc({
@@ -172,6 +179,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 		canvasState: state,
 		dispatch,
 		resetGestureState,
+		selfSaveNonceTracker,
 	});
 
 	// Use wheel handler from GestureRecognizer.

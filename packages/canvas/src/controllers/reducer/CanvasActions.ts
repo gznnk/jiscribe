@@ -27,8 +27,6 @@ export type ContainerResizeAction = {
 export type SyncExternalAction = {
 	type: "SYNC_EXTERNAL";
 	payload: CanvasState;
-	/** Nonce echoed back from the extension. Matches state.saveNonce when this is a fold-back. */
-	saveNonce?: string;
 };
 
 /**

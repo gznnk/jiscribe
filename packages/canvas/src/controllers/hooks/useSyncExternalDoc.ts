@@ -5,6 +5,7 @@ import { canvasToState } from "../../states/canvas/CanvasMapper";
 import { resolveDocSnapshot } from "../../states/canvas/DocSnapshot";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasAction } from "../reducer/CanvasActions";
+import type { createSelfSaveNonceTracker } from "../utils/createSelfSaveNonceTracker";
 import { isSameCanvasDocContent } from "../utils/isSameCanvasDocContent";
 
 export type UseSyncExternalDocParams = {
@@ -18,6 +19,11 @@ export type UseSyncExternalDocParams = {
 	dispatch: Dispatch<CanvasAction>;
 	/** Callback that discards any in-progress gesture before syncing */
 	resetGestureState: () => void;
+	/**
+	 * Shared tracker (populated by useNotifySaveRequest on delivery) that tells a
+	 * fold-back of our own save apart from a genuine external change.
+	 */
+	selfSaveNonceTracker: ReturnType<typeof createSelfSaveNonceTracker>;
 };
 
 /**
@@ -33,6 +39,7 @@ export const useSyncExternalDoc = ({
 	canvasState,
 	dispatch,
 	resetGestureState,
+	selfSaveNonceTracker,
 }: UseSyncExternalDocParams): void => {
 	const hasMountedRef = useRef(false);
 
@@ -48,10 +55,17 @@ export const useSyncExternalDoc = ({
 			hasMountedRef.current = true;
 			return;
 		}
-		// Content-identical doc (e.g. the parent re-created the object, or our own
-		// save echoed back): skip entirely. Proceeding would interrupt an
-		// in-progress gesture, clear all UI state, and push a redundant history
-		// entry even though nothing changed.
+		// Our own save echoed back: the canvas already holds the authoritative
+		// state, so a fold-back carries no new information — and may even arrive
+		// after a newer commit (issue #29), in which case adopting it would revert
+		// the canvas. Ignore it entirely (this also skips the gesture/UI reset
+		// below). Consuming the nonce here drains the pending set on every fold-back.
+		if (selfSaveNonceTracker.consumeIfSelfSave(syncNonce)) {
+			return;
+		}
+		// Content-identical doc (e.g. the parent re-created the object): skip
+		// entirely. Proceeding would interrupt an in-progress gesture, clear all UI
+		// state, and push a redundant history entry even though nothing changed.
 		if (
 			isSameCanvasDocContent(
 				canvasDoc,
@@ -65,7 +79,6 @@ export const useSyncExternalDoc = ({
 		dispatch({
 			type: "SYNC_EXTERNAL",
 			payload: newState,
-			saveNonce: syncNonce,
 		});
-	}, [canvasDoc, dispatch, resetGestureState, syncNonce]);
+	}, [canvasDoc, dispatch, resetGestureState, syncNonce, selfSaveNonceTracker]);
 };

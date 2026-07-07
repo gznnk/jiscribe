@@ -1,13 +1,12 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 
+import { useConstant } from "./useConstant";
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import { resolveDocSnapshot } from "../../states/canvas/DocSnapshot";
 import type { CanvasControllerState } from "../CanvasTypes";
 import { createNonceDeliveryGuard } from "../utils/createNonceDeliveryGuard";
-import {
-	createSaveRequestScheduler,
-	type SaveRequestScheduler,
-} from "../utils/createSaveRequestScheduler";
+import { createSaveRequestScheduler } from "../utils/createSaveRequestScheduler";
+import type { createSelfSaveNonceTracker } from "../utils/createSelfSaveNonceTracker";
 
 /**
  * Custom hook that notifies the parent component when a save is required
@@ -21,10 +20,13 @@ import {
  *
  * @param state - The current Canvas state
  * @param onCommit - Callback invoked on save, receiving the CanvasDoc and saveNonce
+ * @param selfSaveNonceTracker - Shared tracker; each delivered nonce is registered
+ *   so useSyncExternalDoc can recognize its fold-back as a self-save
  */
 export const useNotifySaveRequest = (
 	state: CanvasControllerState,
-	onCommit?: (doc: CanvasDoc, saveNonce: string) => void,
+	onCommit: ((doc: CanvasDoc, saveNonce: string) => void) | undefined,
+	selfSaveNonceTracker: ReturnType<typeof createSelfSaveNonceTracker>,
 ): void => {
 	// onCommit goes through a ref so a parent passing a new function on every
 	// render cannot re-fire the effect below and resend the same saveNonce.
@@ -49,17 +51,8 @@ export const useNotifySaveRequest = (
 	// delivered (stateRef is updated in a layout effect, the schedule below in a
 	// passive one). That commit's own schedule must not deliver it a second
 	// time, so every saveNonce is delivered at most once (see the guard's doc).
-	const deliveryGuardRef = useRef<ReturnType<
-		typeof createNonceDeliveryGuard
-	> | null>(null);
-	if (deliveryGuardRef.current === null) {
-		deliveryGuardRef.current = createNonceDeliveryGuard();
-	}
-
-	const schedulerRef = useRef<SaveRequestScheduler | null>(null);
-	if (schedulerRef.current === null) {
-		schedulerRef.current = createSaveRequestScheduler();
-	}
+	const deliveryGuard = useConstant(createNonceDeliveryGuard);
+	const scheduler = useConstant(createSaveRequestScheduler);
 
 	// Depends only on saveVersion: every bump is one save request. Whether the
 	// commit is part of a coalesce chain is read from historyCoalesce.recorded,
@@ -68,19 +61,19 @@ export const useNotifySaveRequest = (
 		if (state.saveVersion === 0) {
 			return;
 		}
-		schedulerRef.current?.schedule(
-			state.historyCoalesce.recorded !== null,
-			() => {
-				const latestState = stateRef.current;
-				if (!deliveryGuardRef.current?.shouldDeliver(latestState.saveNonce)) {
-					return;
-				}
-				onCommitRef.current?.(
-					resolveDocSnapshot(latestState.history.present),
-					latestState.saveNonce,
-				);
-			},
-		);
+		scheduler.schedule(state.historyCoalesce.recorded !== null, () => {
+			const latestState = stateRef.current;
+			if (!deliveryGuard.shouldDeliver(latestState.saveNonce)) {
+				return;
+			}
+			// Record the delivered nonce so its fold-back is recognized as a
+			// self-save even if a later save's fold-back returns first (issue #29).
+			selfSaveNonceTracker.register(latestState.saveNonce);
+			onCommitRef.current?.(
+				resolveDocSnapshot(latestState.history.present),
+				latestState.saveNonce,
+			);
+		});
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [state.saveVersion]);
 
@@ -92,9 +85,8 @@ export const useNotifySaveRequest = (
 	// above — its cleanup runs on every saveVersion change, which would flush
 	// per repeat and defeat the deferral.
 	useEffect(() => {
-		const scheduler = schedulerRef.current;
 		const flushPendingSave = () => {
-			scheduler?.flush();
+			scheduler.flush();
 		};
 		document.addEventListener("keyup", flushPendingSave);
 		window.addEventListener("blur", flushPendingSave);
@@ -103,5 +95,6 @@ export const useNotifySaveRequest = (
 			window.removeEventListener("blur", flushPendingSave);
 			flushPendingSave();
 		};
-	}, []);
+		// scheduler is a stable useConstant value, so this stays mount-only.
+	}, [scheduler]);
 };

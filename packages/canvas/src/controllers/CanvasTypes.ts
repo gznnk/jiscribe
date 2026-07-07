@@ -206,7 +206,8 @@ export type CanvasControllerState = CanvasState & {
 
 	/**
 	 * UUID generated each time saveVersion increments.
-	 * Passed to onCommit and echoed back via SYNC_EXTERNAL to identify fold-back saves.
+	 * Passed to onCommit and echoed back by the host; the self-save nonce tracker
+	 * matches the echo to identify fold-back saves (see useSyncExternalDoc).
 	 */
 	saveNonce: string;
 

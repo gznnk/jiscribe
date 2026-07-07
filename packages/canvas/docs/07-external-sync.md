@@ -38,22 +38,25 @@ Because this effect depends only on `saveVersion`, it captures in a closure the 
 render in which `saveVersion` incremented** (i.e., the state that should be persisted). `onCommit` is
 invoked through a ref so that it does not re-fire even when the parent passes a new function on every render.
 
-## Avoiding Round-Trip Conflicts with saveNonce (#29)
+## Identifying Fold-Backs with saveNonce (#29)
 
 The problem: the canvas saves → the host rewrites the file → that change is **echoed back to the
 canvas itself** as `canvasDoc`. If this were treated as an ordinary external change, the operation
 the canvas just performed would be re-pushed as a history boundary, and the UI state would be reset.
 
 The solution: on save, issue a `saveNonce` and pass it via `onCommit`; the host returns it unchanged
-as the `saveNonce` of `SYNC_EXTERNAL`. The reducer then behaves as follows:
+as `syncNonce`. Matching is done against a **set of undelivered nonces** held by
+`useSelfSaveNonceTracker` (`controllers/utils/createSelfSaveNonceTracker.ts`):
 
-- `action.saveNonce === state.saveNonce` (echo-back of the canvas's own save)
-  → Update only the object references; leave `past` / `future` (the history) unchanged.
-- Not matching (a genuine external change)
-  → Process it as a history boundary (push onto `past`, reset UI state).
+- `useNotifySaveRequest` `register`s each nonce it delivers.
+- `useSyncExternalDoc` checks a fold-back's `syncNonce` with `consumeIfSelfSave`; on a match
+  (a fold-back of our own save) it is **dropped without dispatching**. The echo carries no new
+  information — the canvas is the source of truth — so nothing is updated (and no in-progress
+  gesture is interrupted).
+- An unregistered nonce (a genuine external change) dispatches `SYNC_EXTERNAL`, and the reducer
+  processes it as a history boundary (push onto `past`, reset UI state).
 
-This makes it possible to distinguish a self-save round-trip from a real external change.
-
-> **Known issue (#29)**: A conflict at the moment when the saveNonce completes a full round-trip.
-> Tracked as a boundary case of nonce issuance and matching.
-> </content>
+Holding a set rather than a single value is the point. When saves overlap and their fold-backs
+return out of order (e.g. a remote FS), a single last-nonce field would already be overwritten by a
+later commit's nonce, so the earlier fold-back would be misclassified as external. Retaining the last
+≤64 nonces makes classification robust to reordering.
