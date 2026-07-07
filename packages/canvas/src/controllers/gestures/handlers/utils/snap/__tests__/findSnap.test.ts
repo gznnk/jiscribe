@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import type { SnapCandidate, SnapCandidates } from "../../../../CanvasTypes";
+import type { SnapCandidate, SnapCandidates } from "../../../../../CanvasTypes";
 import { buildSnapFeedback, findSnap, SNAP_THRESHOLD_PX } from "../findSnap";
 
 /** Helper that builds a target candidate (a snap target). */

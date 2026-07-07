@@ -15,7 +15,7 @@ import {
 	SNAP_THRESHOLD_PX,
 	buildSnapFeedback,
 	findSnap,
-} from "../../utils/snap/findSnap";
+} from "../utils/snap/findSnap";
 
 /**
  * Extracts the preset ID from a targetPart.

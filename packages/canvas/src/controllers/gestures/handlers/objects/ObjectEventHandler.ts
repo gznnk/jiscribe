@@ -34,7 +34,7 @@ import {
 	buildSnapFeedback,
 	findSnap,
 	SNAP_THRESHOLD_PX,
-} from "../../utils/snap/findSnap";
+} from "../utils/snap/findSnap";
 
 /**
  * Handles a click on an object.

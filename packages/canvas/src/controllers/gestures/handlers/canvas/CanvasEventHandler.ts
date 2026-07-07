@@ -10,12 +10,12 @@ import type { SnapFeedback } from "../../../CanvasTypes";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
 import type { GestureHandler } from "../../registry/GestureHandlerTypes";
+import { autoSelectParentGroups } from "../objects/utils/autoSelectParentGroups";
 import {
 	SNAP_THRESHOLD_PX,
 	buildSnapFeedback,
 	findSnap,
-} from "../../utils/snap/findSnap";
-import { autoSelectParentGroups } from "../objects/utils/autoSelectParentGroups";
+} from "../utils/snap/findSnap";
 
 /**
  * Handles events that occur on the canvas.
