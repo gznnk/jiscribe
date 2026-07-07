@@ -17,9 +17,13 @@ import type { CanvasDoc } from "../CanvasDoc";
  * - B. Connector referential integrity:
  *   - The owner.id of an owned endpoint must exist
  *   - The referenced object must be a connectable type (group/polyline/polygon/connector are not allowed)
+ *   - A self-loop must not use a `center` anchor on either end
  *
- * Self-loops (source and target are the same object) are allowed. They are drawn as a
- * rectangular loop using a dedicated orthogonal route (see resolveConnectorPoints / routeSelfLoop).
+ * Self-loops (source and target are the same object) are allowed and drawn as a rectangular loop
+ * using a dedicated orthogonal route (see resolveConnectorPoints / routeSelfLoop). That route only
+ * works when both ends are pinned to a connectPoint: a `center` anchor resolves to the outline point
+ * toward the opposite end, which for a self-loop collapses to null (adjustToOutline fails), leaving
+ * the connector silently undrawn. So a self-loop with a center anchor is rejected here.
  */
 export function validateSemantics(doc: CanvasDoc): SemanticDiagnostic[] {
 	const errors: SemanticDiagnostic[] = [];
@@ -77,6 +81,27 @@ export function validateSemantics(doc: CanvasDoc): SemanticDiagnostic[] {
 				idToType,
 			);
 			errors.push(...sourceErrors, ...targetErrors);
+
+			// A self-loop drawn via routeSelfLoop needs both ends pinned to a connectPoint; a center
+			// anchor collapses to null and the connector goes silently undrawn. Reject it here.
+			// Only judge when both ends are otherwise valid: a broken/non-connectable reference is the
+			// real cause and we avoid a misleading "same object" message when an id does not exist.
+			if (sourceErrors.length === 0 && targetErrors.length === 0) {
+				const sourceOwnerId = connector.source?.owner?.id;
+				const targetOwnerId = connector.target?.owner?.id;
+				const isSelfLoop =
+					sourceOwnerId != null && sourceOwnerId === targetOwnerId;
+				const usesCenterAnchor =
+					connector.source?.anchor?.kind === "center" ||
+					connector.target?.anchor?.kind === "center";
+				if (isSelfLoop && usesCenterAnchor) {
+					errors.push({
+						path: connPath,
+						message: `Self-loop connector on object "${sourceOwnerId}" cannot use a center anchor; pin both ends to a connectPoint.`,
+						id: connector.id,
+					});
+				}
+			}
 		});
 	}
 
