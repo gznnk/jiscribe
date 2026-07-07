@@ -350,7 +350,7 @@ function handleObjectDragEnd(
 export const ObjectEventHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {
 		// Left button only: other buttons fall through to CanvasEventHandler's
-		// canvas-level right-button behavior (#110)
+		// canvas-level middle/right-button behavior (#110, #159)
 		return event.targetKind === "object" && event.button === 0;
 	},
 

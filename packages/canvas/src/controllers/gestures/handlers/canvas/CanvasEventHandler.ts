@@ -19,12 +19,16 @@ import { autoSelectParentGroups } from "../objects/utils/autoSelectParentGroups"
 
 /**
  * Handles events that occur on the canvas.
- * Right-click interactions are also treated as canvas-level behavior so
- * grab-scroll and context menus work consistently above objects and controls.
+ * Middle- and right-button interactions are also treated as canvas-level
+ * behavior so grab-scroll and context menus work consistently above objects
+ * and controls. Middle button pans only; right button pans and opens the
+ * context menu.
  */
 export const CanvasEventHandler: GestureHandler = {
 	supports(event): boolean {
-		return event.targetKind === "canvas" || event.button === 2;
+		return (
+			event.targetKind === "canvas" || event.button === 1 || event.button === 2
+		);
 	},
 
 	handle(state, event) {
@@ -84,9 +88,11 @@ export const CanvasEventHandler: GestureHandler = {
 		// Commit text editing if active
 		let nextState = commitTextEditIfNeeded(state);
 
-		// Right-click drag for viewport panning (GrabScroll)
-		if (event.button === 2) {
-			if (event.type === "click") {
+		// Middle-/right-button drag for viewport panning (GrabScroll).
+		// Middle button (1) pans only; right button (2) also opens the context
+		// menu on click. (#159)
+		if (event.button === 1 || event.button === 2) {
+			if (event.button === 2 && event.type === "click") {
 				nextState = {
 					...nextState,
 					contextMenuPosition: {

@@ -25,7 +25,7 @@ const COMMAND_PREFIX = "command:";
 export const ToolbarHandler: GestureHandler = {
 	supports(event: CanvasEvent) {
 		// Left button only: other buttons fall through to CanvasEventHandler's
-		// canvas-level right-button behavior (#110)
+		// canvas-level middle/right-button behavior (#110, #159)
 		return (
 			event.button === 0 &&
 			event.targetKind === "menu" &&

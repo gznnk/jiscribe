@@ -116,10 +116,11 @@ describe("gesture handler routing exclusivity (#110)", () => {
 		}
 	});
 
-	it("routes middle-button events to no handler except on the canvas itself", () => {
+	it("routes middle-button events to canvas-handler regardless of target (#159)", () => {
 		for (const target of TARGETS) {
-			const expected = target.targetKind === "canvas" ? ["canvas-handler"] : [];
-			expect(supportingNames(makeEvent("click", 1, target))).toEqual(expected);
+			expect(supportingNames(makeEvent("click", 1, target))).toEqual([
+				"canvas-handler",
+			]);
 		}
 	});
 });
