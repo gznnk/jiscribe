@@ -9,15 +9,7 @@ import type { TextType } from "../../../../schemas/objects/types/TextType";
 import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 import { resolveAutoColor } from "../../utils/resolveAutoColor";
-
-const VerticalAlignMap: Record<
-	VerticalAlign,
-	React.CSSProperties["alignItems"]
-> = {
-	top: "flex-start",
-	middle: "center",
-	bottom: "flex-end",
-} as const;
+import { verticalAlignToAlignItems } from "../../utils/verticalAlignToAlignItems";
 
 export type TextEditable = { isEditing?: boolean };
 
@@ -90,7 +82,9 @@ const TextOverlayComponent: React.FC<TextOverlayProps> = ({
 			transform={transform}
 			pointerEvents="none"
 		>
-			<TextWrapper style={{ alignItems: VerticalAlignMap[verticalAlign] }}>
+			<TextWrapper
+				style={{ alignItems: verticalAlignToAlignItems[verticalAlign] }}
+			>
 				{textType === "markdown" ? (
 					<Text
 						style={{

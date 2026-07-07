@@ -4,19 +4,11 @@ import { memo, useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { TextArea, TextEditorWrapper } from "./TextEditorStyled";
 import { createSvgTransform } from "../../../../presentations/objects/utils/createSvgTransform";
 import { resolveAutoColor } from "../../../../presentations/objects/utils/resolveAutoColor";
+import { verticalAlignToAlignItems } from "../../../../presentations/objects/utils/verticalAlignToAlignItems";
 import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
 import type { TextType } from "../../../../schemas/objects/types/TextType";
 import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
-
-const VerticalAlignMap: Record<
-	VerticalAlign,
-	React.CSSProperties["alignItems"]
-> = {
-	top: "flex-start",
-	middle: "center",
-	bottom: "flex-end",
-} as const;
 
 type TextEditorProps = {
 	objectId: string;
@@ -128,7 +120,7 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 				width,
 				height,
 				transform,
-				alignItems: VerticalAlignMap[verticalAlign],
+				alignItems: verticalAlignToAlignItems[verticalAlign],
 			}}
 			onPointerDown={handleWrapperPointerDown}
 		>
