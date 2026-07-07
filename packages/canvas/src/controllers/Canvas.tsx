@@ -20,6 +20,7 @@ import { useContainerResize } from "./hooks/useContainerResize";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useNotifySaveRequest } from "./hooks/useNotifySaveRequest";
+import { useNotifySelectionChange } from "./hooks/useNotifySelectionChange";
 import { useSelfSaveNonceTracker } from "./hooks/useSelfSaveNonceTracker";
 import { useSyncExternalDoc } from "./hooks/useSyncExternalDoc";
 import { mergeCanvasMessages } from "./messages/CanvasMessages";
@@ -87,6 +88,13 @@ type CanvasProps = {
 	 */
 	onRedo?: () => void;
 	/**
+	 * Callback invoked when the selection changes, receiving the new set of
+	 * selected IDs (empty when nothing is selected). Shapes and the connector
+	 * are mutually exclusive and reported together as one ordered list. Use this
+	 * to drive host UI outside the canvas (e.g. an external property panel).
+	 */
+	onSelectionChange?: (selectedIds: string[]) => void;
+	/**
 	 * Partial overrides of the UI strings (tooltips, menus, toasts).
 	 * Defaults to English; the host decides the language (e.g. a VSCode host
 	 * can pass a Japanese dictionary based on `vscode.env.language`).
@@ -115,6 +123,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	onCommit,
 	onUndo,
 	onRedo,
+	onSelectionChange,
 	messages,
 	theme = darkCanvasTheme,
 	autoFocus = true,
@@ -168,6 +177,13 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	// delivered save against its fold-back so overlapping saves that fold back
 	// out of order are still recognized as self-saves (issue #29).
 	const selfSaveNonceTracker = useSelfSaveNonceTracker();
+
+	// Notify the host when the selection changes (external UI integration)
+	useNotifySelectionChange(
+		state.selectedIds,
+		state.selectedConnectorId,
+		onSelectionChange,
+	);
 
 	// Notify parent component when a save is required (after commit or undo/redo)
 	useNotifySaveRequest(state, onCommit, selfSaveNonceTracker);

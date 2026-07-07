@@ -21,6 +21,11 @@ const ownedEndpoint = (id: string) => ({
 	anchor: { kind: "center" },
 });
 
+const connectPointEndpoint = (id: string, connectPointId = "topCenter") => ({
+	owner: { id },
+	anchor: { kind: "connectPoint", id: connectPointId },
+});
+
 const connector = (
 	id: string,
 	source: unknown,
@@ -203,13 +208,61 @@ describe("validateSemantics", () => {
 			).toBe(true);
 		});
 
-		it("accepts a self-loop where source and target are the same object", () => {
+		it("accepts a self-loop when both ends are pinned to a connectPoint", () => {
 			// Self-loops are allowed: rendered as a rectangular loop via a dedicated orthogonal route.
 			const doc: CanvasDoc = {
 				version: 1,
 				root: [
 					rect("a"),
+					connector(
+						"c1",
+						connectPointEndpoint("a", "topCenter"),
+						connectPointEndpoint("a", "bottomCenter"),
+					),
+				],
+			};
+
+			expect(validateSemantics(doc)).toEqual([]);
+		});
+
+		it("rejects a self-loop that uses a center anchor on both ends", () => {
+			// A center anchor collapses to null on a self-loop, leaving the connector silently undrawn.
+			const doc: CanvasDoc = {
+				version: 1,
+				root: [
+					rect("a"),
 					connector("c1", ownedEndpoint("a"), ownedEndpoint("a")),
+				],
+			};
+
+			const errors = validateSemantics(doc);
+			expect(errors).toHaveLength(1);
+			expect(errors[0].path).toBe("root[1]");
+			expect(errors[0].id).toBe("c1");
+			expect(errors[0].message).toContain("center anchor");
+		});
+
+		it("rejects a self-loop when only one end uses a center anchor", () => {
+			const doc: CanvasDoc = {
+				version: 1,
+				root: [
+					rect("a"),
+					connector("c1", ownedEndpoint("a"), connectPointEndpoint("a")),
+				],
+			};
+
+			const errors = validateSemantics(doc);
+			expect(errors).toHaveLength(1);
+			expect(errors[0].message).toContain("center anchor");
+		});
+
+		it("does not flag a center anchor between two distinct objects", () => {
+			const doc: CanvasDoc = {
+				version: 1,
+				root: [
+					rect("a"),
+					rect("b"),
+					connector("c1", ownedEndpoint("a"), ownedEndpoint("b")),
 				],
 			};
 
@@ -272,12 +325,16 @@ describe("validateSemantics", () => {
 			);
 		});
 
-		it("reports no error for a self-loop where both endpoints point to the same connectable owner", () => {
+		it("reports no error for a connectPoint self-loop on a connectable owner", () => {
 			const doc: CanvasDoc = {
 				version: 1,
 				root: [
 					rect("a"),
-					connector("c1", ownedEndpoint("a"), ownedEndpoint("a")),
+					connector(
+						"c1",
+						connectPointEndpoint("a", "leftCenter"),
+						connectPointEndpoint("a", "rightCenter"),
+					),
 				],
 			};
 			expect(validateSemantics(doc)).toEqual([]);
