@@ -255,6 +255,29 @@ export class CanvasDriver {
 	}
 
 	/**
+	 * 中ボタンドラッグ（ビューポートのパンに使う / #159）。右ボタン同様に
+	 * CanvasEventHandler へルーティングされ、図形の上から始めてもパンになる。
+	 */
+	async middleDrag(
+		from: { x: number; y: number },
+		to: { x: number; y: number },
+		steps = 8,
+	) {
+		const fromScreen = this.toScreen(from);
+		const toScreen = this.toScreen(to);
+		await this.page.mouse.move(fromScreen.x, fromScreen.y);
+		await this.page.mouse.down({ button: "middle" });
+		await this.page.mouse.move(toScreen.x, toScreen.y, { steps });
+		await this.page.mouse.up({ button: "middle" });
+	}
+
+	/** コンテンツ座標を中ボタンでクリックする（#159。選択のアサーションはしない） */
+	async middleClickAt(point: { x: number; y: number }) {
+		const screen = this.toScreen(point);
+		await this.page.mouse.click(screen.x, screen.y, { button: "middle" });
+	}
+
+	/**
 	 * いま表示されているコントロール（選択ハンドル・接続アンカー等）の data-id 一覧。
 	 * コントロールは表示中のみ DOM にマウントされるため、これがそのまま可視集合になる。
 	 */
