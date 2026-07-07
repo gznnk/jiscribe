@@ -56,12 +56,17 @@ export const getHoveredElements = (
 		if (seenIds.has(item.id)) {
 			continue;
 		}
-		seenIds.add(item.id);
 
-		// Do not add the drag origin element itself to hovered
+		// Do not add the drag origin element itself to hovered. The exclusion is
+		// checked before seenIds.add so that an excluded control (e.g. a connection
+		// anchor whose data-id is its owner entity's UUID) does not consume the id
+		// slot — otherwise a lower element sharing that id (the entity body) would be
+		// silently deduped away, blinding hover detection to the entity itself.
 		if (exclude && item.id === exclude.id && item.part === exclude.part) {
 			continue;
 		}
+
+		seenIds.add(item.id);
 		hovered.push(item);
 	}
 	return hovered;

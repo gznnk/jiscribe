@@ -85,6 +85,18 @@ describe("getHoveredElements", () => {
 		).toEqual([{ kind: "object", id: "obj-1" }]);
 	});
 
+	it("still hovers the entity body when an excluded control shares its id (excluded origin must not consume the dedup slot)", () => {
+		// Topmost: the drag-origin anchor control (data-id = owner shapeId, excluded).
+		// Below it: the shape body itself, sharing the same id but with no part.
+		const anchor = makeEl("control", "obj-1", "anchor:rightCenter");
+		const shapeBody = makeEl("object", "obj-1");
+		mockElementsFromPoint.mockReturnValue([anchor, shapeBody]);
+
+		expect(
+			getHoveredElements(0, 0, { id: "obj-1", part: "anchor:rightCenter" }),
+		).toEqual([{ kind: "object", id: "obj-1" }]);
+	});
+
 	it("excludes elements outside the canvas when rootElement is passed", () => {
 		const inside = makeEl("rect", "inside");
 		const outside = makeEl("rect", "outside");
