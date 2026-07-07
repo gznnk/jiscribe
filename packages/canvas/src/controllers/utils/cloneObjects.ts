@@ -4,8 +4,7 @@ import type { EndpointRef } from "../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../states/objects/connections/connector/ConnectorState";
 import type { GroupState } from "../../states/objects/primitives/group/GroupState";
-import { moveGroup } from "../gestures/handlers/objects/primitives/GroupController";
-import { objectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
+import { moveObjectTree } from "../gestures/handlers/objects/primitives/GroupController";
 
 const remapEndpointRef = (
 	ref: EndpointRef,
@@ -156,14 +155,8 @@ export function cloneObjects(
 			continue;
 		}
 
-		if (clone.type === "group") {
-			moveGroup(clonedId, clonedObjects, clonedObjects, offset);
-		} else {
-			const moveByDelta = objectBehaviorRegistry.getMoveByDelta(clone.type);
-			if (moveByDelta) {
-				clonedObjects[clonedId] = moveByDelta(clone, offset);
-			}
-		}
+		// Groups propagate the offset to their descendants; other shapes translate themselves.
+		moveObjectTree(clonedId, clonedObjects, clonedObjects, offset);
 	}
 
 	// ── 4. Build newTopLevelIds (preserve topLevelIds order, append promoted orphans at the end) ──

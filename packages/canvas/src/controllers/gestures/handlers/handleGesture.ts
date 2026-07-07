@@ -16,7 +16,7 @@ import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWit
 import type { Gesture } from "../recognizer/GestureRecognizerTypes";
 import { gestureHandlerRegistry } from "../registry/GestureHandlerRegistry";
 import type { CanvasEvent, EventType } from "../registry/GestureHandlerTypes";
-import { calcSnapCandidates } from "../utils/snap/calcSnapCandidates";
+import { calcSnapCandidates } from "./utils/snap/calcSnapCandidates";
 
 /**
  * Event types that should trigger saving the current state as eventStartSnapshot.

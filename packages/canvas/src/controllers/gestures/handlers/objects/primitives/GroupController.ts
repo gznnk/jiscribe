@@ -1,7 +1,10 @@
 import type { Point } from "@workspace/geometry";
 
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
-import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
+import {
+	isGroupState,
+	type GroupState,
+} from "../../../../../states/objects/primitives/group/GroupState";
 import { objectBehaviorRegistry } from "../../../registry/ObjectBehaviorRegistry";
 import type {
 	MoveByDeltaFunction,
@@ -15,12 +18,15 @@ import {
 
 /**
  * Moves a Group object by a delta.
- * Groups have geometry: "none" and no position (cx, cy), so this returns the state unchanged.
- * When dragging a group, only its descendants are moved (handled by updateDescendantsRecursively).
+ * A GroupState is a Frame with its own center (cx, cy), so translate it like any other shape.
+ * Descendants are propagated separately by moveObjectTree (the group is only responsible for
+ * its own cached frame here).
  */
-export const moveByDelta: MoveByDeltaFunction<GroupState> = (state, _delta) => {
-	return state;
-};
+export const moveByDelta: MoveByDeltaFunction<GroupState> = (state, delta) => ({
+	...state,
+	cx: state.cx + delta.x,
+	cy: state.cy + delta.y,
+});
 
 /**
  * Transforms a Group object when its parent group is transformed.
@@ -53,50 +59,40 @@ export const rotateByGroup: RotateByGroupFunction<GroupState> = (
 };
 
 /**
- * Moves a group and all its descendants (including nested groups) by delta.
- * Updates both the group's cached frame and all child objects recursively.
+ * Moves an object and, when it is a group, all of its descendants (including nested groups) by delta.
  *
- * @param groupId - ID of the group to move
- * @param originalObjects - Original objects from eventStartState
- * @param updatedObjects - Target objects to write updates to (mutated)
+ * Every node is translated uniformly through its registered moveByDelta (no per-shape branching);
+ * only the descendant traversal is group-specific, and it lives here as the single place that
+ * propagates a move down the containment tree.
+ *
+ * Reads always come from srcObjects (the pristine source) and writes go to dstObjects, so an
+ * absolute delta is never applied twice. srcObjects and dstObjects may be the same map.
+ *
+ * @param id - ID of the object (or group root) to move
+ * @param srcObjects - Source objects to read from (e.g. the drag-start snapshot)
+ * @param dstObjects - Target objects to write updates to (mutated)
  * @param delta - Movement delta {x, y}
  */
-export function moveGroup(
-	groupId: string,
-	originalObjects: Record<string, ObjectState>,
-	updatedObjects: Record<string, ObjectState>,
+export function moveObjectTree(
+	id: string,
+	srcObjects: Record<string, ObjectState>,
+	dstObjects: Record<string, ObjectState>,
 	delta: Point,
 ): void {
-	const group = originalObjects[groupId];
-	if (!group || group.type !== "group") {
+	const src = srcObjects[id];
+	if (!src) {
 		return;
 	}
 
-	const groupState = group as GroupState;
+	const moveByDeltaFn = objectBehaviorRegistry.getMoveByDelta(src.type);
+	if (moveByDeltaFn) {
+		dstObjects[id] = moveByDeltaFn(src, delta);
+	}
 
-	// Move group's cached frame (simple translation)
-	updatedObjects[groupId] = {
-		...groupState,
-		cx: groupState.cx + delta.x,
-		cy: groupState.cy + delta.y,
-	} as GroupState;
-
-	// Move all children recursively
-	for (const childId of groupState.childIds) {
-		const child = originalObjects[childId];
-		if (!child) {
-			continue;
-		}
-
-		if (child.type === "group") {
-			// Recursively move nested group
-			moveGroup(childId, originalObjects, updatedObjects, delta);
-		} else {
-			// Move regular object using type-specific moveByDelta
-			const moveByDeltaFn = objectBehaviorRegistry.getMoveByDelta(child.type);
-			if (moveByDeltaFn) {
-				updatedObjects[childId] = moveByDeltaFn(child, delta);
-			}
+	// Propagate to descendants: only groups own a containment subtree.
+	if (isGroupState(src)) {
+		for (const childId of src.childIds) {
+			moveObjectTree(childId, srcObjects, dstObjects, delta);
 		}
 	}
 }

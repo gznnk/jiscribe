@@ -5,7 +5,7 @@ import type {
 	SnapCandidates,
 	SnapAxisFeedback,
 	SnapFeedback,
-} from "../../../CanvasTypes";
+} from "../../../../CanvasTypes";
 
 export const SNAP_THRESHOLD_PX = 8;
 
