@@ -63,16 +63,28 @@ export const routeOrthogonalConnector = (
 	// wrap-around, so the stub length is shortened based on the forward distance to the other endpoint
 	// (clampStubMargin). Channel computation (elbowCandidates) uses the unshortened margin to keep the
 	// expressiveness of wrap-around routes.
+	//
+	// The clamp measures from each stub's **base** — the AABB edge it pushes out from — not the connect
+	// point. For an axis-aligned shape these coincide, but for a rotated shape the connect point sits
+	// inside the AABB, so a point-based forward distance underestimates the overshoot and the stub can
+	// shoot past the other side (producing a backtrack). The base is the AABB edge (stubPoint with zero
+	// push-out).
+	const sourceBase = source.box
+		? stubPoint(source.point, source.direction, source.box, 0)
+		: source.point;
+	const targetBase = target.box
+		? stubPoint(target.point, target.direction, target.box, 0)
+		: target.point;
 	const sourceMargin = clampStubMargin(
-		source.point,
+		sourceBase,
 		source.direction,
-		target.point,
+		targetBase,
 		margin,
 	);
 	const targetMargin = clampStubMargin(
-		target.point,
+		targetBase,
 		target.direction,
-		source.point,
+		sourceBase,
 		margin,
 	);
 	const sourceStub = source.box

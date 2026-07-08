@@ -6,6 +6,7 @@ import {
 	measure,
 	minPassByClearance,
 	sweepGrid,
+	sweepGridRotated,
 	type ConfigMeasure,
 } from "./routingHarness";
 
@@ -69,11 +70,40 @@ describe("routing invariants over the configuration space", () => {
 	});
 });
 
+describe("routing invariants — rotated source shape", () => {
+	// The connect point of a rotated shape sits inside its AABB, which used to make the stub overshoot
+	// (a point-based clamp underestimates it) and produce a backtrack spike hidden from the strict
+	// reversal check by a few-px perpendicular jog. Sweep the source rotation over the whole grid and
+	// hold the spike-free bar; `backtracks` catches the tolerant (offset) spikes that `reversals` misses.
+	const rotated = sweepGridRotated(GRID, [15, 30, 45, 60, 75]).filter(
+		(m) => boxGap(m.dx, m.dy) > MARGIN,
+	);
+
+	const describeCases = (list: ConfigMeasure[]): string =>
+		list
+			.slice(0, 6)
+			.map(
+				(m) =>
+					`${m.sourceFace}@${m.sourceRot}->${m.targetFace} d=(${m.dx},${m.dy}) [${m.path
+						.map((p) => `(${Math.round(p.x)},${Math.round(p.y)})`)
+						.join("")}]`,
+			)
+			.join("  ");
+
+	it("no backtrack spikes for clearly separated rotated boxes (incl. offset spikes)", () => {
+		const bad = rotated.filter((m) => m.backtracks > 0 || m.reversals > 0);
+		expect(bad.length, describeCases(bad)).toBe(0);
+	});
+
+	// NOTE: the drawn line is NOT asserted crossing-free under rotation. Exiting a *tilted* face along a
+	// snapped orthogonal direction can clip a corner of the shape (~1% of rotated configs); removing
+	// that needs a shape-aware (non-AABB) stub and is a documented limitation in SPEC.md.
+});
+
 describe("routing invariants — specific reported patterns", () => {
 	it("parallel left-exits, x-overlapping y-stacked: clean C, no staircase (wiggle report)", () => {
 		// source box x[1278,1378], target box x[1251,1351] (overlap in x), both exit left
 		const m = measure("left", "left", 1251 - 1328, 547 - 753);
-		// (relative to source at origin; use absolute-equivalent via a direct route check instead)
 		expect(m.reversals).toBe(0);
 	});
 
@@ -82,5 +112,12 @@ describe("routing invariants — specific reported patterns", () => {
 		const m = measure("left", "right", 949 - 1088, 519 - 689);
 		expect(m.reversals).toBe(0);
 		expect(m.turns).toBeLessThanOrEqual(4);
+	});
+
+	it("rotated near-facing does not backtrack (the reported spike)", () => {
+		// source rotated 20°, right face; a nearby target facing left. Used to jog out and back.
+		const m = measure("right", "left", 160, 20, 20, 0);
+		expect(m.backtracks).toBe(0);
+		expect(m.reversals).toBe(0);
 	});
 });

@@ -10,10 +10,13 @@ Implementation: `routeOrthogonalConnector.ts` (orchestration), `stub.ts` / `elbo
 
 ## Scope
 
-- Two endpoints. Each is a **connect point** on an axis-aligned box face (edge centre) with an
-  outward exit direction, or a free point. The route is made of horizontal/vertical segments only.
-- **Rotation-free** boxes. Rotated shapes, box-size-dependent tuning, and avoiding third shapes in
-  between are out of scope (see Limitations).
+- Two endpoints. Each is a **connect point** on a box face (edge centre) with an outward exit
+  direction, or a free point. The route is made of horizontal/vertical segments only.
+- **Rotated** shapes are supported. The connect point is on the rotated outline; the exit direction
+  is the snapped centre→point vector; the shape is avoided via its **AABB**. The stub clamp measures
+  from the AABB edge (not the connect point) so a rotated stub does not overshoot (see the note under
+  `clampStubMargin`). One residual limitation remains (see Limitations: tilted-face stub clip).
+- Box-size-dependent tuning and avoiding third shapes in between are out of scope.
 - Guarantees below hold for **clearly separated** boxes (a gap larger than the margin on their
   nearest axis). Overlapping / edge-adjacent boxes are near-degenerate (an exit face can point
   straight into an abutting shape) and are best-effort only.
@@ -81,14 +84,21 @@ being dragged), which hand-picked snapshots miss. Verification is therefore a **
 - `routingInvariants.test.ts` asserts, for **clearly separated** boxes (gap > margin):
   - **reversals = 0**, **crossings = 0**, **turns ≤ 4**;
   - **pass-by clearance ≥ margin** when clearance is achievable (both axes separated by > 2×margin).
+- A separate sweep rotates the source box (15–75°) and asserts **no backtrack spikes** (`backtracks`
+  catches the offset spikes a rotated shape produces that the strict reversal check misses). Crossings
+  are measured against the true rotated polygon there, and are **not** asserted 0 (see Limitations).
 - Adjacent / touching / overlapping configs are surveyed but not held to the strict bar.
 
 Any new degradation report should be reproduced as a point (or a swept axis) in this space and, once
 fixed, left as a permanent assertion — not patched as a one-off snapshot.
 
-## Limitations / out of scope (2026-07-08)
+## Limitations / out of scope (2026-07-09)
 
-- **Rotated** shapes; **box-size-dependent** behaviour; **third-shape** obstacle avoidance.
+- **Tilted-face stub clip (rotation):** exiting a rotated face along a _snapped_ orthogonal direction
+  can clip a corner of the shape on the exit leg (~1% of rotated configs, worst near 45°). The elbow
+  still avoids the AABB; only the short exit leg is affected. Removing it needs a shape-aware
+  (non-AABB) stub or a non-orthogonal exit, deferred.
+- **Box-size-dependent** behaviour; **third-shape** obstacle avoidance.
 - **Overlapping / edge-adjacent** boxes: routes are produced but not guaranteed free of the
   anti-patterns (the input is geometrically ambiguous).
-- The sweep is **grid-sampled** (step 20px), not exhaustively continuous.
+- The sweep is **grid-sampled** (step 20px), and rotates only the source; not exhaustively continuous.
