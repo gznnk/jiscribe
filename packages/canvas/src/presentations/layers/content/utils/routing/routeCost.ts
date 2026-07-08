@@ -1,10 +1,16 @@
 import {
 	calcManhattanDistance,
 	isLineIntersectingBox,
+	type BoundingBox,
 	type BoxFeatures,
 	type OrthogonalDirection,
 	type Point,
 } from "@workspace/geometry";
+
+// Crossing / intrusion tests only ever read the four edges, so they take the lightweight
+// `BoundingBox` (`{ top, left, right, bottom }`) rather than a full `BoxFeatures` — a real
+// `BoxFeatures` is assignable to it, and the margin-band boxes are built without allocating corner
+// points.
 
 /**
  * Whether an axis-aligned segment passes through the interior of a box.
@@ -21,10 +27,10 @@ import {
  *
  * @param p1 - Segment start point
  * @param p2 - Segment end point
- * @param box - The axis-aligned bounding box to test against
+ * @param box - The axis-aligned box edges to test against
  * @returns true if the segment passes through the box interior (touching an edge is false)
  */
-const segmentCrossesBox = (p1: Point, p2: Point, box: BoxFeatures): boolean => {
+const segmentCrossesBox = (p1: Point, p2: Point, box: BoundingBox): boolean => {
 	if (p1.y === p2.y) {
 		const y = p1.y;
 		if (y <= box.top || y >= box.bottom) {
@@ -105,14 +111,14 @@ export const countReversals = (points: Point[]): number => {
  * The number of times the elbow (between stubs) passes through the shapes. Excludes the stub legs.
  *
  * @param elbow - The elbow point sequence between stubs (excludes the stub legs)
- * @param sourceBox - AABB of the source shape (null for a free endpoint)
- * @param targetBox - AABB of the target shape (null for a free endpoint)
+ * @param sourceBox - BoundingBox of the source shape (null for a free endpoint)
+ * @param targetBox - BoundingBox of the target shape (null for a free endpoint)
  * @returns The total number of times the elbow passes through both shapes
  */
 export const countBoxCrossings = (
 	elbow: Point[],
-	sourceBox: BoxFeatures | null,
-	targetBox: BoxFeatures | null,
+	sourceBox: BoundingBox | null,
+	targetBox: BoundingBox | null,
 ): number => {
 	let crossings = 0;
 	for (let i = 0; i < elbow.length - 1; i++) {
@@ -142,56 +148,53 @@ const expandBoxExceptExit = (
 	box: BoxFeatures,
 	margin: number,
 	exit: OrthogonalDirection,
-): BoxFeatures => {
-	const left = box.left - (exit === "left" ? 0 : margin);
-	const right = box.right + (exit === "right" ? 0 : margin);
-	const top = box.top - (exit === "up" ? 0 : margin);
-	const bottom = box.bottom + (exit === "down" ? 0 : margin);
-	return {
-		left,
-		right,
-		top,
-		bottom,
-		center: box.center,
-		topLeft: { x: left, y: top },
-		bottomLeft: { x: left, y: bottom },
-		topRight: { x: right, y: top },
-		bottomRight: { x: right, y: bottom },
-	};
+): BoundingBox => ({
+	left: box.left - (exit === "left" ? 0 : margin),
+	right: box.right + (exit === "right" ? 0 : margin),
+	top: box.top - (exit === "up" ? 0 : margin),
+	bottom: box.bottom + (exit === "down" ? 0 : margin),
+});
+
+/**
+ * The obstacle geometry a route is scored against. Built **once per route** (not per candidate):
+ * the raw shape edges for hard crossing detection, and the margin-band edges (each shape expanded on
+ * every side but its own exit face) for intrusion scoring — the exit-corridor exclusion that keeps
+ * the natural exit from reading as a graze. See {@link buildObstacleBoxes}.
+ */
+export type ObstacleBoxes = {
+	/** Raw source edges — a segment through here is a hard crossing (null for a free endpoint). */
+	source: BoundingBox | null;
+	/** Raw target edges. */
+	target: BoundingBox | null;
+	/** Source margin band minus its exit corridor — a segment through here is an intrusion. */
+	sourceClearance: BoundingBox | null;
+	/** Target margin band minus its exit corridor. */
+	targetClearance: BoundingBox | null;
 };
 
 /**
- * The number of times the elbow passes **within the margin** of a shape — i.e. through the clearance
- * band around it (the margin-expanded box) without crossing the shape itself. A segment running
- * exactly along the margin boundary (the intended stub-clearance offset) does not count; only one
- * that dips inside the band does.
+ * Precomputes the obstacle geometry for a route. The clearance boxes depend only on the shapes,
+ * their exit directions, and the margin — all constant across candidates — so this is called once
+ * and reused, instead of re-expanding the boxes inside every candidate's cost.
  *
- * Each shape is expanded on every side **but its own exit face** (see `expandBoxExceptExit`), so the
- * natural exit/entry corridor is not mistaken for an obstacle graze — only a segment squeezing past a
- * *different* side of the shape counts. This is what lets the router prefer a route that keeps the
- * full margin from the shapes it routes past over a slightly shorter one that hugs them.
- *
- * @param elbow - The elbow point sequence between stubs (excludes the stub legs)
- * @param sourceBox - AABB of the source shape (null for a free endpoint)
- * @param sourceExit - The source endpoint's outward direction (its exit-face side is not expanded)
- * @param targetBox - AABB of the target shape (null for a free endpoint)
- * @param targetExit - The target endpoint's outward direction (its exit-face side is not expanded)
- * @param margin - The clearance distance that defines the band (px)
- * @returns The total number of segments intruding into either shape's margin band
+ * @param source - The source endpoint's AABB (null when free) and outward direction
+ * @param target - The target endpoint's AABB (null when free) and outward direction
+ * @param margin - The shape clearance distance (px)
  */
-export const countMarginIntrusions = (
-	elbow: Point[],
-	sourceBox: BoxFeatures | null,
-	sourceExit: OrthogonalDirection,
-	targetBox: BoxFeatures | null,
-	targetExit: OrthogonalDirection,
+export const buildObstacleBoxes = (
+	source: { box: BoxFeatures | null; direction: OrthogonalDirection },
+	target: { box: BoxFeatures | null; direction: OrthogonalDirection },
 	margin: number,
-): number =>
-	countBoxCrossings(
-		elbow,
-		sourceBox ? expandBoxExceptExit(sourceBox, margin, sourceExit) : null,
-		targetBox ? expandBoxExceptExit(targetBox, margin, targetExit) : null,
-	);
+): ObstacleBoxes => ({
+	source: source.box,
+	target: target.box,
+	sourceClearance: source.box
+		? expandBoxExceptExit(source.box, margin, source.direction)
+		: null,
+	targetClearance: target.box
+		? expandBoxExceptExit(target.box, margin, target.direction)
+		: null,
+});
 
 // Weight for the soft trade-off of aesthetics — the only tuning knob left.
 // 1 turn is worth about a ~1000px detour.
@@ -241,29 +244,28 @@ export type RouteCost = {
  *
  * @param fullPath - The full path actually drawn (including stub legs). Used to measure turn count and length
  * @param simplifiedElbow - Only the elbow between stubs (excludes the legs). Used to detect shape crossings / margin intrusions
- * @param source - The source endpoint's AABB (null when free) and outward direction (for the exit corridor)
- * @param target - The target endpoint's AABB (null when free) and outward direction
- * @param margin - The shape clearance distance (px). Defines the margin band for intrusion scoring
+ * @param obstacles - Precomputed obstacle geometry (raw edges + margin-band edges), see {@link buildObstacleBoxes}
  * @returns The crossings / intrusions (hard tiers) and aesthetic score (soft)
  */
 export const calcRouteCost = (
 	fullPath: Point[],
 	simplifiedElbow: Point[],
-	source: { box: BoxFeatures | null; direction: OrthogonalDirection },
-	target: { box: BoxFeatures | null; direction: OrthogonalDirection },
-	margin: number,
+	obstacles: ObstacleBoxes,
 ): RouteCost => {
 	const turns = Math.max(fullPath.length - 2, 0);
 	return {
-		crossings: countBoxCrossings(simplifiedElbow, source.box, target.box),
-		reversals: countReversals(fullPath),
-		intrusions: countMarginIntrusions(
+		crossings: countBoxCrossings(
 			simplifiedElbow,
-			source.box,
-			source.direction,
-			target.box,
-			target.direction,
-			margin,
+			obstacles.source,
+			obstacles.target,
+		),
+		reversals: countReversals(fullPath),
+		// An intrusion is a segment through a shape's margin band (its raw box grown by the margin on
+		// every side but the exit face); scored with the same edge-crossing test as `crossings`.
+		intrusions: countBoxCrossings(
+			simplifiedElbow,
+			obstacles.sourceClearance,
+			obstacles.targetClearance,
 		),
 		// Soft aesthetics: emphasize turn count (×weight), prefer shorter when comparable. Reversals
 		// and margin clearance are ranked ahead of this as their own tiers; centering the S/Z crossover

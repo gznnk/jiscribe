@@ -177,9 +177,14 @@ describe("calcRouteCost", () => {
 			{ x: 20, y: 0 },
 			{ x: 20, y: 20 },
 		];
-		const free = { box: null, direction: "right" as const };
-		const spikeCost = calcRouteCost(spike, spike, free, free, 30);
-		const cleanCost = calcRouteCost(clean, clean, free, free, 30);
+		const noObstacles = {
+			source: null,
+			target: null,
+			sourceClearance: null,
+			targetClearance: null,
+		};
+		const spikeCost = calcRouteCost(spike, spike, noObstacles);
+		const cleanCost = calcRouteCost(clean, clean, noObstacles);
 		expect(spikeCost.crossings).toBe(0);
 		expect(cleanCost.crossings).toBe(0);
 		expect(spikeCost.reversals).toBe(1);
@@ -191,13 +196,12 @@ describe("calcRouteCost", () => {
 			{ x: 0, y: 100 },
 			{ x: 200, y: 100 },
 		];
-		const cost = calcRouteCost(
-			elbow,
-			elbow,
-			{ box, direction: "right" },
-			{ box: null, direction: "left" },
-			30,
-		);
+		const cost = calcRouteCost(elbow, elbow, {
+			source: box,
+			target: null,
+			sourceClearance: null,
+			targetClearance: null,
+		});
 		expect(cost.crossings).toBe(1);
 	});
 });

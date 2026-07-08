@@ -3,6 +3,7 @@ import type { Point } from "@workspace/geometry";
 import { elbowCandidates } from "./elbowCandidates";
 import { calcPathSignature } from "./pathSignature";
 import {
+	buildObstacleBoxes,
 	calcRouteCost,
 	compareRouteChoices,
 	type RouteChoice,
@@ -109,6 +110,10 @@ export const routeOrthogonalConnector = (
 	// Compare candidates under the total order compareRouteChoices (crossings → aesthetics →
 	// intrinsic tie-breaking keys). Ties are decided by the route's own shape, never by
 	// enumeration order, so the result is stable while the shapes move (see routeCost).
+	//
+	// The obstacle geometry (raw edges + margin-band edges) depends only on the shapes, not on the
+	// candidate, so it is built once here and reused for every candidate's cost.
+	const obstacles = buildObstacleBoxes(source, target, margin);
 	let best: RouteChoice | null = null;
 	for (const { elbow, symmetric } of candidates) {
 		// simplifyPath is called twice because the inputs differ:
@@ -121,7 +126,7 @@ export const routeOrthogonalConnector = (
 			target.point,
 		]);
 		const choice: RouteChoice = {
-			cost: calcRouteCost(fullPath, simplifiedElbow, source, target, margin),
+			cost: calcRouteCost(fullPath, simplifiedElbow, obstacles),
 			symmetric,
 			signature: calcPathSignature(fullPath),
 			path: fullPath,
