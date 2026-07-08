@@ -62,11 +62,10 @@ const webviewConfig = {
 	// React の新しい JSX 変換（automatic）を使用する
 	// これにより各ファイルで "import React from 'react'" を書かずに JSX が使える
 	jsx: "automatic",
-	// 拡張子ごとのファイルの扱い方（esbuild はデフォルトで .md を認識しないため明示する）
+	// 拡張子ごとのファイルの扱い方
 	loader: {
 		".tsx": "tsx",
 		".ts": "ts",
-		".md": "text", // .md ファイルを文字列としてインポートできるようにする
 	},
 };
 
