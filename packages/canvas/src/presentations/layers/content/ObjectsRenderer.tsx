@@ -1,6 +1,7 @@
 import { memo } from "react";
 
 import { ConnectorRenderer } from "./ConnectorRenderer";
+import { resolveEndpointOwner } from "./utils/endpoints";
 import type { CanvasState } from "../../../states/canvas/CanvasState";
 import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
@@ -42,14 +43,12 @@ const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 			// Extract only the endpoint owners here so ConnectorRenderer's memo works:
 			// their identities are stable across commits that touch unrelated objects,
 			// unlike the objects map itself.
-			const sourceObjId = connectorState.source.owner?.id;
-			const targetObjId = connectorState.target.owner?.id;
 			result.push(
 				<ConnectorRenderer
 					key={id}
 					connectorState={connectorState}
-					sourceObj={sourceObjId ? (objects[sourceObjId] ?? null) : null}
-					targetObj={targetObjId ? (objects[targetObjId] ?? null) : null}
+					sourceObj={resolveEndpointOwner(objects, connectorState.source)}
+					targetObj={resolveEndpointOwner(objects, connectorState.target)}
 					textEditObjectId={textEditObjectId}
 				/>,
 			);

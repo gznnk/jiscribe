@@ -1,6 +1,7 @@
 import { memo } from "react";
 
 import { ConnectorRenderer } from "../../../../presentations/layers/content/ConnectorRenderer";
+import { resolveEndpointOwner } from "../../../../presentations/layers/content/utils/endpoints";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 
 type PendingConnectorOverlayProps = Pick<
@@ -15,13 +16,11 @@ const PendingConnectorOverlayComponent: React.FC<
 		return null;
 	}
 
-	const sourceObjId = pendingConnector.source.owner?.id;
-	const targetObjId = pendingConnector.target.owner?.id;
 	return (
 		<ConnectorRenderer
 			connectorState={pendingConnector}
-			sourceObj={sourceObjId ? (objects[sourceObjId] ?? null) : null}
-			targetObj={targetObjId ? (objects[targetObjId] ?? null) : null}
+			sourceObj={resolveEndpointOwner(objects, pendingConnector.source)}
+			targetObj={resolveEndpointOwner(objects, pendingConnector.target)}
 			disablePointerEvents={true}
 		/>
 	);
