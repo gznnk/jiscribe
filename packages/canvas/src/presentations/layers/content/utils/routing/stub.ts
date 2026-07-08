@@ -70,7 +70,7 @@ const forwardDistance = (
 };
 
 /**
- * Stub-length clamp that prevents, for close facing endpoints, the stub push-out from
+ * Stub-length clamp that prevents, for close endpoints, the stub push-out from
  * overshooting the other side and inducing a wasteful wrap-around (a route that loops all the way around).
  *
  * Only when the other endpoint is **ahead** in the exit direction, the stub length is limited to
@@ -83,6 +83,10 @@ const forwardDistance = (
  * - Layouts where the other is behind (on the far side) (forward distance ≤ 0) are not clamped.
  *   Since the route must first go straight out and then wrap around, trimming the stub would induce a
  *   reversal spike (see #77).
+ *
+ * A shortened stub can land inside the *other* shape's margin band, but that no longer forces an ugly
+ * staircase: the margin-intrusion cost excludes each endpoint's own exit corridor (see
+ * `countMarginIntrusions`), so the clean route past it wins on merit.
  *
  * @param point - This endpoint's coordinate
  * @param direction - This endpoint's outward direction

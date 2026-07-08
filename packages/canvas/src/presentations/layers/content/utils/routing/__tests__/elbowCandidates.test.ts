@@ -1,28 +1,29 @@
-import type { Point } from "@workspace/geometry";
+import type { BoxFeatures, Point } from "@workspace/geometry";
 import { describe, expect, it } from "vitest";
 
-import { directionsFace, elbowCandidates } from "../elbowCandidates";
+import { elbowCandidates } from "../elbowCandidates";
 
 const orthogonal = (pts: Point[]): boolean =>
 	pts.every((p, i) =>
 		i === 0 ? true : p.x === pts[i - 1].x || p.y === pts[i - 1].y,
 	);
 
-describe("directionsFace", () => {
-	it("x:true when left and right face each other head-on", () => {
-		expect(directionsFace("right", "left")).toEqual({ x: true, y: false });
-		expect(directionsFace("left", "right")).toEqual({ x: true, y: false });
-	});
-
-	it("y:true when up and down face each other head-on", () => {
-		expect(directionsFace("up", "down")).toEqual({ x: false, y: true });
-		expect(directionsFace("down", "up")).toEqual({ x: false, y: true });
-	});
-
-	it("directions that don't mesh are both false", () => {
-		expect(directionsFace("right", "up")).toEqual({ x: false, y: false });
-		expect(directionsFace("right", "right")).toEqual({ x: false, y: false });
-	});
+/** A box spanning [left,right]×[top,bottom] with the derived corner/center fields. */
+const box = (
+	left: number,
+	right: number,
+	top: number,
+	bottom: number,
+): BoxFeatures => ({
+	left,
+	right,
+	top,
+	bottom,
+	center: { x: (left + right) / 2, y: (top + bottom) / 2 },
+	topLeft: { x: left, y: top },
+	bottomLeft: { x: left, y: bottom },
+	topRight: { x: right, y: top },
+	bottomRight: { x: right, y: bottom },
 });
 
 describe("elbowCandidates", () => {
@@ -31,7 +32,7 @@ describe("elbowCandidates", () => {
 
 	it("with free endpoints, enumerates the x/y channels of both stub ends and the midpoint", () => {
 		// box=null, so xs={0,100,50}, ys={0,40,20} → 3 each = 6 candidates total
-		const candidates = elbowCandidates(a, b, null, null, 20, false, false);
+		const candidates = elbowCandidates(a, b, null, null, 20);
 		expect(candidates).toHaveLength(6);
 		// all are 4-point [a, corner, corner, b] paths with only horizontal/vertical segments
 		for (const { elbow } of candidates) {
@@ -42,34 +43,40 @@ describe("elbowCandidates", () => {
 		}
 	});
 
-	it("when facingX, the candidate that bends at midX has symmetric set", () => {
-		const candidates = elbowCandidates(a, b, null, null, 20, true, false);
-		// the vertical-channel candidate at midX = 50 is symmetric
+	it("with free endpoints, the candidate bending at the stub midpoint is symmetric", () => {
+		const candidates = elbowCandidates(a, b, null, null, 20);
+		// no boxes → the ideal crossover falls back to the midpoint of the stubs: idealX = 50
 		const symmetric = candidates.filter((c) => c.symmetric);
-		expect(symmetric).toHaveLength(1);
-		expect(symmetric[0].elbow).toEqual([
-			{ x: 0, y: 0 },
-			{ x: 50, y: 0 },
-			{ x: 50, y: 40 },
-			{ x: 100, y: 40 },
-		]);
+		expect(symmetric).toContainEqual({
+			elbow: [
+				{ x: 0, y: 0 },
+				{ x: 50, y: 0 },
+				{ x: 50, y: 40 },
+				{ x: 100, y: 40 },
+			],
+			symmetric: true,
+		});
+	});
+
+	it("with two boxes, the symmetric candidate bends at the center of the gap between them (not the stub midpoint)", () => {
+		// Non-facing layout: source stub exits up at x=0, target stub enters from the left at x=100.
+		// Boxes are x-separated with a gap between right=10 (source) and left=80 (target).
+		// The stub midpoint would be x=50 (lopsided), but the gap center is (10+80)/2 = 45.
+		const sourceBox = box(-40, 10, -40, 10);
+		const targetBox = box(80, 130, 20, 60);
+		const candidates = elbowCandidates(a, b, sourceBox, targetBox, 20);
+		const symmetricXs = candidates
+			.filter((c) => c.symmetric && c.elbow[1].x === c.elbow[2].x)
+			.map((c) => c.elbow[1].x);
+		expect(symmetricXs).toContain(45);
+		expect(symmetricXs).not.toContain(50);
 	});
 
 	it("with a box, the outer-clearance channels (edge ± margin) are added to the candidates", () => {
 		// under the same conditions, the version with a box has more candidates (detour channels are included)
-		const sourceBox = {
-			left: -50,
-			right: 50,
-			top: -30,
-			bottom: 30,
-			center: { x: 0, y: 0 },
-			topLeft: { x: -50, y: -30 },
-			bottomLeft: { x: -50, y: 30 },
-			topRight: { x: 50, y: -30 },
-			bottomRight: { x: 50, y: 30 },
-		};
-		const withoutBox = elbowCandidates(a, b, null, null, 20, false, false);
-		const withBox = elbowCandidates(a, b, sourceBox, null, 20, false, false);
+		const sourceBox = box(-50, 50, -30, 30);
+		const withoutBox = elbowCandidates(a, b, null, null, 20);
+		const withBox = elbowCandidates(a, b, sourceBox, null, 20);
 		expect(withBox.length).toBeGreaterThan(withoutBox.length);
 	});
 });
