@@ -2,6 +2,7 @@ import { memo } from "react";
 
 import { theme } from "../../../../constants/theme";
 import { useResolvedConnectorPoints } from "../../../../presentations/layers/content/hooks/useResolvedConnectorPoints";
+import { resolveEndpointOwner } from "../../../../presentations/layers/content/utils/endpoints";
 import { isOrthogonalRouting } from "../../../../schemas/objects/types/ConnectorRouting";
 import type { CanvasState } from "../../../../states/canvas/CanvasState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
@@ -42,12 +43,10 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 	zoom = 1,
 	selectedVertex = null,
 }) => {
-	const sourceObjId = connectorState.source.owner?.id;
-	const targetObjId = connectorState.target.owner?.id;
 	const resolved = useResolvedConnectorPoints(
 		connectorState,
-		sourceObjId ? (objects[sourceObjId] ?? null) : null,
-		targetObjId ? (objects[targetObjId] ?? null) : null,
+		resolveEndpointOwner(objects, connectorState.source),
+		resolveEndpointOwner(objects, connectorState.target),
 	);
 	const { handleDimensions } = useCanvasTheme();
 

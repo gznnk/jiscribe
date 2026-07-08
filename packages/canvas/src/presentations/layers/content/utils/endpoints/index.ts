@@ -2,3 +2,4 @@
 // resolveEndpoint / adjustToOutline are internal helpers and are not exported.
 // React hooks are separated into presentations/layers/content/hooks/.
 export { resolveConnectorPoints } from "./resolveConnectorPoints";
+export { resolveEndpointOwner } from "./resolveEndpointOwner";
