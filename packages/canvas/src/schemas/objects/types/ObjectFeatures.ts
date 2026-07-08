@@ -21,6 +21,8 @@ export type ObjectFeatures = {
 	text?: boolean;
 	/** Corner radius styling (for rect) */
 	radius?: boolean;
+	/** Arrowhead ends (startArrow / endArrow) */
+	arrow?: boolean;
 	/** Whether this object can be used as a connector endpoint target */
 	connectable?: boolean;
 };

@@ -88,20 +88,10 @@ const isPropertySupported = (
 			return features.transform === true;
 		case "startArrow":
 		case "endArrow":
-			return false;
+			return features.arrow === true;
 		default:
 			return false;
 	}
-};
-
-const isArrowPropertySupported = (
-	objectType: string,
-	property: string,
-): boolean => {
-	if (property !== "startArrow" && property !== "endArrow") {
-		return false;
-	}
-	return objectType === "polyline" || objectType === "connector";
 };
 
 const parsePropertyValue = (property: string, value: string): unknown => {
@@ -153,8 +143,7 @@ export const handlePropertyUpdate = (
 		const supported = features
 			? isPropertySupported(features, property)
 			: false;
-		const arrowSupported = isArrowPropertySupported(connector.type, property);
-		if (!supported && !arrowSupported) {
+		if (!supported) {
 			return state;
 		}
 
@@ -211,9 +200,8 @@ export const handlePropertyUpdate = (
 		const supported = features
 			? isPropertySupported(features, property)
 			: false;
-		const arrowSupported = isArrowPropertySupported(obj.type, property);
 
-		if (!supported && !arrowSupported) {
+		if (!supported) {
 			continue;
 		}
 
