@@ -1,6 +1,6 @@
 import type { Point } from "@workspace/geometry";
 
-import { directionsFace, elbowCandidates } from "./elbowCandidates";
+import { elbowCandidates } from "./elbowCandidates";
 import { calcPathSignature } from "./pathSignature";
 import {
 	calcRouteCost,
@@ -18,15 +18,18 @@ import { DEFAULT_CONNECTOR_MARGIN } from "../../../../../constants/connectorRout
 /**
  * Generates an orthogonal route connecting two endpoints using only horizontal/vertical segments.
  *
+ * The spec (what a correct route is, and the priority order between competing properties) is in
+ * `SPEC.md` in this folder; it is verified by the config-space sweep in `__tests__/routingInvariants.test.ts`.
+ *
  * Algorithm overview (each step is split into a module in the same folder):
  * 1. `stubPoint`: create a **stub** by pushing each endpoint out along its exit direction
  *    (AABB edge + margin, so it reliably exits the bounding box even for rotated shapes).
  * 2. `elbowCandidates`: enumerate **elbow candidates** connecting the stubs from bend-position
- *    "channels" (both stub ends, the midpoint, and each box's perimeter ± margin). The midpoint
- *    channel represents S/Z shapes; the box-perimeter channels represent wrapping around shapes.
+ *    "channels" (both stub ends, the center between the two shapes, and each box's perimeter ± margin).
+ *    The centered channel represents S/Z shapes; the box-perimeter channels represent wrapping around shapes.
  * 3. `calcRouteCost` / `compareRouteChoices`: evaluate each candidate under a **total order** and
- *    pick the best: shape crossings → aesthetics (turns×weight + length + reversals×penalty −
- *    symmetry bonus) → topology signature → concrete path. The trailing intrinsic keys make the
+ *    pick the best: shape crossings → aesthetics (turns×weight + length + reversals×penalty) →
+ *    symmetric (centered crossover) → topology signature → concrete path. The trailing intrinsic keys make the
  *    result independent of candidate enumeration order, so cost-tied shapes (e.g. wrapping over
  *    vs. under equal-sized boxes) do not flip while an owner shape is dragged (route stability
  *    without memory).
@@ -80,17 +83,14 @@ export const routeOrthogonalConnector = (
 		: target.point;
 
 	// ── Step 2: candidate generation ──
-	// Enumerate orthogonal elbow candidates connecting the stubs. For facing layouts, to prefer a
-	// midpoint bend (S shape), pass that axis (x/y) to candidate generation as `facing`.
-	const facing = directionsFace(source.direction, target.direction);
+	// Enumerate orthogonal elbow candidates connecting the stubs. The candidate bending at the center
+	// between the two shapes is flagged `symmetric`, so it is preferred among cost-equal candidates.
 	const candidates = elbowCandidates(
 		sourceStub,
 		targetStub,
 		source.box,
 		target.box,
 		margin,
-		facing.x,
-		facing.y,
 	);
 
 	// ── Step 3: evaluate and pick the best ──
@@ -109,13 +109,8 @@ export const routeOrthogonalConnector = (
 			target.point,
 		]);
 		const choice: RouteChoice = {
-			cost: calcRouteCost(
-				fullPath,
-				simplifiedElbow,
-				source.box,
-				target.box,
-				symmetric,
-			),
+			cost: calcRouteCost(fullPath, simplifiedElbow, source, target, margin),
+			symmetric,
 			signature: calcPathSignature(fullPath),
 			path: fullPath,
 		};

@@ -116,25 +116,57 @@ describe("countBoxCrossings", () => {
 
 describe("compareCost", () => {
 	it("crossing count takes top priority (any crossing loses no matter how good the aesthetics)", () => {
-		const crossing = { crossings: 1, aesthetic: 0 };
-		const clean = { crossings: 0, aesthetic: 9_999 };
+		const crossing = {
+			crossings: 1,
+			reversals: 0,
+			intrusions: 0,
+			aesthetic: 0,
+		};
+		const clean = {
+			crossings: 0,
+			reversals: 0,
+			intrusions: 0,
+			aesthetic: 9_999,
+		};
 		// compareCost(a,b) < 0 means a is better
 		expect(compareCost(clean, crossing)).toBeLessThan(0);
 	});
 
-	it("compares by aesthetics when the crossing count is equal", () => {
+	it("reversals rank above intrusions and aesthetics (a spike loses even with better clearance)", () => {
+		const spike = { crossings: 0, reversals: 1, intrusions: 0, aesthetic: 0 };
+		const clean = {
+			crossings: 0,
+			reversals: 0,
+			intrusions: 1,
+			aesthetic: 9_999,
+		};
+		expect(compareCost(clean, spike)).toBeLessThan(0);
+	});
+
+	it("margin intrusions rank above the aesthetic (a fuller-clearance route wins even if longer)", () => {
+		const grazing = {
+			crossings: 0,
+			reversals: 0,
+			intrusions: 1,
+			aesthetic: 10,
+		};
+		const clear = { crossings: 0, reversals: 0, intrusions: 0, aesthetic: 20 };
+		expect(compareCost(clear, grazing)).toBeLessThan(0);
+	});
+
+	it("compares by aesthetics when crossings, reversals and intrusions are equal", () => {
 		expect(
 			compareCost(
-				{ crossings: 0, aesthetic: 10 },
-				{ crossings: 0, aesthetic: 20 },
+				{ crossings: 0, reversals: 0, intrusions: 0, aesthetic: 10 },
+				{ crossings: 0, reversals: 0, intrusions: 0, aesthetic: 20 },
 			),
 		).toBeLessThan(0);
 	});
 });
 
 describe("calcRouteCost", () => {
-	it("a route with a reversal is heavily penalized by REVERSAL_PENALTY", () => {
-		// even for the same single corner, a reversal spike costs far more than a detour
+	it("a reversal spike is counted in the reversals tier (ranked above aesthetics)", () => {
+		// even for the same single corner, a reversal spike is flagged so it loses to any spike-free route
 		const spike = [
 			{ x: 0, y: 0 },
 			{ x: 20, y: 0 },
@@ -145,12 +177,13 @@ describe("calcRouteCost", () => {
 			{ x: 20, y: 0 },
 			{ x: 20, y: 20 },
 		];
-		const spikeCost = calcRouteCost(spike, spike, null, null, false);
-		const cleanCost = calcRouteCost(clean, clean, null, null, false);
+		const free = { box: null, direction: "right" as const };
+		const spikeCost = calcRouteCost(spike, spike, free, free, 30);
+		const cleanCost = calcRouteCost(clean, clean, free, free, 30);
 		expect(spikeCost.crossings).toBe(0);
 		expect(cleanCost.crossings).toBe(0);
-		// by the penalty (10,000), spike's aesthetic is dramatically larger
-		expect(spikeCost.aesthetic).toBeGreaterThan(cleanCost.aesthetic + 9_000);
+		expect(spikeCost.reversals).toBe(1);
+		expect(cleanCost.reversals).toBe(0);
 	});
 
 	it("crossings reflects the crossing count of simplifiedElbow", () => {
@@ -158,7 +191,13 @@ describe("calcRouteCost", () => {
 			{ x: 0, y: 100 },
 			{ x: 200, y: 100 },
 		];
-		const cost = calcRouteCost(elbow, elbow, box, null, false);
+		const cost = calcRouteCost(
+			elbow,
+			elbow,
+			{ box, direction: "right" },
+			{ box: null, direction: "left" },
+			30,
+		);
 		expect(cost.crossings).toBe(1);
 	});
 });
