@@ -1,4 +1,9 @@
-import { Canvas, parseCanvasText, type CanvasDoc } from "@workspace/canvas";
+import {
+	Canvas,
+	parseCanvasText,
+	type Camera,
+	type CanvasDoc,
+} from "@workspace/canvas";
 import { useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -25,6 +30,26 @@ declare const acquireVsCodeApi: () => {
 const vscode = acquireVsCodeApi();
 
 /**
+ * getState/setState に退避する Webview ローカル状態。retainContextWhenHidden:
+ * false（#138）でタブ非表示時に Webview が破棄されても、この内容だけはリロードを
+ * またいで保持されるため、ビューポート（カメラ）を退避して再マウント時に復元する。
+ * ドキュメントは "ready" 経由で Extension が再送するので含めない。
+ */
+type PersistedState = {
+	camera?: Camera;
+};
+
+const readPersistedCamera = (): Camera | undefined => {
+	const state = vscode.getState() as PersistedState | null;
+	return state?.camera ?? undefined;
+};
+
+const persistCamera = (camera: Camera): void => {
+	const state = (vscode.getState() as PersistedState | null) ?? {};
+	vscode.setState({ ...state, camera });
+};
+
+/**
  * Canvas エディタのルートコンポーネント。
  *
  * 状態の種類:
@@ -41,6 +66,16 @@ function App() {
 	const [syncNonce, setSyncNonce] = useState<string | undefined>(undefined);
 	const [hasSemanticError, setHasSemanticError] = useState(false);
 	const [parseError, setParseError] = useState<string>("");
+
+	// Controlled camera, restored from persisted state on reload (undefined on
+	// first open → Canvas uses its doc-derived default).
+	const [camera, setCamera] = useState<Camera | undefined>(readPersistedCamera);
+
+	// Mirror pan/zoom into state and persist it so the view survives tab hide.
+	const handleViewportChange = useCallback((next: Camera) => {
+		setCamera(next);
+		persistCamera(next);
+	}, []);
 
 	// 高頻度コミット（キーリピート等）の間引きは Canvas 側の保存スケジューラが
 	// 担うため（#125）、ここではデバウンスせずそのまま Extension へ送る。
@@ -157,6 +192,8 @@ function App() {
 				<Canvas
 					canvasDoc={canvasDoc}
 					syncNonce={syncNonce}
+					viewport={camera}
+					onViewportChange={handleViewportChange}
 					onCommit={handleCommit}
 					onUndo={handleUndo}
 					onRedo={handleRedo}

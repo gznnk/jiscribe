@@ -54,4 +54,27 @@ describe("createInitialControllerState", () => {
 		expect(a.keyPointsCache).not.toBe(b.keyPointsCache);
 		expect(a.history).not.toBe(b.history);
 	});
+
+	it("keeps the doc-derived default viewport when no initialCamera is given", () => {
+		const state = createInitialControllerState(docWithRect);
+
+		// Mapper default: pan at origin, zoom 1 (width/height are placeholders the
+		// ResizeObserver corrects at runtime).
+		expect(state.viewport).toMatchObject({ minX: 0, minY: 0, zoom: 1 });
+	});
+
+	it("seeds the viewport camera from initialCamera without touching width/height", () => {
+		const base = createInitialControllerState(docWithRect);
+		const state = createInitialControllerState(docWithRect, undefined, {
+			minX: 10,
+			minY: 20,
+			zoom: 2,
+		});
+
+		// Camera adopted so the first paint lands at the host's pan/zoom (no flash).
+		expect(state.viewport).toMatchObject({ minX: 10, minY: 20, zoom: 2 });
+		// Width/height stay the mapper default (host does not control pixel size).
+		expect(state.viewport.width).toBe(base.viewport.width);
+		expect(state.viewport.height).toBe(base.viewport.height);
+	});
 });

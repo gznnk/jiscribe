@@ -1,5 +1,6 @@
 import type { CanvasAction } from "./CanvasActions";
 import { createDocSnapshotFromState } from "../../states/canvas/DocSnapshot";
+import { isSameCamera } from "../../states/canvas/Viewport";
 import type { CanvasControllerState } from "../CanvasTypes";
 import { handlePaste } from "./handlers/handlePaste";
 import { handleCommand } from "../commands/handlers/handleCommand";
@@ -44,6 +45,20 @@ export const canvasReducer = (
 					width: action.dimensions.width,
 					height: action.dimensions.height,
 				},
+			};
+		}
+
+		case "SET_VIEWPORT": {
+			// No-op when the camera is unchanged so echoing a host-mirrored
+			// viewport back through the `viewport` prop does not churn state.
+			if (isSameCamera(state.viewport, action.camera)) {
+				return state;
+			}
+			// Keep width/height (container-measured); only the camera is host-controlled.
+			const { minX, minY, zoom } = action.camera;
+			return {
+				...state,
+				viewport: { ...state.viewport, minX, minY, zoom },
 			};
 		}
 

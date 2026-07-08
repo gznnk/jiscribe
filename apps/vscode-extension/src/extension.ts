@@ -25,9 +25,19 @@ export function activate(context: vscode.ExtensionContext) {
 		provider,
 		{
 			webviewOptions: {
-				// true にすると、タブを切り替えてもWebviewの状態（Reactのstate等）が保持される。
-				// false にするとタブを非表示にするたびに Webview が破棄・再生成される。
-				retainContextWhenHidden: true,
+				// false: 非表示タブの Webview コンテキスト（約1MB の JS 評価済み＋React/SVG
+				// ツリー）をメモリに常駐させず、再表示時に破棄・再生成する（#138）。
+				// VSCode 公式も retainContextWhenHidden は高オーバーヘッドとして非推奨。
+				//
+				// 破棄しても状態は失われない:
+				//   - ドキュメント内容: 再生成後の Webview が "ready" を再送 → この Provider が
+				//     doc を再送信する既存フローで復元される（パネルと messageListener は
+				//     タブ非表示では dispose されない）。
+				//   - ビューポート（パン/ズーム）: Webview 側が getState/setState に camera を
+				//     退避し、再マウント時に Canvas の controlled viewport へ復元する
+				//     （src/webview/index.tsx）。
+				// トレードオフ: 再表示時に一瞬のリロード（"Loading canvas..."）が挟まる。
+				retainContextWhenHidden: false,
 			},
 			supportsMultipleEditorsPerDocument: false,
 		},

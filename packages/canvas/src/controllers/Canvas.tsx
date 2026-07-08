@@ -17,10 +17,12 @@ import { useCanvasWheel } from "./hooks/useCanvasWheel";
 import { useClipboardPaste } from "./hooks/useClipboardPaste";
 import { useClipboardWrite } from "./hooks/useClipboardWrite";
 import { useContainerResize } from "./hooks/useContainerResize";
+import { useControlledViewport } from "./hooks/useControlledViewport";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useNotifySaveRequest } from "./hooks/useNotifySaveRequest";
 import { useNotifySelectionChange } from "./hooks/useNotifySelectionChange";
+import { useNotifyViewportChange } from "./hooks/useNotifyViewportChange";
 import { useSelfSaveNonceTracker } from "./hooks/useSelfSaveNonceTracker";
 import { useSyncExternalDoc } from "./hooks/useSyncExternalDoc";
 import { mergeCanvasMessages } from "./messages/CanvasMessages";
@@ -49,6 +51,7 @@ import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
 import { Toolbar } from "./ui/menu/Toolbar";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
+import type { Camera } from "../states/canvas/Viewport";
 
 // Initialize all registries (ObjectRegistry, GestureHandlerRegistry)
 initializeRegistries();
@@ -115,6 +118,19 @@ type CanvasProps = {
 	 * Canvases (or when the host manages focus) so mounting does not steal focus.
 	 */
 	autoFocus?: boolean;
+	/**
+	 * Host-controlled camera (pan + zoom). Its value is applied whenever it
+	 * changes, letting the host set the view at any time (fit-to-screen, restore a
+	 * saved view, …). Omit to leave the viewport uncontrolled (default); pair with
+	 * `onViewportChange` to keep the host's copy in sync.
+	 */
+	viewport?: Camera;
+	/**
+	 * Invoked when the camera (pan/zoom) changes — on internal gestures and on
+	 * programmatic `viewport` changes (not on container resize). Use it to persist
+	 * or mirror the view.
+	 */
+	onViewportChange?: (viewport: Camera) => void;
 };
 
 const CanvasComponent: React.FC<CanvasProps> = ({
@@ -127,6 +143,8 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	messages,
 	theme = darkCanvasTheme,
 	autoFocus = true,
+	viewport: controlledViewport,
+	onViewportChange,
 }) => {
 	// Merged UI strings (English defaults + host overrides), distributed via context
 	const mergedMessages = useMemo(
@@ -152,8 +170,14 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	const canvasRef = useRef<HTMLDivElement>(null);
 	const svgRef = useRef<SVGSVGElement>(null);
 
-	// Reducer for canvas state management with history
-	const [state, dispatch] = useCanvasReducer(canvasDoc, docDefaults);
+	// Reducer for canvas state management with history. The controlled camera (if
+	// any) seeds the initial viewport so the first paint is already at the host's
+	// pan/zoom — see useCanvasReducer / useControlledViewport for the mount handoff.
+	const [state, dispatch] = useCanvasReducer(
+		canvasDoc,
+		docDefaults,
+		controlledViewport,
+	);
 
 	// Keep the reducer-held docDefaults in sync when the host swaps themes at
 	// runtime (the reducer no-ops when the values are unchanged).
@@ -184,6 +208,13 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 		state.selectedConnectorId,
 		onSelectionChange,
 	);
+
+	// Apply a host-controlled camera (when the `viewport` prop is provided) and
+	// notify the host of camera changes. Together these make the viewport an
+	// optional controlled value: internal gestures stay authoritative and are
+	// reported out, while the host can set pan/zoom at any time.
+	useControlledViewport(controlledViewport, dispatch);
+	useNotifyViewportChange(state.viewport, onViewportChange);
 
 	// Notify parent component when a save is required (after commit or undo/redo)
 	useNotifySaveRequest(state, onCommit, selfSaveNonceTracker);

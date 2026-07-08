@@ -2,6 +2,7 @@ import type { Dimensions } from "@workspace/geometry";
 
 import type { DocCreationDefaults } from "../../schemas/objects/types/DocCreationDefaults";
 import type { CanvasState } from "../../states/canvas/CanvasState";
+import type { Camera } from "../../states/canvas/Viewport";
 import type { ClipboardData } from "../commands/selection/ClipboardData";
 import type { Gesture } from "../gestures/recognizer/GestureRecognizerTypes";
 
@@ -27,6 +28,15 @@ export type ContainerResizeAction = {
 export type SyncExternalAction = {
 	type: "SYNC_EXTERNAL";
 	payload: CanvasState;
+};
+
+/**
+ * Set viewport action - applies a host-controlled camera (pan/zoom), keeping the
+ * measured width/height. Dispatched by useControlledViewport.
+ */
+export type SetViewportAction = {
+	type: "SET_VIEWPORT";
+	camera: Camera;
 };
 
 /**
@@ -97,6 +107,7 @@ export type CanvasAction =
 	| GestureAction
 	| ContainerResizeAction
 	| SyncExternalAction
+	| SetViewportAction
 	| CommandAction
 	| UpdateTextEditAction
 	| EndTextEditAction
