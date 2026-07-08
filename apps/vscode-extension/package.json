@@ -114,6 +114,7 @@
 		"@workspace/canvas": "workspace:*",
 		"esbuild": "^0.24.2",
 		"react": "catalog:",
-		"react-dom": "catalog:"
+		"react-dom": "catalog:",
+		"typescript": "catalog:"
 	}
 }
