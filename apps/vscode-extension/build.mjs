@@ -3,10 +3,11 @@
 // 通常ビルド: node build.mjs
 // 監視モード: node build.mjs --watch
 
-import * as esbuild from "esbuild";
 import { copyFileSync, mkdirSync, rmSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
+
+import * as esbuild from "esbuild";
 
 // ESモジュール内では __dirname が使えないため、import.meta.url から求める
 const __filename = fileURLToPath(import.meta.url);
