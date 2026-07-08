@@ -30,12 +30,12 @@ import type {
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
 import type { Mods } from "../../registry/ObjectBehaviorTypes";
+import { isLeftButton } from "../utils/isLeftButton";
 import {
 	buildSnapFeedback,
 	findSnap,
 	SNAP_THRESHOLD_PX,
 } from "../utils/snap/findSnap";
-import { isLeftButton } from "../utils/isLeftButton";
 
 /**
  * Handles a click on an object.

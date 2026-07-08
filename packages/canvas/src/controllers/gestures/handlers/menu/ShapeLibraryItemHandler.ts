@@ -11,12 +11,12 @@ import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
+import { isLeftButton } from "../utils/isLeftButton";
 import {
 	SNAP_THRESHOLD_PX,
 	buildSnapFeedback,
 	findSnap,
 } from "../utils/snap/findSnap";
-import { isLeftButton } from "../utils/isLeftButton";
 
 /**
  * Extracts the preset ID from a targetPart.
