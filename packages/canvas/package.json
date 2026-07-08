@@ -36,13 +36,13 @@
 		"react-dom": "catalog:"
 	},
 	"devDependencies": {
-		"@types/react": "^19.2.7",
-		"@types/react-dom": "^19.2.3",
-		"@vitest/coverage-v8": "^2.1.8",
+		"@types/react": "catalog:",
+		"@types/react-dom": "catalog:",
+		"@vitest/coverage-v8": "catalog:",
 		"@vitest/ui": "^2.1.8",
-		"madge": "^8.0.0",
-		"rimraf": "^6.0.1",
+		"madge": "catalog:",
+		"rimraf": "catalog:",
 		"typescript": "catalog:",
-		"vitest": "^2.1.8"
+		"vitest": "catalog:"
 	}
 }
