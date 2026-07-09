@@ -29,7 +29,7 @@ export const createObjectDoc = (
 ): ObjectDoc => {
 	const factory = shapeFactory.get(type);
 	if (!factory) {
-		throw new Error(`Unsupported object type for menu: ${type}`);
+		throw new Error(`Unsupported object type: ${type}`);
 	}
 	return factory.createDoc(position, overrides, docDefaults);
 };
