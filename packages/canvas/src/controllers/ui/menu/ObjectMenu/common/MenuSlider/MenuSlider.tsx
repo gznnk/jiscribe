@@ -11,27 +11,54 @@ import {
 
 type MenuSliderProps = {
 	value: number;
+	/** Lower bound of the valid range (number input clamp). */
 	min?: number;
+	/** Upper bound of the valid range (number input clamp). */
 	max?: number;
+	/**
+	 * Slider track lower bound. Defaults to `min`. The slider only spans the
+	 * common range; values outside it are still reachable via the number input.
+	 */
+	sliderMin?: number;
+	/** Slider track upper bound. Defaults to `max`. */
+	sliderMax?: number;
+	/** Slider drag increment. The number input stays free-form (no snapping). */
+	step?: number;
 	label?: string;
 	property: string;
 	onPropertyUpdate?: (property: string, value: string, commit: boolean) => void;
 };
 
+const clamp = (value: number, lower: number, upper: number): number =>
+	Math.max(lower, Math.min(upper, value));
+
 /**
  * MenuSlider component.
  * A UI control for adjusting values using a slider.
  * Uses CanvasEvent system (data-kind/data-id) for property updates.
+ *
+ * The slider track (`sliderMin`..`sliderMax`, stepped by `step`) covers the
+ * common range for quick, coarse adjustment. The number input accepts the full
+ * valid range (`min`..`max`) for precise or extreme values; when the committed
+ * value falls outside the track the thumb pins to the nearest end.
  */
 const MenuSliderComponent: React.FC<MenuSliderProps> = ({
 	value,
 	min = 1,
 	max = 100,
+	sliderMin,
+	sliderMax,
+	step = 1,
 	label = "Value",
 	property,
 	onPropertyUpdate,
 }) => {
-	const [sliderValue, setSliderValue] = useState(value);
+	const trackMin = sliderMin ?? min;
+	const trackMax = sliderMax ?? max;
+
+	const [sliderValue, setSliderValue] = useState(
+		clamp(value, trackMin, trackMax),
+	);
 	const [inputValue, setInputValue] = useState(String(value));
 	// ref used so useEffect can read the latest inputValue after render
 	const inputValueRef = useRef(inputValue);
@@ -51,10 +78,10 @@ const MenuSliderComponent: React.FC<MenuSliderProps> = ({
 
 		const parsedValue = Number.parseInt(newInputValue, 10);
 		if (!Number.isNaN(parsedValue)) {
-			const clampedValue = Math.max(min, Math.min(max, parsedValue));
-			setSliderValue(clampedValue);
+			const committedValue = clamp(parsedValue, min, max);
+			setSliderValue(clamp(committedValue, trackMin, trackMax));
 			pendingCommit.current = true;
-			onPropertyUpdate?.(property, String(clampedValue), false);
+			onPropertyUpdate?.(property, String(committedValue), false);
 		}
 	};
 
@@ -62,16 +89,16 @@ const MenuSliderComponent: React.FC<MenuSliderProps> = ({
 		(currentInputValue: string) => {
 			const parsedValue = Number.parseInt(currentInputValue, 10);
 			if (!Number.isNaN(parsedValue) && pendingCommit.current) {
-				const clampedValue = Math.max(min, Math.min(max, parsedValue));
-				setSliderValue(clampedValue);
-				setInputValue(String(clampedValue));
-				onPropertyUpdate?.(property, String(clampedValue), true);
+				const committedValue = clamp(parsedValue, min, max);
+				setSliderValue(clamp(committedValue, trackMin, trackMax));
+				setInputValue(String(committedValue));
+				onPropertyUpdate?.(property, String(committedValue), true);
 				pendingCommit.current = false;
 			} else if (Number.isNaN(parsedValue)) {
-				setInputValue(String(sliderValue));
+				setInputValue(String(value));
 			}
 		},
-		[min, max, property, sliderValue, onPropertyUpdate],
+		[min, max, trackMin, trackMax, property, value, onPropertyUpdate],
 	);
 
 	const handleNumberInputBlur = useCallback(() => {
@@ -93,11 +120,11 @@ const MenuSliderComponent: React.FC<MenuSliderProps> = ({
 	// matches inputValue and is skipped.
 	useEffect(() => {
 		if (String(value) !== inputValueRef.current) {
-			setSliderValue(value);
+			setSliderValue(clamp(value, trackMin, trackMax));
 			setInputValue(String(value));
 			pendingCommit.current = false;
 		}
-	}, [value]);
+	}, [value, trackMin, trackMax]);
 
 	return (
 		<MenuSliderWrapper>
@@ -117,8 +144,9 @@ const MenuSliderComponent: React.FC<MenuSliderProps> = ({
 			</MenuSliderFooter>
 			<MenuSliderInput
 				type="range"
-				min={min}
-				max={max}
+				min={trackMin}
+				max={trackMax}
+				step={step}
 				value={sliderValue}
 				onChange={handleSliderChange}
 				data-kind="menu"

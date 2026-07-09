@@ -15,6 +15,10 @@ const SECTION_ID = "font-size";
 const DEFAULT_FONT_SIZE = 14;
 const MIN_FONT_SIZE = 1;
 const MAX_FONT_SIZE = 999;
+// Slider covers the common typographic range; larger sizes via the number input.
+const SLIDER_MIN_FONT_SIZE = 8;
+const SLIDER_MAX_FONT_SIZE = 72;
+const FONT_SIZE_STEP = 2;
 
 type FontSizeMenuProps = {
 	canvasState: CanvasControllerState;
@@ -61,6 +65,9 @@ const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 							value={fontSize}
 							min={MIN_FONT_SIZE}
 							max={MAX_FONT_SIZE}
+							sliderMin={SLIDER_MIN_FONT_SIZE}
+							sliderMax={SLIDER_MAX_FONT_SIZE}
+							step={FONT_SIZE_STEP}
 							property="fontSize"
 							onPropertyUpdate={onPropertyUpdate}
 						/>

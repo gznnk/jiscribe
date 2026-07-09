@@ -18,6 +18,8 @@ const SECTION_ID = "line-style";
 
 const MIN_STROKE_WIDTH = 1;
 const MAX_STROKE_WIDTH = 100;
+// Slider covers the common range; thicker lines via the number input.
+const SLIDER_MAX_STROKE_WIDTH = 20;
 
 type LineStyleMenuProps = {
 	canvasState: CanvasControllerState;
@@ -87,6 +89,7 @@ const LineStyleMenuComponent: React.FC<LineStyleMenuProps> = ({
 							value={strokeWidth}
 							min={MIN_STROKE_WIDTH}
 							max={MAX_STROKE_WIDTH}
+							sliderMax={SLIDER_MAX_STROKE_WIDTH}
 							property="strokeWidth"
 							onPropertyUpdate={onPropertyUpdate}
 						/>

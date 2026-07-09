@@ -20,12 +20,16 @@ import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
 
 const SECTION_ID = "border-style";
 
-// Slider bounds for border styling
+// Valid range for border styling (number input clamp)
 const MIN_STROKE_WIDTH = 0;
 const MAX_STROKE_WIDTH = 100;
+// Slider covers the common range (from 0 = no border); thicker borders via the number input.
+const SLIDER_MAX_STROKE_WIDTH = 20;
 
 const MIN_CORNER_RADIUS = 0;
 const MAX_CORNER_RADIUS = 999;
+// Slider covers the common range; larger radii via the number input.
+const SLIDER_MAX_CORNER_RADIUS = 20;
 
 type BorderStyleMenuProps = {
 	canvasState: CanvasControllerState;
@@ -104,6 +108,7 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 							value={strokeWidth}
 							min={MIN_STROKE_WIDTH}
 							max={MAX_STROKE_WIDTH}
+							sliderMax={SLIDER_MAX_STROKE_WIDTH}
 							property="strokeWidth"
 							onPropertyUpdate={onPropertyUpdate}
 						/>
@@ -114,6 +119,7 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 								value={cornerRadius}
 								min={MIN_CORNER_RADIUS}
 								max={MAX_CORNER_RADIUS}
+								sliderMax={SLIDER_MAX_CORNER_RADIUS}
 								property="rx"
 								onPropertyUpdate={onPropertyUpdate}
 							/>

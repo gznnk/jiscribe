@@ -14,6 +14,10 @@ import { FontSizeMenuWrapper } from "../FontSizeMenu/FontSizeMenuStyled";
 const SECTION_ID = "label-font-size";
 const MIN_FONT_SIZE = 1;
 const MAX_FONT_SIZE = 999;
+// Slider covers the common typographic range; larger sizes via the number input.
+const SLIDER_MIN_FONT_SIZE = 8;
+const SLIDER_MAX_FONT_SIZE = 72;
+const FONT_SIZE_STEP = 2;
 
 type Props = {
 	canvasState: CanvasControllerState;
@@ -58,6 +62,9 @@ const LabelFontSizeMenuComponent: React.FC<Props> = ({
 							value={fontSize}
 							min={MIN_FONT_SIZE}
 							max={MAX_FONT_SIZE}
+							sliderMin={SLIDER_MIN_FONT_SIZE}
+							sliderMax={SLIDER_MAX_FONT_SIZE}
+							step={FONT_SIZE_STEP}
 							property="label.fontSize"
 							onPropertyUpdate={onPropertyUpdate}
 						/>
