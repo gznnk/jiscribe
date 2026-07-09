@@ -28,7 +28,8 @@ import { useSyncExternalDoc } from "./hooks/useSyncExternalDoc";
 import { mergeCanvasMessages } from "./messages/CanvasMessages";
 import type { CanvasMessages } from "./messages/CanvasMessages";
 import { CanvasMessagesContext } from "./messages/CanvasMessagesContext";
-import { defaultCanvasRegistries } from "./setup";
+import { createCanvasRegistries, defaultCanvasRegistries } from "./setup";
+import type { CanvasConfig } from "./setup";
 import { CanvasView } from "../presentations/CanvasView";
 import { ObjectComponentRegistryContext } from "../presentations/objects/registry/ObjectComponentRegistryContext";
 import type { CanvasTheme } from "../theme/CanvasTheme";
@@ -129,6 +130,20 @@ type CanvasProps = {
 	 * or mirror the view.
 	 */
 	onViewportChange?: (viewport: Camera) => void;
+	/**
+	 * Per-canvas configuration of the available object types, commands, and
+	 * registries. Restricts what this canvas can create/handle (plugin-style
+	 * extensibility and feature-gating), independently of any other `<Canvas>` on
+	 * the page. Omit for the full default set (all shapes and commands).
+	 *
+	 * **Caller responsibility**: when `objectTypes` is restricted, only pass docs
+	 * whose object types remain enabled — otherwise state construction throws
+	 * "Mapper not found" (docs/01-design-philosophy.md principle 4).
+	 *
+	 * Treated as mount-time configuration: pass a stable/memoized value, since a
+	 * new `config` identity rebuilds the registry bundle.
+	 */
+	config?: CanvasConfig;
 };
 
 const CanvasComponent: React.FC<CanvasProps> = ({
@@ -143,6 +158,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	autoFocus = true,
 	viewport: controlledViewport,
 	onViewportChange,
+	config,
 }) => {
 	// Merged UI strings (English defaults + host overrides), distributed via context
 	const mergedMessages = useMemo(
@@ -168,10 +184,13 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	const canvasRef = useRef<HTMLDivElement>(null);
 	const svgRef = useRef<SVGSVGElement>(null);
 
-	// The full default bundle (per-canvas config arrives in a later phase).
-	// Stable module-level identity, so no useMemo is needed here. Injected into
-	// the reducer state (pure tree) and provided via context (React tree).
-	const registries = defaultCanvasRegistries;
+	// Per-canvas registry bundle: a configured set when `config` is given,
+	// otherwise the shared full default (stable identity → no rebuild). Injected
+	// into the reducer state (pure tree) and provided via context (React tree).
+	const registries = useMemo(
+		() => (config ? createCanvasRegistries(config) : defaultCanvasRegistries),
+		[config],
+	);
 
 	// Reducer for canvas state management with history. The controlled camera (if
 	// any) seeds the initial viewport so the first paint is already at the host's
