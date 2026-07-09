@@ -10,7 +10,11 @@ export type {
 	CanvasThemeTokens,
 	CanvasHandleDimensions,
 } from "./theme/CanvasTheme";
-export { darkCanvasTheme, lightCanvasTheme } from "./theme/themePresets";
+export {
+	darkCanvasTheme,
+	lightCanvasTheme,
+	brandLightCanvasTheme,
+} from "./theme/themePresets";
 export type { Camera } from "./states/canvas/Viewport";
 export type { CanvasDoc } from "./schemas/canvas/CanvasDoc";
 export { parseCanvasText } from "./schemas/canvas/validators";

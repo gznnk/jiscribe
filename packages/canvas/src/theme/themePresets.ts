@@ -63,6 +63,17 @@ export const darkCanvasTheme: CanvasTheme = {
 	fontFamily: DEFAULT_FONT_FAMILY,
 };
 
+/**
+ * Selection/transform handles tinted with the brand teal (icon gradient
+ * `#0f9e8f → #075e56`). Connection anchors stay indigo so they read as a
+ * distinct role from the teal selection handles.
+ */
+const BRAND_HANDLE_COLORS = {
+	handleAccent: "#0f9e8f",
+	handleFill: "#ffffff",
+	connectionAccent: "#6366f1",
+} as const;
+
 /** Standard light theme. */
 export const lightCanvasTheme: CanvasTheme = {
 	tokens: {
@@ -91,6 +102,44 @@ export const lightCanvasTheme: CanvasTheme = {
 		scrollbarTrack: "transparent",
 		scrollbarThumb: "#c6c6c6",
 		scrollbarThumbHover: "#a8a8a8",
+	},
+	handleDimensions: HANDLE_DIMENSIONS,
+	fontFamily: DEFAULT_FONT_FAMILY,
+};
+
+/**
+ * Brand light theme. A near-white canvas that keeps the brand teal
+ * (`#0f9e8f → #075e56`, mint line `#ecfffb`) confined to accents — selection
+ * handles, focus accent, dark-teal text — rather than the background. Error
+ * stays warm-red for semantics; the checker follows the injected foreground.
+ */
+export const brandLightCanvasTheme: CanvasTheme = {
+	tokens: {
+		canvasBg: "#ffffff",
+		surface: "#f4f9f8",
+		surfaceHover: "rgba(15, 158, 143, 0.07)",
+		surfaceActive: "rgba(15, 158, 143, 0.12)",
+		border: "#c9e0db",
+		borderSubtle: "#dcece8",
+		foreground: "#0b3f39",
+		foregroundMuted: "#4d726c",
+		disabledForeground: "rgba(11, 63, 57, 0.4)",
+		iconForeground: "#0e544c",
+		accent: "#0f9e8f",
+		inputBg: "#ffffff",
+		inputFg: "#0b3f39",
+		inputBorder: "#c9e0db",
+		inputPlaceholder: "#6f918b",
+		errorFg: "#a1260d",
+		shadow: "0 2px 8px rgba(7, 94, 86, 0.14)",
+		gridLine: "#eef4f2",
+		sliderTrack: "#b4d3cd",
+		transparentChecker: TRANSPARENT_CHECKER,
+		radius: "4px",
+		...BRAND_HANDLE_COLORS,
+		scrollbarTrack: "transparent",
+		scrollbarThumb: "#c3ddd7",
+		scrollbarThumbHover: "#a3ccc3",
 	},
 	handleDimensions: HANDLE_DIMENSIONS,
 	fontFamily: DEFAULT_FONT_FAMILY,

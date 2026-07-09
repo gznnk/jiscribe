@@ -1,12 +1,26 @@
 import {
 	Canvas,
+	brandLightCanvasTheme,
 	darkCanvasTheme,
 	lightCanvasTheme,
 	parseCanvasText,
 } from "@workspace/canvas";
-import type { CanvasDoc } from "@workspace/canvas";
+import type { CanvasDoc, CanvasTheme } from "@workspace/canvas";
 import { useEffect, useState } from "react";
 import "./App.css";
+
+// デモで巡回できるテーマ一覧。テーマを増やしたらここに追加すれば
+// トグルボタンが自動で次のテーマへ切り替わる。colorScheme は暗いテーマだけ
+// "dark" 扱いにし、ページ余白色は各テーマの canvasBg に追従させる。
+const DEMO_THEMES: ReadonlyArray<{
+	label: string;
+	colorScheme: "dark" | "light";
+	theme: CanvasTheme;
+}> = [
+	{ label: "Dark", colorScheme: "dark", theme: darkCanvasTheme },
+	{ label: "Light", colorScheme: "light", theme: lightCanvasTheme },
+	{ label: "Brand Light", colorScheme: "light", theme: brandLightCanvasTheme },
+];
 
 const initialDoc: CanvasDoc = {
 	version: 1,
@@ -49,7 +63,9 @@ function MultiCanvasApp() {
 }
 
 export function App() {
-	const [themeName, setThemeName] = useState<"dark" | "light">("dark");
+	const [themeIndex, setThemeIndex] = useState(0);
+	const current = DEMO_THEMES[themeIndex];
+	const next = DEMO_THEMES[(themeIndex + 1) % DEMO_THEMES.length];
 
 	useEffect(() => {
 		document.title = `Canvas Demo [${__GIT_BRANCH__}]`;
@@ -57,10 +73,9 @@ export function App() {
 
 	// ページ背景（キャンバス外の余白）もテーマに追従させる
 	useEffect(() => {
-		document.documentElement.style.colorScheme = themeName;
-		document.body.style.backgroundColor =
-			themeName === "dark" ? "#242424" : "#ffffff";
-	}, [themeName]);
+		document.documentElement.style.colorScheme = current.colorScheme;
+		document.body.style.backgroundColor = current.theme.tokens.canvasBg;
+	}, [current]);
 
 	if (new URLSearchParams(window.location.search).has("multi")) {
 		return <MultiCanvasApp />;
@@ -68,17 +83,14 @@ export function App() {
 
 	return (
 		<div className="app">
-			<Canvas
-				canvasDoc={initialDoc}
-				theme={themeName === "dark" ? darkCanvasTheme : lightCanvasTheme}
-			/>
+			<Canvas canvasDoc={initialDoc} theme={current.theme} />
 			<button
 				type="button"
 				data-testid="theme-toggle"
 				onClick={() =>
-					setThemeName((current) => (current === "dark" ? "light" : "dark"))
+					setThemeIndex((index) => (index + 1) % DEMO_THEMES.length)
 				}
-				title="Toggle theme"
+				title={`Switch to ${next.label} theme`}
 				style={{
 					position: "fixed",
 					right: 12,
@@ -86,13 +98,13 @@ export function App() {
 					zIndex: 1000,
 					padding: "4px 10px",
 					borderRadius: 4,
-					border: "1px solid #888",
-					background: themeName === "dark" ? "#252526" : "#f3f3f3",
-					color: themeName === "dark" ? "#cccccc" : "#3b3b3b",
+					border: `1px solid ${current.theme.tokens.border}`,
+					background: current.theme.tokens.surface,
+					color: current.theme.tokens.foreground,
 					cursor: "pointer",
 				}}
 			>
-				{themeName === "dark" ? "Light" : "Dark"}
+				{next.label}
 			</button>
 		</div>
 	);
