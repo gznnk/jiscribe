@@ -8,9 +8,9 @@ import {
 	ZoomReadout,
 } from "./ToolbarStyled";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
+import { shapePresetRegistry } from "../../../registry/ShapePresetRegistry";
 import { HelpIcon } from "../../icons/HelpIcon";
 import { ShapeLibraryItem } from "../ShapeLibrary/ShapeLibraryItem";
-import { shapePresetRegistry } from "../ShapeLibrary/ShapePresetRegistry";
 import { ShortcutHelpModal } from "../ShortcutHelp/ShortcutHelpModal";
 
 type ToolbarProps = {

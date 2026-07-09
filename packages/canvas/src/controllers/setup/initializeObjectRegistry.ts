@@ -127,6 +127,7 @@ import {
 } from "../gestures/handlers/objects/primitives/PolylineController";
 import { objectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
 import type { ObjectBehaviorEntry } from "../gestures/registry/ObjectBehaviorTypes";
+import { shapePresetRegistry } from "../registry/ShapePresetRegistry";
 import { DiamondIcon } from "../ui/icons/DiamondIcon";
 import { EllipseIcon } from "../ui/icons/EllipseIcon";
 import { MarkdownRectIcon } from "../ui/icons/MarkdownRectIcon";
@@ -146,7 +147,6 @@ import { RoutingMenu } from "../ui/menu/ObjectMenu/items/RoutingMenu";
 import { StickyColorMenu } from "../ui/menu/ObjectMenu/items/StickyColorMenu";
 import { objectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
 import type { MenuSectionFactory } from "../ui/menu/ObjectMenu/ObjectMenuTypes";
-import { shapePresetRegistry } from "../ui/menu/ShapeLibrary/ShapePresetRegistry";
 
 /**
  * Initialize all object registries with definitions for every object type.
