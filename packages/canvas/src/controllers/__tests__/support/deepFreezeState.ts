@@ -30,9 +30,6 @@ const freezeRecursively = (value: unknown, seen: WeakSet<object>): void => {
  *
  * history 配下だけは凍結しない: DocSnapshot は resolveDocSnapshot が write-once
  * メモ化として意図的に in-place 更新するため（DocSnapshot.ts の invariant を参照）。
- *
- * registries 配下も凍結しない: レジストリバンドルは state に載る by-reference な
- * 依存であって doc 由来の状態ではなく、凍結する意味がない（#165）。
  */
 export const deepFreezeState = (
 	state: CanvasControllerState,
@@ -40,7 +37,7 @@ export const deepFreezeState = (
 	const seen = new WeakSet<object>();
 	Object.freeze(state);
 	for (const [key, child] of Object.entries(state)) {
-		if (key === "history" || key === "registries") {
+		if (key === "history") {
 			continue;
 		}
 		freezeRecursively(child, seen);
