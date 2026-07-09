@@ -16,7 +16,7 @@ import type { ObjectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistr
  * Historically these were module-level singletons shared by every canvas. The
  * bundle groups them so a canvas can own its own configured set (see
  * `createCanvasRegistries`), which is the foundation for per-canvas configuration
- * (`<Canvas config={...}>`).
+ * (`<Canvas initialConfig={...}>`).
  *
  * `objectDocValidatorRegistry` is intentionally NOT part of this bundle: it is
  * used only during parse-time validation at the input boundary (before a

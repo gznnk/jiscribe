@@ -1,4 +1,4 @@
-﻿import { memo, useCallback, useEffect, useMemo, useRef } from "react";
+﻿import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
 	CanvasRoot,
@@ -140,10 +140,11 @@ type CanvasProps = {
 	 * whose object types remain enabled — otherwise state construction throws
 	 * "Mapper not found" (docs/01-design-philosophy.md principle 4).
 	 *
-	 * Treated as mount-time configuration: pass a stable/memoized value, since a
-	 * new `config` identity rebuilds the registry bundle.
+	 * Read **once at mount**: the capability set is part of a canvas's identity,
+	 * so later `initialConfig` changes are ignored. To reconfigure, remount with a
+	 * new React `key` (`<Canvas key={configId} initialConfig={...} />`).
 	 */
-	config?: CanvasConfig;
+	initialConfig?: CanvasConfig;
 };
 
 const CanvasComponent: React.FC<CanvasProps> = ({
@@ -158,7 +159,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	autoFocus = true,
 	viewport: controlledViewport,
 	onViewportChange,
-	config,
+	initialConfig,
 }) => {
 	// Merged UI strings (English defaults + host overrides), distributed via context
 	const mergedMessages = useMemo(
@@ -184,12 +185,16 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	const canvasRef = useRef<HTMLDivElement>(null);
 	const svgRef = useRef<SVGSVGElement>(null);
 
-	// Per-canvas registry bundle: a configured set when `config` is given,
-	// otherwise the shared full default (stable identity → no rebuild). Injected
-	// into the reducer state (pure tree) and provided via context (React tree).
-	const registries = useMemo(
-		() => (config ? createCanvasRegistries(config) : defaultCanvasRegistries),
-		[config],
+	// Per-canvas registry bundle: a configured set when `initialConfig` is given,
+	// otherwise the shared full default. Built once at mount (lazy initial state)
+	// — the capability set is part of a canvas's identity, so later `initialConfig`
+	// changes are ignored (remount via `key` to reconfigure). The stable instance
+	// is closed over by the reducer (pure tree) and provided via context (React
+	// tree), so the two can never desync.
+	const [registries] = useState(() =>
+		initialConfig
+			? createCanvasRegistries(initialConfig)
+			: defaultCanvasRegistries,
 	);
 
 	// Reducer for canvas state management with history. The controlled camera (if

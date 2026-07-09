@@ -20,7 +20,7 @@ export type {
 } from "./schemas/canvas/validators";
 
 // Per-canvas registry configuration (plugin-style extensibility / feature-gating).
-// Pass a `CanvasConfig` to `<Canvas config={...}>`; the lower-level factory and the
+// Pass a `CanvasConfig` to `<Canvas initialConfig={...}>`; the lower-level factory and the
 // full object-type descriptor table are exported for advanced/custom setups.
 export type { CanvasConfig, CanvasRegistries } from "./controllers/setup";
 export {

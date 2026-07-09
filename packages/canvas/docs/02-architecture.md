@@ -91,8 +91,10 @@ Because each registry keys off the shape type (`"rect"`, `"ellipse"`, …), cros
 These registries are **not module-level singletons**. Each `<Canvas>` instance owns its own **bundle** (`CanvasRegistries` — one instance of each registry class), built by `controllers/setup/createCanvasRegistries(config?)`. This lets two canvases on the same page run with different object-type / command sets (plugin-style extensibility, feature-gating). Passing no `config` reuses a shared full default (`defaultCanvasRegistries`).
 
 ```ts
-<Canvas config={{ objectTypes: ["rect", "ellipse"], commands: ["undo", "redo"] }} />
+<Canvas initialConfig={{ objectTypes: ["rect", "ellipse"], commands: ["undo", "redo"] }} />
 ```
+
+`initialConfig` is read **once at mount** — the capability set is part of a canvas's identity, so later `initialConfig` changes are ignored. To reconfigure at runtime, remount with a new React `key`.
 
 The bundle reaches consumers by two paths (#165, Option B):
 
