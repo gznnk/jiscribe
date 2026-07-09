@@ -61,7 +61,7 @@ describe("DuplicateCommand", () => {
 			objects: { a: makeRect("a", 100, 100) },
 			rootIds: ["a"],
 		});
-		const next = DuplicateCommand.execute(state);
+		const next = DuplicateCommand.execute(state, registries);
 
 		expect(Object.keys(next.objects)).toHaveLength(2);
 		expect(next.rootIds).toHaveLength(2);
@@ -81,7 +81,7 @@ describe("DuplicateCommand", () => {
 			objects: { a: makeRect("a", 100, 100) },
 			rootIds: ["a"],
 		});
-		const next = DuplicateCommand.execute(state);
+		const next = DuplicateCommand.execute(state, registries);
 		expect(next.selectedIds).toEqual([next.rootIds[1]]);
 		expect(next.lastDuplicate?.newIds).toEqual(next.selectedIds);
 		expect(next.lastDuplicate?.offset).toEqual({ x: 20, y: 20 });
@@ -98,7 +98,7 @@ describe("DuplicateCommand", () => {
 			},
 			rootIds: ["g"],
 		});
-		const next = DuplicateCommand.execute(state);
+		const next = DuplicateCommand.execute(state, registries);
 		const newId = next.selectedIds[0];
 		// the new object's parent is group g
 		expect(next.objects[newId]?.parentId).toBe("g");
@@ -115,13 +115,14 @@ describe("DuplicateCommand", () => {
 				objects: { a: makeRect("a", 0, 0) },
 				rootIds: ["a"],
 			});
-			expect(DuplicateCommand.canExecute(state)).toBe(true);
+			expect(DuplicateCommand.canExecute(state, registries)).toBe(true);
 		});
 
 		it("is not executable when there is no selection", () => {
 			expect(
 				DuplicateCommand.canExecute(
 					makeState({ selectedIds: [], objects: {}, rootIds: [] }),
+					registries,
 				),
 			).toBe(false);
 		});

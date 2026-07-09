@@ -80,6 +80,7 @@ describe("ObjectMenuHandler", () => {
 			const next = ObjectMenuHandler.handle(
 				makeState(),
 				makeEvent("click", "set:fill:#dc2626"),
+				registries,
 			);
 			expect(fillOf(next)).toBe("#dc2626");
 			expect(next.commitVersion).toBe(6);
@@ -92,12 +93,14 @@ describe("ObjectMenuHandler", () => {
 			const opened = ObjectMenuHandler.handle(
 				makeState(),
 				makeEvent("click", "toggle:bg-color"),
+				registries,
 			);
 			expect(opened.objectMenuOpenId).toBe("bg-color");
 
 			const closed = ObjectMenuHandler.handle(
 				opened,
 				makeEvent("click", "toggle:bg-color"),
+				registries,
 			);
 			expect(closed.objectMenuOpenId).toBeNull();
 		});
@@ -108,6 +111,7 @@ describe("ObjectMenuHandler", () => {
 			const next = ObjectMenuHandler.handle(
 				makeState(),
 				makeEvent("drag", "slider:strokeWidth", "4"),
+				registries,
 			);
 			expect(
 				(next.objects["rect-1"] as unknown as { strokeWidth: number })
@@ -121,6 +125,7 @@ describe("ObjectMenuHandler", () => {
 			const next = ObjectMenuHandler.handle(
 				makeState(),
 				makeEvent("dragEnd", "slider:strokeWidth", "6"),
+				registries,
 			);
 			expect(
 				(next.objects["rect-1"] as unknown as { strokeWidth: number })
@@ -135,6 +140,7 @@ describe("ObjectMenuHandler", () => {
 			const pressed = ObjectMenuHandler.handle(
 				makeState(),
 				makeEvent("pressed", undefined),
+				registries,
 			);
 			expect(pressed.contextMenuPosition).toBeNull();
 
@@ -142,6 +148,7 @@ describe("ObjectMenuHandler", () => {
 			const clicked = ObjectMenuHandler.handle(
 				state,
 				makeEvent("click", undefined),
+				registries,
 			);
 			expect(clicked.objects).toBe(state.objects);
 			expect(clicked.commitVersion).toBe(5);

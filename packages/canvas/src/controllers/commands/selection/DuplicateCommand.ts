@@ -24,7 +24,7 @@ export const DuplicateCommand: Command = {
 
 	canExecute: (state) => state.selectedIds.length > 0,
 
-	execute: (state) => {
+	execute: (state, registries) => {
 		const { selectedIds } = state;
 
 		// ── 1. Collect the objects to duplicate ─────────────────────────────────────
@@ -77,7 +77,7 @@ export const DuplicateCommand: Command = {
 			topLevelIds,
 			allObjects,
 			offset,
-			state.registries.objectBehavior,
+			registries.objectBehavior,
 		);
 
 		const mergedObjects = { ...state.objects, ...newObjects };

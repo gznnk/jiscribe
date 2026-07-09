@@ -60,6 +60,7 @@ describe("ToolbarHandler", () => {
 		const next = ToolbarHandler.handle(
 			makeState(),
 			makeEvent("click", "toolbar", "command:zoomIn"),
+			registries,
 		);
 		expect(next.viewport.zoom).toBeGreaterThan(1);
 	});
@@ -71,6 +72,7 @@ describe("ToolbarHandler", () => {
 		const next = ToolbarHandler.handle(
 			makeState(),
 			makeEvent("doubleClick", "toolbar", "command:zoomIn"),
+			registries,
 		);
 		expect(next.viewport.zoom).toBeGreaterThan(1);
 	});
@@ -79,6 +81,7 @@ describe("ToolbarHandler", () => {
 		const next = ToolbarHandler.handle(
 			makeState(),
 			makeEvent("pressed", "toolbar", "command:zoomIn"),
+			registries,
 		);
 		expect(next.contextMenuPosition).toBeNull();
 		expect(next.viewport.zoom).toBe(1);

@@ -97,7 +97,11 @@ describe("handleRotationDrag", () => {
 			const state = makeState({ "rect-1": makeRect("rect-1", 50, 25) }, [
 				"rect-1",
 			]);
-			const next = handleRotationDrag(state, makeDragEvent({ x: 100, y: 125 }));
+			const next = handleRotationDrag(
+				state,
+				makeDragEvent({ x: 100, y: 125 }),
+				registries,
+			);
 			expect(next.objects["rect-1"]).toMatchObject({ rotation: 90 });
 		});
 
@@ -106,7 +110,11 @@ describe("handleRotationDrag", () => {
 			const state = makeState({ "rect-1": makeRect("rect-1", 50, 25) }, [
 				"rect-1",
 			]);
-			const next = handleRotationDrag(state, makeDragEvent({ x: 150, y: 25 }));
+			const next = handleRotationDrag(
+				state,
+				makeDragEvent({ x: 150, y: 25 }),
+				registries,
+			);
 			expect(next.objects["rect-1"]).toMatchObject({ rotation: 27 });
 		});
 
@@ -115,7 +123,11 @@ describe("handleRotationDrag", () => {
 			const state = makeState({ "rect-1": makeRect("rect-1", 50, 25) }, [
 				"rect-1",
 			]);
-			const next = handleRotationDrag(state, makeDragEvent({ x: 0, y: -75 }));
+			const next = handleRotationDrag(
+				state,
+				makeDragEvent({ x: 0, y: -75 }),
+				registries,
+			);
 			expect(next.objects["rect-1"]).toMatchObject({ rotation: 270 });
 		});
 
@@ -123,7 +135,11 @@ describe("handleRotationDrag", () => {
 			const state = makeState({ "rect-1": makeRect("rect-1", 50, 25) }, [
 				"rect-1",
 			]);
-			const next = handleRotationDrag(state, makeDragEvent({ x: 100, y: 125 }));
+			const next = handleRotationDrag(
+				state,
+				makeDragEvent({ x: 100, y: 125 }),
+				registries,
+			);
 			expect(next.objects["rect-1"]).toMatchObject({
 				cx: 50,
 				cy: 25,
@@ -139,7 +155,11 @@ describe("handleRotationDrag", () => {
 			const group = makeGroup("grp", ["rect-a"], 50, 25);
 			const state = makeState({ grp: group, "rect-a": child }, ["grp"]);
 
-			const next = handleRotationDrag(state, makeDragEvent({ x: 100, y: 125 }));
+			const next = handleRotationDrag(
+				state,
+				makeDragEvent({ x: 100, y: 125 }),
+				registries,
+			);
 
 			expect(next.objects["grp"]).toMatchObject({ rotation: 90 });
 			// Child center (30, 25) rotated +90 about (50, 25) -> (50, 5)
@@ -170,7 +190,11 @@ describe("handleRotationDrag", () => {
 				multiSelectGroup,
 			);
 
-			const next = handleRotationDrag(state, makeDragEvent({ x: 100, y: 125 }));
+			const next = handleRotationDrag(
+				state,
+				makeDragEvent({ x: 100, y: 125 }),
+				registries,
+			);
 
 			expect(next.multiSelectGroup).toMatchObject({ rotation: 90 });
 			// Centers rotate +90 about the group center (50, 25)
@@ -200,17 +224,25 @@ describe("handleRotationDrag", () => {
 				selectedIds: ["rect-1"],
 				eventStartSnapshot: null,
 			} as unknown as CanvasControllerState;
-			expect(handleRotationDrag(state, makeDragEvent({ x: 100, y: 125 }))).toBe(
-				state,
-			);
+			expect(
+				handleRotationDrag(
+					state,
+					makeDragEvent({ x: 100, y: 125 }),
+					registries,
+				),
+			).toBe(state);
 		});
 
 		it("returns the state as is when the selected object is not a transformed frame", () => {
 			const notFrame = { id: "text-1", type: "text" } as unknown as ObjectState;
 			const state = makeState({ "text-1": notFrame }, ["text-1"]);
-			expect(handleRotationDrag(state, makeDragEvent({ x: 100, y: 125 }))).toBe(
-				state,
-			);
+			expect(
+				handleRotationDrag(
+					state,
+					makeDragEvent({ x: 100, y: 125 }),
+					registries,
+				),
+			).toBe(state);
 		});
 	});
 });

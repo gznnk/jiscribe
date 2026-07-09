@@ -13,7 +13,8 @@ type GroupMenuProps = {
 
 const GroupMenuComponent: React.FC<GroupMenuProps> = ({ canvasState }) => {
 	const messages = useCanvasMessages();
-	const { command: commandRegistry } = useCanvasRegistries();
+	const registries = useCanvasRegistries();
+	const commandRegistry = registries.command;
 	// Determine if the single selected item is a group (→ show ungroup)
 	const singleSelected =
 		canvasState.selectedIds.length === 1
@@ -27,7 +28,7 @@ const GroupMenuComponent: React.FC<GroupMenuProps> = ({ canvasState }) => {
 		return null;
 	}
 
-	const enabled = command.canExecute(canvasState);
+	const enabled = command.canExecute(canvasState, registries);
 
 	return (
 		<MenuItemPositioner>

@@ -3,7 +3,10 @@ import { describe, expect, it } from "vitest";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { createTestRegistries } from "../../../setup/createCanvasRegistries";
 import { UngroupCommand } from "../UngroupCommand";
+
+const registries = createTestRegistries();
 
 const makeRect = (
 	id: string,
@@ -67,7 +70,7 @@ describe("UngroupCommand", () => {
 			},
 			rootIds: ["g"],
 		});
-		const next = UngroupCommand.execute(state);
+		const next = UngroupCommand.execute(state, registries);
 
 		// the group is removed
 		expect(next.objects["g"]).toBeUndefined();
@@ -93,7 +96,7 @@ describe("UngroupCommand", () => {
 			},
 			rootIds: ["outer"],
 		});
-		const next = UngroupCommand.execute(state);
+		const next = UngroupCommand.execute(state, registries);
 
 		expect(next.objects["inner"]).toBeUndefined();
 		// inner is expanded in place within outer.childIds
@@ -115,7 +118,7 @@ describe("UngroupCommand", () => {
 				objects: { g: makeGroup("g", ["a"]), a: makeRect("a", 0, 0, "g") },
 				rootIds: ["g"],
 			});
-			expect(UngroupCommand.canExecute(state)).toBe(true);
+			expect(UngroupCommand.canExecute(state, registries)).toBe(true);
 		});
 
 		it("is not executable for a selection containing non-groups", () => {
@@ -124,13 +127,14 @@ describe("UngroupCommand", () => {
 				objects: { g: makeGroup("g", []), a: makeRect("a", 0, 0) },
 				rootIds: ["g", "a"],
 			});
-			expect(UngroupCommand.canExecute(state)).toBe(false);
+			expect(UngroupCommand.canExecute(state, registries)).toBe(false);
 		});
 
 		it("is not executable when there is no selection", () => {
 			expect(
 				UngroupCommand.canExecute(
 					makeState({ selectedIds: [], objects: {}, rootIds: [] }),
+					registries,
 				),
 			).toBe(false);
 		});

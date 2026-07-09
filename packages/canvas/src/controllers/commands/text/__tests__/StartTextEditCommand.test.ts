@@ -38,16 +38,16 @@ const stateWithSelection = (selectedId: string) =>
 describe("StartTextEditCommand", () => {
 	it("a rect that supports text can start editing", () => {
 		const state = stateWithSelection("rect-1");
-		expect(StartTextEditCommand.canExecute?.(state)).toBe(true);
-		expect(StartTextEditCommand.execute(state).textEditState?.objectId).toBe(
-			"rect-1",
-		);
+		expect(StartTextEditCommand.canExecute?.(state, registries)).toBe(true);
+		expect(
+			StartTextEditCommand.execute(state, registries).textEditState?.objectId,
+		).toBe("rect-1");
 	});
 
 	it("an svg that does not support text does not start editing", () => {
 		const state = stateWithSelection("svg-1");
-		expect(StartTextEditCommand.canExecute?.(state)).toBe(false);
+		expect(StartTextEditCommand.canExecute?.(state, registries)).toBe(false);
 		// returns the state unchanged when editing is not entered
-		expect(StartTextEditCommand.execute(state)).toBe(state);
+		expect(StartTextEditCommand.execute(state, registries)).toBe(state);
 	});
 });

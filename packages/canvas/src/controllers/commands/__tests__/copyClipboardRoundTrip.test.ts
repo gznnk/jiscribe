@@ -81,7 +81,7 @@ describe("paste rebuilds the copied structure with all references remapped", () 
 			selectedIds: ["rect-1", "rect-2"],
 		});
 		const copied = runCommand(state, "copy");
-		const after = handlePaste(copied, copied.internalClipboard!);
+		const after = handlePaste(copied, copied.internalClipboard!, registries);
 
 		const newIds = pastedTopLevelIds(state, after);
 		expect(newIds).toHaveLength(3);
@@ -113,7 +113,7 @@ describe("paste rebuilds the copied structure with all references remapped", () 
 		const originalGroup = grouped.objects[originalGroupId] as GroupState;
 
 		const copied = runCommand(grouped, "copy");
-		const after = handlePaste(copied, copied.internalClipboard!);
+		const after = handlePaste(copied, copied.internalClipboard!, registries);
 
 		// Pasted top level: the enclosed connector + the group.
 		const newIds = pastedTopLevelIds(grouped, after);
@@ -150,7 +150,7 @@ describe("paste rebuilds the copied structure with all references remapped", () 
 			selectedIds: ["rect-1", "rect-2"],
 		});
 		const copied = runCommand(state, "copy");
-		const after = handlePaste(copied, copied.internalClipboard!);
+		const after = handlePaste(copied, copied.internalClipboard!, registries);
 
 		const newIds = pastedTopLevelIds(state, after);
 		const newRectIds = newIds.filter(

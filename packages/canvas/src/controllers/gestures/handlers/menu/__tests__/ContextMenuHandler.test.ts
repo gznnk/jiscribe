@@ -56,6 +56,7 @@ describe("ContextMenuHandler", () => {
 		const next = ContextMenuHandler.handle(
 			makeState(),
 			makeEvent("click", "context-menu", "command:unknown-command"),
+			registries,
 		);
 		expect(next.contextMenuPosition).toBeNull();
 	});
@@ -65,6 +66,7 @@ describe("ContextMenuHandler", () => {
 		const next = ContextMenuHandler.handle(
 			state,
 			makeEvent("pressed", "context-menu", "command:copy"),
+			registries,
 		);
 		expect(next.contextMenuPosition).toEqual({ clientX: 100, clientY: 100 });
 	});
@@ -74,6 +76,7 @@ describe("ContextMenuHandler", () => {
 		const next = ContextMenuHandler.handle(
 			state,
 			makeEvent("click", "context-menu", undefined),
+			registries,
 		);
 		expect(next).toBe(state);
 	});

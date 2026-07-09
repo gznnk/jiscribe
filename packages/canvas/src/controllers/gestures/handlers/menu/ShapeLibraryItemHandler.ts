@@ -4,6 +4,7 @@ import type { ShapePreset } from "../../../../schemas/objects/types/ShapePreset"
 import { createObjectDoc } from "../../../../schemas/objects/utils/createObjectDoc";
 import type { ShapeFactoryRegistry } from "../../../../schemas/registry/ShapeFactoryRegistry";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import type { ICanvasRegistries } from "../../../setup/ICanvasRegistries";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import type {
 	CanvasEvent,
@@ -48,15 +49,16 @@ const addObjectToState = (
 	state: CanvasControllerState,
 	preset: ShapePreset,
 	position: { x: number; y: number },
+	registries: ICanvasRegistries,
 ): CanvasControllerState => {
 	const doc = createObjectDoc(
 		preset.objectType,
 		position,
-		state.registries.shapeFactory,
+		registries.shapeFactory,
 		preset.defaultOverrides,
 		state.docDefaults,
 	);
-	const objectState = state.registries.objectMapper.toState(doc);
+	const objectState = registries.objectMapper.toState(doc);
 
 	return {
 		...state,
@@ -83,7 +85,7 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 		);
 	},
 
-	handle(state, event) {
+	handle(state, event, registries) {
 		let nextState = state;
 
 		// Pressing on a menu item closes the context menu (the press itself does not place or draw)
@@ -96,7 +98,7 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 		}
 
 		const presetId = parsePresetId(event.targetPart);
-		const preset = state.registries.shapePreset.get(presetId);
+		const preset = registries.shapePreset.get(presetId);
 		if (!preset) {
 			return nextState;
 		}
@@ -105,18 +107,19 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 			case "click": {
 				// Shapes that don't support bounds drawing (sticky / polygon) are placed at the viewport center;
 				// shapes that do (rect / ellipse / polyline) toggle drawing mode
-				if (
-					!state.registries.shapeFactory.supportsBoundsDrawing(
-						preset.objectType,
-					)
-				) {
+				if (!registries.shapeFactory.supportsBoundsDrawing(preset.objectType)) {
 					const { minX, minY, width, height, zoom } = state.viewport;
 					const centerX = minX + width / zoom / 2;
 					const centerY = minY + height / zoom / 2;
-					const placed = addObjectToState(state, preset, {
-						x: centerX,
-						y: centerY,
-					});
+					const placed = addObjectToState(
+						state,
+						preset,
+						{
+							x: centerX,
+							y: centerY,
+						},
+						registries,
+					);
 					// If a non-drawable shape is pressed while in drawing mode, clear drawing mode
 					return { ...placed, shapeDrawing: null };
 				}
@@ -155,7 +158,7 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 						ghostPosition: event.last,
 						shapeDimensions: calcShapeDimensions(
 							preset,
-							state.registries.shapeFactory,
+							registries.shapeFactory,
 						),
 					},
 					edgeScrollEnabled: true,
@@ -228,7 +231,12 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 					return state;
 				}
 				const position = drag.ghostPosition ?? event.last;
-				const placed = addObjectToState(state, drag.preset, position);
+				const placed = addObjectToState(
+					state,
+					drag.preset,
+					position,
+					registries,
+				);
 				return {
 					...placed,
 					shapeLibraryDrag: null,

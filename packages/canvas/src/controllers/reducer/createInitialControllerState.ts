@@ -36,7 +36,6 @@ export const createInitialControllerState = (
 				};
 	return {
 		...baseState,
-		registries,
 		viewport,
 		...resetUiState(),
 		docDefaults,

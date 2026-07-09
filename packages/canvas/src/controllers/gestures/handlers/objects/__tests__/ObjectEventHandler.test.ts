@@ -135,6 +135,7 @@ describe("ObjectEventHandler - text edit commit", () => {
 		const next = ObjectEventHandler.handle(
 			makeEditState("rect-1", "old", "new"),
 			makeTapEvent("pressed", "rect-1"),
+			registries,
 		);
 		expect((next.objects["rect-1"] as unknown as { text: string }).text).toBe(
 			"new",
@@ -147,10 +148,12 @@ describe("ObjectEventHandler - text edit commit", () => {
 		const afterPressed = ObjectEventHandler.handle(
 			makeEditState("rect-1", "old", "new"),
 			makeTapEvent("pressed", "rect-1"),
+			registries,
 		);
 		const afterDouble = ObjectEventHandler.handle(
 			afterPressed,
 			makeTapEvent("doubleClick", "rect-1"),
+			registries,
 		);
 		// The pending text was committed by the pressed and prefilled again — not lost.
 		expect(afterDouble.textEditState).toEqual({
@@ -164,6 +167,7 @@ describe("ObjectEventHandler - text edit commit", () => {
 		const next = ObjectEventHandler.handle(
 			makeEditState("rect-1", "old", "new"),
 			makeTapEvent("pressed", "rect-2"),
+			registries,
 		);
 		// The edit is committed to rect-1 and the session is cleared.
 		expect((next.objects["rect-1"] as unknown as { text: string }).text).toBe(
@@ -179,6 +183,7 @@ describe("ObjectEventHandler - Shift axis-lock drag", () => {
 		const next = ObjectEventHandler.handle(
 			makeDragState(),
 			makeDragEvent({ x: 30, y: 12 }, false),
+			registries,
 		);
 		expect(movedRect(next)).toMatchObject({ cx: 30, cy: 12 });
 		expect(next.axisLockFeedback).toBeNull();
@@ -188,6 +193,7 @@ describe("ObjectEventHandler - Shift axis-lock drag", () => {
 		const next = ObjectEventHandler.handle(
 			makeDragState(),
 			makeDragEvent({ x: 30, y: 12 }, true),
+			registries,
 		);
 		expect(movedRect(next)).toMatchObject({ cx: 30, cy: 0 });
 	});
@@ -196,6 +202,7 @@ describe("ObjectEventHandler - Shift axis-lock drag", () => {
 		const next = ObjectEventHandler.handle(
 			makeDragState(),
 			makeDragEvent({ x: 8, y: 25 }, true),
+			registries,
 		);
 		expect(movedRect(next)).toMatchObject({ cx: 0, cy: 25 });
 	});
@@ -205,6 +212,7 @@ describe("ObjectEventHandler - Shift axis-lock drag", () => {
 		const afterX = ObjectEventHandler.handle(
 			makeDragState(),
 			makeDragEvent({ x: 20, y: 5 }, true),
+			registries,
 		);
 		expect(movedRect(afterX)).toMatchObject({ cx: 20, cy: 0 });
 
@@ -213,6 +221,7 @@ describe("ObjectEventHandler - Shift axis-lock drag", () => {
 		const afterY = ObjectEventHandler.handle(
 			afterX,
 			makeDragEvent({ x: 6, y: 40 }, true),
+			registries,
 		);
 		expect(movedRect(afterY)).toMatchObject({ cx: 0, cy: 40 });
 	});
@@ -222,6 +231,7 @@ describe("ObjectEventHandler - Shift axis-lock drag", () => {
 			const next = ObjectEventHandler.handle(
 				makeDragState(20, 30),
 				makeDragEvent({ x: 50, y: 8 }, true),
+				registries,
 			);
 			expect(next.axisLockFeedback).toEqual({ y: 30 });
 		});
@@ -230,6 +240,7 @@ describe("ObjectEventHandler - Shift axis-lock drag", () => {
 			const next = ObjectEventHandler.handle(
 				makeDragState(20, 30),
 				makeDragEvent({ x: 8, y: 50 }, true),
+				registries,
 			);
 			expect(next.axisLockFeedback).toEqual({ x: 20 });
 		});
@@ -238,12 +249,14 @@ describe("ObjectEventHandler - Shift axis-lock drag", () => {
 			const afterX = ObjectEventHandler.handle(
 				makeDragState(20, 30),
 				makeDragEvent({ x: 40, y: 5 }, true),
+				registries,
 			);
 			expect(afterX.axisLockFeedback).toEqual({ y: 30 });
 
 			const afterY = ObjectEventHandler.handle(
 				afterX,
 				makeDragEvent({ x: 5, y: 40 }, true),
+				registries,
 			);
 			expect(afterY.axisLockFeedback).toEqual({ x: 20 });
 		});
@@ -255,6 +268,7 @@ describe("ObjectEventHandler - Shift axis-lock drag", () => {
 			const next = ObjectEventHandler.handle(
 				makeDragState(20, 30),
 				makeDragEvent({ x: 4, y: 3 }, true),
+				registries,
 			);
 			expect(movedRect(next)).toMatchObject({ cx: 20, cy: 30 });
 		});
@@ -263,6 +277,7 @@ describe("ObjectEventHandler - Shift axis-lock drag", () => {
 			const next = ObjectEventHandler.handle(
 				makeDragState(20, 30),
 				makeDragEvent({ x: 4, y: 3 }, true),
+				registries,
 			);
 			expect(next.axisLockFeedback).toEqual({ x: 20, y: 30 });
 		});
@@ -272,6 +287,7 @@ describe("ObjectEventHandler - Shift axis-lock drag", () => {
 			const next = ObjectEventHandler.handle(
 				makeDragState(20, 30),
 				makeDragEvent({ x: 8, y: 3 }, true),
+				registries,
 			);
 			expect(movedRect(next)).toMatchObject({ cx: 28, cy: 30 });
 			expect(next.axisLockFeedback).toEqual({ y: 30 });
@@ -281,6 +297,7 @@ describe("ObjectEventHandler - Shift axis-lock drag", () => {
 			const next = ObjectEventHandler.handle(
 				makeDragState(20, 30),
 				makeDragEvent({ x: 4, y: 3 }, false),
+				registries,
 			);
 			expect(movedRect(next)).toMatchObject({ cx: 24, cy: 33 });
 			expect(next.axisLockFeedback).toBeNull();

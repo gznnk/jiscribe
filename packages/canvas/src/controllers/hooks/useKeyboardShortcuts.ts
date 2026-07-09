@@ -30,7 +30,8 @@ export const useKeyboardShortcuts = ({
 	onUndo,
 	onRedo,
 }: UseKeyboardShortcutsParams): void => {
-	const { command: commandRegistry } = useCanvasRegistries();
+	const registries = useCanvasRegistries();
+	const commandRegistry = registries.command;
 
 	const canvasStateRef = useRef(canvasState);
 	canvasStateRef.current = canvasState;
@@ -70,7 +71,7 @@ export const useKeyboardShortcuts = ({
 				onRedo();
 				return;
 			}
-			if (command.canExecute(canvasStateRef.current)) {
+			if (command.canExecute(canvasStateRef.current, registries)) {
 				dispatch({ type: "COMMAND", commandId: command.id });
 			}
 		};
@@ -81,5 +82,5 @@ export const useKeyboardShortcuts = ({
 		return () => {
 			container.removeEventListener("keydown", handleKeyDown);
 		};
-	}, [containerRef, dispatch, onUndo, onRedo, commandRegistry]);
+	}, [containerRef, dispatch, onUndo, onRedo, commandRegistry, registries]);
 };

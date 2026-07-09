@@ -62,12 +62,14 @@ describe("ShapeLibraryItemHandler", () => {
 		const entered = ShapeLibraryItemHandler.handle(
 			makeState(),
 			makeEvent("click", "item:rect"),
+			registries,
 		);
 		expect(entered.shapeDrawing?.preset.id).toBe("rect");
 
 		const left = ShapeLibraryItemHandler.handle(
 			entered,
 			makeEvent("click", "item:rect"),
+			registries,
 		);
 		expect(left.shapeDrawing).toBeNull();
 	});
@@ -76,6 +78,7 @@ describe("ShapeLibraryItemHandler", () => {
 		const next = ShapeLibraryItemHandler.handle(
 			makeState(),
 			makeEvent("click", "item:sticky"),
+			registries,
 		);
 		expect(next.rootIds).toHaveLength(1);
 		expect(next.shapeDrawing).toBeNull();
@@ -87,6 +90,7 @@ describe("ShapeLibraryItemHandler", () => {
 		const next = ShapeLibraryItemHandler.handle(
 			state,
 			makeEvent("click", "item:no-such-preset"),
+			registries,
 		);
 		expect(next.rootIds).toHaveLength(0);
 		expect(next.shapeDrawing).toBeNull();
@@ -96,6 +100,7 @@ describe("ShapeLibraryItemHandler", () => {
 		const next = ShapeLibraryItemHandler.handle(
 			makeState(),
 			makeEvent("pressed", "item:rect"),
+			registries,
 		);
 		expect(next.contextMenuPosition).toBeNull();
 		expect(next.rootIds).toHaveLength(0);

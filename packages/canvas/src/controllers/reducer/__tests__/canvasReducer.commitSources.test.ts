@@ -1,12 +1,15 @@
 import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../CanvasTypes";
-import type { ClipboardData } from "../../commands/selection/ClipboardData";
-import type { CanvasAction } from "../CanvasActions";
-import { canvasReducer } from "../canvasReducer";
 import { createTestState } from "./support/createTestState";
 import { runCommands } from "./support/dispatch";
 import { twoRectsDoc } from "./support/fixtures";
+import type { ClipboardData } from "../../commands/selection/ClipboardData";
+import { createTestRegistries } from "../../setup/createCanvasRegistries";
+import type { CanvasAction } from "../CanvasActions";
+import { createCanvasReducer } from "../canvasReducer";
+
+const canvasReducer = createCanvasReducer(createTestRegistries());
 
 const createState = (): CanvasControllerState =>
 	createTestState(twoRectsDoc, { selectedIds: ["rect-1"] });

@@ -162,7 +162,7 @@ describe("TransformControlHandler", () => {
 
 			// bottomRight anchor dragged exactly onto the topLeft corner (0,0):
 			// the raw new width/height are 0 and must be floored, not committed
-			const next = handler.handle(state, makeDragEvent(0, 0));
+			const next = handler.handle(state, makeDragEvent(0, 0), registries);
 
 			const group = next.objects["g"] as GroupState;
 			expect(group.width).toBeGreaterThanOrEqual(MIN_GROUP_DIMENSION);
@@ -186,7 +186,7 @@ describe("TransformControlHandler", () => {
 			const state = makeGroupResizeState();
 
 			// bottomRight anchor dragged to (200, 150): width 200, height 150
-			const next = handler.handle(state, makeDragEvent(200, 150));
+			const next = handler.handle(state, makeDragEvent(200, 150), registries);
 
 			const group = next.objects["g"] as GroupState;
 			expect(group.width).toBeCloseTo(200);
@@ -201,7 +201,11 @@ describe("TransformControlHandler", () => {
 
 			// Drag the bottomRight anchor from (100, 100) to (150, 130):
 			// the topLeft corner stays fixed at (0, 0)
-			const next = handler.handle(state, makeDragEndEvent({ x: 150, y: 130 }));
+			const next = handler.handle(
+				state,
+				makeDragEndEvent({ x: 150, y: 130 }),
+				registries,
+			);
 
 			expect(rectOf(next)).toMatchObject({
 				cx: 75,

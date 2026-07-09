@@ -68,8 +68,12 @@ describe("moveCommands", () => {
 			objects: { a: makeRect("a", 0, 0), b: makeRect("b", 0, 0) },
 		});
 		for (const command of moveCommands) {
-			expect(command.execute(stateA).historyCoalesce.pending).toBe("move:a");
-			expect(command.execute(stateAB).historyCoalesce.pending).toBe("move:a,b");
+			expect(command.execute(stateA, registries).historyCoalesce.pending).toBe(
+				"move:a",
+			);
+			expect(command.execute(stateAB, registries).historyCoalesce.pending).toBe(
+				"move:a,b",
+			);
 		}
 	});
 
@@ -93,7 +97,7 @@ describe("moveCommands", () => {
 				selectedIds: ["a"],
 				objects: { a: makeRect("a", 50, 50) },
 			});
-			const next = commandById("move-right").execute(state);
+			const next = commandById("move-right").execute(state, registries);
 			const rect = next.objects["a"] as unknown as { cx: number; cy: number };
 			expect(rect.cx).toBe(51);
 			expect(rect.cy).toBe(50);
@@ -104,7 +108,7 @@ describe("moveCommands", () => {
 				selectedIds: ["a"],
 				objects: { a: makeRect("a", 50, 50) },
 			});
-			const next = commandById("move-up").execute(state);
+			const next = commandById("move-up").execute(state, registries);
 			const rect = next.objects["a"] as unknown as { cx: number; cy: number };
 			expect(rect.cy).toBe(49);
 		});
@@ -114,7 +118,7 @@ describe("moveCommands", () => {
 				selectedIds: ["a"],
 				objects: { a: makeRect("a", 50, 50) },
 			});
-			const next = commandById("move-down-large").execute(state);
+			const next = commandById("move-down-large").execute(state, registries);
 			const rect = next.objects["a"] as unknown as { cx: number; cy: number };
 			expect(rect.cy).toBe(60);
 		});
@@ -124,7 +128,7 @@ describe("moveCommands", () => {
 				selectedIds: ["a", "b"],
 				objects: { a: makeRect("a", 0, 0), b: makeRect("b", 100, 100) },
 			});
-			const next = commandById("move-left").execute(state);
+			const next = commandById("move-left").execute(state, registries);
 			expect((next.objects["a"] as unknown as { cx: number }).cx).toBe(-1);
 			expect((next.objects["b"] as unknown as { cx: number }).cx).toBe(99);
 		});
@@ -141,7 +145,7 @@ describe("moveCommands", () => {
 				objects: { a: makeRect("a", 0, 0), b: makeRect("b", 100, 100) },
 				multiSelectGroup,
 			});
-			const next = commandById("move-right").execute(state);
+			const next = commandById("move-right").execute(state, registries);
 			expect(next.multiSelectGroup?.cx).toBe(51);
 			expect(next.multiSelectGroup?.cy).toBe(50);
 		});
@@ -151,7 +155,7 @@ describe("moveCommands", () => {
 				selectedIds: ["a"],
 				objects: { a: makeRect("a", 0, 0) },
 			});
-			const next = commandById("move-up").execute(state);
+			const next = commandById("move-up").execute(state, registries);
 			expect(next.commitVersion).toBe(state.commitVersion + 1);
 		});
 	});
@@ -162,12 +166,12 @@ describe("moveCommands", () => {
 				selectedIds: ["a"],
 				objects: { a: makeRect("a", 0, 0) },
 			});
-			expect(commandById("move-up").canExecute(state)).toBe(true);
+			expect(commandById("move-up").canExecute(state, registries)).toBe(true);
 		});
 
 		it("is not executable when there is no selection", () => {
 			const state = makeState({ selectedIds: [], objects: {} });
-			expect(commandById("move-up").canExecute(state)).toBe(false);
+			expect(commandById("move-up").canExecute(state, registries)).toBe(false);
 		});
 
 		it("is not executable while editing text, prioritizing caret movement", () => {
@@ -176,7 +180,7 @@ describe("moveCommands", () => {
 				objects: { a: makeRect("a", 0, 0) },
 				textEditState: { objectId: "a", text: "" },
 			});
-			expect(commandById("move-up").canExecute(state)).toBe(false);
+			expect(commandById("move-up").canExecute(state, registries)).toBe(false);
 		});
 	});
 });

@@ -1,11 +1,11 @@
-import { type Dispatch, useReducer } from "react";
+import { type Dispatch, useMemo, useReducer } from "react";
 
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import type { DocCreationDefaults } from "../../schemas/objects/types/DocCreationDefaults";
 import type { Camera } from "../../states/canvas/Viewport";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasAction } from "../reducer/CanvasActions";
-import { canvasReducer } from "../reducer/canvasReducer";
+import { createCanvasReducer } from "../reducer/canvasReducer";
 import { createInitialControllerState } from "../reducer/createInitialControllerState";
 import type { CanvasRegistries } from "../setup/CanvasRegistries";
 
@@ -14,8 +14,9 @@ import type { CanvasRegistries } from "../setup/CanvasRegistries";
  * construction of the initial state.
  *
  * @param canvasDoc - The CanvasDoc used to build the initial state (only read at mount time)
- * @param registries - The per-canvas registry bundle, embedded into the state so
- *   the pure reducer tree can resolve mappers/commands/handlers (only read at mount time)
+ * @param registries - The per-canvas registry bundle. Closed over by the reducer
+ *   (via `createCanvasReducer`) and used to build the initial state; the registries
+ *   are dependencies, not state, so they are not stored on the state (#165).
  * @param docDefaults - Theme-derived creation defaults (only read at mount time;
  *   later changes are folded in via the SET_DOC_DEFAULTS action)
  * @param initialCamera - Seeds the initial viewport so the first paint lands at
@@ -28,7 +29,8 @@ export const useCanvasReducer = (
 	docDefaults?: DocCreationDefaults,
 	initialCamera?: Camera,
 ): [CanvasControllerState, Dispatch<CanvasAction>] => {
-	return useReducer(canvasReducer, undefined, () =>
+	const reducer = useMemo(() => createCanvasReducer(registries), [registries]);
+	return useReducer(reducer, undefined, () =>
 		createInitialControllerState(
 			canvasDoc,
 			registries,

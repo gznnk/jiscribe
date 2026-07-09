@@ -3,7 +3,10 @@ import { describe, expect, it } from "vitest";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { createTestRegistries } from "../../../setup/createCanvasRegistries";
 import { GroupCommand } from "../GroupCommand";
+
+const registries = createTestRegistries();
 
 const makeRect = (
 	id: string,
@@ -45,7 +48,7 @@ describe("GroupCommand", () => {
 			objects: { a: makeRect("a", 0, 0), b: makeRect("b", 200, 0) },
 			rootIds: ["a", "b"],
 		});
-		const next = GroupCommand.execute(state);
+		const next = GroupCommand.execute(state, registries);
 
 		// rootIds becomes just the single new group
 		expect(next.rootIds).toHaveLength(1);
@@ -68,7 +71,7 @@ describe("GroupCommand", () => {
 			objects: { a: makeRect("a", 0, 0), b: makeRect("b", 200, 0) },
 			rootIds: ["a", "b"],
 		});
-		const next = GroupCommand.execute(state);
+		const next = GroupCommand.execute(state, registries);
 		const group = next.objects[next.rootIds[0]] as GroupState;
 		// contains a (0..100 wide) and b (150..250) → width is greater than 0
 		expect(group.width).toBeGreaterThan(0);
@@ -102,7 +105,7 @@ describe("GroupCommand", () => {
 				},
 				rootIds: ["p1", "p2"],
 			});
-			const next = GroupCommand.execute(state);
+			const next = GroupCommand.execute(state, registries);
 			const group = next.objects[next.rootIds[0]] as GroupState;
 			expect(group.type).toBe("group");
 			expect(group.width).toBeGreaterThan(0);
@@ -118,7 +121,7 @@ describe("GroupCommand", () => {
 				objects: { a: noGeometry("a"), b: noGeometry("b") },
 				rootIds: ["a", "b"],
 			});
-			const next = GroupCommand.execute(state);
+			const next = GroupCommand.execute(state, registries);
 			expect(next).toBe(state);
 		});
 	});
@@ -130,7 +133,7 @@ describe("GroupCommand", () => {
 				objects: { a: makeRect("a", 0, 0), b: makeRect("b", 0, 0) },
 				rootIds: ["a", "b"],
 			});
-			expect(GroupCommand.canExecute(state)).toBe(true);
+			expect(GroupCommand.canExecute(state, registries)).toBe(true);
 		});
 
 		it("is not executable with a single selection", () => {
@@ -139,7 +142,7 @@ describe("GroupCommand", () => {
 				objects: { a: makeRect("a", 0, 0) },
 				rootIds: ["a"],
 			});
-			expect(GroupCommand.canExecute(state)).toBe(false);
+			expect(GroupCommand.canExecute(state, registries)).toBe(false);
 		});
 	});
 });

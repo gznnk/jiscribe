@@ -4,6 +4,7 @@ import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import { canvasToState } from "../../states/canvas/CanvasMapper";
 import { resolveDocSnapshot } from "../../states/canvas/DocSnapshot";
 import type { CanvasControllerState } from "../CanvasTypes";
+import { useCanvasRegistries } from "../contexts/CanvasRegistriesContext";
 import type { CanvasAction } from "../reducer/CanvasActions";
 import type { createSelfSaveNonceTracker } from "../utils/createSelfSaveNonceTracker";
 import { isSameCanvasDocContent } from "../utils/isSameCanvasDocContent";
@@ -42,6 +43,7 @@ export const useSyncExternalDoc = ({
 	selfSaveNonceTracker,
 }: UseSyncExternalDocParams): void => {
 	const hasMountedRef = useRef(false);
+	const { objectMapper } = useCanvasRegistries();
 
 	// Always-fresh mirror of state so the sync effect below does not need to
 	// depend on (and re-run for) every state change.
@@ -66,20 +68,26 @@ export const useSyncExternalDoc = ({
 		// Content-identical doc (e.g. the parent re-created the object): skip
 		// entirely. Proceeding would interrupt an in-progress gesture, clear all UI
 		// state, and push a redundant history entry even though nothing changed.
-		const mapper = stateRef.current.registries.objectMapper;
 		if (
 			isSameCanvasDocContent(
 				canvasDoc,
-				resolveDocSnapshot(stateRef.current.history.present, mapper),
+				resolveDocSnapshot(stateRef.current.history.present, objectMapper),
 			)
 		) {
 			return;
 		}
-		const newState = canvasToState(canvasDoc, mapper);
+		const newState = canvasToState(canvasDoc, objectMapper);
 		resetGestureState();
 		dispatch({
 			type: "SYNC_EXTERNAL",
 			payload: newState,
 		});
-	}, [canvasDoc, dispatch, resetGestureState, syncNonce, selfSaveNonceTracker]);
+	}, [
+		canvasDoc,
+		dispatch,
+		resetGestureState,
+		syncNonce,
+		selfSaveNonceTracker,
+		objectMapper,
+	]);
 };

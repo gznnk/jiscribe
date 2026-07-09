@@ -11,6 +11,7 @@ import type {
 	EventStartSnapshot,
 	KeyPointsCache,
 } from "../../CanvasTypes";
+import type { CanvasRegistries } from "../../setup/CanvasRegistries";
 import { buildObjectBBoxes } from "../../utils/buildObjectBBoxes";
 import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWithDescendants";
 import type { Gesture } from "../recognizer/GestureRecognizerTypes";
@@ -35,12 +36,13 @@ const EVENT_END_TYPES: readonly EventType[] = ["dragEnd"] as const;
  * Also manages eventStartSnapshot lifecycle (save on dragStart, clear on dragEnd).
  * Automatically records history when commitVersion changes.
  *
- * Routing uses the canvas's own gesture handler registry (`state.registries`),
- * populated when its bundle is built (`createCanvasRegistries`).
+ * Routing uses the canvas's own gesture handler registry, passed in via
+ * `registries` (populated when its bundle is built by `createCanvasRegistries`).
  */
 export const handleGesture = (
 	state: CanvasControllerState,
 	gesture: Gesture,
+	registries: CanvasRegistries,
 ): CanvasControllerState => {
 	let nextState = state;
 
@@ -158,7 +160,7 @@ export const handleGesture = (
 
 	// Process all events
 	for (const event of derivedEvents) {
-		nextState = state.registries.gestureHandler.handle(nextState, event);
+		nextState = registries.gestureHandler.handle(nextState, event, registries);
 	}
 
 	// Clear eventStartSnapshot on event end

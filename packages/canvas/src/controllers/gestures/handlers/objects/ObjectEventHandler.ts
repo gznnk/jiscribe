@@ -19,6 +19,7 @@ import type {
 	CanvasControllerState,
 	SnapFeedback,
 } from "../../../CanvasTypes";
+import type { ICanvasRegistries } from "../../../setup/ICanvasRegistries";
 import { buildSelectedIdsWithDescendants } from "../../../utils/buildSelectedIdsWithDescendants";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
@@ -84,6 +85,7 @@ function handleObjectDrag(
 	canvasState: CanvasControllerState,
 	delta: Point,
 	mods: Mods,
+	registries: ICanvasRegistries,
 ): CanvasControllerState {
 	const eventStartSnapshot = canvasState.eventStartSnapshot;
 	if (!eventStartSnapshot) {
@@ -209,7 +211,7 @@ function handleObjectDrag(
 			srcObjects: eventStartObjects,
 			srcMultiSelectGroup: eventStartMultiSelectGroup,
 			delta: adjustedDelta,
-			objectBehavior: canvasState.registries.objectBehavior,
+			objectBehavior: registries.objectBehavior,
 		});
 
 	const nextState = {
@@ -235,6 +237,7 @@ function handleObjectDragStart(
 	targetObject: ObjectState,
 	delta: Point,
 	mods: Mods,
+	registries: ICanvasRegistries,
 ): CanvasControllerState {
 	const { id } = targetObject;
 
@@ -316,7 +319,7 @@ function handleObjectDragStart(
 	};
 
 	// Run the drag handling
-	return handleObjectDrag(nextState, delta, mods);
+	return handleObjectDrag(nextState, delta, mods, registries);
 }
 
 /**
@@ -326,6 +329,7 @@ function handleObjectDragEnd(
 	canvasState: CanvasControllerState,
 	delta: Point,
 	mods: Mods,
+	registries: ICanvasRegistries,
 ): CanvasControllerState {
 	// Disable edge scrolling
 	const nextState = {
@@ -334,7 +338,7 @@ function handleObjectDragEnd(
 	};
 
 	// Final drag handling
-	const resultState = handleObjectDrag(nextState, delta, mods);
+	const resultState = handleObjectDrag(nextState, delta, mods, registries);
 
 	// Update the parent groups' bounding boxes
 	return updateAffectedGroupBounds(resultState, resultState.selectedIds);
@@ -353,7 +357,7 @@ export const ObjectEventHandler: GestureHandler = {
 		return event.targetKind === "object" && isLeftButton(event);
 	},
 
-	handle(state, event) {
+	handle(state, event, registries) {
 		// Any event that reaches this handler is outside the text-editing overlay
 		// (the overlay covers the edited shape's bbox and is gesture-excluded),
 		// so a pending edit is always committed first, like any outside tap.
@@ -390,9 +394,7 @@ export const ObjectEventHandler: GestureHandler = {
 			// are consistent, so it also lets through shapes with no text at all
 			// (svg / polyline / polygon, etc.). Treat the same features.text used by the
 			// property-update side (isPropertySupported) as authoritative.
-			const features = state.registries.objectMapper.getFeatures(
-				targetObject.type,
-			);
+			const features = registries.objectMapper.getFeatures(targetObject.type);
 			if (features?.text === true && isTextStyleState(targetObject)) {
 				return {
 					...nextState,
@@ -418,11 +420,17 @@ export const ObjectEventHandler: GestureHandler = {
 				objectStartState,
 				event.delta,
 				event.mods,
+				registries,
 			);
 		} else if (event.type === "drag") {
-			return handleObjectDrag(nextState, event.delta, event.mods);
+			return handleObjectDrag(nextState, event.delta, event.mods, registries);
 		} else if (event.type === "dragEnd") {
-			return handleObjectDragEnd(nextState, event.delta, event.mods);
+			return handleObjectDragEnd(
+				nextState,
+				event.delta,
+				event.mods,
+				registries,
+			);
 		}
 
 		return nextState;

@@ -3,6 +3,7 @@ import type { ObjectFeatures } from "../../schemas/objects/types/ObjectFeatures"
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../CanvasTypes";
+import type { ICanvasRegistries } from "../setup/ICanvasRegistries";
 
 /**
  * Dot-notation properties that represent nested style updates on a connector label.
@@ -117,6 +118,7 @@ export const handlePropertyUpdate = (
 	state: CanvasControllerState,
 	property: string,
 	value: string,
+	registries: ICanvasRegistries,
 ): CanvasControllerState => {
 	const { selectedIds, selectedConnectorId, objects, multiSelectGroup } = state;
 
@@ -138,7 +140,7 @@ export const handlePropertyUpdate = (
 			);
 		}
 
-		const features = state.registries.objectMapper.getFeatures(connector.type);
+		const features = registries.objectMapper.getFeatures(connector.type);
 		const supported = features
 			? isPropertySupported(features, property)
 			: false;
@@ -195,7 +197,7 @@ export const handlePropertyUpdate = (
 			continue;
 		}
 
-		const features = state.registries.objectMapper.getFeatures(obj.type);
+		const features = registries.objectMapper.getFeatures(obj.type);
 		const supported = features
 			? isPropertySupported(features, property)
 			: false;
@@ -220,9 +222,7 @@ export const handlePropertyUpdate = (
 				if (!descObj) {
 					continue;
 				}
-				const features = state.registries.objectMapper.getFeatures(
-					descObj.type,
-				);
+				const features = registries.objectMapper.getFeatures(descObj.type);
 				const supported = features
 					? isPropertySupported(features, property)
 					: false;

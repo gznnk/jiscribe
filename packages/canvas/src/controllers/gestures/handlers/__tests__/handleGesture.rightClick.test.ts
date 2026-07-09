@@ -51,6 +51,7 @@ describe("handleGesture - right-click over menus does not execute commands (#110
 			const nextState = handleGesture(
 				state,
 				clickOn(0, "menu", "toolbar", "command:zoomIn"),
+				registries,
 			);
 			expect(nextState.viewport.zoom).not.toBe(state.viewport.zoom);
 		});
@@ -60,6 +61,7 @@ describe("handleGesture - right-click over menus does not execute commands (#110
 			const nextState = handleGesture(
 				state,
 				clickOn(2, "menu", "toolbar", "command:zoomIn"),
+				registries,
 			);
 			expect(nextState.viewport.zoom).toBe(state.viewport.zoom);
 			expect(nextState.contextMenuPosition).toEqual({
@@ -75,6 +77,7 @@ describe("handleGesture - right-click over menus does not execute commands (#110
 			const nextState = handleGesture(
 				state,
 				clickOn(0, "menu", "shape-library", "item:sticky"),
+				registries,
 			);
 			expect(nextState.rootIds.length).toBe(state.rootIds.length + 1);
 		});
@@ -84,6 +87,7 @@ describe("handleGesture - right-click over menus does not execute commands (#110
 			const nextState = handleGesture(
 				state,
 				clickOn(2, "menu", "shape-library", "item:sticky"),
+				registries,
 			);
 			expect(nextState.rootIds).toEqual(state.rootIds);
 			expect(nextState.objects).toEqual(state.objects);
@@ -93,6 +97,7 @@ describe("handleGesture - right-click over menus does not execute commands (#110
 			const nextState = handleGesture(
 				baseState(),
 				clickOn(2, "menu", "shape-library", "item:rect"),
+				registries,
 			);
 			expect(nextState.shapeDrawing).toBeNull();
 		});
@@ -114,6 +119,7 @@ describe("handleGesture - right-click over menus does not execute commands (#110
 			const nextState = handleGesture(
 				openMenuState(),
 				clickOn(0, "menu", "context-menu", "command:selectAll"),
+				registries,
 			);
 			expect(nextState.selectedIds).toEqual(["a"]);
 		});
@@ -122,6 +128,7 @@ describe("handleGesture - right-click over menus does not execute commands (#110
 			const nextState = handleGesture(
 				openMenuState(),
 				clickOn(2, "menu", "context-menu", "command:selectAll"),
+				registries,
 			);
 			expect(nextState.selectedIds).toEqual([]);
 			// Falls through to the canvas right-button behavior: the context menu
@@ -138,6 +145,7 @@ describe("handleGesture - right-click over menus does not execute commands (#110
 			const nextState = handleGesture(
 				baseState(),
 				clickOn(0, "menu", "object-menu", "toggle:style"),
+				registries,
 			);
 			expect(nextState.objectMenuOpenId).toBe("style");
 		});
@@ -146,6 +154,7 @@ describe("handleGesture - right-click over menus does not execute commands (#110
 			const nextState = handleGesture(
 				baseState(),
 				clickOn(2, "menu", "object-menu", "toggle:style"),
+				registries,
 			);
 			expect(nextState.objectMenuOpenId).toBeNull();
 		});

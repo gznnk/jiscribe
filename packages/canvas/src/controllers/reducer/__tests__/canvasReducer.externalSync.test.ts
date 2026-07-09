@@ -4,12 +4,14 @@ import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
 import { canvasToState } from "../../../states/canvas/CanvasMapper";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { CanvasAction } from "../CanvasActions";
-import { canvasReducer } from "../canvasReducer";
+import { createCanvasReducer } from "../canvasReducer";
 import { createTestState } from "./support/createTestState";
 import { rectDoc, twoRectsDoc } from "./support/fixtures";
 import { createTestRegistries } from "../../setup/createCanvasRegistries";
 
 const registries = createTestRegistries();
+
+const canvasReducer = createCanvasReducer(registries);
 
 const createState = (): CanvasControllerState =>
 	createTestState(twoRectsDoc, {

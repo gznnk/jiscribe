@@ -48,7 +48,8 @@ const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 }) => {
 	const menuRef = useRef<HTMLDivElement>(null);
 	const messages = useCanvasMessages();
-	const { command: commandRegistry } = useCanvasRegistries();
+	const registries = useCanvasRegistries();
+	const commandRegistry = registries.command;
 	const { left, top } = useContextMenuPosition(position, menuRef);
 
 	const menuItems: CommandMenuItem[] = [
@@ -117,7 +118,7 @@ const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 							return null;
 						}
 
-						const enabled = command.canExecute(canvasState);
+						const enabled = command.canExecute(canvasState, registries);
 						const shortcuts = command.shortcuts
 							? getPlatformShortcuts(command.shortcuts)
 							: null;

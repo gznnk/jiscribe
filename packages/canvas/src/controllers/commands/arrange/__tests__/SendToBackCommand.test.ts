@@ -3,7 +3,10 @@ import { describe, expect, it } from "vitest";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { createTestRegistries } from "../../../setup/createCanvasRegistries";
 import { SendToBackCommand } from "../SendToBackCommand";
+
+const registries = createTestRegistries();
 
 const makeState = (params: {
 	selectedIds: string[];
@@ -26,7 +29,7 @@ describe("SendToBackCommand", () => {
 				objects: { a: makeRect("a"), b: makeRect("b"), c: makeRect("c") },
 				rootIds: ["a", "b", "c"],
 			});
-			const nextState = SendToBackCommand.execute(state);
+			const nextState = SendToBackCommand.execute(state, registries);
 			expect(nextState.rootIds).toEqual(["c", "a", "b"]);
 		});
 
@@ -42,7 +45,7 @@ describe("SendToBackCommand", () => {
 				},
 				rootIds: ["a", "b", "c", "d"],
 			});
-			const nextState = SendToBackCommand.execute(state);
+			const nextState = SendToBackCommand.execute(state, registries);
 			// keeps the relative order within rootIds [b, d], not the selection order [d, b]
 			expect(nextState.rootIds).toEqual(["b", "d", "a", "c"]);
 		});
@@ -58,7 +61,7 @@ describe("SendToBackCommand", () => {
 				},
 				rootIds: ["a", "b", "c", "d"],
 			});
-			const nextState = SendToBackCommand.execute(state);
+			const nextState = SendToBackCommand.execute(state, registries);
 			expect(nextState.rootIds).toEqual(["c", "a", "b", "d"]);
 		});
 
@@ -68,7 +71,7 @@ describe("SendToBackCommand", () => {
 				objects: { a: makeRect("a"), b: makeRect("b") },
 				rootIds: ["a", "b"],
 			});
-			const nextState = SendToBackCommand.execute(state);
+			const nextState = SendToBackCommand.execute(state, registries);
 			expect(nextState.commitVersion).toBe(state.commitVersion + 1);
 		});
 	});
@@ -86,7 +89,7 @@ describe("SendToBackCommand", () => {
 				},
 				rootIds: ["group1"],
 			});
-			const nextState = SendToBackCommand.execute(state);
+			const nextState = SendToBackCommand.execute(state, registries);
 			const updatedGroup = nextState.objects["group1"] as GroupState;
 			// keeps the relative order within childIds [child1, child3], not the selection order [child3, child1]
 			expect(updatedGroup.childIds).toEqual(["child1", "child3", "child2"]);

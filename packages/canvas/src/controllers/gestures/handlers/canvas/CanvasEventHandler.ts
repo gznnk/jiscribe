@@ -29,7 +29,7 @@ export const CanvasEventHandler: GestureHandler = {
 		);
 	},
 
-	handle(state, event) {
+	handle(state, event, registries) {
 		// Zoom handling
 		// Handle before commitTextEditIfNeeded so zooming does not interrupt an active text edit.
 		if (event.type === "zoom" && event.zoomDelta != null) {
@@ -130,7 +130,7 @@ export const CanvasEventHandler: GestureHandler = {
 		const shapeDrawing = nextState.shapeDrawing;
 		const drawingObjectType =
 			shapeDrawing !== null &&
-			state.registries.shapeFactory.supportsBoundsDrawing(
+			registries.shapeFactory.supportsBoundsDrawing(
 				shapeDrawing.preset.objectType,
 			)
 				? shapeDrawing.preset.objectType
@@ -217,14 +217,14 @@ export const CanvasEventHandler: GestureHandler = {
 					startY,
 					endX,
 					endY,
-					state.registries.shapeFactory,
+					registries.shapeFactory,
 					nextState.shapeDrawing.preset.defaultOverrides,
 					undefined,
 					nextState.docDefaults,
 				);
 
 				if (doc) {
-					const objectState = state.registries.objectMapper.toState(doc);
+					const objectState = registries.objectMapper.toState(doc);
 					nextState = {
 						...nextState,
 						objects: { ...nextState.objects, [objectState.id]: objectState },

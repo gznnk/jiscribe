@@ -48,7 +48,11 @@ const pressedOn = (
 
 describe("handleGesture - context menu auto-close", () => {
 	it("closes the menu on left-click press over a shape", () => {
-		const nextState = handleGesture(openMenuState(), pressedOn("object", "a"));
+		const nextState = handleGesture(
+			openMenuState(),
+			pressedOn("object", "a"),
+			registries,
+		);
 		expect(nextState.contextMenuPosition).toBeNull();
 	});
 
@@ -56,6 +60,7 @@ describe("handleGesture - context menu auto-close", () => {
 		const nextState = handleGesture(
 			openMenuState(),
 			pressedOn("connector", "c"),
+			registries,
 		);
 		expect(nextState.contextMenuPosition).toBeNull();
 	});
@@ -64,6 +69,7 @@ describe("handleGesture - context menu auto-close", () => {
 		const nextState = handleGesture(
 			openMenuState(),
 			pressedOn("control", "transform", "resize:topLeft"),
+			registries,
 		);
 		expect(nextState.contextMenuPosition).toBeNull();
 	});
@@ -72,6 +78,7 @@ describe("handleGesture - context menu auto-close", () => {
 		const nextState = handleGesture(
 			openMenuState(),
 			pressedOn("menu", "toolbar", "command:zoomIn"),
+			registries,
 		);
 		expect(nextState.contextMenuPosition).toBeNull();
 	});
@@ -80,6 +87,7 @@ describe("handleGesture - context menu auto-close", () => {
 		const nextState = handleGesture(
 			openMenuState(),
 			pressedOn("menu", "shape-library", "item:rect"),
+			registries,
 		);
 		expect(nextState.contextMenuPosition).toBeNull();
 	});
@@ -88,6 +96,7 @@ describe("handleGesture - context menu auto-close", () => {
 		const nextState = handleGesture(
 			openMenuState(),
 			pressedOn("menu", "object-menu", "command:group"),
+			registries,
 		);
 		expect(nextState.contextMenuPosition).toBeNull();
 	});
@@ -96,6 +105,7 @@ describe("handleGesture - context menu auto-close", () => {
 		const nextState = handleGesture(
 			openMenuState(),
 			pressedOn("menu", "context-menu", "command:copy"),
+			registries,
 		);
 		expect(nextState.contextMenuPosition).toEqual({
 			clientX: 100,

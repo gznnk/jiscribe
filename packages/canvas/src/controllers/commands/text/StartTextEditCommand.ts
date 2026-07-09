@@ -27,7 +27,7 @@ export const StartTextEditCommand: Command = {
 		default: [{ code: "Enter" }],
 	},
 
-	canExecute(state) {
+	canExecute(state, registries) {
 		// Cannot execute while text editing is already in progress
 		if (state.textEditState) {
 			return false;
@@ -45,11 +45,11 @@ export const StartTextEditCommand: Command = {
 
 		return canEditText(
 			state.objects[state.selectedIds[0]],
-			state.registries.objectMapper,
+			registries.objectMapper,
 		);
 	},
 
-	execute(state) {
+	execute(state, registries) {
 		// When a connector is selected, start editing its label (label.text).
 		if (state.selectedConnectorId && state.selectedIds.length === 0) {
 			const connector = state.objects[state.selectedConnectorId];
@@ -68,7 +68,7 @@ export const StartTextEditCommand: Command = {
 		const objectId = state.selectedIds[0];
 		const targetObject = state.objects[objectId];
 
-		if (!canEditText(targetObject, state.registries.objectMapper)) {
+		if (!canEditText(targetObject, registries.objectMapper)) {
 			return state;
 		}
 

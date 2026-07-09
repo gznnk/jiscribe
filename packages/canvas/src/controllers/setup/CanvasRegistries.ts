@@ -51,29 +51,3 @@ export type CanvasConfig = {
 	/** Escape hatch to further customize the built registries in place. */
 	customize?: (registries: CanvasRegistries) => void;
 };
-
-/**
- * Augments `CanvasControllerState` with the `registries` bundle here rather than
- * in `CanvasTypes.ts`. The bundle references registries (`command`,
- * `gestureHandler`, `objectMenu`) whose handler signatures reference
- * `CanvasControllerState`, so declaring the field in `CanvasTypes` would make
- * `CanvasTypes` import this module and close a type-only file cycle (madge
- * `dep:circle`). Relocating just this one edge here keeps the module graph
- * acyclic while the types stay mutually recursive (which TypeScript handles).
- */
-declare module "../CanvasTypes" {
-	interface CanvasControllerState {
-		/**
-		 * The per-canvas UI registry bundle. Injected once at construction
-		 * (`createInitialControllerState`) and carried on the state so the pure
-		 * reducer/handler/util tree can resolve object mappers, commands, gesture
-		 * handlers, etc. without reading module-level singletons (#165, Option B).
-		 *
-		 * Held by reference and never serialized: history stores `DocSnapshot`s
-		 * (Docs), not controller state, so this adds no per-commit cost. All state
-		 * update paths spread the previous state (`{...state}`, `resetUiState`,
-		 * `SYNC_EXTERNAL`), so `registries` is preserved automatically.
-		 */
-		registries: CanvasRegistries;
-	}
-}

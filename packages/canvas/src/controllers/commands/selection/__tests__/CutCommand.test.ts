@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { createTestRegistries } from "../../../setup/createCanvasRegistries";
 import { CutCommand } from "../CutCommand";
+
+const registries = createTestRegistries();
 
 const makeRect = (id: string): ObjectState =>
 	({
@@ -40,7 +43,7 @@ describe("CutCommand", () => {
 			objects: { a: makeRect("a"), b: makeRect("b") },
 			rootIds: ["a", "b"],
 		});
-		const next = CutCommand.execute(state);
+		const next = CutCommand.execute(state, registries);
 
 		// copy: stashed to the clipboard
 		expect(next.internalClipboard?.rootIds).toEqual(["a"]);
@@ -59,13 +62,14 @@ describe("CutCommand", () => {
 				objects: { a: makeRect("a") },
 				rootIds: ["a"],
 			});
-			expect(CutCommand.canExecute(state)).toBe(true);
+			expect(CutCommand.canExecute(state, registries)).toBe(true);
 		});
 
 		it("is not executable when there is no selection", () => {
 			expect(
 				CutCommand.canExecute(
 					makeState({ selectedIds: [], objects: {}, rootIds: [] }),
+					registries,
 				),
 			).toBe(false);
 		});

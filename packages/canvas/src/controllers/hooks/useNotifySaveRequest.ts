@@ -4,6 +4,7 @@ import { useConstant } from "./useConstant";
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import { resolveDocSnapshot } from "../../states/canvas/DocSnapshot";
 import type { CanvasControllerState } from "../CanvasTypes";
+import { useCanvasRegistries } from "../contexts/CanvasRegistriesContext";
 import { createNonceDeliveryGuard } from "../utils/createNonceDeliveryGuard";
 import { createSaveRequestScheduler } from "../utils/createSaveRequestScheduler";
 import type { createSelfSaveNonceTracker } from "../utils/createSelfSaveNonceTracker";
@@ -28,6 +29,8 @@ export const useNotifySaveRequest = (
 	onCommit: ((doc: CanvasDoc, saveNonce: string) => void) | undefined,
 	selfSaveNonceTracker: ReturnType<typeof createSelfSaveNonceTracker>,
 ): void => {
+	const { objectMapper } = useCanvasRegistries();
+
 	// onCommit goes through a ref so a parent passing a new function on every
 	// render cannot re-fire the effect below and resend the same saveNonce.
 	const onCommitRef = useRef(onCommit);
@@ -70,10 +73,7 @@ export const useNotifySaveRequest = (
 			// self-save even if a later save's fold-back returns first (issue #29).
 			selfSaveNonceTracker.register(latestState.saveNonce);
 			onCommitRef.current?.(
-				resolveDocSnapshot(
-					latestState.history.present,
-					latestState.registries.objectMapper,
-				),
+				resolveDocSnapshot(latestState.history.present, objectMapper),
 				latestState.saveNonce,
 			);
 		});

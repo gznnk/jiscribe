@@ -304,9 +304,9 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 
 	// Zoom button enabled/disabled state is delegated to the command's canExecute (single source of truth).
 	const canZoomIn =
-		registries.command.get("zoomIn")?.canExecute(state) ?? false;
+		registries.command.get("zoomIn")?.canExecute(state, registries) ?? false;
 	const canZoomOut =
-		registries.command.get("zoomOut")?.canExecute(state) ?? false;
+		registries.command.get("zoomOut")?.canExecute(state, registries) ?? false;
 
 	return (
 		<CanvasThemeContext value={theme}>

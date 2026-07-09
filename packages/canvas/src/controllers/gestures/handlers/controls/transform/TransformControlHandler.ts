@@ -22,6 +22,7 @@ import type {
 	CanvasControllerState,
 	SnapFeedback,
 } from "../../../../CanvasTypes";
+import type { ICanvasRegistries } from "../../../../setup/ICanvasRegistries";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { transformChildren } from "../../objects/primitives/GroupController";
@@ -53,6 +54,7 @@ export class TransformControlHandler implements ControlStrategy {
 	handle(
 		state: CanvasControllerState,
 		event: CanvasEvent,
+		registries: ICanvasRegistries,
 	): CanvasControllerState {
 		const targetPart = event.targetPart;
 		if (!targetPart) {
@@ -72,9 +74,9 @@ export class TransformControlHandler implements ControlStrategy {
 		if (event.type === "dragStart") {
 			nextState = this.handleDragStart(nextState, event, anchorType);
 		} else if (event.type === "drag") {
-			nextState = this.handleDrag(nextState, event, anchorType);
+			nextState = this.handleDrag(nextState, event, anchorType, registries);
 		} else if (event.type === "dragEnd") {
-			nextState = this.handleDragEnd(nextState, event, anchorType);
+			nextState = this.handleDragEnd(nextState, event, anchorType, registries);
 		}
 
 		return nextState;
@@ -102,10 +104,11 @@ export class TransformControlHandler implements ControlStrategy {
 		state: CanvasControllerState,
 		event: CanvasEvent,
 		anchorType: TransformAnchorType,
+		registries: ICanvasRegistries,
 	): CanvasControllerState {
 		// Rotation is handled separately
 		if (anchorType === "rotation") {
-			return handleRotationDrag(state, event);
+			return handleRotationDrag(state, event, registries);
 		}
 
 		// Common preprocessing for resize handling
@@ -271,7 +274,7 @@ export class TransformControlHandler implements ControlStrategy {
 				updatedGroup,
 				startGroup,
 				eventStartSnapshot.objects,
-				state.registries.objectBehavior,
+				registries.objectBehavior,
 			);
 			Object.assign(updatedObjects, groupChildrenUpdates);
 
@@ -322,7 +325,7 @@ export class TransformControlHandler implements ControlStrategy {
 					updatedObject as GroupState,
 					updatedObject as GroupState,
 					eventStartSnapshot.objects,
-					state.registries.objectBehavior,
+					registries.objectBehavior,
 				);
 				Object.assign(updatedObjects, groupChildrenUpdates);
 			}
@@ -350,10 +353,11 @@ export class TransformControlHandler implements ControlStrategy {
 		state: CanvasControllerState,
 		event: CanvasEvent,
 		anchorType: TransformAnchorType,
+		registries: ICanvasRegistries,
 	): CanvasControllerState {
 		// Apply the drag-time state update to compute the final state.
 		// handleDrag never mutates its argument, so the state can be passed as is.
-		let nextState = this.handleDrag(state, event, anchorType);
+		let nextState = this.handleDrag(state, event, anchorType, registries);
 
 		// On dragEnd, update the bounds of the selected objects and their parent groups
 		for (const selectedId of nextState.selectedIds) {

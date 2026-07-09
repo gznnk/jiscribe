@@ -76,7 +76,11 @@ describe("handleGesture - area selection (marquee)", () => {
 		let state = stateWithRects();
 
 		// dragStart: eventStartSnapshot (and its bboxes) is created here.
-		state = handleGesture(state, dragGesture("dragStart", 0, 0, 0, 0));
+		state = handleGesture(
+			state,
+			dragGesture("dragStart", 0, 0, 0, 0),
+			registries,
+		);
 		expect(state.eventStartSnapshot).not.toBeNull();
 		expect(state.eventStartSnapshot?.bboxes.r1).toEqual({
 			left: 30,
@@ -88,7 +92,11 @@ describe("handleGesture - area selection (marquee)", () => {
 		expect(state.eventStartSnapshot?.bboxes.far).toBeDefined();
 
 		// drag a rectangle that fully contains r1 + r2 but not `far`.
-		state = handleGesture(state, dragGesture("drag", 0, 0, 200, 200));
+		state = handleGesture(
+			state,
+			dragGesture("drag", 0, 0, 200, 200),
+			registries,
+		);
 
 		expect([...state.selectedIds].sort()).toEqual(["r1", "r2"]);
 		expect(state.selectedIds).not.toContain("far");
@@ -103,18 +111,34 @@ describe("handleGesture - area selection (marquee)", () => {
 
 	it("selects nothing when the sweep contains no object fully", () => {
 		let state = stateWithRects();
-		state = handleGesture(state, dragGesture("dragStart", 0, 0, 0, 0));
+		state = handleGesture(
+			state,
+			dragGesture("dragStart", 0, 0, 0, 0),
+			registries,
+		);
 		// Area 0..50 clips r1 (30..70) — partial overlap, so not selected.
-		state = handleGesture(state, dragGesture("drag", 0, 0, 50, 50));
+		state = handleGesture(state, dragGesture("drag", 0, 0, 50, 50), registries);
 		expect(state.selectedIds).toEqual([]);
 		expect(state.multiSelectGroup).toBeNull();
 	});
 
 	it("clears eventStartSnapshot on dragEnd", () => {
 		let state = stateWithRects();
-		state = handleGesture(state, dragGesture("dragStart", 0, 0, 0, 0));
-		state = handleGesture(state, dragGesture("drag", 0, 0, 200, 200));
-		state = handleGesture(state, dragGesture("dragEnd", 0, 0, 200, 200));
+		state = handleGesture(
+			state,
+			dragGesture("dragStart", 0, 0, 0, 0),
+			registries,
+		);
+		state = handleGesture(
+			state,
+			dragGesture("drag", 0, 0, 200, 200),
+			registries,
+		);
+		state = handleGesture(
+			state,
+			dragGesture("dragEnd", 0, 0, 200, 200),
+			registries,
+		);
 		expect(state.eventStartSnapshot).toBeNull();
 	});
 });

@@ -31,7 +31,8 @@ const StackOrderMenuComponent: React.FC<StackOrderMenuProps> = ({
 	canvasState,
 }) => {
 	const messages = useCanvasMessages();
-	const { command: commandRegistry } = useCanvasRegistries();
+	const registries = useCanvasRegistries();
+	const commandRegistry = registries.command;
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
@@ -57,7 +58,7 @@ const StackOrderMenuComponent: React.FC<StackOrderMenuProps> = ({
 							if (!command) {
 								return null;
 							}
-							const enabled = command.canExecute(canvasState);
+							const enabled = command.canExecute(canvasState, registries);
 							return (
 								<ObjectMenuButton
 									key={commandId}

@@ -52,7 +52,7 @@ describe("UndoCommand", () => {
 			present: snapshotCurrent,
 			future: [],
 		});
-		const next = UndoCommand.execute(state);
+		const next = UndoCommand.execute(state, registries);
 
 		// docPrev (r1 only) is restored
 		expect(Object.keys(next.objects)).toEqual(["r1"]);
@@ -71,7 +71,7 @@ describe("UndoCommand", () => {
 			present: snapshotCurrent,
 			future: [],
 		});
-		const next = UndoCommand.execute(state);
+		const next = UndoCommand.execute(state, registries);
 		expect(next.selectedIds).toEqual([]);
 		expect(next.saveVersion).toBe(1);
 		// restoring history is not a commit, so commitVersion is not changed
@@ -84,12 +84,14 @@ describe("UndoCommand", () => {
 			present: snapshotCurrent,
 			future: [],
 		});
-		expect(UndoCommand.execute(state).viewport).toEqual(state.viewport);
+		expect(UndoCommand.execute(state, registries).viewport).toEqual(
+			state.viewport,
+		);
 	});
 
 	it("returns the state unchanged when past is empty", () => {
 		const state = makeState({ past: [], present: snapshotCurrent, future: [] });
-		expect(UndoCommand.execute(state)).toBe(state);
+		expect(UndoCommand.execute(state, registries)).toBe(state);
 	});
 
 	describe("canExecute", () => {
@@ -101,6 +103,7 @@ describe("UndoCommand", () => {
 						present: snapshotCurrent,
 						future: [],
 					}),
+					registries,
 				),
 			).toBe(true);
 		});
@@ -109,6 +112,7 @@ describe("UndoCommand", () => {
 			expect(
 				UndoCommand.canExecute(
 					makeState({ past: [], present: snapshotCurrent, future: [] }),
+					registries,
 				),
 			).toBe(false);
 		});
@@ -122,6 +126,7 @@ describe("UndoCommand", () => {
 						future: [],
 						eventStartSnapshot: { foo: 1 },
 					}),
+					registries,
 				),
 			).toBe(false);
 		});
@@ -135,6 +140,7 @@ describe("UndoCommand", () => {
 						future: [],
 						textEditState: { objectId: "r1", text: "" },
 					}),
+					registries,
 				),
 			).toBe(false);
 		});

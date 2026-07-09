@@ -52,7 +52,7 @@ describe("RedoCommand", () => {
 			present: snapshotPrev,
 			future: [snapshotNext],
 		});
-		const next = RedoCommand.execute(state);
+		const next = RedoCommand.execute(state, registries);
 
 		// docNext (r1, r2) is restored
 		expect(Object.keys(next.objects).sort()).toEqual(["r1", "r2"]);
@@ -71,7 +71,7 @@ describe("RedoCommand", () => {
 			present: snapshotPrev,
 			future: [snapshotNext],
 		});
-		const next = RedoCommand.execute(state);
+		const next = RedoCommand.execute(state, registries);
 		expect(next.selectedIds).toEqual([]);
 		expect(next.saveVersion).toBe(1);
 		expect(next.commitVersion).toBe(5);
@@ -79,7 +79,7 @@ describe("RedoCommand", () => {
 
 	it("returns the state unchanged when future is empty", () => {
 		const state = makeState({ past: [], present: snapshotPrev, future: [] });
-		expect(RedoCommand.execute(state)).toBe(state);
+		expect(RedoCommand.execute(state, registries)).toBe(state);
 	});
 
 	describe("canExecute", () => {
@@ -91,6 +91,7 @@ describe("RedoCommand", () => {
 						present: snapshotPrev,
 						future: [snapshotNext],
 					}),
+					registries,
 				),
 			).toBe(true);
 		});
@@ -99,6 +100,7 @@ describe("RedoCommand", () => {
 			expect(
 				RedoCommand.canExecute(
 					makeState({ past: [], present: snapshotPrev, future: [] }),
+					registries,
 				),
 			).toBe(false);
 		});
@@ -112,6 +114,7 @@ describe("RedoCommand", () => {
 						future: [snapshotNext],
 						eventStartSnapshot: { foo: 1 },
 					}),
+					registries,
 				),
 			).toBe(false);
 		});
@@ -125,6 +128,7 @@ describe("RedoCommand", () => {
 						future: [snapshotNext],
 						textEditState: { objectId: "r1", text: "" },
 					}),
+					registries,
 				),
 			).toBe(false);
 		});

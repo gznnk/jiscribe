@@ -31,7 +31,7 @@ export const UndoCommand: Command = {
 		return state.history.past.length > 0;
 	},
 
-	execute: (state) => {
+	execute: (state, registries) => {
 		if (state.history.past.length === 0) {
 			return state;
 		}
@@ -39,7 +39,7 @@ export const UndoCommand: Command = {
 		// Resolve only the entry being restored; entries that merely move between
 		// stacks stay as unresolved snapshots.
 		const snapshotToRestore = state.history.past[state.history.past.length - 1];
-		const mapper = state.registries.objectMapper;
+		const mapper = registries.objectMapper;
 		const restoredState = canvasToState(
 			resolveDocSnapshot(snapshotToRestore, mapper),
 			mapper,
@@ -48,7 +48,6 @@ export const UndoCommand: Command = {
 		return {
 			...restoredState,
 			...resetUiState(),
-			registries: state.registries, // canvasToState yields a bare CanvasState; re-attach the bundle
 			viewport: state.viewport, // Preserve viewport
 			commitVersion: state.commitVersion, // Don't update - this is history restoration, not a new commit
 			saveVersion: state.saveVersion + 1,

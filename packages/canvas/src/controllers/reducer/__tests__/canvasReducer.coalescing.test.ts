@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { resolveDocSnapshot } from "../../../states/canvas/DocSnapshot";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestState } from "./support/createTestState";
-import { runCommands } from "./support/dispatch";
+import { runCommands, testReducerRegistries } from "./support/dispatch";
 import { twoRectsDoc } from "./support/fixtures";
 
 // Start with rect-1 selected (cx=5, cy=5)
@@ -68,7 +68,7 @@ describe("canvasReducer (integration)", () => {
 
 		it("nudge commits never rebuild the Doc tree (history snapshots stay lazy)", () => {
 			let state = createState();
-			const toDocSpy = vi.spyOn(state.registries.objectMapper, "toDoc");
+			const toDocSpy = vi.spyOn(testReducerRegistries.objectMapper, "toDoc");
 
 			// Simulates key repeat: neither the first commit nor the coalesced
 			// followers may pay the O(N) canvasToDoc cost (issue #125)
@@ -79,7 +79,7 @@ describe("canvasReducer (integration)", () => {
 			// The lazy present still resolves to the committed positions
 			const presentDoc = resolveDocSnapshot(
 				state.history.present,
-				state.registries.objectMapper,
+				testReducerRegistries.objectMapper,
 			);
 			expect(presentDoc.root[0]).toMatchObject({ id: "rect-1", x: 3 });
 		});
@@ -98,11 +98,11 @@ describe("canvasReducer (integration)", () => {
 			// (immutable) updates cannot leak into stored history entries
 			const initialDoc = resolveDocSnapshot(
 				state.history.past[0],
-				state.registries.objectMapper,
+				testReducerRegistries.objectMapper,
 			);
 			const firstNudgeDoc = resolveDocSnapshot(
 				state.history.past[1],
-				state.registries.objectMapper,
+				testReducerRegistries.objectMapper,
 			);
 			expect(initialDoc.root[0]).toMatchObject({ id: "rect-1", x: 0 });
 			expect(firstNudgeDoc.root[0]).toMatchObject({ id: "rect-1", x: 1 });

@@ -32,7 +32,7 @@ export const ToolbarHandler: GestureHandler = {
 		);
 	},
 
-	handle(state, event) {
+	handle(state, event, registries) {
 		let nextState = state;
 
 		// Close the context menu on a press over the toolbar
@@ -43,7 +43,7 @@ export const ToolbarHandler: GestureHandler = {
 		const isActivation = event.type === "click" || event.type === "doubleClick";
 		if (isActivation && event.targetPart?.startsWith(COMMAND_PREFIX)) {
 			const commandId = event.targetPart.slice(COMMAND_PREFIX.length);
-			return handleCommand(nextState, commandId);
+			return handleCommand(nextState, commandId, registries);
 		}
 
 		return nextState;

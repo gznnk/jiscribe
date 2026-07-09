@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../CanvasTypes";
+import { createTestRegistries } from "../../setup/createCanvasRegistries";
 import type { CanvasAction } from "../CanvasActions";
-import { canvasReducer } from "../canvasReducer";
+import { createCanvasReducer } from "../canvasReducer";
 import { createTestState } from "./support/createTestState";
 import { twoRectsDoc } from "./support/fixtures";
+
+const canvasReducer = createCanvasReducer(createTestRegistries());
 
 const createState = (): CanvasControllerState => createTestState(twoRectsDoc);
 

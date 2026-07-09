@@ -12,7 +12,8 @@ import { defaultCanvasRegistries } from "../setup/createCanvasRegistries";
  * (e.g. unit tests) still resolve the complete set without a Provider.
  *
  * The pure reducer/handler tree cannot read React context; it receives the same
- * bundle out-of-band through `CanvasControllerState.registries` (see #165 Option B).
+ * bundle as an explicit `registries` argument instead (closed over by the reducer
+ * factory `createCanvasReducer`, then threaded to handlers/commands — see #165).
  */
 export const CanvasRegistriesContext = createContext<CanvasRegistries>(
 	defaultCanvasRegistries,
