@@ -9,12 +9,12 @@ import {
 } from "./ContextMenuStyled";
 import { useContextMenuPosition } from "./useContextMenuPosition";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { commandRegistry } from "../../../commands/CommandRegistry";
 import type { PlatformKeyBindings } from "../../../commands/CommandTypes";
 import {
 	formatShortcut,
 	getPlatformShortcuts,
 } from "../../../commands/CommandUtils";
+import { useCommandState } from "../../../hooks/useCommandState";
 import { getCommandLabel } from "../../../messages/CanvasMessages";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 
@@ -48,6 +48,7 @@ const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 }) => {
 	const menuRef = useRef<HTMLDivElement>(null);
 	const messages = useCanvasMessages();
+	const resolveCommand = useCommandState(canvasState);
 	const { left, top } = useContextMenuPosition(position, menuRef);
 
 	const menuItems: CommandMenuItem[] = [
@@ -111,12 +112,12 @@ const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 					}
 
 					case "command": {
-						const command = commandRegistry.get(item.commandId);
-						if (!command) {
+						const resolved = resolveCommand(item.commandId);
+						if (!resolved) {
 							return null;
 						}
 
-						const enabled = command.canExecute(canvasState);
+						const { command, enabled } = resolved;
 						const shortcuts = command.shortcuts
 							? getPlatformShortcuts(command.shortcuts)
 							: null;

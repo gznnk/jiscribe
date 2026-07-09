@@ -3,7 +3,10 @@ import { describe, expect, it } from "vitest";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { createTestRegistries } from "../../../setup/createCanvasRegistries";
 import { BringForwardCommand } from "../BringForwardCommand";
+
+const registries = createTestRegistries();
 
 const makeState = (params: {
 	selectedIds: string[];
@@ -31,7 +34,7 @@ describe("BringForwardCommand", () => {
 				objects: { a: makeRect("a"), b: makeRect("b"), c: makeRect("c") },
 				rootIds: ["a", "b", "c"],
 			});
-			expect(BringForwardCommand.execute(state).rootIds).toEqual([
+			expect(BringForwardCommand.execute(state, registries).rootIds).toEqual([
 				"b",
 				"a",
 				"c",
@@ -44,7 +47,7 @@ describe("BringForwardCommand", () => {
 				objects: { a: makeRect("a"), b: makeRect("b"), c: makeRect("c") },
 				rootIds: ["a", "b", "c"],
 			});
-			expect(BringForwardCommand.execute(state).rootIds).toEqual([
+			expect(BringForwardCommand.execute(state, registries).rootIds).toEqual([
 				"a",
 				"b",
 				"c",
@@ -63,7 +66,7 @@ describe("BringForwardCommand", () => {
 				rootIds: ["a", "b", "c", "d"],
 			});
 			// the b,c block moves in front of d; adjacent selected items are not swapped
-			expect(BringForwardCommand.execute(state).rootIds).toEqual([
+			expect(BringForwardCommand.execute(state, registries).rootIds).toEqual([
 				"a",
 				"d",
 				"b",
@@ -77,7 +80,9 @@ describe("BringForwardCommand", () => {
 				objects: { a: makeRect("a"), b: makeRect("b") },
 				rootIds: ["a", "b"],
 			});
-			expect(BringForwardCommand.execute(state).commitVersion).toBe(1);
+			expect(BringForwardCommand.execute(state, registries).commitVersion).toBe(
+				1,
+			);
 		});
 	});
 
@@ -93,7 +98,7 @@ describe("BringForwardCommand", () => {
 				},
 				rootIds: ["g"],
 			});
-			const next = BringForwardCommand.execute(state);
+			const next = BringForwardCommand.execute(state, registries);
 			expect((next.objects["g"] as GroupState).childIds).toEqual([
 				"c2",
 				"c1",
@@ -110,13 +115,14 @@ describe("BringForwardCommand", () => {
 				objects: { a: makeRect("a"), b: makeRect("b") },
 				rootIds: ["a", "b"],
 			});
-			expect(BringForwardCommand.canExecute(state)).toBe(true);
+			expect(BringForwardCommand.canExecute(state, registries)).toBe(true);
 		});
 
 		it("is not executable when there is no selection", () => {
 			expect(
 				BringForwardCommand.canExecute(
 					makeState({ selectedIds: [], objects: {}, rootIds: [] }),
+					registries,
 				),
 			).toBe(false);
 		});
@@ -131,7 +137,7 @@ describe("BringForwardCommand", () => {
 				},
 				rootIds: ["a", "g"],
 			});
-			expect(BringForwardCommand.canExecute(state)).toBe(false);
+			expect(BringForwardCommand.canExecute(state, registries)).toBe(false);
 		});
 	});
 });

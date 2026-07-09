@@ -12,12 +12,13 @@ import {
 	RowLabel,
 	Title,
 } from "./ShortcutHelpStyled";
-import { commandRegistry } from "../../../commands/CommandRegistry";
+import type { CommandRegistry } from "../../../commands/CommandRegistry";
 import type { Command } from "../../../commands/CommandTypes";
 import {
 	formatShortcutTokens,
 	getPlatformShortcuts,
 } from "../../../commands/CommandUtils";
+import { useCanvasRegistries } from "../../../contexts/CanvasRegistriesContext";
 import {
 	getCommandLabel,
 	type CanvasMessages,
@@ -56,7 +57,10 @@ type CategoryGroup = {
  * Pulls shortcut-bearing commands from the commandRegistry and groups them by
  * category order.
  */
-const buildGroups = (messages: CanvasMessages): CategoryGroup[] => {
+const buildGroups = (
+	messages: CanvasMessages,
+	commandRegistry: CommandRegistry,
+): CategoryGroup[] => {
 	const allCommands = commandRegistry.getAll();
 
 	return CATEGORY_ORDER.map((category) => {
@@ -94,7 +98,11 @@ export const ShortcutHelpModal: React.FC<ShortcutHelpModalProps> = ({
 	onClose,
 }) => {
 	const messages = useCanvasMessages();
-	const groups = useMemo(() => buildGroups(messages), [messages]);
+	const { command: commandRegistry } = useCanvasRegistries();
+	const groups = useMemo(
+		() => buildGroups(messages, commandRegistry),
+		[messages, commandRegistry],
+	);
 
 	return (
 		<Backdrop

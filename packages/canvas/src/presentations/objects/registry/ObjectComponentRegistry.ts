@@ -2,7 +2,7 @@ import type { FC } from "react";
 
 import type { ObjectType } from "../../../schemas/objects/types/ObjectType";
 
-class ObjectComponentRegistry {
+export class ObjectComponentRegistry {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	private readonly components = new Map<ObjectType, FC<any>>();
 
@@ -21,4 +21,5 @@ class ObjectComponentRegistry {
 	}
 }
 
-export const objectComponentRegistry = new ObjectComponentRegistry();
+export const createObjectComponentRegistry = (): ObjectComponentRegistry =>
+	new ObjectComponentRegistry();

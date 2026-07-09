@@ -3,7 +3,10 @@ import { describe, expect, it } from "vitest";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { createTestRegistries } from "../../../setup/createCanvasRegistries";
 import { BringToFrontCommand } from "../BringToFrontCommand";
+
+const registries = createTestRegistries();
 
 const makeState = (params: {
 	selectedIds: string[];
@@ -26,7 +29,7 @@ describe("BringToFrontCommand", () => {
 				objects: { a: makeRect("a"), b: makeRect("b"), c: makeRect("c") },
 				rootIds: ["a", "b", "c"],
 			});
-			const nextState = BringToFrontCommand.execute(state);
+			const nextState = BringToFrontCommand.execute(state, registries);
 			expect(nextState.rootIds).toEqual(["b", "c", "a"]);
 		});
 
@@ -42,7 +45,7 @@ describe("BringToFrontCommand", () => {
 				},
 				rootIds: ["a", "b", "c", "d"],
 			});
-			const nextState = BringToFrontCommand.execute(state);
+			const nextState = BringToFrontCommand.execute(state, registries);
 			// keeps the relative order within rootIds [a, c], not the selection order [c, a]
 			expect(nextState.rootIds).toEqual(["b", "d", "a", "c"]);
 		});
@@ -58,7 +61,7 @@ describe("BringToFrontCommand", () => {
 				},
 				rootIds: ["a", "b", "c", "d"],
 			});
-			const nextState = BringToFrontCommand.execute(state);
+			const nextState = BringToFrontCommand.execute(state, registries);
 			expect(nextState.rootIds).toEqual(["a", "c", "d", "b"]);
 		});
 
@@ -68,7 +71,7 @@ describe("BringToFrontCommand", () => {
 				objects: { a: makeRect("a"), b: makeRect("b") },
 				rootIds: ["a", "b"],
 			});
-			const nextState = BringToFrontCommand.execute(state);
+			const nextState = BringToFrontCommand.execute(state, registries);
 			expect(nextState.commitVersion).toBe(state.commitVersion + 1);
 		});
 	});
@@ -86,7 +89,7 @@ describe("BringToFrontCommand", () => {
 				},
 				rootIds: ["group1"],
 			});
-			const nextState = BringToFrontCommand.execute(state);
+			const nextState = BringToFrontCommand.execute(state, registries);
 			const updatedGroup = nextState.objects["group1"] as GroupState;
 			// keeps the relative order within childIds [child1, child3], not the selection order [child3, child1]
 			expect(updatedGroup.childIds).toEqual(["child2", "child1", "child3"]);

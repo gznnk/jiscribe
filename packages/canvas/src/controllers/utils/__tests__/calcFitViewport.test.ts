@@ -1,13 +1,8 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { ZOOM } from "../../../constants/zoom";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import { initializeObjectRegistry } from "../../setup/initializeObjectRegistry";
 import { calcFitViewport } from "../calcFitViewport";
-
-beforeAll(() => {
-	initializeObjectRegistry();
-});
 
 /** Axis-aligned (unrotated) Frame-family state. bbox is trivial: left=cx-w/2, etc. */
 const rectObj = (

@@ -35,7 +35,7 @@ export const ObjectMenuHandler: GestureHandler = {
 		);
 	},
 
-	handle(state, event) {
+	handle(state, event, registries) {
 		let nextState = state;
 
 		// A press on the ObjectMenu closes the context menu (the press itself performs no item action)
@@ -74,6 +74,7 @@ export const ObjectMenuHandler: GestureHandler = {
 					state,
 					property,
 					event.inputValue,
+					registries,
 				);
 				return { ...newState, selectedVertex: null };
 			}
@@ -84,6 +85,7 @@ export const ObjectMenuHandler: GestureHandler = {
 					state,
 					property,
 					event.inputValue,
+					registries,
 				);
 				return {
 					...newState,
@@ -116,7 +118,12 @@ export const ObjectMenuHandler: GestureHandler = {
 				if (colonIndex !== -1) {
 					const property = rest.slice(0, colonIndex);
 					const value = rest.slice(colonIndex + 1);
-					const newState = handlePropertyUpdate(state, property, value);
+					const newState = handlePropertyUpdate(
+						state,
+						property,
+						value,
+						registries,
+					);
 					// History recording is delegated to handleGesture, so only update commitVersion
 					return {
 						...newState,
@@ -129,7 +136,7 @@ export const ObjectMenuHandler: GestureHandler = {
 			// Command button: command:{commandId}
 			if (actionId.startsWith("command:")) {
 				const commandId = actionId.slice("command:".length);
-				return handleCommand(state, commandId);
+				return handleCommand(state, commandId, registries);
 			}
 		}
 

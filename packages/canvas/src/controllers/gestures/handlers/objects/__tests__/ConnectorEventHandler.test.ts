@@ -2,8 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { createTestRegistries } from "../../../../setup/createCanvasRegistries";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { ConnectorEventHandler } from "../ConnectorEventHandler";
+
+const registries = createTestRegistries();
 
 const makeConnector = (id: string, labelText: string): ConnectorState =>
 	({
@@ -66,6 +69,7 @@ describe("ConnectorEventHandler - double click edit target", () => {
 		const next = ConnectorEventHandler.handle(
 			makeState("Yes"),
 			makeEvent("doubleClick", "c1"),
+			registries,
 		);
 		expect(next.textEditState).toBeNull();
 		expect(next.selectedConnectorId).toBe("c1");
@@ -75,6 +79,7 @@ describe("ConnectorEventHandler - double click edit target", () => {
 		const next = ConnectorEventHandler.handle(
 			makeState("Yes"),
 			makeEvent("doubleClick", "c1", "label"),
+			registries,
 		);
 		expect(next.textEditState).toEqual({ objectId: "c1", text: "Yes" });
 		expect(next.selectedConnectorId).toBe("c1");
@@ -84,6 +89,7 @@ describe("ConnectorEventHandler - double click edit target", () => {
 		const next = ConnectorEventHandler.handle(
 			makeState(""),
 			makeEvent("doubleClick", "c1"),
+			registries,
 		);
 		expect(next.textEditState).toEqual({ objectId: "c1", text: "" });
 		expect(next.selectedConnectorId).toBe("c1");
@@ -95,6 +101,7 @@ describe("ConnectorEventHandler - taps while editing commit", () => {
 		const next = ConnectorEventHandler.handle(
 			makeEditState("c1", "old", "new"),
 			makeEvent("pressed", "c1"),
+			registries,
 		);
 		expect(labelText(next, "c1")).toBe("new");
 		expect(next.textEditState).toBeNull();
@@ -105,10 +112,12 @@ describe("ConnectorEventHandler - taps while editing commit", () => {
 		const afterPressed = ConnectorEventHandler.handle(
 			makeEditState("c1", "old", "new"),
 			makeEvent("pressed", "c1"),
+			registries,
 		);
 		const afterDouble = ConnectorEventHandler.handle(
 			afterPressed,
 			makeEvent("doubleClick", "c1"),
+			registries,
 		);
 		// Exactly one commit (from the pressed); the committed label now exists,
 		// so the line double click only selects.
@@ -122,6 +131,7 @@ describe("ConnectorEventHandler - taps while editing commit", () => {
 		const next = ConnectorEventHandler.handle(
 			makeEditState("c1", "old", "new"),
 			makeEvent("pressed", "c2"),
+			registries,
 		);
 		// The edit is committed to c1 and the session is cleared.
 		expect(labelText(next, "c1")).toBe("new");

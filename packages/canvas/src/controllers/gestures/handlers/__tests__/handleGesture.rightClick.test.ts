@@ -1,21 +1,15 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { CanvasDoc } from "../../../../schemas/canvas/CanvasDoc";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createInitialControllerState } from "../../../reducer/createInitialControllerState";
-import { initializeCommands } from "../../../setup/initializeCommands";
-import { initializeGestureHandlerRegistry } from "../../../setup/initializeGestureHandlerRegistry";
-import { initializeObjectRegistry } from "../../../setup/initializeObjectRegistry";
+import { createTestRegistries } from "../../../setup/createCanvasRegistries";
 import type { Gesture } from "../../recognizer/GestureRecognizerTypes";
 import { handleGesture } from "../handleGesture";
 
-beforeAll(() => {
-	initializeObjectRegistry();
-	initializeGestureHandlerRegistry();
-	initializeCommands();
-});
+const registries = createTestRegistries();
 
 const emptyDoc: CanvasDoc = {
 	version: 1,
@@ -23,7 +17,7 @@ const emptyDoc: CanvasDoc = {
 } as unknown as CanvasDoc;
 
 const baseState = (): CanvasControllerState =>
-	deepFreezeState(createInitialControllerState(emptyDoc));
+	deepFreezeState(createInitialControllerState(emptyDoc, registries));
 
 const CLICK_CLIENT_POS = { x: 200, y: 150 };
 
@@ -57,6 +51,7 @@ describe("handleGesture - right-click over menus does not execute commands (#110
 			const nextState = handleGesture(
 				state,
 				clickOn(0, "menu", "toolbar", "command:zoomIn"),
+				registries,
 			);
 			expect(nextState.viewport.zoom).not.toBe(state.viewport.zoom);
 		});
@@ -66,6 +61,7 @@ describe("handleGesture - right-click over menus does not execute commands (#110
 			const nextState = handleGesture(
 				state,
 				clickOn(2, "menu", "toolbar", "command:zoomIn"),
+				registries,
 			);
 			expect(nextState.viewport.zoom).toBe(state.viewport.zoom);
 			expect(nextState.contextMenuPosition).toEqual({
@@ -81,6 +77,7 @@ describe("handleGesture - right-click over menus does not execute commands (#110
 			const nextState = handleGesture(
 				state,
 				clickOn(0, "menu", "shape-library", "item:sticky"),
+				registries,
 			);
 			expect(nextState.rootIds.length).toBe(state.rootIds.length + 1);
 		});
@@ -90,6 +87,7 @@ describe("handleGesture - right-click over menus does not execute commands (#110
 			const nextState = handleGesture(
 				state,
 				clickOn(2, "menu", "shape-library", "item:sticky"),
+				registries,
 			);
 			expect(nextState.rootIds).toEqual(state.rootIds);
 			expect(nextState.objects).toEqual(state.objects);
@@ -99,6 +97,7 @@ describe("handleGesture - right-click over menus does not execute commands (#110
 			const nextState = handleGesture(
 				baseState(),
 				clickOn(2, "menu", "shape-library", "item:rect"),
+				registries,
 			);
 			expect(nextState.shapeDrawing).toBeNull();
 		});
@@ -120,6 +119,7 @@ describe("handleGesture - right-click over menus does not execute commands (#110
 			const nextState = handleGesture(
 				openMenuState(),
 				clickOn(0, "menu", "context-menu", "command:selectAll"),
+				registries,
 			);
 			expect(nextState.selectedIds).toEqual(["a"]);
 		});
@@ -128,6 +128,7 @@ describe("handleGesture - right-click over menus does not execute commands (#110
 			const nextState = handleGesture(
 				openMenuState(),
 				clickOn(2, "menu", "context-menu", "command:selectAll"),
+				registries,
 			);
 			expect(nextState.selectedIds).toEqual([]);
 			// Falls through to the canvas right-button behavior: the context menu
@@ -144,6 +145,7 @@ describe("handleGesture - right-click over menus does not execute commands (#110
 			const nextState = handleGesture(
 				baseState(),
 				clickOn(0, "menu", "object-menu", "toggle:style"),
+				registries,
 			);
 			expect(nextState.objectMenuOpenId).toBe("style");
 		});
@@ -152,6 +154,7 @@ describe("handleGesture - right-click over menus does not execute commands (#110
 			const nextState = handleGesture(
 				baseState(),
 				clickOn(2, "menu", "object-menu", "toggle:style"),
+				registries,
 			);
 			expect(nextState.objectMenuOpenId).toBeNull();
 		});

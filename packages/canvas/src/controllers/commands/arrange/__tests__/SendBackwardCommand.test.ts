@@ -3,7 +3,10 @@ import { describe, expect, it } from "vitest";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { createTestRegistries } from "../../../setup/createCanvasRegistries";
 import { SendBackwardCommand } from "../SendBackwardCommand";
+
+const registries = createTestRegistries();
 
 const makeState = (params: {
 	selectedIds: string[];
@@ -31,7 +34,7 @@ describe("SendBackwardCommand", () => {
 				objects: { a: makeRect("a"), b: makeRect("b"), c: makeRect("c") },
 				rootIds: ["a", "b", "c"],
 			});
-			expect(SendBackwardCommand.execute(state).rootIds).toEqual([
+			expect(SendBackwardCommand.execute(state, registries).rootIds).toEqual([
 				"a",
 				"c",
 				"b",
@@ -44,7 +47,7 @@ describe("SendBackwardCommand", () => {
 				objects: { a: makeRect("a"), b: makeRect("b"), c: makeRect("c") },
 				rootIds: ["a", "b", "c"],
 			});
-			expect(SendBackwardCommand.execute(state).rootIds).toEqual([
+			expect(SendBackwardCommand.execute(state, registries).rootIds).toEqual([
 				"a",
 				"b",
 				"c",
@@ -62,7 +65,7 @@ describe("SendBackwardCommand", () => {
 				},
 				rootIds: ["a", "b", "c", "d"],
 			});
-			expect(SendBackwardCommand.execute(state).rootIds).toEqual([
+			expect(SendBackwardCommand.execute(state, registries).rootIds).toEqual([
 				"b",
 				"c",
 				"a",
@@ -76,7 +79,9 @@ describe("SendBackwardCommand", () => {
 				objects: { a: makeRect("a"), b: makeRect("b") },
 				rootIds: ["a", "b"],
 			});
-			expect(SendBackwardCommand.execute(state).commitVersion).toBe(1);
+			expect(SendBackwardCommand.execute(state, registries).commitVersion).toBe(
+				1,
+			);
 		});
 	});
 
@@ -92,7 +97,7 @@ describe("SendBackwardCommand", () => {
 				},
 				rootIds: ["g"],
 			});
-			const next = SendBackwardCommand.execute(state);
+			const next = SendBackwardCommand.execute(state, registries);
 			expect((next.objects["g"] as GroupState).childIds).toEqual([
 				"c1",
 				"c3",
@@ -109,13 +114,14 @@ describe("SendBackwardCommand", () => {
 				objects: { a: makeRect("a"), b: makeRect("b") },
 				rootIds: ["a", "b"],
 			});
-			expect(SendBackwardCommand.canExecute(state)).toBe(true);
+			expect(SendBackwardCommand.canExecute(state, registries)).toBe(true);
 		});
 
 		it("is not executable when there is no selection", () => {
 			expect(
 				SendBackwardCommand.canExecute(
 					makeState({ selectedIds: [], objects: {}, rootIds: [] }),
+					registries,
 				),
 			).toBe(false);
 		});

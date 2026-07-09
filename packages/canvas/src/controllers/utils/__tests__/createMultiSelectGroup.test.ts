@@ -1,15 +1,10 @@
-import { beforeAll, describe, it, expect } from "vitest";
+import { describe, it, expect } from "vitest";
 
 import { MIN_GROUP_DIMENSION } from "../../../constants/groupDimensions";
 import { MULTI_SELECT_GROUP } from "../../../constants/multiSelectGroup";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
-import { initializeObjectRegistry } from "../../setup/initializeObjectRegistry";
 import { createMultiSelectGroup } from "../createMultiSelectGroup";
-
-beforeAll(() => {
-	initializeObjectRegistry();
-});
 
 const rect = (
 	id: string,

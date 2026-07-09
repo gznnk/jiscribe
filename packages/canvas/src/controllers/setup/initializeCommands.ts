@@ -1,10 +1,11 @@
+import type { CanvasRegistries } from "./CanvasRegistries";
 import { BringForwardCommand } from "../commands/arrange/BringForwardCommand";
 import { BringToFrontCommand } from "../commands/arrange/BringToFrontCommand";
 import { moveCommands } from "../commands/arrange/MoveCommands";
 import { SendBackwardCommand } from "../commands/arrange/SendBackwardCommand";
 import { SendToBackCommand } from "../commands/arrange/SendToBackCommand";
 import { SwapArrowsCommand } from "../commands/arrow/SwapArrowsCommand";
-import { commandRegistry } from "../commands/CommandRegistry";
+import type { Command } from "../commands/CommandTypes";
 import {
 	SetRoutingOrthogonalCommand,
 	SetRoutingStraightCommand,
@@ -27,42 +28,66 @@ import { ZoomToFitCommand } from "../commands/view/ZoomToFitCommand";
 import { ZoomToSelectionCommand } from "../commands/view/ZoomToSelectionCommand";
 
 /**
- * Registers commands into the registry.
+ * Every command available to a canvas, in registration order.
+ * `createCanvasRegistries` registers all of these by default, or a filtered
+ * subset when `config.commands` restricts the enabled command ids.
  */
-export const initializeCommands = (): void => {
-	commandRegistry
-		// Edit commands
-		.register(UndoCommand)
-		.register(RedoCommand)
-		// Clipboard commands
-		.register(CopyCommand)
-		.register(CutCommand)
-		.register(DuplicateCommand)
-		// Selection commands
-		.register(SelectAllCommand)
-		.register(DeselectAllCommand)
-		.register(DeleteCommand)
-		// Arrange commands
-		.register(BringToFrontCommand)
-		.register(BringForwardCommand)
-		.register(SendBackwardCommand)
-		.register(SendToBackCommand)
-		// Move (nudge) commands: 8 commands (up/down/left/right x normal/Shift)
-		.registerAll(moveCommands)
-		// Arrow commands
-		.register(SwapArrowsCommand)
-		// Connector routing commands
-		.register(SetRoutingStraightCommand)
-		.register(SetRoutingOrthogonalCommand)
-		// Group commands
-		.register(GroupCommand)
-		.register(UngroupCommand)
-		// Text commands
-		.register(StartTextEditCommand)
-		// View commands
-		.register(ZoomInCommand)
-		.register(ZoomOutCommand)
-		.register(ResetZoomCommand)
-		.register(ZoomToFitCommand)
-		.register(ZoomToSelectionCommand);
+export const ALL_COMMANDS: Command[] = [
+	// Edit commands
+	UndoCommand,
+	RedoCommand,
+	// Clipboard commands
+	CopyCommand,
+	CutCommand,
+	DuplicateCommand,
+	// Selection commands
+	SelectAllCommand,
+	DeselectAllCommand,
+	DeleteCommand,
+	// Arrange commands
+	BringToFrontCommand,
+	BringForwardCommand,
+	SendBackwardCommand,
+	SendToBackCommand,
+	// Move (nudge) commands: 8 commands (up/down/left/right x normal/Shift)
+	...moveCommands,
+	// Arrow commands
+	SwapArrowsCommand,
+	// Connector routing commands
+	SetRoutingStraightCommand,
+	SetRoutingOrthogonalCommand,
+	// Group commands
+	GroupCommand,
+	UngroupCommand,
+	// Text commands
+	StartTextEditCommand,
+	// View commands
+	ZoomInCommand,
+	ZoomOutCommand,
+	ResetZoomCommand,
+	ZoomToFitCommand,
+	ZoomToSelectionCommand,
+];
+
+/**
+ * Clears the bundle's command registry and registers the enabled commands.
+ *
+ * Clears first (like the other `initialize*` bundle populators) so re-running it
+ * — tests, partial init, hot reload — never leaves stale commands behind: the
+ * registry always ends up with exactly the listed command ids.
+ *
+ * @param registries Target bundle to populate.
+ * @param commandIds When provided, only commands whose id is included are
+ * registered (enables per-canvas command restriction). Defaults to all.
+ */
+export const initializeCommands = (
+	registries: CanvasRegistries,
+	commandIds?: readonly string[],
+): void => {
+	registries.command.clear();
+	const enabled = commandIds ? new Set(commandIds) : undefined;
+	const commands = enabled
+		? ALL_COMMANDS.filter((command) => enabled.has(command.id))
+		: ALL_COMMANDS;
+	registries.command.registerAll(commands);
 };

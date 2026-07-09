@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { createTestRegistries } from "../../../../setup/createCanvasRegistries";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { ContextMenuHandler } from "../ContextMenuHandler";
 
+const registries = createTestRegistries();
+
 const makeState = (): CanvasControllerState =>
 	({
+		registries,
 		objects: {},
 		rootIds: [],
 		selectedIds: [],
@@ -52,6 +56,7 @@ describe("ContextMenuHandler", () => {
 		const next = ContextMenuHandler.handle(
 			makeState(),
 			makeEvent("click", "context-menu", "command:unknown-command"),
+			registries,
 		);
 		expect(next.contextMenuPosition).toBeNull();
 	});
@@ -61,6 +66,7 @@ describe("ContextMenuHandler", () => {
 		const next = ContextMenuHandler.handle(
 			state,
 			makeEvent("pressed", "context-menu", "command:copy"),
+			registries,
 		);
 		expect(next.contextMenuPosition).toEqual({ clientX: 100, clientY: 100 });
 	});
@@ -70,6 +76,7 @@ describe("ContextMenuHandler", () => {
 		const next = ContextMenuHandler.handle(
 			state,
 			makeEvent("click", "context-menu", undefined),
+			registries,
 		);
 		expect(next).toBe(state);
 	});

@@ -1,17 +1,9 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { createCommandState } from "./support/createCommandState";
 import { runCommand } from "./support/dispatch";
 import { twoRectsWithConnectorDoc } from "./support/fixtures";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
-import { initializeCommands } from "../../setup/initializeCommands";
-import { initializeObjectRegistry } from "../../setup/initializeObjectRegistry";
-
-beforeAll(() => {
-	// canvasToState (doc→state) needs Mappers, and handleCommand needs the Command registry.
-	initializeObjectRegistry();
-	initializeCommands();
-});
 
 /**
  * Connectors live in the separate selectedConnectorId channel and are only mixed into

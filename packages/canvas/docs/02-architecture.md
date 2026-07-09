@@ -62,7 +62,7 @@ Dependency: `states → schemas` (State is converted from Doc).
 - **reducer/**: Dispatches actions to the appropriate handlers → [State Update Flow](./06-state-update-flow.md).
 - **ui/**: UI control logic such as transform controls and menus.
 
-Dependencies: `controllers → states / schemas`. `controllers → presentations` also exists — mostly for utilities, but some UI controllers additionally import presentation **components** and the component registry (e.g. `PendingConnectorOverlay` → `ConnectorRenderer`, `DragGhost` → `objectComponentRegistry`, `ArrowHeadIconPreview` → `Arrow`). The direction (controllers may depend on presentations, never the reverse) still holds.
+Dependencies: `controllers → states / schemas`. `controllers → presentations` also exists — mostly for utilities, but some UI controllers additionally import presentation **components** (e.g. `PendingConnectorOverlay` → `ConnectorRenderer`, `ArrowHeadIconPreview` → `Arrow`) and the presentation-layer `ObjectComponentRegistryContext`. The direction (controllers may depend on presentations, never the reverse) still holds.
 
 ### Presentation Layer (presentations)
 
@@ -73,22 +73,39 @@ Dependency: `presentations → states` (referenced as the type of Props).
 
 ### Registries (distributed — there is no single "registry" layer)
 
-There is **no top-level `src/registry/` directory and no `ObjectRegistry` class**. Instead, per-shape functionality is resolved through several small registries, each **colocated with the layer it belongs to**:
+There is **no top-level `src/registry/` directory and no `ObjectRegistry` class**. Instead, per-shape functionality is resolved through several small registry **classes**, each **colocated with the layer it belongs to**:
 
-| Registry (singleton)                                    | Location                          | Resolves                                                |
-| ------------------------------------------------------- | --------------------------------- | ------------------------------------------------------- |
-| `objectDocValidatorRegistry` / `shapeFactoryRegistry`   | `schemas/registry/`               | per-type Doc validator, features, shape factory         |
-| `objectMapperRegistry` / `objectStateValidatorRegistry` | `states/registry/`                | Doc ↔ State mapper, State validator                     |
-| `gestureHandlerRegistry` / `objectBehaviorRegistry`     | `controllers/gestures/registry/`  | gesture handlers, `moveByDelta` / `transformByGroup`    |
-| `objectComponentRegistry` / `shapePreviewRegistry`      | `presentations/objects/registry/` | render component, preview renderer                      |
-| `shapePresetRegistry` / `objectMenuRegistry`            | `controllers/ui/...`              | ShapeLibrary presets, per-type ObjectMenu               |
-| `commandRegistry`                                       | `controllers/commands/`           | commands (see [Command System](./05-command-system.md)) |
+| Registry class                                          | Location                                      | Resolves                                                |
+| ------------------------------------------------------- | --------------------------------------------- | ------------------------------------------------------- |
+| `ShapeFactoryRegistry`                                  | `schemas/registry/`                           | per-type shape factory (create Doc / bounds)            |
+| `ObjectMapperRegistry` / `ObjectStateValidatorRegistry` | `states/registry/`                            | Doc ↔ State mapper (+ features), State validator        |
+| `GestureHandlerRegistry` / `ObjectBehaviorRegistry`     | `controllers/gestures/registry/`              | gesture handlers, `moveByDelta` / `transformByGroup`    |
+| `ObjectComponentRegistry` / `ShapePreviewRegistry`      | `presentations/objects/registry/`             | render component, preview renderer                      |
+| `ShapePresetRegistry` / `ObjectMenuRegistry`            | `controllers/registry/`, `controllers/ui/...` | ShapeLibrary presets, per-type ObjectMenu               |
+| `CommandRegistry`                                       | `controllers/commands/`                       | commands (see [Command System](./05-command-system.md)) |
 
 Because each registry keys off the shape type (`"rect"`, `"ellipse"`, …), cross-shape processing can be written type-safely without `if (type === ...)` branching.
 
-`controllers/setup/initializeObjectRegistry()` is the **single place that populates all of these at once** (this "register every type into every registry" step is the concept the docs sometimes loosely call the "ObjectRegistry"; it is a function, not a class). The one exception is `objectDocValidatorRegistry`, which is a schema-layer concern populated lazily by `parseCanvasText` at parse time (so the parser-only entry pulls in no UI dependency) — see [Data Model](./03-data-model-and-persistence.md).
+### Per-canvas registries (`CanvasConfig`)
 
-> **On `CanvasMapper`**: whole-document `CanvasDoc ↔ CanvasState` conversion must invoke each shape's Mapper polymorphically, so `states/canvas/CanvasMapper.ts` looks up `objectMapperRegistry` from `states/registry/ObjectMapperRegistry`. This stays **within the `states/` layer** (a registry colocated with the mappers it serves), so it is not a cross-layer exception.
+These registries are **not module-level singletons**. Each `<Canvas>` instance owns its own **bundle** (`CanvasRegistries` — one instance of each registry class), built by `controllers/setup/createCanvasRegistries(config?)`. This lets two canvases on the same page run with different object-type / command sets (plugin-style extensibility, feature-gating). Passing no `config` reuses a shared full default (`defaultCanvasRegistries`).
+
+```ts
+<Canvas initialConfig={{ objectTypes: ["rect", "ellipse"], commands: ["undo", "redo"] }} />
+```
+
+`initialConfig` is read **once at mount** — the capability set is part of a canvas's identity, so later `initialConfig` changes are ignored. To reconfigure at runtime, remount with a new React `key`.
+
+The bundle reaches consumers by two paths (#165, Option B):
+
+- **React tree** (components / hooks) → `CanvasRegistriesContext` + `useCanvasRegistries()`. The presentation-layer `ObjectComponentRegistryContext` distributes just the component registry to renderers (presentation must not import the controllers-layer bundle type).
+- **Pure reducer/handler/util tree** (cannot read React context) → the bundle is **not** stored on `CanvasControllerState` (it is a dependency, not state). `createCanvasReducer(registries)` closes over it and threads it to each handler/command as an explicit `registries` argument (`handleGesture(state, gesture, registries)`, `command.execute(state, registries)`, …). Leaf utils without `state` receive the specific sub-registry as an argument.
+
+`controllers/setup/initializeObjectRegistry(registries)` / `initializeGestureHandlerRegistry(registries)` / `initializeCommands(registries, commandIds?)` populate a **given** bundle; `createCanvasRegistries` wires them together (all object types by default, or the `config` subset). The **exception** is `objectDocValidatorRegistry`, which stays a schema-layer **global** singleton: it is used only during parse-time validation at the input boundary (before a `<Canvas>` exists), so `parseCanvasText` initializes it lazily and the parser-only entry pulls in no UI dependency — see [Data Model](./03-data-model-and-persistence.md).
+
+> **Semantic caveat**: when `config.objectTypes` restricts the enabled types, the caller must only pass docs whose object types remain enabled. A doc containing a disabled type makes `canvasToState` throw `"Mapper not found"` — consistent with the "caller passes a valid, consistent doc" contract ([design philosophy](./01-design-philosophy.md) principle 4). The default config (all types) is backward compatible.
+
+> **On `CanvasMapper`**: whole-document `CanvasDoc ↔ CanvasState` conversion must invoke each shape's Mapper polymorphically, so `states/canvas/CanvasMapper.ts` takes an `ObjectMapperRegistry` argument (`canvasToState(doc, mapper)` / `canvasToDoc(state, mapper)`) rather than reaching for a global — the caller passes the canvas's own `registries.objectMapper` (the bundle threaded through the pure tree, e.g. `createInitialControllerState`). `ObjectMapperRegistry` is the only registry the `states/` layer depends on (colocated with the mappers it serves), so this is not a cross-layer exception.
 
 ## Dependency Graph
 

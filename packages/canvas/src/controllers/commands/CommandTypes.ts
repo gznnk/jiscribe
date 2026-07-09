@@ -1,4 +1,5 @@
 import type { CanvasControllerState } from "../CanvasTypes";
+import type { ICanvasRegistries } from "../setup/ICanvasRegistries";
 
 /**
  * Definition of a keyboard shortcut.
@@ -55,14 +56,23 @@ export type Command = {
 	/**
 	 * Determines whether the command can be executed.
 	 * Used to enable/disable the menu item.
+	 *
+	 * Commands that don't need `registries` may omit the parameter — a
+	 * `(state) => ...` function still satisfies this type.
 	 */
-	canExecute: (state: CanvasControllerState) => boolean;
+	canExecute: (
+		state: CanvasControllerState,
+		registries: ICanvasRegistries,
+	) => boolean;
 
 	/**
 	 * Executes the command and returns a new CanvasControllerState.
 	 * Implemented as a pure function (no side effects).
 	 */
-	execute: (state: CanvasControllerState) => CanvasControllerState;
+	execute: (
+		state: CanvasControllerState,
+		registries: ICanvasRegistries,
+	) => CanvasControllerState;
 
 	/**
 	 * Platform-specific keyboard shortcuts.

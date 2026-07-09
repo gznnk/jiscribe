@@ -1,17 +1,15 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../../../CanvasTypes";
-import { initializeObjectRegistry } from "../../../../setup/initializeObjectRegistry";
+import { createTestRegistries } from "../../../../setup/createCanvasRegistries";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { ShapeLibraryItemHandler } from "../ShapeLibraryItemHandler";
 
-// Shape presets and factories are resolved through the registries.
-beforeAll(() => {
-	initializeObjectRegistry();
-});
+const registries = createTestRegistries();
 
 const makeState = (): CanvasControllerState =>
 	({
+		registries,
 		objects: {},
 		rootIds: [],
 		selectedIds: [],
@@ -64,12 +62,14 @@ describe("ShapeLibraryItemHandler", () => {
 		const entered = ShapeLibraryItemHandler.handle(
 			makeState(),
 			makeEvent("click", "item:rect"),
+			registries,
 		);
 		expect(entered.shapeDrawing?.preset.id).toBe("rect");
 
 		const left = ShapeLibraryItemHandler.handle(
 			entered,
 			makeEvent("click", "item:rect"),
+			registries,
 		);
 		expect(left.shapeDrawing).toBeNull();
 	});
@@ -78,6 +78,7 @@ describe("ShapeLibraryItemHandler", () => {
 		const next = ShapeLibraryItemHandler.handle(
 			makeState(),
 			makeEvent("click", "item:sticky"),
+			registries,
 		);
 		expect(next.rootIds).toHaveLength(1);
 		expect(next.shapeDrawing).toBeNull();
@@ -89,6 +90,7 @@ describe("ShapeLibraryItemHandler", () => {
 		const next = ShapeLibraryItemHandler.handle(
 			state,
 			makeEvent("click", "item:no-such-preset"),
+			registries,
 		);
 		expect(next.rootIds).toHaveLength(0);
 		expect(next.shapeDrawing).toBeNull();
@@ -98,6 +100,7 @@ describe("ShapeLibraryItemHandler", () => {
 		const next = ShapeLibraryItemHandler.handle(
 			makeState(),
 			makeEvent("pressed", "item:rect"),
+			registries,
 		);
 		expect(next.contextMenuPosition).toBeNull();
 		expect(next.rootIds).toHaveLength(0);

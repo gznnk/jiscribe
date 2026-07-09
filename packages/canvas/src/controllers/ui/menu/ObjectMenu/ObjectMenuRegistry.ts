@@ -15,7 +15,7 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
  *   { id: "custom", sections: [{ type: "custom", id: "myPanel", component: MyPanel }] },
  * ]);
  */
-class ObjectMenuRegistry {
+export class ObjectMenuRegistry {
 	private readonly factories = new Map<ObjectType, MenuSectionFactory>();
 
 	/**
@@ -43,4 +43,5 @@ class ObjectMenuRegistry {
 	}
 }
 
-export const objectMenuRegistry = new ObjectMenuRegistry();
+export const createObjectMenuRegistry = (): ObjectMenuRegistry =>
+	new ObjectMenuRegistry();

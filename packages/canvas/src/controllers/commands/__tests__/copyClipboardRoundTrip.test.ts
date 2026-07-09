@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { createCommandState } from "./support/createCommandState";
 import { runCommand } from "./support/dispatch";
@@ -7,14 +7,15 @@ import type { ConnectorState } from "../../../states/objects/connections/connect
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { handlePaste } from "../../reducer/handlers/handlePaste";
-import { initializeCommands } from "../../setup/initializeCommands";
-import { initializeObjectRegistry } from "../../setup/initializeObjectRegistry";
-import { isClipboardData } from "../selection/ClipboardData";
+import { createTestRegistries } from "../../setup/createCanvasRegistries";
+import { isClipboardData as isClipboardDataRaw } from "../selection/ClipboardData";
 
-beforeAll(() => {
-	initializeObjectRegistry();
-	initializeCommands();
-});
+const registries = createTestRegistries();
+
+// isClipboardData takes the per-type state validator explicitly; bind the test
+// bundle's fully-populated one.
+const isClipboardData = (value: unknown): boolean =>
+	isClipboardDataRaw(value, registries.objectStateValidator);
 
 /**
  * Copy and paste live on opposite sides of an untrusted boundary (the system
@@ -80,7 +81,7 @@ describe("paste rebuilds the copied structure with all references remapped", () 
 			selectedIds: ["rect-1", "rect-2"],
 		});
 		const copied = runCommand(state, "copy");
-		const after = handlePaste(copied, copied.internalClipboard!);
+		const after = handlePaste(copied, copied.internalClipboard!, registries);
 
 		const newIds = pastedTopLevelIds(state, after);
 		expect(newIds).toHaveLength(3);
@@ -112,7 +113,7 @@ describe("paste rebuilds the copied structure with all references remapped", () 
 		const originalGroup = grouped.objects[originalGroupId] as GroupState;
 
 		const copied = runCommand(grouped, "copy");
-		const after = handlePaste(copied, copied.internalClipboard!);
+		const after = handlePaste(copied, copied.internalClipboard!, registries);
 
 		// Pasted top level: the enclosed connector + the group.
 		const newIds = pastedTopLevelIds(grouped, after);
@@ -149,7 +150,7 @@ describe("paste rebuilds the copied structure with all references remapped", () 
 			selectedIds: ["rect-1", "rect-2"],
 		});
 		const copied = runCommand(state, "copy");
-		const after = handlePaste(copied, copied.internalClipboard!);
+		const after = handlePaste(copied, copied.internalClipboard!, registries);
 
 		const newIds = pastedTopLevelIds(state, after);
 		const newRectIds = newIds.filter(

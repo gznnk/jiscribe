@@ -7,7 +7,7 @@ import type { ObjectType } from "../../../schemas/objects/types/ObjectType";
  *
  * Only shapes that support draw dragging (rect / ellipse / polyline) are registered.
  */
-class ShapePreviewRegistry {
+export class ShapePreviewRegistry {
 	private readonly renderers = new Map<ObjectType, ShapePreviewRenderer>();
 
 	register(type: ObjectType, renderer: ShapePreviewRenderer): void {
@@ -23,4 +23,5 @@ class ShapePreviewRegistry {
 	}
 }
 
-export const shapePreviewRegistry = new ShapePreviewRegistry();
+export const createShapePreviewRegistry = (): ShapePreviewRegistry =>
+	new ShapePreviewRegistry();

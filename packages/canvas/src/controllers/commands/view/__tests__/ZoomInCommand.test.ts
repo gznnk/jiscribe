@@ -3,7 +3,10 @@ import { describe, expect, it } from "vitest";
 import { ZOOM } from "../../../../constants/zoom";
 import type { Viewport } from "../../../../states/canvas/Viewport";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { createTestRegistries } from "../../../setup/createCanvasRegistries";
 import { ZoomInCommand } from "../ZoomInCommand";
+
+const registries = createTestRegistries();
 
 const makeState = (viewport: Partial<Viewport>): CanvasControllerState =>
 	({
@@ -26,39 +29,41 @@ const centerOf = (viewport: Viewport) => ({
 describe("ZoomInCommand", () => {
 	it("snaps zoom to the next fixed step up (100% -> 125%)", () => {
 		const state = makeState({ zoom: 1 });
-		const next = ZoomInCommand.execute(state);
+		const next = ZoomInCommand.execute(state, registries);
 		expect(next.viewport.zoom).toBe(1.25);
 	});
 
 	it("snaps to the nearest step up (125%) from a mid-step value (116%)", () => {
 		const state = makeState({ zoom: 1.16 });
-		const next = ZoomInCommand.execute(state);
+		const next = ZoomInCommand.execute(state, registries);
 		expect(next.viewport.zoom).toBe(1.25);
 	});
 
 	it("keeps the viewport center after zooming", () => {
 		const state = makeState({ minX: 100, minY: 200, zoom: 2 });
 		const before = centerOf(state.viewport);
-		const after = centerOf(ZoomInCommand.execute(state).viewport);
+		const after = centerOf(ZoomInCommand.execute(state, registries).viewport);
 		expect(after.x).toBeCloseTo(before.x, 3);
 		expect(after.y).toBeCloseTo(before.y, 3);
 	});
 
 	it("does not exceed MAX", () => {
 		const state = makeState({ zoom: ZOOM.MAX });
-		const next = ZoomInCommand.execute(state);
+		const next = ZoomInCommand.execute(state, registries);
 		expect(next.viewport.zoom).toBe(ZOOM.MAX);
 	});
 
 	describe("canExecute", () => {
 		it("is executable when below MAX", () => {
-			expect(ZoomInCommand.canExecute(makeState({ zoom: 1 }))).toBe(true);
+			expect(ZoomInCommand.canExecute(makeState({ zoom: 1 }), registries)).toBe(
+				true,
+			);
 		});
 
 		it("is not executable when MAX is reached", () => {
-			expect(ZoomInCommand.canExecute(makeState({ zoom: ZOOM.MAX }))).toBe(
-				false,
-			);
+			expect(
+				ZoomInCommand.canExecute(makeState({ zoom: ZOOM.MAX }), registries),
+			).toBe(false);
 		});
 	});
 });

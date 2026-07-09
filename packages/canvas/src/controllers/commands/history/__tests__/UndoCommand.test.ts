@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { CanvasDoc } from "../../../../schemas/canvas/CanvasDoc";
 import {
@@ -7,13 +7,10 @@ import {
 	type DocSnapshot,
 } from "../../../../states/canvas/DocSnapshot";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { initializeObjectRegistry } from "../../../setup/initializeObjectRegistry";
+import { createTestRegistries } from "../../../setup/createCanvasRegistries";
 import { UndoCommand } from "../UndoCommand";
 
-// canvasToState uses objectMapperRegistry, so initialize it
-beforeAll(() => {
-	initializeObjectRegistry();
-});
+const registries = createTestRegistries();
 
 const rect = (id: string) =>
 	({ id, type: "rect", x: 0, y: 0, width: 100, height: 100 }) as never;
@@ -45,6 +42,7 @@ const makeState = (params: {
 		internalClipboard: null,
 		commitVersion: 5,
 		saveVersion: 0,
+		registries,
 	}) as unknown as CanvasControllerState;
 
 describe("UndoCommand", () => {
@@ -54,12 +52,14 @@ describe("UndoCommand", () => {
 			present: snapshotCurrent,
 			future: [],
 		});
-		const next = UndoCommand.execute(state);
+		const next = UndoCommand.execute(state, registries);
 
 		// docPrev (r1 only) is restored
 		expect(Object.keys(next.objects)).toEqual(["r1"]);
 		expect(next.history.present).toBe(snapshotPrev);
-		expect(resolveDocSnapshot(next.history.present)).toBe(docPrev);
+		expect(
+			resolveDocSnapshot(next.history.present, registries.objectMapper),
+		).toBe(docPrev);
 		expect(next.history.past).toEqual([]);
 		// the rolled-back present is stashed into future as-is (still a snapshot)
 		expect(next.history.future).toEqual([snapshotCurrent]);
@@ -71,7 +71,7 @@ describe("UndoCommand", () => {
 			present: snapshotCurrent,
 			future: [],
 		});
-		const next = UndoCommand.execute(state);
+		const next = UndoCommand.execute(state, registries);
 		expect(next.selectedIds).toEqual([]);
 		expect(next.saveVersion).toBe(1);
 		// restoring history is not a commit, so commitVersion is not changed
@@ -84,12 +84,14 @@ describe("UndoCommand", () => {
 			present: snapshotCurrent,
 			future: [],
 		});
-		expect(UndoCommand.execute(state).viewport).toEqual(state.viewport);
+		expect(UndoCommand.execute(state, registries).viewport).toEqual(
+			state.viewport,
+		);
 	});
 
 	it("returns the state unchanged when past is empty", () => {
 		const state = makeState({ past: [], present: snapshotCurrent, future: [] });
-		expect(UndoCommand.execute(state)).toBe(state);
+		expect(UndoCommand.execute(state, registries)).toBe(state);
 	});
 
 	describe("canExecute", () => {
@@ -101,6 +103,7 @@ describe("UndoCommand", () => {
 						present: snapshotCurrent,
 						future: [],
 					}),
+					registries,
 				),
 			).toBe(true);
 		});
@@ -109,6 +112,7 @@ describe("UndoCommand", () => {
 			expect(
 				UndoCommand.canExecute(
 					makeState({ past: [], present: snapshotCurrent, future: [] }),
+					registries,
 				),
 			).toBe(false);
 		});
@@ -122,6 +126,7 @@ describe("UndoCommand", () => {
 						future: [],
 						eventStartSnapshot: { foo: 1 },
 					}),
+					registries,
 				),
 			).toBe(false);
 		});
@@ -135,6 +140,7 @@ describe("UndoCommand", () => {
 						future: [],
 						textEditState: { objectId: "r1", text: "" },
 					}),
+					registries,
 				),
 			).toBe(false);
 		});

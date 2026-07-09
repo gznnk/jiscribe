@@ -2,8 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { createTestRegistries } from "../../../../setup/createCanvasRegistries";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { CanvasEventHandler } from "../CanvasEventHandler";
+
+const registries = createTestRegistries();
 
 const makeTextRect = (id: string, text: string): ObjectState =>
 	({ id, type: "rect", text }) as unknown as ObjectState;
@@ -46,7 +49,7 @@ describe("CanvasEventHandler", () => {
 				scrollDelta: { deltaX: 10, deltaY: 20 },
 			});
 
-			const nextState = CanvasEventHandler.handle(state, event);
+			const nextState = CanvasEventHandler.handle(state, event, registries);
 
 			expect(nextState.textEditState).toEqual({
 				objectId: "a",
@@ -65,7 +68,7 @@ describe("CanvasEventHandler", () => {
 				scrollDelta: { deltaX: 10, deltaY: 20 },
 			});
 
-			const nextState = CanvasEventHandler.handle(state, event);
+			const nextState = CanvasEventHandler.handle(state, event, registries);
 
 			expect(nextState.viewport.minX).toBe(5);
 			expect(nextState.viewport.minY).toBe(10);
@@ -79,7 +82,7 @@ describe("CanvasEventHandler", () => {
 				last: { x: 0, y: 0 },
 			});
 
-			const nextState = CanvasEventHandler.handle(state, event);
+			const nextState = CanvasEventHandler.handle(state, event, registries);
 
 			expect(nextState.textEditState).toEqual({
 				objectId: "a",
@@ -94,7 +97,7 @@ describe("CanvasEventHandler", () => {
 			const state = makeState();
 			const event = makeEvent({ type: "pressed", button: 0 });
 
-			const nextState = CanvasEventHandler.handle(state, event);
+			const nextState = CanvasEventHandler.handle(state, event, registries);
 
 			expect(nextState.textEditState).toBeNull();
 			expect(

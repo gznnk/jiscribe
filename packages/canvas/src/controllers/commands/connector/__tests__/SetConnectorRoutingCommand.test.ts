@@ -4,10 +4,13 @@ import { describe, expect, it } from "vitest";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { createTestRegistries } from "../../../setup/createCanvasRegistries";
 import {
 	SetRoutingOrthogonalCommand,
 	SetRoutingStraightCommand,
 } from "../SetConnectorRoutingCommand";
+
+const registries = createTestRegistries();
 
 /** By default both ends are free (not a self-loop). Passing owners makes the endpoints owned. */
 const makeConnector = (
@@ -60,7 +63,7 @@ describe("SetConnectorRoutingCommand", () => {
 				selectedVertex: { objectId: "c1", vertexIndex: 0 },
 			});
 
-			const next = SetRoutingOrthogonalCommand.execute(state);
+			const next = SetRoutingOrthogonalCommand.execute(state, registries);
 			const conn = next.objects["c1"] as ConnectorState;
 
 			expect(conn.routing).toBe("orthogonal");
@@ -79,7 +82,7 @@ describe("SetConnectorRoutingCommand", () => {
 				objects: { c1: makeConnector("c1", "orthogonal", waypoints) },
 			});
 
-			const next = SetRoutingStraightCommand.execute(state);
+			const next = SetRoutingStraightCommand.execute(state, registries);
 			const conn = next.objects["c1"] as ConnectorState;
 
 			expect(conn.routing).toBe("straight");
@@ -95,7 +98,7 @@ describe("SetConnectorRoutingCommand", () => {
 				objects: { c1: makeConnector("c1", undefined, []) },
 			});
 
-			const next = SetRoutingOrthogonalCommand.execute(state);
+			const next = SetRoutingOrthogonalCommand.execute(state, registries);
 
 			// same state reference (no history entry is created)
 			expect(next).toBe(state);
@@ -108,7 +111,7 @@ describe("SetConnectorRoutingCommand", () => {
 				selectedConnectorId: "c1",
 				objects: { c1: makeConnector("c1", "straight", [{ x: 1, y: 2 }]) },
 			});
-			expect(SetRoutingStraightCommand.execute(state)).toBe(state);
+			expect(SetRoutingStraightCommand.execute(state, registries)).toBe(state);
 		});
 	});
 
@@ -118,8 +121,12 @@ describe("SetConnectorRoutingCommand", () => {
 				selectedConnectorId: "c1",
 				objects: { c1: makeConnector("c1", undefined, []) },
 			});
-			expect(SetRoutingStraightCommand.canExecute(state)).toBe(true);
-			expect(SetRoutingOrthogonalCommand.canExecute(state)).toBe(true);
+			expect(SetRoutingStraightCommand.canExecute(state, registries)).toBe(
+				true,
+			);
+			expect(SetRoutingOrthogonalCommand.canExecute(state, registries)).toBe(
+				true,
+			);
 		});
 
 		it("is not executable when no connector is selected", () => {
@@ -127,8 +134,12 @@ describe("SetConnectorRoutingCommand", () => {
 				selectedConnectorId: null,
 				objects: { r1: makeRect("r1") },
 			});
-			expect(SetRoutingStraightCommand.canExecute(state)).toBe(false);
-			expect(SetRoutingOrthogonalCommand.canExecute(state)).toBe(false);
+			expect(SetRoutingStraightCommand.canExecute(state, registries)).toBe(
+				false,
+			);
+			expect(SetRoutingOrthogonalCommand.canExecute(state, registries)).toBe(
+				false,
+			);
 		});
 
 		it("self-loops cannot be straight but can be orthogonal (orthogonal only)", () => {
@@ -141,8 +152,12 @@ describe("SetConnectorRoutingCommand", () => {
 					}),
 				},
 			});
-			expect(SetRoutingStraightCommand.canExecute(state)).toBe(false);
-			expect(SetRoutingOrthogonalCommand.canExecute(state)).toBe(true);
+			expect(SetRoutingStraightCommand.canExecute(state, registries)).toBe(
+				false,
+			);
+			expect(SetRoutingOrthogonalCommand.canExecute(state, registries)).toBe(
+				true,
+			);
 		});
 	});
 });

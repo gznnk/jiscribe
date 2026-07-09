@@ -2,8 +2,8 @@ import type { Point } from "@workspace/geometry";
 
 import { AUTO_COLOR } from "../../../../../schemas/objects/utils/autoColor";
 import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
-import { objectMapperRegistry } from "../../../../../states/registry/ObjectMapperRegistry";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import type { ICanvasRegistries } from "../../../../setup/ICanvasRegistries";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import type { ControlStrategy } from "../ControlEventHandler";
 import { computeEditedEndpoint } from "./utils/computeEditedEndpoint";
@@ -43,6 +43,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 	handle(
 		state: CanvasControllerState,
 		event: CanvasEvent,
+		registries: ICanvasRegistries,
 	): CanvasControllerState {
 		if (!event.targetId || !event.targetPart) {
 			return state;
@@ -54,9 +55,9 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 				? this.handleEditDragStart(state, event)
 				: this.handleCreateDragStart(state, event);
 		} else if (event.type === "drag") {
-			return this.handleDrag(state, event); // shared by create/edit
+			return this.handleDrag(state, event, registries); // shared by create/edit
 		} else if (event.type === "dragEnd") {
-			return this.handleDragEnd(state, event); // shared by create/edit
+			return this.handleDragEnd(state, event, registries); // shared by create/edit
 		}
 
 		return state;
@@ -168,6 +169,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 		event: CanvasEvent,
 		baseConnector: ConnectorState,
 		endpointToUpdate: "source" | "target",
+		registries: ICanvasRegistries,
 	): ConnectorState {
 		// The fixed endpoint (the one not being edited). Passed to computeEditedEndpoint
 		// to avoid the same anchor on a self-loop.
@@ -181,7 +183,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			hovered: event.getHovered(),
 			objects: state.objects,
 			isConnectable: (type) =>
-				objectMapperRegistry.getFeatures(type)?.connectable === true,
+				registries.objectMapper.getFeatures(type)?.connectable === true,
 		});
 
 		return computeEditedEndpoint(
@@ -200,6 +202,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 	private handleDrag(
 		state: CanvasControllerState,
 		event: CanvasEvent,
+		registries: ICanvasRegistries,
 	): CanvasControllerState {
 		// Determine which endpoint is being edited from targetPart
 		// Format: "anchor:<pos>" (create) or "endpoint:<source|target>" (edit)
@@ -220,6 +223,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 				event,
 				baseConnector as ConnectorState,
 				endpointToUpdate,
+				registries,
 			);
 
 			return {
@@ -242,6 +246,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			event,
 			pendingConnector,
 			endpointToUpdate,
+			registries,
 		);
 
 		return {
@@ -257,6 +262,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 	private handleDragEnd(
 		state: CanvasControllerState,
 		event: CanvasEvent,
+		registries: ICanvasRegistries,
 	): CanvasControllerState {
 		const { editingConnectorId } = state;
 
@@ -267,7 +273,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			// If the endpoint has not effectively changed since the start, it is a no-op.
 			// Leaving objects as-is (during handleDrag the entity ends at final position = start position)
 			// avoids handleGesture's auto-commit detection (a change in the objects reference) so nothing is pushed to history.
-			const finalConnector = this.handleDrag(state, event).objects[
+			const finalConnector = this.handleDrag(state, event, registries).objects[
 				editingConnectorId
 			];
 
@@ -310,7 +316,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 
 			// If the endpoint changed, commit the entity update (commitVersion is auto-incremented
 			// by handleGesture detecting the objects change, so it is not incremented here).
-			const dragResult = this.handleDrag(state, event);
+			const dragResult = this.handleDrag(state, event, registries);
 			return {
 				...dragResult,
 				editingConnectorId: null,
@@ -328,7 +334,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			};
 		}
 
-		const dragResult = this.handleDrag(state, event);
+		const dragResult = this.handleDrag(state, event, registries);
 		const finalConnector = dragResult.pendingConnector;
 		if (!finalConnector) {
 			return {

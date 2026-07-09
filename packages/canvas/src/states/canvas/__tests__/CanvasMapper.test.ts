@@ -23,9 +23,11 @@ import {
 	rectToState,
 	rectToDoc,
 } from "../../../states/objects/primitives/rect/RectMapper";
-import { objectMapperRegistry } from "../../../states/registry/ObjectMapperRegistry";
+import { createObjectMapperRegistry } from "../../../states/registry/ObjectMapperRegistry";
 
 describe("CanvasMapper", () => {
+	const objectMapperRegistry = createObjectMapperRegistry();
+
 	// Register mappers before tests
 	beforeEach(() => {
 		objectMapperRegistry.clear();
@@ -104,7 +106,7 @@ describe("CanvasMapper", () => {
 				],
 			} as unknown as CanvasDoc;
 
-			const state = canvasToState(doc);
+			const state = canvasToState(doc, objectMapperRegistry);
 			expect(state.rootIds).toEqual(["rect-1", "conn-1", "rect-2"]);
 			expect(state.objects["conn-1"].type).toBe("connector");
 		});
@@ -119,7 +121,10 @@ describe("CanvasMapper", () => {
 				],
 			} as unknown as CanvasDoc;
 
-			const roundTripped = canvasToDoc(canvasToState(doc));
+			const roundTripped = canvasToDoc(
+				canvasToState(doc, objectMapperRegistry),
+				objectMapperRegistry,
+			);
 			expect(roundTripped.root.map((o) => o.id)).toEqual([
 				"rect-1",
 				"conn-1",
@@ -150,7 +155,7 @@ describe("CanvasMapper", () => {
 				root: [rect1, group1],
 			};
 
-			const state = canvasToState(canvasDoc);
+			const state = canvasToState(canvasDoc, objectMapperRegistry);
 
 			// Check initial viewport
 			expect(state.viewport).toEqual({
@@ -263,7 +268,7 @@ describe("CanvasMapper", () => {
 				},
 			};
 
-			const doc = canvasToDoc(state);
+			const doc = canvasToDoc(state, objectMapperRegistry);
 
 			expect(doc.root).toHaveLength(2);
 			const r1 = doc.root[0] as RectDoc;

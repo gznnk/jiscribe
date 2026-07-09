@@ -2,7 +2,7 @@
 
 import { StackOrderMenuRow } from "./StackOrderMenuStyled";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
-import { commandRegistry } from "../../../../../commands/CommandRegistry";
+import { useCommandState } from "../../../../../hooks/useCommandState";
 import { getCommandLabel } from "../../../../../messages/CanvasMessages";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { BringForwardIcon } from "../../../../icons/BringForwardIcon";
@@ -31,6 +31,7 @@ const StackOrderMenuComponent: React.FC<StackOrderMenuProps> = ({
 	canvasState,
 }) => {
 	const messages = useCanvasMessages();
+	const resolveCommand = useCommandState(canvasState);
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
@@ -52,11 +53,11 @@ const StackOrderMenuComponent: React.FC<StackOrderMenuProps> = ({
 				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>
 					<StackOrderMenuRow>
 						{arrangeCommands.map(({ commandId, Icon }) => {
-							const command = commandRegistry.get(commandId);
-							if (!command) {
+							const resolved = resolveCommand(commandId);
+							if (!resolved) {
 								return null;
 							}
-							const enabled = command.canExecute(canvasState);
+							const { command, enabled } = resolved;
 							return (
 								<ObjectMenuButton
 									key={commandId}

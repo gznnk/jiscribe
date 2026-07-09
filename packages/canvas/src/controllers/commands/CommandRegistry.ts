@@ -5,7 +5,7 @@ import { getPlatformShortcuts } from "./CommandUtils";
  * Registry that manages Commands.
  * Provides registration, lookup, and search by shortcut.
  */
-class CommandRegistry {
+export class CommandRegistry {
 	private commands = new Map<string, Command>();
 
 	/**
@@ -25,6 +25,14 @@ class CommandRegistry {
 			this.register(command);
 		}
 		return this;
+	}
+
+	/**
+	 * Removes all registered commands so the registry can be repopulated from
+	 * scratch (clear-then-register convention shared by the bundle registries).
+	 */
+	clear(): void {
+		this.commands.clear();
 	}
 
 	/**
@@ -76,4 +84,5 @@ class CommandRegistry {
 /**
  * The global CommandRegistry instance.
  */
-export const commandRegistry = new CommandRegistry();
+export const createCommandRegistry = (): CommandRegistry =>
+	new CommandRegistry();

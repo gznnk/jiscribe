@@ -1,17 +1,15 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../../../CanvasTypes";
-import { initializeCommands } from "../../../../setup/initializeCommands";
+import { createTestRegistries } from "../../../../setup/createCanvasRegistries";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { ToolbarHandler } from "../ToolbarHandler";
 
-// zoomIn is resolved through commandRegistry, so initialize it.
-beforeAll(() => {
-	initializeCommands();
-});
+const registries = createTestRegistries();
 
 const makeState = (): CanvasControllerState =>
 	({
+		registries,
 		objects: {},
 		rootIds: [],
 		selectedIds: [],
@@ -62,6 +60,7 @@ describe("ToolbarHandler", () => {
 		const next = ToolbarHandler.handle(
 			makeState(),
 			makeEvent("click", "toolbar", "command:zoomIn"),
+			registries,
 		);
 		expect(next.viewport.zoom).toBeGreaterThan(1);
 	});
@@ -73,6 +72,7 @@ describe("ToolbarHandler", () => {
 		const next = ToolbarHandler.handle(
 			makeState(),
 			makeEvent("doubleClick", "toolbar", "command:zoomIn"),
+			registries,
 		);
 		expect(next.viewport.zoom).toBeGreaterThan(1);
 	});
@@ -81,6 +81,7 @@ describe("ToolbarHandler", () => {
 		const next = ToolbarHandler.handle(
 			makeState(),
 			makeEvent("pressed", "toolbar", "command:zoomIn"),
+			registries,
 		);
 		expect(next.contextMenuPosition).toBeNull();
 		expect(next.viewport.zoom).toBe(1);

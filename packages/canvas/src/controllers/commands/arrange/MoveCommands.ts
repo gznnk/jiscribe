@@ -1,6 +1,7 @@
 import type { Point } from "@workspace/geometry";
 
 import type { CanvasControllerState } from "../../CanvasTypes";
+import type { ICanvasRegistries } from "../../setup/ICanvasRegistries";
 import { moveSelection } from "../../utils/moveSelection";
 import { updateAffectedGroupBounds } from "../../utils/updateAffectedGroupBounds";
 import type { Command } from "../CommandTypes";
@@ -64,12 +65,13 @@ const createMoveCommand = (
 		// Disabled during text editing so caret movement takes priority
 		canExecute: (state: CanvasControllerState) =>
 			state.selectedIds.length > 0 && state.textEditState === null,
-		execute: (state: CanvasControllerState) => {
+		execute: (state: CanvasControllerState, registries: ICanvasRegistries) => {
 			const { objects, multiSelectGroup } = moveSelection({
 				selectedIds: state.selectedIds,
 				srcObjects: state.objects,
 				srcMultiSelectGroup: state.multiSelectGroup,
 				delta: calcNudgeDelta(direction, step),
+				objectBehavior: registries.objectBehavior,
 			});
 			// A nudge is a committing operation, so recompute and commit the parent group bounds each time
 			const moved = updateAffectedGroupBounds(
