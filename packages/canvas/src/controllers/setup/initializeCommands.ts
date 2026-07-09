@@ -70,7 +70,11 @@ export const ALL_COMMANDS: Command[] = [
 ];
 
 /**
- * Registers commands into the bundle's command registry.
+ * Clears the bundle's command registry and registers the enabled commands.
+ *
+ * Clears first (like the other `initialize*` bundle populators) so re-running it
+ * — tests, partial init, hot reload — never leaves stale commands behind: the
+ * registry always ends up with exactly the listed command ids.
  *
  * @param registries Target bundle to populate.
  * @param commandIds When provided, only commands whose id is included are
@@ -80,6 +84,7 @@ export const initializeCommands = (
 	registries: CanvasRegistries,
 	commandIds?: readonly string[],
 ): void => {
+	registries.command.clear();
 	const enabled = commandIds ? new Set(commandIds) : undefined;
 	const commands = enabled
 		? ALL_COMMANDS.filter((command) => enabled.has(command.id))
