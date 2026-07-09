@@ -7,8 +7,8 @@ import {
 	ToolbarIconButton,
 	ZoomReadout,
 } from "./ToolbarStyled";
+import { useCanvasRegistries } from "../../../contexts/CanvasRegistriesContext";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
-import { shapePresetRegistry } from "../../../registry/ShapePresetRegistry";
 import { HelpIcon } from "../../icons/HelpIcon";
 import { ShapeLibraryItem } from "../ShapeLibrary/ShapeLibraryItem";
 import { ShortcutHelpModal } from "../ShortcutHelp/ShortcutHelpModal";
@@ -51,6 +51,7 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 	canZoomOut,
 }) => {
 	const messages = useCanvasMessages();
+	const { shapePreset } = useCanvasRegistries();
 	const [isHelpOpen, setIsHelpOpen] = useState(false);
 	const closeHelp = useCallback(() => setIsHelpOpen(false), []);
 
@@ -87,7 +88,7 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 			<ToolbarContainer>
 				{/* Left: shape tools */}
 				<ToolbarGroup>
-					{shapePresetRegistry.all().map((preset) => (
+					{shapePreset.all().map((preset) => (
 						<ShapeLibraryItem
 							key={preset.id}
 							preset={preset}

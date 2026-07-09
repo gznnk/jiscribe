@@ -1,18 +1,10 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createCommandState } from "./support/createCommandState";
 import { runCommand } from "./support/dispatch";
 import { twoRectsWithConnectorDoc } from "./support/fixtures";
-import { initializeCommands } from "../../setup/initializeCommands";
-import { initializeObjectRegistry } from "../../setup/initializeObjectRegistry";
 import { isArrangeableSelection } from "../../utils/isArrangeableSelection";
-
-beforeAll(() => {
-	// canvasToState (doc→state) needs object/connector Mappers, and handleCommand needs Commands
-	initializeObjectRegistry();
-	initializeCommands();
-});
 
 /**
  * Connectors are selected via selectedConnectorId, which is mutually exclusive with selectedIds.

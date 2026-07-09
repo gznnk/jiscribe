@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { createTestRegistries } from "../../../setup/createCanvasRegistries";
 import { SelectAllCommand } from "../SelectAllCommand";
+
+const registries = createTestRegistries();
 
 const makeRect = (id: string, cx: number, cy: number): ObjectState =>
 	({
@@ -37,7 +40,7 @@ describe("SelectAllCommand", () => {
 			rootIds: ["a", "b"],
 			objects: { a: makeRect("a", 0, 0), b: makeRect("b", 200, 200) },
 		});
-		const next = SelectAllCommand.execute(state);
+		const next = SelectAllCommand.execute(state, registries);
 		expect(next.selectedIds).toEqual(["a", "b"]);
 	});
 
@@ -46,7 +49,9 @@ describe("SelectAllCommand", () => {
 			rootIds: ["a", "b"],
 			objects: { a: makeRect("a", 0, 0), b: makeRect("b", 200, 200) },
 		});
-		expect(SelectAllCommand.execute(state).multiSelectGroup).not.toBeNull();
+		expect(
+			SelectAllCommand.execute(state, registries).multiSelectGroup,
+		).not.toBeNull();
 	});
 
 	it("clears the mutually-exclusive connector and vertex selections", () => {
@@ -54,7 +59,7 @@ describe("SelectAllCommand", () => {
 			rootIds: ["a", "b"],
 			objects: { a: makeRect("a", 0, 0), b: makeRect("b", 200, 200) },
 		});
-		const next = SelectAllCommand.execute(state);
+		const next = SelectAllCommand.execute(state, registries);
 		expect(next.selectedConnectorId).toBeNull();
 		expect(next.selectedVertex).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
@@ -66,12 +71,15 @@ describe("SelectAllCommand", () => {
 				rootIds: ["a"],
 				objects: { a: makeRect("a", 0, 0) },
 			});
-			expect(SelectAllCommand.canExecute(state)).toBe(true);
+			expect(SelectAllCommand.canExecute(state, registries)).toBe(true);
 		});
 
 		it("is not executable on an empty canvas", () => {
 			expect(
-				SelectAllCommand.canExecute(makeState({ rootIds: [], objects: {} })),
+				SelectAllCommand.canExecute(
+					makeState({ rootIds: [], objects: {} }),
+					registries,
+				),
 			).toBe(false);
 		});
 	});

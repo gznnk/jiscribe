@@ -1,18 +1,18 @@
-import { initializeCommands } from "./initializeCommands";
-import { initializeGestureHandlerRegistry } from "./initializeGestureHandlerRegistry";
-import { initializeObjectRegistry } from "./initializeObjectRegistry";
-
-/**
- * Initialize all registries.
- * This should be called once at application startup before using any canvas functionality.
- */
-export const initializeRegistries = (): void => {
-	initializeObjectRegistry();
-	initializeGestureHandlerRegistry();
-	initializeCommands();
-};
-
-// Re-export individual initializers for testing or partial initialization
+// Individual initializers (each populates a given bundle). Exposed for tests
+// and partial initialization; production builds bundles via createCanvasRegistries.
 export { initializeObjectRegistry } from "./initializeObjectRegistry";
 export { initializeGestureHandlerRegistry } from "./initializeGestureHandlerRegistry";
 export { initializeCommands } from "./initializeCommands";
+
+// Per-canvas registry bundle: types, factory, and defaults
+export type { CanvasRegistries, CanvasConfig } from "./CanvasRegistries";
+export {
+	createCanvasRegistries,
+	defaultCanvasRegistries,
+	createTestRegistries,
+} from "./createCanvasRegistries";
+export {
+	ALL_OBJECT_DEFINITIONS,
+	applyObjectDefinition,
+} from "./initializeObjectRegistry";
+export { ALL_COMMANDS } from "./initializeCommands";

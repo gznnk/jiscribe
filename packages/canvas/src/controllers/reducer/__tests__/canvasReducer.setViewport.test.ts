@@ -1,15 +1,13 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../CanvasTypes";
-import { initializeObjectRegistry } from "../../setup/initializeObjectRegistry";
+import { createTestRegistries } from "../../setup/createCanvasRegistries";
 import type { CanvasAction } from "../CanvasActions";
-import { canvasReducer } from "../canvasReducer";
+import { createCanvasReducer } from "../canvasReducer";
 import { createTestState } from "./support/createTestState";
 import { twoRectsDoc } from "./support/fixtures";
 
-beforeAll(() => {
-	initializeObjectRegistry();
-});
+const canvasReducer = createCanvasReducer(createTestRegistries());
 
 const createState = (): CanvasControllerState => createTestState(twoRectsDoc);
 

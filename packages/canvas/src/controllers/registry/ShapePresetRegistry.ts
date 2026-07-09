@@ -7,7 +7,7 @@ import type { ShapePreset } from "../../schemas/objects/types/ShapePreset";
  * - `all()` returns them preserving registration order (= toolbar display order).
  * - Presets have a 1:N relationship with shape types (e.g. rect has "rect" and "rect-markdown").
  */
-class ShapePresetRegistry {
+export class ShapePresetRegistry {
 	private readonly ordered: ShapePreset[] = [];
 	private readonly byId = new Map<string, ShapePreset>();
 
@@ -35,8 +35,5 @@ class ShapePresetRegistry {
 	}
 }
 
-export const shapePresetRegistry = new ShapePresetRegistry();
-
-/** Retrieves a preset by its ID. Returns undefined if not registered. */
-export const getShapePreset = (id: string): ShapePreset | undefined =>
-	shapePresetRegistry.get(id);
+export const createShapePresetRegistry = (): ShapePresetRegistry =>
+	new ShapePresetRegistry();

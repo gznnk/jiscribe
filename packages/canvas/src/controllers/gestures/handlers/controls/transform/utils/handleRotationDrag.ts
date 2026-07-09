@@ -10,6 +10,7 @@ import {
 import { updateSingleGroupBounds } from "./updateSingleGroupBounds";
 import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import type { ICanvasRegistries } from "../../../../../setup/ICanvasRegistries";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 import { rotateChildren } from "../../../objects/primitives/GroupController";
 
@@ -19,6 +20,7 @@ import { rotateChildren } from "../../../objects/primitives/GroupController";
 export function handleRotationDrag(
 	state: CanvasControllerState,
 	event: CanvasEvent,
+	registries: ICanvasRegistries,
 ): CanvasControllerState {
 	const eventStartSnapshot = state.eventStartSnapshot;
 	if (!eventStartSnapshot) {
@@ -94,6 +96,7 @@ export function handleRotationDrag(
 			newRotation,
 			updatedGroup,
 			updatedObjects,
+			registries.objectBehavior,
 		);
 		Object.assign(updatedObjects, rotatedChildren);
 
@@ -129,6 +132,7 @@ export function handleRotationDrag(
 				newRotation,
 				updatedObject as GroupState,
 				eventStartSnapshot.objects,
+				registries.objectBehavior,
 			);
 			Object.assign(updatedObjects, rotatedChildren);
 		}

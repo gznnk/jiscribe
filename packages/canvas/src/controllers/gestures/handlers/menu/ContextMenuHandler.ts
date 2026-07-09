@@ -21,12 +21,12 @@ export const ContextMenuHandler: GestureHandler = {
 		);
 	},
 
-	handle(state, event) {
+	handle(state, event, registries) {
 		if (event.type === "click" && event.targetPart?.startsWith("command:")) {
 			const commandId = event.targetPart.slice("command:".length);
 
 			// Execute the COMMAND action
-			const nextState = handleCommand(state, commandId);
+			const nextState = handleCommand(state, commandId, registries);
 
 			// Close the context menu
 			return {

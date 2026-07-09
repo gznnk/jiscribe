@@ -1,6 +1,7 @@
 import type { CanvasDoc } from "../../../../schemas/canvas/CanvasDoc";
 import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { createTestRegistries } from "../../../setup/createCanvasRegistries";
 import { createInitialControllerState } from "../../createInitialControllerState";
 
 /**
@@ -15,6 +16,6 @@ export const createTestState = (
 	overrides?: Partial<CanvasControllerState>,
 ): CanvasControllerState =>
 	deepFreezeState({
-		...createInitialControllerState(doc),
+		...createInitialControllerState(doc, createTestRegistries()),
 		...overrides,
 	});

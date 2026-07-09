@@ -1,17 +1,17 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
 import { canvasToState } from "../../../states/canvas/CanvasMapper";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { CanvasAction } from "../CanvasActions";
-import { canvasReducer } from "../canvasReducer";
+import { createCanvasReducer } from "../canvasReducer";
 import { createTestState } from "./support/createTestState";
 import { rectDoc, twoRectsDoc } from "./support/fixtures";
-import { initializeObjectRegistry } from "../../setup/initializeObjectRegistry";
+import { createTestRegistries } from "../../setup/createCanvasRegistries";
 
-beforeAll(() => {
-	initializeObjectRegistry();
-});
+const registries = createTestRegistries();
+
+const canvasReducer = createCanvasReducer(registries);
 
 const createState = (): CanvasControllerState =>
 	createTestState(twoRectsDoc, {
@@ -34,7 +34,7 @@ const movedDoc: CanvasDoc = {
 // genuine external change.
 const syncExternal = (): CanvasAction => ({
 	type: "SYNC_EXTERNAL",
-	payload: canvasToState(movedDoc),
+	payload: canvasToState(movedDoc, registries.objectMapper),
 });
 
 const cxOf = (state: CanvasControllerState) =>

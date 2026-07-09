@@ -1,11 +1,11 @@
 import type { Point } from "@workspace/geometry";
 import React, { memo } from "react";
 
-import { objectComponentRegistry } from "../../../../presentations/objects/registry/ObjectComponentRegistry";
 import type { ShapePreset } from "../../../../schemas/objects/types/ShapePreset";
 import { createObjectDoc } from "../../../../schemas/objects/utils/createObjectDoc";
-import { objectMapperRegistry } from "../../../../states/registry/ObjectMapperRegistry";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { useCanvasRegistries } from "../../../contexts/CanvasRegistriesContext";
+import type { CanvasRegistries } from "../../../setup/CanvasRegistries";
 
 type DragGhostProps = {
 	shapeLibraryDrag: CanvasControllerState["shapeLibraryDrag"];
@@ -20,8 +20,9 @@ const GHOST_ID = "drag-ghost";
 const createGhostElement = (
 	preset: ShapePreset,
 	position: Point,
+	registries: CanvasRegistries,
 ): React.ReactNode => {
-	const component = objectComponentRegistry.get(preset.objectType);
+	const component = registries.objectComponent.get(preset.objectType);
 	if (!component) {
 		return null;
 	}
@@ -29,9 +30,10 @@ const createGhostElement = (
 	const doc = createObjectDoc(
 		preset.objectType,
 		position,
+		registries.shapeFactory,
 		preset.defaultOverrides,
 	);
-	const ghostState = objectMapperRegistry.toState(doc);
+	const ghostState = registries.objectMapper.toState(doc);
 	ghostState.id = GHOST_ID;
 
 	return React.createElement(component, ghostState);
@@ -42,6 +44,8 @@ const createGhostElement = (
  * Renders nothing when no drag is in progress.
  */
 const DragGhostComponent: React.FC<DragGhostProps> = ({ shapeLibraryDrag }) => {
+	const registries = useCanvasRegistries();
+
 	if (!shapeLibraryDrag) {
 		return null;
 	}
@@ -51,6 +55,7 @@ const DragGhostComponent: React.FC<DragGhostProps> = ({ shapeLibraryDrag }) => {
 			{createGhostElement(
 				shapeLibraryDrag.preset,
 				shapeLibraryDrag.ghostPosition,
+				registries,
 			)}
 		</g>
 	);

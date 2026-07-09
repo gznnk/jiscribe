@@ -1,16 +1,13 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 import type { PolylineState } from "../../../../states/objects/primitives/polyline/PolylineState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { initializeObjectRegistry } from "../../../setup/initializeObjectRegistry";
+import { createTestRegistries } from "../../../setup/createCanvasRegistries";
 import { DeleteCommand } from "../DeleteCommand";
 
-// group bounds recalculation goes through objectBehaviorRegistry, so initialize it
-beforeAll(() => {
-	initializeObjectRegistry();
-});
+const registries = createTestRegistries();
 
 const makeRect = (id: string, parentId?: string): ObjectState =>
 	({
@@ -70,7 +67,7 @@ describe("DeleteCommand", () => {
 				objects: { a: makeRect("a"), b: makeRect("b") },
 				rootIds: ["a", "b"],
 			});
-			const next = DeleteCommand.execute(state);
+			const next = DeleteCommand.execute(state, registries);
 			expect(next.objects["b"]).toBeUndefined();
 			expect(next.rootIds).toEqual(["a"]);
 			expect(next.selectedIds).toEqual([]);
@@ -87,7 +84,7 @@ describe("DeleteCommand", () => {
 				},
 				rootIds: ["g"],
 			});
-			const next = DeleteCommand.execute(state);
+			const next = DeleteCommand.execute(state, registries);
 			expect(next.objects["g"]).toBeUndefined();
 			expect(next.objects["c1"]).toBeUndefined();
 			expect(next.objects["c2"]).toBeUndefined();
@@ -106,7 +103,7 @@ describe("DeleteCommand", () => {
 				},
 				rootIds: ["g"],
 			});
-			const next = DeleteCommand.execute(state);
+			const next = DeleteCommand.execute(state, registries);
 			expect(next.objects["c1"]).toBeUndefined();
 			expect((next.objects["g"] as GroupState).childIds).toEqual(["c2", "c3"]);
 		});
@@ -125,7 +122,7 @@ describe("DeleteCommand", () => {
 				rootIds: ["p"],
 				selectedVertex: { objectId: "p", vertexIndex: 1 },
 			});
-			const next = DeleteCommand.execute(state);
+			const next = DeleteCommand.execute(state, registries);
 			const updated = next.objects["p"] as PolylineState;
 			expect(updated.points).toEqual([
 				{ x: 0, y: 0 },
@@ -147,7 +144,7 @@ describe("DeleteCommand", () => {
 				rootIds: ["p"],
 				selectedVertex: { objectId: "p", vertexIndex: 1 },
 			});
-			expect(DeleteCommand.execute(state)).toBe(state);
+			expect(DeleteCommand.execute(state, registries)).toBe(state);
 		});
 
 		it("clears only selectedVertex when the vertex-selection target is not a polyline", () => {
@@ -157,7 +154,7 @@ describe("DeleteCommand", () => {
 				rootIds: ["r"],
 				selectedVertex: { objectId: "r", vertexIndex: 0 },
 			});
-			const next = DeleteCommand.execute(state);
+			const next = DeleteCommand.execute(state, registries);
 			expect(next.selectedVertex).toBeNull();
 			// does not fall through to object deletion
 			expect(next.objects["r"]).toBeDefined();
@@ -171,7 +168,7 @@ describe("DeleteCommand", () => {
 				objects: { a: makeRect("a") },
 				rootIds: ["a"],
 			});
-			expect(DeleteCommand.canExecute(state)).toBe(true);
+			expect(DeleteCommand.canExecute(state, registries)).toBe(true);
 		});
 
 		it("is executable when there is a vertex selection", () => {
@@ -181,7 +178,7 @@ describe("DeleteCommand", () => {
 				rootIds: [],
 				selectedVertex: { objectId: "p", vertexIndex: 0 },
 			});
-			expect(DeleteCommand.canExecute(state)).toBe(true);
+			expect(DeleteCommand.canExecute(state, registries)).toBe(true);
 		});
 
 		it("is executable when there is a connector selection", () => {
@@ -191,13 +188,14 @@ describe("DeleteCommand", () => {
 				rootIds: [],
 				selectedConnectorId: "c1",
 			});
-			expect(DeleteCommand.canExecute(state)).toBe(true);
+			expect(DeleteCommand.canExecute(state, registries)).toBe(true);
 		});
 
 		it("is not executable when nothing is selected", () => {
 			expect(
 				DeleteCommand.canExecute(
 					makeState({ selectedIds: [], objects: {}, rootIds: [] }),
+					registries,
 				),
 			).toBe(false);
 		});

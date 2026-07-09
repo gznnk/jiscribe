@@ -1,19 +1,15 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { CanvasDoc } from "../../../../schemas/canvas/CanvasDoc";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createInitialControllerState } from "../../../reducer/createInitialControllerState";
-import { initializeGestureHandlerRegistry } from "../../../setup/initializeGestureHandlerRegistry";
-import { initializeObjectRegistry } from "../../../setup/initializeObjectRegistry";
+import { createTestRegistries } from "../../../setup/createCanvasRegistries";
 import type { Gesture } from "../../recognizer/GestureRecognizerTypes";
 import { handleGesture } from "../handleGesture";
 
-beforeAll(() => {
-	initializeObjectRegistry();
-	initializeGestureHandlerRegistry();
-});
+const registries = createTestRegistries();
 
 const emptyDoc: CanvasDoc = {
 	version: 1,
@@ -25,7 +21,7 @@ const emptyDoc: CanvasDoc = {
  * Includes one shape `a` and one connector `c` so that pressed events on each target can be reproduced.
  */
 const openMenuState = (): CanvasControllerState => {
-	const base = createInitialControllerState(emptyDoc);
+	const base = createInitialControllerState(emptyDoc, registries);
 	const rect = { id: "a", type: "rect" } as unknown as ObjectState;
 	const connector = { id: "c", type: "connector" } as unknown as ObjectState;
 	return deepFreezeState({
@@ -52,7 +48,11 @@ const pressedOn = (
 
 describe("handleGesture - context menu auto-close", () => {
 	it("closes the menu on left-click press over a shape", () => {
-		const nextState = handleGesture(openMenuState(), pressedOn("object", "a"));
+		const nextState = handleGesture(
+			openMenuState(),
+			pressedOn("object", "a"),
+			registries,
+		);
 		expect(nextState.contextMenuPosition).toBeNull();
 	});
 
@@ -60,6 +60,7 @@ describe("handleGesture - context menu auto-close", () => {
 		const nextState = handleGesture(
 			openMenuState(),
 			pressedOn("connector", "c"),
+			registries,
 		);
 		expect(nextState.contextMenuPosition).toBeNull();
 	});
@@ -68,6 +69,7 @@ describe("handleGesture - context menu auto-close", () => {
 		const nextState = handleGesture(
 			openMenuState(),
 			pressedOn("control", "transform", "resize:topLeft"),
+			registries,
 		);
 		expect(nextState.contextMenuPosition).toBeNull();
 	});
@@ -76,6 +78,7 @@ describe("handleGesture - context menu auto-close", () => {
 		const nextState = handleGesture(
 			openMenuState(),
 			pressedOn("menu", "toolbar", "command:zoomIn"),
+			registries,
 		);
 		expect(nextState.contextMenuPosition).toBeNull();
 	});
@@ -84,6 +87,7 @@ describe("handleGesture - context menu auto-close", () => {
 		const nextState = handleGesture(
 			openMenuState(),
 			pressedOn("menu", "shape-library", "item:rect"),
+			registries,
 		);
 		expect(nextState.contextMenuPosition).toBeNull();
 	});
@@ -92,6 +96,7 @@ describe("handleGesture - context menu auto-close", () => {
 		const nextState = handleGesture(
 			openMenuState(),
 			pressedOn("menu", "object-menu", "command:group"),
+			registries,
 		);
 		expect(nextState.contextMenuPosition).toBeNull();
 	});
@@ -100,6 +105,7 @@ describe("handleGesture - context menu auto-close", () => {
 		const nextState = handleGesture(
 			openMenuState(),
 			pressedOn("menu", "context-menu", "command:copy"),
+			registries,
 		);
 		expect(nextState.contextMenuPosition).toEqual({
 			clientX: 100,

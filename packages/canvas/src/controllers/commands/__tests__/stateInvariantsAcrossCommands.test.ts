@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { createCommandState } from "./support/createCommandState";
 import { runCommand } from "./support/dispatch";
@@ -10,14 +10,9 @@ import { isConnectorState } from "../../../states/objects/connections/connector/
 import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../CanvasTypes";
-import { initializeCommands } from "../../setup/initializeCommands";
-import { initializeObjectRegistry } from "../../setup/initializeObjectRegistry";
-import { commandRegistry } from "../CommandRegistry";
+import { createTestRegistries } from "../../setup/createCanvasRegistries";
 
-beforeAll(() => {
-	initializeObjectRegistry();
-	initializeCommands();
-});
+const registries = createTestRegistries();
 
 /**
  * Structural invariants that must hold after ANY command, regardless of what it
@@ -178,7 +173,7 @@ describe("every command preserves structural invariants", () => {
 
 	for (const scenario of scenarios) {
 		it(`starting from "${scenario.label}", the invariants hold after every command`, () => {
-			const commands = commandRegistry.getAll();
+			const commands = registries.command.getAll();
 			expect(commands.length).toBeGreaterThan(0);
 
 			// Sanity: the starting state itself must be sound, or the sweep proves nothing.

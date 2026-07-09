@@ -1,15 +1,13 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
 import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
 import { deepFreezeState } from "../../__tests__/support/deepFreezeState";
 import { createInitialControllerState } from "../../reducer/createInitialControllerState";
-import { initializeObjectRegistry } from "../../setup/initializeObjectRegistry";
+import { createTestRegistries } from "../../setup/createCanvasRegistries";
 import { cleanupConnectorsOnDelete } from "../cleanupConnectorsOnDelete";
 
-beforeAll(() => {
-	initializeObjectRegistry();
-});
+const registries = createTestRegistries();
 
 const rectDoc = (id: string, x: number, y: number): unknown => ({
 	id,
@@ -36,7 +34,10 @@ const free = (x: number, y: number): unknown => ({
 
 const buildState = (root: unknown[]) =>
 	deepFreezeState(
-		createInitialControllerState({ version: 1, root } as unknown as CanvasDoc),
+		createInitialControllerState(
+			{ version: 1, root } as unknown as CanvasDoc,
+			registries,
+		),
 	);
 
 describe("cleanupConnectorsOnDelete", () => {

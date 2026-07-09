@@ -31,7 +31,7 @@ export const UndoCommand: Command = {
 		return state.history.past.length > 0;
 	},
 
-	execute: (state) => {
+	execute: (state, registries) => {
 		if (state.history.past.length === 0) {
 			return state;
 		}
@@ -39,7 +39,11 @@ export const UndoCommand: Command = {
 		// Resolve only the entry being restored; entries that merely move between
 		// stacks stay as unresolved snapshots.
 		const snapshotToRestore = state.history.past[state.history.past.length - 1];
-		const restoredState = canvasToState(resolveDocSnapshot(snapshotToRestore));
+		const mapper = registries.objectMapper;
+		const restoredState = canvasToState(
+			resolveDocSnapshot(snapshotToRestore, mapper),
+			mapper,
+		);
 
 		return {
 			...restoredState,

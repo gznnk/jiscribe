@@ -40,7 +40,7 @@ export const RedoCommand: Command = {
 		return state.history.future.length > 0;
 	},
 
-	execute: (state) => {
+	execute: (state, registries) => {
 		if (state.history.future.length === 0) {
 			return state;
 		}
@@ -48,7 +48,11 @@ export const RedoCommand: Command = {
 		// Resolve only the entry being restored; entries that merely move between
 		// stacks stay as unresolved snapshots.
 		const snapshotToRestore = state.history.future[0];
-		const restoredState = canvasToState(resolveDocSnapshot(snapshotToRestore));
+		const mapper = registries.objectMapper;
+		const restoredState = canvasToState(
+			resolveDocSnapshot(snapshotToRestore, mapper),
+			mapper,
+		);
 
 		return {
 			...restoredState,

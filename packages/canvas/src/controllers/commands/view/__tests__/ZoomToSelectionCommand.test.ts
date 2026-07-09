@@ -1,15 +1,13 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { Viewport } from "../../../../states/canvas/Viewport";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { PolylineState } from "../../../../states/objects/primitives/polyline/PolylineState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { initializeObjectRegistry } from "../../../setup/initializeObjectRegistry";
+import { createTestRegistries } from "../../../setup/createCanvasRegistries";
 import { ZoomToSelectionCommand } from "../ZoomToSelectionCommand";
 
-beforeAll(() => {
-	initializeObjectRegistry();
-});
+const registries = createTestRegistries();
 
 const makeRect = (id: string, cx: number, cy: number): ObjectState =>
 	({
@@ -63,7 +61,7 @@ describe("ZoomToSelectionCommand", () => {
 				b: makeRect("b", 5000, 5000),
 			},
 		});
-		const next = ZoomToSelectionCommand.execute(state);
+		const next = ZoomToSelectionCommand.execute(state, registries);
 		const center = centerOf(next.viewport);
 		expect(center.x).toBeCloseTo(500, 2);
 		expect(center.y).toBeCloseTo(500, 2);
@@ -74,7 +72,7 @@ describe("ZoomToSelectionCommand", () => {
 			selectedIds: ["a"],
 			objects: { a: makeRect("a", 500, 500) },
 		});
-		const next = ZoomToSelectionCommand.execute(state);
+		const next = ZoomToSelectionCommand.execute(state, registries);
 		// 200x200 → 904/200 = 4.52
 		expect(next.viewport.zoom).toBeCloseTo(4.52, 2);
 	});
@@ -90,7 +88,7 @@ describe("ZoomToSelectionCommand", () => {
 				]),
 			},
 		});
-		const next = ZoomToSelectionCommand.execute(state);
+		const next = ZoomToSelectionCommand.execute(state, registries);
 		// Fits to width 200 -> 904/200 = 4.52 (the height axis is excluded from candidates)
 		expect(next.viewport.zoom).toBeCloseTo(4.52, 2);
 		const center = centerOf(next.viewport);
@@ -114,7 +112,7 @@ describe("ZoomToSelectionCommand", () => {
 			objects: { c1: connector },
 			viewport: { minX: 123, minY: 456, zoom: 2 },
 		});
-		const next = ZoomToSelectionCommand.execute(state);
+		const next = ZoomToSelectionCommand.execute(state, registries);
 		// Previously the connector fell into the isPoly branch (empty points -> no-op)
 		expect(next).not.toBe(state);
 		expect(next.viewport.zoom).toBeCloseTo(4.52, 2);
@@ -136,7 +134,7 @@ describe("ZoomToSelectionCommand", () => {
 			},
 			viewport: { minX: 123, minY: 456, zoom: 2 },
 		});
-		expect(ZoomToSelectionCommand.execute(state)).toBe(state);
+		expect(ZoomToSelectionCommand.execute(state, registries)).toBe(state);
 	});
 
 	describe("canExecute", () => {
@@ -147,6 +145,7 @@ describe("ZoomToSelectionCommand", () => {
 						selectedIds: ["a"],
 						objects: { a: makeRect("a", 0, 0) },
 					}),
+					registries,
 				),
 			).toBe(true);
 		});
@@ -155,6 +154,7 @@ describe("ZoomToSelectionCommand", () => {
 			expect(
 				ZoomToSelectionCommand.canExecute(
 					makeState({ selectedIds: [], objects: {} }),
+					registries,
 				),
 			).toBe(false);
 		});

@@ -5,7 +5,7 @@ import { resolveEndpointOwner } from "./utils/endpoints";
 import type { CanvasState } from "../../../states/canvas/CanvasState";
 import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
-import { objectComponentRegistry } from "../../objects/registry/ObjectComponentRegistry";
+import { useObjectComponentRegistry } from "../../objects/registry/ObjectComponentRegistryContext";
 
 type ObjectsRendererProps = Pick<CanvasState, "objects" | "rootIds"> & {
 	textEditObjectId?: string | null;
@@ -24,6 +24,8 @@ const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 	rootIds,
 	textEditObjectId,
 }) => {
+	const objectComponentRegistry = useObjectComponentRegistry();
+
 	const renderObject = (id: string, result: React.ReactNode[]): void => {
 		const objState = objects[id];
 		if (!objState) {

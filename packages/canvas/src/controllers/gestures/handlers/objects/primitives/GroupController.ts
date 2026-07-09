@@ -5,7 +5,7 @@ import {
 	isGroupState,
 	type GroupState,
 } from "../../../../../states/objects/primitives/group/GroupState";
-import { objectBehaviorRegistry } from "../../../registry/ObjectBehaviorRegistry";
+import type { ObjectBehaviorRegistry } from "../../../registry/ObjectBehaviorRegistry";
 import type {
 	MoveByDeltaFunction,
 	RotateByGroupFunction,
@@ -72,19 +72,21 @@ export const rotateByGroup: RotateByGroupFunction<GroupState> = (
  * @param srcObjects - Source objects to read from (e.g. the drag-start snapshot)
  * @param dstObjects - Target objects to write updates to (mutated)
  * @param delta - Movement delta {x, y}
+ * @param objectBehavior - The canvas's object behavior registry (per-shape moveByDelta)
  */
 export function moveObjectTree(
 	id: string,
 	srcObjects: Record<string, ObjectState>,
 	dstObjects: Record<string, ObjectState>,
 	delta: Point,
+	objectBehavior: ObjectBehaviorRegistry,
 ): void {
 	const src = srcObjects[id];
 	if (!src) {
 		return;
 	}
 
-	const moveByDeltaFn = objectBehaviorRegistry.getMoveByDelta(src.type);
+	const moveByDeltaFn = objectBehavior.getMoveByDelta(src.type);
 	if (moveByDeltaFn) {
 		dstObjects[id] = moveByDeltaFn(src, delta);
 	}
@@ -92,7 +94,7 @@ export function moveObjectTree(
 	// Propagate to descendants: only groups own a containment subtree.
 	if (isGroupState(src)) {
 		for (const childId of src.childIds) {
-			moveObjectTree(childId, srcObjects, dstObjects, delta);
+			moveObjectTree(childId, srcObjects, dstObjects, delta, objectBehavior);
 		}
 	}
 }
@@ -105,6 +107,7 @@ export function moveObjectTree(
  * @param rootGroupEnd - Root group state after the transform
  * @param targetGroup - The group to transform (root or a nested group)
  * @param allObjects - State of all objects
+ * @param objectBehavior - The canvas's object behavior registry (per-shape transformByGroup)
  * @returns The transformed objects
  */
 export function transformChildren(
@@ -112,6 +115,7 @@ export function transformChildren(
 	rootGroupEnd: GroupState,
 	targetGroup: GroupState,
 	allObjects: Record<string, ObjectState>,
+	objectBehavior: ObjectBehaviorRegistry,
 ): Record<string, ObjectState> {
 	const transformed = {} as Record<string, ObjectState>;
 
@@ -122,9 +126,7 @@ export function transformChildren(
 		}
 
 		// Get the per-shape transform function via the registry
-		const transformByGroupFn = objectBehaviorRegistry.getTransformByGroup(
-			child.type,
-		);
+		const transformByGroupFn = objectBehavior.getTransformByGroup(child.type);
 
 		if (transformByGroupFn) {
 			transformed[childId] = transformByGroupFn(
@@ -141,6 +143,7 @@ export function transformChildren(
 				rootGroupEnd,
 				child as GroupState,
 				allObjects,
+				objectBehavior,
 			);
 			Object.assign(transformed, nestedTransformed);
 		}
@@ -157,6 +160,7 @@ export function transformChildren(
  * @param endGroupRotation - The group's rotation angle at the end
  * @param targetGroup - The group to rotate (root or a nested group)
  * @param allObjects - State of all objects
+ * @param objectBehavior - The canvas's object behavior registry (per-shape rotateByGroup)
  * @returns The rotated objects
  */
 export function rotateChildren(
@@ -164,6 +168,7 @@ export function rotateChildren(
 	endGroupRotation: number,
 	targetGroup: GroupState,
 	allObjects: Record<string, ObjectState>,
+	objectBehavior: ObjectBehaviorRegistry,
 ): Record<string, ObjectState> {
 	const rotated = {} as Record<string, ObjectState>;
 
@@ -174,7 +179,7 @@ export function rotateChildren(
 		}
 
 		// Get the per-shape rotate function via the registry
-		const rotateByGroupFn = objectBehaviorRegistry.getRotateByGroup(child.type);
+		const rotateByGroupFn = objectBehavior.getRotateByGroup(child.type);
 
 		if (rotateByGroupFn) {
 			rotated[childId] = rotateByGroupFn(
@@ -191,6 +196,7 @@ export function rotateChildren(
 				endGroupRotation,
 				child as GroupState,
 				allObjects,
+				objectBehavior,
 			);
 			Object.assign(rotated, nestedRotated);
 		}

@@ -1,14 +1,9 @@
-import { beforeAll, describe, it, expect } from "vitest";
+import { describe, it, expect } from "vitest";
 
-import { initializeObjectRegistry } from "../../../../../../controllers/setup/initializeObjectRegistry";
 import type { EndpointRef } from "../../../../../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../../../states/objects/connections/connector/ConnectorState";
 import { resolveConnectorPoints } from "../resolveConnectorPoints";
-
-beforeAll(() => {
-	initializeObjectRegistry();
-});
 
 const freeEndpoint = (x: number, y: number): EndpointRef =>
 	({ anchor: { kind: "free", point: { x, y } } }) as EndpointRef;
@@ -40,6 +35,7 @@ const rectObj = (
 	({
 		id,
 		type: "rect",
+		geometry: "rect",
 		cx,
 		cy,
 		width,

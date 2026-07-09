@@ -1,5 +1,6 @@
 import type { CanvasEvent, GestureHandler } from "./GestureHandlerTypes";
 import type { CanvasControllerState } from "../../CanvasTypes";
+import type { ICanvasRegistries } from "../../setup/ICanvasRegistries";
 
 /**
  * Registry for gesture handlers.
@@ -54,10 +55,11 @@ export class GestureHandlerRegistry {
 	handle(
 		state: CanvasControllerState,
 		event: CanvasEvent,
+		registries: ICanvasRegistries,
 	): CanvasControllerState {
 		for (const handler of this.handlers.values()) {
 			if (handler.supports(event)) {
-				return handler.handle(state, event);
+				return handler.handle(state, event, registries);
 			}
 		}
 		return state;
@@ -75,4 +77,5 @@ export class GestureHandlerRegistry {
  * Singleton instance of GestureHandlerRegistry.
  * Should be initialized via initializeGestureHandlerRegistry() from controllers/setup/.
  */
-export const gestureHandlerRegistry = new GestureHandlerRegistry();
+export const createGestureHandlerRegistry = (): GestureHandlerRegistry =>
+	new GestureHandlerRegistry();

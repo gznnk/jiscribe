@@ -5,6 +5,7 @@ import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../states/objects/connections/connector/ConnectorState";
 import type { GroupState } from "../../states/objects/primitives/group/GroupState";
 import { moveObjectTree } from "../gestures/handlers/objects/primitives/GroupController";
+import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
 
 const remapEndpointRef = (
 	ref: EndpointRef,
@@ -60,11 +61,14 @@ const offsetFreeEndpoint = (ref: EndpointRef, offset: Point): EndpointRef => {
  *
  * @returns `newTopLevelIds` lists the new IDs in the same order as `topLevelIds`, with promoted
  *   orphans appended at the end. The caller dispatches them to shapes/connectors by type.
+ * @param objectBehavior - The canvas's object behavior registry (per-shape moveByDelta),
+ *   threaded to moveObjectTree so this pure util reads no module-level singleton (#165).
  */
 export function cloneObjects(
 	topLevelIds: string[],
 	allObjects: Record<string, ObjectState>,
 	offset: Point,
+	objectBehavior: ObjectBehaviorRegistry,
 ): {
 	newObjects: Record<string, ObjectState>;
 	newTopLevelIds: string[];
@@ -156,7 +160,13 @@ export function cloneObjects(
 		}
 
 		// Groups propagate the offset to their descendants; other shapes translate themselves.
-		moveObjectTree(clonedId, clonedObjects, clonedObjects, offset);
+		moveObjectTree(
+			clonedId,
+			clonedObjects,
+			clonedObjects,
+			offset,
+			objectBehavior,
+		);
 	}
 
 	// ── 4. Build newTopLevelIds (preserve topLevelIds order, append promoted orphans at the end) ──

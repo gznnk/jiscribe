@@ -156,8 +156,12 @@ export type EventStartSnapshot = {
 };
 
 /**
- * Canvas state extended with history management for the controller layer
- * This combines the pure canvas state with undo/redo history
+ * Canvas state extended with history management for the controller layer.
+ * This combines the pure canvas state with undo/redo history.
+ *
+ * Pure state only: the per-canvas registry bundle is NOT stored here. It is a
+ * dependency (not data), so it is passed to the pure reducer/handler/command tree
+ * as an explicit `registries` argument instead (#165).
  */
 export type CanvasControllerState = CanvasState & {
 	history: HistoryState;

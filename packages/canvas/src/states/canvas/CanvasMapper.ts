@@ -6,7 +6,7 @@ import type { GroupDoc } from "../../schemas/objects/primitives/group/GroupDoc";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { GroupState } from "../objects/primitives/group/GroupState";
-import { objectMapperRegistry } from "../registry/ObjectMapperRegistry";
+import type { ObjectMapperRegistry } from "../registry/ObjectMapperRegistry";
 import { calculateGroupOrientedBounds } from "../utils/calculateGroupOrientedBounds";
 
 /**
@@ -19,8 +19,15 @@ import { calculateGroupOrientedBounds } from "../utils/calculateGroupOrientedBou
  * acyclic (the policy of not carrying defensive cost internally →
  * docs/01-design-philosophy.md principle 4). Validation is guaranteed at the
  * external-input boundary (host / the `SYNC_EXTERNAL` entry point).
+ *
+ * `mapper` is the per-canvas object mapper registry (not the full bundle) so the
+ * states layer stays decoupled from the controller-layer registries — the only
+ * registry states depends on is `ObjectMapperRegistry` (docs/02-architecture.md).
  */
-export const canvasToState = (doc: CanvasDoc): CanvasState => {
+export const canvasToState = (
+	doc: CanvasDoc,
+	mapper: ObjectMapperRegistry,
+): CanvasState => {
 	const objects: Record<string, ObjectState> = {};
 	const rootIds: string[] = [];
 
@@ -37,7 +44,7 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 	const processObject = (objDoc: ObjectDoc, parentId?: string): string => {
 		// Returns the ID of the processed object
 		// 1. Convert the object itself using the registry
-		const objState = objectMapperRegistry.toState(objDoc);
+		const objState = mapper.toState(objDoc);
 
 		// 2. Set the parent ID (normalization)
 		objState.parentId = parentId;
@@ -106,6 +113,7 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
  */
 export const canvasToDoc = (
 	state: Pick<CanvasState, "objects" | "rootIds">,
+	mapper: ObjectMapperRegistry,
 ): CanvasDoc => {
 	// Helper to reconstruct an object tree from an ID.
 	// The flat state is always internally consistent (index matches objects,
@@ -141,7 +149,7 @@ export const canvasToDoc = (
 		 * Handle recursion here centrally.
 		 */
 
-		const objDoc = objectMapperRegistry.toDoc(objState);
+		const objDoc = mapper.toDoc(objState);
 
 		if (objState.type === "group") {
 			const groupState = objState as GroupState;

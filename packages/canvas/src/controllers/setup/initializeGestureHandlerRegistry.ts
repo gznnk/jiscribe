@@ -1,3 +1,4 @@
+import type { CanvasRegistries } from "./CanvasRegistries";
 import { CanvasEventHandler } from "../gestures/handlers/canvas/CanvasEventHandler";
 import { ConnectionAnchorEventHandler } from "../gestures/handlers/controls/connection/ConnectionAnchorEventHandler";
 import { ConnectorVertexInsertHandler } from "../gestures/handlers/controls/connection/ConnectorVertexInsertHandler";
@@ -11,7 +12,6 @@ import { ShapeLibraryItemHandler } from "../gestures/handlers/menu/ShapeLibraryI
 import { ToolbarHandler } from "../gestures/handlers/menu/ToolbarHandler";
 import { ConnectorEventHandler } from "../gestures/handlers/objects/ConnectorEventHandler";
 import { ObjectEventHandler } from "../gestures/handlers/objects/ObjectEventHandler";
-import { gestureHandlerRegistry } from "../gestures/registry/GestureHandlerRegistry";
 
 /**
  * Initialize the GestureHandlerRegistry with all gesture handlers.
@@ -22,8 +22,16 @@ import { gestureHandlerRegistry } from "../gestures/registry/GestureHandlerRegis
  * CanvasEventHandler takes right-button events. Registration order therefore
  * never decides routing; the exclusivity is pinned by
  * initializeGestureHandlerRegistry.exclusivity.test.ts (#110).
+ *
+ * Gesture handlers are object-type independent, so `createCanvasRegistries`
+ * always registers all of them regardless of the configured object types.
+ *
+ * @param registries Target bundle to populate.
  */
-export const initializeGestureHandlerRegistry = (): void => {
+export const initializeGestureHandlerRegistry = (
+	registries: CanvasRegistries,
+): void => {
+	const gestureHandlerRegistry = registries.gestureHandler;
 	gestureHandlerRegistry.clear();
 
 	// Create control strategies

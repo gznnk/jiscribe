@@ -1,7 +1,7 @@
 import { type Dispatch, type RefObject, useEffect, useRef } from "react";
 
 import type { CanvasControllerState } from "../CanvasTypes";
-import { commandRegistry } from "../commands/CommandRegistry";
+import { useCanvasRegistries } from "../contexts/CanvasRegistriesContext";
 import type { CanvasAction } from "../reducer/CanvasActions";
 
 export type UseKeyboardShortcutsParams = {
@@ -30,6 +30,9 @@ export const useKeyboardShortcuts = ({
 	onUndo,
 	onRedo,
 }: UseKeyboardShortcutsParams): void => {
+	const registries = useCanvasRegistries();
+	const commandRegistry = registries.command;
+
 	const canvasStateRef = useRef(canvasState);
 	canvasStateRef.current = canvasState;
 
@@ -68,7 +71,7 @@ export const useKeyboardShortcuts = ({
 				onRedo();
 				return;
 			}
-			if (command.canExecute(canvasStateRef.current)) {
+			if (command.canExecute(canvasStateRef.current, registries)) {
 				dispatch({ type: "COMMAND", commandId: command.id });
 			}
 		};
@@ -79,5 +82,5 @@ export const useKeyboardShortcuts = ({
 		return () => {
 			container.removeEventListener("keydown", handleKeyDown);
 		};
-	}, [containerRef, dispatch, onUndo, onRedo]);
+	}, [containerRef, dispatch, onUndo, onRedo, commandRegistry, registries]);
 };

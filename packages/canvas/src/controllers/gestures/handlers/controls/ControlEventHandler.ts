@@ -1,4 +1,5 @@
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import type { ICanvasRegistries } from "../../../setup/ICanvasRegistries";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import type {
 	CanvasEvent,
@@ -56,6 +57,7 @@ export class ControlEventHandler implements GestureHandler {
 	handle(
 		state: CanvasControllerState,
 		event: CanvasEvent,
+		registries: ICanvasRegistries,
 	): CanvasControllerState {
 		// Commit text editing if active
 		let nextState = commitTextEditIfNeeded(state);
@@ -70,7 +72,7 @@ export class ControlEventHandler implements GestureHandler {
 		// Try each strategy and use the first one whose supports() returns true
 		for (const strategy of this.strategies.values()) {
 			if (strategy.supports(event)) {
-				return strategy.handle(nextState, event);
+				return strategy.handle(nextState, event, registries);
 			}
 		}
 

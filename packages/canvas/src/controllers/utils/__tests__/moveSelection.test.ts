@@ -1,14 +1,11 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
-import { initializeObjectRegistry } from "../../setup/initializeObjectRegistry";
+import { createTestRegistries } from "../../setup/createCanvasRegistries";
 import { moveSelection } from "../moveSelection";
 
-// moveByDelta is resolved via objectBehaviorRegistry, so initialize the registry
-beforeAll(() => {
-	initializeObjectRegistry();
-});
+const registries = createTestRegistries();
 
 const makeRect = (id: string, cx: number, cy: number): ObjectState =>
 	({
@@ -41,6 +38,7 @@ describe("moveSelection", () => {
 		const srcObjects = { r1: makeRect("r1", 100, 100) };
 
 		const { objects } = moveSelection({
+			objectBehavior: registries.objectBehavior,
 			selectedIds: ["r1"],
 			srcObjects,
 			srcMultiSelectGroup: null,
@@ -54,6 +52,7 @@ describe("moveSelection", () => {
 		const srcObjects = { r1: makeRect("r1", 0, 0) };
 
 		const { objects } = moveSelection({
+			objectBehavior: registries.objectBehavior,
 			selectedIds: ["r1"],
 			srcObjects,
 			srcMultiSelectGroup: null,
@@ -71,6 +70,7 @@ describe("moveSelection", () => {
 		};
 
 		const { objects } = moveSelection({
+			objectBehavior: registries.objectBehavior,
 			selectedIds: ["r1"],
 			srcObjects,
 			srcMultiSelectGroup: null,
@@ -85,6 +85,7 @@ describe("moveSelection", () => {
 		const srcObjects = { r1: makeRect("r1", 0, 0) };
 
 		const { objects } = moveSelection({
+			objectBehavior: registries.objectBehavior,
 			selectedIds: ["ghost", "r1"],
 			srcObjects,
 			srcMultiSelectGroup: null,
@@ -102,6 +103,7 @@ describe("moveSelection", () => {
 		};
 
 		const { objects } = moveSelection({
+			objectBehavior: registries.objectBehavior,
 			selectedIds: ["g1"],
 			srcObjects,
 			srcMultiSelectGroup: null,
@@ -116,6 +118,7 @@ describe("moveSelection", () => {
 		const srcMultiSelectGroup = makeGroup("ms", 10, 20, ["r1"]);
 
 		const { multiSelectGroup } = moveSelection({
+			objectBehavior: registries.objectBehavior,
 			selectedIds: ["r1"],
 			srcObjects: { r1: makeRect("r1", 0, 0) },
 			srcMultiSelectGroup,
@@ -129,6 +132,7 @@ describe("moveSelection", () => {
 
 	it("returns null when multiSelectGroup is null", () => {
 		const { multiSelectGroup } = moveSelection({
+			objectBehavior: registries.objectBehavior,
 			selectedIds: [],
 			srcObjects: {},
 			srcMultiSelectGroup: null,

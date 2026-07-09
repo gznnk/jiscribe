@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { MULTI_SELECT_GROUP } from "../../../../constants/multiSelectGroup";
 import type { CanvasDoc } from "../../../../schemas/canvas/CanvasDoc";
@@ -6,15 +6,11 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createInitialControllerState } from "../../../reducer/createInitialControllerState";
-import { initializeGestureHandlerRegistry } from "../../../setup/initializeGestureHandlerRegistry";
-import { initializeObjectRegistry } from "../../../setup/initializeObjectRegistry";
+import { createTestRegistries } from "../../../setup/createCanvasRegistries";
 import type { Gesture } from "../../recognizer/GestureRecognizerTypes";
 import { handleGesture } from "../handleGesture";
 
-beforeAll(() => {
-	initializeObjectRegistry();
-	initializeGestureHandlerRegistry();
-});
+const registries = createTestRegistries();
 
 const emptyDoc: CanvasDoc = {
 	version: 1,
@@ -42,7 +38,7 @@ const rect = (
 
 /** State seeded with three rects; two inside the sweep area, one far outside. */
 const stateWithRects = (): CanvasControllerState => {
-	const base = createInitialControllerState(emptyDoc);
+	const base = createInitialControllerState(emptyDoc, registries);
 	const objects: Record<string, ObjectState> = {
 		...base.objects,
 		r1: rect("r1", 50, 50, 40, 40), // bbox 30..70
@@ -80,7 +76,11 @@ describe("handleGesture - area selection (marquee)", () => {
 		let state = stateWithRects();
 
 		// dragStart: eventStartSnapshot (and its bboxes) is created here.
-		state = handleGesture(state, dragGesture("dragStart", 0, 0, 0, 0));
+		state = handleGesture(
+			state,
+			dragGesture("dragStart", 0, 0, 0, 0),
+			registries,
+		);
 		expect(state.eventStartSnapshot).not.toBeNull();
 		expect(state.eventStartSnapshot?.bboxes.r1).toEqual({
 			left: 30,
@@ -92,7 +92,11 @@ describe("handleGesture - area selection (marquee)", () => {
 		expect(state.eventStartSnapshot?.bboxes.far).toBeDefined();
 
 		// drag a rectangle that fully contains r1 + r2 but not `far`.
-		state = handleGesture(state, dragGesture("drag", 0, 0, 200, 200));
+		state = handleGesture(
+			state,
+			dragGesture("drag", 0, 0, 200, 200),
+			registries,
+		);
 
 		expect([...state.selectedIds].sort()).toEqual(["r1", "r2"]);
 		expect(state.selectedIds).not.toContain("far");
@@ -107,18 +111,34 @@ describe("handleGesture - area selection (marquee)", () => {
 
 	it("selects nothing when the sweep contains no object fully", () => {
 		let state = stateWithRects();
-		state = handleGesture(state, dragGesture("dragStart", 0, 0, 0, 0));
+		state = handleGesture(
+			state,
+			dragGesture("dragStart", 0, 0, 0, 0),
+			registries,
+		);
 		// Area 0..50 clips r1 (30..70) — partial overlap, so not selected.
-		state = handleGesture(state, dragGesture("drag", 0, 0, 50, 50));
+		state = handleGesture(state, dragGesture("drag", 0, 0, 50, 50), registries);
 		expect(state.selectedIds).toEqual([]);
 		expect(state.multiSelectGroup).toBeNull();
 	});
 
 	it("clears eventStartSnapshot on dragEnd", () => {
 		let state = stateWithRects();
-		state = handleGesture(state, dragGesture("dragStart", 0, 0, 0, 0));
-		state = handleGesture(state, dragGesture("drag", 0, 0, 200, 200));
-		state = handleGesture(state, dragGesture("dragEnd", 0, 0, 200, 200));
+		state = handleGesture(
+			state,
+			dragGesture("dragStart", 0, 0, 0, 0),
+			registries,
+		);
+		state = handleGesture(
+			state,
+			dragGesture("drag", 0, 0, 200, 200),
+			registries,
+		);
+		state = handleGesture(
+			state,
+			dragGesture("dragEnd", 0, 0, 200, 200),
+			registries,
+		);
 		expect(state.eventStartSnapshot).toBeNull();
 	});
 });

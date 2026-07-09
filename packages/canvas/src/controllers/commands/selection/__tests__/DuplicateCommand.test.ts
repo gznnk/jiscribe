@@ -1,15 +1,12 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { initializeObjectRegistry } from "../../../setup/initializeObjectRegistry";
+import { createTestRegistries } from "../../../setup/createCanvasRegistries";
 import { DuplicateCommand } from "../DuplicateCommand";
 
-// cloneObjects uses objectBehaviorRegistry (moveByDelta), so initialize it
-beforeAll(() => {
-	initializeObjectRegistry();
-});
+const registries = createTestRegistries();
 
 const makeRect = (
 	id: string,
@@ -50,6 +47,7 @@ const makeState = (params: {
 	rootIds: string[];
 }): CanvasControllerState =>
 	({
+		registries,
 		multiSelectGroup: null,
 		lastDuplicate: null,
 		commitVersion: 0,
@@ -63,7 +61,7 @@ describe("DuplicateCommand", () => {
 			objects: { a: makeRect("a", 100, 100) },
 			rootIds: ["a"],
 		});
-		const next = DuplicateCommand.execute(state);
+		const next = DuplicateCommand.execute(state, registries);
 
 		expect(Object.keys(next.objects)).toHaveLength(2);
 		expect(next.rootIds).toHaveLength(2);
@@ -83,7 +81,7 @@ describe("DuplicateCommand", () => {
 			objects: { a: makeRect("a", 100, 100) },
 			rootIds: ["a"],
 		});
-		const next = DuplicateCommand.execute(state);
+		const next = DuplicateCommand.execute(state, registries);
 		expect(next.selectedIds).toEqual([next.rootIds[1]]);
 		expect(next.lastDuplicate?.newIds).toEqual(next.selectedIds);
 		expect(next.lastDuplicate?.offset).toEqual({ x: 20, y: 20 });
@@ -100,7 +98,7 @@ describe("DuplicateCommand", () => {
 			},
 			rootIds: ["g"],
 		});
-		const next = DuplicateCommand.execute(state);
+		const next = DuplicateCommand.execute(state, registries);
 		const newId = next.selectedIds[0];
 		// the new object's parent is group g
 		expect(next.objects[newId]?.parentId).toBe("g");
@@ -117,13 +115,14 @@ describe("DuplicateCommand", () => {
 				objects: { a: makeRect("a", 0, 0) },
 				rootIds: ["a"],
 			});
-			expect(DuplicateCommand.canExecute(state)).toBe(true);
+			expect(DuplicateCommand.canExecute(state, registries)).toBe(true);
 		});
 
 		it("is not executable when there is no selection", () => {
 			expect(
 				DuplicateCommand.canExecute(
 					makeState({ selectedIds: [], objects: {}, rootIds: [] }),
+					registries,
 				),
 			).toBe(false);
 		});

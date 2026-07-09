@@ -1,14 +1,16 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { gestureHandlerRegistry } from "../../gestures/registry/GestureHandlerRegistry";
 import type {
 	CanvasEvent,
 	EventType,
 } from "../../gestures/registry/GestureHandlerTypes";
+import { createTestRegistries } from "../createCanvasRegistries";
 import { initializeGestureHandlerRegistry } from "../initializeGestureHandlerRegistry";
 
+const registries = createTestRegistries();
+
 beforeAll(() => {
-	initializeGestureHandlerRegistry();
+	initializeGestureHandlerRegistry(registries);
 });
 
 /**
@@ -66,9 +68,11 @@ const makeEvent = (
 	}) as unknown as CanvasEvent;
 
 const supportingNames = (event: CanvasEvent): string[] =>
-	gestureHandlerRegistry
+	registries.gestureHandler
 		.getHandlerNames()
-		.filter((name) => gestureHandlerRegistry.getHandler(name)!.supports(event));
+		.filter((name) =>
+			registries.gestureHandler.getHandler(name)!.supports(event),
+		);
 
 describe("gesture handler routing exclusivity (#110)", () => {
 	it("at most one handler supports any (target, button, type) combination", () => {

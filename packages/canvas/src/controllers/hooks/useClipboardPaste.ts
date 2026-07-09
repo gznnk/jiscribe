@@ -6,11 +6,13 @@ import {
 	useRef,
 } from "react";
 
+import type { ObjectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
 import { getPlatform } from "../commands/CommandUtils";
 import {
 	type ClipboardData,
 	isClipboardData,
 } from "../commands/selection/ClipboardData";
+import { useCanvasRegistries } from "../contexts/CanvasRegistriesContext";
 import type { CanvasAction } from "../reducer/CanvasActions";
 
 /**
@@ -28,13 +30,14 @@ export const enqueueClipboardPaste = (
 	pasteChain: RefObject<Promise<void>>,
 	internalClipboard: ClipboardData | null,
 	dispatch: Dispatch<CanvasAction>,
+	objectStateValidator: ObjectStateValidatorRegistry,
 ): Promise<void> => {
 	const runPaste = async () => {
 		let data = null;
 		try {
 			const text = await navigator.clipboard.readText();
 			const parsed: unknown = JSON.parse(text);
-			if (isClipboardData(parsed)) {
+			if (isClipboardData(parsed, objectStateValidator)) {
 				data = parsed;
 			}
 		} catch {
@@ -78,10 +81,17 @@ export const useClipboardPaste = (
 	// Held in a ref so the FIFO guarantee survives handlePaste re-creation
 	// (internalClipboard changes remake the callback, but the chain must span them).
 	const pasteChainRef = useRef<Promise<void>>(Promise.resolve());
+	const { objectStateValidator } = useCanvasRegistries();
 
 	const handlePaste = useCallback(
-		() => enqueueClipboardPaste(pasteChainRef, internalClipboard, dispatch),
-		[dispatch, internalClipboard],
+		() =>
+			enqueueClipboardPaste(
+				pasteChainRef,
+				internalClipboard,
+				dispatch,
+				objectStateValidator,
+			),
+		[dispatch, internalClipboard, objectStateValidator],
 	);
 
 	// Paste with Ctrl+V / Cmd+V
