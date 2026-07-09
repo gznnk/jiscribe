@@ -1,7 +1,7 @@
 ﻿import { memo } from "react";
 
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
-import { useCanvasRegistries } from "../../../../../contexts/CanvasRegistriesContext";
+import { useCommandState } from "../../../../../hooks/useCommandState";
 import { getCommandLabel } from "../../../../../messages/CanvasMessages";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { GroupIcon } from "../../../../icons/GroupIcon";
@@ -13,8 +13,7 @@ type GroupMenuProps = {
 
 const GroupMenuComponent: React.FC<GroupMenuProps> = ({ canvasState }) => {
 	const messages = useCanvasMessages();
-	const registries = useCanvasRegistries();
-	const commandRegistry = registries.command;
+	const resolveCommand = useCommandState(canvasState);
 	// Determine if the single selected item is a group (→ show ungroup)
 	const singleSelected =
 		canvasState.selectedIds.length === 1
@@ -23,12 +22,12 @@ const GroupMenuComponent: React.FC<GroupMenuProps> = ({ canvasState }) => {
 	const isGroup = singleSelected?.type === "group";
 
 	const commandId = isGroup ? "ungroup" : "group";
-	const command = commandRegistry.get(commandId);
-	if (!command) {
+	const resolved = resolveCommand(commandId);
+	if (!resolved) {
 		return null;
 	}
 
-	const enabled = command.canExecute(canvasState, registries);
+	const { command, enabled } = resolved;
 
 	return (
 		<MenuItemPositioner>

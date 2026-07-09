@@ -16,6 +16,7 @@ import { useCanvasReducer } from "./hooks/useCanvasReducer";
 import { useCanvasWheel } from "./hooks/useCanvasWheel";
 import { useClipboardPaste } from "./hooks/useClipboardPaste";
 import { useClipboardWrite } from "./hooks/useClipboardWrite";
+import { resolveCommandState } from "./hooks/useCommandState";
 import { useContainerResize } from "./hooks/useContainerResize";
 import { useControlledViewport } from "./hooks/useControlledViewport";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
@@ -306,10 +307,12 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	const { minX, minY, zoom } = state.viewport;
 
 	// Zoom button enabled/disabled state is delegated to the command's canExecute (single source of truth).
+	// Canvas provides the registries context, so it cannot read it back via a hook
+	// and uses the pure resolver against its directly-held bundle instead.
 	const canZoomIn =
-		registries.command.get("zoomIn")?.canExecute(state, registries) ?? false;
+		resolveCommandState(state, registries, "zoomIn")?.enabled ?? false;
 	const canZoomOut =
-		registries.command.get("zoomOut")?.canExecute(state, registries) ?? false;
+		resolveCommandState(state, registries, "zoomOut")?.enabled ?? false;
 
 	return (
 		<CanvasThemeContext value={theme}>
