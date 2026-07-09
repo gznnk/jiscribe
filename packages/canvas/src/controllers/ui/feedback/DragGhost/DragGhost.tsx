@@ -30,6 +30,7 @@ const createGhostElement = (
 	const doc = createObjectDoc(
 		preset.objectType,
 		position,
+		registries.shapeFactory,
 		preset.defaultOverrides,
 	);
 	const ghostState = registries.objectMapper.toState(doc);

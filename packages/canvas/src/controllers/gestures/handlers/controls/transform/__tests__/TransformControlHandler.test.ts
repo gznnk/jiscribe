@@ -4,6 +4,7 @@ import { MIN_GROUP_DIMENSION } from "../../../../../../constants/groupDimensions
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import { createTestRegistries } from "../../../../../setup/createCanvasRegistries";
 import { initializeObjectRegistry } from "../../../../../setup/initializeObjectRegistry";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 import { TransformControlHandler } from "../TransformControlHandler";
@@ -11,6 +12,8 @@ import { TransformControlHandler } from "../TransformControlHandler";
 beforeAll(() => {
 	initializeObjectRegistry();
 });
+
+const registries = createTestRegistries();
 
 const makeRect = (
 	id: string,
@@ -67,6 +70,7 @@ const makeGroupResizeState = (): CanvasControllerState => {
 	const viewport = { minX: 0, minY: 0, width: 1000, height: 800, zoom: 1 };
 
 	return {
+		registries,
 		objects,
 		rootIds: ["g"],
 		selectedIds: ["g"],
@@ -93,6 +97,7 @@ const makeGroupResizeState = (): CanvasControllerState => {
 const makeDragState = (): CanvasControllerState => {
 	const rect = makeRect("rect-1", 50, 50, 100, 100);
 	return {
+		registries,
 		objects: { "rect-1": rect },
 		rootIds: ["rect-1"],
 		selectedIds: ["rect-1"],

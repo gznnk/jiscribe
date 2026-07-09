@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { createTestRegistries } from "../../../../setup/createCanvasRegistries";
 import { initializeCommands } from "../../../../setup/initializeCommands";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { ToolbarHandler } from "../ToolbarHandler";
@@ -10,8 +11,11 @@ beforeAll(() => {
 	initializeCommands();
 });
 
+const registries = createTestRegistries();
+
 const makeState = (): CanvasControllerState =>
 	({
+		registries,
 		objects: {},
 		rootIds: [],
 		selectedIds: [],

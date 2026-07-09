@@ -14,7 +14,6 @@ import { getAncestors } from "./utils/getAncestors";
 import { ORIGIN_SNAP_PX } from "../../../../constants/axisLock";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../../../states/objects/base/TextStyleState";
-import { objectMapperRegistry } from "../../../../states/registry/ObjectMapperRegistry";
 import type {
 	AxisLockFeedback,
 	CanvasControllerState,
@@ -210,6 +209,7 @@ function handleObjectDrag(
 			srcObjects: eventStartObjects,
 			srcMultiSelectGroup: eventStartMultiSelectGroup,
 			delta: adjustedDelta,
+			objectBehavior: canvasState.registries.objectBehavior,
 		});
 
 	const nextState = {
@@ -390,7 +390,9 @@ export const ObjectEventHandler: GestureHandler = {
 			// are consistent, so it also lets through shapes with no text at all
 			// (svg / polyline / polygon, etc.). Treat the same features.text used by the
 			// property-update side (isPropertySupported) as authoritative.
-			const features = objectMapperRegistry.getFeatures(targetObject.type);
+			const features = state.registries.objectMapper.getFeatures(
+				targetObject.type,
+			);
 			if (features?.text === true && isTextStyleState(targetObject)) {
 				return {
 					...nextState,

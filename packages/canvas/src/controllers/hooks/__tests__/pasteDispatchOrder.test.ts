@@ -2,7 +2,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { ClipboardData } from "../../commands/selection/ClipboardData";
 import type { CanvasAction } from "../../reducer/CanvasActions";
+import { createTestRegistries } from "../../setup/createCanvasRegistries";
 import { enqueueClipboardPaste } from "../useClipboardPaste";
+
+const registries = createTestRegistries();
 
 /**
  * issue #48 の回帰テスト。
@@ -71,8 +74,18 @@ describe("enqueueClipboardPaste は連続ペーストを FIFO 直列化する", 
 
 		const clipA = clipboardOf("A");
 		const clipB = clipboardOf("B");
-		const firstPaste = enqueueClipboardPaste(pasteChain, clipA, dispatch);
-		const secondPaste = enqueueClipboardPaste(pasteChain, clipB, dispatch);
+		const firstPaste = enqueueClipboardPaste(
+			pasteChain,
+			clipA,
+			dispatch,
+			registries.objectStateValidator,
+		);
+		const secondPaste = enqueueClipboardPaste(
+			pasteChain,
+			clipB,
+			dispatch,
+			registries.objectStateValidator,
+		);
 
 		// 2 回目の paste は 1 回目の dispatch 完了までクリップボードを読まない
 		await flushMicrotasks();
@@ -105,8 +118,18 @@ describe("enqueueClipboardPaste は連続ペーストを FIFO 直列化する", 
 
 		const clipB = clipboardOf("B");
 		// 1 回目: OS 読み取り失敗かつ internalClipboard も空 → メニューを閉じるだけ
-		const firstPaste = enqueueClipboardPaste(pasteChain, null, dispatch);
-		const secondPaste = enqueueClipboardPaste(pasteChain, clipB, dispatch);
+		const firstPaste = enqueueClipboardPaste(
+			pasteChain,
+			null,
+			dispatch,
+			registries.objectStateValidator,
+		);
+		const secondPaste = enqueueClipboardPaste(
+			pasteChain,
+			clipB,
+			dispatch,
+			registries.objectStateValidator,
+		);
 
 		firstRead.reject(new Error("clipboard permission denied"));
 		await firstPaste;
@@ -131,7 +154,12 @@ describe("enqueueClipboardPaste は連続ペーストを FIFO 直列化する", 
 
 		const clips = [clipboardOf("1"), clipboardOf("2"), clipboardOf("3")];
 		const pastes = clips.map((clip) =>
-			enqueueClipboardPaste(pasteChain, clip, dispatch),
+			enqueueClipboardPaste(
+				pasteChain,
+				clip,
+				dispatch,
+				registries.objectStateValidator,
+			),
 		);
 
 		for (let i = 0; i < reads.length; i++) {

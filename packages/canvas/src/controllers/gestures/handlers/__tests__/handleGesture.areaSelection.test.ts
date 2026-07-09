@@ -6,6 +6,7 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createInitialControllerState } from "../../../reducer/createInitialControllerState";
+import { createTestRegistries } from "../../../setup/createCanvasRegistries";
 import { initializeGestureHandlerRegistry } from "../../../setup/initializeGestureHandlerRegistry";
 import { initializeObjectRegistry } from "../../../setup/initializeObjectRegistry";
 import type { Gesture } from "../../recognizer/GestureRecognizerTypes";
@@ -15,6 +16,8 @@ beforeAll(() => {
 	initializeObjectRegistry();
 	initializeGestureHandlerRegistry();
 });
+
+const registries = createTestRegistries();
 
 const emptyDoc: CanvasDoc = {
 	version: 1,
@@ -42,7 +45,7 @@ const rect = (
 
 /** State seeded with three rects; two inside the sweep area, one far outside. */
 const stateWithRects = (): CanvasControllerState => {
-	const base = createInitialControllerState(emptyDoc);
+	const base = createInitialControllerState(emptyDoc, registries);
 	const objects: Record<string, ObjectState> = {
 		...base.objects,
 		r1: rect("r1", 50, 50, 40, 40), // bbox 30..70

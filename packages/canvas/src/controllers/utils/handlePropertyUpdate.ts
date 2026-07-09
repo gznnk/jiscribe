@@ -2,7 +2,6 @@ import { collectDescendantIds } from "./collectDescendantIds";
 import type { ObjectFeatures } from "../../schemas/objects/types/ObjectFeatures";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../states/objects/connections/connector/ConnectorState";
-import { objectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import type { CanvasControllerState } from "../CanvasTypes";
 
 /**
@@ -139,7 +138,7 @@ export const handlePropertyUpdate = (
 			);
 		}
 
-		const features = objectMapperRegistry.getFeatures(connector.type);
+		const features = state.registries.objectMapper.getFeatures(connector.type);
 		const supported = features
 			? isPropertySupported(features, property)
 			: false;
@@ -196,7 +195,7 @@ export const handlePropertyUpdate = (
 			continue;
 		}
 
-		const features = objectMapperRegistry.getFeatures(obj.type);
+		const features = state.registries.objectMapper.getFeatures(obj.type);
 		const supported = features
 			? isPropertySupported(features, property)
 			: false;
@@ -221,7 +220,9 @@ export const handlePropertyUpdate = (
 				if (!descObj) {
 					continue;
 				}
-				const features = objectMapperRegistry.getFeatures(descObj.type);
+				const features = state.registries.objectMapper.getFeatures(
+					descObj.type,
+				);
 				const supported = features
 					? isPropertySupported(features, property)
 					: false;

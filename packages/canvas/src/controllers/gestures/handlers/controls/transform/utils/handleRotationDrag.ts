@@ -94,6 +94,7 @@ export function handleRotationDrag(
 			newRotation,
 			updatedGroup,
 			updatedObjects,
+			state.registries.objectBehavior,
 		);
 		Object.assign(updatedObjects, rotatedChildren);
 
@@ -129,6 +130,7 @@ export function handleRotationDrag(
 				newRotation,
 				updatedObject as GroupState,
 				eventStartSnapshot.objects,
+				state.registries.objectBehavior,
 			);
 			Object.assign(updatedObjects, rotatedChildren);
 		}

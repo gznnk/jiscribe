@@ -2,7 +2,6 @@ import type { Point } from "@workspace/geometry";
 
 import { AUTO_COLOR } from "../../../../../schemas/objects/utils/autoColor";
 import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
-import { objectMapperRegistry } from "../../../../../states/registry/ObjectMapperRegistry";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import type { ControlStrategy } from "../ControlEventHandler";
@@ -181,7 +180,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			hovered: event.getHovered(),
 			objects: state.objects,
 			isConnectable: (type) =>
-				objectMapperRegistry.getFeatures(type)?.connectable === true,
+				state.registries.objectMapper.getFeatures(type)?.connectable === true,
 		});
 
 		return computeEditedEndpoint(

@@ -5,6 +5,7 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createInitialControllerState } from "../../../reducer/createInitialControllerState";
+import { createTestRegistries } from "../../../setup/createCanvasRegistries";
 import { initializeCommands } from "../../../setup/initializeCommands";
 import { initializeGestureHandlerRegistry } from "../../../setup/initializeGestureHandlerRegistry";
 import { initializeObjectRegistry } from "../../../setup/initializeObjectRegistry";
@@ -17,13 +18,15 @@ beforeAll(() => {
 	initializeCommands();
 });
 
+const registries = createTestRegistries();
+
 const emptyDoc: CanvasDoc = {
 	version: 1,
 	root: [],
 } as unknown as CanvasDoc;
 
 const baseState = (): CanvasControllerState =>
-	deepFreezeState(createInitialControllerState(emptyDoc));
+	deepFreezeState(createInitialControllerState(emptyDoc, registries));
 
 const CLICK_CLIENT_POS = { x: 200, y: 150 };
 

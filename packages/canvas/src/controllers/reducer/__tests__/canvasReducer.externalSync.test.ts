@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 
 import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
 import { canvasToState } from "../../../states/canvas/CanvasMapper";
+import { objectMapperRegistry } from "../../../states/registry/ObjectMapperRegistry";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { CanvasAction } from "../CanvasActions";
 import { canvasReducer } from "../canvasReducer";
@@ -34,7 +35,7 @@ const movedDoc: CanvasDoc = {
 // genuine external change.
 const syncExternal = (): CanvasAction => ({
 	type: "SYNC_EXTERNAL",
-	payload: canvasToState(movedDoc),
+	payload: canvasToState(movedDoc, objectMapperRegistry),
 });
 
 const cxOf = (state: CanvasControllerState) =>

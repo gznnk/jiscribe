@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
+import { createTestRegistries } from "../../../../../setup/createCanvasRegistries";
 import { initializeObjectRegistry } from "../../../../../setup/initializeObjectRegistry";
 import {
 	rotateGroupByGroup,
@@ -47,6 +48,7 @@ describe("GroupController.moveByDelta", () => {
 
 describe("GroupController.moveObjectTree", () => {
 	// moveObjectTree resolves each node's translation through the registry
+	const registries = createTestRegistries();
 	beforeAll(() => {
 		initializeObjectRegistry();
 	});
@@ -65,7 +67,7 @@ describe("GroupController.moveObjectTree", () => {
 		const src = { r1: makeRect("r1", 100, 100) };
 		const dst: Record<string, ObjectState> = { ...src };
 
-		moveObjectTree("r1", src, dst, { x: 10, y: -5 });
+		moveObjectTree("r1", src, dst, { x: 10, y: -5 }, registries.objectBehavior);
 
 		expect(dst.r1).toMatchObject({ cx: 110, cy: 95 });
 	});
@@ -79,7 +81,7 @@ describe("GroupController.moveObjectTree", () => {
 		};
 		const dst: Record<string, ObjectState> = { ...src };
 
-		moveObjectTree("g1", src, dst, { x: 5, y: 0 });
+		moveObjectTree("g1", src, dst, { x: 5, y: 0 }, registries.objectBehavior);
 
 		expect(dst.g1).toMatchObject({ cx: 55, cy: 50 });
 		expect(dst.g2).toMatchObject({ cx: 45, cy: 40 });
@@ -91,7 +93,7 @@ describe("GroupController.moveObjectTree", () => {
 		const src = { r1: makeRect("r1", 0, 0) };
 		const dst: Record<string, ObjectState> = { ...src };
 
-		moveObjectTree("r1", src, dst, { x: 5, y: 5 });
+		moveObjectTree("r1", src, dst, { x: 5, y: 5 }, registries.objectBehavior);
 		expect(src.r1).toMatchObject({ cx: 0, cy: 0 });
 	});
 
@@ -99,7 +101,13 @@ describe("GroupController.moveObjectTree", () => {
 		const src: Record<string, ObjectState> = {};
 		const dst: Record<string, ObjectState> = {};
 		expect(() =>
-			moveObjectTree("ghost", src, dst, { x: 1, y: 1 }),
+			moveObjectTree(
+				"ghost",
+				src,
+				dst,
+				{ x: 1, y: 1 },
+				registries.objectBehavior,
+			),
 		).not.toThrow();
 	});
 });

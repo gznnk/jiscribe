@@ -14,7 +14,6 @@ import type {
 import { buildObjectBBoxes } from "../../utils/buildObjectBBoxes";
 import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWithDescendants";
 import type { Gesture } from "../recognizer/GestureRecognizerTypes";
-import { gestureHandlerRegistry } from "../registry/GestureHandlerRegistry";
 import type { CanvasEvent, EventType } from "../registry/GestureHandlerTypes";
 import { calcSnapCandidates } from "./utils/snap/calcSnapCandidates";
 
@@ -36,8 +35,8 @@ const EVENT_END_TYPES: readonly EventType[] = ["dragEnd"] as const;
  * Also manages eventStartSnapshot lifecycle (save on dragStart, clear on dragEnd).
  * Automatically records history when commitVersion changes.
  *
- * Note: The gestureHandlerRegistry must be initialized via initializeRegistries()
- * from controllers/setup/ before using this function.
+ * Routing uses the canvas's own gesture handler registry (`state.registries`),
+ * populated when its bundle is built (`createCanvasRegistries`).
  */
 export const handleGesture = (
 	state: CanvasControllerState,
@@ -159,7 +158,7 @@ export const handleGesture = (
 
 	// Process all events
 	for (const event of derivedEvents) {
-		nextState = gestureHandlerRegistry.handle(nextState, event);
+		nextState = state.registries.gestureHandler.handle(nextState, event);
 	}
 
 	// Clear eventStartSnapshot on event end

@@ -1,8 +1,10 @@
 import { describe, it, expect } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import { createTestRegistries } from "../../setup/createCanvasRegistries";
 import { cloneObjects } from "../cloneObjects";
 
+const registries = createTestRegistries();
 const ZERO = { x: 0, y: 0 };
 
 // To focus the tests on the remap logic, build ObjectState with minimal shapes.
@@ -18,6 +20,7 @@ describe("cloneObjects", () => {
 				C: { id: "C", type: "rect", parentId: "G" },
 			}),
 			ZERO,
+			registries.objectBehavior,
 		);
 
 		const newG = idRemap.get("G")!;
@@ -38,6 +41,7 @@ describe("cloneObjects", () => {
 				C: { id: "C", type: "rect", parentId: "EXTERNAL" },
 			}),
 			ZERO,
+			registries.objectBehavior,
 		);
 
 		const newC = idRemap.get("C")!;
@@ -55,6 +59,7 @@ describe("cloneObjects", () => {
 				C: { id: "C", type: "rect", parentId: "G" },
 			}),
 			ZERO,
+			registries.objectBehavior,
 		);
 
 		const newG = idRemap.get("G")!;
@@ -80,6 +85,7 @@ describe("cloneObjects", () => {
 				},
 			}),
 			ZERO,
+			registries.objectBehavior,
 		);
 
 		const newA = idRemap.get("A")!;
@@ -115,6 +121,7 @@ describe("cloneObjects", () => {
 				},
 			}),
 			{ x: 20, y: 20 },
+			registries.objectBehavior,
 		);
 
 		const newA = idRemap.get("A")!;
@@ -148,6 +155,7 @@ describe("cloneObjects", () => {
 				C: { id: "C", type: "rect", parentId: "G" },
 			}),
 			ZERO,
+			registries.objectBehavior,
 		);
 
 		const newC = idRemap.get("C")!;

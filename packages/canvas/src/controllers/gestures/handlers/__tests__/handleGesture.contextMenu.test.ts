@@ -5,6 +5,7 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createInitialControllerState } from "../../../reducer/createInitialControllerState";
+import { createTestRegistries } from "../../../setup/createCanvasRegistries";
 import { initializeGestureHandlerRegistry } from "../../../setup/initializeGestureHandlerRegistry";
 import { initializeObjectRegistry } from "../../../setup/initializeObjectRegistry";
 import type { Gesture } from "../../recognizer/GestureRecognizerTypes";
@@ -14,6 +15,8 @@ beforeAll(() => {
 	initializeObjectRegistry();
 	initializeGestureHandlerRegistry();
 });
+
+const registries = createTestRegistries();
 
 const emptyDoc: CanvasDoc = {
 	version: 1,
@@ -25,7 +28,7 @@ const emptyDoc: CanvasDoc = {
  * Includes one shape `a` and one connector `c` so that pressed events on each target can be reproduced.
  */
 const openMenuState = (): CanvasControllerState => {
-	const base = createInitialControllerState(emptyDoc);
+	const base = createInitialControllerState(emptyDoc, registries);
 	const rect = { id: "a", type: "rect" } as unknown as ObjectState;
 	const connector = { id: "c", type: "connector" } as unknown as ObjectState;
 	return deepFreezeState({

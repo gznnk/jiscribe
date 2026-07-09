@@ -5,6 +5,7 @@ import { canvasToState } from "../../states/canvas/CanvasMapper";
 import { createDocSnapshotFromDoc } from "../../states/canvas/DocSnapshot";
 import type { Camera } from "../../states/canvas/Viewport";
 import type { CanvasControllerState } from "../CanvasTypes";
+import type { CanvasRegistries } from "../setup/CanvasRegistries";
 import { resetUiState } from "../utils/resetUiState";
 
 /**
@@ -19,10 +20,11 @@ import { resetUiState } from "../utils/resetUiState";
  */
 export const createInitialControllerState = (
 	initialDoc: CanvasDoc,
+	registries: CanvasRegistries,
 	docDefaults: DocCreationDefaults = { fontFamily: DEFAULT_FONT_FAMILY },
 	initialCamera?: Camera,
 ): CanvasControllerState => {
-	const baseState = canvasToState(initialDoc);
+	const baseState = canvasToState(initialDoc, registries.objectMapper);
 	const viewport =
 		initialCamera === undefined
 			? baseState.viewport
@@ -34,6 +36,7 @@ export const createInitialControllerState = (
 				};
 	return {
 		...baseState,
+		registries,
 		viewport,
 		...resetUiState(),
 		docDefaults,

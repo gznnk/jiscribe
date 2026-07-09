@@ -1,4 +1,4 @@
-import { shapeFactoryRegistry } from "../../registry/ShapeFactoryRegistry";
+import type { ShapeFactoryRegistry } from "../../registry/ShapeFactoryRegistry";
 import type { ObjectDoc } from "../base/ObjectDoc";
 import type { DocCreationDefaults } from "../types/DocCreationDefaults";
 import type { ObjectType } from "../types/ObjectType";
@@ -8,7 +8,8 @@ import type { ObjectType } from "../types/ObjectType";
  * Returns null if the size is below the minimum, or the shape does not support
  * bounds-based drawing.
  *
- * The creation logic is delegated to each shape's `ShapeFactory.createDocFromBounds`.
+ * The creation logic is delegated to each shape's `ShapeFactory.createDocFromBounds`,
+ * resolved from the caller-supplied `shapeFactory` registry (no global state).
  */
 export const createObjectDocFromBounds = (
 	type: ObjectType,
@@ -16,11 +17,12 @@ export const createObjectDocFromBounds = (
 	y1: number,
 	x2: number,
 	y2: number,
+	shapeFactory: ShapeFactoryRegistry,
 	overrides?: Record<string, unknown>,
 	minSize = 5,
 	docDefaults?: DocCreationDefaults,
 ): ObjectDoc | null => {
-	const factory = shapeFactoryRegistry.get(type);
+	const factory = shapeFactory.get(type);
 	if (!factory?.createDocFromBounds) {
 		return null;
 	}

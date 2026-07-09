@@ -1,16 +1,15 @@
 import type { CanvasControllerState } from "../../CanvasTypes";
-import { commandRegistry } from "../CommandRegistry";
 
 /**
  * Handles a COMMAND action.
- * Executes the Command registered in CommandRegistry and returns a new CanvasControllerState.
- * History recording is delegated to canvasReducer.
+ * Executes the Command registered in the canvas's command registry and returns a
+ * new CanvasControllerState. History recording is delegated to canvasReducer.
  */
 export const handleCommand = (
 	state: CanvasControllerState,
 	commandId: string,
 ): CanvasControllerState => {
-	const command = commandRegistry.get(commandId);
+	const command = state.registries.command.get(commandId);
 
 	if (!command) {
 		console.warn(`Command not found: ${commandId}`);

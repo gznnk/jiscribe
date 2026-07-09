@@ -1,8 +1,8 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 
+import { createTestRegistries } from "../../../controllers/setup/createCanvasRegistries";
 import { initializeObjectRegistry } from "../../../controllers/setup/initializeObjectRegistry";
 import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
-import { objectMapperRegistry } from "../../registry/ObjectMapperRegistry";
 import { canvasToDoc, canvasToState } from "../CanvasMapper";
 import {
 	createDocSnapshotFromDoc,
@@ -13,6 +13,9 @@ import {
 beforeAll(() => {
 	initializeObjectRegistry();
 });
+
+const registries = createTestRegistries();
+const mapper = registries.objectMapper;
 
 const rectDoc: CanvasDoc = {
 	version: 1,
@@ -30,24 +33,24 @@ const rectDoc: CanvasDoc = {
 
 describe("DocSnapshot", () => {
 	it("a from-state snapshot converts lazily: no doc until the first resolve", () => {
-		const state = canvasToState(rectDoc);
+		const state = canvasToState(rectDoc, mapper);
 		const snapshot = createDocSnapshotFromState(state);
 
 		expect(snapshot.doc).toBeNull();
 
-		const resolvedDoc = resolveDocSnapshot(snapshot);
-		expect(resolvedDoc).toEqual(canvasToDoc(state));
+		const resolvedDoc = resolveDocSnapshot(snapshot, mapper);
+		expect(resolvedDoc).toEqual(canvasToDoc(state, mapper));
 		// The source refs are released once resolved
 		expect(snapshot.source).toBeNull();
 	});
 
 	it("resolve is memoized: the second call returns the same doc without reconverting", () => {
-		const state = canvasToState(rectDoc);
+		const state = canvasToState(rectDoc, mapper);
 		const snapshot = createDocSnapshotFromState(state);
 
-		const firstDoc = resolveDocSnapshot(snapshot);
-		const toDocSpy = vi.spyOn(objectMapperRegistry, "toDoc");
-		const secondDoc = resolveDocSnapshot(snapshot);
+		const firstDoc = resolveDocSnapshot(snapshot, mapper);
+		const toDocSpy = vi.spyOn(mapper, "toDoc");
+		const secondDoc = resolveDocSnapshot(snapshot, mapper);
 
 		expect(secondDoc).toBe(firstDoc);
 		expect(toDocSpy).not.toHaveBeenCalled();
@@ -57,8 +60,8 @@ describe("DocSnapshot", () => {
 	it("a from-doc snapshot returns the original doc verbatim without any conversion", () => {
 		const snapshot = createDocSnapshotFromDoc(rectDoc);
 
-		const toDocSpy = vi.spyOn(objectMapperRegistry, "toDoc");
-		expect(resolveDocSnapshot(snapshot)).toBe(rectDoc);
+		const toDocSpy = vi.spyOn(mapper, "toDoc");
+		expect(resolveDocSnapshot(snapshot, mapper)).toBe(rectDoc);
 		expect(toDocSpy).not.toHaveBeenCalled();
 		toDocSpy.mockRestore();
 	});

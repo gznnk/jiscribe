@@ -4,8 +4,6 @@ import { collectIdsInArea } from "./utils/collectIdsInArea";
 import { PRECISION } from "../../../../constants/precision";
 import { ZOOM } from "../../../../constants/zoom";
 import { createObjectDocFromBounds } from "../../../../schemas/objects/utils/createObjectDocFromBounds";
-import { shapeFactoryRegistry } from "../../../../schemas/registry/ShapeFactoryRegistry";
-import { objectMapperRegistry } from "../../../../states/registry/ObjectMapperRegistry";
 import type { SnapFeedback } from "../../../CanvasTypes";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
@@ -132,7 +130,9 @@ export const CanvasEventHandler: GestureHandler = {
 		const shapeDrawing = nextState.shapeDrawing;
 		const drawingObjectType =
 			shapeDrawing !== null &&
-			shapeFactoryRegistry.supportsBoundsDrawing(shapeDrawing.preset.objectType)
+			state.registries.shapeFactory.supportsBoundsDrawing(
+				shapeDrawing.preset.objectType,
+			)
 				? shapeDrawing.preset.objectType
 				: null;
 		if (
@@ -217,13 +217,14 @@ export const CanvasEventHandler: GestureHandler = {
 					startY,
 					endX,
 					endY,
+					state.registries.shapeFactory,
 					nextState.shapeDrawing.preset.defaultOverrides,
 					undefined,
 					nextState.docDefaults,
 				);
 
 				if (doc) {
-					const objectState = objectMapperRegistry.toState(doc);
+					const objectState = state.registries.objectMapper.toState(doc);
 					nextState = {
 						...nextState,
 						objects: { ...nextState.objects, [objectState.id]: objectState },

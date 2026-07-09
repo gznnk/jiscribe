@@ -4,7 +4,12 @@ import { isValidConnectorState } from "../../../../states/objects/connections/co
 import { isValidGroupState } from "../../../../states/objects/primitives/group/validateGroupState";
 import { isValidRectState } from "../../../../states/objects/primitives/rect/validateRectState";
 import { objectStateValidatorRegistry } from "../../../../states/registry/ObjectStateValidatorRegistry";
-import { isClipboardData } from "../ClipboardData";
+import { isClipboardData as isClipboardDataRaw } from "../ClipboardData";
+
+// The per-type validator registry is threaded explicitly now; bind the
+// test's configured singleton so the assertions below stay unchanged.
+const isClipboardData = (value: unknown): boolean =>
+	isClipboardDataRaw(value, objectStateValidatorRegistry);
 
 const rect = (id: string) => ({
 	id,

@@ -3,8 +3,11 @@ import { beforeAll, describe, expect, it } from "vitest";
 import type { CanvasDoc } from "../../../../schemas/canvas/CanvasDoc";
 import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
 import { createInitialControllerState } from "../../../reducer/createInitialControllerState";
+import { createTestRegistries } from "../../../setup/createCanvasRegistries";
 import { initializeObjectRegistry } from "../../../setup/initializeObjectRegistry";
 import { StartTextEditCommand } from "../StartTextEditCommand";
+
+const registries = createTestRegistries();
 
 const rect = {
 	id: "rect-1",
@@ -29,7 +32,7 @@ const doc = { version: 1, root: [rect, svg] } as unknown as CanvasDoc;
 
 const stateWithSelection = (selectedId: string) =>
 	deepFreezeState({
-		...createInitialControllerState(doc),
+		...createInitialControllerState(doc, registries),
 		selectedIds: [selectedId],
 	});
 

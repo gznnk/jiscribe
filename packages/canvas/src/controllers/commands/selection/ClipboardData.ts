@@ -3,7 +3,7 @@ import type { Point } from "@workspace/geometry";
 import { isPoint } from "@workspace/geometry";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import { objectStateValidatorRegistry } from "../../../states/registry/ObjectStateValidatorRegistry";
+import type { ObjectStateValidatorRegistry } from "../../../states/registry/ObjectStateValidatorRegistry";
 
 /**
  * Serialized payload written to and read from the system clipboard on copy/paste.
@@ -29,8 +29,14 @@ export type ClipboardData = {
  * Type guard for {@link ClipboardData}. Treats the value as untrusted input and validates
  * type, version, per-object schema, key↔id consistency, referential self-containment, and
  * acyclicity of group childIds before accepting it.
+ *
+ * `objectStateValidator` is the canvas's per-type state validator registry, passed
+ * in so this untrusted-input guard reads no module-level singleton (#165).
  */
-export const isClipboardData = (value: unknown): value is ClipboardData => {
+export const isClipboardData = (
+	value: unknown,
+	objectStateValidator: ObjectStateValidatorRegistry,
+): value is ClipboardData => {
 	if (!isObject(value)) {
 		return false;
 	}
@@ -62,8 +68,8 @@ export const isClipboardData = (value: unknown): value is ClipboardData => {
 			return false;
 		}
 		// Strict per-type validation is delegated to the registry (covers id / various fields / CSS safety).
-		// Unregistered types are rejected. The registry is initialized via initializeObjectRegistry().
-		if (!objectStateValidatorRegistry.validate(o.type, o)) {
+		// Unregistered types are rejected. The registry is the canvas's own bundle.
+		if (!objectStateValidator.validate(o.type, o)) {
 			return false;
 		}
 		// `objects` is a map keyed by id (CopyCommand). childIds / endpoint owner /

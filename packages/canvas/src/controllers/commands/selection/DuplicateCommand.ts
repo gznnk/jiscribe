@@ -77,6 +77,7 @@ export const DuplicateCommand: Command = {
 			topLevelIds,
 			allObjects,
 			offset,
+			state.registries.objectBehavior,
 		);
 
 		const mergedObjects = { ...state.objects, ...newObjects };

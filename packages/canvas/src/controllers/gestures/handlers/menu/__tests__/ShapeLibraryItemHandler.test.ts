@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { createTestRegistries } from "../../../../setup/createCanvasRegistries";
 import { initializeObjectRegistry } from "../../../../setup/initializeObjectRegistry";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { ShapeLibraryItemHandler } from "../ShapeLibraryItemHandler";
@@ -10,8 +11,11 @@ beforeAll(() => {
 	initializeObjectRegistry();
 });
 
+const registries = createTestRegistries();
+
 const makeState = (): CanvasControllerState =>
 	({
+		registries,
 		objects: {},
 		rootIds: [],
 		selectedIds: [],

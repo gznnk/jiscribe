@@ -1,5 +1,6 @@
 import { beforeAll, describe, it, expect } from "vitest";
 
+import { createTestRegistries } from "../../../../controllers/setup/createCanvasRegistries";
 import { initializeObjectRegistry } from "../../../../controllers/setup/initializeObjectRegistry";
 import { createObjectDocFromBounds } from "../createObjectDocFromBounds";
 
@@ -8,21 +9,46 @@ beforeAll(() => {
 	initializeObjectRegistry();
 });
 
+const registries = createTestRegistries();
+
 describe("createObjectDocFromBounds", () => {
 	describe("polyline", () => {
 		it("distance below minSize → null", () => {
 			// (0,0)→(2,2): dist ≈ 2.83 < 5(minSize)
-			expect(createObjectDocFromBounds("polyline", 0, 0, 2, 2)).toBeNull();
+			expect(
+				createObjectDocFromBounds(
+					"polyline",
+					0,
+					0,
+					2,
+					2,
+					registries.shapeFactory,
+				),
+			).toBeNull();
 		});
 
 		it("distance exactly minSize (= 5) → not null (strict dist < minSize check)", () => {
 			// (0,0)→(3,4): dist = 5 → 5 < 5 = false → not null
-			const doc = createObjectDocFromBounds("polyline", 0, 0, 3, 4);
+			const doc = createObjectDocFromBounds(
+				"polyline",
+				0,
+				0,
+				3,
+				4,
+				registries.shapeFactory,
+			);
 			expect(doc).not.toBeNull();
 		});
 
 		it("distance greater than minSize → returns a polyline Doc", () => {
-			const doc = createObjectDocFromBounds("polyline", 0, 0, 10, 0);
+			const doc = createObjectDocFromBounds(
+				"polyline",
+				0,
+				0,
+				10,
+				0,
+				registries.shapeFactory,
+			);
 			expect(doc).not.toBeNull();
 			expect(doc?.type).toBe("polyline");
 			expect((doc as unknown as { points: unknown }).points).toEqual([
@@ -32,14 +58,29 @@ describe("createObjectDocFromBounds", () => {
 		});
 
 		it("applies overrides", () => {
-			const doc = createObjectDocFromBounds("polyline", 0, 0, 10, 0, {
-				stroke: "#ff0000",
-			});
+			const doc = createObjectDocFromBounds(
+				"polyline",
+				0,
+				0,
+				10,
+				0,
+				registries.shapeFactory,
+				{
+					stroke: "#ff0000",
+				},
+			);
 			expect((doc as { stroke?: string })?.stroke).toBe("#ff0000");
 		});
 
 		it("id is in the UUID format returned by crypto.randomUUID()", () => {
-			const doc = createObjectDocFromBounds("polyline", 0, 0, 10, 0);
+			const doc = createObjectDocFromBounds(
+				"polyline",
+				0,
+				0,
+				10,
+				0,
+				registries.shapeFactory,
+			);
 			expect(doc?.id).toMatch(
 				/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
 			);
@@ -48,15 +89,40 @@ describe("createObjectDocFromBounds", () => {
 
 	describe("rect", () => {
 		it("width below minSize → null", () => {
-			expect(createObjectDocFromBounds("rect", 0, 0, 3, 100)).toBeNull();
+			expect(
+				createObjectDocFromBounds(
+					"rect",
+					0,
+					0,
+					3,
+					100,
+					registries.shapeFactory,
+				),
+			).toBeNull();
 		});
 
 		it("height below minSize → null", () => {
-			expect(createObjectDocFromBounds("rect", 0, 0, 100, 3)).toBeNull();
+			expect(
+				createObjectDocFromBounds(
+					"rect",
+					0,
+					0,
+					100,
+					3,
+					registries.shapeFactory,
+				),
+			).toBeNull();
 		});
 
 		it("valid size → returns a rect Doc", () => {
-			const doc = createObjectDocFromBounds("rect", 10, 20, 60, 80);
+			const doc = createObjectDocFromBounds(
+				"rect",
+				10,
+				20,
+				60,
+				80,
+				registries.shapeFactory,
+			);
 			expect(doc).not.toBeNull();
 			expect(doc?.type).toBe("rect");
 			const r = doc as unknown as {
@@ -72,7 +138,14 @@ describe("createObjectDocFromBounds", () => {
 		});
 
 		it("sets x correctly using min even when x1 > x2", () => {
-			const doc = createObjectDocFromBounds("rect", 60, 80, 10, 20);
+			const doc = createObjectDocFromBounds(
+				"rect",
+				60,
+				80,
+				10,
+				20,
+				registries.shapeFactory,
+			);
 			const r = doc as unknown as {
 				x: number;
 				y: number;
@@ -86,23 +159,47 @@ describe("createObjectDocFromBounds", () => {
 		});
 
 		it("overrides take precedence over RECT_DOC_DEFAULTS", () => {
-			const doc = createObjectDocFromBounds("rect", 0, 0, 100, 100, {
-				fill: "blue",
-			});
+			const doc = createObjectDocFromBounds(
+				"rect",
+				0,
+				0,
+				100,
+				100,
+				registries.shapeFactory,
+				{
+					fill: "blue",
+				},
+			);
 			expect((doc as { fill?: string })?.fill).toBe("blue");
 		});
 
 		it("a custom minSize can be specified", () => {
 			// minSize=20 → width=15 < 20 → null
 			expect(
-				createObjectDocFromBounds("rect", 0, 0, 15, 100, {}, 20),
+				createObjectDocFromBounds(
+					"rect",
+					0,
+					0,
+					15,
+					100,
+					registries.shapeFactory,
+					{},
+					20,
+				),
 			).toBeNull();
 		});
 	});
 
 	describe("ellipse", () => {
 		it("valid size → returns an ellipse Doc", () => {
-			const doc = createObjectDocFromBounds("ellipse", 0, 0, 40, 20);
+			const doc = createObjectDocFromBounds(
+				"ellipse",
+				0,
+				0,
+				40,
+				20,
+				registries.shapeFactory,
+			);
 			expect(doc).not.toBeNull();
 			expect(doc?.type).toBe("ellipse");
 			const e = doc as unknown as {

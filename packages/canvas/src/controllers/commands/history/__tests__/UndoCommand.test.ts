@@ -7,6 +7,7 @@ import {
 	type DocSnapshot,
 } from "../../../../states/canvas/DocSnapshot";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { createTestRegistries } from "../../../setup/createCanvasRegistries";
 import { initializeObjectRegistry } from "../../../setup/initializeObjectRegistry";
 import { UndoCommand } from "../UndoCommand";
 
@@ -14,6 +15,8 @@ import { UndoCommand } from "../UndoCommand";
 beforeAll(() => {
 	initializeObjectRegistry();
 });
+
+const registries = createTestRegistries();
 
 const rect = (id: string) =>
 	({ id, type: "rect", x: 0, y: 0, width: 100, height: 100 }) as never;
@@ -45,6 +48,7 @@ const makeState = (params: {
 		internalClipboard: null,
 		commitVersion: 5,
 		saveVersion: 0,
+		registries,
 	}) as unknown as CanvasControllerState;
 
 describe("UndoCommand", () => {
@@ -59,7 +63,9 @@ describe("UndoCommand", () => {
 		// docPrev (r1 only) is restored
 		expect(Object.keys(next.objects)).toEqual(["r1"]);
 		expect(next.history.present).toBe(snapshotPrev);
-		expect(resolveDocSnapshot(next.history.present)).toBe(docPrev);
+		expect(
+			resolveDocSnapshot(next.history.present, registries.objectMapper),
+		).toBe(docPrev);
 		expect(next.history.past).toEqual([]);
 		// the rolled-back present is stashed into future as-is (still a snapshot)
 		expect(next.history.future).toEqual([snapshotCurrent]);

@@ -1,5 +1,6 @@
 import { beforeAll, describe, it, expect } from "vitest";
 
+import { createTestRegistries } from "../../../../controllers/setup/createCanvasRegistries";
 import { initializeObjectRegistry } from "../../../../controllers/setup/initializeObjectRegistry";
 import { createObjectDoc } from "../createObjectDoc";
 
@@ -8,11 +9,12 @@ beforeAll(() => {
 	initializeObjectRegistry();
 });
 
+const registries = createTestRegistries();
 const pos = { x: 100, y: 200 };
 
 describe("createObjectDoc", () => {
 	it("the generated Doc has an id (UUID)", () => {
-		const doc = createObjectDoc("rect", pos);
+		const doc = createObjectDoc("rect", pos, registries.shapeFactory);
 		expect(doc.id).toMatch(
 			/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
 		);
@@ -20,7 +22,7 @@ describe("createObjectDoc", () => {
 
 	describe("rect", () => {
 		it("sets x, y centered on the position", () => {
-			const doc = createObjectDoc("rect", pos);
+			const doc = createObjectDoc("rect", pos, registries.shapeFactory);
 			const r = doc as unknown as {
 				x: number;
 				y: number;
@@ -34,11 +36,16 @@ describe("createObjectDoc", () => {
 		});
 
 		it("type is 'rect'", () => {
-			expect(createObjectDoc("rect", pos).type).toBe("rect");
+			expect(createObjectDoc("rect", pos, registries.shapeFactory).type).toBe(
+				"rect",
+			);
 		});
 
 		it("width/height can be overridden via overrides", () => {
-			const doc = createObjectDoc("rect", pos, { width: 50, height: 30 });
+			const doc = createObjectDoc("rect", pos, registries.shapeFactory, {
+				width: 50,
+				height: 30,
+			});
 			const r = doc as unknown as {
 				x: number;
 				y: number;
@@ -54,20 +61,22 @@ describe("createObjectDoc", () => {
 
 	describe("ellipse", () => {
 		it("sets the position as cx/cy", () => {
-			const doc = createObjectDoc("ellipse", pos);
+			const doc = createObjectDoc("ellipse", pos, registries.shapeFactory);
 			const e = doc as unknown as { cx: number; cy: number };
 			expect(e.cx).toBe(pos.x);
 			expect(e.cy).toBe(pos.y);
 		});
 
 		it("type is 'ellipse'", () => {
-			expect(createObjectDoc("ellipse", pos).type).toBe("ellipse");
+			expect(
+				createObjectDoc("ellipse", pos, registries.shapeFactory).type,
+			).toBe("ellipse");
 		});
 	});
 
 	describe("sticky", () => {
 		it("sets x, y centered on the position", () => {
-			const doc = createObjectDoc("sticky", pos);
+			const doc = createObjectDoc("sticky", pos, registries.shapeFactory);
 			const s = doc as unknown as {
 				x: number;
 				y: number;
@@ -79,13 +88,15 @@ describe("createObjectDoc", () => {
 		});
 
 		it("type is 'sticky'", () => {
-			expect(createObjectDoc("sticky", pos).type).toBe("sticky");
+			expect(createObjectDoc("sticky", pos, registries.shapeFactory).type).toBe(
+				"sticky",
+			);
 		});
 	});
 
 	describe("polyline", () => {
 		it("has 2 horizontal points centered on the position", () => {
-			const doc = createObjectDoc("polyline", pos);
+			const doc = createObjectDoc("polyline", pos, registries.shapeFactory);
 			const pl = doc as unknown as { points: Array<{ x: number; y: number }> };
 			expect(pl.points).toHaveLength(2);
 			expect(pl.points[0].y).toBe(pos.y);
@@ -96,24 +107,28 @@ describe("createObjectDoc", () => {
 		});
 
 		it("type is 'polyline'", () => {
-			expect(createObjectDoc("polyline", pos).type).toBe("polyline");
+			expect(
+				createObjectDoc("polyline", pos, registries.shapeFactory).type,
+			).toBe("polyline");
 		});
 	});
 
 	describe("polygon", () => {
 		it("has 5 vertices", () => {
-			const doc = createObjectDoc("polygon", pos);
+			const doc = createObjectDoc("polygon", pos, registries.shapeFactory);
 			const pg = doc as unknown as { points: Array<{ x: number; y: number }> };
 			expect(pg.points).toHaveLength(5);
 		});
 
 		it("type is 'polygon'", () => {
-			expect(createObjectDoc("polygon", pos).type).toBe("polygon");
+			expect(
+				createObjectDoc("polygon", pos, registries.shapeFactory).type,
+			).toBe("polygon");
 		});
 
 		it("each vertex lies on a circle centered on the position (within tolerance)", () => {
 			const RADIUS = 60;
-			const doc = createObjectDoc("polygon", pos);
+			const doc = createObjectDoc("polygon", pos, registries.shapeFactory);
 			const pg = doc as unknown as { points: Array<{ x: number; y: number }> };
 			for (const pt of pg.points) {
 				const dist = Math.sqrt((pt.x - pos.x) ** 2 + (pt.y - pos.y) ** 2);
@@ -128,6 +143,7 @@ describe("createObjectDoc", () => {
 				createObjectDoc(
 					"connector" as Parameters<typeof createObjectDoc>[0],
 					pos,
+					registries.shapeFactory,
 				),
 			).toThrow();
 		});
@@ -138,7 +154,13 @@ describe("createObjectDoc with docDefaults (theme creation defaults)", () => {
 	const docDefaults = { fontFamily: "serif" };
 
 	it("applies the theme fontFamily to text-bearing shapes", () => {
-		const doc = createObjectDoc("rect", pos, undefined, docDefaults);
+		const doc = createObjectDoc(
+			"rect",
+			pos,
+			registries.shapeFactory,
+			undefined,
+			docDefaults,
+		);
 		expect((doc as unknown as { fontFamily: string }).fontFamily).toBe("serif");
 	});
 
@@ -146,6 +168,7 @@ describe("createObjectDoc with docDefaults (theme creation defaults)", () => {
 		const doc = createObjectDoc(
 			"rect",
 			pos,
+			registries.shapeFactory,
 			{ fontFamily: "monospace" },
 			docDefaults,
 		);
@@ -155,7 +178,13 @@ describe("createObjectDoc with docDefaults (theme creation defaults)", () => {
 	});
 
 	it("does not add fontFamily to shapes that do not support it (polyline)", () => {
-		const doc = createObjectDoc("polyline", pos, undefined, docDefaults);
+		const doc = createObjectDoc(
+			"polyline",
+			pos,
+			registries.shapeFactory,
+			undefined,
+			docDefaults,
+		);
 		expect("fontFamily" in doc).toBe(false);
 	});
 });

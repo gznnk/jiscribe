@@ -3,6 +3,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import type { ObjectState } from "../../../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../../../../CanvasTypes";
+import { createTestRegistries } from "../../../../../../setup/createCanvasRegistries";
 import { initializeObjectRegistry } from "../../../../../../setup/initializeObjectRegistry";
 import type { CanvasEvent } from "../../../../../registry/GestureHandlerTypes";
 import { handleRotationDrag } from "../handleRotationDrag";
@@ -11,6 +12,8 @@ import { handleRotationDrag } from "../handleRotationDrag";
 beforeAll(() => {
 	initializeObjectRegistry();
 });
+
+const registries = createTestRegistries();
 
 const VIEWPORT = { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 };
 
@@ -60,6 +63,7 @@ const makeState = (
 	multiSelectGroup: GroupState | null = null,
 ): CanvasControllerState =>
 	({
+		registries,
 		objects,
 		rootIds: Object.keys(objects),
 		selectedIds,

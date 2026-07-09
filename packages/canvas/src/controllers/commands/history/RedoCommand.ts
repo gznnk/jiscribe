@@ -48,11 +48,16 @@ export const RedoCommand: Command = {
 		// Resolve only the entry being restored; entries that merely move between
 		// stacks stay as unresolved snapshots.
 		const snapshotToRestore = state.history.future[0];
-		const restoredState = canvasToState(resolveDocSnapshot(snapshotToRestore));
+		const mapper = state.registries.objectMapper;
+		const restoredState = canvasToState(
+			resolveDocSnapshot(snapshotToRestore, mapper),
+			mapper,
+		);
 
 		return {
 			...restoredState,
 			...resetUiState(),
+			registries: state.registries, // canvasToState yields a bare CanvasState; re-attach the bundle
 			viewport: state.viewport, // Preserve viewport
 			commitVersion: state.commitVersion, // Don't update - this is history restoration, not a new commit
 			saveVersion: state.saveVersion + 1,

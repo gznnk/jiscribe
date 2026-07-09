@@ -20,6 +20,7 @@ export const handlePaste = (
 		data.rootIds,
 		data.objects,
 		PASTE_OFFSET,
+		state.registries.objectBehavior,
 	);
 
 	const mergedObjects = { ...state.objects, ...newObjects };

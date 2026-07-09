@@ -70,6 +70,7 @@ const createMoveCommand = (
 				srcObjects: state.objects,
 				srcMultiSelectGroup: state.multiSelectGroup,
 				delta: calcNudgeDelta(direction, step),
+				objectBehavior: state.registries.objectBehavior,
 			});
 			// A nudge is a committing operation, so recompute and commit the parent group bounds each time
 			const moved = updateAffectedGroupBounds(

@@ -1,5 +1,6 @@
 import { memo, useMemo, useRef } from "react";
 
+import { defaultCanvasRegistries } from "./setup";
 import { calcFitViewport } from "./utils/calcFitViewport";
 import { CanvasView } from "../presentations/CanvasView";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
@@ -43,7 +44,7 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 	const svgRef = useRef<SVGSVGElement>(null);
 
 	const { objects, rootIds } = useMemo(
-		() => canvasToState(canvasDoc),
+		() => canvasToState(canvasDoc, defaultCanvasRegistries.objectMapper),
 		[canvasDoc],
 	);
 

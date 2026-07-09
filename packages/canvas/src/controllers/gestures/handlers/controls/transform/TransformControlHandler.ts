@@ -271,6 +271,7 @@ export class TransformControlHandler implements ControlStrategy {
 				updatedGroup,
 				startGroup,
 				eventStartSnapshot.objects,
+				state.registries.objectBehavior,
 			);
 			Object.assign(updatedObjects, groupChildrenUpdates);
 
@@ -321,6 +322,7 @@ export class TransformControlHandler implements ControlStrategy {
 					updatedObject as GroupState,
 					updatedObject as GroupState,
 					eventStartSnapshot.objects,
+					state.registries.objectBehavior,
 				);
 				Object.assign(updatedObjects, groupChildrenUpdates);
 			}

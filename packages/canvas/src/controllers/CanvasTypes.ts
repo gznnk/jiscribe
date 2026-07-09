@@ -156,10 +156,18 @@ export type EventStartSnapshot = {
 };
 
 /**
- * Canvas state extended with history management for the controller layer
- * This combines the pure canvas state with undo/redo history
+ * Canvas state extended with history management for the controller layer.
+ * This combines the pure canvas state with undo/redo history.
+ *
+ * NOTE: the `registries: CanvasRegistries` field is added by module augmentation
+ * in `controllers/setup/CanvasRegistries.ts`, not declared here. This keeps
+ * `CanvasTypes` from importing the registry bundle — the bundle's `command` /
+ * `gestureHandler` / `objectMenu` registries reference `CanvasControllerState`
+ * in their handler signatures, so importing the bundle here would form a
+ * type-only file cycle (flagged by madge `dep:circle`). The types are mutually
+ * recursive (fine for TS); the augmentation only relocates the file-level edge.
  */
-export type CanvasControllerState = CanvasState & {
+export interface CanvasControllerState extends CanvasState {
 	history: HistoryState;
 
 	/**
@@ -373,4 +381,4 @@ export type CanvasControllerState = CanvasState & {
 		cy: number;
 		offset: { x: number; y: number };
 	} | null;
-};
+}

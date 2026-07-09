@@ -8,11 +8,14 @@ import {
 } from "../../states/canvas/DocSnapshot";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { createInitialControllerState } from "../reducer/createInitialControllerState";
+import { createTestRegistries } from "../setup/createCanvasRegistries";
 import { initializeObjectRegistry } from "../setup/initializeObjectRegistry";
 
 beforeAll(() => {
 	initializeObjectRegistry();
 });
+
+const registries = createTestRegistries();
 
 const doc: CanvasDoc = {
 	version: 1,
@@ -25,7 +28,9 @@ const doc: CanvasDoc = {
  */
 describe("deepFreezeState", () => {
 	it("throws on in-place mutation of objects / rootIds / nested object state", () => {
-		const state = deepFreezeState(createInitialControllerState(doc));
+		const state = deepFreezeState(
+			createInitialControllerState(doc, registries),
+		);
 
 		expect(() => {
 			(state.objects as Record<string, ObjectState>)["new-id"] = {
@@ -46,7 +51,7 @@ describe("deepFreezeState", () => {
 	it("keeps history unfrozen so resolveDocSnapshot's write-once memoization works", () => {
 		// 初期 state の present は resolved 済みなので、lazy な snapshot を注入して
 		// メモ化の書き込みパスを踏ませる。
-		const base = createInitialControllerState(doc);
+		const base = createInitialControllerState(doc, registries);
 		const state = deepFreezeState({
 			...base,
 			history: {
@@ -57,7 +62,10 @@ describe("deepFreezeState", () => {
 
 		// resolveDocSnapshot は snapshot を in-place 更新してメモ化する（DocSnapshot.ts 参照）。
 		// history 配下が凍結されているとここで TypeError になる。
-		const resolvedDoc = resolveDocSnapshot(state.history.present);
+		const resolvedDoc = resolveDocSnapshot(
+			state.history.present,
+			registries.objectMapper,
+		);
 		expect(resolvedDoc).not.toBeNull();
 		expect(state.history.present.doc).toBe(resolvedDoc);
 		expect(state.history.present.source).toBeNull();

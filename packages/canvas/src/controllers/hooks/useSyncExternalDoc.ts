@@ -66,15 +66,16 @@ export const useSyncExternalDoc = ({
 		// Content-identical doc (e.g. the parent re-created the object): skip
 		// entirely. Proceeding would interrupt an in-progress gesture, clear all UI
 		// state, and push a redundant history entry even though nothing changed.
+		const mapper = stateRef.current.registries.objectMapper;
 		if (
 			isSameCanvasDocContent(
 				canvasDoc,
-				resolveDocSnapshot(stateRef.current.history.present),
+				resolveDocSnapshot(stateRef.current.history.present, mapper),
 			)
 		) {
 			return;
 		}
-		const newState = canvasToState(canvasDoc);
+		const newState = canvasToState(canvasDoc, mapper);
 		resetGestureState();
 		dispatch({
 			type: "SYNC_EXTERNAL",

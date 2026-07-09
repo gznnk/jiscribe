@@ -2,10 +2,8 @@ import type { BoundingBox } from "@workspace/geometry";
 
 import type { ShapePreset } from "../../../../schemas/objects/types/ShapePreset";
 import { createObjectDoc } from "../../../../schemas/objects/utils/createObjectDoc";
-import { shapeFactoryRegistry } from "../../../../schemas/registry/ShapeFactoryRegistry";
-import { objectMapperRegistry } from "../../../../states/registry/ObjectMapperRegistry";
+import type { ShapeFactoryRegistry } from "../../../../schemas/registry/ShapeFactoryRegistry";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { getShapePreset } from "../../../registry/ShapePresetRegistry";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import type {
 	CanvasEvent,
@@ -30,8 +28,9 @@ const parsePresetId = (targetPart: string): string => targetPart.split(":")[1];
  */
 const calcShapeDimensions = (
 	preset: ShapePreset,
+	shapeFactory: ShapeFactoryRegistry,
 ): { halfWidth: number; halfHeight: number } => {
-	const factory = shapeFactoryRegistry.get(preset.objectType);
+	const factory = shapeFactory.get(preset.objectType);
 	if (!factory) {
 		throw new Error(`Unsupported object type for menu: ${preset.objectType}`);
 	}
@@ -53,10 +52,11 @@ const addObjectToState = (
 	const doc = createObjectDoc(
 		preset.objectType,
 		position,
+		state.registries.shapeFactory,
 		preset.defaultOverrides,
 		state.docDefaults,
 	);
-	const objectState = objectMapperRegistry.toState(doc);
+	const objectState = state.registries.objectMapper.toState(doc);
 
 	return {
 		...state,
@@ -96,7 +96,7 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 		}
 
 		const presetId = parsePresetId(event.targetPart);
-		const preset = getShapePreset(presetId);
+		const preset = state.registries.shapePreset.get(presetId);
 		if (!preset) {
 			return nextState;
 		}
@@ -105,7 +105,11 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 			case "click": {
 				// Shapes that don't support bounds drawing (sticky / polygon) are placed at the viewport center;
 				// shapes that do (rect / ellipse / polyline) toggle drawing mode
-				if (!shapeFactoryRegistry.supportsBoundsDrawing(preset.objectType)) {
+				if (
+					!state.registries.shapeFactory.supportsBoundsDrawing(
+						preset.objectType,
+					)
+				) {
 					const { minX, minY, width, height, zoom } = state.viewport;
 					const centerX = minX + width / zoom / 2;
 					const centerY = minY + height / zoom / 2;
@@ -149,7 +153,10 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 					shapeLibraryDrag: {
 						preset,
 						ghostPosition: event.last,
-						shapeDimensions: calcShapeDimensions(preset),
+						shapeDimensions: calcShapeDimensions(
+							preset,
+							state.registries.shapeFactory,
+						),
 					},
 					edgeScrollEnabled: true,
 				};

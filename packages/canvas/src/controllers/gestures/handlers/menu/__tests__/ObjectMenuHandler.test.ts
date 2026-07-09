@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { createTestRegistries } from "../../../../setup/createCanvasRegistries";
 import { initializeObjectRegistry } from "../../../../setup/initializeObjectRegistry";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { ObjectMenuHandler } from "../ObjectMenuHandler";
@@ -10,6 +11,8 @@ import { ObjectMenuHandler } from "../ObjectMenuHandler";
 beforeAll(() => {
 	initializeObjectRegistry();
 });
+
+const registries = createTestRegistries();
 
 const makeRect = (id: string): ObjectState =>
 	({
@@ -25,6 +28,7 @@ const makeRect = (id: string): ObjectState =>
 
 const makeState = (): CanvasControllerState =>
 	({
+		registries,
 		objects: { "rect-1": makeRect("rect-1") },
 		rootIds: ["rect-1"],
 		selectedIds: ["rect-1"],

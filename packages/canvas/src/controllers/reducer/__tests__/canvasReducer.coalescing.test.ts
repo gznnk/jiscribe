@@ -85,7 +85,10 @@ describe("canvasReducer (integration)", () => {
 			toDocSpy.mockRestore();
 
 			// The lazy present still resolves to the committed positions
-			const presentDoc = resolveDocSnapshot(state.history.present);
+			const presentDoc = resolveDocSnapshot(
+				state.history.present,
+				objectMapperRegistry,
+			);
 			expect(presentDoc.root[0]).toMatchObject({ id: "rect-1", x: 3 });
 		});
 
@@ -101,8 +104,14 @@ describe("canvasReducer (integration)", () => {
 
 			// Each snapshot reflects the state at its own commit, proving later
 			// (immutable) updates cannot leak into stored history entries
-			const initialDoc = resolveDocSnapshot(state.history.past[0]);
-			const firstNudgeDoc = resolveDocSnapshot(state.history.past[1]);
+			const initialDoc = resolveDocSnapshot(
+				state.history.past[0],
+				objectMapperRegistry,
+			);
+			const firstNudgeDoc = resolveDocSnapshot(
+				state.history.past[1],
+				objectMapperRegistry,
+			);
 			expect(initialDoc.root[0]).toMatchObject({ id: "rect-1", x: 0 });
 			expect(firstNudgeDoc.root[0]).toMatchObject({ id: "rect-1", x: 1 });
 			expect(cxOf(state)).toBe(7);

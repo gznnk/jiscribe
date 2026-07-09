@@ -1,6 +1,6 @@
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../../states/objects/base/TextStyleState";
-import { objectMapperRegistry } from "../../../states/registry/ObjectMapperRegistry";
+import type { ObjectMapperRegistry } from "../../../states/registry/ObjectMapperRegistry";
 import type { Command } from "../CommandTypes";
 
 /**
@@ -13,9 +13,10 @@ import type { Command } from "../CommandTypes";
  */
 const canEditText = (
 	object: ObjectState | undefined,
+	objectMapper: ObjectMapperRegistry,
 ): object is ObjectState & { text?: string } =>
 	object != null &&
-	objectMapperRegistry.getFeatures(object.type)?.text === true &&
+	objectMapper.getFeatures(object.type)?.text === true &&
 	isTextStyleState(object);
 
 export const StartTextEditCommand: Command = {
@@ -42,7 +43,10 @@ export const StartTextEditCommand: Command = {
 			return false;
 		}
 
-		return canEditText(state.objects[state.selectedIds[0]]);
+		return canEditText(
+			state.objects[state.selectedIds[0]],
+			state.registries.objectMapper,
+		);
 	},
 
 	execute(state) {
@@ -64,7 +68,7 @@ export const StartTextEditCommand: Command = {
 		const objectId = state.selectedIds[0];
 		const targetObject = state.objects[objectId];
 
-		if (!canEditText(targetObject)) {
+		if (!canEditText(targetObject, state.registries.objectMapper)) {
 			return state;
 		}
 

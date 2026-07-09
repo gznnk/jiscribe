@@ -5,16 +5,22 @@ import { runCommand } from "./support/dispatch";
 import { twoRectsWithConnectorDoc } from "./support/fixtures";
 import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
+import { objectStateValidatorRegistry } from "../../../states/registry/ObjectStateValidatorRegistry";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { handlePaste } from "../../reducer/handlers/handlePaste";
 import { initializeCommands } from "../../setup/initializeCommands";
 import { initializeObjectRegistry } from "../../setup/initializeObjectRegistry";
-import { isClipboardData } from "../selection/ClipboardData";
+import { isClipboardData as isClipboardDataRaw } from "../selection/ClipboardData";
 
 beforeAll(() => {
 	initializeObjectRegistry();
 	initializeCommands();
 });
+
+// isClipboardData now takes the per-type validator registry explicitly; bind
+// the singleton populated by initializeObjectRegistry() above.
+const isClipboardData = (value: unknown): boolean =>
+	isClipboardDataRaw(value, objectStateValidatorRegistry);
 
 /**
  * Copy and paste live on opposite sides of an untrusted boundary (the system

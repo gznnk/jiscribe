@@ -1,6 +1,7 @@
 import { canvasToDoc } from "./CanvasMapper";
 import type { CanvasState } from "./CanvasState";
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
+import type { ObjectMapperRegistry } from "../registry/ObjectMapperRegistry";
 
 /**
  * The slice of CanvasState a snapshot needs to rebuild its CanvasDoc later.
@@ -47,13 +48,20 @@ export const createDocSnapshotFromDoc = (doc: CanvasDoc): DocSnapshot => ({
  * call. Memoizes by mutating the snapshot in place — a write-once, idempotent
  * cache fill (`canvasToDoc` is pure), so calling it from a reducer or a
  * double-invoked StrictMode render is harmless.
+ *
+ * `mapper` is only consulted on the first (unresolved) call; once a snapshot is
+ * memoized the mapper is irrelevant, so passing the canvas's own mapper each
+ * time is safe.
  */
-export const resolveDocSnapshot = (snapshot: DocSnapshot): CanvasDoc => {
+export const resolveDocSnapshot = (
+	snapshot: DocSnapshot,
+	mapper: ObjectMapperRegistry,
+): CanvasDoc => {
 	if (snapshot.doc !== null) {
 		return snapshot.doc;
 	}
 	// A snapshot always holds either doc or source; source is non-null here.
-	const resolvedDoc = canvasToDoc(snapshot.source as DocSnapshotSource);
+	const resolvedDoc = canvasToDoc(snapshot.source as DocSnapshotSource, mapper);
 	snapshot.doc = resolvedDoc;
 	snapshot.source = null;
 	return resolvedDoc;

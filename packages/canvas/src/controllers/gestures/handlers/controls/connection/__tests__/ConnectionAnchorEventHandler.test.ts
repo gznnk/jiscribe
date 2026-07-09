@@ -8,6 +8,7 @@ import type { ConnectorState } from "../../../../../../states/objects/connection
 import { deepFreezeState } from "../../../../../__tests__/support/deepFreezeState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { createInitialControllerState } from "../../../../../reducer/createInitialControllerState";
+import { createTestRegistries } from "../../../../../setup/createCanvasRegistries";
 import { initializeObjectRegistry } from "../../../../../setup/initializeObjectRegistry";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 import { ConnectionAnchorEventHandler } from "../ConnectionAnchorEventHandler";
@@ -15,6 +16,8 @@ import { ConnectionAnchorEventHandler } from "../ConnectionAnchorEventHandler";
 beforeAll(() => {
 	initializeObjectRegistry();
 });
+
+const registries = createTestRegistries();
 
 /**
  * An empty document with no shapes.
@@ -50,7 +53,7 @@ const oneFreeConnector = (id: string, target: Point): ConnectorState =>
 const stateWithConnectors = (
 	connectors: ConnectorState[],
 ): CanvasControllerState => {
-	const base = createInitialControllerState(emptyDoc);
+	const base = createInitialControllerState(emptyDoc, registries);
 	const objects = { ...base.objects };
 	for (const c of connectors) {
 		objects[c.id] = c;

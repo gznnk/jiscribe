@@ -7,12 +7,15 @@ import {
 	type DocSnapshot,
 } from "../../../../states/canvas/DocSnapshot";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { createTestRegistries } from "../../../setup/createCanvasRegistries";
 import { initializeObjectRegistry } from "../../../setup/initializeObjectRegistry";
 import { RedoCommand } from "../RedoCommand";
 
 beforeAll(() => {
 	initializeObjectRegistry();
 });
+
+const registries = createTestRegistries();
 
 const rect = (id: string) =>
 	({ id, type: "rect", x: 0, y: 0, width: 100, height: 100 }) as never;
@@ -44,6 +47,7 @@ const makeState = (params: {
 		internalClipboard: null,
 		commitVersion: 5,
 		saveVersion: 0,
+		registries,
 	}) as unknown as CanvasControllerState;
 
 describe("RedoCommand", () => {
@@ -58,7 +62,9 @@ describe("RedoCommand", () => {
 		// docNext (r1, r2) is restored
 		expect(Object.keys(next.objects).sort()).toEqual(["r1", "r2"]);
 		expect(next.history.present).toBe(snapshotNext);
-		expect(resolveDocSnapshot(next.history.present)).toBe(docNext);
+		expect(
+			resolveDocSnapshot(next.history.present, registries.objectMapper),
+		).toBe(docNext);
 		// the advanced-from present is pushed onto past as-is (still a snapshot)
 		expect(next.history.past).toEqual([snapshotPrev]);
 		expect(next.history.future).toEqual([]);

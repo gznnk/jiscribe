@@ -171,11 +171,17 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	const canvasRef = useRef<HTMLDivElement>(null);
 	const svgRef = useRef<SVGSVGElement>(null);
 
+	// The full default bundle (per-canvas config arrives in a later phase).
+	// Stable module-level identity, so no useMemo is needed here. Injected into
+	// the reducer state (pure tree) and provided via context (React tree).
+	const registries = defaultCanvasRegistries;
+
 	// Reducer for canvas state management with history. The controlled camera (if
 	// any) seeds the initial viewport so the first paint is already at the host's
 	// pan/zoom — see useCanvasReducer / useControlledViewport for the mount handoff.
 	const [state, dispatch] = useCanvasReducer(
 		canvasDoc,
+		registries,
 		docDefaults,
 		controlledViewport,
 	);
@@ -279,10 +285,6 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	);
 
 	const { minX, minY, zoom } = state.viewport;
-
-	// The full default bundle (per-canvas config arrives in a later phase).
-	// Stable module-level identity, so no useMemo is needed here.
-	const registries = defaultCanvasRegistries;
 
 	// Zoom button enabled/disabled state is delegated to the command's canExecute (single source of truth).
 	const canZoomIn =

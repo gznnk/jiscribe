@@ -7,12 +7,15 @@ import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasAction } from "../reducer/CanvasActions";
 import { canvasReducer } from "../reducer/canvasReducer";
 import { createInitialControllerState } from "../reducer/createInitialControllerState";
+import type { CanvasRegistries } from "../setup/CanvasRegistries";
 
 /**
  * Custom hook that sets up the canvas state-management reducer, including
  * construction of the initial state.
  *
  * @param canvasDoc - The CanvasDoc used to build the initial state (only read at mount time)
+ * @param registries - The per-canvas registry bundle, embedded into the state so
+ *   the pure reducer tree can resolve mappers/commands/handlers (only read at mount time)
  * @param docDefaults - Theme-derived creation defaults (only read at mount time;
  *   later changes are folded in via the SET_DOC_DEFAULTS action)
  * @param initialCamera - Seeds the initial viewport so the first paint lands at
@@ -21,10 +24,16 @@ import { createInitialControllerState } from "../reducer/createInitialController
  */
 export const useCanvasReducer = (
 	canvasDoc: CanvasDoc,
+	registries: CanvasRegistries,
 	docDefaults?: DocCreationDefaults,
 	initialCamera?: Camera,
 ): [CanvasControllerState, Dispatch<CanvasAction>] => {
 	return useReducer(canvasReducer, undefined, () =>
-		createInitialControllerState(canvasDoc, docDefaults, initialCamera),
+		createInitialControllerState(
+			canvasDoc,
+			registries,
+			docDefaults,
+			initialCamera,
+		),
 	);
 };

@@ -70,7 +70,10 @@ export const useNotifySaveRequest = (
 			// self-save even if a later save's fold-back returns first (issue #29).
 			selfSaveNonceTracker.register(latestState.saveNonce);
 			onCommitRef.current?.(
-				resolveDocSnapshot(latestState.history.present),
+				resolveDocSnapshot(
+					latestState.history.present,
+					latestState.registries.objectMapper,
+				),
 				latestState.saveNonce,
 			);
 		});
