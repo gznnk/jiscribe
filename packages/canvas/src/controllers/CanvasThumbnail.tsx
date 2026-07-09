@@ -3,6 +3,7 @@ import { memo, useMemo, useRef } from "react";
 import { defaultCanvasRegistries } from "./setup";
 import { calcFitViewport } from "./utils/calcFitViewport";
 import { CanvasView } from "../presentations/CanvasView";
+import { ObjectComponentRegistryContext } from "../presentations/objects/registry/ObjectComponentRegistryContext";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import { canvasToState } from "../states/canvas/CanvasMapper";
 import type { CanvasTheme } from "../theme/CanvasTheme";
@@ -69,14 +70,18 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 
 	return (
 		<CanvasThemeContext value={theme}>
-			<div style={themeCssVars}>
-				<CanvasView
-					objects={objects}
-					rootIds={rootIds}
-					viewport={viewport}
-					svgRef={svgRef}
-				/>
-			</div>
+			<ObjectComponentRegistryContext
+				value={defaultCanvasRegistries.objectComponent}
+			>
+				<div style={themeCssVars}>
+					<CanvasView
+						objects={objects}
+						rootIds={rootIds}
+						viewport={viewport}
+						svgRef={svgRef}
+					/>
+				</div>
+			</ObjectComponentRegistryContext>
 		</CanvasThemeContext>
 	);
 };

@@ -77,5 +77,3 @@ export class GestureHandlerRegistry {
  */
 export const createGestureHandlerRegistry = (): GestureHandlerRegistry =>
 	new GestureHandlerRegistry();
-
-export const gestureHandlerRegistry = createGestureHandlerRegistry();

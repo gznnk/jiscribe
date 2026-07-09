@@ -28,7 +28,7 @@ import { useSyncExternalDoc } from "./hooks/useSyncExternalDoc";
 import { mergeCanvasMessages } from "./messages/CanvasMessages";
 import type { CanvasMessages } from "./messages/CanvasMessages";
 import { CanvasMessagesContext } from "./messages/CanvasMessagesContext";
-import { defaultCanvasRegistries, initializeRegistries } from "./setup";
+import { defaultCanvasRegistries } from "./setup";
 import { CanvasView } from "../presentations/CanvasView";
 import { ObjectComponentRegistryContext } from "../presentations/objects/registry/ObjectComponentRegistryContext";
 import type { CanvasTheme } from "../theme/CanvasTheme";
@@ -53,9 +53,6 @@ import { ObjectMenu } from "./ui/menu/ObjectMenu";
 import { Toolbar } from "./ui/menu/Toolbar";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { Camera } from "../states/canvas/Viewport";
-
-// Initialize all registries (ObjectRegistry, GestureHandlerRegistry)
-initializeRegistries();
 
 type CanvasProps = {
 	/**

@@ -45,5 +45,3 @@ export class ObjectMenuRegistry {
 
 export const createObjectMenuRegistry = (): ObjectMenuRegistry =>
 	new ObjectMenuRegistry();
-
-export const objectMenuRegistry = createObjectMenuRegistry();

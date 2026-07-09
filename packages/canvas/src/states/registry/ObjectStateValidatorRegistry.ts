@@ -36,6 +36,3 @@ export class ObjectStateValidatorRegistry {
 
 export const createObjectStateValidatorRegistry =
 	(): ObjectStateValidatorRegistry => new ObjectStateValidatorRegistry();
-
-export const objectStateValidatorRegistry =
-	createObjectStateValidatorRegistry();

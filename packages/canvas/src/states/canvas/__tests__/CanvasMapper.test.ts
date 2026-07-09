@@ -23,9 +23,11 @@ import {
 	rectToState,
 	rectToDoc,
 } from "../../../states/objects/primitives/rect/RectMapper";
-import { objectMapperRegistry } from "../../../states/registry/ObjectMapperRegistry";
+import { createObjectMapperRegistry } from "../../../states/registry/ObjectMapperRegistry";
 
 describe("CanvasMapper", () => {
+	const objectMapperRegistry = createObjectMapperRegistry();
+
 	// Register mappers before tests
 	beforeEach(() => {
 		objectMapperRegistry.clear();

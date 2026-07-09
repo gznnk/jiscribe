@@ -36,5 +36,3 @@ export class ObjectBehaviorRegistry {
 
 export const createObjectBehaviorRegistry = (): ObjectBehaviorRegistry =>
 	new ObjectBehaviorRegistry();
-
-export const objectBehaviorRegistry = createObjectBehaviorRegistry();

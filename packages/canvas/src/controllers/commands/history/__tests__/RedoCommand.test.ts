@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { CanvasDoc } from "../../../../schemas/canvas/CanvasDoc";
 import {
@@ -8,12 +8,7 @@ import {
 } from "../../../../states/canvas/DocSnapshot";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createTestRegistries } from "../../../setup/createCanvasRegistries";
-import { initializeObjectRegistry } from "../../../setup/initializeObjectRegistry";
 import { RedoCommand } from "../RedoCommand";
-
-beforeAll(() => {
-	initializeObjectRegistry();
-});
 
 const registries = createTestRegistries();
 

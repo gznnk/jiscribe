@@ -1,14 +1,9 @@
-import { beforeAll, describe, it, expect } from "vitest";
+import { describe, it, expect } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestRegistries } from "../../setup/createCanvasRegistries";
-import { initializeObjectRegistry } from "../../setup/initializeObjectRegistry";
 import { handlePropertyUpdate } from "../handlePropertyUpdate";
-
-beforeAll(() => {
-	initializeObjectRegistry();
-});
 
 const registries = createTestRegistries();
 

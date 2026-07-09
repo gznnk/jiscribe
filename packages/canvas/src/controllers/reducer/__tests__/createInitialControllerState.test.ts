@@ -1,15 +1,9 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
 import { resolveDocSnapshot } from "../../../states/canvas/DocSnapshot";
 import { createTestRegistries } from "../../setup/createCanvasRegistries";
-import { initializeObjectRegistry } from "../../setup/initializeObjectRegistry";
 import { createInitialControllerState } from "../createInitialControllerState";
-
-// canvasToState converts shapes via objectMapperRegistry, so initialization is required
-beforeAll(() => {
-	initializeObjectRegistry();
-});
 
 const registries = createTestRegistries();
 

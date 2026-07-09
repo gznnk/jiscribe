@@ -1,15 +1,10 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { Viewport } from "../../../../states/canvas/Viewport";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { PolylineState } from "../../../../states/objects/primitives/polyline/PolylineState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { initializeObjectRegistry } from "../../../setup/initializeObjectRegistry";
 import { ZoomToSelectionCommand } from "../ZoomToSelectionCommand";
-
-beforeAll(() => {
-	initializeObjectRegistry();
-});
 
 const makeRect = (id: string, cx: number, cy: number): ObjectState =>
 	({

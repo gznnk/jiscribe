@@ -78,5 +78,3 @@ export class CommandRegistry {
  */
 export const createCommandRegistry = (): CommandRegistry =>
 	new CommandRegistry();
-
-export const commandRegistry = createCommandRegistry();

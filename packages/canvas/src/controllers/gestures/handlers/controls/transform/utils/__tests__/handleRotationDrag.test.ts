@@ -1,17 +1,11 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../../../setup/createCanvasRegistries";
-import { initializeObjectRegistry } from "../../../../../../setup/initializeObjectRegistry";
 import type { CanvasEvent } from "../../../../../registry/GestureHandlerTypes";
 import { handleRotationDrag } from "../handleRotationDrag";
-
-// rotateChildren resolves per-shape rotate functions through objectBehaviorRegistry.
-beforeAll(() => {
-	initializeObjectRegistry();
-});
 
 const registries = createTestRegistries();
 

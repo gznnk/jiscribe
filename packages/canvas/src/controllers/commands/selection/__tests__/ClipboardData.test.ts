@@ -3,8 +3,12 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { isValidConnectorState } from "../../../../states/objects/connections/connector/validateConnectorState";
 import { isValidGroupState } from "../../../../states/objects/primitives/group/validateGroupState";
 import { isValidRectState } from "../../../../states/objects/primitives/rect/validateRectState";
-import { objectStateValidatorRegistry } from "../../../../states/registry/ObjectStateValidatorRegistry";
+import { createObjectStateValidatorRegistry } from "../../../../states/registry/ObjectStateValidatorRegistry";
 import { isClipboardData as isClipboardDataRaw } from "../ClipboardData";
+
+// This suite drives the validator registry directly (clear/register per case,
+// including the empty-registry case), so it owns a fresh local instance.
+const objectStateValidatorRegistry = createObjectStateValidatorRegistry();
 
 // The per-type validator registry is threaded explicitly now; bind the
 // test's configured singleton so the assertions below stay unchanged.

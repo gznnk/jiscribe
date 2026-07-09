@@ -37,9 +37,3 @@ export class ShapePresetRegistry {
 
 export const createShapePresetRegistry = (): ShapePresetRegistry =>
 	new ShapePresetRegistry();
-
-export const shapePresetRegistry = createShapePresetRegistry();
-
-/** Retrieves a preset by its ID. Returns undefined if not registered. */
-export const getShapePreset = (id: string): ShapePreset | undefined =>
-	shapePresetRegistry.get(id);

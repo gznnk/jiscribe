@@ -1,19 +1,12 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createCommandState } from "./support/createCommandState";
 import { runCommand } from "./support/dispatch";
 import { twoRectsWithConnectorDoc } from "./support/fixtures";
 import { handlePaste } from "../../reducer/handlers/handlePaste";
-import { initializeCommands } from "../../setup/initializeCommands";
-import { initializeObjectRegistry } from "../../setup/initializeObjectRegistry";
 import type { ClipboardData } from "../selection/ClipboardData";
 import { CopyCommand } from "../selection/CopyCommand";
-
-beforeAll(() => {
-	initializeObjectRegistry();
-	initializeCommands();
-});
 
 /** A selection whose z-order has the connector "between" rect-1 and rect-2. */
 const betweenState = (): CanvasControllerState =>

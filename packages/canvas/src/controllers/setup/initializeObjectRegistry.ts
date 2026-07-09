@@ -1,7 +1,6 @@
 import type { ComponentType, FC } from "react";
 
 import type { CanvasRegistries } from "./CanvasRegistries";
-import { singletonRegistries } from "./CanvasRegistries";
 import { Sticky } from "../../presentations/objects/annotations/Sticky";
 import { Connector } from "../../presentations/objects/connections/Connector";
 import {
@@ -537,11 +536,10 @@ export const applyObjectDefinition = (
  * parseCanvasText lazily initializes them when needed
  * (schemas/registry/initializeObjectDocValidatorRegistry).
  *
- * @param registries Target bundle. Defaults to the module-level singletons for
- * backward compatibility with existing singleton consumers.
+ * @param registries Target bundle to populate.
  */
 export const initializeObjectRegistry = (
-	registries: CanvasRegistries = singletonRegistries,
+	registries: CanvasRegistries,
 ): void => {
 	registries.objectMapper.clear();
 	registries.objectComponent.clear();

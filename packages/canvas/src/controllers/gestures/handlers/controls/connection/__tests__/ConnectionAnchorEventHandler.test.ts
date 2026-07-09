@@ -1,5 +1,5 @@
 import type { Point } from "@workspace/geometry";
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { CanvasDoc } from "../../../../../../schemas/canvas/CanvasDoc";
 import { isOrthogonalRouting } from "../../../../../../schemas/objects/types/ConnectorRouting";
@@ -9,13 +9,8 @@ import { deepFreezeState } from "../../../../../__tests__/support/deepFreezeStat
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { createInitialControllerState } from "../../../../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../../../../setup/createCanvasRegistries";
-import { initializeObjectRegistry } from "../../../../../setup/initializeObjectRegistry";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 import { ConnectionAnchorEventHandler } from "../ConnectionAnchorEventHandler";
-
-beforeAll(() => {
-	initializeObjectRegistry();
-});
 
 const registries = createTestRegistries();
 

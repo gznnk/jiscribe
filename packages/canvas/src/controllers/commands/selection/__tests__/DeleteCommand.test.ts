@@ -1,16 +1,10 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 import type { PolylineState } from "../../../../states/objects/primitives/polyline/PolylineState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { initializeObjectRegistry } from "../../../setup/initializeObjectRegistry";
 import { DeleteCommand } from "../DeleteCommand";
-
-// group bounds recalculation goes through objectBehaviorRegistry, so initialize it
-beforeAll(() => {
-	initializeObjectRegistry();
-});
 
 const makeRect = (id: string, parentId?: string): ObjectState =>
 	({

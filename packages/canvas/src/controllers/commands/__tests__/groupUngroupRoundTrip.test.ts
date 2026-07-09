@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { createCommandState } from "./support/createCommandState";
 import { runCommand } from "./support/dispatch";
@@ -7,13 +7,6 @@ import {
 	twoRectsWithConnectorDoc,
 } from "./support/fixtures";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
-import { initializeCommands } from "../../setup/initializeCommands";
-import { initializeObjectRegistry } from "../../setup/initializeObjectRegistry";
-
-beforeAll(() => {
-	initializeObjectRegistry();
-	initializeCommands();
-});
 
 /**
  * Group and ungroup are structural inverses: ungroup must restore the children's

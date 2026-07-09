@@ -1,5 +1,4 @@
 import type { CanvasRegistries } from "./CanvasRegistries";
-import { singletonRegistries } from "./CanvasRegistries";
 import { CanvasEventHandler } from "../gestures/handlers/canvas/CanvasEventHandler";
 import { ConnectionAnchorEventHandler } from "../gestures/handlers/controls/connection/ConnectionAnchorEventHandler";
 import { ConnectorVertexInsertHandler } from "../gestures/handlers/controls/connection/ConnectorVertexInsertHandler";
@@ -27,11 +26,10 @@ import { ObjectEventHandler } from "../gestures/handlers/objects/ObjectEventHand
  * Gesture handlers are object-type independent, so `createCanvasRegistries`
  * always registers all of them regardless of the configured object types.
  *
- * @param registries Target bundle. Defaults to the module-level singletons for
- * backward compatibility with existing singleton consumers.
+ * @param registries Target bundle to populate.
  */
 export const initializeGestureHandlerRegistry = (
-	registries: CanvasRegistries = singletonRegistries,
+	registries: CanvasRegistries,
 ): void => {
 	const gestureHandlerRegistry = registries.gestureHandler;
 	gestureHandlerRegistry.clear();

@@ -1,15 +1,9 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../setup/createCanvasRegistries";
-import { initializeObjectRegistry } from "../../../../setup/initializeObjectRegistry";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { ShapeLibraryItemHandler } from "../ShapeLibraryItemHandler";
-
-// Shape presets and factories are resolved through the registries.
-beforeAll(() => {
-	initializeObjectRegistry();
-});
 
 const registries = createTestRegistries();
 

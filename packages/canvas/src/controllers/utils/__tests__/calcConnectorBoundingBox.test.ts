@@ -1,13 +1,8 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
-import { initializeObjectRegistry } from "../../setup/initializeObjectRegistry";
 import { calcConnectorBoundingBox } from "../calcConnectorBoundingBox";
-
-beforeAll(() => {
-	initializeObjectRegistry();
-});
 
 const freeConnector = (
 	overrides: Partial<Record<string, unknown>> = {},

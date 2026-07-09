@@ -1,9 +1,8 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
 import { createTestRegistries } from "../../../../../setup/createCanvasRegistries";
-import { initializeObjectRegistry } from "../../../../../setup/initializeObjectRegistry";
 import {
 	rotateGroupByGroup,
 	transformGroupByGroup,
@@ -49,9 +48,6 @@ describe("GroupController.moveByDelta", () => {
 describe("GroupController.moveObjectTree", () => {
 	// moveObjectTree resolves each node's translation through the registry
 	const registries = createTestRegistries();
-	beforeAll(() => {
-		initializeObjectRegistry();
-	});
 
 	const makeRect = (id: string, cx: number, cy: number): ObjectState =>
 		({

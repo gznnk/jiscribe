@@ -1,26 +1,21 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { createCommandState } from "./support/createCommandState";
 import { runCommand } from "./support/dispatch";
 import { twoRectsWithConnectorDoc } from "./support/fixtures";
 import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
-import { objectStateValidatorRegistry } from "../../../states/registry/ObjectStateValidatorRegistry";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { handlePaste } from "../../reducer/handlers/handlePaste";
-import { initializeCommands } from "../../setup/initializeCommands";
-import { initializeObjectRegistry } from "../../setup/initializeObjectRegistry";
+import { createTestRegistries } from "../../setup/createCanvasRegistries";
 import { isClipboardData as isClipboardDataRaw } from "../selection/ClipboardData";
 
-beforeAll(() => {
-	initializeObjectRegistry();
-	initializeCommands();
-});
+const registries = createTestRegistries();
 
 // isClipboardData now takes the per-type validator registry explicitly; bind
-// the singleton populated by initializeObjectRegistry() above.
+// the fully-populated per-type validator registry from the test bundle.
 const isClipboardData = (value: unknown): boolean =>
-	isClipboardDataRaw(value, objectStateValidatorRegistry);
+	isClipboardDataRaw(value, registries.objectStateValidator);
 
 /**
  * Copy and paste live on opposite sides of an untrusted boundary (the system

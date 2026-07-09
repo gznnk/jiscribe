@@ -2,7 +2,7 @@ import { createContext, useContext } from "react";
 
 import {
 	type ObjectComponentRegistry,
-	objectComponentRegistry,
+	createObjectComponentRegistry,
 } from "./ObjectComponentRegistry";
 
 /**
@@ -16,11 +16,13 @@ import {
  * `registries.objectComponent` into it; the direction controllers → presentations
  * is allowed, the reverse is not.
  *
- * The default value is the module-level singleton so renderers used in isolation
- * (e.g. unit tests) still resolve the full set without a Provider.
+ * The default is a fresh empty registry: rendering a content component without a
+ * Provider yields nothing rather than reaching for a global singleton (there is
+ * no module-level registry anymore — #165 Phase 5). `Canvas` and `CanvasThumbnail`
+ * always provide the canvas's own registry.
  */
 export const ObjectComponentRegistryContext =
-	createContext<ObjectComponentRegistry>(objectComponentRegistry);
+	createContext<ObjectComponentRegistry>(createObjectComponentRegistry());
 
 /**
  * Retrieves the `ObjectComponentRegistry` for the surrounding `<Canvas>`.

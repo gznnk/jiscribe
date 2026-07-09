@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { deepFreezeState } from "./support/deepFreezeState";
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
@@ -9,11 +9,6 @@ import {
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { createInitialControllerState } from "../reducer/createInitialControllerState";
 import { createTestRegistries } from "../setup/createCanvasRegistries";
-import { initializeObjectRegistry } from "../setup/initializeObjectRegistry";
-
-beforeAll(() => {
-	initializeObjectRegistry();
-});
 
 const registries = createTestRegistries();
 

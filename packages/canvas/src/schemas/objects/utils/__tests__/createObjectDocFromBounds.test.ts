@@ -1,13 +1,7 @@
-import { beforeAll, describe, it, expect } from "vitest";
+import { describe, it, expect } from "vitest";
 
 import { createTestRegistries } from "../../../../controllers/setup/createCanvasRegistries";
-import { initializeObjectRegistry } from "../../../../controllers/setup/initializeObjectRegistry";
 import { createObjectDocFromBounds } from "../createObjectDocFromBounds";
-
-// createObjectDocFromBounds resolves via shapeFactoryRegistry, so initialize the registry
-beforeAll(() => {
-	initializeObjectRegistry();
-});
 
 const registries = createTestRegistries();
 

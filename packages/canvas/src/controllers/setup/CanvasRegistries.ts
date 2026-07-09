@@ -1,44 +1,14 @@
-import {
-	type ObjectComponentRegistry,
-	objectComponentRegistry,
-} from "../../presentations/objects/registry/ObjectComponentRegistry";
-import {
-	type ShapePreviewRegistry,
-	shapePreviewRegistry,
-} from "../../presentations/objects/registry/ShapePreviewRegistry";
+import type { ObjectComponentRegistry } from "../../presentations/objects/registry/ObjectComponentRegistry";
+import type { ShapePreviewRegistry } from "../../presentations/objects/registry/ShapePreviewRegistry";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
-import {
-	type ShapeFactoryRegistry,
-	shapeFactoryRegistry,
-} from "../../schemas/registry/ShapeFactoryRegistry";
-import {
-	type ObjectMapperRegistry,
-	objectMapperRegistry,
-} from "../../states/registry/ObjectMapperRegistry";
-import {
-	type ObjectStateValidatorRegistry,
-	objectStateValidatorRegistry,
-} from "../../states/registry/ObjectStateValidatorRegistry";
-import {
-	type CommandRegistry,
-	commandRegistry,
-} from "../commands/CommandRegistry";
-import {
-	type GestureHandlerRegistry,
-	gestureHandlerRegistry,
-} from "../gestures/registry/GestureHandlerRegistry";
-import {
-	type ObjectBehaviorRegistry,
-	objectBehaviorRegistry,
-} from "../gestures/registry/ObjectBehaviorRegistry";
-import {
-	type ShapePresetRegistry,
-	shapePresetRegistry,
-} from "../registry/ShapePresetRegistry";
-import {
-	type ObjectMenuRegistry,
-	objectMenuRegistry,
-} from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
+import type { ShapeFactoryRegistry } from "../../schemas/registry/ShapeFactoryRegistry";
+import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
+import type { ObjectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
+import type { CommandRegistry } from "../commands/CommandRegistry";
+import type { GestureHandlerRegistry } from "../gestures/registry/GestureHandlerRegistry";
+import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
+import type { ShapePresetRegistry } from "../registry/ShapePresetRegistry";
+import type { ObjectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
 
 /**
  * The full set of UI registries a single `<Canvas>` instance operates against.
@@ -80,26 +50,6 @@ export type CanvasConfig = {
 	commands?: string[];
 	/** Escape hatch to further customize the built registries in place. */
 	customize?: (registries: CanvasRegistries) => void;
-};
-
-/**
- * Bundle backed by the module-level singleton instances.
- *
- * Used as the default target of the initialize* functions during the migration
- * so existing singleton consumers keep working unchanged. `initializeRegistries`
- * populates these instances at app startup.
- */
-export const singletonRegistries: CanvasRegistries = {
-	objectMapper: objectMapperRegistry,
-	objectStateValidator: objectStateValidatorRegistry,
-	objectComponent: objectComponentRegistry,
-	shapePreview: shapePreviewRegistry,
-	objectBehavior: objectBehaviorRegistry,
-	gestureHandler: gestureHandlerRegistry,
-	command: commandRegistry,
-	objectMenu: objectMenuRegistry,
-	shapePreset: shapePresetRegistry,
-	shapeFactory: shapeFactoryRegistry,
 };
 
 /**

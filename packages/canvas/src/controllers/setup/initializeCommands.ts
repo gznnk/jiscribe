@@ -1,5 +1,4 @@
 import type { CanvasRegistries } from "./CanvasRegistries";
-import { singletonRegistries } from "./CanvasRegistries";
 import { BringForwardCommand } from "../commands/arrange/BringForwardCommand";
 import { BringToFrontCommand } from "../commands/arrange/BringToFrontCommand";
 import { moveCommands } from "../commands/arrange/MoveCommands";
@@ -73,13 +72,12 @@ export const ALL_COMMANDS: Command[] = [
 /**
  * Registers commands into the bundle's command registry.
  *
- * @param registries Target bundle. Defaults to the module-level singletons for
- * backward compatibility with existing singleton consumers.
+ * @param registries Target bundle to populate.
  * @param commandIds When provided, only commands whose id is included are
  * registered (enables per-canvas command restriction). Defaults to all.
  */
 export const initializeCommands = (
-	registries: CanvasRegistries = singletonRegistries,
+	registries: CanvasRegistries,
 	commandIds?: readonly string[],
 ): void => {
 	const enabled = commandIds ? new Set(commandIds) : undefined;

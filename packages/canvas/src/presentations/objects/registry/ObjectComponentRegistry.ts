@@ -23,5 +23,3 @@ export class ObjectComponentRegistry {
 
 export const createObjectComponentRegistry = (): ObjectComponentRegistry =>
 	new ObjectComponentRegistry();
-
-export const objectComponentRegistry = createObjectComponentRegistry();

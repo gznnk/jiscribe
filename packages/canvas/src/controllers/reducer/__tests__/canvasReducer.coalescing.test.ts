@@ -1,18 +1,10 @@
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { resolveDocSnapshot } from "../../../states/canvas/DocSnapshot";
-import { objectMapperRegistry } from "../../../states/registry/ObjectMapperRegistry";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { createTestState } from "./support/createTestState";
 import { runCommands } from "./support/dispatch";
 import { twoRectsDoc } from "./support/fixtures";
-import { initializeCommands } from "../../setup/initializeCommands";
-import { initializeObjectRegistry } from "../../setup/initializeObjectRegistry";
-
-beforeAll(() => {
-	initializeObjectRegistry();
-	initializeCommands();
-});
 
 // Start with rect-1 selected (cx=5, cy=5)
 const createState = (): CanvasControllerState =>
@@ -76,7 +68,7 @@ describe("canvasReducer (integration)", () => {
 
 		it("nudge commits never rebuild the Doc tree (history snapshots stay lazy)", () => {
 			let state = createState();
-			const toDocSpy = vi.spyOn(objectMapperRegistry, "toDoc");
+			const toDocSpy = vi.spyOn(state.registries.objectMapper, "toDoc");
 
 			// Simulates key repeat: neither the first commit nor the coalesced
 			// followers may pay the O(N) canvasToDoc cost (issue #125)
@@ -87,7 +79,7 @@ describe("canvasReducer (integration)", () => {
 			// The lazy present still resolves to the committed positions
 			const presentDoc = resolveDocSnapshot(
 				state.history.present,
-				objectMapperRegistry,
+				state.registries.objectMapper,
 			);
 			expect(presentDoc.root[0]).toMatchObject({ id: "rect-1", x: 3 });
 		});
@@ -106,11 +98,11 @@ describe("canvasReducer (integration)", () => {
 			// (immutable) updates cannot leak into stored history entries
 			const initialDoc = resolveDocSnapshot(
 				state.history.past[0],
-				objectMapperRegistry,
+				state.registries.objectMapper,
 			);
 			const firstNudgeDoc = resolveDocSnapshot(
 				state.history.past[1],
-				objectMapperRegistry,
+				state.registries.objectMapper,
 			);
 			expect(initialDoc.root[0]).toMatchObject({ id: "rect-1", x: 0 });
 			expect(firstNudgeDoc.root[0]).toMatchObject({ id: "rect-1", x: 1 });

@@ -1,10 +1,9 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { CanvasDoc } from "../../../../schemas/canvas/CanvasDoc";
 import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
 import { createInitialControllerState } from "../../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../../setup/createCanvasRegistries";
-import { initializeObjectRegistry } from "../../../setup/initializeObjectRegistry";
 import { StartTextEditCommand } from "../StartTextEditCommand";
 
 const registries = createTestRegistries();
@@ -37,10 +36,6 @@ const stateWithSelection = (selectedId: string) =>
 	});
 
 describe("StartTextEditCommand", () => {
-	beforeAll(() => {
-		initializeObjectRegistry();
-	});
-
 	it("a rect that supports text can start editing", () => {
 		const state = stateWithSelection("rect-1");
 		expect(StartTextEditCommand.canExecute?.(state)).toBe(true);

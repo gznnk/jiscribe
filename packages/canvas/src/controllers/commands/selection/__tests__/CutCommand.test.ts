@@ -1,13 +1,8 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { initializeObjectRegistry } from "../../../setup/initializeObjectRegistry";
 import { CutCommand } from "../CutCommand";
-
-beforeAll(() => {
-	initializeObjectRegistry();
-});
 
 const makeRect = (id: string): ObjectState =>
 	({

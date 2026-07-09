@@ -25,5 +25,3 @@ export class ShapePreviewRegistry {
 
 export const createShapePreviewRegistry = (): ShapePreviewRegistry =>
 	new ShapePreviewRegistry();
-
-export const shapePreviewRegistry = createShapePreviewRegistry();

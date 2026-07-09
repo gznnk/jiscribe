@@ -1,7 +1,6 @@
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { createTestRegistries } from "../../../controllers/setup/createCanvasRegistries";
-import { initializeObjectRegistry } from "../../../controllers/setup/initializeObjectRegistry";
 import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
 import { canvasToDoc, canvasToState } from "../CanvasMapper";
 import {
@@ -9,10 +8,6 @@ import {
 	createDocSnapshotFromState,
 	resolveDocSnapshot,
 } from "../DocSnapshot";
-
-beforeAll(() => {
-	initializeObjectRegistry();
-});
 
 const registries = createTestRegistries();
 const mapper = registries.objectMapper;

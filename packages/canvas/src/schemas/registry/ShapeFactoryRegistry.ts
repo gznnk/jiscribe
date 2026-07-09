@@ -35,5 +35,3 @@ export class ShapeFactoryRegistry {
 
 export const createShapeFactoryRegistry = (): ShapeFactoryRegistry =>
 	new ShapeFactoryRegistry();
-
-export const shapeFactoryRegistry = createShapeFactoryRegistry();

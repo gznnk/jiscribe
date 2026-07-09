@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { createCommandState } from "./support/createCommandState";
 import { runCommand } from "./support/dispatch";
@@ -10,13 +10,6 @@ import {
 import { isFreeEndpointRef } from "../../../schemas/objects/types/EndpointRef";
 import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../CanvasTypes";
-import { initializeCommands } from "../../setup/initializeCommands";
-import { initializeObjectRegistry } from "../../setup/initializeObjectRegistry";
-
-beforeAll(() => {
-	initializeObjectRegistry();
-	initializeCommands();
-});
 
 const connectorOf = (
 	state: CanvasControllerState,

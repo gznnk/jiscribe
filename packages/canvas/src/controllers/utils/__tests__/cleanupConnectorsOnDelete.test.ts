@@ -1,16 +1,11 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
 import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
 import { deepFreezeState } from "../../__tests__/support/deepFreezeState";
 import { createInitialControllerState } from "../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../setup/createCanvasRegistries";
-import { initializeObjectRegistry } from "../../setup/initializeObjectRegistry";
 import { cleanupConnectorsOnDelete } from "../cleanupConnectorsOnDelete";
-
-beforeAll(() => {
-	initializeObjectRegistry();
-});
 
 const registries = createTestRegistries();
 
