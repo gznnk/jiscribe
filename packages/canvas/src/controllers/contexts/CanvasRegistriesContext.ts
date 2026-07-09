@@ -11,9 +11,8 @@ import { defaultCanvasRegistries } from "../setup/createCanvasRegistries";
  * is the full `defaultCanvasRegistries` so components rendered in isolation
  * (e.g. unit tests) still resolve the complete set without a Provider.
  *
- * The pure reducer/handler tree cannot read React context; it receives the same
- * bundle as an explicit `registries` argument instead (closed over by the reducer
- * factory `createCanvasReducer`, then threaded to handlers/commands — see #165).
+ * The pure reducer/handler tree cannot read context; it receives the same bundle
+ * as an explicit `registries` argument instead (#165).
  */
 export const CanvasRegistriesContext = createContext<CanvasRegistries>(
 	defaultCanvasRegistries,

@@ -5,9 +5,7 @@ import type { ICanvasRegistries } from "../../setup/ICanvasRegistries";
  * Handles a COMMAND action.
  * Executes the Command registered in the canvas's command registry and returns a
  * new CanvasControllerState. History recording is delegated to canvasReducer.
- *
- * `registries` is the per-canvas contract, passed explicitly (not read from state);
- * command lookup and execution both flow through it.
+ * Command lookup and execution both flow through the passed-in `registries` (#165).
  */
 export const handleCommand = (
 	state: CanvasControllerState,

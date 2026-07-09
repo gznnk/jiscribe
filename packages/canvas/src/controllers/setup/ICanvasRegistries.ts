@@ -8,15 +8,11 @@ import type { ShapePresetRegistry } from "../registry/ShapePresetRegistry";
  * The registry contract passed as an argument to the pure reducer/handler tree
  * (commands' `execute`/`canExecute`, gesture handlers' `handle`, `handleCommand`).
  *
- * Key to keeping the dependency graph acyclic: `CommandTypes` /
- * `GestureHandlerTypes` reference this contract, and this contract references
- * nothing that references them back. The non-recursive registries are referenced
- * by their concrete class type; the recursive `command` registry is described by
- * an **inline structural shape** (not the concrete `CommandRegistry` / `Command`
- * types) so this module never imports them — structural typing binds the real
- * classes at the bundle-construction site instead. `CanvasControllerState` is
- * imported for the command signatures, but the (now pure) state does not import
- * this contract back, so there is no cycle and no module-augmentation hack (#165).
+ * Structured to keep the dependency graph acyclic: the recursive `command`
+ * registry is described by an **inline structural shape** (not the concrete
+ * `CommandRegistry` / `Command`), so `CommandTypes` / `GestureHandlerTypes` can
+ * reference this contract without it importing them back — structural typing binds
+ * the real classes at the bundle-construction site instead (#165).
  *
  * The concrete `CanvasRegistries` bundle is structurally assignable to this
  * contract, so callers pass their real bundle where an `ICanvasRegistries` is

@@ -26,7 +26,7 @@ export type MoveSelectionParams = {
 	delta: Point;
 	/**
 	 * The canvas's object behavior registry (per-shape moveByDelta), threaded down
-	 * to moveObjectTree so this pure util reads no module-level singleton (#165).
+	 * to moveObjectTree (#165).
 	 */
 	objectBehavior: ObjectBehaviorRegistry;
 };

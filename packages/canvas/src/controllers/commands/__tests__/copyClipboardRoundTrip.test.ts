@@ -12,8 +12,8 @@ import { isClipboardData as isClipboardDataRaw } from "../selection/ClipboardDat
 
 const registries = createTestRegistries();
 
-// isClipboardData now takes the per-type validator registry explicitly; bind
-// the fully-populated per-type validator registry from the test bundle.
+// isClipboardData takes the per-type state validator explicitly; bind the test
+// bundle's fully-populated one.
 const isClipboardData = (value: unknown): boolean =>
 	isClipboardDataRaw(value, registries.objectStateValidator);
 

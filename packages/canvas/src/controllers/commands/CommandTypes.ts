@@ -57,8 +57,7 @@ export type Command = {
 	 * Determines whether the command can be executed.
 	 * Used to enable/disable the menu item.
 	 *
-	 * `registries` is the per-canvas registry contract, passed explicitly (not
-	 * read from state). Commands that don't need it may omit the parameter — a
+	 * Commands that don't need `registries` may omit the parameter — a
 	 * `(state) => ...` function still satisfies this type.
 	 */
 	canExecute: (

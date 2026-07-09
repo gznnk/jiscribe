@@ -34,8 +34,7 @@ export const adjustToOutline = (
 	}
 
 	// Outline geometry is stamped onto the state at construction (ObjectMapperRegistry),
-	// so it is read from the object directly — no registry lookup, and correct for
-	// custom types too.
+	// so it is read from the object directly — no registry lookup.
 	// Adjust for objects with rect geometry
 	if (obj.geometry === "rect") {
 		return calcOutlinePointTowardForRotatedFrame(obj, toward);

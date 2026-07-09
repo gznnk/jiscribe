@@ -186,11 +186,9 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	const svgRef = useRef<SVGSVGElement>(null);
 
 	// Per-canvas registry bundle: a configured set when `initialConfig` is given,
-	// otherwise the shared full default. Built once at mount (lazy initial state)
-	// — the capability set is part of a canvas's identity, so later `initialConfig`
-	// changes are ignored (remount via `key` to reconfigure). The stable instance
-	// is closed over by the reducer (pure tree) and provided via context (React
-	// tree), so the two can never desync.
+	// otherwise the shared full default. Built once at mount (see the `initialConfig`
+	// prop doc); the stable instance is closed over by the reducer (pure tree) and
+	// provided via context (React tree), so the two can never desync.
 	const [registries] = useState(() =>
 		initialConfig
 			? createCanvasRegistries(initialConfig)

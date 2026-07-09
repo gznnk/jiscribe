@@ -19,10 +19,9 @@ export class ObjectMapperRegistry {
 		features: ObjectFeatures,
 	): void {
 		this.entries.set(type, {
-			// Stamp the type's outline geometry onto every state built here so pure
-			// consumers (e.g. adjustToOutline) can read it from the object without a
-			// registry lookup. Works for custom types too, since it comes from their
-			// registered features (#165).
+			// Stamp the type's outline geometry onto every state so pure consumers
+			// (e.g. adjustToOutline) can read it from the object without a registry
+			// lookup — works for custom types too (#165).
 			toState: (doc) => ({
 				...mapper.toState(doc as TDoc),
 				geometry: features.geometry,

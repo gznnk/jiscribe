@@ -15,8 +15,7 @@ import type { CanvasRegistries } from "../setup/CanvasRegistries";
  *
  * @param canvasDoc - The CanvasDoc used to build the initial state (only read at mount time)
  * @param registries - The per-canvas registry bundle. Closed over by the reducer
- *   (via `createCanvasReducer`) and used to build the initial state; the registries
- *   are dependencies, not state, so they are not stored on the state (#165).
+ *   (via `createCanvasReducer`) and used to build the initial state.
  * @param docDefaults - Theme-derived creation defaults (only read at mount time;
  *   later changes are folded in via the SET_DOC_DEFAULTS action)
  * @param initialCamera - Seeds the initial viewport so the first paint lands at

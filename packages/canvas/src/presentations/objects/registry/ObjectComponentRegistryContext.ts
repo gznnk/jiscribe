@@ -9,17 +9,14 @@ import {
  * Presentation-layer context that distributes the per-canvas
  * `ObjectComponentRegistry` to renderers (e.g. `ObjectsRenderer`).
  *
- * The full `CanvasRegistries` bundle lives in the controllers layer, which
- * presentation components must not import (docs/02-architecture.md). So the
- * component registry — a presentation-owned registry — is handed down through
- * this presentation-layer context instead. `Canvas.tsx` (controllers) provides
- * `registries.objectComponent` into it; the direction controllers → presentations
- * is allowed, the reverse is not.
+ * Presentation components must not import the full `CanvasRegistries` bundle from
+ * the controllers layer (docs/02-architecture.md), so this presentation-owned
+ * registry is handed down separately; `Canvas.tsx` provides
+ * `registries.objectComponent` into it (controllers → presentations is allowed).
  *
- * The default is a fresh empty registry: rendering a content component without a
- * Provider yields nothing rather than reaching for a global singleton (there is
- * no module-level registry anymore — #165 Phase 5). `Canvas` and `CanvasThumbnail`
- * always provide the canvas's own registry.
+ * The default is a fresh empty registry, so rendering without a Provider yields
+ * nothing rather than reaching for a module-level singleton (there is none — #165).
+ * `Canvas` and `CanvasThumbnail` always provide the canvas's own registry.
  */
 export const ObjectComponentRegistryContext =
 	createContext<ObjectComponentRegistry>(createObjectComponentRegistry());

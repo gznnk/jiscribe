@@ -28,9 +28,8 @@ export class CommandRegistry {
 	}
 
 	/**
-	 * Removes all registered commands, so the registry can be repopulated from
-	 * scratch (matches the clear-then-register convention of the other bundle
-	 * registries; keeps "only the listed command ids" honest on re-initialization).
+	 * Removes all registered commands so the registry can be repopulated from
+	 * scratch (clear-then-register convention shared by the bundle registries).
 	 */
 	clear(): void {
 		this.commands.clear();
