@@ -1,8 +1,9 @@
 import { useMemo } from "react";
 
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { useCanvasRegistries } from "../../../../contexts/CanvasRegistriesContext";
 import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
-import { objectMenuRegistry } from "../ObjectMenuRegistry";
+import type { ObjectMenuRegistry } from "../ObjectMenuRegistry";
 import type { MenuItem, MenuSection } from "../ObjectMenuTypes";
 
 const itemKey = (section: MenuItem): string =>
@@ -72,7 +73,10 @@ const mergeSections = (arrays: MenuSection[][]): MenuSection[] => {
  * types; if multiple types are mixed, only the common groups and sections are shown
  * (AND-merge).
  */
-export const getMenuGroups = (state: CanvasControllerState): MenuSection[] => {
+export const getMenuGroups = (
+	state: CanvasControllerState,
+	objectMenuRegistry: ObjectMenuRegistry,
+): MenuSection[] => {
 	const { selectedIds, selectedConnectorId, objects } = state;
 
 	// When a connector is selected, return the connector's groups instead of selectedIds
@@ -126,10 +130,11 @@ export const getMenuGroups = (state: CanvasControllerState): MenuSection[] => {
 /** Memoized hook wrapper around {@link getMenuGroups}, recomputing only when the selection changes. */
 export const useMenuGroups = (state: CanvasControllerState): MenuSection[] => {
 	const { selectedIds, selectedConnectorId, objects } = state;
+	const { objectMenu } = useCanvasRegistries();
 
 	return useMemo(
-		() => getMenuGroups(state),
+		() => getMenuGroups(state, objectMenu),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[selectedIds, selectedConnectorId, objects],
+		[selectedIds, selectedConnectorId, objects, objectMenu],
 	);
 };

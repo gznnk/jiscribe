@@ -10,7 +10,7 @@ type MapperEntry = {
 	features: ObjectFeatures;
 };
 
-class ObjectMapperRegistry {
+export class ObjectMapperRegistry {
 	private readonly entries = new Map<ObjectType, MapperEntry>();
 
 	register<TDoc extends ObjectDoc, TState extends ObjectState>(
@@ -50,4 +50,7 @@ class ObjectMapperRegistry {
 	}
 }
 
-export const objectMapperRegistry = new ObjectMapperRegistry();
+export const createObjectMapperRegistry = (): ObjectMapperRegistry =>
+	new ObjectMapperRegistry();
+
+export const objectMapperRegistry = createObjectMapperRegistry();

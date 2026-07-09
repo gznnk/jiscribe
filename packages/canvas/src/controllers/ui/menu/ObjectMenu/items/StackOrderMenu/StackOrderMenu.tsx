@@ -2,7 +2,7 @@
 
 import { StackOrderMenuRow } from "./StackOrderMenuStyled";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
-import { commandRegistry } from "../../../../../commands/CommandRegistry";
+import { useCanvasRegistries } from "../../../../../contexts/CanvasRegistriesContext";
 import { getCommandLabel } from "../../../../../messages/CanvasMessages";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { BringForwardIcon } from "../../../../icons/BringForwardIcon";
@@ -31,6 +31,7 @@ const StackOrderMenuComponent: React.FC<StackOrderMenuProps> = ({
 	canvasState,
 }) => {
 	const messages = useCanvasMessages();
+	const { command: commandRegistry } = useCanvasRegistries();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(

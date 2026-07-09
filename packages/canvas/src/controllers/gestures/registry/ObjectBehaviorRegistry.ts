@@ -7,7 +7,7 @@ import type {
 import type { ObjectType } from "../../../schemas/objects/types/ObjectType";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 
-class ObjectBehaviorRegistry {
+export class ObjectBehaviorRegistry {
 	private readonly entries = new Map<ObjectType, ObjectBehaviorEntry>();
 
 	register<TState extends ObjectState>(
@@ -34,4 +34,7 @@ class ObjectBehaviorRegistry {
 	}
 }
 
-export const objectBehaviorRegistry = new ObjectBehaviorRegistry();
+export const createObjectBehaviorRegistry = (): ObjectBehaviorRegistry =>
+	new ObjectBehaviorRegistry();
+
+export const objectBehaviorRegistry = createObjectBehaviorRegistry();

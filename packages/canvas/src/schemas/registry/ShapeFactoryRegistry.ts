@@ -9,7 +9,7 @@ import type { ShapeFactory } from "../objects/types/ShapeFactory";
  * register it with `registerObject(..., { shapeFactory })`. Callers such as
  * `createObjectDoc` support the new shape without any edits.
  */
-class ShapeFactoryRegistry {
+export class ShapeFactoryRegistry {
 	private readonly entries = new Map<ObjectType, ShapeFactory>();
 
 	register(type: ObjectType, factory: ShapeFactory): void {
@@ -33,4 +33,7 @@ class ShapeFactoryRegistry {
 	}
 }
 
-export const shapeFactoryRegistry = new ShapeFactoryRegistry();
+export const createShapeFactoryRegistry = (): ShapeFactoryRegistry =>
+	new ShapeFactoryRegistry();
+
+export const shapeFactoryRegistry = createShapeFactoryRegistry();

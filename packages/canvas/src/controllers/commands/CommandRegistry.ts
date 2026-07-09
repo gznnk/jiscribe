@@ -5,7 +5,7 @@ import { getPlatformShortcuts } from "./CommandUtils";
  * Registry that manages Commands.
  * Provides registration, lookup, and search by shortcut.
  */
-class CommandRegistry {
+export class CommandRegistry {
 	private commands = new Map<string, Command>();
 
 	/**
@@ -76,4 +76,7 @@ class CommandRegistry {
 /**
  * The global CommandRegistry instance.
  */
-export const commandRegistry = new CommandRegistry();
+export const createCommandRegistry = (): CommandRegistry =>
+	new CommandRegistry();
+
+export const commandRegistry = createCommandRegistry();

@@ -9,12 +9,12 @@ import {
 } from "./ContextMenuStyled";
 import { useContextMenuPosition } from "./useContextMenuPosition";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { commandRegistry } from "../../../commands/CommandRegistry";
 import type { PlatformKeyBindings } from "../../../commands/CommandTypes";
 import {
 	formatShortcut,
 	getPlatformShortcuts,
 } from "../../../commands/CommandUtils";
+import { useCanvasRegistries } from "../../../contexts/CanvasRegistriesContext";
 import { getCommandLabel } from "../../../messages/CanvasMessages";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 
@@ -48,6 +48,7 @@ const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 }) => {
 	const menuRef = useRef<HTMLDivElement>(null);
 	const messages = useCanvasMessages();
+	const { command: commandRegistry } = useCanvasRegistries();
 	const { left, top } = useContextMenuPosition(position, menuRef);
 
 	const menuItems: CommandMenuItem[] = [

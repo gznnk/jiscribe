@@ -13,7 +13,7 @@ export type ObjectStateValidateFn = (value: unknown) => boolean;
  *
  * Its main use is strict clipboard-data validation in `isClipboardData`.
  */
-class ObjectStateValidatorRegistry {
+export class ObjectStateValidatorRegistry {
 	private readonly entries = new Map<ObjectType, ObjectStateValidateFn>();
 
 	register(type: ObjectType, validate: ObjectStateValidateFn): void {
@@ -34,4 +34,8 @@ class ObjectStateValidatorRegistry {
 	}
 }
 
-export const objectStateValidatorRegistry = new ObjectStateValidatorRegistry();
+export const createObjectStateValidatorRegistry =
+	(): ObjectStateValidatorRegistry => new ObjectStateValidatorRegistry();
+
+export const objectStateValidatorRegistry =
+	createObjectStateValidatorRegistry();

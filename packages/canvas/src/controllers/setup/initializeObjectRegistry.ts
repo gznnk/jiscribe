@@ -1,5 +1,7 @@
 import type { ComponentType, FC } from "react";
 
+import type { CanvasRegistries } from "./CanvasRegistries";
+import { singletonRegistries } from "./CanvasRegistries";
 import { Sticky } from "../../presentations/objects/annotations/Sticky";
 import { Connector } from "../../presentations/objects/connections/Connector";
 import {
@@ -20,8 +22,6 @@ import {
 } from "../../presentations/objects/primitives/Polyline";
 import { Rect, RectPreview } from "../../presentations/objects/primitives/Rect";
 import { Svg } from "../../presentations/objects/primitives/Svg";
-import { objectComponentRegistry } from "../../presentations/objects/registry/ObjectComponentRegistry";
-import { shapePreviewRegistry } from "../../presentations/objects/registry/ShapePreviewRegistry";
 import type { ShapePreviewRenderer } from "../../presentations/objects/registry/ShapePreviewTypes";
 import { StickyFeatures } from "../../schemas/objects/annotations/sticky/StickyDoc";
 import { StickyShapeFactory } from "../../schemas/objects/annotations/sticky/StickyShapeFactory";
@@ -52,7 +52,6 @@ import type {
 	ShapeIconProps,
 	ShapePreset,
 } from "../../schemas/objects/types/ShapePreset";
-import { shapeFactoryRegistry } from "../../schemas/registry/ShapeFactoryRegistry";
 import {
 	stickyToDoc,
 	stickyToState,
@@ -70,11 +69,13 @@ import {
 	diamondToDoc,
 	diamondToState,
 } from "../../states/objects/primitives/diamond/DiamondMapper";
+import type { DiamondState } from "../../states/objects/primitives/diamond/DiamondState";
 import { isValidDiamondState } from "../../states/objects/primitives/diamond/validateDiamondState";
 import {
 	ellipseToDoc,
 	ellipseToState,
 } from "../../states/objects/primitives/ellipse/EllipseMapper";
+import type { EllipseState } from "../../states/objects/primitives/ellipse/EllipseState";
 import { isValidEllipseState } from "../../states/objects/primitives/ellipse/validateEllipseState";
 import {
 	groupToDoc,
@@ -95,15 +96,15 @@ import {
 	rectToDoc,
 	rectToState,
 } from "../../states/objects/primitives/rect/RectMapper";
+import type { RectState } from "../../states/objects/primitives/rect/RectState";
 import { isValidRectState } from "../../states/objects/primitives/rect/validateRectState";
 import {
 	svgToDoc,
 	svgToState,
 } from "../../states/objects/primitives/svg/SvgMapper";
+import type { SvgState } from "../../states/objects/primitives/svg/SvgState";
 import { isValidSvgState } from "../../states/objects/primitives/svg/validateSvgState";
-import { objectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import type { ObjectStateValidateFn } from "../../states/registry/ObjectStateValidatorRegistry";
-import { objectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
 import { createFrameBehavior } from "../gestures/handlers/objects/base/FrameController";
 import {
 	moveByDelta as connectorMoveByDelta,
@@ -125,9 +126,7 @@ import {
 	rotateByGroup as polylineRotateByGroup,
 	transformByGroup as polylineTransformByGroup,
 } from "../gestures/handlers/objects/primitives/PolylineController";
-import { objectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
 import type { ObjectBehaviorEntry } from "../gestures/registry/ObjectBehaviorTypes";
-import { shapePresetRegistry } from "../registry/ShapePresetRegistry";
 import { DiamondIcon } from "../ui/icons/DiamondIcon";
 import { EllipseIcon } from "../ui/icons/EllipseIcon";
 import { MarkdownRectIcon } from "../ui/icons/MarkdownRectIcon";
@@ -145,326 +144,7 @@ import {
 } from "../ui/menu/ObjectMenu/items/LabelStyleMenu";
 import { RoutingMenu } from "../ui/menu/ObjectMenu/items/RoutingMenu";
 import { StickyColorMenu } from "../ui/menu/ObjectMenu/items/StickyColorMenu";
-import { objectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
 import type { MenuSectionFactory } from "../ui/menu/ObjectMenu/ObjectMenuTypes";
-
-/**
- * Initialize all object registries with definitions for every object type.
- */
-export const initializeObjectRegistry = (): void => {
-	objectMapperRegistry.clear();
-	objectComponentRegistry.clear();
-	objectBehaviorRegistry.clear();
-	objectStateValidatorRegistry.clear();
-	objectMenuRegistry.clear();
-	shapeFactoryRegistry.clear();
-	shapePreviewRegistry.clear();
-	shapePresetRegistry.clear();
-
-	// The doc validators (objectDocValidatorRegistry) are not initialized here.
-	// Their registrations are used only during parse-time validation, and parseCanvasText
-	// lazily initializes them when needed (schemas/registry/initializeObjectDocValidatorRegistry).
-
-	registerObject(
-		"rect",
-		{ toDoc: rectToDoc, toState: rectToState },
-		RectFeatures,
-		Rect,
-		createFrameBehavior(),
-		(_state) => [
-			{
-				id: "style",
-				items: [
-					{ type: "backgroundColor" },
-					{ type: "borderColor" },
-					{ type: "borderStyle", radius: true },
-				],
-			},
-			{
-				id: "text",
-				items: [{ type: "fontStyle" }, { type: "textAlignment" }],
-			},
-			{
-				id: "transform",
-				items: [{ type: "aspectRatio" }],
-			},
-		],
-		isValidRectState,
-		{
-			factory: RectShapeFactory,
-			previewRenderer: RectPreview,
-			presets: RectShapePresets,
-			presetIcons: { rect: RectIcon, "rect-markdown": MarkdownRectIcon },
-		},
-	);
-
-	registerObject(
-		"ellipse",
-		{ toDoc: ellipseToDoc, toState: ellipseToState },
-		EllipseFeatures,
-		Ellipse,
-		createFrameBehavior(),
-		(_state) => [
-			{
-				id: "style",
-				items: [
-					{ type: "backgroundColor" },
-					{ type: "borderColor" },
-					{ type: "borderStyle", radius: false },
-				],
-			},
-			{
-				id: "text",
-				items: [{ type: "fontStyle" }, { type: "textAlignment" }],
-			},
-			{
-				id: "transform",
-				items: [{ type: "aspectRatio" }],
-			},
-		],
-		isValidEllipseState,
-		{
-			factory: EllipseShapeFactory,
-			previewRenderer: EllipsePreview,
-			presets: EllipseShapePresets,
-			presetIcons: { ellipse: EllipseIcon },
-		},
-	);
-
-	registerObject(
-		"diamond",
-		{ toDoc: diamondToDoc, toState: diamondToState },
-		DiamondFeatures,
-		Diamond,
-		createFrameBehavior(),
-		(_state) => [
-			{
-				id: "style",
-				items: [
-					{ type: "backgroundColor" },
-					{ type: "borderColor" },
-					{ type: "borderStyle", radius: false },
-				],
-			},
-			{
-				id: "text",
-				items: [{ type: "fontStyle" }, { type: "textAlignment" }],
-			},
-			{
-				id: "transform",
-				items: [{ type: "aspectRatio" }],
-			},
-		],
-		isValidDiamondState,
-		{
-			factory: DiamondShapeFactory,
-			previewRenderer: DiamondPreview,
-			presets: DiamondShapePresets,
-			presetIcons: { diamond: DiamondIcon },
-		},
-	);
-
-	registerObject(
-		"group",
-		{ toDoc: groupToDoc, toState: groupToState },
-		GroupFeatures,
-		() => null,
-		{
-			moveByDelta: groupMoveByDelta,
-			transformByGroup: groupTransformByGroup,
-			rotateByGroup: groupRotateByGroup,
-		},
-		(_state) => [
-			{
-				id: "transform",
-				items: [{ type: "aspectRatio" }],
-			},
-		],
-		isValidGroupState,
-	);
-
-	registerObject(
-		"polygon",
-		{ toDoc: polygonToDoc, toState: polygonToState },
-		PolygonFeatures,
-		Polygon,
-		{
-			moveByDelta: polygonMoveByDelta,
-			transformByGroup: polygonTransformByGroup,
-			rotateByGroup: polygonRotateByGroup,
-		},
-		(_state) => [
-			{
-				id: "style",
-				items: [
-					{ type: "backgroundColor" },
-					{ type: "borderColor" },
-					{ type: "borderStyle", radius: false },
-				],
-			},
-		],
-		isValidPolygonState,
-		{
-			factory: PolygonShapeFactory,
-			previewRenderer: PolygonPreview,
-			presets: PolygonShapePresets,
-			presetIcons: { polygon: PolygonIcon },
-		},
-	);
-
-	registerObject(
-		"polyline",
-		{ toDoc: polylineToDoc, toState: polylineToState },
-		PolylineFeatures,
-		Polyline,
-		{
-			moveByDelta: polylineMoveByDelta,
-			transformByGroup: polylineTransformByGroup,
-			rotateByGroup: polylineRotateByGroup,
-		},
-		(_state) => [
-			{
-				id: "arrowHead",
-				items: [{ type: "arrowHead" }],
-			},
-			{
-				id: "line",
-				items: [{ type: "lineColor" }, { type: "lineStyle" }],
-			},
-		],
-		isValidPolylineState,
-		{
-			factory: PolylineShapeFactory,
-			previewRenderer: PolylinePreview,
-			presets: PolylineShapePresets,
-			presetIcons: { polyline: PolylineIcon },
-		},
-	);
-
-	registerObject(
-		"connector",
-		{ toDoc: connectorToDoc, toState: connectorToState },
-		ConnectorFeatures,
-		Connector,
-		{
-			moveByDelta: connectorMoveByDelta,
-			transformByGroup: connectorTransformByGroup,
-			rotateByGroup: connectorRotateByGroup,
-		},
-		(state) => [
-			{
-				id: "arrowHead",
-				items: [{ type: "arrowHead" }],
-			},
-			// Self-loops are orthogonal-only, so RoutingMenu renders null.
-			// The resulting empty section is collapsed via ObjectMenuSection's `:empty`.
-			{
-				id: "routing",
-				items: [
-					{ type: "custom", id: "connector-routing", component: RoutingMenu },
-				],
-			},
-			{
-				id: "line",
-				items: [{ type: "lineColor" }, { type: "lineStyle" }],
-			},
-			// Label styles. Shown only when a label (label.text) is present.
-			// Following the shapes, split into background/border (style) and text (text) sections.
-			...(state.label?.text
-				? [
-						{
-							id: "label-style",
-							items: [
-								{
-									type: "custom" as const,
-									id: "label-bg-color",
-									component: LabelBackgroundColorMenu,
-								},
-								{
-									type: "custom" as const,
-									id: "label-border-color",
-									component: LabelBorderColorMenu,
-								},
-								{
-									type: "custom" as const,
-									id: "label-border-style",
-									component: LabelBorderStyleMenu,
-								},
-							],
-						},
-						{
-							id: "label-text",
-							items: [
-								{
-									type: "custom" as const,
-									id: "label-font-size",
-									component: LabelFontSizeMenu,
-								},
-								{
-									type: "custom" as const,
-									id: "label-font-color",
-									component: LabelFontColorMenu,
-								},
-								{
-									type: "custom" as const,
-									id: "label-bold",
-									component: LabelBoldMenu,
-								},
-							],
-						},
-					]
-				: []),
-		],
-		isValidConnectorState,
-	);
-
-	registerObject(
-		"sticky",
-		{ toDoc: stickyToDoc, toState: stickyToState },
-		StickyFeatures,
-		Sticky,
-		createFrameBehavior(),
-		(_state: StickyState) => [
-			{
-				id: "style",
-				items: [
-					{ type: "custom", id: "sticky-color", component: StickyColorMenu },
-				],
-			},
-			{
-				id: "text",
-				items: [{ type: "fontStyle" }, { type: "textAlignment" }],
-			},
-			{
-				id: "transform",
-				items: [{ type: "aspectRatio" }],
-			},
-		],
-		isValidStickyState,
-		{
-			factory: StickyShapeFactory,
-			presets: StickyShapePresets,
-			presetIcons: { sticky: StickyIcon },
-		},
-	);
-
-	// SVG is not created from the ShapeLibrary (only added via AI / direct .jis.json authoring).
-	// Therefore shapeLibrary (factory / preview / presets) is not registered.
-	registerObject(
-		"svg",
-		{ toDoc: svgToDoc, toState: svgToState },
-		SvgFeatures,
-		Svg,
-		createFrameBehavior(),
-		(_state) => [
-			{
-				id: "transform",
-				items: [{ type: "aspectRatio" }],
-			},
-		],
-		isValidSvgState,
-	);
-};
 
 /**
  * Creation-related capabilities for the ShapeLibrary (shape palette).
@@ -485,37 +165,394 @@ type ShapeLibraryRegistration = {
 };
 
 /**
- * Registers a single object type across all registries (mapper, component, behavior,
- * state validator, and menu) in one call, and optionally its ShapeLibrary capabilities.
+ * The full description of a single object type across every registry
+ * (mapper, component, behavior, state validator, menu) plus its optional
+ * ShapeLibrary capabilities. Values are widened to the base state/doc types;
+ * per-entry type-safety is enforced at definition site by `defineObject`.
  */
-export const registerObject = <
-	TDoc extends ObjectDoc,
-	TState extends ObjectState,
->(
-	type: ObjectType,
-	mapper: ObjectMapperType<TDoc, TState>,
-	features: ObjectFeatures,
+export type ObjectTypeDefinition = {
+	mapper: ObjectMapperType;
+	features: ObjectFeatures;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	component: FC<any>,
-	behavior: ObjectBehaviorEntry<TState>,
-	menuFactory: MenuSectionFactory<TState>,
-	validateState: ObjectStateValidateFn,
-	shapeLibrary?: ShapeLibraryRegistration,
-): void => {
-	objectMapperRegistry.register(type, mapper, features);
-	objectComponentRegistry.register(type, component);
-	objectBehaviorRegistry.register(type, behavior);
-	objectStateValidatorRegistry.register(type, validateState);
-	objectMenuRegistry.register(type, menuFactory);
+	component: FC<any>;
+	behavior: ObjectBehaviorEntry;
+	menuFactory: MenuSectionFactory<ObjectState>;
+	validateState: ObjectStateValidateFn;
+	shapeLibrary?: ShapeLibraryRegistration;
+};
 
+/**
+ * Builds a single `ObjectTypeDefinition`, preserving per-type `TState` inference
+ * at the definition site (mapper / behavior / menuFactory are checked together)
+ * before widening to the base-typed record entry.
+ */
+const defineObject = <TDoc extends ObjectDoc, TState extends ObjectState>(def: {
+	mapper: ObjectMapperType<TDoc, TState>;
+	features: ObjectFeatures;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	component: FC<any>;
+	behavior: ObjectBehaviorEntry<TState>;
+	menuFactory: MenuSectionFactory<TState>;
+	validateState: ObjectStateValidateFn;
+	shapeLibrary?: ShapeLibraryRegistration;
+}): ObjectTypeDefinition => def as unknown as ObjectTypeDefinition;
+
+/**
+ * Data-only description of every object type. `createCanvasRegistries` applies a
+ * chosen subset of these to a fresh bundle; `initializeObjectRegistry` applies
+ * all of them to its target bundle.
+ */
+export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
+	{
+		rect: defineObject({
+			mapper: { toDoc: rectToDoc, toState: rectToState },
+			features: RectFeatures,
+			component: Rect,
+			behavior: createFrameBehavior<RectState>(),
+			menuFactory: (_state) => [
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: true },
+					],
+				},
+				{
+					id: "text",
+					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				},
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidRectState,
+			shapeLibrary: {
+				factory: RectShapeFactory,
+				previewRenderer: RectPreview,
+				presets: RectShapePresets,
+				presetIcons: { rect: RectIcon, "rect-markdown": MarkdownRectIcon },
+			},
+		}),
+
+		ellipse: defineObject({
+			mapper: { toDoc: ellipseToDoc, toState: ellipseToState },
+			features: EllipseFeatures,
+			component: Ellipse,
+			behavior: createFrameBehavior<EllipseState>(),
+			menuFactory: (_state) => [
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: false },
+					],
+				},
+				{
+					id: "text",
+					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				},
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidEllipseState,
+			shapeLibrary: {
+				factory: EllipseShapeFactory,
+				previewRenderer: EllipsePreview,
+				presets: EllipseShapePresets,
+				presetIcons: { ellipse: EllipseIcon },
+			},
+		}),
+
+		diamond: defineObject({
+			mapper: { toDoc: diamondToDoc, toState: diamondToState },
+			features: DiamondFeatures,
+			component: Diamond,
+			behavior: createFrameBehavior<DiamondState>(),
+			menuFactory: (_state) => [
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: false },
+					],
+				},
+				{
+					id: "text",
+					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				},
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidDiamondState,
+			shapeLibrary: {
+				factory: DiamondShapeFactory,
+				previewRenderer: DiamondPreview,
+				presets: DiamondShapePresets,
+				presetIcons: { diamond: DiamondIcon },
+			},
+		}),
+
+		group: defineObject({
+			mapper: { toDoc: groupToDoc, toState: groupToState },
+			features: GroupFeatures,
+			component: () => null,
+			behavior: {
+				moveByDelta: groupMoveByDelta,
+				transformByGroup: groupTransformByGroup,
+				rotateByGroup: groupRotateByGroup,
+			},
+			menuFactory: (_state) => [
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidGroupState,
+		}),
+
+		polygon: defineObject({
+			mapper: { toDoc: polygonToDoc, toState: polygonToState },
+			features: PolygonFeatures,
+			component: Polygon,
+			behavior: {
+				moveByDelta: polygonMoveByDelta,
+				transformByGroup: polygonTransformByGroup,
+				rotateByGroup: polygonRotateByGroup,
+			},
+			menuFactory: (_state) => [
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: false },
+					],
+				},
+			],
+			validateState: isValidPolygonState,
+			shapeLibrary: {
+				factory: PolygonShapeFactory,
+				previewRenderer: PolygonPreview,
+				presets: PolygonShapePresets,
+				presetIcons: { polygon: PolygonIcon },
+			},
+		}),
+
+		polyline: defineObject({
+			mapper: { toDoc: polylineToDoc, toState: polylineToState },
+			features: PolylineFeatures,
+			component: Polyline,
+			behavior: {
+				moveByDelta: polylineMoveByDelta,
+				transformByGroup: polylineTransformByGroup,
+				rotateByGroup: polylineRotateByGroup,
+			},
+			menuFactory: (_state) => [
+				{
+					id: "arrowHead",
+					items: [{ type: "arrowHead" }],
+				},
+				{
+					id: "line",
+					items: [{ type: "lineColor" }, { type: "lineStyle" }],
+				},
+			],
+			validateState: isValidPolylineState,
+			shapeLibrary: {
+				factory: PolylineShapeFactory,
+				previewRenderer: PolylinePreview,
+				presets: PolylineShapePresets,
+				presetIcons: { polyline: PolylineIcon },
+			},
+		}),
+
+		connector: defineObject({
+			mapper: { toDoc: connectorToDoc, toState: connectorToState },
+			features: ConnectorFeatures,
+			component: Connector,
+			behavior: {
+				moveByDelta: connectorMoveByDelta,
+				transformByGroup: connectorTransformByGroup,
+				rotateByGroup: connectorRotateByGroup,
+			},
+			menuFactory: (state) => [
+				{
+					id: "arrowHead",
+					items: [{ type: "arrowHead" }],
+				},
+				// Self-loops are orthogonal-only, so RoutingMenu renders null.
+				// The resulting empty section is collapsed via ObjectMenuSection's `:empty`.
+				{
+					id: "routing",
+					items: [
+						{ type: "custom", id: "connector-routing", component: RoutingMenu },
+					],
+				},
+				{
+					id: "line",
+					items: [{ type: "lineColor" }, { type: "lineStyle" }],
+				},
+				// Label styles. Shown only when a label (label.text) is present.
+				// Following the shapes, split into background/border (style) and text (text) sections.
+				...(state.label?.text
+					? [
+							{
+								id: "label-style",
+								items: [
+									{
+										type: "custom" as const,
+										id: "label-bg-color",
+										component: LabelBackgroundColorMenu,
+									},
+									{
+										type: "custom" as const,
+										id: "label-border-color",
+										component: LabelBorderColorMenu,
+									},
+									{
+										type: "custom" as const,
+										id: "label-border-style",
+										component: LabelBorderStyleMenu,
+									},
+								],
+							},
+							{
+								id: "label-text",
+								items: [
+									{
+										type: "custom" as const,
+										id: "label-font-size",
+										component: LabelFontSizeMenu,
+									},
+									{
+										type: "custom" as const,
+										id: "label-font-color",
+										component: LabelFontColorMenu,
+									},
+									{
+										type: "custom" as const,
+										id: "label-bold",
+										component: LabelBoldMenu,
+									},
+								],
+							},
+						]
+					: []),
+			],
+			validateState: isValidConnectorState,
+		}),
+
+		sticky: defineObject({
+			mapper: { toDoc: stickyToDoc, toState: stickyToState },
+			features: StickyFeatures,
+			component: Sticky,
+			behavior: createFrameBehavior<StickyState>(),
+			menuFactory: (_state: StickyState) => [
+				{
+					id: "style",
+					items: [
+						{ type: "custom", id: "sticky-color", component: StickyColorMenu },
+					],
+				},
+				{
+					id: "text",
+					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				},
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidStickyState,
+			shapeLibrary: {
+				factory: StickyShapeFactory,
+				presets: StickyShapePresets,
+				presetIcons: { sticky: StickyIcon },
+			},
+		}),
+
+		// SVG is not created from the ShapeLibrary (only added via AI / direct .jis.json authoring).
+		// Therefore shapeLibrary (factory / preview / presets) is not registered.
+		svg: defineObject({
+			mapper: { toDoc: svgToDoc, toState: svgToState },
+			features: SvgFeatures,
+			component: Svg,
+			behavior: createFrameBehavior<SvgState>(),
+			menuFactory: (_state) => [
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidSvgState,
+		}),
+	};
+
+/**
+ * Registers a single object type described by `definition` across all registries
+ * in the given bundle (mapper, component, behavior, state validator, menu), and
+ * optionally its ShapeLibrary capabilities.
+ */
+export const applyObjectDefinition = (
+	registries: CanvasRegistries,
+	type: ObjectType,
+	definition: ObjectTypeDefinition,
+): void => {
+	registries.objectMapper.register(
+		type,
+		definition.mapper,
+		definition.features,
+	);
+	registries.objectComponent.register(type, definition.component);
+	registries.objectBehavior.register(type, definition.behavior);
+	registries.objectStateValidator.register(type, definition.validateState);
+	registries.objectMenu.register(type, definition.menuFactory);
+
+	const shapeLibrary = definition.shapeLibrary;
 	if (shapeLibrary?.factory) {
-		shapeFactoryRegistry.register(type, shapeLibrary.factory);
+		registries.shapeFactory.register(type, shapeLibrary.factory);
 	}
 	if (shapeLibrary?.previewRenderer) {
-		shapePreviewRegistry.register(type, shapeLibrary.previewRenderer);
+		registries.shapePreview.register(type, shapeLibrary.previewRenderer);
 	}
 	shapeLibrary?.presets?.forEach((preset) => {
 		const icon = shapeLibrary.presetIcons?.[preset.id];
-		shapePresetRegistry.register(icon ? { ...preset, icon } : preset);
+		registries.shapePreset.register(icon ? { ...preset, icon } : preset);
 	});
+};
+
+/**
+ * Clears every object registry in the bundle and re-registers all object types.
+ *
+ * The doc validators (objectDocValidatorRegistry) are not initialized here.
+ * Their registrations are used only during parse-time validation, and
+ * parseCanvasText lazily initializes them when needed
+ * (schemas/registry/initializeObjectDocValidatorRegistry).
+ *
+ * @param registries Target bundle. Defaults to the module-level singletons for
+ * backward compatibility with existing singleton consumers.
+ */
+export const initializeObjectRegistry = (
+	registries: CanvasRegistries = singletonRegistries,
+): void => {
+	registries.objectMapper.clear();
+	registries.objectComponent.clear();
+	registries.objectBehavior.clear();
+	registries.objectStateValidator.clear();
+	registries.objectMenu.clear();
+	registries.shapeFactory.clear();
+	registries.shapePreview.clear();
+	registries.shapePreset.clear();
+
+	for (const [type, definition] of Object.entries(ALL_OBJECT_DEFINITIONS)) {
+		applyObjectDefinition(registries, type, definition);
+	}
 };
