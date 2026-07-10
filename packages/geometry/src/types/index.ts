@@ -24,3 +24,6 @@ export * from "./BoxFeatures";
 
 // Direction
 export * from "./OrthogonalDirection";
+
+// Insets
+export * from "./RatioInsets";
