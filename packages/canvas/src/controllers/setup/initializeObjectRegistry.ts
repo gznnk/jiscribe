@@ -3,6 +3,7 @@ import type { ComponentType, FC } from "react";
 import type { CanvasRegistries } from "./CanvasRegistries";
 import { Sticky } from "../../presentations/objects/annotations/Sticky";
 import { Connector } from "../../presentations/objects/connections/Connector";
+import { Db, DbPreview } from "../../presentations/objects/primitives/Db";
 import {
 	Diamond,
 	DiamondPreview,
@@ -27,6 +28,9 @@ import { StickyShapeFactory } from "../../schemas/objects/annotations/sticky/Sti
 import { StickyShapePresets } from "../../schemas/objects/annotations/sticky/StickyShapePresets";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
 import { ConnectorFeatures } from "../../schemas/objects/connections/connector/ConnectorDoc";
+import { DbFeatures } from "../../schemas/objects/primitives/db/DbDoc";
+import { DbShapeFactory } from "../../schemas/objects/primitives/db/DbShapeFactory";
+import { DbShapePresets } from "../../schemas/objects/primitives/db/DbShapePresets";
 import { DiamondFeatures } from "../../schemas/objects/primitives/diamond/DiamondDoc";
 import { DiamondShapeFactory } from "../../schemas/objects/primitives/diamond/DiamondShapeFactory";
 import { DiamondShapePresets } from "../../schemas/objects/primitives/diamond/DiamondShapePresets";
@@ -64,6 +68,12 @@ import {
 	connectorToState,
 } from "../../states/objects/connections/connector/ConnectorMapper";
 import { isValidConnectorState } from "../../states/objects/connections/connector/validateConnectorState";
+import {
+	dbToDoc,
+	dbToState,
+} from "../../states/objects/primitives/db/DbMapper";
+import type { DbState } from "../../states/objects/primitives/db/DbState";
+import { isValidDbState } from "../../states/objects/primitives/db/validateDbState";
 import {
 	diamondToDoc,
 	diamondToState,
@@ -126,6 +136,7 @@ import {
 	transformByGroup as polylineTransformByGroup,
 } from "../gestures/handlers/objects/primitives/PolylineController";
 import type { ObjectBehaviorEntry } from "../gestures/registry/ObjectBehaviorTypes";
+import { DbIcon } from "../ui/icons/DbIcon";
 import { DiamondIcon } from "../ui/icons/DiamondIcon";
 import { EllipseIcon } from "../ui/icons/EllipseIcon";
 import { MarkdownRectIcon } from "../ui/icons/MarkdownRectIcon";
@@ -296,6 +307,38 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				previewRenderer: DiamondPreview,
 				presets: DiamondShapePresets,
 				presetIcons: { diamond: DiamondIcon },
+			},
+		}),
+
+		db: defineObject({
+			mapper: { toDoc: dbToDoc, toState: dbToState },
+			features: DbFeatures,
+			component: Db,
+			behavior: createFrameBehavior<DbState>(),
+			menuFactory: (_state) => [
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: false },
+					],
+				},
+				{
+					id: "text",
+					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				},
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidDbState,
+			shapeLibrary: {
+				factory: DbShapeFactory,
+				previewRenderer: DbPreview,
+				presets: DbShapePresets,
+				presetIcons: { db: DbIcon },
 			},
 		}),
 

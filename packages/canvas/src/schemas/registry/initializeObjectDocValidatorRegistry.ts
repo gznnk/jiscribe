@@ -3,6 +3,8 @@ import { StickyFeatures } from "../objects/annotations/sticky/StickyDoc";
 import { validateStickyDoc } from "../objects/annotations/sticky/validateStickyDoc";
 import { ConnectorFeatures } from "../objects/connections/connector/ConnectorDoc";
 import { validateConnectorDoc } from "../objects/connections/connector/validateConnectorDoc";
+import { DbFeatures } from "../objects/primitives/db/DbDoc";
+import { validateDbDoc } from "../objects/primitives/db/validateDbDoc";
 import { DiamondFeatures } from "../objects/primitives/diamond/DiamondDoc";
 import { validateDiamondDoc } from "../objects/primitives/diamond/validateDiamondDoc";
 import { EllipseFeatures } from "../objects/primitives/ellipse/EllipseDoc";
@@ -52,6 +54,7 @@ export const initializeObjectDocValidatorRegistry = (): void => {
 		validateDiamondDoc,
 		DiamondFeatures,
 	);
+	objectDocValidatorRegistry.register("db", validateDbDoc, DbFeatures);
 	objectDocValidatorRegistry.register("group", validateGroupDoc, GroupFeatures);
 	objectDocValidatorRegistry.register(
 		"polygon",
