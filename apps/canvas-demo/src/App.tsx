@@ -2,11 +2,12 @@ import {
 	Canvas,
 	brandLightCanvasTheme,
 	darkCanvasTheme,
+	extractCanvasSourceFromPng,
 	lightCanvasTheme,
 	parseCanvasText,
 } from "@workspace/canvas";
 import type { CanvasDoc, CanvasTheme } from "@workspace/canvas";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import "./App.css";
 
 // デモで巡回できるテーマ一覧。テーマを増やしたらここに追加すれば
@@ -64,8 +65,35 @@ function MultiCanvasApp() {
 
 export function App() {
 	const [themeIndex, setThemeIndex] = useState(0);
+	const [doc, setDoc] = useState<CanvasDoc>(initialDoc);
 	const current = DEMO_THEMES[themeIndex];
 	const next = DEMO_THEMES[(themeIndex + 1) % DEMO_THEMES.length];
+
+	// jiscribe がエクスポートした PNG（iTXt に .jis.json 入り）のドロップで
+	// キャンバスを差し替える（round-trip の確認用）。外部入力なので
+	// parseCanvasText の 2 段階バリデーションを通してから渡す。
+	const handleDrop = useCallback(async (e: React.DragEvent) => {
+		e.preventDefault();
+		const file = e.dataTransfer.files[0];
+		if (!file || file.type !== "image/png") {
+			return;
+		}
+		const sourceText = await extractCanvasSourceFromPng(file);
+		if (sourceText === null) {
+			console.warn("Dropped PNG has no embedded jiscribe source");
+			return;
+		}
+		const result = parseCanvasText(sourceText);
+		if (result.kind !== "ok") {
+			console.warn("Embedded jiscribe source is invalid", result);
+			return;
+		}
+		setDoc(result.doc);
+	}, []);
+
+	const handleDragOver = useCallback((e: React.DragEvent) => {
+		e.preventDefault();
+	}, []);
 
 	useEffect(() => {
 		document.title = `Canvas Demo [${__GIT_BRANCH__}]`;
@@ -82,8 +110,8 @@ export function App() {
 	}
 
 	return (
-		<div className="app">
-			<Canvas canvasDoc={initialDoc} theme={current.theme} />
+		<div className="app" onDrop={handleDrop} onDragOver={handleDragOver}>
+			<Canvas canvasDoc={doc} theme={current.theme} />
 			<button
 				type="button"
 				data-testid="theme-toggle"

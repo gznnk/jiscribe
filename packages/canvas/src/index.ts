@@ -1,5 +1,24 @@
 export { Canvas } from "./controllers/Canvas";
 export { CanvasThumbnail } from "./controllers/CanvasThumbnail";
+export {
+	exportCanvasToPng,
+	exportCanvasToSvg,
+	rasterizeSvgToPngBlob,
+	canvasToSvgString,
+	buildExportSvg,
+	serializeSvg,
+	embedCanvasSource,
+	extractCanvasSource,
+	embedCanvasSourceInPng,
+	extractCanvasSourceFromPng,
+	downloadBlob,
+} from "./export";
+export type {
+	ExportCanvasToPngOptions,
+	ExportCanvasToSvgOptions,
+	RasterizeSvgOptions,
+	BuildExportSvgOptions,
+} from "./export";
 export { defaultCanvasMessages } from "./controllers/messages/CanvasMessages";
 export type {
 	CanvasMessages,

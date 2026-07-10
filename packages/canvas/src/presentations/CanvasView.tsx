@@ -51,8 +51,10 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 					rootIds={rootIds}
 					textEditObjectId={textEditObjectId}
 				/>
-				{/* Overlay layers injected from parent */}
-				{children}
+				{/* Overlay layers injected from parent. These are control UI
+				    (selection handles, control frames, snap guides, ...), so they
+				    are marked data-canvas-export="exclude" and left out of image export. */}
+				<g data-canvas-export="exclude">{children}</g>
 			</ContentGroup>
 		</Svg>
 	);

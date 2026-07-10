@@ -9,6 +9,8 @@ import {
 } from "./ToolbarStyled";
 import { useCanvasRegistries } from "../../../contexts/CanvasRegistriesContext";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
+import { ExportImageIcon } from "../../icons/ExportImageIcon";
+import { ExportSvgIcon } from "../../icons/ExportSvgIcon";
 import { HelpIcon } from "../../icons/HelpIcon";
 import { ShapeLibraryItem } from "../ShapeLibrary/ShapeLibraryItem";
 import { ShortcutHelpModal } from "../ShortcutHelp/ShortcutHelpModal";
@@ -22,6 +24,10 @@ type ToolbarProps = {
 	canZoomIn: boolean;
 	/** Whether zooming out is possible (canExecute of the zoomOut command) */
 	canZoomOut: boolean;
+	/** Called when the SVG (editable) export button is pressed */
+	onExportSvg?: () => void;
+	/** Called when the PNG export button is pressed */
+	onExportPng?: () => void;
 };
 
 /**
@@ -49,6 +55,8 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 	zoom,
 	canZoomIn,
 	canZoomOut,
+	onExportSvg,
+	onExportPng,
 }) => {
 	const messages = useCanvasMessages();
 	const { shapePreset } = useCanvasRegistries();
@@ -132,6 +140,33 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 						data-part="command:zoomIn"
 					>
 						+
+					</ToolbarIconButton>
+
+					<ToolbarDivider />
+
+					<ToolbarIconButton
+						type="button"
+						aria-label={messages.toolbarExportSvg}
+						title={messages.toolbarExportSvg}
+						data-testid="export:svg"
+						// Without data-gesture="none", pointerdown is captured by
+						// the gesture system and click never fires
+						data-gesture="none"
+						onClick={onExportSvg}
+					>
+						<ExportSvgIcon />
+					</ToolbarIconButton>
+					<ToolbarIconButton
+						type="button"
+						aria-label={messages.toolbarExportPng}
+						title={messages.toolbarExportPng}
+						data-testid="export:png"
+						// Without data-gesture="none", pointerdown is captured by
+						// the gesture system and click never fires
+						data-gesture="none"
+						onClick={onExportPng}
+					>
+						<ExportImageIcon />
 					</ToolbarIconButton>
 
 					<ToolbarDivider />

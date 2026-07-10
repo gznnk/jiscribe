@@ -14,6 +14,10 @@ export type CanvasMessageStrings = {
 	toolbarShowShortcutHelp: string;
 	/** title (tooltip) of the help (?) button */
 	toolbarShortcutHelp: string;
+	/** aria-label / title of the SVG export button */
+	toolbarExportSvg: string;
+	/** aria-label / title of the PNG export button */
+	toolbarExportPng: string;
 
 	// Shortcut help modal
 	shortcutHelpTitle: string;
@@ -98,6 +102,8 @@ export const defaultCanvasMessages: CanvasMessages = {
 	toolbarZoomIn: "Zoom in",
 	toolbarShowShortcutHelp: "Show keyboard shortcuts",
 	toolbarShortcutHelp: "Keyboard shortcuts",
+	toolbarExportSvg: "Export as SVG (editable)",
+	toolbarExportPng: "Export as PNG",
 
 	shortcutHelpTitle: "Keyboard Shortcuts",
 	shortcutHelpClose: "Close",

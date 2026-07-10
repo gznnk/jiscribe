@@ -31,8 +31,10 @@ import type { CanvasMessages } from "./messages/CanvasMessages";
 import { CanvasMessagesContext } from "./messages/CanvasMessagesContext";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./setup";
 import type { CanvasConfig } from "./setup";
+import { exportCanvasToPng, exportCanvasToSvg } from "../export";
 import { CanvasView } from "../presentations/CanvasView";
 import { ObjectComponentRegistryContext } from "../presentations/objects/registry/ObjectComponentRegistryContext";
+import { canvasToDoc } from "../states/canvas/CanvasMapper";
 import type { CanvasTheme } from "../theme/CanvasTheme";
 import { CanvasThemeContext } from "../theme/CanvasThemeContext";
 import { buildThemeCssVars } from "../theme/themeCssVars";
@@ -304,6 +306,28 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 		[],
 	);
 
+	// SVG export (editable SVG; embeds the .jis.json source in <metadata>)
+	const handleExportSvg = useCallback(() => {
+		const svg = svgRef.current;
+		if (!svg) {
+			return;
+		}
+		exportCanvasToSvg(svg, {
+			source: canvasToDoc(state, registries.objectMapper),
+		});
+	}, [state, registries]);
+
+	// PNG export (rasterizes the same converted export SVG)
+	const handleExportPng = useCallback(() => {
+		const svg = svgRef.current;
+		if (!svg) {
+			return;
+		}
+		void exportCanvasToPng(svg, {
+			source: canvasToDoc(state, registries.objectMapper),
+		});
+	}, [state, registries]);
+
 	const { minX, minY, zoom } = state.viewport;
 
 	// Zoom button enabled/disabled state is delegated to the command's canExecute (single source of truth).
@@ -332,6 +356,8 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 									zoom={state.viewport.zoom}
 									canZoomIn={canZoomIn}
 									canZoomOut={canZoomOut}
+									onExportSvg={handleExportSvg}
+									onExportPng={handleExportPng}
 								/>
 								<Viewport
 									data-id="canvas"
