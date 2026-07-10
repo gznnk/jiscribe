@@ -1,10 +1,12 @@
 import type { GeometryType } from "./GeometryType";
 import type { ObjectType } from "./ObjectType";
+import type { TextRegionSpec } from "./TextRegionSpec";
 
 /**
- * Object features configuration for canvas.
- * Controls which feature interfaces should be included in the object types.
- * Used for generating object document types based on their capabilities.
+ * Per-type declaration descriptor for canvas objects.
+ * The boolean flags control which feature interfaces are included in the
+ * generated object types (Doc / State). Non-boolean fields (e.g. `textRegion`)
+ * carry runtime specs that do not affect type generation.
  */
 export type ObjectFeatures = {
 	/** Object type identifier */
@@ -19,6 +21,8 @@ export type ObjectFeatures = {
 	fill?: boolean;
 	/** Text content and styling */
 	text?: boolean;
+	/** How the text region is derived from the frame. Omitted = full bbox */
+	textRegion?: TextRegionSpec;
 	/** Corner radius styling (for rect) */
 	radius?: boolean;
 	/** Arrowhead ends (startArrow / endArrow) */

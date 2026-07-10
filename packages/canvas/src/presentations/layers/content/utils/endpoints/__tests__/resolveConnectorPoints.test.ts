@@ -35,7 +35,7 @@ const rectObj = (
 	({
 		id,
 		type: "rect",
-		geometry: "rect",
+		features: { type: "rect", geometry: "rect" },
 		cx,
 		cy,
 		width,

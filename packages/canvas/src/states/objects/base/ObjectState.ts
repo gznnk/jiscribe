@@ -1,5 +1,5 @@
 import type { MetaState } from "./MetaState";
-import type { GeometryType } from "../../../schemas/objects/types/GeometryType";
+import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
 import type { ObjectType } from "../../../schemas/objects/types/ObjectType";
 
 export type ObjectState = {
@@ -12,12 +12,12 @@ export type ObjectState = {
 	parentId?: string;
 	meta?: MetaState;
 	/**
-	 * Outline geometry kind (rect / ellipse / poly / none), stamped from the type's
-	 * registered `ObjectFeatures.geometry` when the state is built via
-	 * `ObjectMapperRegistry`. Lets pure consumers such as `adjustToOutline` resolve
-	 * the outline shape from the object alone, without a registry lookup (#165).
-	 * Optional because synthetic states (e.g. the multi-select group) are not built
-	 * through a mapper; such objects are never connector-endpoint owners.
+	 * The type's declaration descriptor, stamped by `ObjectMapperRegistry.toState`
+	 * so consumers need no registry lookup (#165, #167).
+	 * Invariant: always the registered const itself, never a copy — reference
+	 * stability keeps memoized components from re-rendering. Re-stamp after
+	 * deserialization (see handlePaste).
+	 * Optional: synthetic states (e.g. the multi-select group) have none.
 	 */
-	geometry?: GeometryType;
+	features?: ObjectFeatures;
 };

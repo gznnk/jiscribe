@@ -74,7 +74,6 @@ export const ObjectMenuHandler: GestureHandler = {
 					state,
 					property,
 					event.inputValue,
-					registries,
 				);
 				return { ...newState, selectedVertex: null };
 			}
@@ -85,7 +84,6 @@ export const ObjectMenuHandler: GestureHandler = {
 					state,
 					property,
 					event.inputValue,
-					registries,
 				);
 				return {
 					...newState,
@@ -118,12 +116,7 @@ export const ObjectMenuHandler: GestureHandler = {
 				if (colonIndex !== -1) {
 					const property = rest.slice(0, colonIndex);
 					const value = rest.slice(colonIndex + 1);
-					const newState = handlePropertyUpdate(
-						state,
-						property,
-						value,
-						registries,
-					);
+					const newState = handlePropertyUpdate(state, property, value);
 					// History recording is delegated to handleGesture, so only update commitVersion
 					return {
 						...newState,
