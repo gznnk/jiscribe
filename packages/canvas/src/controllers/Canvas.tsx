@@ -55,6 +55,7 @@ import { SnapGuides } from "./ui/feedback/SnapGuides";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
 import { Toolbar } from "./ui/menu/Toolbar";
+import { calcContentBounds } from "./utils/calcContentBounds";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { Camera } from "../states/canvas/Viewport";
 
@@ -149,6 +150,12 @@ type CanvasProps = {
 	 */
 	initialConfig?: CanvasConfig;
 };
+
+/**
+ * Margin (world px) kept around the content in exported images. Also absorbs
+ * extents the content bounds do not account for (stroke widths, arrow heads).
+ */
+const EXPORT_FIT_PADDING = 16;
 
 const CanvasComponent: React.FC<CanvasProps> = ({
 	canvasDoc,
@@ -306,16 +313,33 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 		[],
 	);
 
+	// Shared options of the SVG/PNG export: the .jis.json source and a
+	// fit-to-content viewBox (content bounds + margin), so the image is
+	// independent of the current pan/zoom and window size. An empty canvas
+	// falls back to exporting the current view.
+	const buildExportOptions = useCallback(() => {
+		const bounds = calcContentBounds(state.objects);
+		return {
+			source: canvasToDoc(state, registries.objectMapper),
+			viewBox: bounds
+				? {
+						x: bounds.left - EXPORT_FIT_PADDING,
+						y: bounds.top - EXPORT_FIT_PADDING,
+						width: bounds.right - bounds.left + EXPORT_FIT_PADDING * 2,
+						height: bounds.bottom - bounds.top + EXPORT_FIT_PADDING * 2,
+					}
+				: undefined,
+		};
+	}, [state, registries]);
+
 	// SVG export (editable SVG; embeds the .jis.json source in <metadata>)
 	const handleExportSvg = useCallback(() => {
 		const svg = svgRef.current;
 		if (!svg) {
 			return;
 		}
-		exportCanvasToSvg(svg, {
-			source: canvasToDoc(state, registries.objectMapper),
-		});
-	}, [state, registries]);
+		exportCanvasToSvg(svg, buildExportOptions());
+	}, [buildExportOptions]);
 
 	// PNG export (rasterizes the same converted export SVG)
 	const handleExportPng = useCallback(() => {
@@ -323,10 +347,8 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 		if (!svg) {
 			return;
 		}
-		void exportCanvasToPng(svg, {
-			source: canvasToDoc(state, registries.objectMapper),
-		});
-	}, [state, registries]);
+		void exportCanvasToPng(svg, buildExportOptions());
+	}, [buildExportOptions]);
 
 	const { minX, minY, zoom } = state.viewport;
 

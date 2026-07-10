@@ -69,6 +69,13 @@ conversion, the file no longer depends on the document (CSS classes, custom
 properties, foreignObject), so it renders anywhere and the PNG no longer
 taints.
 
+**Fit-to-content**: the exported region is the whole content's bounding box
+plus a 16px margin (`EXPORT_FIT_PADDING` in `Canvas.tsx`, computed via
+`calcContentBounds` — the same bounds source as zoom-to-fit), passed as the
+`viewBox` export option. The image is therefore independent of the current
+pan/zoom and window size; 1 world unit = 1 CSS px (PNG additionally ×`scale`,
+default 2). An empty canvas falls back to exporting the current view.
+
 ## PNG round-trip (iTXt)
 
 The exported PNG embeds the `.jis.json` as an **`iTXt` chunk** (keyword

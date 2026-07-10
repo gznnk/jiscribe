@@ -62,6 +62,13 @@ buildExportSvg(liveSvg, { source }) ─┬─ serializeSvg ─→ .jis.svg ダ�
 （CSS クラス・カスタムプロパティ・foreignObject）に依存しなくなり、
 どの環境でも表示でき PNG も taint しない。
 
+**fit-to-content**: エクスポート範囲は全コンテンツのバウンディングボックス＋
+余白 16px（`Canvas.tsx` の `EXPORT_FIT_PADDING`。境界は zoom-to-fit と同じ
+`calcContentBounds` で算出）を `viewBox` オプションとして渡す。したがって
+画像は現在のパン/ズームやウィンドウサイズに依存せず、1 world 単位 = 1 CSS px
+（PNG はさらに `scale` 倍・既定 2）。空キャンバスは従来どおり現在ビューの
+書き出しにフォールバックする。
+
 ## PNG round-trip（iTXt）
 
 エクスポートした PNG には `.jis.json` を **`iTXt` チャンク**（keyword

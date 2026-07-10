@@ -4,6 +4,14 @@ import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
+/** Exported drawing region in world coordinates (the SVG viewBox). */
+export type ExportViewBox = {
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+};
+
 export type BuildExportSvgOptions = {
 	/** Editing source (`.jis.json`) to embed. Omit to skip the metadata. */
 	source?: CanvasDoc;
@@ -13,6 +21,13 @@ export type BuildExportSvgOptions = {
 	 * background rect entirely.
 	 */
 	background?: string;
+	/**
+	 * Region to export, in world coordinates (e.g. fit-to-content bounds).
+	 * It becomes both the viewBox and the logical output size, making the
+	 * image independent of the current pan/zoom and window size. When
+	 * omitted, the live viewBox (the current view) is exported as-is.
+	 */
+	viewBox?: ExportViewBox;
 };
 
 /** Creates a single Canvas 2D context used for text measurement. */
@@ -114,6 +129,13 @@ export const buildExportSvg = (
 	options: BuildExportSvgOptions = {},
 ): SVGSVGElement => {
 	const cloned = svg.cloneNode(true) as SVGSVGElement;
+
+	// Override the exported region before anything reads cloned.viewBox
+	// (the background rect below covers whatever the final viewBox is).
+	if (options.viewBox) {
+		const { x, y, width, height } = options.viewBox;
+		cloned.setAttribute("viewBox", `${x} ${y} ${width} ${height}`);
+	}
 
 	// Bake paint styles first, while the clone still mirrors the live tree
 	// one-to-one (later steps mutate the clone's structure).

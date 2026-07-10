@@ -47,6 +47,14 @@ test("PNG エクスポート → ドロップで図形が復元される", async
 	const png = await downloadFromToolbar(page, "export:png");
 	expect(png.name).toMatch(/\.png$/);
 
+	// fit-to-content: 出力ピクセルは「コンテンツ境界＋余白16」× scale 2。
+	// bounds は rect(150..400 × 120..260) ∪ ellipse(480..640 × 300..420)。
+	const pngBytes = Buffer.from(png.base64, "base64");
+	const ihdrWidth = pngBytes.readUInt32BE(16);
+	const ihdrHeight = pngBytes.readUInt32BE(20);
+	expect(Math.abs(ihdrWidth - (640 - 150 + 32) * 2)).toBeLessThanOrEqual(4);
+	expect(Math.abs(ihdrHeight - (420 - 120 + 32) * 2)).toBeLessThanOrEqual(4);
+
 	// まっさらな状態に戻してからドロップで復元する
 	await page.reload();
 	await expect.poll(async () => (await canvas.captureObjects()).length).toBe(0);
@@ -89,6 +97,10 @@ test("SVG エクスポートは foreignObject を含まず metadata から復元
 	await canvas.commitText();
 	await canvas.deselect();
 
+	// エクスポート範囲が現在のビューに依存しないことを確認するため、
+	// 書き出し前にパンして視界をずらしておく
+	await canvas.middleDrag({ x: 700, y: 500 }, { x: 550, y: 380 });
+
 	const svg = await downloadFromToolbar(page, "export:svg");
 	expect(svg.name).toMatch(/\.jis\.svg$/);
 
@@ -100,6 +112,18 @@ test("SVG エクスポートは foreignObject を含まず metadata から復元
 	// （欠けると fill が初期値の黒になり図形が黒潰れする）
 	expect(svgText).not.toContain("var(--");
 	expect(svgText).toMatch(/style="[^"]*stroke:/);
+
+	// fit-to-content: パンしていても viewBox はコンテンツ境界＋余白16
+	// （rect は 150,120–400,260 に描画済み）
+	const viewBoxMatch = svgText.match(/viewBox="([^"]+)"/);
+	expect(viewBoxMatch).not.toBeNull();
+	const [vbX, vbY, vbWidth, vbHeight] = viewBoxMatch![1]
+		.split(/\s+/)
+		.map(Number);
+	expect(Math.abs(vbX - (150 - 16))).toBeLessThanOrEqual(2);
+	expect(Math.abs(vbY - (120 - 16))).toBeLessThanOrEqual(2);
+	expect(Math.abs(vbWidth - (250 + 32))).toBeLessThanOrEqual(4);
+	expect(Math.abs(vbHeight - (140 + 32))).toBeLessThanOrEqual(4);
 
 	// metadata の .jis.json が Canvas の入力契約（parseCanvasText）を満たすこと
 	const parsed = await page.evaluate(async (text) => {

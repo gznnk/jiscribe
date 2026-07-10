@@ -49,7 +49,9 @@ export const rasterizeSvgToPngBlob = async (
 	options: RasterizeSvgOptions = {},
 ): Promise<Blob> => {
 	const scale = options.scale ?? 2;
-	const { width, height } = getSvgSize(svg);
+	// With a fit-to-content viewBox the logical size is the region itself
+	// (1 world unit = 1 CSS px); otherwise export at the on-screen size.
+	const { width, height } = options.viewBox ?? getSvgSize(svg);
 
 	const exportSvg = buildExportSvg(svg, options);
 	exportSvg.setAttribute("width", String(width));
