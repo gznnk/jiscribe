@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { RectFeatures } from "../../../../../schemas/objects/primitives/rect/RectDoc";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../setup/createCanvasRegistries";
@@ -12,6 +13,7 @@ const makeRect = (id: string): ObjectState =>
 	({
 		id,
 		type: "rect",
+		features: RectFeatures,
 		cx: 0,
 		cy: 0,
 		width: 100,

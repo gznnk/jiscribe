@@ -25,6 +25,17 @@ export const handlePaste = (
 		registries.objectBehavior,
 	);
 
+	// Re-stamp the features descriptor from this canvas's own registry. The
+	// clipboard is untrusted external input, so a carried features must not be
+	// trusted; re-stamping also restores the shared reference identity that a
+	// JSON round trip breaks (see ObjectState.features).
+	for (const [newId, newObj] of Object.entries(newObjects)) {
+		newObjects[newId] = {
+			...newObj,
+			features: registries.objectMapper.getFeatures(newObj.type),
+		};
+	}
+
 	const mergedObjects = { ...state.objects, ...newObjects };
 
 	// Select only the copied shapes (connectors are managed separately via selectedConnectorId, so exclude them).

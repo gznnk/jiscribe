@@ -15,7 +15,13 @@ type TextEditorProps = {
 	text: string;
 	cx: number;
 	cy: number;
+	/** Text region top-left X in the object's local coordinates (from calcTextRegion) */
+	x: number;
+	/** Text region top-left Y in the object's local coordinates (from calcTextRegion) */
+	y: number;
+	/** Text region width (from calcTextRegion) */
 	width: number;
+	/** Text region height (from calcTextRegion) */
 	height: number;
 	scaleX: number;
 	scaleY: number;
@@ -35,6 +41,8 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 	text,
 	cx,
 	cy,
+	x,
+	y,
 	width,
 	height,
 	scaleX,
@@ -103,11 +111,8 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		}
 	};
 
-	// Calculate position and transform
-	// Position: element's center at origin (will be moved by matrix transform)
-	const x = -width / 2;
-	const y = -height / 2;
-	// Transform: SVG matrix with rotation, scale, and translation to (cx, cy)
+	// Transform: SVG matrix with rotation, scale, and translation to (cx, cy).
+	// x/y position the region in local coordinates before this transform is applied.
 	const transform = createSvgTransform(scaleX, scaleY, rotation, cx, cy);
 
 	return (

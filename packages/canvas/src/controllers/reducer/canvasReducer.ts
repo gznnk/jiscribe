@@ -80,7 +80,6 @@ export const createCanvasReducer =
 					state,
 					action.property,
 					action.value,
-					registries,
 				);
 				// Clear the vertex selection after a property change (so the Delete key acts as object deletion)
 				const updatedWithVertexCleared = { ...updated, selectedVertex: null };

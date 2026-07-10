@@ -9,6 +9,7 @@ import type { FillStyleState } from "../../../states/objects/base/FillStyleState
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { StrokeStyleState } from "../../../states/objects/base/StrokeStyleState";
 import type { TextStyleState } from "../../../states/objects/base/TextStyleState";
+import { calcTextRegion } from "../utils/calcTextRegion";
 import { createSvgTransform } from "../utils/createSvgTransform";
 import { getStrokeDasharray } from "../utils/getStrokeDasharray";
 import { resolveAutoColor } from "../utils/resolveAutoColor";
@@ -45,6 +46,9 @@ type FrameRenderState = ObjectState &
  * consolidated here, and each shape only passes a `draw` function that returns its shape. `draw`
  * receives the state (width/height/rx, etc.) and the shared attributes `shape`.
  *
+ * The text region is derived from the state's stamped `features` descriptor via
+ * `calcTextRegion` (no `textRegion` declared = full bbox).
+ *
  * Shadowed stickies and svg wrapped by DOMPurify are out of scope because their draw structure differs.
  */
 export const createFrameObject = <TState extends FrameRenderState>(
@@ -72,6 +76,7 @@ export const createFrameObject = <TState extends FrameRenderState>(
 			fontSize,
 			fontFamily,
 			fontWeight,
+			features,
 			isEditing = false,
 		} = props;
 
@@ -87,14 +92,16 @@ export const createFrameObject = <TState extends FrameRenderState>(
 			strokeDasharray: getStrokeDasharray(strokeDashType, strokeWidth),
 		};
 
+		const textRegion = calcTextRegion({ width, height }, features?.textRegion);
+
 		return (
 			<>
 				{draw(props, shape)}
 				<TextOverlay
-					x={-width / 2}
-					y={-height / 2}
-					width={width}
-					height={height}
+					x={textRegion.x}
+					y={textRegion.y}
+					width={textRegion.width}
+					height={textRegion.height}
 					transform={transformAttr}
 					text={text}
 					textType={textType}

@@ -1,6 +1,5 @@
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../../states/objects/base/TextStyleState";
-import type { ObjectMapperRegistry } from "../../../states/registry/ObjectMapperRegistry";
 import type { Command } from "../CommandTypes";
 
 /**
@@ -13,11 +12,8 @@ import type { Command } from "../CommandTypes";
  */
 const canEditText = (
 	object: ObjectState | undefined,
-	objectMapper: ObjectMapperRegistry,
 ): object is ObjectState & { text?: string } =>
-	object != null &&
-	objectMapper.getFeatures(object.type)?.text === true &&
-	isTextStyleState(object);
+	object != null && object.features?.text === true && isTextStyleState(object);
 
 export const StartTextEditCommand: Command = {
 	id: "start-text-edit",
@@ -27,7 +23,7 @@ export const StartTextEditCommand: Command = {
 		default: [{ code: "Enter" }],
 	},
 
-	canExecute(state, registries) {
+	canExecute(state) {
 		// Cannot execute while text editing is already in progress
 		if (state.textEditState) {
 			return false;
@@ -43,13 +39,10 @@ export const StartTextEditCommand: Command = {
 			return false;
 		}
 
-		return canEditText(
-			state.objects[state.selectedIds[0]],
-			registries.objectMapper,
-		);
+		return canEditText(state.objects[state.selectedIds[0]]);
 	},
 
-	execute(state, registries) {
+	execute(state) {
 		// When a connector is selected, start editing its label (label.text).
 		if (state.selectedConnectorId && state.selectedIds.length === 0) {
 			const connector = state.objects[state.selectedConnectorId];
@@ -68,7 +61,7 @@ export const StartTextEditCommand: Command = {
 		const objectId = state.selectedIds[0];
 		const targetObject = state.objects[objectId];
 
-		if (!canEditText(targetObject, registries.objectMapper)) {
+		if (!canEditText(targetObject)) {
 			return state;
 		}
 

@@ -13,7 +13,7 @@ const rectObj = (
 	({
 		id,
 		type: "rect",
-		geometry: "rect",
+		features: { type: "rect", geometry: "rect" },
 		cx,
 		cy,
 		width,
@@ -33,7 +33,7 @@ const ellipseObj = (
 	({
 		id,
 		type: "ellipse",
-		geometry: "ellipse",
+		features: { type: "ellipse", geometry: "ellipse" },
 		cx,
 		cy,
 		width,

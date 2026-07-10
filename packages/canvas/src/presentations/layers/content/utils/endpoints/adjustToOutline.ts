@@ -33,16 +33,17 @@ export const adjustToOutline = (
 		return point;
 	}
 
-	// Outline geometry is stamped onto the state at construction (ObjectMapperRegistry),
-	// so it is read from the object directly — no registry lookup.
+	// The features descriptor is stamped onto the state at construction
+	// (ObjectMapperRegistry), so the outline geometry is read from the object
+	// directly — no registry lookup.
 	// Adjust for objects with rect geometry
-	if (obj.geometry === "rect") {
+	if (obj.features?.geometry === "rect") {
 		return calcOutlinePointTowardForRotatedFrame(obj, toward);
 	}
 
 	// Adjust for objects with ellipse geometry
 	// Convert width/height to rx/ry for ellipse calculation
-	if (obj.geometry === "ellipse") {
+	if (obj.features?.geometry === "ellipse") {
 		const ellipse: TransformedEllipse = {
 			cx: obj.cx,
 			cy: obj.cy,
