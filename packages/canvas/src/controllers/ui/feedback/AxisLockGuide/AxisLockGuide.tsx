@@ -1,5 +1,6 @@
 import { memo } from "react";
 
+import { theme } from "../../../../constants/theme";
 import type { Viewport } from "../../../../states/canvas/Viewport";
 import type { AxisLockFeedback } from "../../../CanvasTypes";
 
@@ -9,7 +10,6 @@ type AxisLockGuideProps = {
 };
 
 // Match the appearance of the snap guides (SnapGuides)
-const STROKE = "#3b82f6";
 const STROKE_WIDTH = 1;
 const STROKE_DASHARRAY = "4, 3";
 
@@ -47,10 +47,11 @@ const AxisLockGuideComponent: React.FC<AxisLockGuideProps> = ({
 					y1={top}
 					x2={x}
 					y2={bottom}
-					stroke={STROKE}
 					strokeWidth={STROKE_WIDTH}
 					strokeDasharray={STROKE_DASHARRAY}
 					pointerEvents="none"
+					// The color may hold var(--jiscribe-*), so it is applied via style.
+					style={{ stroke: theme.handleAccent }}
 				/>
 			)}
 			{y !== undefined && (
@@ -60,10 +61,11 @@ const AxisLockGuideComponent: React.FC<AxisLockGuideProps> = ({
 					y1={y}
 					x2={right}
 					y2={y}
-					stroke={STROKE}
 					strokeWidth={STROKE_WIDTH}
 					strokeDasharray={STROKE_DASHARRAY}
 					pointerEvents="none"
+					// The color may hold var(--jiscribe-*), so it is applied via style.
+					style={{ stroke: theme.handleAccent }}
 				/>
 			)}
 		</>
