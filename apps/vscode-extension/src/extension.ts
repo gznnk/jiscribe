@@ -4,6 +4,7 @@ import { registerNewCanvasCommands } from "./commands/newCanvas";
 import { registerSetupAiCommand } from "./commands/setupAi";
 import { DiagnosticProvider } from "./diagnostics/DiagnosticProvider";
 import { JiscribeEditorProvider } from "./editor/JiscribeEditorProvider";
+import { JiscribePngEditorProvider } from "./editor/JiscribePngEditorProvider";
 
 /**
  * 拡張機能が有効になったときに VSCode から呼び出されるエントリーポイント。
@@ -44,6 +45,22 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 
 	context.subscriptions.push(registration);
+
+	// .jis.png（iTXt にソース埋め込み済みの PNG、draw.io の .drawio.png 相当）を
+	// Canvas UI で開くバイナリカスタムエディタを登録する
+	const pngProvider = new JiscribePngEditorProvider(context);
+	const pngRegistration = vscode.window.registerCustomEditorProvider(
+		"jiscribe.pngEditor", // package.json の contributes.customEditors[].viewType と一致させる
+		pngProvider,
+		{
+			webviewOptions: {
+				// テキスト側と同じ理由（#138）で非表示タブの Webview は破棄する
+				retainContextWhenHidden: false,
+			},
+			supportsMultipleEditorsPerDocument: false,
+		},
+	);
+	context.subscriptions.push(pngRegistration);
 
 	registerNewCanvasCommands(context);
 	registerSetupAiCommand(context);

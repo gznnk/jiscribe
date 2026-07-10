@@ -28,7 +28,7 @@ PNG rasterization:
 
 ```
 buildExportSvg(liveSvg, { source }) ─┬─ serializeSvg ─→ .jis.svg download
-                                     └─ <img>→canvas→toBlob ─→ iTXt embed ─→ .png download
+                                     └─ <img>→canvas→toBlob ─→ iTXt embed ─→ .jis.png download
 ```
 
 What `buildExportSvg` (`src/export/buildExportSvg.ts`) does:
@@ -96,6 +96,28 @@ jiscribe can reopen it for editing.
 The demo app accepts a drop of an exported PNG and replaces the canvas with
 the restored document (`App.tsx`).
 
+## VSCode integration (`.jis.png` / `.jis.svg`)
+
+The VSCode extension binds its canvas editor to the double extensions (like
+draw.io's `.drawio.png`): opening such a file restores the document from the
+embedded source, and saving re-renders the image with the updated source
+re-embedded, so the file always stays a valid, current image.
+
+- `.jis.svg` rides the existing text-editor flow (`JiscribeEditorProvider`):
+  the webview extracts the source from `<metadata>` on load and writes back a
+  fully re-rendered SVG on each commit — VSCode's text undo/save applies.
+- `.jis.png` is binary, so a dedicated `CustomEditorProvider`
+  (`JiscribePngEditorProvider`) manages dirty state, undo/redo, save, and
+  hot-exit backups. On save it asks the webview to rasterize
+  (`CanvasExportHandle.toPngBlob`); if the webview cannot respond, it falls
+  back to re-embedding the current source into the last-saved image (stale
+  pixels, but edits are never lost).
+- The Node side reads/writes the iTXt chunk via the UI-free entry
+  `@workspace/canvas/png-source` (same pattern as `./parser`).
+- `<Canvas exportRef>` exposes the imperative export API
+  (`toSvgString` / `toPngBlob`) so hosts run the exact same pipeline as the
+  toolbar buttons.
+
 ## Public API (`@workspace/canvas`)
 
 | Function                                                | Role                                   |
@@ -125,9 +147,6 @@ it to both handlers.
 
 ## Future work
 
-1. **VSCode integration**: open exported PNG / SVG in the extension and
-   restore the document (`extractCanvasSourceFromPng` / `extractCanvasSource`
-   are the foundation)
-2. **Font embedding**: `@font-face` (data URI) + subsetting to remove
+1. **Font embedding**: `@font-face` (data URI) + subsetting to remove
    viewer-side font differences (especially Japanese glyphs)
-3. **Rich Markdown decorations** in `<text>` (headings, bold, lists, tables)
+2. **Rich Markdown decorations** in `<text>` (headings, bold, lists, tables)

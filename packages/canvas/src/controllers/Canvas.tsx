@@ -1,4 +1,12 @@
-﻿import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+﻿import {
+	memo,
+	useCallback,
+	useEffect,
+	useImperativeHandle,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 
 import {
 	CanvasRoot,
@@ -31,7 +39,12 @@ import type { CanvasMessages } from "./messages/CanvasMessages";
 import { CanvasMessagesContext } from "./messages/CanvasMessagesContext";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./setup";
 import type { CanvasConfig } from "./setup";
-import { exportCanvasToPng, exportCanvasToSvg } from "../export";
+import {
+	canvasToSvgString,
+	exportCanvasToPng,
+	exportCanvasToSvg,
+	rasterizeSvgToPngBlob,
+} from "../export";
 import { CanvasView } from "../presentations/CanvasView";
 import { ObjectComponentRegistryContext } from "../presentations/objects/registry/ObjectComponentRegistryContext";
 import { canvasToDoc } from "../states/canvas/CanvasMapper";
@@ -149,6 +162,12 @@ type CanvasProps = {
 	 * new React `key` (`<Canvas key={configId} initialConfig={...} />`).
 	 */
 	initialConfig?: CanvasConfig;
+	/**
+	 * Receives the imperative export API ({@link CanvasExportHandle}). Use it
+	 * when the host needs the exported image programmatically (e.g. writing a
+	 * `.jis.png` on save) instead of through the toolbar download buttons.
+	 */
+	exportRef?: React.Ref<CanvasExportHandle>;
 };
 
 /**
@@ -156,6 +175,26 @@ type CanvasProps = {
  * extents the content bounds do not account for (stroke widths, arrow heads).
  */
 const EXPORT_FIT_PADDING = 16;
+
+/**
+ * Imperative export API exposed via the `exportRef` prop. Hosts that need
+ * image bytes programmatically (e.g. the VSCode extension re-rendering a
+ * `.jis.png` / `.jis.svg` on save) use this to run the exact same export
+ * pipeline as the toolbar buttons (fit-to-content, source embedding).
+ */
+export type CanvasExportHandle = {
+	/**
+	 * Builds the self-contained editable SVG string (`.jis.svg` content).
+	 * Returns null when the canvas is not mounted yet.
+	 */
+	toSvgString(): string | null;
+	/**
+	 * Rasterizes the canvas to a PNG Blob with the `.jis.json` source
+	 * embedded as an iTXt chunk. Returns null when the canvas is not
+	 * mounted yet.
+	 */
+	toPngBlob(): Promise<Blob | null>;
+};
 
 const CanvasComponent: React.FC<CanvasProps> = ({
 	canvasDoc,
@@ -170,6 +209,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	viewport: controlledViewport,
 	onViewportChange,
 	initialConfig,
+	exportRef,
 }) => {
 	// Merged UI strings (English defaults + host overrides), distributed via context
 	const mergedMessages = useMemo(
@@ -331,6 +371,22 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 				: undefined,
 		};
 	}, [state, registries]);
+
+	// Imperative export API for hosts (same pipeline as the toolbar buttons)
+	useImperativeHandle(
+		exportRef,
+		() => ({
+			toSvgString: () => {
+				const svg = svgRef.current;
+				return svg ? canvasToSvgString(svg, buildExportOptions()) : null;
+			},
+			toPngBlob: async () => {
+				const svg = svgRef.current;
+				return svg ? rasterizeSvgToPngBlob(svg, buildExportOptions()) : null;
+			},
+		}),
+		[buildExportOptions],
+	);
 
 	// SVG export (editable SVG; embeds the .jis.json source in <metadata>)
 	const handleExportSvg = useCallback(() => {

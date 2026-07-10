@@ -85,15 +85,20 @@ export const rasterizeSvgToPngBlob = async (
 };
 
 export type ExportCanvasToPngOptions = RasterizeSvgOptions & {
-	/** Download file name. Defaults to a timestamped name. */
+	/** Download file name. Defaults to a timestamped name (extension .jis.png). */
 	fileName?: string;
 };
 
-/** Rasterizes the Canvas `<svg>` to PNG and downloads it. */
+/**
+ * Rasterizes the Canvas `<svg>` to PNG and downloads it. The `.jis.png`
+ * double extension marks the file as carrying an embedded jiscribe source
+ * (like draw.io's `.drawio.png`), so hosts such as the VSCode extension can
+ * bind their canvas editor to that filename pattern.
+ */
 export const exportCanvasToPng = async (
 	svg: SVGSVGElement,
 	options: ExportCanvasToPngOptions = {},
 ): Promise<void> => {
 	const blob = await rasterizeSvgToPngBlob(svg, options);
-	downloadBlob(blob, options.fileName ?? `${buildTimestampedName()}.png`);
+	downloadBlob(blob, options.fileName ?? `${buildTimestampedName()}.jis.png`);
 };

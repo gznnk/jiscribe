@@ -1,16 +1,19 @@
 import {
 	Canvas,
+	extractCanvasSource,
 	parseCanvasText,
 	type Camera,
 	type CanvasDoc,
+	type CanvasExportHandle,
 } from "@workspace/canvas";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 
 import { CanvasErrorNotice } from "./CanvasErrorNotice";
 import { vscodeCanvasTheme } from "./vscodeCanvasTheme";
 import type {
 	ExtensionToWebviewMessage,
+	JiscribeDocType,
 	WebviewToExtensionMessage,
 } from "../types/messages";
 
@@ -50,22 +53,57 @@ const persistCamera = (camera: Camera): void => {
 };
 
 /**
+ * `.jis.svg` のテキストから <metadata> に埋め込まれたソース JSON を取り出す。
+ * SVG として解釈できない、または埋め込みが無い場合は null。
+ */
+const extractSourceFromSvgText = (svgText: string): string | null => {
+	const parsed = new DOMParser().parseFromString(svgText, "image/svg+xml");
+	if (parsed.getElementsByTagName("parsererror").length > 0) {
+		return null;
+	}
+	const source = extractCanvasSource(
+		parsed.documentElement as unknown as SVGSVGElement,
+	);
+	return source ? JSON.stringify(source) : null;
+};
+
+/** Blob を base64 文字列（データ URL のヘッダ無し）へ変換する。 */
+const blobToBase64 = (blob: Blob): Promise<string> =>
+	new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.onload = () => {
+			resolve((reader.result as string).split(",")[1] ?? "");
+		};
+		reader.onerror = () => reject(reader.error);
+		reader.readAsDataURL(blob);
+	});
+
+/**
  * Canvas エディタのルートコンポーネント。
  *
  * 状態の種類:
  *   - canvasDoc: バリデーション済みの CanvasDoc（正常時に Canvas を表示）
  *   - hasSemanticError: 検証エラーの有無（Canvas UI の代わりにエラー通知を表示）
  *   - parseError: JSON 構文エラーメッセージ（JSON が壊れている場合に表示）
+ *   - missingEmbeddedSource: 画像（.jis.svg / .jis.png）にソース埋め込みが無い
  *
  * エラー詳細は Extension 側（DiagnosticProvider）が Problems パネルへ出すため、
  * Webview ではエラーの有無だけを保持する。
- * これら3つは排他的で、同時に複数が表示されることはない。
+ * これらは排他的で、同時に複数が表示されることはない。
  */
 function App() {
 	const [canvasDoc, setCanvasDoc] = useState<CanvasDoc | null>(null);
 	const [syncNonce, setSyncNonce] = useState<string | undefined>(undefined);
 	const [hasSemanticError, setHasSemanticError] = useState(false);
 	const [parseError, setParseError] = useState<string>("");
+	const [missingEmbeddedSource, setMissingEmbeddedSource] = useState(false);
+
+	// 現在のドキュメント種別。コミット時のペイロード生成が参照する。
+	// メッセージハンドラ／コールバックの再購読を避けるため ref で持つ。
+	const docTypeRef = useRef<JiscribeDocType>("json");
+
+	// Canvas の imperative エクスポート API（.jis.svg / .jis.png の書き戻しに使う）
+	const exportHandleRef = useRef<CanvasExportHandle>(null);
 
 	// Controlled camera, restored from persisted state on reload (undefined on
 	// first open → Canvas uses its doc-derived default).
@@ -79,10 +117,28 @@ function App() {
 
 	// 高頻度コミット（キーリピート等）の間引きは Canvas 側の保存スケジューラが
 	// 担うため（#125）、ここではデバウンスせずそのまま Extension へ送る。
+	//
+	// 書き戻すペイロードは docType に依存する:
+	//   - json: doc の JSON テキスト
+	//   - svg:  再レンダリングした SVG 全文（ソース埋め込み済み、draw.io 方式）
+	//   - png:  doc の JSON テキスト（画像バイト列は保存時に requestPngExport で生成）
 	const handleCommit = useCallback((doc: CanvasDoc, saveNonce: string) => {
+		let data: string;
+		if (docTypeRef.current === "svg") {
+			const svgText = exportHandleRef.current?.toSvgString();
+			if (!svgText) {
+				// Canvas 未マウント等で SVG を生成できない場合、JSON を書き込むと
+				// .jis.svg ファイルを壊すため、このコミットは書き戻さない。
+				console.error("[Jiscribe] Failed to render .jis.svg for commit");
+				return;
+			}
+			data = svgText;
+		} else {
+			data = JSON.stringify(doc, null, 2);
+		}
 		const message: WebviewToExtensionMessage = {
 			type: "update",
-			data: JSON.stringify(doc, null, 2),
+			data,
 			saveNonce,
 		};
 		vscode.postMessage(message);
@@ -108,10 +164,37 @@ function App() {
 
 			switch (message.type) {
 				case "update": {
+					const docType = message.docType ?? "json";
+					docTypeRef.current = docType;
+
+					// 画像ドキュメントはまずソース JSON を取り出す。
+					//   - svg: SVG 全文が届くので <metadata> から抽出する
+					//   - png: Extension が抽出済み（埋め込み無しは空文字）
+					let jsonText = message.data;
+					if (docType === "svg") {
+						const extracted = extractSourceFromSvgText(message.data);
+						if (extracted === null) {
+							setMissingEmbeddedSource(true);
+							setCanvasDoc(null);
+							setHasSemanticError(false);
+							setParseError("");
+							break;
+						}
+						jsonText = extracted;
+					}
+					if (docType === "png" && jsonText === "") {
+						setMissingEmbeddedSource(true);
+						setCanvasDoc(null);
+						setHasSemanticError(false);
+						setParseError("");
+						break;
+					}
+					setMissingEmbeddedSource(false);
+
 					// JSON 構文チェック → CanvasDoc セマンティクスチェックを共通ヘルパーへ委譲する。
 					// parseCanvasText() は例外を投げず判別可能なユニオンを返すため、
 					// 拡張側（DiagnosticProvider）と同一ロジックで全ケースを扱える。
-					const result = parseCanvasText(message.data);
+					const result = parseCanvasText(jsonText);
 					switch (result.kind) {
 						case "ok":
 							setSyncNonce(message.saveNonce);
@@ -139,6 +222,32 @@ function App() {
 					}
 					break;
 				}
+
+				case "requestPngExport": {
+					// .jis.png の保存: 現在のキャンバスをラスタライズして返す。
+					// 失敗時も必ず応答し（base64: null）、Extension 側のフォールバック
+					// （旧画像＋新ソース再埋め込み）に切り替えさせる。
+					const respond = (base64: string | null) => {
+						vscode.postMessage({
+							type: "pngExportResult",
+							requestId: message.requestId,
+							base64,
+						});
+					};
+					const handle = exportHandleRef.current;
+					if (!handle) {
+						respond(null);
+						break;
+					}
+					handle
+						.toPngBlob()
+						.then((blob) => (blob ? blobToBase64(blob) : null))
+						.then(respond, (err: unknown) => {
+							console.error("[Jiscribe] PNG export failed:", err);
+							respond(null);
+						});
+					break;
+				}
 			}
 		};
 
@@ -156,7 +265,35 @@ function App() {
 	}, []); // 空の依存配列 = マウント時に1回だけ実行
 
 	// ---- 表示の優先順位 ----
-	// JSON 構文エラー > セマンティクスエラー > Canvas 表示 > ロード中
+	// ソース埋め込み無し > JSON 構文エラー > セマンティクスエラー > Canvas 表示 > ロード中
+
+	if (missingEmbeddedSource) {
+		return (
+			<div
+				style={{
+					display: "flex",
+					flexDirection: "column",
+					alignItems: "center",
+					justifyContent: "center",
+					width: "100%",
+					height: "100vh",
+					color: "#6b7280",
+					fontFamily: "monospace",
+					padding: "20px",
+					boxSizing: "border-box",
+					textAlign: "center",
+				}}
+			>
+				<div style={{ fontWeight: "bold", marginBottom: "8px" }}>
+					No embedded jiscribe source
+				</div>
+				<div style={{ fontSize: "12px" }}>
+					This image does not contain an editable jiscribe canvas. Only images
+					exported from jiscribe (.jis.png / .jis.svg) can be edited.
+				</div>
+			</div>
+		);
+	}
 
 	if (parseError) {
 		return (
@@ -198,6 +335,7 @@ function App() {
 					onUndo={handleUndo}
 					onRedo={handleRedo}
 					theme={vscodeCanvasTheme}
+					exportRef={exportHandleRef}
 				/>
 			</div>
 		);

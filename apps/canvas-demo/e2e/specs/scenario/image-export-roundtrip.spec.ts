@@ -45,7 +45,7 @@ test("PNG エクスポート → ドロップで図形が復元される", async
 	expect(before.length).toBe(2);
 
 	const png = await downloadFromToolbar(page, "export:png");
-	expect(png.name).toMatch(/\.png$/);
+	expect(png.name).toMatch(/\.jis\.png$/);
 
 	// fit-to-content: 出力ピクセルは「コンテンツ境界＋余白16」× scale 2。
 	// bounds は rect(150..400 × 120..260) ∪ ellipse(480..640 × 300..420)。

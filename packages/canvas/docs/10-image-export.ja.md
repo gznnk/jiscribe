@@ -26,7 +26,7 @@ SVG** を構築し、それを SVG 書き出しと PNG ラスタライズの両�
 
 ```
 buildExportSvg(liveSvg, { source }) ─┬─ serializeSvg ─→ .jis.svg ダウンロード
-                                     └─ <img>→canvas→toBlob ─→ iTXt 埋め込み ─→ .png ダウンロード
+                                     └─ <img>→canvas→toBlob ─→ iTXt 埋め込み ─→ .jis.png ダウンロード
 ```
 
 `buildExportSvg`（`src/export/buildExportSvg.ts`）の処理：
@@ -87,6 +87,29 @@ buildExportSvg(liveSvg, { source }) ─┬─ serializeSvg ─→ .jis.svg ダ�
 デモアプリはエクスポート済み PNG のドロップを受け付け、復元した doc で
 キャンバスを差し替える（`App.tsx`）。
 
+## VSCode 連携（`.jis.png` / `.jis.svg`）
+
+VSCode 拡張は二重拡張子（draw.io の `.drawio.png` 相当）にキャンバス
+エディタを紐付ける。開くと埋め込みソースからドキュメントを復元し、保存の
+たびに画像を再レンダリングしてソースを埋め込み直すため、ファイルは常に
+最新の見た目を持つ画像であり続ける。
+
+- `.jis.svg` は既存のテキストエディタフロー（`JiscribeEditorProvider`）に
+  乗る：読み込み時に webview が `<metadata>` からソースを抽出し、コミット
+  ごとに再レンダリングした SVG 全文を書き戻す。VSCode のテキスト undo /
+  保存がそのまま効く
+- `.jis.png` はバイナリのため専用の `CustomEditorProvider`
+  （`JiscribePngEditorProvider`）が dirty・undo/redo・保存・ホットイグジット
+  バックアップを管理する。保存時は webview にラスタライズを依頼
+  （`CanvasExportHandle.toPngBlob`）し、webview が応答できない場合は
+  「前回保存画像＋最新ソースの再埋め込み」にフォールバックする（見た目は
+  古くても編集内容は失われない）
+- Node 側の iTXt 読み書きは UI 依存の無いエントリ
+  `@workspace/canvas/png-source` を使う（`./parser` と同じパターン）
+- `<Canvas exportRef>` が imperative なエクスポート API
+  （`toSvgString` / `toPngBlob`）を公開し、ホストはツールバーのボタンと
+  完全に同じパイプラインを実行する
+
 ## 公開 API（`@workspace/canvas`）
 
 | 関数                                                    | 役割                                       |
@@ -116,8 +139,6 @@ UI: Toolbar 右側に **SVG / PNG の 2 ボタン**。`Canvas.tsx` が
 
 ## 今後（後続フェーズ）
 
-1. **VSCode 連携**: 拡張でエクスポート済み PNG / SVG を開いて復元する
-   （`extractCanvasSourceFromPng` / `extractCanvasSource` が土台）
-2. **フォント埋め込み**: `@font-face`（data URI）＋サブセット化で表示側フォント
+1. **フォント埋め込み**: `@font-face`（data URI）＋サブセット化で表示側フォント
    差異を解消（特に日本語グリフ）
-3. **Markdown リッチ装飾**の `<text>` 再現（見出し・太字・リスト・表など）
+2. **Markdown リッチ装飾**の `<text>` 再現（見出し・太字・リスト・表など）

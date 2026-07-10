@@ -50,6 +50,19 @@
 					},
 					{
 						"filenamePattern": "*.jiscribe.json"
+					},
+					{
+						"filenamePattern": "*.jis.svg"
+					}
+				],
+				"priority": "default"
+			},
+			{
+				"viewType": "jiscribe.pngEditor",
+				"displayName": "Jiscribe Canvas Editor (PNG)",
+				"selector": [
+					{
+						"filenamePattern": "*.jis.png"
 					}
 				],
 				"priority": "default"

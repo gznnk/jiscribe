@@ -5,6 +5,13 @@ All notable changes to the Jiscribe extension are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Editable images (draw.io-style round-trip)**: The canvas can now be exported as a PNG or SVG that stays editable. Use the two new toolbar buttons — **Export as PNG** (`.jis.png`, with the document embedded as a PNG `iTXt` chunk) and **Export as SVG** (`.jis.svg`, with the document embedded in SVG `<metadata>`). Both files render as plain images everywhere (GitHub, Markdown previews, image viewers).
+- **Open `.jis.png` / `.jis.svg` in the canvas editor**: Files with these double extensions now open in the Jiscribe canvas editor, restoring the full document from the embedded source. Editing and saving re-renders the image (fit-to-content) with the updated source re-embedded, so the file always stays a valid, up-to-date image — the same workflow as draw.io's `.drawio.png`. If the editor UI cannot render at save time, the previous image is kept and only the embedded source is updated, so edits are never lost.
+
 ## [0.5.1] - 2026-07-04
 
 ### Added
