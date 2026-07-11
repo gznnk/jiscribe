@@ -126,11 +126,30 @@ function App() {
 	const handleCommit = useCallback((doc: CanvasDoc, saveNonce: string) => {
 		let data: string;
 		if (docTypeRef.current === "svg") {
-			const svgText = exportHandleRef.current?.toSvgString();
+			let svgText: string | null = null;
+			let renderError: unknown = null;
+			try {
+				svgText = exportHandleRef.current?.toSvgString() ?? null;
+			} catch (err) {
+				renderError = err;
+			}
 			if (!svgText) {
 				// Canvas 未マウント等で SVG を生成できない場合、JSON を書き込むと
 				// .jis.svg ファイルを壊すため、このコミットは書き戻さない。
-				console.error("[Jiscribe] Failed to render .jis.svg for commit");
+				// この時点で saveNonce は消費済みで再送されないため、黙って捨てると
+				// ユーザーは保存済みと誤認する。Extension へ通知して失敗を可視化する
+				// （次の正常なコミットが全文を書き戻すので、それまでの警告が目的）。
+				console.error(
+					"[Jiscribe] Failed to render .jis.svg for commit:",
+					renderError,
+				);
+				vscode.postMessage({
+					type: "updateError",
+					reason:
+						renderError instanceof Error
+							? renderError.message
+							: "Failed to render the canvas as SVG",
+				});
 				return;
 			}
 			data = svgText;

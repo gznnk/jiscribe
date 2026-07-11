@@ -35,6 +35,11 @@ export type WebviewToExtensionMessage =
 	 * data の中身は docType に依存する（JiscribeDocType を参照）。
 	 */
 	| { type: "update"; data: string; saveNonce: string }
+	/**
+	 * 書き戻しペイロードの生成に失敗した（.jis.svg の SVG 再レンダリング失敗等）。
+	 * ファイルは更新されないため、Extension は保存失敗としてユーザーへ通知する。
+	 */
+	| { type: "updateError"; reason: string }
 	/** Canvas 上で Undo が要求された（ホストエディタの undo コマンドに委譲する） */
 	| { type: "undo" }
 	/** Canvas 上で Redo が要求された（ホストエディタの redo コマンドに委譲する） */

@@ -150,6 +150,13 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 						break;
 					}
 
+					case "updateError":
+						// Webview 側で書き戻しペイロードを生成できなかった（.jis.svg の
+						// SVG 再レンダリング失敗）。ファイルは古いまま残るため、
+						// 保存失敗としてユーザーへ通知する。
+						this.notifySaveFailure(document, message.reason);
+						break;
+
 					case "exportImage":
 						// エクスポート画像のワークスペース保存（保存ダイアログ→書き込み→通知）
 						void saveExportedImage(
@@ -180,7 +187,12 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 	 */
 	private notifySaveFailure(document: vscode.TextDocument, err: unknown) {
 		console.error("[Jiscribe] ファイルへの書き込みに失敗しました:", err);
-		const detail = err instanceof Error ? `: ${err.message}` : "";
+		const detail =
+			err instanceof Error
+				? `: ${err.message}`
+				: typeof err === "string"
+					? `: ${err}`
+					: "";
 		const baseName = document.uri.path.split("/").pop() ?? document.uri.path;
 		vscode.window.showErrorMessage(
 			`Jiscribe: Failed to write canvas changes to "${baseName}"${detail}. Your latest edits are NOT saved.`,
