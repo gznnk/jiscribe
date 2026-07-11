@@ -17,8 +17,7 @@ export const ACTOR_FIGURE_RATIO = 0.72;
  * It adopts rect geometry (x/y/width/height) and only swaps the rendering for a
  * stick figure with a full-bbox transparent hit area (thin limbs alone would be
  * hard to grab). This lets it reuse Frame-based transforms and connector
- * outline connections with the same mechanism as Rect. The text region is the
- * label band below the figure.
+ * outline connections with the same mechanism as Rect.
  */
 export const ActorFeatures = {
 	type: "actor",
@@ -28,7 +27,6 @@ export const ActorFeatures = {
 	fill: true,
 	text: true,
 	connectable: true,
-	textRegion: { unit: "ratio", inset: { top: ACTOR_FIGURE_RATIO } },
 } as const satisfies ObjectFeatures;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

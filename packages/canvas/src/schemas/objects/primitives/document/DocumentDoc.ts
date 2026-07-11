@@ -17,8 +17,7 @@ export const DOCUMENT_WAVE_RATIO = 0.075;
  *
  * It adopts rect geometry (x/y/width/height) and only swaps the rendering for a
  * wavy-bottomed path. This lets it reuse Frame-based transforms and connector
- * outline connections with the same mechanism as Rect. The text region excludes
- * the wave band at the bottom.
+ * outline connections with the same mechanism as Rect.
  */
 export const DocumentFeatures = {
 	type: "document",
@@ -28,7 +27,6 @@ export const DocumentFeatures = {
 	fill: true,
 	text: true,
 	connectable: true,
-	textRegion: { unit: "ratio", inset: { bottom: DOCUMENT_WAVE_RATIO * 2 } },
 } as const satisfies ObjectFeatures;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

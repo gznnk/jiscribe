@@ -15,9 +15,7 @@ export const DB_CAP_RATIO = 0.12;
  *
  * It adopts rect geometry (x/y/width/height) and only swaps the rendering for a
  * cylinder. This lets it reuse Frame-based transforms and connector outline
- * connections with the same mechanism as Rect. Unlike bbox-text shapes, the
- * text region is declared via `textRegion` to cover only the body below the
- * cap ellipse (the cap's lower edge sits at 2 * DB_CAP_RATIO of the height).
+ * connections with the same mechanism as Rect.
  */
 export const DbFeatures = {
 	type: "db",
@@ -27,7 +25,6 @@ export const DbFeatures = {
 	fill: true,
 	text: true,
 	connectable: true,
-	textRegion: { unit: "ratio", inset: { top: DB_CAP_RATIO * 2 } },
 } as const satisfies ObjectFeatures;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

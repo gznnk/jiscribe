@@ -16,8 +16,7 @@ export const HEXAGON_CAP_RATIO = 0.2;
  *
  * It adopts rect geometry (x/y/width/height) and only swaps the rendering for a
  * hexagonal polygon. This lets it reuse Frame-based transforms and connector
- * outline connections with the same mechanism as Rect. The text region is inset
- * by half a cap on both sides to keep centered text inside the silhouette.
+ * outline connections with the same mechanism as Rect.
  */
 export const HexagonFeatures = {
 	type: "hexagon",
@@ -27,10 +26,6 @@ export const HexagonFeatures = {
 	fill: true,
 	text: true,
 	connectable: true,
-	textRegion: {
-		unit: "ratio",
-		inset: { left: HEXAGON_CAP_RATIO / 2, right: HEXAGON_CAP_RATIO / 2 },
-	},
 } as const satisfies ObjectFeatures;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -6,16 +6,23 @@ import { Connector } from "../../presentations/objects/connections/Connector";
 import {
 	Actor,
 	ActorPreview,
+	calcActorTextRegion,
 } from "../../presentations/objects/primitives/Actor";
 import {
 	Callout,
 	CalloutPreview,
+	calcCalloutTextRegion,
 } from "../../presentations/objects/primitives/Callout";
 import {
 	Cloud,
 	CloudPreview,
+	calcCloudTextRegion,
 } from "../../presentations/objects/primitives/Cloud";
-import { Db, DbPreview } from "../../presentations/objects/primitives/Db";
+import {
+	Db,
+	DbPreview,
+	calcDbTextRegion,
+} from "../../presentations/objects/primitives/Db";
 import {
 	Diamond,
 	DiamondPreview,
@@ -23,6 +30,7 @@ import {
 import {
 	Document,
 	DocumentPreview,
+	calcDocumentTextRegion,
 } from "../../presentations/objects/primitives/Document";
 import {
 	Ellipse,
@@ -31,10 +39,12 @@ import {
 import {
 	Hexagon,
 	HexagonPreview,
+	calcHexagonTextRegion,
 } from "../../presentations/objects/primitives/Hexagon";
 import {
 	Parallelogram,
 	ParallelogramPreview,
+	calcParallelogramTextRegion,
 } from "../../presentations/objects/primitives/Parallelogram";
 import {
 	Polygon,
@@ -48,9 +58,11 @@ import { Rect, RectPreview } from "../../presentations/objects/primitives/Rect";
 import {
 	Stadium,
 	StadiumPreview,
+	calcStadiumTextRegion,
 } from "../../presentations/objects/primitives/Stadium";
 import { Svg } from "../../presentations/objects/primitives/Svg";
 import type { ShapePreviewRenderer } from "../../presentations/objects/registry/ShapePreviewTypes";
+import type { TextRegionCalculator } from "../../presentations/objects/registry/TextRegionRegistry";
 import { StickyFeatures } from "../../schemas/objects/annotations/sticky/StickyDoc";
 import { StickyShapeFactory } from "../../schemas/objects/annotations/sticky/StickyShapeFactory";
 import { StickyShapePresets } from "../../schemas/objects/annotations/sticky/StickyShapePresets";
@@ -274,8 +286,8 @@ type ShapeLibraryRegistration = {
 
 /**
  * The full description of a single object type across every registry
- * (mapper, component, behavior, state validator, menu) plus its optional
- * ShapeLibrary capabilities. Values are widened to the base state/doc types;
+ * (mapper, component, text region, behavior, state validator, menu) plus its
+ * optional ShapeLibrary capabilities. Values are widened to the base state/doc types;
  * per-entry type-safety is enforced at definition site by `defineObject`.
  */
 export type ObjectTypeDefinition = {
@@ -283,6 +295,8 @@ export type ObjectTypeDefinition = {
 	features: ObjectFeatures;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	component: FC<any>;
+	/** Text region calculator. Omitted = full bbox (see TextRegionRegistry). */
+	textRegion?: TextRegionCalculator;
 	behavior: ObjectBehaviorEntry;
 	menuFactory: MenuSectionFactory<ObjectState>;
 	validateState: ObjectStateValidateFn;
@@ -299,6 +313,7 @@ const defineObject = <TDoc extends ObjectDoc, TState extends ObjectState>(def: {
 	features: ObjectFeatures;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	component: FC<any>;
+	textRegion?: TextRegionCalculator;
 	behavior: ObjectBehaviorEntry<TState>;
 	menuFactory: MenuSectionFactory<TState>;
 	validateState: ObjectStateValidateFn;
@@ -412,6 +427,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			mapper: { toDoc: stadiumToDoc, toState: stadiumToState },
 			features: StadiumFeatures,
 			component: Stadium,
+			textRegion: calcStadiumTextRegion,
 			behavior: createFrameBehavior<StadiumState>(),
 			menuFactory: (_state) => [
 				{
@@ -444,6 +460,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			mapper: { toDoc: parallelogramToDoc, toState: parallelogramToState },
 			features: ParallelogramFeatures,
 			component: Parallelogram,
+			textRegion: calcParallelogramTextRegion,
 			behavior: createFrameBehavior<ParallelogramState>(),
 			menuFactory: (_state) => [
 				{
@@ -476,6 +493,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			mapper: { toDoc: hexagonToDoc, toState: hexagonToState },
 			features: HexagonFeatures,
 			component: Hexagon,
+			textRegion: calcHexagonTextRegion,
 			behavior: createFrameBehavior<HexagonState>(),
 			menuFactory: (_state) => [
 				{
@@ -508,6 +526,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			mapper: { toDoc: cloudToDoc, toState: cloudToState },
 			features: CloudFeatures,
 			component: Cloud,
+			textRegion: calcCloudTextRegion,
 			behavior: createFrameBehavior<CloudState>(),
 			menuFactory: (_state) => [
 				{
@@ -540,6 +559,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			mapper: { toDoc: documentToDoc, toState: documentToState },
 			features: DocumentFeatures,
 			component: Document,
+			textRegion: calcDocumentTextRegion,
 			behavior: createFrameBehavior<DocumentState>(),
 			menuFactory: (_state) => [
 				{
@@ -572,6 +592,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			mapper: { toDoc: actorToDoc, toState: actorToState },
 			features: ActorFeatures,
 			component: Actor,
+			textRegion: calcActorTextRegion,
 			behavior: createFrameBehavior<ActorState>(),
 			menuFactory: (_state) => [
 				{
@@ -604,6 +625,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			mapper: { toDoc: calloutToDoc, toState: calloutToState },
 			features: CalloutFeatures,
 			component: Callout,
+			textRegion: calcCalloutTextRegion,
 			behavior: createFrameBehavior<CalloutState>(),
 			menuFactory: (_state) => [
 				{
@@ -636,6 +658,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			mapper: { toDoc: dbToDoc, toState: dbToState },
 			features: DbFeatures,
 			component: Db,
+			textRegion: calcDbTextRegion,
 			behavior: createFrameBehavior<DbState>(),
 			menuFactory: (_state) => [
 				{
@@ -862,8 +885,8 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 
 /**
  * Registers a single object type described by `definition` across all registries
- * in the given bundle (mapper, component, behavior, state validator, menu), and
- * optionally its ShapeLibrary capabilities.
+ * in the given bundle (mapper, component, text region, behavior, state validator,
+ * menu), and optionally its ShapeLibrary capabilities.
  */
 export const applyObjectDefinition = (
 	registries: CanvasRegistries,
@@ -876,6 +899,9 @@ export const applyObjectDefinition = (
 		definition.features,
 	);
 	registries.objectComponent.register(type, definition.component);
+	if (definition.textRegion) {
+		registries.textRegion.register(type, definition.textRegion);
+	}
 	registries.objectBehavior.register(type, definition.behavior);
 	registries.objectStateValidator.register(type, definition.validateState);
 	registries.objectMenu.register(type, definition.menuFactory);
@@ -908,6 +934,7 @@ export const initializeObjectRegistry = (
 ): void => {
 	registries.objectMapper.clear();
 	registries.objectComponent.clear();
+	registries.textRegion.clear();
 	registries.objectBehavior.clear();
 	registries.objectStateValidator.clear();
 	registries.objectMenu.clear();

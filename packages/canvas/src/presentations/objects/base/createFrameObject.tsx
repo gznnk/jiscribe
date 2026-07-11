@@ -9,6 +9,7 @@ import type { FillStyleState } from "../../../states/objects/base/FillStyleState
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { StrokeStyleState } from "../../../states/objects/base/StrokeStyleState";
 import type { TextStyleState } from "../../../states/objects/base/TextStyleState";
+import { useTextRegionRegistry } from "../registry/TextRegionRegistryContext";
 import { calcTextRegion } from "../utils/calcTextRegion";
 import { createSvgTransform } from "../utils/createSvgTransform";
 import { getStrokeDasharray } from "../utils/getStrokeDasharray";
@@ -46,8 +47,8 @@ type FrameRenderState = ObjectState &
  * consolidated here, and each shape only passes a `draw` function that returns its shape. `draw`
  * receives the state (width/height/rx, etc.) and the shared attributes `shape`.
  *
- * The text region is derived from the state's stamped `features` descriptor via
- * `calcTextRegion` (no `textRegion` declared = full bbox).
+ * The text region is derived from the type's calculator in TextRegionRegistry
+ * via `calcTextRegion` (unregistered = full bbox).
  *
  * Shadowed stickies and svg wrapped by DOMPurify are out of scope because their draw structure differs.
  */
@@ -57,6 +58,7 @@ export const createFrameObject = <TState extends FrameRenderState>(
 	const FrameObject: React.FC<TState & TextEditable> = (props) => {
 		const {
 			id,
+			type,
 			cx,
 			cy,
 			width,
@@ -76,10 +78,10 @@ export const createFrameObject = <TState extends FrameRenderState>(
 			fontSize,
 			fontFamily,
 			fontWeight,
-			features,
 			isEditing = false,
 		} = props;
 
+		const textRegionCalculator = useTextRegionRegistry().get(type);
 		const transformAttr = createSvgTransform(scaleX, scaleY, rotation, cx, cy);
 
 		const shape: FrameShapeProps = {
@@ -92,7 +94,7 @@ export const createFrameObject = <TState extends FrameRenderState>(
 			strokeDasharray: getStrokeDasharray(strokeDashType, strokeWidth),
 		};
 
-		const textRegion = calcTextRegion({ width, height }, features?.textRegion);
+		const textRegion = calcTextRegion({ width, height }, textRegionCalculator);
 
 		return (
 			<>

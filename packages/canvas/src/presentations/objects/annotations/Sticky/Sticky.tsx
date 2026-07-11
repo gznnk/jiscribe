@@ -27,11 +27,10 @@ const StickyComponent: React.FC<StickyProps> = ({
 	fontSize,
 	fontFamily,
 	fontWeight,
-	features,
 	isEditing = false,
 }) => {
 	const transformAttr = createSvgTransform(scaleX, scaleY, rotation, cx, cy);
-	const textRegion = calcTextRegion({ width, height }, features?.textRegion);
+	const textRegion = calcTextRegion({ width, height });
 
 	const left = -width / 2;
 	const right = width / 2;

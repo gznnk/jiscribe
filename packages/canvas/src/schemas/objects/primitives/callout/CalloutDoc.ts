@@ -17,7 +17,7 @@ export const CALLOUT_TAIL_RATIO = 0.25;
  * It adopts rect geometry (x/y/width/height) and only swaps the rendering for a
  * bubble with a fixed tail pointing down-left, drawn inside the bounding box so
  * selection, transforms, and connector outline connections work with the same
- * mechanism as Rect. The text region is the bubble body above the tail band.
+ * mechanism as Rect.
  */
 export const CalloutFeatures = {
 	type: "callout",
@@ -27,7 +27,6 @@ export const CalloutFeatures = {
 	fill: true,
 	text: true,
 	connectable: true,
-	textRegion: { unit: "ratio", inset: { bottom: CALLOUT_TAIL_RATIO } },
 } as const satisfies ObjectFeatures;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

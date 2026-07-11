@@ -1,5 +1,6 @@
 import type { ObjectComponentRegistry } from "../../presentations/objects/registry/ObjectComponentRegistry";
 import type { ShapePreviewRegistry } from "../../presentations/objects/registry/ShapePreviewRegistry";
+import type { TextRegionRegistry } from "../../presentations/objects/registry/TextRegionRegistry";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 import type { ShapeFactoryRegistry } from "../../schemas/registry/ShapeFactoryRegistry";
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
@@ -26,6 +27,7 @@ export type CanvasRegistries = {
 	objectMapper: ObjectMapperRegistry;
 	objectStateValidator: ObjectStateValidatorRegistry;
 	objectComponent: ObjectComponentRegistry;
+	textRegion: TextRegionRegistry;
 	shapePreview: ShapePreviewRegistry;
 	objectBehavior: ObjectBehaviorRegistry;
 	gestureHandler: GestureHandlerRegistry;

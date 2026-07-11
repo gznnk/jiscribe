@@ -16,8 +16,6 @@ export const PARALLELOGRAM_SKEW_RATIO = 0.22;
  * It adopts rect geometry (x/y/width/height) and only swaps the rendering for a
  * slanted polygon (top edge shifted right). This lets it reuse Frame-based
  * transforms and connector outline connections with the same mechanism as Rect.
- * The text region is inset by half the skew on both sides to keep centered text
- * inside the slanted silhouette.
  */
 export const ParallelogramFeatures = {
 	type: "parallelogram",
@@ -27,13 +25,6 @@ export const ParallelogramFeatures = {
 	fill: true,
 	text: true,
 	connectable: true,
-	textRegion: {
-		unit: "ratio",
-		inset: {
-			left: PARALLELOGRAM_SKEW_RATIO / 2,
-			right: PARALLELOGRAM_SKEW_RATIO / 2,
-		},
-	},
 } as const satisfies ObjectFeatures;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

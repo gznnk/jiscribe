@@ -1,0 +1,11 @@
+import type { Dimensions, Rect } from "@workspace/geometry";
+import { calcInsetRect } from "@workspace/geometry";
+
+import { DOCUMENT_WAVE_RATIO } from "../../../../schemas/objects/primitives/document/DocumentDoc";
+
+/** Stops the region above the wavy bottom edge (the wave swings one amplitude around its centerline). */
+export const calcDocumentTextRegion = ({ width, height }: Dimensions): Rect =>
+	calcInsetRect(
+		{ cx: 0, cy: 0, width, height },
+		{ bottom: DOCUMENT_WAVE_RATIO * 2 },
+	);
