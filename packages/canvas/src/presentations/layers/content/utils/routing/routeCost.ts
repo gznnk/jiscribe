@@ -210,7 +210,7 @@ const TURN_WEIGHT = 1_000;
  *   the far side of the exit direction goes straight out and around rather than backtracking. When
  *   a layout admits no spike-free route, all candidates tie here and it falls through.
  * - `intrusions` count segments grazing within a shape's margin band (excluding each endpoint's own
- *   exit corridor, see `countMarginIntrusions`). Ranking them above the aesthetic keeps the full
+ *   exit corridor, see `expandBoxExceptExit`). Ranking them above the aesthetic keeps the full
  *   clearance from shapes the route passes whenever a clearance route exists — even at the cost of a
  *   couple of turns — so a route never dips inside the margin and pops back out as a shape is
  *   dragged. It does **not** force a detour for close, facing shapes: when they are nearer than
@@ -292,7 +292,7 @@ export const compareCost = (a: RouteCost, b: RouteCost): number =>
  * tie-breaking keys (topology signature and the concrete path).
  */
 export type RouteChoice = {
-	/** The candidate's cost (crossings → aesthetic, the primary keys). */
+	/** The candidate's cost (crossings → reversals → intrusions → aesthetic, the primary keys). */
 	cost: RouteCost;
 	/**
 	 * Whether the candidate bends at the center between the two shapes (the ideal S/Z crossover).
@@ -329,8 +329,9 @@ const comparePaths = (a: Point[], b: Point[]): number => {
 };
 
 /**
- * **Total order** over route candidates: crossings → aesthetic → symmetric (centered crossover
- * first) → topology signature (alphabetical) → concrete path (lexicographical).
+ * **Total order** over route candidates: crossings → reversals → intrusions → aesthetic →
+ * symmetric (centered crossover first) → topology signature (alphabetical) → concrete path
+ * (lexicographical).
  *
  * `symmetric` sits between the cost and the intrinsic keys: among cost-equal candidates it prefers
  * the one bending at the center between the two shapes, so an S/Z jogs at the midline rather than

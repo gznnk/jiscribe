@@ -86,7 +86,7 @@ const forwardDistance = (
  *
  * A shortened stub can land inside the *other* shape's margin band, but that no longer forces an ugly
  * staircase: the margin-intrusion cost excludes each endpoint's own exit corridor (see
- * `countMarginIntrusions`), so the clean route past it wins on merit.
+ * `expandBoxExceptExit` in `routeCost.ts`), so the clean route past it wins on merit.
  *
  * @param point - This endpoint's coordinate
  * @param direction - This endpoint's outward direction

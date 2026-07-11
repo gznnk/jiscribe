@@ -150,6 +150,11 @@ type CanvasProps = {
 	 */
 	onViewportChange?: (viewport: Camera) => void;
 	/**
+	 * Host UI inserted at the left edge of the toolbar (e.g. save/open buttons).
+	 * Rendered inside a `data-gesture="none"` container, so plain `onClick` works.
+	 */
+	toolbarLeading?: React.ReactNode;
+	/**
 	 * Per-canvas configuration of the available object types, commands, and
 	 * registries. Restricts what this canvas can create/handle (plugin-style
 	 * extensibility and feature-gating), independently of any other `<Canvas>` on
@@ -232,6 +237,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	autoFocus = true,
 	viewport: controlledViewport,
 	onViewportChange,
+	toolbarLeading,
 	initialConfig,
 	exportRef,
 }) => {
@@ -481,6 +487,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 									zoom={state.viewport.zoom}
 									canZoomIn={canZoomIn}
 									canZoomOut={canZoomOut}
+									leading={toolbarLeading}
 								/>
 								<Viewport
 									data-id="canvas"
