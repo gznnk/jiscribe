@@ -3,20 +3,34 @@ import { StickyFeatures } from "../objects/annotations/sticky/StickyDoc";
 import { validateStickyDoc } from "../objects/annotations/sticky/validateStickyDoc";
 import { ConnectorFeatures } from "../objects/connections/connector/ConnectorDoc";
 import { validateConnectorDoc } from "../objects/connections/connector/validateConnectorDoc";
+import { ActorFeatures } from "../objects/primitives/actor/ActorDoc";
+import { validateActorDoc } from "../objects/primitives/actor/validateActorDoc";
+import { CalloutFeatures } from "../objects/primitives/callout/CalloutDoc";
+import { validateCalloutDoc } from "../objects/primitives/callout/validateCalloutDoc";
+import { CloudFeatures } from "../objects/primitives/cloud/CloudDoc";
+import { validateCloudDoc } from "../objects/primitives/cloud/validateCloudDoc";
 import { DbFeatures } from "../objects/primitives/db/DbDoc";
 import { validateDbDoc } from "../objects/primitives/db/validateDbDoc";
 import { DiamondFeatures } from "../objects/primitives/diamond/DiamondDoc";
 import { validateDiamondDoc } from "../objects/primitives/diamond/validateDiamondDoc";
+import { DocumentFeatures } from "../objects/primitives/document/DocumentDoc";
+import { validateDocumentDoc } from "../objects/primitives/document/validateDocumentDoc";
 import { EllipseFeatures } from "../objects/primitives/ellipse/EllipseDoc";
 import { validateEllipseDoc } from "../objects/primitives/ellipse/validateEllipseDoc";
 import { GroupFeatures } from "../objects/primitives/group/GroupDoc";
 import { validateGroupDoc } from "../objects/primitives/group/validateGroupDoc";
+import { HexagonFeatures } from "../objects/primitives/hexagon/HexagonDoc";
+import { validateHexagonDoc } from "../objects/primitives/hexagon/validateHexagonDoc";
+import { ParallelogramFeatures } from "../objects/primitives/parallelogram/ParallelogramDoc";
+import { validateParallelogramDoc } from "../objects/primitives/parallelogram/validateParallelogramDoc";
 import { PolygonFeatures } from "../objects/primitives/polygon/PolygonDoc";
 import { validatePolygonDoc } from "../objects/primitives/polygon/validatePolygonDoc";
 import { PolylineFeatures } from "../objects/primitives/polyline/PolylineDoc";
 import { validatePolylineDoc } from "../objects/primitives/polyline/validatePolylineDoc";
 import { RectFeatures } from "../objects/primitives/rect/RectDoc";
 import { validateRectDoc } from "../objects/primitives/rect/validateRectDoc";
+import { StadiumFeatures } from "../objects/primitives/stadium/StadiumDoc";
+import { validateStadiumDoc } from "../objects/primitives/stadium/validateStadiumDoc";
 import { SvgFeatures } from "../objects/primitives/svg/SvgDoc";
 import { validateSvgDoc } from "../objects/primitives/svg/validateSvgDoc";
 
@@ -53,6 +67,33 @@ export const initializeObjectDocValidatorRegistry = (): void => {
 		"diamond",
 		validateDiamondDoc,
 		DiamondFeatures,
+	);
+	objectDocValidatorRegistry.register(
+		"stadium",
+		validateStadiumDoc,
+		StadiumFeatures,
+	);
+	objectDocValidatorRegistry.register(
+		"parallelogram",
+		validateParallelogramDoc,
+		ParallelogramFeatures,
+	);
+	objectDocValidatorRegistry.register(
+		"hexagon",
+		validateHexagonDoc,
+		HexagonFeatures,
+	);
+	objectDocValidatorRegistry.register("cloud", validateCloudDoc, CloudFeatures);
+	objectDocValidatorRegistry.register(
+		"document",
+		validateDocumentDoc,
+		DocumentFeatures,
+	);
+	objectDocValidatorRegistry.register("actor", validateActorDoc, ActorFeatures);
+	objectDocValidatorRegistry.register(
+		"callout",
+		validateCalloutDoc,
+		CalloutFeatures,
 	);
 	objectDocValidatorRegistry.register("db", validateDbDoc, DbFeatures);
 	objectDocValidatorRegistry.register("group", validateGroupDoc, GroupFeatures);

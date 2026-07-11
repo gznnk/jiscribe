@@ -3,15 +3,39 @@ import type { ComponentType, FC } from "react";
 import type { CanvasRegistries } from "./CanvasRegistries";
 import { Sticky } from "../../presentations/objects/annotations/Sticky";
 import { Connector } from "../../presentations/objects/connections/Connector";
+import {
+	Actor,
+	ActorPreview,
+} from "../../presentations/objects/primitives/Actor";
+import {
+	Callout,
+	CalloutPreview,
+} from "../../presentations/objects/primitives/Callout";
+import {
+	Cloud,
+	CloudPreview,
+} from "../../presentations/objects/primitives/Cloud";
 import { Db, DbPreview } from "../../presentations/objects/primitives/Db";
 import {
 	Diamond,
 	DiamondPreview,
 } from "../../presentations/objects/primitives/Diamond";
 import {
+	Document,
+	DocumentPreview,
+} from "../../presentations/objects/primitives/Document";
+import {
 	Ellipse,
 	EllipsePreview,
 } from "../../presentations/objects/primitives/Ellipse";
+import {
+	Hexagon,
+	HexagonPreview,
+} from "../../presentations/objects/primitives/Hexagon";
+import {
+	Parallelogram,
+	ParallelogramPreview,
+} from "../../presentations/objects/primitives/Parallelogram";
 import {
 	Polygon,
 	PolygonPreview,
@@ -21,6 +45,10 @@ import {
 	PolylinePreview,
 } from "../../presentations/objects/primitives/Polyline";
 import { Rect, RectPreview } from "../../presentations/objects/primitives/Rect";
+import {
+	Stadium,
+	StadiumPreview,
+} from "../../presentations/objects/primitives/Stadium";
 import { Svg } from "../../presentations/objects/primitives/Svg";
 import type { ShapePreviewRenderer } from "../../presentations/objects/registry/ShapePreviewTypes";
 import { StickyFeatures } from "../../schemas/objects/annotations/sticky/StickyDoc";
@@ -28,16 +56,34 @@ import { StickyShapeFactory } from "../../schemas/objects/annotations/sticky/Sti
 import { StickyShapePresets } from "../../schemas/objects/annotations/sticky/StickyShapePresets";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
 import { ConnectorFeatures } from "../../schemas/objects/connections/connector/ConnectorDoc";
+import { ActorFeatures } from "../../schemas/objects/primitives/actor/ActorDoc";
+import { ActorShapeFactory } from "../../schemas/objects/primitives/actor/ActorShapeFactory";
+import { ActorShapePresets } from "../../schemas/objects/primitives/actor/ActorShapePresets";
+import { CalloutFeatures } from "../../schemas/objects/primitives/callout/CalloutDoc";
+import { CalloutShapeFactory } from "../../schemas/objects/primitives/callout/CalloutShapeFactory";
+import { CalloutShapePresets } from "../../schemas/objects/primitives/callout/CalloutShapePresets";
+import { CloudFeatures } from "../../schemas/objects/primitives/cloud/CloudDoc";
+import { CloudShapeFactory } from "../../schemas/objects/primitives/cloud/CloudShapeFactory";
+import { CloudShapePresets } from "../../schemas/objects/primitives/cloud/CloudShapePresets";
 import { DbFeatures } from "../../schemas/objects/primitives/db/DbDoc";
 import { DbShapeFactory } from "../../schemas/objects/primitives/db/DbShapeFactory";
 import { DbShapePresets } from "../../schemas/objects/primitives/db/DbShapePresets";
 import { DiamondFeatures } from "../../schemas/objects/primitives/diamond/DiamondDoc";
 import { DiamondShapeFactory } from "../../schemas/objects/primitives/diamond/DiamondShapeFactory";
 import { DiamondShapePresets } from "../../schemas/objects/primitives/diamond/DiamondShapePresets";
+import { DocumentFeatures } from "../../schemas/objects/primitives/document/DocumentDoc";
+import { DocumentShapeFactory } from "../../schemas/objects/primitives/document/DocumentShapeFactory";
+import { DocumentShapePresets } from "../../schemas/objects/primitives/document/DocumentShapePresets";
 import { EllipseFeatures } from "../../schemas/objects/primitives/ellipse/EllipseDoc";
 import { EllipseShapeFactory } from "../../schemas/objects/primitives/ellipse/EllipseShapeFactory";
 import { EllipseShapePresets } from "../../schemas/objects/primitives/ellipse/EllipseShapePresets";
 import { GroupFeatures } from "../../schemas/objects/primitives/group/GroupDoc";
+import { HexagonFeatures } from "../../schemas/objects/primitives/hexagon/HexagonDoc";
+import { HexagonShapeFactory } from "../../schemas/objects/primitives/hexagon/HexagonShapeFactory";
+import { HexagonShapePresets } from "../../schemas/objects/primitives/hexagon/HexagonShapePresets";
+import { ParallelogramFeatures } from "../../schemas/objects/primitives/parallelogram/ParallelogramDoc";
+import { ParallelogramShapeFactory } from "../../schemas/objects/primitives/parallelogram/ParallelogramShapeFactory";
+import { ParallelogramShapePresets } from "../../schemas/objects/primitives/parallelogram/ParallelogramShapePresets";
 import { PolygonFeatures } from "../../schemas/objects/primitives/polygon/PolygonDoc";
 import { PolygonShapeFactory } from "../../schemas/objects/primitives/polygon/PolygonShapeFactory";
 import { PolygonShapePresets } from "../../schemas/objects/primitives/polygon/PolygonShapePresets";
@@ -47,6 +93,9 @@ import { PolylineShapePresets } from "../../schemas/objects/primitives/polyline/
 import { RectFeatures } from "../../schemas/objects/primitives/rect/RectDoc";
 import { RectShapeFactory } from "../../schemas/objects/primitives/rect/RectShapeFactory";
 import { RectShapePresets } from "../../schemas/objects/primitives/rect/RectShapePresets";
+import { StadiumFeatures } from "../../schemas/objects/primitives/stadium/StadiumDoc";
+import { StadiumShapeFactory } from "../../schemas/objects/primitives/stadium/StadiumShapeFactory";
+import { StadiumShapePresets } from "../../schemas/objects/primitives/stadium/StadiumShapePresets";
 import { SvgFeatures } from "../../schemas/objects/primitives/svg/SvgDoc";
 import type { ObjectFeatures } from "../../schemas/objects/types/ObjectFeatures";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
@@ -69,6 +118,24 @@ import {
 } from "../../states/objects/connections/connector/ConnectorMapper";
 import { isValidConnectorState } from "../../states/objects/connections/connector/validateConnectorState";
 import {
+	actorToDoc,
+	actorToState,
+} from "../../states/objects/primitives/actor/ActorMapper";
+import type { ActorState } from "../../states/objects/primitives/actor/ActorState";
+import { isValidActorState } from "../../states/objects/primitives/actor/validateActorState";
+import {
+	calloutToDoc,
+	calloutToState,
+} from "../../states/objects/primitives/callout/CalloutMapper";
+import type { CalloutState } from "../../states/objects/primitives/callout/CalloutState";
+import { isValidCalloutState } from "../../states/objects/primitives/callout/validateCalloutState";
+import {
+	cloudToDoc,
+	cloudToState,
+} from "../../states/objects/primitives/cloud/CloudMapper";
+import type { CloudState } from "../../states/objects/primitives/cloud/CloudState";
+import { isValidCloudState } from "../../states/objects/primitives/cloud/validateCloudState";
+import {
 	dbToDoc,
 	dbToState,
 } from "../../states/objects/primitives/db/DbMapper";
@@ -81,6 +148,12 @@ import {
 import type { DiamondState } from "../../states/objects/primitives/diamond/DiamondState";
 import { isValidDiamondState } from "../../states/objects/primitives/diamond/validateDiamondState";
 import {
+	documentToDoc,
+	documentToState,
+} from "../../states/objects/primitives/document/DocumentMapper";
+import type { DocumentState } from "../../states/objects/primitives/document/DocumentState";
+import { isValidDocumentState } from "../../states/objects/primitives/document/validateDocumentState";
+import {
 	ellipseToDoc,
 	ellipseToState,
 } from "../../states/objects/primitives/ellipse/EllipseMapper";
@@ -91,6 +164,18 @@ import {
 	groupToState,
 } from "../../states/objects/primitives/group/GroupMapper";
 import { isValidGroupState } from "../../states/objects/primitives/group/validateGroupState";
+import {
+	hexagonToDoc,
+	hexagonToState,
+} from "../../states/objects/primitives/hexagon/HexagonMapper";
+import type { HexagonState } from "../../states/objects/primitives/hexagon/HexagonState";
+import { isValidHexagonState } from "../../states/objects/primitives/hexagon/validateHexagonState";
+import {
+	parallelogramToDoc,
+	parallelogramToState,
+} from "../../states/objects/primitives/parallelogram/ParallelogramMapper";
+import type { ParallelogramState } from "../../states/objects/primitives/parallelogram/ParallelogramState";
+import { isValidParallelogramState } from "../../states/objects/primitives/parallelogram/validateParallelogramState";
 import {
 	polygonToDoc,
 	polygonToState,
@@ -107,6 +192,12 @@ import {
 } from "../../states/objects/primitives/rect/RectMapper";
 import type { RectState } from "../../states/objects/primitives/rect/RectState";
 import { isValidRectState } from "../../states/objects/primitives/rect/validateRectState";
+import {
+	stadiumToDoc,
+	stadiumToState,
+} from "../../states/objects/primitives/stadium/StadiumMapper";
+import type { StadiumState } from "../../states/objects/primitives/stadium/StadiumState";
+import { isValidStadiumState } from "../../states/objects/primitives/stadium/validateStadiumState";
 import {
 	svgToDoc,
 	svgToState,
@@ -136,13 +227,20 @@ import {
 	transformByGroup as polylineTransformByGroup,
 } from "../gestures/handlers/objects/primitives/PolylineController";
 import type { ObjectBehaviorEntry } from "../gestures/registry/ObjectBehaviorTypes";
+import { ActorIcon } from "../ui/icons/ActorIcon";
+import { CalloutIcon } from "../ui/icons/CalloutIcon";
+import { CloudIcon } from "../ui/icons/CloudIcon";
 import { DbIcon } from "../ui/icons/DbIcon";
 import { DiamondIcon } from "../ui/icons/DiamondIcon";
+import { DocumentIcon } from "../ui/icons/DocumentIcon";
 import { EllipseIcon } from "../ui/icons/EllipseIcon";
+import { HexagonIcon } from "../ui/icons/HexagonIcon";
 import { MarkdownRectIcon } from "../ui/icons/MarkdownRectIcon";
+import { ParallelogramIcon } from "../ui/icons/ParallelogramIcon";
 import { PolygonIcon } from "../ui/icons/PolygonIcon";
 import { PolylineIcon } from "../ui/icons/PolylineIcon";
 import { RectIcon } from "../ui/icons/RectIcon";
+import { StadiumIcon } from "../ui/icons/StadiumIcon";
 import { StickyIcon } from "../ui/icons/StickyIcon";
 import {
 	LabelBackgroundColorMenu,
@@ -307,6 +405,230 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				previewRenderer: DiamondPreview,
 				presets: DiamondShapePresets,
 				presetIcons: { diamond: DiamondIcon },
+			},
+		}),
+
+		stadium: defineObject({
+			mapper: { toDoc: stadiumToDoc, toState: stadiumToState },
+			features: StadiumFeatures,
+			component: Stadium,
+			behavior: createFrameBehavior<StadiumState>(),
+			menuFactory: (_state) => [
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: false },
+					],
+				},
+				{
+					id: "text",
+					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				},
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidStadiumState,
+			shapeLibrary: {
+				factory: StadiumShapeFactory,
+				previewRenderer: StadiumPreview,
+				presets: StadiumShapePresets,
+				presetIcons: { stadium: StadiumIcon },
+			},
+		}),
+
+		parallelogram: defineObject({
+			mapper: { toDoc: parallelogramToDoc, toState: parallelogramToState },
+			features: ParallelogramFeatures,
+			component: Parallelogram,
+			behavior: createFrameBehavior<ParallelogramState>(),
+			menuFactory: (_state) => [
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: false },
+					],
+				},
+				{
+					id: "text",
+					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				},
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidParallelogramState,
+			shapeLibrary: {
+				factory: ParallelogramShapeFactory,
+				previewRenderer: ParallelogramPreview,
+				presets: ParallelogramShapePresets,
+				presetIcons: { parallelogram: ParallelogramIcon },
+			},
+		}),
+
+		hexagon: defineObject({
+			mapper: { toDoc: hexagonToDoc, toState: hexagonToState },
+			features: HexagonFeatures,
+			component: Hexagon,
+			behavior: createFrameBehavior<HexagonState>(),
+			menuFactory: (_state) => [
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: false },
+					],
+				},
+				{
+					id: "text",
+					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				},
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidHexagonState,
+			shapeLibrary: {
+				factory: HexagonShapeFactory,
+				previewRenderer: HexagonPreview,
+				presets: HexagonShapePresets,
+				presetIcons: { hexagon: HexagonIcon },
+			},
+		}),
+
+		cloud: defineObject({
+			mapper: { toDoc: cloudToDoc, toState: cloudToState },
+			features: CloudFeatures,
+			component: Cloud,
+			behavior: createFrameBehavior<CloudState>(),
+			menuFactory: (_state) => [
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: false },
+					],
+				},
+				{
+					id: "text",
+					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				},
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidCloudState,
+			shapeLibrary: {
+				factory: CloudShapeFactory,
+				previewRenderer: CloudPreview,
+				presets: CloudShapePresets,
+				presetIcons: { cloud: CloudIcon },
+			},
+		}),
+
+		document: defineObject({
+			mapper: { toDoc: documentToDoc, toState: documentToState },
+			features: DocumentFeatures,
+			component: Document,
+			behavior: createFrameBehavior<DocumentState>(),
+			menuFactory: (_state) => [
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: false },
+					],
+				},
+				{
+					id: "text",
+					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				},
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidDocumentState,
+			shapeLibrary: {
+				factory: DocumentShapeFactory,
+				previewRenderer: DocumentPreview,
+				presets: DocumentShapePresets,
+				presetIcons: { document: DocumentIcon },
+			},
+		}),
+
+		actor: defineObject({
+			mapper: { toDoc: actorToDoc, toState: actorToState },
+			features: ActorFeatures,
+			component: Actor,
+			behavior: createFrameBehavior<ActorState>(),
+			menuFactory: (_state) => [
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: false },
+					],
+				},
+				{
+					id: "text",
+					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				},
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidActorState,
+			shapeLibrary: {
+				factory: ActorShapeFactory,
+				previewRenderer: ActorPreview,
+				presets: ActorShapePresets,
+				presetIcons: { actor: ActorIcon },
+			},
+		}),
+
+		callout: defineObject({
+			mapper: { toDoc: calloutToDoc, toState: calloutToState },
+			features: CalloutFeatures,
+			component: Callout,
+			behavior: createFrameBehavior<CalloutState>(),
+			menuFactory: (_state) => [
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: false },
+					],
+				},
+				{
+					id: "text",
+					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				},
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidCalloutState,
+			shapeLibrary: {
+				factory: CalloutShapeFactory,
+				previewRenderer: CalloutPreview,
+				presets: CalloutShapePresets,
+				presetIcons: { callout: CalloutIcon },
 			},
 		}),
 

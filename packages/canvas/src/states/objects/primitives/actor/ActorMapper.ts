@@ -1,0 +1,10 @@
+import type { ActorState } from "./ActorState";
+import type { ActorDoc } from "../../../../schemas/objects/primitives/actor/ActorDoc";
+import { ActorFeatures } from "../../../../schemas/objects/primitives/actor/ActorDoc";
+import { createFrameMapper } from "../../base/FrameMapper";
+
+/** ActorDoc ↔ ActorState conversion (Frame-family shared logic generated from features). */
+export const { toState: actorToState, toDoc: actorToDoc } = createFrameMapper<
+	ActorDoc,
+	ActorState
+>(ActorFeatures);
