@@ -63,7 +63,8 @@ buildExportSvg(liveSvg, { source }) ─┬─ serializeSvg ─→ .jis.svg ダ�
 どの環境でも表示でき PNG も taint しない。
 
 **fit-to-content**: エクスポート範囲は全コンテンツのバウンディングボックス＋
-余白 16px（`Canvas.tsx` の `EXPORT_FIT_PADDING`。境界は zoom-to-fit と同じ
+余白（既定 16px、`Canvas.tsx` の `EXPORT_FIT_PADDING`。エクスポートダイアログ
+と `CanvasExportOptions.margin` で上書き可。境界は zoom-to-fit と同じ
 `calcContentBounds` で算出）を `viewBox` オプションとして渡す。したがって
 画像は現在のパン/ズームやウィンドウサイズに依存せず、1 world 単位 = 1 CSS px
 （PNG はさらに `scale` 倍・既定 2）。空キャンバスは従来どおり現在ビューの
@@ -107,8 +108,9 @@ VSCode 拡張は二重拡張子（draw.io の `.drawio.png` 相当）にキャ�
 - Node 側の iTXt 読み書きは UI 依存の無いエントリ
   `@workspace/canvas/png-source` を使う（`./parser` と同じパターン）
 - `<Canvas exportRef>` が imperative なエクスポート API
-  （`toSvgString` / `toPngBlob`）を公開し、ホストはツールバーのボタンと
-  完全に同じパイプラインを実行する
+  （`toSvgString(options?)` / `toPngBlob(options?)`、いずれも省略可能な
+  `margin` / `includeSource` を持つ `CanvasExportOptions` を受ける）を公開し、
+  ホストはエクスポートダイアログと完全に同じパイプラインを実行する
 
 ## 公開 API（`@workspace/canvas`）
 
@@ -122,18 +124,25 @@ VSCode 拡張は二重拡張子（draw.io の `.drawio.png` 相当）にキャ�
 | `embedCanvasSource` / `extractCanvasSource`             | SVG `<metadata>` への `.jis.json` 出し入れ |
 | `embedCanvasSourceInPng` / `extractCanvasSourceFromPng` | PNG `iTXt` への `.jis.json` 出し入れ       |
 
-UI: Toolbar 右側に **SVG / PNG の 2 ボタン**。`Canvas.tsx` が
-`canvasToDoc(state, registries.objectMapper)` で `source` を生成して両ハンドラへ
-渡す。
+UI: **コンテキストメニュー → Export…** でダイアログ（`ui/menu/ExportDialog/`）
+を開き、形式（PNG / 編集可能 SVG）・余白・ソースデータ埋め込みの有無
+（既定 ON）を選んで実行する。`Canvas.tsx` が
+`canvasToDoc(state, registries.objectMapper)` で `source` を生成（埋め込み OFF
+のときは省略）し、選択内容を共通のエクスポートオプションへ渡す。デフォルトの
+ダウンロード名は source に追従する：埋め込みありは `.jis.png` / `.jis.svg`
+（`.jis` マーカー＝再編集可能の印）、なしは素の `.png` / `.svg`。
 
 ## 検証
 
 - ユニット（vitest, `src/export/__tests__/`）：iTXt 構造、CRC32 既知ベクトル、
   UTF-8 round-trip、再埋め込みの冪等性、非 PNG の拒否、抽出ソースの
   `parseCanvasText` 通過。
-- E2E（Playwright, `scenario/image-export-roundtrip.spec.ts`）：PNG エクスポート
-  → ドロップ → 図形が同一 id/transform で復元。SVG エクスポートは
-  `<foreignObject>` を含まず、metadata が `parseCanvasText` を通る。
+- E2E（Playwright, `scenario/image-export-roundtrip.spec.ts`）：コンテキスト
+  メニュー → ダイアログのフローで実行。PNG エクスポート → ドロップ → 図形が
+  同一 id/transform で復元。SVG エクスポート（余白 32 指定）は
+  `<foreignObject>` を含まず、viewBox が指定余白を反映し、metadata が
+  `parseCanvasText` を通る。データ埋め込みなしのエクスポートは素の `.svg`
+  でダウンロードされ `<metadata>` を含まない。
 - 文字位置：ライブ（赤）と変換後（青）のインク bbox を行ごとに計測し、全辺
   1px 以内・折り返し完全一致。
 

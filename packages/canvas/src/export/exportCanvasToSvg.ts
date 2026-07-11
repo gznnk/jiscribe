@@ -7,7 +7,11 @@ import {
 import { buildTimestampedName, downloadBlob } from "./downloadBlob";
 
 export type ExportCanvasToSvgOptions = BuildExportSvgOptions & {
-	/** Download file name. Defaults to a timestamped name (extension .jis.svg). */
+	/**
+	 * Download file name. Defaults to a timestamped name — `.jis.svg` when a
+	 * source is embedded (the `.jis` marker means "re-editable"), plain `.svg`
+	 * otherwise.
+	 */
 	fileName?: string;
 };
 
@@ -30,9 +34,10 @@ export const canvasToSvgString = (
 };
 
 /**
- * Downloads the Canvas `<svg>` as an editable SVG (`.jis.svg`).
- * The equivalent of draw.io's editable SVG: native SVG visuals with the
- * editing source stored in metadata.
+ * Downloads the Canvas `<svg>` as an SVG. With `source` it is an editable
+ * SVG (`.jis.svg`) — the equivalent of draw.io's editable SVG: native SVG
+ * visuals with the editing source stored in metadata. Without `source` it is
+ * a plain image (`.svg`).
  */
 export const exportCanvasToSvg = (
 	svg: SVGSVGElement,
@@ -40,5 +45,9 @@ export const exportCanvasToSvg = (
 ): void => {
 	const svgString = canvasToSvgString(svg, options);
 	const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
-	downloadBlob(blob, options.fileName ?? `${buildTimestampedName()}.jis.svg`);
+	const extension = options.source ? ".jis.svg" : ".svg";
+	downloadBlob(
+		blob,
+		options.fileName ?? `${buildTimestampedName()}${extension}`,
+	);
 };

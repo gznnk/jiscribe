@@ -70,9 +70,10 @@ properties, foreignObject), so it renders anywhere and the PNG no longer
 taints.
 
 **Fit-to-content**: the exported region is the whole content's bounding box
-plus a 16px margin (`EXPORT_FIT_PADDING` in `Canvas.tsx`, computed via
-`calcContentBounds` — the same bounds source as zoom-to-fit), passed as the
-`viewBox` export option. The image is therefore independent of the current
+plus a margin (default 16px, `EXPORT_FIT_PADDING` in `Canvas.tsx`; the export
+dialog and `CanvasExportOptions.margin` can override it), computed via
+`calcContentBounds` — the same bounds source as zoom-to-fit — and passed as
+the `viewBox` export option. The image is therefore independent of the current
 pan/zoom and window size; 1 world unit = 1 CSS px (PNG additionally ×`scale`,
 default 2). An empty canvas falls back to exporting the current view.
 
@@ -115,8 +116,9 @@ re-embedded, so the file always stays a valid, current image.
 - The Node side reads/writes the iTXt chunk via the UI-free entry
   `@workspace/canvas/png-source` (same pattern as `./parser`).
 - `<Canvas exportRef>` exposes the imperative export API
-  (`toSvgString` / `toPngBlob`) so hosts run the exact same pipeline as the
-  toolbar buttons.
+  (`toSvgString(options?)` / `toPngBlob(options?)`, both taking
+  `CanvasExportOptions` with an optional `margin` and `includeSource`) so
+  hosts run the exact same pipeline as the export dialog.
 
 ## Public API (`@workspace/canvas`)
 
@@ -130,18 +132,26 @@ re-embedded, so the file always stays a valid, current image.
 | `embedCanvasSource` / `extractCanvasSource`             | `.jis.json` in/out of SVG `<metadata>` |
 | `embedCanvasSourceInPng` / `extractCanvasSourceFromPng` | `.jis.json` in/out of PNG `iTXt`       |
 
-UI: **two buttons (SVG / PNG)** on the right side of the Toolbar. `Canvas.tsx`
-builds `source` with `canvasToDoc(state, registries.objectMapper)` and passes
-it to both handlers.
+UI: **context menu → Export…** opens a dialog (`ui/menu/ExportDialog/`) to
+pick the format (PNG / editable SVG), the margin, and whether to embed the
+source data (default on), then confirm. `Canvas.tsx` builds `source` with
+`canvasToDoc(state, registries.objectMapper)` — omitted when the embed is
+turned off — and routes the choices into the shared export options. The
+default download name follows the source: `.jis.png` / `.jis.svg` with an
+embedded source (the `.jis` marker means "re-editable"), plain `.png` /
+`.svg` without.
 
 ## Verification
 
 - Unit (vitest, `src/export/__tests__/`): iTXt structure, CRC32 known vector,
   UTF-8 round-trip, idempotent re-embedding, non-PNG rejection, and
   `parseCanvasText` acceptance of the extracted source.
-- E2E (Playwright, `scenario/image-export-roundtrip.spec.ts`): PNG export →
-  drop → shapes restored with identical ids/transforms; SVG export contains no
-  `<foreignObject>` and its metadata passes `parseCanvasText`.
+- E2E (Playwright, `scenario/image-export-roundtrip.spec.ts`), driving the
+  context-menu → dialog flow: PNG export → drop → shapes restored with
+  identical ids/transforms; SVG export with a custom margin contains no
+  `<foreignObject>`, reflects the margin in its viewBox, and its metadata
+  passes `parseCanvasText`; a source-less export downloads as plain `.svg`
+  with no `<metadata>`.
 - Text position: live (red) vs converted (blue) ink bounding boxes measured
   per line — within 1px on all sides, identical wrapping.
 

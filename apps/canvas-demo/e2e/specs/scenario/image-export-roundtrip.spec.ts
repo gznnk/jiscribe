@@ -2,23 +2,49 @@ import type { Page } from "@playwright/test";
 import type * as CanvasModule from "@workspace/canvas";
 
 import { expect, test } from "../../fixtures";
+import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
  * 画像エクスポートの round-trip（#55）を検証する spec。
  *
- * - PNG: ツールバーの Export as PNG → ダウンロードされた PNG（iTXt に
- *   .jis.json 入り）をページへドロップ → 図形が復元されること
- * - SVG: Export as SVG → <foreignObject> を含まず（GitHub 対応・taint 回避）、
+ * エクスポートはコンテキストメニューの Export… → ダイアログ（形式＋マージン＋
+ * データ埋め込み有無）→ Export ボタンで実行する。
+ *
+ * - PNG: デフォルトマージン(16)のまま書き出し → ダウンロードされた PNG
+ *   （iTXt に .jis.json 入り）をページへドロップ → 図形が復元されること
+ * - SVG: マージンを 32 に変えて書き出し → <foreignObject> を含まず
+ *   （GitHub 対応・taint 回避）、viewBox が指定マージンを反映し、
  *   <metadata> の .jis.json が parseCanvasText を通ること
+ * - データ埋め込みなし: 拡張子が .jis なしの素の .svg になり、
+ *   <metadata>（埋め込みソース）を含まないこと
  */
 
-/** ダウンロードをトリガーしてファイル内容を base64 で返す */
-const downloadFromToolbar = async (
+/**
+ * コンテキストメニュー → Export… → ダイアログで形式（と任意でマージン・
+ * データ埋め込み有無）を選んで書き出し、ダウンロードされたファイル内容を
+ * base64 で返す
+ */
+const downloadViaExportDialog = async (
 	page: Page,
-	testId: string,
+	canvas: CanvasDriver,
+	menuPoint: { x: number; y: number },
+	format: "png" | "svg",
+	options: { margin?: number; includeSource?: boolean } = {},
 ): Promise<{ name: string; base64: string }> => {
+	await canvas.openContextMenu(menuPoint);
+	await canvas.clickContextMenuItem("export");
+	await expect(page.getByTestId("export-dialog")).toBeVisible();
+
+	await page.getByTestId(`export-dialog:format-${format}`).check();
+	if (options.margin !== undefined) {
+		await page.getByTestId("export-dialog:margin").fill(String(options.margin));
+	}
+	if (options.includeSource === false) {
+		await page.getByTestId("export-dialog:include-source").uncheck();
+	}
+
 	const downloadPromise = page.waitForEvent("download");
-	await page.getByTestId(testId).click();
+	await page.getByTestId("export-dialog:submit").click();
 	const download = await downloadPromise;
 	const stream = await download.createReadStream();
 	const chunks: Buffer[] = [];
@@ -44,7 +70,13 @@ test("PNG エクスポート → ドロップで図形が復元される", async
 	const before = await canvas.captureObjects();
 	expect(before.length).toBe(2);
 
-	const png = await downloadFromToolbar(page, "export:png");
+	// 図形のない空き地を右クリックしてエクスポート（デフォルトマージン 16）
+	const png = await downloadViaExportDialog(
+		page,
+		canvas,
+		{ x: 750, y: 550 },
+		"png",
+	);
 	expect(png.name).toMatch(/\.jis\.png$/);
 
 	// fit-to-content: 出力ピクセルは「コンテンツ境界＋余白16」× scale 2。
@@ -101,7 +133,14 @@ test("SVG エクスポートは foreignObject を含まず metadata から復元
 	// 書き出し前にパンして視界をずらしておく
 	await canvas.middleDrag({ x: 700, y: 500 }, { x: 550, y: 380 });
 
-	const svg = await downloadFromToolbar(page, "export:svg");
+	// パン後も視界内にある空き地を右クリックし、マージンを 32 に変えて書き出す
+	const svg = await downloadViaExportDialog(
+		page,
+		canvas,
+		{ x: 550, y: 400 },
+		"svg",
+		{ margin: 32 },
+	);
 	expect(svg.name).toMatch(/\.jis\.svg$/);
 
 	const svgText = Buffer.from(svg.base64, "base64").toString("utf-8");
@@ -113,17 +152,17 @@ test("SVG エクスポートは foreignObject を含まず metadata から復元
 	expect(svgText).not.toContain("var(--");
 	expect(svgText).toMatch(/style="[^"]*stroke:/);
 
-	// fit-to-content: パンしていても viewBox はコンテンツ境界＋余白16
+	// fit-to-content: パンしていても viewBox はコンテンツ境界＋指定マージン32
 	// （rect は 150,120–400,260 に描画済み）
 	const viewBoxMatch = svgText.match(/viewBox="([^"]+)"/);
 	expect(viewBoxMatch).not.toBeNull();
 	const [vbX, vbY, vbWidth, vbHeight] = viewBoxMatch![1]
 		.split(/\s+/)
 		.map(Number);
-	expect(Math.abs(vbX - (150 - 16))).toBeLessThanOrEqual(2);
-	expect(Math.abs(vbY - (120 - 16))).toBeLessThanOrEqual(2);
-	expect(Math.abs(vbWidth - (250 + 32))).toBeLessThanOrEqual(4);
-	expect(Math.abs(vbHeight - (140 + 32))).toBeLessThanOrEqual(4);
+	expect(Math.abs(vbX - (150 - 32))).toBeLessThanOrEqual(2);
+	expect(Math.abs(vbY - (120 - 32))).toBeLessThanOrEqual(2);
+	expect(Math.abs(vbWidth - (250 + 64))).toBeLessThanOrEqual(4);
+	expect(Math.abs(vbHeight - (140 + 64))).toBeLessThanOrEqual(4);
 
 	// metadata の .jis.json が Canvas の入力契約（parseCanvasText）を満たすこと
 	const parsed = await page.evaluate(async (text) => {
@@ -142,4 +181,31 @@ test("SVG エクスポートは foreignObject を含まず metadata から復元
 	}, svgText);
 
 	expect(parsed?.kind).toBe("ok");
+});
+
+test("データ埋め込みなしの SVG エクスポートは素の .svg で metadata を含まない", async ({
+	canvas,
+	page,
+}) => {
+	await canvas.drawShape("Rectangle", { x: 150, y: 120 }, { x: 400, y: 260 });
+	await canvas.deselect();
+
+	const svg = await downloadViaExportDialog(
+		page,
+		canvas,
+		{ x: 700, y: 500 },
+		"svg",
+		{ includeSource: false },
+	);
+
+	// .jis マーカー（再編集可能の印）が付かない素の .svg であること
+	expect(svg.name).toMatch(/\.svg$/);
+	expect(svg.name).not.toMatch(/\.jis\.svg$/);
+
+	// 埋め込みソース（<metadata> と jiscribe 名前空間）を含まないこと。
+	// 画像自体は通常どおり描画されている（塗り焼き込みは source と無関係）
+	const svgText = Buffer.from(svg.base64, "base64").toString("utf-8");
+	expect(svgText).not.toContain("<metadata");
+	expect(svgText).not.toContain("jiscribe.dev/ns/canvas");
+	expect(svgText).toMatch(/style="[^"]*stroke:/);
 });
