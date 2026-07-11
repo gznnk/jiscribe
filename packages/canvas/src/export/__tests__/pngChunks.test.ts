@@ -83,6 +83,25 @@ describe("insertPngTextChunk / readPngTextChunk", () => {
 		expect(readPngTextChunk(embedded, "jiscribe")).toBe("data");
 	});
 
+	it("非 ASCII keyword（マルチバイト UTF-8）でも round-trip できる", () => {
+		const embedded = insertPngTextChunk(tinyPng(), "メモ", "非ASCIIキーワード");
+		expect(readPngTextChunk(embedded, "メモ")).toBe("非ASCIIキーワード");
+	});
+
+	it("Latin-1 圏の keyword（café）でも round-trip できる", () => {
+		const embedded = insertPngTextChunk(tinyPng(), "café", "latin-1 keyword");
+		expect(readPngTextChunk(embedded, "café")).toBe("latin-1 keyword");
+	});
+
+	it("非 ASCII keyword の再埋め込みも置き換えになる（重複しない）", () => {
+		const once = insertPngTextChunk(tinyPng(), "メモ", "first");
+		const twice = insertPngTextChunk(once, "メモ", "second");
+		expect(readPngTextChunk(twice, "メモ")).toBe("second");
+		expect(
+			listChunkTypes(twice).filter((type) => type === "iTXt"),
+		).toHaveLength(1);
+	});
+
 	it("keyword が無い PNG からの読み出しは null", () => {
 		expect(readPngTextChunk(tinyPng(), "jiscribe")).toBeNull();
 	});

@@ -142,9 +142,11 @@ export const insertPngTextChunk = (
 		throw new Error("Not a valid PNG: missing IEND chunk");
 	}
 
+	const keywordBytes = new TextEncoder().encode(keyword);
 	const removed = chunks.filter(
 		(chunk) =>
-			chunk.type === ITXT_TYPE && readITxtKeyword(png, chunk) === keyword,
+			chunk.type === ITXT_TYPE &&
+			bytesEqual(readITxtKeywordBytes(png, chunk), keywordBytes),
 	);
 	const textChunk = buildITxtChunk(keyword, text);
 
@@ -170,8 +172,14 @@ export const insertPngTextChunk = (
 	return result;
 };
 
-/** Reads the Latin-1 keyword of an iTXt chunk. */
-const readITxtKeyword = (bytes: Uint8Array, chunk: PngChunk): string => {
+/**
+ * Reads the raw keyword bytes of an iTXt chunk (up to the first NUL, capped
+ * at the spec's 79-byte keyword limit + NUL).
+ */
+const readITxtKeywordBytes = (
+	bytes: Uint8Array,
+	chunk: PngChunk,
+): Uint8Array => {
 	const end = Math.min(
 		chunk.dataOffset + chunk.dataLength,
 		chunk.dataOffset + 80,
@@ -180,13 +188,20 @@ const readITxtKeyword = (bytes: Uint8Array, chunk: PngChunk): string => {
 	while (keywordEnd < end && bytes[keywordEnd] !== 0) {
 		keywordEnd++;
 	}
-	return String.fromCharCode(...bytes.subarray(chunk.dataOffset, keywordEnd));
+	return bytes.subarray(chunk.dataOffset, keywordEnd);
 };
+
+const bytesEqual = (a: Uint8Array, b: Uint8Array): boolean =>
+	a.length === b.length && a.every((byte, i) => byte === b[i]);
 
 /**
  * Reads back the text stored by {@link insertPngTextChunk} under `keyword`.
  * Returns null when the bytes are not a PNG, the chunk is missing, or the
  * chunk is compressed (this module only ever writes uncompressed chunks).
+ *
+ * The keyword is compared as UTF-8 bytes — the encoding this module writes.
+ * Note the PNG spec expects Latin-1 keywords, so prefer ASCII keywords for
+ * interoperability with other readers.
  */
 export const readPngTextChunk = (
 	png: Uint8Array,
@@ -195,15 +210,16 @@ export const readPngTextChunk = (
 	if (!isPng(png)) {
 		return null;
 	}
+	const keywordBytes = new TextEncoder().encode(keyword);
 	for (const chunk of listChunks(png)) {
 		if (chunk.type !== ITXT_TYPE) {
 			continue;
 		}
-		if (readITxtKeyword(png, chunk) !== keyword) {
+		if (!bytesEqual(readITxtKeywordBytes(png, chunk), keywordBytes)) {
 			continue;
 		}
 		const dataEnd = chunk.dataOffset + chunk.dataLength;
-		let cursor = chunk.dataOffset + keyword.length + 1;
+		let cursor = chunk.dataOffset + keywordBytes.length + 1;
 		const compressionFlag = png[cursor];
 		cursor += 2; // compression flag + compression method
 		// Skip language tag and translated keyword (both NUL-terminated)
