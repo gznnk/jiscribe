@@ -26,6 +26,7 @@ import {
 import {
 	Diamond,
 	DiamondPreview,
+	calcDiamondTextRegion,
 } from "../../presentations/objects/primitives/Diamond";
 import {
 	Document,
@@ -35,6 +36,7 @@ import {
 import {
 	Ellipse,
 	EllipsePreview,
+	calcEllipseTextRegion,
 } from "../../presentations/objects/primitives/Ellipse";
 import {
 	Hexagon,
@@ -363,6 +365,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			mapper: { toDoc: ellipseToDoc, toState: ellipseToState },
 			features: EllipseFeatures,
 			component: Ellipse,
+			textRegion: calcEllipseTextRegion,
 			behavior: createFrameBehavior<EllipseState>(),
 			menuFactory: (_state) => [
 				{
@@ -395,6 +398,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			mapper: { toDoc: diamondToDoc, toState: diamondToState },
 			features: DiamondFeatures,
 			component: Diamond,
+			textRegion: calcDiamondTextRegion,
 			behavior: createFrameBehavior<DiamondState>(),
 			menuFactory: (_state) => [
 				{

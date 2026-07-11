@@ -4,8 +4,7 @@ import { createFrameObject } from "../../base/createFrameObject";
 
 /**
  * Builds the polygon point list for a diamond centered at the origin, with
- * vertices at top, right, bottom, and left. Text is fitted not inside the
- * diamond but into the bounding-box rectangle (-w/2, -h/2, w, h).
+ * vertices at top, right, bottom, and left. (Text region: calcDiamondTextRegion.)
  */
 const buildDiamondPoints = (width: number, height: number): string => {
 	const halfWidth = width / 2;

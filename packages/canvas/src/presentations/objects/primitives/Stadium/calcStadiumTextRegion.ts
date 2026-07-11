@@ -1,16 +1,24 @@
 import type { Dimensions, Rect } from "@workspace/geometry";
 
 /**
- * Insets the region by half the cap depth on both sides. The caps are
- * semicircles of radius half the short side, so the inset follows the short
- * side rather than the width.
+ * Insets by a full cap radius (half the short side) on the capped axis so the
+ * region aligns with the flat edges between the semicircular caps. The caps
+ * sit on the long axis: left/right when wide, top/bottom when tall.
  */
 export const calcStadiumTextRegion = ({ width, height }: Dimensions): Rect => {
-	const capInset = Math.min(width, height) / 4;
+	const capRadius = Math.min(width, height) / 2;
+	if (width >= height) {
+		return {
+			x: -width / 2 + capRadius,
+			y: -height / 2,
+			width: width - capRadius * 2,
+			height,
+		};
+	}
 	return {
-		x: -width / 2 + capInset,
-		y: -height / 2,
-		width: width - capInset * 2,
-		height,
+		x: -width / 2,
+		y: -height / 2 + capRadius,
+		width,
+		height: height - capRadius * 2,
 	};
 };

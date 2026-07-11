@@ -3,7 +3,7 @@ import { calcInsetRect } from "@workspace/geometry";
 
 import { PARALLELOGRAM_SKEW_RATIO } from "../../../../schemas/objects/primitives/parallelogram/ParallelogramDoc";
 
-/** Insets the region by half the skew on both sides to keep centered text inside the slanted silhouette. */
+/** Insets by a full skew on both sides so the region aligns with the slanted left/right edges. */
 export const calcParallelogramTextRegion = ({
 	width,
 	height,
@@ -11,7 +11,7 @@ export const calcParallelogramTextRegion = ({
 	calcInsetRect(
 		{ cx: 0, cy: 0, width, height },
 		{
-			left: PARALLELOGRAM_SKEW_RATIO / 2,
-			right: PARALLELOGRAM_SKEW_RATIO / 2,
+			left: PARALLELOGRAM_SKEW_RATIO,
+			right: PARALLELOGRAM_SKEW_RATIO,
 		},
 	);
