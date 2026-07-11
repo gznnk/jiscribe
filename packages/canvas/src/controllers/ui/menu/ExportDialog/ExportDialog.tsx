@@ -42,6 +42,8 @@ export type ExportSubmitValues = {
 	margin: number;
 	/** Whether to embed the `.jis.json` source (re-editable file) */
 	includeSource: boolean;
+	/** Whether to skip the background fill (alpha-transparent image) */
+	transparentBackground: boolean;
 };
 
 type ExportDialogProps = {
@@ -65,6 +67,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
 	const messages = useCanvasMessages();
 	const [format, setFormat] = useState<ExportImageFormat>("png");
 	const [includeSource, setIncludeSource] = useState(true);
+	const [transparentBackground, setTransparentBackground] = useState(false);
 	// Kept as text so the field can be emptied while typing; validated below
 	const [marginText, setMarginText] = useState(String(defaultMargin));
 
@@ -128,7 +131,12 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
 					onSubmit={(event) => {
 						event.preventDefault();
 						if (isMarginValid) {
-							onSubmit({ format, margin, includeSource });
+							onSubmit({
+								format,
+								margin,
+								includeSource,
+								transparentBackground,
+							});
 						}
 					}}
 				>
@@ -185,6 +193,17 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
 								onChange={(event) => setIncludeSource(event.target.checked)}
 							/>
 							{messages.exportDialogIncludeSource}
+						</CheckboxOption>
+						<CheckboxOption>
+							<input
+								type="checkbox"
+								checked={transparentBackground}
+								data-testid="export-dialog:transparent-background"
+								onChange={(event) =>
+									setTransparentBackground(event.target.checked)
+								}
+							/>
+							{messages.exportDialogTransparentBackground}
 						</CheckboxOption>
 					</FieldGrid>
 					<Footer>

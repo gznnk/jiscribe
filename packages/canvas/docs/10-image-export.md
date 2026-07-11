@@ -117,8 +117,9 @@ re-embedded, so the file always stays a valid, current image.
   `@workspace/canvas/png-source` (same pattern as `./parser`).
 - `<Canvas exportRef>` exposes the imperative export API
   (`toSvgString(options?)` / `toPngBlob(options?)`, both taking
-  `CanvasExportOptions` with an optional `margin` and `includeSource`) so
-  hosts run the exact same pipeline as the export dialog.
+  `CanvasExportOptions` with an optional `margin`, `includeSource`, and
+  `transparentBackground`) so hosts run the exact same pipeline as the
+  export dialog.
 
 ## Public API (`@workspace/canvas`)
 
@@ -133,8 +134,11 @@ re-embedded, so the file always stays a valid, current image.
 | `embedCanvasSourceInPng` / `extractCanvasSourceFromPng` | `.jis.json` in/out of PNG `iTXt`       |
 
 UI: **context menu → Export…** opens a dialog (`ui/menu/ExportDialog/`) to
-pick the format (PNG / editable SVG), the margin, and whether to embed the
-source data (default on), then confirm. `Canvas.tsx` builds `source` with
+pick the format (PNG / editable SVG), the margin, whether to embed the
+source data (default on), and whether to make the background transparent
+(default off — maps to the `background: "transparent"` export option, which
+skips the background rect; the PNG keeps its alpha), then confirm.
+`Canvas.tsx` builds `source` with
 `canvasToDoc(state, registries.objectMapper)` — omitted when the embed is
 turned off — and routes the choices into the shared export options. The
 default download name follows the source: `.jis.png` / `.jis.svg` with an
@@ -151,7 +155,7 @@ embedded source (the `.jis` marker means "re-editable"), plain `.png` /
   identical ids/transforms; SVG export with a custom margin contains no
   `<foreignObject>`, reflects the margin in its viewBox, and its metadata
   passes `parseCanvasText`; a source-less export downloads as plain `.svg`
-  with no `<metadata>`.
+  with no `<metadata>`; a transparent export lays no background rect.
 - Text position: live (red) vs converted (blue) ink bounding boxes measured
   per line — within 1px on all sides, identical wrapping.
 

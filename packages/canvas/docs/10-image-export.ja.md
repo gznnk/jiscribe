@@ -109,8 +109,9 @@ VSCode 拡張は二重拡張子（draw.io の `.drawio.png` 相当）にキャ�
   `@workspace/canvas/png-source` を使う（`./parser` と同じパターン）
 - `<Canvas exportRef>` が imperative なエクスポート API
   （`toSvgString(options?)` / `toPngBlob(options?)`、いずれも省略可能な
-  `margin` / `includeSource` を持つ `CanvasExportOptions` を受ける）を公開し、
-  ホストはエクスポートダイアログと完全に同じパイプラインを実行する
+  `margin` / `includeSource` / `transparentBackground` を持つ
+  `CanvasExportOptions` を受ける）を公開し、ホストはエクスポート
+  ダイアログと完全に同じパイプラインを実行する
 
 ## 公開 API（`@workspace/canvas`）
 
@@ -126,7 +127,9 @@ VSCode 拡張は二重拡張子（draw.io の `.drawio.png` 相当）にキャ�
 
 UI: **コンテキストメニュー → Export…** でダイアログ（`ui/menu/ExportDialog/`）
 を開き、形式（PNG / 編集可能 SVG）・余白・ソースデータ埋め込みの有無
-（既定 ON）を選んで実行する。`Canvas.tsx` が
+（既定 ON）・背景透過の有無（既定 OFF。`background: "transparent"`
+オプションに対応し背景 rect を敷かない。PNG はアルファ付きになる）を
+選んで実行する。`Canvas.tsx` が
 `canvasToDoc(state, registries.objectMapper)` で `source` を生成（埋め込み OFF
 のときは省略）し、選択内容を共通のエクスポートオプションへ渡す。デフォルトの
 ダウンロード名は source に追従する：埋め込みありは `.jis.png` / `.jis.svg`
@@ -142,7 +145,8 @@ UI: **コンテキストメニュー → Export…** でダイアログ（`ui/me
   同一 id/transform で復元。SVG エクスポート（余白 32 指定）は
   `<foreignObject>` を含まず、viewBox が指定余白を反映し、metadata が
   `parseCanvasText` を通る。データ埋め込みなしのエクスポートは素の `.svg`
-  でダウンロードされ `<metadata>` を含まない。
+  でダウンロードされ `<metadata>` を含まない。透過背景のエクスポートは
+  背景 rect を敷かない。
 - 文字位置：ライブ（赤）と変換後（青）のインク bbox を行ごとに計測し、全辺
   1px 以内・折り返し完全一致。
 

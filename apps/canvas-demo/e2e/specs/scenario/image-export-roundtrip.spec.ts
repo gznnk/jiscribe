@@ -17,6 +17,7 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
  *   <metadata> の .jis.json が parseCanvasText を通ること
  * - データ埋め込みなし: 拡張子が .jis なしの素の .svg になり、
  *   <metadata>（埋め込みソース）を含まないこと
+ * - 透過背景: 背景 rect が敷かれないこと（デフォルトでは敷かれること）
  */
 
 /**
@@ -29,7 +30,11 @@ const downloadViaExportDialog = async (
 	canvas: CanvasDriver,
 	menuPoint: { x: number; y: number },
 	format: "png" | "svg",
-	options: { margin?: number; includeSource?: boolean } = {},
+	options: {
+		margin?: number;
+		includeSource?: boolean;
+		transparentBackground?: boolean;
+	} = {},
 ): Promise<{ name: string; base64: string }> => {
 	await canvas.openContextMenu(menuPoint);
 	await canvas.clickContextMenuItem("export");
@@ -41,6 +46,9 @@ const downloadViaExportDialog = async (
 	}
 	if (options.includeSource === false) {
 		await page.getByTestId("export-dialog:include-source").uncheck();
+	}
+	if (options.transparentBackground) {
+		await page.getByTestId("export-dialog:transparent-background").check();
 	}
 
 	const downloadPromise = page.waitForEvent("download");
@@ -208,4 +216,50 @@ test("データ埋め込みなしの SVG エクスポートは素の .svg で me
 	expect(svgText).not.toContain("<metadata");
 	expect(svgText).not.toContain("jiscribe.dev/ns/canvas");
 	expect(svgText).toMatch(/style="[^"]*stroke:/);
+});
+
+/**
+ * 背景 rect（viewBox 全面を fill 属性で覆う rect。buildExportSvg が敷く）が
+ * あるかを判定する。図形の rect は transform/style ベースなのでマッチしない。
+ */
+const hasBackgroundRect = (svgText: string): boolean => {
+	const viewBoxMatch = svgText.match(/viewBox="([^"]+)"/);
+	expect(viewBoxMatch).not.toBeNull();
+	const [x, y, width, height] = viewBoxMatch![1].split(/\s+/);
+	return new RegExp(
+		`<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="`,
+	).test(svgText);
+};
+
+test("透過背景の SVG エクスポートは背景 rect を敷かない", async ({
+	canvas,
+	page,
+}) => {
+	await canvas.drawShape("Rectangle", { x: 150, y: 120 }, { x: 400, y: 260 });
+	await canvas.deselect();
+
+	// まず既定（背景あり）で「背景 rect が敷かれる」前提を固定してから、
+	// 透過指定で消えることを見る
+	const opaque = await downloadViaExportDialog(
+		page,
+		canvas,
+		{ x: 700, y: 500 },
+		"svg",
+	);
+	const opaqueText = Buffer.from(opaque.base64, "base64").toString("utf-8");
+	expect(hasBackgroundRect(opaqueText)).toBe(true);
+
+	const transparent = await downloadViaExportDialog(
+		page,
+		canvas,
+		{ x: 700, y: 500 },
+		"svg",
+		{ transparentBackground: true },
+	);
+	const transparentText = Buffer.from(transparent.base64, "base64").toString(
+		"utf-8",
+	);
+	expect(hasBackgroundRect(transparentText)).toBe(false);
+	// 図形自体は描画されている
+	expect(transparentText).toMatch(/style="[^"]*stroke:/);
 });

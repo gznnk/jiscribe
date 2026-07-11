@@ -193,6 +193,11 @@ export type CanvasExportOptions = {
 	 * name drops the `.jis` marker (plain `.png` / `.svg`).
 	 */
 	includeSource?: boolean;
+	/**
+	 * Whether to skip the background fill (default false), producing an
+	 * alpha-transparent image instead of the theme's canvas background.
+	 */
+	transparentBackground?: boolean;
 };
 
 /**
@@ -380,12 +385,16 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 		({
 			margin = EXPORT_FIT_PADDING,
 			includeSource = true,
+			transparentBackground = false,
 		}: CanvasExportOptions = {}) => {
 			const bounds = calcContentBounds(state.objects);
 			return {
 				source: includeSource
 					? canvasToDoc(state, registries.objectMapper)
 					: undefined,
+				// "transparent" skips the background rect (buildExportSvg);
+				// undefined falls back to the live theme background
+				background: transparentBackground ? "transparent" : undefined,
 				viewBox: bounds
 					? {
 							x: bounds.left - margin,

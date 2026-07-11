@@ -22,6 +22,7 @@ export type CanvasMessageStrings = {
 	exportDialogFormatSvg: string;
 	exportDialogMargin: string;
 	exportDialogIncludeSource: string;
+	exportDialogTransparentBackground: string;
 	exportDialogSubmit: string;
 	exportDialogCancel: string;
 	/** aria-label of the dialog's close (×) button */
@@ -118,6 +119,7 @@ export const defaultCanvasMessages: CanvasMessages = {
 	exportDialogFormatSvg: "SVG (editable)",
 	exportDialogMargin: "Margin",
 	exportDialogIncludeSource: "Include source data (re-editable)",
+	exportDialogTransparentBackground: "Transparent background",
 	exportDialogSubmit: "Export",
 	exportDialogCancel: "Cancel",
 	exportDialogClose: "Close",
