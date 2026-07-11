@@ -3,7 +3,7 @@ export type {
 	CanvasExportHandle,
 	CanvasExportImagePayload,
 	CanvasExportOptions,
-} from "./controllers/Canvas";
+} from "./controllers/hooks/useCanvasExport";
 export { CanvasThumbnail } from "./controllers/CanvasThumbnail";
 export {
 	exportCanvasToPng,

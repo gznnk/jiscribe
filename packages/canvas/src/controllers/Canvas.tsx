@@ -1,12 +1,4 @@
-﻿import {
-	memo,
-	useCallback,
-	useEffect,
-	useImperativeHandle,
-	useMemo,
-	useRef,
-	useState,
-} from "react";
+﻿import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
 	CanvasRoot,
@@ -19,6 +11,11 @@ import {
 import { CanvasRegistriesContext } from "./contexts/CanvasRegistriesContext";
 import { CanvasViewportRefContext } from "./contexts/CanvasViewportRefContext";
 import { isGestureOptedOut } from "./gestures/recognizer/utils/isGestureOptedOut";
+import { useCanvasExport, EXPORT_FIT_PADDING } from "./hooks/useCanvasExport";
+import type {
+	CanvasExportHandle,
+	CanvasExportImagePayload,
+} from "./hooks/useCanvasExport";
 import { useCanvasFocusScope } from "./hooks/useCanvasFocusScope";
 import { useCanvasReducer } from "./hooks/useCanvasReducer";
 import { useCanvasWheel } from "./hooks/useCanvasWheel";
@@ -39,15 +36,8 @@ import type { CanvasMessages } from "./messages/CanvasMessages";
 import { CanvasMessagesContext } from "./messages/CanvasMessagesContext";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./setup";
 import type { CanvasConfig } from "./setup";
-import {
-	canvasToSvgString,
-	exportCanvasToPng,
-	exportCanvasToSvg,
-	rasterizeSvgToPngBlob,
-} from "../export";
 import { CanvasView } from "../presentations/CanvasView";
 import { ObjectComponentRegistryContext } from "../presentations/objects/registry/ObjectComponentRegistryContext";
-import { canvasToDoc } from "../states/canvas/CanvasMapper";
 import type { CanvasTheme } from "../theme/CanvasTheme";
 import { CanvasThemeContext } from "../theme/CanvasThemeContext";
 import { buildThemeCssVars } from "../theme/themeCssVars";
@@ -67,13 +57,8 @@ import { SelectionOverlay } from "./ui/feedback/SelectionOverlay";
 import { SnapGuides } from "./ui/feedback/SnapGuides";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ExportDialog } from "./ui/menu/ExportDialog";
-import type {
-	ExportImageFormat,
-	ExportSubmitValues,
-} from "./ui/menu/ExportDialog";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
 import { Toolbar } from "./ui/menu/Toolbar";
-import { calcContentBounds } from "./utils/calcContentBounds";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { Camera } from "../states/canvas/Viewport";
 
@@ -184,66 +169,6 @@ type CanvasProps = {
 	 * (e.g. the VSCode extension writing into the workspace).
 	 */
 	onExportImage?: (payload: CanvasExportImagePayload) => void;
-};
-
-/**
- * Default margin (world px) kept around the content in exported images. Also
- * absorbs extents the content bounds do not account for (stroke widths, arrow
- * heads). The export dialog and {@link CanvasExportOptions} can override it.
- */
-const EXPORT_FIT_PADDING = 16;
-
-/**
- * Per-export options shared by the {@link CanvasExportHandle} methods.
- */
-export type CanvasExportOptions = {
-	/**
-	 * Margin (world px) kept around the content, replacing the default (16).
-	 */
-	margin?: number;
-	/**
-	 * Whether to embed the `.jis.json` source in the image (default true),
-	 * making the file re-editable. Without the source, the default download
-	 * name drops the `.jis` marker (plain `.png` / `.svg`).
-	 */
-	includeSource?: boolean;
-	/**
-	 * Whether to skip the background fill (default false), producing an
-	 * alpha-transparent image instead of the theme's canvas background.
-	 */
-	transparentBackground?: boolean;
-};
-
-/**
- * Imperative export API exposed via the `exportRef` prop. Hosts that need
- * image bytes programmatically (e.g. the VSCode extension re-rendering a
- * `.jis.png` / `.jis.svg` on save) use this to run the exact same export
- * pipeline as the export dialog (fit-to-content, source embedding).
- */
-export type CanvasExportHandle = {
-	/**
-	 * Builds the self-contained editable SVG string (`.jis.svg` content).
-	 * Returns null when the canvas is not mounted yet.
-	 */
-	toSvgString(options?: CanvasExportOptions): string | null;
-	/**
-	 * Rasterizes the canvas to a PNG Blob with the `.jis.json` source
-	 * embedded as an iTXt chunk. Returns null when the canvas is not
-	 * mounted yet.
-	 */
-	toPngBlob(options?: CanvasExportOptions): Promise<Blob | null>;
-};
-
-/**
- * Exported image handed to {@link CanvasProps.onExportImage}: the encoded
- * bytes plus what the host needs to derive a file name.
- */
-export type CanvasExportImagePayload = {
-	format: ExportImageFormat;
-	/** Encoded image bytes (PNG, or serialized SVG text) */
-	data: Blob;
-	/** Whether the `.jis.json` source is embedded (re-editable image) */
-	includesSource: boolean;
 };
 
 const CanvasComponent: React.FC<CanvasProps> = ({
@@ -405,102 +330,20 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 		[],
 	);
 
-	// Shared options of the SVG/PNG export: the .jis.json source and a
-	// fit-to-content viewBox (content bounds + margin), so the image is
-	// independent of the current pan/zoom and window size. An empty canvas
-	// falls back to exporting the current view.
-	const buildExportOptions = useCallback(
-		({
-			margin = EXPORT_FIT_PADDING,
-			includeSource = true,
-			transparentBackground = false,
-		}: CanvasExportOptions = {}) => {
-			const bounds = calcContentBounds(state.objects);
-			return {
-				source: includeSource
-					? canvasToDoc(state, registries.objectMapper)
-					: undefined,
-				// "transparent" skips the background rect (buildExportSvg);
-				// undefined falls back to the live theme background
-				background: transparentBackground ? "transparent" : undefined,
-				viewBox: bounds
-					? {
-							x: bounds.left - margin,
-							y: bounds.top - margin,
-							width: bounds.right - bounds.left + margin * 2,
-							height: bounds.bottom - bounds.top + margin * 2,
-						}
-					: undefined,
-			};
-		},
-		[state, registries],
-	);
-
-	// Imperative export API for hosts (same pipeline as the export dialog)
-	useImperativeHandle(
+	// Image export: the imperative exportRef API and the export dialog
+	const {
+		isExportDialogOpen,
+		openExportDialog,
+		closeExportDialog,
+		handleExportSubmit,
+	} = useCanvasExport({
+		svgRef,
+		canvasState: state,
+		registries,
 		exportRef,
-		() => ({
-			toSvgString: (options?: CanvasExportOptions) => {
-				const svg = svgRef.current;
-				return svg ? canvasToSvgString(svg, buildExportOptions(options)) : null;
-			},
-			toPngBlob: async (options?: CanvasExportOptions) => {
-				const svg = svgRef.current;
-				return svg
-					? rasterizeSvgToPngBlob(svg, buildExportOptions(options))
-					: null;
-			},
-		}),
-		[buildExportOptions],
-	);
-
-	// Export dialog (opened from the context menu): pick format + margin, OK
-	const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
-	const closeExportDialog = useCallback(() => setIsExportDialogOpen(false), []);
-	const openExportDialog = useCallback(() => {
-		dispatch({ type: "CLOSE_CONTEXT_MENU" });
-		setIsExportDialogOpen(true);
-	}, [dispatch]);
-
-	// Runs the chosen export (with source: SVG embeds the .jis.json in
-	// <metadata>, PNG in an iTXt chunk; without: a plain image). The result is
-	// handed to the host via onExportImage when set, downloaded otherwise.
-	const handleExportSubmit = useCallback(
-		(values: ExportSubmitValues) => {
-			setIsExportDialogOpen(false);
-			const svg = svgRef.current;
-			if (!svg) {
-				return;
-			}
-			const exportOptions = buildExportOptions(values);
-			if (onExportImage) {
-				const deliver = (data: Blob) =>
-					onExportImage({
-						format: values.format,
-						data,
-						includesSource: values.includeSource,
-					});
-				if (values.format === "svg") {
-					const svgText = canvasToSvgString(svg, exportOptions);
-					deliver(new Blob([svgText], { type: "image/svg+xml;charset=utf-8" }));
-				} else {
-					rasterizeSvgToPngBlob(svg, exportOptions).then(
-						deliver,
-						(err: unknown) => {
-							console.error("[Canvas] PNG export failed:", err);
-						},
-					);
-				}
-				return;
-			}
-			if (values.format === "svg") {
-				exportCanvasToSvg(svg, exportOptions);
-			} else {
-				void exportCanvasToPng(svg, exportOptions);
-			}
-		},
-		[buildExportOptions, onExportImage],
-	);
+		onExportImage,
+		dispatch,
+	});
 
 	const { minX, minY, zoom } = state.viewport;
 
