@@ -29,7 +29,7 @@ import { DEFAULT_CONNECTOR_MARGIN } from "../../../../../constants/connectorRout
  *    "channels" (both stub ends, the center between the two shapes, and each box's perimeter ± margin).
  *    The centered channel represents S/Z shapes; the box-perimeter channels represent wrapping around shapes.
  * 3. `calcRouteCost` / `compareRouteChoices`: evaluate each candidate under a **total order** and
- *    pick the best: shape crossings → aesthetics (turns×weight + length + reversals×penalty) →
+ *    pick the best: shape crossings → reversals → margin intrusions → aesthetics (turns×weight + length) →
  *    symmetric (centered crossover) → topology signature → concrete path. The trailing intrinsic keys make the
  *    result independent of candidate enumeration order, so cost-tied shapes (e.g. wrapping over
  *    vs. under equal-sized boxes) do not flip while an owner shape is dragged (route stability
