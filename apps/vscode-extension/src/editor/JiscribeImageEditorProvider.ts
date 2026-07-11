@@ -3,6 +3,10 @@ import {
 	PNG_SOURCE_KEYWORD,
 	readPngTextChunk,
 } from "@workspace/canvas/png-source";
+import {
+	extractCanvasSourceFromSvgText,
+	replaceCanvasSourceInSvgText,
+} from "@workspace/canvas/svg-source";
 import * as vscode from "vscode";
 
 import { saveExportedImage } from "./saveExportedImage";
@@ -13,28 +17,33 @@ import type {
 } from "../types/messages";
 
 /**
- * Webview からの PNG 生成応答を待つ最大時間。通常は数百 ms オーダーで返るため、
+ * Webview からの画像生成応答を待つ最大時間。通常は数百 ms オーダーで返るため、
  * これを超えたら Webview が応答不能とみなしフォールバックする。
  */
-const PNG_EXPORT_TIMEOUT_MS = 10_000;
+const IMAGE_EXPORT_TIMEOUT_MS = 10_000;
+
+/** 画像ドキュメントの種別。ソースの埋め込み形式と保存時の画像化方法を決める。 */
+type JiscribeImageKind = "png" | "svg";
 
 /**
- * `.jis.png` の CustomDocument。
+ * `.jis.png` / `.jis.svg` の CustomDocument。
  *
- * バイナリのカスタムエディタでは TextDocument が使えないため、
+ * 画像のカスタムエディタでは TextDocument が使えないため、
  * ドキュメントの状態（ソース JSON と最後に保存した画像バイト列）を自前で持つ。
  */
-class JiscribePngDocument implements vscode.CustomDocument {
+class JiscribeImageDocument implements vscode.CustomDocument {
 	/**
 	 * @param uri - ドキュメントの URI
-	 * @param savedBytes - 最後にファイルへ書いた（または読み込んだ）PNG バイト列。
+	 * @param kind - 画像種別（png / svg）
+	 * @param savedBytes - 最後にファイルへ書いた（または読み込んだ）画像バイト列。
 	 *   Webview が応答できないときの保存フォールバック（この画像に最新ソースを
 	 *   埋め込み直す）の土台になる
 	 * @param sourceText - 現在の `.jis.json` ソーステキスト。
-	 *   null = iTXt にソース埋め込みが無い（編集不可のエラー表示になる）
+	 *   null = ソース埋め込みが無い（編集不可のエラー表示になる）
 	 */
 	constructor(
 		public readonly uri: vscode.Uri,
+		public readonly kind: JiscribeImageKind,
 		public savedBytes: Uint8Array,
 		public sourceText: string | null,
 	) {}
@@ -45,21 +54,25 @@ class JiscribePngDocument implements vscode.CustomDocument {
 }
 
 /**
- * `.jis.png`（iTXt にソース埋め込み済みの PNG）を Canvas UI で開く
- * カスタムエディタプロバイダ。draw.io の `.drawio.png` 相当。
+ * ソース埋め込み済みの画像（`.jis.png` / `.jis.svg`、draw.io の `.drawio.png` /
+ * `.drawio.svg` 相当）を Canvas UI で開くカスタムエディタプロバイダ。
  *
- * PNG はバイナリのため CustomTextEditorProvider は使えず、
- * CustomEditorProvider として dirty 管理・保存・バックアップを自前で実装する。
+ * どちらも CustomEditorProvider として dirty 管理・保存・バックアップを自前で
+ * 実装する。PNG はバイナリなので CustomTextEditorProvider が使えない。SVG は
+ * テキストだが、編集のたびに SVG 全文を再レンダリングすると commit 経路が
+ * DOM レンダリングに依存して失敗し得るため、同じ方式に乗せて画像化を保存時
+ * まで遅延する。
  *
  * データフロー:
- *   開く:   ファイル読み込み → iTXt からソース JSON を抽出 → Webview へ送信
+ *   開く:   ファイル読み込み → 埋め込みソース JSON を抽出（png: iTXt / svg:
+ *           <metadata>）→ Webview へ送信
  *   編集:   Webview から doc JSON が届く → edit イベント発火（dirty / undo / redo）
- *   保存:   Webview に PNG 生成を依頼（fit-to-content で再レンダリング＋ソース
+ *   保存:   Webview に画像生成を依頼（fit-to-content で再レンダリング＋ソース
  *           再埋め込み）→ ファイルへ書き込み。Webview が応答できない場合は
  *           「既存画像＋最新ソースの再埋め込み」にフォールバックする
  *           （画像の見た目は前回保存時のままだがソースは失われない）
  */
-export class JiscribePngEditorProvider implements vscode.CustomEditorProvider<JiscribePngDocument> {
+export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<JiscribeImageDocument> {
 	constructor(private readonly context: vscode.ExtensionContext) {}
 
 	// ---- dirty / undo / redo の通知チャネル ----
@@ -68,19 +81,22 @@ export class JiscribePngEditorProvider implements vscode.CustomEditorProvider<Ji
 	// 「ドキュメントが編集された」と伝える。VSCode 側が undo/redo スタックを
 	// 管理し、Ctrl+Z / Ctrl+Y でイベント内の undo() / redo() を呼び返してくる。
 	private readonly changeEmitter = new vscode.EventEmitter<
-		vscode.CustomDocumentEditEvent<JiscribePngDocument>
+		vscode.CustomDocumentEditEvent<JiscribeImageDocument>
 	>();
 	public readonly onDidChangeCustomDocument = this.changeEmitter.event;
 
 	// ドキュメントごとの表示中パネル（supportsMultipleEditorsPerDocument: false
-	// のため高々1つ）。保存時の PNG 生成依頼と undo/redo の反映に使う。
-	private readonly panels = new Map<JiscribePngDocument, vscode.WebviewPanel>();
+	// のため高々1つ）。保存時の画像生成依頼と undo/redo の反映に使う。
+	private readonly panels = new Map<
+		JiscribeImageDocument,
+		vscode.WebviewPanel
+	>();
 
-	// requestPngExport の応答待ち。requestId で対応付ける。
+	// requestImageExport の応答待ち。requestId で対応付ける。
 	private nextRequestId = 1;
 	private readonly pendingExports = new Map<
 		number,
-		(base64: string | null) => void
+		(data: string | null) => void
 	>();
 
 	/** ファイル（またはバックアップ）を読み込んでドキュメントを構築する。 */
@@ -88,19 +104,26 @@ export class JiscribePngEditorProvider implements vscode.CustomEditorProvider<Ji
 		uri: vscode.Uri,
 		openContext: vscode.CustomDocumentOpenContext,
 		_token: vscode.CancellationToken,
-	): Promise<JiscribePngDocument> {
+	): Promise<JiscribeImageDocument> {
 		// ホットイグジット復元時はバックアップの方を読む（URI は元ファイルのまま）
 		const readUri = openContext.backupId
 			? vscode.Uri.parse(openContext.backupId)
 			: uri;
+		const kind: JiscribeImageKind = uri.path.endsWith(".jis.svg")
+			? "svg"
+			: "png";
 		const bytes = await vscode.workspace.fs.readFile(readUri);
-		const sourceText = readPngTextChunk(bytes, PNG_SOURCE_KEYWORD);
-		return new JiscribePngDocument(uri, bytes, sourceText);
+		return new JiscribeImageDocument(
+			uri,
+			kind,
+			bytes,
+			extractSourceFromImage(kind, bytes),
+		);
 	}
 
 	/** エディタ（Webview）を初期化し、ドキュメントとのメッセージ配線を行う。 */
 	public async resolveCustomEditor(
-		document: JiscribePngDocument,
+		document: JiscribeImageDocument,
 		webviewPanel: vscode.WebviewPanel,
 		_token: vscode.CancellationToken,
 	): Promise<void> {
@@ -150,11 +173,11 @@ export class JiscribePngEditorProvider implements vscode.CustomEditorProvider<Ji
 						break;
 					}
 
-					case "pngExportResult": {
+					case "imageExportResult": {
 						const resolve = this.pendingExports.get(message.requestId);
 						if (resolve) {
 							this.pendingExports.delete(message.requestId);
-							resolve(message.base64);
+							resolve(message.data);
 						}
 						break;
 					}
@@ -182,10 +205,10 @@ export class JiscribePngEditorProvider implements vscode.CustomEditorProvider<Ji
 
 	/** 上書き保存。 */
 	public async saveCustomDocument(
-		document: JiscribePngDocument,
+		document: JiscribeImageDocument,
 		token: vscode.CancellationToken,
 	): Promise<void> {
-		const bytes = await this.renderCurrentPng(document);
+		const bytes = await this.renderCurrentImage(document);
 		if (token.isCancellationRequested) {
 			return;
 		}
@@ -195,11 +218,11 @@ export class JiscribePngEditorProvider implements vscode.CustomEditorProvider<Ji
 
 	/** 名前を付けて保存。 */
 	public async saveCustomDocumentAs(
-		document: JiscribePngDocument,
+		document: JiscribeImageDocument,
 		destination: vscode.Uri,
 		token: vscode.CancellationToken,
 	): Promise<void> {
-		const bytes = await this.renderCurrentPng(document);
+		const bytes = await this.renderCurrentImage(document);
 		if (token.isCancellationRequested) {
 			return;
 		}
@@ -208,12 +231,12 @@ export class JiscribePngEditorProvider implements vscode.CustomEditorProvider<Ji
 
 	/** 変更の破棄（Revert File）。ファイルの内容へ巻き戻す。 */
 	public async revertCustomDocument(
-		document: JiscribePngDocument,
+		document: JiscribeImageDocument,
 		_token: vscode.CancellationToken,
 	): Promise<void> {
 		const bytes = await vscode.workspace.fs.readFile(document.uri);
 		document.savedBytes = bytes;
-		document.sourceText = readPngTextChunk(bytes, PNG_SOURCE_KEYWORD);
+		document.sourceText = extractSourceFromImage(document.kind, bytes);
 		this.pushSourceToWebview(document);
 	}
 
@@ -223,7 +246,7 @@ export class JiscribePngEditorProvider implements vscode.CustomEditorProvider<Ji
 	 * （画像は前回保存時のままでも、ソースさえ残れば編集内容は復元できる）。
 	 */
 	public async backupCustomDocument(
-		document: JiscribePngDocument,
+		document: JiscribeImageDocument,
 		context: vscode.CustomDocumentBackupContext,
 		_token: vscode.CancellationToken,
 	): Promise<vscode.CustomDocumentBackup> {
@@ -242,7 +265,7 @@ export class JiscribePngEditorProvider implements vscode.CustomEditorProvider<Ji
 	}
 
 	/** 現在のソース JSON を Webview へ送る（undo/redo/revert の反映）。 */
-	private pushSourceToWebview(document: JiscribePngDocument): void {
+	private pushSourceToWebview(document: JiscribeImageDocument): void {
 		const panel = this.panels.get(document);
 		if (panel) {
 			this.updateWebview(panel, document);
@@ -256,52 +279,59 @@ export class JiscribePngEditorProvider implements vscode.CustomEditorProvider<Ji
 	 */
 	private updateWebview(
 		panel: vscode.WebviewPanel,
-		document: JiscribePngDocument,
+		document: JiscribeImageDocument,
 	): void {
 		const message: ExtensionToWebviewMessage = {
 			type: "update",
 			data: document.sourceText ?? "",
-			docType: "png",
+			docType: document.kind,
 		};
 		panel.webview.postMessage(message);
 	}
 
 	/**
-	 * 現在のソースを反映した PNG バイト列を得る。
+	 * 現在のソースを反映した画像バイト列を得る。
 	 * 第一候補は Webview での再レンダリング（fit-to-content・最新の見た目）。
 	 * Webview が無い/応答しない場合は、最後に保存した画像へ最新ソースを
 	 * 埋め込み直したものを返す。
 	 */
-	private async renderCurrentPng(
-		document: JiscribePngDocument,
+	private async renderCurrentImage(
+		document: JiscribeImageDocument,
 	): Promise<Uint8Array> {
 		const panel = this.panels.get(document);
-		if (panel) {
-			const base64 = await this.requestPngFromWebview(panel);
-			if (base64 !== null) {
-				return new Uint8Array(Buffer.from(base64, "base64"));
+		// retainContextWhenHidden: false のため、非表示タブの Webview は JS
+		// コンテキストが破棄済みで postMessage に応答しない。タイムアウトを
+		// 待たずに即フォールバックする。
+		if (panel && panel.visible) {
+			const data = await this.requestImageFromWebview(panel, document.kind);
+			if (data !== null) {
+				return document.kind === "png"
+					? new Uint8Array(Buffer.from(data, "base64"))
+					: new Uint8Array(Buffer.from(data, "utf8"));
 			}
 		}
 		return this.embedCurrentSource(document);
 	}
 
-	/** Webview に PNG 生成を依頼し、base64 応答を待つ（タイムアウト付き）。 */
-	private requestPngFromWebview(
+	/** Webview に画像生成を依頼し、応答を待つ（タイムアウト付き）。 */
+	private requestImageFromWebview(
 		panel: vscode.WebviewPanel,
+		format: JiscribeImageKind,
 	): Promise<string | null> {
 		const requestId = this.nextRequestId++;
 		const message: ExtensionToWebviewMessage = {
-			type: "requestPngExport",
+			type: "requestImageExport",
 			requestId,
+			format,
 		};
 		return new Promise<string | null>((resolve) => {
 			const timeout = setTimeout(() => {
 				this.pendingExports.delete(requestId);
 				resolve(null);
-			}, PNG_EXPORT_TIMEOUT_MS);
-			this.pendingExports.set(requestId, (base64) => {
+			}, IMAGE_EXPORT_TIMEOUT_MS);
+			this.pendingExports.set(requestId, (data) => {
 				clearTimeout(timeout);
-				resolve(base64);
+				resolve(data);
 			});
 			panel.webview.postMessage(message);
 		});
@@ -310,21 +340,40 @@ export class JiscribePngEditorProvider implements vscode.CustomEditorProvider<Ji
 	/**
 	 * 保存フォールバック: 最後に保存した画像バイト列へ現在のソースを
 	 * 埋め込み直す。画像の見た目は前回保存時のままになるが、ソース
-	 * （編集内容）は失われない。ソースが無い/PNG が壊れている場合は
+	 * （編集内容）は失われない。ソースが無い/画像が壊れている場合は
 	 * 画像をそのまま返す。
 	 */
-	private embedCurrentSource(document: JiscribePngDocument): Uint8Array {
+	private embedCurrentSource(document: JiscribeImageDocument): Uint8Array {
 		if (document.sourceText === null) {
 			return document.savedBytes;
 		}
-		try {
-			return insertPngTextChunk(
-				document.savedBytes,
-				PNG_SOURCE_KEYWORD,
-				document.sourceText,
-			);
-		} catch {
-			return document.savedBytes;
+		if (document.kind === "png") {
+			try {
+				return insertPngTextChunk(
+					document.savedBytes,
+					PNG_SOURCE_KEYWORD,
+					document.sourceText,
+				);
+			} catch {
+				return document.savedBytes;
+			}
 		}
+		const replacedText = replaceCanvasSourceInSvgText(
+			Buffer.from(document.savedBytes).toString("utf8"),
+			document.sourceText,
+		);
+		return replacedText === null
+			? document.savedBytes
+			: new Uint8Array(Buffer.from(replacedText, "utf8"));
 	}
+}
+
+/** 画像バイト列から埋め込みソース JSON を取り出す（無ければ null）。 */
+function extractSourceFromImage(
+	kind: JiscribeImageKind,
+	bytes: Uint8Array,
+): string | null {
+	return kind === "png"
+		? readPngTextChunk(bytes, PNG_SOURCE_KEYWORD)
+		: extractCanvasSourceFromSvgText(Buffer.from(bytes).toString("utf8"));
 }

@@ -1,10 +1,7 @@
+import { SVG_SOURCE_LOCAL_NAME, SVG_SOURCE_NS } from "./svgSourceText";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
-
-/** Namespace for jiscribe-specific data embedded in SVG for round-tripping. */
-const JISCRIBE_NS = "https://jiscribe.dev/ns/canvas";
-const SOURCE_LOCAL_NAME = "source";
 
 /**
  * Embeds a CanvasDoc (the `.jis.json` content) into the SVG's `<metadata>`.
@@ -17,8 +14,8 @@ const SOURCE_LOCAL_NAME = "source";
 export const embedCanvasSource = (svg: SVGSVGElement, doc: CanvasDoc): void => {
 	const metadata = document.createElementNS(SVG_NS, "metadata");
 	const source = document.createElementNS(
-		JISCRIBE_NS,
-		`jiscribe:${SOURCE_LOCAL_NAME}`,
+		SVG_SOURCE_NS,
+		`jiscribe:${SVG_SOURCE_LOCAL_NAME}`,
 	);
 	source.setAttribute("data-jiscribe-version", String(doc.version ?? 1));
 	source.textContent = JSON.stringify(doc);
@@ -31,7 +28,10 @@ export const embedCanvasSource = (svg: SVGSVGElement, doc: CanvasDoc): void => {
  * Returns null when missing or unparsable (groundwork for re-editing / import).
  */
 export const extractCanvasSource = (svg: SVGSVGElement): CanvasDoc | null => {
-	const source = svg.getElementsByTagNameNS(JISCRIBE_NS, SOURCE_LOCAL_NAME)[0];
+	const source = svg.getElementsByTagNameNS(
+		SVG_SOURCE_NS,
+		SVG_SOURCE_LOCAL_NAME,
+	)[0];
 	const json = source?.textContent;
 	if (!json) {
 		return null;

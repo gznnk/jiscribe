@@ -4,12 +4,11 @@ import { saveExportedImage } from "./saveExportedImage";
 import { getCanvasWebviewHtml } from "./webviewHtml";
 import type {
 	ExtensionToWebviewMessage,
-	JiscribeDocType,
 	WebviewToExtensionMessage,
 } from "../types/messages";
 
 /**
- * .jis.json / .jis.svg ファイルを開いたときに Canvas UI を表示する
+ * .jis.json ファイルを開いたときに Canvas UI を表示する
  * カスタムエディタプロバイダ。
  *
  * VSCode の Custom Editor API では、CustomTextEditorProvider を実装して
@@ -20,11 +19,8 @@ import type {
  *   ファイル変更 → Extension → Webview（postMessage）
  *   Canvas 編集  → Webview  → Extension（postMessage）→ WorkspaceEdit でファイルに書き戻す
  *
- * .jis.svg（draw.io の .drawio.svg 相当）もテキストとして同じフローに乗る:
- *   - Extension→Webview は SVG 全文を送り、Webview が <metadata> からソースを抽出
- *   - Webview→Extension は再レンダリングした SVG 全文（ソース埋め込み済み）が届く
- *   Extension 側はどちらも「テキストの全文置換」なので docType の分岐は
- *   送信時のペイロード種別だけで済む。
+ * 画像ドキュメント（.jis.svg / .jis.png）はテキストの全文置換では扱えないため、
+ * JiscribeImageEditorProvider（保存時に画像を再生成する方式）が担当する。
  */
 export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 	constructor(private readonly context: vscode.ExtensionContext) {}
@@ -150,13 +146,6 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 						break;
 					}
 
-					case "updateError":
-						// Webview 側で書き戻しペイロードを生成できなかった（.jis.svg の
-						// SVG 再レンダリング失敗）。ファイルは古いまま残るため、
-						// 保存失敗としてユーザーへ通知する。
-						this.notifySaveFailure(document, message.reason);
-						break;
-
 					case "exportImage":
 						// エクスポート画像のワークスペース保存（保存ダイアログ→書き込み→通知）
 						void saveExportedImage(
@@ -187,12 +176,7 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 	 */
 	private notifySaveFailure(document: vscode.TextDocument, err: unknown) {
 		console.error("[Jiscribe] ファイルへの書き込みに失敗しました:", err);
-		const detail =
-			err instanceof Error
-				? `: ${err.message}`
-				: typeof err === "string"
-					? `: ${err}`
-					: "";
+		const detail = err instanceof Error ? `: ${err.message}` : "";
 		const baseName = document.uri.path.split("/").pop() ?? document.uri.path;
 		vscode.window.showErrorMessage(
 			`Jiscribe: Failed to write canvas changes to "${baseName}"${detail}. Your latest edits are NOT saved.`,
@@ -208,26 +192,19 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 		document: vscode.TextDocument,
 		saveNonce?: string,
 	) {
-		const docType = resolveDocType(document.uri);
 		const text = document.getText();
 		let data: string;
-		if (docType === "svg") {
-			// SVG はそのまま送り、<metadata> からのソース抽出は Webview 側
-			//（DOMParser が使える環境）に任せる
+		try {
+			data = JSON.stringify(JSON.parse(text), null, 2);
+		} catch {
+			// JSON parse に失敗した場合はそのまま送り、Webview 側のエラー画面に任せる
 			data = text;
-		} else {
-			try {
-				data = JSON.stringify(JSON.parse(text), null, 2);
-			} catch {
-				// JSON parse に失敗した場合はそのまま送り、Webview 側のエラー画面に任せる
-				data = text;
-			}
 		}
 		const message: ExtensionToWebviewMessage = {
 			type: "update",
 			data,
 			saveNonce,
-			docType,
+			docType: "json",
 		};
 		panel.webview.postMessage(message);
 	}
@@ -261,13 +238,4 @@ export class JiscribeEditorProvider implements vscode.CustomTextEditorProvider {
 
 		return vscode.workspace.applyEdit(edit);
 	}
-}
-
-/**
- * URI からドキュメント種別を判定する。
- * このプロバイダはテキスト系（.jis.json / .jis.svg）のみを扱う
- * （.jis.png はバイナリのため JiscribePngEditorProvider が担当）。
- */
-function resolveDocType(uri: vscode.Uri): JiscribeDocType {
-	return uri.path.endsWith(".jis.svg") ? "svg" : "json";
 }

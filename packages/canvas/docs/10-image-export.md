@@ -104,17 +104,18 @@ draw.io's `.drawio.png`): opening such a file restores the document from the
 embedded source, and saving re-renders the image with the updated source
 re-embedded, so the file always stays a valid, current image.
 
-- `.jis.svg` rides the existing text-editor flow (`JiscribeEditorProvider`):
-  the webview extracts the source from `<metadata>` on load and writes back a
-  fully re-rendered SVG on each commit — VSCode's text undo/save applies.
-- `.jis.png` is binary, so a dedicated `CustomEditorProvider`
-  (`JiscribePngEditorProvider`) manages dirty state, undo/redo, save, and
-  hot-exit backups. On save it asks the webview to rasterize
-  (`CanvasExportHandle.toPngBlob`); if the webview cannot respond, it falls
-  back to re-embedding the current source into the last-saved image (stale
-  pixels, but edits are never lost).
-- The Node side reads/writes the iTXt chunk via the UI-free entry
-  `@workspace/canvas/png-source` (same pattern as `./parser`).
+- Both `.jis.png` and `.jis.svg` are handled by a dedicated
+  `CustomEditorProvider` (`JiscribeImageEditorProvider`) that manages dirty
+  state, undo/redo, save, and hot-exit backups. Commits from the webview
+  always carry the doc JSON; the image itself is rendered only at save time
+  (`CanvasExportHandle.toPngBlob` / `toSvgString` via `requestImageExport`),
+  so the commit path never depends on DOM rendering. If the webview cannot
+  respond, save falls back to re-embedding the current source into the
+  last-saved image (stale pixels, but edits are never lost).
+- The Node side reads/writes the embedded source via the UI-free entries
+  `@workspace/canvas/png-source` (iTXt chunk) and
+  `@workspace/canvas/svg-source` (`<metadata>` text manipulation, no DOM) —
+  same pattern as `./parser`.
 - `<Canvas exportRef>` exposes the imperative export API
   (`toSvgString(options?)` / `toPngBlob(options?)`, both taking
   `CanvasExportOptions` with an optional `margin`, `includeSource`, and

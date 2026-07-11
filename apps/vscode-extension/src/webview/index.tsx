@@ -1,6 +1,5 @@
 import {
 	Canvas,
-	extractCanvasSource,
 	parseCanvasText,
 	type Camera,
 	type CanvasDoc,
@@ -14,7 +13,6 @@ import { CanvasErrorNotice } from "./CanvasErrorNotice";
 import { vscodeCanvasTheme } from "./vscodeCanvasTheme";
 import type {
 	ExtensionToWebviewMessage,
-	JiscribeDocType,
 	WebviewToExtensionMessage,
 } from "../types/messages";
 
@@ -53,21 +51,6 @@ const persistCamera = (camera: Camera): void => {
 	vscode.setState({ ...state, camera });
 };
 
-/**
- * `.jis.svg` のテキストから <metadata> に埋め込まれたソース JSON を取り出す。
- * SVG として解釈できない、または埋め込みが無い場合は null。
- */
-const extractSourceFromSvgText = (svgText: string): string | null => {
-	const parsed = new DOMParser().parseFromString(svgText, "image/svg+xml");
-	if (parsed.getElementsByTagName("parsererror").length > 0) {
-		return null;
-	}
-	const source = extractCanvasSource(
-		parsed.documentElement as unknown as SVGSVGElement,
-	);
-	return source ? JSON.stringify(source) : null;
-};
-
 /** Blob を base64 文字列（データ URL のヘッダ無し）へ変換する。 */
 const blobToBase64 = (blob: Blob): Promise<string> =>
 	new Promise((resolve, reject) => {
@@ -99,11 +82,7 @@ function App() {
 	const [parseError, setParseError] = useState<string>("");
 	const [missingEmbeddedSource, setMissingEmbeddedSource] = useState(false);
 
-	// 現在のドキュメント種別。コミット時のペイロード生成が参照する。
-	// メッセージハンドラ／コールバックの再購読を避けるため ref で持つ。
-	const docTypeRef = useRef<JiscribeDocType>("json");
-
-	// Canvas の imperative エクスポート API（.jis.svg / .jis.png の書き戻しに使う）
+	// Canvas の imperative エクスポート API（.jis.svg / .jis.png の保存時画像化に使う）
 	const exportHandleRef = useRef<CanvasExportHandle>(null);
 
 	// Controlled camera, restored from persisted state on reload (undefined on
@@ -119,46 +98,13 @@ function App() {
 	// 高頻度コミット（キーリピート等）の間引きは Canvas 側の保存スケジューラが
 	// 担うため（#125）、ここではデバウンスせずそのまま Extension へ送る。
 	//
-	// 書き戻すペイロードは docType に依存する:
-	//   - json: doc の JSON テキスト
-	//   - svg:  再レンダリングした SVG 全文（ソース埋め込み済み、draw.io 方式）
-	//   - png:  doc の JSON テキスト（画像バイト列は保存時に requestPngExport で生成）
+	// 書き戻すペイロードは docType によらず常に doc の JSON テキスト。
+	// 画像ドキュメント（.jis.svg / .jis.png）の画像化は保存時に
+	// requestImageExport で行う（コミット経路を DOM レンダリングに依存させない）。
 	const handleCommit = useCallback((doc: CanvasDoc, saveNonce: string) => {
-		let data: string;
-		if (docTypeRef.current === "svg") {
-			let svgText: string | null = null;
-			let renderError: unknown = null;
-			try {
-				svgText = exportHandleRef.current?.toSvgString() ?? null;
-			} catch (err) {
-				renderError = err;
-			}
-			if (!svgText) {
-				// Canvas 未マウント等で SVG を生成できない場合、JSON を書き込むと
-				// .jis.svg ファイルを壊すため、このコミットは書き戻さない。
-				// この時点で saveNonce は消費済みで再送されないため、黙って捨てると
-				// ユーザーは保存済みと誤認する。Extension へ通知して失敗を可視化する
-				// （次の正常なコミットが全文を書き戻すので、それまでの警告が目的）。
-				console.error(
-					"[Jiscribe] Failed to render .jis.svg for commit:",
-					renderError,
-				);
-				vscode.postMessage({
-					type: "updateError",
-					reason:
-						renderError instanceof Error
-							? renderError.message
-							: "Failed to render the canvas as SVG",
-				});
-				return;
-			}
-			data = svgText;
-		} else {
-			data = JSON.stringify(doc, null, 2);
-		}
 		const message: WebviewToExtensionMessage = {
 			type: "update",
-			data,
+			data: JSON.stringify(doc, null, 2),
 			saveNonce,
 		};
 		vscode.postMessage(message);
@@ -203,24 +149,11 @@ function App() {
 			switch (message.type) {
 				case "update": {
 					const docType = message.docType ?? "json";
-					docTypeRef.current = docType;
 
-					// 画像ドキュメントはまずソース JSON を取り出す。
-					//   - svg: SVG 全文が届くので <metadata> から抽出する
-					//   - png: Extension が抽出済み（埋め込み無しは空文字）
-					let jsonText = message.data;
-					if (docType === "svg") {
-						const extracted = extractSourceFromSvgText(message.data);
-						if (extracted === null) {
-							setMissingEmbeddedSource(true);
-							setCanvasDoc(null);
-							setHasSemanticError(false);
-							setParseError("");
-							break;
-						}
-						jsonText = extracted;
-					}
-					if (docType === "png" && jsonText === "") {
+					// 画像ドキュメント（svg / png）は Extension が埋め込みソースを
+					// 抽出済みの JSON テキストが届く。空文字は埋め込み無しを表す。
+					const jsonText = message.data;
+					if (docType !== "json" && jsonText === "") {
 						setMissingEmbeddedSource(true);
 						setCanvasDoc(null);
 						setHasSemanticError(false);
@@ -261,20 +194,29 @@ function App() {
 					break;
 				}
 
-				case "requestPngExport": {
-					// .jis.png の保存: 現在のキャンバスをラスタライズして返す。
-					// 失敗時も必ず応答し（base64: null）、Extension 側のフォールバック
+				case "requestImageExport": {
+					// .jis.png / .jis.svg の保存: 現在のキャンバスを画像化して返す。
+					// 失敗時も必ず応答し（data: null）、Extension 側のフォールバック
 					// （旧画像＋新ソース再埋め込み）に切り替えさせる。
-					const respond = (base64: string | null) => {
+					const respond = (data: string | null) => {
 						vscode.postMessage({
-							type: "pngExportResult",
+							type: "imageExportResult",
 							requestId: message.requestId,
-							base64,
+							data,
 						});
 					};
 					const handle = exportHandleRef.current;
 					if (!handle) {
 						respond(null);
+						break;
+					}
+					if (message.format === "svg") {
+						try {
+							respond(handle.toSvgString() || null);
+						} catch (err) {
+							console.error("[Jiscribe] SVG export failed:", err);
+							respond(null);
+						}
 						break;
 					}
 					handle

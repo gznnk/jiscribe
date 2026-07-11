@@ -95,18 +95,18 @@ VSCode 拡張は二重拡張子（draw.io の `.drawio.png` 相当）にキャ�
 たびに画像を再レンダリングしてソースを埋め込み直すため、ファイルは常に
 最新の見た目を持つ画像であり続ける。
 
-- `.jis.svg` は既存のテキストエディタフロー（`JiscribeEditorProvider`）に
-  乗る：読み込み時に webview が `<metadata>` からソースを抽出し、コミット
-  ごとに再レンダリングした SVG 全文を書き戻す。VSCode のテキスト undo /
-  保存がそのまま効く
-- `.jis.png` はバイナリのため専用の `CustomEditorProvider`
-  （`JiscribePngEditorProvider`）が dirty・undo/redo・保存・ホットイグジット
-  バックアップを管理する。保存時は webview にラスタライズを依頼
-  （`CanvasExportHandle.toPngBlob`）し、webview が応答できない場合は
+- `.jis.png` / `.jis.svg` とも専用の `CustomEditorProvider`
+  （`JiscribeImageEditorProvider`）が dirty・undo/redo・保存・ホット
+  イグジットバックアップを管理する。webview からのコミットは常に doc の
+  JSON で、画像化は保存時のみ（`requestImageExport` 経由で
+  `CanvasExportHandle.toPngBlob` / `toSvgString`）に行うため、コミット経路が
+  DOM レンダリングに依存しない。webview が応答できない場合は
   「前回保存画像＋最新ソースの再埋め込み」にフォールバックする（見た目は
   古くても編集内容は失われない）
-- Node 側の iTXt 読み書きは UI 依存の無いエントリ
-  `@workspace/canvas/png-source` を使う（`./parser` と同じパターン）
+- Node 側の埋め込みソース読み書きは UI 依存の無いエントリ
+  `@workspace/canvas/png-source`（iTXt チャンク）と
+  `@workspace/canvas/svg-source`（`<metadata>` のテキスト操作・DOM 不要）を
+  使う（`./parser` と同じパターン）
 - `<Canvas exportRef>` が imperative なエクスポート API
   （`toSvgString(options?)` / `toPngBlob(options?)`、いずれも省略可能な
   `margin` / `includeSource` / `transparentBackground` を持つ

@@ -14,11 +14,10 @@
  * 編集対象ドキュメントの種類。update メッセージの data の解釈を決める。
  *
  * - "json": `.jis.json`。data は JSON テキストそのもの
- * - "svg":  `.jis.svg`。Extension→Webview は SVG 全文（Webview が <metadata> から
- *           ソースを抽出）、Webview→Extension も SVG 全文（再レンダリング済み）
- * - "png":  `.jis.png`。Extension→Webview は抽出済み JSON テキスト（埋め込みが
- *           無い場合は空文字）、Webview→Extension も JSON テキスト。画像バイト列は
- *           保存時に requestPngExport / pngExportResult で別途やり取りする
+ * - "svg" / "png": `.jis.svg` / `.jis.png`。Extension が埋め込みソースを抽出済みで、
+ *   双方向とも data は JSON テキスト（埋め込みが無い場合は空文字）。
+ *   画像そのもの（SVG 全文 / PNG バイト列）は保存時に requestImageExport /
+ *   imageExportResult で別途生成・受け渡しする
  */
 export type JiscribeDocType = "json" | "svg" | "png";
 
@@ -31,24 +30,20 @@ export type WebviewToExtensionMessage =
 	/** Webview の初期化が完了し、ファイル内容の初回送信を要求する */
 	| { type: "ready" }
 	/**
-	 * Canvas 上の編集内容をファイルへ書き戻すよう要求する。
-	 * data の中身は docType に依存する（JiscribeDocType を参照）。
+	 * Canvas 上の編集内容の書き戻しを要求する。data は常に doc の JSON テキスト
+	 * （画像ドキュメントでは Extension 側が dirty 管理し、画像化は保存時に行う）。
 	 */
 	| { type: "update"; data: string; saveNonce: string }
-	/**
-	 * 書き戻しペイロードの生成に失敗した（.jis.svg の SVG 再レンダリング失敗等）。
-	 * ファイルは更新されないため、Extension は保存失敗としてユーザーへ通知する。
-	 */
-	| { type: "updateError"; reason: string }
 	/** Canvas 上で Undo が要求された（ホストエディタの undo コマンドに委譲する） */
 	| { type: "undo" }
 	/** Canvas 上で Redo が要求された（ホストエディタの redo コマンドに委譲する） */
 	| { type: "redo" }
 	/**
-	 * requestPngExport への応答。base64 は PNG バイト列（ソース埋め込み済み）。
+	 * requestImageExport への応答。data はソース埋め込み済みの画像
+	 * （png: PNG バイト列の base64 / svg: SVG テキスト）。
 	 * Canvas 未マウント等で生成できなかった場合は null。
 	 */
-	| { type: "pngExportResult"; requestId: number; base64: string | null }
+	| { type: "imageExportResult"; requestId: number; data: string | null }
 	/**
 	 * エクスポートダイアログで生成した画像のワークスペース保存を要求する。
 	 * base64 は画像バイト列（PNG / SVG テキストとも base64 で統一）。
@@ -79,7 +74,7 @@ export type ExtensionToWebviewMessage =
 			docType?: JiscribeDocType;
 	  }
 	/**
-	 * `.jis.png` の保存時に、現在のキャンバスの PNG（ソース埋め込み済み）の
-	 * 生成を要求する。Webview は pngExportResult で応答する。
+	 * `.jis.png` / `.jis.svg` の保存時に、現在のキャンバスの画像
+	 * （ソース埋め込み済み）の生成を要求する。Webview は imageExportResult で応答する。
 	 */
-	| { type: "requestPngExport"; requestId: number };
+	| { type: "requestImageExport"; requestId: number; format: "png" | "svg" };
