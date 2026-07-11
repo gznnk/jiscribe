@@ -5,6 +5,7 @@ import {
 } from "@workspace/canvas/png-source";
 import * as vscode from "vscode";
 
+import { saveExportedImage } from "./saveExportedImage";
 import { getCanvasWebviewHtml } from "./webviewHtml";
 import type {
 	ExtensionToWebviewMessage,
@@ -157,6 +158,16 @@ export class JiscribePngEditorProvider implements vscode.CustomEditorProvider<Ji
 						}
 						break;
 					}
+
+					case "exportImage":
+						// エクスポート画像のワークスペース保存（保存ダイアログ→書き込み→通知）
+						void saveExportedImage(
+							document.uri,
+							message.format,
+							message.base64,
+							message.includesSource,
+						);
+						break;
 				}
 			},
 		);

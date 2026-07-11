@@ -1,6 +1,7 @@
 export { Canvas } from "./controllers/Canvas";
 export type {
 	CanvasExportHandle,
+	CanvasExportImagePayload,
 	CanvasExportOptions,
 } from "./controllers/Canvas";
 export { CanvasThumbnail } from "./controllers/CanvasThumbnail";

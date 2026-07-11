@@ -43,7 +43,18 @@ export type WebviewToExtensionMessage =
 	 * requestPngExport への応答。base64 は PNG バイト列（ソース埋め込み済み）。
 	 * Canvas 未マウント等で生成できなかった場合は null。
 	 */
-	| { type: "pngExportResult"; requestId: number; base64: string | null };
+	| { type: "pngExportResult"; requestId: number; base64: string | null }
+	/**
+	 * エクスポートダイアログで生成した画像のワークスペース保存を要求する。
+	 * base64 は画像バイト列（PNG / SVG テキストとも base64 で統一）。
+	 * ファイル名の導出と保存ダイアログの表示は Extension 側が担う。
+	 */
+	| {
+			type: "exportImage";
+			format: "png" | "svg";
+			base64: string;
+			includesSource: boolean;
+	  };
 
 /**
  * Extension → Webview 方向のメッセージ

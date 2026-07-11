@@ -5,6 +5,7 @@ import {
 	type Camera,
 	type CanvasDoc,
 	type CanvasExportHandle,
+	type CanvasExportImagePayload,
 } from "@workspace/canvas";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
@@ -142,6 +143,24 @@ function App() {
 			saveNonce,
 		};
 		vscode.postMessage(message);
+	}, []);
+
+	// エクスポートダイアログの結果をワークスペース保存へ委譲する。
+	// 保存先の決定（保存ダイアログ）とファイル名導出は Extension 側の責務。
+	const handleExportImage = useCallback((payload: CanvasExportImagePayload) => {
+		blobToBase64(payload.data).then(
+			(base64) => {
+				vscode.postMessage({
+					type: "exportImage",
+					format: payload.format,
+					base64,
+					includesSource: payload.includesSource,
+				});
+			},
+			(err: unknown) => {
+				console.error("[Jiscribe] Failed to encode exported image:", err);
+			},
+		);
 	}, []);
 
 	const handleUndo = useCallback(() => {
@@ -336,6 +355,7 @@ function App() {
 					onRedo={handleRedo}
 					theme={vscodeCanvasTheme}
 					exportRef={exportHandleRef}
+					onExportImage={handleExportImage}
 				/>
 			</div>
 		);

@@ -67,7 +67,10 @@ import { SelectionOverlay } from "./ui/feedback/SelectionOverlay";
 import { SnapGuides } from "./ui/feedback/SnapGuides";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ExportDialog } from "./ui/menu/ExportDialog";
-import type { ExportSubmitValues } from "./ui/menu/ExportDialog";
+import type {
+	ExportImageFormat,
+	ExportSubmitValues,
+} from "./ui/menu/ExportDialog";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
 import { Toolbar } from "./ui/menu/Toolbar";
 import { calcContentBounds } from "./utils/calcContentBounds";
@@ -175,6 +178,12 @@ type CanvasProps = {
 	 * `.jis.png` on save) instead of through the export dialog.
 	 */
 	exportRef?: React.Ref<CanvasExportHandle>;
+	/**
+	 * When provided, the export dialog delivers the exported image here instead
+	 * of triggering a browser download. Use this when the host owns file saving
+	 * (e.g. the VSCode extension writing into the workspace).
+	 */
+	onExportImage?: (payload: CanvasExportImagePayload) => void;
 };
 
 /**
@@ -225,6 +234,18 @@ export type CanvasExportHandle = {
 	toPngBlob(options?: CanvasExportOptions): Promise<Blob | null>;
 };
 
+/**
+ * Exported image handed to {@link CanvasProps.onExportImage}: the encoded
+ * bytes plus what the host needs to derive a file name.
+ */
+export type CanvasExportImagePayload = {
+	format: ExportImageFormat;
+	/** Encoded image bytes (PNG, or serialized SVG text) */
+	data: Blob;
+	/** Whether the `.jis.json` source is embedded (re-editable image) */
+	includesSource: boolean;
+};
+
 const CanvasComponent: React.FC<CanvasProps> = ({
 	canvasDoc,
 	syncNonce,
@@ -240,6 +261,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	toolbarLeading,
 	initialConfig,
 	exportRef,
+	onExportImage,
 }) => {
 	// Merged UI strings (English defaults + host overrides), distributed via context
 	const mergedMessages = useMemo(
@@ -441,7 +463,8 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	}, [dispatch]);
 
 	// Runs the chosen export (with source: SVG embeds the .jis.json in
-	// <metadata>, PNG in an iTXt chunk; without: a plain image)
+	// <metadata>, PNG in an iTXt chunk; without: a plain image). The result is
+	// handed to the host via onExportImage when set, downloaded otherwise.
 	const handleExportSubmit = useCallback(
 		(values: ExportSubmitValues) => {
 			setIsExportDialogOpen(false);
@@ -450,13 +473,33 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 				return;
 			}
 			const exportOptions = buildExportOptions(values);
+			if (onExportImage) {
+				const deliver = (data: Blob) =>
+					onExportImage({
+						format: values.format,
+						data,
+						includesSource: values.includeSource,
+					});
+				if (values.format === "svg") {
+					const svgText = canvasToSvgString(svg, exportOptions);
+					deliver(new Blob([svgText], { type: "image/svg+xml;charset=utf-8" }));
+				} else {
+					rasterizeSvgToPngBlob(svg, exportOptions).then(
+						deliver,
+						(err: unknown) => {
+							console.error("[Canvas] PNG export failed:", err);
+						},
+					);
+				}
+				return;
+			}
 			if (values.format === "svg") {
 				exportCanvasToSvg(svg, exportOptions);
 			} else {
 				void exportCanvasToPng(svg, exportOptions);
 			}
 		},
-		[buildExportOptions],
+		[buildExportOptions, onExportImage],
 	);
 
 	const { minX, minY, zoom } = state.viewport;
