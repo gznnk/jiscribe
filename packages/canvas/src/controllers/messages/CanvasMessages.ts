@@ -116,7 +116,7 @@ export const defaultCanvasMessages: CanvasMessages = {
 	exportDialogTitle: "Export Image",
 	exportDialogFormat: "Format",
 	exportDialogFormatPng: "PNG",
-	exportDialogFormatSvg: "SVG (editable)",
+	exportDialogFormatSvg: "SVG",
 	exportDialogMargin: "Margin",
 	exportDialogIncludeSource: "Include source data (re-editable)",
 	exportDialogTransparentBackground: "Transparent background",
