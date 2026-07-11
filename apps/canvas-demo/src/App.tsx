@@ -2,12 +2,18 @@ import {
 	Canvas,
 	brandLightCanvasTheme,
 	darkCanvasTheme,
+	jaCanvasMessages,
 	lightCanvasTheme,
 	parseCanvasText,
 } from "@workspace/canvas";
 import type { CanvasDoc, CanvasTheme } from "@workspace/canvas";
 import { useCallback, useEffect, useRef, useState } from "react";
 import "./App.css";
+
+// キャンバス UI の言語はブラウザロケールで決める（既定は英語）
+const canvasMessages = navigator.language.toLowerCase().startsWith("ja")
+	? jaCanvasMessages
+	: undefined;
 
 // デモで巡回できるテーマ一覧。テーマを増やしたらここに追加すれば
 // トグルボタンが自動で次のテーマへ切り替わる。colorScheme は暗いテーマだけ
@@ -227,6 +233,7 @@ export function App() {
 				canvasDoc={loadedDoc}
 				onCommit={handleCommit}
 				theme={current.theme}
+				messages={canvasMessages}
 				toolbarLeading={
 					<FileToolbarButtons
 						tokens={current.theme.tokens}

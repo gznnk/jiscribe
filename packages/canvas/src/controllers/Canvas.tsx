@@ -138,6 +138,11 @@ type CanvasProps = {
 	 */
 	toolbarLeading?: React.ReactNode;
 	/**
+	 * Host UI inserted at the right edge of the toolbar (e.g. a settings button).
+	 * Rendered inside a `data-gesture="none"` container, so plain `onClick` works.
+	 */
+	toolbarTrailing?: React.ReactNode;
+	/**
 	 * Per-canvas configuration of the available object types, commands, and
 	 * registries. Restricts what this canvas can create/handle (plugin-style
 	 * extensibility and feature-gating), independently of any other `<Canvas>` on
@@ -167,6 +172,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	viewport: controlledViewport,
 	onViewportChange,
 	toolbarLeading,
+	toolbarTrailing,
 	initialConfig,
 }) => {
 	// Merged UI strings (English defaults + host overrides), distributed via context
@@ -341,6 +347,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 										canZoomIn={canZoomIn}
 										canZoomOut={canZoomOut}
 										leading={toolbarLeading}
+										trailing={toolbarTrailing}
 									/>
 									<Viewport
 										data-id="canvas"

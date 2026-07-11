@@ -1,6 +1,7 @@
 export { Canvas } from "./controllers/Canvas";
 export { CanvasThumbnail } from "./controllers/CanvasThumbnail";
 export { defaultCanvasMessages } from "./controllers/messages/CanvasMessages";
+export { jaCanvasMessages } from "./controllers/messages/jaCanvasMessages";
 export type {
 	CanvasMessages,
 	CanvasMessageStrings,

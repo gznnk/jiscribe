@@ -25,6 +25,8 @@ type ToolbarProps = {
 	canZoomOut: boolean;
 	/** Host UI at the left edge (see CanvasProps.toolbarLeading) */
 	leading?: React.ReactNode;
+	/** Host UI at the right edge (see CanvasProps.toolbarTrailing) */
+	trailing?: React.ReactNode;
 };
 
 /**
@@ -53,6 +55,7 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 	canZoomIn,
 	canZoomOut,
 	leading,
+	trailing,
 }) => {
 	const messages = useCanvasMessages();
 	const { shapePreset } = useCanvasRegistries();
@@ -158,6 +161,12 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 					>
 						<HelpIcon />
 					</ToolbarIconButton>
+					{trailing != null && (
+						<>
+							<ToolbarDivider />
+							<ToolbarHostSlot data-gesture="none">{trailing}</ToolbarHostSlot>
+						</>
+					)}
 				</ToolbarGroup>
 			</ToolbarContainer>
 			{isHelpOpen && <ShortcutHelpModal onClose={closeHelp} />}
