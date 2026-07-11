@@ -4,6 +4,7 @@ import {
 	ToolbarContainer,
 	ToolbarDivider,
 	ToolbarGroup,
+	ToolbarHostSlot,
 	ToolbarIconButton,
 	ZoomReadout,
 } from "./ToolbarStyled";
@@ -22,6 +23,8 @@ type ToolbarProps = {
 	canZoomIn: boolean;
 	/** Whether zooming out is possible (canExecute of the zoomOut command) */
 	canZoomOut: boolean;
+	/** Host UI at the left edge (see CanvasProps.toolbarLeading) */
+	leading?: React.ReactNode;
 };
 
 /**
@@ -49,6 +52,7 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 	zoom,
 	canZoomIn,
 	canZoomOut,
+	leading,
 }) => {
 	const messages = useCanvasMessages();
 	const { shapePreset } = useCanvasRegistries();
@@ -86,8 +90,14 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 	return (
 		<>
 			<ToolbarContainer>
-				{/* Left: shape tools */}
+				{/* Left: host slot (when provided) and shape tools */}
 				<ToolbarGroup>
+					{leading != null && (
+						<>
+							<ToolbarHostSlot data-gesture="none">{leading}</ToolbarHostSlot>
+							<ToolbarDivider />
+						</>
+					)}
 					{shapePreset.all().map((preset) => (
 						<ShapeLibraryItem
 							key={preset.id}

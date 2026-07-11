@@ -6,7 +6,7 @@ import {
 	parseCanvasText,
 } from "@workspace/canvas";
 import type { CanvasDoc, CanvasTheme } from "@workspace/canvas";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import "./App.css";
 
 // デモで巡回できるテーマ一覧。テーマを増やしたらここに追加すれば
@@ -26,6 +26,8 @@ const initialDoc: CanvasDoc = {
 	version: 1,
 	root: [],
 };
+
+const DEFAULT_FILE_NAME = "untitled.jis.json";
 
 // ?multi 用の 2 キャンバス構成。キーボードスコープ（フォーカスされた Canvas だけが
 // ショートカットを処理する）の e2e 検証に使う。図形 ID はページ内で一意にして
@@ -62,10 +64,148 @@ function MultiCanvasApp() {
 	);
 }
 
+/** parseCanvasText の失敗結果をアラート用の文字列にまとめる */
+const formatParseError = (
+	result: Exclude<ReturnType<typeof parseCanvasText>, { kind: "ok" }>,
+): string => {
+	switch (result.kind) {
+		case "syntax-error":
+		case "internal-error":
+			return result.message;
+		case "structure-error":
+		case "semantic-error":
+			return result.diagnostics
+				.map((diagnostic) => `${diagnostic.path}: ${diagnostic.message}`)
+				.join("\n");
+	}
+};
+
+/**
+ * toolbarLeading スロットに挿すファイル操作ボタン。
+ * 配色はホスト側テーマから --demo-* 変数で与える（--jiscribe-* は非公開契約）。
+ */
+function FileToolbarButtons({
+	tokens,
+	onOpen,
+	onSave,
+}: {
+	tokens: CanvasTheme["tokens"];
+	onOpen: () => void;
+	onSave: () => void;
+}) {
+	return (
+		<div
+			className="file-toolbar-buttons"
+			style={
+				{
+					"--demo-radius": tokens.radius,
+					"--demo-icon-foreground": tokens.iconForeground,
+					"--demo-surface-hover": tokens.surfaceHover,
+					"--demo-surface-active": tokens.surfaceActive,
+				} as React.CSSProperties
+			}
+		>
+			<button
+				type="button"
+				className="file-toolbar-button"
+				data-testid="file-open"
+				title="Open file"
+				aria-label="Open file"
+				onClick={onOpen}
+			>
+				<svg
+					width="16"
+					height="16"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="2"
+					strokeLinecap="round"
+					strokeLinejoin="round"
+				>
+					<path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2" />
+				</svg>
+			</button>
+			<button
+				type="button"
+				className="file-toolbar-button"
+				data-testid="file-save"
+				title="Save file"
+				aria-label="Save file"
+				onClick={onSave}
+			>
+				<svg
+					width="16"
+					height="16"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="2"
+					strokeLinecap="round"
+					strokeLinejoin="round"
+				>
+					<path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" />
+					<path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7" />
+					<path d="M7 3v4a1 1 0 0 0 1 1h7" />
+				</svg>
+			</button>
+		</div>
+	);
+}
+
 export function App() {
 	const [themeIndex, setThemeIndex] = useState(0);
 	const current = DEMO_THEMES[themeIndex];
 	const next = DEMO_THEMES[(themeIndex + 1) % DEMO_THEMES.length];
+
+	// canvasDoc はファイル読み込み時だけ差し替える。編集中の最新 doc は
+	// onCommit で ref に写し、保存時に読む。
+	const [loadedDoc, setLoadedDoc] = useState<CanvasDoc>(initialDoc);
+	const [fileName, setFileName] = useState(DEFAULT_FILE_NAME);
+	const latestDocRef = useRef<CanvasDoc>(initialDoc);
+	const fileInputRef = useRef<HTMLInputElement>(null);
+
+	const handleCommit = useCallback((committedDoc: CanvasDoc) => {
+		latestDocRef.current = committedDoc;
+	}, []);
+
+	const handleOpenClick = useCallback(() => {
+		fileInputRef.current?.click();
+	}, []);
+
+	const handleFileChange = useCallback(
+		async (event: React.ChangeEvent<HTMLInputElement>) => {
+			const file = event.target.files?.[0];
+			// 同じファイルをもう一度選んでも change が発火するようリセットする
+			event.target.value = "";
+			if (!file) {
+				return;
+			}
+			const text = await file.text();
+			const result = parseCanvasText(text);
+			if (result.kind !== "ok") {
+				window.alert(
+					`Failed to load ${file.name}:\n${formatParseError(result)}`,
+				);
+				return;
+			}
+			latestDocRef.current = result.doc;
+			setLoadedDoc(result.doc);
+			setFileName(file.name);
+		},
+		[],
+	);
+
+	const handleSave = useCallback(() => {
+		const json = JSON.stringify(latestDocRef.current, null, 2);
+		const blob = new Blob([json], { type: "application/json" });
+		const url = URL.createObjectURL(blob);
+		const anchor = document.createElement("a");
+		anchor.href = url;
+		anchor.download = fileName;
+		anchor.click();
+		URL.revokeObjectURL(url);
+	}, [fileName]);
 
 	useEffect(() => {
 		document.title = `Canvas Demo [${__GIT_BRANCH__}]`;
@@ -83,7 +223,26 @@ export function App() {
 
 	return (
 		<div className="app">
-			<Canvas canvasDoc={initialDoc} theme={current.theme} />
+			<Canvas
+				canvasDoc={loadedDoc}
+				onCommit={handleCommit}
+				theme={current.theme}
+				toolbarLeading={
+					<FileToolbarButtons
+						tokens={current.theme.tokens}
+						onOpen={handleOpenClick}
+						onSave={handleSave}
+					/>
+				}
+			/>
+			<input
+				ref={fileInputRef}
+				type="file"
+				accept=".json,application/json"
+				style={{ display: "none" }}
+				data-testid="file-input"
+				onChange={handleFileChange}
+			/>
 			<button
 				type="button"
 				data-testid="theme-toggle"
