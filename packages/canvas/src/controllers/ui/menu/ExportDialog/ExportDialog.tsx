@@ -22,6 +22,19 @@ import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 /** Image formats offered by the export dialog. */
 export type ExportImageFormat = "png" | "svg";
 
+/**
+ * Upper bound of the margin input (world px). Keeps a typo (e.g. an extra
+ * digit) from ballooning the fit-to-content output size.
+ */
+const MAX_EXPORT_MARGIN = 500;
+
+/**
+ * Keys the number input would accept but the margin must not contain:
+ * sign characters (no negative margins) and exponent/decimal notation
+ * (the margin is a plain non-negative integer).
+ */
+const BLOCKED_MARGIN_KEYS = ["-", "+", "e", "E", "."];
+
 /** What the user confirmed in the export dialog. */
 export type ExportSubmitValues = {
 	format: ExportImageFormat;
@@ -56,7 +69,27 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
 	const [marginText, setMarginText] = useState(String(defaultMargin));
 
 	const margin = Number(marginText);
-	const isMarginValid = marginText.trim() !== "" && margin >= 0;
+	const isMarginValid =
+		marginText.trim() !== "" && margin >= 0 && margin <= MAX_EXPORT_MARGIN;
+
+	// Clamps every change (typing, paste, arrow keys) into 0..MAX as a whole
+	// number; blocked keys never reach here, this catches the rest (paste, DnD)
+	const handleMarginChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		const raw = event.target.value;
+		if (raw === "") {
+			setMarginText("");
+			return;
+		}
+		const parsed = Number(raw);
+		if (!Number.isFinite(parsed)) {
+			return;
+		}
+		const clamped = Math.min(
+			Math.max(Math.trunc(parsed), 0),
+			MAX_EXPORT_MARGIN,
+		);
+		setMarginText(String(clamped));
+	};
 
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
@@ -132,11 +165,17 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
 						<MarginInput
 							type="number"
 							min={0}
+							max={MAX_EXPORT_MARGIN}
 							step={1}
 							value={marginText}
 							aria-label={messages.exportDialogMargin}
 							data-testid="export-dialog:margin"
-							onChange={(event) => setMarginText(event.target.value)}
+							onChange={handleMarginChange}
+							onKeyDown={(event) => {
+								if (BLOCKED_MARGIN_KEYS.includes(event.key)) {
+									event.preventDefault();
+								}
+							}}
 						/>
 						<CheckboxOption>
 							<input

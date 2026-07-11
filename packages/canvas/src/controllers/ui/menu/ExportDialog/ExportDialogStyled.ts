@@ -139,6 +139,18 @@ export const MarginInput = styled.input`
 		outline: 1px solid ${theme.accent};
 		outline-offset: -1px;
 	}
+
+	/* Hide the native spinner (same convention as MenuSliderNumberInput);
+	   its arrows cannot be themed and pick up odd backgrounds in VSCode */
+	&::-webkit-outer-spin-button,
+	&::-webkit-inner-spin-button {
+		-webkit-appearance: none;
+		margin: 0;
+	}
+
+	&[type="number"] {
+		-moz-appearance: textfield;
+	}
 `;
 
 /** Footer separated by a border, mirroring the header (three-zone dialog). */
