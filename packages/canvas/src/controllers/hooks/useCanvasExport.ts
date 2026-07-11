@@ -21,6 +21,7 @@ import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperReg
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasAction } from "../reducer/CanvasActions";
 import type { CanvasRegistries } from "../setup";
+import type { NotifyError } from "./useErrorNotification";
 import type {
 	ExportImageFormat,
 	ExportSubmitValues,
@@ -119,6 +120,52 @@ export const resolveExportOptions = (
 	};
 };
 
+/**
+ * Runs the chosen export (with source: SVG embeds the .jis.json in
+ * <metadata>, PNG in an iTXt chunk; without: a plain image). The result is
+ * handed to the host via deliverToHost when set, downloaded otherwise.
+ * Failures surface through notifyError (error toast).
+ */
+export const runExportSubmit = (
+	svg: SVGSVGElement,
+	values: ExportSubmitValues,
+	exportOptions: BuildExportSvgOptions,
+	deliverToHost: ((payload: CanvasExportImagePayload) => void) | undefined,
+	notifyError: NotifyError,
+): void => {
+	const reportExportError = (err: unknown) => {
+		console.error("[Canvas] Image export failed:", err);
+		notifyError("exportImageError");
+	};
+	try {
+		if (deliverToHost) {
+			const deliver = (data: Blob) =>
+				deliverToHost({
+					format: values.format,
+					data,
+					includesSource: values.includeSource,
+				});
+			if (values.format === "svg") {
+				const svgText = canvasToSvgString(svg, exportOptions);
+				deliver(new Blob([svgText], { type: "image/svg+xml;charset=utf-8" }));
+			} else {
+				rasterizeSvgToPngBlob(svg, exportOptions).then(
+					deliver,
+					reportExportError,
+				);
+			}
+			return;
+		}
+		if (values.format === "svg") {
+			exportCanvasToSvg(svg, exportOptions);
+		} else {
+			exportCanvasToPng(svg, exportOptions).catch(reportExportError);
+		}
+	} catch (err) {
+		reportExportError(err);
+	}
+};
+
 type UseCanvasExportParams = {
 	/** The live canvas `<svg>` (null until CanvasView mounts) */
 	svgRef: React.RefObject<SVGSVGElement | null>;
@@ -127,6 +174,7 @@ type UseCanvasExportParams = {
 	exportRef: React.Ref<CanvasExportHandle> | undefined;
 	onExportImage: ((payload: CanvasExportImagePayload) => void) | undefined;
 	dispatch: Dispatch<CanvasAction>;
+	notifyError: NotifyError;
 };
 
 type UseCanvasExportResult = {
@@ -150,6 +198,7 @@ export const useCanvasExport = ({
 	exportRef,
 	onExportImage,
 	dispatch,
+	notifyError,
 }: UseCanvasExportParams): UseCanvasExportResult => {
 	// Always-fresh mirror of the state, read at export time. Must be a layout
 	// effect: the host can call the imperative handle synchronously right after
@@ -204,9 +253,6 @@ export const useCanvasExport = ({
 		setIsExportDialogOpen(true);
 	}, [dispatch]);
 
-	// Runs the chosen export (with source: SVG embeds the .jis.json in
-	// <metadata>, PNG in an iTXt chunk; without: a plain image). The result is
-	// handed to the host via onExportImage when set, downloaded otherwise.
 	const handleExportSubmit = useCallback(
 		(values: ExportSubmitValues) => {
 			setIsExportDialogOpen(false);
@@ -214,35 +260,15 @@ export const useCanvasExport = ({
 			if (!svg) {
 				return;
 			}
-			const exportOptions = buildExportOptions(values);
-			const deliverToHost = onExportImageRef.current;
-			if (deliverToHost) {
-				const deliver = (data: Blob) =>
-					deliverToHost({
-						format: values.format,
-						data,
-						includesSource: values.includeSource,
-					});
-				if (values.format === "svg") {
-					const svgText = canvasToSvgString(svg, exportOptions);
-					deliver(new Blob([svgText], { type: "image/svg+xml;charset=utf-8" }));
-				} else {
-					rasterizeSvgToPngBlob(svg, exportOptions).then(
-						deliver,
-						(err: unknown) => {
-							console.error("[Canvas] PNG export failed:", err);
-						},
-					);
-				}
-				return;
-			}
-			if (values.format === "svg") {
-				exportCanvasToSvg(svg, exportOptions);
-			} else {
-				void exportCanvasToPng(svg, exportOptions);
-			}
+			runExportSubmit(
+				svg,
+				values,
+				buildExportOptions(values),
+				onExportImageRef.current,
+				notifyError,
+			);
 		},
-		[svgRef, buildExportOptions],
+		[svgRef, buildExportOptions, notifyError],
 	);
 
 	return {

@@ -24,6 +24,7 @@ import { useClipboardWrite } from "./hooks/useClipboardWrite";
 import { resolveCommandState } from "./hooks/useCommandState";
 import { useContainerResize } from "./hooks/useContainerResize";
 import { useControlledViewport } from "./hooks/useControlledViewport";
+import { useErrorNotification } from "./hooks/useErrorNotification";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useNotifySaveRequest } from "./hooks/useNotifySaveRequest";
@@ -49,9 +50,9 @@ import { VertexControlsLayer } from "./ui/controls/VertexControlsLayer";
 import { TextEditorLayer } from "./ui/editors/TextEditorLayer";
 import { AreaSelectionRect } from "./ui/feedback/AreaSelectionRect";
 import { AxisLockGuide } from "./ui/feedback/AxisLockGuide";
-import { ClipboardErrorToast } from "./ui/feedback/ClipboardErrorToast";
 import { DragGhost } from "./ui/feedback/DragGhost";
 import { DrawingPreviewOverlay } from "./ui/feedback/DrawingPreviewOverlay";
+import { ErrorToast } from "./ui/feedback/ErrorToast";
 import { PendingConnectorOverlay } from "./ui/feedback/PendingConnectorOverlay";
 import { SelectionOverlay } from "./ui/feedback/SelectionOverlay";
 import { SnapGuides } from "./ui/feedback/SnapGuides";
@@ -238,8 +239,11 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 		dispatch({ type: "SET_DOC_DEFAULTS", docDefaults });
 	}, [docDefaults, dispatch]);
 
+	// Single error-toast slot shared by all error sources (clipboard, export)
+	const { errorNotification, notifyError } = useErrorNotification();
+
 	// Clipboard write side effect: fired whenever internalClipboard changes (Copy / Cut)
-	const clipboardWriteErrorVersion = useClipboardWrite(state.internalClipboard);
+	useClipboardWrite(state.internalClipboard, notifyError);
 
 	// Gesture handling — declared before useSyncExternalDoc so resetGestureState is available
 	const { pointerHandlers, wheelHandler, resetGestureState } =
@@ -343,6 +347,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 		exportRef,
 		onExportImage,
 		dispatch,
+		notifyError,
 	});
 
 	const { minX, minY, zoom } = state.viewport;
@@ -471,9 +476,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 										</ScrollSyncedOverlay>
 									</Container>
 									<ViewportOverlay>
-										<ClipboardErrorToast
-											errorVersion={clipboardWriteErrorVersion}
-										/>
+										<ErrorToast notification={errorNotification} />
 										<ContextMenu
 											position={state.contextMenuPosition}
 											canvasState={state}

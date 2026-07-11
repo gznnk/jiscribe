@@ -40,8 +40,9 @@ export type CanvasMessageStrings = {
 	contextMenuPaste: string;
 	contextMenuExport: string;
 
-	// Clipboard write error toast
+	// Error toasts
 	clipboardWriteError: string;
+	exportImageError: string;
 
 	// Color picker
 	colorPickerAuto: string;
@@ -136,6 +137,7 @@ export const defaultCanvasMessages: CanvasMessages = {
 
 	clipboardWriteError:
 		"Failed to write to the clipboard. Paste inside the app is still available.",
+	exportImageError: "Failed to export the image.",
 
 	colorPickerAuto: "Auto",
 	colorPickerAutoTitle: "Auto (follows theme)",
