@@ -52,6 +52,34 @@ const persistCamera = (camera: Camera): void => {
 	vscode.setState({ ...state, camera });
 };
 
+/**
+ * Minimal shape validation for messages arriving from the Extension.
+ *
+ * The CSP is `default-src 'none'`, so there is no cross-origin frame that could
+ * postMessage here; this is a defense-in-depth gate (#183) that whitelists known
+ * `type`s and checks each variant's required fields before dispatch, so an
+ * unexpected sender cannot drive the update / export handlers.
+ */
+const isExtensionToWebviewMessage = (
+	value: unknown,
+): value is ExtensionToWebviewMessage => {
+	if (typeof value !== "object" || value === null) {
+		return false;
+	}
+	const message = value as Record<string, unknown>;
+	switch (message.type) {
+		case "update":
+			return typeof message.data === "string";
+		case "requestImageExport":
+			return (
+				typeof message.requestId === "number" &&
+				(message.format === "png" || message.format === "svg")
+			);
+		default:
+			return false;
+	}
+};
+
 /** Convert a Blob to a base64 string (without the data-URL header). */
 const blobToBase64 = (blob: Blob): Promise<string> =>
 	new Promise((resolve, reject) => {
@@ -145,7 +173,10 @@ function App() {
 		 * validate in two stages and switch the display based on the result.
 		 */
 		const messageHandler = (event: MessageEvent) => {
-			const message = event.data as ExtensionToWebviewMessage;
+			if (!isExtensionToWebviewMessage(event.data)) {
+				return;
+			}
+			const message = event.data;
 
 			switch (message.type) {
 				case "update": {
