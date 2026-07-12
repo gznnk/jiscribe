@@ -7,12 +7,20 @@ import { ActorFeatures } from "../objects/primitives/actor/ActorDoc";
 import { validateActorDoc } from "../objects/primitives/actor/validateActorDoc";
 import { CalloutFeatures } from "../objects/primitives/callout/CalloutDoc";
 import { validateCalloutDoc } from "../objects/primitives/callout/validateCalloutDoc";
+import { CardFeatures } from "../objects/primitives/card/CardDoc";
+import { validateCardDoc } from "../objects/primitives/card/validateCardDoc";
 import { CloudFeatures } from "../objects/primitives/cloud/CloudDoc";
 import { validateCloudDoc } from "../objects/primitives/cloud/validateCloudDoc";
+import { CrossFeatures } from "../objects/primitives/cross/CrossDoc";
+import { validateCrossDoc } from "../objects/primitives/cross/validateCrossDoc";
 import { DbFeatures } from "../objects/primitives/db/DbDoc";
 import { validateDbDoc } from "../objects/primitives/db/validateDbDoc";
+import { DelayFeatures } from "../objects/primitives/delay/DelayDoc";
+import { validateDelayDoc } from "../objects/primitives/delay/validateDelayDoc";
 import { DiamondFeatures } from "../objects/primitives/diamond/DiamondDoc";
 import { validateDiamondDoc } from "../objects/primitives/diamond/validateDiamondDoc";
+import { DisplayFeatures } from "../objects/primitives/display/DisplayDoc";
+import { validateDisplayDoc } from "../objects/primitives/display/validateDisplayDoc";
 import { DocumentFeatures } from "../objects/primitives/document/DocumentDoc";
 import { validateDocumentDoc } from "../objects/primitives/document/validateDocumentDoc";
 import { EllipseFeatures } from "../objects/primitives/ellipse/EllipseDoc";
@@ -21,6 +29,8 @@ import { GroupFeatures } from "../objects/primitives/group/GroupDoc";
 import { validateGroupDoc } from "../objects/primitives/group/validateGroupDoc";
 import { HexagonFeatures } from "../objects/primitives/hexagon/HexagonDoc";
 import { validateHexagonDoc } from "../objects/primitives/hexagon/validateHexagonDoc";
+import { ManualInputFeatures } from "../objects/primitives/manualInput/ManualInputDoc";
+import { validateManualInputDoc } from "../objects/primitives/manualInput/validateManualInputDoc";
 import { ParallelogramFeatures } from "../objects/primitives/parallelogram/ParallelogramDoc";
 import { validateParallelogramDoc } from "../objects/primitives/parallelogram/validateParallelogramDoc";
 import { PolygonFeatures } from "../objects/primitives/polygon/PolygonDoc";
@@ -31,8 +41,14 @@ import { RectFeatures } from "../objects/primitives/rect/RectDoc";
 import { validateRectDoc } from "../objects/primitives/rect/validateRectDoc";
 import { StadiumFeatures } from "../objects/primitives/stadium/StadiumDoc";
 import { validateStadiumDoc } from "../objects/primitives/stadium/validateStadiumDoc";
+import { SubroutineFeatures } from "../objects/primitives/subroutine/SubroutineDoc";
+import { validateSubroutineDoc } from "../objects/primitives/subroutine/validateSubroutineDoc";
 import { SvgFeatures } from "../objects/primitives/svg/SvgDoc";
 import { validateSvgDoc } from "../objects/primitives/svg/validateSvgDoc";
+import { TrapezoidFeatures } from "../objects/primitives/trapezoid/TrapezoidDoc";
+import { validateTrapezoidDoc } from "../objects/primitives/trapezoid/validateTrapezoidDoc";
+import { TriangleFeatures } from "../objects/primitives/triangle/TriangleDoc";
+import { validateTriangleDoc } from "../objects/primitives/triangle/validateTriangleDoc";
 
 /**
  * Registers each type's doc validator and features into
@@ -96,6 +112,34 @@ export const initializeObjectDocValidatorRegistry = (): void => {
 		CalloutFeatures,
 	);
 	objectDocValidatorRegistry.register("db", validateDbDoc, DbFeatures);
+	objectDocValidatorRegistry.register(
+		"subroutine",
+		validateSubroutineDoc,
+		SubroutineFeatures,
+	);
+	objectDocValidatorRegistry.register(
+		"trapezoid",
+		validateTrapezoidDoc,
+		TrapezoidFeatures,
+	);
+	objectDocValidatorRegistry.register(
+		"manualInput",
+		validateManualInputDoc,
+		ManualInputFeatures,
+	);
+	objectDocValidatorRegistry.register("card", validateCardDoc, CardFeatures);
+	objectDocValidatorRegistry.register("delay", validateDelayDoc, DelayFeatures);
+	objectDocValidatorRegistry.register(
+		"display",
+		validateDisplayDoc,
+		DisplayFeatures,
+	);
+	objectDocValidatorRegistry.register(
+		"triangle",
+		validateTriangleDoc,
+		TriangleFeatures,
+	);
+	objectDocValidatorRegistry.register("cross", validateCrossDoc, CrossFeatures);
 	objectDocValidatorRegistry.register("group", validateGroupDoc, GroupFeatures);
 	objectDocValidatorRegistry.register(
 		"polygon",

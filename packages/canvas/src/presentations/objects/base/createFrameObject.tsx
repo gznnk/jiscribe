@@ -36,7 +36,7 @@ type FrameRenderState = ObjectState &
 	TransformedFrame &
 	StrokeStyleState &
 	FillStyleState &
-	TextStyleState;
+	Partial<TextStyleState>;
 
 /**
  * Create the display component for Frame-based shapes (rect / diamond / ellipse, etc. that have
@@ -83,6 +83,10 @@ export const createFrameObject = <TState extends FrameRenderState>(
 
 		const textRegionCalculator = useTextRegionRegistry().get(type);
 		const transformAttr = createSvgTransform(scaleX, scaleY, rotation, cx, cy);
+		// Text-less shapes (features.text: false, e.g. cross / triangle) draw no
+		// TextOverlay; this matches the same features.text gate used by the
+		// text-edit gesture and property-update side.
+		const hasText = props.features?.text === true;
 
 		const shape: FrameShapeProps = {
 			"data-kind": "object",
@@ -99,22 +103,24 @@ export const createFrameObject = <TState extends FrameRenderState>(
 		return (
 			<>
 				{draw(props, shape)}
-				<TextOverlay
-					x={textRegion.x}
-					y={textRegion.y}
-					width={textRegion.width}
-					height={textRegion.height}
-					transform={transformAttr}
-					text={text}
-					textType={textType}
-					textAlign={textAlign}
-					verticalAlign={verticalAlign}
-					fontColor={fontColor}
-					fontSize={fontSize}
-					fontFamily={fontFamily}
-					fontWeight={fontWeight}
-					isEditing={isEditing}
-				/>
+				{hasText && (
+					<TextOverlay
+						x={textRegion.x}
+						y={textRegion.y}
+						width={textRegion.width}
+						height={textRegion.height}
+						transform={transformAttr}
+						text={text}
+						textType={textType}
+						textAlign={textAlign}
+						verticalAlign={verticalAlign}
+						fontColor={fontColor}
+						fontSize={fontSize}
+						fontFamily={fontFamily}
+						fontWeight={fontWeight}
+						isEditing={isEditing}
+					/>
+				)}
 			</>
 		);
 	};
