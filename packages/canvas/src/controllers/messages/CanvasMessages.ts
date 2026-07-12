@@ -15,6 +15,19 @@ export type CanvasMessageStrings = {
 	/** title (tooltip) of the help (?) button */
 	toolbarShortcutHelp: string;
 
+	// Export dialog
+	exportDialogTitle: string;
+	exportDialogFormat: string;
+	exportDialogFormatPng: string;
+	exportDialogFormatSvg: string;
+	exportDialogMargin: string;
+	exportDialogIncludeSource: string;
+	exportDialogTransparentBackground: string;
+	exportDialogSubmit: string;
+	exportDialogCancel: string;
+	/** aria-label of the dialog's close (×) button */
+	exportDialogClose: string;
+
 	// Shortcut help modal
 	shortcutHelpTitle: string;
 	shortcutHelpClose: string;
@@ -25,9 +38,11 @@ export type CanvasMessageStrings = {
 
 	// Context menu
 	contextMenuPaste: string;
+	contextMenuExport: string;
 
-	// Clipboard write error toast
+	// Error toasts
 	clipboardWriteError: string;
+	exportImageError: string;
 
 	// Color picker
 	colorPickerAuto: string;
@@ -99,6 +114,17 @@ export const defaultCanvasMessages: CanvasMessages = {
 	toolbarShowShortcutHelp: "Show keyboard shortcuts",
 	toolbarShortcutHelp: "Keyboard shortcuts",
 
+	exportDialogTitle: "Export Image",
+	exportDialogFormat: "Format",
+	exportDialogFormatPng: "PNG",
+	exportDialogFormatSvg: "SVG",
+	exportDialogMargin: "Margin",
+	exportDialogIncludeSource: "Include source data (re-editable)",
+	exportDialogTransparentBackground: "Transparent background",
+	exportDialogSubmit: "Export",
+	exportDialogCancel: "Cancel",
+	exportDialogClose: "Close",
+
 	shortcutHelpTitle: "Keyboard Shortcuts",
 	shortcutHelpClose: "Close",
 	shortcutHelpCategoryEdit: "Edit",
@@ -107,9 +133,11 @@ export const defaultCanvasMessages: CanvasMessages = {
 	shortcutHelpCategoryView: "View",
 
 	contextMenuPaste: "Paste",
+	contextMenuExport: "Export…",
 
 	clipboardWriteError:
 		"Failed to write to the clipboard. Paste inside the app is still available.",
+	exportImageError: "Failed to export the image.",
 
 	colorPickerAuto: "Auto",
 	colorPickerAutoTitle: "Auto (follows theme)",

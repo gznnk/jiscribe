@@ -11,8 +11,8 @@ import {
 import { useCanvasRegistries } from "../../../contexts/CanvasRegistriesContext";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import { HelpIcon } from "../../icons/HelpIcon";
+import { ShortcutHelpModal } from "../../modal/ShortcutHelp/ShortcutHelpModal";
 import { ShapeLibraryItem } from "../ShapeLibrary/ShapeLibraryItem";
-import { ShortcutHelpModal } from "../ShortcutHelp/ShortcutHelpModal";
 
 type ToolbarProps = {
 	/** ID of the shape preset currently being drawn (for the tool's active state) */
@@ -62,14 +62,10 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 	const [isHelpOpen, setIsHelpOpen] = useState(false);
 	const closeHelp = useCallback(() => setIsHelpOpen(false), []);
 
+	// Escape での閉じ処理は ModalShell が担う。ここは「?」で開くだけ。
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
-			// While open, close on Escape (works even when an input holds focus)
 			if (isHelpOpen) {
-				if (event.key === "Escape") {
-					event.preventDefault();
-					setIsHelpOpen(false);
-				}
 				return;
 			}
 

@@ -7,6 +7,8 @@
 	"exports": {
 		".": "./src/index.ts",
 		"./parser": "./src/parser.ts",
+		"./png-source": "./src/png-source.ts",
+		"./svg-source": "./src/svg-source.ts",
 		"./ai/schema": "./ai/jiscribe.schema.json",
 		"./ai/guide": "./ai/ai-guide.md",
 		"./ai/reference": "./ai/reference.md"
