@@ -49,6 +49,16 @@ class JiscribeImageDocument implements vscode.CustomDocument {
 		public sourceText: string | null,
 	) {}
 
+	/**
+	 * True when the last save fell back to the embed path (hidden/unresponsive
+	 * Webview), so the on-disk image is stale relative to the source (#179). The
+	 * Extension re-renders and rewrites once the tab becomes visible again.
+	 */
+	public needsImageReconcile = false;
+
+	/** Guards against overlapping reconcile writes when multiple renders fire. */
+	public reconcileInFlight = false;
+
 	dispose(): void {
 		// Only in-memory bytes are held, so no explicit cleanup is needed.
 	}
@@ -181,6 +191,12 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 						break;
 					}
 
+					case "rendered":
+						// The canvas is mounted and can export now. If a prior hidden-tab
+						// save left a stale image on disk (#179), re-render and rewrite it.
+						void this.reconcileStaleImage(document);
+						break;
+
 					case "exportImage":
 						// Save the exported image to the workspace (save dialog → write → notify).
 						void saveExportedImage(
@@ -207,7 +223,7 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		document: JiscribeImageDocument,
 		token: vscode.CancellationToken,
 	): Promise<void> {
-		const bytes = await this.renderCurrentImage(document);
+		const { bytes, fresh } = await this.renderCurrentImage(document);
 		if (token.isCancellationRequested) {
 			return;
 		}
@@ -222,6 +238,11 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		if (embeddedSource !== null) {
 			document.sourceText = embeddedSource;
 		}
+		// A fallback save (hidden/unresponsive Webview) writes the old rendered
+		// image with the new source. Flag it so the image is re-rendered and
+		// rewritten once the tab is visible again (#179). Nothing to reconcile when
+		// there is no source (the image can't change).
+		document.needsImageReconcile = !fresh && document.sourceText !== null;
 	}
 
 	/**
@@ -235,7 +256,7 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		token: vscode.CancellationToken,
 	): Promise<void> {
 		const destinationKind = kindFromPath(destination.path);
-		const bytes = await this.renderCurrentImage(document, destinationKind);
+		const { bytes } = await this.renderCurrentImage(document, destinationKind);
 		if (token.isCancellationRequested) {
 			return;
 		}
@@ -250,6 +271,8 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		const bytes = await vscode.workspace.fs.readFile(document.uri);
 		document.savedBytes = bytes;
 		document.sourceText = extractSourceFromImage(document.kind, bytes);
+		// Disk image and source are now consistent, so drop any pending reconcile (#179).
+		document.needsImageReconcile = false;
 		this.pushSourceToWebview(document);
 	}
 
@@ -306,13 +329,17 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 	/**
 	 * Get image bytes in `targetKind` format reflecting the current source.
 	 * First choice is a Webview re-render (fit-to-content, latest look). If there
-	 * is no Webview or it doesn't respond, return the last saved image with the
-	 * latest source re-embedded (same format only; see below).
+	 * is no Webview or it doesn't respond, fall back to the last saved image with
+	 * the latest source re-embedded (same format only; see below).
+	 *
+	 * `fresh` reports whether the bytes came from a live Webview render; `false`
+	 * means the (stale-image) fallback was taken, so the caller can flag the
+	 * document for reconciliation (#179).
 	 */
 	private async renderCurrentImage(
 		document: JiscribeImageDocument,
 		targetKind: JiscribeImageKind = document.kind,
-	): Promise<Uint8Array> {
+	): Promise<{ bytes: Uint8Array; fresh: boolean }> {
 		const panel = this.panels.get(document);
 		// With retainContextWhenHidden: false, a hidden tab's Webview has a
 		// discarded JS context and won't answer postMessage. Fall back immediately
@@ -320,12 +347,72 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		if (panel && panel.visible) {
 			const data = await this.requestImageFromWebview(panel, targetKind);
 			if (data !== null) {
-				return targetKind === "png"
-					? new Uint8Array(Buffer.from(data, "base64"))
-					: new Uint8Array(Buffer.from(data, "utf8"));
+				const bytes =
+					targetKind === "png"
+						? new Uint8Array(Buffer.from(data, "base64"))
+						: new Uint8Array(Buffer.from(data, "utf8"));
+				return { bytes, fresh: true };
 			}
 		}
-		return this.embedCurrentSource(document, targetKind);
+		return {
+			bytes: this.embedCurrentSource(document, targetKind),
+			fresh: false,
+		};
+	}
+
+	/**
+	 * Re-render the current source and rewrite the file when a prior hidden-tab
+	 * save left a stale image on disk (#179). Called on the Webview's "rendered"
+	 * signal, so the canvas is mounted and can export. No-op unless a reconcile is
+	 * pending and the tab is visible; the source on disk is already current, so
+	 * this only refreshes the rendered image bytes (no dirty state is introduced).
+	 */
+	private async reconcileStaleImage(
+		document: JiscribeImageDocument,
+	): Promise<void> {
+		const panel = this.panels.get(document);
+		if (
+			!panel ||
+			!panel.visible ||
+			!document.needsImageReconcile ||
+			document.reconcileInFlight
+		) {
+			return;
+		}
+		document.reconcileInFlight = true;
+		try {
+			// The image on disk already embeds this source; reconcile only refreshes
+			// the rendered bytes for it. Capture it so we can detect an edit/undo
+			// landing during the async render below.
+			const sourceAtStart = document.sourceText;
+			const data = await this.requestImageFromWebview(panel, document.kind);
+			// Give up this attempt if the render failed or the tab was hidden again;
+			// the flag stays set so a later "rendered" retries.
+			if (data === null || !panel.visible) {
+				return;
+			}
+			// An edit/undo changed the source mid-render, so the file is now dirty and
+			// its render will be written by the normal save flow. Writing here would
+			// push unsaved edits to disk; skip and clear the flag (the save path owns
+			// reconciliation from now on).
+			if (document.sourceText !== sourceAtStart) {
+				document.needsImageReconcile = false;
+				return;
+			}
+			const bytes =
+				document.kind === "png"
+					? new Uint8Array(Buffer.from(data, "base64"))
+					: new Uint8Array(Buffer.from(data, "utf8"));
+			await vscode.workspace.fs.writeFile(document.uri, bytes);
+			document.savedBytes = bytes;
+			const embeddedSource = extractSourceFromImage(document.kind, bytes);
+			if (embeddedSource !== null) {
+				document.sourceText = embeddedSource;
+			}
+			document.needsImageReconcile = false;
+		} finally {
+			document.reconcileInFlight = false;
+		}
 	}
 
 	/** Ask the Webview to generate the image and await the response (with timeout). */

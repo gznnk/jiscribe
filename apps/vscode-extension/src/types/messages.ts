@@ -39,6 +39,14 @@ export type WebviewToExtensionMessage =
 	 */
 	| { type: "imageExportResult"; requestId: number; data: string | null }
 	/**
+	 * The canvas mounted and can now export an image. Sent after every (re)mount
+	 * once the doc renders, so the Extension can reconcile a stale image left by a
+	 * hidden-tab save (#179): a save while the Webview was discarded falls back to
+	 * "old image + new source", and this lets the Extension re-render and rewrite
+	 * once the tab is visible again.
+	 */
+	| { type: "rendered" }
+	/**
 	 * Requests saving an image produced by the export dialog to the workspace.
 	 * `base64` holds the image bytes (base64 for both PNG and SVG text). The
 	 * Extension derives the file name and shows the save dialog.

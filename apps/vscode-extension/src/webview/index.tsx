@@ -277,6 +277,17 @@ function App() {
 		};
 	}, []); // empty deps = run once on mount
 
+	// Notify the Extension once the canvas has rendered and its export handle is
+	// available. This effect runs after the Canvas commits (exportRef is set via
+	// useImperativeHandle during commit, before this effect), so requestImageExport
+	// can succeed. Lets the Extension reconcile a stale image after a hidden-tab
+	// save (#179).
+	useEffect(() => {
+		if (canvasDoc) {
+			vscode.postMessage({ type: "rendered" });
+		}
+	}, [canvasDoc]);
+
 	// Display priority:
 	// missing source > JSON syntax error > semantic error > Canvas > loading
 
