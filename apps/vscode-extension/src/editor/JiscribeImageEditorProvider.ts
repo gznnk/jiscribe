@@ -109,9 +109,7 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		const readUri = openContext.backupId
 			? vscode.Uri.parse(openContext.backupId)
 			: uri;
-		const kind: JiscribeImageKind = uri.path.endsWith(".jis.svg")
-			? "svg"
-			: "png";
+		const kind = kindFromPath(uri.path);
 		const bytes = await vscode.workspace.fs.readFile(readUri);
 		return new JiscribeImageDocument(
 			uri,
@@ -216,13 +214,18 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		document.savedBytes = bytes;
 	}
 
-	/** 名前を付けて保存。 */
+	/**
+	 * 名前を付けて保存。保存先の拡張子で画像形式を決める（`document.kind` では
+	 * なく `destination` を見る）。`.jis.png` を `.jis.svg` として保存するような
+	 * フォーマット跨ぎでも、保存先形式のバイト列を書く。
+	 */
 	public async saveCustomDocumentAs(
 		document: JiscribeImageDocument,
 		destination: vscode.Uri,
 		token: vscode.CancellationToken,
 	): Promise<void> {
-		const bytes = await this.renderCurrentImage(document);
+		const destinationKind = kindFromPath(destination.path);
+		const bytes = await this.renderCurrentImage(document, destinationKind);
 		if (token.isCancellationRequested) {
 			return;
 		}
@@ -290,27 +293,28 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 	}
 
 	/**
-	 * 現在のソースを反映した画像バイト列を得る。
+	 * 現在のソースを反映した画像バイト列を `targetKind` 形式で得る。
 	 * 第一候補は Webview での再レンダリング（fit-to-content・最新の見た目）。
 	 * Webview が無い/応答しない場合は、最後に保存した画像へ最新ソースを
-	 * 埋め込み直したものを返す。
+	 * 埋め込み直したものを返す（同一形式のときのみ・下記参照）。
 	 */
 	private async renderCurrentImage(
 		document: JiscribeImageDocument,
+		targetKind: JiscribeImageKind = document.kind,
 	): Promise<Uint8Array> {
 		const panel = this.panels.get(document);
 		// retainContextWhenHidden: false のため、非表示タブの Webview は JS
 		// コンテキストが破棄済みで postMessage に応答しない。タイムアウトを
 		// 待たずに即フォールバックする。
 		if (panel && panel.visible) {
-			const data = await this.requestImageFromWebview(panel, document.kind);
+			const data = await this.requestImageFromWebview(panel, targetKind);
 			if (data !== null) {
-				return document.kind === "png"
+				return targetKind === "png"
 					? new Uint8Array(Buffer.from(data, "base64"))
 					: new Uint8Array(Buffer.from(data, "utf8"));
 			}
 		}
-		return this.embedCurrentSource(document);
+		return this.embedCurrentSource(document, targetKind);
 	}
 
 	/** Webview に画像生成を依頼し、応答を待つ（タイムアウト付き）。 */
@@ -342,8 +346,22 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 	 * 埋め込み直す。画像の見た目は前回保存時のままになるが、ソース
 	 * （編集内容）は失われない。ソースが無い/画像が壊れている場合は
 	 * 画像をそのまま返す。
+	 *
+	 * 土台の `savedBytes` は `document.kind` 形式なので、別形式（`targetKind`
+	 * が異なるフォーマット跨ぎの Save As）はここでは作れない。誤形式のバイト列
+	 * を書くとファイルが壊れて図が失われるため、フォールバック不能として失敗
+	 * させ、VSCode 側にエラーを通知させる。
 	 */
-	private embedCurrentSource(document: JiscribeImageDocument): Uint8Array {
+	private embedCurrentSource(
+		document: JiscribeImageDocument,
+		targetKind: JiscribeImageKind = document.kind,
+	): Uint8Array {
+		if (targetKind !== document.kind) {
+			throw new Error(
+				`Cannot save as .jis.${targetKind}: the canvas must be open and ` +
+					`visible to render a ${targetKind.toUpperCase()} image.`,
+			);
+		}
 		if (document.sourceText === null) {
 			return document.savedBytes;
 		}
@@ -366,6 +384,11 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 			? document.savedBytes
 			: new Uint8Array(Buffer.from(replacedText, "utf8"));
 	}
+}
+
+/** URI パスから画像種別を判定する（`.jis.svg` 以外は png 扱い）。 */
+function kindFromPath(path: string): JiscribeImageKind {
+	return path.endsWith(".jis.svg") ? "svg" : "png";
 }
 
 /** 画像バイト列から埋め込みソース JSON を取り出す（無ければ null）。 */
