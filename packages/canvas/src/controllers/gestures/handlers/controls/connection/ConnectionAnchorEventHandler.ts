@@ -1,5 +1,6 @@
 import type { Point } from "@workspace/geometry";
 
+import { ConnectorFeatures } from "../../../../../schemas/objects/connections/connector/ConnectorDoc";
 import { AUTO_COLOR } from "../../../../../schemas/objects/utils/autoColor";
 import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
@@ -90,6 +91,9 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 		const pendingConnector: ConnectorState = {
 			id: connectorId,
 			type: "connector",
+			// features must be stamped on creation: handlePropertyUpdate reads it directly
+			// to gate style updates (a connector without it silently ignores stroke changes).
+			features: ConnectorFeatures,
 			// points holds only intermediate waypoints (endpoints are held by source/target). Empty on new creation since it is a straight line
 			points: [] as Point[],
 			source: {
