@@ -1,14 +1,16 @@
-import {
-	insertPngTextChunk,
-	PNG_SOURCE_KEYWORD,
-	readPngTextChunk,
-} from "@workspace/canvas/png-source";
-import {
-	extractCanvasSourceFromSvgText,
-	replaceCanvasSourceInSvgText,
-} from "@workspace/canvas/svg-source";
 import * as vscode from "vscode";
 
+import {
+	computeExportBytes,
+	embedCurrentSource,
+	extractSourceFromImage,
+	reconcileImageDocument,
+	revertImageDocument,
+	saveImageDocument,
+	type ImageDocSeams,
+	type ImageDocState,
+	type JiscribeImageKind,
+} from "./imageDocumentOps";
 import { saveExportedImage } from "./saveExportedImage";
 import { getCanvasWebviewHtml } from "./webviewHtml";
 import type {
@@ -23,16 +25,15 @@ import type {
  */
 const IMAGE_EXPORT_TIMEOUT_MS = 10_000;
 
-/** Image document kind; decides the source-embedding format and save-time rendering. */
-type JiscribeImageKind = "png" | "svg";
-
 /**
  * CustomDocument for `.jis.png` / `.jis.svg`.
  *
  * TextDocument can't be used for image editors, so we hold the document state
- * (source JSON and the last saved image bytes) ourselves.
+ * (source JSON and the last saved image bytes) ourselves. The save-time
+ * orchestration lives in imageDocumentOps (VSCode-free, unit-tested); this class
+ * is just that state plus the CustomDocument requirements (uri / dispose).
  */
-class JiscribeImageDocument implements vscode.CustomDocument {
+class JiscribeImageDocument implements vscode.CustomDocument, ImageDocState {
 	/**
 	 * @param uri - document URI
 	 * @param kind - image kind (png / svg)
@@ -49,14 +50,7 @@ class JiscribeImageDocument implements vscode.CustomDocument {
 		public sourceText: string | null,
 	) {}
 
-	/**
-	 * True when the last save fell back to the embed path (hidden/unresponsive
-	 * Webview), so the on-disk image is stale relative to the source (#179). The
-	 * Extension re-renders and rewrites once the tab becomes visible again.
-	 */
 	public needsImageReconcile = false;
-
-	/** Guards against overlapping reconcile writes when multiple renders fire. */
 	public reconcileInFlight = false;
 
 	dispose(): void {
@@ -82,7 +76,7 @@ class JiscribeImageDocument implements vscode.CustomDocument {
  *   save:  ask Webview to render (fit-to-content re-render + re-embed source) →
  *          write file. If the Webview can't respond, fall back to "existing
  *          image + re-embedded latest source" (image looks as it did at the last
- *          save, but the source isn't lost).
+ *          save, but the source isn't lost); see imageDocumentOps.
  */
 export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<JiscribeImageDocument> {
 	constructor(private readonly context: vscode.ExtensionContext) {}
@@ -194,7 +188,7 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 					case "rendered":
 						// The canvas is mounted and can export now. If a prior hidden-tab
 						// save left a stale image on disk (#179), re-render and rewrite it.
-						void this.reconcileStaleImage(document);
+						void reconcileImageDocument(document, this.makeSeams(document));
 						break;
 
 					case "exportImage":
@@ -223,26 +217,7 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		document: JiscribeImageDocument,
 		token: vscode.CancellationToken,
 	): Promise<void> {
-		const { bytes, fresh } = await this.renderCurrentImage(document);
-		if (token.isCancellationRequested) {
-			return;
-		}
-		await vscode.workspace.fs.writeFile(document.uri, bytes);
-		document.savedBytes = bytes;
-		// The rendered image embeds the live canvas source (canvasStateRef), which
-		// can be newer than sourceText (the 'update' message is coalesced by the
-		// commit scheduler, #125). Re-sync sourceText to what actually landed on
-		// disk so the backup/undo baseline (embedCurrentSource) matches the file
-		// instead of re-embedding a stale source (#178).
-		const embeddedSource = extractSourceFromImage(document.kind, bytes);
-		if (embeddedSource !== null) {
-			document.sourceText = embeddedSource;
-		}
-		// A fallback save (hidden/unresponsive Webview) writes the old rendered
-		// image with the new source. Flag it so the image is re-rendered and
-		// rewritten once the tab is visible again (#179). Nothing to reconcile when
-		// there is no source (the image can't change).
-		document.needsImageReconcile = !fresh && document.sourceText !== null;
+		await saveImageDocument(document, this.makeSeams(document, token));
 	}
 
 	/**
@@ -256,7 +231,11 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		token: vscode.CancellationToken,
 	): Promise<void> {
 		const destinationKind = kindFromPath(destination.path);
-		const { bytes } = await this.renderCurrentImage(document, destinationKind);
+		const { bytes } = await computeExportBytes(
+			document,
+			this.makeSeams(document),
+			destinationKind,
+		);
 		if (token.isCancellationRequested) {
 			return;
 		}
@@ -268,11 +247,7 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		document: JiscribeImageDocument,
 		_token: vscode.CancellationToken,
 	): Promise<void> {
-		const bytes = await vscode.workspace.fs.readFile(document.uri);
-		document.savedBytes = bytes;
-		document.sourceText = extractSourceFromImage(document.kind, bytes);
-		// Disk image and source are now consistent, so drop any pending reconcile (#179).
-		document.needsImageReconcile = false;
+		await revertImageDocument(document, this.makeSeams(document));
 		this.pushSourceToWebview(document);
 	}
 
@@ -287,7 +262,7 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		context: vscode.CustomDocumentBackupContext,
 		_token: vscode.CancellationToken,
 	): Promise<vscode.CustomDocumentBackup> {
-		const bytes = this.embedCurrentSource(document);
+		const bytes = embedCurrentSource(document);
 		await vscode.workspace.fs.writeFile(context.destination, bytes);
 		return {
 			id: context.destination.toString(),
@@ -299,6 +274,40 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 				}
 			},
 		};
+	}
+
+	/**
+	 * Build the VSCode-backed effects the ops delegate to: webview render, file
+	 * read/write on the document's URI, and (for save) the cancel token.
+	 */
+	private makeSeams(
+		document: JiscribeImageDocument,
+		token?: vscode.CancellationToken,
+	): ImageDocSeams {
+		return {
+			render: (kind) => this.renderViaWebview(document, kind),
+			readFile: async () => vscode.workspace.fs.readFile(document.uri),
+			writeFile: async (bytes) =>
+				vscode.workspace.fs.writeFile(document.uri, bytes),
+			isCancelled: token ? () => token.isCancellationRequested : undefined,
+		};
+	}
+
+	/**
+	 * Render the current canvas via the live Webview, or null when unavailable.
+	 * With retainContextWhenHidden: false, a hidden tab's Webview has a discarded
+	 * JS context and won't answer postMessage, so return null immediately instead
+	 * of waiting for the timeout.
+	 */
+	private renderViaWebview(
+		document: JiscribeImageDocument,
+		kind: JiscribeImageKind,
+	): Promise<string | null> {
+		const panel = this.panels.get(document);
+		if (!panel || !panel.visible) {
+			return Promise.resolve(null);
+		}
+		return this.requestImageFromWebview(panel, kind);
 	}
 
 	/** Send the current source JSON to the Webview (reflecting undo/redo/revert). */
@@ -326,95 +335,6 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		panel.webview.postMessage(message);
 	}
 
-	/**
-	 * Get image bytes in `targetKind` format reflecting the current source.
-	 * First choice is a Webview re-render (fit-to-content, latest look). If there
-	 * is no Webview or it doesn't respond, fall back to the last saved image with
-	 * the latest source re-embedded (same format only; see below).
-	 *
-	 * `fresh` reports whether the bytes came from a live Webview render; `false`
-	 * means the (stale-image) fallback was taken, so the caller can flag the
-	 * document for reconciliation (#179).
-	 */
-	private async renderCurrentImage(
-		document: JiscribeImageDocument,
-		targetKind: JiscribeImageKind = document.kind,
-	): Promise<{ bytes: Uint8Array; fresh: boolean }> {
-		const panel = this.panels.get(document);
-		// With retainContextWhenHidden: false, a hidden tab's Webview has a
-		// discarded JS context and won't answer postMessage. Fall back immediately
-		// instead of waiting for the timeout.
-		if (panel && panel.visible) {
-			const data = await this.requestImageFromWebview(panel, targetKind);
-			if (data !== null) {
-				const bytes =
-					targetKind === "png"
-						? new Uint8Array(Buffer.from(data, "base64"))
-						: new Uint8Array(Buffer.from(data, "utf8"));
-				return { bytes, fresh: true };
-			}
-		}
-		return {
-			bytes: this.embedCurrentSource(document, targetKind),
-			fresh: false,
-		};
-	}
-
-	/**
-	 * Re-render the current source and rewrite the file when a prior hidden-tab
-	 * save left a stale image on disk (#179). Called on the Webview's "rendered"
-	 * signal, so the canvas is mounted and can export. No-op unless a reconcile is
-	 * pending and the tab is visible; the source on disk is already current, so
-	 * this only refreshes the rendered image bytes (no dirty state is introduced).
-	 */
-	private async reconcileStaleImage(
-		document: JiscribeImageDocument,
-	): Promise<void> {
-		const panel = this.panels.get(document);
-		if (
-			!panel ||
-			!panel.visible ||
-			!document.needsImageReconcile ||
-			document.reconcileInFlight
-		) {
-			return;
-		}
-		document.reconcileInFlight = true;
-		try {
-			// The image on disk already embeds this source; reconcile only refreshes
-			// the rendered bytes for it. Capture it so we can detect an edit/undo
-			// landing during the async render below.
-			const sourceAtStart = document.sourceText;
-			const data = await this.requestImageFromWebview(panel, document.kind);
-			// Give up this attempt if the render failed or the tab was hidden again;
-			// the flag stays set so a later "rendered" retries.
-			if (data === null || !panel.visible) {
-				return;
-			}
-			// An edit/undo changed the source mid-render, so the file is now dirty and
-			// its render will be written by the normal save flow. Writing here would
-			// push unsaved edits to disk; skip and clear the flag (the save path owns
-			// reconciliation from now on).
-			if (document.sourceText !== sourceAtStart) {
-				document.needsImageReconcile = false;
-				return;
-			}
-			const bytes =
-				document.kind === "png"
-					? new Uint8Array(Buffer.from(data, "base64"))
-					: new Uint8Array(Buffer.from(data, "utf8"));
-			await vscode.workspace.fs.writeFile(document.uri, bytes);
-			document.savedBytes = bytes;
-			const embeddedSource = extractSourceFromImage(document.kind, bytes);
-			if (embeddedSource !== null) {
-				document.sourceText = embeddedSource;
-			}
-			document.needsImageReconcile = false;
-		} finally {
-			document.reconcileInFlight = false;
-		}
-	}
-
 	/** Ask the Webview to generate the image and await the response (with timeout). */
 	private requestImageFromWebview(
 		panel: vscode.WebviewPanel,
@@ -438,62 +358,9 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 			panel.webview.postMessage(message);
 		});
 	}
-
-	/**
-	 * Save fallback: re-embed the current source into the last saved image bytes.
-	 * The image looks as of the last save, but the source (edits) isn't lost. If
-	 * there's no source or the image is corrupt, return the image unchanged.
-	 *
-	 * The base `savedBytes` is in `document.kind` format, so a different format
-	 * (a cross-format Save As where `targetKind` differs) can't be produced here.
-	 * Writing wrong-format bytes would corrupt the file and lose the diagram, so
-	 * treat it as an unrecoverable fallback and throw, letting VSCode report the error.
-	 */
-	private embedCurrentSource(
-		document: JiscribeImageDocument,
-		targetKind: JiscribeImageKind = document.kind,
-	): Uint8Array {
-		if (targetKind !== document.kind) {
-			throw new Error(
-				`Cannot save as .jis.${targetKind}: the canvas must be open and ` +
-					`visible to render a ${targetKind.toUpperCase()} image.`,
-			);
-		}
-		if (document.sourceText === null) {
-			return document.savedBytes;
-		}
-		if (document.kind === "png") {
-			try {
-				return insertPngTextChunk(
-					document.savedBytes,
-					PNG_SOURCE_KEYWORD,
-					document.sourceText,
-				);
-			} catch {
-				return document.savedBytes;
-			}
-		}
-		const replacedText = replaceCanvasSourceInSvgText(
-			Buffer.from(document.savedBytes).toString("utf8"),
-			document.sourceText,
-		);
-		return replacedText === null
-			? document.savedBytes
-			: new Uint8Array(Buffer.from(replacedText, "utf8"));
-	}
 }
 
 /** Determine the image kind from the URI path (anything but `.jis.svg` is png). */
 function kindFromPath(path: string): JiscribeImageKind {
 	return path.endsWith(".jis.svg") ? "svg" : "png";
-}
-
-/** Extract the embedded source JSON from image bytes (null if absent). */
-function extractSourceFromImage(
-	kind: JiscribeImageKind,
-	bytes: Uint8Array,
-): string | null {
-	return kind === "png"
-		? readPngTextChunk(bytes, PNG_SOURCE_KEYWORD)
-		: extractCanvasSourceFromSvgText(Buffer.from(bytes).toString("utf8"));
 }
