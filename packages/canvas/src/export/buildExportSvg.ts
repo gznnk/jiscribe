@@ -197,3 +197,21 @@ export const serializeSvg = (svg: SVGSVGElement): string => {
 	const xml = new XMLSerializer().serializeToString(svg);
 	return `<?xml version="1.0" encoding="UTF-8"?>\n${xml}`;
 };
+
+/**
+ * Builds the sized, serialized export SVG plus its logical size. The single
+ * place deciding the output dimensions, shared by the SVG export and the PNG
+ * rasterizer so the two formats can never diverge in size.
+ */
+export const buildSizedExportSvgString = (
+	svg: SVGSVGElement,
+	options: BuildExportSvgOptions = {},
+): { svgXml: string; width: number; height: number } => {
+	// With a fit-to-content viewBox the logical size is the region itself
+	// (1 world unit = 1 CSS px); otherwise export at the on-screen size.
+	const { width, height } = options.viewBox ?? getSvgSize(svg);
+	const exportSvg = buildExportSvg(svg, options);
+	exportSvg.setAttribute("width", String(width));
+	exportSvg.setAttribute("height", String(height));
+	return { svgXml: serializeSvg(exportSvg), width, height };
+};

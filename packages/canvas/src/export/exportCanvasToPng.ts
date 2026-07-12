@@ -1,7 +1,5 @@
 import {
-	buildExportSvg,
-	getSvgSize,
-	serializeSvg,
+	buildSizedExportSvgString,
 	type BuildExportSvgOptions,
 } from "./buildExportSvg";
 import { buildTimestampedName, downloadBlob } from "./downloadBlob";
@@ -49,15 +47,8 @@ export const rasterizeSvgToPngBlob = async (
 	options: RasterizeSvgOptions = {},
 ): Promise<Blob> => {
 	const scale = options.scale ?? 2;
-	// With a fit-to-content viewBox the logical size is the region itself
-	// (1 world unit = 1 CSS px); otherwise export at the on-screen size.
-	const { width, height } = options.viewBox ?? getSvgSize(svg);
-
-	const exportSvg = buildExportSvg(svg, options);
-	exportSvg.setAttribute("width", String(width));
-	exportSvg.setAttribute("height", String(height));
-
-	const image = await loadSvgImage(serializeSvg(exportSvg));
+	const { svgXml, width, height } = buildSizedExportSvgString(svg, options);
+	const image = await loadSvgImage(svgXml);
 
 	const canvas = document.createElement("canvas");
 	canvas.width = Math.max(1, Math.ceil(width * scale));

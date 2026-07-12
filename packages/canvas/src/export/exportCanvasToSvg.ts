@@ -1,7 +1,5 @@
 import {
-	buildExportSvg,
-	getSvgSize,
-	serializeSvg,
+	buildSizedExportSvgString,
 	type BuildExportSvgOptions,
 } from "./buildExportSvg";
 import { buildTimestampedName, downloadBlob } from "./downloadBlob";
@@ -23,15 +21,7 @@ export type ExportCanvasToSvgOptions = BuildExportSvgOptions & {
 export const canvasToSvgString = (
 	svg: SVGSVGElement,
 	options: BuildExportSvgOptions = {},
-): string => {
-	// With a fit-to-content viewBox the logical size is the region itself
-	// (1 world unit = 1 CSS px); otherwise export at the on-screen size.
-	const { width, height } = options.viewBox ?? getSvgSize(svg);
-	const exportSvg = buildExportSvg(svg, options);
-	exportSvg.setAttribute("width", String(width));
-	exportSvg.setAttribute("height", String(height));
-	return serializeSvg(exportSvg);
-};
+): string => buildSizedExportSvgString(svg, options).svgXml;
 
 /**
  * Downloads the Canvas `<svg>` as an SVG. With `source` it is an editable
