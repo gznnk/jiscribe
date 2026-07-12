@@ -22,10 +22,13 @@ export class ObjectMapperRegistry {
 			// Stamp the type's declaration descriptor onto every state (as a shared
 			// reference, never a copy) so consumers can read per-type specs from the
 			// object without a registry lookup — works for custom types too (#165).
-			toState: (doc) => ({
-				...mapper.toState(doc as TDoc),
-				features,
-			}),
+			toState: (doc) => {
+				// mapper.toState は常に新規リテラルを返すので所有物として破壊代入できる
+				// （CanvasMapper.processObject の parentId/childIds 代入と同じ契約）
+				const state = mapper.toState(doc as TDoc);
+				state.features = features;
+				return state;
+			},
 			toDoc: (state) => mapper.toDoc(state as TState),
 			features,
 		});
