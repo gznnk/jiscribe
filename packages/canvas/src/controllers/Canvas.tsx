@@ -57,9 +57,9 @@ import { PendingConnectorOverlay } from "./ui/feedback/PendingConnectorOverlay";
 import { SelectionOverlay } from "./ui/feedback/SelectionOverlay";
 import { SnapGuides } from "./ui/feedback/SnapGuides";
 import { ContextMenu } from "./ui/menu/ContextMenu";
-import { ExportDialog } from "./ui/menu/ExportDialog";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
 import { Toolbar } from "./ui/menu/Toolbar";
+import { ExportDialog } from "./ui/modal/ExportDialog";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { Camera } from "../states/canvas/Viewport";
 

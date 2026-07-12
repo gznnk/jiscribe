@@ -25,7 +25,7 @@ import type { NotifyError } from "./useErrorNotification";
 import type {
 	ExportImageFormat,
 	ExportSubmitValues,
-} from "../ui/menu/ExportDialog";
+} from "../ui/modal/ExportDialog";
 import { calcContentBounds } from "../utils/calcContentBounds";
 
 /**

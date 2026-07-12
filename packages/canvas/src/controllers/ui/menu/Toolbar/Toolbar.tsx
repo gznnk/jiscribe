@@ -11,8 +11,8 @@ import {
 import { useCanvasRegistries } from "../../../contexts/CanvasRegistriesContext";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import { HelpIcon } from "../../icons/HelpIcon";
+import { ShortcutHelpModal } from "../../modal/ShortcutHelp/ShortcutHelpModal";
 import { ShapeLibraryItem } from "../ShapeLibrary/ShapeLibraryItem";
-import { ShortcutHelpModal } from "../ShortcutHelp/ShortcutHelpModal";
 
 type ToolbarProps = {
 	/** ID of the shape preset currently being drawn (for the tool's active state) */
@@ -62,17 +62,10 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 	const [isHelpOpen, setIsHelpOpen] = useState(false);
 	const closeHelp = useCallback(() => setIsHelpOpen(false), []);
 
+	// Escape での閉じ処理は ModalShell が担う。ここは「?」で開くだけ。
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
-			// While open, close on Escape (works even when an input holds focus).
-			// stopPropagation で bubble 段の useKeyboardShortcuts に Escape を
-			// DeselectAllCommand として消費させない（モーダルを閉じるだけにする）。
 			if (isHelpOpen) {
-				if (event.key === "Escape") {
-					event.preventDefault();
-					event.stopPropagation();
-					setIsHelpOpen(false);
-				}
 				return;
 			}
 
@@ -89,11 +82,8 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 			}
 		};
 
-		// capture 段で登録する: モーダルは Canvas コンテナ内にあり、bubble 段では
-		// コンテナの useKeyboardShortcuts が先に stopPropagation するため
-		// document のリスナーまで Escape が届かない。
-		document.addEventListener("keydown", handleKeyDown, true);
-		return () => document.removeEventListener("keydown", handleKeyDown, true);
+		document.addEventListener("keydown", handleKeyDown);
+		return () => document.removeEventListener("keydown", handleKeyDown);
 	}, [isHelpOpen]);
 
 	return (

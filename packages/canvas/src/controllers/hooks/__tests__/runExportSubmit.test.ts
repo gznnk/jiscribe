@@ -7,7 +7,7 @@ import {
 	rasterizeSvgToPngBlob,
 } from "../../../export";
 import type { BuildExportSvgOptions } from "../../../export";
-import type { ExportSubmitValues } from "../../ui/menu/ExportDialog";
+import type { ExportSubmitValues } from "../../ui/modal/ExportDialog";
 import { runExportSubmit } from "../useCanvasExport";
 
 vi.mock("../../../export", () => ({
