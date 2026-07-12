@@ -91,7 +91,16 @@ export const saveExportedImage = async (
 			await vscode.commands.executeCommand("revealFileInOS", destination);
 		} catch {
 			// リモート環境等で OS のファイラーを開けない場合はエクスプローラービューで代替
-			await vscode.commands.executeCommand("revealInExplorer", destination);
+			try {
+				await vscode.commands.executeCommand("revealInExplorer", destination);
+			} catch (err) {
+				// ワークスペース外の保存先等では代替も失敗し得る。保存自体は成功
+				// しているので、契約どおり reject せず通知に留める
+				console.error("[Jiscribe] Failed to reveal exported image:", err);
+				vscode.window.showWarningMessage(
+					`Jiscribe: Could not reveal "${savedFileName}" in Explorer`,
+				);
+			}
 		}
 	}
 };
