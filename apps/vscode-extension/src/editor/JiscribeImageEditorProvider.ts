@@ -213,6 +213,15 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		}
 		await vscode.workspace.fs.writeFile(document.uri, bytes);
 		document.savedBytes = bytes;
+		// The rendered image embeds the live canvas source (canvasStateRef), which
+		// can be newer than sourceText (the 'update' message is coalesced by the
+		// commit scheduler, #125). Re-sync sourceText to what actually landed on
+		// disk so the backup/undo baseline (embedCurrentSource) matches the file
+		// instead of re-embedding a stale source (#178).
+		const embeddedSource = extractSourceFromImage(document.kind, bytes);
+		if (embeddedSource !== null) {
+			document.sourceText = embeddedSource;
+		}
 	}
 
 	/**
