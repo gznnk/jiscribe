@@ -1,16 +1,11 @@
 import { Fragment, useMemo } from "react";
 
 import {
-	Backdrop,
 	Body,
 	CategoryTitle,
-	CloseButton,
-	Header,
 	KeyCap,
 	KeyGroup,
-	Panel,
 	RowLabel,
-	Title,
 } from "./ShortcutHelpStyled";
 import type { CommandRegistry } from "../../../commands/CommandRegistry";
 import type { Command } from "../../../commands/CommandTypes";
@@ -25,6 +20,7 @@ import {
 	type CanvasMessageStrings,
 } from "../../../messages/CanvasMessages";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
+import { ModalShell } from "../ModalShell";
 
 /** Display order of categories */
 const CATEGORY_ORDER: NonNullable<Command["category"]>[] = [
@@ -105,52 +101,39 @@ export const ShortcutHelpModal: React.FC<ShortcutHelpModalProps> = ({
 	);
 
 	return (
-		<Backdrop
-			data-gesture="none"
-			onPointerDown={(event) => {
-				// Close only when clicking outside the panel (the backdrop)
-				if (event.target === event.currentTarget) {
-					onClose();
-				}
-			}}
+		<ModalShell
+			title={messages.shortcutHelpTitle}
+			closeLabel={messages.shortcutHelpClose}
+			onClose={onClose}
+			testId="shortcut-help"
+			panelWidth={400}
+			// Fix the height so the size does not change with the number of rows
+			panelHeight={560}
 		>
-			<Panel data-testid="shortcut-help">
-				<Header>
-					<Title>{messages.shortcutHelpTitle}</Title>
-					<CloseButton
-						type="button"
-						aria-label={messages.shortcutHelpClose}
-						data-testid="shortcut-help:close"
-						onClick={onClose}
-					>
-						×
-					</CloseButton>
-				</Header>
-				{/* native-wheel: when scrollable, natively scroll itself rather than the canvas */}
-				<Body data-gesture="native-wheel">
-					{groups.map((group) => (
-						<Fragment key={group.category}>
-							<CategoryTitle>
-								{CATEGORY_MESSAGE_KEYS[group.category]
-									? messages[CATEGORY_MESSAGE_KEYS[group.category]]
-									: group.category}
-							</CategoryTitle>
-							{group.entries.map((entry) => (
-								<Fragment key={entry.id}>
-									<RowLabel data-testid={`shortcut-help:${entry.id}`}>
-										{entry.label}
-									</RowLabel>
-									<KeyGroup>
-										{entry.tokens.map((token, index) => (
-											<KeyCap key={`${entry.id}-${index}`}>{token}</KeyCap>
-										))}
-									</KeyGroup>
-								</Fragment>
-							))}
-						</Fragment>
-					))}
-				</Body>
-			</Panel>
-		</Backdrop>
+			{/* native-wheel: when scrollable, natively scroll itself rather than the canvas */}
+			<Body data-gesture="native-wheel">
+				{groups.map((group) => (
+					<Fragment key={group.category}>
+						<CategoryTitle>
+							{CATEGORY_MESSAGE_KEYS[group.category]
+								? messages[CATEGORY_MESSAGE_KEYS[group.category]]
+								: group.category}
+						</CategoryTitle>
+						{group.entries.map((entry) => (
+							<Fragment key={entry.id}>
+								<RowLabel data-testid={`shortcut-help:${entry.id}`}>
+									{entry.label}
+								</RowLabel>
+								<KeyGroup>
+									{entry.tokens.map((token, index) => (
+										<KeyCap key={`${entry.id}-${index}`}>{token}</KeyCap>
+									))}
+								</KeyGroup>
+							</Fragment>
+						))}
+					</Fragment>
+				))}
+			</Body>
+		</ModalShell>
 	);
 };

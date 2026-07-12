@@ -24,6 +24,8 @@ const GridBackgroundComponent = ({
 			height={height}
 			fill="url(#grid)"
 			pointerEvents="none"
+			// Excluded from PNG/SVG export (like draw.io, the grid is not part of the image)
+			data-canvas-export="exclude"
 		/>
 	);
 };

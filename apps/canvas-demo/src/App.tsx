@@ -2,6 +2,7 @@ import {
 	Canvas,
 	brandLightCanvasTheme,
 	darkCanvasTheme,
+	extractCanvasSourceFromPng,
 	jaCanvasMessages,
 	lightCanvasTheme,
 	parseCanvasText,
@@ -175,6 +176,34 @@ export function App() {
 		latestDocRef.current = committedDoc;
 	}, []);
 
+	// jiscribe がエクスポートした PNG（iTXt に .jis.json 入り）のドロップで
+	// キャンバスを差し替える（round-trip の確認用）。外部入力なので
+	// parseCanvasText の 2 段階バリデーションを通してから渡す。
+	const handleDrop = useCallback(async (e: React.DragEvent) => {
+		e.preventDefault();
+		const file = e.dataTransfer.files[0];
+		if (!file || file.type !== "image/png") {
+			return;
+		}
+		const sourceText = await extractCanvasSourceFromPng(file);
+		if (sourceText === null) {
+			console.warn("Dropped PNG has no embedded jiscribe source");
+			return;
+		}
+		const result = parseCanvasText(sourceText);
+		if (result.kind !== "ok") {
+			console.warn("Embedded jiscribe source is invalid", result);
+			return;
+		}
+		latestDocRef.current = result.doc;
+		setLoadedDoc(result.doc);
+		setFileName(file.name.replace(/\.png$/i, ".json"));
+	}, []);
+
+	const handleDragOver = useCallback((e: React.DragEvent) => {
+		e.preventDefault();
+	}, []);
+
 	const handleOpenClick = useCallback(() => {
 		fileInputRef.current?.click();
 	}, []);
@@ -228,7 +257,7 @@ export function App() {
 	}
 
 	return (
-		<div className="app">
+		<div className="app" onDrop={handleDrop} onDragOver={handleDragOver}>
 			<Canvas
 				canvasDoc={loadedDoc}
 				onCommit={handleCommit}

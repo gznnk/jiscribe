@@ -1,28 +1,22 @@
 import { useEffect, useRef, useState } from "react";
 
-import { Toast } from "./ClipboardErrorToastStyled";
+import { Toast } from "./ErrorToastStyled";
+import type { ErrorNotification } from "../../../hooks/useErrorNotification";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 
 const DISPLAY_DURATION_MS = 4000;
 
-type ClipboardErrorToastProps = {
-	errorVersion: number;
+type ErrorToastProps = {
+	notification: ErrorNotification | null;
 };
 
-export const ClipboardErrorToast = ({
-	errorVersion,
-}: ClipboardErrorToastProps) => {
+export const ErrorToast = ({ notification }: ErrorToastProps) => {
 	const messages = useCanvasMessages();
 	const [visible, setVisible] = useState(false);
 	const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-	const isFirstRender = useRef(true);
 
 	useEffect(() => {
-		if (isFirstRender.current) {
-			isFirstRender.current = false;
-			return;
-		}
-		if (errorVersion === 0) {
+		if (!notification) {
 			return;
 		}
 
@@ -35,7 +29,7 @@ export const ClipboardErrorToast = ({
 			setVisible(false);
 			timerRef.current = null;
 		}, DISPLAY_DURATION_MS);
-	}, [errorVersion]);
+	}, [notification]);
 
 	useEffect(() => {
 		return () => {
@@ -45,5 +39,9 @@ export const ClipboardErrorToast = ({
 		};
 	}, []);
 
-	return <Toast visible={visible}>{messages.clipboardWriteError}</Toast>;
+	return (
+		<Toast visible={visible}>
+			{notification ? messages[notification.messageKey] : null}
+		</Toast>
+	);
 };

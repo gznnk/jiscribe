@@ -1,8 +1,7 @@
-import { calcObjectBoundingBox } from "./calcObjectBoundingBox";
+import { calcContentBounds } from "./calcContentBounds";
 import { calcViewportForBounds } from "./calcViewportForBounds";
 import type { Viewport } from "../../states/canvas/Viewport";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
-import { isGroupState } from "../../states/objects/primitives/group/GroupState";
 
 type FitOptions = {
 	/** Viewport width in screen px. */
@@ -25,37 +24,9 @@ export const calcFitViewport = (
 	objects: Record<string, ObjectState>,
 	{ width, height, padding = 48 }: FitOptions,
 ): Viewport | null => {
-	let minX = Infinity,
-		maxX = -Infinity,
-		minY = Infinity,
-		maxY = -Infinity;
-	let hasValidObject = false;
-
-	for (const obj of Object.values(objects)) {
-		// Skip groups: their children are iterated directly by this loop,
-		// so recursing into them would only duplicate work.
-		if (!obj || isGroupState(obj)) {
-			continue;
-		}
-
-		const bbox = calcObjectBoundingBox(obj, objects);
-		if (!bbox) {
-			continue;
-		}
-
-		minX = Math.min(minX, bbox.left);
-		maxX = Math.max(maxX, bbox.right);
-		minY = Math.min(minY, bbox.top);
-		maxY = Math.max(maxY, bbox.bottom);
-		hasValidObject = true;
-	}
-
-	if (!hasValidObject) {
+	const bounds = calcContentBounds(objects);
+	if (!bounds) {
 		return null;
 	}
-
-	return calcViewportForBounds(
-		{ left: minX, top: minY, right: maxX, bottom: maxY },
-		{ width, height, padding },
-	);
+	return calcViewportForBounds(bounds, { width, height, padding });
 };

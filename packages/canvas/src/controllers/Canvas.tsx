@@ -11,6 +11,11 @@ import {
 import { CanvasRegistriesContext } from "./contexts/CanvasRegistriesContext";
 import { CanvasViewportRefContext } from "./contexts/CanvasViewportRefContext";
 import { isGestureOptedOut } from "./gestures/recognizer/utils/isGestureOptedOut";
+import { useCanvasExport, EXPORT_FIT_PADDING } from "./hooks/useCanvasExport";
+import type {
+	CanvasExportHandle,
+	CanvasExportImagePayload,
+} from "./hooks/useCanvasExport";
 import { useCanvasFocusScope } from "./hooks/useCanvasFocusScope";
 import { useCanvasReducer } from "./hooks/useCanvasReducer";
 import { useCanvasWheel } from "./hooks/useCanvasWheel";
@@ -19,6 +24,7 @@ import { useClipboardWrite } from "./hooks/useClipboardWrite";
 import { resolveCommandState } from "./hooks/useCommandState";
 import { useContainerResize } from "./hooks/useContainerResize";
 import { useControlledViewport } from "./hooks/useControlledViewport";
+import { useErrorNotification } from "./hooks/useErrorNotification";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useNotifySaveRequest } from "./hooks/useNotifySaveRequest";
@@ -45,15 +51,16 @@ import { VertexControlsLayer } from "./ui/controls/VertexControlsLayer";
 import { TextEditorLayer } from "./ui/editors/TextEditorLayer";
 import { AreaSelectionRect } from "./ui/feedback/AreaSelectionRect";
 import { AxisLockGuide } from "./ui/feedback/AxisLockGuide";
-import { ClipboardErrorToast } from "./ui/feedback/ClipboardErrorToast";
 import { DragGhost } from "./ui/feedback/DragGhost";
 import { DrawingPreviewOverlay } from "./ui/feedback/DrawingPreviewOverlay";
+import { ErrorToast } from "./ui/feedback/ErrorToast";
 import { PendingConnectorOverlay } from "./ui/feedback/PendingConnectorOverlay";
 import { SelectionOverlay } from "./ui/feedback/SelectionOverlay";
 import { SnapGuides } from "./ui/feedback/SnapGuides";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
 import { Toolbar } from "./ui/menu/Toolbar";
+import { ExportDialog } from "./ui/modal/ExportDialog";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { Camera } from "../states/canvas/Viewport";
 
@@ -157,6 +164,18 @@ type CanvasProps = {
 	 * new React `key` (`<Canvas key={configId} initialConfig={...} />`).
 	 */
 	initialConfig?: CanvasConfig;
+	/**
+	 * Receives the imperative export API ({@link CanvasExportHandle}). Use it
+	 * when the host needs the exported image programmatically (e.g. writing a
+	 * `.jis.png` on save) instead of through the export dialog.
+	 */
+	exportRef?: React.Ref<CanvasExportHandle>;
+	/**
+	 * When provided, the export dialog delivers the exported image here instead
+	 * of triggering a browser download. Use this when the host owns file saving
+	 * (e.g. the VSCode extension writing into the workspace).
+	 */
+	onExportImage?: (payload: CanvasExportImagePayload) => void;
 };
 
 const CanvasComponent: React.FC<CanvasProps> = ({
@@ -174,6 +193,8 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	toolbarLeading,
 	toolbarTrailing,
 	initialConfig,
+	exportRef,
+	onExportImage,
 }) => {
 	// Merged UI strings (English defaults + host overrides), distributed via context
 	const mergedMessages = useMemo(
@@ -225,8 +246,11 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 		dispatch({ type: "SET_DOC_DEFAULTS", docDefaults });
 	}, [docDefaults, dispatch]);
 
+	// Single error-toast slot shared by all error sources (clipboard, export)
+	const { errorNotification, notifyError } = useErrorNotification();
+
 	// Clipboard write side effect: fired whenever internalClipboard changes (Copy / Cut)
-	const clipboardWriteErrorVersion = useClipboardWrite(state.internalClipboard);
+	useClipboardWrite(state.internalClipboard, notifyError);
 
 	// Gesture handling — declared before useSyncExternalDoc so resetGestureState is available
 	const { pointerHandlers, wheelHandler, resetGestureState } =
@@ -316,6 +340,22 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 		},
 		[],
 	);
+
+	// Image export: the imperative exportRef API and the export dialog
+	const {
+		isExportDialogOpen,
+		openExportDialog,
+		closeExportDialog,
+		handleExportSubmit,
+	} = useCanvasExport({
+		svgRef,
+		canvasState: state,
+		registries,
+		exportRef,
+		onExportImage,
+		dispatch,
+		notifyError,
+	});
 
 	const { minX, minY, zoom } = state.viewport;
 
@@ -447,16 +487,26 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 											</ScrollSyncedOverlay>
 										</Container>
 										<ViewportOverlay>
-											<ClipboardErrorToast
-												errorVersion={clipboardWriteErrorVersion}
-											/>
+											<ErrorToast notification={errorNotification} />
 											<ContextMenu
 												position={state.contextMenuPosition}
 												canvasState={state}
-												callbacks={{ paste: handlePaste }}
+												callbacks={{
+													paste: handlePaste,
+													export: openExportDialog,
+												}}
 											/>
 										</ViewportOverlay>
 									</Viewport>
+									{/* Sibling of the toolbar/viewport (like ShortcutHelpModal) so the
+									    backdrop covers the whole canvas including the toolbar */}
+									{isExportDialogOpen && (
+										<ExportDialog
+											defaultMargin={EXPORT_FIT_PADDING}
+											onClose={closeExportDialog}
+											onSubmit={handleExportSubmit}
+										/>
+									)}
 								</CanvasRoot>
 							</CanvasViewportRefContext>
 						</TextRegionRegistryContext>

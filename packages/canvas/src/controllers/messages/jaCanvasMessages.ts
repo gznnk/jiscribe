@@ -8,6 +8,17 @@ export const jaCanvasMessages: CanvasMessages = {
 	toolbarShowShortcutHelp: "キーボードショートカットを表示",
 	toolbarShortcutHelp: "キーボードショートカット",
 
+	exportDialogTitle: "画像をエクスポート",
+	exportDialogFormat: "形式",
+	exportDialogFormatPng: "PNG",
+	exportDialogFormatSvg: "SVG",
+	exportDialogMargin: "余白",
+	exportDialogIncludeSource: "ソースデータを含める（再編集可能）",
+	exportDialogTransparentBackground: "背景を透過",
+	exportDialogSubmit: "エクスポート",
+	exportDialogCancel: "キャンセル",
+	exportDialogClose: "閉じる",
+
 	shortcutHelpTitle: "キーボードショートカット",
 	shortcutHelpClose: "閉じる",
 	shortcutHelpCategoryEdit: "編集",
@@ -16,9 +27,11 @@ export const jaCanvasMessages: CanvasMessages = {
 	shortcutHelpCategoryView: "表示",
 
 	contextMenuPaste: "貼り付け",
+	contextMenuExport: "エクスポート…",
 
 	clipboardWriteError:
 		"クリップボードへの書き込みに失敗しました。アプリ内での貼り付けは引き続き利用できます。",
+	exportImageError: "画像のエクスポートに失敗しました。",
 
 	colorPickerAuto: "自動",
 	colorPickerAutoTitle: "自動（テーマに追従）",

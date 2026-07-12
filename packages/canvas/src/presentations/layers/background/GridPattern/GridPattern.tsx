@@ -62,7 +62,8 @@ const GridPatternComponent = ({
 	}, [zoom, baseGridSize]);
 
 	return (
-		<defs>
+		// The whole grid defs block is excluded from PNG/SVG export
+		<defs data-canvas-export="exclude">
 			{/* Medium grid pattern (20px) */}
 			<pattern
 				id="grid-medium"

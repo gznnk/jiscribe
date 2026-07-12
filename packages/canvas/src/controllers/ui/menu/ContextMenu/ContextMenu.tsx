@@ -76,6 +76,8 @@ const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 		{ type: "separator" },
 		{ type: "command", commandId: "group" },
 		{ type: "command", commandId: "ungroup" },
+		{ type: "separator" },
+		{ type: "callback", id: "export", label: messages.contextMenuExport },
 	];
 
 	return (

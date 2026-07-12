@@ -53,6 +53,19 @@
 					}
 				],
 				"priority": "default"
+			},
+			{
+				"viewType": "jiscribe.imageEditor",
+				"displayName": "Jiscribe Canvas Editor (Image)",
+				"selector": [
+					{
+						"filenamePattern": "*.jis.png"
+					},
+					{
+						"filenamePattern": "*.jis.svg"
+					}
+				],
+				"priority": "default"
 			}
 		],
 		"jsonValidation": [
