@@ -34,7 +34,13 @@ const buildDefaultUri = (
 	}
 	const documentFileName =
 		documentUri.path.split("/").pop() ?? documentUri.path;
-	const baseName = documentFileName.replace(/(\.jis)?\.(json|svg|png)$/i, "");
+	// 対応パターンは *.jis.json / *.jiscribe.json / *.jis.svg / *.jis.png
+	// （package.json の filenamePattern 参照）。.jiscribe.json の .jiscribe も
+	// 残さず除去する（foo.jiscribe.json → foo.jis.png）
+	const baseName = documentFileName.replace(
+		/(\.jis|\.jiscribe)?\.(json|svg|png)$/i,
+		"",
+	);
 	let exportFileName = `${baseName || buildTimestampedName()}${extension}`;
 	if (exportFileName === documentFileName) {
 		exportFileName = `${baseName}-export${extension}`;
