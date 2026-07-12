@@ -104,6 +104,13 @@ export const resolveExportOptions = (
 	}: CanvasExportOptions = {},
 ): BuildExportSvgOptions => {
 	const bounds = calcContentBounds(state.objects);
+	// 水平/垂直の直線だけのキャンバス等では範囲が退化（幅または高さ 0）し、
+	// マージン 0 だと viewBox が 0 になって空画像が出力されるため、最小
+	// 1 world px を保証する（不足分は中央に配置して内容を帯の中心に置く）
+	const rawWidth = bounds ? bounds.right - bounds.left + margin * 2 : 0;
+	const rawHeight = bounds ? bounds.bottom - bounds.top + margin * 2 : 0;
+	const width = Math.max(rawWidth, 1);
+	const height = Math.max(rawHeight, 1);
 	return {
 		source: includeSource ? canvasToDoc(state, objectMapper) : undefined,
 		// "transparent" skips the background rect (buildExportSvg);
@@ -111,10 +118,10 @@ export const resolveExportOptions = (
 		background: transparentBackground ? "transparent" : undefined,
 		viewBox: bounds
 			? {
-					x: bounds.left - margin,
-					y: bounds.top - margin,
-					width: bounds.right - bounds.left + margin * 2,
-					height: bounds.bottom - bounds.top + margin * 2,
+					x: bounds.left - margin - (width - rawWidth) / 2,
+					y: bounds.top - margin - (height - rawHeight) / 2,
+					width,
+					height,
 				}
 			: undefined,
 	};

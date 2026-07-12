@@ -62,6 +62,32 @@ describe("resolveExportOptions", () => {
 		expect(options.viewBox).toBeUndefined();
 	});
 
+	it("退化した範囲（水平ポリラインのみ）＋マージン 0 でも高さ 1 を保証し中央に置く", () => {
+		// 高さ 0 の内容: y=100 の水平ポリライン
+		const horizontalPolyline = {
+			id: "poly-1",
+			type: "polyline",
+			points: [
+				{ x: 0, y: 100 },
+				{ x: 50, y: 100 },
+			],
+		};
+		const state = {
+			objects: { "poly-1": horizontalPolyline },
+			rootIds: ["poly-1"],
+		} as unknown as Parameters<typeof resolveExportOptions>[0];
+		const options = resolveExportOptions(state, registries.objectMapper, {
+			margin: 0,
+			includeSource: false,
+		});
+		expect(options.viewBox).toEqual({
+			x: 0,
+			y: 99.5, // 高さ 1 の帯の中央に内容（y=100）が来る
+			width: 50,
+			height: 1,
+		});
+	});
+
 	it("embeds the source doc by default", () => {
 		const state = createStateWithRect();
 		const options = resolveExportOptions(state, registries.objectMapper);
