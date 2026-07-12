@@ -18,9 +18,10 @@ vi.mock("../../../export", () => ({
 }));
 
 /**
- * runExportSubmit（エクスポートダイアログ確定時の分岐実行関数）の
- * 配信先の選択と、全分岐の失敗が notifyError に到達することを検証する。
- * SVG 生成・ラスタライズ自体は export/ 側の責務なのでここでは扱わない。
+ * Verifies runExportSubmit (the branch dispatcher invoked when the export
+ * dialog is confirmed): the destination it picks, and that a failure in every
+ * branch reaches notifyError. SVG generation and rasterization themselves are
+ * the responsibility of export/ and are not covered here.
  */
 
 const svg = {} as unknown as SVGSVGElement;

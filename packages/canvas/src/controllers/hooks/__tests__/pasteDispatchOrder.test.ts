@@ -8,15 +8,17 @@ import { enqueueClipboardPaste } from "../useClipboardPaste";
 const registries = createTestRegistries();
 
 /**
- * issue #48 の回帰テスト。
- * navigator.clipboard.readText() は解決順を保証しないため、連続ペーストで
- * PASTE の dispatch 順が呼び出し順と食い違いうる。enqueueClipboardPaste は
- * FIFO チェーンで直列化し「呼び出し順 = dispatch 順」「破棄なし」を保証する。
+ * Regression test for issue #48.
+ * navigator.clipboard.readText() does not guarantee resolution order, so with
+ * consecutive pastes the PASTE dispatch order can diverge from the call order.
+ * enqueueClipboardPaste serializes them into a FIFO chain and guarantees
+ * "call order = dispatch order" with no dropped requests.
  *
- * readText の中身は non-JSON にして internalClipboard フォールバックへ流し、
- * 呼び出しごとに異なるダミー ClipboardData で dispatch 順を識別する
- * （順序保証の仕組みはデータの出所に依存しないため、レジストリ初期化が要る
- * 正規の ClipboardData を組み立てるまでもない）。
+ * readText returns non-JSON so it falls through to the internalClipboard path,
+ * and each call uses a distinct dummy ClipboardData to identify the dispatch
+ * order (the ordering mechanism does not depend on where the data comes from,
+ * so there is no need to build a real ClipboardData that would require
+ * registry initialization).
  */
 
 type Deferred = {
@@ -35,7 +37,7 @@ const createDeferred = (): Deferred => {
 	return { promise, resolve, reject };
 };
 
-/** readText 呼び出し n 回目に deferreds[n-1] を返すスタブを差し込む */
+/** Installs a stub that returns deferreds[n-1] on the nth readText call */
 const stubReadText = (deferreds: Deferred[]) => {
 	let callCount = 0;
 	const readText = vi.fn(() => {
@@ -50,7 +52,7 @@ const stubReadText = (deferreds: Deferred[]) => {
 const clipboardOf = (marker: string): ClipboardData =>
 	({ marker }) as unknown as ClipboardData;
 
-/** チェーンの .then 継続を消化させる（RAF 等は無関係なのでマイクロタスクのみ） */
+/** Drains the chain's .then continuations (only microtasks; RAF etc. are irrelevant) */
 const flushMicrotasks = async () => {
 	for (let i = 0; i < 10; i++) {
 		await Promise.resolve();
@@ -61,8 +63,8 @@ afterEach(() => {
 	vi.unstubAllGlobals();
 });
 
-describe("enqueueClipboardPaste は連続ペーストを FIFO 直列化する", () => {
-	it("先行 readText の解決が遅れても dispatch は呼び出し順になる", async () => {
+describe("enqueueClipboardPaste serializes consecutive pastes in FIFO order", () => {
+	it("dispatches in call order even when the earlier readText resolves late", async () => {
 		const firstRead = createDeferred();
 		const secondRead = createDeferred();
 		const readText = stubReadText([firstRead, secondRead]);
@@ -87,7 +89,7 @@ describe("enqueueClipboardPaste は連続ペーストを FIFO 直列化する", 
 			registries.objectStateValidator,
 		);
 
-		// 2 回目の paste は 1 回目の dispatch 完了までクリップボードを読まない
+		// the second paste does not read the clipboard until the first dispatch completes
 		await flushMicrotasks();
 		expect(readText).toHaveBeenCalledTimes(1);
 		expect(dispatched).toEqual([]);
@@ -106,7 +108,7 @@ describe("enqueueClipboardPaste は連続ペーストを FIFO 直列化する", 
 		]);
 	});
 
-	it("先行 readText の失敗（reject）が後続のペーストを塞がない", async () => {
+	it("a rejected earlier readText does not block subsequent pastes", async () => {
 		const firstRead = createDeferred();
 		const secondRead = createDeferred();
 		stubReadText([firstRead, secondRead]);
@@ -117,7 +119,7 @@ describe("enqueueClipboardPaste は連続ペーストを FIFO 直列化する", 
 		};
 
 		const clipB = clipboardOf("B");
-		// 1 回目: OS 読み取り失敗かつ internalClipboard も空 → メニューを閉じるだけ
+		// first: OS read fails and internalClipboard is empty too → just close the menu
 		const firstPaste = enqueueClipboardPaste(
 			pasteChain,
 			null,
@@ -143,7 +145,7 @@ describe("enqueueClipboardPaste は連続ペーストを FIFO 直列化する", 
 		]);
 	});
 
-	it("連打しても回数分の PASTE が dispatch される（途中のリクエストを破棄しない）", async () => {
+	it("dispatches one PASTE per rapid press without dropping any request", async () => {
 		const reads = [createDeferred(), createDeferred(), createDeferred()];
 		stubReadText(reads);
 		const pasteChain = { current: Promise.resolve() };
