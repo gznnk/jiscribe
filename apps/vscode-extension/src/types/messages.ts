@@ -33,8 +33,8 @@ export type WebviewToExtensionMessage =
 	/** Redo requested on the canvas (delegated to the host editor's redo command). */
 	| { type: "redo" }
 	/**
-	 * Response to requestImageExport. `data` is the source-embedded image (png:
-	 * base64 PNG bytes / svg: SVG text), or null when it could not be generated
+	 * Response to requestImageExport. `data` is the source-embedded image bytes,
+	 * base64-encoded for both PNG and SVG, or null when it could not be generated
 	 * (e.g. Canvas not mounted).
 	 */
 	| { type: "imageExportResult"; requestId: number; data: string | null }

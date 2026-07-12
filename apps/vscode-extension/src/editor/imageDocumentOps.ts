@@ -39,7 +39,7 @@ export interface ImageDocState {
 export interface ImageDocSeams {
 	/**
 	 * Render the current canvas via the live webview; null when unavailable (no
-	 * webview / hidden tab / unresponsive). png → base64 bytes, svg → SVG text.
+	 * webview / hidden tab / unresponsive). Both PNG and SVG bytes are base64.
 	 */
 	render(kind: JiscribeImageKind): Promise<string | null>;
 	/** Read the document file's bytes (revert). */
@@ -60,11 +60,9 @@ export function extractSourceFromImage(
 		: extractCanvasSourceFromSvgText(Buffer.from(bytes).toString("utf8"));
 }
 
-/** Decode a webview render response (png: base64, svg: utf8 text) into bytes. */
-function decodeRenderResult(kind: JiscribeImageKind, data: string): Uint8Array {
-	return kind === "png"
-		? new Uint8Array(Buffer.from(data, "base64"))
-		: new Uint8Array(Buffer.from(data, "utf8"));
+/** Decode a webview render response (base64 image bytes) into bytes. */
+function decodeRenderResult(data: string): Uint8Array {
+	return new Uint8Array(Buffer.from(data, "base64"));
 }
 
 /**
@@ -126,7 +124,7 @@ export async function computeExportBytes(
 ): Promise<{ bytes: Uint8Array; fresh: boolean }> {
 	const data = await seams.render(targetKind);
 	if (data !== null) {
-		return { bytes: decodeRenderResult(targetKind, data), fresh: true };
+		return { bytes: decodeRenderResult(data), fresh: true };
 	}
 	return { bytes: embedCurrentSource(doc, targetKind), fresh: false };
 }
@@ -197,7 +195,7 @@ export async function reconcileImageDocument(
 			doc.needsImageReconcile = false;
 			return;
 		}
-		const bytes = decodeRenderResult(doc.kind, data);
+		const bytes = decodeRenderResult(data);
 		await seams.writeFile(bytes);
 		adoptSavedBytes(doc, bytes);
 		doc.needsImageReconcile = false;

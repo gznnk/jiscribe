@@ -49,6 +49,10 @@ const svgBytes = (svg: string): Uint8Array =>
 const decodeUtf8 = (bytes: Uint8Array): string =>
 	Buffer.from(bytes).toString("utf8");
 
+/** Encode an SVG render result the way the webview sends it (base64, #182). */
+const svgRenderResult = (svg: string): string =>
+	Buffer.from(svg, "utf8").toString("base64");
+
 // --- test doubles -----------------------------------------------------------
 
 const makeDoc = (
@@ -98,7 +102,9 @@ describe("saveImageDocument", () => {
 		// A prior hidden-tab save left this set; a fresh render must clear it.
 		doc.needsImageReconcile = true;
 		const rendered = svgWithSource("FRESH", "re-rendered");
-		const { seams, writes } = makeSeams({ render: async () => rendered });
+		const { seams, writes } = makeSeams({
+			render: async () => svgRenderResult(rendered),
+		});
 
 		await saveImageDocument(doc, seams);
 
@@ -137,7 +143,7 @@ describe("saveImageDocument", () => {
 	it("does not write when the save was cancelled", async () => {
 		const doc = makeDoc("svg", svgBytes(svgWithSource("OLD")), "NEW");
 		const { seams, writes } = makeSeams({
-			render: async () => svgWithSource("FRESH"),
+			render: async () => svgRenderResult(svgWithSource("FRESH")),
 			isCancelled: () => true,
 		});
 
@@ -182,7 +188,9 @@ describe("reconcileImageDocument", () => {
 		const doc = makeDoc("svg", svgBytes(svgWithSource("NEW", "stale")), "NEW");
 		doc.needsImageReconcile = true;
 		const rendered = svgWithSource("NEW", "re-rendered");
-		const { seams, writes } = makeSeams({ render: async () => rendered });
+		const { seams, writes } = makeSeams({
+			render: async () => svgRenderResult(rendered),
+		});
 
 		await reconcileImageDocument(doc, seams);
 
@@ -192,7 +200,7 @@ describe("reconcileImageDocument", () => {
 
 	it("is a no-op when no reconcile is pending", async () => {
 		const doc = makeDoc("svg", svgBytes(svgWithSource("NEW")), "NEW");
-		const render = vi.fn(async () => svgWithSource("NEW"));
+		const render = vi.fn(async () => svgRenderResult(svgWithSource("NEW")));
 		const { seams, writes } = makeSeams({ render });
 
 		await reconcileImageDocument(doc, seams);
@@ -219,7 +227,7 @@ describe("reconcileImageDocument", () => {
 		const { seams, writes } = makeSeams({
 			render: async () => {
 				doc.sourceText = "EDITED";
-				return svgWithSource("EDITED");
+				return svgRenderResult(svgWithSource("EDITED"));
 			},
 		});
 
@@ -243,7 +251,7 @@ describe("reconcileImageDocument", () => {
 		await second;
 		expect(render).toHaveBeenCalledTimes(1); // second bailed on the in-flight guard
 
-		gate.resolve(svgWithSource("NEW", "re-rendered"));
+		gate.resolve(svgRenderResult(svgWithSource("NEW", "re-rendered")));
 		await first;
 		expect(writes).toHaveLength(1);
 		expect(doc.reconcileInFlight).toBe(false);
