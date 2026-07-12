@@ -14,12 +14,12 @@ import { getAncestors } from "./utils/getAncestors";
 import { ORIGIN_SNAP_PX } from "../../../../constants/axisLock";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../../../states/objects/base/TextStyleState";
-import { objectMapperRegistry } from "../../../../states/registry/ObjectMapperRegistry";
 import type {
 	AxisLockFeedback,
 	CanvasControllerState,
 	SnapFeedback,
 } from "../../../CanvasTypes";
+import type { ICanvasRegistries } from "../../../setup/ICanvasRegistries";
 import { buildSelectedIdsWithDescendants } from "../../../utils/buildSelectedIdsWithDescendants";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
@@ -30,11 +30,12 @@ import type {
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
 import type { Mods } from "../../registry/ObjectBehaviorTypes";
+import { isLeftButton } from "../utils/isLeftButton";
 import {
 	buildSnapFeedback,
 	findSnap,
 	SNAP_THRESHOLD_PX,
-} from "../../utils/snap/findSnap";
+} from "../utils/snap/findSnap";
 
 /**
  * Handles a click on an object.
@@ -44,13 +45,7 @@ function handleObjectClick(
 	canvasState: CanvasControllerState,
 	targetObject: ObjectState,
 	mods: Mods,
-	button: number,
 ): CanvasControllerState {
-	// Only handle left-click (button 0)
-	if (button !== 0) {
-		return canvasState;
-	}
-
 	// Determine the new selection via hierarchical selection logic
 	const selectedIds = determineSelection(targetObject, canvasState, mods);
 
@@ -89,14 +84,9 @@ function handleObjectClick(
 function handleObjectDrag(
 	canvasState: CanvasControllerState,
 	delta: Point,
-	button: number,
 	mods: Mods,
+	registries: ICanvasRegistries,
 ): CanvasControllerState {
-	// Only handle left-click drag (button 0)
-	if (button !== 0) {
-		return canvasState;
-	}
-
 	const eventStartSnapshot = canvasState.eventStartSnapshot;
 	if (!eventStartSnapshot) {
 		return canvasState;
@@ -221,6 +211,7 @@ function handleObjectDrag(
 			srcObjects: eventStartObjects,
 			srcMultiSelectGroup: eventStartMultiSelectGroup,
 			delta: adjustedDelta,
+			objectBehavior: registries.objectBehavior,
 		});
 
 	const nextState = {
@@ -246,13 +237,8 @@ function handleObjectDragStart(
 	targetObject: ObjectState,
 	delta: Point,
 	mods: Mods,
-	button: number,
+	registries: ICanvasRegistries,
 ): CanvasControllerState {
-	// Only handle left-click drag (button 0)
-	if (button !== 0) {
-		return canvasState;
-	}
-
 	const { id } = targetObject;
 
 	// Determine the selection state
@@ -333,7 +319,7 @@ function handleObjectDragStart(
 	};
 
 	// Run the drag handling
-	return handleObjectDrag(nextState, delta, button, mods);
+	return handleObjectDrag(nextState, delta, mods, registries);
 }
 
 /**
@@ -342,8 +328,8 @@ function handleObjectDragStart(
 function handleObjectDragEnd(
 	canvasState: CanvasControllerState,
 	delta: Point,
-	button: number,
 	mods: Mods,
+	registries: ICanvasRegistries,
 ): CanvasControllerState {
 	// Disable edge scrolling
 	const nextState = {
@@ -352,7 +338,7 @@ function handleObjectDragEnd(
 	};
 
 	// Final drag handling
-	const resultState = handleObjectDrag(nextState, delta, button, mods);
+	const resultState = handleObjectDrag(nextState, delta, mods, registries);
 
 	// Update the parent groups' bounding boxes
 	return updateAffectedGroupBounds(resultState, resultState.selectedIds);
@@ -368,19 +354,14 @@ function handleObjectDragEnd(
  */
 export const ObjectEventHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {
-		return event.targetKind === "object";
+		return event.targetKind === "object" && isLeftButton(event);
 	},
 
-	handle(state, event) {
-		// Skip commit only for a doubleClick on the object currently being edited (to continue editing).
-		// Otherwise (including a doubleClick on a non-text object), commit and clear.
-		let nextState = state;
-		const isDoubleClickOnCurrentEditTarget =
-			event.type === "doubleClick" &&
-			state.textEditState?.objectId === event.targetId;
-		if (!isDoubleClickOnCurrentEditTarget) {
-			nextState = commitTextEditIfNeeded(state);
-		}
+	handle(state, event, registries) {
+		// Any event that reaches this handler is outside the text-editing overlay
+		// (the overlay covers the edited shape's bbox and is gesture-excluded),
+		// so a pending edit is always committed first, like any outside tap.
+		let nextState = commitTextEditIfNeeded(state);
 
 		const targetObjectId = event.targetId;
 		if (!targetObjectId) {
@@ -394,23 +375,16 @@ export const ObjectEventHandler: GestureHandler = {
 
 		// Handle Pointer Down
 		if (event.type === "pressed") {
-			if (event.button === 0) {
-				// Close the context menu on left-click press
-				nextState = {
-					...nextState,
-					contextMenuPosition: null,
-				};
-			}
+			// Close the context menu on press
+			nextState = {
+				...nextState,
+				contextMenuPosition: null,
+			};
 		}
 
 		// Handle the click event
 		if (event.type === "click") {
-			return handleObjectClick(
-				nextState,
-				targetObject,
-				event.mods,
-				event.button,
-			);
+			return handleObjectClick(nextState, targetObject, event.mods);
 		}
 
 		// Handle the double-click event
@@ -420,7 +394,7 @@ export const ObjectEventHandler: GestureHandler = {
 			// are consistent, so it also lets through shapes with no text at all
 			// (svg / polyline / polygon, etc.). Treat the same features.text used by the
 			// property-update side (isPropertySupported) as authoritative.
-			const features = objectMapperRegistry.getFeatures(targetObject.type);
+			const features = targetObject.features;
 			if (features?.text === true && isTextStyleState(targetObject)) {
 				return {
 					...nextState,
@@ -446,16 +420,16 @@ export const ObjectEventHandler: GestureHandler = {
 				objectStartState,
 				event.delta,
 				event.mods,
-				event.button,
+				registries,
 			);
 		} else if (event.type === "drag") {
-			return handleObjectDrag(nextState, event.delta, event.button, event.mods);
+			return handleObjectDrag(nextState, event.delta, event.mods, registries);
 		} else if (event.type === "dragEnd") {
 			return handleObjectDragEnd(
 				nextState,
 				event.delta,
-				event.button,
 				event.mods,
+				registries,
 			);
 		}
 

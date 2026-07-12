@@ -18,10 +18,10 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
  */
 
 function sourceHandle(canvas: CanvasDriver, id: string) {
-	return canvas.page.locator(`[data-id="connection-anchor:edit:${id}:source"]`);
+	return canvas.page.locator(`[data-id="${id}"][data-part="endpoint:source"]`);
 }
 function targetHandle(canvas: CanvasDriver, id: string) {
-	return canvas.page.locator(`[data-id="connection-anchor:edit:${id}:target"]`);
+	return canvas.page.locator(`[data-id="${id}"][data-part="endpoint:target"]`);
 }
 
 /**
@@ -38,7 +38,7 @@ async function selectUntilHandle(
 			async () => {
 				await canvas.clickAt({ x: 610, y: 350 });
 				return canvas.page
-					.locator(`[data-id="connection-anchor:edit:${id}:${endpoint}"]`)
+					.locator(`[data-id="${id}"][data-part="endpoint:${endpoint}"]`)
 					.count();
 			},
 			{

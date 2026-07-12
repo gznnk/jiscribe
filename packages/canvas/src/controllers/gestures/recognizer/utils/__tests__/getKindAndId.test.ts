@@ -2,10 +2,11 @@ import { describe, it, expect } from "vitest";
 
 import { getKindAndId } from "../getKindAndId";
 
-const makeEl = (kind?: string, id?: string): Element => {
+const makeEl = (kind?: string, id?: string, part?: string): Element => {
 	const attrs: Record<string, string | undefined> = {
 		"data-kind": kind,
 		"data-id": id,
+		"data-part": part,
 	};
 	const el = {
 		closest: (selector: string) => {
@@ -43,5 +44,14 @@ describe("getKindAndId", () => {
 	it("returns the correct values when kind='control' and id='ctrl-2'", () => {
 		const el = makeEl("control", "ctrl-2");
 		expect(getKindAndId(el)).toEqual({ kind: "control", id: "ctrl-2" });
+	});
+
+	it("returns part when the element also carries data-part", () => {
+		const el = makeEl("connector", "c-1", "label");
+		expect(getKindAndId(el)).toEqual({
+			kind: "connector",
+			id: "c-1",
+			part: "label",
+		});
 	});
 });

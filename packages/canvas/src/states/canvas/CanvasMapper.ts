@@ -1,10 +1,12 @@
-﻿import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
+﻿import type { Point } from "@workspace/geometry";
+
+import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
 import type { GroupDoc } from "../../schemas/objects/primitives/group/GroupDoc";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { GroupState } from "../objects/primitives/group/GroupState";
-import { objectMapperRegistry } from "../registry/ObjectMapperRegistry";
+import type { ObjectMapperRegistry } from "../registry/ObjectMapperRegistry";
 import { calculateGroupOrientedBounds } from "../utils/calculateGroupOrientedBounds";
 
 /**
@@ -17,10 +19,23 @@ import { calculateGroupOrientedBounds } from "../utils/calculateGroupOrientedBou
  * acyclic (the policy of not carrying defensive cost internally →
  * docs/01-design-philosophy.md principle 4). Validation is guaranteed at the
  * external-input boundary (host / the `SYNC_EXTERNAL` entry point).
+ *
+ * `mapper` is the per-canvas object mapper registry (not the full bundle) so the
+ * states layer stays decoupled from the controller-layer registries — the only
+ * registry states depends on is `ObjectMapperRegistry` (docs/02-architecture.md).
  */
-export const canvasToState = (doc: CanvasDoc): CanvasState => {
+export const canvasToState = (
+	doc: CanvasDoc,
+	mapper: ObjectMapperRegistry,
+): CanvasState => {
 	const objects: Record<string, ObjectState> = {};
 	const rootIds: string[] = [];
+
+	// Memo shared across this single bottom-up pass: group ID → collected child
+	// points. Lets a parent group reuse a nested group's points instead of
+	// re-traversing its subtree, keeping the whole pass O(N) instead of
+	// O(N × nesting depth). See calculateGroupOrientedBounds.
+	const groupPointCache = new Map<string, Point[]>();
 
 	// Helper to process an object and its children recursively.
 	// Input is a validated CanvasDoc (a nested tree); since the tree is finite
@@ -29,7 +44,7 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 	const processObject = (objDoc: ObjectDoc, parentId?: string): string => {
 		// Returns the ID of the processed object
 		// 1. Convert the object itself using the registry
-		const objState = objectMapperRegistry.toState(objDoc);
+		const objState = mapper.toState(objDoc);
 
 		// 2. Set the parent ID (normalization)
 		objState.parentId = parentId;
@@ -48,7 +63,11 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 			);
 
 			// Calculate and cache the group's bounding frame
-			const bounds = calculateGroupOrientedBounds(objects, groupState.id);
+			const bounds = calculateGroupOrientedBounds(
+				objects,
+				groupState.id,
+				groupPointCache,
+			);
 			if (bounds) {
 				objects[groupState.id] = {
 					...groupState,
@@ -89,8 +108,13 @@ export const canvasToState = (doc: CanvasDoc): CanvasState => {
 /**
  * Converts CanvasState (flat structure) to CanvasDoc (tree structure).
  * This reconstructs the tree for serialization/storage.
+ * Only the object map and root order are read, so any state carrying those
+ * two fields (e.g. a DocSnapshot source) can be converted.
  */
-export const canvasToDoc = (state: CanvasState): CanvasDoc => {
+export const canvasToDoc = (
+	state: Pick<CanvasState, "objects" | "rootIds">,
+	mapper: ObjectMapperRegistry,
+): CanvasDoc => {
 	// Helper to reconstruct an object tree from an ID.
 	// The flat state is always internally consistent (index matches objects,
 	// childIds are acyclic), so it carries no defense against missing IDs or
@@ -125,7 +149,7 @@ export const canvasToDoc = (state: CanvasState): CanvasDoc => {
 		 * Handle recursion here centrally.
 		 */
 
-		const objDoc = objectMapperRegistry.toDoc(objState);
+		const objDoc = mapper.toDoc(objState);
 
 		if (objState.type === "group") {
 			const groupState = objState as GroupState;

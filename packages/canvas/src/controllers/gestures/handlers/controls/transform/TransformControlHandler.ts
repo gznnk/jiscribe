@@ -13,6 +13,7 @@ import { calcAnchorResize } from "./utils/calcAnchorResize";
 import { calcMultiSelectGroupBounds } from "./utils/calcMultiSelectGroupBounds";
 import { handleRotationDrag } from "./utils/handleRotationDrag";
 import { updateSingleGroupBounds } from "./utils/updateSingleGroupBounds";
+import { MIN_GROUP_DIMENSION } from "../../../../../constants/groupDimensions";
 import { PRECISION } from "../../../../../constants/precision";
 import type { TransformState } from "../../../../../states/objects/base/TransformState";
 import { isTransformState } from "../../../../../states/objects/base/TransformState";
@@ -21,6 +22,7 @@ import type {
 	CanvasControllerState,
 	SnapFeedback,
 } from "../../../../CanvasTypes";
+import type { ICanvasRegistries } from "../../../../setup/ICanvasRegistries";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { transformChildren } from "../../objects/primitives/GroupController";
@@ -29,8 +31,8 @@ import type { ControlStrategy } from "../ControlEventHandler";
 /**
  * Handles transform-control operations (resize and rotation).
  *
- * Control ID format: "transform-control:<anchorType>"
- * Example: "transform-control:bottomRight"
+ * Target format: data-id="transform", data-part="resize:<anchorType>" / "rotation"
+ * Example: data-part="resize:bottomRight"
  */
 export class TransformControlHandler implements ControlStrategy {
 	readonly controlType = "transform-control";
@@ -40,36 +42,31 @@ export class TransformControlHandler implements ControlStrategy {
 			return false;
 		}
 
-		const targetId = event.targetId;
-		if (!targetId) {
+		const targetPart = event.targetPart;
+		if (!targetPart) {
 			return false;
 		}
 
-		// Check whether it is a transform-control
-		return targetId.startsWith("transform-control:");
+		// Resize handles and the rotation handle of the transform frame
+		return targetPart.startsWith("resize:") || targetPart === "rotation";
 	}
 
 	handle(
 		state: CanvasControllerState,
 		event: CanvasEvent,
+		registries: ICanvasRegistries,
 	): CanvasControllerState {
-		// Only handle left-click (button 0)
-		if (event.button !== 0) {
+		const targetPart = event.targetPart;
+		if (!targetPart) {
 			return state;
 		}
 
-		const targetControlId = event.targetId;
-		if (!targetControlId) {
-			return state;
-		}
-
-		// Parse the anchor type from "transform-control:bottomRight"
-		const parts = targetControlId.split(":");
-		if (parts.length !== 2 || parts[0] !== "transform-control") {
-			return state;
-		}
-
-		const anchorType = parts[1] as TransformAnchorType;
+		// Parse the anchor type from "resize:<anchorType>" / "rotation"
+		const anchorType = (
+			targetPart === "rotation"
+				? "rotation"
+				: targetPart.slice("resize:".length)
+		) as TransformAnchorType;
 
 		// Route to the appropriate handler based on the gesture type
 		let nextState = state;
@@ -77,9 +74,9 @@ export class TransformControlHandler implements ControlStrategy {
 		if (event.type === "dragStart") {
 			nextState = this.handleDragStart(nextState, event, anchorType);
 		} else if (event.type === "drag") {
-			nextState = this.handleDrag(nextState, event, anchorType);
+			nextState = this.handleDrag(nextState, event, anchorType, registries);
 		} else if (event.type === "dragEnd") {
-			nextState = this.handleDragEnd(nextState, event, anchorType);
+			nextState = this.handleDragEnd(nextState, event, anchorType, registries);
 		}
 
 		return nextState;
@@ -107,10 +104,11 @@ export class TransformControlHandler implements ControlStrategy {
 		state: CanvasControllerState,
 		event: CanvasEvent,
 		anchorType: TransformAnchorType,
+		registries: ICanvasRegistries,
 	): CanvasControllerState {
 		// Rotation is handled separately
 		if (anchorType === "rotation") {
-			return handleRotationDrag(state, event);
+			return handleRotationDrag(state, event, registries);
 		}
 
 		// Common preprocessing for resize handling
@@ -122,6 +120,7 @@ export class TransformControlHandler implements ControlStrategy {
 		// Determine the target frame (multiSelectGroup for multi-selection, the selected object for single selection)
 		let startFrame: (TransformedFrame & TransformState) | null = null;
 		let selectedId: string | null = null;
+		let isGroupTarget = false;
 		const isMultiSelect = state.selectedIds.length > 1;
 
 		if (isMultiSelect) {
@@ -133,6 +132,7 @@ export class TransformControlHandler implements ControlStrategy {
 				isTransformState(multiSelectGroup)
 			) {
 				startFrame = multiSelectGroup as TransformedFrame & TransformState;
+				isGroupTarget = true;
 			}
 		} else if (state.selectedIds.length === 1) {
 			// For single selection
@@ -144,11 +144,23 @@ export class TransformControlHandler implements ControlStrategy {
 				isTransformState(startObject)
 			) {
 				startFrame = startObject as TransformedFrame & TransformState;
+				isGroupTarget = startObject.type === "group";
 			}
 		}
 
 		if (!startFrame) {
 			return state;
+		}
+
+		// GroupState invariant: a group's width/height are divisors when scaling
+		// its children (transformFrameByGroup), so a resize must never drive them
+		// to 0 — floor the minimum dimensions before enforceResizeDimensions runs.
+		if (isGroupTarget) {
+			startFrame = {
+				...startFrame,
+				minWidth: Math.max(startFrame.minWidth ?? 0, MIN_GROUP_DIMENSION),
+				minHeight: Math.max(startFrame.minHeight ?? 0, MIN_GROUP_DIMENSION),
+			};
 		}
 
 		// Compute the inverse affine-transformed cursor position (in the object's local space)
@@ -190,7 +202,7 @@ export class TransformControlHandler implements ControlStrategy {
 		// Snap correction
 		let snapFeedback: SnapFeedback = { x: [], y: [] };
 
-		if (!event.mods.ctrl) {
+		if (eventStartSnapshot.snapCandidates && !event.mods.ctrl) {
 			// Snap candidates use the cached set of all objects from dragStart by reference only;
 			// exclusions (selection + all descendants) are passed to findSnap as a Set and filtered internally.
 			const snapped = applyResizeSnap({
@@ -262,6 +274,7 @@ export class TransformControlHandler implements ControlStrategy {
 				updatedGroup,
 				startGroup,
 				eventStartSnapshot.objects,
+				registries.objectBehavior,
 			);
 			Object.assign(updatedObjects, groupChildrenUpdates);
 
@@ -312,6 +325,7 @@ export class TransformControlHandler implements ControlStrategy {
 					updatedObject as GroupState,
 					updatedObject as GroupState,
 					eventStartSnapshot.objects,
+					registries.objectBehavior,
 				);
 				Object.assign(updatedObjects, groupChildrenUpdates);
 			}
@@ -339,10 +353,11 @@ export class TransformControlHandler implements ControlStrategy {
 		state: CanvasControllerState,
 		event: CanvasEvent,
 		anchorType: TransformAnchorType,
+		registries: ICanvasRegistries,
 	): CanvasControllerState {
 		// Apply the drag-time state update to compute the final state.
 		// handleDrag never mutates its argument, so the state can be passed as is.
-		let nextState = this.handleDrag(state, event, anchorType);
+		let nextState = this.handleDrag(state, event, anchorType, registries);
 
 		// On dragEnd, update the bounds of the selected objects and their parent groups
 		for (const selectedId of nextState.selectedIds) {

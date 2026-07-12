@@ -1,4 +1,4 @@
-import { isBoolean } from "@workspace/basic-validators";
+import { isBoolean, isNumber } from "@workspace/basic-validators";
 import { isTransform, type Transform } from "@workspace/geometry";
 
 /**
@@ -28,6 +28,23 @@ export const isTransformState = (obj: unknown): obj is TransformState => {
 		"lockAspectRatio" in obj &&
 		obj.lockAspectRatio !== undefined &&
 		!isBoolean(obj.lockAspectRatio)
+	) {
+		return false;
+	}
+	// minWidth / minHeight are optional numbers on the type. Keep the guard in sync
+	// with the declared shape so a clipboard-pasted `minWidth: "…"` cannot slip
+	// through this boundary as an ostensibly valid TransformState.
+	if (
+		"minWidth" in obj &&
+		obj.minWidth !== undefined &&
+		!isNumber(obj.minWidth)
+	) {
+		return false;
+	}
+	if (
+		"minHeight" in obj &&
+		obj.minHeight !== undefined &&
+		!isNumber(obj.minHeight)
 	) {
 		return false;
 	}

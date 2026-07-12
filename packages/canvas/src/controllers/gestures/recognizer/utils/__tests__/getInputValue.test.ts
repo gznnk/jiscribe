@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { getInputValue } from "../getInputValue";
+import { getInputValue, readInputValue } from "../getInputValue";
 
 const makeTarget = (params: {
 	tokens: string[];
@@ -37,5 +37,23 @@ describe("getInputValue", () => {
 
 	it("returns undefined when target is null", () => {
 		expect(getInputValue(null)).toBeUndefined();
+	});
+});
+
+describe("readInputValue", () => {
+	it("reads the value without checking the native-pointer qualification", () => {
+		// No data-gesture token: getInputValue rejects, readInputValue reads anyway
+		// (the qualification is fixed at pointerdown by the caller)
+		const target = makeTarget({ tokens: [], value: "42" });
+		expect(readInputValue(target)).toBe("42");
+	});
+
+	it("returns undefined for an element without a string value", () => {
+		const target = makeTarget({ tokens: ["native-pointer"] });
+		expect(readInputValue(target)).toBeUndefined();
+	});
+
+	it("returns undefined when target is null", () => {
+		expect(readInputValue(null)).toBeUndefined();
 	});
 });

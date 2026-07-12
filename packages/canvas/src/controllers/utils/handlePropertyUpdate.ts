@@ -2,7 +2,6 @@ import { collectDescendantIds } from "./collectDescendantIds";
 import type { ObjectFeatures } from "../../schemas/objects/types/ObjectFeatures";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../states/objects/connections/connector/ConnectorState";
-import { objectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import type { CanvasControllerState } from "../CanvasTypes";
 
 /**
@@ -88,20 +87,10 @@ const isPropertySupported = (
 			return features.transform === true;
 		case "startArrow":
 		case "endArrow":
-			return false;
+			return features.arrow === true;
 		default:
 			return false;
 	}
-};
-
-const isArrowPropertySupported = (
-	objectType: string,
-	property: string,
-): boolean => {
-	if (property !== "startArrow" && property !== "endArrow") {
-		return false;
-	}
-	return objectType === "polyline" || objectType === "connector";
 };
 
 const parsePropertyValue = (property: string, value: string): unknown => {
@@ -149,12 +138,11 @@ export const handlePropertyUpdate = (
 			);
 		}
 
-		const features = objectMapperRegistry.getFeatures(connector.type);
+		const features = connector.features;
 		const supported = features
 			? isPropertySupported(features, property)
 			: false;
-		const arrowSupported = isArrowPropertySupported(connector.type, property);
-		if (!supported && !arrowSupported) {
+		if (!supported) {
 			return state;
 		}
 
@@ -207,13 +195,12 @@ export const handlePropertyUpdate = (
 			continue;
 		}
 
-		const features = objectMapperRegistry.getFeatures(obj.type);
+		const features = obj.features;
 		const supported = features
 			? isPropertySupported(features, property)
 			: false;
-		const arrowSupported = isArrowPropertySupported(obj.type, property);
 
-		if (!supported && !arrowSupported) {
+		if (!supported) {
 			continue;
 		}
 
@@ -233,7 +220,7 @@ export const handlePropertyUpdate = (
 				if (!descObj) {
 					continue;
 				}
-				const features = objectMapperRegistry.getFeatures(descObj.type);
+				const features = descObj.features;
 				const supported = features
 					? isPropertySupported(features, property)
 					: false;

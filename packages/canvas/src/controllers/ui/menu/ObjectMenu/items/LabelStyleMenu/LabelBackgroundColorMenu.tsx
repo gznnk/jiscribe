@@ -4,6 +4,7 @@ import { getSelectedConnectorLabel } from "./utils/getSelectedConnectorLabel";
 import { resolveLabelFill } from "../../../../../../presentations/objects/connections/ConnectorLabel";
 import { AUTO_COLOR } from "../../../../../../schemas/objects/utils/autoColor";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { ColorPreviewIcon } from "../../../../icons/ColorPreviewIcon";
 import { ColorPickerGrid } from "../../common/ColorPickerGrid/ColorPickerGrid";
 import { DropdownPanel } from "../../common/DropdownPanel";
@@ -25,6 +26,7 @@ const LabelBackgroundColorMenuComponent: React.FC<Props> = ({
 	canvasState,
 	onPropertyUpdate,
 }) => {
+	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
@@ -38,13 +40,14 @@ const LabelBackgroundColorMenuComponent: React.FC<Props> = ({
 		<MenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-kind="object-menu"
-				data-id={`object-menu:toggle:${SECTION_ID}`}
-				title="Label Background Color"
+				data-kind="menu"
+				data-id="object-menu"
+				data-part={`toggle:${SECTION_ID}`}
+				title={messages.menuLabelBackgroundColor}
 			>
 				<ColorPreviewIcon
 					color={resolveLabelFill(fill === AUTO_COLOR ? undefined : fill)}
-					title="Label Background Color"
+					title={messages.menuLabelBackgroundColor}
 				/>
 			</ObjectMenuButton>
 			{isOpen && (

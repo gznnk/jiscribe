@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
+import { MIN_GROUP_DIMENSION } from "../../../constants/groupDimensions";
 import type { ObjectState } from "../../objects/base/ObjectState";
-import { calculateGroupOrientedBounds } from "../calculateGroupOrientedBounds";
+import {
+	calculateGroupOrientedBounds,
+	calculateOrientedBoundsFromChildIds,
+} from "../calculateGroupOrientedBounds";
 
 /**
  * Helpers that build objects with only the minimal fields needed for testing.
@@ -218,5 +222,181 @@ describe("calculateGroupOrientedBounds", () => {
 		// the AABB after rotation is width:10 height:20
 		expect(result?.width).toBeCloseTo(10);
 		expect(result?.height).toBeCloseTo(20);
+	});
+
+	describe("minimum dimension clamp (GroupState invariant, issue #35)", () => {
+		it("clamps a degenerate axis to MIN_GROUP_DIMENSION when all children are collinear", () => {
+			// two horizontal polylines on the same y → point spread has height 0
+			const objects = {
+				g: makeGroup(["p1", "p2"]),
+				p1: makePoly("p1", [
+					{ x: 0, y: 50 },
+					{ x: 40, y: 50 },
+				]),
+				p2: makePoly("p2", [
+					{ x: 60, y: 50 },
+					{ x: 100, y: 50 },
+				]),
+			};
+
+			const result = calculateGroupOrientedBounds(objects, "g");
+
+			expect(result?.width).toBeCloseTo(100);
+			expect(result?.height).toBe(MIN_GROUP_DIMENSION);
+			// the center stays put; the box only grows symmetrically
+			expect(result?.cx).toBeCloseTo(50);
+			expect(result?.cy).toBeCloseTo(50);
+		});
+
+		it("clamps both axes when all child points coincide", () => {
+			const objects = {
+				g: makeGroup(["p1", "p2"]),
+				p1: makePoly("p1", [{ x: 30, y: 30 }]),
+				p2: makePoly("p2", [{ x: 30, y: 30 }]),
+			};
+
+			const result = calculateGroupOrientedBounds(objects, "g");
+
+			expect(result?.width).toBe(MIN_GROUP_DIMENSION);
+			expect(result?.height).toBe(MIN_GROUP_DIMENSION);
+		});
+
+		it("does not alter non-degenerate bounds", () => {
+			const objects = {
+				g: makeGroup(["f1"]),
+				f1: makeFrame("f1", { cx: 0, cy: 0, width: 20, height: 10 }),
+			};
+
+			const result = calculateGroupOrientedBounds(objects, "g");
+
+			expect(result?.width).toBeCloseTo(20);
+			expect(result?.height).toBeCloseTo(10);
+		});
+	});
+});
+
+describe("calculateOrientedBoundsFromChildIds", () => {
+	const identityTransform = { rotation: 0, scaleX: 1, scaleY: 1 };
+
+	it("computes the OBB without requiring a group object in the map (issue #16)", () => {
+		const objects = {
+			// (-5,-5) to (5,5)
+			f1: makeFrame("f1", { cx: 0, cy: 0, width: 10, height: 10 }),
+			// (15,-5) to (25,5)
+			f2: makeFrame("f2", { cx: 20, cy: 0, width: 10, height: 10 }),
+		};
+
+		const result = calculateOrientedBoundsFromChildIds(
+			objects,
+			["f1", "f2"],
+			identityTransform,
+		);
+
+		// combined range x:[-5,25] y:[-5,5]
+		expect(result?.cx).toBeCloseTo(10);
+		expect(result?.cy).toBeCloseTo(0);
+		expect(result?.width).toBeCloseTo(30);
+		expect(result?.height).toBeCloseTo(10);
+	});
+
+	it("matches calculateGroupOrientedBounds for the same children and transform", () => {
+		const objects = {
+			g: makeGroup(["f1", "p1"], { rotation: 45, scaleX: 2, scaleY: 1 }),
+			f1: makeFrame("f1", { cx: 0, cy: 0, width: 10, height: 10 }),
+			p1: makePoly("p1", [
+				{ x: 100, y: 100 },
+				{ x: 120, y: 80 },
+			]),
+		};
+
+		const viaGroup = calculateGroupOrientedBounds(objects, "g");
+		const viaChildIds = calculateOrientedBoundsFromChildIds(
+			objects,
+			["f1", "p1"],
+			{ rotation: 45, scaleX: 2, scaleY: 1 },
+		);
+
+		expect(viaChildIds).toEqual(viaGroup);
+	});
+
+	it("carries the given transform on the resulting OBB", () => {
+		const objects = {
+			f1: makeFrame("f1", { cx: 0, cy: 0, width: 10, height: 10 }),
+		};
+
+		const result = calculateOrientedBoundsFromChildIds(objects, ["f1"], {
+			rotation: 90,
+			scaleX: 2,
+			scaleY: 3,
+		});
+
+		expect(result?.rotation).toBe(90);
+		expect(result?.scaleX).toBe(2);
+		expect(result?.scaleY).toBe(3);
+	});
+
+	it("recursively collects children of nested groups", () => {
+		const objects = {
+			inner: {
+				id: "inner",
+				type: "group",
+				childIds: ["f2"],
+				cx: 0,
+				cy: 0,
+				width: 0,
+				height: 0,
+			} as unknown as ObjectState,
+			f1: makeFrame("f1", { cx: 0, cy: 0, width: 10, height: 10 }),
+			f2: makeFrame("f2", { cx: 20, cy: 0, width: 10, height: 10 }),
+		};
+
+		const result = calculateOrientedBoundsFromChildIds(
+			objects,
+			["inner", "f1"],
+			identityTransform,
+		);
+
+		// including the nested f2, x:[-5,25] y:[-5,5]
+		expect(result?.cx).toBeCloseTo(10);
+		expect(result?.width).toBeCloseTo(30);
+		expect(result?.height).toBeCloseTo(10);
+	});
+
+	it("returns null when childIds is empty", () => {
+		expect(
+			calculateOrientedBoundsFromChildIds(
+				makeObjects({}),
+				[],
+				identityTransform,
+			),
+		).toBeNull();
+	});
+
+	it("returns null when no child contributes geometry", () => {
+		const objects = makeObjects({
+			c1: { id: "c1", type: "connector" },
+		});
+
+		expect(
+			calculateOrientedBoundsFromChildIds(objects, ["c1"], identityTransform),
+		).toBeNull();
+	});
+
+	it("clamps a degenerate axis to MIN_GROUP_DIMENSION (GroupState invariant)", () => {
+		const objects = {
+			p1: makePoly("p1", [
+				{ x: 0, y: 50 },
+				{ x: 100, y: 50 },
+			]),
+		};
+
+		const result = calculateOrientedBoundsFromChildIds(
+			objects,
+			["p1"],
+			identityTransform,
+		);
+
+		expect(result?.width).toBeCloseTo(100);
+		expect(result?.height).toBe(MIN_GROUP_DIMENSION);
 	});
 });

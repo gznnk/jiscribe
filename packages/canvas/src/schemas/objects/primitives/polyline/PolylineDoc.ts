@@ -6,6 +6,7 @@ export const PolylineFeatures = {
 	type: "polyline",
 	geometry: "poly",
 	stroke: true,
+	arrow: true,
 	connectable: false,
 } as const satisfies ObjectFeatures;
 

@@ -1,13 +1,9 @@
-import { beforeAll, describe, it, expect } from "vitest";
+import { describe, it, expect } from "vitest";
 
+import { MIN_GROUP_DIMENSION } from "../../../../../../../constants/groupDimensions";
 import type { ObjectState } from "../../../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../../../states/objects/primitives/group/GroupState";
-import { initializeObjectRegistry } from "../../../../../../setup/initializeObjectRegistry";
 import { calcMultiSelectGroupBounds } from "../calcMultiSelectGroupBounds";
-
-beforeAll(() => {
-	initializeObjectRegistry();
-});
 
 const freeConnector = (
 	id: string,
@@ -66,6 +62,16 @@ describe("calcMultiSelectGroupBounds", () => {
 			expect(result?.cy).toBeCloseTo(100);
 			expect(result?.width).toBeCloseTo(140);
 			expect(result?.height).toBeCloseTo(140);
+		});
+
+		it("collinear selection -> the degenerate axis is clamped to MIN_GROUP_DIMENSION (issue #35)", () => {
+			// two zero-height rects on the same y → the AABB's height is 0
+			const r1 = rect("r1", 20, 50, 40, 0);
+			const r2 = rect("r2", 80, 50, 40, 0);
+			const result = calcMultiSelectGroupBounds(["r1", "r2"], { r1, r2 });
+			expect(result).not.toBeNull();
+			expect(result?.width).toBeCloseTo(100);
+			expect(result?.height).toBe(MIN_GROUP_DIMENSION);
 		});
 
 		it("nested group -> computes from the grandchild elements' points", () => {
@@ -163,6 +169,25 @@ describe("calcMultiSelectGroupBounds", () => {
 			expect(result?.cy).toBeCloseTo((20 + 350) / 2);
 			expect(result?.width).toBeCloseTo(340);
 			expect(result?.height).toBeCloseTo(330);
+		});
+
+		it("collinear selection -> the degenerate axis is clamped to MIN_GROUP_DIMENSION (issue #35)", () => {
+			// two horizontal connectors on the same y → the OBB's height would be 0
+			const c1 = freeConnector("c1", { x: 0, y: 50 }, { x: 40, y: 50 });
+			const c2 = freeConnector("c2", { x: 60, y: 50 }, { x: 100, y: 50 });
+			const existingGroup = {
+				rotation: 0,
+				scaleX: 1,
+				scaleY: 1,
+			} as GroupState;
+			const result = calcMultiSelectGroupBounds(
+				["c1", "c2"],
+				{ c1, c2 },
+				existingGroup,
+			);
+			expect(result).not.toBeNull();
+			expect(result?.width).toBeCloseTo(100);
+			expect(result?.height).toBe(MIN_GROUP_DIMENSION);
 		});
 
 		it("a rotated existingGroup computes the OBB from connector points too", () => {

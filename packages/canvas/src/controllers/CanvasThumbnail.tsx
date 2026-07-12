@@ -1,9 +1,15 @@
 import { memo, useMemo, useRef } from "react";
 
+import { defaultCanvasRegistries } from "./setup";
 import { calcFitViewport } from "./utils/calcFitViewport";
 import { CanvasView } from "../presentations/CanvasView";
+import { ObjectComponentRegistryContext } from "../presentations/objects/registry/ObjectComponentRegistryContext";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import { canvasToState } from "../states/canvas/CanvasMapper";
+import type { CanvasTheme } from "../theme/CanvasTheme";
+import { CanvasThemeContext } from "../theme/CanvasThemeContext";
+import { buildThemeCssVars } from "../theme/themeCssVars";
+import { darkCanvasTheme } from "../theme/themePresets";
 
 type CanvasThumbnailProps = {
 	/**
@@ -18,6 +24,8 @@ type CanvasThumbnailProps = {
 	height?: number;
 	/** Margin (px) kept around the content. */
 	padding?: number;
+	/** Theme injected by the host (default: `darkCanvasTheme`). See the Canvas `theme` prop. */
+	theme?: CanvasTheme;
 };
 
 /**
@@ -32,11 +40,12 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 	width = 480,
 	height = 270,
 	padding = 24,
+	theme = darkCanvasTheme,
 }) => {
 	const svgRef = useRef<SVGSVGElement>(null);
 
 	const { objects, rootIds } = useMemo(
-		() => canvasToState(canvasDoc),
+		() => canvasToState(canvasDoc, defaultCanvasRegistries.objectMapper),
 		[canvasDoc],
 	);
 
@@ -52,13 +61,28 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 		[objects, width, height, padding],
 	);
 
+	// display: contents keeps the thumbnail out of layout while still letting
+	// the --jiscribe-* custom properties inherit into the CanvasView styles.
+	const themeCssVars = useMemo(
+		() => ({ display: "contents", ...buildThemeCssVars(theme.tokens) }),
+		[theme],
+	);
+
 	return (
-		<CanvasView
-			objects={objects}
-			rootIds={rootIds}
-			viewport={viewport}
-			svgRef={svgRef}
-		/>
+		<CanvasThemeContext value={theme}>
+			<ObjectComponentRegistryContext
+				value={defaultCanvasRegistries.objectComponent}
+			>
+				<div style={themeCssVars}>
+					<CanvasView
+						objects={objects}
+						rootIds={rootIds}
+						viewport={viewport}
+						svgRef={svgRef}
+					/>
+				</div>
+			</ObjectComponentRegistryContext>
+		</CanvasThemeContext>
 	);
 };
 

@@ -5,9 +5,10 @@ import { selectors } from "../../support/selectors";
 /**
  * コネクターのラベル（label.text）編集の e2e。
  *
- * - 線上のダブルクリックでラベル編集を開始できる
+ * - ラベルが無いコネクターは線上のダブルクリックでラベル編集を開始できる
  * - 入力・確定すると経路上に水平ラベルが描かれる（foreignObject[data-kind=connector]）
- * - 再度ダブルクリックすると既存テキストがプリフィルされる
+ * - ラベルがあるときはラベルボックスのダブルクリックだけが再編集を開始する
+ *   （線のダブルクリックは選択のみ。編集中の線タップはラベル外として確定）
  * - 素のラベルは空文字で確定すると取り除かれる
  * - スタイル付きラベルは空文字にしてもスタイルを保持し、再入力で復元できる
  */
@@ -102,9 +103,8 @@ test.describe("コネクターのラベル", () => {
 		await canvas.commitText();
 		await expect(labelLocator).toContainText("Yes");
 
-		// 再編集: 既存テキストがプリフィルされる。
-		const screen = canvas.toScreen(onLine);
-		await canvas.page.mouse.dblclick(screen.x, screen.y);
+		// 再編集: ラベルボックスのダブルクリックで既存テキストがプリフィルされる。
+		await labelBoxOf(canvas, connectorId).dblclick();
 		await expect(canvas.page.locator(selectors.textEditor)).toBeVisible();
 		await expect(canvas.textArea()).toHaveValue("Yes");
 
@@ -341,9 +341,8 @@ test.describe("コネクターのラベル", () => {
 		await expect(labelBox).toHaveCSS("font-weight", "700");
 		await expect(labelBox).toHaveCSS("background-color", "rgb(220, 38, 38)");
 
-		// 再編集してテキストだけ変更（空文字でないので label は維持されるはず）。
-		const screen = canvas.toScreen(onLine);
-		await canvas.page.mouse.dblclick(screen.x, screen.y);
+		// ラベルボックスから再編集してテキストだけ変更（空文字でないので label は維持されるはず）。
+		await labelBox.dblclick();
 		await expect(canvas.textArea()).toHaveValue("Yes");
 		await canvas.textArea().fill("No");
 		await canvas.commitText();
@@ -437,15 +436,15 @@ test.describe("コネクターのラベル", () => {
 		await canvas.page.click(selectors.objectMenuSet("label.fill", "#dc2626"));
 		await expect(labelBox).toHaveCSS("background-color", "rgb(220, 38, 38)");
 
-		// テキストを空にして確定 → ラベルは見た目上消える（text="" で非表示）。
-		const screen = canvas.toScreen(onLine);
-		await canvas.page.mouse.dblclick(screen.x, screen.y);
+		// ラベルボックスから編集し、テキストを空にして確定 → ラベルは見た目上消える（text="" で非表示）。
+		await labelBox.dblclick();
 		await expect(canvas.textArea()).toHaveValue("Yes");
 		await canvas.textArea().fill("");
 		await canvas.commitText();
 		await expect(labelBox).toHaveCount(0);
 
-		// 線を再びダブルクリックしてテキストを入れ直す（プリフィルは空）。
+		// ラベルが無くなったので、線のダブルクリックでテキストを入れ直せる（プリフィルは空）。
+		const screen = canvas.toScreen(onLine);
 		await canvas.page.mouse.dblclick(screen.x, screen.y);
 		await expect(canvas.page.locator(selectors.textEditor)).toBeVisible();
 		await expect(canvas.textArea()).toHaveValue("");
@@ -455,6 +454,54 @@ test.describe("コネクターのラベル", () => {
 		// テキストが戻り、以前の背景色スタイルも復元されている。
 		await expect(labelBox).toContainText("Back");
 		await expect(labelBox).toHaveCSS("background-color", "rgb(220, 38, 38)");
+	});
+
+	test("ラベルがあるコネクターは、線のダブルクリックでは編集にならない（選択のみ）", async ({
+		canvas,
+	}) => {
+		const { onLine } = await setupConnectorWithLabel(canvas, "Yes");
+		await canvas.deselect();
+
+		// 線上をダブルクリック → コネクターは選択されるがエディタは開かない。
+		const screen = canvas.toScreen(onLine);
+		await canvas.page.mouse.dblclick(screen.x, screen.y);
+		await expect(
+			canvas.page.locator(selectors.objectMenuToggle("line-style")),
+		).toBeVisible();
+		await expect(canvas.page.locator(selectors.textEditor)).toHaveCount(0);
+	});
+
+	test("編集中に線をダブルクリックするとラベル外タップとして確定され、余分なコミットは積まれない（#102）", async ({
+		canvas,
+	}) => {
+		const { connectorId, onLine } = await setupConnectorWithLabel(
+			canvas,
+			"Yes",
+		);
+		const labelBox = labelBoxOf(canvas, connectorId);
+		await expect(labelBox).toContainText("Yes");
+
+		// ラベルボックスから編集を開始し、テキストを書き換える（まだ確定しない）。
+		await labelBox.dblclick();
+		await expect(canvas.page.locator(selectors.textEditor)).toBeVisible();
+		await expect(canvas.textArea()).toHaveValue("Yes");
+		await canvas.textArea().fill("No");
+
+		// 確定せずに線上をダブルクリック → ラベル外のタップなので "No" が確定され、
+		// エディタは再オープンしない（ラベルがある線のダブルクリックは選択のみ）。
+		const screen = canvas.toScreen(onLine);
+		await canvas.page.mouse.dblclick(screen.x, screen.y);
+		await expect(canvas.page.locator(selectors.textEditor)).toHaveCount(0);
+		await expect(labelBox).toContainText("No");
+
+		// コミットは「ラベル追加」と「Yes→No」の 2 つだけ（先頭の pressed と
+		// doubleClick で二重にコミットされていれば、1 回目の Undo が "No" のまま
+		// になる）。Undo 2 回でラベルごと消える。
+		await canvas.deselect();
+		await canvas.undo();
+		await expect(labelBox).toContainText("Yes");
+		await canvas.undo();
+		await expect(labelBox).toHaveCount(0);
 	});
 
 	test("ラベルが無いコネクターにはラベルスタイルメニューが出ない", async ({

@@ -1,6 +1,8 @@
 import type { Dimensions } from "@workspace/geometry";
 
+import type { DocCreationDefaults } from "../../schemas/objects/types/DocCreationDefaults";
 import type { CanvasState } from "../../states/canvas/CanvasState";
+import type { Camera } from "../../states/canvas/Viewport";
 import type { ClipboardData } from "../commands/selection/ClipboardData";
 import type { Gesture } from "../gestures/recognizer/GestureRecognizerTypes";
 
@@ -26,8 +28,15 @@ export type ContainerResizeAction = {
 export type SyncExternalAction = {
 	type: "SYNC_EXTERNAL";
 	payload: CanvasState;
-	/** Nonce echoed back from the extension. Matches state.saveNonce when this is a fold-back. */
-	saveNonce?: string;
+};
+
+/**
+ * Set viewport action - applies a host-controlled camera (pan/zoom), keeping the
+ * measured width/height. Dispatched by useControlledViewport.
+ */
+export type SetViewportAction = {
+	type: "SET_VIEWPORT";
+	camera: Camera;
 };
 
 /**
@@ -74,6 +83,15 @@ export type PasteAction = {
 };
 
 /**
+ * Set doc-creation defaults action - keeps state.docDefaults in sync when the
+ * host swaps themes at runtime (e.g. changing the default fontFamily).
+ */
+export type SetDocDefaultsAction = {
+	type: "SET_DOC_DEFAULTS";
+	docDefaults: DocCreationDefaults;
+};
+
+/**
  * Close context menu action - clears the context menu without any other change.
  * Used by callback menu items (e.g. paste with empty clipboard) that bypass the
  * gesture system and would otherwise leave the menu open.
@@ -89,9 +107,11 @@ export type CanvasAction =
 	| GestureAction
 	| ContainerResizeAction
 	| SyncExternalAction
+	| SetViewportAction
 	| CommandAction
 	| UpdateTextEditAction
 	| EndTextEditAction
 	| MenuPropertyUpdateAction
 	| PasteAction
+	| SetDocDefaultsAction
 	| CloseContextMenuAction;

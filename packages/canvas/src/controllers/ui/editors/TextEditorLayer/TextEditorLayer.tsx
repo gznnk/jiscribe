@@ -3,6 +3,8 @@ import { memo } from "react";
 
 import { resolveConnectorPoints } from "../../../../presentations/layers/content/utils/endpoints";
 import { calcConnectorLabelAnchor } from "../../../../presentations/layers/content/utils/label/calcConnectorLabelAnchor";
+import { calcTextRegion } from "../../../../presentations/objects/utils/calcTextRegion";
+import type { TextRegionSpec } from "../../../../schemas/objects/types/TextRegionSpec";
 import {
 	isTextStyleState,
 	type TextStyleState,
@@ -74,12 +76,14 @@ function renderConnectorLabelEditor(
 }
 
 /**
- * Renders the body text editor for a shape that has text (such as rect), overlaid on the shape's bbox.
+ * Renders the body text editor for a shape that has text (such as rect), overlaid on the shape's
+ * text region (derived via calcTextRegion, the seam shared with the rendering-side TextOverlay).
  *
  * @param target - The shape being edited (carries geometry)
  * @param objectId - ID of the target shape
  * @param text - The text being edited
  * @param handlers - Input and exit handlers
+ * @param textRegionSpec - Region spec from the shape's stamped features. Omitted = full bbox
  * @returns The text editor
  */
 function renderTextEditor(
@@ -87,15 +91,22 @@ function renderTextEditor(
 	objectId: string,
 	text: string,
 	handlers: EditorHandlers,
+	textRegionSpec?: TextRegionSpec,
 ): React.ReactElement {
+	const textRegion = calcTextRegion(
+		{ width: target.width ?? 0, height: target.height ?? 0 },
+		textRegionSpec,
+	);
 	return (
 		<TextEditor
 			objectId={objectId}
 			text={text}
 			cx={target.cx}
 			cy={target.cy}
-			width={target.width ?? 0}
-			height={target.height ?? 0}
+			x={textRegion.x}
+			y={textRegion.y}
+			width={textRegion.width}
+			height={textRegion.height}
 			scaleX={target.scaleX ?? 1}
 			scaleY={target.scaleY ?? 1}
 			rotation={target.rotation ?? 0}
@@ -158,6 +169,7 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 			textEditState.objectId,
 			textEditState.text,
 			handlers,
+			targetObject.features?.textRegion,
 		);
 	}
 

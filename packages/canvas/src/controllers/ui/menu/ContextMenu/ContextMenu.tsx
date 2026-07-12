@@ -9,12 +9,14 @@ import {
 } from "./ContextMenuStyled";
 import { useContextMenuPosition } from "./useContextMenuPosition";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { commandRegistry } from "../../../commands/CommandRegistry";
 import type { PlatformKeyBindings } from "../../../commands/CommandTypes";
 import {
 	formatShortcut,
 	getPlatformShortcuts,
 } from "../../../commands/CommandUtils";
+import { useCommandState } from "../../../hooks/useCommandState";
+import { getCommandLabel } from "../../../messages/CanvasMessages";
+import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 
 type CommandMenuItem =
 	| { type: "command"; commandId: string }
@@ -45,6 +47,8 @@ const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 	callbacks,
 }) => {
 	const menuRef = useRef<HTMLDivElement>(null);
+	const messages = useCanvasMessages();
+	const resolveCommand = useCommandState(canvasState);
 	const { left, top } = useContextMenuPosition(position, menuRef);
 
 	const menuItems: CommandMenuItem[] = [
@@ -54,7 +58,7 @@ const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 		{
 			type: "callback",
 			id: "paste",
-			label: "Paste",
+			label: messages.contextMenuPaste,
 			shortcuts: {
 				mac: [{ code: "KeyV", meta: true }],
 				default: [{ code: "KeyV", ctrl: true }],
@@ -72,6 +76,8 @@ const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 		{ type: "separator" },
 		{ type: "command", commandId: "group" },
 		{ type: "command", commandId: "ungroup" },
+		{ type: "separator" },
+		{ type: "callback", id: "export", label: messages.contextMenuExport },
 	];
 
 	return (
@@ -93,8 +99,7 @@ const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 							<MenuItem
 								key={item.id}
 								disabled={!enabled}
-								data-kind="context-menu-callback"
-								data-id={item.id}
+								data-testid={`context-menu-callback:${item.id}`}
 								data-gesture="none"
 								onClick={enabled ? callbacks[item.id] : undefined}
 							>
@@ -109,12 +114,12 @@ const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 					}
 
 					case "command": {
-						const command = commandRegistry.get(item.commandId);
-						if (!command) {
+						const resolved = resolveCommand(item.commandId);
+						if (!resolved) {
 							return null;
 						}
 
-						const enabled = command.canExecute(canvasState);
+						const { command, enabled } = resolved;
 						const shortcuts = command.shortcuts
 							? getPlatformShortcuts(command.shortcuts)
 							: null;
@@ -124,10 +129,13 @@ const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 							<MenuItem
 								key={command.id}
 								disabled={!enabled}
-								data-kind="context-menu"
-								data-id={`context-menu:${command.id}`}
+								data-kind="menu"
+								data-id="context-menu"
+								data-part={`command:${command.id}`}
 							>
-								<MenuItemLabel>{command.label}</MenuItemLabel>
+								<MenuItemLabel>
+									{getCommandLabel(messages, command)}
+								</MenuItemLabel>
 								{firstShortcut && (
 									<MenuItemShortcut>
 										{formatShortcut(firstShortcut)}

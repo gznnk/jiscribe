@@ -2,8 +2,8 @@ import type { Point } from "@workspace/geometry";
 
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { GroupState } from "../../states/objects/primitives/group/GroupState";
-import { moveGroup } from "../gestures/handlers/objects/primitives/GroupController";
-import { objectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
+import { moveObjectTree } from "../gestures/handlers/objects/primitives/GroupController";
+import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
 
 export type MoveSelectionParams = {
 	/**
@@ -24,6 +24,11 @@ export type MoveSelectionParams = {
 	 * The movement amount. On drag, the snap-corrected cumulative delta; on command, a single delta
 	 */
 	delta: Point;
+	/**
+	 * The canvas's object behavior registry (per-shape moveByDelta), threaded down
+	 * to moveObjectTree (#165).
+	 */
+	objectBehavior: ObjectBehaviorRegistry;
 };
 
 export type MoveSelectionResult = {
@@ -47,27 +52,20 @@ export type MoveSelectionResult = {
 export function moveSelection(
 	params: MoveSelectionParams,
 ): MoveSelectionResult {
-	const { selectedIds, srcObjects, srcMultiSelectGroup, delta } = params;
+	const {
+		selectedIds,
+		srcObjects,
+		srcMultiSelectGroup,
+		delta,
+		objectBehavior,
+	} = params;
 
 	const objects = { ...srcObjects };
 
+	// Each selected object is translated through the registry; groups additionally propagate
+	// the move to their descendants. (read: srcObjects / write: objects)
 	for (const selectedId of selectedIds) {
-		const selectedObject = srcObjects[selectedId];
-		if (!selectedObject) {
-			continue;
-		}
-
-		if (selectedObject.type === "group") {
-			// Group: move descendants recursively too (read: srcObjects / write: objects)
-			moveGroup(selectedId, srcObjects, objects, delta);
-		} else {
-			const moveByDelta = objectBehaviorRegistry.getMoveByDelta(
-				selectedObject.type,
-			);
-			if (moveByDelta) {
-				objects[selectedId] = moveByDelta(selectedObject, delta);
-			}
-		}
+		moveObjectTree(selectedId, srcObjects, objects, delta, objectBehavior);
 	}
 
 	const multiSelectGroup: GroupState | null = srcMultiSelectGroup

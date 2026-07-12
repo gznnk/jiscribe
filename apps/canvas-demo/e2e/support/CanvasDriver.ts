@@ -255,6 +255,29 @@ export class CanvasDriver {
 	}
 
 	/**
+	 * 中ボタンドラッグ（ビューポートのパンに使う / #159）。右ボタン同様に
+	 * CanvasEventHandler へルーティングされ、図形の上から始めてもパンになる。
+	 */
+	async middleDrag(
+		from: { x: number; y: number },
+		to: { x: number; y: number },
+		steps = 8,
+	) {
+		const fromScreen = this.toScreen(from);
+		const toScreen = this.toScreen(to);
+		await this.page.mouse.move(fromScreen.x, fromScreen.y);
+		await this.page.mouse.down({ button: "middle" });
+		await this.page.mouse.move(toScreen.x, toScreen.y, { steps });
+		await this.page.mouse.up({ button: "middle" });
+	}
+
+	/** コンテンツ座標を中ボタンでクリックする（#159。選択のアサーションはしない） */
+	async middleClickAt(point: { x: number; y: number }) {
+		const screen = this.toScreen(point);
+		await this.page.mouse.click(screen.x, screen.y, { button: "middle" });
+	}
+
+	/**
 	 * いま表示されているコントロール（選択ハンドル・接続アンカー等）の data-id 一覧。
 	 * コントロールは表示中のみ DOM にマウントされるため、これがそのまま可視集合になる。
 	 */
@@ -262,15 +285,19 @@ export class CanvasDriver {
 		return this.page.evaluate(
 			(controlSelector) =>
 				[...document.querySelectorAll(controlSelector)]
-					.map((el) => el.getAttribute("data-id"))
-					.filter((id): id is string => id !== null),
+					.map((el) => {
+						const id = el.getAttribute("data-id");
+						const part = el.getAttribute("data-part");
+						return id === null ? null : part === null ? id : `${id}/${part}`;
+					})
+					.filter((descriptor): descriptor is string => descriptor !== null),
 			selectors.control,
 		);
 	}
 
-	/** 特定のコントロールが表示されているか */
-	async isControlVisible(controlId: string): Promise<boolean> {
-		return (await this.visibleControlIds()).includes(controlId);
+	/** 特定のコントロールが表示されているか（記述子は "<data-id>/<data-part>"） */
+	async isControlVisible(controlDescriptor: string): Promise<boolean> {
+		return (await this.visibleControlIds()).includes(controlDescriptor);
 	}
 
 	/** いずれかのコントロールが表示されているか（選択状態の簡易判定） */

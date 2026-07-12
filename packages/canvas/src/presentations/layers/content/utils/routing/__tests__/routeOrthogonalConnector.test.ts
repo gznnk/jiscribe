@@ -231,6 +231,197 @@ describe("routeOrthogonalConnector", () => {
 		expect(Math.abs(path[1].y - mid)).toBeLessThanOrEqual(20);
 	});
 
+	it("a forced wrap keeps full-margin clearance from both shapes as one is dragged (no dip into the margin)", () => {
+		// Two vertically-stacked boxes connected on their FAR sides (source.bottom → target.top): both
+		// stubs point away from each other, forcing the route to wrap around one side. As the top box is
+		// dragged right, the wrap column must stay at the leftmost box's left edge minus the full margin
+		// — not graze within the other box's margin and then snap back out (the reported jitter).
+		const margin = 30;
+		const source: OrthogonalConnectorEndpoint = {
+			point: { x: 231, y: 470 }, // bottom-edge center, exits down
+			direction: "down",
+			box: boxAt(231, 420, 100, 100), // left edge = 181
+		};
+		const sourceLeft = 181;
+		for (let dx = 0; dx <= 70; dx += 5) {
+			const target: OrthogonalConnectorEndpoint = {
+				point: { x: 231 + dx, y: 164 }, // top-edge center, exits up
+				direction: "up",
+				box: boxAt(231 + dx, 214, 100, 100),
+			};
+			const path = routeOrthogonalConnector(source, target);
+			// leftmost vertical (wrap) column
+			const wrapX = Math.min(
+				...path.flatMap((p, i) =>
+					i < path.length - 1 && p.x === path[i + 1].x ? [p.x] : [],
+				),
+			);
+			// the wrap goes around the left → its clearance from the source's left edge is exactly the margin
+			expect(sourceLeft - wrapX).toBe(margin);
+		}
+	});
+
+	it("parallel left-exits on x-overlapping, y-stacked boxes make a clean C (no staircase around the exit corridor)", () => {
+		// Both endpoints exit left; the boxes overlap in x and are stacked in y. A clamped stub can land
+		// inside the other box's margin band, but the margin-intrusion cost excludes each endpoint's own
+		// exit corridor, so the clean route wins instead of an ugly staircase. Expect a clean 4-point C.
+		const source: OrthogonalConnectorEndpoint = {
+			point: { x: 1278, y: 753 },
+			direction: "left",
+			box: boxAt(1328, 753, 100, 100), // x[1278,1378]
+		};
+		const target: OrthogonalConnectorEndpoint = {
+			point: { x: 1251, y: 547 },
+			direction: "left",
+			box: boxAt(1301, 547, 100, 100), // x[1251,1351], overlaps source in x
+		};
+		const path = routeOrthogonalConnector(source, target);
+		expect(path).toHaveLength(4);
+		expect(countReversals(path)).toBe(0);
+		// the single vertical run clears both boxes on the left (at the target's left margin)
+		expect(path[1].x).toBe(path[2].x);
+	});
+
+	it("routing past a shape keeps full-margin clearance as the near endpoint is dragged toward it (no dip-and-restore)", () => {
+		// Both endpoints exit left, source to the right of the target. As the source box is dragged up
+		// toward the target, the pass-by segment must never come closer than the margin to the target
+		// and then snap back out — the clearance must stay >= margin throughout (it detours to hold it).
+		const margin = 30;
+		const target: OrthogonalConnectorEndpoint = {
+			point: { x: 1583, y: 557 },
+			direction: "left",
+			box: boxAt(1633, 557, 100, 100), // y-span [507, 607]
+		};
+		const targetTop = 507;
+		const targetBottom = 607;
+		for (let sourceCy = 700; sourceCy >= 460; sourceCy -= 5) {
+			const source: OrthogonalConnectorEndpoint = {
+				point: { x: 1775, y: sourceCy },
+				direction: "left",
+				box: boxAt(1825, sourceCy, 100, 100),
+			};
+			const path = routeOrthogonalConnector(source, target);
+			// every horizontal segment that spans the target's x-band must clear it vertically by the margin
+			for (let i = 0; i < path.length - 1; i++) {
+				const a = path[i];
+				const b = path[i + 1];
+				if (a.y !== b.y) {
+					continue;
+				}
+				const spansTarget =
+					Math.min(a.x, b.x) < 1683 && Math.max(a.x, b.x) > 1583;
+				if (!spansTarget) {
+					continue;
+				}
+				const clearance =
+					a.y <= targetTop
+						? targetTop - a.y
+						: a.y >= targetBottom
+							? a.y - targetBottom
+							: -1; // inside the span → would cross; must not happen for a pass-by
+				expect(clearance).toBeGreaterThanOrEqual(margin);
+			}
+		}
+	});
+
+	it("a forced detour hugs the near edge of the shape it goes around (no over-detour past both boxes)", () => {
+		// Both endpoints exit left, source to the right of target, and the source's exit y sits inside
+		// the target's vertical span (so a straight left run would cross the target). The route must
+		// detour around the target — and the crossover should clear the target's *near* edge by the
+		// margin, not the far envelope of both boxes.
+		const margin = 30;
+		// target: left edge 1583, y-span [507, 607]
+		const target: OrthogonalConnectorEndpoint = {
+			point: { x: 1583, y: 557 },
+			direction: "left",
+			box: boxAt(1633, 557, 100, 100),
+		};
+		// source exit y = 589, in the LOWER half of the target span → detour around the bottom
+		const source: OrthogonalConnectorEndpoint = {
+			point: { x: 1775, y: 589 },
+			direction: "left",
+			box: boxAt(1825, 589, 100, 100), // bottom edge 639
+		};
+		const path = routeOrthogonalConnector(source, target);
+		const crossingY = Math.max(...path.map((p) => p.y));
+		// clears the target's bottom (607) by the margin; must NOT sink to the source-inclusive envelope (639+margin)
+		expect(crossingY).toBe(607 + margin);
+	});
+
+	it("a forced detour goes around the near side (up when the exit is near the top, down when near the bottom)", () => {
+		const target: OrthogonalConnectorEndpoint = {
+			point: { x: 1583, y: 557 },
+			direction: "left",
+			box: boxAt(1633, 557, 100, 100), // y-span [507, 607], center 557
+		};
+		const routeFor = (sourceCy: number) =>
+			routeOrthogonalConnector(
+				{
+					point: { x: 1775, y: sourceCy },
+					direction: "left",
+					box: boxAt(1825, sourceCy, 100, 100),
+				},
+				target,
+			);
+		// exit near the top of the span → detour over the top (crossing above the target)
+		const nearTop = routeFor(520);
+		expect(Math.min(...nearTop.map((p) => p.y))).toBeLessThan(507);
+		// exit near the bottom of the span → detour under the bottom (crossing below the target)
+		const nearBottom = routeFor(595);
+		expect(Math.max(...nearBottom.map((p) => p.y))).toBeGreaterThan(607);
+	});
+
+	it("a wrap alongside a shape keeps full-margin clearance as the far endpoint's box is dragged past it", () => {
+		// source.top (exits up) → target.right (exits right), with the two boxes overlapping in x so the
+		// descent runs alongside the source box. As the target box is dragged right, the descent column
+		// must stay at least the full margin clear of the source's right edge — not graze within its
+		// margin (the target-stub column) and then snap back out.
+		const margin = 30;
+		const source: OrthogonalConnectorEndpoint = {
+			point: { x: 134, y: 268 }, // top-edge center, exits up
+			direction: "up",
+			box: boxAt(134, 318, 100, 100), // right edge = 184
+		};
+		const sourceRight = 184;
+		for (let cx = 64; cx <= 204; cx += 5) {
+			const target: OrthogonalConnectorEndpoint = {
+				point: { x: cx + 50, y: 485 }, // right-edge center, exits right
+				direction: "right",
+				box: boxAt(cx, 485, 100, 100),
+			};
+			const path = routeOrthogonalConnector(source, target);
+			const descentX = path.flatMap((p, i) =>
+				i < path.length - 1 && p.x === path[i + 1].x ? [p.x] : [],
+			);
+			// every vertical run that passes the source on its right must clear it by the full margin
+			for (const x of descentX) {
+				if (x > sourceRight) {
+					expect(x - sourceRight).toBeGreaterThanOrEqual(margin);
+				}
+			}
+		}
+	});
+
+	it("a non-facing S (top edge → left edge) jogs at the center between the shapes, not a shape's margin", () => {
+		// source exits up, target exits left: not facing, so the route is an S with a vertical jog.
+		// The jog must sit at the center of the gap between the two boxes (source.right / target.left),
+		// not hug source.right + margin.
+		const source: OrthogonalConnectorEndpoint = {
+			point: { x: 673, y: 518 }, // top-edge center, exits up
+			direction: "up",
+			box: boxAt(673, 568, 100, 100), // x: [623, 723]
+		};
+		const target: OrthogonalConnectorEndpoint = {
+			point: { x: 921, y: 568 }, // left-edge center, exits left
+			direction: "left",
+			box: boxAt(971, 568, 100, 100), // x: [921, 1021]
+		};
+		const path = routeOrthogonalConnector(source, target);
+		const jog = path.find((p, i) => i > 0 && p.x === path[i + 1]?.x);
+		// center of the gap between source.right (723) and target.left (921) = 822
+		expect(jog?.x).toBe(822);
+	});
+
 	it("right edge → top edge (top-left → bottom-right diagonal arrangement) forms a 2-segment, 1-corner L shape", () => {
 		// exit (right) and entry (up) mesh. It should be a plain L, not a staircase (3 corners).
 		const source: OrthogonalConnectorEndpoint = {

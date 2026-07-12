@@ -3,6 +3,8 @@ import { StickyFeatures } from "../objects/annotations/sticky/StickyDoc";
 import { validateStickyDoc } from "../objects/annotations/sticky/validateStickyDoc";
 import { ConnectorFeatures } from "../objects/connections/connector/ConnectorDoc";
 import { validateConnectorDoc } from "../objects/connections/connector/validateConnectorDoc";
+import { DbFeatures } from "../objects/primitives/db/DbDoc";
+import { validateDbDoc } from "../objects/primitives/db/validateDbDoc";
 import { DiamondFeatures } from "../objects/primitives/diamond/DiamondDoc";
 import { validateDiamondDoc } from "../objects/primitives/diamond/validateDiamondDoc";
 import { EllipseFeatures } from "../objects/primitives/ellipse/EllipseDoc";
@@ -27,10 +29,13 @@ import { validateSvgDoc } from "../objects/primitives/svg/validateSvgDoc";
  * React / @emotion, so it can be safely called from the Node side of the VSCode
  * extension (the parser-only entry `./parser`).
  *
- * The UI side ({@link import("../../controllers/setup/initializeObjectRegistry")})
- * calls this function alongside the other registries (components, gestures,
- * menus, etc.), centralizing the single source of truth for doc validator
- * registration here.
+ * This registry is populated lazily at parse time: the only production caller is
+ * {@link import("../canvas/validators/parseCanvasText").parseCanvasText}, which
+ * calls this idempotently (guarded by `objectDocValidatorRegistry.isEmpty()`) when
+ * it needs to validate. The UI-side
+ * {@link import("../../controllers/setup/initializeObjectRegistry").initializeObjectRegistry}
+ * intentionally does NOT initialize this registry (see the comment there); doc
+ * validators are a schema-layer concern needed only during parse-time validation.
  *
  * When adding a new object type, do not forget to register it here (if this is
  * empty, {@link import("../canvas/validators/validateSemantics").validateSemantics}
@@ -49,6 +54,7 @@ export const initializeObjectDocValidatorRegistry = (): void => {
 		validateDiamondDoc,
 		DiamondFeatures,
 	);
+	objectDocValidatorRegistry.register("db", validateDbDoc, DbFeatures);
 	objectDocValidatorRegistry.register("group", validateGroupDoc, GroupFeatures);
 	objectDocValidatorRegistry.register(
 		"polygon",

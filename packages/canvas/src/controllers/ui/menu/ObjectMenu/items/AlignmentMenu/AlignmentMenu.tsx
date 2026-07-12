@@ -3,6 +3,8 @@
 import { AlignmentMenuContent, AlignmentRow } from "./AlignmentMenuStyled";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import type { TextStyleState } from "../../../../../../states/objects/base/TextStyleState";
+import type { CanvasMessageStrings } from "../../../../../messages/CanvasMessages";
+import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { AlignBottomIcon } from "../../../../icons/AlignBottomIcon";
 import { AlignCenterIcon } from "../../../../icons/AlignCenterIcon";
 import { AlignLeftIcon } from "../../../../icons/AlignLeftIcon";
@@ -21,16 +23,24 @@ type AlignmentMenuProps = {
 };
 
 const horizontalAlignments = [
-	{ value: "left", Icon: AlignLeftIcon, title: "Left" },
-	{ value: "center", Icon: AlignCenterIcon, title: "Center" },
-	{ value: "right", Icon: AlignRightIcon, title: "Right" },
-] as const;
+	{ value: "left", Icon: AlignLeftIcon, messageKey: "menuAlignLeft" },
+	{ value: "center", Icon: AlignCenterIcon, messageKey: "menuAlignCenter" },
+	{ value: "right", Icon: AlignRightIcon, messageKey: "menuAlignRight" },
+] as const satisfies readonly {
+	value: string;
+	Icon: React.FC;
+	messageKey: keyof CanvasMessageStrings;
+}[];
 
 const verticalAlignments = [
-	{ value: "top", Icon: AlignTopIcon, title: "Top" },
-	{ value: "middle", Icon: AlignMiddleIcon, title: "Middle" },
-	{ value: "bottom", Icon: AlignBottomIcon, title: "Bottom" },
-] as const;
+	{ value: "top", Icon: AlignTopIcon, messageKey: "menuAlignTop" },
+	{ value: "middle", Icon: AlignMiddleIcon, messageKey: "menuAlignMiddle" },
+	{ value: "bottom", Icon: AlignBottomIcon, messageKey: "menuAlignBottom" },
+] as const satisfies readonly {
+	value: string;
+	Icon: React.FC;
+	messageKey: keyof CanvasMessageStrings;
+}[];
 
 /**
  * Text alignment menu.
@@ -40,6 +50,7 @@ const verticalAlignments = [
 const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 	canvasState,
 }) => {
+	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
@@ -58,9 +69,10 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 		<MenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-kind="object-menu"
-				data-id={`object-menu:toggle:${SECTION_ID}`}
-				title="Text Alignment"
+				data-kind="menu"
+				data-id="object-menu"
+				data-part={`toggle:${SECTION_ID}`}
+				title={messages.menuTextAlignment}
 			>
 				<AlignLeftIcon />
 			</ObjectMenuButton>
@@ -68,26 +80,28 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>
 					<AlignmentMenuContent>
 						<AlignmentRow>
-							{horizontalAlignments.map(({ value, Icon, title }) => (
+							{horizontalAlignments.map(({ value, Icon, messageKey }) => (
 								<ObjectMenuButton
 									key={value}
 									isActive={textAlign === value}
-									data-kind="object-menu"
-									data-id={`object-menu:set:textAlign:${value}`}
-									title={title}
+									data-kind="menu"
+									data-id="object-menu"
+									data-part={`set:textAlign:${value}`}
+									title={messages[messageKey]}
 								>
 									<Icon />
 								</ObjectMenuButton>
 							))}
 						</AlignmentRow>
 						<AlignmentRow>
-							{verticalAlignments.map(({ value, Icon, title }) => (
+							{verticalAlignments.map(({ value, Icon, messageKey }) => (
 								<ObjectMenuButton
 									key={value}
 									isActive={verticalAlign === value}
-									data-kind="object-menu"
-									data-id={`object-menu:set:verticalAlign:${value}`}
-									title={title}
+									data-kind="menu"
+									data-id="object-menu"
+									data-part={`set:verticalAlign:${value}`}
+									title={messages[messageKey]}
 								>
 									<Icon />
 								</ObjectMenuButton>

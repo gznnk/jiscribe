@@ -1,16 +1,11 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
-import { initializeObjectRegistry } from "../../setup/initializeObjectRegistry";
 import {
 	calcObjectBoundingBox,
 	calcObjectsBoundingBox,
 } from "../calcObjectBoundingBox";
-
-beforeAll(() => {
-	initializeObjectRegistry();
-});
 
 const rect = (
 	id: string,

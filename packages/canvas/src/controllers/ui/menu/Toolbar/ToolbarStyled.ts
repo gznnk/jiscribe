@@ -38,6 +38,17 @@ export const ToolbarGroup = styled.div`
 `;
 
 /**
+ * Container for host-provided toolbar UI (CanvasProps.toolbarLeading / toolbarTrailing).
+ * Opts the slot out of the gesture system so plain onClick works.
+ */
+export const ToolbarHostSlot = styled.div`
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 4px;
+`;
+
+/**
  * Vertical divider within the toolbar.
  */
 export const ToolbarDivider = styled.div`

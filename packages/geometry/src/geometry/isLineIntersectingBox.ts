@@ -1,5 +1,5 @@
 import { doSegmentsIntersectByCoords } from "./doSegmentsIntersectByCoords";
-import type { BoxFeatures } from "../types/BoxFeatures";
+import type { BoundingBox } from "../types/BoundingBox";
 import type { Point } from "../types/Point";
 
 /**
@@ -7,13 +7,13 @@ import type { Point } from "../types/Point";
  *
  * @param p1 - Starting point of the line segment
  * @param p2 - Ending point of the line segment
- * @param box - The box features to check for intersection
+ * @param box - The box edges to check for intersection (a `BoundingBox`; `BoxFeatures` is assignable)
  * @returns True if the line segment intersects the box, false otherwise
  */
 export const isLineIntersectingBox = (
 	p1: Point,
 	p2: Point,
-	box: BoxFeatures,
+	box: BoundingBox,
 ): boolean => {
 	const { left, top, right, bottom } = box;
 	const { x: x1, y: y1 } = p1;

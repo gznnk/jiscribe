@@ -17,13 +17,14 @@ pressed | dragStart | drag | dragEnd | click | doubleClick | wheel
 ```
 
 `Gesture` は SVG 座標とクライアント座標の両方（`start` / `last` / `delta`）、修飾キー
-（`mods`）、ホバー要素、`targetId` / `targetKind`、`inputValue`（`native-pointer` 要素の値）
-などを載せる。
+（`mods`）、ホバー要素（`getHovered()`：遅延評価＋メモ化のヒットテスト）、`targetId` / `targetKind`、
+`inputValue`（`native-pointer` 要素の値）などを載せる。
 
 ポイント:
 
-- **click / doubleClick は排他**: 同一 `targetId` を `DOUBLE_CLICK_THRESHOLD`（300ms）以内に
-  連打すると、2 回目以降は `click` ではなく `doubleClick` になる。「シングル＝選択 /
+- **click / doubleClick は排他**: 同一ターゲット（`(targetId, targetPart)` の組）を
+  `DOUBLE_CLICK_THRESHOLD`（300ms）以内に連打すると、2 回目以降は `click` ではなく `doubleClick` になる。
+  同一ターゲット内の別 part（同じメニューの別ボタン、コネクターの線とラベルボックス）は別のクリック対象。「シングル＝選択 /
   ダブル＝テキスト編集」のように**意味を変えたい**ケースのための意図的な設計で、
   オブジェクト／テキスト系ハンドラはこれに依存している（DOM 標準の加算式に変えると回帰リスクが大きい）。
 - **RAF バッチ**: 高頻度な pointermove は `requestAnimationFrame` でまとめて 1 つの `drag` に集約し、
@@ -47,7 +48,7 @@ pressed | dragStart | drag | dragEnd | click | doubleClick | wheel
 snapCandidates 等）を保存し、`dragEnd` でクリアする。`dragEnd` 時に doc が実際に変化していれば
 `commitVersion` を進め、履歴記録のトリガにする（詳細は [状態更新フロー](./06-state-update-flow.ja.md)）。
 
-## 連携属性 `data-gesture` / `data-kind` / `data-id`
+## 連携属性 `data-gesture` / `data-kind` / `data-id` / `data-part`
 
 キャンバス上の DOM 要素は `data-*` 属性でジェスチャーシステムと連携する。
 テキスト編集中の `textarea` やメニュー内の入力欄など、**ブラウザ標準動作をそのまま使いたい要素**を
@@ -69,21 +70,43 @@ snapCandidates 等）を保存し、`dragEnd` でクリアする。`dragEnd` 時
 読み取り箇所:
 
 - `none` → `isGestureOptedOut`（`GestureRecognizer.getHandlers()` の onPointerDown、`Canvas.tsx` の handleContextMenu）
-- `native-pointer` → `shouldSkipPointerCapture`（キャプチャ抑止）と `getInputValue`（値の収穫）
+- `native-pointer` → `isNativePointerTarget`（キャプチャ抑止と `inputValue` 収穫の対象判定。pointerdown 時に一度だけ判定し `Pressed` に保持）
 - `native-wheel` → `shouldUseNativeWheel`（`useDocumentWheel`）
 
 判定ユーティリティはいずれも `findGestureElement(target, token)` を土台にし、
 `controllers/gestures/recognizer/utils/` に配置している。
 
-### `data-kind` / `data-id`
+### `data-kind` / `data-id` / `data-part`
 
 ジェスチャーの**対象を識別する**属性。`getKindAndId` が `closest("[data-kind]")` で最も近い要素を探し、
-`{ kind, id }` を解決してイベントに載せる。`data-id` のフォーマット例（ObjectMenu）:
+`{ kind, id, part }` を解決してイベントの `targetKind` / `targetId` / `targetPart` に載せる。
 
-- `object-menu:toggle:{sectionId}` — セクション開閉
-- `object-menu:set:{property}:{value}` — プロパティ更新
-- `object-menu:slider:{property}` — スライダー更新
-- `object-menu:command:{commandId}` — コマンド実行
+3 属性はそれぞれ 1 軸を担い、`kind`（粗）→ `part` 接頭辞（細）の 2 段ルーティングツリーを成す（issue #81）:
+
+| 属性        | 意味                                    | 文法                                                                  |
+| ----------- | --------------------------------------- | --------------------------------------------------------------------- |
+| `data-kind` | **ドメイン** — ハンドラ群と 1:1         | `object` / `connector` / `canvas` / `control` / `menu` のいずれか     |
+| `data-id`   | **識別子** — どのターゲットか           | 実体の UUID、またはシングルトン部品名。**パースしない（コロン禁止）** |
+| `data-part` | **サブ要素** — ターゲット内のどの部品か | `<subtype>[:<args...>]`。無印 = ターゲット本体そのもの                |
+
+原則:
+
+- ルーティングは `kind` → ハンドラ、`part` 接頭辞 → ストラテジ。`id` は lookup にだけ使い、決してパースしない
+- 実体のサブタイプ（rect / connector / …）は DOM に書かず `objects[id].type` で解決する
+- `part`（args 含む）は常に**サブ要素の識別子**であり、`id` が実体の識別子であることと対をなす。
+  動詞に見える part（`set:fill:red`）は「fill を赤にするボタン」という部品名であって、
+  part はコマンド伝達チャネルではない
+- `data-kind` はジェスチャーハンドラを持つ要素にだけ付ける。「インタラクティブだが
+  ジェスチャー対象外」はハンドラ無しの kind ではなく `data-gesture="none"` で表現する
+
+例: コネクターのラベルボックスは `data-kind="connector" data-id={connectorId} data-part="label"`。
+ラベルがあるコネクターは、線ではなくラベルボックスのダブルクリックだけがラベル編集を開始する。
+
+#### 移行（issue #81）— 完了
+
+上の文法は全面適用済み。menu 系 kind は `menu` に統合、control の id は実体 UUID（サブ要素は
+`part`）、ハンドラ無しのマーカー kind は撤去した——テスト用フックだけが必要な要素は
+`data-kind` / `data-id` ではなく `data-testid` を使う。
 
 ### なぜトークン化したか
 

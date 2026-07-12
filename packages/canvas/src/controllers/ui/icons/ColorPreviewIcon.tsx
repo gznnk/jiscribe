@@ -66,7 +66,7 @@ const ColorPreviewIconComponent: React.FC<ColorPreviewIconProps> = ({
 				r="10"
 				stroke="rgba(128, 128, 128, 0.5)"
 				strokeWidth="1"
-				// fill may hold var(--vscode-*) (the auto-fill surface color).
+				// fill may hold var(--jiscribe-*) (the auto-fill surface color).
 				// var() is not resolved in presentation attributes, so apply it via style.
 				style={{
 					fill: isTransparent

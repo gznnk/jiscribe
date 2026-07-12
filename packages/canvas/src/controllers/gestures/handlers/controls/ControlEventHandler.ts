@@ -1,9 +1,11 @@
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import type { ICanvasRegistries } from "../../../setup/ICanvasRegistries";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
+import { isLeftButton } from "../utils/isLeftButton";
 
 /**
  * A control strategy is a GestureHandler that handles a specific control type.
@@ -49,12 +51,13 @@ export class ControlEventHandler implements GestureHandler {
 	}
 
 	supports(event: CanvasEvent): boolean {
-		return event.targetKind === "control";
+		return event.targetKind === "control" && isLeftButton(event);
 	}
 
 	handle(
 		state: CanvasControllerState,
 		event: CanvasEvent,
+		registries: ICanvasRegistries,
 	): CanvasControllerState {
 		// Commit text editing if active
 		let nextState = commitTextEditIfNeeded(state);
@@ -63,15 +66,13 @@ export class ControlEventHandler implements GestureHandler {
 		// (Controls are normally unreachable while the menu is open, but this keeps
 		//  behavior consistent across the per-target handlers.)
 		if (event.type === "pressed") {
-			if (event.button === 0) {
-				nextState = { ...nextState, contextMenuPosition: null };
-			}
+			nextState = { ...nextState, contextMenuPosition: null };
 		}
 
 		// Try each strategy and use the first one whose supports() returns true
 		for (const strategy of this.strategies.values()) {
 			if (strategy.supports(event)) {
-				return strategy.handle(nextState, event);
+				return strategy.handle(nextState, event, registries);
 			}
 		}
 

@@ -38,7 +38,7 @@ const FontColorIconComponent: React.FC<FontColorIconProps> = ({
 		>
 			A
 		</text>
-		{/* underlineColor may be var(--vscode-*) (the resolved result of auto), so apply it via style. */}
+		{/* underlineColor may be var(--jiscribe-*) (the resolved result of auto), so apply it via style. */}
 		<rect
 			x="4"
 			y="20"

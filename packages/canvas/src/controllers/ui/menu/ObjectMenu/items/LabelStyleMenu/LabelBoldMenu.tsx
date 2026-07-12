@@ -2,6 +2,7 @@ import { memo } from "react";
 
 import { getSelectedConnectorLabel } from "./utils/getSelectedConnectorLabel";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { BoldIcon } from "../../../../icons/BoldIcon";
 import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
 
@@ -14,15 +15,17 @@ type Props = {
  * Toggles `label.fontWeight` between bold / normal. Updates via a direct data-id (gesture path).
  */
 const LabelBoldMenuComponent: React.FC<Props> = ({ canvasState }) => {
+	const messages = useCanvasMessages();
 	const isBold = getSelectedConnectorLabel(canvasState)?.fontWeight === "bold";
 
 	return (
 		<MenuItemPositioner>
 			<ObjectMenuButton
 				isActive={isBold}
-				data-kind="object-menu"
-				data-id={`object-menu:set:label.fontWeight:${isBold ? "normal" : "bold"}`}
-				title="Label Bold"
+				data-kind="menu"
+				data-id="object-menu"
+				data-part={`set:label.fontWeight:${isBold ? "normal" : "bold"}`}
+				title={messages.menuLabelBold}
 			>
 				<BoldIcon />
 			</ObjectMenuButton>

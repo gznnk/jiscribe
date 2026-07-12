@@ -30,6 +30,26 @@ describe("isTransformState", () => {
 		).toBe(false);
 	});
 
+	it("accepts minWidth / minHeight when they are numbers or undefined", () => {
+		expect(
+			isTransformState({ ...validTransform, minWidth: 10, minHeight: 20 }),
+		).toBe(true);
+		expect(
+			isTransformState({
+				...validTransform,
+				minWidth: undefined,
+				minHeight: undefined,
+			}),
+		).toBe(true);
+	});
+
+	it("rejects minWidth / minHeight when they are not numbers", () => {
+		expect(isTransformState({ ...validTransform, minWidth: "10" })).toBe(false);
+		expect(isTransformState({ ...validTransform, minHeight: "20" })).toBe(
+			false,
+		);
+	});
+
 	it("rejects when a required Transform property is missing", () => {
 		expect(isTransformState({ scaleX: 1, scaleY: 1 })).toBe(false);
 		expect(isTransformState({ rotation: 0, scaleY: 1 })).toBe(false);

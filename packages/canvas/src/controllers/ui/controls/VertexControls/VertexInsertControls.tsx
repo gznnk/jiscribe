@@ -1,10 +1,16 @@
 import type { Point } from "@workspace/geometry";
 import { memo } from "react";
 
-const INSERT_RADIUS = 4;
-const INSERT_STROKE_WIDTH = 1;
-const INSERT_COLOR = "#6366f1";
-const INSERT_FILL = "#6366f1";
+import { theme } from "../../../../constants/theme";
+import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
+
+// Handle colors may hold var(--jiscribe-*), so they are applied via style
+// (fill/stroke) rather than SVG presentation attributes.
+const insertHandleStyle = {
+	fill: theme.connectionAccent,
+	stroke: theme.connectionAccent,
+	cursor: "crosshair",
+} as const;
 
 type VertexInsertControlsProps = {
 	/**
@@ -27,13 +33,13 @@ type VertexInsertControlsProps = {
 	 */
 	zoom?: number;
 	/**
-	 * Control ID prefix, routing the gesture to the matching handler.
+	 * data-part subtype, routing the gesture to the matching handler.
 	 * Polyline/polygon use `"vertex-insert"` (default, → VertexInsertHandler);
-	 * connectors pass `"connector-vertex-insert"` (→ ConnectorVertexInsertHandler),
+	 * connectors pass `"waypoint-insert"` (→ ConnectorVertexInsertHandler),
 	 * because the inserted point maps to a different array index (see those handlers).
 	 * @default "vertex-insert"
 	 */
-	controlIdPrefix?: string;
+	insertPartSubtype?: string;
 };
 
 /**
@@ -42,22 +48,24 @@ type VertexInsertControlsProps = {
  * This is a pure presentation component that renders a simple blue dot at each segment
  * midpoint (matching the connector ConnectionAnchors / Miro style), signalling that a
  * new vertex can be added there. All interaction logic should be handled by the
- * insert handler matching `controlIdPrefix`.
+ * insert handler matching `insertPartSubtype`.
  *
  * Each insertion control has:
  * - data-kind="control" for GestureHandler to identify
- * - data-id="<controlIdPrefix>:<objectId>:<segmentIndex>" for identifying which segment was interacted with
+ * - data-id=<objectId> + data-part="<insertPartSubtype>:<segmentIndex>" for identifying which segment was interacted with
  */
 const VertexInsertControlsComponent: React.FC<VertexInsertControlsProps> = ({
 	objectId,
 	points,
 	closed = false,
 	zoom = 1,
-	controlIdPrefix = "vertex-insert",
+	insertPartSubtype = "vertex-insert",
 }) => {
+	const { handleDimensions } = useCanvasTheme();
+
 	// Adjust sizes based on zoom level to maintain consistent visual size
-	const adjustedRadius = INSERT_RADIUS / zoom;
-	const adjustedStrokeWidth = INSERT_STROKE_WIDTH / zoom;
+	const adjustedRadius = handleDimensions.anchorRadius / zoom;
+	const adjustedStrokeWidth = handleDimensions.anchorStrokeWidth / zoom;
 
 	// Calculate midpoints for each segment
 	const segmentMidpoints: { point: Point; segmentIndex: number }[] = [];
@@ -90,12 +98,11 @@ const VertexInsertControlsComponent: React.FC<VertexInsertControlsProps> = ({
 					cx={point.x}
 					cy={point.y}
 					r={adjustedRadius}
-					fill={INSERT_FILL}
-					stroke={INSERT_COLOR}
 					strokeWidth={adjustedStrokeWidth}
 					data-kind="control"
-					data-id={`${controlIdPrefix}:${objectId}:${segmentIndex}`}
-					style={{ cursor: "crosshair" }}
+					data-id={objectId}
+					data-part={`${insertPartSubtype}:${segmentIndex}`}
+					style={insertHandleStyle}
 				/>
 			))}
 		</>

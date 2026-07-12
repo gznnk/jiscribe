@@ -2,12 +2,9 @@ import { calcFrameKeyPoints } from "@workspace/geometry";
 import type { TransformedFrame } from "@workspace/geometry";
 import { memo } from "react";
 
+import { theme } from "../../../../constants/theme";
+import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 import type { AnchorHandleId } from "../ConnectionAnchorTypes";
-
-const TARGET_RADIUS = 4;
-const TARGET_STROKE_WIDTH = 1;
-const TARGET_COLOR = "#6366f1"; // indigo-500
-const TARGET_FILL = "white";
 
 type ConnectionTargetAnchorsProps = {
 	/**
@@ -41,9 +38,10 @@ const ConnectionTargetAnchorsComponent: React.FC<
 	ConnectionTargetAnchorsProps
 > = ({ frame, activeAnchorId, zoom = 1 }) => {
 	const { cx, cy, width, height, rotation, scaleX, scaleY } = frame;
+	const { handleDimensions } = useCanvasTheme();
 
-	const adjustedRadius = TARGET_RADIUS / zoom;
-	const adjustedStrokeWidth = TARGET_STROKE_WIDTH / zoom;
+	const adjustedRadius = handleDimensions.anchorRadius / zoom;
+	const adjustedStrokeWidth = handleDimensions.anchorStrokeWidth / zoom;
 
 	const points = calcFrameKeyPoints({
 		cx,
@@ -73,9 +71,13 @@ const ConnectionTargetAnchorsComponent: React.FC<
 						cx={x}
 						cy={y}
 						r={isActive ? adjustedRadius * 1.2 : adjustedRadius}
-						fill={isActive ? TARGET_COLOR : TARGET_FILL}
-						stroke={TARGET_COLOR}
 						strokeWidth={adjustedStrokeWidth}
+						// Colors may hold var(--jiscribe-*), so they are applied via style
+						// rather than SVG presentation attributes.
+						style={{
+							fill: isActive ? theme.connectionAccent : theme.handleFill,
+							stroke: theme.connectionAccent,
+						}}
 					/>
 				);
 			})}

@@ -4,8 +4,8 @@ import type { EndpointRef } from "../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../states/objects/connections/connector/ConnectorState";
 import type { GroupState } from "../../states/objects/primitives/group/GroupState";
-import { moveGroup } from "../gestures/handlers/objects/primitives/GroupController";
-import { objectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
+import { moveObjectTree } from "../gestures/handlers/objects/primitives/GroupController";
+import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
 
 const remapEndpointRef = (
 	ref: EndpointRef,
@@ -21,12 +21,34 @@ const remapEndpointRef = (
 };
 
 /**
+ * Translates a free endpoint's absolute point by the offset. Owned endpoints follow
+ * their (already offset) owning shape, so they are returned unchanged.
+ */
+const offsetFreeEndpoint = (ref: EndpointRef, offset: Point): EndpointRef => {
+	if (ref.owner || ref.anchor.kind !== "free") {
+		return ref;
+	}
+	return {
+		...ref,
+		anchor: {
+			...ref.anchor,
+			point: {
+				x: ref.anchor.point.x + offset.x,
+				y: ref.anchor.point.y + offset.y,
+			},
+		},
+	};
+};
+
+/**
  * Clones a set of top-level elements, assigns fresh IDs, and moves them by the given offset.
  *
  * - `topLevelIds` are the top-level elements (objects + connectors) ordered by z-order
  *   (back → front). Accepts the same representation as state / clipboard `rootIds`.
- * - The offset is applied only to non-connectors (connectors are not moved, since their
- *   endpoints follow their owning shapes).
+ * - The offset is applied to non-connectors and to a connector's free endpoints and
+ *   waypoints (owned endpoints are not moved, since they follow their owning shapes;
+ *   free endpoints and waypoints hold absolute coordinates and must be translated to
+ *   keep the connector congruent).
  * - All parentId / childIds / connector endpoint references are remapped to the new IDs.
  * - `allObjects` must also include the descendants of `topLevelIds`.
  *
@@ -39,11 +61,14 @@ const remapEndpointRef = (
  *
  * @returns `newTopLevelIds` lists the new IDs in the same order as `topLevelIds`, with promoted
  *   orphans appended at the end. The caller dispatches them to shapes/connectors by type.
+ * @param objectBehavior - The canvas's object behavior registry (per-shape moveByDelta),
+ *   threaded to moveObjectTree so this pure util reads no module-level singleton (#165).
  */
 export function cloneObjects(
 	topLevelIds: string[],
 	allObjects: Record<string, ObjectState>,
 	offset: Point,
+	objectBehavior: ObjectBehaviorRegistry,
 ): {
 	newObjects: Record<string, ObjectState>;
 	newTopLevelIds: string[];
@@ -106,26 +131,42 @@ export function cloneObjects(
 		clonedObjects[clonedId] = clone;
 	}
 
-	// ── 3. Apply the offset (top-level non-connectors only) ──────────────────
+	// ── 3. Apply the offset (top-level elements) ─────────────────────────────
 	for (const srcId of topLevelIds) {
 		const clonedId = idRemap.get(srcId);
 		if (!clonedId) {
 			continue;
 		}
 		const clone = clonedObjects[clonedId];
-		// Connectors are not offset, since their endpoints follow their owning shapes.
-		if (!clone || clone.type === "connector") {
+		if (!clone) {
 			continue;
 		}
 
-		if (clone.type === "group") {
-			moveGroup(clonedId, clonedObjects, clonedObjects, offset);
-		} else {
-			const moveByDelta = objectBehaviorRegistry.getMoveByDelta(clone.type);
-			if (moveByDelta) {
-				clonedObjects[clonedId] = moveByDelta(clone, offset);
-			}
+		// Connectors: owned endpoints follow their (already offset) shapes, but free
+		// endpoints and waypoints carry absolute coordinates, so translate those to
+		// keep the duplicated connector congruent with the original.
+		if (clone.type === "connector") {
+			const conn = clone as ConnectorState;
+			clonedObjects[clonedId] = {
+				...conn,
+				source: offsetFreeEndpoint(conn.source, offset),
+				target: offsetFreeEndpoint(conn.target, offset),
+				points: conn.points.map((point) => ({
+					x: point.x + offset.x,
+					y: point.y + offset.y,
+				})),
+			} as ConnectorState;
+			continue;
 		}
+
+		// Groups propagate the offset to their descendants; other shapes translate themselves.
+		moveObjectTree(
+			clonedId,
+			clonedObjects,
+			clonedObjects,
+			offset,
+			objectBehavior,
+		);
 	}
 
 	// ── 4. Build newTopLevelIds (preserve topLevelIds order, append promoted orphans at the end) ──

@@ -5,24 +5,24 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
  * コネクター端点のドラッグによる再接続と、その undo。
  *
  * connector.spec は作成と追従、connector-follow-target は両端追従を守るが、「選択した
- * コネクターの端点ハンドル（connection-anchor:edit:<id>:target）を別の図形へドラッグして
+ * コネクターの端点ハンドル（data-id=<id> + data-part="endpoint:target"）を別の図形へドラッグして
  * 接続先を張り替える」操作は未カバーだった。再接続は端点の owner を差し替える中核操作で、
  * 壊れると線が古い図形に取り残される。張り替え後は新しい図形に追従し元の図形には追従しない
  * こと、さらに undo で接続先が元へ戻ること（owner 差し替えが履歴に積まれること）を、
  * points の変化／非変化で守る。
  */
 
-/** data-id を持つコントロールの中心から絶対座標へドラッグする */
+/** コントロール（CSS セレクタ）の中心から絶対座標へドラッグする */
 async function dragControlTo(
 	canvas: CanvasDriver,
-	dataId: string,
+	controlSelector: string,
 	to: { x: number; y: number },
 ) {
-	const control = canvas.page.locator(`[data-id="${dataId}"]`);
+	const control = canvas.page.locator(controlSelector);
 	await expect(control).toBeVisible();
 	const box = await control.boundingBox();
 	if (!box) {
-		throw new Error(`コントロール ${dataId} の位置が取得できない`);
+		throw new Error(`コントロール ${controlSelector} の位置が取得できない`);
 	}
 	// box は画面座標。drag はコンテンツ座標を取るので toContent で揃える。
 	await canvas.drag(
@@ -60,16 +60,20 @@ async function reconnectTargetToC(canvas: CanvasDriver, connectorId: string) {
 	await canvas.clickAt({ x: 500, y: 350 });
 	await expect(
 		canvas.page.locator(
-			`[data-id="connection-anchor:edit:${connectorId}:target"]`,
+			`[data-id="${connectorId}"][data-part="endpoint:target"]`,
 		),
 	).toBeVisible();
 	const pointsBefore = await canvas
 		.objectById(connectorId)
 		.getAttribute("points");
-	await dragControlTo(canvas, `connection-anchor:edit:${connectorId}:target`, {
-		x: 830,
-		y: 490,
-	});
+	await dragControlTo(
+		canvas,
+		`[data-id="${connectorId}"][data-part="endpoint:target"]`,
+		{
+			x: 830,
+			y: 490,
+		},
+	);
 	// 再接続が commit されて points が C 追従へ変わるまで待つ。dragEnd の状態反映は
 	// 非同期なので、ここで同期しないと直後の undo が commit を追い越して空振りする。
 	await expect
@@ -84,16 +88,20 @@ async function reconnectSourceToC(canvas: CanvasDriver, connectorId: string) {
 	await canvas.clickAt({ x: 500, y: 350 });
 	await expect(
 		canvas.page.locator(
-			`[data-id="connection-anchor:edit:${connectorId}:source"]`,
+			`[data-id="${connectorId}"][data-part="endpoint:source"]`,
 		),
 	).toBeVisible();
 	const pointsBefore = await canvas
 		.objectById(connectorId)
 		.getAttribute("points");
-	await dragControlTo(canvas, `connection-anchor:edit:${connectorId}:source`, {
-		x: 830,
-		y: 490,
-	});
+	await dragControlTo(
+		canvas,
+		`[data-id="${connectorId}"][data-part="endpoint:source"]`,
+		{
+			x: 830,
+			y: 490,
+		},
+	);
 	await expect
 		.poll(() => canvas.objectById(connectorId).getAttribute("points"), {
 			message: "source 再接続が反映されコネクターの points が変わること",

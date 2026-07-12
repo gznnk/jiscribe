@@ -10,7 +10,7 @@ import { AUTO_COLOR } from "../../../schemas/objects/utils/autoColor";
  * - `surface` … fill. The "face" of a shape = the theme's panel surface.
  *
  * Single rule: **`"auto"` resolves to the role's theme token, and the result is applied
- * via CSS (style / emotion)**. The resolved value (`var(--vscode-*)`) is not resolved by
+ * via CSS (style / emotion)**. The resolved value (`var(--jiscribe-*)`) is not resolved by
  * SVG presentation attributes, so pass it via CSS rather than as an attribute. This keeps
  * color resolution and application consistent across all fields (without relying on
  * implicit resolution through `currentColor` or `ContentGroup`; issue #38 / doc 08).

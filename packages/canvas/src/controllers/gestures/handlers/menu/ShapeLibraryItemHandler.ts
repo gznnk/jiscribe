@@ -2,26 +2,26 @@ import type { BoundingBox } from "@workspace/geometry";
 
 import type { ShapePreset } from "../../../../schemas/objects/types/ShapePreset";
 import { createObjectDoc } from "../../../../schemas/objects/utils/createObjectDoc";
-import { shapeFactoryRegistry } from "../../../../schemas/registry/ShapeFactoryRegistry";
-import { objectMapperRegistry } from "../../../../states/registry/ObjectMapperRegistry";
+import type { ShapeFactoryRegistry } from "../../../../schemas/registry/ShapeFactoryRegistry";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { getShapePreset } from "../../../ui/menu/ShapeLibrary/ShapePresetRegistry";
+import type { ICanvasRegistries } from "../../../setup/ICanvasRegistries";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
+import { isLeftButton } from "../utils/isLeftButton";
 import {
 	SNAP_THRESHOLD_PX,
 	buildSnapFeedback,
 	findSnap,
-} from "../../utils/snap/findSnap";
+} from "../utils/snap/findSnap";
 
 /**
- * Extracts the preset ID from a targetId.
- * Format: "menu-item:<presetId>"
+ * Extracts the preset ID from a targetPart.
+ * Format: "item:<presetId>"
  */
-const parsePresetId = (targetId: string): string => targetId.split(":")[1];
+const parsePresetId = (targetPart: string): string => targetPart.split(":")[1];
 
 /**
  * Returns the half-size of the ghost shape for a preset.
@@ -29,8 +29,9 @@ const parsePresetId = (targetId: string): string => targetId.split(":")[1];
  */
 const calcShapeDimensions = (
 	preset: ShapePreset,
+	shapeFactory: ShapeFactoryRegistry,
 ): { halfWidth: number; halfHeight: number } => {
-	const factory = shapeFactoryRegistry.get(preset.objectType);
+	const factory = shapeFactory.get(preset.objectType);
 	if (!factory) {
 		throw new Error(`Unsupported object type for menu: ${preset.objectType}`);
 	}
@@ -48,13 +49,16 @@ const addObjectToState = (
 	state: CanvasControllerState,
 	preset: ShapePreset,
 	position: { x: number; y: number },
+	registries: ICanvasRegistries,
 ): CanvasControllerState => {
 	const doc = createObjectDoc(
 		preset.objectType,
 		position,
+		registries.shapeFactory,
 		preset.defaultOverrides,
+		state.docDefaults,
 	);
-	const objectState = objectMapperRegistry.toState(doc);
+	const objectState = registries.objectMapper.toState(doc);
 
 	return {
 		...state,
@@ -74,25 +78,27 @@ const addObjectToState = (
  */
 export const ShapeLibraryItemHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {
-		return event.targetKind === "menu-item";
+		return (
+			event.targetKind === "menu" &&
+			event.targetId === "shape-library" &&
+			isLeftButton(event)
+		);
 	},
 
-	handle(state, event) {
+	handle(state, event, registries) {
 		let nextState = state;
 
 		// Pressing on a menu item closes the context menu (the press itself does not place or draw)
 		if (event.type === "pressed") {
-			if (event.button === 0) {
-				nextState = { ...nextState, contextMenuPosition: null };
-			}
+			nextState = { ...nextState, contextMenuPosition: null };
 		}
 
-		if (!event.targetId) {
+		if (!event.targetPart) {
 			return nextState;
 		}
 
-		const presetId = parsePresetId(event.targetId);
-		const preset = getShapePreset(presetId);
+		const presetId = parsePresetId(event.targetPart);
+		const preset = registries.shapePreset.get(presetId);
 		if (!preset) {
 			return nextState;
 		}
@@ -101,14 +107,19 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 			case "click": {
 				// Shapes that don't support bounds drawing (sticky / polygon) are placed at the viewport center;
 				// shapes that do (rect / ellipse / polyline) toggle drawing mode
-				if (!shapeFactoryRegistry.supportsBoundsDrawing(preset.objectType)) {
+				if (!registries.shapeFactory.supportsBoundsDrawing(preset.objectType)) {
 					const { minX, minY, width, height, zoom } = state.viewport;
 					const centerX = minX + width / zoom / 2;
 					const centerY = minY + height / zoom / 2;
-					const placed = addObjectToState(state, preset, {
-						x: centerX,
-						y: centerY,
-					});
+					const placed = addObjectToState(
+						state,
+						preset,
+						{
+							x: centerX,
+							y: centerY,
+						},
+						registries,
+					);
 					// If a non-drawable shape is pressed while in drawing mode, clear drawing mode
 					return { ...placed, shapeDrawing: null };
 				}
@@ -145,7 +156,10 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 					shapeLibraryDrag: {
 						preset,
 						ghostPosition: event.last,
-						shapeDimensions: calcShapeDimensions(preset),
+						shapeDimensions: calcShapeDimensions(
+							preset,
+							registries.shapeFactory,
+						),
 					},
 					edgeScrollEnabled: true,
 				};
@@ -217,7 +231,12 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 					return state;
 				}
 				const position = drag.ghostPosition ?? event.last;
-				const placed = addObjectToState(state, drag.preset, position);
+				const placed = addObjectToState(
+					state,
+					drag.preset,
+					position,
+					registries,
+				);
 				return {
 					...placed,
 					shapeLibraryDrag: null,

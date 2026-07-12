@@ -12,6 +12,7 @@ import {
 	resolveLabelFill,
 } from "../../../../presentations/objects/connections/ConnectorLabel";
 import { resolveAutoColor } from "../../../../presentations/objects/utils/resolveAutoColor";
+import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 
 type ConnectorLabelEditorProps = {
 	/** Label anchor (world coordinates on the route). The editor is centered here. */
@@ -42,7 +43,9 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 	onEscape,
 }) => {
 	const textAreaRef = useRef<HTMLTextAreaElement>(null);
-	const fontFamily = CONNECTOR_LABEL_DEFAULTS.fontFamily;
+	// Labels have no per-doc fontFamily; follow the host theme so the editor
+	// measures and renders with the same font as ConnectorLabel.
+	const { fontFamily } = useCanvasTheme();
 	// Resolve auto (theme-following) to the theme foreground (ink). Use the same resolver as the rendering side to match colors.
 	const color = resolveAutoColor(fontColor, "ink");
 	const background = resolveLabelFill(fill);
@@ -100,25 +103,24 @@ const ConnectorLabelEditorComponent: React.FC<ConnectorLabelEditorProps> = ({
 
 	return (
 		<ConnectorLabelEditorWrapper
-			data-kind="text-editor"
-			data-id="connector-label"
+			data-testid="text-editor"
 			data-gesture="none"
-			left={anchor.x}
-			top={anchor.y}
-			width={width}
-			background={background}
-			borderWidth={strokeWidth}
-			borderColor={borderColor}
-			borderStyle={strokeDashType}
+			style={{
+				left: anchor.x,
+				top: anchor.y,
+				width,
+				background,
+				border:
+					strokeWidth > 0
+						? `${strokeWidth}px ${strokeDashType} ${borderColor}`
+						: "none",
+			}}
 			onPointerDown={handleWrapperPointerDown}
 		>
 			<ConnectorLabelTextArea
 				data-gesture="native-wheel"
 				value={text}
-				color={color}
-				fontSize={fontSize}
-				fontFamily={fontFamily}
-				fontWeight={fontWeight}
+				style={{ color, fontSize, fontFamily, fontWeight }}
 				ref={textAreaRef}
 				onChange={handleChange}
 				onKeyDown={handleKeyDown}

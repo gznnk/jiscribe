@@ -1,8 +1,9 @@
-import type { FrameKeyPoints, Point } from "@workspace/geometry";
+import type { BoundingBox, FrameKeyPoints, Point } from "@workspace/geometry";
 
-import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
+import type { DocCreationDefaults } from "../schemas/objects/types/DocCreationDefaults";
 import type { ShapePreset } from "../schemas/objects/types/ShapePreset";
 import type { CanvasState } from "../states/canvas/CanvasState";
+import type { DocSnapshot } from "../states/canvas/DocSnapshot";
 import type { Viewport } from "../states/canvas/Viewport";
 import type { ClipboardData } from "./commands/selection/ClipboardData";
 import type { ObjectState } from "../states/objects/base/ObjectState";
@@ -109,14 +110,17 @@ export type AxisLockFeedback = {
 
 /**
  * State of the history stack.
+ * Entries are lazy DocSnapshots: the Doc tree is materialized only when an
+ * entry is actually read (undo/redo restore, save notification, external-sync
+ * comparison), not on every commit.
  */
 export type HistoryState = {
 	/** Past states (undo stack) */
-	past: CanvasDoc[];
+	past: DocSnapshot[];
 	/** Current state */
-	present: CanvasDoc;
+	present: DocSnapshot;
 	/** Future states (redo stack) */
-	future: CanvasDoc[];
+	future: DocSnapshot[];
 };
 
 /**
@@ -129,6 +133,13 @@ export type EventStartSnapshot = {
 	objects: Record<string, ObjectState>;
 	/** Slice of object ID → FrameKeyPoints (also includes multiSelectGroup.id) */
 	keyPoints: Record<string, FrameKeyPoints>;
+	/**
+	 * Flat "object ID → root-level bounding box" map derived from keyPoints once at dragStart.
+	 * Groups hold the union of their children; connectors and objects without a valid extent are absent.
+	 * Consumed by the marquee hot path (collectIdsInArea / createMultiSelectGroup) so it never
+	 * recomputes bboxes per drag frame.
+	 */
+	bboxes: Record<string, BoundingBox>;
 	/** Snap candidates (pre-computed at dragStart for all objects. Exclusions are passed to findSnap as a Set) */
 	snapCandidates: SnapCandidates;
 	/** List of selected IDs at drag start */
@@ -145,8 +156,12 @@ export type EventStartSnapshot = {
 };
 
 /**
- * Canvas state extended with history management for the controller layer
- * This combines the pure canvas state with undo/redo history
+ * Canvas state extended with history management for the controller layer.
+ * This combines the pure canvas state with undo/redo history.
+ *
+ * Pure state only: the per-canvas registry bundle is NOT stored here. It is a
+ * dependency (not data), so it is passed to the pure reducer/handler/command tree
+ * as an explicit `registries` argument instead (#165).
  */
 export type CanvasControllerState = CanvasState & {
 	history: HistoryState;
@@ -195,7 +210,8 @@ export type CanvasControllerState = CanvasState & {
 
 	/**
 	 * UUID generated each time saveVersion increments.
-	 * Passed to onCommit and echoed back via SYNC_EXTERNAL to identify fold-back saves.
+	 * Passed to onCommit and echoed back by the host; the self-save nonce tracker
+	 * matches the echo to identify fold-back saves (see useSyncExternalDoc).
 	 */
 	saveNonce: string;
 
@@ -331,6 +347,13 @@ export type CanvasControllerState = CanvasState & {
 	 * AxisLockGuide draws guide lines spanning the whole viewport.
 	 */
 	axisLockFeedback: AxisLockFeedback | null;
+
+	/**
+	 * Theme-derived defaults for newly created objects (e.g. fontFamily).
+	 * Injected from the Canvas `theme` prop and kept in sync via
+	 * SET_DOC_DEFAULTS; gesture handlers read it when creating docs.
+	 */
+	docDefaults: DocCreationDefaults;
 
 	/**
 	 * Internal clipboard.

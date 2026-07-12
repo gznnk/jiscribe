@@ -1,5 +1,6 @@
+import { isConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
-import { calculateGroupOrientedBounds } from "../../../states/utils/calculateGroupOrientedBounds";
+import { calculateOrientedBoundsFromChildIds } from "../../../states/utils/calculateGroupOrientedBounds";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { cleanupGroups } from "../../utils/cleanupGroups";
 import { findLowestCommonAncestor } from "../../utils/findLowestCommonAncestor";
@@ -17,11 +18,20 @@ export const GroupCommand: Command = {
 		default: [{ code: "KeyG", ctrl: true }],
 	},
 
-	canExecute: (state) => state.selectedIds.length >= 2,
+	// Connectors are never groupable (they follow their endpoints, not a group transform),
+	// so only shape-type selections count toward the "2 or more" requirement.
+	canExecute: (state) =>
+		state.selectedIds.filter((id) => !isConnectorState(state.objects[id]))
+			.length >= 2,
 
 	execute: (state) => {
 		const groupId = crypto.randomUUID();
-		const { selectedIds } = state;
+		// Defensively drop connectors here too: even if a selection path leaks a connector
+		// into selectedIds, it must not be pulled into the group (the bounds calculation
+		// would treat it as a Poly and use its waypoints only, yielding a wrong OBB).
+		const selectedIds = state.selectedIds.filter(
+			(id) => !isConnectorState(state.objects[id]),
+		);
 		const selectedSet = new Set(selectedIds);
 		const lockAspectRatio = state.multiSelectGroup?.lockAspectRatio ?? false;
 
@@ -38,9 +48,28 @@ export const GroupCommand: Command = {
 			state.rootIds,
 		);
 
-		// To compute the new group's bounds, create a temporary group object and pass it to
-		// calculateGroupOrientedBounds (at this point cx/cy/width/height are provisional 0s)
-		const tempGroup = {
+		// Compute the new group's bounds directly from its children-to-be
+		// (the group does not exist yet, so no placeholder object is needed)
+		const bounds = calculateOrientedBoundsFromChildIds(
+			state.objects,
+			childIds,
+			{
+				rotation: 0,
+				scaleX: 1,
+				scaleY: 1,
+			},
+		);
+
+		// GroupState invariant: never create a group without a valid (> 0) frame.
+		// bounds is null only when no selected shape contributes geometry, which
+		// canExecute should already rule out — abort instead of creating a
+		// zero-size group (the divisor in transformFrameByGroup).
+		if (!bounds) {
+			return state;
+		}
+
+		// Create the group with the computed bounds
+		const newGroup = {
 			id: groupId,
 			type: "group",
 			parentId: lcaId,
@@ -48,25 +77,11 @@ export const GroupCommand: Command = {
 			scaleX: 1,
 			scaleY: 1,
 			childIds,
-			cx: 0,
-			cy: 0,
-			width: 0,
-			height: 0,
+			cx: bounds.cx,
+			cy: bounds.cy,
+			width: bounds.width,
+			height: bounds.height,
 			lockAspectRatio,
-		} as unknown as GroupState;
-
-		const bounds = calculateGroupOrientedBounds(
-			{ ...state.objects, [groupId]: tempGroup },
-			groupId,
-		);
-
-		// Create the finalized group with the computed bounds applied
-		const newGroup = {
-			...tempGroup,
-			cx: bounds?.cx ?? 0,
-			cy: bounds?.cy ?? 0,
-			width: bounds?.width ?? 0,
-			height: bounds?.height ?? 0,
 		} as unknown as GroupState;
 
 		// Add the new group to objects and reassign each child item's parentId to the new group

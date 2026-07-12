@@ -1,13 +1,12 @@
-import { beforeAll, describe, it, expect } from "vitest";
+import { describe, it, expect } from "vitest";
 
+import { ConnectorFeatures } from "../../../schemas/objects/connections/connector/ConnectorDoc";
+import { GroupFeatures } from "../../../schemas/objects/primitives/group/GroupDoc";
+import { PolylineFeatures } from "../../../schemas/objects/primitives/polyline/PolylineDoc";
+import { RectFeatures } from "../../../schemas/objects/primitives/rect/RectDoc";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
-import { initializeObjectRegistry } from "../../setup/initializeObjectRegistry";
 import { handlePropertyUpdate } from "../handlePropertyUpdate";
-
-beforeAll(() => {
-	initializeObjectRegistry();
-});
 
 type MinState = Pick<
 	CanvasControllerState,
@@ -27,6 +26,7 @@ const rectObj = (id: string): ObjectState =>
 	({
 		id,
 		type: "rect",
+		features: RectFeatures,
 		fill: "#ffffff",
 		stroke: "#000000",
 		strokeWidth: 1,
@@ -43,10 +43,32 @@ const connObj = (id: string): ObjectState =>
 	({
 		id,
 		type: "connector",
+		features: ConnectorFeatures,
 		stroke: "#000000",
 		strokeWidth: 1,
 		source: { anchor: { kind: "free", point: { x: 0, y: 0 } } },
 		target: { anchor: { kind: "free", point: { x: 100, y: 0 } } },
+	}) as unknown as ObjectState;
+
+const polylineObj = (id: string): ObjectState =>
+	({
+		id,
+		type: "polyline",
+		features: PolylineFeatures,
+		stroke: "#000000",
+		strokeWidth: 1,
+		points: [
+			{ x: 0, y: 0 },
+			{ x: 100, y: 0 },
+		],
+	}) as unknown as ObjectState;
+
+const groupObj = (id: string, childIds: string[]): ObjectState =>
+	({
+		id,
+		type: "group",
+		features: GroupFeatures,
+		childIds,
 	}) as unknown as ObjectState;
 
 describe("handlePropertyUpdate", () => {
@@ -103,6 +125,17 @@ describe("handlePropertyUpdate", () => {
 				objects: { c1 },
 			});
 			expect(handlePropertyUpdate(state, "strokeWidth", "abc")).toBe(state);
+		});
+
+		it("arrow property (endArrow) -> applied via the connector's arrow feature", () => {
+			const c1 = connObj("c1");
+			const state = makeState({
+				selectedConnectorId: "c1",
+				objects: { c1 },
+			});
+			const result = handlePropertyUpdate(state, "endArrow", "FilledTriangle");
+			const updated = result.objects["c1"] as unknown as { endArrow: string };
+			expect(updated.endArrow).toBe("FilledTriangle");
 		});
 	});
 
@@ -262,6 +295,29 @@ describe("handlePropertyUpdate", () => {
 				objects: { r1 },
 			});
 			expect(handlePropertyUpdate(state, "startArrow", "triangle")).toBe(state);
+		});
+
+		it("arrow property on a polyline -> applied via its arrow feature", () => {
+			const p1 = polylineObj("p1");
+			const state = makeState({
+				selectedIds: ["p1"],
+				objects: { p1 },
+			});
+			const result = handlePropertyUpdate(state, "startArrow", "OpenArrow");
+			const updated = result.objects["p1"] as unknown as { startArrow: string };
+			expect(updated.startArrow).toBe("OpenArrow");
+		});
+
+		it("arrow property propagates to arrow-capable group descendants", () => {
+			const g1 = groupObj("g1", ["p1"]);
+			const p1 = polylineObj("p1");
+			const state = makeState({
+				selectedIds: ["g1"],
+				objects: { g1, p1 },
+			});
+			const result = handlePropertyUpdate(state, "endArrow", "FilledTriangle");
+			const updated = result.objects["p1"] as unknown as { endArrow: string };
+			expect(updated.endArrow).toBe("FilledTriangle");
 		});
 
 		it("multiple selection -> all objects are updated", () => {

@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { createTestRegistries } from "../../../setup/createCanvasRegistries";
 import { DeselectAllCommand } from "../DeselectAllCommand";
+
+const registries = createTestRegistries();
 
 const baseState = (
 	overrides: Partial<CanvasControllerState>,
@@ -31,7 +34,7 @@ describe("DeselectAllCommand", () => {
 			objectMenuOpenId: "a",
 			edgeScrollEnabled: true,
 		});
-		const next = DeselectAllCommand.execute(state);
+		const next = DeselectAllCommand.execute(state, registries);
 		expect(next.selectedIds).toEqual([]);
 		expect(next.selectedConnectorId).toBeNull();
 		expect(next.selectedVertex).toBeNull();
@@ -45,13 +48,19 @@ describe("DeselectAllCommand", () => {
 	describe("canExecute", () => {
 		it("is executable when there is an object selection", () => {
 			expect(
-				DeselectAllCommand.canExecute(baseState({ selectedIds: ["a"] })),
+				DeselectAllCommand.canExecute(
+					baseState({ selectedIds: ["a"] }),
+					registries,
+				),
 			).toBe(true);
 		});
 
 		it("is executable when there is a connector selection", () => {
 			expect(
-				DeselectAllCommand.canExecute(baseState({ selectedConnectorId: "c1" })),
+				DeselectAllCommand.canExecute(
+					baseState({ selectedConnectorId: "c1" }),
+					registries,
+				),
 			).toBe(true);
 		});
 
@@ -59,12 +68,15 @@ describe("DeselectAllCommand", () => {
 			expect(
 				DeselectAllCommand.canExecute(
 					baseState({ selectedVertex: { objectId: "p1", vertexIndex: 0 } }),
+					registries,
 				),
 			).toBe(true);
 		});
 
 		it("is not executable when nothing is selected", () => {
-			expect(DeselectAllCommand.canExecute(baseState({}))).toBe(false);
+			expect(DeselectAllCommand.canExecute(baseState({}), registries)).toBe(
+				false,
+			);
 		});
 
 		it("is not executable during an object drag (other than area selection)", () => {
@@ -73,7 +85,7 @@ describe("DeselectAllCommand", () => {
 				eventStartSnapshot: { foo: 1 } as never,
 				areaSelection: null,
 			});
-			expect(DeselectAllCommand.canExecute(state)).toBe(false);
+			expect(DeselectAllCommand.canExecute(state, registries)).toBe(false);
 		});
 
 		it("is executable during an area-selection drag", () => {
@@ -81,7 +93,7 @@ describe("DeselectAllCommand", () => {
 				eventStartSnapshot: { foo: 1 } as never,
 				areaSelection: { x: 0, y: 0 } as never,
 			});
-			expect(DeselectAllCommand.canExecute(state)).toBe(true);
+			expect(DeselectAllCommand.canExecute(state, registries)).toBe(true);
 		});
 	});
 });

@@ -9,6 +9,7 @@ export * from "./calcPolyBoundingBox";
 export * from "./calcPolyKeyPoints";
 export * from "./calcProjectionOntoLine";
 export * from "./calcDimensionsWithMinSize";
+export * from "./calcInsetRect";
 export * from "./isLineIntersectingBox";
 export * from "./snapToDirection";
 export * from "./doSegmentsIntersect";

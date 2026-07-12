@@ -56,6 +56,7 @@ In addition to `name` and `description`, `meta` may hold any custom keys.
 | `rect`      | Rectangle                    | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform, Radius |
 | `ellipse`   | Ellipse                      | `cx`, `cy`, `rx`, `ry`                  | Stroke, Fill, Text, Transform         |
 | `diamond`   | Diamond (decision/branch)    | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `db`        | Database cylinder            | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `polyline`  | Polyline (open path)         | `points`                                | Stroke                                |
 | `polygon`   | Polygon (closed path)        | `points`                                | Stroke, Fill                          |
 | `group`     | Group (contains children)    | none                                    | Transform                             |
@@ -159,6 +160,35 @@ It has **no Radius** (`rx`).
 | `y`      | `number` | `0`     | Y of the bounding box's top-left. |
 | `width`  | `number` | `120`   | Bounding-box width (px).          |
 | `height` | `number` | `80`    | Bounding-box height (px).         |
+
+---
+
+### `db`
+
+A database cylinder, typically used for **data stores in architecture or ER diagrams**.
+Uses the same rect-based geometry (top-left `x`,`y` + `width`,`height`) as `rect`;
+only the rendering is a cylinder. Text is laid out in the **body region below the
+top cap ellipse** (not the full bounding box), and it is **connectable** like `rect`.
+It has **no Radius** (`rx`).
+
+```json
+{
+	"id": "db-1",
+	"type": "db",
+	"x": 200,
+	"y": 150,
+	"width": 120,
+	"height": 100,
+	"text": "users"
+}
+```
+
+| Field    | Type     | Default | Description                       |
+| -------- | -------- | ------- | --------------------------------- |
+| `x`      | `number` | `0`     | X of the bounding box's top-left. |
+| `y`      | `number` | `0`     | Y of the bounding box's top-left. |
+| `width`  | `number` | `120`   | Bounding-box width (px).          |
+| `height` | `number` | `100`   | Bounding-box height (px).         |
 
 ---
 

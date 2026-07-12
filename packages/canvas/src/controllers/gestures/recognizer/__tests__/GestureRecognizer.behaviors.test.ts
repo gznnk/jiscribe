@@ -45,10 +45,11 @@ vi.mock("../utils", async (importActual) => {
 			y: clientY,
 		}),
 		getKindAndId: () => mockUtil.kindAndId,
-		getHoveredElements: () => [],
+		createGetHovered: () => () => [],
 		getInputValue: () => mockUtil.inputValue,
+		readInputValue: () => mockUtil.inputValue,
 		isGestureOptedOut: () => mockUtil.optedOut,
-		shouldSkipPointerCapture: () => false,
+		isNativePointerTarget: () => false,
 		detectEdgeProximity: () => ({ isNearEdge: false }),
 		calculateScrollDelta: () => ({ deltaX: 0, deltaY: 0 }),
 	};

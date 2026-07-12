@@ -4,13 +4,15 @@ import {
 	ToolbarContainer,
 	ToolbarDivider,
 	ToolbarGroup,
+	ToolbarHostSlot,
 	ToolbarIconButton,
 	ZoomReadout,
 } from "./ToolbarStyled";
+import { useCanvasRegistries } from "../../../contexts/CanvasRegistriesContext";
+import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import { HelpIcon } from "../../icons/HelpIcon";
+import { ShortcutHelpModal } from "../../modal/ShortcutHelp/ShortcutHelpModal";
 import { ShapeLibraryItem } from "../ShapeLibrary/ShapeLibraryItem";
-import { shapePresetRegistry } from "../ShapeLibrary/ShapePresetRegistry";
-import { ShortcutHelpModal } from "../ShortcutHelp/ShortcutHelpModal";
 
 type ToolbarProps = {
 	/** ID of the shape preset currently being drawn (for the tool's active state) */
@@ -21,6 +23,10 @@ type ToolbarProps = {
 	canZoomIn: boolean;
 	/** Whether zooming out is possible (canExecute of the zoomOut command) */
 	canZoomOut: boolean;
+	/** Host UI at the left edge (see CanvasProps.toolbarLeading) */
+	leading?: React.ReactNode;
+	/** Host UI at the right edge (see CanvasProps.toolbarTrailing) */
+	trailing?: React.ReactNode;
 };
 
 /**
@@ -39,7 +45,7 @@ const isEditableTarget = (target: EventTarget | null): boolean => {
  * Unified toolbar centered at the top.
  * Combines the shape tools (ShapeLibrary), zoom readout, and help (?) into a single bar.
  *
- * - Shape tools operate through the gesture system (data-kind="menu-item").
+ * - Shape tools operate through the gesture system (data-kind="menu").
  * - Zoom +/- is currently visual only (actual control is via wheel / pinch).
  * - Help is shown as a modal and can also be opened with the `?` key. It does not depend on the Canvas reducer.
  */
@@ -48,18 +54,18 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 	zoom,
 	canZoomIn,
 	canZoomOut,
+	leading,
+	trailing,
 }) => {
+	const messages = useCanvasMessages();
+	const { shapePreset } = useCanvasRegistries();
 	const [isHelpOpen, setIsHelpOpen] = useState(false);
 	const closeHelp = useCallback(() => setIsHelpOpen(false), []);
 
+	// Escape での閉じ処理は ModalShell が担う。ここは「?」で開くだけ。
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
-			// While open, close on Escape (works even when an input holds focus)
 			if (isHelpOpen) {
-				if (event.key === "Escape") {
-					event.preventDefault();
-					setIsHelpOpen(false);
-				}
 				return;
 			}
 
@@ -83,9 +89,15 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 	return (
 		<>
 			<ToolbarContainer>
-				{/* Left: shape tools */}
+				{/* Left: host slot (when provided) and shape tools */}
 				<ToolbarGroup>
-					{shapePresetRegistry.all().map((preset) => (
+					{leading != null && (
+						<>
+							<ToolbarHostSlot data-gesture="none">{leading}</ToolbarHostSlot>
+							<ToolbarDivider />
+						</>
+					)}
+					{shapePreset.all().map((preset) => (
 						<ShapeLibraryItem
 							key={preset.id}
 							preset={preset}
@@ -100,30 +112,33 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 					    the same path as keyboard shortcuts and the context menu. */}
 					<ToolbarIconButton
 						type="button"
-						aria-label="Zoom out"
-						title="Zoom out"
+						aria-label={messages.toolbarZoomOut}
+						title={messages.toolbarZoomOut}
 						disabled={!canZoomOut}
-						data-kind="toolbar"
-						data-id="toolbar:command:zoomOut"
+						data-kind="menu"
+						data-id="toolbar"
+						data-part="command:zoomOut"
 					>
 						−
 					</ToolbarIconButton>
 					<ZoomReadout
 						type="button"
-						aria-label="Reset zoom to 100%"
-						title="Reset zoom to 100%"
-						data-kind="toolbar"
-						data-id="toolbar:command:resetZoom"
+						aria-label={messages.toolbarResetZoom}
+						title={messages.toolbarResetZoom}
+						data-kind="menu"
+						data-id="toolbar"
+						data-part="command:resetZoom"
 					>
 						{Math.round(zoom * 100)}%
 					</ZoomReadout>
 					<ToolbarIconButton
 						type="button"
-						aria-label="Zoom in"
-						title="Zoom in"
+						aria-label={messages.toolbarZoomIn}
+						title={messages.toolbarZoomIn}
 						disabled={!canZoomIn}
-						data-kind="toolbar"
-						data-id="toolbar:command:zoomIn"
+						data-kind="menu"
+						data-id="toolbar"
+						data-part="command:zoomIn"
 					>
 						+
 					</ToolbarIconButton>
@@ -132,9 +147,9 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 
 					<ToolbarIconButton
 						type="button"
-						aria-label="Show keyboard shortcuts"
-						title="Keyboard shortcuts"
-						data-id="shortcut-help:open"
+						aria-label={messages.toolbarShowShortcutHelp}
+						title={messages.toolbarShortcutHelp}
+						data-testid="shortcut-help:open"
 						// Without data-gesture="none", pointerdown is captured by
 						// the gesture system and click never fires
 						data-gesture="none"
@@ -142,6 +157,12 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 					>
 						<HelpIcon />
 					</ToolbarIconButton>
+					{trailing != null && (
+						<>
+							<ToolbarDivider />
+							<ToolbarHostSlot data-gesture="none">{trailing}</ToolbarHostSlot>
+						</>
+					)}
 				</ToolbarGroup>
 			</ToolbarContainer>
 			{isHelpOpen && <ShortcutHelpModal onClose={closeHelp} />}

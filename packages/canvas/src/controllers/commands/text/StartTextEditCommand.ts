@@ -1,6 +1,5 @@
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../../states/objects/base/TextStyleState";
-import { objectMapperRegistry } from "../../../states/registry/ObjectMapperRegistry";
 import type { Command } from "../CommandTypes";
 
 /**
@@ -14,9 +13,7 @@ import type { Command } from "../CommandTypes";
 const canEditText = (
 	object: ObjectState | undefined,
 ): object is ObjectState & { text?: string } =>
-	object != null &&
-	objectMapperRegistry.getFeatures(object.type)?.text === true &&
-	isTextStyleState(object);
+	object != null && object.features?.text === true && isTextStyleState(object);
 
 export const StartTextEditCommand: Command = {
 	id: "start-text-edit",

@@ -17,13 +17,15 @@ pressed | dragStart | drag | dragEnd | click | doubleClick | wheel
 ```
 
 A `Gesture` carries both SVG and client coordinates (`start` / `last` / `delta`), modifier keys
-(`mods`), the hovered element, `targetId` / `targetKind`, `inputValue` (the value of a `native-pointer` element),
-and more.
+(`mods`), the hovered elements (`getHovered()`, a lazy + memoized hit test), `targetId` / `targetKind`,
+`inputValue` (the value of a `native-pointer` element), and more.
 
 Key points:
 
-- **click and doubleClick are mutually exclusive**: If the same `targetId` is tapped repeatedly within
-  `DOUBLE_CLICK_THRESHOLD` (300ms), the second and subsequent events become `doubleClick` instead of `click`.
+- **click and doubleClick are mutually exclusive**: If the same target — the `(targetId, targetPart)` pair —
+  is tapped repeatedly within `DOUBLE_CLICK_THRESHOLD` (300ms), the second and subsequent events become
+  `doubleClick` instead of `click`. Different parts of one target (two buttons of the same menu, a
+  connector's line vs its label box) are separate click targets.
   This is a deliberate design for cases where you want to **change the meaning** of the interaction, such as
   "single = select / double = text editing", and object- and text-related handlers depend on it (switching to
   the DOM-standard cumulative counting model would carry a large regression risk).
@@ -48,7 +50,7 @@ On `dragStart`, `handleGesture` saves `eventStartSnapshot` (the objects / keyPoi
 snapCandidates, etc. at the start of the operation), and clears it on `dragEnd`. If the doc has actually changed
 on `dragEnd`, it advances `commitVersion`, triggering history recording (see [State Update Flow](./06-state-update-flow.md) for details).
 
-## Linking attributes `data-gesture` / `data-kind` / `data-id`
+## Linking attributes `data-gesture` / `data-kind` / `data-id` / `data-part`
 
 DOM elements on the canvas interoperate with the gesture system through `data-*` attributes.
 This convention allows **elements that should retain native browser behavior**—such as the `textarea` used during
@@ -70,21 +72,43 @@ Combined example: `data-gesture="none native-wheel"` (excluded from gestures and
 Where they are read:
 
 - `none` → `isGestureOptedOut` (onPointerDown in `GestureRecognizer.getHandlers()`, handleContextMenu in `Canvas.tsx`)
-- `native-pointer` → `shouldSkipPointerCapture` (suppresses capture) and `getInputValue` (harvests the value)
+- `native-pointer` → `isNativePointerTarget` (suppresses capture and enables `inputValue` harvesting; decided once at pointerdown and held on `Pressed`)
 - `native-wheel` → `shouldUseNativeWheel` (`useDocumentWheel`)
 
 All of these decision utilities are built on `findGestureElement(target, token)` and
 are located in `controllers/gestures/recognizer/utils/`.
 
-### `data-kind` / `data-id`
+### `data-kind` / `data-id` / `data-part`
 
 Attributes that **identify the target** of a gesture. `getKindAndId` finds the nearest element via `closest("[data-kind]")`,
-resolves `{ kind, id }`, and attaches it to the event. Example `data-id` formats (ObjectMenu):
+resolves `{ kind, id, part }`, and attaches it to the event as `targetKind` / `targetId` / `targetPart`.
 
-- `object-menu:toggle:{sectionId}` — expand/collapse a section
-- `object-menu:set:{property}:{value}` — update a property
-- `object-menu:slider:{property}` — update a slider
-- `object-menu:command:{commandId}` — execute a command
+Each attribute carries exactly one axis, forming the two-level routing tree `kind` (coarse) → `part` prefix (fine) (issue #81):
+
+| Attribute   | Meaning                                     | Grammar                                                                 |
+| ----------- | ------------------------------------------- | ----------------------------------------------------------------------- |
+| `data-kind` | **Domain** — 1:1 with a handler group       | one of `object` / `connector` / `canvas` / `control` / `menu`           |
+| `data-id`   | **Identity** — which target                 | an entity UUID or a singleton widget name. **Never parsed — no colons** |
+| `data-part` | **Sub-element** — which piece of the target | `<subtype>[:<args...>]`; absent = the target's body itself              |
+
+Rules:
+
+- Routing is `kind` → handler, then `part` prefix → strategy. `id` is used only for lookup, never parsed.
+- An entity's subtype (rect / connector / …) is never encoded in the DOM; resolve it via `objects[id].type`.
+- `part` (args included) is always the **identifier of a sub-element**, parallel to `id` being the identifier
+  of the entity. A verb-looking part (`set:fill:red`) names the button by what it does; `part` is not a
+  command channel.
+- `data-kind` is present only on elements that have a gesture handler. "Interactive but not a gesture
+  target" is expressed with `data-gesture="none"`, not with a handler-less kind.
+
+Example: a connector's label box is `data-kind="connector" data-id={connectorId} data-part="label"`.
+With a committed label, only a double click on the label box (not the bare line) starts label editing.
+
+#### Migration (issue #81) — completed
+
+The grammar above is fully in effect: menu kinds are consolidated into `menu`, control ids are entity
+UUIDs (with `part` carrying the sub-element), and handler-less marker kinds were removed — elements
+that only need a test hook use `data-testid` instead of `data-kind` / `data-id`.
 
 ### Why we tokenized it
 

@@ -1,18 +1,15 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../CanvasTypes";
-import { handlePaste } from "../../reducer/handlers/handlePaste";
-import { initializeCommands } from "../../setup/initializeCommands";
-import { initializeObjectRegistry } from "../../setup/initializeObjectRegistry";
-import { CopyCommand } from "../selection/CopyCommand";
 import { createCommandState } from "./support/createCommandState";
 import { runCommand } from "./support/dispatch";
 import { twoRectsWithConnectorDoc } from "./support/fixtures";
+import { handlePaste } from "../../reducer/handlers/handlePaste";
+import { createTestRegistries } from "../../setup/createCanvasRegistries";
+import type { ClipboardData } from "../selection/ClipboardData";
+import { CopyCommand } from "../selection/CopyCommand";
 
-beforeAll(() => {
-	initializeObjectRegistry();
-	initializeCommands();
-});
+const registries = createTestRegistries();
 
 /** A selection whose z-order has the connector "between" rect-1 and rect-2. */
 const betweenState = (): CanvasControllerState =>
@@ -42,12 +39,12 @@ describe("preserves connectors' relative z order on copy/duplicate", () => {
 
 	it("copy → paste: connector is kept between the two shapes", () => {
 		const state = betweenState();
-		const clipboard = CopyCommand.execute(state).internalClipboard;
+		const clipboard = CopyCommand.execute(state, registries).internalClipboard;
 		expect(clipboard).not.toBeNull();
 		// clipboard is already z-ordered (with the connector interleaved)
 		expect(clipboard?.rootIds).toEqual(["rect-1", "conn-1", "rect-2"]);
 
-		const after = handlePaste(state, clipboard!);
+		const after = handlePaste(state, clipboard!, registries);
 		expect(after.rootIds).toHaveLength(6);
 		expect(appendedTypes(after, 3)).toEqual(["rect", "connector", "rect"]);
 	});
@@ -70,10 +67,11 @@ describe("maintains selection mutual exclusivity on paste", () => {
 				selectedIds: ["rect-1"],
 				rootIds: ["rect-1", "conn-1", "rect-2"],
 			}),
+			registries,
 		).internalClipboard;
 		expect(clipboard).not.toBeNull();
 
-		const after = handlePaste(state, clipboard!);
+		const after = handlePaste(state, clipboard!, registries);
 		expect(after.selectedConnectorId).toBeNull();
 		expect(after.selectedIds.length).toBeGreaterThan(0);
 	});
@@ -89,10 +87,90 @@ describe("maintains selection mutual exclusivity on paste", () => {
 				selectedIds: ["rect-1"],
 				rootIds: ["rect-1", "conn-1", "rect-2"],
 			}),
+			registries,
 		).internalClipboard;
 		expect(clipboard).not.toBeNull();
 
-		const after = handlePaste(state, clipboard!);
+		const after = handlePaste(state, clipboard!, registries);
 		expect(after.selectedVertex).toBeNull();
+	});
+});
+
+/**
+ * The system clipboard is untrusted external input and isValidGroupState does not
+ * require the group frame (it is a cached value). handlePaste must re-derive pasted
+ * group frames from their children so a crafted/foreign payload cannot inject a
+ * zero-size or missing frame (GroupState invariant, issue #35).
+ */
+describe("re-derives pasted group frames (GroupState invariant, issue #35)", () => {
+	const craftedClipboard = (
+		groupExtras: Record<string, unknown>,
+	): ClipboardData =>
+		({
+			__type: "jiscribe-canvas-clipboard",
+			version: 1,
+			objects: {
+				g: {
+					id: "g",
+					type: "group",
+					childIds: ["a"],
+					rotation: 0,
+					scaleX: 1,
+					scaleY: 1,
+					...groupExtras,
+				},
+				a: {
+					id: "a",
+					type: "rect",
+					parentId: "g",
+					cx: 50,
+					cy: 50,
+					width: 100,
+					height: 60,
+					rotation: 0,
+					scaleX: 1,
+					scaleY: 1,
+				},
+			},
+			rootIds: ["g"],
+			center: { x: 50, y: 50 },
+		}) as unknown as ClipboardData;
+
+	const pastedGroup = (after: CanvasControllerState) => {
+		const pastedGroupId = after.rootIds[after.rootIds.length - 1];
+		return after.objects[pastedGroupId] as unknown as {
+			type: string;
+			cx: number;
+			cy: number;
+			width: number;
+			height: number;
+		};
+	};
+
+	it("a zero-size group frame is replaced with bounds derived from the children", () => {
+		const state = betweenState();
+		const after = handlePaste(
+			state,
+			craftedClipboard({ cx: 0, cy: 0, width: 0, height: 0 }),
+			registries,
+		);
+		const group = pastedGroup(after);
+		expect(group.type).toBe("group");
+		// child rect (100x60 at 50,50) + paste offset (20,20)
+		expect(group.cx).toBeCloseTo(70);
+		expect(group.cy).toBeCloseTo(70);
+		expect(group.width).toBeCloseTo(100);
+		expect(group.height).toBeCloseTo(60);
+	});
+
+	it("a missing group frame is filled in with bounds derived from the children (no NaN)", () => {
+		const state = betweenState();
+		const after = handlePaste(state, craftedClipboard({}), registries);
+		const group = pastedGroup(after);
+		expect(group.type).toBe("group");
+		expect(group.cx).toBeCloseTo(70);
+		expect(group.cy).toBeCloseTo(70);
+		expect(group.width).toBeCloseTo(100);
+		expect(group.height).toBeCloseTo(60);
 	});
 });

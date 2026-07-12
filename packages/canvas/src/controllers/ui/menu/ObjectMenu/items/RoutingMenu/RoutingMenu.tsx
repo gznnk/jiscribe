@@ -4,6 +4,8 @@ import { RoutingMenuRow } from "./RoutingMenuStyled";
 import { getSelectedRouting } from "./utils/getSelectedRouting";
 import { isSelectedConnectorSelfLoop } from "./utils/isSelectedConnectorSelfLoop";
 import type { ConnectorRouting } from "../../../../../../schemas/objects/types/ConnectorRouting";
+import type { CanvasMessageStrings } from "../../../../../messages/CanvasMessages";
+import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { OrthogonalConnectorIcon } from "../../../../icons/OrthogonalConnectorIcon";
 import { StraightConnectorIcon } from "../../../../icons/StraightConnectorIcon";
 import { DropdownPanel } from "../../common/DropdownPanel";
@@ -23,7 +25,7 @@ type IconComponent = React.FC<{
 type RoutingOption = {
 	routing: ConnectorRouting;
 	commandId: string;
-	label: string;
+	messageKey: keyof CanvasMessageStrings;
 	Icon: IconComponent;
 };
 
@@ -35,13 +37,13 @@ const ROUTING_OPTIONS: RoutingOption[] = [
 	{
 		routing: "orthogonal",
 		commandId: "setRoutingOrthogonal",
-		label: "Orthogonal",
+		messageKey: "menuRoutingOrthogonal",
 		Icon: OrthogonalConnectorIcon,
 	},
 	{
 		routing: "straight",
 		commandId: "setRoutingStraight",
-		label: "Straight",
+		messageKey: "menuRoutingStraight",
 		Icon: StraightConnectorIcon,
 	},
 ];
@@ -49,13 +51,14 @@ const ROUTING_OPTIONS: RoutingOption[] = [
 /**
  * Menu item for switching a connector's routing (straight / orthogonal).
  * The button on the bar shows the current routing icon, and clicking it expands the
- * options in a horizontal row. Each option fires `object-menu:command:setRouting*`,
+ * options in a horizontal row. Each option fires `command:setRouting*`,
  * delegating to SetConnectorRoutingCommand.
  *
  * Self-loops are fixed to orthogonal, so this returns null. An emptied section is
  * collapsed along with its divider via ObjectMenuSection's `:empty`.
  */
 const RoutingMenuComponent: React.FC<MenuItemProps> = ({ canvasState }) => {
+	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const currentRouting = getSelectedRouting(canvasState);
@@ -78,24 +81,26 @@ const RoutingMenuComponent: React.FC<MenuItemProps> = ({ canvasState }) => {
 		<MenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-kind="object-menu"
-				data-id={`object-menu:toggle:${SECTION_ID}`}
-				title="Connector Routing"
+				data-kind="menu"
+				data-id="object-menu"
+				data-part={`toggle:${SECTION_ID}`}
+				title={messages.menuConnectorRouting}
 			>
-				<CurrentIcon title="Connector Routing" />
+				<CurrentIcon title={messages.menuConnectorRouting} />
 			</ObjectMenuButton>
 			{isOpen && (
 				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>
 					<RoutingMenuRow>
-						{ROUTING_OPTIONS.map(({ routing, commandId, label, Icon }) => (
+						{ROUTING_OPTIONS.map(({ routing, commandId, messageKey, Icon }) => (
 							<ObjectMenuButton
 								key={routing}
 								isActive={routing === currentRouting}
-								data-kind="object-menu"
-								data-id={`object-menu:command:${commandId}`}
-								title={label}
+								data-kind="menu"
+								data-id="object-menu"
+								data-part={`command:${commandId}`}
+								title={messages[messageKey]}
 							>
-								<Icon title={label} />
+								<Icon title={messages[messageKey]} />
 							</ObjectMenuButton>
 						))}
 					</RoutingMenuRow>

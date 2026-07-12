@@ -1,7 +1,7 @@
 import type { Point } from "@workspace/geometry";
 import { useMemo } from "react";
 
-import type { CanvasState } from "../../../../states/canvas/CanvasState";
+import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
 import { resolveConnectorPoints } from "../utils/endpoints";
 
@@ -22,9 +22,9 @@ export type ResolvedConnectorPoints = {
 /**
  * Custom hook: Resolves connector endpoints with optimized memoization.
  *
- * This hook extracts only the necessary objects (source and target) from the objects map,
- * so the memoization only re-runs when those specific objects change, not when any object
- * in the canvas changes.
+ * Takes the source/target owner objects directly (the caller extracts them from the
+ * objects map), so the memoization only re-runs when those specific objects change,
+ * not when any object in the canvas changes.
  *
  * The polyline point list `points` (source → ...waypoints → target) is assembled and
  * returned inside the same useMemo. This keeps the `points` reference stable so the
@@ -32,20 +32,15 @@ export type ResolvedConnectorPoints = {
  * from when endpoints were passed as scalars).
  *
  * @param connectorState - The connector state to resolve
- * @param objects - Map of all objects in the canvas
+ * @param sourceObj - Owner shape of the source endpoint. null if unreferenced (free endpoint) or not found
+ * @param targetObj - Owner shape of the target endpoint. null if unreferenced (free endpoint) or not found
  * @returns Resolved endpoints and the assembled point list, or null if resolution fails
  */
 export const useResolvedConnectorPoints = (
 	connectorState: ConnectorState,
-	objects: CanvasState["objects"],
+	sourceObj: ObjectState | null,
+	targetObj: ObjectState | null,
 ): ResolvedConnectorPoints | null => {
-	// Extract only the objects we need for this connector
-	const sourceObjId = connectorState.source.owner?.id ?? null;
-	const targetObjId = connectorState.target.owner?.id ?? null;
-
-	const sourceObj = sourceObjId ? objects[sourceObjId] : null;
-	const targetObj = targetObjId ? objects[targetObjId] : null;
-
 	// Memoize based on connector state and the specific objects it references
 	// This avoids re-calculation when unrelated objects change
 	return useMemo(() => {

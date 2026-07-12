@@ -1,6 +1,9 @@
 import type { ObjectDoc } from "../base/ObjectDoc";
 import type { ShapeFactory } from "../types/ShapeFactory";
-import { numberOverride } from "../types/ShapeFactory";
+import {
+	numberOverride,
+	pickSupportedDocDefaults,
+} from "../types/ShapeFactory";
 
 /** Minimal shape that DOC_DEFAULTS of Frame-family shapes (geometry: "rect" / top-left origin) must satisfy. */
 type FrameDefaults = { width: number; height: number } & Record<
@@ -33,11 +36,12 @@ export const createFrameShapeFactory = (
 	const { supportsBounds = true } = options;
 
 	const factory: ShapeFactory = {
-		createDoc(position, overrides) {
+		createDoc(position, overrides, docDefaults) {
 			const width = numberOverride(overrides?.width, defaults.width);
 			const height = numberOverride(overrides?.height, defaults.height);
 			return {
 				...defaults,
+				...pickSupportedDocDefaults(defaults, docDefaults),
 				...overrides,
 				id: crypto.randomUUID(),
 				x: position.x - width / 2,
@@ -54,7 +58,15 @@ export const createFrameShapeFactory = (
 	};
 
 	if (supportsBounds) {
-		factory.createDocFromBounds = (x1, y1, x2, y2, overrides, minSize = 5) => {
+		factory.createDocFromBounds = (
+			x1,
+			y1,
+			x2,
+			y2,
+			overrides,
+			minSize = 5,
+			docDefaults,
+		) => {
 			const width = Math.abs(x2 - x1);
 			const height = Math.abs(y2 - y1);
 			if (width < minSize || height < minSize) {
@@ -62,6 +74,7 @@ export const createFrameShapeFactory = (
 			}
 			return {
 				...defaults,
+				...pickSupportedDocDefaults(defaults, docDefaults),
 				...overrides,
 				id: crypto.randomUUID(),
 				x: Math.min(x1, x2),

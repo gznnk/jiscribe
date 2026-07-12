@@ -63,7 +63,8 @@ External changes are treated as history boundaries. Rather than going through
 setting the new doc as `present`), and `future` is cleared.
 UI state such as selection and in-progress operations is also explicitly reset (only the
 viewport is preserved).
-For how the self-save echo-back (matching saveNonce) is handled, see
+Fold-backs of the canvas's own save are filtered out before reaching the reducer, so every
+`SYNC_EXTERNAL` seen here is a genuine external change. For how fold-backs are identified, see
 [External Sync / VSCode Integration](./07-external-sync.md).
 </content>
 </invoke>

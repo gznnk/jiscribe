@@ -5,6 +5,35 @@ All notable changes to the Jiscribe extension are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.6.0] - 2026-07-12
+
+### Added
+
+- **Editable images (draw.io-style round-trip)**: The canvas can now be exported as a PNG or SVG that stays editable. Right-click the canvas and choose **Export…**, then pick the format — **PNG** (`.jis.png`, with the document embedded as a PNG `iTXt` chunk) or **SVG** (`.jis.svg`, with the document embedded in SVG `<metadata>`) — the margin kept around the content, whether to embed the source data, and whether to make the background transparent. Exports are fit-to-content, and the file is saved into your workspace rather than the browser download folder. Both files render as plain images everywhere (GitHub, Markdown previews, image viewers). Turning the source embed off produces a plain image saved as `.png` / `.svg` (no `.jis` marker, not re-editable).
+- **Open `.jis.png` / `.jis.svg` in the canvas editor**: Files with these double extensions now open in the Jiscribe canvas editor, restoring the full document from the embedded source. Editing and saving re-renders the image (fit-to-content) with the updated source re-embedded, so the file always stays a valid, up-to-date image — the same workflow as draw.io's `.drawio.png`. If the editor UI cannot render at save time, the previous image is kept and only the embedded source is updated, so edits are never lost.
+- **Database (cylinder) shape** _(experimental)_: A new `type: "db"` cylinder primitive for data stores in architecture diagrams. It is available in the shape library (next to Polygon), can be drawn like the other shapes, and its text automatically flows below the cap so it never overlaps the rounded top. This is the first of a broader set of shapes planned for upcoming releases.
+- Refreshed extension icon (new teal line-art mark).
+
+### Fixed
+
+- **Middle-click now pans the canvas** consistently instead of being swallowed by other handlers.
+- **Keyboard shortcuts are scoped to the focused canvas**, so shortcuts no longer fire in the wrong editor when several Jiscribe canvases are open.
+- **Snap and axis-lock guides follow your VS Code theme** (they were a hardcoded blue) and their dashes stay fixed in canvas space instead of shimmering while you drag.
+- **Text-editing scrollbar** moved to an outer gutter so it no longer shifts word-wrap and misaligns the text while editing.
+- **Copy / Paste / Duplicate** keeps free connector endpoints and waypoints aligned by offsetting them together with the shapes.
+- **Self-loop connectors** can no longer attach to the invalid `center` anchor; such documents are now rejected up front.
+- Connectors can no longer be accidentally swept into a group.
+- Rapid consecutive pastes are serialized in order, and a save-flush race that could deliver a stale document was fixed.
+- Hardened several geometry edge cases (division-by-zero guards, zero-size groups prevented).
+
+### Performance
+
+- **Hidden editor tabs no longer keep their webview resident** (`retainContextWhenHidden: false`), cutting memory use when many canvases are open.
+- The webview bundle is smaller — `highlight.js` was trimmed to its common language set (~47% reduction).
+- Numerous canvas and geometry hot paths — connector routing, bounding boxes, frame corner/label recomputation, marquee selection, per-frame gesture DOM reads, and history reconstruction — allocate less and do less redundant work, smoothing drags and routing on large documents.
+
 ## [0.5.1] - 2026-07-04
 
 ### Added

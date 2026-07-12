@@ -1,3 +1,4 @@
+import { DEFAULT_FONT_FAMILY } from "../../../../constants/defaultFontFamily";
 import type { CreateObjectType } from "../../types/CreateObjectType";
 import type { ObjectFeatures } from "../../types/ObjectFeatures";
 import { AUTO_COLOR } from "../../utils/autoColor";
@@ -37,6 +38,6 @@ export const RECT_DOC_DEFAULTS: Omit<RectDoc, "id"> = {
 	verticalAlign: "middle",
 	fontColor: AUTO_COLOR,
 	fontSize: 16,
-	fontFamily: "Noto Sans JP",
+	fontFamily: DEFAULT_FONT_FAMILY,
 	fontWeight: "normal",
 } as const as RectDoc;

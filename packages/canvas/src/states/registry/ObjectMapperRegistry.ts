@@ -10,7 +10,7 @@ type MapperEntry = {
 	features: ObjectFeatures;
 };
 
-class ObjectMapperRegistry {
+export class ObjectMapperRegistry {
 	private readonly entries = new Map<ObjectType, MapperEntry>();
 
 	register<TDoc extends ObjectDoc, TState extends ObjectState>(
@@ -19,7 +19,13 @@ class ObjectMapperRegistry {
 		features: ObjectFeatures,
 	): void {
 		this.entries.set(type, {
-			toState: (doc) => mapper.toState(doc as TDoc),
+			// Stamp the type's declaration descriptor onto every state (as a shared
+			// reference, never a copy) so consumers can read per-type specs from the
+			// object without a registry lookup — works for custom types too (#165).
+			toState: (doc) => ({
+				...mapper.toState(doc as TDoc),
+				features,
+			}),
 			toDoc: (state) => mapper.toDoc(state as TState),
 			features,
 		});
@@ -50,4 +56,5 @@ class ObjectMapperRegistry {
 	}
 }
 
-export const objectMapperRegistry = new ObjectMapperRegistry();
+export const createObjectMapperRegistry = (): ObjectMapperRegistry =>
+	new ObjectMapperRegistry();

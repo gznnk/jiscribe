@@ -1,5 +1,7 @@
-import { calcRotatedPointWithTrig } from "./calcRotatedPointWithTrig";
-import { degreesToRadians } from "../common/degreesToRadians";
+import {
+	calcLocalOffsetForRotation,
+	calcWorldPointFromLocalOffset,
+} from "./calcLocalOffsetForRotation";
 import type { Point } from "../types/Point";
 import type { TransformedFrame } from "../types/TransformedFrame";
 
@@ -19,18 +21,8 @@ export function calcOutlinePointTowardForRotatedFrame(
 		return null;
 	}
 
-	// Compute cos/sin once and reuse for both rotation directions below.
-	const rotationRad = degreesToRadians(rotation);
-	const cos = Math.cos(rotationRad);
-	const sin = Math.sin(rotationRad);
-
-	// world -> local (centered, unrotated): rotate `toward` around center by
-	// -rotation. cos(-θ)=cos and sin(-θ)=-sin, so we reuse the same cos/sin and
-	// keep the local offset as plain numbers (no Point allocation).
-	const wx = toward.x - cx;
-	const wy = toward.y - cy;
-	const dx = wx * cos + wy * sin;
-	const dy = -wx * sin + wy * cos;
+	const offset = calcLocalOffsetForRotation(cx, cy, rotation, toward);
+	const { dx, dy } = offset;
 	if (dx === 0 && dy === 0) {
 		return null;
 	}
@@ -99,6 +91,5 @@ export function calcOutlinePointTowardForRotatedFrame(
 		return null;
 	}
 
-	// local -> world: rotate the hit point back around center by +rotation.
-	return calcRotatedPointWithTrig(cx + bestX, cy + bestY, cx, cy, cos, sin);
+	return calcWorldPointFromLocalOffset(cx, cy, bestX, bestY, offset);
 }

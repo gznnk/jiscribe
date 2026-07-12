@@ -1,14 +1,16 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { CanvasDoc } from "../../../../schemas/canvas/CanvasDoc";
+import {
+	createDocSnapshotFromDoc,
+	resolveDocSnapshot,
+	type DocSnapshot,
+} from "../../../../states/canvas/DocSnapshot";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { initializeObjectRegistry } from "../../../setup/initializeObjectRegistry";
+import { createTestRegistries } from "../../../setup/createCanvasRegistries";
 import { UndoCommand } from "../UndoCommand";
 
-// canvasToState uses objectMapperRegistry, so initialize it
-beforeAll(() => {
-	initializeObjectRegistry();
-});
+const registries = createTestRegistries();
 
 const rect = (id: string) =>
 	({ id, type: "rect", x: 0, y: 0, width: 100, height: 100 }) as never;
@@ -18,11 +20,13 @@ const docCurrent = {
 	version: 1,
 	root: [rect("r1"), rect("r2")],
 } as unknown as CanvasDoc;
+const snapshotPrev = createDocSnapshotFromDoc(docPrev);
+const snapshotCurrent = createDocSnapshotFromDoc(docCurrent);
 
 const makeState = (params: {
-	past: CanvasDoc[];
-	present: CanvasDoc;
-	future: CanvasDoc[];
+	past: DocSnapshot[];
+	present: DocSnapshot;
+	future: DocSnapshot[];
 	eventStartSnapshot?: unknown;
 	textEditState?: unknown;
 }): CanvasControllerState =>
@@ -38,32 +42,36 @@ const makeState = (params: {
 		internalClipboard: null,
 		commitVersion: 5,
 		saveVersion: 0,
+		registries,
 	}) as unknown as CanvasControllerState;
 
 describe("UndoCommand", () => {
 	it("restores the previous history entry and rolls present back", () => {
 		const state = makeState({
-			past: [docPrev],
-			present: docCurrent,
+			past: [snapshotPrev],
+			present: snapshotCurrent,
 			future: [],
 		});
-		const next = UndoCommand.execute(state);
+		const next = UndoCommand.execute(state, registries);
 
 		// docPrev (r1 only) is restored
 		expect(Object.keys(next.objects)).toEqual(["r1"]);
-		expect(next.history.present).toBe(docPrev);
+		expect(next.history.present).toBe(snapshotPrev);
+		expect(
+			resolveDocSnapshot(next.history.present, registries.objectMapper),
+		).toBe(docPrev);
 		expect(next.history.past).toEqual([]);
-		// the rolled-back present is stashed into future
-		expect(next.history.future).toEqual([docCurrent]);
+		// the rolled-back present is stashed into future as-is (still a snapshot)
+		expect(next.history.future).toEqual([snapshotCurrent]);
 	});
 
 	it("clears the selection, increments saveVersion, and leaves commitVersion unchanged", () => {
 		const state = makeState({
-			past: [docPrev],
-			present: docCurrent,
+			past: [snapshotPrev],
+			present: snapshotCurrent,
 			future: [],
 		});
-		const next = UndoCommand.execute(state);
+		const next = UndoCommand.execute(state, registries);
 		expect(next.selectedIds).toEqual([]);
 		expect(next.saveVersion).toBe(1);
 		// restoring history is not a commit, so commitVersion is not changed
@@ -72,23 +80,30 @@ describe("UndoCommand", () => {
 
 	it("preserves the viewport", () => {
 		const state = makeState({
-			past: [docPrev],
-			present: docCurrent,
+			past: [snapshotPrev],
+			present: snapshotCurrent,
 			future: [],
 		});
-		expect(UndoCommand.execute(state).viewport).toEqual(state.viewport);
+		expect(UndoCommand.execute(state, registries).viewport).toEqual(
+			state.viewport,
+		);
 	});
 
 	it("returns the state unchanged when past is empty", () => {
-		const state = makeState({ past: [], present: docCurrent, future: [] });
-		expect(UndoCommand.execute(state)).toBe(state);
+		const state = makeState({ past: [], present: snapshotCurrent, future: [] });
+		expect(UndoCommand.execute(state, registries)).toBe(state);
 	});
 
 	describe("canExecute", () => {
 		it("is executable when there is a past", () => {
 			expect(
 				UndoCommand.canExecute(
-					makeState({ past: [docPrev], present: docCurrent, future: [] }),
+					makeState({
+						past: [snapshotPrev],
+						present: snapshotCurrent,
+						future: [],
+					}),
+					registries,
 				),
 			).toBe(true);
 		});
@@ -96,7 +111,8 @@ describe("UndoCommand", () => {
 		it("is not executable when past is empty", () => {
 			expect(
 				UndoCommand.canExecute(
-					makeState({ past: [], present: docCurrent, future: [] }),
+					makeState({ past: [], present: snapshotCurrent, future: [] }),
+					registries,
 				),
 			).toBe(false);
 		});
@@ -105,11 +121,12 @@ describe("UndoCommand", () => {
 			expect(
 				UndoCommand.canExecute(
 					makeState({
-						past: [docPrev],
-						present: docCurrent,
+						past: [snapshotPrev],
+						present: snapshotCurrent,
 						future: [],
 						eventStartSnapshot: { foo: 1 },
 					}),
+					registries,
 				),
 			).toBe(false);
 		});
@@ -118,11 +135,12 @@ describe("UndoCommand", () => {
 			expect(
 				UndoCommand.canExecute(
 					makeState({
-						past: [docPrev],
-						present: docCurrent,
+						past: [snapshotPrev],
+						present: snapshotCurrent,
 						future: [],
 						textEditState: { objectId: "r1", text: "" },
 					}),
+					registries,
 				),
 			).toBe(false);
 		});

@@ -1,15 +1,13 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
+import { RectFeatures } from "../../../../../schemas/objects/primitives/rect/RectDoc";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
-import { initializeObjectRegistry } from "../../../../setup/initializeObjectRegistry";
+import { createTestRegistries } from "../../../../setup/createCanvasRegistries";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { ObjectEventHandler } from "../ObjectEventHandler";
 
-// moveByDelta is resolved through objectBehaviorRegistry, so initialize the registry.
-beforeAll(() => {
-	initializeObjectRegistry();
-});
+const registries = createTestRegistries();
 
 const SIZE = 10;
 
@@ -17,6 +15,7 @@ const makeRect = (id: string, cx: number, cy: number): ObjectState =>
 	({
 		id,
 		type: "rect",
+		features: RectFeatures,
 		cx,
 		cy,
 		width: SIZE,
@@ -50,6 +49,7 @@ const makeKeyPoints = (cx: number, cy: number) => {
 const makeDragState = (cx = 0, cy = 0): CanvasControllerState => {
 	const rect = makeRect("rect-1", cx, cy);
 	return {
+		registries,
 		objects: { "rect-1": rect },
 		rootIds: ["rect-1"],
 		selectedIds: ["rect-1"],
@@ -86,11 +86,107 @@ const makeDragEvent = (
 const movedRect = (state: CanvasControllerState) =>
 	state.objects["rect-1"] as unknown as { cx: number; cy: number };
 
+const makeTextRect = (id: string, text: string): ObjectState =>
+	({
+		id,
+		type: "rect",
+		features: RectFeatures,
+		cx: 0,
+		cy: 0,
+		width: SIZE,
+		height: SIZE,
+		text,
+	}) as unknown as ObjectState;
+
+/** State while editing `editingId`'s text, with a pending (uncommitted) `pendingText`. */
+const makeEditState = (
+	editingId: string,
+	objectText: string,
+	pendingText: string,
+): CanvasControllerState =>
+	({
+		registries,
+		objects: {
+			[editingId]: makeTextRect(editingId, objectText),
+			"rect-2": makeTextRect("rect-2", "other"),
+		},
+		rootIds: [editingId, "rect-2"],
+		selectedIds: [],
+		selectedConnectorId: null,
+		selectedVertex: null,
+		multiSelectGroup: null,
+		textEditState: { objectId: editingId, text: pendingText },
+		commitVersion: 5,
+		contextMenuPosition: { x: 1, y: 1 },
+		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
+	}) as unknown as CanvasControllerState;
+
+const makeTapEvent = (
+	type: "pressed" | "click" | "doubleClick",
+	targetId: string,
+): CanvasEvent =>
+	({
+		type,
+		targetKind: "object",
+		targetId,
+		button: 0,
+		mods: { shift: false, alt: false, ctrl: false, meta: false },
+	}) as unknown as CanvasEvent;
+
+describe("ObjectEventHandler - text edit commit", () => {
+	it("a pressed on the object being edited commits the pending edit (the editing overlay covers the shape, so a gesture-visible tap is outside it)", () => {
+		const next = ObjectEventHandler.handle(
+			makeEditState("rect-1", "old", "new"),
+			makeTapEvent("pressed", "rect-1"),
+			registries,
+		);
+		expect((next.objects["rect-1"] as unknown as { text: string }).text).toBe(
+			"new",
+		);
+		expect(next.textEditState).toBeNull();
+		expect(next.commitVersion).toBe(6);
+	});
+
+	it("a double click after the pressed commit re-opens editing prefilled with the committed text (exactly one commit)", () => {
+		const afterPressed = ObjectEventHandler.handle(
+			makeEditState("rect-1", "old", "new"),
+			makeTapEvent("pressed", "rect-1"),
+			registries,
+		);
+		const afterDouble = ObjectEventHandler.handle(
+			afterPressed,
+			makeTapEvent("doubleClick", "rect-1"),
+			registries,
+		);
+		// The pending text was committed by the pressed and prefilled again — not lost.
+		expect(afterDouble.textEditState).toEqual({
+			objectId: "rect-1",
+			text: "new",
+		});
+		expect(afterDouble.commitVersion).toBe(6);
+	});
+
+	it("a pressed on a different object commits the pending edit", () => {
+		const next = ObjectEventHandler.handle(
+			makeEditState("rect-1", "old", "new"),
+			makeTapEvent("pressed", "rect-2"),
+			registries,
+		);
+		// The edit is committed to rect-1 and the session is cleared.
+		expect((next.objects["rect-1"] as unknown as { text: string }).text).toBe(
+			"new",
+		);
+		expect(next.textEditState).toBeNull();
+		expect(next.commitVersion).toBe(6);
+	});
+});
+
 describe("ObjectEventHandler - Shift axis-lock drag", () => {
 	it("without Shift, both axes move and no axis-lock feedback appears", () => {
 		const next = ObjectEventHandler.handle(
 			makeDragState(),
 			makeDragEvent({ x: 30, y: 12 }, false),
+			registries,
 		);
 		expect(movedRect(next)).toMatchObject({ cx: 30, cy: 12 });
 		expect(next.axisLockFeedback).toBeNull();
@@ -100,6 +196,7 @@ describe("ObjectEventHandler - Shift axis-lock drag", () => {
 		const next = ObjectEventHandler.handle(
 			makeDragState(),
 			makeDragEvent({ x: 30, y: 12 }, true),
+			registries,
 		);
 		expect(movedRect(next)).toMatchObject({ cx: 30, cy: 0 });
 	});
@@ -108,6 +205,7 @@ describe("ObjectEventHandler - Shift axis-lock drag", () => {
 		const next = ObjectEventHandler.handle(
 			makeDragState(),
 			makeDragEvent({ x: 8, y: 25 }, true),
+			registries,
 		);
 		expect(movedRect(next)).toMatchObject({ cx: 0, cy: 25 });
 	});
@@ -117,6 +215,7 @@ describe("ObjectEventHandler - Shift axis-lock drag", () => {
 		const afterX = ObjectEventHandler.handle(
 			makeDragState(),
 			makeDragEvent({ x: 20, y: 5 }, true),
+			registries,
 		);
 		expect(movedRect(afterX)).toMatchObject({ cx: 20, cy: 0 });
 
@@ -125,6 +224,7 @@ describe("ObjectEventHandler - Shift axis-lock drag", () => {
 		const afterY = ObjectEventHandler.handle(
 			afterX,
 			makeDragEvent({ x: 6, y: 40 }, true),
+			registries,
 		);
 		expect(movedRect(afterY)).toMatchObject({ cx: 0, cy: 40 });
 	});
@@ -134,6 +234,7 @@ describe("ObjectEventHandler - Shift axis-lock drag", () => {
 			const next = ObjectEventHandler.handle(
 				makeDragState(20, 30),
 				makeDragEvent({ x: 50, y: 8 }, true),
+				registries,
 			);
 			expect(next.axisLockFeedback).toEqual({ y: 30 });
 		});
@@ -142,6 +243,7 @@ describe("ObjectEventHandler - Shift axis-lock drag", () => {
 			const next = ObjectEventHandler.handle(
 				makeDragState(20, 30),
 				makeDragEvent({ x: 8, y: 50 }, true),
+				registries,
 			);
 			expect(next.axisLockFeedback).toEqual({ x: 20 });
 		});
@@ -150,12 +252,14 @@ describe("ObjectEventHandler - Shift axis-lock drag", () => {
 			const afterX = ObjectEventHandler.handle(
 				makeDragState(20, 30),
 				makeDragEvent({ x: 40, y: 5 }, true),
+				registries,
 			);
 			expect(afterX.axisLockFeedback).toEqual({ y: 30 });
 
 			const afterY = ObjectEventHandler.handle(
 				afterX,
 				makeDragEvent({ x: 5, y: 40 }, true),
+				registries,
 			);
 			expect(afterY.axisLockFeedback).toEqual({ x: 20 });
 		});
@@ -167,6 +271,7 @@ describe("ObjectEventHandler - Shift axis-lock drag", () => {
 			const next = ObjectEventHandler.handle(
 				makeDragState(20, 30),
 				makeDragEvent({ x: 4, y: 3 }, true),
+				registries,
 			);
 			expect(movedRect(next)).toMatchObject({ cx: 20, cy: 30 });
 		});
@@ -175,6 +280,7 @@ describe("ObjectEventHandler - Shift axis-lock drag", () => {
 			const next = ObjectEventHandler.handle(
 				makeDragState(20, 30),
 				makeDragEvent({ x: 4, y: 3 }, true),
+				registries,
 			);
 			expect(next.axisLockFeedback).toEqual({ x: 20, y: 30 });
 		});
@@ -184,6 +290,7 @@ describe("ObjectEventHandler - Shift axis-lock drag", () => {
 			const next = ObjectEventHandler.handle(
 				makeDragState(20, 30),
 				makeDragEvent({ x: 8, y: 3 }, true),
+				registries,
 			);
 			expect(movedRect(next)).toMatchObject({ cx: 28, cy: 30 });
 			expect(next.axisLockFeedback).toEqual({ y: 30 });
@@ -193,6 +300,7 @@ describe("ObjectEventHandler - Shift axis-lock drag", () => {
 			const next = ObjectEventHandler.handle(
 				makeDragState(20, 30),
 				makeDragEvent({ x: 4, y: 3 }, false),
+				registries,
 			);
 			expect(movedRect(next)).toMatchObject({ cx: 24, cy: 33 });
 			expect(next.axisLockFeedback).toBeNull();

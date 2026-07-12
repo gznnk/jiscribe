@@ -1,10 +1,11 @@
 import { memo } from "react";
 
 import { ConnectorRenderer } from "./ConnectorRenderer";
+import { resolveEndpointOwner } from "./utils/endpoints";
 import type { CanvasState } from "../../../states/canvas/CanvasState";
 import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
-import { objectComponentRegistry } from "../../objects/registry/ObjectComponentRegistry";
+import { useObjectComponentRegistry } from "../../objects/registry/ObjectComponentRegistryContext";
 
 type ObjectsRendererProps = Pick<CanvasState, "objects" | "rootIds"> & {
 	textEditObjectId?: string | null;
@@ -23,6 +24,8 @@ const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 	rootIds,
 	textEditObjectId,
 }) => {
+	const objectComponentRegistry = useObjectComponentRegistry();
+
 	const renderObject = (id: string, result: React.ReactNode[]): void => {
 		const objState = objects[id];
 		if (!objState) {
@@ -38,11 +41,16 @@ const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 
 		// Connectors need dynamic resolution of their endpoints (source/target), so draw them with the dedicated renderer.
 		if (objState.type === "connector") {
+			const connectorState = objState as ConnectorState;
+			// Extract only the endpoint owners here so ConnectorRenderer's memo works:
+			// their identities are stable across commits that touch unrelated objects,
+			// unlike the objects map itself.
 			result.push(
 				<ConnectorRenderer
 					key={id}
-					connectorState={objState as ConnectorState}
-					objects={objects}
+					connectorState={connectorState}
+					sourceObj={resolveEndpointOwner(objects, connectorState.source)}
+					targetObj={resolveEndpointOwner(objects, connectorState.target)}
 					textEditObjectId={textEditObjectId}
 				/>,
 			);

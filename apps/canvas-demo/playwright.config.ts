@@ -1,3 +1,5 @@
+import { createServer } from "node:net";
+
 import { defineConfig } from "@playwright/test";
 
 // headed 実行（--headed / --ui）の時だけ、目視しやすいように
@@ -7,6 +9,25 @@ import { defineConfig } from "@playwright/test";
 const isHeaded =
 	process.argv.includes("--headed") || process.argv.includes("--ui");
 
+// e2e 専用サーバーのポートを実行ごとに OS の空きポート（エフェメラル領域）から取得する。
+// 固定 5174 だと dev:demo と競合し、複数 e2e / 複数 dev:demo の同時起動もできない。
+// この config はワーカー各プロセスでも再評価されるため、最初に決めたポートを
+// PLAYWRIGHT_PORT に焼き付けて全プロセスで共有する（さもないと baseURL と
+// webServer の起動ポートがワーカーごとにズレて ERR_CONNECTION_REFUSED になる）。
+const port = process.env.PLAYWRIGHT_PORT
+	? Number(process.env.PLAYWRIGHT_PORT)
+	: await new Promise<number>((resolve, reject) => {
+			const probe = createServer();
+			probe.on("error", reject);
+			probe.listen(0, "127.0.0.1", () => {
+				const address = probe.address();
+				const freePort =
+					typeof address === "object" && address ? address.port : 0;
+				probe.close(() => resolve(freePort));
+			});
+		});
+process.env.PLAYWRIGHT_PORT = String(port);
+
 export default defineConfig({
 	testDir: "./e2e/specs",
 	fullyParallel: !isHeaded,
@@ -15,7 +36,7 @@ export default defineConfig({
 	retries: process.env.CI ? 2 : 0,
 	reporter: process.env.CI ? "github" : "list",
 	use: {
-		baseURL: "http://localhost:5174",
+		baseURL: `http://localhost:${port}`,
 		viewport: { width: 1440, height: 900 },
 		trace: "on-first-retry",
 		screenshot: "only-on-failure",
@@ -27,8 +48,11 @@ export default defineConfig({
 		launchOptions: isHeaded ? { slowMo: 500 } : {},
 	},
 	webServer: {
-		command: "pnpm dev",
-		port: 5174,
-		reuseExistingServer: !process.env.CI,
+		// 掴んだ空きポートに strictPort で固定。ズレて別ポートに逃げると
+		// baseURL と食い違って全テストが接続失敗するため、逃がさず即エラーにする。
+		command: `pnpm dev --port ${port} --strictPort`,
+		port,
+		// ポートは実行ごとに変わるので reuse しない（毎回専用サーバーを起動・破棄）。
+		reuseExistingServer: false,
 	},
 });

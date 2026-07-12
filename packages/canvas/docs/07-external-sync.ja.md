@@ -35,22 +35,23 @@ State に変換して `SYNC_EXTERNAL` を dispatch する。
 state**（= 永続化すべき state）をクロージャで捕える。`onCommit` は ref 経由で呼び、
 親が毎 render 新しい関数を渡しても再発火しないようにしている。
 
-## saveNonce による折り返し競合の回避（#29）
+## saveNonce による折り返しの識別（#29）
 
 問題: キャンバスが保存 → ホストがファイルを書き換え → その変更が `canvasDoc` として
 **自分自身にエコーバック**される。これを通常の外部変更として扱うと、自分が今行った操作が
 履歴境界として積み直され、UI state がリセットされてしまう。
 
 対策: 保存時に `saveNonce` を発行して `onCommit` で渡し、ホストはそれをそのまま
-`SYNC_EXTERNAL` の `saveNonce` として返す。reducer は
+`syncNonce` として返す。突き合わせは `useSelfSaveNonceTracker` が保持する
+**未消化 nonce のセット**で行う（`controllers/utils/createSelfSaveNonceTracker.ts`）。
 
-- `action.saveNonce === state.saveNonce`（自分の保存のエコーバック）
-  → オブジェクト参照だけ更新し、`past` / `future`（履歴）は変更しない。
-- 一致しない（外部からの本物の変更）
-  → 履歴境界として処理（past に積み、UI state リセット）。
+- `useNotifySaveRequest` が配信した nonce を `register` する。
+- `useSyncExternalDoc` は折り返しの `syncNonce` を `consumeIfSelfSave` で照合し、
+  一致（自分の保存の折り返し）なら **dispatch せず破棄**する。エコーは新情報を
+  持たず、キャンバス側が正本なので何も更新しない（進行中ジェスチャーも中断しない）。
+- 未登録の nonce（外部からの本物の変更）は `SYNC_EXTERNAL` を dispatch し、
+  reducer が履歴境界として処理する（past に積み、UI state リセット）。
 
-これにより、自己保存の折り返しと外部からの実変更を区別できる。
-
-> **既知の課題（#29）**: saveNonce が一巡（折り返し）するタイミングでの競合。
-> nonce の発行・突き合わせの境界ケースとして追跡中。
-> </content>
+単一値ではなくセットで持つのがポイント。保存が重なって折り返しが前後した場合
+（例: リモート FS）、単一値だと後発コミットの nonce で上書きされ、先発の折り返しが
+外部変更と誤判定される。直近 ≤64 件を保持することで順序の入れ替わりに頑健になる。

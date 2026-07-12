@@ -1,14 +1,12 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { initializeObjectRegistry } from "../../../setup/initializeObjectRegistry";
+import { createTestRegistries } from "../../../setup/createCanvasRegistries";
 import { GroupCommand } from "../GroupCommand";
 
-beforeAll(() => {
-	initializeObjectRegistry();
-});
+const registries = createTestRegistries();
 
 const makeRect = (
 	id: string,
@@ -50,7 +48,7 @@ describe("GroupCommand", () => {
 			objects: { a: makeRect("a", 0, 0), b: makeRect("b", 200, 0) },
 			rootIds: ["a", "b"],
 		});
-		const next = GroupCommand.execute(state);
+		const next = GroupCommand.execute(state, registries);
 
 		// rootIds becomes just the single new group
 		expect(next.rootIds).toHaveLength(1);
@@ -73,11 +71,59 @@ describe("GroupCommand", () => {
 			objects: { a: makeRect("a", 0, 0), b: makeRect("b", 200, 0) },
 			rootIds: ["a", "b"],
 		});
-		const next = GroupCommand.execute(state);
+		const next = GroupCommand.execute(state, registries);
 		const group = next.objects[next.rootIds[0]] as GroupState;
 		// contains a (0..100 wide) and b (150..250) → width is greater than 0
 		expect(group.width).toBeGreaterThan(0);
 		expect(group.height).toBeGreaterThan(0);
+	});
+
+	describe("zero-size prevention (GroupState invariant, issue #35)", () => {
+		const makePolyline = (
+			id: string,
+			points: { x: number; y: number }[],
+		): ObjectState =>
+			({
+				id,
+				type: "polyline",
+				points,
+			}) as unknown as ObjectState;
+
+		it("clamps a degenerate axis when grouping collinear children", () => {
+			// two horizontal polylines on the same y → the OBB's height would be 0
+			const state = makeState({
+				selectedIds: ["p1", "p2"],
+				objects: {
+					p1: makePolyline("p1", [
+						{ x: 0, y: 50 },
+						{ x: 40, y: 50 },
+					]),
+					p2: makePolyline("p2", [
+						{ x: 60, y: 50 },
+						{ x: 100, y: 50 },
+					]),
+				},
+				rootIds: ["p1", "p2"],
+			});
+			const next = GroupCommand.execute(state, registries);
+			const group = next.objects[next.rootIds[0]] as GroupState;
+			expect(group.type).toBe("group");
+			expect(group.width).toBeGreaterThan(0);
+			expect(group.height).toBeGreaterThan(0);
+		});
+
+		it("does not create a group when no child contributes geometry", () => {
+			// objects with neither a frame nor points yield null bounds → abort
+			const noGeometry = (id: string): ObjectState =>
+				({ id, type: "mystery" }) as unknown as ObjectState;
+			const state = makeState({
+				selectedIds: ["a", "b"],
+				objects: { a: noGeometry("a"), b: noGeometry("b") },
+				rootIds: ["a", "b"],
+			});
+			const next = GroupCommand.execute(state, registries);
+			expect(next).toBe(state);
+		});
 	});
 
 	describe("canExecute", () => {
@@ -87,7 +133,7 @@ describe("GroupCommand", () => {
 				objects: { a: makeRect("a", 0, 0), b: makeRect("b", 0, 0) },
 				rootIds: ["a", "b"],
 			});
-			expect(GroupCommand.canExecute(state)).toBe(true);
+			expect(GroupCommand.canExecute(state, registries)).toBe(true);
 		});
 
 		it("is not executable with a single selection", () => {
@@ -96,7 +142,7 @@ describe("GroupCommand", () => {
 				objects: { a: makeRect("a", 0, 0) },
 				rootIds: ["a"],
 			});
-			expect(GroupCommand.canExecute(state)).toBe(false);
+			expect(GroupCommand.canExecute(state, registries)).toBe(false);
 		});
 	});
 });

@@ -1,5 +1,6 @@
 import { memo } from "react";
 
+import { theme } from "../../../../constants/theme";
 import type { SnapFeedback } from "../../../CanvasTypes";
 
 type SnapGuidesProps = {
@@ -7,9 +8,18 @@ type SnapGuidesProps = {
 	zoom: number;
 };
 
-const STROKE = "#3b82f6";
 const STROKE_WIDTH = 1;
 const STROKE_DASHARRAY = "4, 3";
+/** Dash pattern period of STROKE_DASHARRAY. Used to pin the dash phase to canvas coordinates */
+const DASH_PERIOD = 4 + 3;
+
+/**
+ * Returns a dash offset that pins the dash pattern to canvas coordinates, so the pattern
+ * stays stationary even when the line's start point moves during a drag.
+ * Normalized to [0, DASH_PERIOD) because a negative stroke-dashoffset is an error in SVG 1.1.
+ */
+const calcDashOffset = (lineStartCoordinate: number): number =>
+	((lineStartCoordinate % DASH_PERIOD) + DASH_PERIOD) % DASH_PERIOD;
 /** Number of screen pixels to extend the guide line beyond each endpoint */
 const EXTENSION_PX = 16;
 
@@ -35,10 +45,12 @@ const SnapGuidesComponent: React.FC<SnapGuidesProps> = ({
 					y1={guide.lineStart - ext}
 					x2={guide.coordinate}
 					y2={guide.lineEnd + ext}
-					stroke={STROKE}
 					strokeWidth={STROKE_WIDTH}
 					strokeDasharray={STROKE_DASHARRAY}
+					strokeDashoffset={calcDashOffset(guide.lineStart - ext)}
 					pointerEvents="none"
+					// The color may hold var(--jiscribe-*), so it is applied via style.
+					style={{ stroke: theme.handleAccent }}
 				/>
 			))}
 			{/* Y-axis snap: horizontal guide lines (may appear for each of top/bottom/center) */}
@@ -50,10 +62,12 @@ const SnapGuidesComponent: React.FC<SnapGuidesProps> = ({
 					y1={guide.coordinate}
 					x2={guide.lineEnd + ext}
 					y2={guide.coordinate}
-					stroke={STROKE}
 					strokeWidth={STROKE_WIDTH}
 					strokeDasharray={STROKE_DASHARRAY}
+					strokeDashoffset={calcDashOffset(guide.lineStart - ext)}
 					pointerEvents="none"
+					// The color may hold var(--jiscribe-*), so it is applied via style.
+					style={{ stroke: theme.handleAccent }}
 				/>
 			))}
 		</>

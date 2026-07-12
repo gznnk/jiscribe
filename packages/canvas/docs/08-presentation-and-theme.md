@@ -24,7 +24,7 @@ By committing to pure rendering, the presentation is determined purely as a func
 The deciding factor is not emotion vs. inline style, but rather **whether a presentation attribute suffices, or whether CSS-function resolution is required**.
 
 - Static colors that do not use CSS functions → an SVG presentation attribute is enough (`fill="currentColor"`, `stroke="#888"`, etc.).
-- Using `var(--vscode-*)` or `color-mix()` → **these are not resolved by presentation attributes**.
+- Using `var(--jiscribe-*)` or `color-mix()` → **these are not resolved by presentation attributes**.
   Apply them as CSS properties (`style={{ fill: ... }}` or emotion).
 
 ### Choosing between emotion and inline style
@@ -38,7 +38,7 @@ Relevant code examples:
 - `style={{ fill: theme.transparentChecker }}` … `controllers/ui/icons/ColorPreviewIcon.tsx`
 - `style={{ stroke: theme.transparentChecker }}` … `controllers/ui/icons/BorderColorIcon.tsx`
 
-## Distinguish UI chrome (VSCode theme tokens) from shape-data colors
+## Distinguish UI chrome (theme tokens) from shape-data colors
 
 There are two kinds of color with different natures, and their origins must always be kept separate.
 
@@ -46,7 +46,7 @@ There are two kinds of color with different natures, and their origins must alwa
 | ------------- | ---------------------------------------------- | -------------------------------------------- |
 | Examples      | menus, toolbars, selection frames, snap guides | a shape's `fill` / `stroke` / `fontColor`    |
 | Origin        | theme tokens in `constants/theme.ts`           | values saved in the document (`.jis.json`)   |
-| Follows theme | yes (automatically adapts to the VSCode theme) | no (data specified by the user) ※except auto |
+| Follows theme | yes (follows the host-injected theme)          | no (data specified by the user) ※except auto |
 
 ### `"auto"` (theme-following color) — an exception in shape data (issue #38)
 
@@ -66,13 +66,13 @@ the saved value does not become theme-dependent, it does not break portability. 
 The color that `"auto"` "should follow" is determined by the field's role. Resolution is **consolidated
 into a single function**, `resolveAutoColor(value, role)` (`presentations/objects/utils/resolveAutoColor.ts`).
 
-| Role             | Target fields          | Resolves to (theme token)                                 |
-| ---------------- | ---------------------- | --------------------------------------------------------- |
-| Foreground (ink) | `stroke` / `fontColor` | `theme.foreground` (`var(--vscode-foreground)`)           |
-| Surface          | `fill`                 | `theme.surface` (`var(--vscode-editorWidget-background)`) |
+| Role             | Target fields          | Resolves to (theme token)                         |
+| ---------------- | ---------------------- | ------------------------------------------------- |
+| Foreground (ink) | `stroke` / `fontColor` | `theme.foreground` (`var(--jiscribe-foreground)`) |
+| Surface          | `fill`                 | `theme.surface` (`var(--jiscribe-surface)`)       |
 
 **Single rule**: "auto resolves to the role's theme token, and color is applied via CSS." Because
-`var(--vscode-*)` is not resolved by SVG presentation attributes, **color is never applied via attributes**,
+`var(--jiscribe-*)` is not resolved by SVG presentation attributes, **color is never applied via attributes**,
 including stroke / fill / arrow color.
 
 - Since shape elements are emotion `styled` (`RectElement`, etc.), the resolved color is **passed via the
@@ -94,9 +94,39 @@ and "attribute vs. style").
 - The color preview icon in the UI chrome is at a different layer from shape-data resolution
   (`resolveAutoColor`); following chrome convention, it indicates auto with `currentColor` (the chrome foreground).
 
-`theme` (`constants/theme.ts`) references `--vscode-*` CSS variables while also holding dark-based fallback
-values for environments where those variables are absent (standalone demos, Storybook, etc.). As a result,
-it blends into the user's theme in VSCode and looks like the dark theme in demo environments.
+## Host theme injection (issue #150)
+
+Theming is host-injectable and neutral — the canvas knows nothing about VSCode.
+
+- **Neutral tokens**: `theme` (`constants/theme.ts`) references neutral `--jiscribe-*` CSS custom
+  properties, each with the dark preset value as its fallback (`var(--jiscribe-foreground, #cccccc)`).
+  emotion styles can stay static module-level constants because the theme resolves at CSS time.
+- **Injection**: the host passes a `CanvasTheme` (`theme/CanvasTheme.ts`) via the Canvas / CanvasThumbnail
+  `theme` prop. The Canvas root injects `theme.tokens` as `--jiscribe-*` custom properties
+  (`theme/themeCssVars.ts`); custom properties inherit, so every descendant style resolves them.
+- **Two delivery paths**: CSS-consumed tokens flow through the custom properties; JS-consumed values
+  (handle dimensions for zoom-adjusted geometry, `fontFamily` for canvas text measurement and
+  new-shape defaults) flow through `CanvasThemeContext` (`useCanvasTheme()`) and must be concrete
+  values, never `var(...)` strings. The default fontFamily also reaches doc creation via
+  `state.docDefaults` → `ShapeFactory` (`pickSupportedDocDefaults` applies it only to shapes whose
+  DOC_DEFAULTS declare `fontFamily`).
+  - **Why fontFamily has both a Context and a state route**: the two consumers have opposite
+    structural constraints. The rendering side must work without a reducer (`CanvasThumbnail` has
+    none, yet connector-label measurement needs a font) → Context with a default value. The creation
+    side runs outside React (gesture handlers are pure `(state, gesture) → state` functions inside
+    the reducer, where `useContext` cannot reach) → controller state. Both routes derive from the
+    same `theme` prop in Canvas.tsx (state is kept in sync via `SET_DOC_DEFAULTS`), so the source of
+    truth is single. Rejected alternatives: attaching docDefaults to every GESTURE action (leaks
+    theme concerns into the recognizer layer) and a module-level mutable default (hidden state;
+    breaks multiple Canvases with different themes on one page). Unifying the routes would mean
+    moving doc creation out of the reducer, which is not worth losing the reducer's determinism
+    and state-transition testability.
+- **Standard themes**: `darkCanvasTheme` (the default; its values double as the token fallbacks) and
+  `lightCanvasTheme` are exported from the package (`theme/themePresets.ts`).
+- **VSCode mapping layer**: the VSCode host (not this package) maps `--vscode-*` onto the neutral
+  tokens by passing `var(--vscode-..., <dark fallback>)` strings as token values
+  (`apps/vscode-extension/src/webview/vscodeCanvasTheme.ts`). That is the only remaining VSCode
+  coupling, and it lives host-side.
 
 ### Details
 

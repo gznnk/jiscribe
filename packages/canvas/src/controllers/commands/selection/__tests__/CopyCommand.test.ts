@@ -3,7 +3,10 @@ import { describe, expect, it } from "vitest";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { createTestRegistries } from "../../../setup/createCanvasRegistries";
 import { CopyCommand } from "../CopyCommand";
+
+const registries = createTestRegistries();
 
 // ---------------------------------------------------------------------------
 // Test fixtures
@@ -81,7 +84,7 @@ describe("CopyCommand — connector inclusion decision", () => {
 			rootIds: ["r1", "r2"],
 			connectorIds: ["conn1"],
 		});
-		const next = CopyCommand.execute(state);
+		const next = CopyCommand.execute(state, registries);
 		expect(next.internalClipboard?.rootIds).toContain("conn1");
 	});
 
@@ -94,7 +97,7 @@ describe("CopyCommand — connector inclusion decision", () => {
 			rootIds: ["r1"],
 			connectorIds: ["conn1"],
 		});
-		const next = CopyCommand.execute(state);
+		const next = CopyCommand.execute(state, registries);
 		expect(next.internalClipboard?.rootIds).toContain("conn1");
 	});
 
@@ -107,7 +110,7 @@ describe("CopyCommand — connector inclusion decision", () => {
 			rootIds: ["r1"],
 			connectorIds: ["conn1"],
 		});
-		const next = CopyCommand.execute(state);
+		const next = CopyCommand.execute(state, registries);
 		expect(next.internalClipboard?.rootIds).toContain("conn1");
 	});
 
@@ -120,7 +123,7 @@ describe("CopyCommand — connector inclusion decision", () => {
 			rootIds: ["r1"],
 			connectorIds: ["conn1"],
 		});
-		const next = CopyCommand.execute(state);
+		const next = CopyCommand.execute(state, registries);
 		expect(next.internalClipboard?.rootIds).not.toContain("conn1");
 	});
 
@@ -134,7 +137,7 @@ describe("CopyCommand — connector inclusion decision", () => {
 			rootIds: ["r1", "r2"],
 			connectorIds: ["conn1"],
 		});
-		const next = CopyCommand.execute(state);
+		const next = CopyCommand.execute(state, registries);
 		expect(next.internalClipboard?.rootIds).not.toContain("conn1");
 	});
 
@@ -148,7 +151,7 @@ describe("CopyCommand — connector inclusion decision", () => {
 			rootIds: ["r1", "r2"],
 			connectorIds: ["conn1"],
 		});
-		const next = CopyCommand.execute(state);
+		const next = CopyCommand.execute(state, registries);
 		expect(next.internalClipboard?.rootIds).not.toContain("conn1");
 	});
 
@@ -163,7 +166,7 @@ describe("CopyCommand — connector inclusion decision", () => {
 			rootIds: ["r1", "r2", "r3"],
 			connectorIds: ["conn1"],
 		});
-		const next = CopyCommand.execute(state);
+		const next = CopyCommand.execute(state, registries);
 		expect(next.internalClipboard?.rootIds).not.toContain("conn1");
 	});
 });
@@ -177,7 +180,7 @@ describe("CopyCommand — basic clipboard behavior", () => {
 			rootIds: ["r1"],
 			connectorIds: [],
 		});
-		const next = CopyCommand.execute(state);
+		const next = CopyCommand.execute(state, registries);
 		expect(next.internalClipboard?.rootIds).toEqual(["r1"]);
 		expect(next.internalClipboard?.objects["r1"]).toBeDefined();
 	});
@@ -189,7 +192,7 @@ describe("CopyCommand — basic clipboard behavior", () => {
 			rootIds: [],
 			connectorIds: [],
 		});
-		expect(CopyCommand.canExecute(state)).toBe(false);
+		expect(CopyCommand.canExecute(state, registries)).toBe(false);
 	});
 
 	it("canExecute is true when there are selectedIds", () => {
@@ -200,6 +203,6 @@ describe("CopyCommand — basic clipboard behavior", () => {
 			rootIds: ["r1"],
 			connectorIds: [],
 		});
-		expect(CopyCommand.canExecute(state)).toBe(true);
+		expect(CopyCommand.canExecute(state, registries)).toBe(true);
 	});
 });

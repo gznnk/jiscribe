@@ -167,4 +167,38 @@ describe("isValidConnectorLabelState", () => {
 			false,
 		);
 	});
+
+	// Parity with the Doc-side validator: anything accepted at this clipboard boundary
+	// must also survive re-parse, so the same range / CSS-safety invariants apply.
+	it("position out of the 0..1 range is false", () => {
+		expect(isValidConnectorLabelState({ text: "x", position: 0 })).toBe(true);
+		expect(isValidConnectorLabelState({ text: "x", position: 1 })).toBe(true);
+		expect(isValidConnectorLabelState({ text: "x", position: 5 })).toBe(false);
+		expect(isValidConnectorLabelState({ text: "x", position: -0.1 })).toBe(
+			false,
+		);
+	});
+
+	it("CSS-injection strings in color fields are false", () => {
+		const injection = "red;} body { display: none }";
+		expect(isValidConnectorLabelState({ text: "x", stroke: injection })).toBe(
+			false,
+		);
+		expect(isValidConnectorLabelState({ text: "x", fill: injection })).toBe(
+			false,
+		);
+		expect(
+			isValidConnectorLabelState({ text: "x", fontColor: injection }),
+		).toBe(false);
+		expect(
+			isValidConnectorLabelState({ text: "x", fontWeight: injection }),
+		).toBe(false);
+	});
+
+	it("fontSize below 1 / negative strokeWidth is false", () => {
+		expect(isValidConnectorLabelState({ text: "x", fontSize: 0 })).toBe(false);
+		expect(isValidConnectorLabelState({ text: "x", strokeWidth: -1 })).toBe(
+			false,
+		);
+	});
 });

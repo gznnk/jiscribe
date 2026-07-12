@@ -23,9 +23,12 @@ Rather than manually defining every property, each object (Rect, Ellipse, etc.) 
 classDiagram
     %% Core Types
     class CanvasDoc {
+        +version: 1
         +root: ObjectDoc[]
-        +connectors: ConnectorDoc[]
     }
+    %% NOTE: connectors are NOT a top-level field. They live inside `root`
+    %% as `type: "connector"` entries, mixed with shapes in z-order.
+    %% validateStructure explicitly rejects a top-level `connectors` array.
 
     class ObjectDoc {
         +id: string
@@ -62,7 +65,7 @@ classDiagram
 
     %% Relationships
     CanvasDoc --> ObjectDoc
-    CanvasDoc --> ConnectorDoc
+    ObjectDoc <|-- ConnectorDoc : type "connector"
 
     %% Composition Logic
     CreateObjectType ..> ObjectDoc : extends

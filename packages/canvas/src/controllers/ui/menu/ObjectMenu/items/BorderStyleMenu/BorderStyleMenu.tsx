@@ -8,6 +8,7 @@ import { getSelectedCornerRadius } from "./utils/getSelectedCornerRadius";
 import { getSelectedStrokeDashType } from "./utils/getSelectedStrokeDashType";
 import { getSelectedStrokeWidth } from "./utils/getSelectedStrokeWidth";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
+import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { DashedCircleIcon } from "../../../../icons/DashedCircleIcon";
 import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
 import { DottedLineIcon } from "../../../../icons/DottedLineIcon";
@@ -19,12 +20,16 @@ import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
 
 const SECTION_ID = "border-style";
 
-// Slider bounds for border styling
+// Valid range for border styling (number input clamp)
 const MIN_STROKE_WIDTH = 0;
 const MAX_STROKE_WIDTH = 100;
+// Slider covers the common range (from 0 = no border); thicker borders via the number input.
+const SLIDER_MAX_STROKE_WIDTH = 20;
 
 const MIN_CORNER_RADIUS = 0;
 const MAX_CORNER_RADIUS = 999;
+// Slider covers the common range; larger radii via the number input.
+const SLIDER_MAX_CORNER_RADIUS = 20;
 
 type BorderStyleMenuProps = {
 	canvasState: CanvasControllerState;
@@ -42,6 +47,7 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 	showRadius = true,
 	onPropertyUpdate,
 }) => {
+	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const strokeWidth = getSelectedStrokeWidth(canvasState);
@@ -56,11 +62,12 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 		<MenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-kind="object-menu"
-				data-id={`object-menu:toggle:${SECTION_ID}`}
-				title="Border Style"
+				data-kind="menu"
+				data-id="object-menu"
+				data-part={`toggle:${SECTION_ID}`}
+				title={messages.menuBorderStyle}
 			>
-				<DashedCircleIcon title="Border Style" />
+				<DashedCircleIcon title={messages.menuBorderStyle} />
 			</ObjectMenuButton>
 			{isOpen && (
 				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>
@@ -69,45 +76,50 @@ const BorderStyleMenuComponent: React.FC<BorderStyleMenuProps> = ({
 						<BorderStyleSection>
 							<ObjectMenuButton
 								isActive={!strokeDashType || strokeDashType === "solid"}
-								data-kind="object-menu"
-								data-id="object-menu:set:strokeDashType:solid"
-								title="Solid line"
+								data-kind="menu"
+								data-id="object-menu"
+								data-part="set:strokeDashType:solid"
+								title={messages.menuSolidLine}
 							>
-								<SolidLineIcon title="Solid line" />
+								<SolidLineIcon title={messages.menuSolidLine} />
 							</ObjectMenuButton>
 							<ObjectMenuButton
 								isActive={strokeDashType === "dashed"}
-								data-kind="object-menu"
-								data-id="object-menu:set:strokeDashType:dashed"
-								title="Dashed line"
+								data-kind="menu"
+								data-id="object-menu"
+								data-part="set:strokeDashType:dashed"
+								title={messages.menuDashedLine}
 							>
-								<DashedLineIcon title="Dashed line" />
+								<DashedLineIcon title={messages.menuDashedLine} />
 							</ObjectMenuButton>
 							<ObjectMenuButton
 								isActive={strokeDashType === "dotted"}
-								data-kind="object-menu"
-								data-id="object-menu:set:strokeDashType:dotted"
-								title="Dotted line"
+								data-kind="menu"
+								data-id="object-menu"
+								data-part="set:strokeDashType:dotted"
+								title={messages.menuDottedLine}
 							>
-								<DottedLineIcon title="Dotted line" />
+								<DottedLineIcon title={messages.menuDottedLine} />
 							</ObjectMenuButton>
 						</BorderStyleSection>
 
 						<MenuSlider
-							label="Border Width"
+							label={messages.menuBorderWidth}
 							value={strokeWidth}
 							min={MIN_STROKE_WIDTH}
 							max={MAX_STROKE_WIDTH}
+							sliderMax={SLIDER_MAX_STROKE_WIDTH}
 							property="strokeWidth"
 							onPropertyUpdate={onPropertyUpdate}
 						/>
 
 						{showRadius && (
 							<MenuSlider
-								label="Corner Radius"
+								label={messages.menuCornerRadius}
 								value={cornerRadius}
 								min={MIN_CORNER_RADIUS}
 								max={MAX_CORNER_RADIUS}
+								sliderMax={SLIDER_MAX_CORNER_RADIUS}
 								property="rx"
 								onPropertyUpdate={onPropertyUpdate}
 							/>

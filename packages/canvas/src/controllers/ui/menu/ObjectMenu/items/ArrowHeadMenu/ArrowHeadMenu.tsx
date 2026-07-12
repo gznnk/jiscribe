@@ -5,6 +5,7 @@ import { ArrowSelectorGrid, ArrowTypeButton } from "./ArrowHeadMenuStyled";
 import { getSelectedArrowType } from "./utils/getSelectedArrowType";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { ArrowTypes } from "../../../../../../schemas/objects/types/ArrowType";
+import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { ArrowSwapIcon } from "../../../../icons/ArrowSwapIcon";
 import { DropdownPanel } from "../../common/DropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
@@ -25,6 +26,7 @@ type ArrowHeadMenuProps = {
 const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 	canvasState,
 }) => {
+	const messages = useCanvasMessages();
 	const startRef = useRef<HTMLDivElement>(null);
 	const endRef = useRef<HTMLDivElement>(null);
 
@@ -51,9 +53,10 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 			<MenuItemPositioner ref={startRef}>
 				<ObjectMenuButton
 					isActive={isStartOpen}
-					data-kind="object-menu"
-					data-id={`object-menu:toggle:${SECTION_ID_START}`}
-					title="Start Arrow"
+					data-kind="menu"
+					data-id="object-menu"
+					data-part={`toggle:${SECTION_ID_START}`}
+					title={messages.menuStartArrow}
 				>
 					<ArrowHeadIconPreview arrowType={currentStart} direction="start" />
 				</ObjectMenuButton>
@@ -68,9 +71,10 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 								<ArrowTypeButton
 									key={`start-${type}`}
 									isActive={currentStart === type}
-									data-kind="object-menu"
-									data-id={`object-menu:set:startArrow:${type}`}
-									title={type}
+									data-kind="menu"
+									data-id="object-menu"
+									data-part={`set:startArrow:${type}`}
+									title={messages.arrowTypeNames[type] ?? type}
 								>
 									<ArrowHeadIconPreview arrowType={type} direction="start" />
 								</ArrowTypeButton>
@@ -82,9 +86,10 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 
 			{/* Swap Button */}
 			<ObjectMenuButton
-				data-kind="object-menu"
-				data-id="object-menu:command:swapArrows"
-				title="Swap arrows"
+				data-kind="menu"
+				data-id="object-menu"
+				data-part="command:swapArrows"
+				title={messages.menuSwapArrows}
 			>
 				<ArrowSwapIcon fill="currentColor" width={24} height={24} />
 			</ObjectMenuButton>
@@ -93,9 +98,10 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 			<MenuItemPositioner ref={endRef}>
 				<ObjectMenuButton
 					isActive={isEndOpen}
-					data-kind="object-menu"
-					data-id={`object-menu:toggle:${SECTION_ID_END}`}
-					title="End Arrow"
+					data-kind="menu"
+					data-id="object-menu"
+					data-part={`toggle:${SECTION_ID_END}`}
+					title={messages.menuEndArrow}
 				>
 					<ArrowHeadIconPreview arrowType={currentEnd} direction="end" />
 				</ObjectMenuButton>
@@ -110,9 +116,10 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 								<ArrowTypeButton
 									key={`end-${type}`}
 									isActive={currentEnd === type}
-									data-kind="object-menu"
-									data-id={`object-menu:set:endArrow:${type}`}
-									title={type}
+									data-kind="menu"
+									data-id="object-menu"
+									data-part={`set:endArrow:${type}`}
+									title={messages.arrowTypeNames[type] ?? type}
 								>
 									<ArrowHeadIconPreview arrowType={type} direction="end" />
 								</ArrowTypeButton>

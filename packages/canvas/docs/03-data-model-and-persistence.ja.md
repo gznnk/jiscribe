@@ -30,9 +30,10 @@ states/objects/primitives/rect/
 ```
 
 全体変換は `states/canvas/CanvasMapper.ts` が一元管理する（`canvasToState` / `canvasToDoc`）。
-CanvasMapper は形状タイプごとの Mapper を `ObjectRegistry` から引いて多態的に呼び出すため、
-**`states/` の中で唯一 `registry/` を参照してよい例外**になっている（理由は
-[アーキテクチャ](./02-architecture.ja.md#registry-層) を参照）。ツリー ↔ フラットの
+CanvasMapper は形状タイプごとの Mapper を `objectMapperRegistry`（`states/registry/ObjectMapperRegistry`）から
+引いて多態的に呼び出す。全体変換のためにレジストリを参照する唯一の箇所だが、そのレジストリは
+**`states/` 層内**（対象の Mapper 群と共配置）に閉じているのでレイヤーをまたぐ依存ではない（理由は
+[アーキテクチャ](./02-architecture.ja.md) を参照）。ツリー ↔ フラットの
 構造変換（親子関係の展開・再構築）はこの一点に集約し、個々の Mapper には漏らさない。
 
 ## 永続化フォーマット（`.jis.json` / `CanvasDoc`）
@@ -50,7 +51,7 @@ CanvasMapper は形状タイプごとの Mapper を `ObjectRegistry` から引�
 }
 ```
 
-- `root` … 図形（rect / ellipse / diamond / polyline / polygon / group / sticky）とコネクターを混在させた単一配列。**配列順がそのまま重なり順（z-order）**になる
+- `root` … 図形（rect / ellipse / diamond / polyline / polygon / group / sticky / svg）とコネクターを混在させた単一配列。**配列順がそのまま重なり順（z-order）**になる
 - コネクター（`type: "connector"`）… 端点は `source` / `target` の `owner{type,id}` + `anchor` で対象図形を参照する。`root` 直下にのみ置かれ、group の子にはならない。少なくとも一方の端点が owned であること（両端 free は不正）
 - 色フィールド（`stroke` / `fontColor` / `fill`）… 具体的な CSS 色のほか、sentinel 値 `"auto"`（テーマ追従）を取りうる。`"auto"` は描画時にテーマ前景色へ解決される（[表示・テーマ](./08-presentation-and-theme.ja.md) 参照）。新規図形の `stroke` / `fontColor` の既定値は `"auto"`
 - 形式仕様の全文は `../ai/reference.md` と `../ai/jiscribe.schema.json` を参照
@@ -106,9 +107,12 @@ commit 機微を二重持ちすることになるため採らない。
 type CanvasParseResult =
 	| { kind: "ok"; doc: CanvasDoc }
 	| { kind: "syntax-error"; message: string } // JSON.parse 失敗
-	| { kind: "semantic-error"; diagnostics: SemanticDiagnostic[] }
+	| { kind: "structure-error"; diagnostics: SemanticDiagnostic[] } // validateStructure 失敗
+	| { kind: "semantic-error"; diagnostics: SemanticDiagnostic[] } // validateSemantics 失敗
 	| { kind: "internal-error"; message: string }; // 検証中の予期しない例外
 ```
+
+`structure-error` と `semantic-error` は下記の 2 つの検証ステージに対応し、各ステージの失敗が別々のバリアントとして表れる。
 
 検証は 2 段階。構造が成立していなければ意味検証へ進まない。
 

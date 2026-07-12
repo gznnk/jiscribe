@@ -43,10 +43,11 @@ vi.mock("../utils", () => ({
 		y: sim.viewport.minY + clientY / sim.viewport.zoom,
 	}),
 	getKindAndId: () => ({ id: "obj-1", kind: "rect" }),
-	getHoveredElements: () => [],
+	createGetHovered: () => () => [],
 	getInputValue: () => undefined,
+	readInputValue: () => undefined,
 	isGestureOptedOut: () => false,
-	shouldSkipPointerCapture: () => false,
+	isNativePointerTarget: () => false,
 	// Position-dependent proximity check. Within AUTO_SCROLL_THRESHOLD (=20px) of the right edge is near.
 	// In the interior (toward the left), near=false, which reproduces arm-on-leave arming.
 	detectEdgeProximity: (

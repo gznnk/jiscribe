@@ -4,6 +4,7 @@ import { memo } from "react";
 import type { StickyState } from "../../../../states/objects/annotations/sticky/StickyState";
 import { TextOverlay } from "../../base/TextOverlay";
 import type { TextEditable } from "../../base/TextOverlay";
+import { calcTextRegion } from "../../utils/calcTextRegion";
 import { createSvgTransform } from "../../utils/createSvgTransform";
 
 type StickyProps = StickyState & TextEditable;
@@ -26,9 +27,11 @@ const StickyComponent: React.FC<StickyProps> = ({
 	fontSize,
 	fontFamily,
 	fontWeight,
+	features,
 	isEditing = false,
 }) => {
 	const transformAttr = createSvgTransform(scaleX, scaleY, rotation, cx, cy);
+	const textRegion = calcTextRegion({ width, height }, features?.textRegion);
 
 	const left = -width / 2;
 	const right = width / 2;
@@ -70,10 +73,10 @@ const StickyComponent: React.FC<StickyProps> = ({
 				transform={transformAttr}
 			/>
 			<TextOverlay
-				x={-width / 2}
-				y={-height / 2}
-				width={width}
-				height={height}
+				x={textRegion.x}
+				y={textRegion.y}
+				width={textRegion.width}
+				height={textRegion.height}
 				transform={transformAttr}
 				text={text}
 				textType={textType}

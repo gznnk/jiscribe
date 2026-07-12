@@ -8,7 +8,7 @@
 	},
 	"homepage": "https://beta.jiscribe.dev",
 	"icon": "icon.png",
-	"version": "0.5.1",
+	"version": "0.6.0",
 	"private": true,
 	"preview": true,
 	"engines": {
@@ -50,6 +50,19 @@
 					},
 					{
 						"filenamePattern": "*.jiscribe.json"
+					}
+				],
+				"priority": "default"
+			},
+			{
+				"viewType": "jiscribe.imageEditor",
+				"displayName": "Jiscribe Canvas Editor (Image)",
+				"selector": [
+					{
+						"filenamePattern": "*.jis.png"
+					},
+					{
+						"filenamePattern": "*.jis.svg"
 					}
 				],
 				"priority": "default"
@@ -106,14 +119,15 @@
 	"dependencies": {},
 	"license": "SEE LICENSE IN LICENSE.txt",
 	"devDependencies": {
-		"@types/node": "^22.10.5",
-		"@types/react": "^19.2.7",
-		"@types/react-dom": "^19.2.3",
+		"@types/node": "catalog:",
+		"@types/react": "catalog:",
+		"@types/react-dom": "catalog:",
 		"@types/vscode": "^1.85.0",
 		"@vscode/vsce": "^3.4.2",
 		"@workspace/canvas": "workspace:*",
-		"esbuild": "^0.24.2",
+		"esbuild": "catalog:",
 		"react": "catalog:",
-		"react-dom": "catalog:"
+		"react-dom": "catalog:",
+		"typescript": "catalog:"
 	}
 }

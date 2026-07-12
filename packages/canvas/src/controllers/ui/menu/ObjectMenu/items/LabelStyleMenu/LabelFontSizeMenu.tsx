@@ -3,6 +3,7 @@ import { memo, useRef } from "react";
 import { getSelectedConnectorLabel } from "./utils/getSelectedConnectorLabel";
 import { CONNECTOR_LABEL_DEFAULTS } from "../../../../../../presentations/objects/connections/ConnectorLabel";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { FontSizeIcon } from "../../../../icons/FontSizeIcon";
 import { DropdownPanel } from "../../common/DropdownPanel";
 import { MenuSlider } from "../../common/MenuSlider";
@@ -13,6 +14,10 @@ import { FontSizeMenuWrapper } from "../FontSizeMenu/FontSizeMenuStyled";
 const SECTION_ID = "label-font-size";
 const MIN_FONT_SIZE = 1;
 const MAX_FONT_SIZE = 999;
+// Slider covers the common typographic range; larger sizes via the number input.
+const SLIDER_MIN_FONT_SIZE = 8;
+const SLIDER_MAX_FONT_SIZE = 72;
+const FONT_SIZE_STEP = 2;
 
 type Props = {
 	canvasState: CanvasControllerState;
@@ -26,6 +31,7 @@ const LabelFontSizeMenuComponent: React.FC<Props> = ({
 	canvasState,
 	onPropertyUpdate,
 }) => {
+	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
@@ -41,9 +47,10 @@ const LabelFontSizeMenuComponent: React.FC<Props> = ({
 		<MenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-kind="object-menu"
-				data-id={`object-menu:toggle:${SECTION_ID}`}
-				title="Label Font Size"
+				data-kind="menu"
+				data-id="object-menu"
+				data-part={`toggle:${SECTION_ID}`}
+				title={messages.menuLabelFontSize}
 			>
 				<FontSizeIcon />
 			</ObjectMenuButton>
@@ -51,10 +58,13 @@ const LabelFontSizeMenuComponent: React.FC<Props> = ({
 				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>
 					<FontSizeMenuWrapper>
 						<MenuSlider
-							label="Font Size"
+							label={messages.menuFontSize}
 							value={fontSize}
 							min={MIN_FONT_SIZE}
 							max={MAX_FONT_SIZE}
+							sliderMin={SLIDER_MIN_FONT_SIZE}
+							sliderMax={SLIDER_MAX_FONT_SIZE}
+							step={FONT_SIZE_STEP}
 							property="label.fontSize"
 							onPropertyUpdate={onPropertyUpdate}
 						/>

@@ -6,16 +6,10 @@ import {
 import type { TransformedFrame } from "@workspace/geometry";
 import { memo } from "react";
 
+import { theme } from "../../../../constants/theme";
+import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 import { RotateRight } from "../../icons/RotateRight";
 import { getResizeCursorForRotation } from "../../utils/getResizeCursorForRotation";
-
-const ANCHOR_RADIUS = 4;
-const ANCHOR_STROKE_WIDTH = 1;
-const ANCHOR_COLOR = "#0d99ff";
-const ANCHOR_FILL = "white";
-const ROTATION_HANDLE_OFFSET = 15;
-const ROTATION_ICON_SIZE = 20;
-const ROTATION_HIT_RADIUS = 7;
 
 type TransformControlsProps = {
 	/**
@@ -37,20 +31,22 @@ type TransformControlsProps = {
  *
  * Each anchor has:
  * - data-kind="control" for GestureHandler to identify
- * - data-id="transform-control:<anchorType>" for identifying which anchor was interacted with
+ * - data-id="transform" + data-part="resize:<anchorType>" / "rotation" for identifying which anchor was interacted with
  */
 const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 	frame,
 	zoom = 1,
 }) => {
 	const { cx, cy, width, height, rotation, scaleX, scaleY } = frame;
+	const { handleDimensions } = useCanvasTheme();
+	const rotationIconSize = handleDimensions.rotationIconSize;
 
 	// Adjust sizes based on zoom level to maintain consistent visual size
 	const scale = 1 / zoom;
-	const adjustedAnchorRadius = ANCHOR_RADIUS / zoom;
-	const adjustedStrokeWidth = ANCHOR_STROKE_WIDTH / zoom;
-	const adjustedRotationOffset = ROTATION_HANDLE_OFFSET / zoom;
-	const adjustedRotationHitRadius = ROTATION_HIT_RADIUS / zoom;
+	const adjustedAnchorRadius = handleDimensions.anchorRadius / zoom;
+	const adjustedStrokeWidth = handleDimensions.anchorStrokeWidth / zoom;
+	const adjustedRotationOffset = handleDimensions.rotationHandleOffset / zoom;
+	const adjustedRotationHitRadius = handleDimensions.rotationHitRadius / zoom;
 
 	// Calculate all feature points (corners and edge midpoints)
 	const points = calcFrameKeyPoints({
@@ -102,50 +98,64 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 
 	return (
 		<g>
+			{/* Handle colors may hold var(--jiscribe-*), so they are applied via style
+			    (fill/stroke) rather than SVG presentation attributes. */}
 			{/* Corner anchors */}
 			<circle
 				cx={points.topLeft.x}
 				cy={points.topLeft.y}
 				r={adjustedAnchorRadius}
-				fill={ANCHOR_FILL}
-				stroke={ANCHOR_COLOR}
 				strokeWidth={adjustedStrokeWidth}
 				data-kind="control"
-				data-id="transform-control:topLeft"
-				style={{ cursor: cursors.topLeft }}
+				data-id="transform"
+				data-part="resize:topLeft"
+				style={{
+					fill: theme.handleFill,
+					stroke: theme.handleAccent,
+					cursor: cursors.topLeft,
+				}}
 			/>
 			<circle
 				cx={points.topRight.x}
 				cy={points.topRight.y}
 				r={adjustedAnchorRadius}
-				fill={ANCHOR_FILL}
-				stroke={ANCHOR_COLOR}
 				strokeWidth={adjustedStrokeWidth}
 				data-kind="control"
-				data-id="transform-control:topRight"
-				style={{ cursor: cursors.topRight }}
+				data-id="transform"
+				data-part="resize:topRight"
+				style={{
+					fill: theme.handleFill,
+					stroke: theme.handleAccent,
+					cursor: cursors.topRight,
+				}}
 			/>
 			<circle
 				cx={points.bottomLeft.x}
 				cy={points.bottomLeft.y}
 				r={adjustedAnchorRadius}
-				fill={ANCHOR_FILL}
-				stroke={ANCHOR_COLOR}
 				strokeWidth={adjustedStrokeWidth}
 				data-kind="control"
-				data-id="transform-control:bottomLeft"
-				style={{ cursor: cursors.bottomLeft }}
+				data-id="transform"
+				data-part="resize:bottomLeft"
+				style={{
+					fill: theme.handleFill,
+					stroke: theme.handleAccent,
+					cursor: cursors.bottomLeft,
+				}}
 			/>
 			<circle
 				cx={points.bottomRight.x}
 				cy={points.bottomRight.y}
 				r={adjustedAnchorRadius}
-				fill={ANCHOR_FILL}
-				stroke={ANCHOR_COLOR}
 				strokeWidth={adjustedStrokeWidth}
 				data-kind="control"
-				data-id="transform-control:bottomRight"
-				style={{ cursor: cursors.bottomRight }}
+				data-id="transform"
+				data-part="resize:bottomRight"
+				style={{
+					fill: theme.handleFill,
+					stroke: theme.handleAccent,
+					cursor: cursors.bottomRight,
+				}}
 			/>
 
 			{/* Edge midpoint anchors */}
@@ -153,52 +163,64 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 				cx={points.topCenter.x}
 				cy={points.topCenter.y}
 				r={adjustedAnchorRadius}
-				fill={ANCHOR_FILL}
-				stroke={ANCHOR_COLOR}
 				strokeWidth={adjustedStrokeWidth}
 				data-kind="control"
-				data-id="transform-control:topCenter"
-				style={{ cursor: cursors.topCenter }}
+				data-id="transform"
+				data-part="resize:topCenter"
+				style={{
+					fill: theme.handleFill,
+					stroke: theme.handleAccent,
+					cursor: cursors.topCenter,
+				}}
 			/>
 			<circle
 				cx={points.rightCenter.x}
 				cy={points.rightCenter.y}
 				r={adjustedAnchorRadius}
-				fill={ANCHOR_FILL}
-				stroke={ANCHOR_COLOR}
 				strokeWidth={adjustedStrokeWidth}
 				data-kind="control"
-				data-id="transform-control:rightCenter"
-				style={{ cursor: cursors.rightCenter }}
+				data-id="transform"
+				data-part="resize:rightCenter"
+				style={{
+					fill: theme.handleFill,
+					stroke: theme.handleAccent,
+					cursor: cursors.rightCenter,
+				}}
 			/>
 			<circle
 				cx={points.bottomCenter.x}
 				cy={points.bottomCenter.y}
 				r={adjustedAnchorRadius}
-				fill={ANCHOR_FILL}
-				stroke={ANCHOR_COLOR}
 				strokeWidth={adjustedStrokeWidth}
 				data-kind="control"
-				data-id="transform-control:bottomCenter"
-				style={{ cursor: cursors.bottomCenter }}
+				data-id="transform"
+				data-part="resize:bottomCenter"
+				style={{
+					fill: theme.handleFill,
+					stroke: theme.handleAccent,
+					cursor: cursors.bottomCenter,
+				}}
 			/>
 			<circle
 				cx={points.leftCenter.x}
 				cy={points.leftCenter.y}
 				r={adjustedAnchorRadius}
-				fill={ANCHOR_FILL}
-				stroke={ANCHOR_COLOR}
 				strokeWidth={adjustedStrokeWidth}
 				data-kind="control"
-				data-id="transform-control:leftCenter"
-				style={{ cursor: cursors.leftCenter }}
+				data-id="transform"
+				data-part="resize:leftCenter"
+				style={{
+					fill: theme.handleFill,
+					stroke: theme.handleAccent,
+					cursor: cursors.leftCenter,
+				}}
 			/>
 
 			{/* Rotation handle */}
 			<g
-				transform={`translate(${rotationPoint.x} ${rotationPoint.y}) rotate(${rotation}) scale(${scale}) translate(${-ROTATION_ICON_SIZE / 2} ${-ROTATION_ICON_SIZE / 2})`}
+				transform={`translate(${rotationPoint.x} ${rotationPoint.y}) rotate(${rotation}) scale(${scale}) translate(${-rotationIconSize / 2} ${-rotationIconSize / 2})`}
 			>
-				<RotateRight width={ROTATION_ICON_SIZE} height={ROTATION_ICON_SIZE} />
+				<RotateRight width={rotationIconSize} height={rotationIconSize} />
 			</g>
 			<circle
 				cx={rotationPoint.x}
@@ -206,7 +228,8 @@ const TransformControlsComponent: React.FC<TransformControlsProps> = ({
 				r={adjustedRotationHitRadius}
 				fill="transparent"
 				data-kind="control"
-				data-id="transform-control:rotation"
+				data-id="transform"
+				data-part="rotation"
 				style={{ cursor: "grab" }}
 			/>
 		</g>

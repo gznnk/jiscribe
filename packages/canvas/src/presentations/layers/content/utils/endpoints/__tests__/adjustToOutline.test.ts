@@ -1,12 +1,7 @@
-import { beforeAll, describe, it, expect } from "vitest";
+import { describe, it, expect } from "vitest";
 
-import { initializeObjectRegistry } from "../../../../../../controllers/setup/initializeObjectRegistry";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import { adjustToOutline } from "../adjustToOutline";
-
-beforeAll(() => {
-	initializeObjectRegistry();
-});
 
 const rectObj = (
 	id: string,
@@ -18,6 +13,7 @@ const rectObj = (
 	({
 		id,
 		type: "rect",
+		features: { type: "rect", geometry: "rect" },
 		cx,
 		cy,
 		width,
@@ -37,6 +33,7 @@ const ellipseObj = (
 	({
 		id,
 		type: "ellipse",
+		features: { type: "ellipse", geometry: "ellipse" },
 		cx,
 		cy,
 		width,

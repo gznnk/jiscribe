@@ -12,7 +12,7 @@ import {
 	buildSnapFeedback,
 	findSnap,
 	SNAP_THRESHOLD_PX,
-} from "../../../utils/snap/findSnap";
+} from "../../utils/snap/findSnap";
 import type { ControlStrategy } from "../ControlEventHandler";
 
 /**
@@ -43,31 +43,25 @@ export class ConnectorVertexInsertHandler implements ControlStrategy {
 		if (event.targetKind !== "control") {
 			return false;
 		}
-		const targetId = event.targetId;
-		return !!targetId && targetId.startsWith("connector-vertex-insert:");
+		const targetPart = event.targetPart;
+		return !!targetPart && targetPart.startsWith("waypoint-insert:");
 	}
 
 	handle(
 		state: CanvasControllerState,
 		event: CanvasEvent,
 	): CanvasControllerState {
-		// Only handle left-click (button 0)
-		if (event.button !== 0) {
+		// targetId = connectorId, targetPart = "waypoint-insert:<segmentIndex>"
+		const connectorId = event.targetId;
+		const targetPart = event.targetPart;
+		if (!connectorId || !targetPart) {
 			return state;
 		}
 
-		const targetControlId = event.targetId;
-		if (!targetControlId) {
-			return state;
-		}
-
-		const parts = targetControlId.split(":");
-		if (parts.length !== 3 || parts[0] !== "connector-vertex-insert") {
-			return state;
-		}
-
-		const connectorId = parts[1];
-		const segmentIndex = parseInt(parts[2], 10);
+		const segmentIndex = parseInt(
+			targetPart.slice("waypoint-insert:".length),
+			10,
+		);
 		if (isNaN(segmentIndex) || segmentIndex < 0) {
 			return state;
 		}

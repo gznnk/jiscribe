@@ -31,9 +31,10 @@ states/objects/primitives/rect/
 ```
 
 The overall conversion is managed centrally by `states/canvas/CanvasMapper.ts` (`canvasToState` / `canvasToDoc`).
-Because CanvasMapper looks up the Mapper for each shape type from the `ObjectRegistry` and invokes it polymorphically,
-it is the **one exception within `states/` that may reference `registry/`** (see
-[Architecture](./02-architecture.md#registry-layer) for the reasoning). The structural
+Because CanvasMapper looks up each shape type's Mapper from `objectMapperRegistry` (`states/registry/ObjectMapperRegistry`) and
+invokes it polymorphically, it is the one point that consults a registry to convert the whole document — but that registry lives
+**within the `states/` layer itself** (colocated with the mappers it serves), so this is not a cross-layer dependency (see
+[Architecture](./02-architecture.md) for the reasoning). The structural
 conversion between tree and flat (expanding and reconstructing parent-child relationships)
 is concentrated at this single point and never leaks into the individual Mappers.
 
@@ -53,7 +54,7 @@ The saved format is `CanvasDoc` (`schemas/canvas/CanvasDoc.ts`).
 }
 ```
 
-- `root` … A single array mixing shapes (rect / ellipse / diamond / polyline / polygon / group / sticky) and connectors. **The array order is itself the stacking order (z-order).**
+- `root` … A single array mixing shapes (rect / ellipse / diamond / polyline / polygon / group / sticky / svg) and connectors. **The array order is itself the stacking order (z-order).**
 - Connector (`type: "connector"`) … Each endpoint references its target shape via `source` / `target` using an `owner{type,id}` plus an `anchor`. Connectors are placed only directly under `root` and are never children of a group. At least one endpoint must be owned (a connector with both ends free is invalid).
 - Color fields (`stroke` / `fontColor` / `fill`) … In addition to a concrete CSS color, they may take the sentinel value `"auto"` (follow the theme). `"auto"` is resolved to the theme's foreground color at render time (see [Presentation and Theme](./08-presentation-and-theme.md)). The default `stroke` / `fontColor` for a new shape is `"auto"`.
 - For the full format specification, see `../ai/reference.md` and `../ai/jiscribe.schema.json`.
@@ -96,9 +97,13 @@ extension side and the Webview side share the same logic and prevents errors fro
 type CanvasParseResult =
 	| { kind: "ok"; doc: CanvasDoc }
 	| { kind: "syntax-error"; message: string } // JSON.parse failed
-	| { kind: "semantic-error"; diagnostics: SemanticDiagnostic[] }
+	| { kind: "structure-error"; diagnostics: SemanticDiagnostic[] } // validateStructure failed
+	| { kind: "semantic-error"; diagnostics: SemanticDiagnostic[] } // validateSemantics failed
 	| { kind: "internal-error"; message: string }; // unexpected exception during validation
 ```
+
+`structure-error` and `semantic-error` correspond to the two validation stages below, so
+each stage's failure surfaces as a distinct variant.
 
 Validation happens in two stages. If the structure does not hold, semantic validation is not reached.
 

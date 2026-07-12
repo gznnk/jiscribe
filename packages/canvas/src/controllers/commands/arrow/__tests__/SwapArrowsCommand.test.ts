@@ -4,7 +4,10 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
 import type { PolylineState } from "../../../../states/objects/primitives/polyline/PolylineState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { createTestRegistries } from "../../../setup/createCanvasRegistries";
 import { SwapArrowsCommand } from "../SwapArrowsCommand";
+
+const registries = createTestRegistries();
 
 const makeConnector = (
 	id: string,
@@ -47,7 +50,7 @@ describe("SwapArrowsCommand", () => {
 				selectedConnectorId: "c1",
 				objects: { c1: makeConnector("c1", "Triangle", "None") },
 			});
-			const next = SwapArrowsCommand.execute(state);
+			const next = SwapArrowsCommand.execute(state, registries);
 			const conn = next.objects["c1"] as ConnectorState;
 			expect(conn.startArrow).toBe("None");
 			expect(conn.endArrow).toBe("Triangle");
@@ -60,7 +63,7 @@ describe("SwapArrowsCommand", () => {
 				selectedConnectorId: "c1",
 				objects: { c1: makeConnector("c1", "Triangle", undefined) },
 			});
-			const conn = SwapArrowsCommand.execute(state).objects[
+			const conn = SwapArrowsCommand.execute(state, registries).objects[
 				"c1"
 			] as ConnectorState;
 			expect(conn.startArrow).toBe("None");
@@ -74,7 +77,7 @@ describe("SwapArrowsCommand", () => {
 				selectedIds: ["p1"],
 				objects: { p1: makePolyline("p1", "Triangle", "None") },
 			});
-			const poly = SwapArrowsCommand.execute(state).objects[
+			const poly = SwapArrowsCommand.execute(state, registries).objects[
 				"p1"
 			] as PolylineState;
 			expect(poly.startArrow).toBe("None");
@@ -89,7 +92,7 @@ describe("SwapArrowsCommand", () => {
 					r1: makeRect("r1"),
 				},
 			});
-			const next = SwapArrowsCommand.execute(state);
+			const next = SwapArrowsCommand.execute(state, registries);
 			const poly = next.objects["p1"] as PolylineState;
 			expect(poly.startArrow).toBe("None");
 			expect(poly.endArrow).toBe("Triangle");
@@ -102,7 +105,7 @@ describe("SwapArrowsCommand", () => {
 				selectedIds: ["r1"],
 				objects: { r1: makeRect("r1") },
 			});
-			expect(SwapArrowsCommand.execute(state)).toBe(state);
+			expect(SwapArrowsCommand.execute(state, registries)).toBe(state);
 		});
 	});
 
@@ -113,7 +116,7 @@ describe("SwapArrowsCommand", () => {
 				selectedConnectorId: "c1",
 				objects: { c1: makeConnector("c1", "None", "None") },
 			});
-			expect(SwapArrowsCommand.canExecute(state)).toBe(true);
+			expect(SwapArrowsCommand.canExecute(state, registries)).toBe(true);
 		});
 
 		it("is executable when the selection contains a polyline", () => {
@@ -121,7 +124,7 @@ describe("SwapArrowsCommand", () => {
 				selectedIds: ["p1"],
 				objects: { p1: makePolyline("p1", "None", "None") },
 			});
-			expect(SwapArrowsCommand.canExecute(state)).toBe(true);
+			expect(SwapArrowsCommand.canExecute(state, registries)).toBe(true);
 		});
 
 		it("is not executable when the selection has no arrow-bearing objects", () => {
@@ -129,7 +132,7 @@ describe("SwapArrowsCommand", () => {
 				selectedIds: ["r1"],
 				objects: { r1: makeRect("r1") },
 			});
-			expect(SwapArrowsCommand.canExecute(state)).toBe(false);
+			expect(SwapArrowsCommand.canExecute(state, registries)).toBe(false);
 		});
 	});
 });

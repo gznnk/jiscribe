@@ -2,6 +2,7 @@ import { memo, useRef } from "react";
 
 import { getSelectedConnectorLabel } from "./utils/getSelectedConnectorLabel";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { DashedCircleIcon } from "../../../../icons/DashedCircleIcon";
 import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
 import { DottedLineIcon } from "../../../../icons/DottedLineIcon";
@@ -34,6 +35,7 @@ const LabelBorderStyleMenuComponent: React.FC<Props> = ({
 	canvasState,
 	onPropertyUpdate,
 }) => {
+	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
@@ -49,11 +51,12 @@ const LabelBorderStyleMenuComponent: React.FC<Props> = ({
 		<MenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-kind="object-menu"
-				data-id={`object-menu:toggle:${SECTION_ID}`}
-				title="Label Border Style"
+				data-kind="menu"
+				data-id="object-menu"
+				data-part={`toggle:${SECTION_ID}`}
+				title={messages.menuLabelBorderStyle}
 			>
-				<DashedCircleIcon title="Label Border Style" />
+				<DashedCircleIcon title={messages.menuLabelBorderStyle} />
 			</ObjectMenuButton>
 			{isOpen && (
 				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>
@@ -61,32 +64,35 @@ const LabelBorderStyleMenuComponent: React.FC<Props> = ({
 						<BorderStyleSection>
 							<ObjectMenuButton
 								isActive={!strokeDashType || strokeDashType === "solid"}
-								data-kind="object-menu"
-								data-id="object-menu:set:label.strokeDashType:solid"
-								title="Solid line"
+								data-kind="menu"
+								data-id="object-menu"
+								data-part="set:label.strokeDashType:solid"
+								title={messages.menuSolidLine}
 							>
-								<SolidLineIcon title="Solid line" />
+								<SolidLineIcon title={messages.menuSolidLine} />
 							</ObjectMenuButton>
 							<ObjectMenuButton
 								isActive={strokeDashType === "dashed"}
-								data-kind="object-menu"
-								data-id="object-menu:set:label.strokeDashType:dashed"
-								title="Dashed line"
+								data-kind="menu"
+								data-id="object-menu"
+								data-part="set:label.strokeDashType:dashed"
+								title={messages.menuDashedLine}
 							>
-								<DashedLineIcon title="Dashed line" />
+								<DashedLineIcon title={messages.menuDashedLine} />
 							</ObjectMenuButton>
 							<ObjectMenuButton
 								isActive={strokeDashType === "dotted"}
-								data-kind="object-menu"
-								data-id="object-menu:set:label.strokeDashType:dotted"
-								title="Dotted line"
+								data-kind="menu"
+								data-id="object-menu"
+								data-part="set:label.strokeDashType:dotted"
+								title={messages.menuDottedLine}
 							>
-								<DottedLineIcon title="Dotted line" />
+								<DottedLineIcon title={messages.menuDottedLine} />
 							</ObjectMenuButton>
 						</BorderStyleSection>
 
 						<MenuSlider
-							label="Border Width"
+							label={messages.menuBorderWidth}
 							value={strokeWidth}
 							min={MIN_BORDER_WIDTH}
 							max={MAX_BORDER_WIDTH}

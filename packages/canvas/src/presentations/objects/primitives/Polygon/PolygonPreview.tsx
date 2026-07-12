@@ -22,7 +22,7 @@ export const PolygonPreview: ShapePreviewRenderer = ({
 		return `${cx + rx * Math.cos(angle)},${cy + ry * Math.sin(angle)}`;
 	}).join(" ");
 
-	// Colors may contain var(--vscode-*) (the result of resolving auto), so apply them via style rather than SVG attributes.
+	// Colors may contain var(--jiscribe-*) (the result of resolving auto), so apply them via style rather than SVG attributes.
 	return (
 		<polygon
 			points={pointsAttr}

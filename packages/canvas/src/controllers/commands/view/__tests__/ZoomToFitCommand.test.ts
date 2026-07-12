@@ -5,7 +5,10 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 import type { PolylineState } from "../../../../states/objects/primitives/polyline/PolylineState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { createTestRegistries } from "../../../setup/createCanvasRegistries";
 import { ZoomToFitCommand } from "../ZoomToFitCommand";
+
+const registries = createTestRegistries();
 
 const makeRect = (id: string, cx: number, cy: number): ObjectState =>
 	({
@@ -54,7 +57,7 @@ describe("ZoomToFitCommand", () => {
 	it("centers so that the bounds of all objects fit", () => {
 		// rect is cx=500,cy=500,200x200 -> bbox 400..600. Content center is (500,500)
 		const state = makeState({ a: makeRect("a", 500, 500) });
-		const next = ZoomToFitCommand.execute(state);
+		const next = ZoomToFitCommand.execute(state, registries);
 		const center = centerOf(next.viewport);
 		expect(center.x).toBeCloseTo(500, 2);
 		expect(center.y).toBeCloseTo(500, 2);
@@ -62,7 +65,7 @@ describe("ZoomToFitCommand", () => {
 
 	it("picks a zoom level that fits the content in the viewport (including 48px padding)", () => {
 		const state = makeState({ a: makeRect("a", 500, 500) });
-		const next = ZoomToFitCommand.execute(state);
+		const next = ZoomToFitCommand.execute(state, registries);
 		// contentWidth=200, availableW = 1000 - 2*48 = 904 → 904/200 = 4.52
 		expect(next.viewport.zoom).toBeCloseTo(4.52, 2);
 	});
@@ -72,13 +75,13 @@ describe("ZoomToFitCommand", () => {
 			g: makeGroup("g", ["a"]),
 			a: makeRect("a", 500, 500),
 		});
-		const next = ZoomToFitCommand.execute(state);
+		const next = ZoomToFitCommand.execute(state, registries);
 		expect(next.viewport.zoom).toBeCloseTo(4.52, 2);
 	});
 
 	it("returns state unchanged when there are no fittable shapes", () => {
 		const state = makeState({ g: makeGroup("g", []) });
-		expect(ZoomToFitCommand.execute(state)).toBe(state);
+		expect(ZoomToFitCommand.execute(state, registries)).toBe(state);
 	});
 
 	it("keeps the current view when only zero-size targets exist (a degenerate poly with 0 size on both axes) (no-op)", () => {
@@ -93,18 +96,23 @@ describe("ZoomToFitCommand", () => {
 			},
 			{ minX: 123, minY: 456, zoom: 2 },
 		);
-		expect(ZoomToFitCommand.execute(state)).toBe(state);
+		expect(ZoomToFitCommand.execute(state, registries)).toBe(state);
 	});
 
 	describe("canExecute", () => {
 		it("is executable when objects exist", () => {
 			expect(
-				ZoomToFitCommand.canExecute(makeState({ a: makeRect("a", 0, 0) })),
+				ZoomToFitCommand.canExecute(
+					makeState({ a: makeRect("a", 0, 0) }),
+					registries,
+				),
 			).toBe(true);
 		});
 
 		it("is not executable when there are no objects", () => {
-			expect(ZoomToFitCommand.canExecute(makeState({}))).toBe(false);
+			expect(ZoomToFitCommand.canExecute(makeState({}), registries)).toBe(
+				false,
+			);
 		});
 	});
 });

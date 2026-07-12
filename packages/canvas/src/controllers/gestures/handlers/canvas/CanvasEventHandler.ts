@@ -4,30 +4,32 @@ import { collectIdsInArea } from "./utils/collectIdsInArea";
 import { PRECISION } from "../../../../constants/precision";
 import { ZOOM } from "../../../../constants/zoom";
 import { createObjectDocFromBounds } from "../../../../schemas/objects/utils/createObjectDocFromBounds";
-import { shapeFactoryRegistry } from "../../../../schemas/registry/ShapeFactoryRegistry";
-import { objectMapperRegistry } from "../../../../states/registry/ObjectMapperRegistry";
 import type { SnapFeedback } from "../../../CanvasTypes";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
 import type { GestureHandler } from "../../registry/GestureHandlerTypes";
+import { autoSelectParentGroups } from "../objects/utils/autoSelectParentGroups";
 import {
 	SNAP_THRESHOLD_PX,
 	buildSnapFeedback,
 	findSnap,
-} from "../../utils/snap/findSnap";
-import { autoSelectParentGroups } from "../objects/utils/autoSelectParentGroups";
+} from "../utils/snap/findSnap";
 
 /**
  * Handles events that occur on the canvas.
- * Right-click interactions are also treated as canvas-level behavior so
- * grab-scroll and context menus work consistently above objects and controls.
+ * Middle- and right-button interactions are also treated as canvas-level
+ * behavior so grab-scroll and context menus work consistently above objects
+ * and controls. Middle button pans only; right button pans and opens the
+ * context menu.
  */
 export const CanvasEventHandler: GestureHandler = {
 	supports(event): boolean {
-		return event.targetKind === "canvas" || event.button === 2;
+		return (
+			event.targetKind === "canvas" || event.button === 1 || event.button === 2
+		);
 	},
 
-	handle(state, event) {
+	handle(state, event, registries) {
 		// Zoom handling
 		// Handle before commitTextEditIfNeeded so zooming does not interrupt an active text edit.
 		if (event.type === "zoom" && event.zoomDelta != null) {
@@ -84,9 +86,11 @@ export const CanvasEventHandler: GestureHandler = {
 		// Commit text editing if active
 		let nextState = commitTextEditIfNeeded(state);
 
-		// Right-click drag for viewport panning (GrabScroll)
-		if (event.button === 2) {
-			if (event.type === "click") {
+		// Middle-/right-button drag for viewport panning (GrabScroll).
+		// Middle button (1) pans only; right button (2) also opens the context
+		// menu on click. (#159)
+		if (event.button === 1 || event.button === 2) {
+			if (event.button === 2 && event.type === "click") {
 				nextState = {
 					...nextState,
 					contextMenuPosition: {
@@ -126,7 +130,9 @@ export const CanvasEventHandler: GestureHandler = {
 		const shapeDrawing = nextState.shapeDrawing;
 		const drawingObjectType =
 			shapeDrawing !== null &&
-			shapeFactoryRegistry.supportsBoundsDrawing(shapeDrawing.preset.objectType)
+			registries.shapeFactory.supportsBoundsDrawing(
+				shapeDrawing.preset.objectType,
+			)
 				? shapeDrawing.preset.objectType
 				: null;
 		if (
@@ -211,11 +217,14 @@ export const CanvasEventHandler: GestureHandler = {
 					startY,
 					endX,
 					endY,
+					registries.shapeFactory,
 					nextState.shapeDrawing.preset.defaultOverrides,
+					undefined,
+					nextState.docDefaults,
 				);
 
 				if (doc) {
-					const objectState = objectMapperRegistry.toState(doc);
+					const objectState = registries.objectMapper.toState(doc);
 					nextState = {
 						...nextState,
 						objects: { ...nextState.objects, [objectState.id]: objectState },
@@ -270,8 +279,11 @@ export const CanvasEventHandler: GestureHandler = {
 				const areaMaxX = Math.max(area.startX, endX);
 				const areaMaxY = Math.max(area.startY, endY);
 
+				// bboxes were built once at dragStart; objects do not move during a marquee,
+				// so containment is a pure O(N) scan with no per-frame bbox recomputation (#124).
+				const bboxes = nextState.eventStartSnapshot?.bboxes ?? {};
 				const hitIds = collectIdsInArea(
-					nextState.objects,
+					bboxes,
 					areaMinX,
 					areaMinY,
 					areaMaxX,
@@ -286,6 +298,7 @@ export const CanvasEventHandler: GestureHandler = {
 						selectedIds,
 						nextState.objects,
 						state.multiSelectGroup,
+						bboxes,
 					);
 				}
 

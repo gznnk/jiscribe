@@ -1,4 +1,9 @@
-import { isNumber, isObject, isString } from "@workspace/basic-validators";
+import {
+	isCssSafeValue,
+	isNumber,
+	isObject,
+	isString,
+} from "@workspace/basic-validators";
 
 import { isConnectorRouting } from "../../../../schemas/objects/types/ConnectorRouting";
 import { isStrokeDashType } from "../../../../schemas/objects/types/StrokeDashType";
@@ -17,6 +22,12 @@ import {
  * Validates the structure of `label` (a nested annotation). Omitting it is
  * allowed and treated as no label. `text` is a required string; position and
  * style fields are type-checked only when present.
+ *
+ * The constraints mirror the Doc-side `validateConnectorLabelFields` exactly: this
+ * is the clipboard boundary, so anything it accepts must also survive re-parse. A
+ * looser check here (plain `isString` on colors, unbounded `position`) would let a
+ * pasted label carry `stroke: "red;}…"` (CSS injection) or `position: 5` through
+ * `commit`, producing a `.jis.json` that fails the Doc validator on the next open.
  */
 export const isValidConnectorLabelState = (label: unknown): boolean => {
 	if (label === undefined) {
@@ -28,14 +39,20 @@ export const isValidConnectorLabelState = (label: unknown): boolean => {
 	const l = label as StateRecord;
 	return (
 		isString(l.text) &&
-		(l.position === undefined || isNumber(l.position)) &&
+		// position is a 0..1 fraction along the line (schema range).
+		(l.position === undefined ||
+			(isNumber(l.position) && l.position >= 0 && l.position <= 1)) &&
 		(l.offset === undefined || isNumber(l.offset)) &&
-		(l.fontColor === undefined || isString(l.fontColor)) &&
-		(l.fontSize === undefined || isNumber(l.fontSize)) &&
-		(l.fontWeight === undefined || isString(l.fontWeight)) &&
-		(l.fill === undefined || isString(l.fill)) &&
-		(l.stroke === undefined || isString(l.stroke)) &&
-		(l.strokeWidth === undefined || isNumber(l.strokeWidth)) &&
+		// Style strings must be CSS-injection-safe, not merely strings.
+		(l.fontColor === undefined || isCssSafeValue(l.fontColor)) &&
+		// fontSize has minimum: 1 in the schema.
+		(l.fontSize === undefined || (isNumber(l.fontSize) && l.fontSize >= 1)) &&
+		(l.fontWeight === undefined || isCssSafeValue(l.fontWeight)) &&
+		(l.fill === undefined || isCssSafeValue(l.fill)) &&
+		(l.stroke === undefined || isCssSafeValue(l.stroke)) &&
+		// strokeWidth has minimum: 0 in the schema.
+		(l.strokeWidth === undefined ||
+			(isNumber(l.strokeWidth) && l.strokeWidth >= 0)) &&
 		(l.strokeDashType === undefined || isStrokeDashType(l.strokeDashType))
 	);
 };

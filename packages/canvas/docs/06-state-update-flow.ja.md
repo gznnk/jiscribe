@@ -55,5 +55,6 @@
 外部からの変更は履歴の境界として扱う。`recordHistoryIfNeeded` を通さずに
 `past` を直接積み（`present` を `past` に移して新 doc を `present` に）、`future` をクリアする。
 あわせて選択・進行中の操作など UI state も明示的にリセットする（viewport のみ維持）。
-自己保存のエコーバック（saveNonce 一致）の扱いは [外部同期・VSCode 連携](./07-external-sync.ja.md) を参照。
+自分の保存の折り返し（fold-back）は reducer に届く前に除外されるため、ここに来る `SYNC_EXTERNAL` は
+常に本物の外部変更である。折り返しの識別方法は [外部同期・VSCode 連携](./07-external-sync.ja.md) を参照。
 </content>

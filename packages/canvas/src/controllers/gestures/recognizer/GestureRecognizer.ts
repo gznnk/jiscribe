@@ -11,14 +11,15 @@ import type {
 } from "./GestureRecognizerTypes";
 import {
 	calculateScrollDelta,
+	createGetHovered,
 	detectEdgeProximity,
-	getHoveredElements,
 	getInputValue,
 	getKindAndId,
 	getSvgPoint,
 	isDoubleClick,
 	isGestureOptedOut,
-	shouldSkipPointerCapture,
+	isNativePointerTarget,
+	readInputValue,
 } from "./utils";
 import type { CanvasControllerState } from "../../CanvasTypes";
 
@@ -64,9 +65,15 @@ export type Pressed = {
 	target: EventTarget | null;
 	targetId?: string;
 	targetKind?: string;
+	targetPart?: string;
 	mods: Mods;
 	dragging: boolean; // whether the move has exceeded DRAG_THRESHOLD and been confirmed as a drag
 	button: number;
+	// Whether target is inside a data-gesture="native-pointer" element (slider etc.).
+	// Fixed at pointerdown and immutable for the gesture's lifetime, so the per-frame
+	// drag path reads this instead of re-walking closest() (#123). Governs both
+	// pointer-capture skipping and inputValue harvesting.
+	isNativePointerTarget: boolean;
 	// Whether edge scrolling has been armed. Becomes true once the cursor has
 	// left the edge zone during a drag. When grabbing from a UI touching the
 	// edge (e.g. ShapeLibrary), the start point is always inside the edge zone,
@@ -209,19 +216,18 @@ export class GestureRecognizer {
 			ctrl: e.ctrlKey,
 			meta: e.metaKey,
 		};
-		const target = getKindAndId(e.target as Element);
-		const targetId = target?.id;
-		const targetKind = target?.kind;
 		const time = e.timeStamp;
-		const inputValue = getInputValue(e.target);
 
 		// wheel: wheel event outside a drag
 		if (e.type === "wheel") {
+			// The origin element only matters as the hover-exclusion key here
+			// (targetId/targetKind on the gesture are fixed to canvas below)
+			const target = getKindAndId(e.target as Element);
 			// During a drag it is handled as pointermove, so this only handles the non-drag case
-			const hovered = getHoveredElements(
+			const getHovered = createGetHovered(
 				e.clientX,
 				e.clientY,
-				targetId,
+				target === null ? undefined : { id: target.id, part: target.part },
 				this.containerRef.current,
 			);
 
@@ -239,14 +245,14 @@ export class GestureRecognizer {
 				clientLast: currentClientPos,
 				clientDelta: { x: 0, y: 0 },
 				mods,
-				hovered,
+				getHovered,
 				time,
 				button: 0,
 				scrollDelta: {
 					deltaX: e.deltaX ?? 0,
 					deltaY: e.deltaY ?? 0,
 				},
-				inputValue,
+				inputValue: getInputValue(e.target),
 			});
 			return;
 		}
@@ -260,16 +266,22 @@ export class GestureRecognizer {
 				return;
 			}
 
+			const target = getKindAndId(e.target as Element);
+			const targetId = target?.id;
+			const targetKind = target?.kind;
+			const targetPart = target?.part;
+			const isNativePointer = isNativePointerTarget(e.target);
+
 			// Set pointer capture (not set on data-gesture="native-pointer" elements).
 			// Sliders and the like need to keep the browser's native drag behavior.
-			if (this.containerRef.current && !shouldSkipPointerCapture(e.target)) {
+			if (this.containerRef.current && !isNativePointer) {
 				this.containerRef.current.setPointerCapture(e.pointerId);
 			}
 
-			const hovered = getHoveredElements(
+			const getHovered = createGetHovered(
 				e.clientX,
 				e.clientY,
-				targetId,
+				targetId === undefined ? undefined : { id: targetId, part: targetPart },
 				this.containerRef.current,
 			);
 
@@ -284,10 +296,12 @@ export class GestureRecognizer {
 				target: e.target,
 				targetId,
 				targetKind,
+				targetPart,
 				mods,
 				dragging: false,
 				button: e.button,
 				edgeScrollArmed: false,
+				isNativePointerTarget: isNativePointer,
 			};
 
 			this.gestureCallback({
@@ -295,6 +309,7 @@ export class GestureRecognizer {
 				target: e.target,
 				targetId,
 				targetKind,
+				targetPart,
 				start: currentPos,
 				last: currentPos,
 				delta: { x: 0, y: 0 },
@@ -302,10 +317,10 @@ export class GestureRecognizer {
 				clientLast: currentClientPos,
 				clientDelta: { x: 0, y: 0 },
 				mods,
-				hovered,
+				getHovered,
 				time,
 				button: e.button,
-				inputValue,
+				inputValue: isNativePointer ? readInputValue(e.target) : undefined,
 			});
 			return;
 		}
@@ -330,10 +345,12 @@ export class GestureRecognizer {
 			this.pressed.last = currentPos;
 			this.pressed.clientLast = currentClientPos;
 
-			const hovered = getHoveredElements(
+			const getHovered = createGetHovered(
 				e.clientX,
 				e.clientY,
-				this.pressed.targetId,
+				this.pressed.targetId === undefined
+					? undefined
+					: { id: this.pressed.targetId, part: this.pressed.targetPart },
 				this.containerRef.current,
 			);
 
@@ -342,13 +359,12 @@ export class GestureRecognizer {
 				const distanceSquared = delta.x ** 2 + delta.y ** 2;
 				if (distanceSquared >= DRAG_THRESHOLD) {
 					this.pressed.dragging = true;
-					// Sliders and the like read the current value from the target element (data-gesture="native-pointer")
-					const dragStartInputValue = getInputValue(this.pressed.target);
 					this.gestureCallback({
 						type: "dragStart",
 						target: this.pressed.target,
 						targetId: this.pressed.targetId,
 						targetKind: this.pressed.targetKind,
+						targetPart: this.pressed.targetPart,
 						start: this.pressed.start,
 						last: currentPos,
 						delta,
@@ -356,10 +372,10 @@ export class GestureRecognizer {
 						clientLast: currentClientPos,
 						clientDelta,
 						mods,
-						hovered,
+						getHovered,
 						time,
 						button: this.pressed.button,
-						inputValue: dragStartInputValue,
+						inputValue: this.readPressedInputValue(),
 					});
 				}
 			} else {
@@ -426,14 +442,12 @@ export class GestureRecognizer {
 					delta.y += svgScrollDeltaY;
 				}
 
-				// Sliders and the like read the current value from the target element (data-gesture="native-pointer")
-				const dragInputValue = getInputValue(this.pressed.target);
-
 				this.gestureCallback({
 					type: "drag",
 					target: this.pressed.target,
 					targetId: this.pressed.targetId,
 					targetKind: this.pressed.targetKind,
+					targetPart: this.pressed.targetPart,
 					start: this.pressed.start,
 					last: currentPos,
 					delta,
@@ -441,11 +455,11 @@ export class GestureRecognizer {
 					clientLast: currentClientPos,
 					clientDelta,
 					mods,
-					hovered,
+					getHovered,
 					time,
 					button: this.pressed.button,
 					scrollDelta,
-					inputValue: dragInputValue,
+					inputValue: this.readPressedInputValue(),
 				});
 			}
 			return;
@@ -454,17 +468,16 @@ export class GestureRecognizer {
 		// pointerup: gesture end
 		if (e.type === "pointerup") {
 			// Release pointer capture (does nothing on data-gesture="native-pointer" elements)
-			if (
-				this.containerRef.current &&
-				!shouldSkipPointerCapture(this.pressed.target)
-			) {
+			if (this.containerRef.current && !this.pressed.isNativePointerTarget) {
 				this.containerRef.current.releasePointerCapture(e.pointerId);
 			}
 
-			const hovered = getHoveredElements(
+			const getHovered = createGetHovered(
 				e.clientX,
 				e.clientY,
-				this.pressed.targetId,
+				this.pressed.targetId === undefined
+					? undefined
+					: { id: this.pressed.targetId, part: this.pressed.targetPart },
 				this.containerRef.current,
 			);
 
@@ -476,6 +489,7 @@ export class GestureRecognizer {
 				const currentClick: ClickSnapshot = {
 					time,
 					targetId: this.pressed.targetId,
+					targetPart: this.pressed.targetPart,
 					clientPos: this.pressed.clientStart,
 				};
 				const doubleClick = isDoubleClick(this.lastClick, currentClick);
@@ -487,14 +501,12 @@ export class GestureRecognizer {
 				this.lastClick = doubleClick ? null : currentClick;
 			}
 
-			// Sliders and the like read the final value from the target element (data-gesture="native-pointer")
-			const finalInputValue = getInputValue(this.pressed.target);
-
 			this.gestureCallback({
 				type: eventType,
 				target: this.pressed.target,
 				targetId: this.pressed.targetId,
 				targetKind: this.pressed.targetKind,
+				targetPart: this.pressed.targetPart,
 				start: this.pressed.start,
 				last: currentPos,
 				delta,
@@ -502,10 +514,10 @@ export class GestureRecognizer {
 				clientLast: currentClientPos,
 				clientDelta,
 				mods,
-				hovered,
+				getHovered,
 				time,
 				button: this.pressed.button,
-				inputValue: finalInputValue,
+				inputValue: this.readPressedInputValue(),
 			});
 			this.pressed = null;
 			return;
@@ -514,29 +526,26 @@ export class GestureRecognizer {
 		// pointercancel: abort the gesture
 		if (e.type === "pointercancel") {
 			// Release pointer capture (does nothing on data-gesture="native-pointer" elements)
-			if (
-				this.containerRef.current &&
-				!shouldSkipPointerCapture(this.pressed.target)
-			) {
+			if (this.containerRef.current && !this.pressed.isNativePointerTarget) {
 				this.containerRef.current.releasePointerCapture(e.pointerId);
 			}
 
-			const hovered = getHoveredElements(
-				e.clientX,
-				e.clientY,
-				this.pressed.targetId,
-				this.containerRef.current,
-			);
-
 			if (this.pressed.dragging) {
-				// Sliders and the like read the final value from the target element (data-gesture="native-pointer")
-				const cancelInputValue = getInputValue(this.pressed.target);
+				const getHovered = createGetHovered(
+					e.clientX,
+					e.clientY,
+					this.pressed.targetId === undefined
+						? undefined
+						: { id: this.pressed.targetId, part: this.pressed.targetPart },
+					this.containerRef.current,
+				);
 
 				this.gestureCallback({
 					type: "dragEnd",
 					target: this.pressed.target,
 					targetId: this.pressed.targetId,
 					targetKind: this.pressed.targetKind,
+					targetPart: this.pressed.targetPart,
 					start: this.pressed.start,
 					last: currentPos,
 					delta,
@@ -544,14 +553,27 @@ export class GestureRecognizer {
 					clientLast: currentClientPos,
 					clientDelta,
 					mods,
-					hovered,
+					getHovered,
 					time,
 					button: this.pressed.button,
-					inputValue: cancelInputValue,
+					inputValue: this.readPressedInputValue(),
 				});
 			}
 			this.pressed = null;
 		}
+	}
+
+	/**
+	 * Read the current inputValue from the pressed target.
+	 * The native-pointer qualification is fixed at pointerdown
+	 * (Pressed.isNativePointerTarget), so this only reads .value — no closest() walk
+	 * on the per-frame drag path (#123). Sliders and the like propagate their value
+	 * via gesture events (data-gesture="native-pointer").
+	 */
+	private readPressedInputValue(): string | undefined {
+		return this.pressed?.isNativePointerTarget
+			? readInputValue(this.pressed.target)
+			: undefined;
 	}
 
 	/**
@@ -626,7 +648,7 @@ export class GestureRecognizer {
 			if (
 				this.containerRef.current &&
 				this.pressed.pointerId !== undefined &&
-				!shouldSkipPointerCapture(this.pressed.target)
+				!this.pressed.isNativePointerTarget
 			) {
 				this.containerRef.current.releasePointerCapture(this.pressed.pointerId);
 			}

@@ -1,5 +1,5 @@
 /**
- * canvas の DOM 契約（data-kind / data-id）に基づくセレクタ定数。
+ * canvas の DOM 契約（data-kind / data-id / data-part、テスト専用フックは data-testid）に基づくセレクタ定数。
  * 詳細は e2e/README.md の「DOM の構造とセレクタ」を参照。
  */
 
@@ -51,42 +51,43 @@ export const selectors = {
 			| "bottomCenter"
 			| "bottomRight"
 			| "rotation",
-	) => `[data-id="transform-control:${handle}"]`,
+	) =>
+		handle === "rotation"
+			? `[data-id="transform"][data-part="rotation"]`
+			: `[data-id="transform"][data-part="resize:${handle}"]`,
 
 	/** コネクター作成アンカー（辺の中点から 20px 外側に表示される） */
-	createAnchor: (anchorId: AnchorId) =>
-		`[data-id^="connection-anchor:create"][data-id$=":${anchorId}"]`,
+	createAnchor: (anchorId: AnchorId) => `[data-part="anchor:${anchorId}"]`,
 
 	/** ObjectMenu のドロップダウンを開くトグルボタン */
-	objectMenuToggle: (sectionId: string) =>
-		`[data-id="object-menu:toggle:${sectionId}"]`,
+	objectMenuToggle: (sectionId: string) => `[data-part="toggle:${sectionId}"]`,
 
 	/** ObjectMenu の即時設定ボタン（プリセット色・線種など） */
 	objectMenuSet: (property: string, value: string) =>
-		`[data-id="object-menu:set:${property}:${value}"]`,
+		`[data-part="set:${property}:${value}"]`,
 
 	/** ObjectMenu のコマンドボタン（重なり順の bringToFront など） */
 	objectMenuCommand: (commandId: string) =>
-		`[data-id="object-menu:command:${commandId}"]`,
+		`[data-part="command:${commandId}"][data-id="object-menu"]`,
 
 	/** ObjectMenu のスライダー（range input、ドラッグで値を変える） */
-	objectMenuSlider: (property: string) =>
-		`[data-id="object-menu:slider:${property}"]`,
+	objectMenuSlider: (property: string) => `[data-part="slider:${property}"]`,
 
 	/** カラーピッカーの CSS カラーテキスト入力欄（Enter で確定） */
 	cssColorInput: 'input[placeholder="CSS color"]',
 
 	/** テキスト編集中の TEXTAREA */
-	textEditor: "[data-kind=text-editor]",
+	textEditor: '[data-testid="text-editor"]',
 
 	/** コンテキストメニューの項目すべて（command / callback）。出現判定に使う */
-	contextMenuAny: '[data-kind^="context-menu"]',
+	contextMenuAny:
+		'[data-id="context-menu"], [data-testid^="context-menu-callback:"]',
 
 	/** コンテキストメニューの command 項目（最前面へ・複製など） */
 	contextMenuCommand: (commandId: string) =>
-		`[data-id="context-menu:${commandId}"]`,
+		`[data-id="context-menu"][data-part="command:${commandId}"]`,
 
 	/** コンテキストメニューの callback 項目（paste など） */
 	contextMenuCallback: (id: string) =>
-		`[data-kind="context-menu-callback"][data-id="${id}"]`,
+		`[data-testid="context-menu-callback:${id}"]`,
 } as const;

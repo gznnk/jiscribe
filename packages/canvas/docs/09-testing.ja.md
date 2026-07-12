@@ -47,10 +47,18 @@ src/**/__tests__/**/*.{test,spec}.{ts,tsx}
 | ----------------------- | -------------------------------------------------------------------- | ---------------------------------- |
 | `<SUT>.test.ts`         | デフォルト。テスト対象ファイルと 1:1 で co-located                   | `validateRectDoc.test.ts`          |
 | `<SUT>.<facet>.test.ts` | 1 つの SUT が大きく、**観点（facet）ごとにファイルを分割**したいとき | `canvasReducer.coalescing.test.ts` |
-| `<scenario>.test.ts`    | 特定の入口に紐づかない sociable な**回帰シナリオ**                   | `copyPasteDuplicateOrder.test.ts`  |
+| `<scenario>.test.ts`    | 単一の SUT ファイルに帰属しない sociable な**横断的回帰シナリオ**    | `copyPasteDuplicateOrder.test.ts`  |
 
 - `<facet>` は振る舞いの局面を表す名詞（`coalescing` / `undoRedo` / `externalSync` など）。
   **solitary な純粋関数テストでは facet 命名を使わない**（観点分割は sociable / 大きい SUT に限る）
+- `<SUT>` 命名と `<scenario>` 命名の使い分けは**入口の有無ではなく、ファイル名が指す主語**で決める。
+  ファイル名が単一 SUT の契約を指すなら `<SUT>(.<facet>)`、複数モジュールに跨る不変条件を指すなら `<scenario>`。
+  scenario テストが特定の入口（`handleCommand` 等）を通っていてもファイル名に入口は冠しない
+  — 落ちたとき開くべきは入口ではなく不変条件を実装する側であり、入口が複数のこともある
+  （例: `copyPasteDuplicateOrder` は `handleCommand` と `handlePaste` の両方を叩く）。
+  入口はフォルダ位置（下表）とテスト先頭の doc コメントで示す
+- `handleCommand` 自体の契約（Registry 解決・`canExecute` ゲートなど）をテストする場合は、
+  scenario 命名にせず通常どおり `handlers/__tests__/handleCommand.test.ts` の SUT 命名に乗せる
 - sociable テストは state 組み立て・dispatch・fixtures を担う `support/` を `__tests__/support/` に置く。
   `support/` の共通化は将来課題で、当面は **フォルダごとに重複を許容**する
   （`controllers/reducer/__tests__/support/` と `controllers/commands/__tests__/support/` は別物）

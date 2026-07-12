@@ -1,3 +1,4 @@
+import { isConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
 import { createMultiSelectGroup } from "../../utils/createMultiSelectGroup";
 import type { Command } from "../CommandTypes";
 
@@ -16,11 +17,18 @@ export const SelectAllCommand: Command = {
 	},
 
 	execute: (state) => {
+		// Connectors are mixed into rootIds but belong to the separate selectedConnectorId
+		// channel; they must never enter selectedIds (otherwise Group would grab them).
+		// Paste already applies this same filter (handlePaste), so Select All matches it.
+		const selectableIds = state.rootIds.filter(
+			(id) => !isConnectorState(state.objects[id]),
+		);
+
 		return {
 			...state,
-			selectedIds: [...state.rootIds],
+			selectedIds: selectableIds,
 			multiSelectGroup: createMultiSelectGroup(
-				state.rootIds,
+				selectableIds,
 				state.objects,
 				state.multiSelectGroup,
 			),

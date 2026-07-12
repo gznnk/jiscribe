@@ -63,7 +63,7 @@ test.describe("コネクターの破線スケール", () => {
 		// 線を選択して破線（dashed）にする。
 		await canvas.clickAt({ x: 610, y: 250 });
 		await expect(
-			canvas.page.locator('[data-id="object-menu:toggle:line-style"]'),
+			canvas.page.locator('[data-part="toggle:line-style"]'),
 		).toBeVisible();
 		await canvas.setStrokeDashType("line-style", "dashed");
 

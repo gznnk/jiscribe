@@ -14,7 +14,7 @@ export const RectPreview: ShapePreviewRenderer = ({
 	const y = Math.min(startY, endY);
 	const width = Math.abs(endX - startX);
 	const height = Math.abs(endY - startY);
-	// Colors may contain var(--vscode-*) (the resolved result of auto), so apply them via style rather than SVG attributes.
+	// Colors may contain var(--jiscribe-*) (the resolved result of auto), so apply them via style rather than SVG attributes.
 	return (
 		<rect
 			x={x}

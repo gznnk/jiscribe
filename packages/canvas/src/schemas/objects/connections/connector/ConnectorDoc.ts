@@ -10,11 +10,12 @@ import type { CreateObjectType } from "../../types/CreateObjectType";
 import type { EndpointRef } from "../../types/EndpointRef";
 import type { ObjectFeatures } from "../../types/ObjectFeatures";
 
-/** Feature descriptor for the connector object type (poly geometry, strokeable, not connectable). */
+/** Feature descriptor for the connector object type (poly geometry, strokeable, arrow ends, not connectable). */
 export const ConnectorFeatures = {
 	type: "connector",
 	geometry: "poly",
 	stroke: true,
+	arrow: true,
 	connectable: false,
 } as const satisfies ObjectFeatures;
 

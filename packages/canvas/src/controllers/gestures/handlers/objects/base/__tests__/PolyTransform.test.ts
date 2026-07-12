@@ -62,6 +62,56 @@ describe("transformPolyByGroup", () => {
 		expect(result.id).toBe("poly-1");
 		expect(result.type).toBe("polyline");
 	});
+
+	describe("division-by-zero guard (issue #44)", () => {
+		it("when startGroup's width is 0, treats groupScaleX as 1 rather than NaN/Infinity", () => {
+			const startGroup = makeGroup({ cx: 0, cy: 0, width: 0, height: 100 });
+			const endGroup = makeGroup({ cx: 0, cy: 0, width: 50, height: 100 });
+			const poly = makePoly([
+				{ x: 10, y: 20 },
+				{ x: -10, y: -20 },
+			]);
+
+			const result = transformPolyByGroup(poly, startGroup, endGroup);
+
+			for (const point of result.points) {
+				expect(Number.isFinite(point.x)).toBe(true);
+				expect(Number.isFinite(point.y)).toBe(true);
+			}
+		});
+
+		it("when startGroup's height is 0, treats groupScaleY as 1 rather than NaN/Infinity", () => {
+			const startGroup = makeGroup({ cx: 0, cy: 0, width: 100, height: 0 });
+			const endGroup = makeGroup({ cx: 0, cy: 0, width: 100, height: 50 });
+			const poly = makePoly([
+				{ x: 10, y: 20 },
+				{ x: -10, y: -20 },
+			]);
+
+			const result = transformPolyByGroup(poly, startGroup, endGroup);
+
+			for (const point of result.points) {
+				expect(Number.isFinite(point.x)).toBe(true);
+				expect(Number.isFinite(point.y)).toBe(true);
+			}
+		});
+
+		it("when both startGroup's width and height are 0, all vertices are finite numbers", () => {
+			const startGroup = makeGroup({ cx: 0, cy: 0, width: 0, height: 0 });
+			const endGroup = makeGroup({ cx: 0, cy: 0, width: 50, height: 50 });
+			const poly = makePoly([
+				{ x: 10, y: 20 },
+				{ x: -10, y: -20 },
+			]);
+
+			const result = transformPolyByGroup(poly, startGroup, endGroup);
+
+			for (const point of result.points) {
+				expect(Number.isFinite(point.x)).toBe(true);
+				expect(Number.isFinite(point.y)).toBe(true);
+			}
+		});
+	});
 });
 
 describe("rotatePolyByGroup", () => {

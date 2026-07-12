@@ -5,16 +5,28 @@ import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
+import { isLeftButton } from "../utils/isLeftButton";
 
 /**
  * Handles click events on connectors.
  * Connectors are selected independently from objects (selectedConnectorId vs selectedIds).
  * Only single selection is supported; selecting a connector clears selectedIds, and vice versa.
- * A double click on a connector starts editing its label (label.text).
+ *
+ * Label editing (label.text) starts on a double click, with the edit target
+ * depending on whether a label exists:
+ * - No committed label: a double click anywhere on the line starts editing
+ *   (there is no label box to aim at yet).
+ * - Committed label: only a double click on the label box (targetPart "label")
+ *   starts editing; a double click on the bare line just selects.
+ *
+ * While editing, the label box is covered by the editor overlay
+ * (data-gesture="none"), so any tap that reaches this handler is outside the
+ * label and commits the pending edit like any other outside tap.
  */
 export const ConnectorEventHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {
 		return (
+			isLeftButton(event) &&
 			event.targetKind === "connector" &&
 			// TODO: this filtering may no longer be necessary here
 			(event.type === "click" ||
@@ -27,40 +39,39 @@ export const ConnectorEventHandler: GestureHandler = {
 		state: CanvasControllerState,
 		event: CanvasEvent,
 	): CanvasControllerState {
-		// Only left-click (button 0)
-		if (event.button !== 0) {
-			return state;
-		}
-
 		const connectorId = event.targetId;
+		let nextState = commitTextEditIfNeeded(state);
 
-		// A double click starts label editing. Re-double-clicking the same connector while
-		// already editing continues editing without committing (same as shape text editing).
+		// A double click selects the connector, and starts label editing when it
+		// hits the edit target (see the doc comment above).
 		if (event.type === "doubleClick") {
 			if (!connectorId) {
-				return state;
+				return nextState;
 			}
-			const isReEditingSame = state.textEditState?.objectId === connectorId;
-			const baseState = isReEditingSame ? state : commitTextEditIfNeeded(state);
-			const connector = baseState.objects[connectorId];
+			const connector = nextState.objects[connectorId];
 			if (connector?.type !== "connector") {
-				return baseState;
+				return nextState;
 			}
-			return {
-				...baseState,
+			const labelText = (connector as ConnectorState).label?.text ?? "";
+			const selectedState = {
+				...nextState,
 				selectedConnectorId: connectorId,
 				selectedIds: [],
 				multiSelectGroup: null,
+			};
+			if (labelText !== "" && event.targetPart !== "label") {
+				return selectedState;
+			}
+			return {
+				...selectedState,
 				textEditState: {
 					objectId: connectorId,
-					text: (connector as ConnectorState).label?.text ?? "",
+					text: labelText,
 				},
 			};
 		}
 
-		let nextState = commitTextEditIfNeeded(state);
-
-		// A press on a connector closes the context menu (button is guarded above, selection happens on click)
+		// A press on a connector closes the context menu (button is guarded in supports, selection happens on click)
 		if (event.type === "pressed") {
 			nextState = { ...nextState, contextMenuPosition: null };
 		}

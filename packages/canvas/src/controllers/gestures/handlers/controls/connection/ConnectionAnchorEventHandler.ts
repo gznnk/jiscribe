@@ -1,8 +1,8 @@
 import type { Point } from "@workspace/geometry";
 
+import { ConnectorFeatures } from "../../../../../schemas/objects/connections/connector/ConnectorDoc";
 import { AUTO_COLOR } from "../../../../../schemas/objects/utils/autoColor";
 import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
-import { objectMapperRegistry } from "../../../../../states/registry/ObjectMapperRegistry";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import type { ControlStrategy } from "../ControlEventHandler";
@@ -13,11 +13,13 @@ import { isSameConnectorEndpoints } from "./utils/isSameConnectorEndpoints";
 import { isAnchorHandleId } from "../../../../ui/controls/ConnectionAnchorTypes";
 
 /**
- * Handler that creates a connector by dragging from a connection anchor.
+ * Handler that creates a connector by dragging from a connection anchor,
+ * and re-anchors an existing connector's endpoint.
  * Registered with ControlEventHandler as a ControlStrategy.
  *
- * Control ID format: "connection-anchor:<objectId>:<anchorPosition>"
- * Example: "connection-anchor:rect-1:topCenter"
+ * Target format:
+ * - create: data-id=<sourceObjectId>, data-part="anchor:<anchorPosition>"
+ * - edit:   data-id=<connectorId>,    data-part="endpoint:<source|target>"
  */
 export class ConnectionAnchorEventHandler implements ControlStrategy {
 	readonly controlType = "connection-anchor";
@@ -27,42 +29,30 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			return false;
 		}
 
-		const targetId = event.targetId;
-		if (!targetId) {
+		const targetPart = event.targetPart;
+		if (!targetPart) {
 			return false;
 		}
 
-		// Support controls starting with connection-anchor (both create/edit)
-		return targetId.startsWith("connection-anchor:");
+		// Support both anchor (create) and endpoint (edit) parts
+		return (
+			targetPart.startsWith("anchor:") || targetPart.startsWith("endpoint:")
+		);
 	}
 
 	handle(
 		state: CanvasControllerState,
 		event: CanvasEvent,
 	): CanvasControllerState {
-		// Only handle left-click (button 0)
-		if (event.button !== 0) {
+		if (!event.targetId || !event.targetPart) {
 			return state;
 		}
-
-		const targetControlId = event.targetId;
-		if (!targetControlId) {
-			return state;
-		}
-
-		// Parse the Control ID: "connection-anchor:<mode>:..."
-		const parts = targetControlId.split(":");
-		if (parts.length < 2 || parts[0] !== "connection-anchor") {
-			return state;
-		}
-
-		const mode = parts[1]; // "create" or "edit"
 
 		// Handle based on the gesture type
 		if (event.type === "dragStart") {
-			return mode === "edit"
-				? this.handleEditDragStart(state, event, parts)
-				: this.handleCreateDragStart(state, event, parts);
+			return event.targetPart.startsWith("endpoint:")
+				? this.handleEditDragStart(state, event)
+				: this.handleCreateDragStart(state, event);
 		} else if (event.type === "drag") {
 			return this.handleDrag(state, event); // shared by create/edit
 		} else if (event.type === "dragEnd") {
@@ -79,14 +69,10 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 	private handleCreateDragStart(
 		state: CanvasControllerState,
 		event: CanvasEvent,
-		parts: string[],
 	): CanvasControllerState {
-		// parts = ["connection-anchor", "create", sourceObjectId, anchorPosition]
-		if (parts.length !== 4) {
-			return state;
-		}
-
-		const [, , sourceObjectId, anchorPosition] = parts;
+		// targetId = sourceObjectId, targetPart = "anchor:<anchorPosition>"
+		const sourceObjectId = event.targetId ?? "";
+		const anchorPosition = event.targetPart?.slice("anchor:".length) ?? "";
 		const sourceObject = state.objects[sourceObjectId];
 
 		if (!sourceObject) {
@@ -105,6 +91,9 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 		const pendingConnector: ConnectorState = {
 			id: connectorId,
 			type: "connector",
+			// features must be stamped on creation: handlePropertyUpdate reads it directly
+			// to gate style updates (a connector without it silently ignores stroke changes).
+			features: ConnectorFeatures,
 			// points holds only intermediate waypoints (endpoints are held by source/target). Empty on new creation since it is a straight line
 			points: [] as Point[],
 			source: {
@@ -145,16 +134,13 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 	 */
 	private handleEditDragStart(
 		state: CanvasControllerState,
-		_event: CanvasEvent,
-		parts: string[],
+		event: CanvasEvent,
 	): CanvasControllerState {
-		// parts = ["connection-anchor", "edit", connectorId, endpoint]
-		if (parts.length !== 4) {
-			return state;
-		}
-
-		const [, , connectorId, endpointStr] = parts;
-		const endpoint = endpointStr as "source" | "target";
+		// targetId = connectorId, targetPart = "endpoint:<source|target>"
+		const connectorId = event.targetId ?? "";
+		const endpoint = event.targetPart?.slice("endpoint:".length) as
+			| "source"
+			| "target";
 
 		if (endpoint !== "source" && endpoint !== "target") {
 			return state;
@@ -195,10 +181,8 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 
 		// Include the same object as a hover target too (self-loops allowed).
 		const hoveredTarget = findConnectableHoverTarget({
-			hovered: event.hovered,
+			hovered: event.getHovered(),
 			objects: state.objects,
-			isConnectable: (type) =>
-				objectMapperRegistry.getFeatures(type)?.connectable === true,
 		});
 
 		return computeEditedEndpoint(
@@ -218,9 +202,9 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 		state: CanvasControllerState,
 		event: CanvasEvent,
 	): CanvasControllerState {
-		// Determine which endpoint is being edited from targetId
-		// Format: "connection-anchor:create:..." or "connection-anchor:edit:...:source|target"
-		const endpointToUpdate = getEditingEndpoint(event.targetId);
+		// Determine which endpoint is being edited from targetPart
+		// Format: "anchor:<pos>" (create) or "endpoint:<source|target>" (edit)
+		const endpointToUpdate = getEditingEndpoint(event.targetPart);
 		const { editingConnectorId } = state;
 
 		// Edit mode: rewrite the entity directly, like polyline vertex editing (no overlay).

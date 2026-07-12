@@ -1,16 +1,22 @@
 import { memo } from "react";
 
+import { theme } from "../../../../constants/theme";
 import { useResolvedConnectorPoints } from "../../../../presentations/layers/content/hooks/useResolvedConnectorPoints";
+import { resolveEndpointOwner } from "../../../../presentations/layers/content/utils/endpoints";
 import { isOrthogonalRouting } from "../../../../schemas/objects/types/ConnectorRouting";
 import type { CanvasState } from "../../../../states/canvas/CanvasState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
+import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { VertexControls, VertexInsertControls } from "../VertexControls";
 
-const ENDPOINT_RADIUS = 4;
-const ENDPOINT_STROKE_WIDTH = 1;
-const ENDPOINT_COLOR = "#0d99ff";
-const ENDPOINT_FILL = "white";
+// Handle colors may hold var(--jiscribe-*), so they are applied via style
+// (fill/stroke) rather than SVG presentation attributes.
+const endpointHandleStyle = {
+	fill: theme.handleFill,
+	stroke: theme.handleAccent,
+	cursor: "move",
+} as const;
 
 type ConnectorControlsProps = {
 	connectorState: ConnectorState;
@@ -22,12 +28,12 @@ type ConnectorControlsProps = {
 /**
  * Renders the editing controls for a selected connector:
  * - Endpoint handles (source / target): drag to reconnect to a shape
- *   (data-id="connection-anchor:edit:<id>:source|target" → ConnectionAnchorEventHandler)
+ *   (data-id=<id> + data-part="endpoint:source|target" → ConnectionAnchorEventHandler)
  * - Waypoint move handles: move existing waypoints
- *   (data-id="vertex-control:<id>:<i>" → reuses VertexControlHandler)
+ *   (data-id=<id> + data-part="vertex:<i>" → reuses VertexControlHandler)
  * - Waypoint insert handles: the midpoint of each segment of the resolved path [source, ...waypoints, target].
  *   Drag to add a new waypoint
- *   (data-id="connector-vertex-insert:<id>:<segment>" → ConnectorVertexInsertHandler)
+ *   (data-id=<id> + data-part="waypoint-insert:<segment>" → ConnectorVertexInsertHandler)
  *
  * Placed in the controllers layer so selection visuals are decoupled from the connector itself.
  */
@@ -37,15 +43,20 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 	zoom = 1,
 	selectedVertex = null,
 }) => {
-	const resolved = useResolvedConnectorPoints(connectorState, objects);
+	const resolved = useResolvedConnectorPoints(
+		connectorState,
+		resolveEndpointOwner(objects, connectorState.source),
+		resolveEndpointOwner(objects, connectorState.target),
+	);
+	const { handleDimensions } = useCanvasTheme();
 
 	if (!resolved) {
 		return null;
 	}
 
 	// Adjust sizes based on zoom level to maintain consistent visual size
-	const adjustedEndpointRadius = ENDPOINT_RADIUS / zoom;
-	const adjustedEndpointStrokeWidth = ENDPOINT_STROKE_WIDTH / zoom;
+	const adjustedEndpointRadius = handleDimensions.anchorRadius / zoom;
+	const adjustedEndpointStrokeWidth = handleDimensions.anchorStrokeWidth / zoom;
 
 	// Enforce the connector invariant "at least one endpoint is owned" on the UI side.
 	// When one endpoint is free, hide the handle of the paired owned endpoint.
@@ -74,7 +85,7 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 				<VertexInsertControls
 					objectId={connectorState.id}
 					points={resolved.points}
-					controlIdPrefix="connector-vertex-insert"
+					insertPartSubtype="waypoint-insert"
 					zoom={zoom}
 				/>
 			)}
@@ -95,12 +106,11 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 					cx={resolved.source.x}
 					cy={resolved.source.y}
 					r={adjustedEndpointRadius}
-					fill={ENDPOINT_FILL}
-					stroke={ENDPOINT_COLOR}
 					strokeWidth={adjustedEndpointStrokeWidth}
 					data-kind="control"
-					data-id={`connection-anchor:edit:${connectorState.id}:source`}
-					style={{ cursor: "move" }}
+					data-id={connectorState.id}
+					data-part="endpoint:source"
+					style={endpointHandleStyle}
 				/>
 			)}
 
@@ -110,12 +120,11 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 					cx={resolved.target.x}
 					cy={resolved.target.y}
 					r={adjustedEndpointRadius}
-					fill={ENDPOINT_FILL}
-					stroke={ENDPOINT_COLOR}
 					strokeWidth={adjustedEndpointStrokeWidth}
 					data-kind="control"
-					data-id={`connection-anchor:edit:${connectorState.id}:target`}
-					style={{ cursor: "move" }}
+					data-id={connectorState.id}
+					data-part="endpoint:target"
+					style={endpointHandleStyle}
 				/>
 			)}
 		</g>

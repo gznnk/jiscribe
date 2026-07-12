@@ -5,11 +5,12 @@ import { theme } from "../../../../constants/theme";
 /**
  * Outer container of the ObjectMenu.
  * Positioned in canvas coordinates inside ScrollSyncedOverlay.
+ *
+ * left / top follow the selection every frame during pan/zoom, so they are
+ * passed via the `style` prop instead of emotion interpolation (see #131).
  */
-export const ObjectMenuWrapper = styled.div<{ left: number; top: number }>`
+export const ObjectMenuWrapper = styled.div`
 	position: absolute;
-	left: ${(props) => props.left}px;
-	top: ${(props) => props.top}px;
 	pointer-events: auto;
 	display: flex;
 	align-items: center;

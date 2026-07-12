@@ -1,9 +1,12 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { CanvasDoc } from "../../../../schemas/canvas/CanvasDoc";
+import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
 import { createInitialControllerState } from "../../../reducer/createInitialControllerState";
-import { initializeObjectRegistry } from "../../../setup/initializeObjectRegistry";
+import { createTestRegistries } from "../../../setup/createCanvasRegistries";
 import { StartTextEditCommand } from "../StartTextEditCommand";
+
+const registries = createTestRegistries();
 
 const rect = {
 	id: "rect-1",
@@ -26,28 +29,25 @@ const svg = {
 
 const doc = { version: 1, root: [rect, svg] } as unknown as CanvasDoc;
 
-const stateWithSelection = (selectedId: string) => ({
-	...createInitialControllerState(doc),
-	selectedIds: [selectedId],
-});
-
-describe("StartTextEditCommand", () => {
-	beforeAll(() => {
-		initializeObjectRegistry();
+const stateWithSelection = (selectedId: string) =>
+	deepFreezeState({
+		...createInitialControllerState(doc, registries),
+		selectedIds: [selectedId],
 	});
 
+describe("StartTextEditCommand", () => {
 	it("a rect that supports text can start editing", () => {
 		const state = stateWithSelection("rect-1");
-		expect(StartTextEditCommand.canExecute?.(state)).toBe(true);
-		expect(StartTextEditCommand.execute(state).textEditState?.objectId).toBe(
-			"rect-1",
-		);
+		expect(StartTextEditCommand.canExecute?.(state, registries)).toBe(true);
+		expect(
+			StartTextEditCommand.execute(state, registries).textEditState?.objectId,
+		).toBe("rect-1");
 	});
 
 	it("an svg that does not support text does not start editing", () => {
 		const state = stateWithSelection("svg-1");
-		expect(StartTextEditCommand.canExecute?.(state)).toBe(false);
+		expect(StartTextEditCommand.canExecute?.(state, registries)).toBe(false);
 		// returns the state unchanged when editing is not entered
-		expect(StartTextEditCommand.execute(state)).toBe(state);
+		expect(StartTextEditCommand.execute(state, registries)).toBe(state);
 	});
 });

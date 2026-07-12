@@ -1,6 +1,7 @@
 import type { Prettify } from "@workspace/utility-types/src/Prettify";
 
 import type { CanvasControllerState } from "../../CanvasTypes";
+import type { ICanvasRegistries } from "../../setup/ICanvasRegistries";
 import type {
 	Gesture,
 	GestureType,
@@ -45,10 +46,13 @@ export interface GestureHandler {
 	 * Handles the canvas event and returns the updated canvas controller state.
 	 * @param state - The current canvas controller state
 	 * @param event - The canvas event to process
+	 * @param registries - The per-canvas registry contract, passed explicitly
+	 *   (not read from state). Handlers that don't need it may omit the parameter.
 	 * @returns The updated canvas controller state
 	 */
 	handle(
 		state: CanvasControllerState,
 		event: CanvasEvent,
+		registries: ICanvasRegistries,
 	): CanvasControllerState;
 }

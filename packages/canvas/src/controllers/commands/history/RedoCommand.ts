@@ -1,4 +1,5 @@
 import { canvasToState } from "../../../states/canvas/CanvasMapper";
+import { resolveDocSnapshot } from "../../../states/canvas/DocSnapshot";
 import { resetUiState } from "../../utils/resetUiState";
 import type { Command } from "../CommandTypes";
 
@@ -39,13 +40,19 @@ export const RedoCommand: Command = {
 		return state.history.future.length > 0;
 	},
 
-	execute: (state) => {
+	execute: (state, registries) => {
 		if (state.history.future.length === 0) {
 			return state;
 		}
 
-		const docToRestore = state.history.future[0];
-		const restoredState = canvasToState(docToRestore);
+		// Resolve only the entry being restored; entries that merely move between
+		// stacks stay as unresolved snapshots.
+		const snapshotToRestore = state.history.future[0];
+		const mapper = registries.objectMapper;
+		const restoredState = canvasToState(
+			resolveDocSnapshot(snapshotToRestore, mapper),
+			mapper,
+		);
 
 		return {
 			...restoredState,
@@ -55,10 +62,11 @@ export const RedoCommand: Command = {
 			saveVersion: state.saveVersion + 1,
 			saveNonce: crypto.randomUUID(),
 			historyCoalesce: { recorded: null, pending: null }, // History navigation is a coalescing boundary
+			docDefaults: state.docDefaults,
 			internalClipboard: state.internalClipboard,
 			history: {
 				past: [...state.history.past, state.history.present],
-				present: docToRestore,
+				present: snapshotToRestore,
 				future: state.history.future.slice(1),
 			},
 		};

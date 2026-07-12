@@ -6,13 +6,17 @@ import {
 import type { TransformedFrame } from "@workspace/geometry";
 import { memo } from "react";
 
+import { theme } from "../../../../constants/theme";
 import type { ConnectPointId } from "../../../../schemas/objects/types/EndpointRef";
+import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 
-const ANCHOR_RADIUS = 4;
-const ANCHOR_STROKE_WIDTH = 1;
-const ANCHOR_COLOR = "#6366f1";
-const ANCHOR_FILL = "#6366f1";
-const ANCHOR_OFFSET = 20; // Distance from the edge
+// Anchor colors may hold var(--jiscribe-*), so they are applied via style
+// (fill/stroke) rather than SVG presentation attributes.
+const connectionAnchorStyle = {
+	fill: theme.connectionAccent,
+	stroke: theme.connectionAccent,
+	cursor: "crosshair",
+} as const;
 
 type ConnectionAnchorsProps = {
 	/**
@@ -38,7 +42,7 @@ type ConnectionAnchorsProps = {
  *
  * Each anchor has:
  * - data-kind="control" for GestureHandler to identify
- * - data-id="connection-anchor:create:<objectId>:<anchorPosition>" for identifying which anchor was interacted with
+ * - data-id=<objectId> + data-part="anchor:<anchorPosition>" for identifying which anchor was interacted with
  */
 const ConnectionAnchorsComponent: React.FC<ConnectionAnchorsProps> = ({
 	objectId,
@@ -46,11 +50,12 @@ const ConnectionAnchorsComponent: React.FC<ConnectionAnchorsProps> = ({
 	zoom = 1,
 }) => {
 	const { cx, cy, width, height, rotation, scaleX, scaleY } = frame;
+	const { handleDimensions } = useCanvasTheme();
 
 	// Adjust sizes based on zoom level to maintain consistent visual size
-	const adjustedAnchorRadius = ANCHOR_RADIUS / zoom;
-	const adjustedStrokeWidth = ANCHOR_STROKE_WIDTH / zoom;
-	const adjustedOffset = ANCHOR_OFFSET / zoom;
+	const adjustedAnchorRadius = handleDimensions.anchorRadius / zoom;
+	const adjustedStrokeWidth = handleDimensions.anchorStrokeWidth / zoom;
+	const adjustedOffset = handleDimensions.connectionAnchorOffset / zoom;
 
 	// Calculate all feature points (corners and edge midpoints)
 	const points = calcFrameKeyPoints({
@@ -111,12 +116,11 @@ const ConnectionAnchorsComponent: React.FC<ConnectionAnchorsProps> = ({
 					cx={point.x}
 					cy={point.y}
 					r={adjustedAnchorRadius}
-					fill={ANCHOR_FILL}
-					stroke={ANCHOR_COLOR}
 					strokeWidth={adjustedStrokeWidth}
 					data-kind="control"
-					data-id={`connection-anchor:create:${objectId}:${position}`}
-					style={{ cursor: "crosshair" }}
+					data-id={objectId}
+					data-part={`anchor:${position}`}
+					style={connectionAnchorStyle}
 				/>
 			))}
 		</g>

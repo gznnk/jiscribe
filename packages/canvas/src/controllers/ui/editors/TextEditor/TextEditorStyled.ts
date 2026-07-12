@@ -1,113 +1,50 @@
 import styled from "@emotion/styled";
 
-import { scrollbarStyles } from "../../../../constants/scrollbarStyles";
+import {
+	SCROLLBAR_WIDTH,
+	scrollbarStyles,
+} from "../../../../constants/scrollbarStyles";
 import { TEXT_LINE_HEIGHT } from "../../../../constants/textLineHeight";
-import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
-
-const VerticalAlignMap: Record<
-	VerticalAlign,
-	React.CSSProperties["alignItems"]
-> = {
-	top: "flex-start",
-	middle: "center",
-	bottom: "flex-end",
-} as const;
-
-/**
- * Props for the text editor element.
- */
-type TextEditorStyledProps = {
-	left: number;
-	top: number;
-	transform: string;
-	width: number;
-	height: number;
-	textAlign: string;
-	color: string;
-	fontSize: number;
-	fontFamily: string;
-	fontWeight: string;
-};
-
-/**
- * Props for the wrapper that positions the editor and applies vertical alignment.
- */
-type TextEditorWrapperProps = {
-	left: number;
-	top: number;
-	transform: string;
-	width: number;
-	height: number;
-	verticalAlign: VerticalAlign;
-};
 
 /**
  * Wrapper that carries the shape's position/transform and aligns the
  * textarea vertically, mirroring TextOverlay's TextWrapper.
+ *
+ * Overflow stays visible so the textarea's scrollbar gutter can hang outside
+ * the shape's right edge; vertical clipping is handled by the textarea's own
+ * max-height.
+ *
+ * Per-instance values (left / top / transform / width / height / align-items)
+ * change with the edited object and while typing (auto-grow), so they are
+ * passed via the `style` prop instead of emotion interpolation (see #131).
  */
-export const TextEditorWrapper = styled.div<TextEditorWrapperProps>`
+export const TextEditorWrapper = styled.div`
 	position: absolute;
-	left: ${(props) => props.left}px;
-	top: ${(props) => props.top}px;
-	transform: ${(props) => props.transform};
-	width: ${(props) => props.width}px;
-	height: ${(props) => props.height}px;
 	display: flex;
-	align-items: ${(props) => VerticalAlignMap[props.verticalAlign]};
-	overflow: hidden;
+	overflow: visible;
 	pointer-events: auto;
 `;
-
-/**
- * Styled input element for the text editor (single line).
- */
-export const Input = styled.input<TextEditorStyledProps>`
-	position: absolute;
-	left: ${(props) => props.left}px;
-	top: ${(props) => props.top}px;
-	transform: ${(props) => props.transform};
-	width: ${(props) => props.width}px;
-	height: ${(props) => props.height}px;
-	text-align: ${(props) => props.textAlign};
-	color: ${(props) => props.color};
-	font-size: ${(props) => props.fontSize}px;
-	font-family: ${(props) => props.fontFamily};
-	font-weight: ${(props) => props.fontWeight};
-	background: transparent;
-	border: none;
-	outline: none;
-	overflow: hidden;
-	resize: none;
-	box-sizing: border-box;
-	padding: 2px 6px;
-	pointer-events: auto;
-	border-radius: 2px;
-`;
-
-/**
- * Props for the multi-line textarea element.
- * Height is set inline by TextEditor to fit the content, so the wrapper's
- * vertical alignment takes effect.
- */
-type TextAreaProps = {
-	textAlign: string;
-	color: string;
-	fontSize: number;
-	fontFamily: string;
-	fontWeight: string;
-};
 
 /**
  * Styled textarea element for the text editor (multi-line).
+ *
+ * Per-instance text styles (text-align / color / font-size / font-family /
+ * font-weight) are passed via the `style` prop (see #131). Height is set
+ * inline by TextEditor to fit the content, so the wrapper's vertical
+ * alignment takes effect.
+ *
+ * The element is widened by the scrollbar width and reserves that extra strip
+ * as a permanent gutter (scrollbar-gutter: stable), so the content box always
+ * equals the shape width and line wrapping matches TextOverlay whether or not
+ * the scrollbar is shown; the scrollbar itself sits outside the shape's right
+ * edge. flex-shrink: 0 keeps the flex parent from squeezing the extra width
+ * back.
  */
-export const TextArea = styled.textarea<TextAreaProps>`
-	width: 100%;
+export const TextArea = styled.textarea`
+	width: calc(100% + ${SCROLLBAR_WIDTH}px);
+	flex-shrink: 0;
+	scrollbar-gutter: stable;
 	max-height: 100%;
-	text-align: ${(props) => props.textAlign};
-	color: ${(props) => props.color};
-	font-size: ${(props) => props.fontSize}px;
-	font-family: ${(props) => props.fontFamily};
-	font-weight: ${(props) => props.fontWeight};
 	line-height: ${TEXT_LINE_HEIGHT};
 	word-break: break-word;
 	white-space: pre-wrap;

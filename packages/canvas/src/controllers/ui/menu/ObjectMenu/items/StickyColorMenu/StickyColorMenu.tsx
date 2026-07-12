@@ -6,6 +6,7 @@ import {
 	ColorPickerContainer,
 	ColorSwatch,
 } from "./StickyColorMenuStyled";
+import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { ColorPreviewIcon } from "../../../../icons/ColorPreviewIcon";
 import { DropdownPanel } from "../../common/DropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
@@ -26,6 +27,7 @@ const getSelectedFillColor = (state: MenuItemProps["canvasState"]): string => {
 };
 
 const StickyColorMenuComponent: React.FC<MenuItemProps> = ({ canvasState }) => {
+	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const currentColor = getSelectedFillColor(canvasState);
@@ -38,11 +40,15 @@ const StickyColorMenuComponent: React.FC<MenuItemProps> = ({ canvasState }) => {
 		<MenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-kind="object-menu"
-				data-id={`object-menu:toggle:${SECTION_ID}`}
-				title="Background Color"
+				data-kind="menu"
+				data-id="object-menu"
+				data-part={`toggle:${SECTION_ID}`}
+				title={messages.menuBackgroundColor}
 			>
-				<ColorPreviewIcon color={currentColor} title="Background Color" />
+				<ColorPreviewIcon
+					color={currentColor}
+					title={messages.menuBackgroundColor}
+				/>
 			</ObjectMenuButton>
 			{isOpen && (
 				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>
@@ -55,9 +61,10 @@ const StickyColorMenuComponent: React.FC<MenuItemProps> = ({ canvasState }) => {
 									selected={
 										preset.value.toLowerCase() === currentColor.toLowerCase()
 									}
-									data-kind="object-menu"
-									data-id={`object-menu:set:fill:${preset.value}`}
-									title={preset.name}
+									data-kind="menu"
+									data-id="object-menu"
+									data-part={`set:fill:${preset.value}`}
+									title={messages.colorNames[preset.name] ?? preset.name}
 								/>
 							))}
 						</ColorGrid>

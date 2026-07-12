@@ -11,8 +11,14 @@ type ViewportProps = {
  * toolbar above the canvas viewport (flex column).
  *
  * The gesture recognizer's pointerHandlers / pointer capture are attached to this element.
- * By containing both the toolbar (data-kind="toolbar" / "menu-item") and the canvas region,
+ * By containing both the toolbar (data-kind="menu") and the canvas region,
  * toolbar interactions also flow through the same gesture path.
+ *
+ * Also the keyboard scope: Canvas.tsx renders this with tabIndex so it can hold
+ * focus, and keydown listeners (shortcuts / paste) are attached here instead of
+ * `document` — only the focused Canvas handles shortcuts when multiple Canvases
+ * share a page. The focus ring is suppressed since focus is a routing concern
+ * here, not a visual one.
  */
 export const CanvasRoot = styled.div`
 	position: relative;
@@ -21,6 +27,7 @@ export const CanvasRoot = styled.div`
 	width: 100%;
 	height: 100%;
 	overflow: hidden;
+	outline: none;
 `;
 
 /**
@@ -54,15 +61,6 @@ export const Container = styled.div`
 `;
 
 /**
- * Props for scroll-synced overlay containers.
- */
-type ScrollSyncedOverlayProps = {
-	left: number;
-	top: number;
-	zoom: number;
-};
-
-/**
  * Container for HTML elements with fixed size that follow canvas content position.
  * Elements inside maintain their original size regardless of zoom level,
  * but their position tracks the zoomed canvas coordinates.
@@ -78,33 +76,26 @@ type ScrollSyncedOverlayProps = {
  *   3. Final screen position: -minX * zoom + cx * zoom = (cx - minX) * zoom ✓
  *
  * Note: Child elements must multiply their canvas coordinates by zoom for positioning.
+ *
+ * left / top change every frame during pan/zoom, so they are passed via the
+ * `style` prop instead of emotion interpolation (which would insert a new CSS
+ * rule per value — see #131).
  */
-export const ScrollSyncedOverlay = styled.div<ScrollSyncedOverlayProps>`
+export const ScrollSyncedOverlay = styled.div`
 	position: absolute;
-	left: ${(props) => props.left * props.zoom}px;
-	top: ${(props) => props.top * props.zoom}px;
 	pointer-events: none;
 `;
-
-/**
- * Props for zoom-scaled overlay containers.
- */
-type ZoomScaledOverlayProps = {
-	left: number;
-	top: number;
-	zoom: number;
-};
 
 /**
  * Container for HTML elements that follow canvas scroll AND zoom.
  * Used for elements that should scale with the canvas zoom level.
  * Example: Text editors that appear directly on objects.
+ *
+ * left / top / scale change every frame during pan/zoom, so they are passed
+ * via the `style` prop instead of emotion interpolation (see #131).
  */
-export const ZoomScaledOverlay = styled.div<ZoomScaledOverlayProps>`
+export const ZoomScaledOverlay = styled.div`
 	position: absolute;
-	left: ${(props) => props.left * props.zoom}px;
-	top: ${(props) => props.top * props.zoom}px;
-	transform: scale(${(props) => props.zoom});
 	transform-origin: top left;
 	pointer-events: none;
 `;

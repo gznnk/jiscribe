@@ -1,12 +1,16 @@
 import { ELLIPSE_DOC_DEFAULTS } from "./EllipseDoc";
 import type { ObjectDoc } from "../../base/ObjectDoc";
 import type { ShapeFactory } from "../../types/ShapeFactory";
-import { numberOverride } from "../../types/ShapeFactory";
+import {
+	numberOverride,
+	pickSupportedDocDefaults,
+} from "../../types/ShapeFactory";
 
 export const EllipseShapeFactory: ShapeFactory = {
-	createDoc(position, overrides) {
+	createDoc(position, overrides, docDefaults) {
 		return {
 			...ELLIPSE_DOC_DEFAULTS,
+			...pickSupportedDocDefaults(ELLIPSE_DOC_DEFAULTS, docDefaults),
 			...overrides,
 			id: crypto.randomUUID(),
 			cx: position.x,
@@ -21,7 +25,7 @@ export const EllipseShapeFactory: ShapeFactory = {
 		};
 	},
 
-	createDocFromBounds(x1, y1, x2, y2, overrides, minSize = 5) {
+	createDocFromBounds(x1, y1, x2, y2, overrides, minSize = 5, docDefaults) {
 		const width = Math.abs(x2 - x1);
 		const height = Math.abs(y2 - y1);
 		if (width < minSize || height < minSize) {
@@ -29,6 +33,7 @@ export const EllipseShapeFactory: ShapeFactory = {
 		}
 		return {
 			...ELLIPSE_DOC_DEFAULTS,
+			...pickSupportedDocDefaults(ELLIPSE_DOC_DEFAULTS, docDefaults),
 			...overrides,
 			id: crypto.randomUUID(),
 			cx: (x1 + x2) / 2,

@@ -4,6 +4,7 @@ import { getSelectedConnectorLabel } from "./utils/getSelectedConnectorLabel";
 import { resolveAutoColor } from "../../../../../../presentations/objects/utils/resolveAutoColor";
 import { AUTO_COLOR } from "../../../../../../schemas/objects/utils/autoColor";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { FontColorIcon } from "../../../../icons/FontColorIcon";
 import { ColorPickerGrid } from "../../common/ColorPickerGrid/ColorPickerGrid";
 import { DropdownPanel } from "../../common/DropdownPanel";
@@ -24,6 +25,7 @@ const LabelFontColorMenuComponent: React.FC<Props> = ({
 	canvasState,
 	onPropertyUpdate,
 }) => {
+	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
@@ -38,9 +40,10 @@ const LabelFontColorMenuComponent: React.FC<Props> = ({
 		<MenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
-				data-kind="object-menu"
-				data-id={`object-menu:toggle:${SECTION_ID}`}
-				title="Label Font Color"
+				data-kind="menu"
+				data-id="object-menu"
+				data-part={`toggle:${SECTION_ID}`}
+				title={messages.menuLabelFontColor}
 			>
 				<FontColorIcon underlineColor={resolveAutoColor(fontColor, "ink")} />
 			</ObjectMenuButton>
