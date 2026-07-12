@@ -439,7 +439,10 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 												zoom={state.viewport.zoom}
 												selectedVertex={state.selectedVertex}
 											/>
-											<DragGhost shapeLibraryDrag={state.shapeLibraryDrag} />
+											<DragGhost
+												shapeLibraryDrag={state.shapeLibraryDrag}
+												docDefaults={state.docDefaults}
+											/>
 											<DrawingPreviewOverlay
 												shapeDrawing={state.shapeDrawing}
 											/>
