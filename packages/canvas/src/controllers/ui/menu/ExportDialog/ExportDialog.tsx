@@ -95,14 +95,19 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
 	};
 
 	useEffect(() => {
+		// capture 段で登録する: ダイアログは Canvas コンテナ内にあり、bubble 段
+		// では useKeyboardShortcuts が先に Escape を DeselectAllCommand として
+		// 消費してしまう（stopPropagation され document まで届かない）。
+		// stopPropagation で選択解除も抑止する（Escape はダイアログを閉じるだけ）。
 		const handleKeyDown = (event: KeyboardEvent) => {
 			if (event.key === "Escape") {
 				event.preventDefault();
+				event.stopPropagation();
 				onClose();
 			}
 		};
-		document.addEventListener("keydown", handleKeyDown);
-		return () => document.removeEventListener("keydown", handleKeyDown);
+		document.addEventListener("keydown", handleKeyDown, true);
+		return () => document.removeEventListener("keydown", handleKeyDown, true);
 	}, [onClose]);
 
 	return (

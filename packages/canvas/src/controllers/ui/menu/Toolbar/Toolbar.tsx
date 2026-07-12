@@ -64,10 +64,13 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
-			// While open, close on Escape (works even when an input holds focus)
+			// While open, close on Escape (works even when an input holds focus).
+			// stopPropagation で bubble 段の useKeyboardShortcuts に Escape を
+			// DeselectAllCommand として消費させない（モーダルを閉じるだけにする）。
 			if (isHelpOpen) {
 				if (event.key === "Escape") {
 					event.preventDefault();
+					event.stopPropagation();
 					setIsHelpOpen(false);
 				}
 				return;
@@ -86,8 +89,11 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 			}
 		};
 
-		document.addEventListener("keydown", handleKeyDown);
-		return () => document.removeEventListener("keydown", handleKeyDown);
+		// capture 段で登録する: モーダルは Canvas コンテナ内にあり、bubble 段では
+		// コンテナの useKeyboardShortcuts が先に stopPropagation するため
+		// document のリスナーまで Escape が届かない。
+		document.addEventListener("keydown", handleKeyDown, true);
+		return () => document.removeEventListener("keydown", handleKeyDown, true);
 	}, [isHelpOpen]);
 
 	return (

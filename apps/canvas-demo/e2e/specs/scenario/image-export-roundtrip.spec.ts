@@ -263,3 +263,23 @@ test("透過背景の SVG エクスポートは背景 rect を敷かない", asy
 	// 図形自体は描画されている
 	expect(transparentText).toMatch(/style="[^"]*stroke:/);
 });
+
+test("Escape はダイアログを閉じるだけで、選択は解除されない", async ({
+	canvas,
+	page,
+}) => {
+	await canvas.drawShape("Rectangle", { x: 150, y: 120 }, { x: 400, y: 260 });
+	await canvas.deselect();
+	await canvas.selectAt({ x: 275, y: 190 });
+
+	// コンテキストメニューは空きスペースの右クリックでのみ開く（選択は保持される）
+	await canvas.openContextMenu({ x: 700, y: 500 });
+	await canvas.clickContextMenuItem("export");
+	await expect(page.getByTestId("export-dialog")).toBeVisible();
+
+	// フォーカスは Canvas コンテナ側に残っている（入力欄ではない）状態で Escape。
+	// bubble 段の DeselectAllCommand に奪われず、ダイアログだけが閉じること。
+	await page.keyboard.press("Escape");
+	await expect(page.getByTestId("export-dialog")).toHaveCount(0);
+	await expect(page.locator("[data-kind=control]").first()).toBeVisible();
+});
