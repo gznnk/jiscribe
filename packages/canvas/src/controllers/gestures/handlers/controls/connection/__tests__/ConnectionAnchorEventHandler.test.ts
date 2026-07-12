@@ -2,6 +2,7 @@ import type { Point } from "@workspace/geometry";
 import { describe, expect, it } from "vitest";
 
 import type { CanvasDoc } from "../../../../../../schemas/canvas/CanvasDoc";
+import { ConnectorFeatures } from "../../../../../../schemas/objects/connections/connector/ConnectorDoc";
 import { isOrthogonalRouting } from "../../../../../../schemas/objects/types/ConnectorRouting";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../../../states/objects/connections/connector/ConnectorState";
@@ -9,6 +10,7 @@ import { deepFreezeState } from "../../../../../__tests__/support/deepFreezeStat
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { createInitialControllerState } from "../../../../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../../../../setup/createCanvasRegistries";
+import { handlePropertyUpdate } from "../../../../../utils/handlePropertyUpdate";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 import { ConnectionAnchorEventHandler } from "../ConnectionAnchorEventHandler";
 
@@ -243,6 +245,74 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 		expect(afterEnd.rootIds[0]).toBe("rect-1");
 		const newId = afterEnd.rootIds[1];
 		expect(afterEnd.objects[newId]?.type).toBe("connector");
+	});
+
+	/**
+	 * Drives the create gesture (drag from a shape's connection anchor) end to end and
+	 * returns the committed connector plus the state it landed in.
+	 */
+	const createConnectorFromRect = (): {
+		state: CanvasControllerState;
+		connectorId: string;
+	} => {
+		const base = stateWithConnectors([]);
+		const state: CanvasControllerState = {
+			...base,
+			objects: {
+				...base.objects,
+				"rect-1": { id: "rect-1", type: "rect" } as unknown as ObjectState,
+			},
+			rootIds: ["rect-1"],
+		};
+
+		const afterStart = handler.handle(
+			state,
+			dragEvent("dragStart", "rect-1", "anchor:rightCenter", { x: 10, y: 10 }),
+		);
+		const afterEnd = handler.handle(
+			afterStart,
+			dragEvent("dragEnd", "rect-1", "anchor:rightCenter", { x: 80, y: 80 }),
+		);
+
+		const connectorId = afterEnd.rootIds[afterEnd.rootIds.length - 1];
+		return { state: afterEnd, connectorId };
+	};
+
+	// Regression guard for #167: a connector created via the gesture must carry the
+	// features descriptor. handlePropertyUpdate reads state.features directly to gate
+	// style updates, so a freshly created connector without it silently ignores every
+	// stroke change until a save/reload re-stamps features through the registry.
+	describe("a newly created connector is immediately style-editable (regression #167)", () => {
+		it("stamps the shared ConnectorFeatures descriptor (same reference, for memo stability)", () => {
+			const { state, connectorId } = createConnectorFromRect();
+			const connector = state.objects[connectorId] as ConnectorState;
+			expect(connector.features).toBe(ConnectorFeatures);
+		});
+
+		it("applies stroke-group updates dispatched by the style menu (dash / color / width)", () => {
+			const { state, connectorId } = createConnectorFromRect();
+			// The style menu targets the selected connector via selectedConnectorId.
+			const selected: CanvasControllerState = {
+				...state,
+				selectedIds: [],
+				selectedConnectorId: connectorId,
+			};
+
+			const dashed = handlePropertyUpdate(selected, "strokeDashType", "dashed");
+			expect(
+				(dashed.objects[connectorId] as ConnectorState).strokeDashType,
+			).toBe("dashed");
+
+			const colored = handlePropertyUpdate(selected, "stroke", "#ff0000");
+			expect((colored.objects[connectorId] as ConnectorState).stroke).toBe(
+				"#ff0000",
+			);
+
+			const widened = handlePropertyUpdate(selected, "strokeWidth", "7");
+			expect((widened.objects[connectorId] as ConnectorState).strokeWidth).toBe(
+				7,
+			);
+		});
 	});
 
 	it("omits routing on a new connector (follows the default orthogonal when omitted)", () => {
