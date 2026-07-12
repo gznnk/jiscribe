@@ -7,37 +7,26 @@ import { JiscribeEditorProvider } from "./editor/JiscribeEditorProvider";
 import { JiscribeImageEditorProvider } from "./editor/JiscribeImageEditorProvider";
 
 /**
- * 拡張機能が有効になったときに VSCode から呼び出されるエントリーポイント。
- * package.json の activationEvents に基づいてトリガーされる
- * （現在は activationEvents: [] のため、最初の .jis.json を開いたときに起動）。
- *
- * @param context  拡張機能のライフサイクルを管理するオブジェクト。
- *                 context.subscriptions に Disposable を追加すると、
- *                 拡張機能の無効化時に自動的に破棄される。
+ * Extension entry point, called by VSCode on activation. Per package.json's
+ * activationEvents (currently []), this fires when the first .jis.json opens.
+ * Disposables pushed to context.subscriptions are released on deactivation.
  */
 export function activate(context: vscode.ExtensionContext) {
-	// .jis.json ファイルのバリデーションエラーを Problems パネルに表示する
+	// Surface .jis.json validation errors in the Problems panel.
 	new DiagnosticProvider(context);
 
-	// .jis.json ファイルを開いたときに Canvas UI（Webview）を表示するカスタムエディタを登録する
+	// Custom editor that shows the Canvas UI (Webview) for .jis.json files.
 	const provider = new JiscribeEditorProvider(context);
 	const registration = vscode.window.registerCustomEditorProvider(
-		"jiscribe.editor", // package.json の contributes.customEditors[].viewType と一致させる
+		"jiscribe.editor", // must match contributes.customEditors[].viewType
 		provider,
 		{
 			webviewOptions: {
-				// false: 非表示タブの Webview コンテキスト（約1MB の JS 評価済み＋React/SVG
-				// ツリー）をメモリに常駐させず、再表示時に破棄・再生成する（#138）。
-				// VSCode 公式も retainContextWhenHidden は高オーバーヘッドとして非推奨。
-				//
-				// 破棄しても状態は失われない:
-				//   - ドキュメント内容: 再生成後の Webview が "ready" を再送 → この Provider が
-				//     doc を再送信する既存フローで復元される（パネルと messageListener は
-				//     タブ非表示では dispose されない）。
-				//   - ビューポート（パン/ズーム）: Webview 側が getState/setState に camera を
-				//     退避し、再マウント時に Canvas の controlled viewport へ復元する
-				//     （src/webview/index.tsx）。
-				// トレードオフ: 再表示時に一瞬のリロード（"Loading canvas..."）が挟まる。
+				// false: discard the hidden tab's Webview context (~1MB of evaluated
+				// JS + React/SVG tree) and rebuild on re-show (#138). No state is lost:
+				// the document is re-sent when the rebuilt Webview re-emits "ready", and
+				// the viewport is saved/restored via getState/setState
+				// (src/webview/index.tsx). Trade-off: a brief "Loading canvas..." reload.
 				retainContextWhenHidden: false,
 			},
 			supportsMultipleEditorsPerDocument: false,
@@ -46,15 +35,15 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(registration);
 
-	// ソース埋め込み済みの画像（.jis.png / .jis.svg、draw.io の .drawio.png /
-	// .drawio.svg 相当）を Canvas UI で開くカスタムエディタを登録する
+	// Custom editor that opens source-embedded images (.jis.png / .jis.svg,
+	// analogous to draw.io's .drawio.png / .drawio.svg) in the Canvas UI.
 	const imageProvider = new JiscribeImageEditorProvider(context);
 	const imageRegistration = vscode.window.registerCustomEditorProvider(
-		"jiscribe.imageEditor", // package.json の contributes.customEditors[].viewType と一致させる
+		"jiscribe.imageEditor", // must match contributes.customEditors[].viewType
 		imageProvider,
 		{
 			webviewOptions: {
-				// テキスト側と同じ理由（#138）で非表示タブの Webview は破棄する
+				// Discard the hidden tab's Webview, same as the text side (#138).
 				retainContextWhenHidden: false,
 			},
 			supportsMultipleEditorsPerDocument: false,
@@ -67,8 +56,7 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 /**
- * 拡張機能が無効になったときに VSCode から呼び出される。
- * context.subscriptions に登録した Disposable は VSCode が自動的に破棄するため、
- * ここで追加のクリーンアップは通常不要。
+ * Called by VSCode on deactivation. Disposables in context.subscriptions are
+ * released automatically, so extra teardown here is usually unnecessary.
  */
 export function deactivate() {}

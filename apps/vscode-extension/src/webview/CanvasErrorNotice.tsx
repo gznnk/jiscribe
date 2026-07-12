@@ -1,9 +1,9 @@
 /**
- * CanvasDoc の検証エラーがあることだけを簡潔に伝える Webview 用コンポーネント。
+ * Webview component that just states the CanvasDoc has validation errors.
  *
- * 個々のエラー詳細（path / message / 行範囲）は DiagnosticProvider が
- * VSCode の Problems パネルへ出すため、ここでは一覧を再掲せず
- * 「エラーがある」という事実と次のアクションだけを示す。
+ * Individual error details (path / message / line range) are surfaced in
+ * VSCode's Problems panel by DiagnosticProvider, so here we don't repeat the
+ * list — only the fact that errors exist and the next action.
  */
 export function CanvasErrorNotice() {
 	return (

@@ -1,6 +1,6 @@
-// ルートエントリ（Canvas コンポーネント込み）ではなくパーサー専用エントリを使う。
-// これにより Node 側バンドル（extension.js）へ react / @emotion / katex などの
-// UI 依存が混入せず、拡張の起動が軽くなる。
+// Import the parser-only entry, not the root entry (which pulls in the Canvas
+// component). This keeps UI deps (react / @emotion / katex) out of the Node
+// bundle (extension.js) so activation stays light.
 import {
 	parseCanvasText,
 	type SemanticDiagnostic,
@@ -8,37 +8,32 @@ import {
 import * as vscode from "vscode";
 
 /**
- * .jis.json ファイルのセマンティクスエラーを VSCode の Problems パネルに表示するプロバイダ。
+ * Surfaces .jis.json semantic errors in VSCode's Problems panel.
  *
- * JSON 構文エラーと「スキーマで表現できる構造エラー」（型・必須フィールド・enum 等）は
- * package.json の `jsonValidation` で登録した JSON スキーマ（VSCode 標準の JSON 言語
- * サービス）が既に Problems パネルへ出すため、ここでは扱わない。両方で出すと同じエラーが
- * 二重に表示されてしまうためである。
+ * JSON syntax errors and schema-expressible structure errors (types, required
+ * fields, enums, etc.) are already reported by the JSON schema registered via
+ * package.json's `jsonValidation` (VSCode's built-in JSON language service), so
+ * we skip them here to avoid duplicate diagnostics.
  *
- * このプロバイダが担当するのは「JSON スキーマでは検出されない」エラーのみ:
- *   - セマンティクスエラー（重複 ID・存在しない参照など）
- *   - validator 専用の構造ルール（両端 free・CSS-safe 等、beyondSchema フラグ付き）。
- *     スキーマが検出できないため、構造エラーでもここで出さないと
- *     「開けないのにエラーが表示されない」状態になる。
+ * This provider only handles errors the JSON schema cannot detect:
+ *   - semantic errors (duplicate IDs, dangling references, etc.)
+ *   - validator-only structure rules (both-ends-free, CSS-safe, etc., flagged
+ *     with beyondSchema). Without these the file would be unopenable yet show
+ *     no error.
  *
- * トリガー:
- *   - ファイルを開いたとき
- *   - ファイルを保存したとき
- *   - 拡張機能が有効になったとき（既に開かれているファイルを対象）
+ * Runs when a file is opened, saved, or already open at activation.
  */
 export class DiagnosticProvider {
-	/** VSCode の Problems パネルに表示する診断情報を管理するコレクション */
+	/** Diagnostics shown in VSCode's Problems panel. */
 	private collection: vscode.DiagnosticCollection;
 
 	constructor(context: vscode.ExtensionContext) {
-		// DiagnosticCollection の名前は Problems パネルのグループ名として表示される。
-		// context.subscriptions に追加することで、拡張機能の無効化時に自動的に破棄される。
+		// The collection name is shown as the Problems panel group name.
 		this.collection =
 			vscode.languages.createDiagnosticCollection("jiscribeCanvas");
 		context.subscriptions.push(this.collection);
 
-		// ファイルを保存・オープンするたびにバリデーションを実行する。
-		// onDidSave / onDidOpen は Disposable を返すため subscriptions に登録して自動破棄する。
+		// Re-validate on every save and open.
 		const saveListener = vscode.workspace.onDidSaveTextDocument((doc) => {
 			this.validateDocument(doc);
 		});
@@ -47,14 +42,14 @@ export class DiagnosticProvider {
 		});
 		context.subscriptions.push(saveListener, openListener);
 
-		// 拡張機能が有効化された時点で既に開かれているタブを対象に初回検証を行う
+		// Validate tabs already open at activation.
 		vscode.workspace.textDocuments.forEach((doc) => {
 			this.validateDocument(doc);
 		});
 	}
 
 	private validateDocument(document: vscode.TextDocument) {
-		// 対象外ファイルはスキップ
+		// Skip unrelated files.
 		const validExts = [".jis.json", ".jiscribe.json"];
 		if (!validExts.some((ext) => document.fileName.endsWith(ext))) {
 			return;
@@ -62,27 +57,23 @@ export class DiagnosticProvider {
 
 		const text = document.getText();
 
-		// 前回のエラー表示をクリアしてから新しい診断を行う
+		// Clear the previous diagnostics before re-validating.
 		this.collection.delete(document.uri);
 
-		// parseCanvasText() は例外を投げず、判別可能なユニオンで結果を返す。
-		// 構文エラー（syntax-error）と「スキーマで表現できる構造エラー」は JSON スキーマ側が
-		// Problems パネルへ出すため、ここでは出さない（二重表示の回避）。
-		// 一方、JSON スキーマでは表現できない validator 専用ルール（両端 free・CSS-safe 等、
-		// beyondSchema フラグ付き）はスキーマが検出できないため、構造エラーであっても
-		// ここで出す。出さないと「開けないのにエラーが表示されない」状態になる。
+		// parseCanvasText() never throws; it returns a discriminated union.
+		// Syntax errors and schema-expressible structure errors are left to the
+		// JSON schema (see class doc); only validator-only rules are reported here.
 		const result = parseCanvasText(text);
 		switch (result.kind) {
 			case "ok":
 				return;
 
 			case "syntax-error":
-				// JSON 構文エラーは VSCode 標準 JSON 言語サービスが担当するため何もしない。
+				// Handled by VSCode's built-in JSON language service.
 				return;
 
 			case "structure-error": {
-				// スキーマで表現できない validator 専用ルールだけを出す。
-				// それ以外の構造エラーは JSON スキーマが Problems パネルへ出す。
+				// Report only validator-only rules; the JSON schema covers the rest.
 				const beyondSchema = result.diagnostics.filter(
 					(diag) => diag.beyondSchema,
 				);
@@ -104,7 +95,7 @@ export class DiagnosticProvider {
 				return;
 
 			case "internal-error": {
-				// 想定外のエラーを握りつぶさず、ファイル先頭に診断として表示する。
+				// Surface unexpected errors at the top of the file rather than swallow them.
 				const diagnostic = new vscode.Diagnostic(
 					new vscode.Range(0, 0, 0, 0),
 					`[Jiscribe] Unexpected error during validation: ${result.message}`,
@@ -117,8 +108,8 @@ export class DiagnosticProvider {
 	}
 
 	/**
-	 * SemanticDiagnostic の配列を VSCode の Diagnostic 配列へ変換する。
-	 * diag.id があればその箇所をハイライトし、無ければファイル先頭にフォールバックする。
+	 * Convert SemanticDiagnostic[] into VSCode Diagnostic[]. Highlights diag.id's
+	 * location when present, otherwise falls back to the top of the file.
 	 */
 	private renderDiagnostics(
 		text: string,
@@ -139,45 +130,38 @@ export class DiagnosticProvider {
 	}
 
 	/**
-	 * JSON テキスト内でエラー対象の ID フィールドの位置を特定し、Range を返す。
+	 * Locate the offending `"id"` field in the JSON text and return its Range.
 	 *
-	 * (#4 修正) 旧実装では text.indexOf('"id-value"') を使っていたため、
-	 * 以下の問題があった:
-	 *   - `"abc"` を検索したとき、`"abcdef"` の先頭にマッチしてしまう
-	 *   - `"parentId": "abc"` など別フィールドの値にマッチしてしまう
+	 * Matches `"id"\s*:\s*"<id>"` so only fields whose key is exactly "id" are
+	 * targeted (a plain substring search would also hit `"abcdef"` for `"abc"`,
+	 * or the value of `"parentId"`). When the same ID appears more than once
+	 * (e.g. a duplicate-ID error), this points at the first occurrence; exact
+	 * resolution would need parser-level position tracking.
 	 *
-	 * 正規表現 `"id"\s*:\s*"<id値>"` を使うことで、
-	 * JSON のキー名が正確に "id" であるフィールドのみを対象にできる。
-	 *
-	 * 注意: 同じ ID が複数箇所に存在する場合（重複 ID エラーの場合など）は
-	 * 最初に見つかった箇所を指す。完全な解決には JSON パーサーレベルの位置追跡が必要。
-	 *
-	 * @param text     ファイルのテキスト全体
-	 * @param document VSCode のドキュメントオブジェクト（文字オフセット→行列変換に使用）
-	 * @param id       検索対象の ID 文字列
+	 * @param text     Full file text
+	 * @param document VSCode document (used for offset→line/column conversion)
+	 * @param id       ID string to locate
 	 */
 	private findIdRange(
 		text: string,
 		document: vscode.TextDocument,
 		id: string,
 	): vscode.Range {
-		// ID 値に正規表現特殊文字（. * + ? 等）が含まれる可能性があるためエスケープする
+		// Escape regex metacharacters (. * + ? etc.) that may appear in the ID.
 		const escapedId = id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-		// `"id": "value"` 形式のみにマッチする正規表現
-		// \s* でキーとコロンの間・コロンと値の間のスペースを許容する
+		// \s* allows whitespace around the key's colon.
 		const regex = new RegExp(`"id"\\s*:\\s*"${escapedId}"`);
 		const match = regex.exec(text);
 
 		if (match) {
-			// match.index はファイル先頭からの文字オフセット。
-			// positionAt() で行・列に変換する。
+			// match.index is a character offset from the start of the file.
 			const startPos = document.positionAt(match.index);
 			const endPos = document.positionAt(match.index + match[0].length);
 			return new vscode.Range(startPos, endPos);
 		}
 
-		// 対応する箇所が見つからなかった場合はファイル先頭にフォールバック
+		// Fall back to the top of the file when no match is found.
 		return new vscode.Range(0, 0, 0, 10);
 	}
 }
