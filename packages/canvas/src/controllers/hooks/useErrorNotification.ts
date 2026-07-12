@@ -3,12 +3,11 @@ import { useCallback, useState } from "react";
 import type { CanvasMessageStrings } from "../messages/CanvasMessages";
 
 /**
- * Error to show in the ErrorToast. `version` bumps on every notify so
- * repeated errors with the same message restart the toast.
+ * Error to show in the ErrorToast. Every notify creates a fresh object, so
+ * the toast restarts via object identity even for a repeated messageKey.
  */
 export type ErrorNotification = {
 	messageKey: keyof CanvasMessageStrings;
-	version: number;
 };
 
 export type NotifyError = (messageKey: keyof CanvasMessageStrings) => void;
@@ -27,10 +26,7 @@ export const useErrorNotification = (): UseErrorNotificationResult => {
 		useState<ErrorNotification | null>(null);
 
 	const notifyError = useCallback<NotifyError>((messageKey) => {
-		setErrorNotification((prev) => ({
-			messageKey,
-			version: (prev?.version ?? 0) + 1,
-		}));
+		setErrorNotification({ messageKey });
 	}, []);
 
 	return { errorNotification, notifyError };

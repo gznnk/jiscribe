@@ -23,7 +23,6 @@ export type {
 	ExportCanvasToSvgOptions,
 	RasterizeSvgOptions,
 	BuildExportSvgOptions,
-	ExportViewBox,
 } from "./export";
 export { defaultCanvasMessages } from "./controllers/messages/CanvasMessages";
 export { jaCanvasMessages } from "./controllers/messages/jaCanvasMessages";

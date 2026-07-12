@@ -1,16 +1,10 @@
+import type { Rect } from "@workspace/geometry";
+
 import { embedCanvasSource } from "./canvasSourceMetadata";
 import { foreignObjectToSvgText } from "./foreignObjectToSvgText";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
-
-/** Exported drawing region in world coordinates (the SVG viewBox). */
-export type ExportViewBox = {
-	x: number;
-	y: number;
-	width: number;
-	height: number;
-};
 
 export type BuildExportSvgOptions = {
 	/** Editing source (`.jis.json`) to embed. Omit to skip the metadata. */
@@ -27,7 +21,7 @@ export type BuildExportSvgOptions = {
 	 * image independent of the current pan/zoom and window size. When
 	 * omitted, the live viewBox (the current view) is exported as-is.
 	 */
-	viewBox?: ExportViewBox;
+	viewBox?: Rect;
 };
 
 /** Creates a single Canvas 2D context used for text measurement. */

@@ -1,13 +1,8 @@
+import type { BoundingBox } from "@workspace/geometry";
+
 import { calcObjectBoundingBox } from "./calcObjectBoundingBox";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { isGroupState } from "../../states/objects/primitives/group/GroupState";
-
-export type ContentBounds = {
-	left: number;
-	top: number;
-	right: number;
-	bottom: number;
-};
 
 /**
  * Pure function that computes the world-coordinate bounding box of all
@@ -19,7 +14,7 @@ export type ContentBounds = {
  */
 export const calcContentBounds = (
 	objects: Record<string, ObjectState>,
-): ContentBounds | null => {
+): BoundingBox | null => {
 	let minX = Infinity,
 		maxX = -Infinity,
 		minY = Infinity,

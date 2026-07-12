@@ -6,7 +6,7 @@ export type {
 export { exportCanvasToSvg, canvasToSvgString } from "./exportCanvasToSvg";
 export type { ExportCanvasToSvgOptions } from "./exportCanvasToSvg";
 export { buildExportSvg, serializeSvg } from "./buildExportSvg";
-export type { BuildExportSvgOptions, ExportViewBox } from "./buildExportSvg";
+export type { BuildExportSvgOptions } from "./buildExportSvg";
 export { embedCanvasSource, extractCanvasSource } from "./canvasSourceMetadata";
 export {
 	embedCanvasSourceInPng,
