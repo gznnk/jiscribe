@@ -16,7 +16,7 @@ export const ObjectTypes = [
 	"card",
 	"delay",
 	"display",
-	"triangle",
+	"extract",
 	"cross",
 	"polyline",
 	"polygon",

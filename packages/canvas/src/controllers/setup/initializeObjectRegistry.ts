@@ -1,77 +1,96 @@
 import type { ComponentType, FC } from "react";
 
 import type { CanvasRegistries } from "./CanvasRegistries";
-import { Sticky } from "../../presentations/objects/annotations/Sticky";
-import { Connector } from "../../presentations/objects/connections/Connector";
-import {
-	Actor,
-	ActorPreview,
-	calcActorTextRegion,
-} from "../../presentations/objects/primitives/Actor";
 import {
 	Callout,
 	CalloutPreview,
 	calcCalloutTextRegion,
-} from "../../presentations/objects/primitives/Callout";
+} from "../../presentations/objects/annotations/Callout";
+import { Sticky } from "../../presentations/objects/annotations/Sticky";
+import { Connector } from "../../presentations/objects/connections/Connector";
 import {
 	Card,
 	CardPreview,
 	calcCardTextRegion,
-} from "../../presentations/objects/primitives/Card";
-import {
-	Cloud,
-	CloudPreview,
-	calcCloudTextRegion,
-} from "../../presentations/objects/primitives/Cloud";
+} from "../../presentations/objects/flowchart/Card";
 import {
 	Cross,
 	CrossPreview,
-} from "../../presentations/objects/primitives/Cross";
+} from "../../presentations/objects/flowchart/Cross";
 import {
 	Db,
 	DbPreview,
 	calcDbTextRegion,
-} from "../../presentations/objects/primitives/Db";
+} from "../../presentations/objects/flowchart/Db";
 import {
 	Delay,
 	DelayPreview,
 	calcDelayTextRegion,
-} from "../../presentations/objects/primitives/Delay";
+} from "../../presentations/objects/flowchart/Delay";
 import {
 	Diamond,
 	DiamondPreview,
 	calcDiamondTextRegion,
-} from "../../presentations/objects/primitives/Diamond";
+} from "../../presentations/objects/flowchart/Diamond";
 import {
 	Display,
 	DisplayPreview,
 	calcDisplayTextRegion,
-} from "../../presentations/objects/primitives/Display";
+} from "../../presentations/objects/flowchart/Display";
 import {
 	Document,
 	DocumentPreview,
 	calcDocumentTextRegion,
-} from "../../presentations/objects/primitives/Document";
+} from "../../presentations/objects/flowchart/Document";
+import {
+	Extract,
+	ExtractPreview,
+} from "../../presentations/objects/flowchart/Extract";
+import {
+	Hexagon,
+	HexagonPreview,
+	calcHexagonTextRegion,
+} from "../../presentations/objects/flowchart/Hexagon";
+import {
+	ManualInput,
+	ManualInputPreview,
+	calcManualInputTextRegion,
+} from "../../presentations/objects/flowchart/ManualInput";
+import {
+	Parallelogram,
+	ParallelogramPreview,
+	calcParallelogramTextRegion,
+} from "../../presentations/objects/flowchart/Parallelogram";
+import {
+	Stadium,
+	StadiumPreview,
+	calcStadiumTextRegion,
+} from "../../presentations/objects/flowchart/Stadium";
+import {
+	Subroutine,
+	SubroutinePreview,
+	calcSubroutineTextRegion,
+} from "../../presentations/objects/flowchart/Subroutine";
+import {
+	Trapezoid,
+	TrapezoidPreview,
+	calcTrapezoidTextRegion,
+} from "../../presentations/objects/flowchart/Trapezoid";
+import {
+	Actor,
+	ActorPreview,
+	calcActorTextRegion,
+} from "../../presentations/objects/general/Actor";
+import {
+	Cloud,
+	CloudPreview,
+	calcCloudTextRegion,
+} from "../../presentations/objects/general/Cloud";
 import {
 	Ellipse,
 	EllipsePreview,
 	calcEllipseTextRegion,
 } from "../../presentations/objects/primitives/Ellipse";
-import {
-	Hexagon,
-	HexagonPreview,
-	calcHexagonTextRegion,
-} from "../../presentations/objects/primitives/Hexagon";
-import {
-	ManualInput,
-	ManualInputPreview,
-	calcManualInputTextRegion,
-} from "../../presentations/objects/primitives/ManualInput";
-import {
-	Parallelogram,
-	ParallelogramPreview,
-	calcParallelogramTextRegion,
-} from "../../presentations/objects/primitives/Parallelogram";
 import {
 	Polygon,
 	PolygonPreview,
@@ -81,76 +100,69 @@ import {
 	PolylinePreview,
 } from "../../presentations/objects/primitives/Polyline";
 import { Rect, RectPreview } from "../../presentations/objects/primitives/Rect";
-import {
-	Stadium,
-	StadiumPreview,
-	calcStadiumTextRegion,
-} from "../../presentations/objects/primitives/Stadium";
-import {
-	Subroutine,
-	SubroutinePreview,
-	calcSubroutineTextRegion,
-} from "../../presentations/objects/primitives/Subroutine";
 import { Svg } from "../../presentations/objects/primitives/Svg";
-import {
-	Trapezoid,
-	TrapezoidPreview,
-	calcTrapezoidTextRegion,
-} from "../../presentations/objects/primitives/Trapezoid";
-import {
-	Triangle,
-	TrianglePreview,
-} from "../../presentations/objects/primitives/Triangle";
 import type { ShapePreviewRenderer } from "../../presentations/objects/registry/ShapePreviewTypes";
 import type { TextRegionCalculator } from "../../presentations/objects/registry/TextRegionRegistry";
+import { CalloutFeatures } from "../../schemas/objects/annotations/callout/CalloutDoc";
+import { CalloutShapeFactory } from "../../schemas/objects/annotations/callout/CalloutShapeFactory";
+import { CalloutShapePresets } from "../../schemas/objects/annotations/callout/CalloutShapePresets";
 import { StickyFeatures } from "../../schemas/objects/annotations/sticky/StickyDoc";
 import { StickyShapeFactory } from "../../schemas/objects/annotations/sticky/StickyShapeFactory";
 import { StickyShapePresets } from "../../schemas/objects/annotations/sticky/StickyShapePresets";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
 import { ConnectorFeatures } from "../../schemas/objects/connections/connector/ConnectorDoc";
-import { ActorFeatures } from "../../schemas/objects/primitives/actor/ActorDoc";
-import { ActorShapeFactory } from "../../schemas/objects/primitives/actor/ActorShapeFactory";
-import { ActorShapePresets } from "../../schemas/objects/primitives/actor/ActorShapePresets";
-import { CalloutFeatures } from "../../schemas/objects/primitives/callout/CalloutDoc";
-import { CalloutShapeFactory } from "../../schemas/objects/primitives/callout/CalloutShapeFactory";
-import { CalloutShapePresets } from "../../schemas/objects/primitives/callout/CalloutShapePresets";
-import { CardFeatures } from "../../schemas/objects/primitives/card/CardDoc";
-import { CardShapeFactory } from "../../schemas/objects/primitives/card/CardShapeFactory";
-import { CardShapePresets } from "../../schemas/objects/primitives/card/CardShapePresets";
-import { CloudFeatures } from "../../schemas/objects/primitives/cloud/CloudDoc";
-import { CloudShapeFactory } from "../../schemas/objects/primitives/cloud/CloudShapeFactory";
-import { CloudShapePresets } from "../../schemas/objects/primitives/cloud/CloudShapePresets";
-import { CrossFeatures } from "../../schemas/objects/primitives/cross/CrossDoc";
-import { CrossShapeFactory } from "../../schemas/objects/primitives/cross/CrossShapeFactory";
-import { CrossShapePresets } from "../../schemas/objects/primitives/cross/CrossShapePresets";
-import { DbFeatures } from "../../schemas/objects/primitives/db/DbDoc";
-import { DbShapeFactory } from "../../schemas/objects/primitives/db/DbShapeFactory";
-import { DbShapePresets } from "../../schemas/objects/primitives/db/DbShapePresets";
-import { DelayFeatures } from "../../schemas/objects/primitives/delay/DelayDoc";
-import { DelayShapeFactory } from "../../schemas/objects/primitives/delay/DelayShapeFactory";
-import { DelayShapePresets } from "../../schemas/objects/primitives/delay/DelayShapePresets";
-import { DiamondFeatures } from "../../schemas/objects/primitives/diamond/DiamondDoc";
-import { DiamondShapeFactory } from "../../schemas/objects/primitives/diamond/DiamondShapeFactory";
-import { DiamondShapePresets } from "../../schemas/objects/primitives/diamond/DiamondShapePresets";
-import { DisplayFeatures } from "../../schemas/objects/primitives/display/DisplayDoc";
-import { DisplayShapeFactory } from "../../schemas/objects/primitives/display/DisplayShapeFactory";
-import { DisplayShapePresets } from "../../schemas/objects/primitives/display/DisplayShapePresets";
-import { DocumentFeatures } from "../../schemas/objects/primitives/document/DocumentDoc";
-import { DocumentShapeFactory } from "../../schemas/objects/primitives/document/DocumentShapeFactory";
-import { DocumentShapePresets } from "../../schemas/objects/primitives/document/DocumentShapePresets";
+import { CardFeatures } from "../../schemas/objects/flowchart/card/CardDoc";
+import { CardShapeFactory } from "../../schemas/objects/flowchart/card/CardShapeFactory";
+import { CardShapePresets } from "../../schemas/objects/flowchart/card/CardShapePresets";
+import { CrossFeatures } from "../../schemas/objects/flowchart/cross/CrossDoc";
+import { CrossShapeFactory } from "../../schemas/objects/flowchart/cross/CrossShapeFactory";
+import { CrossShapePresets } from "../../schemas/objects/flowchart/cross/CrossShapePresets";
+import { DbFeatures } from "../../schemas/objects/flowchart/db/DbDoc";
+import { DbShapeFactory } from "../../schemas/objects/flowchart/db/DbShapeFactory";
+import { DbShapePresets } from "../../schemas/objects/flowchart/db/DbShapePresets";
+import { DelayFeatures } from "../../schemas/objects/flowchart/delay/DelayDoc";
+import { DelayShapeFactory } from "../../schemas/objects/flowchart/delay/DelayShapeFactory";
+import { DelayShapePresets } from "../../schemas/objects/flowchart/delay/DelayShapePresets";
+import { DiamondFeatures } from "../../schemas/objects/flowchart/diamond/DiamondDoc";
+import { DiamondShapeFactory } from "../../schemas/objects/flowchart/diamond/DiamondShapeFactory";
+import { DiamondShapePresets } from "../../schemas/objects/flowchart/diamond/DiamondShapePresets";
+import { DisplayFeatures } from "../../schemas/objects/flowchart/display/DisplayDoc";
+import { DisplayShapeFactory } from "../../schemas/objects/flowchart/display/DisplayShapeFactory";
+import { DisplayShapePresets } from "../../schemas/objects/flowchart/display/DisplayShapePresets";
+import { DocumentFeatures } from "../../schemas/objects/flowchart/document/DocumentDoc";
+import { DocumentShapeFactory } from "../../schemas/objects/flowchart/document/DocumentShapeFactory";
+import { DocumentShapePresets } from "../../schemas/objects/flowchart/document/DocumentShapePresets";
+import { ExtractFeatures } from "../../schemas/objects/flowchart/extract/ExtractDoc";
+import { ExtractShapeFactory } from "../../schemas/objects/flowchart/extract/ExtractShapeFactory";
+import { ExtractShapePresets } from "../../schemas/objects/flowchart/extract/ExtractShapePresets";
+import { HexagonFeatures } from "../../schemas/objects/flowchart/hexagon/HexagonDoc";
+import { HexagonShapeFactory } from "../../schemas/objects/flowchart/hexagon/HexagonShapeFactory";
+import { HexagonShapePresets } from "../../schemas/objects/flowchart/hexagon/HexagonShapePresets";
+import { ManualInputFeatures } from "../../schemas/objects/flowchart/manualInput/ManualInputDoc";
+import { ManualInputShapeFactory } from "../../schemas/objects/flowchart/manualInput/ManualInputShapeFactory";
+import { ManualInputShapePresets } from "../../schemas/objects/flowchart/manualInput/ManualInputShapePresets";
+import { ParallelogramFeatures } from "../../schemas/objects/flowchart/parallelogram/ParallelogramDoc";
+import { ParallelogramShapeFactory } from "../../schemas/objects/flowchart/parallelogram/ParallelogramShapeFactory";
+import { ParallelogramShapePresets } from "../../schemas/objects/flowchart/parallelogram/ParallelogramShapePresets";
+import { StadiumFeatures } from "../../schemas/objects/flowchart/stadium/StadiumDoc";
+import { StadiumShapeFactory } from "../../schemas/objects/flowchart/stadium/StadiumShapeFactory";
+import { StadiumShapePresets } from "../../schemas/objects/flowchart/stadium/StadiumShapePresets";
+import { SubroutineFeatures } from "../../schemas/objects/flowchart/subroutine/SubroutineDoc";
+import { SubroutineShapeFactory } from "../../schemas/objects/flowchart/subroutine/SubroutineShapeFactory";
+import { SubroutineShapePresets } from "../../schemas/objects/flowchart/subroutine/SubroutineShapePresets";
+import { TrapezoidFeatures } from "../../schemas/objects/flowchart/trapezoid/TrapezoidDoc";
+import { TrapezoidShapeFactory } from "../../schemas/objects/flowchart/trapezoid/TrapezoidShapeFactory";
+import { TrapezoidShapePresets } from "../../schemas/objects/flowchart/trapezoid/TrapezoidShapePresets";
+import { ActorFeatures } from "../../schemas/objects/general/actor/ActorDoc";
+import { ActorShapeFactory } from "../../schemas/objects/general/actor/ActorShapeFactory";
+import { ActorShapePresets } from "../../schemas/objects/general/actor/ActorShapePresets";
+import { CloudFeatures } from "../../schemas/objects/general/cloud/CloudDoc";
+import { CloudShapeFactory } from "../../schemas/objects/general/cloud/CloudShapeFactory";
+import { CloudShapePresets } from "../../schemas/objects/general/cloud/CloudShapePresets";
 import { EllipseFeatures } from "../../schemas/objects/primitives/ellipse/EllipseDoc";
 import { EllipseShapeFactory } from "../../schemas/objects/primitives/ellipse/EllipseShapeFactory";
 import { EllipseShapePresets } from "../../schemas/objects/primitives/ellipse/EllipseShapePresets";
 import { GroupFeatures } from "../../schemas/objects/primitives/group/GroupDoc";
-import { HexagonFeatures } from "../../schemas/objects/primitives/hexagon/HexagonDoc";
-import { HexagonShapeFactory } from "../../schemas/objects/primitives/hexagon/HexagonShapeFactory";
-import { HexagonShapePresets } from "../../schemas/objects/primitives/hexagon/HexagonShapePresets";
-import { ManualInputFeatures } from "../../schemas/objects/primitives/manualInput/ManualInputDoc";
-import { ManualInputShapeFactory } from "../../schemas/objects/primitives/manualInput/ManualInputShapeFactory";
-import { ManualInputShapePresets } from "../../schemas/objects/primitives/manualInput/ManualInputShapePresets";
-import { ParallelogramFeatures } from "../../schemas/objects/primitives/parallelogram/ParallelogramDoc";
-import { ParallelogramShapeFactory } from "../../schemas/objects/primitives/parallelogram/ParallelogramShapeFactory";
-import { ParallelogramShapePresets } from "../../schemas/objects/primitives/parallelogram/ParallelogramShapePresets";
 import { PolygonFeatures } from "../../schemas/objects/primitives/polygon/PolygonDoc";
 import { PolygonShapeFactory } from "../../schemas/objects/primitives/polygon/PolygonShapeFactory";
 import { PolygonShapePresets } from "../../schemas/objects/primitives/polygon/PolygonShapePresets";
@@ -160,19 +172,7 @@ import { PolylineShapePresets } from "../../schemas/objects/primitives/polyline/
 import { RectFeatures } from "../../schemas/objects/primitives/rect/RectDoc";
 import { RectShapeFactory } from "../../schemas/objects/primitives/rect/RectShapeFactory";
 import { RectShapePresets } from "../../schemas/objects/primitives/rect/RectShapePresets";
-import { StadiumFeatures } from "../../schemas/objects/primitives/stadium/StadiumDoc";
-import { StadiumShapeFactory } from "../../schemas/objects/primitives/stadium/StadiumShapeFactory";
-import { StadiumShapePresets } from "../../schemas/objects/primitives/stadium/StadiumShapePresets";
-import { SubroutineFeatures } from "../../schemas/objects/primitives/subroutine/SubroutineDoc";
-import { SubroutineShapeFactory } from "../../schemas/objects/primitives/subroutine/SubroutineShapeFactory";
-import { SubroutineShapePresets } from "../../schemas/objects/primitives/subroutine/SubroutineShapePresets";
 import { SvgFeatures } from "../../schemas/objects/primitives/svg/SvgDoc";
-import { TrapezoidFeatures } from "../../schemas/objects/primitives/trapezoid/TrapezoidDoc";
-import { TrapezoidShapeFactory } from "../../schemas/objects/primitives/trapezoid/TrapezoidShapeFactory";
-import { TrapezoidShapePresets } from "../../schemas/objects/primitives/trapezoid/TrapezoidShapePresets";
-import { TriangleFeatures } from "../../schemas/objects/primitives/triangle/TriangleDoc";
-import { TriangleShapeFactory } from "../../schemas/objects/primitives/triangle/TriangleShapeFactory";
-import { TriangleShapePresets } from "../../schemas/objects/primitives/triangle/TriangleShapePresets";
 import type { ObjectFeatures } from "../../schemas/objects/types/ObjectFeatures";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 import type { ShapeFactory } from "../../schemas/objects/types/ShapeFactory";
@@ -180,6 +180,12 @@ import type {
 	ShapeIconProps,
 	ShapePreset,
 } from "../../schemas/objects/types/ShapePreset";
+import {
+	calloutToDoc,
+	calloutToState,
+} from "../../states/objects/annotations/callout/CalloutMapper";
+import type { CalloutState } from "../../states/objects/annotations/callout/CalloutState";
+import { isValidCalloutState } from "../../states/objects/annotations/callout/validateCalloutState";
 import {
 	stickyToDoc,
 	stickyToState,
@@ -194,65 +200,98 @@ import {
 } from "../../states/objects/connections/connector/ConnectorMapper";
 import { isValidConnectorState } from "../../states/objects/connections/connector/validateConnectorState";
 import {
-	actorToDoc,
-	actorToState,
-} from "../../states/objects/primitives/actor/ActorMapper";
-import type { ActorState } from "../../states/objects/primitives/actor/ActorState";
-import { isValidActorState } from "../../states/objects/primitives/actor/validateActorState";
-import {
-	calloutToDoc,
-	calloutToState,
-} from "../../states/objects/primitives/callout/CalloutMapper";
-import type { CalloutState } from "../../states/objects/primitives/callout/CalloutState";
-import { isValidCalloutState } from "../../states/objects/primitives/callout/validateCalloutState";
-import {
 	cardToDoc,
 	cardToState,
-} from "../../states/objects/primitives/card/CardMapper";
-import type { CardState } from "../../states/objects/primitives/card/CardState";
-import { isValidCardState } from "../../states/objects/primitives/card/validateCardState";
-import {
-	cloudToDoc,
-	cloudToState,
-} from "../../states/objects/primitives/cloud/CloudMapper";
-import type { CloudState } from "../../states/objects/primitives/cloud/CloudState";
-import { isValidCloudState } from "../../states/objects/primitives/cloud/validateCloudState";
+} from "../../states/objects/flowchart/card/CardMapper";
+import type { CardState } from "../../states/objects/flowchart/card/CardState";
+import { isValidCardState } from "../../states/objects/flowchart/card/validateCardState";
 import {
 	crossToDoc,
 	crossToState,
-} from "../../states/objects/primitives/cross/CrossMapper";
-import type { CrossState } from "../../states/objects/primitives/cross/CrossState";
-import { isValidCrossState } from "../../states/objects/primitives/cross/validateCrossState";
-import {
-	dbToDoc,
-	dbToState,
-} from "../../states/objects/primitives/db/DbMapper";
-import type { DbState } from "../../states/objects/primitives/db/DbState";
-import { isValidDbState } from "../../states/objects/primitives/db/validateDbState";
+} from "../../states/objects/flowchart/cross/CrossMapper";
+import type { CrossState } from "../../states/objects/flowchart/cross/CrossState";
+import { isValidCrossState } from "../../states/objects/flowchart/cross/validateCrossState";
+import { dbToDoc, dbToState } from "../../states/objects/flowchart/db/DbMapper";
+import type { DbState } from "../../states/objects/flowchart/db/DbState";
+import { isValidDbState } from "../../states/objects/flowchart/db/validateDbState";
 import {
 	delayToDoc,
 	delayToState,
-} from "../../states/objects/primitives/delay/DelayMapper";
-import type { DelayState } from "../../states/objects/primitives/delay/DelayState";
-import { isValidDelayState } from "../../states/objects/primitives/delay/validateDelayState";
+} from "../../states/objects/flowchart/delay/DelayMapper";
+import type { DelayState } from "../../states/objects/flowchart/delay/DelayState";
+import { isValidDelayState } from "../../states/objects/flowchart/delay/validateDelayState";
 import {
 	diamondToDoc,
 	diamondToState,
-} from "../../states/objects/primitives/diamond/DiamondMapper";
-import type { DiamondState } from "../../states/objects/primitives/diamond/DiamondState";
-import { isValidDiamondState } from "../../states/objects/primitives/diamond/validateDiamondState";
+} from "../../states/objects/flowchart/diamond/DiamondMapper";
+import type { DiamondState } from "../../states/objects/flowchart/diamond/DiamondState";
+import { isValidDiamondState } from "../../states/objects/flowchart/diamond/validateDiamondState";
 import {
 	displayToDoc,
 	displayToState,
-} from "../../states/objects/primitives/display/DisplayMapper";
-import type { DisplayState } from "../../states/objects/primitives/display/DisplayState";
-import { isValidDisplayState } from "../../states/objects/primitives/display/validateDisplayState";
+} from "../../states/objects/flowchart/display/DisplayMapper";
+import type { DisplayState } from "../../states/objects/flowchart/display/DisplayState";
+import { isValidDisplayState } from "../../states/objects/flowchart/display/validateDisplayState";
 import {
 	documentToDoc,
 	documentToState,
-} from "../../states/objects/primitives/document/DocumentMapper";
-import type { DocumentState } from "../../states/objects/primitives/document/DocumentState";
-import { isValidDocumentState } from "../../states/objects/primitives/document/validateDocumentState";
+} from "../../states/objects/flowchart/document/DocumentMapper";
+import type { DocumentState } from "../../states/objects/flowchart/document/DocumentState";
+import { isValidDocumentState } from "../../states/objects/flowchart/document/validateDocumentState";
+import {
+	extractToDoc,
+	extractToState,
+} from "../../states/objects/flowchart/extract/ExtractMapper";
+import type { ExtractState } from "../../states/objects/flowchart/extract/ExtractState";
+import { isValidExtractState } from "../../states/objects/flowchart/extract/validateExtractState";
+import {
+	hexagonToDoc,
+	hexagonToState,
+} from "../../states/objects/flowchart/hexagon/HexagonMapper";
+import type { HexagonState } from "../../states/objects/flowchart/hexagon/HexagonState";
+import { isValidHexagonState } from "../../states/objects/flowchart/hexagon/validateHexagonState";
+import {
+	manualInputToDoc,
+	manualInputToState,
+} from "../../states/objects/flowchart/manualInput/ManualInputMapper";
+import type { ManualInputState } from "../../states/objects/flowchart/manualInput/ManualInputState";
+import { isValidManualInputState } from "../../states/objects/flowchart/manualInput/validateManualInputState";
+import {
+	parallelogramToDoc,
+	parallelogramToState,
+} from "../../states/objects/flowchart/parallelogram/ParallelogramMapper";
+import type { ParallelogramState } from "../../states/objects/flowchart/parallelogram/ParallelogramState";
+import { isValidParallelogramState } from "../../states/objects/flowchart/parallelogram/validateParallelogramState";
+import {
+	stadiumToDoc,
+	stadiumToState,
+} from "../../states/objects/flowchart/stadium/StadiumMapper";
+import type { StadiumState } from "../../states/objects/flowchart/stadium/StadiumState";
+import { isValidStadiumState } from "../../states/objects/flowchart/stadium/validateStadiumState";
+import {
+	subroutineToDoc,
+	subroutineToState,
+} from "../../states/objects/flowchart/subroutine/SubroutineMapper";
+import type { SubroutineState } from "../../states/objects/flowchart/subroutine/SubroutineState";
+import { isValidSubroutineState } from "../../states/objects/flowchart/subroutine/validateSubroutineState";
+import {
+	trapezoidToDoc,
+	trapezoidToState,
+} from "../../states/objects/flowchart/trapezoid/TrapezoidMapper";
+import type { TrapezoidState } from "../../states/objects/flowchart/trapezoid/TrapezoidState";
+import { isValidTrapezoidState } from "../../states/objects/flowchart/trapezoid/validateTrapezoidState";
+import {
+	actorToDoc,
+	actorToState,
+} from "../../states/objects/general/actor/ActorMapper";
+import type { ActorState } from "../../states/objects/general/actor/ActorState";
+import { isValidActorState } from "../../states/objects/general/actor/validateActorState";
+import {
+	cloudToDoc,
+	cloudToState,
+} from "../../states/objects/general/cloud/CloudMapper";
+import type { CloudState } from "../../states/objects/general/cloud/CloudState";
+import { isValidCloudState } from "../../states/objects/general/cloud/validateCloudState";
 import {
 	ellipseToDoc,
 	ellipseToState,
@@ -264,24 +303,6 @@ import {
 	groupToState,
 } from "../../states/objects/primitives/group/GroupMapper";
 import { isValidGroupState } from "../../states/objects/primitives/group/validateGroupState";
-import {
-	hexagonToDoc,
-	hexagonToState,
-} from "../../states/objects/primitives/hexagon/HexagonMapper";
-import type { HexagonState } from "../../states/objects/primitives/hexagon/HexagonState";
-import { isValidHexagonState } from "../../states/objects/primitives/hexagon/validateHexagonState";
-import {
-	manualInputToDoc,
-	manualInputToState,
-} from "../../states/objects/primitives/manualInput/ManualInputMapper";
-import type { ManualInputState } from "../../states/objects/primitives/manualInput/ManualInputState";
-import { isValidManualInputState } from "../../states/objects/primitives/manualInput/validateManualInputState";
-import {
-	parallelogramToDoc,
-	parallelogramToState,
-} from "../../states/objects/primitives/parallelogram/ParallelogramMapper";
-import type { ParallelogramState } from "../../states/objects/primitives/parallelogram/ParallelogramState";
-import { isValidParallelogramState } from "../../states/objects/primitives/parallelogram/validateParallelogramState";
 import {
 	polygonToDoc,
 	polygonToState,
@@ -299,35 +320,11 @@ import {
 import type { RectState } from "../../states/objects/primitives/rect/RectState";
 import { isValidRectState } from "../../states/objects/primitives/rect/validateRectState";
 import {
-	stadiumToDoc,
-	stadiumToState,
-} from "../../states/objects/primitives/stadium/StadiumMapper";
-import type { StadiumState } from "../../states/objects/primitives/stadium/StadiumState";
-import { isValidStadiumState } from "../../states/objects/primitives/stadium/validateStadiumState";
-import {
-	subroutineToDoc,
-	subroutineToState,
-} from "../../states/objects/primitives/subroutine/SubroutineMapper";
-import type { SubroutineState } from "../../states/objects/primitives/subroutine/SubroutineState";
-import { isValidSubroutineState } from "../../states/objects/primitives/subroutine/validateSubroutineState";
-import {
 	svgToDoc,
 	svgToState,
 } from "../../states/objects/primitives/svg/SvgMapper";
 import type { SvgState } from "../../states/objects/primitives/svg/SvgState";
 import { isValidSvgState } from "../../states/objects/primitives/svg/validateSvgState";
-import {
-	trapezoidToDoc,
-	trapezoidToState,
-} from "../../states/objects/primitives/trapezoid/TrapezoidMapper";
-import type { TrapezoidState } from "../../states/objects/primitives/trapezoid/TrapezoidState";
-import { isValidTrapezoidState } from "../../states/objects/primitives/trapezoid/validateTrapezoidState";
-import {
-	triangleToDoc,
-	triangleToState,
-} from "../../states/objects/primitives/triangle/TriangleMapper";
-import type { TriangleState } from "../../states/objects/primitives/triangle/TriangleState";
-import { isValidTriangleState } from "../../states/objects/primitives/triangle/validateTriangleState";
 import type { ObjectStateValidateFn } from "../../states/registry/ObjectStateValidatorRegistry";
 import { createFrameBehavior } from "../gestures/handlers/objects/base/FrameController";
 import {
@@ -362,6 +359,7 @@ import { DiamondIcon } from "../ui/icons/DiamondIcon";
 import { DisplayIcon } from "../ui/icons/DisplayIcon";
 import { DocumentIcon } from "../ui/icons/DocumentIcon";
 import { EllipseIcon } from "../ui/icons/EllipseIcon";
+import { ExtractIcon } from "../ui/icons/ExtractIcon";
 import { HexagonIcon } from "../ui/icons/HexagonIcon";
 import { ManualInputIcon } from "../ui/icons/ManualInputIcon";
 import { MarkdownRectIcon } from "../ui/icons/MarkdownRectIcon";
@@ -373,7 +371,6 @@ import { StadiumIcon } from "../ui/icons/StadiumIcon";
 import { StickyIcon } from "../ui/icons/StickyIcon";
 import { SubroutineIcon } from "../ui/icons/SubroutineIcon";
 import { TrapezoidIcon } from "../ui/icons/TrapezoidIcon";
-import { TriangleIcon } from "../ui/icons/TriangleIcon";
 import {
 	LabelBackgroundColorMenu,
 	LabelBoldMenu,
@@ -1007,11 +1004,11 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			},
 		}),
 
-		triangle: defineObject({
-			mapper: { toDoc: triangleToDoc, toState: triangleToState },
-			features: TriangleFeatures,
-			component: Triangle,
-			behavior: createFrameBehavior<TriangleState>(),
+		extract: defineObject({
+			mapper: { toDoc: extractToDoc, toState: extractToState },
+			features: ExtractFeatures,
+			component: Extract,
+			behavior: createFrameBehavior<ExtractState>(),
 			menuFactory: (_state) => [
 				{
 					id: "style",
@@ -1026,12 +1023,12 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					items: [{ type: "aspectRatio" }],
 				},
 			],
-			validateState: isValidTriangleState,
+			validateState: isValidExtractState,
 			shapeLibrary: {
-				factory: TriangleShapeFactory,
-				previewRenderer: TrianglePreview,
-				presets: TriangleShapePresets,
-				presetIcons: { triangle: TriangleIcon },
+				factory: ExtractShapeFactory,
+				previewRenderer: ExtractPreview,
+				presets: ExtractShapePresets,
+				presetIcons: { extract: ExtractIcon },
 			},
 		}),
 

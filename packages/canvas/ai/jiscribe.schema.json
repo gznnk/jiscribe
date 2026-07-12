@@ -99,7 +99,7 @@
 				{ "$ref": "#/$defs/CardDoc" },
 				{ "$ref": "#/$defs/DelayDoc" },
 				{ "$ref": "#/$defs/DisplayDoc" },
-				{ "$ref": "#/$defs/TriangleDoc" },
+				{ "$ref": "#/$defs/ExtractDoc" },
 				{ "$ref": "#/$defs/CrossDoc" },
 				{ "$ref": "#/$defs/PolylineDoc" },
 				{ "$ref": "#/$defs/PolygonDoc" },
@@ -131,7 +131,7 @@
 				{ "$ref": "#/$defs/CardDoc" },
 				{ "$ref": "#/$defs/DelayDoc" },
 				{ "$ref": "#/$defs/DisplayDoc" },
-				{ "$ref": "#/$defs/TriangleDoc" },
+				{ "$ref": "#/$defs/ExtractDoc" },
 				{ "$ref": "#/$defs/CrossDoc" },
 				{ "$ref": "#/$defs/PolylineDoc" },
 				{ "$ref": "#/$defs/PolygonDoc" },
@@ -534,17 +534,17 @@
 			}
 		},
 
-		"TriangleDoc": {
-			"description": "Triangle with its apex at the top, used for merges/hierarchies and as a marker. Uses the same rect-based geometry (x/y/width/height) as RectDoc. Holds no text (it is a marker, not a labeled box).",
+		"ExtractDoc": {
+			"description": "The flowchart \"extract\" symbol — an upward triangle (apex at the top), used for extract/merge/marker nodes. Uses the same rect-based geometry (x/y/width/height) as RectDoc. Holds no text (it is a marker, not a labeled box).",
 			"type": "object",
 			"required": ["id", "type", "x", "y", "width", "height"],
 			"additionalProperties": false,
 			"properties": {
 				"id": { "description": "Unique identifier.", "type": "string" },
 				"type": {
-					"description": "Must be \"triangle\".",
+					"description": "Must be \"extract\".",
 					"type": "string",
-					"const": "triangle"
+					"const": "extract"
 				},
 				"meta": { "$ref": "#/$defs/MetaDoc" },
 				"x": {
@@ -1517,7 +1517,7 @@
 		},
 
 		"OwnerRef": {
-			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / ellipse / diamond / stadium / parallelogram / hexagon / cloud / document / actor / callout / db / subroutine / trapezoid / manualInput / card / delay / display / triangle / cross / sticky (NOT polyline / polygon / group / svg / connector).",
+			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / ellipse / diamond / stadium / parallelogram / hexagon / cloud / document / actor / callout / db / subroutine / trapezoid / manualInput / card / delay / display / extract / cross / sticky (NOT polyline / polygon / group / svg / connector).",
 			"type": "object",
 			"required": ["id"],
 			"additionalProperties": false,

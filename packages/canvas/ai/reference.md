@@ -70,7 +70,7 @@ In addition to `name` and `description`, `meta` may hold any custom keys.
 | `card`          | Card (cut top-left corner)         | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `delay`         | Delay (D-shape)                    | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `display`       | Display (pointed left/round right) | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `triangle`      | Triangle (apex up)                 | `x`, `y`, `width`, `height`             | Stroke, Fill, Transform (no text)     |
+| `extract`       | Extract (apex up)                  | `x`, `y`, `width`, `height`             | Stroke, Fill, Transform (no text)     |
 | `cross`         | Cross / plus                       | `x`, `y`, `width`, `height`             | Stroke, Fill, Transform (no text)     |
 | `polyline`      | Polyline (open path)               | `points`                                | Stroke                                |
 | `polygon`       | Polygon (closed path)              | `points`                                | Stroke, Fill                          |
@@ -413,11 +413,11 @@ It has **no Radius** (`rx`).
 
 ---
 
-### Flowchart box shapes (`subroutine` / `trapezoid` / `manualInput` / `card` / `delay` / `display` / `triangle` / `cross`)
+### Flowchart box shapes (`subroutine` / `trapezoid` / `manualInput` / `card` / `delay` / `display` / `extract` / `cross`)
 
 All eight use the **same rect-based geometry** (top-left `x`,`y` + `width`,`height`)
 and the same Stroke / Fill / Transform styles as `rect`; only the drawn outline
-differs. Six of them also take Text like `rect`; **`triangle` and `cross` hold no
+differs. Six of them also take Text like `rect`; **`extract` and `cross` hold no
 text** (they are markers — omit `text` and the font fields). They are all
 **connectable** like `rect` and have **no Radius** (`rx`). Set `type` to the value
 below and give a bounding box.
@@ -430,7 +430,7 @@ below and give a bounding box.
 | `card`        | Rectangle with the top-left corner cut off   | Punched-card style data    |
 | `delay`       | Rectangle whose right edge is a semicircle   | Wait / delay               |
 | `display`     | Pointed left edge, rounded right cap         | Output to a display        |
-| `triangle`    | Apex at the top (no text)                    | Merge / hierarchy / marker |
+| `extract`     | Upward triangle, apex at the top (no text)   | Extract / merge / marker   |
 | `cross`       | Plus sign (no text)                          | Junction / emphasis marker |
 
 ```json
@@ -705,7 +705,7 @@ Options for `anchor.kind`:
 
 The object referenced by `owner.id` may be **only a box shape (`rect`, `ellipse`, `diamond`,
 `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `actor`, `callout`, `db`,
-`subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `display`, `triangle`, `cross`, or
+`subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `display`, `extract`, `cross`, or
 `sticky`)** — these are the connectable types. A `polyline`, `polygon`, `group`, `svg`, or `connector`
 **cannot** be an endpoint owner; the document is rejected if one is referenced. To
 anchor a connector near such a shape, use a `FreeEndpointRef` instead.
@@ -740,7 +740,7 @@ diagram adapts to light/dark themes.
 
 ### Stroke style
 
-Applies to every box shape except `sticky` (`rect`, `ellipse`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `actor`, `callout`, `db`, `subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `display`, `triangle`, `cross`), plus `polyline`, `polygon`, `connector`.
+Applies to every box shape except `sticky` (`rect`, `ellipse`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `actor`, `callout`, `db`, `subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `display`, `extract`, `cross`), plus `polyline`, `polygon`, `connector`.
 
 | Field            | Type             | Default   | Description                                              |
 | ---------------- | ---------------- | --------- | -------------------------------------------------------- |
@@ -802,9 +802,9 @@ Used by `startArrow` / `endArrow` on `polyline` and `connector`.
 | ------------------- | --------------------------------- |
 | `"None"`            | No arrowhead.                     |
 | `"FilledTriangle"`  | Filled triangle (common arrow).   |
-| `"ConcaveTriangle"` | Concave triangle.                 |
+| `"ConcaveTriangle"` | Concave extract.                  |
 | `"OpenArrow"`       | Open arrow (`>`).                 |
-| `"HollowTriangle"`  | Hollow triangle.                  |
+| `"HollowTriangle"`  | Hollow extract.                   |
 | `"FilledDiamond"`   | Filled diamond (UML aggregation). |
 | `"HollowDiamond"`   | Hollow diamond (UML aggregation). |
 | `"Circle"`          | Circle.                           |

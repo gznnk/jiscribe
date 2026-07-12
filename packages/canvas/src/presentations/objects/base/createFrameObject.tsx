@@ -83,7 +83,7 @@ export const createFrameObject = <TState extends FrameRenderState>(
 
 		const textRegionCalculator = useTextRegionRegistry().get(type);
 		const transformAttr = createSvgTransform(scaleX, scaleY, rotation, cx, cy);
-		// Text-less shapes (features.text: false, e.g. cross / triangle) draw no
+		// Text-less shapes (features.text: false, e.g. cross / extract) draw no
 		// TextOverlay; this matches the same features.text gate used by the
 		// text-edit gesture and property-update side.
 		const hasText = props.features?.text === true;

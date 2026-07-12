@@ -1,11 +1,11 @@
 import { describe, it, expect } from "vitest";
 
-import { calcDbTextRegion } from "../../primitives/Db";
-import { calcDiamondTextRegion } from "../../primitives/Diamond";
+import { calcDbTextRegion } from "../../flowchart/Db";
+import { calcDiamondTextRegion } from "../../flowchart/Diamond";
+import { calcHexagonTextRegion } from "../../flowchart/Hexagon";
+import { calcParallelogramTextRegion } from "../../flowchart/Parallelogram";
+import { calcStadiumTextRegion } from "../../flowchart/Stadium";
 import { calcEllipseTextRegion } from "../../primitives/Ellipse";
-import { calcHexagonTextRegion } from "../../primitives/Hexagon";
-import { calcParallelogramTextRegion } from "../../primitives/Parallelogram";
-import { calcStadiumTextRegion } from "../../primitives/Stadium";
 import { calcTextRegion } from "../calcTextRegion";
 
 describe("calcTextRegion", () => {
