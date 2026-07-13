@@ -5,6 +5,6 @@ export const ManualInputShapePresets: ShapePreset[] = [
 		id: "manualInput",
 		objectType: "manualInput",
 		label: "Manual Input",
-		categories: { flowchart: 70 },
+		categories: { flowchart: 90 },
 	},
 ];

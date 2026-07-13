@@ -5,6 +5,6 @@ export const DbShapePresets: ShapePreset[] = [
 		id: "db",
 		objectType: "db",
 		label: "Database",
-		categories: { flowchart: 130 },
+		categories: { flowchart: 70 },
 	},
 ];

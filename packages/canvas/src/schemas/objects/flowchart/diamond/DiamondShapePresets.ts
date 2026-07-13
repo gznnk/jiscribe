@@ -4,7 +4,9 @@ export const DiamondShapePresets: ShapePreset[] = [
 	{
 		id: "diamond",
 		objectType: "diamond",
-		label: "Diamond",
-		categories: { flowchart: 10 },
+		// Labelled "Decision" for its flowchart role; the type stays the generic
+		// geometric `diamond` (it only ever appears in the flowchart category).
+		label: "Decision",
+		categories: { flowchart: 20 },
 	},
 ];

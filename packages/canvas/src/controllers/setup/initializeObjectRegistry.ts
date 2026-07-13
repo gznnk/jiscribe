@@ -57,6 +57,11 @@ import {
 	calcManualInputTextRegion,
 } from "../../presentations/objects/flowchart/ManualInput";
 import {
+	OffPageConnector,
+	OffPageConnectorPreview,
+	calcOffPageConnectorTextRegion,
+} from "../../presentations/objects/flowchart/OffPageConnector";
+import {
 	Parallelogram,
 	ParallelogramPreview,
 	calcParallelogramTextRegion,
@@ -141,6 +146,9 @@ import { HexagonShapePresets } from "../../schemas/objects/flowchart/hexagon/Hex
 import { ManualInputFeatures } from "../../schemas/objects/flowchart/manualInput/ManualInputDoc";
 import { ManualInputShapeFactory } from "../../schemas/objects/flowchart/manualInput/ManualInputShapeFactory";
 import { ManualInputShapePresets } from "../../schemas/objects/flowchart/manualInput/ManualInputShapePresets";
+import { OffPageConnectorFeatures } from "../../schemas/objects/flowchart/offPageConnector/OffPageConnectorDoc";
+import { OffPageConnectorShapeFactory } from "../../schemas/objects/flowchart/offPageConnector/OffPageConnectorShapeFactory";
+import { OffPageConnectorShapePresets } from "../../schemas/objects/flowchart/offPageConnector/OffPageConnectorShapePresets";
 import { ParallelogramFeatures } from "../../schemas/objects/flowchart/parallelogram/ParallelogramDoc";
 import { ParallelogramShapeFactory } from "../../schemas/objects/flowchart/parallelogram/ParallelogramShapeFactory";
 import { ParallelogramShapePresets } from "../../schemas/objects/flowchart/parallelogram/ParallelogramShapePresets";
@@ -257,6 +265,12 @@ import {
 import type { ManualInputState } from "../../states/objects/flowchart/manualInput/ManualInputState";
 import { isValidManualInputState } from "../../states/objects/flowchart/manualInput/validateManualInputState";
 import {
+	offPageConnectorToDoc,
+	offPageConnectorToState,
+} from "../../states/objects/flowchart/offPageConnector/OffPageConnectorMapper";
+import type { OffPageConnectorState } from "../../states/objects/flowchart/offPageConnector/OffPageConnectorState";
+import { isValidOffPageConnectorState } from "../../states/objects/flowchart/offPageConnector/validateOffPageConnectorState";
+import {
 	parallelogramToDoc,
 	parallelogramToState,
 } from "../../states/objects/flowchart/parallelogram/ParallelogramMapper";
@@ -363,6 +377,8 @@ import { ExtractIcon } from "../ui/icons/ExtractIcon";
 import { HexagonIcon } from "../ui/icons/HexagonIcon";
 import { ManualInputIcon } from "../ui/icons/ManualInputIcon";
 import { MarkdownRectIcon } from "../ui/icons/MarkdownRectIcon";
+import { OffPageConnectorIcon } from "../ui/icons/OffPageConnectorIcon";
+import { OnPageConnectorIcon } from "../ui/icons/OnPageConnectorIcon";
 import { ParallelogramIcon } from "../ui/icons/ParallelogramIcon";
 import { PolygonIcon } from "../ui/icons/PolygonIcon";
 import { PolylineIcon } from "../ui/icons/PolylineIcon";
@@ -472,7 +488,11 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				factory: RectShapeFactory,
 				previewRenderer: RectPreview,
 				presets: RectShapePresets,
-				presetIcons: { rect: RectIcon, "rect-markdown": MarkdownRectIcon },
+				presetIcons: {
+					rect: RectIcon,
+					process: RectIcon,
+					"rect-markdown": MarkdownRectIcon,
+				},
 			},
 		}),
 
@@ -505,7 +525,10 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				factory: EllipseShapeFactory,
 				previewRenderer: EllipsePreview,
 				presets: EllipseShapePresets,
-				presetIcons: { ellipse: EllipseIcon },
+				presetIcons: {
+					ellipse: EllipseIcon,
+					onPageConnector: OnPageConnectorIcon,
+				},
 			},
 		}),
 
@@ -1057,6 +1080,42 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				previewRenderer: CrossPreview,
 				presets: CrossShapePresets,
 				presetIcons: { cross: CrossIcon },
+			},
+		}),
+
+		offPageConnector: defineObject({
+			mapper: {
+				toDoc: offPageConnectorToDoc,
+				toState: offPageConnectorToState,
+			},
+			features: OffPageConnectorFeatures,
+			component: OffPageConnector,
+			textRegion: calcOffPageConnectorTextRegion,
+			behavior: createFrameBehavior<OffPageConnectorState>(),
+			menuFactory: (_state) => [
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: false },
+					],
+				},
+				{
+					id: "text",
+					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				},
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidOffPageConnectorState,
+			shapeLibrary: {
+				factory: OffPageConnectorShapeFactory,
+				previewRenderer: OffPageConnectorPreview,
+				presets: OffPageConnectorShapePresets,
+				presetIcons: { offPageConnector: OffPageConnectorIcon },
 			},
 		}),
 

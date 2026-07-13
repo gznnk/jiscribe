@@ -9,6 +9,16 @@ export const RectShapePresets: ShapePreset[] = [
 		categories: { basic: 10 },
 	},
 	{
+		// Flowchart process box: a plain rectangle. It renders identically to
+		// `rect`, so it stays the same type and only differs as a palette preset
+		// (semantic label + flowchart category), not a distinct shape type.
+		id: "process",
+		objectType: "rect",
+		label: "Process",
+		categories: { flowchart: 10 },
+		defaultOverrides: { width: 140, height: 80 },
+	},
+	{
 		id: "rect-markdown",
 		objectType: "rect",
 		label: "Markdown",

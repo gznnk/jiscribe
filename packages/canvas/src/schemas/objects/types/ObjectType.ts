@@ -18,6 +18,7 @@ export const ObjectTypes = [
 	"display",
 	"extract",
 	"cross",
+	"offPageConnector",
 	"polyline",
 	"polygon",
 	"group",

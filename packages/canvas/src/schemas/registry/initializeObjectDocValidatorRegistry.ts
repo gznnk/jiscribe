@@ -25,6 +25,8 @@ import { HexagonFeatures } from "../objects/flowchart/hexagon/HexagonDoc";
 import { validateHexagonDoc } from "../objects/flowchart/hexagon/validateHexagonDoc";
 import { ManualInputFeatures } from "../objects/flowchart/manualInput/ManualInputDoc";
 import { validateManualInputDoc } from "../objects/flowchart/manualInput/validateManualInputDoc";
+import { OffPageConnectorFeatures } from "../objects/flowchart/offPageConnector/OffPageConnectorDoc";
+import { validateOffPageConnectorDoc } from "../objects/flowchart/offPageConnector/validateOffPageConnectorDoc";
 import { ParallelogramFeatures } from "../objects/flowchart/parallelogram/ParallelogramDoc";
 import { validateParallelogramDoc } from "../objects/flowchart/parallelogram/validateParallelogramDoc";
 import { StadiumFeatures } from "../objects/flowchart/stadium/StadiumDoc";
@@ -140,6 +142,11 @@ export const initializeObjectDocValidatorRegistry = (): void => {
 		ExtractFeatures,
 	);
 	objectDocValidatorRegistry.register("cross", validateCrossDoc, CrossFeatures);
+	objectDocValidatorRegistry.register(
+		"offPageConnector",
+		validateOffPageConnectorDoc,
+		OffPageConnectorFeatures,
+	);
 	objectDocValidatorRegistry.register("group", validateGroupDoc, GroupFeatures);
 	objectDocValidatorRegistry.register(
 		"polygon",

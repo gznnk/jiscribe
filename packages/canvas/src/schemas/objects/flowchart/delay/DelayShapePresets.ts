@@ -5,6 +5,6 @@ export const DelayShapePresets: ShapePreset[] = [
 		id: "delay",
 		objectType: "delay",
 		label: "Delay",
-		categories: { flowchart: 90 },
+		categories: { flowchart: 150 },
 	},
 ];

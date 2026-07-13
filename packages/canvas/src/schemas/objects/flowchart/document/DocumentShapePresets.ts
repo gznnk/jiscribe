@@ -5,6 +5,6 @@ export const DocumentShapePresets: ShapePreset[] = [
 		id: "document",
 		objectType: "document",
 		label: "Document",
-		categories: { flowchart: 140 },
+		categories: { flowchart: 60 },
 	},
 ];

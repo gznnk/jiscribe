@@ -5,6 +5,6 @@ export const SubroutineShapePresets: ShapePreset[] = [
 		id: "subroutine",
 		objectType: "subroutine",
 		label: "Subroutine",
-		categories: { flowchart: 50 },
+		categories: { flowchart: 120 },
 	},
 ];

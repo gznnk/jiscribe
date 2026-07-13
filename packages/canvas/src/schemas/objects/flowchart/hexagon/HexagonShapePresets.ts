@@ -5,6 +5,6 @@ export const HexagonShapePresets: ShapePreset[] = [
 		id: "hexagon",
 		objectType: "hexagon",
 		label: "Hexagon",
-		categories: { flowchart: 40 },
+		categories: { flowchart: 140 },
 	},
 ];

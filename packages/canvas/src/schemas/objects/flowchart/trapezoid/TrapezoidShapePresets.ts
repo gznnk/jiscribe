@@ -5,6 +5,6 @@ export const TrapezoidShapePresets: ShapePreset[] = [
 		id: "trapezoid",
 		objectType: "trapezoid",
 		label: "Trapezoid",
-		categories: { flowchart: 60 },
+		categories: { flowchart: 130 },
 	},
 ];

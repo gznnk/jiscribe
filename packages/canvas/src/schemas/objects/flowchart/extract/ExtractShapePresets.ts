@@ -5,6 +5,6 @@ export const ExtractShapePresets: ShapePreset[] = [
 		id: "extract",
 		objectType: "extract",
 		label: "Extract",
-		categories: { flowchart: 110 },
+		categories: { flowchart: 170 },
 	},
 ];
