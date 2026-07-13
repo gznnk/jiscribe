@@ -1,14 +1,16 @@
-import {
-	insertPngTextChunk,
-	PNG_SOURCE_KEYWORD,
-	readPngTextChunk,
-} from "@workspace/canvas/png-source";
-import {
-	extractCanvasSourceFromSvgText,
-	replaceCanvasSourceInSvgText,
-} from "@workspace/canvas/svg-source";
 import * as vscode from "vscode";
 
+import {
+	computeExportBytes,
+	embedCurrentSource,
+	extractSourceFromImage,
+	reconcileImageDocument,
+	revertImageDocument,
+	saveImageDocument,
+	type ImageDocSeams,
+	type ImageDocState,
+	type JiscribeImageKind,
+} from "./imageDocumentOps";
 import { saveExportedImage } from "./saveExportedImage";
 import { getCanvasWebviewHtml } from "./webviewHtml";
 import type {
@@ -17,29 +19,29 @@ import type {
 } from "../types/messages";
 
 /**
- * Webview からの画像生成応答を待つ最大時間。通常は数百 ms オーダーで返るため、
- * これを超えたら Webview が応答不能とみなしフォールバックする。
+ * Max wait for the Webview's image-generation response. Responses normally
+ * return in a few hundred ms; past this we treat the Webview as unresponsive
+ * and fall back.
  */
 const IMAGE_EXPORT_TIMEOUT_MS = 10_000;
 
-/** 画像ドキュメントの種別。ソースの埋め込み形式と保存時の画像化方法を決める。 */
-type JiscribeImageKind = "png" | "svg";
-
 /**
- * `.jis.png` / `.jis.svg` の CustomDocument。
+ * CustomDocument for `.jis.png` / `.jis.svg`.
  *
- * 画像のカスタムエディタでは TextDocument が使えないため、
- * ドキュメントの状態（ソース JSON と最後に保存した画像バイト列）を自前で持つ。
+ * TextDocument can't be used for image editors, so we hold the document state
+ * (source JSON and the last saved image bytes) ourselves. The save-time
+ * orchestration lives in imageDocumentOps (VSCode-free, unit-tested); this class
+ * is just that state plus the CustomDocument requirements (uri / dispose).
  */
-class JiscribeImageDocument implements vscode.CustomDocument {
+class JiscribeImageDocument implements vscode.CustomDocument, ImageDocState {
 	/**
-	 * @param uri - ドキュメントの URI
-	 * @param kind - 画像種別（png / svg）
-	 * @param savedBytes - 最後にファイルへ書いた（または読み込んだ）画像バイト列。
-	 *   Webview が応答できないときの保存フォールバック（この画像に最新ソースを
-	 *   埋め込み直す）の土台になる
-	 * @param sourceText - 現在の `.jis.json` ソーステキスト。
-	 *   null = ソース埋め込みが無い（編集不可のエラー表示になる）
+	 * @param uri - document URI
+	 * @param kind - image kind (png / svg)
+	 * @param savedBytes - image bytes last written to (or read from) the file;
+	 *   the base for the save fallback that re-embeds the latest source when the
+	 *   Webview can't respond
+	 * @param sourceText - current `.jis.json` source; null means no embedded
+	 *   source (shown as an uneditable error)
 	 */
 	constructor(
 		public readonly uri: vscode.Uri,
@@ -48,70 +50,71 @@ class JiscribeImageDocument implements vscode.CustomDocument {
 		public sourceText: string | null,
 	) {}
 
+	public needsImageReconcile = false;
+	public reconcileInFlight = false;
+
 	dispose(): void {
-		// 保持しているのはメモリ上のバイト列だけなので、明示的な解放は不要
+		// Only in-memory bytes are held, so no explicit cleanup is needed.
 	}
 }
 
 /**
- * ソース埋め込み済みの画像（`.jis.png` / `.jis.svg`、draw.io の `.drawio.png` /
- * `.drawio.svg` 相当）を Canvas UI で開くカスタムエディタプロバイダ。
+ * Custom editor provider that opens source-embedded images (`.jis.png` /
+ * `.jis.svg`, analogous to draw.io's `.drawio.png` / `.drawio.svg`) in the
+ * Canvas UI.
  *
- * どちらも CustomEditorProvider として dirty 管理・保存・バックアップを自前で
- * 実装する。PNG はバイナリなので CustomTextEditorProvider が使えない。SVG は
- * テキストだが、編集のたびに SVG 全文を再レンダリングすると commit 経路が
- * DOM レンダリングに依存して失敗し得るため、同じ方式に乗せて画像化を保存時
- * まで遅延する。
+ * Both implement dirty tracking, save, and backup themselves as a
+ * CustomEditorProvider. PNG is binary so CustomTextEditorProvider can't be used;
+ * SVG is text but re-rendering the full SVG on every edit would make the commit
+ * path depend on DOM rendering (and fail), so it uses the same scheme and defers
+ * rendering to save time.
  *
- * データフロー:
- *   開く:   ファイル読み込み → 埋め込みソース JSON を抽出（png: iTXt / svg:
- *           <metadata>）→ Webview へ送信
- *   編集:   Webview から doc JSON が届く → edit イベント発火（dirty / undo / redo）
- *   保存:   Webview に画像生成を依頼（fit-to-content で再レンダリング＋ソース
- *           再埋め込み）→ ファイルへ書き込み。Webview が応答できない場合は
- *           「既存画像＋最新ソースの再埋め込み」にフォールバックする
- *           （画像の見た目は前回保存時のままだがソースは失われない）
+ * Data flow:
+ *   open:  read file → extract embedded source JSON (png: iTXt / svg:
+ *          <metadata>) → send to Webview
+ *   edit:  doc JSON arrives from Webview → fire edit event (dirty / undo / redo)
+ *   save:  ask Webview to render (fit-to-content re-render + re-embed source) →
+ *          write file. If the Webview can't respond, fall back to "existing
+ *          image + re-embedded latest source" (image looks as it did at the last
+ *          save, but the source isn't lost); see imageDocumentOps.
  */
 export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<JiscribeImageDocument> {
 	constructor(private readonly context: vscode.ExtensionContext) {}
 
-	// ---- dirty / undo / redo の通知チャネル ----
-	//
-	// CustomEditorProvider では、このイベントを fire することで VSCode に
-	// 「ドキュメントが編集された」と伝える。VSCode 側が undo/redo スタックを
-	// 管理し、Ctrl+Z / Ctrl+Y でイベント内の undo() / redo() を呼び返してくる。
+	// dirty / undo / redo notification channel. Firing this event tells VSCode
+	// the document was edited; VSCode manages the undo/redo stack and calls the
+	// event's undo() / redo() back on Ctrl+Z / Ctrl+Y.
 	private readonly changeEmitter = new vscode.EventEmitter<
 		vscode.CustomDocumentEditEvent<JiscribeImageDocument>
 	>();
 	public readonly onDidChangeCustomDocument = this.changeEmitter.event;
 
-	// ドキュメントごとの表示中パネル（supportsMultipleEditorsPerDocument: false
-	// のため高々1つ）。保存時の画像生成依頼と undo/redo の反映に使う。
+	// Visible panel per document (at most one, since
+	// supportsMultipleEditorsPerDocument: false). Used for save-time image
+	// requests and reflecting undo/redo.
 	private readonly panels = new Map<
 		JiscribeImageDocument,
 		vscode.WebviewPanel
 	>();
 
-	// requestImageExport の応答待ち。requestId で対応付ける。
+	// Pending requestImageExport responses, keyed by requestId.
 	private nextRequestId = 1;
 	private readonly pendingExports = new Map<
 		number,
 		(data: string | null) => void
 	>();
 
-	/** ファイル（またはバックアップ）を読み込んでドキュメントを構築する。 */
+	/** Read the file (or its backup) and build the document. */
 	public async openCustomDocument(
 		uri: vscode.Uri,
 		openContext: vscode.CustomDocumentOpenContext,
 		_token: vscode.CancellationToken,
 	): Promise<JiscribeImageDocument> {
-		// ホットイグジット復元時はバックアップの方を読む（URI は元ファイルのまま）
+		// On hot-exit restore, read the backup instead (URI stays the original file).
 		const readUri = openContext.backupId
 			? vscode.Uri.parse(openContext.backupId)
 			: uri;
-		const kind: JiscribeImageKind = uri.path.endsWith(".jis.svg")
-			? "svg"
-			: "png";
+		const kind = kindFromPath(uri.path);
 		const bytes = await vscode.workspace.fs.readFile(readUri);
 		return new JiscribeImageDocument(
 			uri,
@@ -121,7 +124,7 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		);
 	}
 
-	/** エディタ（Webview）を初期化し、ドキュメントとのメッセージ配線を行う。 */
+	/** Initialize the editor (Webview) and wire up its messaging with the document. */
 	public async resolveCustomEditor(
 		document: JiscribeImageDocument,
 		webviewPanel: vscode.WebviewPanel,
@@ -151,10 +154,10 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 						break;
 
 					case "update": {
-						// Canvas の編集。テキストエディタと違いファイルへは書かず、
-						// edit イベントで dirty にするだけ（実際の書き込みは保存時）。
-						// undo/redo は VSCode から呼び返されるので、変更前後の
-						// ソースをクロージャに閉じ込めて差し戻し／再適用する。
+						// Canvas edit. Unlike the text editor, don't write to the file;
+						// just mark dirty via the edit event (the actual write happens at
+						// save). undo/redo are called back by VSCode, so capture the
+						// before/after source in the closure to revert / re-apply.
 						const beforeText = document.sourceText;
 						const afterText = message.data;
 						document.sourceText = afterText;
@@ -182,8 +185,14 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 						break;
 					}
 
+					case "rendered":
+						// The canvas is mounted and can export now. If a prior hidden-tab
+						// save left a stale image on disk (#179), re-render and rewrite it.
+						void reconcileImageDocument(document, this.makeSeams(document));
+						break;
+
 					case "exportImage":
-						// エクスポート画像のワークスペース保存（保存ダイアログ→書き込み→通知）
+						// Save the exported image to the workspace (save dialog → write → notify).
 						void saveExportedImage(
 							document.uri,
 							message.format,
@@ -203,54 +212,57 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		});
 	}
 
-	/** 上書き保存。 */
+	/** Save (overwrite in place). */
 	public async saveCustomDocument(
 		document: JiscribeImageDocument,
 		token: vscode.CancellationToken,
 	): Promise<void> {
-		const bytes = await this.renderCurrentImage(document);
-		if (token.isCancellationRequested) {
-			return;
-		}
-		await vscode.workspace.fs.writeFile(document.uri, bytes);
-		document.savedBytes = bytes;
+		await saveImageDocument(document, this.makeSeams(document, token));
 	}
 
-	/** 名前を付けて保存。 */
+	/**
+	 * Save As. The image format is decided by the destination's extension (look
+	 * at `destination`, not `document.kind`), so a cross-format save such as
+	 * `.jis.png` → `.jis.svg` writes bytes in the destination's format.
+	 */
 	public async saveCustomDocumentAs(
 		document: JiscribeImageDocument,
 		destination: vscode.Uri,
 		token: vscode.CancellationToken,
 	): Promise<void> {
-		const bytes = await this.renderCurrentImage(document);
+		const destinationKind = kindFromPath(destination.path);
+		const { bytes } = await computeExportBytes(
+			document,
+			this.makeSeams(document),
+			destinationKind,
+		);
 		if (token.isCancellationRequested) {
 			return;
 		}
 		await vscode.workspace.fs.writeFile(destination, bytes);
 	}
 
-	/** 変更の破棄（Revert File）。ファイルの内容へ巻き戻す。 */
+	/** Revert File: roll back to the file's on-disk contents. */
 	public async revertCustomDocument(
 		document: JiscribeImageDocument,
 		_token: vscode.CancellationToken,
 	): Promise<void> {
-		const bytes = await vscode.workspace.fs.readFile(document.uri);
-		document.savedBytes = bytes;
-		document.sourceText = extractSourceFromImage(document.kind, bytes);
+		await revertImageDocument(document, this.makeSeams(document));
 		this.pushSourceToWebview(document);
 	}
 
 	/**
-	 * ホットイグジット用バックアップ。エディタが非表示のタイミングでも呼ばれ
-	 * るため、Webview への往復に依存しない埋め込みフォールバックで確実に書く
-	 * （画像は前回保存時のままでも、ソースさえ残れば編集内容は復元できる）。
+	 * Hot-exit backup. This can be called while the editor is hidden, so write
+	 * reliably via the embed fallback that doesn't depend on a Webview round-trip
+	 * (the image may stay as of the last save, but as long as the source remains,
+	 * the edits are recoverable).
 	 */
 	public async backupCustomDocument(
 		document: JiscribeImageDocument,
 		context: vscode.CustomDocumentBackupContext,
 		_token: vscode.CancellationToken,
 	): Promise<vscode.CustomDocumentBackup> {
-		const bytes = this.embedCurrentSource(document);
+		const bytes = embedCurrentSource(document);
 		await vscode.workspace.fs.writeFile(context.destination, bytes);
 		return {
 			id: context.destination.toString(),
@@ -258,13 +270,47 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 				try {
 					await vscode.workspace.fs.delete(context.destination);
 				} catch {
-					// バックアップが既に無い場合は何もしない
+					// Nothing to do if the backup is already gone.
 				}
 			},
 		};
 	}
 
-	/** 現在のソース JSON を Webview へ送る（undo/redo/revert の反映）。 */
+	/**
+	 * Build the VSCode-backed effects the ops delegate to: webview render, file
+	 * read/write on the document's URI, and (for save) the cancel token.
+	 */
+	private makeSeams(
+		document: JiscribeImageDocument,
+		token?: vscode.CancellationToken,
+	): ImageDocSeams {
+		return {
+			render: (kind) => this.renderViaWebview(document, kind),
+			readFile: async () => vscode.workspace.fs.readFile(document.uri),
+			writeFile: async (bytes) =>
+				vscode.workspace.fs.writeFile(document.uri, bytes),
+			isCancelled: token ? () => token.isCancellationRequested : undefined,
+		};
+	}
+
+	/**
+	 * Render the current canvas via the live Webview, or null when unavailable.
+	 * With retainContextWhenHidden: false, a hidden tab's Webview has a discarded
+	 * JS context and won't answer postMessage, so return null immediately instead
+	 * of waiting for the timeout.
+	 */
+	private renderViaWebview(
+		document: JiscribeImageDocument,
+		kind: JiscribeImageKind,
+	): Promise<string | null> {
+		const panel = this.panels.get(document);
+		if (!panel || !panel.visible) {
+			return Promise.resolve(null);
+		}
+		return this.requestImageFromWebview(panel, kind);
+	}
+
+	/** Send the current source JSON to the Webview (reflecting undo/redo/revert). */
 	private pushSourceToWebview(document: JiscribeImageDocument): void {
 		const panel = this.panels.get(document);
 		if (panel) {
@@ -273,9 +319,9 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 	}
 
 	/**
-	 * ドキュメントの現在ソースを Webview へ送信する。
-	 * ソース埋め込みが無い場合は空文字を送り、Webview 側が
-	 * 「編集可能なソースが無い」旨の表示に切り替える。
+	 * Send the document's current source to the Webview. When there's no embedded
+	 * source, send an empty string so the Webview switches to its "no editable
+	 * source" display.
 	 */
 	private updateWebview(
 		panel: vscode.WebviewPanel,
@@ -289,31 +335,7 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 		panel.webview.postMessage(message);
 	}
 
-	/**
-	 * 現在のソースを反映した画像バイト列を得る。
-	 * 第一候補は Webview での再レンダリング（fit-to-content・最新の見た目）。
-	 * Webview が無い/応答しない場合は、最後に保存した画像へ最新ソースを
-	 * 埋め込み直したものを返す。
-	 */
-	private async renderCurrentImage(
-		document: JiscribeImageDocument,
-	): Promise<Uint8Array> {
-		const panel = this.panels.get(document);
-		// retainContextWhenHidden: false のため、非表示タブの Webview は JS
-		// コンテキストが破棄済みで postMessage に応答しない。タイムアウトを
-		// 待たずに即フォールバックする。
-		if (panel && panel.visible) {
-			const data = await this.requestImageFromWebview(panel, document.kind);
-			if (data !== null) {
-				return document.kind === "png"
-					? new Uint8Array(Buffer.from(data, "base64"))
-					: new Uint8Array(Buffer.from(data, "utf8"));
-			}
-		}
-		return this.embedCurrentSource(document);
-	}
-
-	/** Webview に画像生成を依頼し、応答を待つ（タイムアウト付き）。 */
+	/** Ask the Webview to generate the image and await the response (with timeout). */
 	private requestImageFromWebview(
 		panel: vscode.WebviewPanel,
 		format: JiscribeImageKind,
@@ -336,44 +358,9 @@ export class JiscribeImageEditorProvider implements vscode.CustomEditorProvider<
 			panel.webview.postMessage(message);
 		});
 	}
-
-	/**
-	 * 保存フォールバック: 最後に保存した画像バイト列へ現在のソースを
-	 * 埋め込み直す。画像の見た目は前回保存時のままになるが、ソース
-	 * （編集内容）は失われない。ソースが無い/画像が壊れている場合は
-	 * 画像をそのまま返す。
-	 */
-	private embedCurrentSource(document: JiscribeImageDocument): Uint8Array {
-		if (document.sourceText === null) {
-			return document.savedBytes;
-		}
-		if (document.kind === "png") {
-			try {
-				return insertPngTextChunk(
-					document.savedBytes,
-					PNG_SOURCE_KEYWORD,
-					document.sourceText,
-				);
-			} catch {
-				return document.savedBytes;
-			}
-		}
-		const replacedText = replaceCanvasSourceInSvgText(
-			Buffer.from(document.savedBytes).toString("utf8"),
-			document.sourceText,
-		);
-		return replacedText === null
-			? document.savedBytes
-			: new Uint8Array(Buffer.from(replacedText, "utf8"));
-	}
 }
 
-/** 画像バイト列から埋め込みソース JSON を取り出す（無ければ null）。 */
-function extractSourceFromImage(
-	kind: JiscribeImageKind,
-	bytes: Uint8Array,
-): string | null {
-	return kind === "png"
-		? readPngTextChunk(bytes, PNG_SOURCE_KEYWORD)
-		: extractCanvasSourceFromSvgText(Buffer.from(bytes).toString("utf8"));
+/** Determine the image kind from the URI path (anything but `.jis.svg` is png). */
+function kindFromPath(path: string): JiscribeImageKind {
+	return path.endsWith(".jis.svg") ? "svg" : "png";
 }

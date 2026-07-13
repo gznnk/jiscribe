@@ -1,26 +1,29 @@
 import * as vscode from "vscode";
 
 /**
- * 「Set up AI」コマンド。
+ * "Set up AI" command.
  *
- * ワークスペースの AI エージェントが `.jis.json` を正しく生成・編集できるよう、
- * ガイド／スキーマと各エージェント用のアダプタ（Skill / rules / instructions）を配置する。
+ * Places the guide/schema plus per-agent adapters (Skill / rules /
+ * instructions) so a workspace's AI agents can generate and edit `.jis.json`
+ * correctly. See docs/03_ai-integration/setup_ai_design.md.
  *
- * 設計方針（docs/03_ai-integration/setup_ai_design.md）:
- * - 正本は `.jiscribe/`（ai-guide.md ＋ reference.md ＋ jiscribe.schema.json）に 1 部だけ置く。
- * - 各エージェントの own-file アダプタは `.jiscribe/ai-guide.md` を入口として指す薄いポインタにする
- *   （詳細リファレンス・スキーマへの誘導は ai-guide が一手に担い、案内元を 1 つに保つ）。
- * - 我々が生成するファイルのみ上書きし、ユーザー管理ファイル（CLAUDE.md / .gitignore 等）には一切触れない。
+ * - The canonical copy lives once in `.jiscribe/` (ai-guide.md + reference.md +
+ *   jiscribe.schema.json).
+ * - Each agent's own-file adapter is a thin pointer to `.jiscribe/ai-guide.md`,
+ *   which is the single entry point to the full reference and schema.
+ * - Only files we generate are overwritten; user-managed files (CLAUDE.md,
+ *   .gitignore, etc.) are never touched.
  *
- * NOTE: MCP サーバー設定の自動生成は優先度を下げて一旦外している（設計は docs/03_ai-integration/mcp_design.md）。
+ * NOTE: auto-generating MCP server config is deferred
+ * (docs/03_ai-integration/mcp_design.md).
  */
 
-// 生成ファイルであることを示すヘッダ（手編集を促さない）。
+// Header marking a generated file (discourages manual edits).
 const GENERATED_NOTICE =
 	"<!-- Generated and managed by the Jiscribe extension's “Set up AI” command. Manual edits are overwritten on re-run. -->";
 
-// 各アダプタ共通の本文（frontmatter を除く）。`.jiscribe/ai-guide.md` を唯一の入口にする
-// （ai-guide が詳細リファレンス・スキーマへ案内するので、ここでは多重案内しない）。
+// Shared adapter body (excluding frontmatter). `.jiscribe/ai-guide.md` is the
+// single entry point, so we don't duplicate references here.
 const ADAPTER_INSTRUCTION = `When generating or editing Jiscribe diagram data (\`.jis.json\` / \`.jiscribe.json\`), read \`.jiscribe/ai-guide.md\` at the workspace root and follow it. It links to the full reference and schema.
 `;
 
@@ -34,7 +37,7 @@ ${GENERATED_NOTICE}
 
 ${ADAPTER_INSTRUCTION}`;
 
-/** Cursor rule: .cursor/rules/jiscribe.mdc（globs で .jis.json 編集時に自動添付） */
+/** Cursor rule: .cursor/rules/jiscribe.mdc (globs auto-attach it when editing .jis.json). */
 const CURSOR_RULE = `---
 description: Jiscribe .jis.json canvas diagrams
 globs: *.jis.json,*.jiscribe.json
@@ -45,7 +48,7 @@ ${GENERATED_NOTICE}
 
 ${ADAPTER_INSTRUCTION}`;
 
-/** GitHub Copilot: .github/instructions/jiscribe.instructions.md（applyTo でスコープ発火） */
+/** GitHub Copilot: .github/instructions/jiscribe.instructions.md (applyTo scopes when it fires). */
 const COPILOT_INSTRUCTIONS = `---
 applyTo: "**/*.jis.json,**/*.jiscribe.json"
 ---
@@ -60,11 +63,11 @@ interface AgentTarget {
 	id: AgentId;
 	label: string;
 	detail: string;
-	/** 既存利用の検出に使うマーカーディレクトリ（ワークスペース直下）。 */
+	/** Marker directory (at workspace root) used to detect existing use. */
 	markerDir: string;
-	/** アダプタの配置先（ワークスペース直下からの相対パス要素）。 */
+	/** Adapter destination, as path segments relative to the workspace root. */
 	adapterPath: string[];
-	/** アダプタの内容。 */
+	/** Adapter contents. */
 	content: string;
 }
 
@@ -95,7 +98,7 @@ const TARGETS: AgentTarget[] = [
 	},
 ];
 
-/** dist に同梱したアセットを読み込む。 */
+/** Read an asset bundled into dist. */
 async function readDistAsset(
 	context: vscode.ExtensionContext,
 	fileName: string,
@@ -104,7 +107,7 @@ async function readDistAsset(
 	return vscode.workspace.fs.readFile(uri);
 }
 
-/** ワークスペースの対象フォルダを解決する（複数ある場合は選択させる）。 */
+/** Resolve the target workspace folder (prompting to pick if there are several). */
 async function resolveTargetFolder(): Promise<vscode.Uri | undefined> {
 	const folders = vscode.workspace.workspaceFolders;
 	if (!folders || folders.length === 0) {
@@ -122,7 +125,7 @@ async function resolveTargetFolder(): Promise<vscode.Uri | undefined> {
 	return picked?.uri;
 }
 
-/** マーカーディレクトリの有無で「既に使っていそうな」エージェントを推定する。 */
+/** Guess whether an agent is already in use from the presence of its marker dir. */
 async function detectAgent(
 	root: vscode.Uri,
 	markerDir: string,
@@ -135,14 +138,14 @@ async function detectAgent(
 	}
 }
 
-/** 複数選択 UI で設定対象のエージェントを選ばせる。 */
+/** Let the user pick which agents to set up via a multi-select UI. */
 async function pickTargets(
 	root: vscode.Uri,
 ): Promise<AgentTarget[] | undefined> {
 	const detected = await Promise.all(
 		TARGETS.map((t) => detectAgent(root, t.markerDir)),
 	);
-	// 既存マーカーがあるものを既定 ON。何も検出されなければ全部 ON（初回想定）。
+	// Default ON for detected markers; if none are detected, all ON (first run).
 	const anyDetected = detected.some(Boolean);
 	const items = TARGETS.map((target, i) => ({
 		label: target.label,
@@ -180,13 +183,13 @@ async function runSetupAi(context: vscode.ExtensionContext): Promise<void> {
 			readDistAsset(context, "jiscribe.schema.json"),
 		]);
 
-		// 正本: .jiscribe/（全アダプタが参照する）
+		// Canonical copy: .jiscribe/ (referenced by every adapter).
 		const jiscribeDir = vscode.Uri.joinPath(root, ".jiscribe");
 		await vscode.workspace.fs.createDirectory(jiscribeDir);
 		const guideUri = vscode.Uri.joinPath(jiscribeDir, "ai-guide.md");
 		const referenceUri = vscode.Uri.joinPath(jiscribeDir, "reference.md");
 		const schemaUri = vscode.Uri.joinPath(jiscribeDir, "jiscribe.schema.json");
-		// Markdown には生成物ヘッダを付ける（schema は JSON のため付けない）。
+		// Prepend the generated header to Markdown (not the JSON schema).
 		const withNotice = (asset: Uint8Array): Uint8Array =>
 			new TextEncoder().encode(
 				`${GENERATED_NOTICE}\n\n${new TextDecoder().decode(asset)}`,
@@ -195,7 +198,7 @@ async function runSetupAi(context: vscode.ExtensionContext): Promise<void> {
 		await writeFile(referenceUri, withNotice(reference));
 		await writeFile(schemaUri, schema);
 
-		// 選択された各エージェントのアダプタを配置。
+		// Place the adapter for each selected agent.
 		for (const target of targets) {
 			const dir = vscode.Uri.joinPath(root, ...target.adapterPath.slice(0, -1));
 			await vscode.workspace.fs.createDirectory(dir);

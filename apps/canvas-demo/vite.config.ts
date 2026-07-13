@@ -22,5 +22,28 @@ export default defineConfig({
 	},
 	build: {
 		outDir: "dist",
+		rollupOptions: {
+			output: {
+				manualChunks(id) {
+					if (!id.includes("node_modules")) {
+						return undefined;
+					}
+					if (id.includes("/react/") || id.includes("/react-dom/")) {
+						return "react";
+					}
+					if (id.includes("/katex/")) {
+						return "katex";
+					}
+					if (
+						id.includes("/highlight.js/") ||
+						id.includes("/markdown-it") ||
+						id.includes("/dompurify/")
+					) {
+						return "markdown";
+					}
+					return undefined;
+				},
+			},
+		},
 	},
 });

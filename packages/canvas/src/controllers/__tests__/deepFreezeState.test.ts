@@ -18,8 +18,9 @@ const doc: CanvasDoc = {
 } as unknown as CanvasDoc;
 
 /**
- * deepFreezeState はテスト全体のミューテート検知器（凍結が黙って外れると
- * 検知が丸ごと消える）ため、ガード自体の効きをここで担保する。
+ * deepFreezeState is the mutation detector for the whole test suite (if the
+ * freeze silently stops working, all detection disappears), so we assert here
+ * that the guard itself is effective.
  */
 describe("deepFreezeState", () => {
 	it("throws on in-place mutation of objects / rootIds / nested object state", () => {
@@ -44,8 +45,8 @@ describe("deepFreezeState", () => {
 	});
 
 	it("keeps history unfrozen so resolveDocSnapshot's write-once memoization works", () => {
-		// 初期 state の present は resolved 済みなので、lazy な snapshot を注入して
-		// メモ化の書き込みパスを踏ませる。
+		// the initial state's present is already resolved, so inject a lazy
+		// snapshot to exercise the memoization write path.
 		const base = createInitialControllerState(doc, registries);
 		const state = deepFreezeState({
 			...base,
@@ -55,8 +56,8 @@ describe("deepFreezeState", () => {
 			},
 		});
 
-		// resolveDocSnapshot は snapshot を in-place 更新してメモ化する（DocSnapshot.ts 参照）。
-		// history 配下が凍結されているとここで TypeError になる。
+		// resolveDocSnapshot updates the snapshot in place to memoize it (see DocSnapshot.ts).
+		// If anything under history is frozen, this throws a TypeError.
 		const resolvedDoc = resolveDocSnapshot(
 			state.history.present,
 			registries.objectMapper,

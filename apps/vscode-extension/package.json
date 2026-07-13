@@ -8,7 +8,7 @@
 	},
 	"homepage": "https://beta.jiscribe.dev",
 	"icon": "icon.png",
-	"version": "0.5.1",
+	"version": "0.6.1",
 	"private": true,
 	"preview": true,
 	"engines": {
@@ -114,7 +114,8 @@
 		"package": "vsce package --no-dependencies",
 		"publish-ext": "vsce publish --no-dependencies",
 		"lint": "eslint .",
-		"typecheck": "tsc --noEmit"
+		"typecheck": "tsc --noEmit",
+		"test": "vitest run"
 	},
 	"dependencies": {},
 	"license": "SEE LICENSE IN LICENSE.txt",
@@ -128,6 +129,7 @@
 		"esbuild": "catalog:",
 		"react": "catalog:",
 		"react-dom": "catalog:",
-		"typescript": "catalog:"
+		"typescript": "catalog:",
+		"vitest": "catalog:"
 	}
 }

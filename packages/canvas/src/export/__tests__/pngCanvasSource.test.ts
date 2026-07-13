@@ -7,14 +7,14 @@ import {
 	extractCanvasSourceFromPng,
 } from "../pngCanvasSource";
 
-/** 1x1 透過 PNG（実エンコーダ出力） */
+/** 1x1 transparent PNG (real encoder output) */
 const TINY_PNG_BASE64 =
 	"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
 
 const tinyPngBlob = (): Blob =>
 	new Blob([Buffer.from(TINY_PNG_BASE64, "base64")], { type: "image/png" });
 
-/** 入力境界と同じ 2 段階バリデーションを通して正規の CanvasDoc を作る */
+/** Builds a valid CanvasDoc through the same two-stage validation as the input boundary */
 const sampleDoc = (): CanvasDoc => {
 	const result = parseCanvasText(
 		JSON.stringify({
@@ -39,13 +39,13 @@ const sampleDoc = (): CanvasDoc => {
 };
 
 describe("embedCanvasSourceInPng / extractCanvasSourceFromPng", () => {
-	it("CanvasDoc を PNG に埋め込み、parseCanvasText で復元できる", async () => {
+	it("embeds a CanvasDoc into a PNG and restores it via parseCanvasText", async () => {
 		const doc = sampleDoc();
 		const embedded = await embedCanvasSourceInPng(tinyPngBlob(), doc);
 		const text = await extractCanvasSourceFromPng(embedded);
 		expect(text).not.toBeNull();
 
-		// ホスト境界の 2 段階バリデーションをそのまま通す
+		// run it through the host boundary's two-stage validation as-is
 		const parsed = parseCanvasText(text as string);
 		expect(parsed.kind).toBe("ok");
 		if (parsed.kind === "ok") {
@@ -53,11 +53,11 @@ describe("embedCanvasSourceInPng / extractCanvasSourceFromPng", () => {
 		}
 	});
 
-	it("埋め込みの無い PNG からの抽出は null", async () => {
+	it("returns null when extracting from a PNG with no embedded source", async () => {
 		expect(await extractCanvasSourceFromPng(tinyPngBlob())).toBeNull();
 	});
 
-	it("PNG でない Blob からの抽出は null", async () => {
+	it("returns null when extracting from a non-PNG Blob", async () => {
 		const blob = new Blob(["not a png"], { type: "text/plain" });
 		expect(await extractCanvasSourceFromPng(blob)).toBeNull();
 	});

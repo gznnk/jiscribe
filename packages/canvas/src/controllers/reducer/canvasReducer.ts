@@ -59,8 +59,8 @@ export const createCanvasReducer =
 			}
 
 			case "SET_VIEWPORT": {
-				// No-op when the camera is unchanged so echoing a host-mirrored
-				// viewport back through the `viewport` prop does not churn state.
+				// No-op when the camera is unchanged so a repeated imperative
+				// setViewport with the same camera does not churn state.
 				if (isSameCamera(state.viewport, action.camera)) {
 					return state;
 				}

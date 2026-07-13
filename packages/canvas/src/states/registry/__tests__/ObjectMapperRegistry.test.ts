@@ -21,9 +21,10 @@ const rectDoc = {
 } as unknown as RectDoc;
 
 describe("ObjectMapperRegistry", () => {
-	it("toState した state の features は登録済み記述子と同一参照（コピーではない）", () => {
-		// 参照が複製されると memo の shallow compare が毎回不一致になり
-		// 全オブジェクト再レンダーを引き起こすため、同一参照は不変条件。
+	it("the features of a toState result are the same reference as the registered descriptor (not a copy)", () => {
+		// if the reference were copied, memo's shallow compare would mismatch
+		// every time and force a re-render of all objects, so reference identity
+		// is an invariant.
 		const registry = createObjectMapperRegistry();
 		registry.register(
 			"rect",
@@ -37,7 +38,7 @@ describe("ObjectMapperRegistry", () => {
 		expect(state.features).toBe(registry.getFeatures("rect"));
 	});
 
-	it("toDoc に features は漏れない（allow-list pick）", () => {
+	it("features do not leak into toDoc (allow-list pick)", () => {
 		const registry = createObjectMapperRegistry();
 		registry.register(
 			"rect",
