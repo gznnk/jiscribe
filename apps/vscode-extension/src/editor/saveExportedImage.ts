@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 
-/** `jiscribe-YYYYMMDD-HHmmss` 形式のフォールバックファイル名（拡張子なし）。 */
+/** Fallback file name in `jiscribe-YYYYMMDD-HHmmss` form (no extension). */
 const buildTimestampedName = (): string => {
 	const now = new Date();
 	const pad = (value: number): string => String(value).padStart(2, "0");
@@ -11,13 +11,14 @@ const buildTimestampedName = (): string => {
 };
 
 /**
- * 編集中ドキュメントの URI からエクスポートのデフォルト保存先を導出する。
+ * Derive the default export destination from the edited document's URI.
  *
- * - フォルダ: ドキュメントと同じフォルダ（untitled はワークスペースルート）
- * - ファイル名: ドキュメント名の拡張子（`.jis.json` 等の二重拡張子ごと）を
- *   エクスポート形式のものへ差し替える。untitled はタイムスタンプ名
- * - 派生名がドキュメント自身と一致する場合（`.jis.png` 編集中のソース埋め込み
- *   PNG エクスポート等）は `-export` を付けて自己上書きを防ぐ
+ * - Folder: the document's folder (workspace root for untitled).
+ * - File name: replace the document's extension (whole double extension like
+ *   `.jis.json`) with the export format's; untitled uses a timestamped name.
+ * - If the derived name equals the document itself (e.g. exporting a
+ *   source-embedded PNG while editing `.jis.png`), append `-export` to avoid
+ *   overwriting the source.
  */
 const buildDefaultUri = (
 	documentUri: vscode.Uri,
@@ -34,9 +35,9 @@ const buildDefaultUri = (
 	}
 	const documentFileName =
 		documentUri.path.split("/").pop() ?? documentUri.path;
-	// 対応パターンは *.jis.json / *.jiscribe.json / *.jis.svg / *.jis.png
-	// （package.json の filenamePattern 参照）。.jiscribe.json の .jiscribe も
-	// 残さず除去する（foo.jiscribe.json → foo.jis.png）
+	// Handles *.jis.json / *.jiscribe.json / *.jis.svg / *.jis.png (see
+	// package.json's filenamePattern). Strips the full `.jiscribe` too
+	// (foo.jiscribe.json → foo.jis.png).
 	const baseName = documentFileName.replace(
 		/(\.jis|\.jiscribe)?\.(json|svg|png)$/i,
 		"",
@@ -49,12 +50,12 @@ const buildDefaultUri = (
 };
 
 /**
- * エクスポートダイアログで生成された画像をワークスペースへ保存する
- * （Webview からの "exportImage" メッセージのハンドラ本体）。
+ * Save an image produced by the export dialog to the workspace (the handler
+ * body for the Webview's "exportImage" message).
  *
- * 保存ダイアログで保存先をユーザーに選ばせ（上書き確認は VSCode 標準）、
- * 成功時は Reveal アクション付きで通知する。キャンセル時は何もしない。
- * エラーは内部で通知まで済ませるため、この Promise は reject しない。
+ * Prompts for a destination via the save dialog (overwrite confirmation is
+ * VSCode's own) and, on success, notifies with a Reveal action. Does nothing on
+ * cancel. Errors are notified internally, so this Promise never rejects.
  */
 export const saveExportedImage = async (
 	documentUri: vscode.Uri,
@@ -96,12 +97,14 @@ export const saveExportedImage = async (
 		try {
 			await vscode.commands.executeCommand("revealFileInOS", destination);
 		} catch {
-			// リモート環境等で OS のファイラーを開けない場合はエクスプローラービューで代替
+			// Fall back to the Explorer view when the OS file manager can't be
+			// opened (e.g. a remote environment).
 			try {
 				await vscode.commands.executeCommand("revealInExplorer", destination);
 			} catch (err) {
-				// ワークスペース外の保存先等では代替も失敗し得る。保存自体は成功
-				// しているので、契約どおり reject せず通知に留める
+				// The fallback can also fail (e.g. a destination outside the
+				// workspace). The save itself succeeded, so per contract we just
+				// notify instead of rejecting.
 				console.error("[Jiscribe] Failed to reveal exported image:", err);
 				vscode.window.showWarningMessage(
 					`Jiscribe: Could not reveal "${savedFileName}" in Explorer`,

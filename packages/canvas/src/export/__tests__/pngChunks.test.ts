@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { crc32, insertPngTextChunk, readPngTextChunk } from "../pngChunks";
 
-/** 1x1 透過 PNG（実エンコーダ出力）。構造検証のベースに使う。 */
+/** 1x1 transparent PNG (real encoder output). Used as the base for structural checks. */
 const TINY_PNG_BASE64 =
 	"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
 
@@ -19,7 +19,7 @@ const readUint32 = (bytes: Uint8Array, offset: number): number =>
 const chunkTypeAt = (bytes: Uint8Array, offset: number): string =>
 	String.fromCharCode(...bytes.subarray(offset + 4, offset + 8));
 
-/** チャンク列を [type, dataLength] のリストにする（テスト用の素朴な walker） */
+/** Turns the chunk sequence into a list of [type, dataLength] (a naive walker for tests) */
 const listChunkTypes = (bytes: Uint8Array): string[] => {
 	const types: string[] = [];
 	let offset = 8;
@@ -32,29 +32,29 @@ const listChunkTypes = (bytes: Uint8Array): string[] => {
 };
 
 describe("crc32", () => {
-	it("PNG 仕様の既知ベクトルと一致する（空データの IEND チャンク）", () => {
-		// IEND チャンクの CRC は常に 0xAE426082（type "IEND" のみ、データ無し）
+	it("matches the known PNG-spec vector (IEND chunk with empty data)", () => {
+		// the IEND chunk CRC is always 0xAE426082 (type "IEND" only, no data)
 		const iendType = new Uint8Array([0x49, 0x45, 0x4e, 0x44]);
 		expect(crc32(iendType)).toBe(0xae426082);
 	});
 });
 
 describe("insertPngTextChunk / readPngTextChunk", () => {
-	it("UTF-8 テキスト（日本語含む）を埋め込んで取り出せる", () => {
+	it("embeds and reads back UTF-8 text (including Japanese)", () => {
 		const text = JSON.stringify({ version: 1, ラベル: "日本語テキスト🎨" });
 		const embedded = insertPngTextChunk(tinyPng(), "jiscribe", text);
 		expect(readPngTextChunk(embedded, "jiscribe")).toBe(text);
 	});
 
-	it("iTXt は IEND の直前に挿入され、他のチャンクは保持される", () => {
+	it("inserts iTXt right before IEND and preserves the other chunks", () => {
 		const embedded = insertPngTextChunk(tinyPng(), "jiscribe", "data");
 		const types = listChunkTypes(embedded);
 		expect(types).toEqual(["IHDR", "IDAT", "iTXt", "IEND"]);
 	});
 
-	it("挿入したチャンクの CRC が type+data の CRC32 と一致する", () => {
+	it("the inserted chunk's CRC matches the CRC32 of type+data", () => {
 		const embedded = insertPngTextChunk(tinyPng(), "jiscribe", "abc");
-		// iTXt チャンクを探す
+		// find the iTXt chunk
 		let offset = 8;
 		while (chunkTypeAt(embedded, offset) !== "iTXt") {
 			offset += 12 + readUint32(embedded, offset);
@@ -67,7 +67,7 @@ describe("insertPngTextChunk / readPngTextChunk", () => {
 		expect(stored).toBe(computed);
 	});
 
-	it("同じ keyword の再埋め込みは置き換えになる（重複しない）", () => {
+	it("re-embedding the same keyword replaces rather than duplicates", () => {
 		const once = insertPngTextChunk(tinyPng(), "jiscribe", "first");
 		const twice = insertPngTextChunk(once, "jiscribe", "second");
 		expect(readPngTextChunk(twice, "jiscribe")).toBe("second");
@@ -76,24 +76,24 @@ describe("insertPngTextChunk / readPngTextChunk", () => {
 		).toHaveLength(1);
 	});
 
-	it("別 keyword の iTXt は温存される", () => {
+	it("preserves an iTXt chunk with a different keyword", () => {
 		const withOther = insertPngTextChunk(tinyPng(), "other", "keep me");
 		const embedded = insertPngTextChunk(withOther, "jiscribe", "data");
 		expect(readPngTextChunk(embedded, "other")).toBe("keep me");
 		expect(readPngTextChunk(embedded, "jiscribe")).toBe("data");
 	});
 
-	it("非 ASCII keyword（マルチバイト UTF-8）でも round-trip できる", () => {
+	it("round-trips a non-ASCII keyword (multi-byte UTF-8)", () => {
 		const embedded = insertPngTextChunk(tinyPng(), "メモ", "非ASCIIキーワード");
 		expect(readPngTextChunk(embedded, "メモ")).toBe("非ASCIIキーワード");
 	});
 
-	it("Latin-1 圏の keyword（café）でも round-trip できる", () => {
+	it("round-trips a Latin-1 keyword (café)", () => {
 		const embedded = insertPngTextChunk(tinyPng(), "café", "latin-1 keyword");
 		expect(readPngTextChunk(embedded, "café")).toBe("latin-1 keyword");
 	});
 
-	it("非 ASCII keyword の再埋め込みも置き換えになる（重複しない）", () => {
+	it("re-embedding a non-ASCII keyword also replaces rather than duplicates", () => {
 		const once = insertPngTextChunk(tinyPng(), "メモ", "first");
 		const twice = insertPngTextChunk(once, "メモ", "second");
 		expect(readPngTextChunk(twice, "メモ")).toBe("second");
@@ -102,11 +102,11 @@ describe("insertPngTextChunk / readPngTextChunk", () => {
 		).toHaveLength(1);
 	});
 
-	it("keyword が無い PNG からの読み出しは null", () => {
+	it("returns null when reading a keyword absent from the PNG", () => {
 		expect(readPngTextChunk(tinyPng(), "jiscribe")).toBeNull();
 	});
 
-	it("PNG でないバイト列は読み出し null / 挿入は throw", () => {
+	it("non-PNG bytes read as null and insertion throws", () => {
 		const notPng = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 		expect(readPngTextChunk(notPng, "jiscribe")).toBeNull();
 		expect(() => insertPngTextChunk(notPng, "jiscribe", "x")).toThrow(
@@ -114,7 +114,7 @@ describe("insertPngTextChunk / readPngTextChunk", () => {
 		);
 	});
 
-	it("IEND を欠く PNG への挿入は throw", () => {
+	it("inserting into a PNG missing IEND throws", () => {
 		const truncated = tinyPng().subarray(0, 40);
 		expect(() => insertPngTextChunk(truncated, "jiscribe", "x")).toThrow(
 			/missing IEND/,

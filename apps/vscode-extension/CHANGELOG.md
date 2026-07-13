@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-07-13
+
+### Fixed
+
+- **Panning and zooming no longer shake the canvas.** While panning or zooming continuously (trackpad or pinch), the view could rapidly snap back and forth and make the whole diagram tremble; the viewport is now updated so this feedback loop can no longer happen.
+- **Saving `.jis.png` / `.jis.svg` files is more reliable.** Saving from a hidden editor tab no longer leaves a stale image — it re-renders when the tab is shown again — and the embedded source is kept in sync with the bytes written to disk, so a later edit always starts from the saved file.
+- **The drag preview matches the font of the shape it creates**, so text no longer looks different while dragging a shape from the library than it does once dropped.
+
 ## [0.6.0] - 2026-07-12
 
 ### Added

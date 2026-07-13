@@ -17,9 +17,9 @@ import type {
 } from "../types/messages";
 
 /**
- * VSCode の Webview 環境でのみ利用できる API の型定義。
- * acquireVsCodeApi() は VSCode が Webview 内に自動で注入するグローバル関数。
- * 通常の Web ブラウザには存在しないため、declare で型だけ宣言する。
+ * Type of the API available only in the VSCode Webview environment.
+ * acquireVsCodeApi() is a global VSCode injects into the Webview; it doesn't
+ * exist in a normal browser, so we only declare its type.
  */
 declare const acquireVsCodeApi: () => {
 	postMessage(message: WebviewToExtensionMessage): void;
@@ -27,15 +27,16 @@ declare const acquireVsCodeApi: () => {
 	setState(state: unknown): void;
 };
 
-// acquireVsCodeApi() はページの生存期間中に1回しか呼べないため、
-// モジュールレベルで一度だけ呼び出してキャッシュする。
+// acquireVsCodeApi() can be called only once per page lifetime, so call it once
+// at module level and cache it.
 const vscode = acquireVsCodeApi();
 
 /**
- * getState/setState に退避する Webview ローカル状態。retainContextWhenHidden:
- * false（#138）でタブ非表示時に Webview が破棄されても、この内容だけはリロードを
- * またいで保持されるため、ビューポート（カメラ）を退避して再マウント時に復元する。
- * ドキュメントは "ready" 経由で Extension が再送するので含めない。
+ * Webview-local state saved via getState/setState. With
+ * retainContextWhenHidden: false (#138), the Webview is discarded when the tab
+ * hides, but this survives the reload — so we save the viewport (camera) and
+ * restore it on remount. The document isn't included, as the Extension re-sends
+ * it via "ready".
  */
 type PersistedState = {
 	camera?: Camera;
@@ -51,7 +52,35 @@ const persistCamera = (camera: Camera): void => {
 	vscode.setState({ ...state, camera });
 };
 
-/** Blob を base64 文字列（データ URL のヘッダ無し）へ変換する。 */
+/**
+ * Minimal shape validation for messages arriving from the Extension.
+ *
+ * The CSP is `default-src 'none'`, so there is no cross-origin frame that could
+ * postMessage here; this is a defense-in-depth gate (#183) that whitelists known
+ * `type`s and checks each variant's required fields before dispatch, so an
+ * unexpected sender cannot drive the update / export handlers.
+ */
+const isExtensionToWebviewMessage = (
+	value: unknown,
+): value is ExtensionToWebviewMessage => {
+	if (typeof value !== "object" || value === null) {
+		return false;
+	}
+	const message = value as Record<string, unknown>;
+	switch (message.type) {
+		case "update":
+			return typeof message.data === "string";
+		case "requestImageExport":
+			return (
+				typeof message.requestId === "number" &&
+				(message.format === "png" || message.format === "svg")
+			);
+		default:
+			return false;
+	}
+};
+
+/** Convert a Blob to a base64 string (without the data-URL header). */
 const blobToBase64 = (blob: Blob): Promise<string> =>
 	new Promise((resolve, reject) => {
 		const reader = new FileReader();
@@ -63,17 +92,18 @@ const blobToBase64 = (blob: Blob): Promise<string> =>
 	});
 
 /**
- * Canvas エディタのルートコンポーネント。
+ * Root component of the Canvas editor.
  *
- * 状態の種類:
- *   - canvasDoc: バリデーション済みの CanvasDoc（正常時に Canvas を表示）
- *   - hasSemanticError: 検証エラーの有無（Canvas UI の代わりにエラー通知を表示）
- *   - parseError: JSON 構文エラーメッセージ（JSON が壊れている場合に表示）
- *   - missingEmbeddedSource: 画像（.jis.svg / .jis.png）にソース埋め込みが無い
+ * State:
+ *   - canvasDoc: validated CanvasDoc (shows the Canvas when valid)
+ *   - hasSemanticError: whether there are validation errors (shows the error
+ *     notice instead of the Canvas UI)
+ *   - parseError: JSON syntax error message (shown when the JSON is broken)
+ *   - missingEmbeddedSource: image (.jis.svg / .jis.png) has no embedded source
  *
- * エラー詳細は Extension 側（DiagnosticProvider）が Problems パネルへ出すため、
- * Webview ではエラーの有無だけを保持する。
- * これらは排他的で、同時に複数が表示されることはない。
+ * Error details are surfaced in the Problems panel by the Extension
+ * (DiagnosticProvider), so the Webview only holds whether errors exist. These
+ * states are mutually exclusive.
  */
 function App() {
 	const [canvasDoc, setCanvasDoc] = useState<CanvasDoc | null>(null);
@@ -82,25 +112,28 @@ function App() {
 	const [parseError, setParseError] = useState<string>("");
 	const [missingEmbeddedSource, setMissingEmbeddedSource] = useState(false);
 
-	// Canvas の imperative エクスポート API（.jis.svg / .jis.png の保存時画像化に使う）
+	// Canvas's imperative export API (used to render the image when saving .jis.svg / .jis.png).
 	const exportHandleRef = useRef<CanvasExportHandle>(null);
 
-	// Controlled camera, restored from persisted state on reload (undefined on
-	// first open → Canvas uses its doc-derived default).
-	const [camera, setCamera] = useState<Camera | undefined>(readPersistedCamera);
+	// Camera restored from persisted state, read once at mount to seed the canvas
+	// via `defaultViewport` (undefined on first open → Canvas uses its doc-derived
+	// default). The canvas owns the live camera after mount; we only persist what
+	// it reports, never drive it back — so a tab-hide reload restores the last
+	// view with no feedback into the canvas.
+	const [initialCamera] = useState<Camera | undefined>(readPersistedCamera);
 
-	// Mirror pan/zoom into state and persist it so the view survives tab hide.
+	// Persist pan/zoom so the view survives a tab-hide reload (#138,
+	// retainContextWhenHidden: false). A read-only mirror — no setState, no
+	// feeding back into the canvas; it stays authoritative for the live camera.
 	const handleViewportChange = useCallback((next: Camera) => {
-		setCamera(next);
 		persistCamera(next);
 	}, []);
 
-	// 高頻度コミット（キーリピート等）の間引きは Canvas 側の保存スケジューラが
-	// 担うため（#125）、ここではデバウンスせずそのまま Extension へ送る。
-	//
-	// 書き戻すペイロードは docType によらず常に doc の JSON テキスト。
-	// 画像ドキュメント（.jis.svg / .jis.png）の画像化は保存時に
-	// requestImageExport で行う（コミット経路を DOM レンダリングに依存させない）。
+	// The Canvas save scheduler throttles high-frequency commits (key repeat,
+	// etc.) (#125), so send straight to the Extension without debouncing here.
+	// The written-back payload is always the doc's JSON text regardless of
+	// docType; image docs (.jis.svg / .jis.png) render at save time via
+	// requestImageExport (keeping the commit path off DOM rendering).
 	const handleCommit = useCallback((doc: CanvasDoc, saveNonce: string) => {
 		const message: WebviewToExtensionMessage = {
 			type: "update",
@@ -110,8 +143,8 @@ function App() {
 		vscode.postMessage(message);
 	}, []);
 
-	// エクスポートダイアログの結果をワークスペース保存へ委譲する。
-	// 保存先の決定（保存ダイアログ）とファイル名導出は Extension 側の責務。
+	// Delegate the export dialog's result to the workspace save. Choosing the
+	// destination (save dialog) and deriving the file name are the Extension's job.
 	const handleExportImage = useCallback((payload: CanvasExportImagePayload) => {
 		blobToBase64(payload.data).then(
 			(base64) => {
@@ -138,20 +171,24 @@ function App() {
 
 	useEffect(() => {
 		/**
-		 * Extension からのメッセージを受信するハンドラ。
+		 * Handler for messages from the Extension.
 		 *
-		 * ファイルの内容が変わるたびに Extension から "update" メッセージが届く。
-		 * 2段階でパース・バリデーションを行い、結果に応じて表示を切り替える。
+		 * An "update" message arrives whenever the file contents change; parse and
+		 * validate in two stages and switch the display based on the result.
 		 */
 		const messageHandler = (event: MessageEvent) => {
-			const message = event.data as ExtensionToWebviewMessage;
+			if (!isExtensionToWebviewMessage(event.data)) {
+				return;
+			}
+			const message = event.data;
 
 			switch (message.type) {
 				case "update": {
 					const docType = message.docType ?? "json";
 
-					// 画像ドキュメント（svg / png）は Extension が埋め込みソースを
-					// 抽出済みの JSON テキストが届く。空文字は埋め込み無しを表す。
+					// For image docs (svg / png), the Extension has already extracted
+					// the embedded source and sends JSON text. Empty string means no
+					// embedded source.
 					const jsonText = message.data;
 					if (docType !== "json" && jsonText === "") {
 						setMissingEmbeddedSource(true);
@@ -162,9 +199,10 @@ function App() {
 					}
 					setMissingEmbeddedSource(false);
 
-					// JSON 構文チェック → CanvasDoc セマンティクスチェックを共通ヘルパーへ委譲する。
-					// parseCanvasText() は例外を投げず判別可能なユニオンを返すため、
-					// 拡張側（DiagnosticProvider）と同一ロジックで全ケースを扱える。
+					// Delegate JSON syntax → CanvasDoc semantic checks to the shared
+					// helper. parseCanvasText() returns a discriminated union without
+					// throwing, so the same logic as the Extension (DiagnosticProvider)
+					// covers every case.
 					const result = parseCanvasText(jsonText);
 					switch (result.kind) {
 						case "ok":
@@ -176,8 +214,9 @@ function App() {
 
 						case "structure-error":
 						case "semantic-error":
-							// 構造エラー（型・必須フィールド）／セマンティクスエラー（重複 ID 等）は
-							// エラー通知を表示。詳細は Problems パネル側に出るためここでは有無のみ持つ。
+							// Structure errors (types, required fields) and semantic errors
+							// (duplicate IDs, etc.) show the error notice. Details go to the
+							// Problems panel, so hold only whether errors exist here.
 							setHasSemanticError(true);
 							setCanvasDoc(null);
 							setParseError("");
@@ -185,7 +224,7 @@ function App() {
 
 						case "syntax-error":
 						case "internal-error":
-							// JSON 構文エラー・予期しないエラーはメッセージで表示
+							// JSON syntax errors and unexpected errors are shown as a message.
 							setParseError(result.message);
 							setHasSemanticError(false);
 							setCanvasDoc(null);
@@ -195,9 +234,9 @@ function App() {
 				}
 
 				case "requestImageExport": {
-					// .jis.png / .jis.svg の保存: 現在のキャンバスを画像化して返す。
-					// 失敗時も必ず応答し（data: null）、Extension 側のフォールバック
-					// （旧画像＋新ソース再埋め込み）に切り替えさせる。
+					// Saving .jis.png / .jis.svg: render the current canvas and return it.
+					// Always respond even on failure (data: null) so the Extension
+					// switches to its fallback (old image + re-embedded new source).
 					const respond = (data: string | null) => {
 						vscode.postMessage({
 							type: "imageExportResult",
@@ -211,12 +250,28 @@ function App() {
 						break;
 					}
 					if (message.format === "svg") {
+						let svg: string | null;
 						try {
-							respond(handle.toSvgString() || null);
+							svg = handle.toSvgString();
 						} catch (err) {
 							console.error("[Jiscribe] SVG export failed:", err);
 							respond(null);
+							break;
 						}
+						if (!svg) {
+							respond(null);
+							break;
+						}
+						// base64-encode like PNG (via Blob so UTF-8 text survives) so
+						// imageExportResult.data has a single encoding for both formats,
+						// removing the utf8/base64 mismatch hazard (#182).
+						blobToBase64(new Blob([svg], { type: "image/svg+xml" })).then(
+							respond,
+							(err: unknown) => {
+								console.error("[Jiscribe] SVG export failed:", err);
+								respond(null);
+							},
+						);
 						break;
 					}
 					handle
@@ -233,19 +288,28 @@ function App() {
 
 		window.addEventListener("message", messageHandler);
 
-		// Extension へ「Webview の準備ができた」と通知し、ファイルの初期内容を要求する
+		// Tell the Extension the Webview is ready and request the initial contents.
 		vscode.postMessage({ type: "ready" });
 
-		// useEffect のクリーンアップ関数:
-		// コンポーネントがアンマウントされたとき（または deps が変わったとき）に
-		// イベントリスナーを削除してメモリリークを防ぐ。
+		// Cleanup: remove the listener on unmount to avoid a memory leak.
 		return () => {
 			window.removeEventListener("message", messageHandler);
 		};
-	}, []); // 空の依存配列 = マウント時に1回だけ実行
+	}, []); // empty deps = run once on mount
 
-	// ---- 表示の優先順位 ----
-	// ソース埋め込み無し > JSON 構文エラー > セマンティクスエラー > Canvas 表示 > ロード中
+	// Notify the Extension once the canvas has rendered and its export handle is
+	// available. This effect runs after the Canvas commits (exportRef is set via
+	// useImperativeHandle during commit, before this effect), so requestImageExport
+	// can succeed. Lets the Extension reconcile a stale image after a hidden-tab
+	// save (#179).
+	useEffect(() => {
+		if (canvasDoc) {
+			vscode.postMessage({ type: "rendered" });
+		}
+	}, [canvasDoc]);
+
+	// Display priority:
+	// missing source > JSON syntax error > semantic error > Canvas > loading
 
 	if (missingEmbeddedSource) {
 		return (
@@ -309,7 +373,7 @@ function App() {
 				<Canvas
 					canvasDoc={canvasDoc}
 					syncNonce={syncNonce}
-					viewport={camera}
+					defaultViewport={initialCamera}
 					onViewportChange={handleViewportChange}
 					onCommit={handleCommit}
 					onUndo={handleUndo}
@@ -338,9 +402,8 @@ function App() {
 	);
 }
 
-// (#14) script タグを body の末尾に配置しているため、
-// このコードが実行される時点で DOM は構築済みであることが保証されている。
-// ただし null チェックを残すことで、将来的な HTML 構造の変更に対して安全にしておく。
+// The script tag sits at the end of body, so the DOM is guaranteed built when
+// this runs. The null check is kept to stay safe against future HTML changes.
 const container = document.getElementById("root");
 if (container) {
 	const root = createRoot(container);

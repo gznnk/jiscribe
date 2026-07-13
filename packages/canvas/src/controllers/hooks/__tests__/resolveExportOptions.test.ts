@@ -7,9 +7,10 @@ import { createTestRegistries } from "../../setup/createCanvasRegistries";
 import { EXPORT_FIT_PADDING, resolveExportOptions } from "../useCanvasExport";
 
 /**
- * resolveExportOptions（エクスポート実行時に CanvasExportOptions →
- * BuildExportSvgOptions を組み立てる純粋関数）の変換規則を検証する。
- * SVG 生成・ラスタライズ自体は export/ 側の責務なのでここでは扱わない。
+ * Verifies the conversion rules of resolveExportOptions (the pure function that
+ * builds BuildExportSvgOptions from CanvasExportOptions at export time). SVG
+ * generation and rasterization themselves are the responsibility of export/ and
+ * are not covered here.
  */
 
 const registries = createTestRegistries();
@@ -62,8 +63,8 @@ describe("resolveExportOptions", () => {
 		expect(options.viewBox).toBeUndefined();
 	});
 
-	it("退化した範囲（水平ポリラインのみ）＋マージン 0 でも高さ 1 を保証し中央に置く", () => {
-		// 高さ 0 の内容: y=100 の水平ポリライン
+	it("guarantees height 1 and centers content for a degenerate range (horizontal polyline only) with margin 0", () => {
+		// zero-height content: a horizontal polyline at y=100
 		const horizontalPolyline = {
 			id: "poly-1",
 			type: "polyline",
@@ -82,7 +83,7 @@ describe("resolveExportOptions", () => {
 		});
 		expect(options.viewBox).toEqual({
 			x: 0,
-			y: 99.5, // 高さ 1 の帯の中央に内容（y=100）が来る
+			y: 99.5, // content (y=100) sits at the center of the height-1 band
 			width: 50,
 			height: 1,
 		});

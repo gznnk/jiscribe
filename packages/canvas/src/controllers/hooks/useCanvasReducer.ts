@@ -20,7 +20,7 @@ import type { CanvasRegistries } from "../setup/CanvasRegistries";
  *   later changes are folded in via the SET_DOC_DEFAULTS action)
  * @param initialCamera - Seeds the initial viewport so the first paint lands at
  *   the host's pan/zoom instead of flashing the default (only read at mount time;
- *   later changes flow through the `viewport` prop / useControlledViewport).
+ *   later programmatic changes go through `viewportRef.setViewport`).
  */
 export const useCanvasReducer = (
 	canvasDoc: CanvasDoc,

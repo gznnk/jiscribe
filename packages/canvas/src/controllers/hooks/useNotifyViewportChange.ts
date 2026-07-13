@@ -15,10 +15,14 @@ import {
  * spurious for a host that only wants to track/restore the view.
  *
  * Comparison is by value (not reference): the reducer can produce a new
- * `viewport` instance with the same camera across unrelated dispatches, and the
- * controlled loop (emit → host mirrors back into the `viewport` prop → sync-in)
- * relies on an unchanged camera not re-firing. The callback goes through a ref
- * so a host passing a new function each render cannot re-fire the effect.
+ * `viewport` instance with the same camera across unrelated dispatches, so a
+ * value check avoids firing when the camera did not actually move. The callback
+ * goes through a ref so a host passing a new function each render cannot re-fire
+ * the effect.
+ *
+ * Read-only by contract: the host must not feed the reported camera back in to
+ * drive the view (there is no controlled `viewport` prop). Program the view via
+ * `viewportRef.setViewport`; mirroring back would fight continuous gestures.
  *
  * The mount render establishes the baseline (the doc-derived initial camera)
  * and does not notify; the host assumes the initial view until the first change.

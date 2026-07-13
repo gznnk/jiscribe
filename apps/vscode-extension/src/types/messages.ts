@@ -1,53 +1,55 @@
 /**
- * VSCode Extension と Webview 間の通信メッセージ型定義
+ * Message types for communication between the VSCode Extension and the Webview.
  *
- * 背景:
- *   VSCode の Custom Editor では、Extension（Node.js プロセス）と Webview（ブラウザ環境）
- *   が分離されており、直接関数を呼び出すことができません。
- *   代わりに postMessage() で JSON シリアライズ可能なオブジェクトをやり取りします。
- *
- *   型定義を両側で共有することで、送受信のフォーマットが食い違っているバグを
- *   TypeScript のコンパイル時に検出できるようにします。
+ * A Custom Editor's Extension (Node.js) and Webview (browser) are separate and
+ * cannot call each other directly; they exchange JSON-serializable objects via
+ * postMessage(). Sharing these types on both sides catches format mismatches at
+ * compile time.
  */
 
 /**
- * 編集対象ドキュメントの種類。update メッセージの data の解釈を決める。
+ * Kind of the edited document; decides how an update message's `data` is read.
  *
- * - "json": `.jis.json`。data は JSON テキストそのもの
- * - "svg" / "png": `.jis.svg` / `.jis.png`。Extension が埋め込みソースを抽出済みで、
- *   双方向とも data は JSON テキスト（埋め込みが無い場合は空文字）。
- *   画像そのもの（SVG 全文 / PNG バイト列）は保存時に requestImageExport /
- *   imageExportResult で別途生成・受け渡しする
+ * - "json": `.jis.json`. `data` is the JSON text itself.
+ * - "svg" / "png": `.jis.svg` / `.jis.png`. The Extension has already extracted
+ *   the embedded source, so `data` is JSON text in both directions (empty
+ *   string when there is no embedded source). The image itself (full SVG / PNG
+ *   bytes) is generated and exchanged separately at save time via
+ *   requestImageExport / imageExportResult.
  */
 export type JiscribeDocType = "json" | "svg" | "png";
 
-/**
- * Webview → Extension 方向のメッセージ
- *
- * Webview 側で acquireVsCodeApi().postMessage() を呼ぶときの型。
- */
+/** Messages sent Webview → Extension via acquireVsCodeApi().postMessage(). */
 export type WebviewToExtensionMessage =
-	/** Webview の初期化が完了し、ファイル内容の初回送信を要求する */
+	/** Webview initialized; requests the initial file contents. */
 	| { type: "ready" }
 	/**
-	 * Canvas 上の編集内容の書き戻しを要求する。data は常に doc の JSON テキスト
-	 * （画像ドキュメントでは Extension 側が dirty 管理し、画像化は保存時に行う）。
+	 * Requests writing canvas edits back. `data` is always the doc's JSON text
+	 * (for image docs the Extension tracks dirty state and renders at save time).
 	 */
 	| { type: "update"; data: string; saveNonce: string }
-	/** Canvas 上で Undo が要求された（ホストエディタの undo コマンドに委譲する） */
+	/** Undo requested on the canvas (delegated to the host editor's undo command). */
 	| { type: "undo" }
-	/** Canvas 上で Redo が要求された（ホストエディタの redo コマンドに委譲する） */
+	/** Redo requested on the canvas (delegated to the host editor's redo command). */
 	| { type: "redo" }
 	/**
-	 * requestImageExport への応答。data はソース埋め込み済みの画像
-	 * （png: PNG バイト列の base64 / svg: SVG テキスト）。
-	 * Canvas 未マウント等で生成できなかった場合は null。
+	 * Response to requestImageExport. `data` is the source-embedded image bytes,
+	 * base64-encoded for both PNG and SVG, or null when it could not be generated
+	 * (e.g. Canvas not mounted).
 	 */
 	| { type: "imageExportResult"; requestId: number; data: string | null }
 	/**
-	 * エクスポートダイアログで生成した画像のワークスペース保存を要求する。
-	 * base64 は画像バイト列（PNG / SVG テキストとも base64 で統一）。
-	 * ファイル名の導出と保存ダイアログの表示は Extension 側が担う。
+	 * The canvas mounted and can now export an image. Sent after every (re)mount
+	 * once the doc renders, so the Extension can reconcile a stale image left by a
+	 * hidden-tab save (#179): a save while the Webview was discarded falls back to
+	 * "old image + new source", and this lets the Extension re-render and rewrite
+	 * once the tab is visible again.
+	 */
+	| { type: "rendered" }
+	/**
+	 * Requests saving an image produced by the export dialog to the workspace.
+	 * `base64` holds the image bytes (base64 for both PNG and SVG text). The
+	 * Extension derives the file name and shows the save dialog.
 	 */
 	| {
 			type: "exportImage";
@@ -56,16 +58,11 @@ export type WebviewToExtensionMessage =
 			includesSource: boolean;
 	  };
 
-/**
- * Extension → Webview 方向のメッセージ
- *
- * Extension 側で webviewPanel.webview.postMessage() を呼ぶときの型。
- */
+/** Messages sent Extension → Webview via webviewPanel.webview.postMessage(). */
 export type ExtensionToWebviewMessage =
 	/**
-	 * ファイルの最新内容を Webview へ送信する。
-	 * data の中身は docType に依存する（JiscribeDocType を参照）。
-	 * docType 省略時は "json"（後方互換）。
+	 * Sends the latest file contents to the Webview. The meaning of `data`
+	 * depends on `docType` (see JiscribeDocType); omitted docType means "json".
 	 */
 	| {
 			type: "update";
@@ -74,7 +71,7 @@ export type ExtensionToWebviewMessage =
 			docType?: JiscribeDocType;
 	  }
 	/**
-	 * `.jis.png` / `.jis.svg` の保存時に、現在のキャンバスの画像
-	 * （ソース埋め込み済み）の生成を要求する。Webview は imageExportResult で応答する。
+	 * On saving `.jis.png` / `.jis.svg`, requests the current canvas image
+	 * (source embedded). The Webview responds with imageExportResult.
 	 */
 	| { type: "requestImageExport"; requestId: number; format: "png" | "svg" };

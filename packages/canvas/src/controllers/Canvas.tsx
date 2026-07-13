@@ -23,7 +23,6 @@ import { useClipboardPaste } from "./hooks/useClipboardPaste";
 import { useClipboardWrite } from "./hooks/useClipboardWrite";
 import { resolveCommandState } from "./hooks/useCommandState";
 import { useContainerResize } from "./hooks/useContainerResize";
-import { useControlledViewport } from "./hooks/useControlledViewport";
 import { useErrorNotification } from "./hooks/useErrorNotification";
 import { useGestureRecognizer } from "./hooks/useGestureRecognizer";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
@@ -32,13 +31,14 @@ import { useNotifySelectionChange } from "./hooks/useNotifySelectionChange";
 import { useNotifyViewportChange } from "./hooks/useNotifyViewportChange";
 import { useSelfSaveNonceTracker } from "./hooks/useSelfSaveNonceTracker";
 import { useSyncExternalDoc } from "./hooks/useSyncExternalDoc";
+import type { CanvasViewportHandle } from "./hooks/useViewportHandle";
+import { useViewportHandle } from "./hooks/useViewportHandle";
 import { mergeCanvasMessages } from "./messages/CanvasMessages";
 import type { CanvasMessages } from "./messages/CanvasMessages";
 import { CanvasMessagesContext } from "./messages/CanvasMessagesContext";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./setup";
 import type { CanvasConfig } from "./setup";
 import { CanvasView } from "../presentations/CanvasView";
-import { ObjectComponentRegistryContext } from "../presentations/objects/registry/ObjectComponentRegistryContext";
 import type { CanvasTheme } from "../theme/CanvasTheme";
 import { CanvasThemeContext } from "../theme/CanvasThemeContext";
 import { buildThemeCssVars } from "../theme/themeCssVars";
@@ -60,6 +60,7 @@ import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
 import { Toolbar } from "./ui/menu/Toolbar";
 import { ExportDialog } from "./ui/modal/ExportDialog";
+import { ObjectComponentRegistryContext } from "../presentations/objects/registry/ObjectComponentRegistryContext";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { Camera } from "../states/canvas/Viewport";
 
@@ -126,18 +127,28 @@ type CanvasProps = {
 	 */
 	autoFocus?: boolean;
 	/**
-	 * Host-controlled camera (pan + zoom). Its value is applied whenever it
-	 * changes, letting the host set the view at any time (fit-to-screen, restore a
-	 * saved view, …). Omit to leave the viewport uncontrolled (default); pair with
-	 * `onViewportChange` to keep the host's copy in sync.
+	 * Initial camera (pan + zoom) applied once at mount, so the first paint lands
+	 * at the host's view (restore a saved view, …) instead of the doc default.
+	 * Read only at mount; later changes are ignored. To move the view after mount,
+	 * use `viewportRef.setViewport` — not this prop.
 	 */
-	viewport?: Camera;
+	defaultViewport?: Camera;
 	/**
 	 * Invoked when the camera (pan/zoom) changes — on internal gestures and on
-	 * programmatic `viewport` changes (not on container resize). Use it to persist
-	 * or mirror the view.
+	 * `viewportRef.setViewport` (not on container resize). Read-only: use it to
+	 * persist or mirror the view. Do **not** feed it back into `defaultViewport`
+	 * (mount-only) or drive the view from it — the canvas owns the live camera; a
+	 * mirror-back would fight continuous gestures. Push programmatic changes via
+	 * `viewportRef` instead.
 	 */
 	onViewportChange?: (viewport: Camera) => void;
+	/**
+	 * Receives the imperative viewport API ({@link CanvasViewportHandle}). Use its
+	 * `setViewport(camera)` to move pan/zoom programmatically (fit-to-content,
+	 * jump-to-node, a scripted intro). Imperative by design so it cannot feed back
+	 * into a render loop the way a controlled `viewport` value prop would.
+	 */
+	viewportRef?: React.Ref<CanvasViewportHandle>;
 	/**
 	 * Host UI inserted at the left edge of the toolbar (e.g. save/open buttons).
 	 * Rendered inside a `data-gesture="none"` container, so plain `onClick` works.
@@ -187,8 +198,9 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	messages,
 	theme = darkCanvasTheme,
 	autoFocus = true,
-	viewport: controlledViewport,
+	defaultViewport,
 	onViewportChange,
+	viewportRef,
 	toolbarLeading,
 	toolbarTrailing,
 	initialConfig,
@@ -229,14 +241,14 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 			: defaultCanvasRegistries,
 	);
 
-	// Reducer for canvas state management with history. The controlled camera (if
-	// any) seeds the initial viewport so the first paint is already at the host's
-	// pan/zoom — see useCanvasReducer / useControlledViewport for the mount handoff.
+	// Reducer for canvas state management with history. defaultViewport (if any)
+	// seeds the initial viewport so the first paint is already at the host's
+	// pan/zoom — see useCanvasReducer for the mount handoff.
 	const [state, dispatch] = useCanvasReducer(
 		canvasDoc,
 		registries,
 		docDefaults,
-		controlledViewport,
+		defaultViewport,
 	);
 
 	// Keep the reducer-held docDefaults in sync when the host swaps themes at
@@ -272,11 +284,12 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 		onSelectionChange,
 	);
 
-	// Apply a host-controlled camera (when the `viewport` prop is provided) and
-	// notify the host of camera changes. Together these make the viewport an
-	// optional controlled value: internal gestures stay authoritative and are
-	// reported out, while the host can set pan/zoom at any time.
-	useControlledViewport(controlledViewport, dispatch);
+	// Viewport integration: expose an imperative setter for programmatic pan/zoom
+	// (viewportRef) and notify the host of camera changes (onViewportChange). The
+	// canvas stays authoritative for the live camera — the host reads it out and
+	// pushes changes in imperatively, with no controlled value prop that could
+	// feed back and fight continuous gestures.
+	useViewportHandle(viewportRef, dispatch);
 	useNotifyViewportChange(state.viewport, onViewportChange);
 
 	// Notify parent component when a save is required (after commit or undo/redo)
@@ -439,7 +452,10 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 												zoom={state.viewport.zoom}
 												selectedVertex={state.selectedVertex}
 											/>
-											<DragGhost shapeLibraryDrag={state.shapeLibraryDrag} />
+											<DragGhost
+												shapeLibraryDrag={state.shapeLibraryDrag}
+												docDefaults={state.docDefaults}
+											/>
 											<DrawingPreviewOverlay
 												shapeDrawing={state.shapeDrawing}
 											/>
