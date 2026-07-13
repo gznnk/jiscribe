@@ -82,6 +82,7 @@ export const UngroupCommand: Command = {
 				null,
 			),
 			objectMenuOpenId: null,
+			shapeLibraryOpenCategory: null,
 			lastDuplicate: null,
 			commitVersion: state.commitVersion + 1,
 		};

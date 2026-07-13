@@ -2,12 +2,17 @@ import type { ShapePreset } from "../../types/ShapePreset";
 import { AUTO_COLOR } from "../../utils/autoColor";
 
 export const RectShapePresets: ShapePreset[] = [
-	{ id: "rect", objectType: "rect", label: "Rectangle", order: 10 },
+	{
+		id: "rect",
+		objectType: "rect",
+		label: "Rectangle",
+		categories: { basic: 10 },
+	},
 	{
 		id: "rect-markdown",
 		objectType: "rect",
 		label: "Markdown",
-		order: 60,
+		categories: { basic: 50 },
 		defaultOverrides: {
 			width: 300,
 			height: 200,

@@ -4,7 +4,7 @@ import type { ShapePreset } from "../../schemas/objects/types/ShapePreset";
  * Registry that manages the shape presets shown in the ShapeLibrary (toolbar).
  * Registration happens via `registerObject()` in `initializeObjectRegistry()`.
  *
- * - `all()` returns them preserving registration order (= toolbar display order).
+ * - `all()` returns them in registration order.
  * - Presets have a 1:N relationship with shape types (e.g. rect has "rect" and "rect-markdown").
  */
 export class ShapePresetRegistry {
@@ -16,13 +16,20 @@ export class ShapePresetRegistry {
 		this.byId.set(preset.id, preset);
 	}
 
-	/**
-	 * The list of presets sorted by display order.
-	 * Ascending by `order`; ties and unspecified values keep registration order
-	 * (Array.prototype.sort is stable).
-	 */
+	/** All presets in registration order. */
 	all(): readonly ShapePreset[] {
-		return [...this.ordered].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+		return [...this.ordered];
+	}
+
+	/**
+	 * Presets belonging to `categoryId`, sorted by their category-local order
+	 * (ascending `categories[categoryId]`). A preset in several categories
+	 * appears in each, potentially at a different rank.
+	 */
+	byCategory(categoryId: string): readonly ShapePreset[] {
+		return this.ordered
+			.filter((preset) => preset.categories?.[categoryId] !== undefined)
+			.sort((a, b) => a.categories![categoryId] - b.categories![categoryId]);
 	}
 
 	get(id: string): ShapePreset | undefined {

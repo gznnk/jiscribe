@@ -5,6 +5,6 @@ export const ParallelogramShapePresets: ShapePreset[] = [
 		id: "parallelogram",
 		objectType: "parallelogram",
 		label: "Parallelogram",
-		order: 32,
+		categories: { flowchart: 30 },
 	},
 ];

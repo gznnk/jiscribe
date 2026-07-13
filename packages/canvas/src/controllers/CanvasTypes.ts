@@ -279,6 +279,13 @@ export type CanvasControllerState = CanvasState & {
 	objectMenuOpenId: string | null;
 
 	/**
+	 * ID of the ShapeLibrary category whose flyout is open in the toolbar.
+	 * null means no flyout is open. Only one is open at a time. Dismissed by any
+	 * press that is not the category toggle (see handleGesture) and by Escape.
+	 */
+	shapeLibraryOpenCategory: string | null;
+
+	/**
 	 * The group state when multi-selected objects are grouped.
 	 * When multiSelectGroup is non-null, all objects in selectedIds are treated as children of this group.
 	 * Used to manage the grouped selection state.

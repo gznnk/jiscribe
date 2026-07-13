@@ -21,15 +21,17 @@ export type ShapePreset = {
 	label: string;
 	defaultOverrides?: Record<string, unknown>;
 	/**
-	 * Display order in the toolbar. Smaller values are placed further left.
-	 * Equal or unspecified values preserve registration order. Lets the preset
-	 * declare a display order independent of registration order, e.g. basic
-	 * shapes first and variants after.
-	 */
-	order?: number;
-	/**
 	 * Icon shown in the toolbar. Since preset data (schemas) has no UI, it is
 	 * injected by the UI layer (controllers) at `registerObject()` time.
 	 */
 	icon?: ComponentType<ShapeIconProps>;
+	/**
+	 * Palette memberships: category id → display order within that category
+	 * (ascending). A preset may belong to several categories and rank
+	 * differently in each (e.g. `{ basic: 30, flowchart: 20 }`). Membership is
+	 * independent of the source folder ("home") and of whether the preset is
+	 * pinned directly on the toolbar (that is decided by the toolbar layout, so
+	 * this order only affects the order *inside* a category flyout).
+	 */
+	categories?: Record<string, number>;
 };

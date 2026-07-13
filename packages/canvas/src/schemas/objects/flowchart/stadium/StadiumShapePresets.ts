@@ -1,5 +1,10 @@
 import type { ShapePreset } from "../../types/ShapePreset";
 
 export const StadiumShapePresets: ShapePreset[] = [
-	{ id: "stadium", objectType: "stadium", label: "Stadium", order: 31 },
+	{
+		id: "stadium",
+		objectType: "stadium",
+		label: "Stadium",
+		categories: { flowchart: 20 },
+	},
 ];

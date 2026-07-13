@@ -94,6 +94,7 @@ export class TransformControlHandler implements ControlStrategy {
 			...state,
 			edgeScrollEnabled: true,
 			objectMenuOpenId: null,
+			shapeLibraryOpenCategory: null,
 		};
 	}
 

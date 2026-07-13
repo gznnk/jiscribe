@@ -1,5 +1,10 @@
 import type { ShapePreset } from "../../types/ShapePreset";
 
 export const CrossShapePresets: ShapePreset[] = [
-	{ id: "cross", objectType: "cross", label: "Cross", order: 42 },
+	{
+		id: "cross",
+		objectType: "cross",
+		label: "Cross",
+		categories: { flowchart: 120 },
+	},
 ];

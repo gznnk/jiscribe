@@ -20,7 +20,8 @@ export const DeselectAllCommand: Command = {
 			state.selectedConnectorId !== null ||
 			state.selectedVertex !== null ||
 			state.areaSelection !== null ||
-			state.shapeDrawing !== null
+			state.shapeDrawing !== null ||
+			state.shapeLibraryOpenCategory !== null
 		);
 	},
 
@@ -34,6 +35,7 @@ export const DeselectAllCommand: Command = {
 			multiSelectGroup: null,
 			areaSelection: null,
 			objectMenuOpenId: null,
+			shapeLibraryOpenCategory: null,
 			edgeScrollEnabled: false,
 			shapeDrawing: null,
 		};

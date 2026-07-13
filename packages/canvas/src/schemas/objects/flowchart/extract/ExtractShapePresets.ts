@@ -1,5 +1,10 @@
 import type { ShapePreset } from "../../types/ShapePreset";
 
 export const ExtractShapePresets: ShapePreset[] = [
-	{ id: "extract", objectType: "extract", label: "Extract", order: 41 },
+	{
+		id: "extract",
+		objectType: "extract",
+		label: "Extract",
+		categories: { flowchart: 110 },
+	},
 ];

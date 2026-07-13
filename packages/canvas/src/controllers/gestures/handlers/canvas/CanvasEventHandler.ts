@@ -266,6 +266,7 @@ export const CanvasEventHandler: GestureHandler = {
 					selectedVertex: null,
 					edgeScrollEnabled: true,
 					objectMenuOpenId: null,
+					shapeLibraryOpenCategory: null,
 				};
 				return nextState;
 			}
@@ -332,6 +333,7 @@ export const CanvasEventHandler: GestureHandler = {
 				contextMenuPosition: null,
 				// Reset the ObjectMenu expansion
 				objectMenuOpenId: null,
+				shapeLibraryOpenCategory: null,
 				// Reset the multi-select group
 				multiSelectGroup: null,
 			};

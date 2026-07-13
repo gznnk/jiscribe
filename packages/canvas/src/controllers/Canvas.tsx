@@ -59,7 +59,7 @@ import { SelectionOverlay } from "./ui/feedback/SelectionOverlay";
 import { SnapGuides } from "./ui/feedback/SnapGuides";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
-import { Toolbar } from "./ui/menu/Toolbar";
+import { Toolbar, type ToolbarEntry } from "./ui/menu/Toolbar";
 import { ExportDialog } from "./ui/modal/ExportDialog";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { Camera } from "../states/canvas/Viewport";
@@ -150,6 +150,13 @@ type CanvasProps = {
 	 */
 	toolbarTrailing?: React.ReactNode;
 	/**
+	 * Overrides the top-level arrangement of the shape tools: an ordered mix of
+	 * pinned preset buttons and category flyouts (see {@link ToolbarEntry}). Omit
+	 * for the default layout (basic primitives + sticky pinned, flowchart /
+	 * general / annotation as flyouts).
+	 */
+	toolbarLayout?: ToolbarEntry[];
+	/**
 	 * Per-canvas configuration of the available object types, commands, and
 	 * registries. Restricts what this canvas can create/handle (plugin-style
 	 * extensibility and feature-gating), independently of any other `<Canvas>` on
@@ -192,6 +199,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	onViewportChange,
 	toolbarLeading,
 	toolbarTrailing,
+	toolbarLayout,
 	initialConfig,
 	exportRef,
 	onExportImage,
@@ -383,9 +391,11 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 								>
 									<Toolbar
 										activePresetId={state.shapeDrawing?.preset.id ?? null}
+										openCategoryId={state.shapeLibraryOpenCategory}
 										zoom={state.viewport.zoom}
 										canZoomIn={canZoomIn}
 										canZoomOut={canZoomOut}
+										layout={toolbarLayout}
 										leading={toolbarLeading}
 										trailing={toolbarTrailing}
 									/>

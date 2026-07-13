@@ -1,5 +1,10 @@
 import type { ShapePreset } from "../../types/ShapePreset";
 
 export const TrapezoidShapePresets: ShapePreset[] = [
-	{ id: "trapezoid", objectType: "trapezoid", label: "Trapezoid", order: 35 },
+	{
+		id: "trapezoid",
+		objectType: "trapezoid",
+		label: "Trapezoid",
+		categories: { flowchart: 60 },
+	},
 ];

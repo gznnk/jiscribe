@@ -37,6 +37,7 @@ export const SelectAllCommand: Command = {
 			selectedConnectorId: null,
 			selectedVertex: null,
 			objectMenuOpenId: null,
+			shapeLibraryOpenCategory: null,
 		};
 	},
 };

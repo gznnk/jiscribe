@@ -21,6 +21,7 @@ export type UiStateReset = Pick<
 	| "shapeLibraryDrag"
 	| "areaSelection"
 	| "objectMenuOpenId"
+	| "shapeLibraryOpenCategory"
 	| "multiSelectGroup"
 	| "textEditState"
 	| "pendingConnector"
@@ -54,6 +55,7 @@ export const resetUiState = (): UiStateReset => ({
 	shapeLibraryDrag: null,
 	areaSelection: null,
 	objectMenuOpenId: null,
+	shapeLibraryOpenCategory: null,
 	multiSelectGroup: null,
 	textEditState: null,
 	pendingConnector: null,

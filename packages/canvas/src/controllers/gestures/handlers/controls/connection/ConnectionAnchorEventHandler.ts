@@ -122,6 +122,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			selectedIds: [],
 			multiSelectGroup: null,
 			objectMenuOpenId: null,
+			shapeLibraryOpenCategory: null,
 		};
 	}
 
@@ -157,6 +158,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			editingEndpoint: endpoint,
 			edgeScrollEnabled: true,
 			objectMenuOpenId: null,
+			shapeLibraryOpenCategory: null,
 		};
 	}
 
