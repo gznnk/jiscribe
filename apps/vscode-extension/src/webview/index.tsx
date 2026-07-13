@@ -115,13 +115,17 @@ function App() {
 	// Canvas's imperative export API (used to render the image when saving .jis.svg / .jis.png).
 	const exportHandleRef = useRef<CanvasExportHandle>(null);
 
-	// Controlled camera, restored from persisted state on reload (undefined on
-	// first open → Canvas uses its doc-derived default).
-	const [camera, setCamera] = useState<Camera | undefined>(readPersistedCamera);
+	// Camera restored from persisted state, read once at mount to seed the canvas
+	// via `defaultViewport` (undefined on first open → Canvas uses its doc-derived
+	// default). The canvas owns the live camera after mount; we only persist what
+	// it reports, never drive it back — so a tab-hide reload restores the last
+	// view with no feedback into the canvas.
+	const [initialCamera] = useState<Camera | undefined>(readPersistedCamera);
 
-	// Mirror pan/zoom into state and persist it so the view survives tab hide.
+	// Persist pan/zoom so the view survives a tab-hide reload (#138,
+	// retainContextWhenHidden: false). A read-only mirror — no setState, no
+	// feeding back into the canvas; it stays authoritative for the live camera.
 	const handleViewportChange = useCallback((next: Camera) => {
-		setCamera(next);
 		persistCamera(next);
 	}, []);
 
@@ -369,7 +373,7 @@ function App() {
 				<Canvas
 					canvasDoc={canvasDoc}
 					syncNonce={syncNonce}
-					viewport={camera}
+					defaultViewport={initialCamera}
 					onViewportChange={handleViewportChange}
 					onCommit={handleCommit}
 					onUndo={handleUndo}

@@ -45,8 +45,8 @@ describe("canvasReducer / SET_VIEWPORT", () => {
 	});
 
 	it("no-ops (returns the same reference) when the camera is unchanged", () => {
-		// This guard is what stops the controlled-viewport round-trip (host echoes
-		// the emitted camera back into the `viewport` prop) from churning state.
+		// Makes a repeated imperative setViewport with the same camera idempotent,
+		// so re-issuing the current view does not churn state.
 		const state = canvasReducer(
 			createState(),
 			setViewport({ minX: 10, minY: 20, zoom: 2 }),
