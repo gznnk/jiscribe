@@ -280,8 +280,9 @@ export type CanvasControllerState = CanvasState & {
 
 	/**
 	 * ID of the ShapeLibrary category whose flyout is open in the toolbar.
-	 * null means no flyout is open. Only one is open at a time. Dismissed by any
-	 * press that is not the category toggle (see handleGesture) and by Escape.
+	 * null means no flyout is open. Only one is open at a time. Cleared alongside
+	 * objectMenuOpenId by the selection/press handlers and commands (and
+	 * resetUiState), and by Escape — there is no central clear in handleGesture.
 	 */
 	shapeLibraryOpenCategory: string | null;
 

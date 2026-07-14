@@ -72,9 +72,9 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 	const closeHelp = useCallback(() => setIsHelpOpen(false), []);
 
 	// The open category flyout (`openCategoryId`) lives in reducer state; the
-	// toggle button and dismissal go through the gesture system
-	// (ShapeCategoryToggleHandler + handleGesture), so the Toolbar is stateless
-	// here and multiple <Canvas> instances stay independent.
+	// toggle goes through ShapeCategoryToggleHandler and dismissal through the
+	// handlers/commands that clear it, so the Toolbar is stateless here and
+	// multiple <Canvas> instances stay independent.
 
 	// Escape での閉じ処理は ModalShell が担う。ここは「?」で開くだけ。
 	useEffect(() => {

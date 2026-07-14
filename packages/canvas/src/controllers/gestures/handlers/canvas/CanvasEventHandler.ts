@@ -97,6 +97,9 @@ export const CanvasEventHandler: GestureHandler = {
 						clientX: event.clientLast.x,
 						clientY: event.clientLast.y,
 					},
+					// A new context menu supersedes any open ObjectMenu / category flyout.
+					objectMenuOpenId: null,
+					shapeLibraryOpenCategory: null,
 				};
 			}
 
@@ -140,6 +143,18 @@ export const CanvasEventHandler: GestureHandler = {
 			shapeDrawing !== null &&
 			drawingObjectType !== null
 		) {
+			// Starting to draw dismisses an open ObjectMenu / category flyout.
+			if (
+				nextState.objectMenuOpenId !== null ||
+				nextState.shapeLibraryOpenCategory !== null
+			) {
+				nextState = {
+					...nextState,
+					objectMenuOpenId: null,
+					shapeLibraryOpenCategory: null,
+				};
+			}
+
 			if (event.type === "dragStart") {
 				nextState = {
 					...nextState,

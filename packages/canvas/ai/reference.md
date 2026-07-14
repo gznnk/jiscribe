@@ -804,9 +804,9 @@ Used by `startArrow` / `endArrow` on `polyline` and `connector`.
 | ------------------- | --------------------------------- |
 | `"None"`            | No arrowhead.                     |
 | `"FilledTriangle"`  | Filled triangle (common arrow).   |
-| `"ConcaveTriangle"` | Concave extract.                  |
+| `"ConcaveTriangle"` | Concave triangle.                 |
 | `"OpenArrow"`       | Open arrow (`>`).                 |
-| `"HollowTriangle"`  | Hollow extract.                   |
+| `"HollowTriangle"`  | Hollow triangle.                  |
 | `"FilledDiamond"`   | Filled diamond (UML aggregation). |
 | `"HollowDiamond"`   | Hollow diamond (UML aggregation). |
 | `"Circle"`          | Circle.                           |

@@ -3,6 +3,13 @@ import { calcInsetRect } from "@workspace/geometry";
 
 import { DB_CAP_RATIO } from "../../../../schemas/objects/flowchart/db/DbDoc";
 
-/** Restricts the region to the cylinder body below the cap ellipse (its lower edge sits at 2 * DB_CAP_RATIO). */
+/**
+ * Restricts the region to the straight-sided cylinder body: below the full top
+ * cap ellipse (2 * DB_CAP_RATIO) and above the bottom bulge (DB_CAP_RATIO), so
+ * text never spills over the curved bottom at any aspect ratio.
+ */
 export const calcDbTextRegion = ({ width, height }: Dimensions): Rect =>
-	calcInsetRect({ cx: 0, cy: 0, width, height }, { top: DB_CAP_RATIO * 2 });
+	calcInsetRect(
+		{ cx: 0, cy: 0, width, height },
+		{ top: DB_CAP_RATIO * 2, bottom: DB_CAP_RATIO },
+	);

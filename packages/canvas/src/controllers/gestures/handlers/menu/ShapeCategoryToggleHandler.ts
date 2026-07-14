@@ -11,9 +11,10 @@ import { isLeftButton } from "../utils/isLeftButton";
  * targetPart format: `toggle:{categoryId}` → open that category's flyout, or
  * close it if it is already the open one (click acts as a toggle).
  *
- * The flyout's dismissal on outside interactions is handled centrally in
- * handleGesture (any press that is not this toggle clears
- * shapeLibraryOpenCategory), so this handler only owns the toggle itself.
+ * This handler only owns the toggle itself. Dismissal on outside interactions
+ * is handled by the selection/press handlers and commands that clear
+ * shapeLibraryOpenCategory (and resetUiState for bulk resets), mirroring how
+ * objectMenuOpenId is cleared — there is no central clear in handleGesture.
  */
 const TOGGLE_PREFIX = "toggle:";
 
