@@ -162,8 +162,10 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 }) => {
 	const menuRef = useRef<HTMLDivElement>(null);
 	const { shouldRender, x, y } = useObjectMenuPosition(canvasState, menuRef);
-	const objectGroups = useMenuGroups(canvasState);
-	const systemGroups = buildSystemGroups(canvasState);
+	// Skip the group computations while the menu is hidden (e.g. during a drag, where
+	// canvasState.objects churns every frame) — the result would not be shown anyway.
+	const objectGroups = useMenuGroups(canvasState, shouldRender);
+	const systemGroups = shouldRender ? buildSystemGroups(canvasState) : [];
 	const allGroups = [...objectGroups, ...systemGroups];
 
 	if (!shouldRender || allGroups.length === 0) {

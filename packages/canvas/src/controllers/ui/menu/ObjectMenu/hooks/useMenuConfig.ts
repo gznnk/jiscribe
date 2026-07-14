@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 
+import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../../contexts/CanvasRegistriesContext";
 import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
@@ -92,49 +93,57 @@ export const getMenuGroups = (
 		return [];
 	}
 
-	// Collect the concrete object types contained in the selection.
-	// group types are expanded into their descendant concrete object types.
-	const types = new Set<string>();
+	// Collect the concrete object types in the selection, keeping one representative
+	// instance per type. group types expand into their descendant concrete objects.
+	// The selected object (or its descendant) is itself a valid representative, so no
+	// full-objects scan is needed.
+	const representatives = new Map<string, ObjectState>();
 	for (const id of selectedIds) {
 		const obj = objects[id];
 		if (!obj) {
 			continue;
 		}
 		if (obj.type !== "group") {
-			types.add(obj.type);
+			if (!representatives.has(obj.type)) {
+				representatives.set(obj.type, obj);
+			}
 		} else {
 			for (const descId of collectDescendantIds(id, objects)) {
 				const desc = objects[descId];
-				if (desc && desc.type !== "group") {
-					types.add(desc.type);
+				if (desc && desc.type !== "group" && !representatives.has(desc.type)) {
+					representatives.set(desc.type, desc);
 				}
 			}
 		}
 	}
 
-	if (types.size === 0) {
+	if (representatives.size === 0) {
 		return [];
 	}
 
-	// Get the menu groups using a representative instance of each type, then AND-merge them
-	const groupArrays = [...types].map((type) => {
-		const representative = Object.values(objects).find((o) => o?.type === type);
-		return representative
-			? objectMenuRegistry.getGroups(type, representative)
-			: [];
-	});
+	// Get the menu groups from each type's representative, then AND-merge them
+	const groupArrays = [...representatives].map(([type, representative]) =>
+		objectMenuRegistry.getGroups(type, representative),
+	);
 
 	return mergeSections(groupArrays);
 };
 
-/** Memoized hook wrapper around {@link getMenuGroups}, recomputing only when the selection changes. */
-export const useMenuGroups = (state: CanvasControllerState): MenuSection[] => {
+/**
+ * Memoized hook wrapper around {@link getMenuGroups}, recomputing only when the selection changes.
+ * When `enabled` is false (menu hidden, e.g. during a drag) the computation is skipped entirely so
+ * the O(selection) work does not run every frame while the result is not shown.
+ */
+export const useMenuGroups = (
+	state: CanvasControllerState,
+	enabled: boolean,
+): MenuSection[] => {
 	const { selectedIds, selectedConnectorId, objects } = state;
 	const { objectMenu } = useCanvasRegistries();
 
 	return useMemo(
-		() => getMenuGroups(state, objectMenu),
+		() => (enabled ? getMenuGroups(state, objectMenu) : []),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[selectedIds, selectedConnectorId, objects, objectMenu],
+		[enabled, selectedIds, selectedConnectorId, objects, objectMenu],
 	);
 };
