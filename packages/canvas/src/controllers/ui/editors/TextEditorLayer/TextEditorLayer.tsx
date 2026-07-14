@@ -3,14 +3,15 @@ import { memo } from "react";
 
 import { resolveConnectorPoints } from "../../../../presentations/layers/content/utils/endpoints";
 import { calcConnectorLabelAnchor } from "../../../../presentations/layers/content/utils/label/calcConnectorLabelAnchor";
+import type { TextRegionCalculator } from "../../../../presentations/objects/registry/TextRegionRegistry";
 import { calcTextRegion } from "../../../../presentations/objects/utils/calcTextRegion";
-import type { TextRegionSpec } from "../../../../schemas/objects/types/TextRegionSpec";
 import {
 	isTextStyleState,
 	type TextStyleState,
 } from "../../../../states/objects/base/TextStyleState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import { useCanvasRegistries } from "../../../contexts/CanvasRegistriesContext";
 import { ConnectorLabelEditor } from "../ConnectorLabelEditor";
 import { TextEditor } from "../TextEditor";
 
@@ -83,7 +84,7 @@ function renderConnectorLabelEditor(
  * @param objectId - ID of the target shape
  * @param text - The text being edited
  * @param handlers - Input and exit handlers
- * @param textRegionSpec - Region spec from the shape's stamped features. Omitted = full bbox
+ * @param textRegionCalculator - Per-type calculator from TextRegionRegistry. Omitted = full bbox
  * @returns The text editor
  */
 function renderTextEditor(
@@ -91,11 +92,11 @@ function renderTextEditor(
 	objectId: string,
 	text: string,
 	handlers: EditorHandlers,
-	textRegionSpec?: TextRegionSpec,
+	textRegionCalculator?: TextRegionCalculator,
 ): React.ReactElement {
 	const textRegion = calcTextRegion(
 		{ width: target.width ?? 0, height: target.height ?? 0 },
-		textRegionSpec,
+		textRegionCalculator,
 	);
 	return (
 		<TextEditor
@@ -140,6 +141,8 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 	onTextChange,
 	onEscape,
 }) => {
+	const registries = useCanvasRegistries();
+
 	if (!textEditState) {
 		return null;
 	}
@@ -169,7 +172,7 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 			textEditState.objectId,
 			textEditState.text,
 			handlers,
-			targetObject.features?.textRegion,
+			registries.textRegion.get(targetObject.type),
 		);
 	}
 

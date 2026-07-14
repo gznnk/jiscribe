@@ -2,12 +2,27 @@ import type { ShapePreset } from "../../types/ShapePreset";
 import { AUTO_COLOR } from "../../utils/autoColor";
 
 export const RectShapePresets: ShapePreset[] = [
-	{ id: "rect", objectType: "rect", label: "Rectangle", order: 10 },
+	{
+		id: "rect",
+		objectType: "rect",
+		label: "Rectangle",
+		categories: { basic: 10 },
+	},
+	{
+		// Flowchart process box: a plain rectangle. It renders identically to
+		// `rect`, so it stays the same type and only differs as a palette preset
+		// (semantic label + flowchart category), not a distinct shape type.
+		id: "process",
+		objectType: "rect",
+		label: "Process",
+		categories: { flowchart: 10 },
+		defaultOverrides: { width: 140, height: 80 },
+	},
 	{
 		id: "rect-markdown",
 		objectType: "rect",
 		label: "Markdown",
-		order: 60,
+		categories: { basic: 50 },
 		defaultOverrides: {
 			width: 300,
 			height: 200,

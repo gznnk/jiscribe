@@ -1,16 +1,100 @@
 import type { ComponentType, FC } from "react";
 
 import type { CanvasRegistries } from "./CanvasRegistries";
+import {
+	Callout,
+	CalloutPreview,
+	calcCalloutTextRegion,
+} from "../../presentations/objects/annotations/Callout";
 import { Sticky } from "../../presentations/objects/annotations/Sticky";
 import { Connector } from "../../presentations/objects/connections/Connector";
-import { Db, DbPreview } from "../../presentations/objects/primitives/Db";
+import {
+	Card,
+	CardPreview,
+	calcCardTextRegion,
+} from "../../presentations/objects/flowchart/Card";
+import {
+	Cross,
+	CrossPreview,
+} from "../../presentations/objects/flowchart/Cross";
+import {
+	Db,
+	DbPreview,
+	calcDbTextRegion,
+} from "../../presentations/objects/flowchart/Db";
+import {
+	Delay,
+	DelayPreview,
+	calcDelayTextRegion,
+} from "../../presentations/objects/flowchart/Delay";
 import {
 	Diamond,
 	DiamondPreview,
-} from "../../presentations/objects/primitives/Diamond";
+	calcDiamondTextRegion,
+} from "../../presentations/objects/flowchart/Diamond";
+import {
+	Display,
+	DisplayPreview,
+	calcDisplayTextRegion,
+} from "../../presentations/objects/flowchart/Display";
+import {
+	Document,
+	DocumentPreview,
+	calcDocumentTextRegion,
+} from "../../presentations/objects/flowchart/Document";
+import {
+	Extract,
+	ExtractPreview,
+} from "../../presentations/objects/flowchart/Extract";
+import {
+	Hexagon,
+	HexagonPreview,
+	calcHexagonTextRegion,
+} from "../../presentations/objects/flowchart/Hexagon";
+import {
+	ManualInput,
+	ManualInputPreview,
+	calcManualInputTextRegion,
+} from "../../presentations/objects/flowchart/ManualInput";
+import {
+	OffPageConnector,
+	OffPageConnectorPreview,
+	calcOffPageConnectorTextRegion,
+} from "../../presentations/objects/flowchart/OffPageConnector";
+import {
+	Parallelogram,
+	ParallelogramPreview,
+	calcParallelogramTextRegion,
+} from "../../presentations/objects/flowchart/Parallelogram";
+import {
+	Stadium,
+	StadiumPreview,
+	calcStadiumTextRegion,
+} from "../../presentations/objects/flowchart/Stadium";
+import {
+	Subroutine,
+	SubroutinePreview,
+	calcSubroutineTextRegion,
+} from "../../presentations/objects/flowchart/Subroutine";
+import {
+	Trapezoid,
+	TrapezoidPreview,
+	calcTrapezoidTextRegion,
+} from "../../presentations/objects/flowchart/Trapezoid";
+import {
+	Actor,
+	ActorPreview,
+	calcActorTextRegion,
+} from "../../presentations/objects/general/Actor";
+import {
+	Cloud,
+	CloudPreview,
+	calcCloudTextRegion,
+} from "../../presentations/objects/general/Cloud";
 import {
 	Ellipse,
 	EllipsePreview,
+	calcEllipseTextRegion,
 } from "../../presentations/objects/primitives/Ellipse";
 import {
 	Polygon,
@@ -23,17 +107,66 @@ import {
 import { Rect, RectPreview } from "../../presentations/objects/primitives/Rect";
 import { Svg } from "../../presentations/objects/primitives/Svg";
 import type { ShapePreviewRenderer } from "../../presentations/objects/registry/ShapePreviewTypes";
+import type { TextRegionCalculator } from "../../presentations/objects/registry/TextRegionRegistry";
+import { CalloutFeatures } from "../../schemas/objects/annotations/callout/CalloutDoc";
+import { CalloutShapeFactory } from "../../schemas/objects/annotations/callout/CalloutShapeFactory";
+import { CalloutShapePresets } from "../../schemas/objects/annotations/callout/CalloutShapePresets";
 import { StickyFeatures } from "../../schemas/objects/annotations/sticky/StickyDoc";
 import { StickyShapeFactory } from "../../schemas/objects/annotations/sticky/StickyShapeFactory";
 import { StickyShapePresets } from "../../schemas/objects/annotations/sticky/StickyShapePresets";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
 import { ConnectorFeatures } from "../../schemas/objects/connections/connector/ConnectorDoc";
-import { DbFeatures } from "../../schemas/objects/primitives/db/DbDoc";
-import { DbShapeFactory } from "../../schemas/objects/primitives/db/DbShapeFactory";
-import { DbShapePresets } from "../../schemas/objects/primitives/db/DbShapePresets";
-import { DiamondFeatures } from "../../schemas/objects/primitives/diamond/DiamondDoc";
-import { DiamondShapeFactory } from "../../schemas/objects/primitives/diamond/DiamondShapeFactory";
-import { DiamondShapePresets } from "../../schemas/objects/primitives/diamond/DiamondShapePresets";
+import { CardFeatures } from "../../schemas/objects/flowchart/card/CardDoc";
+import { CardShapeFactory } from "../../schemas/objects/flowchart/card/CardShapeFactory";
+import { CardShapePresets } from "../../schemas/objects/flowchart/card/CardShapePresets";
+import { CrossFeatures } from "../../schemas/objects/flowchart/cross/CrossDoc";
+import { CrossShapeFactory } from "../../schemas/objects/flowchart/cross/CrossShapeFactory";
+import { CrossShapePresets } from "../../schemas/objects/flowchart/cross/CrossShapePresets";
+import { DbFeatures } from "../../schemas/objects/flowchart/db/DbDoc";
+import { DbShapeFactory } from "../../schemas/objects/flowchart/db/DbShapeFactory";
+import { DbShapePresets } from "../../schemas/objects/flowchart/db/DbShapePresets";
+import { DelayFeatures } from "../../schemas/objects/flowchart/delay/DelayDoc";
+import { DelayShapeFactory } from "../../schemas/objects/flowchart/delay/DelayShapeFactory";
+import { DelayShapePresets } from "../../schemas/objects/flowchart/delay/DelayShapePresets";
+import { DiamondFeatures } from "../../schemas/objects/flowchart/diamond/DiamondDoc";
+import { DiamondShapeFactory } from "../../schemas/objects/flowchart/diamond/DiamondShapeFactory";
+import { DiamondShapePresets } from "../../schemas/objects/flowchart/diamond/DiamondShapePresets";
+import { DisplayFeatures } from "../../schemas/objects/flowchart/display/DisplayDoc";
+import { DisplayShapeFactory } from "../../schemas/objects/flowchart/display/DisplayShapeFactory";
+import { DisplayShapePresets } from "../../schemas/objects/flowchart/display/DisplayShapePresets";
+import { DocumentFeatures } from "../../schemas/objects/flowchart/document/DocumentDoc";
+import { DocumentShapeFactory } from "../../schemas/objects/flowchart/document/DocumentShapeFactory";
+import { DocumentShapePresets } from "../../schemas/objects/flowchart/document/DocumentShapePresets";
+import { ExtractFeatures } from "../../schemas/objects/flowchart/extract/ExtractDoc";
+import { ExtractShapeFactory } from "../../schemas/objects/flowchart/extract/ExtractShapeFactory";
+import { ExtractShapePresets } from "../../schemas/objects/flowchart/extract/ExtractShapePresets";
+import { HexagonFeatures } from "../../schemas/objects/flowchart/hexagon/HexagonDoc";
+import { HexagonShapeFactory } from "../../schemas/objects/flowchart/hexagon/HexagonShapeFactory";
+import { HexagonShapePresets } from "../../schemas/objects/flowchart/hexagon/HexagonShapePresets";
+import { ManualInputFeatures } from "../../schemas/objects/flowchart/manualInput/ManualInputDoc";
+import { ManualInputShapeFactory } from "../../schemas/objects/flowchart/manualInput/ManualInputShapeFactory";
+import { ManualInputShapePresets } from "../../schemas/objects/flowchart/manualInput/ManualInputShapePresets";
+import { OffPageConnectorFeatures } from "../../schemas/objects/flowchart/offPageConnector/OffPageConnectorDoc";
+import { OffPageConnectorShapeFactory } from "../../schemas/objects/flowchart/offPageConnector/OffPageConnectorShapeFactory";
+import { OffPageConnectorShapePresets } from "../../schemas/objects/flowchart/offPageConnector/OffPageConnectorShapePresets";
+import { ParallelogramFeatures } from "../../schemas/objects/flowchart/parallelogram/ParallelogramDoc";
+import { ParallelogramShapeFactory } from "../../schemas/objects/flowchart/parallelogram/ParallelogramShapeFactory";
+import { ParallelogramShapePresets } from "../../schemas/objects/flowchart/parallelogram/ParallelogramShapePresets";
+import { StadiumFeatures } from "../../schemas/objects/flowchart/stadium/StadiumDoc";
+import { StadiumShapeFactory } from "../../schemas/objects/flowchart/stadium/StadiumShapeFactory";
+import { StadiumShapePresets } from "../../schemas/objects/flowchart/stadium/StadiumShapePresets";
+import { SubroutineFeatures } from "../../schemas/objects/flowchart/subroutine/SubroutineDoc";
+import { SubroutineShapeFactory } from "../../schemas/objects/flowchart/subroutine/SubroutineShapeFactory";
+import { SubroutineShapePresets } from "../../schemas/objects/flowchart/subroutine/SubroutineShapePresets";
+import { TrapezoidFeatures } from "../../schemas/objects/flowchart/trapezoid/TrapezoidDoc";
+import { TrapezoidShapeFactory } from "../../schemas/objects/flowchart/trapezoid/TrapezoidShapeFactory";
+import { TrapezoidShapePresets } from "../../schemas/objects/flowchart/trapezoid/TrapezoidShapePresets";
+import { ActorFeatures } from "../../schemas/objects/general/actor/ActorDoc";
+import { ActorShapeFactory } from "../../schemas/objects/general/actor/ActorShapeFactory";
+import { ActorShapePresets } from "../../schemas/objects/general/actor/ActorShapePresets";
+import { CloudFeatures } from "../../schemas/objects/general/cloud/CloudDoc";
+import { CloudShapeFactory } from "../../schemas/objects/general/cloud/CloudShapeFactory";
+import { CloudShapePresets } from "../../schemas/objects/general/cloud/CloudShapePresets";
 import { EllipseFeatures } from "../../schemas/objects/primitives/ellipse/EllipseDoc";
 import { EllipseShapeFactory } from "../../schemas/objects/primitives/ellipse/EllipseShapeFactory";
 import { EllipseShapePresets } from "../../schemas/objects/primitives/ellipse/EllipseShapePresets";
@@ -56,6 +189,12 @@ import type {
 	ShapePreset,
 } from "../../schemas/objects/types/ShapePreset";
 import {
+	calloutToDoc,
+	calloutToState,
+} from "../../states/objects/annotations/callout/CalloutMapper";
+import type { CalloutState } from "../../states/objects/annotations/callout/CalloutState";
+import { isValidCalloutState } from "../../states/objects/annotations/callout/validateCalloutState";
+import {
 	stickyToDoc,
 	stickyToState,
 } from "../../states/objects/annotations/sticky/StickyMapper";
@@ -69,17 +208,104 @@ import {
 } from "../../states/objects/connections/connector/ConnectorMapper";
 import { isValidConnectorState } from "../../states/objects/connections/connector/validateConnectorState";
 import {
-	dbToDoc,
-	dbToState,
-} from "../../states/objects/primitives/db/DbMapper";
-import type { DbState } from "../../states/objects/primitives/db/DbState";
-import { isValidDbState } from "../../states/objects/primitives/db/validateDbState";
+	cardToDoc,
+	cardToState,
+} from "../../states/objects/flowchart/card/CardMapper";
+import type { CardState } from "../../states/objects/flowchart/card/CardState";
+import { isValidCardState } from "../../states/objects/flowchart/card/validateCardState";
+import {
+	crossToDoc,
+	crossToState,
+} from "../../states/objects/flowchart/cross/CrossMapper";
+import type { CrossState } from "../../states/objects/flowchart/cross/CrossState";
+import { isValidCrossState } from "../../states/objects/flowchart/cross/validateCrossState";
+import { dbToDoc, dbToState } from "../../states/objects/flowchart/db/DbMapper";
+import type { DbState } from "../../states/objects/flowchart/db/DbState";
+import { isValidDbState } from "../../states/objects/flowchart/db/validateDbState";
+import {
+	delayToDoc,
+	delayToState,
+} from "../../states/objects/flowchart/delay/DelayMapper";
+import type { DelayState } from "../../states/objects/flowchart/delay/DelayState";
+import { isValidDelayState } from "../../states/objects/flowchart/delay/validateDelayState";
 import {
 	diamondToDoc,
 	diamondToState,
-} from "../../states/objects/primitives/diamond/DiamondMapper";
-import type { DiamondState } from "../../states/objects/primitives/diamond/DiamondState";
-import { isValidDiamondState } from "../../states/objects/primitives/diamond/validateDiamondState";
+} from "../../states/objects/flowchart/diamond/DiamondMapper";
+import type { DiamondState } from "../../states/objects/flowchart/diamond/DiamondState";
+import { isValidDiamondState } from "../../states/objects/flowchart/diamond/validateDiamondState";
+import {
+	displayToDoc,
+	displayToState,
+} from "../../states/objects/flowchart/display/DisplayMapper";
+import type { DisplayState } from "../../states/objects/flowchart/display/DisplayState";
+import { isValidDisplayState } from "../../states/objects/flowchart/display/validateDisplayState";
+import {
+	documentToDoc,
+	documentToState,
+} from "../../states/objects/flowchart/document/DocumentMapper";
+import type { DocumentState } from "../../states/objects/flowchart/document/DocumentState";
+import { isValidDocumentState } from "../../states/objects/flowchart/document/validateDocumentState";
+import {
+	extractToDoc,
+	extractToState,
+} from "../../states/objects/flowchart/extract/ExtractMapper";
+import type { ExtractState } from "../../states/objects/flowchart/extract/ExtractState";
+import { isValidExtractState } from "../../states/objects/flowchart/extract/validateExtractState";
+import {
+	hexagonToDoc,
+	hexagonToState,
+} from "../../states/objects/flowchart/hexagon/HexagonMapper";
+import type { HexagonState } from "../../states/objects/flowchart/hexagon/HexagonState";
+import { isValidHexagonState } from "../../states/objects/flowchart/hexagon/validateHexagonState";
+import {
+	manualInputToDoc,
+	manualInputToState,
+} from "../../states/objects/flowchart/manualInput/ManualInputMapper";
+import type { ManualInputState } from "../../states/objects/flowchart/manualInput/ManualInputState";
+import { isValidManualInputState } from "../../states/objects/flowchart/manualInput/validateManualInputState";
+import {
+	offPageConnectorToDoc,
+	offPageConnectorToState,
+} from "../../states/objects/flowchart/offPageConnector/OffPageConnectorMapper";
+import type { OffPageConnectorState } from "../../states/objects/flowchart/offPageConnector/OffPageConnectorState";
+import { isValidOffPageConnectorState } from "../../states/objects/flowchart/offPageConnector/validateOffPageConnectorState";
+import {
+	parallelogramToDoc,
+	parallelogramToState,
+} from "../../states/objects/flowchart/parallelogram/ParallelogramMapper";
+import type { ParallelogramState } from "../../states/objects/flowchart/parallelogram/ParallelogramState";
+import { isValidParallelogramState } from "../../states/objects/flowchart/parallelogram/validateParallelogramState";
+import {
+	stadiumToDoc,
+	stadiumToState,
+} from "../../states/objects/flowchart/stadium/StadiumMapper";
+import type { StadiumState } from "../../states/objects/flowchart/stadium/StadiumState";
+import { isValidStadiumState } from "../../states/objects/flowchart/stadium/validateStadiumState";
+import {
+	subroutineToDoc,
+	subroutineToState,
+} from "../../states/objects/flowchart/subroutine/SubroutineMapper";
+import type { SubroutineState } from "../../states/objects/flowchart/subroutine/SubroutineState";
+import { isValidSubroutineState } from "../../states/objects/flowchart/subroutine/validateSubroutineState";
+import {
+	trapezoidToDoc,
+	trapezoidToState,
+} from "../../states/objects/flowchart/trapezoid/TrapezoidMapper";
+import type { TrapezoidState } from "../../states/objects/flowchart/trapezoid/TrapezoidState";
+import { isValidTrapezoidState } from "../../states/objects/flowchart/trapezoid/validateTrapezoidState";
+import {
+	actorToDoc,
+	actorToState,
+} from "../../states/objects/general/actor/ActorMapper";
+import type { ActorState } from "../../states/objects/general/actor/ActorState";
+import { isValidActorState } from "../../states/objects/general/actor/validateActorState";
+import {
+	cloudToDoc,
+	cloudToState,
+} from "../../states/objects/general/cloud/CloudMapper";
+import type { CloudState } from "../../states/objects/general/cloud/CloudState";
+import { isValidCloudState } from "../../states/objects/general/cloud/validateCloudState";
 import {
 	ellipseToDoc,
 	ellipseToState,
@@ -136,14 +362,31 @@ import {
 	transformByGroup as polylineTransformByGroup,
 } from "../gestures/handlers/objects/primitives/PolylineController";
 import type { ObjectBehaviorEntry } from "../gestures/registry/ObjectBehaviorTypes";
+import { ActorIcon } from "../ui/icons/ActorIcon";
+import { CalloutIcon } from "../ui/icons/CalloutIcon";
+import { CardIcon } from "../ui/icons/CardIcon";
+import { CloudIcon } from "../ui/icons/CloudIcon";
+import { CrossIcon } from "../ui/icons/CrossIcon";
 import { DbIcon } from "../ui/icons/DbIcon";
+import { DelayIcon } from "../ui/icons/DelayIcon";
 import { DiamondIcon } from "../ui/icons/DiamondIcon";
+import { DisplayIcon } from "../ui/icons/DisplayIcon";
+import { DocumentIcon } from "../ui/icons/DocumentIcon";
 import { EllipseIcon } from "../ui/icons/EllipseIcon";
+import { ExtractIcon } from "../ui/icons/ExtractIcon";
+import { HexagonIcon } from "../ui/icons/HexagonIcon";
+import { ManualInputIcon } from "../ui/icons/ManualInputIcon";
 import { MarkdownRectIcon } from "../ui/icons/MarkdownRectIcon";
+import { OffPageConnectorIcon } from "../ui/icons/OffPageConnectorIcon";
+import { OnPageConnectorIcon } from "../ui/icons/OnPageConnectorIcon";
+import { ParallelogramIcon } from "../ui/icons/ParallelogramIcon";
 import { PolygonIcon } from "../ui/icons/PolygonIcon";
 import { PolylineIcon } from "../ui/icons/PolylineIcon";
 import { RectIcon } from "../ui/icons/RectIcon";
+import { StadiumIcon } from "../ui/icons/StadiumIcon";
 import { StickyIcon } from "../ui/icons/StickyIcon";
+import { SubroutineIcon } from "../ui/icons/SubroutineIcon";
+import { TrapezoidIcon } from "../ui/icons/TrapezoidIcon";
 import {
 	LabelBackgroundColorMenu,
 	LabelBoldMenu,
@@ -176,8 +419,8 @@ type ShapeLibraryRegistration = {
 
 /**
  * The full description of a single object type across every registry
- * (mapper, component, behavior, state validator, menu) plus its optional
- * ShapeLibrary capabilities. Values are widened to the base state/doc types;
+ * (mapper, component, text region, behavior, state validator, menu) plus its
+ * optional ShapeLibrary capabilities. Values are widened to the base state/doc types;
  * per-entry type-safety is enforced at definition site by `defineObject`.
  */
 export type ObjectTypeDefinition = {
@@ -185,6 +428,8 @@ export type ObjectTypeDefinition = {
 	features: ObjectFeatures;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	component: FC<any>;
+	/** Text region calculator. Omitted = full bbox (see TextRegionRegistry). */
+	textRegion?: TextRegionCalculator;
 	behavior: ObjectBehaviorEntry;
 	menuFactory: MenuSectionFactory<ObjectState>;
 	validateState: ObjectStateValidateFn;
@@ -201,6 +446,7 @@ const defineObject = <TDoc extends ObjectDoc, TState extends ObjectState>(def: {
 	features: ObjectFeatures;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	component: FC<any>;
+	textRegion?: TextRegionCalculator;
 	behavior: ObjectBehaviorEntry<TState>;
 	menuFactory: MenuSectionFactory<TState>;
 	validateState: ObjectStateValidateFn;
@@ -242,7 +488,11 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				factory: RectShapeFactory,
 				previewRenderer: RectPreview,
 				presets: RectShapePresets,
-				presetIcons: { rect: RectIcon, "rect-markdown": MarkdownRectIcon },
+				presetIcons: {
+					rect: RectIcon,
+					process: RectIcon,
+					"rect-markdown": MarkdownRectIcon,
+				},
 			},
 		}),
 
@@ -250,6 +500,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			mapper: { toDoc: ellipseToDoc, toState: ellipseToState },
 			features: EllipseFeatures,
 			component: Ellipse,
+			textRegion: calcEllipseTextRegion,
 			behavior: createFrameBehavior<EllipseState>(),
 			menuFactory: (_state) => [
 				{
@@ -274,7 +525,10 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				factory: EllipseShapeFactory,
 				previewRenderer: EllipsePreview,
 				presets: EllipseShapePresets,
-				presetIcons: { ellipse: EllipseIcon },
+				presetIcons: {
+					ellipse: EllipseIcon,
+					onPageConnector: OnPageConnectorIcon,
+				},
 			},
 		}),
 
@@ -282,6 +536,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			mapper: { toDoc: diamondToDoc, toState: diamondToState },
 			features: DiamondFeatures,
 			component: Diamond,
+			textRegion: calcDiamondTextRegion,
 			behavior: createFrameBehavior<DiamondState>(),
 			menuFactory: (_state) => [
 				{
@@ -310,10 +565,242 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			},
 		}),
 
+		stadium: defineObject({
+			mapper: { toDoc: stadiumToDoc, toState: stadiumToState },
+			features: StadiumFeatures,
+			component: Stadium,
+			textRegion: calcStadiumTextRegion,
+			behavior: createFrameBehavior<StadiumState>(),
+			menuFactory: (_state) => [
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: false },
+					],
+				},
+				{
+					id: "text",
+					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				},
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidStadiumState,
+			shapeLibrary: {
+				factory: StadiumShapeFactory,
+				previewRenderer: StadiumPreview,
+				presets: StadiumShapePresets,
+				presetIcons: { stadium: StadiumIcon },
+			},
+		}),
+
+		parallelogram: defineObject({
+			mapper: { toDoc: parallelogramToDoc, toState: parallelogramToState },
+			features: ParallelogramFeatures,
+			component: Parallelogram,
+			textRegion: calcParallelogramTextRegion,
+			behavior: createFrameBehavior<ParallelogramState>(),
+			menuFactory: (_state) => [
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: false },
+					],
+				},
+				{
+					id: "text",
+					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				},
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidParallelogramState,
+			shapeLibrary: {
+				factory: ParallelogramShapeFactory,
+				previewRenderer: ParallelogramPreview,
+				presets: ParallelogramShapePresets,
+				presetIcons: { parallelogram: ParallelogramIcon },
+			},
+		}),
+
+		hexagon: defineObject({
+			mapper: { toDoc: hexagonToDoc, toState: hexagonToState },
+			features: HexagonFeatures,
+			component: Hexagon,
+			textRegion: calcHexagonTextRegion,
+			behavior: createFrameBehavior<HexagonState>(),
+			menuFactory: (_state) => [
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: false },
+					],
+				},
+				{
+					id: "text",
+					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				},
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidHexagonState,
+			shapeLibrary: {
+				factory: HexagonShapeFactory,
+				previewRenderer: HexagonPreview,
+				presets: HexagonShapePresets,
+				presetIcons: { hexagon: HexagonIcon },
+			},
+		}),
+
+		cloud: defineObject({
+			mapper: { toDoc: cloudToDoc, toState: cloudToState },
+			features: CloudFeatures,
+			component: Cloud,
+			textRegion: calcCloudTextRegion,
+			behavior: createFrameBehavior<CloudState>(),
+			menuFactory: (_state) => [
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: false },
+					],
+				},
+				{
+					id: "text",
+					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				},
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidCloudState,
+			shapeLibrary: {
+				factory: CloudShapeFactory,
+				previewRenderer: CloudPreview,
+				presets: CloudShapePresets,
+				presetIcons: { cloud: CloudIcon },
+			},
+		}),
+
+		document: defineObject({
+			mapper: { toDoc: documentToDoc, toState: documentToState },
+			features: DocumentFeatures,
+			component: Document,
+			textRegion: calcDocumentTextRegion,
+			behavior: createFrameBehavior<DocumentState>(),
+			menuFactory: (_state) => [
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: false },
+					],
+				},
+				{
+					id: "text",
+					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				},
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidDocumentState,
+			shapeLibrary: {
+				factory: DocumentShapeFactory,
+				previewRenderer: DocumentPreview,
+				presets: DocumentShapePresets,
+				presetIcons: { document: DocumentIcon },
+			},
+		}),
+
+		actor: defineObject({
+			mapper: { toDoc: actorToDoc, toState: actorToState },
+			features: ActorFeatures,
+			component: Actor,
+			textRegion: calcActorTextRegion,
+			behavior: createFrameBehavior<ActorState>(),
+			menuFactory: (_state) => [
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: false },
+					],
+				},
+				{
+					id: "text",
+					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				},
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidActorState,
+			shapeLibrary: {
+				factory: ActorShapeFactory,
+				previewRenderer: ActorPreview,
+				presets: ActorShapePresets,
+				presetIcons: { actor: ActorIcon },
+			},
+		}),
+
+		callout: defineObject({
+			mapper: { toDoc: calloutToDoc, toState: calloutToState },
+			features: CalloutFeatures,
+			component: Callout,
+			textRegion: calcCalloutTextRegion,
+			behavior: createFrameBehavior<CalloutState>(),
+			menuFactory: (_state) => [
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: false },
+					],
+				},
+				{
+					id: "text",
+					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				},
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidCalloutState,
+			shapeLibrary: {
+				factory: CalloutShapeFactory,
+				previewRenderer: CalloutPreview,
+				presets: CalloutShapePresets,
+				presetIcons: { callout: CalloutIcon },
+			},
+		}),
+
 		db: defineObject({
 			mapper: { toDoc: dbToDoc, toState: dbToState },
 			features: DbFeatures,
 			component: Db,
+			textRegion: calcDbTextRegion,
 			behavior: createFrameBehavior<DbState>(),
 			menuFactory: (_state) => [
 				{
@@ -339,6 +826,296 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				previewRenderer: DbPreview,
 				presets: DbShapePresets,
 				presetIcons: { db: DbIcon },
+			},
+		}),
+
+		subroutine: defineObject({
+			mapper: { toDoc: subroutineToDoc, toState: subroutineToState },
+			features: SubroutineFeatures,
+			component: Subroutine,
+			textRegion: calcSubroutineTextRegion,
+			behavior: createFrameBehavior<SubroutineState>(),
+			menuFactory: (_state) => [
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: false },
+					],
+				},
+				{
+					id: "text",
+					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				},
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidSubroutineState,
+			shapeLibrary: {
+				factory: SubroutineShapeFactory,
+				previewRenderer: SubroutinePreview,
+				presets: SubroutineShapePresets,
+				presetIcons: { subroutine: SubroutineIcon },
+			},
+		}),
+
+		trapezoid: defineObject({
+			mapper: { toDoc: trapezoidToDoc, toState: trapezoidToState },
+			features: TrapezoidFeatures,
+			component: Trapezoid,
+			textRegion: calcTrapezoidTextRegion,
+			behavior: createFrameBehavior<TrapezoidState>(),
+			menuFactory: (_state) => [
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: false },
+					],
+				},
+				{
+					id: "text",
+					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				},
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidTrapezoidState,
+			shapeLibrary: {
+				factory: TrapezoidShapeFactory,
+				previewRenderer: TrapezoidPreview,
+				presets: TrapezoidShapePresets,
+				presetIcons: { trapezoid: TrapezoidIcon },
+			},
+		}),
+
+		manualInput: defineObject({
+			mapper: { toDoc: manualInputToDoc, toState: manualInputToState },
+			features: ManualInputFeatures,
+			component: ManualInput,
+			textRegion: calcManualInputTextRegion,
+			behavior: createFrameBehavior<ManualInputState>(),
+			menuFactory: (_state) => [
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: false },
+					],
+				},
+				{
+					id: "text",
+					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				},
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidManualInputState,
+			shapeLibrary: {
+				factory: ManualInputShapeFactory,
+				previewRenderer: ManualInputPreview,
+				presets: ManualInputShapePresets,
+				presetIcons: { manualInput: ManualInputIcon },
+			},
+		}),
+
+		card: defineObject({
+			mapper: { toDoc: cardToDoc, toState: cardToState },
+			features: CardFeatures,
+			component: Card,
+			textRegion: calcCardTextRegion,
+			behavior: createFrameBehavior<CardState>(),
+			menuFactory: (_state) => [
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: false },
+					],
+				},
+				{
+					id: "text",
+					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				},
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidCardState,
+			shapeLibrary: {
+				factory: CardShapeFactory,
+				previewRenderer: CardPreview,
+				presets: CardShapePresets,
+				presetIcons: { card: CardIcon },
+			},
+		}),
+
+		delay: defineObject({
+			mapper: { toDoc: delayToDoc, toState: delayToState },
+			features: DelayFeatures,
+			component: Delay,
+			textRegion: calcDelayTextRegion,
+			behavior: createFrameBehavior<DelayState>(),
+			menuFactory: (_state) => [
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: false },
+					],
+				},
+				{
+					id: "text",
+					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				},
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidDelayState,
+			shapeLibrary: {
+				factory: DelayShapeFactory,
+				previewRenderer: DelayPreview,
+				presets: DelayShapePresets,
+				presetIcons: { delay: DelayIcon },
+			},
+		}),
+
+		display: defineObject({
+			mapper: { toDoc: displayToDoc, toState: displayToState },
+			features: DisplayFeatures,
+			component: Display,
+			textRegion: calcDisplayTextRegion,
+			behavior: createFrameBehavior<DisplayState>(),
+			menuFactory: (_state) => [
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: false },
+					],
+				},
+				{
+					id: "text",
+					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				},
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidDisplayState,
+			shapeLibrary: {
+				factory: DisplayShapeFactory,
+				previewRenderer: DisplayPreview,
+				presets: DisplayShapePresets,
+				presetIcons: { display: DisplayIcon },
+			},
+		}),
+
+		extract: defineObject({
+			mapper: { toDoc: extractToDoc, toState: extractToState },
+			features: ExtractFeatures,
+			component: Extract,
+			behavior: createFrameBehavior<ExtractState>(),
+			menuFactory: (_state) => [
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: false },
+					],
+				},
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidExtractState,
+			shapeLibrary: {
+				factory: ExtractShapeFactory,
+				previewRenderer: ExtractPreview,
+				presets: ExtractShapePresets,
+				presetIcons: { extract: ExtractIcon },
+			},
+		}),
+
+		cross: defineObject({
+			mapper: { toDoc: crossToDoc, toState: crossToState },
+			features: CrossFeatures,
+			component: Cross,
+			behavior: createFrameBehavior<CrossState>(),
+			menuFactory: (_state) => [
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: false },
+					],
+				},
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidCrossState,
+			shapeLibrary: {
+				factory: CrossShapeFactory,
+				previewRenderer: CrossPreview,
+				presets: CrossShapePresets,
+				presetIcons: { cross: CrossIcon },
+			},
+		}),
+
+		offPageConnector: defineObject({
+			mapper: {
+				toDoc: offPageConnectorToDoc,
+				toState: offPageConnectorToState,
+			},
+			features: OffPageConnectorFeatures,
+			component: OffPageConnector,
+			textRegion: calcOffPageConnectorTextRegion,
+			behavior: createFrameBehavior<OffPageConnectorState>(),
+			menuFactory: (_state) => [
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: false },
+					],
+				},
+				{
+					id: "text",
+					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				},
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidOffPageConnectorState,
+			shapeLibrary: {
+				factory: OffPageConnectorShapeFactory,
+				previewRenderer: OffPageConnectorPreview,
+				presets: OffPageConnectorShapePresets,
+				presetIcons: { offPageConnector: OffPageConnectorIcon },
 			},
 		}),
 
@@ -540,8 +1317,8 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 
 /**
  * Registers a single object type described by `definition` across all registries
- * in the given bundle (mapper, component, behavior, state validator, menu), and
- * optionally its ShapeLibrary capabilities.
+ * in the given bundle (mapper, component, text region, behavior, state validator,
+ * menu), and optionally its ShapeLibrary capabilities.
  */
 export const applyObjectDefinition = (
 	registries: CanvasRegistries,
@@ -554,6 +1331,9 @@ export const applyObjectDefinition = (
 		definition.features,
 	);
 	registries.objectComponent.register(type, definition.component);
+	if (definition.textRegion) {
+		registries.textRegion.register(type, definition.textRegion);
+	}
 	registries.objectBehavior.register(type, definition.behavior);
 	registries.objectStateValidator.register(type, definition.validateState);
 	registries.objectMenu.register(type, definition.menuFactory);
@@ -586,6 +1366,7 @@ export const initializeObjectRegistry = (
 ): void => {
 	registries.objectMapper.clear();
 	registries.objectComponent.clear();
+	registries.textRegion.clear();
 	registries.objectBehavior.clear();
 	registries.objectStateValidator.clear();
 	registries.objectMenu.clear();

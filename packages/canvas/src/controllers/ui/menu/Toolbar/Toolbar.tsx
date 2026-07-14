@@ -1,5 +1,6 @@
 import { memo, useCallback, useEffect, useState } from "react";
 
+import { DEFAULT_TOOLBAR_LAYOUT, type ToolbarEntry } from "./toolbarLayout";
 import {
 	ToolbarContainer,
 	ToolbarDivider,
@@ -12,17 +13,23 @@ import { useCanvasRegistries } from "../../../contexts/CanvasRegistriesContext";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import { HelpIcon } from "../../icons/HelpIcon";
 import { ShortcutHelpModal } from "../../modal/ShortcutHelp/ShortcutHelpModal";
+import { SHAPE_CATEGORY_DEFINITIONS } from "../ShapeLibrary/shapeCategories";
+import { ShapeCategoryMenu } from "../ShapeLibrary/ShapeCategoryMenu";
 import { ShapeLibraryItem } from "../ShapeLibrary/ShapeLibraryItem";
 
 type ToolbarProps = {
 	/** ID of the shape preset currently being drawn (for the tool's active state) */
 	activePresetId: string | null;
+	/** ID of the category whose flyout is open (reducer state); null = none */
+	openCategoryId: string | null;
 	/** Current zoom factor (1 = 100%) */
 	zoom: number;
 	/** Whether zooming in is possible (canExecute of the zoomIn command) */
 	canZoomIn: boolean;
 	/** Whether zooming out is possible (canExecute of the zoomOut command) */
 	canZoomOut: boolean;
+	/** Top-level arrangement of the shape tools (pinned presets + category flyouts) */
+	layout?: ToolbarEntry[];
 	/** Host UI at the left edge (see CanvasProps.toolbarLeading) */
 	leading?: React.ReactNode;
 	/** Host UI at the right edge (see CanvasProps.toolbarTrailing) */
@@ -51,9 +58,11 @@ const isEditableTarget = (target: EventTarget | null): boolean => {
  */
 const ToolbarComponent: React.FC<ToolbarProps> = ({
 	activePresetId,
+	openCategoryId,
 	zoom,
 	canZoomIn,
 	canZoomOut,
+	layout = DEFAULT_TOOLBAR_LAYOUT,
 	leading,
 	trailing,
 }) => {
@@ -61,6 +70,11 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 	const { shapePreset } = useCanvasRegistries();
 	const [isHelpOpen, setIsHelpOpen] = useState(false);
 	const closeHelp = useCallback(() => setIsHelpOpen(false), []);
+
+	// The open category flyout (`openCategoryId`) lives in reducer state; the
+	// toggle goes through ShapeCategoryToggleHandler and dismissal through the
+	// handlers/commands that clear it, so the Toolbar is stateless here and
+	// multiple <Canvas> instances stay independent.
 
 	// Escape での閉じ処理は ModalShell が担う。ここは「?」で開くだけ。
 	useEffect(() => {
@@ -97,13 +111,34 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 							<ToolbarDivider />
 						</>
 					)}
-					{shapePreset.all().map((preset) => (
-						<ShapeLibraryItem
-							key={preset.id}
-							preset={preset}
-							isActive={activePresetId === preset.id}
-						/>
-					))}
+					{layout.map((entry) => {
+						if (entry.kind === "preset") {
+							const preset = shapePreset.get(entry.presetId);
+							if (!preset) {
+								return null;
+							}
+							return (
+								<ShapeLibraryItem
+									key={`preset:${entry.presetId}`}
+									preset={preset}
+									isActive={activePresetId === preset.id}
+								/>
+							);
+						}
+						const category = SHAPE_CATEGORY_DEFINITIONS[entry.categoryId];
+						if (!category) {
+							return null;
+						}
+						return (
+							<ShapeCategoryMenu
+								key={`category:${entry.categoryId}`}
+								category={category}
+								presets={shapePreset.byCategory(entry.categoryId)}
+								isOpen={openCategoryId === entry.categoryId}
+								activePresetId={activePresetId}
+							/>
+						);
+					})}
 				</ToolbarGroup>
 
 				{/* Right: zoom readout and help */}

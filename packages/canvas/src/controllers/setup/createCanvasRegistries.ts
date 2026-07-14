@@ -7,6 +7,7 @@ import {
 } from "./initializeObjectRegistry";
 import { createObjectComponentRegistry } from "../../presentations/objects/registry/ObjectComponentRegistry";
 import { createShapePreviewRegistry } from "../../presentations/objects/registry/ShapePreviewRegistry";
+import { createTextRegionRegistry } from "../../presentations/objects/registry/TextRegionRegistry";
 import { createShapeFactoryRegistry } from "../../schemas/registry/ShapeFactoryRegistry";
 import { createObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import { createObjectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
@@ -20,7 +21,7 @@ import { createObjectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegist
  * Builds a fresh, fully independent bundle of UI registries for one `<Canvas>`.
  *
  * Wiring order:
- *   1. instantiate the 10 empty registries,
+ *   1. instantiate the 11 empty registries,
  *   2. register all gesture handlers (object-type independent, always all),
  *   3. apply the configured object types (default: every type),
  *   4. register commands, optionally restricted by `config.commands`,
@@ -36,6 +37,7 @@ export const createCanvasRegistries = (
 		objectMapper: createObjectMapperRegistry(),
 		objectStateValidator: createObjectStateValidatorRegistry(),
 		objectComponent: createObjectComponentRegistry(),
+		textRegion: createTextRegionRegistry(),
 		shapePreview: createShapePreviewRegistry(),
 		objectBehavior: createObjectBehaviorRegistry(),
 		gestureHandler: createGestureHandlerRegistry(),

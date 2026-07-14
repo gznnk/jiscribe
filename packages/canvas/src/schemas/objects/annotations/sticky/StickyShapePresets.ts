@@ -5,7 +5,7 @@ export const StickyShapePresets: ShapePreset[] = [
 		id: "sticky",
 		objectType: "sticky",
 		label: "Sticky",
-		order: 50,
+		categories: { annotation: 20 },
 		defaultOverrides: {
 			width: 200,
 			height: 150,

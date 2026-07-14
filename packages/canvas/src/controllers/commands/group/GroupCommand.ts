@@ -143,6 +143,7 @@ export const GroupCommand: Command = {
 			rootIds: updatedRootIds,
 			selectedIds: [groupId],
 			objectMenuOpenId: null,
+			shapeLibraryOpenCategory: null,
 			lastDuplicate: null,
 			commitVersion: state.commitVersion + 1,
 		};

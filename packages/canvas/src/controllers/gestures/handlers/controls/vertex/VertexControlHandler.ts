@@ -91,6 +91,7 @@ export class VertexControlHandler implements ControlStrategy {
 			...state,
 			selectedVertex: { objectId, vertexIndex },
 			objectMenuOpenId: null,
+			shapeLibraryOpenCategory: null,
 		};
 	}
 
@@ -106,6 +107,7 @@ export class VertexControlHandler implements ControlStrategy {
 			selectedVertex: null,
 			edgeScrollEnabled: true,
 			objectMenuOpenId: null,
+			shapeLibraryOpenCategory: null,
 		};
 	}
 

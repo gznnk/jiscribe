@@ -25,6 +25,17 @@ export type {
 	RasterizeSvgOptions,
 	BuildExportSvgOptions,
 } from "./export";
+// ShapeLibrary toolbar arrangement (pinned presets + category flyouts, issue #184).
+// Pass a custom `toolbarLayout` to `<Canvas>`; category metadata is exported so
+// hosts can reference or extend the built-in categories.
+export {
+	DEFAULT_TOOLBAR_LAYOUT,
+	type ToolbarEntry,
+} from "./controllers/ui/menu/Toolbar";
+export {
+	SHAPE_CATEGORY_DEFINITIONS,
+	type ShapeCategory,
+} from "./controllers/ui/menu/ShapeLibrary/shapeCategories";
 export { defaultCanvasMessages } from "./controllers/messages/CanvasMessages";
 export { jaCanvasMessages } from "./controllers/messages/jaCanvasMessages";
 export type {

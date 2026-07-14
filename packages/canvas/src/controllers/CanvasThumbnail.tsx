@@ -4,6 +4,7 @@ import { defaultCanvasRegistries } from "./setup";
 import { calcFitViewport } from "./utils/calcFitViewport";
 import { CanvasView } from "../presentations/CanvasView";
 import { ObjectComponentRegistryContext } from "../presentations/objects/registry/ObjectComponentRegistryContext";
+import { TextRegionRegistryContext } from "../presentations/objects/registry/TextRegionRegistryContext";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import { canvasToState } from "../states/canvas/CanvasMapper";
 import type { CanvasTheme } from "../theme/CanvasTheme";
@@ -73,14 +74,16 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 			<ObjectComponentRegistryContext
 				value={defaultCanvasRegistries.objectComponent}
 			>
-				<div style={themeCssVars}>
-					<CanvasView
-						objects={objects}
-						rootIds={rootIds}
-						viewport={viewport}
-						svgRef={svgRef}
-					/>
-				</div>
+				<TextRegionRegistryContext value={defaultCanvasRegistries.textRegion}>
+					<div style={themeCssVars}>
+						<CanvasView
+							objects={objects}
+							rootIds={rootIds}
+							viewport={viewport}
+							svgRef={svgRef}
+						/>
+					</div>
+				</TextRegionRegistryContext>
 			</ObjectComponentRegistryContext>
 		</CanvasThemeContext>
 	);

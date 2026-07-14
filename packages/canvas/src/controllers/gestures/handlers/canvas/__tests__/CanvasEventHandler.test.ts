@@ -106,4 +106,17 @@ describe("CanvasEventHandler", () => {
 			expect(nextState.selectedIds).toEqual([]);
 		});
 	});
+
+	it("a background press closes an open ShapeLibrary category flyout", () => {
+		const state = makeState({
+			textEditState: null,
+			shapeLibraryOpenCategory: "flowchart",
+		} as Partial<CanvasControllerState>);
+		const nextState = CanvasEventHandler.handle(
+			state,
+			makeEvent({ type: "pressed", button: 0 }),
+			registries,
+		);
+		expect(nextState.shapeLibraryOpenCategory).toBeNull();
+	});
 });

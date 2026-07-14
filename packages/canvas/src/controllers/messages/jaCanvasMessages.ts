@@ -118,6 +118,13 @@ export const jaCanvasMessages: CanvasMessages = {
 		sticky: "付箋",
 	},
 
+	shapeCategoryLabels: {
+		basic: "基本",
+		flowchart: "フローチャート",
+		general: "一般",
+		annotation: "注釈",
+	},
+
 	// PRESET_COLORS と STICKY_PRESET_COLORS の英語名を網羅する
 	colorNames: {
 		Red: "赤",

@@ -74,6 +74,7 @@ function handleObjectClick(
 		selectedVertex: null,
 		// Close the submenu on selection change
 		objectMenuOpenId: null,
+		shapeLibraryOpenCategory: null,
 	};
 }
 
@@ -308,6 +309,7 @@ function handleObjectDragStart(
 		selectedVertex: null,
 		// Close the object menu dropdown at drag start
 		objectMenuOpenId: null,
+		shapeLibraryOpenCategory: null,
 		eventStartSnapshot: canvasState.eventStartSnapshot
 			? {
 					...canvasState.eventStartSnapshot,
