@@ -1,21 +1,36 @@
+import type { Point } from "@workspace/geometry";
+
 import { MANUAL_INPUT_SLOPE_RATIO } from "../../../../schemas/objects/flowchart/manualInput/ManualInputDoc";
+import { formatPolygonPoints } from "../../utils/formatPolygonPoints";
+import { centeredPolygonOutline } from "../../utils/outlineHelpers";
 
 /**
- * Builds the manual-input point list (top edge sloping up toward the right) for a
- * bounding box whose top-left corner is at (x, y). Shared by the object renderer
- * (centered origin) and the draw-drag preview.
+ * Manual-input outline vertices (top edge sloping up toward the right) for a
+ * bounding box whose top-left corner is at (x, y). Single source shared by the
+ * renderer, the draw-drag preview, and the connector outline provider.
  */
+export const manualInputOutlinePoints = (
+	x: number,
+	y: number,
+	width: number,
+	height: number,
+): Point[] => {
+	const slope = height * MANUAL_INPUT_SLOPE_RATIO;
+	return [
+		{ x, y: y + slope },
+		{ x: x + width, y },
+		{ x: x + width, y: y + height },
+		{ x, y: y + height },
+	];
+};
+
 export const buildManualInputPoints = (
 	x: number,
 	y: number,
 	width: number,
 	height: number,
-): string => {
-	const slope = height * MANUAL_INPUT_SLOPE_RATIO;
-	return [
-		`${x},${y + slope}`,
-		`${x + width},${y}`,
-		`${x + width},${y + height}`,
-		`${x},${y + height}`,
-	].join(" ");
-};
+): string => formatPolygonPoints(manualInputOutlinePoints(x, y, width, height));
+
+export const manualInputOutline = centeredPolygonOutline(
+	manualInputOutlinePoints,
+);

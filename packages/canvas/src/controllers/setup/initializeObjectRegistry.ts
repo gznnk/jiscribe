@@ -5,6 +5,7 @@ import {
 	Callout,
 	CalloutPreview,
 	calcCalloutTextRegion,
+	calloutOutline,
 } from "../../presentations/objects/annotations/Callout";
 import { Sticky } from "../../presentations/objects/annotations/Sticky";
 import { Connector } from "../../presentations/objects/connections/Connector";
@@ -12,64 +13,77 @@ import {
 	Card,
 	CardPreview,
 	calcCardTextRegion,
+	cardOutline,
 } from "../../presentations/objects/flowchart/Card";
 import {
 	Cross,
 	CrossPreview,
+	crossOutline,
 } from "../../presentations/objects/flowchart/Cross";
 import {
 	Db,
 	DbPreview,
 	calcDbTextRegion,
+	dbOutline,
 } from "../../presentations/objects/flowchart/Db";
 import {
 	Delay,
 	DelayPreview,
 	calcDelayTextRegion,
+	delayOutline,
 } from "../../presentations/objects/flowchart/Delay";
 import {
 	Diamond,
 	DiamondPreview,
 	calcDiamondTextRegion,
+	diamondOutline,
 } from "../../presentations/objects/flowchart/Diamond";
 import {
 	Display,
 	DisplayPreview,
 	calcDisplayTextRegion,
+	displayOutline,
 } from "../../presentations/objects/flowchart/Display";
 import {
 	Document,
 	DocumentPreview,
 	calcDocumentTextRegion,
+	documentOutline,
 } from "../../presentations/objects/flowchart/Document";
 import {
 	Extract,
 	ExtractPreview,
+	extractOutline,
 } from "../../presentations/objects/flowchart/Extract";
 import {
 	Hexagon,
 	HexagonPreview,
 	calcHexagonTextRegion,
+	hexagonOutline,
 } from "../../presentations/objects/flowchart/Hexagon";
 import {
 	ManualInput,
 	ManualInputPreview,
 	calcManualInputTextRegion,
+	manualInputOutline,
 } from "../../presentations/objects/flowchart/ManualInput";
 import {
 	OffPageConnector,
 	OffPageConnectorPreview,
 	calcOffPageConnectorTextRegion,
+	offPageConnectorOutline,
 } from "../../presentations/objects/flowchart/OffPageConnector";
 import {
 	Parallelogram,
 	ParallelogramPreview,
 	calcParallelogramTextRegion,
+	parallelogramOutline,
 } from "../../presentations/objects/flowchart/Parallelogram";
 import {
 	Stadium,
 	StadiumPreview,
 	calcStadiumTextRegion,
+	stadiumOutline,
 } from "../../presentations/objects/flowchart/Stadium";
 import {
 	Subroutine,
@@ -80,6 +94,7 @@ import {
 	Trapezoid,
 	TrapezoidPreview,
 	calcTrapezoidTextRegion,
+	trapezoidOutline,
 } from "../../presentations/objects/flowchart/Trapezoid";
 import {
 	Actor,
@@ -90,6 +105,7 @@ import {
 	Cloud,
 	CloudPreview,
 	calcCloudTextRegion,
+	cloudOutline,
 } from "../../presentations/objects/general/Cloud";
 import {
 	Ellipse,
@@ -106,6 +122,7 @@ import {
 } from "../../presentations/objects/primitives/Polyline";
 import { Rect, RectPreview } from "../../presentations/objects/primitives/Rect";
 import { Svg } from "../../presentations/objects/primitives/Svg";
+import type { ShapeOutlineProvider } from "../../presentations/objects/registry/ShapeOutlineRegistry";
 import type { ShapePreviewRenderer } from "../../presentations/objects/registry/ShapePreviewTypes";
 import type { TextRegionCalculator } from "../../presentations/objects/registry/TextRegionRegistry";
 import { CalloutFeatures } from "../../schemas/objects/annotations/callout/CalloutDoc";
@@ -430,6 +447,8 @@ export type ObjectTypeDefinition = {
 	component: FC<any>;
 	/** Text region calculator. Omitted = full bbox (see TextRegionRegistry). */
 	textRegion?: TextRegionCalculator;
+	/** Outline polygon provider. Omitted = bounding-box rect/ellipse (see ShapeOutlineRegistry). */
+	outline?: ShapeOutlineProvider;
 	behavior: ObjectBehaviorEntry;
 	menuFactory: MenuSectionFactory<ObjectState>;
 	validateState: ObjectStateValidateFn;
@@ -447,6 +466,7 @@ const defineObject = <TDoc extends ObjectDoc, TState extends ObjectState>(def: {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	component: FC<any>;
 	textRegion?: TextRegionCalculator;
+	outline?: ShapeOutlineProvider;
 	behavior: ObjectBehaviorEntry<TState>;
 	menuFactory: MenuSectionFactory<TState>;
 	validateState: ObjectStateValidateFn;
@@ -537,6 +557,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			features: DiamondFeatures,
 			component: Diamond,
 			textRegion: calcDiamondTextRegion,
+			outline: diamondOutline,
 			behavior: createFrameBehavior<DiamondState>(),
 			menuFactory: (_state) => [
 				{
@@ -570,6 +591,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			features: StadiumFeatures,
 			component: Stadium,
 			textRegion: calcStadiumTextRegion,
+			outline: stadiumOutline,
 			behavior: createFrameBehavior<StadiumState>(),
 			menuFactory: (_state) => [
 				{
@@ -603,6 +625,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			features: ParallelogramFeatures,
 			component: Parallelogram,
 			textRegion: calcParallelogramTextRegion,
+			outline: parallelogramOutline,
 			behavior: createFrameBehavior<ParallelogramState>(),
 			menuFactory: (_state) => [
 				{
@@ -636,6 +659,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			features: HexagonFeatures,
 			component: Hexagon,
 			textRegion: calcHexagonTextRegion,
+			outline: hexagonOutline,
 			behavior: createFrameBehavior<HexagonState>(),
 			menuFactory: (_state) => [
 				{
@@ -669,6 +693,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			features: CloudFeatures,
 			component: Cloud,
 			textRegion: calcCloudTextRegion,
+			outline: cloudOutline,
 			behavior: createFrameBehavior<CloudState>(),
 			menuFactory: (_state) => [
 				{
@@ -702,6 +727,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			features: DocumentFeatures,
 			component: Document,
 			textRegion: calcDocumentTextRegion,
+			outline: documentOutline,
 			behavior: createFrameBehavior<DocumentState>(),
 			menuFactory: (_state) => [
 				{
@@ -768,6 +794,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			features: CalloutFeatures,
 			component: Callout,
 			textRegion: calcCalloutTextRegion,
+			outline: calloutOutline,
 			behavior: createFrameBehavior<CalloutState>(),
 			menuFactory: (_state) => [
 				{
@@ -801,6 +828,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			features: DbFeatures,
 			component: Db,
 			textRegion: calcDbTextRegion,
+			outline: dbOutline,
 			behavior: createFrameBehavior<DbState>(),
 			menuFactory: (_state) => [
 				{
@@ -867,6 +895,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			features: TrapezoidFeatures,
 			component: Trapezoid,
 			textRegion: calcTrapezoidTextRegion,
+			outline: trapezoidOutline,
 			behavior: createFrameBehavior<TrapezoidState>(),
 			menuFactory: (_state) => [
 				{
@@ -900,6 +929,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			features: ManualInputFeatures,
 			component: ManualInput,
 			textRegion: calcManualInputTextRegion,
+			outline: manualInputOutline,
 			behavior: createFrameBehavior<ManualInputState>(),
 			menuFactory: (_state) => [
 				{
@@ -933,6 +963,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			features: CardFeatures,
 			component: Card,
 			textRegion: calcCardTextRegion,
+			outline: cardOutline,
 			behavior: createFrameBehavior<CardState>(),
 			menuFactory: (_state) => [
 				{
@@ -966,6 +997,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			features: DelayFeatures,
 			component: Delay,
 			textRegion: calcDelayTextRegion,
+			outline: delayOutline,
 			behavior: createFrameBehavior<DelayState>(),
 			menuFactory: (_state) => [
 				{
@@ -999,6 +1031,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			features: DisplayFeatures,
 			component: Display,
 			textRegion: calcDisplayTextRegion,
+			outline: displayOutline,
 			behavior: createFrameBehavior<DisplayState>(),
 			menuFactory: (_state) => [
 				{
@@ -1031,6 +1064,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			mapper: { toDoc: extractToDoc, toState: extractToState },
 			features: ExtractFeatures,
 			component: Extract,
+			outline: extractOutline,
 			behavior: createFrameBehavior<ExtractState>(),
 			menuFactory: (_state) => [
 				{
@@ -1059,6 +1093,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			mapper: { toDoc: crossToDoc, toState: crossToState },
 			features: CrossFeatures,
 			component: Cross,
+			outline: crossOutline,
 			behavior: createFrameBehavior<CrossState>(),
 			menuFactory: (_state) => [
 				{
@@ -1091,6 +1126,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			features: OffPageConnectorFeatures,
 			component: OffPageConnector,
 			textRegion: calcOffPageConnectorTextRegion,
+			outline: offPageConnectorOutline,
 			behavior: createFrameBehavior<OffPageConnectorState>(),
 			menuFactory: (_state) => [
 				{
@@ -1334,6 +1370,9 @@ export const applyObjectDefinition = (
 	if (definition.textRegion) {
 		registries.textRegion.register(type, definition.textRegion);
 	}
+	if (definition.outline) {
+		registries.shapeOutline.register(type, definition.outline);
+	}
 	registries.objectBehavior.register(type, definition.behavior);
 	registries.objectStateValidator.register(type, definition.validateState);
 	registries.objectMenu.register(type, definition.menuFactory);
@@ -1367,6 +1406,7 @@ export const initializeObjectRegistry = (
 	registries.objectMapper.clear();
 	registries.objectComponent.clear();
 	registries.textRegion.clear();
+	registries.shapeOutline.clear();
 	registries.objectBehavior.clear();
 	registries.objectStateValidator.clear();
 	registries.objectMenu.clear();

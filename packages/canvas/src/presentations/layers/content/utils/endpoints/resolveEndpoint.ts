@@ -1,5 +1,6 @@
 import {
 	calcFrameKeyPoint,
+	calcOutlinePointTowardForPolygon,
 	isCenterPoint,
 	isTransformedFrame,
 	type Point,
@@ -23,11 +24,15 @@ import type { ObjectState } from "../../../../../states/objects/base/ObjectState
  *   (free / center / connectPoint)
  * @param obj - State of the shape the endpoint references. null/undefined when
  *   unreferenced (free) or not found
+ * @param outline - The shape's local outline polygon (from ShapeOutlineRegistry).
+ *   When present, a connectPoint anchor snaps onto the true edge; omitted =
+ *   bounding-box edge midpoint (rect/ellipse behavior)
  * @returns The resolved coordinate, or null if it cannot be resolved
  */
 export const resolveEndpoint = (
 	endpoint: EndpointRef,
 	obj: ObjectState | null | undefined,
+	outline?: readonly Point[] | null,
 ): Point | null => {
 	// FreeAnchor: point is directly specified
 	if (endpoint.anchor.kind === "free") {
@@ -59,8 +64,20 @@ export const resolveEndpoint = (
 				case "topCenter":
 				case "rightCenter":
 				case "bottomCenter":
-				case "leftCenter":
-					return calcFrameKeyPoint(obj, anchorId);
+				case "leftCenter": {
+					// The bounding-box edge midpoint doubles as the outward direction
+					// (center → midpoint) for outline shapes; casting that ray onto the
+					// true outline lands the anchor on the drawn edge. Rect/ellipse have
+					// no outline registered, so they keep the midpoint as-is.
+					const boxEdgeMidpoint = calcFrameKeyPoint(obj, anchorId);
+					if (outline && outline.length >= 2) {
+						return (
+							calcOutlinePointTowardForPolygon(outline, obj, boxEdgeMidpoint) ??
+							boxEdgeMidpoint
+						);
+					}
+					return boxEdgeMidpoint;
+				}
 				default:
 					return null;
 			}

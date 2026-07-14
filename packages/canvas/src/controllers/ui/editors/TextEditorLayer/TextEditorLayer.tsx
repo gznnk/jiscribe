@@ -3,6 +3,7 @@ import { memo } from "react";
 
 import { resolveConnectorPoints } from "../../../../presentations/layers/content/utils/endpoints";
 import { calcConnectorLabelAnchor } from "../../../../presentations/layers/content/utils/label/calcConnectorLabelAnchor";
+import type { ShapeOutlineRegistry } from "../../../../presentations/objects/registry/ShapeOutlineRegistry";
 import type { TextRegionCalculator } from "../../../../presentations/objects/registry/TextRegionRegistry";
 import { calcTextRegion } from "../../../../presentations/objects/utils/calcTextRegion";
 import {
@@ -37,6 +38,7 @@ function renderConnectorLabelEditor(
 	objects: CanvasControllerState["objects"],
 	text: string,
 	handlers: EditorHandlers,
+	outlineRegistry: ShapeOutlineRegistry,
 ): React.ReactElement | null {
 	const sourceObj = connector.source.owner
 		? objects[connector.source.owner.id]
@@ -44,7 +46,12 @@ function renderConnectorLabelEditor(
 	const targetObj = connector.target.owner
 		? objects[connector.target.owner.id]
 		: null;
-	const resolved = resolveConnectorPoints(connector, sourceObj, targetObj);
+	const resolved = resolveConnectorPoints(
+		connector,
+		sourceObj,
+		targetObj,
+		outlineRegistry,
+	);
 	if (!resolved) {
 		return null;
 	}
@@ -160,6 +167,7 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 			objects,
 			textEditState.text,
 			handlers,
+			registries.shapeOutline,
 		);
 	}
 

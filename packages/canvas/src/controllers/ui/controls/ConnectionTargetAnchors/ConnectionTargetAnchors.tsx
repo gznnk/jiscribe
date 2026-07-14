@@ -1,5 +1,8 @@
-import { calcFrameKeyPoints } from "@workspace/geometry";
-import type { TransformedFrame } from "@workspace/geometry";
+import {
+	calcFrameKeyPoints,
+	calcOutlinePointTowardForPolygon,
+} from "@workspace/geometry";
+import type { Point, TransformedFrame } from "@workspace/geometry";
 import { memo } from "react";
 
 import { theme } from "../../../../constants/theme";
@@ -11,6 +14,11 @@ type ConnectionTargetAnchorsProps = {
 	 * The frame (bounding box) of the target object.
 	 */
 	frame: TransformedFrame;
+	/**
+	 * The shape's local outline polygon (from ShapeOutlineRegistry). When present,
+	 * the edge anchors sit on the true edge instead of the bounding box.
+	 */
+	outline?: readonly Point[] | null;
 	/**
 	 * The anchor that is currently nearest to the cursor.
 	 * null means no specific anchor is highlighted.
@@ -36,7 +44,7 @@ type ConnectionTargetAnchorsProps = {
  */
 const ConnectionTargetAnchorsComponent: React.FC<
 	ConnectionTargetAnchorsProps
-> = ({ frame, activeAnchorId, zoom = 1 }) => {
+> = ({ frame, outline, activeAnchorId, zoom = 1 }) => {
 	const { cx, cy, width, height, rotation, scaleX, scaleY } = frame;
 	const { handleDimensions } = useCanvasTheme();
 
@@ -53,12 +61,25 @@ const ConnectionTargetAnchorsComponent: React.FC<
 		scaleY,
 	});
 
+	// With an outline, place edge anchors on the true edge (ray from center toward
+	// the bounding-box edge midpoint); rect/no-outline keep the midpoint.
+	const edgePoint = (boxMidpoint: Point): Point =>
+		outline && outline.length >= 2
+			? (calcOutlinePointTowardForPolygon(outline, frame, boxMidpoint) ??
+				boxMidpoint)
+			: boxMidpoint;
+
+	const top = edgePoint(points.topCenter);
+	const right = edgePoint(points.rightCenter);
+	const bottom = edgePoint(points.bottomCenter);
+	const left = edgePoint(points.leftCenter);
+
 	const anchors: Array<{ id: AnchorHandleId; x: number; y: number }> = [
 		{ id: "center", x: cx, y: cy },
-		{ id: "topCenter", x: points.topCenter.x, y: points.topCenter.y },
-		{ id: "rightCenter", x: points.rightCenter.x, y: points.rightCenter.y },
-		{ id: "bottomCenter", x: points.bottomCenter.x, y: points.bottomCenter.y },
-		{ id: "leftCenter", x: points.leftCenter.x, y: points.leftCenter.y },
+		{ id: "topCenter", x: top.x, y: top.y },
+		{ id: "rightCenter", x: right.x, y: right.y },
+		{ id: "bottomCenter", x: bottom.x, y: bottom.y },
+		{ id: "leftCenter", x: left.x, y: left.y },
 	];
 
 	return (

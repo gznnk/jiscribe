@@ -1,21 +1,37 @@
+import type { Point } from "@workspace/geometry";
+
 import { PARALLELOGRAM_SKEW_RATIO } from "../../../../schemas/objects/flowchart/parallelogram/ParallelogramDoc";
+import { formatPolygonPoints } from "../../utils/formatPolygonPoints";
+import { centeredPolygonOutline } from "../../utils/outlineHelpers";
 
 /**
- * Builds the polygon point list for a parallelogram whose bounding box has its
- * top-left corner at (x, y). The top edge is shifted right by the skew.
- * Shared by the object renderer (centered origin) and the draw-drag preview.
+ * Parallelogram outline vertices for a bounding box whose top-left corner is at
+ * (x, y). The top edge is shifted right by the skew. Single source shared by the
+ * renderer, the draw-drag preview, and the connector outline provider.
  */
+export const parallelogramOutlinePoints = (
+	x: number,
+	y: number,
+	width: number,
+	height: number,
+): Point[] => {
+	const skew = width * PARALLELOGRAM_SKEW_RATIO;
+	return [
+		{ x: x + skew, y },
+		{ x: x + width, y },
+		{ x: x + width - skew, y: y + height },
+		{ x, y: y + height },
+	];
+};
+
 export const buildParallelogramPoints = (
 	x: number,
 	y: number,
 	width: number,
 	height: number,
-): string => {
-	const skew = width * PARALLELOGRAM_SKEW_RATIO;
-	return [
-		`${x + skew},${y}`,
-		`${x + width},${y}`,
-		`${x + width - skew},${y + height}`,
-		`${x},${y + height}`,
-	].join(" ");
-};
+): string =>
+	formatPolygonPoints(parallelogramOutlinePoints(x, y, width, height));
+
+export const parallelogramOutline = centeredPolygonOutline(
+	parallelogramOutlinePoints,
+);

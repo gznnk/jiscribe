@@ -1,24 +1,37 @@
+import type { Point } from "@workspace/geometry";
+
 import { HEXAGON_CAP_RATIO } from "../../../../schemas/objects/flowchart/hexagon/HexagonDoc";
+import { formatPolygonPoints } from "../../utils/formatPolygonPoints";
+import { centeredPolygonOutline } from "../../utils/outlineHelpers";
 
 /**
- * Builds the polygon point list for a hexagon whose bounding box has its
- * top-left corner at (x, y), with pointed caps on the left and right.
- * Shared by the object renderer (centered origin) and the draw-drag preview.
+ * Hexagon outline vertices for a bounding box whose top-left corner is at (x, y),
+ * with pointed caps on the left and right. Single source shared by the renderer,
+ * the draw-drag preview, and the connector outline provider.
  */
+export const hexagonOutlinePoints = (
+	x: number,
+	y: number,
+	width: number,
+	height: number,
+): Point[] => {
+	const cap = width * HEXAGON_CAP_RATIO;
+	const middleY = y + height / 2;
+	return [
+		{ x, y: middleY },
+		{ x: x + cap, y },
+		{ x: x + width - cap, y },
+		{ x: x + width, y: middleY },
+		{ x: x + width - cap, y: y + height },
+		{ x: x + cap, y: y + height },
+	];
+};
+
 export const buildHexagonPoints = (
 	x: number,
 	y: number,
 	width: number,
 	height: number,
-): string => {
-	const cap = width * HEXAGON_CAP_RATIO;
-	const middleY = y + height / 2;
-	return [
-		`${x},${middleY}`,
-		`${x + cap},${y}`,
-		`${x + width - cap},${y}`,
-		`${x + width},${middleY}`,
-		`${x + width - cap},${y + height}`,
-		`${x + cap},${y + height}`,
-	].join(" ");
-};
+): string => formatPolygonPoints(hexagonOutlinePoints(x, y, width, height));
+
+export const hexagonOutline = centeredPolygonOutline(hexagonOutlinePoints);

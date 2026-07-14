@@ -3,6 +3,7 @@ import { useMemo } from "react";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
+import { useShapeOutlineRegistry } from "../../../objects/registry/ShapeOutlineRegistryContext";
 import { resolveConnectorPoints } from "../utils/endpoints";
 
 /**
@@ -41,6 +42,8 @@ export const useResolvedConnectorPoints = (
 	sourceObj: ObjectState | null,
 	targetObj: ObjectState | null,
 ): ResolvedConnectorPoints | null => {
+	const outlineRegistry = useShapeOutlineRegistry();
+
 	// Memoize based on connector state and the specific objects it references
 	// This avoids re-calculation when unrelated objects change
 	return useMemo(() => {
@@ -48,6 +51,7 @@ export const useResolvedConnectorPoints = (
 			connectorState,
 			sourceObj,
 			targetObj,
+			outlineRegistry,
 		);
 		if (!resolved) {
 			return null;
@@ -57,5 +61,5 @@ export const useResolvedConnectorPoints = (
 			target: resolved.target,
 			points: [resolved.source, ...resolved.waypoints, resolved.target],
 		};
-	}, [connectorState, sourceObj, targetObj]);
+	}, [connectorState, sourceObj, targetObj, outlineRegistry]);
 };
