@@ -19,8 +19,6 @@ export type ShapeCategory = {
 	id: string;
 	/** English fallback label; overridden by `messages.shapeCategoryLabels[id]`. */
 	label: string;
-	/** Display order among category buttons (ascending). */
-	order: number;
 	/** Icon shown on the category button. */
 	icon: ComponentType<ShapeIconProps>;
 };
@@ -30,24 +28,21 @@ export type ShapeCategory = {
  * icon (a dedicated glyph set can replace these later without touching callers).
  */
 export const SHAPE_CATEGORY_DEFINITIONS: Record<string, ShapeCategory> = {
-	basic: { id: "basic", label: "Basic", order: 10, icon: RectIcon },
+	basic: { id: "basic", label: "Basic", icon: RectIcon },
 	flowchart: {
 		id: "flowchart",
 		label: "Flowchart",
-		order: 20,
 		icon: DiamondIcon,
 	},
 	container: {
 		id: "container",
 		label: "Container",
-		order: 25,
 		icon: FrameIcon,
 	},
-	general: { id: "general", label: "General", order: 30, icon: CloudIcon },
+	general: { id: "general", label: "General", icon: CloudIcon },
 	annotation: {
 		id: "annotation",
 		label: "Annotation",
-		order: 40,
 		icon: CalloutIcon,
 	},
 };
