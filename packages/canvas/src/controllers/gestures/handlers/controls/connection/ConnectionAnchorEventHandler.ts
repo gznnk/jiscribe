@@ -1,6 +1,8 @@
 import type { Point } from "@workspace/geometry";
 
 import { ConnectorFeatures } from "../../../../../schemas/objects/connections/connector/ConnectorDoc";
+import { defaultRoutingForAnchors } from "../../../../../schemas/objects/types/ConnectorRouting";
+import { isSameEndpoint } from "../../../../../schemas/objects/types/EndpointRef";
 import { AUTO_COLOR } from "../../../../../schemas/objects/utils/autoColor";
 import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
@@ -218,18 +220,34 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 				return state;
 			}
 
+			const base = baseConnector as ConnectorState;
 			const updated = this.buildEditedConnector(
 				state,
 				event,
-				baseConnector as ConnectorState,
+				base,
 				endpointToUpdate,
 			);
+
+			// Re-anchor parity with creation: when the connector has no explicit routing and
+			// the edited endpoint's anchor actually changed, derive routing from the new anchors
+			// (onto a center → straight, onto an edge → orthogonal). Gating on an actual anchor
+			// change keeps a no-op grab (or a wiggle back to the start) from silently rewriting
+			// routing; an explicit straight/orthogonal choice is always left intact.
+			const baseEndpoint =
+				endpointToUpdate === "source" ? base.source : base.target;
+			const updatedEndpoint =
+				endpointToUpdate === "source" ? updated.source : updated.target;
+			const routed =
+				updated.routing === undefined &&
+				!isSameEndpoint(baseEndpoint, updatedEndpoint)
+					? this.withAnchorDerivedRouting(updated)
+					: updated;
 
 			return {
 				...state,
 				objects: {
 					...state.objects,
-					[editingConnectorId]: { ...updated, id: editingConnectorId },
+					[editingConnectorId]: { ...routed, id: editingConnectorId },
 				},
 			};
 		}
@@ -249,8 +267,27 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 
 		return {
 			...state,
-			pendingConnector: updated,
+			pendingConnector: this.withAnchorDerivedRouting(updated),
 		};
+	}
+
+	/**
+	 * Derives the routing default from the endpoints' anchors (center endpoint →
+	 * straight, both connectPoint → orthogonal). Applied while creating a connector,
+	 * and on re-anchor only when routing was never explicitly set (the caller gates
+	 * on `routing === undefined`), so an explicit straight/orthogonal choice is kept.
+	 * Rebuilt each drag frame so a "straight" set on a prior frame is dropped once
+	 * the endpoint moves off a center anchor (orthogonal is the field's absence).
+	 */
+	private withAnchorDerivedRouting(connector: ConnectorState): ConnectorState {
+		const routing = defaultRoutingForAnchors(
+			connector.source.anchor,
+			connector.target.anchor,
+		);
+		const { routing: _prev, ...rest } = connector;
+		return (
+			routing !== undefined ? { ...rest, routing } : rest
+		) as ConnectorState;
 	}
 
 	/**
