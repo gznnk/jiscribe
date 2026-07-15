@@ -48,6 +48,7 @@ export const jaCanvasMessages: CanvasMessages = {
 	menuFontSize: "フォントサイズ",
 	menuFontColor: "文字色",
 	menuBackgroundColor: "背景色",
+	menuHeaderColor: "ヘッダ色",
 	menuStrokeColor: "枠線の色",
 	menuLineColor: "線の色",
 	menuLineStyle: "線のスタイル",
@@ -116,11 +117,15 @@ export const jaCanvasMessages: CanvasMessages = {
 		polyline: "折れ線",
 		db: "データベース",
 		sticky: "付箋",
+		frame: "枠",
+		boundary: "境界",
+		zone: "ゾーン",
 	},
 
 	shapeCategoryLabels: {
 		basic: "基本",
 		flowchart: "フローチャート",
+		container: "コンテナ",
 		general: "一般",
 		annotation: "注釈",
 	},

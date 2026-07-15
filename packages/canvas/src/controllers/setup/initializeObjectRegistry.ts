@@ -9,6 +9,11 @@ import {
 import { Sticky } from "../../presentations/objects/annotations/Sticky";
 import { Connector } from "../../presentations/objects/connections/Connector";
 import {
+	Container,
+	ContainerPreview,
+	calcContainerTextRegion,
+} from "../../presentations/objects/containers/Container";
+import {
 	Card,
 	CardPreview,
 	calcCardTextRegion,
@@ -116,6 +121,9 @@ import { StickyShapeFactory } from "../../schemas/objects/annotations/sticky/Sti
 import { StickyShapePresets } from "../../schemas/objects/annotations/sticky/StickyShapePresets";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
 import { ConnectorFeatures } from "../../schemas/objects/connections/connector/ConnectorDoc";
+import { ContainerFeatures } from "../../schemas/objects/containers/container/ContainerDoc";
+import { ContainerShapeFactory } from "../../schemas/objects/containers/container/ContainerShapeFactory";
+import { ContainerShapePresets } from "../../schemas/objects/containers/container/ContainerShapePresets";
 import { CardFeatures } from "../../schemas/objects/flowchart/card/CardDoc";
 import { CardShapeFactory } from "../../schemas/objects/flowchart/card/CardShapeFactory";
 import { CardShapePresets } from "../../schemas/objects/flowchart/card/CardShapePresets";
@@ -207,6 +215,12 @@ import {
 	connectorToState,
 } from "../../states/objects/connections/connector/ConnectorMapper";
 import { isValidConnectorState } from "../../states/objects/connections/connector/validateConnectorState";
+import {
+	containerToDoc,
+	containerToState,
+} from "../../states/objects/containers/container/ContainerMapper";
+import type { ContainerState } from "../../states/objects/containers/container/ContainerState";
+import { isValidContainerState } from "../../states/objects/containers/container/validateContainerState";
 import {
 	cardToDoc,
 	cardToState,
@@ -363,6 +377,7 @@ import {
 } from "../gestures/handlers/objects/primitives/PolylineController";
 import type { ObjectBehaviorEntry } from "../gestures/registry/ObjectBehaviorTypes";
 import { ActorIcon } from "../ui/icons/ActorIcon";
+import { BoundaryIcon } from "../ui/icons/BoundaryIcon";
 import { CalloutIcon } from "../ui/icons/CalloutIcon";
 import { CardIcon } from "../ui/icons/CardIcon";
 import { CloudIcon } from "../ui/icons/CloudIcon";
@@ -374,6 +389,7 @@ import { DisplayIcon } from "../ui/icons/DisplayIcon";
 import { DocumentIcon } from "../ui/icons/DocumentIcon";
 import { EllipseIcon } from "../ui/icons/EllipseIcon";
 import { ExtractIcon } from "../ui/icons/ExtractIcon";
+import { FrameIcon } from "../ui/icons/FrameIcon";
 import { HexagonIcon } from "../ui/icons/HexagonIcon";
 import { ManualInputIcon } from "../ui/icons/ManualInputIcon";
 import { MarkdownRectIcon } from "../ui/icons/MarkdownRectIcon";
@@ -387,6 +403,8 @@ import { StadiumIcon } from "../ui/icons/StadiumIcon";
 import { StickyIcon } from "../ui/icons/StickyIcon";
 import { SubroutineIcon } from "../ui/icons/SubroutineIcon";
 import { TrapezoidIcon } from "../ui/icons/TrapezoidIcon";
+import { ZoneIcon } from "../ui/icons/ZoneIcon";
+import { HeaderColorMenu } from "../ui/menu/ObjectMenu/items/HeaderColorMenu";
 import {
 	LabelBackgroundColorMenu,
 	LabelBoldMenu,
@@ -958,6 +976,48 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				previewRenderer: CardPreview,
 				presets: CardShapePresets,
 				presetIcons: { card: CardIcon },
+			},
+		}),
+
+		container: defineObject({
+			mapper: { toDoc: containerToDoc, toState: containerToState },
+			features: ContainerFeatures,
+			component: Container,
+			textRegion: calcContainerTextRegion,
+			behavior: createFrameBehavior<ContainerState>(),
+			menuFactory: (_state) => [
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{
+							type: "custom",
+							id: "header-color",
+							component: HeaderColorMenu,
+						},
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: false },
+					],
+				},
+				{
+					id: "text",
+					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				},
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidContainerState,
+			shapeLibrary: {
+				factory: ContainerShapeFactory,
+				previewRenderer: ContainerPreview,
+				presets: ContainerShapePresets,
+				presetIcons: {
+					frame: FrameIcon,
+					boundary: BoundaryIcon,
+					zone: ZoneIcon,
+				},
 			},
 		}),
 

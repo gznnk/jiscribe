@@ -22,6 +22,7 @@ export type AnchorId =
 /** ObjectMenu のカラーピッカーを開くセクションID */
 export type ColorSectionId =
 	| "bg-color"
+	| "header-color"
 	| "stroke-color"
 	| "line-color"
 	| "font-color";

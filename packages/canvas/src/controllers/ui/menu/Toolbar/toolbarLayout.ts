@@ -15,8 +15,8 @@ export type ToolbarEntry =
 
 /**
  * Default toolbar layout: the basic primitives and sticky stay pinned directly
- * (preserving the classic direct-placement UX); flowchart / general / annotation
- * fold into category flyouts. `basic` has no flyout button by default because its
+ * (preserving the classic direct-placement UX); flowchart / container / general /
+ * annotation fold into category flyouts. `basic` has no flyout button by default because its
  * members are all pinned already — hosts can add `{ kind: "category", categoryId:
  * "basic" }` if they want one.
  */
@@ -28,6 +28,7 @@ export const DEFAULT_TOOLBAR_LAYOUT: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "sticky" },
 	{ kind: "preset", presetId: "rect-markdown" },
 	{ kind: "category", categoryId: "flowchart" },
+	{ kind: "category", categoryId: "container" },
 	{ kind: "category", categoryId: "general" },
 	{ kind: "category", categoryId: "annotation" },
 ];

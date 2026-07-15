@@ -61,6 +61,7 @@ export type CanvasMessageStrings = {
 	menuFontSize: string;
 	menuFontColor: string;
 	menuBackgroundColor: string;
+	menuHeaderColor: string;
 	menuStrokeColor: string;
 	menuLineColor: string;
 	menuLineStyle: string;
@@ -156,6 +157,7 @@ export const defaultCanvasMessages: CanvasMessages = {
 	menuFontSize: "Font Size",
 	menuFontColor: "Font Color",
 	menuBackgroundColor: "Background Color",
+	menuHeaderColor: "Header Color",
 	menuStrokeColor: "Stroke Color",
 	menuLineColor: "Line Color",
 	menuLineStyle: "Line Style",

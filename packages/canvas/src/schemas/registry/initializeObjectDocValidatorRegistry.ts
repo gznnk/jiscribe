@@ -5,6 +5,8 @@ import { StickyFeatures } from "../objects/annotations/sticky/StickyDoc";
 import { validateStickyDoc } from "../objects/annotations/sticky/validateStickyDoc";
 import { ConnectorFeatures } from "../objects/connections/connector/ConnectorDoc";
 import { validateConnectorDoc } from "../objects/connections/connector/validateConnectorDoc";
+import { ContainerFeatures } from "../objects/containers/container/ContainerDoc";
+import { validateContainerDoc } from "../objects/containers/container/validateContainerDoc";
 import { CardFeatures } from "../objects/flowchart/card/CardDoc";
 import { validateCardDoc } from "../objects/flowchart/card/validateCardDoc";
 import { CrossFeatures } from "../objects/flowchart/cross/CrossDoc";
@@ -130,6 +132,11 @@ export const initializeObjectDocValidatorRegistry = (): void => {
 		ManualInputFeatures,
 	);
 	objectDocValidatorRegistry.register("card", validateCardDoc, CardFeatures);
+	objectDocValidatorRegistry.register(
+		"container",
+		validateContainerDoc,
+		ContainerFeatures,
+	);
 	objectDocValidatorRegistry.register("delay", validateDelayDoc, DelayFeatures);
 	objectDocValidatorRegistry.register(
 		"display",

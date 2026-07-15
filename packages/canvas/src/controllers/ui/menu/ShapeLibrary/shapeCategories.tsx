@@ -4,6 +4,7 @@ import type { ShapeIconProps } from "../../../../schemas/objects/types/ShapePres
 import { CalloutIcon } from "../../icons/CalloutIcon";
 import { CloudIcon } from "../../icons/CloudIcon";
 import { DiamondIcon } from "../../icons/DiamondIcon";
+import { FrameIcon } from "../../icons/FrameIcon";
 import { RectIcon } from "../../icons/RectIcon";
 
 /**
@@ -35,6 +36,12 @@ export const SHAPE_CATEGORY_DEFINITIONS: Record<string, ShapeCategory> = {
 		label: "Flowchart",
 		order: 20,
 		icon: DiamondIcon,
+	},
+	container: {
+		id: "container",
+		label: "Container",
+		order: 25,
+		icon: FrameIcon,
 	},
 	general: { id: "general", label: "General", order: 30, icon: CloudIcon },
 	annotation: {

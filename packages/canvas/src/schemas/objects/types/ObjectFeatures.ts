@@ -25,4 +25,6 @@ export type ObjectFeatures = {
 	arrow?: boolean;
 	/** Whether this object can be used as a connector endpoint target */
 	connectable?: boolean;
+	/** Whether this object has an independently-colorable header band (container) */
+	header?: boolean;
 };

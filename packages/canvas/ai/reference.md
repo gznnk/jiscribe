@@ -73,6 +73,7 @@ In addition to `name` and `description`, `meta` may hold any custom keys.
 | `extract`          | Extract (apex up)                  | `x`, `y`, `width`, `height`             | Stroke, Fill, Transform (no text)     |
 | `cross`            | Cross / plus                       | `x`, `y`, `width`, `height`             | Stroke, Fill, Transform (no text)     |
 | `offPageConnector` | Off-page connector (pentagon)      | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `container`        | Titled frame (labels a region)     | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `polyline`         | Polyline (open path)               | `points`                                | Stroke                                |
 | `polygon`          | Polygon (closed path)              | `points`                                | Stroke, Fill                          |
 | `group`            | Group (contains children)          | none                                    | Transform                             |
@@ -449,6 +450,38 @@ below and give a bounding box.
 
 ---
 
+### `container`
+
+A **titled frame** for labelling and enclosing a region of a diagram (module,
+subsystem, layer, or boundary). Same rect-based geometry (top-left `x`,`y` +
+`width`,`height`) as `rect`. The **title renders in a top header band** (not the
+center); the **body is empty and click-through**, so other objects are placed on
+top of it. It is **connectable** like `rect`.
+
+A container does **not** own the objects inside it — moving the container alone
+does not move its contents. To make a frame and its contents move together, wrap
+them in a `group` (with the container as one of the group's `children`). Use
+`strokeDashType: "dashed"` for a boundary / bounded-context look, or a
+translucent `fill` for a tinted zone. `headerFill` sets the header band's own
+color (independent of `fill` / the body), defaulting to `"auto"` (theme
+surface) — set a color to colour-code modules. With a dark `headerFill`, also
+set a readable `fontColor`.
+
+```json
+{
+	"id": "auth-module",
+	"type": "container",
+	"x": 120,
+	"y": 80,
+	"width": 320,
+	"height": 220,
+	"text": "Auth module",
+	"strokeDashType": "dashed"
+}
+```
+
+---
+
 ### `polyline`
 
 ```json
@@ -707,7 +740,7 @@ Options for `anchor.kind`:
 
 The object referenced by `owner.id` may be **only a box shape (`rect`, `ellipse`, `diamond`,
 `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `actor`, `callout`, `db`,
-`subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `display`, `extract`, `cross`, `offPageConnector`, or
+`subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `display`, `extract`, `cross`, `offPageConnector`, `container`, or
 `sticky`)** — these are the connectable types. A `polyline`, `polygon`, `group`, `svg`, or `connector`
 **cannot** be an endpoint owner; the document is rejected if one is referenced. To
 anchor a connector near such a shape, use a `FreeEndpointRef` instead.
@@ -742,7 +775,7 @@ diagram adapts to light/dark themes.
 
 ### Stroke style
 
-Applies to every box shape except `sticky` (`rect`, `ellipse`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `actor`, `callout`, `db`, `subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `display`, `extract`, `cross`, `offPageConnector`), plus `polyline`, `polygon`, `connector`.
+Applies to every box shape except `sticky` (`rect`, `ellipse`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `actor`, `callout`, `db`, `subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `display`, `extract`, `cross`, `offPageConnector`, `container`), plus `polyline`, `polygon`, `connector`.
 
 | Field            | Type             | Default   | Description                                              |
 | ---------------- | ---------------- | --------- | -------------------------------------------------------- |

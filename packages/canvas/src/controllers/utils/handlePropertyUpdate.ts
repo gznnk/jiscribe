@@ -83,6 +83,10 @@ const isPropertySupported = (
 		case "fontFamily":
 		case "fontWeight":
 			return features.text === true;
+		case "headerFill":
+			// Container-only header band color (gated by the `header` feature).
+			// NOTE: this switch is the central property→feature map flagged in #187.
+			return features.header === true;
 		case "lockAspectRatio":
 			return features.transform === true;
 		case "startArrow":
