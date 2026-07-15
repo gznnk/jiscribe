@@ -1,5 +1,8 @@
 import { getRootConnectorIds } from "./getRootConnectorIds";
-import { resolveConnectorPoints } from "../../presentations/layers/content/utils/endpoints";
+import {
+	resolveConnectorPoints,
+	resolveEndpointOwner,
+} from "../../presentations/layers/content/utils/endpoints";
 import type { FreeEndpointRef } from "../../schemas/objects/types/EndpointRef";
 import type { ConnectorState } from "../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../CanvasTypes";
@@ -60,10 +63,8 @@ export function cleanupConnectorsOnDelete(
 		// One endpoint deleted → convert the deleted side to Free
 		// Use resolveConnectorPoints to get the visual coordinates, including outline adjustment for center anchors.
 		// Since it uses the pre-deletion state.objects, both endpoint objects still exist.
-		const sourceObj =
-			sourceOwnerId != null ? state.objects[sourceOwnerId] : null;
-		const targetObj =
-			targetOwnerId != null ? state.objects[targetOwnerId] : null;
+		const sourceObj = resolveEndpointOwner(state.objects, connector.source);
+		const targetObj = resolveEndpointOwner(state.objects, connector.target);
 		const resolved = resolveConnectorPoints(connector, sourceObj, targetObj);
 
 		const updatedConnector = { ...connector };
