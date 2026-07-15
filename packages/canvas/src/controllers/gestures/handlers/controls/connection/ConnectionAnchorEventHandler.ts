@@ -6,13 +6,16 @@ import { isSameEndpoint } from "../../../../../schemas/objects/types/EndpointRef
 import { AUTO_COLOR } from "../../../../../schemas/objects/utils/autoColor";
 import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { isAnchorHandleId } from "../../../../ui/controls/ConnectionAnchorTypes";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import type { ControlStrategy } from "../ControlEventHandler";
 import { computeEditedEndpoint } from "./utils/computeEditedEndpoint";
 import { findConnectableHoverTarget } from "./utils/findConnectableHoverTarget";
 import { getEditingEndpoint } from "./utils/getEditingEndpoint";
 import { isSameConnectorEndpoints } from "./utils/isSameConnectorEndpoints";
-import { isAnchorHandleId } from "../../../../ui/controls/ConnectionAnchorTypes";
+import { snapFreeEndpointStraight } from "./utils/snapFreeEndpointStraight";
+import { resolveEndpointOwner } from "../../../../../presentations/layers/content/utils/endpoints/resolveEndpointOwner";
+import { SNAP_THRESHOLD_PX } from "../../utils/snap/findSnap";
 
 /**
  * Handler that creates a connector by dragging from a connection anchor,
@@ -189,10 +192,22 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			objects: state.objects,
 		});
 
+		// When the edited end lands free (no hover target), snap it onto the fixed end's exit
+		// axis if nearly aligned, so a near-straight connector collapses to one straight segment.
+		// Snapping the coordinate itself keeps the anchor handle, line, and arrow together.
+		const cursor = hoveredTarget
+			? event.last
+			: snapFreeEndpointStraight(
+					event.last,
+					fixedEndpoint,
+					resolveEndpointOwner(state.objects, fixedEndpoint),
+					SNAP_THRESHOLD_PX / state.viewport.zoom,
+				);
+
 		return computeEditedEndpoint(
 			baseConnector,
 			endpointToUpdate,
-			event.last,
+			cursor,
 			hoveredTarget,
 			fixedEndpoint,
 		);
