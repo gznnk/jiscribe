@@ -1,9 +1,10 @@
 import {
 	calcFrameKeyPoints,
 	calcNonZeroSign,
+	calcOutlinePointTowardForPolygon,
 	degreesToRadians,
 } from "@workspace/geometry";
-import type { TransformedFrame } from "@workspace/geometry";
+import type { Point, TransformedFrame } from "@workspace/geometry";
 import { memo } from "react";
 
 import { theme } from "../../../../constants/theme";
@@ -28,6 +29,11 @@ type ConnectionAnchorsProps = {
 	 */
 	frame: TransformedFrame;
 	/**
+	 * The shape's local outline polygon (from ShapeOutlineRegistry). When present,
+	 * the anchor dots sit on the true edge instead of the bounding box.
+	 */
+	outline?: readonly Point[] | null;
+	/**
 	 * Zoom level for adjusting handle sizes.
 	 * @default 1
 	 */
@@ -47,6 +53,7 @@ type ConnectionAnchorsProps = {
 const ConnectionAnchorsComponent: React.FC<ConnectionAnchorsProps> = ({
 	objectId,
 	frame,
+	outline,
 	zoom = 1,
 }) => {
 	const { cx, cy, width, height, rotation, scaleX, scaleY } = frame;
@@ -68,6 +75,20 @@ const ConnectionAnchorsComponent: React.FC<ConnectionAnchorsProps> = ({
 		scaleY,
 	});
 
+	// With an outline, move each anchor from the bounding-box edge midpoint onto
+	// the true edge (ray from center toward that midpoint). Rect/no-outline keep
+	// the midpoint. The outward-normal offset below is applied on top either way.
+	const edgePoint = (boxMidpoint: Point): Point =>
+		outline && outline.length >= 2
+			? (calcOutlinePointTowardForPolygon(outline, frame, boxMidpoint) ??
+				boxMidpoint)
+			: boxMidpoint;
+
+	const topEdge = edgePoint(points.topCenter);
+	const rightEdge = edgePoint(points.rightCenter);
+	const bottomEdge = edgePoint(points.bottomCenter);
+	const leftEdge = edgePoint(points.leftCenter);
+
 	const radians = degreesToRadians(rotation);
 
 	// Calculate anchor positions with offset in the outward normal direction.
@@ -78,23 +99,23 @@ const ConnectionAnchorsComponent: React.FC<ConnectionAnchorsProps> = ({
 	const signY = calcNonZeroSign(scaleY);
 
 	const topCenterAnchor = {
-		x: points.topCenter.x + signY * Math.sin(radians) * adjustedOffset,
-		y: points.topCenter.y - signY * Math.cos(radians) * adjustedOffset,
+		x: topEdge.x + signY * Math.sin(radians) * adjustedOffset,
+		y: topEdge.y - signY * Math.cos(radians) * adjustedOffset,
 	};
 
 	const rightCenterAnchor = {
-		x: points.rightCenter.x + signX * Math.cos(radians) * adjustedOffset,
-		y: points.rightCenter.y + signX * Math.sin(radians) * adjustedOffset,
+		x: rightEdge.x + signX * Math.cos(radians) * adjustedOffset,
+		y: rightEdge.y + signX * Math.sin(radians) * adjustedOffset,
 	};
 
 	const bottomCenterAnchor = {
-		x: points.bottomCenter.x - signY * Math.sin(radians) * adjustedOffset,
-		y: points.bottomCenter.y + signY * Math.cos(radians) * adjustedOffset,
+		x: bottomEdge.x - signY * Math.sin(radians) * adjustedOffset,
+		y: bottomEdge.y + signY * Math.cos(radians) * adjustedOffset,
 	};
 
 	const leftCenterAnchor = {
-		x: points.leftCenter.x - signX * Math.cos(radians) * adjustedOffset,
-		y: points.leftCenter.y - signX * Math.sin(radians) * adjustedOffset,
+		x: leftEdge.x - signX * Math.cos(radians) * adjustedOffset,
+		y: leftEdge.y - signX * Math.sin(radians) * adjustedOffset,
 	};
 
 	const anchors: Array<{
