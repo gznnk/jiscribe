@@ -36,7 +36,7 @@ export const resolveCommandState = (
  * Reads the registry bundle from context once and returns a resolver bound to
  * the given state, so components can look up one command or map over many (menus)
  * without each grabbing `useCanvasRegistries()` and threading the bundle back
- * into `canExecute`. Mirrors {@link useMenuGroups} (pure function + thin hook).
+ * into `canExecute`. Mirrors {@link useMenuSections} (pure function + thin hook).
  *
  * The resolver is a plain closure, not `useCallback`-memoized: `state` changes on
  * nearly every dispatch, so memoizing on `[state, registries]` would rebuild the

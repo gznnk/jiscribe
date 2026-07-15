@@ -1,6 +1,6 @@
 import React, { memo, useRef } from "react";
 
-import { useMenuGroups } from "./hooks/useMenuConfig";
+import { useMenuSections } from "./hooks/useMenuSections";
 import { useObjectMenuPosition } from "./hooks/useObjectMenuPosition";
 import { AlignmentMenu } from "./items/AlignmentMenu";
 import { ArrowHeadMenu } from "./items/ArrowHeadMenu";
@@ -29,12 +29,9 @@ type ObjectMenuProps = {
 	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
 };
 
-const renderItem = (
-	section: MenuItem,
-	props: MenuItemProps,
-): React.ReactNode => {
+const renderItem = (item: MenuItem, props: MenuItemProps): React.ReactNode => {
 	const { canvasState, onPropertyUpdate } = props;
-	switch (section.type) {
+	switch (item.type) {
 		case "arrowHead":
 			return <ArrowHeadMenu key="arrowHead" canvasState={canvasState} />;
 		case "lineColor":
@@ -74,7 +71,7 @@ const renderItem = (
 				<BorderStyleMenu
 					key="borderStyle"
 					canvasState={canvasState}
-					showRadius={section.radius}
+					showRadius={item.radius}
 					onPropertyUpdate={onPropertyUpdate}
 				/>
 			);
@@ -104,8 +101,8 @@ const renderItem = (
 			return <GroupMenu key="group" canvasState={canvasState} />;
 		case "custom":
 			return (
-				<section.component
-					key={section.id}
+				<item.component
+					key={item.id}
 					canvasState={canvasState}
 					onPropertyUpdate={onPropertyUpdate}
 				/>
@@ -113,15 +110,15 @@ const renderItem = (
 	}
 };
 
-const buildSystemGroups = (
+const buildSystemSections = (
 	canvasState: CanvasControllerState,
 ): MenuSection[] => {
-	const systemGroups: MenuSection[] = [];
+	const systemSections: MenuSection[] = [];
 
 	// To show StackOrder including connector selection (selectedConnectorId), use
 	// isArrangeableSelection, which judges by the effective selection rather than selectedIds alone.
 	if (isArrangeableSelection(canvasState)) {
-		systemGroups.push({
+		systemSections.push({
 			id: "system-stack-order",
 			items: [{ type: "stackOrder" }],
 		});
@@ -134,7 +131,7 @@ const buildSystemGroups = (
 	// Like multiSelectGroup, a group holds its own lockAspectRatio, so show the
 	// aspect-ratio menu regardless of the type composition of its descendants
 	if (canvasState.multiSelectGroup || singleSelected?.type === "group") {
-		systemGroups.push({
+		systemSections.push({
 			id: "system-aspect-ratio",
 			items: [{ type: "aspectRatio" }],
 		});
@@ -143,13 +140,13 @@ const buildSystemGroups = (
 	const shouldShowGroup =
 		selectedIds.length > 1 || singleSelected?.type === "group";
 	if (shouldShowGroup) {
-		systemGroups.push({
+		systemSections.push({
 			id: "system-group",
 			items: [{ type: "group" }],
 		});
 	}
 
-	return systemGroups;
+	return systemSections;
 };
 
 /**
@@ -162,36 +159,38 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 }) => {
 	const menuRef = useRef<HTMLDivElement>(null);
 	const { shouldRender, x, y } = useObjectMenuPosition(canvasState, menuRef);
-	// Skip the group computations while the menu is hidden (e.g. during a drag, where
+	// Skip the section computations while the menu is hidden (e.g. during a drag, where
 	// canvasState.objects churns every frame) — the result would not be shown anyway.
-	const objectGroups = useMenuGroups(canvasState, shouldRender);
-	const systemGroups = shouldRender ? buildSystemGroups(canvasState) : [];
-	const allGroups = [...objectGroups, ...systemGroups];
+	const objectSections = useMenuSections(canvasState, shouldRender);
+	const systemSections = shouldRender ? buildSystemSections(canvasState) : [];
+	const allSections = [...objectSections, ...systemSections];
 
-	if (!shouldRender || allGroups.length === 0) {
+	if (!shouldRender || allSections.length === 0) {
 		return null;
 	}
 
 	const itemProps: MenuItemProps = { canvasState, onPropertyUpdate };
 
-	// Since both objectGroups and systemGroups may contain the same item type,
+	// Since both objectSections and systemSections may contain the same item type,
 	// prefer the first occurrence and prevent duplicate rendering
 	const renderedItemKeys = new Set<string>();
 
-	// Wrap each group in an ObjectMenuSection. Dividers are drawn in CSS (::before), and
+	// Wrap each section in an ObjectMenuSection. Dividers are drawn in CSS (::before), and
 	// empty sections (custom returns null / all items skipped as duplicates) are
 	// automatically collapsed along with their divider via `:empty`.
-	const sections = allGroups.map((group) => {
-		const groupItems: React.ReactNode[] = [];
-		group.items.forEach((item) => {
+	const sections = allSections.map((section) => {
+		const sectionItems: React.ReactNode[] = [];
+		section.items.forEach((item) => {
 			const key = item.type === "custom" ? item.id : item.type;
 			if (renderedItemKeys.has(key)) {
 				return;
 			}
 			renderedItemKeys.add(key);
-			groupItems.push(renderItem(item, itemProps));
+			sectionItems.push(renderItem(item, itemProps));
 		});
-		return <ObjectMenuSection key={group.id}>{groupItems}</ObjectMenuSection>;
+		return (
+			<ObjectMenuSection key={section.id}>{sectionItems}</ObjectMenuSection>
+		);
 	});
 
 	return (

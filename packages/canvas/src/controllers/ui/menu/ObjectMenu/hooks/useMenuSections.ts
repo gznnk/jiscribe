@@ -7,8 +7,8 @@ import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
 import type { ObjectMenuRegistry } from "../ObjectMenuRegistry";
 import type { MenuItem, MenuSection } from "../ObjectMenuTypes";
 
-const itemKey = (section: MenuItem): string =>
-	section.type === "custom" ? section.id : section.type;
+const itemKey = (item: MenuItem): string =>
+	item.type === "custom" ? item.id : item.type;
 
 /**
  * AND-merges the item lists of multiple object types.
@@ -21,15 +21,15 @@ const mergeItems = (arrays: MenuItem[][]): MenuItem[] => {
 	}
 
 	return arrays[0]
-		.filter((section) => {
-			const key = itemKey(section);
+		.filter((item) => {
+			const key = itemKey(item);
 			return arrays
 				.slice(1)
 				.every((arr) => arr.some((s) => itemKey(s) === key));
 		})
-		.map((section) => {
-			if (section.type !== "borderStyle") {
-				return section;
+		.map((item) => {
+			if (item.type !== "borderStyle") {
+				return item;
 			}
 			// Show radius only when every type has it set to true
 			const allRadius = arrays.every((arr) => {
@@ -54,39 +54,38 @@ const mergeSections = (arrays: MenuSection[][]): MenuSection[] => {
 	}
 
 	return arrays[0]
-		.filter((group) =>
-			arrays.slice(1).every((arr) => arr.some((g) => g.id === group.id)),
+		.filter((section) =>
+			arrays.slice(1).every((arr) => arr.some((s) => s.id === section.id)),
 		)
-		.map((group) => ({
-			id: group.id,
+		.map((section) => ({
+			id: section.id,
 			items: mergeItems(
-				arrays.map((arr) => arr.find((g) => g.id === group.id)?.items ?? []),
+				arrays.map((arr) => arr.find((s) => s.id === section.id)?.items ?? []),
 			),
 		}))
-		.filter((group) => group.items.length > 0);
+		.filter((section) => section.items.length > 0);
 };
 
 /**
  * Computes the menu sections to display from the current selection.
  *
- * When a connector is selected (selectedConnectorId != null), returns the groups for
+ * When a connector is selected (selectedConnectorId != null), returns the sections for
  * its type. When group objects are selected, expands the descendant concrete object
- * types; if multiple types are mixed, only the common groups and sections are shown
- * (AND-merge).
+ * types; if multiple types are mixed, only the common sections are shown (AND-merge).
  */
-export const getMenuGroups = (
+export const getMenuSections = (
 	state: CanvasControllerState,
 	objectMenuRegistry: ObjectMenuRegistry,
 ): MenuSection[] => {
 	const { selectedIds, selectedConnectorId, objects } = state;
 
-	// When a connector is selected, return the connector's groups instead of selectedIds
+	// When a connector is selected, return the connector's sections instead of selectedIds
 	if (selectedConnectorId !== null) {
 		const connector = objects[selectedConnectorId];
 		if (!connector) {
 			return [];
 		}
-		return objectMenuRegistry.getGroups(connector.type, connector);
+		return objectMenuRegistry.getSections(connector.type, connector);
 	}
 
 	if (selectedIds.length === 0) {
@@ -121,20 +120,20 @@ export const getMenuGroups = (
 		return [];
 	}
 
-	// Get the menu groups from each type's representative, then AND-merge them
-	const groupArrays = [...representatives].map(([type, representative]) =>
-		objectMenuRegistry.getGroups(type, representative),
+	// Get the menu sections from each type's representative, then AND-merge them
+	const sectionArrays = [...representatives].map(([type, representative]) =>
+		objectMenuRegistry.getSections(type, representative),
 	);
 
-	return mergeSections(groupArrays);
+	return mergeSections(sectionArrays);
 };
 
 /**
- * Memoized hook wrapper around {@link getMenuGroups}, recomputing only when the selection changes.
+ * Memoized hook wrapper around {@link getMenuSections}, recomputing only when the selection changes.
  * When `enabled` is false (menu hidden, e.g. during a drag) the computation is skipped entirely so
  * the O(selection) work does not run every frame while the result is not shown.
  */
-export const useMenuGroups = (
+export const useMenuSections = (
 	state: CanvasControllerState,
 	enabled: boolean,
 ): MenuSection[] => {
@@ -142,7 +141,7 @@ export const useMenuGroups = (
 	const { objectMenu } = useCanvasRegistries();
 
 	return useMemo(
-		() => (enabled ? getMenuGroups(state, objectMenu) : []),
+		() => (enabled ? getMenuSections(state, objectMenu) : []),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[enabled, selectedIds, selectedConnectorId, objects, objectMenu],
 	);
