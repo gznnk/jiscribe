@@ -206,10 +206,11 @@ test.describe("コネクターのルーティング幾何", () => {
 		);
 		await canvas.deselect();
 
-		// source の右辺アンカーから target の内部へドラッグして接続する。
+		// source の右辺アンカーから target の左辺中央へ接続する。辺アンカー同士なので
+		// 既定は orthogonal（中心へ落とすと center アンカーになり既定 straight になる）。
 		await canvas.selectAt({ x: 380, y: 230 });
 		const connectorId = await canvas.createConnector("rightCenter", {
-			x: 900,
+			x: 820,
 			y: 490,
 		});
 		await canvas.deselect();
@@ -273,9 +274,12 @@ test.describe("コネクターのルーティング幾何", () => {
 		);
 		await canvas.deselect();
 
+		// target の左辺中央 (760, 370) へ接続 → leftCenter アンカー。辺アンカー同士なので
+		// 既定 orthogonal（obstacle 回避の折れ）を検証できる（中心 (840,370) だと center →
+		// 既定 straight になり、動かしても折れずに貫通してしまう）。
 		await canvas.selectAt({ x: 380, y: 370 });
 		const connectorId = await canvas.createConnector("rightCenter", {
-			x: 840,
+			x: 760,
 			y: 370,
 		});
 		await canvas.deselect();

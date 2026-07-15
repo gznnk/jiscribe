@@ -107,7 +107,12 @@ async function setRouting(
 	await canvas.page.click(`[data-part="command:${commandId}"]`);
 }
 
-/** 斜めに離した 2 矩形を rightCenter→target でつなぎ、コネクター ID を返す（選択解除済み） */
+/**
+ * 斜めに離した 2 矩形を source rightCenter → target leftCenter でつなぎ、コネクター ID を返す。
+ * target は辺アンカー（leftCenter）へ落とす。両端が connectPoint なので既定は orthogonal になり、
+ * この spec が守る「既定は直角 → straight/orthogonal 切替」の前提が成立する（中心へ落とすと
+ * どちらかの端点が center になり既定 straight になってしまう）。
+ */
 async function buildDiagonalConnector(canvas: CanvasDriver): Promise<string> {
 	await canvas.drawShape("Rectangle", { x: 300, y: 180 }, { x: 460, y: 280 });
 	await canvas.deselect();
@@ -115,8 +120,9 @@ async function buildDiagonalConnector(canvas: CanvasDriver): Promise<string> {
 	await canvas.deselect();
 
 	await canvas.selectAt({ x: 380, y: 230 });
+	// target 左辺中央 (820, 490) へドロップ → leftCenter アンカー（辺 = 向きを持つ）。
 	const connectorId = await canvas.createConnector("rightCenter", {
-		x: 900,
+		x: 820,
 		y: 490,
 	});
 	await canvas.deselect();
@@ -217,5 +223,40 @@ test.describe("コネクターの routing 切替（ObjectMenu）", () => {
 			orthoBorderAfter,
 			`orthogonal が非活性化すること: before=${orthoBorderInitial} after=${orthoBorderAfter}`,
 		).not.toBe(orthoBorderInitial);
+	});
+
+	test("中心へドロップした新規コネクターは既定で直線になる", async ({
+		canvas,
+	}) => {
+		// target の「中心」へ落とすと target は center アンカーになる。center は出口方向を
+		// 持たず orthogonal 経路が恣意的になるため、作成時の既定 routing は straight（対角の
+		// 2 頂点）になる。辺アンカー同士（buildDiagonalConnector）の既定 orthogonal と対になる挙動。
+		await canvas.drawShape("Rectangle", { x: 300, y: 180 }, { x: 460, y: 280 });
+		await canvas.deselect();
+		await canvas.drawShape("Rectangle", { x: 820, y: 440 }, { x: 980, y: 540 });
+		await canvas.deselect();
+
+		await canvas.selectAt({ x: 380, y: 230 });
+		// target 中心 (900, 490) へドロップ → center アンカー。
+		const connectorId = await canvas.createConnector("rightCenter", {
+			x: 900,
+			y: 490,
+		});
+		await canvas.deselect();
+
+		const points = await readPoints(canvas, connectorId);
+		expect(
+			points.length,
+			`center アンカーの新規コネクターは既定 straight（2 頂点）: ${JSON.stringify(points)}`,
+		).toBe(2);
+		// 対角配置なので唯一のセグメントは水平でも垂直でもない（斜め直線）。
+		expect(
+			Math.abs(points[0].x - points[1].x),
+			"straight は x が変化する（垂直でない）",
+		).toBeGreaterThan(EPS);
+		expect(
+			Math.abs(points[0].y - points[1].y),
+			"straight は y が変化する（水平でない）",
+		).toBeGreaterThan(EPS);
 	});
 });

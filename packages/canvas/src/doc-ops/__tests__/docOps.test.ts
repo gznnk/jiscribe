@@ -68,6 +68,37 @@ describe("connect", () => {
 		expectValid(doc);
 	});
 
+	it("defaults to straight routing for the center-to-center default (no anchors)", () => {
+		const doc = emptyDoc();
+		const source = addRect(doc, { x: 0, y: 0 });
+		const target = addEllipse(doc, { cx: 400, cy: 0 });
+
+		connect(doc, { sourceId: source, targetId: target });
+
+		const connector = doc.root[2] as Record<string, unknown>;
+		expect(connector.source).toMatchObject({ anchor: { kind: "center" } });
+		expect(connector.target).toMatchObject({ anchor: { kind: "center" } });
+		expect(connector.routing).toBe("straight");
+		expectValid(doc);
+	});
+
+	it("omits routing (orthogonal default) when both ends pin to an edge midpoint", () => {
+		const doc = emptyDoc();
+		const source = addRect(doc, { x: 0, y: 0 });
+		const target = addRect(doc, { x: 400, y: 0 });
+
+		connect(doc, {
+			sourceId: source,
+			targetId: target,
+			sourceAnchor: "rightCenter",
+			targetAnchor: "leftCenter",
+		});
+
+		const connector = doc.root[2] as Record<string, unknown>;
+		expect(connector.routing).toBeUndefined();
+		expectValid(doc);
+	});
+
 	// #115: id uniqueness recurses into group children, so target search must too —
 	// otherwise connecting to an object inside a group fails asymmetrically.
 	it("connects to an object nested inside a group", () => {
