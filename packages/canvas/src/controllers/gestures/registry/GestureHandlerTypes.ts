@@ -1,4 +1,4 @@
-import type { Prettify } from "@workspace/utility-types/src/Prettify";
+import type { Prettify } from "@workspace/utility-types";
 
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ICanvasRegistries } from "../../setup/ICanvasRegistries";
