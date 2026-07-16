@@ -9,6 +9,7 @@ import type {
 	CanvasControllerState,
 	SnapFeedback,
 } from "../../../../CanvasTypes";
+import { createCowObjects } from "../../../../utils/cowObjects";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import {
@@ -219,12 +220,13 @@ export class VertexControlHandler implements ControlStrategy {
 			points: newPoints,
 		};
 
+		// COW view over the previous frame's map (rebased internally, #213)
+		const updatedObjects = createCowObjects(state.objects);
+		updatedObjects[objectId] = updatedObject;
+
 		return {
 			...state,
-			objects: {
-				...state.objects,
-				[objectId]: updatedObject,
-			},
+			objects: updatedObjects,
 			snapFeedback,
 			axisLockFeedback,
 		};

@@ -23,6 +23,7 @@ import type {
 	SnapFeedback,
 } from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../setup/ICanvasRegistries";
+import { createCowObjects } from "../../../../utils/cowObjects";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { transformChildren } from "../../objects/primitives/GroupController";
@@ -255,10 +256,8 @@ export class TransformControlHandler implements ControlStrategy {
 			scaleY: newScaleY,
 		};
 
-		// Build the updated object map from eventStartSnapshot
-		const updatedObjects = {
-			...eventStartSnapshot.objects,
-		};
+		// Build the updated object map from eventStartSnapshot (COW view, #213)
+		const updatedObjects = createCowObjects(eventStartSnapshot.objects);
 
 		let nextState: CanvasControllerState;
 

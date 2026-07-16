@@ -2,6 +2,7 @@ import type { Point } from "@workspace/geometry";
 
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ICanvasRegistries } from "../../setup/ICanvasRegistries";
+import { materializeObjects } from "../../utils/cowObjects";
 import { moveSelection } from "../../utils/moveSelection";
 import { updateAffectedGroupBounds } from "../../utils/updateAffectedGroupBounds";
 import type { Command } from "../CommandTypes";
@@ -73,9 +74,10 @@ const createMoveCommand = (
 				delta: calcNudgeDelta(direction, step),
 				objectBehavior: registries.objectBehavior,
 			});
-			// A nudge is a committing operation, so recompute and commit the parent group bounds each time
+			// A nudge is a committing operation, so recompute and commit the parent group bounds each time.
+			// The moveSelection result is a COW view; flatten it before it enters history.
 			const moved = updateAffectedGroupBounds(
-				{ ...state, objects, multiSelectGroup },
+				{ ...state, objects: materializeObjects(objects), multiSelectGroup },
 				state.selectedIds,
 			);
 			// Coalesce consecutive nudges to the same selection (including key repeat) into

@@ -11,6 +11,7 @@ import { updateSingleGroupBounds } from "./updateSingleGroupBounds";
 import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../../setup/ICanvasRegistries";
+import { createCowObjects } from "../../../../../utils/cowObjects";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 import { rotateChildren } from "../../../objects/primitives/GroupController";
 
@@ -76,10 +77,8 @@ export function handleRotationDrag(
 		roundToDecimal(radiansToDegrees(radian - rotatePointRadian), 0),
 	);
 
-	// Build the updated object map from eventStartSnapshot
-	const updatedObjects = {
-		...eventStartSnapshot.objects,
-	};
+	// Build the updated object map from eventStartSnapshot (COW view, #213)
+	const updatedObjects = createCowObjects(eventStartSnapshot.objects);
 
 	let nextState: CanvasControllerState;
 

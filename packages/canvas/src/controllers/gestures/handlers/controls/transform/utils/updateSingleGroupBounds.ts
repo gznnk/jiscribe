@@ -1,4 +1,5 @@
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import { createCowObjects } from "../../../../../utils/cowObjects";
 import { updateGroupBounds } from "../../../../../utils/updateGroupBounds";
 
 /**
@@ -19,11 +20,12 @@ export function updateSingleGroupBounds(
 		return state;
 	}
 
+	// COW view: called per frame during resize/rotation drags (#213)
+	const updatedObjects = createCowObjects(state.objects);
+	updatedObjects[groupId] = updatedGroup;
+
 	return {
 		...state,
-		objects: {
-			...state.objects,
-			[groupId]: updatedGroup,
-		},
+		objects: updatedObjects,
 	};
 }

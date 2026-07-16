@@ -4,6 +4,7 @@ import { ConnectorFeatures } from "../../../../../schemas/objects/connections/co
 import { AUTO_COLOR } from "../../../../../schemas/objects/utils/autoColor";
 import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { createCowObjects } from "../../../../utils/cowObjects";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import type { ControlStrategy } from "../ControlEventHandler";
 import { computeEditedEndpoint } from "./utils/computeEditedEndpoint";
@@ -225,12 +226,16 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 				endpointToUpdate,
 			);
 
+			// COW view over the previous frame's map (rebased internally, #213)
+			const updatedObjects = createCowObjects(state.objects);
+			updatedObjects[editingConnectorId] = {
+				...updated,
+				id: editingConnectorId,
+			};
+
 			return {
 				...state,
-				objects: {
-					...state.objects,
-					[editingConnectorId]: { ...updated, id: editingConnectorId },
-				},
+				objects: updatedObjects,
 			};
 		}
 

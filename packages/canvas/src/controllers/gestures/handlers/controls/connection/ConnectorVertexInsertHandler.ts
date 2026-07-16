@@ -7,6 +7,7 @@ import type {
 	CanvasControllerState,
 	SnapFeedback,
 } from "../../../../CanvasTypes";
+import { createCowObjects } from "../../../../utils/cowObjects";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import {
 	buildSnapFeedback,
@@ -193,12 +194,13 @@ export class ConnectorVertexInsertHandler implements ControlStrategy {
 		newPoints[insertedIndex] = newPosition;
 
 		const updatedConnector = { ...startConnector, points: newPoints };
+		// COW view over the previous frame's map (rebased internally, #213)
+		const updatedObjects = createCowObjects(state.objects);
+		updatedObjects[connectorId] = updatedConnector;
+
 		return {
 			...state,
-			objects: {
-				...state.objects,
-				[connectorId]: updatedConnector,
-			},
+			objects: updatedObjects,
 			snapFeedback,
 		};
 	}
