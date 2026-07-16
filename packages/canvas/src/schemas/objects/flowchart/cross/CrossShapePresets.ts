@@ -4,7 +4,7 @@ export const CrossShapePresets: ShapePreset[] = [
 	{
 		id: "cross",
 		objectType: "cross",
-		label: "Cross",
+		label: "Junction",
 		categories: { flowchart: 180 },
 	},
 ];

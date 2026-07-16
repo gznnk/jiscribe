@@ -3,9 +3,7 @@ import { memo, useMemo, useRef } from "react";
 import { defaultCanvasRegistries } from "./setup";
 import { calcFitViewport } from "./utils/calcFitViewport";
 import { CanvasView } from "../presentations/CanvasView";
-import { ObjectComponentRegistryContext } from "../presentations/objects/registry/ObjectComponentRegistryContext";
-import { ShapeOutlineRegistryContext } from "../presentations/objects/registry/ShapeOutlineRegistryContext";
-import { TextRegionRegistryContext } from "../presentations/objects/registry/TextRegionRegistryContext";
+import { PresentationRegistriesProvider } from "../presentations/objects/registry/PresentationRegistriesProvider";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import { canvasToState } from "../states/canvas/CanvasMapper";
 import type { CanvasTheme } from "../theme/CanvasTheme";
@@ -72,24 +70,20 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 
 	return (
 		<CanvasThemeContext value={theme}>
-			<ObjectComponentRegistryContext
-				value={defaultCanvasRegistries.objectComponent}
+			<PresentationRegistriesProvider
+				objectComponent={defaultCanvasRegistries.objectComponent}
+				textRegion={defaultCanvasRegistries.textRegion}
+				shapeOutline={defaultCanvasRegistries.shapeOutline}
 			>
-				<TextRegionRegistryContext value={defaultCanvasRegistries.textRegion}>
-					<ShapeOutlineRegistryContext
-						value={defaultCanvasRegistries.shapeOutline}
-					>
-						<div style={themeCssVars}>
-							<CanvasView
-								objects={objects}
-								rootIds={rootIds}
-								viewport={viewport}
-								svgRef={svgRef}
-							/>
-						</div>
-					</ShapeOutlineRegistryContext>
-				</TextRegionRegistryContext>
-			</ObjectComponentRegistryContext>
+				<div style={themeCssVars}>
+					<CanvasView
+						objects={objects}
+						rootIds={rootIds}
+						viewport={viewport}
+						svgRef={svgRef}
+					/>
+				</div>
+			</PresentationRegistriesProvider>
 		</CanvasThemeContext>
 	);
 };

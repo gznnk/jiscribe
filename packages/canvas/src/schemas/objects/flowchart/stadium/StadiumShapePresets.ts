@@ -4,7 +4,7 @@ export const StadiumShapePresets: ShapePreset[] = [
 	{
 		id: "stadium",
 		objectType: "stadium",
-		label: "Stadium",
+		label: "Terminal",
 		categories: { flowchart: 30 },
 	},
 ];
