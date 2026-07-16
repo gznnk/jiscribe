@@ -182,6 +182,13 @@ type UseCanvasExportParams = {
 	onExportImage: ((payload: CanvasExportImagePayload) => void) | undefined;
 	dispatch: Dispatch<CanvasAction>;
 	notifyError: NotifyError;
+	/**
+	 * Runs the snapshot with viewport culling suspended (full object tree in
+	 * the DOM), since every export path clones the live SVG. The synchronous
+	 * part of the snapshot must complete the clone — for the PNG path this
+	 * holds because rasterizeSvgToPngBlob serializes before its first await.
+	 */
+	withCullingSuspended: <T>(snapshot: () => T) => T;
 };
 
 type UseCanvasExportResult = {
@@ -206,6 +213,7 @@ export const useCanvasExport = ({
 	onExportImage,
 	dispatch,
 	notifyError,
+	withCullingSuspended,
 }: UseCanvasExportParams): UseCanvasExportResult => {
 	// Always-fresh mirror of the state, read at export time. Must be a layout
 	// effect: the host can call the imperative handle synchronously right after
@@ -240,16 +248,22 @@ export const useCanvasExport = ({
 		() => ({
 			toSvgString: (options?: CanvasExportOptions) => {
 				const svg = svgRef.current;
-				return svg ? canvasToSvgString(svg, buildExportOptions(options)) : null;
+				return svg
+					? withCullingSuspended(() =>
+							canvasToSvgString(svg, buildExportOptions(options)),
+						)
+					: null;
 			},
 			toPngBlob: async (options?: CanvasExportOptions) => {
 				const svg = svgRef.current;
 				return svg
-					? rasterizeSvgToPngBlob(svg, buildExportOptions(options))
+					? withCullingSuspended(() =>
+							rasterizeSvgToPngBlob(svg, buildExportOptions(options)),
+						)
 					: null;
 			},
 		}),
-		[svgRef, buildExportOptions],
+		[svgRef, buildExportOptions, withCullingSuspended],
 	);
 
 	// Export dialog (opened from the context menu): pick format + margin, OK
@@ -267,15 +281,17 @@ export const useCanvasExport = ({
 			if (!svg) {
 				return;
 			}
-			runExportSubmit(
-				svg,
-				values,
-				buildExportOptions(values),
-				onExportImageRef.current,
-				notifyError,
+			withCullingSuspended(() =>
+				runExportSubmit(
+					svg,
+					values,
+					buildExportOptions(values),
+					onExportImageRef.current,
+					notifyError,
+				),
 			);
 		},
-		[svgRef, buildExportOptions, notifyError],
+		[svgRef, buildExportOptions, notifyError, withCullingSuspended],
 	);
 
 	return {

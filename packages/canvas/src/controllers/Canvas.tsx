@@ -30,6 +30,7 @@ import { useNotifySelectionChange } from "./hooks/useNotifySelectionChange";
 import { useNotifyViewportChange } from "./hooks/useNotifyViewportChange";
 import { useSelfSaveNonceTracker } from "./hooks/useSelfSaveNonceTracker";
 import { useSyncExternalDoc } from "./hooks/useSyncExternalDoc";
+import { useViewportCulling } from "./hooks/useViewportCulling";
 import type { CanvasViewportHandle } from "./hooks/useViewportHandle";
 import { useViewportHandle } from "./hooks/useViewportHandle";
 import { mergeCanvasMessages } from "./messages/CanvasMessages";
@@ -357,6 +358,16 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 		[],
 	);
 
+	// Viewport culling (issue #212): only objects intersecting the visible
+	// world rect are rendered. Export clones the live SVG DOM, so it suspends
+	// culling for the duration of the snapshot via withCullingSuspended.
+	const { visibleObjectIds, withCullingSuspended } = useViewportCulling(
+		state.objects,
+		state.rootIds,
+		state.viewport,
+		state.textEditState?.objectId ?? null,
+	);
+
 	// Image export: the imperative exportRef API and the export dialog
 	const {
 		isExportDialogOpen,
@@ -371,6 +382,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 		onExportImage,
 		dispatch,
 		notifyError,
+		withCullingSuspended,
 	});
 
 	const { minX, minY, zoom } = state.viewport;
@@ -421,6 +433,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 							svgRef={svgRef}
 							textEditObjectId={state.textEditState?.objectId ?? null}
 							isDrawMode={!!state.shapeDrawing}
+							visibleObjectIds={visibleObjectIds}
 						>
 							<PendingConnectorOverlay
 								pendingConnector={state.pendingConnector}
