@@ -7,6 +7,7 @@ import {
 
 import { PRECISION } from "../../../../../constants/precision";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
+import { classifyChildRelativeRotation } from "../../../../utils/classifyChildRelativeRotation";
 import { normalizeRotation } from "../../../../utils/normalizeRotation";
 
 /**
@@ -58,31 +59,27 @@ export function transformFrameByGroup<T extends TransformedFrame>(
 		degreesToRadians(transformRootGroupEndState.rotation),
 	);
 
-	// The child's rotation angle in the group-local coordinate system (degrees)
-	const childRelativeRotationDeg =
-		(frame.rotation - transformRootGroupStartState.rotation + 360) % 360;
-
 	// Optimization: for angle differences of 0, 90, 180, or 270 degrees (parallel/orthogonal), use a simple computation
+	const rotationClass = classifyChildRelativeRotation(
+		frame.rotation,
+		transformRootGroupStartState.rotation,
+	);
 	let newWidth: number;
 	let newHeight: number;
 
-	if (
-		Math.abs(childRelativeRotationDeg) < 0.001 ||
-		Math.abs(childRelativeRotationDeg - 180) < 0.001
-	) {
+	if (rotationClass === "parallel") {
 		// 0 or 180 degrees: parallel
 		newWidth = frame.width * groupScaleX;
 		newHeight = frame.height * groupScaleY;
-	} else if (
-		Math.abs(childRelativeRotationDeg - 90) < 0.001 ||
-		Math.abs(childRelativeRotationDeg - 270) < 0.001
-	) {
+	} else if (rotationClass === "orthogonal") {
 		// 90 or 270 degrees: orthogonal
 		newWidth = frame.width * groupScaleY;
 		newHeight = frame.height * groupScaleX;
 	} else {
 		// General angle: exact computation via trigonometric functions
-		const childRelativeRotation = degreesToRadians(childRelativeRotationDeg);
+		const childRelativeRotation = degreesToRadians(
+			frame.rotation - transformRootGroupStartState.rotation,
+		);
 		const cosTheta = Math.cos(childRelativeRotation);
 		const sinTheta = Math.sin(childRelativeRotation);
 

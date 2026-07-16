@@ -12,6 +12,10 @@ import { applyResizeSnap } from "./utils/applyResizeSnap";
 import { calcAnchorResize } from "./utils/calcAnchorResize";
 import { calcMultiSelectGroupBounds } from "./utils/calcMultiSelectGroupBounds";
 import { handleRotationDrag } from "./utils/handleRotationDrag";
+import {
+	calcMultiSelectGroupBoundsFromCache,
+	createMultiSelectResizeBoundsCache,
+} from "./utils/multiSelectResizeBoundsCache";
 import { updateSingleGroupBounds } from "./utils/updateSingleGroupBounds";
 import { MIN_GROUP_DIMENSION } from "../../../../../constants/groupDimensions";
 import { PRECISION } from "../../../../../constants/precision";
@@ -89,10 +93,29 @@ export class TransformControlHandler implements ControlStrategy {
 	private handleDragStart(
 		state: CanvasControllerState,
 		_event: CanvasEvent,
-		_anchorType: TransformAnchorType,
+		anchorType: TransformAnchorType,
 	): CanvasControllerState {
+		// For a multi-select resize, cache what the per-frame bounds derivation
+		// needs so it never re-collects every leaf vertex (#215)
+		let eventStartSnapshot = state.eventStartSnapshot;
+		if (
+			anchorType !== "rotation" &&
+			eventStartSnapshot?.multiSelectGroup &&
+			state.selectedIds.length > 1
+		) {
+			eventStartSnapshot = {
+				...eventStartSnapshot,
+				multiSelectResizeBoundsCache: createMultiSelectResizeBoundsCache(
+					state.selectedIds,
+					eventStartSnapshot.objects,
+					eventStartSnapshot.multiSelectGroup,
+				),
+			};
+		}
+
 		return {
 			...state,
+			eventStartSnapshot,
 			edgeScrollEnabled: true,
 			objectMenuOpenId: null,
 			shapeLibraryOpenCategory: null,
@@ -286,12 +309,22 @@ export class TransformControlHandler implements ControlStrategy {
 				snapFeedback,
 			};
 
-			// Recompute the bounding box of multiSelectGroup (only this is updated during drag)
-			const recalculatedBounds = calcMultiSelectGroupBounds(
-				state.selectedIds,
-				nextState.objects,
-				nextState.multiSelectGroup,
-			);
+			// Recompute the bounding box of multiSelectGroup (only this is updated during drag).
+			// The dragStart cache derives it without re-collecting every leaf vertex (#215);
+			// fall back to the full point collection when the cache is absent.
+			const boundsCache = eventStartSnapshot.multiSelectResizeBoundsCache;
+			const recalculatedBounds = boundsCache
+				? calcMultiSelectGroupBoundsFromCache(
+						boundsCache,
+						nextState.objects,
+						startGroup,
+						updatedGroup,
+					)
+				: calcMultiSelectGroupBounds(
+						state.selectedIds,
+						nextState.objects,
+						nextState.multiSelectGroup,
+					);
 			if (recalculatedBounds && nextState.multiSelectGroup) {
 				nextState = {
 					...nextState,
