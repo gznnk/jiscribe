@@ -3,6 +3,7 @@ import { generateUniqueId } from "./ids";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
 import type { ArrowType } from "../schemas/objects/types/ArrowType";
+import { defaultRoutingForAnchors } from "../schemas/objects/types/ConnectorRouting";
 import type {
 	ConnectPointId,
 	OwnedEndpointRef,
@@ -37,12 +38,17 @@ export function connect(doc: CanvasDoc, params: ConnectParams): string {
 	const targetId = requireConnectable(doc, params.targetId);
 
 	const id = generateUniqueId(doc, "connector");
+	const source = buildEndpoint(sourceId, params.sourceAnchor);
+	const target = buildEndpoint(targetId, params.targetAnchor);
+	// center 接続は straight を既定にする（両端 connectPoint のときだけ orthogonal で省略）。
+	const routing = defaultRoutingForAnchors(source.anchor, target.anchor);
 	const connector = {
 		id,
 		type: "connector",
-		source: buildEndpoint(sourceId, params.sourceAnchor),
-		target: buildEndpoint(targetId, params.targetAnchor),
+		source,
+		target,
 		points: [],
+		...(routing !== undefined ? { routing } : {}),
 		...(params.startArrow !== undefined
 			? { startArrow: params.startArrow }
 			: {}),

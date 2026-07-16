@@ -1,7 +1,10 @@
 import { calcPolyBoundingBox } from "@workspace/geometry";
 import type { BoundingBox, Point } from "@workspace/geometry";
 
-import { resolveConnectorPoints } from "../../presentations/layers/content/utils/endpoints";
+import {
+	resolveConnectorPoints,
+	resolveEndpointOwner,
+} from "../../presentations/layers/content/utils/endpoints";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../states/objects/connections/connector/ConnectorState";
 
@@ -16,12 +19,8 @@ export const collectConnectorPoints = (
 	connector: ConnectorState,
 	objects: Record<string, ObjectState>,
 ): Point[] | null => {
-	const sourceObj = connector.source.owner
-		? objects[connector.source.owner.id]
-		: undefined;
-	const targetObj = connector.target.owner
-		? objects[connector.target.owner.id]
-		: undefined;
+	const sourceObj = resolveEndpointOwner(objects, connector.source);
+	const targetObj = resolveEndpointOwner(objects, connector.target);
 
 	const resolved = resolveConnectorPoints(connector, sourceObj, targetObj);
 	if (!resolved) {

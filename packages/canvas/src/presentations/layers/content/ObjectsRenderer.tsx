@@ -9,6 +9,12 @@ import { useObjectComponentRegistry } from "../../objects/registry/ObjectCompone
 
 type ObjectsRendererProps = Pick<CanvasState, "objects" | "rootIds"> & {
 	textEditObjectId?: string | null;
+	/**
+	 * Viewport culling (issue #212): when set, only these IDs are rendered.
+	 * Omit to render the full tree — required for paths that need every object
+	 * in the DOM (export clones the live SVG; thumbnails fit all content).
+	 */
+	visibleObjectIds?: ReadonlySet<string>;
 };
 
 /**
@@ -23,10 +29,17 @@ const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 	objects,
 	rootIds,
 	textEditObjectId,
+	visibleObjectIds,
 }) => {
 	const objectComponentRegistry = useObjectComponentRegistry();
 
 	const renderObject = (id: string, result: React.ReactNode[]): void => {
+		// Culling gate: groups with any visible descendant are in the set, so
+		// this single check also prunes fully offscreen subtrees.
+		if (visibleObjectIds && !visibleObjectIds.has(id)) {
+			return;
+		}
+
 		const objState = objects[id];
 		if (!objState) {
 			return;

@@ -64,9 +64,11 @@ test.describe("コネクターの端点編集ハンドル", () => {
 		await canvas.drawShape("Rectangle", { x: 760, y: 440 }, { x: 960, y: 540 });
 		await canvas.deselect();
 
+		// target 左辺中央 (760,490) へ接続 → leftCenter アンカー。辺アンカー同士なので既定
+		// orthogonal で斜め配置はエルボ（多点経路）になる（中心だと center → 既定 straight で 2 頂点）。
 		await canvas.selectAt({ x: 380, y: 230 });
 		const connectorId = await canvas.createConnector("rightCenter", {
-			x: 860,
+			x: 760,
 			y: 490,
 		});
 		await canvas.deselect();

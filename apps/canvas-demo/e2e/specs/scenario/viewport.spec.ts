@@ -127,15 +127,18 @@ test.describe("ビューポートのフレーミング", () => {
 
 		const after = parseViewBox(await canvas.getViewBox());
 		const selectedCenter = await centerOfObject(canvas, selectedId);
-		const otherCenter = await centerOfObject(canvas, otherId);
 
 		expect(contains(after, selectedCenter), "選択図形が枠内に入ること").toBe(
 			true,
 		);
-		// selection は内容全体ではなく選択範囲に寄せるので、離れた非選択図形は枠外になる
-		expect(contains(after, otherCenter), "非選択図形は枠外であること").toBe(
-			false,
-		);
+		// selection は内容全体ではなく選択範囲に寄せるので、離れた非選択図形は枠外になる。
+		// ビューポートカリング（#212）により枠外の図形は DOM から消えるため、
+		// 「DOM に存在しない」も枠外の成立として扱う
+		const other = (await canvas.captureObjects()).find((o) => o.id === otherId);
+		expect(
+			other === undefined || !contains(after, centerOf(other.transform)),
+			"非選択図形は枠外であること",
+		).toBe(true);
 		expect(after.width).toBeLessThan(before.width);
 	});
 

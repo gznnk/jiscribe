@@ -1,3 +1,5 @@
+import type { AnchorSpec } from "./EndpointRef";
+
 /**
  * Available connector routing modes.
  *
@@ -23,3 +25,16 @@ export const isConnectorRouting = (value: unknown): value is ConnectorRouting =>
 export const isOrthogonalRouting = (
 	routing: ConnectorRouting | undefined,
 ): boolean => routing !== "straight";
+
+/**
+ * routing の既定をアンカー種から導く（作成時と、明示 routing の無いコネクターの再アンカー時に
+ * 使う）。connectPoint は辺の法線という出口方向を持つので orthogonal 経路が意図通りに見えるが、
+ * center は出口方向を持たず orthogonal が恣意的な向きに倒れる。そのためどちらかの端点が center の
+ * ときは straight を、両端が connectPoint（向きを持つ）のときは undefined（= 省略時の orthogonal
+ * 既定）を返す。あくまで既定の導出で、ユーザーが明示指定した routing を縛る恒久制約ではない。
+ */
+export const defaultRoutingForAnchors = (
+	a: AnchorSpec,
+	b: AnchorSpec,
+): ConnectorRouting | undefined =>
+	a.kind === "center" || b.kind === "center" ? "straight" : undefined;

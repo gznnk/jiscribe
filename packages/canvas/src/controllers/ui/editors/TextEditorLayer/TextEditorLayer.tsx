@@ -1,7 +1,10 @@
 import type { TransformedFrame } from "@workspace/geometry";
 import { memo } from "react";
 
-import { resolveConnectorPoints } from "../../../../presentations/layers/content/utils/endpoints";
+import {
+	resolveConnectorPoints,
+	resolveEndpointOwner,
+} from "../../../../presentations/layers/content/utils/endpoints";
 import { calcConnectorLabelAnchor } from "../../../../presentations/layers/content/utils/label/calcConnectorLabelAnchor";
 import type { ShapeOutlineRegistry } from "../../../../presentations/objects/registry/ShapeOutlineRegistry";
 import type { TextRegionCalculator } from "../../../../presentations/objects/registry/TextRegionRegistry";
@@ -40,12 +43,8 @@ function renderConnectorLabelEditor(
 	handlers: EditorHandlers,
 	outlineRegistry: ShapeOutlineRegistry,
 ): React.ReactElement | null {
-	const sourceObj = connector.source.owner
-		? objects[connector.source.owner.id]
-		: null;
-	const targetObj = connector.target.owner
-		? objects[connector.target.owner.id]
-		: null;
+	const sourceObj = resolveEndpointOwner(objects, connector.source);
+	const targetObj = resolveEndpointOwner(objects, connector.target);
 	const resolved = resolveConnectorPoints(
 		connector,
 		sourceObj,

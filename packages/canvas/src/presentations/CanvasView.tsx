@@ -14,6 +14,11 @@ type CanvasViewProps = {
 	children?: React.ReactNode;
 	textEditObjectId?: string | null;
 	isDrawMode?: boolean;
+	/**
+	 * Viewport culling: IDs to render (see ObjectsRenderer). Omit to render the
+	 * full tree (export / thumbnail / any path that snapshots the DOM).
+	 */
+	visibleObjectIds?: ReadonlySet<string>;
 } & Pick<CanvasState, "objects" | "rootIds" | "viewport">;
 
 const CanvasViewComponent: React.FC<CanvasViewProps> = ({
@@ -24,6 +29,7 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 	children,
 	textEditObjectId,
 	isDrawMode = false,
+	visibleObjectIds,
 }) => {
 	const { minX, minY, width, height, zoom } = viewport;
 
@@ -50,6 +56,7 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 					objects={objects}
 					rootIds={rootIds}
 					textEditObjectId={textEditObjectId}
+					visibleObjectIds={visibleObjectIds}
 				/>
 				{/* Overlay layers injected from parent. These are control UI
 				    (selection handles, control frames, snap guides, ...), so they

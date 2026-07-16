@@ -52,10 +52,11 @@ test.describe("コネクターの bounding box（曲がり点を含む）", () =
 		await canvas.drawShape("Rectangle", { x: 260, y: 360 }, { x: 380, y: 440 });
 		await canvas.deselect();
 
-		// source の rightCenter から左の target 本体へドロップして回り込みコネクターを作る。
+		// source の rightCenter から左の target 右辺中央 (380,400) へドロップして回り込みを作る。
+		// 辺アンカー同士なので既定 orthogonal（中心へ落とすと center → 既定 straight で折れなくなる）。
 		await canvas.selectAt({ x: 580, y: 400 });
 		const connectorId = await canvas.createConnector("rightCenter", {
-			x: 320,
+			x: 380,
 			y: 400,
 		});
 		await canvas.deselect();
