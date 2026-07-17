@@ -8,13 +8,13 @@ import type {
 	SnapFeedback,
 } from "../../../../CanvasTypes";
 import { createCowObjects } from "../../../../utils/cowObjects";
+import { ControlStrategy } from "../../../registry/ControlStrategy";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import {
 	buildSnapFeedback,
 	findSnap,
 	SNAP_THRESHOLD_PX,
 } from "../../utils/snap/findSnap";
-import type { ControlStrategy } from "../ControlEventHandler";
 
 /**
  * Handles inserting an intermediate waypoint into a connector segment.
@@ -37,9 +37,7 @@ import type { ControlStrategy } from "../ControlEventHandler";
  * - drag: move the inserted waypoint (with snap correction)
  * - dragEnd: commit the final position
  */
-export class ConnectorVertexInsertHandler implements ControlStrategy {
-	readonly controlType = "connector-vertex-insert";
-
+export class ConnectorVertexInsertHandler extends ControlStrategy {
 	supports(event: CanvasEvent): boolean {
 		if (event.targetKind !== "control") {
 			return false;

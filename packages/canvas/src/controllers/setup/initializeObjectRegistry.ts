@@ -371,6 +371,7 @@ import {
 import type { SvgState } from "../../states/objects/primitives/svg/SvgState";
 import { isValidSvgState } from "../../states/objects/primitives/svg/validateSvgState";
 import type { ObjectStateValidateFn } from "../../states/registry/ObjectStateValidatorRegistry";
+import { HeaderHeightControlHandler } from "../gestures/handlers/controls/container/HeaderHeightControlHandler";
 import { createFrameBehavior } from "../gestures/handlers/objects/base/FrameController";
 import {
 	moveByDelta as connectorMoveByDelta,
@@ -393,6 +394,8 @@ import {
 	transformByGroup as polylineTransformByGroup,
 } from "../gestures/handlers/objects/primitives/PolylineController";
 import type { ObjectBehaviorEntry } from "../gestures/registry/ObjectBehaviorTypes";
+import type { SelectionControlDefinition } from "../registry/SelectionControlTypes";
+import { ContainerHeaderHeightControl } from "../ui/controls/ContainerHeaderControls";
 import { ActorIcon } from "../ui/icons/ActorIcon";
 import { BoundaryIcon } from "../ui/icons/BoundaryIcon";
 import { CalloutIcon } from "../ui/icons/CalloutIcon";
@@ -470,6 +473,8 @@ export type ObjectTypeDefinition = {
 	behavior: ObjectBehaviorEntry;
 	menuFactory: MenuSectionFactory<ObjectState>;
 	validateState: ObjectStateValidateFn;
+	/** Type-specific selection controls (handle renderer + gesture strategy pairs). */
+	selectionControls?: SelectionControlDefinition[];
 	shapeLibrary?: ShapeLibraryRegistration;
 };
 
@@ -488,6 +493,7 @@ const defineObject = <TDoc extends ObjectDoc, TState extends ObjectState>(def: {
 	behavior: ObjectBehaviorEntry<TState>;
 	menuFactory: MenuSectionFactory<TState>;
 	validateState: ObjectStateValidateFn;
+	selectionControls?: SelectionControlDefinition<TState>[];
 	shapeLibrary?: ShapeLibraryRegistration;
 }): ObjectTypeDefinition => def as unknown as ObjectTypeDefinition;
 
@@ -1040,6 +1046,12 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				},
 			],
 			validateState: isValidContainerState,
+			selectionControls: [
+				{
+					Component: ContainerHeaderHeightControl,
+					handler: new HeaderHeightControlHandler(),
+				},
+			],
 			shapeLibrary: {
 				factory: ContainerShapeFactory,
 				previewRenderer: ContainerPreview,
@@ -1436,6 +1448,9 @@ export const applyObjectDefinition = (
 	registries.objectBehavior.register(type, definition.behavior);
 	registries.objectStateValidator.register(type, definition.validateState);
 	registries.objectMenu.register(type, definition.menuFactory);
+	if (definition.selectionControls) {
+		registries.selectionControl.register(type, definition.selectionControls);
+	}
 
 	const shapeLibrary = definition.shapeLibrary;
 	if (shapeLibrary?.factory) {
@@ -1470,6 +1485,7 @@ export const initializeObjectRegistry = (
 	registries.objectBehavior.clear();
 	registries.objectStateValidator.clear();
 	registries.objectMenu.clear();
+	registries.selectionControl.clear();
 	registries.shapeFactory.clear();
 	registries.shapePreview.clear();
 	registries.shapePreset.clear();

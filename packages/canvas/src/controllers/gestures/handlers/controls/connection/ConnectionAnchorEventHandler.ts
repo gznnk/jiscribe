@@ -14,9 +14,9 @@ import type { ConnectorState } from "../../../../../states/objects/connections/c
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { isAnchorHandleId } from "../../../../ui/controls/ConnectionAnchorTypes";
 import { createCowObjects } from "../../../../utils/cowObjects";
+import { ControlStrategy } from "../../../registry/ControlStrategy";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { SNAP_THRESHOLD_PX } from "../../utils/snap/findSnap";
-import type { ControlStrategy } from "../ControlEventHandler";
 
 /**
  * Handler that creates a connector by dragging from a connection anchor,
@@ -27,9 +27,7 @@ import type { ControlStrategy } from "../ControlEventHandler";
  * - create: data-id=<sourceObjectId>, data-part="anchor:<anchorPosition>"
  * - edit:   data-id=<connectorId>,    data-part="endpoint:<source|target>"
  */
-export class ConnectionAnchorEventHandler implements ControlStrategy {
-	readonly controlType = "connection-anchor";
-
+export class ConnectionAnchorEventHandler extends ControlStrategy {
 	supports(event: CanvasEvent): boolean {
 		if (event.targetKind !== "control") {
 			return false;

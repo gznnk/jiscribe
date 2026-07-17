@@ -29,9 +29,9 @@ import type {
 import type { ICanvasRegistries } from "../../../../setup/ICanvasRegistries";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
+import { ControlStrategy } from "../../../registry/ControlStrategy";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { transformChildren } from "../../objects/primitives/GroupController";
-import type { ControlStrategy } from "../ControlEventHandler";
 
 /**
  * Handles transform-control operations (resize and rotation).
@@ -39,9 +39,7 @@ import type { ControlStrategy } from "../ControlEventHandler";
  * Target format: data-id="transform", data-part="resize:<anchorType>" / "rotation"
  * Example: data-part="resize:bottomRight"
  */
-export class TransformControlHandler implements ControlStrategy {
-	readonly controlType = "transform-control";
-
+export class TransformControlHandler extends ControlStrategy {
 	supports(event: CanvasEvent): boolean {
 		if (event.targetKind !== "control") {
 			return false;

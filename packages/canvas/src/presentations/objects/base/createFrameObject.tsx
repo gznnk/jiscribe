@@ -61,8 +61,6 @@ export const createFrameObject = <TState extends FrameRenderState>(
 			type,
 			cx,
 			cy,
-			width,
-			height,
 			scaleX,
 			scaleY,
 			rotation,
@@ -98,7 +96,7 @@ export const createFrameObject = <TState extends FrameRenderState>(
 			strokeDasharray: getStrokeDasharray(strokeDashType, strokeWidth),
 		};
 
-		const textRegion = calcTextRegion({ width, height }, textRegionCalculator);
+		const textRegion = calcTextRegion(props, textRegionCalculator);
 
 		return (
 			<>

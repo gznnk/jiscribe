@@ -9,6 +9,7 @@ import { calcConnectorLabelAnchor } from "../../../../presentations/layers/conte
 import type { ShapeOutlineRegistry } from "../../../../presentations/objects/registry/ShapeOutlineRegistry";
 import type { TextRegionCalculator } from "../../../../presentations/objects/registry/TextRegionRegistry";
 import { calcTextRegion } from "../../../../presentations/objects/utils/calcTextRegion";
+import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import {
 	isTextStyleState,
 	type TextStyleState,
@@ -94,16 +95,13 @@ function renderConnectorLabelEditor(
  * @returns The text editor
  */
 function renderTextEditor(
-	target: TextStyleState & TransformedFrame,
+	target: ObjectState & TextStyleState & TransformedFrame,
 	objectId: string,
 	text: string,
 	handlers: EditorHandlers,
 	textRegionCalculator?: TextRegionCalculator,
 ): React.ReactElement {
-	const textRegion = calcTextRegion(
-		{ width: target.width ?? 0, height: target.height ?? 0 },
-		textRegionCalculator,
-	);
+	const textRegion = calcTextRegion(target, textRegionCalculator);
 	return (
 		<TextEditor
 			objectId={objectId}

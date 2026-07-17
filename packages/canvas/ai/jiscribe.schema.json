@@ -387,6 +387,11 @@
 					"description": "Header band fill (any CSS color), independent of `fill` (the body). Defaults to \"auto\" (theme surface); set a color to colour-code modules. With a dark headerFill, also set a readable fontColor.",
 					"type": "string"
 				},
+				"headerHeight": {
+					"description": "Header band height in pixels. Defaults to 28. Increase it when the title wraps to multiple lines.",
+					"type": "number",
+					"minimum": 1
+				},
 				"x": {
 					"description": "Left-edge X coordinate of the bounding box.",
 					"type": "number"
