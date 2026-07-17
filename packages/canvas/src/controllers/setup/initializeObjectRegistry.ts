@@ -67,11 +67,23 @@ import {
 	hexagonOutline,
 } from "../../presentations/objects/flowchart/Hexagon";
 import {
+	LoopLimit,
+	LoopLimitPreview,
+	calcLoopLimitTextRegion,
+	loopLimitOutline,
+} from "../../presentations/objects/flowchart/LoopLimit";
+import {
 	ManualInput,
 	ManualInputPreview,
 	calcManualInputTextRegion,
 	manualInputOutline,
 } from "../../presentations/objects/flowchart/ManualInput";
+import {
+	MultiDocument,
+	MultiDocumentPreview,
+	calcMultiDocumentTextRegion,
+	multiDocumentOutline,
+} from "../../presentations/objects/flowchart/MultiDocument";
 import {
 	OffPageConnector,
 	OffPageConnectorPreview,
@@ -90,6 +102,12 @@ import {
 	calcStadiumTextRegion,
 	stadiumOutline,
 } from "../../presentations/objects/flowchart/Stadium";
+import {
+	StoredData,
+	StoredDataPreview,
+	calcStoredDataTextRegion,
+	storedDataOutline,
+} from "../../presentations/objects/flowchart/StoredData";
 import {
 	Subroutine,
 	SubroutinePreview,
@@ -168,9 +186,15 @@ import { ExtractShapePresets } from "../../schemas/objects/flowchart/extract/Ext
 import { HexagonFeatures } from "../../schemas/objects/flowchart/hexagon/HexagonDoc";
 import { HexagonShapeFactory } from "../../schemas/objects/flowchart/hexagon/HexagonShapeFactory";
 import { HexagonShapePresets } from "../../schemas/objects/flowchart/hexagon/HexagonShapePresets";
+import { LoopLimitFeatures } from "../../schemas/objects/flowchart/loopLimit/LoopLimitDoc";
+import { LoopLimitShapeFactory } from "../../schemas/objects/flowchart/loopLimit/LoopLimitShapeFactory";
+import { LoopLimitShapePresets } from "../../schemas/objects/flowchart/loopLimit/LoopLimitShapePresets";
 import { ManualInputFeatures } from "../../schemas/objects/flowchart/manualInput/ManualInputDoc";
 import { ManualInputShapeFactory } from "../../schemas/objects/flowchart/manualInput/ManualInputShapeFactory";
 import { ManualInputShapePresets } from "../../schemas/objects/flowchart/manualInput/ManualInputShapePresets";
+import { MultiDocumentFeatures } from "../../schemas/objects/flowchart/multiDocument/MultiDocumentDoc";
+import { MultiDocumentShapeFactory } from "../../schemas/objects/flowchart/multiDocument/MultiDocumentShapeFactory";
+import { MultiDocumentShapePresets } from "../../schemas/objects/flowchart/multiDocument/MultiDocumentShapePresets";
 import { OffPageConnectorFeatures } from "../../schemas/objects/flowchart/offPageConnector/OffPageConnectorDoc";
 import { OffPageConnectorShapeFactory } from "../../schemas/objects/flowchart/offPageConnector/OffPageConnectorShapeFactory";
 import { OffPageConnectorShapePresets } from "../../schemas/objects/flowchart/offPageConnector/OffPageConnectorShapePresets";
@@ -180,6 +204,9 @@ import { ParallelogramShapePresets } from "../../schemas/objects/flowchart/paral
 import { StadiumFeatures } from "../../schemas/objects/flowchart/stadium/StadiumDoc";
 import { StadiumShapeFactory } from "../../schemas/objects/flowchart/stadium/StadiumShapeFactory";
 import { StadiumShapePresets } from "../../schemas/objects/flowchart/stadium/StadiumShapePresets";
+import { StoredDataFeatures } from "../../schemas/objects/flowchart/storedData/StoredDataDoc";
+import { StoredDataShapeFactory } from "../../schemas/objects/flowchart/storedData/StoredDataShapeFactory";
+import { StoredDataShapePresets } from "../../schemas/objects/flowchart/storedData/StoredDataShapePresets";
 import { SubroutineFeatures } from "../../schemas/objects/flowchart/subroutine/SubroutineDoc";
 import { SubroutineShapeFactory } from "../../schemas/objects/flowchart/subroutine/SubroutineShapeFactory";
 import { SubroutineShapePresets } from "../../schemas/objects/flowchart/subroutine/SubroutineShapePresets";
@@ -290,11 +317,23 @@ import {
 import type { HexagonState } from "../../states/objects/flowchart/hexagon/HexagonState";
 import { isValidHexagonState } from "../../states/objects/flowchart/hexagon/validateHexagonState";
 import {
+	loopLimitToDoc,
+	loopLimitToState,
+} from "../../states/objects/flowchart/loopLimit/LoopLimitMapper";
+import type { LoopLimitState } from "../../states/objects/flowchart/loopLimit/LoopLimitState";
+import { isValidLoopLimitState } from "../../states/objects/flowchart/loopLimit/validateLoopLimitState";
+import {
 	manualInputToDoc,
 	manualInputToState,
 } from "../../states/objects/flowchart/manualInput/ManualInputMapper";
 import type { ManualInputState } from "../../states/objects/flowchart/manualInput/ManualInputState";
 import { isValidManualInputState } from "../../states/objects/flowchart/manualInput/validateManualInputState";
+import {
+	multiDocumentToDoc,
+	multiDocumentToState,
+} from "../../states/objects/flowchart/multiDocument/MultiDocumentMapper";
+import type { MultiDocumentState } from "../../states/objects/flowchart/multiDocument/MultiDocumentState";
+import { isValidMultiDocumentState } from "../../states/objects/flowchart/multiDocument/validateMultiDocumentState";
 import {
 	offPageConnectorToDoc,
 	offPageConnectorToState,
@@ -313,6 +352,12 @@ import {
 } from "../../states/objects/flowchart/stadium/StadiumMapper";
 import type { StadiumState } from "../../states/objects/flowchart/stadium/StadiumState";
 import { isValidStadiumState } from "../../states/objects/flowchart/stadium/validateStadiumState";
+import {
+	storedDataToDoc,
+	storedDataToState,
+} from "../../states/objects/flowchart/storedData/StoredDataMapper";
+import type { StoredDataState } from "../../states/objects/flowchart/storedData/StoredDataState";
+import { isValidStoredDataState } from "../../states/objects/flowchart/storedData/validateStoredDataState";
 import {
 	subroutineToDoc,
 	subroutineToState,
@@ -408,8 +453,10 @@ import { EllipseIcon } from "../ui/icons/EllipseIcon";
 import { ExtractIcon } from "../ui/icons/ExtractIcon";
 import { FrameIcon } from "../ui/icons/FrameIcon";
 import { HexagonIcon } from "../ui/icons/HexagonIcon";
+import { LoopLimitIcon } from "../ui/icons/LoopLimitIcon";
 import { ManualInputIcon } from "../ui/icons/ManualInputIcon";
 import { MarkdownRectIcon } from "../ui/icons/MarkdownRectIcon";
+import { MultiDocumentIcon } from "../ui/icons/MultiDocumentIcon";
 import { OffPageConnectorIcon } from "../ui/icons/OffPageConnectorIcon";
 import { OnPageConnectorIcon } from "../ui/icons/OnPageConnectorIcon";
 import { ParallelogramIcon } from "../ui/icons/ParallelogramIcon";
@@ -418,6 +465,7 @@ import { PolylineIcon } from "../ui/icons/PolylineIcon";
 import { RectIcon } from "../ui/icons/RectIcon";
 import { StadiumIcon } from "../ui/icons/StadiumIcon";
 import { StickyIcon } from "../ui/icons/StickyIcon";
+import { StoredDataIcon } from "../ui/icons/StoredDataIcon";
 import { SubroutineIcon } from "../ui/icons/SubroutineIcon";
 import { TrapezoidIcon } from "../ui/icons/TrapezoidIcon";
 import { ZoneIcon } from "../ui/icons/ZoneIcon";
@@ -774,6 +822,40 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			},
 		}),
 
+		multiDocument: defineObject({
+			mapper: { toDoc: multiDocumentToDoc, toState: multiDocumentToState },
+			features: MultiDocumentFeatures,
+			component: MultiDocument,
+			textRegion: calcMultiDocumentTextRegion,
+			outline: multiDocumentOutline,
+			behavior: createFrameBehavior<MultiDocumentState>(),
+			menuFactory: (_state) => [
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: false },
+					],
+				},
+				{
+					id: "text",
+					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				},
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidMultiDocumentState,
+			shapeLibrary: {
+				factory: MultiDocumentShapeFactory,
+				previewRenderer: MultiDocumentPreview,
+				presets: MultiDocumentShapePresets,
+				presetIcons: { multiDocument: MultiDocumentIcon },
+			},
+		}),
+
 		actor: defineObject({
 			mapper: { toDoc: actorToDoc, toState: actorToState },
 			features: ActorFeatures,
@@ -872,6 +954,40 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				previewRenderer: DbPreview,
 				presets: DbShapePresets,
 				presetIcons: { db: DbIcon },
+			},
+		}),
+
+		storedData: defineObject({
+			mapper: { toDoc: storedDataToDoc, toState: storedDataToState },
+			features: StoredDataFeatures,
+			component: StoredData,
+			textRegion: calcStoredDataTextRegion,
+			outline: storedDataOutline,
+			behavior: createFrameBehavior<StoredDataState>(),
+			menuFactory: (_state) => [
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: false },
+					],
+				},
+				{
+					id: "text",
+					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				},
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidStoredDataState,
+			shapeLibrary: {
+				factory: StoredDataShapeFactory,
+				previewRenderer: StoredDataPreview,
+				presets: StoredDataShapePresets,
+				presetIcons: { storedData: StoredDataIcon },
 			},
 		}),
 
@@ -1083,6 +1199,40 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				previewRenderer: DelayPreview,
 				presets: DelayShapePresets,
 				presetIcons: { delay: DelayIcon },
+			},
+		}),
+
+		loopLimit: defineObject({
+			mapper: { toDoc: loopLimitToDoc, toState: loopLimitToState },
+			features: LoopLimitFeatures,
+			component: LoopLimit,
+			textRegion: calcLoopLimitTextRegion,
+			outline: loopLimitOutline,
+			behavior: createFrameBehavior<LoopLimitState>(),
+			menuFactory: (_state) => [
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: false },
+					],
+				},
+				{
+					id: "text",
+					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				},
+				{
+					id: "transform",
+					items: [{ type: "aspectRatio" }],
+				},
+			],
+			validateState: isValidLoopLimitState,
+			shapeLibrary: {
+				factory: LoopLimitShapeFactory,
+				previewRenderer: LoopLimitPreview,
+				presets: LoopLimitShapePresets,
+				presetIcons: { loopLimit: LoopLimitIcon },
 			},
 		}),
 
