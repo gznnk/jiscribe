@@ -95,4 +95,36 @@ test.describe("flowchart パレット", () => {
 			),
 		).toBe("polygon");
 	});
+
+	test("multiDocument / storedData / loopLimit がフライアウトから作成できる", async ({
+		canvas,
+	}) => {
+		// multiDocument は3枚重ねの複数要素描画（data-kind は g にのみ付く）
+		expect(
+			await createFromFlyout(
+				canvas,
+				"multiDocument",
+				{ x: 300, y: 220 },
+				{ x: 440, y: 320 },
+			),
+		).toBe("g");
+
+		expect(
+			await createFromFlyout(
+				canvas,
+				"storedData",
+				{ x: 480, y: 220 },
+				{ x: 620, y: 300 },
+			),
+		).toBe("path");
+
+		expect(
+			await createFromFlyout(
+				canvas,
+				"loopLimit",
+				{ x: 300, y: 360 },
+				{ x: 440, y: 440 },
+			),
+		).toBe("polygon");
+	});
 });

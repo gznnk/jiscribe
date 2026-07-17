@@ -1,4 +1,4 @@
-import type { Point } from "@workspace/geometry";
+import type { Point, TransformedFrame } from "@workspace/geometry";
 import { useMemo } from "react";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
@@ -21,11 +21,36 @@ export type ResolvedConnectorPoints = {
 };
 
 /**
+ * Fixed-length dependency tuple of the fields the route resolution actually
+ * reads from an endpoint owner. Non-geometry edits (fill / text / ...) clone
+ * the owner but keep these values, so keying the memo on them skips the
+ * re-route (#214).
+ * Connectable types are all frame-based today; if poly shapes ever become
+ * connectable, `points` must be added here.
+ */
+const getOwnerGeometryDeps = (obj: ObjectState | null) => {
+	const frame = obj as (ObjectState & Partial<TransformedFrame>) | null;
+	return [
+		obj?.id,
+		obj?.type,
+		obj?.features,
+		frame?.cx,
+		frame?.cy,
+		frame?.width,
+		frame?.height,
+		frame?.rotation,
+		frame?.scaleX,
+		frame?.scaleY,
+	] as const;
+};
+
+/**
  * Custom hook: Resolves connector endpoints with optimized memoization.
  *
  * Takes the source/target owner objects directly (the caller extracts them from the
- * objects map), so the memoization only re-runs when those specific objects change,
- * not when any object in the canvas changes.
+ * objects map), and the memoization is keyed on the geometry values the resolution
+ * reads — not the object references — so it only re-runs when the route can actually
+ * change, not on non-geometry edits or unrelated canvas changes.
  *
  * The polyline point list `points` (source → ...waypoints → target) is assembled and
  * returned inside the same useMemo. This keeps the `points` reference stable so the
@@ -44,8 +69,9 @@ export const useResolvedConnectorPoints = (
 ): ResolvedConnectorPoints | null => {
 	const outlineRegistry = useShapeOutlineRegistry();
 
-	// Memoize based on connector state and the specific objects it references
-	// This avoids re-calculation when unrelated objects change
+	// Keyed on the values the resolution reads (connector endpoints / routing and
+	// the owners' geometry) instead of the object references: property edits clone
+	// the connector and the owners without changing geometry (#214).
 	return useMemo(() => {
 		const resolved = resolveConnectorPoints(
 			connectorState,
@@ -61,5 +87,15 @@ export const useResolvedConnectorPoints = (
 			target: resolved.target,
 			points: [resolved.source, ...resolved.waypoints, resolved.target],
 		};
-	}, [connectorState, sourceObj, targetObj, outlineRegistry]);
+		/* eslint-disable react-hooks/exhaustive-deps */
+	}, [
+		connectorState.source,
+		connectorState.target,
+		connectorState.points,
+		connectorState.routing,
+		...getOwnerGeometryDeps(sourceObj),
+		...getOwnerGeometryDeps(targetObj),
+		outlineRegistry,
+	]);
+	/* eslint-enable react-hooks/exhaustive-deps */
 };

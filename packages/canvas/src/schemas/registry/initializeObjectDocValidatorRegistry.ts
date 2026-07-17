@@ -25,14 +25,20 @@ import { ExtractFeatures } from "../objects/flowchart/extract/ExtractDoc";
 import { validateExtractDoc } from "../objects/flowchart/extract/validateExtractDoc";
 import { HexagonFeatures } from "../objects/flowchart/hexagon/HexagonDoc";
 import { validateHexagonDoc } from "../objects/flowchart/hexagon/validateHexagonDoc";
+import { LoopLimitFeatures } from "../objects/flowchart/loopLimit/LoopLimitDoc";
+import { validateLoopLimitDoc } from "../objects/flowchart/loopLimit/validateLoopLimitDoc";
 import { ManualInputFeatures } from "../objects/flowchart/manualInput/ManualInputDoc";
 import { validateManualInputDoc } from "../objects/flowchart/manualInput/validateManualInputDoc";
+import { MultiDocumentFeatures } from "../objects/flowchart/multiDocument/MultiDocumentDoc";
+import { validateMultiDocumentDoc } from "../objects/flowchart/multiDocument/validateMultiDocumentDoc";
 import { OffPageConnectorFeatures } from "../objects/flowchart/offPageConnector/OffPageConnectorDoc";
 import { validateOffPageConnectorDoc } from "../objects/flowchart/offPageConnector/validateOffPageConnectorDoc";
 import { ParallelogramFeatures } from "../objects/flowchart/parallelogram/ParallelogramDoc";
 import { validateParallelogramDoc } from "../objects/flowchart/parallelogram/validateParallelogramDoc";
 import { StadiumFeatures } from "../objects/flowchart/stadium/StadiumDoc";
 import { validateStadiumDoc } from "../objects/flowchart/stadium/validateStadiumDoc";
+import { StoredDataFeatures } from "../objects/flowchart/storedData/StoredDataDoc";
+import { validateStoredDataDoc } from "../objects/flowchart/storedData/validateStoredDataDoc";
 import { SubroutineFeatures } from "../objects/flowchart/subroutine/SubroutineDoc";
 import { validateSubroutineDoc } from "../objects/flowchart/subroutine/validateSubroutineDoc";
 import { TrapezoidFeatures } from "../objects/flowchart/trapezoid/TrapezoidDoc";
@@ -109,6 +115,11 @@ export const initializeObjectDocValidatorRegistry = (): void => {
 		validateDocumentDoc,
 		DocumentFeatures,
 	);
+	objectDocValidatorRegistry.register(
+		"multiDocument",
+		validateMultiDocumentDoc,
+		MultiDocumentFeatures,
+	);
 	objectDocValidatorRegistry.register("actor", validateActorDoc, ActorFeatures);
 	objectDocValidatorRegistry.register(
 		"callout",
@@ -116,6 +127,11 @@ export const initializeObjectDocValidatorRegistry = (): void => {
 		CalloutFeatures,
 	);
 	objectDocValidatorRegistry.register("db", validateDbDoc, DbFeatures);
+	objectDocValidatorRegistry.register(
+		"storedData",
+		validateStoredDataDoc,
+		StoredDataFeatures,
+	);
 	objectDocValidatorRegistry.register(
 		"subroutine",
 		validateSubroutineDoc,
@@ -138,6 +154,11 @@ export const initializeObjectDocValidatorRegistry = (): void => {
 		ContainerFeatures,
 	);
 	objectDocValidatorRegistry.register("delay", validateDelayDoc, DelayFeatures);
+	objectDocValidatorRegistry.register(
+		"loopLimit",
+		validateLoopLimitDoc,
+		LoopLimitFeatures,
+	);
 	objectDocValidatorRegistry.register(
 		"display",
 		validateDisplayDoc,

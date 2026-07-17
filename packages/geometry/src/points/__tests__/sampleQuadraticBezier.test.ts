@@ -23,4 +23,21 @@ describe("sampleQuadraticBezier", () => {
 		expect(points[1].x).toBeCloseTo(1);
 		expect(points[1].y).toBeCloseTo(1);
 	});
+
+	it("restricts sampling to [tStart, tEnd] when given", () => {
+		// Same curve: B(0.25) = (0.5, 0.75), B(0.5) = (1, 1).
+		const points = sampleQuadraticBezier(
+			{ x: 0, y: 0 },
+			{ x: 1, y: 2 },
+			{ x: 2, y: 0 },
+			2,
+			0.25,
+			0.5,
+		);
+		expect(points).toHaveLength(3);
+		expect(points[0].x).toBeCloseTo(0.5);
+		expect(points[0].y).toBeCloseTo(0.75);
+		expect(points[2].x).toBeCloseTo(1);
+		expect(points[2].y).toBeCloseTo(1);
+	});
 });

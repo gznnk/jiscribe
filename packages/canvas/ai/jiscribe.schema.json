@@ -90,15 +90,18 @@
 				{ "$ref": "#/$defs/HexagonDoc" },
 				{ "$ref": "#/$defs/CloudDoc" },
 				{ "$ref": "#/$defs/DocumentDoc" },
+				{ "$ref": "#/$defs/MultiDocumentDoc" },
 				{ "$ref": "#/$defs/ActorDoc" },
 				{ "$ref": "#/$defs/CalloutDoc" },
 				{ "$ref": "#/$defs/DbDoc" },
+				{ "$ref": "#/$defs/StoredDataDoc" },
 				{ "$ref": "#/$defs/SubroutineDoc" },
 				{ "$ref": "#/$defs/TrapezoidDoc" },
 				{ "$ref": "#/$defs/ManualInputDoc" },
 				{ "$ref": "#/$defs/CardDoc" },
 				{ "$ref": "#/$defs/ContainerDoc" },
 				{ "$ref": "#/$defs/DelayDoc" },
+				{ "$ref": "#/$defs/LoopLimitDoc" },
 				{ "$ref": "#/$defs/DisplayDoc" },
 				{ "$ref": "#/$defs/ExtractDoc" },
 				{ "$ref": "#/$defs/CrossDoc" },
@@ -124,15 +127,18 @@
 				{ "$ref": "#/$defs/HexagonDoc" },
 				{ "$ref": "#/$defs/CloudDoc" },
 				{ "$ref": "#/$defs/DocumentDoc" },
+				{ "$ref": "#/$defs/MultiDocumentDoc" },
 				{ "$ref": "#/$defs/ActorDoc" },
 				{ "$ref": "#/$defs/CalloutDoc" },
 				{ "$ref": "#/$defs/DbDoc" },
+				{ "$ref": "#/$defs/StoredDataDoc" },
 				{ "$ref": "#/$defs/SubroutineDoc" },
 				{ "$ref": "#/$defs/TrapezoidDoc" },
 				{ "$ref": "#/$defs/ManualInputDoc" },
 				{ "$ref": "#/$defs/CardDoc" },
 				{ "$ref": "#/$defs/ContainerDoc" },
 				{ "$ref": "#/$defs/DelayDoc" },
+				{ "$ref": "#/$defs/LoopLimitDoc" },
 				{ "$ref": "#/$defs/DisplayDoc" },
 				{ "$ref": "#/$defs/ExtractDoc" },
 				{ "$ref": "#/$defs/CrossDoc" },
@@ -502,6 +508,62 @@
 					"description": "Must be \"delay\".",
 					"type": "string",
 					"const": "delay"
+				},
+				"meta": { "$ref": "#/$defs/MetaDoc" },
+				"x": {
+					"description": "Left-edge X coordinate of the bounding box.",
+					"type": "number"
+				},
+				"y": {
+					"description": "Top-edge Y coordinate of the bounding box.",
+					"type": "number"
+				},
+				"width": {
+					"description": "Bounding-box width in pixels.",
+					"type": "number",
+					"minimum": 0
+				},
+				"height": {
+					"description": "Bounding-box height in pixels.",
+					"type": "number",
+					"minimum": 0
+				},
+				"stroke": { "$ref": "#/$defs/StrokeStyle/properties/stroke" },
+				"strokeWidth": { "$ref": "#/$defs/StrokeStyle/properties/strokeWidth" },
+				"strokeDashType": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+				},
+				"fill": { "$ref": "#/$defs/FillStyle/properties/fill" },
+				"text": { "$ref": "#/$defs/TextStyle/properties/text" },
+				"textType": { "$ref": "#/$defs/TextStyle/properties/textType" },
+				"textAlign": { "$ref": "#/$defs/TextStyle/properties/textAlign" },
+				"verticalAlign": {
+					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
+				},
+				"fontColor": { "$ref": "#/$defs/TextStyle/properties/fontColor" },
+				"fontSize": { "$ref": "#/$defs/TextStyle/properties/fontSize" },
+				"fontFamily": { "$ref": "#/$defs/TextStyle/properties/fontFamily" },
+				"fontWeight": { "$ref": "#/$defs/TextStyle/properties/fontWeight" },
+				"rotation": { "$ref": "#/$defs/TransformStyle/properties/rotation" },
+				"flipX": { "$ref": "#/$defs/TransformStyle/properties/flipX" },
+				"flipY": { "$ref": "#/$defs/TransformStyle/properties/flipY" },
+				"lockAspectRatio": {
+					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				}
+			}
+		},
+
+		"LoopLimitDoc": {
+			"description": "Loop-limit shape (a rectangle with both top corners cut off), marking the start of a loop in flowcharts; set \"flipY\": true to mark the loop end. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text sits below the top bevels.",
+			"type": "object",
+			"required": ["id", "type", "x", "y", "width", "height"],
+			"additionalProperties": false,
+			"properties": {
+				"id": { "description": "Unique identifier.", "type": "string" },
+				"type": {
+					"description": "Must be \"loopLimit\".",
+					"type": "string",
+					"const": "loopLimit"
 				},
 				"meta": { "$ref": "#/$defs/MetaDoc" },
 				"x": {
@@ -1157,6 +1219,62 @@
 			}
 		},
 
+		"StoredDataDoc": {
+			"description": "Stored-data shape (a rectangle whose left/right edges are arcs both bowing left, like a drum segment) — the generic storage symbol for files / caches that are not specifically a database (use DbDoc for databases). Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is laid out between the two side arcs.",
+			"type": "object",
+			"required": ["id", "type", "x", "y", "width", "height"],
+			"additionalProperties": false,
+			"properties": {
+				"id": { "description": "Unique identifier.", "type": "string" },
+				"type": {
+					"description": "Must be \"storedData\".",
+					"type": "string",
+					"const": "storedData"
+				},
+				"meta": { "$ref": "#/$defs/MetaDoc" },
+				"x": {
+					"description": "Left-edge X coordinate of the bounding box.",
+					"type": "number"
+				},
+				"y": {
+					"description": "Top-edge Y coordinate of the bounding box.",
+					"type": "number"
+				},
+				"width": {
+					"description": "Bounding-box width in pixels.",
+					"type": "number",
+					"minimum": 0
+				},
+				"height": {
+					"description": "Bounding-box height in pixels.",
+					"type": "number",
+					"minimum": 0
+				},
+				"stroke": { "$ref": "#/$defs/StrokeStyle/properties/stroke" },
+				"strokeWidth": { "$ref": "#/$defs/StrokeStyle/properties/strokeWidth" },
+				"strokeDashType": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+				},
+				"fill": { "$ref": "#/$defs/FillStyle/properties/fill" },
+				"text": { "$ref": "#/$defs/TextStyle/properties/text" },
+				"textType": { "$ref": "#/$defs/TextStyle/properties/textType" },
+				"textAlign": { "$ref": "#/$defs/TextStyle/properties/textAlign" },
+				"verticalAlign": {
+					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
+				},
+				"fontColor": { "$ref": "#/$defs/TextStyle/properties/fontColor" },
+				"fontSize": { "$ref": "#/$defs/TextStyle/properties/fontSize" },
+				"fontFamily": { "$ref": "#/$defs/TextStyle/properties/fontFamily" },
+				"fontWeight": { "$ref": "#/$defs/TextStyle/properties/fontWeight" },
+				"rotation": { "$ref": "#/$defs/TransformStyle/properties/rotation" },
+				"flipX": { "$ref": "#/$defs/TransformStyle/properties/flipX" },
+				"flipY": { "$ref": "#/$defs/TransformStyle/properties/flipY" },
+				"lockAspectRatio": {
+					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				}
+			}
+		},
+
 		"DocumentDoc": {
 			"description": "Document shape (rect with a wavy bottom edge), typically used for reports/files in flowcharts or deliverables in business diagrams. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a document. Text is laid out above the bottom wave band.",
 			"type": "object",
@@ -1168,6 +1286,62 @@
 					"description": "Must be \"document\".",
 					"type": "string",
 					"const": "document"
+				},
+				"meta": { "$ref": "#/$defs/MetaDoc" },
+				"x": {
+					"description": "Left-edge X coordinate of the bounding box.",
+					"type": "number"
+				},
+				"y": {
+					"description": "Top-edge Y coordinate of the bounding box.",
+					"type": "number"
+				},
+				"width": {
+					"description": "Bounding-box width in pixels.",
+					"type": "number",
+					"minimum": 0
+				},
+				"height": {
+					"description": "Bounding-box height in pixels.",
+					"type": "number",
+					"minimum": 0
+				},
+				"stroke": { "$ref": "#/$defs/StrokeStyle/properties/stroke" },
+				"strokeWidth": { "$ref": "#/$defs/StrokeStyle/properties/strokeWidth" },
+				"strokeDashType": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+				},
+				"fill": { "$ref": "#/$defs/FillStyle/properties/fill" },
+				"text": { "$ref": "#/$defs/TextStyle/properties/text" },
+				"textType": { "$ref": "#/$defs/TextStyle/properties/textType" },
+				"textAlign": { "$ref": "#/$defs/TextStyle/properties/textAlign" },
+				"verticalAlign": {
+					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
+				},
+				"fontColor": { "$ref": "#/$defs/TextStyle/properties/fontColor" },
+				"fontSize": { "$ref": "#/$defs/TextStyle/properties/fontSize" },
+				"fontFamily": { "$ref": "#/$defs/TextStyle/properties/fontFamily" },
+				"fontWeight": { "$ref": "#/$defs/TextStyle/properties/fontWeight" },
+				"rotation": { "$ref": "#/$defs/TransformStyle/properties/rotation" },
+				"flipX": { "$ref": "#/$defs/TransformStyle/properties/flipX" },
+				"flipY": { "$ref": "#/$defs/TransformStyle/properties/flipY" },
+				"lockAspectRatio": {
+					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				}
+			}
+		},
+
+		"MultiDocumentDoc": {
+			"description": "Multi-document shape (three stacked document sheets), used for report batches / file sets in flowcharts. The front sheet sits at the bottom-left and the two back sheets step toward the top-right. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is confined to the front sheet, above its bottom wave band.",
+			"type": "object",
+			"required": ["id", "type", "x", "y", "width", "height"],
+			"additionalProperties": false,
+			"properties": {
+				"id": { "description": "Unique identifier.", "type": "string" },
+				"type": {
+					"description": "Must be \"multiDocument\".",
+					"type": "string",
+					"const": "multiDocument"
 				},
 				"meta": { "$ref": "#/$defs/MetaDoc" },
 				"x": {

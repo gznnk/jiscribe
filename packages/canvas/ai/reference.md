@@ -61,14 +61,17 @@ In addition to `name` and `description`, `meta` may hold any custom keys.
 | `hexagon`          | Hexagon (preparation)              | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `cloud`            | Cloud (external/fuzzy)             | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `document`         | Document (wavy bottom)             | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `multiDocument`    | Multi-document (stacked sheets)    | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `actor`            | Actor (stick figure)               | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `callout`          | Speech-bubble callout              | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `db`               | Database cylinder                  | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `storedData`       | Stored data (bowed sides)          | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `subroutine`       | Predefined process (subroutine)    | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `trapezoid`        | Trapezoid (manual operation)       | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `manualInput`      | Manual input (sloped top)          | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `card`             | Card (cut top-left corner)         | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `delay`            | Delay (D-shape)                    | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `loopLimit`        | Loop limit (cut top corners)       | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `display`          | Display (pointed left/round right) | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `extract`          | Extract (apex up)                  | `x`, `y`, `width`, `height`             | Stroke, Fill, Transform (no text)     |
 | `cross`            | Cross / plus                       | `x`, `y`, `width`, `height`             | Stroke, Fill, Transform (no text)     |
@@ -415,22 +418,25 @@ It has **no Radius** (`rx`).
 
 ---
 
-### Flowchart box shapes (`subroutine` / `trapezoid` / `manualInput` / `card` / `delay` / `display` / `extract` / `cross` / `offPageConnector`)
+### Flowchart box shapes (`multiDocument` / `storedData` / `subroutine` / `trapezoid` / `manualInput` / `card` / `delay` / `loopLimit` / `display` / `extract` / `cross` / `offPageConnector`)
 
-All nine use the **same rect-based geometry** (top-left `x`,`y` + `width`,`height`)
+All twelve use the **same rect-based geometry** (top-left `x`,`y` + `width`,`height`)
 and the same Stroke / Fill / Transform styles as `rect`; only the drawn outline
-differs. Seven of them also take Text like `rect`; **`extract` and `cross` hold no
+differs. Ten of them also take Text like `rect`; **`extract` and `cross` hold no
 text** (they are markers — omit `text` and the font fields). They are all
 **connectable** like `rect` and have **no Radius** (`rx`). Set `type` to the value
 below and give a bounding box.
 
 | `type`             | Outline                                      | Typical use                               |
 | ------------------ | -------------------------------------------- | ----------------------------------------- |
+| `multiDocument`    | Three stacked wavy-bottom sheets             | Report batch / file set                   |
+| `storedData`       | Rectangle with both side edges bowed left    | Generic stored data (file / cache)        |
 | `subroutine`       | Rectangle with a vertical bar near each side | Predefined process / call                 |
 | `trapezoid`        | Wide top, narrow bottom                      | Manual operation                          |
 | `manualInput`      | Top edge slopes up toward the right          | Manual / keyed input                      |
 | `card`             | Rectangle with the top-left corner cut off   | Punched-card style data                   |
 | `delay`            | Rectangle whose right edge is a semicircle   | Wait / delay                              |
+| `loopLimit`        | Rectangle with both top corners cut off      | Loop start (`"flipY": true` for the end)  |
 | `display`          | Pointed left edge, rounded right cap         | Output to a display                       |
 | `extract`          | Upward triangle, apex at the top (no text)   | Extract / merge / marker                  |
 | `cross`            | Plus sign (no text)                          | Junction / emphasis marker                |
@@ -739,8 +745,8 @@ Options for `anchor.kind`:
 `ConnectPointId` options: `"topCenter"` / `"rightCenter"` / `"bottomCenter"` / `"leftCenter"`. For the center, use `{ "kind": "center" }` (not a `connectPoint`).
 
 The object referenced by `owner.id` may be **only a box shape (`rect`, `ellipse`, `diamond`,
-`stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `actor`, `callout`, `db`,
-`subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `display`, `extract`, `cross`, `offPageConnector`, `container`, or
+`stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `multiDocument`, `actor`, `callout`, `db`, `storedData`,
+`subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `loopLimit`, `display`, `extract`, `cross`, `offPageConnector`, `container`, or
 `sticky`)** — these are the connectable types. A `polyline`, `polygon`, `group`, `svg`, or `connector`
 **cannot** be an endpoint owner; the document is rejected if one is referenced. To
 anchor a connector near such a shape, use a `FreeEndpointRef` instead.
@@ -775,7 +781,7 @@ diagram adapts to light/dark themes.
 
 ### Stroke style
 
-Applies to every box shape except `sticky` (`rect`, `ellipse`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `actor`, `callout`, `db`, `subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `display`, `extract`, `cross`, `offPageConnector`, `container`), plus `polyline`, `polygon`, `connector`.
+Applies to every box shape except `sticky` (`rect`, `ellipse`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `multiDocument`, `actor`, `callout`, `db`, `storedData`, `subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `loopLimit`, `display`, `extract`, `cross`, `offPageConnector`, `container`), plus `polyline`, `polygon`, `connector`.
 
 | Field            | Type             | Default   | Description                                              |
 | ---------------- | ---------------- | --------- | -------------------------------------------------------- |
@@ -789,7 +795,7 @@ See [Color values](#color-values-stroke--fontcolor--fill) for `"auto"`.
 
 ### Fill style
 
-Applies to every box shape (`rect`, `ellipse`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `actor`, `callout`, `db`, `sticky`), plus `polygon`. For `actor`, the fill paints the head circle only.
+Applies to every box shape (`rect`, `ellipse`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `multiDocument`, `actor`, `callout`, `db`, `storedData`, `subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `loopLimit`, `display`, `extract`, `cross`, `offPageConnector`, `container`, `sticky`), plus `polygon`. For `actor`, the fill paints the head circle only.
 
 | Field  | Type     | Default         | Description                                              |
 | ------ | -------- | --------------- | -------------------------------------------------------- |
@@ -797,7 +803,7 @@ Applies to every box shape (`rect`, `ellipse`, `diamond`, `stadium`, `parallelog
 
 ### Text style
 
-Applies to every box shape: `rect`, `ellipse`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `actor`, `callout`, `db`, `sticky`.
+Applies to every box shape except `extract` and `cross` (which hold no text): `rect`, `ellipse`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `multiDocument`, `actor`, `callout`, `db`, `storedData`, `subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `loopLimit`, `display`, `offPageConnector`, `container`, `sticky`.
 
 | Field           | Type            | Default          | Description                                                                       |
 | --------------- | --------------- | ---------------- | --------------------------------------------------------------------------------- |
@@ -818,7 +824,7 @@ Applies to every box shape: `rect`, `ellipse`, `diamond`, `stadium`, `parallelog
 
 ### Transform style
 
-Applies to every box shape (`rect`, `ellipse`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `actor`, `callout`, `db`, `sticky`) and `group`. All optional.
+Applies to every box shape (`rect`, `ellipse`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `multiDocument`, `actor`, `callout`, `db`, `storedData`, `subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `loopLimit`, `display`, `extract`, `cross`, `offPageConnector`, `container`, `sticky`) and `group`. All optional.
 
 | Field             | Type      | Default | Description                        |
 | ----------------- | --------- | ------- | ---------------------------------- |
