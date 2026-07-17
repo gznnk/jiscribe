@@ -1,6 +1,10 @@
 import { isNumber, isObject } from "@workspace/basic-validators";
 
-import { CALLOUT_TAIL_SIDES, CalloutFeatures } from "./CalloutDoc";
+import {
+	CALLOUT_TAIL_SIDES,
+	CalloutFeatures,
+	isCalloutTailSide,
+} from "./CalloutDoc";
 import type { SemanticDiagnostic } from "../../../canvas/validators/types";
 import type { ObjectDocValidateFn } from "../../../registry/ObjectDocValidatorRegistry";
 import { createFrameDocValidator } from "../../utils/createFrameDocValidator";
@@ -15,7 +19,7 @@ const validateTail: ObjectDocValidateFn = (o, path) => {
 	}
 	const tail = o.tail as Record<string, unknown>;
 	const errors: SemanticDiagnostic[] = [];
-	if (!CALLOUT_TAIL_SIDES.includes(tail.side as never)) {
+	if (!isCalloutTailSide(tail.side)) {
 		errors.push({
 			path: `${path}.tail.side`,
 			message: `must be one of ${CALLOUT_TAIL_SIDES.map((side) => `"${side}"`).join(" | ")}`,

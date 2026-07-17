@@ -40,13 +40,18 @@ export type CalloutTail = {
 	position: number;
 };
 
-/** Tail used when the field is absent (matches the historical fixed tail). */
+/**
+ * Tail used when the field is absent: down-left, close to (but not identical
+ * with) the historical fixed tail — the base now sits in the start slot
+ * (0.2w–0.4w) instead of the old hand-tuned 0.25w–0.45w.
+ */
 export const CALLOUT_TAIL_DEFAULT: CalloutTail = {
 	side: "bottom",
 	position: 0.2,
 };
 
-const isCalloutTailSide = isEnum(CALLOUT_TAIL_SIDES);
+/** Type guard for CalloutTailSide. */
+export const isCalloutTailSide = isEnum(CALLOUT_TAIL_SIDES);
 
 /** Type guard for CalloutTail (side enum + position in [0, 1]). */
 export const isCalloutTail = (value: unknown): value is CalloutTail => {
