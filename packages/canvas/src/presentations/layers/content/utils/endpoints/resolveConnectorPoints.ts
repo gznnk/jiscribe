@@ -24,7 +24,7 @@ const resolveShapeOutline = (
 	if (!provider || !isTransformedFrame(obj)) {
 		return null;
 	}
-	return provider({ width: obj.width, height: obj.height });
+	return provider(obj);
 };
 
 /**

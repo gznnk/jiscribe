@@ -59,7 +59,7 @@ const ConnectionAnchorsLayerComponent: React.FC<
 		if (!provider || !isTransformedFrame(obj)) {
 			return null;
 		}
-		return provider({ width: obj.width, height: obj.height });
+		return provider(obj);
 	};
 
 	// Do not render anchors while text editing

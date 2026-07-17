@@ -371,6 +371,7 @@ import {
 import type { SvgState } from "../../states/objects/primitives/svg/SvgState";
 import { isValidSvgState } from "../../states/objects/primitives/svg/validateSvgState";
 import type { ObjectStateValidateFn } from "../../states/registry/ObjectStateValidatorRegistry";
+import { TailTipControlHandler } from "../gestures/handlers/controls/callout/TailTipControlHandler";
 import { HeaderHeightControlHandler } from "../gestures/handlers/controls/container/HeaderHeightControlHandler";
 import { createFrameBehavior } from "../gestures/handlers/objects/base/FrameController";
 import {
@@ -395,6 +396,7 @@ import {
 } from "../gestures/handlers/objects/primitives/PolylineController";
 import type { ObjectBehaviorEntry } from "../gestures/registry/ObjectBehaviorTypes";
 import type { SelectionControlDefinition } from "../registry/SelectionControlTypes";
+import { CalloutTailTipControl } from "../ui/controls/CalloutTailControls";
 import { ContainerHeaderHeightControl } from "../ui/controls/ContainerHeaderControls";
 import { ActorIcon } from "../ui/icons/ActorIcon";
 import { BoundaryIcon } from "../ui/icons/BoundaryIcon";
@@ -839,6 +841,12 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				},
 			],
 			validateState: isValidCalloutState,
+			selectionControls: [
+				{
+					Component: CalloutTailTipControl,
+					handler: new TailTipControlHandler(),
+				},
+			],
 			shapeLibrary: {
 				factory: CalloutShapeFactory,
 				previewRenderer: CalloutPreview,

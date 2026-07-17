@@ -1,4 +1,8 @@
-import { sampleQuadraticBezier, type Point } from "@workspace/geometry";
+import {
+	sampleQuadraticBezier,
+	type Dimensions,
+	type Point,
+} from "@workspace/geometry";
 
 import { DOCUMENT_WAVE_RATIO } from "../../../../schemas/objects/flowchart/document/DocumentDoc";
 import type { ShapeOutlineProvider } from "../../registry/ShapeOutlineRegistry";
@@ -9,7 +13,10 @@ import { OUTLINE_CURVE_SEGMENTS } from "../../utils/outlineHelpers";
  * Béziers). `.slice(1)` drops each segment's start point (already emitted).
  * Renderer draws the equivalent path (buildDocumentPath).
  */
-export const documentOutline: ShapeOutlineProvider = ({ width, height }) => {
+export const documentOutline: ShapeOutlineProvider<Dimensions> = ({
+	width,
+	height,
+}) => {
 	const halfWidth = width / 2;
 	const halfHeight = height / 2;
 	const amplitude = height * DOCUMENT_WAVE_RATIO;

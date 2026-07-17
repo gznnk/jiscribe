@@ -1,5 +1,6 @@
 import { buildCalloutPath } from "./buildCalloutPath";
 import { CalloutElement } from "./CalloutStyled";
+import { resolveCalloutTail } from "./calloutTailGeometry";
 import type { CalloutState } from "../../../../states/objects/annotations/callout/CalloutState";
 import { createFrameObject } from "../../base/createFrameObject";
 
@@ -12,6 +13,7 @@ export const Callout = createFrameObject<CalloutState>((state, shape) => (
 			-state.height / 2,
 			state.width,
 			state.height,
+			resolveCalloutTail(state),
 		)}
 	/>
 ));

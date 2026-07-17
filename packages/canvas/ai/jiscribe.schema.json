@@ -1498,7 +1498,7 @@
 		},
 
 		"CalloutDoc": {
-			"description": "Speech-bubble callout with a fixed tail pointing down-left, typically used for annotations and explanatory comments. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a bubble. The tail occupies the bottom quarter of the bounding box and text is laid out in the bubble body above it.",
+			"description": "Speech-bubble callout, typically used for annotations and explanatory comments. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a bubble. The tail stays inside the bounding box, occupying a quarter of it on its side; text is laid out in the bubble body beside it. Point the tail at the annotated object via `tail` (default: bottom edge, position 0.2).",
 			"type": "object",
 			"required": ["id", "type", "x", "y", "width", "height"],
 			"additionalProperties": false,
@@ -1510,6 +1510,25 @@
 					"const": "callout"
 				},
 				"meta": { "$ref": "#/$defs/MetaDoc" },
+				"tail": {
+					"description": "Tail placement: the tip sits on the bounding box's `side` edge at `position`. Choose the side facing the annotated object. The tail base stays in a fixed slot on that edge (left/top half vs right/bottom half, following the tip's half), so the tail always leans like a classic speech bubble. Omitted = bottom at 0.2.",
+					"type": "object",
+					"required": ["side", "position"],
+					"additionalProperties": false,
+					"properties": {
+						"side": {
+							"description": "Which edge of the bounding box the tail tip sits on.",
+							"type": "string",
+							"enum": ["top", "right", "bottom", "left"]
+						},
+						"position": {
+							"description": "Position of the tip along that edge (0 = left/top end, 1 = right/bottom end).",
+							"type": "number",
+							"minimum": 0,
+							"maximum": 1
+						}
+					}
+				},
 				"x": {
 					"description": "Left-edge X coordinate of the bounding box.",
 					"type": "number"
