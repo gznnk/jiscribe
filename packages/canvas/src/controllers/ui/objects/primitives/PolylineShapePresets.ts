@@ -1,4 +1,5 @@
-import type { ShapePreset } from "../../types/ShapePreset";
+import { PolylineIcon } from "./PolylineIcon";
+import type { ShapePreset } from "../types/ShapePreset";
 
 export const PolylineShapePresets: ShapePreset[] = [
 	{
@@ -6,5 +7,6 @@ export const PolylineShapePresets: ShapePreset[] = [
 		objectType: "polyline",
 		label: "Polyline",
 		categories: { basic: 30 },
+		icon: PolylineIcon,
 	},
 ];

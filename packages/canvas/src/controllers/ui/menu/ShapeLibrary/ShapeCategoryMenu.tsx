@@ -7,9 +7,9 @@ import {
 	ShapeCategoryContainer,
 	ShapeCategoryFlyout,
 } from "./ShapeLibraryStyled";
-import type { ShapePreset } from "../../../../schemas/objects/types/ShapePreset";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import { ChevronDownIcon } from "../../icons/ChevronDownIcon";
+import type { ShapePreset } from "../../objects/types/ShapePreset";
 
 type ShapeCategoryMenuProps = {
 	category: ShapeCategory;

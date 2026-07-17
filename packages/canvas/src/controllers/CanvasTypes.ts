@@ -1,11 +1,11 @@
 import type { BoundingBox, FrameKeyPoints, Point } from "@workspace/geometry";
 
 import type { DocCreationDefaults } from "../schemas/objects/types/DocCreationDefaults";
-import type { ShapePreset } from "../schemas/objects/types/ShapePreset";
 import type { CanvasState } from "../states/canvas/CanvasState";
 import type { DocSnapshot } from "../states/canvas/DocSnapshot";
 import type { Viewport } from "../states/canvas/Viewport";
 import type { ClipboardData } from "./commands/selection/ClipboardData";
+import type { ShapePreset } from "./ui/objects/types/ShapePreset";
 import type { ObjectState } from "../states/objects/base/ObjectState";
 import type { ConnectorState } from "../states/objects/connections/connector/ConnectorState";
 import type { GroupState } from "../states/objects/primitives/group/GroupState";

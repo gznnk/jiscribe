@@ -1,11 +1,11 @@
 import type { ComponentType } from "react";
 
-import type { ShapeIconProps } from "../../../../schemas/objects/types/ShapePreset";
-import { CalloutIcon } from "../../icons/CalloutIcon";
-import { CloudIcon } from "../../icons/CloudIcon";
-import { DiamondIcon } from "../../icons/DiamondIcon";
-import { FrameIcon } from "../../icons/FrameIcon";
-import { RectIcon } from "../../icons/RectIcon";
+import { CalloutIcon } from "../../objects/annotations/CalloutIcon";
+import { FrameIcon } from "../../objects/containers/FrameIcon";
+import { DiamondIcon } from "../../objects/flowchart/DiamondIcon";
+import { CloudIcon } from "../../objects/general/CloudIcon";
+import { RectIcon } from "../../objects/primitives/RectIcon";
+import type { ShapeIconProps } from "../../objects/types/ShapePreset";
 
 /**
  * A palette category shown as a submenu (flyout) button in the ShapeLibrary.

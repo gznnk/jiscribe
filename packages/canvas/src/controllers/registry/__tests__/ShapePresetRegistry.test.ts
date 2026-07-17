@@ -1,7 +1,9 @@
 import { describe, it, expect } from "vitest";
 
-import type { ShapePreset } from "../../../schemas/objects/types/ShapePreset";
+import type { ShapePreset } from "../../ui/objects/types/ShapePreset";
 import { createShapePresetRegistry } from "../ShapePresetRegistry";
+
+const DummyIcon = () => null;
 
 const preset = (
 	id: string,
@@ -11,6 +13,7 @@ const preset = (
 	objectType: "rect",
 	label: id,
 	categories,
+	icon: DummyIcon,
 });
 
 describe("ShapePresetRegistry", () => {

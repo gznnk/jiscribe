@@ -1,5 +1,7 @@
-import type { ShapePreset } from "../../types/ShapePreset";
-import { AUTO_COLOR } from "../../utils/autoColor";
+import { MarkdownRectIcon } from "./MarkdownRectIcon";
+import { RectIcon } from "./RectIcon";
+import { AUTO_COLOR } from "../../../../schemas/objects/utils/autoColor";
+import type { ShapePreset } from "../types/ShapePreset";
 
 export const RectShapePresets: ShapePreset[] = [
 	{
@@ -7,6 +9,7 @@ export const RectShapePresets: ShapePreset[] = [
 		objectType: "rect",
 		label: "Rectangle",
 		categories: { basic: 10 },
+		icon: RectIcon,
 	},
 	{
 		// Flowchart process box: a plain rectangle. It renders identically to
@@ -17,6 +20,7 @@ export const RectShapePresets: ShapePreset[] = [
 		label: "Process",
 		categories: { flowchart: 10 },
 		defaultOverrides: { width: 140, height: 80 },
+		icon: RectIcon,
 	},
 	{
 		id: "rect-markdown",
@@ -34,5 +38,6 @@ export const RectShapePresets: ShapePreset[] = [
 			fontColor: AUTO_COLOR,
 			text: "# Title\n\nWrite **markdown** here.",
 		},
+		icon: MarkdownRectIcon,
 	},
 ];

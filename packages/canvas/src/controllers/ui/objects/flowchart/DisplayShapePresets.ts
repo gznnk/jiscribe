@@ -1,4 +1,5 @@
-import type { ShapePreset } from "../../types/ShapePreset";
+import { DisplayIcon } from "./DisplayIcon";
+import type { ShapePreset } from "../types/ShapePreset";
 
 export const DisplayShapePresets: ShapePreset[] = [
 	{
@@ -6,5 +7,6 @@ export const DisplayShapePresets: ShapePreset[] = [
 		objectType: "display",
 		label: "Display",
 		categories: { flowchart: 80 },
+		icon: DisplayIcon,
 	},
 ];

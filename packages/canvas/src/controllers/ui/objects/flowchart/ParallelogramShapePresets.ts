@@ -1,4 +1,5 @@
-import type { ShapePreset } from "../../types/ShapePreset";
+import { ParallelogramIcon } from "./ParallelogramIcon";
+import type { ShapePreset } from "../types/ShapePreset";
 
 export const ParallelogramShapePresets: ShapePreset[] = [
 	{
@@ -6,5 +7,6 @@ export const ParallelogramShapePresets: ShapePreset[] = [
 		objectType: "parallelogram",
 		label: "Data",
 		categories: { flowchart: 50 },
+		icon: ParallelogramIcon,
 	},
 ];

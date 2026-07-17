@@ -1,4 +1,5 @@
-import type { ShapePreset } from "../../types/ShapePreset";
+import { DiamondIcon } from "./DiamondIcon";
+import type { ShapePreset } from "../types/ShapePreset";
 
 export const DiamondShapePresets: ShapePreset[] = [
 	{
@@ -8,5 +9,6 @@ export const DiamondShapePresets: ShapePreset[] = [
 		// geometric `diamond` (it only ever appears in the flowchart category).
 		label: "Decision",
 		categories: { flowchart: 20 },
+		icon: DiamondIcon,
 	},
 ];

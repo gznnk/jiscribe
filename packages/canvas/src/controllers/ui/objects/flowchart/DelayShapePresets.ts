@@ -1,4 +1,5 @@
-import type { ShapePreset } from "../../types/ShapePreset";
+import { DelayIcon } from "./DelayIcon";
+import type { ShapePreset } from "../types/ShapePreset";
 
 export const DelayShapePresets: ShapePreset[] = [
 	{
@@ -6,5 +7,6 @@ export const DelayShapePresets: ShapePreset[] = [
 		objectType: "delay",
 		label: "Delay",
 		categories: { flowchart: 150 },
+		icon: DelayIcon,
 	},
 ];

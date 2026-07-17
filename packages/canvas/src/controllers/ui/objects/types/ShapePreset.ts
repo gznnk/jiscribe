@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 
-import type { ObjectType } from "./ObjectType";
+import type { ObjectType } from "../../../../schemas/objects/types/ObjectType";
 
 /** Props received by a ShapeLibrary icon component. */
 export type ShapeIconProps = {
@@ -20,11 +20,8 @@ export type ShapePreset = {
 	objectType: ObjectType;
 	label: string;
 	defaultOverrides?: Record<string, unknown>;
-	/**
-	 * Icon shown in the toolbar. Since preset data (schemas) has no UI, it is
-	 * injected by the UI layer (controllers) at `registerObject()` time.
-	 */
-	icon?: ComponentType<ShapeIconProps>;
+	/** Icon shown in the toolbar. */
+	icon: ComponentType<ShapeIconProps>;
 	/**
 	 * Palette memberships: category id → display order within that category
 	 * (ascending). A preset may belong to several categories and rank

@@ -1,4 +1,5 @@
-import type { ShapePreset } from "../../types/ShapePreset";
+import { SubroutineIcon } from "./SubroutineIcon";
+import type { ShapePreset } from "../types/ShapePreset";
 
 export const SubroutineShapePresets: ShapePreset[] = [
 	{
@@ -6,5 +7,6 @@ export const SubroutineShapePresets: ShapePreset[] = [
 		objectType: "subroutine",
 		label: "Subroutine",
 		categories: { flowchart: 35 },
+		icon: SubroutineIcon,
 	},
 ];

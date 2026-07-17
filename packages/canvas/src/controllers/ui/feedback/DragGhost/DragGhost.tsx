@@ -2,11 +2,11 @@ import type { Point } from "@workspace/geometry";
 import React, { memo } from "react";
 
 import type { DocCreationDefaults } from "../../../../schemas/objects/types/DocCreationDefaults";
-import type { ShapePreset } from "../../../../schemas/objects/types/ShapePreset";
 import { createObjectDoc } from "../../../../schemas/objects/utils/createObjectDoc";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../contexts/CanvasRegistriesContext";
 import type { CanvasRegistries } from "../../../setup/CanvasRegistries";
+import type { ShapePreset } from "../../objects/types/ShapePreset";
 
 type DragGhostProps = {
 	shapeLibraryDrag: CanvasControllerState["shapeLibraryDrag"];

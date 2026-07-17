@@ -1,4 +1,5 @@
-import type { ShapePreset } from "../../types/ShapePreset";
+import { CloudIcon } from "./CloudIcon";
+import type { ShapePreset } from "../types/ShapePreset";
 
 export const CloudShapePresets: ShapePreset[] = [
 	{
@@ -6,5 +7,6 @@ export const CloudShapePresets: ShapePreset[] = [
 		objectType: "cloud",
 		label: "Cloud",
 		categories: { general: 10 },
+		icon: CloudIcon,
 	},
 ];

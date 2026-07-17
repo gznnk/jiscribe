@@ -1,4 +1,4 @@
-import type { ShapePreset } from "../../schemas/objects/types/ShapePreset";
+import type { ShapePreset } from "../ui/objects/types/ShapePreset";
 
 /**
  * Registry that manages the shape presets shown in the ShapeLibrary (toolbar).

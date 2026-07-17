@@ -1,4 +1,6 @@
-import type { ShapePreset } from "../../types/ShapePreset";
+import { EllipseIcon } from "./EllipseIcon";
+import { OnPageConnectorIcon } from "./OnPageConnectorIcon";
+import type { ShapePreset } from "../types/ShapePreset";
 
 export const EllipseShapePresets: ShapePreset[] = [
 	{
@@ -6,6 +8,7 @@ export const EllipseShapePresets: ShapePreset[] = [
 		objectType: "ellipse",
 		label: "Ellipse",
 		categories: { basic: 20 },
+		icon: EllipseIcon,
 	},
 	{
 		// Flowchart on-page connector: an ellipse type reused as a small labelled
@@ -16,5 +19,6 @@ export const EllipseShapePresets: ShapePreset[] = [
 		label: "On-page connector",
 		categories: { flowchart: 200 },
 		defaultOverrides: { rx: 32, ry: 32 },
+		icon: OnPageConnectorIcon,
 	},
 ];

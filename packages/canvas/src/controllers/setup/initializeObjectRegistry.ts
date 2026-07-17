@@ -1,4 +1,4 @@
-import type { ComponentType, FC } from "react";
+import type { FC } from "react";
 
 import type { CanvasRegistries } from "./CanvasRegistries";
 import {
@@ -150,96 +150,65 @@ import type { ShapePreviewRenderer } from "../../presentations/objects/registry/
 import type { TextRegionCalculator } from "../../presentations/objects/registry/TextRegionRegistry";
 import { CalloutFeatures } from "../../schemas/objects/annotations/callout/CalloutDoc";
 import { CalloutShapeFactory } from "../../schemas/objects/annotations/callout/CalloutShapeFactory";
-import { CalloutShapePresets } from "../../schemas/objects/annotations/callout/CalloutShapePresets";
 import { StickyFeatures } from "../../schemas/objects/annotations/sticky/StickyDoc";
 import { StickyShapeFactory } from "../../schemas/objects/annotations/sticky/StickyShapeFactory";
-import { StickyShapePresets } from "../../schemas/objects/annotations/sticky/StickyShapePresets";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
 import { ConnectorFeatures } from "../../schemas/objects/connections/connector/ConnectorDoc";
 import { ContainerFeatures } from "../../schemas/objects/containers/container/ContainerDoc";
 import { ContainerShapeFactory } from "../../schemas/objects/containers/container/ContainerShapeFactory";
-import { ContainerShapePresets } from "../../schemas/objects/containers/container/ContainerShapePresets";
 import { CardFeatures } from "../../schemas/objects/flowchart/card/CardDoc";
 import { CardShapeFactory } from "../../schemas/objects/flowchart/card/CardShapeFactory";
-import { CardShapePresets } from "../../schemas/objects/flowchart/card/CardShapePresets";
 import { CrossFeatures } from "../../schemas/objects/flowchart/cross/CrossDoc";
 import { CrossShapeFactory } from "../../schemas/objects/flowchart/cross/CrossShapeFactory";
-import { CrossShapePresets } from "../../schemas/objects/flowchart/cross/CrossShapePresets";
 import { DbFeatures } from "../../schemas/objects/flowchart/db/DbDoc";
 import { DbShapeFactory } from "../../schemas/objects/flowchart/db/DbShapeFactory";
-import { DbShapePresets } from "../../schemas/objects/flowchart/db/DbShapePresets";
 import { DelayFeatures } from "../../schemas/objects/flowchart/delay/DelayDoc";
 import { DelayShapeFactory } from "../../schemas/objects/flowchart/delay/DelayShapeFactory";
-import { DelayShapePresets } from "../../schemas/objects/flowchart/delay/DelayShapePresets";
 import { DiamondFeatures } from "../../schemas/objects/flowchart/diamond/DiamondDoc";
 import { DiamondShapeFactory } from "../../schemas/objects/flowchart/diamond/DiamondShapeFactory";
-import { DiamondShapePresets } from "../../schemas/objects/flowchart/diamond/DiamondShapePresets";
 import { DisplayFeatures } from "../../schemas/objects/flowchart/display/DisplayDoc";
 import { DisplayShapeFactory } from "../../schemas/objects/flowchart/display/DisplayShapeFactory";
-import { DisplayShapePresets } from "../../schemas/objects/flowchart/display/DisplayShapePresets";
 import { DocumentFeatures } from "../../schemas/objects/flowchart/document/DocumentDoc";
 import { DocumentShapeFactory } from "../../schemas/objects/flowchart/document/DocumentShapeFactory";
-import { DocumentShapePresets } from "../../schemas/objects/flowchart/document/DocumentShapePresets";
 import { ExtractFeatures } from "../../schemas/objects/flowchart/extract/ExtractDoc";
 import { ExtractShapeFactory } from "../../schemas/objects/flowchart/extract/ExtractShapeFactory";
-import { ExtractShapePresets } from "../../schemas/objects/flowchart/extract/ExtractShapePresets";
 import { HexagonFeatures } from "../../schemas/objects/flowchart/hexagon/HexagonDoc";
 import { HexagonShapeFactory } from "../../schemas/objects/flowchart/hexagon/HexagonShapeFactory";
-import { HexagonShapePresets } from "../../schemas/objects/flowchart/hexagon/HexagonShapePresets";
 import { LoopLimitFeatures } from "../../schemas/objects/flowchart/loopLimit/LoopLimitDoc";
 import { LoopLimitShapeFactory } from "../../schemas/objects/flowchart/loopLimit/LoopLimitShapeFactory";
-import { LoopLimitShapePresets } from "../../schemas/objects/flowchart/loopLimit/LoopLimitShapePresets";
 import { ManualInputFeatures } from "../../schemas/objects/flowchart/manualInput/ManualInputDoc";
 import { ManualInputShapeFactory } from "../../schemas/objects/flowchart/manualInput/ManualInputShapeFactory";
-import { ManualInputShapePresets } from "../../schemas/objects/flowchart/manualInput/ManualInputShapePresets";
 import { MultiDocumentFeatures } from "../../schemas/objects/flowchart/multiDocument/MultiDocumentDoc";
 import { MultiDocumentShapeFactory } from "../../schemas/objects/flowchart/multiDocument/MultiDocumentShapeFactory";
-import { MultiDocumentShapePresets } from "../../schemas/objects/flowchart/multiDocument/MultiDocumentShapePresets";
 import { OffPageConnectorFeatures } from "../../schemas/objects/flowchart/offPageConnector/OffPageConnectorDoc";
 import { OffPageConnectorShapeFactory } from "../../schemas/objects/flowchart/offPageConnector/OffPageConnectorShapeFactory";
-import { OffPageConnectorShapePresets } from "../../schemas/objects/flowchart/offPageConnector/OffPageConnectorShapePresets";
 import { ParallelogramFeatures } from "../../schemas/objects/flowchart/parallelogram/ParallelogramDoc";
 import { ParallelogramShapeFactory } from "../../schemas/objects/flowchart/parallelogram/ParallelogramShapeFactory";
-import { ParallelogramShapePresets } from "../../schemas/objects/flowchart/parallelogram/ParallelogramShapePresets";
 import { StadiumFeatures } from "../../schemas/objects/flowchart/stadium/StadiumDoc";
 import { StadiumShapeFactory } from "../../schemas/objects/flowchart/stadium/StadiumShapeFactory";
-import { StadiumShapePresets } from "../../schemas/objects/flowchart/stadium/StadiumShapePresets";
 import { StoredDataFeatures } from "../../schemas/objects/flowchart/storedData/StoredDataDoc";
 import { StoredDataShapeFactory } from "../../schemas/objects/flowchart/storedData/StoredDataShapeFactory";
-import { StoredDataShapePresets } from "../../schemas/objects/flowchart/storedData/StoredDataShapePresets";
 import { SubroutineFeatures } from "../../schemas/objects/flowchart/subroutine/SubroutineDoc";
 import { SubroutineShapeFactory } from "../../schemas/objects/flowchart/subroutine/SubroutineShapeFactory";
-import { SubroutineShapePresets } from "../../schemas/objects/flowchart/subroutine/SubroutineShapePresets";
 import { TrapezoidFeatures } from "../../schemas/objects/flowchart/trapezoid/TrapezoidDoc";
 import { TrapezoidShapeFactory } from "../../schemas/objects/flowchart/trapezoid/TrapezoidShapeFactory";
-import { TrapezoidShapePresets } from "../../schemas/objects/flowchart/trapezoid/TrapezoidShapePresets";
 import { ActorFeatures } from "../../schemas/objects/general/actor/ActorDoc";
 import { ActorShapeFactory } from "../../schemas/objects/general/actor/ActorShapeFactory";
-import { ActorShapePresets } from "../../schemas/objects/general/actor/ActorShapePresets";
 import { CloudFeatures } from "../../schemas/objects/general/cloud/CloudDoc";
 import { CloudShapeFactory } from "../../schemas/objects/general/cloud/CloudShapeFactory";
-import { CloudShapePresets } from "../../schemas/objects/general/cloud/CloudShapePresets";
 import { EllipseFeatures } from "../../schemas/objects/primitives/ellipse/EllipseDoc";
 import { EllipseShapeFactory } from "../../schemas/objects/primitives/ellipse/EllipseShapeFactory";
-import { EllipseShapePresets } from "../../schemas/objects/primitives/ellipse/EllipseShapePresets";
 import { GroupFeatures } from "../../schemas/objects/primitives/group/GroupDoc";
 import { PolygonFeatures } from "../../schemas/objects/primitives/polygon/PolygonDoc";
 import { PolygonShapeFactory } from "../../schemas/objects/primitives/polygon/PolygonShapeFactory";
-import { PolygonShapePresets } from "../../schemas/objects/primitives/polygon/PolygonShapePresets";
 import { PolylineFeatures } from "../../schemas/objects/primitives/polyline/PolylineDoc";
 import { PolylineShapeFactory } from "../../schemas/objects/primitives/polyline/PolylineShapeFactory";
-import { PolylineShapePresets } from "../../schemas/objects/primitives/polyline/PolylineShapePresets";
 import { RectFeatures } from "../../schemas/objects/primitives/rect/RectDoc";
 import { RectShapeFactory } from "../../schemas/objects/primitives/rect/RectShapeFactory";
-import { RectShapePresets } from "../../schemas/objects/primitives/rect/RectShapePresets";
 import { SvgFeatures } from "../../schemas/objects/primitives/svg/SvgDoc";
 import type { ObjectFeatures } from "../../schemas/objects/types/ObjectFeatures";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 import type { ShapeFactory } from "../../schemas/objects/types/ShapeFactory";
-import type {
-	ShapeIconProps,
-	ShapePreset,
-} from "../../schemas/objects/types/ShapePreset";
 import {
 	calloutToDoc,
 	calloutToState,
@@ -443,37 +412,6 @@ import type { ObjectBehaviorEntry } from "../gestures/registry/ObjectBehaviorTyp
 import type { SelectionControlDefinition } from "../registry/SelectionControlTypes";
 import { CalloutTailTipControl } from "../ui/controls/CalloutTailControls";
 import { ContainerHeaderHeightControl } from "../ui/controls/ContainerHeaderControls";
-import { ActorIcon } from "../ui/icons/ActorIcon";
-import { BoundaryIcon } from "../ui/icons/BoundaryIcon";
-import { CalloutIcon } from "../ui/icons/CalloutIcon";
-import { CardIcon } from "../ui/icons/CardIcon";
-import { CloudIcon } from "../ui/icons/CloudIcon";
-import { CrossIcon } from "../ui/icons/CrossIcon";
-import { DbIcon } from "../ui/icons/DbIcon";
-import { DelayIcon } from "../ui/icons/DelayIcon";
-import { DiamondIcon } from "../ui/icons/DiamondIcon";
-import { DisplayIcon } from "../ui/icons/DisplayIcon";
-import { DocumentIcon } from "../ui/icons/DocumentIcon";
-import { EllipseIcon } from "../ui/icons/EllipseIcon";
-import { ExtractIcon } from "../ui/icons/ExtractIcon";
-import { FrameIcon } from "../ui/icons/FrameIcon";
-import { HexagonIcon } from "../ui/icons/HexagonIcon";
-import { LoopLimitIcon } from "../ui/icons/LoopLimitIcon";
-import { ManualInputIcon } from "../ui/icons/ManualInputIcon";
-import { MarkdownRectIcon } from "../ui/icons/MarkdownRectIcon";
-import { MultiDocumentIcon } from "../ui/icons/MultiDocumentIcon";
-import { OffPageConnectorIcon } from "../ui/icons/OffPageConnectorIcon";
-import { OnPageConnectorIcon } from "../ui/icons/OnPageConnectorIcon";
-import { ParallelogramIcon } from "../ui/icons/ParallelogramIcon";
-import { PolygonIcon } from "../ui/icons/PolygonIcon";
-import { PolylineIcon } from "../ui/icons/PolylineIcon";
-import { RectIcon } from "../ui/icons/RectIcon";
-import { StadiumIcon } from "../ui/icons/StadiumIcon";
-import { StickyIcon } from "../ui/icons/StickyIcon";
-import { StoredDataIcon } from "../ui/icons/StoredDataIcon";
-import { SubroutineIcon } from "../ui/icons/SubroutineIcon";
-import { TrapezoidIcon } from "../ui/icons/TrapezoidIcon";
-import { ZoneIcon } from "../ui/icons/ZoneIcon";
 import { HeaderColorMenu } from "../ui/menu/ObjectMenu/items/HeaderColorMenu";
 import {
 	LabelBackgroundColorMenu,
@@ -486,6 +424,34 @@ import {
 import { RoutingMenu } from "../ui/menu/ObjectMenu/items/RoutingMenu";
 import { StickyColorMenu } from "../ui/menu/ObjectMenu/items/StickyColorMenu";
 import type { MenuSectionFactory } from "../ui/menu/ObjectMenu/ObjectMenuTypes";
+import { CalloutShapePresets } from "../ui/objects/annotations/CalloutShapePresets";
+import { StickyShapePresets } from "../ui/objects/annotations/StickyShapePresets";
+import { ContainerShapePresets } from "../ui/objects/containers/ContainerShapePresets";
+import { CardShapePresets } from "../ui/objects/flowchart/CardShapePresets";
+import { CrossShapePresets } from "../ui/objects/flowchart/CrossShapePresets";
+import { DbShapePresets } from "../ui/objects/flowchart/DbShapePresets";
+import { DelayShapePresets } from "../ui/objects/flowchart/DelayShapePresets";
+import { DiamondShapePresets } from "../ui/objects/flowchart/DiamondShapePresets";
+import { DisplayShapePresets } from "../ui/objects/flowchart/DisplayShapePresets";
+import { DocumentShapePresets } from "../ui/objects/flowchart/DocumentShapePresets";
+import { ExtractShapePresets } from "../ui/objects/flowchart/ExtractShapePresets";
+import { HexagonShapePresets } from "../ui/objects/flowchart/HexagonShapePresets";
+import { LoopLimitShapePresets } from "../ui/objects/flowchart/LoopLimitShapePresets";
+import { ManualInputShapePresets } from "../ui/objects/flowchart/ManualInputShapePresets";
+import { MultiDocumentShapePresets } from "../ui/objects/flowchart/MultiDocumentShapePresets";
+import { OffPageConnectorShapePresets } from "../ui/objects/flowchart/OffPageConnectorShapePresets";
+import { ParallelogramShapePresets } from "../ui/objects/flowchart/ParallelogramShapePresets";
+import { StadiumShapePresets } from "../ui/objects/flowchart/StadiumShapePresets";
+import { StoredDataShapePresets } from "../ui/objects/flowchart/StoredDataShapePresets";
+import { SubroutineShapePresets } from "../ui/objects/flowchart/SubroutineShapePresets";
+import { TrapezoidShapePresets } from "../ui/objects/flowchart/TrapezoidShapePresets";
+import { ActorShapePresets } from "../ui/objects/general/ActorShapePresets";
+import { CloudShapePresets } from "../ui/objects/general/CloudShapePresets";
+import { EllipseShapePresets } from "../ui/objects/primitives/EllipseShapePresets";
+import { PolygonShapePresets } from "../ui/objects/primitives/PolygonShapePresets";
+import { PolylineShapePresets } from "../ui/objects/primitives/PolylineShapePresets";
+import { RectShapePresets } from "../ui/objects/primitives/RectShapePresets";
+import type { ShapePreset } from "../ui/objects/types/ShapePreset";
 
 /**
  * Creation-related capabilities for the ShapeLibrary (shape palette).
@@ -498,11 +464,6 @@ type ShapeLibraryRegistration = {
 	previewRenderer?: ShapePreviewRenderer;
 	/** Presets shown in the toolbar (multiple allowed per type) */
 	presets?: ShapePreset[];
-	/**
-	 * Toolbar icon per preset ID.
-	 * Injected into the corresponding preset at registration time.
-	 */
-	presetIcons?: Record<string, ComponentType<ShapeIconProps>>;
 };
 
 /**
@@ -582,11 +543,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				factory: RectShapeFactory,
 				previewRenderer: RectPreview,
 				presets: RectShapePresets,
-				presetIcons: {
-					rect: RectIcon,
-					process: RectIcon,
-					"rect-markdown": MarkdownRectIcon,
-				},
 			},
 		}),
 
@@ -619,10 +575,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				factory: EllipseShapeFactory,
 				previewRenderer: EllipsePreview,
 				presets: EllipseShapePresets,
-				presetIcons: {
-					ellipse: EllipseIcon,
-					onPageConnector: OnPageConnectorIcon,
-				},
 			},
 		}),
 
@@ -656,7 +608,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				factory: DiamondShapeFactory,
 				previewRenderer: DiamondPreview,
 				presets: DiamondShapePresets,
-				presetIcons: { diamond: DiamondIcon },
 			},
 		}),
 
@@ -690,7 +641,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				factory: StadiumShapeFactory,
 				previewRenderer: StadiumPreview,
 				presets: StadiumShapePresets,
-				presetIcons: { stadium: StadiumIcon },
 			},
 		}),
 
@@ -724,7 +674,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				factory: ParallelogramShapeFactory,
 				previewRenderer: ParallelogramPreview,
 				presets: ParallelogramShapePresets,
-				presetIcons: { parallelogram: ParallelogramIcon },
 			},
 		}),
 
@@ -758,7 +707,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				factory: HexagonShapeFactory,
 				previewRenderer: HexagonPreview,
 				presets: HexagonShapePresets,
-				presetIcons: { hexagon: HexagonIcon },
 			},
 		}),
 
@@ -792,7 +740,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				factory: CloudShapeFactory,
 				previewRenderer: CloudPreview,
 				presets: CloudShapePresets,
-				presetIcons: { cloud: CloudIcon },
 			},
 		}),
 
@@ -826,7 +773,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				factory: DocumentShapeFactory,
 				previewRenderer: DocumentPreview,
 				presets: DocumentShapePresets,
-				presetIcons: { document: DocumentIcon },
 			},
 		}),
 
@@ -860,7 +806,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				factory: MultiDocumentShapeFactory,
 				previewRenderer: MultiDocumentPreview,
 				presets: MultiDocumentShapePresets,
-				presetIcons: { multiDocument: MultiDocumentIcon },
 			},
 		}),
 
@@ -893,7 +838,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				factory: ActorShapeFactory,
 				previewRenderer: ActorPreview,
 				presets: ActorShapePresets,
-				presetIcons: { actor: ActorIcon },
 			},
 		}),
 
@@ -933,7 +877,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				factory: CalloutShapeFactory,
 				previewRenderer: CalloutPreview,
 				presets: CalloutShapePresets,
-				presetIcons: { callout: CalloutIcon },
 			},
 		}),
 
@@ -967,7 +910,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				factory: DbShapeFactory,
 				previewRenderer: DbPreview,
 				presets: DbShapePresets,
-				presetIcons: { db: DbIcon },
 			},
 		}),
 
@@ -1001,7 +943,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				factory: StoredDataShapeFactory,
 				previewRenderer: StoredDataPreview,
 				presets: StoredDataShapePresets,
-				presetIcons: { storedData: StoredDataIcon },
 			},
 		}),
 
@@ -1034,7 +975,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				factory: SubroutineShapeFactory,
 				previewRenderer: SubroutinePreview,
 				presets: SubroutineShapePresets,
-				presetIcons: { subroutine: SubroutineIcon },
 			},
 		}),
 
@@ -1068,7 +1008,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				factory: TrapezoidShapeFactory,
 				previewRenderer: TrapezoidPreview,
 				presets: TrapezoidShapePresets,
-				presetIcons: { trapezoid: TrapezoidIcon },
 			},
 		}),
 
@@ -1102,7 +1041,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				factory: ManualInputShapeFactory,
 				previewRenderer: ManualInputPreview,
 				presets: ManualInputShapePresets,
-				presetIcons: { manualInput: ManualInputIcon },
 			},
 		}),
 
@@ -1136,7 +1074,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				factory: CardShapeFactory,
 				previewRenderer: CardPreview,
 				presets: CardShapePresets,
-				presetIcons: { card: CardIcon },
 			},
 		}),
 
@@ -1180,11 +1117,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				factory: ContainerShapeFactory,
 				previewRenderer: ContainerPreview,
 				presets: ContainerShapePresets,
-				presetIcons: {
-					frame: FrameIcon,
-					boundary: BoundaryIcon,
-					zone: ZoneIcon,
-				},
 			},
 		}),
 
@@ -1218,7 +1150,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				factory: DelayShapeFactory,
 				previewRenderer: DelayPreview,
 				presets: DelayShapePresets,
-				presetIcons: { delay: DelayIcon },
 			},
 		}),
 
@@ -1252,7 +1183,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				factory: LoopLimitShapeFactory,
 				previewRenderer: LoopLimitPreview,
 				presets: LoopLimitShapePresets,
-				presetIcons: { loopLimit: LoopLimitIcon },
 			},
 		}),
 
@@ -1286,7 +1216,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				factory: DisplayShapeFactory,
 				previewRenderer: DisplayPreview,
 				presets: DisplayShapePresets,
-				presetIcons: { display: DisplayIcon },
 			},
 		}),
 
@@ -1315,7 +1244,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				factory: ExtractShapeFactory,
 				previewRenderer: ExtractPreview,
 				presets: ExtractShapePresets,
-				presetIcons: { extract: ExtractIcon },
 			},
 		}),
 
@@ -1344,7 +1272,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				factory: CrossShapeFactory,
 				previewRenderer: CrossPreview,
 				presets: CrossShapePresets,
-				presetIcons: { cross: CrossIcon },
 			},
 		}),
 
@@ -1381,7 +1308,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				factory: OffPageConnectorShapeFactory,
 				previewRenderer: OffPageConnectorPreview,
 				presets: OffPageConnectorShapePresets,
-				presetIcons: { offPageConnector: OffPageConnectorIcon },
 			},
 		}),
 
@@ -1427,7 +1353,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				factory: PolygonShapeFactory,
 				previewRenderer: PolygonPreview,
 				presets: PolygonShapePresets,
-				presetIcons: { polygon: PolygonIcon },
 			},
 		}),
 
@@ -1455,7 +1380,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				factory: PolylineShapeFactory,
 				previewRenderer: PolylinePreview,
 				presets: PolylineShapePresets,
-				presetIcons: { polyline: PolylineIcon },
 			},
 		}),
 
@@ -1560,7 +1484,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			shapeLibrary: {
 				factory: StickyShapeFactory,
 				presets: StickyShapePresets,
-				presetIcons: { sticky: StickyIcon },
 			},
 		}),
 
@@ -1618,8 +1541,7 @@ export const applyObjectDefinition = (
 		registries.shapePreview.register(type, shapeLibrary.previewRenderer);
 	}
 	shapeLibrary?.presets?.forEach((preset) => {
-		const icon = shapeLibrary.presetIcons?.[preset.id];
-		registries.shapePreset.register(icon ? { ...preset, icon } : preset);
+		registries.shapePreset.register(preset);
 	});
 };
 

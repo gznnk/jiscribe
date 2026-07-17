@@ -1,4 +1,5 @@
-import type { ShapePreset } from "../../types/ShapePreset";
+import { ExtractIcon } from "./ExtractIcon";
+import type { ShapePreset } from "../types/ShapePreset";
 
 export const ExtractShapePresets: ShapePreset[] = [
 	{
@@ -6,5 +7,6 @@ export const ExtractShapePresets: ShapePreset[] = [
 		objectType: "extract",
 		label: "Extract",
 		categories: { flowchart: 170 },
+		icon: ExtractIcon,
 	},
 ];

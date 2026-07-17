@@ -1,10 +1,10 @@
 import type { BoundingBox } from "@workspace/geometry";
 
-import type { ShapePreset } from "../../../../schemas/objects/types/ShapePreset";
 import { createObjectDoc } from "../../../../schemas/objects/utils/createObjectDoc";
 import type { ShapeFactoryRegistry } from "../../../../schemas/registry/ShapeFactoryRegistry";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../setup/ICanvasRegistries";
+import type { ShapePreset } from "../../../ui/objects/types/ShapePreset";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import type {
 	CanvasEvent,

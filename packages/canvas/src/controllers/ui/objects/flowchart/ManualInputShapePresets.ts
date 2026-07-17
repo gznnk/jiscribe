@@ -1,4 +1,5 @@
-import type { ShapePreset } from "../../types/ShapePreset";
+import { ManualInputIcon } from "./ManualInputIcon";
+import type { ShapePreset } from "../types/ShapePreset";
 
 export const ManualInputShapePresets: ShapePreset[] = [
 	{
@@ -6,5 +7,6 @@ export const ManualInputShapePresets: ShapePreset[] = [
 		objectType: "manualInput",
 		label: "Manual Input",
 		categories: { flowchart: 90 },
+		icon: ManualInputIcon,
 	},
 ];

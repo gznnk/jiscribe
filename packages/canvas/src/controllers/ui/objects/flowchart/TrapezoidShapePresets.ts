@@ -1,4 +1,5 @@
-import type { ShapePreset } from "../../types/ShapePreset";
+import { TrapezoidIcon } from "./TrapezoidIcon";
+import type { ShapePreset } from "../types/ShapePreset";
 
 export const TrapezoidShapePresets: ShapePreset[] = [
 	{
@@ -6,5 +7,6 @@ export const TrapezoidShapePresets: ShapePreset[] = [
 		objectType: "trapezoid",
 		label: "Manual Operation",
 		categories: { flowchart: 130 },
+		icon: TrapezoidIcon,
 	},
 ];

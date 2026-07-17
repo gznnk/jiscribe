@@ -1,4 +1,5 @@
-import type { ShapePreset } from "../../types/ShapePreset";
+import { StoredDataIcon } from "./StoredDataIcon";
+import type { ShapePreset } from "../types/ShapePreset";
 
 export const StoredDataShapePresets: ShapePreset[] = [
 	{
@@ -6,5 +7,6 @@ export const StoredDataShapePresets: ShapePreset[] = [
 		objectType: "storedData",
 		label: "Stored Data",
 		categories: { flowchart: 75 },
+		icon: StoredDataIcon,
 	},
 ];

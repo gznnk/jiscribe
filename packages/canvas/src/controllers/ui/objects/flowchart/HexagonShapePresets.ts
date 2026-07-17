@@ -1,4 +1,5 @@
-import type { ShapePreset } from "../../types/ShapePreset";
+import { HexagonIcon } from "./HexagonIcon";
+import type { ShapePreset } from "../types/ShapePreset";
 
 export const HexagonShapePresets: ShapePreset[] = [
 	{
@@ -6,5 +7,6 @@ export const HexagonShapePresets: ShapePreset[] = [
 		objectType: "hexagon",
 		label: "Preparation",
 		categories: { flowchart: 140 },
+		icon: HexagonIcon,
 	},
 ];

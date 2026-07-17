@@ -1,4 +1,5 @@
-import type { ShapePreset } from "../../types/ShapePreset";
+import { StickyIcon } from "./StickyIcon";
+import type { ShapePreset } from "../types/ShapePreset";
 
 export const StickyShapePresets: ShapePreset[] = [
 	{
@@ -12,5 +13,6 @@ export const StickyShapePresets: ShapePreset[] = [
 			textAlign: "left",
 			verticalAlign: "top",
 		},
+		icon: StickyIcon,
 	},
 ];
