@@ -1,5 +1,7 @@
-import type { Dimensions, Rect } from "@workspace/geometry";
+import type { Dimensions } from "@workspace/geometry";
 import { calcInsetRect } from "@workspace/geometry";
+
+import type { TextRegionCalculator } from "../../registry/TextRegionRegistry";
 
 /**
  * Inset that lands the region's corners on the ellipse: the inscribed
@@ -7,7 +9,10 @@ import { calcInsetRect } from "@workspace/geometry";
  */
 const ELLIPSE_INSET = (1 - 1 / Math.SQRT2) / 2;
 
-export const calcEllipseTextRegion = ({ width, height }: Dimensions): Rect =>
+export const calcEllipseTextRegion: TextRegionCalculator<Dimensions> = ({
+	width,
+	height,
+}) =>
 	calcInsetRect(
 		{ cx: 0, cy: 0, width, height },
 		{

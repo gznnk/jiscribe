@@ -1,4 +1,5 @@
 import { sampleEllipseArc } from "@workspace/geometry";
+import type { Dimensions } from "@workspace/geometry";
 
 import {
 	DISPLAY_CAP_RATIO,
@@ -11,7 +12,10 @@ import { OUTLINE_CURVE_SEGMENTS } from "../../utils/outlineHelpers";
  * Display outline (centered): pointed left edge + rounded right cap. Renderer
  * draws the equivalent path (buildDisplayPath).
  */
-export const displayOutline: ShapeOutlineProvider = ({ width, height }) => {
+export const displayOutline: ShapeOutlineProvider<Dimensions> = ({
+	width,
+	height,
+}) => {
 	const halfWidth = width / 2;
 	const halfHeight = height / 2;
 	const leftInset = width * DISPLAY_LEFT_RATIO;

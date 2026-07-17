@@ -7,4 +7,5 @@ import { createFrameMapper } from "../../base/FrameMapper";
 export const { toState: containerToState, toDoc: containerToDoc } =
 	createFrameMapper<ContainerDoc, ContainerState>(ContainerFeatures, [
 		"headerFill",
+		"headerHeight",
 	]);

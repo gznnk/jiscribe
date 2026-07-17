@@ -3,8 +3,11 @@ import type { CreateObjectType } from "../../types/CreateObjectType";
 import type { ObjectFeatures } from "../../types/ObjectFeatures";
 import { AUTO_COLOR } from "../../utils/autoColor";
 
-/** Height of the title header band, in local (pre-transform) pixels. */
+/** Default height of the title header band, in local (pre-transform) pixels. */
 export const CONTAINER_HEADER_HEIGHT = 28;
+
+/** Lower clamp for interactive header-height resizing. */
+export const CONTAINER_MIN_HEADER_HEIGHT = 16;
 
 /**
  * A container ("frame"): a titled rectangle that labels/encloses a region of a
@@ -36,6 +39,8 @@ export type ContainerDoc = CreateObjectType<
 	{
 		/** Header band fill, independent of `fill` (the body). Default `"auto"` = theme surface. */
 		headerFill?: string;
+		/** Header band height in local pixels. Default CONTAINER_HEADER_HEIGHT. */
+		headerHeight?: number;
 	}
 >;
 

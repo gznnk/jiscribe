@@ -1,4 +1,8 @@
-import { sampleCubicBezier, type Point } from "@workspace/geometry";
+import {
+	sampleCubicBezier,
+	type Dimensions,
+	type Point,
+} from "@workspace/geometry";
 
 import type { ShapeOutlineProvider } from "../../registry/ShapeOutlineRegistry";
 import { OUTLINE_CURVE_SEGMENTS } from "../../utils/outlineHelpers";
@@ -8,7 +12,10 @@ import { OUTLINE_CURVE_SEGMENTS } from "../../utils/outlineHelpers";
  * silhouette). `.slice(1)` drops each segment's start point (already emitted).
  * Renderer draws the equivalent path (buildCloudPath).
  */
-export const cloudOutline: ShapeOutlineProvider = ({ width, height }) => {
+export const cloudOutline: ShapeOutlineProvider<Dimensions> = ({
+	width,
+	height,
+}) => {
 	const p = (u: number, v: number): Point => ({
 		x: width * (u - 0.5),
 		y: height * (v - 0.5),

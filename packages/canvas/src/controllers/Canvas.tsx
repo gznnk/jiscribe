@@ -43,6 +43,7 @@ import { buildThemeCssVars } from "../theme/themeCssVars";
 import { darkCanvasTheme } from "../theme/themePresets";
 import { ConnectionAnchorsLayer } from "./ui/controls/ConnectionAnchorsLayer";
 import { ConnectorControlsLayer } from "./ui/controls/ConnectorControlsLayer";
+import { SelectionControlsLayer } from "./ui/controls/SelectionControlsLayer";
 import { TransformControlsLayer } from "./ui/controls/TransformControlsLayer";
 import { VertexControlsLayer } from "./ui/controls/VertexControlsLayer";
 import { TextEditorLayer } from "./ui/editors/TextEditorLayer";
@@ -471,6 +472,12 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 								objects={state.objects}
 								zoom={state.viewport.zoom}
 								selectedVertex={state.selectedVertex}
+							/>
+							<SelectionControlsLayer
+								selectedIds={state.selectedIds}
+								objects={state.objects}
+								zoom={state.viewport.zoom}
+								isTextEditing={!!state.textEditState}
 							/>
 							<DragGhost
 								shapeLibraryDrag={state.shapeLibraryDrag}

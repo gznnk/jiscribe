@@ -1,10 +1,10 @@
+import { calcContainerHeaderHeight } from "./calcContainerHeaderHeight";
 import {
 	ContainerBody,
 	ContainerDivider,
 	ContainerHeader,
 	ContainerOutline,
 } from "./ContainerStyled";
-import { CONTAINER_HEADER_HEIGHT } from "../../../../schemas/objects/containers/container/ContainerDoc";
 import type { ContainerState } from "../../../../states/objects/containers/container/ContainerState";
 import { createFrameObject } from "../../base/createFrameObject";
 import { resolveAutoColor } from "../../utils/resolveAutoColor";
@@ -30,7 +30,7 @@ export const Container = createFrameObject<ContainerState>((state, shape) => {
 	const { width, height } = state;
 	const x = -width / 2;
 	const y = -height / 2;
-	const headerHeight = Math.min(CONTAINER_HEADER_HEIGHT, height);
+	const headerHeight = calcContainerHeaderHeight(state);
 
 	// Header band follows the same auto/color model as fill & stroke: "auto"
 	// (the default) → theme surface; a set color → that color. Independent of

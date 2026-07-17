@@ -15,6 +15,7 @@ import { createObjectStateValidatorRegistry } from "../../states/registry/Object
 import { createCommandRegistry } from "../commands/CommandRegistry";
 import { createGestureHandlerRegistry } from "../gestures/registry/GestureHandlerRegistry";
 import { createObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
+import { createSelectionControlRegistry } from "../registry/SelectionControlRegistry";
 import { createShapePresetRegistry } from "../registry/ShapePresetRegistry";
 import { createObjectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
 
@@ -22,7 +23,7 @@ import { createObjectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegist
  * Builds a fresh, fully independent bundle of UI registries for one `<Canvas>`.
  *
  * Wiring order:
- *   1. instantiate the 12 empty registries,
+ *   1. instantiate the 13 empty registries,
  *   2. register all gesture handlers (object-type independent, always all),
  *   3. apply the configured object types (default: every type),
  *   4. register commands, optionally restricted by `config.commands`,
@@ -42,6 +43,7 @@ export const createCanvasRegistries = (
 		shapeOutline: createShapeOutlineRegistry(),
 		shapePreview: createShapePreviewRegistry(),
 		objectBehavior: createObjectBehaviorRegistry(),
+		selectionControl: createSelectionControlRegistry(),
 		gestureHandler: createGestureHandlerRegistry(),
 		command: createCommandRegistry(),
 		objectMenu: createObjectMenuRegistry(),

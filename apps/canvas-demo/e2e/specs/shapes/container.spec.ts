@@ -155,6 +155,41 @@ test.describe("container パレット / 挙動", () => {
 		expect(widths?.divider).toBe(widths?.outline);
 	});
 
+	test("ヘッダ下端のハンドルをドラッグしてヘッダ高を変更できる", async ({
+		canvas,
+	}) => {
+		// 高さ 220 のコンテナ。ヘッダ下端は content 座標 y=248（デフォルト 28px）。
+		const frame = await createFromFlyout(
+			canvas,
+			"frame",
+			{ x: 300, y: 220 },
+			{ x: 560, y: 440 },
+		);
+		// 作成直後は選択済みで、ヘッダ下端中央にヘッダ高ハンドルが出る。
+		await expect(
+			canvas.page.locator(
+				'[data-kind="control"][data-part="selection:container:headerHeight"]',
+			),
+		).toBeVisible();
+
+		// ハンドルを下へ 72px ドラッグ → headerHeight 28 → 100。
+		await canvas.drag({ x: 430, y: 248 }, { x: 430, y: 320 });
+		// ヘッダ帯 rect の height 属性が新しいヘッダ高になる（body/枠線は 220 のまま）。
+		await expect
+			.poll(async () =>
+				canvas.page.evaluate((id) => {
+					const group = document.querySelector(`[data-id="${id}"]`);
+					if (!group) {
+						return [];
+					}
+					return [...group.querySelectorAll("rect")].map((rect) =>
+						rect.getAttribute("height"),
+					);
+				}, frame.id),
+			)
+			.toContain("100");
+	});
+
 	test("ヘッダ色を独立して変更できる（headerFill）", async ({ canvas }) => {
 		const frame = await createFromFlyout(
 			canvas,

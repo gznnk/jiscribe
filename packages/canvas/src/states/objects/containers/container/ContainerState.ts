@@ -10,5 +10,7 @@ export type ContainerState = CreateObjectState<
 	{
 		/** Header band fill, independent of `fill` (the body). Default `"auto"` = theme surface. */
 		headerFill?: string;
+		/** Header band height in local pixels. Default CONTAINER_HEADER_HEIGHT. */
+		headerHeight?: number;
 	}
 >;

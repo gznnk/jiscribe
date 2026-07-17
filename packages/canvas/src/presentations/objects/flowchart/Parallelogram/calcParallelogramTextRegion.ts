@@ -1,13 +1,14 @@
-import type { Dimensions, Rect } from "@workspace/geometry";
+import type { Dimensions } from "@workspace/geometry";
 import { calcInsetRect } from "@workspace/geometry";
 
 import { PARALLELOGRAM_SKEW_RATIO } from "../../../../schemas/objects/flowchart/parallelogram/ParallelogramDoc";
+import type { TextRegionCalculator } from "../../registry/TextRegionRegistry";
 
 /** Insets by a full skew on both sides so the region aligns with the slanted left/right edges. */
-export const calcParallelogramTextRegion = ({
+export const calcParallelogramTextRegion: TextRegionCalculator<Dimensions> = ({
 	width,
 	height,
-}: Dimensions): Rect =>
+}) =>
 	calcInsetRect(
 		{ cx: 0, cy: 0, width, height },
 		{

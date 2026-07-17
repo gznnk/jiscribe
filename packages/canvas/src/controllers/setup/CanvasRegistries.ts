@@ -9,6 +9,7 @@ import type { ObjectStateValidatorRegistry } from "../../states/registry/ObjectS
 import type { CommandRegistry } from "../commands/CommandRegistry";
 import type { GestureHandlerRegistry } from "../gestures/registry/GestureHandlerRegistry";
 import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
+import type { SelectionControlRegistry } from "../registry/SelectionControlRegistry";
 import type { ShapePresetRegistry } from "../registry/ShapePresetRegistry";
 import type { ObjectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
 
@@ -32,6 +33,7 @@ export type CanvasRegistries = {
 	shapeOutline: ShapeOutlineRegistry;
 	shapePreview: ShapePreviewRegistry;
 	objectBehavior: ObjectBehaviorRegistry;
+	selectionControl: SelectionControlRegistry;
 	gestureHandler: GestureHandlerRegistry;
 	command: CommandRegistry;
 	objectMenu: ObjectMenuRegistry;

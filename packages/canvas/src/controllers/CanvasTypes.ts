@@ -125,6 +125,30 @@ export type HistoryState = {
 
 /**
  * Snapshot at gesture start (dragStart).
+ * dragStart cache for deriving multi-select resize bounds without re-collecting
+ * every leaf vertex per frame (#215). Built by TransformControlHandler.
+ */
+export type MultiSelectResizeBoundsCache = {
+	/**
+	 * Combined extents of affine-exact leaf points (polys and axis-aligned frames)
+	 * in the start group's rotation-aligned local space, as offsets from the start
+	 * group center. null when the selection has no such points.
+	 */
+	affineLocalExtents: {
+		minX: number;
+		maxX: number;
+		minY: number;
+		maxY: number;
+	} | null;
+	/**
+	 * Leaf object IDs whose world points must be re-collected every frame because
+	 * their transform is not an exact affine map of the group resize
+	 * (connectors and obliquely rotated frames).
+	 */
+	nonAffineLeafIds: string[];
+};
+
+/**
  * A dedicated type that pre-computes and caches the data needed for calculations during a drag.
  * Created on dragStart and cleared to null on dragEnd.
  */
@@ -153,6 +177,8 @@ export type EventStartSnapshot = {
 	multiSelectGroup: GroupState | null;
 	/** Viewport at drag start (reference point for grab scrolling) */
 	viewport: Viewport;
+	/** Multi-select resize bounds cache (#215). Set by TransformControlHandler on dragStart of a resize anchor */
+	multiSelectResizeBoundsCache?: MultiSelectResizeBoundsCache | null;
 };
 
 /**
