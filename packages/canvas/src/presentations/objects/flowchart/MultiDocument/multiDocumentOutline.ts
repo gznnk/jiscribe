@@ -1,5 +1,6 @@
 import {
 	sampleQuadraticBezier,
+	type Dimensions,
 	type Point,
 	type Rect,
 } from "@workspace/geometry";
@@ -39,7 +40,7 @@ const sampleExposedWave = (sheet: Rect, exposedWidth: number): Point[] => {
  * before dropping to the next sheet's wave line, and finally the front sheet's
  * full wave (two quadratic Béziers, same construction as documentOutline).
  */
-export const multiDocumentOutline: ShapeOutlineProvider = ({
+export const multiDocumentOutline: ShapeOutlineProvider<Dimensions> = ({
 	width,
 	height,
 }) => {
