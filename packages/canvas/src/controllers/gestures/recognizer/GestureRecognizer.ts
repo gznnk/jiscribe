@@ -1,4 +1,4 @@
-import type { Point } from "@workspace/geometry/src/types/Point";
+import type { Point } from "@workspace/geometry";
 import type React from "react";
 
 import { DRAG_THRESHOLD } from "./GestureRecognizerConstants";
