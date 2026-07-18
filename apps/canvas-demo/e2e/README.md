@@ -1,7 +1,7 @@
 # canvas-demo E2E テスト
 
 Playwright Test で canvas を実ユーザーと同じ UI 操作でテストする。
-このドキュメントは構成ガイドと、`scripts/replay-hero-showcase.mjs`（.jis.json の UI 操作による再現）の開発過程で得たノウハウのまとめ。
+このドキュメントは構成ガイドと、Playwright で canvas を UI 操作する際のノウハウのまとめ。
 
 ## 構成
 
@@ -16,7 +16,6 @@ apps/canvas-demo/
 │   │   └── CanvasDriver.ts # 操作API（描画・選択・テキスト・色・コネクター）
 │   ├── specs/             # テスト本体（通常の test:e2e で走る）
 │   └── demo/              # マーケ素材生成用デモ（testDir 外。test:e2e:demo でのみ走る）
-└── scripts/               # Playwright を使った手動デモ・調査用スクリプト（テスト基盤を使わない素の node）
 ```
 
 実行:
@@ -32,15 +31,14 @@ pnpm --filter canvas-demo test:e2e:demo    # マーケ素材生成デモ（hero-
 
 回帰検知ではなく、スクリーンショット／録画などの素材を作るためのデモ。CanvasDriver の
 テスト済み操作だけを合成し、`landing/public/demo/diagrams/cloud-native-commerce.jis.json`（17 部品＋17 結線の
-参照アーキテクチャ図）を UI 操作だけで丸ごと描き起こす。`scripts/replay-hero-showcase.mjs` と
-同じ図を、失敗を隠さない E2E ドライバで再現する位置づけ。重く（約 40s）コネクター選択が
+参照アーキテクチャ図）を UI 操作だけで丸ごと描き起こす。重く（約 40s）コネクター選択が
 flake しやすいため、通常の `test:e2e`（CI ゲート）からは外して `test:e2e:demo` で明示実行する。
 最終状態はスクリーンショットとしてレポートに添付される（目視は `test:e2e:demo:headed`）。
 
 設計方針: **失敗を隠すリトライは入れない**。CanvasDriver は時間待ちではなく状態待ち
 （要素の出現・オブジェクト数の変化を `expect.poll` 等で待つ）で同期し、操作が効かない場合は
-そのまま失敗させてプロダクトの問題として顕在化させる。デモ用スクリプトの Ctrl+Z 救済
-（後述）はテストには持ち込まない。
+そのまま失敗させてプロダクトの問題として顕在化させる。Ctrl+Z による復旧リトライ（後述の
+ハマりどころ参照）はテストには持ち込まない。
 
 ## 基本セットアップ
 
@@ -191,17 +189,3 @@ ObjectMenu は選択図形の下に出るが、画面下端付近ではドロッ
 - オブジェクトの `id / transform / fill` のスナップショットを操作ごとに取り、
   **意図しない移動・着色を検出**すると原因特定が速い
 - スクリーンショット（`page.screenshot`）を残すと headless でも見た目を確認できる
-
-## 参考スクリプト（apps/canvas-demo/scripts/）
-
-テストではなく、手動デモ・調査用。`node apps/canvas-demo/scripts/<name>.mjs` で実行
-（dev サーバーは別途起動しておく）。
-
-| ファイル                   | 内容                                                                                                                                |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `replay-hero-showcase.mjs` | `.jis.json` を UI 操作のみで再現（描画・色・テキスト・コネクター）。検証・リトライ・デバッグログ（`DEBUG=1`、`HEADLESS=1`）の実装例 |
-| `live-show.mjs`            | 回転・リサイズ・コネクター・自由曲線ドラッグのデモ                                                                                  |
-| `live-demo.mjs`            | 描画・移動・マーキー選択の基本デモ                                                                                                  |
-| `inspect-canvas.mjs`       | キャンバス上の図形一覧をダンプ                                                                                                      |
-| `verify-drag.mjs`          | ドラッグ前後の位置比較による検証例                                                                                                  |
-| `screenshot.mjs`           | 任意 URL のスクリーンショットを保存する汎用ツール                                                                                   |
