@@ -1,5 +1,5 @@
 import { LoopLimitIcon } from "./LoopLimitIcon";
-import type { ShapePreset } from "../types/ShapePreset";
+import type { ShapePreset } from "../ShapePreset";
 
 export const LoopLimitShapePresets: ShapePreset[] = [
 	{

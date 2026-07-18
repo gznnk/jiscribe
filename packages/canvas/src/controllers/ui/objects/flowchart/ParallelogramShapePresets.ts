@@ -1,5 +1,5 @@
 import { ParallelogramIcon } from "./ParallelogramIcon";
-import type { ShapePreset } from "../types/ShapePreset";
+import type { ShapePreset } from "../ShapePreset";
 
 export const ParallelogramShapePresets: ShapePreset[] = [
 	{

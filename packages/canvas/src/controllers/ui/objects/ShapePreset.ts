@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 
-import type { ObjectType } from "../../../../schemas/objects/types/ObjectType";
+import type { ObjectType } from "../../../schemas/objects/types/ObjectType";
 
 /** Props received by a ShapeLibrary icon component. */
 export type ShapeIconProps = {

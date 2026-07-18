@@ -1,5 +1,5 @@
 import { OffPageConnectorIcon } from "./OffPageConnectorIcon";
-import type { ShapePreset } from "../types/ShapePreset";
+import type { ShapePreset } from "../ShapePreset";
 
 export const OffPageConnectorShapePresets: ShapePreset[] = [
 	{

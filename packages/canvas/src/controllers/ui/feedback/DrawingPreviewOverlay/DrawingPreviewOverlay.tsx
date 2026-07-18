@@ -5,7 +5,7 @@ import { AUTO_COLOR } from "../../../../schemas/objects/utils/autoColor";
 import type { ShapeFactoryRegistry } from "../../../../schemas/registry/ShapeFactoryRegistry";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../contexts/CanvasRegistriesContext";
-import type { ShapePreset } from "../../objects/types/ShapePreset";
+import type { ShapePreset } from "../../objects/ShapePreset";
 
 type DrawingPreviewOverlayProps = {
 	shapeDrawing: CanvasControllerState["shapeDrawing"];

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../../../CanvasTypes";
-import { SelectionControlRegistry } from "../../../../registry/SelectionControlRegistry";
 import type { ICanvasRegistries } from "../../../../setup/ICanvasRegistries";
+import { SelectionControlRegistry } from "../../../../ui/controls/SelectionControlRegistry";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { SelectionControlHandler } from "../../../registry/SelectionControlHandler";

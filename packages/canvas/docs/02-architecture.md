@@ -75,14 +75,14 @@ Dependency: `presentations → states` (referenced as the type of Props).
 
 There is **no top-level `src/registry/` directory and no `ObjectRegistry` class**. Instead, per-shape functionality is resolved through several small registry **classes**, each **colocated with the layer it belongs to**:
 
-| Registry class                                          | Location                                      | Resolves                                                |
-| ------------------------------------------------------- | --------------------------------------------- | ------------------------------------------------------- |
-| `ShapeFactoryRegistry`                                  | `schemas/registry/`                           | per-type shape factory (create Doc / bounds)            |
-| `ObjectMapperRegistry` / `ObjectStateValidatorRegistry` | `states/registry/`                            | Doc ↔ State mapper (+ features), State validator        |
-| `GestureHandlerRegistry` / `ObjectBehaviorRegistry`     | `controllers/gestures/registry/`              | gesture handlers, `moveByDelta` / `transformByGroup`    |
-| `ObjectComponentRegistry` / `ShapePreviewRegistry`      | `presentations/objects/registry/`             | render component, preview renderer                      |
-| `ShapePresetRegistry` / `ObjectMenuRegistry`            | `controllers/registry/`, `controllers/ui/...` | ShapeLibrary presets, per-type ObjectMenu               |
-| `CommandRegistry`                                       | `controllers/commands/`                       | commands (see [Command System](./05-command-system.md)) |
+| Registry class                                                            | Location                                    | Resolves                                                             |
+| ------------------------------------------------------------------------- | ------------------------------------------- | -------------------------------------------------------------------- |
+| `ShapeFactoryRegistry`                                                    | `schemas/registry/`                         | per-type shape factory (create Doc / bounds)                         |
+| `ObjectMapperRegistry` / `ObjectStateValidatorRegistry`                   | `states/registry/`                          | Doc ↔ State mapper (+ features), State validator                     |
+| `GestureHandlerRegistry` / `ObjectBehaviorRegistry`                       | `controllers/gestures/registry/`            | gesture handlers, `moveByDelta` / `transformByGroup`                 |
+| `ObjectComponentRegistry` / `ShapePreviewRegistry`                        | `presentations/objects/registry/`           | render component, preview renderer                                   |
+| `ShapePresetRegistry` / `ObjectMenuRegistry` / `SelectionControlRegistry` | `controllers/ui/...` (colocated per domain) | ShapeLibrary presets, per-type ObjectMenu, per-type SelectionControl |
+| `CommandRegistry`                                                         | `controllers/commands/`                     | commands (see [Command System](./05-command-system.md))              |
 
 Because each registry keys off the shape type (`"rect"`, `"ellipse"`, …), cross-shape processing can be written type-safely without `if (type === ...)` branching.
 

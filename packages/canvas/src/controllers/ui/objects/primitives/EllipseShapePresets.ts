@@ -1,6 +1,6 @@
 import { EllipseIcon } from "./EllipseIcon";
 import { OnPageConnectorIcon } from "./OnPageConnectorIcon";
-import type { ShapePreset } from "../types/ShapePreset";
+import type { ShapePreset } from "../ShapePreset";
 
 export const EllipseShapePresets: ShapePreset[] = [
 	{

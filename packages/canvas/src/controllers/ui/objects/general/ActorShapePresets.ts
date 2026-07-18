@@ -1,5 +1,5 @@
 import { ActorIcon } from "./ActorIcon";
-import type { ShapePreset } from "../types/ShapePreset";
+import type { ShapePreset } from "../ShapePreset";
 
 export const ActorShapePresets: ShapePreset[] = [
 	{

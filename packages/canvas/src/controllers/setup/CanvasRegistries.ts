@@ -9,10 +9,10 @@ import type { ObjectStateValidatorRegistry } from "../../states/registry/ObjectS
 import type { CommandRegistry } from "../commands/CommandRegistry";
 import type { GestureHandlerRegistry } from "../gestures/registry/GestureHandlerRegistry";
 import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
-import type { SelectionControlRegistry } from "../registry/SelectionControlRegistry";
-import type { ShapePresetRegistry } from "../registry/ShapePresetRegistry";
 import type { StylePropertyRegistry } from "../styleProperties/StylePropertyRegistry";
+import type { SelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
 import type { ObjectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
+import type { ShapePresetRegistry } from "../ui/objects/ShapePresetRegistry";
 
 /**
  * The full set of UI registries a single `<Canvas>` instance operates against.

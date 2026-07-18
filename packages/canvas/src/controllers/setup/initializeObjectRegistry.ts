@@ -416,9 +416,9 @@ import {
 	transformByGroup as polylineTransformByGroup,
 } from "../gestures/handlers/objects/primitives/PolylineController";
 import type { ObjectBehaviorEntry } from "../gestures/registry/ObjectBehaviorTypes";
-import type { SelectionControlDefinition } from "../registry/SelectionControlTypes";
 import { CalloutTailTipControl } from "../ui/controls/CalloutTailControls";
 import { ContainerHeaderHeightControl } from "../ui/controls/ContainerHeaderControls";
+import type { SelectionControlDefinition } from "../ui/controls/SelectionControlTypes";
 import { HeaderColorMenu } from "../ui/menu/ObjectMenu/items/HeaderColorMenu";
 import {
 	LabelBackgroundColorMenu,
@@ -458,7 +458,7 @@ import { EllipseShapePresets } from "../ui/objects/primitives/EllipseShapePreset
 import { PolygonShapePresets } from "../ui/objects/primitives/PolygonShapePresets";
 import { PolylineShapePresets } from "../ui/objects/primitives/PolylineShapePresets";
 import { RectShapePresets } from "../ui/objects/primitives/RectShapePresets";
-import type { ShapePreset } from "../ui/objects/types/ShapePreset";
+import type { ShapePreset } from "../ui/objects/ShapePreset";
 
 /**
  * Creation-related capabilities for the ShapeLibrary (shape palette).

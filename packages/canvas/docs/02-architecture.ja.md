@@ -75,14 +75,14 @@ State を Props として受け取り SVG を描画する純粋コンポーネ�
 
 **トップレベルの `src/registry/` ディレクトリも `ObjectRegistry` クラスも存在しない**。形状ごとの機能は、**それぞれが属するレイヤーに共配置された**複数の小さなレジストリで解決される。
 
-| レジストリクラス                                        | 場所                                          | 解決する対象                                              |
-| ------------------------------------------------------- | --------------------------------------------- | --------------------------------------------------------- |
-| `ShapeFactoryRegistry`                                  | `schemas/registry/`                           | 型別 ShapeFactory（Doc / bounds 生成）                    |
-| `ObjectMapperRegistry` / `ObjectStateValidatorRegistry` | `states/registry/`                            | Doc ↔ State Mapper（+ features）・State バリデータ        |
-| `GestureHandlerRegistry` / `ObjectBehaviorRegistry`     | `controllers/gestures/registry/`              | ジェスチャーハンドラ・`moveByDelta` / `transformByGroup`  |
-| `ObjectComponentRegistry` / `ShapePreviewRegistry`      | `presentations/objects/registry/`             | 描画コンポーネント・プレビュー描画                        |
-| `ShapePresetRegistry` / `ObjectMenuRegistry`            | `controllers/registry/`, `controllers/ui/...` | ShapeLibrary プリセット・型別 ObjectMenu                  |
-| `CommandRegistry`                                       | `controllers/commands/`                       | コマンド（[コマンドシステム](./05-command-system.ja.md)） |
+| レジストリクラス                                                          | 場所                                   | 解決する対象                                                    |
+| ------------------------------------------------------------------------- | -------------------------------------- | --------------------------------------------------------------- |
+| `ShapeFactoryRegistry`                                                    | `schemas/registry/`                    | 型別 ShapeFactory（Doc / bounds 生成）                          |
+| `ObjectMapperRegistry` / `ObjectStateValidatorRegistry`                   | `states/registry/`                     | Doc ↔ State Mapper（+ features）・State バリデータ              |
+| `GestureHandlerRegistry` / `ObjectBehaviorRegistry`                       | `controllers/gestures/registry/`       | ジェスチャーハンドラ・`moveByDelta` / `transformByGroup`        |
+| `ObjectComponentRegistry` / `ShapePreviewRegistry`                        | `presentations/objects/registry/`      | 描画コンポーネント・プレビュー描画                              |
+| `ShapePresetRegistry` / `ObjectMenuRegistry` / `SelectionControlRegistry` | `controllers/ui/...`（各ドメイン配下） | ShapeLibrary プリセット・型別 ObjectMenu・型別 SelectionControl |
+| `CommandRegistry`                                                         | `controllers/commands/`                | コマンド（[コマンドシステム](./05-command-system.ja.md)）       |
 
 各レジストリは形状タイプ（`"rect"`, `"ellipse"` など）をキーにするため、形状横断的な処理を `if (type === ...)` の分岐なしで型安全に書ける。
 

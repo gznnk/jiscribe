@@ -1,5 +1,5 @@
 import { TrapezoidIcon } from "./TrapezoidIcon";
-import type { ShapePreset } from "../types/ShapePreset";
+import type { ShapePreset } from "../ShapePreset";
 
 export const TrapezoidShapePresets: ShapePreset[] = [
 	{

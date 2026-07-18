@@ -1,7 +1,7 @@
 import { BoundaryIcon } from "./BoundaryIcon";
 import { FrameIcon } from "./FrameIcon";
 import { ZoneIcon } from "./ZoneIcon";
-import type { ShapePreset } from "../types/ShapePreset";
+import type { ShapePreset } from "../ShapePreset";
 
 /** Faint neutral tint for the Zone body — subtle enough to never hide contents at any z-order. */
 const ZONE_FILL = "rgba(100, 116, 139, 0.12)";

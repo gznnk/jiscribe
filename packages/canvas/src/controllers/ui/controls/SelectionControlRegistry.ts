@@ -1,6 +1,6 @@
 import type { SelectionControlDefinition } from "./SelectionControlTypes";
-import type { ObjectType } from "../../schemas/objects/types/ObjectType";
-import type { ObjectState } from "../../states/objects/base/ObjectState";
+import type { ObjectType } from "../../../schemas/objects/types/ObjectType";
+import type { ObjectState } from "../../../states/objects/base/ObjectState";
 
 /**
  * Per-type registry of selection controls (see SelectionControlTypes).

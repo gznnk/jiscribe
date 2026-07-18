@@ -1,5 +1,5 @@
 import { DbIcon } from "./DbIcon";
-import type { ShapePreset } from "../types/ShapePreset";
+import type { ShapePreset } from "../ShapePreset";
 
 export const DbShapePresets: ShapePreset[] = [
 	{

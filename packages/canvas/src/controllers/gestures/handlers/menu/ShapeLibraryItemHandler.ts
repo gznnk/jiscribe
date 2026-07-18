@@ -4,7 +4,7 @@ import { createObjectDoc } from "../../../../schemas/objects/utils/createObjectD
 import type { ShapeFactoryRegistry } from "../../../../schemas/registry/ShapeFactoryRegistry";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../setup/ICanvasRegistries";
-import type { ShapePreset } from "../../../ui/objects/types/ShapePreset";
+import type { ShapePreset } from "../../../ui/objects/ShapePreset";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import type {
 	CanvasEvent,

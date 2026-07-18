@@ -1,5 +1,5 @@
 import { StoredDataIcon } from "./StoredDataIcon";
-import type { ShapePreset } from "../types/ShapePreset";
+import type { ShapePreset } from "../ShapePreset";
 
 export const StoredDataShapePresets: ShapePreset[] = [
 	{

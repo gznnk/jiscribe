@@ -2,7 +2,7 @@ import type { ShapeFactoryRegistry } from "../../schemas/registry/ShapeFactoryRe
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
-import type { ShapePresetRegistry } from "../registry/ShapePresetRegistry";
+import type { ShapePresetRegistry } from "../ui/objects/ShapePresetRegistry";
 
 /**
  * The registry contract passed as an argument to the pure reducer/handler tree

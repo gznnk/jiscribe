@@ -1,5 +1,5 @@
 import { DelayIcon } from "./DelayIcon";
-import type { ShapePreset } from "../types/ShapePreset";
+import type { ShapePreset } from "../ShapePreset";
 
 export const DelayShapePresets: ShapePreset[] = [
 	{

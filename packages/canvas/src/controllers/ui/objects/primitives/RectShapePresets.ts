@@ -1,7 +1,7 @@
 import { MarkdownRectIcon } from "./MarkdownRectIcon";
 import { RectIcon } from "./RectIcon";
 import { AUTO_COLOR } from "../../../../schemas/objects/utils/autoColor";
-import type { ShapePreset } from "../types/ShapePreset";
+import type { ShapePreset } from "../ShapePreset";
 
 export const RectShapePresets: ShapePreset[] = [
 	{

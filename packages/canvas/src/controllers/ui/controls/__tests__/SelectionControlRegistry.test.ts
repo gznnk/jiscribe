@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import type { ObjectType } from "../../../schemas/objects/types/ObjectType";
-import type { CanvasControllerState } from "../../CanvasTypes";
-import { SelectionControlHandler } from "../../gestures/registry/SelectionControlHandler";
+import type { ObjectType } from "../../../../schemas/objects/types/ObjectType";
+import type { CanvasControllerState } from "../../../CanvasTypes";
+import { SelectionControlHandler } from "../../../gestures/registry/SelectionControlHandler";
 import { SelectionControlRegistry } from "../SelectionControlRegistry";
 import type { SelectionControlDefinition } from "../SelectionControlTypes";
 

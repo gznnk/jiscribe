@@ -16,10 +16,10 @@ import { createObjectStateValidatorRegistry } from "../../states/registry/Object
 import { createCommandRegistry } from "../commands/CommandRegistry";
 import { createGestureHandlerRegistry } from "../gestures/registry/GestureHandlerRegistry";
 import { createObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
-import { createSelectionControlRegistry } from "../registry/SelectionControlRegistry";
-import { createShapePresetRegistry } from "../registry/ShapePresetRegistry";
 import { createStylePropertyRegistry } from "../styleProperties/StylePropertyRegistry";
+import { createSelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
 import { createObjectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
+import { createShapePresetRegistry } from "../ui/objects/ShapePresetRegistry";
 
 /**
  * Builds a fresh, fully independent bundle of UI registries for one `<Canvas>`.

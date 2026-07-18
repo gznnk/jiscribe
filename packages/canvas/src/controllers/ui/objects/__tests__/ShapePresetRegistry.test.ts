@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import type { ShapePreset } from "../../ui/objects/types/ShapePreset";
+import type { ShapePreset } from "../ShapePreset";
 import { createShapePresetRegistry } from "../ShapePresetRegistry";
 
 const DummyIcon = () => null;

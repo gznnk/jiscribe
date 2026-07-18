@@ -2,7 +2,7 @@ import { memo } from "react";
 
 import { ShapeLibraryButton } from "./ShapeLibraryStyled";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
-import type { ShapePreset } from "../../objects/types/ShapePreset";
+import type { ShapePreset } from "../../objects/ShapePreset";
 
 type ShapeLibraryItemProps = {
 	preset: ShapePreset;

@@ -1,5 +1,5 @@
 import { DiamondIcon } from "./DiamondIcon";
-import type { ShapePreset } from "../types/ShapePreset";
+import type { ShapePreset } from "../ShapePreset";
 
 export const DiamondShapePresets: ShapePreset[] = [
 	{

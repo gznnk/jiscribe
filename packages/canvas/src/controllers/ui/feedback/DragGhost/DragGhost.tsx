@@ -6,7 +6,7 @@ import { createObjectDoc } from "../../../../schemas/objects/utils/createObjectD
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../contexts/CanvasRegistriesContext";
 import type { CanvasRegistries } from "../../../setup/CanvasRegistries";
-import type { ShapePreset } from "../../objects/types/ShapePreset";
+import type { ShapePreset } from "../../objects/ShapePreset";
 
 type DragGhostProps = {
 	shapeLibraryDrag: CanvasControllerState["shapeLibraryDrag"];

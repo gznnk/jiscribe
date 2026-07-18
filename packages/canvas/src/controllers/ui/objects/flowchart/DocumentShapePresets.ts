@@ -1,5 +1,5 @@
 import { DocumentIcon } from "./DocumentIcon";
-import type { ShapePreset } from "../types/ShapePreset";
+import type { ShapePreset } from "../ShapePreset";
 
 export const DocumentShapePresets: ShapePreset[] = [
 	{

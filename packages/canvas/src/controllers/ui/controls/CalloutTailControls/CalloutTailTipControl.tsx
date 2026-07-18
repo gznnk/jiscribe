@@ -10,8 +10,8 @@ import {
 	resolveCalloutTail,
 } from "../../../../presentations/objects/annotations/Callout";
 import type { CalloutState } from "../../../../states/objects/annotations/callout/CalloutState";
-import type { SelectionControlProps } from "../../../registry/SelectionControlTypes";
 import { SelectionControlPill } from "../SelectionControlPill";
+import type { SelectionControlProps } from "../SelectionControlTypes";
 
 /**
  * Handle for dragging the callout's tail tip. Free 2D drag; the handler

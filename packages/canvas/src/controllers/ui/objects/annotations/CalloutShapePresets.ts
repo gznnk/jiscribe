@@ -1,5 +1,5 @@
 import { CalloutIcon } from "./CalloutIcon";
-import type { ShapePreset } from "../types/ShapePreset";
+import type { ShapePreset } from "../ShapePreset";
 
 export const CalloutShapePresets: ShapePreset[] = [
 	{

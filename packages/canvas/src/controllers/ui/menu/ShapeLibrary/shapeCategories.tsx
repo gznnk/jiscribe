@@ -5,7 +5,7 @@ import { FrameIcon } from "../../objects/containers/FrameIcon";
 import { DiamondIcon } from "../../objects/flowchart/DiamondIcon";
 import { CloudIcon } from "../../objects/general/CloudIcon";
 import { RectIcon } from "../../objects/primitives/RectIcon";
-import type { ShapeIconProps } from "../../objects/types/ShapePreset";
+import type { ShapeIconProps } from "../../objects/ShapePreset";
 
 /**
  * A palette category shown as a submenu (flyout) button in the ShapeLibrary.

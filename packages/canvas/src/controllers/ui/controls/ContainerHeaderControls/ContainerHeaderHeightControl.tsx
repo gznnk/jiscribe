@@ -6,9 +6,9 @@ import { memo } from "react";
 
 import { calcContainerHeaderHeight } from "../../../../presentations/objects/containers/Container";
 import type { ContainerState } from "../../../../states/objects/containers/container/ContainerState";
-import type { SelectionControlProps } from "../../../registry/SelectionControlTypes";
 import { getResizeCursorForRotation } from "../../utils/getResizeCursorForRotation";
 import { SelectionControlPill } from "../SelectionControlPill";
+import type { SelectionControlProps } from "../SelectionControlTypes";
 
 /**
  * Handle for dragging the container's header divider to change headerHeight.

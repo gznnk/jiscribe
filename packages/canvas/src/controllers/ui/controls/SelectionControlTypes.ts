@@ -1,7 +1,7 @@
 import type { FC } from "react";
 
-import type { ObjectState } from "../../states/objects/base/ObjectState";
-import type { SelectionControlHandler } from "../gestures/registry/SelectionControlHandler";
+import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import type { SelectionControlHandler } from "../../gestures/registry/SelectionControlHandler";
 
 /** Props passed to a selection control's handle renderer. */
 export type SelectionControlProps<TState extends ObjectState = ObjectState> = {

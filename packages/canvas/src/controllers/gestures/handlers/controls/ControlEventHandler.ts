@@ -1,7 +1,7 @@
 import type { ObjectType } from "../../../../schemas/objects/types/ObjectType";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import type { SelectionControlRegistry } from "../../../registry/SelectionControlRegistry";
 import type { ICanvasRegistries } from "../../../setup/ICanvasRegistries";
+import type { SelectionControlRegistry } from "../../../ui/controls/SelectionControlRegistry";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import type { ControlStrategy } from "../../registry/ControlStrategy";
 import type {

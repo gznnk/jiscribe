@@ -1,5 +1,5 @@
 import { PolygonIcon } from "./PolygonIcon";
-import type { ShapePreset } from "../types/ShapePreset";
+import type { ShapePreset } from "../ShapePreset";
 
 export const PolygonShapePresets: ShapePreset[] = [
 	{

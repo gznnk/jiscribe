@@ -1,5 +1,5 @@
 import { CrossIcon } from "./CrossIcon";
-import type { ShapePreset } from "../types/ShapePreset";
+import type { ShapePreset } from "../ShapePreset";
 
 export const CrossShapePresets: ShapePreset[] = [
 	{

@@ -9,7 +9,7 @@ import {
 } from "./ShapeLibraryStyled";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import { ChevronDownIcon } from "../../icons/ChevronDownIcon";
-import type { ShapePreset } from "../../objects/types/ShapePreset";
+import type { ShapePreset } from "../../objects/ShapePreset";
 
 type ShapeCategoryMenuProps = {
 	category: ShapeCategory;
