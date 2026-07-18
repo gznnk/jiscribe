@@ -37,32 +37,23 @@ export const canvasToState = (
 	// O(N × nesting depth). See calculateGroupOrientedBounds.
 	const groupPointCache = new Map<string, Point[]>();
 
-	// Helper to process an object and its children recursively.
-	// Input is a validated CanvasDoc (a nested tree); since the tree is finite
-	// and cannot encode a parent/child cycle, no recursion guard is needed here.
-	// ID uniqueness / reference integrity are the validator's responsibility.
+	// Recurse over the validated tree. It is finite and cannot encode a
+	// parent/child cycle, so no recursion guard is needed; ID uniqueness and
+	// reference integrity are the validator's responsibility. Returns the ID.
 	const processObject = (objDoc: ObjectDoc, parentId?: string): string => {
-		// Returns the ID of the processed object
-		// 1. Convert the object itself using the registry
 		const objState = mapper.toState(objDoc);
-
-		// 2. Set the parent ID (normalization)
 		objState.parentId = parentId;
-
-		// 3. Register to the flat map
 		objects[objState.id] = objState;
 
-		// 4. If it's a group, process its children recursively
 		if (objState.type === "group") {
 			const groupDoc = objDoc as GroupDoc;
 			const groupState = objState as GroupState;
 
-			// Map children Docs to IDs, processing each child
+			// State holds children as a flat ID list; the nested Docs are recursed.
 			groupState.childIds = groupDoc.children.map((childDoc) =>
 				processObject(childDoc, groupState.id),
 			);
 
-			// Calculate and cache the group's bounding frame
 			const bounds = calculateGroupOrientedBounds(
 				objects,
 				groupState.id,
@@ -82,7 +73,6 @@ export const canvasToState = (
 		return objState.id;
 	};
 
-	// Process root objects.
 	// root is a mixed array of objects and connectors, and its order is the
 	// z-order as-is. The connector invariant (at least one endpoint is owned)
 	// is already guaranteed by validateSemantics at the boundary, so it is not
@@ -122,40 +112,14 @@ export const canvasToDoc = (
 	const reconstructObject = (id: string): ObjectDoc => {
 		const objState = state.objects[id];
 
-		// 1. Convert the state back to doc using the registry
-		// Note: The individual mappers (e.g. GroupMapper) currently expect
-		// to handle children mapping. We need to handle that carefully.
-		// Since we modified GroupMapper to interact with children logic,
-		// we likely need the GroupMapper to be "dumb" about children content
-		// or handle it here.
-
-		// Let's use the registry component. The individual mappers *should*
-		// ideally return a Doc with empty children first, which we then populate.
-		// However, standard mappers might try to access state.children.
-		// Let's look at GroupMapper's `toDoc`.
-
-		/*
-		 * Current GroupMapper.toDoc structure assumption:
-		 * return { ...base, children: state.children.map(child => ...) }
-		 *
-		 * But state.children is now string[].
-		 * The GroupMapper needs to be updated to NOT map children recursively,
-		 * or we need to pass a special context.
-		 *
-		 * Strategy: Modify GroupMapper (and others) to ONLY map their own properties.
-		 * Structure creation happens here (or via a recursive call in mapper if passed context).
-		 *
-		 * Better Strategy for Perf:
-		 * Handle recursion here centrally.
-		 */
-
+		// Each mapper converts only its own properties; child recursion is
+		// managed centrally here (docs/02-architecture.md).
 		const objDoc = mapper.toDoc(objState);
 
 		if (objState.type === "group") {
 			const groupState = objState as GroupState;
 			const groupDoc = objDoc as GroupDoc;
 
-			// Reconstruct children recursively
 			groupDoc.children = groupState.childIds.map((childId) =>
 				reconstructObject(childId),
 			);
