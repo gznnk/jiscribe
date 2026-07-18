@@ -1,38 +1,13 @@
 import {
 	Canvas,
-	brandLightCanvasTheme,
-	darkCanvasTheme,
 	extractCanvasSourceFromPng,
-	jaCanvasMessages,
-	lightCanvasTheme,
 	parseCanvasText,
 } from "@workspace/canvas";
-import type { CanvasDoc, CanvasTheme } from "@workspace/canvas";
-import { useCallback, useEffect, useRef, useState } from "react";
-import "./App.css";
+import type { CanvasDoc } from "@workspace/canvas";
+import { useCallback, useRef, useState } from "react";
+import "./file-io.css";
 
-// キャンバス UI の言語はブラウザロケールで決める（既定は英語）
-const canvasMessages = navigator.language.toLowerCase().startsWith("ja")
-	? jaCanvasMessages
-	: undefined;
-
-// デモで巡回できるテーマ一覧。テーマを増やしたらここに追加すれば
-// トグルボタンが自動で次のテーマへ切り替わる。colorScheme は暗いテーマだけ
-// "dark" 扱いにし、ページ余白色は各テーマの canvasBg に追従させる。
-const DEMO_THEMES: ReadonlyArray<{
-	label: string;
-	colorScheme: "dark" | "light";
-	theme: CanvasTheme;
-}> = [
-	{ label: "Dark", colorScheme: "dark", theme: darkCanvasTheme },
-	{ label: "Light", colorScheme: "light", theme: lightCanvasTheme },
-	{ label: "Brand Light", colorScheme: "light", theme: brandLightCanvasTheme },
-];
-
-const initialDoc: CanvasDoc = {
-	version: 1,
-	root: [],
-};
+const initialDoc: CanvasDoc = { version: 1, root: [] };
 
 const DEFAULT_FILE_NAME = "untitled.jis.json";
 
@@ -52,35 +27,19 @@ const formatParseError = (
 	}
 };
 
-/**
- * toolbarLeading スロットに挿すファイル操作ボタン。
- * 配色はホスト側テーマから --demo-* 変数で与える（--jiscribe-* は非公開契約）。
- */
+/** toolbarLeading スロットに挿すファイル操作ボタン。 */
 function FileToolbarButtons({
-	tokens,
 	onOpen,
 	onSave,
 }: {
-	tokens: CanvasTheme["tokens"];
 	onOpen: () => void;
 	onSave: () => void;
 }) {
 	return (
-		<div
-			className="file-toolbar-buttons"
-			style={
-				{
-					"--demo-radius": tokens.radius,
-					"--demo-icon-foreground": tokens.iconForeground,
-					"--demo-surface-hover": tokens.surfaceHover,
-					"--demo-surface-active": tokens.surfaceActive,
-				} as React.CSSProperties
-			}
-		>
+		<div className="file-toolbar-buttons">
 			<button
 				type="button"
 				className="file-toolbar-button"
-				data-testid="file-open"
 				title="Open file"
 				aria-label="Open file"
 				onClick={onOpen}
@@ -101,7 +60,6 @@ function FileToolbarButtons({
 			<button
 				type="button"
 				className="file-toolbar-button"
-				data-testid="file-save"
 				title="Save file"
 				aria-label="Save file"
 				onClick={onSave}
@@ -125,11 +83,13 @@ function FileToolbarButtons({
 	);
 }
 
-export function App() {
-	const [themeIndex, setThemeIndex] = useState(0);
-	const current = DEMO_THEMES[themeIndex];
-	const next = DEMO_THEMES[(themeIndex + 1) % DEMO_THEMES.length];
-
+/**
+ * ファイル入出力の例:
+ * - .jis.json の読み込み（toolbarLeading の Open ボタン → parseCanvasText で 2 段階バリデーション）
+ * - 編集中ドキュメントの保存（onCommit で最新 doc を ref に写し、Save でダウンロード）
+ * - jiscribe エクスポート PNG（iTXt に .jis.json 入り）のドロップ復元（round-trip 確認用）
+ */
+export function FileIoExample() {
 	// canvasDoc はファイル読み込み時だけ差し替える。編集中の最新 doc は
 	// onCommit で ref に写し、保存時に読む。
 	const [loadedDoc, setLoadedDoc] = useState<CanvasDoc>(initialDoc);
@@ -141,9 +101,6 @@ export function App() {
 		latestDocRef.current = committedDoc;
 	}, []);
 
-	// jiscribe がエクスポートした PNG（iTXt に .jis.json 入り）のドロップで
-	// キャンバスを差し替える（round-trip の確認用）。外部入力なので
-	// parseCanvasText の 2 段階バリデーションを通してから渡す。
 	const handleDrop = useCallback(async (e: React.DragEvent) => {
 		e.preventDefault();
 		const file = e.dataTransfer.files[0];
@@ -207,29 +164,17 @@ export function App() {
 		URL.revokeObjectURL(url);
 	}, [fileName]);
 
-	useEffect(() => {
-		document.title = `Canvas Demo [${__GIT_BRANCH__}]`;
-	}, []);
-
-	// ページ背景（キャンバス外の余白）もテーマに追従させる
-	useEffect(() => {
-		document.documentElement.style.colorScheme = current.colorScheme;
-		document.body.style.backgroundColor = current.theme.tokens.canvasBg;
-	}, [current]);
-
 	return (
-		<div className="app" onDrop={handleDrop} onDragOver={handleDragOver}>
+		<div
+			style={{ width: "100%", height: "100%" }}
+			onDrop={handleDrop}
+			onDragOver={handleDragOver}
+		>
 			<Canvas
 				canvasDoc={loadedDoc}
 				onCommit={handleCommit}
-				theme={current.theme}
-				messages={canvasMessages}
 				toolbarLeading={
-					<FileToolbarButtons
-						tokens={current.theme.tokens}
-						onOpen={handleOpenClick}
-						onSave={handleSave}
-					/>
+					<FileToolbarButtons onOpen={handleOpenClick} onSave={handleSave} />
 				}
 			/>
 			<input
@@ -237,31 +182,8 @@ export function App() {
 				type="file"
 				accept=".json,application/json"
 				style={{ display: "none" }}
-				data-testid="file-input"
 				onChange={handleFileChange}
 			/>
-			<button
-				type="button"
-				data-testid="theme-toggle"
-				onClick={() =>
-					setThemeIndex((index) => (index + 1) % DEMO_THEMES.length)
-				}
-				title={`Switch to ${next.label} theme`}
-				style={{
-					position: "fixed",
-					right: 12,
-					bottom: 12,
-					zIndex: 1000,
-					padding: "4px 10px",
-					borderRadius: 4,
-					border: `1px solid ${current.theme.tokens.border}`,
-					background: current.theme.tokens.surface,
-					color: current.theme.tokens.foreground,
-					cursor: "pointer",
-				}}
-			>
-				{next.label}
-			</button>
 		</div>
 	);
 }

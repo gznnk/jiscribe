@@ -98,7 +98,7 @@ After making changes, run the following in order (the project-wide procedure).
 ```bash
 pnpm lint --fix
 pnpm format
-pnpm build:demo
+pnpm build:examples
 pnpm typecheck
 pnpm lint
 pnpm --filter @workspace/canvas test

@@ -10,7 +10,7 @@ const isHeaded =
 	process.argv.includes("--headed") || process.argv.includes("--ui");
 
 // e2e 専用サーバーのポートを実行ごとに OS の空きポート（エフェメラル領域）から取得する。
-// 固定ポートだと dev サーバー（dev:demo / dev:web 等）と競合し、複数 e2e の同時起動もできない。
+// 固定ポートだと dev サーバー（dev:examples / dev:web 等）と競合し、複数 e2e の同時起動もできない。
 // この config はワーカー各プロセスでも再評価されるため、最初に決めたポートを
 // PLAYWRIGHT_PORT に焼き付けて全プロセスで共有する（さもないと baseURL と
 // webServer の起動ポートがワーカーごとにズレて ERR_CONNECTION_REFUSED になる）。

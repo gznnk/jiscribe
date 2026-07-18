@@ -102,7 +102,7 @@ madge で循環依存を検出する。
 ```bash
 pnpm lint --fix
 pnpm format
-pnpm build:demo
+pnpm build:examples
 pnpm typecheck
 pnpm lint
 pnpm --filter @workspace/canvas test
