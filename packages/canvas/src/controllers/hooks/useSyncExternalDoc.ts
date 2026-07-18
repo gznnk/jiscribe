@@ -6,7 +6,7 @@ import { resolveDocSnapshot } from "../../states/canvas/DocSnapshot";
 import type { CanvasControllerState } from "../CanvasTypes";
 import { useCanvasRegistries } from "../contexts/CanvasRegistriesContext";
 import type { CanvasAction } from "../reducer/CanvasActions";
-import type { createSelfSaveNonceTracker } from "../utils/createSelfSaveNonceTracker";
+import type { createSelfSaveNonceTracker } from "./support/createSelfSaveNonceTracker";
 import { isSameCanvasDocContent } from "../utils/isSameCanvasDocContent";
 
 export type UseSyncExternalDocParams = {
