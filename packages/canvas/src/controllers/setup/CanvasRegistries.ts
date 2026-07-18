@@ -11,6 +11,7 @@ import type { GestureHandlerRegistry } from "../gestures/registry/GestureHandler
 import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
 import type { SelectionControlRegistry } from "../registry/SelectionControlRegistry";
 import type { ShapePresetRegistry } from "../registry/ShapePresetRegistry";
+import type { StylePropertyRegistry } from "../styleProperties/StylePropertyRegistry";
 import type { ObjectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
 
 /**
@@ -39,6 +40,7 @@ export type CanvasRegistries = {
 	objectMenu: ObjectMenuRegistry;
 	shapePreset: ShapePresetRegistry;
 	shapeFactory: ShapeFactoryRegistry;
+	styleProperty: StylePropertyRegistry;
 };
 
 /**

@@ -8,7 +8,8 @@ import type { Command } from "../CommandTypes";
  * supplements this by checking value validity. isTextStyleState alone is a loose
  * guard that only checks the text attributes are internally consistent, so it would
  * also pass shapes with no text at all (svg / polyline / polygon, etc.); this aligns
- * on the same features.text criterion used by the property-update side (isPropertySupported).
+ * on the same features.text criterion used by the property-update side
+ * (FeatureGatedStyleProperty's text gate).
  */
 const canEditText = (
 	object: ObjectState | undefined,

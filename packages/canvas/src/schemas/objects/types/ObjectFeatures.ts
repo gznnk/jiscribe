@@ -25,6 +25,11 @@ export type ObjectFeatures = {
 	arrow?: boolean;
 	/** Whether this object can be used as a connector endpoint target */
 	connectable?: boolean;
-	/** Whether this object has an independently-colorable header band (container) */
-	header?: boolean;
 };
+
+/** Boolean flag keys of ObjectFeatures (excludes the structural `type` / `geometry`). */
+export type ObjectFeatureFlag = {
+	[K in keyof ObjectFeatures]-?: ObjectFeatures[K] extends boolean | undefined
+		? K
+		: never;
+}[keyof ObjectFeatures];

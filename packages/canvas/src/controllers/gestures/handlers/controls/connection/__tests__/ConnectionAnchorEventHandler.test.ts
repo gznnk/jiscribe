@@ -10,7 +10,6 @@ import { deepFreezeState } from "../../../../../__tests__/support/deepFreezeStat
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { createInitialControllerState } from "../../../../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../../../../setup/createCanvasRegistries";
-import { handlePropertyUpdate } from "../../../../../utils/handlePropertyUpdate";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 import { ConnectionAnchorEventHandler } from "../ConnectionAnchorEventHandler";
 
@@ -319,7 +318,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 	};
 
 	// Regression guard for #167: a connector created via the gesture must carry the
-	// features descriptor. handlePropertyUpdate reads state.features directly to gate
+	// features descriptor. The style-property handlers read state.features directly to gate
 	// style updates, so a freshly created connector without it silently ignores every
 	// stroke change until a save/reload re-stamps features through the registry.
 	describe("a newly created connector is immediately style-editable (regression #167)", () => {
@@ -338,17 +337,29 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 				selectedConnectorId: connectorId,
 			};
 
-			const dashed = handlePropertyUpdate(selected, "strokeDashType", "dashed");
+			const dashed = registries.styleProperty.apply(
+				selected,
+				"strokeDashType",
+				"dashed",
+			);
 			expect(
 				(dashed.objects[connectorId] as ConnectorState).strokeDashType,
 			).toBe("dashed");
 
-			const colored = handlePropertyUpdate(selected, "stroke", "#ff0000");
+			const colored = registries.styleProperty.apply(
+				selected,
+				"stroke",
+				"#ff0000",
+			);
 			expect((colored.objects[connectorId] as ConnectorState).stroke).toBe(
 				"#ff0000",
 			);
 
-			const widened = handlePropertyUpdate(selected, "strokeWidth", "7");
+			const widened = registries.styleProperty.apply(
+				selected,
+				"strokeWidth",
+				"7",
+			);
 			expect((widened.objects[connectorId] as ConnectorState).strokeWidth).toBe(
 				7,
 			);

@@ -1,5 +1,4 @@
 import { handleCommand } from "../../../commands/handlers/handleCommand";
-import { handlePropertyUpdate } from "../../../utils/handlePropertyUpdate";
 import type {
 	CanvasEvent,
 	GestureHandler,
@@ -70,7 +69,7 @@ export const ObjectMenuHandler: GestureHandler = {
 
 			// drag event: real-time update (no history recording, menu stays open)
 			if (event.type === "drag") {
-				const newState = handlePropertyUpdate(
+				const newState = registries.styleProperty.apply(
 					state,
 					property,
 					event.inputValue,
@@ -80,7 +79,7 @@ export const ObjectMenuHandler: GestureHandler = {
 
 			// dragEnd event: commit the final value (history recording is delegated to handleGesture)
 			if (event.type === "dragEnd") {
-				const newState = handlePropertyUpdate(
+				const newState = registries.styleProperty.apply(
 					state,
 					property,
 					event.inputValue,
@@ -116,7 +115,11 @@ export const ObjectMenuHandler: GestureHandler = {
 				if (colonIndex !== -1) {
 					const property = rest.slice(0, colonIndex);
 					const value = rest.slice(colonIndex + 1);
-					const newState = handlePropertyUpdate(state, property, value);
+					const newState = registries.styleProperty.apply(
+						state,
+						property,
+						value,
+					);
 					// History recording is delegated to handleGesture, so only update commitVersion
 					return {
 						...newState,

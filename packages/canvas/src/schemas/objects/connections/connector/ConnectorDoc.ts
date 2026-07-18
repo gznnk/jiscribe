@@ -8,6 +8,7 @@ import type { ArrowType } from "../../types/ArrowType";
 import type { ConnectorRouting } from "../../types/ConnectorRouting";
 import type { CreateObjectType } from "../../types/CreateObjectType";
 import type { EndpointRef } from "../../types/EndpointRef";
+import type { ExtraStylePropertyDescriptor } from "../../types/ExtraStyleProperty";
 import type { ObjectFeatures } from "../../types/ObjectFeatures";
 
 /** Feature descriptor for the connector object type (poly geometry, strokeable, arrow ends, not connectable). */
@@ -18,6 +19,21 @@ export const ConnectorFeatures = {
 	arrow: true,
 	connectable: false,
 } as const satisfies ObjectFeatures;
+
+/**
+ * Connector-specific styleable properties beyond the ObjectFeatures flags
+ * (ExtraStylePropertyRegistry 参照). The `label.` prefix is a nested write path
+ * into `connector.label`; a connector without a label ignores these (no-op).
+ */
+export const ConnectorExtraStyleProperties = {
+	"label.fill": { valueType: "string" },
+	"label.stroke": { valueType: "string" },
+	"label.strokeWidth": { valueType: "number" },
+	"label.strokeDashType": { valueType: "string" },
+	"label.fontColor": { valueType: "string" },
+	"label.fontSize": { valueType: "number" },
+	"label.fontWeight": { valueType: "string" },
+} as const satisfies Record<string, ExtraStylePropertyDescriptor>;
 
 /**
  * Annotation (label) attached to a connector.

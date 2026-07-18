@@ -7,7 +7,7 @@ import { handleCommand } from "../commands/handlers/handleCommand";
 import { handleGesture } from "../gestures/handlers/handleGesture";
 import type { CanvasRegistries } from "../setup/CanvasRegistries";
 import { commitTextEditIfNeeded } from "../utils/commitTextEditIfNeeded";
-import { handlePropertyUpdate } from "../utils/handlePropertyUpdate";
+import { materializeObjects } from "../utils/cowObjects";
 import { resetUiState } from "../utils/resetUiState";
 
 /**
@@ -76,13 +76,19 @@ export const createCanvasReducer =
 				// Property updates from the ObjectMenu take two paths.
 				// (1) This case: dispatched from Canvas.tsx's onPropertyUpdate callback via React onChange events (e.g. number-input).
 				// (2) ObjectMenuHandler: via the gesture system (set: / slider:). That path does not go through here.
-				const updated = handlePropertyUpdate(
+				const updated = registries.styleProperty.apply(
 					state,
 					action.property,
 					action.value,
 				);
-				// Clear the vertex selection after a property change (so the Delete key acts as object deletion)
-				const updatedWithVertexCleared = { ...updated, selectedVertex: null };
+				// Clear the vertex selection after a property change (so the Delete key acts as object deletion).
+				// This path bypasses handleGesture, so flatten the COW view here
+				// (one-shot update, same pattern as MoveCommands; #213).
+				const updatedWithVertexCleared = {
+					...updated,
+					objects: materializeObjects(updated.objects),
+					selectedVertex: null,
+				};
 				if (!action.commit) {
 					return updatedWithVertexCleared;
 				}

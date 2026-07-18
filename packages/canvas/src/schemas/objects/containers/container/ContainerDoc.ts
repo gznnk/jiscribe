@@ -1,5 +1,6 @@
 import { DEFAULT_FONT_FAMILY } from "../../../../constants/defaultFontFamily";
 import type { CreateObjectType } from "../../types/CreateObjectType";
+import type { ExtraStylePropertyDescriptor } from "../../types/ExtraStyleProperty";
 import type { ObjectFeatures } from "../../types/ObjectFeatures";
 import { AUTO_COLOR } from "../../utils/autoColor";
 
@@ -27,8 +28,12 @@ export const ContainerFeatures = {
 	fill: true,
 	text: true,
 	connectable: true,
-	header: true,
 } as const satisfies ObjectFeatures;
+
+/** Container-specific styleable properties beyond the ObjectFeatures flags (ExtraStylePropertyRegistry 参照). */
+export const ContainerExtraStyleProperties = {
+	headerFill: { valueType: "string" },
+} as const satisfies Record<string, ExtraStylePropertyDescriptor>;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare const ContainerDocBrand: unique symbol;

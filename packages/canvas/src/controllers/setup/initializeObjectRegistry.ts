@@ -153,8 +153,14 @@ import { CalloutShapeFactory } from "../../schemas/objects/annotations/callout/C
 import { StickyFeatures } from "../../schemas/objects/annotations/sticky/StickyDoc";
 import { StickyShapeFactory } from "../../schemas/objects/annotations/sticky/StickyShapeFactory";
 import type { ObjectDoc } from "../../schemas/objects/base/ObjectDoc";
-import { ConnectorFeatures } from "../../schemas/objects/connections/connector/ConnectorDoc";
-import { ContainerFeatures } from "../../schemas/objects/containers/container/ContainerDoc";
+import {
+	ConnectorExtraStyleProperties,
+	ConnectorFeatures,
+} from "../../schemas/objects/connections/connector/ConnectorDoc";
+import {
+	ContainerExtraStyleProperties,
+	ContainerFeatures,
+} from "../../schemas/objects/containers/container/ContainerDoc";
 import { ContainerShapeFactory } from "../../schemas/objects/containers/container/ContainerShapeFactory";
 import { CardFeatures } from "../../schemas/objects/flowchart/card/CardDoc";
 import { CardShapeFactory } from "../../schemas/objects/flowchart/card/CardShapeFactory";
@@ -206,6 +212,7 @@ import { PolylineShapeFactory } from "../../schemas/objects/primitives/polyline/
 import { RectFeatures } from "../../schemas/objects/primitives/rect/RectDoc";
 import { RectShapeFactory } from "../../schemas/objects/primitives/rect/RectShapeFactory";
 import { SvgFeatures } from "../../schemas/objects/primitives/svg/SvgDoc";
+import type { ExtraStylePropertyDescriptor } from "../../schemas/objects/types/ExtraStyleProperty";
 import type { ObjectFeatures } from "../../schemas/objects/types/ObjectFeatures";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 import type { ShapeFactory } from "../../schemas/objects/types/ShapeFactory";
@@ -486,6 +493,8 @@ export type ObjectTypeDefinition = {
 	validateState: ObjectStateValidateFn;
 	/** Type-specific selection controls (handle renderer + gesture strategy pairs). */
 	selectionControls?: SelectionControlDefinition[];
+	/** Styleable properties beyond the ObjectFeatures flags (see StylePropertyRegistry). */
+	extraStyleProperties?: Record<string, ExtraStylePropertyDescriptor>;
 	shapeLibrary?: ShapeLibraryRegistration;
 };
 
@@ -505,6 +514,7 @@ const defineObject = <TDoc extends ObjectDoc, TState extends ObjectState>(def: {
 	menuFactory: MenuSectionFactory<TState>;
 	validateState: ObjectStateValidateFn;
 	selectionControls?: SelectionControlDefinition<TState>[];
+	extraStyleProperties?: Record<string, ExtraStylePropertyDescriptor>;
 	shapeLibrary?: ShapeLibraryRegistration;
 }): ObjectTypeDefinition => def as unknown as ObjectTypeDefinition;
 
@@ -1080,6 +1090,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 		container: defineObject({
 			mapper: { toDoc: containerToDoc, toState: containerToState },
 			features: ContainerFeatures,
+			extraStyleProperties: ContainerExtraStyleProperties,
 			component: Container,
 			textRegion: calcContainerTextRegion,
 			behavior: createFrameBehavior<ContainerState>(),
@@ -1386,6 +1397,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 		connector: defineObject({
 			mapper: { toDoc: connectorToDoc, toState: connectorToState },
 			features: ConnectorFeatures,
+			extraStyleProperties: ConnectorExtraStyleProperties,
 			component: Connector,
 			behavior: {
 				moveByDelta: connectorMoveByDelta,
@@ -1532,6 +1544,12 @@ export const applyObjectDefinition = (
 	if (definition.selectionControls) {
 		registries.selectionControl.register(type, definition.selectionControls);
 	}
+	if (definition.extraStyleProperties) {
+		registries.styleProperty.registerExtras(
+			type,
+			definition.extraStyleProperties,
+		);
+	}
 
 	const shapeLibrary = definition.shapeLibrary;
 	if (shapeLibrary?.factory) {
@@ -1569,6 +1587,7 @@ export const initializeObjectRegistry = (
 	registries.shapeFactory.clear();
 	registries.shapePreview.clear();
 	registries.shapePreset.clear();
+	registries.styleProperty.clearExtras();
 
 	for (const [type, definition] of Object.entries(ALL_OBJECT_DEFINITIONS)) {
 		applyObjectDefinition(registries, type, definition);
