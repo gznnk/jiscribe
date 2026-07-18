@@ -3,7 +3,7 @@ import type { ConnectorRouting } from "../../../schemas/objects/types/ConnectorR
 import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { isSelfLoopConnector } from "../../utils/isSelfLoopConnector";
-import type { Command } from "../CommandTypes";
+import type { ExecutableCommand } from "../CommandTypes";
 
 /**
  * Executable only when the current selection is a single connector.
@@ -78,7 +78,7 @@ const applyConnectorRouting = (
 	};
 };
 
-export const SetRoutingStraightCommand: Command = {
+export const SetRoutingStraightCommand: ExecutableCommand = {
 	id: "setRoutingStraight",
 	label: "Straight Routing",
 	category: "edit",
@@ -86,7 +86,7 @@ export const SetRoutingStraightCommand: Command = {
 	execute: (state) => applyConnectorRouting(state, "straight"),
 };
 
-export const SetRoutingOrthogonalCommand: Command = {
+export const SetRoutingOrthogonalCommand: ExecutableCommand = {
 	id: "setRoutingOrthogonal",
 	label: "Orthogonal Routing",
 	category: "edit",

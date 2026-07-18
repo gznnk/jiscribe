@@ -10,6 +10,7 @@ import {
 	SetRoutingOrthogonalCommand,
 	SetRoutingStraightCommand,
 } from "../commands/connector/SetConnectorRoutingCommand";
+import { ExportCommand } from "../commands/export/ExportCommand";
 import { GroupCommand } from "../commands/group/GroupCommand";
 import { UngroupCommand } from "../commands/group/UngroupCommand";
 import { RedoCommand } from "../commands/history/RedoCommand";
@@ -19,6 +20,7 @@ import { CutCommand } from "../commands/selection/CutCommand";
 import { DeleteCommand } from "../commands/selection/DeleteCommand";
 import { DeselectAllCommand } from "../commands/selection/DeselectAllCommand";
 import { DuplicateCommand } from "../commands/selection/DuplicateCommand";
+import { PasteCommand } from "../commands/selection/PasteCommand";
 import { SelectAllCommand } from "../commands/selection/SelectAllCommand";
 import { StartTextEditCommand } from "../commands/text/StartTextEditCommand";
 import { ResetZoomCommand } from "../commands/view/ResetZoomCommand";
@@ -39,6 +41,7 @@ export const ALL_COMMANDS: Command[] = [
 	// Clipboard commands
 	CopyCommand,
 	CutCommand,
+	PasteCommand,
 	DuplicateCommand,
 	// Selection commands
 	SelectAllCommand,
@@ -67,6 +70,8 @@ export const ALL_COMMANDS: Command[] = [
 	ResetZoomCommand,
 	ZoomToFitCommand,
 	ZoomToSelectionCommand,
+	// Export command (definition-only; executed via callback)
+	ExportCommand,
 ];
 
 /**

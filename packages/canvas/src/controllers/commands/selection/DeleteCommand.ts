@@ -4,14 +4,14 @@ import type { CanvasControllerState } from "../../CanvasTypes";
 import { cleanupConnectorsOnDelete } from "../../utils/cleanupConnectorsOnDelete";
 import { cleanupGroups } from "../../utils/cleanupGroups";
 import { updateGroupBoundsFromRoot } from "../../utils/updateGroupBoundsFromRoot";
-import type { Command } from "../CommandTypes";
+import type { ExecutableCommand } from "../CommandTypes";
 
 /**
  * Command that deletes the current selection. Prioritizes vertex deletion when a
  * vertex is selected; otherwise removes selected objects (with group descendants)
  * and the selected connector, then cleans up connectors and groups.
  */
-export const DeleteCommand: Command = {
+export const DeleteCommand: ExecutableCommand = {
 	id: "delete",
 	label: "Delete",
 	category: "edit",

@@ -1,6 +1,6 @@
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../../states/objects/base/TextStyleState";
-import type { Command } from "../CommandTypes";
+import type { ExecutableCommand } from "../CommandTypes";
 
 /**
  * Whether the shape can start text editing.
@@ -16,7 +16,7 @@ const canEditText = (
 ): object is ObjectState & { text?: string } =>
 	object != null && object.features?.text === true && isTextStyleState(object);
 
-export const StartTextEditCommand: Command = {
+export const StartTextEditCommand: ExecutableCommand = {
 	id: "start-text-edit",
 	label: "Start Text Editing",
 	category: "edit",

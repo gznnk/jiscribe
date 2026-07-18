@@ -7,9 +7,9 @@ import { cleanupGroups } from "../../utils/cleanupGroups";
 import { findLowestCommonAncestor } from "../../utils/findLowestCommonAncestor";
 import { sortObjectIdsByZOrder } from "../../utils/sortObjectIdsByZOrder";
 import { updateGroupBoundsFromRoot } from "../../utils/updateGroupBoundsFromRoot";
-import type { Command } from "../CommandTypes";
+import type { ExecutableCommand } from "../CommandTypes";
 
-export const GroupCommand: Command = {
+export const GroupCommand: ExecutableCommand = {
 	id: "group",
 	label: "Group",
 	category: "arrange",

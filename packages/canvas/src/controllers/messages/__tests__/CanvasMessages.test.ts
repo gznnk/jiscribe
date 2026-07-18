@@ -12,8 +12,10 @@ describe("mergeCanvasMessages", () => {
 	});
 
 	it("flat key override -> only that key changes", () => {
-		const merged = mergeCanvasMessages({ contextMenuPaste: "貼り付け" });
-		expect(merged.contextMenuPaste).toBe("貼り付け");
+		const merged = mergeCanvasMessages({
+			shortcutHelpTitle: "キーボードショートカット",
+		});
+		expect(merged.shortcutHelpTitle).toBe("キーボードショートカット");
 		expect(merged.toolbarZoomIn).toBe(defaultCanvasMessages.toolbarZoomIn);
 	});
 

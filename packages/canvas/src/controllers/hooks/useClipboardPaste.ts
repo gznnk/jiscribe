@@ -1,13 +1,6 @@
-import {
-	type Dispatch,
-	type RefObject,
-	useCallback,
-	useEffect,
-	useRef,
-} from "react";
+import { type Dispatch, type RefObject, useCallback, useRef } from "react";
 
 import type { ObjectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
-import { getPlatform } from "../commands/CommandUtils";
 import {
 	type ClipboardData,
 	isClipboardData,
@@ -61,20 +54,18 @@ export const enqueueClipboardPaste = (
 };
 
 /**
- * Custom hook that builds the paste handler and registers it to the keyboard
- * shortcut (Ctrl+V / Cmd+V).
+ * Custom hook that builds the paste handler.
+ * The Ctrl+V / Cmd+V shortcut is defined by PasteCommand in the command
+ * registry and wired to this handler via useKeyboardShortcuts' callbacks.
  *
  * It tries to read the OS clipboard and falls back to internalClipboard on failure.
  * Concurrent invocations are serialized FIFO (see enqueueClipboardPaste).
  *
- * @param containerRef - Focusable canvas root the keydown listener is scoped to
- *   (same multi-Canvas rationale as useKeyboardShortcuts)
  * @param internalClipboard - Fallback used when the OS clipboard cannot be read
  * @param dispatch - Canvas reducer dispatch
- * @returns The paste handler callback (reusable from the context menu and elsewhere)
+ * @returns The paste handler callback (used by the keyboard shortcut and the context menu)
  */
 export const useClipboardPaste = (
-	containerRef: RefObject<HTMLElement | null>,
 	internalClipboard: ClipboardData | null,
 	dispatch: Dispatch<CanvasAction>,
 ): (() => Promise<void>) => {
@@ -93,37 +84,6 @@ export const useClipboardPaste = (
 			),
 		[dispatch, internalClipboard, objectStateValidator],
 	);
-
-	// Paste with Ctrl+V / Cmd+V
-	useEffect(() => {
-		const container = containerRef.current;
-		if (!container) {
-			return;
-		}
-
-		const handler = (e: KeyboardEvent) => {
-			if (
-				e.target instanceof HTMLInputElement ||
-				e.target instanceof HTMLTextAreaElement ||
-				e.target instanceof HTMLSelectElement
-			) {
-				return;
-			}
-			const isMac = getPlatform() === "mac";
-			if (
-				e.code === "KeyV" &&
-				(isMac ? e.metaKey : e.ctrlKey) &&
-				!e.shiftKey &&
-				!e.altKey
-			) {
-				void handlePaste();
-				e.preventDefault();
-				e.stopPropagation();
-			}
-		};
-		container.addEventListener("keydown", handler);
-		return () => container.removeEventListener("keydown", handler);
-	}, [containerRef, handlePaste]);
 
 	return handlePaste;
 };

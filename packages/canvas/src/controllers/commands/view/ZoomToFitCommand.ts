@@ -1,9 +1,9 @@
 import { calcFitViewport } from "../../utils/calcFitViewport";
-import type { Command } from "../CommandTypes";
+import type { ExecutableCommand } from "../CommandTypes";
 
 const PADDING_PX = 48;
 
-export const ZoomToFitCommand: Command = {
+export const ZoomToFitCommand: ExecutableCommand = {
 	id: "zoomToFit",
 	label: "Zoom to Fit",
 	category: "view",

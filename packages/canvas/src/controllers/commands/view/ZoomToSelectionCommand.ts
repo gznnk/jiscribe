@@ -2,11 +2,11 @@ import { isGroupState } from "../../../states/objects/primitives/group/GroupStat
 import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWithDescendants";
 import { calcObjectBoundingBox } from "../../utils/calcObjectBoundingBox";
 import { calcViewportForBounds } from "../../utils/calcViewportForBounds";
-import type { Command } from "../CommandTypes";
+import type { ExecutableCommand } from "../CommandTypes";
 
 const PADDING_PX = 48;
 
-export const ZoomToSelectionCommand: Command = {
+export const ZoomToSelectionCommand: ExecutableCommand = {
 	id: "zoomToSelection",
 	label: "Zoom to Selection",
 	category: "view",

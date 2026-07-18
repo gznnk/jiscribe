@@ -1,6 +1,6 @@
-﻿import type { Command } from "../CommandTypes";
+﻿import type { ExecutableCommand } from "../CommandTypes";
 
-export const DeselectAllCommand: Command = {
+export const DeselectAllCommand: ExecutableCommand = {
 	id: "deselectAll",
 	label: "Deselect All",
 	category: "selection",

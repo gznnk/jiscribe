@@ -36,10 +36,6 @@ export type CanvasMessageStrings = {
 	shortcutHelpCategoryArrange: string;
 	shortcutHelpCategoryView: string;
 
-	// Context menu
-	contextMenuPaste: string;
-	contextMenuExport: string;
-
 	// Error toasts
 	clipboardWriteError: string;
 	exportImageError: string;
@@ -134,9 +130,6 @@ export const defaultCanvasMessages: CanvasMessages = {
 	shortcutHelpCategorySelection: "Selection",
 	shortcutHelpCategoryArrange: "Arrange",
 	shortcutHelpCategoryView: "View",
-
-	contextMenuPaste: "Paste",
-	contextMenuExport: "Export…",
 
 	clipboardWriteError:
 		"Failed to write to the clipboard. Paste inside the app is still available.",

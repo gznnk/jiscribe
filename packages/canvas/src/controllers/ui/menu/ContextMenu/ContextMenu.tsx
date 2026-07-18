@@ -9,7 +9,6 @@ import {
 } from "./ContextMenuStyled";
 import { useContextMenuPosition } from "./useContextMenuPosition";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import type { PlatformKeyBindings } from "../../../commands/CommandTypes";
 import {
 	formatShortcut,
 	getPlatformShortcuts,
@@ -18,15 +17,15 @@ import { useCommandState } from "../../../hooks/useCommandState";
 import { getCommandLabel } from "../../../messages/CanvasMessages";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 
+/**
+ * Both kinds resolve label / shortcut / enabled from the command registry;
+ * they differ only in execution wiring: "command" dispatches via the gesture
+ * system (data-part), "callback" invokes callbacks[commandId] directly
+ * (definition-only commands such as paste / export).
+ */
 type CommandMenuItem =
 	| { type: "command"; commandId: string }
-	| {
-			type: "callback";
-			id: string;
-			label: string;
-			shortcuts?: PlatformKeyBindings;
-			enabled?: boolean;
-	  }
+	| { type: "callback"; commandId: string }
 	| { type: "separator" };
 
 type ContextMenuProps = {
@@ -55,15 +54,7 @@ const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 		{ type: "command", commandId: "cut" },
 		{ type: "command", commandId: "copy" },
 		{ type: "command", commandId: "duplicate" },
-		{
-			type: "callback",
-			id: "paste",
-			label: messages.contextMenuPaste,
-			shortcuts: {
-				mac: [{ code: "KeyV", meta: true }],
-				default: [{ code: "KeyV", ctrl: true }],
-			},
-		},
+		{ type: "callback", commandId: "paste" },
 		{ type: "command", commandId: "delete" },
 		{ type: "separator" },
 		{ type: "command", commandId: "selectAll" },
@@ -77,74 +68,51 @@ const ContextMenuBody: React.FC<ContextMenuBodyProps> = ({
 		{ type: "command", commandId: "group" },
 		{ type: "command", commandId: "ungroup" },
 		{ type: "separator" },
-		{ type: "callback", id: "export", label: messages.contextMenuExport },
+		{ type: "callback", commandId: "export" },
 	];
 
 	return (
 		<Menu ref={menuRef} left={left} top={top}>
 			{menuItems.map((item, index) => {
-				switch (item.type) {
-					case "separator": {
-						return <MenuSeparator key={`sep-${index}`} />;
-					}
-
-					case "callback": {
-						const shortcuts = item.shortcuts
-							? getPlatformShortcuts(item.shortcuts)
-							: null;
-						const firstShortcut = shortcuts?.[0];
-						const enabled = item.enabled !== false;
-
-						return (
-							<MenuItem
-								key={item.id}
-								disabled={!enabled}
-								data-testid={`context-menu-callback:${item.id}`}
-								data-gesture="none"
-								onClick={enabled ? callbacks[item.id] : undefined}
-							>
-								<MenuItemLabel>{item.label}</MenuItemLabel>
-								{firstShortcut && (
-									<MenuItemShortcut>
-										{formatShortcut(firstShortcut)}
-									</MenuItemShortcut>
-								)}
-							</MenuItem>
-						);
-					}
-
-					case "command": {
-						const resolved = resolveCommand(item.commandId);
-						if (!resolved) {
-							return null;
-						}
-
-						const { command, enabled } = resolved;
-						const shortcuts = command.shortcuts
-							? getPlatformShortcuts(command.shortcuts)
-							: null;
-						const firstShortcut = shortcuts?.[0];
-
-						return (
-							<MenuItem
-								key={command.id}
-								disabled={!enabled}
-								data-kind="menu"
-								data-id="context-menu"
-								data-part={`command:${command.id}`}
-							>
-								<MenuItemLabel>
-									{getCommandLabel(messages, command)}
-								</MenuItemLabel>
-								{firstShortcut && (
-									<MenuItemShortcut>
-										{formatShortcut(firstShortcut)}
-									</MenuItemShortcut>
-								)}
-							</MenuItem>
-						);
-					}
+				if (item.type === "separator") {
+					return <MenuSeparator key={`sep-${index}`} />;
 				}
+
+				const resolved = resolveCommand(item.commandId);
+				if (!resolved) {
+					return null;
+				}
+
+				const { command, enabled } = resolved;
+				const shortcuts = command.shortcuts
+					? getPlatformShortcuts(command.shortcuts)
+					: null;
+				const firstShortcut = shortcuts?.[0];
+
+				// Execution wiring is the only difference between the two kinds.
+				const executionProps =
+					item.type === "callback"
+						? {
+								"data-testid": `context-menu-callback:${command.id}`,
+								"data-gesture": "none",
+								onClick: enabled ? callbacks[command.id] : undefined,
+							}
+						: {
+								"data-kind": "menu",
+								"data-id": "context-menu",
+								"data-part": `command:${command.id}`,
+							};
+
+				return (
+					<MenuItem key={command.id} disabled={!enabled} {...executionProps}>
+						<MenuItemLabel>{getCommandLabel(messages, command)}</MenuItemLabel>
+						{firstShortcut && (
+							<MenuItemShortcut>
+								{formatShortcut(firstShortcut)}
+							</MenuItemShortcut>
+						)}
+					</MenuItem>
+				);
 			})}
 		</Menu>
 	);

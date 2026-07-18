@@ -26,9 +26,6 @@ export const jaCanvasMessages: CanvasMessages = {
 	shortcutHelpCategoryArrange: "配置",
 	shortcutHelpCategoryView: "表示",
 
-	contextMenuPaste: "貼り付け",
-	contextMenuExport: "エクスポート…",
-
 	clipboardWriteError:
 		"クリップボードへの書き込みに失敗しました。アプリ内での貼り付けは引き続き利用できます。",
 	exportImageError: "画像のエクスポートに失敗しました。",
@@ -79,6 +76,8 @@ export const jaCanvasMessages: CanvasMessages = {
 		redo: "やり直し",
 		copy: "コピー",
 		cut: "切り取り",
+		paste: "貼り付け",
+		export: "エクスポート…",
 		delete: "削除",
 		duplicate: "複製",
 		selectAll: "すべて選択",

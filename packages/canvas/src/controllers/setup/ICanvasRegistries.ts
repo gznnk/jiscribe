@@ -51,7 +51,8 @@ type CommandLike = {
 		state: CanvasControllerState,
 		registries: ICanvasRegistries,
 	): boolean;
-	execute(
+	/** Optional: absent on callback-executed commands (see `Command.execute`). */
+	execute?(
 		state: CanvasControllerState,
 		registries: ICanvasRegistries,
 	): CanvasControllerState;

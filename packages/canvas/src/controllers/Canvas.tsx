@@ -318,22 +318,17 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	// Container resize handling
 	useContainerResize(canvasRef, dispatch);
 
+	// Paste handling (keyboard shortcut + context menu)
+	const handlePaste = useClipboardPaste(state.internalClipboard, dispatch);
+
 	// Keyboard shortcuts handling — scoped to the focusable canvas root (rootRef),
 	// so with multiple Canvases on a page only the focused one handles shortcuts.
 	useKeyboardShortcuts({
 		containerRef: rootRef,
 		canvasState: state,
 		dispatch,
-		onUndo,
-		onRedo,
+		callbacks: { undo: onUndo, redo: onRedo, paste: handlePaste },
 	});
-
-	// Paste handling (keyboard shortcut + context menu)
-	const handlePaste = useClipboardPaste(
-		rootRef,
-		state.internalClipboard,
-		dispatch,
-	);
 
 	// Focus management for the keyboard scope: initial focus (autoFocus) and
 	// reclaiming focus when it silently falls to body (focused element unmounted).

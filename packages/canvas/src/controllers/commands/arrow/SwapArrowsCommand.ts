@@ -1,8 +1,8 @@
 import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
 import type { PolylineState } from "../../../states/objects/primitives/polyline/PolylineState";
-import type { Command } from "../CommandTypes";
+import type { ExecutableCommand } from "../CommandTypes";
 
-export const SwapArrowsCommand: Command = {
+export const SwapArrowsCommand: ExecutableCommand = {
 	id: "swapArrows",
 	label: "Swap Arrows",
 	category: "edit",

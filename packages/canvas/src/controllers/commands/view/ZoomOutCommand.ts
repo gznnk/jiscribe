@@ -2,9 +2,9 @@ import { roundToDecimal } from "@workspace/geometry";
 
 import { PRECISION } from "../../../constants/precision";
 import { ZOOM, stepZoomOut } from "../../../constants/zoom";
-import type { Command } from "../CommandTypes";
+import type { ExecutableCommand } from "../CommandTypes";
 
-export const ZoomOutCommand: Command = {
+export const ZoomOutCommand: ExecutableCommand = {
 	id: "zoomOut",
 	label: "Zoom Out",
 	category: "view",

@@ -5,7 +5,7 @@ import type { ICanvasRegistries } from "../../setup/ICanvasRegistries";
 import { materializeObjects } from "../../utils/cowObjects";
 import { moveSelection } from "../../utils/moveSelection";
 import { updateAffectedGroupBounds } from "../../utils/updateAffectedGroupBounds";
-import type { Command } from "../CommandTypes";
+import type { ExecutableCommand } from "../CommandTypes";
 
 /** Normal move distance (canvas coordinates, px) */
 const NUDGE_STEP = 1;
@@ -53,7 +53,7 @@ const calcNudgeDelta = (direction: NudgeDirection, step: number): Point => {
 const createMoveCommand = (
 	direction: NudgeDirection,
 	step: number,
-): Command => {
+): ExecutableCommand => {
 	const isLarge = step === NUDGE_STEP_LARGE;
 	return {
 		id: `move-${direction}${isLarge ? "-large" : ""}`,
@@ -99,7 +99,9 @@ const createMoveCommand = (
 const NUDGE_DIRECTIONS: NudgeDirection[] = ["up", "down", "left", "right"];
 
 /** The 8 move commands: up/down/left/right × normal/Shift */
-export const moveCommands: Command[] = NUDGE_DIRECTIONS.flatMap((direction) => [
-	createMoveCommand(direction, NUDGE_STEP),
-	createMoveCommand(direction, NUDGE_STEP_LARGE),
-]);
+export const moveCommands: ExecutableCommand[] = NUDGE_DIRECTIONS.flatMap(
+	(direction) => [
+		createMoveCommand(direction, NUDGE_STEP),
+		createMoveCommand(direction, NUDGE_STEP_LARGE),
+	],
+);

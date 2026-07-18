@@ -1,8 +1,8 @@
 import { isConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
 import { createMultiSelectGroup } from "../../utils/createMultiSelectGroup";
-import type { Command } from "../CommandTypes";
+import type { ExecutableCommand } from "../CommandTypes";
 
-export const SelectAllCommand: Command = {
+export const SelectAllCommand: ExecutableCommand = {
 	id: "selectAll",
 	label: "Select All",
 	category: "selection",

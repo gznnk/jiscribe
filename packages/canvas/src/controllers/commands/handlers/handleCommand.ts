@@ -19,6 +19,15 @@ export const handleCommand = (
 		return state;
 	}
 
+	if (!command.execute) {
+		// Callback-executed command (definition-only registration, e.g. paste):
+		// reaching here means a caller dispatched COMMAND without wiring the callback.
+		console.warn(
+			`Command is callback-executed, not dispatchable: ${commandId}`,
+		);
+		return state;
+	}
+
 	if (!command.canExecute(state, registries)) {
 		return state;
 	}

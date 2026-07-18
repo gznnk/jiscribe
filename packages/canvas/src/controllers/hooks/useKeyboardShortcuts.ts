@@ -14,10 +14,13 @@ export type UseKeyboardShortcutsParams = {
 	canvasState: CanvasControllerState;
 	/** Canvas reducer dispatch (sends executable commands as COMMAND actions). */
 	dispatch: Dispatch<CanvasAction>;
-	/** When provided, handle Ctrl+Z with this callback instead of the Canvas-internal UndoCommand. */
-	onUndo?: () => void;
-	/** When provided, handle Ctrl+Shift+Z / Ctrl+Y with this callback instead of the Canvas-internal RedoCommand. */
-	onRedo?: () => void;
+	/**
+	 * Commands executed via callback instead of dispatch, keyed by command id.
+	 * A matched command with an entry here is delegated without checking
+	 * canExecute (availability is decided by the callback owner — e.g. undo/redo
+	 * by an external host such as VSCode, paste by the async clipboard read).
+	 */
+	callbacks?: Partial<Record<string, () => void>>;
 };
 
 /**
@@ -27,14 +30,18 @@ export const useKeyboardShortcuts = ({
 	containerRef,
 	canvasState,
 	dispatch,
-	onUndo,
-	onRedo,
+	callbacks,
 }: UseKeyboardShortcutsParams): void => {
 	const registries = useCanvasRegistries();
 	const commandRegistry = registries.command;
 
 	const canvasStateRef = useRef(canvasState);
 	canvasStateRef.current = canvasState;
+
+	// Held in a ref so an inline callbacks object does not re-register the listener
+	// every render (same pattern as canvasStateRef).
+	const callbacksRef = useRef(callbacks);
+	callbacksRef.current = callbacks;
 
 	useEffect(() => {
 		const container = containerRef.current;
@@ -61,14 +68,11 @@ export const useKeyboardShortcuts = ({
 			event.preventDefault();
 			event.stopPropagation();
 
-			// When an external callback is provided, delegate undo/redo without checking
-			// canExecute (availability is decided by an external owner such as VSCode).
-			if (command.id === "undo" && onUndo) {
-				onUndo();
-				return;
-			}
-			if (command.id === "redo" && onRedo) {
-				onRedo();
+			// Callback-executed commands (undo/redo when externally owned, paste)
+			// are delegated without checking canExecute (see callbacks JSDoc).
+			const callback = callbacksRef.current?.[command.id];
+			if (callback) {
+				callback();
 				return;
 			}
 			if (command.canExecute(canvasStateRef.current, registries)) {
@@ -82,5 +86,5 @@ export const useKeyboardShortcuts = ({
 		return () => {
 			container.removeEventListener("keydown", handleKeyDown);
 		};
-	}, [containerRef, dispatch, onUndo, onRedo, commandRegistry, registries]);
+	}, [containerRef, dispatch, commandRegistry, registries]);
 };

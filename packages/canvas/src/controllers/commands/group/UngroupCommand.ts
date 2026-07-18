@@ -1,9 +1,9 @@
 ﻿import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import { createMultiSelectGroup } from "../../utils/createMultiSelectGroup";
 import { updateGroupBounds } from "../../utils/updateGroupBounds";
-import type { Command } from "../CommandTypes";
+import type { ExecutableCommand } from "../CommandTypes";
 
-export const UngroupCommand: Command = {
+export const UngroupCommand: ExecutableCommand = {
 	id: "ungroup",
 	label: "Ungroup",
 	category: "arrange",
