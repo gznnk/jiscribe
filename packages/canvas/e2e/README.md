@@ -1,4 +1,4 @@
-# canvas-demo E2E テスト
+# canvas E2E テスト
 
 Playwright Test で canvas を実ユーザーと同じ UI 操作でテストする。
 このドキュメントは構成ガイドと、Playwright で canvas を UI 操作する際のノウハウのまとめ。
@@ -6,34 +6,27 @@ Playwright Test で canvas を実ユーザーと同じ UI 操作でテストす�
 ## 構成
 
 ```
-apps/canvas-demo/
-├── playwright.config.ts        # webServer で vite dev (port 5174) を自動起動。testDir: e2e/specs
-├── playwright.demo.config.ts   # デモ専用。本体 config を流用し testDir を e2e/demo に差し替え
+packages/canvas/
+├── playwright.config.mts   # webServer で e2e/harness の vite dev を自動起動。testDir: e2e/specs（top-level await のため .mts）
 ├── e2e/
+│   ├── harness/           # テスト専用ハーネス（Canvas をマウントする最小 Vite アプリ）
+│   │   ├── main.tsx       # 空ドキュメントの単一 Canvas（dark テーマ固定）。?multi で 2 キャンバス構成
+│   │   └── MultiCanvasApp.tsx  # キーボードスコープ検証用の 2 キャンバスページ
 │   ├── fixtures.ts        # canvas フィクスチャ（CanvasDriver を注入）
 │   ├── support/
 │   │   ├── selectors.ts   # data-kind / data-id セレクタ定数
 │   │   └── CanvasDriver.ts # 操作API（描画・選択・テキスト・色・コネクター）
-│   ├── specs/             # テスト本体（通常の test:e2e で走る）
-│   └── demo/              # マーケ素材生成用デモ（testDir 外。test:e2e:demo でのみ走る）
+│   └── specs/             # テスト本体（test:e2e で走る）
 ```
 
 実行:
 
 ```bash
-pnpm --filter canvas-demo test:e2e         # ルートからは pnpm test:e2e
-pnpm --filter canvas-demo test:e2e:headed  # ブラウザ表示あり
-pnpm --filter canvas-demo test:e2e:ui      # Playwright UI モード
-pnpm --filter canvas-demo test:e2e:demo    # マーケ素材生成デモ（hero-showcase 再現）
+pnpm --filter @workspace/canvas test:e2e         # ルートからは pnpm test:e2e
+pnpm --filter @workspace/canvas test:e2e:headed  # ブラウザ表示あり
+pnpm --filter @workspace/canvas test:e2e:ui      # Playwright UI モード
+pnpm --filter @workspace/canvas dev:harness      # ハーネスを手動起動（目視デバッグ用）
 ```
-
-### e2e/demo — マーケ素材生成デモ
-
-回帰検知ではなく、スクリーンショット／録画などの素材を作るためのデモ。CanvasDriver の
-テスト済み操作だけを合成し、`landing/public/demo/diagrams/cloud-native-commerce.jis.json`（17 部品＋17 結線の
-参照アーキテクチャ図）を UI 操作だけで丸ごと描き起こす。重く（約 40s）コネクター選択が
-flake しやすいため、通常の `test:e2e`（CI ゲート）からは外して `test:e2e:demo` で明示実行する。
-最終状態はスクリーンショットとしてレポートに添付される（目視は `test:e2e:demo:headed`）。
 
 設計方針: **失敗を隠すリトライは入れない**。CanvasDriver は時間待ちではなく状態待ち
 （要素の出現・オブジェクト数の変化を `expect.poll` 等で待つ）で同期し、操作が効かない場合は
@@ -47,10 +40,10 @@ import { chromium } from "playwright";
 
 const browser = await chromium.launch({ headless: false, slowMo: 10 });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
-await page.goto("http://localhost:5174/", { waitUntil: "networkidle" });
+await page.goto("http://localhost:5173/", { waitUntil: "networkidle" });
 ```
 
-- 開発サーバーは `pnpm dev:demo`（http://localhost:5174/）
+- 開発サーバーは `pnpm --filter @workspace/canvas dev:harness`（ポートは起動ログ参照）
 - WSL2 では WSLg（`DISPLAY=:0`）があるためヘッドあり実行で実際のウィンドウを表示できる
 - 動きを目視したいときは `headless: false` + `slowMo`、検証だけなら headless（速い）
 - **headless は操作間隔が詰まるためレースコンディションが顕在化しやすい**。headless で通れば headed でも通る、の逆は成り立たないことがある
@@ -62,7 +55,7 @@ await page.goto("http://localhost:5174/", { waitUntil: "networkidle" });
 属性の使い分け:
 
 - **`data-kind` / `data-id`** … プロダクトの**機能契約**（gesture システムが読む）。テストは「ついでに」これを利用する
-- **`data-testid`** … **テスト専用フック**。機能で特定できない要素（gesture を経由しない数値入力欄や、`pointerEvents: none` の装飾要素など）に付ける。`playwright.config.ts` の `testIdAttribute: "data-testid"` で有効化済みで、`page.getByTestId("menu-number-input:strokeWidth")` のように使う。機能契約（`data-id`）に混ぜないことで、テスト都合の識別子と機能の識別子を区別する
+- **`data-testid`** … **テスト専用フック**。機能で特定できない要素（gesture を経由しない数値入力欄や、`pointerEvents: none` の装飾要素など）に付ける。`playwright.config.mts` の `testIdAttribute: "data-testid"` で有効化済みで、`page.getByTestId("menu-number-input:strokeWidth")` のように使う。機能契約（`data-id`）に混ぜないことで、テスト都合の識別子と機能の識別子を区別する
 
 ### data-testid 一覧
 
