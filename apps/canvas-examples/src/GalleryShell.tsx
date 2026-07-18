@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
 
+import { ExternalSyncExample } from "./examples/external-sync";
 import { FileIoExample } from "./examples/file-io";
+import { GalleryExample } from "./examples/gallery";
 import { MinimalExample } from "./examples/minimal";
+import { MultiCanvasExample } from "./examples/multi-canvas";
 import { ThemingExample } from "./examples/theming";
+import { ViewportExample } from "./examples/viewport";
 
 // 各 example は「単体でコピペ可能な統合例」として src/examples/ に 1 ファイルで置く。
 // シェルへの依存を持たせない（親要素いっぱいに描画する、が唯一の契約）。
@@ -30,6 +34,33 @@ const EXAMPLES: ReadonlyArray<{
 		title: "Theming",
 		description: "theme prop によるテーマ切り替え（プリセット3種の巡回）",
 		Component: ThemingExample,
+	},
+	{
+		id: "viewport",
+		title: "Viewport",
+		description:
+			"imperative viewport API（defaultViewport / onViewportChange / viewportRef）",
+		Component: ViewportExample,
+	},
+	{
+		id: "external-sync",
+		title: "External Sync",
+		description:
+			"外部（エディタ・AI）が doc の正本を持ち、canvasDoc 差し替えで push する",
+		Component: ExternalSyncExample,
+	},
+	{
+		id: "multi-canvas",
+		title: "Multi Canvas",
+		description:
+			"複数 Canvas の埋め込み（キーボードはフォーカスされた Canvas にスコープ）",
+		Component: MultiCanvasExample,
+	},
+	{
+		id: "gallery",
+		title: "Gallery",
+		description: "実物 .jis.json の閲覧（landing の作例を読み込む）",
+		Component: GalleryExample,
 	},
 ];
 
