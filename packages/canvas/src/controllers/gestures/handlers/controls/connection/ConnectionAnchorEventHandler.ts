@@ -1,16 +1,22 @@
 import type { Point } from "@workspace/geometry";
 
-import { ConnectorFeatures } from "../../../../../schemas/objects/connections/connector/ConnectorDoc";
-import { AUTO_COLOR } from "../../../../../schemas/objects/utils/autoColor";
-import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
-import type { CanvasControllerState } from "../../../../CanvasTypes";
-import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
-import type { ControlStrategy } from "../ControlEventHandler";
 import { computeEditedEndpoint } from "./utils/computeEditedEndpoint";
 import { findConnectableHoverTarget } from "./utils/findConnectableHoverTarget";
 import { getEditingEndpoint } from "./utils/getEditingEndpoint";
 import { isSameConnectorEndpoints } from "./utils/isSameConnectorEndpoints";
+import { snapFreeEndpointStraight } from "./utils/snapFreeEndpointStraight";
+import { resolveEndpointOwner } from "../../../../../presentations/layers/content/utils/endpoints/resolveEndpointOwner";
+import { ConnectorFeatures } from "../../../../../schemas/objects/connections/connector/ConnectorDoc";
+import { defaultRoutingForAnchors } from "../../../../../schemas/objects/types/ConnectorRouting";
+import { isSameEndpoint } from "../../../../../schemas/objects/types/EndpointRef";
+import { AUTO_COLOR } from "../../../../../schemas/objects/utils/autoColor";
+import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
+import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { isAnchorHandleId } from "../../../../ui/controls/ConnectionAnchorTypes";
+import { createCowObjects } from "../../../../utils/cowObjects";
+import { ControlStrategy } from "../../../registry/ControlStrategy";
+import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
+import { SNAP_THRESHOLD_PX } from "../../utils/snap/findSnap";
 
 /**
  * Handler that creates a connector by dragging from a connection anchor,
@@ -21,9 +27,7 @@ import { isAnchorHandleId } from "../../../../ui/controls/ConnectionAnchorTypes"
  * - create: data-id=<sourceObjectId>, data-part="anchor:<anchorPosition>"
  * - edit:   data-id=<connectorId>,    data-part="endpoint:<source|target>"
  */
-export class ConnectionAnchorEventHandler implements ControlStrategy {
-	readonly controlType = "connection-anchor";
-
+export class ConnectionAnchorEventHandler extends ControlStrategy {
 	supports(event: CanvasEvent): boolean {
 		if (event.targetKind !== "control") {
 			return false;
@@ -91,7 +95,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 		const pendingConnector: ConnectorState = {
 			id: connectorId,
 			type: "connector",
-			// features must be stamped on creation: handlePropertyUpdate reads it directly
+			// features must be stamped on creation: the style-property handlers read it directly
 			// to gate style updates (a connector without it silently ignores stroke changes).
 			features: ConnectorFeatures,
 			// points holds only intermediate waypoints (endpoints are held by source/target). Empty on new creation since it is a straight line
@@ -122,6 +126,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			selectedIds: [],
 			multiSelectGroup: null,
 			objectMenuOpenId: null,
+			shapeLibraryOpenCategory: null,
 		};
 	}
 
@@ -157,6 +162,7 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			editingEndpoint: endpoint,
 			edgeScrollEnabled: true,
 			objectMenuOpenId: null,
+			shapeLibraryOpenCategory: null,
 		};
 	}
 
@@ -185,10 +191,22 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 			objects: state.objects,
 		});
 
+		// When the edited end lands free (no hover target), snap it onto the fixed end's exit
+		// axis if nearly aligned, so a near-straight connector collapses to one straight segment.
+		// Snapping the coordinate itself keeps the anchor handle, line, and arrow together.
+		const cursor = hoveredTarget
+			? event.last
+			: snapFreeEndpointStraight(
+					event.last,
+					fixedEndpoint,
+					resolveEndpointOwner(state.objects, fixedEndpoint),
+					SNAP_THRESHOLD_PX / state.viewport.zoom,
+				);
+
 		return computeEditedEndpoint(
 			baseConnector,
 			endpointToUpdate,
-			event.last,
+			cursor,
 			hoveredTarget,
 			fixedEndpoint,
 		);
@@ -216,19 +234,39 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 				return state;
 			}
 
+			const base = baseConnector as ConnectorState;
 			const updated = this.buildEditedConnector(
 				state,
 				event,
-				baseConnector as ConnectorState,
+				base,
 				endpointToUpdate,
 			);
 
+			// Re-anchor parity with creation: when the connector has no explicit routing and
+			// the edited endpoint's anchor actually changed, derive routing from the new anchors
+			// (onto a center → straight, onto an edge → orthogonal). Gating on an actual anchor
+			// change keeps a no-op grab (or a wiggle back to the start) from silently rewriting
+			// routing; an explicit straight/orthogonal choice is always left intact.
+			const baseEndpoint =
+				endpointToUpdate === "source" ? base.source : base.target;
+			const updatedEndpoint =
+				endpointToUpdate === "source" ? updated.source : updated.target;
+			const routed =
+				updated.routing === undefined &&
+				!isSameEndpoint(baseEndpoint, updatedEndpoint)
+					? this.withAnchorDerivedRouting(updated)
+					: updated;
+
+			// COW view over the previous frame's map (rebased internally, #213)
+			const updatedObjects = createCowObjects(state.objects);
+			updatedObjects[editingConnectorId] = {
+				...routed,
+				id: editingConnectorId,
+			};
+
 			return {
 				...state,
-				objects: {
-					...state.objects,
-					[editingConnectorId]: { ...updated, id: editingConnectorId },
-				},
+				objects: updatedObjects,
 			};
 		}
 
@@ -247,8 +285,27 @@ export class ConnectionAnchorEventHandler implements ControlStrategy {
 
 		return {
 			...state,
-			pendingConnector: updated,
+			pendingConnector: this.withAnchorDerivedRouting(updated),
 		};
+	}
+
+	/**
+	 * Derives the routing default from the endpoints' anchors (center endpoint →
+	 * straight, both connectPoint → orthogonal). Applied while creating a connector,
+	 * and on re-anchor only when routing was never explicitly set (the caller gates
+	 * on `routing === undefined`), so an explicit straight/orthogonal choice is kept.
+	 * Rebuilt each drag frame so a "straight" set on a prior frame is dropped once
+	 * the endpoint moves off a center anchor (orthogonal is the field's absence).
+	 */
+	private withAnchorDerivedRouting(connector: ConnectorState): ConnectorState {
+		const routing = defaultRoutingForAnchors(
+			connector.source.anchor,
+			connector.target.anchor,
+		);
+		const { routing: _prev, ...rest } = connector;
+		return (
+			routing !== undefined ? { ...rest, routing } : rest
+		) as ConnectorState;
 	}
 
 	/**

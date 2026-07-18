@@ -88,14 +88,15 @@ _本文_」（中心的・ほぼ主役・ボックス内整列あり）。コネ
   コネクター＝注記（`label`）で **意味が違う**ため、ある種の非対称は概念上どうしても残る。
 
 **スタイリング UI のネスト対応（ドット記法）**: スタイリングのプロパティ更新配管
-（メニュー項目 → `MENU_PROPERTY_UPDATE` / `object-menu:set:` → `handlePropertyUpdate`）は
-トップ階層プロパティ前提でできている。ラベルの背景・枠線（`label.fill` / `label.stroke` /
+（メニュー項目 → `MENU_PROPERTY_UPDATE` / `object-menu:set:` → `StylePropertyRegistry.apply`）は
+フラットなプロパティ名を運ぶ。ラベルの背景・枠線（`label.fill` / `label.stroke` /
 `label.strokeWidth`）はネストのため、この配管に **ドット記法のプロパティ名のまま相乗り**させる。
-2 経路とも収束点は `handlePropertyUpdate` の 1 か所なので、そこ（connector 分岐）だけが
-`label.` プレフィックスを検出して `connector.label` へネスト merge する。共有 UI
+2 経路とも収束点は `StylePropertyRegistry.apply` の 1 か所。`label.*` は connector 固有の宣言
+（`ConnectorExtraStyleProperties`）として登録され、共有の書き込みパスがドットをネスト merge と
+解釈して `connector.label` へ書く（label 未設定時は no-op）。共有 UI
 （`ColorPickerGrid` / `MenuSlider`）と `commit`（ライブプレビュー＋履歴 1 件）の機微を再実装せずに
-再利用するための割り切りで、フラット配管全体には波及させない。専用アクションを増やす案は、この
-commit 機微を二重持ちすることになるため採らない。
+再利用するための割り切り。専用アクションを増やす案は、この commit 機微を二重持ちすることになるため
+採らない。
 
 ## parser の二段検証（境界での防御）
 

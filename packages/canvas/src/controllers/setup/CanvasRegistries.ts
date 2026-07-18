@@ -1,5 +1,7 @@
 import type { ObjectComponentRegistry } from "../../presentations/objects/registry/ObjectComponentRegistry";
+import type { ShapeOutlineRegistry } from "../../presentations/objects/registry/ShapeOutlineRegistry";
 import type { ShapePreviewRegistry } from "../../presentations/objects/registry/ShapePreviewRegistry";
+import type { TextRegionRegistry } from "../../presentations/objects/registry/TextRegionRegistry";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 import type { ShapeFactoryRegistry } from "../../schemas/registry/ShapeFactoryRegistry";
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
@@ -7,7 +9,9 @@ import type { ObjectStateValidatorRegistry } from "../../states/registry/ObjectS
 import type { CommandRegistry } from "../commands/CommandRegistry";
 import type { GestureHandlerRegistry } from "../gestures/registry/GestureHandlerRegistry";
 import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
+import type { SelectionControlRegistry } from "../registry/SelectionControlRegistry";
 import type { ShapePresetRegistry } from "../registry/ShapePresetRegistry";
+import type { StylePropertyRegistry } from "../styleProperties/StylePropertyRegistry";
 import type { ObjectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
 
 /**
@@ -26,13 +30,17 @@ export type CanvasRegistries = {
 	objectMapper: ObjectMapperRegistry;
 	objectStateValidator: ObjectStateValidatorRegistry;
 	objectComponent: ObjectComponentRegistry;
+	textRegion: TextRegionRegistry;
+	shapeOutline: ShapeOutlineRegistry;
 	shapePreview: ShapePreviewRegistry;
 	objectBehavior: ObjectBehaviorRegistry;
+	selectionControl: SelectionControlRegistry;
 	gestureHandler: GestureHandlerRegistry;
 	command: CommandRegistry;
 	objectMenu: ObjectMenuRegistry;
 	shapePreset: ShapePresetRegistry;
 	shapeFactory: ShapeFactoryRegistry;
+	styleProperty: StylePropertyRegistry;
 };
 
 /**

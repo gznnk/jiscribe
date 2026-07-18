@@ -8,8 +8,7 @@ import {
 	ViewportOverlay,
 	ZoomScaledOverlay,
 } from "./CanvasStyled";
-import { CanvasRegistriesContext } from "./contexts/CanvasRegistriesContext";
-import { CanvasViewportRefContext } from "./contexts/CanvasViewportRefContext";
+import { CanvasProviders } from "./contexts/CanvasProviders";
 import { isGestureOptedOut } from "./gestures/recognizer/utils/isGestureOptedOut";
 import { useCanvasExport, EXPORT_FIT_PADDING } from "./hooks/useCanvasExport";
 import type {
@@ -31,20 +30,20 @@ import { useNotifySelectionChange } from "./hooks/useNotifySelectionChange";
 import { useNotifyViewportChange } from "./hooks/useNotifyViewportChange";
 import { useSelfSaveNonceTracker } from "./hooks/useSelfSaveNonceTracker";
 import { useSyncExternalDoc } from "./hooks/useSyncExternalDoc";
+import { useViewportCulling } from "./hooks/useViewportCulling";
 import type { CanvasViewportHandle } from "./hooks/useViewportHandle";
 import { useViewportHandle } from "./hooks/useViewportHandle";
 import { mergeCanvasMessages } from "./messages/CanvasMessages";
 import type { CanvasMessages } from "./messages/CanvasMessages";
-import { CanvasMessagesContext } from "./messages/CanvasMessagesContext";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./setup";
 import type { CanvasConfig } from "./setup";
 import { CanvasView } from "../presentations/CanvasView";
 import type { CanvasTheme } from "../theme/CanvasTheme";
-import { CanvasThemeContext } from "../theme/CanvasThemeContext";
 import { buildThemeCssVars } from "../theme/themeCssVars";
 import { darkCanvasTheme } from "../theme/themePresets";
 import { ConnectionAnchorsLayer } from "./ui/controls/ConnectionAnchorsLayer";
 import { ConnectorControlsLayer } from "./ui/controls/ConnectorControlsLayer";
+import { SelectionControlsLayer } from "./ui/controls/SelectionControlsLayer";
 import { TransformControlsLayer } from "./ui/controls/TransformControlsLayer";
 import { VertexControlsLayer } from "./ui/controls/VertexControlsLayer";
 import { TextEditorLayer } from "./ui/editors/TextEditorLayer";
@@ -58,9 +57,8 @@ import { SelectionOverlay } from "./ui/feedback/SelectionOverlay";
 import { SnapGuides } from "./ui/feedback/SnapGuides";
 import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
-import { Toolbar } from "./ui/menu/Toolbar";
+import { Toolbar, type ToolbarEntry } from "./ui/menu/Toolbar";
 import { ExportDialog } from "./ui/modal/ExportDialog";
-import { ObjectComponentRegistryContext } from "../presentations/objects/registry/ObjectComponentRegistryContext";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { Camera } from "../states/canvas/Viewport";
 
@@ -160,6 +158,13 @@ type CanvasProps = {
 	 */
 	toolbarTrailing?: React.ReactNode;
 	/**
+	 * Overrides the top-level arrangement of the shape tools: an ordered mix of
+	 * pinned preset buttons and category flyouts (see {@link ToolbarEntry}). Omit
+	 * for the default layout (basic primitives + sticky pinned, flowchart /
+	 * general / annotation as flyouts).
+	 */
+	toolbarLayout?: ToolbarEntry[];
+	/**
 	 * Per-canvas configuration of the available object types, commands, and
 	 * registries. Restricts what this canvas can create/handle (plugin-style
 	 * extensibility and feature-gating), independently of any other `<Canvas>` on
@@ -203,6 +208,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	viewportRef,
 	toolbarLeading,
 	toolbarTrailing,
+	toolbarLayout,
 	initialConfig,
 	exportRef,
 	onExportImage,
@@ -353,6 +359,16 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 		[],
 	);
 
+	// Viewport culling (issue #212): only objects intersecting the visible
+	// world rect are rendered. Export clones the live SVG DOM, so it suspends
+	// culling for the duration of the snapshot via withCullingSuspended.
+	const { visibleObjectIds, withCullingSuspended } = useViewportCulling(
+		state.objects,
+		state.rootIds,
+		state.viewport,
+		state.textEditState?.objectId ?? null,
+	);
+
 	// Image export: the imperative exportRef API and the export dialog
 	const {
 		isExportDialogOpen,
@@ -367,6 +383,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 		onExportImage,
 		dispatch,
 		notifyError,
+		withCullingSuspended,
 	});
 
 	const { minX, minY, zoom } = state.viewport;
@@ -380,151 +397,155 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 		resolveCommandState(state, registries, "zoomOut")?.enabled ?? false;
 
 	return (
-		<CanvasThemeContext value={theme}>
-			<CanvasMessagesContext value={mergedMessages}>
-				<CanvasRegistriesContext value={registries}>
-					<ObjectComponentRegistryContext value={registries.objectComponent}>
-						<CanvasViewportRefContext value={canvasRef}>
-							<CanvasRoot
-								ref={rootRef}
-								tabIndex={0}
-								style={themeCssVars}
-								onContextMenu={handleContextMenu}
-								{...pointerHandlers}
-							>
-								<Toolbar
-									activePresetId={state.shapeDrawing?.preset.id ?? null}
-									zoom={state.viewport.zoom}
-									canZoomIn={canZoomIn}
-									canZoomOut={canZoomOut}
-									leading={toolbarLeading}
-									trailing={toolbarTrailing}
-								/>
-								<Viewport
-									data-id="canvas"
-									data-kind="canvas"
-									ref={canvasRef}
-									cursor={state.shapeDrawing ? "crosshair" : undefined}
-								>
-									<Container>
-										<CanvasView
-											objects={state.objects}
-											rootIds={state.rootIds}
-											viewport={state.viewport}
-											svgRef={svgRef}
-											textEditObjectId={state.textEditState?.objectId ?? null}
-											isDrawMode={!!state.shapeDrawing}
-										>
-											<PendingConnectorOverlay
-												pendingConnector={state.pendingConnector}
-												objects={state.objects}
-											/>
-											<SelectionOverlay
-												selectedIds={state.selectedIds}
-												objects={state.objects}
-												multiSelectGroup={state.multiSelectGroup}
-											/>
-											<ConnectorControlsLayer
-												selectedConnectorId={state.selectedConnectorId}
-												objects={state.objects}
-												zoom={state.viewport.zoom}
-												selectedVertex={state.selectedVertex}
-											/>
-											<TransformControlsLayer
-												selectedIds={state.selectedIds}
-												objects={state.objects}
-												multiSelectGroup={state.multiSelectGroup}
-												zoom={state.viewport.zoom}
-												isTextEditing={!!state.textEditState}
-											/>
-											<ConnectionAnchorsLayer
-												selectedIds={state.selectedIds}
-												objects={state.objects}
-												zoom={state.viewport.zoom}
-												pendingConnector={state.pendingConnector}
-												editingConnectorId={state.editingConnectorId}
-												editingEndpoint={state.editingEndpoint}
-												isTextEditing={!!state.textEditState}
-											/>
-											<VertexControlsLayer
-												selectedIds={state.selectedIds}
-												objects={state.objects}
-												zoom={state.viewport.zoom}
-												selectedVertex={state.selectedVertex}
-											/>
-											<DragGhost
-												shapeLibraryDrag={state.shapeLibraryDrag}
-												docDefaults={state.docDefaults}
-											/>
-											<DrawingPreviewOverlay
-												shapeDrawing={state.shapeDrawing}
-											/>
-											<AreaSelectionRect areaSelection={state.areaSelection} />
-											<SnapGuides
-												snapFeedback={state.snapFeedback}
-												zoom={state.viewport.zoom}
-											/>
-											<AxisLockGuide
-												axisLockFeedback={state.axisLockFeedback}
-												viewport={state.viewport}
-											/>
-										</CanvasView>
-										{/* Container for HTML elements that follow canvas scroll AND zoom (elements scale with zoom) */}
-										<ZoomScaledOverlay
-											style={{
-												left: -minX * zoom,
-												top: -minY * zoom,
-												transform: `scale(${zoom})`,
-											}}
-										>
-											<TextEditorLayer
-												textEditState={state.textEditState}
-												objects={state.objects}
-												onTextChange={(text) =>
-													dispatch({ type: "UPDATE_TEXT_EDIT", text })
-												}
-												onEscape={() =>
-													dispatch({ type: "END_TEXT_EDIT", commit: false })
-												}
-											/>
-										</ZoomScaledOverlay>
-										{/* Container for HTML elements with fixed size (position follows zoom, but size does not) */}
-										<ScrollSyncedOverlay
-											style={{ left: -minX * zoom, top: -minY * zoom }}
-										>
-											<ObjectMenu
-												canvasState={state}
-												onPropertyUpdate={handleMenuPropertyUpdate}
-											/>
-										</ScrollSyncedOverlay>
-									</Container>
-									<ViewportOverlay>
-										<ErrorToast notification={errorNotification} />
-										<ContextMenu
-											position={state.contextMenuPosition}
-											canvasState={state}
-											callbacks={{
-												paste: handlePaste,
-												export: openExportDialog,
-											}}
-										/>
-									</ViewportOverlay>
-								</Viewport>
-								{/* Sibling of the toolbar/viewport (like ShortcutHelpModal) so the
-								    backdrop covers the whole canvas including the toolbar */}
-								{isExportDialogOpen && (
-									<ExportDialog
-										defaultMargin={EXPORT_FIT_PADDING}
-										onClose={closeExportDialog}
-										onSubmit={handleExportSubmit}
-									/>
-								)}
-							</CanvasRoot>
-						</CanvasViewportRefContext>
-					</ObjectComponentRegistryContext>
-				</CanvasRegistriesContext>
-			</CanvasMessagesContext>
-		</CanvasThemeContext>
+		<CanvasProviders
+			theme={theme}
+			messages={mergedMessages}
+			registries={registries}
+			viewportRef={canvasRef}
+		>
+			<CanvasRoot
+				ref={rootRef}
+				tabIndex={0}
+				style={themeCssVars}
+				onContextMenu={handleContextMenu}
+				{...pointerHandlers}
+			>
+				<Toolbar
+					activePresetId={state.shapeDrawing?.preset.id ?? null}
+					openCategoryId={state.shapeLibraryOpenCategory}
+					zoom={state.viewport.zoom}
+					canZoomIn={canZoomIn}
+					canZoomOut={canZoomOut}
+					layout={toolbarLayout}
+					leading={toolbarLeading}
+					trailing={toolbarTrailing}
+				/>
+				<Viewport
+					data-id="canvas"
+					data-kind="canvas"
+					ref={canvasRef}
+					cursor={state.shapeDrawing ? "crosshair" : undefined}
+				>
+					<Container>
+						<CanvasView
+							objects={state.objects}
+							rootIds={state.rootIds}
+							viewport={state.viewport}
+							svgRef={svgRef}
+							textEditObjectId={state.textEditState?.objectId ?? null}
+							isDrawMode={!!state.shapeDrawing}
+							visibleObjectIds={visibleObjectIds}
+						>
+							<PendingConnectorOverlay
+								pendingConnector={state.pendingConnector}
+								objects={state.objects}
+							/>
+							<SelectionOverlay
+								selectedIds={state.selectedIds}
+								objects={state.objects}
+								multiSelectGroup={state.multiSelectGroup}
+							/>
+							<ConnectorControlsLayer
+								selectedConnectorId={state.selectedConnectorId}
+								objects={state.objects}
+								zoom={state.viewport.zoom}
+								selectedVertex={state.selectedVertex}
+							/>
+							<TransformControlsLayer
+								selectedIds={state.selectedIds}
+								objects={state.objects}
+								multiSelectGroup={state.multiSelectGroup}
+								zoom={state.viewport.zoom}
+								isTextEditing={!!state.textEditState}
+							/>
+							<ConnectionAnchorsLayer
+								selectedIds={state.selectedIds}
+								objects={state.objects}
+								zoom={state.viewport.zoom}
+								pendingConnector={state.pendingConnector}
+								editingConnectorId={state.editingConnectorId}
+								editingEndpoint={state.editingEndpoint}
+								isTextEditing={!!state.textEditState}
+							/>
+							<VertexControlsLayer
+								selectedIds={state.selectedIds}
+								objects={state.objects}
+								zoom={state.viewport.zoom}
+								selectedVertex={state.selectedVertex}
+							/>
+							<SelectionControlsLayer
+								selectedIds={state.selectedIds}
+								objects={state.objects}
+								zoom={state.viewport.zoom}
+								isTextEditing={!!state.textEditState}
+							/>
+							<DragGhost
+								shapeLibraryDrag={state.shapeLibraryDrag}
+								docDefaults={state.docDefaults}
+							/>
+							<DrawingPreviewOverlay shapeDrawing={state.shapeDrawing} />
+							<AreaSelectionRect areaSelection={state.areaSelection} />
+							<SnapGuides
+								snapFeedback={state.snapFeedback}
+								zoom={state.viewport.zoom}
+							/>
+							<AxisLockGuide
+								axisLockFeedback={state.axisLockFeedback}
+								viewport={state.viewport}
+							/>
+						</CanvasView>
+						{/* Container for HTML elements that follow canvas scroll AND zoom (elements scale with zoom) */}
+						<ZoomScaledOverlay
+							style={{
+								left: -minX * zoom,
+								top: -minY * zoom,
+								transform: `scale(${zoom})`,
+							}}
+						>
+							<TextEditorLayer
+								textEditState={state.textEditState}
+								objects={state.objects}
+								onTextChange={(text) =>
+									dispatch({ type: "UPDATE_TEXT_EDIT", text })
+								}
+								onEscape={() =>
+									dispatch({ type: "END_TEXT_EDIT", commit: false })
+								}
+							/>
+						</ZoomScaledOverlay>
+						{/* Container for HTML elements with fixed size (position follows zoom, but size does not) */}
+						<ScrollSyncedOverlay
+							style={{ left: -minX * zoom, top: -minY * zoom }}
+						>
+							<ObjectMenu
+								canvasState={state}
+								onPropertyUpdate={handleMenuPropertyUpdate}
+							/>
+						</ScrollSyncedOverlay>
+					</Container>
+					<ViewportOverlay>
+						<ErrorToast notification={errorNotification} />
+						<ContextMenu
+							position={state.contextMenuPosition}
+							canvasState={state}
+							callbacks={{
+								paste: handlePaste,
+								export: openExportDialog,
+							}}
+						/>
+					</ViewportOverlay>
+				</Viewport>
+				{/* Sibling of the toolbar/viewport (like ShortcutHelpModal) so the
+				    backdrop covers the whole canvas including the toolbar */}
+				{isExportDialogOpen && (
+					<ExportDialog
+						defaultMargin={EXPORT_FIT_PADDING}
+						onClose={closeExportDialog}
+						onSubmit={handleExportSubmit}
+					/>
+				)}
+			</CanvasRoot>
+		</CanvasProviders>
 	);
 };
 export const Canvas = memo(CanvasComponent);

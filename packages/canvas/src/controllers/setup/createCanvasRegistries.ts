@@ -5,23 +5,29 @@ import {
 	ALL_OBJECT_DEFINITIONS,
 	applyObjectDefinition,
 } from "./initializeObjectRegistry";
+import { initializeStyleProperties } from "./initializeStyleProperties";
 import { createObjectComponentRegistry } from "../../presentations/objects/registry/ObjectComponentRegistry";
+import { createShapeOutlineRegistry } from "../../presentations/objects/registry/ShapeOutlineRegistry";
 import { createShapePreviewRegistry } from "../../presentations/objects/registry/ShapePreviewRegistry";
+import { createTextRegionRegistry } from "../../presentations/objects/registry/TextRegionRegistry";
 import { createShapeFactoryRegistry } from "../../schemas/registry/ShapeFactoryRegistry";
 import { createObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import { createObjectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
 import { createCommandRegistry } from "../commands/CommandRegistry";
 import { createGestureHandlerRegistry } from "../gestures/registry/GestureHandlerRegistry";
 import { createObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
+import { createSelectionControlRegistry } from "../registry/SelectionControlRegistry";
 import { createShapePresetRegistry } from "../registry/ShapePresetRegistry";
+import { createStylePropertyRegistry } from "../styleProperties/StylePropertyRegistry";
 import { createObjectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
 
 /**
  * Builds a fresh, fully independent bundle of UI registries for one `<Canvas>`.
  *
  * Wiring order:
- *   1. instantiate the 10 empty registries,
- *   2. register all gesture handlers (object-type independent, always all),
+ *   1. instantiate the 14 empty registries,
+ *   2. register the object-type-independent sets (gesture handlers, system
+ *      style properties) — always all,
  *   3. apply the configured object types (default: every type),
  *   4. register commands, optionally restricted by `config.commands`,
  *   5. run the `config.customize` escape hatch.
@@ -36,16 +42,21 @@ export const createCanvasRegistries = (
 		objectMapper: createObjectMapperRegistry(),
 		objectStateValidator: createObjectStateValidatorRegistry(),
 		objectComponent: createObjectComponentRegistry(),
+		textRegion: createTextRegionRegistry(),
+		shapeOutline: createShapeOutlineRegistry(),
 		shapePreview: createShapePreviewRegistry(),
 		objectBehavior: createObjectBehaviorRegistry(),
+		selectionControl: createSelectionControlRegistry(),
 		gestureHandler: createGestureHandlerRegistry(),
 		command: createCommandRegistry(),
 		objectMenu: createObjectMenuRegistry(),
 		shapePreset: createShapePresetRegistry(),
 		shapeFactory: createShapeFactoryRegistry(),
+		styleProperty: createStylePropertyRegistry(),
 	};
 
 	initializeGestureHandlerRegistry(registries);
+	initializeStyleProperties(registries.styleProperty);
 
 	const objectTypes =
 		config?.objectTypes ?? Object.keys(ALL_OBJECT_DEFINITIONS);

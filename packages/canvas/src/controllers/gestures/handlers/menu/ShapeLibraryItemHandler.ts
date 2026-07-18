@@ -1,10 +1,10 @@
 import type { BoundingBox } from "@workspace/geometry";
 
-import type { ShapePreset } from "../../../../schemas/objects/types/ShapePreset";
 import { createObjectDoc } from "../../../../schemas/objects/utils/createObjectDoc";
 import type { ShapeFactoryRegistry } from "../../../../schemas/registry/ShapeFactoryRegistry";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../setup/ICanvasRegistries";
+import type { ShapePreset } from "../../../ui/objects/types/ShapePreset";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import type {
 	CanvasEvent,
@@ -120,14 +120,23 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 						},
 						registries,
 					);
-					// If a non-drawable shape is pressed while in drawing mode, clear drawing mode
-					return { ...placed, shapeDrawing: null };
+					// If a non-drawable shape is pressed while in drawing mode, clear drawing mode.
+					// Using a shape item also dismisses any open category flyout (see objectMenu).
+					return {
+						...placed,
+						shapeDrawing: null,
+						shapeLibraryOpenCategory: null,
+					};
 				}
 
 				const isActive = state.shapeDrawing?.preset.id === presetId;
 
 				if (isActive) {
-					return { ...state, shapeDrawing: null };
+					return {
+						...state,
+						shapeDrawing: null,
+						shapeLibraryOpenCategory: null,
+					};
 				}
 
 				// Drawing mode ON: commit any text edit and clear the selection
@@ -139,6 +148,7 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 					selectedConnectorId: null,
 					multiSelectGroup: null,
 					objectMenuOpenId: null,
+					shapeLibraryOpenCategory: null,
 				};
 			}
 
@@ -153,6 +163,7 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 					selectedConnectorId: null,
 					multiSelectGroup: null,
 					objectMenuOpenId: null,
+					shapeLibraryOpenCategory: null,
 					shapeLibraryDrag: {
 						preset,
 						ghostPosition: event.last,

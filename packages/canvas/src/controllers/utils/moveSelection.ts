@@ -1,5 +1,6 @@
 import type { Point } from "@workspace/geometry";
 
+import { createCowObjects } from "./cowObjects";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { GroupState } from "../../states/objects/primitives/group/GroupState";
 import { moveObjectTree } from "../gestures/handlers/objects/primitives/GroupController";
@@ -32,7 +33,7 @@ export type MoveSelectionParams = {
 };
 
 export type MoveSelectionResult = {
-	/** The object map after moving (a clone of srcObjects) */
+	/** The object map after moving (a COW view of srcObjects — materialize before persisting) */
 	objects: Record<string, ObjectState>;
 	/** The translated multiSelectGroup (null if src was null) */
 	multiSelectGroup: GroupState | null;
@@ -60,7 +61,8 @@ export function moveSelection(
 		objectBehavior,
 	} = params;
 
-	const objects = { ...srcObjects };
+	// COW view: per-frame drag clones must not copy the whole map (#213)
+	const objects = createCowObjects(srcObjects);
 
 	// Each selected object is translated through the registry; groups additionally propagate
 	// the move to their descendants. (read: srcObjects / write: objects)

@@ -136,6 +136,7 @@ export const DeleteCommand: Command = {
 			selectedIds: [] as string[],
 			selectedConnectorId: null,
 			objectMenuOpenId: null,
+			shapeLibraryOpenCategory: null,
 			lastDuplicate: null,
 			commitVersion: state.commitVersion + 1,
 		};

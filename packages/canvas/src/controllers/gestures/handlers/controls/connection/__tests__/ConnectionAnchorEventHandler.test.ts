@@ -10,7 +10,6 @@ import { deepFreezeState } from "../../../../../__tests__/support/deepFreezeStat
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { createInitialControllerState } from "../../../../../reducer/createInitialControllerState";
 import { createTestRegistries } from "../../../../../setup/createCanvasRegistries";
-import { handlePropertyUpdate } from "../../../../../utils/handlePropertyUpdate";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 import { ConnectionAnchorEventHandler } from "../ConnectionAnchorEventHandler";
 
@@ -43,6 +42,45 @@ const oneFreeConnector = (id: string, target: Point): ConnectorState =>
 	}) as unknown as ConnectorState;
 
 /**
+ * A connector with an owned edge-midpoint (connectPoint) source + free target.
+ * Used by re-anchor tests: the source keeps its direction, so routing is decided by
+ * where the target lands (center → straight, edge → orthogonal). `routing` is optional
+ * so a test can pin an explicit value and check it survives a re-anchor.
+ */
+const edgeSourceConnector = (
+	id: string,
+	target: Point,
+	routing?: "straight" | "orthogonal",
+): ConnectorState =>
+	({
+		id,
+		type: "connector",
+		points: [],
+		source: {
+			owner: { id: "host" },
+			anchor: { kind: "connectPoint", id: "rightCenter" },
+		},
+		target: { anchor: { kind: "free", point: target } },
+		...(routing ? { routing } : {}),
+		stroke: "auto",
+		strokeWidth: 2,
+		endArrow: "ConcaveTriangle",
+	}) as unknown as ConnectorState;
+
+/** A connectable object without frame geometry: calcNearestAnchor always resolves it to center. */
+const blobObject = {
+	id: "blob",
+	type: "rect",
+	features: { connectable: true },
+} as unknown as ObjectState;
+
+/** Add the center-resolving blob to a state's objects (top-level only; snapshot not needed for hover). */
+const withBlob = (state: CanvasControllerState): CanvasControllerState => ({
+	...state,
+	objects: { ...state.objects, blob: blobObject },
+});
+
+/**
  * Build a state that injects connectors into objects / rootIds and also prepares the
  * eventStartSnapshot that serves as the editing baseline (in the real app, handleGesture creates it on dragStart).
  * Connectors are managed intermixed in rootIds, so push them onto rootIds.
@@ -72,12 +110,13 @@ const stateWithConnectors = (
 	});
 };
 
-/** Build a drag-type CanvasEvent. */
+/** Build a drag-type CanvasEvent. `hoveredIds` lets a drop resolve onto a shape. */
 const dragEvent = (
 	type: "dragStart" | "dragEnd",
 	targetId: string,
 	targetPart: string,
 	last: Point,
+	hoveredIds: string[] = [],
 ): CanvasEvent =>
 	({
 		type,
@@ -92,7 +131,7 @@ const dragEvent = (
 		clientLast: { x: 0, y: 0 },
 		clientDelta: { x: 0, y: 0 },
 		mods: { shift: false, ctrl: false, alt: false, meta: false },
-		getHovered: () => [],
+		getHovered: () => hoveredIds.map((id) => ({ id })),
 		time: 0,
 		button: 0,
 	}) as unknown as CanvasEvent;
@@ -279,7 +318,7 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 	};
 
 	// Regression guard for #167: a connector created via the gesture must carry the
-	// features descriptor. handlePropertyUpdate reads state.features directly to gate
+	// features descriptor. The style-property handlers read state.features directly to gate
 	// style updates, so a freshly created connector without it silently ignores every
 	// stroke change until a save/reload re-stamps features through the registry.
 	describe("a newly created connector is immediately style-editable (regression #167)", () => {
@@ -298,17 +337,29 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 				selectedConnectorId: connectorId,
 			};
 
-			const dashed = handlePropertyUpdate(selected, "strokeDashType", "dashed");
+			const dashed = registries.styleProperty.apply(
+				selected,
+				"strokeDashType",
+				"dashed",
+			);
 			expect(
 				(dashed.objects[connectorId] as ConnectorState).strokeDashType,
 			).toBe("dashed");
 
-			const colored = handlePropertyUpdate(selected, "stroke", "#ff0000");
+			const colored = registries.styleProperty.apply(
+				selected,
+				"stroke",
+				"#ff0000",
+			);
 			expect((colored.objects[connectorId] as ConnectorState).stroke).toBe(
 				"#ff0000",
 			);
 
-			const widened = handlePropertyUpdate(selected, "strokeWidth", "7");
+			const widened = registries.styleProperty.apply(
+				selected,
+				"strokeWidth",
+				"7",
+			);
 			expect((widened.objects[connectorId] as ConnectorState).strokeWidth).toBe(
 				7,
 			);
@@ -339,5 +390,121 @@ describe("ConnectionAnchorEventHandler endpoint editing (direct entity editing)"
 		expect(isOrthogonalRouting(afterStart.pendingConnector?.routing)).toBe(
 			true,
 		);
+	});
+
+	it("keeps orthogonal (routing omitted) when a new connector drops onto empty space (edge → free)", () => {
+		const { state, connectorId } = createConnectorFromRect();
+		const connector = state.objects[connectorId] as ConnectorState;
+		expect(connector.target.anchor.kind).toBe("free");
+		expect(connector.routing).toBeUndefined();
+	});
+
+	it("defaults to straight routing when a new connector lands on a center anchor", () => {
+		// A connectable object without frame geometry always resolves to a center anchor
+		// (calcNearestAnchor returns center for non-frame targets).
+		const base = stateWithConnectors([]);
+		const state: CanvasControllerState = {
+			...base,
+			objects: {
+				...base.objects,
+				"rect-1": { id: "rect-1", type: "rect" } as unknown as ObjectState,
+				blob: {
+					id: "blob",
+					type: "rect",
+					features: { connectable: true },
+				} as unknown as ObjectState,
+			},
+			rootIds: ["rect-1", "blob"],
+		};
+
+		const afterStart = handler.handle(
+			state,
+			dragEvent("dragStart", "rect-1", "anchor:rightCenter", { x: 10, y: 10 }),
+		);
+		const afterEnd = handler.handle(
+			afterStart,
+			dragEvent("dragEnd", "rect-1", "anchor:rightCenter", { x: 80, y: 80 }, [
+				"blob",
+			]),
+		);
+
+		const connectorId = afterEnd.rootIds[afterEnd.rootIds.length - 1];
+		const connector = afterEnd.objects[connectorId] as ConnectorState;
+		expect(connector.target.anchor).toEqual({ kind: "center" });
+		expect(connector.routing).toBe("straight");
+	});
+
+	// Re-anchor parity (①): editing an existing connector's endpoint follows the same
+	// anchor-derived routing rule as creation, but only when routing was never set and the
+	// edited anchor actually changed.
+	describe("re-anchoring an existing connector derives routing from the new anchors", () => {
+		it("flips an unset-routing connector to straight when its endpoint is re-anchored onto a center", () => {
+			const state = withBlob(
+				stateWithConnectors([edgeSourceConnector("c1", { x: 10, y: 10 })]),
+			);
+
+			const afterStart = handler.handle(
+				state,
+				dragEvent("dragStart", "c1", "endpoint:target", { x: 10, y: 10 }),
+			);
+			const afterEnd = handler.handle(
+				afterStart,
+				dragEvent("dragEnd", "c1", "endpoint:target", { x: 80, y: 80 }, [
+					"blob",
+				]),
+			);
+
+			const updated = afterEnd.objects["c1"] as ConnectorState;
+			expect(updated.target.anchor).toEqual({ kind: "center" });
+			expect(updated.routing).toBe("straight");
+			// A real re-anchor commits (objects reference changed).
+			expect(afterEnd.objects).not.toBe(state.objects);
+		});
+
+		it("leaves routing unset on a no-op grab (edited anchor unchanged)", () => {
+			// source is center, so deriving would yield straight — the no-op guard must prevent it.
+			const state = stateWithConnectors([
+				oneFreeConnector("c1", { x: 10, y: 10 }),
+			]);
+
+			const afterStart = handler.handle(
+				state,
+				dragEvent("dragStart", "c1", "endpoint:target", { x: 10, y: 10 }),
+			);
+			const afterEnd = handler.handle(
+				afterStart,
+				dragEvent("dragEnd", "c1", "endpoint:target", { x: 10, y: 10 }),
+			);
+
+			expect(
+				(afterEnd.objects["c1"] as ConnectorState).routing,
+			).toBeUndefined();
+			// No-op edit does not commit.
+			expect(afterEnd.objects).toBe(state.objects);
+		});
+
+		it("preserves an explicit routing choice when re-anchored onto a center", () => {
+			const state = withBlob(
+				stateWithConnectors([
+					edgeSourceConnector("c1", { x: 10, y: 10 }, "orthogonal"),
+				]),
+			);
+
+			const afterStart = handler.handle(
+				state,
+				dragEvent("dragStart", "c1", "endpoint:target", { x: 10, y: 10 }),
+			);
+			const afterEnd = handler.handle(
+				afterStart,
+				dragEvent("dragEnd", "c1", "endpoint:target", { x: 80, y: 80 }, [
+					"blob",
+				]),
+			);
+
+			const updated = afterEnd.objects["c1"] as ConnectorState;
+			expect(updated.target.anchor).toEqual({ kind: "center" });
+			// Explicit orthogonal is kept even though the target is now a center anchor.
+			expect(updated.routing).toBe("orthogonal");
+		});
 	});
 });

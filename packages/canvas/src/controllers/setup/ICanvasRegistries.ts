@@ -31,6 +31,18 @@ export interface ICanvasRegistries {
 	command: {
 		get(commandId: string): CommandLike | undefined;
 	};
+	/**
+	 * Styleable-property update dispatch, used by the object-menu gesture handler
+	 * and the reducer's MENU_PROPERTY_UPDATE. Inline shape for the same acyclicity
+	 * reason as `command` (the concrete class is `StylePropertyRegistry`).
+	 */
+	styleProperty: {
+		apply(
+			state: CanvasControllerState,
+			property: string,
+			value: string,
+		): CanvasControllerState;
+	};
 }
 
 /** The slice of a `Command` the pure tree invokes (structural; not the `Command` type). */

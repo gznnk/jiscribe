@@ -14,6 +14,7 @@ import type {
 import type { CanvasRegistries } from "../../setup/CanvasRegistries";
 import { buildObjectBBoxes } from "../../utils/buildObjectBBoxes";
 import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWithDescendants";
+import { materializeObjects } from "../../utils/cowObjects";
 import type { Gesture } from "../recognizer/GestureRecognizerTypes";
 import type { CanvasEvent, EventType } from "../registry/GestureHandlerTypes";
 import { calcSnapCandidates } from "./utils/snap/calcSnapCandidates";
@@ -175,6 +176,9 @@ export const handleGesture = (
 
 		nextState = {
 			...nextState,
+			// Flatten the per-frame COW view so history / persistence / the next
+			// gesture's snapshot only ever hold plain records (#213). No-op when plain.
+			objects: materializeObjects(nextState.objects),
 			eventStartSnapshot: null,
 			snapFeedback: null,
 			axisLockFeedback: null,

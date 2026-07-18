@@ -7,14 +7,15 @@ import type {
 	CanvasControllerState,
 	SnapFeedback,
 } from "../../../../CanvasTypes";
+import { createCowObjects } from "../../../../utils/cowObjects";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
+import { ControlStrategy } from "../../../registry/ControlStrategy";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import {
 	buildSnapFeedback,
 	findSnap,
 	SNAP_THRESHOLD_PX,
 } from "../../utils/snap/findSnap";
-import type { ControlStrategy } from "../ControlEventHandler";
 
 /**
  * Handles vertex-insert control operations (adding a vertex to a segment).
@@ -27,9 +28,7 @@ import type { ControlStrategy } from "../ControlEventHandler";
  * - drag: move the newly added vertex
  * - dragEnd: commit the final position
  */
-export class VertexInsertHandler implements ControlStrategy {
-	readonly controlType = "vertex-insert";
-
+export class VertexInsertHandler extends ControlStrategy {
 	supports(event: CanvasEvent): boolean {
 		if (event.targetKind !== "control") {
 			return false;
@@ -210,12 +209,13 @@ export class VertexInsertHandler implements ControlStrategy {
 			points: newPoints,
 		};
 
+		// COW view over the previous frame's map (rebased internally, #213)
+		const updatedObjects = createCowObjects(state.objects);
+		updatedObjects[objectId] = updatedObject;
+
 		return {
 			...state,
-			objects: {
-				...state.objects,
-				[objectId]: updatedObject,
-			},
+			objects: updatedObjects,
 			snapFeedback,
 		};
 	}

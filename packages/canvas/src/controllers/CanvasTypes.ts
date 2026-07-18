@@ -1,11 +1,11 @@
 import type { BoundingBox, FrameKeyPoints, Point } from "@workspace/geometry";
 
 import type { DocCreationDefaults } from "../schemas/objects/types/DocCreationDefaults";
-import type { ShapePreset } from "../schemas/objects/types/ShapePreset";
 import type { CanvasState } from "../states/canvas/CanvasState";
 import type { DocSnapshot } from "../states/canvas/DocSnapshot";
 import type { Viewport } from "../states/canvas/Viewport";
 import type { ClipboardData } from "./commands/selection/ClipboardData";
+import type { ShapePreset } from "./ui/objects/types/ShapePreset";
 import type { ObjectState } from "../states/objects/base/ObjectState";
 import type { ConnectorState } from "../states/objects/connections/connector/ConnectorState";
 import type { GroupState } from "../states/objects/primitives/group/GroupState";
@@ -125,6 +125,30 @@ export type HistoryState = {
 
 /**
  * Snapshot at gesture start (dragStart).
+ * dragStart cache for deriving multi-select resize bounds without re-collecting
+ * every leaf vertex per frame (#215). Built by TransformControlHandler.
+ */
+export type MultiSelectResizeBoundsCache = {
+	/**
+	 * Combined extents of affine-exact leaf points (polys and axis-aligned frames)
+	 * in the start group's rotation-aligned local space, as offsets from the start
+	 * group center. null when the selection has no such points.
+	 */
+	affineLocalExtents: {
+		minX: number;
+		maxX: number;
+		minY: number;
+		maxY: number;
+	} | null;
+	/**
+	 * Leaf object IDs whose world points must be re-collected every frame because
+	 * their transform is not an exact affine map of the group resize
+	 * (connectors and obliquely rotated frames).
+	 */
+	nonAffineLeafIds: string[];
+};
+
+/**
  * A dedicated type that pre-computes and caches the data needed for calculations during a drag.
  * Created on dragStart and cleared to null on dragEnd.
  */
@@ -153,6 +177,8 @@ export type EventStartSnapshot = {
 	multiSelectGroup: GroupState | null;
 	/** Viewport at drag start (reference point for grab scrolling) */
 	viewport: Viewport;
+	/** Multi-select resize bounds cache (#215). Set by TransformControlHandler on dragStart of a resize anchor */
+	multiSelectResizeBoundsCache?: MultiSelectResizeBoundsCache | null;
 };
 
 /**
@@ -277,6 +303,14 @@ export type CanvasControllerState = CanvasState & {
 	 * null means all sections are collapsed.
 	 */
 	objectMenuOpenId: string | null;
+
+	/**
+	 * ID of the ShapeLibrary category whose flyout is open in the toolbar.
+	 * null means no flyout is open. Only one is open at a time. Cleared alongside
+	 * objectMenuOpenId by the selection/press handlers and commands (and
+	 * resetUiState), and by Escape — there is no central clear in handleGesture.
+	 */
+	shapeLibraryOpenCategory: string | null;
 
 	/**
 	 * The group state when multi-selected objects are grouped.

@@ -9,29 +9,29 @@ import { createSvgTransform } from "../../utils/createSvgTransform";
 
 type StickyProps = StickyState & TextEditable;
 
-const StickyComponent: React.FC<StickyProps> = ({
-	id,
-	cx,
-	cy,
-	width,
-	height,
-	scaleX,
-	scaleY,
-	rotation,
-	fill,
-	text,
-	textType,
-	textAlign,
-	verticalAlign,
-	fontColor,
-	fontSize,
-	fontFamily,
-	fontWeight,
-	features,
-	isEditing = false,
-}) => {
+const StickyComponent: React.FC<StickyProps> = (props) => {
+	const {
+		id,
+		cx,
+		cy,
+		width,
+		height,
+		scaleX,
+		scaleY,
+		rotation,
+		fill,
+		text,
+		textType,
+		textAlign,
+		verticalAlign,
+		fontColor,
+		fontSize,
+		fontFamily,
+		fontWeight,
+		isEditing = false,
+	} = props;
 	const transformAttr = createSvgTransform(scaleX, scaleY, rotation, cx, cy);
-	const textRegion = calcTextRegion({ width, height }, features?.textRegion);
+	const textRegion = calcTextRegion(props);
 
 	const left = -width / 2;
 	const right = width / 2;

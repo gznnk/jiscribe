@@ -22,7 +22,7 @@ It is in jiscribe format, so you can view it as a diagram by opening it in the V
 | 7   | [External Sync / VSCode Integration](./07-external-sync.md)      | `useSyncExternalDoc` / `SYNC_EXTERNAL` and the saveNonce round-trip                                                    |
 | 8   | [Presentation and Theme](./08-presentation-and-theme.md)         | Pure rendering in presentations, color usage conventions, and VSCode theme tokens                                      |
 | 9   | [Testing](./09-testing.md)                                       | Unit / integration (vitest), E2E (Playwright), and circular dependency checks (madge)                                  |
-| 10  | [Image Export / Round-trip](./10-image-export.md)                | foreignObject→`<text>` conversion, PNG `iTXt` embedding of `.jis.json`, and drop-to-restore                            |
+| 10  | [Style Property System](./10-style-properties.md)                | StylePropertyRegistry, feature-gated / shape-declared property declarations, and dot-notation nested writes            |
 
 ## AI Reference
 

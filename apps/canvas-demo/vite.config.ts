@@ -19,6 +19,8 @@ export default defineConfig({
 	},
 	server: {
 		port: 5174,
+		// コンテナ内では 0.0.0.0 にバインドしないとホストへ publish しても届かない
+		host: process.env.DEVCONTAINER === "true" || undefined,
 	},
 	build: {
 		outDir: "dist",

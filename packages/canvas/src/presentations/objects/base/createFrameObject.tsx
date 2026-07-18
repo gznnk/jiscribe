@@ -9,6 +9,7 @@ import type { FillStyleState } from "../../../states/objects/base/FillStyleState
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { StrokeStyleState } from "../../../states/objects/base/StrokeStyleState";
 import type { TextStyleState } from "../../../states/objects/base/TextStyleState";
+import { useTextRegionRegistry } from "../registry/TextRegionRegistryContext";
 import { calcTextRegion } from "../utils/calcTextRegion";
 import { createSvgTransform } from "../utils/createSvgTransform";
 import { getStrokeDasharray } from "../utils/getStrokeDasharray";
@@ -35,7 +36,7 @@ type FrameRenderState = ObjectState &
 	TransformedFrame &
 	StrokeStyleState &
 	FillStyleState &
-	TextStyleState;
+	Partial<TextStyleState>;
 
 /**
  * Create the display component for Frame-based shapes (rect / diamond / ellipse, etc. that have
@@ -46,8 +47,8 @@ type FrameRenderState = ObjectState &
  * consolidated here, and each shape only passes a `draw` function that returns its shape. `draw`
  * receives the state (width/height/rx, etc.) and the shared attributes `shape`.
  *
- * The text region is derived from the state's stamped `features` descriptor via
- * `calcTextRegion` (no `textRegion` declared = full bbox).
+ * The text region is derived from the type's calculator in TextRegionRegistry
+ * via `calcTextRegion` (unregistered = full bbox).
  *
  * Shadowed stickies and svg wrapped by DOMPurify are out of scope because their draw structure differs.
  */
@@ -57,10 +58,9 @@ export const createFrameObject = <TState extends FrameRenderState>(
 	const FrameObject: React.FC<TState & TextEditable> = (props) => {
 		const {
 			id,
+			type,
 			cx,
 			cy,
-			width,
-			height,
 			scaleX,
 			scaleY,
 			rotation,
@@ -76,11 +76,15 @@ export const createFrameObject = <TState extends FrameRenderState>(
 			fontSize,
 			fontFamily,
 			fontWeight,
-			features,
 			isEditing = false,
 		} = props;
 
+		const textRegionCalculator = useTextRegionRegistry().get(type);
 		const transformAttr = createSvgTransform(scaleX, scaleY, rotation, cx, cy);
+		// Text-less shapes (features.text: false, e.g. cross / extract) draw no
+		// TextOverlay; this matches the same features.text gate used by the
+		// text-edit gesture and property-update side.
+		const hasText = props.features?.text === true;
 
 		const shape: FrameShapeProps = {
 			"data-kind": "object",
@@ -92,27 +96,29 @@ export const createFrameObject = <TState extends FrameRenderState>(
 			strokeDasharray: getStrokeDasharray(strokeDashType, strokeWidth),
 		};
 
-		const textRegion = calcTextRegion({ width, height }, features?.textRegion);
+		const textRegion = calcTextRegion(props, textRegionCalculator);
 
 		return (
 			<>
 				{draw(props, shape)}
-				<TextOverlay
-					x={textRegion.x}
-					y={textRegion.y}
-					width={textRegion.width}
-					height={textRegion.height}
-					transform={transformAttr}
-					text={text}
-					textType={textType}
-					textAlign={textAlign}
-					verticalAlign={verticalAlign}
-					fontColor={fontColor}
-					fontSize={fontSize}
-					fontFamily={fontFamily}
-					fontWeight={fontWeight}
-					isEditing={isEditing}
-				/>
+				{hasText && (
+					<TextOverlay
+						x={textRegion.x}
+						y={textRegion.y}
+						width={textRegion.width}
+						height={textRegion.height}
+						transform={transformAttr}
+						text={text}
+						textType={textType}
+						textAlign={textAlign}
+						verticalAlign={verticalAlign}
+						fontColor={fontColor}
+						fontSize={fontSize}
+						fontFamily={fontFamily}
+						fontWeight={fontWeight}
+						isEditing={isEditing}
+					/>
+				)}
 			</>
 		);
 	};

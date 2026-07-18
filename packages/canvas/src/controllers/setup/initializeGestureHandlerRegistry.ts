@@ -8,6 +8,7 @@ import { VertexControlHandler } from "../gestures/handlers/controls/vertex/Verte
 import { VertexInsertHandler } from "../gestures/handlers/controls/vertex/VertexInsertHandler";
 import { ContextMenuHandler } from "../gestures/handlers/menu/ContextMenuHandler";
 import { ObjectMenuHandler } from "../gestures/handlers/menu/ObjectMenuHandler";
+import { ShapeCategoryToggleHandler } from "../gestures/handlers/menu/ShapeCategoryToggleHandler";
 import { ShapeLibraryItemHandler } from "../gestures/handlers/menu/ShapeLibraryItemHandler";
 import { ToolbarHandler } from "../gestures/handlers/menu/ToolbarHandler";
 import { ConnectorEventHandler } from "../gestures/handlers/objects/ConnectorEventHandler";
@@ -42,18 +43,25 @@ export const initializeGestureHandlerRegistry = (
 	const connectorVertexInsertHandler = new ConnectorVertexInsertHandler();
 	// Future: const pathControlHandler = new PathControlHandler();
 
-	// Instantiate ControlEventHandler with the strategy array
-	const controlEventHandler = new ControlEventHandler([
-		transformControlHandler,
-		vertexControlHandler,
-		vertexInsertHandler,
-		connectionAnchorEventHandler,
-		connectorVertexInsertHandler,
-		// Future: pathControlHandler,
-	]);
+	// Instantiate ControlEventHandler with the strategy array.
+	// The selectionControl registry instance is stable here even though its
+	// contents are registered later (applyObjectDefinition), so per-type
+	// selection controls resolve at event time.
+	const controlEventHandler = new ControlEventHandler(
+		[
+			transformControlHandler,
+			vertexControlHandler,
+			vertexInsertHandler,
+			connectionAnchorEventHandler,
+			connectorVertexInsertHandler,
+			// Future: pathControlHandler,
+		],
+		registries.selectionControl,
+	);
 
 	gestureHandlerRegistry
 		.register("shape-library-item-handler", ShapeLibraryItemHandler)
+		.register("shape-category-toggle-handler", ShapeCategoryToggleHandler)
 		.register("toolbar-handler", ToolbarHandler)
 		.register("context-menu-handler", ContextMenuHandler)
 		.register("object-menu-handler", ObjectMenuHandler)

@@ -18,6 +18,7 @@ const baseState = (
 		shapeDrawing: null,
 		eventStartSnapshot: null,
 		objectMenuOpenId: null,
+		shapeLibraryOpenCategory: null,
 		edgeScrollEnabled: false,
 		...overrides,
 	}) as unknown as CanvasControllerState;
@@ -43,6 +44,13 @@ describe("DeselectAllCommand", () => {
 		expect(next.shapeDrawing).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
 		expect(next.edgeScrollEnabled).toBe(false);
+	});
+
+	it("closes an open ShapeLibrary category flyout", () => {
+		const state = baseState({ shapeLibraryOpenCategory: "flowchart" });
+		expect(
+			DeselectAllCommand.execute(state, registries).shapeLibraryOpenCategory,
+		).toBeNull();
 	});
 
 	describe("canExecute", () => {
@@ -77,6 +85,15 @@ describe("DeselectAllCommand", () => {
 			expect(DeselectAllCommand.canExecute(baseState({}), registries)).toBe(
 				false,
 			);
+		});
+
+		it("is executable when a ShapeLibrary category flyout is open (Escape closes it)", () => {
+			expect(
+				DeselectAllCommand.canExecute(
+					baseState({ shapeLibraryOpenCategory: "flowchart" }),
+					registries,
+				),
+			).toBe(true);
 		});
 
 		it("is not executable during an object drag (other than area selection)", () => {

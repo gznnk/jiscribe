@@ -106,4 +106,48 @@ describe("ShapeLibraryItemHandler", () => {
 		expect(next.rootIds).toHaveLength(0);
 		expect(next.shapeDrawing).toBeNull();
 	});
+
+	describe("closes an open ShapeLibrary category flyout when the item is used", () => {
+		const openState = (): CanvasControllerState =>
+			({
+				...makeState(),
+				shapeLibraryOpenCategory: "flowchart",
+			}) as CanvasControllerState;
+
+		it("on a click that enters drawing mode (rect)", () => {
+			const next = ShapeLibraryItemHandler.handle(
+				openState(),
+				makeEvent("click", "item:rect"),
+				registries,
+			);
+			expect(next.shapeLibraryOpenCategory).toBeNull();
+		});
+
+		it("on a click that places a non-drawable shape (sticky)", () => {
+			const next = ShapeLibraryItemHandler.handle(
+				openState(),
+				makeEvent("click", "item:sticky"),
+				registries,
+			);
+			expect(next.shapeLibraryOpenCategory).toBeNull();
+		});
+
+		it("on drag start", () => {
+			const dragStart = {
+				type: "dragStart",
+				targetKind: "menu",
+				targetId: "shape-library",
+				targetPart: "item:rect",
+				button: 0,
+				last: { x: 100, y: 100 },
+				mods: { shift: false, alt: false, ctrl: false, meta: false },
+			} as unknown as CanvasEvent;
+			const next = ShapeLibraryItemHandler.handle(
+				openState(),
+				dragStart,
+				registries,
+			);
+			expect(next.shapeLibraryOpenCategory).toBeNull();
+		});
+	});
 });

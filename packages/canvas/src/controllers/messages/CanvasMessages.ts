@@ -61,6 +61,7 @@ export type CanvasMessageStrings = {
 	menuFontSize: string;
 	menuFontColor: string;
 	menuBackgroundColor: string;
+	menuHeaderColor: string;
 	menuStrokeColor: string;
 	menuLineColor: string;
 	menuLineStyle: string;
@@ -100,6 +101,8 @@ export type CanvasMessages = CanvasMessageStrings & {
 	commandLabels: Record<string, string>;
 	/** Overrides keyed by shape preset id (e.g. `rect`, `ellipse`, `sticky`) */
 	shapePresetLabels: Record<string, string>;
+	/** Overrides keyed by shape category id (e.g. `flowchart`, `general`, `annotation`) */
+	shapeCategoryLabels: Record<string, string>;
 	/** Overrides keyed by the English color preset name (e.g. `Red`, `Light Blue`) */
 	colorNames: Record<string, string>;
 	/** Overrides keyed by arrow type (e.g. `FilledTriangle`, `None`) */
@@ -154,6 +157,7 @@ export const defaultCanvasMessages: CanvasMessages = {
 	menuFontSize: "Font Size",
 	menuFontColor: "Font Color",
 	menuBackgroundColor: "Background Color",
+	menuHeaderColor: "Header Color",
 	menuStrokeColor: "Stroke Color",
 	menuLineColor: "Line Color",
 	menuLineStyle: "Line Style",
@@ -181,6 +185,7 @@ export const defaultCanvasMessages: CanvasMessages = {
 
 	commandLabels: {},
 	shapePresetLabels: {},
+	shapeCategoryLabels: {},
 	colorNames: {},
 	arrowTypeNames: {},
 };
@@ -193,6 +198,7 @@ export const mergeCanvasMessages = (
 	...overrides,
 	commandLabels: { ...overrides?.commandLabels },
 	shapePresetLabels: { ...overrides?.shapePresetLabels },
+	shapeCategoryLabels: { ...overrides?.shapeCategoryLabels },
 	colorNames: { ...overrides?.colorNames },
 	arrowTypeNames: { ...overrides?.arrowTypeNames },
 });

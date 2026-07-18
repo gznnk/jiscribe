@@ -139,3 +139,34 @@ describe("ConnectorEventHandler - taps while editing commit", () => {
 		expect(next.commitVersion).toBe(6);
 	});
 });
+
+describe("ConnectorEventHandler - closes menus on selection change", () => {
+	const openMenusState = (): CanvasControllerState =>
+		({
+			...makeState("Yes"),
+			objectMenuOpenId: "style",
+			shapeLibraryOpenCategory: "flowchart",
+		}) as unknown as CanvasControllerState;
+
+	it("a click selecting a connector closes the ObjectMenu submenu and the category flyout", () => {
+		const next = ConnectorEventHandler.handle(
+			openMenusState(),
+			makeEvent("click", "c1"),
+			registries,
+		);
+		expect(next.selectedConnectorId).toBe("c1");
+		expect(next.objectMenuOpenId).toBeNull();
+		expect(next.shapeLibraryOpenCategory).toBeNull();
+	});
+
+	it("a double click selecting a connector also closes them", () => {
+		const next = ConnectorEventHandler.handle(
+			openMenusState(),
+			makeEvent("doubleClick", "c1"),
+			registries,
+		);
+		expect(next.selectedConnectorId).toBe("c1");
+		expect(next.objectMenuOpenId).toBeNull();
+		expect(next.shapeLibraryOpenCategory).toBeNull();
+	});
+});

@@ -1,11 +1,11 @@
 import { memo } from "react";
 
 import { resolveAutoColor } from "../../../../presentations/objects/utils/resolveAutoColor";
-import type { ShapePreset } from "../../../../schemas/objects/types/ShapePreset";
 import { AUTO_COLOR } from "../../../../schemas/objects/utils/autoColor";
 import type { ShapeFactoryRegistry } from "../../../../schemas/registry/ShapeFactoryRegistry";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../contexts/CanvasRegistriesContext";
+import type { ShapePreset } from "../../objects/types/ShapePreset";
 
 type DrawingPreviewOverlayProps = {
 	shapeDrawing: CanvasControllerState["shapeDrawing"];

@@ -33,10 +33,11 @@ export const SelectAllCommand: Command = {
 				state.multiSelectGroup,
 			),
 			// selectedIds is mutually exclusive with selectedConnectorId / selectedVertex.
-			// Without clearing them, the branching in SwapArrows and handlePropertyUpdate breaks.
+			// Without clearing them, the branching in SwapArrows and the style-property handlers breaks.
 			selectedConnectorId: null,
 			selectedVertex: null,
 			objectMenuOpenId: null,
+			shapeLibraryOpenCategory: null,
 		};
 	},
 };

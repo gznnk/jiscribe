@@ -1,11 +1,31 @@
-import type { Point } from "@workspace/geometry";
+import { isTransformedFrame, type Point } from "@workspace/geometry";
 
 import { adjustToOutline } from "./adjustToOutline";
 import { resolveEndpoint } from "./resolveEndpoint";
 import { isOrthogonalRouting } from "../../../../../schemas/objects/types/ConnectorRouting";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
+import type { ShapeOutlineRegistry } from "../../../../objects/registry/ShapeOutlineRegistry";
 import { resolveOrthogonalRoute } from "../routing";
+
+/**
+ * Reads a shape's local outline polygon from the registry, or null when the
+ * shape is not a frame or has no registered outline (rect/ellipse fall through
+ * to their analytic handling in resolveEndpoint / adjustToOutline).
+ */
+const resolveShapeOutline = (
+	obj: ObjectState | null | undefined,
+	outlineRegistry: Pick<ShapeOutlineRegistry, "get"> | null | undefined,
+): Point[] | null => {
+	if (!obj || !outlineRegistry) {
+		return null;
+	}
+	const provider = outlineRegistry.get(obj.type);
+	if (!provider || !isTransformedFrame(obj)) {
+		return null;
+	}
+	return provider(obj);
+};
 
 /**
  * Pure function that resolves both endpoints of a connector to actual coordinates. It handles
@@ -19,16 +39,30 @@ import { resolveOrthogonalRoute } from "../routing";
  * @param connectorState - The connector state to resolve. Carries both endpoints, routing, and manual points
  * @param sourceObj - The owner shape of the source endpoint. null/undefined if unreferenced (free endpoint) or not found
  * @param targetObj - The owner shape of the target endpoint. null/undefined if unreferenced (free endpoint) or not found
+ * @param outlineRegistry - Per-canvas ShapeOutlineRegistry. When provided, non-rect
+ *   shapes attach on their true outline; omitted = bounding-box rect/ellipse handling
  * @returns The resolved source / target points and intermediate waypoints, or null if resolution fails
  */
 export const resolveConnectorPoints = (
 	connectorState: ConnectorState,
 	sourceObj: ObjectState | null | undefined,
 	targetObj: ObjectState | null | undefined,
+	outlineRegistry?: Pick<ShapeOutlineRegistry, "get"> | null,
 ): { source: Point; target: Point; waypoints: Point[] } | null => {
+	const sourceOutline = resolveShapeOutline(sourceObj, outlineRegistry);
+	const targetOutline = resolveShapeOutline(targetObj, outlineRegistry);
+
 	// Resolve endpoints to coordinates
-	let sourcePoint = resolveEndpoint(connectorState.source, sourceObj);
-	let targetPoint = resolveEndpoint(connectorState.target, targetObj);
+	let sourcePoint = resolveEndpoint(
+		connectorState.source,
+		sourceObj,
+		sourceOutline,
+	);
+	let targetPoint = resolveEndpoint(
+		connectorState.target,
+		targetObj,
+		targetOutline,
+	);
 
 	if (!sourcePoint || !targetPoint) {
 		return null;
@@ -42,16 +76,26 @@ export const resolveConnectorPoints = (
 	const sourceToward = waypoints[0] ?? targetPoint;
 	const targetToward = waypoints[waypoints.length - 1] ?? sourcePoint;
 
-	// Adjust to outline for center anchors on rect/ellipse objects
+	// Adjust to outline for center anchors (true outline when available, else rect/ellipse)
 	if (connectorState.source.anchor.kind === "center") {
-		sourcePoint = adjustToOutline(sourcePoint, sourceToward, sourceObj);
+		sourcePoint = adjustToOutline(
+			sourcePoint,
+			sourceToward,
+			sourceObj,
+			sourceOutline,
+		);
 		if (!sourcePoint) {
 			return null;
 		}
 	}
 
 	if (connectorState.target.anchor.kind === "center") {
-		targetPoint = adjustToOutline(targetPoint, targetToward, targetObj);
+		targetPoint = adjustToOutline(
+			targetPoint,
+			targetToward,
+			targetObj,
+			targetOutline,
+		);
 		if (!targetPoint) {
 			return null;
 		}

@@ -9,14 +9,15 @@ import type {
 	CanvasControllerState,
 	SnapFeedback,
 } from "../../../../CanvasTypes";
+import { createCowObjects } from "../../../../utils/cowObjects";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
+import { ControlStrategy } from "../../../registry/ControlStrategy";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import {
 	buildSnapFeedback,
 	findSnap,
 	SNAP_THRESHOLD_PX,
 } from "../../utils/snap/findSnap";
-import type { ControlStrategy } from "../ControlEventHandler";
 
 /**
  * Handles vertex control interactions (moving a vertex).
@@ -24,9 +25,7 @@ import type { ControlStrategy } from "../ControlEventHandler";
  * Target format: data-id=<objectId>, data-part="vertex:<vertexIndex>"
  * Example: data-part="vertex:0"
  */
-export class VertexControlHandler implements ControlStrategy {
-	readonly controlType = "vertex-control";
-
+export class VertexControlHandler extends ControlStrategy {
 	supports(event: CanvasEvent): boolean {
 		if (event.targetKind !== "control") {
 			return false;
@@ -91,6 +90,7 @@ export class VertexControlHandler implements ControlStrategy {
 			...state,
 			selectedVertex: { objectId, vertexIndex },
 			objectMenuOpenId: null,
+			shapeLibraryOpenCategory: null,
 		};
 	}
 
@@ -106,6 +106,7 @@ export class VertexControlHandler implements ControlStrategy {
 			selectedVertex: null,
 			edgeScrollEnabled: true,
 			objectMenuOpenId: null,
+			shapeLibraryOpenCategory: null,
 		};
 	}
 
@@ -217,12 +218,13 @@ export class VertexControlHandler implements ControlStrategy {
 			points: newPoints,
 		};
 
+		// COW view over the previous frame's map (rebased internally, #213)
+		const updatedObjects = createCowObjects(state.objects);
+		updatedObjects[objectId] = updatedObject;
+
 		return {
 			...state,
-			objects: {
-				...state.objects,
-				[objectId]: updatedObject,
-			},
+			objects: updatedObjects,
 			snapFeedback,
 			axisLockFeedback,
 		};
