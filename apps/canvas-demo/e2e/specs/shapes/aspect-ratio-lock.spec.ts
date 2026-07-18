@@ -89,4 +89,34 @@ test.describe("アスペクト比ロック", () => {
 		// 解除後は幅が変わらない。
 		expect(after.width).toBeCloseTo(before.width, 1);
 	});
+
+	// 回帰ガード: Ctrl+G で作ったグループに features が stamp されず、
+	// lockAspectRatio のトグルが無言で no-op になるバグがあった。
+	test("グループ選択でもロックをトグルできる", async ({ canvas }) => {
+		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 500, y: 300 });
+		await canvas.drawShape("Rectangle", { x: 550, y: 200 }, { x: 650, y: 300 });
+
+		// マーキーで両方選択してグループ化
+		await canvas.drag({ x: 380, y: 180 }, { x: 670, y: 320 });
+		await canvas.group();
+
+		// マーキー選択の multiSelectGroup は lockAspectRatio=true が既定で、
+		// Ctrl+G の新グループへ引き継がれる — 初期表示は解除ボタン。
+		const unlockButton = canvas.page.locator(
+			selectors.objectMenuSet("lockAspectRatio", "false"),
+		);
+		await expect(unlockButton).toBeVisible();
+		await unlockButton.click();
+
+		// state へ書き込まれればボタンはロック側（true）へ反転する。
+		// バグ時は features 未 stamp で書き込みが no-op になり反転しない。
+		const lockButton = canvas.page.locator(
+			selectors.objectMenuSet("lockAspectRatio", "true"),
+		);
+		await expect(lockButton).toBeVisible();
+
+		// もう一度押して往復できることも確認
+		await lockButton.click();
+		await expect(unlockButton).toBeVisible();
+	});
 });

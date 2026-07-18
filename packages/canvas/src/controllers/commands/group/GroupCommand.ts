@@ -1,3 +1,4 @@
+import { GroupFeatures } from "../../../schemas/objects/primitives/group/GroupDoc";
 import { isConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import { calculateOrientedBoundsFromChildIds } from "../../../states/utils/calculateGroupOrientedBounds";
@@ -72,6 +73,9 @@ export const GroupCommand: Command = {
 		const newGroup = {
 			id: groupId,
 			type: "group",
+			// features must be stamped on creation: the style-property handlers read it
+			// directly to gate lockAspectRatio (an unstamped group ignores the toggle).
+			features: GroupFeatures,
 			parentId: lcaId,
 			rotation: 0,
 			scaleX: 1,
@@ -142,6 +146,10 @@ export const GroupCommand: Command = {
 			objects: updatedObjects,
 			rootIds: updatedRootIds,
 			selectedIds: [groupId],
+			// The marquee's multiSelectGroup must not survive into the single-group
+			// selection: stale, it swallows lockAspectRatio reads/writes meant for
+			// the real group object (multiSelectGroup takes precedence in both).
+			multiSelectGroup: null,
 			objectMenuOpenId: null,
 			shapeLibraryOpenCategory: null,
 			lastDuplicate: null,

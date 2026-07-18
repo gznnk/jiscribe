@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { GroupFeatures } from "../../../../schemas/objects/primitives/group/GroupDoc";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
@@ -42,6 +43,35 @@ const makeState = (params: {
 	}) as unknown as CanvasControllerState;
 
 describe("GroupCommand", () => {
+	// Regression guard: the created group must carry the shared GroupFeatures
+	// descriptor (the style-property handlers gate lockAspectRatio on
+	// features.transform), and the marquee's multiSelectGroup must not survive —
+	// stale, it swallows lockAspectRatio reads/writes meant for the real group.
+	it("stamps GroupFeatures and clears multiSelectGroup so lockAspectRatio hits the group", () => {
+		const state = makeState({
+			selectedIds: ["a", "b"],
+			objects: { a: makeRect("a", 0, 0), b: makeRect("b", 200, 0) },
+			rootIds: ["a", "b"],
+			multiSelectGroup: { lockAspectRatio: true } as GroupState,
+		});
+		const next = GroupCommand.execute(state, registries);
+		const groupId = next.rootIds[0];
+		const group = next.objects[groupId] as GroupState;
+		expect(group.features).toBe(GroupFeatures);
+		// the marquee default is inherited, then the synthetic group is dropped
+		expect(group.lockAspectRatio).toBe(true);
+		expect(next.multiSelectGroup).toBeNull();
+
+		const unlocked = registries.styleProperty.apply(
+			next,
+			"lockAspectRatio",
+			"false",
+		);
+		expect((unlocked.objects[groupId] as GroupState).lockAspectRatio).toBe(
+			false,
+		);
+	});
+
 	it("combines two root elements into a single new group", () => {
 		const state = makeState({
 			selectedIds: ["a", "b"],
