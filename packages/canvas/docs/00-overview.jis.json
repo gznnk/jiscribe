@@ -913,7 +913,7 @@
 			"strokeWidth": 2,
 			"fill": "#111827",
 			"rx": 8,
-			"text": "E2E：Playwright（apps/canvas-demo/e2e）",
+			"text": "E2E：Playwright（packages/canvas/e2e）",
 			"textType": "text",
 			"textAlign": "center",
 			"verticalAlign": "middle",

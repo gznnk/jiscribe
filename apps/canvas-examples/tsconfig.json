@@ -3,5 +3,5 @@
 	"compilerOptions": {
 		"jsx": "react-jsx"
 	},
-	"include": ["src", "e2e", "playwright.config.mts"]
+	"include": ["src", "vite.config.ts"]
 }

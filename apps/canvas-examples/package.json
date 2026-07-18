@@ -1,5 +1,5 @@
 {
-	"name": "canvas-demo",
+	"name": "canvas-examples",
 	"private": true,
 	"version": "0.0.0",
 	"type": "module",
@@ -8,12 +8,7 @@
 		"build": "tsc -b && vite build",
 		"lint": "eslint .",
 		"preview": "vite preview",
-		"typecheck": "tsc --noEmit",
-		"test:e2e": "playwright test",
-		"test:e2e:headed": "playwright test --headed",
-		"test:e2e:ui": "playwright test --ui",
-		"test:e2e:demo": "playwright test -c playwright.demo.config.ts",
-		"test:e2e:demo:headed": "playwright test -c playwright.demo.config.ts --headed"
+		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
 		"@workspace/canvas": "workspace:*",
@@ -22,7 +17,6 @@
 		"react-dom": "catalog:"
 	},
 	"devDependencies": {
-		"@playwright/test": "^1.60.0",
 		"@types/node": "catalog:",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",

@@ -10,7 +10,7 @@ const isHeaded =
 	process.argv.includes("--headed") || process.argv.includes("--ui");
 
 // e2e 専用サーバーのポートを実行ごとに OS の空きポート（エフェメラル領域）から取得する。
-// 固定 5174 だと dev:demo と競合し、複数 e2e / 複数 dev:demo の同時起動もできない。
+// 固定ポートだと dev サーバー（dev:examples / dev:web 等）と競合し、複数 e2e の同時起動もできない。
 // この config はワーカー各プロセスでも再評価されるため、最初に決めたポートを
 // PLAYWRIGHT_PORT に焼き付けて全プロセスで共有する（さもないと baseURL と
 // webServer の起動ポートがワーカーごとにズレて ERR_CONNECTION_REFUSED になる）。
@@ -50,7 +50,7 @@ export default defineConfig({
 	webServer: {
 		// 掴んだ空きポートに strictPort で固定。ズレて別ポートに逃げると
 		// baseURL と食い違って全テストが接続失敗するため、逃がさず即エラーにする。
-		command: `pnpm dev --port ${port} --strictPort`,
+		command: `pnpm dev:harness --port ${port} --strictPort`,
 		port,
 		// ポートは実行ごとに変わるので reuse しない（毎回専用サーバーを起動・破棄）。
 		reuseExistingServer: false,

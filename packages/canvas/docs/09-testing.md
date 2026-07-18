@@ -70,15 +70,14 @@ src/**/__tests__/**/*.{test,spec}.{ts,tsx}
 
 ## E2E (Playwright)
 
-Non-regression tests using a real browser and real UI operations. Placed under `apps/canvas-demo/e2e/`.
+Non-regression tests using a real browser and real UI operations. Placed under `packages/canvas/e2e/`.
 
-- `playwright.config.ts` auto-starts the vite dev server (port 5174) via `webServer`. `testDir: e2e/specs`
+- `playwright.config.mts` auto-starts a dedicated test harness app (`e2e/harness/`, a minimal Vite app that mounts `Canvas`) via `webServer`. `testDir: e2e/specs`
 - `support/CanvasDriver.ts` … the API for drawing, selection, text, color, and connector operations.
   `support/selectors.ts` … `data-kind` / `data-id` selector constants. `fixtures.ts` injects the CanvasDriver
 - `specs/` is the test body (the CI gate). Categories: `arrange` / `driver` / `editing` / `keyboard` /
   `scenario` / `shapes` / `ui` (+ `smoke.spec.ts`)
-- `e2e/demo/` is a demo **for generating marketing assets** (outside `testDir`). It is for screenshots/recordings rather than regression detection, and because it is heavy and flaky, it is excluded from the normal CI gate and run only via `test:e2e:demo`
-- Run: `pnpm --filter canvas-demo test:e2e` (`:headed` / `:ui` / `:demo` available)
+- Run: `pnpm --filter @workspace/canvas test:e2e` (`:headed` / `:ui` available)
 
 Design policy: **do not add retries that hide failures**. The CanvasDriver stabilizes by waiting on state (`expect.poll`, etc.) rather than on time, so it does not mask genuine defects.
 
@@ -99,7 +98,7 @@ After making changes, run the following in order (the project-wide procedure).
 ```bash
 pnpm lint --fix
 pnpm format
-pnpm build:demo
+pnpm build:examples
 pnpm typecheck
 pnpm lint
 pnpm --filter @workspace/canvas test
