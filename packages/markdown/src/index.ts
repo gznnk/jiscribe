@@ -2,6 +2,9 @@ import DOMPurify from "dompurify";
 import hljs from "highlight.js/lib/common";
 import katex from "katex";
 import MarkdownIt from "markdown-it";
+// 型は @types/markdown-it-link-attributes（DefinitelyTyped の最新 3.0.5）を使う。
+// ランタイム v4 は型を同梱せず DT も v4 未公開だが、本コードが使う attrs 設定は
+// v3 スタブと互換のため 3.0.5 を維持する。
 import linkAttr from "markdown-it-link-attributes";
 
 /**
