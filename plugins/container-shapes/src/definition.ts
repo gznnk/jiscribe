@@ -4,6 +4,7 @@ import { createFrameBehavior } from "@workspace/canvas/unstable";
 
 import { ContainerHeaderHeightControl } from "./controls/ContainerHeaderHeightControl";
 import { HeaderHeightControlHandler } from "./controls/HeaderHeightControlHandler";
+import { HeaderColorMenu } from "./menu/HeaderColorMenu";
 import { calcContainerTextRegion } from "./presentation/calcContainerTextRegion";
 import { Container } from "./presentation/Container";
 import { ContainerPreview } from "./presentation/ContainerPreview";
@@ -18,21 +19,14 @@ import { isValidContainerState } from "./state/validateContainerState";
 import { ContainerShapePresets } from "./ui/ContainerShapePresets";
 
 /**
- * `containerDefinition` intentionally omits one piece of the core definition
- * (docs/05_extensibility/uc1-container-extraction-log.md has the full audit):
+ * `containerDefinition` has zero intentional omissions relative to the core
+ * container entry (`initializeObjectRegistry.ts`) — same section structure,
+ * same items, same `selectionControls`
+ * (docs/05_extensibility/uc1-container-extraction-log.md has the full audit).
  *
- * - The `header-color` custom menu item (HeaderColorMenu): needs the ObjectMenu UI
- *   kit (DropdownPanel / ColorPickerGrid / CanvasMessagesContext / icons), which is
- *   tier 3 (unpublished). `menuFactory` below is built only from standard builtin
- *   item types (backgroundColor / borderColor / borderStyle / fontStyle /
- *   textAlignment / aspectRatio), mirroring the core container entry minus the
- *   custom item.
- *
- * `selectionControls` (headerHeight) is included: Phase A
- * (docs/05_extensibility/custom-controls-design.md) published the
- * `SelectionControlHandler` base and its supporting types via
- * `@workspace/canvas/unstable`, so `HeaderHeightControlHandler` /
- * `ContainerHeaderHeightControl` moved here unchanged.
+ * The `header-color` custom menu item (HeaderColorMenu) is the last piece that
+ * was missing (tier 3: ObjectMenu UI kit, published via `@workspace/canvas/unstable`
+ * per docs/05_extensibility/custom-menu-design.md); it is now restored below.
  */
 export const containerDefinition: ObjectTypeDefinition = defineObject({
 	mapper: { toDoc: containerToDoc, toState: containerToState },
@@ -52,6 +46,7 @@ export const containerDefinition: ObjectTypeDefinition = defineObject({
 			id: "style",
 			items: [
 				{ type: "backgroundColor" },
+				{ type: "custom", id: "header-color", component: HeaderColorMenu },
 				{ type: "borderColor" },
 				{ type: "borderStyle", radius: false },
 			],

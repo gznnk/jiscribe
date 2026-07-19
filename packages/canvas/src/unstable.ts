@@ -45,3 +45,35 @@ export { createCowObjects } from "./controllers/utils/cowObjects";
 export type { CanvasEvent } from "./controllers/gestures/registry/GestureHandlerTypes";
 export type { CanvasControllerState } from "./controllers/CanvasTypes";
 export type { ICanvasRegistries } from "./controllers/setup/ICanvasRegistries";
+
+// ---------------------------------------------------------------------------
+// ObjectMenu UI キット(docs/05_extensibility/custom-menu-design.md)
+// ---------------------------------------------------------------------------
+// `data-kind="menu"` 配下の `data-part` は ObjectMenuHandler が解決する文法:
+//   - `toggle:{sectionId}`   → セクション(ドロップダウン等)の開閉
+//   - `set:{property}:{value}` → 選択オブジェクトのプロパティ更新(1回で確定)
+//   - `command:{commandId}`  → コマンド実行
+//   - `slider:{property}`    → スライダー操作(drag=プレビュー / dragEnd=確定)
+// 詳細は packages/canvas/docs/04-gesture-system.md 参照。プラグインへの推奨は
+// 下記の共有部材を組み合わせるか `onPropertyUpdate` を呼ぶことで、data-part の
+// 直書きは非推奨(内部実装への密結合になるため)。
+
+export {
+	ObjectMenuButton,
+	MenuItemPositioner,
+} from "./controllers/ui/menu/ObjectMenu/ObjectMenuStyled";
+
+export { DropdownPanel } from "./controllers/ui/menu/ObjectMenu/common/DropdownPanel";
+export { ColorPickerGrid } from "./controllers/ui/menu/ObjectMenu/common/ColorPickerGrid";
+export { MenuSlider } from "./controllers/ui/menu/ObjectMenu/common/MenuSlider";
+
+export { useSubmenuPosition } from "./controllers/ui/menu/ObjectMenu/hooks/useSubmenuPosition";
+export type { SubmenuPlacement } from "./controllers/ui/menu/ObjectMenu/hooks/useSubmenuPosition";
+
+export { getFirstSelectedWithProp } from "./controllers/ui/menu/ObjectMenu/utils/getFirstSelectedWithProp";
+
+export { useCanvasMessages } from "./controllers/messages/CanvasMessagesContext";
+
+// `theme` は名前が汎用的すぎるため `canvasThemeCssVars` として re-export
+// (値は `--jiscribe-*` CSS 変数 + ダークテーマ fallback。theme/CanvasTheme.ts 参照)。
+export { theme as canvasThemeCssVars } from "./constants/theme";

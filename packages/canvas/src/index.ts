@@ -123,6 +123,7 @@ export type {
 	BuiltinItem,
 	CustomItem,
 	BuiltinItemKey,
+	MenuItemProps,
 } from "./controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
 export type {
 	SelectionControlDefinition,
