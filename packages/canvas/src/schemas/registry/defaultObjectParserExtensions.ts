@@ -5,8 +5,6 @@ import { StickyFeatures } from "../objects/annotations/sticky/StickyDoc";
 import { validateStickyDoc } from "../objects/annotations/sticky/validateStickyDoc";
 import { ConnectorFeatures } from "../objects/connections/connector/ConnectorDoc";
 import { validateConnectorDoc } from "../objects/connections/connector/validateConnectorDoc";
-import { ContainerFeatures } from "../objects/containers/container/ContainerDoc";
-import { validateContainerDoc } from "../objects/containers/container/validateContainerDoc";
 import { CardFeatures } from "../objects/flowchart/card/CardDoc";
 import { validateCardDoc } from "../objects/flowchart/card/validateCardDoc";
 import { CrossFeatures } from "../objects/flowchart/cross/CrossDoc";
@@ -137,11 +135,6 @@ export const defaultObjectParserExtensions: readonly ObjectParserExtension[] = [
 		validateDoc: validateManualInputDoc,
 	},
 	{ type: "card", features: CardFeatures, validateDoc: validateCardDoc },
-	{
-		type: "container",
-		features: ContainerFeatures,
-		validateDoc: validateContainerDoc,
-	},
 	{ type: "delay", features: DelayFeatures, validateDoc: validateDelayDoc },
 	{
 		type: "loopLimit",

@@ -10,11 +10,6 @@ import {
 import { Sticky } from "../../presentations/objects/annotations/Sticky";
 import { Connector } from "../../presentations/objects/connections/Connector";
 import {
-	Container,
-	ContainerPreview,
-	calcContainerTextRegion,
-} from "../../presentations/objects/containers/Container";
-import {
 	Card,
 	CardPreview,
 	calcCardTextRegion,
@@ -157,11 +152,6 @@ import {
 	ConnectorExtraStyleProperties,
 	ConnectorFeatures,
 } from "../../schemas/objects/connections/connector/ConnectorDoc";
-import {
-	ContainerExtraStyleProperties,
-	ContainerFeatures,
-} from "../../schemas/objects/containers/container/ContainerDoc";
-import { ContainerShapeFactory } from "../../schemas/objects/containers/container/ContainerShapeFactory";
 import { CardFeatures } from "../../schemas/objects/flowchart/card/CardDoc";
 import { CardShapeFactory } from "../../schemas/objects/flowchart/card/CardShapeFactory";
 import { CrossFeatures } from "../../schemas/objects/flowchart/cross/CrossDoc";
@@ -235,12 +225,6 @@ import {
 	connectorToState,
 } from "../../states/objects/connections/connector/ConnectorMapper";
 import { isValidConnectorState } from "../../states/objects/connections/connector/validateConnectorState";
-import {
-	containerToDoc,
-	containerToState,
-} from "../../states/objects/containers/container/ContainerMapper";
-import type { ContainerState } from "../../states/objects/containers/container/ContainerState";
-import { isValidContainerState } from "../../states/objects/containers/container/validateContainerState";
 import {
 	cardToDoc,
 	cardToState,
@@ -393,7 +377,6 @@ import type { SvgState } from "../../states/objects/primitives/svg/SvgState";
 import { isValidSvgState } from "../../states/objects/primitives/svg/validateSvgState";
 import type { ObjectStateValidateFn } from "../../states/registry/ObjectStateValidatorRegistry";
 import { TailTipControlHandler } from "../gestures/handlers/controls/callout/TailTipControlHandler";
-import { HeaderHeightControlHandler } from "../gestures/handlers/controls/container/HeaderHeightControlHandler";
 import { createFrameBehavior } from "../gestures/handlers/objects/base/FrameController";
 import {
 	moveByDelta as connectorMoveByDelta,
@@ -417,9 +400,7 @@ import {
 } from "../gestures/handlers/objects/primitives/PolylineController";
 import type { ObjectBehaviorEntry } from "../gestures/registry/ObjectBehaviorTypes";
 import { CalloutTailTipControl } from "../ui/controls/CalloutTailControls";
-import { ContainerHeaderHeightControl } from "../ui/controls/ContainerHeaderControls";
 import type { SelectionControlDefinition } from "../ui/controls/SelectionControlTypes";
-import { HeaderColorMenu } from "../ui/menu/ObjectMenu/items/HeaderColorMenu";
 import {
 	LabelBackgroundColorMenu,
 	LabelBoldMenu,
@@ -433,7 +414,6 @@ import { StickyColorMenu } from "../ui/menu/ObjectMenu/items/StickyColorMenu";
 import type { MenuSectionFactory } from "../ui/menu/ObjectMenu/ObjectMenuTypes";
 import { CalloutShapePresets } from "../ui/objects/annotations/CalloutShapePresets";
 import { StickyShapePresets } from "../ui/objects/annotations/StickyShapePresets";
-import { ContainerShapePresets } from "../ui/objects/containers/ContainerShapePresets";
 import { CardShapePresets } from "../ui/objects/flowchart/CardShapePresets";
 import { CrossShapePresets } from "../ui/objects/flowchart/CrossShapePresets";
 import { DbShapePresets } from "../ui/objects/flowchart/DbShapePresets";
@@ -1087,50 +1067,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				factory: CardShapeFactory,
 				previewRenderer: CardPreview,
 				presets: CardShapePresets,
-			},
-		}),
-
-		container: defineObject({
-			mapper: { toDoc: containerToDoc, toState: containerToState },
-			features: ContainerFeatures,
-			extraStyleProperties: ContainerExtraStyleProperties,
-			component: Container,
-			textRegion: calcContainerTextRegion,
-			behavior: createFrameBehavior<ContainerState>(),
-			menuFactory: (_state) => [
-				{
-					id: "style",
-					items: [
-						{ type: "backgroundColor" },
-						{
-							type: "custom",
-							id: "header-color",
-							component: HeaderColorMenu,
-						},
-						{ type: "borderColor" },
-						{ type: "borderStyle", radius: false },
-					],
-				},
-				{
-					id: "text",
-					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
-				},
-				{
-					id: "transform",
-					items: [{ type: "aspectRatio" }],
-				},
-			],
-			validateState: isValidContainerState,
-			selectionControls: [
-				{
-					Component: ContainerHeaderHeightControl,
-					handler: new HeaderHeightControlHandler(),
-				},
-			],
-			shapeLibrary: {
-				factory: ContainerShapeFactory,
-				previewRenderer: ContainerPreview,
-				presets: ContainerShapePresets,
 			},
 		}),
 

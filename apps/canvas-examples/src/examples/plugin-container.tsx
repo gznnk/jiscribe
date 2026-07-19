@@ -1,35 +1,22 @@
 import type { CanvasConfig, CanvasDoc } from "@workspace/canvas";
 import {
 	Canvas,
-	ObjectTypes,
 	applyObjectDefinition,
 	createCanvasParser,
-	defaultObjectParserExtensions,
 } from "@workspace/canvas";
 import { containerDefinition } from "@workspace/plugin-container-shapes";
 import { containerParserExtension } from "@workspace/plugin-container-shapes/parser";
 
-// UC1 dogfood（docs/05_extensibility/uc1-container-extraction-log.md）: 「登録経路の
-// 動作実証」。core の container 定義を objectTypes から除外し、外部プラグイン
-// パッケージ（@workspace/plugin-container-shapes）の containerDefinition だけを
-// customize 経由で登録する。プラグイン登録が失敗すれば canvasDoc の container が
-// 「mapper not found」で壊れるため、描画・操作できること自体が経路の反証不能な実証になる。
-//
-// parse 側も同じくプラグイン経路のみを通す（docs/05_extensibility/parser-design.md、
-// G2 の解消実証）。core の container 拡張を preset から filter で除外し、プラグインの
-// containerParserExtension だけを登録した専用 parser で doc を検証する。core 側の
-// グローバル doc validator に container が残っていても、この parser はそれを一切
-// 参照しないため、経過4の但し書き「parse は core 依存のまま」が解消されたことの証明になる。
+// container 図形は core から削除され、@workspace/plugin-container-shapes が唯一の
+// 供給元（docs/05_extensibility/uc1-container-extraction-log.md）。この example は
+// 「外部プラグイン図形の追加」の実証: customize 経由で containerDefinition を登録し、
+// 専用 parser に containerParserExtension を渡して doc を検証する。
 const initialConfig: CanvasConfig = {
-	objectTypes: ObjectTypes.filter((type) => type !== "container"),
 	customize: (registries) =>
 		applyObjectDefinition(registries, "container", containerDefinition),
 };
 
 const pluginContainerParser = createCanvasParser({
-	presetExtensions: defaultObjectParserExtensions.filter(
-		(extension) => extension.type !== "container",
-	),
 	extensions: [containerParserExtension],
 });
 

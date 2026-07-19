@@ -1,20 +1,30 @@
 import {
 	Canvas,
-	parseCanvasText,
+	applyObjectDefinition,
 	type Camera,
+	type CanvasConfig,
 	type CanvasDoc,
 	type CanvasExportHandle,
 	type CanvasExportImagePayload,
 } from "@workspace/canvas";
+import { containerDefinition } from "@workspace/plugin-container-shapes";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 
 import { CanvasErrorNotice } from "./CanvasErrorNotice";
+import { canvasParser } from "./canvasParser";
 import { vscodeCanvasTheme } from "./vscodeCanvasTheme";
 import type {
 	ExtensionToWebviewMessage,
 	WebviewToExtensionMessage,
 } from "../types/messages";
+
+// container 図形は @workspace/plugin-container-shapes から供給する
+// (docs/05_extensibility/uc1-container-extraction-log.md)。
+const initialConfig: CanvasConfig = {
+	customize: (registries) =>
+		applyObjectDefinition(registries, "container", containerDefinition),
+};
 
 /**
  * Type of the API available only in the VSCode Webview environment.
@@ -203,7 +213,7 @@ function App() {
 					// helper. parseCanvasText() returns a discriminated union without
 					// throwing, so the same logic as the Extension (DiagnosticProvider)
 					// covers every case.
-					const result = parseCanvasText(jsonText);
+					const result = canvasParser.parse(jsonText);
 					switch (result.kind) {
 						case "ok":
 							setSyncNonce(message.saveNonce);
@@ -373,6 +383,7 @@ function App() {
 				<Canvas
 					canvasDoc={canvasDoc}
 					syncNonce={syncNonce}
+					initialConfig={initialConfig}
 					defaultViewport={initialCamera}
 					onViewportChange={handleViewportChange}
 					onCommit={handleCommit}

@@ -129,11 +129,18 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 						if (!category) {
 							return null;
 						}
+						const presets = shapePreset.byCategory(entry.categoryId);
+						// A category with no registered presets (e.g. "container" when no
+						// plugin supplies its shapes) has nothing to show, so skip the
+						// button/flyout entirely rather than rendering an empty one.
+						if (presets.length === 0) {
+							return null;
+						}
 						return (
 							<ShapeCategoryMenu
 								key={`category:${entry.categoryId}`}
 								category={category}
-								presets={shapePreset.byCategory(entry.categoryId)}
+								presets={presets}
 								isOpen={openCategoryId === entry.categoryId}
 								activePresetId={activePresetId}
 							/>

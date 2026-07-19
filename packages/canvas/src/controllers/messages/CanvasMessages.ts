@@ -57,6 +57,10 @@ export type CanvasMessageStrings = {
 	menuFontSize: string;
 	menuFontColor: string;
 	menuBackgroundColor: string;
+	/**
+	 * Used by the container plugin's HeaderColorMenu (`plugins/container-shapes`).
+	 * Move to namespaced plugin i18n when that lands (docs/05_extensibility/custom-menu-design.md i18n (b)).
+	 */
 	menuHeaderColor: string;
 	menuStrokeColor: string;
 	menuLineColor: string;

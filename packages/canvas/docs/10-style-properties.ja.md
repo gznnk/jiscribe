@@ -63,17 +63,18 @@ export const SYSTEM_STYLE_PROPERTIES: Record<string, StylePropertyHandler> = {
 ```
 
 **シェイプ固有プロパティ** — `ObjectFeatures` に乗せないプロパティ
-（container の `headerFill`、connector の `label.*` 等）。シェイプの Doc の隣で
-宣言し、その `ObjectTypeDefinition` 経由で配線する:
+（connector の `label.*`、container プラグインの `headerFill` 等）。シェイプの Doc の
+隣で宣言し、その `ObjectTypeDefinition` 経由で配線する。例は container プラグイン
+（`plugins/container-shapes`。当該シェイプは現在そちらに帰属）より:
 
 ```ts
-// ContainerDoc.ts — `headerFill?: string` のすぐ隣
+// plugins/container-shapes/src/schema/ContainerDoc.ts — `headerFill?: string` のすぐ隣
 export const ContainerExtraStyleProperties = {
 	headerFill: { valueType: "string" },
 } as const satisfies Record<string, ExtraStylePropertyDescriptor>;
 
-// initializeObjectRegistry.ts
-container: defineObject({
+// plugins/container-shapes/src/definition.ts
+export const containerDefinition = defineObject({
 	features: ContainerFeatures,
 	extraStyleProperties: ContainerExtraStyleProperties,
 	// …

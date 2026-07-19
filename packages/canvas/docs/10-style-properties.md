@@ -65,17 +65,18 @@ export const SYSTEM_STYLE_PROPERTIES: Record<string, StylePropertyHandler> = {
 ```
 
 **Shape-specific properties** — properties that do not belong on `ObjectFeatures`
-(e.g. container's `headerFill`, connector's `label.*`). Declared next to the shape's
-Doc and wired through its `ObjectTypeDefinition`:
+(e.g. connector's `label.*`, or the container plugin's `headerFill`). Declared next
+to the shape's Doc and wired through its `ObjectTypeDefinition`. Example from the
+container plugin (`plugins/container-shapes`, where the shape now lives):
 
 ```ts
-// ContainerDoc.ts — next to `headerFill?: string`
+// plugins/container-shapes/src/schema/ContainerDoc.ts — next to `headerFill?: string`
 export const ContainerExtraStyleProperties = {
 	headerFill: { valueType: "string" },
 } as const satisfies Record<string, ExtraStylePropertyDescriptor>;
 
-// initializeObjectRegistry.ts
-container: defineObject({
+// plugins/container-shapes/src/definition.ts
+export const containerDefinition = defineObject({
 	features: ContainerFeatures,
 	extraStyleProperties: ContainerExtraStyleProperties,
 	// …

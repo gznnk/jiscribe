@@ -1,16 +1,31 @@
+import { containerDefinition } from "@workspace/plugin-container-shapes";
+import { containerParserExtension } from "@workspace/plugin-container-shapes/parser";
 import React, { useCallback, useState } from "react";
 import ReactDOM from "react-dom/client";
 import "katex/dist/katex.min.css";
 
 import { MultiCanvasApp } from "./MultiCanvasApp";
-import type { CanvasDoc } from "../../src";
+import type { CanvasConfig, CanvasDoc } from "../../src";
 import {
 	Canvas,
+	applyObjectDefinition,
+	createCanvasParser,
 	darkCanvasTheme,
 	extractCanvasSourceFromPng,
-	parseCanvasText,
 } from "../../src";
 import "./harness.css";
+
+// container 図形は core から削除され、@workspace/plugin-container-shapes が唯一の
+// 供給元 (docs/05_extensibility/uc1-container-extraction-log.md)。e2e 専用の
+// dev 限定循環依存として devDependencies に登録し、container.spec.ts を存続させる。
+const initialConfig: CanvasConfig = {
+	customize: (registries) =>
+		applyObjectDefinition(registries, "container", containerDefinition),
+};
+
+const harnessParser = createCanvasParser({
+	extensions: [containerParserExtension],
+});
 
 // spec は demo アプリの既定だった dark テーマ前提で書かれているため、
 // ハーネスも dark で固定する（余白色もキャンバスに追従させる）。
@@ -38,7 +53,7 @@ function HarnessApp() {
 			console.warn("Dropped PNG has no embedded jiscribe source");
 			return;
 		}
-		const result = parseCanvasText(sourceText);
+		const result = harnessParser.parse(sourceText);
 		if (result.kind !== "ok") {
 			console.warn("Embedded jiscribe source is invalid", result);
 			return;
@@ -55,7 +70,11 @@ function HarnessApp() {
 	}
 	return (
 		<div className="app" onDrop={handleDrop} onDragOver={handleDragOver}>
-			<Canvas canvasDoc={loadedDoc} theme={darkCanvasTheme} />
+			<Canvas
+				canvasDoc={loadedDoc}
+				theme={darkCanvasTheme}
+				initialConfig={initialConfig}
+			/>
 		</div>
 	);
 }

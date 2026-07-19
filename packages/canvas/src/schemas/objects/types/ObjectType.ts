@@ -24,7 +24,6 @@ export const ObjectTypes = [
 	"offPageConnector",
 	"polyline",
 	"polygon",
-	"container",
 	"group",
 	"connector",
 	"sticky",

@@ -4,22 +4,37 @@ import {
 	ConnectorExtraStyleProperties,
 	ConnectorFeatures,
 } from "../../../schemas/objects/connections/connector/ConnectorDoc";
-import {
-	ContainerExtraStyleProperties,
-	ContainerFeatures,
-} from "../../../schemas/objects/containers/container/ContainerDoc";
 import { GroupFeatures } from "../../../schemas/objects/primitives/group/GroupDoc";
 import { PolylineFeatures } from "../../../schemas/objects/primitives/polyline/PolylineDoc";
 import { RectFeatures } from "../../../schemas/objects/primitives/rect/RectDoc";
+import type { ExtraStylePropertyDescriptor } from "../../../schemas/objects/types/ExtraStyleProperty";
+import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { initializeStyleProperties } from "../../setup/initializeStyleProperties";
 import { createStylePropertyRegistry } from "../StylePropertyRegistry";
 
+// A synthetic type with a flat (non-nested) extra property, standing in for a
+// plugin-declared shape (e.g. plugins/container-shapes) to exercise the
+// ExtraStyleProperty fallback's non-nested path without depending on any
+// concrete built-in type declaring one (nested extras are already covered by
+// connector's label.* properties below).
+const EXTRA_SHAPE_TYPE = "extraShapeFixture";
+const ExtraShapeFeatures = {
+	type: EXTRA_SHAPE_TYPE,
+	geometry: "rect",
+	stroke: true,
+	fill: true,
+	connectable: true,
+} as const satisfies ObjectFeatures;
+const ExtraShapeExtraStyleProperties = {
+	accentColor: { valueType: "string" },
+} as const satisfies Record<string, ExtraStylePropertyDescriptor>;
+
 // Production-shaped registry: system handlers + the extras under test.
 const styleRegistry = createStylePropertyRegistry();
 initializeStyleProperties(styleRegistry);
-styleRegistry.registerExtras("container", ContainerExtraStyleProperties);
+styleRegistry.registerExtras(EXTRA_SHAPE_TYPE, ExtraShapeExtraStyleProperties);
 styleRegistry.registerExtras("connector", ConnectorExtraStyleProperties);
 
 const applyStyleProperty = (
@@ -91,13 +106,13 @@ const groupObj = (id: string, childIds: string[]): ObjectState =>
 		childIds,
 	}) as unknown as ObjectState;
 
-const containerObj = (id: string): ObjectState =>
+const extraShapeObj = (id: string): ObjectState =>
 	({
 		id,
-		type: "container",
-		features: ContainerFeatures,
+		type: EXTRA_SHAPE_TYPE,
+		features: ExtraShapeFeatures,
 		fill: "transparent",
-		headerFill: "auto",
+		accentColor: "auto",
 		x: 0,
 		y: 0,
 		width: 240,
@@ -421,38 +436,40 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		});
 	});
 
-	describe("shape-declared extra properties (headerFill)", () => {
-		it("headerFill on a container -> applied", () => {
-			const ct1 = containerObj("ct1");
-			const state = makeState({ selectedIds: ["ct1"], objects: { ct1 } });
-			const result = applyStyleProperty(state, "headerFill", "#336699");
+	describe("shape-declared extra properties (accentColor)", () => {
+		it("accentColor on the declaring shape -> applied", () => {
+			const e1 = extraShapeObj("e1");
+			const state = makeState({ selectedIds: ["e1"], objects: { e1 } });
+			const result = applyStyleProperty(state, "accentColor", "#336699");
 			expect(
-				(result.objects["ct1"] as unknown as { headerFill: string }).headerFill,
+				(result.objects["e1"] as unknown as { accentColor: string })
+					.accentColor,
 			).toBe("#336699");
 		});
 
-		it("headerFill on a rect (undeclared shape) -> returns the same reference", () => {
+		it("accentColor on a rect (undeclared shape) -> returns the same reference", () => {
 			const r1 = rectObj("r1");
 			const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
-			expect(applyStyleProperty(state, "headerFill", "#336699")).toBe(state);
+			expect(applyStyleProperty(state, "accentColor", "#336699")).toBe(state);
 		});
 
-		it("headerFill propagates to container descendants of a selected group", () => {
-			const g1 = groupObj("g1", ["ct1"]);
-			const ct1 = containerObj("ct1");
+		it("accentColor propagates to declaring-shape descendants of a selected group", () => {
+			const g1 = groupObj("g1", ["e1"]);
+			const e1 = extraShapeObj("e1");
 			const state = makeState({
 				selectedIds: ["g1"],
-				objects: { g1, ct1 },
+				objects: { g1, e1 },
 			});
-			const result = applyStyleProperty(state, "headerFill", "#112233");
+			const result = applyStyleProperty(state, "accentColor", "#112233");
 			expect(
-				(result.objects["ct1"] as unknown as { headerFill: string }).headerFill,
+				(result.objects["e1"] as unknown as { accentColor: string })
+					.accentColor,
 			).toBe("#112233");
 		});
 
 		it("a completely unknown property -> returns the same reference", () => {
-			const ct1 = containerObj("ct1");
-			const state = makeState({ selectedIds: ["ct1"], objects: { ct1 } });
+			const e1 = extraShapeObj("e1");
+			const state = makeState({ selectedIds: ["e1"], objects: { e1 } });
 			expect(applyStyleProperty(state, "notAProperty", "x")).toBe(state);
 		});
 	});

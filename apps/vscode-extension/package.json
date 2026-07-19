@@ -126,6 +126,7 @@
 		"@types/vscode": "^1.85.0",
 		"@vscode/vsce": "^3.4.2",
 		"@workspace/canvas": "workspace:*",
+		"@workspace/plugin-container-shapes": "workspace:*",
 		"esbuild": "catalog:",
 		"react": "catalog:",
 		"react-dom": "catalog:",

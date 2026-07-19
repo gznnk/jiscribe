@@ -5,7 +5,7 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 
 /**
  * Calculates a shape's text region from its state (untransformed width/height
- * plus any per-shape fields, e.g. the container's headerHeight), in the
+ * plus any per-shape fields, e.g. a headerHeight (see the container plugin)), in the
  * shape's local coordinate space (origin at the center, top-left based Rect).
  * Implementations declare what they read via `TState` (most:
  * `TextRegionCalculator<Dimensions>`); the registry stores the default

@@ -1,7 +1,7 @@
 import type { ComponentType } from "react";
 
+import { FrameIcon } from "../../icons/FrameIcon";
 import { CalloutIcon } from "../../objects/annotations/CalloutIcon";
-import { FrameIcon } from "../../objects/containers/FrameIcon";
 import { DiamondIcon } from "../../objects/flowchart/DiamondIcon";
 import { CloudIcon } from "../../objects/general/CloudIcon";
 import { RectIcon } from "../../objects/primitives/RectIcon";

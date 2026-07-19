@@ -51,6 +51,7 @@
 		"@vitejs/plugin-react-swc": "catalog:",
 		"@vitest/coverage-v8": "catalog:",
 		"@vitest/ui": "^2.1.8",
+		"@workspace/plugin-container-shapes": "workspace:*",
 		"katex": "catalog:",
 		"madge": "catalog:",
 		"rimraf": "catalog:",
