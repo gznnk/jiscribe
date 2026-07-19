@@ -54,10 +54,16 @@ export {
 } from "./theme/themePresets";
 export type { Camera } from "./states/canvas/Viewport";
 export type { CanvasDoc } from "./schemas/canvas/CanvasDoc";
-export { parseCanvasText } from "./schemas/canvas/validators";
+export {
+	parseCanvasText,
+	createCanvasParser,
+	defaultObjectParserExtensions,
+} from "./schemas/canvas/validators";
 export type {
 	SemanticDiagnostic,
 	CanvasParseResult,
+	CanvasParser,
+	ObjectParserExtension,
 } from "./schemas/canvas/validators";
 
 // Per-canvas registry configuration (plugin-style extensibility / feature-gating).

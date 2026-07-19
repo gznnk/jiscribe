@@ -24,7 +24,8 @@ import type { ShapePresetRegistry } from "../ui/objects/ShapePresetRegistry";
  *
  * `objectDocValidatorRegistry` is intentionally NOT part of this bundle: it is
  * used only during parse-time validation at the input boundary (before a
- * `<Canvas>` exists) and stays global.
+ * `<Canvas>` exists). Scoped alternatives are parser-scoped, not canvas-scoped
+ * (see `createCanvasParser`); the global stays as the default-config fallback.
  */
 export type CanvasRegistries = {
 	objectMapper: ObjectMapperRegistry;

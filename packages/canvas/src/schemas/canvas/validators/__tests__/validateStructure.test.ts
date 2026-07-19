@@ -1,8 +1,15 @@
 import { beforeAll, describe, it, expect } from "vitest";
 
 import { initializeObjectDocValidatorRegistry } from "../../../registry/initializeObjectDocValidatorRegistry";
+import { objectDocValidatorRegistry } from "../../../registry/ObjectDocValidatorRegistry";
 import type { SemanticDiagnostic } from "../types";
-import { validateStructure } from "../validateStructure";
+import { validateStructure as validateStructureWithRegistry } from "../validateStructure";
+
+// validateStructure now takes a registry argument (createCanvasParser can supply a
+// non-global one); this suite still exercises it against the global registry, so wrap it
+// to keep every existing single-arg call site below unchanged.
+const validateStructure = (doc: unknown): SemanticDiagnostic[] =>
+	validateStructureWithRegistry(doc, objectDocValidatorRegistry);
 
 // validateStructure delegates per-type validation and known-type checks to the registry.
 // In production parseCanvasText guarantees initialization, so we set up the same precondition in unit tests.
