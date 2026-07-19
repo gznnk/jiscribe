@@ -67,4 +67,69 @@ export type { CanvasConfig, CanvasRegistries } from "./controllers/setup";
 export {
 	createCanvasRegistries,
 	ALL_OBJECT_DEFINITIONS,
+	applyObjectDefinition,
+	defineObject,
 } from "./controllers/setup";
+export type {
+	ObjectTypeDefinition,
+	ShapeLibraryRegistration,
+} from "./controllers/setup";
+
+// 図形定義の語彙（プラグイン作者向け、#144 Stage 1）。
+// `defineObject` で ObjectTypeDefinition を組み立て、`applyObjectDefinition` で
+// CanvasRegistries（`customize`）へ登録する。値 export は最小限（ObjectTypes /
+// defineObject / applyObjectDefinition）に絞り、他はすべて型。
+export { ObjectTypes } from "./schemas/objects/types/ObjectType";
+export type { ObjectType } from "./schemas/objects/types/ObjectType";
+export type { ObjectDoc } from "./schemas/objects/base/ObjectDoc";
+export type { MetaDoc } from "./schemas/objects/base/MetaDoc";
+export type { ObjectState } from "./states/objects/base/ObjectState";
+export type { MetaState } from "./states/objects/base/MetaState";
+export type { CreateObjectType } from "./schemas/objects/types/CreateObjectType";
+export type { CreateObjectState } from "./states/objects/types/CreateObjectState";
+export type { ObjectFeatures } from "./schemas/objects/types/ObjectFeatures";
+export type { GeometryType } from "./schemas/objects/types/GeometryType";
+export type {
+	ExtraStylePropertyDescriptor,
+	StyleValueType,
+} from "./schemas/objects/types/ExtraStyleProperty";
+export type {
+	ShapeFactory,
+	ShapeDimensions,
+} from "./schemas/objects/types/ShapeFactory";
+export type { DocCreationDefaults } from "./schemas/objects/types/DocCreationDefaults";
+export type {
+	ObjectMapperType,
+	DocToStateMapper,
+	StateToDocMapper,
+} from "./states/objects/base/MapperTypes";
+export type { ObjectStateValidateFn } from "./states/registry/ObjectStateValidatorRegistry";
+export type {
+	ObjectBehaviorEntry,
+	MoveByDeltaFunction,
+	TransformByGroupFunction,
+	RotateByGroupFunction,
+} from "./controllers/gestures/registry/ObjectBehaviorTypes";
+export type {
+	MenuSectionFactory,
+	MenuSection,
+	MenuItem,
+	BuiltinItem,
+	CustomItem,
+	BuiltinItemKey,
+} from "./controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
+export type {
+	SelectionControlDefinition,
+	SelectionControlProps,
+} from "./controllers/ui/controls/SelectionControlTypes";
+export type { SelectionControlHandler } from "./controllers/gestures/registry/SelectionControlHandler";
+export type { TextRegionCalculator } from "./presentations/objects/registry/TextRegionRegistry";
+export type { ShapeOutlineProvider } from "./presentations/objects/registry/ShapeOutlineRegistry";
+export type {
+	ShapePreviewRenderer,
+	ShapePreviewProps,
+} from "./presentations/objects/registry/ShapePreviewTypes";
+export type {
+	ShapePreset,
+	ShapeIconProps,
+} from "./controllers/ui/objects/ShapePreset";

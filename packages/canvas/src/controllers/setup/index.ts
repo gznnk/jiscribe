@@ -14,5 +14,10 @@ export {
 export {
 	ALL_OBJECT_DEFINITIONS,
 	applyObjectDefinition,
+	defineObject,
+} from "./initializeObjectRegistry";
+export type {
+	ObjectTypeDefinition,
+	ShapeLibraryRegistration,
 } from "./initializeObjectRegistry";
 export { ALL_COMMANDS } from "./initializeCommands";

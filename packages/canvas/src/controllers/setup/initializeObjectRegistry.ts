@@ -464,7 +464,7 @@ import type { ShapePreset } from "../ui/objects/ShapePreset";
  * Creation-related capabilities for the ShapeLibrary (shape palette).
  * Omitted for types not shown in the palette (group / connector).
  */
-type ShapeLibraryRegistration = {
+export type ShapeLibraryRegistration = {
 	/** Factory responsible for doc creation, dimensions, and bounds generation */
 	factory?: ShapeFactory;
 	/** Preview rendering during drag drawing (only for shapes that support bounds drawing) */
@@ -503,7 +503,10 @@ export type ObjectTypeDefinition = {
  * at the definition site (mapper / behavior / menuFactory are checked together)
  * before widening to the base-typed record entry.
  */
-const defineObject = <TDoc extends ObjectDoc, TState extends ObjectState>(def: {
+export const defineObject = <
+	TDoc extends ObjectDoc,
+	TState extends ObjectState,
+>(def: {
 	mapper: ObjectMapperType<TDoc, TState>;
 	features: ObjectFeatures;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any

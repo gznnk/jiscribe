@@ -5,6 +5,7 @@ import { FileIoExample } from "./examples/file-io";
 import { GalleryExample } from "./examples/gallery";
 import { MinimalExample } from "./examples/minimal";
 import { MultiCanvasExample } from "./examples/multi-canvas";
+import { PluginContainerExample } from "./examples/plugin-container";
 import { ThemingExample } from "./examples/theming";
 import { ViewportExample } from "./examples/viewport";
 
@@ -61,6 +62,13 @@ const EXAMPLES: ReadonlyArray<{
 		title: "Gallery",
 		description: "実物 .jis.json の閲覧（landing の作例を読み込む）",
 		Component: GalleryExample,
+	},
+	{
+		id: "plugin-container",
+		title: "Plugin Container",
+		description:
+			"外部プラグインパッケージ（UC1 dogfood）から container 定義を登録し、core 版を除外して動作を実証する",
+		Component: PluginContainerExample,
 	},
 ];
 

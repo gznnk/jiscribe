@@ -10,6 +10,9 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
+		"@emotion/react": "catalog:",
+		"@emotion/styled": "catalog:",
+		"@workspace/basic-validators": "workspace:*",
 		"@workspace/canvas": "workspace:*",
 		"@workspace/geometry": "workspace:*",
 		"react": "catalog:"
