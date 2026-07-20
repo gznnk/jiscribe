@@ -18,7 +18,7 @@ import type { ObjectState } from "../../../../../states/objects/base/ObjectState
  * @param point - The resolved endpoint (usually the shape's center)
  * @param toward - The point used as the direction the line "heads toward" when computing the intersection with the outline
  * @param obj - State of the shape the endpoint references. null/undefined if unreferenced (in which case point is returned as-is)
- * @param outline - The shape's local outline polygon (from ShapeOutlineRegistry).
+ * @param outline - The shape's local outline polygon (from OutlineRegistry).
  *   When present, the endpoint snaps onto that true outline; omitted = rect/ellipse handling
  * @returns The point snapped onto the outline. null if there is no intersection, e.g. toward is inside the shape. For shapes with neither an outline nor rect/ellipse geometry, the original point without adjustment
  */

@@ -7,7 +7,7 @@ import {
 
 import { calcMultiDocumentSheets } from "./calcMultiDocumentSheets";
 import { DOCUMENT_WAVE_RATIO } from "../../../../schemas/objects/flowchart/document/DocumentDoc";
-import type { ShapeOutlineProvider } from "../../registry/ShapeOutlineRegistry";
+import type { OutlineCalculator } from "../../registry/OutlineRegistry";
 import { OUTLINE_CURVE_SEGMENTS } from "../../utils/outlineHelpers";
 
 /** Segments for the short exposed wave arcs (one offset wide, a fraction of a half-wave). */
@@ -40,7 +40,7 @@ const sampleExposedWave = (sheet: Rect, exposedWidth: number): Point[] => {
  * before dropping to the next sheet's wave line, and finally the front sheet's
  * full wave (two quadratic Béziers, same construction as documentOutline).
  */
-export const multiDocumentOutline: ShapeOutlineProvider<Dimensions> = ({
+export const multiDocumentOutline: OutlineCalculator<Dimensions> = ({
 	width,
 	height,
 }) => {

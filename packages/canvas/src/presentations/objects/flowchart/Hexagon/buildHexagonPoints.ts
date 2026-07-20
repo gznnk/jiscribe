@@ -7,7 +7,7 @@ import { centeredPolygonOutline } from "../../utils/outlineHelpers";
 /**
  * Hexagon outline vertices for a bounding box whose top-left corner is at (x, y),
  * with pointed caps on the left and right. Single source shared by the renderer,
- * the draw-drag preview, and the connector outline provider.
+ * the draw-drag preview, and the connector outline calculator.
  */
 export const hexagonOutlinePoints = (
 	x: number,

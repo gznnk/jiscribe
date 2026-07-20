@@ -11,33 +11,34 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
  * shapes return a sampled polyline. This is the single seam shared by the
  * connector endpoint resolver and the connection-anchor dots so both attach to
  * the drawn outline rather than the bounding box. Implementations declare what
- * they read via `TState` (most: `ShapeOutlineProvider<Dimensions>`); the
+ * they read via `TState` (most: `OutlineCalculator<Dimensions>`); the
  * registry stores the default instantiation, to which narrower readers are
  * assignable by contravariance.
  */
-export type ShapeOutlineProvider<
+export type OutlineCalculator<
 	TState extends Dimensions = ObjectState & Dimensions,
 > = (state: TState) => Point[];
 
 /**
- * Per-type registry of outline providers. Types without a registered provider
- * fall back to the bounding-box rect/ellipse handling in the connector resolver.
+ * Per-type registry of outline calculators. Types without a registered
+ * calculator fall back to the bounding-box rect/ellipse handling in the
+ * connector resolver.
  */
-export class ShapeOutlineRegistry {
-	private readonly providers = new Map<ObjectType, ShapeOutlineProvider>();
+export class OutlineRegistry {
+	private readonly calculators = new Map<ObjectType, OutlineCalculator>();
 
-	register(type: ObjectType, provider: ShapeOutlineProvider): void {
-		this.providers.set(type, provider);
+	register(type: ObjectType, calculator: OutlineCalculator): void {
+		this.calculators.set(type, calculator);
 	}
 
-	get(type: ObjectType): ShapeOutlineProvider | undefined {
-		return this.providers.get(type);
+	get(type: ObjectType): OutlineCalculator | undefined {
+		return this.calculators.get(type);
 	}
 
 	clear(): void {
-		this.providers.clear();
+		this.calculators.clear();
 	}
 }
 
-export const createShapeOutlineRegistry = (): ShapeOutlineRegistry =>
-	new ShapeOutlineRegistry();
+export const createOutlineRegistry = (): OutlineRegistry =>
+	new OutlineRegistry();

@@ -1403,7 +1403,7 @@ export const applyObjectDefinition = (
 		registries.textRegion.register(type, definition.textRegion);
 	}
 	if (definition.outline) {
-		registries.shapeOutline.register(type, definition.outline);
+		registries.outline.register(type, definition.outline);
 	}
 	registries.objectBehavior.register(type, definition.behavior);
 	registries.objectStateValidator.register(type, definition.stateValidator);
@@ -1446,7 +1446,7 @@ export const initializeObjectRegistry = (
 	registries.objectMapper.clear();
 	registries.objectComponent.clear();
 	registries.textRegion.clear();
-	registries.shapeOutline.clear();
+	registries.outline.clear();
 	registries.objectBehavior.clear();
 	registries.objectStateValidator.clear();
 	registries.objectMenu.clear();

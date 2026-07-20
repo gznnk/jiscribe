@@ -6,7 +6,7 @@ import { centeredPolygonOutline } from "../../utils/outlineHelpers";
 /**
  * Extract (upward-triangle) outline vertices (apex at top center, base along the
  * bottom) for a bounding box whose top-left corner is at (x, y). Single source
- * shared by the renderer, the draw-drag preview, and the connector outline provider.
+ * shared by the renderer, the draw-drag preview, and the connector outline calculator.
  */
 export const extractOutlinePoints = (
 	x: number,

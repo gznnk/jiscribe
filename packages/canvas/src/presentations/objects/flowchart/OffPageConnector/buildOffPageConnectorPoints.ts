@@ -8,7 +8,7 @@ import { centeredPolygonOutline } from "../../utils/outlineHelpers";
  * Home-plate pentagon outline vertices for a bounding box whose top-left corner
  * is at (x, y): a rectangle whose bottom edge tapers to a downward point at the
  * horizontal center. Single source shared by the renderer, the draw-drag
- * preview, and the connector outline provider.
+ * preview, and the connector outline calculator.
  */
 export const offPageConnectorOutlinePoints = (
 	x: number,

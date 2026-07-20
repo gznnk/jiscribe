@@ -4,7 +4,7 @@ import type { ObjectBehaviorEntry } from "../controllers/gestures/registry/Objec
 import type { SelectionControlDefinition } from "../controllers/ui/controls/SelectionControlTypes";
 import type { MenuSectionFactory } from "../controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
 import type { ShapePreset } from "../controllers/ui/objects/ShapePreset";
-import type { ShapeOutlineProvider } from "../presentations/objects/registry/ShapeOutlineRegistry";
+import type { OutlineCalculator } from "../presentations/objects/registry/OutlineRegistry";
 import type { ShapePreviewRenderer } from "../presentations/objects/registry/ShapePreviewTypes";
 import type { TextRegionCalculator } from "../presentations/objects/registry/TextRegionRegistry";
 import type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
@@ -63,8 +63,8 @@ export type ObjectTypeDefinition<
 	/** Editable-text region. Omitted = full bbox (see TextRegionRegistry). */
 	textRegion?: TextRegionCalculator;
 
-	/** Hit-test / snap outline. Omitted = bounding-box rect/ellipse (see ShapeOutlineRegistry). */
-	outline?: ShapeOutlineProvider;
+	/** Hit-test / snap outline. Omitted = bounding-box rect/ellipse (see OutlineRegistry). */
+	outline?: OutlineCalculator;
 
 	// --- Interaction (controllers) ---
 

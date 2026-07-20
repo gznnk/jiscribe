@@ -37,7 +37,7 @@ export function CanvasProviders({
 					<PresentationRegistriesProvider
 						objectComponent={registries.objectComponent}
 						textRegion={registries.textRegion}
-						shapeOutline={registries.shapeOutline}
+						outline={registries.outline}
 					>
 						<CanvasViewportElementRefContext value={viewportElementRef}>
 							{children}

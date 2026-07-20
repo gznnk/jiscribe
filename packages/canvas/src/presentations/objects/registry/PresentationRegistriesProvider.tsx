@@ -2,15 +2,15 @@ import type { ReactNode } from "react";
 
 import type { ObjectComponentRegistry } from "./ObjectComponentRegistry";
 import { ObjectComponentRegistryContext } from "./ObjectComponentRegistryContext";
-import type { ShapeOutlineRegistry } from "./ShapeOutlineRegistry";
-import { ShapeOutlineRegistryContext } from "./ShapeOutlineRegistryContext";
+import type { OutlineRegistry } from "./OutlineRegistry";
+import { OutlineRegistryContext } from "./OutlineRegistryContext";
 import type { TextRegionRegistry } from "./TextRegionRegistry";
 import { TextRegionRegistryContext } from "./TextRegionRegistryContext";
 
 type PresentationRegistriesProviderProps = {
 	objectComponent: ObjectComponentRegistry;
 	textRegion: TextRegionRegistry;
-	shapeOutline: ShapeOutlineRegistry;
+	outline: OutlineRegistry;
 	children: ReactNode;
 };
 
@@ -23,15 +23,15 @@ type PresentationRegistriesProviderProps = {
 export function PresentationRegistriesProvider({
 	objectComponent,
 	textRegion,
-	shapeOutline,
+	outline,
 	children,
 }: PresentationRegistriesProviderProps) {
 	return (
 		<ObjectComponentRegistryContext value={objectComponent}>
 			<TextRegionRegistryContext value={textRegion}>
-				<ShapeOutlineRegistryContext value={shapeOutline}>
+				<OutlineRegistryContext value={outline}>
 					{children}
-				</ShapeOutlineRegistryContext>
+				</OutlineRegistryContext>
 			</TextRegionRegistryContext>
 		</ObjectComponentRegistryContext>
 	);

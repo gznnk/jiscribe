@@ -7,7 +7,7 @@ import {
 } from "./initializeObjectRegistry";
 import { initializeStyleProperties } from "./initializeStyleProperties";
 import { createObjectComponentRegistry } from "../../presentations/objects/registry/ObjectComponentRegistry";
-import { createShapeOutlineRegistry } from "../../presentations/objects/registry/ShapeOutlineRegistry";
+import { createOutlineRegistry } from "../../presentations/objects/registry/OutlineRegistry";
 import { createShapePreviewRegistry } from "../../presentations/objects/registry/ShapePreviewRegistry";
 import { createTextRegionRegistry } from "../../presentations/objects/registry/TextRegionRegistry";
 import { createShapeFactoryRegistry } from "../../schemas/registry/ShapeFactoryRegistry";
@@ -44,7 +44,7 @@ export const createCanvasRegistries = (
 		objectStateValidator: createObjectStateValidatorRegistry(),
 		objectComponent: createObjectComponentRegistry(),
 		textRegion: createTextRegionRegistry(),
-		shapeOutline: createShapeOutlineRegistry(),
+		outline: createOutlineRegistry(),
 		shapePreview: createShapePreviewRegistry(),
 		objectBehavior: createObjectBehaviorRegistry(),
 		selectionControl: createSelectionControlRegistry(),

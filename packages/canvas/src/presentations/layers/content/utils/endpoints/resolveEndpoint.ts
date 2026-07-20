@@ -24,7 +24,7 @@ import type { ObjectState } from "../../../../../states/objects/base/ObjectState
  *   (free / center / connectPoint)
  * @param obj - State of the shape the endpoint references. null/undefined when
  *   unreferenced (free) or not found
- * @param outline - The shape's local outline polygon (from ShapeOutlineRegistry).
+ * @param outline - The shape's local outline polygon (from OutlineRegistry).
  *   When present, a connectPoint anchor snaps onto the true edge; omitted =
  *   bounding-box edge midpoint (rect/ellipse behavior)
  * @returns The resolved coordinate, or null if it cannot be resolved

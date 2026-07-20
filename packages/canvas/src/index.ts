@@ -135,7 +135,7 @@ export type {
 } from "./controllers/ui/controls/SelectionControlTypes";
 export type { SelectionControlHandler } from "./controllers/gestures/registry/SelectionControlHandler";
 export type { TextRegionCalculator } from "./presentations/objects/registry/TextRegionRegistry";
-export type { ShapeOutlineProvider } from "./presentations/objects/registry/ShapeOutlineRegistry";
+export type { OutlineCalculator } from "./presentations/objects/registry/OutlineRegistry";
 export type {
 	ShapePreviewRenderer,
 	ShapePreviewProps,

@@ -1,6 +1,6 @@
 import type { CanvasPlugin } from "../../plugin/CanvasPlugin";
 import type { ObjectComponentRegistry } from "../../presentations/objects/registry/ObjectComponentRegistry";
-import type { ShapeOutlineRegistry } from "../../presentations/objects/registry/ShapeOutlineRegistry";
+import type { OutlineRegistry } from "../../presentations/objects/registry/OutlineRegistry";
 import type { ShapePreviewRegistry } from "../../presentations/objects/registry/ShapePreviewRegistry";
 import type { TextRegionRegistry } from "../../presentations/objects/registry/TextRegionRegistry";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
@@ -33,7 +33,7 @@ export type CanvasRegistries = {
 	objectStateValidator: ObjectStateValidatorRegistry;
 	objectComponent: ObjectComponentRegistry;
 	textRegion: TextRegionRegistry;
-	shapeOutline: ShapeOutlineRegistry;
+	outline: OutlineRegistry;
 	shapePreview: ShapePreviewRegistry;
 	objectBehavior: ObjectBehaviorRegistry;
 	selectionControl: SelectionControlRegistry;
