@@ -1,6 +1,6 @@
 import { isObject } from "@workspace/basic-validators";
 
-import type { ObjectStateValidateFn } from "../../../registry/ObjectStateValidatorRegistry";
+import type { ObjectStateValidator } from "../../../registry/ObjectStateValidatorRegistry";
 import {
 	hasValidIdAndType,
 	isValidChildIds,
@@ -12,7 +12,7 @@ import {
  * Validates a GroupState (transform + childIds).
  * The bounding frame (Frame) may be omitted as a cached value, so it is not required.
  */
-export const isValidGroupState: ObjectStateValidateFn = (value) => {
+export const isValidGroupState: ObjectStateValidator = (value) => {
 	if (!isObject(value)) {
 		return false;
 	}

@@ -4,7 +4,7 @@ import type { ObjectType } from "../../schemas/objects/types/ObjectType";
  * Per-type `ObjectState` validation function. Takes an untrusted object (e.g. from
  * the clipboard) and returns a boolean for whether it is valid as that type (type-guard style).
  */
-export type ObjectStateValidateFn = (value: unknown) => boolean;
+export type ObjectStateValidator = (value: unknown) => boolean;
 
 /**
  * Registry for per-type `ObjectState` validators.
@@ -14,9 +14,9 @@ export type ObjectStateValidateFn = (value: unknown) => boolean;
  * Its main use is strict clipboard-data validation in `isClipboardData`.
  */
 export class ObjectStateValidatorRegistry {
-	private readonly entries = new Map<ObjectType, ObjectStateValidateFn>();
+	private readonly entries = new Map<ObjectType, ObjectStateValidator>();
 
-	register(type: ObjectType, validate: ObjectStateValidateFn): void {
+	register(type: ObjectType, validate: ObjectStateValidator): void {
 		this.entries.set(type, validate);
 	}
 

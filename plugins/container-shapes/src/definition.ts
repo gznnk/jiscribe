@@ -63,7 +63,7 @@ export const containerDefinition: ObjectTypeDefinition<
 			items: [{ type: "aspectRatio" }],
 		},
 	],
-	validateState: isValidContainerState,
+	stateValidator: isValidContainerState,
 	shapeLibrary: {
 		factory: ContainerShapeFactory,
 		previewRenderer: ContainerPreview,

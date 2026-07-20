@@ -7,7 +7,7 @@ import {
 
 import { isConnectorRouting } from "../../../../schemas/objects/types/ConnectorRouting";
 import { isStrokeDashType } from "../../../../schemas/objects/types/StrokeDashType";
-import type { ObjectStateValidateFn } from "../../../registry/ObjectStateValidatorRegistry";
+import type { ObjectStateValidator } from "../../../registry/ObjectStateValidatorRegistry";
 import {
 	hasOwnedEndpoint,
 	hasValidIdAndType,
@@ -63,7 +63,7 @@ export const isValidConnectorLabelState = (label: unknown): boolean => {
  * are held by source/target, so an empty array is allowed; the invariant
  * requires at least one of the endpoints to be owned.
  */
-export const isValidConnectorState: ObjectStateValidateFn = (value) => {
+export const isValidConnectorState: ObjectStateValidator = (value) => {
 	if (!isObject(value)) {
 		return false;
 	}

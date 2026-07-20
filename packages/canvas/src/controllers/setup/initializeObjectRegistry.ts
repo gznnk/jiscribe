@@ -459,7 +459,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					items: [{ type: "aspectRatio" }],
 				},
 			],
-			validateState: isValidRectState,
+			stateValidator: isValidRectState,
 			shapeLibrary: {
 				factory: RectShapeFactory,
 				previewRenderer: RectPreview,
@@ -491,7 +491,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					items: [{ type: "aspectRatio" }],
 				},
 			],
-			validateState: isValidEllipseState,
+			stateValidator: isValidEllipseState,
 			shapeLibrary: {
 				factory: EllipseShapeFactory,
 				previewRenderer: EllipsePreview,
@@ -524,7 +524,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					items: [{ type: "aspectRatio" }],
 				},
 			],
-			validateState: isValidDiamondState,
+			stateValidator: isValidDiamondState,
 			shapeLibrary: {
 				factory: DiamondShapeFactory,
 				previewRenderer: DiamondPreview,
@@ -557,7 +557,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					items: [{ type: "aspectRatio" }],
 				},
 			],
-			validateState: isValidStadiumState,
+			stateValidator: isValidStadiumState,
 			shapeLibrary: {
 				factory: StadiumShapeFactory,
 				previewRenderer: StadiumPreview,
@@ -590,7 +590,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					items: [{ type: "aspectRatio" }],
 				},
 			],
-			validateState: isValidParallelogramState,
+			stateValidator: isValidParallelogramState,
 			shapeLibrary: {
 				factory: ParallelogramShapeFactory,
 				previewRenderer: ParallelogramPreview,
@@ -623,7 +623,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					items: [{ type: "aspectRatio" }],
 				},
 			],
-			validateState: isValidHexagonState,
+			stateValidator: isValidHexagonState,
 			shapeLibrary: {
 				factory: HexagonShapeFactory,
 				previewRenderer: HexagonPreview,
@@ -656,7 +656,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					items: [{ type: "aspectRatio" }],
 				},
 			],
-			validateState: isValidCloudState,
+			stateValidator: isValidCloudState,
 			shapeLibrary: {
 				factory: CloudShapeFactory,
 				previewRenderer: CloudPreview,
@@ -689,7 +689,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					items: [{ type: "aspectRatio" }],
 				},
 			],
-			validateState: isValidDocumentState,
+			stateValidator: isValidDocumentState,
 			shapeLibrary: {
 				factory: DocumentShapeFactory,
 				previewRenderer: DocumentPreview,
@@ -722,7 +722,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					items: [{ type: "aspectRatio" }],
 				},
 			],
-			validateState: isValidMultiDocumentState,
+			stateValidator: isValidMultiDocumentState,
 			shapeLibrary: {
 				factory: MultiDocumentShapeFactory,
 				previewRenderer: MultiDocumentPreview,
@@ -754,7 +754,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					items: [{ type: "aspectRatio" }],
 				},
 			],
-			validateState: isValidActorState,
+			stateValidator: isValidActorState,
 			shapeLibrary: {
 				factory: ActorShapeFactory,
 				previewRenderer: ActorPreview,
@@ -787,7 +787,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					items: [{ type: "aspectRatio" }],
 				},
 			],
-			validateState: isValidCalloutState,
+			stateValidator: isValidCalloutState,
 			selectionControls: [
 				{
 					Component: CalloutTailTipControl,
@@ -826,7 +826,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					items: [{ type: "aspectRatio" }],
 				},
 			],
-			validateState: isValidDbState,
+			stateValidator: isValidDbState,
 			shapeLibrary: {
 				factory: DbShapeFactory,
 				previewRenderer: DbPreview,
@@ -859,7 +859,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					items: [{ type: "aspectRatio" }],
 				},
 			],
-			validateState: isValidStoredDataState,
+			stateValidator: isValidStoredDataState,
 			shapeLibrary: {
 				factory: StoredDataShapeFactory,
 				previewRenderer: StoredDataPreview,
@@ -891,7 +891,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					items: [{ type: "aspectRatio" }],
 				},
 			],
-			validateState: isValidSubroutineState,
+			stateValidator: isValidSubroutineState,
 			shapeLibrary: {
 				factory: SubroutineShapeFactory,
 				previewRenderer: SubroutinePreview,
@@ -924,7 +924,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					items: [{ type: "aspectRatio" }],
 				},
 			],
-			validateState: isValidTrapezoidState,
+			stateValidator: isValidTrapezoidState,
 			shapeLibrary: {
 				factory: TrapezoidShapeFactory,
 				previewRenderer: TrapezoidPreview,
@@ -957,7 +957,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					items: [{ type: "aspectRatio" }],
 				},
 			],
-			validateState: isValidManualInputState,
+			stateValidator: isValidManualInputState,
 			shapeLibrary: {
 				factory: ManualInputShapeFactory,
 				previewRenderer: ManualInputPreview,
@@ -990,7 +990,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					items: [{ type: "aspectRatio" }],
 				},
 			],
-			validateState: isValidCardState,
+			stateValidator: isValidCardState,
 			shapeLibrary: {
 				factory: CardShapeFactory,
 				previewRenderer: CardPreview,
@@ -1023,7 +1023,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					items: [{ type: "aspectRatio" }],
 				},
 			],
-			validateState: isValidDelayState,
+			stateValidator: isValidDelayState,
 			shapeLibrary: {
 				factory: DelayShapeFactory,
 				previewRenderer: DelayPreview,
@@ -1056,7 +1056,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					items: [{ type: "aspectRatio" }],
 				},
 			],
-			validateState: isValidLoopLimitState,
+			stateValidator: isValidLoopLimitState,
 			shapeLibrary: {
 				factory: LoopLimitShapeFactory,
 				previewRenderer: LoopLimitPreview,
@@ -1089,7 +1089,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					items: [{ type: "aspectRatio" }],
 				},
 			],
-			validateState: isValidDisplayState,
+			stateValidator: isValidDisplayState,
 			shapeLibrary: {
 				factory: DisplayShapeFactory,
 				previewRenderer: DisplayPreview,
@@ -1117,7 +1117,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					items: [{ type: "aspectRatio" }],
 				},
 			],
-			validateState: isValidExtractState,
+			stateValidator: isValidExtractState,
 			shapeLibrary: {
 				factory: ExtractShapeFactory,
 				previewRenderer: ExtractPreview,
@@ -1145,7 +1145,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					items: [{ type: "aspectRatio" }],
 				},
 			],
-			validateState: isValidCrossState,
+			stateValidator: isValidCrossState,
 			shapeLibrary: {
 				factory: CrossShapeFactory,
 				previewRenderer: CrossPreview,
@@ -1181,7 +1181,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					items: [{ type: "aspectRatio" }],
 				},
 			],
-			validateState: isValidOffPageConnectorState,
+			stateValidator: isValidOffPageConnectorState,
 			shapeLibrary: {
 				factory: OffPageConnectorShapeFactory,
 				previewRenderer: OffPageConnectorPreview,
@@ -1204,7 +1204,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					items: [{ type: "aspectRatio" }],
 				},
 			],
-			validateState: isValidGroupState,
+			stateValidator: isValidGroupState,
 		}),
 
 		polygon: defineObject({
@@ -1226,7 +1226,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					],
 				},
 			],
-			validateState: isValidPolygonState,
+			stateValidator: isValidPolygonState,
 			shapeLibrary: {
 				factory: PolygonShapeFactory,
 				previewRenderer: PolygonPreview,
@@ -1253,7 +1253,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					items: [{ type: "lineColor" }, { type: "lineStyle" }],
 				},
 			],
-			validateState: isValidPolylineState,
+			stateValidator: isValidPolylineState,
 			shapeLibrary: {
 				factory: PolylineShapeFactory,
 				previewRenderer: PolylinePreview,
@@ -1335,7 +1335,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 						]
 					: []),
 			],
-			validateState: isValidConnectorState,
+			stateValidator: isValidConnectorState,
 		}),
 
 		sticky: defineObject({
@@ -1359,7 +1359,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					items: [{ type: "aspectRatio" }],
 				},
 			],
-			validateState: isValidStickyState,
+			stateValidator: isValidStickyState,
 			shapeLibrary: {
 				factory: StickyShapeFactory,
 				presets: StickyShapePresets,
@@ -1379,7 +1379,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					items: [{ type: "aspectRatio" }],
 				},
 			],
-			validateState: isValidSvgState,
+			stateValidator: isValidSvgState,
 		}),
 	};
 
@@ -1406,7 +1406,7 @@ export const applyObjectDefinition = (
 		registries.shapeOutline.register(type, definition.outline);
 	}
 	registries.objectBehavior.register(type, definition.behavior);
-	registries.objectStateValidator.register(type, definition.validateState);
+	registries.objectStateValidator.register(type, definition.stateValidator);
 	registries.objectMenu.register(type, definition.menuFactory);
 	if (definition.selectionControls) {
 		registries.selectionControl.register(type, definition.selectionControls);

@@ -112,7 +112,7 @@ export type {
 	DocToStateMapper,
 	StateToDocMapper,
 } from "./states/objects/base/MapperTypes";
-export type { ObjectStateValidateFn } from "./states/registry/ObjectStateValidatorRegistry";
+export type { ObjectStateValidator } from "./states/registry/ObjectStateValidatorRegistry";
 export type {
 	ObjectBehaviorEntry,
 	MoveByDeltaFunction,

@@ -22,7 +22,7 @@ const buildFakeDefinition = (type: string): ObjectTypeDefinition =>
 			rotateByGroup: (state) => state,
 		},
 		menuFactory: () => [],
-		validateState: () => true,
+		stateValidator: () => true,
 	});
 
 describe("createCanvasRegistries", () => {

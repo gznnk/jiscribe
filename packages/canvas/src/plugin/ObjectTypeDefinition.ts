@@ -13,7 +13,7 @@ import type { ObjectFeatures } from "../schemas/objects/types/ObjectFeatures";
 import type { ShapeFactory } from "../schemas/objects/types/ShapeFactory";
 import type { ObjectMapperType } from "../states/objects/base/MapperTypes";
 import type { ObjectState } from "../states/objects/base/ObjectState";
-import type { ObjectStateValidateFn } from "../states/registry/ObjectStateValidatorRegistry";
+import type { ObjectStateValidator } from "../states/registry/ObjectStateValidatorRegistry";
 
 /**
  * Creation-related capabilities for the ShapeLibrary (shape palette).
@@ -53,7 +53,7 @@ export type ObjectTypeDefinition<
 	mapper: ObjectMapperType<TDoc, TState>;
 
 	/** Type-guard that rejects untrusted State entering the canvas from outside (e.g. pasted clipboard data). */
-	validateState: ObjectStateValidateFn;
+	stateValidator: ObjectStateValidator;
 
 	// --- Render (presentation) ---
 
