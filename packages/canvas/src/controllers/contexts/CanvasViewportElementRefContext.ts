@@ -8,9 +8,10 @@ import { createContext, type RefObject, useContext } from "react";
  * the canvas area. The value is a ref object (stable reference), so no
  * re-render is triggered through the Provider.
  *
- * Canvas.tsx provides the canvasRef.
+ * Canvas.tsx provides the canvas area element ref. Unrelated to the public
+ * `ref.current.viewport` handle (pan/zoom API) — this is the DOM element.
  */
-export const CanvasViewportRefContext =
+export const CanvasViewportElementRefContext =
 	createContext<RefObject<HTMLDivElement | null> | null>(null);
 
 /**
@@ -19,6 +20,6 @@ export const CanvasViewportRefContext =
  * Returns null outside a Provider, so callers must provide a fallback such as
  * the browser window bounds.
  */
-export function useCanvasViewportRef(): RefObject<HTMLDivElement | null> | null {
-	return useContext(CanvasViewportRefContext);
+export function useCanvasViewportElementRef(): RefObject<HTMLDivElement | null> | null {
+	return useContext(CanvasViewportElementRefContext);
 }

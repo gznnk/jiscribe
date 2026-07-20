@@ -40,7 +40,7 @@ const EXAMPLES: ReadonlyArray<{
 		id: "viewport",
 		title: "Viewport",
 		description:
-			"imperative viewport API（defaultViewport / onViewportChange / viewportRef）",
+			"imperative viewport API（defaultViewport / onViewportChange / ref.current.viewport）",
 		Component: ViewportExample,
 	},
 	{

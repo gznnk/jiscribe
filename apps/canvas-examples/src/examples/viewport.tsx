@@ -1,9 +1,5 @@
 import { Canvas, parseCanvasText } from "@workspace/canvas";
-import type {
-	Camera,
-	CanvasDoc,
-	CanvasViewportHandle,
-} from "@workspace/canvas";
+import type { Camera, CanvasDoc, CanvasHandle } from "@workspace/canvas";
 import { useRef, useState } from "react";
 
 // 目印になる図形を散らした doc（Canvas の契約どおり parseCanvasText を通す）
@@ -47,16 +43,16 @@ const initialCamera: Camera = { minX: 0, minY: 0, zoom: 1 };
  * viewport（pan/zoom）の imperative API の例:
  * - defaultViewport … マウント時 1 回だけ適用される初期カメラ
  * - onViewportChange … カメラ変化の読み取り専用通知（永続化・ミラー用。値を戻さない）
- * - viewportRef.setViewport … プログラムからカメラを押し込む唯一の経路
+ * - ref.current.viewport.setViewport … プログラムからカメラを押し込む唯一の経路
  */
 export function ViewportExample() {
-	const viewportRef = useRef<CanvasViewportHandle>(null);
+	const canvasRef = useRef<CanvasHandle>(null);
 	const [camera, setCamera] = useState<Camera>(initialCamera);
 
 	const panelButton = (label: string, targetCamera: Camera) => (
 		<button
 			type="button"
-			onClick={() => viewportRef.current?.setViewport(targetCamera)}
+			onClick={() => canvasRef.current?.viewport.setViewport(targetCamera)}
 			style={{ padding: "4px 10px", cursor: "pointer" }}
 		>
 			{label}
@@ -69,7 +65,7 @@ export function ViewportExample() {
 				canvasDoc={landmarkDoc}
 				defaultViewport={initialCamera}
 				onViewportChange={setCamera}
-				viewportRef={viewportRef}
+				ref={canvasRef}
 			/>
 			<div
 				style={{

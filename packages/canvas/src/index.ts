@@ -1,4 +1,5 @@
 export { Canvas } from "./controllers/Canvas";
+export type { CanvasHandle } from "./controllers/Canvas";
 export type {
 	CanvasExportHandle,
 	CanvasExportImagePayload,

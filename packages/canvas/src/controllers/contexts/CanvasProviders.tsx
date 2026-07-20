@@ -1,7 +1,7 @@
 import type { ReactNode, RefObject } from "react";
 
 import { CanvasRegistriesContext } from "./CanvasRegistriesContext";
-import { CanvasViewportRefContext } from "./CanvasViewportRefContext";
+import { CanvasViewportElementRefContext } from "./CanvasViewportElementRefContext";
 import { PresentationRegistriesProvider } from "../../presentations/objects/registry/PresentationRegistriesProvider";
 import type { CanvasTheme } from "../../theme/CanvasTheme";
 import { CanvasThemeContext } from "../../theme/CanvasThemeContext";
@@ -13,21 +13,21 @@ type CanvasProvidersProps = {
 	theme: CanvasTheme;
 	messages: CanvasMessages;
 	registries: CanvasRegistries;
-	viewportRef: RefObject<HTMLDivElement | null>;
+	viewportElementRef: RefObject<HTMLDivElement | null>;
 	children: ReactNode;
 };
 
 /**
  * Aggregates the context providers a live `<Canvas>` needs (theme, messages,
  * the registry bundle, its three presentation registries, and the viewport
- * ref) into one node, so Canvas.tsx renders its tree without the deep provider
- * nesting.
+ * element ref) into one node, so Canvas.tsx renders its tree without the deep
+ * provider nesting.
  */
 export function CanvasProviders({
 	theme,
 	messages,
 	registries,
-	viewportRef,
+	viewportElementRef,
 	children,
 }: CanvasProvidersProps) {
 	return (
@@ -39,9 +39,9 @@ export function CanvasProviders({
 						textRegion={registries.textRegion}
 						shapeOutline={registries.shapeOutline}
 					>
-						<CanvasViewportRefContext value={viewportRef}>
+						<CanvasViewportElementRefContext value={viewportElementRef}>
 							{children}
-						</CanvasViewportRefContext>
+						</CanvasViewportElementRefContext>
 					</PresentationRegistriesProvider>
 				</CanvasRegistriesContext>
 			</CanvasMessagesContext>

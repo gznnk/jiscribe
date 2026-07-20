@@ -1,4 +1,12 @@
-﻿import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+﻿import {
+	memo,
+	useCallback,
+	useEffect,
+	useImperativeHandle,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 
 import {
 	CanvasRoot,
@@ -128,25 +136,18 @@ type CanvasProps = {
 	 * Initial camera (pan + zoom) applied once at mount, so the first paint lands
 	 * at the host's view (restore a saved view, …) instead of the doc default.
 	 * Read only at mount; later changes are ignored. To move the view after mount,
-	 * use `viewportRef.setViewport` — not this prop.
+	 * use `ref.current.viewport.setViewport` — not this prop.
 	 */
 	defaultViewport?: Camera;
 	/**
 	 * Invoked when the camera (pan/zoom) changes — on internal gestures and on
-	 * `viewportRef.setViewport` (not on container resize). Read-only: use it to
-	 * persist or mirror the view. Do **not** feed it back into `defaultViewport`
-	 * (mount-only) or drive the view from it — the canvas owns the live camera; a
-	 * mirror-back would fight continuous gestures. Push programmatic changes via
-	 * `viewportRef` instead.
+	 * `ref.current.viewport.setViewport` (not on container resize). Read-only: use
+	 * it to persist or mirror the view. Do **not** feed it back into
+	 * `defaultViewport` (mount-only) or drive the view from it — the canvas owns
+	 * the live camera; a mirror-back would fight continuous gestures. Push
+	 * programmatic changes via `ref.current.viewport` instead.
 	 */
 	onViewportChange?: (viewport: Camera) => void;
-	/**
-	 * Receives the imperative viewport API ({@link CanvasViewportHandle}). Use its
-	 * `setViewport(camera)` to move pan/zoom programmatically (fit-to-content,
-	 * jump-to-node, a scripted intro). Imperative by design so it cannot feed back
-	 * into a render loop the way a controlled `viewport` value prop would.
-	 */
-	viewportRef?: React.Ref<CanvasViewportHandle>;
 	/**
 	 * Host UI inserted at the left edge of the toolbar (e.g. save/open buttons).
 	 * Rendered inside a `data-gesture="none"` container, so plain `onClick` works.
@@ -180,20 +181,35 @@ type CanvasProps = {
 	 */
 	initialConfig?: CanvasConfig;
 	/**
-	 * Receives the imperative export API ({@link CanvasExportHandle}). Use it
-	 * when the host needs the exported image programmatically (e.g. writing a
-	 * `.jis.png` on save) instead of through the export dialog.
-	 */
-	exportRef?: React.Ref<CanvasExportHandle>;
-	/**
 	 * When provided, the export dialog delivers the exported image here instead
 	 * of triggering a browser download. Use this when the host owns file saving
 	 * (e.g. the VSCode extension writing into the workspace).
 	 */
 	onExportImage?: (payload: CanvasExportImagePayload) => void;
+	/**
+	 * Receives the imperative Canvas handle ({@link CanvasHandle}), grouping every
+	 * imperative API by subsystem: `ref.current.viewport.setViewport(camera)` to
+	 * move pan/zoom (fit-to-content, jump-to-node, a scripted intro), and
+	 * `ref.current.export.toSvgString()` / `toPngBlob()` to get the exported image
+	 * programmatically. Imperative by design so the view cannot feed back into a
+	 * render loop the way a controlled value prop would.
+	 */
+	ref?: React.Ref<CanvasHandle>;
 };
 
-const CanvasComponent: React.FC<CanvasProps> = ({
+/**
+ * Imperative Canvas API delivered through the component `ref`. Each subsystem
+ * owns a namespace; new imperative capabilities are added as new namespaces
+ * rather than new props.
+ */
+export type CanvasHandle = {
+	/** Pan/zoom control (see {@link CanvasViewportHandle}). */
+	viewport: CanvasViewportHandle;
+	/** Image export (see {@link CanvasExportHandle}). */
+	export: CanvasExportHandle;
+};
+
+const CanvasComponent = ({
 	canvasDoc,
 	syncNonce,
 	onCommit,
@@ -205,14 +221,13 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	autoFocus = true,
 	defaultViewport,
 	onViewportChange,
-	viewportRef,
 	toolbarLeading,
 	toolbarTrailing,
 	toolbarLayout,
 	initialConfig,
-	exportRef,
 	onExportImage,
-}) => {
+	ref,
+}: CanvasProps) => {
 	// Merged UI strings (English defaults + host overrides), distributed via context
 	const mergedMessages = useMemo(
 		() => mergeCanvasMessages(messages),
@@ -294,11 +309,11 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	);
 
 	// Viewport integration: expose an imperative setter for programmatic pan/zoom
-	// (viewportRef) and notify the host of camera changes (onViewportChange). The
-	// canvas stays authoritative for the live camera — the host reads it out and
-	// pushes changes in imperatively, with no controlled value prop that could
-	// feed back and fight continuous gestures.
-	useViewportHandle(viewportRef, dispatch);
+	// (ref.current.viewport) and notify the host of camera changes
+	// (onViewportChange). The canvas stays authoritative for the live camera — the
+	// host reads it out and pushes changes in imperatively, with no controlled
+	// value prop that could feed back and fight continuous gestures.
+	const viewportHandle = useViewportHandle(dispatch);
 	useNotifyViewportChange(state.viewport, onViewportChange);
 
 	// Notify parent component when a save is required (after commit or undo/redo)
@@ -373,8 +388,9 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 		state.textEditState?.objectId ?? null,
 	);
 
-	// Image export: the imperative exportRef API and the export dialog
+	// Image export: the imperative export handle and the export dialog
 	const {
+		exportHandle,
 		isExportDialogOpen,
 		openExportDialog,
 		closeExportDialog,
@@ -383,12 +399,19 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 		svgRef,
 		canvasState: state,
 		registries,
-		exportRef,
 		onExportImage,
 		dispatch,
 		notifyError,
 		withCullingSuspended,
 	});
+
+	// Single imperative Canvas handle: assemble the subsystem sub-handles into one
+	// namespaced object so the whole imperative surface is delivered through `ref`.
+	useImperativeHandle(
+		ref,
+		() => ({ viewport: viewportHandle, export: exportHandle }),
+		[viewportHandle, exportHandle],
+	);
 
 	const { minX, minY, zoom } = state.viewport;
 
@@ -405,7 +428,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 			theme={theme}
 			messages={mergedMessages}
 			registries={registries}
-			viewportRef={canvasRef}
+			viewportElementRef={canvasRef}
 		>
 			<CanvasRoot
 				ref={rootRef}

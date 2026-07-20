@@ -22,7 +22,7 @@ import {
  *
  * Read-only by contract: the host must not feed the reported camera back in to
  * drive the view (there is no controlled `viewport` prop). Program the view via
- * `viewportRef.setViewport`; mirroring back would fight continuous gestures.
+ * `ref.current.viewport.setViewport`; mirroring back would fight continuous gestures.
  *
  * The mount render establishes the baseline (the doc-derived initial camera)
  * and does not notify; the host assumes the initial view until the first change.

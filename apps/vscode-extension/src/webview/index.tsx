@@ -3,8 +3,8 @@ import {
 	type Camera,
 	type CanvasConfig,
 	type CanvasDoc,
-	type CanvasExportHandle,
 	type CanvasExportImagePayload,
+	type CanvasHandle,
 } from "@workspace/canvas";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
@@ -117,8 +117,9 @@ function App() {
 	const [parseError, setParseError] = useState<string>("");
 	const [missingEmbeddedSource, setMissingEmbeddedSource] = useState(false);
 
-	// Canvas's imperative export API (used to render the image when saving .jis.svg / .jis.png).
-	const exportHandleRef = useRef<CanvasExportHandle>(null);
+	// Canvas's imperative handle (its `export` namespace renders the image when
+	// saving .jis.svg / .jis.png).
+	const canvasRef = useRef<CanvasHandle>(null);
 
 	// Camera restored from persisted state, read once at mount to seed the canvas
 	// via `defaultViewport` (undefined on first open → Canvas uses its doc-derived
@@ -249,7 +250,7 @@ function App() {
 							data,
 						});
 					};
-					const handle = exportHandleRef.current;
+					const handle = canvasRef.current?.export;
 					if (!handle) {
 						respond(null);
 						break;
@@ -303,7 +304,7 @@ function App() {
 	}, []); // empty deps = run once on mount
 
 	// Notify the Extension once the canvas has rendered and its export handle is
-	// available. This effect runs after the Canvas commits (exportRef is set via
+	// available. This effect runs after the Canvas commits (the handle is set via
 	// useImperativeHandle during commit, before this effect), so requestImageExport
 	// can succeed. Lets the Extension reconcile a stale image after a hidden-tab
 	// save (#179).
@@ -385,7 +386,7 @@ function App() {
 					onUndo={handleUndo}
 					onRedo={handleRedo}
 					theme={vscodeCanvasTheme}
-					exportRef={exportHandleRef}
+					ref={canvasRef}
 					onExportImage={handleExportImage}
 				/>
 			</div>
