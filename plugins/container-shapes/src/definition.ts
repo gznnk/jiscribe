@@ -1,5 +1,4 @@
 import type { ObjectTypeDefinition } from "@workspace/canvas";
-import { defineObject } from "@workspace/canvas";
 import { createFrameBehavior } from "@workspace/canvas/unstable";
 
 import { ContainerHeaderHeightControl } from "./controls/ContainerHeaderHeightControl";
@@ -8,6 +7,7 @@ import { HeaderColorMenu } from "./menu/HeaderColorMenu";
 import { calcContainerTextRegion } from "./presentation/calcContainerTextRegion";
 import { Container } from "./presentation/Container";
 import { ContainerPreview } from "./presentation/ContainerPreview";
+import type { ContainerDoc } from "./schema/ContainerDoc";
 import {
 	ContainerExtraStyleProperties,
 	ContainerFeatures,
@@ -28,7 +28,10 @@ import { ContainerShapePresets } from "./ui/ContainerShapePresets";
  * was missing (tier 3: ObjectMenu UI kit, published via `@workspace/canvas/unstable`
  * per docs/05_extensibility/custom-menu-design.md); it is now restored below.
  */
-export const containerDefinition: ObjectTypeDefinition = defineObject({
+export const containerDefinition: ObjectTypeDefinition<
+	ContainerDoc,
+	ContainerState
+> = {
 	mapper: { toDoc: containerToDoc, toState: containerToState },
 	features: ContainerFeatures,
 	extraStyleProperties: ContainerExtraStyleProperties,
@@ -66,4 +69,4 @@ export const containerDefinition: ObjectTypeDefinition = defineObject({
 		previewRenderer: ContainerPreview,
 		presets: ContainerShapePresets,
 	},
-});
+};

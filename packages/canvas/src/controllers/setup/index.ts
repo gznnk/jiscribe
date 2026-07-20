@@ -19,6 +19,7 @@ export {
 } from "./initializeObjectRegistry";
 export type {
 	ObjectTypeDefinition,
+	AnyObjectTypeDefinition,
 	ShapeLibraryRegistration,
 } from "./initializeObjectRegistry";
 export { ALL_COMMANDS } from "./initializeCommands";

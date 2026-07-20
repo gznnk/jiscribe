@@ -1,4 +1,4 @@
-import type { ObjectTypeDefinition } from "./initializeObjectRegistry";
+import type { AnyObjectTypeDefinition } from "./initializeObjectRegistry";
 import type { ObjectParserExtension } from "../../schemas/canvas/validators";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 
@@ -11,7 +11,7 @@ export type CanvasPlugin = {
 	id: string;
 
 	/** Object-type contributions. A type already registered (built-in or another plugin) throws at construction time. */
-	objects?: Readonly<Partial<Record<ObjectType, ObjectTypeDefinition>>>;
+	objects?: Readonly<Partial<Record<ObjectType, AnyObjectTypeDefinition>>>;
 
 	/** Parse-time extensions; read by `createCanvasParser({ plugins })`. */
 	parser?: readonly ObjectParserExtension[];

@@ -83,12 +83,14 @@ export {
 } from "./controllers/setup";
 export type {
 	ObjectTypeDefinition,
+	AnyObjectTypeDefinition,
 	ShapeLibraryRegistration,
 } from "./controllers/setup";
 
 // 図形定義の語彙（プラグイン作者向け、#144 Stage 1）。
-// `defineObject` で ObjectTypeDefinition を組み立て、`CanvasPlugin.objects` で
-// 宣言する。値 export は最小限（ObjectTypes / defineObject）に絞り、他はすべて型。
+// プラグインは `ObjectTypeDefinition<TDoc, TState>` を注釈した宣言だけで済む
+// （defineObject 呼び出しは不要）。built-in レコードのみ defineObject を使う。
+// 値 export は最小限（ObjectTypes / defineObject）に絞り、他はすべて型。
 export { ObjectTypes } from "./schemas/objects/types/ObjectType";
 export type { ObjectType } from "./schemas/objects/types/ObjectType";
 export type { ObjectDoc } from "./schemas/objects/base/ObjectDoc";

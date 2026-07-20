@@ -456,11 +456,20 @@ export type ShapeLibraryRegistration = {
 /**
  * The full description of a single object type across every registry
  * (mapper, component, text region, behavior, state validator, menu) plus its
- * optional ShapeLibrary capabilities. Values are widened to the base state/doc types;
- * per-entry type-safety is enforced at definition site by `defineObject`.
+ * optional ShapeLibrary capabilities.
+ *
+ * `TDoc` / `TState` tie `mapper` / `behavior` / `menuFactory` / `selectionControls`
+ * to one state type. A plugin declares a standalone definition with an explicit
+ * annotation — `ObjectTypeDefinition<ContainerDoc, ContainerState>` — and needs no
+ * `defineObject` call. The built-in record uses `defineObject` instead, because a
+ * record literal can only be annotated with the widened entry type, which would
+ * erase per-entry inference.
  */
-export type ObjectTypeDefinition = {
-	mapper: ObjectMapperType;
+export type ObjectTypeDefinition<
+	TDoc extends ObjectDoc = ObjectDoc,
+	TState extends ObjectState = ObjectState,
+> = {
+	mapper: ObjectMapperType<TDoc, TState>;
 
 	features: ObjectFeatures;
 
@@ -473,14 +482,14 @@ export type ObjectTypeDefinition = {
 	/** Outline polygon provider. Omitted = bounding-box rect/ellipse (see ShapeOutlineRegistry). */
 	outline?: ShapeOutlineProvider;
 
-	behavior: ObjectBehaviorEntry;
+	behavior: ObjectBehaviorEntry<TState>;
 
-	menuFactory: MenuSectionFactory<ObjectState>;
+	menuFactory: MenuSectionFactory<TState>;
 
 	validateState: ObjectStateValidateFn;
 
 	/** Type-specific selection controls (handle renderer + gesture strategy pairs). */
-	selectionControls?: SelectionControlDefinition[];
+	selectionControls?: SelectionControlDefinition<TState>[];
 
 	/** Styleable properties beyond the ObjectFeatures flags (see StylePropertyRegistry). */
 	extraStyleProperties?: Record<string, ExtraStylePropertyDescriptor>;
@@ -489,27 +498,26 @@ export type ObjectTypeDefinition = {
 };
 
 /**
- * Builds a single `ObjectTypeDefinition`, preserving per-type `TState` inference
- * at the definition site (mapper / behavior / menuFactory are checked together)
- * before widening to the base-typed record entry.
+ * State-erased storage form. `any` on the state params kills the reverse
+ * variance of `menuFactory` / `behavior` (contravariant in `TState`), so a
+ * precisely-typed definition flows into the registry without a cast. This is the
+ * type the plugin/registry boundary stores.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AnyObjectTypeDefinition = ObjectTypeDefinition<any, any>;
+
+/**
+ * Builds a single built-in `ObjectTypeDefinition`, preserving per-type `TState`
+ * inference at the definition site (mapper / behavior / menuFactory are checked
+ * together) before widening to the base-typed record entry. Plugins declare
+ * standalone definitions with an explicit annotation instead (see above).
  */
 export const defineObject = <
 	TDoc extends ObjectDoc,
 	TState extends ObjectState,
->(def: {
-	mapper: ObjectMapperType<TDoc, TState>;
-	features: ObjectFeatures;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	component: FC<any>;
-	textRegion?: TextRegionCalculator;
-	outline?: ShapeOutlineProvider;
-	behavior: ObjectBehaviorEntry<TState>;
-	menuFactory: MenuSectionFactory<TState>;
-	validateState: ObjectStateValidateFn;
-	selectionControls?: SelectionControlDefinition<TState>[];
-	extraStyleProperties?: Record<string, ExtraStylePropertyDescriptor>;
-	shapeLibrary?: ShapeLibraryRegistration;
-}): ObjectTypeDefinition => def as unknown as ObjectTypeDefinition;
+>(
+	def: ObjectTypeDefinition<TDoc, TState>,
+): ObjectTypeDefinition => def as unknown as ObjectTypeDefinition;
 
 /**
  * Data-only description of every object type. `createCanvasRegistries` applies a
@@ -1473,7 +1481,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 export const applyObjectDefinition = (
 	registries: CanvasRegistries,
 	type: ObjectType,
-	definition: ObjectTypeDefinition,
+	definition: AnyObjectTypeDefinition,
 ): void => {
 	registries.objectMapper.register(
 		type,
