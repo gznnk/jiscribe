@@ -240,7 +240,10 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	// Per-canvas registry bundle: a configured set when `initialConfig` is given,
 	// otherwise the shared full default. Built once at mount (see the `initialConfig`
 	// prop doc); the stable instance is closed over by the reducer (pure tree) and
-	// provided via context (React tree), so the two can never desync.
+	// provided via context (React tree), so the two can never desync. Canvas is the
+	// provider, so its own hooks cannot read the bundle back from context (they would
+	// get the default, missing any plugin types); they receive it as an explicit
+	// `registries` argument instead.
 	const [registries] = useState(() =>
 		initialConfig
 			? createCanvasRegistries(initialConfig)
@@ -299,7 +302,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	useNotifyViewportChange(state.viewport, onViewportChange);
 
 	// Notify parent component when a save is required (after commit or undo/redo)
-	useNotifySaveRequest(state, onCommit, selfSaveNonceTracker);
+	useNotifySaveRequest(state, onCommit, selfSaveNonceTracker, registries);
 
 	// Sync external canvasDoc changes
 	useSyncExternalDoc({
@@ -309,6 +312,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 		dispatch,
 		resetGestureState,
 		selfSaveNonceTracker,
+		registries,
 	});
 
 	// Use wheel handler from GestureRecognizer.
@@ -319,7 +323,11 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	useContainerResize(canvasRef, dispatch);
 
 	// Paste handling (keyboard shortcut + context menu)
-	const handlePaste = useClipboardPaste(state.internalClipboard, dispatch);
+	const handlePaste = useClipboardPaste(
+		state.internalClipboard,
+		dispatch,
+		registries,
+	);
 
 	// Keyboard shortcuts handling — scoped to the focusable canvas root (rootRef),
 	// so with multiple Canvases on a page only the focused one handles shortcuts.
@@ -328,6 +336,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 		canvasState: state,
 		dispatch,
 		callbacks: { undo: onUndo, redo: onRedo, paste: handlePaste },
+		registries,
 	});
 
 	// Focus management for the keyboard scope: initial focus (autoFocus) and

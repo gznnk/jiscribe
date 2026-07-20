@@ -1,8 +1,8 @@
 import { type Dispatch, type RefObject, useEffect, useRef } from "react";
 
 import type { CanvasControllerState } from "../CanvasTypes";
-import { useCanvasRegistries } from "../contexts/CanvasRegistriesContext";
 import type { CanvasAction } from "../reducer/CanvasActions";
+import type { CanvasRegistries } from "../setup/CanvasRegistries";
 
 export type UseKeyboardShortcutsParams = {
 	/**
@@ -21,6 +21,11 @@ export type UseKeyboardShortcutsParams = {
 	 * by an external host such as VSCode, paste by the async clipboard read).
 	 */
 	callbacks?: Partial<Record<string, () => void>>;
+	/**
+	 * Passed in explicitly (not read via context) because Canvas is the provider
+	 * of the registries context and so cannot consume it via a hook.
+	 */
+	registries: CanvasRegistries;
 };
 
 /**
@@ -31,8 +36,8 @@ export const useKeyboardShortcuts = ({
 	canvasState,
 	dispatch,
 	callbacks,
+	registries,
 }: UseKeyboardShortcutsParams): void => {
-	const registries = useCanvasRegistries();
 	const commandRegistry = registries.command;
 
 	const canvasStateRef = useRef(canvasState);
