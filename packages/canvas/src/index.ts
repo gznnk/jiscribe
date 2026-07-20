@@ -71,26 +71,23 @@ export type {
 // full object-type descriptor table are exported for advanced/custom setups.
 // Plugin declarations (docs/05_extensibility/canvas-plugin-design.md) go through
 // `CanvasConfig.plugins`; there is no raw-registry escape hatch.
-export type {
-	CanvasConfig,
-	CanvasRegistries,
-	CanvasPlugin,
-} from "./controllers/setup";
+export type { CanvasConfig, CanvasRegistries } from "./controllers/setup";
 export {
 	createCanvasRegistries,
 	ALL_OBJECT_DEFINITIONS,
-	defineObject,
-} from "./controllers/setup";
-export type {
-	ObjectTypeDefinition,
-	AnyObjectTypeDefinition,
-	ShapeLibraryRegistration,
 } from "./controllers/setup";
 
-// 図形定義の語彙（プラグイン作者向け、#144 Stage 1）。
+// 図形定義の語彙（プラグイン作者向け、#144 Stage 1・src/plugin）。
 // プラグインは `ObjectTypeDefinition<TDoc, TState>` を注釈した宣言だけで済む
 // （defineObject 呼び出しは不要）。built-in レコードのみ defineObject を使う。
 // 値 export は最小限（ObjectTypes / defineObject）に絞り、他はすべて型。
+export { defineObject } from "./plugin";
+export type {
+	CanvasPlugin,
+	ObjectTypeDefinition,
+	AnyObjectTypeDefinition,
+	ShapeLibraryRegistration,
+} from "./plugin";
 export { ObjectTypes } from "./schemas/objects/types/ObjectType";
 export type { ObjectType } from "./schemas/objects/types/ObjectType";
 export type { ObjectDoc } from "./schemas/objects/base/ObjectDoc";

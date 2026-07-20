@@ -1,4 +1,4 @@
-import type { CanvasPlugin } from "./CanvasPlugin";
+import type { CanvasPlugin } from "../../plugin/CanvasPlugin";
 import type { ObjectComponentRegistry } from "../../presentations/objects/registry/ObjectComponentRegistry";
 import type { ShapeOutlineRegistry } from "../../presentations/objects/registry/ShapeOutlineRegistry";
 import type { ShapePreviewRegistry } from "../../presentations/objects/registry/ShapePreviewRegistry";

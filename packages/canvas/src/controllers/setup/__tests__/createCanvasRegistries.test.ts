@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
 
-import type { CanvasPlugin } from "../CanvasPlugin";
+import type { CanvasPlugin } from "../../../plugin/CanvasPlugin";
+import { defineObject } from "../../../plugin/ObjectTypeDefinition";
+import type { ObjectTypeDefinition } from "../../../plugin/ObjectTypeDefinition";
 import { createCanvasRegistries } from "../createCanvasRegistries";
-import { defineObject } from "../initializeObjectRegistry";
-import type { ObjectTypeDefinition } from "../initializeObjectRegistry";
 
 // Minimal stand-in for a plugin object type (mirrors how plugin-container-shapes
 // registers "container"), built entirely from the same `defineObject` builtins

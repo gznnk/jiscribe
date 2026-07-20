@@ -1,6 +1,6 @@
-import type { AnyObjectTypeDefinition } from "./initializeObjectRegistry";
-import type { ObjectParserExtension } from "../../schemas/canvas/validators";
-import type { ObjectType } from "../../schemas/objects/types/ObjectType";
+import type { AnyObjectTypeDefinition } from "./ObjectTypeDefinition";
+import type { ObjectParserExtension } from "../schemas/canvas/validators";
+import type { ObjectType } from "../schemas/objects/types/ObjectType";
 
 /**
  * Declarative bundle of object-type and parse-time contributions a host wires

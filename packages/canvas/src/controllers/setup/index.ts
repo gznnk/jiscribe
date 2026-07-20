@@ -6,20 +6,15 @@ export { initializeCommands } from "./initializeCommands";
 
 // Per-canvas registry bundle: types, factory, and defaults
 export type { CanvasRegistries, CanvasConfig } from "./CanvasRegistries";
-export type { CanvasPlugin } from "./CanvasPlugin";
 export {
 	createCanvasRegistries,
 	defaultCanvasRegistries,
 	createTestRegistries,
 } from "./createCanvasRegistries";
+// Plugin vocabulary (ObjectTypeDefinition / defineObject / CanvasPlugin) lives in
+// `src/plugin`; `applyObjectDefinition` is the wiring that applies it here.
 export {
 	ALL_OBJECT_DEFINITIONS,
 	applyObjectDefinition,
-	defineObject,
-} from "./initializeObjectRegistry";
-export type {
-	ObjectTypeDefinition,
-	AnyObjectTypeDefinition,
-	ShapeLibraryRegistration,
 } from "./initializeObjectRegistry";
 export { ALL_COMMANDS } from "./initializeCommands";
