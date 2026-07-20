@@ -69,11 +69,16 @@ export type {
 // Per-canvas registry configuration (plugin-style extensibility / feature-gating).
 // Pass a `CanvasConfig` to `<Canvas initialConfig={...}>`; the lower-level factory and the
 // full object-type descriptor table are exported for advanced/custom setups.
-export type { CanvasConfig, CanvasRegistries } from "./controllers/setup";
+// Plugin declarations (docs/05_extensibility/canvas-plugin-design.md) go through
+// `CanvasConfig.plugins`; there is no raw-registry escape hatch.
+export type {
+	CanvasConfig,
+	CanvasRegistries,
+	CanvasPlugin,
+} from "./controllers/setup";
 export {
 	createCanvasRegistries,
 	ALL_OBJECT_DEFINITIONS,
-	applyObjectDefinition,
 	defineObject,
 } from "./controllers/setup";
 export type {
@@ -82,9 +87,8 @@ export type {
 } from "./controllers/setup";
 
 // 図形定義の語彙（プラグイン作者向け、#144 Stage 1）。
-// `defineObject` で ObjectTypeDefinition を組み立て、`applyObjectDefinition` で
-// CanvasRegistries（`customize`）へ登録する。値 export は最小限（ObjectTypes /
-// defineObject / applyObjectDefinition）に絞り、他はすべて型。
+// `defineObject` で ObjectTypeDefinition を組み立て、`CanvasPlugin.objects` で
+// 宣言する。値 export は最小限（ObjectTypes / defineObject）に絞り、他はすべて型。
 export { ObjectTypes } from "./schemas/objects/types/ObjectType";
 export type { ObjectType } from "./schemas/objects/types/ObjectType";
 export type { ObjectDoc } from "./schemas/objects/base/ObjectDoc";

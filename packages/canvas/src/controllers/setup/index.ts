@@ -6,6 +6,7 @@ export { initializeCommands } from "./initializeCommands";
 
 // Per-canvas registry bundle: types, factory, and defaults
 export type { CanvasRegistries, CanvasConfig } from "./CanvasRegistries";
+export type { CanvasPlugin } from "./CanvasPlugin";
 export {
 	createCanvasRegistries,
 	defaultCanvasRegistries,

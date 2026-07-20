@@ -1,5 +1,4 @@
-import { containerDefinition } from "@workspace/plugin-container-shapes";
-import { containerParserExtension } from "@workspace/plugin-container-shapes/parser";
+import { containerPlugin } from "@workspace/plugin-container-shapes";
 import React, { useCallback, useState } from "react";
 import ReactDOM from "react-dom/client";
 import "katex/dist/katex.min.css";
@@ -8,7 +7,6 @@ import { MultiCanvasApp } from "./MultiCanvasApp";
 import type { CanvasConfig, CanvasDoc } from "../../src";
 import {
 	Canvas,
-	applyObjectDefinition,
 	createCanvasParser,
 	darkCanvasTheme,
 	extractCanvasSourceFromPng,
@@ -16,16 +14,13 @@ import {
 import "./harness.css";
 
 // container 図形は core から削除され、@workspace/plugin-container-shapes が唯一の
-// 供給元 (docs/05_extensibility/uc1-container-extraction-log.md)。e2e 専用の
-// dev 限定循環依存として devDependencies に登録し、container.spec.ts を存続させる。
-const initialConfig: CanvasConfig = {
-	customize: (registries) =>
-		applyObjectDefinition(registries, "container", containerDefinition),
-};
+// 供給元 (docs/05_extensibility/canvas-plugin-design.md)。e2e 専用の dev 限定
+// 循環依存として devDependencies に登録し、container.spec.ts を存続させる。
+const plugins = [containerPlugin];
 
-const harnessParser = createCanvasParser({
-	extensions: [containerParserExtension],
-});
+const initialConfig: CanvasConfig = { plugins };
+
+const harnessParser = createCanvasParser({ plugins });
 
 // spec は demo アプリの既定だった dark テーマ前提で書かれているため、
 // ハーネスも dark で固定する（余白色もキャンバスに追従させる）。

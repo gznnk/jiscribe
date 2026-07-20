@@ -1,3 +1,4 @@
+import type { CanvasPlugin } from "./CanvasPlugin";
 import type { ObjectComponentRegistry } from "../../presentations/objects/registry/ObjectComponentRegistry";
 import type { ShapeOutlineRegistry } from "../../presentations/objects/registry/ShapeOutlineRegistry";
 import type { ShapePreviewRegistry } from "../../presentations/objects/registry/ShapePreviewRegistry";
@@ -47,16 +48,20 @@ export type CanvasRegistries = {
 /**
  * Per-canvas configuration passed to `createCanvasRegistries`.
  *
- * All fields are optional; the defaults reproduce the full set (backward
- * compatible). Restricting `objectTypes` is the caller's contract to only pass
- * docs whose object types remain enabled — otherwise `canvasToState` throws
- * "Mapper not found" (see docs/01-design-philosophy.md principle 4).
+ * All fields are optional; omitting them reproduces the full built-in set.
+ * Restricting `objectTypes` is the caller's contract to only pass docs whose
+ * object types remain enabled — otherwise `canvasToState` throws "Mapper not
+ * found" (see docs/01-design-philosophy.md principle 4).
  */
 export type CanvasConfig = {
 	/** Enabled object types. Default: all registered types. */
 	objectTypes?: ObjectType[];
 	/** Enabled command ids. Default: all registered commands. */
 	commands?: string[];
-	/** Escape hatch to further customize the built registries in place. */
-	customize?: (registries: CanvasRegistries) => void;
+	/**
+	 * Plugins applied in declared order after the built-ins
+	 * (docs/05_extensibility/canvas-plugin-design.md). A type already claimed
+	 * by a built-in or an earlier plugin throws at construction time.
+	 */
+	plugins?: readonly CanvasPlugin[];
 };

@@ -184,6 +184,65 @@ describe("createCanvasParser", () => {
 		});
 	});
 
+	describe("plugins", () => {
+		// A minimal stand-in for `CanvasPlugin` as read by `createCanvasParser`
+		// (only `{ id, parser? }` — the structural subset; no `@workspace/canvas`
+		// controllers-layer import).
+		const moonParserExtension: ObjectParserExtension = {
+			type: "moon",
+			features: { ...starFeatures, type: "moon" },
+			validateDoc: () => [],
+		};
+
+		it("accepts a doc using a plugin-supplied type", () => {
+			const parser = createCanvasParser({
+				plugins: [{ id: "moon-plugin", parser: [moonParserExtension] }],
+			});
+			const result = parser.parse(
+				text({ version: 1, root: [{ ...star("m1"), type: "moon" }] }),
+			);
+			expect(result.kind).toBe("ok");
+		});
+
+		it("merges presetExtensions, extensions, and plugins together", () => {
+			const parser = createCanvasParser({
+				extensions: [starParserExtension],
+				plugins: [{ id: "moon-plugin", parser: [moonParserExtension] }],
+			});
+			const doc = {
+				version: 1,
+				root: [rect("r1"), star("s1"), { ...star("m1"), type: "moon" }],
+			};
+			expect(parser.parse(text(doc)).kind).toBe("ok");
+		});
+
+		it("throws (with the plugin id) when a plugin's type duplicates a preset type", () => {
+			expect(() =>
+				createCanvasParser({
+					plugins: [
+						{
+							id: "rect-plugin",
+							parser: [
+								defaultObjectParserExtensions.find((e) => e.type === "rect")!,
+							],
+						},
+					],
+				}),
+			).toThrow(/rect-plugin/);
+		});
+
+		it("throws (with both plugin ids) when two plugins duplicate a type", () => {
+			expect(() =>
+				createCanvasParser({
+					plugins: [
+						{ id: "plugin-a", parser: [starParserExtension] },
+						{ id: "plugin-b", parser: [starParserExtension] },
+					],
+				}),
+			).toThrow(/plugin-a.*plugin-b|plugin-b.*plugin-a/);
+		});
+	});
+
 	describe("default configuration (config omitted)", () => {
 		it("returns the same result as parseCanvasText for a valid doc", () => {
 			const doc = { version: 1, root: [rect("r1")] };

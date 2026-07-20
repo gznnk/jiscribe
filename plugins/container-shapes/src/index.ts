@@ -28,3 +28,4 @@ export { HeaderHeightControlHandler } from "./controls/HeaderHeightControlHandle
 export { ContainerShapePresets } from "./ui/ContainerShapePresets";
 
 export { containerDefinition } from "./definition";
+export { containerPlugin } from "./plugin";

@@ -461,20 +461,30 @@ export type ShapeLibraryRegistration = {
  */
 export type ObjectTypeDefinition = {
 	mapper: ObjectMapperType;
+
 	features: ObjectFeatures;
+
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	component: FC<any>;
+
 	/** Text region calculator. Omitted = full bbox (see TextRegionRegistry). */
 	textRegion?: TextRegionCalculator;
+
 	/** Outline polygon provider. Omitted = bounding-box rect/ellipse (see ShapeOutlineRegistry). */
 	outline?: ShapeOutlineProvider;
+
 	behavior: ObjectBehaviorEntry;
+
 	menuFactory: MenuSectionFactory<ObjectState>;
+
 	validateState: ObjectStateValidateFn;
+
 	/** Type-specific selection controls (handle renderer + gesture strategy pairs). */
 	selectionControls?: SelectionControlDefinition[];
+
 	/** Styleable properties beyond the ObjectFeatures flags (see StylePropertyRegistry). */
 	extraStyleProperties?: Record<string, ExtraStylePropertyDescriptor>;
+
 	shapeLibrary?: ShapeLibraryRegistration;
 };
 

@@ -1,18 +1,16 @@
 import {
 	Canvas,
-	applyObjectDefinition,
 	type Camera,
 	type CanvasConfig,
 	type CanvasDoc,
 	type CanvasExportHandle,
 	type CanvasExportImagePayload,
 } from "@workspace/canvas";
-import { containerDefinition } from "@workspace/plugin-container-shapes";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 
 import { CanvasErrorNotice } from "./CanvasErrorNotice";
-import { canvasParser } from "./canvasParser";
+import { canvasParser, plugins } from "./canvasParser";
 import { vscodeCanvasTheme } from "./vscodeCanvasTheme";
 import type {
 	ExtensionToWebviewMessage,
@@ -20,11 +18,8 @@ import type {
 } from "../types/messages";
 
 // container 図形は @workspace/plugin-container-shapes から供給する
-// (docs/05_extensibility/uc1-container-extraction-log.md)。
-const initialConfig: CanvasConfig = {
-	customize: (registries) =>
-		applyObjectDefinition(registries, "container", containerDefinition),
-};
+// (docs/05_extensibility/canvas-plugin-design.md)。
+const initialConfig: CanvasConfig = { plugins };
 
 /**
  * Type of the API available only in the VSCode Webview environment.

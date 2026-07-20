@@ -1,6 +1,29 @@
 import { describe, it, expect } from "vitest";
 
+import type { CanvasPlugin } from "../CanvasPlugin";
 import { createCanvasRegistries } from "../createCanvasRegistries";
+import { defineObject } from "../initializeObjectRegistry";
+import type { ObjectTypeDefinition } from "../initializeObjectRegistry";
+
+// Minimal stand-in for a plugin object type (mirrors how plugin-container-shapes
+// registers "container"), built entirely from the same `defineObject` builtins
+// use so this suite has no dependency beyond this layer.
+const buildFakeDefinition = (type: string): ObjectTypeDefinition =>
+	defineObject({
+		mapper: {
+			toDoc: (state) => ({ id: state.id, type }),
+			toState: (doc) => ({ id: doc.id, type }),
+		},
+		features: { type, geometry: "rect" },
+		component: () => null,
+		behavior: {
+			moveByDelta: (state) => state,
+			transformByGroup: (state) => state,
+			rotateByGroup: (state) => state,
+		},
+		menuFactory: () => [],
+		validateState: () => true,
+	});
 
 describe("createCanvasRegistries", () => {
 	describe("default (no config)", () => {
@@ -63,15 +86,38 @@ describe("createCanvasRegistries", () => {
 		});
 	});
 
-	describe("customize hook", () => {
-		it("runs against the built bundle", () => {
-			let seen: unknown = null;
-			const registries = createCanvasRegistries({
-				customize: (built) => {
-					seen = built;
-				},
-			});
-			expect(seen).toBe(registries);
+	describe("plugins", () => {
+		it("registers a plugin's object types", () => {
+			const starPlugin: CanvasPlugin = {
+				id: "star-plugin",
+				objects: { star: buildFakeDefinition("star") },
+			};
+			const registries = createCanvasRegistries({ plugins: [starPlugin] });
+			expect(registries.objectMapper.getFeatures("star")).toBeDefined();
+		});
+
+		it("throws when a plugin's object type collides with a built-in", () => {
+			const rectPlugin: CanvasPlugin = {
+				id: "rect-plugin",
+				objects: { rect: buildFakeDefinition("rect") },
+			};
+			expect(() => createCanvasRegistries({ plugins: [rectPlugin] })).toThrow(
+				/rect-plugin.*"rect"/,
+			);
+		});
+
+		it("throws when two plugins declare the same object type", () => {
+			const pluginA: CanvasPlugin = {
+				id: "plugin-a",
+				objects: { star: buildFakeDefinition("star") },
+			};
+			const pluginB: CanvasPlugin = {
+				id: "plugin-b",
+				objects: { star: buildFakeDefinition("star") },
+			};
+			expect(() =>
+				createCanvasRegistries({ plugins: [pluginA, pluginB] }),
+			).toThrow(/plugin-b.*"star".*plugin-a/);
 		});
 	});
 

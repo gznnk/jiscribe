@@ -30,7 +30,8 @@ import { createShapePresetRegistry } from "../ui/objects/ShapePresetRegistry";
  *      style properties) — always all,
  *   3. apply the configured object types (default: every type),
  *   4. register commands, optionally restricted by `config.commands`,
- *   5. run the `config.customize` escape hatch.
+ *   5. apply `config.plugins` in declared order. A plugin object type that
+ *      collides with a built-in or an earlier plugin throws (see `CanvasPlugin`).
  *
  * Passing no `config` reproduces the full set, matching the historical singleton
  * behavior (backward compatible).
@@ -58,18 +59,38 @@ export const createCanvasRegistries = (
 	initializeGestureHandlerRegistry(registries);
 	initializeStyleProperties(registries.styleProperty);
 
+	// Tracks which object types are already claimed and by whom, so a plugin
+	// colliding with a built-in or an earlier plugin throws instead of
+	// silently overwriting the earlier registration.
+	const typeOrigins = new Map<string, string>();
+
 	const objectTypes =
 		config?.objectTypes ?? Object.keys(ALL_OBJECT_DEFINITIONS);
 	for (const type of objectTypes) {
 		const definition = ALL_OBJECT_DEFINITIONS[type];
 		if (definition) {
 			applyObjectDefinition(registries, type, definition);
+			typeOrigins.set(type, "a built-in object type");
 		}
 	}
 
 	initializeCommands(registries, config?.commands);
 
-	config?.customize?.(registries);
+	for (const plugin of config?.plugins ?? []) {
+		for (const [type, definition] of Object.entries(plugin.objects ?? {})) {
+			if (!definition) {
+				continue;
+			}
+			const existingOrigin = typeOrigins.get(type);
+			if (existingOrigin !== undefined) {
+				throw new Error(
+					`createCanvasRegistries: plugin "${plugin.id}" object type "${type}" conflicts with ${existingOrigin}`,
+				);
+			}
+			applyObjectDefinition(registries, type, definition);
+			typeOrigins.set(type, `plugin "${plugin.id}"`);
+		}
+	}
 
 	return registries;
 };

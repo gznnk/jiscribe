@@ -83,7 +83,8 @@ export const containerDefinition = defineObject({
 
 宣言の存在**そのもの**が gate であり、別フラグは無い。誰も宣言していない
 プロパティはどこにも適用されない（fail-closed）。登録は
-`applyObjectDefinition` を通るので、`CanvasConfig.customize` で足した
+`applyObjectDefinition` を通るので、`CanvasConfig.plugins`
+（docs/05_extensibility/canvas-plugin-design.md 参照）で足した
 プラグイン/カスタム図形も同じ能力を持つ。`initializeObjectRegistry` の
 clear サイクルは per-type の extras だけを消す（`clearExtras`）—
 システムハンドラは gesture handler や command と同じく canvas-wide。

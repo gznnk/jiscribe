@@ -1,24 +1,17 @@
 import type { CanvasConfig, CanvasDoc } from "@workspace/canvas";
-import {
-	Canvas,
-	applyObjectDefinition,
-	createCanvasParser,
-} from "@workspace/canvas";
-import { containerDefinition } from "@workspace/plugin-container-shapes";
-import { containerParserExtension } from "@workspace/plugin-container-shapes/parser";
+import { Canvas, createCanvasParser } from "@workspace/canvas";
+import { containerPlugin } from "@workspace/plugin-container-shapes";
 
 // container 図形は core から削除され、@workspace/plugin-container-shapes が唯一の
-// 供給元（docs/05_extensibility/uc1-container-extraction-log.md）。この example は
-// 「外部プラグイン図形の追加」の実証: customize 経由で containerDefinition を登録し、
-// 専用 parser に containerParserExtension を渡して doc を検証する。
-const initialConfig: CanvasConfig = {
-	customize: (registries) =>
-		applyObjectDefinition(registries, "container", containerDefinition),
-};
+// 供給元（docs/05_extensibility/canvas-plugin-design.md）。この example は
+// 「外部プラグイン図形の追加」の実証: `CanvasPlugin` 宣言 1 つ（containerPlugin）を
+// createCanvasParser と Canvas の initialConfig の両方に渡すだけで、doc の検証と
+// 図形一式の登録が揃う。
+const plugins = [containerPlugin];
 
-const pluginContainerParser = createCanvasParser({
-	extensions: [containerParserExtension],
-});
+const initialConfig: CanvasConfig = { plugins };
+
+const pluginContainerParser = createCanvasParser({ plugins });
 
 const buildPluginContainerDoc = (): CanvasDoc => {
 	const result = pluginContainerParser.parse(
