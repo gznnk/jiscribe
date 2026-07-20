@@ -111,16 +111,20 @@ The bundle reaches consumers by two paths (#165, Option B):
 
 ```mermaid
 graph TD
+    subgraph Plugin["Extension Seam (plugin)"]
+        PluginVocab["ObjectTypeDefinition&lt;TDoc,TState&gt; / defineObject / CanvasPlugin"]
+    end
     subgraph Presentations["Presentation Layer (presentations)"]
         PresentationComponents["React Components"]
         PresentationUtils["utils (coordinate resolution, etc.)"]
+        PresentationRegistryTypes["registry contracts (textRegion / preview / outline)"]
     end
     subgraph Controllers["Logic Layer (controllers)"]
-        Gestures["gestures/handlers (+ registry/)"]
+        Gestures["gestures/handlers (+ registry/ · ObjectBehaviorEntry)"]
         Commands["commands (+ CommandRegistry)"]
         Reducer["reducer"]
-        UI["ui"]
-        Setup["setup (initializeObjectRegistry populates all registries)"]
+        UI["ui (+ menu / controls / ShapePreset types)"]
+        Setup["setup (applyObjectDefinition wires definitions into all registries)"]
     end
     subgraph States["Data Layer"]
         StatesTypes["states/ (State types + Mapper + ObjectMapperRegistry)"]
@@ -136,7 +140,20 @@ graph TD
     Setup --> StatesTypes
     Setup --> PresentationComponents
     StatesTypes --> SchemasTypes
+
+    %% plugin aggregates the type contract of every layer; setup consumes it.
+    %% Setup -> Plugin plus Plugin -> Gestures/UI = controllers <-> plugin.
+    Setup --> Plugin
+    Plugin --> Gestures
+    Plugin --> UI
+    Plugin --> PresentationRegistryTypes
+    Plugin --> StatesTypes
+    Plugin --> SchemasTypes
 ```
+
+**On `plugin` (the extension seam)**: `plugin/` holds the declarative vocabulary a shape/plugin author writes — `ObjectTypeDefinition<TDoc, TState>`, `defineObject`, `CanvasPlugin`. One definition **aggregates the type contract of every layer** (mapper/state from `states`, doc/features/factory from `schemas`, `ObjectBehaviorEntry` from `gestures/registry`, menu/controls/`ShapePreset` from `ui`, preview/outline/textRegion contracts from `presentations`), so `plugin` depends on all four layers. Conversely `controllers/setup` depends on `plugin` to build the built-in record (`defineObject`) and apply it (`applyObjectDefinition` → the registries). At the subgraph level this is a **`controllers ⇄ plugin` mutual reference** — the arrows above cross the Controllers boundary in both directions.
+
+It is deliberately **not** a concrete import cycle: `plugin` pulls only leaf *type* modules (`ObjectBehaviorTypes` / `SelectionControlTypes` / `ObjectMenuTypes` / `ShapePreset`), while the file that consumes `plugin` is `setup/initializeObjectRegistry` — a different file that none of those leaf modules import back. So madge `dep:circle` stays green even though the folders reference each other. Keeping `applyObjectDefinition` (the runtime wiring) in `setup` rather than `plugin` is what preserves this: `plugin` never imports the concrete registries.
 
 The dependency direction is also enforced in CI (madge `dep:circle`, see [Testing](./09-testing.md)).
 

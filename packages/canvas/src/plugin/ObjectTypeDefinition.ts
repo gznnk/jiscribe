@@ -29,9 +29,9 @@ export type ShapeLibraryRegistration = {
 };
 
 /**
- * The full description of a single object type across every registry
- * (mapper, component, text region, behavior, state validator, menu) plus its
- * optional ShapeLibrary capabilities.
+ * The full description of a single object type, aggregating one entry from each
+ * layer's contract (model / render / interaction / style / palette). Fields are
+ * grouped in that order below; required first within each group.
  *
  * `TDoc` / `TState` tie `mapper` / `behavior` / `menuFactory` / `selectionControls`
  * to one state type. A plugin declares a standalone definition with an explicit
@@ -44,31 +44,48 @@ export type ObjectTypeDefinition<
 	TDoc extends ObjectDoc = ObjectDoc,
 	TState extends ObjectState = ObjectState,
 > = {
-	mapper: ObjectMapperType<TDoc, TState>;
+	// --- Model (state / schema) ---
 
+	/** Geometry kind and per-type capability flags (see ObjectFeatures). */
 	features: ObjectFeatures;
 
+	/** Doc ↔ State conversion. */
+	mapper: ObjectMapperType<TDoc, TState>;
+
+	/** Type-guard that rejects untrusted State entering the canvas from outside (e.g. pasted clipboard data). */
+	validateState: ObjectStateValidateFn;
+
+	// --- Render (presentation) ---
+
+	/** SVG renderer for the shape. */
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	component: FC<any>;
 
-	/** Text region calculator. Omitted = full bbox (see TextRegionRegistry). */
+	/** Editable-text region. Omitted = full bbox (see TextRegionRegistry). */
 	textRegion?: TextRegionCalculator;
 
-	/** Outline polygon provider. Omitted = bounding-box rect/ellipse (see ShapeOutlineRegistry). */
+	/** Hit-test / snap outline. Omitted = bounding-box rect/ellipse (see ShapeOutlineRegistry). */
 	outline?: ShapeOutlineProvider;
 
+	// --- Interaction (controllers) ---
+
+	/** Group-transform ops (move / rotate / transform). */
 	behavior: ObjectBehaviorEntry<TState>;
 
+	/** ObjectMenu sections built from the current selection state. */
 	menuFactory: MenuSectionFactory<TState>;
-
-	validateState: ObjectStateValidateFn;
 
 	/** Type-specific selection controls (handle renderer + gesture strategy pairs). */
 	selectionControls?: SelectionControlDefinition<TState>[];
 
+	// --- Style ---
+
 	/** Styleable properties beyond the ObjectFeatures flags (see StylePropertyRegistry). */
 	extraStyleProperties?: Record<string, ExtraStylePropertyDescriptor>;
 
+	// --- Palette (ShapeLibrary) ---
+
+	/** Shape-palette capabilities: factory / preview / presets. */
 	shapeLibrary?: ShapeLibraryRegistration;
 };
 
