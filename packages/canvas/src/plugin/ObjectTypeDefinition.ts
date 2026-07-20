@@ -57,9 +57,8 @@ export type ObjectTypeDefinition<
 
 	// --- Render (presentation) ---
 
-	/** SVG renderer for the shape. */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	component: FC<any>;
+	/** SVG renderer for the shape. Editable types read `isEditing` by self-declaring `FC<TState & TextEditable>`. */
+	component: FC<TState>;
 
 	/** Editable-text region. Omitted = full bbox (see TextRegionRegistry). */
 	textRegion?: TextRegionCalculator;
