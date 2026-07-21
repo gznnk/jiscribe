@@ -364,6 +364,7 @@ import {
 	transformByGroup as polylineTransformByGroup,
 } from "../gestures/handlers/objects/primitives/PolylineController";
 import { CalloutTailTipControl } from "../ui/controls/CalloutTailControls";
+import { createDefaultMenuFactory } from "../ui/menu/ObjectMenu/createDefaultMenuFactory";
 import {
 	LabelBackgroundColorMenu,
 	LabelBoldMenu,
@@ -413,24 +414,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			features: RectFeatures,
 			component: Rect,
 			behavior: createFrameBehavior<RectState>(),
-			menuFactory: (_state) => [
-				{
-					id: "style",
-					items: [
-						{ type: "backgroundColor" },
-						{ type: "borderColor" },
-						{ type: "borderStyle", radius: true },
-					],
-				},
-				{
-					id: "text",
-					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
-				},
-				{
-					id: "transform",
-					items: [{ type: "aspectRatio" }],
-				},
-			],
 			stateValidator: isValidRectState,
 			shapeLibrary: {
 				factory: RectShapeFactory,
@@ -444,24 +427,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			component: Ellipse,
 			textRegion: calcEllipseTextRegion,
 			behavior: createFrameBehavior<EllipseState>(),
-			menuFactory: (_state) => [
-				{
-					id: "style",
-					items: [
-						{ type: "backgroundColor" },
-						{ type: "borderColor" },
-						{ type: "borderStyle", radius: false },
-					],
-				},
-				{
-					id: "text",
-					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
-				},
-				{
-					id: "transform",
-					items: [{ type: "aspectRatio" }],
-				},
-			],
 			stateValidator: isValidEllipseState,
 			shapeLibrary: {
 				factory: EllipseShapeFactory,
@@ -476,24 +441,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			textRegion: calcDiamondTextRegion,
 			outline: diamondOutline,
 			behavior: createFrameBehavior<DiamondState>(),
-			menuFactory: (_state) => [
-				{
-					id: "style",
-					items: [
-						{ type: "backgroundColor" },
-						{ type: "borderColor" },
-						{ type: "borderStyle", radius: false },
-					],
-				},
-				{
-					id: "text",
-					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
-				},
-				{
-					id: "transform",
-					items: [{ type: "aspectRatio" }],
-				},
-			],
 			stateValidator: isValidDiamondState,
 			shapeLibrary: {
 				factory: DiamondShapeFactory,
@@ -508,24 +455,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			textRegion: calcStadiumTextRegion,
 			outline: stadiumOutline,
 			behavior: createFrameBehavior<StadiumState>(),
-			menuFactory: (_state) => [
-				{
-					id: "style",
-					items: [
-						{ type: "backgroundColor" },
-						{ type: "borderColor" },
-						{ type: "borderStyle", radius: false },
-					],
-				},
-				{
-					id: "text",
-					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
-				},
-				{
-					id: "transform",
-					items: [{ type: "aspectRatio" }],
-				},
-			],
 			stateValidator: isValidStadiumState,
 			shapeLibrary: {
 				factory: StadiumShapeFactory,
@@ -540,24 +469,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			textRegion: calcParallelogramTextRegion,
 			outline: parallelogramOutline,
 			behavior: createFrameBehavior<ParallelogramState>(),
-			menuFactory: (_state) => [
-				{
-					id: "style",
-					items: [
-						{ type: "backgroundColor" },
-						{ type: "borderColor" },
-						{ type: "borderStyle", radius: false },
-					],
-				},
-				{
-					id: "text",
-					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
-				},
-				{
-					id: "transform",
-					items: [{ type: "aspectRatio" }],
-				},
-			],
 			stateValidator: isValidParallelogramState,
 			shapeLibrary: {
 				factory: ParallelogramShapeFactory,
@@ -572,24 +483,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			textRegion: calcHexagonTextRegion,
 			outline: hexagonOutline,
 			behavior: createFrameBehavior<HexagonState>(),
-			menuFactory: (_state) => [
-				{
-					id: "style",
-					items: [
-						{ type: "backgroundColor" },
-						{ type: "borderColor" },
-						{ type: "borderStyle", radius: false },
-					],
-				},
-				{
-					id: "text",
-					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
-				},
-				{
-					id: "transform",
-					items: [{ type: "aspectRatio" }],
-				},
-			],
 			stateValidator: isValidHexagonState,
 			shapeLibrary: {
 				factory: HexagonShapeFactory,
@@ -604,24 +497,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			textRegion: calcCloudTextRegion,
 			outline: cloudOutline,
 			behavior: createFrameBehavior<CloudState>(),
-			menuFactory: (_state) => [
-				{
-					id: "style",
-					items: [
-						{ type: "backgroundColor" },
-						{ type: "borderColor" },
-						{ type: "borderStyle", radius: false },
-					],
-				},
-				{
-					id: "text",
-					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
-				},
-				{
-					id: "transform",
-					items: [{ type: "aspectRatio" }],
-				},
-			],
 			stateValidator: isValidCloudState,
 			shapeLibrary: {
 				factory: CloudShapeFactory,
@@ -636,24 +511,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			textRegion: calcDocumentTextRegion,
 			outline: documentOutline,
 			behavior: createFrameBehavior<DocumentState>(),
-			menuFactory: (_state) => [
-				{
-					id: "style",
-					items: [
-						{ type: "backgroundColor" },
-						{ type: "borderColor" },
-						{ type: "borderStyle", radius: false },
-					],
-				},
-				{
-					id: "text",
-					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
-				},
-				{
-					id: "transform",
-					items: [{ type: "aspectRatio" }],
-				},
-			],
 			stateValidator: isValidDocumentState,
 			shapeLibrary: {
 				factory: DocumentShapeFactory,
@@ -668,24 +525,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			textRegion: calcMultiDocumentTextRegion,
 			outline: multiDocumentOutline,
 			behavior: createFrameBehavior<MultiDocumentState>(),
-			menuFactory: (_state) => [
-				{
-					id: "style",
-					items: [
-						{ type: "backgroundColor" },
-						{ type: "borderColor" },
-						{ type: "borderStyle", radius: false },
-					],
-				},
-				{
-					id: "text",
-					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
-				},
-				{
-					id: "transform",
-					items: [{ type: "aspectRatio" }],
-				},
-			],
 			stateValidator: isValidMultiDocumentState,
 			shapeLibrary: {
 				factory: MultiDocumentShapeFactory,
@@ -699,24 +538,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			component: Actor,
 			textRegion: calcActorTextRegion,
 			behavior: createFrameBehavior<ActorState>(),
-			menuFactory: (_state) => [
-				{
-					id: "style",
-					items: [
-						{ type: "backgroundColor" },
-						{ type: "borderColor" },
-						{ type: "borderStyle", radius: false },
-					],
-				},
-				{
-					id: "text",
-					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
-				},
-				{
-					id: "transform",
-					items: [{ type: "aspectRatio" }],
-				},
-			],
 			stateValidator: isValidActorState,
 			shapeLibrary: {
 				factory: ActorShapeFactory,
@@ -731,24 +552,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			textRegion: calcCalloutTextRegion,
 			outline: calloutOutline,
 			behavior: createFrameBehavior<CalloutState>(),
-			menuFactory: (_state) => [
-				{
-					id: "style",
-					items: [
-						{ type: "backgroundColor" },
-						{ type: "borderColor" },
-						{ type: "borderStyle", radius: false },
-					],
-				},
-				{
-					id: "text",
-					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
-				},
-				{
-					id: "transform",
-					items: [{ type: "aspectRatio" }],
-				},
-			],
 			stateValidator: isValidCalloutState,
 			selectionControls: [
 				{
@@ -769,24 +572,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			textRegion: calcDbTextRegion,
 			outline: dbOutline,
 			behavior: createFrameBehavior<DbState>(),
-			menuFactory: (_state) => [
-				{
-					id: "style",
-					items: [
-						{ type: "backgroundColor" },
-						{ type: "borderColor" },
-						{ type: "borderStyle", radius: false },
-					],
-				},
-				{
-					id: "text",
-					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
-				},
-				{
-					id: "transform",
-					items: [{ type: "aspectRatio" }],
-				},
-			],
 			stateValidator: isValidDbState,
 			shapeLibrary: {
 				factory: DbShapeFactory,
@@ -801,24 +586,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			textRegion: calcStoredDataTextRegion,
 			outline: storedDataOutline,
 			behavior: createFrameBehavior<StoredDataState>(),
-			menuFactory: (_state) => [
-				{
-					id: "style",
-					items: [
-						{ type: "backgroundColor" },
-						{ type: "borderColor" },
-						{ type: "borderStyle", radius: false },
-					],
-				},
-				{
-					id: "text",
-					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
-				},
-				{
-					id: "transform",
-					items: [{ type: "aspectRatio" }],
-				},
-			],
 			stateValidator: isValidStoredDataState,
 			shapeLibrary: {
 				factory: StoredDataShapeFactory,
@@ -832,24 +599,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			component: Subroutine,
 			textRegion: calcSubroutineTextRegion,
 			behavior: createFrameBehavior<SubroutineState>(),
-			menuFactory: (_state) => [
-				{
-					id: "style",
-					items: [
-						{ type: "backgroundColor" },
-						{ type: "borderColor" },
-						{ type: "borderStyle", radius: false },
-					],
-				},
-				{
-					id: "text",
-					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
-				},
-				{
-					id: "transform",
-					items: [{ type: "aspectRatio" }],
-				},
-			],
 			stateValidator: isValidSubroutineState,
 			shapeLibrary: {
 				factory: SubroutineShapeFactory,
@@ -864,24 +613,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			textRegion: calcTrapezoidTextRegion,
 			outline: trapezoidOutline,
 			behavior: createFrameBehavior<TrapezoidState>(),
-			menuFactory: (_state) => [
-				{
-					id: "style",
-					items: [
-						{ type: "backgroundColor" },
-						{ type: "borderColor" },
-						{ type: "borderStyle", radius: false },
-					],
-				},
-				{
-					id: "text",
-					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
-				},
-				{
-					id: "transform",
-					items: [{ type: "aspectRatio" }],
-				},
-			],
 			stateValidator: isValidTrapezoidState,
 			shapeLibrary: {
 				factory: TrapezoidShapeFactory,
@@ -896,24 +627,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			textRegion: calcManualInputTextRegion,
 			outline: manualInputOutline,
 			behavior: createFrameBehavior<ManualInputState>(),
-			menuFactory: (_state) => [
-				{
-					id: "style",
-					items: [
-						{ type: "backgroundColor" },
-						{ type: "borderColor" },
-						{ type: "borderStyle", radius: false },
-					],
-				},
-				{
-					id: "text",
-					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
-				},
-				{
-					id: "transform",
-					items: [{ type: "aspectRatio" }],
-				},
-			],
 			stateValidator: isValidManualInputState,
 			shapeLibrary: {
 				factory: ManualInputShapeFactory,
@@ -928,24 +641,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			textRegion: calcCardTextRegion,
 			outline: cardOutline,
 			behavior: createFrameBehavior<CardState>(),
-			menuFactory: (_state) => [
-				{
-					id: "style",
-					items: [
-						{ type: "backgroundColor" },
-						{ type: "borderColor" },
-						{ type: "borderStyle", radius: false },
-					],
-				},
-				{
-					id: "text",
-					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
-				},
-				{
-					id: "transform",
-					items: [{ type: "aspectRatio" }],
-				},
-			],
 			stateValidator: isValidCardState,
 			shapeLibrary: {
 				factory: CardShapeFactory,
@@ -960,24 +655,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			textRegion: calcDelayTextRegion,
 			outline: delayOutline,
 			behavior: createFrameBehavior<DelayState>(),
-			menuFactory: (_state) => [
-				{
-					id: "style",
-					items: [
-						{ type: "backgroundColor" },
-						{ type: "borderColor" },
-						{ type: "borderStyle", radius: false },
-					],
-				},
-				{
-					id: "text",
-					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
-				},
-				{
-					id: "transform",
-					items: [{ type: "aspectRatio" }],
-				},
-			],
 			stateValidator: isValidDelayState,
 			shapeLibrary: {
 				factory: DelayShapeFactory,
@@ -992,24 +669,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			textRegion: calcLoopLimitTextRegion,
 			outline: loopLimitOutline,
 			behavior: createFrameBehavior<LoopLimitState>(),
-			menuFactory: (_state) => [
-				{
-					id: "style",
-					items: [
-						{ type: "backgroundColor" },
-						{ type: "borderColor" },
-						{ type: "borderStyle", radius: false },
-					],
-				},
-				{
-					id: "text",
-					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
-				},
-				{
-					id: "transform",
-					items: [{ type: "aspectRatio" }],
-				},
-			],
 			stateValidator: isValidLoopLimitState,
 			shapeLibrary: {
 				factory: LoopLimitShapeFactory,
@@ -1024,24 +683,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			textRegion: calcDisplayTextRegion,
 			outline: displayOutline,
 			behavior: createFrameBehavior<DisplayState>(),
-			menuFactory: (_state) => [
-				{
-					id: "style",
-					items: [
-						{ type: "backgroundColor" },
-						{ type: "borderColor" },
-						{ type: "borderStyle", radius: false },
-					],
-				},
-				{
-					id: "text",
-					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
-				},
-				{
-					id: "transform",
-					items: [{ type: "aspectRatio" }],
-				},
-			],
 			stateValidator: isValidDisplayState,
 			shapeLibrary: {
 				factory: DisplayShapeFactory,
@@ -1055,20 +696,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			component: Extract,
 			outline: extractOutline,
 			behavior: createFrameBehavior<ExtractState>(),
-			menuFactory: (_state) => [
-				{
-					id: "style",
-					items: [
-						{ type: "backgroundColor" },
-						{ type: "borderColor" },
-						{ type: "borderStyle", radius: false },
-					],
-				},
-				{
-					id: "transform",
-					items: [{ type: "aspectRatio" }],
-				},
-			],
 			stateValidator: isValidExtractState,
 			shapeLibrary: {
 				factory: ExtractShapeFactory,
@@ -1082,20 +709,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			component: Cross,
 			outline: crossOutline,
 			behavior: createFrameBehavior<CrossState>(),
-			menuFactory: (_state) => [
-				{
-					id: "style",
-					items: [
-						{ type: "backgroundColor" },
-						{ type: "borderColor" },
-						{ type: "borderStyle", radius: false },
-					],
-				},
-				{
-					id: "transform",
-					items: [{ type: "aspectRatio" }],
-				},
-			],
 			stateValidator: isValidCrossState,
 			shapeLibrary: {
 				factory: CrossShapeFactory,
@@ -1113,24 +726,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			textRegion: calcOffPageConnectorTextRegion,
 			outline: offPageConnectorOutline,
 			behavior: createFrameBehavior<OffPageConnectorState>(),
-			menuFactory: (_state) => [
-				{
-					id: "style",
-					items: [
-						{ type: "backgroundColor" },
-						{ type: "borderColor" },
-						{ type: "borderStyle", radius: false },
-					],
-				},
-				{
-					id: "text",
-					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
-				},
-				{
-					id: "transform",
-					items: [{ type: "aspectRatio" }],
-				},
-			],
 			stateValidator: isValidOffPageConnectorState,
 			shapeLibrary: {
 				factory: OffPageConnectorShapeFactory,
@@ -1147,12 +742,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				transformByGroup: groupTransformByGroup,
 				rotateByGroup: groupRotateByGroup,
 			},
-			menuFactory: (_state) => [
-				{
-					id: "transform",
-					items: [{ type: "aspectRatio" }],
-				},
-			],
 			stateValidator: isValidGroupState,
 		}),
 
@@ -1165,16 +754,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				transformByGroup: polygonTransformByGroup,
 				rotateByGroup: polygonRotateByGroup,
 			},
-			menuFactory: (_state) => [
-				{
-					id: "style",
-					items: [
-						{ type: "backgroundColor" },
-						{ type: "borderColor" },
-						{ type: "borderStyle", radius: false },
-					],
-				},
-			],
 			stateValidator: isValidPolygonState,
 			shapeLibrary: {
 				factory: PolygonShapeFactory,
@@ -1191,16 +770,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				transformByGroup: polylineTransformByGroup,
 				rotateByGroup: polylineRotateByGroup,
 			},
-			menuFactory: (_state) => [
-				{
-					id: "arrowHead",
-					items: [{ type: "arrowHead" }],
-				},
-				{
-					id: "line",
-					items: [{ type: "lineColor" }, { type: "lineStyle" }],
-				},
-			],
 			stateValidator: isValidPolylineState,
 			shapeLibrary: {
 				factory: PolylineShapeFactory,
@@ -1320,12 +889,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			features: SvgFeatures,
 			component: Svg,
 			behavior: createFrameBehavior<SvgState>(),
-			menuFactory: (_state) => [
-				{
-					id: "transform",
-					items: [{ type: "aspectRatio" }],
-				},
-			],
 			stateValidator: isValidSvgState,
 		}),
 	};
@@ -1354,7 +917,10 @@ export const applyObjectDefinition = (
 	}
 	registries.objectBehavior.register(type, definition.behavior);
 	registries.objectStateValidator.register(type, definition.stateValidator);
-	registries.objectMenu.register(type, definition.menuFactory);
+	registries.objectMenu.register(
+		type,
+		definition.menuFactory ?? createDefaultMenuFactory(definition.features),
+	);
 	if (definition.selectionControls) {
 		registries.selectionControl.register(type, definition.selectionControls);
 	}

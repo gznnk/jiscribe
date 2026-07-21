@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest";
 import type { CanvasPlugin } from "../../../plugin/CanvasPlugin";
 import { defineObject } from "../../../plugin/ObjectTypeDefinition";
 import type { ObjectTypeDefinition } from "../../../plugin/ObjectTypeDefinition";
+import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { createCanvasRegistries } from "../createCanvasRegistries";
 
 // Minimal stand-in for a plugin object type (mirrors how plugin-container-shapes
@@ -94,6 +95,55 @@ describe("createCanvasRegistries", () => {
 			};
 			const registries = createCanvasRegistries({ plugins: [starPlugin] });
 			expect(registries.objectMapper.getFeatures("star")).toBeDefined();
+		});
+
+		it("derives menu sections from features when menuFactory is omitted", () => {
+			const plugin: CanvasPlugin = {
+				id: "boxy-plugin",
+				objects: {
+					boxy: defineObject({
+						mapper: {
+							toDoc: (state) => ({ id: state.id, type: "boxy" }),
+							toState: (doc) => ({ id: doc.id, type: "boxy" }),
+						},
+						features: {
+							type: "boxy",
+							geometry: "rect",
+							transform: true,
+							stroke: true,
+							fill: true,
+							text: true,
+						},
+						component: () => null,
+						behavior: {
+							moveByDelta: (state) => state,
+							transformByGroup: (state) => state,
+							rotateByGroup: (state) => state,
+						},
+						stateValidator: () => true,
+					}),
+				},
+			};
+			const registries = createCanvasRegistries({ plugins: [plugin] });
+			const sections = registries.objectMenu.getSections("boxy", {
+				id: "b1",
+				type: "boxy",
+			} as unknown as ObjectState);
+			expect(sections).toEqual([
+				{
+					id: "style",
+					items: [
+						{ type: "backgroundColor" },
+						{ type: "borderColor" },
+						{ type: "borderStyle", radius: false },
+					],
+				},
+				{
+					id: "text",
+					items: [{ type: "fontStyle" }, { type: "textAlignment" }],
+				},
+				{ id: "transform", items: [{ type: "aspectRatio" }] },
+			]);
 		});
 
 		it("throws when a plugin's object type collides with a built-in", () => {

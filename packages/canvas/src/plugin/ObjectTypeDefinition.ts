@@ -68,8 +68,8 @@ export type ObjectTypeDefinition<
 	/** Group-transform ops (move / rotate / transform). */
 	behavior: ObjectBehaviorEntry<TState>;
 
-	/** ObjectMenu sections built from the current selection state. */
-	menuFactory: ObjectMenuSectionFactory<TState>;
+	/** ObjectMenu sections built from the current selection state. Omitted = derived from features (see createDefaultMenuFactory). */
+	menuFactory?: ObjectMenuSectionFactory<TState>;
 
 	/** Type-specific selection controls (handle renderer + gesture strategy pairs). */
 	selectionControls?: SelectionControlDefinition<TState>[];

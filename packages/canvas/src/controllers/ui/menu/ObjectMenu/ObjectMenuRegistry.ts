@@ -5,15 +5,9 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 /**
  * Registry that manages menu section definitions per object type.
  *
- * Registration goes through registerObject() in initializeObjectRegistry.ts.
- * To add a custom object, also use registerObject() and have the factory
- * function return that object's dedicated section configuration.
- *
- * @example
- * registerObject("myShape", definition, (state) => [
- *   { id: "style", items: [{ type: "backgroundColor" }] },
- *   { id: "custom", items: [{ type: "custom", id: "myPanel", component: MyPanel }] },
- * ]);
+ * Registration goes through applyObjectDefinition() in initializeObjectRegistry.ts:
+ * a definition's `menuFactory`, or the features-derived default
+ * (createDefaultMenuFactory) when omitted.
  */
 export class ObjectMenuRegistry {
 	private readonly factories = new Map<ObjectType, ObjectMenuSectionFactory>();
