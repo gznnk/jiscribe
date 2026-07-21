@@ -45,6 +45,13 @@ export const selectors = {
 	/** キャンバス上の図形（rect / ellipse / polyline …） */
 	object: "[data-kind=object]",
 
+	/**
+	 * ドラッグ描画中のプレビュー（ゴースト）。図形本体コンポーネントを流用するため
+	 * data-kind=object を持つが、コミット済み図形ではない。オブジェクト列挙時に
+	 * この配下を除外して一時要素を数えないようにする。
+	 */
+	drawingPreview: '[data-testid="drawing-preview"]',
+
 	/** コネクター（本体の polyline。矢印の polygon も同じ data-kind を持つ） */
 	connectorPolyline: "polyline[data-kind=connector]",
 

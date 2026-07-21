@@ -63,8 +63,13 @@ const DrawingPreviewOverlayComponent: React.FC<DrawingPreviewOverlayProps> = ({
 		return null;
 	}
 
+	// data-testid: the ghost reuses the shape's own component, so it carries
+	// data-kind=object like a real object. e2e excludes this subtree to avoid
+	// counting the transient preview as a committed object.
 	return (
-		<g pointerEvents="none">{createPreviewElement(shapeDrawing, registries)}</g>
+		<g pointerEvents="none" data-testid="drawing-preview">
+			{createPreviewElement(shapeDrawing, registries)}
+		</g>
 	);
 };
 
