@@ -72,8 +72,8 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 		<CanvasThemeContext value={theme}>
 			<PresentationRegistriesProvider
 				objectComponent={defaultCanvasRegistries.objectComponent}
-				textRegion={defaultCanvasRegistries.textRegion}
-				outline={defaultCanvasRegistries.outline}
+				objectTextRegion={defaultCanvasRegistries.objectTextRegion}
+				objectOutline={defaultCanvasRegistries.objectOutline}
 			>
 				<div style={themeCssVars}>
 					<CanvasView

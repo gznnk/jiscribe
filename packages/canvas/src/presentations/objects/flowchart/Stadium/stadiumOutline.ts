@@ -1,7 +1,7 @@
 import { sampleEllipseArc } from "@workspace/geometry";
 import type { Dimensions } from "@workspace/geometry";
 
-import type { OutlineCalculator } from "../../registry/OutlineRegistry";
+import type { ObjectOutlineCalculator } from "../../registry/ObjectOutlineRegistry";
 import { OUTLINE_CURVE_SEGMENTS } from "../../utils/outlineHelpers";
 
 /**
@@ -9,7 +9,7 @@ import { OUTLINE_CURVE_SEGMENTS } from "../../utils/outlineHelpers";
  * short side). The straight edges between the four corner arcs are the polygon
  * edges connecting consecutive arcs. Renderer draws `<rect rx>`.
  */
-export const stadiumOutline: OutlineCalculator<Dimensions> = ({
+export const stadiumOutline: ObjectOutlineCalculator<Dimensions> = ({
 	width,
 	height,
 }) => {

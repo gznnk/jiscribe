@@ -9,11 +9,11 @@ import { resolveConnectorPoints } from "../resolveConnectorPoints";
 /**
  * Integration coverage for the shape-outline connector attachment: a connector
  * to a non-rectangular shape must land on the shape's true outline, not its
- * bounding box. Uses the real per-canvas OutlineRegistry so registration in
+ * bounding box. Uses the real per-canvas ObjectOutlineRegistry so registration in
  * ALL_OBJECT_DEFINITIONS is exercised too.
  */
 
-const outlineRegistry = defaultCanvasRegistries.outline;
+const outlineRegistry = defaultCanvasRegistries.objectOutline;
 
 const freeEndpoint = (x: number, y: number): EndpointRef =>
 	({ anchor: { kind: "free", point: { x, y } } }) as EndpointRef;

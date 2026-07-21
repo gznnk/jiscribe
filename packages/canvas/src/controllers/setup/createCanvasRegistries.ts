@@ -7,8 +7,8 @@ import {
 } from "./initializeObjectRegistry";
 import { initializeStyleProperties } from "./initializeStyleProperties";
 import { createObjectComponentRegistry } from "../../presentations/objects/registry/ObjectComponentRegistry";
-import { createOutlineRegistry } from "../../presentations/objects/registry/OutlineRegistry";
-import { createTextRegionRegistry } from "../../presentations/objects/registry/TextRegionRegistry";
+import { createObjectOutlineRegistry } from "../../presentations/objects/registry/ObjectOutlineRegistry";
+import { createObjectTextRegionRegistry } from "../../presentations/objects/registry/ObjectTextRegionRegistry";
 import { createShapeFactoryRegistry } from "../../schemas/registry/ShapeFactoryRegistry";
 import { createObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import { createObjectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
@@ -42,8 +42,8 @@ export const createCanvasRegistries = (
 		objectMapper: createObjectMapperRegistry(),
 		objectStateValidator: createObjectStateValidatorRegistry(),
 		objectComponent: createObjectComponentRegistry(),
-		textRegion: createTextRegionRegistry(),
-		outline: createOutlineRegistry(),
+		objectTextRegion: createObjectTextRegionRegistry(),
+		objectOutline: createObjectOutlineRegistry(),
 		objectBehavior: createObjectBehaviorRegistry(),
 		selectionControl: createSelectionControlRegistry(),
 		gestureHandler: createGestureHandlerRegistry(),

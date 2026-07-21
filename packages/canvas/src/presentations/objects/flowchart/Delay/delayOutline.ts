@@ -1,14 +1,14 @@
 import { sampleEllipseArc } from "@workspace/geometry";
 import type { Dimensions } from "@workspace/geometry";
 
-import type { OutlineCalculator } from "../../registry/OutlineRegistry";
+import type { ObjectOutlineCalculator } from "../../registry/ObjectOutlineRegistry";
 import { OUTLINE_CURVE_SEGMENTS } from "../../utils/outlineHelpers";
 
 /**
  * Delay outline (centered): rectangle with a right-side semicircular bulge
  * (radius = height/2). Renderer draws the equivalent arc (buildDelayPath).
  */
-export const delayOutline: OutlineCalculator<Dimensions> = ({
+export const delayOutline: ObjectOutlineCalculator<Dimensions> = ({
 	width,
 	height,
 }) => {

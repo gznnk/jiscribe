@@ -2,7 +2,7 @@ import { isTransformedFrame } from "@workspace/geometry";
 import type { Point } from "@workspace/geometry";
 import { memo } from "react";
 
-import { useOutlineRegistry } from "../../../../presentations/objects/registry/OutlineRegistryContext";
+import { useObjectOutlineRegistry } from "../../../../presentations/objects/registry/ObjectOutlineRegistryContext";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
 import { ConnectionAnchors } from "../ConnectionAnchors";
@@ -50,7 +50,7 @@ const ConnectionAnchorsLayerComponent: React.FC<
 	editingEndpoint,
 	isTextEditing,
 }) => {
-	const outlineRegistry = useOutlineRegistry();
+	const outlineRegistry = useObjectOutlineRegistry();
 
 	// Reads the object's true outline polygon (null for rect/ellipse/no-provider,
 	// which fall back to bounding-box anchors in the dot components).

@@ -4,10 +4,10 @@ import { calcInsetRect } from "@workspace/geometry";
 import { resolveCalloutTail } from "./calloutTailGeometry";
 import { CALLOUT_TAIL_RATIO } from "../../../../schemas/objects/annotations/callout/CalloutDoc";
 import type { CalloutState } from "../../../../states/objects/annotations/callout/CalloutState";
-import type { TextRegionCalculator } from "../../registry/TextRegionRegistry";
+import type { ObjectTextRegionCalculator } from "../../registry/ObjectTextRegionRegistry";
 
 /** Restricts the region to the bubble body beside the tail band. */
-export const calcCalloutTextRegion: TextRegionCalculator<
+export const calcCalloutTextRegion: ObjectTextRegionCalculator<
 	Dimensions & Pick<CalloutState, "tail">
 > = (state) => {
 	const { width, height } = state;

@@ -5,7 +5,7 @@ import { resolveEndpoint } from "./resolveEndpoint";
 import { isOrthogonalRouting } from "../../../../../schemas/objects/types/ConnectorRouting";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
-import type { OutlineRegistry } from "../../../../objects/registry/OutlineRegistry";
+import type { ObjectOutlineRegistry } from "../../../../objects/registry/ObjectOutlineRegistry";
 import { resolveOrthogonalRoute } from "../routing";
 
 /**
@@ -15,7 +15,7 @@ import { resolveOrthogonalRoute } from "../routing";
  */
 const resolveOutline = (
 	obj: ObjectState | null | undefined,
-	outlineRegistry: Pick<OutlineRegistry, "get"> | null | undefined,
+	outlineRegistry: Pick<ObjectOutlineRegistry, "get"> | null | undefined,
 ): Point[] | null => {
 	if (!obj || !outlineRegistry) {
 		return null;
@@ -39,7 +39,7 @@ const resolveOutline = (
  * @param connectorState - The connector state to resolve. Carries both endpoints, routing, and manual points
  * @param sourceObj - The owner shape of the source endpoint. null/undefined if unreferenced (free endpoint) or not found
  * @param targetObj - The owner shape of the target endpoint. null/undefined if unreferenced (free endpoint) or not found
- * @param outlineRegistry - Per-canvas OutlineRegistry. When provided, non-rect
+ * @param outlineRegistry - Per-canvas ObjectOutlineRegistry. When provided, non-rect
  *   shapes attach on their true outline; omitted = bounding-box rect/ellipse handling
  * @returns The resolved source / target points and intermediate waypoints, or null if resolution fails
  */
@@ -47,7 +47,7 @@ export const resolveConnectorPoints = (
 	connectorState: ConnectorState,
 	sourceObj: ObjectState | null | undefined,
 	targetObj: ObjectState | null | undefined,
-	outlineRegistry?: Pick<OutlineRegistry, "get"> | null,
+	outlineRegistry?: Pick<ObjectOutlineRegistry, "get"> | null,
 ): { source: Point; target: Point; waypoints: Point[] } | null => {
 	const sourceOutline = resolveOutline(sourceObj, outlineRegistry);
 	const targetOutline = resolveOutline(targetObj, outlineRegistry);

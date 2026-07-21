@@ -6,8 +6,8 @@ import {
 	resolveEndpointOwner,
 } from "../../../../presentations/layers/content/utils/endpoints";
 import { calcConnectorLabelAnchor } from "../../../../presentations/layers/content/utils/label/calcConnectorLabelAnchor";
-import type { OutlineRegistry } from "../../../../presentations/objects/registry/OutlineRegistry";
-import type { TextRegionCalculator } from "../../../../presentations/objects/registry/TextRegionRegistry";
+import type { ObjectOutlineRegistry } from "../../../../presentations/objects/registry/ObjectOutlineRegistry";
+import type { ObjectTextRegionCalculator } from "../../../../presentations/objects/registry/ObjectTextRegionRegistry";
 import { calcTextRegion } from "../../../../presentations/objects/utils/calcTextRegion";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import {
@@ -42,7 +42,7 @@ function renderConnectorLabelEditor(
 	objects: CanvasControllerState["objects"],
 	text: string,
 	handlers: EditorHandlers,
-	outlineRegistry: OutlineRegistry,
+	outlineRegistry: ObjectOutlineRegistry,
 ): React.ReactElement | null {
 	const sourceObj = resolveEndpointOwner(objects, connector.source);
 	const targetObj = resolveEndpointOwner(objects, connector.target);
@@ -91,7 +91,7 @@ function renderConnectorLabelEditor(
  * @param objectId - ID of the target shape
  * @param text - The text being edited
  * @param handlers - Input and exit handlers
- * @param textRegionCalculator - Per-type calculator from TextRegionRegistry. Omitted = full bbox
+ * @param textRegionCalculator - Per-type calculator from ObjectTextRegionRegistry. Omitted = full bbox
  * @returns The text editor
  */
 function renderTextEditor(
@@ -99,7 +99,7 @@ function renderTextEditor(
 	objectId: string,
 	text: string,
 	handlers: EditorHandlers,
-	textRegionCalculator?: TextRegionCalculator,
+	textRegionCalculator?: ObjectTextRegionCalculator,
 ): React.ReactElement {
 	const textRegion = calcTextRegion(target, textRegionCalculator);
 	return (
@@ -164,7 +164,7 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 			objects,
 			textEditState.text,
 			handlers,
-			registries.outline,
+			registries.objectOutline,
 		);
 	}
 
@@ -177,7 +177,7 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 			textEditState.objectId,
 			textEditState.text,
 			handlers,
-			registries.textRegion.get(targetObject.type),
+			registries.objectTextRegion.get(targetObject.type),
 		);
 	}
 

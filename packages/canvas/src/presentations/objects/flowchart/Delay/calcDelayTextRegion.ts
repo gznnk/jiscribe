@@ -1,14 +1,14 @@
 import type { Dimensions } from "@workspace/geometry";
 import { calcInsetRect } from "@workspace/geometry";
 
-import type { TextRegionCalculator } from "../../registry/TextRegionRegistry";
+import type { ObjectTextRegionCalculator } from "../../registry/ObjectTextRegionRegistry";
 
 /**
  * Insets the right by the cap radius (height / 2) so the full-height region
  * ends where the straight top/bottom edges meet the semicircular cap. A
  * constant ratio overflows the right corners once height exceeds 0.4 * width.
  */
-export const calcDelayTextRegion: TextRegionCalculator<Dimensions> = ({
+export const calcDelayTextRegion: ObjectTextRegionCalculator<Dimensions> = ({
 	width,
 	height,
 }) =>

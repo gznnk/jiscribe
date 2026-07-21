@@ -3,7 +3,7 @@ import { useMemo } from "react";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
-import { useOutlineRegistry } from "../../../objects/registry/OutlineRegistryContext";
+import { useObjectOutlineRegistry } from "../../../objects/registry/ObjectOutlineRegistryContext";
 import { resolveConnectorPoints } from "../utils/endpoints";
 
 /**
@@ -67,7 +67,7 @@ export const useResolvedConnectorPoints = (
 	sourceObj: ObjectState | null,
 	targetObj: ObjectState | null,
 ): ResolvedConnectorPoints | null => {
-	const outlineRegistry = useOutlineRegistry();
+	const outlineRegistry = useObjectOutlineRegistry();
 
 	// Keyed on the values the resolution reads (connector endpoints / routing and
 	// the owners' geometry) instead of the object references: property edits clone

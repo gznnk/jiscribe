@@ -8,10 +8,10 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
  * plus any per-shape fields, e.g. a headerHeight (see the container plugin)), in the
  * shape's local coordinate space (origin at the center, top-left based Rect).
  * Implementations declare what they read via `TState` (most:
- * `TextRegionCalculator<Dimensions>`); the registry stores the default
+ * `ObjectTextRegionCalculator<Dimensions>`); the registry stores the default
  * instantiation, to which narrower readers are assignable by contravariance.
  */
-export type TextRegionCalculator<
+export type ObjectTextRegionCalculator<
 	TState extends Dimensions = ObjectState & Dimensions,
 > = (state: TState) => Rect;
 
@@ -19,14 +19,17 @@ export type TextRegionCalculator<
  * Per-type registry of text region calculators. Types without a registered
  * calculator fall back to the full bounding box (see calcTextRegion).
  */
-export class TextRegionRegistry {
-	private readonly calculators = new Map<ObjectType, TextRegionCalculator>();
+export class ObjectTextRegionRegistry {
+	private readonly calculators = new Map<
+		ObjectType,
+		ObjectTextRegionCalculator
+	>();
 
-	register(type: ObjectType, calculator: TextRegionCalculator): void {
+	register(type: ObjectType, calculator: ObjectTextRegionCalculator): void {
 		this.calculators.set(type, calculator);
 	}
 
-	get(type: ObjectType): TextRegionCalculator | undefined {
+	get(type: ObjectType): ObjectTextRegionCalculator | undefined {
 		return this.calculators.get(type);
 	}
 
@@ -35,5 +38,5 @@ export class TextRegionRegistry {
 	}
 }
 
-export const createTextRegionRegistry = (): TextRegionRegistry =>
-	new TextRegionRegistry();
+export const createObjectTextRegionRegistry = (): ObjectTextRegionRegistry =>
+	new ObjectTextRegionRegistry();

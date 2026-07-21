@@ -1,4 +1,4 @@
-import type { TextRegionCalculator } from "@workspace/canvas";
+import type { ObjectTextRegionCalculator } from "@workspace/canvas";
 import type { Dimensions } from "@workspace/geometry";
 
 import { calcContainerHeaderHeight } from "./calcContainerHeaderHeight";
@@ -9,7 +9,7 @@ import type { ContainerState } from "../state/ContainerState";
  * other objects). Region is local (origin at the shape center), top-left based.
  * `headerHeight` carries the per-object band height (absent = default).
  */
-export const calcContainerTextRegion: TextRegionCalculator<
+export const calcContainerTextRegion: ObjectTextRegionCalculator<
 	Dimensions & Pick<ContainerState, "headerHeight">
 > = (state) => {
 	const { width, height } = state;

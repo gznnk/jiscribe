@@ -2,7 +2,7 @@ import type { Dimensions } from "@workspace/geometry";
 import { calcInsetRect } from "@workspace/geometry";
 
 import { CARD_CUT_RATIO } from "../../../../schemas/objects/flowchart/card/CardDoc";
-import type { TextRegionCalculator } from "../../registry/TextRegionRegistry";
+import type { ObjectTextRegionCalculator } from "../../registry/ObjectTextRegionRegistry";
 
 /**
  * Insets the top by the corner cut so the region sits fully below the bevel
@@ -10,7 +10,7 @@ import type { TextRegionCalculator } from "../../registry/TextRegionRegistry";
  * (min(w, h) * CARD_CUT_RATIO), so a constant ratio would let the top edge
  * poke into the removed corner at non-square aspect ratios.
  */
-export const calcCardTextRegion: TextRegionCalculator<Dimensions> = ({
+export const calcCardTextRegion: ObjectTextRegionCalculator<Dimensions> = ({
 	width,
 	height,
 }) => {

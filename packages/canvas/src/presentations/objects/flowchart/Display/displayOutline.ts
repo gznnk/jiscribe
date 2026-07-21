@@ -5,14 +5,14 @@ import {
 	DISPLAY_CAP_RATIO,
 	DISPLAY_LEFT_RATIO,
 } from "../../../../schemas/objects/flowchart/display/DisplayDoc";
-import type { OutlineCalculator } from "../../registry/OutlineRegistry";
+import type { ObjectOutlineCalculator } from "../../registry/ObjectOutlineRegistry";
 import { OUTLINE_CURVE_SEGMENTS } from "../../utils/outlineHelpers";
 
 /**
  * Display outline (centered): pointed left edge + rounded right cap. Renderer
  * draws the equivalent path (buildDisplayPath).
  */
-export const displayOutline: OutlineCalculator<Dimensions> = ({
+export const displayOutline: ObjectOutlineCalculator<Dimensions> = ({
 	width,
 	height,
 }) => {

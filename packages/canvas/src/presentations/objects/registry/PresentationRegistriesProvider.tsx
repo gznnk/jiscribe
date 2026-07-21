@@ -2,15 +2,15 @@ import type { ReactNode } from "react";
 
 import type { ObjectComponentRegistry } from "./ObjectComponentRegistry";
 import { ObjectComponentRegistryContext } from "./ObjectComponentRegistryContext";
-import type { OutlineRegistry } from "./OutlineRegistry";
-import { OutlineRegistryContext } from "./OutlineRegistryContext";
-import type { TextRegionRegistry } from "./TextRegionRegistry";
-import { TextRegionRegistryContext } from "./TextRegionRegistryContext";
+import type { ObjectOutlineRegistry } from "./ObjectOutlineRegistry";
+import { ObjectOutlineRegistryContext } from "./ObjectOutlineRegistryContext";
+import type { ObjectTextRegionRegistry } from "./ObjectTextRegionRegistry";
+import { ObjectTextRegionRegistryContext } from "./ObjectTextRegionRegistryContext";
 
 type PresentationRegistriesProviderProps = {
 	objectComponent: ObjectComponentRegistry;
-	textRegion: TextRegionRegistry;
-	outline: OutlineRegistry;
+	objectTextRegion: ObjectTextRegionRegistry;
+	objectOutline: ObjectOutlineRegistry;
 	children: ReactNode;
 };
 
@@ -22,17 +22,17 @@ type PresentationRegistriesProviderProps = {
  */
 export function PresentationRegistriesProvider({
 	objectComponent,
-	textRegion,
-	outline,
+	objectTextRegion,
+	objectOutline,
 	children,
 }: PresentationRegistriesProviderProps) {
 	return (
 		<ObjectComponentRegistryContext value={objectComponent}>
-			<TextRegionRegistryContext value={textRegion}>
-				<OutlineRegistryContext value={outline}>
+			<ObjectTextRegionRegistryContext value={objectTextRegion}>
+				<ObjectOutlineRegistryContext value={objectOutline}>
 					{children}
-				</OutlineRegistryContext>
-			</TextRegionRegistryContext>
+				</ObjectOutlineRegistryContext>
+			</ObjectTextRegionRegistryContext>
 		</ObjectComponentRegistryContext>
 	);
 }

@@ -1347,10 +1347,10 @@ export const applyObjectDefinition = (
 	);
 	registries.objectComponent.register(type, definition.component);
 	if (definition.textRegion) {
-		registries.textRegion.register(type, definition.textRegion);
+		registries.objectTextRegion.register(type, definition.textRegion);
 	}
 	if (definition.outline) {
-		registries.outline.register(type, definition.outline);
+		registries.objectOutline.register(type, definition.outline);
 	}
 	registries.objectBehavior.register(type, definition.behavior);
 	registries.objectStateValidator.register(type, definition.stateValidator);
@@ -1389,8 +1389,8 @@ export const initializeObjectRegistry = (
 ): void => {
 	registries.objectMapper.clear();
 	registries.objectComponent.clear();
-	registries.textRegion.clear();
-	registries.outline.clear();
+	registries.objectTextRegion.clear();
+	registries.objectOutline.clear();
 	registries.objectBehavior.clear();
 	registries.objectStateValidator.clear();
 	registries.objectMenu.clear();

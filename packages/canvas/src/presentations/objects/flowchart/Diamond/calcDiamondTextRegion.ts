@@ -1,7 +1,7 @@
 import type { Dimensions } from "@workspace/geometry";
 import { calcInsetRect } from "@workspace/geometry";
 
-import type { TextRegionCalculator } from "../../registry/TextRegionRegistry";
+import type { ObjectTextRegionCalculator } from "../../registry/ObjectTextRegionRegistry";
 
 /**
  * Inset that lands the region's corners on the diamond edges: a centered rect
@@ -9,7 +9,7 @@ import type { TextRegionCalculator } from "../../registry/TextRegionRegistry";
  */
 const DIAMOND_INSET = 0.25;
 
-export const calcDiamondTextRegion: TextRegionCalculator<Dimensions> = ({
+export const calcDiamondTextRegion: ObjectTextRegionCalculator<Dimensions> = ({
 	width,
 	height,
 }) =>

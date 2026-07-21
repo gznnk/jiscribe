@@ -5,10 +5,10 @@ import {
 	DISPLAY_CAP_RATIO,
 	DISPLAY_LEFT_RATIO,
 } from "../../../../schemas/objects/flowchart/display/DisplayDoc";
-import type { TextRegionCalculator } from "../../registry/TextRegionRegistry";
+import type { ObjectTextRegionCalculator } from "../../registry/ObjectTextRegionRegistry";
 
 /** Insets the pointed left and rounded right so text sits in the flat middle band. */
-export const calcDisplayTextRegion: TextRegionCalculator<Dimensions> = ({
+export const calcDisplayTextRegion: ObjectTextRegionCalculator<Dimensions> = ({
 	width,
 	height,
 }) =>

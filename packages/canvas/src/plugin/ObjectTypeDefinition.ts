@@ -4,8 +4,8 @@ import type { ObjectBehaviorEntry } from "../controllers/gestures/registry/Objec
 import type { SelectionControlDefinition } from "../controllers/ui/controls/SelectionControlTypes";
 import type { MenuSectionFactory } from "../controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
 import type { ShapePreset } from "../controllers/ui/objects/ShapePreset";
-import type { OutlineCalculator } from "../presentations/objects/registry/OutlineRegistry";
-import type { TextRegionCalculator } from "../presentations/objects/registry/TextRegionRegistry";
+import type { ObjectOutlineCalculator } from "../presentations/objects/registry/ObjectOutlineRegistry";
+import type { ObjectTextRegionCalculator } from "../presentations/objects/registry/ObjectTextRegionRegistry";
 import type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
 import type { ExtraStylePropertyDescriptor } from "../schemas/objects/types/ExtraStyleProperty";
 import type { ObjectFeatures } from "../schemas/objects/types/ObjectFeatures";
@@ -57,11 +57,11 @@ export type ObjectTypeDefinition<
 	/** SVG renderer for the shape. Editable types read `isEditing` by self-declaring `FC<TState & TextEditable>`. */
 	component: FC<TState>;
 
-	/** Editable-text region. Omitted = full bbox (see TextRegionRegistry). */
-	textRegion?: TextRegionCalculator;
+	/** Editable-text region. Omitted = full bbox (see ObjectTextRegionRegistry). */
+	textRegion?: ObjectTextRegionCalculator;
 
-	/** Hit-test / snap outline. Omitted = bounding-box rect/ellipse (see OutlineRegistry). */
-	outline?: OutlineCalculator;
+	/** Hit-test / snap outline. Omitted = bounding-box rect/ellipse (see ObjectOutlineRegistry). */
+	outline?: ObjectOutlineCalculator;
 
 	// --- Interaction (controllers) ---
 

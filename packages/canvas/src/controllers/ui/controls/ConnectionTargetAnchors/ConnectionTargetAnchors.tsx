@@ -15,7 +15,7 @@ type ConnectionTargetAnchorsProps = {
 	 */
 	frame: TransformedFrame;
 	/**
-	 * The shape's local outline polygon (from OutlineRegistry). When present,
+	 * The shape's local outline polygon (from ObjectOutlineRegistry). When present,
 	 * the edge anchors sit on the true edge instead of the bounding box.
 	 */
 	outline?: readonly Point[] | null;
