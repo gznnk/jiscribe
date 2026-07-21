@@ -2,7 +2,7 @@ import type { FC } from "react";
 
 import type { ObjectBehaviorEntry } from "../controllers/gestures/registry/ObjectBehaviorTypes";
 import type { SelectionControlDefinition } from "../controllers/ui/controls/SelectionControlTypes";
-import type { MenuSectionFactory } from "../controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
+import type { ObjectMenuSectionFactory } from "../controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
 import type { ShapePreset } from "../controllers/ui/objects/ShapePreset";
 import type { ObjectOutlineCalculator } from "../presentations/objects/registry/ObjectOutlineRegistry";
 import type { ObjectTextRegionCalculator } from "../presentations/objects/registry/ObjectTextRegionRegistry";
@@ -69,7 +69,7 @@ export type ObjectTypeDefinition<
 	behavior: ObjectBehaviorEntry<TState>;
 
 	/** ObjectMenu sections built from the current selection state. */
-	menuFactory: MenuSectionFactory<TState>;
+	menuFactory: ObjectMenuSectionFactory<TState>;
 
 	/** Type-specific selection controls (handle renderer + gesture strategy pairs). */
 	selectionControls?: SelectionControlDefinition<TState>[];

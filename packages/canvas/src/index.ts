@@ -121,7 +121,7 @@ export type {
 	RotateByGroupFunction,
 } from "./controllers/gestures/registry/ObjectBehaviorTypes";
 export type {
-	MenuSectionFactory,
+	ObjectMenuSectionFactory,
 	MenuSection,
 	MenuItem,
 	BuiltinItem,

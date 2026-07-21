@@ -1,4 +1,4 @@
-import type { MenuSectionFactory, MenuSection } from "./ObjectMenuTypes";
+import type { ObjectMenuSectionFactory, MenuSection } from "./ObjectMenuTypes";
 import type { ObjectType } from "../../../../schemas/objects/types/ObjectType";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 
@@ -16,7 +16,7 @@ import type { ObjectState } from "../../../../states/objects/base/ObjectState";
  * ]);
  */
 export class ObjectMenuRegistry {
-	private readonly factories = new Map<ObjectType, MenuSectionFactory>();
+	private readonly factories = new Map<ObjectType, ObjectMenuSectionFactory>();
 
 	/**
 	 * Associates a menu section factory with an object type.
@@ -24,9 +24,9 @@ export class ObjectMenuRegistry {
 	 */
 	register<TState extends ObjectState>(
 		type: ObjectType,
-		factory: MenuSectionFactory<TState>,
+		factory: ObjectMenuSectionFactory<TState>,
 	): void {
-		this.factories.set(type, factory as MenuSectionFactory);
+		this.factories.set(type, factory as ObjectMenuSectionFactory);
 	}
 
 	/**

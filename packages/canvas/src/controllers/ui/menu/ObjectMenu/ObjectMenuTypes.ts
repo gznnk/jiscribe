@@ -36,6 +36,6 @@ export type MenuSection = {
 	items: MenuItem[];
 };
 
-export type MenuSectionFactory<TState = unknown> = (
+export type ObjectMenuSectionFactory<TState = unknown> = (
 	state: TState,
 ) => MenuSection[];
