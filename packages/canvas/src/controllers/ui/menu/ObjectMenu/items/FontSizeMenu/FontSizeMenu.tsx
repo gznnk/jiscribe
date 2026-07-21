@@ -5,10 +5,13 @@ import type { CanvasControllerState } from "../../../../../../controllers/Canvas
 import type { TextStyleState } from "../../../../../../states/objects/base/TextStyleState";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { FontSizeIcon } from "../../../../icons/FontSizeIcon";
-import { DropdownPanel } from "../../common/DropdownPanel";
-import { MenuSlider } from "../../common/MenuSlider";
+import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
+import { ObjectMenuSlider } from "../../common/ObjectMenuSlider";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
-import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
+import {
+	ObjectMenuButton,
+	ObjectMenuItemPositioner,
+} from "../../ObjectMenuStyled";
 import { getFirstSelectedWithProp } from "../../utils/getFirstSelectedWithProp";
 
 const SECTION_ID = "font-size";
@@ -47,7 +50,7 @@ const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 		(obj as TextStyleState | undefined)?.fontSize ?? DEFAULT_FONT_SIZE;
 
 	return (
-		<MenuItemPositioner ref={menuItemRef}>
+		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
 				data-kind="menu"
@@ -58,9 +61,13 @@ const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 				<FontSizeIcon />
 			</ObjectMenuButton>
 			{isOpen && (
-				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>
+				<ObjectMenuDropdownPanel
+					ref={submenuRef}
+					placement={placement}
+					offsetX={offsetX}
+				>
 					<FontSizeMenuWrapper>
-						<MenuSlider
+						<ObjectMenuSlider
 							label={messages.menuFontSize}
 							value={fontSize}
 							min={MIN_FONT_SIZE}
@@ -72,9 +79,9 @@ const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 							onPropertyUpdate={onPropertyUpdate}
 						/>
 					</FontSizeMenuWrapper>
-				</DropdownPanel>
+				</ObjectMenuDropdownPanel>
 			)}
-		</MenuItemPositioner>
+		</ObjectMenuItemPositioner>
 	);
 };
 

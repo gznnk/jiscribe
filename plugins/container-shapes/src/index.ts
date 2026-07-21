@@ -4,7 +4,7 @@
 // @workspace/canvas/unstable 経由で利用)。Phase A(custom-controls-design.md)で
 // selectionControls(ヘッダー高さコントロール)も同じく unstable 経由の
 // SelectionControlHandler / SelectionControlPill 等で移植済み。tier 3
-// (custom-menu-design.md)で ObjectMenu UI キット(DropdownPanel / ColorPickerGrid /
+// (custom-menu-design.md)で ObjectMenu UI キット(ObjectMenuDropdownPanel / ObjectMenuColorPickerGrid /
 // useCanvasMessages 等)も unstable 経由で公開され、header-color メニューも移植済み。
 // containerDefinition は core の container 定義と同一構成(意図的除外ゼロ)。
 // i18n は (a) 方式(menuHeaderColor は core の CanvasMessageStrings キーを読み続ける)。

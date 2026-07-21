@@ -6,10 +6,13 @@ import { AUTO_COLOR } from "../../../../../../schemas/objects/utils/autoColor";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { FontColorIcon } from "../../../../icons/FontColorIcon";
-import { ColorPickerGrid } from "../../common/ColorPickerGrid/ColorPickerGrid";
-import { DropdownPanel } from "../../common/DropdownPanel";
+import { ObjectMenuColorPickerGrid } from "../../common/ObjectMenuColorPickerGrid/ObjectMenuColorPickerGrid";
+import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
-import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
+import {
+	ObjectMenuButton,
+	ObjectMenuItemPositioner,
+} from "../../ObjectMenuStyled";
 
 const SECTION_ID = "label-font-color";
 
@@ -37,7 +40,7 @@ const LabelFontColorMenuComponent: React.FC<Props> = ({
 		getSelectedConnectorLabel(canvasState)?.fontColor ?? AUTO_COLOR;
 
 	return (
-		<MenuItemPositioner ref={menuItemRef}>
+		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
 				data-kind="menu"
@@ -48,15 +51,19 @@ const LabelFontColorMenuComponent: React.FC<Props> = ({
 				<FontColorIcon underlineColor={resolveAutoColor(fontColor, "ink")} />
 			</ObjectMenuButton>
 			{isOpen && (
-				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>
-					<ColorPickerGrid
+				<ObjectMenuDropdownPanel
+					ref={submenuRef}
+					placement={placement}
+					offsetX={offsetX}
+				>
+					<ObjectMenuColorPickerGrid
 						currentColor={fontColor}
 						property="label.fontColor"
 						onPropertyUpdate={onPropertyUpdate}
 					/>
-				</DropdownPanel>
+				</ObjectMenuDropdownPanel>
 			)}
-		</MenuItemPositioner>
+		</ObjectMenuItemPositioner>
 	);
 };
 

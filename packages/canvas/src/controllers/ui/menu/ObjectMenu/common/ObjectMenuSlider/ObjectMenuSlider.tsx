@@ -2,14 +2,14 @@ import type React from "react";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 
 import {
-	MenuSliderWrapper,
-	MenuSliderInput,
-	MenuSliderFooter,
-	MenuSliderLabel,
-	MenuSliderNumberInput,
-} from "./MenuSliderStyled";
+	ObjectMenuSliderWrapper,
+	ObjectMenuSliderInput,
+	ObjectMenuSliderFooter,
+	ObjectMenuSliderLabel,
+	ObjectMenuSliderNumberInput,
+} from "./ObjectMenuSliderStyled";
 
-type MenuSliderProps = {
+type ObjectMenuSliderProps = {
 	value: number;
 	/** Lower bound of the valid range (number input clamp). */
 	min?: number;
@@ -33,7 +33,7 @@ const clamp = (value: number, lower: number, upper: number): number =>
 	Math.max(lower, Math.min(upper, value));
 
 /**
- * MenuSlider component.
+ * ObjectMenuSlider component.
  * A UI control for adjusting values using a slider.
  * Uses CanvasEvent system (data-kind/data-id) for property updates.
  *
@@ -42,7 +42,7 @@ const clamp = (value: number, lower: number, upper: number): number =>
  * valid range (`min`..`max`) for precise or extreme values; when the committed
  * value falls outside the track the thumb pins to the nearest end.
  */
-const MenuSliderComponent: React.FC<MenuSliderProps> = ({
+const ObjectMenuSliderComponent: React.FC<ObjectMenuSliderProps> = ({
 	value,
 	min = 1,
 	max = 100,
@@ -127,10 +127,10 @@ const MenuSliderComponent: React.FC<MenuSliderProps> = ({
 	}, [value, trackMin, trackMax]);
 
 	return (
-		<MenuSliderWrapper>
-			<MenuSliderFooter>
-				<MenuSliderLabel>{label}</MenuSliderLabel>
-				<MenuSliderNumberInput
+		<ObjectMenuSliderWrapper>
+			<ObjectMenuSliderFooter>
+				<ObjectMenuSliderLabel>{label}</ObjectMenuSliderLabel>
+				<ObjectMenuSliderNumberInput
 					type="number"
 					min={min}
 					max={max}
@@ -141,8 +141,8 @@ const MenuSliderComponent: React.FC<MenuSliderProps> = ({
 					data-testid={`menu-number-input:${property}`}
 					data-gesture="none"
 				/>
-			</MenuSliderFooter>
-			<MenuSliderInput
+			</ObjectMenuSliderFooter>
+			<ObjectMenuSliderInput
 				type="range"
 				min={trackMin}
 				max={trackMax}
@@ -154,8 +154,8 @@ const MenuSliderComponent: React.FC<MenuSliderProps> = ({
 				data-part={`slider:${property}`}
 				data-gesture="native-pointer"
 			/>
-		</MenuSliderWrapper>
+		</ObjectMenuSliderWrapper>
 	);
 };
 
-export const MenuSlider = memo(MenuSliderComponent);
+export const ObjectMenuSlider = memo(ObjectMenuSliderComponent);

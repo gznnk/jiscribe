@@ -8,15 +8,20 @@ import {
 } from "./StickyColorMenuStyled";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { ColorPreviewIcon } from "../../../../icons/ColorPreviewIcon";
-import { DropdownPanel } from "../../common/DropdownPanel";
+import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
-import { MenuItemPositioner, ObjectMenuButton } from "../../ObjectMenuStyled";
-import type { MenuItemProps } from "../../ObjectMenuTypes";
+import {
+	ObjectMenuItemPositioner,
+	ObjectMenuButton,
+} from "../../ObjectMenuStyled";
+import type { ObjectMenuItemProps } from "../../ObjectMenuTypes";
 import { getFirstSelectedWithProp } from "../../utils/getFirstSelectedWithProp";
 
 const SECTION_ID = "sticky-color";
 
-const getSelectedFillColor = (state: MenuItemProps["canvasState"]): string => {
+const getSelectedFillColor = (
+	state: ObjectMenuItemProps["canvasState"],
+): string => {
 	const obj = getFirstSelectedWithProp(
 		state.selectedIds,
 		state.objects,
@@ -26,7 +31,9 @@ const getSelectedFillColor = (state: MenuItemProps["canvasState"]): string => {
 	return typeof fill === "string" ? fill : "transparent";
 };
 
-const StickyColorMenuComponent: React.FC<MenuItemProps> = ({ canvasState }) => {
+const StickyColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
+	canvasState,
+}) => {
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
@@ -37,7 +44,7 @@ const StickyColorMenuComponent: React.FC<MenuItemProps> = ({ canvasState }) => {
 	);
 
 	return (
-		<MenuItemPositioner ref={menuItemRef}>
+		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
 				data-kind="menu"
@@ -51,7 +58,11 @@ const StickyColorMenuComponent: React.FC<MenuItemProps> = ({ canvasState }) => {
 				/>
 			</ObjectMenuButton>
 			{isOpen && (
-				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>
+				<ObjectMenuDropdownPanel
+					ref={submenuRef}
+					placement={placement}
+					offsetX={offsetX}
+				>
 					<ColorPickerContainer>
 						<ColorGrid>
 							{STICKY_PRESET_COLORS.map((preset) => (
@@ -69,9 +80,9 @@ const StickyColorMenuComponent: React.FC<MenuItemProps> = ({ canvasState }) => {
 							))}
 						</ColorGrid>
 					</ColorPickerContainer>
-				</DropdownPanel>
+				</ObjectMenuDropdownPanel>
 			)}
-		</MenuItemPositioner>
+		</ObjectMenuItemPositioner>
 	);
 };
 

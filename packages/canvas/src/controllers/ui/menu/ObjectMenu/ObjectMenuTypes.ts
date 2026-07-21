@@ -13,7 +13,7 @@ export type BuiltinItemKey =
 	| "stackOrder"
 	| "group";
 
-export type MenuItemProps = {
+export type ObjectMenuItemProps = {
 	canvasState: CanvasControllerState;
 	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
 };
@@ -29,13 +29,13 @@ export type CustomItem = {
 	component: React.ComponentType<any>;
 };
 
-export type MenuItem = BuiltinItem | CustomItem;
+export type ObjectMenuItem = BuiltinItem | CustomItem;
 
-export type MenuSection = {
+export type ObjectMenuSection = {
 	id: string;
-	items: MenuItem[];
+	items: ObjectMenuItem[];
 };
 
 export type ObjectMenuSectionFactory<TState = unknown> = (
 	state: TState,
-) => MenuSection[];
+) => ObjectMenuSection[];

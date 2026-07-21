@@ -7,10 +7,13 @@ import { DashedCircleIcon } from "../../../../icons/DashedCircleIcon";
 import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
 import { DottedLineIcon } from "../../../../icons/DottedLineIcon";
 import { SolidLineIcon } from "../../../../icons/SolidLineIcon";
-import { DropdownPanel } from "../../common/DropdownPanel";
-import { MenuSlider } from "../../common/MenuSlider";
+import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
+import { ObjectMenuSlider } from "../../common/ObjectMenuSlider";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
-import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
+import {
+	ObjectMenuButton,
+	ObjectMenuItemPositioner,
+} from "../../ObjectMenuStyled";
 import {
 	BorderStyleMenuWrapper,
 	BorderStyleSection,
@@ -48,7 +51,7 @@ const LabelBorderStyleMenuComponent: React.FC<Props> = ({
 	const strokeDashType = label?.strokeDashType;
 
 	return (
-		<MenuItemPositioner ref={menuItemRef}>
+		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
 				data-kind="menu"
@@ -59,7 +62,11 @@ const LabelBorderStyleMenuComponent: React.FC<Props> = ({
 				<DashedCircleIcon title={messages.menuLabelBorderStyle} />
 			</ObjectMenuButton>
 			{isOpen && (
-				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>
+				<ObjectMenuDropdownPanel
+					ref={submenuRef}
+					placement={placement}
+					offsetX={offsetX}
+				>
 					<BorderStyleMenuWrapper>
 						<BorderStyleSection>
 							<ObjectMenuButton
@@ -91,7 +98,7 @@ const LabelBorderStyleMenuComponent: React.FC<Props> = ({
 							</ObjectMenuButton>
 						</BorderStyleSection>
 
-						<MenuSlider
+						<ObjectMenuSlider
 							label={messages.menuBorderWidth}
 							value={strokeWidth}
 							min={MIN_BORDER_WIDTH}
@@ -100,9 +107,9 @@ const LabelBorderStyleMenuComponent: React.FC<Props> = ({
 							onPropertyUpdate={onPropertyUpdate}
 						/>
 					</BorderStyleMenuWrapper>
-				</DropdownPanel>
+				</ObjectMenuDropdownPanel>
 			)}
-		</MenuItemPositioner>
+		</ObjectMenuItemPositioner>
 	);
 };
 

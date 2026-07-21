@@ -4,7 +4,10 @@ import { getSelectedConnectorLabel } from "./utils/getSelectedConnectorLabel";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { BoldIcon } from "../../../../icons/BoldIcon";
-import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
+import {
+	ObjectMenuButton,
+	ObjectMenuItemPositioner,
+} from "../../ObjectMenuStyled";
 
 type Props = {
 	canvasState: CanvasControllerState;
@@ -19,7 +22,7 @@ const LabelBoldMenuComponent: React.FC<Props> = ({ canvasState }) => {
 	const isBold = getSelectedConnectorLabel(canvasState)?.fontWeight === "bold";
 
 	return (
-		<MenuItemPositioner>
+		<ObjectMenuItemPositioner>
 			<ObjectMenuButton
 				isActive={isBold}
 				data-kind="menu"
@@ -29,7 +32,7 @@ const LabelBoldMenuComponent: React.FC<Props> = ({ canvasState }) => {
 			>
 				<BoldIcon />
 			</ObjectMenuButton>
-		</MenuItemPositioner>
+		</ObjectMenuItemPositioner>
 	);
 };
 

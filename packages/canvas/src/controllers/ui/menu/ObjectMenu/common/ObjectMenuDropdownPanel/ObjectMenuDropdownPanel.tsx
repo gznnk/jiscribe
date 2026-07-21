@@ -1,9 +1,11 @@
 import { forwardRef } from "react";
 import type { ComponentPropsWithoutRef } from "react";
 
-import { DropdownPanelRoot } from "./DropdownPanelStyled";
+import { ObjectMenuDropdownPanelRoot } from "./ObjectMenuDropdownPanelStyled";
 
-type DropdownPanelProps = ComponentPropsWithoutRef<typeof DropdownPanelRoot> & {
+type ObjectMenuDropdownPanelProps = ComponentPropsWithoutRef<
+	typeof ObjectMenuDropdownPanelRoot
+> & {
 	/** Whether the panel opens below ("down") or above ("up") the button. */
 	placement?: "down" | "up";
 	/** Horizontal correction (px) applied to keep the panel within the canvas area. */
@@ -21,20 +23,21 @@ type DropdownPanelProps = ComponentPropsWithoutRef<typeof DropdownPanelRoot> & {
  * and selection are retained. Inner buttons have their own data-kind, so closest
  * picks up the button first and they behave as before.
  */
-export const DropdownPanel = forwardRef<HTMLDivElement, DropdownPanelProps>(
-	({ placement = "down", offsetX = 0, style, ...props }, ref) => (
-		<DropdownPanelRoot
-			ref={ref}
-			data-kind="menu"
-			data-id="object-menu"
-			data-part="panel"
-			style={{
-				...(placement === "up" ? { bottom: 40 } : { top: 40 }),
-				transform: `translateX(calc(-50% + ${offsetX}px))`,
-				...style,
-			}}
-			{...props}
-		/>
-	),
-);
-DropdownPanel.displayName = "DropdownPanel";
+export const ObjectMenuDropdownPanel = forwardRef<
+	HTMLDivElement,
+	ObjectMenuDropdownPanelProps
+>(({ placement = "down", offsetX = 0, style, ...props }, ref) => (
+	<ObjectMenuDropdownPanelRoot
+		ref={ref}
+		data-kind="menu"
+		data-id="object-menu"
+		data-part="panel"
+		style={{
+			...(placement === "up" ? { bottom: 40 } : { top: 40 }),
+			transform: `translateX(calc(-50% + ${offsetX}px))`,
+			...style,
+		}}
+		{...props}
+	/>
+));
+ObjectMenuDropdownPanel.displayName = "ObjectMenuDropdownPanel";

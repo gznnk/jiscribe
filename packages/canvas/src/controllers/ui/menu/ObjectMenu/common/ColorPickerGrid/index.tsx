@@ -1,1 +1,0 @@
-export { ColorPickerGrid } from "./ColorPickerGrid";

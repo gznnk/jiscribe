@@ -5,10 +5,13 @@ import { CONNECTOR_LABEL_DEFAULTS } from "../../../../../../presentations/object
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { FontSizeIcon } from "../../../../icons/FontSizeIcon";
-import { DropdownPanel } from "../../common/DropdownPanel";
-import { MenuSlider } from "../../common/MenuSlider";
+import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
+import { ObjectMenuSlider } from "../../common/ObjectMenuSlider";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
-import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
+import {
+	ObjectMenuButton,
+	ObjectMenuItemPositioner,
+} from "../../ObjectMenuStyled";
 import { FontSizeMenuWrapper } from "../FontSizeMenu/FontSizeMenuStyled";
 
 const SECTION_ID = "label-font-size";
@@ -44,7 +47,7 @@ const LabelFontSizeMenuComponent: React.FC<Props> = ({
 		CONNECTOR_LABEL_DEFAULTS.fontSize;
 
 	return (
-		<MenuItemPositioner ref={menuItemRef}>
+		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
 				data-kind="menu"
@@ -55,9 +58,13 @@ const LabelFontSizeMenuComponent: React.FC<Props> = ({
 				<FontSizeIcon />
 			</ObjectMenuButton>
 			{isOpen && (
-				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>
+				<ObjectMenuDropdownPanel
+					ref={submenuRef}
+					placement={placement}
+					offsetX={offsetX}
+				>
 					<FontSizeMenuWrapper>
-						<MenuSlider
+						<ObjectMenuSlider
 							label={messages.menuFontSize}
 							value={fontSize}
 							min={MIN_FONT_SIZE}
@@ -69,9 +76,9 @@ const LabelFontSizeMenuComponent: React.FC<Props> = ({
 							onPropertyUpdate={onPropertyUpdate}
 						/>
 					</FontSizeMenuWrapper>
-				</DropdownPanel>
+				</ObjectMenuDropdownPanel>
 			)}
-		</MenuItemPositioner>
+		</ObjectMenuItemPositioner>
 	);
 };
 

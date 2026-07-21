@@ -6,10 +6,13 @@ import { AUTO_COLOR } from "../../../../../../schemas/objects/utils/autoColor";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { BorderColorIcon } from "../../../../icons/BorderColorIcon";
-import { ColorPickerGrid } from "../../common/ColorPickerGrid/ColorPickerGrid";
-import { DropdownPanel } from "../../common/DropdownPanel";
+import { ObjectMenuColorPickerGrid } from "../../common/ObjectMenuColorPickerGrid/ObjectMenuColorPickerGrid";
+import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
-import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
+import {
+	ObjectMenuButton,
+	ObjectMenuItemPositioner,
+} from "../../ObjectMenuStyled";
 
 const SECTION_ID = "label-border-color";
 
@@ -37,7 +40,7 @@ const LabelBorderColorMenuComponent: React.FC<Props> = ({
 	const stroke = getSelectedConnectorLabel(canvasState)?.stroke ?? AUTO_COLOR;
 
 	return (
-		<MenuItemPositioner ref={menuItemRef}>
+		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
 				data-kind="menu"
@@ -51,15 +54,19 @@ const LabelBorderColorMenuComponent: React.FC<Props> = ({
 				/>
 			</ObjectMenuButton>
 			{isOpen && (
-				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>
-					<ColorPickerGrid
+				<ObjectMenuDropdownPanel
+					ref={submenuRef}
+					placement={placement}
+					offsetX={offsetX}
+				>
+					<ObjectMenuColorPickerGrid
 						currentColor={stroke}
 						property="label.stroke"
 						onPropertyUpdate={onPropertyUpdate}
 					/>
-				</DropdownPanel>
+				</ObjectMenuDropdownPanel>
 			)}
-		</MenuItemPositioner>
+		</ObjectMenuItemPositioner>
 	);
 };
 

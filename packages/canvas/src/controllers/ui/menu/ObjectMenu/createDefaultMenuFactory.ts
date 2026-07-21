@@ -1,6 +1,6 @@
 import type {
-	MenuItem,
-	MenuSection,
+	ObjectMenuItem,
+	ObjectMenuSection,
 	ObjectMenuSectionFactory,
 } from "./ObjectMenuTypes";
 import type { ObjectFeatures } from "../../../../schemas/objects/types/ObjectFeatures";
@@ -12,7 +12,7 @@ import type { ObjectFeatures } from "../../../../schemas/objects/types/ObjectFea
 export const createDefaultMenuFactory = (
 	features: ObjectFeatures,
 ): ObjectMenuSectionFactory => {
-	const sections: MenuSection[] = [];
+	const sections: ObjectMenuSection[] = [];
 
 	if (features.arrow) {
 		sections.push({ id: "arrowHead", items: [{ type: "arrowHead" }] });
@@ -24,7 +24,7 @@ export const createDefaultMenuFactory = (
 		});
 	}
 	if (features.fill) {
-		const items: MenuItem[] = [{ type: "backgroundColor" }];
+		const items: ObjectMenuItem[] = [{ type: "backgroundColor" }];
 		if (features.stroke) {
 			items.push(
 				{ type: "borderColor" },

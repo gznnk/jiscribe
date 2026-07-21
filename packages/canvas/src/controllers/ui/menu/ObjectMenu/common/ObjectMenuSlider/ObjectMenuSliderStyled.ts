@@ -5,7 +5,7 @@ import { theme } from "../../../../../../constants/theme";
 /**
  * Wrapper for the entire menu slider component.
  */
-export const MenuSliderWrapper = styled.div`
+export const ObjectMenuSliderWrapper = styled.div`
 	display: flex;
 	flex-direction: column;
 	gap: 8px;
@@ -15,7 +15,7 @@ export const MenuSliderWrapper = styled.div`
 /**
  * Styled range input element for the menu slider.
  */
-export const MenuSliderInput = styled.input`
+export const ObjectMenuSliderInput = styled.input`
 	flex: 1;
 	height: 2px;
 	-webkit-appearance: none;
@@ -90,7 +90,7 @@ export const MenuSliderInput = styled.input`
 /**
  * Footer section containing label and number input.
  */
-export const MenuSliderFooter = styled.div`
+export const ObjectMenuSliderFooter = styled.div`
 	display: flex;
 	justify-content: space-between;
 	align-items: flex-start;
@@ -100,7 +100,7 @@ export const MenuSliderFooter = styled.div`
 /**
  * Label for the menu slider.
  */
-export const MenuSliderLabel = styled.label`
+export const ObjectMenuSliderLabel = styled.label`
 	font-size: 12px;
 	font-weight: 600;
 	color: ${theme.foreground};
@@ -110,7 +110,7 @@ export const MenuSliderLabel = styled.label`
 /**
  * Number input for direct value entry.
  */
-export const MenuSliderNumberInput = styled.input`
+export const ObjectMenuSliderNumberInput = styled.input`
 	display: block;
 	width: 36px;
 	height: 22px;

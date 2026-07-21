@@ -65,12 +65,12 @@ export type { ICanvasRegistries } from "./controllers/setup/ICanvasRegistries";
 
 export {
 	ObjectMenuButton,
-	MenuItemPositioner,
+	ObjectMenuItemPositioner,
 } from "./controllers/ui/menu/ObjectMenu/ObjectMenuStyled";
 
-export { DropdownPanel } from "./controllers/ui/menu/ObjectMenu/common/DropdownPanel";
-export { ColorPickerGrid } from "./controllers/ui/menu/ObjectMenu/common/ColorPickerGrid";
-export { MenuSlider } from "./controllers/ui/menu/ObjectMenu/common/MenuSlider";
+export { ObjectMenuDropdownPanel } from "./controllers/ui/menu/ObjectMenu/common/ObjectMenuDropdownPanel";
+export { ObjectMenuColorPickerGrid } from "./controllers/ui/menu/ObjectMenu/common/ObjectMenuColorPickerGrid";
+export { ObjectMenuSlider } from "./controllers/ui/menu/ObjectMenu/common/ObjectMenuSlider";
 
 export { useSubmenuPosition } from "./controllers/ui/menu/ObjectMenu/hooks/useSubmenuPosition";
 export type { SubmenuPlacement } from "./controllers/ui/menu/ObjectMenu/hooks/useSubmenuPosition";

@@ -11,9 +11,12 @@ import { AlignLeftIcon } from "../../../../icons/AlignLeftIcon";
 import { AlignMiddleIcon } from "../../../../icons/AlignMiddleIcon";
 import { AlignRightIcon } from "../../../../icons/AlignRightIcon";
 import { AlignTopIcon } from "../../../../icons/AlignTopIcon";
-import { DropdownPanel } from "../../common/DropdownPanel";
+import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
-import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
+import {
+	ObjectMenuButton,
+	ObjectMenuItemPositioner,
+} from "../../ObjectMenuStyled";
 import { getFirstSelectedWithProp } from "../../utils/getFirstSelectedWithProp";
 
 const SECTION_ID = "alignment";
@@ -66,7 +69,7 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 	const verticalAlign = obj?.verticalAlign ?? "middle";
 
 	return (
-		<MenuItemPositioner ref={menuItemRef}>
+		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
 				data-kind="menu"
@@ -77,7 +80,11 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 				<AlignLeftIcon />
 			</ObjectMenuButton>
 			{isOpen && (
-				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>
+				<ObjectMenuDropdownPanel
+					ref={submenuRef}
+					placement={placement}
+					offsetX={offsetX}
+				>
 					<AlignmentMenuContent>
 						<AlignmentRow>
 							{horizontalAlignments.map(({ value, Icon, messageKey }) => (
@@ -108,9 +115,9 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 							))}
 						</AlignmentRow>
 					</AlignmentMenuContent>
-				</DropdownPanel>
+				</ObjectMenuDropdownPanel>
 			)}
-		</MenuItemPositioner>
+		</ObjectMenuItemPositioner>
 	);
 };
 

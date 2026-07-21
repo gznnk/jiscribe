@@ -5,9 +5,9 @@ import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../../contexts/CanvasRegistriesContext";
 import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
 import type { ObjectMenuRegistry } from "../ObjectMenuRegistry";
-import type { MenuItem, MenuSection } from "../ObjectMenuTypes";
+import type { ObjectMenuItem, ObjectMenuSection } from "../ObjectMenuTypes";
 
-const itemKey = (item: MenuItem): string =>
+const itemKey = (item: ObjectMenuItem): string =>
 	item.type === "custom" ? item.id : item.type;
 
 /**
@@ -15,7 +15,7 @@ const itemKey = (item: MenuItem): string =>
  * Keeps only the items common to all types.
  * For borderStyle, radius is enabled only when every type has radius: true.
  */
-const mergeItems = (arrays: MenuItem[][]): MenuItem[] => {
+const mergeItems = (arrays: ObjectMenuItem[][]): ObjectMenuItem[] => {
 	if (arrays.length === 1) {
 		return arrays[0];
 	}
@@ -45,7 +45,7 @@ const mergeItems = (arrays: MenuItem[][]): MenuItem[] => {
  * Keeps only sections whose id is common to all types, and AND-merges the items
  * within each section as well.
  */
-const mergeSections = (arrays: MenuSection[][]): MenuSection[] => {
+const mergeSections = (arrays: ObjectMenuSection[][]): ObjectMenuSection[] => {
 	if (arrays.length === 0) {
 		return [];
 	}
@@ -76,7 +76,7 @@ const mergeSections = (arrays: MenuSection[][]): MenuSection[] => {
 export const getMenuSections = (
 	state: CanvasControllerState,
 	objectMenuRegistry: ObjectMenuRegistry,
-): MenuSection[] => {
+): ObjectMenuSection[] => {
 	const { selectedIds, selectedConnectorId, objects } = state;
 
 	// When a connector is selected, return the connector's sections instead of selectedIds
@@ -136,7 +136,7 @@ export const getMenuSections = (
 export const useMenuSections = (
 	state: CanvasControllerState,
 	enabled: boolean,
-): MenuSection[] => {
+): ObjectMenuSection[] => {
 	const { selectedIds, selectedConnectorId, objects } = state;
 	const { objectMenu } = useCanvasRegistries();
 

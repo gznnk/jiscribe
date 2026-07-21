@@ -7,10 +7,10 @@ import { theme } from "../../../../../../constants/theme";
  *
  * Placement (top/bottom) and the horizontal correction (translateX with
  * offsetX) are measured values that can change every frame while the menu
- * follows the selection, so DropdownPanel applies them via the `style` prop
+ * follows the selection, so ObjectMenuDropdownPanel applies them via the `style` prop
  * instead of emotion interpolation (see #131).
  */
-export const DropdownPanelRoot = styled.div`
+export const ObjectMenuDropdownPanelRoot = styled.div`
 	position: absolute;
 	left: 50%;
 	z-index: 1100;

@@ -1,8 +1,8 @@
-import type { MenuItemProps } from "@workspace/canvas";
+import type { ObjectMenuItemProps } from "@workspace/canvas";
 import {
-	ColorPickerGrid,
-	DropdownPanel,
-	MenuItemPositioner,
+	ObjectMenuColorPickerGrid,
+	ObjectMenuDropdownPanel,
+	ObjectMenuItemPositioner,
 	ObjectMenuButton,
 	getFirstSelectedWithProp,
 	resolveAutoColor,
@@ -34,7 +34,7 @@ const getSelectedHeaderColor = (state: CanvasControllerState): string => {
  * docs/05_extensibility/custom-menu-design.md) — read via `useCanvasMessages()`
  * rather than a plugin-local string.
  */
-const HeaderColorMenuComponent: React.FC<MenuItemProps> = ({
+const HeaderColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	canvasState,
 	onPropertyUpdate,
 }) => {
@@ -48,7 +48,7 @@ const HeaderColorMenuComponent: React.FC<MenuItemProps> = ({
 	);
 
 	return (
-		<MenuItemPositioner ref={menuItemRef}>
+		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
 				data-kind="menu"
@@ -62,15 +62,19 @@ const HeaderColorMenuComponent: React.FC<MenuItemProps> = ({
 				/>
 			</ObjectMenuButton>
 			{isOpen && (
-				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>
-					<ColorPickerGrid
+				<ObjectMenuDropdownPanel
+					ref={submenuRef}
+					placement={placement}
+					offsetX={offsetX}
+				>
+					<ObjectMenuColorPickerGrid
 						currentColor={currentColor}
 						property="headerFill"
 						onPropertyUpdate={onPropertyUpdate}
 					/>
-				</DropdownPanel>
+				</ObjectMenuDropdownPanel>
 			)}
-		</MenuItemPositioner>
+		</ObjectMenuItemPositioner>
 	);
 };
 

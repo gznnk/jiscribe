@@ -8,10 +8,13 @@ import type { CanvasMessageStrings } from "../../../../../messages/CanvasMessage
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { OrthogonalConnectorIcon } from "../../../../icons/OrthogonalConnectorIcon";
 import { StraightConnectorIcon } from "../../../../icons/StraightConnectorIcon";
-import { DropdownPanel } from "../../common/DropdownPanel";
+import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
-import { MenuItemPositioner, ObjectMenuButton } from "../../ObjectMenuStyled";
-import type { MenuItemProps } from "../../ObjectMenuTypes";
+import {
+	ObjectMenuItemPositioner,
+	ObjectMenuButton,
+} from "../../ObjectMenuStyled";
+import type { ObjectMenuItemProps } from "../../ObjectMenuTypes";
 
 const SECTION_ID = "connector-routing";
 
@@ -57,7 +60,9 @@ const ROUTING_OPTIONS: RoutingOption[] = [
  * Self-loops are fixed to orthogonal, so this returns null. An emptied section is
  * collapsed along with its divider via ObjectMenuSection's `:empty`.
  */
-const RoutingMenuComponent: React.FC<MenuItemProps> = ({ canvasState }) => {
+const RoutingMenuComponent: React.FC<ObjectMenuItemProps> = ({
+	canvasState,
+}) => {
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
@@ -78,7 +83,7 @@ const RoutingMenuComponent: React.FC<MenuItemProps> = ({ canvasState }) => {
 			: StraightConnectorIcon;
 
 	return (
-		<MenuItemPositioner ref={menuItemRef}>
+		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
 				data-kind="menu"
@@ -89,7 +94,11 @@ const RoutingMenuComponent: React.FC<MenuItemProps> = ({ canvasState }) => {
 				<CurrentIcon title={messages.menuConnectorRouting} />
 			</ObjectMenuButton>
 			{isOpen && (
-				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>
+				<ObjectMenuDropdownPanel
+					ref={submenuRef}
+					placement={placement}
+					offsetX={offsetX}
+				>
 					<RoutingMenuRow>
 						{ROUTING_OPTIONS.map(({ routing, commandId, messageKey, Icon }) => (
 							<ObjectMenuButton
@@ -104,9 +113,9 @@ const RoutingMenuComponent: React.FC<MenuItemProps> = ({ canvasState }) => {
 							</ObjectMenuButton>
 						))}
 					</RoutingMenuRow>
-				</DropdownPanel>
+				</ObjectMenuDropdownPanel>
 			)}
-		</MenuItemPositioner>
+		</ObjectMenuItemPositioner>
 	);
 };
 

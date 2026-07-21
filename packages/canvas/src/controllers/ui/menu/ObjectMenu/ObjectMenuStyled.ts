@@ -47,7 +47,7 @@ export const ObjectMenuContainer = styled.div`
  * remain at the start only if the structurally first section becomes empty (in the current
  * menu configuration the first section is always visible).
  */
-export const ObjectMenuSection = styled.div`
+export const ObjectMenuSectionRow = styled.div`
 	display: flex;
 	flex-direction: row;
 	align-items: center;
@@ -121,6 +121,6 @@ export const ObjectMenuButton = styled.button<{ isActive?: boolean }>`
  * Positioning container for a menu button (relative).
  * Serves as the anchor position for the dropdown.
  */
-export const MenuItemPositioner = styled.div`
+export const ObjectMenuItemPositioner = styled.div`
 	position: relative;
 `;

@@ -4,7 +4,7 @@ import { useCanvasViewportElementRef } from "../../../../contexts/CanvasViewport
 
 /**
  * Distance between the menu button and the submenu (px).
- * Corresponds to the DropdownPanel CSS (top: 40px / bottom: 40px).
+ * Corresponds to the ObjectMenuDropdownPanel CSS (top: 40px / bottom: 40px).
  */
 const SUBMENU_DISTANCE = 40;
 
@@ -14,7 +14,7 @@ const VIEWPORT_MARGIN = 8;
 export type SubmenuPlacement = "down" | "up";
 
 type SubmenuPositionResult = {
-	/** ref passed to the submenu element (DropdownPanel). Used to measure its actual size */
+	/** ref passed to the submenu element (ObjectMenuDropdownPanel). Used to measure its actual size */
 	submenuRef: RefObject<HTMLDivElement | null>;
 	/** Vertical expansion direction of the submenu */
 	placement: SubmenuPlacement;

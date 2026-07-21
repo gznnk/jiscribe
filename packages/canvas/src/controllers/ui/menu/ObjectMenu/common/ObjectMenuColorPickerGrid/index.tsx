@@ -1,0 +1,1 @@
+export { ObjectMenuColorPickerGrid } from "./ObjectMenuColorPickerGrid";

@@ -4,7 +4,7 @@ import { theme } from "../../../../../../constants/theme";
 
 /**
  * Arrow selector grid (3 columns).
- * Placed inside a DropdownPanel.
+ * Placed inside a ObjectMenuDropdownPanel.
  */
 export const ArrowSelectorGrid = styled.div`
 	display: grid;

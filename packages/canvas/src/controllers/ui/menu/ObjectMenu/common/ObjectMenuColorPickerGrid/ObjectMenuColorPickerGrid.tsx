@@ -7,7 +7,7 @@ import {
 	ColorPickerContainer,
 	ColorSwatch,
 	ColorTextInput,
-} from "./ColorPickerGridStyled";
+} from "./ObjectMenuColorPickerGridStyled";
 import {
 	AUTO_COLOR,
 	isAutoColor,
@@ -15,7 +15,7 @@ import {
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { PRESET_COLORS } from "../../ObjectMenuConstants";
 
-type ColorPickerGridProps = {
+type ObjectMenuColorPickerGridProps = {
 	/** Currently selected color */
 	currentColor: string;
 	/** Property name (e.g. "fill", "stroke") */
@@ -30,11 +30,9 @@ type ColorPickerGridProps = {
  * The text input previews in real time on onChange (commit: false), and
  * commits on onBlur / Enter (commit: true).
  */
-const ColorPickerGridComponent: React.FC<ColorPickerGridProps> = ({
-	currentColor,
-	property,
-	onPropertyUpdate,
-}) => {
+const ObjectMenuColorPickerGridComponent: React.FC<
+	ObjectMenuColorPickerGridProps
+> = ({ currentColor, property, onPropertyUpdate }) => {
 	const messages = useCanvasMessages();
 	const [inputValue, setInputValue] = useState(currentColor);
 	const [isValid, setIsValid] = useState(true);
@@ -131,4 +129,6 @@ const ColorPickerGridComponent: React.FC<ColorPickerGridProps> = ({
 	);
 };
 
-export const ColorPickerGrid = memo(ColorPickerGridComponent);
+export const ObjectMenuColorPickerGrid = memo(
+	ObjectMenuColorPickerGridComponent,
+);

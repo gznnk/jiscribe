@@ -6,10 +6,13 @@ import { AUTO_COLOR } from "../../../../../../schemas/objects/utils/autoColor";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { ColorPreviewIcon } from "../../../../icons/ColorPreviewIcon";
-import { ColorPickerGrid } from "../../common/ColorPickerGrid/ColorPickerGrid";
-import { DropdownPanel } from "../../common/DropdownPanel";
+import { ObjectMenuColorPickerGrid } from "../../common/ObjectMenuColorPickerGrid/ObjectMenuColorPickerGrid";
+import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
-import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
+import {
+	ObjectMenuButton,
+	ObjectMenuItemPositioner,
+} from "../../ObjectMenuStyled";
 
 const SECTION_ID = "label-bg-color";
 
@@ -37,7 +40,7 @@ const LabelBackgroundColorMenuComponent: React.FC<Props> = ({
 	const fill = getSelectedConnectorLabel(canvasState)?.fill ?? AUTO_COLOR;
 
 	return (
-		<MenuItemPositioner ref={menuItemRef}>
+		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
 				data-kind="menu"
@@ -51,15 +54,19 @@ const LabelBackgroundColorMenuComponent: React.FC<Props> = ({
 				/>
 			</ObjectMenuButton>
 			{isOpen && (
-				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>
-					<ColorPickerGrid
+				<ObjectMenuDropdownPanel
+					ref={submenuRef}
+					placement={placement}
+					offsetX={offsetX}
+				>
+					<ObjectMenuColorPickerGrid
 						currentColor={fill}
 						property="label.fill"
 						onPropertyUpdate={onPropertyUpdate}
 					/>
-				</DropdownPanel>
+				</ObjectMenuDropdownPanel>
 			)}
-		</MenuItemPositioner>
+		</ObjectMenuItemPositioner>
 	);
 };
 

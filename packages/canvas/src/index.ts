@@ -122,12 +122,12 @@ export type {
 } from "./controllers/gestures/registry/ObjectBehaviorTypes";
 export type {
 	ObjectMenuSectionFactory,
-	MenuSection,
-	MenuItem,
+	ObjectMenuSection,
+	ObjectMenuItem,
 	BuiltinItem,
 	CustomItem,
 	BuiltinItemKey,
-	MenuItemProps,
+	ObjectMenuItemProps,
 } from "./controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
 export type {
 	SelectionControlDefinition,

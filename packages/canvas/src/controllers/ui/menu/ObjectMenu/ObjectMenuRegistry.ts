@@ -1,4 +1,7 @@
-import type { ObjectMenuSectionFactory, MenuSection } from "./ObjectMenuTypes";
+import type {
+	ObjectMenuSectionFactory,
+	ObjectMenuSection,
+} from "./ObjectMenuTypes";
 import type { ObjectType } from "../../../../schemas/objects/types/ObjectType";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 
@@ -27,7 +30,7 @@ export class ObjectMenuRegistry {
 	 * Invokes the factory for the given type and returns its menu sections.
 	 * Returns an empty array for an unregistered type.
 	 */
-	getSections(type: ObjectType, state: ObjectState): MenuSection[] {
+	getSections(type: ObjectType, state: ObjectState): ObjectMenuSection[] {
 		return this.factories.get(type)?.(state) ?? [];
 	}
 
