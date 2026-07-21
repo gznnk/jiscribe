@@ -137,10 +137,6 @@ export type { SelectionControlHandler } from "./controllers/gestures/registry/Se
 export type { TextRegionCalculator } from "./presentations/objects/registry/TextRegionRegistry";
 export type { OutlineCalculator } from "./presentations/objects/registry/OutlineRegistry";
 export type {
-	ShapePreviewRenderer,
-	ShapePreviewProps,
-} from "./presentations/objects/registry/ShapePreviewTypes";
-export type {
 	ShapePreset,
 	ShapeIconProps,
 } from "./controllers/ui/objects/ShapePreset";

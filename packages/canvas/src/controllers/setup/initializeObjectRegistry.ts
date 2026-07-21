@@ -6,7 +6,6 @@ import type {
 } from "../../plugin/ObjectTypeDefinition";
 import {
 	Callout,
-	CalloutPreview,
 	calcCalloutTextRegion,
 	calloutOutline,
 } from "../../presentations/objects/annotations/Callout";
@@ -14,134 +13,107 @@ import { Sticky } from "../../presentations/objects/annotations/Sticky";
 import { Connector } from "../../presentations/objects/connections/Connector";
 import {
 	Card,
-	CardPreview,
 	calcCardTextRegion,
 	cardOutline,
 } from "../../presentations/objects/flowchart/Card";
 import {
 	Cross,
-	CrossPreview,
 	crossOutline,
 } from "../../presentations/objects/flowchart/Cross";
 import {
 	Db,
-	DbPreview,
 	calcDbTextRegion,
 	dbOutline,
 } from "../../presentations/objects/flowchart/Db";
 import {
 	Delay,
-	DelayPreview,
 	calcDelayTextRegion,
 	delayOutline,
 } from "../../presentations/objects/flowchart/Delay";
 import {
 	Diamond,
-	DiamondPreview,
 	calcDiamondTextRegion,
 	diamondOutline,
 } from "../../presentations/objects/flowchart/Diamond";
 import {
 	Display,
-	DisplayPreview,
 	calcDisplayTextRegion,
 	displayOutline,
 } from "../../presentations/objects/flowchart/Display";
 import {
 	Document,
-	DocumentPreview,
 	calcDocumentTextRegion,
 	documentOutline,
 } from "../../presentations/objects/flowchart/Document";
 import {
 	Extract,
-	ExtractPreview,
 	extractOutline,
 } from "../../presentations/objects/flowchart/Extract";
 import {
 	Hexagon,
-	HexagonPreview,
 	calcHexagonTextRegion,
 	hexagonOutline,
 } from "../../presentations/objects/flowchart/Hexagon";
 import {
 	LoopLimit,
-	LoopLimitPreview,
 	calcLoopLimitTextRegion,
 	loopLimitOutline,
 } from "../../presentations/objects/flowchart/LoopLimit";
 import {
 	ManualInput,
-	ManualInputPreview,
 	calcManualInputTextRegion,
 	manualInputOutline,
 } from "../../presentations/objects/flowchart/ManualInput";
 import {
 	MultiDocument,
-	MultiDocumentPreview,
 	calcMultiDocumentTextRegion,
 	multiDocumentOutline,
 } from "../../presentations/objects/flowchart/MultiDocument";
 import {
 	OffPageConnector,
-	OffPageConnectorPreview,
 	calcOffPageConnectorTextRegion,
 	offPageConnectorOutline,
 } from "../../presentations/objects/flowchart/OffPageConnector";
 import {
 	Parallelogram,
-	ParallelogramPreview,
 	calcParallelogramTextRegion,
 	parallelogramOutline,
 } from "../../presentations/objects/flowchart/Parallelogram";
 import {
 	Stadium,
-	StadiumPreview,
 	calcStadiumTextRegion,
 	stadiumOutline,
 } from "../../presentations/objects/flowchart/Stadium";
 import {
 	StoredData,
-	StoredDataPreview,
 	calcStoredDataTextRegion,
 	storedDataOutline,
 } from "../../presentations/objects/flowchart/StoredData";
 import {
 	Subroutine,
-	SubroutinePreview,
 	calcSubroutineTextRegion,
 } from "../../presentations/objects/flowchart/Subroutine";
 import {
 	Trapezoid,
-	TrapezoidPreview,
 	calcTrapezoidTextRegion,
 	trapezoidOutline,
 } from "../../presentations/objects/flowchart/Trapezoid";
 import {
 	Actor,
-	ActorPreview,
 	calcActorTextRegion,
 } from "../../presentations/objects/general/Actor";
 import {
 	Cloud,
-	CloudPreview,
 	calcCloudTextRegion,
 	cloudOutline,
 } from "../../presentations/objects/general/Cloud";
 import {
 	Ellipse,
-	EllipsePreview,
 	calcEllipseTextRegion,
 } from "../../presentations/objects/primitives/Ellipse";
-import {
-	Polygon,
-	PolygonPreview,
-} from "../../presentations/objects/primitives/Polygon";
-import {
-	Polyline,
-	PolylinePreview,
-} from "../../presentations/objects/primitives/Polyline";
-import { Rect, RectPreview } from "../../presentations/objects/primitives/Rect";
+import { Polygon } from "../../presentations/objects/primitives/Polygon";
+import { Polyline } from "../../presentations/objects/primitives/Polyline";
+import { Rect } from "../../presentations/objects/primitives/Rect";
 import { Svg } from "../../presentations/objects/primitives/Svg";
 import { CalloutFeatures } from "../../schemas/objects/annotations/callout/CalloutDoc";
 import { CalloutShapeFactory } from "../../schemas/objects/annotations/callout/CalloutShapeFactory";
@@ -462,7 +434,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			stateValidator: isValidRectState,
 			shapeLibrary: {
 				factory: RectShapeFactory,
-				previewRenderer: RectPreview,
 				presets: RectShapePresets,
 			},
 		}),
@@ -494,7 +465,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			stateValidator: isValidEllipseState,
 			shapeLibrary: {
 				factory: EllipseShapeFactory,
-				previewRenderer: EllipsePreview,
 				presets: EllipseShapePresets,
 			},
 		}),
@@ -527,7 +497,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			stateValidator: isValidDiamondState,
 			shapeLibrary: {
 				factory: DiamondShapeFactory,
-				previewRenderer: DiamondPreview,
 				presets: DiamondShapePresets,
 			},
 		}),
@@ -560,7 +529,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			stateValidator: isValidStadiumState,
 			shapeLibrary: {
 				factory: StadiumShapeFactory,
-				previewRenderer: StadiumPreview,
 				presets: StadiumShapePresets,
 			},
 		}),
@@ -593,7 +561,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			stateValidator: isValidParallelogramState,
 			shapeLibrary: {
 				factory: ParallelogramShapeFactory,
-				previewRenderer: ParallelogramPreview,
 				presets: ParallelogramShapePresets,
 			},
 		}),
@@ -626,7 +593,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			stateValidator: isValidHexagonState,
 			shapeLibrary: {
 				factory: HexagonShapeFactory,
-				previewRenderer: HexagonPreview,
 				presets: HexagonShapePresets,
 			},
 		}),
@@ -659,7 +625,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			stateValidator: isValidCloudState,
 			shapeLibrary: {
 				factory: CloudShapeFactory,
-				previewRenderer: CloudPreview,
 				presets: CloudShapePresets,
 			},
 		}),
@@ -692,7 +657,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			stateValidator: isValidDocumentState,
 			shapeLibrary: {
 				factory: DocumentShapeFactory,
-				previewRenderer: DocumentPreview,
 				presets: DocumentShapePresets,
 			},
 		}),
@@ -725,7 +689,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			stateValidator: isValidMultiDocumentState,
 			shapeLibrary: {
 				factory: MultiDocumentShapeFactory,
-				previewRenderer: MultiDocumentPreview,
 				presets: MultiDocumentShapePresets,
 			},
 		}),
@@ -757,7 +720,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			stateValidator: isValidActorState,
 			shapeLibrary: {
 				factory: ActorShapeFactory,
-				previewRenderer: ActorPreview,
 				presets: ActorShapePresets,
 			},
 		}),
@@ -796,7 +758,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			],
 			shapeLibrary: {
 				factory: CalloutShapeFactory,
-				previewRenderer: CalloutPreview,
 				presets: CalloutShapePresets,
 			},
 		}),
@@ -829,7 +790,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			stateValidator: isValidDbState,
 			shapeLibrary: {
 				factory: DbShapeFactory,
-				previewRenderer: DbPreview,
 				presets: DbShapePresets,
 			},
 		}),
@@ -862,7 +822,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			stateValidator: isValidStoredDataState,
 			shapeLibrary: {
 				factory: StoredDataShapeFactory,
-				previewRenderer: StoredDataPreview,
 				presets: StoredDataShapePresets,
 			},
 		}),
@@ -894,7 +853,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			stateValidator: isValidSubroutineState,
 			shapeLibrary: {
 				factory: SubroutineShapeFactory,
-				previewRenderer: SubroutinePreview,
 				presets: SubroutineShapePresets,
 			},
 		}),
@@ -927,7 +885,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			stateValidator: isValidTrapezoidState,
 			shapeLibrary: {
 				factory: TrapezoidShapeFactory,
-				previewRenderer: TrapezoidPreview,
 				presets: TrapezoidShapePresets,
 			},
 		}),
@@ -960,7 +917,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			stateValidator: isValidManualInputState,
 			shapeLibrary: {
 				factory: ManualInputShapeFactory,
-				previewRenderer: ManualInputPreview,
 				presets: ManualInputShapePresets,
 			},
 		}),
@@ -993,7 +949,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			stateValidator: isValidCardState,
 			shapeLibrary: {
 				factory: CardShapeFactory,
-				previewRenderer: CardPreview,
 				presets: CardShapePresets,
 			},
 		}),
@@ -1026,7 +981,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			stateValidator: isValidDelayState,
 			shapeLibrary: {
 				factory: DelayShapeFactory,
-				previewRenderer: DelayPreview,
 				presets: DelayShapePresets,
 			},
 		}),
@@ -1059,7 +1013,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			stateValidator: isValidLoopLimitState,
 			shapeLibrary: {
 				factory: LoopLimitShapeFactory,
-				previewRenderer: LoopLimitPreview,
 				presets: LoopLimitShapePresets,
 			},
 		}),
@@ -1092,7 +1045,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			stateValidator: isValidDisplayState,
 			shapeLibrary: {
 				factory: DisplayShapeFactory,
-				previewRenderer: DisplayPreview,
 				presets: DisplayShapePresets,
 			},
 		}),
@@ -1120,7 +1072,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			stateValidator: isValidExtractState,
 			shapeLibrary: {
 				factory: ExtractShapeFactory,
-				previewRenderer: ExtractPreview,
 				presets: ExtractShapePresets,
 			},
 		}),
@@ -1148,7 +1099,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			stateValidator: isValidCrossState,
 			shapeLibrary: {
 				factory: CrossShapeFactory,
-				previewRenderer: CrossPreview,
 				presets: CrossShapePresets,
 			},
 		}),
@@ -1184,7 +1134,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			stateValidator: isValidOffPageConnectorState,
 			shapeLibrary: {
 				factory: OffPageConnectorShapeFactory,
-				previewRenderer: OffPageConnectorPreview,
 				presets: OffPageConnectorShapePresets,
 			},
 		}),
@@ -1229,7 +1178,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			stateValidator: isValidPolygonState,
 			shapeLibrary: {
 				factory: PolygonShapeFactory,
-				previewRenderer: PolygonPreview,
 				presets: PolygonShapePresets,
 			},
 		}),
@@ -1256,7 +1204,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			stateValidator: isValidPolylineState,
 			shapeLibrary: {
 				factory: PolylineShapeFactory,
-				previewRenderer: PolylinePreview,
 				presets: PolylineShapePresets,
 			},
 		}),
@@ -1422,9 +1369,6 @@ export const applyObjectDefinition = (
 	if (shapeLibrary?.factory) {
 		registries.shapeFactory.register(type, shapeLibrary.factory);
 	}
-	if (shapeLibrary?.previewRenderer) {
-		registries.shapePreview.register(type, shapeLibrary.previewRenderer);
-	}
 	shapeLibrary?.presets?.forEach((preset) => {
 		registries.shapePreset.register(preset);
 	});
@@ -1452,7 +1396,6 @@ export const initializeObjectRegistry = (
 	registries.objectMenu.clear();
 	registries.selectionControl.clear();
 	registries.shapeFactory.clear();
-	registries.shapePreview.clear();
 	registries.shapePreset.clear();
 	registries.styleProperty.clearExtras();
 

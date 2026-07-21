@@ -5,7 +5,6 @@ import type { SelectionControlDefinition } from "../controllers/ui/controls/Sele
 import type { MenuSectionFactory } from "../controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
 import type { ShapePreset } from "../controllers/ui/objects/ShapePreset";
 import type { OutlineCalculator } from "../presentations/objects/registry/OutlineRegistry";
-import type { ShapePreviewRenderer } from "../presentations/objects/registry/ShapePreviewTypes";
 import type { TextRegionCalculator } from "../presentations/objects/registry/TextRegionRegistry";
 import type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
 import type { ExtraStylePropertyDescriptor } from "../schemas/objects/types/ExtraStyleProperty";
@@ -22,8 +21,6 @@ import type { ObjectStateValidator } from "../states/registry/ObjectStateValidat
 export type ShapeLibraryRegistration = {
 	/** Factory responsible for doc creation, dimensions, and bounds generation */
 	factory?: ShapeFactory;
-	/** Preview rendering during drag drawing (only for shapes that support bounds drawing) */
-	previewRenderer?: ShapePreviewRenderer;
 	/** Presets shown in the toolbar (multiple allowed per type) */
 	presets?: ShapePreset[];
 };
@@ -84,7 +81,7 @@ export type ObjectTypeDefinition<
 
 	// --- Palette (ShapeLibrary) ---
 
-	/** Shape-palette capabilities: factory / preview / presets. */
+	/** Shape-palette capabilities: factory / presets. */
 	shapeLibrary?: ShapeLibraryRegistration;
 };
 

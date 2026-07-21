@@ -18,7 +18,6 @@ export { containerToDoc, containerToState } from "./state/ContainerMapper";
 export { isValidContainerState } from "./state/validateContainerState";
 
 export { Container } from "./presentation/Container";
-export { ContainerPreview } from "./presentation/ContainerPreview";
 export { calcContainerHeaderHeight } from "./presentation/calcContainerHeaderHeight";
 export { calcContainerTextRegion } from "./presentation/calcContainerTextRegion";
 

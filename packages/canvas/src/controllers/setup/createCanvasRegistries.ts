@@ -8,7 +8,6 @@ import {
 import { initializeStyleProperties } from "./initializeStyleProperties";
 import { createObjectComponentRegistry } from "../../presentations/objects/registry/ObjectComponentRegistry";
 import { createOutlineRegistry } from "../../presentations/objects/registry/OutlineRegistry";
-import { createShapePreviewRegistry } from "../../presentations/objects/registry/ShapePreviewRegistry";
 import { createTextRegionRegistry } from "../../presentations/objects/registry/TextRegionRegistry";
 import { createShapeFactoryRegistry } from "../../schemas/registry/ShapeFactoryRegistry";
 import { createObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
@@ -25,7 +24,7 @@ import { createShapePresetRegistry } from "../ui/objects/ShapePresetRegistry";
  * Builds a fresh, fully independent bundle of UI registries for one `<Canvas>`.
  *
  * Wiring order:
- *   1. instantiate the 14 empty registries,
+ *   1. instantiate the empty registries,
  *   2. register the object-type-independent sets (gesture handlers, system
  *      style properties) — always all,
  *   3. apply the configured object types (default: every type),
@@ -45,7 +44,6 @@ export const createCanvasRegistries = (
 		objectComponent: createObjectComponentRegistry(),
 		textRegion: createTextRegionRegistry(),
 		outline: createOutlineRegistry(),
-		shapePreview: createShapePreviewRegistry(),
 		objectBehavior: createObjectBehaviorRegistry(),
 		selectionControl: createSelectionControlRegistry(),
 		gestureHandler: createGestureHandlerRegistry(),

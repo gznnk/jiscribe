@@ -6,7 +6,6 @@ import { HeaderHeightControlHandler } from "./controls/HeaderHeightControlHandle
 import { HeaderColorMenu } from "./menu/HeaderColorMenu";
 import { calcContainerTextRegion } from "./presentation/calcContainerTextRegion";
 import { Container } from "./presentation/Container";
-import { ContainerPreview } from "./presentation/ContainerPreview";
 import type { ContainerDoc } from "./schema/ContainerDoc";
 import {
 	ContainerExtraStyleProperties,
@@ -66,7 +65,6 @@ export const containerDefinition: ObjectTypeDefinition<
 	stateValidator: isValidContainerState,
 	shapeLibrary: {
 		factory: ContainerShapeFactory,
-		previewRenderer: ContainerPreview,
 		presets: ContainerShapePresets,
 	},
 };
