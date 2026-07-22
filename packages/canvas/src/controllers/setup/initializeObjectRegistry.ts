@@ -364,7 +364,6 @@ import {
 	transformByGroup as polylineTransformByGroup,
 } from "../gestures/handlers/objects/primitives/PolylineController";
 import { CalloutTailTipControl } from "../ui/controls/CalloutTailControls";
-import { createDefaultMenu } from "../ui/menu/ObjectMenu/createDefaultMenu";
 import {
 	LabelBackgroundColorMenu,
 	LabelBoldMenu,
@@ -375,6 +374,7 @@ import {
 } from "../ui/menu/ObjectMenu/items/LabelStyleMenu";
 import { RoutingMenu } from "../ui/menu/ObjectMenu/items/RoutingMenu";
 import { StickyColorMenu } from "../ui/menu/ObjectMenu/items/StickyColorMenu";
+import { createDefaultMenu } from "../ui/menu/ObjectMenu/utils/createDefaultMenu";
 import { CalloutShapePresets } from "../ui/objects/annotations/CalloutShapePresets";
 import { StickyShapePresets } from "../ui/objects/annotations/StickyShapePresets";
 import { CardShapePresets } from "../ui/objects/flowchart/CardShapePresets";

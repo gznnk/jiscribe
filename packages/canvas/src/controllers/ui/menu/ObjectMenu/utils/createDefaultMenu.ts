@@ -1,5 +1,5 @@
-import type { ObjectMenuItem, ObjectMenuSection } from "./ObjectMenuTypes";
-import type { ObjectFeatures } from "../../../../schemas/objects/types/ObjectFeatures";
+import type { ObjectFeatures } from "../../../../../schemas/objects/types/ObjectFeatures";
+import type { ObjectMenuItem, ObjectMenuSection } from "../ObjectMenuTypes";
 
 /**
  * Derives the default ObjectMenu sections from an object type's ObjectFeatures,

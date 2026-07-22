@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import type { ObjectFeatures } from "../../../../../schemas/objects/types/ObjectFeatures";
+import type { ObjectFeatures } from "../../../../../../schemas/objects/types/ObjectFeatures";
 import { createDefaultMenu } from "../createDefaultMenu";
 
 const features = (extra: Partial<ObjectFeatures>): ObjectFeatures => ({
