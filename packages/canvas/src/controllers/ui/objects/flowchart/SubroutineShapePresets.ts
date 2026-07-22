@@ -5,7 +5,7 @@ export const SubroutineShapePresets: ShapePreset[] = [
 	{
 		id: "subroutine",
 		objectType: "subroutine",
-		label: "Subroutine",
+		label: { en: "Subroutine", ja: "サブルーチン" },
 		categories: { flowchart: 35 },
 		icon: SubroutineIcon,
 	},

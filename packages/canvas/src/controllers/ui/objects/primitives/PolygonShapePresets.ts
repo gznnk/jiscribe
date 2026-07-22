@@ -5,7 +5,7 @@ export const PolygonShapePresets: ShapePreset[] = [
 	{
 		id: "polygon",
 		objectType: "polygon",
-		label: "Polygon",
+		label: { en: "Polygon", ja: "多角形" },
 		categories: { basic: 40 },
 		icon: PolygonIcon,
 	},

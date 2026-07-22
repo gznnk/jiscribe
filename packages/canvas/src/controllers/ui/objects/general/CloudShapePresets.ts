@@ -5,7 +5,7 @@ export const CloudShapePresets: ShapePreset[] = [
 	{
 		id: "cloud",
 		objectType: "cloud",
-		label: "Cloud",
+		label: { en: "Cloud", ja: "雲" },
 		categories: { general: 10 },
 		icon: CloudIcon,
 	},

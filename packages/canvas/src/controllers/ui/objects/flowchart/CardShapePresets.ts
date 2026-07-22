@@ -5,7 +5,7 @@ export const CardShapePresets: ShapePreset[] = [
 	{
 		id: "card",
 		objectType: "card",
-		label: "Card",
+		label: { en: "Card", ja: "カード" },
 		categories: { flowchart: 100 },
 		icon: CardIcon,
 	},

@@ -5,7 +5,7 @@ export const OffPageConnectorShapePresets: ShapePreset[] = [
 	{
 		id: "offPageConnector",
 		objectType: "offPageConnector",
-		label: "Off-page connector",
+		label: { en: "Off-page connector", ja: "他ページ結合子" },
 		categories: { flowchart: 210 },
 		icon: OffPageConnectorIcon,
 	},

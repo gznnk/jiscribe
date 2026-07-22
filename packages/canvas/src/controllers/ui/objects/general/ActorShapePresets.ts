@@ -5,7 +5,7 @@ export const ActorShapePresets: ShapePreset[] = [
 	{
 		id: "actor",
 		objectType: "actor",
-		label: "Actor",
+		label: { en: "Actor", ja: "アクター" },
 		categories: { general: 20 },
 		icon: ActorIcon,
 	},

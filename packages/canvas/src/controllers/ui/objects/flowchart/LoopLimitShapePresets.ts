@@ -5,7 +5,7 @@ export const LoopLimitShapePresets: ShapePreset[] = [
 	{
 		id: "loopLimit",
 		objectType: "loopLimit",
-		label: "Loop Limit",
+		label: { en: "Loop Limit", ja: "ループ端" },
 		categories: { flowchart: 160 },
 		icon: LoopLimitIcon,
 	},

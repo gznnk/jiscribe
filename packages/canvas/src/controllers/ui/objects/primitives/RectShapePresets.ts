@@ -7,7 +7,7 @@ export const RectShapePresets: ShapePreset[] = [
 	{
 		id: "rect",
 		objectType: "rect",
-		label: "Rectangle",
+		label: { en: "Rectangle", ja: "長方形" },
 		categories: { basic: 10 },
 		icon: RectIcon,
 	},
@@ -17,7 +17,7 @@ export const RectShapePresets: ShapePreset[] = [
 		// (semantic label + flowchart category), not a distinct shape type.
 		id: "process",
 		objectType: "rect",
-		label: "Process",
+		label: { en: "Process", ja: "処理" },
 		categories: { flowchart: 10 },
 		defaultOverrides: { width: 140, height: 80 },
 		icon: RectIcon,
@@ -25,7 +25,7 @@ export const RectShapePresets: ShapePreset[] = [
 	{
 		id: "rect-markdown",
 		objectType: "rect",
-		label: "Markdown",
+		label: { en: "Markdown", ja: "Markdown" },
 		categories: { basic: 50 },
 		defaultOverrides: {
 			width: 300,

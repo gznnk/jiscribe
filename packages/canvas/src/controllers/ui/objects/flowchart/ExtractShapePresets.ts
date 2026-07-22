@@ -5,7 +5,7 @@ export const ExtractShapePresets: ShapePreset[] = [
 	{
 		id: "extract",
 		objectType: "extract",
-		label: "Extract",
+		label: { en: "Extract", ja: "抽出" },
 		categories: { flowchart: 170 },
 		icon: ExtractIcon,
 	},

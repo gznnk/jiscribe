@@ -5,7 +5,7 @@ export const DisplayShapePresets: ShapePreset[] = [
 	{
 		id: "display",
 		objectType: "display",
-		label: "Display",
+		label: { en: "Display", ja: "表示" },
 		categories: { flowchart: 80 },
 		icon: DisplayIcon,
 	},

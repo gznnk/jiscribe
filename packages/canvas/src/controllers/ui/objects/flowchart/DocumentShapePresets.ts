@@ -5,7 +5,7 @@ export const DocumentShapePresets: ShapePreset[] = [
 	{
 		id: "document",
 		objectType: "document",
-		label: "Document",
+		label: { en: "Document", ja: "書類" },
 		categories: { flowchart: 60 },
 		icon: DocumentIcon,
 	},

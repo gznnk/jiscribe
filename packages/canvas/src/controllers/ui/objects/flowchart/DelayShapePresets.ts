@@ -5,7 +5,7 @@ export const DelayShapePresets: ShapePreset[] = [
 	{
 		id: "delay",
 		objectType: "delay",
-		label: "Delay",
+		label: { en: "Delay", ja: "遅延" },
 		categories: { flowchart: 150 },
 		icon: DelayIcon,
 	},

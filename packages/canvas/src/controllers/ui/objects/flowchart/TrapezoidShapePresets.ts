@@ -5,7 +5,7 @@ export const TrapezoidShapePresets: ShapePreset[] = [
 	{
 		id: "trapezoid",
 		objectType: "trapezoid",
-		label: "Manual Operation",
+		label: { en: "Manual Operation", ja: "手操作" },
 		categories: { flowchart: 130 },
 		icon: TrapezoidIcon,
 	},

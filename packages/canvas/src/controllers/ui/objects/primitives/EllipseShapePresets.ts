@@ -6,7 +6,7 @@ export const EllipseShapePresets: ShapePreset[] = [
 	{
 		id: "ellipse",
 		objectType: "ellipse",
-		label: "Ellipse",
+		label: { en: "Ellipse", ja: "楕円" },
 		categories: { basic: 20 },
 		icon: EllipseIcon,
 	},
@@ -16,7 +16,7 @@ export const EllipseShapePresets: ShapePreset[] = [
 		// (not a distinct one) and only differs as a palette preset.
 		id: "onPageConnector",
 		objectType: "ellipse",
-		label: "On-page connector",
+		label: { en: "On-page connector", ja: "結合子" },
 		categories: { flowchart: 200 },
 		defaultOverrides: { rx: 32, ry: 32 },
 		icon: OnPageConnectorIcon,

@@ -5,7 +5,7 @@ export const StoredDataShapePresets: ShapePreset[] = [
 	{
 		id: "storedData",
 		objectType: "storedData",
-		label: "Stored Data",
+		label: { en: "Stored Data", ja: "記憶データ" },
 		categories: { flowchart: 75 },
 		icon: StoredDataIcon,
 	},

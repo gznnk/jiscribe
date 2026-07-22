@@ -5,7 +5,7 @@ export const CrossShapePresets: ShapePreset[] = [
 	{
 		id: "cross",
 		objectType: "cross",
-		label: "Junction",
+		label: { en: "Junction", ja: "接合点" },
 		categories: { flowchart: 180 },
 		icon: CrossIcon,
 	},
