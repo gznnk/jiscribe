@@ -78,6 +78,9 @@ export type { SubmenuPlacement } from "./controllers/ui/menu/ObjectMenu/hooks/us
 export { getFirstSelectedWithProp } from "./controllers/ui/menu/ObjectMenu/utils/getFirstSelectedWithProp";
 
 export { useCanvasMessages } from "./controllers/messages/CanvasMessagesContext";
+export { useCanvasLocale } from "./controllers/messages/CanvasLocaleContext";
+export { resolveLocaleMessages } from "./controllers/messages/resolveLocaleMessages";
+export type { LocaleMessages } from "./controllers/messages/resolveLocaleMessages";
 
 // `theme` は名前が汎用的すぎるため `canvasThemeCssVars` として re-export
 // (値は `--jiscribe-*` CSS 変数 + ダークテーマ fallback。theme/CanvasTheme.ts 参照)。

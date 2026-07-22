@@ -1,3 +1,8 @@
+import { jaCanvasMessages } from "./jaCanvasMessages";
+import {
+	resolveLocaleMessages,
+	type LocaleMessages,
+} from "./resolveLocaleMessages";
 import type { Command } from "../commands/CommandTypes";
 
 /**
@@ -57,11 +62,6 @@ export type CanvasMessageStrings = {
 	menuFontSize: string;
 	menuFontColor: string;
 	menuBackgroundColor: string;
-	/**
-	 * Used by the container plugin's HeaderColorMenu (`plugins/container-shapes`).
-	 * Move to namespaced plugin i18n when that lands (docs/05_extensibility/custom-menu-design.md i18n (b)).
-	 */
-	menuHeaderColor: string;
 	menuStrokeColor: string;
 	menuLineColor: string;
 	menuLineStyle: string;
@@ -154,7 +154,6 @@ export const defaultCanvasMessages: CanvasMessages = {
 	menuFontSize: "Font Size",
 	menuFontColor: "Font Color",
 	menuBackgroundColor: "Background Color",
-	menuHeaderColor: "Header Color",
 	menuStrokeColor: "Stroke Color",
 	menuLineColor: "Line Color",
 	menuLineStyle: "Line Style",
@@ -187,18 +186,45 @@ export const defaultCanvasMessages: CanvasMessages = {
 	arrowTypeNames: {},
 };
 
-/** Merges host-supplied partial messages over the English defaults. */
-export const mergeCanvasMessages = (
+/** Built-in dictionaries the canvas resolves from `locale` on its own. */
+const builtinCanvasMessagesByLocale: LocaleMessages<CanvasMessages> = {
+	en: defaultCanvasMessages,
+	ja: jaCanvasMessages,
+};
+
+/**
+ * Resolves the effective messages for a locale, then applies host overrides.
+ * Flat keys: English defaults ← built-in locale dictionary ← overrides. Record
+ * fields are merged key by key (built-in locale record ← overrides record).
+ */
+export const resolveCanvasMessages = (
+	locale: string,
 	overrides?: Partial<CanvasMessages>,
-): CanvasMessages => ({
-	...defaultCanvasMessages,
-	...overrides,
-	commandLabels: { ...overrides?.commandLabels },
-	shapePresetLabels: { ...overrides?.shapePresetLabels },
-	shapeCategoryLabels: { ...overrides?.shapeCategoryLabels },
-	colorNames: { ...overrides?.colorNames },
-	arrowTypeNames: { ...overrides?.arrowTypeNames },
-});
+): CanvasMessages => {
+	const localized = resolveLocaleMessages(
+		builtinCanvasMessagesByLocale,
+		locale,
+	);
+	return {
+		...defaultCanvasMessages,
+		...localized,
+		...overrides,
+		commandLabels: { ...localized.commandLabels, ...overrides?.commandLabels },
+		shapePresetLabels: {
+			...localized.shapePresetLabels,
+			...overrides?.shapePresetLabels,
+		},
+		shapeCategoryLabels: {
+			...localized.shapeCategoryLabels,
+			...overrides?.shapeCategoryLabels,
+		},
+		colorNames: { ...localized.colorNames, ...overrides?.colorNames },
+		arrowTypeNames: {
+			...localized.arrowTypeNames,
+			...overrides?.arrowTypeNames,
+		},
+	};
+};
 
 /** Resolves a command's display label: override by id, else the command's English label. */
 export const getCommandLabel = (

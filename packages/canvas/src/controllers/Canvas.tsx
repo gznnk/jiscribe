@@ -41,7 +41,7 @@ import { useSyncExternalDoc } from "./hooks/useSyncExternalDoc";
 import { useViewportCulling } from "./hooks/useViewportCulling";
 import type { CanvasViewportHandle } from "./hooks/useViewportHandle";
 import { useViewportHandle } from "./hooks/useViewportHandle";
-import { mergeCanvasMessages } from "./messages/CanvasMessages";
+import { resolveCanvasMessages } from "./messages/CanvasMessages";
 import type { CanvasMessages } from "./messages/CanvasMessages";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./setup";
 import type { CanvasConfig } from "./setup";
@@ -112,9 +112,15 @@ type CanvasProps = {
 	 */
 	onSelectionChange?: (selectedIds: string[]) => void;
 	/**
-	 * Partial overrides of the UI strings (tooltips, menus, toasts).
-	 * Defaults to English; the host decides the language (e.g. a VSCode host
-	 * can pass a Japanese dictionary based on `vscode.env.language`).
+	 * Active locale (default `"en"`). Selects the canvas's built-in dictionary
+	 * (en / ja) and is exposed to plugins via `useCanvasLocale`. Resolution is
+	 * exact → language subtag (`"ja-JP"` → `"ja"`) → `"en"`.
+	 */
+	locale?: string;
+	/**
+	 * Partial overrides applied on top of the locale-resolved dictionary
+	 * (tooltips, menus, toasts). Use this to tweak individual strings; use
+	 * `locale` to pick the language.
 	 */
 	messages?: Partial<CanvasMessages>;
 	/**
@@ -216,6 +222,7 @@ const CanvasComponent = ({
 	onUndo,
 	onRedo,
 	onSelectionChange,
+	locale = "en",
 	messages,
 	theme = darkCanvasTheme,
 	autoFocus = true,
@@ -228,10 +235,11 @@ const CanvasComponent = ({
 	onExportImage,
 	ref,
 }: CanvasProps) => {
-	// Merged UI strings (English defaults + host overrides), distributed via context
+	// UI strings resolved from locale, then host overrides applied. Distributed
+	// via context along with the raw locale (plugins resolve their own strings).
 	const mergedMessages = useMemo(
-		() => mergeCanvasMessages(messages),
-		[messages],
+		() => resolveCanvasMessages(locale, messages),
+		[locale, messages],
 	);
 
 	// Appearance tokens as --jiscribe-* custom properties, injected on the root
@@ -426,6 +434,7 @@ const CanvasComponent = ({
 	return (
 		<CanvasProviders
 			theme={theme}
+			locale={locale}
 			messages={mergedMessages}
 			registries={registries}
 			viewportElementRef={canvasRef}

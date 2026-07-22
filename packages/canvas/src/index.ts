@@ -38,7 +38,6 @@ export {
 	type ShapeCategory,
 } from "./controllers/ui/menu/ShapeLibrary/shapeCategories";
 export { defaultCanvasMessages } from "./controllers/messages/CanvasMessages";
-export { jaCanvasMessages } from "./controllers/messages/jaCanvasMessages";
 export type {
 	CanvasMessages,
 	CanvasMessageStrings,

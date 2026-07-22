@@ -1,6 +1,6 @@
 import type { CanvasMessages } from "./CanvasMessages";
 
-/** Japanese dictionary. Hosts pass this to the `messages` prop of Canvas. */
+/** Japanese dictionary. Built-in; resolved via the `locale` prop of Canvas. */
 export const jaCanvasMessages: CanvasMessages = {
 	toolbarZoomOut: "ズームアウト",
 	toolbarResetZoom: "ズームを100%に戻す",
@@ -45,7 +45,6 @@ export const jaCanvasMessages: CanvasMessages = {
 	menuFontSize: "フォントサイズ",
 	menuFontColor: "文字色",
 	menuBackgroundColor: "背景色",
-	menuHeaderColor: "ヘッダ色",
 	menuStrokeColor: "枠線の色",
 	menuLineColor: "線の色",
 	menuLineStyle: "線のスタイル",

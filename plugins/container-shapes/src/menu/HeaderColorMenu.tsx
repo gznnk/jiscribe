@@ -6,13 +6,15 @@ import {
 	ObjectMenuButton,
 	getFirstSelectedWithProp,
 	resolveAutoColor,
-	useCanvasMessages,
+	resolveLocaleMessages,
+	useCanvasLocale,
 	useSubmenuPosition,
 	type CanvasControllerState,
 } from "@workspace/canvas/unstable";
 import { memo, useRef } from "react";
 
 import { HeaderColorPreviewIcon } from "./HeaderColorPreviewIcon";
+import { containerMessagesByLocale } from "../messages/containerMessages";
 
 const SECTION_ID = "header-color";
 
@@ -30,15 +32,15 @@ const getSelectedHeaderColor = (state: CanvasControllerState): string => {
  * Header color menu (container only). Sets the `headerFill` property via a color
  * picker. Unset = the header shows a derived faint tint of the stroke.
  *
- * `menuHeaderColor` is a core `CanvasMessageStrings` key (i18n (a) 方式,
- * docs/05_extensibility/custom-menu-design.md) — read via `useCanvasMessages()`
- * rather than a plugin-local string.
+ * `menuHeaderColor` is owned by this plugin: its dictionary is resolved from the
+ * canvas locale (`useCanvasLocale` + `resolveLocaleMessages`), not from core.
  */
 const HeaderColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
 	canvasState,
 	onPropertyUpdate,
 }) => {
-	const messages = useCanvasMessages();
+	const locale = useCanvasLocale();
+	const messages = resolveLocaleMessages(containerMessagesByLocale, locale);
 	const menuItemRef = useRef<HTMLDivElement>(null);
 	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
 	const currentColor = getSelectedHeaderColor(canvasState);
