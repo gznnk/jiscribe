@@ -6,7 +6,10 @@ import {
 	resolveCanvasMessages,
 } from "../CanvasMessages";
 import { jaCanvasMessages } from "../jaCanvasMessages";
-import { resolveLocaleMessages } from "../resolveLocaleMessages";
+import {
+	resolveLocaleMessages,
+	resolveLocalizedLabel,
+} from "../resolveLocaleMessages";
 
 describe("resolveCanvasMessages", () => {
 	it("en, no overrides -> equals the English defaults", () => {
@@ -71,6 +74,28 @@ describe("resolveLocaleMessages", () => {
 
 	it("unknown locale falls back to en", () => {
 		expect(resolveLocaleMessages(dict, "de")).toBe("english");
+	});
+});
+
+describe("resolveLocalizedLabel", () => {
+	it("plain string is locale-agnostic", () => {
+		expect(resolveLocalizedLabel("Frame", "ja")).toBe("Frame");
+	});
+
+	it("dictionary resolves for the locale", () => {
+		expect(resolveLocalizedLabel({ en: "Frame", ja: "枠" }, "ja")).toBe("枠");
+	});
+
+	it("dictionary falls back via language subtag (ja-JP -> ja)", () => {
+		expect(resolveLocalizedLabel({ en: "Frame", ja: "枠" }, "ja-JP")).toBe(
+			"枠",
+		);
+	});
+
+	it("dictionary falls back to en for an unknown locale", () => {
+		expect(resolveLocalizedLabel({ en: "Frame", ja: "枠" }, "de")).toBe(
+			"Frame",
+		);
 	});
 });
 

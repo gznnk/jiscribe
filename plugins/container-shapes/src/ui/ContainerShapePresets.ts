@@ -11,7 +11,7 @@ export const ContainerShapePresets: ShapePreset[] = [
 	{
 		id: "frame",
 		objectType: "container",
-		label: "Frame",
+		label: { en: "Frame", ja: "枠" },
 		categories: { container: 10 },
 		icon: FrameIcon,
 	},
@@ -20,7 +20,7 @@ export const ContainerShapePresets: ShapePreset[] = [
 		// Differs only as a palette preset (dashed default), not a distinct type.
 		id: "boundary",
 		objectType: "container",
-		label: "Boundary",
+		label: { en: "Boundary", ja: "境界" },
 		categories: { container: 20 },
 		defaultOverrides: { strokeDashType: "dashed" },
 		icon: BoundaryIcon,
@@ -29,7 +29,7 @@ export const ContainerShapePresets: ShapePreset[] = [
 		// Tinted body — a colored zone objects are dropped onto.
 		id: "zone",
 		objectType: "container",
-		label: "Zone",
+		label: { en: "Zone", ja: "ゾーン" },
 		categories: { container: 30 },
 		defaultOverrides: { fill: ZONE_FILL },
 		icon: ZoneIcon,

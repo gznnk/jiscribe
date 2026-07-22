@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 
 import type { ObjectType } from "../../../schemas/objects/types/ObjectType";
+import type { LocaleMessages } from "../../messages/resolveLocaleMessages";
 
 /** Props received by a ShapeLibrary icon component. */
 export type ShapeIconProps = {
@@ -18,7 +19,11 @@ export type ShapeIconProps = {
 export type ShapePreset = {
 	id: string;
 	objectType: ObjectType;
-	label: string;
+	/**
+	 * Display label: a plain string (all locales) or a `LocaleMessages` dictionary.
+	 * Resolution order: `messages.shapePresetLabels[id]` (host override) → this label.
+	 */
+	label: string | LocaleMessages<string>;
 	defaultOverrides?: Record<string, unknown>;
 	/** Icon shown in the toolbar. */
 	icon: ComponentType<ShapeIconProps>;

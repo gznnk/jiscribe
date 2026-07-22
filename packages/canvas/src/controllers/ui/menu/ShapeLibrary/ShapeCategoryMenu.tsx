@@ -7,7 +7,9 @@ import {
 	ShapeCategoryContainer,
 	ShapeCategoryFlyout,
 } from "./ShapeLibraryStyled";
+import { useCanvasLocale } from "../../../messages/CanvasLocaleContext";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
+import { resolveLocalizedLabel } from "../../../messages/resolveLocaleMessages";
 import { ChevronDownIcon } from "../../icons/ChevronDownIcon";
 import type { ShapePreset } from "../../objects/ShapePreset";
 
@@ -37,7 +39,10 @@ const ShapeCategoryMenuComponent: React.FC<ShapeCategoryMenuProps> = ({
 	activePresetId,
 }) => {
 	const messages = useCanvasMessages();
-	const label = messages.shapeCategoryLabels[category.id] ?? category.label;
+	const locale = useCanvasLocale();
+	const label =
+		messages.shapeCategoryLabels[category.id] ??
+		resolveLocalizedLabel(category.label, locale);
 	const Icon = category.icon;
 
 	return (

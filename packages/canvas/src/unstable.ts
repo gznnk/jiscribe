@@ -79,7 +79,10 @@ export { getFirstSelectedWithProp } from "./controllers/ui/menu/ObjectMenu/utils
 
 export { useCanvasMessages } from "./controllers/messages/CanvasMessagesContext";
 export { useCanvasLocale } from "./controllers/messages/CanvasLocaleContext";
-export { resolveLocaleMessages } from "./controllers/messages/resolveLocaleMessages";
+export {
+	resolveLocaleMessages,
+	resolveLocalizedLabel,
+} from "./controllers/messages/resolveLocaleMessages";
 export type { LocaleMessages } from "./controllers/messages/resolveLocaleMessages";
 
 // `theme` は名前が汎用的すぎるため `canvasThemeCssVars` として re-export

@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 
+import type { LocaleMessages } from "../../../messages/resolveLocaleMessages";
 import { FrameIcon } from "../../icons/FrameIcon";
 import { CalloutIcon } from "../../objects/annotations/CalloutIcon";
 import { DiamondIcon } from "../../objects/flowchart/DiamondIcon";
@@ -12,13 +13,13 @@ import type { ShapeIconProps } from "../../objects/ShapePreset";
  *
  * Categories are a presentation axis, independent of the source folder ("home")
  * a shape lives in: a preset declares its memberships via `ShapePreset.categories`,
- * and the flyout lists `shapePreset.byCategory(id)`. The display label falls back
- * to `label` here and is overridden by `messages.shapeCategoryLabels[id]`.
+ * and the flyout lists `shapePreset.byCategory(id)`. Resolution order for the
+ * label: `messages.shapeCategoryLabels[id]` (host override) → this `label`.
  */
 export type ShapeCategory = {
 	id: string;
-	/** English fallback label; overridden by `messages.shapeCategoryLabels[id]`. */
-	label: string;
+	/** A plain string (all locales) or a `LocaleMessages` dictionary. */
+	label: string | LocaleMessages<string>;
 	/** Icon shown on the category button. */
 	icon: ComponentType<ShapeIconProps>;
 };
@@ -28,21 +29,25 @@ export type ShapeCategory = {
  * icon (a dedicated glyph set can replace these later without touching callers).
  */
 export const SHAPE_CATEGORY_DEFINITIONS: Record<string, ShapeCategory> = {
-	basic: { id: "basic", label: "Basic", icon: RectIcon },
+	basic: { id: "basic", label: { en: "Basic", ja: "基本" }, icon: RectIcon },
 	flowchart: {
 		id: "flowchart",
-		label: "Flowchart",
+		label: { en: "Flowchart", ja: "フローチャート" },
 		icon: DiamondIcon,
 	},
 	container: {
 		id: "container",
-		label: "Container",
+		label: { en: "Container", ja: "コンテナ" },
 		icon: FrameIcon,
 	},
-	general: { id: "general", label: "General", icon: CloudIcon },
+	general: {
+		id: "general",
+		label: { en: "General", ja: "一般" },
+		icon: CloudIcon,
+	},
 	annotation: {
 		id: "annotation",
-		label: "Annotation",
+		label: { en: "Annotation", ja: "注釈" },
 		icon: CalloutIcon,
 	},
 };

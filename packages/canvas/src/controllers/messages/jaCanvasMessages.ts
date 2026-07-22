@@ -115,9 +115,6 @@ export const jaCanvasMessages: CanvasMessages = {
 		polyline: "折れ線",
 		db: "データベース",
 		sticky: "付箋",
-		frame: "枠",
-		boundary: "境界",
-		zone: "ゾーン",
 		process: "処理",
 		stadium: "端子",
 		document: "書類",
@@ -138,13 +135,8 @@ export const jaCanvasMessages: CanvasMessages = {
 		callout: "吹き出し",
 	},
 
-	shapeCategoryLabels: {
-		basic: "基本",
-		flowchart: "フローチャート",
-		container: "コンテナ",
-		general: "一般",
-		annotation: "注釈",
-	},
+	// カテゴリの ja ラベルは SHAPE_CATEGORY_DEFINITIONS 側にある。record はホスト上書き用に残す
+	shapeCategoryLabels: {},
 
 	// PRESET_COLORS と STICKY_PRESET_COLORS の英語名を網羅する
 	colorNames: {

@@ -23,3 +23,16 @@ export function resolveLocaleMessages<T>(
 	}
 	return dictByLocale.en;
 }
+
+/**
+ * Resolves a label declared outside React: a plain string is locale-agnostic and
+ * returned as-is; a `LocaleMessages` dictionary is resolved for the locale.
+ */
+export function resolveLocalizedLabel(
+	label: string | LocaleMessages<string>,
+	locale: string,
+): string {
+	return typeof label === "string"
+		? label
+		: resolveLocaleMessages(label, locale);
+}
