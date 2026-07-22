@@ -43,7 +43,7 @@ export const containerDefinition: ObjectTypeDefinition<
 			handler: new HeaderHeightControlHandler(),
 		},
 	],
-	menuFactory: (_state) => [
+	menu: [
 		{
 			id: "style",
 			items: [

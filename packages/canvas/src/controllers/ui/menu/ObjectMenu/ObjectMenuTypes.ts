@@ -35,7 +35,3 @@ export type ObjectMenuSection = {
 	id: string;
 	items: ObjectMenuItem[];
 };
-
-export type ObjectMenuSectionFactory<TState = unknown> = (
-	state: TState,
-) => ObjectMenuSection[];

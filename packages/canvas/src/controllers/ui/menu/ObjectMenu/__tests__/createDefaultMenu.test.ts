@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 
 import type { ObjectFeatures } from "../../../../../schemas/objects/types/ObjectFeatures";
-import { createDefaultMenuFactory } from "../createDefaultMenuFactory";
+import { createDefaultMenu } from "../createDefaultMenu";
 
 const features = (extra: Partial<ObjectFeatures>): ObjectFeatures => ({
 	type: "rect",
@@ -9,9 +9,9 @@ const features = (extra: Partial<ObjectFeatures>): ObjectFeatures => ({
 	...extra,
 });
 
-describe("createDefaultMenuFactory", () => {
+describe("createDefaultMenu", () => {
 	it("rect-like (all flags + radius) -> style(radius:true) / text / transform", () => {
-		const sections = createDefaultMenuFactory(
+		const sections = createDefaultMenu(
 			features({
 				transform: true,
 				stroke: true,
@@ -19,7 +19,7 @@ describe("createDefaultMenuFactory", () => {
 				text: true,
 				radius: true,
 			}),
-		)({});
+		);
 		expect(sections).toEqual([
 			{
 				id: "style",
@@ -38,9 +38,9 @@ describe("createDefaultMenuFactory", () => {
 	});
 
 	it("polyline-like (stroke + arrow, no fill) -> arrowHead / line", () => {
-		const sections = createDefaultMenuFactory(
+		const sections = createDefaultMenu(
 			features({ geometry: "poly", stroke: true, arrow: true }),
-		)({});
+		);
 		expect(sections).toEqual([
 			{ id: "arrowHead", items: [{ type: "arrowHead" }] },
 			{
@@ -51,15 +51,15 @@ describe("createDefaultMenuFactory", () => {
 	});
 
 	it("group-like (transform only) -> transform", () => {
-		const sections = createDefaultMenuFactory(
+		const sections = createDefaultMenu(
 			features({ geometry: "none", transform: true }),
-		)({});
+		);
 		expect(sections).toEqual([
 			{ id: "transform", items: [{ type: "aspectRatio" }] },
 		]);
 	});
 
 	it("no flags -> empty", () => {
-		expect(createDefaultMenuFactory(features({}))({})).toEqual([]);
+		expect(createDefaultMenu(features({}))).toEqual([]);
 	});
 });

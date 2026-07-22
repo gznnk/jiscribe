@@ -19,7 +19,15 @@ type Props = {
  */
 const LabelBoldMenuComponent: React.FC<Props> = ({ canvasState }) => {
 	const messages = useCanvasMessages();
-	const isBold = getSelectedConnectorLabel(canvasState)?.fontWeight === "bold";
+	const label = getSelectedConnectorLabel(canvasState);
+
+	// Early-return only after all hooks have been called (to keep hook order stable).
+	// No label text: render nothing, and the emptied section collapses via `:empty`.
+	if (!label?.text) {
+		return null;
+	}
+
+	const isBold = label.fontWeight === "bold";
 
 	return (
 		<ObjectMenuItemPositioner>

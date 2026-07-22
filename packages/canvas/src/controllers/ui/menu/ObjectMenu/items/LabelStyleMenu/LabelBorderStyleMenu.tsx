@@ -47,8 +47,15 @@ const LabelBorderStyleMenuComponent: React.FC<Props> = ({
 	);
 
 	const label = getSelectedConnectorLabel(canvasState);
-	const strokeWidth = label?.strokeWidth ?? 0;
-	const strokeDashType = label?.strokeDashType;
+
+	// Early-return only after all hooks have been called (to keep hook order stable).
+	// No label text: render nothing, and the emptied section collapses via `:empty`.
+	if (!label?.text) {
+		return null;
+	}
+
+	const strokeWidth = label.strokeWidth ?? 0;
+	const strokeDashType = label.strokeDashType;
 
 	return (
 		<ObjectMenuItemPositioner ref={menuItemRef}>

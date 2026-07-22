@@ -2,7 +2,7 @@ import type { FC } from "react";
 
 import type { ObjectBehaviorEntry } from "../controllers/gestures/registry/ObjectBehaviorTypes";
 import type { SelectionControlDefinition } from "../controllers/ui/controls/SelectionControlTypes";
-import type { ObjectMenuSectionFactory } from "../controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
+import type { ObjectMenuSection } from "../controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
 import type { ShapePreset } from "../controllers/ui/objects/ShapePreset";
 import type { ObjectOutlineCalculator } from "../presentations/objects/registry/ObjectOutlineRegistry";
 import type { ObjectTextRegionCalculator } from "../presentations/objects/registry/ObjectTextRegionRegistry";
@@ -30,8 +30,8 @@ export type ShapeLibraryRegistration = {
  * layer's contract (model / render / interaction / style / palette). Fields are
  * grouped in that order below; required first within each group.
  *
- * `TDoc` / `TState` tie `mapper` / `behavior` / `menuFactory` / `selectionControls`
- * to one state type. A plugin declares a standalone definition with an explicit
+ * `TDoc` / `TState` tie `mapper` / `behavior` / `selectionControls` to one state
+ * type. A plugin declares a standalone definition with an explicit
  * annotation — `ObjectTypeDefinition<ContainerDoc, ContainerState>` — and needs no
  * `defineObject` call. The built-in record uses `defineObject` instead, because a
  * record literal can only be annotated with the widened entry type, which would
@@ -68,8 +68,12 @@ export type ObjectTypeDefinition<
 	/** Group-transform ops (move / rotate / transform). */
 	behavior: ObjectBehaviorEntry<TState>;
 
-	/** ObjectMenu sections built from the current selection state. Omitted = derived from features (see createDefaultMenuFactory). */
-	menuFactory?: ObjectMenuSectionFactory<TState>;
+	/**
+	 * ObjectMenu sections for this type. Omitted = derived from features (see createDefaultMenu).
+	 * Static per type; per-instance visibility belongs to the `custom` item component
+	 * (return null and the emptied section collapses).
+	 */
+	menu?: ObjectMenuSection[];
 
 	/** Type-specific selection controls (handle renderer + gesture strategy pairs). */
 	selectionControls?: SelectionControlDefinition<TState>[];
@@ -87,17 +91,16 @@ export type ObjectTypeDefinition<
 
 /**
  * State-erased storage form. `any` on the state params kills the reverse
- * variance of `menuFactory` / `behavior` (contravariant in `TState`), so a
- * precisely-typed definition flows into the registry without a cast. This is the
- * type the plugin/registry boundary stores.
+ * variance of `behavior` (contravariant in `TState`), so a precisely-typed
+ * definition flows into the registry without a cast. This is the type the
+ * plugin/registry boundary stores.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyObjectTypeDefinition = ObjectTypeDefinition<any, any>;
 
 /**
  * Builds a single built-in `ObjectTypeDefinition`, preserving per-type `TState`
- * inference at the definition site (mapper / behavior / menuFactory are checked
- * together) before widening to the base-typed record entry. Plugins declare
+ * inference at the definition site (mapper / behavior are checked together) before widening to the base-typed record entry. Plugins declare
  * standalone definitions with an explicit annotation instead (see above).
  */
 export const defineObject = <

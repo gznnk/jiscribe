@@ -1,17 +1,13 @@
-import type {
-	ObjectMenuItem,
-	ObjectMenuSection,
-	ObjectMenuSectionFactory,
-} from "./ObjectMenuTypes";
+import type { ObjectMenuItem, ObjectMenuSection } from "./ObjectMenuTypes";
 import type { ObjectFeatures } from "../../../../schemas/objects/types/ObjectFeatures";
 
 /**
  * Derives the default ObjectMenu sections from an object type's ObjectFeatures,
- * used when a definition omits `menuFactory` (see ObjectTypeDefinition).
+ * used when a definition omits `menu` (see ObjectTypeDefinition).
  */
-export const createDefaultMenuFactory = (
+export const createDefaultMenu = (
 	features: ObjectFeatures,
-): ObjectMenuSectionFactory => {
+): ObjectMenuSection[] => {
 	const sections: ObjectMenuSection[] = [];
 
 	if (features.arrow) {
@@ -43,5 +39,5 @@ export const createDefaultMenuFactory = (
 		sections.push({ id: "transform", items: [{ type: "aspectRatio" }] });
 	}
 
-	return () => sections;
+	return sections;
 };

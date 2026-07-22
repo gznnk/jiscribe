@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 
-import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../../contexts/CanvasRegistriesContext";
 import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
@@ -85,44 +84,40 @@ export const getMenuSections = (
 		if (!connector) {
 			return [];
 		}
-		return objectMenuRegistry.getSections(connector.type, connector);
+		return objectMenuRegistry.getSections(connector.type);
 	}
 
 	if (selectedIds.length === 0) {
 		return [];
 	}
 
-	// Collect the concrete object types in the selection, keeping one representative
-	// instance per type. group types expand into their descendant concrete objects.
-	// The selected object (or its descendant) is itself a valid representative, so no
-	// full-objects scan is needed.
-	const representatives = new Map<string, ObjectState>();
+	// Collect the concrete object types in the selection. group types expand into
+	// their descendant concrete objects.
+	const selectedTypes = new Set<string>();
 	for (const id of selectedIds) {
 		const obj = objects[id];
 		if (!obj) {
 			continue;
 		}
 		if (obj.type !== "group") {
-			if (!representatives.has(obj.type)) {
-				representatives.set(obj.type, obj);
-			}
+			selectedTypes.add(obj.type);
 		} else {
 			for (const descId of collectDescendantIds(id, objects)) {
 				const desc = objects[descId];
-				if (desc && desc.type !== "group" && !representatives.has(desc.type)) {
-					representatives.set(desc.type, desc);
+				if (desc && desc.type !== "group") {
+					selectedTypes.add(desc.type);
 				}
 			}
 		}
 	}
 
-	if (representatives.size === 0) {
+	if (selectedTypes.size === 0) {
 		return [];
 	}
 
-	// Get the menu sections from each type's representative, then AND-merge them
-	const sectionArrays = [...representatives].map(([type, representative]) =>
-		objectMenuRegistry.getSections(type, representative),
+	// Get each type's menu sections, then AND-merge them
+	const sectionArrays = [...selectedTypes].map((type) =>
+		objectMenuRegistry.getSections(type),
 	);
 
 	return mergeSections(sectionArrays);

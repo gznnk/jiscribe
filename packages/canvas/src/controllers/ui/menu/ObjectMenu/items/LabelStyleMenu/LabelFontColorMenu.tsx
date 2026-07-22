@@ -36,8 +36,15 @@ const LabelFontColorMenuComponent: React.FC<Props> = ({
 		isOpen,
 	);
 
-	const fontColor =
-		getSelectedConnectorLabel(canvasState)?.fontColor ?? AUTO_COLOR;
+	const label = getSelectedConnectorLabel(canvasState);
+
+	// Early-return only after all hooks have been called (to keep hook order stable).
+	// No label text: render nothing, and the emptied section collapses via `:empty`.
+	if (!label?.text) {
+		return null;
+	}
+
+	const fontColor = label.fontColor ?? AUTO_COLOR;
 
 	return (
 		<ObjectMenuItemPositioner ref={menuItemRef}>

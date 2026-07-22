@@ -3,7 +3,6 @@ import { describe, it, expect } from "vitest";
 import type { CanvasPlugin } from "../../../plugin/CanvasPlugin";
 import { defineObject } from "../../../plugin/ObjectTypeDefinition";
 import type { ObjectTypeDefinition } from "../../../plugin/ObjectTypeDefinition";
-import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { createCanvasRegistries } from "../createCanvasRegistries";
 
 // Minimal stand-in for a plugin object type (mirrors how plugin-container-shapes
@@ -22,7 +21,7 @@ const buildFakeDefinition = (type: string): ObjectTypeDefinition =>
 			transformByGroup: (state) => state,
 			rotateByGroup: (state) => state,
 		},
-		menuFactory: () => [],
+		menu: [],
 		stateValidator: () => true,
 	});
 
@@ -97,7 +96,7 @@ describe("createCanvasRegistries", () => {
 			expect(registries.objectMapper.getFeatures("star")).toBeDefined();
 		});
 
-		it("derives menu sections from features when menuFactory is omitted", () => {
+		it("derives menu sections from features when menu is omitted", () => {
 			const plugin: CanvasPlugin = {
 				id: "boxy-plugin",
 				objects: {
@@ -125,10 +124,7 @@ describe("createCanvasRegistries", () => {
 				},
 			};
 			const registries = createCanvasRegistries({ plugins: [plugin] });
-			const sections = registries.objectMenu.getSections("boxy", {
-				id: "b1",
-				type: "boxy",
-			} as unknown as ObjectState);
+			const sections = registries.objectMenu.getSections("boxy");
 			expect(sections).toEqual([
 				{
 					id: "style",

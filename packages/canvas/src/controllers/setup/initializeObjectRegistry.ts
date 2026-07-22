@@ -364,7 +364,7 @@ import {
 	transformByGroup as polylineTransformByGroup,
 } from "../gestures/handlers/objects/primitives/PolylineController";
 import { CalloutTailTipControl } from "../ui/controls/CalloutTailControls";
-import { createDefaultMenuFactory } from "../ui/menu/ObjectMenu/createDefaultMenuFactory";
+import { createDefaultMenu } from "../ui/menu/ObjectMenu/createDefaultMenu";
 import {
 	LabelBackgroundColorMenu,
 	LabelBoldMenu,
@@ -787,7 +787,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				transformByGroup: connectorTransformByGroup,
 				rotateByGroup: connectorRotateByGroup,
 			},
-			menuFactory: (state) => [
+			menu: [
 				{
 					id: "arrowHead",
 					items: [{ type: "arrowHead" }],
@@ -804,52 +804,45 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					id: "line",
 					items: [{ type: "lineColor" }, { type: "lineStyle" }],
 				},
-				// Label styles. Shown only when a label (label.text) is present.
+				// Label styles. Each item renders null while the connector has no label text,
+				// so both sections collapse via ObjectMenuSection's `:empty`.
 				// Following the shapes, split into background/border (style) and text (text) sections.
-				...(state.label?.text
-					? [
-							{
-								id: "label-style",
-								items: [
-									{
-										type: "custom" as const,
-										id: "label-bg-color",
-										component: LabelBackgroundColorMenu,
-									},
-									{
-										type: "custom" as const,
-										id: "label-border-color",
-										component: LabelBorderColorMenu,
-									},
-									{
-										type: "custom" as const,
-										id: "label-border-style",
-										component: LabelBorderStyleMenu,
-									},
-								],
-							},
-							{
-								id: "label-text",
-								items: [
-									{
-										type: "custom" as const,
-										id: "label-font-size",
-										component: LabelFontSizeMenu,
-									},
-									{
-										type: "custom" as const,
-										id: "label-font-color",
-										component: LabelFontColorMenu,
-									},
-									{
-										type: "custom" as const,
-										id: "label-bold",
-										component: LabelBoldMenu,
-									},
-								],
-							},
-						]
-					: []),
+				{
+					id: "label-style",
+					items: [
+						{
+							type: "custom",
+							id: "label-bg-color",
+							component: LabelBackgroundColorMenu,
+						},
+						{
+							type: "custom",
+							id: "label-border-color",
+							component: LabelBorderColorMenu,
+						},
+						{
+							type: "custom",
+							id: "label-border-style",
+							component: LabelBorderStyleMenu,
+						},
+					],
+				},
+				{
+					id: "label-text",
+					items: [
+						{
+							type: "custom",
+							id: "label-font-size",
+							component: LabelFontSizeMenu,
+						},
+						{
+							type: "custom",
+							id: "label-font-color",
+							component: LabelFontColorMenu,
+						},
+						{ type: "custom", id: "label-bold", component: LabelBoldMenu },
+					],
+				},
 			],
 			stateValidator: isValidConnectorState,
 		}),
@@ -859,7 +852,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			features: StickyFeatures,
 			component: Sticky,
 			behavior: createFrameBehavior<StickyState>(),
-			menuFactory: (_state: StickyState) => [
+			menu: [
 				{
 					id: "style",
 					items: [
@@ -919,7 +912,7 @@ export const applyObjectDefinition = (
 	registries.objectStateValidator.register(type, definition.stateValidator);
 	registries.objectMenu.register(
 		type,
-		definition.menuFactory ?? createDefaultMenuFactory(definition.features),
+		definition.menu ?? createDefaultMenu(definition.features),
 	);
 	if (definition.selectionControls) {
 		registries.selectionControl.register(type, definition.selectionControls);

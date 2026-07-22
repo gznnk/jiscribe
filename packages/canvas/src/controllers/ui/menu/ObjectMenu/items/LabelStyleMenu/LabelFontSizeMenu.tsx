@@ -42,9 +42,15 @@ const LabelFontSizeMenuComponent: React.FC<Props> = ({
 		isOpen,
 	);
 
-	const fontSize =
-		getSelectedConnectorLabel(canvasState)?.fontSize ??
-		CONNECTOR_LABEL_DEFAULTS.fontSize;
+	const label = getSelectedConnectorLabel(canvasState);
+
+	// Early-return only after all hooks have been called (to keep hook order stable).
+	// No label text: render nothing, and the emptied section collapses via `:empty`.
+	if (!label?.text) {
+		return null;
+	}
+
+	const fontSize = label.fontSize ?? CONNECTOR_LABEL_DEFAULTS.fontSize;
 
 	return (
 		<ObjectMenuItemPositioner ref={menuItemRef}>
