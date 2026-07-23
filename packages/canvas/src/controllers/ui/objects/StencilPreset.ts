@@ -17,23 +17,19 @@ export type StencilIconProps = {
  * objectType's `ObjectFactory`, passing defaultOverrides.
  */
 export type StencilPreset = {
+	/** Stable identifier; also the lookup key for label overrides and category order. */
 	id: string;
+	/** Object type this preset creates through (presets are not 1:1 with types). */
 	objectType: ObjectType;
 	/**
-	 * Display label: a plain string (all locales) or a `LocaleMessages` dictionary.
-	 * Resolution order: `messages.stencilPresetLabels[id]` (host override) → this label.
+	 * Display label: a plain string or a per-locale dictionary.
+	 * Resolved via `messages.stencilPresetLabels[id]` (host override) → this label.
 	 */
 	label: string | LocaleMessages<string>;
-	defaultOverrides?: Record<string, unknown>;
-	/** Icon shown in the toolbar. */
+	/** Icon component rendered in the palette. */
 	icon: ComponentType<StencilIconProps>;
-	/**
-	 * Palette memberships: category id → display order within that category
-	 * (ascending). A preset may belong to several categories and rank
-	 * differently in each (e.g. `{ basic: 30, flowchart: 20 }`). Membership is
-	 * independent of the source folder ("home") and of whether the preset is
-	 * pinned directly on the toolbar (that is decided by the toolbar layout, so
-	 * this order only affects the order *inside* a category flyout).
-	 */
+	/** Palette memberships: category id → sort order within that category (ascending). */
 	categories?: Record<string, number>;
+	/** Merged over the objectType's defaults when creating via its `ObjectFactory`. */
+	defaultOverrides?: Record<string, unknown>;
 };

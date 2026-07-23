@@ -6,6 +6,7 @@ export const StickyStencilPresets: StencilPreset[] = [
 		id: "sticky",
 		objectType: "sticky",
 		label: { en: "Sticky", ja: "付箋" },
+		icon: StickyIcon,
 		categories: { annotation: 20 },
 		defaultOverrides: {
 			width: 200,
@@ -13,6 +14,5 @@ export const StickyStencilPresets: StencilPreset[] = [
 			textAlign: "left",
 			verticalAlign: "top",
 		},
-		icon: StickyIcon,
 	},
 ];

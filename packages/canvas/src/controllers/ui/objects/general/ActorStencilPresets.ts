@@ -6,7 +6,7 @@ export const ActorStencilPresets: StencilPreset[] = [
 		id: "actor",
 		objectType: "actor",
 		label: { en: "Actor", ja: "アクター" },
-		categories: { general: 20 },
 		icon: ActorIcon,
+		categories: { general: 20 },
 	},
 ];

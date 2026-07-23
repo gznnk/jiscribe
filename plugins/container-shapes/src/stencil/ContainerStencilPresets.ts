@@ -12,8 +12,8 @@ export const ContainerStencilPresets: StencilPreset[] = [
 		id: "frame",
 		objectType: "container",
 		label: { en: "Frame", ja: "枠" },
-		categories: { container: 10 },
 		icon: FrameIcon,
+		categories: { container: 10 },
 	},
 	{
 		// Dashed border — for a boundary / bounded context / "external" region.
@@ -21,17 +21,17 @@ export const ContainerStencilPresets: StencilPreset[] = [
 		id: "boundary",
 		objectType: "container",
 		label: { en: "Boundary", ja: "境界" },
+		icon: BoundaryIcon,
 		categories: { container: 20 },
 		defaultOverrides: { strokeDashType: "dashed" },
-		icon: BoundaryIcon,
 	},
 	{
 		// Tinted body — a colored zone objects are dropped onto.
 		id: "zone",
 		objectType: "container",
 		label: { en: "Zone", ja: "ゾーン" },
+		icon: ZoneIcon,
 		categories: { container: 30 },
 		defaultOverrides: { fill: ZONE_FILL },
-		icon: ZoneIcon,
 	},
 ];

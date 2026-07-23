@@ -6,7 +6,7 @@ export const DisplayStencilPresets: StencilPreset[] = [
 		id: "display",
 		objectType: "display",
 		label: { en: "Display", ja: "表示" },
-		categories: { flowchart: 80 },
 		icon: DisplayIcon,
+		categories: { flowchart: 80 },
 	},
 ];

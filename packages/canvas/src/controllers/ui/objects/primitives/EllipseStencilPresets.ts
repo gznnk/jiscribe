@@ -7,8 +7,8 @@ export const EllipseStencilPresets: StencilPreset[] = [
 		id: "ellipse",
 		objectType: "ellipse",
 		label: { en: "Ellipse", ja: "楕円" },
-		categories: { basic: 20 },
 		icon: EllipseIcon,
+		categories: { basic: 20 },
 	},
 	{
 		// Flowchart on-page connector: an ellipse type reused as a small labelled
@@ -17,8 +17,8 @@ export const EllipseStencilPresets: StencilPreset[] = [
 		id: "onPageConnector",
 		objectType: "ellipse",
 		label: { en: "On-page connector", ja: "結合子" },
+		icon: OnPageConnectorIcon,
 		categories: { flowchart: 200 },
 		defaultOverrides: { rx: 32, ry: 32 },
-		icon: OnPageConnectorIcon,
 	},
 ];

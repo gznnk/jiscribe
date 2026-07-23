@@ -6,7 +6,7 @@ export const CalloutStencilPresets: StencilPreset[] = [
 		id: "callout",
 		objectType: "callout",
 		label: { en: "Callout", ja: "吹き出し" },
-		categories: { annotation: 10 },
 		icon: CalloutIcon,
+		categories: { annotation: 10 },
 	},
 ];

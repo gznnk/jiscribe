@@ -6,7 +6,7 @@ export const CardStencilPresets: StencilPreset[] = [
 		id: "card",
 		objectType: "card",
 		label: { en: "Card", ja: "カード" },
-		categories: { flowchart: 100 },
 		icon: CardIcon,
+		categories: { flowchart: 100 },
 	},
 ];

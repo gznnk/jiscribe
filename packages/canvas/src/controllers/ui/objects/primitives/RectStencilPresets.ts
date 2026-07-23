@@ -8,8 +8,8 @@ export const RectStencilPresets: StencilPreset[] = [
 		id: "rect",
 		objectType: "rect",
 		label: { en: "Rectangle", ja: "長方形" },
-		categories: { basic: 10 },
 		icon: RectIcon,
+		categories: { basic: 10 },
 	},
 	{
 		// Flowchart process box: a plain rectangle. It renders identically to
@@ -18,14 +18,15 @@ export const RectStencilPresets: StencilPreset[] = [
 		id: "process",
 		objectType: "rect",
 		label: { en: "Process", ja: "処理" },
+		icon: RectIcon,
 		categories: { flowchart: 10 },
 		defaultOverrides: { width: 140, height: 80 },
-		icon: RectIcon,
 	},
 	{
 		id: "rect-markdown",
 		objectType: "rect",
 		label: { en: "Markdown", ja: "Markdown" },
+		icon: MarkdownRectIcon,
 		categories: { basic: 50 },
 		defaultOverrides: {
 			width: 300,
@@ -38,6 +39,5 @@ export const RectStencilPresets: StencilPreset[] = [
 			fontColor: AUTO_COLOR,
 			text: "# Title\n\nWrite **markdown** here.",
 		},
-		icon: MarkdownRectIcon,
 	},
 ];
