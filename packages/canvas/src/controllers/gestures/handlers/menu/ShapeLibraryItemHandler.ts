@@ -1,7 +1,7 @@
 import type { BoundingBox } from "@workspace/geometry";
 
 import { createObjectDoc } from "../../../../schemas/objects/utils/createObjectDoc";
-import type { ShapeFactoryRegistry } from "../../../../schemas/registry/ShapeFactoryRegistry";
+import type { ObjectFactoryRegistry } from "../../../../schemas/registry/ObjectFactoryRegistry";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../setup/ICanvasRegistries";
 import type { ShapePreset } from "../../../ui/objects/ShapePreset";
@@ -25,13 +25,13 @@ const parsePresetId = (targetPart: string): string => targetPart.split(":")[1];
 
 /**
  * Returns the half-size of the ghost shape for a preset.
- * Delegates to each shape's ShapeFactory (no per-type branching here).
+ * Delegates to each shape's ObjectFactory (no per-type branching here).
  */
 const calcShapeDimensions = (
 	preset: ShapePreset,
-	shapeFactory: ShapeFactoryRegistry,
+	objectFactory: ObjectFactoryRegistry,
 ): { halfWidth: number; halfHeight: number } => {
-	const factory = shapeFactory.get(preset.objectType);
+	const factory = objectFactory.get(preset.objectType);
 	if (!factory) {
 		throw new Error(`Unsupported object type for menu: ${preset.objectType}`);
 	}
@@ -54,7 +54,7 @@ const addObjectToState = (
 	const doc = createObjectDoc(
 		preset.objectType,
 		position,
-		registries.shapeFactory,
+		registries.objectFactory,
 		preset.defaultOverrides,
 		state.docDefaults,
 	);
@@ -107,7 +107,9 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 			case "click": {
 				// Shapes that don't support bounds drawing (sticky / polygon) are placed at the viewport center;
 				// shapes that do (rect / ellipse / polyline) toggle drawing mode
-				if (!registries.shapeFactory.supportsBoundsDrawing(preset.objectType)) {
+				if (
+					!registries.objectFactory.supportsBoundsDrawing(preset.objectType)
+				) {
 					const { minX, minY, width, height, zoom } = state.viewport;
 					const centerX = minX + width / zoom / 2;
 					const centerY = minY + height / zoom / 2;
@@ -169,7 +171,7 @@ export const ShapeLibraryItemHandler: GestureHandler = {
 						ghostPosition: event.last,
 						shapeDimensions: calcShapeDimensions(
 							preset,
-							registries.shapeFactory,
+							registries.objectFactory,
 						),
 					},
 					edgeScrollEnabled: true,

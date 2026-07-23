@@ -23,7 +23,7 @@ packages/canvas/src/
 │   │   ├── CanvasDoc.ts
 │   │   └── validators/     # parseCanvasText / validateStructure / validateSemantics
 │   ├── objects/            # base / primitives / connections / annotations / types + per-type validateXxxDoc
-│   └── registry/           # ObjectDocValidatorRegistry / ShapeFactoryRegistry (+ initialization)
+│   └── registry/           # ObjectDocValidatorRegistry / ObjectFactoryRegistry (+ initialization)
 ├── states/                 # runtime state types (State model) + Mapper
 │   ├── canvas/             # CanvasState / CanvasMapper / Viewport
 │   ├── objects/            # base / primitives / connections / annotations (State + Mapper)
@@ -77,7 +77,7 @@ There is **no top-level `src/registry/` directory and no `ObjectRegistry` class*
 
 | Registry class                                                            | Location                                    | Resolves                                                             |
 | ------------------------------------------------------------------------- | ------------------------------------------- | -------------------------------------------------------------------- |
-| `ShapeFactoryRegistry`                                                    | `schemas/registry/`                         | per-type shape factory (create Doc / bounds)                         |
+| `ObjectFactoryRegistry`                                                   | `schemas/registry/`                         | per-type shape factory (create Doc / bounds)                         |
 | `ObjectMapperRegistry` / `ObjectStateValidatorRegistry`                   | `states/registry/`                          | Doc ↔ State mapper (+ features), State validator                     |
 | `GestureHandlerRegistry` / `ObjectBehaviorRegistry`                       | `controllers/gestures/registry/`            | gesture handlers, `moveByDelta` / `transformByGroup`                 |
 | `ObjectComponentRegistry` / `ShapePreviewRegistry`                        | `presentations/objects/registry/`           | render component, preview renderer                                   |

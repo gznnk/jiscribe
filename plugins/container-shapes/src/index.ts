@@ -1,5 +1,5 @@
 // UC1 実験: container 図形の追い出し先パッケージ。tier 2 移植済み(frame 系ベース実装
-// createFrameObject / createFrameBehavior / createFrameMapper / createFrameShapeFactory /
+// createFrameObject / createFrameBehavior / createFrameMapper / createFrameObjectFactory /
 // createFrame*Validator / resolveAutoColor / AUTO_COLOR / DEFAULT_FONT_FAMILY / PRECISION を
 // @workspace/canvas/unstable 経由で利用)。Phase A(custom-controls-design.md)で
 // selectionControls(ヘッダー高さコントロール)も同じく unstable 経由の
@@ -11,7 +11,7 @@
 // から resolveLocaleMessages で解決する(menuHeaderColor は core から撤去済み)。
 // (docs/05_extensibility/uc1-container-extraction-log.md 参照)。
 export * from "./schema/ContainerDoc";
-export { ContainerShapeFactory } from "./schema/ContainerShapeFactory";
+export { ContainerObjectFactory } from "./schema/ContainerObjectFactory";
 export { validateContainerDoc } from "./schema/validateContainerDoc";
 
 export * from "./state/ContainerState";

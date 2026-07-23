@@ -23,7 +23,7 @@ packages/canvas/src/
 │   │   ├── CanvasDoc.ts
 │   │   └── validators/     # parseCanvasText / validateStructure / validateSemantics
 │   ├── objects/            # base / primitives / connections / annotations / types + 型別 validateXxxDoc
-│   └── registry/           # ObjectDocValidatorRegistry / ShapeFactoryRegistry（+ 初期化）
+│   └── registry/           # ObjectDocValidatorRegistry / ObjectFactoryRegistry（+ 初期化）
 ├── states/                 # ランタイム状態型（State モデル）+ Mapper
 │   ├── canvas/             # CanvasState / CanvasMapper / Viewport
 │   ├── objects/            # base / primitives / connections / annotations（State + Mapper）
@@ -77,7 +77,7 @@ State を Props として受け取り SVG を描画する純粋コンポーネ�
 
 | レジストリクラス                                                          | 場所                                   | 解決する対象                                                    |
 | ------------------------------------------------------------------------- | -------------------------------------- | --------------------------------------------------------------- |
-| `ShapeFactoryRegistry`                                                    | `schemas/registry/`                    | 型別 ShapeFactory（Doc / bounds 生成）                          |
+| `ObjectFactoryRegistry`                                                   | `schemas/registry/`                    | 型別 ObjectFactory（Doc / bounds 生成）                         |
 | `ObjectMapperRegistry` / `ObjectStateValidatorRegistry`                   | `states/registry/`                     | Doc ↔ State Mapper（+ features）・State バリデータ              |
 | `GestureHandlerRegistry` / `ObjectBehaviorRegistry`                       | `controllers/gestures/registry/`       | ジェスチャーハンドラ・`moveByDelta` / `transformByGroup`        |
 | `ObjectComponentRegistry` / `ShapePreviewRegistry`                        | `presentations/objects/registry/`      | 描画コンポーネント・プレビュー描画                              |

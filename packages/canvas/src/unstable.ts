@@ -17,7 +17,7 @@ export { createFrameBehavior } from "./controllers/gestures/handlers/objects/bas
 
 export { createFrameMapper } from "./states/objects/base/FrameMapper";
 
-export { createFrameShapeFactory } from "./schemas/objects/utils/createFrameShapeFactory";
+export { createFrameObjectFactory } from "./schemas/objects/utils/createFrameObjectFactory";
 
 export { createFrameStateValidator } from "./states/objects/utils/createFrameStateValidator";
 export type { StateRecord } from "./states/objects/utils/validateStateUtils";

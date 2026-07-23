@@ -54,7 +54,7 @@ describe("createCanvasRegistries", () => {
 			expect(registries.objectMapper.getFeatures("rect")).toBeDefined();
 			expect(registries.objectMapper.getFeatures("ellipse")).toBeDefined();
 			expect(registries.objectMapper.getFeatures("diamond")).toBeUndefined();
-			expect(registries.shapeFactory.get("diamond")).toBeUndefined();
+			expect(registries.objectFactory.get("diamond")).toBeUndefined();
 		});
 
 		it("restricts the ShapeLibrary presets to the enabled types", () => {

@@ -11,7 +11,7 @@ import {
 	ContainerExtraStyleProperties,
 	ContainerFeatures,
 } from "./schema/ContainerDoc";
-import { ContainerShapeFactory } from "./schema/ContainerShapeFactory";
+import { ContainerObjectFactory } from "./schema/ContainerObjectFactory";
 import { containerToDoc, containerToState } from "./state/ContainerMapper";
 import type { ContainerState } from "./state/ContainerState";
 import { isValidContainerState } from "./state/validateContainerState";
@@ -65,7 +65,7 @@ export const containerDefinition: ObjectTypeDefinition<
 	],
 	stateValidator: isValidContainerState,
 	shapeLibrary: {
-		factory: ContainerShapeFactory,
+		factory: ContainerObjectFactory,
 		presets: ContainerShapePresets,
 		categories: [
 			{

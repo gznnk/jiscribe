@@ -9,8 +9,8 @@ import type { ObjectOutlineCalculator } from "../presentations/objects/registry/
 import type { ObjectTextRegionCalculator } from "../presentations/objects/registry/ObjectTextRegionRegistry";
 import type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
 import type { ExtraStylePropertyDescriptor } from "../schemas/objects/types/ExtraStyleProperty";
+import type { ObjectFactory } from "../schemas/objects/types/ObjectFactory";
 import type { ObjectFeatures } from "../schemas/objects/types/ObjectFeatures";
-import type { ShapeFactory } from "../schemas/objects/types/ShapeFactory";
 import type { ObjectMapperType } from "../states/objects/base/MapperTypes";
 import type { ObjectState } from "../states/objects/base/ObjectState";
 import type { ObjectStateValidator } from "../states/registry/ObjectStateValidatorRegistry";
@@ -21,7 +21,7 @@ import type { ObjectStateValidator } from "../states/registry/ObjectStateValidat
  */
 export type ShapeLibraryRegistration = {
 	/** Factory responsible for doc creation, dimensions, and bounds generation */
-	factory?: ShapeFactory;
+	factory?: ObjectFactory;
 	/** Presets shown in the toolbar (multiple allowed per type) */
 	presets?: ShapePreset[];
 	/**

@@ -103,7 +103,7 @@ style」という 2 方式混在を解消）。
 - **2 つの伝搬経路**: CSS で消費するトークンはカスタムプロパティ経由。JS で消費する値
   （ズーム補正計算に使うハンドル寸法、canvas でのテキスト計測と新規図形の既定に使う
   `fontFamily`）は `CanvasThemeContext`（`useCanvasTheme()`）経由で、`var(...)` 文字列ではなく
-  具体値でなければならない。既定 fontFamily は `state.docDefaults` → `ShapeFactory` を通じて
+  具体値でなければならない。既定 fontFamily は `state.docDefaults` → `ObjectFactory` を通じて
   doc 生成にも届く（`pickSupportedDocDefaults` が DOC_DEFAULTS に `fontFamily` を宣言する図形に
   だけ適用する）。
   - **fontFamily だけ Context と state の 2 経路を持つ理由**: 2 つの消費者の構造的制約が逆向き

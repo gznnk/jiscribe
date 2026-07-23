@@ -14,7 +14,7 @@ export type ShapeIconProps = {
  *
  * Presets are not 1:1 with shape types (e.g. "rect" and "rect-markdown" are
  * both variants of the rect type). Creation always goes through the
- * objectType's `ShapeFactory`, passing defaultOverrides.
+ * objectType's `ObjectFactory`, passing defaultOverrides.
  */
 export type ShapePreset = {
 	id: string;

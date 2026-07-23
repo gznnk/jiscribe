@@ -5,7 +5,7 @@
 // 組み立てたいだけの Node 側 consumer は、この入口を使って UI 依存を避けられる。
 //
 // 各 op は zod に依存せず、既に型付けされた params を受け取る（tool 入力の zod 検証は
-// adapter 側の責務）。オブジェクト生成は canvas 本体と同じ ShapeFactory を再利用するため、
+// adapter 側の責務）。オブジェクト生成は canvas 本体と同じ ObjectFactory を再利用するため、
 // スタイル既定値まで含んだ正しい ObjectDoc を作る。
 //
 // Import 例: `import { addRect } from "@workspace/canvas/doc-ops";`

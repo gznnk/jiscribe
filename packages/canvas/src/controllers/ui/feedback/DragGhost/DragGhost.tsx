@@ -33,7 +33,7 @@ const createGhostElement = (
 	const doc = createObjectDoc(
 		preset.objectType,
 		position,
-		registries.shapeFactory,
+		registries.objectFactory,
 		preset.defaultOverrides,
 		docDefaults,
 	);

@@ -133,7 +133,7 @@ export const CanvasEventHandler: GestureHandler = {
 		const shapeDrawing = nextState.shapeDrawing;
 		const drawingObjectType =
 			shapeDrawing !== null &&
-			registries.shapeFactory.supportsBoundsDrawing(
+			registries.objectFactory.supportsBoundsDrawing(
 				shapeDrawing.preset.objectType,
 			)
 				? shapeDrawing.preset.objectType
@@ -232,7 +232,7 @@ export const CanvasEventHandler: GestureHandler = {
 					startY,
 					endX,
 					endY,
-					registries.shapeFactory,
+					registries.objectFactory,
 					nextState.shapeDrawing.preset.defaultOverrides,
 					undefined,
 					nextState.docDefaults,

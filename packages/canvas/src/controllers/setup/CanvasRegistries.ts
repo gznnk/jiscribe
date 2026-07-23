@@ -3,7 +3,7 @@ import type { ObjectComponentRegistry } from "../../presentations/objects/regist
 import type { ObjectOutlineRegistry } from "../../presentations/objects/registry/ObjectOutlineRegistry";
 import type { ObjectTextRegionRegistry } from "../../presentations/objects/registry/ObjectTextRegionRegistry";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
-import type { ShapeFactoryRegistry } from "../../schemas/registry/ShapeFactoryRegistry";
+import type { ObjectFactoryRegistry } from "../../schemas/registry/ObjectFactoryRegistry";
 import type { Camera } from "../../states/canvas/Viewport";
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import type { ObjectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
@@ -41,7 +41,7 @@ export type CanvasRegistries = {
 	command: CommandRegistry;
 	objectMenu: ObjectMenuRegistry;
 	shapePreset: ShapePresetRegistry;
-	shapeFactory: ShapeFactoryRegistry;
+	objectFactory: ObjectFactoryRegistry;
 	styleProperty: StylePropertyRegistry;
 	/**
 	 * Palette categories: built-ins seeded first, then each applied definition's

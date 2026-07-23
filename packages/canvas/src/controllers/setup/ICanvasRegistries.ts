@@ -1,4 +1,4 @@
-import type { ShapeFactoryRegistry } from "../../schemas/registry/ShapeFactoryRegistry";
+import type { ObjectFactoryRegistry } from "../../schemas/registry/ObjectFactoryRegistry";
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
@@ -21,7 +21,7 @@ import type { ShapePresetRegistry } from "../ui/objects/ShapePresetRegistry";
 export interface ICanvasRegistries {
 	objectMapper: ObjectMapperRegistry;
 	objectBehavior: ObjectBehaviorRegistry;
-	shapeFactory: ShapeFactoryRegistry;
+	objectFactory: ObjectFactoryRegistry;
 	shapePreset: ShapePresetRegistry;
 	/**
 	 * Command lookup, used by `handleCommand` (reached from the menu/context/toolbar

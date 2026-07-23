@@ -109,9 +109,9 @@ export type {
 	StyleValueType,
 } from "./schemas/objects/types/ExtraStyleProperty";
 export type {
-	ShapeFactory,
+	ObjectFactory,
 	ShapeDimensions,
-} from "./schemas/objects/types/ShapeFactory";
+} from "./schemas/objects/types/ObjectFactory";
 export type { DocCreationDefaults } from "./schemas/objects/types/DocCreationDefaults";
 export type {
 	ObjectMapperType,

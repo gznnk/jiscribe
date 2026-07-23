@@ -8,7 +8,7 @@ const pos = { x: 100, y: 200 };
 
 describe("createObjectDoc", () => {
 	it("the generated Doc has an id (UUID)", () => {
-		const doc = createObjectDoc("rect", pos, registries.shapeFactory);
+		const doc = createObjectDoc("rect", pos, registries.objectFactory);
 		expect(doc.id).toMatch(
 			/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
 		);
@@ -16,7 +16,7 @@ describe("createObjectDoc", () => {
 
 	describe("rect", () => {
 		it("sets x, y centered on the position", () => {
-			const doc = createObjectDoc("rect", pos, registries.shapeFactory);
+			const doc = createObjectDoc("rect", pos, registries.objectFactory);
 			const r = doc as unknown as {
 				x: number;
 				y: number;
@@ -30,13 +30,13 @@ describe("createObjectDoc", () => {
 		});
 
 		it("type is 'rect'", () => {
-			expect(createObjectDoc("rect", pos, registries.shapeFactory).type).toBe(
+			expect(createObjectDoc("rect", pos, registries.objectFactory).type).toBe(
 				"rect",
 			);
 		});
 
 		it("width/height can be overridden via overrides", () => {
-			const doc = createObjectDoc("rect", pos, registries.shapeFactory, {
+			const doc = createObjectDoc("rect", pos, registries.objectFactory, {
 				width: 50,
 				height: 30,
 			});
@@ -55,7 +55,7 @@ describe("createObjectDoc", () => {
 
 	describe("ellipse", () => {
 		it("sets the position as cx/cy", () => {
-			const doc = createObjectDoc("ellipse", pos, registries.shapeFactory);
+			const doc = createObjectDoc("ellipse", pos, registries.objectFactory);
 			const e = doc as unknown as { cx: number; cy: number };
 			expect(e.cx).toBe(pos.x);
 			expect(e.cy).toBe(pos.y);
@@ -63,14 +63,14 @@ describe("createObjectDoc", () => {
 
 		it("type is 'ellipse'", () => {
 			expect(
-				createObjectDoc("ellipse", pos, registries.shapeFactory).type,
+				createObjectDoc("ellipse", pos, registries.objectFactory).type,
 			).toBe("ellipse");
 		});
 	});
 
 	describe("sticky", () => {
 		it("sets x, y centered on the position", () => {
-			const doc = createObjectDoc("sticky", pos, registries.shapeFactory);
+			const doc = createObjectDoc("sticky", pos, registries.objectFactory);
 			const s = doc as unknown as {
 				x: number;
 				y: number;
@@ -82,15 +82,15 @@ describe("createObjectDoc", () => {
 		});
 
 		it("type is 'sticky'", () => {
-			expect(createObjectDoc("sticky", pos, registries.shapeFactory).type).toBe(
-				"sticky",
-			);
+			expect(
+				createObjectDoc("sticky", pos, registries.objectFactory).type,
+			).toBe("sticky");
 		});
 	});
 
 	describe("polyline", () => {
 		it("has 2 horizontal points centered on the position", () => {
-			const doc = createObjectDoc("polyline", pos, registries.shapeFactory);
+			const doc = createObjectDoc("polyline", pos, registries.objectFactory);
 			const pl = doc as unknown as { points: Array<{ x: number; y: number }> };
 			expect(pl.points).toHaveLength(2);
 			expect(pl.points[0].y).toBe(pos.y);
@@ -102,27 +102,27 @@ describe("createObjectDoc", () => {
 
 		it("type is 'polyline'", () => {
 			expect(
-				createObjectDoc("polyline", pos, registries.shapeFactory).type,
+				createObjectDoc("polyline", pos, registries.objectFactory).type,
 			).toBe("polyline");
 		});
 	});
 
 	describe("polygon", () => {
 		it("has 5 vertices", () => {
-			const doc = createObjectDoc("polygon", pos, registries.shapeFactory);
+			const doc = createObjectDoc("polygon", pos, registries.objectFactory);
 			const pg = doc as unknown as { points: Array<{ x: number; y: number }> };
 			expect(pg.points).toHaveLength(5);
 		});
 
 		it("type is 'polygon'", () => {
 			expect(
-				createObjectDoc("polygon", pos, registries.shapeFactory).type,
+				createObjectDoc("polygon", pos, registries.objectFactory).type,
 			).toBe("polygon");
 		});
 
 		it("each vertex lies on a circle centered on the position (within tolerance)", () => {
 			const RADIUS = 60;
-			const doc = createObjectDoc("polygon", pos, registries.shapeFactory);
+			const doc = createObjectDoc("polygon", pos, registries.objectFactory);
 			const pg = doc as unknown as { points: Array<{ x: number; y: number }> };
 			for (const pt of pg.points) {
 				const dist = Math.sqrt((pt.x - pos.x) ** 2 + (pt.y - pos.y) ** 2);
@@ -137,7 +137,7 @@ describe("createObjectDoc", () => {
 				createObjectDoc(
 					"connector" as Parameters<typeof createObjectDoc>[0],
 					pos,
-					registries.shapeFactory,
+					registries.objectFactory,
 				),
 			).toThrow();
 		});
@@ -151,7 +151,7 @@ describe("createObjectDoc with docDefaults (theme creation defaults)", () => {
 		const doc = createObjectDoc(
 			"rect",
 			pos,
-			registries.shapeFactory,
+			registries.objectFactory,
 			undefined,
 			docDefaults,
 		);
@@ -162,7 +162,7 @@ describe("createObjectDoc with docDefaults (theme creation defaults)", () => {
 		const doc = createObjectDoc(
 			"rect",
 			pos,
-			registries.shapeFactory,
+			registries.objectFactory,
 			{ fontFamily: "monospace" },
 			docDefaults,
 		);
@@ -175,7 +175,7 @@ describe("createObjectDoc with docDefaults (theme creation defaults)", () => {
 		const doc = createObjectDoc(
 			"polyline",
 			pos,
-			registries.shapeFactory,
+			registries.objectFactory,
 			undefined,
 			docDefaults,
 		);

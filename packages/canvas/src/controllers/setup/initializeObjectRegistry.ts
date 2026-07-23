@@ -116,62 +116,62 @@ import { Polyline } from "../../presentations/objects/primitives/Polyline";
 import { Rect } from "../../presentations/objects/primitives/Rect";
 import { Svg } from "../../presentations/objects/primitives/Svg";
 import { CalloutFeatures } from "../../schemas/objects/annotations/callout/CalloutDoc";
-import { CalloutShapeFactory } from "../../schemas/objects/annotations/callout/CalloutShapeFactory";
+import { CalloutObjectFactory } from "../../schemas/objects/annotations/callout/CalloutObjectFactory";
 import { StickyFeatures } from "../../schemas/objects/annotations/sticky/StickyDoc";
-import { StickyShapeFactory } from "../../schemas/objects/annotations/sticky/StickyShapeFactory";
+import { StickyObjectFactory } from "../../schemas/objects/annotations/sticky/StickyObjectFactory";
 import {
 	ConnectorExtraStyleProperties,
 	ConnectorFeatures,
 } from "../../schemas/objects/connections/connector/ConnectorDoc";
 import { CardFeatures } from "../../schemas/objects/flowchart/card/CardDoc";
-import { CardShapeFactory } from "../../schemas/objects/flowchart/card/CardShapeFactory";
+import { CardObjectFactory } from "../../schemas/objects/flowchart/card/CardObjectFactory";
 import { CrossFeatures } from "../../schemas/objects/flowchart/cross/CrossDoc";
-import { CrossShapeFactory } from "../../schemas/objects/flowchart/cross/CrossShapeFactory";
+import { CrossObjectFactory } from "../../schemas/objects/flowchart/cross/CrossObjectFactory";
 import { DbFeatures } from "../../schemas/objects/flowchart/db/DbDoc";
-import { DbShapeFactory } from "../../schemas/objects/flowchart/db/DbShapeFactory";
+import { DbObjectFactory } from "../../schemas/objects/flowchart/db/DbObjectFactory";
 import { DelayFeatures } from "../../schemas/objects/flowchart/delay/DelayDoc";
-import { DelayShapeFactory } from "../../schemas/objects/flowchart/delay/DelayShapeFactory";
+import { DelayObjectFactory } from "../../schemas/objects/flowchart/delay/DelayObjectFactory";
 import { DiamondFeatures } from "../../schemas/objects/flowchart/diamond/DiamondDoc";
-import { DiamondShapeFactory } from "../../schemas/objects/flowchart/diamond/DiamondShapeFactory";
+import { DiamondObjectFactory } from "../../schemas/objects/flowchart/diamond/DiamondObjectFactory";
 import { DisplayFeatures } from "../../schemas/objects/flowchart/display/DisplayDoc";
-import { DisplayShapeFactory } from "../../schemas/objects/flowchart/display/DisplayShapeFactory";
+import { DisplayObjectFactory } from "../../schemas/objects/flowchart/display/DisplayObjectFactory";
 import { DocumentFeatures } from "../../schemas/objects/flowchart/document/DocumentDoc";
-import { DocumentShapeFactory } from "../../schemas/objects/flowchart/document/DocumentShapeFactory";
+import { DocumentObjectFactory } from "../../schemas/objects/flowchart/document/DocumentObjectFactory";
 import { ExtractFeatures } from "../../schemas/objects/flowchart/extract/ExtractDoc";
-import { ExtractShapeFactory } from "../../schemas/objects/flowchart/extract/ExtractShapeFactory";
+import { ExtractObjectFactory } from "../../schemas/objects/flowchart/extract/ExtractObjectFactory";
 import { HexagonFeatures } from "../../schemas/objects/flowchart/hexagon/HexagonDoc";
-import { HexagonShapeFactory } from "../../schemas/objects/flowchart/hexagon/HexagonShapeFactory";
+import { HexagonObjectFactory } from "../../schemas/objects/flowchart/hexagon/HexagonObjectFactory";
 import { LoopLimitFeatures } from "../../schemas/objects/flowchart/loopLimit/LoopLimitDoc";
-import { LoopLimitShapeFactory } from "../../schemas/objects/flowchart/loopLimit/LoopLimitShapeFactory";
+import { LoopLimitObjectFactory } from "../../schemas/objects/flowchart/loopLimit/LoopLimitObjectFactory";
 import { ManualInputFeatures } from "../../schemas/objects/flowchart/manualInput/ManualInputDoc";
-import { ManualInputShapeFactory } from "../../schemas/objects/flowchart/manualInput/ManualInputShapeFactory";
+import { ManualInputObjectFactory } from "../../schemas/objects/flowchart/manualInput/ManualInputObjectFactory";
 import { MultiDocumentFeatures } from "../../schemas/objects/flowchart/multiDocument/MultiDocumentDoc";
-import { MultiDocumentShapeFactory } from "../../schemas/objects/flowchart/multiDocument/MultiDocumentShapeFactory";
+import { MultiDocumentObjectFactory } from "../../schemas/objects/flowchart/multiDocument/MultiDocumentObjectFactory";
 import { OffPageConnectorFeatures } from "../../schemas/objects/flowchart/offPageConnector/OffPageConnectorDoc";
-import { OffPageConnectorShapeFactory } from "../../schemas/objects/flowchart/offPageConnector/OffPageConnectorShapeFactory";
+import { OffPageConnectorObjectFactory } from "../../schemas/objects/flowchart/offPageConnector/OffPageConnectorObjectFactory";
 import { ParallelogramFeatures } from "../../schemas/objects/flowchart/parallelogram/ParallelogramDoc";
-import { ParallelogramShapeFactory } from "../../schemas/objects/flowchart/parallelogram/ParallelogramShapeFactory";
+import { ParallelogramObjectFactory } from "../../schemas/objects/flowchart/parallelogram/ParallelogramObjectFactory";
 import { StadiumFeatures } from "../../schemas/objects/flowchart/stadium/StadiumDoc";
-import { StadiumShapeFactory } from "../../schemas/objects/flowchart/stadium/StadiumShapeFactory";
+import { StadiumObjectFactory } from "../../schemas/objects/flowchart/stadium/StadiumObjectFactory";
 import { StoredDataFeatures } from "../../schemas/objects/flowchart/storedData/StoredDataDoc";
-import { StoredDataShapeFactory } from "../../schemas/objects/flowchart/storedData/StoredDataShapeFactory";
+import { StoredDataObjectFactory } from "../../schemas/objects/flowchart/storedData/StoredDataObjectFactory";
 import { SubroutineFeatures } from "../../schemas/objects/flowchart/subroutine/SubroutineDoc";
-import { SubroutineShapeFactory } from "../../schemas/objects/flowchart/subroutine/SubroutineShapeFactory";
+import { SubroutineObjectFactory } from "../../schemas/objects/flowchart/subroutine/SubroutineObjectFactory";
 import { TrapezoidFeatures } from "../../schemas/objects/flowchart/trapezoid/TrapezoidDoc";
-import { TrapezoidShapeFactory } from "../../schemas/objects/flowchart/trapezoid/TrapezoidShapeFactory";
+import { TrapezoidObjectFactory } from "../../schemas/objects/flowchart/trapezoid/TrapezoidObjectFactory";
 import { ActorFeatures } from "../../schemas/objects/general/actor/ActorDoc";
-import { ActorShapeFactory } from "../../schemas/objects/general/actor/ActorShapeFactory";
+import { ActorObjectFactory } from "../../schemas/objects/general/actor/ActorObjectFactory";
 import { CloudFeatures } from "../../schemas/objects/general/cloud/CloudDoc";
-import { CloudShapeFactory } from "../../schemas/objects/general/cloud/CloudShapeFactory";
+import { CloudObjectFactory } from "../../schemas/objects/general/cloud/CloudObjectFactory";
 import { EllipseFeatures } from "../../schemas/objects/primitives/ellipse/EllipseDoc";
-import { EllipseShapeFactory } from "../../schemas/objects/primitives/ellipse/EllipseShapeFactory";
+import { EllipseObjectFactory } from "../../schemas/objects/primitives/ellipse/EllipseObjectFactory";
 import { GroupFeatures } from "../../schemas/objects/primitives/group/GroupDoc";
 import { PolygonFeatures } from "../../schemas/objects/primitives/polygon/PolygonDoc";
-import { PolygonShapeFactory } from "../../schemas/objects/primitives/polygon/PolygonShapeFactory";
+import { PolygonObjectFactory } from "../../schemas/objects/primitives/polygon/PolygonObjectFactory";
 import { PolylineFeatures } from "../../schemas/objects/primitives/polyline/PolylineDoc";
-import { PolylineShapeFactory } from "../../schemas/objects/primitives/polyline/PolylineShapeFactory";
+import { PolylineObjectFactory } from "../../schemas/objects/primitives/polyline/PolylineObjectFactory";
 import { RectFeatures } from "../../schemas/objects/primitives/rect/RectDoc";
-import { RectShapeFactory } from "../../schemas/objects/primitives/rect/RectShapeFactory";
+import { RectObjectFactory } from "../../schemas/objects/primitives/rect/RectObjectFactory";
 import { SvgFeatures } from "../../schemas/objects/primitives/svg/SvgDoc";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 import {
@@ -416,7 +416,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			behavior: createFrameBehavior<RectState>(),
 			stateValidator: isValidRectState,
 			shapeLibrary: {
-				factory: RectShapeFactory,
+				factory: RectObjectFactory,
 				presets: RectShapePresets,
 			},
 		}),
@@ -429,7 +429,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			behavior: createFrameBehavior<EllipseState>(),
 			stateValidator: isValidEllipseState,
 			shapeLibrary: {
-				factory: EllipseShapeFactory,
+				factory: EllipseObjectFactory,
 				presets: EllipseShapePresets,
 			},
 		}),
@@ -443,7 +443,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			behavior: createFrameBehavior<DiamondState>(),
 			stateValidator: isValidDiamondState,
 			shapeLibrary: {
-				factory: DiamondShapeFactory,
+				factory: DiamondObjectFactory,
 				presets: DiamondShapePresets,
 			},
 		}),
@@ -457,7 +457,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			behavior: createFrameBehavior<StadiumState>(),
 			stateValidator: isValidStadiumState,
 			shapeLibrary: {
-				factory: StadiumShapeFactory,
+				factory: StadiumObjectFactory,
 				presets: StadiumShapePresets,
 			},
 		}),
@@ -471,7 +471,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			behavior: createFrameBehavior<ParallelogramState>(),
 			stateValidator: isValidParallelogramState,
 			shapeLibrary: {
-				factory: ParallelogramShapeFactory,
+				factory: ParallelogramObjectFactory,
 				presets: ParallelogramShapePresets,
 			},
 		}),
@@ -485,7 +485,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			behavior: createFrameBehavior<HexagonState>(),
 			stateValidator: isValidHexagonState,
 			shapeLibrary: {
-				factory: HexagonShapeFactory,
+				factory: HexagonObjectFactory,
 				presets: HexagonShapePresets,
 			},
 		}),
@@ -499,7 +499,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			behavior: createFrameBehavior<CloudState>(),
 			stateValidator: isValidCloudState,
 			shapeLibrary: {
-				factory: CloudShapeFactory,
+				factory: CloudObjectFactory,
 				presets: CloudShapePresets,
 			},
 		}),
@@ -513,7 +513,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			behavior: createFrameBehavior<DocumentState>(),
 			stateValidator: isValidDocumentState,
 			shapeLibrary: {
-				factory: DocumentShapeFactory,
+				factory: DocumentObjectFactory,
 				presets: DocumentShapePresets,
 			},
 		}),
@@ -527,7 +527,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			behavior: createFrameBehavior<MultiDocumentState>(),
 			stateValidator: isValidMultiDocumentState,
 			shapeLibrary: {
-				factory: MultiDocumentShapeFactory,
+				factory: MultiDocumentObjectFactory,
 				presets: MultiDocumentShapePresets,
 			},
 		}),
@@ -540,7 +540,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			behavior: createFrameBehavior<ActorState>(),
 			stateValidator: isValidActorState,
 			shapeLibrary: {
-				factory: ActorShapeFactory,
+				factory: ActorObjectFactory,
 				presets: ActorShapePresets,
 			},
 		}),
@@ -560,7 +560,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				},
 			],
 			shapeLibrary: {
-				factory: CalloutShapeFactory,
+				factory: CalloutObjectFactory,
 				presets: CalloutShapePresets,
 			},
 		}),
@@ -574,7 +574,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			behavior: createFrameBehavior<DbState>(),
 			stateValidator: isValidDbState,
 			shapeLibrary: {
-				factory: DbShapeFactory,
+				factory: DbObjectFactory,
 				presets: DbShapePresets,
 			},
 		}),
@@ -588,7 +588,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			behavior: createFrameBehavior<StoredDataState>(),
 			stateValidator: isValidStoredDataState,
 			shapeLibrary: {
-				factory: StoredDataShapeFactory,
+				factory: StoredDataObjectFactory,
 				presets: StoredDataShapePresets,
 			},
 		}),
@@ -601,7 +601,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			behavior: createFrameBehavior<SubroutineState>(),
 			stateValidator: isValidSubroutineState,
 			shapeLibrary: {
-				factory: SubroutineShapeFactory,
+				factory: SubroutineObjectFactory,
 				presets: SubroutineShapePresets,
 			},
 		}),
@@ -615,7 +615,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			behavior: createFrameBehavior<TrapezoidState>(),
 			stateValidator: isValidTrapezoidState,
 			shapeLibrary: {
-				factory: TrapezoidShapeFactory,
+				factory: TrapezoidObjectFactory,
 				presets: TrapezoidShapePresets,
 			},
 		}),
@@ -629,7 +629,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			behavior: createFrameBehavior<ManualInputState>(),
 			stateValidator: isValidManualInputState,
 			shapeLibrary: {
-				factory: ManualInputShapeFactory,
+				factory: ManualInputObjectFactory,
 				presets: ManualInputShapePresets,
 			},
 		}),
@@ -643,7 +643,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			behavior: createFrameBehavior<CardState>(),
 			stateValidator: isValidCardState,
 			shapeLibrary: {
-				factory: CardShapeFactory,
+				factory: CardObjectFactory,
 				presets: CardShapePresets,
 			},
 		}),
@@ -657,7 +657,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			behavior: createFrameBehavior<DelayState>(),
 			stateValidator: isValidDelayState,
 			shapeLibrary: {
-				factory: DelayShapeFactory,
+				factory: DelayObjectFactory,
 				presets: DelayShapePresets,
 			},
 		}),
@@ -671,7 +671,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			behavior: createFrameBehavior<LoopLimitState>(),
 			stateValidator: isValidLoopLimitState,
 			shapeLibrary: {
-				factory: LoopLimitShapeFactory,
+				factory: LoopLimitObjectFactory,
 				presets: LoopLimitShapePresets,
 			},
 		}),
@@ -685,7 +685,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			behavior: createFrameBehavior<DisplayState>(),
 			stateValidator: isValidDisplayState,
 			shapeLibrary: {
-				factory: DisplayShapeFactory,
+				factory: DisplayObjectFactory,
 				presets: DisplayShapePresets,
 			},
 		}),
@@ -698,7 +698,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			behavior: createFrameBehavior<ExtractState>(),
 			stateValidator: isValidExtractState,
 			shapeLibrary: {
-				factory: ExtractShapeFactory,
+				factory: ExtractObjectFactory,
 				presets: ExtractShapePresets,
 			},
 		}),
@@ -711,7 +711,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			behavior: createFrameBehavior<CrossState>(),
 			stateValidator: isValidCrossState,
 			shapeLibrary: {
-				factory: CrossShapeFactory,
+				factory: CrossObjectFactory,
 				presets: CrossShapePresets,
 			},
 		}),
@@ -728,7 +728,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			behavior: createFrameBehavior<OffPageConnectorState>(),
 			stateValidator: isValidOffPageConnectorState,
 			shapeLibrary: {
-				factory: OffPageConnectorShapeFactory,
+				factory: OffPageConnectorObjectFactory,
 				presets: OffPageConnectorShapePresets,
 			},
 		}),
@@ -756,7 +756,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			},
 			stateValidator: isValidPolygonState,
 			shapeLibrary: {
-				factory: PolygonShapeFactory,
+				factory: PolygonObjectFactory,
 				presets: PolygonShapePresets,
 			},
 		}),
@@ -772,7 +772,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			},
 			stateValidator: isValidPolylineState,
 			shapeLibrary: {
-				factory: PolylineShapeFactory,
+				factory: PolylineObjectFactory,
 				presets: PolylineShapePresets,
 			},
 		}),
@@ -870,7 +870,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			],
 			stateValidator: isValidStickyState,
 			shapeLibrary: {
-				factory: StickyShapeFactory,
+				factory: StickyObjectFactory,
 				presets: StickyShapePresets,
 			},
 		}),
@@ -926,7 +926,7 @@ export const applyObjectDefinition = (
 
 	const shapeLibrary = definition.shapeLibrary;
 	if (shapeLibrary?.factory) {
-		registries.shapeFactory.register(type, shapeLibrary.factory);
+		registries.objectFactory.register(type, shapeLibrary.factory);
 	}
 	shapeLibrary?.presets?.forEach((preset) => {
 		registries.shapePreset.register(preset);
@@ -959,7 +959,7 @@ export const initializeObjectRegistry = (
 	registries.objectStateValidator.clear();
 	registries.objectMenu.clear();
 	registries.selectionControl.clear();
-	registries.shapeFactory.clear();
+	registries.objectFactory.clear();
 	registries.shapePreset.clear();
 	registries.styleProperty.clearExtras();
 

@@ -26,7 +26,7 @@ const createPreviewElement = (
 ): React.ReactNode => {
 	const { preview } = shapeDrawing;
 	const { objectType, defaultOverrides } = shapeDrawing.preset;
-	const factory = registries.shapeFactory.get(objectType);
+	const factory = registries.objectFactory.get(objectType);
 	const component = registries.objectComponent.get(objectType);
 	if (!preview || !factory?.createDocFromBounds || !component) {
 		return null;

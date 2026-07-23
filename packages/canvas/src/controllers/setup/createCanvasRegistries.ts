@@ -10,7 +10,7 @@ import { initializeStyleProperties } from "./initializeStyleProperties";
 import { createObjectComponentRegistry } from "../../presentations/objects/registry/ObjectComponentRegistry";
 import { createObjectOutlineRegistry } from "../../presentations/objects/registry/ObjectOutlineRegistry";
 import { createObjectTextRegionRegistry } from "../../presentations/objects/registry/ObjectTextRegionRegistry";
-import { createShapeFactoryRegistry } from "../../schemas/registry/ShapeFactoryRegistry";
+import { createObjectFactoryRegistry } from "../../schemas/registry/ObjectFactoryRegistry";
 import { createObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import { createObjectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
 import { createCommandRegistry } from "../commands/CommandRegistry";
@@ -52,7 +52,7 @@ export const createCanvasRegistries = (
 		command: createCommandRegistry(),
 		objectMenu: createObjectMenuRegistry(),
 		shapePreset: createShapePresetRegistry(),
-		shapeFactory: createShapeFactoryRegistry(),
+		objectFactory: createObjectFactoryRegistry(),
 		styleProperty: createStylePropertyRegistry(),
 		shapeCategories: createShapeCategoryRegistry(),
 	};
