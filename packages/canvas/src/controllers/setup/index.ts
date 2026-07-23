@@ -5,7 +5,11 @@ export { initializeGestureHandlerRegistry } from "./initializeGestureHandlerRegi
 export { initializeCommands } from "./initializeCommands";
 
 // Per-canvas registry bundle: types, factory, and defaults
-export type { CanvasRegistries, CanvasConfig } from "./CanvasRegistries";
+export type {
+	CanvasRegistries,
+	CanvasCapabilities,
+	CanvasConfig,
+} from "./CanvasRegistries";
 export {
 	createCanvasRegistries,
 	defaultCanvasRegistries,

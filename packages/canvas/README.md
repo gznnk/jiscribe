@@ -11,7 +11,7 @@ import type { CanvasDoc } from "@workspace/canvas";
 const initialDoc: CanvasDoc = { version: 1, root: [], connectors: [] };
 
 function App() {
-	return <Canvas canvasDoc={initialDoc} />;
+	return <Canvas doc={initialDoc} />;
 }
 ```
 

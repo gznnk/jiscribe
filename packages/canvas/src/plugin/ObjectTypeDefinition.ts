@@ -27,7 +27,7 @@ export type ShapeLibraryRegistration = {
 	/**
 	 * New palette categories this type contributes (metadata only: id / label /
 	 * icon). This is a declaration; whether and where a category appears is
-	 * decided by `toolbarLayout`. An id colliding with a built-in or an earlier
+	 * decided by `toolbar.layout`. An id colliding with a built-in or an earlier
 	 * definition is ignored (first-wins).
 	 */
 	categories?: ShapeCategory[];

@@ -7,7 +7,7 @@
  *
  * This keeps "direct display" and the category submenus (issue #184) on the same
  * axis, decoupled from preset registration. Hosts can override the whole list via
- * the `toolbarLayout` Canvas prop.
+ * the `toolbar.layout` Canvas prop.
  */
 export type ToolbarEntry =
 	| { kind: "preset"; presetId: string }
@@ -17,7 +17,7 @@ export type ToolbarEntry =
  * Default toolbar layout: the basic primitives and sticky stay pinned directly
  * (preserving the classic direct-placement UX); flowchart / general / annotation
  * fold into category flyouts. Only core categories appear here — a plugin category
- * (e.g. container) is shown only when the host adds its slot via `toolbarLayout`.
+ * (e.g. container) is shown only when the host adds its slot via `toolbar.layout`.
  * `basic` has no flyout button by default because its members are all pinned
  * already — hosts can add `{ kind: "category", categoryId: "basic" }` if they want one.
  */

@@ -96,7 +96,7 @@ export function GalleryExample() {
 					<p style={{ padding: 16, color: "#f87171" }}>{loadError}</p>
 				) : loadedDoc ? (
 					// 図の切り替えは key でリマウントし、前の図の選択・履歴を持ち越さない
-					<Canvas key={selectedName} canvasDoc={loadedDoc} autoFocus={false} />
+					<Canvas key={selectedName} doc={loadedDoc} autoFocus={false} />
 				) : null}
 			</div>
 		</div>

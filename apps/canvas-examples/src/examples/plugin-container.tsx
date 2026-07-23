@@ -138,9 +138,9 @@ const pluginContainerDoc = buildPluginContainerDoc();
 export function PluginContainerExample() {
 	return (
 		<Canvas
-			canvasDoc={pluginContainerDoc}
+			doc={pluginContainerDoc}
 			initialConfig={initialConfig}
-			toolbarLayout={toolbarLayout}
+			toolbar={{ layout: toolbarLayout }}
 		/>
 	);
 }

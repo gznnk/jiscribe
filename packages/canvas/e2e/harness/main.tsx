@@ -82,10 +82,10 @@ function HarnessApp() {
 	return (
 		<div className="app" onDrop={handleDrop} onDragOver={handleDragOver}>
 			<Canvas
-				canvasDoc={loadedDoc}
+				doc={loadedDoc}
 				theme={darkCanvasTheme}
 				initialConfig={initialConfig}
-				toolbarLayout={toolbarLayout}
+				toolbar={{ layout: toolbarLayout }}
 			/>
 		</div>
 	);

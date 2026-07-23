@@ -29,9 +29,9 @@ type ToolbarProps = {
 	canZoomOut: boolean;
 	/** Top-level arrangement of the shape tools (pinned presets + category flyouts) */
 	layout?: ToolbarEntry[];
-	/** Host UI at the left edge (see CanvasProps.toolbarLeading) */
+	/** Host UI at the left edge (see CanvasProps.toolbar.leading) */
 	leading?: React.ReactNode;
-	/** Host UI at the right edge (see CanvasProps.toolbarTrailing) */
+	/** Host UI at the right edge (see CanvasProps.toolbar.trailing) */
 	trailing?: React.ReactNode;
 };
 

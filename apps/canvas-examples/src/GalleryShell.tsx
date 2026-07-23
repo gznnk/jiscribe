@@ -40,14 +40,14 @@ const EXAMPLES: ReadonlyArray<{
 		id: "viewport",
 		title: "Viewport",
 		description:
-			"imperative viewport API（defaultViewport / onViewportChange / ref.current.viewport）",
+			"imperative viewport API（initialConfig.viewport / onViewportChange / ref.current.viewport）",
 		Component: ViewportExample,
 	},
 	{
 		id: "external-sync",
 		title: "External Sync",
 		description:
-			"外部（エディタ・AI）が doc の正本を持ち、canvasDoc 差し替えで push する",
+			"外部（エディタ・AI）が doc の正本を持ち、doc 差し替えで push する",
 		Component: ExternalSyncExample,
 	},
 	{

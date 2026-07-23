@@ -31,7 +31,7 @@ const parseOrThrow = (sourceText: string): CanvasDoc => {
 
 /**
  * 外部同期の例: ホスト（エディタ・AI・ストレージ）が doc の正本を持ち、
- * canvasDoc の差し替えでキャンバスへ push する。逆方向は onCommit で受ける。
+ * doc の差し替えでキャンバスへ push する。逆方向は onCommit で受ける。
  * 実ホストで保存の折り返しを外部変更と誤認しないための saveNonce / syncNonce の
  * 契約は packages/canvas/docs/07-external-sync.md を参照（この例では折り返しが
  * 無いので省略している）。
@@ -44,7 +44,7 @@ export function ExternalSyncExample() {
 	const [status, setStatus] = useState("初期 doc を表示中");
 	const addedCountRef = useRef(0);
 
-	// キャンバス側の編集はテキストへミラーするだけで、canvasDoc は差し替えない
+	// キャンバス側の編集はテキストへミラーするだけで、doc は差し替えない
 	// （差し替えは「外部からの変更」を表すこの例の押し込み操作に限る）
 	const handleCommit = useCallback((committedDoc: CanvasDoc) => {
 		setSourceText(JSON.stringify(committedDoc, null, 2));
@@ -99,7 +99,7 @@ export function ExternalSyncExample() {
 	return (
 		<div style={{ display: "flex", width: "100%", height: "100%" }}>
 			<div style={{ flex: 1, minWidth: 0 }}>
-				<Canvas canvasDoc={pushedDoc} onCommit={handleCommit} />
+				<Canvas doc={pushedDoc} onCommit={handleCommit} />
 			</div>
 			<div
 				style={{

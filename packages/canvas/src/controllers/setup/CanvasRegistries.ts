@@ -4,6 +4,7 @@ import type { ObjectOutlineRegistry } from "../../presentations/objects/registry
 import type { ObjectTextRegionRegistry } from "../../presentations/objects/registry/ObjectTextRegionRegistry";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 import type { ShapeFactoryRegistry } from "../../schemas/registry/ShapeFactoryRegistry";
+import type { Camera } from "../../states/canvas/Viewport";
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import type { ObjectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
 import type { CommandRegistry } from "../commands/CommandRegistry";
@@ -51,14 +52,15 @@ export type CanvasRegistries = {
 };
 
 /**
- * Per-canvas configuration passed to `createCanvasRegistries`.
+ * The capability set passed to `createCanvasRegistries`: which object types,
+ * commands, and plugins a `<Canvas>` operates against.
  *
  * All fields are optional; omitting them reproduces the full built-in set.
  * Restricting `objectTypes` is the caller's contract to only pass docs whose
  * object types remain enabled — otherwise `canvasToState` throws "Mapper not
  * found" (see docs/01-design-philosophy.md principle 4).
  */
-export type CanvasConfig = {
+export type CanvasCapabilities = {
 	/** Enabled object types. Default: all registered types. */
 	objectTypes?: ObjectType[];
 	/** Enabled command ids. Default: all registered commands. */
@@ -69,4 +71,22 @@ export type CanvasConfig = {
 	 * by a built-in or an earlier plugin throws at construction time.
 	 */
 	plugins?: readonly CanvasPlugin[];
+};
+
+/**
+ * Mount-time configuration for `<Canvas initialConfig={...}>`: the capability
+ * set (`CanvasCapabilities`) plus the initial view. Read **once at mount** — the
+ * configuration is part of a canvas's identity, so later changes are ignored; to
+ * reconfigure, remount with a new React `key` (`<Canvas key={configId} .../>`).
+ *
+ * `autoFocus` is deliberately NOT here: it is a top-level `<Canvas>` prop,
+ * following the React-idiomatic spelling that already signals mount-time intent.
+ */
+export type CanvasConfig = CanvasCapabilities & {
+	/**
+	 * Initial camera (pan + zoom) applied once at mount, so the first paint lands
+	 * at the host's view (restore a saved view, …) instead of the doc default. To
+	 * move the view after mount, use `ref.current.viewport.setViewport` — not this.
+	 */
+	viewport?: Camera;
 };

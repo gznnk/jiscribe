@@ -138,7 +138,7 @@ function App() {
 	const canvasRef = useRef<CanvasHandle>(null);
 
 	// Camera restored from persisted state, read once at mount to seed the canvas
-	// via `defaultViewport` (undefined on first open → Canvas uses its doc-derived
+	// via `initialConfig.viewport` (undefined on first open → Canvas uses its doc-derived
 	// default). The canvas owns the live camera after mount; we only persist what
 	// it reports, never drive it back — so a tab-hide reload restores the last
 	// view with no feedback into the canvas.
@@ -393,11 +393,10 @@ function App() {
 		return (
 			<div style={{ width: "100%", height: "100vh" }}>
 				<Canvas
-					canvasDoc={canvasDoc}
+					doc={canvasDoc}
 					syncNonce={syncNonce}
-					initialConfig={initialConfig}
-					toolbarLayout={toolbarLayout}
-					defaultViewport={initialCamera}
+					initialConfig={{ ...initialConfig, viewport: initialCamera }}
+					toolbar={{ layout: toolbarLayout }}
 					onViewportChange={handleViewportChange}
 					onCommit={handleCommit}
 					onUndo={handleUndo}

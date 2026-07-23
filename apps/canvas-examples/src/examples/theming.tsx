@@ -43,7 +43,7 @@ export function ThemingExample() {
 
 	return (
 		<div style={{ position: "relative", width: "100%", height: "100%" }}>
-			<Canvas canvasDoc={emptyDoc} theme={current.theme} />
+			<Canvas doc={emptyDoc} theme={current.theme} />
 			<button
 				type="button"
 				onClick={() => setThemeIndex((index) => (index + 1) % THEMES.length)}

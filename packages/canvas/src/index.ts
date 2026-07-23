@@ -27,7 +27,7 @@ export type {
 	BuildExportSvgOptions,
 } from "./export";
 // ShapeLibrary toolbar arrangement (pinned presets + category flyouts, issue #184).
-// Pass a custom `toolbarLayout` to `<Canvas>`; built-in category metadata is
+// Pass a custom `toolbar.layout` to `<Canvas>`; built-in category metadata is
 // exported for hosts composing layouts (plugins add categories via
 // `ObjectTypeDefinition.shapeLibrary.categories`).
 export {
@@ -68,11 +68,16 @@ export type {
 } from "./schemas/canvas/validators";
 
 // Per-canvas registry configuration (plugin-style extensibility / feature-gating).
-// Pass a `CanvasConfig` to `<Canvas initialConfig={...}>`; the lower-level factory and the
-// full object-type descriptor table are exported for advanced/custom setups.
-// Plugin declarations (docs/05_extensibility/canvas-plugin-design.md) go through
+// Pass a `CanvasConfig` (capability set + initial view) to `<Canvas initialConfig={...}>`;
+// its capability subset `CanvasCapabilities` is what the lower-level factory consumes.
+// The factory and the full object-type descriptor table are exported for advanced/custom
+// setups. Plugin declarations (docs/05_extensibility/canvas-plugin-design.md) go through
 // `CanvasConfig.plugins`; there is no raw-registry escape hatch.
-export type { CanvasConfig, CanvasRegistries } from "./controllers/setup";
+export type {
+	CanvasCapabilities,
+	CanvasConfig,
+	CanvasRegistries,
+} from "./controllers/setup";
 export {
 	createCanvasRegistries,
 	ALL_OBJECT_DEFINITIONS,

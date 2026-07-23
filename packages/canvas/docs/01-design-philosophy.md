@@ -86,7 +86,7 @@ internals can be written cheaply on the assumption that "only valid state ever a
 > **Where the boundary lives**: The validation boundary is centralized in the parser
 > (`parseCanvasText`), and `Canvas` does not re-validate. Routing the `CanvasDoc` passed
 > to `Canvas` through `parseCanvasText` is **the host's responsibility**
-> (→ see the comment on the `canvasDoc` prop in `Canvas.tsx`), and not re-validating at
+> (→ see the comment on the `doc` prop in `Canvas.tsx`), and not re-validating at
 > the entry point of `SYNC_EXTERNAL` / `canvasToState` is an **intentional design decision**
 > to avoid redundant validation. Because `Canvas` relies on the contract that it is handed
 > a validated doc, the host must always route input through `parseCanvasText`.

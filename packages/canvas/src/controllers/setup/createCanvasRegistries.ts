@@ -1,4 +1,4 @@
-import type { CanvasConfig, CanvasRegistries } from "./CanvasRegistries";
+import type { CanvasCapabilities, CanvasRegistries } from "./CanvasRegistries";
 import { initializeCommands } from "./initializeCommands";
 import { initializeGestureHandlerRegistry } from "./initializeGestureHandlerRegistry";
 import {
@@ -38,7 +38,7 @@ import { createShapePresetRegistry } from "../ui/objects/ShapePresetRegistry";
  * behavior (backward compatible).
  */
 export const createCanvasRegistries = (
-	config?: CanvasConfig,
+	config?: CanvasCapabilities,
 ): CanvasRegistries => {
 	const registries: CanvasRegistries = {
 		objectMapper: createObjectMapperRegistry(),

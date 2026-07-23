@@ -29,10 +29,10 @@ export function MultiCanvasExample() {
 	return (
 		<div style={{ display: "flex", width: "100%", height: "100%" }}>
 			<div style={{ flex: 1, minWidth: 0 }}>
-				<Canvas canvasDoc={leftDoc} autoFocus={false} />
+				<Canvas doc={leftDoc} autoFocus={false} />
 			</div>
 			<div style={{ flex: 1, minWidth: 0, borderLeft: "1px solid #333" }}>
-				<Canvas canvasDoc={rightDoc} autoFocus={false} />
+				<Canvas doc={rightDoc} autoFocus={false} />
 			</div>
 		</div>
 	);

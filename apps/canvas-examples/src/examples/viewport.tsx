@@ -41,7 +41,7 @@ const initialCamera: Camera = { minX: 0, minY: 0, zoom: 1 };
 
 /**
  * viewport（pan/zoom）の imperative API の例:
- * - defaultViewport … マウント時 1 回だけ適用される初期カメラ
+ * - initialConfig.viewport … マウント時 1 回だけ適用される初期カメラ
  * - onViewportChange … カメラ変化の読み取り専用通知（永続化・ミラー用。値を戻さない）
  * - ref.current.viewport.setViewport … プログラムからカメラを押し込む唯一の経路
  */
@@ -62,8 +62,8 @@ export function ViewportExample() {
 	return (
 		<div style={{ position: "relative", width: "100%", height: "100%" }}>
 			<Canvas
-				canvasDoc={landmarkDoc}
-				defaultViewport={initialCamera}
+				doc={landmarkDoc}
+				initialConfig={{ viewport: initialCamera }}
 				onViewportChange={setCamera}
 				ref={canvasRef}
 			/>
