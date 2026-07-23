@@ -1,4 +1,7 @@
-import { containerPlugin } from "@workspace/plugin-container-shapes";
+import {
+	containerPlugin,
+	containerToolbarEntry,
+} from "@workspace/plugin-container-shapes";
 import React, { useCallback, useState } from "react";
 import ReactDOM from "react-dom/client";
 import "katex/dist/katex.min.css";
@@ -7,9 +10,12 @@ import { MultiCanvasApp } from "./MultiCanvasApp";
 import type { CanvasConfig, CanvasDoc, ToolbarEntry } from "../../src";
 import {
 	Canvas,
+	annotationToolbarEntry,
 	createCanvasParser,
 	darkCanvasTheme,
 	extractCanvasSourceFromPng,
+	flowchartToolbarEntry,
+	generalToolbarEntry,
 } from "../../src";
 import "./harness.css";
 
@@ -30,10 +36,10 @@ const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "polygon" },
 	{ kind: "preset", presetId: "sticky" },
 	{ kind: "preset", presetId: "rect-markdown" },
-	{ kind: "category", categoryId: "flowchart" },
-	{ kind: "category", categoryId: "container" },
-	{ kind: "category", categoryId: "general" },
-	{ kind: "category", categoryId: "annotation" },
+	flowchartToolbarEntry,
+	containerToolbarEntry,
+	generalToolbarEntry,
+	annotationToolbarEntry,
 ];
 
 const harnessParser = createCanvasParser({ plugins });

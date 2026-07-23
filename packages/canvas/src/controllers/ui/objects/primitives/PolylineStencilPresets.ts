@@ -7,6 +7,5 @@ export const PolylineStencilPresets: StencilPreset[] = [
 		objectType: "polyline",
 		label: { en: "Polyline", ja: "折れ線" },
 		icon: PolylineIcon,
-		categories: { basic: 30 },
 	},
 ];

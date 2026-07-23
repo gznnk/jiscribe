@@ -167,62 +167,6 @@ describe("createCanvasRegistries", () => {
 		});
 	});
 
-	describe("stencilCategories registry", () => {
-		// Adds palette category metadata to the minimal fake definition.
-		const buildCategoryDefinition = (
-			type: string,
-			categories: { id: string; label: string }[],
-		): ObjectTypeDefinition => ({
-			...buildFakeDefinition(type),
-			stencilLibrary: {
-				categories: categories.map((category) => ({
-					...category,
-					icon: () => null,
-				})),
-			},
-		});
-
-		it("includes a plugin definition's declared categories", () => {
-			const plugin: CanvasPlugin = {
-				id: "gizmo-plugin",
-				objects: {
-					gizmo: buildCategoryDefinition("gizmo", [
-						{ id: "gizmos", label: "Gizmos" },
-					]),
-				},
-			};
-			const registries = createCanvasRegistries({ plugins: [plugin] });
-			expect(registries.stencilCategories.get("gizmos")?.label).toBe("Gizmos");
-		});
-
-		it("keeps the built-in when a definition reuses its id (first-wins)", () => {
-			const plugin: CanvasPlugin = {
-				id: "shadow-plugin",
-				objects: {
-					gizmo: buildCategoryDefinition("gizmo", [
-						{ id: "flowchart", label: "Hijacked" },
-					]),
-				},
-			};
-			const registries = createCanvasRegistries({ plugins: [plugin] });
-			// The built-in "flowchart" metadata survives; the plugin's is ignored.
-			expect(registries.stencilCategories.get("flowchart")?.label).toEqual({
-				en: "Flowchart",
-				ja: "フローチャート",
-			});
-		});
-
-		it("still exposes the built-ins for definitions that declare no categories", () => {
-			const plugin: CanvasPlugin = {
-				id: "plain-plugin",
-				objects: { star: buildFakeDefinition("star") },
-			};
-			const registries = createCanvasRegistries({ plugins: [plugin] });
-			expect(registries.stencilCategories.get("basic")).toBeDefined();
-			expect(registries.stencilCategories.get("flowchart")).toBeDefined();
-		});
-	});
-
 	describe("isolation", () => {
 		it("returns an independent bundle each call", () => {
 			const a = createCanvasRegistries();

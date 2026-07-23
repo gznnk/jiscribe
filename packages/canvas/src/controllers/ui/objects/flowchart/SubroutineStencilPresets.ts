@@ -7,6 +7,5 @@ export const SubroutineStencilPresets: StencilPreset[] = [
 		objectType: "subroutine",
 		label: { en: "Subroutine", ja: "サブルーチン" },
 		icon: SubroutineIcon,
-		categories: { flowchart: 35 },
 	},
 ];

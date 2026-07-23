@@ -1,5 +1,8 @@
 import {
 	Canvas,
+	annotationToolbarEntry,
+	flowchartToolbarEntry,
+	generalToolbarEntry,
 	type Camera,
 	type CanvasConfig,
 	type CanvasDoc,
@@ -7,6 +10,7 @@ import {
 	type CanvasHandle,
 	type ToolbarEntry,
 } from "@workspace/canvas";
+import { containerToolbarEntry } from "@workspace/plugin-container-shapes";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -31,10 +35,10 @@ const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "polygon" },
 	{ kind: "preset", presetId: "sticky" },
 	{ kind: "preset", presetId: "rect-markdown" },
-	{ kind: "category", categoryId: "flowchart" },
-	{ kind: "category", categoryId: "container" },
-	{ kind: "category", categoryId: "general" },
-	{ kind: "category", categoryId: "annotation" },
+	flowchartToolbarEntry,
+	containerToolbarEntry,
+	generalToolbarEntry,
+	annotationToolbarEntry,
 ];
 
 /**

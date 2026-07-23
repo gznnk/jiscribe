@@ -7,6 +7,5 @@ export const HexagonStencilPresets: StencilPreset[] = [
 		objectType: "hexagon",
 		label: { en: "Preparation", ja: "準備" },
 		icon: HexagonIcon,
-		categories: { flowchart: 140 },
 	},
 ];

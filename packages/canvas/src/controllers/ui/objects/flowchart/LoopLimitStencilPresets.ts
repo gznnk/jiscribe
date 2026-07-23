@@ -7,6 +7,5 @@ export const LoopLimitStencilPresets: StencilPreset[] = [
 		objectType: "loopLimit",
 		label: { en: "Loop Limit", ja: "ループ端" },
 		icon: LoopLimitIcon,
-		categories: { flowchart: 160 },
 	},
 ];

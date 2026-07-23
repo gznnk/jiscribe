@@ -7,6 +7,5 @@ export const DelayStencilPresets: StencilPreset[] = [
 		objectType: "delay",
 		label: { en: "Delay", ja: "遅延" },
 		icon: DelayIcon,
-		categories: { flowchart: 150 },
 	},
 ];

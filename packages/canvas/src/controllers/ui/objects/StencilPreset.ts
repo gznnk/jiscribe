@@ -17,7 +17,7 @@ export type StencilIconProps = {
  * objectType's `ObjectFactory`, passing defaultOverrides.
  */
 export type StencilPreset = {
-	/** Stable identifier; also the lookup key for label overrides and category order. */
+	/** Stable identifier; the lookup key for label overrides and toolbar layout. */
 	id: string;
 	/** Object type this preset creates through (presets are not 1:1 with types). */
 	objectType: ObjectType;
@@ -28,8 +28,6 @@ export type StencilPreset = {
 	label: string | LocaleMessages<string>;
 	/** Icon component rendered in the palette. */
 	icon: ComponentType<StencilIconProps>;
-	/** Palette memberships: category id → sort order within that category (ascending). */
-	categories?: Record<string, number>;
 	/** Merged over the objectType's defaults when creating via its `ObjectFactory`. */
 	defaultOverrides?: Record<string, unknown>;
 };

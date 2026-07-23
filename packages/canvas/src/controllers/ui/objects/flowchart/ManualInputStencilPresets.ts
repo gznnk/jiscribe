@@ -7,6 +7,5 @@ export const ManualInputStencilPresets: StencilPreset[] = [
 		objectType: "manualInput",
 		label: { en: "Manual Input", ja: "手動入力" },
 		icon: ManualInputIcon,
-		categories: { flowchart: 90 },
 	},
 ];

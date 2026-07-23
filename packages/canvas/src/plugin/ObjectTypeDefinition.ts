@@ -3,7 +3,6 @@ import type { FC } from "react";
 import type { ObjectBehaviorEntry } from "../controllers/gestures/registry/ObjectBehaviorTypes";
 import type { SelectionControlDefinition } from "../controllers/ui/controls/SelectionControlTypes";
 import type { ObjectMenuSection } from "../controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
-import type { StencilCategory } from "../controllers/ui/menu/StencilLibrary/stencilCategories";
 import type { StencilPreset } from "../controllers/ui/objects/StencilPreset";
 import type { ObjectOutlineCalculator } from "../presentations/objects/registry/ObjectOutlineRegistry";
 import type { ObjectTextRegionCalculator } from "../presentations/objects/registry/ObjectTextRegionRegistry";
@@ -22,15 +21,12 @@ import type { ObjectStateValidator } from "../states/registry/ObjectStateValidat
 export type StencilLibraryRegistration = {
 	/** Factory responsible for doc creation, dimensions, and bounds generation */
 	factory?: ObjectFactory;
-	/** Presets shown in the toolbar (multiple allowed per type) */
-	presets?: StencilPreset[];
 	/**
-	 * New palette categories this type contributes (metadata only: id / label /
-	 * icon). This is a declaration; whether and where a category appears is
-	 * decided by `toolbar.layout`. An id colliding with a built-in or an earlier
-	 * definition is ignored (first-wins).
+	 * Presets this type contributes to the palette (multiple allowed per type).
+	 * Registration only makes them exist; where they show and in what order is
+	 * decided by `toolbar.layout` (a pinned entry, or a category entry's `presetIds`).
 	 */
-	categories?: StencilCategory[];
+	presets?: StencilPreset[];
 };
 
 /**

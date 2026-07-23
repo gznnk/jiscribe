@@ -16,7 +16,6 @@ import { containerToDoc, containerToState } from "./state/ContainerMapper";
 import type { ContainerState } from "./state/ContainerState";
 import { isValidContainerState } from "./state/validateContainerState";
 import { ContainerStencilPresets } from "./stencil/ContainerStencilPresets";
-import { FrameIcon } from "./stencil/FrameIcon";
 
 /**
  * `containerDefinition` has zero intentional omissions relative to the core
@@ -67,12 +66,5 @@ export const containerDefinition: ObjectTypeDefinition<
 	stencilLibrary: {
 		factory: ContainerObjectFactory,
 		presets: ContainerStencilPresets,
-		categories: [
-			{
-				id: "container",
-				label: { en: "Container", ja: "コンテナ" },
-				icon: FrameIcon,
-			},
-		],
 	},
 };

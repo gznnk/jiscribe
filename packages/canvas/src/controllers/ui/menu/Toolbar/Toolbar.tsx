@@ -66,7 +66,7 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 	trailing,
 }) => {
 	const messages = useCanvasMessages();
-	const { stencilPreset, stencilCategories } = useCanvasRegistries();
+	const { stencilPreset } = useCanvasRegistries();
 	const [isHelpOpen, setIsHelpOpen] = useState(false);
 	const closeHelp = useCallback(() => setIsHelpOpen(false), []);
 
@@ -124,25 +124,24 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 								/>
 							);
 						}
-						// Category metadata comes from the registry (built-ins +
-						// definition-declared). An unknown id (layout naming a category no
-						// definition supplies) has no metadata, so skip its button.
-						const category = stencilCategories.get(entry.categoryId);
-						if (!category) {
-							return null;
-						}
-						const presets = stencilPreset.byCategory(entry.categoryId);
-						// A category with no registered presets has nothing to show, so
+						// Resolve the layout's presetIds in order; a preset that isn't
+						// registered (e.g. a plugin not applied) is silently skipped.
+						const presets = entry.presetIds
+							.map((id) => stencilPreset.get(id))
+							.filter((preset) => preset !== undefined);
+						// A category with no resolvable presets has nothing to show, so
 						// skip the button/flyout entirely rather than rendering an empty one.
 						if (presets.length === 0) {
 							return null;
 						}
 						return (
 							<StencilCategoryMenu
-								key={`category:${entry.categoryId}`}
-								category={category}
+								key={`category:${entry.id}`}
+								id={entry.id}
+								label={entry.label}
+								icon={entry.icon}
 								presets={presets}
-								isOpen={openCategoryId === entry.categoryId}
+								isOpen={openCategoryId === entry.id}
 								activePresetId={activePresetId}
 							/>
 						);

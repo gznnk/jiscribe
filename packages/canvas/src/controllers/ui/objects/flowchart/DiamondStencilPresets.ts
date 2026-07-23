@@ -9,6 +9,5 @@ export const DiamondStencilPresets: StencilPreset[] = [
 		// geometric `diamond` (it only ever appears in the flowchart category).
 		label: { en: "Decision", ja: "判断" },
 		icon: DiamondIcon,
-		categories: { flowchart: 20 },
 	},
 ];

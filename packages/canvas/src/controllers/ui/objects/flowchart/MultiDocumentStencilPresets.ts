@@ -7,6 +7,5 @@ export const MultiDocumentStencilPresets: StencilPreset[] = [
 		objectType: "multiDocument",
 		label: { en: "Multi-document", ja: "複数書類" },
 		icon: MultiDocumentIcon,
-		categories: { flowchart: 65 },
 	},
 ];

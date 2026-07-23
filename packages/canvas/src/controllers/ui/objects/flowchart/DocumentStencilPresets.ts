@@ -7,6 +7,5 @@ export const DocumentStencilPresets: StencilPreset[] = [
 		objectType: "document",
 		label: { en: "Document", ja: "書類" },
 		icon: DocumentIcon,
-		categories: { flowchart: 60 },
 	},
 ];

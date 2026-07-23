@@ -5,54 +5,37 @@ import { createStencilPresetRegistry } from "../StencilPresetRegistry";
 
 const DummyIcon = () => null;
 
-const preset = (
-	id: string,
-	categories?: Record<string, number>,
-): StencilPreset => ({
+const preset = (id: string): StencilPreset => ({
 	id,
 	objectType: "rect",
 	label: id,
-	categories,
 	icon: DummyIcon,
 });
 
 describe("StencilPresetRegistry", () => {
-	it("byCategory はカテゴリ内 order（categories の値）昇順で返す", () => {
+	it("all は登録順で返す", () => {
 		const registry = createStencilPresetRegistry();
-		// 登録順とカテゴリ内順序が食い違うように値を仕込む。
-		registry.register(preset("b", { flowchart: 20 }));
-		registry.register(preset("a", { flowchart: 10 }));
-		registry.register(preset("x", { basic: 10 }));
+		registry.register(preset("b"));
+		registry.register(preset("a"));
+		registry.register(preset("c"));
 
-		expect(registry.byCategory("flowchart").map((p) => p.id)).toEqual([
-			"a",
-			"b",
-		]);
-		expect(registry.byCategory("basic").map((p) => p.id)).toEqual(["x"]);
+		expect(registry.all().map((p) => p.id)).toEqual(["b", "a", "c"]);
 	});
 
-	it("多重所属の preset は各カテゴリでそれぞれの order 位置に現れる", () => {
+	it("get は id で preset を引く。未登録は undefined", () => {
 		const registry = createStencilPresetRegistry();
-		// rect は basic では後方(30)、flowchart では前方(10)に置きたい。
-		registry.register(preset("rect", { basic: 30, flowchart: 10 }));
-		registry.register(preset("diamond", { flowchart: 20 }));
-		registry.register(preset("ellipse", { basic: 10 }));
+		registry.register(preset("rect"));
 
-		expect(registry.byCategory("basic").map((p) => p.id)).toEqual([
-			"ellipse",
-			"rect",
-		]);
-		expect(registry.byCategory("flowchart").map((p) => p.id)).toEqual([
-			"rect",
-			"diamond",
-		]);
+		expect(registry.get("rect")?.id).toBe("rect");
+		expect(registry.get("missing")).toBeUndefined();
 	});
 
-	it("categories を持たない preset はどのカテゴリにも現れない", () => {
+	it("clear は登録内容をすべて捨てる", () => {
 		const registry = createStencilPresetRegistry();
-		registry.register(preset("loose"));
+		registry.register(preset("rect"));
+		registry.clear();
 
-		expect(registry.byCategory("basic")).toEqual([]);
-		expect(registry.byCategory("flowchart")).toEqual([]);
+		expect(registry.all()).toEqual([]);
+		expect(registry.get("rect")).toBeUndefined();
 	});
 });

@@ -1,6 +1,15 @@
 import type { CanvasConfig, CanvasDoc, ToolbarEntry } from "@workspace/canvas";
-import { Canvas, createCanvasParser } from "@workspace/canvas";
-import { containerPlugin } from "@workspace/plugin-container-shapes";
+import {
+	Canvas,
+	annotationToolbarEntry,
+	createCanvasParser,
+	flowchartToolbarEntry,
+	generalToolbarEntry,
+} from "@workspace/canvas";
+import {
+	containerPlugin,
+	containerToolbarEntry,
+} from "@workspace/plugin-container-shapes";
 
 // container 図形は core から削除され、@workspace/plugin-container-shapes が唯一の
 // 供給元（docs/05_extensibility/canvas-plugin-design.md）。この example は
@@ -20,10 +29,10 @@ const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "polygon" },
 	{ kind: "preset", presetId: "sticky" },
 	{ kind: "preset", presetId: "rect-markdown" },
-	{ kind: "category", categoryId: "flowchart" },
-	{ kind: "category", categoryId: "container" },
-	{ kind: "category", categoryId: "general" },
-	{ kind: "category", categoryId: "annotation" },
+	flowchartToolbarEntry,
+	containerToolbarEntry,
+	generalToolbarEntry,
+	annotationToolbarEntry,
 ];
 
 const pluginContainerParser = createCanvasParser({ plugins });

@@ -7,6 +7,5 @@ export const StoredDataStencilPresets: StencilPreset[] = [
 		objectType: "storedData",
 		label: { en: "Stored Data", ja: "記憶データ" },
 		icon: StoredDataIcon,
-		categories: { flowchart: 75 },
 	},
 ];

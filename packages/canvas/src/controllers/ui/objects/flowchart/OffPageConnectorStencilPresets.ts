@@ -7,6 +7,5 @@ export const OffPageConnectorStencilPresets: StencilPreset[] = [
 		objectType: "offPageConnector",
 		label: { en: "Off-page connector", ja: "他ページ結合子" },
 		icon: OffPageConnectorIcon,
-		categories: { flowchart: 210 },
 	},
 ];

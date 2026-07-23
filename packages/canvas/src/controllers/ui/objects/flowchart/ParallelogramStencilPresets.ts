@@ -7,6 +7,5 @@ export const ParallelogramStencilPresets: StencilPreset[] = [
 		objectType: "parallelogram",
 		label: { en: "Data", ja: "データ" },
 		icon: ParallelogramIcon,
-		categories: { flowchart: 50 },
 	},
 ];

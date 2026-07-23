@@ -7,6 +7,5 @@ export const ExtractStencilPresets: StencilPreset[] = [
 		objectType: "extract",
 		label: { en: "Extract", ja: "抽出" },
 		icon: ExtractIcon,
-		categories: { flowchart: 170 },
 	},
 ];

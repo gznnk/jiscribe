@@ -7,6 +7,5 @@ export const TrapezoidStencilPresets: StencilPreset[] = [
 		objectType: "trapezoid",
 		label: { en: "Manual Operation", ja: "手操作" },
 		icon: TrapezoidIcon,
-		categories: { flowchart: 130 },
 	},
 ];

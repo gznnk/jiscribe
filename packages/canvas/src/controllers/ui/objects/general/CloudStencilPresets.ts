@@ -7,6 +7,5 @@ export const CloudStencilPresets: StencilPreset[] = [
 		objectType: "cloud",
 		label: { en: "Cloud", ja: "雲" },
 		icon: CloudIcon,
-		categories: { general: 10 },
 	},
 ];

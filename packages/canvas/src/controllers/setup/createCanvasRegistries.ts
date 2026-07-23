@@ -5,7 +5,6 @@ import {
 	ALL_OBJECT_DEFINITIONS,
 	applyObjectDefinition,
 } from "./initializeObjectRegistry";
-import { initializeStencilCategoryRegistry } from "./initializeStencilCategoryRegistry";
 import { initializeStyleProperties } from "./initializeStyleProperties";
 import { createObjectComponentRegistry } from "../../presentations/objects/registry/ObjectComponentRegistry";
 import { createObjectOutlineRegistry } from "../../presentations/objects/registry/ObjectOutlineRegistry";
@@ -19,7 +18,6 @@ import { createObjectBehaviorRegistry } from "../gestures/registry/ObjectBehavio
 import { createStylePropertyRegistry } from "../styleProperties/StylePropertyRegistry";
 import { createSelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
 import { createObjectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
-import { createStencilCategoryRegistry } from "../ui/menu/StencilLibrary/StencilCategoryRegistry";
 import { createStencilPresetRegistry } from "../ui/objects/StencilPresetRegistry";
 
 /**
@@ -54,14 +52,10 @@ export const createCanvasRegistries = (
 		stencilPreset: createStencilPresetRegistry(),
 		objectFactory: createObjectFactoryRegistry(),
 		styleProperty: createStylePropertyRegistry(),
-		stencilCategories: createStencilCategoryRegistry(),
 	};
 
 	initializeGestureHandlerRegistry(registries);
 	initializeStyleProperties(registries.styleProperty);
-	// Seed the built-in categories before applying definitions so their ids win
-	// first-wins over any definition (built-in or plugin) that reuses one.
-	initializeStencilCategoryRegistry(registries.stencilCategories);
 
 	// Tracks which object types are already claimed and by whom, so a plugin
 	// colliding with a built-in or an earlier plugin throws instead of

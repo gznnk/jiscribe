@@ -931,11 +931,6 @@ export const applyObjectDefinition = (
 	stencilLibrary?.presets?.forEach((preset) => {
 		registries.stencilPreset.register(preset);
 	});
-	// Categories are first-wins, so built-ins seeded before the apply loops keep
-	// their id against a definition that reuses it (see StencilCategoryRegistry).
-	stencilLibrary?.categories?.forEach((category) => {
-		registries.stencilCategories.register(category);
-	});
 };
 
 /**

@@ -1,6 +1,5 @@
-import { memo } from "react";
+import { memo, type ComponentType } from "react";
 
-import type { StencilCategory } from "./stencilCategories";
 import { StencilLibraryItem } from "./StencilLibraryItem";
 import {
 	StencilCategoryButton,
@@ -9,12 +8,21 @@ import {
 } from "./StencilLibraryStyled";
 import { useCanvasLocale } from "../../../messages/CanvasLocaleContext";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
-import { resolveLocalizedLabel } from "../../../messages/resolveLocaleMessages";
+import {
+	resolveLocalizedLabel,
+	type LocaleMessages,
+} from "../../../messages/resolveLocaleMessages";
 import { ChevronDownIcon } from "../../icons/ChevronDownIcon";
-import type { StencilPreset } from "../../objects/StencilPreset";
+import type {
+	StencilIconProps,
+	StencilPreset,
+} from "../../objects/StencilPreset";
 
 type StencilCategoryMenuProps = {
-	category: StencilCategory;
+	/** Flyout open/close key and host label-override key. */
+	id: string;
+	label: string | LocaleMessages<string>;
+	icon: ComponentType<StencilIconProps>;
 	/** Presets belonging to this category (already ordered). */
 	presets: readonly StencilPreset[];
 	isOpen: boolean;
@@ -33,7 +41,9 @@ const CARET_SIZE = 14;
  * purely presentational and multiple <Canvas> instances stay independent.
  */
 const StencilCategoryMenuComponent: React.FC<StencilCategoryMenuProps> = ({
-	category,
+	id,
+	label: categoryLabel,
+	icon: Icon,
 	presets,
 	isOpen,
 	activePresetId,
@@ -41,9 +51,8 @@ const StencilCategoryMenuComponent: React.FC<StencilCategoryMenuProps> = ({
 	const messages = useCanvasMessages();
 	const locale = useCanvasLocale();
 	const label =
-		messages.stencilCategoryLabels[category.id] ??
-		resolveLocalizedLabel(category.label, locale);
-	const Icon = category.icon;
+		messages.stencilCategoryLabels[id] ??
+		resolveLocalizedLabel(categoryLabel, locale);
 
 	return (
 		<StencilCategoryContainer>
@@ -51,7 +60,7 @@ const StencilCategoryMenuComponent: React.FC<StencilCategoryMenuProps> = ({
 				type="button"
 				data-kind="menu"
 				data-id="stencil-category"
-				data-part={`toggle:${category.id}`}
+				data-part={`toggle:${id}`}
 				aria-haspopup="true"
 				aria-expanded={isOpen}
 				title={label}
@@ -61,7 +70,7 @@ const StencilCategoryMenuComponent: React.FC<StencilCategoryMenuProps> = ({
 				<ChevronDownIcon width={CARET_SIZE} height={CARET_SIZE} />
 			</StencilCategoryButton>
 			{isOpen && (
-				<StencilCategoryFlyout data-category-flyout={category.id}>
+				<StencilCategoryFlyout data-category-flyout={id}>
 					{presets.map((preset) => (
 						<StencilLibraryItem
 							key={preset.id}

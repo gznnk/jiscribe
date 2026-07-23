@@ -13,7 +13,6 @@ import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehavior
 import type { StylePropertyRegistry } from "../styleProperties/StylePropertyRegistry";
 import type { SelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
 import type { ObjectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
-import type { StencilCategoryRegistry } from "../ui/menu/StencilLibrary/StencilCategoryRegistry";
 import type { StencilPresetRegistry } from "../ui/objects/StencilPresetRegistry";
 
 /**
@@ -43,12 +42,6 @@ export type CanvasRegistries = {
 	stencilPreset: StencilPresetRegistry;
 	objectFactory: ObjectFactoryRegistry;
 	styleProperty: StylePropertyRegistry;
-	/**
-	 * Palette categories: built-ins seeded first, then each applied definition's
-	 * declared categories (first-wins). The toolbar reads it to resolve a layout
-	 * entry's category.
-	 */
-	stencilCategories: StencilCategoryRegistry;
 };
 
 /**

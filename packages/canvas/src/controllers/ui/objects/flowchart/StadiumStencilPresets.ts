@@ -7,6 +7,5 @@ export const StadiumStencilPresets: StencilPreset[] = [
 		objectType: "stadium",
 		label: { en: "Terminal", ja: "端子" },
 		icon: StadiumIcon,
-		categories: { flowchart: 30 },
 	},
 ];

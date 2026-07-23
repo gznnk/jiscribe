@@ -7,6 +7,5 @@ export const CrossStencilPresets: StencilPreset[] = [
 		objectType: "cross",
 		label: { en: "Junction", ja: "接合点" },
 		icon: CrossIcon,
-		categories: { flowchart: 180 },
 	},
 ];

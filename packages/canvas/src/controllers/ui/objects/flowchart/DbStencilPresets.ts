@@ -7,6 +7,5 @@ export const DbStencilPresets: StencilPreset[] = [
 		objectType: "db",
 		label: { en: "Database", ja: "データベース" },
 		icon: DbIcon,
-		categories: { flowchart: 70 },
 	},
 ];

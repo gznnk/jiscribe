@@ -26,6 +26,7 @@ export { ContainerHeaderHeightControl } from "./controls/ContainerHeaderHeightCo
 export { HeaderHeightControlHandler } from "./controls/HeaderHeightControlHandler";
 
 export { ContainerStencilPresets } from "./stencil/ContainerStencilPresets";
+export { containerToolbarEntry } from "./stencil/ContainerToolbarEntry";
 
 export { containerDefinition } from "./definition";
 export { containerPlugin } from "./plugin";

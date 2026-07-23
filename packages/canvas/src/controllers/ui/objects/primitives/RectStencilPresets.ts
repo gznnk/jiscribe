@@ -9,7 +9,6 @@ export const RectStencilPresets: StencilPreset[] = [
 		objectType: "rect",
 		label: { en: "Rectangle", ja: "長方形" },
 		icon: RectIcon,
-		categories: { basic: 10 },
 	},
 	{
 		// Flowchart process box: a plain rectangle. It renders identically to
@@ -19,7 +18,6 @@ export const RectStencilPresets: StencilPreset[] = [
 		objectType: "rect",
 		label: { en: "Process", ja: "処理" },
 		icon: RectIcon,
-		categories: { flowchart: 10 },
 		defaultOverrides: { width: 140, height: 80 },
 	},
 	{
@@ -27,7 +25,6 @@ export const RectStencilPresets: StencilPreset[] = [
 		objectType: "rect",
 		label: { en: "Markdown", ja: "Markdown" },
 		icon: MarkdownRectIcon,
-		categories: { basic: 50 },
 		defaultOverrides: {
 			width: 300,
 			height: 200,

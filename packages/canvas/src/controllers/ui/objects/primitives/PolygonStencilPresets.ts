@@ -7,6 +7,5 @@ export const PolygonStencilPresets: StencilPreset[] = [
 		objectType: "polygon",
 		label: { en: "Polygon", ja: "多角形" },
 		icon: PolygonIcon,
-		categories: { basic: 40 },
 	},
 ];

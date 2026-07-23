@@ -27,17 +27,19 @@ export type {
 	BuildExportSvgOptions,
 } from "./export";
 // StencilLibrary toolbar arrangement (pinned presets + category flyouts, issue #184).
-// Pass a custom `toolbar.layout` to `<Canvas>`; built-in category metadata is
-// exported for hosts composing layouts (plugins add categories via
-// `ObjectTypeDefinition.stencilLibrary.categories`).
+// The layout is the single source of order and category metadata: each entry names,
+// in display order, a pinned preset or a category flyout (label / icon / `presetIds`
+// carried inline). Pass a custom `toolbar.layout` to `<Canvas>`; built-in category
+// entries are exported for hosts composing layouts, and plugins export their own
+// (e.g. `containerToolbarEntry`).
 export {
 	DEFAULT_TOOLBAR_LAYOUT,
+	flowchartToolbarEntry,
+	generalToolbarEntry,
+	annotationToolbarEntry,
+	basicToolbarEntry,
 	type ToolbarEntry,
 } from "./controllers/ui/menu/Toolbar";
-export {
-	STENCIL_CATEGORY_DEFINITIONS,
-	type StencilCategory,
-} from "./controllers/ui/menu/StencilLibrary/stencilCategories";
 export { defaultCanvasMessages } from "./controllers/messages/CanvasMessages";
 export type {
 	CanvasMessages,
