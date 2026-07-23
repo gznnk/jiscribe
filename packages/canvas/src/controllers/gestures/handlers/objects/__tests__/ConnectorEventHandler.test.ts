@@ -145,7 +145,7 @@ describe("ConnectorEventHandler - closes menus on selection change", () => {
 		({
 			...makeState("Yes"),
 			objectMenuOpenId: "style",
-			shapeLibraryOpenCategory: "flowchart",
+			stencilLibraryOpenCategory: "flowchart",
 		}) as unknown as CanvasControllerState;
 
 	it("a click selecting a connector closes the ObjectMenu submenu and the category flyout", () => {
@@ -156,7 +156,7 @@ describe("ConnectorEventHandler - closes menus on selection change", () => {
 		);
 		expect(next.selectedConnectorId).toBe("c1");
 		expect(next.objectMenuOpenId).toBeNull();
-		expect(next.shapeLibraryOpenCategory).toBeNull();
+		expect(next.stencilLibraryOpenCategory).toBeNull();
 	});
 
 	it("a double click selecting a connector also closes them", () => {
@@ -167,6 +167,6 @@ describe("ConnectorEventHandler - closes menus on selection change", () => {
 		);
 		expect(next.selectedConnectorId).toBe("c1");
 		expect(next.objectMenuOpenId).toBeNull();
-		expect(next.shapeLibraryOpenCategory).toBeNull();
+		expect(next.stencilLibraryOpenCategory).toBeNull();
 	});
 });

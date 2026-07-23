@@ -18,7 +18,7 @@ const baseState = (
 		shapeDrawing: null,
 		eventStartSnapshot: null,
 		objectMenuOpenId: null,
-		shapeLibraryOpenCategory: null,
+		stencilLibraryOpenCategory: null,
 		edgeScrollEnabled: false,
 		...overrides,
 	}) as unknown as CanvasControllerState;
@@ -46,10 +46,10 @@ describe("DeselectAllCommand", () => {
 		expect(next.edgeScrollEnabled).toBe(false);
 	});
 
-	it("closes an open ShapeLibrary category flyout", () => {
-		const state = baseState({ shapeLibraryOpenCategory: "flowchart" });
+	it("closes an open StencilLibrary category flyout", () => {
+		const state = baseState({ stencilLibraryOpenCategory: "flowchart" });
 		expect(
-			DeselectAllCommand.execute(state, registries).shapeLibraryOpenCategory,
+			DeselectAllCommand.execute(state, registries).stencilLibraryOpenCategory,
 		).toBeNull();
 	});
 
@@ -87,10 +87,10 @@ describe("DeselectAllCommand", () => {
 			);
 		});
 
-		it("is executable when a ShapeLibrary category flyout is open (Escape closes it)", () => {
+		it("is executable when a StencilLibrary category flyout is open (Escape closes it)", () => {
 			expect(
 				DeselectAllCommand.canExecute(
-					baseState({ shapeLibraryOpenCategory: "flowchart" }),
+					baseState({ stencilLibraryOpenCategory: "flowchart" }),
 					registries,
 				),
 			).toBe(true);

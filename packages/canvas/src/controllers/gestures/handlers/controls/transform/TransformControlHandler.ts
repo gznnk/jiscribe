@@ -116,7 +116,7 @@ export class TransformControlHandler extends ControlStrategy {
 			eventStartSnapshot,
 			edgeScrollEnabled: true,
 			objectMenuOpenId: null,
-			shapeLibraryOpenCategory: null,
+			stencilLibraryOpenCategory: null,
 		};
 	}
 

@@ -18,10 +18,10 @@ export type UiStateReset = Pick<
 	| "snapCandidatesCache"
 	| "edgeScrollEnabled"
 	| "contextMenuPosition"
-	| "shapeLibraryDrag"
+	| "stencilLibraryDrag"
 	| "areaSelection"
 	| "objectMenuOpenId"
-	| "shapeLibraryOpenCategory"
+	| "stencilLibraryOpenCategory"
 	| "multiSelectGroup"
 	| "textEditState"
 	| "pendingConnector"
@@ -52,10 +52,10 @@ export const resetUiState = (): UiStateReset => ({
 	snapCandidatesCache: null,
 	edgeScrollEnabled: false,
 	contextMenuPosition: null,
-	shapeLibraryDrag: null,
+	stencilLibraryDrag: null,
 	areaSelection: null,
 	objectMenuOpenId: null,
-	shapeLibraryOpenCategory: null,
+	stencilLibraryOpenCategory: null,
 	multiSelectGroup: null,
 	textEditState: null,
 	pendingConnector: null,

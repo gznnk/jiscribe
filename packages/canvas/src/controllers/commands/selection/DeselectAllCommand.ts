@@ -21,7 +21,7 @@ export const DeselectAllCommand: ExecutableCommand = {
 			state.selectedVertex !== null ||
 			state.areaSelection !== null ||
 			state.shapeDrawing !== null ||
-			state.shapeLibraryOpenCategory !== null
+			state.stencilLibraryOpenCategory !== null
 		);
 	},
 
@@ -35,7 +35,7 @@ export const DeselectAllCommand: ExecutableCommand = {
 			multiSelectGroup: null,
 			areaSelection: null,
 			objectMenuOpenId: null,
-			shapeLibraryOpenCategory: null,
+			stencilLibraryOpenCategory: null,
 			edgeScrollEnabled: false,
 			shapeDrawing: null,
 		};

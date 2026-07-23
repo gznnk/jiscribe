@@ -151,7 +151,7 @@ export const GroupCommand: ExecutableCommand = {
 			// the real group object (multiSelectGroup takes precedence in both).
 			multiSelectGroup: null,
 			objectMenuOpenId: null,
-			shapeLibraryOpenCategory: null,
+			stencilLibraryOpenCategory: null,
 			lastDuplicate: null,
 			commitVersion: state.commitVersion + 1,
 		};

@@ -375,32 +375,32 @@ import {
 import { RoutingMenu } from "../ui/menu/ObjectMenu/items/RoutingMenu";
 import { StickyColorMenu } from "../ui/menu/ObjectMenu/items/StickyColorMenu";
 import { createDefaultMenu } from "../ui/menu/ObjectMenu/utils/createDefaultMenu";
-import { CalloutShapePresets } from "../ui/objects/annotations/CalloutShapePresets";
-import { StickyShapePresets } from "../ui/objects/annotations/StickyShapePresets";
-import { CardShapePresets } from "../ui/objects/flowchart/CardShapePresets";
-import { CrossShapePresets } from "../ui/objects/flowchart/CrossShapePresets";
-import { DbShapePresets } from "../ui/objects/flowchart/DbShapePresets";
-import { DelayShapePresets } from "../ui/objects/flowchart/DelayShapePresets";
-import { DiamondShapePresets } from "../ui/objects/flowchart/DiamondShapePresets";
-import { DisplayShapePresets } from "../ui/objects/flowchart/DisplayShapePresets";
-import { DocumentShapePresets } from "../ui/objects/flowchart/DocumentShapePresets";
-import { ExtractShapePresets } from "../ui/objects/flowchart/ExtractShapePresets";
-import { HexagonShapePresets } from "../ui/objects/flowchart/HexagonShapePresets";
-import { LoopLimitShapePresets } from "../ui/objects/flowchart/LoopLimitShapePresets";
-import { ManualInputShapePresets } from "../ui/objects/flowchart/ManualInputShapePresets";
-import { MultiDocumentShapePresets } from "../ui/objects/flowchart/MultiDocumentShapePresets";
-import { OffPageConnectorShapePresets } from "../ui/objects/flowchart/OffPageConnectorShapePresets";
-import { ParallelogramShapePresets } from "../ui/objects/flowchart/ParallelogramShapePresets";
-import { StadiumShapePresets } from "../ui/objects/flowchart/StadiumShapePresets";
-import { StoredDataShapePresets } from "../ui/objects/flowchart/StoredDataShapePresets";
-import { SubroutineShapePresets } from "../ui/objects/flowchart/SubroutineShapePresets";
-import { TrapezoidShapePresets } from "../ui/objects/flowchart/TrapezoidShapePresets";
-import { ActorShapePresets } from "../ui/objects/general/ActorShapePresets";
-import { CloudShapePresets } from "../ui/objects/general/CloudShapePresets";
-import { EllipseShapePresets } from "../ui/objects/primitives/EllipseShapePresets";
-import { PolygonShapePresets } from "../ui/objects/primitives/PolygonShapePresets";
-import { PolylineShapePresets } from "../ui/objects/primitives/PolylineShapePresets";
-import { RectShapePresets } from "../ui/objects/primitives/RectShapePresets";
+import { CalloutStencilPresets } from "../ui/objects/annotations/CalloutStencilPresets";
+import { StickyStencilPresets } from "../ui/objects/annotations/StickyStencilPresets";
+import { CardStencilPresets } from "../ui/objects/flowchart/CardStencilPresets";
+import { CrossStencilPresets } from "../ui/objects/flowchart/CrossStencilPresets";
+import { DbStencilPresets } from "../ui/objects/flowchart/DbStencilPresets";
+import { DelayStencilPresets } from "../ui/objects/flowchart/DelayStencilPresets";
+import { DiamondStencilPresets } from "../ui/objects/flowchart/DiamondStencilPresets";
+import { DisplayStencilPresets } from "../ui/objects/flowchart/DisplayStencilPresets";
+import { DocumentStencilPresets } from "../ui/objects/flowchart/DocumentStencilPresets";
+import { ExtractStencilPresets } from "../ui/objects/flowchart/ExtractStencilPresets";
+import { HexagonStencilPresets } from "../ui/objects/flowchart/HexagonStencilPresets";
+import { LoopLimitStencilPresets } from "../ui/objects/flowchart/LoopLimitStencilPresets";
+import { ManualInputStencilPresets } from "../ui/objects/flowchart/ManualInputStencilPresets";
+import { MultiDocumentStencilPresets } from "../ui/objects/flowchart/MultiDocumentStencilPresets";
+import { OffPageConnectorStencilPresets } from "../ui/objects/flowchart/OffPageConnectorStencilPresets";
+import { ParallelogramStencilPresets } from "../ui/objects/flowchart/ParallelogramStencilPresets";
+import { StadiumStencilPresets } from "../ui/objects/flowchart/StadiumStencilPresets";
+import { StoredDataStencilPresets } from "../ui/objects/flowchart/StoredDataStencilPresets";
+import { SubroutineStencilPresets } from "../ui/objects/flowchart/SubroutineStencilPresets";
+import { TrapezoidStencilPresets } from "../ui/objects/flowchart/TrapezoidStencilPresets";
+import { ActorStencilPresets } from "../ui/objects/general/ActorStencilPresets";
+import { CloudStencilPresets } from "../ui/objects/general/CloudStencilPresets";
+import { EllipseStencilPresets } from "../ui/objects/primitives/EllipseStencilPresets";
+import { PolygonStencilPresets } from "../ui/objects/primitives/PolygonStencilPresets";
+import { PolylineStencilPresets } from "../ui/objects/primitives/PolylineStencilPresets";
+import { RectStencilPresets } from "../ui/objects/primitives/RectStencilPresets";
 
 /**
  * Data-only description of every object type. `createCanvasRegistries` applies a
@@ -415,9 +415,9 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			component: Rect,
 			behavior: createFrameBehavior<RectState>(),
 			stateValidator: isValidRectState,
-			shapeLibrary: {
+			stencilLibrary: {
 				factory: RectObjectFactory,
-				presets: RectShapePresets,
+				presets: RectStencilPresets,
 			},
 		}),
 
@@ -428,9 +428,9 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			textRegion: calcEllipseTextRegion,
 			behavior: createFrameBehavior<EllipseState>(),
 			stateValidator: isValidEllipseState,
-			shapeLibrary: {
+			stencilLibrary: {
 				factory: EllipseObjectFactory,
-				presets: EllipseShapePresets,
+				presets: EllipseStencilPresets,
 			},
 		}),
 
@@ -442,9 +442,9 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: diamondOutline,
 			behavior: createFrameBehavior<DiamondState>(),
 			stateValidator: isValidDiamondState,
-			shapeLibrary: {
+			stencilLibrary: {
 				factory: DiamondObjectFactory,
-				presets: DiamondShapePresets,
+				presets: DiamondStencilPresets,
 			},
 		}),
 
@@ -456,9 +456,9 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: stadiumOutline,
 			behavior: createFrameBehavior<StadiumState>(),
 			stateValidator: isValidStadiumState,
-			shapeLibrary: {
+			stencilLibrary: {
 				factory: StadiumObjectFactory,
-				presets: StadiumShapePresets,
+				presets: StadiumStencilPresets,
 			},
 		}),
 
@@ -470,9 +470,9 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: parallelogramOutline,
 			behavior: createFrameBehavior<ParallelogramState>(),
 			stateValidator: isValidParallelogramState,
-			shapeLibrary: {
+			stencilLibrary: {
 				factory: ParallelogramObjectFactory,
-				presets: ParallelogramShapePresets,
+				presets: ParallelogramStencilPresets,
 			},
 		}),
 
@@ -484,9 +484,9 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: hexagonOutline,
 			behavior: createFrameBehavior<HexagonState>(),
 			stateValidator: isValidHexagonState,
-			shapeLibrary: {
+			stencilLibrary: {
 				factory: HexagonObjectFactory,
-				presets: HexagonShapePresets,
+				presets: HexagonStencilPresets,
 			},
 		}),
 
@@ -498,9 +498,9 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: cloudOutline,
 			behavior: createFrameBehavior<CloudState>(),
 			stateValidator: isValidCloudState,
-			shapeLibrary: {
+			stencilLibrary: {
 				factory: CloudObjectFactory,
-				presets: CloudShapePresets,
+				presets: CloudStencilPresets,
 			},
 		}),
 
@@ -512,9 +512,9 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: documentOutline,
 			behavior: createFrameBehavior<DocumentState>(),
 			stateValidator: isValidDocumentState,
-			shapeLibrary: {
+			stencilLibrary: {
 				factory: DocumentObjectFactory,
-				presets: DocumentShapePresets,
+				presets: DocumentStencilPresets,
 			},
 		}),
 
@@ -526,9 +526,9 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: multiDocumentOutline,
 			behavior: createFrameBehavior<MultiDocumentState>(),
 			stateValidator: isValidMultiDocumentState,
-			shapeLibrary: {
+			stencilLibrary: {
 				factory: MultiDocumentObjectFactory,
-				presets: MultiDocumentShapePresets,
+				presets: MultiDocumentStencilPresets,
 			},
 		}),
 
@@ -539,9 +539,9 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			textRegion: calcActorTextRegion,
 			behavior: createFrameBehavior<ActorState>(),
 			stateValidator: isValidActorState,
-			shapeLibrary: {
+			stencilLibrary: {
 				factory: ActorObjectFactory,
-				presets: ActorShapePresets,
+				presets: ActorStencilPresets,
 			},
 		}),
 
@@ -559,9 +559,9 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					handler: new TailTipControlHandler(),
 				},
 			],
-			shapeLibrary: {
+			stencilLibrary: {
 				factory: CalloutObjectFactory,
-				presets: CalloutShapePresets,
+				presets: CalloutStencilPresets,
 			},
 		}),
 
@@ -573,9 +573,9 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: dbOutline,
 			behavior: createFrameBehavior<DbState>(),
 			stateValidator: isValidDbState,
-			shapeLibrary: {
+			stencilLibrary: {
 				factory: DbObjectFactory,
-				presets: DbShapePresets,
+				presets: DbStencilPresets,
 			},
 		}),
 
@@ -587,9 +587,9 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: storedDataOutline,
 			behavior: createFrameBehavior<StoredDataState>(),
 			stateValidator: isValidStoredDataState,
-			shapeLibrary: {
+			stencilLibrary: {
 				factory: StoredDataObjectFactory,
-				presets: StoredDataShapePresets,
+				presets: StoredDataStencilPresets,
 			},
 		}),
 
@@ -600,9 +600,9 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			textRegion: calcSubroutineTextRegion,
 			behavior: createFrameBehavior<SubroutineState>(),
 			stateValidator: isValidSubroutineState,
-			shapeLibrary: {
+			stencilLibrary: {
 				factory: SubroutineObjectFactory,
-				presets: SubroutineShapePresets,
+				presets: SubroutineStencilPresets,
 			},
 		}),
 
@@ -614,9 +614,9 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: trapezoidOutline,
 			behavior: createFrameBehavior<TrapezoidState>(),
 			stateValidator: isValidTrapezoidState,
-			shapeLibrary: {
+			stencilLibrary: {
 				factory: TrapezoidObjectFactory,
-				presets: TrapezoidShapePresets,
+				presets: TrapezoidStencilPresets,
 			},
 		}),
 
@@ -628,9 +628,9 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: manualInputOutline,
 			behavior: createFrameBehavior<ManualInputState>(),
 			stateValidator: isValidManualInputState,
-			shapeLibrary: {
+			stencilLibrary: {
 				factory: ManualInputObjectFactory,
-				presets: ManualInputShapePresets,
+				presets: ManualInputStencilPresets,
 			},
 		}),
 
@@ -642,9 +642,9 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: cardOutline,
 			behavior: createFrameBehavior<CardState>(),
 			stateValidator: isValidCardState,
-			shapeLibrary: {
+			stencilLibrary: {
 				factory: CardObjectFactory,
-				presets: CardShapePresets,
+				presets: CardStencilPresets,
 			},
 		}),
 
@@ -656,9 +656,9 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: delayOutline,
 			behavior: createFrameBehavior<DelayState>(),
 			stateValidator: isValidDelayState,
-			shapeLibrary: {
+			stencilLibrary: {
 				factory: DelayObjectFactory,
-				presets: DelayShapePresets,
+				presets: DelayStencilPresets,
 			},
 		}),
 
@@ -670,9 +670,9 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: loopLimitOutline,
 			behavior: createFrameBehavior<LoopLimitState>(),
 			stateValidator: isValidLoopLimitState,
-			shapeLibrary: {
+			stencilLibrary: {
 				factory: LoopLimitObjectFactory,
-				presets: LoopLimitShapePresets,
+				presets: LoopLimitStencilPresets,
 			},
 		}),
 
@@ -684,9 +684,9 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: displayOutline,
 			behavior: createFrameBehavior<DisplayState>(),
 			stateValidator: isValidDisplayState,
-			shapeLibrary: {
+			stencilLibrary: {
 				factory: DisplayObjectFactory,
-				presets: DisplayShapePresets,
+				presets: DisplayStencilPresets,
 			},
 		}),
 
@@ -697,9 +697,9 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: extractOutline,
 			behavior: createFrameBehavior<ExtractState>(),
 			stateValidator: isValidExtractState,
-			shapeLibrary: {
+			stencilLibrary: {
 				factory: ExtractObjectFactory,
-				presets: ExtractShapePresets,
+				presets: ExtractStencilPresets,
 			},
 		}),
 
@@ -710,9 +710,9 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: crossOutline,
 			behavior: createFrameBehavior<CrossState>(),
 			stateValidator: isValidCrossState,
-			shapeLibrary: {
+			stencilLibrary: {
 				factory: CrossObjectFactory,
-				presets: CrossShapePresets,
+				presets: CrossStencilPresets,
 			},
 		}),
 
@@ -727,9 +727,9 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: offPageConnectorOutline,
 			behavior: createFrameBehavior<OffPageConnectorState>(),
 			stateValidator: isValidOffPageConnectorState,
-			shapeLibrary: {
+			stencilLibrary: {
 				factory: OffPageConnectorObjectFactory,
-				presets: OffPageConnectorShapePresets,
+				presets: OffPageConnectorStencilPresets,
 			},
 		}),
 
@@ -755,9 +755,9 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				rotateByGroup: polygonRotateByGroup,
 			},
 			stateValidator: isValidPolygonState,
-			shapeLibrary: {
+			stencilLibrary: {
 				factory: PolygonObjectFactory,
-				presets: PolygonShapePresets,
+				presets: PolygonStencilPresets,
 			},
 		}),
 
@@ -771,9 +771,9 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				rotateByGroup: polylineRotateByGroup,
 			},
 			stateValidator: isValidPolylineState,
-			shapeLibrary: {
+			stencilLibrary: {
 				factory: PolylineObjectFactory,
-				presets: PolylineShapePresets,
+				presets: PolylineStencilPresets,
 			},
 		}),
 
@@ -869,14 +869,14 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				},
 			],
 			stateValidator: isValidStickyState,
-			shapeLibrary: {
+			stencilLibrary: {
 				factory: StickyObjectFactory,
-				presets: StickyShapePresets,
+				presets: StickyStencilPresets,
 			},
 		}),
 
-		// SVG is not created from the ShapeLibrary (only added via AI / direct .jis.json authoring).
-		// Therefore shapeLibrary (factory / preview / presets) is not registered.
+		// SVG is not created from the StencilLibrary (only added via AI / direct .jis.json authoring).
+		// Therefore stencilLibrary (factory / preview / presets) is not registered.
 		svg: defineObject({
 			mapper: { toDoc: svgToDoc, toState: svgToState },
 			features: SvgFeatures,
@@ -889,7 +889,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 /**
  * Registers a single object type described by `definition` across all registries
  * in the given bundle (mapper, component, text region, behavior, state validator,
- * menu), and optionally its ShapeLibrary capabilities.
+ * menu), and optionally its StencilLibrary capabilities.
  */
 export const applyObjectDefinition = (
 	registries: CanvasRegistries,
@@ -924,17 +924,17 @@ export const applyObjectDefinition = (
 		);
 	}
 
-	const shapeLibrary = definition.shapeLibrary;
-	if (shapeLibrary?.factory) {
-		registries.objectFactory.register(type, shapeLibrary.factory);
+	const stencilLibrary = definition.stencilLibrary;
+	if (stencilLibrary?.factory) {
+		registries.objectFactory.register(type, stencilLibrary.factory);
 	}
-	shapeLibrary?.presets?.forEach((preset) => {
-		registries.shapePreset.register(preset);
+	stencilLibrary?.presets?.forEach((preset) => {
+		registries.stencilPreset.register(preset);
 	});
 	// Categories are first-wins, so built-ins seeded before the apply loops keep
-	// their id against a definition that reuses it (see ShapeCategoryRegistry).
-	shapeLibrary?.categories?.forEach((category) => {
-		registries.shapeCategories.register(category);
+	// their id against a definition that reuses it (see StencilCategoryRegistry).
+	stencilLibrary?.categories?.forEach((category) => {
+		registries.stencilCategories.register(category);
 	});
 };
 
@@ -960,7 +960,7 @@ export const initializeObjectRegistry = (
 	registries.objectMenu.clear();
 	registries.selectionControl.clear();
 	registries.objectFactory.clear();
-	registries.shapePreset.clear();
+	registries.stencilPreset.clear();
 	registries.styleProperty.clearExtras();
 
 	for (const [type, definition] of Object.entries(ALL_OBJECT_DEFINITIONS)) {

@@ -37,7 +37,7 @@ const TARGETS: Target[] = [
 	{ targetKind: "menu", targetId: "toolbar", targetPart: "command:zoomIn" },
 	{ targetKind: "menu", targetId: "context-menu", targetPart: "command:copy" },
 	{ targetKind: "menu", targetId: "object-menu", targetPart: "toggle:style" },
-	{ targetKind: "menu", targetId: "shape-library", targetPart: "item:rect" },
+	{ targetKind: "menu", targetId: "stencil-library", targetPart: "item:rect" },
 ];
 
 const TYPES: EventType[] = [

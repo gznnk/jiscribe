@@ -60,7 +60,7 @@ export const ConnectorEventHandler: GestureHandler = {
 				multiSelectGroup: null,
 				// Close the submenu / category flyout on selection change
 				objectMenuOpenId: null,
-				shapeLibraryOpenCategory: null,
+				stencilLibraryOpenCategory: null,
 			};
 			if (labelText !== "" && event.targetPart !== "label") {
 				return selectedState;
@@ -93,7 +93,7 @@ export const ConnectorEventHandler: GestureHandler = {
 				multiSelectGroup: null,
 				// Close the submenu / category flyout on selection change
 				objectMenuOpenId: null,
-				shapeLibraryOpenCategory: null,
+				stencilLibraryOpenCategory: null,
 			};
 		}
 

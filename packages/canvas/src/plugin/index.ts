@@ -7,5 +7,5 @@ export { defineObject } from "./ObjectTypeDefinition";
 export type {
 	ObjectTypeDefinition,
 	AnyObjectTypeDefinition,
-	ShapeLibraryRegistration,
+	StencilLibraryRegistration,
 } from "./ObjectTypeDefinition";

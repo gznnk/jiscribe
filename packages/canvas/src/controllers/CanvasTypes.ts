@@ -5,7 +5,7 @@ import type { CanvasState } from "../states/canvas/CanvasState";
 import type { DocSnapshot } from "../states/canvas/DocSnapshot";
 import type { Viewport } from "../states/canvas/Viewport";
 import type { ClipboardData } from "./commands/selection/ClipboardData";
-import type { ShapePreset } from "./ui/objects/ShapePreset";
+import type { StencilPreset } from "./ui/objects/StencilPreset";
 import type { ObjectState } from "../states/objects/base/ObjectState";
 import type { ConnectorState } from "../states/objects/connections/connector/ConnectorState";
 import type { GroupState } from "../states/objects/primitives/group/GroupState";
@@ -254,30 +254,30 @@ export type CanvasControllerState = CanvasState & {
 	contextMenuPosition: { clientX: number; clientY: number } | null;
 
 	/**
-	 * In-progress drag state from the ShapeLibrary.
+	 * In-progress drag state from the StencilLibrary.
 	 * Set on dragStart and cleared to null after adding the shape on dragEnd.
 	 * While non-null it means a drag is in progress.
 	 */
-	shapeLibraryDrag: {
-		/** Shape preset being dragged */
-		preset: ShapePreset;
+	stencilLibraryDrag: {
+		/** Stencil preset being dragged */
+		preset: StencilPreset;
 		/** Ghost display position (SVG coordinates, snapped) */
 		ghostPosition: Point;
 		/** Half size of the ghost shape (cached at dragStart) */
-		shapeDimensions: { halfWidth: number; halfHeight: number };
+		objectDimensions: { halfWidth: number; halfHeight: number };
 	} | null;
 
 	/**
 	 * State while in drawing mode.
-	 * Set when the Rect/Ellipse button in the ShapeLibrary is clicked, and
+	 * Set when the Rect/Ellipse button in the StencilLibrary is clicked, and
 	 * cleared to null on drawing completion, Escape, or a canvas click.
 	 * - null: drawing mode OFF
 	 * - preview is null: drawing mode ON (drag not started)
 	 * - preview is non-null: dragging (preview displayed)
 	 */
 	shapeDrawing: {
-		/** Shape preset being drawn */
-		preset: ShapePreset;
+		/** Stencil preset being drawn */
+		preset: StencilPreset;
 		/** Preview rectangle during the drag (SVG coordinates). null before the drag starts */
 		preview: {
 			startX: number;
@@ -305,12 +305,12 @@ export type CanvasControllerState = CanvasState & {
 	objectMenuOpenId: string | null;
 
 	/**
-	 * ID of the ShapeLibrary category whose flyout is open in the toolbar.
+	 * ID of the StencilLibrary category whose flyout is open in the toolbar.
 	 * null means no flyout is open. Only one is open at a time. Cleared alongside
 	 * objectMenuOpenId by the selection/press handlers and commands (and
 	 * resetUiState), and by Escape — there is no central clear in handleGesture.
 	 */
-	shapeLibraryOpenCategory: string | null;
+	stencilLibraryOpenCategory: string | null;
 
 	/**
 	 * The group state when multi-selected objects are grouped.

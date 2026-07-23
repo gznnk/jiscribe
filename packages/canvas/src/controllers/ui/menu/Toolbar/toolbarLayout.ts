@@ -1,5 +1,5 @@
 /**
- * Describes the top-level arrangement of the ShapeLibrary section of the toolbar.
+ * Describes the top-level arrangement of the StencilLibrary section of the toolbar.
  *
  * The bar is an ordered list of entries mixing two kinds:
  * - `preset`: a shape button pinned directly on the bar (the classic flat display).

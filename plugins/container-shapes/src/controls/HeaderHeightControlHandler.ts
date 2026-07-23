@@ -41,7 +41,7 @@ export class HeaderHeightControlHandler extends SelectionControlHandler {
 				...state,
 				edgeScrollEnabled: true,
 				objectMenuOpenId: null,
-				shapeLibraryOpenCategory: null,
+				stencilLibraryOpenCategory: null,
 			};
 		}
 		if (event.type === "drag") {

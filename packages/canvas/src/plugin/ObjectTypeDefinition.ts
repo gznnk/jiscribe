@@ -3,8 +3,8 @@ import type { FC } from "react";
 import type { ObjectBehaviorEntry } from "../controllers/gestures/registry/ObjectBehaviorTypes";
 import type { SelectionControlDefinition } from "../controllers/ui/controls/SelectionControlTypes";
 import type { ObjectMenuSection } from "../controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
-import type { ShapeCategory } from "../controllers/ui/menu/ShapeLibrary/shapeCategories";
-import type { ShapePreset } from "../controllers/ui/objects/ShapePreset";
+import type { StencilCategory } from "../controllers/ui/menu/StencilLibrary/stencilCategories";
+import type { StencilPreset } from "../controllers/ui/objects/StencilPreset";
 import type { ObjectOutlineCalculator } from "../presentations/objects/registry/ObjectOutlineRegistry";
 import type { ObjectTextRegionCalculator } from "../presentations/objects/registry/ObjectTextRegionRegistry";
 import type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
@@ -16,21 +16,21 @@ import type { ObjectState } from "../states/objects/base/ObjectState";
 import type { ObjectStateValidator } from "../states/registry/ObjectStateValidatorRegistry";
 
 /**
- * Creation-related capabilities for the ShapeLibrary (shape palette).
+ * Creation-related capabilities for the StencilLibrary (stencil palette).
  * Omitted for types not shown in the palette (group / connector).
  */
-export type ShapeLibraryRegistration = {
+export type StencilLibraryRegistration = {
 	/** Factory responsible for doc creation, dimensions, and bounds generation */
 	factory?: ObjectFactory;
 	/** Presets shown in the toolbar (multiple allowed per type) */
-	presets?: ShapePreset[];
+	presets?: StencilPreset[];
 	/**
 	 * New palette categories this type contributes (metadata only: id / label /
 	 * icon). This is a declaration; whether and where a category appears is
 	 * decided by `toolbar.layout`. An id colliding with a built-in or an earlier
 	 * definition is ignored (first-wins).
 	 */
-	categories?: ShapeCategory[];
+	categories?: StencilCategory[];
 };
 
 /**
@@ -91,10 +91,10 @@ export type ObjectTypeDefinition<
 	/** Styleable properties beyond the ObjectFeatures flags (see StylePropertyRegistry). */
 	extraStyleProperties?: Record<string, ExtraStylePropertyDescriptor>;
 
-	// --- Palette (ShapeLibrary) ---
+	// --- Palette (StencilLibrary) ---
 
-	/** Shape-palette capabilities: factory / presets. */
-	shapeLibrary?: ShapeLibraryRegistration;
+	/** Stencil-palette capabilities: factory / presets. */
+	stencilLibrary?: StencilLibraryRegistration;
 };
 
 /**

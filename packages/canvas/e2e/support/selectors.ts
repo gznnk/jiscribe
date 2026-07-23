@@ -31,15 +31,15 @@ export const selectors = {
 	/** ツールバーのツールボタン */
 	toolButton: (tool: ToolTitle) => `button[title="${tool}"]`,
 
-	/** ShapeLibrary のカテゴリボタン（フライアウトを開くトグル） */
+	/** StencilLibrary のカテゴリボタン（フライアウトを開くトグル） */
 	categoryButton: (categoryId: string) =>
-		`[data-id="shape-category"][data-part="toggle:${categoryId}"]`,
+		`[data-id="stencil-category"][data-part="toggle:${categoryId}"]`,
 
 	/** カテゴリフライアウト（開いているときだけ存在） */
 	categoryFlyout: (categoryId: string) =>
 		`[data-category-flyout="${categoryId}"]`,
 
-	/** ShapeLibrary の図形項目（ピン留め・フライアウト内で共通の DOM 契約） */
+	/** StencilLibrary の図形項目（ピン留め・フライアウト内で共通の DOM 契約） */
 	shapeItem: (presetId: string) => `[data-part="item:${presetId}"]`,
 
 	/** キャンバス上の図形（rect / ellipse / polyline …） */

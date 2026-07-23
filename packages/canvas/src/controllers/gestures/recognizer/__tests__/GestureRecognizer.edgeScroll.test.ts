@@ -345,7 +345,7 @@ describe("GestureRecognizer drag.last during scroll (#72 regression / common to 
 });
 
 describe("GestureRecognizer arm-on-leave (preventing runaway right after grabbing from edge-adjacent UI)", () => {
-	// Grabbing from edge-adjacent UI such as ShapeLibrary always places the start point inside the
+	// Grabbing from edge-adjacent UI such as StencilLibrary always places the start point inside the
 	// edge zone. Do not trigger scrolling until the pointer has left the edge zone at least once.
 	it("does not scroll even while moving inside the edge zone from the start", () => {
 		const { events, dispatch } = setup();

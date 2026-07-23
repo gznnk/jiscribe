@@ -358,7 +358,7 @@ export class CanvasDriver {
 	/**
 	 * クリックだけで配置される図形（Sticky）をツールボタンのクリックで
 	 * キャンバス中央へ即時追加し、新規 data-id を返す。
-	 * これらは対角ドラッグではなく ShapeLibraryItemHandler が即配置するため、
+	 * これらは対角ドラッグではなく StencilLibraryItemHandler が即配置するため、
 	 * crosshair 待ち＋ドラッグの drawShape ではなく本メソッドを使う。
 	 */
 	async placeShape(tool: ToolTitle): Promise<string> {

@@ -83,10 +83,10 @@ describe("handleGesture - context menu auto-close", () => {
 		expect(nextState.contextMenuPosition).toBeNull();
 	});
 
-	it("closes the menu on left-click press over a shape library item", () => {
+	it("closes the menu on left-click press over a stencil library item", () => {
 		const nextState = handleGesture(
 			openMenuState(),
-			pressedOn("menu", "shape-library", "item:rect"),
+			pressedOn("menu", "stencil-library", "item:rect"),
 			registries,
 		);
 		expect(nextState.contextMenuPosition).toBeNull();

@@ -99,7 +99,7 @@ export const CanvasEventHandler: GestureHandler = {
 					},
 					// A new context menu supersedes any open ObjectMenu / category flyout.
 					objectMenuOpenId: null,
-					shapeLibraryOpenCategory: null,
+					stencilLibraryOpenCategory: null,
 				};
 			}
 
@@ -146,12 +146,12 @@ export const CanvasEventHandler: GestureHandler = {
 			// Starting to draw dismisses an open ObjectMenu / category flyout.
 			if (
 				nextState.objectMenuOpenId !== null ||
-				nextState.shapeLibraryOpenCategory !== null
+				nextState.stencilLibraryOpenCategory !== null
 			) {
 				nextState = {
 					...nextState,
 					objectMenuOpenId: null,
-					shapeLibraryOpenCategory: null,
+					stencilLibraryOpenCategory: null,
 				};
 			}
 
@@ -281,7 +281,7 @@ export const CanvasEventHandler: GestureHandler = {
 					selectedVertex: null,
 					edgeScrollEnabled: true,
 					objectMenuOpenId: null,
-					shapeLibraryOpenCategory: null,
+					stencilLibraryOpenCategory: null,
 				};
 				return nextState;
 			}
@@ -348,7 +348,7 @@ export const CanvasEventHandler: GestureHandler = {
 				contextMenuPosition: null,
 				// Reset the ObjectMenu expansion
 				objectMenuOpenId: null,
-				shapeLibraryOpenCategory: null,
+				stencilLibraryOpenCategory: null,
 				// Reset the multi-select group
 				multiSelectGroup: null,
 			};

@@ -15,7 +15,7 @@ import { ContainerObjectFactory } from "./schema/ContainerObjectFactory";
 import { containerToDoc, containerToState } from "./state/ContainerMapper";
 import type { ContainerState } from "./state/ContainerState";
 import { isValidContainerState } from "./state/validateContainerState";
-import { ContainerShapePresets } from "./ui/ContainerShapePresets";
+import { ContainerStencilPresets } from "./ui/ContainerStencilPresets";
 import { FrameIcon } from "./ui/FrameIcon";
 
 /**
@@ -64,9 +64,9 @@ export const containerDefinition: ObjectTypeDefinition<
 		},
 	],
 	stateValidator: isValidContainerState,
-	shapeLibrary: {
+	stencilLibrary: {
 		factory: ContainerObjectFactory,
-		presets: ContainerShapePresets,
+		presets: ContainerStencilPresets,
 		categories: [
 			{
 				id: "container",

@@ -1,0 +1,12 @@
+import { LoopLimitIcon } from "./LoopLimitIcon";
+import type { StencilPreset } from "../StencilPreset";
+
+export const LoopLimitStencilPresets: StencilPreset[] = [
+	{
+		id: "loopLimit",
+		objectType: "loopLimit",
+		label: { en: "Loop Limit", ja: "ループ端" },
+		categories: { flowchart: 160 },
+		icon: LoopLimitIcon,
+	},
+];

@@ -464,7 +464,7 @@ const CanvasComponent = ({
 			>
 				<Toolbar
 					activePresetId={state.shapeDrawing?.preset.id ?? null}
-					openCategoryId={state.shapeLibraryOpenCategory}
+					openCategoryId={state.stencilLibraryOpenCategory}
 					zoom={state.viewport.zoom}
 					canZoomIn={canZoomIn}
 					canZoomOut={canZoomOut}
@@ -532,7 +532,7 @@ const CanvasComponent = ({
 								isTextEditing={!!state.textEditState}
 							/>
 							<DragGhost
-								shapeLibraryDrag={state.shapeLibraryDrag}
+								stencilLibraryDrag={state.stencilLibraryDrag}
 								docDefaults={state.docDefaults}
 							/>
 							<DrawingPreviewOverlay shapeDrawing={state.shapeDrawing} />

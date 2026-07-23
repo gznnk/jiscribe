@@ -26,18 +26,18 @@ export type {
 	RasterizeSvgOptions,
 	BuildExportSvgOptions,
 } from "./export";
-// ShapeLibrary toolbar arrangement (pinned presets + category flyouts, issue #184).
+// StencilLibrary toolbar arrangement (pinned presets + category flyouts, issue #184).
 // Pass a custom `toolbar.layout` to `<Canvas>`; built-in category metadata is
 // exported for hosts composing layouts (plugins add categories via
-// `ObjectTypeDefinition.shapeLibrary.categories`).
+// `ObjectTypeDefinition.stencilLibrary.categories`).
 export {
 	DEFAULT_TOOLBAR_LAYOUT,
 	type ToolbarEntry,
 } from "./controllers/ui/menu/Toolbar";
 export {
 	SHAPE_CATEGORY_DEFINITIONS,
-	type ShapeCategory,
-} from "./controllers/ui/menu/ShapeLibrary/shapeCategories";
+	type StencilCategory,
+} from "./controllers/ui/menu/StencilLibrary/stencilCategories";
 export { defaultCanvasMessages } from "./controllers/messages/CanvasMessages";
 export type {
 	CanvasMessages,
@@ -92,7 +92,7 @@ export type {
 	CanvasPlugin,
 	ObjectTypeDefinition,
 	AnyObjectTypeDefinition,
-	ShapeLibraryRegistration,
+	StencilLibraryRegistration,
 } from "./plugin";
 export { ObjectTypes } from "./schemas/objects/types/ObjectType";
 export type { ObjectType } from "./schemas/objects/types/ObjectType";
@@ -110,7 +110,7 @@ export type {
 } from "./schemas/objects/types/ExtraStyleProperty";
 export type {
 	ObjectFactory,
-	ShapeDimensions,
+	ObjectDimensions,
 } from "./schemas/objects/types/ObjectFactory";
 export type { DocCreationDefaults } from "./schemas/objects/types/DocCreationDefaults";
 export type {
@@ -141,6 +141,6 @@ export type { SelectionControlHandler } from "./controllers/gestures/registry/Se
 export type { ObjectTextRegionCalculator } from "./presentations/objects/registry/ObjectTextRegionRegistry";
 export type { ObjectOutlineCalculator } from "./presentations/objects/registry/ObjectOutlineRegistry";
 export type {
-	ShapePreset,
-	ShapeIconProps,
-} from "./controllers/ui/objects/ShapePreset";
+	StencilPreset,
+	StencilIconProps,
+} from "./controllers/ui/objects/StencilPreset";

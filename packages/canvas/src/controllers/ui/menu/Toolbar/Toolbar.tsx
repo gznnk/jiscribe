@@ -13,11 +13,11 @@ import { useCanvasRegistries } from "../../../contexts/CanvasRegistriesContext";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import { HelpIcon } from "../../icons/HelpIcon";
 import { ShortcutHelpModal } from "../../modal/ShortcutHelp/ShortcutHelpModal";
-import { ShapeCategoryMenu } from "../ShapeLibrary/ShapeCategoryMenu";
-import { ShapeLibraryItem } from "../ShapeLibrary/ShapeLibraryItem";
+import { StencilCategoryMenu } from "../StencilLibrary/StencilCategoryMenu";
+import { StencilLibraryItem } from "../StencilLibrary/StencilLibraryItem";
 
 type ToolbarProps = {
-	/** ID of the shape preset currently being drawn (for the tool's active state) */
+	/** ID of the stencil preset currently being drawn (for the tool's active state) */
 	activePresetId: string | null;
 	/** ID of the category whose flyout is open (reducer state); null = none */
 	openCategoryId: string | null;
@@ -49,7 +49,7 @@ const isEditableTarget = (target: EventTarget | null): boolean => {
 
 /**
  * Unified toolbar centered at the top.
- * Combines the shape tools (ShapeLibrary), zoom readout, and help (?) into a single bar.
+ * Combines the shape tools (StencilLibrary), zoom readout, and help (?) into a single bar.
  *
  * - Shape tools operate through the gesture system (data-kind="menu").
  * - Zoom +/- is currently visual only (actual control is via wheel / pinch).
@@ -66,12 +66,12 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 	trailing,
 }) => {
 	const messages = useCanvasMessages();
-	const { shapePreset, shapeCategories } = useCanvasRegistries();
+	const { stencilPreset, stencilCategories } = useCanvasRegistries();
 	const [isHelpOpen, setIsHelpOpen] = useState(false);
 	const closeHelp = useCallback(() => setIsHelpOpen(false), []);
 
 	// The open category flyout (`openCategoryId`) lives in reducer state; the
-	// toggle goes through ShapeCategoryToggleHandler and dismissal through the
+	// toggle goes through StencilCategoryToggleHandler and dismissal through the
 	// handlers/commands that clear it, so the Toolbar is stateless here and
 	// multiple <Canvas> instances stay independent.
 
@@ -112,12 +112,12 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 					)}
 					{layout.map((entry) => {
 						if (entry.kind === "preset") {
-							const preset = shapePreset.get(entry.presetId);
+							const preset = stencilPreset.get(entry.presetId);
 							if (!preset) {
 								return null;
 							}
 							return (
-								<ShapeLibraryItem
+								<StencilLibraryItem
 									key={`preset:${entry.presetId}`}
 									preset={preset}
 									isActive={activePresetId === preset.id}
@@ -127,18 +127,18 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 						// Category metadata comes from the registry (built-ins +
 						// definition-declared). An unknown id (layout naming a category no
 						// definition supplies) has no metadata, so skip its button.
-						const category = shapeCategories.get(entry.categoryId);
+						const category = stencilCategories.get(entry.categoryId);
 						if (!category) {
 							return null;
 						}
-						const presets = shapePreset.byCategory(entry.categoryId);
+						const presets = stencilPreset.byCategory(entry.categoryId);
 						// A category with no registered presets has nothing to show, so
 						// skip the button/flyout entirely rather than rendering an empty one.
 						if (presets.length === 0) {
 							return null;
 						}
 						return (
-							<ShapeCategoryMenu
+							<StencilCategoryMenu
 								key={`category:${entry.categoryId}`}
 								category={category}
 								presets={presets}

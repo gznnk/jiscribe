@@ -4,7 +4,7 @@ import type { DocCreationDefaults } from "./DocCreationDefaults";
 import type { ObjectDoc } from "../base/ObjectDoc";
 
 /** Half-size of a shape for ghost display (offset from the center). */
-export type ShapeDimensions = { halfWidth: number; halfHeight: number };
+export type ObjectDimensions = { halfWidth: number; halfHeight: number };
 
 /**
  * A factory that encapsulates the knowledge of how to create an object.
@@ -29,7 +29,7 @@ export type ObjectFactory = {
 	/**
 	 * Return the half-size for ghost display (after overrides are applied).
 	 */
-	calcDimensions(overrides?: Record<string, unknown>): ShapeDimensions;
+	calcDimensions(overrides?: Record<string, unknown>): ObjectDimensions;
 
 	/**
 	 * Create an ObjectDoc from a two-point bounds. Returns null if below the minimum size.

@@ -13,8 +13,8 @@ import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehavior
 import type { StylePropertyRegistry } from "../styleProperties/StylePropertyRegistry";
 import type { SelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
 import type { ObjectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
-import type { ShapeCategoryRegistry } from "../ui/menu/ShapeLibrary/ShapeCategoryRegistry";
-import type { ShapePresetRegistry } from "../ui/objects/ShapePresetRegistry";
+import type { StencilCategoryRegistry } from "../ui/menu/StencilLibrary/StencilCategoryRegistry";
+import type { StencilPresetRegistry } from "../ui/objects/StencilPresetRegistry";
 
 /**
  * The full set of UI registries a single `<Canvas>` instance operates against.
@@ -40,7 +40,7 @@ export type CanvasRegistries = {
 	gestureHandler: GestureHandlerRegistry;
 	command: CommandRegistry;
 	objectMenu: ObjectMenuRegistry;
-	shapePreset: ShapePresetRegistry;
+	stencilPreset: StencilPresetRegistry;
 	objectFactory: ObjectFactoryRegistry;
 	styleProperty: StylePropertyRegistry;
 	/**
@@ -48,7 +48,7 @@ export type CanvasRegistries = {
 	 * declared categories (first-wins). The toolbar reads it to resolve a layout
 	 * entry's category.
 	 */
-	shapeCategories: ShapeCategoryRegistry;
+	stencilCategories: StencilCategoryRegistry;
 };
 
 /**

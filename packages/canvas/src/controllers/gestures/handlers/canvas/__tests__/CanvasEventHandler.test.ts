@@ -107,16 +107,16 @@ describe("CanvasEventHandler", () => {
 		});
 	});
 
-	it("a background press closes an open ShapeLibrary category flyout", () => {
+	it("a background press closes an open StencilLibrary category flyout", () => {
 		const state = makeState({
 			textEditState: null,
-			shapeLibraryOpenCategory: "flowchart",
+			stencilLibraryOpenCategory: "flowchart",
 		} as Partial<CanvasControllerState>);
 		const nextState = CanvasEventHandler.handle(
 			state,
 			makeEvent({ type: "pressed", button: 0 }),
 			registries,
 		);
-		expect(nextState.shapeLibraryOpenCategory).toBeNull();
+		expect(nextState.stencilLibraryOpenCategory).toBeNull();
 	});
 });

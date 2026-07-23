@@ -57,10 +57,10 @@ describe("createCanvasRegistries", () => {
 			expect(registries.objectFactory.get("diamond")).toBeUndefined();
 		});
 
-		it("restricts the ShapeLibrary presets to the enabled types", () => {
+		it("restricts the StencilLibrary presets to the enabled types", () => {
 			const registries = createCanvasRegistries({ objectTypes: ["rect"] });
 			const presetTypes = new Set(
-				registries.shapePreset.all().map((preset) => preset.objectType),
+				registries.stencilPreset.all().map((preset) => preset.objectType),
 			);
 			expect(presetTypes.has("rect")).toBe(true);
 			expect(presetTypes.has("ellipse")).toBe(false);
@@ -167,14 +167,14 @@ describe("createCanvasRegistries", () => {
 		});
 	});
 
-	describe("shapeCategories registry", () => {
+	describe("stencilCategories registry", () => {
 		// Adds palette category metadata to the minimal fake definition.
 		const buildCategoryDefinition = (
 			type: string,
 			categories: { id: string; label: string }[],
 		): ObjectTypeDefinition => ({
 			...buildFakeDefinition(type),
-			shapeLibrary: {
+			stencilLibrary: {
 				categories: categories.map((category) => ({
 					...category,
 					icon: () => null,
@@ -192,7 +192,7 @@ describe("createCanvasRegistries", () => {
 				},
 			};
 			const registries = createCanvasRegistries({ plugins: [plugin] });
-			expect(registries.shapeCategories.get("gizmos")?.label).toBe("Gizmos");
+			expect(registries.stencilCategories.get("gizmos")?.label).toBe("Gizmos");
 		});
 
 		it("keeps the built-in when a definition reuses its id (first-wins)", () => {
@@ -206,7 +206,7 @@ describe("createCanvasRegistries", () => {
 			};
 			const registries = createCanvasRegistries({ plugins: [plugin] });
 			// The built-in "flowchart" metadata survives; the plugin's is ignored.
-			expect(registries.shapeCategories.get("flowchart")?.label).toEqual({
+			expect(registries.stencilCategories.get("flowchart")?.label).toEqual({
 				en: "Flowchart",
 				ja: "フローチャート",
 			});
@@ -218,8 +218,8 @@ describe("createCanvasRegistries", () => {
 				objects: { star: buildFakeDefinition("star") },
 			};
 			const registries = createCanvasRegistries({ plugins: [plugin] });
-			expect(registries.shapeCategories.get("basic")).toBeDefined();
-			expect(registries.shapeCategories.get("flowchart")).toBeDefined();
+			expect(registries.stencilCategories.get("basic")).toBeDefined();
+			expect(registries.stencilCategories.get("flowchart")).toBeDefined();
 		});
 	});
 
