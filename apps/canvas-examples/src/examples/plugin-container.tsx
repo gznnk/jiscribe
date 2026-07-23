@@ -1,4 +1,4 @@
-import type { CanvasConfig, CanvasDoc } from "@workspace/canvas";
+import type { CanvasConfig, CanvasDoc, ToolbarEntry } from "@workspace/canvas";
 import { Canvas, createCanvasParser } from "@workspace/canvas";
 import { containerPlugin } from "@workspace/plugin-container-shapes";
 
@@ -10,6 +10,21 @@ import { containerPlugin } from "@workspace/plugin-container-shapes";
 const plugins = [containerPlugin];
 
 const initialConfig: CanvasConfig = { plugins };
+
+// container カテゴリは core の既定 layout に含まれない（プラグイン供給）。
+// 従来どおり flowchart 直後に出すため、ホスト側で container スロットを差し込む。
+const toolbarLayout: ToolbarEntry[] = [
+	{ kind: "preset", presetId: "rect" },
+	{ kind: "preset", presetId: "ellipse" },
+	{ kind: "preset", presetId: "polyline" },
+	{ kind: "preset", presetId: "polygon" },
+	{ kind: "preset", presetId: "sticky" },
+	{ kind: "preset", presetId: "rect-markdown" },
+	{ kind: "category", categoryId: "flowchart" },
+	{ kind: "category", categoryId: "container" },
+	{ kind: "category", categoryId: "general" },
+	{ kind: "category", categoryId: "annotation" },
+];
 
 const pluginContainerParser = createCanvasParser({ plugins });
 
@@ -122,6 +137,10 @@ const pluginContainerDoc = buildPluginContainerDoc();
  */
 export function PluginContainerExample() {
 	return (
-		<Canvas canvasDoc={pluginContainerDoc} initialConfig={initialConfig} />
+		<Canvas
+			canvasDoc={pluginContainerDoc}
+			initialConfig={initialConfig}
+			toolbarLayout={toolbarLayout}
+		/>
 	);
 }

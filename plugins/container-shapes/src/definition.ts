@@ -16,6 +16,7 @@ import { containerToDoc, containerToState } from "./state/ContainerMapper";
 import type { ContainerState } from "./state/ContainerState";
 import { isValidContainerState } from "./state/validateContainerState";
 import { ContainerShapePresets } from "./ui/ContainerShapePresets";
+import { FrameIcon } from "./ui/FrameIcon";
 
 /**
  * `containerDefinition` has zero intentional omissions relative to the core
@@ -66,5 +67,12 @@ export const containerDefinition: ObjectTypeDefinition<
 	shapeLibrary: {
 		factory: ContainerShapeFactory,
 		presets: ContainerShapePresets,
+		categories: [
+			{
+				id: "container",
+				label: { en: "Container", ja: "コンテナ" },
+				icon: FrameIcon,
+			},
+		],
 	},
 };

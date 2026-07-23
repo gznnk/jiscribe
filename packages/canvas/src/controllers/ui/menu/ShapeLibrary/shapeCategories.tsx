@@ -1,7 +1,6 @@
 import type { ComponentType } from "react";
 
 import type { LocaleMessages } from "../../../messages/resolveLocaleMessages";
-import { FrameIcon } from "../../icons/FrameIcon";
 import { CalloutIcon } from "../../objects/annotations/CalloutIcon";
 import { DiamondIcon } from "../../objects/flowchart/DiamondIcon";
 import { CloudIcon } from "../../objects/general/CloudIcon";
@@ -27,6 +26,7 @@ export type ShapeCategory = {
 /**
  * Built-in category metadata. The category icon reuses a representative shape
  * icon (a dedicated glyph set can replace these later without touching callers).
+ * Plugins contribute further categories via `ObjectTypeDefinition.shapeLibrary.categories`.
  */
 export const SHAPE_CATEGORY_DEFINITIONS: Record<string, ShapeCategory> = {
 	basic: { id: "basic", label: { en: "Basic", ja: "基本" }, icon: RectIcon },
@@ -34,11 +34,6 @@ export const SHAPE_CATEGORY_DEFINITIONS: Record<string, ShapeCategory> = {
 		id: "flowchart",
 		label: { en: "Flowchart", ja: "フローチャート" },
 		icon: DiamondIcon,
-	},
-	container: {
-		id: "container",
-		label: { en: "Container", ja: "コンテナ" },
-		icon: FrameIcon,
 	},
 	general: {
 		id: "general",

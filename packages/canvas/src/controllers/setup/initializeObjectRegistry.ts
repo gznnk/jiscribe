@@ -931,6 +931,11 @@ export const applyObjectDefinition = (
 	shapeLibrary?.presets?.forEach((preset) => {
 		registries.shapePreset.register(preset);
 	});
+	// Categories are first-wins, so built-ins seeded before the apply loops keep
+	// their id against a definition that reuses it (see ShapeCategoryRegistry).
+	shapeLibrary?.categories?.forEach((category) => {
+		registries.shapeCategories.register(category);
+	});
 };
 
 /**

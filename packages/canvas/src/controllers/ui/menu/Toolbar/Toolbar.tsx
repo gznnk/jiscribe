@@ -13,7 +13,6 @@ import { useCanvasRegistries } from "../../../contexts/CanvasRegistriesContext";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import { HelpIcon } from "../../icons/HelpIcon";
 import { ShortcutHelpModal } from "../../modal/ShortcutHelp/ShortcutHelpModal";
-import { SHAPE_CATEGORY_DEFINITIONS } from "../ShapeLibrary/shapeCategories";
 import { ShapeCategoryMenu } from "../ShapeLibrary/ShapeCategoryMenu";
 import { ShapeLibraryItem } from "../ShapeLibrary/ShapeLibraryItem";
 
@@ -67,7 +66,7 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 	trailing,
 }) => {
 	const messages = useCanvasMessages();
-	const { shapePreset } = useCanvasRegistries();
+	const { shapePreset, shapeCategories } = useCanvasRegistries();
 	const [isHelpOpen, setIsHelpOpen] = useState(false);
 	const closeHelp = useCallback(() => setIsHelpOpen(false), []);
 
@@ -125,14 +124,16 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 								/>
 							);
 						}
-						const category = SHAPE_CATEGORY_DEFINITIONS[entry.categoryId];
+						// Category metadata comes from the registry (built-ins +
+						// definition-declared). An unknown id (layout naming a category no
+						// definition supplies) has no metadata, so skip its button.
+						const category = shapeCategories.get(entry.categoryId);
 						if (!category) {
 							return null;
 						}
 						const presets = shapePreset.byCategory(entry.categoryId);
-						// A category with no registered presets (e.g. "container" when no
-						// plugin supplies its shapes) has nothing to show, so skip the
-						// button/flyout entirely rather than rendering an empty one.
+						// A category with no registered presets has nothing to show, so
+						// skip the button/flyout entirely rather than rendering an empty one.
 						if (presets.length === 0) {
 							return null;
 						}

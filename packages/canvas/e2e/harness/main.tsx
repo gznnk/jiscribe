@@ -4,7 +4,7 @@ import ReactDOM from "react-dom/client";
 import "katex/dist/katex.min.css";
 
 import { MultiCanvasApp } from "./MultiCanvasApp";
-import type { CanvasConfig, CanvasDoc } from "../../src";
+import type { CanvasConfig, CanvasDoc, ToolbarEntry } from "../../src";
 import {
 	Canvas,
 	createCanvasParser,
@@ -19,6 +19,22 @@ import "./harness.css";
 const plugins = [containerPlugin];
 
 const initialConfig: CanvasConfig = { plugins };
+
+// container カテゴリは core の既定 layout に含まれない（プラグイン供給）。
+// container.spec.ts は container フライアウトボタンに依存するため、従来どおり
+// flowchart 直後に container スロットを差し込んだ layout をハーネスから渡す。
+const toolbarLayout: ToolbarEntry[] = [
+	{ kind: "preset", presetId: "rect" },
+	{ kind: "preset", presetId: "ellipse" },
+	{ kind: "preset", presetId: "polyline" },
+	{ kind: "preset", presetId: "polygon" },
+	{ kind: "preset", presetId: "sticky" },
+	{ kind: "preset", presetId: "rect-markdown" },
+	{ kind: "category", categoryId: "flowchart" },
+	{ kind: "category", categoryId: "container" },
+	{ kind: "category", categoryId: "general" },
+	{ kind: "category", categoryId: "annotation" },
+];
 
 const harnessParser = createCanvasParser({ plugins });
 
@@ -69,6 +85,7 @@ function HarnessApp() {
 				canvasDoc={loadedDoc}
 				theme={darkCanvasTheme}
 				initialConfig={initialConfig}
+				toolbarLayout={toolbarLayout}
 			/>
 		</div>
 	);

@@ -5,6 +5,7 @@ import {
 	type CanvasDoc,
 	type CanvasExportImagePayload,
 	type CanvasHandle,
+	type ToolbarEntry,
 } from "@workspace/canvas";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
@@ -20,6 +21,21 @@ import type {
 // container 図形は @workspace/plugin-container-shapes から供給する
 // (docs/05_extensibility/canvas-plugin-design.md)。
 const initialConfig: CanvasConfig = { plugins };
+
+// container カテゴリは core の既定 layout に含まれない（プラグイン供給）。
+// 従来どおり flowchart 直後に出すため、ホスト側で container スロットを差し込む。
+const toolbarLayout: ToolbarEntry[] = [
+	{ kind: "preset", presetId: "rect" },
+	{ kind: "preset", presetId: "ellipse" },
+	{ kind: "preset", presetId: "polyline" },
+	{ kind: "preset", presetId: "polygon" },
+	{ kind: "preset", presetId: "sticky" },
+	{ kind: "preset", presetId: "rect-markdown" },
+	{ kind: "category", categoryId: "flowchart" },
+	{ kind: "category", categoryId: "container" },
+	{ kind: "category", categoryId: "general" },
+	{ kind: "category", categoryId: "annotation" },
+];
 
 /**
  * Type of the API available only in the VSCode Webview environment.
@@ -380,6 +396,7 @@ function App() {
 					canvasDoc={canvasDoc}
 					syncNonce={syncNonce}
 					initialConfig={initialConfig}
+					toolbarLayout={toolbarLayout}
 					defaultViewport={initialCamera}
 					onViewportChange={handleViewportChange}
 					onCommit={handleCommit}

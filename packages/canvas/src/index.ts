@@ -27,8 +27,9 @@ export type {
 	BuildExportSvgOptions,
 } from "./export";
 // ShapeLibrary toolbar arrangement (pinned presets + category flyouts, issue #184).
-// Pass a custom `toolbarLayout` to `<Canvas>`; category metadata is exported so
-// hosts can reference or extend the built-in categories.
+// Pass a custom `toolbarLayout` to `<Canvas>`; built-in category metadata is
+// exported for hosts composing layouts (plugins add categories via
+// `ObjectTypeDefinition.shapeLibrary.categories`).
 export {
 	DEFAULT_TOOLBAR_LAYOUT,
 	type ToolbarEntry,

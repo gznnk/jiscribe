@@ -5,6 +5,7 @@ import {
 	ALL_OBJECT_DEFINITIONS,
 	applyObjectDefinition,
 } from "./initializeObjectRegistry";
+import { initializeShapeCategoryRegistry } from "./initializeShapeCategoryRegistry";
 import { initializeStyleProperties } from "./initializeStyleProperties";
 import { createObjectComponentRegistry } from "../../presentations/objects/registry/ObjectComponentRegistry";
 import { createObjectOutlineRegistry } from "../../presentations/objects/registry/ObjectOutlineRegistry";
@@ -18,6 +19,7 @@ import { createObjectBehaviorRegistry } from "../gestures/registry/ObjectBehavio
 import { createStylePropertyRegistry } from "../styleProperties/StylePropertyRegistry";
 import { createSelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
 import { createObjectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
+import { createShapeCategoryRegistry } from "../ui/menu/ShapeLibrary/ShapeCategoryRegistry";
 import { createShapePresetRegistry } from "../ui/objects/ShapePresetRegistry";
 
 /**
@@ -52,10 +54,14 @@ export const createCanvasRegistries = (
 		shapePreset: createShapePresetRegistry(),
 		shapeFactory: createShapeFactoryRegistry(),
 		styleProperty: createStylePropertyRegistry(),
+		shapeCategories: createShapeCategoryRegistry(),
 	};
 
 	initializeGestureHandlerRegistry(registries);
 	initializeStyleProperties(registries.styleProperty);
+	// Seed the built-in categories before applying definitions so their ids win
+	// first-wins over any definition (built-in or plugin) that reuses one.
+	initializeShapeCategoryRegistry(registries.shapeCategories);
 
 	// Tracks which object types are already claimed and by whom, so a plugin
 	// colliding with a built-in or an earlier plugin throws instead of

@@ -12,6 +12,7 @@ import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehavior
 import type { StylePropertyRegistry } from "../styleProperties/StylePropertyRegistry";
 import type { SelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
 import type { ObjectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
+import type { ShapeCategoryRegistry } from "../ui/menu/ShapeLibrary/ShapeCategoryRegistry";
 import type { ShapePresetRegistry } from "../ui/objects/ShapePresetRegistry";
 
 /**
@@ -41,6 +42,12 @@ export type CanvasRegistries = {
 	shapePreset: ShapePresetRegistry;
 	shapeFactory: ShapeFactoryRegistry;
 	styleProperty: StylePropertyRegistry;
+	/**
+	 * Palette categories: built-ins seeded first, then each applied definition's
+	 * declared categories (first-wins). The toolbar reads it to resolve a layout
+	 * entry's category.
+	 */
+	shapeCategories: ShapeCategoryRegistry;
 };
 
 /**
