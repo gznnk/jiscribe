@@ -3,7 +3,6 @@ import { memo, useRef } from "react";
 import { getSelectedConnectorLabel } from "./utils/getSelectedConnectorLabel";
 import { resolveAutoColor } from "../../../../../../presentations/objects/utils/resolveAutoColor";
 import { AUTO_COLOR } from "../../../../../../schemas/objects/utils/autoColor";
-import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { FontColorIcon } from "../../../../icons/FontColorIcon";
 import { ObjectMenuColorPickerGrid } from "../../common/ObjectMenuColorPickerGrid/ObjectMenuColorPickerGrid";
@@ -13,30 +12,28 @@ import {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
+import type { ObjectMenuItemProps } from "../../ObjectMenuTypes";
 
 const SECTION_ID = "label-font-color";
-
-type Props = {
-	canvasState: CanvasControllerState;
-	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
-};
 
 /**
  * Font color menu for the label (same layout as the shape's Font Color). The value is the nested `label.fontColor`.
  */
-const LabelFontColorMenuComponent: React.FC<Props> = ({
-	canvasState,
+const LabelFontColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
+	objects,
+	selectedConnectorId,
+	openSectionId,
 	onPropertyUpdate,
 }) => {
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
-	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
+	const isOpen = openSectionId === SECTION_ID;
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,
 	);
 
-	const label = getSelectedConnectorLabel(canvasState);
+	const label = getSelectedConnectorLabel(selectedConnectorId, objects);
 
 	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.

@@ -20,11 +20,7 @@ import {
 	ObjectMenuSectionRow,
 	ObjectMenuWrapper,
 } from "./ObjectMenuStyled";
-import type {
-	ObjectMenuItem,
-	ObjectMenuSection,
-	ObjectMenuItemProps,
-} from "./ObjectMenuTypes";
+import type { ObjectMenuItem, ObjectMenuSection } from "./ObjectMenuTypes";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { isArrangeableSelection } from "../../../utils/isArrangeableSelection";
 
@@ -35,9 +31,9 @@ type ObjectMenuProps = {
 
 const renderItem = (
 	item: ObjectMenuItem,
-	props: ObjectMenuItemProps,
+	canvasState: CanvasControllerState,
+	onPropertyUpdate: (property: string, value: string, commit: boolean) => void,
 ): React.ReactNode => {
-	const { canvasState, onPropertyUpdate } = props;
 	switch (item.type) {
 		case "arrowHead":
 			return <ArrowHeadMenu key="arrowHead" canvasState={canvasState} />;
@@ -110,7 +106,10 @@ const renderItem = (
 			return (
 				<item.component
 					key={item.id}
-					canvasState={canvasState}
+					objects={canvasState.objects}
+					selectedIds={canvasState.selectedIds}
+					selectedConnectorId={canvasState.selectedConnectorId}
+					openSectionId={canvasState.objectMenuOpenId}
 					onPropertyUpdate={onPropertyUpdate}
 				/>
 			);
@@ -176,8 +175,6 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 		return null;
 	}
 
-	const itemProps: ObjectMenuItemProps = { canvasState, onPropertyUpdate };
-
 	// Since both objectSections and systemSections may contain the same item type,
 	// prefer the first occurrence and prevent duplicate rendering
 	const renderedItemKeys = new Set<string>();
@@ -193,7 +190,7 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 				return;
 			}
 			renderedItemKeys.add(key);
-			sectionItems.push(renderItem(item, itemProps));
+			sectionItems.push(renderItem(item, canvasState, onPropertyUpdate));
 		});
 		return (
 			<ObjectMenuSectionRow key={section.id}>

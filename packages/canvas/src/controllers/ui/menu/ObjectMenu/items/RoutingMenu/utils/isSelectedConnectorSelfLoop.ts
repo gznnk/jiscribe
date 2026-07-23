@@ -1,4 +1,4 @@
-import type { CanvasControllerState } from "../../../../../../../controllers/CanvasTypes";
+import type { ObjectState } from "../../../../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../../../../states/objects/connections/connector/ConnectorState";
 import { isSelfLoopConnector } from "../../../../../../utils/isSelfLoopConnector";
 
@@ -7,10 +7,11 @@ import { isSelfLoopConnector } from "../../../../../../utils/isSelfLoopConnector
  * so the routing toggle is not rendered (switching to straight would break them).
  */
 export const isSelectedConnectorSelfLoop = (
-	state: CanvasControllerState,
+	selectedConnectorId: string | null,
+	objects: Record<string, ObjectState>,
 ): boolean => {
-	const id = state.selectedConnectorId;
-	const connector = id !== null ? state.objects[id] : undefined;
+	const connector =
+		selectedConnectorId !== null ? objects[selectedConnectorId] : undefined;
 	if (!connector || connector.type !== "connector") {
 		return false;
 	}

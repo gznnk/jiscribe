@@ -1,7 +1,6 @@
 import { memo, useRef } from "react";
 
 import { getSelectedConnectorLabel } from "./utils/getSelectedConnectorLabel";
-import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { DashedCircleIcon } from "../../../../icons/DashedCircleIcon";
 import { DashedLineIcon } from "../../../../icons/DashedLineIcon";
@@ -14,6 +13,7 @@ import {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
+import type { ObjectMenuItemProps } from "../../ObjectMenuTypes";
 import {
 	BorderStyleMenuWrapper,
 	BorderStyleSection,
@@ -24,29 +24,26 @@ const SECTION_ID = "label-border-style";
 const MIN_BORDER_WIDTH = 0;
 const MAX_BORDER_WIDTH = 12;
 
-type Props = {
-	canvasState: CanvasControllerState;
-	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
-};
-
 /**
  * Label border style menu (same layout as the shape's Border Style).
  * Handles solid/dashed/dotted (`label.strokeDashType`) and border width (`label.strokeWidth`).
  * Labels have no corner radius `rx`, so Corner Radius is not shown.
  */
-const LabelBorderStyleMenuComponent: React.FC<Props> = ({
-	canvasState,
+const LabelBorderStyleMenuComponent: React.FC<ObjectMenuItemProps> = ({
+	objects,
+	selectedConnectorId,
+	openSectionId,
 	onPropertyUpdate,
 }) => {
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
-	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
+	const isOpen = openSectionId === SECTION_ID;
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,
 	);
 
-	const label = getSelectedConnectorLabel(canvasState);
+	const label = getSelectedConnectorLabel(selectedConnectorId, objects);
 
 	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.

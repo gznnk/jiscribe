@@ -3,7 +3,6 @@ import { memo, useRef } from "react";
 import { getSelectedConnectorLabel } from "./utils/getSelectedConnectorLabel";
 import { resolveAutoColor } from "../../../../../../presentations/objects/utils/resolveAutoColor";
 import { AUTO_COLOR } from "../../../../../../schemas/objects/utils/autoColor";
-import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { BorderColorIcon } from "../../../../icons/BorderColorIcon";
 import { ObjectMenuColorPickerGrid } from "../../common/ObjectMenuColorPickerGrid/ObjectMenuColorPickerGrid";
@@ -13,31 +12,29 @@ import {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
+import type { ObjectMenuItemProps } from "../../ObjectMenuTypes";
 
 const SECTION_ID = "label-border-color";
-
-type Props = {
-	canvasState: CanvasControllerState;
-	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
-};
 
 /**
  * Label border color menu (same layout as the shape's Border Color).
  * The value is the nested `label.stroke`. The border is only visible when `label.strokeWidth > 0`.
  */
-const LabelBorderColorMenuComponent: React.FC<Props> = ({
-	canvasState,
+const LabelBorderColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
+	objects,
+	selectedConnectorId,
+	openSectionId,
 	onPropertyUpdate,
 }) => {
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
-	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
+	const isOpen = openSectionId === SECTION_ID;
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,
 	);
 
-	const label = getSelectedConnectorLabel(canvasState);
+	const label = getSelectedConnectorLabel(selectedConnectorId, objects);
 
 	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.

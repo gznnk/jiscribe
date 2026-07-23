@@ -9,7 +9,6 @@ import {
 	resolveLocaleMessages,
 	useCanvasLocale,
 	useSubmenuPosition,
-	type CanvasControllerState,
 } from "@workspace/canvas/unstable";
 import { memo, useRef } from "react";
 
@@ -18,12 +17,11 @@ import { containerMessagesByLocale } from "../messages/containerMessages";
 
 const SECTION_ID = "header-color";
 
-const getSelectedHeaderColor = (state: CanvasControllerState): string => {
-	const obj = getFirstSelectedWithProp(
-		state.selectedIds,
-		state.objects,
-		"headerFill",
-	);
+const getSelectedHeaderColor = (
+	selectedIds: string[],
+	objects: ObjectMenuItemProps["objects"],
+): string => {
+	const obj = getFirstSelectedWithProp(selectedIds, objects, "headerFill");
 	const headerFill = (obj as Record<string, unknown>)?.headerFill;
 	return typeof headerFill === "string" ? headerFill : "transparent";
 };
@@ -36,14 +34,16 @@ const getSelectedHeaderColor = (state: CanvasControllerState): string => {
  * canvas locale (`useCanvasLocale` + `resolveLocaleMessages`), not from core.
  */
 const HeaderColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
-	canvasState,
+	objects,
+	selectedIds,
+	openSectionId,
 	onPropertyUpdate,
 }) => {
 	const locale = useCanvasLocale();
 	const messages = resolveLocaleMessages(containerMessagesByLocale, locale);
 	const menuItemRef = useRef<HTMLDivElement>(null);
-	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
-	const currentColor = getSelectedHeaderColor(canvasState);
+	const isOpen = openSectionId === SECTION_ID;
+	const currentColor = getSelectedHeaderColor(selectedIds, objects);
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,

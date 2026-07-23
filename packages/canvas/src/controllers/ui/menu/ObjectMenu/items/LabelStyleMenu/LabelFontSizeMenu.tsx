@@ -2,7 +2,6 @@ import { memo, useRef } from "react";
 
 import { getSelectedConnectorLabel } from "./utils/getSelectedConnectorLabel";
 import { CONNECTOR_LABEL_DEFAULTS } from "../../../../../../presentations/objects/connections/ConnectorLabel";
-import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { FontSizeIcon } from "../../../../icons/FontSizeIcon";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
@@ -12,6 +11,7 @@ import {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
+import type { ObjectMenuItemProps } from "../../ObjectMenuTypes";
 import { FontSizeMenuWrapper } from "../FontSizeMenu/FontSizeMenuStyled";
 
 const SECTION_ID = "label-font-size";
@@ -22,27 +22,24 @@ const SLIDER_MIN_FONT_SIZE = 8;
 const SLIDER_MAX_FONT_SIZE = 72;
 const FONT_SIZE_STEP = 2;
 
-type Props = {
-	canvasState: CanvasControllerState;
-	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
-};
-
 /**
  * Font size menu for the label (same layout as the shape's Font Size). The value is the nested `label.fontSize`.
  */
-const LabelFontSizeMenuComponent: React.FC<Props> = ({
-	canvasState,
+const LabelFontSizeMenuComponent: React.FC<ObjectMenuItemProps> = ({
+	objects,
+	selectedConnectorId,
+	openSectionId,
 	onPropertyUpdate,
 }) => {
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
-	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
+	const isOpen = openSectionId === SECTION_ID;
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,
 	);
 
-	const label = getSelectedConnectorLabel(canvasState);
+	const label = getSelectedConnectorLabel(selectedConnectorId, objects);
 
 	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.

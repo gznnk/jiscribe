@@ -20,24 +20,23 @@ import { getFirstSelectedWithProp } from "../../utils/getFirstSelectedWithProp";
 const SECTION_ID = "sticky-color";
 
 const getSelectedFillColor = (
-	state: ObjectMenuItemProps["canvasState"],
+	selectedIds: string[],
+	objects: ObjectMenuItemProps["objects"],
 ): string => {
-	const obj = getFirstSelectedWithProp(
-		state.selectedIds,
-		state.objects,
-		"fill",
-	);
+	const obj = getFirstSelectedWithProp(selectedIds, objects, "fill");
 	const fill = (obj as Record<string, unknown>)?.fill;
 	return typeof fill === "string" ? fill : "transparent";
 };
 
 const StickyColorMenuComponent: React.FC<ObjectMenuItemProps> = ({
-	canvasState,
+	objects,
+	selectedIds,
+	openSectionId,
 }) => {
 	const messages = useCanvasMessages();
 	const menuItemRef = useRef<HTMLDivElement>(null);
-	const isOpen = canvasState.objectMenuOpenId === SECTION_ID;
-	const currentColor = getSelectedFillColor(canvasState);
+	const isOpen = openSectionId === SECTION_ID;
+	const currentColor = getSelectedFillColor(selectedIds, objects);
 	const { submenuRef, placement, offsetX } = useSubmenuPosition(
 		menuItemRef,
 		isOpen,

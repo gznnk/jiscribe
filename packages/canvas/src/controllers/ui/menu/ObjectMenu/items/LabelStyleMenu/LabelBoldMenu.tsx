@@ -1,25 +1,24 @@
 import { memo } from "react";
 
 import { getSelectedConnectorLabel } from "./utils/getSelectedConnectorLabel";
-import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { BoldIcon } from "../../../../icons/BoldIcon";
 import {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
-
-type Props = {
-	canvasState: CanvasControllerState;
-};
+import type { ObjectMenuItemProps } from "../../ObjectMenuTypes";
 
 /**
  * Label bold menu (same toggle as the shape's Bold).
  * Toggles `label.fontWeight` between bold / normal. Updates via a direct data-id (gesture path).
  */
-const LabelBoldMenuComponent: React.FC<Props> = ({ canvasState }) => {
+const LabelBoldMenuComponent: React.FC<ObjectMenuItemProps> = ({
+	objects,
+	selectedConnectorId,
+}) => {
 	const messages = useCanvasMessages();
-	const label = getSelectedConnectorLabel(canvasState);
+	const label = getSelectedConnectorLabel(selectedConnectorId, objects);
 
 	// Early-return only after all hooks have been called (to keep hook order stable).
 	// No label text: render nothing, and the emptied section collapses via `:empty`.
