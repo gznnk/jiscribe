@@ -28,7 +28,7 @@ export type StencilCategory = {
  * icon (a dedicated glyph set can replace these later without touching callers).
  * Plugins contribute further categories via `ObjectTypeDefinition.stencilLibrary.categories`.
  */
-export const SHAPE_CATEGORY_DEFINITIONS: Record<string, StencilCategory> = {
+export const STENCIL_CATEGORY_DEFINITIONS: Record<string, StencilCategory> = {
 	basic: { id: "basic", label: { en: "Basic", ja: "基本" }, icon: RectIcon },
 	flowchart: {
 		id: "flowchart",

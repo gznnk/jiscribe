@@ -35,7 +35,7 @@ export {
 	type ToolbarEntry,
 } from "./controllers/ui/menu/Toolbar";
 export {
-	SHAPE_CATEGORY_DEFINITIONS,
+	STENCIL_CATEGORY_DEFINITIONS,
 	type StencilCategory,
 } from "./controllers/ui/menu/StencilLibrary/stencilCategories";
 export { defaultCanvasMessages } from "./controllers/messages/CanvasMessages";

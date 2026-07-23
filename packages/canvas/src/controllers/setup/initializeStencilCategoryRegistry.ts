@@ -1,11 +1,11 @@
-import { SHAPE_CATEGORY_DEFINITIONS } from "../ui/menu/StencilLibrary/stencilCategories";
+import { STENCIL_CATEGORY_DEFINITIONS } from "../ui/menu/StencilLibrary/stencilCategories";
 import type { StencilCategoryRegistry } from "../ui/menu/StencilLibrary/StencilCategoryRegistry";
 
 /** Seeds the built-in categories into a fresh StencilCategoryRegistry. */
 export const initializeStencilCategoryRegistry = (
 	registry: StencilCategoryRegistry,
 ): void => {
-	for (const category of Object.values(SHAPE_CATEGORY_DEFINITIONS)) {
+	for (const category of Object.values(STENCIL_CATEGORY_DEFINITIONS)) {
 		registry.register(category);
 	}
 };

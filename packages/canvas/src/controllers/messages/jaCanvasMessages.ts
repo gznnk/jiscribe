@@ -109,7 +109,7 @@ export const jaCanvasMessages: CanvasMessages = {
 	// プリセットの ja ラベルは各プリセット定義側にある。record はホスト上書き用に残す
 	stencilPresetLabels: {},
 
-	// カテゴリの ja ラベルは SHAPE_CATEGORY_DEFINITIONS 側にある。record はホスト上書き用に残す
+	// カテゴリの ja ラベルは STENCIL_CATEGORY_DEFINITIONS 側にある。record はホスト上書き用に残す
 	stencilCategoryLabels: {},
 
 	// PRESET_COLORS と STICKY_PRESET_COLORS の英語名を網羅する
