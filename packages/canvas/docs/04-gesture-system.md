@@ -43,7 +43,7 @@ determine whether it should process the event.
 | ------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
 | `canvas/`     | The entire canvas (empty-space drag = range selection, pan, zoom)    | `CanvasEventHandler.ts`                                                                              |
 | `controls/`   | Transform controls (resize, rotate, vertex, connection)              | `ControlEventHandler.ts`, `transform/`, `vertex/`, `connection/`                                     |
-| `menu/`       | Context menu, object menu, toolbar, stencil library                    | `ContextMenuHandler.ts`, `ObjectMenuHandler.ts`, `ToolbarHandler.ts`, `StencilLibraryItemHandler.ts` |
+| `menu/`       | Context menu, object menu, toolbar, stencil library                  | `ContextMenuHandler.ts`, `ObjectMenuHandler.ts`, `ToolbarHandler.ts`, `StencilLibraryItemHandler.ts` |
 | `objects/`    | Shapes and connectors themselves (move, select, launch text editing) | `ObjectEventHandler.ts`, `ConnectorEventHandler.ts`, shape-specific Controllers                      |
 
 On `dragStart`, `handleGesture` saves `eventStartSnapshot` (the objects / keyPoints /
