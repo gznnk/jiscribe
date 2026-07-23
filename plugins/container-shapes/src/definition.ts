@@ -15,8 +15,8 @@ import { ContainerObjectFactory } from "./schema/ContainerObjectFactory";
 import { containerToDoc, containerToState } from "./state/ContainerMapper";
 import type { ContainerState } from "./state/ContainerState";
 import { isValidContainerState } from "./state/validateContainerState";
-import { ContainerStencilPresets } from "./ui/ContainerStencilPresets";
-import { FrameIcon } from "./ui/FrameIcon";
+import { ContainerStencilPresets } from "./stencil/ContainerStencilPresets";
+import { FrameIcon } from "./stencil/FrameIcon";
 
 /**
  * `containerDefinition` has zero intentional omissions relative to the core
