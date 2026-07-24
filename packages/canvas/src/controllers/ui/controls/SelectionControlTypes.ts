@@ -1,9 +1,8 @@
+import type { Point } from "@workspace/geometry";
 import type { FC } from "react";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import type { CanvasControllerState } from "../../CanvasTypes";
-import type { CanvasEvent } from "../../gestures/registry/GestureHandlerTypes";
-import type { ICanvasRegistries } from "../../setup/ICanvasRegistries";
+import type { Mods } from "../../gestures/recognizer/GestureRecognizerTypes";
 
 /** Props passed to a selection control's handle renderer. */
 export type SelectionControlProps<TState extends ObjectState = ObjectState> = {
@@ -16,6 +15,29 @@ export type SelectionControlProps<TState extends ObjectState = ObjectState> = {
 	 * alongside data-kind="control" and data-id={object.id}.
 	 */
 	part: string;
+};
+
+/** The control's own object, as of the current frame and the gesture-start snapshot. */
+export type SelectionControlContext<TState extends ObjectState = ObjectState> =
+	{
+		/** The control's object in the current frame. */
+		object: TState;
+		/** The control's object captured at gesture start. */
+		startObject: TState;
+	};
+
+/** A drag/dragEnd event handed to a selection control, in SVG coordinates. */
+export type SelectionControlEvent = {
+	type: "drag" | "dragEnd";
+	/** Pointer position at gesture start. */
+	start: Point;
+	/** Current pointer position. */
+	last: Point;
+	/** Movement from `start` to `last`. */
+	delta: Point;
+	mods: Mods;
+	/** data-part sub-segment after `selection:<type>:<name>:`, or undefined. */
+	subPart?: string;
 };
 
 /**
@@ -36,10 +58,13 @@ export type SelectionControlDefinition<
 	name: string;
 	/** Renders the handles carrying the `part` prop as their data-part. */
 	Component: FC<SelectionControlProps<TState>>;
-	/** Handles the control's events. */
+	/**
+	 * Maps the gesture-start object plus cursor to the updated object (full
+	 * replacement), or null for no change. Called for drag/dragEnd only; the
+	 * adapter owns dragStart, snapshot guards, and the write-back.
+	 */
 	handle: (
-		state: CanvasControllerState,
-		event: CanvasEvent,
-		registries: ICanvasRegistries,
-	) => CanvasControllerState;
+		context: SelectionControlContext<TState>,
+		event: SelectionControlEvent,
+	) => TState | null;
 };

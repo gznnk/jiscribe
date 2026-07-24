@@ -1,8 +1,11 @@
+import type { Point } from "@workspace/geometry";
 import { describe, expect, it } from "vitest";
 
 import type { CalloutState } from "../../../../../../states/objects/annotations/callout/CalloutState";
-import type { CanvasControllerState } from "../../../../../CanvasTypes";
-import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
+import type {
+	SelectionControlContext,
+	SelectionControlEvent,
+} from "../../../../../ui/controls/SelectionControlTypes";
 import { handleCalloutTailTip } from "../handleCalloutTailTip";
 
 /** Callout of 200x160 centered at (100, 100): edges x=[0,200], y=[20,180]. */
@@ -20,88 +23,65 @@ const makeCallout = (overrides: Partial<CalloutState> = {}): CalloutState =>
 		...overrides,
 	}) as unknown as CalloutState;
 
-const makeDragState = (callout: CalloutState): CanvasControllerState =>
-	({
-		objects: { "callout-1": callout },
-		rootIds: ["callout-1"],
-		selectedIds: ["callout-1"],
-		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
-		eventStartSnapshot: {
-			objects: { "callout-1": callout },
-			keyPoints: {},
-			snapCandidates: null,
-			selectedIds: ["callout-1"],
-			selectedIdsWithDescendants: new Set(["callout-1"]),
-			multiSelectGroup: null,
-			viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
-		},
-	}) as unknown as CanvasControllerState;
+const makeContext = (
+	callout: CalloutState,
+): SelectionControlContext<CalloutState> => ({
+	object: callout,
+	startObject: callout,
+});
 
-const makeDragEvent = (
-	last: { x: number; y: number },
+const makeEvent = (
+	last: Point,
 	type: "drag" | "dragEnd" = "drag",
-): CanvasEvent =>
-	({
-		type,
-		targetKind: "control",
-		targetId: "callout-1",
-		targetPart: "selection:callout:tailTip",
-		button: 0,
-		last,
-		mods: { shift: false, alt: false, ctrl: false, meta: false },
-	}) as unknown as CanvasEvent;
-
-const tailOf = (state: CanvasControllerState) =>
-	(state.objects["callout-1"] as CalloutState).tail;
+): SelectionControlEvent => ({
+	type,
+	start: { x: 0, y: 0 },
+	last,
+	delta: { x: 0, y: 0 },
+	mods: { shift: false, alt: false, ctrl: false, meta: false },
+});
 
 describe("handleCalloutTailTip", () => {
 	it("derives side=right and the edge projection from a rightward drag", () => {
 		const next = handleCalloutTailTip(
-			makeDragState(makeCallout()),
-			makeDragEvent({ x: 190, y: 100 }),
+			makeContext(makeCallout()),
+			makeEvent({ x: 190, y: 100 }),
 		);
-		expect(tailOf(next)).toEqual({ side: "right", position: 0.5 });
+		expect(next.tail).toEqual({ side: "right", position: 0.5 });
 	});
 
 	it("derives side=bottom when the vertical axis dominates", () => {
 		const next = handleCalloutTailTip(
-			makeDragState(makeCallout()),
-			makeDragEvent({ x: 40, y: 400 }),
+			makeContext(makeCallout()),
+			makeEvent({ x: 40, y: 400 }),
 		);
-		expect(tailOf(next)).toEqual({ side: "bottom", position: 0.2 });
+		expect(next.tail).toEqual({ side: "bottom", position: 0.2 });
 	});
 
 	it("clamps position to [0, 1] when the pointer runs past the edge", () => {
 		const next = handleCalloutTailTip(
-			makeDragState(makeCallout()),
-			makeDragEvent({ x: 400, y: 300 }),
+			makeContext(makeCallout()),
+			makeEvent({ x: 400, y: 300 }),
 		);
-		expect(tailOf(next)).toEqual({ side: "right", position: 1 });
+		expect(next.tail).toEqual({ side: "right", position: 1 });
 	});
 
 	it("maps the pointer through the inverse transform for rotated callouts", () => {
 		// rotation=90: world (100, 160) -> local (60, 0) -> right at 0.5
 		const next = handleCalloutTailTip(
-			makeDragState(makeCallout({ rotation: 90 })),
-			makeDragEvent({ x: 100, y: 160 }),
+			makeContext(makeCallout({ rotation: 90 })),
+			makeEvent({ x: 100, y: 160 }),
 		);
-		expect(tailOf(next)).toEqual({ side: "right", position: 0.5 });
+		expect(next.tail).toEqual({ side: "right", position: 0.5 });
 	});
 
-	it("dragEnd applies the update and disables edge scrolling", () => {
-		const next = handleCalloutTailTip(
-			makeDragState(makeCallout()),
-			makeDragEvent({ x: 190, y: 100 }, "dragEnd"),
-		);
-		expect(tailOf(next)).toEqual({ side: "right", position: 0.5 });
-		expect(next.edgeScrollEnabled).toBe(false);
-	});
-
-	it("ignores drags for non-callout targets", () => {
+	it("returns the updated object without mutating the input", () => {
 		const callout = makeCallout();
-		const rectLike = { ...callout, type: "rect" } as unknown as CalloutState;
-		const state = makeDragState(rectLike);
-		const next = handleCalloutTailTip(state, makeDragEvent({ x: 190, y: 100 }));
-		expect(next).toBe(state);
+		const next = handleCalloutTailTip(
+			makeContext(callout),
+			makeEvent({ x: 190, y: 100 }),
+		);
+		expect(callout.tail).toBeUndefined();
+		expect(next).not.toBe(callout);
 	});
 });

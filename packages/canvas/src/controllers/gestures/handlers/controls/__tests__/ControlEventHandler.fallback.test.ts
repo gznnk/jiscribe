@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../../setup/ICanvasRegistries";
 import { SelectionControlRegistry } from "../../../../ui/controls/SelectionControlRegistry";
@@ -9,8 +10,15 @@ import { ControlEventHandler } from "../ControlEventHandler";
 
 const registries = undefined as unknown as ICanvasRegistries;
 
+const makeContainer = (): ObjectState =>
+	({ id: "container-1", type: "container" }) as unknown as ObjectState;
+
+/** State whose current frame and start snapshot both hold a container. */
 const makeState = (): CanvasControllerState =>
-	({ objects: {} }) as unknown as CanvasControllerState;
+	({
+		objects: { "container-1": makeContainer() },
+		eventStartSnapshot: { objects: { "container-1": makeContainer() } },
+	}) as unknown as CanvasControllerState;
 
 const makeEvent = (targetPart: string): CanvasEvent =>
 	({
@@ -19,12 +27,19 @@ const makeEvent = (targetPart: string): CanvasEvent =>
 		targetId: "container-1",
 		targetPart,
 		button: 0,
+		start: { x: 0, y: 0 },
 		last: { x: 0, y: 0 },
+		delta: { x: 0, y: 0 },
 		mods: { shift: false, alt: false, ctrl: false, meta: false },
 	}) as unknown as CanvasEvent;
 
-const handledBy = (state: CanvasControllerState): string | undefined =>
+/** Marker set at the state level by the static strategy. */
+const stateMark = (state: CanvasControllerState): string | undefined =>
 	(state as unknown as { handledBy?: string }).handledBy;
+
+/** Marker set on the routed object by the selection control. */
+const objectMark = (state: CanvasControllerState): string | undefined =>
+	(state.objects["container-1"] as unknown as { handledBy?: string }).handledBy;
 
 /** Static strategy that marks the state so the test can observe the route. */
 class StaticMarkerStrategy extends ControlStrategy {
@@ -42,17 +57,17 @@ class StaticMarkerStrategy extends ControlStrategy {
 
 const makeSelectionControlRegistry = (): SelectionControlRegistry => {
 	const registry = new SelectionControlRegistry();
-	// Marks the state so the test can observe the route
+	// Marks the routed object so the test can observe the route
 	// (part: selection:container:headerHeight).
 	registry.register("container", [
 		{
 			name: "headerHeight",
 			Component: () => null,
-			handle: (state) =>
+			handle: (context) =>
 				({
-					...state,
+					...context.startObject,
 					handledBy: "selection-control",
-				}) as unknown as CanvasControllerState,
+				}) as unknown as ObjectState,
 		},
 	]);
 	return registry;
@@ -69,7 +84,7 @@ describe("ControlEventHandler selection-control fallback", () => {
 			makeEvent("selection:container:headerHeight"),
 			registries,
 		);
-		expect(handledBy(next)).toBe("selection-control");
+		expect(objectMark(next)).toBe("selection-control");
 	});
 
 	it("accepts sub-segmented parts of the same control", () => {
@@ -79,7 +94,7 @@ describe("ControlEventHandler selection-control fallback", () => {
 			makeEvent("selection:container:headerHeight:3"),
 			registries,
 		);
-		expect(handledBy(next)).toBe("selection-control");
+		expect(objectMark(next)).toBe("selection-control");
 	});
 
 	it("static strategies keep precedence over selection controls", () => {
@@ -92,7 +107,7 @@ describe("ControlEventHandler selection-control fallback", () => {
 			makeEvent("resize:topLeft"),
 			registries,
 		);
-		expect(handledBy(next)).toBe("static");
+		expect(stateMark(next)).toBe("static");
 	});
 
 	it("returns the state unchanged for parts outside the selection namespace", () => {

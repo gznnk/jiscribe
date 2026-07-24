@@ -44,12 +44,6 @@ export { ControlStrategy } from "./controllers/gestures/registry/ControlStrategy
 export { SelectionControlPill } from "./controllers/ui/controls/SelectionControlPill";
 export { getResizeCursorForRotation } from "./controllers/ui/utils";
 
-export { createCowObjects } from "./controllers/utils/cowObjects";
-
-export type { CanvasEvent } from "./controllers/gestures/registry/GestureHandlerTypes";
-export type { CanvasControllerState } from "./controllers/CanvasTypes";
-export type { ICanvasRegistries } from "./controllers/setup/ICanvasRegistries";
-
 // ---------------------------------------------------------------------------
 // ObjectMenu UI キット(docs/05_extensibility/custom-menu-design.md)
 // ---------------------------------------------------------------------------

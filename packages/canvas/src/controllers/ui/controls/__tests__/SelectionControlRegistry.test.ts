@@ -6,7 +6,7 @@ import type { SelectionControlDefinition } from "../SelectionControlTypes";
 const makeControl = (name: string): SelectionControlDefinition => ({
 	name,
 	Component: () => null,
-	handle: (state) => state,
+	handle: (context) => context.object,
 });
 
 describe("SelectionControlRegistry", () => {
