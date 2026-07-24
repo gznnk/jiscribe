@@ -31,18 +31,13 @@ export const containerDefinition: ObjectTypeDefinition<
 	ContainerDoc,
 	ContainerState
 > = {
-	mapper: { toDoc: containerToDoc, toState: containerToState },
 	features: ContainerFeatures,
-	extraStyleProperties: ContainerExtraStyleProperties,
+	mapper: { toDoc: containerToDoc, toState: containerToState },
+	stateValidator: isValidContainerState,
+	factory: ContainerObjectFactory,
 	component: Container,
 	textRegion: calcContainerTextRegion,
 	behavior: createFrameBehavior<ContainerState>(),
-	selectionControls: [
-		{
-			Component: ContainerHeaderHeightControl,
-			handler: new HeaderHeightControlHandler(),
-		},
-	],
 	menu: [
 		{
 			id: "style",
@@ -62,7 +57,12 @@ export const containerDefinition: ObjectTypeDefinition<
 			items: [{ type: "aspectRatio" }],
 		},
 	],
-	stateValidator: isValidContainerState,
-	factory: ContainerObjectFactory,
+	selectionControls: [
+		{
+			Component: ContainerHeaderHeightControl,
+			handler: new HeaderHeightControlHandler(),
+		},
+	],
+	extraStyleProperties: ContainerExtraStyleProperties,
 	stencilPresets: ContainerStencilPresets,
 };

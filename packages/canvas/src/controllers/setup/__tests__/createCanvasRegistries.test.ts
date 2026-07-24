@@ -10,11 +10,12 @@ import { createCanvasRegistries } from "../createCanvasRegistries";
 // use so this suite has no dependency beyond this layer.
 const buildFakeDefinition = (type: string): ObjectTypeDefinition =>
 	defineObject({
+		features: { type, geometry: "rect" },
 		mapper: {
 			toDoc: (state) => ({ id: state.id, type }),
 			toState: (doc) => ({ id: doc.id, type }),
 		},
-		features: { type, geometry: "rect" },
+		stateValidator: () => true,
 		component: () => null,
 		behavior: {
 			moveByDelta: (state) => state,
@@ -22,7 +23,6 @@ const buildFakeDefinition = (type: string): ObjectTypeDefinition =>
 			rotateByGroup: (state) => state,
 		},
 		menu: [],
-		stateValidator: () => true,
 	});
 
 describe("createCanvasRegistries", () => {
@@ -101,10 +101,6 @@ describe("createCanvasRegistries", () => {
 				id: "boxy-plugin",
 				objects: {
 					boxy: defineObject({
-						mapper: {
-							toDoc: (state) => ({ id: state.id, type: "boxy" }),
-							toState: (doc) => ({ id: doc.id, type: "boxy" }),
-						},
 						features: {
 							type: "boxy",
 							geometry: "rect",
@@ -113,13 +109,17 @@ describe("createCanvasRegistries", () => {
 							fill: true,
 							text: true,
 						},
+						mapper: {
+							toDoc: (state) => ({ id: state.id, type: "boxy" }),
+							toState: (doc) => ({ id: doc.id, type: "boxy" }),
+						},
+						stateValidator: () => true,
 						component: () => null,
 						behavior: {
 							moveByDelta: (state) => state,
 							transformByGroup: (state) => state,
 							rotateByGroup: (state) => state,
 						},
-						stateValidator: () => true,
 					}),
 				},
 			};
@@ -159,9 +159,9 @@ describe("createCanvasRegistries", () => {
 					}),
 				},
 			};
-			expect(() =>
-				createCanvasRegistries({ plugins: [brokenPlugin] }),
-			).toThrow(/"widget".*stencilPresets.*factory/);
+			expect(() => createCanvasRegistries({ plugins: [brokenPlugin] })).toThrow(
+				/"widget".*stencilPresets.*factory/,
+			);
 		});
 
 		it("throws when a plugin's object type collides with a built-in", () => {
