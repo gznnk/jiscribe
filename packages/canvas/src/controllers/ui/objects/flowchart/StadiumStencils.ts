@@ -1,7 +1,7 @@
 import { StadiumIcon } from "./StadiumIcon";
-import type { StencilPreset } from "../StencilPreset";
+import type { Stencil } from "../Stencil";
 
-export const StadiumStencilPresets: StencilPreset[] = [
+export const StadiumStencils: Stencil[] = [
 	{
 		id: "stadium",
 		objectType: "stadium",

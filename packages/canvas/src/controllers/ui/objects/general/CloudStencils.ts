@@ -1,7 +1,7 @@
 import { CloudIcon } from "./CloudIcon";
-import type { StencilPreset } from "../StencilPreset";
+import type { Stencil } from "../Stencil";
 
-export const CloudStencilPresets: StencilPreset[] = [
+export const CloudStencils: Stencil[] = [
 	{
 		id: "cloud",
 		objectType: "cloud",

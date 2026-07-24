@@ -1,7 +1,7 @@
 import { CalloutIcon } from "./CalloutIcon";
-import type { StencilPreset } from "../StencilPreset";
+import type { Stencil } from "../Stencil";
 
-export const CalloutStencilPresets: StencilPreset[] = [
+export const CalloutStencils: Stencil[] = [
 	{
 		id: "callout",
 		objectType: "callout",

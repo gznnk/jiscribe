@@ -1,7 +1,7 @@
 import { HexagonIcon } from "./HexagonIcon";
-import type { StencilPreset } from "../StencilPreset";
+import type { Stencil } from "../Stencil";
 
-export const HexagonStencilPresets: StencilPreset[] = [
+export const HexagonStencils: Stencil[] = [
 	{
 		id: "hexagon",
 		objectType: "hexagon",

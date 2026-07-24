@@ -4,7 +4,7 @@ import { createObjectDoc } from "../../../../schemas/objects/utils/createObjectD
 import type { ObjectFactoryRegistry } from "../../../../schemas/registry/ObjectFactoryRegistry";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../setup/ICanvasRegistries";
-import type { StencilPreset } from "../../../ui/objects/StencilPreset";
+import type { Stencil } from "../../../ui/objects/Stencil";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import type {
 	CanvasEvent,
@@ -28,7 +28,7 @@ const parsePresetId = (targetPart: string): string => targetPart.split(":")[1];
  * Delegates to each shape's ObjectFactory (no per-type branching here).
  */
 const calcObjectDimensions = (
-	preset: StencilPreset,
+	preset: Stencil,
 	objectFactory: ObjectFactoryRegistry,
 ): { halfWidth: number; halfHeight: number } => {
 	const factory = objectFactory.get(preset.objectType);
@@ -47,7 +47,7 @@ const calcObjectDimensions = (
  */
 const addObjectToState = (
 	state: CanvasControllerState,
-	preset: StencilPreset,
+	preset: Stencil,
 	position: { x: number; y: number },
 	registries: ICanvasRegistries,
 ): CanvasControllerState => {
@@ -98,7 +98,7 @@ export const StencilLibraryItemHandler: GestureHandler = {
 		}
 
 		const presetId = parsePresetId(event.targetPart);
-		const preset = registries.stencilPreset.get(presetId);
+		const preset = registries.stencil.get(presetId);
 		if (!preset) {
 			return nextState;
 		}

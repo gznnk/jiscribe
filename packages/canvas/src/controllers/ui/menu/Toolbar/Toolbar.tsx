@@ -17,7 +17,7 @@ import { StencilCategoryMenu } from "../StencilLibrary/StencilCategoryMenu";
 import { StencilLibraryItem } from "../StencilLibrary/StencilLibraryItem";
 
 type ToolbarProps = {
-	/** ID of the stencil preset currently being drawn (for the tool's active state) */
+	/** ID of the stencil currently being drawn (for the tool's active state) */
 	activePresetId: string | null;
 	/** ID of the category whose flyout is open (reducer state); null = none */
 	openCategoryId: string | null;
@@ -66,7 +66,7 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 	trailing,
 }) => {
 	const messages = useCanvasMessages();
-	const { stencilPreset } = useCanvasRegistries();
+	const { stencil } = useCanvasRegistries();
 	const [isHelpOpen, setIsHelpOpen] = useState(false);
 	const closeHelp = useCallback(() => setIsHelpOpen(false), []);
 
@@ -112,7 +112,7 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 					)}
 					{layout.map((entry) => {
 						if (entry.kind === "preset") {
-							const preset = stencilPreset.get(entry.presetId);
+							const preset = stencil.get(entry.presetId);
 							if (!preset) {
 								return null;
 							}
@@ -127,7 +127,7 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 						// Resolve the layout's presetIds in order; a preset that isn't
 						// registered (e.g. a plugin not applied) is silently skipped.
 						const presets = entry.presetIds
-							.map((id) => stencilPreset.get(id))
+							.map((id) => stencil.get(id))
 							.filter((preset) => preset !== undefined);
 						// A category with no resolvable presets has nothing to show, so
 						// skip the button/flyout entirely rather than rendering an empty one.

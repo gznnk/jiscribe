@@ -1,9 +1,9 @@
 import { MarkdownRectIcon } from "./MarkdownRectIcon";
 import { RectIcon } from "./RectIcon";
 import { AUTO_COLOR } from "../../../../schemas/objects/utils/autoColor";
-import type { StencilPreset } from "../StencilPreset";
+import type { Stencil } from "../Stencil";
 
-export const RectStencilPresets: StencilPreset[] = [
+export const RectStencils: Stencil[] = [
 	{
 		id: "rect",
 		objectType: "rect",

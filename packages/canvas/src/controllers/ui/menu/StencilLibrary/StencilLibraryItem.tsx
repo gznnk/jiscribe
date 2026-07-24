@@ -4,10 +4,10 @@ import { StencilLibraryButton } from "./StencilLibraryStyled";
 import { useCanvasLocale } from "../../../messages/CanvasLocaleContext";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import { resolveLocalizedLabel } from "../../../messages/resolveLocaleMessages";
-import type { StencilPreset } from "../../objects/StencilPreset";
+import type { Stencil } from "../../objects/Stencil";
 
 type StencilLibraryItemProps = {
-	preset: StencilPreset;
+	preset: Stencil;
 	isActive?: boolean;
 };
 
@@ -26,7 +26,7 @@ const StencilLibraryItemComponent: React.FC<StencilLibraryItemProps> = ({
 			data-id="stencil-library"
 			data-part={`item:${preset.id}`}
 			title={
-				messages.stencilPresetLabels[preset.id] ??
+				messages.stencilLabels[preset.id] ??
 				resolveLocalizedLabel(preset.label, locale)
 			}
 			isActive={isActive}

@@ -1,7 +1,7 @@
 import { DelayIcon } from "./DelayIcon";
-import type { StencilPreset } from "../StencilPreset";
+import type { Stencil } from "../Stencil";
 
-export const DelayStencilPresets: StencilPreset[] = [
+export const DelayStencils: Stencil[] = [
 	{
 		id: "delay",
 		objectType: "delay",

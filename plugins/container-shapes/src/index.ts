@@ -25,7 +25,7 @@ export { calcContainerTextRegion } from "./presentation/calcContainerTextRegion"
 export { ContainerHeaderHeightControl } from "./controls/ContainerHeaderHeightControl";
 export { HeaderHeightControlHandler } from "./controls/HeaderHeightControlHandler";
 
-export { ContainerStencilPresets } from "./stencil/ContainerStencilPresets";
+export { ContainerStencils } from "./stencil/ContainerStencils";
 export { containerToolbarEntry } from "./stencil/ContainerToolbarEntry";
 
 export { containerDefinition } from "./definition";

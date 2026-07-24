@@ -60,7 +60,7 @@ describe("createCanvasRegistries", () => {
 		it("restricts the StencilLibrary presets to the enabled types", () => {
 			const registries = createCanvasRegistries({ objectTypes: ["rect"] });
 			const presetTypes = new Set(
-				registries.stencilPreset.all().map((preset) => preset.objectType),
+				registries.stencil.all().map((preset) => preset.objectType),
 			);
 			expect(presetTypes.has("rect")).toBe(true);
 			expect(presetTypes.has("ellipse")).toBe(false);
@@ -142,13 +142,13 @@ describe("createCanvasRegistries", () => {
 			]);
 		});
 
-		it("throws when a definition declares stencilPresets but no factory", () => {
+		it("throws when a definition declares stencils but no factory", () => {
 			const brokenPlugin: CanvasPlugin = {
 				id: "broken-plugin",
 				objects: {
 					widget: defineObject({
 						...buildFakeDefinition("widget"),
-						stencilPresets: [
+						stencils: [
 							{
 								id: "widget",
 								objectType: "widget",
@@ -160,7 +160,7 @@ describe("createCanvasRegistries", () => {
 				},
 			};
 			expect(() => createCanvasRegistries({ plugins: [brokenPlugin] })).toThrow(
-				/"widget".*stencilPresets.*factory/,
+				/"widget".*stencils.*factory/,
 			);
 		});
 

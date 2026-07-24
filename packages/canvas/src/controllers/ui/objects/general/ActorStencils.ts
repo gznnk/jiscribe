@@ -1,7 +1,7 @@
 import { ActorIcon } from "./ActorIcon";
-import type { StencilPreset } from "../StencilPreset";
+import type { Stencil } from "../Stencil";
 
-export const ActorStencilPresets: StencilPreset[] = [
+export const ActorStencils: Stencil[] = [
 	{
 		id: "actor",
 		objectType: "actor",

@@ -15,7 +15,7 @@ import { ContainerObjectFactory } from "./schema/ContainerObjectFactory";
 import { containerToDoc, containerToState } from "./state/ContainerMapper";
 import type { ContainerState } from "./state/ContainerState";
 import { isValidContainerState } from "./state/validateContainerState";
-import { ContainerStencilPresets } from "./stencil/ContainerStencilPresets";
+import { ContainerStencils } from "./stencil/ContainerStencils";
 
 /**
  * `containerDefinition` has zero intentional omissions relative to the core
@@ -64,5 +64,5 @@ export const containerDefinition: ObjectTypeDefinition<
 		},
 	],
 	extraStyleProperties: ContainerExtraStyleProperties,
-	stencilPresets: ContainerStencilPresets,
+	stencils: ContainerStencils,
 };

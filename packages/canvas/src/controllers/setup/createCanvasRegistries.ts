@@ -18,7 +18,7 @@ import { createObjectBehaviorRegistry } from "../gestures/registry/ObjectBehavio
 import { createStylePropertyRegistry } from "../styleProperties/StylePropertyRegistry";
 import { createSelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
 import { createObjectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
-import { createStencilPresetRegistry } from "../ui/objects/StencilPresetRegistry";
+import { createStencilRegistry } from "../ui/objects/StencilRegistry";
 
 /**
  * Builds a fresh, fully independent bundle of UI registries for one `<Canvas>`.
@@ -49,7 +49,7 @@ export const createCanvasRegistries = (
 		gestureHandler: createGestureHandlerRegistry(),
 		command: createCommandRegistry(),
 		objectMenu: createObjectMenuRegistry(),
-		stencilPreset: createStencilPresetRegistry(),
+		stencil: createStencilRegistry(),
 		objectFactory: createObjectFactoryRegistry(),
 		styleProperty: createStylePropertyRegistry(),
 	};

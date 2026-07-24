@@ -6,7 +6,7 @@ import { createObjectDoc } from "../../../../schemas/objects/utils/createObjectD
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../contexts/CanvasRegistriesContext";
 import type { CanvasRegistries } from "../../../setup/CanvasRegistries";
-import type { StencilPreset } from "../../objects/StencilPreset";
+import type { Stencil } from "../../objects/Stencil";
 
 type DragGhostProps = {
 	stencilLibraryDrag: CanvasControllerState["stencilLibraryDrag"];
@@ -20,7 +20,7 @@ const GHOST_ID = "drag-ghost";
  * Uses React.createElement to avoid creating a component variable during render.
  */
 const createGhostElement = (
-	preset: StencilPreset,
+	preset: Stencil,
 	position: Point,
 	registries: CanvasRegistries,
 	docDefaults: DocCreationDefaults,

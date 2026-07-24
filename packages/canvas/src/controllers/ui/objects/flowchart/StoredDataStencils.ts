@@ -1,7 +1,7 @@
 import { StoredDataIcon } from "./StoredDataIcon";
-import type { StencilPreset } from "../StencilPreset";
+import type { Stencil } from "../Stencil";
 
-export const StoredDataStencilPresets: StencilPreset[] = [
+export const StoredDataStencils: Stencil[] = [
 	{
 		id: "storedData",
 		objectType: "storedData",

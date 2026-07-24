@@ -1,7 +1,7 @@
 import { MultiDocumentIcon } from "./MultiDocumentIcon";
-import type { StencilPreset } from "../StencilPreset";
+import type { Stencil } from "../Stencil";
 
-export const MultiDocumentStencilPresets: StencilPreset[] = [
+export const MultiDocumentStencils: Stencil[] = [
 	{
 		id: "multiDocument",
 		objectType: "multiDocument",

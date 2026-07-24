@@ -1,4 +1,4 @@
-import type { StencilPreset } from "@workspace/canvas";
+import type { Stencil } from "@workspace/canvas";
 
 import { BoundaryIcon } from "./BoundaryIcon";
 import { FrameIcon } from "./FrameIcon";
@@ -7,7 +7,7 @@ import { ZoneIcon } from "./ZoneIcon";
 /** Faint neutral tint for the Zone body — subtle enough to never hide contents at any z-order. */
 const ZONE_FILL = "rgba(100, 116, 139, 0.12)";
 
-export const ContainerStencilPresets: StencilPreset[] = [
+export const ContainerStencils: Stencil[] = [
 	{
 		id: "frame",
 		objectType: "container",

@@ -1,7 +1,7 @@
 import { DbIcon } from "./DbIcon";
-import type { StencilPreset } from "../StencilPreset";
+import type { Stencil } from "../Stencil";
 
-export const DbStencilPresets: StencilPreset[] = [
+export const DbStencils: Stencil[] = [
 	{
 		id: "db",
 		objectType: "db",

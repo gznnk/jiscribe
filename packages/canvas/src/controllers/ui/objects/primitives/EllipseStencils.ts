@@ -1,8 +1,8 @@
 import { EllipseIcon } from "./EllipseIcon";
 import { OnPageConnectorIcon } from "./OnPageConnectorIcon";
-import type { StencilPreset } from "../StencilPreset";
+import type { Stencil } from "../Stencil";
 
-export const EllipseStencilPresets: StencilPreset[] = [
+export const EllipseStencils: Stencil[] = [
 	{
 		id: "ellipse",
 		objectType: "ellipse",

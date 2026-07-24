@@ -2,7 +2,7 @@ import type { ObjectFactoryRegistry } from "../../schemas/registry/ObjectFactory
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
-import type { StencilPresetRegistry } from "../ui/objects/StencilPresetRegistry";
+import type { StencilRegistry } from "../ui/objects/StencilRegistry";
 
 /**
  * The registry contract passed as an argument to the pure reducer/handler tree
@@ -22,7 +22,7 @@ export interface ICanvasRegistries {
 	objectMapper: ObjectMapperRegistry;
 	objectBehavior: ObjectBehaviorRegistry;
 	objectFactory: ObjectFactoryRegistry;
-	stencilPreset: StencilPresetRegistry;
+	stencil: StencilRegistry;
 	/**
 	 * Command lookup, used by `handleCommand` (reached from the menu/context/toolbar
 	 * gesture handlers). Inline shape — mirrors what the pure tree calls on the

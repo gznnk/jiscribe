@@ -5,7 +5,7 @@ import { CalloutIcon } from "../../objects/annotations/CalloutIcon";
 import { DiamondIcon } from "../../objects/flowchart/DiamondIcon";
 import { CloudIcon } from "../../objects/general/CloudIcon";
 import { RectIcon } from "../../objects/primitives/RectIcon";
-import type { StencilIconProps } from "../../objects/StencilPreset";
+import type { StencilIconProps } from "../../objects/Stencil";
 
 /**
  * Describes the top-level arrangement of the StencilLibrary section of the toolbar.

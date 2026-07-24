@@ -107,7 +107,7 @@ export const jaCanvasMessages: CanvasMessages = {
 	},
 
 	// プリセットの ja ラベルは各プリセット定義側にある。record はホスト上書き用に残す
-	stencilPresetLabels: {},
+	stencilLabels: {},
 
 	// カテゴリの ja ラベルは toolbar.layout のカテゴリエントリ側にある。record はホスト上書き用に残す
 	stencilCategoryLabels: {},

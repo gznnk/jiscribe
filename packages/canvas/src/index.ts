@@ -142,6 +142,6 @@ export type { SelectionControlHandler } from "./controllers/gestures/registry/Se
 export type { ObjectTextRegionCalculator } from "./presentations/objects/registry/ObjectTextRegionRegistry";
 export type { ObjectOutlineCalculator } from "./presentations/objects/registry/ObjectOutlineRegistry";
 export type {
-	StencilPreset,
+	Stencil,
 	StencilIconProps,
-} from "./controllers/ui/objects/StencilPreset";
+} from "./controllers/ui/objects/Stencil";

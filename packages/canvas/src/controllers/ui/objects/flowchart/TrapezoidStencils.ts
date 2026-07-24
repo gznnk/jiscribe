@@ -1,7 +1,7 @@
 import { TrapezoidIcon } from "./TrapezoidIcon";
-import type { StencilPreset } from "../StencilPreset";
+import type { Stencil } from "../Stencil";
 
-export const TrapezoidStencilPresets: StencilPreset[] = [
+export const TrapezoidStencils: Stencil[] = [
 	{
 		id: "trapezoid",
 		objectType: "trapezoid",

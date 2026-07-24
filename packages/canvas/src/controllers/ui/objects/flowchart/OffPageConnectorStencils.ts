@@ -1,7 +1,7 @@
 import { OffPageConnectorIcon } from "./OffPageConnectorIcon";
-import type { StencilPreset } from "../StencilPreset";
+import type { Stencil } from "../Stencil";
 
-export const OffPageConnectorStencilPresets: StencilPreset[] = [
+export const OffPageConnectorStencils: Stencil[] = [
 	{
 		id: "offPageConnector",
 		objectType: "offPageConnector",

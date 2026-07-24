@@ -3,7 +3,7 @@ import type { FC } from "react";
 import type { ObjectBehaviorEntry } from "../controllers/gestures/registry/ObjectBehaviorTypes";
 import type { SelectionControlDefinition } from "../controllers/ui/controls/SelectionControlTypes";
 import type { ObjectMenuSection } from "../controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
-import type { StencilPreset } from "../controllers/ui/objects/StencilPreset";
+import type { Stencil } from "../controllers/ui/objects/Stencil";
 import type { ObjectOutlineCalculator } from "../presentations/objects/registry/ObjectOutlineRegistry";
 import type { ObjectTextRegionCalculator } from "../presentations/objects/registry/ObjectTextRegionRegistry";
 import type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
@@ -41,7 +41,7 @@ export type ObjectTypeDefinition<
 	/** Type-guard that rejects untrusted State entering the canvas from outside (e.g. pasted clipboard data). */
 	stateValidator: ObjectStateValidator;
 
-	/** Doc creation, dimensions, and bounds generation. Required for any type with `stencilPresets`. */
+	/** Doc creation, dimensions, and bounds generation. Required for any type with `stencils`. */
 	factory?: ObjectFactory;
 
 	// --- Render (presentation) ---
@@ -82,7 +82,7 @@ export type ObjectTypeDefinition<
 	 * Registration only makes them exist; where they show and in what order is
 	 * decided by `toolbar.layout` (a pinned entry, or a category entry's `presetIds`).
 	 */
-	stencilPresets?: StencilPreset[];
+	stencils?: Stencil[];
 };
 
 /**

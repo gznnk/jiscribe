@@ -1,7 +1,7 @@
 import { PolygonIcon } from "./PolygonIcon";
-import type { StencilPreset } from "../StencilPreset";
+import type { Stencil } from "../Stencil";
 
-export const PolygonStencilPresets: StencilPreset[] = [
+export const PolygonStencils: Stencil[] = [
 	{
 		id: "polygon",
 		objectType: "polygon",

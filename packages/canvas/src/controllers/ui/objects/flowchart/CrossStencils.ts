@@ -1,7 +1,7 @@
 import { CrossIcon } from "./CrossIcon";
-import type { StencilPreset } from "../StencilPreset";
+import type { Stencil } from "../Stencil";
 
-export const CrossStencilPresets: StencilPreset[] = [
+export const CrossStencils: Stencil[] = [
 	{
 		id: "cross",
 		objectType: "cross",

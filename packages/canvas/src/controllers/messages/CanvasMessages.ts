@@ -93,14 +93,14 @@ export type CanvasMessageStrings = {
  *
  * The flat keys cover strings hardcoded in components. The record keys
  * override labels whose English defaults live next to their definitions
- * (commands, stencil presets, color presets, arrow types); an entry missing
+ * (commands, stencils, color presets, arrow types); an entry missing
  * from a record falls back to that definition's label.
  */
 export type CanvasMessages = CanvasMessageStrings & {
 	/** Overrides keyed by command id (e.g. `undo`, `bringToFront`, `move-up-large`) */
 	commandLabels: Record<string, string>;
-	/** Overrides keyed by stencil preset id (e.g. `rect`, `ellipse`, `sticky`) */
-	stencilPresetLabels: Record<string, string>;
+	/** Overrides keyed by stencil id (e.g. `rect`, `ellipse`, `sticky`) */
+	stencilLabels: Record<string, string>;
 	/** Overrides keyed by stencil category id (e.g. `flowchart`, `general`, `annotation`) */
 	stencilCategoryLabels: Record<string, string>;
 	/** Overrides keyed by the English color preset name (e.g. `Red`, `Light Blue`) */
@@ -180,7 +180,7 @@ export const defaultCanvasMessages: CanvasMessages = {
 	menuLabelBorderStyle: "Label Border Style",
 
 	commandLabels: {},
-	stencilPresetLabels: {},
+	stencilLabels: {},
 	stencilCategoryLabels: {},
 	colorNames: {},
 	arrowTypeNames: {},
@@ -210,9 +210,9 @@ export const resolveCanvasMessages = (
 		...localized,
 		...overrides,
 		commandLabels: { ...localized.commandLabels, ...overrides?.commandLabels },
-		stencilPresetLabels: {
-			...localized.stencilPresetLabels,
-			...overrides?.stencilPresetLabels,
+		stencilLabels: {
+			...localized.stencilLabels,
+			...overrides?.stencilLabels,
 		},
 		stencilCategoryLabels: {
 			...localized.stencilCategoryLabels,

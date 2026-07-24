@@ -13,7 +13,7 @@ import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehavior
 import type { StylePropertyRegistry } from "../styleProperties/StylePropertyRegistry";
 import type { SelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
 import type { ObjectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
-import type { StencilPresetRegistry } from "../ui/objects/StencilPresetRegistry";
+import type { StencilRegistry } from "../ui/objects/StencilRegistry";
 
 /**
  * The full set of UI registries a single `<Canvas>` instance operates against.
@@ -39,7 +39,7 @@ export type CanvasRegistries = {
 	gestureHandler: GestureHandlerRegistry;
 	command: CommandRegistry;
 	objectMenu: ObjectMenuRegistry;
-	stencilPreset: StencilPresetRegistry;
+	stencil: StencilRegistry;
 	objectFactory: ObjectFactoryRegistry;
 	styleProperty: StylePropertyRegistry;
 };

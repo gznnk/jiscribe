@@ -13,10 +13,7 @@ import {
 	type LocaleMessages,
 } from "../../../messages/resolveLocaleMessages";
 import { ChevronDownIcon } from "../../icons/ChevronDownIcon";
-import type {
-	StencilIconProps,
-	StencilPreset,
-} from "../../objects/StencilPreset";
+import type { StencilIconProps, Stencil } from "../../objects/Stencil";
 
 type StencilCategoryMenuProps = {
 	/** Flyout open/close key and host label-override key. */
@@ -24,7 +21,7 @@ type StencilCategoryMenuProps = {
 	label: string | LocaleMessages<string>;
 	icon: ComponentType<StencilIconProps>;
 	/** Presets belonging to this category (already ordered). */
-	presets: readonly StencilPreset[];
+	presets: readonly Stencil[];
 	isOpen: boolean;
 	/** Preset id currently in drawing mode, to highlight the matching flyout item. */
 	activePresetId: string | null;

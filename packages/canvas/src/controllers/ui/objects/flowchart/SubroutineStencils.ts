@@ -1,7 +1,7 @@
 import { SubroutineIcon } from "./SubroutineIcon";
-import type { StencilPreset } from "../StencilPreset";
+import type { Stencil } from "../Stencil";
 
-export const SubroutineStencilPresets: StencilPreset[] = [
+export const SubroutineStencils: Stencil[] = [
 	{
 		id: "subroutine",
 		objectType: "subroutine",

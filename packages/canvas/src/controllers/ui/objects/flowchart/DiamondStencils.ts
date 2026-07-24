@@ -1,7 +1,7 @@
 import { DiamondIcon } from "./DiamondIcon";
-import type { StencilPreset } from "../StencilPreset";
+import type { Stencil } from "../Stencil";
 
-export const DiamondStencilPresets: StencilPreset[] = [
+export const DiamondStencils: Stencil[] = [
 	{
 		id: "diamond",
 		objectType: "diamond",

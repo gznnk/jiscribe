@@ -1,7 +1,7 @@
 import { StickyIcon } from "./StickyIcon";
-import type { StencilPreset } from "../StencilPreset";
+import type { Stencil } from "../Stencil";
 
-export const StickyStencilPresets: StencilPreset[] = [
+export const StickyStencils: Stencil[] = [
 	{
 		id: "sticky",
 		objectType: "sticky",

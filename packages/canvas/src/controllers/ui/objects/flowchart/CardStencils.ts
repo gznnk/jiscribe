@@ -1,7 +1,7 @@
 import { CardIcon } from "./CardIcon";
-import type { StencilPreset } from "../StencilPreset";
+import type { Stencil } from "../Stencil";
 
-export const CardStencilPresets: StencilPreset[] = [
+export const CardStencils: Stencil[] = [
 	{
 		id: "card",
 		objectType: "card",

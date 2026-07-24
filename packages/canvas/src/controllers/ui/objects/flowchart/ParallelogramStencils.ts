@@ -1,7 +1,7 @@
 import { ParallelogramIcon } from "./ParallelogramIcon";
-import type { StencilPreset } from "../StencilPreset";
+import type { Stencil } from "../Stencil";
 
-export const ParallelogramStencilPresets: StencilPreset[] = [
+export const ParallelogramStencils: Stencil[] = [
 	{
 		id: "parallelogram",
 		objectType: "parallelogram",

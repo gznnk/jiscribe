@@ -16,14 +16,14 @@ export type StencilIconProps = {
  * both variants of the rect type). Creation always goes through the
  * objectType's `ObjectFactory`, passing defaultOverrides.
  */
-export type StencilPreset = {
+export type Stencil = {
 	/** Stable identifier; the lookup key for label overrides and toolbar layout. */
 	id: string;
 	/** Object type this preset creates through (presets are not 1:1 with types). */
 	objectType: ObjectType;
 	/**
 	 * Display label: a plain string or a per-locale dictionary.
-	 * Resolved via `messages.stencilPresetLabels[id]` (host override) → this label.
+	 * Resolved via `messages.stencilLabels[id]` (host override) → this label.
 	 */
 	label: string | LocaleMessages<string>;
 	/** Icon component rendered in the palette. */

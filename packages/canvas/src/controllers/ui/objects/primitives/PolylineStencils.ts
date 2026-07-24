@@ -1,7 +1,7 @@
 import { PolylineIcon } from "./PolylineIcon";
-import type { StencilPreset } from "../StencilPreset";
+import type { Stencil } from "../Stencil";
 
-export const PolylineStencilPresets: StencilPreset[] = [
+export const PolylineStencils: Stencil[] = [
 	{
 		id: "polyline",
 		objectType: "polyline",

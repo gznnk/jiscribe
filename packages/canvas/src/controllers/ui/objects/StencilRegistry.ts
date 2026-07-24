@@ -1,28 +1,28 @@
-import type { StencilPreset } from "./StencilPreset";
+import type { Stencil } from "./Stencil";
 
 /**
- * Registry that manages the stencil presets shown in the StencilLibrary (toolbar).
+ * Registry that manages the stencils shown in the StencilLibrary (toolbar).
  * Registration happens via `registerObject()` in `initializeObjectRegistry()`.
  *
  * It answers only "what exists"; display order (top level and within category
  * flyouts) is owned by the toolbar layout, which resolves presets by id via `get`.
  * Presets have a 1:N relationship with object types (e.g. rect has "rect" and "rect-markdown").
  */
-export class StencilPresetRegistry {
-	private readonly ordered: StencilPreset[] = [];
-	private readonly byId = new Map<string, StencilPreset>();
+export class StencilRegistry {
+	private readonly ordered: Stencil[] = [];
+	private readonly byId = new Map<string, Stencil>();
 
-	register(preset: StencilPreset): void {
+	register(preset: Stencil): void {
 		this.ordered.push(preset);
 		this.byId.set(preset.id, preset);
 	}
 
 	/** All presets in registration order. */
-	all(): readonly StencilPreset[] {
+	all(): readonly Stencil[] {
 		return [...this.ordered];
 	}
 
-	get(id: string): StencilPreset | undefined {
+	get(id: string): Stencil | undefined {
 		return this.byId.get(id);
 	}
 
@@ -32,5 +32,5 @@ export class StencilPresetRegistry {
 	}
 }
 
-export const createStencilPresetRegistry = (): StencilPresetRegistry =>
-	new StencilPresetRegistry();
+export const createStencilRegistry = (): StencilRegistry =>
+	new StencilRegistry();

@@ -1,7 +1,7 @@
 import { ManualInputIcon } from "./ManualInputIcon";
-import type { StencilPreset } from "../StencilPreset";
+import type { Stencil } from "../Stencil";
 
-export const ManualInputStencilPresets: StencilPreset[] = [
+export const ManualInputStencils: Stencil[] = [
 	{
 		id: "manualInput",
 		objectType: "manualInput",

@@ -5,7 +5,7 @@ import type { CanvasState } from "../states/canvas/CanvasState";
 import type { DocSnapshot } from "../states/canvas/DocSnapshot";
 import type { Viewport } from "../states/canvas/Viewport";
 import type { ClipboardData } from "./commands/selection/ClipboardData";
-import type { StencilPreset } from "./ui/objects/StencilPreset";
+import type { Stencil } from "./ui/objects/Stencil";
 import type { ObjectState } from "../states/objects/base/ObjectState";
 import type { ConnectorState } from "../states/objects/connections/connector/ConnectorState";
 import type { GroupState } from "../states/objects/primitives/group/GroupState";
@@ -259,8 +259,8 @@ export type CanvasControllerState = CanvasState & {
 	 * While non-null it means a drag is in progress.
 	 */
 	stencilLibraryDrag: {
-		/** Stencil preset being dragged */
-		preset: StencilPreset;
+		/** Stencil being dragged */
+		preset: Stencil;
 		/** Ghost display position (SVG coordinates, snapped) */
 		ghostPosition: Point;
 		/** Half size of the ghost shape (cached at dragStart) */
@@ -276,8 +276,8 @@ export type CanvasControllerState = CanvasState & {
 	 * - preview is non-null: dragging (preview displayed)
 	 */
 	shapeDrawing: {
-		/** Stencil preset being drawn */
-		preset: StencilPreset;
+		/** Stencil being drawn */
+		preset: Stencil;
 		/** Preview rectangle during the drag (SVG coordinates). null before the drag starts */
 		preview: {
 			startX: number;

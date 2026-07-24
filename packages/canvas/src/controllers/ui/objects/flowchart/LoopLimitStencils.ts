@@ -1,7 +1,7 @@
 import { LoopLimitIcon } from "./LoopLimitIcon";
-import type { StencilPreset } from "../StencilPreset";
+import type { Stencil } from "../Stencil";
 
-export const LoopLimitStencilPresets: StencilPreset[] = [
+export const LoopLimitStencils: Stencil[] = [
 	{
 		id: "loopLimit",
 		objectType: "loopLimit",

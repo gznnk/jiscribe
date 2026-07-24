@@ -1,7 +1,7 @@
 import { ExtractIcon } from "./ExtractIcon";
-import type { StencilPreset } from "../StencilPreset";
+import type { Stencil } from "../Stencil";
 
-export const ExtractStencilPresets: StencilPreset[] = [
+export const ExtractStencils: Stencil[] = [
 	{
 		id: "extract",
 		objectType: "extract",
