@@ -5,7 +5,7 @@ import { createCommandState } from "./support/createCommandState";
 import { runCommand } from "./support/dispatch";
 import { twoRectsWithConnectorDoc } from "./support/fixtures";
 import { handlePaste } from "../../reducer/handlers/handlePaste";
-import { createTestRegistries } from "../../setup/createCanvasRegistries";
+import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import type { ClipboardData } from "../selection/ClipboardData";
 import { CopyCommand } from "../selection/CopyCommand";
 

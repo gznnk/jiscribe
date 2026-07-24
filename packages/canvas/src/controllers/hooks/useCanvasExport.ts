@@ -20,7 +20,7 @@ import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasAction } from "../reducer/CanvasActions";
-import type { CanvasRegistries } from "../setup";
+import type { CanvasRegistries } from "../registries";
 import type { NotifyError } from "./useErrorNotification";
 import type {
 	ExportImageFormat,

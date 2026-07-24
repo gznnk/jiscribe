@@ -1,6 +1,6 @@
 import { type RefObject, useLayoutEffect, useState } from "react";
 
-import { useCanvasViewportElementRef } from "../../../contexts/CanvasViewportElementRefContext";
+import { useCanvasViewportElementRef } from "../../../CanvasViewportElementRefContext";
 
 /** Minimum margin from the edges of the canvas area (px) */
 const VIEWPORT_MARGIN = 8;

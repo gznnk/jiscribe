@@ -2,8 +2,8 @@ import React, { memo } from "react";
 
 import { ghostifyPreviewState } from "./ghostifyPreviewState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { useCanvasRegistries } from "../../../contexts/CanvasRegistriesContext";
-import type { CanvasRegistries } from "../../../setup/CanvasRegistries";
+import type { CanvasRegistries } from "../../../registries/CanvasRegistries";
+import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 
 type DrawingPreviewOverlayProps = {
 	shapeDrawing: CanvasControllerState["shapeDrawing"];

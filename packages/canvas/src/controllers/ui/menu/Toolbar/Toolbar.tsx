@@ -9,8 +9,8 @@ import {
 	ToolbarIconButton,
 	ZoomReadout,
 } from "./ToolbarStyled";
-import { useCanvasRegistries } from "../../../contexts/CanvasRegistriesContext";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
+import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import { HelpIcon } from "../../icons/HelpIcon";
 import { ShortcutHelpModal } from "../../modal/ShortcutHelp/ShortcutHelpModal";
 import { StencilCategoryMenu } from "../StencilLibrary/StencilCategoryMenu";

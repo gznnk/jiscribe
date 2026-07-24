@@ -2,7 +2,7 @@ import type { CanvasDoc } from "../../../../schemas/canvas/CanvasDoc";
 import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { createInitialControllerState } from "../../../reducer/createInitialControllerState";
-import { createTestRegistries } from "../../../setup/createCanvasRegistries";
+import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 
 /**
  * commands 結合テスト用の CanvasControllerState を構築する。

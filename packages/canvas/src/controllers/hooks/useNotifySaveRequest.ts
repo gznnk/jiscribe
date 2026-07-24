@@ -4,7 +4,7 @@ import { useConstant } from "./useConstant";
 import type { CanvasDoc } from "../../schemas/canvas/CanvasDoc";
 import { resolveDocSnapshot } from "../../states/canvas/DocSnapshot";
 import type { CanvasControllerState } from "../CanvasTypes";
-import type { CanvasRegistries } from "../setup/CanvasRegistries";
+import type { CanvasRegistries } from "../registries/CanvasRegistries";
 import { createNonceDeliveryGuard } from "./support/createNonceDeliveryGuard";
 import { createSaveRequestScheduler } from "./support/createSaveRequestScheduler";
 import type { createSelfSaveNonceTracker } from "./support/createSelfSaveNonceTracker";

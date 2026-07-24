@@ -7,7 +7,7 @@ import type { ConnectorState } from "../../../states/objects/connections/connect
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../CanvasTypes";
 import { handlePaste } from "../../reducer/handlers/handlePaste";
-import { createTestRegistries } from "../../setup/createCanvasRegistries";
+import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { isClipboardData as isClipboardDataRaw } from "../selection/ClipboardData";
 
 const registries = createTestRegistries();

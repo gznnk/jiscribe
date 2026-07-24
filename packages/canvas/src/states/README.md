@@ -26,7 +26,7 @@ For the core design principles (Type Composition, Branded Types, ObjectFeatures)
 
 ## Registry initialization
 
-The registries under `registry/` (`ObjectMapperRegistry` / `ObjectStateValidatorRegistry`) are registered **all at once** by `registerObject()` in `controllers/setup/initializeObjectRegistry.ts`, together with the other registries such as presentations / gestures / menu. The State side has no dedicated initialization file (asymmetric with the `schemas` doc validators, which do have an init under `schemas/registry/` for lazy initialization at parse time).
+The registries under `registry/` (`ObjectMapperRegistry` / `ObjectStateValidatorRegistry`) are registered **all at once** by `registerObject()` in `controllers/registries/initializeObjectRegistry.ts`, together with the other registries such as presentations / gestures / menu. The State side has no dedicated initialization file (asymmetric with the `schemas` doc validators, which do have an init under `schemas/registry/` for lazy initialization at parse time).
 
 ## Usage Example
 

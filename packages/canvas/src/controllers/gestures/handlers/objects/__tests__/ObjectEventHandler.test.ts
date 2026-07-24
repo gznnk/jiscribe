@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { RectFeatures } from "../../../../../schemas/objects/primitives/rect/RectDoc";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
-import { createTestRegistries } from "../../../../setup/createCanvasRegistries";
+import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { ObjectEventHandler } from "../ObjectEventHandler";
 

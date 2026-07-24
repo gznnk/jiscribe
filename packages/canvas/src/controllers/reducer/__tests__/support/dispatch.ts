@@ -1,6 +1,6 @@
 import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { createTestRegistries } from "../../../setup/createCanvasRegistries";
+import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import type { CanvasAction } from "../../CanvasActions";
 import { createCanvasReducer } from "../../canvasReducer";
 

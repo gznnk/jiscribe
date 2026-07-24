@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { Viewport } from "../../../../states/canvas/Viewport";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { createTestRegistries } from "../../../setup/createCanvasRegistries";
+import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import { ResetZoomCommand } from "../ResetZoomCommand";
 
 const registries = createTestRegistries();

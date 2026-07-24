@@ -1,7 +1,7 @@
 import type { Point } from "@workspace/geometry";
 
 import type { CanvasControllerState } from "../../CanvasTypes";
-import type { ICanvasRegistries } from "../../setup/ICanvasRegistries";
+import type { ICanvasRegistries } from "../../registries/ICanvasRegistries";
 import { materializeObjects } from "../../utils/cowObjects";
 import { moveSelection } from "../../utils/moveSelection";
 import { updateAffectedGroupBounds } from "../../utils/updateAffectedGroupBounds";

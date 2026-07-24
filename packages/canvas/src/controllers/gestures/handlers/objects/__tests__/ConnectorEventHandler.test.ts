@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
-import { createTestRegistries } from "../../../../setup/createCanvasRegistries";
+import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { ConnectorEventHandler } from "../ConnectorEventHandler";
 

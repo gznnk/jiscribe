@@ -7,7 +7,7 @@ import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasAction } from "../reducer/CanvasActions";
 import { createCanvasReducer } from "../reducer/canvasReducer";
 import { createInitialControllerState } from "../reducer/createInitialControllerState";
-import type { CanvasRegistries } from "../setup/CanvasRegistries";
+import type { CanvasRegistries } from "../registries/CanvasRegistries";
 
 /**
  * Custom hook that sets up the canvas state-management reducer, including

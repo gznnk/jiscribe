@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
-import type { ICanvasRegistries } from "../../../../setup/ICanvasRegistries";
+import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
 import { SelectionControlRegistry } from "../../../../ui/controls/SelectionControlRegistry";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";

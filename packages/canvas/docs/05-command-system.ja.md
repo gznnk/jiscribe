@@ -45,7 +45,7 @@ type Command = {
 - `handleCommand`（`commands/handlers/handleCommand.ts`）… `get` → `canExecute` → `execute` を仲介
 - `useKeyboardShortcuts`（`hooks/`）… keydown を `findByShortcut` で解決して dispatch（入力フィールド上では無効化）
 - `CommandUtils`… プラットフォーム判定・`getPlatformShortcuts` / `formatShortcut`（`⌘A` ↔ `Ctrl+A`）
-- 登録は `setup/`（`initializeCommands`）でまとめて行う
+- 登録は `registries/`（`initializeCommands`）でまとめて行う
 
 ## カテゴリと収録コマンド
 

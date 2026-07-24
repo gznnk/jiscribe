@@ -9,7 +9,7 @@ import type { ConnectorState } from "../../../../../../states/objects/connection
 import { deepFreezeState } from "../../../../../__tests__/support/deepFreezeState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
 import { createInitialControllerState } from "../../../../../reducer/createInitialControllerState";
-import { createTestRegistries } from "../../../../../setup/createCanvasRegistries";
+import { createTestRegistries } from "../../../../../registries/createCanvasRegistries";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 import { ConnectionAnchorEventHandler } from "../ConnectionAnchorEventHandler";
 

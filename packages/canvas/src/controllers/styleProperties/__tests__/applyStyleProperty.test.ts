@@ -11,7 +11,7 @@ import type { ExtraStylePropertyDescriptor } from "../../../schemas/objects/type
 import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
-import { initializeStyleProperties } from "../../setup/initializeStyleProperties";
+import { initializeStyleProperties } from "../../registries/initializeStyleProperties";
 import { createStylePropertyRegistry } from "../StylePropertyRegistry";
 
 // A synthetic type with a flat (non-nested) extra property, standing in for a

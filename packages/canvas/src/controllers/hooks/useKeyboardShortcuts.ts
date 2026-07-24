@@ -2,7 +2,7 @@ import { type Dispatch, type RefObject, useEffect, useRef } from "react";
 
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { CanvasAction } from "../reducer/CanvasActions";
-import type { CanvasRegistries } from "../setup/CanvasRegistries";
+import type { CanvasRegistries } from "../registries/CanvasRegistries";
 
 export type UseKeyboardShortcutsParams = {
 	/**

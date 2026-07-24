@@ -13,13 +13,13 @@ import {
 	formatShortcutTokens,
 	getPlatformShortcuts,
 } from "../../../commands/CommandUtils";
-import { useCanvasRegistries } from "../../../contexts/CanvasRegistriesContext";
 import {
 	getCommandLabel,
 	type CanvasMessages,
 	type CanvasMessageStrings,
 } from "../../../messages/CanvasMessages";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
+import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import { ModalShell } from "../ModalShell";
 
 /** Display order of categories */

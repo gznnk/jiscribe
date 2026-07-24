@@ -7,7 +7,7 @@ import {
 	type DocSnapshot,
 } from "../../../../states/canvas/DocSnapshot";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { createTestRegistries } from "../../../setup/createCanvasRegistries";
+import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import { RedoCommand } from "../RedoCommand";
 
 const registries = createTestRegistries();

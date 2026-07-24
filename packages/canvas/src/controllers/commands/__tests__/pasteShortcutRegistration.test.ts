@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createCommandState } from "./support/createCommandState";
 import { twoRectsWithConnectorDoc } from "./support/fixtures";
-import { createTestRegistries } from "../../setup/createCanvasRegistries";
+import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { handleCommand } from "../handlers/handleCommand";
 
 /** Pin getPlatform()'s detection via navigator.userAgent */

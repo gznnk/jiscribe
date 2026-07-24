@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 
 import type { CanvasControllerState } from "../../../../CanvasTypes";
-import { useCanvasRegistries } from "../../../../contexts/CanvasRegistriesContext";
+import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
 import { collectDescendantIds } from "../../../../utils/collectDescendantIds";
 import type { ObjectMenuRegistry } from "../ObjectMenuRegistry";
 import type { ObjectMenuItem, ObjectMenuSection } from "../ObjectMenuTypes";

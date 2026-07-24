@@ -4,8 +4,8 @@ import type { StyleValueType } from "../../../schemas/objects/types/ExtraStylePr
 import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { CanvasControllerState } from "../../CanvasTypes";
-import { createTestRegistries } from "../../setup/createCanvasRegistries";
-import { ALL_OBJECT_DEFINITIONS } from "../../setup/initializeObjectRegistry";
+import { createTestRegistries } from "../../registries/createCanvasRegistries";
+import { ALL_OBJECT_DEFINITIONS } from "../../registries/initializeObjectRegistry";
 import { FeatureGatedStyleProperty } from "../FeatureGatedStyleProperty";
 import { SYSTEM_STYLE_PROPERTIES } from "../systemStyleProperties";
 

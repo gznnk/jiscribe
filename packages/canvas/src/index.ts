@@ -78,11 +78,11 @@ export type {
 	CanvasCapabilities,
 	CanvasConfig,
 	CanvasRegistries,
-} from "./controllers/setup";
+} from "./controllers/registries";
 export {
 	createCanvasRegistries,
 	ALL_OBJECT_DEFINITIONS,
-} from "./controllers/setup";
+} from "./controllers/registries";
 
 // 図形定義の語彙（プラグイン作者向け、#144 Stage 1・src/plugin）。
 // プラグインは `ObjectTypeDefinition<TDoc, TState>` を注釈した宣言だけで済む

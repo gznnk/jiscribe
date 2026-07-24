@@ -26,7 +26,7 @@ import type {
 	CanvasControllerState,
 	SnapFeedback,
 } from "../../../../CanvasTypes";
-import type { ICanvasRegistries } from "../../../../setup/ICanvasRegistries";
+import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
 import { ControlStrategy } from "../../../registry/ControlStrategy";

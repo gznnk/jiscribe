@@ -1,6 +1,6 @@
 import { type RefObject, useLayoutEffect, useRef, useState } from "react";
 
-import { useCanvasViewportElementRef } from "../../../../contexts/CanvasViewportElementRefContext";
+import { useCanvasViewportElementRef } from "../../../../CanvasViewportElementRefContext";
 
 /**
  * Distance between the menu button and the submenu (px).

@@ -16,7 +16,7 @@ import { objectDocValidatorRegistry } from "./ObjectDocValidatorRegistry";
  * {@link import("../canvas/validators/parseCanvasText").parseCanvasText}, which
  * calls this idempotently (guarded by `objectDocValidatorRegistry.isEmpty()`) when
  * it needs to validate. The UI-side
- * {@link import("../../controllers/setup/initializeObjectRegistry").initializeObjectRegistry}
+ * {@link import("../../controllers/registries/initializeObjectRegistry").initializeObjectRegistry}
  * intentionally does NOT initialize this registry (see the comment there); doc
  * validators are a schema-layer concern needed only during parse-time validation.
  *

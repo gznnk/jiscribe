@@ -51,7 +51,7 @@ interface は意図的に 1 メソッドに絞っている。協力オブジェ�
 
 **システムプロパティ**（`styleProperties/systemStyleProperties.ts`）—
 `ObjectFeatures` フラグと 1:1 で結びつく閉じた集合。バンドル生成時に全キャンバスへ
-登録される（`setup/initializeStyleProperties`）:
+登録される（`registries/initializeStyleProperties`）:
 
 ```ts
 export const SYSTEM_STYLE_PROPERTIES: Record<string, StylePropertyHandler> = {

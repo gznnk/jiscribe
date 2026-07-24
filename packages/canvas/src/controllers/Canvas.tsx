@@ -8,6 +8,7 @@
 	useState,
 } from "react";
 
+import { CanvasProviders } from "./CanvasProviders";
 import {
 	CanvasRoot,
 	Container,
@@ -16,7 +17,6 @@ import {
 	ViewportOverlay,
 	ZoomScaledOverlay,
 } from "./CanvasStyled";
-import { CanvasProviders } from "./contexts/CanvasProviders";
 import { isGestureOptedOut } from "./gestures/recognizer/utils/isGestureOptedOut";
 import { useCanvasExport, EXPORT_FIT_PADDING } from "./hooks/useCanvasExport";
 import type {
@@ -43,8 +43,8 @@ import type { CanvasViewportHandle } from "./hooks/useViewportHandle";
 import { useViewportHandle } from "./hooks/useViewportHandle";
 import { resolveCanvasMessages } from "./messages/CanvasMessages";
 import type { CanvasMessages } from "./messages/CanvasMessages";
-import { createCanvasRegistries, defaultCanvasRegistries } from "./setup";
-import type { CanvasConfig } from "./setup";
+import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
+import type { CanvasConfig } from "./registries";
 import { CanvasView } from "../presentations/CanvasView";
 import type { CanvasTheme } from "../theme/CanvasTheme";
 import { buildThemeCssVars } from "../theme/themeCssVars";

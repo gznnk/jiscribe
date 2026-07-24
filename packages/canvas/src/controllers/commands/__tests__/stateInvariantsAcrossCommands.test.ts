@@ -10,7 +10,7 @@ import { isConnectorState } from "../../../states/objects/connections/connector/
 import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
 import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../CanvasTypes";
-import { createTestRegistries } from "../../setup/createCanvasRegistries";
+import { createTestRegistries } from "../../registries/createCanvasRegistries";
 
 const registries = createTestRegistries();
 

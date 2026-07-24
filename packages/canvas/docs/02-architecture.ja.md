@@ -34,7 +34,7 @@ packages/canvas/src/
 │   ├── commands/           # Command パターン（selection/arrange/arrow/connector/group/history/text/view）+ CommandRegistry
 │   ├── reducer/            # canvasReducer + CanvasActions
 │   ├── hooks/              # useCanvasReducer / useSyncExternalDoc など
-│   ├── setup/              # initializeObjectRegistry / initializeGestureHandlerRegistry / initializeCommands
+│   ├── registries/         # initializeObjectRegistry / initializeGestureHandlerRegistry / initializeCommands
 │   ├── ui/                 # 変形コントロール・メニュー・アイコンなど UI 制御（StencilRegistry / ObjectMenuRegistry を含む）
 │   └── utils/
 ├── presentations/          # 純粋な描画コンポーネント（layers / objects / defs）
@@ -88,7 +88,7 @@ State を Props として受け取り SVG を描画する純粋コンポーネ�
 
 ### canvas 単位のレジストリ（`CanvasConfig`）
 
-これらのレジストリは**モジュールシングルトンではない**。各 `<Canvas>` インスタンスが自前の**バンドル**（`CanvasRegistries`＝各レジストリクラスのインスタンス一式）を持ち、`controllers/setup/createCanvasRegistries(config?)` が生成する。これにより、同一ページ上の2つの canvas を異なる object type / command セットで動かせる（プラグイン的拡張・機能制限）。`config` 未指定時は共有のフルデフォルト（`defaultCanvasRegistries`）を再利用する。
+これらのレジストリは**モジュールシングルトンではない**。各 `<Canvas>` インスタンスが自前の**バンドル**（`CanvasRegistries`＝各レジストリクラスのインスタンス一式）を持ち、`controllers/registries/createCanvasRegistries(config?)` が生成する。これにより、同一ページ上の2つの canvas を異なる object type / command セットで動かせる（プラグイン的拡張・機能制限）。`config` 未指定時は共有のフルデフォルト（`defaultCanvasRegistries`）を再利用する。
 
 ```ts
 <Canvas initialConfig={{ objectTypes: ["rect", "ellipse"], commands: ["undo", "redo"] }} />
@@ -150,7 +150,7 @@ Registry パターンにより、形状追加は「6 ステップ + 登録」で
 4. **Controller**: `controllers/gestures/handlers/objects/primitives/<Shape>Controller.ts`（`moveByDelta` / `transformByGroup`）
 5. **Component**: `presentations/objects/primitives/<Shape>/<Shape>.tsx`
 6. **登録**: 登録先レジストリが分かれているため、**2 箇所**に登録する。
-   - `controllers/setup/initializeObjectRegistry.ts` — Mapper / Component / behavior / State バリデータ / menu（UI 側レジストリ群）
+   - `controllers/registries/initializeObjectRegistry.ts` — Mapper / Component / behavior / State バリデータ / menu（UI 側レジストリ群）
    - `schemas/registry/initializeObjectDocValidatorRegistry.ts` — Doc バリデータ。**ここを忘れない**こと。これは `parseCanvasText` が遅延初期化する独立した schema 層レジストリなので、ここに登録し忘れると UI では動くのにパーサーが未知の型として reject する。
 
 既存ロジックの分岐を増やさず、登録だけで形状横断処理（変形・スナップ・描画）に乗る。

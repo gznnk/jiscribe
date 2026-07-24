@@ -1,7 +1,7 @@
 import type { Prettify } from "@workspace/utility-types";
 
 import type { CanvasControllerState } from "../../CanvasTypes";
-import type { ICanvasRegistries } from "../../setup/ICanvasRegistries";
+import type { ICanvasRegistries } from "../../registries/ICanvasRegistries";
 import type {
 	Gesture,
 	GestureType,

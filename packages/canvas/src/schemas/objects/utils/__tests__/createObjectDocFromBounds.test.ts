@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import { createTestRegistries } from "../../../../controllers/setup/createCanvasRegistries";
+import { createTestRegistries } from "../../../../controllers/registries/createCanvasRegistries";
 import { createObjectDocFromBounds } from "../createObjectDocFromBounds";
 
 const registries = createTestRegistries();

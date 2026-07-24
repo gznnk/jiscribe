@@ -1,7 +1,7 @@
 import type { CanvasControllerState } from "../CanvasTypes";
 import type { Command } from "../commands/CommandTypes";
-import { useCanvasRegistries } from "../contexts/CanvasRegistriesContext";
-import type { CanvasRegistries } from "../setup/CanvasRegistries";
+import type { CanvasRegistries } from "../registries/CanvasRegistries";
+import { useCanvasRegistries } from "../registries/CanvasRegistriesContext";
 
 /** A resolved command paired with whether it can currently run. */
 export type ResolvedCommandState = {

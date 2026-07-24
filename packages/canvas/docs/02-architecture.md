@@ -34,7 +34,7 @@ packages/canvas/src/
 │   ├── commands/           # Command pattern (selection/arrange/arrow/connector/group/history/text/view) + CommandRegistry
 │   ├── reducer/            # canvasReducer + CanvasActions
 │   ├── hooks/              # useCanvasReducer / useSyncExternalDoc, etc.
-│   ├── setup/              # initializeObjectRegistry / initializeGestureHandlerRegistry / initializeCommands
+│   ├── registries/         # initializeObjectRegistry / initializeGestureHandlerRegistry / initializeCommands
 │   ├── ui/                 # UI control (transform controls, menus, icons) incl. StencilRegistry / ObjectMenuRegistry
 │   └── utils/
 ├── presentations/          # pure rendering components (layers / objects / defs)
@@ -88,7 +88,7 @@ Because each registry keys off the shape type (`"rect"`, `"ellipse"`, …), cros
 
 ### Per-canvas registries (`CanvasConfig`)
 
-These registries are **not module-level singletons**. Each `<Canvas>` instance owns its own **bundle** (`CanvasRegistries` — one instance of each registry class), built by `controllers/setup/createCanvasRegistries(config?)`. This lets two canvases on the same page run with different object-type / command sets (plugin-style extensibility, feature-gating). Passing no `config` reuses a shared full default (`defaultCanvasRegistries`).
+These registries are **not module-level singletons**. Each `<Canvas>` instance owns its own **bundle** (`CanvasRegistries` — one instance of each registry class), built by `controllers/registries/createCanvasRegistries(config?)`. This lets two canvases on the same page run with different object-type / command sets (plugin-style extensibility, feature-gating). Passing no `config` reuses a shared full default (`defaultCanvasRegistries`).
 
 ```ts
 <Canvas initialConfig={{ objectTypes: ["rect", "ellipse"], commands: ["undo", "redo"] }} />
@@ -101,7 +101,7 @@ The bundle reaches consumers by two paths (#165, Option B):
 - **React tree** (components / hooks) → `CanvasRegistriesContext` + `useCanvasRegistries()`. The presentation-layer `ObjectComponentRegistryContext` distributes just the component registry to renderers (presentation must not import the controllers-layer bundle type).
 - **Pure reducer/handler/util tree** (cannot read React context) → the bundle is **not** stored on `CanvasControllerState` (it is a dependency, not state). `createCanvasReducer(registries)` closes over it and threads it to each handler/command as an explicit `registries` argument (`handleGesture(state, gesture, registries)`, `command.execute(state, registries)`, …). Leaf utils without `state` receive the specific sub-registry as an argument.
 
-`controllers/setup/initializeObjectRegistry(registries)` / `initializeGestureHandlerRegistry(registries)` / `initializeCommands(registries, commandIds?)` populate a **given** bundle; `createCanvasRegistries` wires them together (all object types by default, or the `config` subset). The **exception** is `objectDocValidatorRegistry`, which stays a schema-layer **global** singleton: it is used only during parse-time validation at the input boundary (before a `<Canvas>` exists), so `parseCanvasText` initializes it lazily and the parser-only entry pulls in no UI dependency — see [Data Model](./03-data-model-and-persistence.md).
+`controllers/registries/initializeObjectRegistry(registries)` / `initializeGestureHandlerRegistry(registries)` / `initializeCommands(registries, commandIds?)` populate a **given** bundle; `createCanvasRegistries` wires them together (all object types by default, or the `config` subset). The **exception** is `objectDocValidatorRegistry`, which stays a schema-layer **global** singleton: it is used only during parse-time validation at the input boundary (before a `<Canvas>` exists), so `parseCanvasText` initializes it lazily and the parser-only entry pulls in no UI dependency — see [Data Model](./03-data-model-and-persistence.md).
 
 > **Semantic caveat**: when `config.objectTypes` restricts the enabled types, the caller must only pass docs whose object types remain enabled. A doc containing a disabled type makes `canvasToState` throw `"Mapper not found"` — consistent with the "caller passes a valid, consistent doc" contract ([design philosophy](./01-design-philosophy.md) principle 4). The default config (all types) is backward compatible.
 
@@ -151,7 +151,7 @@ graph TD
     Plugin --> SchemasTypes
 ```
 
-**On `plugin` (the extension seam)**: `plugin/` holds the declarative vocabulary a shape/plugin author writes — `ObjectTypeDefinition<TDoc, TState>`, `defineObject`, `CanvasPlugin`. One definition **aggregates the type contract of every layer** (mapper/state from `states`, doc/features/factory from `schemas`, `ObjectBehaviorEntry` from `gestures/registry`, menu/controls/`Stencil` from `ui`, component/textRegion/outline contracts from `presentations`), so `plugin` depends on all four layers. Conversely `controllers/setup` depends on `plugin` to build the built-in record (`defineObject`) and apply it (`applyObjectDefinition` → the registries). At the subgraph level this is a **`controllers ⇄ plugin` mutual reference** — the arrows above cross the Controllers boundary in both directions.
+**On `plugin` (the extension seam)**: `plugin/` holds the declarative vocabulary a shape/plugin author writes — `ObjectTypeDefinition<TDoc, TState>`, `defineObject`, `CanvasPlugin`. One definition **aggregates the type contract of every layer** (mapper/state from `states`, doc/features/factory from `schemas`, `ObjectBehaviorEntry` from `gestures/registry`, menu/controls/`Stencil` from `ui`, component/textRegion/outline contracts from `presentations`), so `plugin` depends on all four layers. Conversely `controllers/registries` depends on `plugin` to build the built-in record (`defineObject`) and apply it (`applyObjectDefinition` → the registries). At the subgraph level this is a **`controllers ⇄ plugin` mutual reference** — the arrows above cross the Controllers boundary in both directions.
 
 It is deliberately **not** a concrete import cycle: `plugin` pulls only leaf _type_ modules (`ObjectBehaviorTypes` / `SelectionControlTypes` / `ObjectMenuTypes` / `Stencil`), while the file that consumes `plugin` is `setup/initializeObjectRegistry` — a different file that none of those leaf modules import back. So madge `dep:circle` stays green even though the folders reference each other. Keeping `applyObjectDefinition` (the runtime wiring) in `setup` rather than `plugin` is what preserves this: `plugin` never imports the concrete registries.
 
@@ -167,7 +167,7 @@ Thanks to the Registry pattern, adding a shape is completed in "6 steps + regist
 4. **Controller**: `controllers/gestures/handlers/objects/primitives/<Shape>Controller.ts` (`moveByDelta` / `transformByGroup`)
 5. **Component**: `presentations/objects/primitives/<Shape>/<Shape>.tsx`
 6. **Registration**: Register it in **both** setup paths, because they populate different registry sets:
-   - `controllers/setup/initializeObjectRegistry.ts` — mapper / component / behavior / state validator / menu (the UI-side registries)
+   - `controllers/registries/initializeObjectRegistry.ts` — mapper / component / behavior / state validator / menu (the UI-side registries)
    - `schemas/registry/initializeObjectDocValidatorRegistry.ts` — the Doc validator. **Do not forget this one**: it is a separate, schema-layer registry populated lazily by `parseCanvasText`, so a shape missing here is rejected by the parser as an unknown type even though the UI works.
 
 Without adding branches to existing logic, the shape joins cross-shape processing (transform, snap, rendering) simply by being registered.

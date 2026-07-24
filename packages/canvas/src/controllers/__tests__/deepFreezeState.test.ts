@@ -8,7 +8,7 @@ import {
 } from "../../states/canvas/DocSnapshot";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import { createInitialControllerState } from "../reducer/createInitialControllerState";
-import { createTestRegistries } from "../setup/createCanvasRegistries";
+import { createTestRegistries } from "../registries/createCanvasRegistries";
 
 const registries = createTestRegistries();
 

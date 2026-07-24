@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { CanvasDoc } from "../../../schemas/canvas/CanvasDoc";
 import type { RectDoc } from "../../../schemas/objects/primitives/rect/RectDoc";
 import { canvasToState } from "../../../states/canvas/CanvasMapper";
-import { createTestRegistries } from "../../setup/createCanvasRegistries";
+import { createTestRegistries } from "../../registries/createCanvasRegistries";
 import { EXPORT_FIT_PADDING, resolveExportOptions } from "../useCanvasExport";
 
 /**
