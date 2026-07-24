@@ -142,6 +142,28 @@ describe("createCanvasRegistries", () => {
 			]);
 		});
 
+		it("throws when a definition declares stencilPresets but no factory", () => {
+			const brokenPlugin: CanvasPlugin = {
+				id: "broken-plugin",
+				objects: {
+					widget: defineObject({
+						...buildFakeDefinition("widget"),
+						stencilPresets: [
+							{
+								id: "widget",
+								objectType: "widget",
+								label: "Widget",
+								icon: () => null,
+							},
+						],
+					}),
+				},
+			};
+			expect(() =>
+				createCanvasRegistries({ plugins: [brokenPlugin] }),
+			).toThrow(/"widget".*stencilPresets.*factory/);
+		});
+
 		it("throws when a plugin's object type collides with a built-in", () => {
 			const rectPlugin: CanvasPlugin = {
 				id: "rect-plugin",

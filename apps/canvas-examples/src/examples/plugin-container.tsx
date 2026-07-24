@@ -142,7 +142,7 @@ const pluginContainerDoc = buildPluginContainerDoc();
 /**
  * プラグイン経路の実証例: container ヘッダーをドラッグして中の rect / ellipse が
  * 一緒に動く（move-together）ことを確認できる。動けば mapper・component・behavior・
- * stencilLibrary の登録一式がプラグイン経由で成立している証拠になる。
+ * factory / stencilPresets の登録一式がプラグイン経由で成立している証拠になる。
  */
 export function PluginContainerExample() {
 	return (

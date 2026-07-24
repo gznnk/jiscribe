@@ -94,7 +94,6 @@ export type {
 	CanvasPlugin,
 	ObjectTypeDefinition,
 	AnyObjectTypeDefinition,
-	StencilLibraryRegistration,
 } from "./plugin";
 export { ObjectTypes } from "./schemas/objects/types/ObjectType";
 export type { ObjectType } from "./schemas/objects/types/ObjectType";

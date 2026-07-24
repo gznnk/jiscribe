@@ -415,10 +415,8 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			component: Rect,
 			behavior: createFrameBehavior<RectState>(),
 			stateValidator: isValidRectState,
-			stencilLibrary: {
-				factory: RectObjectFactory,
-				presets: RectStencilPresets,
-			},
+			factory: RectObjectFactory,
+			stencilPresets: RectStencilPresets,
 		}),
 
 		ellipse: defineObject({
@@ -428,10 +426,8 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			textRegion: calcEllipseTextRegion,
 			behavior: createFrameBehavior<EllipseState>(),
 			stateValidator: isValidEllipseState,
-			stencilLibrary: {
-				factory: EllipseObjectFactory,
-				presets: EllipseStencilPresets,
-			},
+			factory: EllipseObjectFactory,
+			stencilPresets: EllipseStencilPresets,
 		}),
 
 		diamond: defineObject({
@@ -442,10 +438,8 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: diamondOutline,
 			behavior: createFrameBehavior<DiamondState>(),
 			stateValidator: isValidDiamondState,
-			stencilLibrary: {
-				factory: DiamondObjectFactory,
-				presets: DiamondStencilPresets,
-			},
+			factory: DiamondObjectFactory,
+			stencilPresets: DiamondStencilPresets,
 		}),
 
 		stadium: defineObject({
@@ -456,10 +450,8 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: stadiumOutline,
 			behavior: createFrameBehavior<StadiumState>(),
 			stateValidator: isValidStadiumState,
-			stencilLibrary: {
-				factory: StadiumObjectFactory,
-				presets: StadiumStencilPresets,
-			},
+			factory: StadiumObjectFactory,
+			stencilPresets: StadiumStencilPresets,
 		}),
 
 		parallelogram: defineObject({
@@ -470,10 +462,8 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: parallelogramOutline,
 			behavior: createFrameBehavior<ParallelogramState>(),
 			stateValidator: isValidParallelogramState,
-			stencilLibrary: {
-				factory: ParallelogramObjectFactory,
-				presets: ParallelogramStencilPresets,
-			},
+			factory: ParallelogramObjectFactory,
+			stencilPresets: ParallelogramStencilPresets,
 		}),
 
 		hexagon: defineObject({
@@ -484,10 +474,8 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: hexagonOutline,
 			behavior: createFrameBehavior<HexagonState>(),
 			stateValidator: isValidHexagonState,
-			stencilLibrary: {
-				factory: HexagonObjectFactory,
-				presets: HexagonStencilPresets,
-			},
+			factory: HexagonObjectFactory,
+			stencilPresets: HexagonStencilPresets,
 		}),
 
 		cloud: defineObject({
@@ -498,10 +486,8 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: cloudOutline,
 			behavior: createFrameBehavior<CloudState>(),
 			stateValidator: isValidCloudState,
-			stencilLibrary: {
-				factory: CloudObjectFactory,
-				presets: CloudStencilPresets,
-			},
+			factory: CloudObjectFactory,
+			stencilPresets: CloudStencilPresets,
 		}),
 
 		document: defineObject({
@@ -512,10 +498,8 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: documentOutline,
 			behavior: createFrameBehavior<DocumentState>(),
 			stateValidator: isValidDocumentState,
-			stencilLibrary: {
-				factory: DocumentObjectFactory,
-				presets: DocumentStencilPresets,
-			},
+			factory: DocumentObjectFactory,
+			stencilPresets: DocumentStencilPresets,
 		}),
 
 		multiDocument: defineObject({
@@ -526,10 +510,8 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: multiDocumentOutline,
 			behavior: createFrameBehavior<MultiDocumentState>(),
 			stateValidator: isValidMultiDocumentState,
-			stencilLibrary: {
-				factory: MultiDocumentObjectFactory,
-				presets: MultiDocumentStencilPresets,
-			},
+			factory: MultiDocumentObjectFactory,
+			stencilPresets: MultiDocumentStencilPresets,
 		}),
 
 		actor: defineObject({
@@ -539,10 +521,8 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			textRegion: calcActorTextRegion,
 			behavior: createFrameBehavior<ActorState>(),
 			stateValidator: isValidActorState,
-			stencilLibrary: {
-				factory: ActorObjectFactory,
-				presets: ActorStencilPresets,
-			},
+			factory: ActorObjectFactory,
+			stencilPresets: ActorStencilPresets,
 		}),
 
 		callout: defineObject({
@@ -559,10 +539,8 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					handler: new TailTipControlHandler(),
 				},
 			],
-			stencilLibrary: {
-				factory: CalloutObjectFactory,
-				presets: CalloutStencilPresets,
-			},
+			factory: CalloutObjectFactory,
+			stencilPresets: CalloutStencilPresets,
 		}),
 
 		db: defineObject({
@@ -573,10 +551,8 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: dbOutline,
 			behavior: createFrameBehavior<DbState>(),
 			stateValidator: isValidDbState,
-			stencilLibrary: {
-				factory: DbObjectFactory,
-				presets: DbStencilPresets,
-			},
+			factory: DbObjectFactory,
+			stencilPresets: DbStencilPresets,
 		}),
 
 		storedData: defineObject({
@@ -587,10 +563,8 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: storedDataOutline,
 			behavior: createFrameBehavior<StoredDataState>(),
 			stateValidator: isValidStoredDataState,
-			stencilLibrary: {
-				factory: StoredDataObjectFactory,
-				presets: StoredDataStencilPresets,
-			},
+			factory: StoredDataObjectFactory,
+			stencilPresets: StoredDataStencilPresets,
 		}),
 
 		subroutine: defineObject({
@@ -600,10 +574,8 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			textRegion: calcSubroutineTextRegion,
 			behavior: createFrameBehavior<SubroutineState>(),
 			stateValidator: isValidSubroutineState,
-			stencilLibrary: {
-				factory: SubroutineObjectFactory,
-				presets: SubroutineStencilPresets,
-			},
+			factory: SubroutineObjectFactory,
+			stencilPresets: SubroutineStencilPresets,
 		}),
 
 		trapezoid: defineObject({
@@ -614,10 +586,8 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: trapezoidOutline,
 			behavior: createFrameBehavior<TrapezoidState>(),
 			stateValidator: isValidTrapezoidState,
-			stencilLibrary: {
-				factory: TrapezoidObjectFactory,
-				presets: TrapezoidStencilPresets,
-			},
+			factory: TrapezoidObjectFactory,
+			stencilPresets: TrapezoidStencilPresets,
 		}),
 
 		manualInput: defineObject({
@@ -628,10 +598,8 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: manualInputOutline,
 			behavior: createFrameBehavior<ManualInputState>(),
 			stateValidator: isValidManualInputState,
-			stencilLibrary: {
-				factory: ManualInputObjectFactory,
-				presets: ManualInputStencilPresets,
-			},
+			factory: ManualInputObjectFactory,
+			stencilPresets: ManualInputStencilPresets,
 		}),
 
 		card: defineObject({
@@ -642,10 +610,8 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: cardOutline,
 			behavior: createFrameBehavior<CardState>(),
 			stateValidator: isValidCardState,
-			stencilLibrary: {
-				factory: CardObjectFactory,
-				presets: CardStencilPresets,
-			},
+			factory: CardObjectFactory,
+			stencilPresets: CardStencilPresets,
 		}),
 
 		delay: defineObject({
@@ -656,10 +622,8 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: delayOutline,
 			behavior: createFrameBehavior<DelayState>(),
 			stateValidator: isValidDelayState,
-			stencilLibrary: {
-				factory: DelayObjectFactory,
-				presets: DelayStencilPresets,
-			},
+			factory: DelayObjectFactory,
+			stencilPresets: DelayStencilPresets,
 		}),
 
 		loopLimit: defineObject({
@@ -670,10 +634,8 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: loopLimitOutline,
 			behavior: createFrameBehavior<LoopLimitState>(),
 			stateValidator: isValidLoopLimitState,
-			stencilLibrary: {
-				factory: LoopLimitObjectFactory,
-				presets: LoopLimitStencilPresets,
-			},
+			factory: LoopLimitObjectFactory,
+			stencilPresets: LoopLimitStencilPresets,
 		}),
 
 		display: defineObject({
@@ -684,10 +646,8 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: displayOutline,
 			behavior: createFrameBehavior<DisplayState>(),
 			stateValidator: isValidDisplayState,
-			stencilLibrary: {
-				factory: DisplayObjectFactory,
-				presets: DisplayStencilPresets,
-			},
+			factory: DisplayObjectFactory,
+			stencilPresets: DisplayStencilPresets,
 		}),
 
 		extract: defineObject({
@@ -697,10 +657,8 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: extractOutline,
 			behavior: createFrameBehavior<ExtractState>(),
 			stateValidator: isValidExtractState,
-			stencilLibrary: {
-				factory: ExtractObjectFactory,
-				presets: ExtractStencilPresets,
-			},
+			factory: ExtractObjectFactory,
+			stencilPresets: ExtractStencilPresets,
 		}),
 
 		cross: defineObject({
@@ -710,10 +668,8 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: crossOutline,
 			behavior: createFrameBehavior<CrossState>(),
 			stateValidator: isValidCrossState,
-			stencilLibrary: {
-				factory: CrossObjectFactory,
-				presets: CrossStencilPresets,
-			},
+			factory: CrossObjectFactory,
+			stencilPresets: CrossStencilPresets,
 		}),
 
 		offPageConnector: defineObject({
@@ -727,10 +683,8 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: offPageConnectorOutline,
 			behavior: createFrameBehavior<OffPageConnectorState>(),
 			stateValidator: isValidOffPageConnectorState,
-			stencilLibrary: {
-				factory: OffPageConnectorObjectFactory,
-				presets: OffPageConnectorStencilPresets,
-			},
+			factory: OffPageConnectorObjectFactory,
+			stencilPresets: OffPageConnectorStencilPresets,
 		}),
 
 		group: defineObject({
@@ -755,10 +709,8 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				rotateByGroup: polygonRotateByGroup,
 			},
 			stateValidator: isValidPolygonState,
-			stencilLibrary: {
-				factory: PolygonObjectFactory,
-				presets: PolygonStencilPresets,
-			},
+			factory: PolygonObjectFactory,
+			stencilPresets: PolygonStencilPresets,
 		}),
 
 		polyline: defineObject({
@@ -771,10 +723,8 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				rotateByGroup: polylineRotateByGroup,
 			},
 			stateValidator: isValidPolylineState,
-			stencilLibrary: {
-				factory: PolylineObjectFactory,
-				presets: PolylineStencilPresets,
-			},
+			factory: PolylineObjectFactory,
+			stencilPresets: PolylineStencilPresets,
 		}),
 
 		connector: defineObject({
@@ -869,14 +819,12 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				},
 			],
 			stateValidator: isValidStickyState,
-			stencilLibrary: {
-				factory: StickyObjectFactory,
-				presets: StickyStencilPresets,
-			},
+			factory: StickyObjectFactory,
+			stencilPresets: StickyStencilPresets,
 		}),
 
 		// SVG is not created from the StencilLibrary (only added via AI / direct .jis.json authoring).
-		// Therefore stencilLibrary (factory / preview / presets) is not registered.
+		// Therefore factory / stencilPresets are not registered.
 		svg: defineObject({
 			mapper: { toDoc: svgToDoc, toState: svgToState },
 			features: SvgFeatures,
@@ -889,7 +837,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 /**
  * Registers a single object type described by `definition` across all registries
  * in the given bundle (mapper, component, text region, behavior, state validator,
- * menu), and optionally its StencilLibrary capabilities.
+ * menu), and optionally its factory / stencil presets.
  */
 export const applyObjectDefinition = (
 	registries: CanvasRegistries,
@@ -924,11 +872,14 @@ export const applyObjectDefinition = (
 		);
 	}
 
-	const stencilLibrary = definition.stencilLibrary;
-	if (stencilLibrary?.factory) {
-		registries.objectFactory.register(type, stencilLibrary.factory);
+	if (definition.factory) {
+		registries.objectFactory.register(type, definition.factory);
+	} else if (definition.stencilPresets) {
+		throw new Error(
+			`applyObjectDefinition: object type "${type}" declares stencilPresets but no factory (click-placement and drag-drawing both require a factory)`,
+		);
 	}
-	stencilLibrary?.presets?.forEach((preset) => {
+	definition.stencilPresets?.forEach((preset) => {
 		registries.stencilPreset.register(preset);
 	});
 };

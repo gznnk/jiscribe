@@ -15,21 +15,6 @@ import type { ObjectState } from "../states/objects/base/ObjectState";
 import type { ObjectStateValidator } from "../states/registry/ObjectStateValidatorRegistry";
 
 /**
- * Creation-related capabilities for the StencilLibrary (stencil palette).
- * Omitted for types not shown in the palette (group / connector).
- */
-export type StencilLibraryRegistration = {
-	/** Factory responsible for doc creation, dimensions, and bounds generation */
-	factory?: ObjectFactory;
-	/**
-	 * Presets this type contributes to the palette (multiple allowed per type).
-	 * Registration only makes them exist; where they show and in what order is
-	 * decided by `toolbar.layout` (a pinned entry, or a category entry's `presetIds`).
-	 */
-	presets?: StencilPreset[];
-};
-
-/**
  * The full description of a single object type, aggregating one entry from each
  * layer's contract (model / render / interaction / style / palette). Fields are
  * grouped in that order below; required first within each group.
@@ -55,6 +40,9 @@ export type ObjectTypeDefinition<
 
 	/** Type-guard that rejects untrusted State entering the canvas from outside (e.g. pasted clipboard data). */
 	stateValidator: ObjectStateValidator;
+
+	/** Doc creation, dimensions, and bounds generation. Required for any type with `stencilPresets`. */
+	factory?: ObjectFactory;
 
 	// --- Render (presentation) ---
 
@@ -89,8 +77,12 @@ export type ObjectTypeDefinition<
 
 	// --- Palette (StencilLibrary) ---
 
-	/** Stencil-palette capabilities: factory / presets. */
-	stencilLibrary?: StencilLibraryRegistration;
+	/**
+	 * Presets this type contributes to the palette (multiple allowed per type).
+	 * Registration only makes them exist; where they show and in what order is
+	 * decided by `toolbar.layout` (a pinned entry, or a category entry's `presetIds`).
+	 */
+	stencilPresets?: StencilPreset[];
 };
 
 /**

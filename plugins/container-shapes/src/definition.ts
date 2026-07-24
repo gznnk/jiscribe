@@ -63,8 +63,6 @@ export const containerDefinition: ObjectTypeDefinition<
 		},
 	],
 	stateValidator: isValidContainerState,
-	stencilLibrary: {
-		factory: ContainerObjectFactory,
-		presets: ContainerStencilPresets,
-	},
+	factory: ContainerObjectFactory,
+	stencilPresets: ContainerStencilPresets,
 };
