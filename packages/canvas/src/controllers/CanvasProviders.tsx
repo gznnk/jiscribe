@@ -1,14 +1,14 @@
 import type { ReactNode, RefObject } from "react";
 
-import { CanvasRegistriesContext } from "./CanvasRegistriesContext";
 import { CanvasViewportElementRefContext } from "./CanvasViewportElementRefContext";
-import { PresentationRegistriesProvider } from "../../presentations/objects/registry/PresentationRegistriesProvider";
-import type { CanvasTheme } from "../../theme/CanvasTheme";
-import { CanvasThemeContext } from "../../theme/CanvasThemeContext";
-import { CanvasLocaleContext } from "../messages/CanvasLocaleContext";
-import type { CanvasMessages } from "../messages/CanvasMessages";
-import { CanvasMessagesContext } from "../messages/CanvasMessagesContext";
-import type { CanvasRegistries } from "../setup";
+import { CanvasLocaleContext } from "./messages/CanvasLocaleContext";
+import type { CanvasMessages } from "./messages/CanvasMessages";
+import { CanvasMessagesContext } from "./messages/CanvasMessagesContext";
+import type { CanvasRegistries } from "./setup";
+import { CanvasRegistriesContext } from "./setup/CanvasRegistriesContext";
+import { PresentationRegistriesProvider } from "../presentations/objects/registry/PresentationRegistriesProvider";
+import type { CanvasTheme } from "../theme/CanvasTheme";
+import { CanvasThemeContext } from "../theme/CanvasThemeContext";
 
 type CanvasProvidersProps = {
 	theme: CanvasTheme;

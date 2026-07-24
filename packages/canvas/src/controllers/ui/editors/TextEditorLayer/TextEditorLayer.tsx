@@ -16,7 +16,7 @@ import {
 } from "../../../../states/objects/base/TextStyleState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { useCanvasRegistries } from "../../../contexts/CanvasRegistriesContext";
+import { useCanvasRegistries } from "../../../setup/CanvasRegistriesContext";
 import { ConnectorLabelEditor } from "../ConnectorLabelEditor";
 import { TextEditor } from "../TextEditor";
 

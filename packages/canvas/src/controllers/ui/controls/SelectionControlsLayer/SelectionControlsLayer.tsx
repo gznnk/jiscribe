@@ -1,7 +1,7 @@
 import { memo } from "react";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
-import { useCanvasRegistries } from "../../../contexts/CanvasRegistriesContext";
+import { useCanvasRegistries } from "../../../setup/CanvasRegistriesContext";
 
 type SelectionControlsLayerProps = {
 	selectedIds: string[];

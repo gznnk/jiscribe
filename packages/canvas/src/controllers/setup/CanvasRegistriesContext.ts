@@ -1,7 +1,7 @@
 import { createContext, useContext } from "react";
 
-import type { CanvasRegistries } from "../setup/CanvasRegistries";
-import { defaultCanvasRegistries } from "../setup/createCanvasRegistries";
+import type { CanvasRegistries } from "./CanvasRegistries";
+import { defaultCanvasRegistries } from "./createCanvasRegistries";
 
 /**
  * Context that distributes the per-canvas registry bundle to descendant

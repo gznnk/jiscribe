@@ -4,8 +4,8 @@ import React, { memo } from "react";
 import type { DocCreationDefaults } from "../../../../schemas/objects/types/DocCreationDefaults";
 import { createObjectDoc } from "../../../../schemas/objects/utils/createObjectDoc";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { useCanvasRegistries } from "../../../contexts/CanvasRegistriesContext";
 import type { CanvasRegistries } from "../../../setup/CanvasRegistries";
+import { useCanvasRegistries } from "../../../setup/CanvasRegistriesContext";
 import type { Stencil } from "../../objects/Stencil";
 
 type DragGhostProps = {

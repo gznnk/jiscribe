@@ -8,6 +8,7 @@
 	useState,
 } from "react";
 
+import { CanvasProviders } from "./CanvasProviders";
 import {
 	CanvasRoot,
 	Container,
@@ -16,7 +17,6 @@ import {
 	ViewportOverlay,
 	ZoomScaledOverlay,
 } from "./CanvasStyled";
-import { CanvasProviders } from "./contexts/CanvasProviders";
 import { isGestureOptedOut } from "./gestures/recognizer/utils/isGestureOptedOut";
 import { useCanvasExport, EXPORT_FIT_PADDING } from "./hooks/useCanvasExport";
 import type {
