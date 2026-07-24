@@ -17,7 +17,7 @@ import type { ContainerState } from "../state/ContainerState";
  * Rendered as a horizontal pill at the divider midpoint.
  *
  * data-kind="control" + data-id=<objectId> + data-part={part}
- * (part comes from HeaderHeightControlHandler via SelectionControlsLayer).
+ * (part comes from the selectionControls registration via SelectionControlsLayer).
  */
 const ContainerHeaderHeightControlComponent: React.FC<
 	SelectionControlProps<ContainerState>

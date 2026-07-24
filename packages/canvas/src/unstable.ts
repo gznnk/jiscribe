@@ -36,10 +36,9 @@ export { DEFAULT_FONT_FAMILY } from "./constants/defaultFontFamily";
 export { PRECISION } from "./constants/precision";
 
 // ---------------------------------------------------------------------------
-// Phase A: 型固有 selection control の基底(docs/05_extensibility/custom-controls-design.md)
+// Phase A: 型固有 selection control の部品(docs/05_extensibility/custom-controls-design.md)
 // ---------------------------------------------------------------------------
 
-export { SelectionControlHandler } from "./controllers/gestures/registry/SelectionControlHandler";
 export { ControlStrategy } from "./controllers/gestures/registry/ControlStrategy";
 
 export { SelectionControlPill } from "./controllers/ui/controls/SelectionControlPill";

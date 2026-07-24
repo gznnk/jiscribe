@@ -5,9 +5,7 @@ import type {
 import { describe, expect, it } from "vitest";
 
 import type { ContainerState } from "../../state/ContainerState";
-import { HeaderHeightControlHandler } from "../HeaderHeightControlHandler";
-
-const handler = new HeaderHeightControlHandler();
+import { handleContainerHeaderHeight } from "../handleContainerHeaderHeight";
 
 /** Container of 200x160 centered at (100, 100): top edge y=20, bottom edge y=180. */
 const makeContainer = (
@@ -60,26 +58,9 @@ const makeDragEvent = (
 const headerHeightOf = (state: CanvasControllerState): number | undefined =>
 	(state.objects["container-1"] as ContainerState).headerHeight;
 
-describe("HeaderHeightControlHandler", () => {
-	it("supports only its own selection-control part (common supports from the base)", () => {
-		expect(handler.part).toBe("selection:container:headerHeight");
-		expect(handler.supports(makeDragEvent({ x: 0, y: 0 }))).toBe(true);
-		expect(
-			handler.supports({
-				targetKind: "control",
-				targetPart: "resize:topLeft",
-			} as unknown as CanvasEvent),
-		).toBe(false);
-		expect(
-			handler.supports({
-				targetKind: "object",
-				targetPart: "selection:container:headerHeight",
-			} as unknown as CanvasEvent),
-		).toBe(false);
-	});
-
+describe("handleContainerHeaderHeight", () => {
 	it("derives headerHeight from the cursor's distance to the top edge", () => {
-		const next = handler.handle(
+		const next = handleContainerHeaderHeight(
 			makeDragState(makeContainer()),
 			makeDragEvent({ x: 100, y: 60 }),
 		);
@@ -87,7 +68,7 @@ describe("HeaderHeightControlHandler", () => {
 	});
 
 	it("clamps to the minimum header height", () => {
-		const next = handler.handle(
+		const next = handleContainerHeaderHeight(
 			makeDragState(makeContainer()),
 			makeDragEvent({ x: 100, y: 22 }),
 		);
@@ -95,7 +76,7 @@ describe("HeaderHeightControlHandler", () => {
 	});
 
 	it("clamps to the container height", () => {
-		const next = handler.handle(
+		const next = handleContainerHeaderHeight(
 			makeDragState(makeContainer()),
 			makeDragEvent({ x: 100, y: 500 }),
 		);
@@ -105,7 +86,7 @@ describe("HeaderHeightControlHandler", () => {
 	it("never persists below 1 even when the container height is sub-pixel", () => {
 		// height 0.5 -> the height-side clamp would give 0.5, which the doc
 		// validator (min 1) rejects; the persisted value floors at 1
-		const next = handler.handle(
+		const next = handleContainerHeaderHeight(
 			makeDragState(makeContainer({ height: 0.5 })),
 			makeDragEvent({ x: 100, y: 100 }),
 		);
@@ -115,7 +96,7 @@ describe("HeaderHeightControlHandler", () => {
 	it("maps the cursor through the inverse transform for rotated containers", () => {
 		// rotation=90: local (0, ly) maps to world (cx - ly, cy);
 		// cursor (140, 100) -> ly = -40 -> headerHeight = -40 + 160/2 = 40
-		const next = handler.handle(
+		const next = handleContainerHeaderHeight(
 			makeDragState(makeContainer({ rotation: 90 })),
 			makeDragEvent({ x: 140, y: 100 }),
 		);
@@ -124,13 +105,16 @@ describe("HeaderHeightControlHandler", () => {
 
 	it("does not mutate the input state (returns an updated copy)", () => {
 		const state = makeDragState(makeContainer());
-		const next = handler.handle(state, makeDragEvent({ x: 100, y: 60 }));
+		const next = handleContainerHeaderHeight(
+			state,
+			makeDragEvent({ x: 100, y: 60 }),
+		);
 		expect(headerHeightOf(state)).toBeUndefined();
 		expect(next).not.toBe(state);
 	});
 
 	it("dragEnd applies the update and disables edge scrolling", () => {
-		const next = handler.handle(
+		const next = handleContainerHeaderHeight(
 			makeDragState(makeContainer()),
 			makeDragEvent({ x: 100, y: 60 }, "dragEnd"),
 		);
@@ -145,7 +129,10 @@ describe("HeaderHeightControlHandler", () => {
 			type: "rect",
 		} as unknown as ContainerState;
 		const state = makeDragState(rectLike);
-		const next = handler.handle(state, makeDragEvent({ x: 100, y: 60 }));
+		const next = handleContainerHeaderHeight(
+			state,
+			makeDragEvent({ x: 100, y: 60 }),
+		);
 		expect(next).toBe(state);
 	});
 });

@@ -138,7 +138,6 @@ export type {
 	SelectionControlDefinition,
 	SelectionControlProps,
 } from "./controllers/ui/controls/SelectionControlTypes";
-export type { SelectionControlHandler } from "./controllers/gestures/registry/SelectionControlHandler";
 export type { ObjectTextRegionCalculator } from "./presentations/objects/registry/ObjectTextRegionRegistry";
 export type { ObjectOutlineCalculator } from "./presentations/objects/registry/ObjectOutlineRegistry";
 export type {

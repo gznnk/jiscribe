@@ -341,7 +341,7 @@ import {
 } from "../../states/objects/primitives/svg/SvgMapper";
 import type { SvgState } from "../../states/objects/primitives/svg/SvgState";
 import { isValidSvgState } from "../../states/objects/primitives/svg/validateSvgState";
-import { TailTipControlHandler } from "../gestures/handlers/controls/callout/TailTipControlHandler";
+import { handleCalloutTailTip } from "../gestures/handlers/controls/callout/handleCalloutTailTip";
 import { createFrameBehavior } from "../gestures/handlers/objects/base/FrameController";
 import {
 	moveByDelta as connectorMoveByDelta,
@@ -536,8 +536,9 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			behavior: createFrameBehavior<CalloutState>(),
 			selectionControls: [
 				{
+					name: "tailTip",
 					Component: CalloutTailTipControl,
-					handler: new TailTipControlHandler(),
+					handle: handleCalloutTailTip,
 				},
 			],
 			stencils: CalloutStencils,

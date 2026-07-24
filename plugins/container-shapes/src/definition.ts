@@ -2,7 +2,7 @@ import type { ObjectTypeDefinition } from "@workspace/canvas";
 import { createFrameBehavior } from "@workspace/canvas/unstable";
 
 import { ContainerHeaderHeightControl } from "./controls/ContainerHeaderHeightControl";
-import { HeaderHeightControlHandler } from "./controls/HeaderHeightControlHandler";
+import { handleContainerHeaderHeight } from "./controls/handleContainerHeaderHeight";
 import { HeaderColorMenu } from "./menu/HeaderColorMenu";
 import { calcContainerTextRegion } from "./presentation/calcContainerTextRegion";
 import { Container } from "./presentation/Container";
@@ -40,8 +40,9 @@ export const containerDefinition: ObjectTypeDefinition<
 	behavior: createFrameBehavior<ContainerState>(),
 	selectionControls: [
 		{
+			name: "headerHeight",
 			Component: ContainerHeaderHeightControl,
-			handler: new HeaderHeightControlHandler(),
+			handle: handleContainerHeaderHeight,
 		},
 	],
 	extraStyleProperties: ContainerExtraStyleProperties,

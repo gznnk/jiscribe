@@ -5,7 +5,6 @@ import type { ICanvasRegistries } from "../../../../setup/ICanvasRegistries";
 import { SelectionControlRegistry } from "../../../../ui/controls/SelectionControlRegistry";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
-import { SelectionControlHandler } from "../../../registry/SelectionControlHandler";
 import { ControlEventHandler } from "../ControlEventHandler";
 
 const registries = undefined as unknown as ICanvasRegistries;
@@ -41,24 +40,20 @@ class StaticMarkerStrategy extends ControlStrategy {
 	}
 }
 
-/** Selection control that marks the state (part: selection:container:headerHeight). */
-class SelectionMarkerHandler extends SelectionControlHandler {
-	constructor() {
-		super("container", "headerHeight");
-	}
-
-	handle(state: CanvasControllerState): CanvasControllerState {
-		return {
-			...state,
-			handledBy: "selection-control",
-		} as unknown as CanvasControllerState;
-	}
-}
-
 const makeSelectionControlRegistry = (): SelectionControlRegistry => {
 	const registry = new SelectionControlRegistry();
+	// Marks the state so the test can observe the route
+	// (part: selection:container:headerHeight).
 	registry.register("container", [
-		{ Component: () => null, handler: new SelectionMarkerHandler() },
+		{
+			name: "headerHeight",
+			Component: () => null,
+			handle: (state) =>
+				({
+					...state,
+					handledBy: "selection-control",
+				}) as unknown as CanvasControllerState,
+		},
 	]);
 	return registry;
 };

@@ -3,7 +3,7 @@
 // createFrame*Validator / resolveAutoColor / AUTO_COLOR / DEFAULT_FONT_FAMILY / PRECISION を
 // @workspace/canvas/unstable 経由で利用)。Phase A(custom-controls-design.md)で
 // selectionControls(ヘッダー高さコントロール)も同じく unstable 経由の
-// SelectionControlHandler / SelectionControlPill 等で移植済み。tier 3
+// SelectionControlPill 等で移植済み(handle はプレーン関数)。tier 3
 // (custom-menu-design.md)で ObjectMenu UI キット(ObjectMenuDropdownPanel / ObjectMenuColorPickerGrid /
 // useCanvasMessages 等)も unstable 経由で公開され、header-color メニューも移植済み。
 // containerDefinition は core の container 定義と同一構成(意図的除外ゼロ)。
@@ -23,7 +23,7 @@ export { calcContainerHeaderHeight } from "./presentation/calcContainerHeaderHei
 export { calcContainerTextRegion } from "./presentation/calcContainerTextRegion";
 
 export { ContainerHeaderHeightControl } from "./controls/ContainerHeaderHeightControl";
-export { HeaderHeightControlHandler } from "./controls/HeaderHeightControlHandler";
+export { handleContainerHeaderHeight } from "./controls/handleContainerHeaderHeight";
 
 export { ContainerStencils } from "./stencil/ContainerStencils";
 export { containerToolbarEntry } from "./stencil/ContainerToolbarEntry";

@@ -19,7 +19,7 @@ import type { SelectionControlProps } from "../SelectionControlTypes";
  * bounding-box edge the tail sits on, oriented along that edge.
  *
  * data-kind="control" + data-id=<objectId> + data-part={part}
- * (part comes from TailTipControlHandler via SelectionControlsLayer).
+ * (part comes from the selectionControls registration via SelectionControlsLayer).
  */
 const CalloutTailTipControlComponent: React.FC<
 	SelectionControlProps<CalloutState>
