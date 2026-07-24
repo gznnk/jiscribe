@@ -16,7 +16,7 @@ import type { ObjectStateValidator } from "../states/registry/ObjectStateValidat
 
 /**
  * The full description of a single object type, aggregating one entry from each
- * layer's contract (model / render / interaction / style / palette). Fields are
+ * layer's contract (model / render / interaction / style / editor UI). Fields are
  * grouped in that order below; required first within each group.
  *
  * `TDoc` / `TState` tie `mapper` / `behavior` / `selectionControls` to one state
@@ -60,13 +60,6 @@ export type ObjectTypeDefinition<
 	/** Group-transform ops (move / rotate / transform). */
 	behavior: ObjectBehaviorEntry<TState>;
 
-	/**
-	 * ObjectMenu sections for this type. Omitted = derived from features (see createDefaultMenu).
-	 * Static per type; per-instance visibility belongs to the `custom` item component
-	 * (return null and the emptied section collapses).
-	 */
-	menu?: ObjectMenuSection[];
-
 	/** Type-specific selection controls (handle renderer + gesture strategy pairs). */
 	selectionControls?: SelectionControlDefinition<TState>[];
 
@@ -75,14 +68,21 @@ export type ObjectTypeDefinition<
 	/** Styleable properties beyond the ObjectFeatures flags (see StylePropertyRegistry). */
 	extraStyleProperties?: Record<string, ExtraStylePropertyDescriptor>;
 
-	// --- Palette (StencilLibrary) ---
+	// --- Editor UI (StencilLibrary / ObjectMenu) ---
 
 	/**
-	 * Presets this type contributes to the palette (multiple allowed per type).
+	 * Stencils this type contributes to the palette (multiple allowed per type).
 	 * Registration only makes them exist; where they show and in what order is
 	 * decided by `toolbar.layout` (a pinned entry, or a category entry's `presetIds`).
 	 */
 	stencils?: Stencil[];
+
+	/**
+	 * ObjectMenu sections for this type. Omitted = derived from features (see createDefaultMenu).
+	 * Static per type; per-instance visibility belongs to the `custom` item component
+	 * (return null and the emptied section collapses).
+	 */
+	menu?: ObjectMenuSection[];
 };
 
 /**

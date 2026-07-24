@@ -737,6 +737,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 				transformByGroup: connectorTransformByGroup,
 				rotateByGroup: connectorRotateByGroup,
 			},
+			extraStyleProperties: ConnectorExtraStyleProperties,
 			menu: [
 				{
 					id: "arrowHead",
@@ -794,7 +795,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					],
 				},
 			],
-			extraStyleProperties: ConnectorExtraStyleProperties,
 		}),
 
 		sticky: defineObject({
@@ -804,6 +804,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			factory: StickyObjectFactory,
 			component: Sticky,
 			behavior: createFrameBehavior<StickyState>(),
+			stencils: StickyStencils,
 			menu: [
 				{
 					id: "style",
@@ -820,7 +821,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 					items: [{ type: "aspectRatio" }],
 				},
 			],
-			stencils: StickyStencils,
 		}),
 
 		// SVG is not created from the StencilLibrary (only added via AI / direct .jis.json authoring).

@@ -38,6 +38,14 @@ export const containerDefinition: ObjectTypeDefinition<
 	component: Container,
 	textRegion: calcContainerTextRegion,
 	behavior: createFrameBehavior<ContainerState>(),
+	selectionControls: [
+		{
+			Component: ContainerHeaderHeightControl,
+			handler: new HeaderHeightControlHandler(),
+		},
+	],
+	extraStyleProperties: ContainerExtraStyleProperties,
+	stencils: ContainerStencils,
 	menu: [
 		{
 			id: "style",
@@ -57,12 +65,4 @@ export const containerDefinition: ObjectTypeDefinition<
 			items: [{ type: "aspectRatio" }],
 		},
 	],
-	selectionControls: [
-		{
-			Component: ContainerHeaderHeightControl,
-			handler: new HeaderHeightControlHandler(),
-		},
-	],
-	extraStyleProperties: ContainerExtraStyleProperties,
-	stencils: ContainerStencils,
 };
