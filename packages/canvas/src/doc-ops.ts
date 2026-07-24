@@ -9,8 +9,14 @@
 // スタイル既定値まで含んだ正しい ObjectDoc を作る。
 //
 // Import 例: `import { addRect } from "@workspace/canvas/doc-ops";`
-export { addRect, type AddRectParams } from "./addRect";
-export { addEllipse, type AddEllipseParams } from "./addEllipse";
-export { connect, type ConnectParams, type AnchorHandleId } from "./connect";
-export { DocOperationError } from "./errors";
-export type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
+export {
+	addRect,
+	type AddRectParams,
+	addEllipse,
+	type AddEllipseParams,
+	connect,
+	type ConnectParams,
+	type AnchorHandleId,
+	DocOperationError,
+	type CanvasDoc,
+} from "./docOps";
