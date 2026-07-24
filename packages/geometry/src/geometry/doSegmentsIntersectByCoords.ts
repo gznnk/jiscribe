@@ -1,3 +1,5 @@
+import { EPSILON } from "../common/EPSILON";
+
 /**
  * 数値座標版の線分交差判定。`doSegmentsIntersect` の計算コアで、Point を一切確保しない。
  * ホットパス（`isLineIntersectingBox` の 4 辺判定やルーティングの経路再計算）から
@@ -33,7 +35,7 @@ export const doSegmentsIntersectByCoords = (
 	const sy = q2y - q1y;
 	const denominator = rx * sy - ry * sx;
 
-	if (denominator === 0) {
+	if (Math.abs(denominator) < EPSILON) {
 		return false;
 	} // Parallel or colinear → always non-intersecting
 

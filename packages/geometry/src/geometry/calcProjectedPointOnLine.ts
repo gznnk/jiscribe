@@ -1,3 +1,4 @@
+import { EPSILON } from "../common/EPSILON";
 import type { Point } from "../types/Point";
 
 /**
@@ -17,7 +18,7 @@ export const calcProjectedPointOnLine = (
 	const dx = lineEnd.x - lineStart.x;
 	const dy = lineEnd.y - lineStart.y;
 	const lenSq = dx * dx + dy * dy;
-	if (lenSq === 0) {
+	if (lenSq < EPSILON) {
 		return { x: lineStart.x, y: lineStart.y };
 	}
 	const t =

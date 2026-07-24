@@ -1,4 +1,5 @@
-﻿export * from "./degreesToRadians";
+﻿export * from "./EPSILON";
+export * from "./degreesToRadians";
 export * from "./nanToZero";
 export * from "./negativeToZero";
 export * from "./normalizeAngleDeg";
