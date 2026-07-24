@@ -14,7 +14,7 @@
   - `calcBoundingBox(points)` - 点集合のバウンディングボックスを計算します。
   - `calcEuclideanDistance(x1, y1, x2, y2)` - 2点間のユークリッド距離を計算します。
   - `calcManhattanDistance(x1, y1, x2, y2)` - 2点間のマンハッタン距離を計算します。
-  - `calcRotatedPoint(px, py, cx, cy, theta)` - 中心 `(cx, cy)` まわりに `theta`（ラジアン）だけ回転した点の座標を計算します。
+  - `calcRotatedPoint(px, py, cx, cy, angleRad)` - 中心 `(cx, cy)` まわりに `angleRad`（ラジアン）だけ回転した点の座標を計算します。
 
 > 座標は `Point` オブジェクトではなくフラットなスカラー（`x`, `y`）で受け渡すのがこのライブラリの規約。引数の順序・型を新設・変更する際はこの規約に合わせること。
 
@@ -50,6 +50,38 @@
 
 - **例:**
   - `doSegmentsIntersect(s1, s2)` - 線分が交差するかどうかをチェックします（複雑なチェックを意味する場合の `is...` の代替）。
+
+---
+
+## 数値・引数規約
+
+座標・角度・スケールの受け渡しに関する規約。命名規則と併せて守ること。
+
+### 1. 引数順序
+
+「主語 → 基準 → パラメータ」の順に並べる。主語は計算対象、基準は主語を位置づける参照点、パラメータは残りの数値。
+
+- 例: `calcRotatedPoint(px, py, cx, cy, angleRad)` は回転される点 `(px, py)` が主語、中心 `(cx, cy)` が基準。
+
+既存関数の引数順序を変更するときは、必ず関数リネームとセットで行う。全引数が `number` のまま順序だけ入れ替えると、移行漏れが typecheck を素通りして角度が π ずれるなどの実害になるため。
+
+### 2. 角度単位
+
+- 角度を返す関数は関数名に `Rad` / `Deg` サフィックスを付ける（例: `calcVectorAngleRad`, `normalizeAngleDeg`）。
+- 角度を受け取る引数名は `angleRad` / `angleDeg` / `rotationDeg` のように単位サフィックスを必須とする。`theta` は使わない。
+- 例外: `Transform.rotation` は永続化形式に接するフィールド名のため維持する（度数法であることを JSDoc に明記済み）。
+
+### 3. `Point` 版とスカラー版の併存
+
+同じ計算に `Point` を受け取る版とスカラー（`x`, `y`）を受け取る版の両方を置く場合、スカラー版に `ByCoords` サフィックスを付ける（例: `doSegmentsIntersect` / `doSegmentsIntersectByCoords`）。座標は原則フラットなスカラーで受け渡すのがこのライブラリの規約（命名規則の calc 節の注記も参照）。
+
+### 4. 縮退・平行判定の EPSILON
+
+縮退・平行判定は `=== 0` ではなく共通定数 `EPSILON`（`src/common`、`1e-9`、座標はキャンバスピクセルスケール前提）との比較を使う。
+
+### 5. scale 契約
+
+`Transform.scaleX` / `Transform.scaleY` は反転フラグであり、値は `1 | -1` のみを取る（寸法は width/height が持つ）。
 
 ---
 
