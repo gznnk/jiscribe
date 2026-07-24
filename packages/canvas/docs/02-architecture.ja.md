@@ -110,6 +110,8 @@ State を Props として受け取り SVG を描画する純粋コンポーネ�
 
 ## 依存関係グラフ
 
+Jiscribe 版（レイヤーを枠で表現した見やすい図）は [02-architecture.jis.json](./02-architecture.jis.json) を参照。
+
 ```mermaid
 graph TD
     subgraph Plugin["拡張シーム (plugin)"]

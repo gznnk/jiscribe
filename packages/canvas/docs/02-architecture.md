@@ -110,6 +110,8 @@ The bundle reaches consumers by two paths (#165, Option B):
 
 ## Dependency Graph
 
+For a Jiscribe version (layers drawn as frames, easier to read), see [02-architecture.jis.json](./02-architecture.jis.json).
+
 ```mermaid
 graph TD
     subgraph Plugin["Extension Seam (plugin)"]
