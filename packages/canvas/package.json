@@ -8,7 +8,7 @@
 		".": "./src/index.ts",
 		"./unstable": "./src/unstable.ts",
 		"./parser": "./src/parser.ts",
-		"./doc-ops": "./src/doc-ops/index.ts",
+		"./docOps": "./src/docOps/index.ts",
 		"./png-source": "./src/png-source.ts",
 		"./svg-source": "./src/svg-source.ts",
 		"./ai/schema": "./ai/jiscribe.schema.json",
