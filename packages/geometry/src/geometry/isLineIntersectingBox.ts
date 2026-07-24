@@ -5,6 +5,8 @@ import type { Point } from "../types/Point";
 /**
  * Determines if a line segment intersects with a box.
  *
+ * 4 辺との交差のみを exclusive に判定するため、線分が box に完全内包される場合は false。
+ *
  * @param p1 - Starting point of the line segment
  * @param p2 - Ending point of the line segment
  * @param box - The box edges to check for intersection (a `BoundingBox`; `BoxFeatures` is assignable)
