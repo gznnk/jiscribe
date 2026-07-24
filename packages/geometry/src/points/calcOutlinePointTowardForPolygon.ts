@@ -1,5 +1,5 @@
 import { degreesToRadians } from "../common/degreesToRadians";
-import { EPSILON } from "../common/EPSILON";
+import { EPSILON } from "../constants/EPSILON";
 import { calcAffineTransformedPoint } from "../transform/calcAffineTransformedPoint";
 import type { Point } from "../types/Point";
 import type { TransformedFrame } from "../types/TransformedFrame";

@@ -1,4 +1,4 @@
-import { EPSILON } from "../common/EPSILON";
+import { EPSILON } from "../constants/EPSILON";
 
 /**
  * 数値座標版の線分交差判定。`doSegmentsIntersect` の計算コアで、Point を一切確保しない。
