@@ -4,7 +4,10 @@ import { getSelectedLockAspectRatio } from "./utils/getSelectedLockAspectRatio";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { AspectRatioIcon } from "../../../../icons/AspectRatioIcon";
-import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
+import {
+	ObjectMenuButton,
+	ObjectMenuItemPositioner,
+} from "../../ObjectMenuStyled";
 
 type KeepAspectRatioMenuProps = {
 	canvasState: CanvasControllerState;
@@ -26,7 +29,7 @@ const KeepAspectRatioMenuComponent: React.FC<KeepAspectRatioMenuProps> = ({
 		: messages.menuLockAspectRatio;
 
 	return (
-		<MenuItemPositioner>
+		<ObjectMenuItemPositioner>
 			<ObjectMenuButton
 				isActive={isLocked}
 				data-kind="menu"
@@ -36,7 +39,7 @@ const KeepAspectRatioMenuComponent: React.FC<KeepAspectRatioMenuProps> = ({
 			>
 				<AspectRatioIcon title={title} />
 			</ObjectMenuButton>
-		</MenuItemPositioner>
+		</ObjectMenuItemPositioner>
 	);
 };
 

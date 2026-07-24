@@ -1,7 +1,7 @@
 import { DocumentFeatures } from "../../../../schemas/objects/flowchart/document/DocumentDoc";
-import type { ObjectStateValidateFn } from "../../../registry/ObjectStateValidatorRegistry";
+import type { ObjectStateValidator } from "../../../registry/ObjectStateValidatorRegistry";
 import { createFrameStateValidator } from "../../utils/createFrameStateValidator";
 
 /** Validates DocumentState (Frame-family common logic generated from features). */
-export const isValidDocumentState: ObjectStateValidateFn =
+export const isValidDocumentState: ObjectStateValidator =
 	createFrameStateValidator(DocumentFeatures);

@@ -1,8 +1,8 @@
 import {
 	useCallback,
 	useEffect,
-	useImperativeHandle,
 	useLayoutEffect,
+	useMemo,
 	useRef,
 	useState,
 } from "react";
@@ -57,10 +57,11 @@ export type CanvasExportOptions = {
 };
 
 /**
- * Imperative export API exposed via the `exportRef` prop. Hosts that need
- * image bytes programmatically (e.g. the VSCode extension re-rendering a
- * `.jis.png` / `.jis.svg` on save) use this to run the exact same export
- * pipeline as the export dialog (fit-to-content, source embedding).
+ * Imperative export API exposed on the `export` namespace of the Canvas handle
+ * (`ref.current.export`). Hosts that need image bytes programmatically (e.g. the
+ * VSCode extension re-rendering a `.jis.png` / `.jis.svg` on save) use this to
+ * run the exact same export pipeline as the export dialog (fit-to-content,
+ * source embedding).
  */
 export type CanvasExportHandle = {
 	/**
@@ -178,7 +179,6 @@ type UseCanvasExportParams = {
 	svgRef: React.RefObject<SVGSVGElement | null>;
 	canvasState: CanvasControllerState;
 	registries: CanvasRegistries;
-	exportRef: React.Ref<CanvasExportHandle> | undefined;
 	onExportImage: ((payload: CanvasExportImagePayload) => void) | undefined;
 	dispatch: Dispatch<CanvasAction>;
 	notifyError: NotifyError;
@@ -192,6 +192,8 @@ type UseCanvasExportParams = {
 };
 
 type UseCanvasExportResult = {
+	/** Export sub-handle assembled into the Canvas handle (`ref.current.export`) */
+	exportHandle: CanvasExportHandle;
 	isExportDialogOpen: boolean;
 	/** Opens the export dialog (and closes the context menu it was invoked from) */
 	openExportDialog: () => void;
@@ -200,7 +202,7 @@ type UseCanvasExportResult = {
 };
 
 /**
- * Owns image export: the imperative `exportRef` API and the export dialog
+ * Owns image export: the imperative export handle and the export dialog
  * (open state + submit). Export options are built from the state at export
  * time (not at render time), so the handle and all returned callbacks stay
  * referentially stable across state updates and unstable host callbacks.
@@ -209,7 +211,6 @@ export const useCanvasExport = ({
 	svgRef,
 	canvasState,
 	registries,
-	exportRef,
 	onExportImage,
 	dispatch,
 	notifyError,
@@ -243,8 +244,7 @@ export const useCanvasExport = ({
 	);
 
 	// Imperative export API for hosts (same pipeline as the export dialog)
-	useImperativeHandle(
-		exportRef,
+	const exportHandle = useMemo<CanvasExportHandle>(
 		() => ({
 			toSvgString: (options?: CanvasExportOptions) => {
 				const svg = svgRef.current;
@@ -295,6 +295,7 @@ export const useCanvasExport = ({
 	);
 
 	return {
+		exportHandle,
 		isExportDialogOpen,
 		openExportDialog,
 		closeExportDialog,

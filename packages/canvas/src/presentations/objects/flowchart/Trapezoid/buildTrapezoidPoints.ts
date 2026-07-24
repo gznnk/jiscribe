@@ -7,7 +7,7 @@ import { centeredPolygonOutline } from "../../utils/outlineHelpers";
 /**
  * Trapezoid outline vertices (wide top, narrow bottom) for a bounding box whose
  * top-left corner is at (x, y). Single source shared by the renderer, the
- * draw-drag preview, and the connector outline provider.
+ * draw-drag preview, and the connector outline calculator.
  */
 export const trapezoidOutlinePoints = (
 	x: number,

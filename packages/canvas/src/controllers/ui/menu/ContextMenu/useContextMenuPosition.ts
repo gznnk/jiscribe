@@ -1,6 +1,6 @@
 import { type RefObject, useLayoutEffect, useState } from "react";
 
-import { useCanvasViewportRef } from "../../../contexts/CanvasViewportRefContext";
+import { useCanvasViewportElementRef } from "../../../contexts/CanvasViewportElementRefContext";
 
 /** Minimum margin from the edges of the canvas area (px) */
 const VIEWPORT_MARGIN = 8;
@@ -58,7 +58,7 @@ function calcAdjustedAxisCoord(
  *
  * Because the menu is positioned with position: fixed (browser viewport coordinates), boundaries
  * use the canvas root element's getBoundingClientRect() (same coordinate system), obtained via
- * CanvasViewportRefContext.
+ * CanvasViewportElementRefContext.
  * state.viewport is the canvas's internal scroll/zoom state and cannot be used here.
  *
  * Since the menu's height depends on the number of items, it is measured from the real DOM after
@@ -72,7 +72,7 @@ export function useContextMenuPosition(
 	position: ContextMenuPosition,
 	menuRef: RefObject<HTMLDivElement | null>,
 ): AdjustedMenuPosition {
-	const viewportRef = useCanvasViewportRef();
+	const viewportElementRef = useCanvasViewportElementRef();
 	const [adjustedPosition, setAdjustedPosition] =
 		useState<AdjustedMenuPosition>({
 			left: position.clientX,
@@ -91,7 +91,7 @@ export function useContextMenuPosition(
 
 		// Rectangle of the canvas area (browser viewport coordinates).
 		// Falls back to the whole browser window when outside the provider or the ref is unset.
-		const viewportElement = viewportRef?.current ?? null;
+		const viewportElement = viewportElementRef?.current ?? null;
 		const areaRect = viewportElement
 			? viewportElement.getBoundingClientRect()
 			: {
@@ -115,7 +115,7 @@ export function useContextMenuPosition(
 				areaRect.bottom,
 			),
 		});
-	}, [position, menuRef, viewportRef]);
+	}, [position, menuRef, viewportElementRef]);
 
 	return adjustedPosition;
 }

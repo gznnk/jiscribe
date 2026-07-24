@@ -63,17 +63,18 @@ export const SYSTEM_STYLE_PROPERTIES: Record<string, StylePropertyHandler> = {
 ```
 
 **シェイプ固有プロパティ** — `ObjectFeatures` に乗せないプロパティ
-（container の `headerFill`、connector の `label.*` 等）。シェイプの Doc の隣で
-宣言し、その `ObjectTypeDefinition` 経由で配線する:
+（connector の `label.*`、container プラグインの `headerFill` 等）。シェイプの Doc の
+隣で宣言し、その `ObjectTypeDefinition` 経由で配線する。例は container プラグイン
+（`plugins/container-shapes`。当該シェイプは現在そちらに帰属）より:
 
 ```ts
-// ContainerDoc.ts — `headerFill?: string` のすぐ隣
+// plugins/container-shapes/src/schema/ContainerDoc.ts — `headerFill?: string` のすぐ隣
 export const ContainerExtraStyleProperties = {
 	headerFill: { valueType: "string" },
 } as const satisfies Record<string, ExtraStylePropertyDescriptor>;
 
-// initializeObjectRegistry.ts
-container: defineObject({
+// plugins/container-shapes/src/definition.ts
+export const containerDefinition = defineObject({
 	features: ContainerFeatures,
 	extraStyleProperties: ContainerExtraStyleProperties,
 	// …
@@ -82,7 +83,8 @@ container: defineObject({
 
 宣言の存在**そのもの**が gate であり、別フラグは無い。誰も宣言していない
 プロパティはどこにも適用されない（fail-closed）。登録は
-`applyObjectDefinition` を通るので、`CanvasConfig.customize` で足した
+`applyObjectDefinition` を通るので、`CanvasConfig.plugins`
+（docs/05_extensibility/plugin-architecture-requirements.md 参照）で足した
 プラグイン/カスタム図形も同じ能力を持つ。`initializeObjectRegistry` の
 clear サイクルは per-type の extras だけを消す（`clearExtras`）—
 システムハンドラは gesture handler や command と同じく canvas-wide。

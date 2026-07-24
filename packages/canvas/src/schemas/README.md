@@ -13,7 +13,7 @@ It leverages TypeScript's type system to automatically compose object types base
 | `objects/`       | Individual object definitions, classified into `base` (common), `primitives` (basic shapes), `connections` (lines/arrows), `annotations`, etc. |
 | `objects/types/` | Defines the enums and shared types used by objects (`ObjectType`, `GeometryType`, etc.) and the type-composition utility (`CreateObjectType`). |
 | `objects/utils/` | Runtime helpers that assist in generating and validating Docs (`createObjectDoc`, `autoColor`, `validateDocUtils`, etc.).                      |
-| `registry/`      | Manages the per-type doc validator and ShapeFactory registry and its initialization (`initializeObjectDocValidatorRegistry`).                  |
+| `registry/`      | Manages the per-type doc validator and ObjectFactory registry and its initialization (`initializeObjectDocValidatorRegistry`).                 |
 
 ## Type Composition Architecture
 

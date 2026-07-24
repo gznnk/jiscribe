@@ -38,7 +38,7 @@ export const ToolbarGroup = styled.div`
 `;
 
 /**
- * Container for host-provided toolbar UI (CanvasProps.toolbarLeading / toolbarTrailing).
+ * Container for host-provided toolbar UI (CanvasProps.toolbar.leading / trailing).
  * Opts the slot out of the gesture system so plain onClick works.
  */
 export const ToolbarHostSlot = styled.div`

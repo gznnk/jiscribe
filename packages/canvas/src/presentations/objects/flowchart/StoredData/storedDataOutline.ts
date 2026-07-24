@@ -1,7 +1,7 @@
 import { sampleEllipseArc } from "@workspace/geometry";
 
 import { STORED_DATA_CAP_RATIO } from "../../../../schemas/objects/flowchart/storedData/StoredDataDoc";
-import type { ShapeOutlineProvider } from "../../registry/ShapeOutlineRegistry";
+import type { ObjectOutlineCalculator } from "../../registry/ObjectOutlineRegistry";
 import { OUTLINE_CURVE_SEGMENTS } from "../../utils/outlineHelpers";
 
 /**
@@ -10,7 +10,10 @@ import { OUTLINE_CURVE_SEGMENTS } from "../../utils/outlineHelpers";
  * on the bounding-box left edge). Renderer draws the equivalent arcs
  * (buildStoredDataPath).
  */
-export const storedDataOutline: ShapeOutlineProvider = ({ width, height }) => {
+export const storedDataOutline: ObjectOutlineCalculator = ({
+	width,
+	height,
+}) => {
 	const halfWidth = width / 2;
 	const halfHeight = height / 2;
 	const depth = width * STORED_DATA_CAP_RATIO;

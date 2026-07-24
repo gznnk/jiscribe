@@ -41,7 +41,7 @@ invoked through a ref so that it does not re-fire even when the parent passes a 
 ## Identifying Fold-Backs with saveNonce (#29)
 
 The problem: the canvas saves → the host rewrites the file → that change is **echoed back to the
-canvas itself** as `canvasDoc`. If this were treated as an ordinary external change, the operation
+canvas itself** as `doc`. If this were treated as an ordinary external change, the operation
 the canvas just performed would be re-pushed as a history boundary, and the UI state would be reset.
 
 The solution: on save, issue a `saveNonce` and pass it via `onCommit`; the host returns it unchanged

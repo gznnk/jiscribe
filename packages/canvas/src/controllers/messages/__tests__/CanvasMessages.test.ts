@@ -3,30 +3,99 @@ import { describe, it, expect } from "vitest";
 import {
 	defaultCanvasMessages,
 	getCommandLabel,
-	mergeCanvasMessages,
+	resolveCanvasMessages,
 } from "../CanvasMessages";
+import { jaCanvasMessages } from "../jaCanvasMessages";
+import {
+	resolveLocaleMessages,
+	resolveLocalizedLabel,
+} from "../resolveLocaleMessages";
 
-describe("mergeCanvasMessages", () => {
-	it("no overrides -> equals the English defaults", () => {
-		expect(mergeCanvasMessages()).toEqual(defaultCanvasMessages);
+describe("resolveCanvasMessages", () => {
+	it("en, no overrides -> equals the English defaults", () => {
+		expect(resolveCanvasMessages("en")).toEqual(defaultCanvasMessages);
 	});
 
-	it("flat key override -> only that key changes", () => {
-		const merged = mergeCanvasMessages({
-			shortcutHelpTitle: "キーボードショートカット",
+	it("exact locale match -> the built-in dictionary for that locale", () => {
+		const merged = resolveCanvasMessages("ja");
+		expect(merged.toolbarZoomIn).toBe(jaCanvasMessages.toolbarZoomIn);
+		expect(merged.commandLabels.undo).toBe(jaCanvasMessages.commandLabels.undo);
+	});
+
+	it("language subtag fallback -> ja-JP resolves to the ja dictionary", () => {
+		expect(resolveCanvasMessages("ja-JP").toolbarZoomIn).toBe(
+			jaCanvasMessages.toolbarZoomIn,
+		);
+	});
+
+	it("unknown locale -> falls back to the English defaults", () => {
+		expect(resolveCanvasMessages("fr").toolbarZoomIn).toBe(
+			defaultCanvasMessages.toolbarZoomIn,
+		);
+	});
+
+	it("flat override wins over the locale dictionary", () => {
+		const merged = resolveCanvasMessages("ja", {
+			toolbarZoomIn: "カスタム",
 		});
-		expect(merged.shortcutHelpTitle).toBe("キーボードショートカット");
-		expect(merged.toolbarZoomIn).toBe(defaultCanvasMessages.toolbarZoomIn);
+		expect(merged.toolbarZoomIn).toBe("カスタム");
+		// non-overridden flat keys keep the locale value
+		expect(merged.toolbarZoomOut).toBe(jaCanvasMessages.toolbarZoomOut);
 	});
 
-	it("record override -> kept as-is (missing ids fall back at lookup time)", () => {
-		const merged = mergeCanvasMessages({ commandLabels: { undo: "元に戻す" } });
-		expect(merged.commandLabels).toEqual({ undo: "元に戻す" });
+	it("record override merges per key over the locale record", () => {
+		const merged = resolveCanvasMessages("ja", {
+			commandLabels: { undo: "戻す（カスタム）", newId: "新規" },
+		});
+		// overridden id wins
+		expect(merged.commandLabels.undo).toBe("戻す（カスタム）");
+		// added id is present
+		expect(merged.commandLabels.newId).toBe("新規");
+		// non-overridden id keeps the ja value
+		expect(merged.commandLabels.redo).toBe(jaCanvasMessages.commandLabels.redo);
 	});
 
 	it("does not mutate the defaults", () => {
-		mergeCanvasMessages({ commandLabels: { undo: "元に戻す" } });
+		resolveCanvasMessages("en", { commandLabels: { undo: "元に戻す" } });
 		expect(defaultCanvasMessages.commandLabels).toEqual({});
+	});
+});
+
+describe("resolveLocaleMessages", () => {
+	const dict = { en: "english", ja: "japanese" };
+
+	it("exact match", () => {
+		expect(resolveLocaleMessages(dict, "ja")).toBe("japanese");
+	});
+
+	it("language subtag (ja-JP -> ja)", () => {
+		expect(resolveLocaleMessages(dict, "ja-JP")).toBe("japanese");
+	});
+
+	it("unknown locale falls back to en", () => {
+		expect(resolveLocaleMessages(dict, "de")).toBe("english");
+	});
+});
+
+describe("resolveLocalizedLabel", () => {
+	it("plain string is locale-agnostic", () => {
+		expect(resolveLocalizedLabel("Frame", "ja")).toBe("Frame");
+	});
+
+	it("dictionary resolves for the locale", () => {
+		expect(resolveLocalizedLabel({ en: "Frame", ja: "枠" }, "ja")).toBe("枠");
+	});
+
+	it("dictionary falls back via language subtag (ja-JP -> ja)", () => {
+		expect(resolveLocalizedLabel({ en: "Frame", ja: "枠" }, "ja-JP")).toBe(
+			"枠",
+		);
+	});
+
+	it("dictionary falls back to en for an unknown locale", () => {
+		expect(resolveLocalizedLabel({ en: "Frame", ja: "枠" }, "de")).toBe(
+			"Frame",
+		);
 	});
 });
 
@@ -38,12 +107,16 @@ describe("getCommandLabel", () => {
 	});
 
 	it("override present -> the override wins", () => {
-		const merged = mergeCanvasMessages({ commandLabels: { undo: "元に戻す" } });
+		const merged = resolveCanvasMessages("en", {
+			commandLabels: { undo: "元に戻す" },
+		});
 		expect(getCommandLabel(merged, command)).toBe("元に戻す");
 	});
 
 	it("override for another id -> falls back to the command's label", () => {
-		const merged = mergeCanvasMessages({ commandLabels: { redo: "やり直す" } });
+		const merged = resolveCanvasMessages("en", {
+			commandLabels: { redo: "やり直す" },
+		});
 		expect(getCommandLabel(merged, command)).toBe("Undo");
 	});
 });

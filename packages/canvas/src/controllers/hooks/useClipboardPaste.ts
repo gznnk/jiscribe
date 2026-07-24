@@ -5,8 +5,8 @@ import {
 	type ClipboardData,
 	isClipboardData,
 } from "../commands/selection/ClipboardData";
-import { useCanvasRegistries } from "../contexts/CanvasRegistriesContext";
 import type { CanvasAction } from "../reducer/CanvasActions";
+import type { CanvasRegistries } from "../setup/CanvasRegistries";
 
 /**
  * Reads the OS clipboard (falling back to internalClipboard) and dispatches PASTE.
@@ -63,16 +63,19 @@ export const enqueueClipboardPaste = (
  *
  * @param internalClipboard - Fallback used when the OS clipboard cannot be read
  * @param dispatch - Canvas reducer dispatch
+ * @param registries - Passed in explicitly (not read via context) because Canvas
+ *   is the provider of the registries context and so cannot consume it via a hook
  * @returns The paste handler callback (used by the keyboard shortcut and the context menu)
  */
 export const useClipboardPaste = (
 	internalClipboard: ClipboardData | null,
 	dispatch: Dispatch<CanvasAction>,
+	registries: CanvasRegistries,
 ): (() => Promise<void>) => {
 	// Held in a ref so the FIFO guarantee survives handlePaste re-creation
 	// (internalClipboard changes remake the callback, but the chain must span them).
 	const pasteChainRef = useRef<Promise<void>>(Promise.resolve());
-	const { objectStateValidator } = useCanvasRegistries();
+	const { objectStateValidator } = registries;
 
 	const handlePaste = useCallback(
 		() =>

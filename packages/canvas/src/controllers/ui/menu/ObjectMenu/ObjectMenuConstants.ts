@@ -1,6 +1,6 @@
 /**
  * Tailwind CSS-based preset colors.
- * The 4x7 = 28-color palette used by ColorPickerGrid.
+ * The 4x7 = 28-color palette used by ObjectMenuColorPickerGrid.
  */
 export type ColorPreset = {
 	value: string;

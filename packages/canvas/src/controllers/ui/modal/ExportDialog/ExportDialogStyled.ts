@@ -75,7 +75,7 @@ export const MarginInput = styled.input`
 		outline-offset: -1px;
 	}
 
-	/* Hide the native spinner (same convention as MenuSliderNumberInput);
+	/* Hide the native spinner (same convention as ObjectMenuSliderNumberInput);
 	   its arrows cannot be themed and pick up odd backgrounds in VSCode */
 	&::-webkit-outer-spin-button,
 	&::-webkit-inner-spin-button {

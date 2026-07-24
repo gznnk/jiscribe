@@ -1,6 +1,6 @@
 import { generateUniqueId } from "./ids";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
-import { EllipseShapeFactory } from "../schemas/objects/primitives/ellipse/EllipseShapeFactory";
+import { EllipseObjectFactory } from "../schemas/objects/primitives/ellipse/EllipseObjectFactory";
 
 const DEFAULT_ELLIPSE_RX = 80;
 const DEFAULT_ELLIPSE_RY = 50;
@@ -21,7 +21,7 @@ export type AddEllipseParams = {
  * 楕円は中心基準（cx/cy）。id は factory の UUID を `ellipse-N` 連番へ差し替える。
  */
 export function addEllipse(doc: CanvasDoc, params: AddEllipseParams): string {
-	const ellipse = EllipseShapeFactory.createDoc(
+	const ellipse = EllipseObjectFactory.createDoc(
 		{ x: params.cx, y: params.cy },
 		{
 			rx: params.rx ?? DEFAULT_ELLIPSE_RX,

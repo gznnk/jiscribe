@@ -98,26 +98,30 @@ export class CanvasDriver {
 	/** 図形・コネクターのスナップショットを取得する */
 	async captureObjects(): Promise<ObjectSnapshot[]> {
 		return this.page.evaluate(
-			({ objectSelector, connectorSelector }) =>
+			({ objectSelector, connectorSelector, previewSelector }) =>
 				[
 					...document.querySelectorAll(
 						`${objectSelector}, ${connectorSelector}`,
 					),
-				].map((el) => {
-					// 色は SVG 属性ではなく emotion CSS で当たるため computed style で読む
-					// （issue #38 / theme 追従）。値はブラウザ正規化済みの rgb(...) 形式。
-					const style = getComputedStyle(el);
-					return {
-						id: el.getAttribute("data-id"),
-						tag: el.tagName.toLowerCase(),
-						transform: el.getAttribute("transform"),
-						fill: style.fill,
-						stroke: style.stroke,
-					};
-				}),
+				]
+					// ドラッグ描画のゴーストは data-kind=object を持つが未コミットなので除く
+					.filter((el) => !el.closest(previewSelector))
+					.map((el) => {
+						// 色は SVG 属性ではなく emotion CSS で当たるため computed style で読む
+						// （issue #38 / theme 追従）。値はブラウザ正規化済みの rgb(...) 形式。
+						const style = getComputedStyle(el);
+						return {
+							id: el.getAttribute("data-id"),
+							tag: el.tagName.toLowerCase(),
+							transform: el.getAttribute("transform"),
+							fill: style.fill,
+							stroke: style.stroke,
+						};
+					}),
 			{
 				objectSelector: selectors.object,
 				connectorSelector: selectors.connectorPolyline,
+				previewSelector: selectors.drawingPreview,
 			},
 		);
 	}
@@ -354,7 +358,7 @@ export class CanvasDriver {
 	/**
 	 * クリックだけで配置される図形（Sticky）をツールボタンのクリックで
 	 * キャンバス中央へ即時追加し、新規 data-id を返す。
-	 * これらは対角ドラッグではなく ShapeLibraryItemHandler が即配置するため、
+	 * これらは対角ドラッグではなく StencilLibraryItemHandler が即配置するため、
 	 * crosshair 待ち＋ドラッグの drawShape ではなく本メソッドを使う。
 	 */
 	async placeShape(tool: ToolTitle): Promise<string> {
@@ -789,13 +793,20 @@ export class CanvasDriver {
 	/** 図形（コネクター除く）の DOM 順インデックス。SVG では後ろの要素ほど前面 */
 	async objectIndex(id: string): Promise<number> {
 		return this.page.evaluate(
-			({ objectSelector, targetId }) => {
-				const objects = [...document.querySelectorAll(objectSelector)];
+			({ objectSelector, previewSelector, targetId }) => {
+				const objects = [
+					...document.querySelectorAll(objectSelector),
+					// ドラッグ描画のゴーストは data-kind=object を持つが未コミットなので除く
+				].filter((el) => !el.closest(previewSelector));
 				return objects.findIndex(
 					(el) => el.getAttribute("data-id") === targetId,
 				);
 			},
-			{ objectSelector: selectors.object, targetId: id },
+			{
+				objectSelector: selectors.object,
+				previewSelector: selectors.drawingPreview,
+				targetId: id,
+			},
 		);
 	}
 
@@ -806,15 +817,19 @@ export class CanvasDriver {
 	 */
 	async zOrderIndex(id: string): Promise<number> {
 		return this.page.evaluate(
-			({ objectSelector, connectorSelector, targetId }) =>
+			({ objectSelector, connectorSelector, previewSelector, targetId }) =>
 				[
 					...document.querySelectorAll(
 						`${objectSelector}, ${connectorSelector}`,
 					),
-				].findIndex((el) => el.getAttribute("data-id") === targetId),
+				]
+					// ドラッグ描画のゴーストは data-kind=object を持つが未コミットなので除く
+					.filter((el) => !el.closest(previewSelector))
+					.findIndex((el) => el.getAttribute("data-id") === targetId),
 			{
 				objectSelector: selectors.object,
 				connectorSelector: selectors.connectorPolyline,
+				previewSelector: selectors.drawingPreview,
 				targetId: id,
 			},
 		);

@@ -5,7 +5,7 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
  * 既定ポリゴン（正多角形）の頂点ジオメトリを精密に守る。
  *
  * polygon-vertex.spec は「頂点数が 5」までで、各頂点が正しい位置（外接楕円上に等角 72°
- * 間隔・先頭が真上）にあるかは未検証だった。実装（PolygonShapeFactory.buildPolygonPoints）は
+ * 間隔・先頭が真上）にあるかは未検証だった。実装（PolygonObjectFactory.buildPolygonPoints）は
  *   angle_i = 2π·i/5 − π/2、頂点 = (cx + rx·cosθ, cy + ry·sinθ)
  * で、描画 bbox の外接楕円に内接する正五角形を作る。ここでは描画矩形から決まる
  * cx,cy,rx,ry に対し、DOM の points 配列がこの式どおりかを 1 点ずつ照合して

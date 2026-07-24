@@ -2,10 +2,10 @@ import type { Dimensions } from "@workspace/geometry";
 import { calcInsetRect } from "@workspace/geometry";
 
 import { HEXAGON_CAP_RATIO } from "../../../../schemas/objects/flowchart/hexagon/HexagonDoc";
-import type { TextRegionCalculator } from "../../registry/TextRegionRegistry";
+import type { ObjectTextRegionCalculator } from "../../registry/ObjectTextRegionRegistry";
 
 /** Insets by a full cap on both sides so the region aligns with the top/bottom edges between the pointed caps. */
-export const calcHexagonTextRegion: TextRegionCalculator<Dimensions> = ({
+export const calcHexagonTextRegion: ObjectTextRegionCalculator<Dimensions> = ({
 	width,
 	height,
 }) =>

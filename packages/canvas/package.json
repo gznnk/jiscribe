@@ -6,6 +6,7 @@
 	"types": "src/index.ts",
 	"exports": {
 		".": "./src/index.ts",
+		"./unstable": "./src/unstable.ts",
 		"./parser": "./src/parser.ts",
 		"./doc-ops": "./src/doc-ops/index.ts",
 		"./png-source": "./src/png-source.ts",
@@ -50,6 +51,7 @@
 		"@vitejs/plugin-react-swc": "catalog:",
 		"@vitest/coverage-v8": "catalog:",
 		"@vitest/ui": "^2.1.8",
+		"@workspace/plugin-container-shapes": "workspace:*",
 		"katex": "catalog:",
 		"madge": "catalog:",
 		"rimraf": "catalog:",

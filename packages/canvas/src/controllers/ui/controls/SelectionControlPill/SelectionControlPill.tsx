@@ -15,7 +15,7 @@ type SelectionControlPillProps = {
 	rotation: number;
 	zoom: number;
 	objectId: string;
-	/** data-part value (from SelectionControlHandler.part). */
+	/** data-part value (the control's derived `selection:<objectType>:<name>`). */
 	part: string;
 	cursor: string;
 };

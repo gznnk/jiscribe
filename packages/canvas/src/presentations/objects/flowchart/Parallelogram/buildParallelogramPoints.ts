@@ -7,7 +7,7 @@ import { centeredPolygonOutline } from "../../utils/outlineHelpers";
 /**
  * Parallelogram outline vertices for a bounding box whose top-left corner is at
  * (x, y). The top edge is shifted right by the skew. Single source shared by the
- * renderer, the draw-drag preview, and the connector outline provider.
+ * renderer, the draw-drag preview, and the connector outline calculator.
  */
 export const parallelogramOutlinePoints = (
 	x: number,

@@ -7,9 +7,12 @@ import type { CanvasControllerState } from "../../../../../../controllers/Canvas
 import { ArrowTypes } from "../../../../../../schemas/objects/types/ArrowType";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { ArrowSwapIcon } from "../../../../icons/ArrowSwapIcon";
-import { DropdownPanel } from "../../common/DropdownPanel";
+import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
-import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
+import {
+	ObjectMenuButton,
+	ObjectMenuItemPositioner,
+} from "../../ObjectMenuStyled";
 
 const SECTION_ID_START = "arrow-head-start";
 const SECTION_ID_END = "arrow-head-end";
@@ -50,7 +53,7 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 	return (
 		<>
 			{/* Start Arrow Button */}
-			<MenuItemPositioner ref={startRef}>
+			<ObjectMenuItemPositioner ref={startRef}>
 				<ObjectMenuButton
 					isActive={isStartOpen}
 					data-kind="menu"
@@ -61,7 +64,7 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 					<ArrowHeadIconPreview arrowType={currentStart} direction="start" />
 				</ObjectMenuButton>
 				{isStartOpen && (
-					<DropdownPanel
+					<ObjectMenuDropdownPanel
 						ref={startSubmenuRef}
 						placement={startPlacement}
 						offsetX={startOffsetX}
@@ -80,9 +83,9 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 								</ArrowTypeButton>
 							))}
 						</ArrowSelectorGrid>
-					</DropdownPanel>
+					</ObjectMenuDropdownPanel>
 				)}
-			</MenuItemPositioner>
+			</ObjectMenuItemPositioner>
 
 			{/* Swap Button */}
 			<ObjectMenuButton
@@ -95,7 +98,7 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 			</ObjectMenuButton>
 
 			{/* End Arrow Button */}
-			<MenuItemPositioner ref={endRef}>
+			<ObjectMenuItemPositioner ref={endRef}>
 				<ObjectMenuButton
 					isActive={isEndOpen}
 					data-kind="menu"
@@ -106,7 +109,7 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 					<ArrowHeadIconPreview arrowType={currentEnd} direction="end" />
 				</ObjectMenuButton>
 				{isEndOpen && (
-					<DropdownPanel
+					<ObjectMenuDropdownPanel
 						ref={endSubmenuRef}
 						placement={endPlacement}
 						offsetX={endOffsetX}
@@ -125,9 +128,9 @@ const ArrowHeadMenuComponent: React.FC<ArrowHeadMenuProps> = ({
 								</ArrowTypeButton>
 							))}
 						</ArrowSelectorGrid>
-					</DropdownPanel>
+					</ObjectMenuDropdownPanel>
 				)}
-			</MenuItemPositioner>
+			</ObjectMenuItemPositioner>
 		</>
 	);
 };

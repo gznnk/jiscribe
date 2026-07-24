@@ -1,3 +1,8 @@
+import { jaCanvasMessages } from "./jaCanvasMessages";
+import {
+	resolveLocaleMessages,
+	type LocaleMessages,
+} from "./resolveLocaleMessages";
 import type { Command } from "../commands/CommandTypes";
 
 /**
@@ -57,7 +62,6 @@ export type CanvasMessageStrings = {
 	menuFontSize: string;
 	menuFontColor: string;
 	menuBackgroundColor: string;
-	menuHeaderColor: string;
 	menuStrokeColor: string;
 	menuLineColor: string;
 	menuLineStyle: string;
@@ -89,16 +93,16 @@ export type CanvasMessageStrings = {
  *
  * The flat keys cover strings hardcoded in components. The record keys
  * override labels whose English defaults live next to their definitions
- * (commands, shape presets, color presets, arrow types); an entry missing
+ * (commands, stencils, color presets, arrow types); an entry missing
  * from a record falls back to that definition's label.
  */
 export type CanvasMessages = CanvasMessageStrings & {
 	/** Overrides keyed by command id (e.g. `undo`, `bringToFront`, `move-up-large`) */
 	commandLabels: Record<string, string>;
-	/** Overrides keyed by shape preset id (e.g. `rect`, `ellipse`, `sticky`) */
-	shapePresetLabels: Record<string, string>;
-	/** Overrides keyed by shape category id (e.g. `flowchart`, `general`, `annotation`) */
-	shapeCategoryLabels: Record<string, string>;
+	/** Overrides keyed by stencil id (e.g. `rect`, `ellipse`, `sticky`) */
+	stencilLabels: Record<string, string>;
+	/** Overrides keyed by stencil category id (e.g. `flowchart`, `general`, `annotation`) */
+	stencilCategoryLabels: Record<string, string>;
 	/** Overrides keyed by the English color preset name (e.g. `Red`, `Light Blue`) */
 	colorNames: Record<string, string>;
 	/** Overrides keyed by arrow type (e.g. `FilledTriangle`, `None`) */
@@ -150,7 +154,6 @@ export const defaultCanvasMessages: CanvasMessages = {
 	menuFontSize: "Font Size",
 	menuFontColor: "Font Color",
 	menuBackgroundColor: "Background Color",
-	menuHeaderColor: "Header Color",
 	menuStrokeColor: "Stroke Color",
 	menuLineColor: "Line Color",
 	menuLineStyle: "Line Style",
@@ -177,24 +180,51 @@ export const defaultCanvasMessages: CanvasMessages = {
 	menuLabelBorderStyle: "Label Border Style",
 
 	commandLabels: {},
-	shapePresetLabels: {},
-	shapeCategoryLabels: {},
+	stencilLabels: {},
+	stencilCategoryLabels: {},
 	colorNames: {},
 	arrowTypeNames: {},
 };
 
-/** Merges host-supplied partial messages over the English defaults. */
-export const mergeCanvasMessages = (
+/** Built-in dictionaries the canvas resolves from `locale` on its own. */
+const builtinCanvasMessagesByLocale: LocaleMessages<CanvasMessages> = {
+	en: defaultCanvasMessages,
+	ja: jaCanvasMessages,
+};
+
+/**
+ * Resolves the effective messages for a locale, then applies host overrides.
+ * Flat keys: English defaults ← built-in locale dictionary ← overrides. Record
+ * fields are merged key by key (built-in locale record ← overrides record).
+ */
+export const resolveCanvasMessages = (
+	locale: string,
 	overrides?: Partial<CanvasMessages>,
-): CanvasMessages => ({
-	...defaultCanvasMessages,
-	...overrides,
-	commandLabels: { ...overrides?.commandLabels },
-	shapePresetLabels: { ...overrides?.shapePresetLabels },
-	shapeCategoryLabels: { ...overrides?.shapeCategoryLabels },
-	colorNames: { ...overrides?.colorNames },
-	arrowTypeNames: { ...overrides?.arrowTypeNames },
-});
+): CanvasMessages => {
+	const localized = resolveLocaleMessages(
+		builtinCanvasMessagesByLocale,
+		locale,
+	);
+	return {
+		...defaultCanvasMessages,
+		...localized,
+		...overrides,
+		commandLabels: { ...localized.commandLabels, ...overrides?.commandLabels },
+		stencilLabels: {
+			...localized.stencilLabels,
+			...overrides?.stencilLabels,
+		},
+		stencilCategoryLabels: {
+			...localized.stencilCategoryLabels,
+			...overrides?.stencilCategoryLabels,
+		},
+		colorNames: { ...localized.colorNames, ...overrides?.colorNames },
+		arrowTypeNames: {
+			...localized.arrowTypeNames,
+			...overrides?.arrowTypeNames,
+		},
+	};
+};
 
 /** Resolves a command's display label: override by id, else the command's English label. */
 export const getCommandLabel = (

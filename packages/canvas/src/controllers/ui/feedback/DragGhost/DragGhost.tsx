@@ -6,10 +6,10 @@ import { createObjectDoc } from "../../../../schemas/objects/utils/createObjectD
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../contexts/CanvasRegistriesContext";
 import type { CanvasRegistries } from "../../../setup/CanvasRegistries";
-import type { ShapePreset } from "../../objects/ShapePreset";
+import type { Stencil } from "../../objects/Stencil";
 
 type DragGhostProps = {
-	shapeLibraryDrag: CanvasControllerState["shapeLibraryDrag"];
+	stencilLibraryDrag: CanvasControllerState["stencilLibraryDrag"];
 	docDefaults: DocCreationDefaults;
 };
 
@@ -20,7 +20,7 @@ const GHOST_ID = "drag-ghost";
  * Uses React.createElement to avoid creating a component variable during render.
  */
 const createGhostElement = (
-	preset: ShapePreset,
+	preset: Stencil,
 	position: Point,
 	registries: CanvasRegistries,
 	docDefaults: DocCreationDefaults,
@@ -33,7 +33,7 @@ const createGhostElement = (
 	const doc = createObjectDoc(
 		preset.objectType,
 		position,
-		registries.shapeFactory,
+		registries.objectFactory,
 		preset.defaultOverrides,
 		docDefaults,
 	);
@@ -44,24 +44,24 @@ const createGhostElement = (
 };
 
 /**
- * Renders a semi-transparent ghost of the shape being dragged from the shape library.
+ * Renders a semi-transparent ghost of the shape being dragged from the stencil library.
  * Renders nothing when no drag is in progress.
  */
 const DragGhostComponent: React.FC<DragGhostProps> = ({
-	shapeLibraryDrag,
+	stencilLibraryDrag,
 	docDefaults,
 }) => {
 	const registries = useCanvasRegistries();
 
-	if (!shapeLibraryDrag) {
+	if (!stencilLibraryDrag) {
 		return null;
 	}
 
 	return (
 		<g opacity={0.5} pointerEvents="none">
 			{createGhostElement(
-				shapeLibraryDrag.preset,
-				shapeLibraryDrag.ghostPosition,
+				stencilLibraryDrag.preset,
+				stencilLibraryDrag.ghostPosition,
 				registries,
 				docDefaults,
 			)}

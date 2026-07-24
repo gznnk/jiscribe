@@ -8,7 +8,7 @@ import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
-import { parseSelectionControlObjectType } from "../../registry/SelectionControlHandler";
+import { parseSelectionControlObjectType } from "../../registry/RegisteredSelectionControl";
 import { isLeftButton } from "../utils/isLeftButton";
 
 /**
@@ -90,7 +90,7 @@ export class ControlEventHandler implements GestureHandler {
 		// The parsed segment is untrusted DOM text; an unknown type simply
 		// misses the registry.
 		const controls = this.selectionControls.get(objectType as ObjectType);
-		return controls?.find((control) => control.handler.supports(event))
-			?.handler;
+		return controls?.find((control) => control.strategy.supports(event))
+			?.strategy;
 	}
 }

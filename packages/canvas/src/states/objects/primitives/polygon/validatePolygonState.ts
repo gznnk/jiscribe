@@ -1,6 +1,6 @@
 import { isObject } from "@workspace/basic-validators";
 
-import type { ObjectStateValidateFn } from "../../../registry/ObjectStateValidatorRegistry";
+import type { ObjectStateValidator } from "../../../registry/ObjectStateValidatorRegistry";
 import {
 	hasValidIdAndType,
 	isValidFillStyleState,
@@ -13,7 +13,7 @@ import {
  * Validates a PolygonState (Poly + stroke + fill).
  * A polygon is a closed shape, so it requires at least 3 points (unlike a polyline's 2).
  */
-export const isValidPolygonState: ObjectStateValidateFn = (value) => {
+export const isValidPolygonState: ObjectStateValidator = (value) => {
 	if (!isObject(value)) {
 		return false;
 	}

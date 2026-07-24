@@ -8,5 +8,5 @@ const emptyDoc: CanvasDoc = { version: 1, root: [] };
  * テーマ・コールバック等はすべて省略可能で、既定は dark テーマ・非制御動作。
  */
 export function MinimalExample() {
-	return <Canvas canvasDoc={emptyDoc} />;
+	return <Canvas doc={emptyDoc} />;
 }

@@ -1,7 +1,7 @@
 import type { Dimensions, Rect } from "@workspace/geometry";
 
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
-import type { TextRegionCalculator } from "../registry/TextRegionRegistry";
+import type { ObjectTextRegionCalculator } from "../registry/ObjectTextRegionRegistry";
 
 /**
  * Derives a shape's text region in its local coordinate space (origin at
@@ -11,12 +11,12 @@ import type { TextRegionCalculator } from "../registry/TextRegionRegistry";
  * entering or leaving edit mode.
  *
  * @param state - The object state (carries the untransformed width/height)
- * @param calculator - Per-type calculator from TextRegionRegistry. Omitted = full bounding box
+ * @param calculator - Per-type calculator from ObjectTextRegionRegistry. Omitted = full bounding box
  * @returns The text region (top-left based, local coordinates)
  */
 export const calcTextRegion = (
 	state: ObjectState & Dimensions,
-	calculator?: TextRegionCalculator,
+	calculator?: ObjectTextRegionCalculator,
 ): Rect =>
 	calculator?.(state) ?? {
 		x: -state.width / 2,

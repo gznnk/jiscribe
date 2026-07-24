@@ -27,10 +27,10 @@ export function MultiCanvasApp() {
 	return (
 		<div className="app" style={{ display: "flex" }}>
 			<div data-testid="canvas-a" style={{ flex: 1, minWidth: 0 }}>
-				<Canvas canvasDoc={multiDocA} autoFocus={false} />
+				<Canvas doc={multiDocA} autoFocus={false} />
 			</div>
 			<div data-testid="canvas-b" style={{ flex: 1, minWidth: 0 }}>
-				<Canvas canvasDoc={multiDocB} autoFocus={false} />
+				<Canvas doc={multiDocB} autoFocus={false} />
 			</div>
 		</div>
 	);

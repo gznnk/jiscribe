@@ -1,6 +1,10 @@
 import type { SelectionControlDefinition } from "./SelectionControlTypes";
 import type { ObjectType } from "../../../schemas/objects/types/ObjectType";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import {
+	createRegisteredSelectionControl,
+	type RegisteredSelectionControl,
+} from "../../gestures/registry/RegisteredSelectionControl";
 
 /**
  * Per-type registry of selection controls (see SelectionControlTypes).
@@ -9,32 +13,30 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 export class SelectionControlRegistry {
 	private readonly entries = new Map<
 		ObjectType,
-		SelectionControlDefinition[]
+		RegisteredSelectionControl[]
 	>();
 
 	register<TState extends ObjectState>(
 		type: ObjectType,
 		controls: SelectionControlDefinition<TState>[],
 	): void {
-		const widenedControls = controls as unknown as SelectionControlDefinition[];
+		const registered: RegisteredSelectionControl[] = [];
 		const parts = new Set<string>();
-		for (const control of widenedControls) {
-			if (control.handler.objectType !== type) {
-				throw new Error(
-					`Selection control "${control.handler.part}" cannot be registered for type "${type}"`,
-				);
+		for (const control of controls) {
+			const entry = createRegisteredSelectionControl(
+				type,
+				control as unknown as SelectionControlDefinition,
+			);
+			if (parts.has(entry.part)) {
+				throw new Error(`Duplicate selection control part "${entry.part}"`);
 			}
-			if (parts.has(control.handler.part)) {
-				throw new Error(
-					`Duplicate selection control part "${control.handler.part}"`,
-				);
-			}
-			parts.add(control.handler.part);
+			parts.add(entry.part);
+			registered.push(entry);
 		}
-		this.entries.set(type, widenedControls);
+		this.entries.set(type, registered);
 	}
 
-	get(type: ObjectType): readonly SelectionControlDefinition[] | undefined {
+	get(type: ObjectType): readonly RegisteredSelectionControl[] | undefined {
 		return this.entries.get(type);
 	}
 

@@ -110,7 +110,7 @@ describe("system style properties (feature-gated, registry-driven)", () => {
 });
 
 describe("shape-declared extra properties (registry-driven)", () => {
-	it("the wiring exposes at least one extra declaration (container/connector)", () => {
+	it("the wiring exposes at least one extra declaration (e.g. connector label.*)", () => {
 		expect(EXTRA_DECLARATIONS.length).toBeGreaterThan(0);
 	});
 

@@ -1,1 +1,0 @@
-export { HeaderColorMenu } from "./HeaderColorMenu";

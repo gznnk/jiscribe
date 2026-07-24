@@ -82,7 +82,7 @@ export const UngroupCommand: ExecutableCommand = {
 				null,
 			),
 			objectMenuOpenId: null,
-			shapeLibraryOpenCategory: null,
+			stencilLibraryOpenCategory: null,
 			lastDuplicate: null,
 			commitVersion: state.commitVersion + 1,
 		};

@@ -108,7 +108,7 @@ Theming is host-injectable and neutral — the canvas knows nothing about VSCode
   (handle dimensions for zoom-adjusted geometry, `fontFamily` for canvas text measurement and
   new-shape defaults) flow through `CanvasThemeContext` (`useCanvasTheme()`) and must be concrete
   values, never `var(...)` strings. The default fontFamily also reaches doc creation via
-  `state.docDefaults` → `ShapeFactory` (`pickSupportedDocDefaults` applies it only to shapes whose
+  `state.docDefaults` → `ObjectFactory` (`pickSupportedDocDefaults` applies it only to shapes whose
   DOC_DEFAULTS declare `fontFamily`).
   - **Why fontFamily has both a Context and a state route**: the two consumers have opposite
     structural constraints. The rendering side must work without a reducer (`CanvasThumbnail` has

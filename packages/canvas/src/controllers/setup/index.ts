@@ -5,12 +5,18 @@ export { initializeGestureHandlerRegistry } from "./initializeGestureHandlerRegi
 export { initializeCommands } from "./initializeCommands";
 
 // Per-canvas registry bundle: types, factory, and defaults
-export type { CanvasRegistries, CanvasConfig } from "./CanvasRegistries";
+export type {
+	CanvasRegistries,
+	CanvasCapabilities,
+	CanvasConfig,
+} from "./CanvasRegistries";
 export {
 	createCanvasRegistries,
 	defaultCanvasRegistries,
 	createTestRegistries,
 } from "./createCanvasRegistries";
+// Plugin vocabulary (ObjectTypeDefinition / defineObject / CanvasPlugin) lives in
+// `src/plugin`; `applyObjectDefinition` is the wiring that applies it here.
 export {
 	ALL_OBJECT_DEFINITIONS,
 	applyObjectDefinition,

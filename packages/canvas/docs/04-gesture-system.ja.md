@@ -37,12 +37,12 @@ pressed | dragStart | drag | dragEnd | click | doubleClick | wheel
 `gestureHandlerRegistry` 経由で対象ハンドラへ渡す。各ハンドラは `targetKind` で
 自分が処理すべきイベントかを判定する。
 
-| ハンドラ群  | 対象                                                                   | 主なファイル                                                                                       |
-| ----------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `canvas/`   | キャンバス全体（空白ドラッグ＝範囲選択、パン、ズーム）                 | `CanvasEventHandler.ts`                                                                            |
-| `controls/` | 変形コントロール（リサイズ・回転・頂点・接続）                         | `ControlEventHandler.ts`, `transform/`, `vertex/`, `connection/`                                   |
-| `menu/`     | コンテキストメニュー・オブジェクトメニュー・ツールバー・図形ライブラリ | `ContextMenuHandler.ts`, `ObjectMenuHandler.ts`, `ToolbarHandler.ts`, `ShapeLibraryItemHandler.ts` |
-| `objects/`  | 図形・コネクター本体（移動・選択・テキスト編集起動）                   | `ObjectEventHandler.ts`, `ConnectorEventHandler.ts`, 形状別 Controller                             |
+| ハンドラ群  | 対象                                                                   | 主なファイル                                                                                         |
+| ----------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `canvas/`   | キャンバス全体（空白ドラッグ＝範囲選択、パン、ズーム）                 | `CanvasEventHandler.ts`                                                                              |
+| `controls/` | 変形コントロール（リサイズ・回転・頂点・接続）                         | `ControlEventHandler.ts`, `transform/`, `vertex/`, `connection/`                                     |
+| `menu/`     | コンテキストメニュー・オブジェクトメニュー・ツールバー・図形ライブラリ | `ContextMenuHandler.ts`, `ObjectMenuHandler.ts`, `ToolbarHandler.ts`, `StencilLibraryItemHandler.ts` |
+| `objects/`  | 図形・コネクター本体（移動・選択・テキスト編集起動）                   | `ObjectEventHandler.ts`, `ConnectorEventHandler.ts`, 形状別 Controller                               |
 
 `handleGesture` は `dragStart` で `eventStartSnapshot`（操作開始時の objects / keyPoints /
 snapCandidates 等）を保存し、`dragEnd` でクリアする。`dragEnd` 時に doc が実際に変化していれば

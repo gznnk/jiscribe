@@ -1,6 +1,15 @@
 // Import the parser-only entry, not the root entry (which pulls in the Canvas
 // component). This keeps UI deps (react / @emotion / katex) out of the Node
 // bundle (extension.js) so activation stays light.
+//
+// Deliberately NOT wired to @workspace/plugin-container-shapes/parser here: its
+// schema (ContainerDoc.ts) imports AUTO_COLOR/DEFAULT_FONT_FAMILY from
+// @workspace/canvas/unstable, and esbuild does not tree-shake that barrel
+// module — bundling it drags the whole React + ObjectMenu UI kit into
+// extension.js (verified: even a lone-constant import balloons the Node
+// bundle by ~40k lines of React). container diagnostics therefore stay
+// core-only for now (docs/05_extensibility/plugin-architecture-requirements.md
+// §7「unstable 層の Node/UI 分割」参照)。
 import {
 	parseCanvasText,
 	type SemanticDiagnostic,

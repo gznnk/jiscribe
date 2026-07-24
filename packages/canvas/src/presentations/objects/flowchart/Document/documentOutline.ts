@@ -5,7 +5,7 @@ import {
 } from "@workspace/geometry";
 
 import { DOCUMENT_WAVE_RATIO } from "../../../../schemas/objects/flowchart/document/DocumentDoc";
-import type { ShapeOutlineProvider } from "../../registry/ShapeOutlineRegistry";
+import type { ObjectOutlineCalculator } from "../../registry/ObjectOutlineRegistry";
 import { OUTLINE_CURVE_SEGMENTS } from "../../utils/outlineHelpers";
 
 /**
@@ -13,7 +13,7 @@ import { OUTLINE_CURVE_SEGMENTS } from "../../utils/outlineHelpers";
  * Béziers). `.slice(1)` drops each segment's start point (already emitted).
  * Renderer draws the equivalent path (buildDocumentPath).
  */
-export const documentOutline: ShapeOutlineProvider<Dimensions> = ({
+export const documentOutline: ObjectOutlineCalculator<Dimensions> = ({
 	width,
 	height,
 }) => {

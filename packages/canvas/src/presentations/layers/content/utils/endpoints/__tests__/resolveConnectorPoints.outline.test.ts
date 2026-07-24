@@ -9,11 +9,11 @@ import { resolveConnectorPoints } from "../resolveConnectorPoints";
 /**
  * Integration coverage for the shape-outline connector attachment: a connector
  * to a non-rectangular shape must land on the shape's true outline, not its
- * bounding box. Uses the real per-canvas ShapeOutlineRegistry so registration in
+ * bounding box. Uses the real per-canvas ObjectOutlineRegistry so registration in
  * ALL_OBJECT_DEFINITIONS is exercised too.
  */
 
-const outlineRegistry = defaultCanvasRegistries.shapeOutline;
+const outlineRegistry = defaultCanvasRegistries.objectOutline;
 
 const freeEndpoint = (x: number, y: number): EndpointRef =>
 	({ anchor: { kind: "free", point: { x, y } } }) as EndpointRef;
@@ -55,7 +55,7 @@ const frameObj = (
 	}) as unknown as ObjectState;
 
 describe("resolveConnectorPoints — shape outline attachment", () => {
-	it("registers outline providers for non-rect shapes but not for rect/ellipse", () => {
+	it("registers outline calculators for non-rect shapes but not for rect/ellipse", () => {
 		expect(outlineRegistry.get("diamond")).toBeTypeOf("function");
 		expect(outlineRegistry.get("parallelogram")).toBeTypeOf("function");
 		expect(outlineRegistry.get("db")).toBeTypeOf("function");

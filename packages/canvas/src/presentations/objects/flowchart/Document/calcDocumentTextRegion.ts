@@ -2,10 +2,10 @@ import type { Dimensions } from "@workspace/geometry";
 import { calcInsetRect } from "@workspace/geometry";
 
 import { DOCUMENT_WAVE_RATIO } from "../../../../schemas/objects/flowchart/document/DocumentDoc";
-import type { TextRegionCalculator } from "../../registry/TextRegionRegistry";
+import type { ObjectTextRegionCalculator } from "../../registry/ObjectTextRegionRegistry";
 
 /** Stops the region above the wavy bottom edge (the wave swings one amplitude around its centerline). */
-export const calcDocumentTextRegion: TextRegionCalculator<Dimensions> = ({
+export const calcDocumentTextRegion: ObjectTextRegionCalculator<Dimensions> = ({
 	width,
 	height,
 }) =>

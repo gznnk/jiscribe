@@ -4,7 +4,7 @@ import {
 	type Point,
 } from "@workspace/geometry";
 
-import type { ShapeOutlineProvider } from "../../registry/ShapeOutlineRegistry";
+import type { ObjectOutlineCalculator } from "../../registry/ObjectOutlineRegistry";
 import { OUTLINE_CURVE_SEGMENTS } from "../../utils/outlineHelpers";
 
 /**
@@ -12,7 +12,7 @@ import { OUTLINE_CURVE_SEGMENTS } from "../../utils/outlineHelpers";
  * silhouette). `.slice(1)` drops each segment's start point (already emitted).
  * Renderer draws the equivalent path (buildCloudPath).
  */
-export const cloudOutline: ShapeOutlineProvider<Dimensions> = ({
+export const cloudOutline: ObjectOutlineCalculator<Dimensions> = ({
 	width,
 	height,
 }) => {

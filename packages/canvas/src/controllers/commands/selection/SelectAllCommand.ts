@@ -37,7 +37,7 @@ export const SelectAllCommand: ExecutableCommand = {
 			selectedConnectorId: null,
 			selectedVertex: null,
 			objectMenuOpenId: null,
-			shapeLibraryOpenCategory: null,
+			stencilLibraryOpenCategory: null,
 		};
 	},
 };

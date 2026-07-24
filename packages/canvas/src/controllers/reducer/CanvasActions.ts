@@ -32,7 +32,7 @@ export type SyncExternalAction = {
 
 /**
  * Set viewport action - applies a camera (pan/zoom), keeping the measured
- * width/height. Dispatched by the imperative `viewportRef.setViewport`
+ * width/height. Dispatched by the imperative `ref.current.viewport.setViewport`
  * (useViewportHandle) so a host can move the view programmatically.
  */
 export type SetViewportAction = {

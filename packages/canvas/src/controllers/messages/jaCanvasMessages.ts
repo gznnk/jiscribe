@@ -1,6 +1,6 @@
 import type { CanvasMessages } from "./CanvasMessages";
 
-/** Japanese dictionary. Hosts pass this to the `messages` prop of Canvas. */
+/** Japanese dictionary. Built-in; resolved via the `locale` prop of Canvas. */
 export const jaCanvasMessages: CanvasMessages = {
 	toolbarZoomOut: "ズームアウト",
 	toolbarResetZoom: "ズームを100%に戻す",
@@ -45,7 +45,6 @@ export const jaCanvasMessages: CanvasMessages = {
 	menuFontSize: "フォントサイズ",
 	menuFontColor: "文字色",
 	menuBackgroundColor: "背景色",
-	menuHeaderColor: "ヘッダ色",
 	menuStrokeColor: "枠線の色",
 	menuLineColor: "線の色",
 	menuLineStyle: "線のスタイル",
@@ -107,45 +106,11 @@ export const jaCanvasMessages: CanvasMessages = {
 		"move-right-large": "右へ移動 (10px)",
 	},
 
-	shapePresetLabels: {
-		rect: "長方形",
-		"rect-markdown": "Markdown",
-		ellipse: "楕円",
-		diamond: "判断",
-		polygon: "多角形",
-		polyline: "折れ線",
-		db: "データベース",
-		sticky: "付箋",
-		frame: "枠",
-		boundary: "境界",
-		zone: "ゾーン",
-		process: "処理",
-		stadium: "端子",
-		document: "書類",
-		manualInput: "手動入力",
-		delay: "遅延",
-		hexagon: "準備",
-		parallelogram: "データ",
-		trapezoid: "手操作",
-		card: "カード",
-		subroutine: "サブルーチン",
-		onPageConnector: "結合子",
-		offPageConnector: "他ページ結合子",
-		cross: "接合点",
-		extract: "抽出",
-		display: "表示",
-		cloud: "雲",
-		actor: "アクター",
-		callout: "吹き出し",
-	},
+	// プリセットの ja ラベルは各プリセット定義側にある。record はホスト上書き用に残す
+	stencilLabels: {},
 
-	shapeCategoryLabels: {
-		basic: "基本",
-		flowchart: "フローチャート",
-		container: "コンテナ",
-		general: "一般",
-		annotation: "注釈",
-	},
+	// カテゴリの ja ラベルは toolbar.layout のカテゴリエントリ側にある。record はホスト上書き用に残す
+	stencilCategoryLabels: {},
 
 	// PRESET_COLORS と STICKY_PRESET_COLORS の英語名を網羅する
 	colorNames: {

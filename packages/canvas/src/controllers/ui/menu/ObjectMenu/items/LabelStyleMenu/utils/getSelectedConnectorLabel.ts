@@ -1,5 +1,5 @@
 import type { ConnectorLabel } from "../../../../../../../schemas/objects/connections/connector/ConnectorDoc";
-import type { CanvasControllerState } from "../../../../../../CanvasTypes";
+import type { ObjectState } from "../../../../../../../states/objects/base/ObjectState";
 
 /**
  * Returns the label of the selected connector (selectedConnectorId).
@@ -9,9 +9,11 @@ import type { CanvasControllerState } from "../../../../../../CanvasTypes";
  * separate path.
  */
 export const getSelectedConnectorLabel = (
-	state: CanvasControllerState,
+	selectedConnectorId: string | null,
+	objects: Record<string, ObjectState>,
 ): ConnectorLabel | undefined => {
-	const id = state.selectedConnectorId;
-	const connector = id ? state.objects[id] : undefined;
+	const connector = selectedConnectorId
+		? objects[selectedConnectorId]
+		: undefined;
 	return (connector as { label?: ConnectorLabel } | undefined)?.label;
 };

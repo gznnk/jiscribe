@@ -1,0 +1,34 @@
+import type { Stencil } from "@workspace/canvas";
+
+import { BoundaryIcon } from "./BoundaryIcon";
+import { FrameIcon } from "./FrameIcon";
+import { ZoneIcon } from "./ZoneIcon";
+
+/** Faint neutral tint for the Zone body — subtle enough to never hide contents at any z-order. */
+const ZONE_FILL = "rgba(100, 116, 139, 0.12)";
+
+export const ContainerStencils: Stencil[] = [
+	{
+		id: "frame",
+		objectType: "container",
+		label: { en: "Frame", ja: "枠" },
+		icon: FrameIcon,
+	},
+	{
+		// Dashed border — for a boundary / bounded context / "external" region.
+		// Differs only as a palette preset (dashed default), not a distinct type.
+		id: "boundary",
+		objectType: "container",
+		label: { en: "Boundary", ja: "境界" },
+		icon: BoundaryIcon,
+		defaultOverrides: { strokeDashType: "dashed" },
+	},
+	{
+		// Tinted body — a colored zone objects are dropped onto.
+		id: "zone",
+		objectType: "container",
+		label: { en: "Zone", ja: "ゾーン" },
+		icon: ZoneIcon,
+		defaultOverrides: { fill: ZONE_FILL },
+	},
+];

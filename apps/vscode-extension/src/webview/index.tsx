@@ -1,20 +1,45 @@
 import {
 	Canvas,
-	parseCanvasText,
+	annotationToolbarEntry,
+	flowchartToolbarEntry,
+	generalToolbarEntry,
 	type Camera,
+	type CanvasConfig,
 	type CanvasDoc,
-	type CanvasExportHandle,
 	type CanvasExportImagePayload,
+	type CanvasHandle,
+	type ToolbarEntry,
 } from "@workspace/canvas";
+import { containerToolbarEntry } from "@workspace/plugin-container-shapes";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 
 import { CanvasErrorNotice } from "./CanvasErrorNotice";
+import { canvasParser, plugins } from "./canvasParser";
 import { vscodeCanvasTheme } from "./vscodeCanvasTheme";
 import type {
 	ExtensionToWebviewMessage,
 	WebviewToExtensionMessage,
 } from "../types/messages";
+
+// container 図形は @workspace/plugin-container-shapes から供給する
+// (docs/05_extensibility/plugin-architecture-requirements.md)。
+const initialConfig: CanvasConfig = { plugins };
+
+// container カテゴリは core の既定 layout に含まれない（プラグイン供給）。
+// 従来どおり flowchart 直後に出すため、ホスト側で container スロットを差し込む。
+const toolbarLayout: ToolbarEntry[] = [
+	{ kind: "preset", presetId: "rect" },
+	{ kind: "preset", presetId: "ellipse" },
+	{ kind: "preset", presetId: "polyline" },
+	{ kind: "preset", presetId: "polygon" },
+	{ kind: "preset", presetId: "sticky" },
+	{ kind: "preset", presetId: "rect-markdown" },
+	flowchartToolbarEntry,
+	containerToolbarEntry,
+	generalToolbarEntry,
+	annotationToolbarEntry,
+];
 
 /**
  * Type of the API available only in the VSCode Webview environment.
@@ -112,11 +137,12 @@ function App() {
 	const [parseError, setParseError] = useState<string>("");
 	const [missingEmbeddedSource, setMissingEmbeddedSource] = useState(false);
 
-	// Canvas's imperative export API (used to render the image when saving .jis.svg / .jis.png).
-	const exportHandleRef = useRef<CanvasExportHandle>(null);
+	// Canvas's imperative handle (its `export` namespace renders the image when
+	// saving .jis.svg / .jis.png).
+	const canvasRef = useRef<CanvasHandle>(null);
 
 	// Camera restored from persisted state, read once at mount to seed the canvas
-	// via `defaultViewport` (undefined on first open → Canvas uses its doc-derived
+	// via `initialConfig.viewport` (undefined on first open → Canvas uses its doc-derived
 	// default). The canvas owns the live camera after mount; we only persist what
 	// it reports, never drive it back — so a tab-hide reload restores the last
 	// view with no feedback into the canvas.
@@ -203,7 +229,7 @@ function App() {
 					// helper. parseCanvasText() returns a discriminated union without
 					// throwing, so the same logic as the Extension (DiagnosticProvider)
 					// covers every case.
-					const result = parseCanvasText(jsonText);
+					const result = canvasParser.parse(jsonText);
 					switch (result.kind) {
 						case "ok":
 							setSyncNonce(message.saveNonce);
@@ -244,7 +270,7 @@ function App() {
 							data,
 						});
 					};
-					const handle = exportHandleRef.current;
+					const handle = canvasRef.current?.export;
 					if (!handle) {
 						respond(null);
 						break;
@@ -298,7 +324,7 @@ function App() {
 	}, []); // empty deps = run once on mount
 
 	// Notify the Extension once the canvas has rendered and its export handle is
-	// available. This effect runs after the Canvas commits (exportRef is set via
+	// available. This effect runs after the Canvas commits (the handle is set via
 	// useImperativeHandle during commit, before this effect), so requestImageExport
 	// can succeed. Lets the Extension reconcile a stale image after a hidden-tab
 	// save (#179).
@@ -371,15 +397,16 @@ function App() {
 		return (
 			<div style={{ width: "100%", height: "100vh" }}>
 				<Canvas
-					canvasDoc={canvasDoc}
+					doc={canvasDoc}
 					syncNonce={syncNonce}
-					defaultViewport={initialCamera}
+					initialConfig={{ ...initialConfig, viewport: initialCamera }}
+					toolbar={{ layout: toolbarLayout }}
 					onViewportChange={handleViewportChange}
 					onCommit={handleCommit}
 					onUndo={handleUndo}
 					onRedo={handleRedo}
 					theme={vscodeCanvasTheme}
-					exportRef={exportHandleRef}
+					ref={canvasRef}
 					onExportImage={handleExportImage}
 				/>
 			</div>

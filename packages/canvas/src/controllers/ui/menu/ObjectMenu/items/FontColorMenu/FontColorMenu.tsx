@@ -5,10 +5,13 @@ import { resolveAutoColor } from "../../../../../../presentations/objects/utils/
 import type { TextStyleState } from "../../../../../../states/objects/base/TextStyleState";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { FontColorIcon } from "../../../../icons/FontColorIcon";
-import { ColorPickerGrid } from "../../common/ColorPickerGrid/ColorPickerGrid";
-import { DropdownPanel } from "../../common/DropdownPanel";
+import { ObjectMenuColorPickerGrid } from "../../common/ObjectMenuColorPickerGrid/ObjectMenuColorPickerGrid";
+import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
-import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
+import {
+	ObjectMenuButton,
+	ObjectMenuItemPositioner,
+} from "../../ObjectMenuStyled";
 import { getFirstSelectedWithProp } from "../../utils/getFirstSelectedWithProp";
 
 const SECTION_ID = "font-color";
@@ -22,7 +25,7 @@ type FontColorMenuProps = {
 /**
  * Font color menu.
  * Changes the font color of the selected text object.
- * Since ColorPickerGrid coordinates with the gesture system via data attributes,
+ * Since ObjectMenuColorPickerGrid coordinates with the gesture system via data attributes,
  * this component only retrieves and displays the current color.
  */
 const FontColorMenuComponent: React.FC<FontColorMenuProps> = ({
@@ -43,7 +46,7 @@ const FontColorMenuComponent: React.FC<FontColorMenuProps> = ({
 		(obj as TextStyleState | undefined)?.fontColor ?? DEFAULT_FONT_COLOR;
 
 	return (
-		<MenuItemPositioner ref={menuItemRef}>
+		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
 				data-kind="menu"
@@ -54,15 +57,19 @@ const FontColorMenuComponent: React.FC<FontColorMenuProps> = ({
 				<FontColorIcon underlineColor={resolveAutoColor(currentColor, "ink")} />
 			</ObjectMenuButton>
 			{isOpen && (
-				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>
-					<ColorPickerGrid
+				<ObjectMenuDropdownPanel
+					ref={submenuRef}
+					placement={placement}
+					offsetX={offsetX}
+				>
+					<ObjectMenuColorPickerGrid
 						currentColor={currentColor}
 						property="fontColor"
 						onPropertyUpdate={onPropertyUpdate}
 					/>
-				</DropdownPanel>
+				</ObjectMenuDropdownPanel>
 			)}
-		</MenuItemPositioner>
+		</ObjectMenuItemPositioner>
 	);
 };
 

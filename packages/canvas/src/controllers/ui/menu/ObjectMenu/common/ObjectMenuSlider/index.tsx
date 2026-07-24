@@ -1,0 +1,1 @@
+export { ObjectMenuSlider } from "./ObjectMenuSlider";

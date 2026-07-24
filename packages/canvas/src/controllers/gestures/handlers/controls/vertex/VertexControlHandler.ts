@@ -90,7 +90,7 @@ export class VertexControlHandler extends ControlStrategy {
 			...state,
 			selectedVertex: { objectId, vertexIndex },
 			objectMenuOpenId: null,
-			shapeLibraryOpenCategory: null,
+			stencilLibraryOpenCategory: null,
 		};
 	}
 
@@ -106,7 +106,7 @@ export class VertexControlHandler extends ControlStrategy {
 			selectedVertex: null,
 			edgeScrollEnabled: true,
 			objectMenuOpenId: null,
-			shapeLibraryOpenCategory: null,
+			stencilLibraryOpenCategory: null,
 		};
 	}
 

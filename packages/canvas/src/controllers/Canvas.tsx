@@ -1,4 +1,12 @@
-﻿import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+﻿import {
+	memo,
+	useCallback,
+	useEffect,
+	useImperativeHandle,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 
 import {
 	CanvasRoot,
@@ -33,7 +41,7 @@ import { useSyncExternalDoc } from "./hooks/useSyncExternalDoc";
 import { useViewportCulling } from "./hooks/useViewportCulling";
 import type { CanvasViewportHandle } from "./hooks/useViewportHandle";
 import { useViewportHandle } from "./hooks/useViewportHandle";
-import { mergeCanvasMessages } from "./messages/CanvasMessages";
+import { resolveCanvasMessages } from "./messages/CanvasMessages";
 import type { CanvasMessages } from "./messages/CanvasMessages";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./setup";
 import type { CanvasConfig } from "./setup";
@@ -63,6 +71,7 @@ import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { Camera } from "../states/canvas/Viewport";
 
 type CanvasProps = {
+	// ── Model & persistence (the core contract) ──
 	/**
 	 * The CanvasDoc to display.
 	 *
@@ -73,7 +82,7 @@ type CanvasProps = {
 	 * internal traversals. Validation is done at the external-input boundary (host)
 	 * → see packages/canvas/docs/01-design-philosophy.md principle 4.
 	 */
-	canvasDoc: CanvasDoc;
+	doc: CanvasDoc;
 	/**
 	 * Nonce from the most recent incoming sync message. Matched against the
 	 * delivered save nonces so a fold-back of our own save is recognized and
@@ -86,6 +95,49 @@ type CanvasProps = {
 	 * The second argument is the saveNonce that should be echoed back via syncNonce.
 	 */
 	onCommit?: (doc: CanvasDoc, saveNonce: string) => void;
+
+	// ── Host notifications (read-out only) ──
+	/**
+	 * Callback invoked when the selection changes, receiving the new set of
+	 * selected IDs (empty when nothing is selected). Shapes and the connector
+	 * are mutually exclusive and reported together as one ordered list. Use this
+	 * to drive host UI outside the canvas (e.g. an external property panel).
+	 */
+	onSelectionChange?: (selectedIds: string[]) => void;
+	/**
+	 * Invoked when the camera (pan/zoom) changes — on internal gestures and on
+	 * `ref.current.viewport.setViewport` (not on container resize). Read-only: use
+	 * it to persist or mirror the view. Do **not** feed it back into
+	 * `initialConfig.viewport` (mount-only) or drive the view from it — the canvas
+	 * owns the live camera; a mirror-back would fight continuous gestures. Push
+	 * programmatic changes via `ref.current.viewport` instead.
+	 */
+	onViewportChange?: (viewport: Camera) => void;
+
+	// ── Appearance & localization (live) ──
+	/**
+	 * Theme injected by the host (default: `darkCanvasTheme`). Appearance tokens
+	 * are exposed to styles as `--jiscribe-*` CSS custom properties on the
+	 * Canvas root; handle dimensions and the default font are distributed via
+	 * context. A VSCode host passes tokens holding `var(--vscode-...)` values
+	 * to follow the editor theme; other hosts can pass `lightCanvasTheme` or
+	 * their own `CanvasTheme`.
+	 */
+	theme?: CanvasTheme;
+	/**
+	 * Active locale (default `"en"`). Selects the canvas's built-in dictionary
+	 * (en / ja) and is exposed to plugins via `useCanvasLocale`. Resolution is
+	 * exact → language subtag (`"ja-JP"` → `"ja"`) → `"en"`.
+	 */
+	locale?: string;
+	/**
+	 * Partial overrides applied on top of the locale-resolved dictionary
+	 * (tooltips, menus, toasts). Use this to tweak individual strings; use
+	 * `locale` to pick the language.
+	 */
+	messages?: Partial<CanvasMessages>;
+
+	// ── Host-integration escape hatches ──
 	/**
 	 * When provided, Ctrl+Z is delegated to this callback instead of Canvas's
 	 * internal undo stack. Use this in VSCode to forward undo to the host editor.
@@ -97,126 +149,113 @@ type CanvasProps = {
 	 */
 	onRedo?: () => void;
 	/**
-	 * Callback invoked when the selection changes, receiving the new set of
-	 * selected IDs (empty when nothing is selected). Shapes and the connector
-	 * are mutually exclusive and reported together as one ordered list. Use this
-	 * to drive host UI outside the canvas (e.g. an external property panel).
-	 */
-	onSelectionChange?: (selectedIds: string[]) => void;
-	/**
-	 * Partial overrides of the UI strings (tooltips, menus, toasts).
-	 * Defaults to English; the host decides the language (e.g. a VSCode host
-	 * can pass a Japanese dictionary based on `vscode.env.language`).
-	 */
-	messages?: Partial<CanvasMessages>;
-	/**
-	 * Theme injected by the host (default: `darkCanvasTheme`). Appearance tokens
-	 * are exposed to styles as `--jiscribe-*` CSS custom properties on the
-	 * Canvas root; handle dimensions and the default font are distributed via
-	 * context. A VSCode host passes tokens holding `var(--vscode-...)` values
-	 * to follow the editor theme; other hosts can pass `lightCanvasTheme` or
-	 * their own `CanvasTheme`.
-	 */
-	theme?: CanvasTheme;
-	/**
-	 * Focus the canvas on mount so keyboard shortcuts work immediately (default true).
-	 * Shortcuts are scoped to the focused Canvas; set false when embedding multiple
-	 * Canvases (or when the host manages focus) so mounting does not steal focus.
-	 */
-	autoFocus?: boolean;
-	/**
-	 * Initial camera (pan + zoom) applied once at mount, so the first paint lands
-	 * at the host's view (restore a saved view, …) instead of the doc default.
-	 * Read only at mount; later changes are ignored. To move the view after mount,
-	 * use `viewportRef.setViewport` — not this prop.
-	 */
-	defaultViewport?: Camera;
-	/**
-	 * Invoked when the camera (pan/zoom) changes — on internal gestures and on
-	 * `viewportRef.setViewport` (not on container resize). Read-only: use it to
-	 * persist or mirror the view. Do **not** feed it back into `defaultViewport`
-	 * (mount-only) or drive the view from it — the canvas owns the live camera; a
-	 * mirror-back would fight continuous gestures. Push programmatic changes via
-	 * `viewportRef` instead.
-	 */
-	onViewportChange?: (viewport: Camera) => void;
-	/**
-	 * Receives the imperative viewport API ({@link CanvasViewportHandle}). Use its
-	 * `setViewport(camera)` to move pan/zoom programmatically (fit-to-content,
-	 * jump-to-node, a scripted intro). Imperative by design so it cannot feed back
-	 * into a render loop the way a controlled `viewport` value prop would.
-	 */
-	viewportRef?: React.Ref<CanvasViewportHandle>;
-	/**
-	 * Host UI inserted at the left edge of the toolbar (e.g. save/open buttons).
-	 * Rendered inside a `data-gesture="none"` container, so plain `onClick` works.
-	 */
-	toolbarLeading?: React.ReactNode;
-	/**
-	 * Host UI inserted at the right edge of the toolbar (e.g. a settings button).
-	 * Rendered inside a `data-gesture="none"` container, so plain `onClick` works.
-	 */
-	toolbarTrailing?: React.ReactNode;
-	/**
-	 * Overrides the top-level arrangement of the shape tools: an ordered mix of
-	 * pinned preset buttons and category flyouts (see {@link ToolbarEntry}). Omit
-	 * for the default layout (basic primitives + sticky pinned, flowchart /
-	 * general / annotation as flyouts).
-	 */
-	toolbarLayout?: ToolbarEntry[];
-	/**
-	 * Per-canvas configuration of the available object types, commands, and
-	 * registries. Restricts what this canvas can create/handle (plugin-style
-	 * extensibility and feature-gating), independently of any other `<Canvas>` on
-	 * the page. Omit for the full default set (all shapes and commands).
-	 *
-	 * **Caller responsibility**: when `objectTypes` is restricted, only pass docs
-	 * whose object types remain enabled — otherwise state construction throws
-	 * "Mapper not found" (docs/01-design-philosophy.md principle 4).
-	 *
-	 * Read **once at mount**: the capability set is part of a canvas's identity,
-	 * so later `initialConfig` changes are ignored. To reconfigure, remount with a
-	 * new React `key` (`<Canvas key={configId} initialConfig={...} />`).
-	 */
-	initialConfig?: CanvasConfig;
-	/**
-	 * Receives the imperative export API ({@link CanvasExportHandle}). Use it
-	 * when the host needs the exported image programmatically (e.g. writing a
-	 * `.jis.png` on save) instead of through the export dialog.
-	 */
-	exportRef?: React.Ref<CanvasExportHandle>;
-	/**
 	 * When provided, the export dialog delivers the exported image here instead
 	 * of triggering a browser download. Use this when the host owns file saving
 	 * (e.g. the VSCode extension writing into the workspace).
 	 */
 	onExportImage?: (payload: CanvasExportImagePayload) => void;
+
+	// ── Toolbar (host UI slots) ──
+	/**
+	 * Host-provided toolbar customization: UI slots at the edges (`leading` /
+	 * `trailing`) and an override of the shape-tool arrangement (`layout`). Grouped
+	 * for cohesion; since the JSX slots already break `<Canvas>`'s memo, a host
+	 * rendering this inline can `useMemo` the object to avoid extra re-renders.
+	 */
+	toolbar?: {
+		/**
+		 * Host UI inserted at the left edge of the toolbar (e.g. save/open buttons).
+		 * Rendered inside a `data-gesture="none"` container, so plain `onClick` works.
+		 */
+		leading?: React.ReactNode;
+		/**
+		 * Host UI inserted at the right edge of the toolbar (e.g. a settings button).
+		 * Rendered inside a `data-gesture="none"` container, so plain `onClick` works.
+		 */
+		trailing?: React.ReactNode;
+		/**
+		 * Overrides the top-level arrangement of the shape tools: an ordered mix of
+		 * pinned preset buttons and category flyouts (see {@link ToolbarEntry}). Omit
+		 * for the default layout (basic primitives + sticky pinned, flowchart /
+		 * general / annotation as flyouts).
+		 */
+		layout?: ToolbarEntry[];
+	};
+
+	// ── Focus behavior ──
+	/**
+	 * Focus the canvas on mount so keyboard shortcuts work immediately (default
+	 * true). Shortcuts are scoped to the focused canvas; set false when embedding
+	 * multiple canvases (or when the host manages focus) so mounting does not
+	 * steal focus. Top-level (not in `initialConfig`) to match the React-idiomatic
+	 * `autoFocus` spelling.
+	 */
+	autoFocus?: boolean;
+
+	// ── Mount-time setup (read once; remount with a new key to change) ──
+	/**
+	 * Per-canvas configuration read **once at mount** ({@link CanvasConfig}): the
+	 * capability set (available object types, commands, plugins) plus the initial
+	 * view (`viewport`). Restricts what this canvas can create/handle (plugin-style
+	 * extensibility and feature-gating), independently of any other `<Canvas>` on
+	 * the page. Omit for the full default set.
+	 *
+	 * **Caller responsibility**: when `objectTypes` is restricted, only pass docs
+	 * whose object types remain enabled — otherwise state construction throws
+	 * "Mapper not found" (docs/01-design-philosophy.md principle 4).
+	 *
+	 * Later changes are ignored (the configuration is part of a canvas's identity).
+	 * To reconfigure, remount with a new React `key`
+	 * (`<Canvas key={configId} initialConfig={...} />`).
+	 */
+	initialConfig?: CanvasConfig;
+
+	// ── Imperative handle ──
+	/**
+	 * Receives the imperative Canvas handle ({@link CanvasHandle}), grouping every
+	 * imperative API by subsystem: `ref.current.viewport.setViewport(camera)` to
+	 * move pan/zoom (fit-to-content, jump-to-node, a scripted intro), and
+	 * `ref.current.export.toSvgString()` / `toPngBlob()` to get the exported image
+	 * programmatically. Imperative by design so the view cannot feed back into a
+	 * render loop the way a controlled value prop would.
+	 */
+	ref?: React.Ref<CanvasHandle>;
 };
 
-const CanvasComponent: React.FC<CanvasProps> = ({
-	canvasDoc,
+/**
+ * Imperative Canvas API delivered through the component `ref`. Each subsystem
+ * owns a namespace; new imperative capabilities are added as new namespaces
+ * rather than new props.
+ */
+export type CanvasHandle = {
+	/** Pan/zoom control (see {@link CanvasViewportHandle}). */
+	viewport: CanvasViewportHandle;
+	/** Image export (see {@link CanvasExportHandle}). */
+	export: CanvasExportHandle;
+};
+
+const CanvasComponent = ({
+	doc,
 	syncNonce,
 	onCommit,
+	onSelectionChange,
+	onViewportChange,
+	theme = darkCanvasTheme,
+	locale = "en",
+	messages,
 	onUndo,
 	onRedo,
-	onSelectionChange,
-	messages,
-	theme = darkCanvasTheme,
-	autoFocus = true,
-	defaultViewport,
-	onViewportChange,
-	viewportRef,
-	toolbarLeading,
-	toolbarTrailing,
-	toolbarLayout,
-	initialConfig,
-	exportRef,
 	onExportImage,
-}) => {
-	// Merged UI strings (English defaults + host overrides), distributed via context
+	toolbar,
+	autoFocus = true,
+	initialConfig,
+	ref,
+}: CanvasProps) => {
+	// UI strings resolved from locale, then host overrides applied. Distributed
+	// via context along with the raw locale (plugins resolve their own strings).
 	const mergedMessages = useMemo(
-		() => mergeCanvasMessages(messages),
-		[messages],
+		() => resolveCanvasMessages(locale, messages),
+		[locale, messages],
 	);
 
 	// Appearance tokens as --jiscribe-* custom properties, injected on the root
@@ -240,21 +279,24 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	// Per-canvas registry bundle: a configured set when `initialConfig` is given,
 	// otherwise the shared full default. Built once at mount (see the `initialConfig`
 	// prop doc); the stable instance is closed over by the reducer (pure tree) and
-	// provided via context (React tree), so the two can never desync.
+	// provided via context (React tree), so the two can never desync. Canvas is the
+	// provider, so its own hooks cannot read the bundle back from context (they would
+	// get the default, missing any plugin types); they receive it as an explicit
+	// `registries` argument instead.
 	const [registries] = useState(() =>
 		initialConfig
 			? createCanvasRegistries(initialConfig)
 			: defaultCanvasRegistries,
 	);
 
-	// Reducer for canvas state management with history. defaultViewport (if any)
-	// seeds the initial viewport so the first paint is already at the host's
-	// pan/zoom — see useCanvasReducer for the mount handoff.
+	// Reducer for canvas state management with history. initialConfig.viewport
+	// (if any) seeds the initial viewport so the first paint is already at the
+	// host's pan/zoom — see useCanvasReducer for the mount handoff.
 	const [state, dispatch] = useCanvasReducer(
-		canvasDoc,
+		doc,
 		registries,
 		docDefaults,
-		defaultViewport,
+		initialConfig?.viewport,
 	);
 
 	// Keep the reducer-held docDefaults in sync when the host swaps themes at
@@ -291,24 +333,25 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	);
 
 	// Viewport integration: expose an imperative setter for programmatic pan/zoom
-	// (viewportRef) and notify the host of camera changes (onViewportChange). The
-	// canvas stays authoritative for the live camera — the host reads it out and
-	// pushes changes in imperatively, with no controlled value prop that could
-	// feed back and fight continuous gestures.
-	useViewportHandle(viewportRef, dispatch);
+	// (ref.current.viewport) and notify the host of camera changes
+	// (onViewportChange). The canvas stays authoritative for the live camera — the
+	// host reads it out and pushes changes in imperatively, with no controlled
+	// value prop that could feed back and fight continuous gestures.
+	const viewportHandle = useViewportHandle(dispatch);
 	useNotifyViewportChange(state.viewport, onViewportChange);
 
 	// Notify parent component when a save is required (after commit or undo/redo)
-	useNotifySaveRequest(state, onCommit, selfSaveNonceTracker);
+	useNotifySaveRequest(state, onCommit, selfSaveNonceTracker, registries);
 
-	// Sync external canvasDoc changes
+	// Sync external doc changes
 	useSyncExternalDoc({
-		canvasDoc,
+		canvasDoc: doc,
 		syncNonce,
 		canvasState: state,
 		dispatch,
 		resetGestureState,
 		selfSaveNonceTracker,
+		registries,
 	});
 
 	// Use wheel handler from GestureRecognizer.
@@ -319,7 +362,11 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	useContainerResize(canvasRef, dispatch);
 
 	// Paste handling (keyboard shortcut + context menu)
-	const handlePaste = useClipboardPaste(state.internalClipboard, dispatch);
+	const handlePaste = useClipboardPaste(
+		state.internalClipboard,
+		dispatch,
+		registries,
+	);
 
 	// Keyboard shortcuts handling — scoped to the focusable canvas root (rootRef),
 	// so with multiple Canvases on a page only the focused one handles shortcuts.
@@ -328,6 +375,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 		canvasState: state,
 		dispatch,
 		callbacks: { undo: onUndo, redo: onRedo, paste: handlePaste },
+		registries,
 	});
 
 	// Focus management for the keyboard scope: initial focus (autoFocus) and
@@ -364,8 +412,9 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 		state.textEditState?.objectId ?? null,
 	);
 
-	// Image export: the imperative exportRef API and the export dialog
+	// Image export: the imperative export handle and the export dialog
 	const {
+		exportHandle,
 		isExportDialogOpen,
 		openExportDialog,
 		closeExportDialog,
@@ -374,12 +423,19 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 		svgRef,
 		canvasState: state,
 		registries,
-		exportRef,
 		onExportImage,
 		dispatch,
 		notifyError,
 		withCullingSuspended,
 	});
+
+	// Single imperative Canvas handle: assemble the subsystem sub-handles into one
+	// namespaced object so the whole imperative surface is delivered through `ref`.
+	useImperativeHandle(
+		ref,
+		() => ({ viewport: viewportHandle, export: exportHandle }),
+		[viewportHandle, exportHandle],
+	);
 
 	const { minX, minY, zoom } = state.viewport;
 
@@ -394,9 +450,10 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 	return (
 		<CanvasProviders
 			theme={theme}
+			locale={locale}
 			messages={mergedMessages}
 			registries={registries}
-			viewportRef={canvasRef}
+			viewportElementRef={canvasRef}
 		>
 			<CanvasRoot
 				ref={rootRef}
@@ -407,13 +464,13 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 			>
 				<Toolbar
 					activePresetId={state.shapeDrawing?.preset.id ?? null}
-					openCategoryId={state.shapeLibraryOpenCategory}
+					openCategoryId={state.stencilLibraryOpenCategory}
 					zoom={state.viewport.zoom}
 					canZoomIn={canZoomIn}
 					canZoomOut={canZoomOut}
-					layout={toolbarLayout}
-					leading={toolbarLeading}
-					trailing={toolbarTrailing}
+					layout={toolbar?.layout}
+					leading={toolbar?.leading}
+					trailing={toolbar?.trailing}
 				/>
 				<Viewport
 					data-id="canvas"
@@ -475,7 +532,7 @@ const CanvasComponent: React.FC<CanvasProps> = ({
 								isTextEditing={!!state.textEditState}
 							/>
 							<DragGhost
-								shapeLibraryDrag={state.shapeLibraryDrag}
+								stencilLibraryDrag={state.stencilLibraryDrag}
 								docDefaults={state.docDefaults}
 							/>
 							<DrawingPreviewOverlay shapeDrawing={state.shapeDrawing} />

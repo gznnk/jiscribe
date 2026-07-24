@@ -13,12 +13,11 @@ import { useCanvasRegistries } from "../../../contexts/CanvasRegistriesContext";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
 import { HelpIcon } from "../../icons/HelpIcon";
 import { ShortcutHelpModal } from "../../modal/ShortcutHelp/ShortcutHelpModal";
-import { SHAPE_CATEGORY_DEFINITIONS } from "../ShapeLibrary/shapeCategories";
-import { ShapeCategoryMenu } from "../ShapeLibrary/ShapeCategoryMenu";
-import { ShapeLibraryItem } from "../ShapeLibrary/ShapeLibraryItem";
+import { StencilCategoryMenu } from "../StencilLibrary/StencilCategoryMenu";
+import { StencilLibraryItem } from "../StencilLibrary/StencilLibraryItem";
 
 type ToolbarProps = {
-	/** ID of the shape preset currently being drawn (for the tool's active state) */
+	/** ID of the stencil currently being drawn (for the tool's active state) */
 	activePresetId: string | null;
 	/** ID of the category whose flyout is open (reducer state); null = none */
 	openCategoryId: string | null;
@@ -30,9 +29,9 @@ type ToolbarProps = {
 	canZoomOut: boolean;
 	/** Top-level arrangement of the shape tools (pinned presets + category flyouts) */
 	layout?: ToolbarEntry[];
-	/** Host UI at the left edge (see CanvasProps.toolbarLeading) */
+	/** Host UI at the left edge (see CanvasProps.toolbar.leading) */
 	leading?: React.ReactNode;
-	/** Host UI at the right edge (see CanvasProps.toolbarTrailing) */
+	/** Host UI at the right edge (see CanvasProps.toolbar.trailing) */
 	trailing?: React.ReactNode;
 };
 
@@ -50,7 +49,7 @@ const isEditableTarget = (target: EventTarget | null): boolean => {
 
 /**
  * Unified toolbar centered at the top.
- * Combines the shape tools (ShapeLibrary), zoom readout, and help (?) into a single bar.
+ * Combines the shape tools (StencilLibrary), zoom readout, and help (?) into a single bar.
  *
  * - Shape tools operate through the gesture system (data-kind="menu").
  * - Zoom +/- is currently visual only (actual control is via wheel / pinch).
@@ -67,12 +66,12 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 	trailing,
 }) => {
 	const messages = useCanvasMessages();
-	const { shapePreset } = useCanvasRegistries();
+	const { stencil } = useCanvasRegistries();
 	const [isHelpOpen, setIsHelpOpen] = useState(false);
 	const closeHelp = useCallback(() => setIsHelpOpen(false), []);
 
 	// The open category flyout (`openCategoryId`) lives in reducer state; the
-	// toggle goes through ShapeCategoryToggleHandler and dismissal through the
+	// toggle goes through StencilCategoryToggleHandler and dismissal through the
 	// handlers/commands that clear it, so the Toolbar is stateless here and
 	// multiple <Canvas> instances stay independent.
 
@@ -113,28 +112,36 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 					)}
 					{layout.map((entry) => {
 						if (entry.kind === "preset") {
-							const preset = shapePreset.get(entry.presetId);
+							const preset = stencil.get(entry.presetId);
 							if (!preset) {
 								return null;
 							}
 							return (
-								<ShapeLibraryItem
+								<StencilLibraryItem
 									key={`preset:${entry.presetId}`}
 									preset={preset}
 									isActive={activePresetId === preset.id}
 								/>
 							);
 						}
-						const category = SHAPE_CATEGORY_DEFINITIONS[entry.categoryId];
-						if (!category) {
+						// Resolve the layout's presetIds in order; a preset that isn't
+						// registered (e.g. a plugin not applied) is silently skipped.
+						const presets = entry.presetIds
+							.map((id) => stencil.get(id))
+							.filter((preset) => preset !== undefined);
+						// A category with no resolvable presets has nothing to show, so
+						// skip the button/flyout entirely rather than rendering an empty one.
+						if (presets.length === 0) {
 							return null;
 						}
 						return (
-							<ShapeCategoryMenu
-								key={`category:${entry.categoryId}`}
-								category={category}
-								presets={shapePreset.byCategory(entry.categoryId)}
-								isOpen={openCategoryId === entry.categoryId}
+							<StencilCategoryMenu
+								key={`category:${entry.id}`}
+								id={entry.id}
+								label={entry.label}
+								icon={entry.icon}
+								presets={presets}
+								isOpen={openCategoryId === entry.id}
 								activePresetId={activePresetId}
 							/>
 						);

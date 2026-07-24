@@ -8,7 +8,7 @@ import { centeredPolygonOutline } from "../../utils/outlineHelpers";
  * Card outline vertices (top-left corner cut off) for a bounding box whose
  * top-left corner is at (x, y). The cut length follows the shorter side so the
  * corner stays a 45-degree bevel at any aspect ratio. Single source shared by
- * the renderer, the draw-drag preview, and the connector outline provider.
+ * the renderer, the draw-drag preview, and the connector outline calculator.
  */
 export const cardOutlinePoints = (
 	x: number,

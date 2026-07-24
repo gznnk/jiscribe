@@ -1,12 +1,13 @@
-import { type Dispatch, useImperativeHandle } from "react";
+import { type Dispatch, useMemo } from "react";
 
 import type { Camera } from "../../states/canvas/Viewport";
 import type { CanvasAction } from "../reducer/CanvasActions";
 
 /**
- * Imperative viewport API exposed via the `viewportRef` prop. Hosts push a new
- * camera (pan/zoom) programmatically — fit-to-content, jump-to-node, a scripted
- * intro — without the viewport being a controlled value.
+ * Imperative viewport API exposed on the `viewport` namespace of the Canvas
+ * handle (`ref.current.viewport`). Hosts push a new camera (pan/zoom)
+ * programmatically — fit-to-content, jump-to-node, a scripted intro — without
+ * the viewport being a controlled value.
  *
  * Deliberately imperative rather than a `viewport` value prop: the canvas
  * advances its own camera every frame during continuous gestures (trackpad pan,
@@ -20,16 +21,14 @@ export type CanvasViewportHandle = {
 	setViewport(camera: Camera): void;
 };
 
+/** Builds the stable viewport sub-handle assembled into the Canvas handle. */
 export const useViewportHandle = (
-	viewportRef: React.Ref<CanvasViewportHandle> | undefined,
 	dispatch: Dispatch<CanvasAction>,
-): void => {
-	useImperativeHandle(
-		viewportRef,
+): CanvasViewportHandle =>
+	useMemo(
 		() => ({
 			setViewport: (camera: Camera) =>
 				dispatch({ type: "SET_VIEWPORT", camera }),
 		}),
 		[dispatch],
 	);
-};

@@ -4,7 +4,10 @@ import type { CanvasControllerState } from "../../../../../../controllers/Canvas
 import type { TextStyleState } from "../../../../../../states/objects/base/TextStyleState";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { BoldIcon } from "../../../../icons/BoldIcon";
-import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
+import {
+	ObjectMenuButton,
+	ObjectMenuItemPositioner,
+} from "../../ObjectMenuStyled";
 import { getFirstSelectedWithProp } from "../../utils/getFirstSelectedWithProp";
 
 type BoldMenuProps = {
@@ -22,7 +25,7 @@ const BoldMenuComponent: React.FC<BoldMenuProps> = ({ canvasState }) => {
 	const isBold = (obj as TextStyleState | undefined)?.fontWeight === "bold";
 
 	return (
-		<MenuItemPositioner>
+		<ObjectMenuItemPositioner>
 			<ObjectMenuButton
 				isActive={isBold}
 				data-kind="menu"
@@ -32,7 +35,7 @@ const BoldMenuComponent: React.FC<BoldMenuProps> = ({ canvasState }) => {
 			>
 				<BoldIcon />
 			</ObjectMenuButton>
-		</MenuItemPositioner>
+		</ObjectMenuItemPositioner>
 	);
 };
 

@@ -1,7 +1,8 @@
-import { memo, useMemo, useRef } from "react";
+import { memo, useMemo, useRef, useState } from "react";
 
-import { defaultCanvasRegistries } from "./setup";
+import { createCanvasRegistries, defaultCanvasRegistries } from "./setup";
 import { calcFitViewport } from "./utils/calcFitViewport";
+import type { CanvasPlugin } from "../plugin/CanvasPlugin";
 import { CanvasView } from "../presentations/CanvasView";
 import { PresentationRegistriesProvider } from "../presentations/objects/registry/PresentationRegistriesProvider";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
@@ -26,6 +27,12 @@ type CanvasThumbnailProps = {
 	padding?: number;
 	/** Theme injected by the host (default: `darkCanvasTheme`). See the Canvas `theme` prop. */
 	theme?: CanvasTheme;
+	/**
+	 * Plugins whose object types the doc may reference. Read once at mount; later
+	 * changes are ignored (see the Canvas `initialConfig` prop doc). Without them,
+	 * plugin-supplied objects have no mapper and `canvasToState` throws.
+	 */
+	plugins?: readonly CanvasPlugin[];
 };
 
 /**
@@ -41,12 +48,19 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 	height = 270,
 	padding = 24,
 	theme = darkCanvasTheme,
+	plugins,
 }) => {
 	const svgRef = useRef<SVGSVGElement>(null);
 
+	// Configured bundle when `plugins` is given, otherwise the shared full
+	// default. Built once at mount (see the `plugins` prop doc).
+	const [registries] = useState(() =>
+		plugins ? createCanvasRegistries({ plugins }) : defaultCanvasRegistries,
+	);
+
 	const { objects, rootIds } = useMemo(
-		() => canvasToState(canvasDoc, defaultCanvasRegistries.objectMapper),
-		[canvasDoc],
+		() => canvasToState(canvasDoc, registries.objectMapper),
+		[canvasDoc, registries],
 	);
 
 	const viewport = useMemo(
@@ -71,9 +85,9 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 	return (
 		<CanvasThemeContext value={theme}>
 			<PresentationRegistriesProvider
-				objectComponent={defaultCanvasRegistries.objectComponent}
-				textRegion={defaultCanvasRegistries.textRegion}
-				shapeOutline={defaultCanvasRegistries.shapeOutline}
+				objectComponent={registries.objectComponent}
+				objectTextRegion={registries.objectTextRegion}
+				objectOutline={registries.objectOutline}
 			>
 				<div style={themeCssVars}>
 					<CanvasView

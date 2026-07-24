@@ -17,10 +17,10 @@ import { StackOrderMenu } from "./items/StackOrderMenu";
 import { StrokeColorMenu } from "./items/StrokeColorMenu";
 import {
 	ObjectMenuContainer,
-	ObjectMenuSection,
+	ObjectMenuSectionRow,
 	ObjectMenuWrapper,
 } from "./ObjectMenuStyled";
-import type { MenuItem, MenuSection, MenuItemProps } from "./ObjectMenuTypes";
+import type { ObjectMenuItem, ObjectMenuSection } from "./ObjectMenuTypes";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { isArrangeableSelection } from "../../../utils/isArrangeableSelection";
 
@@ -29,8 +29,11 @@ type ObjectMenuProps = {
 	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
 };
 
-const renderItem = (item: MenuItem, props: MenuItemProps): React.ReactNode => {
-	const { canvasState, onPropertyUpdate } = props;
+const renderItem = (
+	item: ObjectMenuItem,
+	canvasState: CanvasControllerState,
+	onPropertyUpdate: (property: string, value: string, commit: boolean) => void,
+): React.ReactNode => {
 	switch (item.type) {
 		case "arrowHead":
 			return <ArrowHeadMenu key="arrowHead" canvasState={canvasState} />;
@@ -103,7 +106,10 @@ const renderItem = (item: MenuItem, props: MenuItemProps): React.ReactNode => {
 			return (
 				<item.component
 					key={item.id}
-					canvasState={canvasState}
+					objects={canvasState.objects}
+					selectedIds={canvasState.selectedIds}
+					selectedConnectorId={canvasState.selectedConnectorId}
+					openSectionId={canvasState.objectMenuOpenId}
 					onPropertyUpdate={onPropertyUpdate}
 				/>
 			);
@@ -112,8 +118,8 @@ const renderItem = (item: MenuItem, props: MenuItemProps): React.ReactNode => {
 
 const buildSystemSections = (
 	canvasState: CanvasControllerState,
-): MenuSection[] => {
-	const systemSections: MenuSection[] = [];
+): ObjectMenuSection[] => {
+	const systemSections: ObjectMenuSection[] = [];
 
 	// To show StackOrder including connector selection (selectedConnectorId), use
 	// isArrangeableSelection, which judges by the effective selection rather than selectedIds alone.
@@ -169,13 +175,11 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 		return null;
 	}
 
-	const itemProps: MenuItemProps = { canvasState, onPropertyUpdate };
-
 	// Since both objectSections and systemSections may contain the same item type,
 	// prefer the first occurrence and prevent duplicate rendering
 	const renderedItemKeys = new Set<string>();
 
-	// Wrap each section in an ObjectMenuSection. Dividers are drawn in CSS (::before), and
+	// Wrap each section in an ObjectMenuSectionRow. Dividers are drawn in CSS (::before), and
 	// empty sections (custom returns null / all items skipped as duplicates) are
 	// automatically collapsed along with their divider via `:empty`.
 	const sections = allSections.map((section) => {
@@ -186,10 +190,12 @@ const ObjectMenuComponent: React.FC<ObjectMenuProps> = ({
 				return;
 			}
 			renderedItemKeys.add(key);
-			sectionItems.push(renderItem(item, itemProps));
+			sectionItems.push(renderItem(item, canvasState, onPropertyUpdate));
 		});
 		return (
-			<ObjectMenuSection key={section.id}>{sectionItems}</ObjectMenuSection>
+			<ObjectMenuSectionRow key={section.id}>
+				{sectionItems}
+			</ObjectMenuSectionRow>
 		);
 	});
 

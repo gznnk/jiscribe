@@ -10,9 +10,12 @@ import { BringToFrontIcon } from "../../../../icons/BringToFrontIcon";
 import { SendBackwardIcon } from "../../../../icons/SendBackwardIcon";
 import { SendToBackIcon } from "../../../../icons/SendToBackIcon";
 import { StackOrderIcon } from "../../../../icons/StackOrderIcon";
-import { DropdownPanel } from "../../common/DropdownPanel";
+import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
 import { useSubmenuPosition } from "../../hooks/useSubmenuPosition";
-import { ObjectMenuButton, MenuItemPositioner } from "../../ObjectMenuStyled";
+import {
+	ObjectMenuButton,
+	ObjectMenuItemPositioner,
+} from "../../ObjectMenuStyled";
 
 const SECTION_ID = "stack-order";
 
@@ -40,7 +43,7 @@ const StackOrderMenuComponent: React.FC<StackOrderMenuProps> = ({
 	);
 
 	return (
-		<MenuItemPositioner ref={menuItemRef}>
+		<ObjectMenuItemPositioner ref={menuItemRef}>
 			<ObjectMenuButton
 				isActive={isOpen}
 				data-kind="menu"
@@ -50,7 +53,11 @@ const StackOrderMenuComponent: React.FC<StackOrderMenuProps> = ({
 				<StackOrderIcon />
 			</ObjectMenuButton>
 			{isOpen && (
-				<DropdownPanel ref={submenuRef} placement={placement} offsetX={offsetX}>
+				<ObjectMenuDropdownPanel
+					ref={submenuRef}
+					placement={placement}
+					offsetX={offsetX}
+				>
 					<StackOrderMenuRow>
 						{arrangeCommands.map(({ commandId, Icon }) => {
 							const resolved = resolveCommand(commandId);
@@ -71,9 +78,9 @@ const StackOrderMenuComponent: React.FC<StackOrderMenuProps> = ({
 							);
 						})}
 					</StackOrderMenuRow>
-				</DropdownPanel>
+				</ObjectMenuDropdownPanel>
 			)}
-		</MenuItemPositioner>
+		</ObjectMenuItemPositioner>
 	);
 };
 

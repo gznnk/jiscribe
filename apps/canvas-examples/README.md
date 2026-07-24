@@ -11,15 +11,15 @@ pnpm build:examples   # ビルド（CI で examples の腐敗防止を兼ねる�
 
 ## examples
 
-| id              | 内容                                                                        |
-| --------------- | --------------------------------------------------------------------------- |
-| `minimal`       | 空ドキュメントで Canvas をマウントする最小構成                              |
-| `file-io`       | .jis.json の読み込み・保存、エクスポート PNG のドロップ復元                 |
-| `theming`       | theme prop によるテーマ切り替え（プリセット3種の巡回）                      |
-| `viewport`      | imperative viewport API（defaultViewport / onViewportChange / viewportRef） |
-| `external-sync` | 外部（エディタ・AI）が doc の正本を持ち、canvasDoc 差し替えで push する     |
-| `multi-canvas`  | 複数 Canvas の埋め込み（キーボードはフォーカスされた Canvas にスコープ）    |
-| `gallery`       | 実物 .jis.json の閲覧（正本は `apps/landing/public/demo/diagrams/`）        |
+| id              | 内容                                                                                        |
+| --------------- | ------------------------------------------------------------------------------------------- |
+| `minimal`       | 空ドキュメントで Canvas をマウントする最小構成                                              |
+| `file-io`       | .jis.json の読み込み・保存、エクスポート PNG のドロップ復元                                 |
+| `theming`       | theme prop によるテーマ切り替え（プリセット3種の巡回）                                      |
+| `viewport`      | imperative viewport API（initialConfig.viewport / onViewportChange / ref.current.viewport） |
+| `external-sync` | 外部（エディタ・AI）が doc の正本を持ち、doc 差し替えで push する                           |
+| `multi-canvas`  | 複数 Canvas の埋め込み（キーボードはフォーカスされた Canvas にスコープ）                    |
+| `gallery`       | 実物 .jis.json の閲覧（正本は `apps/landing/public/demo/diagrams/`）                        |
 
 ## example を追加するとき
 

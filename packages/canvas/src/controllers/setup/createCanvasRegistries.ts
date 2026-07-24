@@ -1,4 +1,4 @@
-import type { CanvasConfig, CanvasRegistries } from "./CanvasRegistries";
+import type { CanvasCapabilities, CanvasRegistries } from "./CanvasRegistries";
 import { initializeCommands } from "./initializeCommands";
 import { initializeGestureHandlerRegistry } from "./initializeGestureHandlerRegistry";
 import {
@@ -7,10 +7,9 @@ import {
 } from "./initializeObjectRegistry";
 import { initializeStyleProperties } from "./initializeStyleProperties";
 import { createObjectComponentRegistry } from "../../presentations/objects/registry/ObjectComponentRegistry";
-import { createShapeOutlineRegistry } from "../../presentations/objects/registry/ShapeOutlineRegistry";
-import { createShapePreviewRegistry } from "../../presentations/objects/registry/ShapePreviewRegistry";
-import { createTextRegionRegistry } from "../../presentations/objects/registry/TextRegionRegistry";
-import { createShapeFactoryRegistry } from "../../schemas/registry/ShapeFactoryRegistry";
+import { createObjectOutlineRegistry } from "../../presentations/objects/registry/ObjectOutlineRegistry";
+import { createObjectTextRegionRegistry } from "../../presentations/objects/registry/ObjectTextRegionRegistry";
+import { createObjectFactoryRegistry } from "../../schemas/registry/ObjectFactoryRegistry";
 import { createObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import { createObjectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
 import { createCommandRegistry } from "../commands/CommandRegistry";
@@ -19,44 +18,49 @@ import { createObjectBehaviorRegistry } from "../gestures/registry/ObjectBehavio
 import { createStylePropertyRegistry } from "../styleProperties/StylePropertyRegistry";
 import { createSelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
 import { createObjectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
-import { createShapePresetRegistry } from "../ui/objects/ShapePresetRegistry";
+import { createStencilRegistry } from "../ui/objects/StencilRegistry";
 
 /**
  * Builds a fresh, fully independent bundle of UI registries for one `<Canvas>`.
  *
  * Wiring order:
- *   1. instantiate the 14 empty registries,
+ *   1. instantiate the empty registries,
  *   2. register the object-type-independent sets (gesture handlers, system
  *      style properties) — always all,
  *   3. apply the configured object types (default: every type),
  *   4. register commands, optionally restricted by `config.commands`,
- *   5. run the `config.customize` escape hatch.
+ *   5. apply `config.plugins` in declared order. A plugin object type that
+ *      collides with a built-in or an earlier plugin throws (see `CanvasPlugin`).
  *
  * Passing no `config` reproduces the full set, matching the historical singleton
  * behavior (backward compatible).
  */
 export const createCanvasRegistries = (
-	config?: CanvasConfig,
+	config?: CanvasCapabilities,
 ): CanvasRegistries => {
 	const registries: CanvasRegistries = {
 		objectMapper: createObjectMapperRegistry(),
 		objectStateValidator: createObjectStateValidatorRegistry(),
 		objectComponent: createObjectComponentRegistry(),
-		textRegion: createTextRegionRegistry(),
-		shapeOutline: createShapeOutlineRegistry(),
-		shapePreview: createShapePreviewRegistry(),
+		objectTextRegion: createObjectTextRegionRegistry(),
+		objectOutline: createObjectOutlineRegistry(),
 		objectBehavior: createObjectBehaviorRegistry(),
 		selectionControl: createSelectionControlRegistry(),
 		gestureHandler: createGestureHandlerRegistry(),
 		command: createCommandRegistry(),
 		objectMenu: createObjectMenuRegistry(),
-		shapePreset: createShapePresetRegistry(),
-		shapeFactory: createShapeFactoryRegistry(),
+		stencil: createStencilRegistry(),
+		objectFactory: createObjectFactoryRegistry(),
 		styleProperty: createStylePropertyRegistry(),
 	};
 
 	initializeGestureHandlerRegistry(registries);
 	initializeStyleProperties(registries.styleProperty);
+
+	// Tracks which object types are already claimed and by whom, so a plugin
+	// colliding with a built-in or an earlier plugin throws instead of
+	// silently overwriting the earlier registration.
+	const typeOrigins = new Map<string, string>();
 
 	const objectTypes =
 		config?.objectTypes ?? Object.keys(ALL_OBJECT_DEFINITIONS);
@@ -64,12 +68,27 @@ export const createCanvasRegistries = (
 		const definition = ALL_OBJECT_DEFINITIONS[type];
 		if (definition) {
 			applyObjectDefinition(registries, type, definition);
+			typeOrigins.set(type, "a built-in object type");
 		}
 	}
 
 	initializeCommands(registries, config?.commands);
 
-	config?.customize?.(registries);
+	for (const plugin of config?.plugins ?? []) {
+		for (const [type, definition] of Object.entries(plugin.objects ?? {})) {
+			if (!definition) {
+				continue;
+			}
+			const existingOrigin = typeOrigins.get(type);
+			if (existingOrigin !== undefined) {
+				throw new Error(
+					`createCanvasRegistries: plugin "${plugin.id}" object type "${type}" conflicts with ${existingOrigin}`,
+				);
+			}
+			applyObjectDefinition(registries, type, definition);
+			typeOrigins.set(type, `plugin "${plugin.id}"`);
+		}
+	}
 
 	return registries;
 };

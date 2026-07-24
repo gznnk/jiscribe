@@ -71,12 +71,12 @@ describe("handleGesture - right-click over menus does not execute commands (#110
 		});
 	});
 
-	describe("shape library", () => {
+	describe("stencil library", () => {
 		it("places a shape on left-click (positive control)", () => {
 			const state = baseState();
 			const nextState = handleGesture(
 				state,
-				clickOn(0, "menu", "shape-library", "item:sticky"),
+				clickOn(0, "menu", "stencil-library", "item:sticky"),
 				registries,
 			);
 			expect(nextState.rootIds.length).toBe(state.rootIds.length + 1);
@@ -86,7 +86,7 @@ describe("handleGesture - right-click over menus does not execute commands (#110
 			const state = baseState();
 			const nextState = handleGesture(
 				state,
-				clickOn(2, "menu", "shape-library", "item:sticky"),
+				clickOn(2, "menu", "stencil-library", "item:sticky"),
 				registries,
 			);
 			expect(nextState.rootIds).toEqual(state.rootIds);
@@ -96,7 +96,7 @@ describe("handleGesture - right-click over menus does not execute commands (#110
 		it("does not toggle drawing mode on right-click", () => {
 			const nextState = handleGesture(
 				baseState(),
-				clickOn(2, "menu", "shape-library", "item:rect"),
+				clickOn(2, "menu", "stencil-library", "item:rect"),
 				registries,
 			);
 			expect(nextState.shapeDrawing).toBeNull();

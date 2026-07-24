@@ -23,7 +23,7 @@ packages/canvas/src/
 │   │   ├── CanvasDoc.ts
 │   │   └── validators/     # parseCanvasText / validateStructure / validateSemantics
 │   ├── objects/            # base / primitives / connections / annotations / types + per-type validateXxxDoc
-│   └── registry/           # ObjectDocValidatorRegistry / ShapeFactoryRegistry (+ initialization)
+│   └── registry/           # ObjectDocValidatorRegistry / ObjectFactoryRegistry (+ initialization)
 ├── states/                 # runtime state types (State model) + Mapper
 │   ├── canvas/             # CanvasState / CanvasMapper / Viewport
 │   ├── objects/            # base / primitives / connections / annotations (State + Mapper)
@@ -35,10 +35,10 @@ packages/canvas/src/
 │   ├── reducer/            # canvasReducer + CanvasActions
 │   ├── hooks/              # useCanvasReducer / useSyncExternalDoc, etc.
 │   ├── setup/              # initializeObjectRegistry / initializeGestureHandlerRegistry / initializeCommands
-│   ├── ui/                 # UI control (transform controls, menus, icons) incl. ShapePresetRegistry / ObjectMenuRegistry
+│   ├── ui/                 # UI control (transform controls, menus, icons) incl. StencilRegistry / ObjectMenuRegistry
 │   └── utils/
 ├── presentations/          # pure rendering components (layers / objects / defs)
-│   └── objects/registry/   # ObjectComponentRegistry / ShapePreviewRegistry
+│   └── objects/registry/   # ObjectComponentRegistry / ObjectTextRegionRegistry / ObjectOutlineRegistry
 └── constants/              # theme.ts / precision.ts, etc.
 ```
 
@@ -75,14 +75,14 @@ Dependency: `presentations → states` (referenced as the type of Props).
 
 There is **no top-level `src/registry/` directory and no `ObjectRegistry` class**. Instead, per-shape functionality is resolved through several small registry **classes**, each **colocated with the layer it belongs to**:
 
-| Registry class                                                            | Location                                    | Resolves                                                             |
-| ------------------------------------------------------------------------- | ------------------------------------------- | -------------------------------------------------------------------- |
-| `ShapeFactoryRegistry`                                                    | `schemas/registry/`                         | per-type shape factory (create Doc / bounds)                         |
-| `ObjectMapperRegistry` / `ObjectStateValidatorRegistry`                   | `states/registry/`                          | Doc ↔ State mapper (+ features), State validator                     |
-| `GestureHandlerRegistry` / `ObjectBehaviorRegistry`                       | `controllers/gestures/registry/`            | gesture handlers, `moveByDelta` / `transformByGroup`                 |
-| `ObjectComponentRegistry` / `ShapePreviewRegistry`                        | `presentations/objects/registry/`           | render component, preview renderer                                   |
-| `ShapePresetRegistry` / `ObjectMenuRegistry` / `SelectionControlRegistry` | `controllers/ui/...` (colocated per domain) | ShapeLibrary presets, per-type ObjectMenu, per-type SelectionControl |
-| `CommandRegistry`                                                         | `controllers/commands/`                     | commands (see [Command System](./05-command-system.md))              |
+| Registry class                                                                   | Location                                    | Resolves                                                               |
+| -------------------------------------------------------------------------------- | ------------------------------------------- | ---------------------------------------------------------------------- |
+| `ObjectFactoryRegistry`                                                          | `schemas/registry/`                         | per-type shape factory (create Doc / bounds)                           |
+| `ObjectMapperRegistry` / `ObjectStateValidatorRegistry`                          | `states/registry/`                          | Doc ↔ State mapper (+ features), State validator                       |
+| `GestureHandlerRegistry` / `ObjectBehaviorRegistry`                              | `controllers/gestures/registry/`            | gesture handlers, `moveByDelta` / `transformByGroup`                   |
+| `ObjectComponentRegistry` / `ObjectTextRegionRegistry` / `ObjectOutlineRegistry` | `presentations/objects/registry/`           | render component, editable-text region, hit-test / snap outline        |
+| `StencilRegistry` / `ObjectMenuRegistry` / `SelectionControlRegistry`            | `controllers/ui/...` (colocated per domain) | StencilLibrary presets, per-type ObjectMenu, per-type SelectionControl |
+| `CommandRegistry`                                                                | `controllers/commands/`                     | commands (see [Command System](./05-command-system.md))                |
 
 Because each registry keys off the shape type (`"rect"`, `"ellipse"`, …), cross-shape processing can be written type-safely without `if (type === ...)` branching.
 
@@ -111,16 +111,20 @@ The bundle reaches consumers by two paths (#165, Option B):
 
 ```mermaid
 graph TD
+    subgraph Plugin["Extension Seam (plugin)"]
+        PluginVocab["ObjectTypeDefinition&lt;TDoc,TState&gt; / defineObject / CanvasPlugin"]
+    end
     subgraph Presentations["Presentation Layer (presentations)"]
         PresentationComponents["React Components"]
         PresentationUtils["utils (coordinate resolution, etc.)"]
+        PresentationRegistryTypes["registry contracts (component / textRegion / outline)"]
     end
     subgraph Controllers["Logic Layer (controllers)"]
-        Gestures["gestures/handlers (+ registry/)"]
+        Gestures["gestures/handlers (+ registry/ · ObjectBehaviorEntry)"]
         Commands["commands (+ CommandRegistry)"]
         Reducer["reducer"]
-        UI["ui"]
-        Setup["setup (initializeObjectRegistry populates all registries)"]
+        UI["ui (+ menu / controls / Stencil types)"]
+        Setup["setup (applyObjectDefinition wires definitions into all registries)"]
     end
     subgraph States["Data Layer"]
         StatesTypes["states/ (State types + Mapper + ObjectMapperRegistry)"]
@@ -136,7 +140,20 @@ graph TD
     Setup --> StatesTypes
     Setup --> PresentationComponents
     StatesTypes --> SchemasTypes
+
+    %% plugin aggregates the type contract of every layer; setup consumes it.
+    %% Setup -> Plugin plus Plugin -> Gestures/UI = controllers <-> plugin.
+    Setup --> Plugin
+    Plugin --> Gestures
+    Plugin --> UI
+    Plugin --> PresentationRegistryTypes
+    Plugin --> StatesTypes
+    Plugin --> SchemasTypes
 ```
+
+**On `plugin` (the extension seam)**: `plugin/` holds the declarative vocabulary a shape/plugin author writes — `ObjectTypeDefinition<TDoc, TState>`, `defineObject`, `CanvasPlugin`. One definition **aggregates the type contract of every layer** (mapper/state from `states`, doc/features/factory from `schemas`, `ObjectBehaviorEntry` from `gestures/registry`, menu/controls/`Stencil` from `ui`, component/textRegion/outline contracts from `presentations`), so `plugin` depends on all four layers. Conversely `controllers/setup` depends on `plugin` to build the built-in record (`defineObject`) and apply it (`applyObjectDefinition` → the registries). At the subgraph level this is a **`controllers ⇄ plugin` mutual reference** — the arrows above cross the Controllers boundary in both directions.
+
+It is deliberately **not** a concrete import cycle: `plugin` pulls only leaf _type_ modules (`ObjectBehaviorTypes` / `SelectionControlTypes` / `ObjectMenuTypes` / `Stencil`), while the file that consumes `plugin` is `setup/initializeObjectRegistry` — a different file that none of those leaf modules import back. So madge `dep:circle` stays green even though the folders reference each other. Keeping `applyObjectDefinition` (the runtime wiring) in `setup` rather than `plugin` is what preserves this: `plugin` never imports the concrete registries.
 
 The dependency direction is also enforced in CI (madge `dep:circle`, see [Testing](./09-testing.md)).
 

@@ -7,7 +7,7 @@ import { centeredPolygonOutline } from "../../utils/outlineHelpers";
 /**
  * Manual-input outline vertices (top edge sloping up toward the right) for a
  * bounding box whose top-left corner is at (x, y). Single source shared by the
- * renderer, the draw-drag preview, and the connector outline provider.
+ * renderer, the draw-drag preview, and the connector outline calculator.
  */
 export const manualInputOutlinePoints = (
 	x: number,

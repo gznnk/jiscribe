@@ -27,7 +27,7 @@ const formatParseError = (
 	}
 };
 
-/** toolbarLeading スロットに挿すファイル操作ボタン。 */
+/** toolbar.leading スロットに挿すファイル操作ボタン。 */
 function FileToolbarButtons({
 	onOpen,
 	onSave,
@@ -85,12 +85,12 @@ function FileToolbarButtons({
 
 /**
  * ファイル入出力の例:
- * - .jis.json の読み込み（toolbarLeading の Open ボタン → parseCanvasText で 2 段階バリデーション）
+ * - .jis.json の読み込み（toolbar.leading の Open ボタン → parseCanvasText で 2 段階バリデーション）
  * - 編集中ドキュメントの保存（onCommit で最新 doc を ref に写し、Save でダウンロード）
  * - jiscribe エクスポート PNG（iTXt に .jis.json 入り）のドロップ復元（round-trip 確認用）
  */
 export function FileIoExample() {
-	// canvasDoc はファイル読み込み時だけ差し替える。編集中の最新 doc は
+	// doc はファイル読み込み時だけ差し替える。編集中の最新 doc は
 	// onCommit で ref に写し、保存時に読む。
 	const [loadedDoc, setLoadedDoc] = useState<CanvasDoc>(initialDoc);
 	const [fileName, setFileName] = useState(DEFAULT_FILE_NAME);
@@ -171,11 +171,13 @@ export function FileIoExample() {
 			onDragOver={handleDragOver}
 		>
 			<Canvas
-				canvasDoc={loadedDoc}
+				doc={loadedDoc}
 				onCommit={handleCommit}
-				toolbarLeading={
-					<FileToolbarButtons onOpen={handleOpenClick} onSave={handleSave} />
-				}
+				toolbar={{
+					leading: (
+						<FileToolbarButtons onOpen={handleOpenClick} onSave={handleSave} />
+					),
+				}}
 			/>
 			<input
 				ref={fileInputRef}

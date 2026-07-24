@@ -1,13 +1,13 @@
 import type { Dimensions } from "@workspace/geometry";
 
-import type { TextRegionCalculator } from "../../registry/TextRegionRegistry";
+import type { ObjectTextRegionCalculator } from "../../registry/ObjectTextRegionRegistry";
 
 /**
  * Insets by a full cap radius (half the short side) on the capped axis so the
  * region aligns with the flat edges between the semicircular caps. The caps
  * sit on the long axis: left/right when wide, top/bottom when tall.
  */
-export const calcStadiumTextRegion: TextRegionCalculator<Dimensions> = ({
+export const calcStadiumTextRegion: ObjectTextRegionCalculator<Dimensions> = ({
 	width,
 	height,
 }) => {

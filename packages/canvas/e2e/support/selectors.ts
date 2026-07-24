@@ -31,19 +31,26 @@ export const selectors = {
 	/** ツールバーのツールボタン */
 	toolButton: (tool: ToolTitle) => `button[title="${tool}"]`,
 
-	/** ShapeLibrary のカテゴリボタン（フライアウトを開くトグル） */
+	/** StencilLibrary のカテゴリボタン（フライアウトを開くトグル） */
 	categoryButton: (categoryId: string) =>
-		`[data-id="shape-category"][data-part="toggle:${categoryId}"]`,
+		`[data-id="stencil-category"][data-part="toggle:${categoryId}"]`,
 
 	/** カテゴリフライアウト（開いているときだけ存在） */
 	categoryFlyout: (categoryId: string) =>
 		`[data-category-flyout="${categoryId}"]`,
 
-	/** ShapeLibrary の図形項目（ピン留め・フライアウト内で共通の DOM 契約） */
+	/** StencilLibrary の図形項目（ピン留め・フライアウト内で共通の DOM 契約） */
 	shapeItem: (presetId: string) => `[data-part="item:${presetId}"]`,
 
 	/** キャンバス上の図形（rect / ellipse / polyline …） */
 	object: "[data-kind=object]",
+
+	/**
+	 * ドラッグ描画中のプレビュー（ゴースト）。図形本体コンポーネントを流用するため
+	 * data-kind=object を持つが、コミット済み図形ではない。オブジェクト列挙時に
+	 * この配下を除外して一時要素を数えないようにする。
+	 */
+	drawingPreview: '[data-testid="drawing-preview"]',
 
 	/** コネクター（本体の polyline。矢印の polygon も同じ data-kind を持つ） */
 	connectorPolyline: "polyline[data-kind=connector]",

@@ -1,4 +1,4 @@
-import type { CanvasControllerState } from "../../../CanvasTypes";
+import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 
 export type BuiltinItemKey =
 	| "arrowHead"
@@ -13,8 +13,16 @@ export type BuiltinItemKey =
 	| "stackOrder"
 	| "group";
 
-export type MenuItemProps = {
-	canvasState: CanvasControllerState;
+/**
+ * Contract for custom menu item components. Exposes only the slices of canvas
+ * state that menu items need, not the whole controller state.
+ */
+export type ObjectMenuItemProps = {
+	objects: Record<string, ObjectState>;
+	selectedIds: string[];
+	selectedConnectorId: string | null;
+	/** ID of the currently open menu section (`toggle:{sectionId}`). */
+	openSectionId: string | null;
 	onPropertyUpdate: (property: string, value: string, commit: boolean) => void;
 };
 
@@ -25,17 +33,12 @@ export type BuiltinItem =
 export type CustomItem = {
 	type: "custom";
 	id: string;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	component: React.ComponentType<any>;
+	component: React.ComponentType<ObjectMenuItemProps>;
 };
 
-export type MenuItem = BuiltinItem | CustomItem;
+export type ObjectMenuItem = BuiltinItem | CustomItem;
 
-export type MenuSection = {
+export type ObjectMenuSection = {
 	id: string;
-	items: MenuItem[];
+	items: ObjectMenuItem[];
 };
-
-export type MenuSectionFactory<TState = unknown> = (
-	state: TState,
-) => MenuSection[];

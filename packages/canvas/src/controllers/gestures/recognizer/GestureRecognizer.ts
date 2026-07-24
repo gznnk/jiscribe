@@ -76,7 +76,7 @@ export type Pressed = {
 	isNativePointerTarget: boolean;
 	// Whether edge scrolling has been armed. Becomes true once the cursor has
 	// left the edge zone during a drag. When grabbing from a UI touching the
-	// edge (e.g. ShapeLibrary), the start point is always inside the edge zone,
+	// edge (e.g. StencilLibrary), the start point is always inside the edge zone,
 	// so this prevents scrolling from firing spuriously on the first frame.
 	edgeScrollArmed: boolean;
 };

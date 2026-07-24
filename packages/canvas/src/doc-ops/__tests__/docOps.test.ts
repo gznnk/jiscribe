@@ -29,7 +29,7 @@ describe("addRect", () => {
 		expect(rect.y).toBe(40);
 	});
 
-	it("carries ShapeFactory style defaults (not a bare object)", () => {
+	it("carries ObjectFactory style defaults (not a bare object)", () => {
 		const doc = emptyDoc();
 		addRect(doc, { x: 0, y: 0 });
 

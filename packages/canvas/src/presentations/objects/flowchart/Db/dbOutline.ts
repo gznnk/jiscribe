@@ -2,7 +2,7 @@ import { sampleEllipseArc } from "@workspace/geometry";
 import type { Dimensions } from "@workspace/geometry";
 
 import { DB_CAP_RATIO } from "../../../../schemas/objects/flowchart/db/DbDoc";
-import type { ShapeOutlineProvider } from "../../registry/ShapeOutlineRegistry";
+import type { ObjectOutlineCalculator } from "../../registry/ObjectOutlineRegistry";
 import { OUTLINE_CURVE_SEGMENTS } from "../../utils/outlineHelpers";
 
 /**
@@ -10,7 +10,7 @@ import { OUTLINE_CURVE_SEGMENTS } from "../../utils/outlineHelpers";
  * polyline, joined by the straight sides. Renderer draws the equivalent arcs
  * (buildDbPaths); this is the connector-attachment polyline.
  */
-export const dbOutline: ShapeOutlineProvider<Dimensions> = ({
+export const dbOutline: ObjectOutlineCalculator<Dimensions> = ({
 	width,
 	height,
 }) => {
