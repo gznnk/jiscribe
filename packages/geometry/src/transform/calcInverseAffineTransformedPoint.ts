@@ -10,7 +10,7 @@ import type { Point } from "../types/Point";
  * @param py - Y-coordinate of the transformed point
  * @param sx - Scale factor in x-direction from the original transformation
  * @param sy - Scale factor in y-direction from the original transformation
- * @param theta - Rotation angle in radians from the original transformation
+ * @param angleRad - Rotation angle in radians from the original transformation
  * @param tx - Translation distance in x-direction from the original transformation
  * @param ty - Translation distance in y-direction from the original transformation
  * @returns The original point before transformation
@@ -20,12 +20,12 @@ export const calcInverseAffineTransformedPoint = (
 	py: number,
 	sx: number,
 	sy: number,
-	theta: number,
+	angleRad: number,
 	tx: number,
 	ty: number,
 ): Point => {
 	// Special case optimization: no rotation
-	if (theta === 0) {
+	if (angleRad === 0) {
 		return {
 			x: (px - tx) / sx,
 			y: (py - ty) / sy,
@@ -38,8 +38,8 @@ export const calcInverseAffineTransformedPoint = (
 		py,
 		sx,
 		sy,
-		Math.cos(theta),
-		Math.sin(theta),
+		Math.cos(angleRad),
+		Math.sin(angleRad),
 		tx,
 		ty,
 	);

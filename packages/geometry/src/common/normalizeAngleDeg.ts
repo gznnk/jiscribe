@@ -6,12 +6,12 @@
  *
  * @example
  * ```typescript
- * normalizeAngle(370); // 10
- * normalizeAngle(-10); // 350
- * normalizeAngle(0);   // 0
- * normalizeAngle(360); // 0
+ * normalizeAngleDeg(370); // 10
+ * normalizeAngleDeg(-10); // 350
+ * normalizeAngleDeg(0);   // 0
+ * normalizeAngleDeg(360); // 0
  * ```
  */
-export function normalizeAngle(degrees: number): number {
+export function normalizeAngleDeg(degrees: number): number {
 	return ((degrees % 360) + 360) % 360;
 }

@@ -12,8 +12,8 @@ import type { Point } from "../types/Point";
  * @param py - Y-coordinate of the point to transform
  * @param sx - Scale factor in x-direction
  * @param sy - Scale factor in y-direction
- * @param cosTheta - Pre-computed cosine of the rotation angle
- * @param sinTheta - Pre-computed sine of the rotation angle
+ * @param cosAngle - Pre-computed cosine of the rotation angle
+ * @param sinAngle - Pre-computed sine of the rotation angle
  * @param tx - Translation distance in x-direction
  * @param ty - Translation distance in y-direction
  * @returns The transformed point
@@ -23,11 +23,11 @@ export const applyAffineWithTrig = (
 	py: number,
 	sx: number,
 	sy: number,
-	cosTheta: number,
-	sinTheta: number,
+	cosAngle: number,
+	sinAngle: number,
 	tx: number,
 	ty: number,
 ): Point => ({
-	x: sx * cosTheta * px - sy * sinTheta * py + tx,
-	y: sx * sinTheta * px + sy * cosTheta * py + ty,
+	x: sx * cosAngle * px - sy * sinAngle * py + tx,
+	y: sx * sinAngle * px + sy * cosAngle * py + ty,
 });

@@ -8,7 +8,7 @@ import type { Point } from "../types/Point";
  * @param py - Y-coordinate of the point to rotate
  * @param cx - X-coordinate of the rotation center
  * @param cy - Y-coordinate of the rotation center
- * @param theta - Angle of rotation in radians
+ * @param angleRad - Angle of rotation in radians
  * @returns The rotated point
  */
 export const calcRotatedPoint = (
@@ -16,6 +16,13 @@ export const calcRotatedPoint = (
 	py: number,
 	cx: number,
 	cy: number,
-	theta: number,
+	angleRad: number,
 ): Point =>
-	calcRotatedPointWithTrig(px, py, cx, cy, Math.cos(theta), Math.sin(theta));
+	calcRotatedPointWithTrig(
+		px,
+		py,
+		cx,
+		cy,
+		Math.cos(angleRad),
+		Math.sin(angleRad),
+	);

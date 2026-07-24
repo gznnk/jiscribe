@@ -21,7 +21,7 @@ export function calcOutlinePointTowardForPolygon(
 		return null;
 	}
 	const { cx, cy, rotation, scaleX, scaleY } = frame;
-	const theta = degreesToRadians(rotation);
+	const angleRad = degreesToRadians(rotation);
 
 	const worldPolygon: Point[] = new Array(localPolygon.length);
 	for (let i = 0; i < localPolygon.length; i++) {
@@ -31,7 +31,7 @@ export function calcOutlinePointTowardForPolygon(
 			p.y,
 			scaleX,
 			scaleY,
-			theta,
+			angleRad,
 			cx,
 			cy,
 		);

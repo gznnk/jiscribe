@@ -2,7 +2,7 @@ import type { TransformedFrame } from "@workspace/geometry";
 import {
 	calcVectorAngle,
 	isTransformedFrame,
-	normalizeAngle,
+	normalizeAngleDeg,
 	radiansToDegrees,
 	roundToDecimal,
 } from "@workspace/geometry";
@@ -73,7 +73,7 @@ export function handleRotationDrag(
 	);
 
 	// Compute the new rotation angle (0-360 degrees, rounded to an integer)
-	const newRotation = normalizeAngle(
+	const newRotation = normalizeAngleDeg(
 		roundToDecimal(radiansToDegrees(radian - rotatePointRadian), 0),
 	);
 

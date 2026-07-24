@@ -22,8 +22,8 @@ export const calcBoundingBox = (frame: TransformedFrame): BoundingBox => {
 	// For elements with rotation, calculate all four corners and find bounding box
 	if (rotation !== 0) {
 		const radians = degreesToRadians(rotation);
-		const cosTheta = Math.cos(radians);
-		const sinTheta = Math.sin(radians);
+		const cosAngle = Math.cos(radians);
+		const sinAngle = Math.sin(radians);
 
 		// Calculate all four corners
 		const topLeft = applyAffineWithTrig(
@@ -31,8 +31,8 @@ export const calcBoundingBox = (frame: TransformedFrame): BoundingBox => {
 			-halfHeight,
 			scaleX,
 			scaleY,
-			cosTheta,
-			sinTheta,
+			cosAngle,
+			sinAngle,
 			cx,
 			cy,
 		);
@@ -42,8 +42,8 @@ export const calcBoundingBox = (frame: TransformedFrame): BoundingBox => {
 			halfHeight,
 			scaleX,
 			scaleY,
-			cosTheta,
-			sinTheta,
+			cosAngle,
+			sinAngle,
 			cx,
 			cy,
 		);
@@ -53,8 +53,8 @@ export const calcBoundingBox = (frame: TransformedFrame): BoundingBox => {
 			-halfHeight,
 			scaleX,
 			scaleY,
-			cosTheta,
-			sinTheta,
+			cosAngle,
+			sinAngle,
 			cx,
 			cy,
 		);
@@ -64,8 +64,8 @@ export const calcBoundingBox = (frame: TransformedFrame): BoundingBox => {
 			halfHeight,
 			scaleX,
 			scaleY,
-			cosTheta,
-			sinTheta,
+			cosAngle,
+			sinAngle,
 			cx,
 			cy,
 		);

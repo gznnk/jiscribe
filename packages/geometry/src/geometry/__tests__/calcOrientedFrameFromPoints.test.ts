@@ -2,7 +2,7 @@ import { describe, it, expect, assert } from "vitest";
 
 import { calcOrientedFrameFromPoints } from "../../geometry/calcOrientedFrameFromPoints";
 
-// シグネチャ: calcOrientedFrameFromPoints(points, scaleX=1, scaleY=1, rotation=0)
+// シグネチャ: calcOrientedFrameFromPoints(points, scaleX=1, scaleY=1, rotationDeg=0)
 describe("calcOrientedFrameFromPoints", () => {
 	it("空配列の場合はnullを返す", () => {
 		expect(calcOrientedFrameFromPoints([])).toBeNull();

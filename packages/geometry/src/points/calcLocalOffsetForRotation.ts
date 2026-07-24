@@ -22,23 +22,23 @@ export type LocalOffsetForRotation = {
  * Convert a world-space `toward` point into a local (centered, unrotated) offset
  * from the shape's center.
  *
- * Fast path: rotation === 0 (the vast majority of shapes) needs no trig — the
+ * Fast path: rotationDeg === 0 (the vast majority of shapes) needs no trig — the
  * world offset is already the local offset, so cos/sin default to 1/0.
  */
 export function calcLocalOffsetForRotation(
 	cx: number,
 	cy: number,
-	rotation: number,
+	rotationDeg: number,
 	toward: Point,
 ): LocalOffsetForRotation {
 	let cos = 1;
 	let sin = 0;
 	let dx = toward.x - cx;
 	let dy = toward.y - cy;
-	const isRotated = rotation !== 0;
+	const isRotated = rotationDeg !== 0;
 	if (isRotated) {
 		// Compute cos/sin once and reuse for both rotation directions below.
-		const rotationRad = degreesToRadians(rotation);
+		const rotationRad = degreesToRadians(rotationDeg);
 		cos = Math.cos(rotationRad);
 		sin = Math.sin(rotationRad);
 

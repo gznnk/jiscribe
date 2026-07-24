@@ -21,7 +21,7 @@ describe("calcAffineTransformedPoint", () => {
 		expect(result.y).toBeCloseTo(9);
 	});
 
-	it("回転なし（theta=0）の最適化パスが正しく動作する", () => {
+	it("回転なし（angleRad=0）の最適化パスが正しく動作する", () => {
 		const result = calcAffineTransformedPoint(1, 1, 2, 2, 0, 5, 5);
 		expect(result.x).toBeCloseTo(7); // 2*1 + 5
 		expect(result.y).toBeCloseTo(7); // 2*1 + 5

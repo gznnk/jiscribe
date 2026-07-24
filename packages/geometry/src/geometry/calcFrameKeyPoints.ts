@@ -34,8 +34,8 @@ export const calcFrameKeyPoints = (frame: TransformedFrame): FrameKeyPoints => {
 
 	// With rotation - compute cos/sin once and reuse across all 8 key points
 	const radians = degreesToRadians(rotation);
-	const cosTheta = Math.cos(radians);
-	const sinTheta = Math.sin(radians);
+	const cosAngle = Math.cos(radians);
+	const sinAngle = Math.sin(radians);
 
 	return {
 		topLeft: applyAffineWithTrig(
@@ -43,8 +43,8 @@ export const calcFrameKeyPoints = (frame: TransformedFrame): FrameKeyPoints => {
 			-halfHeight,
 			scaleX,
 			scaleY,
-			cosTheta,
-			sinTheta,
+			cosAngle,
+			sinAngle,
 			cx,
 			cy,
 		),
@@ -53,8 +53,8 @@ export const calcFrameKeyPoints = (frame: TransformedFrame): FrameKeyPoints => {
 			-halfHeight,
 			scaleX,
 			scaleY,
-			cosTheta,
-			sinTheta,
+			cosAngle,
+			sinAngle,
 			cx,
 			cy,
 		),
@@ -63,8 +63,8 @@ export const calcFrameKeyPoints = (frame: TransformedFrame): FrameKeyPoints => {
 			-halfHeight,
 			scaleX,
 			scaleY,
-			cosTheta,
-			sinTheta,
+			cosAngle,
+			sinAngle,
 			cx,
 			cy,
 		),
@@ -73,8 +73,8 @@ export const calcFrameKeyPoints = (frame: TransformedFrame): FrameKeyPoints => {
 			0,
 			scaleX,
 			scaleY,
-			cosTheta,
-			sinTheta,
+			cosAngle,
+			sinAngle,
 			cx,
 			cy,
 		),
@@ -83,8 +83,8 @@ export const calcFrameKeyPoints = (frame: TransformedFrame): FrameKeyPoints => {
 			halfHeight,
 			scaleX,
 			scaleY,
-			cosTheta,
-			sinTheta,
+			cosAngle,
+			sinAngle,
 			cx,
 			cy,
 		),
@@ -93,8 +93,8 @@ export const calcFrameKeyPoints = (frame: TransformedFrame): FrameKeyPoints => {
 			halfHeight,
 			scaleX,
 			scaleY,
-			cosTheta,
-			sinTheta,
+			cosAngle,
+			sinAngle,
 			cx,
 			cy,
 		),
@@ -103,8 +103,8 @@ export const calcFrameKeyPoints = (frame: TransformedFrame): FrameKeyPoints => {
 			halfHeight,
 			scaleX,
 			scaleY,
-			cosTheta,
-			sinTheta,
+			cosAngle,
+			sinAngle,
 			cx,
 			cy,
 		),
@@ -113,8 +113,8 @@ export const calcFrameKeyPoints = (frame: TransformedFrame): FrameKeyPoints => {
 			0,
 			scaleX,
 			scaleY,
-			cosTheta,
-			sinTheta,
+			cosAngle,
+			sinAngle,
 			cx,
 			cy,
 		),

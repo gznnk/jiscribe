@@ -24,9 +24,9 @@ describe("calcRotatedPointWithTrig", () => {
 	});
 
 	it("sin の符号反転で逆回転になる（cos(-θ)=cos, sin(-θ)=-sin）", () => {
-		const theta = Math.PI / 3;
-		const cos = Math.cos(theta);
-		const sin = Math.sin(theta);
+		const angleRad = Math.PI / 3;
+		const cos = Math.cos(angleRad);
+		const sin = Math.sin(angleRad);
 		// +θ で回した点を -θ（sin 符号反転）で戻すと元に戻る
 		const rotated = calcRotatedPointWithTrig(3, 2, 1, 1, cos, sin);
 		const restored = calcRotatedPointWithTrig(

@@ -4,7 +4,7 @@ import { applyInverseAffineWithTrig } from "../applyInverseAffineWithTrig";
 import { calcInverseAffineTransformedPoint } from "../calcInverseAffineTransformedPoint";
 
 describe("applyInverseAffineWithTrig", () => {
-	it("cos=1・sin=0 は回転なし（theta=0）の特例パスと同一結果になる", () => {
+	it("cos=1・sin=0 は回転なし（angleRad=0）の特例パスと同一結果になる", () => {
 		const result = applyInverseAffineWithTrig(7, 7, 2, 2, 1, 0, 5, 5);
 		expect(result.x).toBe(1); // (7-5)/2
 		expect(result.y).toBe(1); // (7-5)/2
@@ -26,17 +26,17 @@ describe("applyInverseAffineWithTrig", () => {
 		expect(result.y).toBeCloseTo(0);
 	});
 
-	it("同一 theta から計算した cos/sin で calcInverseAffineTransformedPoint と一致する", () => {
-		const theta = 0.7;
-		const cosTheta = Math.cos(theta);
-		const sinTheta = Math.sin(theta);
+	it("同一 angleRad から計算した cos/sin で calcInverseAffineTransformedPoint と一致する", () => {
+		const angleRad = 0.7;
+		const cosAngle = Math.cos(angleRad);
+		const sinAngle = Math.sin(angleRad);
 		const viaHelper = applyInverseAffineWithTrig(
 			3,
 			-4,
 			1.5,
 			2,
-			cosTheta,
-			sinTheta,
+			cosAngle,
+			sinAngle,
 			7,
 			-2,
 		);
@@ -45,7 +45,7 @@ describe("applyInverseAffineWithTrig", () => {
 			-4,
 			1.5,
 			2,
-			theta,
+			angleRad,
 			7,
 			-2,
 		);

@@ -17,14 +17,14 @@ import type { TransformedFrame } from "../types/TransformedFrame";
  * @param points - フレームを計算する点の配列
  * @param scaleX - X軸のスケール (デフォルト: 1)
  * @param scaleY - Y軸のスケール (デフォルト: 1)
- * @param rotation - 回転角度（度数法、デフォルト: 0）
+ * @param rotationDeg - 回転角度（度数法、デフォルト: 0）
  * @returns 点群を包含する TransformedFrame。points が空の場合は null
  */
 export const calcOrientedFrameFromPoints = (
 	points: Point[],
 	scaleX = 1,
 	scaleY = 1,
-	rotation = 0,
+	rotationDeg = 0,
 ): TransformedFrame | null => {
 	if (points.length === 0) {
 		return null;
@@ -36,9 +36,9 @@ export const calcOrientedFrameFromPoints = (
 	const x = nanToZero((left + right) / 2);
 	const y = nanToZero((top + bottom) / 2);
 
-	const radians = degreesToRadians(rotation);
-	const cosTheta = Math.cos(radians);
-	const sinTheta = Math.sin(radians);
+	const radians = degreesToRadians(rotationDeg);
+	const cosAngle = Math.cos(radians);
+	const sinAngle = Math.sin(radians);
 
 	// 逆変換後の点群の AABB を、中間配列や Point を確保せずワンパスで求める。
 	// 各点の変換式は applyInverseAffineWithTrig と同一（ホットパスのためインライン展開）。
@@ -49,8 +49,8 @@ export const calcOrientedFrameFromPoints = (
 	for (const p of points) {
 		const translatedX = p.x - x;
 		const translatedY = p.y - y;
-		const ix = (cosTheta * translatedX + sinTheta * translatedY) / scaleX;
-		const iy = (-sinTheta * translatedX + cosTheta * translatedY) / scaleY;
+		const ix = (cosAngle * translatedX + sinAngle * translatedY) / scaleX;
+		const iy = (-sinAngle * translatedX + cosAngle * translatedY) / scaleY;
 		if (ix < inverseLeft) {
 			inverseLeft = ix;
 		}
@@ -76,8 +76,8 @@ export const calcOrientedFrameFromPoints = (
 		inverseCenterY,
 		scaleX,
 		scaleY,
-		cosTheta,
-		sinTheta,
+		cosAngle,
+		sinAngle,
 		x,
 		y,
 	);
@@ -87,7 +87,7 @@ export const calcOrientedFrameFromPoints = (
 		cy: centerPoint.y,
 		width,
 		height,
-		rotation,
+		rotation: rotationDeg,
 		scaleX,
 		scaleY,
 	};

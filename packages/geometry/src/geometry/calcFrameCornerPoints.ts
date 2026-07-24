@@ -30,8 +30,8 @@ export function calcFrameCornerPoints(frame: TransformedFrame): Point[] {
 
 	// With rotation - compute cos/sin once and reuse across all four corners
 	const radians = degreesToRadians(rotation);
-	const cosTheta = Math.cos(radians);
-	const sinTheta = Math.sin(radians);
+	const cosAngle = Math.cos(radians);
+	const sinAngle = Math.sin(radians);
 
 	return [
 		applyAffineWithTrig(
@@ -39,8 +39,8 @@ export function calcFrameCornerPoints(frame: TransformedFrame): Point[] {
 			-halfHeight,
 			scaleX,
 			scaleY,
-			cosTheta,
-			sinTheta,
+			cosAngle,
+			sinAngle,
 			cx,
 			cy,
 		), // top-left
@@ -49,8 +49,8 @@ export function calcFrameCornerPoints(frame: TransformedFrame): Point[] {
 			-halfHeight,
 			scaleX,
 			scaleY,
-			cosTheta,
-			sinTheta,
+			cosAngle,
+			sinAngle,
 			cx,
 			cy,
 		), // top-right
@@ -59,8 +59,8 @@ export function calcFrameCornerPoints(frame: TransformedFrame): Point[] {
 			halfHeight,
 			scaleX,
 			scaleY,
-			cosTheta,
-			sinTheta,
+			cosAngle,
+			sinAngle,
 			cx,
 			cy,
 		), // bottom-right
@@ -69,8 +69,8 @@ export function calcFrameCornerPoints(frame: TransformedFrame): Point[] {
 			halfHeight,
 			scaleX,
 			scaleY,
-			cosTheta,
-			sinTheta,
+			cosAngle,
+			sinAngle,
 			cx,
 			cy,
 		), // bottom-left
