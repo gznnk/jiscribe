@@ -4,8 +4,8 @@ import { CanvasViewportElementRefContext } from "./CanvasViewportElementRefConte
 import { CanvasLocaleContext } from "./messages/CanvasLocaleContext";
 import type { CanvasMessages } from "./messages/CanvasMessages";
 import { CanvasMessagesContext } from "./messages/CanvasMessagesContext";
-import type { CanvasRegistries } from "./setup";
-import { CanvasRegistriesContext } from "./setup/CanvasRegistriesContext";
+import type { CanvasRegistries } from "./registries";
+import { CanvasRegistriesContext } from "./registries/CanvasRegistriesContext";
 import { PresentationRegistriesProvider } from "../presentations/objects/registry/PresentationRegistriesProvider";
 import type { CanvasTheme } from "../theme/CanvasTheme";
 import { CanvasThemeContext } from "../theme/CanvasThemeContext";

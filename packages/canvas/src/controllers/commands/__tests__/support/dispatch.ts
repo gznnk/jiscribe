@@ -1,7 +1,7 @@
 import { deepFreezeState } from "../../../__tests__/support/deepFreezeState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import type { CanvasRegistries } from "../../../setup/CanvasRegistries";
-import { createTestRegistries } from "../../../setup/createCanvasRegistries";
+import type { CanvasRegistries } from "../../../registries/CanvasRegistries";
+import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import { handleCommand } from "../../handlers/handleCommand";
 
 /**

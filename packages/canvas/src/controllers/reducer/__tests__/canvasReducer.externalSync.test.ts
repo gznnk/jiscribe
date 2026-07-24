@@ -7,7 +7,7 @@ import type { CanvasAction } from "../CanvasActions";
 import { createCanvasReducer } from "../canvasReducer";
 import { createTestState } from "./support/createTestState";
 import { rectDoc, twoRectsDoc } from "./support/fixtures";
-import { createTestRegistries } from "../../setup/createCanvasRegistries";
+import { createTestRegistries } from "../../registries/createCanvasRegistries";
 
 const registries = createTestRegistries();
 

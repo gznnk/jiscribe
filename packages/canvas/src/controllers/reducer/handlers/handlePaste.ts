@@ -1,6 +1,6 @@
 import type { CanvasControllerState } from "../../CanvasTypes";
 import type { ClipboardData } from "../../commands/selection/ClipboardData";
-import type { ICanvasRegistries } from "../../setup/ICanvasRegistries";
+import type { ICanvasRegistries } from "../../registries/ICanvasRegistries";
 import { cloneObjects } from "../../utils/cloneObjects";
 import { createMultiSelectGroup } from "../../utils/createMultiSelectGroup";
 import { updateGroupBoundsFromRoot } from "../../utils/updateGroupBoundsFromRoot";

@@ -1,6 +1,6 @@
 import { memo, useMemo, useRef, useState } from "react";
 
-import { createCanvasRegistries, defaultCanvasRegistries } from "./setup";
+import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
 import { calcFitViewport } from "./utils/calcFitViewport";
 import type { CanvasPlugin } from "../plugin/CanvasPlugin";
 import { CanvasView } from "../presentations/CanvasView";

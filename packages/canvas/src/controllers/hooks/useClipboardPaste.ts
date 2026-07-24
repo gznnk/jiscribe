@@ -6,7 +6,7 @@ import {
 	isClipboardData,
 } from "../commands/selection/ClipboardData";
 import type { CanvasAction } from "../reducer/CanvasActions";
-import type { CanvasRegistries } from "../setup/CanvasRegistries";
+import type { CanvasRegistries } from "../registries/CanvasRegistries";
 
 /**
  * Reads the OS clipboard (falling back to internalClipboard) and dispatches PASTE.

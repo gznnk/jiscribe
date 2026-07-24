@@ -11,7 +11,7 @@ import type {
 	EventStartSnapshot,
 	KeyPointsCache,
 } from "../../CanvasTypes";
-import type { CanvasRegistries } from "../../setup/CanvasRegistries";
+import type { CanvasRegistries } from "../../registries/CanvasRegistries";
 import { buildObjectBBoxes } from "../../utils/buildObjectBBoxes";
 import { buildSelectedIdsWithDescendants } from "../../utils/buildSelectedIdsWithDescendants";
 import { materializeObjects } from "../../utils/cowObjects";

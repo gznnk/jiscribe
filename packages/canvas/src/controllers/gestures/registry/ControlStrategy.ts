@@ -1,6 +1,6 @@
 import type { CanvasEvent, GestureHandler } from "./GestureHandlerTypes";
 import type { CanvasControllerState } from "../../CanvasTypes";
-import type { ICanvasRegistries } from "../../setup/ICanvasRegistries";
+import type { ICanvasRegistries } from "../../registries/ICanvasRegistries";
 
 /**
  * Base class for control-level strategies (resize, vertex, header height, …).

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import { defaultCanvasRegistries } from "../../../../../../controllers/setup/createCanvasRegistries";
+import { defaultCanvasRegistries } from "../../../../../../controllers/registries/createCanvasRegistries";
 import type { EndpointRef } from "../../../../../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../../../states/objects/connections/connector/ConnectorState";

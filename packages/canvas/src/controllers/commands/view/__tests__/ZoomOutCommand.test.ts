@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { ZOOM } from "../../../../constants/zoom";
 import type { Viewport } from "../../../../states/canvas/Viewport";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { createTestRegistries } from "../../../setup/createCanvasRegistries";
+import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import { ZoomInCommand } from "../ZoomInCommand";
 import { ZoomOutCommand } from "../ZoomOutCommand";
 

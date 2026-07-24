@@ -3,7 +3,7 @@ import type { BoundingBox } from "@workspace/geometry";
 import { createObjectDoc } from "../../../../schemas/objects/utils/createObjectDoc";
 import type { ObjectFactoryRegistry } from "../../../../schemas/registry/ObjectFactoryRegistry";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import type { ICanvasRegistries } from "../../../setup/ICanvasRegistries";
+import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import type { Stencil } from "../../../ui/objects/Stencil";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import type {

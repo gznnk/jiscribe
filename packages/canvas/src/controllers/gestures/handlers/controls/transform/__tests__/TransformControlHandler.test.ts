@@ -4,7 +4,7 @@ import { MIN_GROUP_DIMENSION } from "../../../../../../constants/groupDimensions
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
-import { createTestRegistries } from "../../../../../setup/createCanvasRegistries";
+import { createTestRegistries } from "../../../../../registries/createCanvasRegistries";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 import { TransformControlHandler } from "../TransformControlHandler";
 

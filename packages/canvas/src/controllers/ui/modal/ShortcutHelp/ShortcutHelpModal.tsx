@@ -19,7 +19,7 @@ import {
 	type CanvasMessageStrings,
 } from "../../../messages/CanvasMessages";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
-import { useCanvasRegistries } from "../../../setup/CanvasRegistriesContext";
+import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import { ModalShell } from "../ModalShell";
 
 /** Display order of categories */

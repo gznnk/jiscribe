@@ -7,7 +7,7 @@
 // Raw registry registration, downgraded from the stable layer (#144 §3): the
 // declarative `CanvasPlugin.objects` is the intended path; this is the
 // lower-level primitive it's built on.
-export { applyObjectDefinition } from "./controllers/setup";
+export { applyObjectDefinition } from "./controllers/registries";
 
 export { createFrameObject } from "./presentations/objects/base/createFrameObject";
 export type { FrameShapeProps } from "./presentations/objects/base/createFrameObject";

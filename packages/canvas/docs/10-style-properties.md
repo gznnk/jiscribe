@@ -53,7 +53,7 @@ registry know nothing about individual properties.
 
 **System properties** (`styleProperties/systemStyleProperties.ts`) — the closed set
 tied 1:1 to `ObjectFeatures` flags, registered into every bundle at creation
-(`setup/initializeStyleProperties`):
+(`registries/initializeStyleProperties`):
 
 ```ts
 export const SYSTEM_STYLE_PROPERTIES: Record<string, StylePropertyHandler> = {

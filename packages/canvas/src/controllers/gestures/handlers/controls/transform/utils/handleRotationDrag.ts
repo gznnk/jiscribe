@@ -10,7 +10,7 @@ import {
 import { updateSingleGroupBounds } from "./updateSingleGroupBounds";
 import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
-import type { ICanvasRegistries } from "../../../../../setup/ICanvasRegistries";
+import type { ICanvasRegistries } from "../../../../../registries/ICanvasRegistries";
 import { createCowObjects } from "../../../../../utils/cowObjects";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 import { rotateChildren } from "../../../objects/primitives/GroupController";

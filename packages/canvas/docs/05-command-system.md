@@ -45,7 +45,7 @@ Because `execute` is a pure function, each Command can be tested in isolation (s
 - `handleCommand` (`commands/handlers/handleCommand.ts`) — mediates `get` → `canExecute` → `execute`
 - `useKeyboardShortcuts` (`hooks/`) — resolves keydown events via `findByShortcut` and dispatches (disabled while an input field is focused)
 - `CommandUtils` — platform detection, `getPlatformShortcuts` / `formatShortcut` (`⌘A` ↔ `Ctrl+A`)
-- Registration is done all at once in `setup/` (`initializeCommands`)
+- Registration is done all at once in `registries/` (`initializeCommands`)
 
 ## Categories and included commands
 

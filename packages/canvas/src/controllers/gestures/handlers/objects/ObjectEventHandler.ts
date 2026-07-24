@@ -19,7 +19,7 @@ import type {
 	CanvasControllerState,
 	SnapFeedback,
 } from "../../../CanvasTypes";
-import type { ICanvasRegistries } from "../../../setup/ICanvasRegistries";
+import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import { buildSelectedIdsWithDescendants } from "../../../utils/buildSelectedIdsWithDescendants";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";

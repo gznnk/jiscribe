@@ -1,5 +1,5 @@
 import type { CanvasControllerState } from "../CanvasTypes";
-import type { ICanvasRegistries } from "../setup/ICanvasRegistries";
+import type { ICanvasRegistries } from "../registries/ICanvasRegistries";
 
 /**
  * Definition of a keyboard shortcut.
