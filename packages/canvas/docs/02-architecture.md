@@ -39,6 +39,7 @@ packages/canvas/src/
 │   └── utils/
 ├── presentations/          # pure rendering components (layers / objects / defs)
 │   └── objects/registry/   # ObjectComponentRegistry / ObjectTextRegionRegistry / ObjectOutlineRegistry
+├── plugin/                 # extension seam (ObjectTypeDefinition / defineObject / CanvasPlugin)
 └── constants/              # theme.ts / precision.ts, etc.
 ```
 
@@ -62,14 +63,14 @@ Dependency: `states → schemas` (State is converted from Doc).
 - **reducer/**: Dispatches actions to the appropriate handlers → [State Update Flow](./06-state-update-flow.md).
 - **ui/**: UI control logic such as transform controls and menus.
 
-Dependencies: `controllers → states / schemas`. `controllers → presentations` also exists — mostly for utilities, but some UI controllers additionally import presentation **components** (e.g. `PendingConnectorOverlay` → `ConnectorRenderer`, `ArrowHeadIconPreview` → `Arrow`) and the presentation-layer `ObjectComponentRegistryContext`. The direction (controllers may depend on presentations, never the reverse) still holds.
+Dependencies: `controllers → states / schemas`. `controllers → presentations` also exists. Most of it is utility references, chiefly connector endpoint resolution / orthogonal routing (`presentations/layers/content/utils/endpoints` / `routing`) — consumed not only by `ui` but also by `gestures` (free-endpoint snapping / re-anchoring) and `utils` (freeing endpoints on delete, bounding boxes, visibility). The free-endpoint coordinates persisted on delete go through this same resolution (deliberately, to capture the on-screen position at deletion time). Some UI controllers additionally import presentation **components** (e.g. `PendingConnectorOverlay` → `ConnectorRenderer`, `ArrowHeadIconPreview` → `Arrow`) and the presentation-layer registry contexts (`PresentationRegistriesProvider`, etc.). The direction (controllers may depend on presentations, never the reverse) still holds.
 
 ### Presentation Layer (presentations)
 
 Pure components (Dumb Components) that receive State as Props and render SVG.
 They hold no logic or state, and receive event handlers via Props → [Presentation and Theme](./08-presentation-and-theme.md).
 
-Dependency: `presentations → states` (referenced as the type of Props).
+Dependency: `presentations → states / schemas` (State as the type of Props, plus schema types such as `EndpointRef` and constants such as `AUTO_COLOR`).
 
 ### Registries (distributed — there is no single "registry" layer)
 
@@ -116,7 +117,7 @@ graph TD
     end
     subgraph Presentations["Presentation Layer (presentations)"]
         PresentationComponents["React Components"]
-        PresentationUtils["utils (coordinate resolution, etc.)"]
+        PresentationUtils["utils (connector endpoint resolution / orthogonal routing, etc.)"]
         PresentationRegistryTypes["registry contracts (component / textRegion / outline)"]
     end
     subgraph Controllers["Logic Layer (controllers)"]
@@ -124,7 +125,8 @@ graph TD
         Commands["commands (+ CommandRegistry)"]
         Reducer["reducer"]
         UI["ui (+ menu / controls / Stencil types)"]
-        Setup["setup (applyObjectDefinition wires definitions into all registries)"]
+        CtrlUtils["utils"]
+        Registries["registries (applyObjectDefinition wires definitions into all registries)"]
     end
     subgraph States["Data Layer"]
         StatesTypes["states/ (State types + Mapper + ObjectMapperRegistry)"]
@@ -132,18 +134,25 @@ graph TD
     end
 
     PresentationComponents --> StatesTypes
+    PresentationUtils --> StatesTypes
     Gestures --> StatesTypes
     Commands --> StatesTypes
     Reducer --> StatesTypes
     UI --> StatesTypes
+    CtrlUtils --> StatesTypes
+    Registries --> StatesTypes
+    Gestures --> PresentationUtils
+    CtrlUtils --> PresentationUtils
+    UI --> PresentationUtils
     UI --> PresentationComponents
-    Setup --> StatesTypes
-    Setup --> PresentationComponents
+    UI --> PresentationRegistryTypes
+    Registries --> PresentationComponents
+    Registries --> PresentationRegistryTypes
     StatesTypes --> SchemasTypes
 
-    %% plugin aggregates the type contract of every layer; setup consumes it.
-    %% Setup -> Plugin plus Plugin -> Gestures/UI = controllers <-> plugin.
-    Setup --> Plugin
+    %% plugin aggregates the type contract of every layer; registries consumes it.
+    %% Registries -> Plugin plus Plugin -> Gestures/UI = controllers <-> plugin.
+    Registries --> Plugin
     Plugin --> Gestures
     Plugin --> UI
     Plugin --> PresentationRegistryTypes
@@ -151,9 +160,11 @@ graph TD
     Plugin --> SchemasTypes
 ```
 
+Direct references to schema types/constants (`EndpointRef`, `AUTO_COLOR`, …) and to `constants/` (theme, etc.) exist from nearly everywhere, so they are omitted from the graph.
+
 **On `plugin` (the extension seam)**: `plugin/` holds the declarative vocabulary a shape/plugin author writes — `ObjectTypeDefinition<TDoc, TState>`, `defineObject`, `CanvasPlugin`. One definition **aggregates the type contract of every layer** (mapper/state from `states`, doc/features/factory from `schemas`, `ObjectBehaviorEntry` from `gestures/registry`, menu/controls/`Stencil` from `ui`, component/textRegion/outline contracts from `presentations`), so `plugin` depends on all four layers. Conversely `controllers/registries` depends on `plugin` to build the built-in record (`defineObject`) and apply it (`applyObjectDefinition` → the registries). At the subgraph level this is a **`controllers ⇄ plugin` mutual reference** — the arrows above cross the Controllers boundary in both directions.
 
-It is deliberately **not** a concrete import cycle: `plugin` pulls only leaf _type_ modules (`ObjectBehaviorTypes` / `SelectionControlTypes` / `ObjectMenuTypes` / `Stencil`), while the file that consumes `plugin` is `setup/initializeObjectRegistry` — a different file that none of those leaf modules import back. So madge `dep:circle` stays green even though the folders reference each other. Keeping `applyObjectDefinition` (the runtime wiring) in `setup` rather than `plugin` is what preserves this: `plugin` never imports the concrete registries.
+It is deliberately **not** a concrete import cycle: `plugin` pulls only leaf _type_ modules (`ObjectBehaviorTypes` / `SelectionControlTypes` / `ObjectMenuTypes` / `Stencil`), while the files that consume `plugin` (`registries/initializeObjectRegistry` and friends) are different files that none of those leaf modules import back. So madge `dep:circle` stays green even though the folders reference each other. Keeping `applyObjectDefinition` (the runtime wiring) in `registries` rather than `plugin` is what preserves this: `plugin` never imports the concrete registries.
 
 The dependency direction is also enforced in CI (madge `dep:circle`, see [Testing](./09-testing.md)).
 
@@ -166,7 +177,7 @@ Thanks to the Registry pattern, adding a shape is completed in "6 steps + regist
 3. **Mapper**: `states/objects/primitives/<shape>/<Shape>Mapper.ts` (Doc ↔ State)
 4. **Controller**: `controllers/gestures/handlers/objects/primitives/<Shape>Controller.ts` (`moveByDelta` / `transformByGroup`)
 5. **Component**: `presentations/objects/primitives/<Shape>/<Shape>.tsx`
-6. **Registration**: Register it in **both** setup paths, because they populate different registry sets:
+6. **Registration**: Register it in **both** registration paths, because they populate different registry sets:
    - `controllers/registries/initializeObjectRegistry.ts` — mapper / component / behavior / state validator / menu (the UI-side registries)
    - `schemas/registry/initializeObjectDocValidatorRegistry.ts` — the Doc validator. **Do not forget this one**: it is a separate, schema-layer registry populated lazily by `parseCanvasText`, so a shape missing here is rejected by the parser as an unknown type even though the UI works.
 

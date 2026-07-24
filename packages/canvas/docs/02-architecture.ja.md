@@ -39,6 +39,7 @@ packages/canvas/src/
 │   └── utils/
 ├── presentations/          # 純粋な描画コンポーネント（layers / objects / defs）
 │   └── objects/registry/   # ObjectComponentRegistry / ObjectTextRegionRegistry / ObjectOutlineRegistry
+├── plugin/                 # 拡張シーム（ObjectTypeDefinition / defineObject / CanvasPlugin）
 └── constants/              # theme.ts / precision.ts など
 ```
 
@@ -62,14 +63,14 @@ packages/canvas/src/
 - **reducer/**: アクションを各ハンドラへ振り分ける → [状態更新フロー](./06-state-update-flow.ja.md)。
 - **ui/**: 変形コントロールやメニューなど UI 制御ロジック。
 
-依存: `controllers → states / schemas`。`controllers → presentations` も存在し、多くは utilities だが、一部の UI コントローラは表示層の**コンポーネント**（例: `PendingConnectorOverlay` → `ConnectorRenderer`、`ArrowHeadIconPreview` → `Arrow`）や presentations 層の `ObjectComponentRegistryContext` も import する。方向（controllers は presentations に依存してよいが逆は禁止）は保たれている。
+依存: `controllers → states / schemas`。`controllers → presentations` も存在する。大半はユーティリティ参照で、代表はコネクタ端点解決・直交ルーティング（`presentations/layers/content/utils/endpoints` / `routing`）— `ui` に加えて `gestures`（Free 端点のスナップ・再アンカー）と `utils`（削除時の端点 Free 化・バウンディングボックス・可視判定）からも参照される。削除時に永続化される Free 端点座標もこの解決を通す（削除時点の見た目の位置を捕捉する意図）。一部の UI コントローラは表示層の**コンポーネント**（例: `PendingConnectorOverlay` → `ConnectorRenderer`、`ArrowHeadIconPreview` → `Arrow`）や presentations 層の registry Context（`PresentationRegistriesProvider` など）も import する。方向（controllers は presentations に依存してよいが逆は禁止）は保たれている。
 
 ### 表示層（presentations）
 
 State を Props として受け取り SVG を描画する純粋コンポーネント（Dumb Component）。
 ロジック・状態を持たず、イベントハンドラは Props 経由で受け取る → [表示・テーマ](./08-presentation-and-theme.ja.md)。
 
-依存: `presentations → states`（Props の型として参照）。
+依存: `presentations → states / schemas`（Props の型に加え、`EndpointRef` などの schema 型や `AUTO_COLOR` などの定数も参照する）。
 
 ### レジストリ群（分散型 — 単一の「registry 層」は存在しない）
 
@@ -111,16 +112,21 @@ State を Props として受け取り SVG を描画する純粋コンポーネ�
 
 ```mermaid
 graph TD
+    subgraph Plugin["拡張シーム (plugin)"]
+        PluginVocab["ObjectTypeDefinition&lt;TDoc,TState&gt; / defineObject / CanvasPlugin"]
+    end
     subgraph Presentations["表示層 (presentations)"]
         PresentationComponents["React Components"]
-        PresentationUtils["utils（座標解決など）"]
+        PresentationUtils["utils（コネクタ端点解決・直交ルーティングなど）"]
+        PresentationRegistryTypes["registry 契約（component / textRegion / outline）"]
     end
     subgraph Controllers["ロジック層 (controllers)"]
         Gestures["gestures/handlers (+ registry/)"]
         Commands["commands (+ CommandRegistry)"]
         Reducer["reducer"]
         UI["ui"]
-        Setup["setup（initializeObjectRegistry が全レジストリを登録）"]
+        CtrlUtils["utils"]
+        Registries["registries（applyObjectDefinition が定義を各レジストリへ配線）"]
     end
     subgraph States["データ層"]
         StatesTypes["states/（State 型 + Mapper + ObjectMapperRegistry）"]
@@ -128,15 +134,37 @@ graph TD
     end
 
     PresentationComponents --> StatesTypes
+    PresentationUtils --> StatesTypes
     Gestures --> StatesTypes
     Commands --> StatesTypes
     Reducer --> StatesTypes
     UI --> StatesTypes
+    CtrlUtils --> StatesTypes
+    Registries --> StatesTypes
+    Gestures --> PresentationUtils
+    CtrlUtils --> PresentationUtils
+    UI --> PresentationUtils
     UI --> PresentationComponents
-    Setup --> StatesTypes
-    Setup --> PresentationComponents
+    UI --> PresentationRegistryTypes
+    Registries --> PresentationComponents
+    Registries --> PresentationRegistryTypes
     StatesTypes --> SchemasTypes
+
+    %% plugin は全レイヤーの型契約を集約し、registries がそれを消費する。
+    %% Registries -> Plugin と Plugin -> Gestures/UI で controllers <-> plugin になる。
+    Registries --> Plugin
+    Plugin --> Gestures
+    Plugin --> UI
+    Plugin --> PresentationRegistryTypes
+    Plugin --> StatesTypes
+    Plugin --> SchemasTypes
 ```
+
+schemas の型・定数（`EndpointRef` / `AUTO_COLOR` など）と `constants/`（theme など）への直接参照はほぼ全域から存在するため、図では省略している。
+
+**`plugin`（拡張シーム）について**: `plugin/` には形状/プラグイン作者が書く宣言的語彙 — `ObjectTypeDefinition<TDoc, TState>`、`defineObject`、`CanvasPlugin` — を置く。1つの定義が**全レイヤーの型契約を集約する**（states の mapper/state、schemas の doc/features/factory、`gestures/registry` の `ObjectBehaviorEntry`、`ui` の menu/controls/`Stencil`、presentations の component/textRegion/outline 契約）ため、`plugin` は4レイヤーすべてに依存する。逆に `controllers/registries` は、組み込み定義の構築（`defineObject`）と適用（`applyObjectDefinition` → 各レジストリ）のために `plugin` に依存する。サブグラフ単位で見ると **`controllers ⇄ plugin` の相互参照**であり、上図の矢印は Controllers の境界を双方向に横切っている。
+
+これは意図的に、具象的な import 循環には**なっていない**: `plugin` が import するのは leaf の型モジュール（`ObjectBehaviorTypes` / `SelectionControlTypes` / `ObjectMenuTypes` / `Stencil`）だけで、`plugin` を消費するのは `registries/initializeObjectRegistry` など別のファイル群であり、これらの leaf モジュールから逆に import されることはない。そのため madge `dep:circle` はフォルダ同士が相互参照していても green のまま。`applyObjectDefinition`（実行時の配線）を `plugin` ではなく `registries` に置いていることがこれを保っている。
 
 依存方向は CI でも担保している（[テスト](./09-testing.ja.md) の madge `dep:circle`）。
 
