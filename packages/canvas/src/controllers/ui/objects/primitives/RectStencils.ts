@@ -13,7 +13,8 @@ export const RectStencils: Stencil[] = [
 	{
 		// Flowchart process box: a plain rectangle. It renders identically to
 		// `rect`, so it stays the same type and only differs as a palette preset
-		// (semantic label + flowchart category), not a distinct shape type.
+		// (semantic label), not a distinct shape type. Listed via the
+		// plugin-supplied flowchart category entry (flowchartToolbarEntry).
 		id: "process",
 		objectType: "rect",
 		label: { en: "Process", ja: "処理" },

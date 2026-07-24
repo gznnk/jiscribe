@@ -2,6 +2,10 @@ import {
 	containerPlugin,
 	containerToolbarEntry,
 } from "@workspace/plugin-container-shapes";
+import {
+	flowchartPlugin,
+	flowchartToolbarEntry,
+} from "@workspace/plugin-flowchart-shapes";
 import React, { useCallback, useState } from "react";
 import ReactDOM from "react-dom/client";
 import "katex/dist/katex.min.css";
@@ -14,21 +18,21 @@ import {
 	createCanvasParser,
 	darkCanvasTheme,
 	extractCanvasSourceFromPng,
-	flowchartToolbarEntry,
 	generalToolbarEntry,
 } from "../../src";
 import "./harness.css";
 
-// container 図形は core から削除され、@workspace/plugin-container-shapes が唯一の
+// flowchart / container 図形は core から削除され、それぞれ
+// @workspace/plugin-flowchart-shapes / @workspace/plugin-container-shapes が唯一の
 // 供給元 (docs/05_extensibility/plugin-architecture-requirements.md)。e2e 専用の dev 限定
-// 循環依存として devDependencies に登録し、container.spec.ts を存続させる。
-const plugins = [containerPlugin];
+// 循環依存として devDependencies に登録し、関連 spec を存続させる。
+const plugins = [flowchartPlugin, containerPlugin];
 
 const initialConfig: CanvasConfig = { plugins };
 
-// container カテゴリは core の既定 layout に含まれない（プラグイン供給）。
-// container.spec.ts は container フライアウトボタンに依存するため、従来どおり
-// flowchart 直後に container スロットを差し込んだ layout をハーネスから渡す。
+// flowchart / container カテゴリは core の既定 layout に含まれない（プラグイン供給）。
+// spec は両フライアウトボタンに依存するため、従来どおり flowchart 直後に container
+// スロットを差し込んだ layout をハーネスから渡す。
 const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "rect" },
 	{ kind: "preset", presetId: "ellipse" },

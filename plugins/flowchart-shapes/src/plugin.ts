@@ -1,0 +1,53 @@
+import type { CanvasPlugin } from "@workspace/canvas";
+
+import {
+	cardDefinition,
+	crossDefinition,
+	dbDefinition,
+	delayDefinition,
+	diamondDefinition,
+	displayDefinition,
+	documentDefinition,
+	extractDefinition,
+	hexagonDefinition,
+	loopLimitDefinition,
+	manualInputDefinition,
+	multiDocumentDefinition,
+	offPageConnectorDefinition,
+	parallelogramDefinition,
+	stadiumDefinition,
+	storedDataDefinition,
+	subroutineDefinition,
+	trapezoidDefinition,
+} from "./definitions";
+import { flowchartParserExtensions } from "./parser";
+
+/**
+ * `CanvasPlugin` declaration for the flowchart shapes
+ * (docs/05_extensibility/plugin-architecture-requirements.md §3). Hosts wire this
+ * into both `createCanvasParser` and `<Canvas initialConfig>` via a single `plugins` array.
+ */
+export const flowchartPlugin: CanvasPlugin = {
+	id: "flowchart-shapes",
+	objects: {
+		card: cardDefinition,
+		cross: crossDefinition,
+		db: dbDefinition,
+		delay: delayDefinition,
+		diamond: diamondDefinition,
+		display: displayDefinition,
+		document: documentDefinition,
+		extract: extractDefinition,
+		hexagon: hexagonDefinition,
+		loopLimit: loopLimitDefinition,
+		manualInput: manualInputDefinition,
+		multiDocument: multiDocumentDefinition,
+		offPageConnector: offPageConnectorDefinition,
+		parallelogram: parallelogramDefinition,
+		stadium: stadiumDefinition,
+		storedData: storedDataDefinition,
+		subroutine: subroutineDefinition,
+		trapezoid: trapezoidDefinition,
+	},
+	parser: flowchartParserExtensions,
+};

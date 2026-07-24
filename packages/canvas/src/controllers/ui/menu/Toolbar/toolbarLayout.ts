@@ -2,7 +2,6 @@ import type { ComponentType } from "react";
 
 import type { LocaleMessages } from "../../../messages/resolveLocaleMessages";
 import { CalloutIcon } from "../../objects/annotations/CalloutIcon";
-import { DiamondIcon } from "../../objects/flowchart/DiamondIcon";
 import { CloudIcon } from "../../objects/general/CloudIcon";
 import { RectIcon } from "../../objects/primitives/RectIcon";
 import type { StencilIconProps } from "../../objects/Stencil";
@@ -40,37 +39,8 @@ export type ToolbarEntry =
  * Built-in category entries. The category icon reuses a representative shape icon
  * (a dedicated glyph set can replace these later without touching callers). Hosts
  * compose these into a `toolbar.layout`; plugins export their own entries (e.g.
- * `containerToolbarEntry`).
+ * `flowchartToolbarEntry`, `containerToolbarEntry`).
  */
-export const flowchartToolbarEntry: ToolbarEntry = {
-	kind: "category",
-	id: "flowchart",
-	label: { en: "Flowchart", ja: "フローチャート" },
-	icon: DiamondIcon,
-	presetIds: [
-		"process",
-		"diamond",
-		"stadium",
-		"subroutine",
-		"parallelogram",
-		"document",
-		"multiDocument",
-		"db",
-		"storedData",
-		"display",
-		"manualInput",
-		"card",
-		"trapezoid",
-		"hexagon",
-		"delay",
-		"loopLimit",
-		"extract",
-		"cross",
-		"onPageConnector",
-		"offPageConnector",
-	],
-};
-
 export const generalToolbarEntry: ToolbarEntry = {
 	kind: "category",
 	id: "general",
@@ -102,9 +72,10 @@ export const basicToolbarEntry: ToolbarEntry = {
 
 /**
  * Default toolbar layout: the basic primitives and sticky stay pinned directly
- * (preserving the classic direct-placement UX); flowchart / general / annotation
- * fold into category flyouts. Only core categories appear here — a plugin category
- * (e.g. container) is shown only when the host adds its entry via `toolbar.layout`.
+ * (preserving the classic direct-placement UX); general / annotation fold into
+ * category flyouts. Only core categories appear here — a plugin category (e.g.
+ * flowchart, container) is shown only when the host adds its entry via
+ * `toolbar.layout`.
  */
 export const DEFAULT_TOOLBAR_LAYOUT: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "rect" },
@@ -113,7 +84,6 @@ export const DEFAULT_TOOLBAR_LAYOUT: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "polygon" },
 	{ kind: "preset", presetId: "sticky" },
 	{ kind: "preset", presetId: "rect-markdown" },
-	flowchartToolbarEntry,
 	generalToolbarEntry,
 	annotationToolbarEntry,
 ];

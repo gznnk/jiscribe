@@ -52,6 +52,7 @@
 		"@vitest/coverage-v8": "catalog:",
 		"@vitest/ui": "^2.1.8",
 		"@workspace/plugin-container-shapes": "workspace:*",
+		"@workspace/plugin-flowchart-shapes": "workspace:*",
 		"katex": "catalog:",
 		"madge": "catalog:",
 		"rimraf": "catalog:",

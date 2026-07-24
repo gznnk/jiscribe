@@ -3,25 +3,28 @@ import {
 	Canvas,
 	annotationToolbarEntry,
 	createCanvasParser,
-	flowchartToolbarEntry,
 	generalToolbarEntry,
 } from "@workspace/canvas";
 import {
 	containerPlugin,
 	containerToolbarEntry,
 } from "@workspace/plugin-container-shapes";
+import {
+	flowchartPlugin,
+	flowchartToolbarEntry,
+} from "@workspace/plugin-flowchart-shapes";
 
-// container 図形は core から削除され、@workspace/plugin-container-shapes が唯一の
+// flowchart / container 図形は core から削除され、それぞれ
+// @workspace/plugin-flowchart-shapes / @workspace/plugin-container-shapes が唯一の
 // 供給元（docs/05_extensibility/plugin-architecture-requirements.md）。この example は
-// 「外部プラグイン図形の追加」の実証: `CanvasPlugin` 宣言 1 つ（containerPlugin）を
-// createCanvasParser と Canvas の initialConfig の両方に渡すだけで、doc の検証と
-// 図形一式の登録が揃う。
-const plugins = [containerPlugin];
+// 「外部プラグイン図形の追加」の実証: `CanvasPlugin` 宣言を createCanvasParser と
+// Canvas の initialConfig の両方に渡すだけで、doc の検証と図形一式の登録が揃う。
+const plugins = [flowchartPlugin, containerPlugin];
 
 const initialConfig: CanvasConfig = { plugins };
 
-// container カテゴリは core の既定 layout に含まれない（プラグイン供給）。
-// 従来どおり flowchart 直後に出すため、ホスト側で container スロットを差し込む。
+// flowchart / container カテゴリは core の既定 layout に含まれない（プラグイン供給）。
+// 従来どおりの並びで出すため、ホスト側で両スロットを差し込む。
 const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "rect" },
 	{ kind: "preset", presetId: "ellipse" },

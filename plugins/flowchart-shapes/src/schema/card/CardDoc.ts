@@ -1,0 +1,49 @@
+import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas";
+import { DEFAULT_FONT_FAMILY, AUTO_COLOR } from "@workspace/canvas/unstable";
+
+/** Length of the cut corner as a fraction of the shorter side. */
+export const CARD_CUT_RATIO = 0.25;
+
+/**
+ * A card (a rectangle with the top-left corner cut off), used for punched-card style data in flowcharts.
+ *
+ * It adopts rect geometry (x/y/width/height) and only swaps the rendering. This
+ * lets it reuse Frame-based transforms and connector outline connections with
+ * the same mechanism as Rect.
+ */
+export const CardFeatures = {
+	type: "card",
+	geometry: "rect",
+	transform: true,
+	stroke: true,
+	fill: true,
+	text: true,
+	connectable: true,
+} as const satisfies ObjectFeatures;
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+declare const CardDocBrand: unique symbol;
+
+export type CardDoc = CreateObjectType<
+	typeof CardFeatures,
+	typeof CardDocBrand
+>;
+
+export const CARD_DOC_DEFAULTS: Omit<CardDoc, "id"> = {
+	type: "card",
+	x: 0,
+	y: 0,
+	width: 120,
+	height: 80,
+	fill: "transparent",
+	stroke: AUTO_COLOR,
+	strokeWidth: 2,
+	text: "",
+	textType: "text",
+	textAlign: "center",
+	verticalAlign: "middle",
+	fontColor: AUTO_COLOR,
+	fontSize: 16,
+	fontFamily: DEFAULT_FONT_FAMILY,
+	fontWeight: "normal",
+} as const as CardDoc;

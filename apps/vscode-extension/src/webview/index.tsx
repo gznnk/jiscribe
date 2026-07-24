@@ -1,7 +1,6 @@
 import {
 	Canvas,
 	annotationToolbarEntry,
-	flowchartToolbarEntry,
 	generalToolbarEntry,
 	type Camera,
 	type CanvasConfig,
@@ -11,6 +10,7 @@ import {
 	type ToolbarEntry,
 } from "@workspace/canvas";
 import { containerToolbarEntry } from "@workspace/plugin-container-shapes";
+import { flowchartToolbarEntry } from "@workspace/plugin-flowchart-shapes";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -26,8 +26,8 @@ import type {
 // (docs/05_extensibility/plugin-architecture-requirements.md)。
 const initialConfig: CanvasConfig = { plugins };
 
-// container カテゴリは core の既定 layout に含まれない（プラグイン供給）。
-// 従来どおり flowchart 直後に出すため、ホスト側で container スロットを差し込む。
+// flowchart / container カテゴリは core の既定 layout に含まれない（プラグイン供給）。
+// 従来どおりの並びで出すため、ホスト側で両スロットを差し込む。
 const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "rect" },
 	{ kind: "preset", presetId: "ellipse" },

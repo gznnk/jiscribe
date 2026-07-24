@@ -34,7 +34,6 @@ export type {
 // (e.g. `containerToolbarEntry`).
 export {
 	DEFAULT_TOOLBAR_LAYOUT,
-	flowchartToolbarEntry,
 	generalToolbarEntry,
 	annotationToolbarEntry,
 	basicToolbarEntry,

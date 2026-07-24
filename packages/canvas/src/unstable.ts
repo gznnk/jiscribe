@@ -33,6 +33,13 @@ export { AUTO_COLOR } from "./schemas/objects/utils/autoColor";
 
 export { DEFAULT_FONT_FAMILY } from "./constants/defaultFontFamily";
 
+// Polygon/outline helpers for frame 系プラグイン図形の描画・connector 接続 outline。
+export { formatPolygonPoints } from "./presentations/objects/utils/formatPolygonPoints";
+export {
+	centeredPolygonOutline,
+	OUTLINE_CURVE_SEGMENTS,
+} from "./presentations/objects/utils/outlineHelpers";
+
 export { PRECISION } from "./constants/precision";
 
 // ---------------------------------------------------------------------------

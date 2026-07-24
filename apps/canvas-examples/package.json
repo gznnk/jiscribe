@@ -13,6 +13,7 @@
 	"dependencies": {
 		"@workspace/canvas": "workspace:*",
 		"@workspace/plugin-container-shapes": "workspace:*",
+		"@workspace/plugin-flowchart-shapes": "workspace:*",
 		"katex": "catalog:",
 		"react": "catalog:",
 		"react-dom": "catalog:"
