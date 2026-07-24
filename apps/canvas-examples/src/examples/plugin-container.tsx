@@ -12,7 +12,7 @@ import {
 } from "@workspace/plugin-container-shapes";
 
 // container 図形は core から削除され、@workspace/plugin-container-shapes が唯一の
-// 供給元（docs/05_extensibility/canvas-plugin-design.md）。この example は
+// 供給元（docs/05_extensibility/plugin-architecture-requirements.md）。この example は
 // 「外部プラグイン図形の追加」の実証: `CanvasPlugin` 宣言 1 つ（containerPlugin）を
 // createCanvasParser と Canvas の initialConfig の両方に渡すだけで、doc の検証と
 // 図形一式の登録が揃う。

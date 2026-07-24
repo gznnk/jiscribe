@@ -23,7 +23,7 @@ import type {
 } from "../types/messages";
 
 // container 図形は @workspace/plugin-container-shapes から供給する
-// (docs/05_extensibility/canvas-plugin-design.md)。
+// (docs/05_extensibility/plugin-architecture-requirements.md)。
 const initialConfig: CanvasConfig = { plugins };
 
 // container カテゴリは core の既定 layout に含まれない（プラグイン供給）。

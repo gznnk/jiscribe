@@ -20,7 +20,7 @@ import {
 import "./harness.css";
 
 // container 図形は core から削除され、@workspace/plugin-container-shapes が唯一の
-// 供給元 (docs/05_extensibility/canvas-plugin-design.md)。e2e 専用の dev 限定
+// 供給元 (docs/05_extensibility/plugin-architecture-requirements.md)。e2e 専用の dev 限定
 // 循環依存として devDependencies に登録し、container.spec.ts を存続させる。
 const plugins = [containerPlugin];
 

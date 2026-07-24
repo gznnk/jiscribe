@@ -21,11 +21,11 @@ import { ContainerStencils } from "./stencil/ContainerStencils";
  * `containerDefinition` has zero intentional omissions relative to the core
  * container entry (`initializeObjectRegistry.ts`) — same section structure,
  * same items, same `selectionControls`
- * (docs/05_extensibility/uc1-container-extraction-log.md has the full audit).
+ * (docs/05_extensibility/plugin-architecture-requirements.md §4 UC1).
  *
  * The `header-color` custom menu item (HeaderColorMenu) is the last piece that
- * was missing (tier 3: ObjectMenu UI kit, published via `@workspace/canvas/unstable`
- * per docs/05_extensibility/custom-menu-design.md); it is now restored below.
+ * was missing (ObjectMenu UI kit, published via `@workspace/canvas/unstable`);
+ * it is now restored below.
  */
 export const containerDefinition: ObjectTypeDefinition<
 	ContainerDoc,

@@ -60,7 +60,7 @@ export type CanvasCapabilities = {
 	commands?: string[];
 	/**
 	 * Plugins applied in declared order after the built-ins
-	 * (docs/05_extensibility/canvas-plugin-design.md). A type already claimed
+	 * (docs/05_extensibility/plugin-architecture-requirements.md §3). A type already claimed
 	 * by a built-in or an earlier plugin throws at construction time.
 	 */
 	plugins?: readonly CanvasPlugin[];

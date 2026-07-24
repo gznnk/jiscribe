@@ -73,8 +73,8 @@ export type {
 // Pass a `CanvasConfig` (capability set + initial view) to `<Canvas initialConfig={...}>`;
 // its capability subset `CanvasCapabilities` is what the lower-level factory consumes.
 // The factory and the full object-type descriptor table are exported for advanced/custom
-// setups. Plugin declarations (docs/05_extensibility/canvas-plugin-design.md) go through
-// `CanvasConfig.plugins`; there is no raw-registry escape hatch.
+// setups. Plugin declarations (docs/05_extensibility/plugin-architecture-requirements.md)
+// go through `CanvasConfig.plugins`; there is no raw-registry escape hatch.
 export type {
 	CanvasCapabilities,
 	CanvasConfig,

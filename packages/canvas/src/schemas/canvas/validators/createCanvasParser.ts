@@ -14,7 +14,7 @@ export type CanvasParser = {
 /**
  * The slice of `CanvasPlugin` this module reads. Structural (not imported from
  * `controllers/setup`) so the schema layer doesn't depend on the controllers
- * layer's `CanvasPlugin` type (docs/05_extensibility/canvas-plugin-design.md §5).
+ * layer's `CanvasPlugin` type (docs/05_extensibility/plugin-architecture-requirements.md §3).
  */
 type ParserPlugin = {
 	id: string;

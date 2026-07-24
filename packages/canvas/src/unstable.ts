@@ -36,7 +36,7 @@ export { DEFAULT_FONT_FAMILY } from "./constants/defaultFontFamily";
 export { PRECISION } from "./constants/precision";
 
 // ---------------------------------------------------------------------------
-// Phase A: 型固有 selection control の部品(docs/05_extensibility/custom-controls-design.md)
+// Phase A: 型固有 selection control の部品(docs/05_extensibility/plugin-architecture-requirements.md §4)
 // ---------------------------------------------------------------------------
 
 export { ControlStrategy } from "./controllers/gestures/registry/ControlStrategy";
@@ -45,7 +45,7 @@ export { SelectionControlPill } from "./controllers/ui/controls/SelectionControl
 export { getResizeCursorForRotation } from "./controllers/ui/utils";
 
 // ---------------------------------------------------------------------------
-// ObjectMenu UI キット(docs/05_extensibility/custom-menu-design.md)
+// ObjectMenu UI キット(docs/05_extensibility/plugin-architecture-requirements.md §4 UC1)
 // ---------------------------------------------------------------------------
 // `data-kind="menu"` 配下の `data-part` は ObjectMenuHandler が解決する文法:
 //   - `toggle:{sectionId}`   → セクション(ドロップダウン等)の開閉

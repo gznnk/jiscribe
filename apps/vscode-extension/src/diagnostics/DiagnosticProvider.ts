@@ -8,7 +8,8 @@
 // module — bundling it drags the whole React + ObjectMenu UI kit into
 // extension.js (verified: even a lone-constant import balloons the Node
 // bundle by ~40k lines of React). container diagnostics therefore stay
-// core-only for now (docs/05_extensibility/uc1-container-extraction-log.md).
+// core-only for now (docs/05_extensibility/plugin-architecture-requirements.md
+// §7「unstable 層の Node/UI 分割」参照)。
 import {
 	parseCanvasText,
 	type SemanticDiagnostic,
