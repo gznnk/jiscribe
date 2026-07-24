@@ -1,4 +1,4 @@
-import { calcVectorAngle } from "@workspace/geometry";
+import { calcVectorAngleRad } from "@workspace/geometry";
 import type React from "react";
 import { memo } from "react";
 
@@ -37,11 +37,11 @@ const PolylineComponent: React.FC<PolylineProps> = ({
 	// Calculate angle at the start of the polyline (pointing from second point to first)
 	let startAngleRadians = 0;
 	if (points.length >= 2 && startArrow && startArrow !== "None") {
-		startAngleRadians = calcVectorAngle(
-			points[1].x,
-			points[1].y,
+		startAngleRadians = calcVectorAngleRad(
 			points[0].x,
 			points[0].y,
+			points[1].x,
+			points[1].y,
 		);
 	}
 
@@ -49,11 +49,11 @@ const PolylineComponent: React.FC<PolylineProps> = ({
 	let endAngleRadians = 0;
 	if (points.length >= 2 && endArrow && endArrow !== "None") {
 		const lastIdx = points.length - 1;
-		endAngleRadians = calcVectorAngle(
-			points[lastIdx - 1].x,
-			points[lastIdx - 1].y,
+		endAngleRadians = calcVectorAngleRad(
 			points[lastIdx].x,
 			points[lastIdx].y,
+			points[lastIdx - 1].x,
+			points[lastIdx - 1].y,
 		);
 	}
 
