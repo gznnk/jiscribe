@@ -15,15 +15,21 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
+		"@workspace/basic-validators": "workspace:*",
+		"@workspace/geometry": "workspace:*"
+	},
+	"peerDependencies": {
 		"@emotion/react": "catalog:",
 		"@emotion/styled": "catalog:",
-		"@workspace/basic-validators": "workspace:*",
 		"@workspace/canvas": "workspace:*",
-		"@workspace/geometry": "workspace:*",
 		"react": "catalog:"
 	},
 	"devDependencies": {
+		"@emotion/react": "catalog:",
+		"@emotion/styled": "catalog:",
 		"@types/react": "catalog:",
+		"@workspace/canvas": "workspace:*",
+		"react": "catalog:",
 		"typescript": "catalog:",
 		"vitest": "catalog:"
 	}
