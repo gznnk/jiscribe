@@ -44,7 +44,8 @@ const extensionConfig = {
 // ── Webview のビルド設定（ブラウザ環境で動く）────────────────────────────
 // VSCode のパネル内に表示される UI（SVGキャンバス）は Webview という仕組みで動く。
 // Webview はブラウザと同じ環境なので、ブラウザ向けにバンドルする必要がある。
-// src/webview/index.tsx を単一ファイル dist/webview.js にバンドルする。
+// src/webview/index.tsx を dist/webview.js にバンドルする
+// （import された CSS は dist/webview.css、フォントは dist/fonts/ に分離出力される）。
 const webviewConfig = {
 	// バンドルの起点となるファイル（React コンポーネントのルート）
 	entryPoints: [join(__dirname, "src", "webview", "index.tsx")],
@@ -63,10 +64,21 @@ const webviewConfig = {
 	// これにより各ファイルで "import React from 'react'" を書かずに JSX が使える
 	jsx: "automatic",
 	// 拡張子ごとのファイルの扱い方
+	// css: KaTeX のスタイル（数式は KaTeX の HTML + CSS で組まれるため必須）。
+	//      esbuild は JS から import された CSS を outfile と同名の dist/webview.css
+	//      にまとめて出力する。読み込みは webviewHtml.ts の <link> が担う。
+	// woff2/woff/ttf: katex.min.css の @font-face が参照するフォント実体。
+	//      file ローダーで dist/fonts/ にコピーし、CSS 内の url() を相対パスに書き換える
+	//      （Webview の CSP は font-src に cspSource を許可済み）。
 	loader: {
 		".tsx": "tsx",
 		".ts": "ts",
+		".css": "css",
+		".woff2": "file",
+		".woff": "file",
+		".ttf": "file",
 	},
+	assetNames: "fonts/[name]-[hash]",
 };
 
 // ── AI アセットのコピー ──────────────────────────────────────────────────

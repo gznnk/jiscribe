@@ -130,6 +130,7 @@
 		"@workspace/plugin-flowchart-shapes": "workspace:*",
 		"@workspace/plugin-markdown-shape": "workspace:*",
 		"esbuild": "catalog:",
+		"katex": "catalog:",
 		"react": "catalog:",
 		"react-dom": "catalog:",
 		"typescript": "catalog:",
