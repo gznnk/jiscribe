@@ -6,11 +6,13 @@
 // the VSCode extension's DiagnosticProvider, the MCP server, Function Calling
 // handlers — use this entry to keep those UI dependencies out of their bundle.
 //
-// The doc-ops each take already-typed params (no zod; tool-input validation is the
-// adapter's responsibility) and reuse the same ObjectFactory as the canvas, so they
-// produce correct ObjectDocs down to the style defaults.
+// The doc-ops are definition-driven: `createDocOps({ presetDefinitions?, plugins? })`
+// resolves the same ObjectDocDefinition set as the parser, so `addObject(doc, type, …)`
+// / `connect(…)` handle built-in and plugin types uniformly. They take already-typed
+// params (no zod; tool-input validation is the adapter's responsibility) and reuse the
+// same ObjectFactory as the canvas, producing correct ObjectDocs down to the style defaults.
 //
-// Import 例: `import { parseCanvasText, addRect } from "@workspace/canvas/doc";`
+// Import 例: `import { parseCanvasText, createDocOps } from "@workspace/canvas/doc";`
 export type { CanvasDoc } from "./schemas/canvas/CanvasDoc";
 export type { ObjectDoc } from "./schemas/objects/base/ObjectDoc";
 export type { ObjectType } from "./schemas/objects/types/ObjectType";
@@ -34,11 +36,9 @@ export {
 } from "./schemas/canvas/validators";
 export { builtinObjectDocDefinitions } from "./schemas/registry/builtinObjectDocDefinitions";
 export {
-	addRect,
-	type AddRectParams,
-	addEllipse,
-	type AddEllipseParams,
-	connect,
+	createDocOps,
+	type DocOps,
+	type AddObjectParams,
 	type ConnectParams,
 	type AnchorHandleId,
 	DocOperationError,

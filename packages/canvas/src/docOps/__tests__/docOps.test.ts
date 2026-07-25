@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import { parseCanvasText } from "../../schemas/canvas/validators";
-import { addEllipse } from "../addEllipse";
-import { addRect } from "../addRect";
-import { connect } from "../connect";
+import { createFrameObjectFactory } from "../../schemas/objects/utils/createFrameObjectFactory";
+import type { ObjectDocDefinition } from "../../schemas/plugin/ObjectDocDefinition";
+import { createDocOps } from "../createDocOps";
 import { DocOperationError } from "../errors";
 
 /** 空の CanvasDoc を毎回新規に作る（テスト間で共有しない）。 */
@@ -15,11 +15,19 @@ const expectValid = (doc: { version: 1; root: unknown[] }) => {
 	expect(result.kind).toBe("ok");
 };
 
-describe("addRect", () => {
+/** 既定（組み込み定義のみ）の doc-ops。 */
+const docOps = createDocOps();
+
+describe("addObject", () => {
 	it("assigns friendly sequential ids and keeps top-left coordinates", () => {
 		const doc = emptyDoc();
-		const first = addRect(doc, { x: 40, y: 40 });
-		const second = addRect(doc, { x: 0, y: 0, width: 200, height: 100 });
+		const first = docOps.addObject(doc, "rect", { x: 40, y: 40 });
+		const second = docOps.addObject(doc, "rect", {
+			x: 0,
+			y: 0,
+			width: 200,
+			height: 100,
+		});
 
 		expect(first).toBe("rect-1");
 		expect(second).toBe("rect-2");
@@ -29,36 +37,80 @@ describe("addRect", () => {
 		expect(rect.y).toBe(40);
 	});
 
+	it("uses the factory's default dimensions when width/height are omitted", () => {
+		const doc = emptyDoc();
+		docOps.addObject(doc, "rect", { x: 0, y: 0 });
+
+		// RECT_DOC_DEFAULTS (100x100) — the factory default, not the old docOps constant.
+		const rect = doc.root[0] as Record<string, unknown>;
+		expect(rect.width).toBe(100);
+		expect(rect.height).toBe(100);
+	});
+
 	it("carries ObjectFactory style defaults (not a bare object)", () => {
 		const doc = emptyDoc();
-		addRect(doc, { x: 0, y: 0 });
+		docOps.addObject(doc, "rect", { x: 0, y: 0 });
 
 		const rect = doc.root[0] as Record<string, unknown>;
 		expect(rect).toMatchObject({ fill: expect.any(String), fontSize: 16 });
 		expectValid(doc);
 	});
-});
 
-describe("addEllipse", () => {
-	it("places at the center and assigns a friendly id", () => {
+	it("propagates text only when provided", () => {
 		const doc = emptyDoc();
-		const id = addEllipse(doc, { cx: 400, cy: 90 });
+		docOps.addObject(doc, "rect", { x: 0, y: 0, text: "hello" });
+
+		const rect = doc.root[0] as Record<string, unknown>;
+		expect(rect.text).toBe("hello");
+	});
+
+	it("places a center-based ellipse from a top-left bounding box", () => {
+		const doc = emptyDoc();
+		// 左上 (320, 40) ＋ 160x100 の外接矩形 → 中心 (400, 90)・rx 80・ry 50。
+		const id = docOps.addObject(doc, "ellipse", {
+			x: 320,
+			y: 40,
+			width: 160,
+			height: 100,
+		});
 
 		expect(id).toBe("ellipse-1");
 		const ellipse = doc.root[0] as Record<string, unknown>;
 		expect(ellipse.cx).toBe(400);
 		expect(ellipse.cy).toBe(90);
+		expect(ellipse.rx).toBe(80);
+		expect(ellipse.ry).toBe(50);
 		expectValid(doc);
+	});
+
+	it("throws DocOperationError for an unknown type", () => {
+		const doc = emptyDoc();
+		expect(() => docOps.addObject(doc, "nope", { x: 0, y: 0 })).toThrow(
+			DocOperationError,
+		);
+	});
+
+	it("throws DocOperationError for a defined type without a factory", () => {
+		const doc = emptyDoc();
+		// group / connector / svg are defined but not programmatically creatable.
+		expect(() => docOps.addObject(doc, "group", { x: 0, y: 0 })).toThrow(
+			DocOperationError,
+		);
 	});
 });
 
 describe("connect", () => {
 	it("connects two top-level objects into a valid document", () => {
 		const doc = emptyDoc();
-		const source = addRect(doc, { x: 0, y: 0 });
-		const target = addEllipse(doc, { cx: 400, cy: 0 });
+		const source = docOps.addObject(doc, "rect", { x: 0, y: 0 });
+		const target = docOps.addObject(doc, "ellipse", {
+			x: 320,
+			y: -50,
+			width: 160,
+			height: 100,
+		});
 
-		const id = connect(doc, {
+		const id = docOps.connect(doc, {
 			sourceId: source,
 			targetId: target,
 			endArrow: "FilledTriangle",
@@ -70,10 +122,10 @@ describe("connect", () => {
 
 	it("defaults to straight routing for the center-to-center default (no anchors)", () => {
 		const doc = emptyDoc();
-		const source = addRect(doc, { x: 0, y: 0 });
-		const target = addEllipse(doc, { cx: 400, cy: 0 });
+		const source = docOps.addObject(doc, "rect", { x: 0, y: 0 });
+		const target = docOps.addObject(doc, "rect", { x: 400, y: 0 });
 
-		connect(doc, { sourceId: source, targetId: target });
+		docOps.connect(doc, { sourceId: source, targetId: target });
 
 		const connector = doc.root[2] as Record<string, unknown>;
 		expect(connector.source).toMatchObject({ anchor: { kind: "center" } });
@@ -84,10 +136,10 @@ describe("connect", () => {
 
 	it("omits routing (orthogonal default) when both ends pin to an edge midpoint", () => {
 		const doc = emptyDoc();
-		const source = addRect(doc, { x: 0, y: 0 });
-		const target = addRect(doc, { x: 400, y: 0 });
+		const source = docOps.addObject(doc, "rect", { x: 0, y: 0 });
+		const target = docOps.addObject(doc, "rect", { x: 400, y: 0 });
 
-		connect(doc, {
+		docOps.connect(doc, {
 			sourceId: source,
 			targetId: target,
 			sourceAnchor: "rightCenter",
@@ -133,32 +185,90 @@ describe("connect", () => {
 				},
 			],
 		};
-		const source = addRect(doc, { x: 0, y: 0 });
+		const source = docOps.addObject(doc, "rect", { x: 0, y: 0 });
 
 		expect(() =>
-			connect(doc, { sourceId: source, targetId: "inner-rect" }),
+			docOps.connect(doc, { sourceId: source, targetId: "inner-rect" }),
 		).not.toThrow();
 		expectValid(doc);
 	});
 
 	it("throws DocOperationError for a missing id", () => {
 		const doc = emptyDoc();
-		const source = addRect(doc, { x: 0, y: 0 });
+		const source = docOps.addObject(doc, "rect", { x: 0, y: 0 });
 
 		expect(() =>
-			connect(doc, { sourceId: source, targetId: "missing" }),
+			docOps.connect(doc, { sourceId: source, targetId: "missing" }),
 		).toThrow(DocOperationError);
 	});
 
 	it("throws DocOperationError when the target is not connectable", () => {
 		const doc = emptyDoc();
-		const first = addRect(doc, { x: 0, y: 0 });
-		const second = addRect(doc, { x: 400, y: 0 });
-		const connectorId = connect(doc, { sourceId: first, targetId: second });
+		const first = docOps.addObject(doc, "rect", { x: 0, y: 0 });
+		const second = docOps.addObject(doc, "rect", { x: 400, y: 0 });
+		const connectorId = docOps.connect(doc, {
+			sourceId: first,
+			targetId: second,
+		});
 
 		// A connector itself is not a connectable type.
 		expect(() =>
-			connect(doc, { sourceId: first, targetId: connectorId }),
+			docOps.connect(doc, { sourceId: first, targetId: connectorId }),
 		).toThrow(DocOperationError);
+	});
+});
+
+describe("createDocOps with a plugin definition", () => {
+	// 依存方向により canvas のテストから実プラグインは import できないので、
+	// createFrameObjectFactory でフェイクの connectable な図形 "star" を組み立てる。
+	const starDefinition: ObjectDocDefinition = {
+		features: {
+			type: "star",
+			geometry: "rect",
+			transform: true,
+			connectable: true,
+		},
+		validateDoc: () => [],
+		factory: createFrameObjectFactory({
+			type: "star",
+			width: 120,
+			height: 80,
+			fill: "transparent",
+			stroke: "auto",
+			strokeWidth: 2,
+		}),
+	};
+	const starPlugin = { id: "star-plugin", objects: { star: starDefinition } };
+
+	it("adds and connects a plugin-supplied shape", () => {
+		const pluginOps = createDocOps({ plugins: [starPlugin] });
+		const doc = emptyDoc();
+
+		const starId = pluginOps.addObject(doc, "star", {
+			x: 10,
+			y: 20,
+			width: 100,
+			height: 50,
+		});
+		expect(starId).toBe("star-1");
+		const star = doc.root[0] as Record<string, unknown>;
+		expect(star).toMatchObject({ type: "star", x: 10, y: 20 });
+		expect(star.width).toBe(100);
+		expect(star.height).toBe(50);
+
+		const rectId = pluginOps.addObject(doc, "rect", { x: 300, y: 0 });
+		const connectorId = pluginOps.connect(doc, {
+			sourceId: starId,
+			targetId: rectId,
+		});
+		expect(connectorId).toBe("connector-1");
+	});
+
+	it("throws at construction when a plugin duplicates a preset type", () => {
+		expect(() =>
+			createDocOps({
+				plugins: [{ id: "dup-plugin", objects: { rect: starDefinition } }],
+			}),
+		).toThrow(/dup-plugin/);
 	});
 });
