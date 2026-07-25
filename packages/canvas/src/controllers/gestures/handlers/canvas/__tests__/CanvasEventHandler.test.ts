@@ -107,6 +107,87 @@ describe("CanvasEventHandler", () => {
 		});
 	});
 
+	describe("area selection (marquee)", () => {
+		const bboxes = {
+			a: { left: 10, right: 20, top: 10, bottom: 20 },
+			b: { left: 30, right: 40, top: 30, bottom: 40 },
+		};
+		const makeMarqueeState = (
+			overrides: Partial<CanvasControllerState> = {},
+		): CanvasControllerState =>
+			makeState({
+				objects: {
+					a: makeTextRect("a", ""),
+					b: makeTextRect("b", ""),
+				},
+				rootIds: ["a", "b"],
+				selectedIds: [],
+				textEditState: null,
+				eventStartSnapshot: { bboxes },
+				...overrides,
+			} as Partial<CanvasControllerState>);
+
+		it("dragStart initializes hitIds to empty and clears multiSelectGroup", () => {
+			const state = makeMarqueeState({
+				multiSelectGroup: { id: "stale" },
+			} as Partial<CanvasControllerState>);
+			const nextState = CanvasEventHandler.handle(
+				state,
+				makeEvent({
+					type: "dragStart",
+					start: { x: 0, y: 0 },
+					last: { x: 0, y: 0 },
+				}),
+				registries,
+			);
+			expect(nextState.areaSelection).toEqual({
+				startX: 0,
+				startY: 0,
+				endX: 0,
+				endY: 0,
+				hitIds: [],
+			});
+			expect(nextState.multiSelectGroup).toBeNull();
+		});
+
+		it("a changed hit set recomputes the selection and stores the new hitIds", () => {
+			const state = makeMarqueeState({
+				areaSelection: { startX: 0, startY: 0, endX: 5, endY: 5, hitIds: [] },
+			} as Partial<CanvasControllerState>);
+			const nextState = CanvasEventHandler.handle(
+				state,
+				makeEvent({ type: "drag", last: { x: 50, y: 50 } }),
+				registries,
+			);
+			expect(nextState.selectedIds).toEqual(["a", "b"]);
+			expect(nextState.multiSelectGroup).not.toBeNull();
+			expect(nextState.areaSelection?.hitIds).toEqual(["a", "b"]);
+		});
+
+		it("an identical hit set early-outs, keeping selectedIds / multiSelectGroup by reference", () => {
+			const state = makeMarqueeState({
+				areaSelection: { startX: 0, startY: 0, endX: 5, endY: 5, hitIds: [] },
+			} as Partial<CanvasControllerState>);
+			const firstFrame = CanvasEventHandler.handle(
+				state,
+				makeEvent({ type: "drag", last: { x: 50, y: 50 } }),
+				registries,
+			);
+			const secondFrame = CanvasEventHandler.handle(
+				firstFrame,
+				makeEvent({ type: "drag", last: { x: 55, y: 55 } }),
+				registries,
+			);
+			expect(secondFrame.selectedIds).toBe(firstFrame.selectedIds);
+			expect(secondFrame.multiSelectGroup).toBe(firstFrame.multiSelectGroup);
+			expect(secondFrame.areaSelection?.hitIds).toBe(
+				firstFrame.areaSelection?.hitIds,
+			);
+			expect(secondFrame.areaSelection?.endX).toBe(55);
+			expect(secondFrame.areaSelection?.endY).toBe(55);
+		});
+	});
+
 	it("a background press closes an open StencilLibrary category flyout", () => {
 		const state = makeState({
 			textEditState: null,

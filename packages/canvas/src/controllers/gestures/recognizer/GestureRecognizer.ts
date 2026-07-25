@@ -639,11 +639,28 @@ export class GestureRecognizer {
 	}
 
 	/**
-	 * Forcibly reset the drag state from the outside.
-	 * Called when the canvas state is swapped out by an external change such as SYNC_EXTERNAL.
-	 * Does nothing when pressed is null (not dragging).
+	 * Abort the in-progress gesture: cancel the pending RAF batch, discard queued
+	 * events, release pointer capture, and clear pressed.
+	 *
+	 * The single lifecycle operation shared by both callers:
+	 *   - external state swaps (SYNC_EXTERNAL via useSyncExternalDoc), so a held
+	 *     drag does not keep firing against the replaced state
+	 *   - useGestureRecognizer's effect cleanup, so the RAF callback does not fire
+	 *     after unmount (#14)
+	 *
+	 * NOT terminal: the instance stays fully functional afterwards — new events
+	 * re-schedule processing as usual. StrictMode's effect setup→cleanup→setup
+	 * relies on this to resume with the same instance (#78). Destruction is left
+	 * to GC; after a real unmount no events arrive because the handlers are
+	 * detached with the DOM.
 	 */
-	public resetGestureState(): void {
+	public cancelPendingGesture(): void {
+		if (this.rafId !== null) {
+			cancelAnimationFrame(this.rafId);
+			this.rafId = null;
+		}
+		this.scheduled = false;
+		this.queue = [];
 		if (this.pressed !== null) {
 			if (
 				this.containerRef.current &&
@@ -654,23 +671,6 @@ export class GestureRecognizer {
 			}
 			this.pressed = null;
 		}
-		// Discard so that drag events after the abort do not fire from the RAF queue
-		this.queue = [];
-	}
-
-	/**
-	 * Dispose of the instance.
-	 * Called on component unmount to cancel any pending RAF so that callbacks
-	 * do not fire after unmount.
-	 */
-	public dispose(): void {
-		if (this.rafId !== null) {
-			cancelAnimationFrame(this.rafId);
-			this.rafId = null;
-		}
-		this.scheduled = false;
-		this.queue = [];
-		this.pressed = null;
 	}
 
 	/**

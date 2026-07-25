@@ -18,7 +18,7 @@ import type * as RecognizerUtils from "../utils";
  *   - turning a wheel outside a drag into a wheel gesture
  *   - propagation of mods / button / targetKind
  *   - origin suppression via isGestureOptedOut
- *   - lifecycle of resetGestureState / dispose
+ *   - lifecycle of cancelPendingGesture (abort, capture release, non-terminal resume)
  *
  * DOM-dependent utilities are replaced with deterministic stubs. getKindAndId's return value
  * (= presence of targetId/targetKind) is switched per test via mockUtil.
@@ -147,11 +147,11 @@ const makeWheelEvent = (
 		timeStamp,
 	}) as never;
 
-const setup = () => {
+const setup = (options: { container?: HTMLElement } = {}) => {
 	const events: Gesture[] = [];
 	const config: GestureRecognizerConfig = {
 		gestureCallback: (g) => events.push(g),
-		containerRef: { current: null },
+		containerRef: { current: options.container ?? null },
 		svgRef: { current: null },
 		canvasStateRef: {
 			current: {
@@ -460,14 +460,14 @@ describe("GestureRecognizer isGestureOptedOut", () => {
 });
 
 describe("GestureRecognizer lifecycle", () => {
-	it("resetGestureState discards a pending drag", () => {
+	it("cancelPendingGesture discards a pending drag", () => {
 		const { dispatch, recognizer, types } = setup();
 
 		dispatch(makeEvent("pointerdown", 0, 0, 1000));
 		flushRaf();
-		// Queue a move but reset before flushing
+		// Queue a move but cancel before flushing
 		dispatch(makeEvent("pointermove", 50, 0, 1016));
-		recognizer.resetGestureState();
+		recognizer.cancelPendingGesture();
 		flushRaf();
 		// pressed is already discarded, so the following up is ignored too
 		dispatch(makeEvent("pointerup", 50, 0, 1032));
@@ -476,15 +476,65 @@ describe("GestureRecognizer lifecycle", () => {
 		expect(types()).toEqual(["pressed"]);
 	});
 
-	it("dispose cancels pending RAFs and does not fire the callback", () => {
+	it("cancelPendingGesture cancels pending RAFs and does not fire the callback", () => {
 		const { dispatch, recognizer, events } = setup();
 
 		dispatch(makeEvent("pointerdown", 0, 0, 1000)); // Schedule one RAF
-		recognizer.dispose();
+		recognizer.cancelPendingGesture();
 		flushRaf();
 
 		expect(cancelledIds.length).toBeGreaterThan(0);
 		expect(events).toHaveLength(0);
+	});
+
+	it("cancelPendingGesture releases the pointer capture held by an in-progress drag", () => {
+		const captured: number[] = [];
+		const released: number[] = [];
+		const container = {
+			setPointerCapture: (pointerId: number) => captured.push(pointerId),
+			releasePointerCapture: (pointerId: number) => released.push(pointerId),
+		} as unknown as HTMLElement;
+		const { dispatch, recognizer, types } = setup({ container });
+
+		dispatch(makeEvent("pointerdown", 0, 0, 1000));
+		flushRaf();
+		dispatch(makeEvent("pointermove", 50, 0, 1016));
+		flushRaf();
+		expect(captured).toEqual([1]);
+
+		recognizer.cancelPendingGesture();
+		expect(released).toEqual([1]);
+
+		// pressed is gone: the still-held pointer no longer drives the drag
+		dispatch(makeEvent("pointermove", 100, 0, 1032));
+		dispatch(makeEvent("pointerup", 100, 0, 1048));
+		flushRaf();
+		expect(types()).toEqual(["pressed", "dragStart"]);
+	});
+
+	// StrictMode runs effect setup→cleanup→setup on the same component without
+	// re-rendering, so the hook keeps using the same instance across the cleanup.
+	// This locks the contract that cancelPendingGesture is NOT terminal (#78).
+	it("cancelPendingGesture is not terminal: the same instance keeps recognizing gestures", () => {
+		const { dispatch, recognizer, types } = setup();
+
+		// Cleanup fires while an event batch is still pending
+		dispatch(makeEvent("pointerdown", 0, 0, 1000));
+		recognizer.cancelPendingGesture();
+		flushRaf();
+		expect(types()).toEqual([]);
+
+		// After the re-setup, a full gesture must run on the same instance
+		dispatch(makeEvent("pointerdown", 0, 0, 2000));
+		flushRaf();
+		dispatch(makeEvent("pointermove", 50, 0, 2016));
+		flushRaf();
+		dispatch(makeEvent("pointermove", 80, 0, 2032));
+		flushRaf();
+		dispatch(makeEvent("pointerup", 80, 0, 2048));
+		flushRaf();
+
+		expect(types()).toEqual(["pressed", "dragStart", "drag", "dragEnd"]);
 	});
 });
 

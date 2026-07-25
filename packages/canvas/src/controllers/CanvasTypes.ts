@@ -296,6 +296,11 @@ export type CanvasControllerState = CanvasState & {
 		startY: number;
 		endX: number;
 		endY: number;
+		/**
+		 * The previous frame's marquee hit set. When the current frame's hits are
+		 * identical, group folding and multiSelectGroup rebuilding are skipped (#219).
+		 */
+		hitIds: string[];
 	} | null;
 
 	/**
