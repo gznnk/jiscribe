@@ -275,10 +275,14 @@ export const CanvasEventHandler: GestureHandler = {
 						startY: event.start.y,
 						endX: event.last.x,
 						endY: event.last.y,
+						hitIds: [],
 					},
 					selectedIds: [],
 					selectedConnectorId: null,
 					selectedVertex: null,
+					// Cleared here too (not only on "pressed"): the early-out below keeps the
+					// previous multiSelectGroup as-is while the hit set stays empty.
+					multiSelectGroup: null,
 					edgeScrollEnabled: true,
 					objectMenuOpenId: null,
 					stencilLibraryOpenCategory: null,
@@ -306,6 +310,20 @@ export const CanvasEventHandler: GestureHandler = {
 					areaMaxY,
 				);
 
+				// Same hit set as the previous frame: keep selectedIds / multiSelectGroup
+				// as-is and skip group folding and multiSelectGroup rebuilding (#219).
+				// Element order is stable because collectIdsInArea scans the same bboxes map.
+				const areSameIds =
+					hitIds.length === area.hitIds.length &&
+					hitIds.every((id, i) => id === area.hitIds[i]);
+				if (areSameIds) {
+					nextState = {
+						...nextState,
+						areaSelection: { ...area, endX, endY },
+					};
+					return nextState;
+				}
+
 				const selectedIds = autoSelectParentGroups(nextState, hitIds);
 
 				let multiSelectGroup = null;
@@ -320,7 +338,7 @@ export const CanvasEventHandler: GestureHandler = {
 
 				nextState = {
 					...nextState,
-					areaSelection: { ...area, endX, endY },
+					areaSelection: { ...area, endX, endY, hitIds },
 					selectedIds,
 					multiSelectGroup,
 				};
