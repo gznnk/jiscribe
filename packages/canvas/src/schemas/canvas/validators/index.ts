@@ -3,8 +3,5 @@ export { validateSemantics } from "./validateSemantics";
 export { validateStructure } from "./validateStructure";
 export { parseCanvasText } from "./parseCanvasText";
 export type { CanvasParseResult } from "./parseWithRegistry";
-export {
-	createCanvasParser,
-	defaultObjectParserExtensions,
-} from "./createCanvasParser";
-export type { CanvasParser, ObjectParserExtension } from "./createCanvasParser";
+export { createCanvasParser } from "./createCanvasParser";
+export type { CanvasParser } from "./createCanvasParser";

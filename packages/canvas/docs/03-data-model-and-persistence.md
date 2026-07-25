@@ -121,11 +121,11 @@ initializes it idempotently if it is uninitialized. This structurally lets calle
 
 ### A Parser-Only Entry Point
 
-`parser.ts` is a separate entry point that includes no UI dependencies (react / emotion / katex).
-It is aimed at consumers who "just want to parse text into a `CanvasDoc`" (such as the DiagnosticProvider on the Node side of the VSCode extension).
+`doc.ts` is a separate headless entry point that includes no UI dependencies (react / emotion / katex).
+It is aimed at consumers who "just want to parse text into a `CanvasDoc`" or build one programmatically (such as the DiagnosticProvider on the Node side of the VSCode extension, or the MCP server).
 
 ```ts
-import { parseCanvasText } from "@workspace/canvas/parser";
+import { parseCanvasText } from "@workspace/canvas/doc";
 ```
 
 Assuming that any Doc that has passed this boundary is valid, internal functions omit defensive checks

@@ -1,12 +1,12 @@
-import { createCanvasParser } from "@workspace/canvas/parser";
+import { createCanvasParser } from "@workspace/canvas/doc";
 import { describe, expect, it } from "vitest";
 
-import { flowchartPlugin } from "../plugin";
+import { flowchartDocPlugin } from "../doc";
 
 // Parse through a plugin-aware parser so the flowchart shapes are known to
 // parse-time structure/semantic validation (they no longer live in the core
-// default extensions).
-const parser = createCanvasParser({ plugins: [flowchartPlugin] });
+// built-in definitions). The headless `flowchartDocPlugin` carries no React deps.
+const parser = createCanvasParser({ plugins: [flowchartDocPlugin] });
 
 const doc = {
 	version: 1,

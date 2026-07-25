@@ -8,16 +8,18 @@ import type { ObjectOutlineCalculator } from "../presentations/objects/registry/
 import type { ObjectTextRegionCalculator } from "../presentations/objects/registry/ObjectTextRegionRegistry";
 import type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
 import type { ExtraStylePropertyDescriptor } from "../schemas/objects/types/ExtraStyleProperty";
-import type { ObjectFactory } from "../schemas/objects/types/ObjectFactory";
-import type { ObjectFeatures } from "../schemas/objects/types/ObjectFeatures";
+import type { ObjectDocDefinition } from "../schemas/plugin/ObjectDocDefinition";
 import type { ObjectMapperType } from "../states/objects/base/MapperTypes";
 import type { ObjectState } from "../states/objects/base/ObjectState";
 import type { ObjectStateValidator } from "../states/registry/ObjectStateValidatorRegistry";
 
 /**
- * The full description of a single object type, aggregating one entry from each
- * layer's contract (model / render / interaction / style / editor UI). Fields are
- * grouped in that order below; required first within each group.
+ * The full description of a single object type: the headless
+ * {@link ObjectDocDefinition} (features / validateDoc / factory) intersected with
+ * the UI-layer contracts (render / interaction / style / editor UI). Fields are
+ * grouped in that order below; required first within each group. Because it
+ * extends {@link ObjectDocDefinition}, a UI definition is structurally a doc
+ * definition, and `CanvasPlugin.objects` flows into `createCanvasParser` unchanged.
  *
  * `TDoc` / `TState` tie `mapper` / `behavior` / `selectionControls` to one state
  * type. A plugin declares a standalone definition with an explicit
@@ -29,20 +31,14 @@ import type { ObjectStateValidator } from "../states/registry/ObjectStateValidat
 export type ObjectTypeDefinition<
 	TDoc extends ObjectDoc = ObjectDoc,
 	TState extends ObjectState = ObjectState,
-> = {
-	// --- Model (state / schema) ---
-
-	/** Geometry kind and per-type capability flags (see ObjectFeatures). */
-	features: ObjectFeatures;
+> = ObjectDocDefinition & {
+	// --- Model (state) ---
 
 	/** Doc ↔ State conversion. */
 	mapper: ObjectMapperType<TDoc, TState>;
 
 	/** Type-guard that rejects untrusted State entering the canvas from outside (e.g. pasted clipboard data). */
 	stateValidator: ObjectStateValidator;
-
-	/** Doc creation, dimensions, and bounds generation. Required for any type with `stencils`. */
-	factory?: ObjectFactory;
 
 	// --- Render (presentation) ---
 

@@ -7,18 +7,6 @@ export type ObjectDocValidateFn = (
 	path: string,
 ) => SemanticDiagnostic[];
 
-/**
- * A parse-time extension for one object type: its doc validator plus the features
- * used for structure-stage type-existence checks and semantic-stage connectability
- * checks (see {@link ObjectDocValidatorRegistry.getFeatures} / `isConnectable`).
- * `createCanvasParser` composes an array of these into a dedicated registry instance.
- */
-export type ObjectParserExtension = {
-	type: ObjectType;
-	features: ObjectFeatures;
-	validateDoc: ObjectDocValidateFn;
-};
-
 type ValidatorEntry = {
 	validate: ObjectDocValidateFn;
 	features: ObjectFeatures;
@@ -28,11 +16,11 @@ class ObjectDocValidatorRegistry {
 	private readonly entries = new Map<ObjectType, ValidatorEntry>();
 
 	register(
-		type: ObjectType,
+		type: string,
 		validate: ObjectDocValidateFn,
 		features: ObjectFeatures,
 	): void {
-		this.entries.set(type, { validate, features });
+		this.entries.set(type as ObjectType, { validate, features });
 	}
 
 	validate(

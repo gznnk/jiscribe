@@ -15,11 +15,11 @@ import type { CanvasConfig, CanvasDoc, ToolbarEntry } from "../../src";
 import {
 	Canvas,
 	annotationToolbarEntry,
-	createCanvasParser,
 	darkCanvasTheme,
 	extractCanvasSourceFromPng,
 	generalToolbarEntry,
 } from "../../src";
+import { createCanvasParser } from "../../src/doc";
 import "./harness.css";
 
 // flowchart / container 図形は core から削除され、それぞれ

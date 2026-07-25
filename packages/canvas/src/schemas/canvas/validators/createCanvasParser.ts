@@ -1,24 +1,33 @@
 import type { CanvasParseResult } from "./parseWithRegistry";
 import { parseWithRegistry } from "./parseWithRegistry";
-import { defaultObjectParserExtensions } from "../../registry/defaultObjectParserExtensions";
-import type { ObjectParserExtension } from "../../registry/ObjectDocValidatorRegistry";
+import type { ObjectFeatures } from "../../objects/types/ObjectFeatures";
+import type { ObjectDocDefinition } from "../../plugin/ObjectDocDefinition";
+import { builtinObjectDocDefinitions } from "../../registry/builtinObjectDocDefinitions";
+import type { ObjectDocValidateFn } from "../../registry/ObjectDocValidatorRegistry";
 import { createObjectDocValidatorRegistry } from "../../registry/ObjectDocValidatorRegistry";
-
-export type { ObjectParserExtension } from "../../registry/ObjectDocValidatorRegistry";
-export { defaultObjectParserExtensions } from "../../registry/defaultObjectParserExtensions";
 
 export type CanvasParser = {
 	parse(text: string): CanvasParseResult;
 };
 
 /**
- * The slice of `CanvasPlugin` this module reads. Structural (not imported from
- * `controllers/registries`) so the schema layer doesn't depend on the controllers
- * layer's `CanvasPlugin` type (docs/05_extensibility/plugin-architecture-requirements.md §3).
+ * The slice of `CanvasPlugin` this module reads: just the headless doc
+ * contributions. Structural (not imported from `controllers/registries`) so the
+ * schema layer doesn't depend on the controllers layer's `CanvasPlugin` type; a
+ * full `CanvasPlugin` (or `CanvasDocPlugin`) is assignable to it because its
+ * `objects` values extend {@link ObjectDocDefinition}
+ * (docs/05_extensibility/plugin-architecture-requirements.md §3).
  */
-type ParserPlugin = {
+type CanvasDocPluginLike = {
 	id: string;
-	parser?: readonly ObjectParserExtension[];
+	objects?: Readonly<
+		Partial<
+			Record<
+				string,
+				{ features: ObjectFeatures; validateDoc: ObjectDocValidateFn }
+			>
+		>
+	>;
 };
 
 /**
@@ -26,50 +35,67 @@ type ParserPlugin = {
  * multiple parsers (e.g. the default one and a plugin-aware one) can coexist without
  * mutating shared global state.
  *
- * `presetExtensions` defaults to {@link defaultObjectParserExtensions} (every built-in
- * type). To swap out a built-in type for a plugin's own extension, filter it out of
- * `presetExtensions` and add the replacement via `extensions`; a `type` present in
- * `presetExtensions`, `extensions`, or any `plugins` entry's `parser` (or repeated
- * within any of them) is rejected at construction time rather than silently
- * last-wins, so an accidental duplicate registration fails loudly instead of
- * quietly picking one. Merge order is `presetExtensions` → `extensions` →
- * `plugins` (declared order).
+ * `presetDefinitions` defaults to {@link builtinObjectDocDefinitions} (every built-in
+ * type). To swap out a built-in type for a plugin's own definition, pass a
+ * `presetDefinitions` with that type filtered out and add the replacement via a
+ * `plugins` entry; a `type` present in both `presetDefinitions` and a plugin (or
+ * shared between two plugins) is rejected at construction time rather than silently
+ * last-wins, so an accidental duplicate registration fails loudly instead of quietly
+ * picking one. Merge order is `presetDefinitions` → `plugins` (declared order).
  */
 export const createCanvasParser = (config?: {
-	presetExtensions?: readonly ObjectParserExtension[];
-	extensions?: readonly ObjectParserExtension[];
-	plugins?: readonly ParserPlugin[];
+	presetDefinitions?: Readonly<Partial<Record<string, ObjectDocDefinition>>>;
+	plugins?: readonly CanvasDocPluginLike[];
 }): CanvasParser => {
-	const presetExtensions =
-		config?.presetExtensions ?? defaultObjectParserExtensions;
-	const extensions = config?.extensions ?? [];
+	const presetDefinitions =
+		config?.presetDefinitions ?? builtinObjectDocDefinitions;
 	const plugins = config?.plugins ?? [];
 
-	type SourcedExtension = { extension: ObjectParserExtension; origin: string };
-	const sourcedExtensions: SourcedExtension[] = [
-		...presetExtensions.map((extension) => ({
-			extension,
-			origin: "presetExtensions",
-		})),
-		...extensions.map((extension) => ({ extension, origin: "extensions" })),
+	type SourcedDefinition = {
+		type: string;
+		features: ObjectFeatures;
+		validateDoc: ObjectDocValidateFn;
+		origin: string;
+	};
+	const sourcedDefinitions: SourcedDefinition[] = [
+		...Object.entries(presetDefinitions).flatMap(([type, definition]) =>
+			definition
+				? [
+						{
+							type,
+							features: definition.features,
+							validateDoc: definition.validateDoc,
+							origin: "presetDefinitions",
+						},
+					]
+				: [],
+		),
 		...plugins.flatMap((plugin) =>
-			(plugin.parser ?? []).map((extension) => ({
-				extension,
-				origin: `plugin "${plugin.id}"`,
-			})),
+			Object.entries(plugin.objects ?? {}).flatMap(([type, definition]) =>
+				definition
+					? [
+							{
+								type,
+								features: definition.features,
+								validateDoc: definition.validateDoc,
+								origin: `plugin "${plugin.id}"`,
+							},
+						]
+					: [],
+			),
 		),
 	];
 
 	const originByType = new Map<string, string>();
 	const duplicateMessages: string[] = [];
-	sourcedExtensions.forEach(({ extension, origin }) => {
-		const firstOrigin = originByType.get(extension.type);
+	sourcedDefinitions.forEach(({ type, origin }) => {
+		const firstOrigin = originByType.get(type);
 		if (firstOrigin !== undefined) {
 			duplicateMessages.push(
-				`"${extension.type}" (${origin} conflicts with ${firstOrigin})`,
+				`"${type}" (${origin} conflicts with ${firstOrigin})`,
 			);
 		} else {
-			originByType.set(extension.type, origin);
+			originByType.set(type, origin);
 		}
 	});
 	if (duplicateMessages.length > 0) {
@@ -79,12 +105,8 @@ export const createCanvasParser = (config?: {
 	}
 
 	const registry = createObjectDocValidatorRegistry();
-	sourcedExtensions.forEach(({ extension }) => {
-		registry.register(
-			extension.type,
-			extension.validateDoc,
-			extension.features,
-		);
+	sourcedDefinitions.forEach(({ type, features, validateDoc }) => {
+		registry.register(type, validateDoc, features);
 	});
 
 	return {

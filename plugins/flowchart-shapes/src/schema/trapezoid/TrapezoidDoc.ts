@@ -1,5 +1,8 @@
-import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas";
-import { DEFAULT_FONT_FAMILY, AUTO_COLOR } from "@workspace/canvas/unstable";
+import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas/doc";
+import {
+	DEFAULT_FONT_FAMILY,
+	AUTO_COLOR,
+} from "@workspace/canvas/unstable-doc";
 
 /** How far each bottom corner is inset from the top corner, as a fraction of the width. */
 export const TRAPEZOID_SLOPE_RATIO = 0.2;

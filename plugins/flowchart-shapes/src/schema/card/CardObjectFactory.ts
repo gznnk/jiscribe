@@ -1,4 +1,4 @@
-import { createFrameObjectFactory } from "@workspace/canvas/unstable";
+import { createFrameObjectFactory } from "@workspace/canvas/unstable-doc";
 
 import { CARD_DOC_DEFAULTS } from "./CardDoc";
 

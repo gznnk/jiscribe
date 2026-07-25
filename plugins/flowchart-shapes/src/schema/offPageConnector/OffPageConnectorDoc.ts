@@ -1,5 +1,8 @@
-import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas";
-import { DEFAULT_FONT_FAMILY, AUTO_COLOR } from "@workspace/canvas/unstable";
+import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas/doc";
+import {
+	DEFAULT_FONT_FAMILY,
+	AUTO_COLOR,
+} from "@workspace/canvas/unstable-doc";
 
 /**
  * Height of the downward tip as a fraction of the height.

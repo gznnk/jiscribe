@@ -7,7 +7,7 @@
 	"types": "src/index.ts",
 	"exports": {
 		".": "./src/index.ts",
-		"./parser": "./src/parser.ts"
+		"./doc": "./src/doc.ts"
 	},
 	"scripts": {
 		"lint": "eslint .",

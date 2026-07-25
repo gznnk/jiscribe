@@ -1,20 +1,25 @@
-// Import the parser-only entry, not the root entry (which pulls in the Canvas
-// component). This keeps UI deps (react / @emotion / katex) out of the Node
-// bundle (extension.js) so activation stays light.
+// Import the headless `./doc` entry, not the root entry (which pulls in the Canvas
+// component). This keeps UI deps (react / @emotion / katex) out of the Node bundle
+// (extension.js) so activation stays light.
 //
-// Deliberately NOT wired to @workspace/plugin-container-shapes/parser here: its
-// schema (ContainerDoc.ts) imports AUTO_COLOR/DEFAULT_FONT_FAMILY from
-// @workspace/canvas/unstable, and esbuild does not tree-shake that barrel
-// module — bundling it drags the whole React + ObjectMenu UI kit into
-// extension.js (verified: even a lone-constant import balloons the Node
-// bundle by ~40k lines of React). container diagnostics therefore stay
-// core-only for now (docs/05_extensibility/plugin-architecture-requirements.md
-// §7「unstable 層の Node/UI 分割」参照)。
+// The flowchart / container plugins are wired in through their own headless `./doc`
+// entries: those import only `@workspace/canvas/doc` / `@workspace/canvas/unstable-doc`
+// (no React), so esbuild keeps the Node bundle small even though it now validates
+// plugin shapes too (docs/05_extensibility/plugin-architecture-requirements.md
+// §7「unstable 層の Node/UI 分割」)。
 import {
-	parseCanvasText,
+	createCanvasParser,
 	type SemanticDiagnostic,
-} from "@workspace/canvas/parser";
+} from "@workspace/canvas/doc";
+import { containerDocPlugin } from "@workspace/plugin-container-shapes/doc";
+import { flowchartDocPlugin } from "@workspace/plugin-flowchart-shapes/doc";
 import * as vscode from "vscode";
+
+// Plugin-aware parser: built-in types plus the flowchart / container plugin shapes,
+// so .jis.json files using those shapes validate instead of reporting them unknown.
+const canvasParser = createCanvasParser({
+	plugins: [flowchartDocPlugin, containerDocPlugin],
+});
 
 /**
  * Surfaces .jis.json semantic errors in VSCode's Problems panel.
@@ -69,10 +74,10 @@ export class DiagnosticProvider {
 		// Clear the previous diagnostics before re-validating.
 		this.collection.delete(document.uri);
 
-		// parseCanvasText() never throws; it returns a discriminated union.
+		// parse() never throws; it returns a discriminated union.
 		// Syntax errors and schema-expressible structure errors are left to the
 		// JSON schema (see class doc); only validator-only rules are reported here.
-		const result = parseCanvasText(text);
+		const result = canvasParser.parse(text);
 		switch (result.kind) {
 			case "ok":
 				return;

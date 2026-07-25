@@ -1,15 +1,15 @@
-import { defaultObjectParserExtensions } from "./defaultObjectParserExtensions";
+import { builtinObjectDocDefinitions } from "./builtinObjectDocDefinitions";
 import type { createObjectDocValidatorRegistry } from "./ObjectDocValidatorRegistry";
 import { objectDocValidatorRegistry } from "./ObjectDocValidatorRegistry";
 
 /**
- * Folds {@link defaultObjectParserExtensions} (one entry per built-in object type)
+ * Folds {@link builtinObjectDocDefinitions} (one entry per built-in object type)
  * into the given registry, populating each type's doc validator and features.
  *
  * This is a schema-layer-only initialization, all that is needed to "just parse
  * and validate text into a CanvasDoc". It pulls in no UI dependencies such as
  * React / @emotion, so it can be safely called from the Node side of the VSCode
- * extension (the parser-only entry `./parser`).
+ * extension (the headless entry `./doc`).
  *
  * Defaults to the global {@link objectDocValidatorRegistry} and is populated lazily
  * at parse time: the only production caller of the no-arg form is
@@ -21,7 +21,7 @@ import { objectDocValidatorRegistry } from "./ObjectDocValidatorRegistry";
  * validators are a schema-layer concern needed only during parse-time validation.
  *
  * `createCanvasParser` does not use this function: it builds its own registry from a
- * caller-chosen extension list (which may filter out or replace built-in types).
+ * caller-chosen definition set (which may filter out or replace built-in types).
  */
 export const initializeObjectDocValidatorRegistry = (
 	registry: ReturnType<
@@ -29,11 +29,9 @@ export const initializeObjectDocValidatorRegistry = (
 	> = objectDocValidatorRegistry,
 ): void => {
 	registry.clear();
-	defaultObjectParserExtensions.forEach((extension) => {
-		registry.register(
-			extension.type,
-			extension.validateDoc,
-			extension.features,
-		);
-	});
+	for (const [type, definition] of Object.entries(
+		builtinObjectDocDefinitions,
+	)) {
+		registry.register(type, definition.validateDoc, definition.features);
+	}
 };

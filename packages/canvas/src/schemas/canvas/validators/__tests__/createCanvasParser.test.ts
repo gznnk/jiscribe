@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { defaultObjectParserExtensions } from "../../../registry/defaultObjectParserExtensions";
-import type { ObjectParserExtension } from "../../../registry/ObjectDocValidatorRegistry";
+import type { ObjectDocDefinition } from "../../../plugin/ObjectDocDefinition";
+import { builtinObjectDocDefinitions } from "../../../registry/builtinObjectDocDefinitions";
+import type { ObjectDocValidateFn } from "../../../registry/ObjectDocValidatorRegistry";
 import { createCanvasParser } from "../createCanvasParser";
 import { parseCanvasText } from "../parseCanvasText";
 import type { SemanticDiagnostic } from "../types";
 
-// createCanvasParser builds a dedicated (non-global) registry from a preset/extensions
+// createCanvasParser builds a dedicated (non-global) registry from a preset/plugin
 // composition. These tests exercise that composition contract; the individual
 // structure/semantics validation rules themselves are covered by validateStructure.test.ts /
 // validateSemantics.test.ts.
@@ -32,7 +33,7 @@ const starFeatures = {
 	connectable: true,
 } as const;
 
-const validateStarDoc: ObjectParserExtension["validateDoc"] = (obj, path) => {
+const validateStarDoc: ObjectDocValidateFn = (obj, path) => {
 	const errors: SemanticDiagnostic[] = [];
 	if ("points" in obj && (typeof obj.points !== "number" || obj.points <= 0)) {
 		errors.push({
@@ -43,11 +44,14 @@ const validateStarDoc: ObjectParserExtension["validateDoc"] = (obj, path) => {
 	return errors;
 };
 
-const starParserExtension: ObjectParserExtension = {
-	type: "star",
+const starDocDefinition: ObjectDocDefinition = {
 	features: starFeatures,
 	validateDoc: validateStarDoc,
 };
+
+// A plugin exposing the "star" type through its `objects` map (the structural
+// subset createCanvasParser reads; no `@workspace/canvas` controllers-layer import).
+const starPlugin = { id: "star-plugin", objects: { star: starDocDefinition } };
 
 const star = (id: string, over: Record<string, unknown> = {}) => ({
 	id,
@@ -61,7 +65,7 @@ const star = (id: string, over: Record<string, unknown> = {}) => ({
 });
 
 describe("createCanvasParser", () => {
-	describe("without the plugin extension registered", () => {
+	describe("without the plugin definition registered", () => {
 		it("rejects a doc containing the plugin type (Unknown object type, structure-error)", () => {
 			const parser = createCanvasParser();
 			const result = parser.parse(text({ version: 1, root: [star("s1")] }));
@@ -76,17 +80,16 @@ describe("createCanvasParser", () => {
 		});
 	});
 
-	describe("with the plugin extension registered (via extensions)", () => {
-		const buildParser = () =>
-			createCanvasParser({ extensions: [starParserExtension] });
+	describe("with the plugin definition registered (via plugins)", () => {
+		const buildParser = () => createCanvasParser({ plugins: [starPlugin] });
 
-		it("accepts the same doc that was rejected without the extension", () => {
+		it("accepts the same doc that was rejected without the plugin", () => {
 			const parser = buildParser();
 			const result = parser.parse(text({ version: 1, root: [star("s1")] }));
 			expect(result.kind).toBe("ok");
 		});
 
-		it("surfaces the extension's own validateDoc diagnostics (invalid points)", () => {
+		it("surfaces the plugin's own validateDoc diagnostics (invalid points)", () => {
 			const parser = buildParser();
 			const result = parser.parse(
 				text({ version: 1, root: [star("s1", { points: -1 })] }),
@@ -121,21 +124,21 @@ describe("createCanvasParser", () => {
 		});
 	});
 
-	describe("preset filter + extension: replacing a built-in type", () => {
-		it("lets an extension override a built-in type once the preset entry is filtered out", () => {
-			const strictRectExtension: ObjectParserExtension = {
-				type: "rect",
-				features: defaultObjectParserExtensions.find((e) => e.type === "rect")!
-					.features,
+	describe("preset filter + plugin: replacing a built-in type", () => {
+		it("lets a plugin override a built-in type once the preset entry is filtered out", () => {
+			const strictRectDefinition: ObjectDocDefinition = {
+				features: builtinObjectDocDefinitions.rect.features,
 				validateDoc: (_obj, path) => [
 					{ path, message: "rect is disabled by this parser configuration" },
 				],
 			};
+			const { rect: _omitted, ...presetsWithoutRect } =
+				builtinObjectDocDefinitions;
 			const parser = createCanvasParser({
-				presetExtensions: defaultObjectParserExtensions.filter(
-					(e) => e.type !== "rect",
-				),
-				extensions: [strictRectExtension],
+				presetDefinitions: presetsWithoutRect,
+				plugins: [
+					{ id: "strict-rect-plugin", objects: { rect: strictRectDefinition } },
+				],
 			});
 			const result = parser.parse(text({ version: 1, root: [rect("r1")] }));
 			expect(result.kind).toBe("structure-error");
@@ -150,64 +153,45 @@ describe("createCanvasParser", () => {
 	});
 
 	describe("duplicate type detection (throws at construction time)", () => {
-		it("throws when extensions duplicates a preset type", () => {
+		it("throws when a plugin duplicates a preset type", () => {
 			expect(() =>
 				createCanvasParser({
-					extensions: [
-						defaultObjectParserExtensions.find((e) => e.type === "rect")!,
+					plugins: [
+						{
+							id: "rect-plugin",
+							objects: { rect: builtinObjectDocDefinitions.rect },
+						},
 					],
 				}),
-			).toThrow(/rect/);
-		});
-
-		it("throws when extensions itself contains a duplicate type", () => {
-			expect(() =>
-				createCanvasParser({
-					presetExtensions: [],
-					extensions: [starParserExtension, starParserExtension],
-				}),
-			).toThrow(/star/);
-		});
-
-		it("throws when presetExtensions itself contains a duplicate type", () => {
-			expect(() =>
-				createCanvasParser({
-					presetExtensions: [starParserExtension, starParserExtension],
-				}),
-			).toThrow(/star/);
+			).toThrow(/rect-plugin/);
 		});
 
 		it("does not throw for a valid non-overlapping composition", () => {
-			expect(() =>
-				createCanvasParser({ extensions: [starParserExtension] }),
-			).not.toThrow();
+			expect(() => createCanvasParser({ plugins: [starPlugin] })).not.toThrow();
 		});
 	});
 
 	describe("plugins", () => {
-		// A minimal stand-in for `CanvasPlugin` as read by `createCanvasParser`
-		// (only `{ id, parser? }` — the structural subset; no `@workspace/canvas`
-		// controllers-layer import).
-		const moonParserExtension: ObjectParserExtension = {
-			type: "moon",
+		const moonDocDefinition: ObjectDocDefinition = {
 			features: { ...starFeatures, type: "moon" },
 			validateDoc: () => [],
 		};
+		const moonPlugin = {
+			id: "moon-plugin",
+			objects: { moon: moonDocDefinition },
+		};
 
 		it("accepts a doc using a plugin-supplied type", () => {
-			const parser = createCanvasParser({
-				plugins: [{ id: "moon-plugin", parser: [moonParserExtension] }],
-			});
+			const parser = createCanvasParser({ plugins: [moonPlugin] });
 			const result = parser.parse(
 				text({ version: 1, root: [{ ...star("m1"), type: "moon" }] }),
 			);
 			expect(result.kind).toBe("ok");
 		});
 
-		it("merges presetExtensions, extensions, and plugins together", () => {
+		it("merges presetDefinitions and multiple plugins together", () => {
 			const parser = createCanvasParser({
-				extensions: [starParserExtension],
-				plugins: [{ id: "moon-plugin", parser: [moonParserExtension] }],
+				plugins: [starPlugin, moonPlugin],
 			});
 			const doc = {
 				version: 1,
@@ -216,27 +200,12 @@ describe("createCanvasParser", () => {
 			expect(parser.parse(text(doc)).kind).toBe("ok");
 		});
 
-		it("throws (with the plugin id) when a plugin's type duplicates a preset type", () => {
-			expect(() =>
-				createCanvasParser({
-					plugins: [
-						{
-							id: "rect-plugin",
-							parser: [
-								defaultObjectParserExtensions.find((e) => e.type === "rect")!,
-							],
-						},
-					],
-				}),
-			).toThrow(/rect-plugin/);
-		});
-
 		it("throws (with both plugin ids) when two plugins duplicate a type", () => {
 			expect(() =>
 				createCanvasParser({
 					plugins: [
-						{ id: "plugin-a", parser: [starParserExtension] },
-						{ id: "plugin-b", parser: [starParserExtension] },
+						{ id: "plugin-a", objects: { star: starDocDefinition } },
+						{ id: "plugin-b", objects: { star: starDocDefinition } },
 					],
 				}),
 			).toThrow(/plugin-a.*plugin-b|plugin-b.*plugin-a/);

@@ -1,6 +1,26 @@
 import type { ObjectTypeDefinition } from "@workspace/canvas";
 import { createFrameBehavior } from "@workspace/canvas/unstable";
 
+import {
+	cardDocDefinition,
+	crossDocDefinition,
+	dbDocDefinition,
+	delayDocDefinition,
+	diamondDocDefinition,
+	displayDocDefinition,
+	documentDocDefinition,
+	extractDocDefinition,
+	hexagonDocDefinition,
+	loopLimitDocDefinition,
+	manualInputDocDefinition,
+	multiDocumentDocDefinition,
+	offPageConnectorDocDefinition,
+	parallelogramDocDefinition,
+	stadiumDocDefinition,
+	storedDataDocDefinition,
+	subroutineDocDefinition,
+	trapezoidDocDefinition,
+} from "./doc";
 import { Card, calcCardTextRegion, cardOutline } from "./presentation/Card";
 import { Cross, crossOutline } from "./presentation/Cross";
 import { Db, calcDbTextRegion, dbOutline } from "./presentation/Db";
@@ -71,59 +91,23 @@ import {
 	trapezoidOutline,
 } from "./presentation/Trapezoid";
 import type { CardDoc } from "./schema/card/CardDoc";
-import { CardFeatures } from "./schema/card/CardDoc";
-import { CardObjectFactory } from "./schema/card/CardObjectFactory";
 import type { CrossDoc } from "./schema/cross/CrossDoc";
-import { CrossFeatures } from "./schema/cross/CrossDoc";
-import { CrossObjectFactory } from "./schema/cross/CrossObjectFactory";
 import type { DbDoc } from "./schema/db/DbDoc";
-import { DbFeatures } from "./schema/db/DbDoc";
-import { DbObjectFactory } from "./schema/db/DbObjectFactory";
 import type { DelayDoc } from "./schema/delay/DelayDoc";
-import { DelayFeatures } from "./schema/delay/DelayDoc";
-import { DelayObjectFactory } from "./schema/delay/DelayObjectFactory";
 import type { DiamondDoc } from "./schema/diamond/DiamondDoc";
-import { DiamondFeatures } from "./schema/diamond/DiamondDoc";
-import { DiamondObjectFactory } from "./schema/diamond/DiamondObjectFactory";
 import type { DisplayDoc } from "./schema/display/DisplayDoc";
-import { DisplayFeatures } from "./schema/display/DisplayDoc";
-import { DisplayObjectFactory } from "./schema/display/DisplayObjectFactory";
 import type { DocumentDoc } from "./schema/document/DocumentDoc";
-import { DocumentFeatures } from "./schema/document/DocumentDoc";
-import { DocumentObjectFactory } from "./schema/document/DocumentObjectFactory";
 import type { ExtractDoc } from "./schema/extract/ExtractDoc";
-import { ExtractFeatures } from "./schema/extract/ExtractDoc";
-import { ExtractObjectFactory } from "./schema/extract/ExtractObjectFactory";
 import type { HexagonDoc } from "./schema/hexagon/HexagonDoc";
-import { HexagonFeatures } from "./schema/hexagon/HexagonDoc";
-import { HexagonObjectFactory } from "./schema/hexagon/HexagonObjectFactory";
 import type { LoopLimitDoc } from "./schema/loopLimit/LoopLimitDoc";
-import { LoopLimitFeatures } from "./schema/loopLimit/LoopLimitDoc";
-import { LoopLimitObjectFactory } from "./schema/loopLimit/LoopLimitObjectFactory";
 import type { ManualInputDoc } from "./schema/manualInput/ManualInputDoc";
-import { ManualInputFeatures } from "./schema/manualInput/ManualInputDoc";
-import { ManualInputObjectFactory } from "./schema/manualInput/ManualInputObjectFactory";
 import type { MultiDocumentDoc } from "./schema/multiDocument/MultiDocumentDoc";
-import { MultiDocumentFeatures } from "./schema/multiDocument/MultiDocumentDoc";
-import { MultiDocumentObjectFactory } from "./schema/multiDocument/MultiDocumentObjectFactory";
 import type { OffPageConnectorDoc } from "./schema/offPageConnector/OffPageConnectorDoc";
-import { OffPageConnectorFeatures } from "./schema/offPageConnector/OffPageConnectorDoc";
-import { OffPageConnectorObjectFactory } from "./schema/offPageConnector/OffPageConnectorObjectFactory";
 import type { ParallelogramDoc } from "./schema/parallelogram/ParallelogramDoc";
-import { ParallelogramFeatures } from "./schema/parallelogram/ParallelogramDoc";
-import { ParallelogramObjectFactory } from "./schema/parallelogram/ParallelogramObjectFactory";
 import type { StadiumDoc } from "./schema/stadium/StadiumDoc";
-import { StadiumFeatures } from "./schema/stadium/StadiumDoc";
-import { StadiumObjectFactory } from "./schema/stadium/StadiumObjectFactory";
 import type { StoredDataDoc } from "./schema/storedData/StoredDataDoc";
-import { StoredDataFeatures } from "./schema/storedData/StoredDataDoc";
-import { StoredDataObjectFactory } from "./schema/storedData/StoredDataObjectFactory";
 import type { SubroutineDoc } from "./schema/subroutine/SubroutineDoc";
-import { SubroutineFeatures } from "./schema/subroutine/SubroutineDoc";
-import { SubroutineObjectFactory } from "./schema/subroutine/SubroutineObjectFactory";
 import type { TrapezoidDoc } from "./schema/trapezoid/TrapezoidDoc";
-import { TrapezoidFeatures } from "./schema/trapezoid/TrapezoidDoc";
-import { TrapezoidObjectFactory } from "./schema/trapezoid/TrapezoidObjectFactory";
 import { cardToDoc, cardToState } from "./state/card/CardMapper";
 import type { CardState } from "./state/card/CardState";
 import { isValidCardState } from "./state/card/validateCardState";
@@ -225,16 +209,16 @@ import { SubroutineStencils } from "./stencil/SubroutineStencils";
 import { TrapezoidStencils } from "./stencil/TrapezoidStencils";
 
 /**
- * flowchart 18 図形の `ObjectTypeDefinition` 群。core の登録エントリ
- * (initializeObjectRegistry.ts の ALL_OBJECT_DEFINITIONS) と 1:1 で、意図的除外は
- * ない。menu は未宣言なので features から既定メニューが導出される
- * (docs/05_extensibility/plugin-architecture-requirements.md)。
+ * flowchart 18 図形の `ObjectTypeDefinition` 群。各定義は `./doc` の headless doc 定義
+ * (features / validateDoc / factory) を spread し、render / interaction / editor UI 部を
+ * 足して合成する。core の登録エントリ (initializeObjectRegistry.ts の
+ * ALL_OBJECT_DEFINITIONS) と 1:1 で、意図的除外はない。menu は未宣言なので features から
+ * 既定メニューが導出される (docs/05_extensibility/plugin-architecture-requirements.md)。
  */
 export const cardDefinition: ObjectTypeDefinition<CardDoc, CardState> = {
-	features: CardFeatures,
+	...cardDocDefinition,
 	mapper: { toDoc: cardToDoc, toState: cardToState },
 	stateValidator: isValidCardState,
-	factory: CardObjectFactory,
 	component: Card,
 	textRegion: calcCardTextRegion,
 	outline: cardOutline,
@@ -243,10 +227,9 @@ export const cardDefinition: ObjectTypeDefinition<CardDoc, CardState> = {
 };
 
 export const crossDefinition: ObjectTypeDefinition<CrossDoc, CrossState> = {
-	features: CrossFeatures,
+	...crossDocDefinition,
 	mapper: { toDoc: crossToDoc, toState: crossToState },
 	stateValidator: isValidCrossState,
-	factory: CrossObjectFactory,
 	component: Cross,
 	outline: crossOutline,
 	behavior: createFrameBehavior<CrossState>(),
@@ -254,10 +237,9 @@ export const crossDefinition: ObjectTypeDefinition<CrossDoc, CrossState> = {
 };
 
 export const dbDefinition: ObjectTypeDefinition<DbDoc, DbState> = {
-	features: DbFeatures,
+	...dbDocDefinition,
 	mapper: { toDoc: dbToDoc, toState: dbToState },
 	stateValidator: isValidDbState,
-	factory: DbObjectFactory,
 	component: Db,
 	textRegion: calcDbTextRegion,
 	outline: dbOutline,
@@ -266,10 +248,9 @@ export const dbDefinition: ObjectTypeDefinition<DbDoc, DbState> = {
 };
 
 export const delayDefinition: ObjectTypeDefinition<DelayDoc, DelayState> = {
-	features: DelayFeatures,
+	...delayDocDefinition,
 	mapper: { toDoc: delayToDoc, toState: delayToState },
 	stateValidator: isValidDelayState,
-	factory: DelayObjectFactory,
 	component: Delay,
 	textRegion: calcDelayTextRegion,
 	outline: delayOutline,
@@ -279,10 +260,9 @@ export const delayDefinition: ObjectTypeDefinition<DelayDoc, DelayState> = {
 
 export const diamondDefinition: ObjectTypeDefinition<DiamondDoc, DiamondState> =
 	{
-		features: DiamondFeatures,
+		...diamondDocDefinition,
 		mapper: { toDoc: diamondToDoc, toState: diamondToState },
 		stateValidator: isValidDiamondState,
-		factory: DiamondObjectFactory,
 		component: Diamond,
 		textRegion: calcDiamondTextRegion,
 		outline: diamondOutline,
@@ -292,10 +272,9 @@ export const diamondDefinition: ObjectTypeDefinition<DiamondDoc, DiamondState> =
 
 export const displayDefinition: ObjectTypeDefinition<DisplayDoc, DisplayState> =
 	{
-		features: DisplayFeatures,
+		...displayDocDefinition,
 		mapper: { toDoc: displayToDoc, toState: displayToState },
 		stateValidator: isValidDisplayState,
-		factory: DisplayObjectFactory,
 		component: Display,
 		textRegion: calcDisplayTextRegion,
 		outline: displayOutline,
@@ -307,10 +286,9 @@ export const documentDefinition: ObjectTypeDefinition<
 	DocumentDoc,
 	DocumentState
 > = {
-	features: DocumentFeatures,
+	...documentDocDefinition,
 	mapper: { toDoc: documentToDoc, toState: documentToState },
 	stateValidator: isValidDocumentState,
-	factory: DocumentObjectFactory,
 	component: Document,
 	textRegion: calcDocumentTextRegion,
 	outline: documentOutline,
@@ -320,10 +298,9 @@ export const documentDefinition: ObjectTypeDefinition<
 
 export const extractDefinition: ObjectTypeDefinition<ExtractDoc, ExtractState> =
 	{
-		features: ExtractFeatures,
+		...extractDocDefinition,
 		mapper: { toDoc: extractToDoc, toState: extractToState },
 		stateValidator: isValidExtractState,
-		factory: ExtractObjectFactory,
 		component: Extract,
 		outline: extractOutline,
 		behavior: createFrameBehavior<ExtractState>(),
@@ -332,10 +309,9 @@ export const extractDefinition: ObjectTypeDefinition<ExtractDoc, ExtractState> =
 
 export const hexagonDefinition: ObjectTypeDefinition<HexagonDoc, HexagonState> =
 	{
-		features: HexagonFeatures,
+		...hexagonDocDefinition,
 		mapper: { toDoc: hexagonToDoc, toState: hexagonToState },
 		stateValidator: isValidHexagonState,
-		factory: HexagonObjectFactory,
 		component: Hexagon,
 		textRegion: calcHexagonTextRegion,
 		outline: hexagonOutline,
@@ -347,10 +323,9 @@ export const loopLimitDefinition: ObjectTypeDefinition<
 	LoopLimitDoc,
 	LoopLimitState
 > = {
-	features: LoopLimitFeatures,
+	...loopLimitDocDefinition,
 	mapper: { toDoc: loopLimitToDoc, toState: loopLimitToState },
 	stateValidator: isValidLoopLimitState,
-	factory: LoopLimitObjectFactory,
 	component: LoopLimit,
 	textRegion: calcLoopLimitTextRegion,
 	outline: loopLimitOutline,
@@ -362,10 +337,9 @@ export const manualInputDefinition: ObjectTypeDefinition<
 	ManualInputDoc,
 	ManualInputState
 > = {
-	features: ManualInputFeatures,
+	...manualInputDocDefinition,
 	mapper: { toDoc: manualInputToDoc, toState: manualInputToState },
 	stateValidator: isValidManualInputState,
-	factory: ManualInputObjectFactory,
 	component: ManualInput,
 	textRegion: calcManualInputTextRegion,
 	outline: manualInputOutline,
@@ -377,10 +351,9 @@ export const multiDocumentDefinition: ObjectTypeDefinition<
 	MultiDocumentDoc,
 	MultiDocumentState
 > = {
-	features: MultiDocumentFeatures,
+	...multiDocumentDocDefinition,
 	mapper: { toDoc: multiDocumentToDoc, toState: multiDocumentToState },
 	stateValidator: isValidMultiDocumentState,
-	factory: MultiDocumentObjectFactory,
 	component: MultiDocument,
 	textRegion: calcMultiDocumentTextRegion,
 	outline: multiDocumentOutline,
@@ -392,10 +365,9 @@ export const offPageConnectorDefinition: ObjectTypeDefinition<
 	OffPageConnectorDoc,
 	OffPageConnectorState
 > = {
-	features: OffPageConnectorFeatures,
+	...offPageConnectorDocDefinition,
 	mapper: { toDoc: offPageConnectorToDoc, toState: offPageConnectorToState },
 	stateValidator: isValidOffPageConnectorState,
-	factory: OffPageConnectorObjectFactory,
 	component: OffPageConnector,
 	textRegion: calcOffPageConnectorTextRegion,
 	outline: offPageConnectorOutline,
@@ -407,10 +379,9 @@ export const parallelogramDefinition: ObjectTypeDefinition<
 	ParallelogramDoc,
 	ParallelogramState
 > = {
-	features: ParallelogramFeatures,
+	...parallelogramDocDefinition,
 	mapper: { toDoc: parallelogramToDoc, toState: parallelogramToState },
 	stateValidator: isValidParallelogramState,
-	factory: ParallelogramObjectFactory,
 	component: Parallelogram,
 	textRegion: calcParallelogramTextRegion,
 	outline: parallelogramOutline,
@@ -420,10 +391,9 @@ export const parallelogramDefinition: ObjectTypeDefinition<
 
 export const stadiumDefinition: ObjectTypeDefinition<StadiumDoc, StadiumState> =
 	{
-		features: StadiumFeatures,
+		...stadiumDocDefinition,
 		mapper: { toDoc: stadiumToDoc, toState: stadiumToState },
 		stateValidator: isValidStadiumState,
-		factory: StadiumObjectFactory,
 		component: Stadium,
 		textRegion: calcStadiumTextRegion,
 		outline: stadiumOutline,
@@ -435,10 +405,9 @@ export const storedDataDefinition: ObjectTypeDefinition<
 	StoredDataDoc,
 	StoredDataState
 > = {
-	features: StoredDataFeatures,
+	...storedDataDocDefinition,
 	mapper: { toDoc: storedDataToDoc, toState: storedDataToState },
 	stateValidator: isValidStoredDataState,
-	factory: StoredDataObjectFactory,
 	component: StoredData,
 	textRegion: calcStoredDataTextRegion,
 	outline: storedDataOutline,
@@ -450,10 +419,9 @@ export const subroutineDefinition: ObjectTypeDefinition<
 	SubroutineDoc,
 	SubroutineState
 > = {
-	features: SubroutineFeatures,
+	...subroutineDocDefinition,
 	mapper: { toDoc: subroutineToDoc, toState: subroutineToState },
 	stateValidator: isValidSubroutineState,
-	factory: SubroutineObjectFactory,
 	component: Subroutine,
 	textRegion: calcSubroutineTextRegion,
 	behavior: createFrameBehavior<SubroutineState>(),
@@ -464,10 +432,9 @@ export const trapezoidDefinition: ObjectTypeDefinition<
 	TrapezoidDoc,
 	TrapezoidState
 > = {
-	features: TrapezoidFeatures,
+	...trapezoidDocDefinition,
 	mapper: { toDoc: trapezoidToDoc, toState: trapezoidToState },
 	stateValidator: isValidTrapezoidState,
-	factory: TrapezoidObjectFactory,
 	component: Trapezoid,
 	textRegion: calcTrapezoidTextRegion,
 	outline: trapezoidOutline,
