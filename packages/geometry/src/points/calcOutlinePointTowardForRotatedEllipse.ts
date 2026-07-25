@@ -9,6 +9,8 @@ import type { TransformedEllipse } from "../types/TransformedEllipse";
  * Return the intersection point on the ellipse outline along the ray
  * from ellipse center toward `toward` (world coord).
  *
+ * scale は FlipScale(±1) 前提のため無視する。楕円の輪郭は軸反転で不変なので正しい。
+ *
  * Returns null if `toward` is inside the ellipse or if degenerate (toward == center).
  */
 export function calcOutlinePointTowardForRotatedEllipse(

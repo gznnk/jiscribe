@@ -81,7 +81,9 @@
 
 ### 5. scale 契約
 
-`Transform.scaleX` / `Transform.scaleY` は反転フラグであり、値は `1 | -1` のみを取る（寸法は width/height が持つ）。
+`Transform.scaleX` / `Transform.scaleY` は反転フラグであり、`FlipScale`（`1 | -1`、`src/types`）型で定義域を `1 | -1` に絞ってコンパイラで強制する（寸法は width/height が持つ）。符号を作る箇所は `calcNonZeroSign`（`1 | -1` を返す）を経由し、キャストは使わない。
+
+定義域を `number`（一般 scale）へ広げる場合は、対称図形の輪郭を反転不変とみなして scale を無視している outline 系関数（`calcOutlinePointTowardForRotatedFrame` / `ForRotatedEllipse`）の一般 scale 対応とセットで行うこと。
 
 ---
 

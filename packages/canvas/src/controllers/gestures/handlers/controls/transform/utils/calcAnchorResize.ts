@@ -1,4 +1,5 @@
 import type {
+	FlipScale,
 	FrameKeyPoints,
 	KeyPointId,
 	TransformedFrame,
@@ -24,8 +25,8 @@ export type AnchorResizeResult = {
 	height: number;
 	inversedCenterX: number;
 	inversedCenterY: number;
-	scaleX: number;
-	scaleY: number;
+	scaleX: FlipScale;
+	scaleY: FlipScale;
 };
 
 /**

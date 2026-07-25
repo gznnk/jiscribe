@@ -2,6 +2,7 @@ import { calcPolyBoundingBox } from "./calcPolyBoundingBox";
 import { degreesToRadians } from "../common/degreesToRadians";
 import { nanToZero } from "../common/nanToZero";
 import { applyAffineWithTrig } from "../transform/applyAffineWithTrig";
+import type { FlipScale } from "../types/FlipScale";
 import type { Point } from "../types/Point";
 import type { TransformedFrame } from "../types/TransformedFrame";
 
@@ -15,15 +16,15 @@ import type { TransformedFrame } from "../types/TransformedFrame";
  * 4. 逆変換後の中心を順変換して最終的な中心位置を計算
  *
  * @param points - フレームを計算する点の配列
- * @param scaleX - X軸のスケール (デフォルト: 1)
- * @param scaleY - Y軸のスケール (デフォルト: 1)
+ * @param scaleX - X軸の反転フラグ（±1、デフォルト: 1）
+ * @param scaleY - Y軸の反転フラグ（±1、デフォルト: 1）
  * @param rotationDeg - 回転角度（度数法、デフォルト: 0）
  * @returns 点群を包含する TransformedFrame。points が空の場合は null
  */
 export const calcOrientedFrameFromPoints = (
 	points: Point[],
-	scaleX = 1,
-	scaleY = 1,
+	scaleX: FlipScale = 1,
+	scaleY: FlipScale = 1,
 	rotationDeg = 0,
 ): TransformedFrame | null => {
 	if (points.length === 0) {

@@ -70,6 +70,8 @@ describe("calcFrameCornerPoints", () => {
 	});
 
 	it("scaleX/scaleYが4隅に反映される", () => {
+		// 一般 scale(±1 以外)の math が保たれていることの退行検出。型は FlipScale だが
+		// 実装は一般 scale 対応のままなので、定義域外の値を cast で流して検証する。
 		const corners = calcFrameCornerPoints({
 			cx: 0,
 			cy: 0,
@@ -78,7 +80,7 @@ describe("calcFrameCornerPoints", () => {
 			rotation: 0,
 			scaleX: 2,
 			scaleY: -1,
-		});
+		} as unknown as TransformedFrame);
 		// 左上(-50,-25) -> (-100, 25)
 		expect(corners[0]).toEqual({ x: -100, y: 25 });
 		// 右上(50,-25) -> (100, 25)
@@ -124,8 +126,9 @@ describe("calcFrameCornerPoints", () => {
 	});
 
 	it("rotationとscaleの複合でも4隅すべてが個別アフィン変換と一致する", () => {
-		// 回転と非単位スケール（flip含む）を組み合わせた退行検出用ケース
-		const cases: TransformedFrame[] = [
+		// 回転と非単位スケール（flip含む）を組み合わせた退行検出用ケース。
+		// 一般 scale の math を検証するため、FlipScale の定義域外の値を cast で流す。
+		const cases = [
 			{
 				cx: 10,
 				cy: 20,
@@ -162,7 +165,7 @@ describe("calcFrameCornerPoints", () => {
 				scaleX: -1,
 				scaleY: -1,
 			},
-		];
+		] as TransformedFrame[];
 		for (const frame of cases) {
 			const corners = calcFrameCornerPoints(frame);
 			const reference = cornersByReference(frame);

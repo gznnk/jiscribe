@@ -44,11 +44,11 @@ describe("calcOrientedFrameFromPoints", () => {
 			{ x: 0, y: 60 },
 		];
 		// シグネチャ: (points, scaleX, scaleY, rotation)
-		const result = calcOrientedFrameFromPoints(points, 2, 0.5, 45);
+		const result = calcOrientedFrameFromPoints(points, -1, 1, 45);
 		assert(result !== null);
 		expect(result.rotation).toBe(45);
-		expect(result.scaleX).toBe(2);
-		expect(result.scaleY).toBe(0.5);
+		expect(result.scaleX).toBe(-1);
+		expect(result.scaleY).toBe(1);
 	});
 
 	it("90度回転時は逆変換後AABCから幅・高さが入れ替わる", () => {

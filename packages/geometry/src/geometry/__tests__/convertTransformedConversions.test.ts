@@ -11,8 +11,8 @@ describe("convertTransformedRectToFrame", () => {
 			width: 100,
 			height: 60,
 			rotation: 45,
-			scaleX: 2,
-			scaleY: 0.5,
+			scaleX: -1,
+			scaleY: 1,
 		});
 		expect(result).toEqual({
 			cx: 50,
@@ -20,8 +20,8 @@ describe("convertTransformedRectToFrame", () => {
 			width: 100,
 			height: 60,
 			rotation: 45,
-			scaleX: 2,
-			scaleY: 0.5,
+			scaleX: -1,
+			scaleY: 1,
 		});
 	});
 

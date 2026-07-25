@@ -10,6 +10,8 @@ import type { TransformedFrame } from "../types/TransformedFrame";
  * Return the intersection point on the frame outline along the ray
  * from frame center toward `toward` (world coord).
  *
+ * scale は FlipScale(±1) 前提のため無視する。矩形の輪郭は軸反転で不変なので正しい。
+ *
  * Returns null if `toward` is inside the frame or if degenerate (toward == center).
  */
 export function calcOutlinePointTowardForRotatedFrame(

@@ -1,3 +1,4 @@
+import type { FlipScale } from "@workspace/geometry";
 import { describe, expect, it } from "vitest";
 
 import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
@@ -11,8 +12,8 @@ type FrameState = ObjectState & {
 	width: number;
 	height: number;
 	rotation: number;
-	scaleX: number;
-	scaleY: number;
+	scaleX: FlipScale;
+	scaleY: FlipScale;
 };
 
 const makeFrame = (overrides?: Partial<FrameState>): FrameState =>

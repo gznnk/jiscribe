@@ -1,8 +1,9 @@
 import { describe, it, expect } from "vitest";
 
 import { calcOutlinePointTowardForRotatedEllipse } from "../../points/calcOutlinePointTowardForRotatedEllipse";
+import type { TransformedEllipse } from "../../types/TransformedEllipse";
 
-const baseEllipse = {
+const baseEllipse: TransformedEllipse = {
 	cx: 0,
 	cy: 0,
 	rx: 50,

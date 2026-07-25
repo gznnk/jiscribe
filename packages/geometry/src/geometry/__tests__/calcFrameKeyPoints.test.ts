@@ -1,8 +1,9 @@
 import { describe, it, expect } from "vitest";
 
 import { calcFrameKeyPoints } from "../../geometry/calcFrameKeyPoints";
+import type { TransformedFrame } from "../../types/TransformedFrame";
 
-const frame0 = {
+const frame0: TransformedFrame = {
 	cx: 50,
 	cy: 30,
 	width: 100,

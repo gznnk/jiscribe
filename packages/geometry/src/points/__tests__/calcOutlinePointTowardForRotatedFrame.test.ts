@@ -1,8 +1,9 @@
 import { describe, it, expect } from "vitest";
 
 import { calcOutlinePointTowardForRotatedFrame } from "../../points/calcOutlinePointTowardForRotatedFrame";
+import type { TransformedFrame } from "../../types/TransformedFrame";
 
-const baseFrame = {
+const baseFrame: TransformedFrame = {
 	cx: 0,
 	cy: 0,
 	width: 100,

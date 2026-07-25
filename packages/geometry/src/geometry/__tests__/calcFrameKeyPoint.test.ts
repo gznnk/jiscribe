@@ -3,8 +3,9 @@ import { describe, it, expect } from "vitest";
 import { calcFrameKeyPoint } from "../../geometry/calcFrameKeyPoint";
 import { calcFrameKeyPoints } from "../../geometry/calcFrameKeyPoints";
 import type { KeyPointId } from "../../types/KeyPoints";
+import type { TransformedFrame } from "../../types/TransformedFrame";
 
-const frame0 = {
+const frame0: TransformedFrame = {
 	cx: 50,
 	cy: 30,
 	width: 100,
@@ -40,7 +41,14 @@ describe("calcFrameKeyPoint", () => {
 	});
 
 	it("全ての key point で calcFrameKeyPoints と同じ座標を返す", () => {
-		const frame = { ...frame0, rotation: 37, scaleX: 1.5, scaleY: 0.8 };
+		// 一般 scale(±1 以外)でも single/all が一致することの退行検出。実装は一般 scale
+		// 対応のままなので、FlipScale の定義域外の値を cast で流して検証する。
+		const frame = {
+			...frame0,
+			rotation: 37,
+			scaleX: 1.5,
+			scaleY: 0.8,
+		} as unknown as TransformedFrame;
 		const all = calcFrameKeyPoints(frame);
 		for (const id of allKeyPointIds) {
 			const single = calcFrameKeyPoint(frame, id);

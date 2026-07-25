@@ -5,6 +5,6 @@
  * @param value - Number to get the sign of
  * @returns 1 if value is zero or positive, -1 if value is negative
  */
-export const calcNonZeroSign = (value: number): number => {
+export const calcNonZeroSign = (value: number): 1 | -1 => {
 	return value >= 0 ? 1 : -1;
 };
