@@ -21,14 +21,20 @@ const CONNECT_POINT_LOCAL_DIRECTIONS: Record<ConnectPointId, Point> = {
 	leftCenter: { x: -1, y: 0 },
 };
 
-/** Local center of the anchor region; the shape center when none is registered. */
-const calcRayOrigin = (anchorRegion?: Rect | null): Point =>
-	anchorRegion
-		? {
-				x: anchorRegion.x + anchorRegion.width / 2,
-				y: anchorRegion.y + anchorRegion.height / 2,
-			}
-		: { x: 0, y: 0 };
+/**
+ * Local center of the anchor region; the shape center when none is registered.
+ * Regions come from plugin calculators, several of which divide by the shape
+ * size, so a degenerate shape can hand back NaN — fall back rather than let it
+ * poison the coordinate.
+ */
+const calcRayOrigin = (anchorRegion?: Rect | null): Point => {
+	if (!anchorRegion) {
+		return { x: 0, y: 0 };
+	}
+	const x = anchorRegion.x + anchorRegion.width / 2;
+	const y = anchorRegion.y + anchorRegion.height / 2;
+	return Number.isFinite(x) && Number.isFinite(y) ? { x, y } : { x: 0, y: 0 };
+};
 
 /**
  * World position of one edge connect point.

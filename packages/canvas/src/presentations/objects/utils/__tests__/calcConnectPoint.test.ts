@@ -102,6 +102,14 @@ describe("calcConnectPoint", () => {
 			});
 		});
 	});
+
+	it("ignores a non-finite anchor region rather than returning NaN", () => {
+		// A plugin calculator dividing by a degenerate shape size can hand back NaN.
+		const broken = { x: NaN, y: NaN, width: NaN, height: NaN };
+		expect(
+			calcConnectPoint(baseFrame, "leftCenter", homePlate, broken),
+		).toEqual({ x: -50, y: 0 });
+	});
 });
 
 describe("calcConnectPointDirection", () => {

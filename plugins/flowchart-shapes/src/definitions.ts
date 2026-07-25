@@ -48,6 +48,7 @@ import {
 } from "./presentation/Hexagon";
 import {
 	LoopLimit,
+	calcLoopLimitAnchorRegion,
 	calcLoopLimitTextRegion,
 	loopLimitOutline,
 } from "./presentation/LoopLimit";
@@ -330,6 +331,7 @@ export const loopLimitDefinition: ObjectTypeDefinition<
 	component: LoopLimit,
 	textRegion: calcLoopLimitTextRegion,
 	outline: loopLimitOutline,
+	anchorRegion: calcLoopLimitAnchorRegion,
 	behavior: createFrameBehavior<LoopLimitState>(),
 	stencils: LoopLimitStencils,
 };
