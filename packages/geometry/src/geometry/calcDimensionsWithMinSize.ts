@@ -5,8 +5,10 @@ export const calcDimensionsWithMinSize = (
 	minWidth?: number,
 	minHeight?: number,
 ) => {
-	const effectiveWidth = minWidth ? Math.max(width, minWidth) : width;
-	const effectiveHeight = minHeight ? Math.max(height, minHeight) : height;
+	const effectiveWidth =
+		minWidth === undefined ? width : Math.max(width, minWidth);
+	const effectiveHeight =
+		minHeight === undefined ? height : Math.max(height, minHeight);
 
 	return {
 		effectiveWidth,

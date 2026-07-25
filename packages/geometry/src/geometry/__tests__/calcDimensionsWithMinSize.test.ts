@@ -32,4 +32,16 @@ describe("calcDimensionsWithMinSize", () => {
 		expect(result.effectiveWidth).toBe(50);
 		expect(result.effectiveHeight).toBe(100);
 	});
+
+	it("treats a minimum of 0 as a constraint, not as absent", () => {
+		const result = calcDimensionsWithMinSize(-20, -5, 0, 0);
+		expect(result.effectiveWidth).toBe(0);
+		expect(result.effectiveHeight).toBe(0);
+	});
+
+	it("leaves non-negative dimensions untouched under a minimum of 0", () => {
+		const result = calcDimensionsWithMinSize(100, 50, 0, 0);
+		expect(result.effectiveWidth).toBe(100);
+		expect(result.effectiveHeight).toBe(50);
+	});
 });
