@@ -86,10 +86,10 @@ describe("renderMarkdown - 基本整形", () => {
 		expect(renderMarkdown("a\nb")).toContain("<br>");
 	});
 
-	it("言語指定のコードフェンスは highlight.js のクラスが付く", () => {
+	it("言語指定のコードフェンスは language- クラスが付き、ハイライトはされない", () => {
 		const html = renderMarkdown("```js\nconst a = 1;\n```");
-		expect(html).toContain('class="hljs language-js"');
-		expect(html).toContain("hljs-keyword");
+		expect(html).toContain('class="language-js"');
+		expect(html).not.toContain("hljs");
 	});
 
 	it("言語指定なしのコードフェンスはクラスなしの pre/code になる", () => {

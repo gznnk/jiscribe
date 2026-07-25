@@ -123,7 +123,7 @@ test.describe("Markdown 描画", () => {
 		expect(anchor?.rel).toBe("noopener noreferrer");
 	});
 
-	test("言語付きコードフェンスは highlight.js でハイライトされる", async ({
+	test("言語付きコードフェンスは language- クラス付きの code になる", async ({
 		canvas,
 	}) => {
 		const id = await canvas.drawShape(
@@ -150,19 +150,17 @@ test.describe("Markdown 描画", () => {
 			return codeEl
 				? {
 						className: codeEl.className,
-						tokenCount: codeEl.querySelectorAll('[class^="hljs-"]').length,
+						text: codeEl.textContent,
 					}
 				: null;
 		}, id);
 
 		expect(code).not.toBeNull();
-		expect(code?.className).toContain("hljs");
 		expect(code?.className).toContain("language-js");
-		// 実際にトークン分割されている（ハイライト適用）こと。
-		expect(code?.tokenCount).toBeGreaterThan(0);
+		expect(code?.text).toContain("const x = 1;");
 	});
 
-	test("言語指定なしのコードフェンスはハイライトされず素の code になる", async ({
+	test("言語指定なしのコードフェンスはクラスなしの素の code になる", async ({
 		canvas,
 	}) => {
 		const id = await canvas.drawShape(
@@ -189,15 +187,13 @@ test.describe("Markdown 描画", () => {
 			return codeEl
 				? {
 						className: codeEl.className,
-						tokenCount: codeEl.querySelectorAll('[class^="hljs-"]').length,
 						text: codeEl.textContent,
 					}
 				: null;
 		}, id);
 
 		expect(code).not.toBeNull();
-		expect(code?.className).not.toContain("hljs");
-		expect(code?.tokenCount).toBe(0);
+		expect(code?.className).toBe("");
 		expect(code?.text).toContain("plain text");
 	});
 });

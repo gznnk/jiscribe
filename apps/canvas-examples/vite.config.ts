@@ -36,11 +36,7 @@ export default defineConfig({
 					if (id.includes("/katex/")) {
 						return "katex";
 					}
-					if (
-						id.includes("/highlight.js/") ||
-						id.includes("/markdown-it") ||
-						id.includes("/dompurify/")
-					) {
+					if (id.includes("/markdown-it") || id.includes("/dompurify/")) {
 						return "markdown";
 					}
 					return undefined;
