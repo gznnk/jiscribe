@@ -3,7 +3,7 @@ import type { ClipboardData } from "../../commands/selection/ClipboardData";
 import type { ICanvasRegistries } from "../../registries/ICanvasRegistries";
 import { cloneObjects } from "../../utils/cloneObjects";
 import { createMultiSelectGroup } from "../../utils/createMultiSelectGroup";
-import { updateGroupBoundsFromRoot } from "../../utils/updateGroupBoundsFromRoot";
+import { updateGroupBoundsFromRoots } from "../../utils/updateGroupBoundsFromRoot";
 
 const PASTE_OFFSET = { x: 20, y: 20 };
 
@@ -43,7 +43,7 @@ export const handlePaste = (
 		(id) => mergedObjects[id]?.type !== "connector",
 	);
 
-	let nextState: CanvasControllerState = {
+	const nextState: CanvasControllerState = {
 		...state,
 		objects: mergedObjects,
 		rootIds: [...state.rootIds, ...newTopLevelIds],
@@ -65,11 +65,9 @@ export const handlePaste = (
 	// missing frame. Deriving via calculateGroupOrientedBounds restores the
 	// GroupState invariant (width/height >= MIN_GROUP_DIMENSION) — issue #35.
 	// For clipboards produced by CopyCommand this is an idempotent no-op.
-	for (const newId of newTopLevelIds) {
-		if (nextState.objects[newId]?.type === "group") {
-			nextState = updateGroupBoundsFromRoot(nextState, newId);
-		}
-	}
+	const pastedGroupIds = newTopLevelIds.filter(
+		(newId) => nextState.objects[newId]?.type === "group",
+	);
 
-	return nextState;
+	return updateGroupBoundsFromRoots(nextState, pastedGroupIds);
 };
