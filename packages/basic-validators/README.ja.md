@@ -4,7 +4,8 @@
 
 jiscribe 全体で共有する実行時の型ガード。依存なしの述語だけを収録し、信頼境界
 （パース済みの `.jis.json`、クリップボードの内容、プラグインからの入力など）で
-`unknown` を型付きコードに渡す前に絞り込む。
+`unknown` を型付きコードに渡す前に絞り込む。ブラウザのグローバルには一切触れないため、
+どのガードも Node とブラウザで同じ挙動になる。
 
 ## 使い方
 
@@ -38,7 +39,6 @@ const isLabel = (value: unknown): value is Label =>
 | `isNonNegativeNumber` | `>= 0` の数値                                             |
 | `isNumberInRange`     | 閉区間に収まる数値。ファクトリ: `isNumberInRange(0, 100)` |
 | `isEnum`              | 決まった集合の要素。ファクトリ: `isEnum([...] as const)`  |
-| `isCssColor`          | ブラウザの CSS パーサーが色として受け付ける文字列         |
 | `isCssSafeValue`      | CSS からの抜け出しに使える文字列を含まない文字列          |
 | `isUrl`               | WHATWG `URL` コンストラクタがパースできる文字列           |
 
@@ -50,11 +50,11 @@ const isLabel = (value: unknown): value is Label =>
 - **`isNumber` は `NaN` を弾く**が `Infinity` は通す。絞り込んだ値は必ず比較できる。
   `isPositiveNumber` / `isNonNegativeNumber` / `isNumberInRange` はこれを土台にして
   いるため同じ挙動を引き継ぐ。
-- **`isCssColor` はブラウザ専用。** `CSS.supports` を呼ぶが Node には `CSS` が無く、
-  `ReferenceError` を投げる。両方の環境で走らせる必要があるなら `isCssSafeValue` を
-  使う。こちらは純粋な正規表現チェックで、注入に使える文字列（`;` `{` `}` `<` `>`
-  `\`、`url(`、`expression(`、コメント区切り）を弾くだけで、値が意味のある CSS か
-  どうかは判定しない。
+- **`isCssSafeValue` が見るのは安全性であって妥当性ではない。** CSS 宣言からの抜け出しに
+  使える文字列（`;` `{` `}` `<` `>` `\`、`url(`、`expression(`、コメント区切り）を弾く
+  だけで、安全な文字列が意味のある CSS であるとは限らない。厳密な色の妥当性判定は
+  ブラウザの CSS パーサーを必要とするため、ここではなく `@workspace/canvas` の
+  `states/objects/utils/isCssColor` に置いている。
 - **`isUrl` はパースできるかの判定であって安全性の判定ではない。** `javascript:` を
   含めどのスキームも通り、相対パスや `example.com` のようなホスト名だけの文字列は
   通らない。
@@ -67,5 +67,6 @@ pnpm --filter @workspace/basic-validators lint
 pnpm --filter @workspace/basic-validators test
 ```
 
-テストは Node で動くため `isCssColor` には単体テストが無い。この制約は
-`@workspace/canvas` 側の呼び出しにも及ぶ（`isTextStyleState.test.ts` の NOTE 参照）。
+テストは DOM の無い Node で動くが、ここのガードはそれで困らないことが前提。
+`window` / `document` / `CSS` を必要とするものは、このパッケージではなく利用側の
+パッケージに置く。

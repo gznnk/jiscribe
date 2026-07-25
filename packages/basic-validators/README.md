@@ -4,7 +4,8 @@
 
 Runtime type guards shared across jiscribe. Dependency-free predicates that narrow
 `unknown` at trust boundaries — parsed `.jis.json` documents, clipboard payloads, plugin
-input — before the value reaches typed code.
+input — before the value reaches typed code. Nothing here touches a browser global, so
+every guard behaves the same in Node and the browser.
 
 ## Usage
 
@@ -38,7 +39,6 @@ return diagnostics live in the packages that own the schema, not here.
 | `isNonNegativeNumber` | a number `>= 0`                                                       |
 | `isNumberInRange`     | a number inside the closed range — factory: `isNumberInRange(0, 100)` |
 | `isEnum`              | a member of a fixed set — factory: `isEnum([...] as const)`           |
-| `isCssColor`          | a string the browser's CSS parser accepts as a color                  |
 | `isCssSafeValue`      | a string with no CSS breakout sequences                               |
 | `isUrl`               | a string the WHATWG `URL` constructor parses                          |
 
@@ -50,11 +50,11 @@ Three contracts are worth knowing before writing against this package:
 - **`isNumber` rejects `NaN`** but accepts `Infinity`, so the narrowed value is always
   comparable. `isPositiveNumber` / `isNonNegativeNumber` / `isNumberInRange` all build on
   it and inherit that behavior.
-- **`isCssColor` is browser-only.** It calls `CSS.supports`, which is undefined under Node
-  and throws a `ReferenceError` there. Reach for `isCssSafeValue` when the check has to run
-  in both environments — it is a pure regex check that rejects injection vectors (`;` `{`
-  `}` `<` `>` `\`, `url(`, `expression(`, comment delimiters) without asserting that the
-  value is meaningful CSS.
+- **`isCssSafeValue` checks safety, not validity.** It rejects the sequences that break out
+  of a CSS declaration (`;` `{` `}` `<` `>` `\`, `url(`, `expression(`, comment delimiters),
+  but a safe string need not be meaningful CSS. Strict color validity needs the browser's
+  CSS parser and therefore lives in `@workspace/canvas` (`states/objects/utils/isCssColor`),
+  not here.
 - **`isUrl` is a parse check, not a safety check.** Any scheme parses, including
   `javascript:`; relative paths and bare hosts like `example.com` do not.
 
@@ -66,5 +66,5 @@ pnpm --filter @workspace/basic-validators lint
 pnpm --filter @workspace/basic-validators test
 ```
 
-Tests run under Node, so `isCssColor` has no unit test; the same limitation reaches its
-callers in `@workspace/canvas` (see the note in `isTextStyleState.test.ts`).
+Tests run under Node with no DOM, which the guards here are expected to tolerate: anything
+needing `window`, `document` or `CSS` belongs to a consuming package, not to this one.
