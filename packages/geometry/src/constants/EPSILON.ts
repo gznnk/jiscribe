@@ -1,4 +1,5 @@
 /**
- * 縮退・平行判定用の共通許容誤差。座標はキャンバスピクセルスケール前提。
+ * Shared tolerance for degeneracy and parallelism checks.
+ * Assumes coordinates are on a canvas-pixel scale.
  */
 export const EPSILON = 1e-9;

@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import { calcKeyPointsBoundingBox } from "../../geometry/calcKeyPointsBoundingBox";
 
 describe("calcKeyPointsBoundingBox", () => {
-	it("軸平行な矩形のキーポイントから正しいBBを返す", () => {
+	it("computes the box from the key points of an axis-aligned rectangle", () => {
 		const kp = {
 			topLeft: { x: 0, y: 0 },
 			topCenter: { x: 50, y: 0 },
@@ -21,8 +21,8 @@ describe("calcKeyPointsBoundingBox", () => {
 		expect(result.bottom).toBe(60);
 	});
 
-	it("回転した矩形のキーポイントから正しいBBを返す", () => {
-		// 45度回転した正方形（一辺100）の頂点
+	it("computes the box from the key points of a rotated rectangle", () => {
+		// Vertices of a square with side 100 rotated 45 degrees.
 		const d = 50 * Math.SQRT2;
 		const kp = {
 			topLeft: { x: 0, y: -d },

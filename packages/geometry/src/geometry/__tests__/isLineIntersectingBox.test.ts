@@ -15,32 +15,32 @@ const box = {
 };
 
 describe("isLineIntersectingBox", () => {
-	it("ボックスを横断する線分はtrueを返す", () => {
+	it("returns true for a segment crossing the box horizontally", () => {
 		expect(
 			isLineIntersectingBox({ x: -10, y: 50 }, { x: 110, y: 50 }, box),
 		).toBe(true);
 	});
 
-	it("ボックスを縦断する線分はtrueを返す", () => {
+	it("returns true for a segment crossing the box vertically", () => {
 		expect(
 			isLineIntersectingBox({ x: 50, y: -10 }, { x: 50, y: 110 }, box),
 		).toBe(true);
 	});
 
-	it("ボックスの外側にある線分はfalseを返す", () => {
+	it("returns false for a segment outside the box", () => {
 		expect(
 			isLineIntersectingBox({ x: -50, y: 50 }, { x: -10, y: 50 }, box),
 		).toBe(false);
 	});
 
-	it("ボックス内部のみの線分はfalseを返す（辺に触れない）", () => {
+	it("returns false for a segment fully inside the box, touching no edge", () => {
 		expect(isLineIntersectingBox({ x: 10, y: 10 }, { x: 90, y: 90 }, box)).toBe(
 			false,
 		);
 	});
 
-	it("斜めにボックスを横断する線分はtrueを返す", () => {
-		// コーナーを通らないようにオフセットした対角線
+	it("returns true for a segment crossing the box diagonally", () => {
+		// Diagonal offset so that it misses the corners.
 		expect(
 			isLineIntersectingBox({ x: -10, y: 20 }, { x: 110, y: 80 }, box),
 		).toBe(true);

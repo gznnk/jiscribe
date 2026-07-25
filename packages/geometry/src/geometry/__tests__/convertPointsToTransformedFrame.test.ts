@@ -3,12 +3,12 @@ import { describe, it, expect } from "vitest";
 import { convertPointsToTransformedFrame } from "../../geometry/convertPointsToTransformedFrame";
 
 describe("convertPointsToTransformedFrame", () => {
-	it("空配列の場合は null を返す", () => {
+	it("returns null for an empty array", () => {
 		const result = convertPointsToTransformedFrame([]);
 		expect(result).toBeNull();
 	});
 
-	it("1点の場合は幅・高さ0のフレームを返す", () => {
+	it("returns a zero-sized frame for a single point", () => {
 		const result = convertPointsToTransformedFrame([{ x: 10, y: 20 }]);
 		expect(result).not.toBeNull();
 		expect(result!.cx).toBe(10);
@@ -17,7 +17,7 @@ describe("convertPointsToTransformedFrame", () => {
 		expect(result!.height).toBe(0);
 	});
 
-	it("矩形の4点から正しいフレームを生成する", () => {
+	it("builds the enclosing frame from four rectangle corners", () => {
 		const result = convertPointsToTransformedFrame([
 			{ x: 0, y: 0 },
 			{ x: 100, y: 0 },

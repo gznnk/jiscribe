@@ -4,14 +4,14 @@ import { applyAffineWithTrig } from "../applyAffineWithTrig";
 import { calcAffineTransformedPoint } from "../calcAffineTransformedPoint";
 
 describe("applyAffineWithTrig", () => {
-	it("cos=1・sin=0 は回転なし（angleRad=0）の特例パスと同一結果になる", () => {
+	it("matches the no-rotation fast path when cos=1 and sin=0", () => {
 		const result = applyAffineWithTrig(1, 1, 2, 2, 1, 0, 5, 5);
 		expect(result.x).toBe(7); // 2*1*1 - 2*0*1 + 5
 		expect(result.y).toBe(7); // 2*0*1 + 2*1*1 + 5
 	});
 
-	it("事前計算した cos/sin で90度回転を適用する", () => {
-		// (1, 0) をスケール1・90度回転・移動なし → (0, 1)
+	it("applies a 90 degree rotation from pre-computed cos/sin", () => {
+		// (1, 0) at scale 1, rotated 90 degrees, no translation -> (0, 1)
 		const result = applyAffineWithTrig(
 			1,
 			0,
@@ -26,7 +26,7 @@ describe("applyAffineWithTrig", () => {
 		expect(result.y).toBeCloseTo(1);
 	});
 
-	it("スケール・回転・平行移動を同時に適用する", () => {
+	it("applies scale, rotation and translation together", () => {
 		const result = applyAffineWithTrig(
 			1,
 			0,
@@ -41,7 +41,7 @@ describe("applyAffineWithTrig", () => {
 		expect(result.y).toBeCloseTo(22);
 	});
 
-	it("同一 angleRad から計算した cos/sin で calcAffineTransformedPoint と一致する", () => {
+	it("agrees with calcAffineTransformedPoint given cos/sin of the same angle", () => {
 		const angleRad = 0.7;
 		const cosAngle = Math.cos(angleRad);
 		const sinAngle = Math.sin(angleRad);

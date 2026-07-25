@@ -1,10 +1,9 @@
 import type { BoundingBox, Point } from "../types";
 
 /**
- * Poly系オブジェクトの points 配列からバウンディングボックスを計算する。
+ * Bounding box of a poly shape's points.
  *
- * @param points - 点の配列
- * @returns バウンディングボックス、または空配列の場合は null
+ * @returns The bounding box, or null if `points` is empty
  */
 export function calcPolyBoundingBox(
 	points: readonly Point[],

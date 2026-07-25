@@ -4,7 +4,7 @@ import { convertTransformedEllipseToFrame } from "../../geometry/convertTransfor
 import { convertTransformedRectToFrame } from "../../geometry/convertTransformedRectToFrame";
 
 describe("convertTransformedRectToFrame", () => {
-	it("TransformedRect を TransformedFrame に変換する", () => {
+	it("converts a TransformedRect to a TransformedFrame", () => {
 		const result = convertTransformedRectToFrame({
 			x: 0,
 			y: 0,
@@ -25,7 +25,7 @@ describe("convertTransformedRectToFrame", () => {
 		});
 	});
 
-	it("rotation/scaleX/scaleY がそのまま引き継がれる", () => {
+	it("carries rotation, scaleX and scaleY through unchanged", () => {
 		const result = convertTransformedRectToFrame({
 			x: 10,
 			y: 20,
@@ -44,7 +44,7 @@ describe("convertTransformedRectToFrame", () => {
 });
 
 describe("convertTransformedEllipseToFrame", () => {
-	it("TransformedEllipse を TransformedFrame に変換する", () => {
+	it("converts a TransformedEllipse to a TransformedFrame", () => {
 		const result = convertTransformedEllipseToFrame({
 			cx: 10,
 			cy: 20,

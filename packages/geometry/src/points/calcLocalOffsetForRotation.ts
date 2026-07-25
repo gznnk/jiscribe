@@ -3,27 +3,24 @@ import { degreesToRadians } from "../common/degreesToRadians";
 import type { Point } from "../types/Point";
 
 /**
- * World `toward` point expressed as a local (centered, unrotated) offset from a
- * rotated shape's center, plus the trig values needed to map a resulting local
- * point back to world space via {@link calcWorldPointFromLocalOffset}.
+ * A world point expressed as a local (centered, unrotated) offset from a rotated
+ * shape's center, together with the cos/sin needed to map a local point back to
+ * world space via {@link calcWorldPointFromLocalOffset}.
  */
 export type LocalOffsetForRotation = {
-	/** Local (centered, unrotated) offset from center. */
+	/** Offset from the center in local (unrotated) space. */
 	dx: number;
 	dy: number;
-	/** Pre-computed cos/sin of the rotation, reused for the reverse rotation. */
+	/** cos/sin of the rotation, reused for the reverse rotation. */
 	cos: number;
 	sin: number;
-	/** Whether rotation is non-zero. When false, world offset equals local offset. */
+	/** When false, the local offset already equals the world offset. */
 	isRotated: boolean;
 };
 
 /**
- * Convert a world-space `toward` point into a local (centered, unrotated) offset
- * from the shape's center.
- *
- * Fast path: rotationDeg === 0 (the vast majority of shapes) needs no trig — the
- * world offset is already the local offset, so cos/sin default to 1/0.
+ * Converts a world-space `toward` point into a local (centered, unrotated)
+ * offset from the shape's center. `rotationDeg === 0` needs no trig.
  */
 export function calcLocalOffsetForRotation(
 	cx: number,
@@ -37,14 +34,12 @@ export function calcLocalOffsetForRotation(
 	let dy = toward.y - cy;
 	const isRotated = rotationDeg !== 0;
 	if (isRotated) {
-		// Compute cos/sin once and reuse for both rotation directions below.
 		const rotationRad = degreesToRadians(rotationDeg);
 		cos = Math.cos(rotationRad);
 		sin = Math.sin(rotationRad);
 
-		// world -> local (centered, unrotated): rotate `toward` around center by
-		// -rotation. cos(-θ)=cos and sin(-θ)=-sin, so we reuse the same cos/sin and
-		// keep the local offset as plain numbers (no Point allocation).
+		// world -> local: rotate by -rotation. cos(-θ)=cos and sin(-θ)=-sin, so one
+		// cos/sin pair serves both directions and no Point is allocated.
 		const wx = dx;
 		const wy = dy;
 		dx = wx * cos + wy * sin;
@@ -54,10 +49,8 @@ export function calcLocalOffsetForRotation(
 }
 
 /**
- * Map a local (centered, unrotated) point back to world space, inverting the
- * transform of {@link calcLocalOffsetForRotation}.
- *
- * Fast path: when the shape is not rotated, skip the trig and just translate.
+ * Maps a local (centered, unrotated) point back to world space, inverting
+ * {@link calcLocalOffsetForRotation}. Unrotated shapes skip the trig.
  */
 export function calcWorldPointFromLocalOffset(
 	cx: number,
@@ -69,7 +62,6 @@ export function calcWorldPointFromLocalOffset(
 	if (!offset.isRotated) {
 		return { x: cx + localX, y: cy + localY };
 	}
-	// local -> world: rotate the local point back around center by +rotation.
 	return calcRotatedPointWithTrig(
 		cx + localX,
 		cy + localY,

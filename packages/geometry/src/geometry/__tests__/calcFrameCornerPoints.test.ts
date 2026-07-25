@@ -6,9 +6,9 @@ import { calcAffineTransformedPoint } from "../../transform/calcAffineTransforme
 import type { TransformedFrame } from "../../types";
 
 /**
- * リファクタ前の実装をそのまま再現したオラクル。
- * 各 corner を calcAffineTransformedPoint で個別変換し、意味論が変わって
- * いないことを検証するための参照値として使う。
+ * Oracle reproducing the pre-refactor implementation, which transformed each
+ * corner separately via calcAffineTransformedPoint. Used as the reference for
+ * checking that the semantics did not change.
  */
 const cornersByReference = (frame: TransformedFrame) => {
 	const { cx, cy, width, height, rotation = 0, scaleX = 1, scaleY = 1 } = frame;
@@ -34,7 +34,7 @@ const cornersByReference = (frame: TransformedFrame) => {
 };
 
 describe("calcFrameCornerPoints", () => {
-	it("rotation=0の場合は軸平行な4隅を左上から時計回りで返す", () => {
+	it("returns axis-aligned corners clockwise from the top-left when rotation is 0", () => {
 		const corners = calcFrameCornerPoints({
 			cx: 100,
 			cy: 100,
@@ -52,7 +52,7 @@ describe("calcFrameCornerPoints", () => {
 		]);
 	});
 
-	it("rotation=90の場合は4隅が回転後の座標になる", () => {
+	it("returns rotated coordinates when rotation is 90", () => {
 		const corners = calcFrameCornerPoints({
 			cx: 100,
 			cy: 100,
@@ -62,16 +62,16 @@ describe("calcFrameCornerPoints", () => {
 			scaleX: 1,
 			scaleY: 1,
 		});
-		// 左上(-50,-25)が回転して(cx+25, cy-50)へ
+		// The top-left (-50,-25) rotates to (cx+25, cy-50).
 		expect(corners[0].x).toBeCloseTo(125);
 		expect(corners[0].y).toBeCloseTo(50);
 		expect(corners[2].x).toBeCloseTo(75);
 		expect(corners[2].y).toBeCloseTo(150);
 	});
 
-	it("scaleX/scaleYが4隅に反映される", () => {
-		// 一般 scale(±1 以外)の math が保たれていることの退行検出。型は FlipScale だが
-		// 実装は一般 scale 対応のままなので、定義域外の値を cast で流して検証する。
+	it("applies scaleX and scaleY to every corner", () => {
+		// Regression guard for general (non ±1) scale math. The type is FlipScale but the
+		// implementation still handles general scale, so out-of-domain values are cast in.
 		const corners = calcFrameCornerPoints({
 			cx: 0,
 			cy: 0,
@@ -81,24 +81,24 @@ describe("calcFrameCornerPoints", () => {
 			scaleX: 2,
 			scaleY: -1,
 		} as unknown as TransformedFrame);
-		// 左上(-50,-25) -> (-100, 25)
+		// top-left (-50,-25) -> (-100, 25)
 		expect(corners[0]).toEqual({ x: -100, y: 25 });
-		// 右上(50,-25) -> (100, 25)
+		// top-right (50,-25) -> (100, 25)
 		expect(corners[1]).toEqual({ x: 100, y: 25 });
-		// 右下(50,25) -> (100, -25)
+		// bottom-right (50,25) -> (100, -25)
 		expect(corners[2]).toEqual({ x: 100, y: -25 });
-		// 左下(-50,25) -> (-100, -25)
+		// bottom-left (-50,25) -> (-100, -25)
 		expect(corners[3]).toEqual({ x: -100, y: -25 });
 	});
 
-	it("rotation/scaleX/scaleYを省略するとデフォルト(0/1/1)が使われる", () => {
+	it("falls back to rotation 0 and scale 1 when they are omitted", () => {
 		const corners = calcFrameCornerPoints({
 			cx: 100,
 			cy: 100,
 			width: 100,
 			height: 50,
 		} as TransformedFrame);
-		// rotation=0, scaleX=scaleY=1 の軸平行な4隅
+		// Axis-aligned corners for rotation 0 and scaleX = scaleY = 1.
 		expect(corners).toEqual([
 			{ x: 50, y: 75 },
 			{ x: 150, y: 75 },
@@ -107,7 +107,7 @@ describe("calcFrameCornerPoints", () => {
 		]);
 	});
 
-	it("rotation!==0のとき4隅すべてが個別アフィン変換と一致する（回転のみ）", () => {
+	it("matches the per-corner affine transform for every corner when only rotated", () => {
 		const frame: TransformedFrame = {
 			cx: 100,
 			cy: 100,
@@ -125,9 +125,9 @@ describe("calcFrameCornerPoints", () => {
 		});
 	});
 
-	it("rotationとscaleの複合でも4隅すべてが個別アフィン変換と一致する", () => {
-		// 回転と非単位スケール（flip含む）を組み合わせた退行検出用ケース。
-		// 一般 scale の math を検証するため、FlipScale の定義域外の値を cast で流す。
+	it("matches the per-corner affine transform for every corner under rotation and scale", () => {
+		// Regression cases combining rotation with non-unit scale (flips included).
+		// Out-of-domain FlipScale values are cast in to exercise the general scale math.
 		const cases = [
 			{
 				cx: 10,

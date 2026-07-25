@@ -3,11 +3,11 @@ import { describe, it, expect } from "vitest";
 import { calcPolyKeyPoints } from "../../geometry/calcPolyKeyPoints";
 
 describe("calcPolyKeyPoints", () => {
-	it("空配列の場合はnullを返す", () => {
+	it("returns null for an empty array", () => {
 		expect(calcPolyKeyPoints([])).toBeNull();
 	});
 
-	it("矩形の点群から正しいキーポイントを返す", () => {
+	it("computes key points from the points of a rectangle", () => {
 		const points = [
 			{ x: 0, y: 0 },
 			{ x: 100, y: 0 },
@@ -23,7 +23,7 @@ describe("calcPolyKeyPoints", () => {
 		expect(kp!.leftCenter).toEqual({ x: 0, y: 30 });
 	});
 
-	it("8つのキーポイントがすべて返る", () => {
+	it("returns all eight key points", () => {
 		const kp = calcPolyKeyPoints([
 			{ x: 0, y: 0 },
 			{ x: 10, y: 10 },

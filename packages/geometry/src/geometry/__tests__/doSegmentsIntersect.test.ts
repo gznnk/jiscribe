@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import { doSegmentsIntersect } from "../../geometry/doSegmentsIntersect";
 
 describe("doSegmentsIntersect", () => {
-	it("交差する線分はtrueを返す（X字）", () => {
+	it("returns true for segments crossing in an X", () => {
 		const result = doSegmentsIntersect(
 			{ x: 0, y: 0 },
 			{ x: 2, y: 2 },
@@ -13,7 +13,7 @@ describe("doSegmentsIntersect", () => {
 		expect(result).toBe(true);
 	});
 
-	it("平行な線分はfalseを返す", () => {
+	it("returns false for parallel segments", () => {
 		const result = doSegmentsIntersect(
 			{ x: 0, y: 0 },
 			{ x: 2, y: 0 },
@@ -23,7 +23,7 @@ describe("doSegmentsIntersect", () => {
 		expect(result).toBe(false);
 	});
 
-	it("同一直線上の線分（共線）はfalseを返す", () => {
+	it("returns false for colinear segments", () => {
 		const result = doSegmentsIntersect(
 			{ x: 0, y: 0 },
 			{ x: 2, y: 0 },
@@ -33,7 +33,7 @@ describe("doSegmentsIntersect", () => {
 		expect(result).toBe(false);
 	});
 
-	it("端点で接触する場合（inclusive=true）はtrueを返す", () => {
+	it("returns false for colinear segments touching at an endpoint, even when inclusive", () => {
 		const result = doSegmentsIntersect(
 			{ x: 0, y: 0 },
 			{ x: 1, y: 0 },
@@ -41,11 +41,11 @@ describe("doSegmentsIntersect", () => {
 			{ x: 2, y: 0 },
 			true,
 		);
-		// 共線なのでfalse
+		// Colinear, so false.
 		expect(result).toBe(false);
 	});
 
-	it("T字交差（端点が中間点に当たる）はinclusiveでtrueを返す", () => {
+	it("returns true for a T intersection when inclusive", () => {
 		const result = doSegmentsIntersect(
 			{ x: 1, y: 0 },
 			{ x: 1, y: 2 },
@@ -56,8 +56,8 @@ describe("doSegmentsIntersect", () => {
 		expect(result).toBe(true);
 	});
 
-	it("T字交差（端点が中間点に当たる）はinclusiveでtrueを返す（非inclusive）", () => {
-		// 端点での交差はinclusive=falseでは非交差
+	it("returns false for a T intersection when not inclusive", () => {
+		// Touching at an endpoint does not count when inclusive is false.
 		const result = doSegmentsIntersect(
 			{ x: 0, y: 0 },
 			{ x: 2, y: 0 },
@@ -65,11 +65,11 @@ describe("doSegmentsIntersect", () => {
 			{ x: 1, y: 2 },
 			false,
 		);
-		// t=0.5(interior), u=0(endpoint) なのでfalse
+		// t=0.5 (interior), u=0 (endpoint), so false.
 		expect(result).toBe(false);
 	});
 
-	it("明らかに交差しない線分はfalseを返す", () => {
+	it("returns false for clearly disjoint segments", () => {
 		const result = doSegmentsIntersect(
 			{ x: 0, y: 0 },
 			{ x: 1, y: 0 },

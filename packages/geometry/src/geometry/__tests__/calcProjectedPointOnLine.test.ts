@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import { calcProjectedPointOnLine } from "../../geometry/calcProjectedPointOnLine";
 
 describe("calcProjectedPointOnLine", () => {
-	it("水平線への投影はy座標だけが線に揃う", () => {
+	it("aligns only the y coordinate when projecting onto a horizontal line", () => {
 		const result = calcProjectedPointOnLine(
 			{ x: 3, y: 5 },
 			{ x: 0, y: 0 },
@@ -12,7 +12,7 @@ describe("calcProjectedPointOnLine", () => {
 		expect(result).toEqual({ x: 3, y: 0 });
 	});
 
-	it("垂直線への投影はx座標だけが線に揃う", () => {
+	it("aligns only the x coordinate when projecting onto a vertical line", () => {
 		const result = calcProjectedPointOnLine(
 			{ x: 4, y: 7 },
 			{ x: 0, y: 0 },
@@ -21,7 +21,7 @@ describe("calcProjectedPointOnLine", () => {
 		expect(result).toEqual({ x: 0, y: 7 });
 	});
 
-	it("斜め45度の線への投影を返す", () => {
+	it("projects onto a 45 degree line", () => {
 		const result = calcProjectedPointOnLine(
 			{ x: 4, y: 0 },
 			{ x: 0, y: 0 },
@@ -31,7 +31,7 @@ describe("calcProjectedPointOnLine", () => {
 		expect(result.y).toBeCloseTo(2);
 	});
 
-	it("線上の点はそのまま返る", () => {
+	it("returns a point already on the line unchanged", () => {
 		const result = calcProjectedPointOnLine(
 			{ x: 6, y: 0 },
 			{ x: 0, y: 0 },
@@ -40,7 +40,7 @@ describe("calcProjectedPointOnLine", () => {
 		expect(result).toEqual({ x: 6, y: 0 });
 	});
 
-	it("線分の外側でも直線への投影を返す（線分にクランプしない）", () => {
+	it("projects onto the infinite line without clamping to the segment", () => {
 		const result = calcProjectedPointOnLine(
 			{ x: 15, y: 3 },
 			{ x: 0, y: 0 },
@@ -49,7 +49,7 @@ describe("calcProjectedPointOnLine", () => {
 		expect(result).toEqual({ x: 15, y: 0 });
 	});
 
-	it("lineStartとlineEndが同一点（退化した線）の場合はlineStartを返す", () => {
+	it("returns lineStart when the line is degenerate", () => {
 		const result = calcProjectedPointOnLine(
 			{ x: 8, y: 9 },
 			{ x: 2, y: 3 },
@@ -58,7 +58,7 @@ describe("calcProjectedPointOnLine", () => {
 		expect(result).toEqual({ x: 2, y: 3 });
 	});
 
-	it("lineStartがオフセットされた線でも正しく投影する", () => {
+	it("projects correctly onto a line that does not start at the origin", () => {
 		const result = calcProjectedPointOnLine(
 			{ x: 1, y: 12 },
 			{ x: 5, y: 5 },

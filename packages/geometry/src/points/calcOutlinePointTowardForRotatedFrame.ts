@@ -7,12 +7,13 @@ import type { Point } from "../types/Point";
 import type { TransformedFrame } from "../types/TransformedFrame";
 
 /**
- * Return the intersection point on the frame outline along the ray
- * from frame center toward `toward` (world coord).
+ * Intersection point on the frame outline along the ray from the frame center
+ * toward `toward` (world coordinates).
  *
- * scale は FlipScale(±1) 前提のため無視する。矩形の輪郭は軸反転で不変なので正しい。
+ * Scale is ignored: it is a `FlipScale`, and a rectangle outline is invariant
+ * under axis flips.
  *
- * Returns null if `toward` is inside the frame or if degenerate (toward == center).
+ * Returns null if `toward` is inside the frame, or is the center itself.
  */
 export function calcOutlinePointTowardForRotatedFrame(
 	frame: TransformedFrame,
@@ -33,8 +34,7 @@ export function calcOutlinePointTowardForRotatedFrame(
 	const hx = width / 2;
 	const hy = height / 2;
 
-	// Check if the point is inside the frame
-	// In local coordinates: |x| <= hx && |y| <= hy means inside
+	// In local coordinates |x| <= hx && |y| <= hy means inside.
 	if (Math.abs(dx) <= hx - EPSILON && Math.abs(dy) <= hy - EPSILON) {
 		return null;
 	}
@@ -45,7 +45,7 @@ export function calcOutlinePointTowardForRotatedFrame(
 	let bestX = 0;
 	let bestY = 0;
 
-	// Intersect with vertical sides x = ±hx
+	// Vertical sides x = ±hx
 	if (Math.abs(dx) > EPSILON) {
 		const t1 = -hx / dx;
 		if (t1 > 0 && t1 < bestT) {
@@ -67,7 +67,7 @@ export function calcOutlinePointTowardForRotatedFrame(
 		}
 	}
 
-	// Intersect with horizontal sides y = ±hy
+	// Horizontal sides y = ±hy
 	if (Math.abs(dy) > EPSILON) {
 		const t1 = -hy / dy;
 		if (t1 > 0 && t1 < bestT) {

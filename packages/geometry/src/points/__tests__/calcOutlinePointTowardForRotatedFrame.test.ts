@@ -14,7 +14,7 @@ const baseFrame: TransformedFrame = {
 };
 
 describe("calcOutlinePointTowardForRotatedFrame", () => {
-	it("towardが内部にある場合はnullを返す", () => {
+	it("returns null when toward is inside the frame", () => {
 		const result = calcOutlinePointTowardForRotatedFrame(baseFrame, {
 			x: 10,
 			y: 5,
@@ -22,7 +22,7 @@ describe("calcOutlinePointTowardForRotatedFrame", () => {
 		expect(result).toBeNull();
 	});
 
-	it("towardが中心と同じ場合はnullを返す", () => {
+	it("returns null when toward equals the center", () => {
 		const result = calcOutlinePointTowardForRotatedFrame(baseFrame, {
 			x: 0,
 			y: 0,
@@ -30,7 +30,7 @@ describe("calcOutlinePointTowardForRotatedFrame", () => {
 		expect(result).toBeNull();
 	});
 
-	it("towardが右外側にある場合は右辺の交点を返す", () => {
+	it("returns the right-edge intersection for a toward point to the right", () => {
 		const result = calcOutlinePointTowardForRotatedFrame(baseFrame, {
 			x: 200,
 			y: 0,
@@ -40,7 +40,7 @@ describe("calcOutlinePointTowardForRotatedFrame", () => {
 		expect(result!.y).toBeCloseTo(0);
 	});
 
-	it("towardが上外側にある場合は上辺の交点を返す", () => {
+	it("returns the top-edge intersection for a toward point above", () => {
 		const result = calcOutlinePointTowardForRotatedFrame(baseFrame, {
 			x: 0,
 			y: -200,
@@ -50,8 +50,9 @@ describe("calcOutlinePointTowardForRotatedFrame", () => {
 		expect(result!.y).toBeCloseTo(-30);
 	});
 
-	it("回転なしで中心が原点以外・斜め方向でも正しい交点を返す", () => {
-		// 中心(10,20)から(210,140)へのレイ: 方向(200,120)、右辺(x=60)到達時に y=50 で角に当たる
+	it("returns the correct intersection for a diagonal ray from an off-origin center", () => {
+		// Ray from center (10,20) toward (210,140): direction (200,120) reaches the right edge
+		// (x=60) at y=50, exactly on the corner.
 		const result = calcOutlinePointTowardForRotatedFrame(
 			{ ...baseFrame, cx: 10, cy: 20 },
 			{ x: 210, y: 140 },
@@ -61,8 +62,8 @@ describe("calcOutlinePointTowardForRotatedFrame", () => {
 		expect(result!.y).toBeCloseTo(50);
 	});
 
-	it("90度回転時は右外側のtowardが回転後の縁（x=半高=30）に当たる", () => {
-		// 100x60 を 90度回転すると、ローカル半高(30)が世界座標の水平方向の縁になる
+	it("hits the rotated edge (x = half height = 30) for a rightward toward when rotated 90 degrees", () => {
+		// Rotating 100x60 by 90 degrees puts the local half height (30) on the world horizontal edge.
 		const result = calcOutlinePointTowardForRotatedFrame(
 			{ ...baseFrame, rotation: 90 },
 			{ x: 200, y: 0 },
@@ -72,7 +73,7 @@ describe("calcOutlinePointTowardForRotatedFrame", () => {
 		expect(result!.y).toBeCloseTo(0);
 	});
 
-	it("width/heightが0以下の場合はnullを返す", () => {
+	it("returns null when width or height is 0 or less", () => {
 		const result = calcOutlinePointTowardForRotatedFrame(
 			{ ...baseFrame, width: 0 },
 			{ x: 200, y: 0 },

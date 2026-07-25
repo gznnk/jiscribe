@@ -1,12 +1,7 @@
 import type { Ellipse } from "../types/Ellipse";
 import type { Frame } from "../types/Frame";
 
-/**
- * Converts an Ellipse (center/radii based) to a Frame (center/dimensions based).
- *
- * @param ellipse - The ellipse geometry
- * @returns The corresponding Frame
- */
+/** Converts an {@link Ellipse} (center + radii) to a {@link Frame} (center + dimensions). */
 export const convertEllipseToFrame = (ellipse: Ellipse): Frame => {
 	const { cx, cy, rx, ry } = ellipse;
 	return {

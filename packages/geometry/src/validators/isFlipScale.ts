@@ -1,11 +1,6 @@
 import type { FlipScale } from "../types/FlipScale";
 
-/**
- * Check if a value is a FlipScale (反転フラグ: 1 または -1)。
- *
- * @param value - The value to check
- * @returns True if the value is 1 or -1, false otherwise
- */
+/** Type guard for {@link FlipScale}: the value must be exactly 1 or -1. */
 export const isFlipScale = (value: unknown): value is FlipScale => {
 	return value === 1 || value === -1;
 };

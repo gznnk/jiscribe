@@ -1,12 +1,7 @@
 import type { Frame } from "../types/Frame";
 import type { Rect } from "../types/Rect";
 
-/**
- * Converts a Frame (center based) to a Rect (top-left based).
- *
- * @param frame - The frame geometry
- * @returns The corresponding Rect
- */
+/** Converts a {@link Frame} (center based) to a {@link Rect} (top-left based). */
 export const convertFrameToRect = (frame: Frame): Rect => {
 	const { cx, cy, width, height } = frame;
 	return {

@@ -3,10 +3,9 @@ import type { FrameKeyPoints } from "../types/FrameKeyPoints";
 import type { Point } from "../types/Point";
 
 /**
- * Poly系オブジェクトの points 配列から FrameKeyPoints を計算する。
+ * Key points of a poly shape, taken from its bounding box.
  *
- * @param points - 点の配列
- * @returns FrameKeyPoints、または空配列の場合は null
+ * @returns The key points, or null if `points` is empty
  */
 export function calcPolyKeyPoints(
 	points: readonly Point[],

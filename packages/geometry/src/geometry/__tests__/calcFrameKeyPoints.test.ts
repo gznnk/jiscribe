@@ -14,7 +14,7 @@ const frame0: TransformedFrame = {
 };
 
 describe("calcFrameKeyPoints", () => {
-	it("回転なしの場合、各キーポイントを正しく返す", () => {
+	it("returns every key point when unrotated", () => {
 		const kp = calcFrameKeyPoints(frame0);
 		expect(kp.topLeft).toEqual({ x: 0, y: 0 });
 		expect(kp.topRight).toEqual({ x: 100, y: 0 });
@@ -26,14 +26,14 @@ describe("calcFrameKeyPoints", () => {
 		expect(kp.rightCenter).toEqual({ x: 100, y: 30 });
 	});
 
-	it("90度回転した場合、topCenterが左側に移動する", () => {
+	it("moves topCenter when rotated 90 degrees", () => {
 		const kp = calcFrameKeyPoints({ ...frame0, rotation: 90 });
-		// topCenter (0,-30) → 90度回転 → (30, 0) → +center(50,30) → (80, 30)
+		// topCenter (0,-30) rotated 90 degrees is (30, 0), plus the center (50,30) -> (80, 30).
 		expect(kp.topCenter.x).toBeCloseTo(80);
 		expect(kp.topCenter.y).toBeCloseTo(30);
 	});
 
-	it("8つのキーポイントがすべて返る", () => {
+	it("returns all eight key points", () => {
 		const kp = calcFrameKeyPoints(frame0);
 		expect(kp).toHaveProperty("topLeft");
 		expect(kp).toHaveProperty("topCenter");

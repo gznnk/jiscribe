@@ -2,13 +2,9 @@ import { EPSILON } from "../constants/EPSILON";
 import type { Point } from "../types/Point";
 
 /**
- * Projects a point onto a line defined by two points (perpendicular projection).
- * Returns the closest point on the line to the given point.
- *
- * @param point - The point to project
- * @param lineStart - First point on the line
- * @param lineEnd - Second point on the line
- * @returns The closest point on the line to `point`
+ * Perpendicular projection of `point` onto the infinite line through
+ * `lineStart` and `lineEnd`. The result is not clamped to the segment; a
+ * degenerate line returns `lineStart`.
  */
 export const calcProjectedPointOnLine = (
 	point: Point,

@@ -1,21 +1,10 @@
 import type { Point } from "../types/Point";
 
 /**
- * Rotates a point around a center using pre-computed cos/sin.
- *
- * This is the trig-free core shared by {@link calcRotatedPoint} and by callers
- * that rotate multiple points — or the same angle in both directions — with one
- * cos/sin pair. Computing `Math.cos`/`Math.sin` once and passing them here avoids
- * recomputing the trigonometric values per call. For the inverse rotation,
- * pass `(cosAngle, -sinAngle)` since `cos(-θ) = cos(θ)` and `sin(-θ) = -sin(θ)`.
- *
- * @param px - X-coordinate of the point to rotate
- * @param py - Y-coordinate of the point to rotate
- * @param cx - X-coordinate of the rotation center
- * @param cy - Y-coordinate of the rotation center
- * @param cosAngle - Pre-computed cosine of the rotation angle
- * @param sinAngle - Pre-computed sine of the rotation angle
- * @returns The rotated point
+ * Rotates point `(px, py)` around center `(cx, cy)` using pre-computed cos/sin.
+ * Trig-free core of {@link calcRotatedPoint}: pass one cos/sin pair when
+ * rotating many points by the same angle. For the inverse rotation pass
+ * `(cosAngle, -sinAngle)`.
  */
 export const calcRotatedPointWithTrig = (
 	px: number,

@@ -3,11 +3,9 @@ import type { Point } from "../types/Point";
 import type { TransformedFrame } from "../types/TransformedFrame";
 
 /**
- * Converts an array of Points to a TransformedFrame (center based) that
- * encompasses all points. Rotation is fixed to 0 and scale to 1.
+ * Smallest axis-aligned frame enclosing `points`, with no rotation and no flips.
  *
- * @param points - The array of points
- * @returns The corresponding TransformedFrame, or null if `points` is empty
+ * @returns The enclosing frame, or null if `points` is empty
  */
 export const convertPointsToTransformedFrame = (
 	points: Point[],

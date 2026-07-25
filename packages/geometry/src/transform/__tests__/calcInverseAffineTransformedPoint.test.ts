@@ -4,7 +4,7 @@ import { calcAffineTransformedPoint } from "../calcAffineTransformedPoint";
 import { calcInverseAffineTransformedPoint } from "../calcInverseAffineTransformedPoint";
 
 describe("calcInverseAffineTransformedPoint", () => {
-	it("変換の逆変換で元の点に戻る（回転なし）", () => {
+	it("round-trips back to the original point without rotation", () => {
 		const srcX = 3;
 		const srcY = 4;
 		const transformed = calcAffineTransformedPoint(srcX, srcY, 2, 3, 0, 10, 20);
@@ -21,7 +21,7 @@ describe("calcInverseAffineTransformedPoint", () => {
 		expect(restored.y).toBeCloseTo(srcY);
 	});
 
-	it("変換の逆変換で元の点に戻る（90度回転あり）", () => {
+	it("round-trips back to the original point with a 90 degree rotation", () => {
 		const srcX = 1;
 		const srcY = 2;
 		const angleRad = Math.PI / 2;
@@ -47,10 +47,10 @@ describe("calcInverseAffineTransformedPoint", () => {
 		expect(restored.y).toBeCloseTo(srcY);
 	});
 
-	it("変換の逆変換で元の点に戻る（任意の角度）", () => {
+	it("round-trips back to the original point at an arbitrary angle", () => {
 		const srcX = 5;
 		const srcY = -3;
-		const angleRad = 0.7854; // 約45度
+		const angleRad = 0.7854; // roughly 45 degrees
 		const transformed = calcAffineTransformedPoint(
 			srcX,
 			srcY,
@@ -73,7 +73,7 @@ describe("calcInverseAffineTransformedPoint", () => {
 		expect(restored.y).toBeCloseTo(srcY);
 	});
 
-	it("回転なし（angleRad=0）の最適化パスが正しく動作する", () => {
+	it("takes the correct result on the angleRad=0 fast path", () => {
 		const result = calcInverseAffineTransformedPoint(12, 15, 2, 3, 0, 4, 6);
 		expect(result.x).toBeCloseTo(4); // (12 - 4) / 2
 		expect(result.y).toBeCloseTo(3); // (15 - 6) / 3

@@ -1,2 +1,2 @@
-/** 直交方向（軸並行の上下左右）。 */
+/** Axis-aligned direction. */
 export type OrthogonalDirection = "up" | "down" | "left" | "right";

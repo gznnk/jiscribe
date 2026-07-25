@@ -6,12 +6,13 @@ import type { Point } from "../types/Point";
 import type { TransformedEllipse } from "../types/TransformedEllipse";
 
 /**
- * Return the intersection point on the ellipse outline along the ray
- * from ellipse center toward `toward` (world coord).
+ * Intersection point on the ellipse outline along the ray from the ellipse
+ * center toward `toward` (world coordinates).
  *
- * scale は FlipScale(±1) 前提のため無視する。楕円の輪郭は軸反転で不変なので正しい。
+ * Scale is ignored: it is a `FlipScale`, and an ellipse outline is
+ * invariant under axis flips.
  *
- * Returns null if `toward` is inside the ellipse or if degenerate (toward == center).
+ * Returns null if `toward` is inside the ellipse, or is the center itself.
  */
 export function calcOutlinePointTowardForRotatedEllipse(
 	ellipse: TransformedEllipse,
@@ -29,8 +30,7 @@ export function calcOutlinePointTowardForRotatedEllipse(
 		return null;
 	}
 
-	// Check if the point is inside the ellipse
-	// In local coordinates: (x/rx)^2 + (y/ry)^2 <= 1 means inside
+	// In local coordinates (x/rx)^2 + (y/ry)^2 <= 1 means inside.
 	const normalizedDist = (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry);
 	if (normalizedDist <= 1) {
 		return null;
@@ -41,7 +41,6 @@ export function calcOutlinePointTowardForRotatedEllipse(
 		return null;
 	}
 
-	// local -> world: scale the offset onto the outline (÷denom), then rotate
-	// the local hit point back around center by +rotation.
+	// Scale the offset onto the outline, then rotate the hit point back to world.
 	return calcWorldPointFromLocalOffset(cx, cy, dx / denom, dy / denom, offset);
 }

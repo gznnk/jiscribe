@@ -1,16 +1,7 @@
 import { calcRotatedPointWithTrig } from "./calcRotatedPointWithTrig";
 import type { Point } from "../types/Point";
 
-/**
- * Rotates a point around a center point by a given angle.
- *
- * @param px - X-coordinate of the point to rotate
- * @param py - Y-coordinate of the point to rotate
- * @param cx - X-coordinate of the rotation center
- * @param cy - Y-coordinate of the rotation center
- * @param angleRad - Angle of rotation in radians
- * @returns The rotated point
- */
+/** Rotates point `(px, py)` around center `(cx, cy)` by `angleRad`. */
 export const calcRotatedPoint = (
 	px: number,
 	py: number,

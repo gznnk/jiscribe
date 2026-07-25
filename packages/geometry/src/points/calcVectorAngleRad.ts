@@ -1,12 +1,8 @@
 /**
- * Calculates the angle (in radians) of the vector from an origin toward a point.
- * Uses standard trigonometry (0 radians = 3 o'clock/Right).
+ * Angle of the vector from origin `(ox, oy)` toward point `(px, py)`.
+ * Screen coordinates, so 0 points right and the angle grows clockwise.
  *
- * @param px - X-coordinate of the target point
- * @param py - Y-coordinate of the target point
- * @param ox - X-coordinate of the origin point
- * @param oy - Y-coordinate of the origin point
- * @returns The angle in radians (-π to π)
+ * @returns The angle in radians, within (-π, π]
  */
 export const calcVectorAngleRad = (
 	px: number,

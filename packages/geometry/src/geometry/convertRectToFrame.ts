@@ -1,12 +1,7 @@
 import type { Frame } from "../types/Frame";
 import type { Rect } from "../types/Rect";
 
-/**
- * Converts a Rect (top-left based) to a Frame (center based).
- *
- * @param rect - The rectangle geometry
- * @returns The corresponding Frame
- */
+/** Converts a {@link Rect} (top-left based) to a {@link Frame} (center based). */
 export const convertRectToFrame = (rect: Rect): Frame => {
 	const { x, y, width, height } = rect;
 	return {
