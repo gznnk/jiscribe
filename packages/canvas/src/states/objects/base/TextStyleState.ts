@@ -1,4 +1,4 @@
-import { isCssColor, isNumber, isString } from "@workspace/basic-validators";
+import { isNumber, isString } from "@workspace/basic-validators";
 
 import type { TextAlign } from "../../../schemas/objects/types/TextAlign";
 import { isTextAlign } from "../../../schemas/objects/types/TextAlign";
@@ -7,6 +7,7 @@ import { isTextType } from "../../../schemas/objects/types/TextType";
 import type { VerticalAlign } from "../../../schemas/objects/types/VerticalAlign";
 import { isVerticalAlign } from "../../../schemas/objects/types/VerticalAlign";
 import { isAutoColor } from "../../../schemas/objects/utils/autoColor";
+import { isCssColor } from "../utils/isCssColor";
 
 /**
  * Text style properties in runtime state.
