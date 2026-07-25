@@ -6,7 +6,7 @@ import {
 	flowchartPlugin,
 	flowchartToolbarEntry,
 } from "@workspace/plugin-flowchart-shapes";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import "katex/dist/katex.min.css";
 
@@ -62,6 +62,22 @@ const emptyDoc: CanvasDoc = { version: 1, root: [] };
  */
 function HarnessApp() {
 	const [loadedDoc, setLoadedDoc] = useState<CanvasDoc>(emptyDoc);
+
+	// 外部同期（親からの doc 差し替え → SYNC_EXTERNAL）を spec から起こす操作口。
+	// scenario/external-sync-cancels-drag.spec が依存する。
+	useEffect(() => {
+		(
+			window as unknown as {
+				__setHarnessDoc?: (docText: string) => void;
+			}
+		).__setHarnessDoc = (docText: string) => {
+			const result = harnessParser.parse(docText);
+			if (result.kind !== "ok") {
+				throw new Error(`invalid harness doc: ${result.kind}`);
+			}
+			setLoadedDoc(result.doc);
+		};
+	}, []);
 
 	const handleDrop = useCallback(async (e: React.DragEvent) => {
 		e.preventDefault();
