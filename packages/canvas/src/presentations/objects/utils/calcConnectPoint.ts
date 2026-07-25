@@ -39,10 +39,16 @@ const calcRayOrigin = (anchorRegion?: Rect | null): Point =>
  * registered outline resolve analytically against the bounding box, which for a
  * centered origin reproduces `calcFrameKeyPoint`.
  *
- * @param frame - The shape's transformed frame
- * @param connectPointId - Which edge connect point to resolve
- * @param outline - The shape's local outline polygon (from ObjectOutlineRegistry). Omitted = bounding box
- * @param anchorRegion - The shape's local anchor region. Omitted = full bounding box
+ * @param frame - The shape the anchor belongs to; its rotation and flips carry
+ *   into the result
+ * @param connectPointId - Which of the four edge anchors to resolve
+ * @param outline - The shape's outline polygon in local, centered coordinates
+ *   (from ObjectOutlineRegistry). Omitted, or a ray that misses it, falls back
+ *   to the bounding box
+ * @param anchorRegion - The band to center the anchors on, in the same local
+ *   space (from ObjectAnchorRegionRegistry). Omitted = the full bounding box,
+ *   i.e. the edge midpoints
+ * @returns The anchor in world coordinates
  */
 export const calcConnectPoint = (
 	frame: TransformedFrame,
@@ -87,6 +93,12 @@ export const calcConnectPoint = (
  * rotation and flip, so it stays exact even when the anchor region moves the
  * anchor off the bounding-box edge midpoint (a "center → anchor" vector would
  * pick the wrong axis on a tall, narrow shape).
+ *
+ * @param frame - The shape the anchor belongs to; only its rotation and the
+ *   signs of its scales matter
+ * @param connectPointId - Which of the four edge anchors to take the normal of
+ * @returns The world-space axis direction, snapped to the nearest of the four
+ *   even when the shape sits at an odd rotation
  */
 export const calcConnectPointDirection = (
 	frame: TransformedFrame,

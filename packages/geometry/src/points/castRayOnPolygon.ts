@@ -2,9 +2,18 @@ import { EPSILON } from "../constants/EPSILON";
 import type { Point } from "../types/Point";
 
 /**
- * Nearest positive-t hit of the ray (origin `originX,originY`, direction
- * `dirX,dirY`) against a closed polygon. Returns null if the direction is
- * degenerate or no edge is crossed.
+ * Nearest forward hit of a ray against a closed polygon, in whatever coordinate
+ * space both are given in.
+ *
+ * @param polygon - Vertices of a closed polygon; the last is joined back to the
+ *   first. An empty array yields null
+ * @param originX - Ray origin x. An origin lying on an edge does not hit that
+ *   edge — the ray travels on past it
+ * @param originY - Ray origin y
+ * @param dirX - Ray direction x. Not required to be normalized
+ * @param dirY - Ray direction y
+ * @returns The crossing nearest the origin, only ahead of it along the
+ *   direction, or null if the direction is zero or no edge is crossed
  */
 export function castRayOnPolygon(
 	polygon: readonly Point[],
