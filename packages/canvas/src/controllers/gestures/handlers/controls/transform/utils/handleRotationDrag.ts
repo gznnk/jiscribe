@@ -1,8 +1,8 @@
 import type { TransformedFrame } from "@workspace/geometry";
 import {
-	calcVectorAngle,
+	calcVectorAngleRad,
 	isTransformedFrame,
-	normalizeAngle,
+	normalizeAngleDeg,
 	radiansToDegrees,
 	roundToDecimal,
 } from "@workspace/geometry";
@@ -57,23 +57,23 @@ export function handleRotationDrag(
 	const cursorY = event.last.y;
 
 	// Compute the angle of the vector from the center point to the cursor
-	const radian = calcVectorAngle(
-		startFrame.cx,
-		startFrame.cy,
+	const radian = calcVectorAngleRad(
 		cursorX,
 		cursorY,
+		startFrame.cx,
+		startFrame.cy,
 	);
 
 	// Compute the reference angle of the rotation point (toward the top-right)
-	const rotatePointRadian = calcVectorAngle(
-		startFrame.cx,
-		startFrame.cy,
+	const rotatePointRadian = calcVectorAngleRad(
 		startFrame.cx + startFrame.width,
 		startFrame.cy - startFrame.height,
+		startFrame.cx,
+		startFrame.cy,
 	);
 
 	// Compute the new rotation angle (0-360 degrees, rounded to an integer)
-	const newRotation = normalizeAngle(
+	const newRotation = normalizeAngleDeg(
 		roundToDecimal(radiansToDegrees(radian - rotatePointRadian), 0),
 	);
 

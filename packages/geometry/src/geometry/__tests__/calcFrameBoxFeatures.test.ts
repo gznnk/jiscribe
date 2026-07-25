@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import { calcFrameBoxFeatures } from "../../geometry/calcFrameBoxFeatures";
 
 describe("calcFrameBoxFeatures", () => {
-	it("回転なしの場合、バウンディングボックスをフレームサイズで返す", () => {
+	it("returns a box matching the frame size when unrotated", () => {
 		const result = calcFrameBoxFeatures({
 			cx: 50,
 			cy: 30,
@@ -19,7 +19,7 @@ describe("calcFrameBoxFeatures", () => {
 		expect(result.bottom).toBeCloseTo(60);
 	});
 
-	it("center, 四隅のプロパティが含まれる", () => {
+	it("includes the center and all four corners", () => {
 		const result = calcFrameBoxFeatures({
 			cx: 50,
 			cy: 30,
@@ -36,7 +36,7 @@ describe("calcFrameBoxFeatures", () => {
 		expect(result.bottomRight).toEqual({ x: 100, y: 60 });
 	});
 
-	it("90度回転した場合、width/heightが入れ替わる", () => {
+	it("swaps width and height when rotated 90 degrees", () => {
 		const result = calcFrameBoxFeatures({
 			cx: 0,
 			cy: 0,

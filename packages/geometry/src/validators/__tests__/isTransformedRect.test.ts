@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import { isTransformedRect } from "../isTransformedRect";
 
 describe("isTransformedRect", () => {
-	it("有効なTransformedRectはtrueを返す", () => {
+	it("returns true for a valid TransformedRect", () => {
 		expect(
 			isTransformedRect({
 				x: 0,
@@ -17,19 +17,19 @@ describe("isTransformedRect", () => {
 		).toBe(true);
 	});
 
-	it("Transformプロパティが欠けている場合はfalseを返す", () => {
+	it("returns false when the Transform properties are missing", () => {
 		expect(isTransformedRect({ x: 0, y: 0, width: 100, height: 60 })).toBe(
 			false,
 		);
 	});
 
-	it("Rectプロパティが欠けている場合はfalseを返す", () => {
+	it("returns false when the Rect properties are missing", () => {
 		expect(isTransformedRect({ rotation: 0, scaleX: 1, scaleY: 1 })).toBe(
 			false,
 		);
 	});
 
-	it("widthが負の場合はfalseを返す", () => {
+	it("returns false for a negative width", () => {
 		expect(
 			isTransformedRect({
 				x: 0,

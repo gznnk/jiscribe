@@ -6,7 +6,7 @@ import { selectors } from "../../support/selectors";
  * 矢印の「向き（回転角）」が端セグメントの方向に一致することを幾何レベルで検証する spec。
  *
  * 矢印は端点を先端として、隣接点へ向かう端セグメントに沿って回転して描かれる
- * （Connector.tsx の startAngleRadians / endAngleRadians = calcVectorAngle(...)）。矢印 polygon は
+ * （Connector.tsx の startAngleRadians / endAngleRadians = calcVectorAngleRad(...)）。矢印 polygon は
  * matrix(sx·cosθ, sx·sinθ, …, x, y) で配置されるため、行列から θ=atan2(b,a)（回転角）と
  * (e,f)（先端＝端点）が読める。connector-arrow-head.spec は矢印の有無・形状・入れ替えは守るが、
  * この「向きが端セグメントに沿う」幾何は未検証だった。

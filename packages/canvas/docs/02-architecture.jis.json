@@ -1,0 +1,735 @@
+{
+	"version": 1,
+	"root": [
+		{
+			"id": "title",
+			"type": "rect",
+			"x": 40,
+			"y": -40,
+			"width": 720,
+			"height": 40,
+			"stroke": "transparent",
+			"fill": "transparent",
+			"text": "canvas 依存関係グラフ（docs/02-architecture 対応）",
+			"textAlign": "left",
+			"verticalAlign": "middle",
+			"fontSize": 20,
+			"fontColor": "auto"
+		},
+		{
+			"id": "layer-controllers",
+			"type": "rect",
+			"x": 40,
+			"y": 40,
+			"width": 1000,
+			"height": 280,
+			"rx": 8,
+			"fill": "#E3F2FD",
+			"stroke": "#1565C0",
+			"strokeWidth": 2,
+			"text": "ロジック層 (controllers)",
+			"textAlign": "left",
+			"verticalAlign": "top",
+			"fontSize": 14,
+			"fontColor": "#1565C0"
+		},
+		{
+			"id": "layer-presentations",
+			"type": "rect",
+			"x": 40,
+			"y": 400,
+			"width": 660,
+			"height": 210,
+			"rx": 8,
+			"fill": "#F3E5F5",
+			"stroke": "#6A1B9A",
+			"strokeWidth": 2,
+			"text": "表示層 (presentations)",
+			"textAlign": "left",
+			"verticalAlign": "top",
+			"fontSize": 14,
+			"fontColor": "#6A1B9A"
+		},
+		{
+			"id": "layer-plugin",
+			"type": "rect",
+			"x": 760,
+			"y": 400,
+			"width": 280,
+			"height": 210,
+			"rx": 8,
+			"fill": "#FFF3E0",
+			"stroke": "#E65100",
+			"strokeWidth": 2,
+			"text": "拡張シーム (plugin)",
+			"textAlign": "left",
+			"verticalAlign": "top",
+			"fontSize": 14,
+			"fontColor": "#E65100"
+		},
+		{
+			"id": "layer-data",
+			"type": "rect",
+			"x": 460,
+			"y": 690,
+			"width": 580,
+			"height": 270,
+			"rx": 8,
+			"fill": "#E8F5E9",
+			"stroke": "#2E7D32",
+			"strokeWidth": 2,
+			"text": "データ層 (schemas + states)",
+			"textAlign": "left",
+			"verticalAlign": "top",
+			"fontSize": 14,
+			"fontColor": "#2E7D32"
+		},
+		{
+			"id": "ctrl-ui",
+			"type": "rect",
+			"x": 60,
+			"y": 100,
+			"width": 120,
+			"height": 60,
+			"rx": 6,
+			"fill": "#FFFFFF",
+			"stroke": "#1565C0",
+			"strokeWidth": 2,
+			"text": "ui",
+			"fontColor": "#1F2937"
+		},
+		{
+			"id": "ctrl-gestures",
+			"type": "rect",
+			"x": 200,
+			"y": 100,
+			"width": 160,
+			"height": 60,
+			"rx": 6,
+			"fill": "#FFFFFF",
+			"stroke": "#1565C0",
+			"strokeWidth": 2,
+			"text": "gestures/handlers",
+			"fontColor": "#1F2937"
+		},
+		{
+			"id": "ctrl-utils",
+			"type": "rect",
+			"x": 380,
+			"y": 100,
+			"width": 100,
+			"height": 60,
+			"rx": 6,
+			"fill": "#FFFFFF",
+			"stroke": "#1565C0",
+			"strokeWidth": 2,
+			"text": "utils",
+			"fontColor": "#1F2937"
+		},
+		{
+			"id": "ctrl-commands",
+			"type": "rect",
+			"x": 620,
+			"y": 100,
+			"width": 130,
+			"height": 60,
+			"rx": 6,
+			"fill": "#FFFFFF",
+			"stroke": "#1565C0",
+			"strokeWidth": 2,
+			"text": "commands",
+			"fontColor": "#1F2937"
+		},
+		{
+			"id": "ctrl-reducer",
+			"type": "rect",
+			"x": 780,
+			"y": 100,
+			"width": 110,
+			"height": 60,
+			"rx": 6,
+			"fill": "#FFFFFF",
+			"stroke": "#1565C0",
+			"strokeWidth": 2,
+			"text": "reducer",
+			"fontColor": "#1F2937"
+		},
+		{
+			"id": "ctrl-registries",
+			"type": "rect",
+			"x": 620,
+			"y": 210,
+			"width": 280,
+			"height": 70,
+			"rx": 6,
+			"fill": "#FFFFFF",
+			"stroke": "#1565C0",
+			"strokeWidth": 2,
+			"text": "registries\napplyObjectDefinition が配線",
+			"fontSize": 14,
+			"fontColor": "#1F2937"
+		},
+		{
+			"id": "pres-components",
+			"type": "rect",
+			"x": 60,
+			"y": 470,
+			"width": 150,
+			"height": 70,
+			"rx": 6,
+			"fill": "#FFFFFF",
+			"stroke": "#6A1B9A",
+			"strokeWidth": 2,
+			"text": "React Components",
+			"fontSize": 13,
+			"fontColor": "#1F2937"
+		},
+		{
+			"id": "pres-utils",
+			"type": "rect",
+			"x": 230,
+			"y": 470,
+			"width": 160,
+			"height": 70,
+			"rx": 6,
+			"fill": "#FFFFFF",
+			"stroke": "#6A1B9A",
+			"strokeWidth": 2,
+			"text": "utils\n端点解決 / 直交ルーティング",
+			"fontSize": 12,
+			"fontColor": "#1F2937"
+		},
+		{
+			"id": "pres-contracts",
+			"type": "rect",
+			"x": 410,
+			"y": 470,
+			"width": 170,
+			"height": 70,
+			"rx": 6,
+			"fill": "#FFFFFF",
+			"stroke": "#6A1B9A",
+			"strokeWidth": 2,
+			"text": "registry 契約\ncomponent / textRegion / outline",
+			"fontSize": 12,
+			"fontColor": "#1F2937"
+		},
+		{
+			"id": "plugin-vocab",
+			"type": "rect",
+			"x": 790,
+			"y": 470,
+			"width": 220,
+			"height": 70,
+			"rx": 6,
+			"fill": "#FFFFFF",
+			"stroke": "#E65100",
+			"strokeWidth": 2,
+			"text": "ObjectTypeDefinition\ndefineObject / CanvasPlugin",
+			"fontSize": 13,
+			"fontColor": "#1F2937"
+		},
+		{
+			"id": "data-states",
+			"type": "rect",
+			"x": 580,
+			"y": 730,
+			"width": 300,
+			"height": 70,
+			"rx": 6,
+			"fill": "#FFFFFF",
+			"stroke": "#2E7D32",
+			"strokeWidth": 2,
+			"text": "states/ — State 型 + Mapper\n+ ObjectMapperRegistry",
+			"fontSize": 13,
+			"fontColor": "#1F2937"
+		},
+		{
+			"id": "data-schemas",
+			"type": "rect",
+			"x": 580,
+			"y": 850,
+			"width": 300,
+			"height": 70,
+			"rx": 6,
+			"fill": "#FFFFFF",
+			"stroke": "#2E7D32",
+			"strokeWidth": 2,
+			"text": "schemas/ — Doc 型 + 検証\n+ ObjectDocValidatorRegistry",
+			"fontSize": 13,
+			"fontColor": "#1F2937"
+		},
+		{
+			"id": "legend",
+			"type": "rect",
+			"x": 40,
+			"y": 1000,
+			"width": 680,
+			"height": 96,
+			"rx": 6,
+			"fill": "transparent",
+			"stroke": "auto",
+			"strokeWidth": 1,
+			"strokeDashType": "dashed",
+			"text": "実線: 実装・ユーティリティ参照　／　破線: 型のみの参照\nstates へ向かう線は途中で1本に合流させている（各ノード個別の依存）\nschemas の型・定数（EndpointRef / AUTO_COLOR など）と constants/ への参照は全域から存在するため省略",
+			"textAlign": "left",
+			"fontSize": 12,
+			"fontColor": "auto"
+		},
+		{
+			"id": "e1",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": { "id": "ctrl-ui" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "id": "pres-components" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "auto",
+			"strokeWidth": 2,
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "e2",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": { "id": "ctrl-ui" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "id": "pres-utils" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "auto",
+			"strokeWidth": 2,
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "e3",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": { "id": "ctrl-ui" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "id": "pres-contracts" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "auto",
+			"strokeWidth": 2,
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "e4",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": { "id": "ctrl-gestures" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "id": "pres-utils" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "auto",
+			"strokeWidth": 2,
+			"endArrow": "FilledTriangle",
+			"label": {
+				"text": "スナップ / 再アンカー",
+				"fontSize": 12,
+				"fontColor": "auto"
+			}
+		},
+		{
+			"id": "e5",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": { "id": "ctrl-utils" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "id": "pres-utils" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "auto",
+			"strokeWidth": 2,
+			"endArrow": "FilledTriangle",
+			"label": {
+				"text": "削除時 Free 化 / BBox / 可視判定",
+				"fontSize": 12,
+				"fontColor": "auto"
+			}
+		},
+		{
+			"id": "e6",
+			"type": "connector",
+			"routing": "straight",
+			"points": [{ "x": 135, "y": 245 }],
+			"source": {
+				"owner": { "id": "ctrl-registries" },
+				"anchor": { "kind": "connectPoint", "id": "leftCenter" }
+			},
+			"target": {
+				"owner": { "id": "pres-components" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "auto",
+			"strokeWidth": 2,
+			"endArrow": "FilledTriangle",
+			"label": {
+				"text": "組み込み Component 登録",
+				"fontSize": 12,
+				"fontColor": "auto"
+			}
+		},
+		{
+			"id": "e7",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": { "id": "ctrl-registries" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "id": "pres-contracts" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "auto",
+			"strokeWidth": 2,
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "e8",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": { "id": "ctrl-registries" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "id": "plugin-vocab" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "auto",
+			"strokeWidth": 2,
+			"endArrow": "FilledTriangle",
+			"label": {
+				"text": "defineObject / applyObjectDefinition",
+				"fontSize": 12,
+				"fontColor": "auto"
+			}
+		},
+		{
+			"id": "e9",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": { "id": "plugin-vocab" },
+				"anchor": { "kind": "connectPoint", "id": "leftCenter" }
+			},
+			"target": {
+				"owner": { "id": "pres-contracts" },
+				"anchor": { "kind": "connectPoint", "id": "rightCenter" }
+			},
+			"stroke": "auto",
+			"strokeWidth": 2,
+			"strokeDashType": "dashed",
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "e10",
+			"type": "connector",
+			"routing": "straight",
+			"points": [
+				{ "x": 1064, "y": 505 },
+				{ "x": 1064, "y": 16 },
+				{ "x": 120, "y": 16 }
+			],
+			"source": {
+				"owner": { "id": "plugin-vocab" },
+				"anchor": { "kind": "connectPoint", "id": "rightCenter" }
+			},
+			"target": {
+				"owner": { "id": "ctrl-ui" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "auto",
+			"strokeWidth": 2,
+			"strokeDashType": "dashed",
+			"endArrow": "FilledTriangle",
+			"label": {
+				"text": "Menu / Controls / Stencil 型",
+				"fontSize": 12,
+				"fontColor": "auto"
+			}
+		},
+		{
+			"id": "e11",
+			"type": "connector",
+			"routing": "straight",
+			"points": [
+				{ "x": 1052, "y": 505 },
+				{ "x": 1052, "y": 28 },
+				{ "x": 280, "y": 28 }
+			],
+			"source": {
+				"owner": { "id": "plugin-vocab" },
+				"anchor": { "kind": "connectPoint", "id": "rightCenter" }
+			},
+			"target": {
+				"owner": { "id": "ctrl-gestures" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "auto",
+			"strokeWidth": 2,
+			"strokeDashType": "dashed",
+			"endArrow": "FilledTriangle",
+			"label": {
+				"text": "ObjectBehaviorEntry 型",
+				"fontSize": 12,
+				"fontColor": "auto",
+				"position": 0.35
+			}
+		},
+		{
+			"id": "e12",
+			"type": "connector",
+			"routing": "straight",
+			"points": [{ "x": 900, "y": 765 }],
+			"source": {
+				"owner": { "id": "plugin-vocab" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "id": "data-states" },
+				"anchor": { "kind": "connectPoint", "id": "rightCenter" }
+			},
+			"stroke": "auto",
+			"strokeWidth": 2,
+			"strokeDashType": "dashed",
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "e13",
+			"type": "connector",
+			"routing": "straight",
+			"points": [
+				{ "x": 900, "y": 560 },
+				{ "x": 940, "y": 560 },
+				{ "x": 940, "y": 885 }
+			],
+			"source": {
+				"owner": { "id": "plugin-vocab" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "id": "data-schemas" },
+				"anchor": { "kind": "connectPoint", "id": "rightCenter" }
+			},
+			"stroke": "auto",
+			"strokeWidth": 2,
+			"strokeDashType": "dashed",
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "e14",
+			"type": "connector",
+			"points": [],
+			"source": {
+				"owner": { "id": "data-states" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "id": "data-schemas" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "auto",
+			"strokeWidth": 2,
+			"endArrow": "FilledTriangle",
+			"label": {
+				"text": "Doc から変換",
+				"fontSize": 12,
+				"fontColor": "auto"
+			}
+		},
+		{
+			"id": "e15",
+			"type": "connector",
+			"routing": "straight",
+			"points": [
+				{ "x": 120, "y": 336 },
+				{ "x": 730, "y": 336 }
+			],
+			"source": {
+				"owner": { "id": "ctrl-ui" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "id": "data-states" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "auto",
+			"strokeWidth": 2,
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "e16",
+			"type": "connector",
+			"routing": "straight",
+			"points": [
+				{ "x": 280, "y": 348 },
+				{ "x": 730, "y": 348 }
+			],
+			"source": {
+				"owner": { "id": "ctrl-gestures" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "id": "data-states" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "auto",
+			"strokeWidth": 2,
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "e17",
+			"type": "connector",
+			"routing": "straight",
+			"points": [
+				{ "x": 430, "y": 360 },
+				{ "x": 730, "y": 360 }
+			],
+			"source": {
+				"owner": { "id": "ctrl-utils" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "id": "data-states" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "auto",
+			"strokeWidth": 2,
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "e18",
+			"type": "connector",
+			"routing": "straight",
+			"points": [
+				{ "x": 685, "y": 372 },
+				{ "x": 730, "y": 372 }
+			],
+			"source": {
+				"owner": { "id": "ctrl-commands" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "id": "data-states" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "auto",
+			"strokeWidth": 2,
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "e19",
+			"type": "connector",
+			"routing": "straight",
+			"points": [
+				{ "x": 835, "y": 384 },
+				{ "x": 730, "y": 384 }
+			],
+			"source": {
+				"owner": { "id": "ctrl-reducer" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "id": "data-states" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "auto",
+			"strokeWidth": 2,
+			"endArrow": "FilledTriangle"
+		},
+		{
+			"id": "e20",
+			"type": "connector",
+			"routing": "straight",
+			"points": [
+				{ "x": 760, "y": 330 },
+				{ "x": 730, "y": 330 }
+			],
+			"source": {
+				"owner": { "id": "ctrl-registries" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "id": "data-states" },
+				"anchor": { "kind": "connectPoint", "id": "topCenter" }
+			},
+			"stroke": "auto",
+			"strokeWidth": 2,
+			"endArrow": "FilledTriangle",
+			"label": {
+				"text": "controllers 全域 → states",
+				"fontSize": 12,
+				"fontColor": "auto",
+				"position": 0.7
+			}
+		},
+		{
+			"id": "e21",
+			"type": "connector",
+			"routing": "straight",
+			"points": [
+				{ "x": 135, "y": 640 },
+				{ "x": 552, "y": 640 },
+				{ "x": 552, "y": 765 }
+			],
+			"source": {
+				"owner": { "id": "pres-components" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "id": "data-states" },
+				"anchor": { "kind": "connectPoint", "id": "leftCenter" }
+			},
+			"stroke": "auto",
+			"strokeWidth": 2,
+			"endArrow": "FilledTriangle",
+			"label": {
+				"text": "State を Props の型として参照",
+				"fontSize": 12,
+				"fontColor": "auto"
+			}
+		},
+		{
+			"id": "e22",
+			"type": "connector",
+			"routing": "straight",
+			"points": [
+				{ "x": 310, "y": 652 },
+				{ "x": 564, "y": 652 },
+				{ "x": 564, "y": 765 }
+			],
+			"source": {
+				"owner": { "id": "pres-utils" },
+				"anchor": { "kind": "connectPoint", "id": "bottomCenter" }
+			},
+			"target": {
+				"owner": { "id": "data-states" },
+				"anchor": { "kind": "connectPoint", "id": "leftCenter" }
+			},
+			"stroke": "auto",
+			"strokeWidth": 2,
+			"endArrow": "FilledTriangle"
+		}
+	]
+}

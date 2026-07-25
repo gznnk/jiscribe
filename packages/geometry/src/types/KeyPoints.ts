@@ -1,9 +1,6 @@
 import type { Point } from "./Point";
 
-/**
- * Defines the coordinates for key reference points of a shape.
- * Includes corner points and mid-points for each side to support manipulation and connection.
- */
+/** The eight reference points of a shape: four corners and four edge midpoints. */
 export type KeyPoints = {
 	topLeft: Point;
 	topCenter: Point;
@@ -15,5 +12,5 @@ export type KeyPoints = {
 	leftCenter: Point;
 };
 
-/** KeyPoints のいずれか1点を指すキー。 */
+/** Key identifying a single point of {@link KeyPoints}. */
 export type KeyPointId = keyof KeyPoints;

@@ -6,6 +6,7 @@ import {
 	type BoxFeatures,
 	type KeyPointId,
 	type Point,
+	type TransformedFrame,
 } from "@workspace/geometry";
 
 import { routeOrthogonalConnector } from "..";
@@ -45,7 +46,7 @@ export const endpoint = (
 	face: Face,
 	rotation = 0,
 ): OrthogonalConnectorEndpoint => {
-	const frame = {
+	const frame: TransformedFrame = {
 		cx,
 		cy,
 		width: SIZE,

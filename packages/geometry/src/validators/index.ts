@@ -6,6 +6,7 @@ export * from "./isFrame";
 export * from "./isEllipse";
 
 // Transform validator
+export * from "./isFlipScale";
 export * from "./isTransform";
 
 // Transformed validators

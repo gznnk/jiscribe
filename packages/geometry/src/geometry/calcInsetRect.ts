@@ -4,13 +4,9 @@ import type { RatioInsets } from "../types/RatioInsets";
 import type { Rect } from "../types/Rect";
 
 /**
- * Calculates the rectangle obtained by shrinking a frame with ratio insets.
- * Because the insets are ratios, the resulting rect follows the frame size.
- * Insets whose sum exceeds 1 collapse the rect to zero width / height.
- *
- * @param frame - The frame geometry (center based)
- * @param insets - Ratio insets for each edge (omitted edges mean 0)
- * @returns The inset rectangle (top-left based)
+ * Shrinks a frame by ratio insets. Because the insets are ratios, the result
+ * follows the frame size. Insets summing above 1 collapse the rect to zero
+ * width or height.
  */
 export const calcInsetRect = (frame: Frame, insets: RatioInsets): Rect => {
 	const { cx, cy, width, height } = frame;

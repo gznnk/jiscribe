@@ -3,16 +3,16 @@ import { describe, it, expect } from "vitest";
 import { calcPolyBoundingBox } from "../../geometry/calcPolyBoundingBox";
 
 describe("calcPolyBoundingBox", () => {
-	it("空配列の場合はnullを返す", () => {
+	it("returns null for an empty array", () => {
 		expect(calcPolyBoundingBox([])).toBeNull();
 	});
 
-	it("1点の場合はその点をBBとして返す", () => {
+	it("returns a degenerate box for a single point", () => {
 		const result = calcPolyBoundingBox([{ x: 5, y: 3 }]);
 		expect(result).toEqual({ left: 5, right: 5, top: 3, bottom: 3 });
 	});
 
-	it("複数点のBBを正しく計算する", () => {
+	it("computes the box over several points", () => {
 		const points = [
 			{ x: 1, y: 4 },
 			{ x: 5, y: 2 },
@@ -23,7 +23,7 @@ describe("calcPolyBoundingBox", () => {
 		expect(result).toEqual({ left: -1, right: 5, top: 1, bottom: 7 });
 	});
 
-	it("全点が同じ座標の場合", () => {
+	it("handles points that all share the same coordinates", () => {
 		const result = calcPolyBoundingBox([
 			{ x: 2, y: 3 },
 			{ x: 2, y: 3 },

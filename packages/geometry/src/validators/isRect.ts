@@ -6,15 +6,7 @@ import {
 
 import type { Rect } from "../types/Rect";
 
-/**
- * Check if an object is a Rect (primitive).
- * Validates all required Rect properties:
- * - Position: x, y (numbers)
- * - Size: width, height (non-negative numbers)
- *
- * @param obj - The object to check
- * @returns True if the object is a Rect, false otherwise
- */
+/** Type guard for {@link Rect}. Width and height must be non-negative. */
 export const isRect = (obj: unknown): obj is Rect => {
 	if (!isObject(obj)) {
 		return false;

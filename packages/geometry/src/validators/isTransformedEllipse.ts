@@ -2,13 +2,7 @@ import { isEllipse } from "./isEllipse";
 import { isTransform } from "./isTransform";
 import type { TransformedEllipse } from "../types/TransformedEllipse";
 
-/**
- * Check if an object is a TransformedEllipse.
- * Validates both Ellipse and Transform properties.
- *
- * @param obj - The object to check
- * @returns True if the object is a TransformedEllipse, false otherwise
- */
+/** Type guard for {@link TransformedEllipse}. */
 export const isTransformedEllipse = (
 	obj: unknown,
 ): obj is TransformedEllipse => {

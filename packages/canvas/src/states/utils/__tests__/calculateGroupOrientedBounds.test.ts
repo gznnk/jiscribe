@@ -1,3 +1,4 @@
+import type { Transform } from "@workspace/geometry";
 import { describe, expect, it } from "vitest";
 
 import { MIN_GROUP_DIMENSION } from "../../../constants/groupDimensions";
@@ -276,7 +277,7 @@ describe("calculateGroupOrientedBounds", () => {
 });
 
 describe("calculateOrientedBoundsFromChildIds", () => {
-	const identityTransform = { rotation: 0, scaleX: 1, scaleY: 1 };
+	const identityTransform: Transform = { rotation: 0, scaleX: 1, scaleY: 1 };
 
 	it("computes the OBB without requiring a group object in the map (issue #16)", () => {
 		const objects = {
@@ -301,7 +302,7 @@ describe("calculateOrientedBoundsFromChildIds", () => {
 
 	it("matches calculateGroupOrientedBounds for the same children and transform", () => {
 		const objects = {
-			g: makeGroup(["f1", "p1"], { rotation: 45, scaleX: 2, scaleY: 1 }),
+			g: makeGroup(["f1", "p1"], { rotation: 45, scaleX: -1, scaleY: 1 }),
 			f1: makeFrame("f1", { cx: 0, cy: 0, width: 10, height: 10 }),
 			p1: makePoly("p1", [
 				{ x: 100, y: 100 },
@@ -313,7 +314,7 @@ describe("calculateOrientedBoundsFromChildIds", () => {
 		const viaChildIds = calculateOrientedBoundsFromChildIds(
 			objects,
 			["f1", "p1"],
-			{ rotation: 45, scaleX: 2, scaleY: 1 },
+			{ rotation: 45, scaleX: -1, scaleY: 1 },
 		);
 
 		expect(viaChildIds).toEqual(viaGroup);
@@ -326,13 +327,13 @@ describe("calculateOrientedBoundsFromChildIds", () => {
 
 		const result = calculateOrientedBoundsFromChildIds(objects, ["f1"], {
 			rotation: 90,
-			scaleX: 2,
-			scaleY: 3,
+			scaleX: -1,
+			scaleY: 1,
 		});
 
 		expect(result?.rotation).toBe(90);
-		expect(result?.scaleX).toBe(2);
-		expect(result?.scaleY).toBe(3);
+		expect(result?.scaleX).toBe(-1);
+		expect(result?.scaleY).toBe(1);
 	});
 
 	it("recursively collects children of nested groups", () => {

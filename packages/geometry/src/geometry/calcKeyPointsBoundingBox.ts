@@ -1,9 +1,7 @@
 import type { BoundingBox } from "../types/BoundingBox";
 import type { FrameKeyPoints } from "../types/FrameKeyPoints";
 
-/**
- * FrameKeyPoints の4隅から AABB（軸方向バウンディングボックス）を計算する。
- */
+/** Axis-aligned bounding box of the four corners of a {@link FrameKeyPoints}. */
 export const calcKeyPointsBoundingBox = (kp: FrameKeyPoints): BoundingBox => ({
 	left: Math.min(
 		kp.topLeft.x,

@@ -1,7 +1,4 @@
-/**
- * Represents a point with center coordinates (cx, cy).
- * Used for objects that have a center point, such as rectangles and ellipses.
- */
+/** A point expressed as center coordinates, as used by `Frame` and `Ellipse`. */
 export type CenterPoint = {
 	cx: number;
 	cy: number;

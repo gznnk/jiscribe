@@ -1,4 +1,5 @@
 import { degreesToRadians } from "../common/degreesToRadians";
+import { EPSILON } from "../constants/EPSILON";
 import { calcAffineTransformedPoint } from "../transform/calcAffineTransformedPoint";
 import type { Point } from "../types/Point";
 import type { TransformedFrame } from "../types/TransformedFrame";
@@ -21,7 +22,7 @@ export function calcOutlinePointTowardForPolygon(
 		return null;
 	}
 	const { cx, cy, rotation, scaleX, scaleY } = frame;
-	const theta = degreesToRadians(rotation);
+	const angleRad = degreesToRadians(rotation);
 
 	const worldPolygon: Point[] = new Array(localPolygon.length);
 	for (let i = 0; i < localPolygon.length; i++) {
@@ -31,7 +32,7 @@ export function calcOutlinePointTowardForPolygon(
 			p.y,
 			scaleX,
 			scaleY,
-			theta,
+			angleRad,
 			cx,
 			cy,
 		);
@@ -56,7 +57,6 @@ function castRayFromCenter(
 		return null;
 	}
 
-	const eps = 1e-9;
 	let bestT = Infinity;
 	const n = polygon.length;
 
@@ -69,7 +69,7 @@ function castRayFromCenter(
 		const ex = b.x - a.x;
 		const ey = b.y - a.y;
 		const denom = dirX * ey - dirY * ex;
-		if (Math.abs(denom) < eps) {
+		if (Math.abs(denom) < EPSILON) {
 			// Ray parallel to this edge.
 			continue;
 		}
@@ -77,7 +77,7 @@ function castRayFromCenter(
 		const wy = a.y - cy;
 		const t = (wx * ey - wy * ex) / denom;
 		const u = (wx * dirY - wy * dirX) / denom;
-		if (t > eps && u >= -eps && u <= 1 + eps && t < bestT) {
+		if (t > EPSILON && u >= -EPSILON && u <= 1 + EPSILON && t < bestT) {
 			bestT = t;
 		}
 	}

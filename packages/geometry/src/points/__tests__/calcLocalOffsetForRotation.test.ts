@@ -6,7 +6,7 @@ import {
 } from "../calcLocalOffsetForRotation";
 
 describe("calcLocalOffsetForRotation", () => {
-	it("回転なしは trig を通さず world オフセットをそのまま local とする", () => {
+	it("skips the trig when unrotated, taking the world offset as the local offset", () => {
 		const offset = calcLocalOffsetForRotation(10, 20, 0, { x: 40, y: 60 });
 		expect(offset.isRotated).toBe(false);
 		expect(offset.cos).toBe(1);
@@ -15,8 +15,8 @@ describe("calcLocalOffsetForRotation", () => {
 		expect(offset.dy).toBeCloseTo(40);
 	});
 
-	it("90度回転時は world オフセットを -90度回して local に変換する", () => {
-		// 中心(0,0), rotation=90。world (100, 0) は local では -90度回転した (0, -100)
+	it("rotates the world offset by -90 degrees into local space when rotated 90 degrees", () => {
+		// Center (0,0), rotation 90: world (100, 0) becomes (0, -100) in local space.
 		const offset = calcLocalOffsetForRotation(0, 0, 90, { x: 100, y: 0 });
 		expect(offset.isRotated).toBe(true);
 		expect(offset.cos).toBeCloseTo(0);
@@ -25,13 +25,13 @@ describe("calcLocalOffsetForRotation", () => {
 		expect(offset.dy).toBeCloseTo(-100);
 	});
 
-	it("中心が原点以外でも中心相対でオフセットを算出する", () => {
+	it("measures the offset relative to a center away from the origin", () => {
 		const offset = calcLocalOffsetForRotation(5, -3, 0, { x: 12, y: 7 });
 		expect(offset.dx).toBeCloseTo(7);
 		expect(offset.dy).toBeCloseTo(10);
 	});
 
-	it("toward が中心と同じなら dx/dy はともに 0", () => {
+	it("yields dx and dy of 0 when toward equals the center", () => {
 		const offset = calcLocalOffsetForRotation(4, 8, 45, { x: 4, y: 8 });
 		expect(offset.dx).toBeCloseTo(0);
 		expect(offset.dy).toBeCloseTo(0);
@@ -39,7 +39,7 @@ describe("calcLocalOffsetForRotation", () => {
 });
 
 describe("calcWorldPointFromLocalOffset", () => {
-	it("回転なしは local 点を平行移動するだけ", () => {
+	it("only translates the local point when unrotated", () => {
 		const world = calcWorldPointFromLocalOffset(10, 20, 3, 4, {
 			cos: 1,
 			sin: 0,
@@ -49,8 +49,8 @@ describe("calcWorldPointFromLocalOffset", () => {
 		expect(world.y).toBeCloseTo(24);
 	});
 
-	it("90度回転時は local 点を +90度回して world に戻す", () => {
-		// cos/sin は rotation=90 のもの。local (10, 0) は +90度回転で (0, 10)
+	it("rotates the local point by +90 degrees back to world space", () => {
+		// cos/sin are for rotation 90: local (10, 0) rotates to (0, 10).
 		const world = calcWorldPointFromLocalOffset(0, 0, 10, 0, {
 			cos: Math.cos(Math.PI / 2),
 			sin: Math.sin(Math.PI / 2),
@@ -61,15 +61,15 @@ describe("calcWorldPointFromLocalOffset", () => {
 	});
 });
 
-describe("calcLocalOffsetForRotation ⇄ calcWorldPointFromLocalOffset の往復", () => {
-	it("world → local → world で元の点に戻る（任意の回転・中心）", () => {
+describe("calcLocalOffsetForRotation / calcWorldPointFromLocalOffset round trip", () => {
+	it("world -> local -> world returns the original point for any rotation and center", () => {
 		const cx = 7;
 		const cy = -4;
 		const rotation = 37;
 		const toward = { x: 123, y: 56 };
 
 		const offset = calcLocalOffsetForRotation(cx, cy, rotation, toward);
-		// local オフセットをそのまま world へ戻せば toward に一致するはず
+		// Mapping the local offset straight back to world space must give toward.
 		const restored = calcWorldPointFromLocalOffset(
 			cx,
 			cy,
@@ -81,7 +81,7 @@ describe("calcLocalOffsetForRotation ⇄ calcWorldPointFromLocalOffset の往復
 		expect(restored.y).toBeCloseTo(toward.y);
 	});
 
-	it("回転なしでも往復で元の点に戻る", () => {
+	it("round-trips back to the original point when unrotated", () => {
 		const offset = calcLocalOffsetForRotation(2, 3, 0, { x: 50, y: -10 });
 		const restored = calcWorldPointFromLocalOffset(
 			2,

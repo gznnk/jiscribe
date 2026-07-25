@@ -1,4 +1,4 @@
-import { calcVectorAngle, type Point } from "@workspace/geometry";
+import { calcVectorAngleRad, type Point } from "@workspace/geometry";
 import type React from "react";
 import { memo } from "react";
 
@@ -58,17 +58,17 @@ const ConnectorComponent: React.FC<ConnectorProps> = ({
 	const linePointsAttr = toPointsAttr(insetPoints);
 
 	// Orient arrows toward the point adjacent to the endpoint (following the end segment even for polylines).
-	const startAngleRadians = calcVectorAngle(
-		polyPoints[1].x,
-		polyPoints[1].y,
+	const startAngleRadians = calcVectorAngleRad(
 		start.x,
 		start.y,
+		polyPoints[1].x,
+		polyPoints[1].y,
 	);
-	const endAngleRadians = calcVectorAngle(
-		polyPoints[lastIdx - 1].x,
-		polyPoints[lastIdx - 1].y,
+	const endAngleRadians = calcVectorAngleRad(
 		end.x,
 		end.y,
+		polyPoints[lastIdx - 1].x,
+		polyPoints[lastIdx - 1].y,
 	);
 
 	return (

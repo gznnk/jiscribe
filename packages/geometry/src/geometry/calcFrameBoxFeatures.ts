@@ -3,15 +3,8 @@ import type { BoxFeatures } from "../types/BoxFeatures";
 import type { TransformedFrame } from "../types/TransformedFrame";
 
 /**
- * Calculates the bounding box features of a transformed frame.
- * Takes into account rotation and scaling.
- *
- * `BoxFeatures` は `calcBoundingBox` が返す軸並行バウンディングボックスに、
- * center と四隅（いずれも AABB から導出される点）を加えたもの。AABB 算出は
- * calcBoundingBox に委ね、ここではその拡張だけを担う。
- *
- * @param frame - Transformed frame shape parameters
- * @returns The bounding box features
+ * Axis-aligned bounding box of a transformed frame, extended with its center and
+ * four corners. The box itself comes from {@link calcBoundingBox}.
  */
 export const calcFrameBoxFeatures = (frame: TransformedFrame): BoxFeatures => {
 	const { top, left, right, bottom } = calcBoundingBox(frame);

@@ -1,205 +1,264 @@
-# 幾何学型定義 (Geometry Types)
+> 🌐 日本語版: [types.ja.md](./types.ja.md)
 
-このドキュメントでは、`@workspace/geometry` パッケージで使用される型システムについて説明します。型は、プリミティブ (Primitives)、変換済み (Transformed)、計算済み/機能 (Computed/Features) の3つのカテゴリに分類されます。
+# Geometry Types
 
-## 型カテゴリ (Type Categories)
+The type system used by `@workspace/geometry`. Types fall into five groups:
+basic values, primitive shapes, transformation, transformed shapes, and computed
+results.
 
-### 1. プリミティブ (Primitives)
+## 1. Basic values
 
-プリミティブ型は、変換情報（回転やスケールなし）を持たない純粋な幾何学的形状を表します。これらは、すべての幾何学操作の基本的な構成要素です。
+### `Point`
 
-#### `Rect`
-
-左上の角の位置と寸法で定義される矩形。
+A point in 2D space.
 
 ```typescript
-type Rect = {
-	x: number; // 左端の x 座標
-	y: number; // 上端の y 座標
-	width: number; // 幅
-	height: number; // 高さ
+type Point = {
+	x: number;
+	y: number;
 };
 ```
 
-#### `Frame`
+### `CenterPoint`
 
-中心点と寸法で定義される矩形。
+A point expressed as center coordinates. `Frame` and `Ellipse` are built on the
+same `cx` / `cy` naming.
 
 ```typescript
-type Frame = {
-	cx: number; // 中心の x 座標
-	cy: number; // 中心の y 座標
-	width: number; // 幅
-	height: number; // 高さ
+type CenterPoint = {
+	cx: number;
+	cy: number;
 };
 ```
 
-#### `Ellipse`
-
-中心点と半径で定義される楕円。
+### `Dimensions`
 
 ```typescript
-type Ellipse = {
-	cx: number; // 中心の x 座標
-	cy: number; // 中心の y 座標
-	rx: number; // 水平方向の半径
-	ry: number; // 垂直方向の半径
+type Dimensions = {
+	width: number;
+	height: number;
 };
 ```
 
-### 2. 変換済み (Transformed)
+### `BoundingBox`
 
-変換済み型は、プリミティブ形状と変換情報を組み合わせたものです。これらは、形状を回転またはスケーリングする必要がある場合に使用されます。
-
-#### `Transform`
-
-任意の形状に適用できる変換パラメータ。
-
-```typescript
-type Transform = {
-	rotation: number; // 回転角度（ラジアン）
-	scaleX: number; // 水平方向のスケール係数
-	scaleY: number; // 垂直方向のスケール係数
-};
-```
-
-#### `TransformedRect`
-
-変換が適用された矩形。
-
-```typescript
-type TransformedRect = Rect & Transform;
-```
-
-#### `TransformedFrame`
-
-変換が適用されたフレーム。
-
-```typescript
-type TransformedFrame = Frame & Transform;
-```
-
-#### `TransformedEllipse`
-
-変換が適用された楕円。
-
-```typescript
-type TransformedEllipse = Ellipse & Transform;
-```
-
-### 3. 計算済み / 機能 (Computed / Features)
-
-計算済み型は、バウンディングボックスや参照点などの計算結果を表します。これらは通常、幾何学計算関数の出力です。
-
-#### `BoundingBox`
-
-形状の矩形範囲を表す軸平行バウンディングボックス (AABB)。
+An axis-aligned box (AABB) expressed as the coordinates of its four edges.
 
 ```typescript
 type BoundingBox = {
-	top: number; // 上端の y 座標
-	left: number; // 左端の x 座標
-	right: number; // 右端の x 座標
-	bottom: number; // 下端の y 座標
+	top: number;
+	left: number;
+	right: number;
+	bottom: number;
 };
 ```
 
-#### `BoxFeatures`
+## 2. Primitive shapes
 
-追加の機能点（角と中心）を持つバウンディングボックス。
+Primitives are pure geometry: no rotation, no flips. They are the building
+blocks every other shape type is composed from.
+
+### `Rect`
+
+A rectangle anchored at its top-left corner.
+
+```typescript
+type Rect = {
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+};
+```
+
+### `Frame`
+
+A rectangle anchored at its center. This is the shape most calculations in the
+package operate on.
+
+```typescript
+type Frame = {
+	cx: number;
+	cy: number;
+	width: number;
+	height: number;
+};
+```
+
+### `Ellipse`
+
+An ellipse anchored at its center and sized by radii.
+
+```typescript
+type Ellipse = {
+	cx: number;
+	cy: number;
+	rx: number;
+	ry: number;
+};
+```
+
+## 3. Transformation
+
+### `FlipScale`
+
+An axis flip flag, never a general scale factor. Restricting the domain to
+`1 | -1` makes the contract a compile-time guarantee.
+
+```typescript
+type FlipScale = 1 | -1;
+```
+
+### `Transform`
+
+Rotation and axis flips applied to a primitive.
+
+```typescript
+type Transform = {
+	rotation: number; // degrees, not radians
+	scaleX: FlipScale; // horizontal flip
+	scaleY: FlipScale; // vertical flip
+};
+```
+
+Two properties are easy to get wrong:
+
+- **`rotation` is in degrees.** Functions that take an angle directly use
+  radians and name the parameter `angleRad`, so convert with `degreesToRadians`
+  when passing `Transform.rotation` down to them.
+- **`scaleX` / `scaleY` only flip.** Size lives in `width` / `height` (or
+  `rx` / `ry`); scale never stretches a shape. See
+  [the scale contract](./naming-and-structure.md#6-scale-contract) for what it
+  would take to widen this to general scale.
+
+## 4. Transformed shapes
+
+A primitive combined with a `Transform`.
+
+```typescript
+type TransformedRect = Rect & Transform;
+type TransformedFrame = Frame & Transform;
+type TransformedEllipse = Ellipse & Transform;
+```
+
+## 5. Computed results
+
+Types produced by the calculation functions rather than authored by hand.
+
+### `BoxFeatures`
+
+A `BoundingBox` extended with its center and four corners. Note that these are
+corners of the AABB, so they are not the rotated shape's own corners — use
+`calcFrameCornerPoints` for those.
 
 ```typescript
 type BoxFeatures = BoundingBox & {
-	center: Point; // 中心点
-	topLeft: Point; // 左上の角
-	topRight: Point; // 右上の角
-	bottomLeft: Point; // 左下の角
-	bottomRight: Point; // 右下の角
+	center: Point;
+	topLeft: Point;
+	bottomLeft: Point;
+	topRight: Point;
+	bottomRight: Point;
 };
 ```
 
-#### `KeyPoints`
+### `KeyPoints`
 
-形状上の8つの参照点：4つの角と4つの辺の中点。形状操作ハンドルや整列操作に使用されます。
+The eight reference points of a shape: four corners and four edge midpoints.
+Used for manipulation handles, connector endpoints, and alignment.
 
 ```typescript
 type KeyPoints = {
-	topLeft: Point; // 左上の角
-	topCenter: Point; // 上辺の中点
-	topRight: Point; // 右上の角
-	rightCenter: Point; // 右辺の中点
-	bottomRight: Point; // 右下の角
-	bottomCenter: Point; // 下辺の中点
-	bottomLeft: Point; // 左下の角
-	leftCenter: Point; // 左辺の中点
+	topLeft: Point;
+	topCenter: Point;
+	topRight: Point;
+	rightCenter: Point;
+	bottomRight: Point;
+	bottomCenter: Point;
+	bottomLeft: Point;
+	leftCenter: Point;
 };
 ```
 
-#### `RectKeyPoints`
+### `KeyPointId`
 
-矩形のキーポイント。
+A key naming a single point of `KeyPoints`. Taken by `calcFrameKeyPoint`, which
+computes one point instead of all eight.
 
 ```typescript
-type RectKeyPoints = KeyPoints;
+type KeyPointId = keyof KeyPoints;
 ```
 
-#### `FrameKeyPoints`
+### `FrameKeyPoints`
 
-フレームのキーポイント。
+The key points of a frame. Currently an alias of `KeyPoints`.
 
 ```typescript
 type FrameKeyPoints = KeyPoints;
 ```
 
-## 型選択ガイド (Type Selection Guide)
+## 6. Direction and insets
 
-### プリミティブを使用する場合
+### `OrthogonalDirection`
 
-以下の場合はプリミティブ型 (`Rect`, `Frame`, `Ellipse`) を使用してください：
-
-- 回転やスケーリングが不要な場合
-- 基本的な幾何学的計算を行う場合
-- 正規化された形状データを保存する場合
-
-### 変換済み型を使用する場合
-
-以下の場合は変換済み型 (`TransformedRect`, `TransformedFrame`, `TransformedEllipse`) を使用してください：
-
-- 形状に回転やスケーリングが必要な場合
-- ユーザーが操作する形状を扱う場合
-- 変換可能な形状を描画する場合
-
-### 計算済み/機能型を使用する場合
-
-以下の場合は計算済み型 (`BoundingBox`, `BoxFeatures`, `KeyPoints`) を使用してください：
-
-- 形状の軸平行境界が必要な場合
-- UIハンドルのための参照点が必要な場合
-- ヒットテストや衝突判定を行う場合
-- 整列のための参照点が必要な場合
-
-## バリデータ (Validators)
-
-実行時の型チェックのために、型ガードが提供されています：
-
-### プリミティブバリデータ
-
-- `isRect(obj)` - オブジェクトが `Rect` かどうかをチェック
-- `isFrame(obj)` - オブジェクトが `Frame` かどうかをチェック
-- `isEllipse(obj)` - オブジェクトが `Ellipse` かどうかをチェック
-
-### 変換バリデータ
-
-- `isTransform(obj)` - オブジェクトが変換プロパティを持っているかをチェック
-
-### 変換済みバリデータ
-
-- `isTransformedRect(obj)` - オブジェクトが `TransformedRect` かどうかをチェック
-- `isTransformedFrame(obj)` - オブジェクトが `TransformedFrame` かどうかをチェック
-- `isTransformedEllipse(obj)` - オブジェクトが `TransformedEllipse` かどうかをチェック
-
-変換済みバリデータは合成パターンを使用しています：
+An axis-aligned direction, as returned by `snapToDirection`.
 
 ```typescript
-isTransformedRect(obj) = isRect(obj) && isTransform(obj);
+type OrthogonalDirection = "up" | "down" | "left" | "right";
 ```
+
+### `RatioInsets`
+
+Insets given as ratios of a frame's dimensions: `top` / `bottom` are relative to
+the height, `left` / `right` to the width. Omitted edges mean no inset. Because
+they are ratios, an inset rect follows the frame as it resizes.
+
+```typescript
+type RatioInsets = {
+	top?: number;
+	right?: number;
+	bottom?: number;
+	left?: number;
+};
+```
+
+## Choosing a type
+
+| Situation                                                       | Use                                                         |
+| --------------------------------------------------------------- | ----------------------------------------------------------- |
+| Rotation and flips are irrelevant, or the data is normalized    | `Rect`, `Frame`, `Ellipse`                                  |
+| The shape is user-manipulated, rendered, or rotated             | `TransformedRect`, `TransformedFrame`, `TransformedEllipse` |
+| You need axis-aligned bounds, hit testing, or alignment anchors | `BoundingBox`, `BoxFeatures`, `KeyPoints`                   |
+
+Most calculations take `Frame` / `TransformedFrame`. `Rect` and `Ellipse` exist
+mainly at the boundaries — SVG attributes and persisted documents — and the
+`convert*` functions bridge to `Frame` from there.
+
+## Validators
+
+Runtime type guards, one per validatable type. All of them narrow via
+`value is T`, and all reject `null` and non-objects.
+
+| Guard                  | Notes                                              |
+| ---------------------- | -------------------------------------------------- |
+| `isPoint`              |                                                    |
+| `isCenterPoint`        |                                                    |
+| `isRect`               | `width` / `height` must be non-negative            |
+| `isFrame`              | `width` / `height` must be non-negative            |
+| `isEllipse`            | `rx` / `ry` must be non-negative                   |
+| `isFlipScale`          | The value must be exactly `1` or `-1`              |
+| `isTransform`          | `scaleX` / `scaleY` are checked with `isFlipScale` |
+| `isTransformedRect`    | `isRect && isTransform`                            |
+| `isTransformedFrame`   | `isFrame && isTransform`                           |
+| `isTransformedEllipse` | `isEllipse && isTransform`                         |
+| `isFrameKeyPoints`     | All eight points must be present and valid         |
+
+The guards for transformed shapes are composed from the primitive and transform
+guards:
+
+```typescript
+isTransformedRect(obj) === isRect(obj) && isTransform(obj);
+```
+
+`BoundingBox`, `BoxFeatures`, `Dimensions`, `OrthogonalDirection` and
+`RatioInsets` have no guards — they are produced internally or supplied as
+literals, so nothing crosses a runtime boundary as those types.

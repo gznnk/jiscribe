@@ -3,19 +3,13 @@ import { applyAffineWithTrig } from "../transform/applyAffineWithTrig";
 import type { FrameKeyPoints } from "../types/FrameKeyPoints";
 import type { TransformedFrame } from "../types/TransformedFrame";
 
-/**
- * Calculates the key points (vertices and edge centers) of a frame.
- *
- * @param frame - The transformed frame geometry (center position, dimensions, rotation, scale)
- * @returns The coordinates of the frame's key points
- */
+/** The eight key points (corners and edge midpoints) of a frame in world coordinates. */
 export const calcFrameKeyPoints = (frame: TransformedFrame): FrameKeyPoints => {
 	const { cx, cy, width, height, rotation, scaleX, scaleY } = frame;
 
 	const halfWidth = width / 2;
 	const halfHeight = height / 2;
 
-	// No rotation - optimized path when rotation is 0
 	if (rotation === 0) {
 		const scaledHalfWidth = scaleX * halfWidth;
 		const scaledHalfHeight = scaleY * halfHeight;
@@ -32,10 +26,10 @@ export const calcFrameKeyPoints = (frame: TransformedFrame): FrameKeyPoints => {
 		};
 	}
 
-	// With rotation - compute cos/sin once and reuse across all 8 key points
+	// Compute cos/sin once and reuse across all eight key points.
 	const radians = degreesToRadians(rotation);
-	const cosTheta = Math.cos(radians);
-	const sinTheta = Math.sin(radians);
+	const cosAngle = Math.cos(radians);
+	const sinAngle = Math.sin(radians);
 
 	return {
 		topLeft: applyAffineWithTrig(
@@ -43,8 +37,8 @@ export const calcFrameKeyPoints = (frame: TransformedFrame): FrameKeyPoints => {
 			-halfHeight,
 			scaleX,
 			scaleY,
-			cosTheta,
-			sinTheta,
+			cosAngle,
+			sinAngle,
 			cx,
 			cy,
 		),
@@ -53,8 +47,8 @@ export const calcFrameKeyPoints = (frame: TransformedFrame): FrameKeyPoints => {
 			-halfHeight,
 			scaleX,
 			scaleY,
-			cosTheta,
-			sinTheta,
+			cosAngle,
+			sinAngle,
 			cx,
 			cy,
 		),
@@ -63,8 +57,8 @@ export const calcFrameKeyPoints = (frame: TransformedFrame): FrameKeyPoints => {
 			-halfHeight,
 			scaleX,
 			scaleY,
-			cosTheta,
-			sinTheta,
+			cosAngle,
+			sinAngle,
 			cx,
 			cy,
 		),
@@ -73,8 +67,8 @@ export const calcFrameKeyPoints = (frame: TransformedFrame): FrameKeyPoints => {
 			0,
 			scaleX,
 			scaleY,
-			cosTheta,
-			sinTheta,
+			cosAngle,
+			sinAngle,
 			cx,
 			cy,
 		),
@@ -83,8 +77,8 @@ export const calcFrameKeyPoints = (frame: TransformedFrame): FrameKeyPoints => {
 			halfHeight,
 			scaleX,
 			scaleY,
-			cosTheta,
-			sinTheta,
+			cosAngle,
+			sinAngle,
 			cx,
 			cy,
 		),
@@ -93,8 +87,8 @@ export const calcFrameKeyPoints = (frame: TransformedFrame): FrameKeyPoints => {
 			halfHeight,
 			scaleX,
 			scaleY,
-			cosTheta,
-			sinTheta,
+			cosAngle,
+			sinAngle,
 			cx,
 			cy,
 		),
@@ -103,8 +97,8 @@ export const calcFrameKeyPoints = (frame: TransformedFrame): FrameKeyPoints => {
 			halfHeight,
 			scaleX,
 			scaleY,
-			cosTheta,
-			sinTheta,
+			cosAngle,
+			sinAngle,
 			cx,
 			cy,
 		),
@@ -113,8 +107,8 @@ export const calcFrameKeyPoints = (frame: TransformedFrame): FrameKeyPoints => {
 			0,
 			scaleX,
 			scaleY,
-			cosTheta,
-			sinTheta,
+			cosAngle,
+			sinAngle,
 			cx,
 			cy,
 		),

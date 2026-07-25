@@ -2,13 +2,13 @@ import { describe, it, expect, assert } from "vitest";
 
 import { calcOrientedFrameFromPoints } from "../../geometry/calcOrientedFrameFromPoints";
 
-// シグネチャ: calcOrientedFrameFromPoints(points, scaleX=1, scaleY=1, rotation=0)
+// Signature: calcOrientedFrameFromPoints(points, scaleX=1, scaleY=1, rotationDeg=0)
 describe("calcOrientedFrameFromPoints", () => {
-	it("空配列の場合はnullを返す", () => {
+	it("returns null for an empty array", () => {
 		expect(calcOrientedFrameFromPoints([])).toBeNull();
 	});
 
-	it("1点の場合は幅・高さ0のフレームを返す", () => {
+	it("returns a zero-sized frame for a single point", () => {
 		const result = calcOrientedFrameFromPoints([{ x: 10, y: 20 }]);
 		assert(result !== null);
 		expect(result.cx).toBe(10);
@@ -20,7 +20,7 @@ describe("calcOrientedFrameFromPoints", () => {
 		expect(result.scaleY).toBe(1);
 	});
 
-	it("rotation=0の場合は軸平行なバウンディングフレームを返す", () => {
+	it("returns an axis-aligned bounding frame when rotation is 0", () => {
 		const points = [
 			{ x: 0, y: 0 },
 			{ x: 100, y: 0 },
@@ -36,24 +36,24 @@ describe("calcOrientedFrameFromPoints", () => {
 		expect(result.rotation).toBe(0);
 	});
 
-	it("rotation/scaleX/scaleYが結果に反映される", () => {
+	it("carries rotation, scaleX and scaleY into the result", () => {
 		const points = [
 			{ x: 0, y: 0 },
 			{ x: 100, y: 0 },
 			{ x: 100, y: 60 },
 			{ x: 0, y: 60 },
 		];
-		// シグネチャ: (points, scaleX, scaleY, rotation)
-		const result = calcOrientedFrameFromPoints(points, 2, 0.5, 45);
+		// Signature: (points, scaleX, scaleY, rotation)
+		const result = calcOrientedFrameFromPoints(points, -1, 1, 45);
 		assert(result !== null);
 		expect(result.rotation).toBe(45);
-		expect(result.scaleX).toBe(2);
-		expect(result.scaleY).toBe(0.5);
+		expect(result.scaleX).toBe(-1);
+		expect(result.scaleY).toBe(1);
 	});
 
-	it("90度回転時は逆変換後AABCから幅・高さが入れ替わる", () => {
-		// 100x60 の矩形。rotation=90 の逆変換で軸が入れ替わり width=60, height=100 になる。
-		// 中心は不変（50, 30）。
+	it("swaps width and height from the inverse-transformed box when rotated 90 degrees", () => {
+		// A 100x60 rectangle: the rotation-90 inverse swaps the axes, giving width=60 and
+		// height=100. The center stays at (50, 30).
 		const points = [
 			{ x: 0, y: 0 },
 			{ x: 100, y: 0 },
@@ -68,10 +68,9 @@ describe("calcOrientedFrameFromPoints", () => {
 		expect(result.height).toBeCloseTo(100);
 	});
 
-	// リグレッション: Math.min/max のスプレッド展開は大規模点群で
-	// RangeError(Maximum call stack size exceeded) を起こしうるため、
-	// 単一ループ化により数万点でもクラッシュしないことを保証する。
-	it("数万点でもRangeErrorを起こさず正しいAABBを返す", () => {
+	// Regression: spreading into Math.min/max can throw RangeError (maximum call stack
+	// size exceeded) on large point sets, so the single-pass loop must survive them.
+	it("returns the correct box for hundreds of thousands of points without a RangeError", () => {
 		const count = 200_000;
 		const points = Array.from({ length: count }, (_, i) => ({
 			x: i,

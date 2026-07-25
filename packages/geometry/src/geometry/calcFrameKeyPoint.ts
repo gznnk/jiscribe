@@ -5,14 +5,9 @@ import type { Point } from "../types/Point";
 import type { TransformedFrame } from "../types/TransformedFrame";
 
 /**
- * フレームの key point のうち、指定された1点だけを算出する。
- *
- * 全 8 点が必要なら {@link calcFrameKeyPoints} を使う。1点しか要らない場面
- * （コネクタの endpoint 解決など）で全点計算を避けるための軽量版。
- *
- * @param frame - 変換済みフレーム（中心位置・寸法・回転・スケール）
- * @param keyPointId - 取得したい key point のキー
- * @returns 指定された key point の座標
+ * A single key point of a frame. Lightweight alternative to
+ * {@link calcFrameKeyPoints} for callers that need one point (such as resolving
+ * a connector endpoint) rather than all eight.
  */
 export const calcFrameKeyPoint = (
 	frame: TransformedFrame,
@@ -23,7 +18,7 @@ export const calcFrameKeyPoint = (
 	const halfWidth = width / 2;
 	const halfHeight = height / 2;
 
-	// 該当 key point のフレームローカル座標（中心原点）を求める
+	// Frame-local coordinates of the requested key point (origin at the center).
 	let localX: number;
 	let localY: number;
 	switch (keyPointId) {
@@ -61,7 +56,7 @@ export const calcFrameKeyPoint = (
 			break;
 	}
 
-	// calcAffineTransformedPoint は rotation === 0 を内部で最適化する
+	// calcAffineTransformedPoint takes its own fast path when rotation is 0.
 	const radians = degreesToRadians(rotation);
 	return calcAffineTransformedPoint(
 		localX,

@@ -1,8 +1,60 @@
+> 🌐 日本語版: [README.ja.md](./README.ja.md)
+
 # @workspace/geometry
 
-幾何学計算とユーティリティのためのライブラリです。
+Geometry types and calculations shared across jiscribe. Dependency-free, pure
+functions only — no rendering, no framework, no state.
 
-## ドキュメント
+## Usage
 
-- [命名規則とディレクトリ構造](./docs/naming_and_structure.md)
-- [型定義](./docs/types.md)
+```typescript
+import type { Point, TransformedFrame } from "@workspace/geometry";
+import { calcFrameKeyPoints, isPoint } from "@workspace/geometry";
+
+const frame: TransformedFrame = {
+	cx: 50,
+	cy: 30,
+	width: 100,
+	height: 60,
+	rotation: 0,
+	scaleX: 1,
+	scaleY: 1,
+};
+
+const keyPoints = calcFrameKeyPoints(frame);
+```
+
+Everything is re-exported from the package root, so import from
+`@workspace/geometry` rather than reaching into `src/`.
+
+## What is in here
+
+| Directory        | Contents                                                          |
+| ---------------- | ----------------------------------------------------------------- |
+| `src/types`      | `Point`, `Rect`, `Frame`, `Ellipse`, `Transform`, `KeyPoints`, …  |
+| `src/geometry`   | Bounding boxes, key points, intersection tests, shape conversions |
+| `src/points`     | Distance, rotation, outline intersection, curve sampling          |
+| `src/transform`  | Affine transformation and its inverse                             |
+| `src/common`     | Angle conversion and small numeric helpers                        |
+| `src/constants`  | `EPSILON`                                                         |
+| `src/validators` | Runtime type guards                                               |
+
+Two contracts are worth knowing before writing against this package:
+
+- `Transform.rotation` is in **degrees**, while functions taking an angle
+  directly use **radians** (`angleRad`). Convert with `degreesToRadians`.
+- `Transform.scaleX` / `scaleY` are **flip flags** (`1 | -1`), not scale
+  factors. Size lives in `width` / `height`.
+
+## Development
+
+```bash
+pnpm --filter @workspace/geometry typecheck
+pnpm --filter @workspace/geometry lint
+pnpm --filter @workspace/geometry test
+```
+
+## Documentation
+
+- [Naming and Structure](./docs/naming-and-structure.md)
+- [Geometry Types](./docs/types.md)

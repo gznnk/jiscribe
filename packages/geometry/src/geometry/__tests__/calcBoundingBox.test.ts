@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import { calcBoundingBox } from "../../geometry/calcBoundingBox";
 
 describe("calcBoundingBox", () => {
-	it("回転なしの場合、中心座標から単純にバウンディングボックスを計算する", () => {
+	it("derives the box straight from the center when unrotated", () => {
 		const result = calcBoundingBox({
 			cx: 100,
 			cy: 50,
@@ -19,7 +19,7 @@ describe("calcBoundingBox", () => {
 		expect(result.bottom).toBeCloseTo(70);
 	});
 
-	it("原点中心の正方形でrotation=0の場合", () => {
+	it("handles an unrotated square centered on the origin", () => {
 		const result = calcBoundingBox({
 			cx: 0,
 			cy: 0,
@@ -35,7 +35,7 @@ describe("calcBoundingBox", () => {
 		expect(result.bottom).toBeCloseTo(50);
 	});
 
-	it("90度回転した矩形のバウンディングボックスを計算する", () => {
+	it("computes the box of a rectangle rotated 90 degrees", () => {
 		const result = calcBoundingBox({
 			cx: 0,
 			cy: 0,
@@ -45,14 +45,14 @@ describe("calcBoundingBox", () => {
 			scaleX: 1,
 			scaleY: 1,
 		});
-		// 90度回転するとwidth/heightが入れ替わる
+		// A 90 degree rotation swaps width and height.
 		expect(result.left).toBeCloseTo(-20);
 		expect(result.right).toBeCloseTo(20);
 		expect(result.top).toBeCloseTo(-50);
 		expect(result.bottom).toBeCloseTo(50);
 	});
 
-	it("45度回転した正方形は元より大きいバウンディングボックスになる", () => {
+	it("grows the box for a square rotated 45 degrees", () => {
 		const size = 100;
 		const result = calcBoundingBox({
 			cx: 0,
@@ -63,7 +63,7 @@ describe("calcBoundingBox", () => {
 			scaleX: 1,
 			scaleY: 1,
 		});
-		// 45度回転した正方形のBBは一辺 = size/sqrt(2) * 2 = size*sqrt(2)
+		// The box of a square rotated 45 degrees has side size*sqrt(2).
 		const expected = (size / 2) * Math.SQRT2;
 		expect(result.left).toBeCloseTo(-expected);
 		expect(result.right).toBeCloseTo(expected);

@@ -1,12 +1,7 @@
 import type { TransformedFrame } from "../types/TransformedFrame";
 import type { TransformedRect } from "../types/TransformedRect";
 
-/**
- * Converts a TransformedRect (top-left based) to a TransformedFrame (center based).
- *
- * @param geometry - The transformed rectangle geometry
- * @returns The corresponding TransformedFrame
- */
+/** Converts a {@link TransformedRect} (top-left based) to a {@link TransformedFrame} (center based). */
 export const convertTransformedRectToFrame = (
 	geometry: TransformedRect,
 ): TransformedFrame => {

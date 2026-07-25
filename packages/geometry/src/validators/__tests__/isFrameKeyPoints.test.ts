@@ -14,26 +14,26 @@ const validKP = {
 };
 
 describe("isFrameKeyPoints", () => {
-	it("8つのPointを持つオブジェクトはtrueを返す", () => {
+	it("returns true for an object holding all eight points", () => {
 		expect(isFrameKeyPoints(validKP)).toBe(true);
 	});
 
-	it("1つでもPointが欠けている場合はfalseを返す", () => {
+	it("returns false when any point is missing", () => {
 		const { topLeft: _omit, ...rest } = validKP;
 		expect(isFrameKeyPoints(rest)).toBe(false);
 	});
 
-	it("Pointプロパティが不正な場合はfalseを返す", () => {
+	it("returns false when a point property is malformed", () => {
 		expect(isFrameKeyPoints({ ...validKP, topLeft: { x: "0", y: 0 } })).toBe(
 			false,
 		);
 	});
 
-	it("nullはfalseを返す", () => {
+	it("returns false for null", () => {
 		expect(isFrameKeyPoints(null)).toBe(false);
 	});
 
-	it("空オブジェクトはfalseを返す", () => {
+	it("returns false for an empty object", () => {
 		expect(isFrameKeyPoints({})).toBe(false);
 	});
 });

@@ -10,6 +10,7 @@ export * from "./Frame";
 export * from "./Ellipse";
 
 // Transformation
+export * from "./FlipScale";
 export * from "./Transform";
 
 // Transformed shapes (with rotation and scale)

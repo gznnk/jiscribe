@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import { isTransformedEllipse } from "../isTransformedEllipse";
 
 describe("isTransformedEllipse", () => {
-	it("有効なTransformedEllipseはtrueを返す", () => {
+	it("returns true for a valid TransformedEllipse", () => {
 		expect(
 			isTransformedEllipse({
 				cx: 0,
@@ -17,17 +17,17 @@ describe("isTransformedEllipse", () => {
 		).toBe(true);
 	});
 
-	it("Transformプロパティが欠けている場合はfalseを返す", () => {
+	it("returns false when the Transform properties are missing", () => {
 		expect(isTransformedEllipse({ cx: 0, cy: 0, rx: 50, ry: 30 })).toBe(false);
 	});
 
-	it("Ellipseプロパティが欠けている場合はfalseを返す", () => {
+	it("returns false when the Ellipse properties are missing", () => {
 		expect(isTransformedEllipse({ rotation: 0, scaleX: 1, scaleY: 1 })).toBe(
 			false,
 		);
 	});
 
-	it("rxが負の場合はfalseを返す", () => {
+	it("returns false for a negative rx", () => {
 		expect(
 			isTransformedEllipse({
 				cx: 0,

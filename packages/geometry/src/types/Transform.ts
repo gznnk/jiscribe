@@ -1,12 +1,11 @@
-/**
- * Defines transformation properties for shapes.
- * Used to apply rotation and scaling to geometric primitives.
- */
+import type { FlipScale } from "./FlipScale";
+
+/** Rotation and axis flips applied to a geometric primitive. */
 export type Transform = {
-	/** Rotation in degrees */
+	/** Rotation in degrees. */
 	rotation: number;
-	/** Scale factor for X axis */
-	scaleX: number;
-	/** Scale factor for Y axis */
-	scaleY: number;
+	/** Horizontal flip. Size is carried by width/height, never by scale. */
+	scaleX: FlipScale;
+	/** Vertical flip. */
+	scaleY: FlipScale;
 };
