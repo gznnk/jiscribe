@@ -28,29 +28,9 @@ import { Polygon } from "../../presentations/objects/primitives/Polygon";
 import { Polyline } from "../../presentations/objects/primitives/Polyline";
 import { Rect } from "../../presentations/objects/primitives/Rect";
 import { Svg } from "../../presentations/objects/primitives/Svg";
-import { CalloutFeatures } from "../../schemas/objects/annotations/callout/CalloutDoc";
-import { CalloutObjectFactory } from "../../schemas/objects/annotations/callout/CalloutObjectFactory";
-import { StickyFeatures } from "../../schemas/objects/annotations/sticky/StickyDoc";
-import { StickyObjectFactory } from "../../schemas/objects/annotations/sticky/StickyObjectFactory";
-import {
-	ConnectorExtraStyleProperties,
-	ConnectorFeatures,
-} from "../../schemas/objects/connections/connector/ConnectorDoc";
-import { ActorFeatures } from "../../schemas/objects/general/actor/ActorDoc";
-import { ActorObjectFactory } from "../../schemas/objects/general/actor/ActorObjectFactory";
-import { CloudFeatures } from "../../schemas/objects/general/cloud/CloudDoc";
-import { CloudObjectFactory } from "../../schemas/objects/general/cloud/CloudObjectFactory";
-import { EllipseFeatures } from "../../schemas/objects/primitives/ellipse/EllipseDoc";
-import { EllipseObjectFactory } from "../../schemas/objects/primitives/ellipse/EllipseObjectFactory";
-import { GroupFeatures } from "../../schemas/objects/primitives/group/GroupDoc";
-import { PolygonFeatures } from "../../schemas/objects/primitives/polygon/PolygonDoc";
-import { PolygonObjectFactory } from "../../schemas/objects/primitives/polygon/PolygonObjectFactory";
-import { PolylineFeatures } from "../../schemas/objects/primitives/polyline/PolylineDoc";
-import { PolylineObjectFactory } from "../../schemas/objects/primitives/polyline/PolylineObjectFactory";
-import { RectFeatures } from "../../schemas/objects/primitives/rect/RectDoc";
-import { RectObjectFactory } from "../../schemas/objects/primitives/rect/RectObjectFactory";
-import { SvgFeatures } from "../../schemas/objects/primitives/svg/SvgDoc";
+import { ConnectorExtraStyleProperties } from "../../schemas/objects/connections/connector/ConnectorDoc";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
+import { builtinObjectDocDefinitions } from "../../schemas/registry/builtinObjectDocDefinitions";
 import {
 	calloutToDoc,
 	calloutToState,
@@ -164,20 +144,18 @@ import { RectStencils } from "../ui/objects/primitives/RectStencils";
 export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 	{
 		rect: defineObject({
-			features: RectFeatures,
+			...builtinObjectDocDefinitions.rect,
 			mapper: { toDoc: rectToDoc, toState: rectToState },
 			stateValidator: isValidRectState,
-			factory: RectObjectFactory,
 			component: Rect,
 			behavior: createFrameBehavior<RectState>(),
 			stencils: RectStencils,
 		}),
 
 		ellipse: defineObject({
-			features: EllipseFeatures,
+			...builtinObjectDocDefinitions.ellipse,
 			mapper: { toDoc: ellipseToDoc, toState: ellipseToState },
 			stateValidator: isValidEllipseState,
-			factory: EllipseObjectFactory,
 			component: Ellipse,
 			textRegion: calcEllipseTextRegion,
 			behavior: createFrameBehavior<EllipseState>(),
@@ -185,10 +163,9 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 		}),
 
 		cloud: defineObject({
-			features: CloudFeatures,
+			...builtinObjectDocDefinitions.cloud,
 			mapper: { toDoc: cloudToDoc, toState: cloudToState },
 			stateValidator: isValidCloudState,
-			factory: CloudObjectFactory,
 			component: Cloud,
 			textRegion: calcCloudTextRegion,
 			outline: cloudOutline,
@@ -197,10 +174,9 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 		}),
 
 		actor: defineObject({
-			features: ActorFeatures,
+			...builtinObjectDocDefinitions.actor,
 			mapper: { toDoc: actorToDoc, toState: actorToState },
 			stateValidator: isValidActorState,
-			factory: ActorObjectFactory,
 			component: Actor,
 			textRegion: calcActorTextRegion,
 			behavior: createFrameBehavior<ActorState>(),
@@ -208,10 +184,9 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 		}),
 
 		callout: defineObject({
-			features: CalloutFeatures,
+			...builtinObjectDocDefinitions.callout,
 			mapper: { toDoc: calloutToDoc, toState: calloutToState },
 			stateValidator: isValidCalloutState,
-			factory: CalloutObjectFactory,
 			component: Callout,
 			textRegion: calcCalloutTextRegion,
 			outline: calloutOutline,
@@ -227,7 +202,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 		}),
 
 		group: defineObject({
-			features: GroupFeatures,
+			...builtinObjectDocDefinitions.group,
 			mapper: { toDoc: groupToDoc, toState: groupToState },
 			stateValidator: isValidGroupState,
 			component: () => null,
@@ -239,10 +214,9 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 		}),
 
 		polygon: defineObject({
-			features: PolygonFeatures,
+			...builtinObjectDocDefinitions.polygon,
 			mapper: { toDoc: polygonToDoc, toState: polygonToState },
 			stateValidator: isValidPolygonState,
-			factory: PolygonObjectFactory,
 			component: Polygon,
 			behavior: {
 				moveByDelta: polygonMoveByDelta,
@@ -253,10 +227,9 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 		}),
 
 		polyline: defineObject({
-			features: PolylineFeatures,
+			...builtinObjectDocDefinitions.polyline,
 			mapper: { toDoc: polylineToDoc, toState: polylineToState },
 			stateValidator: isValidPolylineState,
-			factory: PolylineObjectFactory,
 			component: Polyline,
 			behavior: {
 				moveByDelta: polylineMoveByDelta,
@@ -267,7 +240,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 		}),
 
 		connector: defineObject({
-			features: ConnectorFeatures,
+			...builtinObjectDocDefinitions.connector,
 			mapper: { toDoc: connectorToDoc, toState: connectorToState },
 			stateValidator: isValidConnectorState,
 			component: Connector,
@@ -337,10 +310,9 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 		}),
 
 		sticky: defineObject({
-			features: StickyFeatures,
+			...builtinObjectDocDefinitions.sticky,
 			mapper: { toDoc: stickyToDoc, toState: stickyToState },
 			stateValidator: isValidStickyState,
-			factory: StickyObjectFactory,
 			component: Sticky,
 			behavior: createFrameBehavior<StickyState>(),
 			stencils: StickyStencils,
@@ -365,7 +337,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 		// SVG is not created from the StencilLibrary (only added via AI / direct .jis.json authoring).
 		// Therefore factory / stencils are not registered.
 		svg: defineObject({
-			features: SvgFeatures,
+			...builtinObjectDocDefinitions.svg,
 			mapper: { toDoc: svgToDoc, toState: svgToState },
 			stateValidator: isValidSvgState,
 			component: Svg,

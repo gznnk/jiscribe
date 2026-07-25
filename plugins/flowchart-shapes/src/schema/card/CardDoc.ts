@@ -1,5 +1,8 @@
-import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas";
-import { DEFAULT_FONT_FAMILY, AUTO_COLOR } from "@workspace/canvas/unstable";
+import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas/doc";
+import {
+	DEFAULT_FONT_FAMILY,
+	AUTO_COLOR,
+} from "@workspace/canvas/unstable-doc";
 
 /** Length of the cut corner as a fraction of the shorter side. */
 export const CARD_CUT_RATIO = 0.25;

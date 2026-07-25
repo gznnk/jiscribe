@@ -8,3 +8,6 @@ export type {
 	ObjectTypeDefinition,
 	AnyObjectTypeDefinition,
 } from "./ObjectTypeDefinition";
+// Headless (doc-layer) counterparts; the canonical home is `src/doc.ts`.
+export type { ObjectDocDefinition } from "../schemas/plugin/ObjectDocDefinition";
+export type { CanvasDocPlugin } from "../schemas/plugin/CanvasDocPlugin";

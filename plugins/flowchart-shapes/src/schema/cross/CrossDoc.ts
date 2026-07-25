@@ -1,5 +1,5 @@
-import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas";
-import { AUTO_COLOR } from "@workspace/canvas/unstable";
+import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas/doc";
+import { AUTO_COLOR } from "@workspace/canvas/unstable-doc";
 
 /**
  * A cross (plus) marker, used to mark junctions and for emphasis. It holds no

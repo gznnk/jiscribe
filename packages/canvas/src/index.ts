@@ -56,16 +56,14 @@ export {
 } from "./theme/themePresets";
 export type { Camera } from "./states/canvas/Viewport";
 export type { CanvasDoc } from "./schemas/canvas/CanvasDoc";
-export {
-	parseCanvasText,
-	createCanvasParser,
-	defaultObjectParserExtensions,
-} from "./schemas/canvas/validators";
+// Headless parse/build API. `createCanvasParser` and the doc-ops live on the
+// `./doc` entry (UI-free); this root re-exports only `parseCanvasText` plus the
+// result types for UI consumers that already load the full canvas.
+export { parseCanvasText } from "./schemas/canvas/validators";
 export type {
 	SemanticDiagnostic,
 	CanvasParseResult,
 	CanvasParser,
-	ObjectParserExtension,
 } from "./schemas/canvas/validators";
 
 // Per-canvas registry configuration (plugin-style extensibility / feature-gating).
@@ -93,6 +91,8 @@ export type {
 	CanvasPlugin,
 	ObjectTypeDefinition,
 	AnyObjectTypeDefinition,
+	ObjectDocDefinition,
+	CanvasDocPlugin,
 } from "./plugin";
 export { ObjectTypes } from "./schemas/objects/types/ObjectType";
 export type { ObjectType } from "./schemas/objects/types/ObjectType";

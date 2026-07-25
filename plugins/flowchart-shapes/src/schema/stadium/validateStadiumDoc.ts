@@ -1,5 +1,5 @@
-import type { ObjectDocValidateFn } from "@workspace/canvas/unstable";
-import { createFrameDocValidator } from "@workspace/canvas/unstable";
+import type { ObjectDocValidateFn } from "@workspace/canvas/unstable-doc";
+import { createFrameDocValidator } from "@workspace/canvas/unstable-doc";
 
 import { StadiumFeatures } from "./StadiumDoc";
 

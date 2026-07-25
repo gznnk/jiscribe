@@ -1,5 +1,5 @@
-import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas";
-import { AUTO_COLOR } from "@workspace/canvas/unstable";
+import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas/doc";
+import { AUTO_COLOR } from "@workspace/canvas/unstable-doc";
 
 /**
  * The flowchart "extract" symbol — an upward triangle (apex at the top), used

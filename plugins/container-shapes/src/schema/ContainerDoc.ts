@@ -2,8 +2,11 @@ import type {
 	CreateObjectType,
 	ExtraStylePropertyDescriptor,
 	ObjectFeatures,
-} from "@workspace/canvas";
-import { AUTO_COLOR, DEFAULT_FONT_FAMILY } from "@workspace/canvas/unstable";
+} from "@workspace/canvas/doc";
+import {
+	AUTO_COLOR,
+	DEFAULT_FONT_FAMILY,
+} from "@workspace/canvas/unstable-doc";
 
 /** Default height of the title header band, in local (pre-transform) pixels. */
 export const CONTAINER_HEADER_HEIGHT = 28;

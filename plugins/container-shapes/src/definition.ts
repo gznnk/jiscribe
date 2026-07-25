@@ -3,15 +3,12 @@ import { createFrameBehavior } from "@workspace/canvas/unstable";
 
 import { ContainerHeaderHeightControl } from "./controls/ContainerHeaderHeightControl";
 import { handleContainerHeaderHeight } from "./controls/handleContainerHeaderHeight";
+import { containerDocDefinition } from "./doc";
 import { HeaderColorMenu } from "./menu/HeaderColorMenu";
 import { calcContainerTextRegion } from "./presentation/calcContainerTextRegion";
 import { Container } from "./presentation/Container";
 import type { ContainerDoc } from "./schema/ContainerDoc";
-import {
-	ContainerExtraStyleProperties,
-	ContainerFeatures,
-} from "./schema/ContainerDoc";
-import { ContainerObjectFactory } from "./schema/ContainerObjectFactory";
+import { ContainerExtraStyleProperties } from "./schema/ContainerDoc";
 import { containerToDoc, containerToState } from "./state/ContainerMapper";
 import type { ContainerState } from "./state/ContainerState";
 import { isValidContainerState } from "./state/validateContainerState";
@@ -31,10 +28,9 @@ export const containerDefinition: ObjectTypeDefinition<
 	ContainerDoc,
 	ContainerState
 > = {
-	features: ContainerFeatures,
+	...containerDocDefinition,
 	mapper: { toDoc: containerToDoc, toState: containerToState },
 	stateValidator: isValidContainerState,
-	factory: ContainerObjectFactory,
 	component: Container,
 	textRegion: calcContainerTextRegion,
 	behavior: createFrameBehavior<ContainerState>(),

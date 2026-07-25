@@ -20,12 +20,13 @@ import {
 	subroutineDefinition,
 	trapezoidDefinition,
 } from "./definitions";
-import { flowchartParserExtensions } from "./parser";
 
 /**
  * `CanvasPlugin` declaration for the flowchart shapes
  * (docs/05_extensibility/plugin-architecture-requirements.md §3). Hosts wire this
- * into both `createCanvasParser` and `<Canvas initialConfig>` via a single `plugins` array.
+ * into `<Canvas initialConfig>` via `plugins`; `objects` also feeds
+ * `createCanvasParser` since each definition extends `ObjectDocDefinition`. The
+ * headless (Node-side) parse entry is `flowchartDocPlugin` in `./doc`.
  */
 export const flowchartPlugin: CanvasPlugin = {
 	id: "flowchart-shapes",
@@ -49,5 +50,4 @@ export const flowchartPlugin: CanvasPlugin = {
 		subroutine: subroutineDefinition,
 		trapezoid: trapezoidDefinition,
 	},
-	parser: flowchartParserExtensions,
 };

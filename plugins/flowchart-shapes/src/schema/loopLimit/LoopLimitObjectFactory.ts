@@ -1,4 +1,4 @@
-import { createFrameObjectFactory } from "@workspace/canvas/unstable";
+import { createFrameObjectFactory } from "@workspace/canvas/unstable-doc";
 
 import { LOOP_LIMIT_DOC_DEFAULTS } from "./LoopLimitDoc";
 

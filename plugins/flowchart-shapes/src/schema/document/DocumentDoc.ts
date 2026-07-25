@@ -1,5 +1,8 @@
-import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas";
-import { DEFAULT_FONT_FAMILY, AUTO_COLOR } from "@workspace/canvas/unstable";
+import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas/doc";
+import {
+	DEFAULT_FONT_FAMILY,
+	AUTO_COLOR,
+} from "@workspace/canvas/unstable-doc";
 
 /**
  * Amplitude of the bottom wave as a fraction of the height. The wave band

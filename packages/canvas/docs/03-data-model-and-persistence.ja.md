@@ -129,11 +129,12 @@ type CanvasParseResult =
 
 ### パーサー専用エントリ
 
-`parser.ts` は UI 依存（react / emotion / katex）を含まない別エントリ。
-「テキストを `CanvasDoc` にパースしたいだけ」の利用者（VSCode 拡張の Node 側 DiagnosticProvider など）向け。
+`doc.ts` は UI 依存（react / emotion / katex）を含まない headless な別エントリ。
+「テキストを `CanvasDoc` にパースしたいだけ」「プログラムから `CanvasDoc` を組み立てたいだけ」の
+利用者（VSCode 拡張の Node 側 DiagnosticProvider・MCP サーバーなど）向け。
 
 ```ts
-import { parseCanvasText } from "@workspace/canvas/parser";
+import { parseCanvasText } from "@workspace/canvas/doc";
 ```
 
 この境界を通った Doc は正当であることを前提に、内部関数は防御的チェックを省く

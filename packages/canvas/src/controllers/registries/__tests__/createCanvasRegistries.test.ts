@@ -11,6 +11,7 @@ import { createCanvasRegistries } from "../createCanvasRegistries";
 const buildFakeDefinition = (type: string): ObjectTypeDefinition =>
 	defineObject({
 		features: { type, geometry: "rect" },
+		validateDoc: () => [],
 		mapper: {
 			toDoc: (state) => ({ id: state.id, type }),
 			toState: (doc) => ({ id: doc.id, type }),
@@ -109,6 +110,7 @@ describe("createCanvasRegistries", () => {
 							fill: true,
 							text: true,
 						},
+						validateDoc: () => [],
 						mapper: {
 							toDoc: (state) => ({ id: state.id, type: "boxy" }),
 							toState: (doc) => ({ id: doc.id, type: "boxy" }),

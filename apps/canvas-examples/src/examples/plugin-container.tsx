@@ -2,9 +2,9 @@ import type { CanvasConfig, CanvasDoc, ToolbarEntry } from "@workspace/canvas";
 import {
 	Canvas,
 	annotationToolbarEntry,
-	createCanvasParser,
 	generalToolbarEntry,
 } from "@workspace/canvas";
+import { createCanvasParser } from "@workspace/canvas/doc";
 import {
 	containerPlugin,
 	containerToolbarEntry,

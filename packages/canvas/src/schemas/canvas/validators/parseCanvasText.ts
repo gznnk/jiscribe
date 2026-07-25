@@ -25,7 +25,7 @@ export function parseCanvasText(text: string): CanvasParseResult {
 	// parseWithRegistry delegates per-type validation and connectability checks to whatever
 	// registry it is given. Since the global registry is used only for "validation at parse
 	// time", populate it here if it is uninitialized (idempotent: does nothing if already
-	// populated). This frees callers (the UI entry / the parser-only entry) from having to
+	// populated). This frees callers (the UI entry / the headless `./doc` entry) from having to
 	// worry about initialization and structurally prevents false positives from picking the
 	// wrong entry point.
 	if (objectDocValidatorRegistry.isEmpty()) {
