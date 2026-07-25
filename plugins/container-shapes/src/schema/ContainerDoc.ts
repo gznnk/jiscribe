@@ -65,7 +65,6 @@ export const CONTAINER_DOC_DEFAULTS: Omit<ContainerDoc, "id"> = {
 	stroke: AUTO_COLOR,
 	strokeWidth: 2,
 	text: "",
-	textType: "text",
 	textAlign: "left",
 	verticalAlign: "middle",
 	fontColor: AUTO_COLOR,

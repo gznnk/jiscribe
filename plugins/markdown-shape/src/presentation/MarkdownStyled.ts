@@ -1,35 +1,35 @@
 import styled from "@emotion/styled";
 
-import { TEXT_LINE_HEIGHT } from "../../../../constants/textLineHeight";
+type MarkdownCardProps = {
+	/** Resolved stroke color (auto is resolved to the theme foreground). */
+	strokeColor: string;
+	/** Resolved fill color (auto is resolved to the theme surface). */
+	fillColor: string;
+};
 
-/**
- * Vertical alignment (align-items) is a per-instance value passed via the
- * `style` prop instead of emotion interpolation (see #131).
- */
-export const TextWrapper = styled.div`
-	display: flex;
-	width: 100%;
-	height: 100%;
-	overflow: hidden;
+/** The card the rendered Markdown sits on. Same interaction affordances as a Rect. */
+export const MarkdownCard = styled.rect<MarkdownCardProps>`
+	stroke: ${({ strokeColor }) => strokeColor};
+	fill: ${({ fillColor }) => fillColor};
+	pointer-events: auto;
+	cursor: grab;
+
+	&:focus {
+		outline: none;
+	}
 `;
 
 /**
- * Per-instance text styles (text-align / color / font-size / font-family /
- * font-weight / word-break / white-space) are passed via the `style` prop
- * instead of emotion interpolation (see #131). Only the static markdown
- * element styles live here.
+ * Rendered-Markdown body, drawn inside canvas's TextOverlayFrame.
+ *
+ * `white-space` / `word-break` are reset from the frame's plain-text defaults
+ * because this subtree lays itself out as HTML blocks. Sizes are relative (`em`)
+ * so the whole document scales with the shape's `fontSize`.
  */
-export const Text = styled.div`
+export const MarkdownBody = styled.div`
 	width: 100%;
-	line-height: ${TEXT_LINE_HEIGHT};
-	border: none;
-	outline: none;
-	background: transparent;
-	pointer-events: none;
-	user-select: none;
-	overflow: hidden;
-	padding: 2px 6px;
-	box-sizing: border-box;
+	white-space: normal;
+	word-break: normal;
 
 	p {
 		margin: 0.5em 0;
@@ -161,8 +161,4 @@ export const Text = styled.div`
 		margin: 0 0.2em;
 		font-size: 0.9em;
 	}
-`;
-
-export const ForeignObjectElement = styled.foreignObject`
-	opacity: 1;
 `;

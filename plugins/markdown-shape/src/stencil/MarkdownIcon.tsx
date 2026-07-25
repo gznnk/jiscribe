@@ -1,11 +1,8 @@
+import type { StencilIconProps } from "@workspace/canvas";
+import type React from "react";
 import { memo } from "react";
 
-type MarkdownRectIconProps = {
-	width?: number;
-	height?: number;
-};
-
-const MarkdownRectIconComponent: React.FC<MarkdownRectIconProps> = ({
+const MarkdownIconComponent: React.FC<StencilIconProps> = ({
 	width = 24,
 	height = 24,
 }) => {
@@ -59,4 +56,4 @@ const MarkdownRectIconComponent: React.FC<MarkdownRectIconProps> = ({
 	);
 };
 
-export const MarkdownRectIcon = memo(MarkdownRectIconComponent);
+export const MarkdownIcon = memo(MarkdownIconComponent);

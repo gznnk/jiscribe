@@ -26,15 +26,15 @@ import type {
 // (docs/05_extensibility/plugin-architecture-requirements.md)。
 const initialConfig: CanvasConfig = { plugins };
 
-// flowchart / container カテゴリは core の既定 layout に含まれない（プラグイン供給）。
-// 従来どおりの並びで出すため、ホスト側で両スロットを差し込む。
+// flowchart / container カテゴリと markdown プリセットは core の既定 layout に
+// 含まれない（プラグイン供給）。従来どおりの並びで出すため、ホスト側で差し込む。
 const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "rect" },
 	{ kind: "preset", presetId: "ellipse" },
 	{ kind: "preset", presetId: "polyline" },
 	{ kind: "preset", presetId: "polygon" },
 	{ kind: "preset", presetId: "sticky" },
-	{ kind: "preset", presetId: "rect-markdown" },
+	{ kind: "preset", presetId: "markdown" },
 	flowchartToolbarEntry,
 	containerToolbarEntry,
 	generalToolbarEntry,

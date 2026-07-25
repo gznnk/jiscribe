@@ -61,7 +61,6 @@
 				},
 				"fill": { "$ref": "#/$defs/FillStyle/properties/fill" },
 				"text": { "$ref": "#/$defs/TextStyle/properties/text" },
-				"textType": { "$ref": "#/$defs/TextStyle/properties/textType" },
 				"textAlign": { "$ref": "#/$defs/TextStyle/properties/textAlign" },
 				"verticalAlign": {
 					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
@@ -83,6 +82,7 @@
 			"description": "Any placeable object at the top level of 'root'. Connectors are allowed here.",
 			"oneOf": [
 				{ "$ref": "#/$defs/RectDoc" },
+				{ "$ref": "#/$defs/MarkdownDoc" },
 				{ "$ref": "#/$defs/EllipseDoc" },
 				{ "$ref": "#/$defs/DiamondDoc" },
 				{ "$ref": "#/$defs/StadiumDoc" },
@@ -119,6 +119,7 @@
 			"description": "Objects allowed inside a group's children. Connectors are top-level only (root), so they are excluded here.",
 			"oneOf": [
 				{ "$ref": "#/$defs/RectDoc" },
+				{ "$ref": "#/$defs/MarkdownDoc" },
 				{ "$ref": "#/$defs/EllipseDoc" },
 				{ "$ref": "#/$defs/DiamondDoc" },
 				{ "$ref": "#/$defs/StadiumDoc" },
@@ -188,7 +189,6 @@
 				},
 				"fill": { "$ref": "#/$defs/FillStyle/properties/fill" },
 				"text": { "$ref": "#/$defs/TextStyle/properties/text" },
-				"textType": { "$ref": "#/$defs/TextStyle/properties/textType" },
 				"textAlign": { "$ref": "#/$defs/TextStyle/properties/textAlign" },
 				"verticalAlign": {
 					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
@@ -244,7 +244,6 @@
 				},
 				"fill": { "$ref": "#/$defs/FillStyle/properties/fill" },
 				"text": { "$ref": "#/$defs/TextStyle/properties/text" },
-				"textType": { "$ref": "#/$defs/TextStyle/properties/textType" },
 				"textAlign": { "$ref": "#/$defs/TextStyle/properties/textAlign" },
 				"verticalAlign": {
 					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
@@ -300,7 +299,6 @@
 				},
 				"fill": { "$ref": "#/$defs/FillStyle/properties/fill" },
 				"text": { "$ref": "#/$defs/TextStyle/properties/text" },
-				"textType": { "$ref": "#/$defs/TextStyle/properties/textType" },
 				"textAlign": { "$ref": "#/$defs/TextStyle/properties/textAlign" },
 				"verticalAlign": {
 					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
@@ -356,7 +354,6 @@
 				},
 				"fill": { "$ref": "#/$defs/FillStyle/properties/fill" },
 				"text": { "$ref": "#/$defs/TextStyle/properties/text" },
-				"textType": { "$ref": "#/$defs/TextStyle/properties/textType" },
 				"textAlign": { "$ref": "#/$defs/TextStyle/properties/textAlign" },
 				"verticalAlign": {
 					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
@@ -412,7 +409,6 @@
 				},
 				"fill": { "$ref": "#/$defs/FillStyle/properties/fill" },
 				"text": { "$ref": "#/$defs/TextStyle/properties/text" },
-				"textType": { "$ref": "#/$defs/TextStyle/properties/textType" },
 				"textAlign": { "$ref": "#/$defs/TextStyle/properties/textAlign" },
 				"verticalAlign": {
 					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
@@ -468,7 +464,6 @@
 				},
 				"fill": { "$ref": "#/$defs/FillStyle/properties/fill" },
 				"text": { "$ref": "#/$defs/TextStyle/properties/text" },
-				"textType": { "$ref": "#/$defs/TextStyle/properties/textType" },
 				"textAlign": { "$ref": "#/$defs/TextStyle/properties/textAlign" },
 				"verticalAlign": {
 					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
@@ -524,7 +519,6 @@
 				},
 				"fill": { "$ref": "#/$defs/FillStyle/properties/fill" },
 				"text": { "$ref": "#/$defs/TextStyle/properties/text" },
-				"textType": { "$ref": "#/$defs/TextStyle/properties/textType" },
 				"textAlign": { "$ref": "#/$defs/TextStyle/properties/textAlign" },
 				"verticalAlign": {
 					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
@@ -580,7 +574,6 @@
 				},
 				"fill": { "$ref": "#/$defs/FillStyle/properties/fill" },
 				"text": { "$ref": "#/$defs/TextStyle/properties/text" },
-				"textType": { "$ref": "#/$defs/TextStyle/properties/textType" },
 				"textAlign": { "$ref": "#/$defs/TextStyle/properties/textAlign" },
 				"verticalAlign": {
 					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
@@ -728,7 +721,6 @@
 				},
 				"fill": { "$ref": "#/$defs/FillStyle/properties/fill" },
 				"text": { "$ref": "#/$defs/TextStyle/properties/text" },
-				"textType": { "$ref": "#/$defs/TextStyle/properties/textType" },
 				"textAlign": { "$ref": "#/$defs/TextStyle/properties/textAlign" },
 				"verticalAlign": {
 					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
@@ -800,7 +792,6 @@
 				},
 				"fill": { "$ref": "#/$defs/FillStyle/properties/fill" },
 				"text": { "$ref": "#/$defs/TextStyle/properties/text" },
-				"textType": { "$ref": "#/$defs/TextStyle/properties/textType" },
 				"textAlign": { "$ref": "#/$defs/TextStyle/properties/textAlign" },
 				"verticalAlign": {
 					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
@@ -833,12 +824,6 @@
 			"description": "Dash pattern for stroke/border.",
 			"type": "string",
 			"enum": ["solid", "dashed", "dotted"]
-		},
-
-		"TextType": {
-			"description": "How text content is rendered.",
-			"type": "string",
-			"enum": ["text", "markdown"]
 		},
 
 		"TextAlign": {
@@ -917,11 +902,6 @@
 					"description": "Text content to display. Default: \"\"",
 					"type": "string",
 					"default": ""
-				},
-				"textType": {
-					"description": "How text is rendered. Default: \"text\"",
-					"allOf": [{ "$ref": "#/$defs/TextType" }],
-					"default": "text"
 				},
 				"textAlign": {
 					"description": "Horizontal text alignment. Default: \"center\"",
@@ -1022,13 +1002,86 @@
 				},
 				"fill": { "$ref": "#/$defs/FillStyle/properties/fill" },
 				"text": { "$ref": "#/$defs/TextStyle/properties/text" },
-				"textType": { "$ref": "#/$defs/TextStyle/properties/textType" },
 				"textAlign": { "$ref": "#/$defs/TextStyle/properties/textAlign" },
 				"verticalAlign": {
 					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
 				},
 				"fontColor": { "$ref": "#/$defs/TextStyle/properties/fontColor" },
 				"fontSize": { "$ref": "#/$defs/TextStyle/properties/fontSize" },
+				"fontFamily": { "$ref": "#/$defs/TextStyle/properties/fontFamily" },
+				"fontWeight": { "$ref": "#/$defs/TextStyle/properties/fontWeight" },
+				"rotation": { "$ref": "#/$defs/TransformStyle/properties/rotation" },
+				"flipX": { "$ref": "#/$defs/TransformStyle/properties/flipX" },
+				"flipY": { "$ref": "#/$defs/TransformStyle/properties/flipY" },
+				"lockAspectRatio": {
+					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				}
+			}
+		},
+
+		"MarkdownDoc": {
+			"description": "A card whose text is Markdown source, rendered as HTML on the canvas. Use it for notes, specs, summaries, and any block of prose that needs headings, lists, tables, code fences, or math ($...$ inline, $$...$$ block) — a rect CANNOT do this, its text is always plain. Same rect-based geometry (x/y/width/height) as RectDoc. Write the body as ordinary Markdown in `text`, using \"\\n\" for line breaks. Defaults suit a document: 300x200, left/top aligned, and a theme-following fill so the card reads as a page. Image export flattens the rendering to plain text, so do not rely on it for exported diagrams.",
+			"type": "object",
+			"required": ["id", "type", "x", "y", "width", "height"],
+			"additionalProperties": false,
+			"properties": {
+				"id": { "description": "Unique identifier.", "type": "string" },
+				"type": {
+					"description": "Must be \"markdown\".",
+					"type": "string",
+					"const": "markdown"
+				},
+				"meta": { "$ref": "#/$defs/MetaDoc" },
+				"x": { "description": "Left-edge X coordinate.", "type": "number" },
+				"y": { "description": "Top-edge Y coordinate.", "type": "number" },
+				"width": {
+					"description": "Width in pixels. Default when created from the palette: 300",
+					"type": "number",
+					"minimum": 0
+				},
+				"height": {
+					"description": "Height in pixels. Content taller than this is clipped, so give a long body enough room. Default when created from the palette: 200",
+					"type": "number",
+					"minimum": 0
+				},
+				"rx": {
+					"description": "Corner radius (SVG rx). Default: 0",
+					"type": "number",
+					"minimum": 0,
+					"default": 0
+				},
+				"stroke": { "$ref": "#/$defs/StrokeStyle/properties/stroke" },
+				"strokeWidth": { "$ref": "#/$defs/StrokeStyle/properties/strokeWidth" },
+				"strokeDashType": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+				},
+				"fill": {
+					"description": "Fill color as a CSS color string, or \"auto\" to follow the theme surface. Default: \"auto\" (unlike other shapes, which default to transparent)",
+					"type": "string",
+					"default": "auto"
+				},
+				"text": {
+					"description": "Markdown source to render. Default: \"\"",
+					"type": "string",
+					"default": ""
+				},
+				"textAlign": {
+					"description": "Horizontal alignment of the rendered blocks. Default: \"left\"",
+					"allOf": [{ "$ref": "#/$defs/TextAlign" }],
+					"default": "left"
+				},
+				"verticalAlign": {
+					"description": "Vertical placement of the rendered body. Default: \"top\"",
+					"allOf": [{ "$ref": "#/$defs/VerticalAlign" }],
+					"default": "top"
+				},
+				"fontColor": { "$ref": "#/$defs/TextStyle/properties/fontColor" },
+				"fontSize": {
+					"description": "Base font size in pixels; headings and code scale relative to it. Default: 16",
+					"type": "number",
+					"minimum": 1,
+					"default": 16
+				},
 				"fontFamily": { "$ref": "#/$defs/TextStyle/properties/fontFamily" },
 				"fontWeight": { "$ref": "#/$defs/TextStyle/properties/fontWeight" },
 				"rotation": { "$ref": "#/$defs/TransformStyle/properties/rotation" },
@@ -1078,7 +1131,6 @@
 				},
 				"fill": { "$ref": "#/$defs/FillStyle/properties/fill" },
 				"text": { "$ref": "#/$defs/TextStyle/properties/text" },
-				"textType": { "$ref": "#/$defs/TextStyle/properties/textType" },
 				"textAlign": { "$ref": "#/$defs/TextStyle/properties/textAlign" },
 				"verticalAlign": {
 					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
@@ -1134,7 +1186,6 @@
 				},
 				"fill": { "$ref": "#/$defs/FillStyle/properties/fill" },
 				"text": { "$ref": "#/$defs/TextStyle/properties/text" },
-				"textType": { "$ref": "#/$defs/TextStyle/properties/textType" },
 				"textAlign": { "$ref": "#/$defs/TextStyle/properties/textAlign" },
 				"verticalAlign": {
 					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
@@ -1190,7 +1241,6 @@
 				},
 				"fill": { "$ref": "#/$defs/FillStyle/properties/fill" },
 				"text": { "$ref": "#/$defs/TextStyle/properties/text" },
-				"textType": { "$ref": "#/$defs/TextStyle/properties/textType" },
 				"textAlign": { "$ref": "#/$defs/TextStyle/properties/textAlign" },
 				"verticalAlign": {
 					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
@@ -1246,7 +1296,6 @@
 				},
 				"fill": { "$ref": "#/$defs/FillStyle/properties/fill" },
 				"text": { "$ref": "#/$defs/TextStyle/properties/text" },
-				"textType": { "$ref": "#/$defs/TextStyle/properties/textType" },
 				"textAlign": { "$ref": "#/$defs/TextStyle/properties/textAlign" },
 				"verticalAlign": {
 					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
@@ -1302,7 +1351,6 @@
 				},
 				"fill": { "$ref": "#/$defs/FillStyle/properties/fill" },
 				"text": { "$ref": "#/$defs/TextStyle/properties/text" },
-				"textType": { "$ref": "#/$defs/TextStyle/properties/textType" },
 				"textAlign": { "$ref": "#/$defs/TextStyle/properties/textAlign" },
 				"verticalAlign": {
 					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
@@ -1352,7 +1400,6 @@
 				},
 				"fill": { "$ref": "#/$defs/FillStyle/properties/fill" },
 				"text": { "$ref": "#/$defs/TextStyle/properties/text" },
-				"textType": { "$ref": "#/$defs/TextStyle/properties/textType" },
 				"textAlign": { "$ref": "#/$defs/TextStyle/properties/textAlign" },
 				"verticalAlign": {
 					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
@@ -1499,7 +1546,6 @@
 				},
 				"fill": { "$ref": "#/$defs/FillStyle/properties/fill" },
 				"text": { "$ref": "#/$defs/TextStyle/properties/text" },
-				"textType": { "$ref": "#/$defs/TextStyle/properties/textType" },
 				"textAlign": { "$ref": "#/$defs/TextStyle/properties/textAlign" },
 				"verticalAlign": {
 					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
@@ -1544,7 +1590,6 @@
 				},
 				"fill": { "$ref": "#/$defs/FillStyle/properties/fill" },
 				"text": { "$ref": "#/$defs/TextStyle/properties/text" },
-				"textType": { "$ref": "#/$defs/TextStyle/properties/textType" },
 				"textAlign": { "$ref": "#/$defs/TextStyle/properties/textAlign" },
 				"verticalAlign": {
 					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
@@ -1661,7 +1706,6 @@
 				},
 				"fill": { "$ref": "#/$defs/FillStyle/properties/fill" },
 				"text": { "$ref": "#/$defs/TextStyle/properties/text" },
-				"textType": { "$ref": "#/$defs/TextStyle/properties/textType" },
 				"textAlign": { "$ref": "#/$defs/TextStyle/properties/textAlign" },
 				"verticalAlign": {
 					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
@@ -1727,7 +1771,6 @@
 				},
 				"fill": { "$ref": "#/$defs/FillStyle/properties/fill" },
 				"text": { "$ref": "#/$defs/TextStyle/properties/text" },
-				"textType": { "$ref": "#/$defs/TextStyle/properties/textType" },
 				"textAlign": { "$ref": "#/$defs/TextStyle/properties/textAlign" },
 				"verticalAlign": {
 					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
@@ -1857,7 +1900,7 @@
 					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
 				},
 				"label": {
-					"description": "Optional text annotation drawn on the connector (an edge label such as \"Yes\"/\"No\"). A connector has NO top-level text; put the label here. Omit it for no label. Typography is a SUBSET of the shape text vocabulary: only fontColor, fontSize, and fontWeight apply. A label has NO textType (it is always plain text, never markdown), textAlign, verticalAlign, or fontFamily — do not add those keys here.",
+					"description": "Optional text annotation drawn on the connector (an edge label such as \"Yes\"/\"No\"). A connector has NO top-level text; put the label here. Omit it for no label. Typography is a SUBSET of the shape text vocabulary: only fontColor, fontSize, and fontWeight apply. A label is always plain text — for Markdown use a separate object of type \"markdown\". It has NO textAlign, verticalAlign, or fontFamily — do not add those keys here.",
 					"type": "object",
 					"required": ["text"],
 					"additionalProperties": false,

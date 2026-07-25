@@ -14,7 +14,6 @@ const validDiamond = {
 	strokeWidth: 1,
 	fill: "transparent",
 	text: "",
-	textType: "text",
 	textAlign: "center",
 	verticalAlign: "middle",
 	fontColor: "#000",
@@ -59,9 +58,9 @@ describe("validateDiamondDoc", () => {
 		).toEqual([]);
 	});
 
-	it("is an error when textType has an invalid value", () => {
+	it("is an error when the removed textType key is present", () => {
 		const errors = validateDiamondDoc(
-			{ ...validDiamond, textType: "html" },
+			{ ...validDiamond, textType: "markdown" },
 			"root",
 		);
 		expect(errors.some((e) => e.path === "root.textType")).toBe(true);

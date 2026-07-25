@@ -107,7 +107,6 @@ export const CALLOUT_DOC_DEFAULTS: Omit<CalloutDoc, "id"> = {
 	stroke: AUTO_COLOR,
 	strokeWidth: 2,
 	text: "",
-	textType: "text",
 	textAlign: "center",
 	verticalAlign: "middle",
 	fontColor: AUTO_COLOR,

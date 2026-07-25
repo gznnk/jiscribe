@@ -42,7 +42,6 @@ export const MANUAL_INPUT_DOC_DEFAULTS: Omit<ManualInputDoc, "id"> = {
 	stroke: AUTO_COLOR,
 	strokeWidth: 2,
 	text: "",
-	textType: "text",
 	textAlign: "center",
 	verticalAlign: "middle",
 	fontColor: AUTO_COLOR,

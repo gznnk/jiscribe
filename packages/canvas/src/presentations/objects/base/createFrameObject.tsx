@@ -39,6 +39,44 @@ type FrameRenderState = ObjectState &
 	Partial<TextStyleState>;
 
 /**
+ * The placed, style-resolved text box handed to a custom overlay renderer:
+ * the region from ObjectTextRegionRegistry, the shape's transform, and the
+ * typography the shape carries. Most renderers pass these straight through to
+ * {@link import("./TextOverlay").TextOverlayFrame} and only supply their own body.
+ */
+export type FrameTextOverlayProps = {
+	/** Text region left edge in local coordinates (shape center as origin). */
+	x: number;
+	/** Text region top edge in local coordinates (shape center as origin). */
+	y: number;
+	/** Text region width; may be negative for a flipped shape. */
+	width: number;
+	/** Text region height; may be negative for a flipped shape. */
+	height: number;
+	/** The shape's SVG transform matrix; apply it so text follows the shape. */
+	transform: string;
+	/** The shape's raw text — Markdown source, or whatever the type stores. */
+	text?: string;
+	textAlign?: TextStyleState["textAlign"];
+	verticalAlign?: TextStyleState["verticalAlign"];
+	/** May be `"auto"`; resolve with resolveAutoColor (TextOverlayFrame already does). */
+	fontColor?: string;
+	fontSize?: number;
+	fontFamily?: string;
+	fontWeight?: string;
+	/** True while the in-place editor is open: draw nothing, or it doubles up with the textarea. */
+	isEditing: boolean;
+};
+
+/**
+ * Draws a shape's text. Supplied by types that render something other than
+ * plain text (Markdown, for one); omitted, the shared plain-text TextOverlay is used.
+ */
+export type FrameTextOverlayRenderer = (
+	props: FrameTextOverlayProps,
+) => ReactNode;
+
+/**
  * Create the display component for Frame-based shapes (rect / diamond / ellipse, etc. that have
  * stroke + fill + text + a single SVG shape).
  *
@@ -50,10 +88,16 @@ type FrameRenderState = ObjectState &
  * The text region is derived from the type's calculator in ObjectTextRegionRegistry
  * via `calcTextRegion` (unregistered = full bbox).
  *
+ * `renderTextOverlay` swaps out how the text is drawn while keeping every shared
+ * derivation (transform, resolved colors, dashes, region, memo) here. A type
+ * whose body is not plain text passes one; it receives the placed box and draws
+ * into `TextOverlayFrame` so display keeps matching the editing textarea.
+ *
  * Shadowed stickies and svg wrapped by DOMPurify are out of scope because their draw structure differs.
  */
 export const createFrameObject = <TState extends FrameRenderState>(
 	draw: (state: TState, shape: FrameShapeProps) => ReactNode,
+	renderTextOverlay?: FrameTextOverlayRenderer,
 ): React.FC<TState & TextEditable> => {
 	const FrameObject: React.FC<TState & TextEditable> = (props) => {
 		const {
@@ -69,7 +113,6 @@ export const createFrameObject = <TState extends FrameRenderState>(
 			strokeWidth,
 			strokeDashType,
 			text,
-			textType,
 			textAlign,
 			verticalAlign,
 			fontColor,
@@ -101,24 +144,40 @@ export const createFrameObject = <TState extends FrameRenderState>(
 		return (
 			<>
 				{draw(props, shape)}
-				{hasText && (
-					<TextOverlay
-						x={textRegion.x}
-						y={textRegion.y}
-						width={textRegion.width}
-						height={textRegion.height}
-						transform={transformAttr}
-						text={text}
-						textType={textType}
-						textAlign={textAlign}
-						verticalAlign={verticalAlign}
-						fontColor={fontColor}
-						fontSize={fontSize}
-						fontFamily={fontFamily}
-						fontWeight={fontWeight}
-						isEditing={isEditing}
-					/>
-				)}
+				{hasText &&
+					(renderTextOverlay ? (
+						renderTextOverlay({
+							x: textRegion.x,
+							y: textRegion.y,
+							width: textRegion.width,
+							height: textRegion.height,
+							transform: transformAttr,
+							text,
+							textAlign,
+							verticalAlign,
+							fontColor,
+							fontSize,
+							fontFamily,
+							fontWeight,
+							isEditing,
+						})
+					) : (
+						<TextOverlay
+							x={textRegion.x}
+							y={textRegion.y}
+							width={textRegion.width}
+							height={textRegion.height}
+							transform={transformAttr}
+							text={text}
+							textAlign={textAlign}
+							verticalAlign={verticalAlign}
+							fontColor={fontColor}
+							fontSize={fontSize}
+							fontFamily={fontFamily}
+							fontWeight={fontWeight}
+							isEditing={isEditing}
+						/>
+					))}
 			</>
 		);
 	};

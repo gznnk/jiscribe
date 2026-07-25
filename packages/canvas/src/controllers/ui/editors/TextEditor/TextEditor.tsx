@@ -6,7 +6,6 @@ import { createSvgTransform } from "../../../../presentations/objects/utils/crea
 import { resolveAutoColor } from "../../../../presentations/objects/utils/resolveAutoColor";
 import { verticalAlignToAlignItems } from "../../../../presentations/objects/utils/verticalAlignToAlignItems";
 import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
-import type { TextType } from "../../../../schemas/objects/types/TextType";
 import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 
@@ -26,7 +25,6 @@ type TextEditorProps = {
 	scaleX: number;
 	scaleY: number;
 	rotation: number;
-	textType?: TextType;
 	textAlign?: TextAlign;
 	verticalAlign?: VerticalAlign;
 	fontColor?: string;

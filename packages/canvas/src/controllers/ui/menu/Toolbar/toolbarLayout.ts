@@ -67,15 +67,15 @@ export const basicToolbarEntry: ToolbarEntry = {
 	id: "basic",
 	label: { en: "Basic", ja: "基本" },
 	icon: RectIcon,
-	presetIds: ["rect", "ellipse", "polyline", "polygon", "rect-markdown"],
+	presetIds: ["rect", "ellipse", "polyline", "polygon"],
 };
 
 /**
  * Default toolbar layout: the basic primitives and sticky stay pinned directly
  * (preserving the classic direct-placement UX); general / annotation fold into
- * category flyouts. Only core categories appear here — a plugin category (e.g.
- * flowchart, container) is shown only when the host adds its entry via
- * `toolbar.layout`.
+ * category flyouts. Only core presets and categories appear here — anything a
+ * plugin supplies (the flowchart / container categories, the `markdown` preset)
+ * is shown only when the host adds it via `toolbar.layout`.
  */
 export const DEFAULT_TOOLBAR_LAYOUT: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "rect" },
@@ -83,7 +83,6 @@ export const DEFAULT_TOOLBAR_LAYOUT: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "polyline" },
 	{ kind: "preset", presetId: "polygon" },
 	{ kind: "preset", presetId: "sticky" },
-	{ kind: "preset", presetId: "rect-markdown" },
 	generalToolbarEntry,
 	annotationToolbarEntry,
 ];

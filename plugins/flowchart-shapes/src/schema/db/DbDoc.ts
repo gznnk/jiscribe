@@ -43,7 +43,6 @@ export const DB_DOC_DEFAULTS: Omit<DbDoc, "id"> = {
 	stroke: AUTO_COLOR,
 	strokeWidth: 2,
 	text: "",
-	textType: "text",
 	textAlign: "center",
 	verticalAlign: "middle",
 	fontColor: AUTO_COLOR,

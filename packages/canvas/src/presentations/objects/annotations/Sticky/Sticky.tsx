@@ -21,7 +21,6 @@ const StickyComponent: React.FC<StickyProps> = (props) => {
 		rotation,
 		fill,
 		text,
-		textType,
 		textAlign,
 		verticalAlign,
 		fontColor,
@@ -79,7 +78,6 @@ const StickyComponent: React.FC<StickyProps> = (props) => {
 				height={textRegion.height}
 				transform={transformAttr}
 				text={text}
-				textType={textType}
 				textAlign={textAlign}
 				verticalAlign={verticalAlign}
 				fontColor={fontColor}

@@ -24,7 +24,6 @@ describe("RectMapper", () => {
 				strokeWidth: 2,
 				fill: "#ff0000",
 				text: "Sample Text",
-				textType: "textarea",
 				textAlign: "center",
 				verticalAlign: "center",
 				fontColor: "#333333",
@@ -48,7 +47,6 @@ describe("RectMapper", () => {
 			expect(state.strokeWidth).toBe(2);
 			expect(state.fill).toBe("#ff0000");
 			expect(state.text).toBe("Sample Text");
-			expect(state.textType).toBe("textarea");
 			expect(state.textAlign).toBe("center");
 			expect(state.verticalAlign).toBe("center");
 			expect(state.fontColor).toBe("#333333");
@@ -108,7 +106,6 @@ describe("RectMapper", () => {
 				strokeWidth: 2,
 				fill: "#ff0000",
 				text: "Sample Text",
-				textType: "textarea",
 				textAlign: "center",
 				verticalAlign: "center",
 				fontColor: "#333333",
@@ -132,7 +129,6 @@ describe("RectMapper", () => {
 			expect(doc.strokeWidth).toBe(2);
 			expect(doc.fill).toBe("#ff0000");
 			expect(doc.text).toBe("Sample Text");
-			expect(doc.textType).toBe("textarea");
 			expect(doc.textAlign).toBe("center");
 			expect(doc.verticalAlign).toBe("center");
 			expect(doc.fontColor).toBe("#333333");
@@ -196,7 +192,6 @@ describe("RectMapper", () => {
 				strokeWidth: 2,
 				fill: "#ff0000",
 				text: "Round Trip",
-				textType: "markdown",
 				textAlign: "left",
 				verticalAlign: "top",
 				fontColor: "#111111",
@@ -220,7 +215,6 @@ describe("RectMapper", () => {
 			expect(convertedDoc.strokeWidth).toBe(originalDoc.strokeWidth);
 			expect(convertedDoc.fill).toBe(originalDoc.fill);
 			expect(convertedDoc.text).toBe(originalDoc.text);
-			expect(convertedDoc.textType).toBe(originalDoc.textType);
 			expect(convertedDoc.textAlign).toBe(originalDoc.textAlign);
 			expect(convertedDoc.verticalAlign).toBe(originalDoc.verticalAlign);
 			expect(convertedDoc.fontColor).toBe(originalDoc.fontColor);

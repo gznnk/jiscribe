@@ -73,7 +73,7 @@ test.describe("図形の描画", () => {
 		const created = (await canvas.captureObjects()).find(
 			(obj) => obj.id === id,
 		);
-		// Markdown プリセットは rect（textType: "markdown"）
+		// markdown 図形はカード本体を rect 要素で描く（本文だけが Markdown 描画）
 		expect(created?.tag).toBe("rect");
 		// 既定の文面が描画される（innerHTML はエスケープされるため textContent で確認）
 		await expect

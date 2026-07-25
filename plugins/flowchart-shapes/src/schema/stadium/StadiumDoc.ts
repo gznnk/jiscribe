@@ -40,7 +40,6 @@ export const STADIUM_DOC_DEFAULTS: Omit<StadiumDoc, "id"> = {
 	stroke: AUTO_COLOR,
 	strokeWidth: 2,
 	text: "",
-	textType: "text",
 	textAlign: "center",
 	verticalAlign: "middle",
 	fontColor: AUTO_COLOR,

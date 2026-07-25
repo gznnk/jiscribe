@@ -10,7 +10,6 @@ import { isConnectPointId } from "../types/EndpointRef";
 import { isPoly } from "../types/Poly";
 import { isStrokeDashType } from "../types/StrokeDashType";
 import { isTextAlign } from "../types/TextAlign";
-import { isTextType } from "../types/TextType";
 import { isVerticalAlign } from "../types/VerticalAlign";
 
 /**
@@ -271,8 +270,10 @@ export function validateFillStyleFields(
 }
 
 /**
- * Validate optional text style fields: `text`, `textType`, `textAlign`, `verticalAlign`,
+ * Validate optional text style fields: `text`, `textAlign`, `verticalAlign`,
  * `fontColor` (safe CSS color), `fontSize` (≥ 1), `fontFamily`/`fontWeight` (safe CSS values).
+ * Also reports the removed `textType` key so old documents fail loudly rather than
+ * silently losing their Markdown rendering.
  */
 export function validateTextStyleFields(
 	o: Record<string, unknown>,
@@ -282,10 +283,16 @@ export function validateTextStyleFields(
 	if ("text" in o && !isString(o.text)) {
 		errors.push({ path: `${path}.text`, message: "must be a string" });
 	}
-	if ("textType" in o && !isTextType(o.textType)) {
+	// Markdown used to be a mode flag on any text-bearing shape. It is a type of
+	// its own now, so a document carrying the old flag would render as plain text
+	// with no warning. `beyondSchema` stays unset: the JSON schema rejects the key
+	// too (additionalProperties: false), and the VSCode extension leaves those to
+	// the schema to avoid duplicate diagnostics.
+	if ("textType" in o) {
 		errors.push({
 			path: `${path}.textType`,
-			message: "must be one of: text, markdown",
+			message:
+				'has been removed: use an object of type "markdown" for Markdown content',
 		});
 	}
 	if ("textAlign" in o && !isTextAlign(o.textAlign)) {

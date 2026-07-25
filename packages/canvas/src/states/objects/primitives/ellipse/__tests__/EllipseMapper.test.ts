@@ -24,7 +24,6 @@ describe("EllipseMapper", () => {
 				strokeWidth: 2,
 				fill: "#ff0000",
 				text: "Ellipse Text",
-				textType: "text",
 				textAlign: "right",
 				verticalAlign: "bottom",
 				fontColor: "#222222",
@@ -48,7 +47,6 @@ describe("EllipseMapper", () => {
 			expect(state.strokeWidth).toBe(2);
 			expect(state.fill).toBe("#ff0000");
 			expect(state.text).toBe("Ellipse Text");
-			expect(state.textType).toBe("text");
 			expect(state.textAlign).toBe("right");
 			expect(state.verticalAlign).toBe("bottom");
 			expect(state.fontColor).toBe("#222222");
@@ -108,7 +106,6 @@ describe("EllipseMapper", () => {
 				strokeWidth: 2,
 				fill: "#ff0000",
 				text: "Ellipse Text",
-				textType: "text",
 				textAlign: "right",
 				verticalAlign: "bottom",
 				fontColor: "#222222",
@@ -132,7 +129,6 @@ describe("EllipseMapper", () => {
 			expect(doc.strokeWidth).toBe(2);
 			expect(doc.fill).toBe("#ff0000");
 			expect(doc.text).toBe("Ellipse Text");
-			expect(doc.textType).toBe("text");
 			expect(doc.textAlign).toBe("right");
 			expect(doc.verticalAlign).toBe("bottom");
 			expect(doc.fontColor).toBe("#222222");
@@ -196,7 +192,6 @@ describe("EllipseMapper", () => {
 				strokeWidth: 2,
 				fill: "#ff0000",
 				text: "Round Trip Text",
-				textType: "text",
 				textAlign: "center",
 				verticalAlign: "center",
 				fontColor: "#444444",
@@ -220,7 +215,6 @@ describe("EllipseMapper", () => {
 			expect(convertedDoc.strokeWidth).toBe(originalDoc.strokeWidth);
 			expect(convertedDoc.fill).toBe(originalDoc.fill);
 			expect(convertedDoc.text).toBe(originalDoc.text);
-			expect(convertedDoc.textType).toBe(originalDoc.textType);
 			expect(convertedDoc.textAlign).toBe(originalDoc.textAlign);
 			expect(convertedDoc.verticalAlign).toBe(originalDoc.verticalAlign);
 			expect(convertedDoc.fontColor).toBe(originalDoc.fontColor);

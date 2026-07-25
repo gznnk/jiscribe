@@ -347,7 +347,6 @@ describe("validateTextStyleFields", () => {
 	it("valid text fields have no errors", () => {
 		const o = {
 			text: "hello",
-			textType: "text",
 			textAlign: "center",
 			verticalAlign: "middle",
 			fontColor: "#000",
@@ -385,15 +384,12 @@ describe("validateTextStyleFields", () => {
 		).toEqual([]);
 	});
 
-	it("textType: markdown has no errors", () => {
-		expect(validateTextStyleFields({ textType: "markdown" }, "root")).toEqual(
-			[],
-		);
-	});
-
-	it("errors for an invalid textType value", () => {
-		const errors = validateTextStyleFields({ textType: "html" }, "root");
-		expect(errors[0].path).toBe("root.textType");
+	it("errors for the removed textType key, whatever its value", () => {
+		for (const removed of ["text", "markdown"]) {
+			const errors = validateTextStyleFields({ textType: removed }, "root");
+			expect(errors[0].path).toBe("root.textType");
+			expect(errors[0].message).toContain('type "markdown"');
+		}
 	});
 
 	it("errors when fontSize is not a number", () => {

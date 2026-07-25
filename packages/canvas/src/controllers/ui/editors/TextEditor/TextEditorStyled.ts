@@ -8,7 +8,7 @@ import { TEXT_LINE_HEIGHT } from "../../../../constants/textLineHeight";
 
 /**
  * Wrapper that carries the shape's position/transform and aligns the
- * textarea vertically, mirroring TextOverlay's TextWrapper.
+ * textarea vertically, mirroring TextOverlayFrame's TextWrapper.
  *
  * Overflow stays visible so the textarea's scrollbar gutter can hang outside
  * the shape's right edge; vertical clipping is handled by the textarea's own
@@ -35,7 +35,7 @@ export const TextEditorWrapper = styled.div`
  *
  * The element is widened by the scrollbar width and reserves that extra strip
  * as a permanent gutter (scrollbar-gutter: stable), so the content box always
- * equals the shape width and line wrapping matches TextOverlay whether or not
+ * equals the shape width and line wrapping matches the displayed text whether or not
  * the scrollbar is shown; the scrollbar itself sits outside the shape's right
  * edge. flex-shrink: 0 keeps the flex parent from squeezing the extra width
  * back.

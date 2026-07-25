@@ -1,6 +1,4 @@
-import { MarkdownRectIcon } from "./MarkdownRectIcon";
 import { RectIcon } from "./RectIcon";
-import { AUTO_COLOR } from "../../../../schemas/objects/utils/autoColor";
 import type { Stencil } from "../Stencil";
 
 export const RectStencils: Stencil[] = [
@@ -20,22 +18,5 @@ export const RectStencils: Stencil[] = [
 		label: { en: "Process", ja: "処理" },
 		icon: RectIcon,
 		defaultOverrides: { width: 140, height: 80 },
-	},
-	{
-		id: "rect-markdown",
-		objectType: "rect",
-		label: { en: "Markdown", ja: "Markdown" },
-		icon: MarkdownRectIcon,
-		defaultOverrides: {
-			width: 300,
-			height: 200,
-			textType: "markdown",
-			textAlign: "left",
-			verticalAlign: "top",
-			fill: AUTO_COLOR,
-			stroke: AUTO_COLOR,
-			fontColor: AUTO_COLOR,
-			text: "# Title\n\nWrite **markdown** here.",
-		},
 	},
 ];

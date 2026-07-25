@@ -29,7 +29,6 @@ export const STICKY_DOC_DEFAULTS: Omit<StickyDoc, "id"> = {
 	height: 120,
 	fill: "#fef9c3",
 	text: "",
-	textType: "text",
 	textAlign: "center",
 	verticalAlign: "middle",
 	fontColor: "#000000",

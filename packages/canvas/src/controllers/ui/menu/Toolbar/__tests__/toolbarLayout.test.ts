@@ -74,7 +74,6 @@ describe("DEFAULT_TOOLBAR_LAYOUT", () => {
 			"polyline",
 			"polygon",
 			"sticky",
-			"rect-markdown",
 		]);
 	});
 

@@ -1,5 +1,4 @@
 import type { TextAlign } from "../types/TextAlign";
-import type { TextType } from "../types/TextType";
 import type { VerticalAlign } from "../types/VerticalAlign";
 import { exhaustiveKeysOf } from "../utils/exhaustiveKeys";
 
@@ -10,8 +9,6 @@ import { exhaustiveKeysOf } from "../utils/exhaustiveKeys";
 export type TextStyleDoc = {
 	/** Text content to display */
 	text?: string;
-	/** Text display type */
-	textType?: TextType;
 	/** Horizontal text alignment */
 	textAlign?: TextAlign;
 	/** Vertical text alignment */
@@ -32,7 +29,6 @@ export type TextStyleDoc = {
  */
 export const TEXT_STYLE_KEYS = exhaustiveKeysOf<TextStyleDoc>()([
 	"text",
-	"textType",
 	"textAlign",
 	"verticalAlign",
 	"fontColor",

@@ -173,7 +173,6 @@ describe("connect", () => {
 							strokeWidth: 2,
 							rx: 0,
 							text: "",
-							textType: "text",
 							textAlign: "center",
 							verticalAlign: "middle",
 							fontColor: "auto",

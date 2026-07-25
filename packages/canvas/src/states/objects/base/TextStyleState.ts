@@ -2,8 +2,6 @@ import { isNumber, isString } from "@workspace/basic-validators";
 
 import type { TextAlign } from "../../../schemas/objects/types/TextAlign";
 import { isTextAlign } from "../../../schemas/objects/types/TextAlign";
-import type { TextType } from "../../../schemas/objects/types/TextType";
-import { isTextType } from "../../../schemas/objects/types/TextType";
 import type { VerticalAlign } from "../../../schemas/objects/types/VerticalAlign";
 import { isVerticalAlign } from "../../../schemas/objects/types/VerticalAlign";
 import { isAutoColor } from "../../../schemas/objects/utils/autoColor";
@@ -16,8 +14,6 @@ import { isCssColor } from "../utils/isCssColor";
 export type TextStyleState = {
 	/** Text content to display */
 	text?: string;
-	/** Text display type */
-	textType?: TextType;
 	/** Horizontal text alignment */
 	textAlign?: TextAlign;
 	/** Vertical text alignment */
@@ -48,13 +44,6 @@ export const isTextStyleState = (obj: unknown): obj is TextStyleState => {
 	// If the text property is present, it must be a string
 	if ("text" in candidate && candidate.text !== undefined) {
 		if (!isString(candidate.text)) {
-			return false;
-		}
-	}
-
-	// If the textType property is present, it must be a valid value
-	if ("textType" in candidate && candidate.textType !== undefined) {
-		if (!isTextType(candidate.textType)) {
 			return false;
 		}
 	}

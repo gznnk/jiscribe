@@ -39,7 +39,6 @@ export const CLOUD_DOC_DEFAULTS: Omit<CloudDoc, "id"> = {
 	stroke: AUTO_COLOR,
 	strokeWidth: 2,
 	text: "",
-	textType: "text",
 	textAlign: "center",
 	verticalAlign: "middle",
 	fontColor: AUTO_COLOR,

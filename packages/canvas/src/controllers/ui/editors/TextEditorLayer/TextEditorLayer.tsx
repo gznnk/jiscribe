@@ -115,7 +115,6 @@ function renderTextEditor(
 			scaleX={target.scaleX ?? 1}
 			scaleY={target.scaleY ?? 1}
 			rotation={target.rotation ?? 0}
-			textType={target.textType}
 			textAlign={target.textAlign}
 			verticalAlign={target.verticalAlign}
 			fontColor={target.fontColor}

@@ -12,7 +12,6 @@ const validSticky = {
 	flipY: false,
 	fill: "#fef9c3",
 	text: "memo",
-	textType: "text",
 	textAlign: "center",
 	verticalAlign: "middle",
 	fontColor: "#000",

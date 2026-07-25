@@ -1,0 +1,109 @@
+import { negativeToZero } from "@workspace/geometry";
+import type React from "react";
+import type { ReactNode } from "react";
+import { memo } from "react";
+
+import {
+	ForeignObjectElement,
+	TextContent,
+	TextWrapper,
+} from "./TextOverlayFrameStyled";
+import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
+import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
+import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
+import { resolveAutoColor } from "../../utils/resolveAutoColor";
+import { verticalAlignToAlignItems } from "../../utils/verticalAlignToAlignItems";
+
+export type TextOverlayFrameProps = {
+	/** Text region left edge in the shape's local coordinates (from calcTextRegion). */
+	x: number;
+	/** Text region top edge in the shape's local coordinates (from calcTextRegion). */
+	y: number;
+	/** Text region width; negative values are clamped to 0. */
+	width: number;
+	/** Text region height; negative values are clamped to 0. */
+	height: number;
+	/** SVG transform matrix of the parent shape (createSvgTransform output). */
+	transform: string;
+	/** Horizontal alignment of the content. Default: `"center"`. */
+	textAlign?: TextAlign;
+	/** Vertical placement of the content block inside the region. Default: `"middle"`. */
+	verticalAlign?: VerticalAlign;
+	/** CSS color, or `"auto"` to follow the theme foreground. Default: `"#000000"`. */
+	fontColor?: string;
+	/** Font size in pixels. Default: 16. */
+	fontSize?: number;
+	/** Font family; falls back to the canvas theme font when omitted. */
+	fontFamily?: string;
+	/** CSS font-weight. Default: `"normal"`. */
+	fontWeight?: string;
+	/** Content drawn inside the box — a text node, or an element that renders its own markup. */
+	children: ReactNode;
+};
+
+const TextOverlayFrameComponent: React.FC<TextOverlayFrameProps> = ({
+	x,
+	y,
+	width,
+	height,
+	transform,
+	textAlign = "center",
+	verticalAlign = "middle",
+	fontColor = "#000000",
+	fontSize = 16,
+	fontFamily,
+	fontWeight = "normal",
+	children,
+}) => {
+	// Docs of text-bearing shapes always carry fontFamily; the theme font is a
+	// safety net for callers that omit it.
+	const { fontFamily: themeFontFamily } = useCanvasTheme();
+	const resolvedFontFamily = fontFamily ?? themeFontFamily;
+	// Resolve auto (theme-following) to the theme foreground (ink) (issue #38).
+	const resolvedColor = resolveAutoColor(fontColor, "ink");
+
+	return (
+		<ForeignObjectElement
+			x={x}
+			y={y}
+			width={negativeToZero(width)}
+			height={negativeToZero(height)}
+			transform={transform}
+			pointerEvents="none"
+		>
+			<TextWrapper
+				style={{ alignItems: verticalAlignToAlignItems[verticalAlign] }}
+			>
+				<TextContent
+					style={{
+						textAlign,
+						color: resolvedColor,
+						fontSize,
+						fontFamily: resolvedFontFamily,
+						fontWeight,
+					}}
+				>
+					{children}
+				</TextContent>
+			</TextWrapper>
+		</ForeignObjectElement>
+	);
+};
+
+/**
+ * The box every text overlay is drawn in: a foreignObject placed and transformed
+ * with the parent shape, holding one content element that carries the shared
+ * typography contract (line-height, padding, alignment, resolved color/font).
+ *
+ * The same contract has to hold on the editing side (TextEditor renders a
+ * textarea over the identical region), so display and edit must not drift apart
+ * — which is why this box lives here rather than in each shape. Shapes that draw
+ * something other than plain text (Markdown, for one) render their own element
+ * as `children` instead of duplicating the box.
+ *
+ * The DOM shape is load-bearing: `foreignObject > wrapper > content`. Image
+ * export walks exactly these two levels and reads the computed style off the
+ * content element (see foreignObjectToSvgText), so children must nest *inside*
+ * the content element, never between the levels.
+ */
+export const TextOverlayFrame = memo(TextOverlayFrameComponent);

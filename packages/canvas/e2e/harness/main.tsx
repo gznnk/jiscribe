@@ -6,6 +6,7 @@ import {
 	flowchartPlugin,
 	flowchartToolbarEntry,
 } from "@workspace/plugin-flowchart-shapes";
+import { markdownPlugin } from "@workspace/plugin-markdown-shape";
 import React, { useCallback, useState } from "react";
 import ReactDOM from "react-dom/client";
 import "katex/dist/katex.min.css";
@@ -22,24 +23,25 @@ import {
 import { createCanvasParser } from "../../src/doc";
 import "./harness.css";
 
-// flowchart / container 図形は core から削除され、それぞれ
-// @workspace/plugin-flowchart-shapes / @workspace/plugin-container-shapes が唯一の
-// 供給元 (docs/05_extensibility/plugin-architecture-requirements.md)。e2e 専用の dev 限定
+// flowchart / container / markdown 図形は core から削除され、それぞれ
+// @workspace/plugin-flowchart-shapes / @workspace/plugin-container-shapes /
+// @workspace/plugin-markdown-shape が唯一の供給元
+// (docs/05_extensibility/plugin-architecture-requirements.md)。e2e 専用の dev 限定
 // 循環依存として devDependencies に登録し、関連 spec を存続させる。
-const plugins = [flowchartPlugin, containerPlugin];
+const plugins = [flowchartPlugin, containerPlugin, markdownPlugin];
 
 const initialConfig: CanvasConfig = { plugins };
 
-// flowchart / container カテゴリは core の既定 layout に含まれない（プラグイン供給）。
-// spec は両フライアウトボタンに依存するため、従来どおり flowchart 直後に container
-// スロットを差し込んだ layout をハーネスから渡す。
+// flowchart / container カテゴリと markdown プリセットは core の既定 layout に
+// 含まれない（プラグイン供給）。spec は両フライアウトボタンと Markdown プリセットに
+// 依存するため、従来どおりの並びの layout をハーネスから渡す。
 const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "rect" },
 	{ kind: "preset", presetId: "ellipse" },
 	{ kind: "preset", presetId: "polyline" },
 	{ kind: "preset", presetId: "polygon" },
 	{ kind: "preset", presetId: "sticky" },
-	{ kind: "preset", presetId: "rect-markdown" },
+	{ kind: "preset", presetId: "markdown" },
 	flowchartToolbarEntry,
 	containerToolbarEntry,
 	generalToolbarEntry,

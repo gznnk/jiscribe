@@ -12,9 +12,9 @@ export type StencilIconProps = {
 /**
  * A single item in the stencil palette shown in the StencilLibrary (toolbar).
  *
- * Presets are not 1:1 with object types (e.g. "rect" and "rect-markdown" are
- * both variants of the rect type). Creation always goes through the
- * objectType's `ObjectFactory`, passing defaultOverrides.
+ * Presets are not 1:1 with object types (e.g. "rect" and "process" are both
+ * variants of the rect type). Creation always goes through the objectType's
+ * `ObjectFactory`, passing defaultOverrides.
  */
 export type Stencil = {
 	/** Stable identifier; the lookup key for label overrides and toolbar layout. */

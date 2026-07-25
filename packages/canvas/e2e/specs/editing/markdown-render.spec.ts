@@ -2,7 +2,7 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * Markdown 図形（textType: "markdown"）が、本文を「プレーンテキストではなく HTML として」
+ * markdown 図形（type: "markdown"）が、本文を「プレーンテキストではなく HTML として」
  * 描画することを守る。
  *
  * 既存の draw.spec は textContent に "Title" が含まれることだけを見るため、Markdown 変換が

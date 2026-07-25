@@ -46,7 +46,6 @@ export const PARALLELOGRAM_DOC_DEFAULTS: Omit<ParallelogramDoc, "id"> = {
 	stroke: AUTO_COLOR,
 	strokeWidth: 2,
 	text: "",
-	textType: "text",
 	textAlign: "center",
 	verticalAlign: "middle",
 	fontColor: AUTO_COLOR,

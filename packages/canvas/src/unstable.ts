@@ -16,8 +16,19 @@
 export { applyObjectDefinition } from "./controllers/registries";
 
 export { createFrameObject } from "./presentations/objects/base/createFrameObject";
-export type { FrameShapeProps } from "./presentations/objects/base/createFrameObject";
+export type {
+	FrameShapeProps,
+	FrameTextOverlayProps,
+	FrameTextOverlayRenderer,
+} from "./presentations/objects/base/createFrameObject";
 export type { TextEditable } from "./presentations/objects/base/TextOverlay/TextOverlay";
+
+// 本文がプレーンテキストでない図形(Markdown 等)向けの器。表示側とコア側の編集用
+// textarea が同じ視覚契約(line-height / padding / 配置 / 色・フォント解決)を共有する
+// ため、器は core 側に置いたまま中身だけを差し替える(createFrameObject の
+// renderTextOverlay と組で使う)。
+export { TextOverlayFrame } from "./presentations/objects/base/TextOverlay/TextOverlayFrame";
+export type { TextOverlayFrameProps } from "./presentations/objects/base/TextOverlay/TextOverlayFrame";
 
 export { createFrameBehavior } from "./controllers/gestures/handlers/objects/base/FrameController";
 

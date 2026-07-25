@@ -54,6 +54,7 @@ In addition to `name` and `description`, `meta` may hold any custom keys.
 | `type`             | Description                        | Geometry                                | Styles                                |
 | ------------------ | ---------------------------------- | --------------------------------------- | ------------------------------------- |
 | `rect`             | Rectangle                          | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform, Radius |
+| `markdown`         | Markdown card (rendered as HTML)   | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform, Radius |
 | `ellipse`          | Ellipse                            | `cx`, `cy`, `rx`, `ry`                  | Stroke, Fill, Text, Transform         |
 | `diamond`          | Diamond (decision/branch)          | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `stadium`          | Stadium/pill (start/end)           | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
@@ -102,7 +103,6 @@ In addition to `name` and `description`, `meta` may hold any custom keys.
 	"strokeWidth": 2,
 	"rx": 8,
 	"text": "Text",
-	"textType": "text",
 	"textAlign": "center",
 	"verticalAlign": "middle",
 	"fontColor": "#000000",
@@ -534,6 +534,41 @@ A group has no position or size of its own; these are determined by its `childre
 
 ---
 
+### `markdown` (Markdown card)
+
+A card whose `text` is **Markdown source, rendered as HTML** on the canvas. Geometry is the same as `rect` (top-left `x`,`y` + `width`,`height`), and Stroke / Fill / Text / Transform / Radius all apply.
+
+Use it whenever the body needs headings, lists, tables, code fences, links, or math (`$...$` inline, `$$...$$` block). A `rect` **cannot** do this — its `text` is always drawn as plain text. Conversely, for a one-line label inside a shape, keep using `rect` and friends.
+
+```json
+{
+	"id": "md-1",
+	"type": "markdown",
+	"x": 100,
+	"y": 100,
+	"width": 300,
+	"height": 200,
+	"text": "# Title\n\n- point one\n- point two\n\n`code` and **bold**.",
+	"textAlign": "left",
+	"verticalAlign": "top"
+}
+```
+
+| Field    | Type     | Default | Description                                                             |
+| -------- | -------- | ------- | ----------------------------------------------------------------------- |
+| `x`      | `number` | `0`     | X of the top-left corner.                                               |
+| `y`      | `number` | `0`     | Y of the top-left corner.                                               |
+| `width`  | `number` | `300`   | Width (px).                                                             |
+| `height` | `number` | `200`   | Height (px). Content taller than the box is clipped, so leave headroom. |
+| `rx`     | `number` | `0`     | Corner radius (SVG `rx`).                                               |
+| `text`   | `string` | `""`    | Markdown source. Use `"\n"` for line breaks.                            |
+
+Some Text-style defaults differ from other shapes, matching how a document reads: `textAlign` is `"left"`, `verticalAlign` is `"top"`, and `fill` is `"auto"` (theme surface) instead of `"transparent"`. `fontSize` is the base size — headings and code scale relative to it.
+
+Image export (PNG/SVG) flattens the rendering to plain text, so do not rely on a Markdown card for the styling of an exported diagram.
+
+---
+
 ### `sticky` (sticky note)
 
 A sticky note. Its geometry is the same as `rect` (top-left `x`,`y` + `width`,`height`), but it has **no Stroke and no Radius**.
@@ -711,7 +746,7 @@ Options for `anchor.kind`:
 
 `ConnectPointId` options: `"topCenter"` / `"rightCenter"` / `"bottomCenter"` / `"leftCenter"`. For the center, use `{ "kind": "center" }` (not a `connectPoint`).
 
-The object referenced by `owner.id` may be **only a box shape (`rect`, `ellipse`, `diamond`,
+The object referenced by `owner.id` may be **only a box shape (`rect`, `markdown`, `ellipse`, `diamond`,
 `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `multiDocument`, `actor`, `callout`, `db`, `storedData`,
 `subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `loopLimit`, `display`, `extract`, `cross`, `offPageConnector`, or
 `sticky`)** — these are the connectable types. A `polyline`, `polygon`, `group`, `svg`, or `connector`
@@ -748,7 +783,7 @@ diagram adapts to light/dark themes.
 
 ### Stroke style
 
-Applies to every box shape except `sticky` (`rect`, `ellipse`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `multiDocument`, `actor`, `callout`, `db`, `storedData`, `subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `loopLimit`, `display`, `extract`, `cross`, `offPageConnector`), plus `polyline`, `polygon`, `connector`.
+Applies to every box shape except `sticky` (`rect`, `markdown`, `ellipse`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `multiDocument`, `actor`, `callout`, `db`, `storedData`, `subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `loopLimit`, `display`, `extract`, `cross`, `offPageConnector`), plus `polyline`, `polygon`, `connector`.
 
 | Field            | Type             | Default   | Description                                              |
 | ---------------- | ---------------- | --------- | -------------------------------------------------------- |
@@ -762,7 +797,7 @@ See [Color values](#color-values-stroke--fontcolor--fill) for `"auto"`.
 
 ### Fill style
 
-Applies to every box shape (`rect`, `ellipse`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `multiDocument`, `actor`, `callout`, `db`, `storedData`, `subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `loopLimit`, `display`, `extract`, `cross`, `offPageConnector`, `sticky`), plus `polygon`. For `actor`, the fill paints the head circle only.
+Applies to every box shape (`rect`, `markdown`, `ellipse`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `multiDocument`, `actor`, `callout`, `db`, `storedData`, `subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `loopLimit`, `display`, `extract`, `cross`, `offPageConnector`, `sticky`), plus `polygon`. For `actor`, the fill paints the head circle only.
 
 | Field  | Type     | Default         | Description                                              |
 | ------ | -------- | --------------- | -------------------------------------------------------- |
@@ -770,12 +805,11 @@ Applies to every box shape (`rect`, `ellipse`, `diamond`, `stadium`, `parallelog
 
 ### Text style
 
-Applies to every box shape except `extract` and `cross` (which hold no text): `rect`, `ellipse`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `multiDocument`, `actor`, `callout`, `db`, `storedData`, `subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `loopLimit`, `display`, `offPageConnector`, `sticky`.
+Applies to every box shape except `extract` and `cross` (which hold no text): `rect`, `markdown`, `ellipse`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `multiDocument`, `actor`, `callout`, `db`, `storedData`, `subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `loopLimit`, `display`, `offPageConnector`, `sticky`.
 
 | Field           | Type            | Default          | Description                                                                       |
 | --------------- | --------------- | ---------------- | --------------------------------------------------------------------------------- |
 | `text`          | `string`        | `""`             | Text content.                                                                     |
-| `textType`      | `TextType`      | `"text"`         | How text is rendered.                                                             |
 | `textAlign`     | `TextAlign`     | `"center"`       | Horizontal alignment.                                                             |
 | `verticalAlign` | `VerticalAlign` | `"middle"`       | Vertical alignment.                                                               |
 | `fontColor`     | `string`        | `"auto"`         | Text color (CSS color, or `"auto"` to follow the theme; sticky uses `"#000000"`). |
@@ -783,15 +817,13 @@ Applies to every box shape except `extract` and `cross` (which hold no text): `r
 | `fontFamily`    | `string`        | `"Noto Sans JP"` | Font family.                                                                      |
 | `fontWeight`    | `string`        | `"normal"`       | Font weight.                                                                      |
 
-`TextType`: `"text"` (plain text) / `"markdown"` (Markdown rendering)
-
 `TextAlign`: `"left"` / `"center"` / `"right"`
 
 `VerticalAlign`: `"top"` / `"middle"` / `"bottom"`
 
 ### Transform style
 
-Applies to every box shape (`rect`, `ellipse`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `multiDocument`, `actor`, `callout`, `db`, `storedData`, `subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `loopLimit`, `display`, `extract`, `cross`, `offPageConnector`, `sticky`) and `group`. All optional.
+Applies to every box shape (`rect`, `markdown`, `ellipse`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `multiDocument`, `actor`, `callout`, `db`, `storedData`, `subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `loopLimit`, `display`, `extract`, `cross`, `offPageConnector`, `sticky`) and `group`. All optional.
 
 | Field             | Type      | Default | Description                        |
 | ----------------- | --------- | ------- | ---------------------------------- |
