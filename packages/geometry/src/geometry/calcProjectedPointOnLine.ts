@@ -5,6 +5,10 @@ import type { Point } from "../types/Point";
  * Perpendicular projection of `point` onto the infinite line through
  * `lineStart` and `lineEnd`. The result is not clamped to the segment; a
  * degenerate line returns `lineStart`.
+ *
+ * @param point - The point to project
+ * @param lineStart - First point defining the line
+ * @param lineEnd - Second point defining the line
  */
 export const calcProjectedPointOnLine = (
 	point: Point,

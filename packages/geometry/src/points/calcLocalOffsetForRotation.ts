@@ -8,11 +8,13 @@ import type { Point } from "../types/Point";
  * world space via {@link calcWorldPointFromLocalOffset}.
  */
 export type LocalOffsetForRotation = {
-	/** Offset from the center in local (unrotated) space. */
+	/** X offset from the center in local (unrotated) space. */
 	dx: number;
+	/** Y offset from the center in local (unrotated) space. */
 	dy: number;
-	/** cos/sin of the rotation, reused for the reverse rotation. */
+	/** Cosine of the shape rotation, reused for the reverse rotation. */
 	cos: number;
+	/** Sine of the shape rotation, reused for the reverse rotation. */
 	sin: number;
 	/** When false, the local offset already equals the world offset. */
 	isRotated: boolean;
@@ -21,6 +23,11 @@ export type LocalOffsetForRotation = {
 /**
  * Converts a world-space `toward` point into a local (centered, unrotated)
  * offset from the shape's center. `rotationDeg === 0` needs no trig.
+ *
+ * @param cx - Shape center x in world space
+ * @param cy - Shape center y in world space
+ * @param rotationDeg - Shape rotation in degrees (`Transform.rotation`)
+ * @param toward - The world-space point to express as a local offset
  */
 export function calcLocalOffsetForRotation(
 	cx: number,
@@ -51,6 +58,13 @@ export function calcLocalOffsetForRotation(
 /**
  * Maps a local (centered, unrotated) point back to world space, inverting
  * {@link calcLocalOffsetForRotation}. Unrotated shapes skip the trig.
+ *
+ * @param cx - Shape center x in world space
+ * @param cy - Shape center y in world space
+ * @param localX - Point x in local space, offset from the center
+ * @param localY - Point y in local space, offset from the center
+ * @param offset - The trig from {@link calcLocalOffsetForRotation} for the same
+ *   shape; `localX` / `localY` need not be that call's `dx` / `dy`
  */
 export function calcWorldPointFromLocalOffset(
 	cx: number,

@@ -11,7 +11,12 @@ import type { TransformedFrame } from "../types/TransformedFrame";
  * world space with the same affine as the renderer / calcFrameKeyPoint, so the
  * result follows the shape's rotation and flip.
  *
- * Returns null if the ray hits no edge (degenerate polygon, toward == center).
+ * @param localPolygon - Closed outline in local, centered coordinates; the last
+ *   vertex is joined back to the first. Fewer than 2 vertices yields null
+ * @param frame - The shape whose center, rotation and flips place the polygon
+ * @param toward - World-space point the ray from the center aims at
+ * @returns The outline hit, or null if the ray crosses no edge (degenerate
+ *   polygon, or `toward` at the center)
  */
 export function calcOutlinePointTowardForPolygon(
 	localPolygon: readonly Point[],

@@ -5,6 +5,8 @@ import type { TransformedFrame } from "../types/TransformedFrame";
 /**
  * Smallest axis-aligned frame enclosing `points`, with no rotation and no flips.
  *
+ * @param points - Vertices in world coordinates; use
+ *   {@link calcOrientedFrameFromPoints} to fit a rotated frame instead
  * @returns The enclosing frame, or null if `points` is empty
  */
 export const convertPointsToTransformedFrame = (

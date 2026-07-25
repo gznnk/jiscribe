@@ -7,6 +7,10 @@ import type { Rect } from "../types/Rect";
  * Shrinks a frame by ratio insets. Because the insets are ratios, the result
  * follows the frame size. Insets summing above 1 collapse the rect to zero
  * width or height.
+ *
+ * @param frame - The frame to shrink
+ * @param insets - Per-edge insets as ratios of the frame width / height
+ * @returns The inset rect, top-left based
  */
 export const calcInsetRect = (frame: Frame, insets: RatioInsets): Rect => {
 	const { cx, cy, width, height } = frame;

@@ -7,6 +7,16 @@ import { EPSILON } from "../constants/EPSILON";
  *
  * Parallel and colinear segments never intersect. Otherwise `inclusive`
  * decides whether touching at an endpoint counts as an intersection.
+ *
+ * @param p1x - Start x of the first segment
+ * @param p1y - Start y of the first segment
+ * @param p2x - End x of the first segment
+ * @param p2y - End y of the first segment
+ * @param q1x - Start x of the second segment
+ * @param q1y - Start y of the second segment
+ * @param q2x - End x of the second segment
+ * @param q2y - End y of the second segment
+ * @param inclusive - Whether a touch at an endpoint counts as an intersection
  */
 export const doSegmentsIntersectByCoords = (
 	p1x: number,

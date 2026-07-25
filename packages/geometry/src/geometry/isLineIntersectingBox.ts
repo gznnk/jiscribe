@@ -6,7 +6,9 @@ import type { Point } from "../types/Point";
  * Whether a line segment crosses any of a box's four edges. The edge tests are
  * exclusive, so a segment fully contained in the box returns false.
  *
- * `BoxFeatures` is assignable to the `box` parameter.
+ * @param p1 - Start of the segment
+ * @param p2 - End of the segment
+ * @param box - The box to test against; `BoxFeatures` is assignable here
  */
 export const isLineIntersectingBox = (
 	p1: Point,

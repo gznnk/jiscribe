@@ -256,7 +256,7 @@ The guards for transformed shapes are composed from the primitive and transform
 guards:
 
 ```typescript
-isTransformedRect(obj) === isRect(obj) && isTransform(obj);
+isTransformedRect(value) === isRect(value) && isTransform(value);
 ```
 
 `BoundingBox`, `BoxFeatures`, `Dimensions`, `OrthogonalDirection` and

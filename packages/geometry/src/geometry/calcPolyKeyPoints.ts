@@ -5,6 +5,8 @@ import type { Point } from "../types/Point";
 /**
  * Key points of a poly shape, taken from its bounding box.
  *
+ * @param points - Vertices in world coordinates; the key points sit on the
+ *   bounding box, so they need not be vertices themselves
  * @returns The key points, or null if `points` is empty
  */
 export function calcPolyKeyPoints(

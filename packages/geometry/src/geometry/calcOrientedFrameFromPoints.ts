@@ -13,6 +13,11 @@ import type { TransformedFrame } from "../types/TransformedFrame";
  * bounding box; the bounding box of the result gives width/height, and its
  * center is transformed forward again to give the final center.
  *
+ * @param points - World-space points the frame must enclose
+ * @param scaleX - Horizontal flip the resulting frame carries
+ * @param scaleY - Vertical flip the resulting frame carries
+ * @param rotationDeg - Rotation in degrees the resulting frame carries; the
+ *   frame is fitted in that rotated space, not axis-aligned
  * @returns The enclosing frame, or null if `points` is empty
  */
 export const calcOrientedFrameFromPoints = (

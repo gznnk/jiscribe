@@ -23,7 +23,7 @@
 すべて `is` を使う。
 
 - **例:**
-  - `isPoint(obj)` — 値が妥当な `Point` かどうか
+  - `isPoint(value)` — 値が妥当な `Point` かどうか
   - `isLineIntersectingBox(p1, p2, box)` — 線分がボックスの辺と交差するかどうか
 
 ### 3. `do...` — 計算を伴う述語

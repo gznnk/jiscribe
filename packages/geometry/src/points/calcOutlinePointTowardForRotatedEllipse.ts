@@ -12,7 +12,10 @@ import type { TransformedEllipse } from "../types/TransformedEllipse";
  * Scale is ignored: it is a `FlipScale`, and an ellipse outline is
  * invariant under axis flips.
  *
- * Returns null if `toward` is inside the ellipse, or is the center itself.
+ * @param ellipse - The shape to hit; a non-positive radius yields null
+ * @param toward - World-space point the ray from the center aims at
+ * @returns The outline hit, or null if `toward` is inside the ellipse or is the
+ *   center itself
  */
 export function calcOutlinePointTowardForRotatedEllipse(
 	ellipse: TransformedEllipse,

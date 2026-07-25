@@ -8,6 +8,10 @@ import type { TransformedFrame } from "../types/TransformedFrame";
  * A single key point of a frame. Lightweight alternative to
  * {@link calcFrameKeyPoints} for callers that need one point (such as resolving
  * a connector endpoint) rather than all eight.
+ *
+ * @param frame - The shape whose key point is wanted
+ * @param keyPointId - Which of the eight points to compute
+ * @returns The key point in world coordinates, with rotation and flips applied
  */
 export const calcFrameKeyPoint = (
 	frame: TransformedFrame,

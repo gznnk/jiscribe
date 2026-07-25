@@ -24,7 +24,7 @@ Returns a boolean about a state, property, or validity. Every type guard in
 `src/validators` uses `is`.
 
 - **Examples:**
-  - `isPoint(obj)` — whether the value is a valid `Point`
+  - `isPoint(value)` — whether the value is a valid `Point`
   - `isLineIntersectingBox(p1, p2, box)` — whether a segment crosses a box's edges
 
 ### 3. `do...` — predicate over a non-trivial computation

@@ -13,7 +13,10 @@ import type { TransformedFrame } from "../types/TransformedFrame";
  * Scale is ignored: it is a `FlipScale`, and a rectangle outline is invariant
  * under axis flips.
  *
- * Returns null if `toward` is inside the frame, or is the center itself.
+ * @param frame - The shape to hit; a non-positive width or height yields null
+ * @param toward - World-space point the ray from the center aims at
+ * @returns The outline hit, or null if `toward` is inside the frame or is the
+ *   center itself
  */
 export function calcOutlinePointTowardForRotatedFrame(
 	frame: TransformedFrame,

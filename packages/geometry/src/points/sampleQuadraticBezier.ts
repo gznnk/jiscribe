@@ -3,6 +3,13 @@ import type { Point } from "../types/Point";
 /**
  * Samples points along a quadratic Bézier curve over t ∈ [tStart, tEnd] (both
  * endpoints inclusive; defaults to the full curve). Returns `segments + 1` points.
+ *
+ * @param p0 - Start point of the curve
+ * @param control - Control point both ends are pulled toward
+ * @param p1 - End point of the curve
+ * @param segments - Number of segments to divide the sampled range into
+ * @param tStart - Start of the sampled range, as t on the full curve
+ * @param tEnd - End of the sampled range, as t on the full curve
  */
 export function sampleQuadraticBezier(
 	p0: Point,
