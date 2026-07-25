@@ -1,10 +1,11 @@
-import { isTransformedFrame, type Point } from "@workspace/geometry";
+import { isTransformedFrame, type Point, type Rect } from "@workspace/geometry";
 
 import { adjustToOutline } from "./adjustToOutline";
 import { resolveEndpoint } from "./resolveEndpoint";
 import { isOrthogonalRouting } from "../../../../../schemas/objects/types/ConnectorRouting";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
+import type { ObjectAnchorRegionRegistry } from "../../../../objects/registry/ObjectAnchorRegionRegistry";
 import type { ObjectOutlineRegistry } from "../../../../objects/registry/ObjectOutlineRegistry";
 import { resolveOrthogonalRoute } from "../routing";
 
@@ -28,6 +29,28 @@ const resolveOutline = (
 };
 
 /**
+ * Reads a shape's local anchor region from the registry, or null when the shape
+ * is not a frame or has no registered region (the edge anchors then use the
+ * full bounding box).
+ */
+const resolveAnchorRegion = (
+	obj: ObjectState | null | undefined,
+	anchorRegionRegistry:
+		| Pick<ObjectAnchorRegionRegistry, "get">
+		| null
+		| undefined,
+): Rect | null => {
+	if (!obj || !anchorRegionRegistry) {
+		return null;
+	}
+	const calculator = anchorRegionRegistry.get(obj.type);
+	if (!calculator || !isTransformedFrame(obj)) {
+		return null;
+	}
+	return calculator(obj);
+};
+
+/**
  * Pure function that resolves both endpoints of a connector to actual coordinates. It handles
  * endpoint resolution and the outline adjustment for center anchors together. It takes the target
  * shapes individually rather than the whole objects map, so React component memoization stays effective.
@@ -41,6 +64,8 @@ const resolveOutline = (
  * @param targetObj - The owner shape of the target endpoint. null/undefined if unreferenced (free endpoint) or not found
  * @param outlineRegistry - Per-canvas ObjectOutlineRegistry. When provided, non-rect
  *   shapes attach on their true outline; omitted = bounding-box rect/ellipse handling
+ * @param anchorRegionRegistry - Per-canvas ObjectAnchorRegionRegistry. When provided, a shape
+ *   whose silhouette tapers centers its edge anchors on the declared band; omitted = full bounding box
  * @returns The resolved source / target points and intermediate waypoints, or null if resolution fails
  */
 export const resolveConnectorPoints = (
@@ -48,20 +73,31 @@ export const resolveConnectorPoints = (
 	sourceObj: ObjectState | null | undefined,
 	targetObj: ObjectState | null | undefined,
 	outlineRegistry?: Pick<ObjectOutlineRegistry, "get"> | null,
+	anchorRegionRegistry?: Pick<ObjectAnchorRegionRegistry, "get"> | null,
 ): { source: Point; target: Point; waypoints: Point[] } | null => {
 	const sourceOutline = resolveOutline(sourceObj, outlineRegistry);
 	const targetOutline = resolveOutline(targetObj, outlineRegistry);
+	const sourceAnchorRegion = resolveAnchorRegion(
+		sourceObj,
+		anchorRegionRegistry,
+	);
+	const targetAnchorRegion = resolveAnchorRegion(
+		targetObj,
+		anchorRegionRegistry,
+	);
 
 	// Resolve endpoints to coordinates
 	let sourcePoint = resolveEndpoint(
 		connectorState.source,
 		sourceObj,
 		sourceOutline,
+		sourceAnchorRegion,
 	);
 	let targetPoint = resolveEndpoint(
 		connectorState.target,
 		targetObj,
 		targetOutline,
+		targetAnchorRegion,
 	);
 
 	if (!sourcePoint || !targetPoint) {

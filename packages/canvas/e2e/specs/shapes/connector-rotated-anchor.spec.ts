@@ -4,7 +4,7 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 /**
  * 回転した接続元の「辺アンカー追従」を幾何レベルで検証する spec。
  *
- * connectPoint アンカー（辺の中央）は calcFrameKeyPoint で回転込みに解決されるため、図形を
+ * connectPoint アンカー（辺の中央）は calcConnectPoint で回転込みに解決されるため、図形を
  * 回転するとコネクター端点は「回転後の辺の中点」へ移る。これは AABB（軸並行バウンディング
  * ボックス）の辺中央とは別の点で、回転した辺の中点は AABB の内側に入る。
  *

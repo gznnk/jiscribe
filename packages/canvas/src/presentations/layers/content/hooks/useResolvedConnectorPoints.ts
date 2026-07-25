@@ -3,6 +3,7 @@ import { useMemo } from "react";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
+import { useObjectAnchorRegionRegistry } from "../../../objects/registry/ObjectAnchorRegionRegistryContext";
 import { useObjectOutlineRegistry } from "../../../objects/registry/ObjectOutlineRegistryContext";
 import { resolveConnectorPoints } from "../utils/endpoints";
 
@@ -68,6 +69,7 @@ export const useResolvedConnectorPoints = (
 	targetObj: ObjectState | null,
 ): ResolvedConnectorPoints | null => {
 	const outlineRegistry = useObjectOutlineRegistry();
+	const anchorRegionRegistry = useObjectAnchorRegionRegistry();
 
 	// Keyed on the values the resolution reads (connector endpoints / routing and
 	// the owners' geometry) instead of the object references: property edits clone
@@ -78,6 +80,7 @@ export const useResolvedConnectorPoints = (
 			sourceObj,
 			targetObj,
 			outlineRegistry,
+			anchorRegionRegistry,
 		);
 		if (!resolved) {
 			return null;
@@ -96,6 +99,7 @@ export const useResolvedConnectorPoints = (
 		...getOwnerGeometryDeps(sourceObj),
 		...getOwnerGeometryDeps(targetObj),
 		outlineRegistry,
+		anchorRegionRegistry,
 	]);
 	/* eslint-enable react-hooks/exhaustive-deps */
 };

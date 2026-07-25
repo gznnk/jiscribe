@@ -6,8 +6,8 @@ import type { TransformedFrame } from "../types/TransformedFrame";
 
 /**
  * A single key point of a frame. Lightweight alternative to
- * {@link calcFrameKeyPoints} for callers that need one point (such as resolving
- * a connector endpoint) rather than all eight.
+ * {@link calcFrameKeyPoints} for callers that need one point rather than all
+ * eight.
  */
 export const calcFrameKeyPoint = (
 	frame: TransformedFrame,

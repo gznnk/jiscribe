@@ -88,6 +88,7 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 				objectComponent={registries.objectComponent}
 				objectTextRegion={registries.objectTextRegion}
 				objectOutline={registries.objectOutline}
+				objectAnchorRegion={registries.objectAnchorRegion}
 			>
 				<div style={themeCssVars}>
 					<CanvasView

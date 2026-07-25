@@ -87,11 +87,12 @@ describe("resolveOrthogonalRoute", () => {
 		expect(path.at(-2)!.x).toBeLessThan(targetPoint.x);
 	});
 
-	it("the connectPoint outward direction is determined by center → endpoint and follows the shape's rotation", () => {
-		// even for a rotated shape, if the resolved endpoint is above the center, outward is up.
-		// pass an unrelated anchor.id to show it is not used for a fixed mapping.
+	it("the connectPoint outward direction follows the anchor's own normal through the shape's rotation", () => {
+		// rightCenter on a shape rotated by 90° faces down. The direction comes from the
+		// anchor id, not from "center → endpoint", so an anchor region that shifts the
+		// endpoint off the bbox edge midpoint cannot tip it onto the wrong axis.
 		const rotated = frameObj("r1", 100, 100, 100, 60, 90);
-		const sourcePoint: Point = { x: 100, y: 40 }; // above the center (100,100)
+		const sourcePoint: Point = { x: 100, y: 150 }; // the rotated rightCenter
 		const targetPoint: Point = { x: 100, y: 400 };
 
 		const path = resolveOrthogonalRoute(
@@ -105,8 +106,8 @@ describe("resolveOrthogonalRoute", () => {
 
 		expect(path[0]).toEqual(sourcePoint);
 		expectOrthogonal(path);
-		// since the endpoint is above the center, the stub emerges upward (-y)
-		expect(path[1].y).toBeLessThan(sourcePoint.y);
+		// rightCenter rotated by 90° points down (+y), so the stub emerges downward
+		expect(path[1].y).toBeGreaterThan(sourcePoint.y);
 	});
 
 	it("center endpoints don't use the normal and fall back to the direction toward the other endpoint", () => {
@@ -178,8 +179,8 @@ describe("resolveOrthogonalRoute", () => {
 		// target is dragged across the source's midline.
 		const routeWrapAround = (targetCy: number): Point[] =>
 			resolveOrthogonalRoute(
-				connectPoint("right"),
-				connectPoint("left"),
+				connectPoint("rightCenter"),
+				connectPoint("leftCenter"),
 				{ x: 100, y: 50 },
 				{ x: -300, y: targetCy },
 				frameObj("src", 50, 50, 100, 100),

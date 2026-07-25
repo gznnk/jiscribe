@@ -6,6 +6,7 @@ import {
 	applyObjectDefinition,
 } from "./initializeObjectRegistry";
 import { initializeStyleProperties } from "./initializeStyleProperties";
+import { createObjectAnchorRegionRegistry } from "../../presentations/objects/registry/ObjectAnchorRegionRegistry";
 import { createObjectComponentRegistry } from "../../presentations/objects/registry/ObjectComponentRegistry";
 import { createObjectOutlineRegistry } from "../../presentations/objects/registry/ObjectOutlineRegistry";
 import { createObjectTextRegionRegistry } from "../../presentations/objects/registry/ObjectTextRegionRegistry";
@@ -44,6 +45,7 @@ export const createCanvasRegistries = (
 		objectComponent: createObjectComponentRegistry(),
 		objectTextRegion: createObjectTextRegionRegistry(),
 		objectOutline: createObjectOutlineRegistry(),
+		objectAnchorRegion: createObjectAnchorRegionRegistry(),
 		objectBehavior: createObjectBehaviorRegistry(),
 		selectionControl: createSelectionControlRegistry(),
 		gestureHandler: createGestureHandlerRegistry(),

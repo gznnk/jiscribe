@@ -367,6 +367,9 @@ export const applyObjectDefinition = (
 	if (definition.outline) {
 		registries.objectOutline.register(type, definition.outline);
 	}
+	if (definition.anchorRegion) {
+		registries.objectAnchorRegion.register(type, definition.anchorRegion);
+	}
 	registries.objectBehavior.register(type, definition.behavior);
 	registries.objectStateValidator.register(type, definition.stateValidator);
 	registries.objectMenu.register(
@@ -412,6 +415,7 @@ export const initializeObjectRegistry = (
 	registries.objectComponent.clear();
 	registries.objectTextRegion.clear();
 	registries.objectOutline.clear();
+	registries.objectAnchorRegion.clear();
 	registries.objectBehavior.clear();
 	registries.objectStateValidator.clear();
 	registries.objectMenu.clear();

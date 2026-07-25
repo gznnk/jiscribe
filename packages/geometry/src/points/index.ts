@@ -7,6 +7,8 @@ export * from "./calcLocalOffsetForRotation";
 export * from "./calcOutlinePointTowardForRotatedFrame";
 export * from "./calcOutlinePointTowardForRotatedEllipse";
 export * from "./calcOutlinePointTowardForPolygon";
+export * from "./calcOutlinePointAlongLocalRayForPolygon";
+export * from "./castRayOnPolygon";
 export * from "./sampleEllipseArc";
 export * from "./sampleCubicBezier";
 export * from "./sampleQuadraticBezier";

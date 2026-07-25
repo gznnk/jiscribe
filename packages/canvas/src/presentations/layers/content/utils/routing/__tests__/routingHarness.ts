@@ -1,15 +1,17 @@
 import {
 	calcFrameBoxFeatures,
-	calcFrameKeyPoint,
 	degreesToRadians,
-	snapToDirection,
 	type BoxFeatures,
-	type KeyPointId,
 	type Point,
 	type TransformedFrame,
 } from "@workspace/geometry";
 
 import { routeOrthogonalConnector } from "..";
+import type { ConnectPointId } from "../../../../../../schemas/objects/types/EndpointRef";
+import {
+	calcConnectPoint,
+	calcConnectPointDirection,
+} from "../../../../../objects/utils/calcConnectPoint";
 import { countReversals } from "../routeCost";
 import type { OrthogonalConnectorEndpoint } from "../types";
 
@@ -28,7 +30,7 @@ export const FACES: Face[] = ["top", "bottom", "left", "right"];
 const MARGIN = 30;
 const SIZE = 100;
 
-const FACE_KEY: Record<Face, KeyPointId> = {
+const FACE_KEY: Record<Face, ConnectPointId> = {
 	top: "topCenter",
 	bottom: "bottomCenter",
 	left: "leftCenter",
@@ -36,9 +38,10 @@ const FACE_KEY: Record<Face, KeyPointId> = {
 };
 
 /**
- * Builds an endpoint exactly as the app resolves it: the connect point is the (possibly rotated)
- * face key point (`calcFrameKeyPoint`), the direction is the snapped centre→point vector, and the
- * box is the AABB of the (rotated) frame. `rotation` is in degrees (0 = axis-aligned).
+ * Builds an endpoint exactly as the app resolves it: point and outward direction come from the
+ * same `calcConnectPoint` / `calcConnectPointDirection` the renderer uses (no outline or anchor
+ * region here, so both reduce to the face midpoint and its normal), and the box is the AABB of
+ * the (rotated) frame. `rotation` is in degrees (0 = axis-aligned).
  */
 export const endpoint = (
 	cx: number,
@@ -56,8 +59,11 @@ export const endpoint = (
 		scaleY: 1,
 	};
 	const box = calcFrameBoxFeatures(frame);
-	const point = calcFrameKeyPoint(frame, FACE_KEY[face]);
-	return { point, direction: snapToDirection(point.x - cx, point.y - cy), box };
+	return {
+		point: calcConnectPoint(frame, FACE_KEY[face]),
+		direction: calcConnectPointDirection(frame, FACE_KEY[face]),
+		box,
+	};
 };
 
 /** Whether the two 100×100 boxes (centres given) overlap (a semi-degenerate input). */

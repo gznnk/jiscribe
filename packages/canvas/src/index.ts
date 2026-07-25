@@ -142,6 +142,7 @@ export type {
 export type { Mods } from "./controllers/gestures/recognizer/GestureRecognizerTypes";
 export type { ObjectTextRegionCalculator } from "./presentations/objects/registry/ObjectTextRegionRegistry";
 export type { ObjectOutlineCalculator } from "./presentations/objects/registry/ObjectOutlineRegistry";
+export type { ObjectAnchorRegionCalculator } from "./presentations/objects/registry/ObjectAnchorRegionRegistry";
 export type {
 	Stencil,
 	StencilIconProps,

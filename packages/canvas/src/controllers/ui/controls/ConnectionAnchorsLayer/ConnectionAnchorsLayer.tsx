@@ -1,7 +1,8 @@
 import { isTransformedFrame } from "@workspace/geometry";
-import type { Point } from "@workspace/geometry";
+import type { Point, Rect } from "@workspace/geometry";
 import { memo } from "react";
 
+import { useObjectAnchorRegionRegistry } from "../../../../presentations/objects/registry/ObjectAnchorRegionRegistryContext";
 import { useObjectOutlineRegistry } from "../../../../presentations/objects/registry/ObjectOutlineRegistryContext";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
@@ -34,7 +35,8 @@ type ConnectionAnchorsLayerProps = {
 
 /**
  * Renders ConnectionAnchors for frame-based objects when exactly one is selected.
- * Shows connection anchor points on the midpoints of each edge.
+ * Shows the four edge connection anchors, placed on the shape's outline and
+ * anchor region rather than the bounding box.
  *
  * Also renders ConnectionTargetAnchors on the hovered object while a connection
  * drag is in progress, to indicate connectable points on the target side.
@@ -51,11 +53,21 @@ const ConnectionAnchorsLayerComponent: React.FC<
 	isTextEditing,
 }) => {
 	const outlineRegistry = useObjectOutlineRegistry();
+	const anchorRegionRegistry = useObjectAnchorRegionRegistry();
 
 	// Reads the object's true outline polygon (null for rect/ellipse/no-provider,
 	// which fall back to bounding-box anchors in the dot components).
 	const resolveOutline = (obj: ObjectState): Point[] | null => {
 		const provider = outlineRegistry.get(obj.type);
+		if (!provider || !isTransformedFrame(obj)) {
+			return null;
+		}
+		return provider(obj);
+	};
+
+	// Reads the band the edge anchors are centered on (null = full bounding box).
+	const resolveAnchorRegion = (obj: ObjectState): Rect | null => {
+		const provider = anchorRegionRegistry.get(obj.type);
 		if (!provider || !isTransformedFrame(obj)) {
 			return null;
 		}
@@ -123,6 +135,7 @@ const ConnectionAnchorsLayerComponent: React.FC<
 					objectId={selectedId!}
 					frame={selectedObject!}
 					outline={resolveOutline(selectedObject!)}
+					anchorRegion={resolveAnchorRegion(selectedObject!)}
 					zoom={zoom}
 				/>
 			)}
@@ -130,6 +143,7 @@ const ConnectionAnchorsLayerComponent: React.FC<
 				<ConnectionTargetAnchors
 					frame={targetObject!}
 					outline={resolveOutline(targetObject!)}
+					anchorRegion={resolveAnchorRegion(targetObject!)}
 					activeAnchorId={activeAnchorId}
 					zoom={zoom}
 				/>

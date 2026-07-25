@@ -63,6 +63,7 @@ import {
 } from "./presentation/MultiDocument";
 import {
 	OffPageConnector,
+	calcOffPageConnectorAnchorRegion,
 	calcOffPageConnectorTextRegion,
 	offPageConnectorOutline,
 } from "./presentation/OffPageConnector";
@@ -371,6 +372,7 @@ export const offPageConnectorDefinition: ObjectTypeDefinition<
 	component: OffPageConnector,
 	textRegion: calcOffPageConnectorTextRegion,
 	outline: offPageConnectorOutline,
+	anchorRegion: calcOffPageConnectorAnchorRegion,
 	behavior: createFrameBehavior<OffPageConnectorState>(),
 	stencils: OffPageConnectorStencils,
 };

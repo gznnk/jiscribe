@@ -1,11 +1,9 @@
-import {
-	calcFrameKeyPoints,
-	calcOutlinePointTowardForPolygon,
-} from "@workspace/geometry";
-import type { Point, TransformedFrame } from "@workspace/geometry";
+import type { Point, Rect, TransformedFrame } from "@workspace/geometry";
 import { memo } from "react";
 
 import { theme } from "../../../../constants/theme";
+import { calcConnectPoint } from "../../../../presentations/objects/utils/calcConnectPoint";
+import type { ConnectPointId } from "../../../../schemas/objects/types/EndpointRef";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
 import type { AnchorHandleId } from "../ConnectionAnchorTypes";
 
@@ -19,6 +17,11 @@ type ConnectionTargetAnchorsProps = {
 	 * the edge anchors sit on the true edge instead of the bounding box.
 	 */
 	outline?: readonly Point[] | null;
+	/**
+	 * The shape's local anchor region (from ObjectAnchorRegionRegistry). When present,
+	 * the edge anchors are centered on that band instead of the bounding box.
+	 */
+	anchorRegion?: Rect | null;
 	/**
 	 * The anchor that is currently nearest to the cursor.
 	 * null means no specific anchor is highlighted.
@@ -36,7 +39,7 @@ type ConnectionTargetAnchorsProps = {
  *
  * When a connection drag is in progress and the cursor hovers over a valid
  * target object, this component renders the connectable points on that object:
- * center + four edge midpoints.
+ * center + the four edge anchors (see calcConnectPoint).
  *
  * The point nearest to the cursor (already computed by
  * ConnectionAnchorEventHandler) is visually highlighted.
@@ -44,35 +47,21 @@ type ConnectionTargetAnchorsProps = {
  */
 const ConnectionTargetAnchorsComponent: React.FC<
 	ConnectionTargetAnchorsProps
-> = ({ frame, outline, activeAnchorId, zoom = 1 }) => {
-	const { cx, cy, width, height, rotation, scaleX, scaleY } = frame;
+> = ({ frame, outline, anchorRegion, activeAnchorId, zoom = 1 }) => {
+	const { cx, cy } = frame;
 	const { handleDimensions } = useCanvasTheme();
 
 	const adjustedRadius = handleDimensions.anchorRadius / zoom;
 	const adjustedStrokeWidth = handleDimensions.anchorStrokeWidth / zoom;
 
-	const points = calcFrameKeyPoints({
-		cx,
-		cy,
-		width,
-		height,
-		rotation,
-		scaleX,
-		scaleY,
-	});
+	// Edge anchors sit where a connector would attach (outline + anchor region aware).
+	const edgePoint = (connectPointId: ConnectPointId): Point =>
+		calcConnectPoint(frame, connectPointId, outline, anchorRegion);
 
-	// With an outline, place edge anchors on the true edge (ray from center toward
-	// the bounding-box edge midpoint); rect/no-outline keep the midpoint.
-	const edgePoint = (boxMidpoint: Point): Point =>
-		outline && outline.length >= 2
-			? (calcOutlinePointTowardForPolygon(outline, frame, boxMidpoint) ??
-				boxMidpoint)
-			: boxMidpoint;
-
-	const top = edgePoint(points.topCenter);
-	const right = edgePoint(points.rightCenter);
-	const bottom = edgePoint(points.bottomCenter);
-	const left = edgePoint(points.leftCenter);
+	const top = edgePoint("topCenter");
+	const right = edgePoint("rightCenter");
+	const bottom = edgePoint("bottomCenter");
+	const left = edgePoint("leftCenter");
 
 	const anchors: Array<{ id: AnchorHandleId; x: number; y: number }> = [
 		{ id: "center", x: cx, y: cy },
