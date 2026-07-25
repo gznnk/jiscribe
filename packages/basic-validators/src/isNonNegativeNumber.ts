@@ -1,7 +1,10 @@
 import { isNumber } from "./isNumber";
 
 /**
- * Check if value is a non-negative number (>= 0).
+ * Type guard for a number greater than or equal to zero.
+ *
+ * @param value - Value to narrow; `0` and `-0` pass, `Infinity` passes and `NaN` fails
+ *   (see {@link isNumber})
  */
 export const isNonNegativeNumber = (value: unknown): value is number => {
 	return isNumber(value) && value >= 0;

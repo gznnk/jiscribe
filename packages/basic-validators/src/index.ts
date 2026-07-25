@@ -1,6 +1,7 @@
 /**
- * Shared validation utilities.
- * Simple boolean-returning type guard functions.
+ * Dependency-free runtime type guards shared across jiscribe. Every export returns a
+ * boolean and narrows its argument; none of them coerce their input. `isCssColor` is the
+ * one export that is not portable — it needs the browser's `CSS` global.
  */
 
 // Basic type guards
