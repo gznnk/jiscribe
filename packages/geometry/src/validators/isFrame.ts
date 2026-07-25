@@ -6,20 +6,25 @@ import {
 
 import type { Frame } from "../types/Frame";
 
-/** Type guard for {@link Frame}. Width and height must be non-negative. */
-export const isFrame = (obj: unknown): obj is Frame => {
-	if (!isObject(obj)) {
+/**
+ * Type guard for {@link Frame}. Width and height must be non-negative.
+ *
+ * @param value - Value to narrow; extra properties are allowed, so a
+ *   {@link TransformedFrame} passes too
+ */
+export const isFrame = (value: unknown): value is Frame => {
+	if (!isObject(value)) {
 		return false;
 	}
 
 	return (
-		"cx" in obj &&
-		isNumber(obj.cx) &&
-		"cy" in obj &&
-		isNumber(obj.cy) &&
-		"width" in obj &&
-		isNonNegativeNumber(obj.width) &&
-		"height" in obj &&
-		isNonNegativeNumber(obj.height)
+		"cx" in value &&
+		isNumber(value.cx) &&
+		"cy" in value &&
+		isNumber(value.cy) &&
+		"width" in value &&
+		isNonNegativeNumber(value.width) &&
+		"height" in value &&
+		isNonNegativeNumber(value.height)
 	);
 };

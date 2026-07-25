@@ -5,6 +5,13 @@ import type { Point } from "../types/Point";
  * Trig-free core of {@link calcRotatedPoint}: pass one cos/sin pair when
  * rotating many points by the same angle. For the inverse rotation pass
  * `(cosAngle, -sinAngle)`.
+ *
+ * @param px - X of the point to rotate
+ * @param py - Y of the point to rotate
+ * @param cx - X of the center to rotate around
+ * @param cy - Y of the center to rotate around
+ * @param cosAngle - `Math.cos` of the rotation angle in radians
+ * @param sinAngle - `Math.sin` of the same angle
  */
 export const calcRotatedPointWithTrig = (
 	px: number,

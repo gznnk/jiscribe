@@ -250,7 +250,7 @@ type RatioInsets = {
 変換済み図形のガードはプリミティブと変換のガードの合成になっている。
 
 ```typescript
-isTransformedRect(obj) === isRect(obj) && isTransform(obj);
+isTransformedRect(value) === isRect(value) && isTransform(value);
 ```
 
 `BoundingBox` / `BoxFeatures` / `Dimensions` / `OrthogonalDirection` /

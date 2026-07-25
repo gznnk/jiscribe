@@ -6,20 +6,25 @@ import {
 
 import type { Rect } from "../types/Rect";
 
-/** Type guard for {@link Rect}. Width and height must be non-negative. */
-export const isRect = (obj: unknown): obj is Rect => {
-	if (!isObject(obj)) {
+/**
+ * Type guard for {@link Rect}. Width and height must be non-negative.
+ *
+ * @param value - Value to narrow; extra properties are allowed, so a
+ *   {@link TransformedRect} passes too
+ */
+export const isRect = (value: unknown): value is Rect => {
+	if (!isObject(value)) {
 		return false;
 	}
 
 	return (
-		"x" in obj &&
-		isNumber(obj.x) &&
-		"y" in obj &&
-		isNumber(obj.y) &&
-		"width" in obj &&
-		isNonNegativeNumber(obj.width) &&
-		"height" in obj &&
-		isNonNegativeNumber(obj.height)
+		"x" in value &&
+		isNumber(value.x) &&
+		"y" in value &&
+		isNumber(value.y) &&
+		"width" in value &&
+		isNonNegativeNumber(value.width) &&
+		"height" in value &&
+		isNonNegativeNumber(value.height)
 	);
 };

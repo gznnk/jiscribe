@@ -5,6 +5,14 @@ import type { Point } from "../types/Point";
  * Samples points along an elliptical arc (both endpoints inclusive). A point at
  * angle θ is (cx + rx·cos θ, cy + ry·sin θ); angles are in degrees. Returns
  * `segments + 1` points.
+ *
+ * @param cx - Ellipse center x
+ * @param cy - Ellipse center y
+ * @param rx - Horizontal radius
+ * @param ry - Vertical radius
+ * @param startDeg - Angle the arc starts at, in degrees
+ * @param endDeg - Angle the arc ends at; sweeps backwards when below `startDeg`
+ * @param segments - Number of segments to divide the arc into
  */
 export function sampleEllipseArc(
 	cx: number,

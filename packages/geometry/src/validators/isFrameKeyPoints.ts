@@ -3,7 +3,12 @@ import { isObject } from "@workspace/basic-validators";
 import { isPoint } from "./isPoint";
 import type { FrameKeyPoints } from "../types/FrameKeyPoints";
 
-/** Type guard for {@link FrameKeyPoints}. All eight points must be present and valid. */
+/**
+ * Type guard for {@link FrameKeyPoints}. All eight points must be present and valid.
+ *
+ * @param value - Value to narrow; extra properties are allowed, but every one
+ *   of the eight keys must hold a valid {@link Point}
+ */
 export const isFrameKeyPoints = (value: unknown): value is FrameKeyPoints => {
 	if (!isObject(value)) {
 		return false;

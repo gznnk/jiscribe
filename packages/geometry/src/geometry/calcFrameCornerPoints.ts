@@ -5,7 +5,9 @@ import type { Point, TransformedFrame } from "../types";
 /**
  * The four corners of a frame in world coordinates (rotation and flips applied).
  *
- * @returns The corners in top-left, top-right, bottom-right, bottom-left order
+ * @param frame - The shape whose corners are wanted
+ * @returns The corners in top-left, top-right, bottom-right, bottom-left order,
+ *   named for their position before the transform
  */
 export function calcFrameCornerPoints(frame: TransformedFrame): Point[] {
 	const { cx, cy, width, height, rotation = 0, scaleX = 1, scaleY = 1 } = frame;

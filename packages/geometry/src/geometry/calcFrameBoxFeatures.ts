@@ -5,6 +5,10 @@ import type { TransformedFrame } from "../types/TransformedFrame";
 /**
  * Axis-aligned bounding box of a transformed frame, extended with its center and
  * four corners. The box itself comes from {@link calcBoundingBox}.
+ *
+ * @param frame - The shape to enclose
+ * @returns The box, whose corners are those of the box itself, not the rotated
+ *   corners of `frame` (use {@link calcFrameCornerPoints} for those)
  */
 export const calcFrameBoxFeatures = (frame: TransformedFrame): BoxFeatures => {
 	const { top, left, right, bottom } = calcBoundingBox(frame);

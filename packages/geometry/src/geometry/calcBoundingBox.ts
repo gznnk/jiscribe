@@ -3,7 +3,12 @@ import { applyAffineWithTrig } from "../transform/applyAffineWithTrig";
 import type { BoundingBox } from "../types/BoundingBox";
 import type { TransformedFrame } from "../types/TransformedFrame";
 
-/** Axis-aligned bounding box of a transformed frame. */
+/**
+ * Axis-aligned bounding box of a transformed frame.
+ *
+ * @param frame - The shape to enclose; `rotation` grows the box, while the
+ *   flips cannot change its extents
+ */
 export const calcBoundingBox = (frame: TransformedFrame): BoundingBox => {
 	const { cx, cy } = frame;
 

@@ -4,6 +4,9 @@ import type { OrthogonalDirection } from "../types/OrthogonalDirection";
  * Snaps the vector `(dx, dy)` to the nearest axis direction, preferring the
  * dominant axis and falling back to horizontal on a tie. Diagonal and zero
  * vectors always resolve to some direction.
+ *
+ * @param dx - Horizontal component of the vector
+ * @param dy - Vertical component of the vector, growing downwards
  */
 export const snapToDirection = (
 	dx: number,

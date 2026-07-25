@@ -3,6 +3,8 @@ import type { BoundingBox, Point } from "../types";
 /**
  * Bounding box of a poly shape's points.
  *
+ * @param points - Vertices in world coordinates; already transformed, so no
+ *   rotation or flip is applied here
  * @returns The bounding box, or null if `points` is empty
  */
 export function calcPolyBoundingBox(

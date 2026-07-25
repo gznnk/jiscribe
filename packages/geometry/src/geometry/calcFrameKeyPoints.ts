@@ -3,7 +3,12 @@ import { applyAffineWithTrig } from "../transform/applyAffineWithTrig";
 import type { FrameKeyPoints } from "../types/FrameKeyPoints";
 import type { TransformedFrame } from "../types/TransformedFrame";
 
-/** The eight key points (corners and edge midpoints) of a frame in world coordinates. */
+/**
+ * The eight key points (corners and edge midpoints) of a frame in world coordinates.
+ *
+ * @param frame - The shape whose key points are wanted; rotation and flips are
+ *   applied, so the keys name each point's position before the transform
+ */
 export const calcFrameKeyPoints = (frame: TransformedFrame): FrameKeyPoints => {
 	const { cx, cy, width, height, rotation, scaleX, scaleY } = frame;
 
