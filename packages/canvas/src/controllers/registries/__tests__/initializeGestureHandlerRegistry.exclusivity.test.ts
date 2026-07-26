@@ -38,6 +38,8 @@ const TARGETS: Target[] = [
 	{ targetKind: "menu", targetId: "context-menu", targetPart: "command:copy" },
 	{ targetKind: "menu", targetId: "object-menu", targetPart: "toggle:style" },
 	{ targetKind: "menu", targetId: "stencil-library", targetPart: "item:rect" },
+	// Appended so the indices used below stay put.
+	{ targetKind: "connector", targetId: "c", targetPart: "label" },
 ];
 
 const TYPES: EventType[] = [
@@ -110,6 +112,16 @@ describe("gesture handler routing exclusivity (#110)", () => {
 		expect(
 			supportingNames(makeEvent("click", 0, TARGETS[0])), // canvas
 		).toEqual(["canvas-handler"]);
+	});
+
+	it("splits the connector label box between tap and drag handlers", () => {
+		const labelBox = TARGETS[TARGETS.length - 1];
+		expect(supportingNames(makeEvent("click", 0, labelBox))).toEqual([
+			"connector-handler",
+		]);
+		expect(supportingNames(makeEvent("dragStart", 0, labelBox))).toEqual([
+			"connector-label-drag-handler",
+		]);
 	});
 
 	it("routes right-button events to canvas-handler regardless of target", () => {

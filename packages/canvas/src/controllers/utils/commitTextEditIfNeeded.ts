@@ -1,3 +1,5 @@
+import type { ConnectorLabelPlacement } from "../../presentations/layers/content/utils/label/calcConnectorLabelPlacement";
+import type { ConnectorLabel } from "../../schemas/objects/connections/connector/ConnectorDoc";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import {
 	isTextStyleState,
@@ -5,6 +7,7 @@ import {
 } from "../../states/objects/base/TextStyleState";
 import type { ConnectorState } from "../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../CanvasTypes";
+import { applyLabelPlacement } from "../gestures/handlers/objects/utils/applyLabelPlacement";
 
 /**
  * Ends the editing session only (does not modify any object).
@@ -25,12 +28,16 @@ function clearTextEdit(state: CanvasControllerState): CanvasControllerState {
  * @param state - the current canvas controller state
  * @param connector - the connector whose label is being updated
  * @param text - the edited text to write back
+ * @param placement - placement for a label being created (the double-clicked
+ *   point on the line). Applied only alongside non-empty text, so a cancelled or
+ *   emptied edit creates nothing
  * @returns a new state reflecting the label (if unchanged, only clears textEditState)
  */
 function commitConnectorLabel(
 	state: CanvasControllerState,
 	connector: ConnectorState,
 	text: string,
+	placement: ConnectorLabelPlacement | undefined,
 ): CanvasControllerState {
 	const currentText = connector.label?.text ?? "";
 	if (text === currentText) {
@@ -52,9 +59,10 @@ function commitConnectorLabel(
 			} as ConnectorState;
 		}
 	} else {
+		const label: ConnectorLabel = { ...connector.label, text };
 		nextConnector = {
 			...connector,
-			label: { ...connector.label, text },
+			label: placement ? applyLabelPlacement(label, placement) : label,
 		} as ConnectorState;
 	}
 
@@ -100,7 +108,9 @@ function commitTextStyleText(
 
 /**
  * Commits the active text editing session, if any.
- * A dispatcher that simply routes to a dedicated commit function per target kind.
+ * A dispatcher that simply routes to a dedicated commit function per editing kind.
+ * The target object is re-checked here because the session only holds an id, which
+ * may no longer resolve to an object of the expected type.
  *
  * @param state - the current canvas controller state
  * @returns a new state reflecting the text (if not editing, returns the original state unchanged)
@@ -108,22 +118,31 @@ function commitTextStyleText(
 export function commitTextEditIfNeeded(
 	state: CanvasControllerState,
 ): CanvasControllerState {
-	if (!state.textEditState) {
+	const { textEditState } = state;
+	if (!textEditState) {
 		return state;
 	}
 
-	const { objectId, text } = state.textEditState;
-	const targetObject = state.objects[objectId];
-
+	const targetObject = state.objects[textEditState.objectId];
 	if (!targetObject) {
 		return clearTextEdit(state);
 	}
+
 	// Connectors update the nested label.text rather than a body text.
-	if (targetObject.type === "connector") {
-		return commitConnectorLabel(state, targetObject as ConnectorState, text);
+	if (textEditState.kind === "connectorLabel") {
+		if (targetObject.type !== "connector") {
+			return clearTextEdit(state);
+		}
+		return commitConnectorLabel(
+			state,
+			targetObject as ConnectorState,
+			textEditState.text,
+			textEditState.placement,
+		);
 	}
+
 	if (isTextStyleState(targetObject)) {
-		return commitTextStyleText(state, targetObject, text);
+		return commitTextStyleText(state, targetObject, textEditState.text);
 	}
 	return clearTextEdit(state);
 }

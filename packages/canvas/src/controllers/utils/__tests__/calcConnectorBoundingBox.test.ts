@@ -35,6 +35,22 @@ const rectObj = (
 		scaleY: 1,
 	}) as unknown as ObjectState;
 
+/** A straight connector along y = 0 from x 0 to x 100, carrying the given label. */
+const labeledHorizontalConnector = (
+	label: Record<string, unknown>,
+): ConnectorState =>
+	freeConnector({
+		routing: "straight",
+		source: { anchor: { kind: "free", point: { x: 0, y: 0 } } },
+		target: { anchor: { kind: "free", point: { x: 100, y: 0 } } },
+		label,
+	});
+
+// In a non-browser environment calcConnectorLabelBox falls back to a character
+// count estimate, so "Yes" (16px, no border) is a fixed 40.8 x 28 box.
+const LABEL_HALF_WIDTH = 20.4;
+const LABEL_HALF_HEIGHT = 14;
+
 describe("calcConnectorBoundingBox", () => {
 	it("a connector with only free endpoints computes its bound from both endpoints", () => {
 		const bbox = calcConnectorBoundingBox(
@@ -87,6 +103,59 @@ describe("calcConnectorBoundingBox", () => {
 		expect(bbox!.right).toBeGreaterThan(350);
 		expect(bbox!.top).toBeLessThanOrEqual(100);
 		expect(bbox!.bottom).toBeGreaterThanOrEqual(300);
+	});
+
+	it("a label at the default midpoint widens the range above and below the line", () => {
+		const bbox = calcConnectorBoundingBox(
+			labeledHorizontalConnector({ text: "Yes" }),
+			{},
+		);
+
+		// The path alone is a zero-height segment; the label box centered on the
+		// midpoint grows it vertically and stays inside the endpoints horizontally.
+		expect(bbox).toEqual({
+			left: 0,
+			right: 100,
+			top: -LABEL_HALF_HEIGHT,
+			bottom: LABEL_HALF_HEIGHT,
+		});
+	});
+
+	it("the range follows a label displaced by position and offset", () => {
+		const offsetBBox = calcConnectorBoundingBox(
+			labeledHorizontalConnector({ text: "Yes", offset: 50 }),
+			{},
+		);
+
+		// Offset is a signed perpendicular distance, so the label sits 50 below the line.
+		expect(offsetBBox).toEqual({
+			left: 0,
+			right: 100,
+			top: 0,
+			bottom: 50 + LABEL_HALF_HEIGHT,
+		});
+
+		const sourceEndBBox = calcConnectorBoundingBox(
+			labeledHorizontalConnector({ text: "Yes", position: 0 }),
+			{},
+		);
+
+		// At the source end, half the label box hangs past the endpoint.
+		expect(sourceEndBBox).toEqual({
+			left: -LABEL_HALF_WIDTH,
+			right: 100,
+			top: -LABEL_HALF_HEIGHT,
+			bottom: LABEL_HALF_HEIGHT,
+		});
+	});
+
+	it("a style-only label with empty text leaves the range at the path", () => {
+		const bbox = calcConnectorBoundingBox(
+			labeledHorizontalConnector({ text: "", fill: "#fff", strokeWidth: 2 }),
+			{},
+		);
+
+		expect(bbox).toEqual({ left: 0, right: 100, top: 0, bottom: 0 });
 	});
 
 	it("returns null when an owned endpoint's referenced object does not exist", () => {

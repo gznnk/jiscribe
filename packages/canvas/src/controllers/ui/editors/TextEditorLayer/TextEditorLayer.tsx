@@ -6,6 +6,7 @@ import {
 	resolveEndpointOwner,
 } from "../../../../presentations/layers/content/utils/endpoints";
 import { calcConnectorLabelAnchor } from "../../../../presentations/layers/content/utils/label/calcConnectorLabelAnchor";
+import type { ConnectorLabelPlacement } from "../../../../presentations/layers/content/utils/label/calcConnectorLabelPlacement";
 import type { ObjectOutlineRegistry } from "../../../../presentations/objects/registry/ObjectOutlineRegistry";
 import type { ObjectTextRegionCalculator } from "../../../../presentations/objects/registry/ObjectTextRegionRegistry";
 import { calcTextRegion } from "../../../../presentations/objects/utils/calcTextRegion";
@@ -28,12 +29,15 @@ type EditorHandlers = {
 
 /**
  * Renders the label editor for a connector. Since a connector has no bbox, the
- * dedicated editor is placed at the path midpoint (the label anchor). Renders
- * nothing if the path or anchor cannot be resolved.
+ * dedicated editor is placed on the label anchor: the label's own placement, or
+ * the pending one for a label that does not exist yet (defaulting to the path
+ * midpoint). Renders nothing if the path or anchor cannot be resolved.
  *
  * @param connector - The connector whose label is being edited
  * @param objects - All objects, used to resolve endpoints
  * @param text - The text being edited
+ * @param pendingPlacement - Placement of the label being created, if any. Only
+ *   consulted for keys the label does not carry itself
  * @param handlers - Input and exit handlers
  * @returns The label editor, or null if it cannot be rendered
  */
@@ -41,6 +45,7 @@ function renderConnectorLabelEditor(
 	connector: ConnectorState,
 	objects: CanvasControllerState["objects"],
 	text: string,
+	pendingPlacement: ConnectorLabelPlacement | undefined,
 	handlers: EditorHandlers,
 	outlineRegistry: ObjectOutlineRegistry,
 ): React.ReactElement | null {
@@ -59,8 +64,8 @@ function renderConnectorLabelEditor(
 	const points = [resolved.source, ...resolved.waypoints, resolved.target];
 	const anchor = calcConnectorLabelAnchor(
 		points,
-		connector.label?.position,
-		connector.label?.offset,
+		connector.label?.position ?? pendingPlacement?.position,
+		connector.label?.offset ?? pendingPlacement?.offset,
 	);
 	if (!anchor) {
 		return null;
@@ -135,7 +140,7 @@ type TextEditorLayerProps = {
 };
 
 /**
- * If there is an active text-editing session, dispatches to the dedicated editor for the target's type.
+ * If there is an active text-editing session, dispatches to the dedicated editor for the editing kind.
  * The render-side dispatcher that pairs with commitTextEditIfNeeded on the commit side.
  */
 const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
@@ -157,11 +162,15 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 
 	const handlers: EditorHandlers = { onChange: onTextChange, onEscape };
 
-	if (targetObject.type === "connector") {
+	if (textEditState.kind === "connectorLabel") {
+		if (targetObject.type !== "connector") {
+			return null;
+		}
 		return renderConnectorLabelEditor(
 			targetObject as ConnectorState,
 			objects,
 			textEditState.text,
+			textEditState.placement,
 			handlers,
 			registries.objectOutline,
 		);

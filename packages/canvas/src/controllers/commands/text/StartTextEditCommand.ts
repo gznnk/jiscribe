@@ -53,6 +53,7 @@ export const StartTextEditCommand: ExecutableCommand = {
 			return {
 				...state,
 				textEditState: {
+					kind: "connectorLabel",
 					objectId: state.selectedConnectorId,
 					text: (connector as { label?: { text?: string } }).label?.text ?? "",
 				},
@@ -69,6 +70,7 @@ export const StartTextEditCommand: ExecutableCommand = {
 		return {
 			...state,
 			textEditState: {
+				kind: "shape",
 				objectId,
 				text: targetObject.text ?? "",
 			},
