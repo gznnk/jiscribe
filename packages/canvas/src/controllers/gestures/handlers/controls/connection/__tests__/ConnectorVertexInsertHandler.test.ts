@@ -222,3 +222,70 @@ describe("moving a connector waypoint via VertexControlHandler (reuse check)", (
 		]);
 	});
 });
+
+describe("ConnectorVertexInsertHandler - doubleClick starts label editing", () => {
+	/** State whose connector carries a committed label. */
+	const makeLabeledState = (labelText: string): CanvasControllerState => {
+		const state = makeState([]);
+		const connector = state.objects["conn-1"] as unknown as {
+			label?: { text: string };
+		};
+		connector.label = { text: labelText };
+		return state;
+	};
+
+	/** doubleClick on the waypoint-insert handle, with a stubbed hover stack. */
+	const doubleClickEvent = (
+		hovered: { id: string; kind: string; part?: string }[],
+	): CanvasEvent =>
+		({
+			type: "doubleClick",
+			targetKind: "control",
+			targetId: "conn-1",
+			targetPart: "waypoint-insert:0",
+			button: 0,
+			last: { x: 50, y: 50 },
+			getHovered: () => hovered,
+			mods: { shift: false, alt: false, ctrl: false, meta: false },
+		}) as unknown as CanvasEvent;
+
+	it("without a label, opens the editor empty (a double click aimed at the line landing on the handle)", () => {
+		const next = insertHandler.handle(makeState([]), doubleClickEvent([]));
+		expect(next.textEditState).toEqual({
+			kind: "connectorLabel",
+			objectId: "conn-1",
+			text: "",
+		});
+		// No waypoint is inserted by the double click
+		expect(pointsOf(next)).toEqual([]);
+	});
+
+	it("with a committed label whose box is in the hover stack, opens the editor prefilled (the handle covers the default midpoint placement)", () => {
+		const next = insertHandler.handle(
+			makeLabeledState("Yes"),
+			doubleClickEvent([{ id: "conn-1", kind: "connector", part: "label" }]),
+		);
+		expect(next.textEditState).toEqual({
+			kind: "connectorLabel",
+			objectId: "conn-1",
+			text: "Yes",
+		});
+	});
+
+	it("with a committed label elsewhere (box not in the hover stack), selects without opening the editor", () => {
+		const next = insertHandler.handle(
+			makeLabeledState("Yes"),
+			doubleClickEvent([]),
+		);
+		expect(next.textEditState).toBeUndefined();
+		expect(next.selectedConnectorId).toBe("conn-1");
+	});
+
+	it("a hover stack entry of another connector's label does not count as a label hit", () => {
+		const next = insertHandler.handle(
+			makeLabeledState("Yes"),
+			doubleClickEvent([{ id: "conn-2", kind: "connector", part: "label" }]),
+		);
+		expect(next.textEditState).toBeUndefined();
+	});
+});

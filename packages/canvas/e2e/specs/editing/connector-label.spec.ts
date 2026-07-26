@@ -380,6 +380,107 @@ test.describe("コネクターのラベル", () => {
 		await expect(labelBox).toHaveCSS("font-weight", "700");
 	});
 
+	test("直線コネクター中点の挿入ハンドル上でも、ダブルクリックでラベル編集が開始する", async ({
+		canvas,
+	}) => {
+		// target の中心へ落とすと center アンカーになり既定 straight
+		// （挿入ハンドルが中点＝既定ラベル位置に出る、U1 の衝突条件）
+		await canvas.drawShape("Rectangle", { x: 300, y: 150 }, { x: 500, y: 250 });
+		await canvas.deselect();
+		await canvas.drawShape("Rectangle", { x: 700, y: 300 }, { x: 900, y: 400 });
+		await canvas.deselect();
+		await canvas.selectAt({ x: 400, y: 200 });
+		const connectorId = await canvas.createConnector("rightCenter", {
+			x: 800,
+			y: 350,
+		});
+		await canvas.deselect();
+
+		const points = parsePoints(
+			await canvas.objectById(connectorId).getAttribute("points"),
+		);
+		expect(points).toHaveLength(2);
+		const mid = pointAtRatio(points, 0.5);
+
+		// 線を選択し、中点に挿入ハンドルが出るのを待つ
+		await canvas.clickAt(mid);
+		await expect(
+			canvas.page.locator(
+				`[data-part="waypoint-insert:0"][data-id="${connectorId}"]`,
+			),
+		).toBeVisible();
+
+		// 選択クリックとダブルクリック1打目が対にならないよう、doubleClick の
+		// 時間閾値（300ms）より長く空ける（対になると1打目で編集が開き、
+		// 2打目が外側タップ扱いで空編集を即確定してしまう）
+		await canvas.page.waitForTimeout(400);
+
+		// 2打ともハンドルに吸われても「コネクターのダブルクリック」として届き、
+		// ウェイポイント挿入ではなくラベル編集が開始する
+		const screen = canvas.toScreen(mid);
+		await canvas.page.mouse.dblclick(screen.x, screen.y);
+		await expect(canvas.page.locator(selectors.textEditor)).toBeVisible();
+		await canvas.textArea().fill("Mid");
+		await canvas.commitText();
+		await expect(labelBoxOf(canvas, connectorId)).toContainText("Mid");
+
+		// ダブルクリックでウェイポイントは挿入されていない（直線のまま）
+		expect(
+			parsePoints(await canvas.objectById(connectorId).getAttribute("points")),
+		).toHaveLength(2);
+	});
+
+	test("中央の確定済みラベルを挿入ハンドルが覆っていても、ダブルクリックで再編集できる", async ({
+		canvas,
+	}) => {
+		// 直線コネクター（前のテストと同じ構成）に既定位置＝中点のラベルを付ける。
+		// 選択すると挿入ハンドルがラベル中心の真上に重なる（U1 の衝突条件）。
+		await canvas.drawShape("Rectangle", { x: 300, y: 150 }, { x: 500, y: 250 });
+		await canvas.deselect();
+		await canvas.drawShape("Rectangle", { x: 700, y: 300 }, { x: 900, y: 400 });
+		await canvas.deselect();
+		await canvas.selectAt({ x: 400, y: 200 });
+		const connectorId = await canvas.createConnector("rightCenter", {
+			x: 800,
+			y: 350,
+		});
+		await canvas.deselect();
+
+		const points = parsePoints(
+			await canvas.objectById(connectorId).getAttribute("points"),
+		);
+		expect(points).toHaveLength(2);
+		const mid = pointAtRatio(points, 0.5);
+		await canvas.typeTextAt(mid, "Yes");
+		await canvas.commitText();
+
+		// ラベル中心（＝中点）をクリックして選択し、ハンドルがラベルに重なるのを待つ
+		await canvas.clickAt(mid);
+		await expect(
+			canvas.page.locator(
+				`[data-part="waypoint-insert:0"][data-id="${connectorId}"]`,
+			),
+		).toBeVisible();
+
+		// 選択クリックとの合体を避ける分離待ち（前のテストのコメント参照）
+		await canvas.page.waitForTimeout(400);
+
+		// 2打とも最前面のハンドルに当たるが、hover スタック（実 DOM の
+		// elementsFromPoint）から下のラベル箱が見つかり、既存ラベルの再編集が開く
+		const screen = canvas.toScreen(mid);
+		await canvas.page.mouse.dblclick(screen.x, screen.y);
+		await expect(canvas.page.locator(selectors.textEditor)).toBeVisible();
+		await expect(canvas.textArea()).toHaveValue("Yes");
+
+		// その場で書き換えて確定できる（新規作成や削除に化けていない）
+		await canvas.textArea().fill("No");
+		await canvas.commitText();
+		await expect(labelBoxOf(canvas, connectorId)).toContainText("No");
+		expect(
+			parsePoints(await canvas.objectById(connectorId).getAttribute("points")),
+		).toHaveLength(2);
+	});
+
 	test("コネクター選択中に Enter でラベル編集を開始でき、Escape でキャンセルできる", async ({
 		canvas,
 	}) => {

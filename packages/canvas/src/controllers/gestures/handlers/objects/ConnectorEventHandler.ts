@@ -1,60 +1,11 @@
-import { snapLabelOffsetToLine } from "./utils/snapLabelOffsetToLine";
-import { CONNECTOR_HIT_STROKE_WIDTH } from "../../../../constants/connectorHitArea";
-import {
-	calcConnectorLabelPlacement,
-	type ConnectorLabelPlacement,
-} from "../../../../presentations/layers/content/utils/label/calcConnectorLabelPlacement";
-import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
-import { collectConnectorPoints } from "../../../utils/calcConnectorBoundingBox";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
 import { isLeftButton } from "../utils/isLeftButton";
-import { SNAP_THRESHOLD_PX } from "../utils/snap/findSnap";
-
-/**
- * Projects the double-clicked point onto the connector path, so a label created
- * from a bare-line double click is placed where it was aimed instead of at the
- * path midpoint. The offset snaps onto the line with a threshold of at least the
- * hit band's half width, so a click that can reach the connector at all creates
- * the label on the line at any zoom; only a path resolved differently from the
- * rendered one (see the drag handler) can leave an offset behind. The label drag
- * keeps the plain zoom-scaled threshold, its aim not being confined to the band.
- *
- * Only called for a connector without label text, so any placement the label
- * still carries belongs to a deleted label and is overridden. Emptying a label
- * through the editor drops its placement (commitTextEditIfNeeded), so one only
- * reaches here from an externally authored document. Returns null when the path
- * cannot be resolved, leaving the label's own values in charge.
- *
- * @param state Canvas state, read for the objects (endpoint resolution) and the zoom
- * @param connector Connector whose line was double-clicked
- * @param event Double-click event; `last` is the clicked point in SVG coordinates
- */
-const calcPendingLabelPlacement = (
-	state: CanvasControllerState,
-	connector: ConnectorState,
-	event: CanvasEvent,
-): ConnectorLabelPlacement | null => {
-	const points = collectConnectorPoints(connector, state.objects);
-	if (!points) {
-		return null;
-	}
-
-	const placement = calcConnectorLabelPlacement(points, event.last);
-	return placement
-		? snapLabelOffsetToLine(
-				placement,
-				Math.max(
-					SNAP_THRESHOLD_PX / state.viewport.zoom,
-					CONNECTOR_HIT_STROKE_WIDTH / 2,
-				),
-			)
-		: null;
-};
+import { startConnectorLabelEdit } from "../utils/startConnectorLabelEdit";
 
 /**
  * Handles click events on connectors.
@@ -99,39 +50,12 @@ export const ConnectorEventHandler: GestureHandler = {
 			if (!connectorId) {
 				return nextState;
 			}
-			const connector = nextState.objects[connectorId];
-			if (connector?.type !== "connector") {
-				return nextState;
-			}
-			const connectorState = connector as ConnectorState;
-			const labelText = connectorState.label?.text ?? "";
-			const selectedState = {
-				...nextState,
-				selectedConnectorId: connectorId,
-				selectedIds: [],
-				multiSelectGroup: null,
-				// Close the submenu / category flyout on selection change
-				objectMenuOpenId: null,
-				stencilLibraryOpenCategory: null,
-			};
-			if (labelText !== "" && event.targetPart !== "label") {
-				return selectedState;
-			}
-			// A label being created starts where it was clicked; an existing one is
-			// edited in place.
-			const placement =
-				labelText === ""
-					? calcPendingLabelPlacement(selectedState, connectorState, event)
-					: null;
-			return {
-				...selectedState,
-				textEditState: {
-					kind: "connectorLabel",
-					objectId: connectorId,
-					text: labelText,
-					...(placement ? { placement } : {}),
-				},
-			};
+			return startConnectorLabelEdit(
+				nextState,
+				connectorId,
+				event,
+				event.targetPart === "label",
+			);
 		}
 
 		// A press on a connector closes the context menu (button is guarded in supports, selection happens on click)

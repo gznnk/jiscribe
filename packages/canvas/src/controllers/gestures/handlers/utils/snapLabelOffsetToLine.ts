@@ -1,4 +1,4 @@
-import type { ConnectorLabelPlacement } from "../../../../../presentations/layers/content/utils/label/calcConnectorLabelPlacement";
+import type { ConnectorLabelPlacement } from "../../../../presentations/layers/content/utils/label/calcConnectorLabelPlacement";
 
 /**
  * Pulls a label placed just beside the line back onto it, so the common

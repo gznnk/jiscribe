@@ -3,7 +3,6 @@ import {
 	DEFAULT_LABEL_OFFSET,
 	DEFAULT_LABEL_POSITION,
 } from "./utils/applyLabelPlacement";
-import { snapLabelOffsetToLine } from "./utils/snapLabelOffsetToLine";
 import { calcConnectorLabelAnchor } from "../../../../presentations/layers/content/utils/label/calcConnectorLabelAnchor";
 import { calcConnectorLabelPlacement } from "../../../../presentations/layers/content/utils/label/calcConnectorLabelPlacement";
 import type { ConnectorLabel } from "../../../../schemas/objects/connections/connector/ConnectorDoc";
@@ -22,6 +21,7 @@ import type {
 } from "../../registry/GestureHandlerTypes";
 import { isLeftButton } from "../utils/isLeftButton";
 import { SNAP_THRESHOLD_PX } from "../utils/snap/findSnap";
+import { snapLabelOffsetToLine } from "../utils/snapLabelOffsetToLine";
 
 type LabeledConnector = { connector: ConnectorState; label: ConnectorLabel };
 

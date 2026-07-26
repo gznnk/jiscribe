@@ -9,16 +9,20 @@ import type { ClickSnapshot } from "../GestureRecognizerTypes";
  *
  * Conditions:
  *   1. A prior single click is recorded (previous !== null)
- *   2. Same target (matching targetId AND targetPart; the background matches as both are
- *      undefined). Different parts of one target — e.g. two buttons of the same menu, or a
- *      connector's line vs its label box — are separate click targets, not a double click.
- *   3. Within the time threshold (DOUBLE_CLICK_THRESHOLD)
- *   4. Within the screen distance threshold (DOUBLE_CLICK_DISTANCE_THRESHOLD)
+ *   2. Within the time threshold (DOUBLE_CLICK_THRESHOLD)
+ *   3. Within the screen distance threshold (DOUBLE_CLICK_DISTANCE_THRESHOLD)
  *
- * Never treat it as a doubleClick while previous is null (no baseline recorded). Because the
- * background always has an undefined targetId that matches, distinguishing separate clicks
- * by position is handled by the distance check. Distance is compared squared, as in the
- * DRAG_THRESHOLD check, to avoid sqrt.
+ * Target identity is deliberately NOT compared, matching the OS/browser
+ * convention (time + position only). Two clicks a human lands within the
+ * distance threshold and the time threshold are one double click even when
+ * the second one hits a different element — typically a control the first
+ * click made appear (e.g. a connector's waypoint-insert handle over the
+ * default label position). The emitted doubleClick targets the second
+ * click's element; what the pair means is decided by its handler.
+ *
+ * Never treat it as a doubleClick while previous is null (no baseline
+ * recorded). Distance is compared squared, as in the DRAG_THRESHOLD check,
+ * to avoid sqrt.
  *
  * @param previous - The prior single click, or null if none recorded
  * @param current - The current click
@@ -37,8 +41,6 @@ export const isDoubleClick = (
 		(current.clientPos.y - previous.clientPos.y) ** 2;
 
 	return (
-		previous.targetId === current.targetId &&
-		previous.targetPart === current.targetPart &&
 		current.time - previous.time < DOUBLE_CLICK_THRESHOLD &&
 		clientDistanceSquared < DOUBLE_CLICK_DISTANCE_THRESHOLD
 	);
