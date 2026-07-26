@@ -22,9 +22,10 @@ import { SNAP_THRESHOLD_PX } from "../utils/snap/findSnap";
  * a placement off the line only survives on a very thick stroke.
  *
  * Only called for a connector without label text, so any placement the label
- * still carries belongs to a deleted label (an externally authored document can
- * hold one; commitConnectorLabel strips it here) and is overridden. Returns null
- * when the path cannot be resolved, leaving the label's own values in charge.
+ * still carries belongs to a deleted label and is overridden. Emptying a label
+ * through the editor drops its placement (commitTextEditIfNeeded), so one only
+ * reaches here from an externally authored document. Returns null when the path
+ * cannot be resolved, leaving the label's own values in charge.
  *
  * @param state Canvas state, read for the objects (endpoint resolution) and the zoom
  * @param connector Connector whose line was double-clicked
