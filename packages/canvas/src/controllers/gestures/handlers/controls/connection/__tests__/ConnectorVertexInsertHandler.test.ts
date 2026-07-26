@@ -2,6 +2,7 @@ import type { Point } from "@workspace/geometry";
 import { describe, expect, it } from "vitest";
 
 import type { CanvasControllerState } from "../../../../../CanvasTypes";
+import { createTestRegistries } from "../../../../../registries/createCanvasRegistries";
 import type { CanvasEvent } from "../../../../registry/GestureHandlerTypes";
 import { VertexControlHandler } from "../../vertex/VertexControlHandler";
 import { VertexInsertHandler } from "../../vertex/VertexInsertHandler";
@@ -9,6 +10,7 @@ import { ConnectionAnchorEventHandler } from "../ConnectionAnchorEventHandler";
 import { ConnectorVertexInsertHandler } from "../ConnectorVertexInsertHandler";
 
 const insertHandler = new ConnectorVertexInsertHandler();
+const registries = createTestRegistries();
 
 /** A minimal event carrying only targetKind / targetId, for verifying supports(). */
 const controlEvent = (
@@ -79,6 +81,7 @@ describe("ConnectorVertexInsertHandler", () => {
 		const next = insertHandler.handle(
 			state,
 			insertEvent("dragStart", { x: 50, y: 50 }, 0),
+			registries,
 		);
 		expect(pointsOf(next)).toEqual([{ x: 50, y: 50 }]);
 		// eventStartSnapshot is also updated for the subsequent drag
@@ -96,6 +99,7 @@ describe("ConnectorVertexInsertHandler", () => {
 		const next = insertHandler.handle(
 			state,
 			insertEvent("dragStart", { x: 50, y: 40 }, 1),
+			registries,
 		);
 		expect(pointsOf(next)).toEqual([
 			{ x: 0, y: 0 },
@@ -109,6 +113,7 @@ describe("ConnectorVertexInsertHandler", () => {
 		const next = insertHandler.handle(
 			state,
 			insertEvent("dragStart", { x: 80, y: 80 }, 1),
+			registries,
 		);
 		expect(pointsOf(next)).toEqual([
 			{ x: 0, y: 0 },
@@ -120,10 +125,12 @@ describe("ConnectorVertexInsertHandler", () => {
 		const started = insertHandler.handle(
 			makeState([]),
 			insertEvent("dragStart", { x: 50, y: 50 }, 0),
+			registries,
 		);
 		const dragged = insertHandler.handle(
 			started,
 			insertEvent("drag", { x: 70, y: 90 }, 0),
+			registries,
 		);
 		expect(pointsOf(dragged)).toEqual([{ x: 70, y: 90 }]);
 	});
@@ -132,10 +139,12 @@ describe("ConnectorVertexInsertHandler", () => {
 		const started = insertHandler.handle(
 			makeState([]),
 			insertEvent("dragStart", { x: 50, y: 50 }, 0),
+			registries,
 		);
 		const ended = insertHandler.handle(
 			started,
 			insertEvent("dragEnd", { x: 60, y: 60 }, 0),
+			registries,
 		);
 		expect(pointsOf(ended)).toEqual([{ x: 60, y: 60 }]);
 		expect(ended.edgeScrollEnabled).toBe(false);
@@ -150,6 +159,7 @@ describe("ConnectorVertexInsertHandler", () => {
 		const next = insertHandler.handle(
 			state,
 			insertEvent("dragStart", { x: 50, y: 50 }, 0),
+			registries,
 		);
 		expect(next).toBe(state);
 	});
@@ -160,6 +170,7 @@ describe("ConnectorVertexInsertHandler", () => {
 		const next = insertHandler.handle(
 			state,
 			insertEvent("dragStart", { x: 50, y: 50 }, 5),
+			registries,
 		);
 		expect(pointsOf(next)).toEqual([]);
 	});
@@ -250,7 +261,11 @@ describe("ConnectorVertexInsertHandler - doubleClick starts label editing", () =
 		}) as unknown as CanvasEvent;
 
 	it("without a label, opens the editor empty (a double click aimed at the line landing on the handle)", () => {
-		const next = insertHandler.handle(makeState([]), doubleClickEvent([]));
+		const next = insertHandler.handle(
+			makeState([]),
+			doubleClickEvent([]),
+			registries,
+		);
 		expect(next.textEditState).toEqual({
 			kind: "connectorLabel",
 			objectId: "conn-1",
@@ -264,6 +279,7 @@ describe("ConnectorVertexInsertHandler - doubleClick starts label editing", () =
 		const next = insertHandler.handle(
 			makeLabeledState("Yes"),
 			doubleClickEvent([{ id: "conn-1", kind: "connector", part: "label" }]),
+			registries,
 		);
 		expect(next.textEditState).toEqual({
 			kind: "connectorLabel",
@@ -276,6 +292,7 @@ describe("ConnectorVertexInsertHandler - doubleClick starts label editing", () =
 		const next = insertHandler.handle(
 			makeLabeledState("Yes"),
 			doubleClickEvent([]),
+			registries,
 		);
 		expect(next.textEditState).toBeUndefined();
 		expect(next.selectedConnectorId).toBe("conn-1");
@@ -285,6 +302,7 @@ describe("ConnectorVertexInsertHandler - doubleClick starts label editing", () =
 		const next = insertHandler.handle(
 			makeLabeledState("Yes"),
 			doubleClickEvent([{ id: "conn-2", kind: "connector", part: "label" }]),
+			registries,
 		);
 		expect(next.textEditState).toBeUndefined();
 	});

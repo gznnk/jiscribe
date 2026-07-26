@@ -7,6 +7,7 @@ import type {
 	CanvasControllerState,
 	SnapFeedback,
 } from "../../../../CanvasTypes";
+import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
@@ -54,6 +55,7 @@ export class ConnectorVertexInsertHandler extends ControlStrategy {
 	handle(
 		state: CanvasControllerState,
 		event: CanvasEvent,
+		registries: ICanvasRegistries,
 	): CanvasControllerState {
 		// targetId = connectorId, targetPart = "waypoint-insert:<segmentIndex>"
 		const connectorId = event.targetId;
@@ -74,7 +76,13 @@ export class ConnectorVertexInsertHandler extends ControlStrategy {
 						hovered.id === connectorId &&
 						hovered.part === "label",
 				);
-			return startConnectorLabelEdit(state, connectorId, event, isLabelBoxHit);
+			return startConnectorLabelEdit(
+				state,
+				connectorId,
+				event,
+				isLabelBoxHit,
+				registries,
+			);
 		}
 
 		const segmentIndex = parseInt(

@@ -7,6 +7,8 @@ import {
 } from "../../presentations/layers/content/utils/endpoints";
 import { calcConnectorLabelAnchor } from "../../presentations/layers/content/utils/label/calcConnectorLabelAnchor";
 import { resolveConnectorLabelBox } from "../../presentations/objects/connections/ConnectorLabel/utils/connectorLabelLayout";
+import type { ObjectAnchorRegionRegistry } from "../../presentations/objects/registry/ObjectAnchorRegionRegistry";
+import type { ObjectOutlineRegistry } from "../../presentations/objects/registry/ObjectOutlineRegistry";
 import type { ConnectorLabel } from "../../schemas/objects/connections/connector/ConnectorDoc";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../states/objects/connections/connector/ConnectorState";
@@ -17,15 +19,31 @@ import type { ConnectorState } from "../../states/objects/connections/connector/
  *
  * Returns null if the endpoints cannot be resolved (e.g. a referenced object
  * was removed).
+ *
+ * @param connector - The connector whose path is collected
+ * @param objects - The object map, used to resolve the endpoint owners
+ * @param outlineRegistry - Per-canvas ObjectOutlineRegistry. Pass it whenever the points
+ *   are compared against a pointer position: omitting it approximates an outline shape by
+ *   its bounding box, putting the path off the drawn one
+ * @param anchorRegionRegistry - Per-canvas ObjectAnchorRegionRegistry, the companion of
+ *   `outlineRegistry`; omitted = edge anchors centered on the full bounding box
  */
 export const collectConnectorPoints = (
 	connector: ConnectorState,
 	objects: Record<string, ObjectState>,
+	outlineRegistry?: Pick<ObjectOutlineRegistry, "get"> | null,
+	anchorRegionRegistry?: Pick<ObjectAnchorRegionRegistry, "get"> | null,
 ): Point[] | null => {
 	const sourceObj = resolveEndpointOwner(objects, connector.source);
 	const targetObj = resolveEndpointOwner(objects, connector.target);
 
-	const resolved = resolveConnectorPoints(connector, sourceObj, targetObj);
+	const resolved = resolveConnectorPoints(
+		connector,
+		sourceObj,
+		targetObj,
+		outlineRegistry,
+		anchorRegionRegistry,
+	);
 	if (!resolved) {
 		return null;
 	}
@@ -75,6 +93,13 @@ const collectLabelCorners = (
  * unioned in, so zoom-to-fit and the export viewBox do not crop it and viewport
  * culling does not drop a connector whose label is still on screen.
  * Returns null if the endpoints cannot be resolved (e.g. a referenced object was removed).
+ *
+ * The path is resolved without the outline / anchor-region registries, so on an
+ * outline shape the endpoints land on the bounding box rather than the drawn
+ * silhouette. The difference stays within the owner shape's own bounds and is
+ * absorbed by the margins the consumers already add (zoom-to-fit, export
+ * viewBox, culling) — unlike a path compared against a pointer position, which
+ * has no such slack and must pass the registries in.
  */
 export const calcConnectorBoundingBox = (
 	connector: ConnectorState,

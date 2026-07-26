@@ -7,6 +7,7 @@ import {
 	type ConnectorState,
 } from "../../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import {
 	applyLabelPlacement,
 	DEFAULT_LABEL_OFFSET,
@@ -85,10 +86,9 @@ const handleDragStart = (
  * label was grabbed and its anchor), so grabbing a corner of the box does not
  * snap its center onto the cursor.
  *
- * The path here comes from collectConnectorPoints (analytic endpoints) while
- * rendering resolves it through the outline registry. The two agree for
- * built-in shapes; a plugin-supplied outline may differ slightly near the
- * endpoints, the same trade-off calcConnectorBoundingBox already accepts.
+ * The path is resolved through the same registries the rendering uses, so the
+ * polyline the cursor is measured against is the one on screen, outline shapes
+ * included.
  *
  * A near-zero offset snaps onto the line unless Ctrl is held, the same bypass
  * the object-move and transform snaps use.
@@ -96,6 +96,7 @@ const handleDragStart = (
 const handleDrag = (
 	state: CanvasControllerState,
 	event: CanvasEvent,
+	registries: ICanvasRegistries,
 ): CanvasControllerState => {
 	const connectorId = event.targetId;
 	const snapshot = state.eventStartSnapshot;
@@ -109,7 +110,12 @@ const handleDrag = (
 	}
 	const { connector, label } = labeled;
 
-	const points = collectConnectorPoints(connector, snapshot.objects);
+	const points = collectConnectorPoints(
+		connector,
+		snapshot.objects,
+		registries.objectOutline,
+		registries.objectAnchorRegion,
+	);
 	if (!points) {
 		return state;
 	}
@@ -158,9 +164,10 @@ const handleDrag = (
 const handleDragEnd = (
 	state: CanvasControllerState,
 	event: CanvasEvent,
+	registries: ICanvasRegistries,
 ): CanvasControllerState => {
 	const connectorId = event.targetId;
-	const dragResult = handleDrag(state, event);
+	const dragResult = handleDrag(state, event, registries);
 	const started = connectorId
 		? getLabeledConnector(state.eventStartSnapshot?.objects[connectorId])
 		: null;
@@ -224,13 +231,14 @@ export const ConnectorLabelDragHandler: GestureHandler = {
 	handle(
 		state: CanvasControllerState,
 		event: CanvasEvent,
+		registries: ICanvasRegistries,
 	): CanvasControllerState {
 		if (event.type === "dragStart") {
 			return handleDragStart(state, event);
 		}
 		if (event.type === "drag") {
-			return handleDrag(state, event);
+			return handleDrag(state, event, registries);
 		}
-		return handleDragEnd(state, event);
+		return handleDragEnd(state, event, registries);
 	},
 };

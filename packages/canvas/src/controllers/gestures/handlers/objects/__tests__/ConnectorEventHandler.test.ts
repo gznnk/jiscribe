@@ -173,7 +173,7 @@ describe("ConnectorEventHandler - placement of the label being created", () => {
 		});
 	});
 
-	it("keeps an offset that reaches the threshold (a path resolved off the rendered one)", () => {
+	it("keeps an offset that reaches the threshold, beyond the reach of a real click on the hit band", () => {
 		const next = dblclickAt(stateWith(), { x: 150, y: SNAP_THRESHOLD_PX });
 		expect(pendingPlacement(next)).toEqual({
 			position: 0.75,
@@ -193,6 +193,37 @@ describe("ConnectorEventHandler - placement of the label being created", () => {
 			y: CONNECTOR_HIT_STROKE_WIDTH / 2 - 0.5,
 		});
 		expect(pendingPlacement(next)).toEqual({ position: 0.75, offset: 0 });
+	});
+
+	it("measures the position along the same path the rendering resolves", () => {
+		// A cloud 200x100 centered on the origin: its registered outline puts the
+		// center-anchored endpoint on the bump at (75, 0), while the bounding-box
+		// fallback would put it at (100, 0) and read the click as position 0.5.
+		const cloud = {
+			id: "cl1",
+			type: "cloud",
+			features: { type: "cloud", geometry: "rect" },
+			cx: 0,
+			cy: 0,
+			width: 200,
+			height: 100,
+			rotation: 0,
+			scaleX: 1,
+			scaleY: 1,
+		};
+		const attached = {
+			...freeConnector(),
+			source: { owner: { id: "cl1" }, anchor: { kind: "center" } },
+			target: { anchor: { kind: "free", point: { x: 500, y: 0 } } },
+		};
+		const state = {
+			...makeState(""),
+			objects: { cl1: cloud, c1: attached },
+		} as unknown as CanvasControllerState;
+
+		const next = dblclickAt(state, { x: 300, y: 0 });
+
+		expect(pendingPlacement(next)?.position).toBeCloseTo(225 / 425, 5);
 	});
 
 	it("writes nothing to the connector until the edit is committed", () => {

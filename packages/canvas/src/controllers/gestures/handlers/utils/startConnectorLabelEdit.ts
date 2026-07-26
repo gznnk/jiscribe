@@ -7,17 +7,18 @@ import {
 } from "../../../../presentations/layers/content/utils/label/calcConnectorLabelPlacement";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import { collectConnectorPoints } from "../../../utils/calcConnectorBoundingBox";
 import type { CanvasEvent } from "../../registry/GestureHandlerTypes";
 
 /**
  * Projects the double-clicked point onto the connector path, so a label created
  * from a bare-line double click is placed where it was aimed instead of at the
- * path midpoint. The offset snaps onto the line with a threshold of at least the
- * hit band's half width, so a click that can reach the connector at all creates
- * the label on the line at any zoom; only a path resolved differently from the
- * rendered one (see the drag handler) can leave an offset behind. The label drag
- * keeps the plain zoom-scaled threshold, its aim not being confined to the band.
+ * path midpoint. The path is resolved through the same registries the rendering
+ * uses, and the offset snaps onto the line with a threshold of at least the hit
+ * band's half width: a double click that can reach the connector at all creates
+ * the label on the line, at any zoom and on any shape. The label drag keeps the
+ * plain zoom-scaled threshold, its aim not being confined to the band.
  *
  * Only called for a connector without label text, so any placement the label
  * still carries belongs to a deleted label and is overridden. Emptying a label
@@ -28,13 +29,21 @@ import type { CanvasEvent } from "../../registry/GestureHandlerTypes";
  * @param state Canvas state, read for the objects (endpoint resolution) and the zoom
  * @param connector Connector whose line was double-clicked
  * @param event Double-click event; `last` is the clicked point in SVG coordinates
+ * @param registries Per-canvas registries, read for the outline / anchor-region
+ *   geometry the path resolution needs
  */
 const calcPendingLabelPlacement = (
 	state: CanvasControllerState,
 	connector: ConnectorState,
 	event: CanvasEvent,
+	registries: ICanvasRegistries,
 ): ConnectorLabelPlacement | null => {
-	const points = collectConnectorPoints(connector, state.objects);
+	const points = collectConnectorPoints(
+		connector,
+		state.objects,
+		registries.objectOutline,
+		registries.objectAnchorRegion,
+	);
 	if (!points) {
 		return null;
 	}
@@ -71,12 +80,15 @@ const calcPendingLabelPlacement = (
  *   of a label being created
  * @param isLabelBoxHit Whether the double click landed on the committed label's
  *   box; decides re-edit vs select when label text exists
+ * @param registries Per-canvas registries, forwarded to the placement calculation
+ *   (unused when an existing label is re-edited)
  */
 export const startConnectorLabelEdit = (
 	state: CanvasControllerState,
 	connectorId: string,
 	event: CanvasEvent,
 	isLabelBoxHit: boolean,
+	registries: ICanvasRegistries,
 ): CanvasControllerState => {
 	const connector = state.objects[connectorId];
 	if (connector?.type !== "connector") {
@@ -102,7 +114,12 @@ export const startConnectorLabelEdit = (
 	// edited in place.
 	const placement =
 		labelText === ""
-			? calcPendingLabelPlacement(selectedState, connectorState, event)
+			? calcPendingLabelPlacement(
+					selectedState,
+					connectorState,
+					event,
+					registries,
+				)
 			: null;
 	return {
 		...selectedState,

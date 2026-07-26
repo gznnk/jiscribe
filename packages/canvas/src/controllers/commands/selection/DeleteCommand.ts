@@ -27,7 +27,7 @@ export const DeleteCommand: ExecutableCommand = {
 		);
 	},
 
-	execute: (state) => {
+	execute: (state, registries) => {
 		// When a selectedVertex exists, prioritize vertex deletion.
 		// Even if selectedIds still contains objects, return from this branch so we
 		// don't fall through to object deletion.
@@ -98,7 +98,11 @@ export const DeleteCommand: ExecutableCommand = {
 		}
 
 		// Clean up connectors (run first so coordinates resolve against the pre-delete state)
-		const stateAfterConnectors = cleanupConnectorsOnDelete(state, idsToDelete);
+		const stateAfterConnectors = cleanupConnectorsOnDelete(
+			state,
+			idsToDelete,
+			registries,
+		);
 
 		const updatedObjects = { ...stateAfterConnectors.objects };
 

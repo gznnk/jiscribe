@@ -1,3 +1,5 @@
+import type { ObjectAnchorRegionRegistry } from "../../presentations/objects/registry/ObjectAnchorRegionRegistry";
+import type { ObjectOutlineRegistry } from "../../presentations/objects/registry/ObjectOutlineRegistry";
 import type { ObjectFactoryRegistry } from "../../schemas/registry/ObjectFactoryRegistry";
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import type { CanvasControllerState } from "../CanvasTypes";
@@ -17,12 +19,27 @@ import type { StencilRegistry } from "../ui/objects/StencilRegistry";
  * The concrete `CanvasRegistries` bundle is structurally assignable to this
  * contract, so callers pass their real bundle where an `ICanvasRegistries` is
  * expected.
+ *
+ * The two geometry registries are declared by their real classes: they live in
+ * `presentations` but are imported type-only (as `CanvasRegistries` already
+ * does), so no runtime edge is added and the graph stays acyclic.
  */
 export interface ICanvasRegistries {
 	objectMapper: ObjectMapperRegistry;
 	objectBehavior: ObjectBehaviorRegistry;
 	objectFactory: ObjectFactoryRegistry;
 	stencil: StencilRegistry;
+	/**
+	 * Per-type outline polygons, needed by every consumer that resolves a
+	 * connector path (`resolveConnectorPoints`) so its endpoints land on the drawn
+	 * silhouette — the same coordinates the rendering resolves.
+	 */
+	objectOutline: ObjectOutlineRegistry;
+	/**
+	 * Per-type anchor regions, the companion of `objectOutline` in connector path
+	 * resolution: it recenters the edge anchors of a tapering silhouette.
+	 */
+	objectAnchorRegion: ObjectAnchorRegionRegistry;
 	/**
 	 * Command lookup, used by `handleCommand` (reached from the menu/context/toolbar
 	 * gesture handlers). Inline shape — mirrors what the pure tree calls on the

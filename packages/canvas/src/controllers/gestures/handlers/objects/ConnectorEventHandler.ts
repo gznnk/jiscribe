@@ -1,4 +1,5 @@
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import type {
 	CanvasEvent,
@@ -40,6 +41,7 @@ export const ConnectorEventHandler: GestureHandler = {
 	handle(
 		state: CanvasControllerState,
 		event: CanvasEvent,
+		registries: ICanvasRegistries,
 	): CanvasControllerState {
 		const connectorId = event.targetId;
 		let nextState = commitTextEditIfNeeded(state);
@@ -55,6 +57,7 @@ export const ConnectorEventHandler: GestureHandler = {
 				connectorId,
 				event,
 				event.targetPart === "label",
+				registries,
 			);
 		}
 

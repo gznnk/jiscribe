@@ -7,6 +7,7 @@ import {
 } from "../../../../presentations/layers/content/utils/endpoints";
 import { calcConnectorLabelAnchor } from "../../../../presentations/layers/content/utils/label/calcConnectorLabelAnchor";
 import type { ConnectorLabelPlacement } from "../../../../presentations/layers/content/utils/label/calcConnectorLabelPlacement";
+import type { ObjectAnchorRegionRegistry } from "../../../../presentations/objects/registry/ObjectAnchorRegionRegistry";
 import type { ObjectOutlineRegistry } from "../../../../presentations/objects/registry/ObjectOutlineRegistry";
 import type { ObjectTextRegionCalculator } from "../../../../presentations/objects/registry/ObjectTextRegionRegistry";
 import { calcTextRegion } from "../../../../presentations/objects/utils/calcTextRegion";
@@ -40,6 +41,10 @@ type EditorHandlers = {
  *   precedence over the label's own keys, which for a label being created can
  *   only be leftovers from a deleted one (a re-edit carries no pending placement)
  * @param handlers - Input and exit handlers
+ * @param outlineRegistry - Per-canvas ObjectOutlineRegistry, so the path the anchor
+ *   is measured along is the rendered one
+ * @param anchorRegionRegistry - Per-canvas ObjectAnchorRegionRegistry, the companion of
+ *   `outlineRegistry` in path resolution
  * @returns The label editor, or null if it cannot be rendered
  */
 function renderConnectorLabelEditor(
@@ -49,6 +54,7 @@ function renderConnectorLabelEditor(
 	pendingPlacement: ConnectorLabelPlacement | undefined,
 	handlers: EditorHandlers,
 	outlineRegistry: ObjectOutlineRegistry,
+	anchorRegionRegistry: ObjectAnchorRegionRegistry,
 ): React.ReactElement | null {
 	const sourceObj = resolveEndpointOwner(objects, connector.source);
 	const targetObj = resolveEndpointOwner(objects, connector.target);
@@ -57,6 +63,7 @@ function renderConnectorLabelEditor(
 		sourceObj,
 		targetObj,
 		outlineRegistry,
+		anchorRegionRegistry,
 	);
 	if (!resolved) {
 		return null;
@@ -174,6 +181,7 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 			textEditState.placement,
 			handlers,
 			registries.objectOutline,
+			registries.objectAnchorRegion,
 		);
 	}
 
