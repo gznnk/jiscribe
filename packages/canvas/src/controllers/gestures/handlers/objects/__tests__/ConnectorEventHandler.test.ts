@@ -186,12 +186,12 @@ describe("ConnectorEventHandler - placement of the label being created", () => {
 		expect(next.objects).toBe(state.objects);
 	});
 
-	it("leaves an emptied label's own placement in charge", () => {
-		const next = dblclickAt(stateWith({ text: "", position: 0.3 }), {
-			x: 150,
-			y: 0,
-		});
-		expect(pendingPlacement(next)).toBeUndefined();
+	it("overrides the placement left on an emptied label by an external document", () => {
+		const next = dblclickAt(
+			stateWith({ text: "", position: 0.2, offset: 30, fill: "#dc2626" }),
+			{ x: 150, y: 0 },
+		);
+		expect(pendingPlacement(next)).toEqual({ position: 0.75, offset: 0 });
 	});
 
 	it("carries no placement when an existing label is edited from its box", () => {

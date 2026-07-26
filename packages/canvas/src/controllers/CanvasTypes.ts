@@ -339,10 +339,11 @@ export type CanvasControllerState = CanvasState & {
 				text: string;
 				/**
 				 * Placement the label being created takes on commit, projected from the
-				 * double-clicked point on the line. Absent whenever the label already
-				 * carries a placement of its own (which wins) — nothing is written to
-				 * the connector until the edit is committed, so cancelling leaves no
-				 * trace.
+				 * double-clicked point on the line. Set only when creating (empty label
+				 * text); a committed label is re-edited in place and keeps its own
+				 * placement. When present it wins over any placement left on an emptied
+				 * label — nothing is written to the connector until the edit is
+				 * committed, so cancelling leaves no trace.
 				 */
 				placement?: ConnectorLabelPlacement;
 		  }

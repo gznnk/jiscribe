@@ -21,9 +21,10 @@ import { SNAP_THRESHOLD_PX } from "../utils/snap/findSnap";
  * label drag uses; a double click within the stroke hit width always snaps, so
  * a placement off the line only survives on a very thick stroke.
  *
- * Returns null when the label already carries a placement of its own (an
- * emptied label keeps one), or when the path cannot be resolved: the label's
- * own values apply in both cases.
+ * Only called for a connector without label text, so any placement the label
+ * still carries belongs to a deleted label (an externally authored document can
+ * hold one; commitConnectorLabel strips it here) and is overridden. Returns null
+ * when the path cannot be resolved, leaving the label's own values in charge.
  *
  * @param state Canvas state, read for the objects (endpoint resolution) and the zoom
  * @param connector Connector whose line was double-clicked
@@ -34,11 +35,6 @@ const calcPendingLabelPlacement = (
 	connector: ConnectorState,
 	event: CanvasEvent,
 ): ConnectorLabelPlacement | null => {
-	const label = connector.label;
-	if (label?.position !== undefined || label?.offset !== undefined) {
-		return null;
-	}
-
 	const points = collectConnectorPoints(connector, state.objects);
 	if (!points) {
 		return null;

@@ -21,9 +21,11 @@ function clearTextEdit(state: CanvasControllerState): CanvasControllerState {
 
 /**
  * Commits a connector's label edit. The text is written back to `label.text` (nested).
- * Even when cleared to an empty string, the style/placement is not discarded: the label is kept
- * with only its text emptied, so re-entering text can restore it. However, a bare label that holds
- * only text is not worth keeping, so it is removed entirely (leaving no empty-label junk = back to no label).
+ * When cleared to an empty string the styles are not discarded: the label is kept with only its
+ * text emptied, so re-entering text can restore them. The placement is dropped, because it
+ * describes a label that no longer exists and would otherwise pin the next one to the old spot.
+ * A label left holding nothing but text is not worth keeping, so it is removed entirely
+ * (leaving no empty-label junk = back to no label).
  *
  * @param state - the current canvas controller state
  * @param connector - the connector whose label is being updated
@@ -46,16 +48,21 @@ function commitConnectorLabel(
 
 	let nextConnector: ConnectorState;
 	if (text === "") {
-		// If anything besides text remains (style/placement), keep the label and empty only its text.
-		const { text: _clearedText, ...labelWithoutText } = connector.label ?? {};
-		if (Object.keys(labelWithoutText).length === 0) {
-			// A bare label (text only) is removed entirely, reverting to no label.
+		// If any style remains, keep the label and empty only its text.
+		const {
+			text: _clearedText,
+			position: _clearedPosition,
+			offset: _clearedOffset,
+			...labelStyles
+		} = connector.label ?? {};
+		if (Object.keys(labelStyles).length === 0) {
+			// A label with no style left is removed entirely, reverting to no label.
 			const { label: _removed, ...rest } = connector;
 			nextConnector = rest as ConnectorState;
 		} else {
 			nextConnector = {
 				...connector,
-				label: { ...labelWithoutText, text: "" },
+				label: { ...labelStyles, text: "" },
 			} as ConnectorState;
 		}
 	} else {

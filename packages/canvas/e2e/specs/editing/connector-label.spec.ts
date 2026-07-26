@@ -12,6 +12,7 @@ import { selectors } from "../../support/selectors";
  *   （線のダブルクリックは選択のみ。編集中の線タップはラベル外として確定）
  * - 素のラベルは空文字で確定すると取り除かれる
  * - スタイル付きラベルは空文字にしてもスタイルを保持し、再入力で復元できる
+ *   （保持するのはスタイルだけで、位置は消したラベルのものなので引き継がない）
  */
 
 type Vec = { x: number; y: number };
@@ -232,6 +233,47 @@ test.describe("コネクターのラベル", () => {
 				async () =>
 					distance(await labelCenter(canvas, connectorId), clickPoint),
 				{ message: "作り直したラベルも 2 回目のダブルクリック点に来ること" },
+			)
+			.toBeLessThanOrEqual(TOLERANCE_PX);
+	});
+
+	test("ラベルを消してから付け直すと、消す前の位置ではなくダブルクリック点に来る", async ({
+		canvas,
+	}) => {
+		const connectorId = await setupConnector(canvas);
+		const points = parsePoints(
+			await canvas.objectById(connectorId).getAttribute("points"),
+		);
+		const labelLocator = canvas.page.locator(
+			`foreignObject[data-kind=connector][data-id="${connectorId}"]`,
+		);
+
+		// 中点でない点にラベルを作る（位置が label.position として残る）。
+		const firstPoint = pointAtRatio(points, 0.25);
+		await canvas.typeTextAt(firstPoint, "Yes");
+		await canvas.commitText();
+		await expect(labelLocator).toContainText("Yes");
+
+		// ラベルボックスから空文字で確定して消す。
+		await labelBoxOf(canvas, connectorId).dblclick();
+		await expect(canvas.textArea()).toHaveValue("Yes");
+		await canvas.textArea().fill("");
+		await canvas.commitText();
+		await expect(labelLocator).toHaveCount(0);
+
+		// 別の点のダブルクリックで付け直す（消したラベルの位置は引きずらない）。
+		await canvas.deselect();
+		const secondPoint = pointAtRatio(points, 0.75);
+		expect(distance(firstPoint, secondPoint)).toBeGreaterThan(30);
+		await canvas.typeTextAt(secondPoint, "Back");
+		await canvas.commitText();
+		await expect(labelLocator).toContainText("Back");
+
+		await expect
+			.poll(
+				async () =>
+					distance(await labelCenter(canvas, connectorId), secondPoint),
+				{ message: "付け直したラベルが 2 回目のダブルクリック点に来ること" },
 			)
 			.toBeLessThanOrEqual(TOLERANCE_PX);
 	});
@@ -566,7 +608,13 @@ test.describe("コネクターのラベル", () => {
 		await expect(labelBox).toHaveCount(0);
 
 		// ラベルが無くなったので、線のダブルクリックでテキストを入れ直せる（プリフィルは空）。
-		const screen = canvas.toScreen(onLine);
+		// 消した位置と別の点を選び、復元されるのがスタイルだけであることも見る。
+		const points = parsePoints(
+			await canvas.objectById(connectorId).getAttribute("points"),
+		);
+		const rePoint = pointAtRatio(points, 0.75);
+		expect(distance(rePoint, onLine)).toBeGreaterThan(30);
+		const screen = canvas.toScreen(rePoint);
 		await canvas.page.mouse.dblclick(screen.x, screen.y);
 		await expect(canvas.page.locator(selectors.textEditor)).toBeVisible();
 		await expect(canvas.textArea()).toHaveValue("");
@@ -576,6 +624,14 @@ test.describe("コネクターのラベル", () => {
 		// テキストが戻り、以前の背景色スタイルも復元されている。
 		await expect(labelBox).toContainText("Back");
 		await expect(labelBox).toHaveCSS("background-color", "rgb(220, 38, 38)");
+
+		// 位置はスタイルと違って引き継がず、2 回目のダブルクリック点に来る。
+		await expect
+			.poll(
+				async () => distance(await labelCenter(canvas, connectorId), rePoint),
+				{ message: "付け直したラベルが 2 回目のダブルクリック点に来ること" },
+			)
+			.toBeLessThanOrEqual(TOLERANCE_PX);
 	});
 
 	test("ラベルがあるコネクターは、線のダブルクリックでは編集にならない（選択のみ）", async ({

@@ -125,13 +125,15 @@ describe("commitTextEditIfNeeded", () => {
 		expect(updated.label).toBeUndefined();
 	});
 
-	it("connector: committing a styled label with an empty string -> keeps the label and only empties text", () => {
-		// a label carrying more than text (style/placement) is not discarded even when emptied.
+	it("connector: committing a styled label with an empty string -> keeps the style but drops the placement", () => {
+		// the style of a label is not discarded when emptied; its placement is,
+		// since it describes a label that no longer exists.
 		const styledLabel = {
 			text: "Yes",
 			fill: "#dc2626",
 			fontWeight: "bold",
 			position: 0.3,
+			offset: 20,
 		};
 		const c = {
 			id: "c1",
@@ -146,19 +148,33 @@ describe("commitTextEditIfNeeded", () => {
 		const result = commitTextEditIfNeeded(state);
 		expect(result.commitVersion).toBe(2);
 		const updated = result.objects["c1"] as unknown as {
-			label?: {
-				text: string;
-				fill?: string;
-				fontWeight?: string;
-				position?: number;
-			};
+			label?: ConnectorLabel;
 		};
-		expect(updated.label).toBeDefined();
-		expect(updated.label?.text).toBe("");
-		// style/placement is preserved (recoverable on re-entry).
-		expect(updated.label?.fill).toBe("#dc2626");
-		expect(updated.label?.fontWeight).toBe("bold");
-		expect(updated.label?.position).toBe(0.3);
+		expect(updated.label).toEqual({
+			text: "",
+			fill: "#dc2626",
+			fontWeight: "bold",
+		});
+	});
+
+	it("connector: committing a dragged but unstyled label with an empty string -> removes the label", () => {
+		// nothing but the placement remains after emptying, and that is dropped too.
+		const c = {
+			id: "c1",
+			type: "connector",
+			label: { text: "Yes", position: 0.3, offset: 20 },
+		} as unknown;
+		const state = makeState({
+			objects: { c1: c as CanvasControllerState["objects"][string] },
+			textEditState: { kind: "connectorLabel", objectId: "c1", text: "" },
+			commitVersion: 1,
+		});
+		const result = commitTextEditIfNeeded(state);
+		expect(result.commitVersion).toBe(2);
+		const updated = result.objects["c1"] as unknown as {
+			label?: ConnectorLabel;
+		};
+		expect(updated.label).toBeUndefined();
 	});
 
 	it("connector: after emptying a styled label, re-entering text -> the style is restored", () => {
@@ -255,6 +271,33 @@ describe("commitTextEditIfNeeded", () => {
 		expect(updated.label).toBeUndefined();
 		// Nothing changed, so the session only closes.
 		expect(result.commitVersion).toBe(1);
+	});
+
+	it("connector: a pending placement overrides the placement left on an emptied label", () => {
+		// an externally authored document can hold a placement alongside empty text.
+		const c = {
+			id: "c1",
+			type: "connector",
+			label: { text: "", position: 0.2, offset: 30, fill: "#dc2626" },
+		} as unknown;
+		const state = makeState({
+			objects: { c1: c as CanvasControllerState["objects"][string] },
+			textEditState: {
+				kind: "connectorLabel",
+				objectId: "c1",
+				text: "Back",
+				placement: { position: 0.75, offset: 0 },
+			},
+		});
+		const result = commitTextEditIfNeeded(state);
+		const updated = result.objects["c1"] as unknown as {
+			label?: ConnectorLabel;
+		};
+		expect(updated.label).toEqual({
+			text: "Back",
+			position: 0.75,
+			fill: "#dc2626",
+		});
 	});
 
 	it("connector: an existing label keeps its own placement (no pending one)", () => {

@@ -29,15 +29,16 @@ type EditorHandlers = {
 
 /**
  * Renders the label editor for a connector. Since a connector has no bbox, the
- * dedicated editor is placed on the label anchor: the label's own placement, or
- * the pending one for a label that does not exist yet (defaulting to the path
- * midpoint). Renders nothing if the path or anchor cannot be resolved.
+ * dedicated editor is placed on the label anchor: the pending placement of a
+ * label being created, else the label's own (defaulting to the path midpoint).
+ * Renders nothing if the path or anchor cannot be resolved.
  *
  * @param connector - The connector whose label is being edited
  * @param objects - All objects, used to resolve endpoints
  * @param text - The text being edited
- * @param pendingPlacement - Placement of the label being created, if any. Only
- *   consulted for keys the label does not carry itself
+ * @param pendingPlacement - Placement of the label being created, if any. Takes
+ *   precedence over the label's own keys, which for a label being created can
+ *   only be leftovers from a deleted one (a re-edit carries no pending placement)
  * @param handlers - Input and exit handlers
  * @returns The label editor, or null if it cannot be rendered
  */
@@ -64,8 +65,8 @@ function renderConnectorLabelEditor(
 	const points = [resolved.source, ...resolved.waypoints, resolved.target];
 	const anchor = calcConnectorLabelAnchor(
 		points,
-		connector.label?.position ?? pendingPlacement?.position,
-		connector.label?.offset ?? pendingPlacement?.offset,
+		pendingPlacement?.position ?? connector.label?.position,
+		pendingPlacement?.offset ?? connector.label?.offset,
 	);
 	if (!anchor) {
 		return null;
