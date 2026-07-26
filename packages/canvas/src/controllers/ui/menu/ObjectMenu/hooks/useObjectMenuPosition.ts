@@ -38,6 +38,7 @@ export function useObjectMenuPosition(
 		areaSelection,
 		eventStartSnapshot,
 		objectMenuOpenId,
+		textEditState,
 	} = state;
 
 	const [menuDimensions, setMenuDimensions] = useState({
@@ -53,6 +54,12 @@ export function useObjectMenuPosition(
 			return false;
 		}
 		if (contextMenuPosition !== null) {
+			return false;
+		}
+		// Hide during text editing: every click outside the editor then lands on
+		// canvas/object/control, all of which run commitTextEditIfNeeded, so the
+		// edit cannot be left dangling by a menu interaction (U6)
+		if (textEditState !== null) {
 			return false;
 		}
 		// Even when eventStartSnapshot is non-null, keep showing the menu if objectMenuOpenId is non-null
@@ -71,6 +78,7 @@ export function useObjectMenuPosition(
 		eventStartSnapshot,
 		areaSelection,
 		objectMenuOpenId,
+		textEditState,
 	]);
 
 	useLayoutEffect(() => {
