@@ -7,13 +7,18 @@ import { selectors } from "../../support/selectors";
  *
  * - ラベルが無いコネクターは線上のダブルクリックでラベル編集を開始できる
  * - 入力・確定すると経路上に水平ラベルが描かれる（foreignObject[data-kind=connector]）
+ *   位置はダブルクリックした点（経路中点ではない）。Escape でキャンセルすれば何も残らない
  * - ラベルがあるときはラベルボックスのダブルクリックだけが再編集を開始する
  *   （線のダブルクリックは選択のみ。編集中の線タップはラベル外として確定）
  * - 素のラベルは空文字で確定すると取り除かれる
  * - スタイル付きラベルは空文字にしてもスタイルを保持し、再入力で復元できる
+ *   （保持するのはスタイルだけで、位置は消したラベルのものなので引き継がない）
  */
 
 type Vec = { x: number; y: number };
+
+/** ダブルクリック点とラベル中心のズレ許容値。 */
+const TOLERANCE_PX = 2;
 
 function parsePoints(attr: string | null): Vec[] {
 	if (!attr) {
@@ -51,14 +56,68 @@ function labelBoxOf(canvas: CanvasDriver, connectorId: string) {
 		.first();
 }
 
-/**
- * 2つの矩形を結ぶコネクターを作り、ラベルを付けて返す。
- * （多くのテストで同じ前置きを踏むためのヘルパ。）
- */
-async function setupConnectorWithLabel(
+/** 経路の弧長比率 t（0=source, 1=target）に当たる線上の点。 */
+function pointAtRatio(points: Vec[], t: number): Vec {
+	const lengths = points
+		.slice(1)
+		.map((point, i) =>
+			Math.hypot(point.x - points[i].x, point.y - points[i].y),
+		);
+	const target = lengths.reduce((sum, length) => sum + length, 0) * t;
+
+	let traveled = 0;
+	for (let i = 0; i < lengths.length; i++) {
+		if (traveled + lengths[i] >= target) {
+			const ratio = (target - traveled) / lengths[i];
+			return {
+				x: points[i].x + (points[i + 1].x - points[i].x) * ratio,
+				y: points[i].y + (points[i + 1].y - points[i].y) * ratio,
+			};
+		}
+		traveled += lengths[i];
+	}
+	return points[points.length - 1];
+}
+
+function distance(a: Vec, b: Vec): number {
+	return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+/** ラベルボックスの中心（コンテンツ座標）。 */
+async function labelCenter(
 	canvas: CanvasDriver,
-	text: string,
-): Promise<{ connectorId: string; onLine: Vec }> {
+	connectorId: string,
+): Promise<Vec> {
+	const box = await labelBoxOf(canvas, connectorId).boundingBox();
+	if (!box) {
+		throw new Error("ラベルボックスの位置が取得できない");
+	}
+	return canvas.toContent({
+		x: box.x + box.width / 2,
+		y: box.y + box.height / 2,
+	});
+}
+
+/**
+ * ラベルボックスから十分離れた線上の点。ラベルはダブルクリックした位置に作られるので、
+ * 「線（ラベル外）のダブルクリック」を試すにはラベルの下でない点を選ぶ必要がある。
+ */
+async function bareLinePoint(
+	canvas: CanvasDriver,
+	connectorId: string,
+): Promise<Vec> {
+	const points = parsePoints(
+		await canvas.objectById(connectorId).getAttribute("points"),
+	);
+	const point = pointAtRatio(points, 0.8);
+	expect(
+		distance(point, await labelCenter(canvas, connectorId)),
+	).toBeGreaterThan(40);
+	return point;
+}
+
+/** 2つの矩形を結ぶ、ラベルの無いコネクターを作って返す。 */
+async function setupConnector(canvas: CanvasDriver): Promise<string> {
 	await canvas.drawShape("Rectangle", { x: 300, y: 150 }, { x: 500, y: 250 });
 	await canvas.deselect();
 	await canvas.drawShape("Rectangle", { x: 700, y: 300 }, { x: 900, y: 400 });
@@ -70,6 +129,18 @@ async function setupConnectorWithLabel(
 		y: 350,
 	});
 	await canvas.deselect();
+	return connectorId;
+}
+
+/**
+ * 2つの矩形を結ぶコネクターを作り、ラベルを付けて返す。
+ * （多くのテストで同じ前置きを踏むためのヘルパ。）
+ */
+async function setupConnectorWithLabel(
+	canvas: CanvasDriver,
+	text: string,
+): Promise<{ connectorId: string; onLine: Vec }> {
+	const connectorId = await setupConnector(canvas);
 
 	const onLine = await pointOnConnector(canvas, connectorId);
 	await canvas.typeTextAt(onLine, text);
@@ -112,6 +183,99 @@ test.describe("コネクターのラベル", () => {
 		await canvas.textArea().fill("");
 		await canvas.commitText();
 		await expect(labelLocator).toHaveCount(0);
+	});
+
+	test("ラベルはダブルクリックした位置に作られる", async ({ canvas }) => {
+		const connectorId = await setupConnector(canvas);
+		const points = parsePoints(
+			await canvas.objectById(connectorId).getAttribute("points"),
+		);
+		// 中点に置かれても通ってしまわないよう、中点から十分離れた線上の点を選ぶ。
+		const clickPoint = pointAtRatio(points, 0.25);
+		expect(distance(clickPoint, pointAtRatio(points, 0.5))).toBeGreaterThan(30);
+
+		await canvas.typeTextAt(clickPoint, "Yes");
+		await canvas.commitText();
+
+		await expect
+			.poll(
+				async () =>
+					distance(await labelCenter(canvas, connectorId), clickPoint),
+				{ message: "ラベル中心がダブルクリック点に来ること" },
+			)
+			.toBeLessThanOrEqual(TOLERANCE_PX);
+	});
+
+	test("ダブルクリック後に Escape で抜けるとラベルは作られない", async ({
+		canvas,
+	}) => {
+		const connectorId = await setupConnector(canvas);
+		const points = parsePoints(
+			await canvas.objectById(connectorId).getAttribute("points"),
+		);
+		const labelLocator = canvas.page.locator(
+			`foreignObject[data-kind=connector][data-id="${connectorId}"]`,
+		);
+
+		// 中点以外で編集を開始し、入力したままキャンセルする。
+		await canvas.typeTextAt(pointAtRatio(points, 0.25), "Yes");
+		await canvas.cancelText();
+		await expect(labelLocator).toHaveCount(0);
+
+		// キャンセルは痕跡を残さないので、別の位置のダブルクリックで作り直せる。
+		await canvas.deselect();
+		const clickPoint = pointAtRatio(points, 0.75);
+		await canvas.typeTextAt(clickPoint, "Back");
+		await canvas.commitText();
+		await expect(labelLocator).toContainText("Back");
+		await expect
+			.poll(
+				async () =>
+					distance(await labelCenter(canvas, connectorId), clickPoint),
+				{ message: "作り直したラベルも 2 回目のダブルクリック点に来ること" },
+			)
+			.toBeLessThanOrEqual(TOLERANCE_PX);
+	});
+
+	test("ラベルを消してから付け直すと、消す前の位置ではなくダブルクリック点に来る", async ({
+		canvas,
+	}) => {
+		const connectorId = await setupConnector(canvas);
+		const points = parsePoints(
+			await canvas.objectById(connectorId).getAttribute("points"),
+		);
+		const labelLocator = canvas.page.locator(
+			`foreignObject[data-kind=connector][data-id="${connectorId}"]`,
+		);
+
+		// 中点でない点にラベルを作る（位置が label.position として残る）。
+		const firstPoint = pointAtRatio(points, 0.25);
+		await canvas.typeTextAt(firstPoint, "Yes");
+		await canvas.commitText();
+		await expect(labelLocator).toContainText("Yes");
+
+		// ラベルボックスから空文字で確定して消す。
+		await labelBoxOf(canvas, connectorId).dblclick();
+		await expect(canvas.textArea()).toHaveValue("Yes");
+		await canvas.textArea().fill("");
+		await canvas.commitText();
+		await expect(labelLocator).toHaveCount(0);
+
+		// 別の点のダブルクリックで付け直す（消したラベルの位置は引きずらない）。
+		await canvas.deselect();
+		const secondPoint = pointAtRatio(points, 0.75);
+		expect(distance(firstPoint, secondPoint)).toBeGreaterThan(30);
+		await canvas.typeTextAt(secondPoint, "Back");
+		await canvas.commitText();
+		await expect(labelLocator).toContainText("Back");
+
+		await expect
+			.poll(
+				async () =>
+					distance(await labelCenter(canvas, connectorId), secondPoint),
+				{ message: "付け直したラベルが 2 回目のダブルクリック点に来ること" },
+			)
+			.toBeLessThanOrEqual(TOLERANCE_PX);
 	});
 
 	test("スタイリングUIでラベルの背景色を変更できる（label.fill）", async ({
@@ -214,6 +378,107 @@ test.describe("コネクターのラベル", () => {
 			.locator("div")
 			.first();
 		await expect(labelBox).toHaveCSS("font-weight", "700");
+	});
+
+	test("直線コネクター中点の挿入ハンドル上でも、ダブルクリックでラベル編集が開始する", async ({
+		canvas,
+	}) => {
+		// target の中心へ落とすと center アンカーになり既定 straight
+		// （挿入ハンドルが中点＝既定ラベル位置に出る、U1 の衝突条件）
+		await canvas.drawShape("Rectangle", { x: 300, y: 150 }, { x: 500, y: 250 });
+		await canvas.deselect();
+		await canvas.drawShape("Rectangle", { x: 700, y: 300 }, { x: 900, y: 400 });
+		await canvas.deselect();
+		await canvas.selectAt({ x: 400, y: 200 });
+		const connectorId = await canvas.createConnector("rightCenter", {
+			x: 800,
+			y: 350,
+		});
+		await canvas.deselect();
+
+		const points = parsePoints(
+			await canvas.objectById(connectorId).getAttribute("points"),
+		);
+		expect(points).toHaveLength(2);
+		const mid = pointAtRatio(points, 0.5);
+
+		// 線を選択し、中点に挿入ハンドルが出るのを待つ
+		await canvas.clickAt(mid);
+		await expect(
+			canvas.page.locator(
+				`[data-part="waypoint-insert:0"][data-id="${connectorId}"]`,
+			),
+		).toBeVisible();
+
+		// 選択クリックとダブルクリック1打目が対にならないよう、doubleClick の
+		// 時間閾値（300ms）より長く空ける（対になると1打目で編集が開き、
+		// 2打目が外側タップ扱いで空編集を即確定してしまう）
+		await canvas.page.waitForTimeout(400);
+
+		// 2打ともハンドルに吸われても「コネクターのダブルクリック」として届き、
+		// ウェイポイント挿入ではなくラベル編集が開始する
+		const screen = canvas.toScreen(mid);
+		await canvas.page.mouse.dblclick(screen.x, screen.y);
+		await expect(canvas.page.locator(selectors.textEditor)).toBeVisible();
+		await canvas.textArea().fill("Mid");
+		await canvas.commitText();
+		await expect(labelBoxOf(canvas, connectorId)).toContainText("Mid");
+
+		// ダブルクリックでウェイポイントは挿入されていない（直線のまま）
+		expect(
+			parsePoints(await canvas.objectById(connectorId).getAttribute("points")),
+		).toHaveLength(2);
+	});
+
+	test("中央の確定済みラベルを挿入ハンドルが覆っていても、ダブルクリックで再編集できる", async ({
+		canvas,
+	}) => {
+		// 直線コネクター（前のテストと同じ構成）に既定位置＝中点のラベルを付ける。
+		// 選択すると挿入ハンドルがラベル中心の真上に重なる（U1 の衝突条件）。
+		await canvas.drawShape("Rectangle", { x: 300, y: 150 }, { x: 500, y: 250 });
+		await canvas.deselect();
+		await canvas.drawShape("Rectangle", { x: 700, y: 300 }, { x: 900, y: 400 });
+		await canvas.deselect();
+		await canvas.selectAt({ x: 400, y: 200 });
+		const connectorId = await canvas.createConnector("rightCenter", {
+			x: 800,
+			y: 350,
+		});
+		await canvas.deselect();
+
+		const points = parsePoints(
+			await canvas.objectById(connectorId).getAttribute("points"),
+		);
+		expect(points).toHaveLength(2);
+		const mid = pointAtRatio(points, 0.5);
+		await canvas.typeTextAt(mid, "Yes");
+		await canvas.commitText();
+
+		// ラベル中心（＝中点）をクリックして選択し、ハンドルがラベルに重なるのを待つ
+		await canvas.clickAt(mid);
+		await expect(
+			canvas.page.locator(
+				`[data-part="waypoint-insert:0"][data-id="${connectorId}"]`,
+			),
+		).toBeVisible();
+
+		// 選択クリックとの合体を避ける分離待ち（前のテストのコメント参照）
+		await canvas.page.waitForTimeout(400);
+
+		// 2打とも最前面のハンドルに当たるが、hover スタック（実 DOM の
+		// elementsFromPoint）から下のラベル箱が見つかり、既存ラベルの再編集が開く
+		const screen = canvas.toScreen(mid);
+		await canvas.page.mouse.dblclick(screen.x, screen.y);
+		await expect(canvas.page.locator(selectors.textEditor)).toBeVisible();
+		await expect(canvas.textArea()).toHaveValue("Yes");
+
+		// その場で書き換えて確定できる（新規作成や削除に化けていない）
+		await canvas.textArea().fill("No");
+		await canvas.commitText();
+		await expect(labelBoxOf(canvas, connectorId)).toContainText("No");
+		expect(
+			parsePoints(await canvas.objectById(connectorId).getAttribute("points")),
+		).toHaveLength(2);
 	});
 
 	test("コネクター選択中に Enter でラベル編集を開始でき、Escape でキャンセルできる", async ({
@@ -444,7 +709,13 @@ test.describe("コネクターのラベル", () => {
 		await expect(labelBox).toHaveCount(0);
 
 		// ラベルが無くなったので、線のダブルクリックでテキストを入れ直せる（プリフィルは空）。
-		const screen = canvas.toScreen(onLine);
+		// 消した位置と別の点を選び、復元されるのがスタイルだけであることも見る。
+		const points = parsePoints(
+			await canvas.objectById(connectorId).getAttribute("points"),
+		);
+		const rePoint = pointAtRatio(points, 0.75);
+		expect(distance(rePoint, onLine)).toBeGreaterThan(30);
+		const screen = canvas.toScreen(rePoint);
 		await canvas.page.mouse.dblclick(screen.x, screen.y);
 		await expect(canvas.page.locator(selectors.textEditor)).toBeVisible();
 		await expect(canvas.textArea()).toHaveValue("");
@@ -454,16 +725,24 @@ test.describe("コネクターのラベル", () => {
 		// テキストが戻り、以前の背景色スタイルも復元されている。
 		await expect(labelBox).toContainText("Back");
 		await expect(labelBox).toHaveCSS("background-color", "rgb(220, 38, 38)");
+
+		// 位置はスタイルと違って引き継がず、2 回目のダブルクリック点に来る。
+		await expect
+			.poll(
+				async () => distance(await labelCenter(canvas, connectorId), rePoint),
+				{ message: "付け直したラベルが 2 回目のダブルクリック点に来ること" },
+			)
+			.toBeLessThanOrEqual(TOLERANCE_PX);
 	});
 
 	test("ラベルがあるコネクターは、線のダブルクリックでは編集にならない（選択のみ）", async ({
 		canvas,
 	}) => {
-		const { onLine } = await setupConnectorWithLabel(canvas, "Yes");
+		const { connectorId } = await setupConnectorWithLabel(canvas, "Yes");
 		await canvas.deselect();
 
-		// 線上をダブルクリック → コネクターは選択されるがエディタは開かない。
-		const screen = canvas.toScreen(onLine);
+		// 線上（ラベルボックスの外）をダブルクリック → コネクターは選択されるがエディタは開かない。
+		const screen = canvas.toScreen(await bareLinePoint(canvas, connectorId));
 		await canvas.page.mouse.dblclick(screen.x, screen.y);
 		await expect(
 			canvas.page.locator(selectors.objectMenuToggle("line-style")),
@@ -474,12 +753,10 @@ test.describe("コネクターのラベル", () => {
 	test("編集中に線をダブルクリックするとラベル外タップとして確定され、余分なコミットは積まれない（#102）", async ({
 		canvas,
 	}) => {
-		const { connectorId, onLine } = await setupConnectorWithLabel(
-			canvas,
-			"Yes",
-		);
+		const { connectorId } = await setupConnectorWithLabel(canvas, "Yes");
 		const labelBox = labelBoxOf(canvas, connectorId);
 		await expect(labelBox).toContainText("Yes");
+		const offLabel = await bareLinePoint(canvas, connectorId);
 
 		// ラベルボックスから編集を開始し、テキストを書き換える（まだ確定しない）。
 		await labelBox.dblclick();
@@ -489,7 +766,7 @@ test.describe("コネクターのラベル", () => {
 
 		// 確定せずに線上をダブルクリック → ラベル外のタップなので "No" が確定され、
 		// エディタは再オープンしない（ラベルがある線のダブルクリックは選択のみ）。
-		const screen = canvas.toScreen(onLine);
+		const screen = canvas.toScreen(offLabel);
 		await canvas.page.mouse.dblclick(screen.x, screen.y);
 		await expect(canvas.page.locator(selectors.textEditor)).toHaveCount(0);
 		await expect(labelBox).toContainText("No");

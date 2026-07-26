@@ -1,5 +1,6 @@
 import type { BoundingBox, FrameKeyPoints, Point } from "@workspace/geometry";
 
+import type { ConnectorLabelPlacement } from "../presentations/layers/content/utils/label/calcConnectorLabelPlacement";
 import type { DocCreationDefaults } from "../schemas/objects/types/DocCreationDefaults";
 import type { CanvasState } from "../states/canvas/CanvasState";
 import type { DocSnapshot } from "../states/canvas/DocSnapshot";
@@ -326,13 +327,27 @@ export type CanvasControllerState = CanvasState & {
 	multiSelectGroup: GroupState | null;
 
 	/**
-	 * State while editing text.
+	 * State while editing text. The variant tells which kind of text is being
+	 * edited: a shape's body text or a connector's label.
 	 * null when not editing text.
 	 */
-	textEditState: {
-		objectId: string;
-		text: string;
-	} | null;
+	textEditState:
+		| { kind: "shape"; objectId: string; text: string }
+		| {
+				kind: "connectorLabel";
+				objectId: string;
+				text: string;
+				/**
+				 * Placement the label being created takes on commit, projected from the
+				 * double-clicked point on the line. Set only when creating (empty label
+				 * text); a committed label is re-edited in place and keeps its own
+				 * placement. When present it wins over any placement left on an emptied
+				 * label — nothing is written to the connector until the edit is
+				 * committed, so cancelling leaves no trace.
+				 */
+				placement?: ConnectorLabelPlacement;
+		  }
+		| null;
 
 	/**
 	 * Temporary state while creating a connector.

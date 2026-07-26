@@ -401,6 +401,7 @@ export const ObjectEventHandler: GestureHandler = {
 				return {
 					...nextState,
 					textEditState: {
+						kind: "shape",
 						objectId: targetObject.id,
 						text: targetObject.text ?? "",
 					},

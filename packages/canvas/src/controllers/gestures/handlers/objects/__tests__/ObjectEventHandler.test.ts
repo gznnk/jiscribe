@@ -115,7 +115,7 @@ const makeEditState = (
 		selectedConnectorId: null,
 		selectedVertex: null,
 		multiSelectGroup: null,
-		textEditState: { objectId: editingId, text: pendingText },
+		textEditState: { kind: "shape", objectId: editingId, text: pendingText },
 		commitVersion: 5,
 		contextMenuPosition: { x: 1, y: 1 },
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
@@ -160,6 +160,7 @@ describe("ObjectEventHandler - text edit commit", () => {
 		);
 		// The pending text was committed by the pressed and prefilled again — not lost.
 		expect(afterDouble.textEditState).toEqual({
+			kind: "shape",
 			objectId: "rect-1",
 			text: "new",
 		});

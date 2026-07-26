@@ -39,7 +39,7 @@ const makeState = (): CanvasControllerState =>
 	}) as unknown as CanvasControllerState;
 
 const makeEvent = (
-	type: "pressed" | "click" | "drag" | "dragEnd",
+	type: "pressed" | "click" | "doubleClick" | "drag" | "dragEnd",
 	targetPart: string | undefined,
 	inputValue?: string,
 	targetKind = "menu",
@@ -87,6 +87,16 @@ describe("ObjectMenuHandler", () => {
 			expect(fillOf(next)).toBe("#dc2626");
 			expect(next.commitVersion).toBe(6);
 			expect(next.selectedVertex).toBeNull();
+		});
+
+		it("a doubleClick activates like a click (a rapid second press of a value-dependent toggle, e.g. bold → normal, arrives as doubleClick)", () => {
+			const next = ObjectMenuHandler.handle(
+				makeState(),
+				makeEvent("doubleClick", "set:fill:#dc2626"),
+				registries,
+			);
+			expect(fillOf(next)).toBe("#dc2626");
+			expect(next.commitVersion).toBe(6);
 		});
 	});
 

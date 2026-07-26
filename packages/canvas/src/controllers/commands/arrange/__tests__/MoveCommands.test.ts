@@ -178,7 +178,7 @@ describe("moveCommands", () => {
 			const state = makeState({
 				selectedIds: ["a"],
 				objects: { a: makeRect("a", 0, 0) },
-				textEditState: { objectId: "a", text: "" },
+				textEditState: { kind: "shape", objectId: "a", text: "" },
 			});
 			expect(commandById("move-up").canExecute(state, registries)).toBe(false);
 		});

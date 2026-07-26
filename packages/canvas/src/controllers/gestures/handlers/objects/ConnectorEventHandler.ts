@@ -1,11 +1,12 @@
-import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
 import { isLeftButton } from "../utils/isLeftButton";
+import { startConnectorLabelEdit } from "../utils/startConnectorLabelEdit";
 
 /**
  * Handles click events on connectors.
@@ -15,20 +16,22 @@ import { isLeftButton } from "../utils/isLeftButton";
  * Label editing (label.text) starts on a double click, with the edit target
  * depending on whether a label exists:
  * - No committed label: a double click anywhere on the line starts editing
- *   (there is no label box to aim at yet).
+ *   (there is no label box to aim at yet), and the label being created takes the
+ *   clicked point as its placement (carried in textEditState until committed).
  * - Committed label: only a double click on the label box (targetPart "label")
  *   starts editing; a double click on the bare line just selects.
  *
- * While editing, the label box is covered by the editor overlay
- * (data-gesture="none"), so any tap that reaches this handler is outside the
- * label and commits the pending edit like any other outside tap.
+ * While editing, the static label box is not rendered and the editor overlay
+ * (data-gesture="none") sits in its place, so any tap that reaches this handler
+ * is outside the editor and commits the pending edit like any other outside tap.
  */
 export const ConnectorEventHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {
 		return (
 			isLeftButton(event) &&
 			event.targetKind === "connector" &&
-			// TODO: this filtering may no longer be necessary here
+			// Taps only: drags on the label box belong to ConnectorLabelDragHandler,
+			// which shares this targetKind (see initializeGestureHandlerRegistry).
 			(event.type === "click" ||
 				event.type === "pressed" ||
 				event.type === "doubleClick")
@@ -38,6 +41,7 @@ export const ConnectorEventHandler: GestureHandler = {
 	handle(
 		state: CanvasControllerState,
 		event: CanvasEvent,
+		registries: ICanvasRegistries,
 	): CanvasControllerState {
 		const connectorId = event.targetId;
 		let nextState = commitTextEditIfNeeded(state);
@@ -48,30 +52,13 @@ export const ConnectorEventHandler: GestureHandler = {
 			if (!connectorId) {
 				return nextState;
 			}
-			const connector = nextState.objects[connectorId];
-			if (connector?.type !== "connector") {
-				return nextState;
-			}
-			const labelText = (connector as ConnectorState).label?.text ?? "";
-			const selectedState = {
-				...nextState,
-				selectedConnectorId: connectorId,
-				selectedIds: [],
-				multiSelectGroup: null,
-				// Close the submenu / category flyout on selection change
-				objectMenuOpenId: null,
-				stencilLibraryOpenCategory: null,
-			};
-			if (labelText !== "" && event.targetPart !== "label") {
-				return selectedState;
-			}
-			return {
-				...selectedState,
-				textEditState: {
-					objectId: connectorId,
-					text: labelText,
-				},
-			};
+			return startConnectorLabelEdit(
+				nextState,
+				connectorId,
+				event,
+				event.targetPart === "label",
+				registries,
+			);
 		}
 
 		// A press on a connector closes the context menu (button is guarded in supports, selection happens on click)
@@ -90,6 +77,8 @@ export const ConnectorEventHandler: GestureHandler = {
 				...nextState,
 				selectedConnectorId: connectorId,
 				selectedIds: [],
+				// Without clearing it, an invisible vertex selection lingers and the Delete key deletes an unintended vertex
+				selectedVertex: null,
 				multiSelectGroup: null,
 				// Close the submenu / category flyout on selection change
 				objectMenuOpenId: null,

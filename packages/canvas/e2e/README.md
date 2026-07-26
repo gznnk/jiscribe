@@ -70,7 +70,7 @@ await page.goto("http://localhost:5173/", { waitUntil: "networkidle" });
 | ------------- | -------------------------------------- | --------------------------------------------------------------------------------------------- |
 | `canvas`      | キャンバス本体（DIV）                  | id: `canvas`                                                                                  |
 | `object`      | 図形（rect / ellipse / polyline …）    | id: UUID                                                                                      |
-| `connector`   | コネクター（polyline + 矢印 + ラベル） | id: UUID。ラベルボックスは part: `label`                                                      |
+| `connector`   | コネクター（polyline + 矢印 + ラベル） | id: UUID。ラベルボックスは part: `label`（ドラッグで position / offset を移動）               |
 | `control`     | 選択時のハンドル類                     | 下表参照                                                                                      |
 | `menu`        | メニュー UI 全般                       | id: `toolbar` / `object-menu` / `context-menu` / `stencil-library`。ボタンは part（下表参照） |
 | `text-editor` | テキスト編集中の TEXTAREA              | id: `textarea`                                                                                |

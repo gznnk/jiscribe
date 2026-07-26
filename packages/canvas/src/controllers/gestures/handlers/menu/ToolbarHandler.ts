@@ -16,8 +16,8 @@ import { isLeftButton } from "../utils/isLeftButton";
  * path (handleCommand) as keyboard shortcuts and the context menu.
  *
  * Note that click and doubleClick are treated equivalently.
- * GestureRecognizer fires click / doubleClick exclusively (rapidly hitting the same target
- * within DOUBLE_CLICK_THRESHOLD makes the second and later ones doubleClick). Repeat toolbar
+ * GestureRecognizer fires click / doubleClick exclusively (rapidly clicking the same spot
+ * within DOUBLE_CLICK_THRESHOLD makes the second one doubleClick). Repeat toolbar
  * commands (zoom ±, etc.) have no double-click-specific meaning, so doubleClick is also
  * treated as a single execution. This makes "rapid clicking = execute every time" hold.
  */

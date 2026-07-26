@@ -1,7 +1,11 @@
 import type { Rect } from "@workspace/geometry";
 
 import { embedCanvasSource } from "./canvasSourceMetadata";
-import { foreignObjectToSvgText } from "./foreignObjectToSvgText";
+import {
+	connectorLabelToSvgGroup,
+	foreignObjectToSvgText,
+	isConnectorLabelForeignObject,
+} from "./foreignObjectToSvgText";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -113,8 +117,9 @@ export const getSvgSize = (
  * - Bakes computed paint styles (fill / stroke / opacity) into inline styles
  *   — emotion classes and `var(--jiscribe-*)` do not survive standalone
  * - Removes control overlays (selection handles, ...) and the grid
- * - Converts foreignObject text to native `<text>` (avoids canvas taint and
- *   works on GitHub, which sanitizes foreignObject away)
+ * - Converts foreignObject text to native `<text>` — connector labels also get
+ *   their box as a `<rect>` (avoids canvas taint and works on GitHub, which
+ *   sanitizes foreignObject away)
  * - Lays a solid background `<rect>`
  * - When `source` is given, embeds the `.jis.json` in `<metadata>`
  */
@@ -142,12 +147,13 @@ export const buildExportSvg = (
 	for (let i = 0; i < clonedForeignObjects.length; i++) {
 		const clonedForeignObject = clonedForeignObjects[i];
 		const liveForeignObject = liveForeignObjects[i];
+		// Connector labels have their own DOM shape (and paint a box), so they
+		// take a dedicated converter instead of the text overlay contract.
+		const convert = isConnectorLabelForeignObject(clonedForeignObject)
+			? connectorLabelToSvgGroup
+			: foreignObjectToSvgText;
 		const replacement = liveForeignObject
-			? foreignObjectToSvgText(
-					liveForeignObject,
-					clonedForeignObject,
-					measureContext,
-				)
+			? convert(liveForeignObject, clonedForeignObject, measureContext)
 			: null;
 		if (replacement) {
 			clonedForeignObject.replaceWith(replacement);

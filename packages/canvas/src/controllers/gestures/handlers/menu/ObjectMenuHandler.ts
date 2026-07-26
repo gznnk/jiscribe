@@ -15,7 +15,7 @@ import { isLeftButton } from "../utils/isLeftButton";
  * Logic needed by both paths (such as clearing selectedVertex) must be added to each of them.
  *
  * Events handled:
- * - click: menu item click
+ * - click / doubleClick: menu item activation (equivalent; see the comment at the branch)
  * - drag: real-time slider update (no history recording)
  * - dragEnd: commit the slider's final value + record history
  *
@@ -94,8 +94,16 @@ export const ObjectMenuHandler: GestureHandler = {
 			return state;
 		}
 
-		// Menu item click
-		if (event.type === "click" && event.targetPart) {
+		// Menu item activation. doubleClick activates like click (the ToolbarHandler
+		// pattern): the recognizer pairs any two rapid same-position clicks without
+		// comparing targets, so the second press of a toggle whose data-part changes
+		// with the value (set:fontWeight:bold → set:fontWeight:normal) arrives as
+		// doubleClick and must still fire. Each pointerup emits exactly one of
+		// click / doubleClick, so this cannot run an action twice.
+		if (
+			(event.type === "click" || event.type === "doubleClick") &&
+			event.targetPart
+		) {
 			const actionId = event.targetPart;
 
 			// toggle button: toggle a section open/closed

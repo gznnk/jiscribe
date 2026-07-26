@@ -6,6 +6,8 @@ import {
 	resolveEndpointOwner,
 } from "../../../../presentations/layers/content/utils/endpoints";
 import { calcConnectorLabelAnchor } from "../../../../presentations/layers/content/utils/label/calcConnectorLabelAnchor";
+import type { ConnectorLabelPlacement } from "../../../../presentations/layers/content/utils/label/calcConnectorLabelPlacement";
+import type { ObjectAnchorRegionRegistry } from "../../../../presentations/objects/registry/ObjectAnchorRegionRegistry";
 import type { ObjectOutlineRegistry } from "../../../../presentations/objects/registry/ObjectOutlineRegistry";
 import type { ObjectTextRegionCalculator } from "../../../../presentations/objects/registry/ObjectTextRegionRegistry";
 import { calcTextRegion } from "../../../../presentations/objects/utils/calcTextRegion";
@@ -28,21 +30,31 @@ type EditorHandlers = {
 
 /**
  * Renders the label editor for a connector. Since a connector has no bbox, the
- * dedicated editor is placed at the path midpoint (the label anchor). Renders
- * nothing if the path or anchor cannot be resolved.
+ * dedicated editor is placed on the label anchor: the pending placement of a
+ * label being created, else the label's own (defaulting to the path midpoint).
+ * Renders nothing if the path or anchor cannot be resolved.
  *
  * @param connector - The connector whose label is being edited
  * @param objects - All objects, used to resolve endpoints
  * @param text - The text being edited
+ * @param pendingPlacement - Placement of the label being created, if any. Takes
+ *   precedence over the label's own keys, which for a label being created can
+ *   only be leftovers from a deleted one (a re-edit carries no pending placement)
  * @param handlers - Input and exit handlers
+ * @param outlineRegistry - Per-canvas ObjectOutlineRegistry, so the path the anchor
+ *   is measured along is the rendered one
+ * @param anchorRegionRegistry - Per-canvas ObjectAnchorRegionRegistry, the companion of
+ *   `outlineRegistry` in path resolution
  * @returns The label editor, or null if it cannot be rendered
  */
 function renderConnectorLabelEditor(
 	connector: ConnectorState,
 	objects: CanvasControllerState["objects"],
 	text: string,
+	pendingPlacement: ConnectorLabelPlacement | undefined,
 	handlers: EditorHandlers,
 	outlineRegistry: ObjectOutlineRegistry,
+	anchorRegionRegistry: ObjectAnchorRegionRegistry,
 ): React.ReactElement | null {
 	const sourceObj = resolveEndpointOwner(objects, connector.source);
 	const targetObj = resolveEndpointOwner(objects, connector.target);
@@ -51,6 +63,7 @@ function renderConnectorLabelEditor(
 		sourceObj,
 		targetObj,
 		outlineRegistry,
+		anchorRegionRegistry,
 	);
 	if (!resolved) {
 		return null;
@@ -59,8 +72,8 @@ function renderConnectorLabelEditor(
 	const points = [resolved.source, ...resolved.waypoints, resolved.target];
 	const anchor = calcConnectorLabelAnchor(
 		points,
-		connector.label?.position,
-		connector.label?.offset,
+		pendingPlacement?.position ?? connector.label?.position,
+		pendingPlacement?.offset ?? connector.label?.offset,
 	);
 	if (!anchor) {
 		return null;
@@ -135,7 +148,7 @@ type TextEditorLayerProps = {
 };
 
 /**
- * If there is an active text-editing session, dispatches to the dedicated editor for the target's type.
+ * If there is an active text-editing session, dispatches to the dedicated editor for the editing kind.
  * The render-side dispatcher that pairs with commitTextEditIfNeeded on the commit side.
  */
 const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
@@ -157,13 +170,18 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 
 	const handlers: EditorHandlers = { onChange: onTextChange, onEscape };
 
-	if (targetObject.type === "connector") {
+	if (textEditState.kind === "connectorLabel") {
+		if (targetObject.type !== "connector") {
+			return null;
+		}
 		return renderConnectorLabelEditor(
 			targetObject as ConnectorState,
 			objects,
 			textEditState.text,
+			textEditState.placement,
 			handlers,
 			registries.objectOutline,
+			registries.objectAnchorRegion,
 		);
 	}
 

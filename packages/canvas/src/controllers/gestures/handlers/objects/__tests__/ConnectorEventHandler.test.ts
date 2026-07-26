@@ -1,19 +1,24 @@
+import type { Point } from "@workspace/geometry";
 import { describe, expect, it } from "vitest";
 
+import { CONNECTOR_HIT_STROKE_WIDTH } from "../../../../../constants/connectorHitArea";
+import type { ConnectorLabel } from "../../../../../schemas/objects/connections/connector/ConnectorDoc";
 import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
+import { SNAP_THRESHOLD_PX } from "../../utils/snap/findSnap";
 import { ConnectorEventHandler } from "../ConnectorEventHandler";
 
 const registries = createTestRegistries();
 
+/** Endpoints reference absent objects, so the path never resolves (placement stays out of it). */
 const makeConnector = (id: string, labelText: string): ConnectorState =>
 	({
 		id,
 		type: "connector",
-		source: { objectId: "a" },
-		target: { objectId: "b" },
+		source: { owner: { id: "a" }, anchor: { kind: "center" } },
+		target: { owner: { id: "b" }, anchor: { kind: "center" } },
 		label: { text: labelText },
 	}) as unknown as ConnectorState;
 
@@ -44,25 +49,38 @@ const makeEditState = (
 	({
 		...makeState(labelText),
 		selectedConnectorId: editingId,
-		textEditState: { objectId: editingId, text: pendingText },
+		textEditState: {
+			kind: "connectorLabel",
+			objectId: editingId,
+			text: pendingText,
+		},
 	}) as unknown as CanvasControllerState;
 
 const makeEvent = (
 	type: "pressed" | "click" | "doubleClick",
 	targetId: string,
 	targetPart?: string,
+	last: Point = { x: 0, y: 0 },
 ): CanvasEvent =>
 	({
 		type,
 		targetKind: "connector",
 		targetId,
 		targetPart,
+		start: last,
+		last,
 		button: 0,
 		mods: { shift: false, alt: false, ctrl: false, meta: false },
 	}) as unknown as CanvasEvent;
 
 const labelText = (state: CanvasControllerState, id: string) =>
 	(state.objects[id] as ConnectorState).label?.text;
+
+/** The pending placement carried by the label editing session, if any. */
+const pendingPlacement = (state: CanvasControllerState) =>
+	state.textEditState?.kind === "connectorLabel"
+		? state.textEditState.placement
+		: undefined;
 
 describe("ConnectorEventHandler - double click edit target", () => {
 	it("with a committed label, a double click on the bare line selects without opening the editor", () => {
@@ -81,7 +99,11 @@ describe("ConnectorEventHandler - double click edit target", () => {
 			makeEvent("doubleClick", "c1", "label"),
 			registries,
 		);
-		expect(next.textEditState).toEqual({ objectId: "c1", text: "Yes" });
+		expect(next.textEditState).toEqual({
+			kind: "connectorLabel",
+			objectId: "c1",
+			text: "Yes",
+		});
 		expect(next.selectedConnectorId).toBe("c1");
 	});
 
@@ -91,8 +113,145 @@ describe("ConnectorEventHandler - double click edit target", () => {
 			makeEvent("doubleClick", "c1"),
 			registries,
 		);
-		expect(next.textEditState).toEqual({ objectId: "c1", text: "" });
+		expect(next.textEditState).toEqual({
+			kind: "connectorLabel",
+			objectId: "c1",
+			text: "",
+		});
 		expect(next.selectedConnectorId).toBe("c1");
+	});
+});
+
+describe("ConnectorEventHandler - placement of the label being created", () => {
+	/**
+	 * A straight connector between two free endpoints, so the resolved path is
+	 * exactly (0,0)-(200,0) with no owner geometry involved.
+	 */
+	const freeConnector = (label?: ConnectorLabel): ConnectorState =>
+		({
+			id: "c1",
+			type: "connector",
+			points: [],
+			source: { anchor: { kind: "free", point: { x: 0, y: 0 } } },
+			target: { anchor: { kind: "free", point: { x: 200, y: 0 } } },
+			routing: "straight",
+			...(label ? { label } : {}),
+		}) as unknown as ConnectorState;
+
+	const stateWith = (label?: ConnectorLabel): CanvasControllerState =>
+		({
+			...makeState(""),
+			objects: { c1: freeConnector(label) },
+		}) as unknown as CanvasControllerState;
+
+	const dblclickAt = (
+		state: CanvasControllerState,
+		last: Point,
+		targetPart?: string,
+	) =>
+		ConnectorEventHandler.handle(
+			state,
+			makeEvent("doubleClick", "c1", targetPart, last),
+			registries,
+		);
+
+	it("projects the clicked point onto the path", () => {
+		const next = dblclickAt(stateWith(), { x: 150, y: 0 });
+		expect(next.textEditState).toEqual({
+			kind: "connectorLabel",
+			objectId: "c1",
+			text: "",
+			placement: { position: 0.75, offset: 0 },
+		});
+	});
+
+	it("snaps a click beside the line onto it, as the label drag does", () => {
+		const next = dblclickAt(stateWith(), { x: 150, y: SNAP_THRESHOLD_PX - 2 });
+		expect(pendingPlacement(next)).toEqual({
+			position: 0.75,
+			offset: 0,
+		});
+	});
+
+	it("keeps an offset that reaches the threshold, beyond the reach of a real click on the hit band", () => {
+		const next = dblclickAt(stateWith(), { x: 150, y: SNAP_THRESHOLD_PX });
+		expect(pendingPlacement(next)).toEqual({
+			position: 0.75,
+			offset: SNAP_THRESHOLD_PX,
+		});
+	});
+
+	it("snaps a click anywhere in the hit band even when the zoom shrinks the threshold", () => {
+		// zoom 2 puts the zoom-scaled threshold (4) inside the hit band's half
+		// width (6), which would otherwise leave the label floating off the line.
+		const zoomed = {
+			...stateWith(),
+			viewport: { ...stateWith().viewport, zoom: 2 },
+		} as CanvasControllerState;
+		const next = dblclickAt(zoomed, {
+			x: 150,
+			y: CONNECTOR_HIT_STROKE_WIDTH / 2 - 0.5,
+		});
+		expect(pendingPlacement(next)).toEqual({ position: 0.75, offset: 0 });
+	});
+
+	it("measures the position along the same path the rendering resolves", () => {
+		// A cloud 200x100 centered on the origin: its registered outline puts the
+		// center-anchored endpoint on the bump at (75, 0), while the bounding-box
+		// fallback would put it at (100, 0) and read the click as position 0.5.
+		const cloud = {
+			id: "cl1",
+			type: "cloud",
+			features: { type: "cloud", geometry: "rect" },
+			cx: 0,
+			cy: 0,
+			width: 200,
+			height: 100,
+			rotation: 0,
+			scaleX: 1,
+			scaleY: 1,
+		};
+		const attached = {
+			...freeConnector(),
+			source: { owner: { id: "cl1" }, anchor: { kind: "center" } },
+			target: { anchor: { kind: "free", point: { x: 500, y: 0 } } },
+		};
+		const state = {
+			...makeState(""),
+			objects: { cl1: cloud, c1: attached },
+		} as unknown as CanvasControllerState;
+
+		const next = dblclickAt(state, { x: 300, y: 0 });
+
+		expect(pendingPlacement(next)?.position).toBeCloseTo(225 / 425, 5);
+	});
+
+	it("writes nothing to the connector until the edit is committed", () => {
+		const state = stateWith();
+		const next = dblclickAt(state, { x: 150, y: 0 });
+		expect(next.objects).toBe(state.objects);
+	});
+
+	it("overrides the placement left on an emptied label by an external document", () => {
+		const next = dblclickAt(
+			stateWith({ text: "", position: 0.2, offset: 30, fill: "#dc2626" }),
+			{ x: 150, y: 0 },
+		);
+		expect(pendingPlacement(next)).toEqual({ position: 0.75, offset: 0 });
+	});
+
+	it("carries no placement when an existing label is edited from its box", () => {
+		const next = dblclickAt(
+			stateWith({ text: "Yes" }),
+			{ x: 150, y: 0 },
+			"label",
+		);
+		expect(next.textEditState).toEqual({
+			kind: "connectorLabel",
+			objectId: "c1",
+			text: "Yes",
+		});
+		expect(pendingPlacement(next)).toBeUndefined();
 	});
 });
 
@@ -140,32 +299,35 @@ describe("ConnectorEventHandler - taps while editing commit", () => {
 	});
 });
 
-describe("ConnectorEventHandler - closes menus on selection change", () => {
-	const openMenusState = (): CanvasControllerState =>
+describe("ConnectorEventHandler - clears stale UI state on selection change", () => {
+	const staleUiState = (): CanvasControllerState =>
 		({
 			...makeState("Yes"),
+			selectedVertex: { objectId: "c2", vertexIndex: 0 },
 			objectMenuOpenId: "style",
 			stencilLibraryOpenCategory: "flowchart",
 		}) as unknown as CanvasControllerState;
 
-	it("a click selecting a connector closes the ObjectMenu submenu and the category flyout", () => {
+	it("a click selecting a connector closes the menus and drops the vertex selection", () => {
 		const next = ConnectorEventHandler.handle(
-			openMenusState(),
+			staleUiState(),
 			makeEvent("click", "c1"),
 			registries,
 		);
 		expect(next.selectedConnectorId).toBe("c1");
+		expect(next.selectedVertex).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
 		expect(next.stencilLibraryOpenCategory).toBeNull();
 	});
 
-	it("a double click selecting a connector also closes them", () => {
+	it("a double click selecting a connector also clears them", () => {
 		const next = ConnectorEventHandler.handle(
-			openMenusState(),
+			staleUiState(),
 			makeEvent("doubleClick", "c1"),
 			registries,
 		);
 		expect(next.selectedConnectorId).toBe("c1");
+		expect(next.selectedVertex).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
 		expect(next.stencilLibraryOpenCategory).toBeNull();
 	});

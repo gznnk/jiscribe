@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
 	calcConnectorLabelBox,
+	resolveConnectorLabelBox,
+	CONNECTOR_LABEL_DEFAULTS,
 	CONNECTOR_LABEL_MAX_WIDTH,
 	CONNECTOR_LABEL_MIN_WIDTH,
 	type ConnectorLabelFont,
@@ -45,5 +47,45 @@ describe("calcConnectorLabelBox", () => {
 		expect(Number.isFinite(box.height)).toBe(true);
 		expect(box.width).toBeGreaterThan(0);
 		expect(box.height).toBeGreaterThan(0);
+	});
+});
+
+describe("resolveConnectorLabelBox", () => {
+	it("an unstyled label resolves to the default font and no border", () => {
+		expect(resolveConnectorLabelBox({ text: "Yes" })).toEqual(
+			calcConnectorLabelBox(
+				"Yes",
+				{
+					fontSize: CONNECTOR_LABEL_DEFAULTS.fontSize,
+					fontFamily: CONNECTOR_LABEL_DEFAULTS.fontFamily,
+					fontWeight: CONNECTOR_LABEL_DEFAULTS.fontWeight,
+				},
+				0,
+			),
+		);
+	});
+
+	it("styled values from the label win over the defaults", () => {
+		const styled = resolveConnectorLabelBox({
+			text: "Yes",
+			fontSize: 32,
+			fontWeight: "bold",
+			strokeWidth: 3,
+		});
+
+		expect(styled).toEqual(
+			calcConnectorLabelBox(
+				"Yes",
+				{
+					fontSize: 32,
+					fontFamily: CONNECTOR_LABEL_DEFAULTS.fontFamily,
+					fontWeight: "bold",
+				},
+				3,
+			),
+		);
+		expect(styled.height).toBeGreaterThan(
+			resolveConnectorLabelBox({ text: "Yes" }).height,
+		);
 	});
 });
