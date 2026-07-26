@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { ConnectorLabel } from "../../../../../../schemas/objects/connections/connector/ConnectorDoc";
+import type { ConnectorLabel } from "../../../schemas/objects/connections/connector/ConnectorDoc";
 import { applyLabelPlacement } from "../applyLabelPlacement";
 
 const label: ConnectorLabel = { text: "Yes" };

@@ -268,32 +268,35 @@ describe("ConnectorEventHandler - taps while editing commit", () => {
 	});
 });
 
-describe("ConnectorEventHandler - closes menus on selection change", () => {
-	const openMenusState = (): CanvasControllerState =>
+describe("ConnectorEventHandler - clears stale UI state on selection change", () => {
+	const staleUiState = (): CanvasControllerState =>
 		({
 			...makeState("Yes"),
+			selectedVertex: { objectId: "c2", vertexIndex: 0 },
 			objectMenuOpenId: "style",
 			stencilLibraryOpenCategory: "flowchart",
 		}) as unknown as CanvasControllerState;
 
-	it("a click selecting a connector closes the ObjectMenu submenu and the category flyout", () => {
+	it("a click selecting a connector closes the menus and drops the vertex selection", () => {
 		const next = ConnectorEventHandler.handle(
-			openMenusState(),
+			staleUiState(),
 			makeEvent("click", "c1"),
 			registries,
 		);
 		expect(next.selectedConnectorId).toBe("c1");
+		expect(next.selectedVertex).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
 		expect(next.stencilLibraryOpenCategory).toBeNull();
 	});
 
-	it("a double click selecting a connector also closes them", () => {
+	it("a double click selecting a connector also clears them", () => {
 		const next = ConnectorEventHandler.handle(
-			openMenusState(),
+			staleUiState(),
 			makeEvent("doubleClick", "c1"),
 			registries,
 		);
 		expect(next.selectedConnectorId).toBe("c1");
+		expect(next.selectedVertex).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
 		expect(next.stencilLibraryOpenCategory).toBeNull();
 	});

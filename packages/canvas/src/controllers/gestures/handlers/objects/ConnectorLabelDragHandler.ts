@@ -1,8 +1,3 @@
-import {
-	applyLabelPlacement,
-	DEFAULT_LABEL_OFFSET,
-	DEFAULT_LABEL_POSITION,
-} from "./utils/applyLabelPlacement";
 import { calcConnectorLabelAnchor } from "../../../../presentations/layers/content/utils/label/calcConnectorLabelAnchor";
 import { calcConnectorLabelPlacement } from "../../../../presentations/layers/content/utils/label/calcConnectorLabelPlacement";
 import type { ConnectorLabel } from "../../../../schemas/objects/connections/connector/ConnectorDoc";
@@ -12,6 +7,11 @@ import {
 	type ConnectorState,
 } from "../../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
+import {
+	applyLabelPlacement,
+	DEFAULT_LABEL_OFFSET,
+	DEFAULT_LABEL_POSITION,
+} from "../../../utils/applyLabelPlacement";
 import { collectConnectorPoints } from "../../../utils/calcConnectorBoundingBox";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { createCowObjects } from "../../../utils/cowObjects";
@@ -65,6 +65,8 @@ const handleDragStart = (
 		...nextState,
 		selectedConnectorId: connectorId,
 		selectedIds: [],
+		// Without clearing it, an invisible vertex selection lingers and the Delete key deletes an unintended vertex
+		selectedVertex: null,
 		multiSelectGroup: null,
 		// Close the submenu / category flyout on selection change
 		objectMenuOpenId: null,
@@ -203,8 +205,9 @@ const handleDragEnd = (
  * exclusive (#110). The recognizer's 3px drag threshold is what keeps a sloppy
  * double click on the label from nudging it.
  *
- * While editing, the label box is covered by the editor overlay
- * (data-gesture="none"), so no drag can reach the label being edited.
+ * While editing, the static label box is not rendered (ConnectorRenderer skips
+ * it in favor of ConnectorLabelEditor), so no drag can reach the label being
+ * edited.
  */
 export const ConnectorLabelDragHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {

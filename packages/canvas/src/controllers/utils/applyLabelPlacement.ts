@@ -1,8 +1,8 @@
 import { roundToDecimal } from "@workspace/geometry";
 
-import { PRECISION } from "../../../../../constants/precision";
-import type { ConnectorLabelPlacement } from "../../../../../presentations/layers/content/utils/label/calcConnectorLabelPlacement";
-import type { ConnectorLabel } from "../../../../../schemas/objects/connections/connector/ConnectorDoc";
+import { PRECISION } from "../../constants/precision";
+import type { ConnectorLabelPlacement } from "../../presentations/layers/content/utils/label/calcConnectorLabelPlacement";
+import type { ConnectorLabel } from "../../schemas/objects/connections/connector/ConnectorDoc";
 
 /** Decimal places for label.position (a 0..1 ratio; 4 ≒ sub-pixel on paths up to ~10k px). */
 const LABEL_POSITION_PRECISION = 4;

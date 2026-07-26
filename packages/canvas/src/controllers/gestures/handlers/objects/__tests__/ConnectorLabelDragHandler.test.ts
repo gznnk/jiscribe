@@ -155,6 +155,7 @@ describe("ConnectorLabelDragHandler - dragStart", () => {
 		const state = {
 			...stateWith(labeledConnector({ text: "Yes" })),
 			selectedIds: ["other"],
+			selectedVertex: { objectId: "other", vertexIndex: 0 },
 			objectMenuOpenId: "style",
 			stencilLibraryOpenCategory: "flowchart",
 			contextMenuPosition: { x: 1, y: 1 },
@@ -168,6 +169,7 @@ describe("ConnectorLabelDragHandler - dragStart", () => {
 
 		expect(next.selectedConnectorId).toBe("c1");
 		expect(next.selectedIds).toEqual([]);
+		expect(next.selectedVertex).toBeNull();
 		expect(next.multiSelectGroup).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
 		expect(next.stencilLibraryOpenCategory).toBeNull();

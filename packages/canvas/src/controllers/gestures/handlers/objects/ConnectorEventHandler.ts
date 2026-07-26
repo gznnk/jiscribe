@@ -20,9 +20,9 @@ import { startConnectorLabelEdit } from "../utils/startConnectorLabelEdit";
  * - Committed label: only a double click on the label box (targetPart "label")
  *   starts editing; a double click on the bare line just selects.
  *
- * While editing, the label box is covered by the editor overlay
- * (data-gesture="none"), so any tap that reaches this handler is outside the
- * label and commits the pending edit like any other outside tap.
+ * While editing, the static label box is not rendered and the editor overlay
+ * (data-gesture="none") sits in its place, so any tap that reaches this handler
+ * is outside the editor and commits the pending edit like any other outside tap.
  */
 export const ConnectorEventHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {
@@ -74,6 +74,8 @@ export const ConnectorEventHandler: GestureHandler = {
 				...nextState,
 				selectedConnectorId: connectorId,
 				selectedIds: [],
+				// Without clearing it, an invisible vertex selection lingers and the Delete key deletes an unintended vertex
+				selectedVertex: null,
 				multiSelectGroup: null,
 				// Close the submenu / category flyout on selection change
 				objectMenuOpenId: null,

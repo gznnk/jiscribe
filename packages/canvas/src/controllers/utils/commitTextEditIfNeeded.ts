@@ -1,3 +1,4 @@
+import { applyLabelPlacement } from "./applyLabelPlacement";
 import type { ConnectorLabelPlacement } from "../../presentations/layers/content/utils/label/calcConnectorLabelPlacement";
 import type { ConnectorLabel } from "../../schemas/objects/connections/connector/ConnectorDoc";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
@@ -7,7 +8,6 @@ import {
 } from "../../states/objects/base/TextStyleState";
 import type { ConnectorState } from "../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../CanvasTypes";
-import { applyLabelPlacement } from "../gestures/handlers/objects/utils/applyLabelPlacement";
 
 /**
  * Ends the editing session only (does not modify any object).
