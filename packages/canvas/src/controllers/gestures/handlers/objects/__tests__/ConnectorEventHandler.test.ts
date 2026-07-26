@@ -1,6 +1,7 @@
 import type { Point } from "@workspace/geometry";
 import { describe, expect, it } from "vitest";
 
+import { CONNECTOR_HIT_STROKE_WIDTH } from "../../../../../constants/connectorHitArea";
 import type { ConnectorLabel } from "../../../../../schemas/objects/connections/connector/ConnectorDoc";
 import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
@@ -172,12 +173,26 @@ describe("ConnectorEventHandler - placement of the label being created", () => {
 		});
 	});
 
-	it("keeps an offset that reaches the threshold (a very thick stroke)", () => {
+	it("keeps an offset that reaches the threshold (a path resolved off the rendered one)", () => {
 		const next = dblclickAt(stateWith(), { x: 150, y: SNAP_THRESHOLD_PX });
 		expect(pendingPlacement(next)).toEqual({
 			position: 0.75,
 			offset: SNAP_THRESHOLD_PX,
 		});
+	});
+
+	it("snaps a click anywhere in the hit band even when the zoom shrinks the threshold", () => {
+		// zoom 2 puts the zoom-scaled threshold (4) inside the hit band's half
+		// width (6), which would otherwise leave the label floating off the line.
+		const zoomed = {
+			...stateWith(),
+			viewport: { ...stateWith().viewport, zoom: 2 },
+		} as CanvasControllerState;
+		const next = dblclickAt(zoomed, {
+			x: 150,
+			y: CONNECTOR_HIT_STROKE_WIDTH / 2 - 0.5,
+		});
+		expect(pendingPlacement(next)).toEqual({ position: 0.75, offset: 0 });
 	});
 
 	it("writes nothing to the connector until the edit is committed", () => {

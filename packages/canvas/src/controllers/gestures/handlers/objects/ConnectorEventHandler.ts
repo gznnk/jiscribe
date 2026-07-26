@@ -1,4 +1,5 @@
 import { snapLabelOffsetToLine } from "./utils/snapLabelOffsetToLine";
+import { CONNECTOR_HIT_STROKE_WIDTH } from "../../../../constants/connectorHitArea";
 import {
 	calcConnectorLabelPlacement,
 	type ConnectorLabelPlacement,
@@ -17,9 +18,11 @@ import { SNAP_THRESHOLD_PX } from "../utils/snap/findSnap";
 /**
  * Projects the double-clicked point onto the connector path, so a label created
  * from a bare-line double click is placed where it was aimed instead of at the
- * path midpoint. The offset snaps onto the line with the same threshold the
- * label drag uses; a double click within the stroke hit width always snaps, so
- * a placement off the line only survives on a very thick stroke.
+ * path midpoint. The offset snaps onto the line with a threshold of at least the
+ * hit band's half width, so a click that can reach the connector at all creates
+ * the label on the line at any zoom; only a path resolved differently from the
+ * rendered one (see the drag handler) can leave an offset behind. The label drag
+ * keeps the plain zoom-scaled threshold, its aim not being confined to the band.
  *
  * Only called for a connector without label text, so any placement the label
  * still carries belongs to a deleted label and is overridden. Emptying a label
@@ -43,7 +46,13 @@ const calcPendingLabelPlacement = (
 
 	const placement = calcConnectorLabelPlacement(points, event.last);
 	return placement
-		? snapLabelOffsetToLine(placement, SNAP_THRESHOLD_PX / state.viewport.zoom)
+		? snapLabelOffsetToLine(
+				placement,
+				Math.max(
+					SNAP_THRESHOLD_PX / state.viewport.zoom,
+					CONNECTOR_HIT_STROKE_WIDTH / 2,
+				),
+			)
 		: null;
 };
 
