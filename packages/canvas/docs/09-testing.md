@@ -89,7 +89,8 @@ Non-regression for the gesture spec corresponds to the [Gesture System](./04-ges
 To mechanically guarantee the one-way dependency between layers ([Architecture](./02-architecture.md)),
 madge is used to detect circular dependencies.
 
-- Run: `pnpm dep:circle`
+- Run: `pnpm dep:check` (whole workspace) / `pnpm --filter @workspace/canvas dep:check` (canvas only)
+- The CI `checks` job runs `pnpm dep:check` as well
 
 ## Running everything at once (checks on task completion)
 
@@ -100,6 +101,7 @@ pnpm lint --fix
 pnpm format
 pnpm build:examples
 pnpm typecheck
+pnpm dep:check
 pnpm lint
 pnpm --filter @workspace/canvas test
 ```

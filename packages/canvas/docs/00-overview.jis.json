@@ -944,7 +944,7 @@
 			"strokeWidth": 2,
 			"fill": "#111827",
 			"rx": 8,
-			"text": "循環依存チェック：madge（dep:circle）でレイヤー逆依存を検出",
+			"text": "循環依存チェック：madge（dep:check）でレイヤー逆依存を検出",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",

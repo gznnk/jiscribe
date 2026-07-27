@@ -93,7 +93,8 @@ src/**/__tests__/**/*.{test,spec}.{ts,tsx}
 レイヤーの一方向依存（[アーキテクチャ](./02-architecture.ja.md)）を機械的に担保するため、
 madge で循環依存を検出する。
 
-- 実行: `pnpm dep:circle`
+- 実行: `pnpm dep:check`（ワークスペース全体）/ `pnpm --filter @workspace/canvas dep:check`（canvas のみ）
+- CI の checks ジョブでも `pnpm dep:check` が走る
 
 ## 一括実行（タスク完了時のチェック）
 
@@ -104,6 +105,7 @@ pnpm lint --fix
 pnpm format
 pnpm build:examples
 pnpm typecheck
+pnpm dep:check
 pnpm lint
 pnpm --filter @workspace/canvas test
 ```
