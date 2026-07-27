@@ -67,18 +67,43 @@ describe("ghostifyPreviewState", () => {
 		expect(ghost.strokeDashType).toBe("solid");
 	});
 
-	it("blanks the text so no overlay is shown over the ghost", () => {
-		expect(asRecord(ghostifyPreviewState(state({ text: "hello" }))).text).toBe(
-			"",
-		);
+	it("blanks every text slot so no overlay is shown over the ghost", () => {
+		expect(
+			asRecord(
+				ghostifyPreviewState(state({ text: { body: { text: "hello" } } })),
+			).text,
+		).toEqual({ body: { text: "" } });
+	});
+
+	it("keeps the slot keys, their content kinds, and their styling while blanking", () => {
+		expect(
+			asRecord(
+				ghostifyPreviewState(
+					state({
+						text: {
+							name: { text: "User", fontWeight: "bold" },
+							rows: { text: ["id"] },
+						},
+					}),
+				),
+			).text,
+		).toEqual({ name: { text: "", fontWeight: "bold" }, rows: { text: [] } });
+	});
+
+	it("adds no text field to a shape that holds none", () => {
+		expect("text" in asRecord(ghostifyPreviewState(state()))).toBe(false);
 	});
 
 	it("does not mutate the source state", () => {
-		const source = state({ stroke: "#ff0000", text: "hello", strokeWidth: 12 });
+		const source = state({
+			stroke: "#ff0000",
+			text: { body: { text: "hello" } },
+			strokeWidth: 12,
+		});
 		ghostifyPreviewState(source);
 		expect(asRecord(source)).toMatchObject({
 			stroke: "#ff0000",
-			text: "hello",
+			text: { body: { text: "hello" } },
 			strokeWidth: 12,
 		});
 	});

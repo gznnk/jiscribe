@@ -29,6 +29,10 @@ type GeometryDoc<T extends ObjectFeatures> = //
  * Conditionally includes feature interfaces based on provided features.
  * Automatically applies branding to prevent structural type compatibility.
  *
+ * `text: "body"` mixes in the root TextStyleDoc form; `text: "slots"` mixes in
+ * nothing, because a keyed doc's slot set is closed and the type spells it out
+ * itself through `P` (see the record shape).
+ *
  * @template T - ObjectFeatures configuration
  * @template S - Unique symbol for branding (prevents direct assignment between types)
  * @template P - Additional properties type (optional)
@@ -59,7 +63,7 @@ export type CreateObjectType<
 		(T["transform"] extends true ? TransformDoc : object) &
 		(T["stroke"] extends true ? StrokeStyleDoc : object) &
 		(T["fill"] extends true ? FillStyleDoc : object) &
-		(T["text"] extends true ? TextStyleDoc : object) &
+		(T["text"] extends "body" ? TextStyleDoc : object) &
 		(T["radius"] extends true ? RadiusStyleDoc : object) &
 		Brand<S> &
 		P

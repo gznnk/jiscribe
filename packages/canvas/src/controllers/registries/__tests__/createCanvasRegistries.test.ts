@@ -108,7 +108,7 @@ describe("createCanvasRegistries", () => {
 							transform: true,
 							stroke: true,
 							fill: true,
-							text: true,
+							text: "body",
 						},
 						validateDoc: () => [],
 						mapper: {

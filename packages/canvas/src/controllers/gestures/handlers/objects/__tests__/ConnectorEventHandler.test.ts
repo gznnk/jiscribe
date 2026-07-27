@@ -44,7 +44,7 @@ const makeEditState = (
 	({
 		...makeState(labelText),
 		selectedConnectorId: editingId,
-		textEditState: { objectId: editingId, text: pendingText },
+		textEditState: { objectId: editingId, slotId: "label", text: pendingText },
 	}) as unknown as CanvasControllerState;
 
 const makeEvent = (
@@ -81,7 +81,11 @@ describe("ConnectorEventHandler - double click edit target", () => {
 			makeEvent("doubleClick", "c1", "label"),
 			registries,
 		);
-		expect(next.textEditState).toEqual({ objectId: "c1", text: "Yes" });
+		expect(next.textEditState).toEqual({
+			objectId: "c1",
+			slotId: "label",
+			text: "Yes",
+		});
 		expect(next.selectedConnectorId).toBe("c1");
 	});
 
@@ -91,7 +95,11 @@ describe("ConnectorEventHandler - double click edit target", () => {
 			makeEvent("doubleClick", "c1"),
 			registries,
 		);
-		expect(next.textEditState).toEqual({ objectId: "c1", text: "" });
+		expect(next.textEditState).toEqual({
+			objectId: "c1",
+			slotId: "label",
+			text: "",
+		});
 		expect(next.selectedConnectorId).toBe("c1");
 	});
 });

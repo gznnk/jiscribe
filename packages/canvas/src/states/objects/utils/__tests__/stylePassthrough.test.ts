@@ -3,7 +3,6 @@ import { describe, it, expect } from "vitest";
 import { FILL_STYLE_KEYS } from "../../../../schemas/objects/base/FillStyleDoc";
 import { RADIUS_STYLE_KEYS } from "../../../../schemas/objects/base/RadiusStyleDoc";
 import { STROKE_STYLE_KEYS } from "../../../../schemas/objects/base/StrokeStyleDoc";
-import { TEXT_STYLE_KEYS } from "../../../../schemas/objects/base/TextStyleDoc";
 import type { ObjectFeatures } from "../../../../schemas/objects/types/ObjectFeatures";
 import { collectStyleKeys, pick } from "../stylePassthrough";
 
@@ -18,17 +17,20 @@ describe("collectStyleKeys", () => {
 		expect(collectStyleKeys(features())).toEqual([]);
 	});
 
-	it("collects the keys of each enabled group in stroke → fill → text → radius order", () => {
+	it("collects the keys of each enabled group in stroke → fill → radius order", () => {
 		expect(
 			collectStyleKeys(
-				features({ stroke: true, fill: true, text: true, radius: true }),
+				features({ stroke: true, fill: true, text: "body", radius: true }),
 			),
-		).toEqual([
-			...STROKE_STYLE_KEYS,
-			...FILL_STYLE_KEYS,
-			...TEXT_STYLE_KEYS,
-			...RADIUS_STYLE_KEYS,
-		]);
+		).toEqual([...STROKE_STYLE_KEYS, ...FILL_STYLE_KEYS, ...RADIUS_STYLE_KEYS]);
+	});
+
+	it("excludes the whole text group, which the mappers rebuild per slot", () => {
+		for (const textShape of ["body", "slots"] as const) {
+			const keys = collectStyleKeys(features({ text: textShape }));
+			expect(keys).not.toContain("text");
+			expect(keys).not.toContain("textAlign");
+		}
 	});
 
 	it("omits the groups that are off", () => {
@@ -39,7 +41,7 @@ describe("collectStyleKeys", () => {
 
 	it("excludes geometry and transform, which the mappers rebuild", () => {
 		const keys = collectStyleKeys(
-			features({ transform: true, stroke: true, fill: true, text: true }),
+			features({ transform: true, stroke: true, fill: true, text: "body" }),
 		);
 		for (const key of ["x", "y", "cx", "cy", "width", "height", "rotation"]) {
 			expect(keys).not.toContain(key);

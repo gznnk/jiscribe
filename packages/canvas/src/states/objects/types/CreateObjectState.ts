@@ -37,6 +37,8 @@ type GeometryState<T extends ObjectFeatures> = //
  * - Uses Frame instead of Rect/Ellipse (runtime representation)
  * - Uses TransformState instead of TransformDoc (pre-computed transform with UI properties)
  * - Includes Brand to prevent direct assignment from/to Doc types
+ * - Mixes in the same TextStyleState for both text shapes ("body" / "slots"),
+ *   the state having one normal form regardless of how the doc spells its text
  *
  * @template T - ObjectFeatures configuration (shared with Doc)
  * @template S - Unique symbol for branding (prevents direct assignment between types)
@@ -68,7 +70,7 @@ export type CreateObjectState<
 		(T["transform"] extends true ? TransformState : object) &
 		(T["stroke"] extends true ? StrokeStyleState : object) &
 		(T["fill"] extends true ? FillStyleState : object) &
-		(T["text"] extends true ? TextStyleState : object) &
+		(T["text"] extends "body" | "slots" ? TextStyleState : object) &
 		(T["radius"] extends true ? RadiusStyleState : object) &
 		Brand<S> &
 		P

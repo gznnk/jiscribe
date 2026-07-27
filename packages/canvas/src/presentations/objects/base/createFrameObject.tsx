@@ -1,14 +1,17 @@
 import type { TransformedFrame } from "@workspace/geometry";
-import { memo } from "react";
+import { Fragment, memo } from "react";
 import type React from "react";
 import type { ReactNode } from "react";
 
 import { TextOverlay } from "./TextOverlay";
 import type { TextEditable } from "./TextOverlay";
+import { BODY_TEXT_SLOT_ID } from "../../../constants/textSlotId";
+import type { TextSlot } from "../../../schemas/objects/types/TextSlot";
 import type { FillStyleState } from "../../../states/objects/base/FillStyleState";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { StrokeStyleState } from "../../../states/objects/base/StrokeStyleState";
 import type { TextStyleState } from "../../../states/objects/base/TextStyleState";
+import { readTextSlot } from "../../../states/objects/types/TextSlots";
 import { useObjectTextRegionRegistry } from "../registry/ObjectTextRegionRegistryContext";
 import { calcTextRegion } from "../utils/calcTextRegion";
 import { createSvgTransform } from "../utils/createSvgTransform";
@@ -41,10 +44,12 @@ type FrameRenderState = ObjectState &
 /**
  * The placed, style-resolved text box handed to a custom overlay renderer:
  * the region from ObjectTextRegionRegistry, the shape's transform, and the
- * typography the shape carries. Most renderers pass these straight through to
+ * typography the slot carries. Most renderers pass these straight through to
  * {@link import("./TextOverlay").TextOverlayFrame} and only supply their own body.
  */
 export type FrameTextOverlayProps = {
+	/** Which slot is being drawn: a key of `state.text`. Single-slot shapes ignore it. */
+	slotId: string;
 	/** Text region left edge in local coordinates (shape center as origin). */
 	x: number;
 	/** Text region top edge in local coordinates (shape center as origin). */
@@ -55,16 +60,19 @@ export type FrameTextOverlayProps = {
 	height: number;
 	/** The shape's SVG transform matrix; apply it so text follows the shape. */
 	transform: string;
-	/** The shape's raw text — Markdown source, or whatever the type stores. */
+	/** The slot's raw text — Markdown source, or whatever the type stores (rows are "\n"-joined). */
 	text?: string;
-	textAlign?: TextStyleState["textAlign"];
-	verticalAlign?: TextStyleState["verticalAlign"];
+	textAlign?: TextSlot["textAlign"];
+	verticalAlign?: TextSlot["verticalAlign"];
 	/** May be `"auto"`; resolve with resolveAutoColor (TextOverlayFrame already does). */
 	fontColor?: string;
 	fontSize?: number;
 	fontFamily?: string;
 	fontWeight?: string;
-	/** True while the in-place editor is open: draw nothing, or it doubles up with the textarea. */
+	/**
+	 * True while the in-place editor is open **on this slot**: draw nothing, or it
+	 * doubles up with the textarea. The shape's other slots stay drawn.
+	 */
 	isEditing: boolean;
 };
 
@@ -85,8 +93,12 @@ export type FrameTextOverlayRenderer = (
  * consolidated here, and each shape only passes a `draw` function that returns its shape. `draw`
  * receives the state (width/height/rx, etc.) and the shared attributes `shape`.
  *
- * The text region is derived from the type's calculator in ObjectTextRegionRegistry
- * via `calcTextRegion` (unregistered = full bbox).
+ * Text follows `features.text`: a "body" type draws its single body slot, a
+ * "slots" type draws one overlay per key of `state.text` (the authority on which
+ * slots the shape has). Each overlay is placed by the type's calculator in
+ * ObjectTextRegionRegistry via `calcTextRegion` (unregistered = full bbox).
+ * Editing blanks only the slot the editor is over (`editingSlotId`), so a
+ * multi-slot shape keeps showing the rest.
  *
  * `renderTextOverlay` swaps out how the text is drawn while keeping every shared
  * derivation (transform, resolved colors, dashes, region, memo) here. A type
@@ -113,21 +125,16 @@ export const createFrameObject = <TState extends FrameRenderState>(
 			strokeWidth,
 			strokeDashType,
 			text,
-			textAlign,
-			verticalAlign,
-			fontColor,
-			fontSize,
-			fontFamily,
-			fontWeight,
 			isEditing = false,
+			editingSlotId,
 		} = props;
 
 		const textRegionCalculator = useObjectTextRegionRegistry().get(type);
 		const transformAttr = createSvgTransform(scaleX, scaleY, rotation, cx, cy);
-		// Text-less shapes (features.text: false, e.g. cross / extract) draw no
-		// TextOverlay; this matches the same features.text gate used by the
-		// text-edit gesture and property-update side.
-		const hasText = props.features?.text === true;
+		// The features.text gate matches the one used by the text-edit gesture and
+		// property-update side: unset (cross / extract) draws no overlay, "body"
+		// draws its one named slot, "slots" enumerates state.text.
+		const textShape = props.features?.text;
 
 		const shape: FrameShapeProps = {
 			"data-kind": "object",
@@ -139,44 +146,49 @@ export const createFrameObject = <TState extends FrameRenderState>(
 			strokeDasharray: getStrokeDasharray(strokeDashType, strokeWidth),
 		};
 
-		const textRegion = calcTextRegion(props, textRegionCalculator);
+		const drawSlotOverlay = (slotId: string, slot: TextSlot): ReactNode => {
+			const textRegion = calcTextRegion(props, slotId, textRegionCalculator);
+			const overlayProps: FrameTextOverlayProps = {
+				slotId,
+				x: textRegion.x,
+				y: textRegion.y,
+				width: textRegion.width,
+				height: textRegion.height,
+				transform: transformAttr,
+				text: readTextSlot(text, slotId),
+				textAlign: slot.textAlign,
+				verticalAlign: slot.verticalAlign,
+				fontColor: slot.fontColor,
+				fontSize: slot.fontSize,
+				fontFamily: slot.fontFamily,
+				fontWeight: slot.fontWeight,
+				// Only the slot the editor is over must go blank; a caller that
+				// names no slot is editing the shape as a whole.
+				isEditing:
+					isEditing &&
+					(editingSlotId === undefined || editingSlotId === slotId),
+			};
+			return renderTextOverlay ? (
+				renderTextOverlay(overlayProps)
+			) : (
+				<TextOverlay {...overlayProps} />
+			);
+		};
+
+		// A "body" shape addresses its one slot by name rather than enumerating,
+		// so a malformed multi-slot state cannot overlap-draw; a missing body slot
+		// draws nothing, same as the enumeration would.
+		const bodySlot = text?.[BODY_TEXT_SLOT_ID];
 
 		return (
 			<>
 				{draw(props, shape)}
-				{hasText &&
-					(renderTextOverlay ? (
-						renderTextOverlay({
-							x: textRegion.x,
-							y: textRegion.y,
-							width: textRegion.width,
-							height: textRegion.height,
-							transform: transformAttr,
-							text,
-							textAlign,
-							verticalAlign,
-							fontColor,
-							fontSize,
-							fontFamily,
-							fontWeight,
-							isEditing,
-						})
-					) : (
-						<TextOverlay
-							x={textRegion.x}
-							y={textRegion.y}
-							width={textRegion.width}
-							height={textRegion.height}
-							transform={transformAttr}
-							text={text}
-							textAlign={textAlign}
-							verticalAlign={verticalAlign}
-							fontColor={fontColor}
-							fontSize={fontSize}
-							fontFamily={fontFamily}
-							fontWeight={fontWeight}
-							isEditing={isEditing}
-						/>
+				{textShape === "body" &&
+					bodySlot !== undefined &&
+					drawSlotOverlay(BODY_TEXT_SLOT_ID, bodySlot)}
+				{textShape === "slots" &&
+					Object.entries(text ?? {}).map(([slotId, slot]) => (
+						<Fragment key={slotId}>{drawSlotOverlay(slotId, slot)}</Fragment>
 					))}
 			</>
 		);

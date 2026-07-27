@@ -3,7 +3,7 @@ import { AUTO_COLOR } from "@workspace/canvas/unstable-doc";
 
 /**
  * The flowchart "extract" symbol — an upward triangle (apex at the top), used
- * for extract/merge/marker nodes. It holds no text (text: false).
+ * for extract/merge/marker nodes. It holds no text (no `text` feature).
  *
  * It adopts rect geometry (x/y/width/height) and only swaps the rendering. This
  * lets it reuse Frame-based transforms and connector outline connections with
@@ -15,7 +15,6 @@ export const ExtractFeatures = {
 	transform: true,
 	stroke: true,
 	fill: true,
-	text: false,
 	connectable: true,
 } as const satisfies ObjectFeatures;
 

@@ -77,6 +77,7 @@ In addition to `name` and `description`, `meta` may hold any custom keys.
 | `extract`          | Extract (apex up)                  | `x`, `y`, `width`, `height`             | Stroke, Fill, Transform (no text)     |
 | `cross`            | Cross / plus                       | `x`, `y`, `width`, `height`             | Stroke, Fill, Transform (no text)     |
 | `offPageConnector` | Off-page connector (pentagon)      | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `record`           | Titled box with a row compartment  | `x`, `y`, `width`, `height`             | Stroke, Fill, Text (keyed), Transform |
 | `polyline`         | Polyline (open path)               | `points`                                | Stroke                                |
 | `polygon`          | Polygon (closed path)              | `points`                                | Stroke, Fill                          |
 | `group`            | Group (contains children)          | none                                    | Transform                             |
@@ -455,6 +456,56 @@ below and give a bounding box.
 
 ---
 
+### `record` (titled box with a row compartment)
+
+A box with a **title band on top and a compartment of rows below it** — a UML
+class, an ER entity, an ontology concept with its properties. Uses the same
+rect-based geometry (top-left `x`,`y` + `width`,`height`) as `rect` and is
+**connectable** like it; it has **no Radius** (`rx`).
+
+`record` is the only shape whose **`text` is an object, not a string**: it has two
+named text slots, and a plain string is rejected. Put the title in `name.text` and
+one array entry per row in `rows.text` (**no newline inside an entry** — add
+another entry). Typography belongs to each slot, so a `record` has **no**
+shape-wide `textAlign` / `fontSize` / ... fields.
+
+```json
+{
+	"id": "rec-1",
+	"type": "record",
+	"x": 200,
+	"y": 150,
+	"width": 180,
+	"height": 95,
+	"text": {
+		"name": { "text": "User" },
+		"rows": { "text": ["id: string", "name: string", "email: string"] }
+	}
+}
+```
+
+| Field            | Type       | Default | Description                                                         |
+| ---------------- | ---------- | ------- | ------------------------------------------------------------------- |
+| `x`              | `number`   | `0`     | X of the bounding box's top-left.                                   |
+| `y`              | `number`   | `0`     | Y of the bounding box's top-left.                                   |
+| `width`          | `number`   | `180`   | Bounding-box width (px).                                            |
+| `height`         | `number`   | `95`    | Bounding-box height (px). Not auto-fitted to the rows.              |
+| `text.name.text` | `string`   | `""`    | Title in the top band.                                              |
+| `text.rows.text` | `string[]` | `[]`    | Compartment rows, one entry per line (left-aligned, packed to top). |
+
+Either slot also takes `textAlign` / `verticalAlign` / `fontColor` / `fontSize` /
+`fontFamily` / `fontWeight` beside its `text`, with the same meanings as the
+shape-wide fields of other shapes. The defaults differ where the compartments
+need it: `textAlign` `"left"`, `verticalAlign` `"top"`, `fontSize` `14` (the 21px
+row pitch is sized for it); the rest are the shared defaults. `fill` defaults to
+`"auto"` (theme surface) rather than `"transparent"`.
+
+The **height is not adjusted to the content**: give it a value that fits the rows
+— `32 + 21 × (number of rows)` is the height that fits them exactly. Rows below
+the bottom edge are clipped.
+
+---
+
 ### `polyline`
 
 ```json
@@ -748,7 +799,7 @@ Options for `anchor.kind`:
 
 The object referenced by `owner.id` may be **only a box shape (`rect`, `markdown`, `ellipse`, `diamond`,
 `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `multiDocument`, `actor`, `callout`, `db`, `storedData`,
-`subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `loopLimit`, `display`, `extract`, `cross`, `offPageConnector`, or
+`subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `loopLimit`, `display`, `extract`, `cross`, `offPageConnector`, `record`, or
 `sticky`)** — these are the connectable types. A `polyline`, `polygon`, `group`, `svg`, or `connector`
 **cannot** be an endpoint owner; the document is rejected if one is referenced. To
 anchor a connector near such a shape, use a `FreeEndpointRef` instead.
@@ -783,7 +834,7 @@ diagram adapts to light/dark themes.
 
 ### Stroke style
 
-Applies to every box shape except `sticky` (`rect`, `markdown`, `ellipse`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `multiDocument`, `actor`, `callout`, `db`, `storedData`, `subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `loopLimit`, `display`, `extract`, `cross`, `offPageConnector`), plus `polyline`, `polygon`, `connector`.
+Applies to every box shape except `sticky` (`rect`, `markdown`, `ellipse`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `multiDocument`, `actor`, `callout`, `db`, `storedData`, `subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `loopLimit`, `display`, `extract`, `cross`, `offPageConnector`, `record`), plus `polyline`, `polygon`, `connector`.
 
 | Field            | Type             | Default   | Description                                              |
 | ---------------- | ---------------- | --------- | -------------------------------------------------------- |
@@ -797,7 +848,7 @@ See [Color values](#color-values-stroke--fontcolor--fill) for `"auto"`.
 
 ### Fill style
 
-Applies to every box shape (`rect`, `markdown`, `ellipse`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `multiDocument`, `actor`, `callout`, `db`, `storedData`, `subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `loopLimit`, `display`, `extract`, `cross`, `offPageConnector`, `sticky`), plus `polygon`. For `actor`, the fill paints the head circle only.
+Applies to every box shape (`rect`, `markdown`, `ellipse`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `multiDocument`, `actor`, `callout`, `db`, `storedData`, `subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `loopLimit`, `display`, `extract`, `cross`, `offPageConnector`, `record`, `sticky`), plus `polygon`. For `actor`, the fill paints the head circle only. For `record`, the default is `"auto"` rather than `"transparent"` (see its section).
 
 | Field  | Type     | Default         | Description                                              |
 | ------ | -------- | --------------- | -------------------------------------------------------- |
@@ -805,7 +856,7 @@ Applies to every box shape (`rect`, `markdown`, `ellipse`, `diamond`, `stadium`,
 
 ### Text style
 
-Applies to every box shape except `extract` and `cross` (which hold no text): `rect`, `markdown`, `ellipse`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `multiDocument`, `actor`, `callout`, `db`, `storedData`, `subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `loopLimit`, `display`, `offPageConnector`, `sticky`.
+Applies to every box shape except `extract` and `cross` (which hold no text): `rect`, `markdown`, `ellipse`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `multiDocument`, `actor`, `callout`, `db`, `storedData`, `subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `loopLimit`, `display`, `offPageConnector`, `sticky`. A `record` holds text too, but has none of these shape-wide fields — its typography lives inside each slot (see its section).
 
 | Field           | Type            | Default          | Description                                                                       |
 | --------------- | --------------- | ---------------- | --------------------------------------------------------------------------------- |
@@ -823,7 +874,7 @@ Applies to every box shape except `extract` and `cross` (which hold no text): `r
 
 ### Transform style
 
-Applies to every box shape (`rect`, `markdown`, `ellipse`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `multiDocument`, `actor`, `callout`, `db`, `storedData`, `subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `loopLimit`, `display`, `extract`, `cross`, `offPageConnector`, `sticky`) and `group`. All optional.
+Applies to every box shape (`rect`, `markdown`, `ellipse`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `multiDocument`, `actor`, `callout`, `db`, `storedData`, `subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `loopLimit`, `display`, `extract`, `cross`, `offPageConnector`, `record`, `sticky`) and `group`. All optional.
 
 | Field             | Type      | Default | Description                        |
 | ----------------- | --------- | ------- | ---------------------------------- |

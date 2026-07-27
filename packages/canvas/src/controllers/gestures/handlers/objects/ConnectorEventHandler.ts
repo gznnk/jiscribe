@@ -1,3 +1,4 @@
+import { LABEL_TEXT_SLOT_ID } from "../../../../constants/textSlotId";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
@@ -69,6 +70,7 @@ export const ConnectorEventHandler: GestureHandler = {
 				...selectedState,
 				textEditState: {
 					objectId: connectorId,
+					slotId: LABEL_TEXT_SLOT_ID,
 					text: labelText,
 				},
 			};

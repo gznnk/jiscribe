@@ -15,12 +15,18 @@ import {
 import { containerDocPlugin } from "@workspace/plugin-container-shapes/doc";
 import { flowchartDocPlugin } from "@workspace/plugin-flowchart-shapes/doc";
 import { markdownDocPlugin } from "@workspace/plugin-markdown-shape/doc";
+import { umlDocPlugin } from "@workspace/plugin-uml-shapes/doc";
 import * as vscode from "vscode";
 
 // Plugin-aware parser: built-in types plus the flowchart / container / markdown plugin
 // shapes, so .jis.json files using those shapes validate instead of reporting them unknown.
 const canvasParser = createCanvasParser({
-	plugins: [flowchartDocPlugin, containerDocPlugin, markdownDocPlugin],
+	plugins: [
+		flowchartDocPlugin,
+		containerDocPlugin,
+		markdownDocPlugin,
+		umlDocPlugin,
+	],
 });
 
 /**

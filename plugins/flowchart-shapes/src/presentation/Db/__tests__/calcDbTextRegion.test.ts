@@ -4,7 +4,7 @@ import { calcDbTextRegion } from "../calcDbTextRegion";
 
 describe("calcDbTextRegion", () => {
 	it("上キャップ全体と下の膨らみの内側に収める", () => {
-		const result = calcDbTextRegion({ width: 120, height: 100 });
+		const result = calcDbTextRegion({ width: 120, height: 100 }, "body");
 		const capRy = 100 * 0.12;
 		expect(result.x).toBe(-60);
 		expect(result.width).toBe(120);

@@ -5,7 +5,15 @@ import { TextOverlayFrame } from "./TextOverlayFrame";
 import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
 import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
 
-export type TextEditable = { isEditing?: boolean };
+export type TextEditable = {
+	/** True while any slot of this object has the in-place editor open. */
+	isEditing?: boolean;
+	/**
+	 * Which slot that editor targets, so a multi-slot shape blanks only that one
+	 * and keeps drawing the rest. Omitted = the whole object counts as editing.
+	 */
+	editingSlotId?: string;
+};
 
 type TextOverlayProps = {
 	// Position and size (relative to parent shape's center)

@@ -485,6 +485,7 @@ const CanvasComponent = ({
 							viewport={state.viewport}
 							svgRef={svgRef}
 							textEditObjectId={state.textEditState?.objectId ?? null}
+							textEditSlotId={state.textEditState?.slotId ?? null}
 							isDrawMode={!!state.shapeDrawing}
 							visibleObjectIds={visibleObjectIds}
 						>

@@ -49,7 +49,9 @@ export const createFrameDocValidator =
 		...(features.transform ? validateTransformFields(o, path) : []),
 		...(features.stroke ? validateStrokeStyleFields(o, path) : []),
 		...(features.fill ? validateFillStyleFields(o, path) : []),
-		...(features.text ? validateTextStyleFields(o, path) : []),
+		// "slots" types carry no root text group at all; their closed slot set is
+		// theirs to validate, and `extra` is where they do it.
+		...(features.text === "body" ? validateTextStyleFields(o, path) : []),
 		...(features.radius ? validateRadiusStyleFields(o, path) : []),
 		...(extra ? extra(o, path) : []),
 	];

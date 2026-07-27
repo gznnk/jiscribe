@@ -95,8 +95,12 @@ const makeTextRect = (id: string, text: string): ObjectState =>
 		cy: 0,
 		width: SIZE,
 		height: SIZE,
-		text,
+		text: { body: { text } },
 	}) as unknown as ObjectState;
+
+const bodyTextOf = (state: CanvasControllerState, id: string): string =>
+	(state.objects[id] as unknown as { text: { body: { text: string } } }).text
+		.body.text;
 
 /** State while editing `editingId`'s text, with a pending (uncommitted) `pendingText`. */
 const makeEditState = (
@@ -115,7 +119,7 @@ const makeEditState = (
 		selectedConnectorId: null,
 		selectedVertex: null,
 		multiSelectGroup: null,
-		textEditState: { objectId: editingId, text: pendingText },
+		textEditState: { objectId: editingId, slotId: "body", text: pendingText },
 		commitVersion: 5,
 		contextMenuPosition: { x: 1, y: 1 },
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
@@ -140,9 +144,7 @@ describe("ObjectEventHandler - text edit commit", () => {
 			makeTapEvent("pressed", "rect-1"),
 			registries,
 		);
-		expect((next.objects["rect-1"] as unknown as { text: string }).text).toBe(
-			"new",
-		);
+		expect(bodyTextOf(next, "rect-1")).toBe("new");
 		expect(next.textEditState).toBeNull();
 		expect(next.commitVersion).toBe(6);
 	});
@@ -161,6 +163,7 @@ describe("ObjectEventHandler - text edit commit", () => {
 		// The pending text was committed by the pressed and prefilled again — not lost.
 		expect(afterDouble.textEditState).toEqual({
 			objectId: "rect-1",
+			slotId: "body",
 			text: "new",
 		});
 		expect(afterDouble.commitVersion).toBe(6);
@@ -173,9 +176,7 @@ describe("ObjectEventHandler - text edit commit", () => {
 			registries,
 		);
 		// The edit is committed to rect-1 and the session is cleared.
-		expect((next.objects["rect-1"] as unknown as { text: string }).text).toBe(
-			"new",
-		);
+		expect(bodyTextOf(next, "rect-1")).toBe("new");
 		expect(next.textEditState).toBeNull();
 		expect(next.commitVersion).toBe(6);
 	});

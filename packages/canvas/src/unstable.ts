@@ -30,6 +30,11 @@ export type { TextEditable } from "./presentations/objects/base/TextOverlay/Text
 export { TextOverlayFrame } from "./presentations/objects/base/TextOverlay/TextOverlayFrame";
 export type { TextOverlayFrameProps } from "./presentations/objects/base/TextOverlay/TextOverlayFrame";
 
+// 本文はプレーンテキストのまま、スロットごとにタイポグラフィだけ差し替えたい図形
+// (record のタイトル帯など)向け。renderTextOverlay から受け取った props を
+// そのまま渡し、変えたいものだけ上書きする。
+export { TextOverlay } from "./presentations/objects/base/TextOverlay/TextOverlay";
+
 export { createFrameBehavior } from "./controllers/gestures/handlers/objects/base/FrameController";
 
 export { createFrameMapper } from "./states/objects/base/FrameMapper";

@@ -331,6 +331,14 @@ export type CanvasControllerState = CanvasState & {
 	 */
 	textEditState: {
 		objectId: string;
+
+		/**
+		 * The text slot being edited: a key of the object's `state.text`, or
+		 * "label" for a connector's label (which lives in its nested label.text).
+		 */
+		slotId: string;
+
+		/** The edited text; a slot holding rows is joined with "\n" while editing. */
 		text: string;
 	} | null;
 

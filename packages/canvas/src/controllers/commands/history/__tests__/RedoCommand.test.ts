@@ -126,7 +126,7 @@ describe("RedoCommand", () => {
 						past: [],
 						present: snapshotPrev,
 						future: [snapshotNext],
-						textEditState: { objectId: "r1", text: "" },
+						textEditState: { objectId: "r1", slotId: "body", text: "" },
 					}),
 					registries,
 				),

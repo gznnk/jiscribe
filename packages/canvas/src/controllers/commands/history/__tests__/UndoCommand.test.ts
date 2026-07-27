@@ -138,7 +138,7 @@ describe("UndoCommand", () => {
 						past: [snapshotPrev],
 						present: snapshotCurrent,
 						future: [],
-						textEditState: { objectId: "r1", text: "" },
+						textEditState: { objectId: "r1", slotId: "body", text: "" },
 					}),
 					registries,
 				),

@@ -13,11 +13,42 @@ const makeEl = (kind?: string, id?: string, part?: string): Element => {
 			if (selector === "[data-kind]" && kind !== undefined) {
 				return el;
 			}
+			if (selector === "[data-part]" && part !== undefined) {
+				return el;
+			}
 			return null;
 		},
 		getAttribute: (attr: string) => attrs[attr] ?? null,
 	};
 	return el as unknown as Element;
+};
+
+/**
+ * Two elements: the pressed one carries [data-part], an ancestor carries
+ * [data-kind]/[data-id]. `partOutsideKind` puts the part element above the kind
+ * element instead, which must not be read.
+ */
+const makeNestedPartEl = (
+	kind: string,
+	id: string,
+	part: string,
+	{ partOutsideKind = false }: { partOutsideKind?: boolean } = {},
+): { partEl: Element; kindEl: Element } => {
+	const kindEl = {
+		getAttribute: (attr: string) =>
+			({ "data-kind": kind, "data-id": id })[attr] ?? null,
+		contains: (other: Element) => !partOutsideKind && other === partEl,
+	} as unknown as Element;
+	const partEl = {
+		closest: (selector: string) =>
+			selector === "[data-kind]"
+				? kindEl
+				: selector === "[data-part]"
+					? partEl
+					: null,
+		getAttribute: (attr: string) => (attr === "data-part" ? part : null),
+	} as unknown as Element;
+	return { partEl, kindEl };
 };
 
 const makeElNoMatch = (): Element =>
@@ -53,5 +84,23 @@ describe("getKindAndId", () => {
 			id: "c-1",
 			part: "label",
 		});
+	});
+
+	it("reads data-part from a descendant of the [data-kind] element", () => {
+		// 区画付き図形（record）は data-kind を1要素に保ったまま、区画ごとの
+		// ヒット要素に data-part を付ける。
+		const { partEl } = makeNestedPartEl("object", "obj-1", "rows");
+		expect(getKindAndId(partEl)).toEqual({
+			kind: "object",
+			id: "obj-1",
+			part: "rows",
+		});
+	});
+
+	it("ignores a data-part that sits outside the [data-kind] element", () => {
+		const { partEl } = makeNestedPartEl("object", "obj-1", "rows", {
+			partOutsideKind: true,
+		});
+		expect(getKindAndId(partEl)).toEqual({ kind: "object", id: "obj-1" });
 	});
 });

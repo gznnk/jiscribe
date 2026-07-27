@@ -18,6 +18,7 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
  * - データ埋め込みなし: 拡張子が .jis なしの素の .svg になり、
  *   <metadata>（埋め込みソース）を含まないこと
  * - 透過背景: 背景 rect が敷かれないこと（デフォルトでは敷かれること）
+ * - 複数スロット図形（record、#167）: 全スロットのテキストが <text> で出力されること
  */
 
 /**
@@ -216,6 +217,44 @@ test("データ埋め込みなしの SVG エクスポートは素の .svg で me
 	expect(svgText).not.toContain("<metadata");
 	expect(svgText).not.toContain("jiscribe.dev/ns/canvas");
 	expect(svgText).toMatch(/style="[^"]*stroke:/);
+});
+
+test("record（複数スロット）の SVG エクスポートは全スロットを <text> で出力する", async ({
+	canvas,
+	page,
+}) => {
+	await canvas.drawShapeFromFlyout(
+		"uml",
+		"record",
+		{ x: 300, y: 200 },
+		{ x: 520, y: 280 },
+	);
+	await canvas.deselect();
+
+	// タイトル帯（上端 28px 内）= name スロット、その下 = rows スロット
+	await canvas.typeTextAt({ x: 410, y: 212 }, "Users");
+	await canvas.commitText();
+	await canvas.typeTextAt({ x: 410, y: 255 }, "id: string\nname: string");
+	await canvas.commitText();
+	await canvas.deselect();
+
+	// データ埋め込みを外し、本文一致 = 描画された <text> 由来と確定させる
+	const svg = await downloadViaExportDialog(
+		page,
+		canvas,
+		{ x: 750, y: 550 },
+		"svg",
+		{ includeSource: false },
+	);
+	const svgText = Buffer.from(svg.base64, "base64").toString("utf-8");
+
+	expect(svgText).not.toContain("<foreignObject");
+	const textElements = [...svgText.matchAll(/<text[\s\S]*?<\/text>/g)].join(
+		" ",
+	);
+	expect(textElements).toContain("Users");
+	expect(textElements).toContain("id: string");
+	expect(textElements).toContain("name: string");
 });
 
 /**

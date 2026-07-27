@@ -9,7 +9,7 @@ It focuses on the essentials. For the full field-level specification, see [`refe
 
 - The canvas is an **infinite plane**. Coordinates follow the SVG convention: **x increases to the right, y increases downward** (the opposite of math; screen coordinates). Unit is **px**.
 - Coordinate values are arbitrary (**negatives are allowed**). The origin `(0, 0)` is **not** pinned to the top-left of the screen (the view pans and zooms).
-- Each shape has its own reference point: **every box shape (`rect`, `markdown`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `multiDocument`, `actor`, `callout`, `db`, `storedData`, `subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `loopLimit`, `display`, `extract`, `cross`, `offPageConnector`, `sticky`) uses its top-left corner `(x, y)`**, **`ellipse` uses its center `(cx, cy)`** (see "Object quick reference").
+- Each shape has its own reference point: **every box shape (`rect`, `markdown`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `multiDocument`, `actor`, `callout`, `db`, `storedData`, `subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `loopLimit`, `display`, `extract`, `cross`, `offPageConnector`, `record`, `sticky`) uses its top-left corner `(x, y)`**, **`ellipse` uses its center `(cx, cy)`** (see "Object quick reference").
 - Stacking order (z-order) follows the **order of the `root` array** — later entries are drawn on top. Overlapping is allowed.
 - There is no auto-layout. You compute coordinates yourself (see "Layout conventions").
 
@@ -25,7 +25,7 @@ The top level must always have `version` / `root` (the array may be empty).
 ```
 
 - `version`: **required, always `1`** (fixed value for this format version).
-- `root`: array of shapes (rect / markdown / ellipse / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / callout / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / extract / cross / offPageConnector / polyline / polygon / group / sticky / svg) **and connectors**, in z-order (back → front). The array order is the stacking order. Connectors (`"type": "connector"`) sit at the top level among the objects; they are **never** placed inside a group's `children`.
+- `root`: array of shapes (rect / markdown / ellipse / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / callout / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / extract / cross / offPageConnector / record / polyline / polygon / group / sticky / svg) **and connectors**, in z-order (back → front). The array order is the stacking order. Connectors (`"type": "connector"`) sit at the top level among the objects; they are **never** placed inside a group's `children`.
 
 ## 3. MUST / MUST NOT (violations break the file)
 
@@ -33,7 +33,7 @@ The top level must always have `version` / `root` (the array may be empty).
 
 - Include **`version: 1`** at the top level (required, fixed value).
 - Give every object a **unique `id`** and a **`type`**.
-- `rect` uses `x`,`y` (top-left) + `width`,`height`. `ellipse` uses `cx`,`cy` (center) + `rx`,`ry` (radii). `diamond`, `db`, and the other box shapes (`stadium` / `parallelogram` / `hexagon` / `cloud` / `document` / `multiDocument` / `actor` / `callout` / `storedData` / `subroutine` / `trapezoid` / `manualInput` / `card` / `delay` / `loopLimit` / `display` / `extract` / `cross` / `offPageConnector`) use `x`,`y` (top-left) + `width`,`height`, same as `rect`.
+- `rect` uses `x`,`y` (top-left) + `width`,`height`. `ellipse` uses `cx`,`cy` (center) + `rx`,`ry` (radii). `diamond`, `db`, and the other box shapes (`stadium` / `parallelogram` / `hexagon` / `cloud` / `document` / `multiDocument` / `actor` / `callout` / `storedData` / `subroutine` / `trapezoid` / `manualInput` / `card` / `delay` / `loopLimit` / `display` / `extract` / `cross` / `offPageConnector` / `record`) use `x`,`y` (top-left) + `width`,`height`, same as `rect`.
 - Put `connector` in `root` (top level, mixed with the objects), and express its endpoints with `source` / `target` (EndpointRef).
 - A connector must have **at least one owned endpoint** (`source` or `target` referencing an object). Both endpoints `free` is invalid.
 - Leave `points` as an **empty array** `[]` unless you set `"routing": "straight"` and want manual bends.
@@ -43,7 +43,7 @@ The top level must always have `version` / `root` (the array may be empty).
 **MUST NOT**
 
 - Do not put endpoint (start/end) coordinates in a connector's `points`. `points` holds only intermediate waypoints (usually empty).
-- Do not attach a connector endpoint (`owner`) to a `polyline`, `polygon`, `group`, `svg`, or `connector`. Only `rect` / `markdown` / `ellipse` / `diamond` / `stadium` / `parallelogram` / `hexagon` / `cloud` / `document` / `multiDocument` / `actor` / `callout` / `db` / `storedData` / `subroutine` / `trapezoid` / `manualInput` / `card` / `delay` / `loopLimit` / `display` / `extract` / `cross` / `offPageConnector` / `sticky` are connectable; use a `free` endpoint to point near other types.
+- Do not attach a connector endpoint (`owner`) to a `polyline`, `polygon`, `group`, `svg`, or `connector`. Only `rect` / `markdown` / `ellipse` / `diamond` / `stadium` / `parallelogram` / `hexagon` / `cloud` / `document` / `multiDocument` / `actor` / `callout` / `db` / `storedData` / `subroutine` / `trapezoid` / `manualInput` / `card` / `delay` / `loopLimit` / `display` / `extract` / `cross` / `offPageConnector` / `record` / `sticky` are connectable; use a `free` endpoint to point near other types.
 - Do not give a `group` `x`,`y`,`width`,`height`. Its position comes from its `children`.
 - Do not reuse the same `id`.
 - Do not put a `connector` inside a group's `children` (connectors live at the top level of `root` only).
@@ -76,6 +76,7 @@ The top level must always have `version` / `root` (the array may be empty).
 | `extract`               | `x`,`y`,`width`,`height`             | stroke / fill / rotation (merge/marker; **no text**)             |
 | `cross`                 | `x`,`y`,`width`,`height`             | stroke / fill / rotation (junction/marker; **no text**)          |
 | `offPageConnector`      | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (off-page connector; pentagon)   |
+| `record`                | `x`,`y`,`width`,`height`             | stroke / fill / **keyed** text / rotation (titled box + rows)    |
 | `polyline`              | `points` (open line)                 | stroke / startArrow / endArrow                                   |
 | `polygon`               | `points` (auto-closed)               | stroke / fill                                                    |
 | `group`                 | `children`                           | rotation / flipX / flipY                                         |
@@ -88,7 +89,7 @@ The top level must always have `version` / `root` (the array may be empty).
 - Colors (`stroke` / `fontColor` / `fill`): a CSS color string, or `"auto"` to follow the editor theme. `"auto"` is the default for `stroke` / `fontColor` (resolved to the theme foreground) and adapts to light/dark; `fill` defaults to `"transparent"`. Prefer `"auto"` (or omit the field) unless a specific color is needed.
 - Stroke: `stroke` (color, default `"auto"`), `strokeWidth` (default 2), `strokeDashType`: `"solid"`/`"dashed"`/`"dotted"`
 - Fill: `fill` (default `"transparent"`)
-- Text (every box shape **except `extract` / `cross`, which hold no text**: rect / markdown / ellipse / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / callout / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / offPageConnector / sticky): `text`, `textAlign`: `"left"`/`"center"`/`"right"`, `verticalAlign`: `"top"`/`"middle"`/`"bottom"`, `fontColor` (default `"auto"`), `fontSize` (default 16). For `diamond` and `stadium`, text is placed within the full bounding box (not clipped to the shape interior). For `db`, text is placed in the body region below the top cap ellipse. For `cloud`, text is placed in a reduced central region inside the bumps, so give the shape generous width/height. For `document` and `callout`, text sits above the bottom wave/tail band. For `multiDocument`, text is confined to the front (bottom-left) sheet, so give the shape generous size. For `actor`, text is the label band below the stick figure — keep it short.
+- Text (every box shape **except `extract` / `cross`, which hold no text**: rect / markdown / ellipse / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / callout / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / offPageConnector / record / sticky): `text`, `textAlign`: `"left"`/`"center"`/`"right"`, `verticalAlign`: `"top"`/`"middle"`/`"bottom"`, `fontColor` (default `"auto"`), `fontSize` (default 16). For `diamond` and `stadium`, text is placed within the full bounding box (not clipped to the shape interior). For `db`, text is placed in the body region below the top cap ellipse. For `cloud`, text is placed in a reduced central region inside the bumps, so give the shape generous width/height. For `document` and `callout`, text sits above the bottom wave/tail band. For `multiDocument`, text is confined to the front (bottom-left) sheet, so give the shape generous size. For `actor`, text is the label band below the stick figure — keep it short. **`record` is the exception: its `text` is a keyed object, and the typography lives inside each slot rather than on the shape** (see the record entry below).
 - Markdown body (`markdown` only): `text` holds **Markdown source** and is rendered as HTML — headings, lists, tables, code fences, links, and math (`$...$` inline, `$$...$$` block). Every other shape draws `text` as plain text, so reach for `markdown` whenever the content needs structure (notes, specs, summaries), and keep `rect` for one-line labels. Defaults suit a document: 300x200, `textAlign` `"left"`, `verticalAlign` `"top"`, `fill` `"auto"`. Content taller than `height` is clipped, so leave headroom. Image export flattens it to plain text.
 - Connector label (edge label, e.g. `"Yes"`/`"No"`): a connector has **no** top-level `text`. Put the annotation in a nested `label` object: `"label": { "text": "Yes" }`. Optional fields: `position` (0–1 along the path, default 0.5 = midpoint), `offset` (perpendicular shift, default 0), `fontColor` (default `"auto"`), `fontSize` (default 16), `fontWeight`, plus background/border — `fill` (default canvas background = masks the line; `"transparent"` to show the line), `stroke` (border color), `strokeWidth` (border width, default 0 = no border), `strokeDashType` (border line style: `"solid"`/`"dashed"`/`"dotted"`). Plain text only; the label is drawn horizontally at the midpoint by default. Omit `label` for no label.
 - Arrows `startArrow`/`endArrow`: `"None"` / `"FilledTriangle"` (standard arrow) / `"OpenArrow"` / `"HollowTriangle"` / `"FilledDiamond"` / `"HollowDiamond"` / `"ConcaveTriangle"` / `"Circle"`
@@ -104,8 +105,42 @@ The top level must always have `version` / `root` (the array may be empty).
 
 - `anchor.kind`: `"connectPoint"` (+ `id`) / `"center"` / `"free"` (+ `point`)
 - `connectPoint` `id`: `"topCenter"`/`"rightCenter"`/`"bottomCenter"`/`"leftCenter"` (for the center, use `"kind": "center"` instead — it is not a `connectPoint` id)
-- `owner` may reference **only a box shape (`rect` / `markdown` / `ellipse` / `diamond` / `stadium` / `parallelogram` / `hexagon` / `cloud` / `document` / `multiDocument` / `actor` / `callout` / `db` / `storedData` / `subroutine` / `trapezoid` / `manualInput` / `card` / `delay` / `loopLimit` / `display` / `extract` / `cross` / `offPageConnector` / `sticky`)**. You **cannot** attach an endpoint to a `polyline`, `polygon`, `group`, `svg`, or `connector`. To point an arrow at/from one of those, use a `free` endpoint placed near it instead.
+- `owner` may reference **only a box shape (`rect` / `markdown` / `ellipse` / `diamond` / `stadium` / `parallelogram` / `hexagon` / `cloud` / `document` / `multiDocument` / `actor` / `callout` / `db` / `storedData` / `subroutine` / `trapezoid` / `manualInput` / `card` / `delay` / `loopLimit` / `display` / `extract` / `cross` / `offPageConnector` / `record` / `sticky`)**. You **cannot** attach an endpoint to a `polyline`, `polygon`, `group`, `svg`, or `connector`. To point an arrow at/from one of those, use a `free` endpoint placed near it instead.
 - A free point not attached to any object: `{ "anchor": { "kind": "free", "point": { "x": 400, "y": 200 } } }` (no `owner`)
+
+### Record (`record`) — the one shape whose `text` is an object
+
+Use `record` for a **titled box with a list of rows**: a UML class, an ER entity,
+an ontology concept with its properties. Its `text` has two named slots and a
+plain string is rejected — put the title in `name.text` and **one array entry per
+row** in `rows.text` (never a newline inside an entry).
+
+```json
+{
+	"id": "user",
+	"type": "record",
+	"x": 120,
+	"y": 80,
+	"width": 180,
+	"height": 95,
+	"text": {
+		"name": { "text": "User" },
+		"rows": { "text": ["id: string", "name: string", "email: string"] }
+	}
+}
+```
+
+Each slot carries **its own** typography (`textAlign` / `verticalAlign` /
+`fontColor` / `fontSize` / `fontFamily` / `fontWeight`, all optional and written
+beside `text`); a `record` has **no shape-wide** text fields, so writing them at
+the top level is an error. Slot defaults differ from other shapes where the
+compartments need it — `textAlign` `"left"`, `verticalAlign` `"top"`, `fontSize`
+`14` (the 21px row pitch is sized for it) — and `fill` defaults to `"auto"` like
+`markdown`. Both bands draw exactly what their slot's typography says; the rows
+are packed one line per entry into the compartment below the title band. The
+**height is never adjusted to the content**, so size it
+yourself: `32 + 21 * rows.length` fits the band plus one line per row exactly, and
+rows past the bottom edge are clipped.
 
 ### Raw SVG (`svg`) — escape hatch for complex visuals
 
@@ -317,7 +352,7 @@ These are guidelines for readability, not part of the spec. Overlapping itself i
 
 - ❌ Putting a connector inside a group's `children` → ✅ keep connectors at the top level of `root`.
 - ❌ A connector with both endpoints `free` (no owner) → ✅ at least one endpoint must reference an object.
-- ❌ Attaching a connector endpoint (`owner`) to a `polyline`/`polygon`/`group`/`svg` → ✅ only box shapes (`rect`/`markdown`/`ellipse`/`diamond`/`stadium`/`parallelogram`/`hexagon`/`cloud`/`document`/`multiDocument`/`actor`/`callout`/`db`/`storedData`/`subroutine`/`trapezoid`/`manualInput`/`card`/`delay`/`loopLimit`/`display`/`extract`/`cross`/`offPageConnector`/`sticky`) are connectable; use a `free` endpoint placed near the target instead.
+- ❌ Attaching a connector endpoint (`owner`) to a `polyline`/`polygon`/`group`/`svg` → ✅ only box shapes (`rect`/`markdown`/`ellipse`/`diamond`/`stadium`/`parallelogram`/`hexagon`/`cloud`/`document`/`multiDocument`/`actor`/`callout`/`db`/`storedData`/`subroutine`/`trapezoid`/`manualInput`/`card`/`delay`/`loopLimit`/`display`/`extract`/`cross`/`offPageConnector`/`record`/`sticky`) are connectable; use a `free` endpoint placed near the target instead.
 - ❌ Reaching for `svg` for ordinary boxes/nodes/arrows → ✅ use the built-in shapes; keep `svg` for visuals they cannot express.
 - ❌ Putting endpoint coordinates in a connector's `points` → ✅ `points: []`; endpoints go in `source`/`target`.
 - ❌ Putting a connector's edge label in a top-level `text` field → ✅ use a nested `label`: `"label": { "text": "Yes" }`.

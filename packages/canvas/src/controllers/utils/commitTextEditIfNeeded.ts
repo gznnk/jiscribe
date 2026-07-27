@@ -1,9 +1,14 @@
+import { LABEL_TEXT_SLOT_ID } from "../../constants/textSlotId";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import {
 	isTextStyleState,
 	type TextStyleState,
 } from "../../states/objects/base/TextStyleState";
 import type { ConnectorState } from "../../states/objects/connections/connector/ConnectorState";
+import {
+	readTextSlot,
+	writeTextSlot,
+} from "../../states/objects/types/TextSlots";
 import type { CanvasControllerState } from "../CanvasTypes";
 
 /**
@@ -70,28 +75,41 @@ function commitConnectorLabel(
 }
 
 /**
- * Commits the body text of a text-bearing shape (rect, etc.).
+ * Commits one text slot of a text-bearing shape (rect, etc.). The write-back is slot-generic:
+ * a slot holding rows takes the edited text split on "\n" (writeTextSlot), and the other slots
+ * as well as the slot order are left untouched.
  * If unchanged, it only closes the editing session and leaves commitVersion untouched.
  *
  * @param state - the current canvas controller state
  * @param target - the shape whose text is being updated
+ * @param slotId - the slot being committed; a slot the shape does not have is discarded
  * @param text - the edited text to write back
  * @returns a new state reflecting the text (if unchanged, only clears textEditState)
  */
-function commitTextStyleText(
+function commitTextSlot(
 	state: CanvasControllerState,
 	target: TextStyleState & ObjectState,
+	slotId: string,
 	text: string,
 ): CanvasControllerState {
-	if (text === target.text) {
+	const slots = target.text;
+	if (slots === undefined || !(slotId in slots)) {
 		return clearTextEdit(state);
 	}
+	if (text === readTextSlot(slots, slotId)) {
+		return clearTextEdit(state);
+	}
+
+	const nextTarget = {
+		...target,
+		text: writeTextSlot(slots, slotId, text),
+	};
 
 	return {
 		...state,
 		objects: {
 			...state.objects,
-			[target.id]: { ...target, text } as ObjectState,
+			[target.id]: nextTarget as ObjectState,
 		},
 		textEditState: null,
 		commitVersion: state.commitVersion + 1,
@@ -100,7 +118,7 @@ function commitTextStyleText(
 
 /**
  * Commits the active text editing session, if any.
- * A dispatcher that simply routes to a dedicated commit function per target kind.
+ * A dispatcher that routes to a dedicated commit function per edited slot.
  *
  * @param state - the current canvas controller state
  * @returns a new state reflecting the text (if not editing, returns the original state unchanged)
@@ -112,18 +130,23 @@ export function commitTextEditIfNeeded(
 		return state;
 	}
 
-	const { objectId, text } = state.textEditState;
+	const { objectId, slotId, text } = state.textEditState;
 	const targetObject = state.objects[objectId];
 
 	if (!targetObject) {
 		return clearTextEdit(state);
 	}
-	// Connectors update the nested label.text rather than a body text.
+	// The object kind decides the route, not the slot id: a connector's one
+	// editable text is its nested label.text (the LABEL_TEXT_SLOT_ID pseudo
+	// slot), while on a shape "label" is a slot name like any other.
 	if (targetObject.type === "connector") {
+		if (slotId !== LABEL_TEXT_SLOT_ID) {
+			return clearTextEdit(state);
+		}
 		return commitConnectorLabel(state, targetObject as ConnectorState, text);
 	}
 	if (isTextStyleState(targetObject)) {
-		return commitTextStyleText(state, targetObject, text);
+		return commitTextSlot(state, targetObject, slotId, text);
 	}
 	return clearTextEdit(state);
 }

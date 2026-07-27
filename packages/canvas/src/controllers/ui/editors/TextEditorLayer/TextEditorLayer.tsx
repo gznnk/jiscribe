@@ -1,6 +1,7 @@
 import type { TransformedFrame } from "@workspace/geometry";
 import { memo } from "react";
 
+import { LABEL_TEXT_SLOT_ID } from "../../../../constants/textSlotId";
 import {
 	resolveConnectorPoints,
 	resolveEndpointOwner,
@@ -84,11 +85,13 @@ function renderConnectorLabelEditor(
 }
 
 /**
- * Renders the body text editor for a shape that has text (such as rect), overlaid on the shape's
- * text region (derived via calcTextRegion, the seam shared with the rendering-side TextOverlay).
+ * Renders the text editor for one slot of a shape that has text (such as rect), overlaid on that
+ * slot's region (derived via calcTextRegion, the seam shared with the rendering-side TextOverlay).
+ * The typography comes from the edited slot, so the textarea matches the overlay it replaces.
  *
  * @param target - The shape being edited (carries geometry)
  * @param objectId - ID of the target shape
+ * @param slotId - The slot being edited; a key of `target.text`
  * @param text - The text being edited
  * @param handlers - Input and exit handlers
  * @param textRegionCalculator - Per-type calculator from ObjectTextRegionRegistry. Omitted = full bbox
@@ -97,11 +100,13 @@ function renderConnectorLabelEditor(
 function renderTextEditor(
 	target: ObjectState & TextStyleState & TransformedFrame,
 	objectId: string,
+	slotId: string,
 	text: string,
 	handlers: EditorHandlers,
 	textRegionCalculator?: ObjectTextRegionCalculator,
 ): React.ReactElement {
-	const textRegion = calcTextRegion(target, textRegionCalculator);
+	const textRegion = calcTextRegion(target, slotId, textRegionCalculator);
+	const slot = target.text?.[slotId];
 	return (
 		<TextEditor
 			objectId={objectId}
@@ -115,12 +120,12 @@ function renderTextEditor(
 			scaleX={target.scaleX ?? 1}
 			scaleY={target.scaleY ?? 1}
 			rotation={target.rotation ?? 0}
-			textAlign={target.textAlign}
-			verticalAlign={target.verticalAlign}
-			fontColor={target.fontColor}
-			fontSize={target.fontSize}
-			fontFamily={target.fontFamily}
-			fontWeight={target.fontWeight}
+			textAlign={slot?.textAlign}
+			verticalAlign={slot?.verticalAlign}
+			fontColor={slot?.fontColor}
+			fontSize={slot?.fontSize}
+			fontFamily={slot?.fontFamily}
+			fontWeight={slot?.fontWeight}
 			onChange={handlers.onChange}
 			onEscape={handlers.onEscape}
 		/>
@@ -135,7 +140,7 @@ type TextEditorLayerProps = {
 };
 
 /**
- * If there is an active text-editing session, dispatches to the dedicated editor for the target's type.
+ * If there is an active text-editing session, dispatches to the dedicated editor for the edited slot.
  * The render-side dispatcher that pairs with commitTextEditIfNeeded on the commit side.
  */
 const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
@@ -157,7 +162,13 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 
 	const handlers: EditorHandlers = { onChange: onTextChange, onEscape };
 
+	// The object kind decides the editor, not the slot id: a connector's one
+	// editable text is its label (the LABEL_TEXT_SLOT_ID pseudo slot), while on
+	// a shape "label" is a slot name like any other.
 	if (targetObject.type === "connector") {
+		if (textEditState.slotId !== LABEL_TEXT_SLOT_ID) {
+			return null;
+		}
 		return renderConnectorLabelEditor(
 			targetObject as ConnectorState,
 			objects,
@@ -167,13 +178,20 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 		);
 	}
 
-	if (isTextStyleState(targetObject)) {
+	// Any other slot id is a key of the shape's own text; one the shape does not
+	// have has no region to place the editor in, so nothing is rendered.
+	if (
+		isTextStyleState(targetObject) &&
+		targetObject.text !== undefined &&
+		textEditState.slotId in targetObject.text
+	) {
 		// Shapes with text also carry geometry (cx/cy/width...).
 		const geometryObject = targetObject as typeof targetObject &
 			TransformedFrame;
 		return renderTextEditor(
 			geometryObject,
 			textEditState.objectId,
+			textEditState.slotId,
 			textEditState.text,
 			handlers,
 			registries.objectTextRegion.get(targetObject.type),

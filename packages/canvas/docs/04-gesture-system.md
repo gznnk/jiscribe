@@ -81,7 +81,9 @@ are located in `controllers/gestures/recognizer/utils/`.
 ### `data-kind` / `data-id` / `data-part`
 
 Attributes that **identify the target** of a gesture. `getKindAndId` finds the nearest element via `closest("[data-kind]")`,
-resolves `{ kind, id, part }`, and attaches it to the event as `targetKind` / `targetId` / `targetPart`.
+resolves `{ kind, id, part }`, and attaches it to the event as `targetKind` / `targetId` / `targetPart`. `part` is read from the
+nearest `[data-part]` **at or inside** that element, so a shape that draws several hit regions can mark each one while still
+exposing a single `[data-kind]` element (one object = one `data-kind="object"` element, which e2e's `captureObjects` counts on).
 
 Each attribute carries exactly one axis, forming the two-level routing tree `kind` (coarse) → `part` prefix (fine) (issue #81):
 
@@ -103,6 +105,9 @@ Rules:
 
 Example: a connector's label box is `data-kind="connector" data-id={connectorId} data-part="label"`.
 With a committed label, only a double click on the label box (not the bare line) starts label editing.
+A multi-slot shape uses the nested form instead: the `record` shape's `<g data-kind="object">` wraps two
+compartment rects carrying `data-part="name"` / `data-part="rows"`, which is how a double click resolves
+the text slot it landed in (`resolveTextSlotId` checks the value against the keys of `state.text`).
 
 #### Migration (issue #81) — completed
 

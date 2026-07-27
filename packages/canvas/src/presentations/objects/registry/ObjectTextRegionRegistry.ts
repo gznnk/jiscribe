@@ -4,16 +4,19 @@ import type { ObjectType } from "../../../schemas/objects/types/ObjectType";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 
 /**
- * Calculates a shape's text region from its state (untransformed width/height
- * plus any per-shape fields, e.g. a headerHeight (see the container plugin)), in the
- * shape's local coordinate space (origin at the center, top-left based Rect).
- * Implementations declare what they read via `TState` (most:
+ * Calculates the region of one text slot from the shape's state (untransformed
+ * width/height plus any per-shape fields, e.g. a headerHeight (see the container
+ * plugin)), in the shape's local coordinate space (origin at the center, top-left
+ * based Rect). Implementations declare what they read via `TState` (most:
  * `ObjectTextRegionCalculator<Dimensions>`); the registry stores the default
  * instantiation, to which narrower readers are assignable by contravariance.
+ *
+ * `slotId` is a key of `state.text` (the authority on which slots a shape has).
+ * A single-slot shape can simply leave the parameter out of its signature.
  */
 export type ObjectTextRegionCalculator<
 	TState extends Dimensions = ObjectState & Dimensions,
-> = (state: TState) => Rect;
+> = (state: TState, slotId: string) => Rect;
 
 /**
  * Per-type registry of text region calculators. Types without a registered

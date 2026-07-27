@@ -2,7 +2,6 @@
 
 import { AlignmentMenuContent, AlignmentRow } from "./AlignmentMenuStyled";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
-import type { TextStyleState } from "../../../../../../states/objects/base/TextStyleState";
 import type { CanvasMessageStrings } from "../../../../../messages/CanvasMessages";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { AlignBottomIcon } from "../../../../icons/AlignBottomIcon";
@@ -17,7 +16,7 @@ import {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
-import { getFirstSelectedWithProp } from "../../utils/getFirstSelectedWithProp";
+import { getFirstSelectedTextSlot } from "../../utils/getFirstSelectedTextSlot";
 
 const SECTION_ID = "alignment";
 
@@ -62,11 +61,9 @@ const AlignmentMenuComponent: React.FC<AlignmentMenuProps> = ({
 	);
 
 	const { selectedIds, objects } = canvasState;
-	const obj = getFirstSelectedWithProp(selectedIds, objects, "textAlign") as
-		| TextStyleState
-		| undefined;
-	const textAlign = obj?.textAlign ?? "left";
-	const verticalAlign = obj?.verticalAlign ?? "middle";
+	const slot = getFirstSelectedTextSlot(selectedIds, objects);
+	const textAlign = slot?.textAlign ?? "left";
+	const verticalAlign = slot?.verticalAlign ?? "middle";
 
 	return (
 		<ObjectMenuItemPositioner ref={menuItemRef}>

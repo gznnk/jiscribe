@@ -66,7 +66,7 @@ describe("createFrameStateValidator feature gating", () => {
 		scaleY: 1,
 		stroke: "url(javascript:alert(1))",
 		fill: "url(javascript:alert(1))",
-		fontSize: 0,
+		text: { body: { text: "hello", fontSize: 0 } },
 		rx: -1,
 	};
 
@@ -79,7 +79,7 @@ describe("createFrameStateValidator feature gating", () => {
 		["transform", { transform: true }],
 		["stroke", { stroke: true }],
 		["fill", { fill: true }],
-		["text", { text: true }],
+		["text", { text: "body" }],
 		["radius", { radius: true }],
 	] as [string, Partial<ObjectFeatures>][])(
 		"rejects a malformed %s group once the flag is on",
@@ -95,7 +95,7 @@ describe("createFrameStateValidator feature gating", () => {
 				transform: true,
 				stroke: true,
 				fill: true,
-				text: true,
+				text: "body",
 				radius: true,
 			}),
 		);
@@ -109,9 +109,14 @@ describe("createFrameStateValidator feature gating", () => {
 				strokeWidth: 2,
 				strokeDashType: "dashed",
 				fill: "#fff",
-				fontSize: 16,
-				fontFamily: "Noto Sans JP",
-				fontWeight: "normal",
+				text: {
+					body: {
+						text: "hello",
+						fontSize: 16,
+						fontFamily: "Noto Sans JP",
+						fontWeight: "normal",
+					},
+				},
 				rx: 4,
 			}),
 		).toBe(true);

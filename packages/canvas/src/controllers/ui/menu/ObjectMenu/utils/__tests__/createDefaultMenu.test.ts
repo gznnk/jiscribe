@@ -16,7 +16,7 @@ describe("createDefaultMenu", () => {
 				transform: true,
 				stroke: true,
 				fill: true,
-				text: true,
+				text: "body",
 				radius: true,
 			}),
 		);

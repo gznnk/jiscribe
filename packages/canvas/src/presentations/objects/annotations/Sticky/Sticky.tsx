@@ -1,7 +1,9 @@
 import type React from "react";
 import { memo } from "react";
 
+import { BODY_TEXT_SLOT_ID } from "../../../../constants/textSlotId";
 import type { StickyState } from "../../../../states/objects/annotations/sticky/StickyState";
+import { readTextSlot } from "../../../../states/objects/types/TextSlots";
 import { TextOverlay } from "../../base/TextOverlay";
 import type { TextEditable } from "../../base/TextOverlay";
 import { calcTextRegion } from "../../utils/calcTextRegion";
@@ -21,16 +23,14 @@ const StickyComponent: React.FC<StickyProps> = (props) => {
 		rotation,
 		fill,
 		text,
-		textAlign,
-		verticalAlign,
-		fontColor,
-		fontSize,
-		fontFamily,
-		fontWeight,
 		isEditing = false,
 	} = props;
 	const transformAttr = createSvgTransform(scaleX, scaleY, rotation, cx, cy);
-	const textRegion = calcTextRegion(props);
+
+	// Sticky is a "body"-feature type: its one slot is addressed by name rather
+	// than enumerated, so a malformed multi-slot state cannot overlap-draw here.
+	const bodySlot = text?.[BODY_TEXT_SLOT_ID];
+	const textRegion = calcTextRegion(props, BODY_TEXT_SLOT_ID);
 
 	const left = -width / 2;
 	const right = width / 2;
@@ -77,13 +77,13 @@ const StickyComponent: React.FC<StickyProps> = (props) => {
 				width={textRegion.width}
 				height={textRegion.height}
 				transform={transformAttr}
-				text={text}
-				textAlign={textAlign}
-				verticalAlign={verticalAlign}
-				fontColor={fontColor}
-				fontSize={fontSize}
-				fontFamily={fontFamily}
-				fontWeight={fontWeight}
+				text={readTextSlot(text, BODY_TEXT_SLOT_ID)}
+				textAlign={bodySlot?.textAlign}
+				verticalAlign={bodySlot?.verticalAlign}
+				fontColor={bodySlot?.fontColor}
+				fontSize={bodySlot?.fontSize}
+				fontFamily={bodySlot?.fontFamily}
+				fontWeight={bodySlot?.fontWeight}
 				isEditing={isEditing}
 			/>
 		</g>

@@ -13,8 +13,14 @@ const validSticky = {
 	scaleX: 1,
 	scaleY: 1,
 	fill: "#ffeb3b",
-	fontSize: 14,
+	text: { body: { text: "note", fontSize: 14 } },
 };
+
+/** The same sticky with one styling field of its body slot replaced. */
+const withBodyStyle = (style: Record<string, unknown>) => ({
+	...validSticky,
+	text: { body: { ...validSticky.text.body, ...style } },
+});
 
 describe("isValidStickyState", () => {
 	it("returns true for a valid Sticky", () => {
@@ -30,13 +36,13 @@ describe("isValidStickyState", () => {
 		expect(isValidStickyState({ ...validSticky, width: -1 })).toBe(false);
 	});
 
-	it("returns false when fontSize < 1 (>= 1)", () => {
-		expect(isValidStickyState({ ...validSticky, fontSize: 0 })).toBe(false);
+	it("returns false when a slot's fontSize < 1 (>= 1)", () => {
+		expect(isValidStickyState(withBodyStyle({ fontSize: 0 }))).toBe(false);
 	});
 
-	it("returns false for a fontFamily containing CSS injection", () => {
+	it("returns false for a slot's fontFamily containing CSS injection", () => {
 		expect(
-			isValidStickyState({ ...validSticky, fontFamily: "Arial; } body {" }),
+			isValidStickyState(withBodyStyle({ fontFamily: "Arial; } body {" })),
 		).toBe(false);
 	});
 });

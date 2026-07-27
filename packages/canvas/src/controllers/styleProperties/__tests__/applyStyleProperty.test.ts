@@ -436,6 +436,150 @@ describe("StylePropertyRegistry.apply (selection style updates)", () => {
 		});
 	});
 
+	describe("text styling (stored per slot)", () => {
+		const slotsOf = (
+			state: CanvasControllerState,
+			id: string,
+		): Record<string, Record<string, unknown>> =>
+			(
+				state.objects[id] as unknown as {
+					text: Record<string, Record<string, unknown>>;
+				}
+			).text;
+
+		/** A rect whose single body slot carries the shape's typography. */
+		const bodyRect = (id: string, style: Record<string, unknown> = {}) =>
+			({
+				...rectObj(id),
+				text: { body: { text: "hello", ...style } },
+			}) as unknown as ObjectState;
+
+		/** A two-slot shape, standing in for a record. */
+		const keyedRect = (id: string, style: Record<string, unknown> = {}) =>
+			({
+				...rectObj(id),
+				text: {
+					name: { text: "User", ...style },
+					rows: { text: ["id"], ...style },
+				},
+			}) as unknown as ObjectState;
+
+		it("writes into the slot rather than the object root", () => {
+			const r1 = bodyRect("r1");
+			const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+			const result = applyStyleProperty(state, "fontSize", "24");
+			expect(slotsOf(result, "r1").body).toEqual({
+				text: "hello",
+				fontSize: 24,
+			});
+			expect("fontSize" in result.objects["r1"]).toBe(false);
+		});
+
+		it("writes into every slot, the menus having no per-slot control", () => {
+			const r1 = keyedRect("r1");
+			const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+			const result = applyStyleProperty(state, "fontWeight", "bold");
+			expect(slotsOf(result, "r1")).toEqual({
+				name: { text: "User", fontWeight: "bold" },
+				rows: { text: ["id"], fontWeight: "bold" },
+			});
+		});
+
+		it("keeps the slot's content and its other styling", () => {
+			const r1 = bodyRect("r1", { textAlign: "right", fontSize: 12 });
+			const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+			const result = applyStyleProperty(state, "fontSize", "24");
+			expect(slotsOf(result, "r1").body).toEqual({
+				text: "hello",
+				textAlign: "right",
+				fontSize: 24,
+			});
+		});
+
+		it("applies to every selected object and to group descendants", () => {
+			const g1 = groupObj("g1", ["r2"]);
+			const r1 = bodyRect("r1");
+			const r2 = bodyRect("r2");
+			const state = makeState({
+				selectedIds: ["r1", "g1"],
+				objects: { g1, r1, r2 },
+			});
+			const result = applyStyleProperty(state, "fontColor", "#123456");
+			expect(slotsOf(result, "r1").body.fontColor).toBe("#123456");
+			expect(slotsOf(result, "r2").body.fontColor).toBe("#123456");
+		});
+
+		it("skips an object that holds no text at all", () => {
+			const p1 = polylineObj("p1");
+			const state = makeState({ selectedIds: ["p1"], objects: { p1 } });
+			expect(applyStyleProperty(state, "fontSize", "24")).toBe(state);
+		});
+
+		it("does not mutate the original slots (immutable)", () => {
+			const r1 = bodyRect("r1", { fontSize: 12 });
+			const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+			applyStyleProperty(state, "fontSize", "24");
+			expect(slotsOf(state, "r1").body.fontSize).toBe(12);
+		});
+	});
+
+	describe("text content property (text)", () => {
+		const slotsOf = (
+			state: CanvasControllerState,
+			id: string,
+		): Record<string, Record<string, unknown>> =>
+			(
+				state.objects[id] as unknown as {
+					text: Record<string, Record<string, unknown>>;
+				}
+			).text;
+
+		it("writes the body slot's content, keeping its styling", () => {
+			const r1 = {
+				...rectObj("r1"),
+				text: { body: { text: "hello", fontSize: 12 } },
+			} as unknown as ObjectState;
+			const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+			const result = applyStyleProperty(state, "text", "world");
+			expect(slotsOf(result, "r1").body).toEqual({
+				text: "world",
+				fontSize: 12,
+			});
+		});
+
+		it("writes only the first slot of a multi-slot shape", () => {
+			const r1 = {
+				...rectObj("r1"),
+				text: { name: { text: "User" }, rows: { text: ["id"] } },
+			} as unknown as ObjectState;
+			const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+			const result = applyStyleProperty(state, "text", "Account");
+			expect(slotsOf(result, "r1")).toEqual({
+				name: { text: "Account" },
+				rows: { text: ["id"] },
+			});
+		});
+
+		it("splits on newlines when the target slot holds rows", () => {
+			const r1 = {
+				...rectObj("r1"),
+				text: { rows: { text: ["id"] } },
+			} as unknown as ObjectState;
+			const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+			const result = applyStyleProperty(state, "text", "id\nemail");
+			expect(slotsOf(result, "r1").rows).toEqual({ text: ["id", "email"] });
+		});
+
+		it("skips an object with no slot to write", () => {
+			const r1 = {
+				...rectObj("r1"),
+				text: {},
+			} as unknown as ObjectState;
+			const state = makeState({ selectedIds: ["r1"], objects: { r1 } });
+			expect(applyStyleProperty(state, "text", "world")).toBe(state);
+		});
+	});
+
 	describe("shape-declared extra properties (accentColor)", () => {
 		it("accentColor on the declaring shape -> applied", () => {
 			const e1 = extraShapeObj("e1");

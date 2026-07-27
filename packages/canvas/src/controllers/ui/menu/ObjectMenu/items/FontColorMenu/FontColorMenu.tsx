@@ -2,7 +2,6 @@
 
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import { resolveAutoColor } from "../../../../../../presentations/objects/utils/resolveAutoColor";
-import type { TextStyleState } from "../../../../../../states/objects/base/TextStyleState";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { FontColorIcon } from "../../../../icons/FontColorIcon";
 import { ObjectMenuColorPickerGrid } from "../../common/ObjectMenuColorPickerGrid/ObjectMenuColorPickerGrid";
@@ -12,7 +11,7 @@ import {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
-import { getFirstSelectedWithProp } from "../../utils/getFirstSelectedWithProp";
+import { getFirstSelectedTextSlot } from "../../utils/getFirstSelectedTextSlot";
 
 const SECTION_ID = "font-color";
 const DEFAULT_FONT_COLOR = "#333333";
@@ -41,9 +40,8 @@ const FontColorMenuComponent: React.FC<FontColorMenuProps> = ({
 	);
 
 	const { selectedIds, objects } = canvasState;
-	const obj = getFirstSelectedWithProp(selectedIds, objects, "fontColor");
-	const currentColor =
-		(obj as TextStyleState | undefined)?.fontColor ?? DEFAULT_FONT_COLOR;
+	const slot = getFirstSelectedTextSlot(selectedIds, objects);
+	const currentColor = slot?.fontColor ?? DEFAULT_FONT_COLOR;
 
 	return (
 		<ObjectMenuItemPositioner ref={menuItemRef}>

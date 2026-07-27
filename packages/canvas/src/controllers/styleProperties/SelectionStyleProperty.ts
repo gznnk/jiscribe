@@ -135,7 +135,24 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 		return { ...state, objects: updatedObjects };
 	}
 
-	/** Support gate + coercion + path write for one object. Null means "does not apply" (skip). */
+	/**
+	 * Writes the coerced value into a supported object. The default is the dot-path
+	 * write; a property whose storage is not one path (text styling, which lives in
+	 * every slot) overrides this. Null means "does not apply" (skip).
+	 */
+	protected writeValue(
+		obj: ObjectState,
+		path: readonly string[],
+		value: string | number | boolean,
+	): ObjectState | null {
+		return writeAtPath(
+			obj as unknown as Record<string, unknown>,
+			path,
+			value,
+		) as ObjectState | null;
+	}
+
+	/** Support gate + coercion + write for one object. Null means "does not apply" (skip). */
 	private applyToObject(
 		obj: ObjectState,
 		property: string,
@@ -150,10 +167,6 @@ export abstract class SelectionStyleProperty implements StylePropertyHandler {
 		if (coerced === null) {
 			return null;
 		}
-		return writeAtPath(
-			obj as unknown as Record<string, unknown>,
-			path,
-			coerced,
-		) as ObjectState | null;
+		return this.writeValue(obj, path, coerced);
 	}
 }

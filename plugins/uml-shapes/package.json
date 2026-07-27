@@ -1,0 +1,36 @@
+{
+	"name": "@workspace/plugin-uml-shapes",
+	"version": "0.0.0",
+	"private": true,
+	"description": "UML 系図形（record = 区画付きボックス）を canvas 公開 API のみで外部パッケージとして提供する（docs/05_extensibility/plugin-architecture-requirements.md）",
+	"main": "src/index.ts",
+	"types": "src/index.ts",
+	"exports": {
+		".": "./src/index.ts",
+		"./doc": "./src/doc.ts"
+	},
+	"scripts": {
+		"lint": "eslint .",
+		"test": "vitest run",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@workspace/basic-validators": "workspace:*",
+		"@workspace/geometry": "workspace:*"
+	},
+	"peerDependencies": {
+		"@emotion/react": "catalog:",
+		"@emotion/styled": "catalog:",
+		"@workspace/canvas": "workspace:*",
+		"react": "catalog:"
+	},
+	"devDependencies": {
+		"@emotion/react": "catalog:",
+		"@emotion/styled": "catalog:",
+		"@types/react": "catalog:",
+		"@workspace/canvas": "workspace:*",
+		"react": "catalog:",
+		"typescript": "catalog:",
+		"vitest": "catalog:"
+	}
+}

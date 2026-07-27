@@ -14,6 +14,10 @@ import { getAncestors } from "./utils/getAncestors";
 import { ORIGIN_SNAP_PX } from "../../../../constants/axisLock";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import { isTextStyleState } from "../../../../states/objects/base/TextStyleState";
+import {
+	readTextSlot,
+	resolveTextSlotId,
+} from "../../../../states/objects/types/TextSlots";
 import type {
 	AxisLockFeedback,
 	CanvasControllerState,
@@ -391,18 +395,26 @@ export const ObjectEventHandler: GestureHandler = {
 
 		// Handle the double-click event
 		if (event.type === "doubleClick") {
-			// Start text editing only for shapes that have text (features.text).
-			// isTextStyleState is a loose guard that only checks whether the text attributes
-			// are consistent, so it also lets through shapes with no text at all
-			// (svg / polyline / polygon, etc.). Treat the same features.text used by the
-			// property-update side (FeatureGatedStyleProperty's text gate) as authoritative.
+			// Start text editing only for shapes that have text (features.text, in
+			// either shape). isTextStyleState is a loose guard that only checks whether
+			// the text attributes are consistent, so it also lets through shapes with no
+			// text at all (svg / polyline / polygon, etc.). Treat the same features.text
+			// used by the property-update side (TextSlotStyleProperty) as authoritative.
 			const features = targetObject.features;
-			if (features?.text === true && isTextStyleState(targetObject)) {
+			if (features?.text !== undefined && isTextStyleState(targetObject)) {
+				// The pressed element's [data-part] names the slot (as it does for a
+				// connector's label). It comes from the DOM, so resolveTextSlotId
+				// honors it only when it matches a slot and otherwise opens the first.
+				const slotId = resolveTextSlotId(targetObject.text, event.targetPart);
+				if (slotId === undefined) {
+					return nextState;
+				}
 				return {
 					...nextState,
 					textEditState: {
 						objectId: targetObject.id,
-						text: targetObject.text ?? "",
+						slotId,
+						text: readTextSlot(targetObject.text, slotId),
 					},
 				};
 			}
