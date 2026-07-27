@@ -27,7 +27,7 @@ pnpm --filter @workspace/canvas lint
 
 ## ドキュメント
 
-設計ドキュメントは [docs/](./docs/README.md) に 10 本の柱で整理しています。
+設計ドキュメントは [docs/](./docs/README.md) に 11 本の柱で整理しています。
 
 - [設計ドキュメント目次](./docs/README.md)
 - [設計思想](./docs/01-design-philosophy.md) / [アーキテクチャ](./docs/02-architecture.md)
@@ -37,6 +37,7 @@ pnpm --filter @workspace/canvas lint
 - [外部同期・VSCode 連携](./docs/07-external-sync.md)
 - [表示・テーマ](./docs/08-presentation-and-theme.md) / [テスト](./docs/09-testing.md)
 - [スタイルプロパティシステム](./docs/10-style-properties.md)
+- [図形の設計判断](./docs/11-shape-design.md)
 
 AI 向けリファレンス:
 
