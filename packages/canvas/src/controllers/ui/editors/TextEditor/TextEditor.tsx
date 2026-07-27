@@ -109,17 +109,17 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		}
 	};
 
-	// Transform: SVG matrix with rotation, scale, and translation to (cx, cy).
-	// x/y position the region in local coordinates before this transform is applied.
-	const transform = createSvgTransform(scaleX, scaleY, rotation, cx, cy);
+	// The region offset (x/y) rides inside the transform, after the shape
+	// matrix, mirroring TextOverlayFrame: left/top would be applied outside the
+	// transform, which only agrees with the SVG side while the region is
+	// centered on the shape's local origin.
+	const transform = `${createSvgTransform(scaleX, scaleY, rotation, cx, cy)} translate(${x}px, ${y}px)`;
 
 	return (
 		<TextEditorWrapper
 			data-testid="text-editor"
 			data-gesture="none"
 			style={{
-				left: x,
-				top: y,
 				width,
 				height,
 				transform,

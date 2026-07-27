@@ -14,12 +14,19 @@ import { TEXT_LINE_HEIGHT } from "../../../../constants/textLineHeight";
  * the shape's right edge; vertical clipping is handled by the textarea's own
  * max-height.
  *
- * Per-instance values (left / top / transform / width / height / align-items)
- * change with the edited object and while typing (auto-grow), so they are
- * passed via the `style` prop instead of emotion interpolation (see #131).
+ * Per-instance values (transform / width / height / align-items) change with
+ * the edited object and while typing (auto-grow), so they are passed via the
+ * `style` prop instead of emotion interpolation (see #131).
  */
 export const TextEditorWrapper = styled.div`
 	position: absolute;
+	left: 0;
+	top: 0;
+	/* The transform must compose about the shape's local origin like the SVG
+	 * side (TextOverlayFrame), not about the element center CSS defaults to —
+	 * with an off-center text region (record slots) the two differ once the
+	 * shape is rotated or flipped. */
+	transform-origin: 0 0;
 	display: flex;
 	overflow: visible;
 	pointer-events: auto;

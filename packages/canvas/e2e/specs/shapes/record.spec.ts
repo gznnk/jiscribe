@@ -97,6 +97,52 @@ test.describe("record（区画付きボックス）", () => {
 		await canvas.cancelText();
 	});
 
+	test("回転した record でもテキストエディタが行区画に重なる", async ({
+		canvas,
+	}) => {
+		// スロット領域が図形中心からずれた最初の型なので、エディタの変換合成が
+		// 表示側（SVG）とずれると回転時にだけ顕在化する（transform-origin 回帰の検知）。
+		const record = await createRecord(canvas, RECORD_FROM, RECORD_TO);
+		await canvas.selectAt({ x: 410, y: 240 });
+
+		// 回転ハンドルを右下へ振って大きく傾ける（角度の正確さは要らない）。
+		await canvas.dragTransformHandle("rotation", { x: 540, y: 300 });
+		// 接続アンカー（control）も同じ data-id を持つため、object 本体に絞る。
+		const group = canvas.page.locator(
+			`[data-kind="object"][data-id="${record.id}"]`,
+		);
+		await expect
+			.poll(
+				async () => {
+					const transform = (await group.getAttribute("transform")) ?? "";
+					const b = transform.match(/matrix\(([^)]+)\)/)?.[1]?.split(",")[1];
+					return Math.abs(Number(b));
+				},
+				{ message: "回転で b 成分（sinθ）が 0 から外れること" },
+			)
+			.toBeGreaterThan(0.3);
+		await canvas.deselect();
+
+		// 回転後の行区画を直接ダブルクリックして rows 編集を開く。
+		const rows = group.locator('[data-part="rows"]');
+		await rows.dblclick();
+		await expect(canvas.textArea()).toBeVisible();
+
+		// エディタ枠は行区画と同じ局所矩形＋同じ変換なので、画面上の外接箱が一致する。
+		const editorBox = await canvas.page
+			.locator('[data-testid="text-editor"]')
+			.boundingBox();
+		const rowsBox = await rows.boundingBox();
+		if (!editorBox || !rowsBox) {
+			throw new Error("エディタ枠または行区画の外接箱が取得できない");
+		}
+		expect(Math.abs(editorBox.x - rowsBox.x)).toBeLessThan(1.5);
+		expect(Math.abs(editorBox.y - rowsBox.y)).toBeLessThan(1.5);
+		expect(Math.abs(editorBox.width - rowsBox.width)).toBeLessThan(1.5);
+		expect(Math.abs(editorBox.height - rowsBox.height)).toBeLessThan(1.5);
+		await canvas.cancelText();
+	});
+
 	test("行を追加しても箱の高さは変わらない", async ({ canvas }) => {
 		const record = await createRecord(canvas, RECORD_FROM, RECORD_TO);
 		await canvas.deselect();
