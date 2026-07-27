@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 
-import type { CanvasMessageStrings } from "../messages/CanvasMessages";
+import type { CanvasMessageStrings } from "../messages/CanvasMessagesTypes";
 
 /**
  * Error to show in the ErrorToast. Every notify creates a fresh object, so

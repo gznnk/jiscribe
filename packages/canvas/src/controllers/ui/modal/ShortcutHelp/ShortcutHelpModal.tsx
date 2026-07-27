@@ -13,12 +13,12 @@ import {
 	formatShortcutTokens,
 	getPlatformShortcuts,
 } from "../../../commands/CommandUtils";
-import {
-	getCommandLabel,
-	type CanvasMessages,
-	type CanvasMessageStrings,
-} from "../../../messages/CanvasMessages";
+import { getCommandLabel } from "../../../messages/CanvasMessages";
 import { useCanvasMessages } from "../../../messages/CanvasMessagesContext";
+import type {
+	CanvasMessages,
+	CanvasMessageStrings,
+} from "../../../messages/CanvasMessagesTypes";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import { ModalShell } from "../ModalShell";
 

@@ -3,8 +3,8 @@
 import { AlignmentMenuContent, AlignmentRow } from "./AlignmentMenuStyled";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
 import type { TextStyleState } from "../../../../../../states/objects/base/TextStyleState";
-import type { CanvasMessageStrings } from "../../../../../messages/CanvasMessages";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
+import type { CanvasMessageStrings } from "../../../../../messages/CanvasMessagesTypes";
 import { AlignBottomIcon } from "../../../../icons/AlignBottomIcon";
 import { AlignCenterIcon } from "../../../../icons/AlignCenterIcon";
 import { AlignLeftIcon } from "../../../../icons/AlignLeftIcon";

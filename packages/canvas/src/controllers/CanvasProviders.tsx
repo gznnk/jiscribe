@@ -2,8 +2,8 @@ import type { ReactNode, RefObject } from "react";
 
 import { CanvasViewportElementRefContext } from "./CanvasViewportElementRefContext";
 import { CanvasLocaleContext } from "./messages/CanvasLocaleContext";
-import type { CanvasMessages } from "./messages/CanvasMessages";
 import { CanvasMessagesContext } from "./messages/CanvasMessagesContext";
+import type { CanvasMessages } from "./messages/CanvasMessagesTypes";
 import type { CanvasRegistries } from "./registries";
 import { CanvasRegistriesContext } from "./registries/CanvasRegistriesContext";
 import { PresentationRegistriesProvider } from "../presentations/objects/registry/PresentationRegistriesProvider";

@@ -1,6 +1,7 @@
 import { createContext, useContext } from "react";
 
-import { defaultCanvasMessages, type CanvasMessages } from "./CanvasMessages";
+import { defaultCanvasMessages } from "./CanvasMessages";
+import type { CanvasMessages } from "./CanvasMessagesTypes";
 
 /**
  * Context that distributes the merged UI messages to descendant components.

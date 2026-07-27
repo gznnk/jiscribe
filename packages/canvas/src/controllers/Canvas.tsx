@@ -42,7 +42,7 @@ import { useViewportCulling } from "./hooks/useViewportCulling";
 import type { CanvasViewportHandle } from "./hooks/useViewportHandle";
 import { useViewportHandle } from "./hooks/useViewportHandle";
 import { resolveCanvasMessages } from "./messages/CanvasMessages";
-import type { CanvasMessages } from "./messages/CanvasMessages";
+import type { CanvasMessages } from "./messages/CanvasMessagesTypes";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
 import type { CanvasConfig } from "./registries";
 import { CanvasView } from "../presentations/CanvasView";

@@ -1,4 +1,4 @@
-import type { CanvasMessages } from "./CanvasMessages";
+import type { CanvasMessages } from "./CanvasMessagesTypes";
 
 /** Japanese dictionary. Built-in; resolved via the `locale` prop of Canvas. */
 export const jaCanvasMessages: CanvasMessages = {

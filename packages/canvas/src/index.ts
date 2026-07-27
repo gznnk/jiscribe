@@ -43,7 +43,7 @@ export { defaultCanvasMessages } from "./controllers/messages/CanvasMessages";
 export type {
 	CanvasMessages,
 	CanvasMessageStrings,
-} from "./controllers/messages/CanvasMessages";
+} from "./controllers/messages/CanvasMessagesTypes";
 export type {
 	CanvasTheme,
 	CanvasThemeTokens,
