@@ -28,4 +28,6 @@ export const LabelBox = styled.div`
 	white-space: pre-wrap;
 	word-break: break-word;
 	user-select: none;
+	/* The box itself is the drag handle for label.position / label.offset. */
+	cursor: move;
 `;

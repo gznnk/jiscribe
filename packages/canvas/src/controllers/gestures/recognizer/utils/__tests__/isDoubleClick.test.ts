@@ -12,8 +12,6 @@ const DISTANCE = Math.sqrt(DOUBLE_CLICK_DISTANCE_THRESHOLD);
 
 const snapshot = (overrides: Partial<ClickSnapshot> = {}): ClickSnapshot => ({
 	time: 1000,
-	targetId: "obj-1",
-	targetPart: undefined,
 	clientPos: { x: 0, y: 0 },
 	...overrides,
 });
@@ -26,7 +24,7 @@ describe("isDoubleClick", () => {
 	});
 
 	describe("all conditions are satisfied", () => {
-		it("true when same target, within time, and within distance", () => {
+		it("true when within time and within distance", () => {
 			const previous = snapshot({ time: 1000, clientPos: { x: 0, y: 0 } });
 			const current = snapshot({ time: 1100, clientPos: { x: 2, y: 1 } });
 			expect(isDoubleClick(previous, current)).toBe(true);
@@ -35,32 +33,6 @@ describe("isDoubleClick", () => {
 		it("true even at distance 0 (exact same position)", () => {
 			const previous = snapshot({ time: 1000 });
 			const current = snapshot({ time: 1000 });
-			expect(isDoubleClick(previous, current)).toBe(true);
-		});
-	});
-
-	describe("target", () => {
-		it("false when targetId differs", () => {
-			const previous = snapshot({ targetId: "obj-1" });
-			const current = snapshot({ time: 1100, targetId: "obj-2" });
-			expect(isDoubleClick(previous, current)).toBe(false);
-		});
-
-		it("treated as a match when both are undefined (background to background)", () => {
-			const previous = snapshot({ targetId: undefined });
-			const current = snapshot({ time: 1100, targetId: undefined });
-			expect(isDoubleClick(previous, current)).toBe(true);
-		});
-
-		it("false when targetPart differs (two buttons of the same menu, or line vs label)", () => {
-			const previous = snapshot({ targetPart: "set:fill:red" });
-			const current = snapshot({ time: 1100, targetPart: "set:fill:blue" });
-			expect(isDoubleClick(previous, current)).toBe(false);
-		});
-
-		it("true when targetPart matches too (same button tapped twice)", () => {
-			const previous = snapshot({ targetPart: "command:zoomIn" });
-			const current = snapshot({ time: 1100, targetPart: "command:zoomIn" });
 			expect(isDoubleClick(previous, current)).toBe(true);
 		});
 	});

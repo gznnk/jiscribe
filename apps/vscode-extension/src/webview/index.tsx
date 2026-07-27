@@ -14,6 +14,7 @@ import { flowchartToolbarEntry } from "@workspace/plugin-flowchart-shapes";
 import { umlToolbarEntry } from "@workspace/plugin-uml-shapes";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
+import "katex/dist/katex.min.css";
 
 import { CanvasErrorNotice } from "./CanvasErrorNotice";
 import { canvasParser, plugins } from "./canvasParser";

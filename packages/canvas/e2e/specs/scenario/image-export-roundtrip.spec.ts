@@ -3,6 +3,7 @@ import type * as CanvasModule from "@workspace/canvas";
 
 import { expect, test } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
+import { selectors } from "../../support/selectors";
 
 /**
  * 画像エクスポートの round-trip（#55）を検証する spec。
@@ -19,6 +20,8 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
  *   <metadata>（埋め込みソース）を含まないこと
  * - 透過背景: 背景 rect が敷かれないこと（デフォルトでは敷かれること）
  * - 複数スロット図形（record、#167）: 全スロットのテキストが <text> で出力されること
+ * - コネクターラベル: foreignObject ではなく <text>＋箱の <rect> として
+ *   書き出され（B1）、PNG でもラスタライズされること
  */
 
 /**
@@ -301,6 +304,272 @@ test("透過背景の SVG エクスポートは背景 rect を敷かない", asy
 	expect(hasBackgroundRect(transparentText)).toBe(false);
 	// 図形自体は描画されている
 	expect(transparentText).toMatch(/style="[^"]*stroke:/);
+});
+
+type Box = { x: number; y: number; width: number; height: number };
+
+/** ラベルの背景色・枠線色（既定でない値であることが検証の前提）。 */
+const LABEL_FILL = "rgb(220, 38, 38)";
+const LABEL_STROKE = "rgb(59, 130, 246)";
+const LABEL_STROKE_WIDTH = 2;
+
+/** ラベルボックス（foreignObject 内側の LabelBox div）のロケーター。 */
+const labelBoxOf = (canvas: CanvasDriver) =>
+	canvas.page
+		.locator("foreignObject[data-kind=connector][data-part=label]")
+		.locator("div")
+		.first();
+
+/** ラベル foreignObject のジオメトリ属性（＝ワールド座標のラベル箱）。 */
+const labelForeignObjectBox = async (canvas: CanvasDriver): Promise<Box> => {
+	const attributes = await canvas.page
+		.locator("foreignObject[data-kind=connector][data-part=label]")
+		.evaluate((element) => ({
+			x: element.getAttribute("x"),
+			y: element.getAttribute("y"),
+			width: element.getAttribute("width"),
+			height: element.getAttribute("height"),
+		}));
+	return {
+		x: Number(attributes.x),
+		y: Number(attributes.y),
+		width: Number(attributes.width),
+		height: Number(attributes.height),
+	};
+};
+
+/**
+ * 2つの矩形をコネクターで結び、既定でないスタイル（赤背景・青枠 2px）の
+ * ラベルを付けて、既定位置（作成時のアンカー）から動かす。
+ */
+const setupStyledLabeledConnector = async (
+	canvas: CanvasDriver,
+): Promise<void> => {
+	await canvas.drawShape("Rectangle", { x: 300, y: 150 }, { x: 500, y: 250 });
+	await canvas.deselect();
+	await canvas.drawShape("Rectangle", { x: 700, y: 300 }, { x: 900, y: 400 });
+	await canvas.deselect();
+
+	await canvas.selectAt({ x: 400, y: 200 });
+	const connectorId = await canvas.createConnector("rightCenter", {
+		x: 715,
+		y: 350,
+	});
+	await canvas.deselect();
+
+	// 線上（最初のセグメントの中点）をダブルクリックしてラベルを付ける。
+	const points = (await canvas.objectById(connectorId).getAttribute("points"))!
+		.trim()
+		.split(/\s+/)
+		.map((pair) => {
+			const [x, y] = pair.split(",").map(Number);
+			return { x, y };
+		});
+	const onLine = {
+		x: (points[0].x + points[1].x) / 2,
+		y: (points[0].y + points[1].y) / 2,
+	};
+	await canvas.typeTextAt(onLine, "Yes");
+	await canvas.commitText();
+
+	// 背景色・枠線を既定から変える（エクスポートに塗りと枠が出ることを見るため）。
+	await canvas.clickAt(onLine);
+	await canvas.openObjectMenu("label-bg-color");
+	await canvas.page.click(selectors.objectMenuSet("label.fill", "#dc2626"));
+	await canvas.openObjectMenu("label-border-style");
+	await canvas.setNumberInput("label.strokeWidth", LABEL_STROKE_WIDTH);
+	await canvas.openObjectMenu("label-border-color");
+	await canvas.page.click(selectors.objectMenuSet("label.stroke", "#3b82f6"));
+
+	const labelBox = labelBoxOf(canvas);
+	await expect(labelBox).toHaveCSS("background-color", LABEL_FILL);
+	await expect(labelBox).toHaveCSS("border-top-color", LABEL_STROKE);
+
+	// 既定位置（label.position / label.offset 無指定の中点）から動かす。選択中は
+	// コントロールハンドルがラベルに重なるので解除してから掴む。
+	await canvas.deselect();
+	const before = await labelForeignObjectBox(canvas);
+	const screenBox = await labelBox.boundingBox();
+	if (!screenBox) {
+		throw new Error("ラベルボックスの位置が取得できない");
+	}
+	const grabPoint = canvas.toContent({
+		x: screenBox.x + screenBox.width / 2,
+		y: screenBox.y + screenBox.height / 2,
+	});
+	await canvas.drag(grabPoint, { x: grabPoint.x, y: grabPoint.y - 40 }, 10);
+	await expect
+		.poll(async () => (await labelForeignObjectBox(canvas)).y, {
+			message: "ドラッグでラベルが既定位置から動くこと",
+		})
+		.toBeLessThan(before.y - 20);
+};
+
+type SvgAttributes = Record<string, string>;
+
+/** SVG テキストから指定タグの開始タグを拾い、属性を名前→値で返す。 */
+const parseTagAttributes = (
+	svgText: string,
+	tagName: string,
+): SvgAttributes[] =>
+	(svgText.match(new RegExp(`<${tagName}\\b[^>]*>`, "g")) ?? []).map((tag) => {
+		const attributes: SvgAttributes = {};
+		for (const [, name, value] of tag.matchAll(/([\w:-]+)="([^"]*)"/g)) {
+			attributes[name] = value;
+		}
+		return attributes;
+	});
+
+/** viewBox を数値 4 つに分解する。 */
+const parseViewBox = (svgText: string): Box => {
+	const viewBoxMatch = svgText.match(/viewBox="([^"]+)"/);
+	expect(viewBoxMatch).not.toBeNull();
+	const [x, y, width, height] = viewBoxMatch![1].split(/\s+/).map(Number);
+	return { x, y, width, height };
+};
+
+test("コネクターラベルは foreignObject ではなく <text>＋箱の <rect> として書き出される", async ({
+	canvas,
+	page,
+}) => {
+	await setupStyledLabeledConnector(canvas);
+	const labelBox = await labelForeignObjectBox(canvas);
+
+	await canvas.deselect();
+	const svg = await downloadViaExportDialog(
+		page,
+		canvas,
+		{ x: 200, y: 550 },
+		"svg",
+	);
+	const svgText = Buffer.from(svg.base64, "base64").toString("utf-8");
+
+	// foreignObject は残らない（残せば PNG が taint し GitHub でも消える）。
+	expect(svgText).not.toContain("<foreignObject");
+
+	// 箱: ラベル foreignObject と同じ位置・大きさの rect が塗りと枠付きで出る。
+	// CSS の枠線は内側に描かれるので、SVG の stroke は線幅の半分だけ内側に寄る。
+	const labelRect = parseTagAttributes(svgText, "rect").find(
+		(attributes) => attributes.fill === LABEL_FILL,
+	);
+	expect(labelRect, "ラベル背景色の rect が出力されること").toBeDefined();
+	expect(labelRect!.stroke).toBe(LABEL_STROKE);
+	expect(Number(labelRect!["stroke-width"])).toBe(LABEL_STROKE_WIDTH);
+	const inset = LABEL_STROKE_WIDTH / 2;
+	expect(Math.abs(Number(labelRect!.x) - (labelBox.x + inset))).toBeLessThan(1);
+	expect(Math.abs(Number(labelRect!.y) - (labelBox.y + inset))).toBeLessThan(1);
+	expect(
+		Math.abs(Number(labelRect!.width) - (labelBox.width - inset * 2)),
+	).toBeLessThan(1);
+	expect(
+		Math.abs(Number(labelRect!.height) - (labelBox.height - inset * 2)),
+	).toBeLessThan(1);
+
+	// 文字: ネイティブの <text> になり、箱の中央に置かれる。
+	const labelTextBlock = (svgText.match(/<text\b[\s\S]*?<\/text>/g) ?? []).find(
+		(block) => block.includes(">Yes<"),
+	);
+	expect(
+		labelTextBlock,
+		"ラベル文字列が <text> として出力されること",
+	).toBeDefined();
+	const tspan = parseTagAttributes(labelTextBlock!, "tspan")[0];
+	expect(
+		Math.abs(Number(tspan.x) - (labelBox.x + labelBox.width / 2)),
+	).toBeLessThan(1);
+	expect(Number(tspan.y)).toBeGreaterThan(labelBox.y);
+	expect(Number(tspan.y)).toBeLessThan(labelBox.y + labelBox.height);
+
+	// viewBox にラベル箱が収まる（ラベルはコネクターの extent の一部）。
+	const viewBox = parseViewBox(svgText);
+	expect(viewBox.x).toBeLessThanOrEqual(labelBox.x);
+	expect(viewBox.y).toBeLessThanOrEqual(labelBox.y);
+	expect(viewBox.x + viewBox.width).toBeGreaterThanOrEqual(
+		labelBox.x + labelBox.width,
+	);
+	expect(viewBox.y + viewBox.height).toBeGreaterThanOrEqual(
+		labelBox.y + labelBox.height,
+	);
+});
+
+test("PNG エクスポートでもコネクターラベルがラスタライズされる", async ({
+	canvas,
+	page,
+}) => {
+	await setupStyledLabeledConnector(canvas);
+	const labelBox = await labelForeignObjectBox(canvas);
+
+	// ワールド座標→ピクセルの換算に使う viewBox は SVG 側から取る
+	// （どちらも同じマージンなので出力領域は一致する）。
+	await canvas.deselect();
+	const svg = await downloadViaExportDialog(
+		page,
+		canvas,
+		{ x: 200, y: 550 },
+		"svg",
+	);
+	const viewBox = parseViewBox(
+		Buffer.from(svg.base64, "base64").toString("utf-8"),
+	);
+
+	const png = await downloadViaExportDialog(
+		page,
+		canvas,
+		{ x: 200, y: 550 },
+		"png",
+	);
+
+	// ラベル箱の内側（枠線と文字を避けた塗りの領域）に背景色の画素があること。
+	const fillPixelCount = await page.evaluate(
+		async ({ base64, region, color }) => {
+			const image = new Image();
+			await new Promise((resolve, reject) => {
+				image.onload = resolve;
+				image.onerror = reject;
+				image.src = `data:image/png;base64,${base64}`;
+			});
+			const canvasElement = document.createElement("canvas");
+			canvasElement.width = image.naturalWidth;
+			canvasElement.height = image.naturalHeight;
+			const context = canvasElement.getContext("2d")!;
+			context.drawImage(image, 0, 0);
+
+			const scale = image.naturalWidth / region.viewBoxWidth;
+			const { data } = context.getImageData(
+				Math.round((region.x - region.viewBoxX) * scale),
+				Math.round((region.y - region.viewBoxY) * scale),
+				Math.max(1, Math.round(region.width * scale)),
+				Math.max(1, Math.round(region.height * scale)),
+			);
+			let count = 0;
+			for (let i = 0; i < data.length; i += 4) {
+				if (
+					Math.abs(data[i] - color.r) < 20 &&
+					Math.abs(data[i + 1] - color.g) < 20 &&
+					Math.abs(data[i + 2] - color.b) < 20
+				) {
+					count++;
+				}
+			}
+			return count;
+		},
+		{
+			base64: png.base64,
+			// 枠線（2）と余白を避け、箱の内側だけを見る
+			region: {
+				x: labelBox.x + 4,
+				y: labelBox.y + 4,
+				width: labelBox.width - 8,
+				height: labelBox.height - 8,
+				viewBoxX: viewBox.x,
+				viewBoxY: viewBox.y,
+				viewBoxWidth: viewBox.width,
+			},
+			color: { r: 220, g: 38, b: 38 },
+		},
+	);
+
+	expect(fillPixelCount).toBeGreaterThan(20);
 });
 
 test("Escape はダイアログを閉じるだけで、選択は解除されない", async ({

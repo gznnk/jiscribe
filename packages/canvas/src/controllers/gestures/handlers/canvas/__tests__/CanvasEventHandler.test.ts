@@ -25,7 +25,12 @@ const makeState = (
 		areaSelection: null,
 		contextMenuPosition: null,
 		objectMenuOpenId: null,
-		textEditState: { objectId: "a", slotId: "body", text: "edited text" },
+		textEditState: {
+			kind: "shape",
+			objectId: "a",
+			slotId: "body",
+			text: "edited text",
+		},
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 		commitVersion: 0,
 		...overrides,
@@ -52,6 +57,7 @@ describe("CanvasEventHandler", () => {
 			const nextState = CanvasEventHandler.handle(state, event, registries);
 
 			expect(nextState.textEditState).toEqual({
+				kind: "shape",
 				objectId: "a",
 				slotId: "body",
 				text: "edited text",
@@ -86,6 +92,7 @@ describe("CanvasEventHandler", () => {
 			const nextState = CanvasEventHandler.handle(state, event, registries);
 
 			expect(nextState.textEditState).toEqual({
+				kind: "shape",
 				objectId: "a",
 				slotId: "body",
 				text: "edited text",

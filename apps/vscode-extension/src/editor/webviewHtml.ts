@@ -16,6 +16,11 @@ export const getCanvasWebviewHtml = (
 	const scriptUri = webview.asWebviewUri(
 		vscode.Uri.joinPath(extensionUri, "dist", "webview.js"),
 	);
+	// Webview のバンドルが import した CSS（KaTeX のスタイル）。esbuild が
+	// dist/webview.css に出力する。数式はこの CSS 無しでは組版が崩れる。
+	const styleUri = webview.asWebviewUri(
+		vscode.Uri.joinPath(extensionUri, "dist", "webview.css"),
+	);
 
 	const nonce = getNonce();
 
@@ -36,6 +41,7 @@ export const getCanvasWebviewHtml = (
 			-->
 			<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} https: data: blob:; style-src ${webview.cspSource} 'unsafe-inline'; font-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
 			<title>Jiscribe Canvas Editor</title>
+			<link rel="stylesheet" href="${styleUri}">
 			<style>
 				body, html {
 					margin: 0;

@@ -1,5 +1,4 @@
 import DOMPurify from "dompurify";
-import hljs from "highlight.js/lib/common";
 import katex from "katex";
 import MarkdownIt from "markdown-it";
 // 型は @types/markdown-it-link-attributes（DefinitelyTyped の最新 3.0.5）を使う。
@@ -139,24 +138,22 @@ const katexLite = (md: MarkdownIt): void => {
 
 /**
  * Create and configure the markdown-it instance with plugins and options.
- * Includes syntax highlighting, math rendering, and link attribute handling.
+ * Includes math rendering and link attribute handling.
+ *
+ * Code fences are left to markdown-it's default renderer, which emits
+ * `<pre><code class="language-xxx">` with the source escaped. Syntax
+ * highlighting is deliberately absent: the shape's colors follow the theme and
+ * the per-object font color via `currentColor`, which a highlighter's fixed
+ * palette cannot follow, and image export flattens the body to plain text.
  */
 const md = new MarkdownIt({
 	// Disable raw HTML in source as defense-in-depth against XSS: user-typed
 	// HTML tags are escaped to literal text instead of relying solely on
-	// DOMPurify (which may have known mXSS bypasses). Math (KaTeX) and code
-	// highlighting emit HTML via renderer rules, so they are unaffected.
+	// DOMPurify (which may have known mXSS bypasses). Math (KaTeX) emits HTML
+	// via renderer rules, so it is unaffected.
 	html: false,
 	breaks: true, // Convert '\n' in paragraphs into <br>
 	linkify: true, // Autoconvert URL-like text to links
-
-	// Custom syntax highlighting using highlight.js
-	highlight: (str: string, lang: string): string => {
-		if (lang && hljs.getLanguage(lang)) {
-			return `<pre><code class="hljs language-${lang}">${hljs.highlight(str, { language: lang }).value}</code></pre>`;
-		}
-		return `<pre><code>${md.utils.escapeHtml(str)}</code></pre>`;
-	},
 })
 	// Apply the custom KaTeX plugin
 	.use(katexLite)

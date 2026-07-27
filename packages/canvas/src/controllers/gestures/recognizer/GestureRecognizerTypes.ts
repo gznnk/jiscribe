@@ -38,8 +38,6 @@ export type ScrollDelta = {
  */
 export type ClickSnapshot = {
 	time: number;
-	targetId: string | undefined;
-	targetPart: string | undefined;
 	clientPos: Point;
 };
 

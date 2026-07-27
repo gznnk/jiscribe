@@ -412,6 +412,7 @@ export const ObjectEventHandler: GestureHandler = {
 				return {
 					...nextState,
 					textEditState: {
+						kind: "shape",
 						objectId: targetObject.id,
 						slotId,
 						text: readTextSlot(targetObject.text, slotId),

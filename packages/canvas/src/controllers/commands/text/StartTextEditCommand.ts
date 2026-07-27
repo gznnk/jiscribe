@@ -1,4 +1,3 @@
-import { LABEL_TEXT_SLOT_ID } from "../../../constants/textSlotId";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { TextStyleState } from "../../../states/objects/base/TextStyleState";
 import { isTextStyleState } from "../../../states/objects/base/TextStyleState";
@@ -61,8 +60,8 @@ export const StartTextEditCommand: ExecutableCommand = {
 			return {
 				...state,
 				textEditState: {
+					kind: "connectorLabel",
 					objectId: state.selectedConnectorId,
-					slotId: LABEL_TEXT_SLOT_ID,
 					text: (connector as { label?: { text?: string } }).label?.text ?? "",
 				},
 			};
@@ -84,6 +83,7 @@ export const StartTextEditCommand: ExecutableCommand = {
 		return {
 			...state,
 			textEditState: {
+				kind: "shape",
 				objectId,
 				slotId,
 				text: readTextSlot(targetObject.text, slotId),

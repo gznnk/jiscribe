@@ -7,6 +7,7 @@ import type {
 	CanvasControllerState,
 	SnapFeedback,
 } from "../../../../CanvasTypes";
+import type { ICanvasRegistries } from "../../../../registries/ICanvasRegistries";
 import { createCowObjects } from "../../../../utils/cowObjects";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
@@ -15,6 +16,7 @@ import {
 	findSnap,
 	SNAP_THRESHOLD_PX,
 } from "../../utils/snap/findSnap";
+import { startConnectorLabelEdit } from "../../utils/startConnectorLabelEdit";
 
 /**
  * Handles inserting an intermediate waypoint into a connector segment.
@@ -36,6 +38,10 @@ import {
  * - dragStart: insert a new waypoint into the specified segment
  * - drag: move the inserted waypoint (with snap correction)
  * - dragEnd: commit the final position
+ * - doubleClick: start label editing. The handle sits on the path (a segment
+ *   midpoint coincides with the default label placement), so a double click
+ *   aimed at the line or the label box can land here; it means "double click
+ *   the connector", not "insert a waypoint" (which is drag-only).
  */
 export class ConnectorVertexInsertHandler extends ControlStrategy {
 	supports(event: CanvasEvent): boolean {
@@ -49,12 +55,34 @@ export class ConnectorVertexInsertHandler extends ControlStrategy {
 	handle(
 		state: CanvasControllerState,
 		event: CanvasEvent,
+		registries: ICanvasRegistries,
 	): CanvasControllerState {
 		// targetId = connectorId, targetPart = "waypoint-insert:<segmentIndex>"
 		const connectorId = event.targetId;
 		const targetPart = event.targetPart;
 		if (!connectorId || !targetPart) {
 			return state;
+		}
+
+		// The label box shares the connector's data-id with this handle, but the
+		// pressed control is excluded from the hover stack before the id-dedup
+		// (getHoveredElements 参照), so the box is visible here when hit.
+		if (event.type === "doubleClick") {
+			const isLabelBoxHit = event
+				.getHovered()
+				.some(
+					(hovered) =>
+						hovered.kind === "connector" &&
+						hovered.id === connectorId &&
+						hovered.part === "label",
+				);
+			return startConnectorLabelEdit(
+				state,
+				connectorId,
+				event,
+				isLabelBoxHit,
+				registries,
+			);
 		}
 
 		const segmentIndex = parseInt(

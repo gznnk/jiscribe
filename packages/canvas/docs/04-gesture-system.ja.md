@@ -37,12 +37,12 @@ pressed | dragStart | drag | dragEnd | click | doubleClick | wheel
 `gestureHandlerRegistry` 経由で対象ハンドラへ渡す。各ハンドラは `targetKind` で
 自分が処理すべきイベントかを判定する。
 
-| ハンドラ群  | 対象                                                                   | 主なファイル                                                                                         |
-| ----------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `canvas/`   | キャンバス全体（空白ドラッグ＝範囲選択、パン、ズーム）                 | `CanvasEventHandler.ts`                                                                              |
-| `controls/` | 変形コントロール（リサイズ・回転・頂点・接続）                         | `ControlEventHandler.ts`, `transform/`, `vertex/`, `connection/`                                     |
-| `menu/`     | コンテキストメニュー・オブジェクトメニュー・ツールバー・図形ライブラリ | `ContextMenuHandler.ts`, `ObjectMenuHandler.ts`, `ToolbarHandler.ts`, `StencilLibraryItemHandler.ts` |
-| `objects/`  | 図形・コネクター本体（移動・選択・テキスト編集起動）                   | `ObjectEventHandler.ts`, `ConnectorEventHandler.ts`, 形状別 Controller                               |
+| ハンドラ群  | 対象                                                                   | 主なファイル                                                                                           |
+| ----------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `canvas/`   | キャンバス全体（空白ドラッグ＝範囲選択、パン、ズーム）                 | `CanvasEventHandler.ts`                                                                                |
+| `controls/` | 変形コントロール（リサイズ・回転・頂点・接続）                         | `ControlEventHandler.ts`, `transform/`, `vertex/`, `connection/`                                       |
+| `menu/`     | コンテキストメニュー・オブジェクトメニュー・ツールバー・図形ライブラリ | `ContextMenuHandler.ts`, `ObjectMenuHandler.ts`, `ToolbarHandler.ts`, `StencilLibraryItemHandler.ts`   |
+| `objects/`  | 図形・コネクター本体（移動・選択・テキスト編集起動・ラベル移動）       | `ObjectEventHandler.ts`, `ConnectorEventHandler.ts`, `ConnectorLabelDragHandler.ts`, 形状別 Controller |
 
 `handleGesture` は `dragStart` で `eventStartSnapshot`（操作開始時の objects / keyPoints /
 snapCandidates 等）を保存し、`dragEnd` でクリアする。`dragEnd` 時に doc が実際に変化していれば
@@ -104,6 +104,10 @@ snapCandidates 等）を保存し、`dragEnd` でクリアする。`dragEnd` 時
 
 例: コネクターのラベルボックスは `data-kind="connector" data-id={connectorId} data-part="label"`。
 ラベルがあるコネクターは、線ではなくラベルボックスのダブルクリックだけがラベル編集を開始する。
+ラベルボックスのドラッグは経路上の移動（`label.position` / `label.offset`）になり、
+線から `SNAP_THRESHOLD_PX` 以内に落とすと `offset` は 0 に吸着する（Ctrl 押下で解除）。
+ラベルが無いときは線のダブルクリックがクリック点（経路へ射影し同じ吸着をかけた位置）に
+ラベルを作る。確定するまでは `textEditState` が保持し、コネクターには書き込まない。
 複数スロットを持つ図形は入れ子の形を使う: `record` の `<g data-kind="object">` は
 `data-part="name"` / `data-part="rows"` を持つ 2 つの区画矩形を包み、ダブルクリックした区画から
 編集スロットを解決する（`resolveTextSlotId` が値を `state.text` のキーと照合する）。

@@ -72,6 +72,20 @@ test.describe("ObjectMenu によるスタイル設定", () => {
 		await expect(canvas.page.locator(selectors.control).first()).toBeVisible();
 	});
 
+	test("テキスト編集中は ObjectMenu が非表示になる", async ({ canvas }) => {
+		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
+
+		const objectMenu = canvas.page.locator('[data-id="object-menu"]');
+		await expect(objectMenu.first()).toBeVisible();
+
+		// 編集開始でメニューが消え、編集終了（選択は維持される）で再表示される
+		await canvas.typeTextAt({ x: 500, y: 260 }, "Editing");
+		await expect(objectMenu).toHaveCount(0);
+
+		await canvas.cancelText();
+		await expect(objectMenu.first()).toBeVisible();
+	});
+
 	test("色設定はテキスト編集後も保持される", async ({ canvas }) => {
 		const id = await canvas.drawShape(
 			"Rectangle",

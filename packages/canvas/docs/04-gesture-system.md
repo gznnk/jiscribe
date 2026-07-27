@@ -39,12 +39,12 @@ It converts a `Gesture` into a `CanvasEvent` (`wheel` branches into `zoom` / `sc
 and passes it to the target handler via `gestureHandlerRegistry`. Each handler uses `targetKind` to
 determine whether it should process the event.
 
-| Handler group | Target                                                               | Main files                                                                                           |
-| ------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `canvas/`     | The entire canvas (empty-space drag = range selection, pan, zoom)    | `CanvasEventHandler.ts`                                                                              |
-| `controls/`   | Transform controls (resize, rotate, vertex, connection)              | `ControlEventHandler.ts`, `transform/`, `vertex/`, `connection/`                                     |
-| `menu/`       | Context menu, object menu, toolbar, stencil library                  | `ContextMenuHandler.ts`, `ObjectMenuHandler.ts`, `ToolbarHandler.ts`, `StencilLibraryItemHandler.ts` |
-| `objects/`    | Shapes and connectors themselves (move, select, launch text editing) | `ObjectEventHandler.ts`, `ConnectorEventHandler.ts`, shape-specific Controllers                      |
+| Handler group | Target                                                                                       | Main files                                                                                                      |
+| ------------- | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `canvas/`     | The entire canvas (empty-space drag = range selection, pan, zoom)                            | `CanvasEventHandler.ts`                                                                                         |
+| `controls/`   | Transform controls (resize, rotate, vertex, connection)                                      | `ControlEventHandler.ts`, `transform/`, `vertex/`, `connection/`                                                |
+| `menu/`       | Context menu, object menu, toolbar, stencil library                                          | `ContextMenuHandler.ts`, `ObjectMenuHandler.ts`, `ToolbarHandler.ts`, `StencilLibraryItemHandler.ts`            |
+| `objects/`    | Shapes and connectors themselves (move, select, launch text editing, drag a connector label) | `ObjectEventHandler.ts`, `ConnectorEventHandler.ts`, `ConnectorLabelDragHandler.ts`, shape-specific Controllers |
 
 On `dragStart`, `handleGesture` saves `eventStartSnapshot` (the objects / keyPoints /
 snapCandidates, etc. at the start of the operation), and clears it on `dragEnd`. If the doc has actually changed
@@ -104,7 +104,11 @@ Rules:
   target" is expressed with `data-gesture="none"`, not with a handler-less kind.
 
 Example: a connector's label box is `data-kind="connector" data-id={connectorId} data-part="label"`.
-With a committed label, only a double click on the label box (not the bare line) starts label editing.
+With a committed label, only a double click on the label box (not the bare line) starts label editing,
+and dragging the box moves the label along the path (`label.position` / `label.offset`),
+with `offset` snapping to 0 within `SNAP_THRESHOLD_PX` of the line (bypassed by holding Ctrl).
+With no label yet, a double click on the bare line creates one at the clicked point (projected onto
+the path and snapped the same way), carried in `textEditState` until the edit is committed.
 A multi-slot shape uses the nested form instead: the `record` shape's `<g data-kind="object">` wraps two
 compartment rects carrying `data-part="name"` / `data-part="rows"`, which is how a double click resolves
 the text slot it landed in (`resolveTextSlotId` checks the value against the keys of `state.text`).

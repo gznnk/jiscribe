@@ -12,7 +12,7 @@ import type * as RecognizerUtils from "../utils";
  * Behavior coverage test for GestureRecognizer.
  *
  * Covers paths that the batchOrdering / edgeScroll tests do not:
- *   - click / doubleClick decisions (threshold, triple-tap suppression, target difference)
+ *   - click / doubleClick decisions (threshold, triple-tap suppression, target-independence)
  *   - multitouch (ignoring the second pointerdown)
  *   - pointercancel (dragEnd while dragging / silent when not dragging)
  *   - turning a wheel outside a drag into a wheel gesture
@@ -232,20 +232,22 @@ describe("GestureRecognizer click / doubleClick", () => {
 		]);
 	});
 
-	it("stays a click even within the time window if the target differs", () => {
-		const { dispatch, types } = setup();
+	it("a doubleClick even when the target differs, as long as time and position match (OS convention; a control appearing under the cursor after the first click must not swallow the pair)", () => {
+		const { dispatch, types, events } = setup();
 
-		mockUtil.kindAndId = { id: "obj-1", kind: "rect" };
+		mockUtil.kindAndId = { id: "obj-1", kind: "connector" };
 		dispatch(makeEvent("pointerdown", 0, 0, 1000));
 		dispatch(makeEvent("pointerup", 0, 0, 1000));
 		flushRaf();
 
-		mockUtil.kindAndId = { id: "obj-2", kind: "rect" };
+		mockUtil.kindAndId = { id: "obj-1", kind: "control" };
 		dispatch(makeEvent("pointerdown", 0, 0, 1100));
 		dispatch(makeEvent("pointerup", 0, 0, 1100));
 		flushRaf();
 
-		expect(types()).toEqual(["pressed", "click", "pressed", "click"]);
+		expect(types()).toEqual(["pressed", "click", "pressed", "doubleClick"]);
+		// The doubleClick targets the second click's element
+		expect(events[3].targetKind).toBe("control");
 	});
 
 	it("still counts as a click even with a tiny move below DRAG_THRESHOLD in between", () => {

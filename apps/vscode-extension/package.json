@@ -131,6 +131,7 @@
 		"@workspace/plugin-markdown-shape": "workspace:*",
 		"@workspace/plugin-uml-shapes": "workspace:*",
 		"esbuild": "catalog:",
+		"katex": "catalog:",
 		"react": "catalog:",
 		"react-dom": "catalog:",
 		"typescript": "catalog:",
