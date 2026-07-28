@@ -20,14 +20,27 @@ import { collectStyleKeys, pick } from "../utils/stylePassthrough";
  * `extraKeys` (connector's source/target/routing/arrows/label, polyline's arrows). Because it is an
  * allow-list, runtime-only fields cannot structurally leak into the Doc.
  *
- * @param features - Feature descriptor (must have geometry: "poly").
+ * `features` is tied to `TDoc` through the `type` discriminator, so a call whose Doc, State,
+ * and descriptor do not all name the same object type fails to compile. It is a discriminator
+ * check, not a structural one: the style groups are not compared, which holds in practice
+ * because each object type has exactly one feature descriptor.
+ *
+ * The body is one of the two places exempt from the double-cast ban (see eslint.config.js).
+ * TypeScript cannot check it: `TDoc` / `TState` are unresolved inside a generic body, so the
+ * conditional types the real Doc / State are built from never reduce, and the assembled object —
+ * part `pick()` result typed as `Record<string, unknown>` — cannot be proven to cover them.
+ * The round-trip test over every registered type covers this from the runtime side instead.
+ *
+ * @param features - Feature descriptor of the type being mapped. Its `type` must match
+ *   `TDoc["type"]`, and its `geometry` must be "poly" (see `createFrameMapper` for rect /
+ *   ellipse shapes).
  * @param extraKeys - Shape-specific field names to pass through (non-style groups).
  */
 export const createPolyMapper = <
 	TDoc extends ObjectDoc,
-	TState extends ObjectState,
+	TState extends ObjectState & { type: TDoc["type"] },
 >(
-	features: ObjectFeatures,
+	features: ObjectFeatures & { type: TDoc["type"]; geometry: "poly" },
 	extraKeys: readonly string[] = [],
 ): ObjectMapperType<TDoc, TState> => {
 	const passthroughKeys = [...collectStyleKeys(features), ...extraKeys];

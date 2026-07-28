@@ -1,8 +1,20 @@
 import { describe, expect, it } from "vitest";
 
+import type { ConnectorDoc } from "../../../../schemas/objects/connections/connector/ConnectorDoc";
+import { ConnectorFeatures } from "../../../../schemas/objects/connections/connector/ConnectorDoc";
+import { EllipseFeatures } from "../../../../schemas/objects/primitives/ellipse/EllipseDoc";
+import type { PolylineDoc } from "../../../../schemas/objects/primitives/polyline/PolylineDoc";
+import { PolylineFeatures } from "../../../../schemas/objects/primitives/polyline/PolylineDoc";
+import type { RectDoc } from "../../../../schemas/objects/primitives/rect/RectDoc";
+import { RectFeatures } from "../../../../schemas/objects/primitives/rect/RectDoc";
 import { stickyToState } from "../../annotations/sticky/StickyMapper";
+import type { ConnectorState } from "../../connections/connector/ConnectorState";
+import type { EllipseState } from "../../primitives/ellipse/EllipseState";
+import type { PolylineState } from "../../primitives/polyline/PolylineState";
 import { rectToDoc, rectToState } from "../../primitives/rect/RectMapper";
 import type { RectState } from "../../primitives/rect/RectState";
+import { createFrameMapper } from "../FrameMapper";
+import { createPolyMapper } from "../PolyMapper";
 
 /**
  * Regression test for the pass-through approach.
@@ -116,5 +128,33 @@ describe("FrameMapper allow-list: does not carry keys other than the ones to pic
 		expect(state.fill).toBe("#ffff00");
 		expect("stroke" in state).toBe(false);
 		expect("strokeWidth" in state).toBe(false);
+	});
+});
+
+/**
+ * Compile-time regression guard for the features↔Doc/State binding.
+ *
+ * `createFrameMapper` / `createPolyMapper` tie the descriptor to `TDoc["type"]`, so a call
+ * that names three different object types no longer compiles. Nothing here runs — the
+ * `@ts-expect-error` directives fail `pnpm typecheck` if a constraint is ever loosened.
+ */
+describe("mapper factories reject a features / Doc / State mismatch", () => {
+	it("is enforced at compile time", () => {
+		// Correct pairings, including connector whose Doc narrows points to optional.
+		createFrameMapper<RectDoc, RectState>(RectFeatures);
+		createPolyMapper<ConnectorDoc, ConnectorState>(ConnectorFeatures);
+
+		// @ts-expect-error EllipseState.type is "ellipse", so it cannot pair with RectDoc
+		createFrameMapper<RectDoc, EllipseState>(RectFeatures);
+
+		// @ts-expect-error EllipseFeatures.type is "ellipse", so it cannot describe RectDoc
+		createFrameMapper<RectDoc, RectState>(EllipseFeatures);
+
+		createFrameMapper<PolylineDoc, PolylineState>(
+			// @ts-expect-error PolylineFeatures.geometry is "poly", not a Frame family one
+			PolylineFeatures,
+		);
+
+		expect(true).toBe(true);
 	});
 });

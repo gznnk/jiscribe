@@ -9,8 +9,9 @@ import type { Unbranded } from "@workspace/utility-types";
  * symbol-keyed brand — which has no runtime existence — is taken on faith. `T` cannot be
  * inferred from the argument, so the target type must always be written explicitly.
  *
- * @param value - The fully built object, brand key aside. Values that still need fields
- *   filled in by a later pass do not belong here; give the intermediate its own type instead.
+ * @param value - An object carrying every field of `T` except the brand key. Placeholder
+ *   values a later pass overwrites are fine (`groupToState` 参照); a missing key is not, and
+ *   is what this catches.
  * @returns The same object reference, typed as the branded `T`.
  */
 export const rebrand = <T>(value: Unbranded<T>): T => value as T;

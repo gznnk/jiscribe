@@ -1,27 +1,28 @@
 import type { MetaDoc } from "../../../schemas/objects/base/MetaDoc";
 import type { MetaState } from "../../../states/objects/base/MetaState";
+import { rebrand } from "../utils/rebrand";
 
 /**
  * Mapper for converting between MetaDoc and MetaState.
- * MetaDoc and MetaState are branded types with the same structure,
- * so conversion requires type assertions.
+ * The two are structurally identical and differ only by their brand, so both
+ * directions are a re-brand of the same object — no field is read or rewritten.
  */
 export const MetaMapper = {
 	/**
 	 * Converts MetaDoc to MetaState.
 	 * @param doc - The document to convert
-	 * @returns The converted state
+	 * @returns The same object reference, re-branded
 	 */
 	toState(doc: MetaDoc): MetaState {
-		return doc as unknown as MetaState;
+		return rebrand<MetaState>(doc);
 	},
 
 	/**
 	 * Converts MetaState to MetaDoc.
 	 * @param state - The state to convert
-	 * @returns The converted document
+	 * @returns The same object reference, re-branded
 	 */
 	toDoc(state: MetaState): MetaDoc {
-		return state as unknown as MetaDoc;
+		return rebrand<MetaDoc>(state);
 	},
 };
