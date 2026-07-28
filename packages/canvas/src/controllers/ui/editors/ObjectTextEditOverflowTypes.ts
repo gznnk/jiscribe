@@ -5,8 +5,9 @@
  * - `"scroll"`: the editor keeps the region's height and scrolls inside it, so
  *   the box the shape draws stays the box the caret moves in.
  * - `"grow"`: the editor takes the region's height as a minimum and extends
- *   downward, for a slot whose region is itself derived from the text and
- *   therefore follows the draft keystroke by keystroke (the record's title band).
+ *   downward as far as the shape's bottom edge, scrolling once that is used up,
+ *   for a slot whose region is itself derived from the text and therefore
+ *   follows the draft keystroke by keystroke (the record's title band).
  *
  * A region that does *not* follow the draft must stay `"scroll"`: growing there
  * would let the editor spill over whatever is drawn below it.

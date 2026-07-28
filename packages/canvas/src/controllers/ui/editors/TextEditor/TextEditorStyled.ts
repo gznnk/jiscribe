@@ -12,8 +12,8 @@ import { TEXT_LINE_HEIGHT } from "../../../../constants/textLineHeight";
  *
  * Overflow stays visible so the textarea's scrollbar gutter can hang outside
  * the shape's right edge; vertical clipping is handled by the textarea's own
- * max-height, which TextEditor sets only for a "scroll" slot (see
- * ObjectTextEditOverflowRegistry).
+ * max-height, which TextEditor sets to the region for a "scroll" slot and to
+ * the shape's bottom edge for a "grow" one (see ObjectTextEditOverflowRegistry).
  *
  * Per-instance values (transform / width / height or min-height / align-items)
  * change with the edited object and while typing (auto-grow), so they are
@@ -42,9 +42,10 @@ export const TextEditorWrapper = styled.div`
  * Per-instance text styles (text-align / color / font-size / font-family /
  * font-weight) and max-height are passed via the `style` prop (see #131).
  * Height is set inline by TextEditor to fit the content, so the wrapper's
- * vertical alignment takes effect; the max-height a "scroll" slot adds then
- * clips it back to the region and turns the excess into scrolling, while a
- * "grow" slot leaves it uncapped and pushes the wrapper's min-height instead.
+ * vertical alignment takes effect; max-height then clips it back and turns the
+ * excess into scrolling — at the region for a "scroll" slot, at the shape's
+ * bottom edge for a "grow" one, which until that point pushes the wrapper's
+ * min-height instead of scrolling.
  *
  * The element is widened by the scrollbar width and reserves that extra strip
  * as a permanent gutter (scrollbar-gutter: stable), so the content box always

@@ -10,7 +10,8 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
  * - 片方のスロットを編集中でも、もう片方のテキストは表示されたまま
  * - 行を増やしても箱は自動リサイズされない（高さはドラッグしたまま）
  * - タイトル帯だけはタイトルの表示行数（改行・折り返し）に追従して伸びる。
- *   追従は編集中の下書きにも及び、Escape のキャンセルで確定値へ戻る
+ *   追従は編集中の下書きにも及び、Escape のキャンセルで確定値へ戻る。伸びるのは
+ *   箱の下端までで、そこから先はエディタもスクロールに転じる
  * - 帯に追従しない行区画の編集は区画内に留まり、あふれた分はスクロールで見る
  *
  * 座標メモ: 作成サイズ 220x80 → 空タイトルのタイトル帯は上端 28px
@@ -302,6 +303,47 @@ test.describe("record（区画付きボックス）", () => {
 				message: "キャンセルで帯が元の高さに戻ること",
 			})
 			.toBe(28);
+	});
+
+	test("箱に収まらないタイトルの編集は図形の下端で止まりスクロールする", async ({
+		canvas,
+	}) => {
+		const record = await createRecord(canvas, RECORD_FROM, RECORD_TO);
+		await canvas.deselect();
+
+		// 5 行 = 21 × 5 + 7 = 112px で箱の高さ 80px を超える。
+		await canvas.typeTextAt(NAME_SPOT, "A\nB\nC\nD\nE");
+		await expect(canvas.textArea()).toHaveValue("A\nB\nC\nD\nE");
+
+		// 帯は箱の下端で止まる（calcRecordSlotRegions の clamp）。
+		await expect
+			.poll(async () => (await partRect(canvas, record.id, "name")).height, {
+				message: "帯が箱の高さで頭打ちになること",
+			})
+			.toBe(80);
+
+		// エディタも同じ下端で止まる（伸び続けて図形の下へはみ出さない）。
+		const bandBox = await canvas.page
+			.locator(
+				`[data-kind="object"][data-id="${record.id}"] [data-part="name"]`,
+			)
+			.boundingBox();
+		const editorBox = await canvas.page
+			.locator('[data-testid="text-editor"]')
+			.boundingBox();
+		if (!bandBox || !editorBox) {
+			throw new Error("帯またはエディタ枠の外接箱が取得できない");
+		}
+		expect(editorBox.y + editorBox.height).toBeLessThanOrEqual(
+			bandBox.y + bandBox.height + 1.5,
+		);
+
+		// 使い切った先はスクロールで見る（ホイール委譲もこの可否で決まる）。
+		const overflow = await canvas
+			.textArea()
+			.evaluate((el) => el.scrollHeight - el.clientHeight);
+		expect(overflow).toBeGreaterThan(0);
+		await canvas.cancelText();
 	});
 
 	test("幅に収まらないタイトルは折り返して帯が伸びる", async ({ canvas }) => {

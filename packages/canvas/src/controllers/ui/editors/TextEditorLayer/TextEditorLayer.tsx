@@ -123,6 +123,10 @@ function renderTextEditor(
 ): React.ReactElement {
 	const textRegion = calcTextRegion(target, slotId, textRegionCalculator);
 	const slot = target.text?.[slotId];
+	// How far a growing editor may extend: from the region's top edge down to the
+	// shape's bottom edge (local coordinates, origin at the shape center). A region
+	// already at or below that edge yields 0 rather than a negative length.
+	const growLimit = Math.max(target.height / 2 - textRegion.y, 0);
 	return (
 		<TextEditor
 			objectId={objectId}
@@ -133,10 +137,11 @@ function renderTextEditor(
 			y={textRegion.y}
 			width={textRegion.width}
 			height={textRegion.height}
-			overflow={resolveTextEditOverflow(slotId, textEditOverflowResolver)}
 			scaleX={target.scaleX ?? 1}
 			scaleY={target.scaleY ?? 1}
 			rotation={target.rotation ?? 0}
+			overflow={resolveTextEditOverflow(slotId, textEditOverflowResolver)}
+			growLimit={growLimit}
 			textAlign={slot?.textAlign}
 			verticalAlign={slot?.verticalAlign}
 			fontColor={slot?.fontColor}

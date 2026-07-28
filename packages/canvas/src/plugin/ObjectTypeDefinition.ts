@@ -51,10 +51,10 @@ export type ObjectTypeDefinition<
 	textRegion?: ObjectTextRegionCalculator;
 
 	/**
-	 * Whether the in-place editor scrolls inside a slot's region or grows past it.
-	 * Declared next to `textRegion` because only a region derived from the text
-	 * itself may grow. Omitted = `"scroll"` for every slot (see
-	 * ObjectTextEditOverflowRegistry).
+	 * Whether the in-place editor scrolls inside a slot's region or grows past it,
+	 * to the shape's bottom edge at most. Declared next to `textRegion` because
+	 * only a region derived from the text itself may grow. Omitted = `"scroll"`
+	 * for every slot (see ObjectTextEditOverflowRegistry).
 	 */
 	textEditOverflow?: ObjectTextEditOverflowResolver;
 
