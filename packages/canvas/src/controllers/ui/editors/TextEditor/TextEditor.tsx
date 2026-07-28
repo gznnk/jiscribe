@@ -8,6 +8,7 @@ import { verticalAlignToAlignItems } from "../../../../presentations/objects/uti
 import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
 import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
+import type { TextEditOverflow } from "../ObjectTextEditOverflowTypes";
 
 type TextEditorProps = {
 	objectId: string;
@@ -20,11 +21,15 @@ type TextEditorProps = {
 	y: number;
 	/** Text region width (from calcTextRegion) */
 	width: number;
-	/** Text region height (from calcTextRegion) */
+	/** Text region height (from calcTextRegion); a cap when `overflow` is "scroll", a minimum when it is "grow" */
 	height: number;
 	scaleX: number;
 	scaleY: number;
 	rotation: number;
+	/** What happens when the typed text outgrows `height` (see ObjectTextEditOverflowRegistry) */
+	overflow: TextEditOverflow;
+	/** How far a "grow" editor may extend, in local px from the region's top edge (the shape's bottom edge); never negative, ignored when `overflow` is "scroll" */
+	growLimit: number;
 	textAlign?: TextAlign;
 	verticalAlign?: VerticalAlign;
 	fontColor?: string;
@@ -46,6 +51,8 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 	scaleX,
 	scaleY,
 	rotation,
+	overflow,
+	growLimit,
 	textAlign = "center",
 	verticalAlign = "middle",
 	fontColor = "#000000",
@@ -109,19 +116,24 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 		}
 	};
 
-	// Transform: SVG matrix with rotation, scale, and translation to (cx, cy).
-	// x/y position the region in local coordinates before this transform is applied.
-	const transform = createSvgTransform(scaleX, scaleY, rotation, cx, cy);
+	// The region offset (x/y) rides inside the transform, after the shape
+	// matrix, mirroring TextOverlayFrame: left/top would be applied outside the
+	// transform, which only agrees with the SVG side while the region is
+	// centered on the shape's local origin.
+	const transform = `${createSvgTransform(scaleX, scaleY, rotation, cx, cy)} translate(${x}px, ${y}px)`;
 
 	return (
 		<TextEditorWrapper
 			data-testid="text-editor"
 			data-gesture="none"
 			style={{
-				left: x,
-				top: y,
 				width,
-				height,
+				// "scroll" pins the box to the region and lets the textarea's own
+				// max-height clip it; "grow" takes the region as a floor and extends
+				// downward from its top edge until `growLimit` (growth direction
+				// independent of verticalAlign).
+				height: overflow === "scroll" ? height : undefined,
+				minHeight: overflow === "grow" ? height : undefined,
 				transform,
 				alignItems: verticalAlignToAlignItems[verticalAlign],
 			}}
@@ -131,6 +143,11 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 				data-gesture="native-wheel"
 				value={text}
 				style={{
+					// Both modes cap the textarea, at the region ("scroll") or at the
+					// shape's bottom edge ("grow"); past the cap the text scrolls, which
+					// is also what hands the wheel over (shouldUseNativeWheel tests
+					// scrollability).
+					maxHeight: overflow === "scroll" ? "100%" : growLimit,
 					textAlign,
 					color: resolvedColor,
 					fontSize,

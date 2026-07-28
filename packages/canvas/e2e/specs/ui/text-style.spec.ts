@@ -24,6 +24,25 @@ test.describe("ObjectMenu によるテキストスタイル設定", () => {
 		return id;
 	}
 
+	test("テキスト領域のオフセットは x/y ではなく transform に載る（リサイズ中の1pxちらつき対策）", async ({
+		canvas,
+	}) => {
+		const id = await drawLabeledRect(canvas);
+
+		// Chromium は foreignObject の HTML を「箱の位置を整数に丸めた場所」へ
+		// ラスタライズする。領域オフセット(-height/2 ...)と図形の translate(中心)は
+		// どちらも height/2 を含み、和は一定なのに片方だけ丸められると打ち消しが
+		// 崩れ、リサイズ中にテキストが 1px 単位でちらつく。オフセットを transform に
+		// 畳んで和を丸め前に確定させるのが対策なので、x/y が 0 のままであることを守る。
+		const box = await canvas.page.evaluate((objectId) => {
+			const fo = document
+				.querySelector(`[data-id="${objectId}"]`)
+				?.parentElement?.querySelector("foreignObject");
+			return fo ? { x: fo.getAttribute("x"), y: fo.getAttribute("y") } : null;
+		}, id);
+		expect(box).toEqual({ x: "0", y: "0" });
+	});
+
 	test("フォントサイズを変えると描画テキストのサイズが追従する", async ({
 		canvas,
 	}) => {

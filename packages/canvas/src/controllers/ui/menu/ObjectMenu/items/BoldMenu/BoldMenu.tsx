@@ -1,14 +1,13 @@
 ﻿import { memo } from "react";
 
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
-import type { TextStyleState } from "../../../../../../states/objects/base/TextStyleState";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { BoldIcon } from "../../../../icons/BoldIcon";
 import {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
-import { getFirstSelectedWithProp } from "../../utils/getFirstSelectedWithProp";
+import { getFirstSelectedTextSlot } from "../../utils/getFirstSelectedTextSlot";
 
 type BoldMenuProps = {
 	canvasState: CanvasControllerState;
@@ -21,8 +20,8 @@ type BoldMenuProps = {
 const BoldMenuComponent: React.FC<BoldMenuProps> = ({ canvasState }) => {
 	const messages = useCanvasMessages();
 	const { selectedIds, objects } = canvasState;
-	const obj = getFirstSelectedWithProp(selectedIds, objects, "fontWeight");
-	const isBold = (obj as TextStyleState | undefined)?.fontWeight === "bold";
+	const slot = getFirstSelectedTextSlot(selectedIds, objects);
+	const isBold = slot?.fontWeight === "bold";
 
 	return (
 		<ObjectMenuItemPositioner>

@@ -356,6 +356,53 @@ export class CanvasDriver {
 	}
 
 	/**
+	 * カテゴリフライアウトの図形（プラグイン提供の record 等）を選んでドラッグで
+	 * 描き、新規図形の data-id を返す。トップレベルツールは drawShape を使う。
+	 */
+	async drawShapeFromFlyout(
+		categoryId: string,
+		presetId: string,
+		from: { x: number; y: number },
+		to: { x: number; y: number },
+	): Promise<string> {
+		const before = await this.captureObjects();
+		const beforeIds = new Set(before.map((obj) => obj.id));
+
+		await this.page.click(selectors.categoryButton(categoryId));
+		const item = this.page.locator(selectors.shapeItem(presetId));
+		await expect(item).toBeVisible();
+		await item.click();
+
+		// フライアウト項目はツールボタンと違い armed 状態の cursor を持たないため、
+		// キャンバス側の cursor: crosshair を描画モード入りのシグナルにする
+		await expect
+			.poll(
+				() =>
+					this.page
+						.locator('[data-kind="canvas"]')
+						.evaluate((el) => getComputedStyle(el).cursor),
+				{ message: `${presetId} クリックで描画モードに入ること` },
+			)
+			.toBe("crosshair");
+
+		await this.drag(from, to);
+
+		// 状態待ち: 新規オブジェクトの出現を待つ（出なければ操作が効いていない）
+		await expect
+			.poll(async () => (await this.captureObjects()).length, {
+				message: `${presetId} で新規図形が作成されること`,
+			})
+			.toBe(before.length + 1);
+
+		const after = await this.captureObjects();
+		const created = after.find((obj) => !beforeIds.has(obj.id));
+		if (!created?.id) {
+			throw new Error(`${presetId} で作成された図形の data-id が取得できない`);
+		}
+		return created.id;
+	}
+
+	/**
 	 * クリックだけで配置される図形（Sticky）をツールボタンのクリックで
 	 * キャンバス中央へ即時追加し、新規 data-id を返す。
 	 * これらは対角ドラッグではなく StencilLibraryItemHandler が即配置するため、
@@ -416,11 +463,22 @@ export class CanvasDriver {
 		await expect(this.page.locator(selectors.control)).toHaveCount(0);
 	}
 
+	/**
+	 * テキストエディタが開き、textarea が入力を受け取れる状態になるまで待つ。
+	 * 受付前に打鍵するとその分がキャンバス側へ落ちる。打鍵内容に改行があると
+	 * その Enter 自体が編集を開始し直すため、値が空ではなく「途中から入った」
+	 * 紛らわしい形になる（issue #237）。打鍵前は必ずこれを通すこと。
+	 */
+	async waitForTextEditor() {
+		await expect(this.page.locator(selectors.textEditor)).toBeVisible();
+		await expect(this.textArea()).toBeFocused();
+	}
+
 	/** ダブルクリックでテキストエディタを開き、タイプする。確定は commitText() */
 	async typeTextAt(point: { x: number; y: number }, text: string) {
 		const screen = this.toScreen(point);
 		await this.page.mouse.dblclick(screen.x, screen.y);
-		await expect(this.page.locator(selectors.textEditor)).toBeVisible();
+		await this.waitForTextEditor();
 		await this.page.keyboard.type(text);
 	}
 

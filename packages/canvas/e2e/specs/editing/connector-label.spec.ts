@@ -13,12 +13,17 @@ import { selectors } from "../../support/selectors";
  * - 素のラベルは空文字で確定すると取り除かれる
  * - スタイル付きラベルは空文字にしてもスタイルを保持し、再入力で復元できる
  *   （保持するのはスタイルだけで、位置は消したラベルのものなので引き継がない）
+ * - 折り返すラベルは、確定前（textarea の実レイアウト）と確定後（計測による
+ *   折り返しシミュレーション）で高さが一致する
  */
 
 type Vec = { x: number; y: number };
 
 /** ダブルクリック点とラベル中心のズレ許容値。 */
 const TOLERANCE_PX = 2;
+
+/** 編集中と確定後のラベル高さのズレ許容値（サブピクセルの丸めぶん）。 */
+const HEIGHT_TOLERANCE_PX = 2;
 
 function parsePoints(attr: string | null): Vec[] {
 	if (!attr) {
@@ -717,7 +722,7 @@ test.describe("コネクターのラベル", () => {
 		expect(distance(rePoint, onLine)).toBeGreaterThan(30);
 		const screen = canvas.toScreen(rePoint);
 		await canvas.page.mouse.dblclick(screen.x, screen.y);
-		await expect(canvas.page.locator(selectors.textEditor)).toBeVisible();
+		await canvas.waitForTextEditor();
 		await expect(canvas.textArea()).toHaveValue("");
 		await canvas.page.keyboard.type("Back");
 		await canvas.commitText();
@@ -815,5 +820,48 @@ test.describe("コネクターのラベル", () => {
 		await expect(
 			canvas.page.locator(selectors.objectMenuToggle("label-bg-color")),
 		).toBeVisible();
+	});
+
+	test("単語で折り返すラベルは、確定後の高さが編集中の高さと一致する", async ({
+		canvas,
+	}) => {
+		// 編集中はテキストエリアの実レイアウト（scrollHeight）、確定後は計測による
+		// 折り返しシミュレーションで高さが決まる。両者がずれると確定した瞬間に
+		// ラベルが 1 行分クリップされる。
+		const connectorId = await setupConnector(canvas);
+		const onLine = await pointOnConnector(canvas, connectorId);
+
+		// 最大幅（240px = テキスト幅 228px）に対し、1 単語で半分以上を占める語を 3 つ。
+		// 1 行に 1 単語しか入らないので表示は 3 行になるが、総幅 ÷ 利用幅の比率推定では
+		// 2 行にしかならない（比率推定が取りこぼす行）。
+		const word = "Telecommunications";
+		const text = `${word} ${word} ${word}`;
+		await canvas.typeTextAt(onLine, text);
+		await expect(canvas.textArea()).toHaveValue(text);
+
+		// 折り返しが起きた（＝ 3 行になった）ところで高さを読む。
+		// 1 行は 16 × 1.5 + パディング 4 = 28px なので、3 行なら 70px を超える。
+		const editorBox = canvas.page.locator(selectors.textEditor);
+		await expect
+			.poll(async () => (await editorBox.boundingBox())?.height ?? 0, {
+				message: "編集中のラベルが 3 行に折り返されること",
+			})
+			.toBeGreaterThan(70);
+		const editorHeight = (await editorBox.boundingBox())?.height ?? 0;
+
+		await canvas.commitText();
+		const labelBox = labelBoxOf(canvas, connectorId);
+		await expect(labelBox).toContainText(text);
+
+		// 表示側の高さが編集中と一致する（サブピクセルの丸めぶんだけ許容）。
+		await expect
+			.poll(
+				async () =>
+					Math.abs(
+						((await labelBox.boundingBox())?.height ?? 0) - editorHeight,
+					),
+				{ message: "確定後の表示高さが編集中と一致すること" },
+			)
+			.toBeLessThanOrEqual(HEIGHT_TOLERANCE_PX);
 	});
 });

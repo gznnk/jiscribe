@@ -83,7 +83,7 @@ describe("createFrameDocValidator feature gating", () => {
 		["transform", { transform: true }, "root.rotation"],
 		["stroke", { stroke: true }, "root.stroke"],
 		["fill", { fill: true }, "root.fill"],
-		["text", { text: true }, "root.textAlign"],
+		["text", { text: "body" }, "root.textAlign"],
 		["radius", { radius: true }, "root.rx"],
 	] as [string, Partial<ObjectFeatures>, string][])(
 		"validates %s fields only when the flag is on",
@@ -101,7 +101,7 @@ describe("createFrameDocValidator feature gating", () => {
 				transform: true,
 				stroke: true,
 				fill: true,
-				text: true,
+				text: "body",
 				radius: true,
 			}),
 		);

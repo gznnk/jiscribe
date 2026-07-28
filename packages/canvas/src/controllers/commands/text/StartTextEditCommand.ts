@@ -1,20 +1,27 @@
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import type { TextStyleState } from "../../../states/objects/base/TextStyleState";
 import { isTextStyleState } from "../../../states/objects/base/TextStyleState";
+import {
+	getFirstTextSlotId,
+	readTextSlot,
+} from "../../../states/objects/types/TextSlots";
 import type { ExecutableCommand } from "../CommandTypes";
 
 /**
  * Whether the shape can start text editing.
- * Only shapes that hold text (features.text) qualify; the structural guard
- * supplements this by checking value validity. isTextStyleState alone is a loose
- * guard that only checks the text attributes are internally consistent, so it would
- * also pass shapes with no text at all (svg / polyline / polygon, etc.); this aligns
- * on the same features.text criterion used by the property-update side
- * (FeatureGatedStyleProperty's text gate).
+ * Only shapes that hold text (features.text, in either shape) qualify; the
+ * structural guard supplements this by checking value validity. isTextStyleState
+ * alone is a loose guard that only checks the text attributes are internally
+ * consistent, so it would also pass shapes with no text at all (svg / polyline /
+ * polygon, etc.); this aligns on the same features.text criterion used by the
+ * property-update side (TextSlotStyleProperty).
  */
 const canEditText = (
 	object: ObjectState | undefined,
-): object is ObjectState & { text?: string } =>
-	object != null && object.features?.text === true && isTextStyleState(object);
+): object is ObjectState & TextStyleState =>
+	object != null &&
+	object.features?.text !== undefined &&
+	isTextStyleState(object);
 
 export const StartTextEditCommand: ExecutableCommand = {
 	id: "start-text-edit",
@@ -67,12 +74,19 @@ export const StartTextEditCommand: ExecutableCommand = {
 			return state;
 		}
 
+		// No pointer position to resolve a slot from, so the first slot is the default.
+		const slotId = getFirstTextSlotId(targetObject.text);
+		if (slotId === undefined) {
+			return state;
+		}
+
 		return {
 			...state,
 			textEditState: {
 				kind: "shape",
 				objectId,
-				text: targetObject.text ?? "",
+				slotId,
+				text: readTextSlot(targetObject.text, slotId),
 			},
 		};
 	},

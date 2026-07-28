@@ -13,6 +13,8 @@ type CanvasViewProps = {
 	svgRef: React.RefObject<SVGSVGElement | null>;
 	children?: React.ReactNode;
 	textEditObjectId?: string | null;
+	/** Slot the open editor targets, so only that slot's text is hidden (see ObjectsRenderer). */
+	textEditSlotId?: string | null;
 	isDrawMode?: boolean;
 	/**
 	 * Viewport culling: IDs to render (see ObjectsRenderer). Omit to render the
@@ -28,6 +30,7 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 	svgRef,
 	children,
 	textEditObjectId,
+	textEditSlotId,
 	isDrawMode = false,
 	visibleObjectIds,
 }) => {
@@ -56,6 +59,7 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 					objects={objects}
 					rootIds={rootIds}
 					textEditObjectId={textEditObjectId}
+					textEditSlotId={textEditSlotId}
 					visibleObjectIds={visibleObjectIds}
 				/>
 				{/* Overlay layers injected from parent. These are control UI

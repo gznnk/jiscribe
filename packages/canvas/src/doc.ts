@@ -18,6 +18,17 @@ export type { ObjectDoc } from "./schemas/objects/base/ObjectDoc";
 export type { ObjectType } from "./schemas/objects/types/ObjectType";
 export type { ObjectFeatures } from "./schemas/objects/types/ObjectFeatures";
 export type { CreateObjectType } from "./schemas/objects/types/CreateObjectType";
+// A text slot is the unit of text in both layers, so a type that spells out its
+// own slots (features.text: "slots") declares them with this in its Doc and reuses
+// the very same values in its State.
+export type {
+	TextSlot,
+	TextSlotContent,
+} from "./schemas/objects/types/TextSlot";
+export {
+	isTextSlot,
+	TEXT_SLOT_STYLE_KEYS,
+} from "./schemas/objects/types/TextSlot";
 export type {
 	ExtraStylePropertyDescriptor,
 	StyleValueType,

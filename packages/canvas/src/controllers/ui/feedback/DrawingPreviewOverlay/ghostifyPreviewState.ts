@@ -2,6 +2,8 @@ import { resolveAutoColor } from "../../../../presentations/objects/utils/resolv
 import { AUTO_COLOR } from "../../../../schemas/objects/utils/autoColor";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { StrokeStyleState } from "../../../../states/objects/base/StrokeStyleState";
+import type { TextStyleState } from "../../../../states/objects/base/TextStyleState";
+import { blankTextSlots } from "../../../../states/objects/types/TextSlots";
 
 /** Uniform thin outline for the drag-drawing ghost, independent of the shape's real strokeWidth. */
 const PREVIEW_STROKE_WIDTH = 1.5;
@@ -17,12 +19,14 @@ export const ghostifyPreviewState = (state: ObjectState): ObjectState => {
 		(state as StrokeStyleState).stroke ?? AUTO_COLOR,
 		"ink",
 	);
+	const text = (state as TextStyleState).text;
 	return {
 		...state,
 		stroke,
 		fill: `color-mix(in srgb, ${stroke} 18%, transparent)`,
 		strokeWidth: PREVIEW_STROKE_WIDTH,
 		strokeDashType: "solid",
-		text: "",
+		// Emptied slot by slot: a text-less shape must not gain a text field.
+		...(text ? { text: blankTextSlots(text) } : {}),
 	} as ObjectState;
 };

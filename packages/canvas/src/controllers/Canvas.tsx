@@ -45,6 +45,7 @@ import { resolveCanvasMessages } from "./messages/CanvasMessages";
 import type { CanvasMessages } from "./messages/CanvasMessagesTypes";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
 import type { CanvasConfig } from "./registries";
+import { graftTextEditDraft } from "./utils/graftTextEditDraft";
 import { CanvasView } from "../presentations/CanvasView";
 import type { CanvasTheme } from "../theme/CanvasTheme";
 import { buildThemeCssVars } from "../theme/themeCssVars";
@@ -402,6 +403,16 @@ const CanvasComponent = ({
 		[],
 	);
 
+	// Objects as the view should show them *right now*: the slot being edited
+	// carries the uncommitted editor text, so geometry derived from it (the
+	// record's title band) follows every keystroke instead of jumping on commit.
+	// Rendering and editor placement only — the committed state.objects stays the
+	// input of hit testing, snapping and bboxes.
+	const draftObjects = useMemo(
+		() => graftTextEditDraft(state.objects, state.textEditState),
+		[state.objects, state.textEditState],
+	);
+
 	// Viewport culling (issue #212): only objects intersecting the visible
 	// world rect are rendered. Export clones the live SVG DOM, so it suspends
 	// culling for the duration of the snapshot via withCullingSuspended.
@@ -480,11 +491,16 @@ const CanvasComponent = ({
 				>
 					<Container>
 						<CanvasView
-							objects={state.objects}
+							objects={draftObjects}
 							rootIds={state.rootIds}
 							viewport={state.viewport}
 							svgRef={svgRef}
 							textEditObjectId={state.textEditState?.objectId ?? null}
+							textEditSlotId={
+								state.textEditState?.kind === "shape"
+									? state.textEditState.slotId
+									: null
+							}
 							isDrawMode={!!state.shapeDrawing}
 							visibleObjectIds={visibleObjectIds}
 						>
@@ -556,7 +572,7 @@ const CanvasComponent = ({
 						>
 							<TextEditorLayer
 								textEditState={state.textEditState}
-								objects={state.objects}
+								objects={draftObjects}
 								onTextChange={(text) =>
 									dispatch({ type: "UPDATE_TEXT_EDIT", text })
 								}

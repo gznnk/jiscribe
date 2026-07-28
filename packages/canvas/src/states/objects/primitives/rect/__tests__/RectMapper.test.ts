@@ -46,13 +46,18 @@ describe("RectMapper", () => {
 			expect(state.stroke).toBe("#000000");
 			expect(state.strokeWidth).toBe(2);
 			expect(state.fill).toBe("#ff0000");
-			expect(state.text).toBe("Sample Text");
-			expect(state.textAlign).toBe("center");
-			expect(state.verticalAlign).toBe("center");
-			expect(state.fontColor).toBe("#333333");
-			expect(state.fontSize).toBe(16);
-			expect(state.fontFamily).toBe("Arial");
-			expect(state.fontWeight).toBe("bold");
+			// The doc's flat text group becomes the one body slot, styling included.
+			expect(state.text).toEqual({
+				body: {
+					text: "Sample Text",
+					textAlign: "center",
+					verticalAlign: "center",
+					fontColor: "#333333",
+					fontSize: 16,
+					fontFamily: "Arial",
+					fontWeight: "bold",
+				},
+			});
 		});
 
 		it("should handle default transform values", () => {
@@ -105,13 +110,17 @@ describe("RectMapper", () => {
 				stroke: "#000000",
 				strokeWidth: 2,
 				fill: "#ff0000",
-				text: "Sample Text",
-				textAlign: "center",
-				verticalAlign: "center",
-				fontColor: "#333333",
-				fontSize: 16,
-				fontFamily: "Arial",
-				fontWeight: "bold",
+				text: {
+					body: {
+						text: "Sample Text",
+						textAlign: "center",
+						verticalAlign: "center",
+						fontColor: "#333333",
+						fontSize: 16,
+						fontFamily: "Arial",
+						fontWeight: "bold",
+					},
+				},
 			} as unknown as RectState;
 
 			const doc = rectToDoc(state);

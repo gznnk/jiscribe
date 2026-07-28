@@ -97,6 +97,27 @@ describe("createCanvasRegistries", () => {
 			expect(registries.objectMapper.getFeatures("star")).toBeDefined();
 		});
 
+		it("registers a plugin's text-edit overflow resolver, and only for that type", () => {
+			const resolveSlotOverflow = (slotId: string) =>
+				slotId === "name" ? ("grow" as const) : ("scroll" as const);
+			const bandPlugin: CanvasPlugin = {
+				id: "band-plugin",
+				objects: {
+					band: defineObject({
+						...buildFakeDefinition("band"),
+						textEditOverflow: resolveSlotOverflow,
+					}),
+				},
+			};
+			const registries = createCanvasRegistries({ plugins: [bandPlugin] });
+			expect(registries.objectTextEditOverflow.get("band")).toBe(
+				resolveSlotOverflow,
+			);
+			// A type that declares nothing stays on the default (scroll), which the
+			// editor applies via resolveTextEditOverflow.
+			expect(registries.objectTextEditOverflow.get("rect")).toBeUndefined();
+		});
+
 		it("derives menu sections from features when menu is omitted", () => {
 			const plugin: CanvasPlugin = {
 				id: "boxy-plugin",
@@ -108,7 +129,7 @@ describe("createCanvasRegistries", () => {
 							transform: true,
 							stroke: true,
 							fill: true,
-							text: true,
+							text: "body",
 						},
 						validateDoc: () => [],
 						mapper: {

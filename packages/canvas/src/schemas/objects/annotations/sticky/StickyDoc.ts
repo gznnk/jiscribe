@@ -8,7 +8,7 @@ export const StickyFeatures = {
 	transform: true,
 	stroke: false,
 	fill: true,
-	text: true,
+	text: "body",
 	radius: false,
 	connectable: true,
 } as const satisfies ObjectFeatures;

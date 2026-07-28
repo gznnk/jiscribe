@@ -9,6 +9,9 @@ import {
 import type { ObjectMapperType } from "./MapperTypes";
 import { ObjectMapper } from "./ObjectMapper";
 import type { ObjectState } from "./ObjectState";
+import type { TextDocFields } from "./TextSlotsMapper";
+import { mapTextDocToState, mapTextStateToDoc } from "./TextSlotsMapper";
+import type { TextStyleState } from "./TextStyleState";
 import {
 	mapTransformDocToState,
 	mapTransformStateToDoc,
@@ -23,10 +26,11 @@ import { collectStyleKeys, pick } from "../utils/stylePassthrough";
  * Generates a Doc↔State mapper from `features` for Frame-family objects
  * (shapes with geometry: "rect" | "ellipse" + transform).
  *
- * The only differences between Doc and State are the geometry and transform
- * representations. Everything else (stroke / fill / text / radius / svgText …) shares
- * the same names and types, so this mapper converts only geometry/transform and passes
- * the rest through by **explicitly picking them via an allow-list**.
+ * The differences between Doc and State are the geometry, the transform, and the text
+ * group (whose styling sits flat on a `"body"` Doc but inside each slot in the State).
+ * Everything else (stroke / fill / radius / svgText …) shares the same names and types, so
+ * this mapper converts only those three and passes the rest through by **explicitly picking
+ * them via an allow-list**.
  *
  * The picked keys are the style groups enabled in `features` (`collectStyleKeys`) plus
  * shape-specific `extraKeys` (such as svg's svgText). Because it is an allow-list,
@@ -74,6 +78,7 @@ export const createFrameMapper = <
 			return {
 				...ObjectMapper.toState(doc),
 				...pick(doc as unknown as Record<string, unknown>, passthroughKeys),
+				...mapTextDocToState(features.text, doc as TextDocFields),
 				...frame,
 				...transform,
 			} as unknown as TState;
@@ -89,6 +94,7 @@ export const createFrameMapper = <
 			return {
 				...ObjectMapper.toDoc(state),
 				...pick(state as unknown as Record<string, unknown>, passthroughKeys),
+				...mapTextStateToDoc(features.text, (state as TextStyleState).text),
 				...geometry,
 				...transform,
 			} as unknown as TDoc;

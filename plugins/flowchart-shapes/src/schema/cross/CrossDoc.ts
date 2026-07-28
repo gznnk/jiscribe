@@ -3,7 +3,7 @@ import { AUTO_COLOR } from "@workspace/canvas/unstable-doc";
 
 /**
  * A cross (plus) marker, used to mark junctions and for emphasis. It holds no
- * text (text: false) — it is a marker, not a labeled box.
+ * text (no `text` feature) — it is a marker, not a labeled box.
  *
  * It adopts rect geometry (x/y/width/height) and only swaps the rendering. This
  * lets it reuse Frame-based transforms and connector outline connections with
@@ -15,7 +15,6 @@ export const CrossFeatures = {
 	transform: true,
 	stroke: true,
 	fill: true,
-	text: false,
 	connectable: true,
 } as const satisfies ObjectFeatures;
 

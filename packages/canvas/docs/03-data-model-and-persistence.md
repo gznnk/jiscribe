@@ -63,17 +63,20 @@ The saved format is `CanvasDoc` (`schemas/canvas/CanvasDoc.ts`).
 
 The storage shape of the text-bearing fields is **intentionally asymmetric** between shapes and connectors.
 
-- **Shapes (rect / ellipse / diamond / sticky)** … hold `text` / `textAlign` / `fontColor` … **flat at the top level** (`features.text` composes `TextStyleDoc`).
+- **Single-body shapes (rect / ellipse / diamond / sticky, …)** … hold `text` / `textAlign` / `fontColor` … **flat at the top level** (`features.text: "body"` composes `TextStyleDoc`).
+- **Multi-slot shapes (e.g. the uml-shapes record)** … declare `features.text: "slots"` and hold `text` as an **object keyed by slot id** (`text: { name: {…}, rows: {…} }`; each slot is a `TextSlot` = content plus typography, and the slot set is closed per type).
 - **Connectors** … hold their annotation as a **single nested object**
   `label: { text, position, offset, fontColor, fontSize, fontWeight, fill, stroke, strokeWidth, strokeDashType }`
   (no `features.text`). The background `fill` and border `stroke` / `strokeWidth` / `strokeDashType` borrow the same vocabulary as shapes, but differ in that they are nested inside `label`.
+
+On the State side both shape forms normalize to the **one keyed-slot form** (a `"body"` type's mapper expands it into the single `body` slot and folds it back on save; see `TextSlotsMapper`). The rendering / editing / styling consumers read only this normal form and never branch on the doc's shape.
 
 This difference does not reflect layer convenience but a **difference in role**. A shape's `text` is "the _body_ of that shape" (central, essentially the main actor, with in-box alignment). A connector's text is "an _annotation_ attached to an edge (edge label)" (optional, secondary, with no notion of alignment), and it additionally has **connector-specific placement axes**: `position` (a ratio along the route) and `offset` (perpendicular distance). Reusing a flat form would introduce distortions: (1) these connector-specific fields would mix in with the other keys and their ownership would become unreadable; (2) a short tag on a line would carry irrelevant `textAlign` / `verticalAlign`. The judgment is that **different things may take different shapes** (forcing them to match would be "false consistency"). Even from the perspective of the AI that generates the JSON, this is consistent with the premise that each type has different capabilities (the capability table in `../ai/ai-guide.md`), so the cost of confusion is low.
 
 Guidance for when this asymmetry bothers you:
 
 - **The fix is to "raise," not "lower."** If you want symmetry, the right approach is not to flatten the connector (which revives the distortions above: specific fields floating loose, irrelevant fields attached), but to **align shapes to the `label` nesting as well**. Since the policy is that backward compatibility is unnecessary (we are the only users), this is technically feasible.
-- **But do not do it until a second reason appears.** Nesting shape text is a large-scale change that ripples across rect/ellipse/diamond/sticky, `TextOverlay`, the text editor, styling, and the validators as a whole, and all it buys right now is visual symmetry. Undertake it once a **second motivation** appears — a shape needing multiple text regions or badges, a label needing a different placement concept, etc. — at which point the rework cost is justified.
+- **But do not do it until a second reason appears.** When that second motivation — a shape needing multiple text regions — actually arrived with #167, the answer taken was not unifying on `label` nesting but **named text slots** (State always keyed, the single-body doc keeping its flat sugar). Folding the connector `label` into a slot (removing the type-specific branch) remains an optional follow-up for when more motivation accumulates.
 - **Perfect symmetry is inherently unattainable.** Even if everything were nested, the key names would still **differ in meaning** — shape = body (`text`), connector = annotation (`label`) — so some asymmetry conceptually remains no matter what.
 
 **Nesting support in the styling UI (dot notation)**: The styling property-update plumbing

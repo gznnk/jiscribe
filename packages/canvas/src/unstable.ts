@@ -30,6 +30,11 @@ export type { TextEditable } from "./presentations/objects/base/TextOverlay/Text
 export { TextOverlayFrame } from "./presentations/objects/base/TextOverlay/TextOverlayFrame";
 export type { TextOverlayFrameProps } from "./presentations/objects/base/TextOverlay/TextOverlayFrame";
 
+// 本文はプレーンテキストのまま、スロットごとにタイポグラフィだけ差し替えたい図形
+// (record のタイトル帯など)向け。renderTextOverlay から受け取った props を
+// そのまま渡し、変えたいものだけ上書きする。
+export { TextOverlay } from "./presentations/objects/base/TextOverlay/TextOverlay";
+
 export { createFrameBehavior } from "./controllers/gestures/handlers/objects/base/FrameController";
 
 export { createFrameMapper } from "./states/objects/base/FrameMapper";
@@ -39,6 +44,11 @@ export type { StateRecord } from "./states/objects/utils/validateStateUtils";
 
 export { resolveAutoColor } from "./presentations/objects/utils/resolveAutoColor";
 export type { AutoColorRole } from "./presentations/objects/utils/resolveAutoColor";
+
+// テキストを描く箱の高さを内容から導く図形(record のタイトル帯など)向け。表示側
+// CSS(pre-wrap + break-word)と同じ折り返しを再現して表示行数を数える。
+export { calcVisualLineCount } from "./presentations/objects/utils/measureText";
+export type { TextMeasureFont } from "./presentations/objects/utils/measureText";
 
 // Polygon/outline helpers for frame 系プラグイン図形の描画・connector 接続 outline。
 export { formatPolygonPoints } from "./presentations/objects/utils/formatPolygonPoints";

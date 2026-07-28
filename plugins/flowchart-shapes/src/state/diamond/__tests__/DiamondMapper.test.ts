@@ -42,7 +42,18 @@ describe("DiamondMapper", () => {
 			expect(state.scaleY).toBe(1); // flipY = false
 			expect(state.stroke).toBe("#000000");
 			expect(state.fill).toBe("#ff0000");
-			expect(state.text).toBe("Decision");
+			// The doc's flat text group becomes the one body slot, styling included.
+			expect(state.text).toEqual({
+				body: {
+					text: "Decision",
+					textAlign: "center",
+					verticalAlign: "middle",
+					fontColor: "#333333",
+					fontSize: 16,
+					fontFamily: "Arial",
+					fontWeight: "bold",
+				},
+			});
 		});
 
 		it("should handle default transform values", () => {
@@ -78,13 +89,17 @@ describe("DiamondMapper", () => {
 				stroke: "#000000",
 				strokeWidth: 2,
 				fill: "#ff0000",
-				text: "Decision",
-				textAlign: "center",
-				verticalAlign: "middle",
-				fontColor: "#333333",
-				fontSize: 16,
-				fontFamily: "Arial",
-				fontWeight: "bold",
+				text: {
+					body: {
+						text: "Decision",
+						textAlign: "center",
+						verticalAlign: "middle",
+						fontColor: "#333333",
+						fontSize: 16,
+						fontFamily: "Arial",
+						fontWeight: "bold",
+					},
+				},
 			} as unknown as DiamondState;
 
 			const doc = diamondToDoc(state);

@@ -1,0 +1,28 @@
+// Headless (UI 非依存) 入口。canvas 本体の ./doc と相似形: MCP や VSCode 拡張の Node 側
+// 診断など、definition.ts（React コンポーネントを含む）を経由せずに parse-time 検証へ
+// 参加したい消費者のための入口。import は ./schema/** と @workspace/canvas/doc /
+// @workspace/canvas/unstable-doc のみで、presentation / state / stencil を引き込まない。
+import type {
+	CanvasDocPlugin,
+	ObjectDocDefinition,
+} from "@workspace/canvas/doc";
+
+import { RecordFeatures } from "./schema/RecordDoc";
+import { RecordObjectFactory } from "./schema/RecordObjectFactory";
+import { validateRecordDoc } from "./schema/validateRecordDoc";
+
+export const recordDocDefinition: ObjectDocDefinition = {
+	features: RecordFeatures,
+	validateDoc: validateRecordDoc,
+	factory: RecordObjectFactory,
+};
+
+/**
+ * Headless `CanvasDocPlugin` for the UML shapes: the doc-layer view of
+ * `umlPlugin`, teaching `createCanvasParser` the types without loading any
+ * React / presentation code (docs/05_extensibility/plugin-architecture-requirements.md §4 UC1).
+ */
+export const umlDocPlugin: CanvasDocPlugin = {
+	id: "uml-shapes",
+	objects: { record: recordDocDefinition },
+};

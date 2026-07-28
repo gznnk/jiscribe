@@ -7,6 +7,7 @@ import {
 	flowchartToolbarEntry,
 } from "@workspace/plugin-flowchart-shapes";
 import { markdownPlugin } from "@workspace/plugin-markdown-shape";
+import { umlPlugin, umlToolbarEntry } from "@workspace/plugin-uml-shapes";
 import React, { useCallback, useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import "katex/dist/katex.min.css";
@@ -28,7 +29,7 @@ import "./harness.css";
 // @workspace/plugin-markdown-shape が唯一の供給元
 // (docs/05_extensibility/plugin-architecture-requirements.md)。e2e 専用の dev 限定
 // 循環依存として devDependencies に登録し、関連 spec を存続させる。
-const plugins = [flowchartPlugin, containerPlugin, markdownPlugin];
+const plugins = [flowchartPlugin, containerPlugin, markdownPlugin, umlPlugin];
 
 const initialConfig: CanvasConfig = { plugins };
 
@@ -44,6 +45,7 @@ const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "markdown" },
 	flowchartToolbarEntry,
 	containerToolbarEntry,
+	umlToolbarEntry,
 	generalToolbarEntry,
 	annotationToolbarEntry,
 ];

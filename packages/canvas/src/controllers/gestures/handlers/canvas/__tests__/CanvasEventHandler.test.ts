@@ -9,7 +9,7 @@ import { CanvasEventHandler } from "../CanvasEventHandler";
 const registries = createTestRegistries();
 
 const makeTextRect = (id: string, text: string): ObjectState =>
-	({ id, type: "rect", text }) as unknown as ObjectState;
+	({ id, type: "rect", text: { body: { text } } }) as unknown as ObjectState;
 
 const makeState = (
 	overrides: Partial<CanvasControllerState> = {},
@@ -25,7 +25,12 @@ const makeState = (
 		areaSelection: null,
 		contextMenuPosition: null,
 		objectMenuOpenId: null,
-		textEditState: { kind: "shape", objectId: "a", text: "edited text" },
+		textEditState: {
+			kind: "shape",
+			objectId: "a",
+			slotId: "body",
+			text: "edited text",
+		},
 		viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
 		commitVersion: 0,
 		...overrides,
@@ -54,6 +59,7 @@ describe("CanvasEventHandler", () => {
 			expect(nextState.textEditState).toEqual({
 				kind: "shape",
 				objectId: "a",
+				slotId: "body",
 				text: "edited text",
 			});
 			expect(nextState.viewport.minX).toBe(10);
@@ -88,6 +94,7 @@ describe("CanvasEventHandler", () => {
 			expect(nextState.textEditState).toEqual({
 				kind: "shape",
 				objectId: "a",
+				slotId: "body",
 				text: "edited text",
 			});
 			expect(nextState.viewport.zoom).toBeCloseTo(1.1);
@@ -103,7 +110,11 @@ describe("CanvasEventHandler", () => {
 
 			expect(nextState.textEditState).toBeNull();
 			expect(
-				(nextState.objects["a"] as ObjectState & { text: string }).text,
+				(
+					nextState.objects["a"] as ObjectState & {
+						text: { body: { text: string } };
+					}
+				).text.body.text,
 			).toBe("edited text");
 			expect(nextState.selectedIds).toEqual([]);
 		});

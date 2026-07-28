@@ -129,6 +129,7 @@
 		"@workspace/plugin-container-shapes": "workspace:*",
 		"@workspace/plugin-flowchart-shapes": "workspace:*",
 		"@workspace/plugin-markdown-shape": "workspace:*",
+		"@workspace/plugin-uml-shapes": "workspace:*",
 		"esbuild": "catalog:",
 		"katex": "catalog:",
 		"react": "catalog:",

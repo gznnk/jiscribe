@@ -5,957 +5,958 @@
 		{
 			"id": "cf3cb2d4-e48e-4ec5-8a48-a5cb117eb612",
 			"type": "rect",
-			"x": 120,
-			"y": 2417.861,
-			"width": 220,
-			"height": 75,
 			"stroke": "#6366f1",
 			"strokeWidth": 2,
 			"fill": "#4338ca",
-			"rx": 8,
 			"text": "Index",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#ffffff",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 120,
+			"y": 2740.3,
+			"width": 220,
+			"height": 75
 		},
 		{
 			"id": "55851003-1450-48b5-a6ac-24bcedbe8bcd",
 			"type": "rect",
-			"x": 600,
-			"y": 209.625,
-			"width": 260,
-			"height": 75,
 			"stroke": "#4b5563",
 			"strokeWidth": 2,
 			"fill": "#1f2937",
-			"rx": 8,
 			"text": "設計思想",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#f3f4f6",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 600,
+			"y": 209.625,
+			"width": 260,
+			"height": 75
 		},
 		{
 			"id": "0dc3f5c4-15a4-4eed-8c96-70d3d15a171c",
 			"type": "rect",
-			"x": 1080,
-			"y": 0.0,
-			"width": 360,
-			"height": 75,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "性能を最優先する",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 0,
+			"width": 360,
+			"height": 75
 		},
 		{
 			"id": "cdb15197-10b1-4f33-a0a7-0b5b6f9afee0",
 			"type": "rect",
-			"x": 1080,
-			"y": 130.0,
-			"width": 360,
-			"height": 75,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "ロジックは可能な限り純粋関数で書く",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 130,
+			"width": 360,
+			"height": 75
 		},
 		{
 			"id": "660fd4f3-41e9-4a46-be4e-3204ff43724b",
 			"type": "rect",
-			"x": 1560,
-			"y": 130.0,
-			"width": 380,
-			"height": 75,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "テストを容易にするため",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1560,
+			"y": 130,
+			"width": 380,
+			"height": 75
 		},
 		{
 			"id": "c0674d43-6ae7-4573-b644-d35f7b9e3717",
 			"type": "rect",
-			"x": 1080,
-			"y": 275.0,
-			"width": 360,
-			"height": 84,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "各イベントハンドラがキャンバス全体の状態更新に責任を持つ",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 275,
+			"width": 360,
+			"height": 84
 		},
 		{
 			"id": "be661037-ed67-4217-8cdc-acda57cbfc2b",
 			"type": "rect",
-			"x": 1560,
-			"y": 260.0,
-			"width": 380,
-			"height": 114,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "状態の項目ごとに更新責任を分割する構造は、相互に依存する多様な状態を扱う本アプリでは破綻しやすいため",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1560,
+			"y": 260,
+			"width": 380,
+			"height": 114
 		},
 		{
 			"id": "1e8abfc6-f775-4e68-9439-100dd951ef56",
 			"type": "rect",
-			"x": 1080,
-			"y": 424.5,
-			"width": 360,
-			"height": 84,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "不正な状態（循環参照など）は外部入力の境界で弾き、内部関数は正当性を前提とする",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 424.5,
+			"width": 360,
+			"height": 84
 		},
 		{
 			"id": "9ea9bf6f-7d49-4541-b48c-aabbef36b58e",
 			"type": "rect",
-			"x": 1560,
-			"y": 424.5,
-			"width": 380,
-			"height": 84,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "各所での重複した正当性チェックを避けるのは性能優先のため",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1560,
+			"y": 424.5,
+			"width": 380,
+			"height": 84
 		},
 		{
 			"id": "85c3a124-adc0-441c-ac2a-307b4a2aae4c",
 			"type": "rect",
-			"x": 2040,
-			"y": 429.0,
-			"width": 380,
-			"height": 75,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
-			"text": "現状は内部各所にチェックが残っており要改善",
+			"text": "内部各所の防御的チェックは撤去済み（正当な state のみが来る前提）",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 2040,
+			"y": 429,
+			"width": 380,
+			"height": 75
 		},
 		{
 			"id": "edc855c1-0615-4a5b-a7f0-fc44d5dbff46",
 			"type": "rect",
-			"x": 600,
-			"y": 757.5,
-			"width": 260,
-			"height": 75,
 			"stroke": "#4b5563",
 			"strokeWidth": 2,
 			"fill": "#1f2937",
-			"rx": 8,
 			"text": "アーキテクチャ",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#f3f4f6",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 600,
+			"y": 757.5,
+			"width": 260,
+			"height": 75
 		},
 		{
 			"id": "a9a4263d-c210-4c44-8762-9eddb51fad24",
 			"type": "rect",
-			"x": 1080,
-			"y": 559.0,
-			"width": 360,
-			"height": 144,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "レイヤー分離：schemas / states / controllers / presentations / registry",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 559,
+			"width": 360,
+			"height": 144
 		},
 		{
 			"id": "aa954db2-e611-4055-a72c-3c1d553cb11b",
 			"type": "rect",
-			"x": 1080,
-			"y": 758.0,
-			"width": 360,
-			"height": 84,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "依存は下位→上位の一方向のみ（逆依存を禁止）",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 758,
+			"width": 360,
+			"height": 84
 		},
 		{
 			"id": "8a997ab5-fd8e-40e8-88a3-ee3a56380625",
 			"type": "rect",
-			"x": 1080,
-			"y": 912.0,
-			"width": 360,
-			"height": 84,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "Registry パターンで形状ごとの機能を動的解決して拡張",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 912,
+			"width": 360,
+			"height": 84
 		},
 		{
 			"id": "767fd5c0-3e5e-4e08-be66-652aea448beb",
 			"type": "rect",
-			"x": 1560,
-			"y": 897.0,
-			"width": 380,
-			"height": 114,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "新しい形状の追加手順：Schema→State→Mapper→Controller→Component→登録",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1560,
+			"y": 897,
+			"width": 380,
+			"height": 114
 		},
 		{
 			"id": "4e85e257-9bb9-4bea-b76f-9612b2360c15",
 			"type": "rect",
-			"x": 600,
-			"y": 1309.0,
-			"width": 260,
-			"height": 75,
 			"stroke": "#4b5563",
 			"strokeWidth": 2,
 			"fill": "#1f2937",
-			"rx": 8,
 			"text": "データモデルと永続化",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#f3f4f6",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 600,
+			"y": 1309,
+			"width": 260,
+			"height": 75
 		},
 		{
 			"id": "dc6ba61f-6938-4864-9489-62c69ebb1f0a",
 			"type": "rect",
-			"x": 1080,
-			"y": 1066.0,
-			"width": 360,
-			"height": 114,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "Doc（保存用・ツリー）↔ State（実行用・フラット）を Mapper で相互変換",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 1066,
+			"width": 360,
+			"height": 114
 		},
 		{
 			"id": "1b31d448-ca31-4d39-af6b-c05adde3660f",
 			"type": "rect",
-			"x": 1080,
-			"y": 1235.0,
-			"width": 360,
-			"height": 84,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "CanvasMapper が全体変換を多態的に集約（registry 参照を許容）",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 1235,
+			"width": 360,
+			"height": 84
 		},
 		{
 			"id": "4ff5fa95-b2fa-443f-9b9a-8f9cebd40ecf",
 			"type": "rect",
-			"x": 1080,
-			"y": 1374.0,
-			"width": 360,
-			"height": 84,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "永続化フォーマット .jis.json / CanvasDoc の仕様",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 1374,
+			"width": 360,
+			"height": 84
 		},
 		{
 			"id": "b99a0bf3-03df-4421-a555-66d180fe62b6",
 			"type": "rect",
-			"x": 1080,
-			"y": 1513.0,
-			"width": 360,
-			"height": 114,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "parser の二段検証：構造（validateStructure）→ 意味（validateSemantics）で境界を防御",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 1513,
+			"width": 360,
+			"height": 114
 		},
 		{
 			"id": "92532169-5105-45e7-9193-4964efddc435",
 			"type": "rect",
-			"x": 600,
-			"y": 1958.75,
-			"width": 260,
-			"height": 75,
 			"stroke": "#4b5563",
 			"strokeWidth": 2,
 			"fill": "#1f2937",
-			"rx": 8,
 			"text": "ジェスチャシステム",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#f3f4f6",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 600,
+			"y": 1958.75,
+			"width": 260,
+			"height": 75
 		},
 		{
 			"id": "da49a162-01ea-4753-8a60-27763566ece5",
 			"type": "rect",
-			"x": 1080,
-			"y": 1682.0,
-			"width": 360,
-			"height": 144,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "GestureRecognizer：pointer から gesture を認識（click / doubleClick は排他、RAF バッチ）",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 1682,
+			"width": 360,
+			"height": 144
 		},
 		{
 			"id": "a1815cae-4038-4d2b-b057-3b4e9c2a46ce",
 			"type": "rect",
-			"x": 1080,
-			"y": 1881.0,
-			"width": 360,
-			"height": 84,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "ハンドラ構成：canvas / controls / menu / objects",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 1881,
+			"width": 360,
+			"height": 84
 		},
 		{
 			"id": "1becab6d-a255-4b18-8355-5c19add0997b",
 			"type": "rect",
-			"x": 1080,
-			"y": 2020.0,
-			"width": 360,
-			"height": 114,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "連携属性 data-gesture / data-kind / data-id でジェスチャの可否を制御",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 2020,
+			"width": 360,
+			"height": 114
 		},
 		{
 			"id": "035d7208-0c61-415c-9f47-75560d5a190e",
 			"type": "rect",
-			"x": 1080,
-			"y": 2189.0,
-			"width": 360,
-			"height": 84,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "反復ボタンは click と doubleClick を等価に扱う（連打＝連続実行）",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 2189,
+			"width": 360,
+			"height": 84
 		},
 		{
 			"id": "937aff2d-0f0b-44b2-aa46-d2d3796ff464",
 			"type": "rect",
-			"x": 600,
-			"y": 2590.125,
-			"width": 260,
-			"height": 75,
 			"stroke": "#4b5563",
 			"strokeWidth": 2,
 			"fill": "#1f2937",
-			"rx": 8,
 			"text": "コマンドシステム",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#f3f4f6",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 600,
+			"y": 2590.125,
+			"width": 260,
+			"height": 75
 		},
 		{
 			"id": "e1520e29-3c48-4d62-a0de-021f3caf2225",
 			"type": "rect",
-			"x": 1080,
-			"y": 2328.0,
-			"width": 360,
-			"height": 114,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "CommandRegistry：ショートカット / メニュー / ツールバーが同一経路を通る",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 2328,
+			"width": 360,
+			"height": 114
 		},
 		{
 			"id": "c4602cb1-fee9-4445-868c-6145c5415a5c",
 			"type": "rect",
-			"x": 1080,
-			"y": 2497.0,
-			"width": 360,
-			"height": 114,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "カテゴリ：selection / edit / arrange / view / text / group / arrow",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 2497,
+			"width": 360,
+			"height": 114
 		},
 		{
 			"id": "d54ce3c1-3072-45ad-bacf-d4cfc816af33",
 			"type": "rect",
-			"x": 1080,
-			"y": 2666.0,
-			"width": 360,
-			"height": 75,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "Undo / Redo（history）",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 2666,
+			"width": 360,
+			"height": 75
 		},
 		{
 			"id": "de605386-5724-4d6d-89df-8f5a011a4f6c",
 			"type": "rect",
-			"x": 1080,
-			"y": 2796.0,
-			"width": 360,
-			"height": 144,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "クリップボード：copy / cut / paste / duplicate（untrusted 入力検証は #40 / #46）",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 2796,
+			"width": 360,
+			"height": 144
 		},
 		{
 			"id": "1fa89e75-198b-483f-9928-650a4003308d",
 			"type": "rect",
-			"x": 600,
-			"y": 3109.5,
-			"width": 260,
-			"height": 84,
 			"stroke": "#4b5563",
 			"strokeWidth": 2,
 			"fill": "#1f2937",
-			"rx": 8,
 			"text": "状態更新フロー（Reducer）",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#f3f4f6",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 600,
+			"y": 3109.5,
+			"width": 260,
+			"height": 84
 		},
 		{
 			"id": "7269f411-ee3a-46cf-a236-f2cc98b3be4a",
 			"type": "rect",
-			"x": 1080,
-			"y": 2995.0,
-			"width": 360,
-			"height": 144,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "canvasReducer のアクション：GESTURE / COMMAND / PASTE / SYNC_EXTERNAL ほか",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 2995,
+			"width": 360,
+			"height": 144
 		},
 		{
 			"id": "9efbcb55-b035-4ac7-97f2-ef8b79431153",
 			"type": "rect",
-			"x": 1080,
-			"y": 3194.0,
-			"width": 360,
-			"height": 84,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "各ハンドラは純粋関数として新しい CanvasState を返す",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 3194,
+			"width": 360,
+			"height": 84
 		},
 		{
 			"id": "3091677b-7ad1-416e-a41a-57b980d54c5a",
 			"type": "rect",
-			"x": 600,
-			"y": 3429.5,
-			"width": 260,
-			"height": 75,
 			"stroke": "#4b5563",
 			"strokeWidth": 2,
 			"fill": "#1f2937",
-			"rx": 8,
 			"text": "外部同期・VSCode 連携",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#f3f4f6",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 600,
+			"y": 3429.5,
+			"width": 260,
+			"height": 75
 		},
 		{
 			"id": "b2de7bc5-26e0-40b1-aec7-107379199955",
 			"type": "rect",
-			"x": 1080,
-			"y": 3333.0,
-			"width": 360,
-			"height": 114,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "useSyncExternalDoc / SYNC_EXTERNAL：ホスト側のファイル変更を取り込む",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 3333,
+			"width": 360,
+			"height": 114
 		},
 		{
 			"id": "7cd905f1-4b05-4667-aa4b-178eeb84c8e5",
 			"type": "rect",
-			"x": 1080,
-			"y": 3502.0,
-			"width": 360,
-			"height": 84,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "saveNonce 折り返し時の競合（#29）",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 3502,
+			"width": 360,
+			"height": 84
 		},
 		{
 			"id": "31748fae-59cf-4b66-81fc-68e4aa32f598",
 			"type": "rect",
-			"x": 600,
-			"y": 3829.5,
-			"width": 260,
-			"height": 75,
 			"stroke": "#4b5563",
 			"strokeWidth": 2,
 			"fill": "#1f2937",
-			"rx": 8,
 			"text": "表示・テーマ",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#f3f4f6",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 600,
+			"y": 3829.5,
+			"width": 260,
+			"height": 75
 		},
 		{
 			"id": "5bfacf2b-a992-4bc8-acd3-d3504250c14e",
 			"type": "rect",
-			"x": 1080,
-			"y": 3641.0,
-			"width": 360,
-			"height": 114,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "presentations は純粋描画（状態を持たず Props で受け取る Dumb Component）",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 3641,
+			"width": 360,
+			"height": 114
 		},
 		{
 			"id": "0b078681-5e60-413d-8bfa-02a57f660e22",
 			"type": "rect",
-			"x": 1080,
-			"y": 3810.0,
-			"width": 360,
-			"height": 114,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "色は presentation 属性か CSS（var(--vscode-*) / color-mix 解決時）かを使い分ける",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 3810,
+			"width": 360,
+			"height": 114
 		},
 		{
 			"id": "d850dc93-126f-4398-bc64-15e7cb6d7cdf",
 			"type": "rect",
-			"x": 1080,
-			"y": 3979.0,
-			"width": 360,
-			"height": 114,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "UI クロームは VSCode テーマトークンを参照し、図形データの色（fill/stroke）と区別する",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 3979,
+			"width": 360,
+			"height": 114
 		},
 		{
 			"id": "cc8734a7-84b9-44d5-9f9c-36eb7abead8d",
 			"type": "rect",
-			"x": 600,
-			"y": 4562.75,
-			"width": 260,
-			"height": 75,
 			"stroke": "#4b5563",
 			"strokeWidth": 2,
 			"fill": "#1f2937",
-			"rx": 8,
 			"text": "テスト",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#f3f4f6",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 600,
+			"y": 4562.75,
+			"width": 260,
+			"height": 75
 		},
 		{
 			"id": "7e6d3a8f-712f-4c92-9f49-c48cbcf848b8",
 			"type": "rect",
-			"x": 1080,
-			"y": 4148.0,
-			"width": 360,
-			"height": 114,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "ユニットテスト：各層 co-located の __tests__/（vitest・environment node）",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 4148,
+			"width": 360,
+			"height": 114
 		},
 		{
 			"id": "8fb0058e-947b-4702-a563-bb7d32fa77d7",
 			"type": "rect",
-			"x": 1560,
-			"y": 4148.0,
-			"width": 380,
-			"height": 114,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "対象は schemas / states / controllers / presentations の純粋関数群",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1560,
+			"y": 4148,
+			"width": 380,
+			"height": 114
 		},
 		{
 			"id": "94fd889c-e172-4af7-a995-a45dc64ba5f4",
 			"type": "rect",
-			"x": 1080,
-			"y": 4317.0,
-			"width": 360,
-			"height": 114,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "sociable ユニット：__tests__/ で canvasReducer / handleCommand 経由の振る舞いを検証",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 4317,
+			"width": 360,
+			"height": 114
 		},
 		{
 			"id": "83e6313f-0ab3-4018-a513-cafd779c4f38",
 			"type": "rect",
-			"x": 1560,
-			"y": 4317.0,
-			"width": 380,
-			"height": 114,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "coalescing / commitSources / externalSync / undoRedo の 4 観点",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1560,
+			"y": 4317,
+			"width": 380,
+			"height": 114
 		},
 		{
 			"id": "4295398d-cd33-4858-abfd-c06f61718bb5",
 			"type": "rect",
-			"x": 1080,
-			"y": 4715.0,
-			"width": 360,
-			"height": 84,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "E2E：Playwright（packages/canvas/e2e）",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 4715,
+			"width": 360,
+			"height": 84
 		},
 		{
 			"id": "ac37b638-4a2f-4375-b558-a6a72ae0f020",
 			"type": "rect",
-			"x": 1560,
-			"y": 4486.0,
-			"width": 380,
-			"height": 174,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "CanvasDriver で実 UI 操作。specs/ が CI ゲート（arrange / driver / editing / keyboard / scenario / shapes / ui）",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1560,
+			"y": 4486,
+			"width": 380,
+			"height": 174
 		},
 		{
 			"id": "f1275e2b-7a24-4de7-a94d-619bd47d9db8",
 			"type": "rect",
-			"x": 1560,
-			"y": 4715.0,
-			"width": 380,
-			"height": 114,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "e2e/demo はマーケ素材生成用で testDir 外（test:e2e:demo のみ・CI 外）",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1560,
+			"y": 4715,
+			"width": 380,
+			"height": 114
 		},
 		{
 			"id": "d25e8e6c-35e3-468e-ae29-815507401232",
 			"type": "rect",
-			"x": 1560,
-			"y": 4884.0,
-			"width": 380,
-			"height": 84,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "失敗を隠すリトライは入れず、時間待ちでなく状態待ちで安定させる",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1560,
+			"y": 4884,
+			"width": 380,
+			"height": 84
 		},
 		{
 			"id": "02fe8d8c-d859-4424-9bbb-bc4339546da4",
 			"type": "rect",
-			"x": 1080,
-			"y": 5023.0,
-			"width": 360,
-			"height": 84,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "循環依存チェック：madge（dep:check）でレイヤー逆依存を検出",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 5023,
+			"width": 360,
+			"height": 84
 		},
 		{
 			"id": "6cee743d-de2f-4277-8f0a-32df495e4748",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "cf3cb2d4-e48e-4ec5-8a48-a5cb117eb612"
@@ -974,14 +975,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "f09957ff-0c62-4505-b9c9-0eecd0803756",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "55851003-1450-48b5-a6ac-24bcedbe8bcd"
@@ -1000,14 +1001,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "7820632f-148a-4b5b-8960-51300068b6e8",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "55851003-1450-48b5-a6ac-24bcedbe8bcd"
@@ -1026,14 +1027,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "be04f5ea-9080-4bce-8b15-8ba0bf8f2b7b",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "cdb15197-10b1-4f33-a0a7-0b5b6f9afee0"
@@ -1052,14 +1053,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "a1da32af-2885-4113-9fdf-3dd570ae3996",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "55851003-1450-48b5-a6ac-24bcedbe8bcd"
@@ -1078,14 +1079,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "c7f71f3a-5de5-4b89-ae53-fb3c42ac077c",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "c0674d43-6ae7-4573-b644-d35f7b9e3717"
@@ -1104,14 +1105,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "f909f7b3-72c9-447e-82f8-e185a690468e",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "55851003-1450-48b5-a6ac-24bcedbe8bcd"
@@ -1130,14 +1131,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "b1c7ba37-c892-4429-bb0f-0c1841764990",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "1e8abfc6-f775-4e68-9439-100dd951ef56"
@@ -1156,14 +1157,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "e490af06-4470-4457-bcb8-8d8266e4e3ca",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "9ea9bf6f-7d49-4541-b48c-aabbef36b58e"
@@ -1182,14 +1183,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "d1e2e572-3875-40cf-b93a-47764131538d",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "cf3cb2d4-e48e-4ec5-8a48-a5cb117eb612"
@@ -1208,14 +1209,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "12c64932-83cf-41b4-bf0f-e48971119f02",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "edc855c1-0615-4a5b-a7f0-fc44d5dbff46"
@@ -1234,14 +1235,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "d0e9210d-2d2b-4c9e-aebc-7dfe144831c9",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "edc855c1-0615-4a5b-a7f0-fc44d5dbff46"
@@ -1260,14 +1261,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "4565366d-78d2-4dd1-8773-3c77a9386017",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "edc855c1-0615-4a5b-a7f0-fc44d5dbff46"
@@ -1286,14 +1287,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "6baca3a0-6016-439a-978e-e001c6ffb7cc",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "8a997ab5-fd8e-40e8-88a3-ee3a56380625"
@@ -1312,14 +1313,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "f9f612be-2391-47aa-ac2d-0311e85315e1",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "cf3cb2d4-e48e-4ec5-8a48-a5cb117eb612"
@@ -1338,14 +1339,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "9169de10-0318-4232-853f-9da70aa7147c",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "4e85e257-9bb9-4bea-b76f-9612b2360c15"
@@ -1364,14 +1365,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "d9a66249-b6c2-4243-8011-30f8e7068133",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "4e85e257-9bb9-4bea-b76f-9612b2360c15"
@@ -1390,14 +1391,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "20a146a9-1721-42ba-844b-642e2c7ab617",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "4e85e257-9bb9-4bea-b76f-9612b2360c15"
@@ -1416,14 +1417,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "ffa7dda5-b871-4313-b1c3-ed7ecc488abb",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "4e85e257-9bb9-4bea-b76f-9612b2360c15"
@@ -1442,14 +1443,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "9f2e7875-7787-4920-9ac0-2f2b44edf7ad",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "cf3cb2d4-e48e-4ec5-8a48-a5cb117eb612"
@@ -1468,14 +1469,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "337c664f-06cb-48f6-a4d2-12863dab9383",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "92532169-5105-45e7-9193-4964efddc435"
@@ -1494,14 +1495,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "2df893a5-faf4-4839-90f7-a77d5948de5d",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "92532169-5105-45e7-9193-4964efddc435"
@@ -1520,14 +1521,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "3a413bb3-7a46-417b-9ba9-a9bd17176a20",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "92532169-5105-45e7-9193-4964efddc435"
@@ -1546,14 +1547,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "b20404fc-c28d-4274-b341-faa6ae153ec5",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "92532169-5105-45e7-9193-4964efddc435"
@@ -1572,14 +1573,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "79caa42f-2f1d-432e-bc4a-a9fd254ab8ea",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "cf3cb2d4-e48e-4ec5-8a48-a5cb117eb612"
@@ -1598,14 +1599,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "6e508f03-d9dc-4bba-9310-c87716b5f2d8",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "937aff2d-0f0b-44b2-aa46-d2d3796ff464"
@@ -1624,14 +1625,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "10ac87da-d340-4005-a189-f455e24aaeb5",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "937aff2d-0f0b-44b2-aa46-d2d3796ff464"
@@ -1650,14 +1651,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "c6463cc2-ec9f-4100-bf3a-49247b4f1fe8",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "937aff2d-0f0b-44b2-aa46-d2d3796ff464"
@@ -1676,14 +1677,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "cc31b624-0b1c-4a7b-877f-a9d67509f8b4",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "937aff2d-0f0b-44b2-aa46-d2d3796ff464"
@@ -1702,14 +1703,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "34bb6881-4b00-4ce2-9ee4-33ee1f077531",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "cf3cb2d4-e48e-4ec5-8a48-a5cb117eb612"
@@ -1728,14 +1729,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "d3240895-5d8b-478c-9ab2-3162868b1732",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "1fa89e75-198b-483f-9928-650a4003308d"
@@ -1754,14 +1755,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "896bfab8-ab13-42f3-aa9b-c182ecc18472",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "1fa89e75-198b-483f-9928-650a4003308d"
@@ -1780,14 +1781,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "01f599c6-b183-4f08-879c-db1cc4c7404a",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "cf3cb2d4-e48e-4ec5-8a48-a5cb117eb612"
@@ -1806,14 +1807,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "d0ddd73a-dcaf-43a0-b4b2-e9e37980d46f",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "3091677b-7ad1-416e-a41a-57b980d54c5a"
@@ -1832,14 +1833,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "d0f6341e-e6e7-4dd9-b2ba-8b65eb80bd26",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "3091677b-7ad1-416e-a41a-57b980d54c5a"
@@ -1858,14 +1859,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "15d680ae-1fba-494c-9a32-235e316e8b3f",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "cf3cb2d4-e48e-4ec5-8a48-a5cb117eb612"
@@ -1884,14 +1885,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "bd3471bf-b059-4a6a-842e-df371c53ca6f",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "31748fae-59cf-4b66-81fc-68e4aa32f598"
@@ -1910,14 +1911,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "ceb3e833-b729-4795-8669-2040717ab0a4",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "31748fae-59cf-4b66-81fc-68e4aa32f598"
@@ -1936,14 +1937,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "2bfddbe6-bc50-4578-bab4-9ea3811f1a94",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "31748fae-59cf-4b66-81fc-68e4aa32f598"
@@ -1962,14 +1963,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "c4787c6e-ea93-4879-a625-8029ddcec2f3",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "cf3cb2d4-e48e-4ec5-8a48-a5cb117eb612"
@@ -1988,14 +1989,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "94077d97-2a2b-4133-b5bb-0dcb9f830a0a",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "cc8734a7-84b9-44d5-9f9c-36eb7abead8d"
@@ -2014,14 +2015,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "ac44552e-35c2-4d23-acc6-efda1b774643",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "7e6d3a8f-712f-4c92-9f49-c48cbcf848b8"
@@ -2040,14 +2041,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "ec05a9e1-00c5-4952-9ea6-70ea5b922fe1",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "cc8734a7-84b9-44d5-9f9c-36eb7abead8d"
@@ -2066,14 +2067,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "23a4bff3-d86e-48e3-b556-d0cd8ba5cd8a",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "94fd889c-e172-4af7-a995-a45dc64ba5f4"
@@ -2092,14 +2093,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "e3a661eb-9f27-40f8-9902-917d6036afee",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "cc8734a7-84b9-44d5-9f9c-36eb7abead8d"
@@ -2118,14 +2119,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "5e1c3c37-1c84-4918-9538-b97a6c08c542",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "4295398d-cd33-4858-abfd-c06f61718bb5"
@@ -2144,14 +2145,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "45a92d2a-9d91-4274-8c51-c200f52cec69",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "4295398d-cd33-4858-abfd-c06f61718bb5"
@@ -2170,14 +2171,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "f9ac287d-d8f2-4dae-a22b-998af28bbcac",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "4295398d-cd33-4858-abfd-c06f61718bb5"
@@ -2196,14 +2197,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "ed4ffb39-575c-46e6-9dc4-5b59d80a7bbc",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "cc8734a7-84b9-44d5-9f9c-36eb7abead8d"
@@ -2222,147 +2223,223 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "0af28f0f-f34a-4800-9440-8ab8717bf5c3",
 			"type": "rect",
-			"x": 600,
-			"y": 5504.5,
-			"width": 260,
-			"height": 75,
 			"stroke": "#4b5563",
 			"strokeWidth": 2,
 			"fill": "#1f2937",
-			"rx": 8,
 			"text": "スタイルプロパティシステム",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#f3f4f6",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 600,
+			"y": 5504.5,
+			"width": 260,
+			"height": 75
 		},
 		{
 			"id": "ee30ccf1-308a-4b19-95d2-0efad67218bc",
 			"type": "rect",
-			"x": 1080,
-			"y": 5177.0,
-			"width": 360,
-			"height": 114,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "StylePropertyRegistry：メニューの set:/slider: と MENU_PROPERTY_UPDATE が同一経路で収束し、プロパティ→ハンドラを解決",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 5177,
+			"width": 360,
+			"height": 114
 		},
 		{
 			"id": "eecf0980-eb85-4b64-b411-24f130341865",
 			"type": "rect",
-			"x": 1080,
-			"y": 5346.0,
-			"width": 360,
-			"height": 114,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "システムプロパティ：ObjectFeatures の gate と 1:1 の宣言 15 行（FeatureGatedStyleProperty）",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 5346,
+			"width": 360,
+			"height": 114
 		},
 		{
 			"id": "ce22bb4a-3c01-43b2-8d35-3d838fbee745",
 			"type": "rect",
-			"x": 1080,
-			"y": 5515.0,
-			"width": 360,
-			"height": 114,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "シェイプ固有プロパティ：Doc の ExtraStyleProperties 宣言（宣言の存在が gate・fail-closed）",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 5515,
+			"width": 360,
+			"height": 114
 		},
 		{
 			"id": "4c4f8fd0-eaa3-48be-b359-8db66202c07a",
 			"type": "rect",
-			"x": 1560,
-			"y": 5515.0,
-			"width": 380,
-			"height": 114,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "headerFill（container）/ label.*（connector）。ObjectTypeDefinition 経由で per-canvas 登録",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1560,
+			"y": 5515,
+			"width": 380,
+			"height": 114
 		},
 		{
 			"id": "7ad38214-7d8b-4df6-9045-186f3cf255c7",
 			"type": "rect",
-			"x": 1080,
-			"y": 5684.0,
-			"width": 360,
-			"height": 84,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "ドット記法は汎用ネスト書き込み（親が無ければ no-op・捏造しない）",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 5684,
+			"width": 360,
+			"height": 84
 		},
 		{
 			"id": "d060bfc6-b435-4f29-80bb-aeeb40d2615e",
 			"type": "rect",
-			"x": 1080,
-			"y": 5823.0,
-			"width": 360,
-			"height": 84,
 			"stroke": "#374151",
 			"strokeWidth": 2,
 			"fill": "#111827",
-			"rx": 8,
 			"text": "特殊挙動はハンドラ自身に閉じる（LockAspectRatioProperty）",
 			"textAlign": "center",
 			"verticalAlign": "middle",
 			"fontColor": "#cbd5e1",
 			"fontSize": 16,
 			"fontFamily": "Noto Sans JP",
-			"fontWeight": "normal"
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 5823,
+			"width": 360,
+			"height": 84
+		},
+		{
+			"id": "a1b5c9d3-2e6f-4a8b-9c1d-3f7e5a2b8c46",
+			"type": "rect",
+			"stroke": "#4b5563",
+			"strokeWidth": 2,
+			"fill": "#1f2937",
+			"text": "図形の設計判断",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#f3f4f6",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 600,
+			"y": 6067.7944,
+			"width": 260,
+			"height": 75
+		},
+		{
+			"id": "b7f2a9c1-4d3e-4f6a-9c8b-2e5d7a1f3c90",
+			"type": "rect",
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"text": "外形（bbox）はユーザー指定。収まらないコンテンツはクリップし、エンジンは自動補正しない（矛盾は診断で直す）",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 5964.7944,
+			"width": 360,
+			"height": 114
+		},
+		{
+			"id": "c4e8d2f6-7a1b-4c3d-8e9f-5b6a2d4c8e17",
+			"type": "rect",
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"text": "内部区画は役割で切り分け：テキストを収めるだけなら導出、操作面・造形を兼ねるなら doc フィールドで手動",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1080,
+			"y": 6133.7944,
+			"width": 360,
+			"height": 114
+		},
+		{
+			"id": "d8a3e6f1-9b2c-4d5e-8f7a-1c4b6d9e2a53",
+			"type": "rect",
+			"stroke": "#374151",
+			"strokeWidth": 2,
+			"fill": "#111827",
+			"text": "record の name 帯＝導出 / container の header＝headerHeight + divider ドラッグ",
+			"textAlign": "center",
+			"verticalAlign": "middle",
+			"fontColor": "#cbd5e1",
+			"fontSize": 16,
+			"fontFamily": "Noto Sans JP",
+			"fontWeight": "normal",
+			"rx": 8,
+			"x": 1560,
+			"y": 6148.7944,
+			"width": 380,
+			"height": 84
 		},
 		{
 			"id": "bbc9d9d7-17cf-4e98-803c-8f0091312a82",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "cf3cb2d4-e48e-4ec5-8a48-a5cb117eb612"
@@ -2381,14 +2458,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "22237d95-ce2f-4371-a5aa-8c9419a26a07",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "0af28f0f-f34a-4800-9440-8ab8717bf5c3"
@@ -2407,14 +2484,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "190903b5-c381-4722-a110-54de4d286058",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "0af28f0f-f34a-4800-9440-8ab8717bf5c3"
@@ -2433,14 +2510,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "7e588f69-3eda-4101-ad48-63efba12c58e",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "0af28f0f-f34a-4800-9440-8ab8717bf5c3"
@@ -2459,14 +2536,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "6e18fd00-74d2-476c-a2ca-6160d26b1775",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "0af28f0f-f34a-4800-9440-8ab8717bf5c3"
@@ -2485,14 +2562,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "05de01e8-bcac-4f53-9a0f-a45500b58c3b",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "0af28f0f-f34a-4800-9440-8ab8717bf5c3"
@@ -2511,14 +2588,14 @@
 					"id": "leftCenter"
 				}
 			},
-			"stroke": "#9ca3af",
-			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		},
 		{
 			"id": "69950d68-6180-4029-8555-22bd9a8ef2df",
 			"type": "connector",
-			"points": [],
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
 			"source": {
 				"owner": {
 					"id": "ce22bb4a-3c01-43b2-8d35-3d838fbee745"
@@ -2537,9 +2614,112 @@
 					"id": "leftCenter"
 				}
 			},
+			"endArrow": "ConcaveTriangle",
+			"points": []
+		},
+		{
+			"id": "e5b8d1a4-3c7f-4e2a-9d6b-8f1c5a3e7b29",
+			"type": "connector",
 			"stroke": "#9ca3af",
 			"strokeWidth": 2,
-			"endArrow": "ConcaveTriangle"
+			"source": {
+				"owner": {
+					"id": "cf3cb2d4-e48e-4ec5-8a48-a5cb117eb612"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"id": "a1b5c9d3-2e6f-4a8b-9c1d-3f7e5a2b8c46"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"endArrow": "ConcaveTriangle",
+			"points": []
+		},
+		{
+			"id": "f2c6e9b3-5a8d-4f1e-8b4c-2d7a9e5c1f68",
+			"type": "connector",
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"source": {
+				"owner": {
+					"id": "a1b5c9d3-2e6f-4a8b-9c1d-3f7e5a2b8c46"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"id": "b7f2a9c1-4d3e-4f6a-9c8b-2e5d7a1f3c90"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"endArrow": "ConcaveTriangle",
+			"points": []
+		},
+		{
+			"id": "a9d4f7c2-6b1e-4a3d-9e8f-5c2b7d4a1e95",
+			"type": "connector",
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"source": {
+				"owner": {
+					"id": "a1b5c9d3-2e6f-4a8b-9c1d-3f7e5a2b8c46"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"id": "c4e8d2f6-7a1b-4c3d-8e9f-5b6a2d4c8e17"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"endArrow": "ConcaveTriangle",
+			"points": []
+		},
+		{
+			"id": "b3e7a1d5-8c4f-4b6a-8d2e-9f5c3a7b1d84",
+			"type": "connector",
+			"stroke": "#9ca3af",
+			"strokeWidth": 2,
+			"source": {
+				"owner": {
+					"id": "c4e8d2f6-7a1b-4c3d-8e9f-5b6a2d4c8e17"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "rightCenter"
+				}
+			},
+			"target": {
+				"owner": {
+					"id": "d8a3e6f1-9b2c-4d5e-8f7a-1c4b6d9e2a53"
+				},
+				"anchor": {
+					"kind": "connectPoint",
+					"id": "leftCenter"
+				}
+			},
+			"endArrow": "ConcaveTriangle",
+			"points": []
 		}
 	]
 }

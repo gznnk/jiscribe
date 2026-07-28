@@ -332,7 +332,14 @@ export type CanvasControllerState = CanvasState & {
 	 * null when not editing text.
 	 */
 	textEditState:
-		| { kind: "shape"; objectId: string; text: string }
+		| {
+				kind: "shape";
+				objectId: string;
+				/** The text slot being edited: a key of the object's `state.text`. */
+				slotId: string;
+				/** The edited text; a slot holding rows is joined with "\n" while editing. */
+				text: string;
+		  }
 		| {
 				kind: "connectorLabel";
 				objectId: string;

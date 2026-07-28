@@ -40,8 +40,8 @@ describe("StartTextEditCommand", () => {
 		const state = stateWithSelection("rect-1");
 		expect(StartTextEditCommand.canExecute?.(state, registries)).toBe(true);
 		expect(
-			StartTextEditCommand.execute(state, registries).textEditState?.objectId,
-		).toBe("rect-1");
+			StartTextEditCommand.execute(state, registries).textEditState,
+		).toMatchObject({ objectId: "rect-1", slotId: "body" });
 	});
 
 	it("an svg that does not support text does not start editing", () => {

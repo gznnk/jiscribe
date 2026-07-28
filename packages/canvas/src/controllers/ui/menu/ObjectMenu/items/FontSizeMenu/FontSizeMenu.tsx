@@ -2,7 +2,6 @@
 
 import { FontSizeMenuWrapper } from "./FontSizeMenuStyled";
 import type { CanvasControllerState } from "../../../../../../controllers/CanvasTypes";
-import type { TextStyleState } from "../../../../../../states/objects/base/TextStyleState";
 import { useCanvasMessages } from "../../../../../messages/CanvasMessagesContext";
 import { FontSizeIcon } from "../../../../icons/FontSizeIcon";
 import { ObjectMenuDropdownPanel } from "../../common/ObjectMenuDropdownPanel";
@@ -12,7 +11,7 @@ import {
 	ObjectMenuButton,
 	ObjectMenuItemPositioner,
 } from "../../ObjectMenuStyled";
-import { getFirstSelectedWithProp } from "../../utils/getFirstSelectedWithProp";
+import { getFirstSelectedTextSlot } from "../../utils/getFirstSelectedTextSlot";
 
 const SECTION_ID = "font-size";
 const DEFAULT_FONT_SIZE = 14;
@@ -45,9 +44,8 @@ const FontSizeMenuComponent: React.FC<FontSizeMenuProps> = ({
 	);
 
 	const { selectedIds, objects } = canvasState;
-	const obj = getFirstSelectedWithProp(selectedIds, objects, "fontSize");
-	const fontSize =
-		(obj as TextStyleState | undefined)?.fontSize ?? DEFAULT_FONT_SIZE;
+	const slot = getFirstSelectedTextSlot(selectedIds, objects);
+	const fontSize = slot?.fontSize ?? DEFAULT_FONT_SIZE;
 
 	return (
 		<ObjectMenuItemPositioner ref={menuItemRef}>

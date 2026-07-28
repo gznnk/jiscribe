@@ -79,7 +79,10 @@ snapCandidates 等）を保存し、`dragEnd` でクリアする。`dragEnd` 時
 ### `data-kind` / `data-id` / `data-part`
 
 ジェスチャーの**対象を識別する**属性。`getKindAndId` が `closest("[data-kind]")` で最も近い要素を探し、
-`{ kind, id, part }` を解決してイベントの `targetKind` / `targetId` / `targetPart` に載せる。
+`{ kind, id, part }` を解決してイベントの `targetKind` / `targetId` / `targetPart` に載せる。`part` はその要素
+**自身または配下**の最も近い `[data-part]` から読む。これにより、ヒット領域を複数描く図形でも
+`[data-kind]` 要素は 1 つに保てる（1 オブジェクト = 1 つの `data-kind="object"` 要素。e2e の
+`captureObjects` がこの契約に依存している）。
 
 3 属性はそれぞれ 1 軸を担い、`kind`（粗）→ `part` 接頭辞（細）の 2 段ルーティングツリーを成す（issue #81）:
 
@@ -105,6 +108,9 @@ snapCandidates 等）を保存し、`dragEnd` でクリアする。`dragEnd` 時
 線から `SNAP_THRESHOLD_PX` 以内に落とすと `offset` は 0 に吸着する（Ctrl 押下で解除）。
 ラベルが無いときは線のダブルクリックがクリック点（経路へ射影し同じ吸着をかけた位置）に
 ラベルを作る。確定するまでは `textEditState` が保持し、コネクターには書き込まない。
+複数スロットを持つ図形は入れ子の形を使う: `record` の `<g data-kind="object">` は
+`data-part="name"` / `data-part="rows"` を持つ 2 つの区画矩形を包み、ダブルクリックした区画から
+編集スロットを解決する（`resolveTextSlotId` が値を `state.text` のキーと照合する）。
 
 #### 移行（issue #81）— 完了
 

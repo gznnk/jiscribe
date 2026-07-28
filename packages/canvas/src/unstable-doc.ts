@@ -13,9 +13,19 @@
 export { createFrameObjectFactory } from "./schemas/objects/utils/createFrameObjectFactory";
 
 export { createFrameDocValidator } from "./schemas/objects/utils/createFrameDocValidator";
-export { validateOptionalNumber } from "./schemas/objects/utils/validateDocUtils";
+export {
+	validateOptionalNumber,
+	// A `text: "slots"` type validates its own slots, and their styling is the
+	// same six fields the single-body form has, checked by the same rules.
+	validateTextSlotStyleFields,
+} from "./schemas/objects/utils/validateDocUtils";
 export type { ObjectDocValidateFn } from "./schemas/registry/ObjectDocValidatorRegistry";
 
 export { AUTO_COLOR } from "./schemas/objects/utils/autoColor";
 
 export { DEFAULT_FONT_FAMILY } from "./constants/defaultFontFamily";
+
+// 表示(TextOverlayFrame)と編集(TextEditor)が共有する line-height。行単位の寸法を
+// 自前で持つ図形（record の行高など）は、描画される行の高さとずれないように
+// この値から行高を作る。
+export { TEXT_LINE_HEIGHT } from "./constants/textLineHeight";

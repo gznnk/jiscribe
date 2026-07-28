@@ -20,6 +20,8 @@ import type { ConnectorState } from "../../../../states/objects/connections/conn
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import { ConnectorLabelEditor } from "../ConnectorLabelEditor";
+import { resolveTextEditOverflow } from "../ObjectTextEditOverflowRegistry";
+import type { ObjectTextEditOverflowResolver } from "../ObjectTextEditOverflowTypes";
 import { TextEditor } from "../TextEditor";
 
 /** Handlers that report editor input and exit to the parent (Canvas). Common across all types. */
@@ -97,24 +99,34 @@ function renderConnectorLabelEditor(
 }
 
 /**
- * Renders the body text editor for a shape that has text (such as rect), overlaid on the shape's
- * text region (derived via calcTextRegion, the seam shared with the rendering-side TextOverlay).
+ * Renders the text editor for one slot of a shape that has text (such as rect), overlaid on that
+ * slot's region (derived via calcTextRegion, the seam shared with the rendering-side TextOverlay).
+ * The typography comes from the edited slot, so the textarea matches the overlay it replaces.
  *
  * @param target - The shape being edited (carries geometry)
  * @param objectId - ID of the target shape
+ * @param slotId - The slot being edited; a key of `target.text`
  * @param text - The text being edited
  * @param handlers - Input and exit handlers
  * @param textRegionCalculator - Per-type calculator from ObjectTextRegionRegistry. Omitted = full bbox
+ * @param textEditOverflowResolver - Per-type resolver from ObjectTextEditOverflowRegistry. Omitted = the slot scrolls
  * @returns The text editor
  */
 function renderTextEditor(
 	target: ObjectState & TextStyleState & TransformedFrame,
 	objectId: string,
+	slotId: string,
 	text: string,
 	handlers: EditorHandlers,
 	textRegionCalculator?: ObjectTextRegionCalculator,
+	textEditOverflowResolver?: ObjectTextEditOverflowResolver,
 ): React.ReactElement {
-	const textRegion = calcTextRegion(target, textRegionCalculator);
+	const textRegion = calcTextRegion(target, slotId, textRegionCalculator);
+	const slot = target.text?.[slotId];
+	// How far a growing editor may extend: from the region's top edge down to the
+	// shape's bottom edge (local coordinates, origin at the shape center). A region
+	// already at or below that edge yields 0 rather than a negative length.
+	const growLimit = Math.max(target.height / 2 - textRegion.y, 0);
 	return (
 		<TextEditor
 			objectId={objectId}
@@ -128,12 +140,14 @@ function renderTextEditor(
 			scaleX={target.scaleX ?? 1}
 			scaleY={target.scaleY ?? 1}
 			rotation={target.rotation ?? 0}
-			textAlign={target.textAlign}
-			verticalAlign={target.verticalAlign}
-			fontColor={target.fontColor}
-			fontSize={target.fontSize}
-			fontFamily={target.fontFamily}
-			fontWeight={target.fontWeight}
+			overflow={resolveTextEditOverflow(slotId, textEditOverflowResolver)}
+			growLimit={growLimit}
+			textAlign={slot?.textAlign}
+			verticalAlign={slot?.verticalAlign}
+			fontColor={slot?.fontColor}
+			fontSize={slot?.fontSize}
+			fontFamily={slot?.fontFamily}
+			fontWeight={slot?.fontWeight}
 			onChange={handlers.onChange}
 			onEscape={handlers.onEscape}
 		/>
@@ -185,16 +199,24 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 		);
 	}
 
-	if (isTextStyleState(targetObject)) {
+	// Any other slot id is a key of the shape's own text; one the shape does not
+	// have has no region to place the editor in, so nothing is rendered.
+	if (
+		isTextStyleState(targetObject) &&
+		targetObject.text !== undefined &&
+		textEditState.slotId in targetObject.text
+	) {
 		// Shapes with text also carry geometry (cx/cy/width...).
 		const geometryObject = targetObject as typeof targetObject &
 			TransformedFrame;
 		return renderTextEditor(
 			geometryObject,
 			textEditState.objectId,
+			textEditState.slotId,
 			textEditState.text,
 			handlers,
 			registries.objectTextRegion.get(targetObject.type),
+			registries.objectTextEditOverflow.get(targetObject.type),
 		);
 	}
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import type { ObjectDoc } from "../../../schemas/objects/base/ObjectDoc";
 import { ALL_OBJECT_DEFINITIONS } from "../initializeObjectRegistry";
 
 /**
@@ -25,6 +26,16 @@ const withFactory = definitions.flatMap(([type, definition]) => {
 	return factory ? [{ type, definition, factory }] : [];
 });
 
+/**
+ * An empty body text is the one default that legitimately does not come back:
+ * the mapper normalizes it to an absent field, which expands to the same state
+ * (`mapTextStateToDoc` 参照). Everything else must survive verbatim.
+ */
+const normalizeEmptyText = (doc: ObjectDoc): object => {
+	const { text, ...withoutText } = doc as ObjectDoc & { text?: unknown };
+	return text === "" ? withoutText : doc;
+};
+
 describe("registered object types: Doc→State→Doc round trip", () => {
 	it("covers every type that has a factory, and nothing else is silently skipped", () => {
 		const skipped = definitions
@@ -45,7 +56,7 @@ describe("registered object types: Doc→State→Doc round trip", () => {
 				definition.mapper.toState(doc),
 			);
 
-			expect(roundTripped).toEqual(doc);
+			expect(roundTripped).toEqual(normalizeEmptyText(doc));
 		});
 
 		it("preserves rotation and flip across the round trip", () => {
@@ -63,7 +74,7 @@ describe("registered object types: Doc→State→Doc round trip", () => {
 				definition.mapper.toState(doc),
 			);
 
-			expect(roundTripped).toEqual(doc);
+			expect(roundTripped).toEqual(normalizeEmptyText(doc));
 		});
 	});
 });

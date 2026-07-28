@@ -10,6 +10,11 @@ import { useObjectComponentRegistry } from "../../objects/registry/ObjectCompone
 type ObjectsRendererProps = Pick<CanvasState, "objects" | "rootIds"> & {
 	textEditObjectId?: string | null;
 	/**
+	 * Slot of `textEditObjectId` the editor is over. Passed on so a multi-slot
+	 * shape hides only that slot's text while the textarea covers it.
+	 */
+	textEditSlotId?: string | null;
+	/**
 	 * Viewport culling (issue #212): when set, only these IDs are rendered.
 	 * Omit to render the full tree — required for paths that need every object
 	 * in the DOM (export clones the live SVG; thumbnails fit all content).
@@ -29,6 +34,7 @@ const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 	objects,
 	rootIds,
 	textEditObjectId,
+	textEditSlotId,
 	visibleObjectIds,
 }) => {
 	const objectComponentRegistry = useObjectComponentRegistry();
@@ -79,7 +85,14 @@ const ObjectsRendererComponent: React.FC<ObjectsRendererProps> = ({
 		// When text editing, add the isEditing prop
 		const isEditing = id === textEditObjectId;
 		result.push(
-			<ObjectComponent key={id} {...objState} isEditing={isEditing} />,
+			<ObjectComponent
+				key={id}
+				{...objState}
+				isEditing={isEditing}
+				// Only the edited object receives the slot id; for the rest the prop
+				// stays undefined so starting/ending an edit does not break their memo.
+				editingSlotId={isEditing ? (textEditSlotId ?? undefined) : undefined}
+			/>,
 		);
 	};
 

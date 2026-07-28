@@ -64,11 +64,19 @@ const TextOverlayFrameComponent: React.FC<TextOverlayFrameProps> = ({
 
 	return (
 		<ForeignObjectElement
-			x={x}
-			y={y}
+			// The region offset rides on the transform instead of x/y: Chromium
+			// rasterizes a foreignObject's HTML at its box position rounded to whole
+			// pixels, and rounding `y` on its own breaks the cancellation between the
+			// region offset (-height/2 + band) and the shape's translate (center).
+			// Both carry half the height, so during a resize each changes by a
+			// fraction while their sum stays put — and the text flickered by 1px
+			// every time the center crossed a pixel. Folded into one transform, the
+			// sum is computed before any rounding, so the text holds still.
+			x={0}
+			y={0}
 			width={negativeToZero(width)}
 			height={negativeToZero(height)}
-			transform={transform}
+			transform={`${transform} translate(${x} ${y})`}
 			pointerEvents="none"
 		>
 			<TextWrapper

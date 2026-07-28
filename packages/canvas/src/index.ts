@@ -141,6 +141,10 @@ export type {
 } from "./controllers/ui/controls/SelectionControlTypes";
 export type { Mods } from "./controllers/gestures/recognizer/GestureRecognizerTypes";
 export type { ObjectTextRegionCalculator } from "./presentations/objects/registry/ObjectTextRegionRegistry";
+export type {
+	ObjectTextEditOverflowResolver,
+	TextEditOverflow,
+} from "./controllers/ui/editors/ObjectTextEditOverflowTypes";
 export type { ObjectOutlineCalculator } from "./presentations/objects/registry/ObjectOutlineRegistry";
 export type { ObjectAnchorRegionCalculator } from "./presentations/objects/registry/ObjectAnchorRegionRegistry";
 export type {

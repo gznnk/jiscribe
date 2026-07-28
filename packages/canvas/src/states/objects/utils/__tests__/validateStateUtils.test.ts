@@ -99,28 +99,42 @@ describe("validateStateUtils", () => {
 	});
 
 	describe("isValidTextStyleState", () => {
+		/** Wraps one slot's styling in the keyed normal form the state validator sees. */
+		const withSlot = (style: Record<string, unknown>) => ({
+			text: { body: { text: "hello", ...style } },
+		});
+
 		it("no text / valid font is true", () => {
 			expect(isValidTextStyleState({})).toBe(true);
 			expect(
-				isValidTextStyleState({
-					fontFamily: "Noto Sans JP",
-					fontWeight: "600",
-				}),
+				isValidTextStyleState(
+					withSlot({ fontFamily: "Noto Sans JP", fontWeight: "600" }),
+				),
 			).toBe(true);
 		});
 		it("fontSize >= 1 is true, < 1 is false (schema minimum: 1)", () => {
-			expect(isValidTextStyleState({ fontSize: 1 })).toBe(true);
-			expect(isValidTextStyleState({ fontSize: 12 })).toBe(true);
-			expect(isValidTextStyleState({ fontSize: 0 })).toBe(false);
-			expect(isValidTextStyleState({ fontSize: -3 })).toBe(false);
+			expect(isValidTextStyleState(withSlot({ fontSize: 1 }))).toBe(true);
+			expect(isValidTextStyleState(withSlot({ fontSize: 12 }))).toBe(true);
+			expect(isValidTextStyleState(withSlot({ fontSize: 0 }))).toBe(false);
+			expect(isValidTextStyleState(withSlot({ fontSize: -3 }))).toBe(false);
 		});
 		it("injection in fontFamily / fontWeight is false", () => {
-			expect(isValidTextStyleState({ fontFamily: "Arial; } body {" })).toBe(
-				false,
-			);
-			expect(isValidTextStyleState({ fontWeight: "bold } html {" })).toBe(
-				false,
-			);
+			expect(
+				isValidTextStyleState(withSlot({ fontFamily: "Arial; } body {" })),
+			).toBe(false);
+			expect(
+				isValidTextStyleState(withSlot({ fontWeight: "bold } html {" })),
+			).toBe(false);
+		});
+		it("checks every slot, not only the first", () => {
+			expect(
+				isValidTextStyleState({
+					text: {
+						name: { text: "User" },
+						rows: { text: ["id"], fontSize: 0 },
+					},
+				}),
+			).toBe(false);
 		});
 	});
 

@@ -270,31 +270,20 @@ export function validateFillStyleFields(
 }
 
 /**
- * Validate optional text style fields: `text`, `textAlign`, `verticalAlign`,
- * `fontColor` (safe CSS color), `fontSize` (≥ 1), `fontFamily`/`fontWeight` (safe CSS values).
- * Also reports the removed `textType` key so old documents fail loudly rather than
- * silently losing their Markdown rendering.
+ * Validate the styling fields a text carries — `textAlign`, `verticalAlign`,
+ * `fontColor` (safe CSS color), `fontSize` (≥ 1), `fontFamily`/`fontWeight` (safe
+ * CSS values). The same six names appear flat on a single-body doc and inside
+ * each slot of a keyed one, so both forms validate them through here.
+ *
+ * @param o - The object carrying the styling: the doc itself, or one of its text slots
+ * @param path - Diagnostic path of `o`, which each field name is appended to
+ * @returns One diagnostic per malformed field; empty when every field is absent or valid
  */
-export function validateTextStyleFields(
+export function validateTextSlotStyleFields(
 	o: Record<string, unknown>,
 	path: string,
 ): SemanticDiagnostic[] {
 	const errors: SemanticDiagnostic[] = [];
-	if ("text" in o && !isString(o.text)) {
-		errors.push({ path: `${path}.text`, message: "must be a string" });
-	}
-	// Markdown used to be a mode flag on any text-bearing shape. It is a type of
-	// its own now, so a document carrying the old flag would render as plain text
-	// with no warning. `beyondSchema` stays unset: the JSON schema rejects the key
-	// too (additionalProperties: false), and the VSCode extension leaves those to
-	// the schema to avoid duplicate diagnostics.
-	if ("textType" in o) {
-		errors.push({
-			path: `${path}.textType`,
-			message:
-				'has been removed: use an object of type "markdown" for Markdown content',
-		});
-	}
 	if ("textAlign" in o && !isTextAlign(o.textAlign)) {
 		errors.push({
 			path: `${path}.textAlign`,
@@ -330,6 +319,43 @@ export function validateTextStyleFields(
 			beyondSchema: true,
 		});
 	}
+	return errors;
+}
+
+/**
+ * Validate the text group of a single-body doc (features.text: "body"): `text`
+ * as a plain string plus the flat styling fields. A keyed object is rejected
+ * here — a type whose text is keyed declares `text: "slots"` and validates its
+ * own closed slot set (see the record shape).
+ *
+ * Also reports the removed `textType` key so old documents fail loudly rather
+ * than silently losing their Markdown rendering.
+ *
+ * @param o - The doc to check; a missing `text` is valid (it reads as empty)
+ * @param path - Diagnostic path of `o`, which each field name is appended to
+ * @returns One diagnostic per malformed field; empty when the whole group is valid
+ */
+export function validateTextStyleFields(
+	o: Record<string, unknown>,
+	path: string,
+): SemanticDiagnostic[] {
+	const errors: SemanticDiagnostic[] = [];
+	if ("text" in o && !isString(o.text)) {
+		errors.push({ path: `${path}.text`, message: "must be a string" });
+	}
+	// Markdown used to be a mode flag on any text-bearing shape. It is a type of
+	// its own now, so a document carrying the old flag would render as plain text
+	// with no warning. `beyondSchema` stays unset: the JSON schema rejects the key
+	// too (additionalProperties: false), and the VSCode extension leaves those to
+	// the schema to avoid duplicate diagnostics.
+	if ("textType" in o) {
+		errors.push({
+			path: `${path}.textType`,
+			message:
+				'has been removed: use an object of type "markdown" for Markdown content',
+		});
+	}
+	errors.push(...validateTextSlotStyleFields(o, path));
 	return errors;
 }
 

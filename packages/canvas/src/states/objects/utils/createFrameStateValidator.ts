@@ -36,7 +36,7 @@ export const createFrameStateValidator = (
 			(!features.transform || isValidTransformState(o)) &&
 			(!features.stroke || isValidStrokeStyleState(o)) &&
 			(!features.fill || isValidFillStyleState(o)) &&
-			(!features.text || isValidTextStyleState(o)) &&
+			(features.text === undefined || isValidTextStyleState(o)) &&
 			(!features.radius || isValidRadiusStyleState(o)) &&
 			(isExtraValid === undefined || isExtraValid(o))
 		);

@@ -9,7 +9,7 @@ export const EllipseFeatures = {
 	transform: true,
 	stroke: true,
 	fill: true,
-	text: true,
+	text: "body",
 	connectable: true,
 } as const satisfies ObjectFeatures;
 

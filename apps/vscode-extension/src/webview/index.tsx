@@ -11,6 +11,7 @@ import {
 } from "@workspace/canvas";
 import { containerToolbarEntry } from "@workspace/plugin-container-shapes";
 import { flowchartToolbarEntry } from "@workspace/plugin-flowchart-shapes";
+import { umlToolbarEntry } from "@workspace/plugin-uml-shapes";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "katex/dist/katex.min.css";
@@ -38,6 +39,7 @@ const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "markdown" },
 	flowchartToolbarEntry,
 	containerToolbarEntry,
+	umlToolbarEntry,
 	generalToolbarEntry,
 	annotationToolbarEntry,
 ];

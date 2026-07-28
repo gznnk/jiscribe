@@ -14,7 +14,7 @@ const validEllipse = {
 	scaleY: 1,
 	stroke: "#000",
 	fill: "#fff",
-	fontSize: 16,
+	text: { body: { text: "label", fontSize: 16 } },
 };
 
 describe("isValidEllipseState", () => {
@@ -34,8 +34,13 @@ describe("isValidEllipseState", () => {
 		expect(isValidEllipseState({ ...validEllipse, height: -1 })).toBe(false);
 	});
 
-	it("fontSize < 1 is false (>= 1)", () => {
-		expect(isValidEllipseState({ ...validEllipse, fontSize: 0 })).toBe(false);
+	it("a slot's fontSize < 1 is false (>= 1)", () => {
+		expect(
+			isValidEllipseState({
+				...validEllipse,
+				text: { body: { text: "label", fontSize: 0 } },
+			}),
+		).toBe(false);
 	});
 
 	it("fill containing CSS injection is false", () => {

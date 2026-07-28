@@ -46,13 +46,18 @@ describe("EllipseMapper", () => {
 			expect(state.stroke).toBe("#000000");
 			expect(state.strokeWidth).toBe(2);
 			expect(state.fill).toBe("#ff0000");
-			expect(state.text).toBe("Ellipse Text");
-			expect(state.textAlign).toBe("right");
-			expect(state.verticalAlign).toBe("bottom");
-			expect(state.fontColor).toBe("#222222");
-			expect(state.fontSize).toBe(18);
-			expect(state.fontFamily).toBe("Verdana");
-			expect(state.fontWeight).toBe("600");
+			// The doc's flat text group becomes the one body slot, styling included.
+			expect(state.text).toEqual({
+				body: {
+					text: "Ellipse Text",
+					textAlign: "right",
+					verticalAlign: "bottom",
+					fontColor: "#222222",
+					fontSize: 18,
+					fontFamily: "Verdana",
+					fontWeight: "600",
+				},
+			});
 		});
 
 		it("should handle default transform values", () => {
@@ -105,13 +110,17 @@ describe("EllipseMapper", () => {
 				stroke: "#000000",
 				strokeWidth: 2,
 				fill: "#ff0000",
-				text: "Ellipse Text",
-				textAlign: "right",
-				verticalAlign: "bottom",
-				fontColor: "#222222",
-				fontSize: 18,
-				fontFamily: "Verdana",
-				fontWeight: "600",
+				text: {
+					body: {
+						text: "Ellipse Text",
+						textAlign: "right",
+						verticalAlign: "bottom",
+						fontColor: "#222222",
+						fontSize: 18,
+						fontFamily: "Verdana",
+						fontWeight: "600",
+					},
+				},
 			} as unknown as EllipseState;
 
 			const doc = ellipseToDoc(state);

@@ -14,6 +14,7 @@ import {
 	flowchartToolbarEntry,
 } from "@workspace/plugin-flowchart-shapes";
 import { markdownPlugin } from "@workspace/plugin-markdown-shape";
+import { umlPlugin, umlToolbarEntry } from "@workspace/plugin-uml-shapes";
 
 // flowchart / container / markdown 図形は core から削除され、それぞれ
 // @workspace/plugin-flowchart-shapes / @workspace/plugin-container-shapes /
@@ -21,7 +22,7 @@ import { markdownPlugin } from "@workspace/plugin-markdown-shape";
 // （docs/05_extensibility/plugin-architecture-requirements.md）。この example は
 // 「外部プラグイン図形の追加」の実証: `CanvasPlugin` 宣言を createCanvasParser と
 // Canvas の initialConfig の両方に渡すだけで、doc の検証と図形一式の登録が揃う。
-const plugins = [flowchartPlugin, containerPlugin, markdownPlugin];
+const plugins = [flowchartPlugin, containerPlugin, markdownPlugin, umlPlugin];
 
 const initialConfig: CanvasConfig = { plugins };
 
@@ -36,6 +37,7 @@ const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "markdown" },
 	flowchartToolbarEntry,
 	containerToolbarEntry,
+	umlToolbarEntry,
 	generalToolbarEntry,
 	annotationToolbarEntry,
 ];

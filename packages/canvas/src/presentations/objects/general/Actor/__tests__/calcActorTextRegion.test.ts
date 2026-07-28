@@ -7,7 +7,7 @@ import { calcActorTextRegion } from "../calcActorTextRegion";
 
 describe("calcActorTextRegion", () => {
 	it("takes the caption band below the figure, spanning the full width", () => {
-		expectRectCloseTo(calcActorTextRegion({ width: 80, height: 100 }), {
+		expectRectCloseTo(calcActorTextRegion({ width: 80, height: 100 }, "body"), {
 			x: -40,
 			y: -50 + 100 * ACTOR_FIGURE_RATIO,
 			width: 80,
@@ -16,14 +16,14 @@ describe("calcActorTextRegion", () => {
 	});
 
 	it("is centered on the origin, matching the shape's local coordinates", () => {
-		const region = calcActorTextRegion({ width: 80, height: 100 });
+		const region = calcActorTextRegion({ width: 80, height: 100 }, "body");
 		expect(region.x + region.width / 2).toBeCloseTo(0);
 		expect(region.y + region.height).toBeCloseTo(50);
 	});
 
 	it("does not overlap the figure band that buildActorFigure fills", () => {
 		const [width, height] = [80, 100];
-		const region = calcActorTextRegion({ width, height });
+		const region = calcActorTextRegion({ width, height }, "body");
 		// buildActorFigure lays out from a top-left origin; the region is centered.
 		const figure = buildActorFigure(-width / 2, -height / 2, width, height);
 		const figureBottom = -height / 2 + height * ACTOR_FIGURE_RATIO;
@@ -33,13 +33,13 @@ describe("calcActorTextRegion", () => {
 	});
 
 	it("follows the box size", () => {
-		const region = calcActorTextRegion({ width: 160, height: 200 });
+		const region = calcActorTextRegion({ width: 160, height: 200 }, "body");
 		expect(region.width).toBeCloseTo(160);
 		expect(region.height).toBeCloseTo(200 * (1 - ACTOR_FIGURE_RATIO));
 	});
 
 	it("collapses to zero for a zero-sized box", () => {
-		expectRectCloseTo(calcActorTextRegion({ width: 0, height: 0 }), {
+		expectRectCloseTo(calcActorTextRegion({ width: 0, height: 0 }, "body"), {
 			x: 0,
 			y: 0,
 			width: 0,

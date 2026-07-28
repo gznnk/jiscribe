@@ -1,6 +1,8 @@
 import { FeatureGatedStyleProperty } from "./FeatureGatedStyleProperty";
 import { LockAspectRatioProperty } from "./LockAspectRatioProperty";
 import type { StylePropertyHandler } from "./StylePropertyHandler";
+import { TextContentProperty } from "./TextContentProperty";
+import { TextSlotStyleProperty } from "./TextSlotStyleProperty";
 
 /**
  * System style properties: the closed set tied 1:1 to ObjectFeatures flags,
@@ -8,6 +10,11 @@ import type { StylePropertyHandler } from "./StylePropertyHandler";
  * Shape-specific properties are NOT added here — declare them in the shape's
  * ExtraStyleProperties (see ObjectTypeDefinition.extraStyleProperties) instead.
  * Handlers are stateless, so the instances are shared across bundles.
+ *
+ * The text group lives in `state.text` as keyed slots, so a dot-path write would
+ * flatten it; "text" (the content, written into the default slot) and the six
+ * styling properties (written into every slot) have their own handlers instead
+ * of the flag gate.
  */
 export const SYSTEM_STYLE_PROPERTIES: Record<string, StylePropertyHandler> = {
 	fill: new FeatureGatedStyleProperty("fill", "string"),
@@ -15,13 +22,13 @@ export const SYSTEM_STYLE_PROPERTIES: Record<string, StylePropertyHandler> = {
 	strokeWidth: new FeatureGatedStyleProperty("stroke", "number"),
 	strokeDashType: new FeatureGatedStyleProperty("stroke", "string"),
 	rx: new FeatureGatedStyleProperty("radius", "number"),
-	text: new FeatureGatedStyleProperty("text", "string"),
-	textAlign: new FeatureGatedStyleProperty("text", "string"),
-	verticalAlign: new FeatureGatedStyleProperty("text", "string"),
-	fontColor: new FeatureGatedStyleProperty("text", "string"),
-	fontSize: new FeatureGatedStyleProperty("text", "number"),
-	fontFamily: new FeatureGatedStyleProperty("text", "string"),
-	fontWeight: new FeatureGatedStyleProperty("text", "string"),
+	text: new TextContentProperty(),
+	textAlign: new TextSlotStyleProperty("string"),
+	verticalAlign: new TextSlotStyleProperty("string"),
+	fontColor: new TextSlotStyleProperty("string"),
+	fontSize: new TextSlotStyleProperty("number"),
+	fontFamily: new TextSlotStyleProperty("string"),
+	fontWeight: new TextSlotStyleProperty("string"),
 	startArrow: new FeatureGatedStyleProperty("arrow", "string"),
 	endArrow: new FeatureGatedStyleProperty("arrow", "string"),
 	lockAspectRatio: new LockAspectRatioProperty(),

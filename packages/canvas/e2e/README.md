@@ -66,14 +66,14 @@ await page.goto("http://localhost:5173/", { waitUntil: "networkidle" });
 | `context-menu-callback:{id}`    | コンテキストメニューの callback 項目 | paste など、gesture を経由しない項目                                                             |
 | `snap-guide:x` / `snap-guide:y` | スナップガイド線（縦 / 横）          | `pointerEvents: none` の装飾。drag 中のみ存在。整列座標は line の `x1`（x軸）/ `y1`（y軸）が保持 |
 
-| data-kind     | 意味                                   | data-id / data-part                                                                           |
-| ------------- | -------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `canvas`      | キャンバス本体（DIV）                  | id: `canvas`                                                                                  |
-| `object`      | 図形（rect / ellipse / polyline …）    | id: UUID                                                                                      |
-| `connector`   | コネクター（polyline + 矢印 + ラベル） | id: UUID。ラベルボックスは part: `label`（ドラッグで position / offset を移動）               |
-| `control`     | 選択時のハンドル類                     | 下表参照                                                                                      |
-| `menu`        | メニュー UI 全般                       | id: `toolbar` / `object-menu` / `context-menu` / `stencil-library`。ボタンは part（下表参照） |
-| `text-editor` | テキスト編集中の TEXTAREA              | id: `textarea`                                                                                |
+| data-kind     | 意味                                   | data-id / data-part                                                                                                                |
+| ------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `canvas`      | キャンバス本体（DIV）                  | id: `canvas`                                                                                                                       |
+| `object`      | 図形（rect / ellipse / polyline …）    | id: UUID。**1 オブジェクト = 1 要素**（`captureObjects` が数える）。区画付き図形（record）は配下の区画要素に part: `name` / `rows` |
+| `connector`   | コネクター（polyline + 矢印 + ラベル） | id: UUID。ラベルボックスは part: `label`（ドラッグで position / offset を移動）                                                    |
+| `control`     | 選択時のハンドル類                     | 下表参照                                                                                                                           |
+| `menu`        | メニュー UI 全般                       | id: `toolbar` / `object-menu` / `context-menu` / `stencil-library`。ボタンは part（下表参照）                                      |
+| `text-editor` | テキスト編集中の TEXTAREA              | id: `textarea`                                                                                                                     |
 
 kind / id / part の3軸文法は `packages/canvas/docs/04-gesture-system.md` を参照。
 図形ライブラリのボタンは part: `item:<presetId>`（例 `item:rect`）。

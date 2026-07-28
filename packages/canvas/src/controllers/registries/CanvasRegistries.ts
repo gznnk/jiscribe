@@ -13,6 +13,7 @@ import type { GestureHandlerRegistry } from "../gestures/registry/GestureHandler
 import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
 import type { StylePropertyRegistry } from "../styleProperties/StylePropertyRegistry";
 import type { SelectionControlRegistry } from "../ui/controls/SelectionControlRegistry";
+import type { ObjectTextEditOverflowRegistry } from "../ui/editors/ObjectTextEditOverflowRegistry";
 import type { ObjectMenuRegistry } from "../ui/menu/ObjectMenu/ObjectMenuRegistry";
 import type { StencilRegistry } from "../ui/objects/StencilRegistry";
 
@@ -34,6 +35,7 @@ export type CanvasRegistries = {
 	objectStateValidator: ObjectStateValidatorRegistry;
 	objectComponent: ObjectComponentRegistry;
 	objectTextRegion: ObjectTextRegionRegistry;
+	objectTextEditOverflow: ObjectTextEditOverflowRegistry;
 	objectOutline: ObjectOutlineRegistry;
 	objectAnchorRegion: ObjectAnchorRegionRegistry;
 	objectBehavior: ObjectBehaviorRegistry;

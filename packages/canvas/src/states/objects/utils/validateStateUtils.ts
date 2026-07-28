@@ -5,11 +5,14 @@ import {
 	isString,
 } from "@workspace/basic-validators";
 
+import { isCssColor } from "./isCssColor";
 import { isArrowType } from "../../../schemas/objects/types/ArrowType";
 import { isOwnedEndpointRef } from "../../../schemas/objects/types/EndpointRef";
 import type { ObjectType } from "../../../schemas/objects/types/ObjectType";
 import { isPoly } from "../../../schemas/objects/types/Poly";
 import { isStrokeDashType } from "../../../schemas/objects/types/StrokeDashType";
+import type { TextSlot } from "../../../schemas/objects/types/TextSlot";
+import { isAutoColor } from "../../../schemas/objects/utils/autoColor";
 import { validateEndpointRef } from "../../../schemas/objects/utils/validateDocUtils";
 import { isTextStyleState } from "../base/TextStyleState";
 import { isTransformState } from "../base/TransformState";
@@ -21,7 +24,7 @@ import { isTransformState } from "../base/TransformState";
  *
  * Step 1's `isCssSafeValue` is applied to style strings (stroke / fill / fontFamily / fontWeight)
  * to reject CSS injection at the boundary. Strict color validity (`isCssColor` = `CSS.supports`)
- * is browser-only and is left to `isTextStyleState`.
+ * is browser-only, so it lives here rather than in the schema-layer guards.
  */
 export type StateRecord = Record<string, unknown>;
 
@@ -103,33 +106,38 @@ export const isValidFillStyleState = (o: StateRecord): boolean =>
 	!("fill" in o) || o.fill === undefined || isCssSafeValue(o.fill);
 
 /**
- * In addition to TextStyleState validity, validates the CSS-injection safety of
- * fontFamily / fontWeight (supplementing `isTextStyleState`, which only checks both via `isString`).
+ * Validates one slot's styling beyond its declared types: CSS-injection safety for
+ * fontFamily / fontWeight / fontColor (which `isTextSlot` only checks via `isString`),
+ * strict color validity for fontColor, and the schema's fontSize minimum.
  */
-export const isValidTextStyleState = (o: StateRecord): boolean => {
-	if (!isTextStyleState(o)) {
+const isValidTextSlotStyle = (slot: TextSlot): boolean => {
+	if (slot.fontFamily !== undefined && !isCssSafeValue(slot.fontFamily)) {
 		return false;
 	}
+	if (slot.fontWeight !== undefined && !isCssSafeValue(slot.fontWeight)) {
+		return false;
+	}
+	// The sentinel "auto" (theme-following, issue #38) is checked first so the
+	// browser-only isCssColor (CSS.supports) is skipped for it.
 	if (
-		"fontFamily" in o &&
-		o.fontFamily !== undefined &&
-		!isCssSafeValue(o.fontFamily)
+		slot.fontColor !== undefined &&
+		!isAutoColor(slot.fontColor) &&
+		!isCssColor(slot.fontColor)
 	) {
 		return false;
 	}
-	if (
-		"fontWeight" in o &&
-		o.fontWeight !== undefined &&
-		!isCssSafeValue(o.fontWeight)
-	) {
-		return false;
-	}
-	// fontSize has minimum: 1 in the schema (isTextStyleState only checks up to number)
-	if (!isValidOptionalNumber(o.fontSize, 1)) {
-		return false;
-	}
-	return true;
+	// fontSize has minimum: 1 in the schema (isTextSlot only checks up to number)
+	return isValidOptionalNumber(slot.fontSize, 1);
 };
+
+/**
+ * In addition to TextStyleState validity, validates each slot's styling for CSS
+ * safety, color validity, and the fontSize minimum — the boundary checks that
+ * `isTextSlot` leaves out because they need browser APIs the schema layer cannot reach.
+ */
+export const isValidTextStyleState = (o: StateRecord): boolean =>
+	isTextStyleState(o) &&
+	Object.values(o.text ?? {}).every(isValidTextSlotStyle);
 
 /** Validates RadiusStyleState's rx as a number (minimum: 0 in the schema) when present. */
 export const isValidRadiusStyleState = (o: StateRecord): boolean =>

@@ -60,12 +60,19 @@ CanvasMapper は形状タイプごとの Mapper を `objectMapperRegistry`（`st
 
 文字を持つフィールドの格納形が、図形とコネクターで **意図的に非対称** になっている。
 
-- **図形（rect / ellipse / diamond / sticky）** … `text` / `textAlign` / `fontColor` … を
-  **トップ階層にフラット**で持つ（`features.text` が `TextStyleDoc` を合成する）。
+- **単一本文の図形（rect / ellipse / diamond / sticky など）** … `text` / `textAlign` / `fontColor` … を
+  **トップ階層にフラット**で持つ（`features.text: "body"` が `TextStyleDoc` を合成する）。
+- **複数スロットの図形（uml-shapes の record など）** … `features.text: "slots"` を宣言し、`text` を
+  **スロット ID キーのオブジェクト**で持つ（`text: { name: {…}, rows: {…} }`。各スロットは
+  `TextSlot` = 内容＋タイポグラフィで、スロット集合は型ごとにクローズド）。
 - **コネクター** … 注記を
   `label: { text, position, offset, fontColor, fontSize, fontWeight, fill, stroke, strokeWidth, strokeDashType }`
   の **ネストした 1 オブジェクト**で持つ（`features.text` は立てない）。背景 `fill`・枠線
   `stroke`/`strokeWidth`/`strokeDashType` は図形と同じ語彙を借りるが、`label` の中にネストする点が異なる。
+
+State 側は図形のどちらの形も **keyed スロット一形**に正規化される（`"body"` 型は mapper が単一
+`body` スロットへ展開し、保存時に畳み戻す。`TextSlotsMapper` 参照）。描画・編集・スタイリングの
+consumer はこの正規形だけを読むので、doc の形による分岐を持たない。
 
 この差は層の都合ではなく、**役割（ロール）の違い**を映したもの。図形の `text` は「その図形の
 _本文_」（中心的・ほぼ主役・ボックス内整列あり）。コネクターの文字は「辺に付く _注記_（edge label）」
@@ -80,10 +87,10 @@ _本文_」（中心的・ほぼ主役・ボックス内整列あり）。コネ
 - **解は「下げる」ではなく「上げる」**。対称性を取りたいなら、コネクターを平らにする（固有フィールドが
   浮く・無関係フィールドが付く前述の歪みが復活する）のではなく、**図形側も `label` ネストに寄せて
   揃える**のが筋。後方互換は不要方針（自分しか使っていない）なので技術的には可能。
-- **ただし second reason が出るまでやらない**。図形テキストのネスト化は rect/ellipse/diamond/sticky・
-  `TextOverlay`・テキストエディタ・スタイリング・バリデータ全体に波及する大改修で、いま得られるのは
-  見た目の対称性だけ。図形に複数テキスト領域やバッジが要る、ラベルにも別の配置概念が要る、等の
-  **第二の動機**が出た時点で着手すれば改修コストが正当化される。
+- **ただし second reason が出るまでやらない**。実際に #167 で「図形に複数テキスト領域」という
+  第二の動機が現れた際、採ったのは label ネストへの統一ではなく**名前付きテキストスロット**
+  （State は常に keyed、単一本文の doc はフラット糖衣を維持）だった。コネクター `label` の
+  スロット統合（型固有分岐の撤去）は、さらに動機が揃った時点の任意課題として残っている。
 - **完全対称は本質的に取れない**。仮に全部ネストしても、キー名は図形＝本文（`text`）、
   コネクター＝注記（`label`）で **意味が違う**ため、ある種の非対称は概念上どうしても残る。
 

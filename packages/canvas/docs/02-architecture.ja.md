@@ -166,7 +166,7 @@ schemas の型・定数（`EndpointRef` / `AUTO_COLOR` など）と `constants/`
 
 **`plugin`（拡張シーム）について**: `plugin/` には形状/プラグイン作者が書く宣言的語彙 — `ObjectTypeDefinition<TDoc, TState>`、`defineObject`、`CanvasPlugin` — を置く。1つの定義が**全レイヤーの型契約を集約する**（states の mapper/state、schemas の doc/features/factory、`gestures/registry` の `ObjectBehaviorEntry`、`ui` の menu/controls/`Stencil`、presentations の component/textRegion/outline 契約）ため、`plugin` は4レイヤーすべてに依存する。逆に `controllers/registries` は、組み込み定義の構築（`defineObject`）と適用（`applyObjectDefinition` → 各レジストリ）のために `plugin` に依存する。サブグラフ単位で見ると **`controllers ⇄ plugin` の相互参照**であり、上図の矢印は Controllers の境界を双方向に横切っている。
 
-これは意図的に、具象的な import 循環には**なっていない**: `plugin` が import するのは leaf の型モジュール（`ObjectBehaviorTypes` / `SelectionControlTypes` / `ObjectMenuTypes` / `Stencil`）だけで、`plugin` を消費するのは `registries/initializeObjectRegistry` など別のファイル群であり、これらの leaf モジュールから逆に import されることはない。そのため madge `dep:check` はフォルダ同士が相互参照していても green のまま。`applyObjectDefinition`（実行時の配線）を `plugin` ではなく `registries` に置いていることがこれを保っている。
+これは意図的に、具象的な import 循環には**なっていない**: `plugin` が import するのは leaf の型モジュール（`ObjectBehaviorTypes` / `SelectionControlTypes` / `ObjectMenuTypes` / `ObjectTextEditOverflowTypes` / `Stencil`）だけで、`plugin` を消費するのは `registries/initializeObjectRegistry` など別のファイル群であり、これらの leaf モジュールから逆に import されることはない。そのため madge `dep:check` はフォルダ同士が相互参照していても green のまま。`applyObjectDefinition`（実行時の配線）を `plugin` ではなく `registries` に置いていることがこれを保っている。
 
 依存方向は CI でも担保している（[テスト](./09-testing.ja.md) の madge `dep:check`）。
 
