@@ -463,11 +463,22 @@ export class CanvasDriver {
 		await expect(this.page.locator(selectors.control)).toHaveCount(0);
 	}
 
+	/**
+	 * テキストエディタが開き、textarea が入力を受け取れる状態になるまで待つ。
+	 * 受付前に打鍵するとその分がキャンバス側へ落ちる。打鍵内容に改行があると
+	 * その Enter 自体が編集を開始し直すため、値が空ではなく「途中から入った」
+	 * 紛らわしい形になる（issue #237）。打鍵前は必ずこれを通すこと。
+	 */
+	async waitForTextEditor() {
+		await expect(this.page.locator(selectors.textEditor)).toBeVisible();
+		await expect(this.textArea()).toBeFocused();
+	}
+
 	/** ダブルクリックでテキストエディタを開き、タイプする。確定は commitText() */
 	async typeTextAt(point: { x: number; y: number }, text: string) {
 		const screen = this.toScreen(point);
 		await this.page.mouse.dblclick(screen.x, screen.y);
-		await expect(this.page.locator(selectors.textEditor)).toBeVisible();
+		await this.waitForTextEditor();
 		await this.page.keyboard.type(text);
 	}
 

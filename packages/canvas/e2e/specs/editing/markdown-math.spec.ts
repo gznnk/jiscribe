@@ -48,7 +48,7 @@ async function drawMarkdownWith(
 
 	const center = canvas.toScreen({ x: 540, y: 300 });
 	await canvas.page.mouse.dblclick(center.x, center.y);
-	await expect(canvas.textArea()).toBeVisible();
+	await canvas.waitForTextEditor();
 	await canvas.page.keyboard.press("Control+a");
 	await canvas.page.keyboard.type(replacement);
 	await canvas.commitText();

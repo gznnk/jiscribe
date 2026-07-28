@@ -1,5 +1,4 @@
 import { test, expect } from "../../fixtures";
-import { selectors } from "../../support/selectors";
 
 /**
  * Enter キーによるテキスト編集開始（StartTextEditCommand の code: "Enter"）。
@@ -19,7 +18,7 @@ test.describe("キーボード: Enter でのテキスト編集開始", () => {
 		await canvas.selectAt({ x: 500, y: 260 });
 
 		await canvas.page.keyboard.press("Enter");
-		await expect(canvas.page.locator(selectors.textEditor)).toBeVisible();
+		await canvas.waitForTextEditor();
 
 		await canvas.page.keyboard.type("Typed via Enter");
 		await canvas.commitText();
@@ -34,7 +33,7 @@ test.describe("キーボード: Enter でのテキスト編集開始", () => {
 		await canvas.selectAt({ x: 500, y: 260 });
 
 		await canvas.page.keyboard.press("Enter");
-		await expect(canvas.page.locator(selectors.textEditor)).toBeVisible();
+		await canvas.waitForTextEditor();
 
 		await canvas.page.keyboard.type("Discarded via Escape");
 		await canvas.cancelText();

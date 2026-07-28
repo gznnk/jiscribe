@@ -68,7 +68,7 @@ test.describe("Markdown 描画", () => {
 		// 既存の生 Markdown を全選択して置き換える。
 		const center = canvas.toScreen({ x: 550, y: 300 });
 		await canvas.page.mouse.dblclick(center.x, center.y);
-		await expect(canvas.textArea()).toBeVisible();
+		await canvas.waitForTextEditor();
 		await canvas.page.keyboard.press("Control+a");
 		await canvas.page.keyboard.type("## Updated\n\n- first\n- second");
 		await canvas.commitText();
@@ -93,7 +93,7 @@ test.describe("Markdown 描画", () => {
 
 		const center = canvas.toScreen({ x: 550, y: 300 });
 		await canvas.page.mouse.dblclick(center.x, center.y);
-		await expect(canvas.textArea()).toBeVisible();
+		await canvas.waitForTextEditor();
 		await canvas.page.keyboard.press("Control+a");
 		await canvas.page.keyboard.type("[Example](https://example.com)");
 		await canvas.commitText();
@@ -135,7 +135,7 @@ test.describe("Markdown 描画", () => {
 
 		const center = canvas.toScreen({ x: 550, y: 300 });
 		await canvas.page.mouse.dblclick(center.x, center.y);
-		await expect(canvas.textArea()).toBeVisible();
+		await canvas.waitForTextEditor();
 		await canvas.page.keyboard.press("Control+a");
 		await canvas.page.keyboard.type("```js\nconst x = 1;\n```");
 		await canvas.commitText();
@@ -172,7 +172,7 @@ test.describe("Markdown 描画", () => {
 
 		const center = canvas.toScreen({ x: 550, y: 300 });
 		await canvas.page.mouse.dblclick(center.x, center.y);
-		await expect(canvas.textArea()).toBeVisible();
+		await canvas.waitForTextEditor();
 		await canvas.page.keyboard.press("Control+a");
 		await canvas.page.keyboard.type("```\nplain text\n```");
 		await canvas.commitText();

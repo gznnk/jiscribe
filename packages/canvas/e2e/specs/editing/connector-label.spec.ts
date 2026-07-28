@@ -722,7 +722,7 @@ test.describe("コネクターのラベル", () => {
 		expect(distance(rePoint, onLine)).toBeGreaterThan(30);
 		const screen = canvas.toScreen(rePoint);
 		await canvas.page.mouse.dblclick(screen.x, screen.y);
-		await expect(canvas.page.locator(selectors.textEditor)).toBeVisible();
+		await canvas.waitForTextEditor();
 		await expect(canvas.textArea()).toHaveValue("");
 		await canvas.page.keyboard.type("Back");
 		await canvas.commitText();
