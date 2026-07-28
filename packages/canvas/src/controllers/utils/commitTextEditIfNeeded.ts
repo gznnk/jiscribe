@@ -34,9 +34,11 @@ function clearTextEdit(state: CanvasControllerState): CanvasControllerState {
  * @param state - the current canvas controller state
  * @param connector - the connector whose label is being updated
  * @param text - the edited text to write back
- * @param placement - placement for a label being created (the double-clicked
- *   point on the line). Applied only alongside non-empty text, so a cancelled or
- *   emptied edit creates nothing
+ * @param placement - placement for a label being created: the double-clicked
+ *   point on the line, or the default (midpoint) when creation started from the
+ *   Enter shortcut. Applied only alongside non-empty text, so a cancelled or
+ *   emptied edit creates nothing. Absent for a re-edit, which keeps the label's
+ *   own placement
  * @returns a new state reflecting the label (if unchanged, only clears textEditState)
  */
 function commitConnectorLabel(

@@ -5,6 +5,7 @@ import {
 	getFirstTextSlotId,
 	readTextSlot,
 } from "../../../states/objects/types/TextSlots";
+import { DEFAULT_LABEL_PLACEMENT } from "../../utils/applyLabelPlacement";
 import type { ExecutableCommand } from "../CommandTypes";
 
 /**
@@ -57,12 +58,19 @@ export const StartTextEditCommand: ExecutableCommand = {
 			if (connector?.type !== "connector") {
 				return state;
 			}
+			const labelText =
+				(connector as { label?: { text?: string } }).label?.text ?? "";
 			return {
 				...state,
 				textEditState: {
 					kind: "connectorLabel",
 					objectId: state.selectedConnectorId,
-					text: (connector as { label?: { text?: string } }).label?.text ?? "",
+					text: labelText,
+					// Enter carries no pointer position, so a label being created takes
+					// the default placement. Without it the commit would spread the
+					// connector's own keys and revive the placement of a deleted label
+					// (the pointer path overrides those with the clicked point).
+					...(labelText === "" ? { placement: DEFAULT_LABEL_PLACEMENT } : {}),
 				},
 			};
 		}

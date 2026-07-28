@@ -14,6 +14,17 @@ export const DEFAULT_LABEL_POSITION = 0.5;
 export const DEFAULT_LABEL_OFFSET = 0;
 
 /**
+ * Placement of a label nobody aimed: the path midpoint, on the line. Passing it
+ * to {@link applyLabelPlacement} strips `position` / `offset` (both equal their
+ * defaults), which is how a creation path with no pointer point — the Enter
+ * shortcut — discards what a deleted label left on the connector.
+ */
+export const DEFAULT_LABEL_PLACEMENT: ConnectorLabelPlacement = {
+	position: DEFAULT_LABEL_POSITION,
+	offset: DEFAULT_LABEL_OFFSET,
+};
+
+/**
  * Returns the label with its placement replaced by a rounded, document-safe
  * `placement`.
  *
