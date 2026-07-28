@@ -2,6 +2,7 @@ import type { FC } from "react";
 
 import type { ObjectBehaviorEntry } from "../controllers/gestures/registry/ObjectBehaviorTypes";
 import type { SelectionControlDefinition } from "../controllers/ui/controls/SelectionControlTypes";
+import type { ObjectTextEditOverflowResolver } from "../controllers/ui/editors/ObjectTextEditOverflowTypes";
 import type { ObjectMenuSection } from "../controllers/ui/menu/ObjectMenu/ObjectMenuTypes";
 import type { Stencil } from "../controllers/ui/objects/Stencil";
 import type { ObjectAnchorRegionCalculator } from "../presentations/objects/registry/ObjectAnchorRegionRegistry";
@@ -48,6 +49,14 @@ export type ObjectTypeDefinition<
 
 	/** Editable-text region. Omitted = full bbox (see ObjectTextRegionRegistry). */
 	textRegion?: ObjectTextRegionCalculator;
+
+	/**
+	 * Whether the in-place editor scrolls inside a slot's region or grows past it.
+	 * Declared next to `textRegion` because only a region derived from the text
+	 * itself may grow. Omitted = `"scroll"` for every slot (see
+	 * ObjectTextEditOverflowRegistry).
+	 */
+	textEditOverflow?: ObjectTextEditOverflowResolver;
 
 	/** Hit-test / snap outline. Omitted = bounding-box rect/ellipse (see ObjectOutlineRegistry). */
 	outline?: ObjectOutlineCalculator;

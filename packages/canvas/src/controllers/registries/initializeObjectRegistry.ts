@@ -364,6 +364,12 @@ export const applyObjectDefinition = (
 	if (definition.textRegion) {
 		registries.objectTextRegion.register(type, definition.textRegion);
 	}
+	if (definition.textEditOverflow) {
+		registries.objectTextEditOverflow.register(
+			type,
+			definition.textEditOverflow,
+		);
+	}
 	if (definition.outline) {
 		registries.objectOutline.register(type, definition.outline);
 	}
@@ -414,6 +420,7 @@ export const initializeObjectRegistry = (
 	registries.objectMapper.clear();
 	registries.objectComponent.clear();
 	registries.objectTextRegion.clear();
+	registries.objectTextEditOverflow.clear();
 	registries.objectOutline.clear();
 	registries.objectAnchorRegion.clear();
 	registries.objectBehavior.clear();

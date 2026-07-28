@@ -20,6 +20,8 @@ import type { ConnectorState } from "../../../../states/objects/connections/conn
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import { useCanvasRegistries } from "../../../registries/CanvasRegistriesContext";
 import { ConnectorLabelEditor } from "../ConnectorLabelEditor";
+import { resolveTextEditOverflow } from "../ObjectTextEditOverflowRegistry";
+import type { ObjectTextEditOverflowResolver } from "../ObjectTextEditOverflowTypes";
 import { TextEditor } from "../TextEditor";
 
 /** Handlers that report editor input and exit to the parent (Canvas). Common across all types. */
@@ -107,6 +109,7 @@ function renderConnectorLabelEditor(
  * @param text - The text being edited
  * @param handlers - Input and exit handlers
  * @param textRegionCalculator - Per-type calculator from ObjectTextRegionRegistry. Omitted = full bbox
+ * @param textEditOverflowResolver - Per-type resolver from ObjectTextEditOverflowRegistry. Omitted = the slot scrolls
  * @returns The text editor
  */
 function renderTextEditor(
@@ -116,6 +119,7 @@ function renderTextEditor(
 	text: string,
 	handlers: EditorHandlers,
 	textRegionCalculator?: ObjectTextRegionCalculator,
+	textEditOverflowResolver?: ObjectTextEditOverflowResolver,
 ): React.ReactElement {
 	const textRegion = calcTextRegion(target, slotId, textRegionCalculator);
 	const slot = target.text?.[slotId];
@@ -129,6 +133,7 @@ function renderTextEditor(
 			y={textRegion.y}
 			width={textRegion.width}
 			height={textRegion.height}
+			overflow={resolveTextEditOverflow(slotId, textEditOverflowResolver)}
 			scaleX={target.scaleX ?? 1}
 			scaleY={target.scaleY ?? 1}
 			rotation={target.rotation ?? 0}
@@ -206,6 +211,7 @@ const TextEditorLayerComponent: React.FC<TextEditorLayerProps> = ({
 			textEditState.text,
 			handlers,
 			registries.objectTextRegion.get(targetObject.type),
+			registries.objectTextEditOverflow.get(targetObject.type),
 		);
 	}
 

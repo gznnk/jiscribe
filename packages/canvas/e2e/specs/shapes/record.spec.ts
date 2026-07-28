@@ -9,7 +9,9 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
  *   スロットの編集になる（data-part によるスロット解決）
  * - 片方のスロットを編集中でも、もう片方のテキストは表示されたまま
  * - 行を増やしても箱は自動リサイズされない（高さはドラッグしたまま）
- * - タイトル帯だけはタイトルの表示行数（改行・折り返し）に追従して伸びる
+ * - タイトル帯だけはタイトルの表示行数（改行・折り返し）に追従して伸びる。
+ *   追従は編集中の下書きにも及び、Escape のキャンセルで確定値へ戻る
+ * - 帯に追従しない行区画の編集は区画内に留まり、あふれた分はスクロールで見る
  *
  * 座標メモ: 作成サイズ 220x80 → 空タイトルのタイトル帯は上端 28px
  * （content y=[200,228]）、行区画はその下（y=[228,280]）。
@@ -195,6 +197,42 @@ test.describe("record（区画付きボックス）", () => {
 		await canvas.cancelText();
 	});
 
+	test("行区画の編集は区画内に留まりスクロールする", async ({ canvas }) => {
+		const record = await createRecord(canvas, RECORD_FROM, RECORD_TO);
+		await canvas.deselect();
+
+		const rowsBefore = await partRect(canvas, record.id, "rows");
+
+		// 行区画（52px）に収まらない行数を編集中のまま持たせる。
+		await canvas.typeTextAt(ROWS_SPOT, "a\nb\nc\nd\ne\nf");
+		await expect(canvas.textArea()).toHaveValue("a\nb\nc\nd\ne\nf");
+
+		// rows は帯の残余なので下書きに追従しない。エディタが伸びれば区画の下へ
+		// はみ出すため、区画の高さに留まってスクロール可能になっていること。
+		const overflow = await canvas
+			.textArea()
+			.evaluate((el) => el.scrollHeight - el.clientHeight);
+		expect(overflow).toBeGreaterThan(0);
+
+		const editorBox = await canvas.page
+			.locator('[data-testid="text-editor"]')
+			.boundingBox();
+		const rowsBox = await canvas.page
+			.locator(
+				`[data-kind="object"][data-id="${record.id}"] [data-part="rows"]`,
+			)
+			.boundingBox();
+		if (!editorBox || !rowsBox) {
+			throw new Error("エディタ枠または行区画の外接箱が取得できない");
+		}
+		expect(Math.abs(editorBox.height - rowsBox.height)).toBeLessThan(1.5);
+
+		// 区画そのものも編集中に動かない（伸びるのはタイトル帯だけ）。
+		const rowsDuringEdit = await partRect(canvas, record.id, "rows");
+		expect(rowsDuringEdit).toEqual(rowsBefore);
+		await canvas.cancelText();
+	});
+
 	test("タイトルが複数行になるとタイトル帯が伸びる", async ({ canvas }) => {
 		const record = await createRecord(canvas, RECORD_FROM, RECORD_TO);
 		await canvas.deselect();
@@ -217,6 +255,53 @@ test.describe("record（区画付きボックス）", () => {
 
 		// 伸びるのは帯だけで、箱の高さは自動リサイズされない。
 		expect(await outlineHeight(canvas, record.id)).toBe(80);
+	});
+
+	test("タイトル編集中は確定を待たずに帯が伸びる", async ({ canvas }) => {
+		const record = await createRecord(canvas, RECORD_FROM, RECORD_TO);
+		await canvas.deselect();
+
+		expect((await partRect(canvas, record.id, "name")).height).toBe(28);
+
+		// エディタを開いたまま改行を打つ。帯の高さは確定済み state ではなく編集中の
+		// 下書きから導出されるので、この時点で伸びていなければならない。
+		await canvas.typeTextAt(NAME_SPOT, "User\nAccount");
+		await expect(canvas.textArea()).toHaveValue("User\nAccount");
+		await expect
+			.poll(async () => (await partRect(canvas, record.id, "name")).height, {
+				message: "確定前に帯が 1 行ぶん伸びること",
+			})
+			.toBe(49);
+
+		// 行区画も編集中から伸びた帯の直下に付いてくる。
+		const editingName = await partRect(canvas, record.id, "name");
+		const editingRows = await partRect(canvas, record.id, "rows");
+		expect(editingRows.y).toBeCloseTo(editingName.y + editingName.height, 3);
+
+		// 確定は編集中と同じ導出なので、高さはジャンプせずそのまま。
+		await canvas.commitText();
+		expect((await partRect(canvas, record.id, "name")).height).toBe(49);
+	});
+
+	test("タイトル編集を Escape でキャンセルすると帯の高さが戻る", async ({
+		canvas,
+	}) => {
+		const record = await createRecord(canvas, RECORD_FROM, RECORD_TO);
+		await canvas.deselect();
+
+		await canvas.typeTextAt(NAME_SPOT, "User\nAccount");
+		await expect
+			.poll(async () => (await partRect(canvas, record.id, "name")).height)
+			.toBe(49);
+
+		await canvas.cancelText();
+
+		// 下書きは破棄されるので、帯は確定値（空タイトルの 1 行ぶん）へ戻る。
+		await expect
+			.poll(async () => (await partRect(canvas, record.id, "name")).height, {
+				message: "キャンセルで帯が元の高さに戻ること",
+			})
+			.toBe(28);
 	});
 
 	test("幅に収まらないタイトルは折り返して帯が伸びる", async ({ canvas }) => {

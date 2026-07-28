@@ -1,0 +1,107 @@
+import { describe, it, expect } from "vitest";
+
+import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import type { TextSlots } from "../../../states/objects/types/TextSlots";
+import type { CanvasControllerState } from "../../CanvasTypes";
+import { graftTextEditDraft } from "../graftTextEditDraft";
+
+const textObj = (id: string, text: TextSlots): ObjectState =>
+	({ id, type: "rect", text }) as unknown as ObjectState;
+
+const slotsOf = (objects: Record<string, ObjectState>, id: string): TextSlots =>
+	(objects[id] as unknown as { text: TextSlots }).text;
+
+const shapeEdit = (
+	objectId: string,
+	slotId: string,
+	text: string,
+): CanvasControllerState["textEditState"] => ({
+	kind: "shape",
+	objectId,
+	slotId,
+	text,
+});
+
+describe("graftTextEditDraft", () => {
+	it("returns the same reference when nothing is being edited", () => {
+		const objects = { r1: textObj("r1", { name: { text: "User" } }) };
+		expect(graftTextEditDraft(objects, null)).toBe(objects);
+	});
+
+	it("returns the same reference while a connector label is being edited", () => {
+		const objects = { c1: { id: "c1", type: "connector" } as ObjectState };
+		expect(
+			graftTextEditDraft(objects, {
+				kind: "connectorLabel",
+				objectId: "c1",
+				text: "calls",
+			}),
+		).toBe(objects);
+	});
+
+	it("returns the same reference while the draft still equals the committed text", () => {
+		const objects = { r1: textObj("r1", { name: { text: "User" } }) };
+		expect(graftTextEditDraft(objects, shapeEdit("r1", "name", "User"))).toBe(
+			objects,
+		);
+	});
+
+	it("returns the same reference for a missing object or an unknown slot", () => {
+		const objects = { r1: textObj("r1", { name: { text: "User" } }) };
+		expect(graftTextEditDraft(objects, shapeEdit("gone", "name", "X"))).toBe(
+			objects,
+		);
+		expect(graftTextEditDraft(objects, shapeEdit("r1", "rows", "X"))).toBe(
+			objects,
+		);
+	});
+
+	it("replaces only the edited slot's text on the edited object", () => {
+		const objects = {
+			r1: textObj("r1", {
+				name: { text: "User", fontSize: 20 },
+				rows: { text: ["id: string"] },
+			}),
+			r2: textObj("r2", { name: { text: "Order" } }),
+		};
+
+		const grafted = graftTextEditDraft(
+			objects,
+			shapeEdit("r1", "name", "User\nAccount"),
+		);
+
+		expect(grafted).not.toBe(objects);
+		expect(slotsOf(grafted, "r1").name).toEqual({
+			text: "User\nAccount",
+			fontSize: 20,
+		});
+		// Objects other than the edited one, and the edited object's other slots,
+		// keep their identity so their memoized components bail out.
+		expect(grafted.r2).toBe(objects.r2);
+		expect(slotsOf(grafted, "r1").rows).toBe(slotsOf(objects, "r1").rows);
+		expect(objects.r1).not.toBe(grafted.r1);
+	});
+
+	it("splits the draft back into rows for a slot holding rows", () => {
+		const objects = {
+			r1: textObj("r1", { name: { text: "User" }, rows: { text: ["id"] } }),
+		};
+
+		const grafted = graftTextEditDraft(
+			objects,
+			shapeEdit("r1", "rows", "id\nname"),
+		);
+
+		expect(slotsOf(grafted, "r1").rows.text).toEqual(["id", "name"]);
+		expect(slotsOf(grafted, "r1").name).toBe(slotsOf(objects, "r1").name);
+	});
+
+	it("leaves an object whose text is not the keyed normal form untouched", () => {
+		const objects = {
+			r1: { id: "r1", type: "rect", text: 123 } as unknown as ObjectState,
+		};
+		expect(graftTextEditDraft(objects, shapeEdit("r1", "name", "User"))).toBe(
+			objects,
+		);
+	});
+});

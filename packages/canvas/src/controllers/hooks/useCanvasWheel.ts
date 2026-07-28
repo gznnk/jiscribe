@@ -11,8 +11,10 @@ import { shouldUseNativeWheel } from "../gestures/recognizer/utils/shouldUseNati
  * - Multiple Canvases can be placed on the same page, each handling only the wheel
  *   events within its own area (no need to separately track an "active Canvas").
  *
- * Over scrollable elements marked with data-gesture="native-wheel" (such as a textarea
- * being edited), native scrolling is left in place and preventDefault is not called.
+ * Over scrollable elements marked with data-gesture="native-wheel" (the shortcut
+ * help modal's body, or a textarea editing a "scroll" slot — a "grow" slot's
+ * textarea never overflows, so the wheel falls through to the canvas), native
+ * scrolling is left in place and preventDefault is not called.
  * When Ctrl is held, the event is always handled by the canvas as a zoom operation.
  *
  * @param containerRef - Reference to the canvas container element
@@ -29,8 +31,9 @@ export function useCanvasWheel(
 		}
 
 		const onContainerWheel = (e: WheelEvent) => {
-			// Over a scrollable data-gesture="native-wheel" element (such as a textarea
-			// being edited), leave native scrolling in place and skip canvas scrolling
+			// Over a scrollable data-gesture="native-wheel" element (the shortcut help
+			// modal's body, a textarea overflowing its slot), leave native scrolling in
+			// place and skip canvas scrolling
 			if (shouldUseNativeWheel(e.target, e.ctrlKey)) {
 				return;
 			}

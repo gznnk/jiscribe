@@ -12,11 +12,15 @@ import { TEXT_LINE_HEIGHT } from "../../../../constants/textLineHeight";
  *
  * Overflow stays visible so the textarea's scrollbar gutter can hang outside
  * the shape's right edge; vertical clipping is handled by the textarea's own
- * max-height.
+ * max-height, which TextEditor sets only for a "scroll" slot (see
+ * ObjectTextEditOverflowRegistry).
  *
- * Per-instance values (transform / width / height / align-items) change with
- * the edited object and while typing (auto-grow), so they are passed via the
- * `style` prop instead of emotion interpolation (see #131).
+ * Per-instance values (transform / width / height or min-height / align-items)
+ * change with the edited object and while typing (auto-grow), so they are
+ * passed via the `style` prop instead of emotion interpolation (see #131).
+ * Which of height / min-height carries the region is what separates the two
+ * overflow modes, so both are left to that prop rather than split into styled
+ * variants.
  */
 export const TextEditorWrapper = styled.div`
 	position: absolute;
@@ -36,22 +40,23 @@ export const TextEditorWrapper = styled.div`
  * Styled textarea element for the text editor (multi-line).
  *
  * Per-instance text styles (text-align / color / font-size / font-family /
- * font-weight) are passed via the `style` prop (see #131). Height is set
- * inline by TextEditor to fit the content, so the wrapper's vertical
- * alignment takes effect.
+ * font-weight) and max-height are passed via the `style` prop (see #131).
+ * Height is set inline by TextEditor to fit the content, so the wrapper's
+ * vertical alignment takes effect; the max-height a "scroll" slot adds then
+ * clips it back to the region and turns the excess into scrolling, while a
+ * "grow" slot leaves it uncapped and pushes the wrapper's min-height instead.
  *
  * The element is widened by the scrollbar width and reserves that extra strip
  * as a permanent gutter (scrollbar-gutter: stable), so the content box always
- * equals the shape width and line wrapping matches the displayed text whether or not
- * the scrollbar is shown; the scrollbar itself sits outside the shape's right
- * edge. flex-shrink: 0 keeps the flex parent from squeezing the extra width
- * back.
+ * equals the shape width and line wrapping matches the displayed text whether
+ * or not the scrollbar is shown; the scrollbar itself sits outside the shape's
+ * right edge. flex-shrink: 0 keeps the flex parent from squeezing the extra
+ * width back.
  */
 export const TextArea = styled.textarea`
 	width: calc(100% + ${SCROLLBAR_WIDTH}px);
 	flex-shrink: 0;
 	scrollbar-gutter: stable;
-	max-height: 100%;
 	line-height: ${TEXT_LINE_HEIGHT};
 	word-break: break-word;
 	white-space: pre-wrap;

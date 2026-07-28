@@ -8,6 +8,7 @@ import { verticalAlignToAlignItems } from "../../../../presentations/objects/uti
 import type { TextAlign } from "../../../../schemas/objects/types/TextAlign";
 import type { VerticalAlign } from "../../../../schemas/objects/types/VerticalAlign";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
+import type { TextEditOverflow } from "../ObjectTextEditOverflowTypes";
 
 type TextEditorProps = {
 	objectId: string;
@@ -20,8 +21,10 @@ type TextEditorProps = {
 	y: number;
 	/** Text region width (from calcTextRegion) */
 	width: number;
-	/** Text region height (from calcTextRegion) */
+	/** Text region height (from calcTextRegion); a cap when `overflow` is "scroll", a minimum when it is "grow" */
 	height: number;
+	/** What happens when the typed text outgrows `height` (see ObjectTextEditOverflowRegistry) */
+	overflow: TextEditOverflow;
 	scaleX: number;
 	scaleY: number;
 	rotation: number;
@@ -43,6 +46,7 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 	y,
 	width,
 	height,
+	overflow,
 	scaleX,
 	scaleY,
 	rotation,
@@ -121,7 +125,12 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 			data-gesture="none"
 			style={{
 				width,
-				height,
+				// "scroll" pins the box to the region and lets the textarea's own
+				// max-height clip it; "grow" takes the region as a floor and extends
+				// downward from its top edge (growth direction independent of
+				// verticalAlign).
+				height: overflow === "scroll" ? height : undefined,
+				minHeight: overflow === "grow" ? height : undefined,
 				transform,
 				alignItems: verticalAlignToAlignItems[verticalAlign],
 			}}
@@ -131,6 +140,10 @@ const TextEditorComponent: React.FC<TextEditorProps> = ({
 				data-gesture="native-wheel"
 				value={text}
 				style={{
+					// Only a "scroll" slot is capped, and only a capped textarea ever
+					// overflows — which is also what makes native-wheel take over
+					// (shouldUseNativeWheel tests scrollability).
+					maxHeight: overflow === "scroll" ? "100%" : undefined,
 					textAlign,
 					color: resolvedColor,
 					fontSize,
