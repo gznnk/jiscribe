@@ -25,15 +25,34 @@ export const RECORD_FONT_SIZE = 14;
  */
 export const RECORD_ROW_HEIGHT = RECORD_FONT_SIZE * TEXT_LINE_HEIGHT;
 
-/** Height of the title band: one line of text plus breathing room above and below. */
-export const RECORD_HEADER_HEIGHT = 28;
-
 /**
  * Vertical padding the shared text box (TextOverlayFrame's content element) adds
  * above and below the rows. Counted in below so the default height shows its rows
  * without clipping them.
  */
 const RECORD_ROWS_PADDING_Y = 2;
+
+/**
+ * Horizontal padding the shared text box adds on each side of the title, i.e.
+ * the width the name has to wrap in is the box width minus twice this
+ * (TextOverlayFrame's content element 参照).
+ */
+export const RECORD_NAME_PADDING_X = 6;
+
+/**
+ * Local pixels the title band adds above and below its text in total: the shared
+ * text box's own vertical padding plus the band's extra breathing room.
+ */
+export const RECORD_NAME_PADDING_Y_TOTAL = 7;
+
+/**
+ * Height of the title band holding one line at the default type size. The band
+ * itself follows its slot — a larger `fontSize`, a newline, or a title too long
+ * for the width grows it (calcRecordSlotRegions 参照) — so this is the height a
+ * freshly created record shows, and the unit the default box height reserves.
+ */
+export const RECORD_HEADER_HEIGHT =
+	RECORD_ROW_HEIGHT + RECORD_NAME_PADDING_Y_TOTAL;
 
 /** Local pixels of the box the rows cannot use: the title band plus the text box's own padding. */
 export const RECORD_ROWS_RESERVED_HEIGHT =

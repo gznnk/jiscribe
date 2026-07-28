@@ -17,7 +17,10 @@ export { isValidRecordState } from "./state/validateRecordState";
 
 export { RecordBox } from "./presentation/RecordBox";
 export { calcRecordSlotRegions } from "./presentation/calcRecordSlotRegions";
-export type { RecordSlotRegions } from "./presentation/calcRecordSlotRegions";
+export type {
+	RecordSlotRegions,
+	RecordSlotRegionsState,
+} from "./presentation/calcRecordSlotRegions";
 export { calcRecordTextRegion } from "./presentation/calcRecordTextRegion";
 
 export { RecordStencils } from "./stencil/RecordStencils";

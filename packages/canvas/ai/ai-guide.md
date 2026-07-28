@@ -140,7 +140,10 @@ compartments need it — `textAlign` `"left"`, `verticalAlign` `"top"`, `fontSiz
 are packed one line per entry into the compartment below the title band. The
 **height is never adjusted to the content**, so size it
 yourself: `32 + 21 * rows.length` fits the band plus one line per row exactly, and
-rows past the bottom edge are clipped.
+rows past the bottom edge are clipped. The **title band** is the one part that
+does grow with its text: a larger `name.fontSize`, a newline, or a title too long
+for the `width` makes the band taller (one 1.5×fontSize line per displayed line
+plus 7px) and pushes the rows down, so add that much to the `height` too.
 
 ### Raw SVG (`svg`) — escape hatch for complex visuals
 

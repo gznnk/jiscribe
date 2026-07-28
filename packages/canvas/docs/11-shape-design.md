@@ -18,7 +18,7 @@ whether to expose it as a doc field or derive it in the engine based on the
   surfaced as diagnostics for the AI / user to fix — the engine does not auto-correct)
 - **Internal compartments that exist only to hold text** (e.g., the record's name
   band) are **derived**. What the user wants is not "a specific height" but
-  "a readable title," and deriving from the font size satisfies that
+  "a readable title," and deriving from the font size and line count satisfies that
 - **Regions that double as interaction surfaces or visual design elements**
   (e.g., the container's header: the grab handle standing in for the pass-through
   body, and a visual accent with its own color) are **manually adjustable via a

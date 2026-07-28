@@ -504,6 +504,13 @@ The **height is not adjusted to the content**: give it a value that fits the row
 — `32 + 21 × (number of rows)` is the height that fits them exactly. Rows below
 the bottom edge are clipped.
 
+The **title band** is the exception: it follows its own slot. Its height is
+`1.5 × name.fontSize × (displayed lines) + 7`, so raising `name.fontSize`,
+writing a newline in `name.text`, or giving a title too long for the `width`
+makes the band taller and starts the rows lower — add the extra to `height`
+as well. With the default `fontSize` 14 and a one-line title the band is the
+28px the formula above assumes.
+
 ---
 
 ### `polyline`

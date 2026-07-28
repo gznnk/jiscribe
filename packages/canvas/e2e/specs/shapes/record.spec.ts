@@ -9,9 +9,10 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
  *   スロットの編集になる（data-part によるスロット解決）
  * - 片方のスロットを編集中でも、もう片方のテキストは表示されたまま
  * - 行を増やしても箱は自動リサイズされない（高さはドラッグしたまま）
+ * - タイトル帯だけはタイトルの表示行数（改行・折り返し）に追従して伸びる
  *
- * 座標メモ: 作成サイズ 220x80 → タイトル帯は上端 28px（content y=[200,228]）、
- * 行区画はその下（y=[228,280]）。
+ * 座標メモ: 作成サイズ 220x80 → 空タイトルのタイトル帯は上端 28px
+ * （content y=[200,228]）、行区画はその下（y=[228,280]）。
  */
 
 const CATEGORY = "uml";
@@ -32,6 +33,33 @@ async function createRecord(
 	const id = await canvas.drawShapeFromFlyout(CATEGORY, "record", from, to);
 	const created = (await canvas.captureObjects()).find((obj) => obj.id === id);
 	return { id, tag: created?.tag ?? "" };
+}
+
+/** 区画矩形（data-part）の局所座標での y と height。帯の伸縮を読む手段。 */
+async function partRect(
+	canvas: CanvasDriver,
+	id: string,
+	part: "name" | "rows",
+): Promise<{ y: number; height: number }> {
+	const rect = await canvas.page.evaluate(
+		({ objectId, partName }) => {
+			const el = document.querySelector(
+				`[data-kind="object"][data-id="${objectId}"] [data-part="${partName}"]`,
+			);
+			if (!el) {
+				return null;
+			}
+			return {
+				y: Number(el.getAttribute("y")),
+				height: Number(el.getAttribute("height")),
+			};
+		},
+		{ objectId: id, partName: part },
+	);
+	if (!rect) {
+		throw new Error(`区画 ${part} の矩形が見つからない`);
+	}
+	return rect;
 }
 
 /** 枠線矩形（fill:none で特定）の height 属性。箱の高さを読む手段。 */
@@ -165,5 +193,45 @@ test.describe("record（区画付きボックス）", () => {
 			"id: string\nname: string\nemail: string",
 		);
 		await canvas.cancelText();
+	});
+
+	test("タイトルが複数行になるとタイトル帯が伸びる", async ({ canvas }) => {
+		const record = await createRecord(canvas, RECORD_FROM, RECORD_TO);
+		await canvas.deselect();
+
+		expect((await partRect(canvas, record.id, "name")).height).toBe(28);
+
+		// 明示改行の 2 行タイトル → 1 行ぶん（14 × 1.5 = 21）伸びる。
+		await canvas.typeTextAt(NAME_SPOT, "User\nAccount");
+		await canvas.commitText();
+		await expect
+			.poll(async () => (await partRect(canvas, record.id, "name")).height, {
+				message: "2 行のタイトルで帯が 1 行ぶん伸びること",
+			})
+			.toBe(49);
+
+		// 行区画は伸びた帯の直下から始まる（隙間も重なりも作らない）。
+		const name = await partRect(canvas, record.id, "name");
+		const rows = await partRect(canvas, record.id, "rows");
+		expect(rows.y).toBeCloseTo(name.y + name.height, 3);
+
+		// 伸びるのは帯だけで、箱の高さは自動リサイズされない。
+		expect(await outlineHeight(canvas, record.id)).toBe(80);
+	});
+
+	test("幅に収まらないタイトルは折り返して帯が伸びる", async ({ canvas }) => {
+		const record = await createRecord(canvas, RECORD_FROM, RECORD_TO);
+		await canvas.deselect();
+
+		// 220px の箱（テキストの使える幅は 208px）に 1 行では収まらない長さ。
+		await canvas.typeTextAt(NAME_SPOT, "Authentication Provider Configuration");
+		await canvas.commitText();
+
+		// 帯の高さは常に「行数 × 21 + 7」なので、49 以上なら 2 行以上に折り返している。
+		await expect
+			.poll(async () => (await partRect(canvas, record.id, "name")).height, {
+				message: "折り返したタイトルで帯が 2 行以上ぶんに伸びること",
+			})
+			.toBeGreaterThanOrEqual(49);
 	});
 });

@@ -712,7 +712,7 @@
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Not auto-fitted: size it for the rows (32 + 21 * rows.length fits them exactly), or rows past the bottom are clipped.",
+					"description": "Bounding-box height in pixels. Not auto-fitted: size it for the rows (32 + 21 * rows.length fits them exactly), or rows past the bottom are clipped. The title band is the one part that grows with its content — a larger name fontSize, a newline, or a name too long for the width makes it taller (1.5 * fontSize per displayed line + 7) and pushes the rows down, so add that much here too.",
 					"type": "number",
 					"minimum": 0
 				},
