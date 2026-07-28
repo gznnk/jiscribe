@@ -104,37 +104,78 @@ describe("validateStateUtils", () => {
 			text: { body: { text: "hello", ...style } },
 		});
 
-		it("no text / valid font is true", () => {
-			expect(isValidTextStyleState({})).toBe(true);
+		it("valid font is true", () => {
 			expect(
 				isValidTextStyleState(
 					withSlot({ fontFamily: "Noto Sans JP", fontWeight: "600" }),
+					"body",
 				),
 			).toBe(true);
 		});
 		it("fontSize >= 1 is true, < 1 is false (schema minimum: 1)", () => {
-			expect(isValidTextStyleState(withSlot({ fontSize: 1 }))).toBe(true);
-			expect(isValidTextStyleState(withSlot({ fontSize: 12 }))).toBe(true);
-			expect(isValidTextStyleState(withSlot({ fontSize: 0 }))).toBe(false);
-			expect(isValidTextStyleState(withSlot({ fontSize: -3 }))).toBe(false);
+			expect(isValidTextStyleState(withSlot({ fontSize: 1 }), "body")).toBe(
+				true,
+			);
+			expect(isValidTextStyleState(withSlot({ fontSize: 12 }), "body")).toBe(
+				true,
+			);
+			expect(isValidTextStyleState(withSlot({ fontSize: 0 }), "body")).toBe(
+				false,
+			);
+			expect(isValidTextStyleState(withSlot({ fontSize: -3 }), "body")).toBe(
+				false,
+			);
 		});
 		it("injection in fontFamily / fontWeight is false", () => {
 			expect(
-				isValidTextStyleState(withSlot({ fontFamily: "Arial; } body {" })),
+				isValidTextStyleState(
+					withSlot({ fontFamily: "Arial; } body {" }),
+					"body",
+				),
 			).toBe(false);
 			expect(
-				isValidTextStyleState(withSlot({ fontWeight: "bold } html {" })),
+				isValidTextStyleState(
+					withSlot({ fontWeight: "bold } html {" }),
+					"body",
+				),
 			).toBe(false);
 		});
 		it("checks every slot, not only the first", () => {
 			expect(
-				isValidTextStyleState({
-					text: {
-						name: { text: "User" },
-						rows: { text: ["id"], fontSize: 0 },
+				isValidTextStyleState(
+					{
+						text: {
+							name: { text: "User" },
+							rows: { text: ["id"], fontSize: 0 },
+						},
 					},
-				}),
+					"slots",
+				),
 			).toBe(false);
+		});
+
+		// The key set is the authority on a shape's slots, so a "body" type that
+		// arrives without `body`, or with a key beside it, would draw and edit a
+		// slot that mapTextStateToDoc drops on save (issue #235).
+		it("a body type must carry exactly the body slot", () => {
+			expect(isValidTextStyleState({}, "body")).toBe(false);
+			expect(isValidTextStyleState({ text: {} }, "body")).toBe(false);
+			expect(
+				isValidTextStyleState({ text: { weird: { text: "x" } } }, "body"),
+			).toBe(false);
+			expect(
+				isValidTextStyleState(
+					{ text: { body: { text: "hi" }, weird: { text: "x" } } },
+					"body",
+				),
+			).toBe(false);
+		});
+		it("a slots type leaves the key set to its own validator", () => {
+			expect(isValidTextStyleState({}, "slots")).toBe(true);
+			expect(isValidTextStyleState({ text: {} }, "slots")).toBe(true);
+			expect(
+				isValidTextStyleState({ text: { anything: { text: "x" } } }, "slots"),
+			).toBe(true);
 		});
 	});
 

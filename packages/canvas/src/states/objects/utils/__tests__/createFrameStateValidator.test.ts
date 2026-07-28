@@ -89,6 +89,22 @@ describe("createFrameStateValidator feature gating", () => {
 		},
 	);
 
+	// The slot keys are the authority on a shape's slots, so a "body" type whose
+	// state skipped the mapper must not pass: the extra key would be drawn and
+	// editable, then dropped on save (issue #235).
+	it.each([
+		["no text at all", {}],
+		["an empty slot map", { text: {} }],
+		["a slot other than body", { text: { weird: { text: "x" } } }],
+		[
+			"an extra slot beside body",
+			{ text: { body: { text: "hi" }, weird: { text: "x" } } },
+		],
+	])("rejects a body type with %s", (_label, textState) => {
+		const isValid = createFrameStateValidator(features({ text: "body" }));
+		expect(isValid({ ...validFrame, ...textState })).toBe(false);
+	});
+
 	it("accepts well-formed values for every enabled group", () => {
 		const isValid = createFrameStateValidator(
 			features({

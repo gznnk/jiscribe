@@ -6,8 +6,10 @@ import {
 } from "@workspace/basic-validators";
 
 import { isCssColor } from "./isCssColor";
+import { BODY_TEXT_SLOT_ID } from "../../../constants/textSlotId";
 import { isArrowType } from "../../../schemas/objects/types/ArrowType";
 import { isOwnedEndpointRef } from "../../../schemas/objects/types/EndpointRef";
+import type { ObjectFeatures } from "../../../schemas/objects/types/ObjectFeatures";
 import type { ObjectType } from "../../../schemas/objects/types/ObjectType";
 import { isPoly } from "../../../schemas/objects/types/Poly";
 import { isStrokeDashType } from "../../../schemas/objects/types/StrokeDashType";
@@ -131,12 +133,41 @@ const isValidTextSlotStyle = (slot: TextSlot): boolean => {
 };
 
 /**
- * In addition to TextStyleState validity, validates each slot's styling for CSS
- * safety, color validity, and the fontSize minimum — the boundary checks that
- * `isTextSlot` leaves out because they need browser APIs the schema layer cannot reach.
+ * Whether the slot keys are the set `textShape` declares. A `"body"` type holds
+ * exactly the one `body` slot: the mapper materializes it even for a doc with
+ * neither text nor styling (TextSlotsMapper 参照), so a state missing it, or
+ * carrying a key beside it, never came through the mapper. Left unchecked, such
+ * a key would be drawn and editable yet dropped on save, since `mapTextStateToDoc`
+ * reads only `body`. A `"slots"` type's key set is the type's own to pin
+ * (validateRecordState 参照), so it passes here.
  */
-export const isValidTextStyleState = (o: StateRecord): boolean =>
+const hasDeclaredTextSlots = (
+	text: unknown,
+	textShape: ObjectFeatures["text"],
+): boolean => {
+	if (textShape !== "body") {
+		return true;
+	}
+	const slotIds = Object.keys(text ?? {});
+	return slotIds.length === 1 && slotIds[0] === BODY_TEXT_SLOT_ID;
+};
+
+/**
+ * In addition to TextStyleState validity, validates the slot key set against the
+ * type's declared text shape, and each slot's styling for CSS safety, color
+ * validity, and the fontSize minimum — the boundary checks that `isTextSlot`
+ * leaves out because they need browser APIs the schema layer cannot reach.
+ *
+ * @param o - The untrusted state record to check
+ * @param textShape - The type's `features.text`; decides which slot keys are
+ *   admissible (see {@link hasDeclaredTextSlots})
+ */
+export const isValidTextStyleState = (
+	o: StateRecord,
+	textShape: ObjectFeatures["text"],
+): boolean =>
 	isTextStyleState(o) &&
+	hasDeclaredTextSlots(o.text, textShape) &&
 	Object.values(o.text ?? {}).every(isValidTextSlotStyle);
 
 /** Validates RadiusStyleState's rx as a number (minimum: 0 in the schema) when present. */

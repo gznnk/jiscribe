@@ -14,6 +14,8 @@ const objectStateValidatorRegistry = createObjectStateValidatorRegistry();
 const isClipboardData = (value: unknown): boolean =>
 	isClipboardDataRaw(value, objectStateValidatorRegistry);
 
+// The `body` slot is part of a rect's normal form — the mapper materializes it
+// for every rect — so a copied one always carries it (issue #235).
 const rect = (id: string) => ({
 	id,
 	type: "rect",
@@ -24,6 +26,7 @@ const rect = (id: string) => ({
 	rotation: 0,
 	scaleX: 1,
 	scaleY: 1,
+	text: { body: { text: "" } },
 });
 
 const group = (id: string, childIds: string[]) => ({

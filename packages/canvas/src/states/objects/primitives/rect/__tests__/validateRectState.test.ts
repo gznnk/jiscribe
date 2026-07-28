@@ -33,6 +33,9 @@ describe("isValidRectState", () => {
 				rotation: 0,
 				scaleX: 1,
 				scaleY: 1,
+				// Unstyled, but the slot itself is part of the minimum: the mapper
+				// materializes `body` for every rect, drawn or loaded (issue #235).
+				text: { body: { text: "" } },
 			}),
 		).toBe(true);
 	});

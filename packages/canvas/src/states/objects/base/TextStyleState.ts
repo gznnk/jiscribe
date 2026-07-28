@@ -6,7 +6,12 @@ import { isTextSlots, type TextSlots } from "../types/TextSlots";
  * place to read and write it.
  */
 export type TextStyleState = {
-	/** Text content and styling, keyed by slot id (see TextSlots). Present on every text-bearing shape. */
+	/**
+	 * Text content and styling, keyed by slot id (see TextSlots). Optional only
+	 * because a text-less type shares this state shape: a type declaring
+	 * `features.text` always carries it, which `isValidTextStyleState` enforces on
+	 * untrusted state.
+	 */
 	text?: TextSlots;
 };
 
