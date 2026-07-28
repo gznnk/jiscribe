@@ -5,11 +5,15 @@ import {
 	pickSupportedDocDefaults,
 } from "../types/ObjectFactory";
 
-/** Minimal shape that DOC_DEFAULTS of Frame-family shapes (geometry: "rect" / top-left origin) must satisfy. */
-type FrameDefaults = { width: number; height: number } & Record<
-	string,
-	unknown
->;
+/**
+ * Minimal shape that DOC_DEFAULTS of Frame-family shapes (geometry: "rect" / top-left origin)
+ * must satisfy. Carrying `type` (and `meta`) from ObjectDoc keeps the assembled object
+ * structurally an ObjectDoc once `id` is added, so the return needs no `unknown` hop.
+ */
+type FrameDefaults = Omit<ObjectDoc, "id"> & {
+	width: number;
+	height: number;
+} & Record<string, unknown>;
 
 type FrameObjectFactoryOptions = {
 	/**
@@ -46,7 +50,7 @@ export const createFrameObjectFactory = (
 				id: crypto.randomUUID(),
 				x: position.x - width / 2,
 				y: position.y - height / 2,
-			} as unknown as ObjectDoc;
+			};
 		},
 
 		calcDimensions(overrides) {
@@ -81,7 +85,7 @@ export const createFrameObjectFactory = (
 				y: Math.min(y1, y2),
 				width,
 				height,
-			} as unknown as ObjectDoc;
+			};
 		};
 	}
 
