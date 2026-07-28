@@ -686,7 +686,7 @@
 		},
 
 		"RecordDoc": {
-			"description": "Record: a titled box with a compartment of rows underneath (a UML class, an ER entity, an ontology concept with its properties). Uses the same rect-based geometry (x/y/width/height) as RectDoc. Unlike every other shape, its \"text\" is a keyed object with two slots — \"name\" for the title band and \"rows\" for the compartment — and the plain-string form is rejected. Typography belongs to each slot, so there are no shape-wide textAlign/fontSize/... fields here. The box is not auto-fitted to its rows.",
+			"description": "Record: a titled box with compartments of rows underneath (a UML class, an ER entity, an ontology concept with its properties). Uses the same rect-based geometry (x/y/width/height) as RectDoc. Unlike every other shape, its \"text\" is a keyed object of slots — \"name\" for the title band, then \"attributes\" and \"operations\" for the compartments — and the plain-string form is rejected. Which slots you write is what gives the box its compartments: omit \"operations\" for a two-compartment box, omit both for a plain titled box. Typography belongs to each slot, so there are no shape-wide textAlign/fontSize/... fields here. The box is not auto-fitted to its rows.",
 			"type": "object",
 			"required": ["id", "type", "x", "y", "width", "height"],
 			"additionalProperties": false,
@@ -712,7 +712,7 @@
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Not auto-fitted: size it for the rows (32 + 21 * rows.length fits them exactly), or rows past the bottom are clipped. The title band is the one part that grows with its content — a larger name fontSize, a newline, or a name too long for the width makes it taller (1.5 * fontSize per displayed line + 7) and pushes the rows down, so add that much here too.",
+					"description": "Bounding-box height in pixels. Not auto-fitted: the compartments divide up whatever height you give. Every compartment above the bottom one takes the height its own rows need (21 per row, at least one row, plus 4); the bottom one takes the remainder and clips whatever falls past the box. Size it yourself: a title band over one compartment of N rows fits exactly at 32 + 21 * N, and a second compartment of M rows adds 21 * M + 4 (25 when it is empty). The title band is the one part that grows with its content — a larger name fontSize, a newline, or a name too long for the width makes it taller (1.5 * fontSize per displayed line + 7) and pushes the compartments down, so add that much here too.",
 					"type": "number",
 					"minimum": 0
 				},
@@ -727,12 +727,12 @@
 					"default": "auto"
 				},
 				"text": {
-					"description": "The two text slots. Not a string: a record keeps its title and its rows apart, and each slot carries its own typography instead of the shape-wide fields other shapes have. Default: { \"name\": { \"text\": \"\" }, \"rows\": { \"text\": [] } }",
+					"description": "The text slots. Not a string: a record keeps its title and its compartments apart, and each slot carries its own typography instead of the shape-wide fields other shapes have. Which slots you write is what gives the box its compartments — write \"attributes\" alone for a two-compartment box (an ER entity, a DTO), add \"operations\" for a UML class, omit both for a plain titled box. Default: { \"name\": { \"text\": \"\" }, \"attributes\": { \"text\": [] } }",
 					"type": "object",
 					"additionalProperties": false,
 					"properties": {
 						"name": {
-							"description": "Title slot, shown in the top band.",
+							"description": "Title slot, shown in the top band. Always drawn, whether or not you write it.",
 							"type": "object",
 							"additionalProperties": false,
 							"required": ["text"],
@@ -769,14 +769,53 @@
 								}
 							}
 						},
-						"rows": {
-							"description": "Compartment slot, filling the box below the title band.",
+						"attributes": {
+							"description": "Attribute compartment (fields, properties, ER columns), drawn under the title band. Omit the whole slot to leave the compartment off the box; an empty array keeps the compartment and draws it empty.",
 							"type": "object",
 							"additionalProperties": false,
 							"required": ["text"],
 							"properties": {
 								"text": {
-									"description": "Compartment rows, one array entry per line (no newlines inside an entry). Default: []",
+									"description": "Attribute rows, one array entry per line (no newlines inside an entry). Default: []",
+									"type": "array",
+									"items": { "type": "string" },
+									"default": []
+								},
+								"textAlign": {
+									"description": "Horizontal text alignment. Default: \"left\" (a record slot's default, not the shared \"center\")",
+									"allOf": [{ "$ref": "#/$defs/TextAlign" }],
+									"default": "left"
+								},
+								"verticalAlign": {
+									"description": "Vertical text alignment. Default: \"top\" (a record slot's default, not the shared \"middle\")",
+									"allOf": [{ "$ref": "#/$defs/VerticalAlign" }],
+									"default": "top"
+								},
+								"fontColor": {
+									"$ref": "#/$defs/TextStyle/properties/fontColor"
+								},
+								"fontSize": {
+									"description": "Font size in pixels. Default: 14 (the 21px row pitch and the height formula 32 + 21 * rows.length are sized for it)",
+									"type": "number",
+									"minimum": 1,
+									"default": 14
+								},
+								"fontFamily": {
+									"$ref": "#/$defs/TextStyle/properties/fontFamily"
+								},
+								"fontWeight": {
+									"$ref": "#/$defs/TextStyle/properties/fontWeight"
+								}
+							}
+						},
+						"operations": {
+							"description": "Operation compartment (methods, behaviors), drawn under the attributes. Omit the whole slot for a shape that has no operations — a UML class with only attributes is drawn with two compartments, not three.",
+							"type": "object",
+							"additionalProperties": false,
+							"required": ["text"],
+							"properties": {
+								"text": {
+									"description": "Operation rows, one array entry per line (no newlines inside an entry). Default: []",
 									"type": "array",
 									"items": { "type": "string" },
 									"default": []

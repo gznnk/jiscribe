@@ -77,7 +77,7 @@ In addition to `name` and `description`, `meta` may hold any custom keys.
 | `extract`          | Extract (apex up)                  | `x`, `y`, `width`, `height`             | Stroke, Fill, Transform (no text)     |
 | `cross`            | Cross / plus                       | `x`, `y`, `width`, `height`             | Stroke, Fill, Transform (no text)     |
 | `offPageConnector` | Off-page connector (pentagon)      | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `record`           | Titled box with a row compartment  | `x`, `y`, `width`, `height`             | Stroke, Fill, Text (keyed), Transform |
+| `record`           | Titled box with row compartments   | `x`, `y`, `width`, `height`             | Stroke, Fill, Text (keyed), Transform |
 | `polyline`         | Polyline (open path)               | `points`                                | Stroke                                |
 | `polygon`          | Polygon (closed path)              | `points`                                | Stroke, Fill                          |
 | `group`            | Group (contains children)          | none                                    | Transform                             |
@@ -456,18 +456,24 @@ below and give a bounding box.
 
 ---
 
-### `record` (titled box with a row compartment)
+### `record` (titled box with row compartments)
 
-A box with a **title band on top and a compartment of rows below it** — a UML
-class, an ER entity, an ontology concept with its properties. Uses the same
+A box with a **title band on top and one or two compartments of rows below it** —
+a UML class, an ER entity, an ontology concept with its properties. Uses the same
 rect-based geometry (top-left `x`,`y` + `width`,`height`) as `rect` and is
 **connectable** like it; it has **no Radius** (`rx`).
 
-`record` is the only shape whose **`text` is an object, not a string**: it has two
+`record` is the only shape whose **`text` is an object, not a string**: it has
 named text slots, and a plain string is rejected. Put the title in `name.text` and
-one array entry per row in `rows.text` (**no newline inside an entry** — add
-another entry). Typography belongs to each slot, so a `record` has **no**
+one array entry per row in a compartment's `text` (**no newline inside an entry**
+— add another entry). Typography belongs to each slot, so a `record` has **no**
 shape-wide `textAlign` / `fontSize` / ... fields.
+
+**The slots you write are the compartments the box has.** There are three —
+`name`, `attributes`, `operations` — stacked in that order. `name` is always
+drawn; omit either of the others and the box simply does not have that
+compartment. An empty array (`{ "text": [] }`) is different: it keeps the
+compartment and draws it empty.
 
 ```json
 {
@@ -479,37 +485,61 @@ shape-wide `textAlign` / `fontSize` / ... fields.
 	"height": 95,
 	"text": {
 		"name": { "text": "User" },
-		"rows": { "text": ["id: string", "name: string", "email: string"] }
+		"attributes": { "text": ["id: string", "name: string", "email: string"] }
 	}
 }
 ```
 
-| Field            | Type       | Default | Description                                                         |
-| ---------------- | ---------- | ------- | ------------------------------------------------------------------- |
-| `x`              | `number`   | `0`     | X of the bounding box's top-left.                                   |
-| `y`              | `number`   | `0`     | Y of the bounding box's top-left.                                   |
-| `width`          | `number`   | `180`   | Bounding-box width (px).                                            |
-| `height`         | `number`   | `95`    | Bounding-box height (px). Not auto-fitted to the rows.              |
-| `text.name.text` | `string`   | `""`    | Title in the top band.                                              |
-| `text.rows.text` | `string[]` | `[]`    | Compartment rows, one entry per line (left-aligned, packed to top). |
+A UML class with operations adds the third slot (`"height": 120` fits two rows in
+each compartment):
 
-Either slot also takes `textAlign` / `verticalAlign` / `fontColor` / `fontSize` /
+```json
+{
+	"id": "rec-2",
+	"type": "record",
+	"x": 420,
+	"y": 150,
+	"width": 200,
+	"height": 120,
+	"text": {
+		"name": { "text": "Order" },
+		"attributes": { "text": ["id: string", "total: number"] },
+		"operations": { "text": ["submit()", "cancel()"] }
+	}
+}
+```
+
+| Field                  | Type       | Default | Description                                                       |
+| ---------------------- | ---------- | ------- | ----------------------------------------------------------------- |
+| `x`                    | `number`   | `0`     | X of the bounding box's top-left.                                 |
+| `y`                    | `number`   | `0`     | Y of the bounding box's top-left.                                 |
+| `width`                | `number`   | `180`   | Bounding-box width (px).                                          |
+| `height`               | `number`   | `95`    | Bounding-box height (px). Not auto-fitted to the rows.            |
+| `text.name.text`       | `string`   | `""`    | Title in the top band; the band is always drawn.                  |
+| `text.attributes.text` | `string[]` | —       | Attribute rows, one entry per line. Slot absent = no compartment. |
+| `text.operations.text` | `string[]` | —       | Operation rows, one entry per line. Slot absent = no compartment. |
+
+Every slot also takes `textAlign` / `verticalAlign` / `fontColor` / `fontSize` /
 `fontFamily` / `fontWeight` beside its `text`, with the same meanings as the
 shape-wide fields of other shapes. The defaults differ where the compartments
 need it: `textAlign` `"left"`, `verticalAlign` `"top"`, `fontSize` `14` (the 21px
 row pitch is sized for it); the rest are the shared defaults. `fill` defaults to
 `"auto"` (theme surface) rather than `"transparent"`.
 
-The **height is not adjusted to the content**: give it a value that fits the rows
-— `32 + 21 × (number of rows)` is the height that fits them exactly. Rows below
-the bottom edge are clipped.
+The **height is not adjusted to the content**: the compartments divide up whatever
+height you give. Every compartment above the bottom one takes the height its own
+rows need (`21 × rows + 4`, or 25 when empty); the bottom one takes the remainder
+and clips rows below the box edge. Heights that fit exactly:
 
-The **title band** is the exception: it follows its own slot. Its height is
+- title + one compartment of N rows: `32 + 21 × N`
+- add a second compartment of M rows: `+ 21 × M + 4`
+
+The **title band** follows its own slot. Its height is
 `1.5 × name.fontSize × (displayed lines) + 7`, so raising `name.fontSize`,
 writing a newline in `name.text`, or giving a title too long for the `width`
-makes the band taller and starts the rows lower — add the extra to `height`
-as well. With the default `fontSize` 14 and a one-line title the band is the
-28px the formula above assumes.
+makes the band taller and starts the compartments lower — add the extra to
+`height` as well. With the default `fontSize` 14 and a one-line title the band is
+the 28px the formulas above assume.
 
 ---
 

@@ -234,7 +234,7 @@ test("record（複数スロット）の SVG エクスポートは全スロット
 	);
 	await canvas.deselect();
 
-	// タイトル帯（上端 28px 内）= name スロット、その下 = rows スロット
+	// タイトル帯（上端 28px 内）= name スロット、その下 = attributes スロット
 	await canvas.typeTextAt({ x: 410, y: 212 }, "Users");
 	await canvas.commitText();
 	await canvas.typeTextAt({ x: 410, y: 255 }, "id: string\nname: string");

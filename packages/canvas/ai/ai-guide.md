@@ -50,39 +50,39 @@ The top level must always have `version` / `root` (the array may be empty).
 
 ## 4. Object quick reference
 
-| `type`                  | Required geometry                    | Main styles                                                      |
-| ----------------------- | ------------------------------------ | ---------------------------------------------------------------- |
-| `rect`                  | `x`,`y`,`width`,`height`             | stroke / fill / text / `rx` (rounded) / rotation                 |
-| `markdown`              | `x`,`y`,`width`,`height`             | stroke / fill / **Markdown-rendered** text / `rx` / rotation     |
-| `ellipse`               | `cx`,`cy`,`rx`,`ry`                  | stroke / fill / text / rotation                                  |
-| `diamond`               | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (decision node)                  |
-| `stadium`               | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (start/end terminator)           |
-| `parallelogram`         | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (input/output)                   |
-| `hexagon`               | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (preparation)                    |
-| `cloud`                 | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (external system, fuzzy concept) |
-| `document`              | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (report, file)                   |
-| `multiDocument`         | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (stacked documents; batch)       |
-| `actor`                 | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (user, role, stakeholder)        |
-| `callout`               | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (annotation bubble)              |
-| `db`                    | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (data store)                     |
-| `storedData`            | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (generic stored data; file)      |
-| `subroutine`            | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (predefined process / call)      |
-| `trapezoid`             | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (manual operation)               |
-| `manualInput`           | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (manual/keyed input)             |
-| `card`                  | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (punched-card data)              |
-| `delay`                 | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (wait/delay)                     |
-| `loopLimit`             | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (loop start; `flipY` for end)    |
-| `display`               | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (output to display)              |
-| `extract`               | `x`,`y`,`width`,`height`             | stroke / fill / rotation (merge/marker; **no text**)             |
-| `cross`                 | `x`,`y`,`width`,`height`             | stroke / fill / rotation (junction/marker; **no text**)          |
-| `offPageConnector`      | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (off-page connector; pentagon)   |
-| `record`                | `x`,`y`,`width`,`height`             | stroke / fill / **keyed** text / rotation (titled box + rows)    |
-| `polyline`              | `points` (open line)                 | stroke / startArrow / endArrow                                   |
-| `polygon`               | `points` (auto-closed)               | stroke / fill                                                    |
-| `group`                 | `children`                           | rotation / flipX / flipY                                         |
-| `connector` (in `root`) | `source`,`target`,`points:[]`        | stroke / startArrow / endArrow / routing / label                 |
-| `sticky`                | `x`,`y`,`width`,`height`             | fill / text (no stroke or rx)                                    |
-| `svg`                   | `x`,`y`,`width`,`height` + `svgText` | rotation only (opaque box; no stroke/fill/text)                  |
+| `type`                  | Required geometry                    | Main styles                                                           |
+| ----------------------- | ------------------------------------ | --------------------------------------------------------------------- |
+| `rect`                  | `x`,`y`,`width`,`height`             | stroke / fill / text / `rx` (rounded) / rotation                      |
+| `markdown`              | `x`,`y`,`width`,`height`             | stroke / fill / **Markdown-rendered** text / `rx` / rotation          |
+| `ellipse`               | `cx`,`cy`,`rx`,`ry`                  | stroke / fill / text / rotation                                       |
+| `diamond`               | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (decision node)                       |
+| `stadium`               | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (start/end terminator)                |
+| `parallelogram`         | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (input/output)                        |
+| `hexagon`               | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (preparation)                         |
+| `cloud`                 | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (external system, fuzzy concept)      |
+| `document`              | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (report, file)                        |
+| `multiDocument`         | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (stacked documents; batch)            |
+| `actor`                 | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (user, role, stakeholder)             |
+| `callout`               | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (annotation bubble)                   |
+| `db`                    | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (data store)                          |
+| `storedData`            | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (generic stored data; file)           |
+| `subroutine`            | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (predefined process / call)           |
+| `trapezoid`             | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (manual operation)                    |
+| `manualInput`           | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (manual/keyed input)                  |
+| `card`                  | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (punched-card data)                   |
+| `delay`                 | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (wait/delay)                          |
+| `loopLimit`             | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (loop start; `flipY` for end)         |
+| `display`               | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (output to display)                   |
+| `extract`               | `x`,`y`,`width`,`height`             | stroke / fill / rotation (merge/marker; **no text**)                  |
+| `cross`                 | `x`,`y`,`width`,`height`             | stroke / fill / rotation (junction/marker; **no text**)               |
+| `offPageConnector`      | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation (off-page connector; pentagon)        |
+| `record`                | `x`,`y`,`width`,`height`             | stroke / fill / **keyed** text / rotation (titled box + compartments) |
+| `polyline`              | `points` (open line)                 | stroke / startArrow / endArrow                                        |
+| `polygon`               | `points` (auto-closed)               | stroke / fill                                                         |
+| `group`                 | `children`                           | rotation / flipX / flipY                                              |
+| `connector` (in `root`) | `source`,`target`,`points:[]`        | stroke / startArrow / endArrow / routing / label                      |
+| `sticky`                | `x`,`y`,`width`,`height`             | fill / text (no stroke or rx)                                         |
+| `svg`                   | `x`,`y`,`width`,`height` + `svgText` | rotation only (opaque box; no stroke/fill/text)                       |
 
 **Style values**
 
@@ -110,10 +110,14 @@ The top level must always have `version` / `root` (the array may be empty).
 
 ### Record (`record`) — the one shape whose `text` is an object
 
-Use `record` for a **titled box with a list of rows**: a UML class, an ER entity,
-an ontology concept with its properties. Its `text` has two named slots and a
-plain string is rejected — put the title in `name.text` and **one array entry per
-row** in `rows.text` (never a newline inside an entry).
+Use `record` for a **titled box with compartments of rows**: a UML class, an ER
+entity, an ontology concept with its properties. Its `text` is a set of named
+slots and a plain string is rejected — put the title in `name.text` and **one
+array entry per row** in a compartment's `text` (never a newline inside an entry).
+
+**Which slots you write is what gives the box its compartments.** There are three:
+`name` (always drawn), `attributes`, and `operations`, stacked in that order.
+Leave a compartment's slot out entirely and the box does not have it.
 
 ```json
 {
@@ -125,10 +129,33 @@ row** in `rows.text` (never a newline inside an entry).
 	"height": 95,
 	"text": {
 		"name": { "text": "User" },
-		"rows": { "text": ["id: string", "name: string", "email: string"] }
+		"attributes": { "text": ["id: string", "name: string", "email: string"] }
 	}
 }
 ```
+
+A UML class adds the third slot; a DTO, an ER entity, or a value object leaves it
+out and stays two-compartment:
+
+```json
+{
+	"id": "order",
+	"type": "record",
+	"x": 360,
+	"y": 80,
+	"width": 200,
+	"height": 120,
+	"text": {
+		"name": { "text": "Order" },
+		"attributes": { "text": ["id: string", "total: number"] },
+		"operations": { "text": ["submit()", "cancel()"] }
+	}
+}
+```
+
+An empty array is not the same as an absent slot: `"operations": { "text": [] }`
+keeps the compartment and draws it empty, which is how you say "this class has no
+operations" rather than "this box has no operations compartment".
 
 Each slot carries **its own** typography (`textAlign` / `verticalAlign` /
 `fontColor` / `fontSize` / `fontFamily` / `fontWeight`, all optional and written
@@ -136,14 +163,21 @@ beside `text`); a `record` has **no shape-wide** text fields, so writing them at
 the top level is an error. Slot defaults differ from other shapes where the
 compartments need it — `textAlign` `"left"`, `verticalAlign` `"top"`, `fontSize`
 `14` (the 21px row pitch is sized for it) — and `fill` defaults to `"auto"` like
-`markdown`. Both bands draw exactly what their slot's typography says; the rows
-are packed one line per entry into the compartment below the title band. The
-**height is never adjusted to the content**, so size it
-yourself: `32 + 21 * rows.length` fits the band plus one line per row exactly, and
-rows past the bottom edge are clipped. The **title band** is the one part that
-does grow with its text: a larger `name.fontSize`, a newline, or a title too long
-for the `width` makes the band taller (one 1.5×fontSize line per displayed line
-plus 7px) and pushes the rows down, so add that much to the `height` too.
+`markdown`. Every band draws exactly what its slot's typography says; rows are
+packed one line per entry.
+
+The **height is never adjusted to the content** — the compartments divide up
+whatever height you give. Each compartment above the bottom one takes the height
+its own rows need (`21 * rows + 4`, and 25 when empty); the bottom one takes the
+remainder and clips anything past the box. So size it yourself:
+
+- title + one compartment of N rows: `32 + 21 * N`
+- add a second compartment of M rows: `+ 21 * M + 4`
+
+The **title band** is the one part that grows with its text: a larger
+`name.fontSize`, a newline, or a title too long for the `width` makes the band
+taller (one 1.5×fontSize line per displayed line plus 7px) and pushes the
+compartments down, so add that much to the `height` too.
 
 ### Raw SVG (`svg`) — escape hatch for complex visuals
 

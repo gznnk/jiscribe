@@ -20,11 +20,11 @@ const makeDoc = (text?: RecordDoc["text"]): RecordDoc =>
 describe("recordToState", () => {
 	it("keeps the slot contents, filling omitted styling with the record defaults", () => {
 		const state = recordToState(
-			makeDoc({ name: { text: "User" }, rows: { text: ["id", "name"] } }),
+			makeDoc({ name: { text: "User" }, attributes: { text: ["id", "name"] } }),
 		);
 		expect(state.text).toEqual({
 			name: { ...RECORD_SLOT_STYLE_DEFAULTS, text: "User" },
-			rows: { ...RECORD_SLOT_STYLE_DEFAULTS, text: ["id", "name"] },
+			attributes: { ...RECORD_SLOT_STYLE_DEFAULTS, text: ["id", "name"] },
 		});
 	});
 
@@ -32,12 +32,12 @@ describe("recordToState", () => {
 		const state = recordToState(
 			makeDoc({
 				name: { text: "User", fontWeight: "bold" },
-				rows: { text: ["id"], fontSize: 12, textAlign: "center" },
+				attributes: { text: ["id"], fontSize: 12, textAlign: "center" },
 			}),
 		);
 		expect(state.text).toEqual({
 			name: { ...RECORD_SLOT_STYLE_DEFAULTS, text: "User", fontWeight: "bold" },
-			rows: {
+			attributes: {
 				...RECORD_SLOT_STYLE_DEFAULTS,
 				text: ["id"],
 				fontSize: 12,
@@ -46,40 +46,64 @@ describe("recordToState", () => {
 		});
 	});
 
-	it("fills in both slots when the doc spells out neither", () => {
+	it("materializes the title alone when the doc spells out no slot", () => {
+		// An absent compartment is an absent compartment, so only the title —
+		// which every record has — is filled in.
 		expect(recordToState(makeDoc()).text).toEqual({
 			name: { ...RECORD_SLOT_STYLE_DEFAULTS, text: "" },
-			rows: { ...RECORD_SLOT_STYLE_DEFAULTS, text: [] },
 		});
 	});
 
-	it("puts name first even when the doc wrote rows first", () => {
-		// 先頭キーが Enter 起動の既定スロットなので、キー順は state 側で固定する。
+	it("keeps a written compartment and leaves an unwritten one out", () => {
+		const state = recordToState(
+			makeDoc({ name: { text: "User" }, operations: { text: ["save()"] } }),
+		);
+		expect(Object.keys(state.text)).toEqual(["name", "operations"]);
+	});
+
+	it("materializes the title even when the doc writes only a compartment", () => {
+		const state = recordToState(
+			makeDoc({ attributes: { text: ["id"] } } as RecordDoc["text"]),
+		);
+		expect(state.text.name).toEqual({
+			...RECORD_SLOT_STYLE_DEFAULTS,
+			text: "",
+		});
+	});
+
+	it("stacks the slots in the canonical order whatever order the doc wrote them", () => {
+		// 先頭キーが Enter 起動の既定スロットで、以降のキー順が区画の重なり順。
 		const state = recordToState(
 			makeDoc({
-				rows: { text: ["a"] },
+				operations: { text: ["save()"] },
+				attributes: { text: ["a"] },
 				name: { text: "User" },
 			} as RecordDoc["text"]),
 		);
-		expect(Object.keys(state.text)).toEqual(["name", "rows"]);
+		expect(Object.keys(state.text)).toEqual([
+			"name",
+			"attributes",
+			"operations",
+		]);
 	});
 
 	it("gives every record its own rows array", () => {
-		const first = recordToState(makeDoc());
-		const second = recordToState(makeDoc());
-		expect(first.text.rows.text).not.toBe(second.text.rows.text);
+		const emptyRows = { name: { text: "" }, attributes: { text: [] } };
+		const first = recordToState(makeDoc(emptyRows));
+		const second = recordToState(makeDoc(emptyRows));
+		expect(first.text.attributes?.text).not.toBe(second.text.attributes?.text);
 	});
 
 	it("falls back to an empty slot for a content of the wrong kind", () => {
 		const state = recordToState(
 			makeDoc({
 				name: { text: ["User"] },
-				rows: { text: "id" },
+				attributes: { text: "id" },
 			} as unknown as RecordDoc["text"]),
 		);
 		expect(state.text).toEqual({
 			name: { ...RECORD_SLOT_STYLE_DEFAULTS, text: "" },
-			rows: { ...RECORD_SLOT_STYLE_DEFAULTS, text: [] },
+			attributes: { ...RECORD_SLOT_STYLE_DEFAULTS, text: [] },
 		});
 	});
 
@@ -96,26 +120,26 @@ describe("recordToState", () => {
 describe("recordToDoc", () => {
 	it("emits the keyed text unconverted, the materialized defaults included", () => {
 		const state = recordToState(
-			makeDoc({ name: { text: "User" }, rows: { text: ["id"] } }),
+			makeDoc({ name: { text: "User" }, attributes: { text: ["id"] } }),
 		);
 		expect(recordToDoc(state).text).toEqual({
 			name: { ...RECORD_SLOT_STYLE_DEFAULTS, text: "User" },
-			rows: { ...RECORD_SLOT_STYLE_DEFAULTS, text: ["id"] },
+			attributes: { ...RECORD_SLOT_STYLE_DEFAULTS, text: ["id"] },
 		});
 	});
 
-	it("keeps the empty keyed text instead of dropping it", () => {
+	it("keeps the title-only text instead of dropping it", () => {
 		const state = recordToState(makeDoc());
 		expect(recordToDoc(state).text).toEqual({
 			name: { ...RECORD_SLOT_STYLE_DEFAULTS, text: "" },
-			rows: { ...RECORD_SLOT_STYLE_DEFAULTS, text: [] },
 		});
 	});
 
-	it("round-trips content and explicit styling, materializing the omitted defaults", () => {
+	it("round-trips all three compartments, materializing the omitted defaults", () => {
 		const doc = makeDoc({
 			name: { text: "User", fontWeight: "bold" },
-			rows: { text: ["id: string", "name: string"], fontSize: 12 },
+			attributes: { text: ["id: string", "name: string"], fontSize: 12 },
+			operations: { text: ["save()"] },
 		});
 		const roundTripped = recordToDoc(recordToState(doc));
 		expect(roundTripped).toMatchObject({
@@ -128,11 +152,24 @@ describe("recordToDoc", () => {
 		});
 		expect(roundTripped.text).toEqual({
 			name: { ...RECORD_SLOT_STYLE_DEFAULTS, text: "User", fontWeight: "bold" },
-			rows: {
+			attributes: {
 				...RECORD_SLOT_STYLE_DEFAULTS,
 				text: ["id: string", "name: string"],
 				fontSize: 12,
 			},
+			operations: { ...RECORD_SLOT_STYLE_DEFAULTS, text: ["save()"] },
 		});
+	});
+
+	it("round-trips a two-compartment box without inventing the third", () => {
+		const doc = makeDoc({
+			name: { text: "UserDto" },
+			attributes: { text: ["id: string"] },
+		});
+		const roundTripped = recordToDoc(recordToState(doc));
+		expect(Object.keys(roundTripped.text ?? {})).toEqual([
+			"name",
+			"attributes",
+		]);
 	});
 });

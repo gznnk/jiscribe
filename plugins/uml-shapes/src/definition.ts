@@ -16,16 +16,17 @@ import { RecordStencils } from "./stencil/RecordStencils";
 
 /**
  * The title band is sized from the title itself (calcRecordSlotRegions), so it
- * follows the draft while it is typed and the editor may grow with it. The rows
- * region is only the leftover below that band — it does not answer to the rows
- * text — so its editor stays inside it and scrolls.
+ * follows the draft while it is typed and the editor may grow with it, down to
+ * the box's bottom edge. A row compartment stays `"scroll"`: its region already
+ * follows the draft where it can, and letting the editor pass it would spill over
+ * the compartment below.
  */
 const resolveRecordTextEditOverflow: ObjectTextEditOverflowResolver = (
 	slotId,
 ) => (slotId === RECORD_NAME_SLOT_ID ? "grow" : "scroll");
 
 /**
- * The record's two text slots need no declaration here: the keys of `state.text`
+ * The record's text slots need no declaration here: the keys of `state.text`
  * are the authority, and the per-type contributions are `textRegion` and
  * `textEditOverflow`, which both take the slot id (see calcRecordTextRegion).
  *

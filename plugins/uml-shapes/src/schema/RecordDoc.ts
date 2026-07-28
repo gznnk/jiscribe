@@ -12,25 +12,52 @@ import {
 /** Slot holding the box title (class / entity / concept name). */
 export const RECORD_NAME_SLOT_ID = "name";
 
-/** Slot holding the compartment rows (attributes, fields, properties). */
-export const RECORD_ROWS_SLOT_ID = "rows";
+/** Slot holding the attribute rows (fields, properties, ER columns). */
+export const RECORD_ATTRIBUTES_SLOT_ID = "attributes";
+
+/** Slot holding the operation rows (methods, behaviors). */
+export const RECORD_OPERATIONS_SLOT_ID = "operations";
+
+/**
+ * Every slot a record may hold, in the order their compartments stack from the
+ * top of the box. `name` is always there; the others are optional, and an absent
+ * one is not an empty compartment but no compartment at all — which is how a
+ * two-compartment box (a DTO, an ER entity) and a name-only box are written.
+ */
+export const RECORD_SLOT_IDS = [
+	RECORD_NAME_SLOT_ID,
+	RECORD_ATTRIBUTES_SLOT_ID,
+	RECORD_OPERATIONS_SLOT_ID,
+] as const;
+
+/** One of the record's slot ids (RECORD_SLOT_IDS 参照). */
+export type RecordSlotId = (typeof RECORD_SLOT_IDS)[number];
+
+/**
+ * A slot whose content is a list of rows — every slot but the title, and equally
+ * every slot a record may leave out.
+ */
+export type RecordListSlotId = Exclude<
+	RecordSlotId,
+	typeof RECORD_NAME_SLOT_ID
+>;
 
 /** Default type size; the band metrics below are derived from it. */
 export const RECORD_FONT_SIZE = 14;
 
 /**
  * Height one drawn row occupies, in local pixels. Derived from the shared
- * line-height, and the unit the default box height is measured in (a row that
- * wraps takes more than this and overflows — see calcRecordSlotRegions).
+ * line-height, and the unit a list compartment is measured in (a row that wraps
+ * takes more than this and overflows — see calcRecordSlotRegions).
  */
 export const RECORD_ROW_HEIGHT = RECORD_FONT_SIZE * TEXT_LINE_HEIGHT;
 
 /**
  * Vertical padding the shared text box (TextOverlayFrame's content element) adds
- * above and below the rows. Counted in below so the default height shows its rows
- * without clipping them.
+ * above and below a list compartment's rows. Counted in below so a compartment
+ * sized for its rows shows them without clipping.
  */
-const RECORD_ROWS_PADDING_Y = 2;
+const RECORD_LIST_PADDING_Y = 2;
 
 /**
  * Horizontal padding the shared text box adds on each side of the title, i.e.
@@ -54,9 +81,17 @@ export const RECORD_NAME_PADDING_Y_TOTAL = 7;
 export const RECORD_HEADER_HEIGHT =
 	RECORD_ROW_HEIGHT + RECORD_NAME_PADDING_Y_TOTAL;
 
-/** Local pixels of the box the rows cannot use: the title band plus the text box's own padding. */
-export const RECORD_ROWS_RESERVED_HEIGHT =
-	RECORD_HEADER_HEIGHT + RECORD_ROWS_PADDING_Y * 2;
+/**
+ * Height a list compartment showing `rowCount` rows occupies, padding included.
+ * The single place the rows → pixels conversion lives: the region split measures
+ * a compartment with it, and the doc defaults size a fresh box with it.
+ *
+ * @param rowCount - Rows to fit; 0 still yields one row's worth, so an empty
+ *   compartment reads as a compartment rather than a hairline
+ * @returns Local pixels, never below one row plus the padding
+ */
+export const calcRecordListHeight = (rowCount: number): number =>
+	Math.max(rowCount, 1) * RECORD_ROW_HEIGHT + RECORD_LIST_PADDING_Y * 2;
 
 /**
  * Typography a record slot has unless its doc says otherwise: the mapper fills
@@ -75,10 +110,10 @@ export const RECORD_SLOT_STYLE_DEFAULTS = {
 } as const satisfies Omit<TextSlot, "text">;
 
 /**
- * A record: a titled box with a compartment of rows below it (a UML class, an ER
- * entity, an ontology concept with its properties). Two text slots — `name` for
- * the title band and `rows` for the compartment — keyed by slot id in `text`;
- * the single-body form other shapes use is not valid here (see validateRecordDoc).
+ * A record: a titled box with one or two compartments of rows below it (a UML
+ * class, an ER entity, an ontology concept with its properties). Its text is a
+ * set of slots keyed by slot id (RECORD_SLOT_IDS 参照) rather than the single
+ * body other shapes take; the string form is not valid here (validateRecordDoc 参照).
  *
  * Adopts rect geometry (x/y/width/height) so it reuses Frame-based transforms and
  * outline connector attachment exactly like Rect / Card. The box is sized freely:
@@ -96,15 +131,18 @@ export const RecordFeatures = {
 
 /**
  * The record's `text`: a closed set of slot ids, unlike the single body of most
- * shapes. The variability lives in the `rows` array, so the key set stays fixed
- * and doubles as the slot declaration. Each slot carries its own typography
- * (TextSlot), there being no shape-wide text style to inherit from.
+ * shapes. Which of them are written decides how many compartments the box has,
+ * so the optional keys are the shape's structure and not merely absent content.
+ * Each slot carries its own typography (TextSlot), there being no shape-wide
+ * text style to inherit from.
  */
 export type RecordTextDoc = {
-	/** Title shown in the top band. May be empty. */
+	/** Title shown in the top band. Always present; may be empty. */
 	name: TextSlot<string>;
-	/** Compartment rows, one entry per line. May be empty; an entry may not contain a newline. */
-	rows: TextSlot<string[]>;
+	/** Attribute rows, one entry per line. Omitted means the box has no attribute compartment. */
+	attributes?: TextSlot<string[]>;
+	/** Operation rows, one entry per line. Omitted means the box has no operation compartment. */
+	operations?: TextSlot<string[]>;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -112,29 +150,31 @@ declare const RecordDocBrand: unique symbol;
 
 /**
  * `text: "slots"` mixes in no text fields of its own, so the closed slot set is
- * spelled out here — the one place that knows a record has exactly `name` and `rows`.
+ * spelled out here — the one place that knows which slots a record may have.
  */
 export type RecordDoc = CreateObjectType<
 	typeof RecordFeatures,
 	typeof RecordDocBrand,
 	{
-		/** The two text slots. Absent is read as both empty. */
+		/** The text slots. Absent is read as a title-only box with an empty title. */
 		text?: RecordTextDoc;
 	}
 >;
 
 /**
  * Theme-derived doc defaults for a newly created record (tier 2: AUTO_COLOR /
- * DEFAULT_FONT_FAMILY). The typography is repeated in both slots because a slot
- * is where it is stored — the drawing has no styling of its own (RecordBox).
+ * DEFAULT_FONT_FAMILY). Two compartments — the shape most records take — with the
+ * third available through the class stencil (RecordStencils 参照). The typography
+ * is repeated in both slots because a slot is where it is stored: the drawing has
+ * no styling of its own (RecordBox).
  */
 export const RECORD_DOC_DEFAULTS: Omit<RecordDoc, "id"> = {
 	type: "record",
 	x: 0,
 	y: 0,
 	width: 180,
-	// Fits three rows under the title band without resizing.
-	height: RECORD_ROWS_RESERVED_HEIGHT + 3 * RECORD_ROW_HEIGHT,
+	// Fits three attribute rows under the title band without resizing.
+	height: RECORD_HEADER_HEIGHT + calcRecordListHeight(3),
 	fill: AUTO_COLOR,
 	stroke: AUTO_COLOR,
 	strokeWidth: 2,
@@ -142,6 +182,6 @@ export const RECORD_DOC_DEFAULTS: Omit<RecordDoc, "id"> = {
 		name: { text: "", ...RECORD_SLOT_STYLE_DEFAULTS },
 		// `as string[]` keeps `as const` from typing the empty rows as a readonly
 		// tuple, which no longer overlaps RecordTextDoc.
-		rows: { text: [] as string[], ...RECORD_SLOT_STYLE_DEFAULTS },
+		attributes: { text: [] as string[], ...RECORD_SLOT_STYLE_DEFAULTS },
 	},
 } as const as RecordDoc;

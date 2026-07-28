@@ -26,7 +26,7 @@ const makeDoc = (text: unknown) => ({
 			y: 0,
 			width: 180,
 			height: 100,
-			text: { name: { text: "Order" }, rows: { text: ["id: string"] } },
+			text: { name: { text: "Order" }, attributes: { text: ["id: string"] } },
 		},
 		{
 			id: "c-1",
@@ -44,7 +44,8 @@ describe("record shape", () => {
 			JSON.stringify(
 				makeDoc({
 					name: { text: "User" },
-					rows: { text: ["id: string", "name"] },
+					attributes: { text: ["id: string", "name"] },
+					operations: { text: ["save()"] },
 				}),
 			),
 		);

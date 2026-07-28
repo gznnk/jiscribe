@@ -15,11 +15,24 @@ const validate = (doc: Record<string, unknown>) =>
 	validateRecordDoc(doc, "root[0]");
 
 describe("validateRecordDoc", () => {
-	it("accepts the keyed text with both slots", () => {
+	it("accepts the keyed text with a title and a compartment", () => {
 		expect(
 			validate({
 				...baseDoc,
-				text: { name: { text: "User" }, rows: { text: ["id: string"] } },
+				text: { name: { text: "User" }, attributes: { text: ["id: string"] } },
+			}),
+		).toEqual([]);
+	});
+
+	it("accepts all three compartments", () => {
+		expect(
+			validate({
+				...baseDoc,
+				text: {
+					name: { text: "User" },
+					attributes: { text: ["id: string"] },
+					operations: { text: ["save()"] },
+				},
 			}),
 		).toEqual([]);
 	});
@@ -29,18 +42,19 @@ describe("validateRecordDoc", () => {
 		expect(
 			validate({
 				...baseDoc,
-				text: { name: { text: "" }, rows: { text: [] } },
+				text: { name: { text: "" }, attributes: { text: [] } },
 			}),
 		).toEqual([]);
 	});
 
-	it("accepts a partially spelled out text (one slot only)", () => {
+	it("accepts a box that leaves compartments out", () => {
+		// 区画の欠落はエラーではなく「その区画を持たない箱」。
 		expect(validate({ ...baseDoc, text: { name: { text: "User" } } })).toEqual(
 			[],
 		);
-		expect(validate({ ...baseDoc, text: { rows: { text: ["a"] } } })).toEqual(
-			[],
-		);
+		expect(
+			validate({ ...baseDoc, text: { operations: { text: ["save()"] } } }),
+		).toEqual([]);
 	});
 
 	it("accepts per-slot styling", () => {
@@ -49,7 +63,7 @@ describe("validateRecordDoc", () => {
 				...baseDoc,
 				text: {
 					name: { text: "User", fontWeight: "bold", textAlign: "center" },
-					rows: { text: ["id"], fontSize: 12 },
+					attributes: { text: ["id"], fontSize: 12 },
 				},
 			}),
 		).toEqual([]);
@@ -60,7 +74,8 @@ describe("validateRecordDoc", () => {
 		expect(errors).toHaveLength(1);
 		expect(errors[0].path).toBe("root[0].text");
 		expect(errors[0].message).toContain("name");
-		expect(errors[0].message).toContain("rows");
+		expect(errors[0].message).toContain("attributes");
+		expect(errors[0].message).toContain("operations");
 	});
 
 	it("rejects a bare content in place of a slot object", () => {
@@ -71,44 +86,54 @@ describe("validateRecordDoc", () => {
 	});
 
 	it("rejects an unknown slot id", () => {
+		// 打ち間違いを黙って捨てると、区画が 1 つ足りない図が出来上がる。
 		const errors = validate({
 			...baseDoc,
-			text: { name: { text: "User" }, body: { text: "oops" } },
+			text: { name: { text: "User" }, rows: { text: ["oops"] } },
 		});
 		expect(errors).toEqual([
 			{
-				path: "root[0].text.body",
-				message: 'is not a slot of a record: use "name" or "rows"',
+				path: "root[0].text.rows",
+				message:
+					'is not a slot of a record: use "name" / "attributes" / "operations"',
 			},
 		]);
 	});
 
 	it("rejects a mistyped name", () => {
 		expect(
-			validate({ ...baseDoc, text: { name: { text: 1 }, rows: { text: [] } } }),
+			validate({
+				...baseDoc,
+				text: { name: { text: 1 }, attributes: { text: [] } },
+			}),
 		).toEqual([
 			{ path: "root[0].text.name.text", message: "must be a string" },
 		]);
 	});
 
 	it("rejects rows that are not an array of strings", () => {
-		expect(validate({ ...baseDoc, text: { rows: { text: "a\nb" } } })).toEqual([
+		expect(
+			validate({ ...baseDoc, text: { attributes: { text: "a\nb" } } }),
+		).toEqual([
 			{
-				path: "root[0].text.rows.text",
+				path: "root[0].text.attributes.text",
 				message: "must be an array of strings",
 			},
 		]);
 		expect(
-			validate({ ...baseDoc, text: { rows: { text: ["a", 2] } } }),
+			validate({ ...baseDoc, text: { operations: { text: ["a", 2] } } }),
 		).toEqual([
-			{ path: "root[0].text.rows.text[1]", message: "must be a string" },
+			{ path: "root[0].text.operations.text[1]", message: "must be a string" },
 		]);
 	});
 
 	it("rejects a newline inside a row, which would silently split it", () => {
-		const errors = validate({ ...baseDoc, text: { rows: { text: ["a\nb"] } } });
+		const errors = validate({
+			...baseDoc,
+			text: { attributes: { text: ["a\nb"] } },
+		});
 		expect(errors).toHaveLength(1);
-		expect(errors[0].path).toBe("root[0].text.rows.text[0]");
+		expect(errors[0].path).toBe("root[0].text.attributes.text[0]");
 		expect(errors[0].message).toContain("newline");
 		// The one record rule the JSON schema cannot express; without the flag
 		// the VSCode extension would suppress it (structure-error filtering).

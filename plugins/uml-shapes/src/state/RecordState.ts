@@ -4,17 +4,23 @@ import type { TextSlot } from "@workspace/canvas/doc";
 import type { RecordFeatures } from "../schema/RecordDoc";
 
 /**
- * The record's slots in the state normal form. Both keys are always present and
- * always in this order — `name` first, so Enter-started editing (which has no
- * pointer position to resolve a slot from) opens the title. Structurally the
- * same as RecordTextDoc: a keyed doc and its state hold the same slot shape, the
- * mapper only filling omitted styling from RECORD_SLOT_STYLE_DEFAULTS.
+ * The record's slots in the state normal form. `name` is always present and
+ * always first, so Enter-started editing (which has no pointer position to
+ * resolve a slot from) opens the title; the compartments below follow in
+ * RECORD_SLOT_IDS order, and one the doc left out stays out — the key set is
+ * what gives the box its compartments (createFrameObject enumerates it).
+ *
+ * Structurally the same as RecordTextDoc: a keyed doc and its state hold the same
+ * slot shape, the mapper only filling omitted styling from
+ * RECORD_SLOT_STYLE_DEFAULTS.
  */
 export type RecordTextState = {
 	/** Title shown in the top band. */
 	name: TextSlot<string>;
-	/** Compartment rows, one entry per line. */
-	rows: TextSlot<string[]>;
+	/** Attribute rows; absent when the box has no attribute compartment. */
+	attributes?: TextSlot<string[]>;
+	/** Operation rows; absent when the box has no operation compartment. */
+	operations?: TextSlot<string[]>;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -23,12 +29,12 @@ declare const RecordStateBrand: unique symbol;
 /**
  * `text` is replaced rather than extended: the generated TextStyleState types it
  * as the open slot map every text-bearing shape shares, while a record's set is
- * closed and always populated.
+ * closed and its title always populated.
  */
 export type RecordState = Omit<
 	CreateObjectState<typeof RecordFeatures, typeof RecordStateBrand>,
 	"text"
 > & {
-	/** The two text slots; guaranteed present, typed, and styled by RecordMapper. */
+	/** The text slots; typed, styled, and ordered by RecordMapper, with `name` guaranteed. */
 	text: RecordTextState;
 };

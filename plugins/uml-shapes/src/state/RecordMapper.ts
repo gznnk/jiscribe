@@ -7,8 +7,9 @@ import { AUTO_COLOR } from "@workspace/canvas/unstable-doc";
 
 import type { RecordState, RecordTextState } from "./RecordState";
 import {
+	RECORD_ATTRIBUTES_SLOT_ID,
 	RECORD_NAME_SLOT_ID,
-	RECORD_ROWS_SLOT_ID,
+	RECORD_OPERATIONS_SLOT_ID,
 	RECORD_SLOT_STYLE_DEFAULTS,
 	RecordFeatures,
 } from "../schema/RecordDoc";
@@ -27,11 +28,11 @@ const normalizeNameSlot = (value: unknown): TextSlot<string> => {
 };
 
 /**
- * Forces the compartment slot's content to an array of rows, filling omitted
+ * Forces a compartment slot's content to an array of rows, filling omitted
  * styling from the record defaults. The array is always fresh, so records
  * created from the same doc defaults never share one.
  */
-const normalizeRowsSlot = (value: unknown): TextSlot<string[]> => {
+const normalizeListSlot = (value: unknown): TextSlot<string[]> => {
 	if (!isTextSlot(value)) {
 		return { ...RECORD_SLOT_STYLE_DEFAULTS, text: [] };
 	}
@@ -44,22 +45,34 @@ const normalizeRowsSlot = (value: unknown): TextSlot<string[]> => {
 };
 
 /**
- * Forces the slots into the record's normal form: both keys present, typed,
- * styled (omitted typography filled from RECORD_SLOT_STYLE_DEFAULTS — without
- * this, a parsed doc would render with the shared center/middle/16 fallbacks the
- * schema's documented defaults contradict), and in `name` → `rows` order. The
- * generic doc → state pass-through keeps whatever a document happened to write
- * (including the wrong order, which would move the Enter-editing default), and
- * every consumer — the region calculator, the overlays, the commit write-back —
- * reads the slots off this object, so the invariant has to be established once,
- * here.
+ * Forces the slots into the record's normal form: the title always present and
+ * first, every written compartment typed and styled (omitted typography filled
+ * from RECORD_SLOT_STYLE_DEFAULTS — without this, a parsed doc would render with
+ * the shared center/middle/16 fallbacks the schema's documented defaults
+ * contradict), and the compartments in RECORD_SLOT_IDS order.
+ *
+ * A compartment the doc left out stays out: the key set is what the drawing and
+ * the region split read the box's compartments from. The generic doc → state
+ * pass-through keeps whatever a document happened to write (including the wrong
+ * order, which would move the Enter-editing default and stack the compartments
+ * the wrong way round), so the invariant has to be established once, here.
  */
 const normalizeRecordText = (text: unknown): RecordTextState => {
 	const slots = isObject(text) ? text : {};
-	return {
-		name: normalizeNameSlot(slots[RECORD_NAME_SLOT_ID]),
-		rows: normalizeRowsSlot(slots[RECORD_ROWS_SLOT_ID]),
+	const normalized: RecordTextState = {
+		[RECORD_NAME_SLOT_ID]: normalizeNameSlot(slots[RECORD_NAME_SLOT_ID]),
 	};
+	if (slots[RECORD_ATTRIBUTES_SLOT_ID] !== undefined) {
+		normalized[RECORD_ATTRIBUTES_SLOT_ID] = normalizeListSlot(
+			slots[RECORD_ATTRIBUTES_SLOT_ID],
+		);
+	}
+	if (slots[RECORD_OPERATIONS_SLOT_ID] !== undefined) {
+		normalized[RECORD_OPERATIONS_SLOT_ID] = normalizeListSlot(
+			slots[RECORD_OPERATIONS_SLOT_ID],
+		);
+	}
+	return normalized;
 };
 
 const frameMapper = createFrameMapper<RecordDoc, RecordState>(RecordFeatures);

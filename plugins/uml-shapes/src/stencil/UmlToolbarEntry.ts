@@ -12,5 +12,5 @@ export const umlToolbarEntry: ToolbarEntry = {
 	id: "uml",
 	label: { en: "UML", ja: "UML" },
 	icon: RecordIcon,
-	presetIds: ["record"],
+	presetIds: ["record", "class"],
 };

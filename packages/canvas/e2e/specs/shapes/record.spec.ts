@@ -5,7 +5,7 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
  * record（区画付きボックス）= 1 図形に複数のテキストスロットを持つ最初の型。
  * 守る挙動:
  * - uml フライアウトから作成でき、複合 <g> ＋区画ごとの data-part で描画される
- * - タイトル帯のダブルクリックは name スロット、行区画のダブルクリックは rows
+ * - タイトル帯のダブルクリックは name スロット、行区画のダブルクリックは attributes
  *   スロットの編集になる（data-part によるスロット解決）
  * - 片方のスロットを編集中でも、もう片方のテキストは表示されたまま
  * - 行を増やしても箱は自動リサイズされない（高さはドラッグしたまま）
@@ -13,6 +13,9 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
  *   追従は編集中の下書きにも及び、Escape のキャンセルで確定値へ戻る。伸びるのは
  *   箱の下端までで、そこから先はエディタもスクロールに転じる
  * - 帯に追従しない行区画の編集は区画内に留まり、あふれた分はスクロールで見る
+ * - 区画の構成はスロットの有無で決まる。record ステンシルは name + attributes の
+ *   2 区画、class ステンシルは operations を足した 3 区画。3 区画では中段が自分の
+ *   行数ぶんを取り、最下段が残りを取る
  *
  * 座標メモ: 作成サイズ 220x80 → 空タイトルのタイトル帯は上端 28px
  * （content y=[200,228]）、行区画はその下（y=[228,280]）。
@@ -25,7 +28,7 @@ const RECORD_TO = { x: 520, y: 280 };
 /** タイトル帯の中（上端から 28px 以内）。 */
 const NAME_SPOT = { x: 410, y: 212 };
 /** 行区画の中（タイトル帯より下）。 */
-const ROWS_SPOT = { x: 410, y: 255 };
+const ATTRIBUTES_SPOT = { x: 410, y: 255 };
 
 /** uml フライアウトから record を対角ドラッグで作成し、新規オブジェクトの {id, tag} を返す。 */
 async function createRecord(
@@ -42,7 +45,7 @@ async function createRecord(
 async function partRect(
 	canvas: CanvasDriver,
 	id: string,
-	part: "name" | "rows",
+	part: "name" | "attributes" | "operations",
 ): Promise<{ y: number; height: number }> {
 	const rect = await canvas.page.evaluate(
 		({ objectId, partName }) => {
@@ -100,7 +103,51 @@ test.describe("record（区画付きボックス）", () => {
 				el.getAttribute("data-part"),
 			);
 		}, record.id);
-		expect(parts).toEqual(["name", "rows"]);
+		expect(parts).toEqual(["name", "attributes"]);
+	});
+
+	test("class ステンシルは 3 区画で作られ、中段は行数ぶんだけ取る", async ({
+		canvas,
+	}) => {
+		// 220x120 の箱。空タイトルの帯 28 + 空の中段 25（1 行ぶん + 余白）で、
+		// 残り 67 が最下段。
+		const id = await canvas.drawShapeFromFlyout(
+			CATEGORY,
+			"class",
+			{ x: 300, y: 200 },
+			{ x: 520, y: 320 },
+		);
+		await canvas.deselect();
+
+		const parts = await canvas.page.evaluate((objectId) => {
+			const group = document.querySelector(`[data-id="${objectId}"]`);
+			if (!group) {
+				return [];
+			}
+			return [...group.querySelectorAll("[data-part]")].map((el) =>
+				el.getAttribute("data-part"),
+			);
+		}, id);
+		expect(parts).toEqual(["name", "attributes", "operations"]);
+
+		expect((await partRect(canvas, id, "attributes")).height).toBe(25);
+		expect((await partRect(canvas, id, "operations")).height).toBe(
+			120 - 28 - 25,
+		);
+
+		// 中段に 2 行入れると中段が 2 行ぶん（21 × 2 + 4）へ伸び、最下段がそのぶん
+		// 縮む。箱の高さは動かない。
+		await canvas.typeTextAt({ x: 410, y: 240 }, "id: string\nname: string");
+		await canvas.commitText();
+		await expect
+			.poll(async () => (await partRect(canvas, id, "attributes")).height, {
+				message: "中段が 2 行ぶんへ伸びること",
+			})
+			.toBe(46);
+		expect((await partRect(canvas, id, "operations")).height).toBe(
+			120 - 28 - 46,
+		);
+		expect(await outlineHeight(canvas, id)).toBe(120);
 	});
 
 	test("タイトル帯と行区画で編集されるスロットが切り替わる", async ({
@@ -115,15 +162,15 @@ test.describe("record（区画付きボックス）", () => {
 		await canvas.commitText();
 		await expect(canvas.page.locator("body")).toContainText("User");
 
-		// 行区画のダブルクリック → rows スロット。name の内容は入っていない。
-		await canvas.typeTextAt(ROWS_SPOT, "id: string");
+		// 行区画のダブルクリック → attributes スロット。name の内容は入っていない。
+		await canvas.typeTextAt(ATTRIBUTES_SPOT, "id: string");
 		await expect(canvas.textArea()).toHaveValue("id: string");
 		// 編集中でないスロット（name）のテキストは表示されたまま。
 		await expect(canvas.page.locator("body")).toContainText("User");
 		await canvas.commitText();
 
 		// 再度行区画を開くと、コミットされた行が "\n" 連結で戻ってくる。
-		await canvas.typeTextAt(ROWS_SPOT, "");
+		await canvas.typeTextAt(ATTRIBUTES_SPOT, "");
 		await expect(canvas.textArea()).toHaveValue("id: string");
 		await canvas.cancelText();
 	});
@@ -154,23 +201,23 @@ test.describe("record（区画付きボックス）", () => {
 			.toBeGreaterThan(0.3);
 		await canvas.deselect();
 
-		// 回転後の行区画を直接ダブルクリックして rows 編集を開く。
-		const rows = group.locator('[data-part="rows"]');
-		await rows.dblclick();
+		// 回転後の行区画を直接ダブルクリックして attributes 編集を開く。
+		const attributes = group.locator('[data-part="attributes"]');
+		await attributes.dblclick();
 		await expect(canvas.textArea()).toBeVisible();
 
 		// エディタ枠は行区画と同じ局所矩形＋同じ変換なので、画面上の外接箱が一致する。
 		const editorBox = await canvas.page
 			.locator('[data-testid="text-editor"]')
 			.boundingBox();
-		const rowsBox = await rows.boundingBox();
-		if (!editorBox || !rowsBox) {
+		const attributesBox = await attributes.boundingBox();
+		if (!editorBox || !attributesBox) {
 			throw new Error("エディタ枠または行区画の外接箱が取得できない");
 		}
-		expect(Math.abs(editorBox.x - rowsBox.x)).toBeLessThan(1.5);
-		expect(Math.abs(editorBox.y - rowsBox.y)).toBeLessThan(1.5);
-		expect(Math.abs(editorBox.width - rowsBox.width)).toBeLessThan(1.5);
-		expect(Math.abs(editorBox.height - rowsBox.height)).toBeLessThan(1.5);
+		expect(Math.abs(editorBox.x - attributesBox.x)).toBeLessThan(1.5);
+		expect(Math.abs(editorBox.y - attributesBox.y)).toBeLessThan(1.5);
+		expect(Math.abs(editorBox.width - attributesBox.width)).toBeLessThan(1.5);
+		expect(Math.abs(editorBox.height - attributesBox.height)).toBeLessThan(1.5);
 		await canvas.cancelText();
 	});
 
@@ -182,7 +229,7 @@ test.describe("record（区画付きボックス）", () => {
 
 		// 行区画に収まらない行数（ヘッダ + パディング(32) + 21 × 3 = 95 > 80）。
 		await canvas.typeTextAt(
-			ROWS_SPOT,
+			ATTRIBUTES_SPOT,
 			"id: string\nname: string\nemail: string",
 		);
 		await canvas.commitText();
@@ -191,7 +238,7 @@ test.describe("record（区画付きボックス）", () => {
 		expect(await outlineHeight(canvas, record.id)).toBe(80);
 
 		// コミット自体は成立している（再度開くと 3 行が "\n" 連結で戻る）。
-		await canvas.typeTextAt(ROWS_SPOT, "");
+		await canvas.typeTextAt(ATTRIBUTES_SPOT, "");
 		await expect(canvas.textArea()).toHaveValue(
 			"id: string\nname: string\nemail: string",
 		);
@@ -202,13 +249,13 @@ test.describe("record（区画付きボックス）", () => {
 		const record = await createRecord(canvas, RECORD_FROM, RECORD_TO);
 		await canvas.deselect();
 
-		const rowsBefore = await partRect(canvas, record.id, "rows");
+		const attributesBefore = await partRect(canvas, record.id, "attributes");
 
 		// 行区画（52px）に収まらない行数を編集中のまま持たせる。
-		await canvas.typeTextAt(ROWS_SPOT, "a\nb\nc\nd\ne\nf");
+		await canvas.typeTextAt(ATTRIBUTES_SPOT, "a\nb\nc\nd\ne\nf");
 		await expect(canvas.textArea()).toHaveValue("a\nb\nc\nd\ne\nf");
 
-		// rows は帯の残余なので下書きに追従しない。エディタが伸びれば区画の下へ
+		// attributes は帯の残余なので下書きに追従しない。エディタが伸びれば区画の下へ
 		// はみ出すため、区画の高さに留まってスクロール可能になっていること。
 		const overflow = await canvas
 			.textArea()
@@ -218,19 +265,23 @@ test.describe("record（区画付きボックス）", () => {
 		const editorBox = await canvas.page
 			.locator('[data-testid="text-editor"]')
 			.boundingBox();
-		const rowsBox = await canvas.page
+		const attributesBox = await canvas.page
 			.locator(
-				`[data-kind="object"][data-id="${record.id}"] [data-part="rows"]`,
+				`[data-kind="object"][data-id="${record.id}"] [data-part="attributes"]`,
 			)
 			.boundingBox();
-		if (!editorBox || !rowsBox) {
+		if (!editorBox || !attributesBox) {
 			throw new Error("エディタ枠または行区画の外接箱が取得できない");
 		}
-		expect(Math.abs(editorBox.height - rowsBox.height)).toBeLessThan(1.5);
+		expect(Math.abs(editorBox.height - attributesBox.height)).toBeLessThan(1.5);
 
 		// 区画そのものも編集中に動かない（伸びるのはタイトル帯だけ）。
-		const rowsDuringEdit = await partRect(canvas, record.id, "rows");
-		expect(rowsDuringEdit).toEqual(rowsBefore);
+		const attributesDuringEdit = await partRect(
+			canvas,
+			record.id,
+			"attributes",
+		);
+		expect(attributesDuringEdit).toEqual(attributesBefore);
 		await canvas.cancelText();
 	});
 
@@ -251,8 +302,8 @@ test.describe("record（区画付きボックス）", () => {
 
 		// 行区画は伸びた帯の直下から始まる（隙間も重なりも作らない）。
 		const name = await partRect(canvas, record.id, "name");
-		const rows = await partRect(canvas, record.id, "rows");
-		expect(rows.y).toBeCloseTo(name.y + name.height, 3);
+		const attributes = await partRect(canvas, record.id, "attributes");
+		expect(attributes.y).toBeCloseTo(name.y + name.height, 3);
 
 		// 伸びるのは帯だけで、箱の高さは自動リサイズされない。
 		expect(await outlineHeight(canvas, record.id)).toBe(80);
@@ -276,8 +327,11 @@ test.describe("record（区画付きボックス）", () => {
 
 		// 行区画も編集中から伸びた帯の直下に付いてくる。
 		const editingName = await partRect(canvas, record.id, "name");
-		const editingRows = await partRect(canvas, record.id, "rows");
-		expect(editingRows.y).toBeCloseTo(editingName.y + editingName.height, 3);
+		const editingAttributes = await partRect(canvas, record.id, "attributes");
+		expect(editingAttributes.y).toBeCloseTo(
+			editingName.y + editingName.height,
+			3,
+		);
 
 		// 確定は編集中と同じ導出なので、高さはジャンプせずそのまま。
 		await canvas.commitText();
