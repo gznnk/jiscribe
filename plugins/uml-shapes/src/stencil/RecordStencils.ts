@@ -16,9 +16,9 @@ import {
  */
 export const RecordStencils: Stencil[] = [
 	{
-		id: "record",
+		id: "entity",
 		objectType: "record",
-		label: { en: "Record", ja: "区画付きボックス" },
+		label: { en: "Entity", ja: "エンティティ" },
 		icon: RecordIcon,
 	},
 	{

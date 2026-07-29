@@ -13,7 +13,7 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
  *   追従は編集中の下書きにも及び、Escape のキャンセルで確定値へ戻る。伸びるのは
  *   箱の下端までで、そこから先はエディタもスクロールに転じる
  * - 帯に追従しない行区画の編集は区画内に留まり、あふれた分はスクロールで見る
- * - 区画の構成はスロットの有無で決まる。record ステンシルは name + attributes の
+ * - 区画の構成はスロットの有無で決まる。entity ステンシルは name + attributes の
  *   2 区画、class ステンシルは operations を足した 3 区画。3 区画では中段が自分の
  *   行数ぶんを取り、最下段が残りを取る
  *
@@ -30,13 +30,13 @@ const NAME_SPOT = { x: 410, y: 212 };
 /** 行区画の中（タイトル帯より下）。 */
 const ATTRIBUTES_SPOT = { x: 410, y: 255 };
 
-/** uml フライアウトから record を対角ドラッグで作成し、新規オブジェクトの {id, tag} を返す。 */
+/** uml フライアウトから entity を対角ドラッグで作成し、新規オブジェクトの {id, tag} を返す。 */
 async function createRecord(
 	canvas: CanvasDriver,
 	from: { x: number; y: number },
 	to: { x: number; y: number },
 ): Promise<{ id: string; tag: string }> {
-	const id = await canvas.drawShapeFromFlyout(CATEGORY, "record", from, to);
+	const id = await canvas.drawShapeFromFlyout(CATEGORY, "entity", from, to);
 	const created = (await canvas.captureObjects()).find((obj) => obj.id === id);
 	return { id, tag: created?.tag ?? "" };
 }

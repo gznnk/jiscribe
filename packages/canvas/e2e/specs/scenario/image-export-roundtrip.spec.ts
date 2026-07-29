@@ -228,7 +228,7 @@ test("record（複数スロット）の SVG エクスポートは全スロット
 }) => {
 	await canvas.drawShapeFromFlyout(
 		"uml",
-		"record",
+		"entity",
 		{ x: 300, y: 200 },
 		{ x: 520, y: 280 },
 	);
