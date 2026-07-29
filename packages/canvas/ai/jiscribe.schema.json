@@ -1014,7 +1014,7 @@
 		},
 
 		"ArrowType": {
-			"description": "Arrow shape at a connector endpoint.",
+			"description": "Arrow shape at a connector endpoint. Includes UML relationship markers and ER crow's foot cardinality marks.",
 			"type": "string",
 			"enum": [
 				"FilledTriangle",
@@ -1024,6 +1024,13 @@
 				"FilledDiamond",
 				"HollowDiamond",
 				"Circle",
+				"HollowCircle",
+				"Cross",
+				"CrowFootMany",
+				"CrowFootOneMany",
+				"CrowFootZeroMany",
+				"CrowFootOne",
+				"CrowFootZeroOne",
 				"None"
 			]
 		},

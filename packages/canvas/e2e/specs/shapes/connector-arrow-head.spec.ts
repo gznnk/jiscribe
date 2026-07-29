@@ -5,10 +5,12 @@ import { selectors } from "../../support/selectors";
 /**
  * コネクターの矢印（arrow head）設定の反映と永続。
  *
- * 矢印は端点ごとに `polygon[data-kind=connector][data-id=<id>]` として描かれ、
- * 種別が "None" のときは要素自体が描かれない。既定の新規コネクターは終端だけに
- * ConcaveTriangle を持つ。矢印系（startArrow / endArrow / swapArrows）は既存スイートで
- * 未カバーだったため、「メニュー操作 → 描画要素の増減・入れ替え」を守る。
+ * 矢印は端点ごとに `[data-kind=connector][data-id=<id>]` の要素として描かれ、
+ * 種別が "None" のときは要素自体が描かれない。三角・ひし形は `polygon` 単体だが、
+ * 鳥足系は複数要素からなるため `g` に data-kind が載る（`arrowCount` が数えるのは
+ * 前者だけ）。既定の新規コネクターは終端だけに ConcaveTriangle を持つ。矢印系
+ * （startArrow / endArrow / swapArrows）は既存スイートで未カバーだったため、
+ * 「メニュー操作 → 描画要素の増減・入れ替え」を守る。
  */
 
 /** 上下 2 矩形を縦コネクターで結び、コネクター ID を返す（接続後は選択解除済み） */
@@ -146,6 +148,36 @@ test.describe("コネクターの矢印", () => {
 			.poll(async () => (await arrowShapesByEnd(canvas, id)).source)
 			.toBe(before.target);
 		expect((await arrowShapesByEnd(canvas, id)).target).toBe(before.source);
+	});
+
+	test("鳥足の矢印は path + circle の複合要素として描かれる", async ({
+		canvas,
+	}) => {
+		const id = await buildConnector(canvas);
+
+		await selectConnector(canvas);
+		await canvas.openObjectMenu("arrow-head-end");
+		await canvas.page.click(
+			selectors.objectMenuSet("endArrow", "CrowFootZeroMany"),
+		);
+
+		// 三角系と違い複数要素で 1 つの矢印を成すため、data-kind は <g> に載る。
+		// 子要素からでもヒットテストが辿れることを、要素の内訳ごと押さえる。
+		await expect
+			.poll(() =>
+				canvas.page.evaluate((cid) => {
+					const group = document.querySelector(
+						`g[data-kind="connector"][data-id="${cid}"]`,
+					);
+					return {
+						paths: group?.querySelectorAll("path").length ?? 0,
+						circles: group?.querySelectorAll("circle").length ?? 0,
+					};
+				}, id),
+			)
+			.toEqual({ paths: 1, circles: 1 });
+
+		expect(await arrowCount(canvas, id)).toBe(0);
 	});
 
 	test("endArrow を None にする操作は undo で戻り、redo で再適用される", async ({

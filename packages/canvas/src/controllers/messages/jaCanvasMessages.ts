@@ -152,6 +152,13 @@ export const jaCanvasMessages: CanvasMessages = {
 		FilledDiamond: "塗りつぶしひし形",
 		HollowDiamond: "白抜きひし形",
 		Circle: "丸",
+		HollowCircle: "白抜き丸",
+		Cross: "バツ印",
+		CrowFootMany: "鳥足（多）",
+		CrowFootOneMany: "鳥足（1 以上）",
+		CrowFootZeroMany: "鳥足（0 以上）",
+		CrowFootOne: "鳥足（1 のみ）",
+		CrowFootZeroOne: "鳥足（0 または 1）",
 		None: "なし",
 	},
 };

@@ -37,6 +37,18 @@ export const ArrowPolyline = styled.polyline<ArrowColorProps>`
 `;
 
 /**
+ * Styled path element for arrow shapes.
+ * Used by marks made of several disconnected strokes (a cross, a crow's foot
+ * and its cardinality bars), which a single polyline cannot express.
+ * Enables pointer events for click detection.
+ */
+export const ArrowPath = styled.path<ArrowColorProps>`
+	${arrowColor}
+	pointer-events: auto;
+	cursor: grab;
+`;
+
+/**
  * Styled circle element for arrow shapes.
  * Enables pointer events for click detection.
  */

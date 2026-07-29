@@ -9,6 +9,16 @@ type ArrowHeadIconPreviewProps = {
 	direction: "start" | "end";
 };
 
+/** Scale used whenever the arrow fits at full size. */
+const PREVIEW_SCALE = 1.5;
+
+/**
+ * Horizontal run available to the arrow inside the 24-wide icon, leaving a
+ * pixel of margin at the far edge. Long marks (the ER crow's foot family) are
+ * scaled down to this instead of being clipped by the icon's viewport.
+ */
+const PREVIEW_SPAN = 22;
+
 const ArrowHeadIconPreviewComponent: React.FC<ArrowHeadIconPreviewProps> = ({
 	arrowType,
 	direction,
@@ -16,12 +26,16 @@ const ArrowHeadIconPreviewComponent: React.FC<ArrowHeadIconPreviewProps> = ({
 	const isStart = direction === "start";
 	const type = arrowType ?? "None";
 
-	const scale = 1.5;
+	const baseInset = getArrowLineInset(type);
+	const scale =
+		baseInset > 0
+			? Math.min(PREVIEW_SCALE, PREVIEW_SPAN / baseInset)
+			: PREVIEW_SCALE;
 	const tipX = isStart ? 1 : 23;
 	const radians = isStart ? Math.PI : 0;
 
 	// Shorten the line to the base of the arrowhead to prevent it from passing through the hollow interior or protruding past the tip.
-	const inset = getArrowLineInset(type) * scale;
+	const inset = baseInset * scale;
 	const lineX1 = isStart && inset > 0 ? tipX + inset : 2;
 	const lineX2 = !isStart && inset > 0 ? tipX - inset : 22;
 

@@ -1,7 +1,14 @@
 import { CIRCLE_INSET } from "./shapes/Circle";
 import { CONCAVE_TRIANGLE_INSET } from "./shapes/ConcaveTriangle";
+import { CROSS_INSET } from "./shapes/Cross";
+import { CROW_FOOT_MANY_INSET } from "./shapes/CrowFootMany";
+import { CROW_FOOT_ONE_INSET } from "./shapes/CrowFootOne";
+import { CROW_FOOT_ONE_MANY_INSET } from "./shapes/CrowFootOneMany";
+import { CROW_FOOT_ZERO_MANY_INSET } from "./shapes/CrowFootZeroMany";
+import { CROW_FOOT_ZERO_ONE_INSET } from "./shapes/CrowFootZeroOne";
 import { FILLED_DIAMOND_INSET } from "./shapes/FilledDiamond";
 import { FILLED_TRIANGLE_INSET } from "./shapes/FilledTriangle";
+import { HOLLOW_CIRCLE_INSET } from "./shapes/HollowCircle";
 import { HOLLOW_DIAMOND_INSET } from "./shapes/HollowDiamond";
 import { HOLLOW_TRIANGLE_INSET } from "./shapes/HollowTriangle";
 import type { ArrowType } from "../../../schemas/objects/types/ArrowType";
@@ -22,6 +29,7 @@ import type { ArrowType } from "../../../schemas/objects/types/ArrowType";
  * Types that are not shortened:
  *   - None: no arrow
  *   - OpenArrow: has no body and connects to the line at the tip (endpoint), so shortening would leave a gap
+ *   - Cross: sits on the line by definition (UML non-navigable end)
  */
 const ARROW_LINE_INSETS: Record<ArrowType, number> = {
 	FilledTriangle: FILLED_TRIANGLE_INSET,
@@ -31,6 +39,13 @@ const ARROW_LINE_INSETS: Record<ArrowType, number> = {
 	FilledDiamond: FILLED_DIAMOND_INSET,
 	HollowDiamond: HOLLOW_DIAMOND_INSET,
 	Circle: CIRCLE_INSET,
+	HollowCircle: HOLLOW_CIRCLE_INSET,
+	Cross: CROSS_INSET,
+	CrowFootMany: CROW_FOOT_MANY_INSET,
+	CrowFootOneMany: CROW_FOOT_ONE_MANY_INSET,
+	CrowFootZeroMany: CROW_FOOT_ZERO_MANY_INSET,
+	CrowFootOne: CROW_FOOT_ONE_INSET,
+	CrowFootZeroOne: CROW_FOOT_ZERO_ONE_INSET,
 	None: 0,
 };
 

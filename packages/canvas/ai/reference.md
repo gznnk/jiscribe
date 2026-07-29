@@ -926,16 +926,23 @@ Applies to every box shape (`rect`, `markdown`, `ellipse`, `diamond`, `stadium`,
 
 Used by `startArrow` / `endArrow` on `polyline` and `connector`.
 
-| Value               | Description                       |
-| ------------------- | --------------------------------- |
-| `"None"`            | No arrowhead.                     |
-| `"FilledTriangle"`  | Filled triangle (common arrow).   |
-| `"ConcaveTriangle"` | Concave triangle.                 |
-| `"OpenArrow"`       | Open arrow (`>`).                 |
-| `"HollowTriangle"`  | Hollow triangle.                  |
-| `"FilledDiamond"`   | Filled diamond (UML aggregation). |
-| `"HollowDiamond"`   | Hollow diamond (UML aggregation). |
-| `"Circle"`          | Circle.                           |
+| Value                | Description                                                              |
+| -------------------- | ------------------------------------------------------------------------ |
+| `"None"`             | No arrowhead.                                                            |
+| `"FilledTriangle"`   | Filled triangle (common arrow).                                          |
+| `"ConcaveTriangle"`  | Concave triangle.                                                        |
+| `"OpenArrow"`        | Open arrow (`>`). UML dependency / navigable association.                |
+| `"HollowTriangle"`   | Hollow triangle. UML generalization (solid line) / realization (dashed). |
+| `"FilledDiamond"`    | Filled diamond (UML composition).                                        |
+| `"HollowDiamond"`    | Hollow diamond (UML aggregation).                                        |
+| `"Circle"`           | Filled circle. UML owned association end; sequence lost/found message.   |
+| `"HollowCircle"`     | Hollow circle. UML provided interface (lollipop).                        |
+| `"Cross"`            | Cross (`×`) drawn on the line. UML non-navigable association end.        |
+| `"CrowFootMany"`     | ER crow's foot: many.                                                    |
+| `"CrowFootOneMany"`  | ER crow's foot with a bar: one or many (`1..*`).                         |
+| `"CrowFootZeroMany"` | ER crow's foot with a circle: zero or many (`0..*`).                     |
+| `"CrowFootOne"`      | ER double bar: exactly one (`1..1`).                                     |
+| `"CrowFootZeroOne"`  | ER circle and bar: zero or one (`0..1`).                                 |
 
 ---
 
