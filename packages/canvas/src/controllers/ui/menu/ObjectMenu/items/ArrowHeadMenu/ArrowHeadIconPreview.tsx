@@ -9,7 +9,11 @@ type ArrowHeadIconPreviewProps = {
 	direction: "start" | "end";
 };
 
-/** Scale used whenever the arrow fits at full size. */
+/**
+ * Scale used whenever the arrow fits at full size. It doubles as the icon's
+ * stroke width: the arrow's stroke is 1 local unit times this scale, so the
+ * line has to use the same value to read as one continuous stroke.
+ */
 const PREVIEW_SCALE = 1.5;
 
 /**
@@ -54,7 +58,7 @@ const ArrowHeadIconPreviewComponent: React.FC<ArrowHeadIconPreviewProps> = ({
 				x2={lineX2}
 				y2="12"
 				stroke="currentColor"
-				strokeWidth="2"
+				strokeWidth={scale}
 			/>
 
 			<Arrow
