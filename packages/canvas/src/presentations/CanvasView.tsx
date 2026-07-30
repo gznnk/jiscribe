@@ -21,6 +21,10 @@ type CanvasViewProps = {
 	 * full tree (export / thumbnail / any path that snapshots the DOM).
 	 */
 	visibleObjectIds?: ReadonlySet<string>;
+	/** Render the background grid (default true). See {@link GridPattern}. */
+	showGrid?: boolean;
+	/** Base grid spacing in world units (default 25), passed to GridPattern. */
+	gridSize?: number;
 } & Pick<CanvasState, "objects" | "rootIds" | "viewport">;
 
 const CanvasViewComponent: React.FC<CanvasViewProps> = ({
@@ -33,6 +37,8 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 	textEditSlotId,
 	isDrawMode = false,
 	visibleObjectIds,
+	showGrid = true,
+	gridSize = 25,
 }) => {
 	const { minX, minY, width, height, zoom } = viewport;
 
@@ -44,15 +50,23 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 			viewBox={`${minX} ${minY} ${width / zoom} ${height / zoom}`}
 		>
 			<CanvasDefs />
-			{/* Grid pattern definition */}
-			<GridPattern zoom={zoom} baseGridSize={25} color={theme.gridLine} />
-			{/* Grid background */}
-			<GridBackground
-				x={minX}
-				y={minY}
-				width={width / zoom}
-				height={height / zoom}
-			/>
+			{showGrid && (
+				<>
+					{/* Grid pattern definition */}
+					<GridPattern
+						zoom={zoom}
+						baseGridSize={gridSize}
+						color={theme.gridLine}
+					/>
+					{/* Grid background */}
+					<GridBackground
+						x={minX}
+						y={minY}
+						width={width / zoom}
+						height={height / zoom}
+					/>
+				</>
+			)}
 			<ContentGroup isDrawMode={isDrawMode}>
 				{/* Traverse rootIds (in z-order) and render objects and connectors interleaved */}
 				<ObjectsRenderer

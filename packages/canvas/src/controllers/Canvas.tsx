@@ -126,6 +126,20 @@ type CanvasProps = {
 	 */
 	theme?: CanvasTheme;
 	/**
+	 * Whether to render the background grid (default `true`). The grid is a
+	 * viewing aid only — it is already excluded from image export — so this
+	 * toggles the on-screen display without changing exported images. Live: can
+	 * be flipped at runtime.
+	 */
+	showGrid?: boolean;
+	/**
+	 * Base grid spacing in world units (default `25`). Sets the medium grid
+	 * interval; bold lines fall every 4× this value and the multi-level grid
+	 * adapts to zoom (see the canvas's grid layer). Ignored when `showGrid` is
+	 * `false`.
+	 */
+	gridSize?: number;
+	/**
 	 * Active locale (default `"en"`). Selects the canvas's built-in dictionary
 	 * (en / ja) and is exposed to plugins via `useCanvasLocale`. Resolution is
 	 * exact → language subtag (`"ja-JP"` → `"ja"`) → `"en"`.
@@ -242,6 +256,8 @@ const CanvasComponent = ({
 	onSelectionChange,
 	onViewportChange,
 	theme = darkCanvasTheme,
+	showGrid = true,
+	gridSize = 25,
 	locale = "en",
 	messages,
 	onUndo,
@@ -503,6 +519,8 @@ const CanvasComponent = ({
 							}
 							isDrawMode={!!state.shapeDrawing}
 							visibleObjectIds={visibleObjectIds}
+							showGrid={showGrid}
+							gridSize={gridSize}
 						>
 							<PendingConnectorOverlay
 								pendingConnector={state.pendingConnector}
