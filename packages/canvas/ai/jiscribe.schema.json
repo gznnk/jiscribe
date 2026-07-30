@@ -16,6 +16,10 @@
 			"type": "integer",
 			"const": 1
 		},
+		"background": {
+			"description": "Canvas surface color as a literal CSS color string (a concrete color, not a var(...), so the file stays portable). Omit to follow the theme background. When set it is the surface for both display and image export, and the grid line color is derived from it.",
+			"type": "string"
+		},
 		"root": {
 			"description": "All objects on the canvas (shapes, polylines, groups, connectors) in z-order (back to front). Connectors are mixed in among the objects; array order is the stacking order.",
 			"type": "array",

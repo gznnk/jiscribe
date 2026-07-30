@@ -521,6 +521,7 @@ const CanvasComponent = ({
 							visibleObjectIds={visibleObjectIds}
 							showGrid={showGrid}
 							gridSize={gridSize}
+							background={state.background}
 						>
 							<PendingConnectorOverlay
 								pendingConnector={state.pendingConnector}

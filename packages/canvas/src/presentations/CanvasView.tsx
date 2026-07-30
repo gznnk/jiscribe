@@ -5,6 +5,7 @@ import { ContentGroup, Svg } from "./CanvasViewStyled";
 import { theme } from "../constants/theme";
 import { CanvasDefs } from "./defs/CanvasDefs";
 import type { CanvasState } from "../states/canvas/CanvasState";
+import { deriveGridLineColor } from "./layers/background/deriveGridLineColor";
 import { GridBackground } from "./layers/background/GridBackground";
 import { GridPattern } from "./layers/background/GridPattern";
 import { ObjectsRenderer } from "./layers/content/ObjectsRenderer";
@@ -25,7 +26,7 @@ type CanvasViewProps = {
 	showGrid?: boolean;
 	/** Base grid spacing in world units (default 25), passed to GridPattern. */
 	gridSize?: number;
-} & Pick<CanvasState, "objects" | "rootIds" | "viewport">;
+} & Pick<CanvasState, "objects" | "rootIds" | "viewport" | "background">;
 
 const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 	objects,
@@ -39,8 +40,19 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 	visibleObjectIds,
 	showGrid = true,
 	gridSize = 25,
+	background,
 }) => {
 	const { minX, minY, width, height, zoom } = viewport;
+
+	// A doc-authored surface color paints via the SVG's own background-color, so
+	// image export (which reads getComputedStyle(svg).backgroundColor) follows it
+	// for free. Absent → the styled theme background stays in effect.
+	// The grid line is derived from the doc surface so it reads on any color;
+	// when following the theme (or an unparseable color) fall back to gridLine.
+	const gridLineColor =
+		background !== undefined
+			? (deriveGridLineColor(background) ?? theme.gridLine)
+			: theme.gridLine;
 
 	return (
 		<Svg
@@ -48,6 +60,9 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 			width={width}
 			height={height}
 			viewBox={`${minX} ${minY} ${width / zoom} ${height / zoom}`}
+			style={
+				background !== undefined ? { backgroundColor: background } : undefined
+			}
 		>
 			<CanvasDefs />
 			{showGrid && (
@@ -56,7 +71,7 @@ const CanvasViewComponent: React.FC<CanvasViewProps> = ({
 					<GridPattern
 						zoom={zoom}
 						baseGridSize={gridSize}
-						color={theme.gridLine}
+						color={gridLineColor}
 					/>
 					{/* Grid background */}
 					<GridBackground
