@@ -97,6 +97,7 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 						viewport={viewport}
 						svgRef={svgRef}
 						background={background}
+						surfaceColor={theme.tokens.canvasBg}
 					/>
 				</div>
 			</PresentationRegistriesProvider>

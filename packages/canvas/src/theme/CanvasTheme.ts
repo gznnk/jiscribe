@@ -55,8 +55,6 @@ export type CanvasThemeTokens = {
 	errorFg: string;
 	/** Drop shadow for floating UI (full box-shadow value) */
 	shadow: string;
-	/** Grid line color */
-	gridLine: string;
 	/** Track color for sliders, etc. (a mid gray visible against the surface) */
 	sliderTrack: string;
 	/**

@@ -39,11 +39,17 @@ describe("deriveGridLineColor", () => {
 		expect(deriveGridLineColor("rgba(30 30 30 / 0.5)")).not.toBeNull();
 	});
 
-	it("returns null for unparseable colors so the caller falls back to the token", () => {
+	it("returns null for unparseable colors so the caller leaves the grid unset", () => {
 		expect(deriveGridLineColor("auto")).toBeNull();
 		expect(deriveGridLineColor("rebeccapurple")).toBeNull();
 		expect(deriveGridLineColor("var(--jiscribe-canvasBg, #fff)")).toBeNull();
 		expect(deriveGridLineColor("hsl(210, 50%, 20%)")).toBeNull();
 		expect(deriveGridLineColor("#ff")).toBeNull();
+	});
+
+	it("returns null for a fully transparent surface (nothing to derive from)", () => {
+		expect(deriveGridLineColor("rgba(0, 0, 0, 0)")).toBeNull();
+		expect(deriveGridLineColor("transparent")).toBeNull();
+		expect(deriveGridLineColor("#ffffff00")).toBeNull();
 	});
 });

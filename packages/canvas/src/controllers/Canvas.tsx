@@ -522,6 +522,7 @@ const CanvasComponent = ({
 							showGrid={showGrid}
 							gridSize={gridSize}
 							background={state.background}
+							surfaceColor={theme.tokens.canvasBg}
 						>
 							<PendingConnectorOverlay
 								pendingConnector={state.pendingConnector}

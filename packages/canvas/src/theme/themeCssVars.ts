@@ -26,7 +26,6 @@ export const THEME_TOKEN_CSS_VARS: Record<keyof CanvasThemeTokens, string> = {
 	inputPlaceholder: "--jiscribe-input-placeholder",
 	errorFg: "--jiscribe-error-fg",
 	shadow: "--jiscribe-shadow",
-	gridLine: "--jiscribe-grid-line",
 	sliderTrack: "--jiscribe-slider-track",
 	transparentChecker: "--jiscribe-transparent-checker",
 	radius: "--jiscribe-radius",
