@@ -58,7 +58,7 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 		plugins ? createCanvasRegistries({ plugins }) : defaultCanvasRegistries,
 	);
 
-	const { objects, rootIds } = useMemo(
+	const { objects, rootIds, background } = useMemo(
 		() => canvasToState(canvasDoc, registries.objectMapper),
 		[canvasDoc, registries],
 	);
@@ -96,6 +96,8 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 						rootIds={rootIds}
 						viewport={viewport}
 						svgRef={svgRef}
+						background={background}
+						surfaceColor={theme.tokens.canvasBg}
 					/>
 				</div>
 			</PresentationRegistriesProvider>

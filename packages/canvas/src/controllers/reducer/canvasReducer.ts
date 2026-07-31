@@ -114,6 +114,7 @@ export const createCanvasReducer =
 					...state,
 					objects: action.payload.objects,
 					rootIds: action.payload.rootIds,
+					background: action.payload.background,
 					...resetUiState(),
 					// An external change is a history boundary. Since past is pushed directly without going
 					// through recordHistoryIfNeeded, explicitly reset the coalesce state here (do not carry

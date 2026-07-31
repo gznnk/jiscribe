@@ -1,11 +1,10 @@
 import { memo, useMemo } from "react";
 
-import { theme } from "../../../../constants/theme";
-
 type GridPatternProps = {
 	zoom: number;
 	baseGridSize?: number;
-	color?: string;
+	/** Grid line color, derived from the resolved surface (see CanvasView). */
+	color: string;
 };
 
 /**
@@ -19,7 +18,7 @@ type GridPatternProps = {
 const GridPatternComponent = ({
 	zoom,
 	baseGridSize = 25,
-	color = theme.gridLine,
+	color,
 }: GridPatternProps): React.JSX.Element => {
 	const gridConfig = useMemo(() => {
 		// Fixed grid sizes in world coordinates

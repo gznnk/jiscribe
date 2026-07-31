@@ -117,6 +117,12 @@ export function validateStructure(
 		});
 	}
 
+	// Optional canvas surface color. When present it must be a color string;
+	// omitted means "follow the theme background" (see CanvasDoc.background).
+	if (d.background !== undefined && !isString(d.background)) {
+		errors.push({ path: "background", message: "must be a string" });
+	}
+
 	if (!isArray(d.root)) {
 		errors.push({ path: "root", message: "must be an array" });
 	} else {

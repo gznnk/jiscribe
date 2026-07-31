@@ -23,5 +23,13 @@ export type CanvasDocV1 = {
 	 */
 	$schema?: string;
 	version: 1;
+	/**
+	 * Canvas surface color as a literal CSS color string (like shape `fill`, a
+	 * concrete color — not a `var(...)` — so the file stays portable). Omit to
+	 * follow the theme's `canvasBg`. When set it is the surface for both display
+	 * and image export, and the grid line color is derived from it so the grid
+	 * stays readable on any background (see `deriveGridLineColor`).
+	 */
+	background?: string;
 	root: ObjectDoc[];
 };

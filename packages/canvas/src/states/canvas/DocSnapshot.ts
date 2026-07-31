@@ -8,7 +8,10 @@ import type { ObjectMapperRegistry } from "../registry/ObjectMapperRegistry";
  * Holding these references is safe because every state update path replaces
  * objects immutably; the committed map can never change under the snapshot.
  */
-export type DocSnapshotSource = Pick<CanvasState, "objects" | "rootIds">;
+export type DocSnapshotSource = Pick<
+	CanvasState,
+	"objects" | "rootIds" | "background"
+>;
 
 /**
  * A history entry whose CanvasDoc is materialized lazily.
@@ -34,7 +37,11 @@ export const createDocSnapshotFromState = (
 	source: DocSnapshotSource,
 ): DocSnapshot => ({
 	doc: null,
-	source: { objects: source.objects, rootIds: source.rootIds },
+	source: {
+		objects: source.objects,
+		rootIds: source.rootIds,
+		background: source.background,
+	},
 });
 
 /** Wraps an existing Doc (e.g. the initial document) as an already-resolved snapshot. */
