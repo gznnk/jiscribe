@@ -13,6 +13,7 @@ import { StencilLibraryItemHandler } from "../gestures/handlers/menu/StencilLibr
 import { ToolbarHandler } from "../gestures/handlers/menu/ToolbarHandler";
 import { ConnectorEventHandler } from "../gestures/handlers/objects/ConnectorEventHandler";
 import { ConnectorLabelDragHandler } from "../gestures/handlers/objects/ConnectorLabelDragHandler";
+import { ConnectorSegmentDragHandler } from "../gestures/handlers/objects/ConnectorSegmentDragHandler";
 import { ObjectEventHandler } from "../gestures/handlers/objects/ObjectEventHandler";
 
 /**
@@ -21,9 +22,10 @@ import { ObjectEventHandler } from "../gestures/handlers/objects/ObjectEventHand
  *
  * The handlers' supports() are mutually exclusive: each requires its own
  * targetKind (and targetId for menus) plus the left button, and only
- * CanvasEventHandler takes right-button events. The one targetKind shared by
- * two handlers is "connector", split by event type (drags on the label box go
- * to ConnectorLabelDragHandler, taps to ConnectorEventHandler). Registration
+ * CanvasEventHandler takes right-button events. The one shared targetKind is
+ * "connector", split among three handlers by event type and data-part: taps go
+ * to ConnectorEventHandler, drags on the label box to ConnectorLabelDragHandler,
+ * and drags on a "segment:<i>" band to ConnectorSegmentDragHandler. Registration
  * order therefore never decides routing; the exclusivity is pinned by
  * initializeGestureHandlerRegistry.exclusivity.test.ts (#110).
  *
@@ -70,6 +72,7 @@ export const initializeGestureHandlerRegistry = (
 		.register("object-menu-handler", ObjectMenuHandler)
 		.register("canvas-handler", CanvasEventHandler)
 		.register("connector-label-drag-handler", ConnectorLabelDragHandler)
+		.register("connector-segment-drag-handler", ConnectorSegmentDragHandler)
 		.register("connector-handler", ConnectorEventHandler)
 		.register("object-handler", ObjectEventHandler)
 		.register("control-handler", controlEventHandler);

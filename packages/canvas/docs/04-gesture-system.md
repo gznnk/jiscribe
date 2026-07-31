@@ -39,12 +39,12 @@ It converts a `Gesture` into a `CanvasEvent` (`wheel` branches into `zoom` / `sc
 and passes it to the target handler via `gestureHandlerRegistry`. Each handler uses `targetKind` to
 determine whether it should process the event.
 
-| Handler group | Target                                                                                       | Main files                                                                                                      |
-| ------------- | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `canvas/`     | The entire canvas (empty-space drag = range selection, pan, zoom)                            | `CanvasEventHandler.ts`                                                                                         |
-| `controls/`   | Transform controls (resize, rotate, vertex, connection)                                      | `ControlEventHandler.ts`, `transform/`, `vertex/`, `connection/`                                                |
-| `menu/`       | Context menu, object menu, toolbar, stencil library                                          | `ContextMenuHandler.ts`, `ObjectMenuHandler.ts`, `ToolbarHandler.ts`, `StencilLibraryItemHandler.ts`            |
-| `objects/`    | Shapes and connectors themselves (move, select, launch text editing, drag a connector label) | `ObjectEventHandler.ts`, `ConnectorEventHandler.ts`, `ConnectorLabelDragHandler.ts`, shape-specific Controllers |
+| Handler group | Target                                                                                                              | Main files                                                                                                                                        |
+| ------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `canvas/`     | The entire canvas (empty-space drag = range selection, pan, zoom)                                                   | `CanvasEventHandler.ts`                                                                                                                           |
+| `controls/`   | Transform controls (resize, rotate, vertex, connection)                                                             | `ControlEventHandler.ts`, `transform/`, `vertex/`, `connection/`                                                                                  |
+| `menu/`       | Context menu, object menu, toolbar, stencil library                                                                 | `ContextMenuHandler.ts`, `ObjectMenuHandler.ts`, `ToolbarHandler.ts`, `StencilLibraryItemHandler.ts`                                              |
+| `objects/`    | Shapes and connectors themselves (move, select, launch text editing, drag a connector label or one of its segments) | `ObjectEventHandler.ts`, `ConnectorEventHandler.ts`, `ConnectorLabelDragHandler.ts`, `ConnectorSegmentDragHandler.ts`, shape-specific Controllers |
 
 On `dragStart`, `handleGesture` saves `eventStartSnapshot` (the objects / keyPoints /
 snapCandidates, etc. at the start of the operation), and clears it on `dragEnd`. If the doc has actually changed

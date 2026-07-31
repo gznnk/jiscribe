@@ -95,6 +95,7 @@ export const jaCanvasMessages: CanvasMessages = {
 		swapArrows: "矢印を入れ替え",
 		setRoutingStraight: "直線経路",
 		setRoutingOrthogonal: "直角経路",
+		resetConnectorRoute: "経路を自動に戻す",
 		"start-text-edit": "テキスト編集を開始",
 		"move-up": "上へ移動",
 		"move-up-large": "上へ移動 (10px)",

@@ -6,6 +6,7 @@ import { SendBackwardCommand } from "../commands/arrange/SendBackwardCommand";
 import { SendToBackCommand } from "../commands/arrange/SendToBackCommand";
 import { SwapArrowsCommand } from "../commands/arrow/SwapArrowsCommand";
 import type { Command } from "../commands/CommandTypes";
+import { ResetConnectorRouteCommand } from "../commands/connector/ResetConnectorRouteCommand";
 import {
 	SetRoutingOrthogonalCommand,
 	SetRoutingStraightCommand,
@@ -59,6 +60,7 @@ export const ALL_COMMANDS: Command[] = [
 	// Connector routing commands
 	SetRoutingStraightCommand,
 	SetRoutingOrthogonalCommand,
+	ResetConnectorRouteCommand,
 	// Group commands
 	GroupCommand,
 	UngroupCommand,

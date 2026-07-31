@@ -40,7 +40,11 @@ const TARGETS: Target[] = [
 	{ targetKind: "menu", targetId: "stencil-library", targetPart: "item:rect" },
 	// Appended so the indices used below stay put.
 	{ targetKind: "connector", targetId: "c", targetPart: "label" },
+	{ targetKind: "connector", targetId: "c", targetPart: "segment:1" },
 ];
+
+const LABEL_BOX = TARGETS[9];
+const SEGMENT_BAND = TARGETS[10];
 
 const TYPES: EventType[] = [
 	"pressed",
@@ -115,12 +119,25 @@ describe("gesture handler routing exclusivity (#110)", () => {
 	});
 
 	it("splits the connector label box between tap and drag handlers", () => {
-		const labelBox = TARGETS[TARGETS.length - 1];
-		expect(supportingNames(makeEvent("click", 0, labelBox))).toEqual([
+		expect(supportingNames(makeEvent("click", 0, LABEL_BOX))).toEqual([
 			"connector-handler",
 		]);
-		expect(supportingNames(makeEvent("dragStart", 0, labelBox))).toEqual([
+		expect(supportingNames(makeEvent("dragStart", 0, LABEL_BOX))).toEqual([
 			"connector-label-drag-handler",
+		]);
+	});
+
+	it("splits a connector segment band between tap and drag handlers", () => {
+		// Taps on a segment select the connector or edit its label like any other part of the line;
+		// only the drag belongs to the segment handler.
+		expect(supportingNames(makeEvent("click", 0, SEGMENT_BAND))).toEqual([
+			"connector-handler",
+		]);
+		expect(supportingNames(makeEvent("doubleClick", 0, SEGMENT_BAND))).toEqual([
+			"connector-handler",
+		]);
+		expect(supportingNames(makeEvent("dragStart", 0, SEGMENT_BAND))).toEqual([
+			"connector-segment-drag-handler",
 		]);
 	});
 

@@ -70,14 +70,16 @@ declare const ConnectorDocBrand: unique symbol;
 /**
  * Doc for a connector (connection line).
  *
- * Semantics of `points`: holds **only the intermediate waypoints** in source → target order, in
- * world coordinates. Endpoint coordinates are not included (the source of truth for endpoints is the
- * `source` / `target` EndpointRef, and owned anchors are dynamically resolved at render time).
- * A straight connector has an empty array.
+ * Semantics of `points`: the route's **own vertices** — the corners the line bends at — in
+ * source → target order, in world coordinates. Endpoint coordinates are not included (the source of
+ * truth for endpoints is the `source` / `target` EndpointRef, and owned anchors are dynamically
+ * resolved at render time). Empty means the path is the engine's to choose.
  *
- * When `routing` is `"orthogonal"` (the default when omitted), the path is auto-generated at render
- * time and `points` is unused (always empty; derived values are not persisted). Specify `"straight"`
- * explicitly only when a straight line is desired.
+ * Non-empty, `points` **is** the path under either line shape: the drawn corners are exactly the
+ * stored ones. Only the vertex next to each endpoint is adjusted at render time, sliding along to
+ * keep its segment axis-aligned now that the endpoint has moved (`alignVertexPath`). Nothing else is
+ * corrected — a shape dragged across the route is crossed, and a route folded back on itself stays
+ * folded. Use ResetConnectorRouteCommand to hand the path back to the engine.
  *
  * Unlike polyline/polygon — whose `points` *is* the shape and is required — a connector's waypoints
  * are optional here (unspecified means none). The shared `Poly` geometry types them as required, so
@@ -101,7 +103,7 @@ export type ConnectorDoc = Prettify<
 		>,
 		"points"
 	> & {
-		/** Intermediate waypoints (source → target). Omitted means none (a straight connector). */
+		/** The route's vertices (source → target). Omitted means the engine routes the whole path. */
 		points?: Point[];
 	}
 >;

@@ -110,8 +110,8 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 			target: {
 				anchor: { kind: "free", point: { x: event.last.x, y: event.last.y } },
 			},
-			// routing is omitted. When omitted, orthogonal (automatic orthogonal routing) is the default.
-			// Specify "straight" explicitly only when a straight line is wanted.
+			// routing is omitted. When omitted, orthogonal (right-angle segments) is the default.
+			// Specify "straight" explicitly only when segments at any angle are wanted.
 			stroke: AUTO_COLOR,
 			strokeWidth: 2,
 			endArrow: "ConcaveTriangle",

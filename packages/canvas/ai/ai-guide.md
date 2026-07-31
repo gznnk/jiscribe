@@ -36,13 +36,14 @@ The top level must always have `version` / `root` (the array may be empty).
 - `rect` uses `x`,`y` (top-left) + `width`,`height`. `ellipse` uses `cx`,`cy` (center) + `rx`,`ry` (radii). `diamond`, `db`, and the other box shapes (`stadium` / `parallelogram` / `hexagon` / `cloud` / `document` / `multiDocument` / `actor` / `callout` / `storedData` / `subroutine` / `trapezoid` / `manualInput` / `card` / `delay` / `loopLimit` / `display` / `extract` / `cross` / `offPageConnector` / `record`) use `x`,`y` (top-left) + `width`,`height`, same as `rect`.
 - Put `connector` in `root` (top level, mixed with the objects), and express its endpoints with `source` / `target` (EndpointRef).
 - A connector must have **at least one owned endpoint** (`source` or `target` referencing an object). Both endpoints `free` is invalid.
-- Leave `points` as an **empty array** `[]` unless you set `"routing": "straight"` and want manual bends.
-- Optional `routing`: omitted ⇒ `"orthogonal"` (default) — a right-angle (horizontal/vertical) path auto-generated at render time that **ignores `points`** (keep them `[]`). Set `"routing": "straight"` to draw a straight line through `points` instead. For flowchart-style wiring, just omit `routing`.
-- A connector may **loop back to the same object** (`source` and `target` referencing the same `owner.id`) — useful for self-transitions in state machines. Point the two endpoints at different anchors (e.g. `topCenter` and `rightCenter`); it is always drawn as a rectangular orthogonal loop, so leave `routing` omitted and `points` `[]` (a `"straight"` self-loop is ignored).
+- Leave `points` as an **empty array** `[]` unless a specific route matters. Empty lets the engine route the whole path, which is almost always what you want.
+- Optional `routing`: the **shape of the segments**. Omitted ⇒ `"orthogonal"` (default) — right angles only. `"straight"` draws the segments at any angle. For flowchart-style wiring, just omit `routing`.
+- Non-empty `points` are the route's **vertices** — the corners the line bends at, in order. They become the whole path, so under `"orthogonal"` **consecutive points must share x or y** (and so must the first/last point with its endpoint's axis); the engine no longer avoids anything.
+- A connector may **loop back to the same object** (`source` and `target` referencing the same `owner.id`) — useful for self-transitions in state machines. Point the two endpoints at different anchors (e.g. `topCenter` and `rightCenter`); with `points` `[]` it is drawn as a rectangular loop whatever `routing` says, so leave `routing` omitted.
 
 **MUST NOT**
 
-- Do not put endpoint (start/end) coordinates in a connector's `points`. `points` holds only intermediate waypoints (usually empty).
+- Do not put endpoint (start/end) coordinates in a connector's `points`. `points` holds only the intermediate vertices (usually empty).
 - Do not attach a connector endpoint (`owner`) to a `polyline`, `polygon`, `group`, `svg`, or `connector`. Only `rect` / `markdown` / `ellipse` / `diamond` / `stadium` / `parallelogram` / `hexagon` / `cloud` / `document` / `multiDocument` / `actor` / `callout` / `db` / `storedData` / `subroutine` / `trapezoid` / `manualInput` / `card` / `delay` / `loopLimit` / `display` / `extract` / `cross` / `offPageConnector` / `record` / `sticky` are connectable; use a `free` endpoint to point near other types.
 - Do not give a `group` `x`,`y`,`width`,`height`. Its position comes from its `children`.
 - Do not reuse the same `id`.

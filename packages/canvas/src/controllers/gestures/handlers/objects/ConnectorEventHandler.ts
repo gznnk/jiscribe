@@ -30,8 +30,9 @@ export const ConnectorEventHandler: GestureHandler = {
 		return (
 			isLeftButton(event) &&
 			event.targetKind === "connector" &&
-			// Taps only: drags on the label box belong to ConnectorLabelDragHandler,
-			// which shares this targetKind (see initializeGestureHandlerRegistry).
+			// Taps only, whatever part they land on. Drags belong to the two handlers that
+			// share this targetKind: the label box to ConnectorLabelDragHandler, a segment band
+			// to ConnectorSegmentDragHandler (see initializeGestureHandlerRegistry).
 			(event.type === "click" ||
 				event.type === "pressed" ||
 				event.type === "doubleClick")

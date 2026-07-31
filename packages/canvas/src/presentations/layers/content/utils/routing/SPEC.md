@@ -17,6 +17,10 @@ Implementation: `routeOrthogonalConnector.ts` (orchestration), `stub.ts` / `elbo
   from the AABB edge (not the connect point) so a rotated stub does not overshoot (see the note under
   `clampStubMargin`). One residual limitation remains (see Limitations: tilted-face stub clip).
 - Box-size-dependent tuning and avoiding third shapes in between are out of scope.
+- **A connector with vertices is out of scope entirely.** Once `points` is non-empty it _is_ the path
+  (ConnectorDoc 参照): nothing here runs, nothing is avoided, and a route the author shaped into a
+  detour stays a detour. This spec governs only the route the engine chooses for itself, which is
+  what a connector has until the first segment drag and again after ResetConnectorRouteCommand.
 - Guarantees below hold for **clearly separated** boxes (a gap larger than the margin on their
   nearest axis). Overlapping / edge-adjacent boxes are near-degenerate (an exit face can point
   straight into an abutting shape) and are best-effort only.

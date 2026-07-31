@@ -31,9 +31,15 @@ type ConnectorControlsProps = {
  *   (data-id=<id> + data-part="endpoint:source|target" → ConnectionAnchorEventHandler)
  * - Waypoint move handles: move existing waypoints
  *   (data-id=<id> + data-part="vertex:<i>" → reuses VertexControlHandler)
- * - Waypoint insert handles: the midpoint of each segment of the resolved path [source, ...waypoints, target].
- *   Drag to add a new waypoint
+ * - Waypoint insert handles (straight only): the midpoint of each segment of the resolved path
+ *   [source, ...waypoints, target]. Drag to add a new waypoint
  *   (data-id=<id> + data-part="waypoint-insert:<segment>" → ConnectorVertexInsertHandler)
+ *
+ * The two shapes are edited differently because a point means a different thing in each. Under
+ * straight a point is a bend the user places and then moves freely; under orthogonal the vertices
+ * have to stay axis-aligned, so they are only ever moved a whole segment at a time — which needs no
+ * handle at all and is not offered here: the segment itself is the target, and its hit band lives
+ * with the connector (ConnectorSegmentHitAreas 参照).
  *
  * Placed in the controllers layer so selection visuals are decoupled from the connector itself.
  */
@@ -67,9 +73,8 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 	const showSourceHandle = sourceIsFree || !targetIsFree;
 	const showTargetHandle = targetIsFree || !sourceIsFree;
 
-	// Move handles are placed at the waypoints; insert handles are placed at the midpoint of each
-	// segment of the fully resolved path (endpoints included).
-	// For orthogonal (automatic routing) the path is computed, so no manual handles are shown.
+	// Straight gets per-vertex move and insert handles; orthogonal makes each segment grabbable
+	// along its whole length instead.
 	// When routing is omitted, orthogonal is the default.
 	const isOrthogonal = isOrthogonalRouting(connectorState.routing);
 	const waypoints = connectorState.points;

@@ -2004,13 +2004,13 @@
 				},
 				"meta": { "$ref": "#/$defs/MetaDoc" },
 				"points": {
-					"description": "Ordered list of intermediate waypoints from source to target, in world coordinates. Endpoint coordinates are NOT included; they are defined by source/target and resolved dynamically. Used only with \"routing\": \"straight\". Ignored under the default \"orthogonal\" routing (the path is derived at render time). Optional; omit it (defaults to an empty array) unless you set \"routing\": \"straight\" and want to route through explicit waypoints.",
+					"description": "Ordered list of the route's vertices from source to target, in world coordinates - the corners the line bends at. Endpoint coordinates are NOT included; they are defined by source/target and resolved dynamically. Empty (the normal case) lets the engine route the whole path. Non-empty, these points ARE the path: under the default \"orthogonal\" shape consecutive points must share x or y, and the first/last must share the axis its endpoint is left on, because nothing straightens or re-routes them. Use vertices only when a specific route matters.",
 					"type": "array",
 					"items": { "$ref": "#/$defs/Point" },
 					"default": []
 				},
 				"routing": {
-					"description": "How the path between endpoints is computed. \"orthogonal\" auto-generates a horizontal/vertical path at render time from the endpoint shapes (and ignores \"points\"). \"straight\" connects the endpoints with a straight line through any manual \"points\" waypoints. Optional; omitting it means \"orthogonal\" (the default). Set \"straight\" explicitly only when you want a straight line.",
+					"description": "Shape of the connector's segments. \"orthogonal\" keeps every segment axis-aligned, so the line bends only at right angles. \"straight\" lets segments run at any angle: a single direct line, or a polyline through the \"points\" vertices. Optional; omitting it means \"orthogonal\" (the default). This chooses the shape only - whether the path is engine-routed or authored is decided by \"points\".",
 					"type": "string",
 					"enum": ["straight", "orthogonal"]
 				},
