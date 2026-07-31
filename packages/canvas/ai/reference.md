@@ -744,7 +744,8 @@ end to end; non-empty means `points` **is** the path — the drawn corners are e
 `"orthogonal"` you must therefore keep it axis-aligned yourself: **consecutive points share x or y**, the first
 point shares the axis the line leaves the source on, and the last shares the target's. The engine avoids nothing
 and straightens nothing; only the vertex next to each endpoint slides along when a connected shape moves, so the
-segment touching it stays axis-aligned.
+segment touching it stays axis-aligned. Editor operations write that slid position back into `points` when they
+commit, so a stored list you read back always matches what is drawn.
 
 Prefer an empty `points`. Reach for vertices only when a specific route matters (steering a line clear of a
 crowded area, running several edges down a shared channel), and expect a big layout change to leave the route

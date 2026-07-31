@@ -65,6 +65,20 @@ describe("fuzz: drag/move/rotate operation sequences", () => {
 				return alignedDrawnPath(vertices, source, target);
 			};
 
+			// The commit that follows a shape operation persists the drawn (aligned) vertices,
+			// rounded, back into the store (reconcileConnectorVertices 相当).
+			const persistDrawnVertices = (stored: Point[]): Point[] => {
+				if (stored.length === 0) {
+					return stored;
+				}
+				return drawnPath()
+					.slice(1, -1)
+					.map((point) => ({
+						x: Math.round(point.x * 10000) / 10000,
+						y: Math.round(point.y * 10000) / 10000,
+					}));
+			};
+
 			for (let step = 0; step < 14; step++) {
 				const path = drawnPath();
 				const label = `trial ${trial} step ${step} ${sourceFace}→${targetFace}`;
@@ -133,6 +147,7 @@ describe("fuzz: drag/move/rotate operation sequences", () => {
 							targetFrame.rotation,
 						);
 					}
+					vertices = persistDrawnVertices(vertices);
 				} else {
 					// Quarter-turn rotation
 					const rotation = pick([0, 90, 180, 270]);
@@ -141,6 +156,7 @@ describe("fuzz: drag/move/rotate operation sequences", () => {
 					} else {
 						targetFrame = makeFrame(targetFrame.cx, targetFrame.cy, rotation);
 					}
+					vertices = persistDrawnVertices(vertices);
 				}
 
 				if (vertices.length > 0) {

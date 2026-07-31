@@ -76,10 +76,12 @@ declare const ConnectorDocBrand: unique symbol;
  * resolved at render time). Empty means the path is the engine's to choose.
  *
  * Non-empty, `points` **is** the path under either line shape: the drawn corners are exactly the
- * stored ones. Only the vertex next to each endpoint is adjusted at render time, sliding along to
- * keep its segment axis-aligned now that the endpoint has moved (`alignVertexPath`). Nothing else is
- * corrected — a shape dragged across the route is crossed, and a route folded back on itself stays
- * folded. Use ResetConnectorRouteCommand to hand the path back to the engine.
+ * stored ones. Only the vertex next to each endpoint is adjusted while an endpoint moves, sliding
+ * along to keep its segment axis-aligned (`alignVertexPath`); when the operation commits, that
+ * adjusted list is written back here (`reconcileConnectorVertices`), so at rest the stored list
+ * always matches what is drawn. Nothing else is corrected — a shape dragged across the route is
+ * crossed, and a route folded back on itself stays folded. Use ResetConnectorRouteCommand to hand
+ * the path back to the engine.
  *
  * Unlike polyline/polygon — whose `points` *is* the shape and is required — a connector's waypoints
  * are optional here (unspecified means none). The shared `Poly` geometry types them as required, so

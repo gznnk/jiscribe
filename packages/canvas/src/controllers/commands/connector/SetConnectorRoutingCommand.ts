@@ -37,9 +37,11 @@ const canSetStraight = (state: CanvasControllerState): boolean => {
 /**
  * The vertices to store when switching a shaped route to straight: the path exactly as drawn on
  * screen. Under orthogonal the vertices next to the endpoints are re-aligned at render time
- * (alignVertexPath), so the stored list can lag behind a shape that has moved since — straight
- * draws the stored list raw, and switching on the stale one would jump to a route the user is not
- * looking at. Null when the path cannot be resolved; the stored vertices are then kept as they are.
+ * (alignVertexPath), so a stored list the editor never committed — an AI-written doc — can lag
+ * behind the endpoints; straight draws the stored list raw, and switching on the stale one would
+ * jump to a route the user is not looking at. (Lists touched by editor operations already match:
+ * commits write the aligned path back, reconcileConnectorVertices 参照.) Null when the path cannot
+ * be resolved; the stored vertices are then kept as they are.
  */
 const bakeDrawnVertices = (
 	connector: ConnectorState,

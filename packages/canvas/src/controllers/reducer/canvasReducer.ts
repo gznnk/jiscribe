@@ -8,6 +8,10 @@ import { handleGesture } from "../gestures/handlers/handleGesture";
 import type { CanvasRegistries } from "../registries/CanvasRegistries";
 import { commitTextEditIfNeeded } from "../utils/commitTextEditIfNeeded";
 import { materializeObjects } from "../utils/cowObjects";
+import {
+	reconcileConnectorVertices,
+	reconcileConnectorVerticesIfCommitted,
+} from "../utils/reconcileConnectorVertices";
 import { resetUiState } from "../utils/resetUiState";
 
 /**
@@ -26,7 +30,12 @@ export const createCanvasReducer =
 		switch (action.type) {
 			case "GESTURE": {
 				const gestureResult = handleGesture(state, action.gesture, registries);
-				return recordHistoryIfNeeded(gestureResult, state);
+				const reconciledResult = reconcileConnectorVerticesIfCommitted(
+					gestureResult,
+					state,
+					registries,
+				);
+				return recordHistoryIfNeeded(reconciledResult, state);
 			}
 
 			case "COMMAND": {
@@ -35,7 +44,12 @@ export const createCanvasReducer =
 					action.commandId,
 					registries,
 				);
-				return recordHistoryIfNeeded(commandResult, state);
+				const reconciledResult = reconcileConnectorVerticesIfCommitted(
+					commandResult,
+					state,
+					registries,
+				);
+				return recordHistoryIfNeeded(reconciledResult, state);
 			}
 
 			case "SET_DOC_DEFAULTS": {
@@ -92,13 +106,17 @@ export const createCanvasReducer =
 				if (!action.commit) {
 					return updatedWithVertexCleared;
 				}
-				return recordHistoryIfNeeded(
-					{
-						...updatedWithVertexCleared,
-						commitVersion: state.commitVersion + 1,
-					},
-					state,
+				// This case decides the commit itself (action.commit above), so the
+				// unconditional reconcile applies — no commitVersion gate to re-check.
+				const committedResult = {
+					...updatedWithVertexCleared,
+					commitVersion: state.commitVersion + 1,
+				};
+				const reconciledResult = reconcileConnectorVertices(
+					committedResult,
+					registries,
 				);
+				return recordHistoryIfNeeded(reconciledResult, state);
 			}
 
 			case "SYNC_EXTERNAL": {
@@ -147,7 +165,12 @@ export const createCanvasReducer =
 
 				if (action.commit) {
 					const commitResult = commitTextEditIfNeeded(state);
-					return recordHistoryIfNeeded(commitResult, state);
+					const reconciledResult = reconcileConnectorVerticesIfCommitted(
+						commitResult,
+						state,
+						registries,
+					);
+					return recordHistoryIfNeeded(reconciledResult, state);
 				}
 
 				// On cancel, clear only textEditState
@@ -159,7 +182,12 @@ export const createCanvasReducer =
 
 			case "PASTE": {
 				const pasteResult = handlePaste(state, action.data, registries);
-				return recordHistoryIfNeeded(pasteResult, state);
+				const reconciledResult = reconcileConnectorVerticesIfCommitted(
+					pasteResult,
+					state,
+					registries,
+				);
+				return recordHistoryIfNeeded(reconciledResult, state);
 			}
 
 			case "CLOSE_CONTEXT_MENU": {
