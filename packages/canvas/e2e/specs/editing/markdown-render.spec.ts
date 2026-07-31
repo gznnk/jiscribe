@@ -2,18 +2,19 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * markdown 図形（type: "markdown"）が、本文を「プレーンテキストではなく HTML として」
- * 描画することを守る。
+ * Guards that a markdown shape (type: "markdown") renders its body "as HTML,
+ * not as plain text".
  *
- * 既存の draw.spec は textContent に "Title" が含まれることだけを見るため、Markdown 変換が
- * 壊れて生テキストを流し込むだけになっても気づけない。ここでは renderMarkdown →
- * （DOMPurify サニタイズ）→ foreignObject 内 HTML というパイプラインの結果を、
- * 見出し・強調・リストといった実要素の有無で検証する。
+ * The existing draw.spec only checks that textContent contains "Title", so it
+ * would not notice if the Markdown conversion broke and merely poured in the raw
+ * text. Here the result of the renderMarkdown -> (DOMPurify sanitize) -> HTML
+ * inside foreignObject pipeline is verified through the presence of real
+ * elements such as headings, emphasis and lists.
  */
 
 /**
- * 図形 id に対応する TextOverlay（foreignObject 内のテキスト div）の中から、
- * セレクタにマッチした要素の textContent 一覧を返す。
+ * Returns the textContent of every element matching the selector inside the
+ * TextOverlay (the text div inside foreignObject) of the given shape id.
  */
 async function renderedText(
 	canvas: CanvasDriver,
@@ -40,8 +41,8 @@ async function renderedText(
 	);
 }
 
-test.describe("Markdown 描画", () => {
-	test("既定の Markdown 文面は見出しと強調を HTML 要素として描画する", async ({
+test.describe("Markdown rendering", () => {
+	test("renders headings and emphasis as HTML elements for the default Markdown body", async ({
 		canvas,
 	}) => {
 		const id = await canvas.drawShape(
@@ -55,7 +56,7 @@ test.describe("Markdown 描画", () => {
 		expect(await renderedText(canvas, id, "strong")).toEqual(["markdown"]);
 	});
 
-	test("本文を編集すると Markdown 描画が更新される（見出しとリスト）", async ({
+	test("updates the Markdown rendering when the body is edited (headings and lists)", async ({
 		canvas,
 	}) => {
 		const id = await canvas.drawShape(
@@ -65,7 +66,7 @@ test.describe("Markdown 描画", () => {
 		);
 		await canvas.deselect();
 
-		// 既存の生 Markdown を全選択して置き換える。
+		// Select all of the existing raw Markdown and replace it.
 		const center = canvas.toScreen({ x: 550, y: 300 });
 		await canvas.page.mouse.dblclick(center.x, center.y);
 		await canvas.waitForTextEditor();
@@ -77,11 +78,11 @@ test.describe("Markdown 描画", () => {
 			.poll(() => renderedText(canvas, id, "h2"))
 			.toEqual(["Updated"]);
 		expect(await renderedText(canvas, id, "li")).toEqual(["first", "second"]);
-		// 旧見出しが残っていないこと（置き換わったこと）。
+		// The old heading is gone (it was replaced).
 		expect(await renderedText(canvas, id, "h1")).toEqual([]);
 	});
 
-	test("リンクは target=_blank / rel=noopener noreferrer 付きで描画される", async ({
+	test("renders links with target=_blank / rel=noopener noreferrer", async ({
 		canvas,
 	}) => {
 		const id = await canvas.drawShape(
@@ -98,7 +99,8 @@ test.describe("Markdown 描画", () => {
 		await canvas.page.keyboard.type("[Example](https://example.com)");
 		await canvas.commitText();
 
-		// アンカーが描画され、新規タブ用の安全属性が DOMPurify 通過後も保持される。
+		// The anchor is rendered and the safety attributes for opening a new tab
+		// survive DOMPurify.
 		const anchor = await canvas.page.evaluate((targetId) => {
 			const shape = document.querySelector(`[data-id="${targetId}"]`);
 			let sibling = shape?.nextElementSibling ?? null;
@@ -123,7 +125,7 @@ test.describe("Markdown 描画", () => {
 		expect(anchor?.rel).toBe("noopener noreferrer");
 	});
 
-	test("言語付きコードフェンスは language- クラス付きの code になる", async ({
+	test("turns a code fence with a language into a code element with a language- class", async ({
 		canvas,
 	}) => {
 		const id = await canvas.drawShape(
@@ -160,7 +162,7 @@ test.describe("Markdown 描画", () => {
 		expect(code?.text).toContain("const x = 1;");
 	});
 
-	test("言語指定なしのコードフェンスはクラスなしの素の code になる", async ({
+	test("turns a code fence without a language into a bare code element with no class", async ({
 		canvas,
 	}) => {
 		const id = await canvas.drawShape(

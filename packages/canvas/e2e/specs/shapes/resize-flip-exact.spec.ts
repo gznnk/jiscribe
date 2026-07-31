@@ -2,17 +2,18 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * リサイズの反転（フリップ）後の「正確な寸法・中心・符号」を守る。
+ * Pins the exact size, center and signs after a resize flip.
  *
- * resize-flip.spec は反転で行列の符号が反転すること・幅高さが正のままであることまでで、
- * 反転後の寸法や中心がどこに来るかは未検証だった。実装は反対辺をアンカーに保つので、
- * 右辺ハンドルを左辺(x=400)の 100px 外(x=300)まで引くと、図形は [300,400] を占める：
- *   ・幅は越えた量ぶん = 100（絶対値）
- *   ・中心 x = (300+400)/2 = 350（反対辺 400 を固定した結果）
- *   ・scaleX 反転 = matrix.a = -1（無回転）
- *   ・直交軸（高さ・中心 y）は不変
- * アンカーや中心計算の取り違えは符号だけの検証では捕まらないため、ここで数値を固める。
- * スナップは ctrl で無効化。zoom=1。
+ * resize-flip.spec goes as far as the matrix signs flipping and width/height
+ * staying positive. The implementation keeps the opposite edge as the anchor, so
+ * pulling the right edge handle 100px past the left edge (x=400) to x=300 leaves
+ * the shape occupying [300,400]:
+ *   - the width is the overshoot = 100 (absolute value)
+ *   - center x = (300+400)/2 = 350, from holding the opposite edge at 400
+ *   - the flipped scaleX = matrix.a = -1 (no rotation)
+ *   - the orthogonal axis (height, center y) is unchanged
+ * A mistaken anchor or center calculation survives a sign-only check, so the
+ * numbers are pinned here. Snapping is disabled with ctrl. zoom=1.
  */
 
 const TOLERANCE_PX = 2;
@@ -40,11 +41,11 @@ async function frameOf(canvas: CanvasDriver, id: string): Promise<Frame> {
 	});
 }
 
-test.describe("リサイズ反転後の正確な寸法", () => {
-	test("右辺を左辺の 100px 外まで引くと [300,400] を占める（幅100・中心350・a=-1）", async ({
+test.describe("exact dimensions after a resize flip", () => {
+	test("occupies [300,400] when the right edge is pulled 100px past the left edge (width 100, center 350, a=-1)", async ({
 		canvas,
 	}) => {
-		// 矩形 (400,200)-(560,300): 左400・右560・幅160・高100・中心(480,250)。
+		// Rect (400,200)-(560,300): left 400, right 560, width 160, height 100, center (480,250).
 		const id = await canvas.drawShape(
 			"Rectangle",
 			{ x: 400, y: 200 },
@@ -53,28 +54,28 @@ test.describe("リサイズ反転後の正確な寸法", () => {
 		const before = await frameOf(canvas, id);
 		expect(before.a).toBeGreaterThan(0);
 
-		// 右中央ハンドルを左辺(400)の 100px 外(x=300)へ引く（ctrl でスナップ無効）。
+		// Pull the right-center handle 100px past the left edge (400), to x=300 (ctrl: no snapping).
 		await canvas.dragTransformHandle(
 			"rightCenter",
 			{ x: 300, y: 250 },
 			{ ctrl: true },
 		);
 
-		// 反転（a<0）が適用されるまで待つ。
+		// Wait for the flip (a<0) to apply.
 		await expect
 			.poll(async () => (await frameOf(canvas, id)).a, {
-				message: "水平反転で a が負になること",
+				message: "a turns negative on a horizontal flip",
 			})
 			.toBeLessThan(0);
 
 		const after = await frameOf(canvas, id);
-		// 幅は越えた量ぶん = 100（絶対値、正のまま）。
+		// The width is the overshoot, 100, kept positive as an absolute value.
 		expect(Math.abs(after.width - 100)).toBeLessThanOrEqual(TOLERANCE_PX);
-		// scaleX 反転 = -1（無回転なので a = scaleX）。
+		// The flipped scaleX is -1 (no rotation, so a = scaleX).
 		expect(Math.abs(after.a - -1)).toBeLessThanOrEqual(0.02);
-		// 中心 x は反対辺(400)固定の結果 (300+400)/2 = 350。
+		// Holding the opposite edge (400) puts center x at (300+400)/2 = 350.
 		expect(Math.abs(after.cx - 350)).toBeLessThanOrEqual(TOLERANCE_PX);
-		// 直交軸（高さ・中心 y）は不変。
+		// The orthogonal axis (height, center y) is unchanged.
 		expect(Math.abs(after.height - before.height)).toBeLessThanOrEqual(
 			TOLERANCE_PX,
 		);

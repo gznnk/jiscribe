@@ -3,37 +3,37 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 import { selectors } from "../../support/selectors";
 
 /**
- * StencilLibrary のカテゴリフライアウト（#184 案A）の中核挙動を守る。
+ * Core behavior of the StencilLibrary category flyout (#184 option A).
  *
- * - カテゴリボタン押下でフライアウトが開き、中の図形項目（ピン留めと同じ
- *   `data-part="item:<presetId>"` 契約）が現れる。
- * - フライアウト内の図形は既存の StencilLibraryItemHandler をそのまま通るため、
- *   クリックで描画モードに入り、キャンバスへのドラッグで実際に作成できる。
- * - 図形を選び終えた pointerup、外側クリック、Escape のいずれでも閉じる。
+ * - Pressing a category button opens the flyout and reveals the shape items inside
+ *   (the same `data-part="item:<presetId>"` contract as the pinned items).
+ * - Shapes in the flyout go through the existing StencilLibraryItemHandler as is, so a
+ *   click enters drawing mode and a drag onto the canvas actually creates the shape.
+ * - It closes on the pointerup that picks a shape, on an outside click, and on Escape.
  *
- * 描画モードの ON は Canvas の cursor: crosshair で観測する（フライアウト項目は
- * pointerup で unmount されるため、ツールボタンの cursor ではなくキャンバス側を見る）。
+ * Drawing mode being on is observed through the Canvas cursor: crosshair (flyout items
+ * unmount on pointerup, so the canvas is watched rather than the tool button cursor).
  */
 
 const FLOWCHART = "flowchart";
 
-/** キャンバス（data-kind="canvas"）の computed cursor。crosshair=描画モード ON。 */
+/** Computed cursor of the canvas (data-kind="canvas"). crosshair = drawing mode on. */
 async function canvasCursor(canvas: CanvasDriver): Promise<string> {
 	return canvas.page
 		.locator('[data-kind="canvas"]')
 		.evaluate((el) => getComputedStyle(el).cursor);
 }
 
-test.describe("StencilLibrary カテゴリフライアウト", () => {
-	test("カテゴリを開いてフライアウトの図形をドラッグ作成できる", async ({
+test.describe("StencilLibrary category flyout", () => {
+	test("creates a shape by dragging one out of an opened category flyout", async ({
 		canvas,
 	}) => {
-		// 初期状態ではフライアウトは閉じている
+		// The flyout starts closed
 		await expect(
 			canvas.page.locator(selectors.categoryFlyout(FLOWCHART)),
 		).toHaveCount(0);
 
-		// カテゴリボタン押下でフライアウトが開き、diamond 項目が現れる
+		// Pressing the category button opens the flyout and reveals the diamond item
 		await canvas.page.click(selectors.categoryButton(FLOWCHART));
 		await expect(
 			canvas.page.locator(selectors.categoryFlyout(FLOWCHART)),
@@ -41,30 +41,32 @@ test.describe("StencilLibrary カテゴリフライアウト", () => {
 		const diamondItem = canvas.page.locator(selectors.shapeItem("diamond"));
 		await expect(diamondItem).toBeVisible();
 
-		// 項目クリックで描画モードに入り（Canvas が crosshair になる）、
-		// pointerup でフライアウトは閉じる
+		// Clicking an item enters drawing mode (the Canvas turns crosshair) and the
+		// flyout closes on pointerup
 		const before = (await canvas.captureObjects()).length;
 		await diamondItem.click();
 		await expect
 			.poll(() => canvasCursor(canvas), {
-				message: "フライアウトの図形クリックで描画モードに入ること",
+				message: "clicking a shape in the flyout enters drawing mode",
 			})
 			.toBe("crosshair");
 		await expect(
 			canvas.page.locator(selectors.categoryFlyout(FLOWCHART)),
 		).toHaveCount(0);
 
-		// キャンバスへドラッグして実際に作成される（上端エッジゾーンを避けて内部へ）
+		// Drag onto the canvas to actually create it (inside, clear of the top edge zone)
 		await canvas.drag({ x: 360, y: 240 }, { x: 520, y: 360 });
 		await expect
 			.poll(async () => (await canvas.captureObjects()).length, {
-				message: "フライアウト経由で新規図形が作成されること",
+				message: "a new shape is created through the flyout",
 			})
 			.toBe(before + 1);
 	});
 
-	test("Escape と外側クリックでフライアウトが閉じる", async ({ canvas }) => {
-		// Escape で閉じる
+	test("closes the flyout on Escape and on an outside click", async ({
+		canvas,
+	}) => {
+		// Close with Escape
 		await canvas.page.click(selectors.categoryButton(FLOWCHART));
 		await expect(
 			canvas.page.locator(selectors.categoryFlyout(FLOWCHART)),
@@ -74,7 +76,7 @@ test.describe("StencilLibrary カテゴリフライアウト", () => {
 			canvas.page.locator(selectors.categoryFlyout(FLOWCHART)),
 		).toHaveCount(0);
 
-		// 開き直して、キャンバスの空き領域クリック（外側）で閉じる
+		// Reopen, then close with a click on empty canvas (outside)
 		await canvas.page.click(selectors.categoryButton(FLOWCHART));
 		await expect(
 			canvas.page.locator(selectors.categoryFlyout(FLOWCHART)),

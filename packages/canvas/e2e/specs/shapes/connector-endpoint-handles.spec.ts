@@ -2,17 +2,17 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * 選択中コネクターの「端点編集ハンドル」が経路の端点に正確に重なることを検証する spec。
+ * Checks that the endpoint editing handles of a selected connector sit exactly on the route's
+ * endpoints.
  *
- * コネクターを選択すると、両端に再接続用の編集ハンドル
- * （data-id=<id> + data-part="endpoint:source/target"）が出る。connector-reconnect.spec は
- * このハンドルを掴んでドラッグする操作を守るが、ハンドル自体が *経路の端点に乗っているか*
- * は未検証だった。ハンドルが端点からずれると「線の端を掴んだつもりが掴めない／別の場所が
- * 動く」操作バグになる。
+ * Selecting a connector puts a reconnect handle on each end
+ * (data-id=<id> plus data-part="endpoint:source/target"). A handle offset from its endpoint
+ * turns into an interaction bug: grabbing the end of the line misses, or moves something else.
  *
- * ここでは多点経路（エルボあり）のコネクターで、source/target ハンドルの中心が points の
- * 先頭/末尾の端点に一致することを守る。zoom=1 ではワールド座標＝コンテンツ座標なので、
- * ハンドルの画面 boundingBox を toContent して points と突き合わせる。
+ * Uses a multi-point route (with an elbow) and guards that the centers of the source and target
+ * handles coincide with the first and last of the points. At zoom=1 world coordinates equal
+ * content coordinates, so the handles' screen boundingBox goes through toContent before it is
+ * compared against the points.
  */
 
 type Vec = { x: number; y: number };
@@ -21,7 +21,7 @@ const EPS = 2;
 
 function parsePoints(attr: string | null): Vec[] {
 	if (!attr) {
-		throw new Error("points 属性が取得できない");
+		throw new Error("cannot read the points attribute");
 	}
 	return attr
 		.trim()
@@ -36,7 +36,7 @@ function distance(a: Vec, b: Vec): number {
 	return Math.hypot(a.x - b.x, a.y - b.y);
 }
 
-/** コントロール（CSS セレクタ）の中心をコンテンツ座標で返す（zoom=1 ではワールド座標と一致） */
+/** Returns the center of the control matched by the CSS selector in content coordinates (equal to world coordinates at zoom=1) */
 async function controlContentCenter(
 	canvas: CanvasDriver,
 	controlSelector: string,
@@ -45,7 +45,7 @@ async function controlContentCenter(
 	await expect(loc).toBeVisible();
 	const box = await loc.boundingBox();
 	if (!box) {
-		throw new Error(`コントロール ${controlSelector} の位置が取得できない`);
+		throw new Error(`cannot read the position of control ${controlSelector}`);
 	}
 	return canvas.toContent({
 		x: box.x + box.width / 2,
@@ -53,19 +53,20 @@ async function controlContentCenter(
 	});
 }
 
-test.describe("コネクターの端点編集ハンドル", () => {
-	test("source/target ハンドルが経路の端点に正確に重なる", async ({
+test.describe("connector endpoint editing handles", () => {
+	test("puts the source and target handles exactly on the route's endpoints", async ({
 		canvas,
 	}) => {
-		// 斜め配置でエルボのある多点経路にして、ハンドルが「端点」に乗る（中間点ではない）ことを
-		// はっきり確かめる。
+		// A diagonal layout gives a multi-point route with an elbow, which makes it clear the
+		// handles land on the endpoints and not on an intermediate point.
 		await canvas.drawShape("Rectangle", { x: 300, y: 180 }, { x: 460, y: 280 });
 		await canvas.deselect();
 		await canvas.drawShape("Rectangle", { x: 760, y: 440 }, { x: 960, y: 540 });
 		await canvas.deselect();
 
-		// target 左辺中央 (760,490) へ接続 → leftCenter アンカー。辺アンカー同士なので既定
-		// orthogonal で斜め配置はエルボ（多点経路）になる（中心だと center → 既定 straight で 2 頂点）。
+		// Connecting to the target's left edge center (760,490) gives a leftCenter anchor. Both ends
+		// are edge anchors, so routing defaults to orthogonal and the diagonal layout elbows
+		// (dropping on the center would give a center anchor, which defaults to straight, 2 vertices).
 		await canvas.selectAt({ x: 380, y: 230 });
 		const connectorId = await canvas.createConnector("rightCenter", {
 			x: 760,
@@ -76,12 +77,12 @@ test.describe("コネクターの端点編集ハンドル", () => {
 		const points = parsePoints(
 			await canvas.objectById(connectorId).getAttribute("points"),
 		);
-		// エルボがある（端点が中間点と区別できる）こと。
+		// There is an elbow, so endpoints are distinguishable from intermediate points.
 		expect(points.length).toBeGreaterThanOrEqual(3);
 		const startPoint = points[0];
 		const endPoint = points[points.length - 1];
 
-		// 経路の最長セグメントの中点をクリックしてコネクターを選択する（角を避けて確実に当てる）。
+		// Click the midpoint of the longest segment, which avoids the corners and hits reliably.
 		let clickAt = {
 			x: (points[0].x + points[1].x) / 2,
 			y: (points[0].y + points[1].y) / 2,
@@ -99,7 +100,7 @@ test.describe("コネクターの端点編集ハンドル", () => {
 		}
 		await canvas.clickAt(clickAt);
 
-		// 端点編集ハンドルが両端に出る。
+		// The endpoint editing handles appear on both ends.
 		const sourceHandle = await controlContentCenter(
 			canvas,
 			`[data-id="${connectorId}"][data-part="endpoint:source"]`,
@@ -109,20 +110,19 @@ test.describe("コネクターの端点編集ハンドル", () => {
 			`[data-id="${connectorId}"][data-part="endpoint:target"]`,
 		);
 
-		// 各ハンドルの中心が経路の端点に一致する。
 		expect(
 			distance(sourceHandle, startPoint),
-			`source ハンドル ${JSON.stringify(sourceHandle)} が始点 ${JSON.stringify(startPoint)} に重なること`,
+			`the source handle ${JSON.stringify(sourceHandle)} sits on the start point ${JSON.stringify(startPoint)}`,
 		).toBeLessThanOrEqual(EPS);
 		expect(
 			distance(targetHandle, endPoint),
-			`target ハンドル ${JSON.stringify(targetHandle)} が終点 ${JSON.stringify(endPoint)} に重なること`,
+			`the target handle ${JSON.stringify(targetHandle)} sits on the end point ${JSON.stringify(endPoint)}`,
 		).toBeLessThanOrEqual(EPS);
 
-		// 取り違え防止: source/target ハンドルは別々の端（十分離れている）にある。
+		// Guards against a mix-up: the two handles are far apart, on different ends.
 		expect(
 			distance(sourceHandle, targetHandle),
-			"source と target のハンドルが別々の端にあること",
+			"the source and target handles are on different ends",
 		).toBeGreaterThan(50);
 	});
 });

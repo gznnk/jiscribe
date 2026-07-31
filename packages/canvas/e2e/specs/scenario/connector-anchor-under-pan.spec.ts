@@ -2,15 +2,18 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * パン（viewBox 原点の移動）中にコネクターを「作成」したとき、端点が正しいワールド座標
- * （図形の辺）に解決されることを検証する spec。
+ * Creating a connector while the viewBox origin is panned must still resolve the
+ * endpoints to the correct world coordinates (the shape edges).
  *
- * connector-anchor-under-zoom.spec は viewBox の *スケール*（ズーム）下での作成を守るが、
- * viewBox の *原点移動*（パン）下での作成は別経路だった。パンの平行移動が screen→world 変換に
- * 正しく入らないと、パン後に作ったコネクターの端点が辺からずれる。
+ * connector-anchor-under-zoom.spec covers creation under a viewBox *scale*
+ * (zoom); creation under a viewBox *origin shift* (pan) is a separate path. If
+ * the pan translation does not enter the screen->world conversion, endpoints of
+ * a connector created after panning drift off the edge.
  *
- * 図形との対話は「現在の画面 boundingBox → toContent」で行い（パンでも実画面位置に当たる）、
- * 端点の期待値は要素の transform 属性（モデル変換＝パン不変）由来のワールド AABB から作る。
+ * Shapes are addressed through their current screen boundingBox fed to
+ * toContent, so the interaction lands on the real on-screen position even after
+ * panning. Expected endpoints come from a world AABB derived from the element's
+ * transform attribute (the model transform, which pan does not affect).
  */
 
 type Vec = { x: number; y: number };
@@ -20,7 +23,7 @@ const EPS = 2;
 
 function parsePoints(attr: string | null): Vec[] {
 	if (!attr) {
-		throw new Error("points 属性が取得できない");
+		throw new Error("cannot read the points attribute");
 	}
 	return attr
 		.trim()
@@ -36,14 +39,15 @@ function distance(a: Vec, b: Vec): number {
 }
 
 /**
- * 図形のワールド AABB を要素の transform 属性（local→world のモデル変換）で算出する。
- * getCTM は viewBox（パン/ズーム）を畳み込むためビューポート操作下ではワールド座標とずれる。
+ * World AABB of a shape, computed from the element's transform attribute (the
+ * local->world model transform). getCTM folds in the viewBox (pan/zoom), so it
+ * disagrees with world coordinates once the viewport is moved.
  */
 async function worldAABB(canvas: CanvasDriver, id: string): Promise<AABB> {
 	return canvas.page.evaluate((targetId) => {
 		const el = document.querySelector(`[data-id="${targetId}"]`);
 		if (!(el instanceof SVGGraphicsElement)) {
-			throw new Error(`図形 ${targetId} が SVGGraphicsElement でない`);
+			throw new Error(`shape ${targetId} is not an SVGGraphicsElement`);
 		}
 		const bbox = el.getBBox();
 		const matched = (el.getAttribute("transform") ?? "").match(
@@ -86,11 +90,11 @@ function onPerimeter(p: Vec, box: AABB): boolean {
 	return onVerticalEdge || onHorizontalEdge;
 }
 
-/** 図形の中心コンテンツ座標（画面 boundingBox を toContent で変換。パンでも実画面に当たる） */
+/** Shape center in content coordinates (screen boundingBox through toContent, so it lands on the real screen position even when panned) */
 async function contentCenter(canvas: CanvasDriver, id: string): Promise<Vec> {
 	const box = await canvas.objectById(id).boundingBox();
 	if (!box) {
-		throw new Error(`図形 ${id} の boundingBox が取得できない`);
+		throw new Error(`cannot read the boundingBox of shape ${id}`);
 	}
 	return canvas.toContent({
 		x: box.x + box.width / 2,
@@ -98,18 +102,18 @@ async function contentCenter(canvas: CanvasDriver, id: string): Promise<Vec> {
 	});
 }
 
-/** viewBox の原点（x,y）を返す */
+/** Origin (x,y) of the viewBox */
 async function viewBoxOrigin(canvas: CanvasDriver): Promise<Vec> {
 	const raw = await canvas.getViewBox();
 	if (!raw) {
-		throw new Error("viewBox が取得できない");
+		throw new Error("cannot read the viewBox");
 	}
 	const [x, y] = raw.trim().split(/\s+/).map(Number);
 	return { x, y };
 }
 
-test.describe("パン下でのコネクター作成", () => {
-	test("パン後に作成しても端点が図形の辺に正確に解決される", async ({
+test.describe("connector creation under pan", () => {
+	test("resolves endpoints exactly onto the shape edges when created after panning", async ({
 		canvas,
 	}) => {
 		const sourceId = await canvas.drawShape(
@@ -125,7 +129,7 @@ test.describe("パン下でのコネクター作成", () => {
 		);
 		await canvas.deselect();
 
-		// 右ボタンドラッグでビューポートをパンする。
+		// Pan the viewport with a right-button drag.
 		const originBefore = await viewBoxOrigin(canvas);
 		await canvas.rightDrag({ x: 650, y: 400 }, { x: 740, y: 480 });
 		await expect
@@ -134,11 +138,11 @@ test.describe("パン下でのコネクター作成", () => {
 					const o = await viewBoxOrigin(canvas);
 					return distance(o, originBefore);
 				},
-				{ message: "パンで viewBox 原点が移動すること" },
+				{ message: "the pan moves the viewBox origin" },
 			)
 			.toBeGreaterThan(20);
 
-		// パン後の現在の画面位置で source を選択し、bottomCenter から target へドラッグ。
+		// Select source at its current post-pan screen position, then drag from bottomCenter to target.
 		await canvas.selectAt(await contentCenter(canvas, sourceId));
 		const connectorId = await canvas.createConnector(
 			"bottomCenter",
@@ -152,25 +156,25 @@ test.describe("パン下でのコネクター作成", () => {
 		const sourceBox = await worldAABB(canvas, sourceId);
 		const targetBox = await worldAABB(canvas, targetId);
 
-		// 始点は source 下辺中央にワールド座標で正確に乗る（パンの平行移動が変換に正しく入る）。
+		// The start point lands exactly on the middle of source's bottom edge in world
+		// coordinates, i.e. the pan translation entered the conversion correctly.
 		expect(
 			distance(points[0], { x: centerX(sourceBox), y: sourceBox.maxY }),
-			`始点 ${JSON.stringify(points[0])} が source 下辺中央に乗ること（パン下）`,
+			`start point ${JSON.stringify(points[0])} sits on the middle of source's bottom edge (under pan)`,
 		).toBeLessThanOrEqual(EPS);
 
-		// 終点は target の輪郭（周）上に乗る。
 		expect(
 			onPerimeter(points[points.length - 1], targetBox),
-			`終点 ${JSON.stringify(points[points.length - 1])} が target の周上に乗ること（パン下）`,
+			`end point ${JSON.stringify(points[points.length - 1])} sits on target's perimeter (under pan)`,
 		).toBe(true);
 
-		// 全セグメントが直角。
+		// Every segment is axis-aligned.
 		for (let i = 1; i < points.length; i++) {
 			const horizontal = Math.abs(points[i - 1].y - points[i].y) <= EPS;
 			const vertical = Math.abs(points[i - 1].x - points[i].x) <= EPS;
 			expect(
 				horizontal !== vertical,
-				`セグメント ${i - 1}->${i} が直角であること`,
+				`segment ${i - 1}->${i} is axis-aligned`,
 			).toBe(true);
 		}
 	});

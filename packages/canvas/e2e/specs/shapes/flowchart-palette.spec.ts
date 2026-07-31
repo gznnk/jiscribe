@@ -3,24 +3,25 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 import { selectors } from "../../support/selectors";
 
 /**
- * flowchart フライアウトの図形が作成でき、期待どおりの SVG 要素で描画されることを守る。
- * 特に「型は使い回し・preset で意味を着せる」判断を固定する:
- * - process   … rect 型を流用（`<rect>`）
- * - decision  … diamond 型を流用（`<polygon>`）
- * - onPageConnector  … ellipse 型を流用した小円（`<ellipse>`）
- * - offPageConnector … 固有のホームベース五角形型（`<polygon>`）
+ * Guards that the flowchart flyout shapes can be created and render as the
+ * expected SVG elements. It pins the "reuse the type, let the preset carry the
+ * meaning" decision:
+ * - process           ... reuses the rect type (`<rect>`)
+ * - decision          ... reuses the diamond type (`<polygon>`)
+ * - onPageConnector   ... a small circle reusing the ellipse type (`<ellipse>`)
+ * - offPageConnector  ... its own home-plate pentagon type (`<polygon>`)
  */
 
 const FLOWCHART = "flowchart";
 
-/** キャンバスの computed cursor。crosshair=描画モード ON。 */
+/** The canvas computed cursor. crosshair means draw mode is on. */
 async function canvasCursor(canvas: CanvasDriver): Promise<string> {
 	return canvas.page
 		.locator('[data-kind="canvas"]')
 		.evaluate((el) => getComputedStyle(el).cursor);
 }
 
-/** flowchart フライアウトから presetId を1つ対角ドラッグで作成し、その SVG タグ名を返す。 */
+/** Creates one presetId from the flowchart flyout by diagonal drag and returns its SVG tag name. */
 async function createFromFlyout(
 	canvas: CanvasDriver,
 	presetId: string,
@@ -36,14 +37,14 @@ async function createFromFlyout(
 	await item.click();
 	await expect
 		.poll(() => canvasCursor(canvas), {
-			message: `${presetId} クリックで描画モードに入ること`,
+			message: `clicking ${presetId} enters draw mode`,
 		})
 		.toBe("crosshair");
 
 	await canvas.drag(from, to);
 	await expect
 		.poll(async () => (await canvas.captureObjects()).length, {
-			message: `${presetId} が1つ作成されること`,
+			message: `exactly one ${presetId} is created`,
 		})
 		.toBe(before.length + 1);
 
@@ -53,11 +54,11 @@ async function createFromFlyout(
 	return created?.tag ?? null;
 }
 
-test.describe("flowchart パレット", () => {
-	test("各図形がフライアウトから作成でき、正しい SVG 要素で描画される", async ({
+test.describe("flowchart palette", () => {
+	test("creates every shape from the flyout with the right SVG element", async ({
 		canvas,
 	}) => {
-		// 型を使い回す preset（process=rect / decision=diamond / on-page=ellipse）
+		// Presets that reuse a type (process=rect / decision=diamond / on-page=ellipse)
 		expect(
 			await createFromFlyout(
 				canvas,
@@ -85,7 +86,7 @@ test.describe("flowchart パレット", () => {
 			),
 		).toBe("ellipse");
 
-		// 固有の型を持つ off-page connector（五角形）
+		// The off-page connector has a type of its own (pentagon)
 		expect(
 			await createFromFlyout(
 				canvas,
@@ -96,10 +97,10 @@ test.describe("flowchart パレット", () => {
 		).toBe("polygon");
 	});
 
-	test("multiDocument / storedData / loopLimit がフライアウトから作成できる", async ({
+	test("creates multiDocument / storedData / loopLimit from the flyout", async ({
 		canvas,
 	}) => {
-		// multiDocument は3枚重ねの複数要素描画（data-kind は g にのみ付く）
+		// multiDocument draws three stacked sheets as several elements (data-kind sits on the g only)
 		expect(
 			await createFromFlyout(
 				canvas,

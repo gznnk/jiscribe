@@ -1,12 +1,14 @@
 import { test, expect } from "../../fixtures";
 
 /**
- * キーボードによる選択操作。
- * - Ctrl+A 全選択 / Escape 選択解除
- * - Delete での削除と Undo による復元
+ * Selection operations from the keyboard.
+ * - Ctrl+A selects all / Escape clears the selection
+ * - Delete removes, undo restores
  */
-test.describe("キーボード: 選択", () => {
-	test("Ctrl+A で全選択し、まとめて削除できる", async ({ canvas }) => {
+test.describe("keyboard: selection", () => {
+	test("selects everything on Ctrl+A and deletes it in one go", async ({
+		canvas,
+	}) => {
 		await canvas.drawShape("Rectangle", { x: 300, y: 200 }, { x: 440, y: 320 });
 		await canvas.deselect();
 		await canvas.drawShape("Rectangle", { x: 560, y: 200 }, { x: 700, y: 320 });
@@ -16,16 +18,15 @@ test.describe("キーボード: 選択", () => {
 		await canvas.selectAll();
 		expect(await canvas.hasAnyControl()).toBe(true);
 
-		// 全選択されていれば Delete で両方消える
 		await canvas.deleteSelection();
 		await expect
 			.poll(async () => (await canvas.captureObjects()).length)
 			.toBe(0);
 	});
 
-	test("Escape で選択が解除される", async ({ canvas }) => {
+	test("clears the selection on Escape", async ({ canvas }) => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
-		// 描画直後は選択状態（コントロールが出ている）
+		// Right after drawing the shape is selected, so controls are showing.
 		expect(await canvas.hasAnyControl()).toBe(true);
 
 		await canvas.pressEscape();
@@ -33,7 +34,7 @@ test.describe("キーボード: 選択", () => {
 		await expect.poll(() => canvas.hasAnyControl()).toBe(false);
 	});
 
-	test("Delete で削除し、Undo で復元される", async ({ canvas }) => {
+	test("deletes on Delete and restores on undo", async ({ canvas }) => {
 		const id = await canvas.drawShape(
 			"Rectangle",
 			{ x: 400, y: 200 },
@@ -47,7 +48,7 @@ test.describe("キーボード: 選択", () => {
 			.toBe(0);
 
 		await canvas.undo();
-		// 同じ図形（id・位置）が戻る
+		// The same shape comes back, id and position included.
 		await expect
 			.poll(async () => (await canvas.captureObjects()).length)
 			.toBe(1);

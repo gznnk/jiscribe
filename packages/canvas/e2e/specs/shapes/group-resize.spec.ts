@@ -1,29 +1,30 @@
 import { test, expect } from "../../fixtures";
 
 /**
- * 複数選択（マルチセレクト）のリサイズ。
+ * Multi-select resize.
  *
- * 単一図形のリサイズは resize / rotated-resize / driver-transform が守るが、複数選択を
- * まとめてリサイズすると、選択全体のバウンディングボックス（calcMultiSelectGroupBounds）を
- * 基準に各子が拡大縮小される。これは各子の寸法だけでなく位置（中心）も比例で動かす操作で、
- * (1) 子の寸法が変わらない（位置だけ動く）、(2) 一部の子だけ拡大される、(3) 履歴が分かれて
- * 1 回の undo で戻りきらない、といった退行が起きやすい。「両方が拡大し、外側の子ほど外へ
- * 開く」「1 回の undo で両方戻る」で守る。
+ * Single shapes are covered by resize / rotated-resize / driver-transform.
+ * Resizing a multi-selection instead scales every child against the bounding box
+ * of the whole selection (calcMultiSelectGroupBounds), which moves each child's
+ * center proportionally as well as its size. That invites regressions where
+ * (1) children keep their size and only move, (2) only some children scale, or
+ * (3) the history splits so one undo does not restore everything. Guarded by
+ * "both grow and the outer child opens further out" and "one undo restores both".
  */
 
-/** transform="matrix(a,b,c,d,e,f)" の中心X（e）を返す */
+/** Returns the center X (e) of transform="matrix(a,b,c,d,e,f)". */
 function centerXOf(transform: string | null): number {
 	const nums = transform?.match(/-?\d+(?:\.\d+)?/g)?.map(Number);
 	if (!nums || nums.length < 6) {
-		throw new Error(`transform を解釈できない: ${transform}`);
+		throw new Error(`cannot parse the transform: ${transform}`);
 	}
 	return nums[4];
 }
 
-/** "x1,y1 x2,y2 ..." 形式の points から最大 X を返す */
+/** Returns the largest X in a "x1,y1 x2,y2 ..." points string. */
 function maxXOf(points: string | null): number {
 	if (!points) {
-		throw new Error("points が取得できない");
+		throw new Error("the points attribute is missing");
 	}
 	return Math.max(
 		...points
@@ -33,12 +34,12 @@ function maxXOf(points: string | null): number {
 	);
 }
 
-test.describe("複数選択のリサイズ（比例拡大）", () => {
-	test("マルチセレクトの角ハンドルは両図形を比例拡大し、1 回の undo で両方戻る", async ({
+test.describe("multi-select resize (proportional scaling)", () => {
+	test("scales both shapes proportionally from a multi-select corner handle and restores both with one undo", async ({
 		canvas,
 	}) => {
-		// 横並びの 2 矩形（各 幅160・高さ100）。
-		// A 中心 (300,210) / B 中心 (700,210)。グループ bbox: left=220 right=780 top=160 bottom=260。
+		// Two rects side by side (160 x 100 each).
+		// A centered at (300,210), B at (700,210). Group bbox: left=220 right=780 top=160 bottom=260.
 		const a = await canvas.drawShape(
 			"Rectangle",
 			{ x: 220, y: 160 },
@@ -60,33 +61,33 @@ test.describe("複数選択のリサイズ（比例拡大）", () => {
 		const bTransformBefore = await bRect.getAttribute("transform");
 		const bCenterXBefore = centerXOf(bTransformBefore);
 
-		// マーキーで両方を選択（完全包含）。
+		// Select both with a marquee (fully enclosing).
 		await canvas.drag({ x: 180, y: 120 }, { x: 820, y: 300 }, 12);
 
-		// グループ bbox の右下角（780,260）を外側へドラッグして拡大する。
-		// 左上角 (220,160) を固定点に、x は 560→820、y は 100→200 へ拡大される。
+		// Drag the group bbox's bottom-right corner (780,260) outward to grow it.
+		// With the top-left (220,160) fixed, x grows 560 -> 820 and y grows 100 -> 200.
 		await canvas.dragTransformHandle("bottomRight", { x: 1040, y: 360 });
 
-		// 比例拡大なので両方の幅が増える（位置だけ動く退行を弾く）。
+		// Proportional scaling widens both, which rules out the move-only regression.
 		await expect
 			.poll(() => aRect.getAttribute("width").then(Number), {
-				message: "A の幅が拡大すること",
+				message: "A grows wider",
 			})
 			.toBeGreaterThan(aWidthBefore);
 		expect(Number(await bRect.getAttribute("width"))).toBeGreaterThan(
 			bWidthBefore,
 		);
 
-		// 外側（右）の子ほど外へ開く: B の中心Xは右へ動く。
+		// The outer (right) child opens further out: B's center X moves right.
 		expect(centerXOf(await bRect.getAttribute("transform"))).toBeGreaterThan(
 			bCenterXBefore,
 		);
 
-		// 1 回の undo で両図形の寸法・位置がまとめて元へ戻る（履歴 1 エントリ）。
+		// One undo restores size and position of both shapes (a single history entry).
 		await canvas.undo();
 		await expect
 			.poll(() => aRect.getAttribute("transform"), {
-				message: "1 回の undo で A が元の寸法・位置へ戻ること",
+				message: "one undo restores A's size and position",
 			})
 			.toBe(aTransformBefore);
 		expect(await aRect.getAttribute("width")).toBe(String(aWidthBefore));
@@ -94,10 +95,10 @@ test.describe("複数選択のリサイズ（比例拡大）", () => {
 		expect(await bRect.getAttribute("width")).toBe(String(bWidthBefore));
 	});
 
-	test("ポリラインを含むマルチセレクトのリサイズは points を拡大し、1 回の undo で戻る", async ({
+	test("scales the points of a polyline in a multi-select resize and restores them with one undo", async ({
 		canvas,
 	}) => {
-		// 矩形 + ポリライン。ポリラインは寸法ではなく points 配列でスケールされる別経路。
+		// Rect + polyline. The polyline takes a separate path: it scales through its points array, not its size.
 		const rect = await canvas.drawShape(
 			"Rectangle",
 			{ x: 250, y: 200 },
@@ -117,28 +118,28 @@ test.describe("複数選択のリサイズ（比例拡大）", () => {
 		const polyPointsBefore = await polyEl.getAttribute("points");
 		const polyMaxXBefore = maxXOf(polyPointsBefore);
 
-		// マーキーで両方を選択（bbox: left=250 top=200 right=700 bottom=300）。
+		// Select both with a marquee (bbox: left=250 top=200 right=700 bottom=300).
 		await canvas.drag({ x: 210, y: 160 }, { x: 760, y: 340 }, 12);
 
-		// 右下角（700,300）を外側へドラッグして拡大する。
+		// Drag the bottom-right corner (700,300) outward to grow it.
 		await canvas.dragTransformHandle("bottomRight", { x: 1000, y: 450 });
 
-		// ポリラインの points が拡大される（最大 X が右へ伸びる）。
+		// The polyline's points scale up, so its largest X extends right.
 		await expect
 			.poll(() => polyEl.getAttribute("points").then(maxXOf), {
-				message: "ポリラインの points が拡大されること",
+				message: "the polyline's points scale up",
 			})
 			.toBeGreaterThan(polyMaxXBefore);
-		// 矩形も一緒に拡大している。
+		// The rect grows along with it.
 		expect(Number(await rectEl.getAttribute("width"))).toBeGreaterThan(
 			rectWidthBefore,
 		);
 
-		// 1 回の undo でポリラインの points が元へ戻る（履歴 1 エントリ）。
+		// One undo restores the polyline's points (a single history entry).
 		await canvas.undo();
 		await expect
 			.poll(() => polyEl.getAttribute("points"), {
-				message: "1 回の undo でポリラインの points が元へ戻ること",
+				message: "one undo restores the polyline's points",
 			})
 			.toBe(polyPointsBefore);
 		expect(Number(await rectEl.getAttribute("width"))).toBe(rectWidthBefore);

@@ -2,16 +2,15 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * center アンカーの輪郭点が、接続図形のリサイズに追従して再計算されることを検証する spec。
+ * Checks that a center anchor's outline point is recomputed when the connected shape is resized.
  *
- * center アンカーの端点は図形中心ではなく、相手へ向かう輪郭点へ吸着する（adjustToOutline）。
- * 図形をリサイズすると中心・辺位置が変わるため、輪郭点も新しい辺へ移るべき。
- * connector-resize-anchor.spec は辺（connectPoint）アンカーのリサイズ追従を守り、
- * connector-center-anchor-outline.spec は静止図形での輪郭吸着を守るが、「center アンカー × リサイズ」
- * の組み合わせは未検証だった。
+ * A center anchor's endpoint snaps not to the shape center but to the outline point facing the
+ * other end (adjustToOutline). Resizing moves the center and the edges, so the outline point has
+ * to move onto the new edge.
  *
- * A（左）→ B（右・center 接続）を水平に結び、B の左辺を外側へリサイズすると、輪郭点が新しい
- * 左辺中央へ移ることを、図形の実ジオメトリと突き合わせて守る。
+ * Joins A (left) to B (right, connected at its center) horizontally, resizes B's left edge
+ * outward, and guards against the shape's real geometry that the outline point moves to the new
+ * left edge center.
  */
 
 type Vec = { x: number; y: number };
@@ -21,7 +20,7 @@ const EPS = 2;
 
 function parsePoints(attr: string | null): Vec[] {
 	if (!attr) {
-		throw new Error("points 属性が取得できない");
+		throw new Error("cannot read the points attribute");
 	}
 	return attr
 		.trim()
@@ -40,12 +39,12 @@ async function worldAABB(canvas: CanvasDriver, id: string): Promise<AABB> {
 	return canvas.page.evaluate((targetId) => {
 		const el = document.querySelector(`[data-id="${targetId}"]`);
 		if (!(el instanceof SVGGraphicsElement)) {
-			throw new Error(`図形 ${targetId} が SVGGraphicsElement でない`);
+			throw new Error(`shape ${targetId} is not an SVGGraphicsElement`);
 		}
 		const bbox = el.getBBox();
 		const ctm = el.getCTM();
 		if (!ctm) {
-			throw new Error(`図形 ${targetId} の CTM が取得できない`);
+			throw new Error(`cannot read the CTM of shape ${targetId}`);
 		}
 		const corners = [
 			{ x: bbox.x, y: bbox.y },
@@ -91,12 +90,13 @@ async function endPoint(canvas: CanvasDriver, id: string): Promise<Vec> {
 	return points[points.length - 1];
 }
 
-test.describe("center アンカーのリサイズ追従", () => {
-	test("接続図形をリサイズすると center 輪郭点が新しい辺へ移る", async ({
+test.describe("center anchor following a resize", () => {
+	test("moves the center outline point onto the new edge when the connected shape is resized", async ({
 		canvas,
 	}) => {
-		// A（左）と B（右）を同じ高さに置く。A.rightCenter → B.center で水平に結ぶと、
-		// 輪郭点は B 中心→A 方向（左）＝ B の左辺中央になる。
+		// A (left) and B (right) at the same height. Joining A.rightCenter → B.center horizontally
+		// puts the outline point in the direction from B's center toward A, i.e. B's left edge
+		// center.
 		await canvas.drawShape("Rectangle", { x: 200, y: 300 }, { x: 360, y: 400 });
 		await canvas.deselect();
 		const bId = await canvas.drawShape(
@@ -110,15 +110,14 @@ test.describe("center アンカーのリサイズ追従", () => {
 		const id = await canvas.createConnector("rightCenter", { x: 800, y: 350 });
 		await canvas.deselect();
 
-		// 初期: 輪郭点は B の左辺中央。
 		const bBefore = await worldAABB(canvas, bId);
 		const endBefore = await endPoint(canvas, id);
 		expect(
 			distance(endBefore, leftCenter(bBefore)),
-			"初期の終点が B 左辺中央に乗ること",
+			"the initial end point lies on B's left edge center",
 		).toBeLessThanOrEqual(EPS);
 
-		// B を選択して左辺を外側（左）へリサイズする。中心 (800,350) を掴む（終点 700,350 と被らない）。
+		// Grab B at its center (800,350), which does not overlap the end point (700,350).
 		await canvas.selectAt({ x: 800, y: 350 });
 		await canvas.dragTransformHandle(
 			"leftCenter",
@@ -128,25 +127,22 @@ test.describe("center アンカーのリサイズ追従", () => {
 		await canvas.deselect();
 
 		const bAfter = await worldAABB(canvas, bId);
-		// 左辺が実際に外側へ広がっている。
-		expect(bAfter.minX, "左辺が左へ広がっていること").toBeLessThan(
+		expect(bAfter.minX, "the left edge really widened leftward").toBeLessThan(
 			bBefore.minX - 20,
 		);
 
-		// center 輪郭点はリサイズ後の新しい左辺中央へ移る。
 		const endAfter = await endPoint(canvas, id);
 		expect(
 			distance(endAfter, leftCenter(bAfter)),
-			`終点 ${JSON.stringify(endAfter)} が新しい B 左辺中央 ${JSON.stringify(leftCenter(bAfter))} へ移ること`,
+			`the end point ${JSON.stringify(endAfter)} moves to B's new left edge center ${JSON.stringify(leftCenter(bAfter))}`,
 		).toBeLessThanOrEqual(EPS);
 		expect(
 			onPerimeter(endAfter, bAfter),
-			"終点が（リサイズ後の）B の輪郭上にあること",
+			"the end point lies on the resized B's outline",
 		).toBe(true);
-		// 旧左辺位置からは左へ動いている。
 		expect(
 			endBefore.x - endAfter.x,
-			"終点が左（外側）へ移動していること",
+			"the end point moved left (outward) from the old edge position",
 		).toBeGreaterThan(20);
 	});
 });

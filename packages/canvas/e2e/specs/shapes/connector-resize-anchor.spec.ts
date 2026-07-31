@@ -2,17 +2,19 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * 接続図形を「リサイズ」したときのコネクター端点追従を幾何レベルで検証する spec。
+ * Spec verifying, at the geometry level, that connector endpoints follow when a connected shape is
+ * *resized*.
  *
- * コネクターの端点は接続図形の辺アンカー（bottomCenter 等）に解決されるため、図形をリサイズ
- * して辺が動けば端点もその新しい辺中央へ移る。connector-follow-resize.spec は「リサイズで
- * points が変わる」までしか見ておらず、端点が *リサイズ後の* 辺中央に正確に乗るかは未検証
- * だった。
+ * An endpoint resolves to an edge anchor of the connected shape (bottomCenter and so on), so when
+ * a resize moves that edge, the endpoint moves to the new edge center. connector-follow-resize.spec
+ * only checks that points change on a resize; whether the endpoint lands exactly on the edge center
+ * *after* the resize was untested.
  *
- * ここでは bottomCenter で接続した端点について、
- *   - 下辺を下へ伸ばすと端点 y がリサイズ後の下辺中央に正確に追従する
- *   - 右辺を右へ伸ばすと（中心 x がずれて）端点 x もリサイズ後の下辺中央に正確に追従する
- * ことを、リサイズ後の図形ジオメトリから期待値を作って守る。座標オフセットには依存しない。
+ * For an endpoint connected at bottomCenter, this guards that
+ *   - extending the bottom edge downwards makes the endpoint y follow the resized bottom edge center
+ *   - extending the right edge to the right (shifting the center x) makes the endpoint x follow it too
+ * Expected values are built from the shape geometry after the resize, so this does not depend on
+ * coordinate offsets.
  */
 
 type Vec = { x: number; y: number };
@@ -22,7 +24,7 @@ const EPS = 1.5;
 
 function parsePoints(attr: string | null): Vec[] {
 	if (!attr) {
-		throw new Error("points 属性が取得できない");
+		throw new Error("points attribute is missing");
 	}
 	return attr
 		.trim()
@@ -41,12 +43,12 @@ async function worldAABB(canvas: CanvasDriver, id: string): Promise<AABB> {
 	return canvas.page.evaluate((targetId) => {
 		const el = document.querySelector(`[data-id="${targetId}"]`);
 		if (!(el instanceof SVGGraphicsElement)) {
-			throw new Error(`図形 ${targetId} が SVGGraphicsElement でない`);
+			throw new Error(`shape ${targetId} is not an SVGGraphicsElement`);
 		}
 		const bbox = el.getBBox();
 		const ctm = el.getCTM();
 		if (!ctm) {
-			throw new Error(`図形 ${targetId} の CTM が取得できない`);
+			throw new Error(`CTM of shape ${targetId} is not available`);
 		}
 		const corners = [
 			{ x: bbox.x, y: bbox.y },
@@ -73,11 +75,11 @@ const bottomCenter = (box: AABB): Vec => ({
 	y: box.maxY,
 });
 
-test.describe("リサイズ時のコネクター端点追従", () => {
-	test("接続元をリサイズすると端点が新しい下辺中央へ正確に追従する", async ({
+test.describe("connector endpoint following on resize", () => {
+	test("endpoint follows exactly to the new bottom edge center when the source shape is resized", async ({
 		canvas,
 	}) => {
-		// 上の source（中心 500,200）と下の target。source の bottomCenter で接続する。
+		// A source above (center 500,200) and a target below, connected at the source bottomCenter.
 		const sourceId = await canvas.drawShape(
 			"Rectangle",
 			{ x: 400, y: 150 },
@@ -102,15 +104,14 @@ test.describe("リサイズ時のコネクター端点追従", () => {
 		const pointsAttr = () =>
 			canvas.objectById(connectorId).getAttribute("points");
 
-		// 初期: 端点は source の下辺中央に乗る。
 		const initialBox = await worldAABB(canvas, sourceId);
 		const initialBottomCenter = bottomCenter(initialBox);
 		expect(
 			distance(await startPoint(), initialBottomCenter),
-			"初期は端点が下辺中央に乗ること",
+			"endpoint initially sits on the bottom edge center",
 		).toBeLessThanOrEqual(EPS);
 
-		// ── 下辺を下へ伸ばす（垂直方向の追従）──
+		// -- Extend the bottom edge downwards (vertical following) --
 		const beforeResize1 = await pointsAttr();
 		await canvas.selectAt({ x: 500, y: 200 });
 		await canvas.dragTransformHandle(
@@ -119,22 +120,23 @@ test.describe("リサイズ時のコネクター端点追従", () => {
 			{ ctrl: true },
 		);
 		await expect
-			.poll(pointsAttr, { message: "下辺リサイズで端点が追従すること" })
+			.poll(pointsAttr, {
+				message: "endpoint follows the bottom edge resize",
+			})
 			.not.toBe(beforeResize1);
 
 		const box1 = await worldAABB(canvas, sourceId);
 		const bottomCenter1 = bottomCenter(box1);
-		// 下辺が実際に下がっている（追従が空振りでない）。
-		expect(bottomCenter1.y, "下辺が下へ伸びていること").toBeGreaterThan(
+		// The bottom edge really moved down, so the following assertion is not vacuous.
+		expect(bottomCenter1.y, "bottom edge extended downwards").toBeGreaterThan(
 			initialBottomCenter.y + 20,
 		);
-		// 端点はリサイズ後の下辺中央に正確に乗る。
 		expect(
 			distance(await startPoint(), bottomCenter1),
-			`端点 ${JSON.stringify(await startPoint())} が新しい下辺中央 ${JSON.stringify(bottomCenter1)} に乗ること`,
+			`endpoint ${JSON.stringify(await startPoint())} sits on the new bottom edge center ${JSON.stringify(bottomCenter1)}`,
 		).toBeLessThanOrEqual(EPS);
 
-		// ── 右辺を右へ伸ばす（中心 x がずれ、水平方向の追従）──
+		// -- Extend the right edge to the right (center x shifts, horizontal following) --
 		const beforeResize2 = await pointsAttr();
 		await canvas.dragTransformHandle(
 			"rightCenter",
@@ -142,20 +144,18 @@ test.describe("リサイズ時のコネクター端点追従", () => {
 			{ ctrl: true },
 		);
 		await expect
-			.poll(pointsAttr, { message: "右辺リサイズで端点が追従すること" })
+			.poll(pointsAttr, { message: "endpoint follows the right edge resize" })
 			.not.toBe(beforeResize2);
 
 		const box2 = await worldAABB(canvas, sourceId);
 		const bottomCenter2 = bottomCenter(box2);
-		// 中心 x が右へ動いている。
 		expect(
 			bottomCenter2.x,
-			"右辺リサイズで下辺中央の x が右へ動くこと",
+			"x of the bottom edge center moves right on the right edge resize",
 		).toBeGreaterThan(bottomCenter1.x + 20);
-		// 端点はリサイズ後の下辺中央（x が動いた位置）に正確に乗る。
 		expect(
 			distance(await startPoint(), bottomCenter2),
-			`端点 ${JSON.stringify(await startPoint())} が新しい下辺中央 ${JSON.stringify(bottomCenter2)} に乗ること`,
+			`endpoint ${JSON.stringify(await startPoint())} sits on the new bottom edge center ${JSON.stringify(bottomCenter2)}`,
 		).toBeLessThanOrEqual(EPS);
 	});
 });

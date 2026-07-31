@@ -1,33 +1,34 @@
 import { test, expect } from "../../fixtures";
 
 /**
- * ビューポートのパン（右ドラッグ）の振る舞い不変条件。
+ * Behavioral invariants of a viewport pan (right drag).
  *
- * driver-input.spec は「rightDrag で viewBox が変わる」までを守るが、ユーザーが実際に
- * 頼る不変条件——(1) パンしても図形のワールド座標は動かない、(2) ズーム倍率は変わらない、
- * (3) パン後の新しい画面位置で図形を選択できる（screen↔world 変換が正しい）——は
- * 未カバーだった。座標変換の退行は viewBox が変わるだけのテストでは見逃すため、
- * 「パン後に新位置でクリックして選択できる」で守る。
+ * driver-input.spec goes as far as "rightDrag changes the viewBox", leaving the
+ * invariants users actually rely on uncovered: (1) panning does not move a
+ * shape's world coordinates, (2) the zoom factor does not change, (3) a shape can
+ * be selected at its new screen position after the pan, i.e. the screen<->world
+ * conversion is right. A conversion regression slips past a test that only
+ * watches the viewBox, so clicking at the new position is what guards it.
  *
- * 既定ビューポート（zoom=1）では viewBox 幅＝SVG ピクセル幅なので、
- * 画面座標 = ワールド座標 − viewBox.min（スケール 1）で対応づく。
+ * In the default viewport (zoom=1) the viewBox width equals the SVG pixel width,
+ * so screen coordinates map as world coordinates minus viewBox.min, at scale 1.
  */
 
 type ViewBox = { minX: number; minY: number; width: number; height: number };
 
 function parseViewBox(raw: string | null): ViewBox {
 	if (!raw) {
-		throw new Error("viewBox が取得できない");
+		throw new Error("cannot read the viewBox");
 	}
 	const [minX, minY, width, height] = raw.trim().split(/\s+/).map(Number);
 	return { minX, minY, width, height };
 }
 
-test.describe("ビューポートのパン", () => {
-	test("パンしても図形のワールド座標は不動で、新しい画面位置から選択できる", async ({
+test.describe("viewport pan", () => {
+	test("leaves the shape's world coordinates alone and lets it be selected at its new screen position", async ({
 		canvas,
 	}) => {
-		// 中心 (500,300) の矩形。
+		// A rectangle centered at (500,300).
 		const id = await canvas.drawShape(
 			"Rectangle",
 			{ x: 420, y: 250 },
@@ -38,25 +39,26 @@ test.describe("ビューポートのパン", () => {
 		const worldBefore = await canvas.objectById(id).getAttribute("transform");
 		const vbBefore = parseViewBox(await canvas.getViewBox());
 
-		// 右ドラッグでパンする。
+		// Pan with a right drag.
 		await canvas.rightDrag({ x: 700, y: 500 }, { x: 850, y: 600 });
 
 		const vbAfter = parseViewBox(await canvas.getViewBox());
 
-		// ズーム倍率は変わらない（viewBox の寸法が保たれる）。
+		// The zoom factor is unchanged, i.e. the viewBox keeps its size.
 		expect(vbAfter.width).toBeCloseTo(vbBefore.width, 3);
 		expect(vbAfter.height).toBeCloseTo(vbBefore.height, 3);
-		// パンしたので原点（min）はずれる。
+		// The pan shifts the origin (min).
 		expect(
 			vbAfter.minX !== vbBefore.minX || vbAfter.minY !== vbBefore.minY,
 		).toBe(true);
-		// 図形のワールド座標（transform）は動かない。
+		// The shape's world coordinates (transform) stay put.
 		expect(await canvas.objectById(id).getAttribute("transform")).toBe(
 			worldBefore,
 		);
 
-		// パン後の新しい画面位置（= ワールド中心 − viewBox.min）でクリックして選択できる。
-		// 変換が壊れていればここは空振りし、selectAt がコントロール待ちで失敗する。
+		// Clicking at the new post-pan screen position (world center minus viewBox.min)
+		// selects the shape. A broken conversion misses it and selectAt fails waiting
+		// for the controls.
 		const screen = { x: 500 - vbAfter.minX, y: 300 - vbAfter.minY };
 		await canvas.selectAt(screen);
 		expect(await canvas.isControlVisible("transform/resize:bottomRight")).toBe(

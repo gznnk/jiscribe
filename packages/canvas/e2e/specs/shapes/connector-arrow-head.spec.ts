@@ -3,17 +3,16 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 import { selectors } from "../../support/selectors";
 
 /**
- * コネクターの矢印（arrow head）設定の反映と永続。
+ * Applying and persisting connector arrow head settings.
  *
- * 矢印は端点ごとに `[data-kind=connector][data-id=<id>]` の要素として描かれ、
- * 種別が "None" のときは要素自体が描かれない。三角・ひし形は `polygon` 単体だが、
- * 鳥足系は複数要素からなるため `g` に data-kind が載る（`arrowCount` が数えるのは
- * 前者だけ）。既定の新規コネクターは終端だけに ConcaveTriangle を持つ。矢印系
- * （startArrow / endArrow / swapArrows）は既存スイートで未カバーだったため、
- * 「メニュー操作 → 描画要素の増減・入れ替え」を守る。
+ * Each end's arrow is drawn as a `[data-kind=connector][data-id=<id>]` element, and nothing is
+ * drawn at all when the type is "None". Triangles and diamonds are a single `polygon`, while
+ * crow's foot types are made of several elements so data-kind sits on a `g` (`arrowCount`
+ * counts only the former). A new connector carries a ConcaveTriangle on its end only. Guards
+ * that menu operations add, remove and swap the drawn elements.
  */
 
-/** 上下 2 矩形を縦コネクターで結び、コネクター ID を返す（接続後は選択解除済み） */
+/** Joins two stacked rectangles with a vertical connector and returns its ID (left deselected) */
 async function buildConnector(canvas: CanvasDriver): Promise<string> {
 	await canvas.drawShape("Rectangle", { x: 400, y: 150 }, { x: 600, y: 250 });
 	await canvas.deselect();
@@ -29,7 +28,7 @@ async function buildConnector(canvas: CanvasDriver): Promise<string> {
 	return connectorId;
 }
 
-/** 線上をクリックしてコネクターを選択し、矢印メニューの表示を待つ */
+/** Selects the connector by clicking on the line and waits for the arrow menu */
 async function selectConnector(canvas: CanvasDriver) {
 	await canvas.clickAt({ x: 500, y: 350 });
 	await expect(
@@ -37,7 +36,7 @@ async function selectConnector(canvas: CanvasDriver) {
 	).toBeVisible();
 }
 
-/** 指定コネクターの矢印 polygon 数 */
+/** Number of arrow polygons on the given connector */
 async function arrowCount(canvas: CanvasDriver, id: string): Promise<number> {
 	return canvas.page.evaluate(
 		(cid) =>
@@ -49,9 +48,10 @@ async function arrowCount(canvas: CanvasDriver, id: string): Promise<number> {
 }
 
 /**
- * 始端・終端それぞれに最も近い矢印 polygon の points 文字列（＝矢印形状の指紋）を返す。
- * 端点は当たり判定用ポリライン（data-id 付き）の両端から取り、矢印の matrix(e,f) との
- * 距離で対応づける。矢印が無い端は null。
+ * Returns the points string (a fingerprint of the arrow shape) of the arrow polygon nearest to
+ * the start and to the end. The endpoints come from the ends of the hit-area polyline (the one
+ * carrying data-id) and are matched by distance to each arrow's matrix(e,f). An end with no
+ * arrow yields null.
  */
 async function arrowShapesByEnd(
 	canvas: CanvasDriver,
@@ -99,8 +99,8 @@ async function arrowShapesByEnd(
 	}, id);
 }
 
-test.describe("コネクターの矢印", () => {
-	test("既定は終端のみ矢印を持ち、endArrow を None にすると消える", async ({
+test.describe("connector arrows", () => {
+	test("draws an arrow on the end only by default and removes it when endArrow is set to None", async ({
 		canvas,
 	}) => {
 		const id = await buildConnector(canvas);
@@ -113,7 +113,9 @@ test.describe("コネクターの矢印", () => {
 		await expect.poll(() => arrowCount(canvas, id)).toBe(0);
 	});
 
-	test("startArrow を設定すると両端に矢印が並ぶ（2つ）", async ({ canvas }) => {
+	test("shows arrows on both ends (2) when startArrow is set", async ({
+		canvas,
+	}) => {
 		const id = await buildConnector(canvas);
 		expect(await arrowCount(canvas, id)).toBe(1);
 
@@ -126,10 +128,13 @@ test.describe("コネクターの矢印", () => {
 		await expect.poll(() => arrowCount(canvas, id)).toBe(2);
 	});
 
-	test("swapArrows で始端と終端の矢印形状が入れ替わる", async ({ canvas }) => {
+	test("swaps the start and end arrow shapes on swapArrows", async ({
+		canvas,
+	}) => {
 		const id = await buildConnector(canvas);
 
-		// 両端に異なる形状を付けて区別できるようにする（既定 end=ConcaveTriangle）。
+		// Give the two ends different shapes so they can be told apart (end defaults to
+		// ConcaveTriangle).
 		await selectConnector(canvas);
 		await canvas.openObjectMenu("arrow-head-start");
 		await canvas.page.click(
@@ -150,7 +155,7 @@ test.describe("コネクターの矢印", () => {
 		expect((await arrowShapesByEnd(canvas, id)).target).toBe(before.source);
 	});
 
-	test("鳥足の矢印は path + circle の複合要素として描かれる", async ({
+	test("draws a crow's foot arrow as a composite of path + circle", async ({
 		canvas,
 	}) => {
 		const id = await buildConnector(canvas);
@@ -161,8 +166,8 @@ test.describe("コネクターの矢印", () => {
 			selectors.objectMenuSet("endArrow", "CrowFootZeroMany"),
 		);
 
-		// 三角系と違い複数要素で 1 つの矢印を成すため、data-kind は <g> に載る。
-		// 子要素からでもヒットテストが辿れることを、要素の内訳ごと押さえる。
+		// Unlike the triangles, several elements make up one arrow, so data-kind sits on the <g>.
+		// Pinning the element breakdown also covers hit testing reaching it from a child.
 		await expect
 			.poll(() =>
 				canvas.page.evaluate((cid) => {
@@ -180,7 +185,7 @@ test.describe("コネクターの矢印", () => {
 		expect(await arrowCount(canvas, id)).toBe(0);
 	});
 
-	test("endArrow を None にする操作は undo で戻り、redo で再適用される", async ({
+	test("reverts setting endArrow to None on undo and reapplies it on redo", async ({
 		canvas,
 	}) => {
 		const id = await buildConnector(canvas);

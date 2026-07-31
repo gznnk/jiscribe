@@ -2,17 +2,20 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * Zoom to Fit（Ctrl+0）の「正確なフレーミング」を守る。
+ * Guards the exact framing Zoom to Fit (Ctrl+0) produces.
  *
- * viewport.spec は「対象が枠内に入る」までで、中心合わせ・余白量は未検証だった。
- * 実装（ZoomToFitCommand）は
- *   ・viewBox 中心 = 内容バウンディングボックスの中心（contentCx/contentCy）
- *   ・制約軸（はみ出す側）で画面 48px（PADDING_PX）ぶんの余白を左右に取る
- * という枠組み。中心ズレや余白計算の取り違えは「枠内に入る」検証では捕まらないため、
- * 中心一致と「制約軸の余白＝48px/zoom」まで踏み込んで固める。
+ * viewport.spec goes as far as "the target lands inside the frame" and never
+ * checks the centering or the margin. The implementation (ZoomToFitCommand):
+ *   - viewBox center = center of the content bounding box (contentCx/contentCy)
+ *   - on the constraining axis (the one that overflows), a margin worth 48
+ *     screen px (PADDING_PX) on each side
+ * A drifted center or a mixed-up margin computation survives an "inside the
+ * frame" check, so the center match and "constraining-axis margin = 48px/zoom"
+ * are pinned here.
  *
- * 内容 bbox は軸並行矩形なので描画座標がそのまま境界。横長(960×520)に置くので
- * 制約軸は横（width）になる（多少のツールバー高さの差では揺らがない）。
+ * The content bbox is axis-aligned, so the drawing coordinates are its bounds
+ * directly. The content is laid out landscape (960x520), which makes width the
+ * constraining axis; small differences in toolbar height do not flip that.
  */
 
 const PADDING_PX = 48;
@@ -21,13 +24,13 @@ type ViewBox = { minX: number; minY: number; width: number; height: number };
 
 function parseViewBox(raw: string | null): ViewBox {
 	if (!raw) {
-		throw new Error("viewBox が取得できない");
+		throw new Error("cannot read the viewBox");
 	}
 	const [minX, minY, width, height] = raw.trim().split(/\s+/).map(Number);
 	return { minX, minY, width, height };
 }
 
-/** キャンバス本体 svg の画面ピクセル幅（= viewport.width）。zoom 復元に使う */
+/** Screen pixel width of the canvas svg itself (= viewport.width), used to recover the zoom */
 async function svgScreenWidth(canvas: CanvasDriver): Promise<number> {
 	return canvas.page.evaluate(() => {
 		const svgs = [...document.querySelectorAll("svg")];
@@ -45,11 +48,11 @@ async function svgScreenWidth(canvas: CanvasDriver): Promise<number> {
 	});
 }
 
-test.describe("Zoom to Fit の正確なフレーミング", () => {
-	test("内容の中心に合わせ、制約軸に 48px の余白を左右対称に取る", async ({
+test.describe("exact framing of Zoom to Fit", () => {
+	test("centers on the content and takes a symmetric 48px margin on the constraining axis", async ({
 		canvas,
 	}) => {
-		// 内容 bbox: 左200・上200・右1160・下720 → 幅960×高520、中心 (680,460)。
+		// Content bbox: left 200, top 200, right 1160, bottom 720 -> 960x520, center (680,460).
 		await canvas.drawShape("Rectangle", { x: 200, y: 200 }, { x: 360, y: 300 });
 		await canvas.drawShape(
 			"Rectangle",
@@ -67,20 +70,21 @@ test.describe("Zoom to Fit の正確なフレーミング", () => {
 		await canvas.zoomToFit();
 		await expect
 			.poll(() => canvas.getViewBox(), {
-				message: "Zoom to Fit で viewBox が変化すること",
+				message: "Zoom to Fit changes the viewBox",
 			})
 			.not.toBe(before);
 
 		const vb = parseViewBox(await canvas.getViewBox());
 		const svgW = await svgScreenWidth(canvas);
-		// zoom = 画面幅 / viewBox幅。world 余白は 48/zoom = 48 * viewBox幅 / 画面幅。
+		// zoom = screen width / viewBox width, so the world margin is 48/zoom = 48 * viewBox width / screen width.
 		const expectedMarginWorld = (PADDING_PX * vb.width) / svgW;
 
-		// 中心合わせ: viewBox 中心が内容中心に一致する（x も y も）。
+		// Centering: the viewBox center matches the content center on both axes.
 		expect(vb.minX + vb.width / 2).toBeCloseTo(contentCx, 0);
 		expect(vb.minY + vb.height / 2).toBeCloseTo(contentCy, 0);
 
-		// 制約軸（横）の左右余白がともに 48px/zoom（左右対称 ＝ 中心合わせの裏付けでもある）。
+		// Both margins on the constraining axis (width) are 48px/zoom; their symmetry
+		// also backs up the centering.
 		const leftMargin = contentLeft - vb.minX;
 		const rightMargin = vb.minX + vb.width - contentRight;
 		expect(Math.abs(leftMargin - expectedMarginWorld)).toBeLessThanOrEqual(2);

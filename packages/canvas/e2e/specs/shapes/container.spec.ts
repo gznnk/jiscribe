@@ -3,24 +3,24 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 import { selectors } from "../../support/selectors";
 
 /**
- * container ("frame") シェイプの中核挙動を守る:
- * - container フライアウトから frame / boundary / zone が作成でき、複合 <g> で描画される
- * - 本体（body）はクリック貫通し、ヘッダ帯でのみ選択される（pass-through）
- * - boundary preset は破線ボーダーになる
+ * Guards the core behavior of the container ("frame") shape:
+ * - frame / boundary / zone can be created from the container flyout and render as a composite <g>
+ * - the body passes clicks through, so only the header band selects it (pass-through)
+ * - the boundary preset gets a dashed border
  *
- * 束ね（move-together）は既存の group が担当するため、ここでは検証しない。
+ * Moving children together is the existing group's job, so it is not checked here.
  */
 
 const CATEGORY = "container";
 
-/** キャンバスの computed cursor。crosshair=描画モード ON。 */
+/** The canvas computed cursor. crosshair means draw mode is on. */
 async function canvasCursor(canvas: CanvasDriver): Promise<string> {
 	return canvas.page
 		.locator('[data-kind="canvas"]')
 		.evaluate((el) => getComputedStyle(el).cursor);
 }
 
-/** container フライアウトから presetId を対角ドラッグで作成し、新規オブジェクトの {id, tag} を返す。 */
+/** Creates presetId from the container flyout by diagonal drag and returns the new object's {id, tag}. */
 async function createFromFlyout(
 	canvas: CanvasDriver,
 	presetId: string,
@@ -36,14 +36,14 @@ async function createFromFlyout(
 	await item.click();
 	await expect
 		.poll(() => canvasCursor(canvas), {
-			message: `${presetId} クリックで描画モードに入ること`,
+			message: `clicking ${presetId} enters draw mode`,
 		})
 		.toBe("crosshair");
 
 	await canvas.drag(from, to);
 	await expect
 		.poll(async () => (await canvas.captureObjects()).length, {
-			message: `${presetId} が1つ作成されること`,
+			message: `exactly one ${presetId} is created`,
 		})
 		.toBe(before.length + 1);
 
@@ -51,13 +51,13 @@ async function createFromFlyout(
 		(obj) => !beforeIds.has(obj.id),
 	);
 	if (!created?.id) {
-		throw new Error(`${presetId} で作成された図形の data-id が取得できない`);
+		throw new Error(`the shape created for ${presetId} has no data-id`);
 	}
 	return { id: created.id, tag: created.tag };
 }
 
-test.describe("container パレット / 挙動", () => {
-	test("frame / boundary / zone がフライアウトから作成でき、複合 <g> で描画される", async ({
+test.describe("container palette / behavior", () => {
+	test("creates frame / boundary / zone from the flyout as composite <g> elements", async ({
 		canvas,
 	}) => {
 		const frame = await createFromFlyout(
@@ -85,34 +85,38 @@ test.describe("container パレット / 挙動", () => {
 		expect(zone.tag).toBe("g");
 	});
 
-	test("本体はクリック貫通し、ヘッダ帯でのみ選択される", async ({ canvas }) => {
-		// 高さ 220 のコンテナ。ヘッダ帯は上端 28px（content 座標 y=[220,248]）。
+	test("passes clicks through the body and selects only on the header band", async ({
+		canvas,
+	}) => {
+		// Container of height 220. The header band is the top 28px (content coordinates y=[220,248]).
 		await createFromFlyout(
 			canvas,
 			"frame",
 			{ x: 300, y: 220 },
 			{ x: 560, y: 440 },
 		);
-		// 作成直後は自動選択されコントロールが出ている。
+		// Auto-selected right after creation, so controls are showing.
 		await expect(canvas.page.locator(selectors.control).first()).toBeVisible();
 
-		// 本体（ヘッダより下の内側）クリック → 貫通してキャンバスに抜け、選択が外れる。
+		// A click on the body (inside, below the header) falls through to the canvas and clears the selection.
 		await canvas.clickAt({ x: 430, y: 350 });
 		await expect(canvas.page.locator(selectors.control)).toHaveCount(0);
 
-		// ヘッダ帯クリック → コンテナが選択される。
+		// A click on the header band selects the container.
 		await canvas.clickAt({ x: 430, y: 232 });
 		await expect(canvas.page.locator(selectors.control).first()).toBeVisible();
 	});
 
-	test("boundary preset は破線ボーダーで描画される", async ({ canvas }) => {
+	test("renders the boundary preset with a dashed border", async ({
+		canvas,
+	}) => {
 		const boundary = await createFromFlyout(
 			canvas,
 			"boundary",
 			{ x: 300, y: 220 },
 			{ x: 560, y: 400 },
 		);
-		// アウトライン矩形（fill:none の枠）に stroke-dasharray が乗っていること。
+		// The outline rect (the fill:none frame) carries a stroke-dasharray.
 		const dash = await canvas.page.evaluate((id) => {
 			const group = document.querySelector(`[data-id="${id}"]`);
 			if (!group) {
@@ -126,7 +130,7 @@ test.describe("container パレット / 挙動", () => {
 		expect(dash).not.toBe("none");
 	});
 
-	test("ヘッダ下線は枠線と同じ太さ（strokeWidth 追従）で描かれる", async ({
+	test("draws the header divider at the same width as the border (strokeWidth follows)", async ({
 		canvas,
 	}) => {
 		const frame = await createFromFlyout(
@@ -135,8 +139,9 @@ test.describe("container パレット / 挙動", () => {
 			{ x: 300, y: 220 },
 			{ x: 560, y: 420 },
 		);
-		// 枠線と下線の stroke-width が一致すること。色は emotion CSS で当たるため
-		// 属性セレクタでは拾えない → 枠線 rect は computed fill:none で特定する。
+		// The border and the divider must share a stroke-width. Colors are applied
+		// through emotion CSS, so attribute selectors cannot reach them and the
+		// border rect is identified by its computed fill:none instead.
 		const widths = await canvas.page.evaluate((id) => {
 			const group = document.querySelector(`[data-id="${id}"]`);
 			if (!group) {
@@ -155,26 +160,26 @@ test.describe("container パレット / 挙動", () => {
 		expect(widths?.divider).toBe(widths?.outline);
 	});
 
-	test("ヘッダ下端のハンドルをドラッグしてヘッダ高を変更できる", async ({
+	test("changes the header height by dragging the handle at the header's bottom edge", async ({
 		canvas,
 	}) => {
-		// 高さ 220 のコンテナ。ヘッダ下端は content 座標 y=248（デフォルト 28px）。
+		// Container of height 220. The header's bottom edge sits at content y=248 (28px by default).
 		const frame = await createFromFlyout(
 			canvas,
 			"frame",
 			{ x: 300, y: 220 },
 			{ x: 560, y: 440 },
 		);
-		// 作成直後は選択済みで、ヘッダ下端中央にヘッダ高ハンドルが出る。
+		// Selected right after creation, with the header height handle at the middle of that edge.
 		await expect(
 			canvas.page.locator(
 				'[data-kind="control"][data-part="selection:container:headerHeight"]',
 			),
 		).toBeVisible();
 
-		// ハンドルを下へ 72px ドラッグ → headerHeight 28 → 100。
+		// Drag the handle 72px down: headerHeight 28 -> 100.
 		await canvas.drag({ x: 430, y: 248 }, { x: 430, y: 320 });
-		// ヘッダ帯 rect の height 属性が新しいヘッダ高になる（body/枠線は 220 のまま）。
+		// The header band rect's height attribute takes the new header height (body and border stay 220).
 		await expect
 			.poll(async () =>
 				canvas.page.evaluate((id) => {
@@ -190,17 +195,19 @@ test.describe("container パレット / 挙動", () => {
 			.toContain("100");
 	});
 
-	test("ヘッダ色を独立して変更できる（headerFill）", async ({ canvas }) => {
+	test("changes the header color independently (headerFill)", async ({
+		canvas,
+	}) => {
 		const frame = await createFromFlyout(
 			canvas,
 			"frame",
 			{ x: 300, y: 220 },
 			{ x: 560, y: 420 },
 		);
-		// 作成直後は選択済みで ObjectMenu が出ている。ヘッダ色を青に設定する。
+		// Selected right after creation, so the ObjectMenu is up. Set the header color to blue.
 		await canvas.setColor("header-color", "#3b82f6");
 		const blue = await canvas.normalizeColor("#3b82f6");
-		// ヘッダ矩形の fill が指定色になる（body / 枠線ではなくヘッダだけが変わる）。
+		// The header rect's fill takes the given color, while body and border keep theirs.
 		await expect
 			.poll(async () =>
 				canvas.page.evaluate((id) => {

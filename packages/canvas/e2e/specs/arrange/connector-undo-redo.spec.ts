@@ -1,11 +1,11 @@
 import { test, expect } from "../../fixtures";
 
 /**
- * コネクター作成の undo / redo が、履歴 + canvasToState 往復（コネクターも rootIds の一員）を
- * 通して正しく消えて戻ることを実操作で検証する。
+ * Undo / redo of connector creation through the history and the canvasToState round
+ * trip (a connector is a member of rootIds too).
  */
-test.describe("コネクターの undo / redo", () => {
-	test("コネクター作成は undo で消え、redo で同じ ID が戻る", async ({
+test.describe("connector undo / redo", () => {
+	test("removes a created connector on undo and brings the same id back on redo", async ({
 		canvas,
 	}) => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 150 }, { x: 600, y: 250 });
@@ -20,16 +20,15 @@ test.describe("コネクターの undo / redo", () => {
 		});
 		await canvas.deselect();
 
-		// 作成直後: コネクターが存在（z-order 上にいる）
+		// Right after creation the connector is present in the z-order
 		await expect
 			.poll(() => canvas.zOrderIndex(connectorId))
 			.toBeGreaterThanOrEqual(0);
 
-		// undo → コネクターが消える
 		await canvas.undo();
 		await expect.poll(() => canvas.zOrderIndex(connectorId)).toBe(-1);
 
-		// redo → 同じ ID で戻る
+		// Back with the same id
 		await canvas.redo();
 		await expect
 			.poll(() => canvas.zOrderIndex(connectorId))

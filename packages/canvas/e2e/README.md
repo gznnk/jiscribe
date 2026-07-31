@@ -1,39 +1,41 @@
-# canvas E2E テスト
+# canvas E2E tests
 
-Playwright Test で canvas を実ユーザーと同じ UI 操作でテストする。
-このドキュメントは構成ガイドと、Playwright で canvas を UI 操作する際のノウハウのまとめ。
+Test canvas with Playwright Test, driving the UI exactly like a real user.
+This document is both a layout guide and a collection of know-how for driving
+canvas from Playwright.
 
-## 構成
+## Layout
 
 ```
 packages/canvas/
-├── playwright.config.mts   # webServer で e2e/harness の vite dev を自動起動。testDir: e2e/specs（top-level await のため .mts）
+├── playwright.config.mts   # webServer auto-starts the vite dev server for e2e/harness. testDir: e2e/specs (.mts because of top-level await)
 ├── e2e/
-│   ├── harness/           # テスト専用ハーネス（Canvas をマウントする最小 Vite アプリ）
-│   │   ├── main.tsx       # 空ドキュメントの単一 Canvas（dark テーマ固定）。?multi で 2 キャンバス構成
-│   │   └── MultiCanvasApp.tsx  # キーボードスコープ検証用の 2 キャンバスページ
-│   ├── fixtures.ts        # canvas フィクスチャ（CanvasDriver を注入）
+│   ├── harness/           # test-only harness (a minimal Vite app that mounts Canvas)
+│   │   ├── main.tsx       # a single Canvas with an empty document (dark theme fixed). ?multi gives a 2-canvas setup
+│   │   └── MultiCanvasApp.tsx  # a 2-canvas page for verifying keyboard scope
+│   ├── fixtures.ts        # the canvas fixture (injects CanvasDriver)
 │   ├── support/
-│   │   ├── selectors.ts   # data-kind / data-id セレクタ定数
-│   │   └── CanvasDriver.ts # 操作API（描画・選択・テキスト・色・コネクター）
-│   └── specs/             # テスト本体（test:e2e で走る）
+│   │   ├── selectors.ts   # data-kind / data-id selector constants
+│   │   └── CanvasDriver.ts # operation API (drawing, selection, text, color, connectors)
+│   └── specs/             # the tests themselves (run by test:e2e)
 ```
 
-実行:
+Running:
 
 ```bash
-pnpm --filter @workspace/canvas test:e2e         # ルートからは pnpm test:e2e
-pnpm --filter @workspace/canvas test:e2e:headed  # ブラウザ表示あり
-pnpm --filter @workspace/canvas test:e2e:ui      # Playwright UI モード
-pnpm --filter @workspace/canvas dev:harness      # ハーネスを手動起動（目視デバッグ用）
+pnpm --filter @workspace/canvas test:e2e         # from the root, pnpm test:e2e
+pnpm --filter @workspace/canvas test:e2e:headed  # with the browser shown
+pnpm --filter @workspace/canvas test:e2e:ui      # Playwright UI mode
+pnpm --filter @workspace/canvas dev:harness      # start the harness manually (for visual debugging)
 ```
 
-設計方針: **失敗を隠すリトライは入れない**。CanvasDriver は時間待ちではなく状態待ち
-（要素の出現・オブジェクト数の変化を `expect.poll` 等で待つ）で同期し、操作が効かない場合は
-そのまま失敗させてプロダクトの問題として顕在化させる。Ctrl+Z による復旧リトライ（後述の
-ハマりどころ参照）はテストには持ち込まない。
+Design policy: **no retries that hide failures**. CanvasDriver synchronizes by waiting on
+state rather than on time (waiting for elements to appear or for the object count to change
+with `expect.poll` and friends), and when an operation does not take effect it lets the test
+fail so the problem surfaces as a product problem. Recovery retries via Ctrl+Z (see the
+gotchas below) are not brought into the tests.
 
-## 基本セットアップ
+## Basic setup
 
 ```js
 import { chromium } from "playwright";
@@ -43,142 +45,149 @@ const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 await page.goto("http://localhost:5173/", { waitUntil: "networkidle" });
 ```
 
-- 開発サーバーは `pnpm --filter @workspace/canvas dev:harness`（ポートは起動ログ参照）
-- WSL2 では WSLg（`DISPLAY=:0`）があるためヘッドあり実行で実際のウィンドウを表示できる
-- 動きを目視したいときは `headless: false` + `slowMo`、検証だけなら headless（速い）
-- **headless は操作間隔が詰まるためレースコンディションが顕在化しやすい**。headless で通れば headed でも通る、の逆は成り立たないことがある
+- The dev server is `pnpm --filter @workspace/canvas dev:harness` (see the startup log for the port)
+- On WSL2, WSLg (`DISPLAY=:0`) is available, so a headed run can show a real window
+- Use `headless: false` + `slowMo` when you want to watch the motion; use headless (faster) when you only need verification
+- **headless packs the operations closer together, so race conditions surface more easily**. Passing in headless implies passing in headed, but the converse may not hold
 
-## DOM の構造とセレクタ
+## DOM structure and selectors
 
-ジェスチャーシステムが `data-kind` / `data-id` でイベントをルーティングしているため、テストでも同じ属性を使うのが確実。
+The gesture system routes events by `data-kind` / `data-id`, so using the same attributes in
+tests is the reliable choice.
 
-属性の使い分け:
+How to pick between the attributes:
 
-- **`data-kind` / `data-id`** … プロダクトの**機能契約**（gesture システムが読む）。テストは「ついでに」これを利用する
-- **`data-testid`** … **テスト専用フック**。機能で特定できない要素（gesture を経由しない数値入力欄や、`pointerEvents: none` の装飾要素など）に付ける。`playwright.config.mts` の `testIdAttribute: "data-testid"` で有効化済みで、`page.getByTestId("menu-number-input:strokeWidth")` のように使う。機能契約（`data-id`）に混ぜないことで、テスト都合の識別子と機能の識別子を区別する
+- **`data-kind` / `data-id`** … the product's **functional contract** (read by the gesture system). Tests use it "as a side benefit"
+- **`data-testid`** … a **test-only hook**. Put it on elements that cannot be identified functionally (number inputs that do not go through gestures, decorative elements with `pointerEvents: none`, and so on). It is already enabled through `testIdAttribute: "data-testid"` in `playwright.config.mts`, and is used like `page.getByTestId("menu-number-input:strokeWidth")`. Keeping it out of the functional contract (`data-id`) separates test-driven identifiers from functional ones
 
-### data-testid 一覧
+### data-testid list
 
-| data-testid                     | 要素                                 | 補足                                                                                             |
-| ------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------ |
-| `menu-number-input:{property}`  | ObjectMenu の数値入力欄              | gesture を経由しないフォーム要素                                                                 |
-| `text-editor`                   | テキスト編集オーバーレイ             | 図形・コネクターラベル共通。内側の TEXTAREA は `[data-testid="text-editor"] textarea`            |
-| `context-menu-callback:{id}`    | コンテキストメニューの callback 項目 | paste など、gesture を経由しない項目                                                             |
-| `snap-guide:x` / `snap-guide:y` | スナップガイド線（縦 / 横）          | `pointerEvents: none` の装飾。drag 中のみ存在。整列座標は line の `x1`（x軸）/ `y1`（y軸）が保持 |
+| data-testid                     | Element                                  | Notes                                                                                                                                         |
+| ------------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `menu-number-input:{property}`  | number input in the ObjectMenu           | a form element that does not go through gestures                                                                                              |
+| `text-editor`                   | the text editing overlay                 | shared by shapes and connector labels. The inner TEXTAREA is `[data-testid="text-editor"] textarea`                                           |
+| `context-menu-callback:{id}`    | callback items of the context menu       | items such as paste that do not go through gestures                                                                                           |
+| `snap-guide:x` / `snap-guide:y` | snap guide lines (vertical / horizontal) | decoration with `pointerEvents: none`. Present only during a drag. The aligned coordinate is held in the line's `x1` (x axis) / `y1` (y axis) |
 
-| data-kind     | 意味                                   | data-id / data-part                                                                                                                |
-| ------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `canvas`      | キャンバス本体（DIV）                  | id: `canvas`                                                                                                                       |
-| `object`      | 図形（rect / ellipse / polyline …）    | id: UUID。**1 オブジェクト = 1 要素**（`captureObjects` が数える）。区画付き図形（record）は配下の区画要素に part: `name` / `rows` |
-| `connector`   | コネクター（polyline + 矢印 + ラベル） | id: UUID。ラベルボックスは part: `label`（ドラッグで position / offset を移動）                                                    |
-| `control`     | 選択時のハンドル類                     | 下表参照                                                                                                                           |
-| `menu`        | メニュー UI 全般                       | id: `toolbar` / `object-menu` / `context-menu` / `stencil-library`。ボタンは part（下表参照）                                      |
-| `text-editor` | テキスト編集中の TEXTAREA              | id: `textarea`                                                                                                                     |
+| data-kind     | Meaning                                | data-id / data-part                                                                                                                                    |
+| ------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `canvas`      | the canvas itself (DIV)                | id: `canvas`                                                                                                                                           |
+| `object`      | a shape (rect / ellipse / polyline …)  | id: UUID. **1 object = 1 element** (what `captureObjects` counts). Shapes with sections (record) carry part: `name` / `rows` on their section elements |
+| `connector`   | a connector (polyline + arrow + label) | id: UUID. The label box is part: `label` (dragging it moves position / offset)                                                                         |
+| `control`     | handles shown while selected           | see the table below                                                                                                                                    |
+| `menu`        | UI menus in general                    | id: `toolbar` / `object-menu` / `context-menu` / `stencil-library`. Buttons use part (see the table below)                                             |
+| `text-editor` | the TEXTAREA while editing text        | id: `textarea`                                                                                                                                         |
 
-kind / id / part の3軸文法は `packages/canvas/docs/04-gesture-system.md` を参照。
-図形ライブラリのボタンは part: `item:<presetId>`（例 `item:rect`）。
+For the three-axis grammar of kind / id / part, see
+`packages/canvas/docs/04-gesture-system.md`.
+Shape library buttons use part: `item:<presetId>` (for example `item:rect`).
 
-ツールバーは `button[title="Rectangle"]` のように `title` 属性でも特定できる
-（Rectangle / Ellipse / Polyline / Polygon / Sticky / Markdown）。
+Toolbar buttons can also be identified by the `title` attribute, as in
+`button[title="Rectangle"]` (Rectangle / Ellipse / Polyline / Polygon / Sticky / Markdown).
 
-### control の data-id / data-part
+### data-id / data-part of control
 
-| data-id / data-part                                                     | 役割                                                                                                                                      |
-| ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| id: `transform`, part: `resize:topLeft` 〜 `resize:bottomRight` 等8方向 | リサイズハンドル（8px 四方）                                                                                                              |
-| id: `transform`, part: `rotation`                                       | 回転ハンドル（topRight の外側 +15,-15 付近）                                                                                              |
-| id: `<uuid>`, part: `anchor:<anchorId>`                                 | コネクター作成アンカー。`anchorId` は `topCenter` / `bottomCenter` / `leftCenter` / `rightCenter`。**辺の中点から 20px 外側**に表示される |
-| id: `<uuid>`, part: `vertex:<i>` / `vertex-insert:<seg>`                | polyline / polygon の頂点移動・挿入ハンドル（コネクターの waypoint 移動も `vertex:<i>`）                                                  |
-| id: `<uuid>`, part: `endpoint:source\|target` / `waypoint-insert:<seg>` | コネクターの端点再接続・waypoint 挿入ハンドル                                                                                             |
+| data-id / data-part                                                          | Role                                                                                                                                                      |
+| ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| id: `transform`, part: `resize:topLeft` … `resize:bottomRight`, 8 directions | resize handles (8px square)                                                                                                                               |
+| id: `transform`, part: `rotation`                                            | the rotation handle (around +15,-15 outside topRight)                                                                                                     |
+| id: `<uuid>`, part: `anchor:<anchorId>`                                      | the connector creation anchor. `anchorId` is `topCenter` / `bottomCenter` / `leftCenter` / `rightCenter`. Drawn **20px outside the midpoint of the edge** |
+| id: `<uuid>`, part: `vertex:<i>` / `vertex-insert:<seg>`                     | handles for moving and inserting polyline / polygon vertices (moving a connector waypoint is also `vertex:<i>`)                                           |
+| id: `<uuid>`, part: `endpoint:source\|target` / `waypoint-insert:<seg>`      | handles for reconnecting a connector endpoint and inserting a waypoint                                                                                    |
 
-### object-menu（data-id="object-menu"）の data-part
+### data-part of object-menu (data-id="object-menu")
 
-| data-part                                        | 開くもの                                                                  |
-| ------------------------------------------------ | ------------------------------------------------------------------------- |
-| `toggle:bg-color`                                | 背景色（property: `fill`）                                                |
-| `toggle:stroke-color`                            | 枠線色（`stroke`）                                                        |
-| `toggle:line-color`                              | 線色（`stroke`、線・コネクター用）                                        |
-| `toggle:font-color`                              | 文字色（`fontColor`）                                                     |
-| `toggle:line-style` / `border-style`             | 線種・線幅（・角丸）                                                      |
-| `toggle:font-size` / `alignment` / `stack-order` | フォントサイズ / 配置 / 重なり順                                          |
-| `set:<property>:<value>`                         | 即時設定ボタン（例: `set:strokeDashType:dashed`、プリセット色スウォッチ） |
+| data-part                                        | What it opens                                                                            |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| `toggle:bg-color`                                | background color (property: `fill`)                                                      |
+| `toggle:stroke-color`                            | border color (`stroke`)                                                                  |
+| `toggle:line-color`                              | line color (`stroke`, for lines and connectors)                                          |
+| `toggle:font-color`                              | font color (`fontColor`)                                                                 |
+| `toggle:line-style` / `border-style`             | line type and width (and corner radius)                                                  |
+| `toggle:font-size` / `alignment` / `stack-order` | font size / alignment / stacking order                                                   |
+| `set:<property>:<value>`                         | immediate-apply buttons (for example `set:strokeDashType:dashed`, preset color swatches) |
 
-カラーピッカーには **CSS カラーのテキスト入力欄**（`input[placeholder="CSS color"]`）があり、
-任意の hex や `transparent` を入力して **Enter で確定**できる。プリセットにない色はこれで設定する。
+The color picker has a **text input for a CSS color** (`input[placeholder="CSS color"]`)
+where any hex value or `transparent` can be typed and **confirmed with Enter**. Use it for
+colors that are not in the presets.
 
-## 座標系
+## Coordinate systems
 
-- デフォルト（ズーム1・パンなし）では **ドキュメント座標 ≒ 画面座標**
-- パン/ズームは SVG の `viewBox` で実装されている。最大面積の `svg` の `viewBox` 属性を読めば現在のパン/ズーム状態が分かる（テスト中の不変条件チェックに有効）
-- 図形要素は `transform="matrix(1,0,0,1,cx,cy)"` を持ち、**e,f が図形の中心座標**。`x,y,width,height` は中心原点
-- コネクターの `points` は SVG 座標。画面座標へは `el.getScreenCTM()` + `DOMPoint.matrixTransform()` で変換する
+- By default (zoom 1, no pan) **document coordinates ≒ screen coordinates**
+- Pan/zoom is implemented through the SVG `viewBox`. Reading the `viewBox` attribute of the largest `svg` tells you the current pan/zoom state (useful as an invariant check during a test)
+- Shape elements carry `transform="matrix(1,0,0,1,cx,cy)"`, where **e,f are the center coordinates of the shape**. `x,y,width,height` are relative to that center origin
+- A connector's `points` are in SVG coordinates. Convert to screen coordinates with `el.getScreenCTM()` + `DOMPoint.matrixTransform()`
 
-## 操作のセマンティクス
+## Semantics of the operations
 
-| 操作           | 方法                                                | 注意                                                                                      |
-| -------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| 図形を描く     | ツールボタンをクリック → 対角ドラッグ               | 描画後ツールは選択モードに戻る。**新規図形は自動的に選択状態**になり ObjectMenu が出る    |
-| 選択           | 図形をクリック                                      | 最前面の図形に当たる                                                                      |
-| 複数選択       | 空白からドラッグ（マーキー）                        |                                                                                           |
-| 移動           | 図形上で mousedown → move → up                      |                                                                                           |
-| テキスト編集   | ダブルクリック → TEXTAREA にタイプ                  | **Escape はキャンセル**。確定は**外側クリック**（他のジェスチャー開始でも commit される） |
-| 色・スタイル   | 選択中の ObjectMenu から                            | 上記の data-id 参照                                                                       |
-| コネクター作成 | 接続元を選択 → 作成アンカーから接続先の辺へドラッグ | **作成直後は選択されない**。スタイル変更するには線上をクリックして選択し直す              |
-| 回転           | 回転ハンドルを中心周りの円軌道でドラッグ            | 半径はハンドル位置から計算する                                                            |
-| Undo / Redo    | Ctrl+Z / Ctrl+Shift+Z（修飾キー必須）               | 誤操作の復旧に使える                                                                      |
+| Operation        | How                                                                        | Notes                                                                                                               |
+| ---------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| draw a shape     | click the tool button → drag diagonally                                    | the tool returns to select mode after drawing. **A new shape is automatically selected** and the ObjectMenu appears |
+| select           | click the shape                                                            | hits the frontmost shape                                                                                            |
+| multi-select     | drag from empty space (marquee)                                            |                                                                                                                     |
+| move             | mousedown on the shape → move → up                                         |                                                                                                                     |
+| edit text        | double click → type into the TEXTAREA                                      | **Escape cancels**. Commit by **clicking outside** (starting another gesture also commits)                          |
+| color and style  | from the ObjectMenu while selected                                         | see the data-id above                                                                                               |
+| create connector | select the source → drag from the creation anchor to an edge of the target | **it is not selected right after creation**. To style it, click the line to select it again                         |
+| rotate           | drag the rotation handle along a circular path around the center           | compute the radius from the handle position                                                                         |
+| Undo / Redo      | Ctrl+Z / Ctrl+Shift+Z (modifier required)                                  | useful for recovering from a mistake                                                                                |
 
-ドラッグは `page.mouse.move(x, y, { steps: N })` で中間イベントを発生させること。
-steps なしの瞬間移動はジェスチャー認識やデモの視認性の点で不利。
+Drags must use `page.mouse.move(x, y, { steps: N })` so intermediate events are produced.
+An instantaneous move without steps is bad for gesture recognition and for the visibility of
+demos.
 
-## ハマりどころ（重要）
+## Gotchas (important)
 
-### 1. ツールボタンのクリックが「たまに」効かない
+### 1. Clicks on tool buttons "sometimes" do not take effect
 
-直前のクリックとの間隔が短いと、ダブルクリック判定との衝突等でツール選択が無視されることがある。
-その状態でドラッグすると**既存の図形を掴んで動かしてしまい**、さらに後続の色設定・テキスト入力まで
-その図形に誤適用される（被害がカスケードする）。
+If the interval since the previous click is short, tool selection can be ignored because of
+a collision with the double-click decision and the like. Dragging in that state
+**grabs and moves an existing shape instead**, and subsequent color settings and text input
+are misapplied to that shape too (the damage cascades).
 
-対策:
+Countermeasures:
 
-- クリックの間に **300ms 程度のポーズ**を入れる
-- 描画後に **オブジェクト数が増えたことを検証**する。増えていなければ、既存図形の transform が
-  変わっていないか調べ、変わっていたら **Ctrl+Z で復元してからリトライ**する
+- Put a **pause of about 300ms** between clicks
+- **Verify that the object count increased** after drawing. If it did not, check whether the transform of an existing shape changed, and if it did, **restore with Ctrl+Z and retry**
 
 ```js
-const before = await captureObjects(); // [data-kind=object] の id と transform
+const before = await captureObjects(); // id and transform of [data-kind=object]
 await page.click('button[title="Rectangle"]');
 await drag(...);
 const after = await captureObjects();
 if (after.length === before.length) {
-	// 誤って動かした図形があれば Ctrl+Z で戻してリトライ
+	// if a shape was moved by mistake, restore it with Ctrl+Z and retry
 }
 ```
 
-### 2. Escape はテキスト編集の「キャンセル」
+### 2. Escape "cancels" text editing
 
-タイプした内容が消える。確定は外側クリック（`commitTextEditIfNeeded` が他のジェスチャー開始時に走る）。
+What you typed is discarded. Commit by clicking outside
+(`commitTextEditIfNeeded` runs when another gesture starts).
 
-### 3. カラードロップダウンが図形を覆うことがある
+### 3. Color dropdowns can cover the shape
 
-ObjectMenu は選択図形の下に出るが、画面下端付近ではドロップダウンが**上方向にフリップして
-図形自体を覆う**。その状態でダブルクリックするとパネル（プリセットスウォッチ）に当たり、
-テキストエディタが開かない・意図しない色が付くなどの誤動作になる。
+The ObjectMenu appears below the selected shape, but near the bottom edge of the screen the
+dropdown **flips upward and covers the shape itself**. Double clicking in that state hits
+the panel (a preset swatch), which misbehaves: the text editor does not open, an unintended
+color is applied, and so on.
 
-対策: テキスト編集の前に一度**選択解除してメニューを閉じる**。さらにダブルクリック後に
-`[data-kind=text-editor]` の出現を `waitForSelector` で確認し、出なければリトライする。
+Countermeasure: **clear the selection to close the menu** before editing text. On top of
+that, confirm with `waitForSelector` that `[data-kind=text-editor]` appeared after the
+double click, and retry if it did not.
 
-### 4. ビューポート端 20px で自動スクロール（パン）
+### 4. Auto-scroll (pan) within 20px of the viewport edge
 
-ドラッグ中にポインタが端から `AUTO_SCROLL_THRESHOLD = 20` px 以内に入るとキャンバスがパンする
-（1ステップ 10px）。端ぎりぎりまでドラッグする操作（画面いっぱいの矩形など）は viewBox がずれ、
-以降の座標前提が全部崩れる。
+If the pointer comes within `AUTO_SCROLL_THRESHOLD = 20` px of an edge during a drag, the
+canvas pans (10px per step). Operations that drag right up to the edge (a rectangle filling
+the screen, for example) shift the viewBox and break every coordinate assumption that
+follows.
 
-対策: 操作座標は端から **25px 以上**離す。テスト全体の不変条件として viewBox の変化を監視する。
+Countermeasure: keep operation coordinates **at least 25px** away from the edges. Watch for
+changes to the viewBox as an invariant across the whole test.
 
-### 5. 検証は「操作したつもり」ではなく結果で行う
+### 5. Verify by the result, not by "having performed the operation"
 
-- テキストの存在確認は `document.body.textContent` を使う（`innerHTML` は `&` が `&amp;` に
-  エスケープされ偽陰性になる）
-- オブジェクトの `id / transform / fill` のスナップショットを操作ごとに取り、
-  **意図しない移動・着色を検出**すると原因特定が速い
-- スクリーンショット（`page.screenshot`）を残すと headless でも見た目を確認できる
+- Check for the presence of text with `document.body.textContent` (`innerHTML` escapes `&` into `&amp;` and gives false negatives)
+- Taking a snapshot of each object's `id / transform / fill` after every operation and **detecting unintended moves and recoloring** makes it much faster to find the cause
+- Leaving screenshots (`page.screenshot`) lets you check the appearance even in headless

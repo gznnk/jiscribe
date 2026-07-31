@@ -3,15 +3,15 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 import { selectors } from "../../support/selectors";
 
 /**
- * callout の足（tail）の付け替えを守る:
- * - 選択時に足の先端にハンドル（selection:callout:tailTip）が出る
- * - ハンドルの自由ドラッグで side / position が変わり、パスが追従する
+ * Guards re-attaching the callout tail:
+ * - a handle (selection:callout:tailTip) appears at the tail tip on selection
+ * - free-dragging that handle changes side / position and the path follows
  */
 
 const TAIL_HANDLE =
 	'[data-kind="control"][data-part="selection:callout:tailTip"]';
 
-/** annotation フライアウトから callout を対角ドラッグで作成し、新規 id を返す。 */
+/** Creates a callout by diagonal drag from the annotation flyout and returns its new id. */
 async function createCallout(
 	canvas: CanvasDriver,
 	from: { x: number; y: number },
@@ -28,7 +28,7 @@ async function createCallout(
 	await canvas.drag(from, to);
 	await expect
 		.poll(async () => (await canvas.captureObjects()).length, {
-			message: "callout が1つ作成されること",
+			message: "exactly one callout is created",
 		})
 		.toBe(before.length + 1);
 
@@ -36,12 +36,12 @@ async function createCallout(
 		(obj) => !beforeIds.has(obj.id),
 	);
 	if (!created?.id) {
-		throw new Error("callout の data-id が取得できない");
+		throw new Error("the created callout has no data-id");
 	}
 	return created.id;
 }
 
-/** 対象 callout の path d 属性を読む。 */
+/** Reads the d attribute of the given callout's path. */
 async function calloutPathD(
 	canvas: CanvasDriver,
 	id: string,
@@ -52,32 +52,33 @@ async function calloutPathD(
 	}, id);
 }
 
-test.describe("callout 足の付け替え", () => {
-	test("先端ハンドルを右辺へドラッグすると足が右向きになりパスが追従する", async ({
+test.describe("callout tail re-attach", () => {
+	test("turns the tail right and updates the path when the tip handle is dragged to the right edge", async ({
 		canvas,
 	}) => {
-		// 200x160 の callout（content 座標 x=[300,500], y=[220,380]）。
+		// 200x160 callout (content coordinates x=[300,500], y=[220,380]).
 		const id = await createCallout(
 			canvas,
 			{ x: 300, y: 220 },
 			{ x: 500, y: 380 },
 		);
 
-		// 作成直後は選択済みで、デフォルトの足先端（下辺 position 0.2 = x=340, y=380）にハンドルが出る。
+		// Selected right after creation, with the handle at the default tail tip
+		// (bottom edge, position 0.2 = x=340, y=380).
 		const handle = canvas.page.locator(TAIL_HANDLE);
 		await expect(handle).toBeVisible();
 
 		const before = await calloutPathD(canvas, id);
 		expect(before).toBeTruthy();
 
-		// 先端を右辺中央（x=500, y=300）へドラッグ → side=right / position=0.5。
+		// Drag the tip to the middle of the right edge (x=500, y=300): side=right / position=0.5.
 		await canvas.drag({ x: 340, y: 380 }, { x: 500, y: 300 });
 
-		// パスが変わり、先端がローカル右辺中央 (100, 0) に移る
-		// （200x160 の callout: ローカル座標は中心原点、右辺 x=100）。
+		// The path changes and the tip moves to the local right edge center (100, 0)
+		// (local coordinates are centered, so a 200x160 callout has its right edge at x=100).
 		await expect
 			.poll(async () => calloutPathD(canvas, id), {
-				message: "足の付け替えでパスが更新されること",
+				message: "the path updates when the tail is re-attached",
 			})
 			.not.toBe(before);
 		const after = await calloutPathD(canvas, id);

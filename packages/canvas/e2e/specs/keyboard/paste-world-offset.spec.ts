@@ -2,36 +2,37 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * 貼り付けオフセット（+20,+20）がワールド座標基準で、ビューポートのパンに依存しないことを守る。
+ * Guards that the paste offset (+20,+20) is in world coordinates and does not
+ * depend on viewport panning.
  *
- * handlePaste は PASTE_OFFSET をワールド座標で適用する。もし誤って画面座標基準だと、パン後の
- * 貼り付けでクローンがパン分ずれてしまう。コピー → パン → 貼り付けの順で、クローンが
- * 元のワールド中心 +20,+20（= matrix の e,f）に置かれることを検証する。
+ * handlePaste applies PASTE_OFFSET in world coordinates. Were it based on screen
+ * coordinates by mistake, a paste after panning would put the clone off by the
+ * pan amount. Copy, pan, then paste, and check that the clone lands at the
+ * source's world center +20,+20, which is the e,f of the matrix.
  */
 
-/** 全図形の transform 文字列一覧 */
+/** Transform strings of every shape. */
 async function transforms(canvas: CanvasDriver): Promise<(string | null)[]> {
 	return (await canvas.captureObjects()).map((obj) => obj.transform);
 }
 
-test("貼り付けはパンしてもワールド座標で +20,+20 に配置される", async ({
+test("places the paste at +20,+20 in world coordinates even after panning", async ({
 	canvas,
 }) => {
-	// 中心 (500,260) の矩形を描いてコピー。
+	// A rect centered at (500,260).
 	await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
 	await canvas.copy();
 
 	const viewBoxBefore = await canvas.getViewBox();
 
-	// 右ドラッグでビューポートをパンする（viewBox が変わる）。
 	await canvas.rightDrag({ x: 700, y: 700 }, { x: 480, y: 500 });
 	await expect.poll(() => canvas.getViewBox()).not.toBe(viewBoxBefore);
 
-	// パン後に貼り付け。
 	await canvas.paste();
 	await expect.poll(async () => (await canvas.captureObjects()).length).toBe(2);
 
-	// 元はワールド (500,260) のまま、クローンはワールド (520,280)。パン量に依らない。
+	// The original stays at world (500,260) and the clone lands at world
+	// (520,280), independently of how far the viewport panned.
 	const list = await transforms(canvas);
 	expect(list).toContain("matrix(1, 0, 0, 1, 500, 260)");
 	expect(list).toContain("matrix(1, 0, 0, 1, 520, 280)");

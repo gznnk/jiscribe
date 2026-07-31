@@ -1,8 +1,10 @@
 import { test, expect } from "../../fixtures";
 import { selectors } from "../../support/selectors";
 
-test.describe("ObjectMenu によるスタイル設定", () => {
-	test("背景色と枠線色を CSS カラー入力で設定できる", async ({ canvas }) => {
+test.describe("styling through the ObjectMenu", () => {
+	test("sets the background and stroke color from the CSS color input", async ({
+		canvas,
+	}) => {
 		const id = await canvas.drawShape(
 			"Rectangle",
 			{ x: 400, y: 200 },
@@ -12,7 +14,7 @@ test.describe("ObjectMenu によるスタイル設定", () => {
 		await canvas.setColor("bg-color", "#6366f1");
 		await canvas.setColor("stroke-color", "#4f46e5");
 
-		// 色は SVG 属性ではなく emotion CSS で当たるため computed style で検証する
+		// Colors come from emotion CSS rather than SVG attributes, so check the computed style
 		expect(await canvas.computedColor(id, "fill")).toBe(
 			await canvas.normalizeColor("#6366f1"),
 		);
@@ -21,7 +23,7 @@ test.describe("ObjectMenu によるスタイル設定", () => {
 		);
 	});
 
-	test("transparent も設定できる", async ({ canvas }) => {
+	test("sets transparent as well", async ({ canvas }) => {
 		const id = await canvas.drawShape(
 			"Rectangle",
 			{ x: 400, y: 200 },
@@ -30,13 +32,13 @@ test.describe("ObjectMenu によるスタイル設定", () => {
 
 		await canvas.setColor("stroke-color", "transparent");
 
-		// transparent は computed style で rgba(0, 0, 0, 0) として解決される
+		// transparent resolves to rgba(0, 0, 0, 0) in the computed style
 		expect(await canvas.computedColor(id, "stroke")).toBe(
 			await canvas.normalizeColor("transparent"),
 		);
 	});
 
-	test("ポリラインを破線にできる", async ({ canvas }) => {
+	test("makes a polyline dashed", async ({ canvas }) => {
 		const id = await canvas.drawShape(
 			"Polyline",
 			{ x: 400, y: 400 },
@@ -45,40 +47,44 @@ test.describe("ObjectMenu によるスタイル設定", () => {
 
 		await canvas.setStrokeDashType("line-style", "dashed");
 
-		// スタイルは当たり判定用要素ではなく描画用要素に付く
+		// The style lands on the visual element, not the hit-test element
 		await expect(await canvas.visualPolylineFor(id)).toHaveAttribute(
 			"stroke-dasharray",
 			/.+/,
 		);
 	});
 
-	test("サブメニューの背景をクリックしても閉じない", async ({ canvas }) => {
+	test("keeps the submenu open when its background is clicked", async ({
+		canvas,
+	}) => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
 
-		// カラーピッカーのサブメニューを開く
 		await canvas.openObjectMenu("bg-color");
 		const colorInput = canvas.page.locator(selectors.cssColorInput);
 		await expect(colorInput).toBeVisible();
 
-		// パネルの余白（ボタン以外の背景部分）をクリックする。
-		// ColorPickerContainer の padding 領域に当たる左上角を狙う。
+		// Click the blank part of the panel (background, not a button): the top-left
+		// corner falls inside the padding of ColorPickerContainer.
 		const panel = canvas.page.locator(
 			'[data-id="object-menu"][data-part="panel"]',
 		);
 		await panel.click({ position: { x: 6, y: 6 } });
 
-		// サブメニューは開いたまま、図形の選択も維持されること
+		// The submenu stays open and the shape stays selected
 		await expect(colorInput).toBeVisible();
 		await expect(canvas.page.locator(selectors.control).first()).toBeVisible();
 	});
 
-	test("テキスト編集中は ObjectMenu が非表示になる", async ({ canvas }) => {
+	test("hides the ObjectMenu while text is being edited", async ({
+		canvas,
+	}) => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
 
 		const objectMenu = canvas.page.locator('[data-id="object-menu"]');
 		await expect(objectMenu.first()).toBeVisible();
 
-		// 編集開始でメニューが消え、編集終了（選択は維持される）で再表示される
+		// The menu disappears when editing starts and comes back when it ends (the
+		// selection is kept)
 		await canvas.typeTextAt({ x: 500, y: 260 }, "Editing");
 		await expect(objectMenu).toHaveCount(0);
 
@@ -86,7 +92,7 @@ test.describe("ObjectMenu によるスタイル設定", () => {
 		await expect(objectMenu.first()).toBeVisible();
 	});
 
-	test("色設定はテキスト編集後も保持される", async ({ canvas }) => {
+	test("keeps the color setting after text editing", async ({ canvas }) => {
 		const id = await canvas.drawShape(
 			"Rectangle",
 			{ x: 400, y: 200 },

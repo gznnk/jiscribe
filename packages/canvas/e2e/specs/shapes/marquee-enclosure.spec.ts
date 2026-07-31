@@ -1,18 +1,19 @@
 import { test, expect } from "../../fixtures";
 
 /**
- * マーキー（範囲選択）の包含ルール。
+ * Marquee enclosure rule.
  *
- * collectIdsInArea は「バウンディングボックスが矩形に**完全に含まれる**」オブジェクトだけを
- * 選択する契約（部分的にかかっただけでは選ばれない）。この境界条件はうっかり交差判定へ
- * 変えてしまう退行が起きやすく、起きると「囲ったつもりのない図形まで動く／消える」という
- * 体験になる。完全包含した図形だけが選択されることを、まとめ移動の結果で守る。
+ * collectIdsInArea only selects objects whose bounding box is **fully contained**
+ * in the rect; merely overlapping it is not enough. That boundary is easy to
+ * regress into an intersection test, and when it does, shapes the user never
+ * meant to enclose start moving or disappearing. Guarded through the result of a
+ * bulk move.
  */
-test.describe("マーキーの包含ルール（完全包含のみ選択）", () => {
-	test("枠に完全に入った図形だけが選択され、はみ出した図形は選ばれない", async ({
+test.describe("marquee enclosure rule (full containment only)", () => {
+	test("selects only shapes fully inside the marquee and skips ones sticking out", async ({
 		canvas,
 	}) => {
-		// A: bbox x300-440 / B: bbox x560-700（ともに y200-320）
+		// A: bbox x300-440 / B: bbox x560-700 (both y200-320)
 		const a = await canvas.drawShape(
 			"Rectangle",
 			{ x: 300, y: 200 },
@@ -26,14 +27,14 @@ test.describe("マーキーの包含ルール（完全包含のみ選択）", ()
 		);
 		await canvas.deselect();
 
-		// 枠 (260,160)-(600,360): A は完全に内側、B は右端 (700) が枠 (600) からはみ出す。
+		// Marquee (260,160)-(600,360): A is fully inside, B's right edge (700) sticks out past 600.
 		await canvas.drag({ x: 260, y: 160 }, { x: 600, y: 360 }, 12);
 
-		// 選択は A のみ。右に 1px ナッジすると A だけ動き、B は不動。
+		// Only A is selected: a 1px nudge to the right moves A alone and leaves B put.
 		await canvas.nudge("right");
 		await expect
 			.poll(() => canvas.objectById(a).getAttribute("transform"), {
-				message: "完全包含された A は動くこと",
+				message: "the fully contained A moves",
 			})
 			.toBe("matrix(1, 0, 0, 1, 371, 260)");
 		expect(await canvas.objectById(b).getAttribute("transform")).toBe(
@@ -41,7 +42,9 @@ test.describe("マーキーの包含ルール（完全包含のみ選択）", ()
 		);
 	});
 
-	test("枠が両方を完全に包含すれば両方とも選択される", async ({ canvas }) => {
+	test("selects both shapes when the marquee fully contains both", async ({
+		canvas,
+	}) => {
 		const a = await canvas.drawShape(
 			"Rectangle",
 			{ x: 300, y: 200 },
@@ -55,7 +58,7 @@ test.describe("マーキーの包含ルール（完全包含のみ選択）", ()
 		);
 		await canvas.deselect();
 
-		// 枠 (260,160)-(740,360): A も B も完全に内側。
+		// Marquee (260,160)-(740,360): both A and B are fully inside.
 		await canvas.drag({ x: 260, y: 160 }, { x: 740, y: 360 }, 12);
 
 		await canvas.nudge("right");

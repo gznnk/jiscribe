@@ -3,14 +3,15 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 import { selectors } from "../../support/selectors";
 
 /**
- * 複数選択に対するテキストスタイル一括適用を守る。
+ * Text style applied in bulk to a multi-selection.
  *
- * handlePropertyUpdate は選択中の全 id にプロパティを適用する。fill の一括適用は別途テスト済みだが、
- * text 系プロパティ（fontSize / fontWeight）も同じループで全選択へ伝播するかは未カバーだった。
- * もし最初の 1 つにしか乗らなければ製品バグになる経路なので、両図形の描画結果で守る。
+ * handlePropertyUpdate applies a property to every selected id. Bulk fill is tested
+ * separately, but whether text properties (fontSize / fontWeight) propagate to the
+ * whole selection through the same loop had no coverage. Landing on only the first
+ * shape would be a product bug, so both shapes' rendering is checked.
  */
 
-/** テキスト入りの矩形を 2 つ並べて描き、id を返す（各描画後に選択解除） */
+/** Draws two labeled rectangles side by side and returns their ids (deselected after each) */
 async function drawTwoLabeledRects(
 	canvas: CanvasDriver,
 ): Promise<{ left: string; right: string }> {
@@ -33,7 +34,7 @@ async function drawTwoLabeledRects(
 	return { left, right };
 }
 
-/** 両矩形を囲むマーキーで複数選択する */
+/** Multi-selects both rectangles with a marquee around them */
 async function marqueeSelectBoth(canvas: CanvasDriver) {
 	await canvas.drag({ x: 310, y: 150 }, { x: 720, y: 330 });
 	await expect
@@ -41,8 +42,8 @@ async function marqueeSelectBoth(canvas: CanvasDriver) {
 		.toBeGreaterThan(0);
 }
 
-test.describe("複数選択へのテキストスタイル一括適用", () => {
-	test("複数選択でフォントサイズを変えると全テキストに反映される", async ({
+test.describe("bulk text style application to a multi-selection", () => {
+	test("applies a font size change to every text in a multi-selection", async ({
 		canvas,
 	}) => {
 		const { left, right } = await drawTwoLabeledRects(canvas);
@@ -57,7 +58,7 @@ test.describe("複数選択へのテキストスタイル一括適用", () => {
 		expect((await canvas.textStyleOf(right))?.fontSize).toBe("44px");
 	});
 
-	test("複数選択で太字にすると全テキストが bold になる", async ({ canvas }) => {
+	test("makes every text bold in a multi-selection", async ({ canvas }) => {
 		const { left, right } = await drawTwoLabeledRects(canvas);
 		await marqueeSelectBoth(canvas);
 

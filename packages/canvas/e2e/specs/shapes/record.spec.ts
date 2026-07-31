@@ -2,35 +2,38 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * record（区画付きボックス）= 1 図形に複数のテキストスロットを持つ最初の型。
- * 守る挙動:
- * - uml フライアウトから作成でき、複合 <g> ＋区画ごとの data-part で描画される
- * - タイトル帯のダブルクリックは name スロット、行区画のダブルクリックは attributes
- *   スロットの編集になる（data-part によるスロット解決）
- * - 片方のスロットを編集中でも、もう片方のテキストは表示されたまま
- * - 行を増やしても箱は自動リサイズされない（高さはドラッグしたまま）
- * - タイトル帯だけはタイトルの表示行数（改行・折り返し）に追従して伸びる。
- *   追従は編集中の下書きにも及び、Escape のキャンセルで確定値へ戻る。伸びるのは
- *   箱の下端までで、そこから先はエディタもスクロールに転じる
- * - 帯に追従しない行区画の編集は区画内に留まり、あふれた分はスクロールで見る
- * - 区画の構成はスロットの有無で決まる。entity ステンシルは name + attributes の
- *   2 区画、class ステンシルは operations を足した 3 区画。3 区画では中段が自分の
- *   行数ぶんを取り、最下段が残りを取る
+ * record (a box with compartments) is the first type to hold several text slots
+ * in one shape. Guarded behavior:
+ * - it can be created from the uml flyout and renders as a composite <g> with a
+ *   data-part per compartment
+ * - double-clicking the title band edits the name slot and double-clicking a row
+ *   compartment edits the attributes slot (slot resolution through data-part)
+ * - while one slot is being edited, the other slot's text stays visible
+ * - adding rows does not auto-resize the box (its height stays as dragged)
+ * - only the title band grows, following the title's displayed line count (both
+ *   explicit breaks and wrapping). It follows the draft while editing too and
+ *   returns to the committed value when Escape cancels. It grows only as far as
+ *   the bottom of the box, past which the editor turns to scrolling
+ * - editing a row compartment, which does not follow the band, stays inside the
+ *   compartment and the overflow is reached by scrolling
+ * - the compartments follow from which slots exist. The entity stencil has the
+ *   two name + attributes, the class stencil adds operations for three. With
+ *   three, the middle one takes what its rows need and the bottom one the rest
  *
- * 座標メモ: 作成サイズ 220x80 → 空タイトルのタイトル帯は上端 28px
- * （content y=[200,228]）、行区画はその下（y=[228,280]）。
+ * Coordinate note: created at 220x80, an empty title band is the top 28px
+ * (content y=[200,228]) and the row compartment sits below it (y=[228,280]).
  */
 
 const CATEGORY = "uml";
 
 const RECORD_FROM = { x: 300, y: 200 };
 const RECORD_TO = { x: 520, y: 280 };
-/** タイトル帯の中（上端から 28px 以内）。 */
+/** Inside the title band (within 28px of the top edge). */
 const NAME_SPOT = { x: 410, y: 212 };
-/** 行区画の中（タイトル帯より下）。 */
+/** Inside the row compartment (below the title band). */
 const ATTRIBUTES_SPOT = { x: 410, y: 255 };
 
-/** uml フライアウトから entity を対角ドラッグで作成し、新規オブジェクトの {id, tag} を返す。 */
+/** Creates an entity from the uml flyout by diagonal drag and returns the new object's {id, tag}. */
 async function createRecord(
 	canvas: CanvasDriver,
 	from: { x: number; y: number },
@@ -41,7 +44,7 @@ async function createRecord(
 	return { id, tag: created?.tag ?? "" };
 }
 
-/** 区画矩形（data-part）の局所座標での y と height。帯の伸縮を読む手段。 */
+/** Local y and height of a compartment rect (data-part); how the band's growth is read. */
 async function partRect(
 	canvas: CanvasDriver,
 	id: string,
@@ -63,12 +66,12 @@ async function partRect(
 		{ objectId: id, partName: part },
 	);
 	if (!rect) {
-		throw new Error(`区画 ${part} の矩形が見つからない`);
+		throw new Error(`no rect found for the ${part} compartment`);
 	}
 	return rect;
 }
 
-/** 枠線矩形（fill:none で特定）の height 属性。箱の高さを読む手段。 */
+/** The height attribute of the outline rect (found by fill:none); how the box height is read. */
 async function outlineHeight(
 	canvas: CanvasDriver,
 	id: string,
@@ -86,12 +89,12 @@ async function outlineHeight(
 	}, id);
 }
 
-test.describe("record（区画付きボックス）", () => {
-	test("uml フライアウトから作成でき、区画ごとに data-part が付く", async ({
+test.describe("record (a box with compartments)", () => {
+	test("creates it from the uml flyout with a data-part on every compartment", async ({
 		canvas,
 	}) => {
 		const record = await createRecord(canvas, RECORD_FROM, RECORD_TO);
-		// 1 オブジェクト = 1 つの data-kind=object 要素（区画は data-part だけを持つ）。
+		// One object = one data-kind=object element; the compartments carry only data-part.
 		expect(record.tag).toBe("g");
 
 		const parts = await canvas.page.evaluate((id) => {
@@ -106,11 +109,11 @@ test.describe("record（区画付きボックス）", () => {
 		expect(parts).toEqual(["name", "attributes"]);
 	});
 
-	test("class ステンシルは 3 区画で作られ、中段は行数ぶんだけ取る", async ({
+	test("builds the class stencil with 3 compartments where the middle one takes only its rows", async ({
 		canvas,
 	}) => {
-		// 220x120 の箱。空タイトルの帯 28 + 空の中段 25（1 行ぶん + 余白）で、
-		// 残り 67 が最下段。
+		// 220x120 box. The empty title band takes 28 and the empty middle 25 (one
+		// row plus padding), leaving 67 for the bottom compartment.
 		const id = await canvas.drawShapeFromFlyout(
 			CATEGORY,
 			"class",
@@ -135,13 +138,13 @@ test.describe("record（区画付きボックス）", () => {
 			120 - 28 - 25,
 		);
 
-		// 中段に 2 行入れると中段が 2 行ぶん（21 × 2 + 4）へ伸び、最下段がそのぶん
-		// 縮む。箱の高さは動かない。
+		// Two rows in the middle grow it to two rows' worth (21 * 2 + 4) and shrink
+		// the bottom by the same amount. The box height does not move.
 		await canvas.typeTextAt({ x: 410, y: 240 }, "id: string\nname: string");
 		await canvas.commitText();
 		await expect
 			.poll(async () => (await partRect(canvas, id, "attributes")).height, {
-				message: "中段が 2 行ぶんへ伸びること",
+				message: "the middle compartment grows to two rows' worth",
 			})
 			.toBe(46);
 		expect((await partRect(canvas, id, "operations")).height).toBe(
@@ -150,42 +153,43 @@ test.describe("record（区画付きボックス）", () => {
 		expect(await outlineHeight(canvas, id)).toBe(120);
 	});
 
-	test("タイトル帯と行区画で編集されるスロットが切り替わる", async ({
+	test("switches the edited slot between the title band and the row compartment", async ({
 		canvas,
 	}) => {
 		await createRecord(canvas, RECORD_FROM, RECORD_TO);
 		await canvas.deselect();
 
-		// タイトル帯のダブルクリック → name スロット（空から開く）。
+		// Double-clicking the title band opens the name slot, starting empty.
 		await canvas.typeTextAt(NAME_SPOT, "User");
 		await expect(canvas.textArea()).toHaveValue("User");
 		await canvas.commitText();
 		await expect(canvas.page.locator("body")).toContainText("User");
 
-		// 行区画のダブルクリック → attributes スロット。name の内容は入っていない。
+		// Double-clicking the row compartment opens the attributes slot, without the name's content.
 		await canvas.typeTextAt(ATTRIBUTES_SPOT, "id: string");
 		await expect(canvas.textArea()).toHaveValue("id: string");
-		// 編集中でないスロット（name）のテキストは表示されたまま。
+		// The text of the slot that is not being edited (name) stays visible.
 		await expect(canvas.page.locator("body")).toContainText("User");
 		await canvas.commitText();
 
-		// 再度行区画を開くと、コミットされた行が "\n" 連結で戻ってくる。
+		// Reopening the row compartment brings the committed rows back, joined by "\n".
 		await canvas.typeTextAt(ATTRIBUTES_SPOT, "");
 		await expect(canvas.textArea()).toHaveValue("id: string");
 		await canvas.cancelText();
 	});
 
-	test("回転した record でもテキストエディタが行区画に重なる", async ({
+	test("keeps the text editor over the row compartment on a rotated record", async ({
 		canvas,
 	}) => {
-		// スロット領域が図形中心からずれた最初の型なので、エディタの変換合成が
-		// 表示側（SVG）とずれると回転時にだけ顕在化する（transform-origin 回帰の検知）。
+		// This is the first type whose slot regions are offset from the shape
+		// center, so a mismatch between the editor's composed transform and the
+		// SVG's shows up only under rotation (catching transform-origin regressions).
 		const record = await createRecord(canvas, RECORD_FROM, RECORD_TO);
 		await canvas.selectAt({ x: 410, y: 240 });
 
-		// 回転ハンドルを右下へ振って大きく傾ける（角度の正確さは要らない）。
+		// Swing the rotation handle to the bottom right for a large tilt; the exact angle does not matter.
 		await canvas.dragTransformHandle("rotation", { x: 540, y: 300 });
-		// 接続アンカー（control）も同じ data-id を持つため、object 本体に絞る。
+		// The connection anchors (controls) share this data-id, so narrow to the object itself.
 		const group = canvas.page.locator(
 			`[data-kind="object"][data-id="${record.id}"]`,
 		);
@@ -196,23 +200,25 @@ test.describe("record（区画付きボックス）", () => {
 					const b = transform.match(/matrix\(([^)]+)\)/)?.[1]?.split(",")[1];
 					return Math.abs(Number(b));
 				},
-				{ message: "回転で b 成分（sinθ）が 0 から外れること" },
+				{ message: "the b component (sin of the angle) leaves 0 on rotation" },
 			)
 			.toBeGreaterThan(0.3);
 		await canvas.deselect();
 
-		// 回転後の行区画を直接ダブルクリックして attributes 編集を開く。
+		// Double-click the rotated row compartment directly to open the attributes editor.
 		const attributes = group.locator('[data-part="attributes"]');
 		await attributes.dblclick();
 		await expect(canvas.textArea()).toBeVisible();
 
-		// エディタ枠は行区画と同じ局所矩形＋同じ変換なので、画面上の外接箱が一致する。
+		// The editor frame shares the compartment's local rect and transform, so their screen boxes match.
 		const editorBox = await canvas.page
 			.locator('[data-testid="text-editor"]')
 			.boundingBox();
 		const attributesBox = await attributes.boundingBox();
 		if (!editorBox || !attributesBox) {
-			throw new Error("エディタ枠または行区画の外接箱が取得できない");
+			throw new Error(
+				"no bounding box for the editor frame or the row compartment",
+			);
 		}
 		expect(Math.abs(editorBox.x - attributesBox.x)).toBeLessThan(1.5);
 		expect(Math.abs(editorBox.y - attributesBox.y)).toBeLessThan(1.5);
@@ -221,23 +227,23 @@ test.describe("record（区画付きボックス）", () => {
 		await canvas.cancelText();
 	});
 
-	test("行を追加しても箱の高さは変わらない", async ({ canvas }) => {
+	test("keeps the box height when rows are added", async ({ canvas }) => {
 		const record = await createRecord(canvas, RECORD_FROM, RECORD_TO);
 		await canvas.deselect();
 
 		expect(await outlineHeight(canvas, record.id)).toBe(80);
 
-		// 行区画に収まらない行数（ヘッダ + パディング(32) + 21 × 3 = 95 > 80）。
+		// More rows than the compartment fits (header + padding (32) + 21 * 3 = 95 > 80).
 		await canvas.typeTextAt(
 			ATTRIBUTES_SPOT,
 			"id: string\nname: string\nemail: string",
 		);
 		await canvas.commitText();
 
-		// 収まらない行は区画でクリップされるだけで、高さは自動補正されない。
+		// Rows that do not fit are simply clipped by the compartment; the height is not auto-corrected.
 		expect(await outlineHeight(canvas, record.id)).toBe(80);
 
-		// コミット自体は成立している（再度開くと 3 行が "\n" 連結で戻る）。
+		// The commit itself went through: reopening returns the 3 rows joined by "\n".
 		await canvas.typeTextAt(ATTRIBUTES_SPOT, "");
 		await expect(canvas.textArea()).toHaveValue(
 			"id: string\nname: string\nemail: string",
@@ -245,18 +251,21 @@ test.describe("record（区画付きボックス）", () => {
 		await canvas.cancelText();
 	});
 
-	test("行区画の編集は区画内に留まりスクロールする", async ({ canvas }) => {
+	test("keeps editing a row compartment inside the compartment and scrolls", async ({
+		canvas,
+	}) => {
 		const record = await createRecord(canvas, RECORD_FROM, RECORD_TO);
 		await canvas.deselect();
 
 		const attributesBefore = await partRect(canvas, record.id, "attributes");
 
-		// 行区画（52px）に収まらない行数を編集中のまま持たせる。
+		// Hold more rows than the 52px compartment fits, still in edit mode.
 		await canvas.typeTextAt(ATTRIBUTES_SPOT, "a\nb\nc\nd\ne\nf");
 		await expect(canvas.textArea()).toHaveValue("a\nb\nc\nd\ne\nf");
 
-		// attributes は帯の残余なので下書きに追従しない。エディタが伸びれば区画の下へ
-		// はみ出すため、区画の高さに留まってスクロール可能になっていること。
+		// attributes takes what the band leaves, so it does not follow the draft. A
+		// growing editor would spill below the compartment, so it has to stay at the
+		// compartment height and scroll instead.
 		const overflow = await canvas
 			.textArea()
 			.evaluate((el) => el.scrollHeight - el.clientHeight);
@@ -271,11 +280,13 @@ test.describe("record（区画付きボックス）", () => {
 			)
 			.boundingBox();
 		if (!editorBox || !attributesBox) {
-			throw new Error("エディタ枠または行区画の外接箱が取得できない");
+			throw new Error(
+				"no bounding box for the editor frame or the row compartment",
+			);
 		}
 		expect(Math.abs(editorBox.height - attributesBox.height)).toBeLessThan(1.5);
 
-		// 区画そのものも編集中に動かない（伸びるのはタイトル帯だけ）。
+		// The compartment itself does not move during editing; only the title band grows.
 		const attributesDuringEdit = await partRect(
 			canvas,
 			record.id,
@@ -285,47 +296,52 @@ test.describe("record（区画付きボックス）", () => {
 		await canvas.cancelText();
 	});
 
-	test("タイトルが複数行になるとタイトル帯が伸びる", async ({ canvas }) => {
+	test("grows the title band when the title spans several lines", async ({
+		canvas,
+	}) => {
 		const record = await createRecord(canvas, RECORD_FROM, RECORD_TO);
 		await canvas.deselect();
 
 		expect((await partRect(canvas, record.id, "name")).height).toBe(28);
 
-		// 明示改行の 2 行タイトル → 1 行ぶん（14 × 1.5 = 21）伸びる。
+		// A two-line title with an explicit break grows it by one row (14 * 1.5 = 21).
 		await canvas.typeTextAt(NAME_SPOT, "User\nAccount");
 		await canvas.commitText();
 		await expect
 			.poll(async () => (await partRect(canvas, record.id, "name")).height, {
-				message: "2 行のタイトルで帯が 1 行ぶん伸びること",
+				message: "a two-line title grows the band by one row",
 			})
 			.toBe(49);
 
-		// 行区画は伸びた帯の直下から始まる（隙間も重なりも作らない）。
+		// The row compartment starts right below the grown band, with no gap and no overlap.
 		const name = await partRect(canvas, record.id, "name");
 		const attributes = await partRect(canvas, record.id, "attributes");
 		expect(attributes.y).toBeCloseTo(name.y + name.height, 3);
 
-		// 伸びるのは帯だけで、箱の高さは自動リサイズされない。
+		// Only the band grows; the box height is not auto-resized.
 		expect(await outlineHeight(canvas, record.id)).toBe(80);
 	});
 
-	test("タイトル編集中は確定を待たずに帯が伸びる", async ({ canvas }) => {
+	test("grows the band while the title is being edited, before it is committed", async ({
+		canvas,
+	}) => {
 		const record = await createRecord(canvas, RECORD_FROM, RECORD_TO);
 		await canvas.deselect();
 
 		expect((await partRect(canvas, record.id, "name")).height).toBe(28);
 
-		// エディタを開いたまま改行を打つ。帯の高さは確定済み state ではなく編集中の
-		// 下書きから導出されるので、この時点で伸びていなければならない。
+		// Type a line break with the editor still open. The band height is derived
+		// from the editing draft rather than the committed state, so it has to have
+		// grown by now.
 		await canvas.typeTextAt(NAME_SPOT, "User\nAccount");
 		await expect(canvas.textArea()).toHaveValue("User\nAccount");
 		await expect
 			.poll(async () => (await partRect(canvas, record.id, "name")).height, {
-				message: "確定前に帯が 1 行ぶん伸びること",
+				message: "the band grows by one row before the commit",
 			})
 			.toBe(49);
 
-		// 行区画も編集中から伸びた帯の直下に付いてくる。
+		// The row compartment follows right below the grown band during editing too.
 		const editingName = await partRect(canvas, record.id, "name");
 		const editingAttributes = await partRect(canvas, record.id, "attributes");
 		expect(editingAttributes.y).toBeCloseTo(
@@ -333,12 +349,12 @@ test.describe("record（区画付きボックス）", () => {
 			3,
 		);
 
-		// 確定は編集中と同じ導出なので、高さはジャンプせずそのまま。
+		// Committing uses the same derivation as editing, so the height does not jump.
 		await canvas.commitText();
 		expect((await partRect(canvas, record.id, "name")).height).toBe(49);
 	});
 
-	test("タイトル編集を Escape でキャンセルすると帯の高さが戻る", async ({
+	test("restores the band height when the title edit is cancelled with Escape", async ({
 		canvas,
 	}) => {
 		const record = await createRecord(canvas, RECORD_FROM, RECORD_TO);
@@ -351,32 +367,32 @@ test.describe("record（区画付きボックス）", () => {
 
 		await canvas.cancelText();
 
-		// 下書きは破棄されるので、帯は確定値（空タイトルの 1 行ぶん）へ戻る。
+		// The draft is dropped, so the band returns to the committed value, one row for an empty title.
 		await expect
 			.poll(async () => (await partRect(canvas, record.id, "name")).height, {
-				message: "キャンセルで帯が元の高さに戻ること",
+				message: "cancelling returns the band to its original height",
 			})
 			.toBe(28);
 	});
 
-	test("箱に収まらないタイトルの編集は図形の下端で止まりスクロールする", async ({
+	test("stops at the shape's bottom edge and scrolls when the title does not fit the box", async ({
 		canvas,
 	}) => {
 		const record = await createRecord(canvas, RECORD_FROM, RECORD_TO);
 		await canvas.deselect();
 
-		// 5 行 = 21 × 5 + 7 = 112px で箱の高さ 80px を超える。
+		// 5 rows = 21 * 5 + 7 = 112px, past the box height of 80px.
 		await canvas.typeTextAt(NAME_SPOT, "A\nB\nC\nD\nE");
 		await expect(canvas.textArea()).toHaveValue("A\nB\nC\nD\nE");
 
-		// 帯は箱の下端で止まる（calcRecordSlotRegions の clamp）。
+		// The band stops at the box's bottom edge (the clamp in calcRecordSlotRegions).
 		await expect
 			.poll(async () => (await partRect(canvas, record.id, "name")).height, {
-				message: "帯が箱の高さで頭打ちになること",
+				message: "the band tops out at the box height",
 			})
 			.toBe(80);
 
-		// エディタも同じ下端で止まる（伸び続けて図形の下へはみ出さない）。
+		// The editor stops at that same edge instead of growing past the shape.
 		const bandBox = await canvas.page
 			.locator(
 				`[data-kind="object"][data-id="${record.id}"] [data-part="name"]`,
@@ -386,13 +402,13 @@ test.describe("record（区画付きボックス）", () => {
 			.locator('[data-testid="text-editor"]')
 			.boundingBox();
 		if (!bandBox || !editorBox) {
-			throw new Error("帯またはエディタ枠の外接箱が取得できない");
+			throw new Error("no bounding box for the band or the editor frame");
 		}
 		expect(editorBox.y + editorBox.height).toBeLessThanOrEqual(
 			bandBox.y + bandBox.height + 1.5,
 		);
 
-		// 使い切った先はスクロールで見る（ホイール委譲もこの可否で決まる）。
+		// What is left over is reached by scrolling, which also decides wheel delegation.
 		const overflow = await canvas
 			.textArea()
 			.evaluate((el) => el.scrollHeight - el.clientHeight);
@@ -400,18 +416,20 @@ test.describe("record（区画付きボックス）", () => {
 		await canvas.cancelText();
 	});
 
-	test("幅に収まらないタイトルは折り返して帯が伸びる", async ({ canvas }) => {
+	test("wraps a title too wide for the box and grows the band", async ({
+		canvas,
+	}) => {
 		const record = await createRecord(canvas, RECORD_FROM, RECORD_TO);
 		await canvas.deselect();
 
-		// 220px の箱（テキストの使える幅は 208px）に 1 行では収まらない長さ。
+		// Too long for a single line in a 220px box (208px usable for text).
 		await canvas.typeTextAt(NAME_SPOT, "Authentication Provider Configuration");
 		await canvas.commitText();
 
-		// 帯の高さは常に「行数 × 21 + 7」なので、49 以上なら 2 行以上に折り返している。
+		// The band height is always rows * 21 + 7, so 49 or more means it wrapped onto at least two lines.
 		await expect
 			.poll(async () => (await partRect(canvas, record.id, "name")).height, {
-				message: "折り返したタイトルで帯が 2 行以上ぶんに伸びること",
+				message: "a wrapped title grows the band to two rows or more",
 			})
 			.toBeGreaterThanOrEqual(49);
 	});

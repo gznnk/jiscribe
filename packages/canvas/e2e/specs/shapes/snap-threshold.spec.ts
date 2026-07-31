@@ -2,22 +2,25 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * スナップ閾値（SNAP_THRESHOLD_PX = 8）の「範囲境界」を守る。
+ * Guards the boundary of the snap threshold (SNAP_THRESHOLD_PX = 8).
  *
- * snap.spec は閾値内（距離3）の吸着は手厚く見るが、「閾値の外まで離せば吸着しない」
- * という負側の境界は未検証だった。閾値が広がりすぎる退行（遠くの図形にまで吸い付く）は
- * 吸着テストだけでは捕まらない。ここでは同じ中央↔中央の構図で、距離5（閾値内→吸着）と
- * 距離12（閾値外→生の位置のまま）を対比して境界を固める。
+ * snap.spec covers snapping inside the threshold (distance 3) thoroughly, but
+ * the negative side, that nothing snaps once it is beyond the threshold, was
+ * unchecked. A regression that widens the threshold, sticking to distant shapes,
+ * survives the snapping tests. Here the same center-to-center layout is used at
+ * distance 5 (inside, snaps) and distance 12 (outside, stays raw) to pin the
+ * boundary.
  *
- * zoom=1・パンなしなので画面座標＝SVG 座標。A 中心X=500 を基準に B 中心を寄せる。
- * 幅差により B の left/right はどの候補にも当たらず、中央X のみが判定対象になる。
+ * zoom=1 with no panning, so screen coordinates are SVG coordinates. B's center
+ * approaches A's center X=500, and the difference in width keeps B's left/right
+ * off every candidate, leaving only the center X in play.
  */
 
-// A: 幅200・高さ100、中心 (500,200)。centerX=500
+// A: 200 x 100 centered at (500,200), so centerX=500
 const drawWideA = (canvas: CanvasDriver) =>
 	canvas.drawShape("Rectangle", { x: 400, y: 150 }, { x: 600, y: 250 });
 
-/** B（幅100・高さ100、初期中心 (400,450)）を描く */
+/** Draws B (100 x 100, initially centered at (400,450)). */
 const drawSquareB = (canvas: CanvasDriver) =>
 	canvas.drawShape("Rectangle", { x: 350, y: 400 }, { x: 450, y: 500 });
 
@@ -28,15 +31,15 @@ async function transformOf(
 	return (await canvas.captureObjects()).find((o) => o.id === id)?.transform;
 }
 
-test.describe("スナップ閾値の範囲境界", () => {
-	test("中心X が閾値内（距離5）なら相手の中心へ吸着する", async ({
+test.describe("snap threshold boundary", () => {
+	test("snaps onto the other shape's center when the center X is inside the threshold (distance 5)", async ({
 		canvas,
 	}) => {
 		await drawWideA(canvas);
 		const bId = await drawSquareB(canvas);
 		await canvas.deselect();
 
-		// B 中心(400,450) → (505,450): 中心X 505 は A 中心X 500 から距離5（≤8）。
+		// B's center (400,450) -> (505,450): center X 505 is 5 from A's center X 500 (<= 8).
 		await canvas.dragInspecting(
 			{ x: 400, y: 450 },
 			{ x: 505, y: 450 },
@@ -46,21 +49,21 @@ test.describe("スナップ閾値の範囲境界", () => {
 			},
 		);
 
-		// 解放後: 中心Xが 500 へ吸着する。
+		// After release the center X snaps to 500.
 		await expect
 			.poll(() => transformOf(canvas, bId))
 			.toBe("matrix(1, 0, 0, 1, 500, 450)");
 	});
 
-	test("中心X が閾値外（距離12）なら吸着せず生の位置に留まる", async ({
+	test("does not snap and stays at the raw position when the center X is outside the threshold (distance 12)", async ({
 		canvas,
 	}) => {
 		await drawWideA(canvas);
 		const bId = await drawSquareB(canvas);
 		await canvas.deselect();
 
-		// B 中心(400,450) → (512,450): 中心X 512 は A 中心X 500 から距離12（>8）。
-		// 閾値外なのでガイドは出ず、吸着もしない。
+		// B's center (400,450) -> (512,450): center X 512 is 12 from A's center X 500 (> 8).
+		// Beyond the threshold, so no guide appears and nothing snaps.
 		await canvas.dragInspecting(
 			{ x: 400, y: 450 },
 			{ x: 512, y: 450 },
@@ -69,7 +72,7 @@ test.describe("スナップ閾値の範囲境界", () => {
 			},
 		);
 
-		// 解放後: 吸着せず生の中心X 512 のまま。
+		// After release it keeps the raw center X of 512.
 		await expect
 			.poll(() => transformOf(canvas, bId))
 			.toBe("matrix(1, 0, 0, 1, 512, 450)");

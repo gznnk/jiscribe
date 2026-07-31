@@ -1,23 +1,26 @@
 import { test, expect } from "../../fixtures";
 
 /**
- * Ctrl/Meta+クリックによる追加選択（additive selection）の検証。
+ * Additive selection via Ctrl/Meta+click.
  *
- * 複数選択は「複数図形をグループ化せずにまとめて扱う」中核機能だが、既存テストは
- * マーキー選択（basic-gestures）とグループ化（group）に限られ、Ctrl+クリックでの
- * 選択追加や Ctrl+A 全選択からのまとめ移動はカバーされていなかった。選択モデル
- * （determineSelection の additive 分岐 / multiSelectGroup 経由のまとめ移動）は
- * リファクタで壊れやすいため、「まとめて動く」という観測可能な振る舞いで守る。
+ * Multi-selection is the core "handle several shapes together without grouping
+ * them" feature, but the existing tests only covered marquee selection
+ * (basic-gestures) and grouping (group); adding to the selection with
+ * Ctrl+click, and moving everything after a Ctrl+A select-all, were uncovered.
+ * The selection model (the additive branch of determineSelection, and moving as
+ * a unit through multiSelectGroup) is easy to break in a refactor, so it is
+ * guarded through the observable "they move together" behavior.
  *
- * 追加選択は Ctrl/Meta+クリック（Shift は移動時の軸固定なので使わない）。
- * 追加選択は座標変換を通す canvas.ctrlClickAt を使う。
+ * Additive selection is Ctrl/Meta+click; Shift is axis locking during a move and
+ * is not used here. It goes through canvas.ctrlClickAt, which applies the
+ * coordinate transform.
  */
 
-test.describe("複数選択（Ctrl+クリック / Ctrl+A）", () => {
-	test("Ctrl+クリックで選択に追加し、まとめて移動できる", async ({
+test.describe("multi-selection (Ctrl+click / Ctrl+A)", () => {
+	test("adds to the selection on Ctrl+click and moves them together", async ({
 		canvas,
 	}) => {
-		// A: 中心 (370,260)、B: 中心 (630,260)
+		// A: center (370,260), B: center (630,260)
 		const a = await canvas.drawShape(
 			"Rectangle",
 			{ x: 300, y: 200 },
@@ -31,16 +34,15 @@ test.describe("複数選択（Ctrl+クリック / Ctrl+A）", () => {
 		);
 		await canvas.deselect();
 
-		// A を選択 → Ctrl+クリックで B を追加
 		await canvas.selectAt({ x: 370, y: 260 });
 		await canvas.ctrlClickAt({ x: 630, y: 260 });
 
-		// A をドラッグ（+50,+40）すると、追加選択された B も同じだけ動く
+		// Dragging A by (+50,+40) moves the additively selected B by the same amount.
 		await canvas.drag({ x: 370, y: 260 }, { x: 420, y: 300 });
 
 		await expect
 			.poll(() => canvas.objectById(a).getAttribute("transform"), {
-				message: "A が移動すること",
+				message: "A moves",
 			})
 			.toBe("matrix(1, 0, 0, 1, 420, 300)");
 		expect(await canvas.objectById(b).getAttribute("transform")).toBe(
@@ -48,8 +50,10 @@ test.describe("複数選択（Ctrl+クリック / Ctrl+A）", () => {
 		);
 	});
 
-	test("Ctrl+A で全選択し、まとめて移動できる", async ({ canvas }) => {
-		// A: 中心 (370,260)、B: 中心 (630,260)
+	test("selects everything on Ctrl+A and moves them together", async ({
+		canvas,
+	}) => {
+		// A: center (370,260), B: center (630,260)
 		const a = await canvas.drawShape(
 			"Rectangle",
 			{ x: 300, y: 200 },
@@ -63,13 +67,13 @@ test.describe("複数選択（Ctrl+クリック / Ctrl+A）", () => {
 		);
 		await canvas.deselect();
 
-		// 全選択してから A をドラッグ（+50,+40）すると、全図形が同じだけ動く
+		// After select-all, dragging A by (+50,+40) moves every shape by the same amount.
 		await canvas.selectAll();
 		await canvas.drag({ x: 370, y: 260 }, { x: 420, y: 300 });
 
 		await expect
 			.poll(() => canvas.objectById(a).getAttribute("transform"), {
-				message: "A が移動すること",
+				message: "A moves",
 			})
 			.toBe("matrix(1, 0, 0, 1, 420, 300)");
 		expect(await canvas.objectById(b).getAttribute("transform")).toBe(
@@ -77,10 +81,10 @@ test.describe("複数選択（Ctrl+クリック / Ctrl+A）", () => {
 		);
 	});
 
-	test("Ctrl+クリックは選択済みの図形を選択から外す（トグルオフ）", async ({
+	test("drops an already selected shape on Ctrl+click (toggle off)", async ({
 		canvas,
 	}) => {
-		// 横並びの 3 矩形。A 中心 (300,260) / B 中心 (550,260) / C 中心 (800,260)。
+		// Three rects in a row. A center (300,260) / B center (550,260) / C center (800,260).
 		const a = await canvas.drawShape(
 			"Rectangle",
 			{ x: 230, y: 200 },
@@ -100,22 +104,22 @@ test.describe("複数選択（Ctrl+クリック / Ctrl+A）", () => {
 		);
 		await canvas.deselect();
 
-		// 全選択（A・B・C）してから、Ctrl+クリックで B を選択から外す。
+		// Select all (A, B, C), then Ctrl+click to drop B from the selection.
 		await canvas.selectAll();
 		await canvas.ctrlClickAt({ x: 550, y: 260 });
 
-		// 残った選択（A・C）を A からドラッグ（+100,+50）。A・C は動くが、外した B は動かない。
+		// Drag the remaining selection (A, C) from A by (+100,+50).
 		await canvas.drag({ x: 300, y: 260 }, { x: 400, y: 310 });
 
 		await expect
 			.poll(() => canvas.objectById(a).getAttribute("transform"), {
-				message: "A が移動すること",
+				message: "A moves",
 			})
 			.toBe("matrix(1, 0, 0, 1, 400, 310)");
 		expect(await canvas.objectById(c).getAttribute("transform")).toBe(
 			"matrix(1, 0, 0, 1, 900, 310)",
 		);
-		// トグルオフした B は選択から外れているので動かない。
+		// B was toggled off, so it stays put.
 		expect(await canvas.objectById(b).getAttribute("transform")).toBe(
 			"matrix(1, 0, 0, 1, 550, 260)",
 		);

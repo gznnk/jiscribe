@@ -1,18 +1,20 @@
 import { test, expect } from "../../fixtures";
 
 /**
- * 重なり順（z-order）変更の undo / redo。
+ * Undo / redo of stacking order (z-order) changes.
  *
- * z-order.spec は bringToFront などの結果（DOM 順）を守るが、その操作が履歴に正しく
- * 積まれ undo で元の重なり順へ戻る／redo で再適用されるかは検証されていなかった。
- * arrange 系コマンドが履歴エントリを作り損ねると「重なり順だけ undo できない」という
- * 非対称な退行になる。DOM 順インデックスの往復で守る。
+ * z-order.spec guards the result of bringToFront and friends (DOM order), but not
+ * whether the operation is pushed onto the history so that undo restores the previous
+ * order and redo reapplies it. An arrange command that fails to create a history entry
+ * regresses asymmetrically: "only the stacking order cannot be undone". Guarded through
+ * the round trip of the DOM order index.
  */
-test.describe("重なり順の undo / redo", () => {
-	test("bringToFront は undo で元の順序に戻り、redo で再適用される", async ({
+test.describe("stacking order undo / redo", () => {
+	test("restores the original order on undo of bringToFront and reapplies it on redo", async ({
 		canvas,
 	}) => {
-		// A を先、B を後に描く → B が前面（DOM 末尾）。重ならない位置に置く。
+		// A first, B second, so B is in front (last in DOM). They are placed apart so
+		// they do not overlap.
 		const a = await canvas.drawShape(
 			"Rectangle",
 			{ x: 300, y: 200 },
@@ -22,31 +24,29 @@ test.describe("重なり順の undo / redo", () => {
 		await canvas.drawShape("Rectangle", { x: 520, y: 200 }, { x: 660, y: 320 });
 		await canvas.deselect();
 
-		// 初期は A が背面（index 0）
+		// A starts at the back (index 0)
 		expect(await canvas.objectIndex(a)).toBe(0);
 
-		// A を最前面へ → A が index 1（DOM 末尾）になる
+		// Bring A to the front -> A becomes index 1 (last in DOM)
 		await canvas.selectAt({ x: 370, y: 260 });
 		await canvas.arrange("bringToFront");
 		await expect
 			.poll(() => canvas.objectIndex(a), {
-				message: "bringToFront で A が最前面になること",
+				message: "bringToFront puts A in front",
 			})
 			.toBe(1);
 
-		// undo で元の重なり順（A が背面）に戻る
 		await canvas.undo();
 		await expect
 			.poll(() => canvas.objectIndex(a), {
-				message: "undo で重なり順が戻ること",
+				message: "undo restores the stacking order",
 			})
 			.toBe(0);
 
-		// redo で再び最前面へ
 		await canvas.redo();
 		await expect
 			.poll(() => canvas.objectIndex(a), {
-				message: "redo で重なり順変更が再適用されること",
+				message: "redo reapplies the stacking order change",
 			})
 			.toBe(1);
 	});

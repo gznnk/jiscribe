@@ -3,19 +3,21 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 import { selectors } from "../../support/selectors";
 
 /**
- * 回転後のリサイズ／回転の中心保持の検証。
+ * Resizing after a rotation, and rotation keeping the center.
  *
- * 既存の resize.spec は未回転の図形のみを対象にしている。回転した図形のリサイズは
- * 「ハンドルを図形のローカル軸に沿って動かす」変換が必要で、ここがリファクタで
- * 壊れやすい（画面軸で計算してしまうと、回転図形を掴むと暴れる典型バグ）。
+ * resize.spec only covers unrotated shapes. Resizing a rotated shape needs the
+ * handle movement converted onto the shape's local axes, which is easy to break
+ * in a refactor: computing on the screen axes is the classic bug where grabbing
+ * a rotated shape makes it thrash.
  *
- * 図形のローカル寸法は rect の width/height 属性、中心は transform の matrix(e,f) に
- * 出るので、それらの不変条件で守る。
+ * The shape's local size lives in the rect's width/height attributes and its
+ * center in matrix(e,f) of the transform, so those invariants are the guard.
  */
 
 /**
- * 図形の中心をコンテンツ座標で返す（回転しても中心＝回転軸なので一致する）。
- * boundingBox は画面座標なので toContent() でドライバ入力系と同じ座標へ変換する。
+ * Returns the shape's center in content coordinates; the center is the rotation
+ * axis, so it holds under rotation. boundingBox is in screen coordinates, hence
+ * toContent() to reach the coordinates the driver takes as input.
  */
 async function screenCenterOf(
 	canvas: CanvasDriver,
@@ -23,7 +25,7 @@ async function screenCenterOf(
 ): Promise<{ x: number; y: number }> {
 	const box = await canvas.objectById(id).boundingBox();
 	if (!box) {
-		throw new Error(`図形 ${id} の boundingBox が取得できない`);
+		throw new Error(`cannot read the boundingBox of shape ${id}`);
 	}
 	return canvas.toContent({
 		x: box.x + box.width / 2,
@@ -31,20 +33,20 @@ async function screenCenterOf(
 	});
 }
 
-/** transform="matrix(a, b, c, d, e, f)" の (e,f)＝中心座標を取り出す */
+/** Extracts (e,f), the center, from transform="matrix(a, b, c, d, e, f)". */
 function matrixCenter(transform: string | null): { x: number; y: number } {
 	const nums = transform?.match(/-?\d+(?:\.\d+)?/g)?.map(Number);
 	if (!nums || nums.length < 6) {
-		throw new Error(`transform を解釈できない: ${transform}`);
+		throw new Error(`cannot parse the transform: ${transform}`);
 	}
 	return { x: nums[4], y: nums[5] };
 }
 
-test.describe("回転後のリサイズ", () => {
-	test("90°回転してもリサイズはローカル軸で効く（高さだけ変わり幅は不変）", async ({
+test.describe("resizing after a rotation", () => {
+	test("resizes along the local axes after a 90 degree rotation, changing only the height", async ({
 		canvas,
 	}) => {
-		// 中心 (500,260) の 200x120 矩形
+		// 200x120 rect centered at (500,260)
 		const id = await canvas.drawShape(
 			"Rectangle",
 			{ x: 400, y: 200 },
@@ -54,24 +56,24 @@ test.describe("回転後のリサイズ", () => {
 		const widthBefore = Number(await rect.getAttribute("width"));
 		const heightBefore = Number(await rect.getAttribute("height"));
 
-		// 回転ハンドルを中心の真横（右）へ落とす → ちょうど 90° 回転
+		// Drop the rotation handle straight to the right of the center for exactly 90 degrees
 		await canvas.dragTransformHandle("rotation", { x: 700, y: 260 });
 		await expect
 			.poll(() => rect.getAttribute("transform"), {
-				message: "回転で transform が変化すること",
+				message: "the transform changes on rotation",
 			})
 			.not.toBe("matrix(1, 0, 0, 1, 500, 260)");
 
-		// bottomCenter ハンドルをローカル外向き（中心→ハンドルの放射方向）へ 80px ドラッグ。
-		// 90°回転後、この放射方向は画面上では水平だが、ローカルでは「高さ」軸にあたる。
+		// Drag the bottomCenter handle 80px outward along the local direction (center to handle).
+		// After the 90 degree rotation that direction is horizontal on screen but is the local height axis.
 		const center = await screenCenterOf(canvas, id);
 		const handleBox = await canvas.page
 			.locator(selectors.transformControl("bottomCenter"))
 			.boundingBox();
 		if (!handleBox) {
-			throw new Error("bottomCenter ハンドルの位置が取得できない");
+			throw new Error("cannot locate the bottomCenter handle");
 		}
-		// handleBox は画面座標。center（コンテンツ座標）と揃えるため変換する。
+		// handleBox is in screen coordinates, so convert it to match center in content coordinates.
 		const handleCenter = canvas.toContent({
 			x: handleBox.x + handleBox.width / 2,
 			y: handleBox.y + handleBox.height / 2,
@@ -88,18 +90,18 @@ test.describe("回転後のリサイズ", () => {
 
 		await expect
 			.poll(() => rect.getAttribute("height"), {
-				message: "ローカル高さが変わること",
+				message: "the local height changes",
 			})
 			.not.toBe(String(heightBefore));
 
 		const widthAfter = Number(await rect.getAttribute("width"));
 		const heightAfter = Number(await rect.getAttribute("height"));
-		// 高さは明確に増え、幅はほぼ不変（ローカル軸でリサイズされた証拠）
+		// The height clearly grows while the width barely moves, which shows the resize followed the local axes
 		expect(heightAfter).toBeGreaterThan(heightBefore + 20);
 		expect(Math.abs(widthAfter - widthBefore)).toBeLessThanOrEqual(2);
 	});
 
-	test("回転は中心を動かさない（matrix の e,f が保たれる）", async ({
+	test("does not move the center on rotation, preserving the matrix e,f", async ({
 		canvas,
 	}) => {
 		const id = await canvas.drawShape(
@@ -111,13 +113,13 @@ test.describe("回転後のリサイズ", () => {
 		const before = matrixCenter(await rect.getAttribute("transform"));
 		const screenBefore = await screenCenterOf(canvas, id);
 
-		// 任意角度に回転（中心の右上あたりへ）
+		// Rotate to an arbitrary angle, up and right of the center
 		await canvas.dragTransformHandle("rotation", { x: 640, y: 140 });
 		await expect
 			.poll(() => rect.getAttribute("transform"))
 			.not.toBe("matrix(1, 0, 0, 1, 500, 260)");
 
-		// 回転軸は中心なので、matrix の中心も画面上の中心も動かない
+		// The center is the rotation axis, so neither the matrix center nor the screen center moves
 		const after = matrixCenter(await rect.getAttribute("transform"));
 		expect(Math.abs(after.x - before.x)).toBeLessThanOrEqual(1);
 		expect(Math.abs(after.y - before.y)).toBeLessThanOrEqual(1);

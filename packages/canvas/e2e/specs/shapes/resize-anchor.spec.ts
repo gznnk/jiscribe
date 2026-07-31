@@ -2,23 +2,26 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * 辺ハンドル（片軸）リサイズの「アンカー＝反対側の辺」挙動を精密に守る。
+ * Pins the "anchor = the opposite edge" behavior of an edge handle (single axis)
+ * resize.
  *
- * resize.spec は「動いた／動かない」までしか見ておらず、リサイズ実装の肝である
- *   ・引いた辺は反対側の辺を固定したまま動く
- *   ・寸法は引いた量ぶん増減する
- *   ・中心はその半分だけずれる（反対辺が固定なので）
- *   ・直交軸（幅⇔高さ）と直交軸の中心は動かない
- * という数値関係は未検証だった。アンカーの取り違え（中心固定で両側が動く等）が起きると
- * 「中心が半分ずれる」がここで崩れて落ちる。
+ * resize.spec only looks at whether things moved. The numeric relations at the
+ * heart of the resize implementation
+ *   - the dragged edge moves while the opposite edge stays fixed
+ *   - the size changes by the dragged amount
+ *   - the center shifts by half of it, since the opposite edge is fixed
+ *   - the orthogonal axis (width <-> height) and its center do not move
+ * were unchecked. A mistaken anchor (both sides moving around a fixed center,
+ * say) breaks "the center shifts by half" and fails here.
  *
- * スナップは単一図形でも寸法吸着が入りうるため ctrl で無効化し、ハンドルの純粋な
- * 追従だけを測る。zoom=1 なので画面移動量＝world 移動量。
+ * Snapping can pull dimensions even for a single shape, so it is disabled with
+ * ctrl to measure the handle's plain follow. zoom=1, so screen movement is world
+ * movement.
  */
 
 const TOLERANCE_PX = 2;
 
-/** 図形の現在の寸法（width/height）と中心（transform の e,f）を読む */
+/** Reads the shape's current size (width/height) and center (e,f of the transform). */
 async function frameOf(
 	canvas: CanvasDriver,
 	id: string,
@@ -37,37 +40,37 @@ async function frameOf(
 }
 
 /**
- * 各辺ハンドルの検証ケース。
- * 描画矩形 (400,200)-(600,320) は width=200 / height=120 / 中心 (500,260)、
- * 上辺 y=200・下辺 y=320・左辺 x=400・右辺 x=600。
- * `to` はハンドル（辺の中点）を動かす先（コンテンツ座標）。
+ * One case per edge handle.
+ * The drawn rect (400,200)-(600,320) is width=200 / height=120 centered at
+ * (500,260), with top y=200, bottom y=320, left x=400 and right x=600.
+ * `to` is where the handle (the edge midpoint) is moved, in content coordinates.
  */
 const CASES = [
 	{
 		handle: "bottomCenter" as const,
-		to: { x: 500, y: 420 }, // 下辺を +100 下へ
+		to: { x: 500, y: 420 }, // bottom edge 100 down
 		expect: { dWidth: 0, dHeight: 100, dcx: 0, dcy: 50 },
 	},
 	{
 		handle: "topCenter" as const,
-		to: { x: 500, y: 140 }, // 上辺を 60 上へ
+		to: { x: 500, y: 140 }, // top edge 60 up
 		expect: { dWidth: 0, dHeight: 60, dcx: 0, dcy: -30 },
 	},
 	{
 		handle: "rightCenter" as const,
-		to: { x: 680, y: 260 }, // 右辺を +80 右へ
+		to: { x: 680, y: 260 }, // right edge 80 right
 		expect: { dWidth: 80, dHeight: 0, dcx: 40, dcy: 0 },
 	},
 	{
 		handle: "leftCenter" as const,
-		to: { x: 360, y: 260 }, // 左辺を 40 左へ
+		to: { x: 360, y: 260 }, // left edge 40 left
 		expect: { dWidth: 40, dHeight: 0, dcx: -20, dcy: 0 },
 	},
 ];
 
-test.describe("辺ハンドルリサイズのアンカー挙動", () => {
+test.describe("anchor behavior of an edge handle resize", () => {
 	for (const testCase of CASES) {
-		test(`${testCase.handle}: 反対辺を固定し、寸法は引いた量・中心は半分だけ動く`, async ({
+		test(`${testCase.handle}: keeps the opposite edge fixed, changes the size by the drag and the center by half of it`, async ({
 			canvas,
 		}) => {
 			const id = await canvas.drawShape(
@@ -81,7 +84,7 @@ test.describe("辺ハンドルリサイズのアンカー挙動", () => {
 				ctrl: true,
 			});
 
-			// リサイズが効いたこと（主軸の寸法が変わったこと）を先に待つ。
+			// Wait for the resize to land, meaning the primary axis size changed.
 			const primaryIsWidth = testCase.expect.dWidth !== 0;
 			await expect
 				.poll(async () =>
@@ -92,14 +95,14 @@ test.describe("辺ハンドルリサイズのアンカー挙動", () => {
 				.not.toBe(primaryIsWidth ? before.width : before.height);
 
 			const after = await frameOf(canvas, id);
-			// 寸法は引いた量ぶん増える。
+			// The size changes by the dragged amount.
 			expect(
 				Math.abs(after.width - before.width - testCase.expect.dWidth),
 			).toBeLessThanOrEqual(TOLERANCE_PX);
 			expect(
 				Math.abs(after.height - before.height - testCase.expect.dHeight),
 			).toBeLessThanOrEqual(TOLERANCE_PX);
-			// 中心は反対辺固定のため、引いた量の半分だけずれる。
+			// With the opposite edge fixed, the center shifts by half the dragged amount.
 			expect(
 				Math.abs(after.cx - before.cx - testCase.expect.dcx),
 			).toBeLessThanOrEqual(TOLERANCE_PX);

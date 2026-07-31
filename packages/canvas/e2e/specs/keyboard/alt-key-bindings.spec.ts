@@ -2,22 +2,24 @@ import { test, expect } from "../../fixtures";
 import { selectors } from "../../support/selectors";
 
 /**
- * コマンドレジストリに宣言された「代替キーバインド」の非回帰。
+ * Regression guard for the alternate key bindings declared in the command
+ * registry.
  *
- * 主バインドは既存 spec が守るが、同じコマンドに別名で割り当てられた以下の
- * バインドは未カバーだった（ショートカット表の破損を検知できない）。
- * - Redo: 主 Ctrl+Shift+Z（nudge.spec 等）／ 代替 Ctrl+Y（RedoCommand）
- * - Delete: 主 Delete（selection.spec）／ 代替 Backspace（DeleteCommand）
- * - DeselectAll: 主 Escape（selection.spec）／ 代替 Ctrl+Shift+A（DeselectAllCommand）
+ * Existing specs cover the primary bindings, but the alternates below, assigned
+ * to the same commands under a different name, were uncovered, so damage to the
+ * shortcut table went undetected.
+ * - Redo: primary Ctrl+Shift+Z (nudge.spec and others) / alternate Ctrl+Y (RedoCommand)
+ * - Delete: primary Delete (selection.spec) / alternate Backspace (DeleteCommand)
+ * - DeselectAll: primary Escape (selection.spec) / alternate Ctrl+Shift+A (DeselectAllCommand)
  */
-test.describe("キーボード: 代替バインド", () => {
-	test("Ctrl+Y で redo できる（Ctrl+Shift+Z の代替）", async ({ canvas }) => {
+test.describe("keyboard: alternate bindings", () => {
+	test("redoes on Ctrl+Y (alternate for Ctrl+Shift+Z)", async ({ canvas }) => {
 		const id = await canvas.drawShape(
 			"Rectangle",
 			{ x: 400, y: 200 },
 			{ x: 600, y: 320 },
 		);
-		// 中心は (500, 260)
+		// Center is (500, 260).
 		expect(await canvas.objectById(id).getAttribute("transform")).toBe(
 			"matrix(1, 0, 0, 1, 500, 260)",
 		);
@@ -32,16 +34,17 @@ test.describe("キーボード: 代替バインド", () => {
 			.poll(() => canvas.objectById(id).getAttribute("transform"))
 			.toBe("matrix(1, 0, 0, 1, 500, 260)");
 
-		// Ctrl+Y でナッジが再適用される
 		await canvas.page.keyboard.press("Control+y");
 		await expect
 			.poll(() => canvas.objectById(id).getAttribute("transform"), {
-				message: "Ctrl+Y で redo が効くこと",
+				message: "Ctrl+Y triggers redo",
 			})
 			.toBe("matrix(1, 0, 0, 1, 501, 260)");
 	});
 
-	test("Backspace で選択を削除できる（Delete の代替）", async ({ canvas }) => {
+	test("deletes the selection on Backspace (alternate for Delete)", async ({
+		canvas,
+	}) => {
 		const id = await canvas.drawShape(
 			"Rectangle",
 			{ x: 400, y: 200 },
@@ -52,11 +55,11 @@ test.describe("キーボード: 代替バインド", () => {
 		await canvas.page.keyboard.press("Backspace");
 		await expect
 			.poll(async () => (await canvas.captureObjects()).length, {
-				message: "Backspace で選択図形が削除されること",
+				message: "Backspace deletes the selected shape",
 			})
 			.toBe(0);
 
-		// 同じ図形が undo で戻る（削除が履歴に積まれている）
+		// Undo brings the same shape back, so the delete was pushed onto the history.
 		await canvas.undo();
 		await expect
 			.poll(async () => (await canvas.captureObjects()).length)
@@ -66,7 +69,7 @@ test.describe("キーボード: 代替バインド", () => {
 		);
 	});
 
-	test("Ctrl+Shift+A で選択を解除できる（Escape の代替）", async ({
+	test("clears the selection on Ctrl+Shift+A (alternate for Escape)", async ({
 		canvas,
 	}) => {
 		await canvas.drawShape("Rectangle", { x: 300, y: 200 }, { x: 440, y: 320 });
@@ -79,7 +82,7 @@ test.describe("キーボード: 代替バインド", () => {
 		await canvas.page.keyboard.press("Control+Shift+a");
 		await expect
 			.poll(() => canvas.hasAnyControl(), {
-				message: "Ctrl+Shift+A で選択が解除されること",
+				message: "Ctrl+Shift+A clears the selection",
 			})
 			.toBe(false);
 		await expect(canvas.page.locator(selectors.control)).toHaveCount(0);

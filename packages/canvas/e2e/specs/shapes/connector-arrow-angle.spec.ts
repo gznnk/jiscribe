@@ -3,19 +3,19 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 import { selectors } from "../../support/selectors";
 
 /**
- * 矢印の「向き（回転角）」が端セグメントの方向に一致することを幾何レベルで検証する spec。
+ * Checks at the geometry level that an arrow's rotation follows its end segment.
  *
- * 矢印は端点を先端として、隣接点へ向かう端セグメントに沿って回転して描かれる
- * （Connector.tsx の startAngleRadians / endAngleRadians = calcVectorAngleRad(...)）。矢印 polygon は
- * matrix(sx·cosθ, sx·sinθ, …, x, y) で配置されるため、行列から θ=atan2(b,a)（回転角）と
- * (e,f)（先端＝端点）が読める。connector-arrow-head.spec は矢印の有無・形状・入れ替えは守るが、
- * この「向きが端セグメントに沿う」幾何は未検証だった。
+ * An arrow is drawn with its tip at the endpoint, rotated along the end segment that runs
+ * toward the adjacent point (Connector.tsx startAngleRadians / endAngleRadians =
+ * calcVectorAngleRad(...)). The arrow polygon is placed with matrix(sx·cosθ, sx·sinθ, …, x, y),
+ * so the rotation θ=atan2(b,a) and the tip (e,f) can be read back from the matrix.
  *
- * ここでは L 字（始端は真下へ出て上向き矢印、終端は水平に入って右向き矢印）になる配置を作り、
- * 始端・終端それぞれの矢印が
- *   - 先端が端点に一致する
- *   - 回転角が実際の端セグメント方向（外向き）に一致する
- * ことを守る。始端と終端で向きの軸が異なるため、取り違え（始端＝終端の角を使う等）も検出できる。
+ * The layout forms an L (the start exits straight down with an upward arrow, the end enters
+ * horizontally with a rightward arrow), and for each end this guards that
+ *   - the tip coincides with the endpoint
+ *   - the rotation matches the actual outward end-segment direction
+ * The two ends use different axes, so mixing them up (using the end angle for the start) is
+ * also caught.
  */
 
 type Vec = { x: number; y: number };
@@ -23,7 +23,7 @@ type ArrowMatrix = { a: number; b: number; tip: Vec };
 
 function parsePoints(attr: string | null): Vec[] {
 	if (!attr) {
-		throw new Error("points 属性が取得できない");
+		throw new Error("cannot read the points attribute");
 	}
 	return attr
 		.trim()
@@ -38,7 +38,7 @@ function distance(a: Vec, b: Vec): number {
 	return Math.hypot(a.x - b.x, a.y - b.y);
 }
 
-/** 2 角の差を [-π, π] に正規化した絶対値（ラジアン） */
+/** Absolute difference of two angles, normalized to [-π, π] (radians) */
 function angleDiff(a: number, b: number): number {
 	let d = a - b;
 	while (d > Math.PI) {
@@ -50,7 +50,7 @@ function angleDiff(a: number, b: number): number {
 	return Math.abs(d);
 }
 
-/** コネクターの矢印 polygon すべての matrix（a,b と先端 e,f）を読む */
+/** Reads the matrix (a, b and the tip e, f) of every arrow polygon of a connector */
 async function readArrows(
 	canvas: CanvasDriver,
 	id: string,
@@ -70,7 +70,7 @@ async function readArrows(
 	}, id);
 }
 
-/** endpoint に最も近い矢印を返す */
+/** Returns the arrow whose tip is nearest to the endpoint */
 function arrowNearest(arrows: ArrowMatrix[], endpoint: Vec): ArrowMatrix {
 	let best = arrows[0];
 	let bestDist = Infinity;
@@ -84,7 +84,7 @@ function arrowNearest(arrows: ArrowMatrix[], endpoint: Vec): ArrowMatrix {
 	return best;
 }
 
-/** 線の中点付近をクリックしてコネクターを選択し、矢印メニューの表示を待つ */
+/** Selects the connector by clicking near the line midpoint and waits for the arrow menu */
 async function selectConnector(canvas: CanvasDriver, at: Vec) {
 	await canvas.clickAt(at);
 	await expect(
@@ -92,12 +92,12 @@ async function selectConnector(canvas: CanvasDriver, at: Vec) {
 	).toBeVisible();
 }
 
-test.describe("コネクターの矢印の向き", () => {
-	test("矢印の回転角が端セグメントの方向（外向き）に一致する", async ({
+test.describe("connector arrow direction", () => {
+	test("rotates each arrow to match the outward direction of its end segment", async ({
 		canvas,
 	}) => {
-		// source は左上、target は右下。source bottomCenter（下へ出る）→ target leftCenter
-		// （左から水平に入る）で L 字経路になる。
+		// source is top-left, target is bottom-right. source bottomCenter (exits downward) →
+		// target leftCenter (enters horizontally from the left) gives an L-shaped route.
 		await canvas.drawShape("Rectangle", { x: 300, y: 150 }, { x: 500, y: 250 });
 		await canvas.deselect();
 		await canvas.drawShape("Rectangle", { x: 700, y: 400 }, { x: 900, y: 500 });
@@ -120,14 +120,13 @@ test.describe("コネクターの矢印の向き", () => {
 		const afterStart = points[1];
 		const beforeEnd = points[points.length - 2];
 
-		// 既定では終端のみ矢印。終端矢印の向きを検証する。
+		// By default only the end carries an arrow.
 		const endArrow = arrowNearest(await readArrows(canvas, connectorId), end);
-		// 先端は終端の端点に一致する。
 		expect(
 			distance(endArrow.tip, end),
-			"終端矢印の先端が終点に一致すること",
+			"end arrow tip coincides with the end point",
 		).toBeLessThanOrEqual(1.5);
-		// 回転角は「beforeEnd → end」（外向き＝端点へ向かう向き）に一致する。
+		// Outward direction is beforeEnd → end.
 		const endArrowAngle = Math.atan2(endArrow.b, endArrow.a);
 		const endSegmentAngle = Math.atan2(
 			end.y - beforeEnd.y,
@@ -135,10 +134,10 @@ test.describe("コネクターの矢印の向き", () => {
 		);
 		expect(
 			angleDiff(endArrowAngle, endSegmentAngle),
-			`終端矢印の角 ${endArrowAngle.toFixed(3)} が端セグメント方向 ${endSegmentAngle.toFixed(3)} に一致すること`,
+			`end arrow angle ${endArrowAngle.toFixed(3)} matches end-segment direction ${endSegmentAngle.toFixed(3)}`,
 		).toBeLessThanOrEqual(0.05);
 
-		// 始端にも矢印を付けて、別方向（外向き）に沿うことを検証する。
+		// Add an arrow at the start as well and check it follows its own outward direction.
 		await selectConnector(canvas, {
 			x: start.x,
 			y: (start.y + afterStart.y) / 2,
@@ -153,12 +152,11 @@ test.describe("コネクターの矢印の向き", () => {
 			await readArrows(canvas, connectorId),
 			start,
 		);
-		// 先端は始端の端点に一致する。
 		expect(
 			distance(startArrow.tip, start),
-			"始端矢印の先端が始点に一致すること",
+			"start arrow tip coincides with the start point",
 		).toBeLessThanOrEqual(1.5);
-		// 回転角は「afterStart → start」（外向き＝始点側へ向かう向き）に一致する。
+		// Outward direction is afterStart → start.
 		const startArrowAngle = Math.atan2(startArrow.b, startArrow.a);
 		const startSegmentAngle = Math.atan2(
 			start.y - afterStart.y,
@@ -166,13 +164,14 @@ test.describe("コネクターの矢印の向き", () => {
 		);
 		expect(
 			angleDiff(startArrowAngle, startSegmentAngle),
-			`始端矢印の角 ${startArrowAngle.toFixed(3)} が端セグメント方向 ${startSegmentAngle.toFixed(3)} に一致すること`,
+			`start arrow angle ${startArrowAngle.toFixed(3)} matches end-segment direction ${startSegmentAngle.toFixed(3)}`,
 		).toBeLessThanOrEqual(0.05);
 
-		// L 字なので始端（垂直）と終端（水平）で向きの軸が異なることも確認（取り違え検出）。
+		// The L shape puts the start (vertical) and end (horizontal) on different axes, so a
+		// mix-up between them shows up here.
 		expect(
 			angleDiff(startArrowAngle, endArrowAngle),
-			"始端と終端の矢印は別方向を向くこと（L 字配置）",
+			"start and end arrows point in different directions (L-shaped layout)",
 		).toBeGreaterThan(1.0);
 	});
 });

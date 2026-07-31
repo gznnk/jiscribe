@@ -1,15 +1,19 @@
 import { test, expect } from "../../fixtures";
 
 /**
- * 切り取り＆ペースト（Ctrl+X → Ctrl+V）が中身を引き継ぐことの検証。
+ * Guards that cut-paste (Ctrl+X then Ctrl+V) carries the contents over.
  *
- * clipboard.spec は「Ctrl+X で消え Ctrl+V で戻る」を数で守るが、戻ってきた図形が
- * スタイル・テキストを保っているかは検証していなかった。CutCommand は copy + delete で、
- * クリップボードへのシリアライズが絡むため、コピペとは別に中身欠落が起き得る。
- * 切り取り後は元が消え、ペーストで中身（背景色・テキスト）ごと 1 つ戻ることを守る。
+ * clipboard.spec guards "Ctrl+X removes it, Ctrl+V brings it back" by object
+ * count only, and does not check that the restored shape kept its style and
+ * text. CutCommand is copy plus delete and involves clipboard serialization, so
+ * content can be lost there independently of copy-paste. Guarded by: the cut
+ * removes the original, and the paste brings exactly one back with its
+ * background color and text.
  */
-test.describe("切り取り＆ペーストが中身を引き継ぐ", () => {
-	test("切り取り→ペーストで背景色ごと戻る", async ({ canvas }) => {
+test.describe("cut-paste carries the contents over", () => {
+	test("brings the background color back on cut then paste", async ({
+		canvas,
+	}) => {
 		const srcId = await canvas.drawShape(
 			"Rectangle",
 			{ x: 400, y: 200 },
@@ -21,19 +25,19 @@ test.describe("切り取り＆ペーストが中身を引き継ぐ", () => {
 			.poll(() => canvas.computedColor(srcId, "fill"))
 			.toBe(customFill);
 
-		// 色入力欄に残ったフォーカスをキャンバスへ戻してから切り取る
+		// Hand focus back from the color input to the canvas before cutting.
 		await canvas.selectAt({ x: 500, y: 260 });
 		await canvas.cut();
 		await expect
 			.poll(async () => (await canvas.captureObjects()).length, {
-				message: "切り取りで元図形が消えること",
+				message: "the cut removes the original shape",
 			})
 			.toBe(0);
 
 		await canvas.paste();
 		await expect
 			.poll(async () => (await canvas.captureObjects()).length, {
-				message: "ペーストで 1 つ戻ること",
+				message: "the paste brings one shape back",
 			})
 			.toBe(1);
 
@@ -41,7 +45,7 @@ test.describe("切り取り＆ペーストが中身を引き継ぐ", () => {
 		expect(await canvas.computedColor(pasted.id!, "fill")).toBe(customFill);
 	});
 
-	test("切り取り→ペーストでテキストごと戻る", async ({ canvas }) => {
+	test("brings the text back on cut then paste", async ({ canvas }) => {
 		const text = "Cut Me";
 		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
 		await canvas.deselect();
@@ -52,7 +56,6 @@ test.describe("切り取り＆ペーストが中身を引き継ぐ", () => {
 
 		await canvas.selectAt({ x: 500, y: 260 });
 		await canvas.cut();
-		// 切り取りで図形もテキストも消える
 		await expect
 			.poll(async () => (await canvas.captureObjects()).length)
 			.toBe(0);

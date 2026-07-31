@@ -2,15 +2,16 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * 付箋（Sticky）への接続を検証する spec。
+ * Spec for connecting to a Sticky note.
  *
- * コネクターは connectable な図形に繋がる（rect / ellipse / sticky / diamond）。既存のコネクター
- * spec は Rectangle / Ellipse ばかりで、別オブジェクト種別である Sticky（注釈・<g> 描画）への
- * 接続は未検証だった。Sticky は geometry="rect" なので、辺アンカー解決・輪郭吸着・追従が
- * rect と同様に効くはずで、種別をまたいで結線が機能することを守る。
+ * A connector attaches to connectable shapes (rect / ellipse / sticky / diamond). The existing
+ * connector specs only use Rectangle / Ellipse, leaving connections to Sticky — a different object
+ * type, drawn as an annotation in a <g> — untested. Sticky has geometry="rect", so edge anchor
+ * resolution, snapping to the outline and following should work as they do for rect; this guards
+ * that connecting works across object types.
  *
- * Sticky はクリック配置（placeShape）でキャンバス中央に置かれるため、位置は実行時に
- * worldAABB で読み取る（zoom=1 ではワールド座標＝コンテンツ座標）。
+ * A Sticky is placed at the canvas center by click placement (placeShape), so its position is read
+ * at runtime with worldAABB (at zoom=1, world coordinates equal content coordinates).
  */
 
 type Vec = { x: number; y: number };
@@ -20,7 +21,7 @@ const EPS = 2;
 
 function parsePoints(attr: string | null): Vec[] {
 	if (!attr) {
-		throw new Error("points 属性が取得できない");
+		throw new Error("points attribute is missing");
 	}
 	return attr
 		.trim()
@@ -39,11 +40,11 @@ async function worldAABB(canvas: CanvasDriver, id: string): Promise<AABB> {
 	return canvas.page.evaluate((targetId) => {
 		const root = document.querySelector(`[data-id="${targetId}"]`);
 		if (!(root instanceof SVGGraphicsElement)) {
-			throw new Error(`図形 ${targetId} が SVGGraphicsElement でない`);
+			throw new Error(`shape ${targetId} is not an SVGGraphicsElement`);
 		}
-		// Sticky は <g data-id> 内に「影 polygon（filter 付き）＋本体 polygon」で描かれ、
-		// <g> の bbox は影ぶん膨らむ。本体ジオメトリ（filter なしの polygon、または rect/ellipse）を
-		// 優先して輪郭の AABB を取る。
+		// A Sticky is drawn inside <g data-id> as a shadow polygon (with a filter) plus the body
+		// polygon, so the bbox of the <g> is inflated by the shadow. Prefer the body geometry (a
+		// polygon without a filter, or a rect/ellipse) to get the AABB of the outline.
 		const geom =
 			root.tagName.toLowerCase() === "g"
 				? ((root.querySelector(
@@ -54,7 +55,7 @@ async function worldAABB(canvas: CanvasDriver, id: string): Promise<AABB> {
 		const bbox = el.getBBox();
 		const ctm = el.getCTM();
 		if (!ctm) {
-			throw new Error(`図形 ${targetId} の CTM が取得できない`);
+			throw new Error(`CTM of shape ${targetId} is not available`);
 		}
 		const corners = [
 			{ x: bbox.x, y: bbox.y },
@@ -94,17 +95,17 @@ function onPerimeter(p: Vec, box: AABB): boolean {
 	return onVerticalEdge || onHorizontalEdge;
 }
 
-test.describe("付箋へのコネクター接続", () => {
-	test("Rectangle から Sticky へ接続でき、端点が付箋の辺に乗って追従する", async ({
+test.describe("connecting a connector to a sticky note", () => {
+	test("connects a Rectangle to a Sticky with the endpoint sitting on the sticky edge and following it", async ({
 		canvas,
 	}) => {
-		// Sticky をキャンバス中央へ配置し、実位置を読む。
+		// Place a Sticky at the canvas center and read its actual position.
 		const stickyId = await canvas.placeShape("Sticky");
 		await canvas.deselect();
 		const stickyBox = await worldAABB(canvas, stickyId);
 		const stickyCenter = center(stickyBox);
 
-		// Sticky の十分左に Rectangle を描く（重ならない位置）。
+		// Draw a Rectangle well to the left of the Sticky, where they do not overlap.
 		const rectId = await canvas.drawShape(
 			"Rectangle",
 			{ x: 120, y: stickyCenter.y - 50 },
@@ -112,7 +113,7 @@ test.describe("付箋へのコネクター接続", () => {
 		);
 		await canvas.deselect();
 
-		// Rectangle の rightCenter から Sticky の中心へドロップして接続する。
+		// Connect by dropping from the Rectangle rightCenter onto the center of the Sticky.
 		await canvas.selectAt({ x: 200, y: stickyCenter.y });
 		const connectorId = await canvas.createConnector(
 			"rightCenter",
@@ -125,19 +126,18 @@ test.describe("付箋へのコネクター接続", () => {
 		);
 		const rectBox = await worldAABB(canvas, rectId);
 
-		// 始点は Rectangle の右辺中央に乗る。
 		expect(
 			distance(points[0], { x: rectBox.maxX, y: centerY(rectBox) }),
-			`始点が Rectangle 右辺中央に乗ること`,
+			`start point sits on the Rectangle right edge center`,
 		).toBeLessThanOrEqual(EPS);
 
-		// 終点は Sticky の輪郭（周）上に乗る（中心へドロップ→輪郭吸着）。
+		// The end point sits on the Sticky outline: a drop on the center snaps to the outline.
 		expect(
 			onPerimeter(points[points.length - 1], stickyBox),
-			`終点 ${JSON.stringify(points[points.length - 1])} が Sticky の周上に乗ること`,
+			`end point ${JSON.stringify(points[points.length - 1])} sits on the Sticky perimeter`,
 		).toBe(true);
 
-		// Sticky を動かすとコネクターが追従する（＝Sticky に実接続されている）。
+		// Moving the Sticky drags the connector along, so it really is connected to the Sticky.
 		const before = await canvas.objectById(connectorId).getAttribute("points");
 		await canvas.drag(stickyCenter, {
 			x: stickyCenter.x + 120,
@@ -145,18 +145,17 @@ test.describe("付箋へのコネクター接続", () => {
 		});
 		await expect
 			.poll(() => canvas.objectById(connectorId).getAttribute("points"), {
-				message: "Sticky 移動でコネクターが追従すること",
+				message: "connector follows when the Sticky moves",
 			})
 			.not.toBe(before);
 
-		// 追従後も終点は（移動後の）Sticky 輪郭上に乗り続ける。
 		const movedPoints = parsePoints(
 			await canvas.objectById(connectorId).getAttribute("points"),
 		);
 		const movedStickyBox = await worldAABB(canvas, stickyId);
 		expect(
 			onPerimeter(movedPoints[movedPoints.length - 1], movedStickyBox),
-			"追従後も終点が移動後の Sticky 周上に乗ること",
+			"end point still sits on the perimeter of the moved Sticky",
 		).toBe(true);
 	});
 });

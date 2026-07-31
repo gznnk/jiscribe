@@ -2,23 +2,26 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * 接続図形を削除したときのコネクター整合性。
+ * Connector integrity when a connected shape is deleted.
  *
- * 既存の connector.spec はコネクター自身の Delete を守るが、「接続先の図形を消したら
- * コネクターはどうなるか」という整合性（cleanupConnectorsOnDelete）は e2e で守られて
- * いなかった。ここが壊れると孤立コネクターが残る・座標解決に失敗してクラッシュする等、
- * ドキュメント破損につながるため ROI が高い。挙動の契約は：
+ * connector.spec guards Delete on the connector itself, but the integrity of "what
+ * happens to the connector when the shape it points at is deleted"
+ * (cleanupConnectorsOnDelete) had no e2e coverage. Breaking it leaves orphan connectors
+ * or fails coordinate resolution, which corrupts the document. The contract is:
  *
- * - 片端の図形だけ削除 → 削除側を Free 化してコネクターは残す（残った図形に追従し続ける）
- * - 両端の図形を削除 → コネクターも一緒に消える
- * - 削除は1コマンド（cleanup 込み）なので 1 回の undo で図形もコネクターも戻る
+ * - Delete the shape at one end -> that end becomes Free and the connector stays
+ *   (it keeps following the remaining shape)
+ * - Delete the shapes at both ends -> the connector is deleted too
+ * - Delete is a single command (cleanup included), so one undo brings back both the
+ *   shapes and the connector
  *
- * 観測可能な不変条件（オブジェクト数・polyline の有無・points の追従）で検証する。
+ * Verified through observable invariants (object count, presence of the polyline,
+ * points following the shape).
  */
 
 const CONNECTOR = "polyline[data-kind=connector]";
 
-/** 上下に並ぶ 2 つの矩形を縦コネクターで結ぶ。各 data-id を返す */
+/** Connects two vertically stacked rectangles with a vertical connector. Returns each data-id */
 async function buildConnectedPair(canvas: CanvasDriver) {
 	const topId = await canvas.drawShape(
 		"Rectangle",
@@ -33,7 +36,8 @@ async function buildConnectedPair(canvas: CanvasDriver) {
 	);
 	await canvas.deselect();
 
-	// 上の矩形を選択し、下辺アンカーから下の矩形の上辺中点へドラッグして接続
+	// Select the top rectangle and drag from its bottom anchor to the top-center of the
+	// bottom rectangle to connect them
 	await canvas.selectAt({ x: 500, y: 200 });
 	const connectorId = await canvas.createConnector("bottomCenter", {
 		x: 500,
@@ -41,67 +45,66 @@ async function buildConnectedPair(canvas: CanvasDriver) {
 	});
 	await canvas.deselect();
 
-	// 矩形 2 + コネクター 1 = 3 オブジェクト
+	// 2 rectangles + 1 connector = 3 objects
 	await expect.poll(async () => (await canvas.captureObjects()).length).toBe(3);
 
 	return { topId, bottomId, connectorId };
 }
 
-test.describe("接続図形の削除とコネクター整合性", () => {
-	test("片端の図形だけ削除するとコネクターは残り、残った図形に追従する", async ({
+test.describe("connector integrity when connected shapes are deleted", () => {
+	test("keeps the connector following the remaining shape when only one end shape is deleted", async ({
 		canvas,
 	}) => {
 		const { topId, bottomId, connectorId } = await buildConnectedPair(canvas);
 
-		// 上の矩形だけ削除（接続元側）
+		// Delete only the top rectangle (the source end)
 		await canvas.selectAt({ x: 500, y: 200 });
 		await canvas.deleteSelection();
 
-		// 上の矩形は消えるが、下の矩形とコネクターは残る（削除側は Free 化）
+		// The deleted end becomes Free, so the connector survives with the bottom rectangle
 		await expect
 			.poll(async () => (await canvas.captureObjects()).length, {
-				message: "矩形 1 とコネクター 1 が残ること",
+				message: "1 rectangle and 1 connector remain",
 			})
 			.toBe(2);
 		await expect(canvas.page.locator(CONNECTOR)).toHaveCount(1);
 		await expect(canvas.objectById(topId)).toHaveCount(0);
 		await expect(canvas.objectById(bottomId)).toBeVisible();
 
-		// 残った下の矩形を動かすと、接続が生きているコネクターは追従する
 		const pointsBefore = await canvas
 			.objectById(connectorId)
 			.getAttribute("points");
 		await canvas.drag({ x: 500, y: 500 }, { x: 800, y: 500 });
 		await expect
 			.poll(() => canvas.objectById(connectorId).getAttribute("points"), {
-				message: "残った図形の移動にコネクターが追従すること",
+				message: "the connector follows the move of the remaining shape",
 			})
 			.not.toBe(pointsBefore);
 	});
 
-	test("両端の図形を削除するとコネクターも消え、undo で 3 つとも戻る", async ({
+	test("deletes the connector when both end shapes are deleted and undo brings all three back", async ({
 		canvas,
 	}) => {
 		await buildConnectedPair(canvas);
 
-		// 2 つの矩形をまとめて選択（コネクター自身は選択しない）
+		// Select both rectangles (not the connector itself)
 		await canvas.selectAt({ x: 500, y: 200 });
 		await canvas.ctrlClickAt({ x: 500, y: 500 });
 		await canvas.deleteSelection();
 
-		// 両端が消えるとコネクターも cleanup される → 空になる
+		// Both ends gone -> the connector is cleaned up as well
 		await expect
 			.poll(async () => (await canvas.captureObjects()).length, {
-				message: "矩形もコネクターも消えること",
+				message: "both the rectangles and the connector are gone",
 			})
 			.toBe(0);
 		await expect(canvas.page.locator(CONNECTOR)).toHaveCount(0);
 
-		// 削除は cleanup 込みで 1 コマンド。1 回の undo で 3 つとも戻る
+		// Delete is one command including cleanup, so one undo restores all three
 		await canvas.undo();
 		await expect
 			.poll(async () => (await canvas.captureObjects()).length, {
-				message: "undo で矩形 2 + コネクター 1 が復元されること",
+				message: "undo restores 2 rectangles + 1 connector",
 			})
 			.toBe(3);
 		await expect(canvas.page.locator(CONNECTOR)).toHaveCount(1);

@@ -1,18 +1,21 @@
 import { test, expect } from "../../fixtures";
 
 /**
- * Undo / Redo の履歴整合性。
+ * Undo / redo history integrity.
  *
- * 既存の undo テストは削除（selection）・リサイズ（driver-transform）・コネクター作成
- * （connector-undo-redo）に限られていた。ここでは描画・移動・色変更という代表的な
- * 編集操作それぞれが1回の undo で巻き戻り redo で再適用されること、さらに複数操作の
- * 履歴が正しい順序（後入れ先出し）で巻き戻る／やり直されることを守る。
+ * The existing undo tests were limited to delete (selection), resize
+ * (driver-transform) and connector creation (connector-undo-redo). Here each
+ * representative edit - draw, move, color change - must roll back with one undo and be
+ * reapplied by redo, and a history of several operations must unwind / replay in the
+ * right order (last in, first out).
  *
- * 履歴スタックの順序やエントリ粒度はリファクタで壊れやすく、壊れても即クラッシュ
- * しないため、不変条件（図形数・transform・色）で検証する。
+ * Stack order and entry granularity break easily under refactors without crashing, so
+ * they are verified through invariants (shape count, transform, color).
  */
-test.describe("Undo / Redo の履歴整合性", () => {
-	test("描画は undo で消え、redo で同じ ID・位置が戻る", async ({ canvas }) => {
+test.describe("undo / redo history integrity", () => {
+	test("removes a drawn shape on undo and brings back the same id and position on redo", async ({
+		canvas,
+	}) => {
 		const id = await canvas.drawShape(
 			"Rectangle",
 			{ x: 400, y: 200 },
@@ -23,23 +26,23 @@ test.describe("Undo / Redo の履歴整合性", () => {
 		await canvas.undo();
 		await expect
 			.poll(async () => (await canvas.captureObjects()).length, {
-				message: "undo で描画した図形が消えること",
+				message: "undo removes the drawn shape",
 			})
 			.toBe(0);
 
 		await canvas.redo();
 		await expect
 			.poll(async () => (await canvas.captureObjects()).length, {
-				message: "redo で図形が戻ること",
+				message: "redo brings the shape back",
 			})
 			.toBe(1);
-		// 同じ id・位置で復元される
+		// Restored with the same id and position
 		expect(await canvas.objectById(id).getAttribute("transform")).toBe(
 			transform,
 		);
 	});
 
-	test("移動は undo で元の位置に戻り、redo で再適用される", async ({
+	test("restores the original position of a move on undo and reapplies it on redo", async ({
 		canvas,
 	}) => {
 		const id = await canvas.drawShape(
@@ -47,7 +50,7 @@ test.describe("Undo / Redo の履歴整合性", () => {
 			{ x: 400, y: 200 },
 			{ x: 600, y: 320 },
 		);
-		// 描画直後は選択済み。中心 (500,260) から (560,300) へドラッグ（+60,+40）
+		// Selected right after drawing. Drag the center (500,260) to (560,300) (+60,+40)
 		await canvas.drag({ x: 500, y: 260 }, { x: 560, y: 300 });
 		await expect
 			.poll(() => canvas.objectById(id).getAttribute("transform"))
@@ -56,19 +59,19 @@ test.describe("Undo / Redo の履歴整合性", () => {
 		await canvas.undo();
 		await expect
 			.poll(() => canvas.objectById(id).getAttribute("transform"), {
-				message: "undo で元の位置に戻ること",
+				message: "undo restores the original position",
 			})
 			.toBe("matrix(1, 0, 0, 1, 500, 260)");
 
 		await canvas.redo();
 		await expect
 			.poll(() => canvas.objectById(id).getAttribute("transform"), {
-				message: "redo で移動が再適用されること",
+				message: "redo reapplies the move",
 			})
 			.toBe("matrix(1, 0, 0, 1, 560, 300)");
 	});
 
-	test("色変更は undo で元の色に戻り、redo で再適用される", async ({
+	test("restores the original color on undo and reapplies the color change on redo", async ({
 		canvas,
 	}) => {
 		const id = await canvas.drawShape(
@@ -86,48 +89,48 @@ test.describe("Undo / Redo の履歴整合性", () => {
 		await canvas.undo();
 		await expect
 			.poll(() => canvas.computedColor(id, "fill"), {
-				message: "undo で元の色に戻ること",
+				message: "undo restores the original color",
 			})
 			.toBe(originalFill);
 
 		await canvas.redo();
 		await expect
 			.poll(() => canvas.computedColor(id, "fill"), {
-				message: "redo で色変更が再適用されること",
+				message: "redo reapplies the color change",
 			})
 			.toBe(newFill);
 	});
 
-	test("複数操作は後入れ先出しで巻き戻り、redo で順に復元される", async ({
+	test("unwinds several operations last in first out and restores them in order on redo", async ({
 		canvas,
 	}) => {
-		// 操作1: A を描画
+		// Operation 1: draw A
 		const a = await canvas.drawShape(
 			"Rectangle",
 			{ x: 300, y: 200 },
 			{ x: 440, y: 320 },
 		);
 		await canvas.deselect();
-		// 操作2: B を描画
+		// Operation 2: draw B
 		const b = await canvas.drawShape(
 			"Rectangle",
 			{ x: 560, y: 200 },
 			{ x: 700, y: 320 },
 		);
-		// 操作3: B を移動（中心 630,260 → 700,300、+70,+40）
+		// Operation 3: move B (center 630,260 -> 700,300, +70,+40)
 		await canvas.drag({ x: 630, y: 260 }, { x: 700, y: 300 });
 		await expect
 			.poll(() => canvas.objectById(b).getAttribute("transform"))
 			.toBe("matrix(1, 0, 0, 1, 700, 300)");
 
-		// undo1: B の移動だけ巻き戻る（図形は2つのまま、B が元位置へ）
+		// undo 1: only B's move is rolled back (still 2 shapes, B back where it was)
 		await canvas.undo();
 		await expect
 			.poll(() => canvas.objectById(b).getAttribute("transform"))
 			.toBe("matrix(1, 0, 0, 1, 630, 260)");
 		expect(await canvas.captureObjects()).toHaveLength(2);
 
-		// undo2: B の描画が巻き戻る（A だけ残る）
+		// undo 2: drawing B is rolled back (only A is left)
 		await canvas.undo();
 		await expect
 			.poll(async () => (await canvas.captureObjects()).length)
@@ -136,13 +139,13 @@ test.describe("Undo / Redo の履歴整合性", () => {
 			"matrix(1, 0, 0, 1, 370, 260)",
 		);
 
-		// undo3: A の描画が巻き戻る（空になる）
+		// undo 3: drawing A is rolled back (nothing is left)
 		await canvas.undo();
 		await expect
 			.poll(async () => (await canvas.captureObjects()).length)
 			.toBe(0);
 
-		// redo で同じ順に復元される
+		// redo restores them in the same order
 		await canvas.redo();
 		await expect
 			.poll(async () => (await canvas.captureObjects()).length)
@@ -154,7 +157,7 @@ test.describe("Undo / Redo の履歴整合性", () => {
 		await canvas.redo();
 		await expect
 			.poll(() => canvas.objectById(b).getAttribute("transform"), {
-				message: "最後の redo で B の移動まで復元されること",
+				message: "the last redo restores B's move as well",
 			})
 			.toBe("matrix(1, 0, 0, 1, 700, 300)");
 	});

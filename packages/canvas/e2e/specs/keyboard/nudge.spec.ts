@@ -1,17 +1,18 @@
 import { test, expect } from "../../fixtures";
 
 /**
- * 矢印キーによるナッジ移動。通常 1px / Shift 併用 10px。
- * 既定ビューポート（zoom=1）では移動量がそのまま transform の e,f に反映される。
+ * Arrow-key nudge: 1px normally, 10px with Shift.
+ * At the default viewport (zoom=1) the movement lands directly on the e,f of
+ * the transform.
  */
-test.describe("キーボード: ナッジ移動", () => {
-	test("矢印キーで 1px 移動する", async ({ canvas }) => {
+test.describe("keyboard: nudge", () => {
+	test("moves by 1px on an arrow key", async ({ canvas }) => {
 		const id = await canvas.drawShape(
 			"Rectangle",
 			{ x: 400, y: 200 },
 			{ x: 600, y: 320 },
 		);
-		// 中心は (500, 260)
+		// Center is (500, 260).
 		expect(await canvas.objectById(id).getAttribute("transform")).toBe(
 			"matrix(1, 0, 0, 1, 500, 260)",
 		);
@@ -27,7 +28,7 @@ test.describe("キーボード: ナッジ移動", () => {
 			.toBe("matrix(1, 0, 0, 1, 501, 261)");
 	});
 
-	test("Shift+矢印キーで 10px 移動する", async ({ canvas }) => {
+	test("moves by 10px on Shift+arrow", async ({ canvas }) => {
 		const id = await canvas.drawShape(
 			"Rectangle",
 			{ x: 400, y: 200 },
@@ -45,7 +46,7 @@ test.describe("キーボード: ナッジ移動", () => {
 			.toBe("matrix(1, 0, 0, 1, 490, 250)");
 	});
 
-	test("同じ選択への連続ナッジは 1 回の undo でまとめて戻り、redo で再適用される", async ({
+	test("reverts consecutive nudges on one selection with a single undo and reapplies them on redo", async ({
 		canvas,
 	}) => {
 		const id = await canvas.drawShape(
@@ -53,34 +54,34 @@ test.describe("キーボード: ナッジ移動", () => {
 			{ x: 400, y: 200 },
 			{ x: 600, y: 320 },
 		);
-		// 中心は (500, 260)
+		// Center is (500, 260).
 		expect(await canvas.objectById(id).getAttribute("transform")).toBe(
 			"matrix(1, 0, 0, 1, 500, 260)",
 		);
 
-		// 選択を変えずに右へ 5 回ナッジ（合計 +5px）。historyCoalesce で 1 エントリにまとまる。
+		// Nudge right 5 times without changing the selection (+5px in total).
+		// historyCoalesce folds them into a single entry.
 		for (let i = 0; i < 5; i++) {
 			await canvas.nudge("right");
 		}
 		await expect
 			.poll(() => canvas.objectById(id).getAttribute("transform"), {
-				message: "5 回ナッジで +5px 動くこと",
+				message: "5 nudges move it by +5px",
 			})
 			.toBe("matrix(1, 0, 0, 1, 505, 260)");
 
-		// 1 回の undo で 5px 分すべて戻る（1px ずつではない＝コアレス済み）。
+		// One undo reverts all 5px, not 1px at a time, which is what coalescing buys.
 		await canvas.undo();
 		await expect
 			.poll(() => canvas.objectById(id).getAttribute("transform"), {
-				message: "1 回の undo で連続ナッジがまとめて元へ戻ること",
+				message: "one undo reverts the consecutive nudges together",
 			})
 			.toBe("matrix(1, 0, 0, 1, 500, 260)");
 
-		// 1 回の redo で +5px がまとめて再適用される。
 		await canvas.redo();
 		await expect
 			.poll(() => canvas.objectById(id).getAttribute("transform"), {
-				message: "1 回の redo で連続ナッジがまとめて再適用されること",
+				message: "one redo reapplies the consecutive nudges together",
 			})
 			.toBe("matrix(1, 0, 0, 1, 505, 260)");
 	});

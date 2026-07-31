@@ -3,25 +3,28 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 import { selectors } from "../../support/selectors";
 
 /**
- * コネクターラベルのドラッグ移動（issue #86）の e2e。
+ * e2e for dragging a connector label (issue #86).
  *
- * ラベルボックス（foreignObject[data-kind=connector][data-part=label]）自体を掴んで
- * 動かすと、ドロップ点が経路上の {position（弧長比率）, offset（垂直距離）} に逆算
- * されて label に書き戻る。DOM から読めるのはラベルボックスの位置だけなので、
- * 「掴んだラベルの中心がドロップ点に来る」ことで逆算の正しさを見る。ただし線の
- * すぐ脇（8px 以内）へ落としたときだけは offset が 0 に吸着するので、線上へ寄る。
+ * Grabbing and moving the label box itself
+ * (foreignObject[data-kind=connector][data-part=label]) makes the drop point be
+ * solved back into {position (arc-length ratio), offset (perpendicular
+ * distance)} on the route and written back to label. Only the label box position
+ * is readable from the DOM, so the correctness of that inversion is checked by
+ * "the center of the grabbed label lands on the drop point". Dropping right
+ * beside the line (within 8px) is the exception: offset snaps to 0, so the label
+ * moves onto the line.
  *
- * ラベル編集（connector-label.spec.ts）とは別ファイルにしている。
+ * Kept separate from label editing (connector-label.spec.ts).
  */
 
 type Vec = { x: number; y: number };
 
-/** ドロップ点とラベル中心のズレ許容値。 */
+/** Allowed gap between the drop point and the label center. */
 const TOLERANCE_PX = 2;
 
 function parsePoints(attr: string | null): Vec[] {
 	if (!attr) {
-		throw new Error("points 属性が取得できない");
+		throw new Error("cannot read the points attribute");
 	}
 	return attr
 		.trim()
@@ -32,7 +35,7 @@ function parsePoints(attr: string | null): Vec[] {
 		});
 }
 
-/** コネクターの最初のセグメント中点（必ず線上の点）を返す。 */
+/** Midpoint of the connector's first segment (always a point on the line). */
 async function pointOnConnector(
 	canvas: CanvasDriver,
 	connectorId: string,
@@ -47,7 +50,7 @@ async function pointOnConnector(
 	};
 }
 
-/** ラベルボックス（foreignObject 内側の LabelBox div）のロケーター。 */
+/** Locator for the label box (the LabelBox div inside foreignObject). */
 function labelBoxOf(canvas: CanvasDriver, connectorId: string) {
 	return canvas.page
 		.locator(`foreignObject[data-kind=connector][data-id="${connectorId}"]`)
@@ -56,8 +59,8 @@ function labelBoxOf(canvas: CanvasDriver, connectorId: string) {
 }
 
 /**
- * 2つの矩形を結ぶコネクターを作り、ラベルを付けて返す。
- * ルーティングは既定（orthogonal）なので経路は途中で折れる。
+ * Creates a connector joining two rectangles, gives it a label, and returns it.
+ * Routing is the default (orthogonal), so the route bends partway.
  */
 async function setupConnectorWithLabel(
 	canvas: CanvasDriver,
@@ -81,7 +84,7 @@ async function setupConnectorWithLabel(
 	return { connectorId, onLine };
 }
 
-/** 描画されている経路の頂点列（zoom=1 なので絶対座標）。 */
+/** Vertices of the rendered route (absolute coordinates, since zoom=1). */
 async function connectorPoints(
 	canvas: CanvasDriver,
 	connectorId: string,
@@ -93,7 +96,7 @@ async function connectorPoints(
 
 type Segment = { start: Vec; end: Vec };
 
-/** 経路の中で最も長いセグメント。内部の点は必ず射影が clamp されない。 */
+/** Longest segment of the route; projection of its interior points is never clamped. */
 function longestSegment(points: Vec[]): Segment {
 	expect(points.length).toBeGreaterThanOrEqual(2);
 	let longest: Segment = { start: points[0], end: points[1] };
@@ -111,7 +114,7 @@ function longestSegment(points: Vec[]): Segment {
 	return longest;
 }
 
-/** セグメント上の比率 t（0=start, 1=end）の点。 */
+/** Point at ratio t along the segment (0=start, 1=end). */
 function segmentPointAt({ start, end }: Segment, t: number): Vec {
 	return {
 		x: start.x + (end.x - start.x) * t,
@@ -119,7 +122,7 @@ function segmentPointAt({ start, end }: Segment, t: number): Vec {
 	};
 }
 
-/** セグメントの終点から進行方向へ distancePx 延長した、線分の外側の点。 */
+/** Point outside the segment, distancePx past its end along its direction. */
 function pointBeyondEnd(segment: Segment, distancePx: number): Vec {
 	const length = Math.hypot(
 		segment.end.x - segment.start.x,
@@ -128,7 +131,7 @@ function pointBeyondEnd(segment: Segment, distancePx: number): Vec {
 	return segmentPointAt(segment, 1 + distancePx / length);
 }
 
-/** セグメントの進行方向に対する左法線（単位ベクトル）。 */
+/** Left normal of the segment's direction (unit vector). */
 function leftNormal({ start, end }: Segment): Vec {
 	const length = Math.hypot(end.x - start.x, end.y - start.y);
 	return { x: -(end.y - start.y) / length, y: (end.x - start.x) / length };
@@ -138,14 +141,14 @@ function distance(a: Vec, b: Vec): number {
 	return Math.hypot(a.x - b.x, a.y - b.y);
 }
 
-/** ラベルボックスの中心（コンテンツ座標）。 */
+/** Center of the label box (content coordinates). */
 async function labelCenter(
 	canvas: CanvasDriver,
 	connectorId: string,
 ): Promise<Vec> {
 	const box = await labelBoxOf(canvas, connectorId).boundingBox();
 	if (!box) {
-		throw new Error("ラベルボックスの位置が取得できない");
+		throw new Error("cannot read the position of the label box");
 	}
 	return canvas.toContent({
 		x: box.x + box.width / 2,
@@ -162,16 +165,17 @@ async function expectLabelCenterNear(
 		.poll(
 			async () => distance(await labelCenter(canvas, connectorId), expected),
 			{
-				message: `ラベル中心が ${JSON.stringify(expected)} に来ること`,
+				message: `the label center should land on ${JSON.stringify(expected)}`,
 			},
 		)
 		.toBeLessThanOrEqual(TOLERANCE_PX);
 }
 
 /**
- * ラベルボックスの中心を掴んで `to` へドラッグする。
- * 選択中はコントロールハンドルがラベルに重なって pointerdown を奪うため、
- * 掴む前に選択を解除する（未選択のラベルも直接ドラッグできる）。
+ * Grabs the center of the label box and drags it to `to`.
+ * While selected, control handles overlap the label and steal pointerdown, so
+ * the selection is cleared before grabbing (an unselected label can be dragged
+ * directly).
  */
 async function dragLabelTo(
 	canvas: CanvasDriver,
@@ -181,7 +185,7 @@ async function dragLabelTo(
 	await canvas.deselect();
 	const box = await labelBoxOf(canvas, connectorId).boundingBox();
 	if (!box) {
-		throw new Error("ラベルボックスの位置が取得できない");
+		throw new Error("cannot read the position of the label box");
 	}
 	await canvas.drag(
 		canvas.toContent({ x: box.x + box.width / 2, y: box.y + box.height / 2 }),
@@ -190,8 +194,8 @@ async function dragLabelTo(
 	);
 }
 
-test.describe("コネクターラベルのドラッグ移動", () => {
-	test("経路に沿ってドラッグするとラベルがドロップ点へ移る", async ({
+test.describe("dragging a connector label", () => {
+	test("moves the label to the drop point when dragged along the route", async ({
 		canvas,
 	}) => {
 		const { connectorId } = await setupConnectorWithLabel(canvas, "Yes");
@@ -203,7 +207,9 @@ test.describe("コネクターラベルのドラッグ移動", () => {
 		await expectLabelCenterNear(canvas, connectorId, dropPoint);
 	});
 
-	test("線と垂直方向へドラッグするとラベルが脇に浮く", async ({ canvas }) => {
+	test("floats the label off to the side when dragged perpendicular to the line", async ({
+		canvas,
+	}) => {
 		const { connectorId } = await setupConnectorWithLabel(canvas, "Yes");
 
 		const segment = longestSegment(await connectorPoints(canvas, connectorId));
@@ -216,30 +222,35 @@ test.describe("コネクターラベルのドラッグ移動", () => {
 		await dragLabelTo(canvas, connectorId, dropPoint);
 
 		await expectLabelCenterNear(canvas, connectorId, dropPoint);
-		// 線上ではなく、離れた位置に置かれている（offset が効いている）。
+		// Placed away from the line rather than on it (offset is in effect).
 		expect(
 			distance(await labelCenter(canvas, connectorId), onLine),
 		).toBeGreaterThan(30);
 	});
 
-	test("線のすぐ脇へ落とすと線上に吸着する", async ({ canvas }) => {
+	test("snaps onto the line when dropped right beside it", async ({
+		canvas,
+	}) => {
 		const { connectorId } = await setupConnectorWithLabel(canvas, "Yes");
 
 		const segment = longestSegment(await connectorPoints(canvas, connectorId));
 		const onLine = segmentPointAt(segment, 0.4);
 		const normal = leftNormal(segment);
-		// 吸着しきい値（SNAP_THRESHOLD_PX = 8、zoom=1 なのでそのまま world px）の内側。
+		// Inside the snap threshold (SNAP_THRESHOLD_PX = 8; zoom=1, so it is world px
+		// as-is).
 		const dropPoint = {
 			x: onLine.x + normal.x * 5,
 			y: onLine.y + normal.y * 5,
 		};
 		await dragLabelTo(canvas, connectorId, dropPoint);
 
-		// ドロップ点ではなく、その真横の線上へ吸い付く。
+		// Sticks to the point on the line straight across, not to the drop point.
 		await expectLabelCenterNear(canvas, connectorId, onLine);
 	});
 
-	test("1回のドラッグは Undo 1回で元の位置に戻る", async ({ canvas }) => {
+	test("returns to the original position with one Undo after one drag", async ({
+		canvas,
+	}) => {
 		const { connectorId } = await setupConnectorWithLabel(canvas, "Yes");
 		const originalCenter = await labelCenter(canvas, connectorId);
 
@@ -248,13 +259,13 @@ test.describe("コネクターラベルのドラッグ移動", () => {
 		await dragLabelTo(canvas, connectorId, dropPoint);
 		await expectLabelCenterNear(canvas, connectorId, dropPoint);
 
-		// 入力欄にフォーカスが残らないよう選択解除してから Undo。
+		// Clear the selection first so no input keeps focus, then Undo.
 		await canvas.deselect();
 		await canvas.undo();
 		await expectLabelCenterNear(canvas, connectorId, originalCenter);
 	});
 
-	test("ドラッグ後もラベルのクリック選択・ダブルクリック編集は効く", async ({
+	test("keeps click-to-select and double-click-to-edit on the label working after a drag", async ({
 		canvas,
 	}) => {
 		const { connectorId } = await setupConnectorWithLabel(canvas, "Yes");
@@ -264,14 +275,14 @@ test.describe("コネクターラベルのドラッグ移動", () => {
 		await dragLabelTo(canvas, connectorId, dropPoint);
 		await expectLabelCenterNear(canvas, connectorId, dropPoint);
 
-		// クリックは選択（ラベルスタイルメニューの出現で確認）。
+		// A click selects (confirmed by the label style menu appearing).
 		await canvas.deselect();
 		await labelBoxOf(canvas, connectorId).click();
 		await expect(
 			canvas.page.locator(selectors.objectMenuToggle("label-bg-color")),
 		).toBeVisible();
 
-		// ダブルクリックはテキスト編集。
+		// A double click edits the text.
 		await canvas.deselect();
 		await labelBoxOf(canvas, connectorId).dblclick();
 		await expect(canvas.page.locator(selectors.textEditor)).toBeVisible();
@@ -279,23 +290,23 @@ test.describe("コネクターラベルのドラッグ移動", () => {
 		await canvas.cancelText();
 	});
 
-	test("orthogonal ルーティング（既定）の折れた経路でも任意のセグメントへ置ける", async ({
+	test("places the label on any segment even on the bent route of orthogonal routing (the default)", async ({
 		canvas,
 	}) => {
 		const { connectorId } = await setupConnectorWithLabel(canvas, "Yes");
 
-		// 既定ルーティングは折れ点を持つ（曲がっていなければ前提が崩れている）。
+		// The default routing has a bend point (no bend means the premise is broken).
 		const points = await connectorPoints(canvas, connectorId);
 		expect(points.length).toBeGreaterThanOrEqual(3);
 
-		// 最長セグメントではない最初のセグメントの中点へ落とす。
+		// Drop onto the midpoint of the first segment, which is not the longest one.
 		const dropPoint = segmentPointAt({ start: points[0], end: points[1] }, 0.5);
 		await dragLabelTo(canvas, connectorId, dropPoint);
 
 		await expectLabelCenterNear(canvas, connectorId, dropPoint);
 	});
 
-	test("未選択のコネクターでもラベルを直接ドラッグでき、ドラッグが選択を兼ねる", async ({
+	test("drags the label directly on an unselected connector, with the drag doubling as the selection", async ({
 		canvas,
 	}) => {
 		const { connectorId } = await setupConnectorWithLabel(canvas, "Yes");
@@ -311,11 +322,13 @@ test.describe("コネクターラベルのドラッグ移動", () => {
 		await dragLabelTo(canvas, connectorId, dropPoint);
 
 		await expectLabelCenterNear(canvas, connectorId, dropPoint);
-		// 端点ハンドルが出ている＝コネクターが選択された。
+		// Endpoint handles present means the connector got selected.
 		await expect(sourceHandle).toHaveCount(1);
 	});
 
-	test("終点の先へドラッグしても経路の終端で止まる", async ({ canvas }) => {
+	test("stops at the end of the route when dragged past the end point", async ({
+		canvas,
+	}) => {
 		const { connectorId } = await setupConnectorWithLabel(canvas, "Yes");
 
 		const points = await connectorPoints(canvas, connectorId);
@@ -323,16 +336,17 @@ test.describe("コネクターラベルのドラッグ移動", () => {
 			start: points[points.length - 2],
 			end: points[points.length - 1],
 		};
-		// 経路の延長線上（＝垂直距離 0）へ大きくはみ出させる。position は [0,1] に
-		// clamp されるので終点止まり、offset は 0 のままになる。他のセグメントより
-		// 最終セグメントの方が近い距離に収めている。
+		// Overshoot far along the extension of the route (perpendicular distance 0).
+		// position is clamped to [0,1] so it stops at the end and offset stays 0. The
+		// overshoot is kept close enough that the last segment is nearer than any
+		// other segment.
 		const dropPoint = pointBeyondEnd(lastSegment, 150);
 		await dragLabelTo(canvas, connectorId, dropPoint);
 
 		await expectLabelCenterNear(canvas, connectorId, lastSegment.end);
 	});
 
-	test("Undo で戻した位置は Redo でドラッグ後の位置に戻る", async ({
+	test("returns a position reverted by Undo to the post-drag position on Redo", async ({
 		canvas,
 	}) => {
 		const { connectorId } = await setupConnectorWithLabel(canvas, "Yes");
@@ -343,7 +357,7 @@ test.describe("コネクターラベルのドラッグ移動", () => {
 		await dragLabelTo(canvas, connectorId, dropPoint);
 		await expectLabelCenterNear(canvas, connectorId, dropPoint);
 
-		// 入力欄にフォーカスが残らないよう選択解除してから Undo / Redo。
+		// Clear the selection first so no input keeps focus, then Undo / Redo.
 		await canvas.deselect();
 		await canvas.undo();
 		await expectLabelCenterNear(canvas, connectorId, originalCenter);
@@ -352,12 +366,12 @@ test.describe("コネクターラベルのドラッグ移動", () => {
 		await expectLabelCenterNear(canvas, connectorId, dropPoint);
 	});
 
-	test("ドラッグ後にテキストを編集し直しても位置は保たれる", async ({
+	test("keeps the position when the text is re-edited after a drag", async ({
 		canvas,
 	}) => {
 		const { connectorId } = await setupConnectorWithLabel(canvas, "Yes");
 
-		// position も offset も既定でない場所へ移す。
+		// Move it where neither position nor offset is the default.
 		const segment = longestSegment(await connectorPoints(canvas, connectorId));
 		const normal = leftNormal(segment);
 		const onLine = segmentPointAt(segment, 0.3);
@@ -368,7 +382,8 @@ test.describe("コネクターラベルのドラッグ移動", () => {
 		await dragLabelTo(canvas, connectorId, dropPoint);
 		await expectLabelCenterNear(canvas, connectorId, dropPoint);
 
-		// 選択中のコントロールがラベルに重なるので、解除してから再編集する。
+		// The controls of the selection overlap the label, so clear it before
+		// re-editing.
 		await canvas.deselect();
 		const labelBox = labelBoxOf(canvas, connectorId);
 		await labelBox.dblclick();
@@ -380,9 +395,12 @@ test.describe("コネクターラベルのドラッグ移動", () => {
 		await expectLabelCenterNear(canvas, connectorId, dropPoint);
 	});
 
-	test("元の位置へ戻すドラッグで作成時の位置に戻る", async ({ canvas }) => {
+	test("returns to the creation-time position when dragged back to it", async ({
+		canvas,
+	}) => {
 		const { connectorId } = await setupConnectorWithLabel(canvas, "Yes");
-		// ドラッグ前の中心＝ラベルを作ったダブルクリック点のアンカー。
+		// The pre-drag center is the anchor at the double-click point that created
+		// the label.
 		const createdCenter = await labelCenter(canvas, connectorId);
 
 		const segment = longestSegment(await connectorPoints(canvas, connectorId));

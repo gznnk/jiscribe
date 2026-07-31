@@ -2,25 +2,26 @@ import { test, expect } from "../../fixtures";
 import type { ObjectSnapshot } from "../../support/CanvasDriver";
 
 /**
- * 複数図形のコピー＆ペーストが重なり順（z-order）を保つことの検証。
+ * Copy & paste of several shapes preserves the stacking order (z-order).
  *
- * z-order.spec は arrange コマンド（bringToFront 等）を守るが、複数の重なった図形を
- * まとめてコピペしたときに「複製どうしの相対的な重なり順」が保たれるかは未カバーだった。
- * cloneObjects は rootIds（背面→前面の z-order）と同じ順序で新 ID を返し、handlePaste は
- * それを rootIds 末尾（最前面）へ積む。順序がシャッフルされると複製の重なりが入れ替わる
- * 退行になるため、複製 A'<B'<C' の DOM 順（= 重なり順）で守る。
+ * z-order.spec guards the arrange commands (bringToFront etc.), but whether the
+ * relative stacking order among the copies survives copy-pasting several overlapping
+ * shapes at once had no coverage. cloneObjects returns the new ids in the same order as
+ * rootIds (back -> front z-order), and handlePaste pushes them onto the end of rootIds
+ * (frontmost). A shuffled order would swap the copies' overlap, so the DOM order
+ * (= stacking order) A' < B' < C' is what is guarded.
  */
 
-/** transform="matrix(a,b,c,d,e,f)" から中心座標（e,f）を取り出す */
+/** Extracts the center (e,f) out of transform="matrix(a,b,c,d,e,f)" */
 function centerOf(transform: string | null): { x: number; y: number } {
 	const nums = transform?.match(/-?\d+(?:\.\d+)?/g)?.map(Number);
 	if (!nums || nums.length < 6) {
-		throw new Error(`transform を解釈できない: ${transform}`);
+		throw new Error(`cannot parse transform: ${transform}`);
 	}
 	return { x: nums[4], y: nums[5] };
 }
 
-/** 期待中心（誤差 1px 以内）に一致する複製図形の id を after から探す */
+/** Finds in `after` the id of the copy whose center matches `expected` within 1px */
 function findCopyId(
 	after: ObjectSnapshot[],
 	beforeIds: Set<string>,
@@ -35,37 +36,37 @@ function findCopyId(
 	});
 	if (!copy?.id) {
 		throw new Error(
-			`中心 (${expected.x},${expected.y}) の複製図形が見つからない`,
+			`no copied shape found at center (${expected.x},${expected.y})`,
 		);
 	}
 	return copy.id;
 }
 
-test.describe("コピー＆ペーストの重なり順保持", () => {
-	test("重なった 3 図形をまとめてコピペすると複製も同じ重なり順になる", async ({
+test.describe("copy & paste preserves stacking order", () => {
+	test("keeps the same stacking order among the copies when 3 overlapping shapes are copy-pasted together", async ({
 		canvas,
 	}) => {
-		// 重なる 3 矩形を背面→前面の順（A→B→C）に描く。描画順 = z-order。
+		// Draw 3 overlapping rectangles back to front (A->B->C). Draw order = z-order.
 		const a = await canvas.drawShape(
 			"Rectangle",
 			{ x: 300, y: 200 },
 			{ x: 400, y: 300 },
-		); // 中心 (350,250)
+		); // center (350,250)
 		await canvas.deselect();
 		const b = await canvas.drawShape(
 			"Rectangle",
 			{ x: 340, y: 220 },
 			{ x: 440, y: 320 },
-		); // 中心 (390,270)
+		); // center (390,270)
 		await canvas.deselect();
 		const c = await canvas.drawShape(
 			"Rectangle",
 			{ x: 380, y: 240 },
 			{ x: 480, y: 340 },
-		); // 中心 (430,290)
+		); // center (430,290)
 		await canvas.deselect();
 
-		// 元の重なり順を確認（A < B < C）。
+		// The original stacking order (A < B < C).
 		expect(await canvas.objectIndex(a)).toBeLessThan(
 			await canvas.objectIndex(b),
 		);
@@ -79,30 +80,31 @@ test.describe("コピー＆ペーストの重なり順保持", () => {
 				.filter((id): id is string => id !== null),
 		);
 
-		// 全選択してコピー＆ペースト → 6 図形になる。
+		// Select all, copy & paste -> 6 shapes.
 		await canvas.selectAll();
 		await canvas.copy();
 		await canvas.paste();
 		await expect
 			.poll(async () => (await canvas.captureObjects()).length, {
-				message: "コピペで 3 図形増えて合計 6 になること",
+				message: "copy-paste adds 3 shapes for a total of 6",
 			})
 			.toBe(6);
 
-		// 各複製は元から +20,+20。中心一致で複製 id を特定する。
+		// Each copy is offset +20,+20 from its source; identify the copies by center.
 		const after = await canvas.captureObjects();
 		const copyA = findCopyId(after, beforeIds, { x: 370, y: 270 });
 		const copyB = findCopyId(after, beforeIds, { x: 410, y: 290 });
 		const copyC = findCopyId(after, beforeIds, { x: 450, y: 310 });
 
-		// 複製どうしの重なり順は元と同じ（A' < B' < C'）。
+		// The copies keep the original stacking order (A' < B' < C').
 		expect(await canvas.objectIndex(copyA)).toBeLessThan(
 			await canvas.objectIndex(copyB),
 		);
 		expect(await canvas.objectIndex(copyB)).toBeLessThan(
 			await canvas.objectIndex(copyC),
 		);
-		// 複製は元より前面（最背面の複製 A' でも元の最前面 C より上）。
+		// The copies sit in front of the originals (even the backmost copy A' is above
+		// the frontmost original C).
 		expect(await canvas.objectIndex(copyA)).toBeGreaterThan(
 			await canvas.objectIndex(c),
 		);

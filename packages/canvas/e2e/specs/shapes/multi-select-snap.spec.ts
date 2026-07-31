@@ -1,36 +1,39 @@
 import { test, expect } from "../../fixtures";
 
 /**
- * 複数選択（マルチセレクト）をまとめて移動するときのスナップ（吸着）。
+ * Snapping while a multi-selection is moved as a whole.
  *
- * snap.spec は単一図形の移動スナップを守るが、複数選択をまとめて動かすときは
- * 選択全体のバウンディングボックスの辺／中心がスナップ候補になる（グループ bbox 経由）。
- * 単一図形と複数選択ではスナップに渡す矩形が異なるため別経路で、壊れると「まとめて動かすと
- * 吸着しない」退行になる。ドラッグ中の青ガイドと、解放後に確定した中心座標で守る。
+ * snap.spec covers move snapping for a single shape. Moving a multi-selection
+ * instead offers the edges and center of the whole selection's bounding box as
+ * snap candidates (through the group bbox). The rect handed to snapping differs
+ * from the single-shape one, so it is a separate path, and breaking it means
+ * bulk moves stop snapping. Guarded by the blue guide during the drag and by the
+ * center coordinates settled after release.
  *
- * 既定ビューポート（zoom=1）では画面座標＝SVG 座標、スナップ閾値は 8（SNAP_THRESHOLD_PX）。
+ * In the default viewport (zoom=1) screen coordinates are SVG coordinates, and
+ * the snap threshold is 8 (SNAP_THRESHOLD_PX).
  */
 
-/** transform="matrix(a,b,c,d,e,f)" の中心X（e）を返す */
+/** Returns the center X (e) of transform="matrix(a,b,c,d,e,f)". */
 function centerXOf(transform: string | null): number {
 	const nums = transform?.match(/-?\d+(?:\.\d+)?/g)?.map(Number);
 	if (!nums || nums.length < 6) {
-		throw new Error(`transform を解釈できない: ${transform}`);
+		throw new Error(`cannot parse the transform: ${transform}`);
 	}
 	return nums[4];
 }
 
-test.describe("複数選択のまとめ移動スナップ", () => {
-	test("まとめて動かすと選択全体の右辺が相手の右辺へ吸着する", async ({
+test.describe("snapping when a multi-selection moves as a whole", () => {
+	test("snaps the selection's right edge onto the other shape's right edge", async ({
 		canvas,
 	}) => {
-		// 参照 A: 中心 (500,200)・右辺 x=600（スナップ相手）。
+		// Reference A: centered at (500,200) with its right edge at x=600 (the snap target).
 		await canvas.drawShape("Rectangle", { x: 400, y: 150 }, { x: 600, y: 250 });
 		await canvas.deselect();
 
-		// B・C（各 幅120）を縦に重ねて配置。両方とも left=300 right=420。
-		// グループ bbox の右辺は 420。中心・左辺は A の候補（400/500/600）から離してあるので、
-		// 右辺どうしのスナップだけが狙える。
+		// B and C (120 wide each) stacked vertically, both left=300 right=420.
+		// The group bbox's right edge is 420. Their center and left edge sit away from
+		// A's candidates (400/500/600), so only the right-to-right snap can fire.
 		const b = await canvas.drawShape(
 			"Rectangle",
 			{ x: 300, y: 450 },
@@ -44,11 +47,11 @@ test.describe("複数選択のまとめ移動スナップ", () => {
 		);
 		await canvas.deselect();
 
-		// マーキーで B・C を選択。
+		// Select B and C with a marquee.
 		await canvas.drag({ x: 280, y: 430 }, { x: 440, y: 630 }, 12);
 
-		// グループを右へ動かして、右辺(420)を A の右辺(600)近くへ寄せる。
-		// B 中心 360 → 537（+177）でグループ右辺 ≒ 597（600 から距離 3、閾値内）。
+		// Move the group right so its right edge (420) approaches A's right edge (600).
+		// B's center 360 -> 537 (+177) puts the group's right edge at about 597, 3 away and within the threshold.
 		await canvas.dragInspecting(
 			{ x: 360, y: 485 },
 			{ x: 537, y: 485 },
@@ -58,8 +61,8 @@ test.describe("複数選択のまとめ移動スナップ", () => {
 			},
 		);
 
-		// 解放後: グループ右辺が 600 へ吸着 → B・C の中心X は 540（右辺 600 − 半幅 60）。
-		// 吸着しなければ 537 付近のはず。
+		// After release the group's right edge snaps to 600, so B and C have center X 540 (600 minus the half width 60).
+		// Without the snap it would sit near 537.
 		await expect
 			.poll(async () => {
 				const obj = (await canvas.captureObjects()).find((o) => o.id === b);

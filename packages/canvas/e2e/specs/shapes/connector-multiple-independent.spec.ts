@@ -2,18 +2,17 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * 1 つの図形に複数のコネクターが繋がっているときの、独立した追従とアンカー解決を検証する spec。
+ * Spec for independent following and anchor resolution when several connectors attach to one shape.
  *
- * 既存のコネクター追従 spec はいずれも「1 図形 = 1 コネクター」で、ハブ図形に複数本が
- * 別アンカー（topCenter / bottomCenter）で繋がる構成は未検証だった。実図では 1 つの図形に
- * 何本も繋がるのが普通で、ハブを動かすと全コネクターがそれぞれ自分のアンカーから追従し、
- * 片方の相手だけを動かすともう片方は影響を受けない、という独立性が要る。
+ * The other connector-following specs all use one connector per shape; a hub shape carrying
+ * several connectors on different anchors (topCenter / bottomCenter) was untested.
  *
- * ここでは上(T1) / ハブ / 下(T2) を topCenter / bottomCenter の 2 本で結び、
- *   - 2 本の始点がハブの別々の辺中央に正確に乗る
- *   - ハブを動かすと両方が新しい辺中央へ追従する
- *   - T1 だけを動かすと c1 のみ変化し c2 は不変
- * を守る。座標オフセットには依存しない（図形の実描画から期待値を作る）。
+ * T1 (top) / hub / T2 (bottom) are joined by two connectors on topCenter / bottomCenter, and this
+ * guards that
+ *   - each start point sits exactly on its own edge center of the hub
+ *   - moving the hub makes both follow to the new edge centers
+ *   - moving only T1 changes c1 and leaves c2 unchanged
+ * Expected values are built from the rendered shapes, so this does not depend on coordinate offsets.
  */
 
 type Vec = { x: number; y: number };
@@ -23,7 +22,7 @@ const EPS = 1.5;
 
 function parsePoints(attr: string | null): Vec[] {
 	if (!attr) {
-		throw new Error("points 属性が取得できない");
+		throw new Error("points attribute is missing");
 	}
 	return attr
 		.trim()
@@ -42,12 +41,12 @@ async function worldAABB(canvas: CanvasDriver, id: string): Promise<AABB> {
 	return canvas.page.evaluate((targetId) => {
 		const el = document.querySelector(`[data-id="${targetId}"]`);
 		if (!(el instanceof SVGGraphicsElement)) {
-			throw new Error(`図形 ${targetId} が SVGGraphicsElement でない`);
+			throw new Error(`shape ${targetId} is not an SVGGraphicsElement`);
 		}
 		const bbox = el.getBBox();
 		const ctm = el.getCTM();
 		if (!ctm) {
-			throw new Error(`図形 ${targetId} の CTM が取得できない`);
+			throw new Error(`CTM of shape ${targetId} is not available`);
 		}
 		const corners = [
 			{ x: bbox.x, y: bbox.y },
@@ -82,11 +81,11 @@ async function startPoint(canvas: CanvasDriver, id: string): Promise<Vec> {
 	return parsePoints(await canvas.objectById(id).getAttribute("points"))[0];
 }
 
-test.describe("ハブ図形の複数コネクター", () => {
-	test("ハブを動かすと両コネクターが各アンカーから追従し、片方の相手移動は他方に影響しない", async ({
+test.describe("multiple connectors on a hub shape", () => {
+	test("follows from each anchor when the hub moves, and moving one peer does not affect the other", async ({
 		canvas,
 	}) => {
-		// 上(T1) / ハブ / 下(T2) を縦に並べる。
+		// Stack T1 (top) / hub / T2 (bottom) vertically.
 		await canvas.drawShape("Rectangle", { x: 400, y: 100 }, { x: 600, y: 180 });
 		await canvas.deselect();
 		const hubId = await canvas.drawShape(
@@ -98,7 +97,7 @@ test.describe("ハブ図形の複数コネクター", () => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 560 }, { x: 600, y: 640 });
 		await canvas.deselect();
 
-		// c1: ハブ topCenter → T1。c2: ハブ bottomCenter → T2。
+		// c1: hub topCenter -> T1. c2: hub bottomCenter -> T2.
 		await canvas.selectAt({ x: 500, y: 380 });
 		const c1 = await canvas.createConnector("topCenter", { x: 500, y: 175 });
 		await canvas.deselect();
@@ -106,48 +105,47 @@ test.describe("ハブ図形の複数コネクター", () => {
 		const c2 = await canvas.createConnector("bottomCenter", { x: 500, y: 565 });
 		await canvas.deselect();
 
-		// 2 本の始点がハブの別々の辺中央に正確に乗る。
+		// Both start points sit exactly on separate edge centers of the hub.
 		const hub0 = await worldAABB(canvas, hubId);
 		expect(
 			distance(await startPoint(canvas, c1), topCenter(hub0)),
-			"c1 の始点がハブ上辺中央に乗ること",
+			"start point of c1 sits on the top edge center of the hub",
 		).toBeLessThanOrEqual(EPS);
 		expect(
 			distance(await startPoint(canvas, c2), bottomCenter(hub0)),
-			"c2 の始点がハブ下辺中央に乗ること",
+			"start point of c2 sits on the bottom edge center of the hub",
 		).toBeLessThanOrEqual(EPS);
 
-		// ── ハブを右へ動かす: 両方が新しい辺中央へ追従 ──
+		// -- Move the hub to the right: both follow to the new edge centers --
 		await canvas.drag({ x: 500, y: 380 }, { x: 760, y: 380 });
 		await expect
 			.poll(async () => (await startPoint(canvas, c1)).x, {
-				message: "ハブ移動で c1 始点が追従すること",
+				message: "start point of c1 follows the hub move",
 			})
 			.toBeGreaterThan(topCenter(hub0).x + 100);
 
 		const hub1 = await worldAABB(canvas, hubId);
 		expect(
 			distance(await startPoint(canvas, c1), topCenter(hub1)),
-			"c1 始点が移動後のハブ上辺中央に乗ること",
+			"start point of c1 sits on the top edge center of the moved hub",
 		).toBeLessThanOrEqual(EPS);
 		expect(
 			distance(await startPoint(canvas, c2), bottomCenter(hub1)),
-			"c2 始点が移動後のハブ下辺中央に乗ること",
+			"start point of c2 sits on the bottom edge center of the moved hub",
 		).toBeLessThanOrEqual(EPS);
 
-		// ── T1 だけを動かす: c1 のみ変化、c2 は不変 ──
+		// -- Move only T1: c1 changes, c2 stays unchanged --
 		const c1Before = await canvas.objectById(c1).getAttribute("points");
 		const c2Before = await canvas.objectById(c2).getAttribute("points");
 		await canvas.drag({ x: 500, y: 140 }, { x: 800, y: 140 });
 		await expect
 			.poll(() => canvas.objectById(c1).getAttribute("points"), {
-				message: "T1 移動で c1 が変化すること",
+				message: "c1 changes when T1 moves",
 			})
 			.not.toBe(c1Before);
-		// c2 は T1 の移動に影響されない。
 		expect(
 			await canvas.objectById(c2).getAttribute("points"),
-			"T1 移動は c2 に影響しないこと",
+			"moving T1 does not affect c2",
 		).toBe(c2Before);
 	});
 });

@@ -2,18 +2,20 @@ import { expect, test } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * ビューポートカリング（#212）の検証。
+ * Viewport culling (#212).
  *
- * 可視矩形（ビューポート＋マージン）と交差しない図形は DOM にレンダーされない。
- * - パンで画面外に出た図形は DOM から外れ、視界に戻すと再描画される
- * - エクスポートはライブ SVG の clone なので、カリングを一時停止して
- *   画面外の図形も出力に含める（終わったらカリングに戻る）
+ * Shapes that do not intersect the visible rect (viewport plus margin) are not
+ * rendered into the DOM.
+ * - A shape panned off screen drops out of the DOM and is redrawn once brought
+ *   back into view
+ * - Export clones the live SVG, so it suspends culling to include off-screen
+ *   shapes in the output and resumes culling afterwards
  */
 
 const findObject = async (canvas: CanvasDriver, id: string) =>
 	(await canvas.captureObjects()).find((obj) => obj.id === id);
 
-test("画面外に出た図形は DOM から外れ、視界に戻すと再描画される", async ({
+test("drops off-screen shapes from the DOM and redraws them when brought back into view", async ({
 	canvas,
 }) => {
 	const id = await canvas.drawShape(
@@ -25,24 +27,24 @@ test("画面外に出た図形は DOM から外れ、視界に戻すと再描画
 	const before = await findObject(canvas, id);
 	expect(before).toBeDefined();
 
-	// 左へ 650px パン → 図形（右端 x=400）はカリングマージンを超えて画面外になる
+	// Pan 650px left: the shape (right edge at x=400) passes the culling margin and goes off screen.
 	await canvas.middleDrag({ x: 800, y: 400 }, { x: 150, y: 400 });
 	await expect
 		.poll(async () => (await findObject(canvas, id)) === undefined, {
-			message: "画面外の図形が DOM から外れること",
+			message: "the off-screen shape drops out of the DOM",
 		})
 		.toBe(true);
 
-	// 元の視界へ戻す → 再描画され、transform も変わっていない
+	// Back to the original view: it is redrawn with an unchanged transform.
 	await canvas.middleDrag({ x: 150, y: 400 }, { x: 800, y: 400 });
 	await expect
 		.poll(async () => (await findObject(canvas, id))?.transform ?? null, {
-			message: "視界に戻した図形が再描画されること",
+			message: "the shape brought back into view is redrawn",
 		})
 		.toBe(before!.transform);
 });
 
-test("エクスポートはカリングされた画面外の図形も含む", async ({
+test("includes culled off-screen shapes in the export", async ({
 	canvas,
 	page,
 }) => {
@@ -53,11 +55,11 @@ test("エクスポートはカリングされた画面外の図形も含む", as
 	);
 	await canvas.deselect();
 
-	// パンで図形をカリングさせてからエクスポートする
+	// Pan to get the shape culled, then export.
 	await canvas.middleDrag({ x: 800, y: 400 }, { x: 150, y: 400 });
 	await expect
 		.poll(async () => (await findObject(canvas, id)) === undefined, {
-			message: "画面外の図形が DOM から外れること",
+			message: "the off-screen shape drops out of the DOM",
 		})
 		.toBe(true);
 
@@ -75,13 +77,13 @@ test("エクスポートはカリングされた画面外の図形も含む", as
 	}
 	const svgText = Buffer.concat(chunks).toString("utf-8");
 
-	// fit-to-content のエクスポートに、DOM からカリング済みの図形が含まれること
+	// The fit-to-content export contains the shape that was culled from the DOM.
 	expect(svgText).toContain(`data-id="${id}"`);
 
-	// エクスポート後はカリングが復帰している（画面外の図形は DOM に無いまま）
+	// Culling is back after the export: the off-screen shape stays out of the DOM.
 	await expect
 		.poll(async () => (await findObject(canvas, id)) === undefined, {
-			message: "エクスポート後もカリングが効いていること",
+			message: "culling is still in effect after the export",
 		})
 		.toBe(true);
 });

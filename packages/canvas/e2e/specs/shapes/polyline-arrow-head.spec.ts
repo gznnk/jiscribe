@@ -3,18 +3,20 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 import { selectors } from "../../support/selectors";
 
 /**
- * 単独のポリライン（コネクターではない線）の矢印（arrow head）設定。
+ * Arrow head settings on a standalone polyline (a line, not a connector).
  *
- * ポリラインの矢印は `polygon[data-kind=object][data-id=<id>]` として描かれ、既定では
- * 矢印を持たない（コネクターは終端に既定矢印を持つのと対照的）。矢印系メニューは
- * コネクターと共有だが、プレゼンテーションと既定値が異なる別経路のため個別に守る。
+ * A polyline's arrow renders as `polygon[data-kind=object][data-id=<id>]` and it
+ * has none by default, unlike a connector, which carries a default arrow at its
+ * end. The arrow menus are shared with connectors, but the presentation and the
+ * defaults differ, so this path is guarded on its own.
  */
 
 /**
- * ポリライン id の矢印数。矢印は種別により polygon / polyline / circle と要素が変わるため
- * タグでは数えられない。矢印はいずれも transform 属性（matrix で端点へ配置）を持ち、
- * 当たり判定用ポリライン（data-kind=object・同 id・transform なし）は持たないので、
- * 「同 id かつ transform を持つ要素」を矢印として数える。
+ * Number of arrows on the polyline id. Arrows render as polygon / polyline /
+ * circle depending on the kind, so tags cannot count them. Every arrow has a
+ * transform attribute (a matrix placing it at an endpoint) while the hit-test
+ * polyline (data-kind=object, same id, no transform) does not, so elements with
+ * the same id and a transform are counted as arrows.
  */
 async function arrowCount(canvas: CanvasDriver, id: string): Promise<number> {
 	return canvas.page.evaluate(
@@ -28,13 +30,13 @@ async function arrowCount(canvas: CanvasDriver, id: string): Promise<number> {
 	);
 }
 
-/** 水平ポリラインを引いて id を返す（描画直後は選択済み） */
+/** Draws a horizontal polyline and returns its id (selected right after drawing). */
 async function drawLine(canvas: CanvasDriver): Promise<string> {
 	return canvas.drawShape("Polyline", { x: 300, y: 300 }, { x: 600, y: 300 });
 }
 
-test.describe("ポリラインの矢印", () => {
-	test("既定では矢印を持たず、endArrow を設定すると終端に矢印が出る", async ({
+test.describe("polyline arrow heads", () => {
+	test("has no arrow by default and puts one at the end when endArrow is set", async ({
 		canvas,
 	}) => {
 		const id = await drawLine(canvas);
@@ -48,7 +50,9 @@ test.describe("ポリラインの矢印", () => {
 		await expect.poll(() => arrowCount(canvas, id)).toBe(1);
 	});
 
-	test("startArrow も設定すると両端に矢印が並ぶ（2つ）", async ({ canvas }) => {
+	test("shows arrows at both ends (2) once startArrow is set as well", async ({
+		canvas,
+	}) => {
 		const id = await drawLine(canvas);
 
 		await canvas.openObjectMenu("arrow-head-end");
@@ -62,7 +66,7 @@ test.describe("ポリラインの矢印", () => {
 		await expect.poll(() => arrowCount(canvas, id)).toBe(2);
 	});
 
-	test("endArrow の設定は undo で消え、redo で再適用される", async ({
+	test("drops the endArrow setting on undo and reapplies it on redo", async ({
 		canvas,
 	}) => {
 		const id = await drawLine(canvas);

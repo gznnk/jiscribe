@@ -2,17 +2,18 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * コネクター端点のドラッグによる再接続と、その undo。
+ * Reconnecting a connector by dragging an endpoint, and undoing it.
  *
- * connector.spec は作成と追従、connector-follow-target は両端追従を守るが、「選択した
- * コネクターの端点ハンドル（data-id=<id> + data-part="endpoint:target"）を別の図形へドラッグして
- * 接続先を張り替える」操作は未カバーだった。再接続は端点の owner を差し替える中核操作で、
- * 壊れると線が古い図形に取り残される。張り替え後は新しい図形に追従し元の図形には追従しない
- * こと、さらに undo で接続先が元へ戻ること（owner 差し替えが履歴に積まれること）を、
- * points の変化／非変化で守る。
+ * connector.spec covers creation and following, connector-follow-target covers following at both
+ * ends, but dragging the endpoint handle of a selected connector
+ * (data-id=<id> + data-part="endpoint:target") onto another shape to swap the connected shape was
+ * uncovered. Reconnecting is the core operation that replaces the owner of an endpoint; when it
+ * breaks, the line is left behind on the old shape. Guards, through changes / non-changes of
+ * points, that after the swap the connector follows the new shape and not the old one, and that
+ * undo restores the original connection (i.e. the owner swap is pushed onto the history).
  */
 
-/** コントロール（CSS セレクタ）の中心から絶対座標へドラッグする */
+/** Drags from the center of the control (a CSS selector) to an absolute coordinate. */
 async function dragControlTo(
 	canvas: CanvasDriver,
 	controlSelector: string,
@@ -22,9 +23,9 @@ async function dragControlTo(
 	await expect(control).toBeVisible();
 	const box = await control.boundingBox();
 	if (!box) {
-		throw new Error(`コントロール ${controlSelector} の位置が取得できない`);
+		throw new Error(`position of control ${controlSelector} is not available`);
 	}
-	// box は画面座標。drag はコンテンツ座標を取るので toContent で揃える。
+	// box is in screen coordinates; drag takes content coordinates, so convert with toContent.
 	await canvas.drag(
 		canvas.toContent({ x: box.x + box.width / 2, y: box.y + box.height / 2 }),
 		to,
@@ -33,8 +34,8 @@ async function dragControlTo(
 }
 
 /**
- * A(上,中心500,200) と B(下,中心500,500) をコネクターで接続し、右側に C(中心830,490) を置く。
- * コネクター ID を返す（作成後は選択解除済み）。
+ * Connects A (top, center 500,200) and B (bottom, center 500,500) with a connector and places C
+ * (center 830,490) on the right. Returns the connector id (the selection is cleared afterwards).
  */
 async function placeAbcAndConnect(canvas: CanvasDriver): Promise<string> {
 	await canvas.drawShape("Rectangle", { x: 400, y: 150 }, { x: 600, y: 250 });
@@ -55,7 +56,7 @@ async function placeAbcAndConnect(canvas: CanvasDriver): Promise<string> {
 	return connectorId;
 }
 
-/** コネクターを選択し、target 端点を C(830,490) の中心へドラッグして張り替える */
+/** Selects the connector and drags the target endpoint onto the center of C (830,490). */
 async function reconnectTargetToC(canvas: CanvasDriver, connectorId: string) {
 	await canvas.clickAt({ x: 500, y: 350 });
 	await expect(
@@ -74,16 +75,16 @@ async function reconnectTargetToC(canvas: CanvasDriver, connectorId: string) {
 			y: 490,
 		},
 	);
-	// 再接続が commit されて points が C 追従へ変わるまで待つ。dragEnd の状態反映は
-	// 非同期なので、ここで同期しないと直後の undo が commit を追い越して空振りする。
+	// Wait until the reconnect is committed and points switch to following C. The state update on
+	// dragEnd is async; without syncing here a following undo can overtake the commit and no-op.
 	await expect
 		.poll(() => canvas.objectById(connectorId).getAttribute("points"), {
-			message: "再接続が反映されコネクターの points が変わること",
+			message: "points of the connector change once the reconnect is applied",
 		})
 		.not.toBe(pointsBefore);
 }
 
-/** コネクターを選択し、source 端点を C(830,490) の中心へドラッグして張り替える */
+/** Selects the connector and drags the source endpoint onto the center of C (830,490). */
 async function reconnectSourceToC(canvas: CanvasDriver, connectorId: string) {
 	await canvas.clickAt({ x: 500, y: 350 });
 	await expect(
@@ -104,13 +105,14 @@ async function reconnectSourceToC(canvas: CanvasDriver, connectorId: string) {
 	);
 	await expect
 		.poll(() => canvas.objectById(connectorId).getAttribute("points"), {
-			message: "source 再接続が反映されコネクターの points が変わること",
+			message:
+				"points of the connector change once the source reconnect is applied",
 		})
 		.not.toBe(pointsBefore);
 }
 
-test.describe("コネクターの再接続", () => {
-	test("端点ハンドルを別の図形へドラッグすると接続先が張り替わる", async ({
+test.describe("reconnecting a connector", () => {
+	test("swaps the connected shape when an endpoint handle is dragged onto another shape", async ({
 		canvas,
 	}) => {
 		const connectorId = await placeAbcAndConnect(canvas);
@@ -122,27 +124,29 @@ test.describe("コネクターの再接続", () => {
 			.objectById(connectorId)
 			.getAttribute("points");
 
-		// 元の接続先 B を動かしても、もう追従しない（張り替え済み）
+		// Moving the original target B no longer drags the connector along (already swapped).
 		await canvas.drag({ x: 500, y: 500 }, { x: 300, y: 500 });
 		expect(await canvas.objectById(connectorId).getAttribute("points")).toBe(
 			pointsAfterReconnect,
 		);
 
-		// 新しい接続先 C を動かすと追従する
+		// Moving the new target C drags the connector along.
 		await canvas.drag({ x: 830, y: 490 }, { x: 1010, y: 490 });
 		await expect
 			.poll(() => canvas.objectById(connectorId).getAttribute("points"), {
-				message: "張り替え後は新しい図形 C に追従すること",
+				message: "follows the new shape C after the swap",
 			})
 			.not.toBe(pointsAfterReconnect);
 	});
 
-	test("再接続を undo すると接続先が元の図形へ戻る", async ({ canvas }) => {
+	test("restores the original connected shape when the reconnect is undone", async ({
+		canvas,
+	}) => {
 		const connectorId = await placeAbcAndConnect(canvas);
 
 		await reconnectTargetToC(canvas, connectorId);
 
-		// undo で接続先が C → B へ戻る。
+		// Undo moves the connected shape back from C to B.
 		await canvas.undo();
 		await canvas.deselect();
 
@@ -150,22 +154,23 @@ test.describe("コネクターの再接続", () => {
 			.objectById(connectorId)
 			.getAttribute("points");
 
-		// 張り替え先だった C を動かしても、もう追従しない（接続は B に戻っている）。
+		// Moving C, the former swap target, no longer drags it along (the connection is back on B).
 		await canvas.drag({ x: 830, y: 490 }, { x: 1010, y: 490 });
 		expect(await canvas.objectById(connectorId).getAttribute("points")).toBe(
 			pointsAfterUndo,
 		);
 
-		// 元の接続先 B を動かすと再び追従する。
+		// Moving the original target B drags the connector along again.
 		await canvas.drag({ x: 500, y: 500 }, { x: 300, y: 500 });
 		await expect
 			.poll(() => canvas.objectById(connectorId).getAttribute("points"), {
-				message: "undo 後は元の図形 B への接続が復活して追従すること",
+				message:
+					"connection to the original shape B is restored and follows after undo",
 			})
 			.not.toBe(pointsAfterUndo);
 	});
 
-	test("source 端点を別の図形へドラッグすると接続元が張り替わる", async ({
+	test("swaps the source shape when the source endpoint is dragged onto another shape", async ({
 		canvas,
 	}) => {
 		const connectorId = await placeAbcAndConnect(canvas);
@@ -177,22 +182,22 @@ test.describe("コネクターの再接続", () => {
 			.objectById(connectorId)
 			.getAttribute("points");
 
-		// 元の接続元 A を動かしても、もう追従しない（張り替え済み）。
+		// Moving the original source A no longer drags the connector along (already swapped).
 		await canvas.drag({ x: 500, y: 200 }, { x: 300, y: 200 });
 		expect(await canvas.objectById(connectorId).getAttribute("points")).toBe(
 			pointsAfterReconnect,
 		);
 
-		// 新しい接続元 C を動かすと追従する。
+		// Moving the new source C drags the connector along.
 		await canvas.drag({ x: 830, y: 490 }, { x: 1010, y: 490 });
 		await expect
 			.poll(() => canvas.objectById(connectorId).getAttribute("points"), {
-				message: "張り替え後は新しい図形 C に追従すること",
+				message: "follows the new shape C after the swap",
 			})
 			.not.toBe(pointsAfterReconnect);
 	});
 
-	test("source の再接続を undo すると接続元が元の図形へ戻る", async ({
+	test("restores the original source shape when the source reconnect is undone", async ({
 		canvas,
 	}) => {
 		const connectorId = await placeAbcAndConnect(canvas);
@@ -202,12 +207,12 @@ test.describe("コネクターの再接続", () => {
 			.objectById(connectorId)
 			.getAttribute("points");
 
-		// undo で接続元が C → A へ戻る。reconnect の commit と undo のレースを避けるため、
-		// points が C 接続状態から変わる（undo が反映される）まで待ってから測る。
+		// Undo moves the source shape back from C to A. To avoid a race between the reconnect
+		// commit and undo, wait until points leave the C-connected state before measuring.
 		await canvas.undo();
 		await expect
 			.poll(() => canvas.objectById(connectorId).getAttribute("points"), {
-				message: "undo が反映され C 接続が解けること",
+				message: "undo is applied and the connection to C is released",
 			})
 			.not.toBe(pointsConnectedToC);
 		await canvas.deselect();
@@ -216,17 +221,18 @@ test.describe("コネクターの再接続", () => {
 			.objectById(connectorId)
 			.getAttribute("points");
 
-		// 張り替え先だった C を動かしても、もう追従しない（接続元は A に戻っている）。
+		// Moving C, the former swap target, no longer drags it along (the source is back on A).
 		await canvas.drag({ x: 830, y: 490 }, { x: 1010, y: 490 });
 		expect(await canvas.objectById(connectorId).getAttribute("points")).toBe(
 			pointsAfterUndo,
 		);
 
-		// 元の接続元 A を動かすと再び追従する。
+		// Moving the original source A drags the connector along again.
 		await canvas.drag({ x: 500, y: 200 }, { x: 300, y: 200 });
 		await expect
 			.poll(() => canvas.objectById(connectorId).getAttribute("points"), {
-				message: "undo 後は元の図形 A への接続が復活して追従すること",
+				message:
+					"connection to the original shape A is restored and follows after undo",
 			})
 			.not.toBe(pointsAfterUndo);
 	});

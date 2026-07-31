@@ -2,28 +2,31 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * 直角コネクターのセグメントを掴んで経路を手で決める操作を UI レベルで検証する spec。
+ * Spec verifying, at the UI level, deciding a route by hand by grabbing segments of an orthogonal
+ * connector.
  *
- * connector-routing-switch.spec は「線の形の切替」までしか守っておらず、直角のまま経路を
- * 決める導線——セグメントを垂直方向へドラッグすると `points` に頂点が入り、
- * 以後その頂点が経路そのものになること——は未検証だった。
+ * connector-routing-switch.spec only covers switching the shape of the line; the path for deciding
+ * a route while staying orthogonal — dragging a segment perpendicular to itself puts vertices into
+ * `points`, and those vertices then *are* the route — was untested.
  *
- * ここで守るのは6つ。(1) 中間セグメントは両端の頂点ごと動く、(2) 端のセグメントは長さを
- * 保ったまま動き、辺に残った端点との間に垂直な接続線分が入る、(3) 図形を動かすと端点に
- * 隣接する頂点が追従して直角が保たれる、(4) 当たりは線分全体にあり、選択していなくても中点以外から掴める、
- * (5) 直線への切替はそのとき描かれていた経路を points に焼き付けるので、形が飛ばない、
- * (6) 走行を重ねて一直線になった線は1本として動き、置き去りの斜め線分を作らない。
- * 回り込みが生じる配置は救わない仕様なので、ここでも要求しない。
+ * Six things are guarded here. (1) A middle segment moves together with the vertices at both of its
+ * ends. (2) An end segment moves while keeping its length, and a perpendicular link segment appears
+ * between it and the endpoint left on the edge. (3) Moving a shape makes the vertex adjacent to the
+ * endpoint follow, keeping the right angles. (4) The hit area covers the whole segment, so it can
+ * be grabbed away from the midpoint and without selecting first. (5) Switching to straight bakes
+ * the currently drawn route into points, so the shape does not jump. (6) A line made straight by
+ * overlaying runs moves as one and leaves no stray diagonal segment.
+ * Layouts that require routing around are out of scope by design and are not required here either.
  */
 
 type Vec = { x: number; y: number };
 
 const EPS = 1.5;
 
-/** polyline の points 属性 "x1,y1 x2,y2 ..." を座標配列へパースする */
+/** Parses the polyline points attribute "x1,y1 x2,y2 ..." into an array of coordinates. */
 function parsePoints(attr: string | null): Vec[] {
 	if (!attr) {
-		throw new Error("points 属性が取得できない");
+		throw new Error("points attribute is missing");
 	}
 	return attr
 		.trim()
@@ -34,7 +37,7 @@ function parsePoints(attr: string | null): Vec[] {
 		});
 }
 
-/** 隣り合う頂点がすべて水平 or 垂直（=直角・退化なし）であることを検査する */
+/** Checks that every pair of adjacent vertices is horizontal or vertical (right angles, no degenerate segments). */
 function assertOrthogonalSegments(points: Vec[]) {
 	for (let i = 1; i < points.length; i++) {
 		const prev = points[i - 1];
@@ -43,12 +46,12 @@ function assertOrthogonalSegments(points: Vec[]) {
 		const vertical = Math.abs(prev.x - cur.x) <= EPS;
 		expect(
 			horizontal !== vertical,
-			`セグメント ${i - 1}->${i} が直角でない（重複点 or 斜め）: ${JSON.stringify(prev)} -> ${JSON.stringify(cur)}`,
+			`segment ${i - 1}->${i} is not at a right angle (duplicated point or diagonal): ${JSON.stringify(prev)} -> ${JSON.stringify(cur)}`,
 		).toBe(true);
 	}
 }
 
-/** コネクターの現在の描画 points を読む */
+/** Reads the currently rendered points of the connector. */
 async function readPoints(
 	canvas: CanvasDriver,
 	connectorId: string,
@@ -58,7 +61,7 @@ async function readPoints(
 	);
 }
 
-/** 最も長い垂直セグメントの x 座標。留めた走行位置を頂点数に依存せず読むための指標 */
+/** x of the longest vertical segment: reads the pinned run position without depending on the vertex count. */
 async function longestVerticalRunX(
 	canvas: CanvasDriver,
 	connectorId: string,
@@ -74,12 +77,12 @@ async function longestVerticalRunX(
 	}
 	expect(
 		best.length,
-		`垂直な走行が存在すること: ${JSON.stringify(points)}`,
+		`a vertical run exists: ${JSON.stringify(points)}`,
 	).toBeGreaterThan(0);
 	return best.x;
 }
 
-/** コネクターを最長セグメントの中点でクリックして選択する */
+/** Selects the connector by clicking the midpoint of its longest segment. */
 async function selectConnector(canvas: CanvasDriver, connectorId: string) {
 	const points = await readPoints(canvas, connectorId);
 	let best = { mid: points[0], length: -1 };
@@ -97,8 +100,9 @@ async function selectConnector(canvas: CanvasDriver, connectorId: string) {
 }
 
 /**
- * 斜めに離した 2 矩形を rightCenter → leftCenter でつなぐ。両端が辺アンカーなので既定は直角に
- * なり、折れ点 2 つ・中間に垂直の走行が 1 本ある経路ができる。
+ * Joins two rectangles placed diagonally apart from rightCenter to leftCenter. Both ends being edge
+ * anchors, the default is orthogonal, giving a route with two bends and one vertical run in the
+ * middle.
  */
 async function buildDiagonalConnector(canvas: CanvasDriver): Promise<string> {
 	await canvas.drawShape("Rectangle", { x: 300, y: 180 }, { x: 460, y: 280 });
@@ -115,8 +119,8 @@ async function buildDiagonalConnector(canvas: CanvasDriver): Promise<string> {
 	return connectorId;
 }
 
-test.describe("直角コネクターのセグメントドラッグ", () => {
-	test("中間セグメントを動かすと走行位置が留まり、図形を動かしても直角が保たれる", async ({
+test.describe("segment drag on an orthogonal connector", () => {
+	test("pins the run position when a middle segment is moved and keeps right angles when a shape moves", async ({
 		canvas,
 	}) => {
 		const connectorId = await buildDiagonalConnector(canvas);
@@ -139,13 +143,14 @@ test.describe("直角コネクターのセグメントドラッグ", () => {
 
 		await expect
 			.poll(async () => longestVerticalRunX(canvas, connectorId), {
-				message: "掴んだ走行が右へ移動すること",
+				message: "the grabbed run moves to the right",
 			})
 			.toBeGreaterThan(initialRunX + 60);
 		assertOrthogonalSegments(await readPoints(canvas, connectorId));
 		const pinnedRunX = await longestVerticalRunX(canvas, connectorId);
 
-		// 接続元を下げる。端点に隣接する頂点が追従するので、斜めの線分は生じない。
+		// Lower the source shape. The vertex adjacent to the endpoint follows, so no diagonal
+		// segment appears.
 		await canvas.deselect();
 		await canvas.selectAt({ x: 380, y: 230 });
 		await canvas.drag({ x: 380, y: 230 }, { x: 380, y: 400 });
@@ -153,24 +158,24 @@ test.describe("直角コネクターのセグメントドラッグ", () => {
 
 		const afterMove = await readPoints(canvas, connectorId);
 		assertOrthogonalSegments(afterMove);
-		expect(afterMove[0].y, "始点は接続元の辺中央へ追従する").toBeCloseTo(
-			400,
-			0,
-		);
+		expect(
+			afterMove[0].y,
+			"start point follows the edge center of the source shape",
+		).toBeCloseTo(400, 0);
 		expect(
 			await longestVerticalRunX(canvas, connectorId),
-			"留めた走行位置は図形を動かしても変わらない",
+			"the pinned run position is unchanged by the shape move",
 		).toBeCloseTo(pinnedRunX, 0);
 	});
 
-	test("端のセグメントは長さを保って動き、端点とは垂直な線分でつながる", async ({
+	test("moves an end segment keeping its length and links it to the endpoint with a perpendicular segment", async ({
 		canvas,
 	}) => {
 		const connectorId = await buildDiagonalConnector(canvas);
 		await selectConnector(canvas, connectorId);
 		const initial = await readPoints(canvas, connectorId);
 
-		// 先頭セグメント（接続元の右辺から出る水平線）を下へ引く。
+		// Pull the first segment (the horizontal line leaving the right edge of the source) down.
 		await canvas.drag(
 			{ x: (initial[0].x + initial[1].x) / 2, y: initial[0].y },
 			{ x: (initial[0].x + initial[1].x) / 2, y: initial[0].y + 110 },
@@ -178,20 +183,23 @@ test.describe("直角コネクターのセグメントドラッグ", () => {
 
 		const dragged = await readPoints(canvas, connectorId);
 		assertOrthogonalSegments(dragged);
-		expect(dragged[0], "始点は接続元の辺に残る").toEqual(initial[0]);
-		expect(dragged[1].x, "端点から真下へ垂直な接続線分が降りる").toBeCloseTo(
-			initial[0].x,
-			0,
-		);
+		expect(
+			dragged[0],
+			"start point stays on the edge of the source shape",
+		).toEqual(initial[0]);
+		expect(
+			dragged[1].x,
+			"a perpendicular link segment drops straight down from the endpoint",
+		).toBeCloseTo(initial[0].x, 0);
 		expect(dragged[1].y).toBeCloseTo(initial[0].y + 110, 0);
 		expect(
 			dragged[2].x,
-			"ドラッグした線分は先端の x を保ったまま新しい高さへ移る",
+			"the dragged segment moves to the new height keeping the x of its far end",
 		).toBeCloseTo(initial[1].x, 0);
 		expect(dragged[2].y).toBeCloseTo(initial[0].y + 110, 0);
 	});
 
-	test("「経路を自動に戻す」で手で決めた頂点が捨てられる", async ({
+	test('discards hand-placed vertices on "reset route to automatic"', async ({
 		canvas,
 	}) => {
 		const connectorId = await buildDiagonalConnector(canvas);
@@ -207,7 +215,8 @@ test.describe("直角コネクターのセグメントドラッグ", () => {
 			.poll(async () => longestVerticalRunX(canvas, connectorId))
 			.not.toBeCloseTo((initial[1].x + initial[2].x) / 2, 0);
 
-		// 経路のリセットはモードではなく操作なので、routing メニューではなくコンテキストメニュー。
+		// Resetting the route is an operation, not a mode, so it lives in the context menu rather
+		// than the routing menu.
 		const onLine = await readPoints(canvas, connectorId);
 		await canvas.openContextMenu({
 			x: (onLine[0].x + onLine[1].x) / 2,
@@ -217,19 +226,20 @@ test.describe("直角コネクターのセグメントドラッグ", () => {
 
 		await expect
 			.poll(async () => readPoints(canvas, connectorId), {
-				message: "自動ルーティングの経路へ戻ること",
+				message: "returns to the automatically routed path",
 			})
 			.toEqual(initial);
 	});
 
-	test("選択していなくても線分の端寄りから掴んで動かせる", async ({
+	test("can be grabbed near the end of a segment and moved without selecting first", async ({
 		canvas,
 	}) => {
 		const connectorId = await buildDiagonalConnector(canvas);
 		const initial = await readPoints(canvas, connectorId);
 
-		// 当たりはコネクター自身が持つので、選択を挟まずに掴める。位置は縦の走行の上端から
-		// 25px——中点にハンドルを置く方式では当たりが無かったところ。
+		// The connector itself owns the hit area, so it can be grabbed without selecting first. The
+		// grab point is 25px below the top of the vertical run, where a midpoint-handle approach
+		// would have no hit area.
 		const nearEnd = { x: initial[1].x, y: initial[1].y + 25 };
 		await canvas.drag(nearEnd, { x: nearEnd.x + 130, y: nearEnd.y });
 
@@ -237,18 +247,18 @@ test.describe("直角コネクターのセグメントドラッグ", () => {
 		assertOrthogonalSegments(dragged);
 		expect(
 			await longestVerticalRunX(canvas, connectorId),
-			"端寄りを掴んでも走行が動く",
+			"the run moves even when grabbed near its end",
 		).toBeCloseTo(initial[1].x + 130, 0);
 	});
 
-	test("走行を接続先の面の線上へ重ねても、1本の斜め線に潰れない", async ({
+	test("does not collapse into a single diagonal line when the run is overlaid on the face of the target", async ({
 		canvas,
 	}) => {
 		const connectorId = await buildDiagonalConnector(canvas);
 		const initial = await readPoints(canvas, connectorId);
 		await selectConnector(canvas, connectorId);
 
-		// 縦の走行を接続先の左辺の線（target の x）までドラッグして重ねる。角が1つだけ残る。
+		// Drag the vertical run onto the line of the target left edge (the target x). One bend remains.
 		const mid = {
 			x: (initial[1].x + initial[2].x) / 2,
 			y: (initial[1].y + initial[2].y) / 2,
@@ -257,24 +267,26 @@ test.describe("直角コネクターのセグメントドラッグ", () => {
 
 		await expect
 			.poll(async () => longestVerticalRunX(canvas, connectorId), {
-				message: "走行が接続先の面まで動くこと",
+				message: "the run moves up to the face of the target",
 			})
 			.toBeCloseTo(initial[3].x, 0);
 		const collapsed = await readPoints(canvas, connectorId);
 		assertOrthogonalSegments(collapsed);
-		expect(collapsed.length, "L字（3点）に畳まれ、斜めの1本線にならない").toBe(
-			3,
-		);
+		expect(
+			collapsed.length,
+			"folds into an L (3 points) instead of a single diagonal line",
+		).toBe(3);
 	});
 
-	test("走行を重ねて一直線にした後で掴んでも、斜めの線分にならない", async ({
+	test("does not produce a diagonal segment when grabbed after runs were overlaid into a straight line", async ({
 		canvas,
 	}) => {
 		const connectorId = await buildDiagonalConnector(canvas);
 		const initial = await readPoints(canvas, connectorId);
 		await selectConnector(canvas, connectorId);
 
-		// 先頭セグメントを下げる（端点から垂直に降りる接続線分と、下がった先の水平の走行ができる）。
+		// Lower the first segment, producing a link segment dropping vertically from the endpoint
+		// and a horizontal run at the lowered height.
 		const firstMid = {
 			x: (initial[0].x + initial[1].x) / 2,
 			y: initial[0].y,
@@ -282,13 +294,14 @@ test.describe("直角コネクターのセグメントドラッグ", () => {
 		await canvas.drag(firstMid, { x: firstMid.x, y: firstMid.y + 110 });
 		await expect
 			.poll(async () => (await readPoints(canvas, connectorId)).length, {
-				message: "垂直な接続線分で折れ点が増えること",
+				message: "the perpendicular link segment adds bends",
 			})
 			.toBeGreaterThan(initial.length);
 		const lowered = await readPoints(canvas, connectorId);
 		assertOrthogonalSegments(lowered);
 
-		// 下がった走行（lowered[1]→lowered[2]）を元の高さへ戻し、出だしの線と重ねて一直線にする。
+		// Bring the lowered run (lowered[1]->lowered[2]) back to the original height, overlaying it
+		// on the opening line to make one straight line.
 		const runMid = {
 			x: (lowered[1].x + lowered[2].x) / 2,
 			y: lowered[1].y,
@@ -297,7 +310,8 @@ test.describe("直角コネクターのセグメントドラッグ", () => {
 		const merged = await readPoints(canvas, connectorId);
 		assertOrthogonalSegments(merged);
 
-		// 一直線になった線を掴んで下げる。重なった走行が別々に動くと、置き去りの側が斜めになる。
+		// Grab the straightened line and lower it. If the overlaid runs moved separately, the one
+		// left behind would go diagonal.
 		const grab = { x: initial[1].x - 40, y: merged[0].y };
 		await canvas.drag(grab, { x: grab.x, y: grab.y + 60 });
 		await expect
@@ -311,13 +325,13 @@ test.describe("直角コネクターのセグメントドラッグ", () => {
 							Math.abs(point.y - (merged[0].y + 60)) <= 2,
 					);
 				},
-				{ message: "掴んだ線がドラッグ先の高さへ移ること" },
+				{ message: "the grabbed line moves to the drop height" },
 			)
 			.toBe(true);
 		assertOrthogonalSegments(await readPoints(canvas, connectorId));
 	});
 
-	test("図形を動かした後で直線へ切り替えても、見えていた形のまま切り替わる", async ({
+	test("keeps the visible shape when switching to straight after a shape was moved", async ({
 		canvas,
 	}) => {
 		const connectorId = await buildDiagonalConnector(canvas);
@@ -334,7 +348,8 @@ test.describe("直角コネクターのセグメントドラッグ", () => {
 			.poll(async () => longestVerticalRunX(canvas, connectorId))
 			.toBeGreaterThan(initialRunX + 60);
 
-		// 接続元を動かして、保存済みの頂点列と描画（align 済み）の座標をずらしてから切り替える。
+		// Move the source shape so the stored vertices and the rendered (aligned) coordinates differ
+		// before switching.
 		await canvas.deselect();
 		await canvas.selectAt({ x: 380, y: 230 });
 		await canvas.drag({ x: 380, y: 230 }, { x: 380, y: 400 });
@@ -351,16 +366,19 @@ test.describe("直角コネクターのセグメントドラッグ", () => {
 		).toHaveCount(0);
 
 		const afterSwitch = await readPoints(canvas, connectorId);
-		expect(afterSwitch.length, "切替で頂点は増減しない").toBe(
-			beforeSwitch.length,
-		);
+		expect(
+			afterSwitch.length,
+			"the vertex count does not change on the switch",
+		).toBe(beforeSwitch.length);
 		afterSwitch.forEach((point, index) => {
 			expect(point.x).toBeCloseTo(beforeSwitch[index].x, 0);
 			expect(point.y).toBeCloseTo(beforeSwitch[index].y, 0);
 		});
 	});
 
-	test("直線ルーティングにはセグメントの当たりが出ない", async ({ canvas }) => {
+	test("shows no segment hit areas for straight routing", async ({
+		canvas,
+	}) => {
 		const connectorId = await buildDiagonalConnector(canvas);
 		await selectConnector(canvas, connectorId);
 
@@ -369,7 +387,7 @@ test.describe("直角コネクターのセグメントドラッグ", () => {
 
 		await expect
 			.poll(async () => (await readPoints(canvas, connectorId)).length, {
-				message: "straight 切替で 2 頂点の直線になること",
+				message: "becomes a 2-vertex straight line when switched to straight",
 			})
 			.toBe(2);
 		await expect(

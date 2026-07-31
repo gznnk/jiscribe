@@ -2,15 +2,15 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * コネクターの接続先（target）追従。
+ * Connector following its target shape.
  *
- * connector.spec は「接続元（source）を動かすと追従する」までを守るが、target 側を
- * 動かしたときの追従は検証されていなかった。エンドポイント解決（resolveConnectorPoints）は
- * source / target で別経路を通るため、片側だけ追従が壊れる退行があり得る。両端を順に
- * 動かして points が都度変化することで、両エンドポイントの結線が生きていることを守る。
+ * Endpoint resolution (resolveConnectorPoints) takes different paths for source and target, so a
+ * regression can break following on one side alone (see connector.spec for the source side).
+ * Moving both ends in turn and watching the points change each time shows both endpoints are
+ * still wired up.
  */
 
-/** 上下 2 矩形を縦コネクターで結び、コネクター ID を返す（接続後は選択解除済み） */
+/** Joins two stacked rectangles with a vertical connector and returns its ID (left deselected) */
 async function buildConnectedPair(canvas: CanvasDriver): Promise<string> {
 	await canvas.drawShape("Rectangle", { x: 400, y: 150 }, { x: 600, y: 250 });
 	await canvas.deselect();
@@ -26,49 +26,49 @@ async function buildConnectedPair(canvas: CanvasDriver): Promise<string> {
 	return connectorId;
 }
 
-test.describe("コネクターの接続先追従", () => {
-	test("接続先（target）の図形を動かすとコネクターが追従する", async ({
-		canvas,
-	}) => {
+test.describe("connector following its target", () => {
+	test("follows when the target shape is moved", async ({ canvas }) => {
 		const connectorId = await buildConnectedPair(canvas);
 
 		const pointsBefore = await canvas
 			.objectById(connectorId)
 			.getAttribute("points");
 
-		// 下（接続先）の矩形を右へ移動
+		// Move the lower (target) rectangle right.
 		await canvas.drag({ x: 500, y: 500 }, { x: 800, y: 500 });
 
 		await expect
 			.poll(() => canvas.objectById(connectorId).getAttribute("points"), {
-				message: "接続先の移動にコネクターが追従すること",
+				message: "the connector follows the target's move",
 			})
 			.not.toBe(pointsBefore);
 	});
 
-	test("接続元・接続先を順に動かすと両端に追従し続ける", async ({ canvas }) => {
+	test("keeps following both ends when the source and the target are moved in turn", async ({
+		canvas,
+	}) => {
 		const connectorId = await buildConnectedPair(canvas);
 
 		const pointsInitial = await canvas
 			.objectById(connectorId)
 			.getAttribute("points");
 
-		// まず接続元（上）を右へ動かす → points が変わる
+		// First move the source (upper) rectangle right.
 		await canvas.drag({ x: 500, y: 200 }, { x: 750, y: 200 });
 		await expect
 			.poll(() => canvas.objectById(connectorId).getAttribute("points"), {
-				message: "接続元の移動に追従すること",
+				message: "it follows the source's move",
 			})
 			.not.toBe(pointsInitial);
 		const pointsAfterSource = await canvas
 			.objectById(connectorId)
 			.getAttribute("points");
 
-		// 続けて接続先（下）も右へ動かす → points がさらに変わる
+		// Then move the target (lower) rectangle right as well.
 		await canvas.drag({ x: 500, y: 500 }, { x: 750, y: 500 });
 		await expect
 			.poll(() => canvas.objectById(connectorId).getAttribute("points"), {
-				message: "接続先の移動にも追従すること",
+				message: "it follows the target's move too",
 			})
 			.not.toBe(pointsAfterSource);
 	});

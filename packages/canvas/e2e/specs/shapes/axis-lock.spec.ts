@@ -1,14 +1,14 @@
 import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
-/** ポリラインの頂点座標一覧を返す（"x,y x,y" 形式の points 属性をパース） */
+/** Returns the polyline vertices, parsed from the "x,y x,y" points attribute. */
 const readVertices = async (
 	canvas: CanvasDriver,
 	id: string,
 ): Promise<{ x: number; y: number }[]> => {
 	const points = await canvas.objectById(id).getAttribute("points");
 	if (!points) {
-		throw new Error("polyline の points 属性が取得できない");
+		throw new Error("the polyline has no points attribute");
 	}
 	return points
 		.trim()
@@ -20,17 +20,20 @@ const readVertices = async (
 };
 
 /**
- * Shift ドラッグの軸固定。
- * - オブジェクト移動: 移動量の大きい軸方向にだけ動き、固定軸のガイドが出る。
- * - 頂点ドラッグ: 開始頂点を基準に同じく軸固定される。
- * - 原点スナップ: 開始位置付近では元の位置に吸着し、両軸（十字）ガイドが出る。
+ * Axis locking under a Shift drag.
+ * - Object move: moves along the axis with the larger delta only, and the guide
+ *   for the locked axis appears.
+ * - Vertex drag: locks the same way, taking the dragged vertex as the origin.
+ * - Origin snap: near the start position it snaps back to the original position
+ *   and both axis guides (a cross) appear.
  *
- * 軸固定ガイドは drag 中のみ DOM に存在するため、解放前（dragInspecting の
- * コールバック内）で検証する。最終位置は解放後に poll で確認する。
+ * The axis lock guides live in the DOM only during the drag, so they are checked
+ * before release (inside the dragInspecting callback). Final positions are
+ * polled after release.
  */
-test.describe("Shift 軸固定", () => {
-	test.describe("オブジェクト移動", () => {
-		test("横方向優位の Shift ドラッグは Y を固定し横移動・横ガイドを出す", async ({
+test.describe("Shift axis lock", () => {
+	test.describe("object move", () => {
+		test("locks Y and shows the horizontal guide when the Shift drag is mostly horizontal", async ({
 			canvas,
 		}) => {
 			const id = await canvas.drawShape(
@@ -40,7 +43,7 @@ test.describe("Shift 軸固定", () => {
 			);
 			await canvas.deselect();
 
-			// 中心(500,260)から (700,290): dx=200 > dy=30 → Y 固定の横移動
+			// Center (500,260) to (700,290): dx=200 > dy=30, so Y locks and it moves horizontally
 			await canvas.dragInspecting(
 				{ x: 500, y: 260 },
 				{ x: 700, y: 290 },
@@ -62,7 +65,7 @@ test.describe("Shift 軸固定", () => {
 				.toBe("matrix(1, 0, 0, 1, 700, 260)");
 		});
 
-		test("縦方向優位の Shift ドラッグは X を固定し縦移動・縦ガイドを出す", async ({
+		test("locks X and shows the vertical guide when the Shift drag is mostly vertical", async ({
 			canvas,
 		}) => {
 			const id = await canvas.drawShape(
@@ -72,7 +75,7 @@ test.describe("Shift 軸固定", () => {
 			);
 			await canvas.deselect();
 
-			// 中心(500,260)から (530,460): dy=200 > dx=30 → X 固定の縦移動
+			// Center (500,260) to (530,460): dy=200 > dx=30, so X locks and it moves vertically
 			await canvas.dragInspecting(
 				{ x: 500, y: 260 },
 				{ x: 530, y: 460 },
@@ -94,7 +97,7 @@ test.describe("Shift 軸固定", () => {
 				.toBe("matrix(1, 0, 0, 1, 500, 460)");
 		});
 
-		test("開始位置付近では原点に吸着し両軸ガイド（十字）を出す", async ({
+		test("snaps to the origin and shows both axis guides near the start position", async ({
 			canvas,
 		}) => {
 			const id = await canvas.drawShape(
@@ -104,7 +107,7 @@ test.describe("Shift 軸固定", () => {
 			);
 			await canvas.deselect();
 
-			// 中心(500,260)から (504,263): フリー軸の移動量が小さく原点吸着
+			// Center (500,260) to (504,263): the free axis barely moves, so it snaps to the origin
 			await canvas.dragInspecting(
 				{ x: 500, y: 260 },
 				{ x: 504, y: 263 },
@@ -117,7 +120,7 @@ test.describe("Shift 軸固定", () => {
 				{ shift: true },
 			);
 
-			// 元の位置に戻っている
+			// Back at the original position
 			await expect
 				.poll(async () => {
 					const moved = (await canvas.captureObjects()).find(
@@ -128,7 +131,7 @@ test.describe("Shift 軸固定", () => {
 				.toBe("matrix(1, 0, 0, 1, 500, 260)");
 		});
 
-		test("Shift なしでは斜め移動できる（軸固定もガイドも出ない）", async ({
+		test("moves diagonally without Shift, with no axis lock and no guides", async ({
 			canvas,
 		}) => {
 			const id = await canvas.drawShape(
@@ -158,8 +161,8 @@ test.describe("Shift 軸固定", () => {
 		});
 	});
 
-	test.describe("頂点ドラッグ", () => {
-		test("横方向優位の Shift 頂点ドラッグは Y を固定し横ガイドを出す", async ({
+	test.describe("vertex drag", () => {
+		test("locks Y and shows the horizontal guide when the Shift vertex drag is mostly horizontal", async ({
 			canvas,
 		}) => {
 			const id = await canvas.drawShape(
@@ -167,11 +170,11 @@ test.describe("Shift 軸固定", () => {
 				{ x: 400, y: 400 },
 				{ x: 700, y: 450 },
 			);
-			// 描画直後は選択済みで頂点コントロールが表示されている
+			// Selected right after drawing, so the vertex controls are shown
 			await expect(canvas.objectById(id)).toBeVisible();
 			const start = (await readVertices(canvas, id))[0];
 
-			// 開始頂点から横方向優位にドラッグ: Y を開始頂点に固定
+			// Drag mostly horizontally from the start vertex: Y stays at the start vertex
 			await canvas.dragInspecting(
 				start,
 				{ x: start.x + 200, y: start.y + 20 },
@@ -188,7 +191,7 @@ test.describe("Shift 軸固定", () => {
 				.toEqual({ x: start.x + 200, y: start.y });
 		});
 
-		test("開始頂点付近では原点に吸着し両軸ガイド（十字）を出す", async ({
+		test("snaps to the origin and shows both axis guides near the start vertex", async ({
 			canvas,
 		}) => {
 			const id = await canvas.drawShape(
@@ -199,7 +202,7 @@ test.describe("Shift 軸固定", () => {
 			await expect(canvas.objectById(id)).toBeVisible();
 			const start = (await readVertices(canvas, id))[0];
 
-			// わずかな移動 → 開始頂点へ吸着し両軸ガイド
+			// A tiny move snaps back to the start vertex and shows both guides
 			await canvas.dragInspecting(
 				start,
 				{ x: start.x + 4, y: start.y + 3 },
@@ -212,7 +215,7 @@ test.describe("Shift 軸固定", () => {
 				{ shift: true },
 			);
 
-			// 開始頂点に戻っている
+			// Back at the start vertex
 			await expect
 				.poll(async () => (await readVertices(canvas, id))[0])
 				.toEqual({ x: start.x, y: start.y });

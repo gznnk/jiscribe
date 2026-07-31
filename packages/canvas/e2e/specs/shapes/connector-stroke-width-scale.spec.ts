@@ -2,16 +2,16 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * コネクターの strokeWidth と「矢印スケール・線インセット」の連動を検証する spec。
+ * Spec verifying that the arrow scale and the line inset of a connector track its strokeWidth.
  *
- * 矢印は scale=strokeWidth で描かれ（matrix の (a,b) の長さ＝strokeWidth）、視覚線の端は
- * 矢印 inset = 定数 × strokeWidth だけ手前で終端する。つまり線を太くすると矢印も inset も
- * 比例して大きくなる。connector-style.spec は線色・線種を、connector-arrow-inset.spec は
- * strokeWidth=2 固定での inset を守るが、strokeWidth を変えたときの「比例スケール」連動は
- * 未検証だった。
+ * An arrow is drawn with scale=strokeWidth (the length of (a,b) in its matrix equals strokeWidth),
+ * and the visual line ends short by an arrow inset of a constant times strokeWidth. So thickening
+ * the line grows both the arrow and the inset proportionally. connector-style.spec covers line
+ * color and dash type, connector-arrow-inset.spec covers the inset at a fixed strokeWidth=2, but
+ * the proportional scaling when strokeWidth changes was untested.
  *
- * ここでは line-style メニューの数値入力で strokeWidth を 2→6 に変え、矢印行列のスケールと
- * 視覚線の inset がともに約 3 倍になることを守る。
+ * strokeWidth is changed from 2 to 6 through the number input of the line-style menu, guarding that
+ * both the arrow matrix scale and the visual line inset grow about threefold.
  */
 
 type Vec = { x: number; y: number };
@@ -19,7 +19,7 @@ type ArrowMatrix = { a: number; b: number; tip: Vec };
 
 function parsePoints(attr: string | null): Vec[] {
 	if (!attr) {
-		throw new Error("points 属性が取得できない");
+		throw new Error("points attribute is missing");
 	}
 	return attr
 		.trim()
@@ -34,7 +34,7 @@ function distance(a: Vec, b: Vec): number {
 	return Math.hypot(a.x - b.x, a.y - b.y);
 }
 
-/** コネクターの矢印 polygon すべての matrix（a,b と先端 e,f）を読む */
+/** Reads the matrix of every arrow polygon of the connector: a,b and the tip e,f. */
 async function readArrows(
 	canvas: CanvasDriver,
 	id: string,
@@ -68,8 +68,8 @@ function arrowNearest(arrows: ArrowMatrix[], endpoint: Vec): ArrowMatrix {
 }
 
 /**
- * 当たり判定線（全長）と視覚線（inset 済み）の座標列を読む。視覚線は当たり判定線の親配下の
- * data 属性なし polyline。
+ * Reads the coordinates of the hit line (full length) and the visual line (inset applied). The
+ * visual line is the polyline without data attributes under the parent of the hit line.
  */
 async function readLines(
 	canvas: CanvasDriver,
@@ -91,12 +91,12 @@ async function readLines(
 		};
 	}, id);
 	if (!data.hit || !data.visual) {
-		throw new Error("当たり判定線／視覚線の points が取得できない");
+		throw new Error("points of the hit line / visual line are not available");
 	}
 	return { hit: parsePoints(data.hit), visual: parsePoints(data.visual) };
 }
 
-/** 終端矢印のスケール（matrix の (a,b) の長さ＝strokeWidth）と inset を測る */
+/** Measures the scale of the end arrow (the length of (a,b) in its matrix, equal to strokeWidth) and the inset. */
 async function measure(
 	canvas: CanvasDriver,
 	id: string,
@@ -110,7 +110,7 @@ async function measure(
 	};
 }
 
-/** 左右の 2 矩形を rightCenter → leftCenter で結ぶ水平な直線コネクター（既定 end 矢印あり）。 */
+/** A horizontal straight connector joining two side-by-side rectangles from rightCenter to leftCenter (with the default end arrow). */
 async function buildHorizontalConnector(canvas: CanvasDriver): Promise<string> {
 	await canvas.drawShape("Rectangle", { x: 300, y: 200 }, { x: 460, y: 300 });
 	await canvas.deselect();
@@ -123,24 +123,25 @@ async function buildHorizontalConnector(canvas: CanvasDriver): Promise<string> {
 	return id;
 }
 
-test.describe("コネクターの線幅と矢印・インセットの連動", () => {
-	test("strokeWidth を太くすると矢印スケールと線インセットが比例して拡大する", async ({
+test.describe("connector stroke width driving the arrow and the inset", () => {
+	test("grows the arrow scale and the line inset proportionally when strokeWidth is increased", async ({
 		canvas,
 	}) => {
 		const connectorId = await buildHorizontalConnector(canvas);
 
-		// 既定 strokeWidth=2。矢印スケール≈2、inset>0。
+		// Default strokeWidth=2, so the arrow scale is about 2 and the inset is above 0.
 		const before = await measure(canvas, connectorId);
 		expect(
 			before.arrowScale,
-			`既定の矢印スケールが strokeWidth(2) に一致すること: ${before.arrowScale.toFixed(2)}`,
+			`default arrow scale matches strokeWidth(2): ${before.arrowScale.toFixed(2)}`,
 		).toBeGreaterThan(1.5);
 		expect(before.arrowScale).toBeLessThan(2.5);
-		expect(before.inset, "既定でも終端は inset されていること").toBeGreaterThan(
-			6,
-		);
+		expect(
+			before.inset,
+			"the end is inset even with the default width",
+		).toBeGreaterThan(6);
 
-		// line-style メニューを開いて strokeWidth を 6 に変更。
+		// Open the line-style menu and change strokeWidth to 6.
 		await canvas.clickAt({ x: 610, y: 250 });
 		await expect(
 			canvas.page.locator('[data-part="toggle:line-style"]'),
@@ -149,23 +150,23 @@ test.describe("コネクターの線幅と矢印・インセットの連動", ()
 		await canvas.setNumberInput("strokeWidth", 6);
 		await canvas.deselect();
 
-		// strokeWidth=6。矢印スケール≈6、inset も約 3 倍。
+		// strokeWidth=6, so the arrow scale is about 6 and the inset about three times as large.
 		const after = await measure(canvas, connectorId);
 		expect(
 			after.arrowScale,
-			`変更後の矢印スケールが strokeWidth(6) に一致すること: ${after.arrowScale.toFixed(2)}`,
+			`arrow scale after the change matches strokeWidth(6): ${after.arrowScale.toFixed(2)}`,
 		).toBeGreaterThan(5.4);
 		expect(after.arrowScale).toBeLessThan(6.6);
 
-		// 比例連動: スケールも inset も strokeWidth 比（6/2=3）でほぼ 3 倍になる。
+		// Both the scale and the inset grow by the strokeWidth ratio (6/2=3).
 		expect(
 			after.arrowScale / before.arrowScale,
-			"矢印スケールが strokeWidth 比（≈3）で拡大すること",
+			"arrow scale grows by the strokeWidth ratio (about 3)",
 		).toBeGreaterThan(2.6);
 		expect(after.arrowScale / before.arrowScale).toBeLessThan(3.4);
 		expect(
 			after.inset / before.inset,
-			`線インセットが strokeWidth 比（≈3）で拡大すること: ${(after.inset / before.inset).toFixed(2)}`,
+			`line inset grows by the strokeWidth ratio (about 3): ${(after.inset / before.inset).toFixed(2)}`,
 		).toBeGreaterThan(2.6);
 		expect(after.inset / before.inset).toBeLessThan(3.4);
 	});

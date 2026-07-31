@@ -3,40 +3,43 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 import { selectors } from "../../support/selectors";
 
 /**
- * #72 の非回帰。ズーム≠1 で「リサイズのドラッグを保持したままホイールでスクロール」した
- * とき、bottomRight ハンドル（= event.last をカーソル world 位置として使う経路）が
- * 実ビューポート移動量に追従することを検証する。
+ * Non-regression for #72. With zoom != 1, scrolling by wheel while a resize drag
+ * is held must keep the bottomRight handle (the path that uses event.last as the
+ * cursor's world position) following the real viewport movement.
  *
- * 旧実装は currentPos(=last) に生ピクセルの scrollDelta を加算していた。ビューポートは
- * scrollDelta/zoom（world 単位）しか動かないため、zoom≠1 では last が zoom 倍ずれ、
- * リサイズがカーソルから乖離していた（移動は delta 経由のため影響なし）。
+ * The old implementation added the raw pixel scrollDelta to currentPos (= last).
+ * The viewport only moves by scrollDelta/zoom (world units), so with zoom != 1
+ * last drifted by a factor of zoom and the resize came away from the cursor.
+ * Moving goes through delta and was unaffected.
  *
- * 検証は「bottomRight の world 幅増分（deltaW）」を「実ビューポート移動量（viewBox の
- * minX 増分 = worldShift）」と比べる:
- *   - 修正後: deltaW ≈ worldShift（ハンドルが実移動量に追従する）
- *   - 退行時: deltaW ≈ scrollDelta（生px。worldShift の zoom 倍に膨らむ）
+ * The check compares the world width bottomRight gained (deltaW) against the
+ * real viewport movement (the growth of the viewBox minX = worldShift):
+ *   - fixed: deltaW ~= worldShift, the handle follows the real movement
+ *   - regressed: deltaW ~= scrollDelta (raw px, zoom times worldShift)
  *
- * 期待値を viewBox から直接測る理由: viewport.width は実 SVG 幅ではなく固定値（1000）の
- * ため、`scrollDelta × (viewBox幅/SVG画面幅)` は SVG が 1000px 幅で描画される環境でしか
- * 実移動量に一致しない。worldShift（minX 増分）は描画幅に依存せず常に実移動量と等しい。
+ * The expected value is measured straight from the viewBox because
+ * viewport.width is a fixed 1000 rather than the real SVG width, so
+ * `scrollDelta * (viewBox width / SVG screen width)` only matches the real
+ * movement where the SVG renders 1000px wide. worldShift (the minX growth)
+ * equals the real movement regardless of the rendered width.
  */
 
 const TOLERANCE_PX = 14;
 
-/** viewBox の minX（world 座標。水平スクロールでこの値が動く）。 */
+/** The viewBox minX (world coordinates; horizontal scrolling moves this value). */
 async function viewBoxMinX(canvas: CanvasDriver): Promise<number> {
 	const raw = await canvas.getViewBox();
 	if (!raw) {
-		throw new Error("viewBox が取得できない");
+		throw new Error("cannot read the viewBox");
 	}
 	return Number(raw.trim().split(/\s+/)[0]);
 }
 
-/** 画面 1px が表す world 長（viewBox 幅 ÷ SVG 画面幅）。zoom を上げるほど小さくなる。 */
+/** World length of one screen pixel (viewBox width / SVG screen width); smaller the more you zoom in. */
 async function worldPerScreenPixel(canvas: CanvasDriver): Promise<number> {
 	const raw = await canvas.getViewBox();
 	if (!raw) {
-		throw new Error("viewBox が取得できない");
+		throw new Error("cannot read the viewBox");
 	}
 	const vbWidth = Number(raw.trim().split(/\s+/)[2]);
 	const svgScreenWidth = await canvas.page.evaluate(() => {
@@ -56,7 +59,7 @@ async function worldPerScreenPixel(canvas: CanvasDriver): Promise<number> {
 	return vbWidth / svgScreenWidth;
 }
 
-/** 変形ハンドルの画面座標中心（boundingBox は画面座標を返す） */
+/** Screen-coordinate center of a transform handle (boundingBox returns screen coordinates). */
 async function handleScreenCenter(
 	canvas: CanvasDriver,
 	handle: "bottomRight",
@@ -65,13 +68,13 @@ async function handleScreenCenter(
 	await expect(control).toBeVisible();
 	const box = await control.boundingBox();
 	if (!box) {
-		throw new Error(`変形ハンドル ${handle} の位置が取得できない`);
+		throw new Error(`cannot locate the ${handle} transform handle`);
 	}
 	return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 }
 
-test.describe("ズーム下・リサイズ中のスクロール（#72）", () => {
-	test("ドラッグ保持中のホイールスクロールで bottomRight は実ビューポート移動量に追従する（生pxではない）", async ({
+test.describe("scrolling mid-resize under zoom (#72)", () => {
+	test("makes bottomRight follow the real viewport movement, not raw pixels, on a wheel scroll during a held drag", async ({
 		canvas,
 	}) => {
 		const id = await canvas.drawShape(
@@ -79,14 +82,14 @@ test.describe("ズーム下・リサイズ中のスクロール（#72）", () =>
 			{ x: 300, y: 180 },
 			{ x: 520, y: 340 },
 		);
-		// drawShape 直後は自動選択。ハンドルを出したままズームする（選択は zoom で消えない）。
+		// drawShape auto-selects. Zoom with the handles still up; zooming does not clear the selection.
 		const rect = canvas.objectById(id);
 
-		// 図形中心を基点にズームイン（基点が中心なので中心の画面位置は不動）。
-		// ctrl+wheel は 1 ノッチ ×1.1 固定なので、scale が十分小さくなるまで繰り返す。
+		// Zoom in around the shape's center, which therefore keeps its screen position.
+		// ctrl+wheel is a fixed 1.1 per notch, so repeat until the scale is small enough.
 		const box0 = await rect.boundingBox();
 		if (!box0) {
-			throw new Error("図形の boundingBox が取得できない");
+			throw new Error("cannot read the shape's boundingBox");
 		}
 		const center = canvas.toContent({
 			x: box0.x + box0.width / 2,
@@ -99,51 +102,53 @@ test.describe("ズーム下・リサイズ中のスクロール（#72）", () =>
 			await canvas.wheel(center, { deltaY: -200, ctrl: true });
 		}
 
-		// zoom が 1 に近いと worldShift ≈ scrollDelta となり退行が隠れるため、
-		// 先に十分ズームインできていることを固める（scale が小さい = zoom が高い）。
+		// Near zoom 1, worldShift ~= scrollDelta and the regression hides, so pin that
+		// the zoom-in went far enough (a small scale means a high zoom).
 		expect(await worldPerScreenPixel(canvas)).toBeLessThan(0.6);
 
-		// bottomRight ハンドルでリサイズを開始し、保持したままにする。
+		// Start a resize on the bottomRight handle and keep it held.
 		const handle = await handleScreenCenter(canvas, "bottomRight");
 		const worldWInit = Number(await rect.getAttribute("width"));
 
 		await canvas.page.mouse.move(handle.x, handle.y);
 		await canvas.page.mouse.down();
-		// 外側へ少し広げてドラッグを確立しつつヘッドルームを確保する。
+		// Widen a little outward to establish the drag and leave headroom.
 		await canvas.page.mouse.move(handle.x + 60, handle.y + 40, { steps: 6 });
 
 		try {
-			// 確立した移動が world 幅に反映されるまで待ってから基準値を読む。
+			// Read the baseline only once that movement has reached the world width.
 			await expect
 				.poll(async () => Number(await rect.getAttribute("width")), {
-					message: "ドラッグ確立で world 幅が増えること",
+					message: "establishing the drag grows the world width",
 				})
 				.toBeGreaterThan(worldWInit + 5);
 			const widthBefore = Number(await rect.getAttribute("width"));
 			const minXBefore = await viewBoxMinX(canvas);
 
-			// カーソルは動かさず、ドラッグ保持中にホイールで水平スクロールする。
-			// deltaX>0 で viewport.minX が scrollDelta/zoom 増え、固定カーソル下の world は
-			// 同じだけ右へ動く。bottomRight はそれに追従するので world 幅が増える。
+			// Scroll horizontally by wheel during the held drag, without moving the cursor.
+			// deltaX>0 grows viewport.minX by scrollDelta/zoom, and the world under the
+			// fixed cursor moves right by the same amount. bottomRight follows it, so
+			// the world width grows.
 			const scrollDelta = 160;
 			await canvas.page.mouse.wheel(scrollDelta, 0);
 
 			await expect
 				.poll(async () => Number(await rect.getAttribute("width")), {
-					message: "スクロールで world 幅が増えて落ち着くこと",
+					message: "the world width grows and settles after the scroll",
 				})
 				.toBeGreaterThan(widthBefore + 1);
 			const widthAfter = Number(await rect.getAttribute("width"));
 			const deltaW = widthAfter - widthBefore;
 
-			// 実ビューポート移動量（world 単位）。修正後はこれと bottomRight の増分が一致する。
+			// The real viewport movement in world units; after the fix bottomRight's gain matches it.
 			const worldShift = (await viewBoxMinX(canvas)) - minXBefore;
 
-			// 修正後: bottomRight の増分 ≈ 実ビューポート移動量。
-			// （viewBox から直接測るため SVG の描画ピクセル幅に依存しない）
+			// After the fix, bottomRight's gain ~= the real viewport movement.
+			// Measured straight from the viewBox, so the SVG's rendered pixel width does not matter.
 			expect(Math.abs(deltaW - worldShift)).toBeLessThanOrEqual(TOLERANCE_PX);
-			// 退行（生px加算）なら deltaW ≈ scrollDelta（worldShift の zoom 倍）となり、
-			// worldShift（< scrollDelta）から TOLERANCE 以上ずれてここで落ちる。
+			// With the regression (raw px added) deltaW ~= scrollDelta, zoom times
+			// worldShift, which lands more than TOLERANCE away from worldShift
+			// (< scrollDelta) and fails here.
 			expect(deltaW).toBeLessThan(scrollDelta * 0.85);
 		} finally {
 			await canvas.page.mouse.up();

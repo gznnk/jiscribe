@@ -1,12 +1,14 @@
 import { test, expect } from "../../fixtures";
 
 /**
- * グループ化（Ctrl+G）/ 解除（Ctrl+Shift+G）。
- * グループ化後はメンバーをクリックするとグループ全体が選択され、まとめて動く
- * （autoSelectParentGroups）。解除後は個別に動く。
+ * Grouping (Ctrl+G) / ungrouping (Ctrl+Shift+G).
+ * After grouping, clicking a member selects the whole group and they move together
+ * (autoSelectParentGroups). After ungrouping they move individually.
  */
-test.describe("グループ", () => {
-	test("グループ化するとメンバーをまとめて移動できる", async ({ canvas }) => {
+test.describe("group", () => {
+	test("moves the members together once they are grouped", async ({
+		canvas,
+	}) => {
 		const a = await canvas.drawShape(
 			"Rectangle",
 			{ x: 300, y: 200 },
@@ -20,16 +22,16 @@ test.describe("グループ", () => {
 		);
 		await canvas.deselect();
 
-		// マーキーで両方選択してグループ化
+		// Marquee-select both and group them
 		await canvas.drag({ x: 260, y: 160 }, { x: 740, y: 360 }, 12);
 		await canvas.group();
 		await canvas.deselect();
 
-		// A をクリックするとグループ全体が選択され、ドラッグで両方動く
+		// Clicking A selects the whole group, so the drag moves both
 		await canvas.selectAt({ x: 370, y: 260 });
 		await canvas.drag({ x: 370, y: 260 }, { x: 470, y: 300 });
 
-		// 両方が同じ量 (+100, +40) だけ移動する
+		// Both move by the same amount (+100, +40)
 		await expect
 			.poll(() => canvas.objectById(a).getAttribute("transform"))
 			.toBe("matrix(1, 0, 0, 1, 470, 300)");
@@ -38,7 +40,9 @@ test.describe("グループ", () => {
 		);
 	});
 
-	test("グループ解除後は個別に移動できる", async ({ canvas }) => {
+	test("moves the members individually after ungrouping", async ({
+		canvas,
+	}) => {
 		const a = await canvas.drawShape(
 			"Rectangle",
 			{ x: 300, y: 200 },
@@ -57,7 +61,7 @@ test.describe("グループ", () => {
 		await canvas.ungroup();
 		await canvas.deselect();
 
-		// A だけをクリック・移動しても B は動かない
+		// Clicking and moving A alone leaves B put
 		await canvas.selectAt({ x: 370, y: 260 });
 		await canvas.drag({ x: 370, y: 260 }, { x: 470, y: 260 });
 

@@ -3,27 +3,27 @@ import type { CDPSession, Page } from "@playwright/test";
 import { test, expect } from "../../fixtures";
 
 /**
- * issue #25「GestureRecognizer — マルチタッチ時の状態汚染」の非回帰テスト。
+ * Non-regression test for issue #25 "GestureRecognizer - state pollution on multi-touch".
  *
- * GestureRecognizer は単一ポインター（pressed）しか保持しないため、1本目の
- * 操作中に2本目の pointerdown が割り込むと pressed が上書きされ、1本目の
- * pointer の以降のイベントが pointerId 不一致で無視されてしまう問題があった。
- * 結果として図形が中間状態で固まり、座標が誤って確定するリスクがあった。
- * 修正後は「アクティブなジェスチャー中の2本目以降の pointerdown は単純に無視」する。
+ * GestureRecognizer holds a single pointer (pressed), so a second pointerdown
+ * interrupting the first gesture overwrote it and every later event from the
+ * first pointer was dropped on a pointerId mismatch. Shapes froze in an
+ * intermediate state and risked committing the wrong coordinates. After the fix,
+ * a second or later pointerdown during an active gesture is simply ignored.
  *
- * Playwright の mouse/touchscreen API はマルチタッチを扱えないため、
- * CDP の Input.dispatchTouchEvent で実際のタッチポイントを2本同時に送って再現する。
+ * Playwright's mouse/touchscreen API cannot do multi-touch, so two real touch
+ * points are sent at once through CDP's Input.dispatchTouchEvent.
  *
- * CDP タッチの注意点（このテストの組み立てはこれに依存している）:
- * - touchStart/touchMove には「現在アクティブな全タッチ点」を渡す（id で区別）。
- * - touchEnd には「離す点」を渡す（[] なら残り全部を離す）。
- * - キャプチャ確立後、同一指の2回目以降の touchMove は反映されないため、
- *   各指の移動は1回の touchMove で最終位置まで送る。
+ * CDP touch caveats this test is built around:
+ * - touchStart/touchMove take every currently active touch point (told apart by id).
+ * - touchEnd takes the points to release ([] releases all the remaining ones).
+ * - Once capture is established the second and later touchMove of the same finger
+ *   has no effect, so each finger is moved to its final position in one touchMove.
  */
 
 type TouchPoint = { x: number; y: number; id: number };
 
-/** RAF を2フレーム進め、GestureRecognizer のキュー（schedule の単発 RAF）を消化させる */
+/** Advances two RAF frames to drain the GestureRecognizer queue (schedule's one-shot RAF). */
 function flushFrames(page: Page) {
 	return page.evaluate(
 		() =>
@@ -41,16 +41,16 @@ function dispatchTouch(
 	return client.send("Input.dispatchTouchEvent", { type, touchPoints });
 }
 
-// 図形から十分離れた空白座標（コンテンツ座標）。2本目のタッチの着地点に使う。
+// Empty spot well clear of the shape (content coordinates), used as the second touch's landing point.
 const SECOND_FINGER = { x: 150, y: 780, id: 2 } as const;
 const FIRST_FINGER_ID = 1;
 
-test.describe("マルチタッチ時の状態汚染 (issue #25)", () => {
-	test("1本目のドラッグ中に2本目のタッチが割り込んでも、1本目で図形を動かし続けられる", async ({
+test.describe("state pollution on multi-touch (issue #25)", () => {
+	test("keeps moving the shape with the first finger when a second touch interrupts the drag", async ({
 		canvas,
 		page,
 	}) => {
-		// 中心 (500, 260) の矩形
+		// Rect centered at (500, 260)
 		const id = await canvas.drawShape(
 			"Rectangle",
 			{ x: 400, y: 200 },
@@ -58,32 +58,33 @@ test.describe("マルチタッチ時の状態汚染 (issue #25)", () => {
 		);
 		await canvas.deselect();
 
-		// タッチは実マウスのツール操作と干渉するため、描画が終わってから有効化する
+		// Touch interferes with driving the tools by real mouse, so enable it after drawing
 		const client = await page.context().newCDPSession(page);
 		await client.send("Emulation.setTouchEmulationEnabled", {
 			enabled: true,
 			maxTouchPoints: 5,
 		});
 
-		// CDP は生の画面座標を取るため、コンテンツ座標を画面座標へ変換して送る。
+		// CDP takes raw screen coordinates, so content coordinates are converted before sending.
 		const tp = (p: TouchPoint): TouchPoint => ({ ...p, ...canvas.toScreen(p) });
 
-		// 1本目: 図形中心を押さえる
+		// First finger: press on the shape's center
 		await dispatchTouch(client, "touchStart", [
 			tp({ x: 500, y: 260, id: FIRST_FINGER_ID }),
 		]);
 		await flushFrames(page);
 
-		// 2本目: 離れた空白を同時に押さえる（マルチタッチの割り込み）
+		// Second finger: press the distant empty spot at the same time (the multi-touch interruption)
 		await dispatchTouch(client, "touchStart", [
 			tp({ x: 500, y: 260, id: FIRST_FINGER_ID }),
 			tp({ ...SECOND_FINGER }),
 		]);
 		await flushFrames(page);
 
-		// 1本目を最終位置 (800, 560) までドラッグする。
-		// 旧実装では2本目の pointerdown で pressed が上書きされ、1本目の move が
-		// pointerId 不一致で無視されて図形が中心のまま固まる（= 中間状態で確定）。
+		// Drag the first finger to its final position (800, 560).
+		// In the old implementation the second pointerdown overwrote pressed, the first
+		// finger's moves were dropped on a pointerId mismatch and the shape stayed
+		// frozen at its center, committing an intermediate state.
 		await dispatchTouch(client, "touchMove", [
 			tp({ x: 800, y: 560, id: FIRST_FINGER_ID }),
 			tp({ ...SECOND_FINGER }),
@@ -97,12 +98,12 @@ test.describe("マルチタッチ時の状態汚染 (issue #25)", () => {
 						?.transform,
 				{
 					message:
-						"2本目の割り込みを無視し、1本目で図形を最終位置まで動かせること",
+						"the second finger's interruption is ignored and the first carries the shape to its final position",
 				},
 			)
 			.toBe("matrix(1, 0, 0, 1, 800, 560)");
 
-		// 2本とも離してジェスチャーを終え、最終位置で確定していることを確認する
+		// Release both fingers to end the gesture and confirm it commits at the final position
 		await dispatchTouch(client, "touchEnd", [tp({ ...SECOND_FINGER })]);
 		await dispatchTouch(client, "touchEnd", []);
 		await flushFrames(page);
@@ -112,11 +113,11 @@ test.describe("マルチタッチ時の状態汚染 (issue #25)", () => {
 		).toBe("matrix(1, 0, 0, 1, 800, 560)");
 	});
 
-	test("1本目を押している間に2本目がタップして離れても、1本目の操作は生き続ける", async ({
+	test("keeps the first finger's gesture alive when a second finger taps and releases during the press", async ({
 		canvas,
 		page,
 	}) => {
-		// 中心 (500, 260) の矩形
+		// Rect centered at (500, 260)
 		const id = await canvas.drawShape(
 			"Rectangle",
 			{ x: 400, y: 200 },
@@ -130,16 +131,16 @@ test.describe("マルチタッチ時の状態汚染 (issue #25)", () => {
 			maxTouchPoints: 5,
 		});
 
-		// CDP は生の画面座標を取るため、コンテンツ座標を画面座標へ変換して送る。
+		// CDP takes raw screen coordinates, so content coordinates are converted before sending.
 		const tp = (p: TouchPoint): TouchPoint => ({ ...p, ...canvas.toScreen(p) });
 
-		// 1本目: 図形中心を押さえたまま保持する
+		// First finger: hold the press on the shape's center
 		await dispatchTouch(client, "touchStart", [
 			tp({ x: 500, y: 260, id: FIRST_FINGER_ID }),
 		]);
 		await flushFrames(page);
 
-		// 2本目: 空白をタップして（押して離す）割り込む
+		// Second finger: interrupt with a tap on empty space (press and release)
 		await dispatchTouch(client, "touchStart", [
 			tp({ x: 500, y: 260, id: FIRST_FINGER_ID }),
 			tp({ ...SECOND_FINGER }),
@@ -148,9 +149,10 @@ test.describe("マルチタッチ時の状態汚染 (issue #25)", () => {
 		await dispatchTouch(client, "touchEnd", [tp({ ...SECOND_FINGER })]);
 		await flushFrames(page);
 
-		// 1本目を最終位置までドラッグする。
-		// 旧実装では2本目で pressed が奪われ、その後 2本目の touchEnd で pressed が
-		// クリアされてしまい、1本目の move が無視されて図形が動かない。
+		// Drag the first finger to its final position.
+		// In the old implementation the second finger stole pressed and its touchEnd
+		// then cleared it, so the first finger's moves were ignored and the shape
+		// did not move at all.
 		await dispatchTouch(client, "touchMove", [
 			tp({ x: 800, y: 560, id: FIRST_FINGER_ID }),
 		]);
@@ -163,7 +165,7 @@ test.describe("マルチタッチ時の状態汚染 (issue #25)", () => {
 						?.transform,
 				{
 					message:
-						"2本目のタップ割り込み後も1本目の操作が継続し図形を動かせること",
+						"the first finger's gesture survives the second finger's tap and still moves the shape",
 				},
 			)
 			.toBe("matrix(1, 0, 0, 1, 800, 560)");

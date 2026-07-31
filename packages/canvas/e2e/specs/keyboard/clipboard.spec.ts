@@ -1,13 +1,13 @@
 import { test, expect } from "../../fixtures";
 
 /**
- * キーボードによるクリップボード操作。
- * - Duplicate(Ctrl+D) はクリップボードを介さない
- * - Copy/Cut/Paste は内部クリップボードでラウンドトリップする
- *   （OS クリップボード読み取りが失敗しても internalClipboard にフォールバックする）
+ * Clipboard operations from the keyboard.
+ * - Duplicate (Ctrl+D) does not go through the clipboard
+ * - Copy/Cut/Paste round-trip through the internal clipboard
+ *   (falling back to internalClipboard when the OS clipboard read fails)
  */
-test.describe("キーボード: クリップボード", () => {
-	test("Ctrl+D で選択図形を複製する", async ({ canvas }) => {
+test.describe("keyboard: clipboard", () => {
+	test("duplicates the selected shape on Ctrl+D", async ({ canvas }) => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
 		const before = (await canvas.captureObjects()).length;
 
@@ -18,7 +18,7 @@ test.describe("キーボード: クリップボード", () => {
 			.toBe(before + 1);
 	});
 
-	test("Ctrl+C → Ctrl+V でコピー＆ペーストするとオブジェクトが増える", async ({
+	test("adds an object when copy-pasting with Ctrl+C then Ctrl+V", async ({
 		canvas,
 	}) => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
@@ -32,25 +32,25 @@ test.describe("キーボード: クリップボード", () => {
 			.toBe(before + 1);
 	});
 
-	test("Ctrl+X で消え、Ctrl+V で戻る（切り取り→貼り付け）", async ({
+	test("removes the shape on Ctrl+X and brings it back on Ctrl+V", async ({
 		canvas,
 	}) => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
 
 		await canvas.cut();
-		// 切り取りは即座に削除する
 		await expect
 			.poll(async () => (await canvas.captureObjects()).length)
 			.toBe(0);
 
 		await canvas.paste();
-		// 貼り付けで復活する
 		await expect
 			.poll(async () => (await canvas.captureObjects()).length)
 			.toBe(1);
 	});
 
-	test("Ctrl+V の後 Undo で複製が消え、Redo で戻る", async ({ canvas }) => {
+	test("removes the pasted copy on undo after Ctrl+V and restores it on redo", async ({
+		canvas,
+	}) => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
 		const before = (await canvas.captureObjects()).length;
 
@@ -60,7 +60,8 @@ test.describe("キーボード: クリップボード", () => {
 			.poll(async () => (await canvas.captureObjects()).length)
 			.toBe(before + 1);
 
-		// ペーストは履歴に積まれるので、undo で複製だけが消える（元図形は残る）。
+		// Paste is pushed onto the history, so undo removes only the copy and the
+		// original stays.
 		await canvas.undo();
 		await expect
 			.poll(async () => (await canvas.captureObjects()).length)
@@ -72,7 +73,9 @@ test.describe("キーボード: クリップボード", () => {
 			.toBe(before + 1);
 	});
 
-	test("Ctrl+D の後 Undo で複製が消え、Redo で戻る", async ({ canvas }) => {
+	test("removes the duplicate on undo after Ctrl+D and restores it on redo", async ({
+		canvas,
+	}) => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
 		const before = (await canvas.captureObjects()).length;
 

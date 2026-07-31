@@ -1,25 +1,23 @@
 import { test, expect } from "../../fixtures";
 
 /**
- * CanvasDriver の入力プリミティブ（wheel / rightDrag / コントロール可視判定）の
- * 動作確認。プロダクトの仕様ではなくドライバ API 自体を検証する。
+ * Driver self-test for CanvasDriver's input primitives (wheel / rightDrag /
+ * control visibility). Verifies the driver API itself, not product behavior.
  */
-test.describe("ドライバ動作確認: 入力プリミティブ", () => {
-	test("wheel でキャンバスがスクロールする（viewBox が変わる）", async ({
-		canvas,
-	}) => {
+test.describe("driver: input primitives", () => {
+	test("scrolls the canvas on wheel (viewBox changes)", async ({ canvas }) => {
 		const before = await canvas.getViewBox();
 
 		await canvas.wheel({ x: 700, y: 450 }, { deltaY: 200 });
 
 		await expect
 			.poll(() => canvas.getViewBox(), {
-				message: "wheel 後に viewBox が変化すること",
+				message: "viewBox changes after the wheel",
 			})
 			.not.toBe(before);
 	});
 
-	test("ctrl+wheel でキャンバスがズームする（viewBox が変わる）", async ({
+	test("zooms the canvas on ctrl+wheel (viewBox changes)", async ({
 		canvas,
 	}) => {
 		const before = await canvas.getViewBox();
@@ -29,7 +27,7 @@ test.describe("ドライバ動作確認: 入力プリミティブ", () => {
 		await expect.poll(() => canvas.getViewBox()).not.toBe(before);
 	});
 
-	test("rightDrag でビューポートがパンする（viewBox が変わる）", async ({
+	test("pans the viewport on rightDrag (viewBox changes)", async ({
 		canvas,
 	}) => {
 		const before = await canvas.getViewBox();
@@ -39,7 +37,7 @@ test.describe("ドライバ動作確認: 入力プリミティブ", () => {
 		await expect.poll(() => canvas.getViewBox()).not.toBe(before);
 	});
 
-	test("描画直後は変形コントロールが表示される", async ({ canvas }) => {
+	test("shows transform controls right after drawing", async ({ canvas }) => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
 
 		const ids = await canvas.visibleControlIds();
@@ -51,7 +49,9 @@ test.describe("ドライバ動作確認: 入力プリミティブ", () => {
 		expect(await canvas.hasAnyControl()).toBe(true);
 	});
 
-	test("選択解除でコントロールが消える", async ({ canvas }) => {
+	test("removes the controls when the selection is cleared", async ({
+		canvas,
+	}) => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
 		await canvas.deselect();
 

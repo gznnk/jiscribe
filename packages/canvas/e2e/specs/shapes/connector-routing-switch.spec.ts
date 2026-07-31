@@ -2,26 +2,29 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * ObjectMenu からのコネクター routing 切替（直線 / 直角）を UI レベルで検証する spec。
+ * Spec verifying, at the UI level, switching connector routing (straight / orthogonal) from the
+ * ObjectMenu.
  *
- * connector-routing-geometry.spec は「既定（orthogonal）の出力幾何」までしか守っておらず、
- * RoutingMenu（ObjectMenu の routing ドロップダウン）を使って straight ⇄ orthogonal を
- * 切り替えたときに実際に描画経路が切り替わること——straight で 1 本の対角直線に、
- * orthogonal で直角の折れ線に戻ること、現在 routing が選択肢のハイライトに反映されること——
- * は未検証だった。SetConnectorRoutingCommand の eff果を実 UI 操作で守る。
+ * connector-routing-geometry.spec only covers the output geometry of the default (orthogonal)
+ * routing; switching straight <-> orthogonal through the RoutingMenu (the routing dropdown of the
+ * ObjectMenu) and having the rendered route actually change was untested — becoming a single
+ * diagonal line for straight, returning to a right-angled polyline for orthogonal, and the current
+ * routing being reflected in the highlighted option. This guards the effect of
+ * SetConnectorRoutingCommand through real UI operations.
  *
- * 配置は「斜めに離した 2 図形」を使う。この配置では straight = 2 頂点の対角線、
- * orthogonal = 直角の折れ線（3 頂点以上）になり、両 routing が幾何的に明確に区別できる。
+ * The layout uses two shapes placed diagonally apart. There, straight is a 2-vertex diagonal and
+ * orthogonal is a right-angled polyline (3 or more vertices), so the two routings are clearly
+ * distinguishable geometrically.
  */
 
 type Vec = { x: number; y: number };
 
 const EPS = 1.5;
 
-/** polyline の points 属性 "x1,y1 x2,y2 ..." を座標配列へパースする */
+/** Parses the polyline points attribute "x1,y1 x2,y2 ..." into an array of coordinates. */
 function parsePoints(attr: string | null): Vec[] {
 	if (!attr) {
-		throw new Error("points 属性が取得できない");
+		throw new Error("points attribute is missing");
 	}
 	return attr
 		.trim()
@@ -32,7 +35,7 @@ function parsePoints(attr: string | null): Vec[] {
 		});
 }
 
-/** 隣り合う頂点がすべて水平 or 垂直（=直角・退化なし）であることを検査する */
+/** Checks that every pair of adjacent vertices is horizontal or vertical (right angles, no degenerate segments). */
 function assertOrthogonalSegments(points: Vec[]) {
 	for (let i = 1; i < points.length; i++) {
 		const prev = points[i - 1];
@@ -41,12 +44,12 @@ function assertOrthogonalSegments(points: Vec[]) {
 		const vertical = Math.abs(prev.x - cur.x) <= EPS;
 		expect(
 			horizontal !== vertical,
-			`セグメント ${i - 1}->${i} が直角でない（重複点 or 斜め）: ${JSON.stringify(prev)} -> ${JSON.stringify(cur)}`,
+			`segment ${i - 1}->${i} is not at a right angle (duplicated point or diagonal): ${JSON.stringify(prev)} -> ${JSON.stringify(cur)}`,
 		).toBe(true);
 	}
 }
 
-/** コネクターの現在の描画 points を読む */
+/** Reads the currently rendered points of the connector. */
 async function readPoints(
 	canvas: CanvasDriver,
 	connectorId: string,
@@ -57,9 +60,9 @@ async function readPoints(
 }
 
 /**
- * コネクターを「線上の一点」をクリックして選択する。
- * routing 切替で経路（頂点数）が変わるため、その時点の最長セグメントの中点を
- * 実描画 points から求めてクリックする（当たり判定の中心線上で確実に拾う）。
+ * Selects the connector by clicking a point on the line. The route (and its vertex count) changes
+ * with the routing, so the midpoint of the longest segment at that moment is computed from the
+ * rendered points and clicked, which lands on the center line of the hit area.
  */
 async function selectConnector(canvas: CanvasDriver, connectorId: string) {
 	const points = await readPoints(canvas, connectorId);
@@ -79,9 +82,9 @@ async function selectConnector(canvas: CanvasDriver, connectorId: string) {
 }
 
 /**
- * RoutingMenu のドロップダウンを開く（既に開いていれば何もしない）。
- * コマンドをクリックしてもドロップダウンは閉じないため、トグルを無条件に押すと
- * 開いているものを閉じてしまう。選択肢が見えていなければトグルを押して開く。
+ * Opens the RoutingMenu dropdown, doing nothing if it is already open. Clicking a command does not
+ * close the dropdown, so pressing the toggle unconditionally would close an open one; the toggle is
+ * pressed only when no option is visible.
  */
 async function ensureRoutingMenuOpen(canvas: CanvasDriver) {
 	const anyOption = canvas.page.locator(
@@ -94,8 +97,8 @@ async function ensureRoutingMenuOpen(canvas: CanvasDriver) {
 }
 
 /**
- * RoutingMenu を開いて指定 routing の選択肢を押す。
- * 切替後もコネクター選択は維持されるので、続けて別 routing へ切り替えられる。
+ * Opens the RoutingMenu and presses the option for the given routing. The connector stays selected
+ * after the switch, so another routing can be selected right after.
  */
 async function setRouting(
 	canvas: CanvasDriver,
@@ -108,10 +111,10 @@ async function setRouting(
 }
 
 /**
- * 斜めに離した 2 矩形を source rightCenter → target leftCenter でつなぎ、コネクター ID を返す。
- * target は辺アンカー（leftCenter）へ落とす。両端が connectPoint なので既定は orthogonal になり、
- * この spec が守る「既定は直角 → straight/orthogonal 切替」の前提が成立する（中心へ落とすと
- * どちらかの端点が center になり既定 straight になってしまう）。
+ * Joins two rectangles placed diagonally apart from source rightCenter to target leftCenter and
+ * returns the connector id. The target end is dropped on an edge anchor (leftCenter): with both
+ * ends being connectPoints the default is orthogonal, which is the premise this spec relies on
+ * (dropping on a center would make one endpoint a center anchor, defaulting to straight).
  */
 async function buildDiagonalConnector(canvas: CanvasDriver): Promise<string> {
 	await canvas.drawShape("Rectangle", { x: 300, y: 180 }, { x: 460, y: 280 });
@@ -120,7 +123,7 @@ async function buildDiagonalConnector(canvas: CanvasDriver): Promise<string> {
 	await canvas.deselect();
 
 	await canvas.selectAt({ x: 380, y: 230 });
-	// target 左辺中央 (820, 490) へドロップ → leftCenter アンカー（辺 = 向きを持つ）。
+	// Drop on the target left edge center (820, 490) -> a leftCenter anchor (an edge has a direction).
 	const connectorId = await canvas.createConnector("rightCenter", {
 		x: 820,
 		y: 490,
@@ -129,51 +132,53 @@ async function buildDiagonalConnector(canvas: CanvasDriver): Promise<string> {
 	return connectorId;
 }
 
-test.describe("コネクターの routing 切替（ObjectMenu）", () => {
-	test("既定は直角、straight 切替で対角直線、orthogonal 切替で直角へ戻る", async ({
+test.describe("switching connector routing (ObjectMenu)", () => {
+	test("defaults to orthogonal, becomes a diagonal line on straight and returns to right angles on orthogonal", async ({
 		canvas,
 	}) => {
 		const connectorId = await buildDiagonalConnector(canvas);
 
-		// 既定（routing 省略）は orthogonal。斜め配置なので折れて 3 頂点以上・全直角。
+		// The default (routing omitted) is orthogonal. The diagonal layout bends, so there are at
+		// least 3 vertices and all segments are at right angles.
 		const initial = await readPoints(canvas, connectorId);
 		expect(
 			initial.length,
-			`既定 routing が直角の折れ線であること: ${JSON.stringify(initial)}`,
+			`default routing is a right-angled polyline: ${JSON.stringify(initial)}`,
 		).toBeGreaterThanOrEqual(3);
 		assertOrthogonalSegments(initial);
 
-		// straight へ切替 → 端点を直結する 1 セグメント（2 頂点）の対角線になる。
+		// Switch to straight -> a diagonal of one segment (2 vertices) joining the endpoints directly.
 		await selectConnector(canvas, connectorId);
 		await setRouting(canvas, "straight");
 		await expect
 			.poll(async () => (await readPoints(canvas, connectorId)).length, {
-				message: "straight 切替で 2 頂点の直線になること",
+				message: "becomes a 2-vertex straight line when switched to straight",
 			})
 			.toBe(2);
 
 		const straight = await readPoints(canvas, connectorId);
-		// 対角配置なので、唯一のセグメントは水平でも垂直でもない（斜め）。
+		// The layout is diagonal, so the only segment is neither horizontal nor vertical.
 		expect(
 			Math.abs(straight[0].x - straight[1].x),
-			"straight は x が変化する（垂直でない）",
+			"straight changes x (not vertical)",
 		).toBeGreaterThan(EPS);
 		expect(
 			Math.abs(straight[0].y - straight[1].y),
-			"straight は y が変化する（水平でない）",
+			"straight changes y (not horizontal)",
 		).toBeGreaterThan(EPS);
 
-		// orthogonal へ戻す → 再び直角の折れ線（3 頂点以上）。
+		// Switch back to orthogonal -> a right-angled polyline again (3 or more vertices).
 		await setRouting(canvas, "orthogonal");
 		await expect
 			.poll(async () => (await readPoints(canvas, connectorId)).length, {
-				message: "orthogonal 切替で折れ線（3 頂点以上）へ戻ること",
+				message:
+					"returns to a polyline (3 or more vertices) when switched to orthogonal",
 			})
 			.toBeGreaterThanOrEqual(3);
 		assertOrthogonalSegments(await readPoints(canvas, connectorId));
 	});
 
-	test("RoutingMenu の現在 routing が選択肢のハイライトに反映される", async ({
+	test("reflects the current routing in the highlighted option of the RoutingMenu", async ({
 		canvas,
 	}) => {
 		const connectorId = await buildDiagonalConnector(canvas);
@@ -186,28 +191,28 @@ test.describe("コネクターの routing 切替（ObjectMenu）", () => {
 			'[data-part="command:setRoutingStraight"]',
 		);
 
-		// active 状態は ObjectMenuButton の isActive スタイル（border-color=accent / 非活性は
-		// transparent）に出る。background はホバーでも変わるが border-color は active のみで
-		// 変わるため、現在 routing の判定には border-color を読む。
+		// The active state shows up in the isActive style of ObjectMenuButton (border-color=accent,
+		// transparent when inactive). background also changes on hover, while border-color only
+		// changes with active, so the current routing is read from border-color.
 		const borderColorOf = (
 			locator: ReturnType<typeof canvas.page.locator>,
 		): Promise<string> =>
 			locator.evaluate((el) => getComputedStyle(el).borderColor);
 
-		// 既定は orthogonal。ドロップダウンを開くと orthogonal 側だけが active。
+		// The default is orthogonal, so opening the dropdown shows only orthogonal as active.
 		await ensureRoutingMenuOpen(canvas);
 		const orthoBorderInitial = await borderColorOf(orthogonalOption);
 		const straightBorderInitial = await borderColorOf(straightOption);
 		expect(
 			orthoBorderInitial,
-			`既定では orthogonal 側が active（border が straight と異なる）: ortho=${orthoBorderInitial} straight=${straightBorderInitial}`,
+			`orthogonal is active by default (its border differs from straight): ortho=${orthoBorderInitial} straight=${straightBorderInitial}`,
 		).not.toBe(straightBorderInitial);
 
-		// straight へ切替 → 反映を points で確認してから、active が straight 側へ移ること。
+		// Switch to straight: confirm it applied through points, then that active moved to straight.
 		await canvas.page.click('[data-part="command:setRoutingStraight"]');
 		await expect
 			.poll(async () => (await readPoints(canvas, connectorId)).length, {
-				message: "straight 切替が反映されること",
+				message: "the switch to straight is applied",
 			})
 			.toBe(2);
 
@@ -216,28 +221,28 @@ test.describe("コネクターの routing 切替（ObjectMenu）", () => {
 		const straightBorderAfter = await borderColorOf(straightOption);
 		expect(
 			straightBorderAfter,
-			`straight 切替後は straight 側が active（border が orthogonal と異なる）: ortho=${orthoBorderAfter} straight=${straightBorderAfter}`,
+			`straight is active after switching to straight (its border differs from orthogonal): ortho=${orthoBorderAfter} straight=${straightBorderAfter}`,
 		).not.toBe(orthoBorderAfter);
-		// orthogonal は非活性化した（active が orthogonal から外れて straight へ移った）。
 		expect(
 			orthoBorderAfter,
-			`orthogonal が非活性化すること: before=${orthoBorderInitial} after=${orthoBorderAfter}`,
+			`orthogonal becomes inactive: before=${orthoBorderInitial} after=${orthoBorderAfter}`,
 		).not.toBe(orthoBorderInitial);
 	});
 
-	test("中心へドロップした新規コネクターは既定で直線になる", async ({
+	test("defaults a new connector dropped on a center to straight", async ({
 		canvas,
 	}) => {
-		// target の「中心」へ落とすと target は center アンカーになる。center は出口方向を
-		// 持たず orthogonal 経路が恣意的になるため、作成時の既定 routing は straight（対角の
-		// 2 頂点）になる。辺アンカー同士（buildDiagonalConnector）の既定 orthogonal と対になる挙動。
+		// Dropping on the *center* of the target makes it a center anchor. A center has no exit
+		// direction, which would make an orthogonal route arbitrary, so the default routing at
+		// creation is straight (a 2-vertex diagonal). This is the counterpart of the orthogonal
+		// default for two edge anchors (buildDiagonalConnector).
 		await canvas.drawShape("Rectangle", { x: 300, y: 180 }, { x: 460, y: 280 });
 		await canvas.deselect();
 		await canvas.drawShape("Rectangle", { x: 820, y: 440 }, { x: 980, y: 540 });
 		await canvas.deselect();
 
 		await canvas.selectAt({ x: 380, y: 230 });
-		// target 中心 (900, 490) へドロップ → center アンカー。
+		// Drop on the target center (900, 490) -> a center anchor.
 		const connectorId = await canvas.createConnector("rightCenter", {
 			x: 900,
 			y: 490,
@@ -247,16 +252,16 @@ test.describe("コネクターの routing 切替（ObjectMenu）", () => {
 		const points = await readPoints(canvas, connectorId);
 		expect(
 			points.length,
-			`center アンカーの新規コネクターは既定 straight（2 頂点）: ${JSON.stringify(points)}`,
+			`a new connector on a center anchor defaults to straight (2 vertices): ${JSON.stringify(points)}`,
 		).toBe(2);
-		// 対角配置なので唯一のセグメントは水平でも垂直でもない（斜め直線）。
+		// The layout is diagonal, so the only segment is neither horizontal nor vertical.
 		expect(
 			Math.abs(points[0].x - points[1].x),
-			"straight は x が変化する（垂直でない）",
+			"straight changes x (not vertical)",
 		).toBeGreaterThan(EPS);
 		expect(
 			Math.abs(points[0].y - points[1].y),
-			"straight は y が変化する（水平でない）",
+			"straight changes y (not horizontal)",
 		).toBeGreaterThan(EPS);
 	});
 });

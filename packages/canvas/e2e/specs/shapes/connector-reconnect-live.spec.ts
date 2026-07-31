@@ -2,16 +2,17 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * コネクター端点の再接続「ドラッグ中（コミット前）のライブプレビュー」を検証する spec。
+ * Spec for the live preview shown *while dragging* (before commit) when reconnecting a connector
+ * endpoint.
  *
- * 端点編集ハンドルをドラッグしている最中、コネクターはリリース前からカーソルに追従して
- * リアルタイムに引き直される（handleDrag が実体を直接更新する）。connector-reconnect.spec は
- * リリース後のコミット結果と undo を守るが、ドラッグ中の途中状態（プレビュー）は未検証だった。
- * プレビューが出ないと「離すまで線がどこへ繋がるか分からない」操作になる。
+ * While the endpoint edit handle is dragged, the connector is redrawn in real time following the
+ * cursor before release (handleDrag updates the object directly). connector-reconnect.spec covers
+ * the committed result after release and undo, but the intermediate state during the drag was
+ * untested. Without the preview the user cannot tell where the line will attach until releasing.
  *
- * dragInspecting でドラッグを保持したまま、コネクターの終点が現在のカーソル位置へ追従して
- * いることを確認し、リリース後にその位置で確定することも併せて守る。zoom=1 では
- * ワールド座標＝コンテンツ座標。
+ * Holds the drag open with dragInspecting to check that the connector end point follows the
+ * current cursor position, and also that it settles there after release. At zoom=1, world
+ * coordinates equal content coordinates.
  */
 
 type Vec = { x: number; y: number };
@@ -20,7 +21,7 @@ const EPS = 3;
 
 function parsePoints(attr: string | null): Vec[] {
 	if (!attr) {
-		throw new Error("points 属性が取得できない");
+		throw new Error("points attribute is missing");
 	}
 	return attr
 		.trim()
@@ -42,11 +43,11 @@ async function lastPoint(canvas: CanvasDriver, id: string): Promise<Vec> {
 	return points[points.length - 1];
 }
 
-test.describe("コネクター再接続のライブプレビュー", () => {
-	test("端点ハンドルのドラッグ中に終点がカーソルへ追従し、離すとそこで確定する", async ({
+test.describe("live preview while reconnecting a connector", () => {
+	test("end point follows the cursor while the endpoint handle is dragged and settles there on release", async ({
 		canvas,
 	}) => {
-		// 上下 2 矩形を縦コネクターで結ぶ（target は topCenter）。
+		// Join two stacked rectangles with a vertical connector (target is topCenter).
 		await canvas.drawShape("Rectangle", { x: 400, y: 150 }, { x: 600, y: 250 });
 		await canvas.deselect();
 		await canvas.drawShape("Rectangle", { x: 400, y: 450 }, { x: 600, y: 550 });
@@ -61,7 +62,7 @@ test.describe("コネクター再接続のライブプレビュー", () => {
 
 		const initialLast = await lastPoint(canvas, connectorId);
 
-		// コネクターを選択して target 端点ハンドルを出す。
+		// Select the connector to show the target endpoint handle.
 		await canvas.clickAt({ x: 500, y: 350 });
 		const handle = canvas.page.locator(
 			`[data-id="${connectorId}"][data-part="endpoint:target"]`,
@@ -69,36 +70,36 @@ test.describe("コネクター再接続のライブプレビュー", () => {
 		await expect(handle).toBeVisible();
 		const box = await handle.boundingBox();
 		if (!box) {
-			throw new Error("target ハンドルの位置が取得できない");
+			throw new Error("position of the target handle is not available");
 		}
 		const fromContent = canvas.toContent({
 			x: box.x + box.width / 2,
 			y: box.y + box.height / 2,
 		});
 
-		// 空きスペースへ向けてハンドルをドラッグし、保持したまま追従を確認する。
+		// Drag the handle toward empty space and check the following while holding it.
 		const dragTo = { x: 850, y: 300 };
 		await canvas.dragInspecting(fromContent, dragTo, async () => {
-			// コミット前でも終点がカーソル位置へ追従している（ライブプレビュー）。
+			// The end point follows the cursor even before commit (live preview).
 			await expect
 				.poll(
 					async () => distance(await lastPoint(canvas, connectorId), dragTo),
 					{
-						message: "ドラッグ中に終点がカーソルへ追従すること",
+						message: "end point follows the cursor during the drag",
 					},
 				)
 				.toBeLessThanOrEqual(EPS);
-			// 初期位置から確かに動いている。
+			// It has really moved away from the initial position.
 			expect(
 				distance(await lastPoint(canvas, connectorId), initialLast),
 			).toBeGreaterThan(50);
 		});
 
-		// リリース後、終点はドラッグ先（空きスペース＝free 端点）で確定する。
+		// After release the end point settles at the drop position (empty space = a free endpoint).
 		await canvas.deselect();
 		expect(
 			distance(await lastPoint(canvas, connectorId), dragTo),
-			"リリース後に終点がドラッグ先で確定すること",
+			"end point settles at the drop position after release",
 		).toBeLessThanOrEqual(EPS);
 	});
 });

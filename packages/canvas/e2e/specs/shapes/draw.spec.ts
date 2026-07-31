@@ -1,7 +1,7 @@
 import { test, expect } from "../../fixtures";
 
-test.describe("図形の描画", () => {
-	test("Rectangle は rect 要素を作る", async ({ canvas }) => {
+test.describe("shape drawing", () => {
+	test("creates a rect element for Rectangle", async ({ canvas }) => {
 		const id = await canvas.drawShape(
 			"Rectangle",
 			{ x: 400, y: 200 },
@@ -11,11 +11,11 @@ test.describe("図形の描画", () => {
 			(obj) => obj.id === id,
 		);
 		expect(created?.tag).toBe("rect");
-		// transform の e,f は図形の中心座標
+		// e,f of the transform are the shape's center
 		expect(created?.transform).toBe("matrix(1, 0, 0, 1, 500, 260)");
 	});
 
-	test("Ellipse は ellipse 要素を作る", async ({ canvas }) => {
+	test("creates an ellipse element for Ellipse", async ({ canvas }) => {
 		const id = await canvas.drawShape(
 			"Ellipse",
 			{ x: 400, y: 200 },
@@ -27,7 +27,7 @@ test.describe("図形の描画", () => {
 		expect(created?.tag).toBe("ellipse");
 	});
 
-	test("Polyline はドラッグで線を作る", async ({ canvas }) => {
+	test("creates a line from a drag for Polyline", async ({ canvas }) => {
 		const id = await canvas.drawShape(
 			"Polyline",
 			{ x: 400, y: 400 },
@@ -39,8 +39,10 @@ test.describe("図形の描画", () => {
 		expect(created?.tag).toBe("polyline");
 	});
 
-	test("Polygon はドラッグで polygon 要素を作る", async ({ canvas }) => {
-		// Polygon も Draw モードに対応し、対角ドラッグで領域にフィットして配置される
+	test("creates a polygon element from a drag for Polygon", async ({
+		canvas,
+	}) => {
+		// Polygon supports Draw mode too and is fitted into the dragged region
 		const id = await canvas.drawShape(
 			"Polygon",
 			{ x: 400, y: 200 },
@@ -52,17 +54,19 @@ test.describe("図形の描画", () => {
 		expect(created?.tag).toBe("polygon");
 	});
 
-	test("Sticky はクリックで配置され g 要素を作る", async ({ canvas }) => {
-		// Sticky も即配置タイプ
+	test("places Sticky with a click and creates a g element", async ({
+		canvas,
+	}) => {
+		// Sticky is a place-on-click type
 		const id = await canvas.placeShape("Sticky");
 		const created = (await canvas.captureObjects()).find(
 			(obj) => obj.id === id,
 		);
-		// Sticky のルートは <g data-kind="object">
+		// The Sticky root is <g data-kind="object">
 		expect(created?.tag).toBe("g");
 	});
 
-	test("Markdown は rect 要素を作り既定の Markdown 文面を持つ", async ({
+	test("creates a rect element carrying the default Markdown body for Markdown", async ({
 		canvas,
 	}) => {
 		const id = await canvas.drawShape(
@@ -73,15 +77,15 @@ test.describe("図形の描画", () => {
 		const created = (await canvas.captureObjects()).find(
 			(obj) => obj.id === id,
 		);
-		// markdown 図形はカード本体を rect 要素で描く（本文だけが Markdown 描画）
+		// The markdown shape draws its card body as a rect; only the body text is Markdown-rendered
 		expect(created?.tag).toBe("rect");
-		// 既定の文面が描画される（innerHTML はエスケープされるため textContent で確認）
+		// The default text renders (checked through textContent because innerHTML is escaped)
 		await expect
 			.poll(() => canvas.page.evaluate(() => document.body.textContent ?? ""))
 			.toContain("Title");
 	});
 
-	test("図形はドラッグで移動できる", async ({ canvas }) => {
+	test("moves a shape by dragging it", async ({ canvas }) => {
 		const id = await canvas.drawShape(
 			"Rectangle",
 			{ x: 400, y: 200 },
@@ -101,7 +105,7 @@ test.describe("図形の描画", () => {
 			.toBe("matrix(1, 0, 0, 1, 800, 560)");
 	});
 
-	test("描画してもキャンバスはパン・ズームしない", async ({ canvas }) => {
+	test("does not pan or zoom the canvas while drawing", async ({ canvas }) => {
 		const initialViewBox = await canvas.getViewBox();
 		await canvas.drawShape("Rectangle", { x: 200, y: 200 }, { x: 500, y: 400 });
 		await canvas.deselect();

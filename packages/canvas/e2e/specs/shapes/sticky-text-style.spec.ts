@@ -2,24 +2,24 @@ import { test, expect } from "../../fixtures";
 import { selectors } from "../../support/selectors";
 
 /**
- * Sticky のテキストスタイル設定。
+ * Text style settings on a Sticky.
  *
- * Sticky は rect/ellipse と違い `<g data-id>` の子として TextOverlay を持つ別 DOM 構造で、
- * かつ既定テキストを持たない。配置 → テキスト入力 → フォント設定という経路で、
- * fontSize / fontColor / fontWeight が描画へ反映されることを守る。
+ * Unlike rect/ellipse, a Sticky has its own DOM structure, a TextOverlay as a
+ * child of `<g data-id>`, and no default text. Guarded along the place -> type
+ * text -> set font path: fontSize / fontColor / fontWeight must reach the render.
  */
-test.describe("Sticky のテキストスタイル", () => {
-	test("フォントサイズ・文字色・太字を設定すると描画に反映される", async ({
+test.describe("Sticky text style", () => {
+	test("applies the font size, text color and bold to the render", async ({
 		canvas,
 	}) => {
 		const id = await canvas.placeShape("Sticky");
-		// 配置直後の選択メニューがテキスト編集の邪魔をしないよう一度解除する。
+		// Deselect so the menu shown right after placing does not get in the way of text editing.
 		await canvas.deselect();
 
-		// 配置位置（中心）をバウンディングボックスから求めてテキストを入れる。
+		// Take the placed position (its center) from the bounding box and type there.
 		const box = await canvas.objectById(id).boundingBox();
 		if (!box) {
-			throw new Error("Sticky の位置が取得できない");
+			throw new Error("cannot locate the Sticky");
 		}
 		const center = canvas.toContent({
 			x: box.x + box.width / 2,

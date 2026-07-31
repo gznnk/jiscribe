@@ -2,16 +2,18 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * グループの複製・削除の整合性。
+ * Integrity of duplicating and deleting a group.
  *
- * 既存の group.spec は移動と解除を守るが、グループを 1 単位として複製・削除したときに
- * 「メンバー（子孫）まで正しく追従するか」は検証されていなかった。複製は
- * buildSelectedIdsWithDescendants + cloneObjects、削除は DeleteCommand の collectIds 再帰で
- * 子孫を辿る実装で、ここが壊れると「箱だけ複製されて中身が空」「親だけ消えて子が孤立」
- * といったツリー破損になる。観測可能な不変条件（メンバー数・まとめ移動・undo 復元）で守る。
+ * group.spec guards moving and ungrouping, but whether the members (descendants) follow
+ * correctly when a group is duplicated or deleted as one unit was not verified.
+ * Duplicate runs through buildSelectedIdsWithDescendants + cloneObjects, delete walks
+ * the descendants through DeleteCommand's recursive collectIds; breaking either corrupts
+ * the tree ("the box is duplicated but empty", "the parent is deleted and the children
+ * are orphaned"). Guarded through observable invariants (member count, moving as a unit,
+ * undo restore).
  */
 
-/** A: 中心 (370,260) / B: 中心 (630,260) を描き、マーキーで囲ってグループ化する */
+/** Draws A (center 370,260) and B (center 630,260), then marquee-selects and groups them */
 async function drawAndGroupPair(canvas: CanvasDriver) {
 	const a = await canvas.drawShape(
 		"Rectangle",
@@ -32,28 +34,28 @@ async function drawAndGroupPair(canvas: CanvasDriver) {
 	return { a, b };
 }
 
-test.describe("グループの複製・削除", () => {
-	test("グループを複製するとメンバーごと複製され、複製同士もグループ化される", async ({
+test.describe("group duplicate / delete", () => {
+	test("duplicates the members along with the group and groups the copies together", async ({
 		canvas,
 	}) => {
 		const { a, b } = await drawAndGroupPair(canvas);
 
-		// グループ化直後はグループが選択済み。Ctrl+D でメンバーごと複製される。
+		// The group is selected right after grouping; Ctrl+D duplicates it with its members.
 		await canvas.duplicate();
 
-		// 矩形は 2 → 4 に増える（複製はメンバーまで含む）
+		// Rectangles go 2 -> 4 (the copy includes the members)
 		await expect
 			.poll(async () => (await canvas.captureObjects()).length, {
-				message: "メンバー 2 つが複製されて合計 4 になること",
+				message: "the 2 members are duplicated for a total of 4",
 			})
 			.toBe(4);
 
-		// 複製直後は複製グループが選択された状態。複製は元から +20,+20 ずれて配置される
-		// （複製グループは A クローン中心 390,280 を含む）。選択グループをドラッグすると、
-		// 複製メンバーだけがまとめて +100,+40 動き、元の A・B は動かない。
+		// The duplicated group is selected right after duplicating and is offset +20,+20
+		// from the source (so the copy of A is centered at 390,280). Dragging the selected
+		// group moves only the copied members by +100,+40; the original A and B stay put.
 		await canvas.drag({ x: 390, y: 280 }, { x: 490, y: 320 });
 
-		// 元の 2 つは不動
+		// The originals do not move
 		expect(await canvas.objectById(a).getAttribute("transform")).toBe(
 			"matrix(1, 0, 0, 1, 370, 260)",
 		);
@@ -61,7 +63,7 @@ test.describe("グループの複製・削除", () => {
 			"matrix(1, 0, 0, 1, 630, 260)",
 		);
 
-		// 複製された 2 つは「グループとして」一緒に動いている（390,280→490,320 / 650,280→750,320）
+		// The two copies move together as a group (390,280->490,320 / 650,280->750,320)
 		const cloneTransforms = (await canvas.captureObjects())
 			.filter((obj) => obj.id !== a && obj.id !== b)
 			.map((obj) => obj.transform)
@@ -72,25 +74,26 @@ test.describe("グループの複製・削除", () => {
 		]);
 	});
 
-	test("グループをコピー＆ペーストするとメンバーごと複製され、複製もグループ化される", async ({
+	test("duplicates the members on copy & paste of a group and groups the copies together", async ({
 		canvas,
 	}) => {
 		const { a, b } = await drawAndGroupPair(canvas);
 
-		// Ctrl+D（DuplicateCommand）とは別経路の clipboard コピー＆ペースト（handlePaste）。
-		// グループ化直後はグループが選択済み。コピーして貼り付ける。
+		// Clipboard copy & paste (handlePaste) is a different path from Ctrl+D
+		// (DuplicateCommand). The group is selected right after grouping.
 		await canvas.copy();
 		await canvas.paste();
 
 		await expect
 			.poll(async () => (await canvas.captureObjects()).length, {
-				message: "メンバー 2 つが複製されて合計 4 になること",
+				message: "the 2 members are duplicated for a total of 4",
 			})
 			.toBe(4);
 
-		// 貼り付け直後は貼り付けグループが選択された状態。複製は元から +20,+20 ずれる
-		// （複製グループは A クローン中心 390,280 を含む）。これをドラッグすると複製メンバー
-		// だけがまとめて動き、元の A・B は動かない＝貼り付けでもグループ構造が保たれている。
+		// The pasted group is selected right after pasting and is offset +20,+20 from the
+		// source (so the copy of A is centered at 390,280). Dragging it moves only the
+		// pasted members and leaves the original A and B put, i.e. paste keeps the group
+		// structure.
 		await canvas.drag({ x: 390, y: 280 }, { x: 490, y: 320 });
 
 		expect(await canvas.objectById(a).getAttribute("transform")).toBe(
@@ -100,7 +103,8 @@ test.describe("グループの複製・削除", () => {
 			"matrix(1, 0, 0, 1, 630, 260)",
 		);
 
-		// 貼り付けた 2 つは「グループとして」一緒に動く（390,280→490,320 / 650,280→750,320）。
+		// The two pasted shapes move together as a group (390,280->490,320 /
+		// 650,280->750,320).
 		const cloneTransforms = (await canvas.captureObjects())
 			.filter((obj) => obj.id !== a && obj.id !== b)
 			.map((obj) => obj.transform)
@@ -111,29 +115,29 @@ test.describe("グループの複製・削除", () => {
 		]);
 	});
 
-	test("グループを削除すると全メンバーが消え、undo で復元されグループも保たれる", async ({
+	test("deletes every member with the group and restores them with the group intact on undo", async ({
 		canvas,
 	}) => {
 		const { a, b } = await drawAndGroupPair(canvas);
 
-		// グループ選択中に削除すると、子孫（A・B）まで消える
+		// Deleting with the group selected removes the descendants (A and B) too
 		await canvas.deleteSelection();
 		await expect
 			.poll(async () => (await canvas.captureObjects()).length, {
-				message: "グループ削除で全メンバーが消えること",
+				message: "deleting the group removes every member",
 			})
 			.toBe(0);
 
-		// 1 回の undo で 2 つとも戻る
+		// One undo brings both back
 		await canvas.undo();
 		await expect
 			.poll(async () => (await canvas.captureObjects()).length, {
-				message: "undo でメンバー 2 つが復元されること",
+				message: "undo restores the 2 members",
 			})
 			.toBe(2);
 
-		// グループ構造も復元されている: A をクリックするとグループ全体が選択され、
-		// ドラッグで B も同じだけ動く（+100,+40）。
+		// The group structure is restored too: clicking A selects the whole group, and
+		// dragging moves B by the same amount (+100,+40).
 		await canvas.deselect();
 		await canvas.selectAt({ x: 370, y: 260 });
 		await canvas.drag({ x: 370, y: 260 }, { x: 470, y: 300 });

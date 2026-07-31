@@ -3,13 +3,15 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 import { selectors } from "../../support/selectors";
 
 /**
- * コピー＆ペースト／複製が枠線系プロパティ（角丸 rx・線幅 strokeWidth・線種 strokeDashType）を
- * 引き継ぐことを守る。
+ * Guards that copy-paste and duplicate carry over the border properties: corner
+ * radius (rx), stroke width (strokeWidth) and dash type (strokeDashType).
  *
- * 既存の preserves 系は fill / text / font / transform を見るが、border-style セクションの
- * プロパティはクリップボードのシリアライズで保たれるか未カバーだった。rect は rx / stroke-width /
- * stroke-dasharray を SVG 属性として描くため、複製先の属性で照合する。
- * （コピペは handlePaste、複製は DuplicateCommand と別経路なので両方守る。）
+ * The existing preserves specs look at fill / text / font / transform, but
+ * whether the border-style section's properties survive clipboard serialization
+ * was uncovered. A rect draws rx / stroke-width / stroke-dasharray as SVG
+ * attributes, so the clone is checked through those attributes. Copy-paste goes
+ * through handlePaste and duplicate through DuplicateCommand, so both paths are
+ * guarded.
  */
 
 type BorderAttrs = {
@@ -18,7 +20,7 @@ type BorderAttrs = {
 	dash: string | null;
 };
 
-/** rect の枠線系属性をまとめて読む */
+/** Reads a rect's border attributes in one go. */
 async function borderAttrs(
 	canvas: CanvasDriver,
 	id: string,
@@ -31,7 +33,10 @@ async function borderAttrs(
 	};
 }
 
-/** rect を描いて角丸・線幅・破線を設定し、id と設定後の属性を返す（設定後は選択解除済み） */
+/**
+ * Draws a rect, sets its corner radius, stroke width and dash, and returns the
+ * id together with the resulting attributes. Leaves the shape deselected.
+ */
 async function drawBorderedRect(
 	canvas: CanvasDriver,
 ): Promise<{ id: string; attrs: BorderAttrs }> {
@@ -41,7 +46,7 @@ async function drawBorderedRect(
 		{ x: 620, y: 360 },
 	);
 
-	// border-style セクションを開き、角丸・線幅・破線を設定する（同一ドロップダウン内）。
+	// Corner radius, stroke width and dash all live in the same border-style dropdown.
 	await canvas.openObjectMenu("border-style");
 	await canvas.setNumberInput("rx", 16);
 	await canvas.setNumberInput("strokeWidth", 6);
@@ -52,12 +57,13 @@ async function drawBorderedRect(
 	expect(attrs.strokeWidth).toBe("6");
 	expect(attrs.dash).not.toBeNull();
 
-	// 数値入力欄にフォーカスが残ると Ctrl+C/V/D が吸われるため、選択解除してフォーカスを戻す。
+	// Focus left in a number input would swallow Ctrl+C/V/D, so deselect to hand
+	// focus back to the canvas.
 	await canvas.deselect();
 	return { id, attrs };
 }
 
-/** 直近で増えた図形の id を返す */
+/** Returns the id of the shape that was just added. */
 async function newObjectId(
 	canvas: CanvasDriver,
 	beforeIds: Set<string | null>,
@@ -66,13 +72,15 @@ async function newObjectId(
 		(obj) => !beforeIds.has(obj.id),
 	);
 	if (!created?.id) {
-		throw new Error("増えた図形の data-id が取得できない");
+		throw new Error("no data-id on the newly added shape");
 	}
 	return created.id;
 }
 
-test.describe("コピー＆ペースト／複製の枠線プロパティ保持", () => {
-	test("コピー＆ペーストは角丸・線幅・線種を引き継ぐ", async ({ canvas }) => {
+test.describe("copy-paste / duplicate preserve border properties", () => {
+	test("carries over corner radius, stroke width and dash on copy-paste", async ({
+		canvas,
+	}) => {
 		const { attrs } = await drawBorderedRect(canvas);
 
 		const before = await canvas.captureObjects();
@@ -94,7 +102,9 @@ test.describe("コピー＆ペースト／複製の枠線プロパティ保持",
 		expect(clone.dash).toBe(attrs.dash);
 	});
 
-	test("複製（Ctrl+D）は角丸・線幅・線種を引き継ぐ", async ({ canvas }) => {
+	test("carries over corner radius, stroke width and dash on duplicate (Ctrl+D)", async ({
+		canvas,
+	}) => {
 		const { attrs } = await drawBorderedRect(canvas);
 
 		const before = await canvas.captureObjects();

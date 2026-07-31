@@ -2,18 +2,19 @@ import { test, expect } from "../../fixtures";
 import { selectors } from "../../support/selectors";
 
 /**
- * テキスト編集まわりのジェスチャー回帰の e2e 化。
- * data-gesture（none / native-wheel）によるテキスト編集まわりの回帰を検証する。
- * 仕様は packages/canvas/docs/04-gesture-system.md を参照。
- * 確定（1-9）・Escape キャンセル（1-10）は editing/text-edit.spec.ts でカバー済み。
+ * Gesture regressions around text editing, as e2e.
+ * Verifies regressions around text editing driven by data-gesture
+ * (none / native-wheel). For the spec, see
+ * packages/canvas/docs/04-gesture-system.md.
+ * Commit (1-9) and Escape cancel (1-10) are already covered by
+ * editing/text-edit.spec.ts.
  */
-test.describe("テキスト編集のジェスチャー挙動", () => {
+test.describe("gesture behavior during text editing", () => {
 	const RECT_FROM = { x: 400, y: 200 };
 	const RECT_TO = { x: 600, y: 320 };
 	const CENTER = { x: 500, y: 260 };
 
-	// 1-1: 再編集時にキャレットが末尾に置かれフォーカスされる
-	test("1-1 編集開始時に textarea がフォーカスされキャレットが末尾になる", async ({
+	test("1-1 focuses the textarea and puts the caret at the end when editing starts", async ({
 		canvas,
 	}) => {
 		await canvas.drawShape("Rectangle", RECT_FROM, RECT_TO);
@@ -21,7 +22,7 @@ test.describe("テキスト編集のジェスチャー挙動", () => {
 		await canvas.typeTextAt(CENTER, "Hi");
 		await canvas.commitText();
 
-		// 再度開くとフォーカスがあり、キャレットは末尾（長さ 2）
+		// Reopening gives focus with the caret at the end (length 2).
 		await canvas.page.mouse.dblclick(CENTER.x, CENTER.y);
 		await expect(canvas.page.locator(selectors.textEditor)).toBeVisible();
 
@@ -30,8 +31,9 @@ test.describe("テキスト編集のジェスチャー挙動", () => {
 		await canvas.cancelText();
 	});
 
-	// 1-2: 縦アライメント設定が編集中も維持される
-	test("1-2 設定した縦アライメントが編集中も維持される", async ({ canvas }) => {
+	test("1-2 keeps the configured vertical alignment while editing", async ({
+		canvas,
+	}) => {
 		await canvas.drawShape("Rectangle", RECT_FROM, RECT_TO);
 		await canvas.setVerticalAlign("top");
 		await canvas.deselect();
@@ -42,8 +44,7 @@ test.describe("テキスト編集のジェスチャー挙動", () => {
 		await canvas.cancelText();
 	});
 
-	// 1-3: テキストをドラッグ選択しても図形が動かない
-	test("1-3 textarea 内のドラッグは図形を動かさずテキストを選択する", async ({
+	test("1-3 selects text without moving the shape when dragging inside the textarea", async ({
 		canvas,
 	}) => {
 		const id = await canvas.drawShape("Rectangle", RECT_FROM, RECT_TO);
@@ -56,9 +57,10 @@ test.describe("テキスト編集のジェスチャー挙動", () => {
 
 		const box = await canvas.textArea().boundingBox();
 		if (!box) {
-			throw new Error("textarea の位置が取得できない");
+			throw new Error("cannot read the position of the textarea");
 		}
-		// box は画面座標。drag はコンテンツ座標を取るので toContent で揃える。
+		// box is in screen coordinates; drag takes content coordinates, so convert
+		// with toContent.
 		const y = box.y + box.height / 2;
 		await canvas.drag(
 			canvas.toContent({ x: box.x + 6, y }),
@@ -66,19 +68,18 @@ test.describe("テキスト編集のジェスチャー挙動", () => {
 			10,
 		);
 
-		// 図形は動いていない
+		// The shape has not moved.
 		expect(await canvas.objectById(id).getAttribute("transform")).toBe(
 			transformBefore,
 		);
-		// テキストが選択されている（範囲が空でない）
+		// The text is selected (the range is not empty).
 		const selection = await canvas.textEditorSelection();
 		expect(selection).not.toBeNull();
 		expect(selection?.start).not.toBe(selection?.end);
 		await canvas.cancelText();
 	});
 
-	// 1-4: テキスト外の余白クリックでフォーカスが外れない
-	test("1-4 編集枠の余白クリックでフォーカスが維持される", async ({
+	test("1-4 keeps focus when the padding of the edit box is clicked", async ({
 		canvas,
 	}) => {
 		await canvas.drawShape("Rectangle", RECT_FROM, RECT_TO);
@@ -86,7 +87,7 @@ test.describe("テキスト編集のジェスチャー挙動", () => {
 		await canvas.deselect();
 		await canvas.typeTextAt(CENTER, "x");
 
-		// 上寄せなのでテキストの下（枠内の余白）をクリックする
+		// Top-aligned, so click below the text (the padding inside the box).
 		await canvas.page.mouse.click(CENTER.x, 305);
 
 		expect(await canvas.page.locator(selectors.textEditor).isVisible()).toBe(
@@ -96,8 +97,7 @@ test.describe("テキスト編集のジェスチャー挙動", () => {
 		await canvas.cancelText();
 	});
 
-	// 1-5: あふれた textarea 上のホイールは textarea をスクロールし、キャンバスは動かさない
-	test("1-5 あふれた textarea のホイールは textarea をスクロールしキャンバスは動かない", async ({
+	test("1-5 scrolls the textarea and not the canvas when wheeling over an overflowing textarea", async ({
 		canvas,
 	}) => {
 		await canvas.drawShape("Rectangle", RECT_FROM, RECT_TO);
@@ -107,7 +107,7 @@ test.describe("テキスト編集のジェスチャー挙動", () => {
 		);
 		await canvas.typeTextAt(CENTER, longText);
 
-		// タイプ直後はキャレット末尾でスクロールは最下部
+		// Right after typing the caret is at the end and the scroll is at the bottom.
 		const scrollBefore = await canvas.textEditorScrollTop();
 		const viewBoxBefore = await canvas.getViewBox();
 
@@ -115,7 +115,7 @@ test.describe("テキスト編集のジェスチャー挙動", () => {
 
 		await expect
 			.poll(() => canvas.textEditorScrollTop(), {
-				message: "ホイールで textarea がスクロールすること",
+				message: "the wheel should scroll the textarea",
 			})
 			.toBeLessThan(scrollBefore);
 		expect(await canvas.getViewBox()).toBe(viewBoxBefore);
@@ -125,8 +125,7 @@ test.describe("テキスト編集のジェスチャー挙動", () => {
 		await canvas.cancelText();
 	});
 
-	// 1-6: あふれない編集中のホイールはキャンバスをスクロールし、編集は継続する
-	test("1-6 あふれない編集中のホイールはキャンバスをスクロールし編集は継続する", async ({
+	test("1-6 scrolls the canvas and keeps editing when wheeling during a non-overflowing edit", async ({
 		canvas,
 	}) => {
 		await canvas.drawShape("Rectangle", RECT_FROM, RECT_TO);
@@ -138,7 +137,7 @@ test.describe("テキスト編集のジェスチャー挙動", () => {
 
 		await expect
 			.poll(() => canvas.getViewBox(), {
-				message: "あふれていないときはキャンバスがスクロールすること",
+				message: "the canvas should scroll when there is no overflow",
 			})
 			.not.toBe(viewBoxBefore);
 		expect(await canvas.page.locator(selectors.textEditor).isVisible()).toBe(
@@ -147,8 +146,7 @@ test.describe("テキスト編集のジェスチャー挙動", () => {
 		await canvas.cancelText();
 	});
 
-	// 1-7: 編集中の Ctrl+ホイールはキャンバスをズームし、編集は継続する
-	test("1-7 編集中の Ctrl+ホイールはキャンバスをズームし編集は継続する", async ({
+	test("1-7 zooms the canvas and keeps editing when Ctrl+wheeling during an edit", async ({
 		canvas,
 	}) => {
 		await canvas.drawShape("Rectangle", RECT_FROM, RECT_TO);
@@ -165,8 +163,8 @@ test.describe("テキスト編集のジェスチャー挙動", () => {
 		await canvas.cancelText();
 	});
 
-	// 1-8: textarea 上の右クリックは自前メニューを開かない（ネイティブに委譲）
-	test("1-8 編集中の右クリックは自前コンテキストメニューを開かない", async ({
+	// The right click over the textarea is delegated to the native menu.
+	test("1-8 does not open the built-in context menu on right click during an edit", async ({
 		canvas,
 	}) => {
 		await canvas.drawShape("Rectangle", RECT_FROM, RECT_TO);

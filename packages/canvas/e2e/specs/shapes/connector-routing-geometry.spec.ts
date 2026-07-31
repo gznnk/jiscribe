@@ -2,29 +2,30 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * コネクターの直交ルーティングを「幾何」レベルで検証する spec。
+ * Spec verifying orthogonal connector routing at the *geometry* level.
  *
- * 既存のコネクター spec 群（connector / connector-follow-* / connector-reconnect 等）は
- * points 属性の「変化／非変化」までしか見ておらず、実際に描かれる経路が幾何的に正しいか
- * ——端点が接続図形の辺に正確に乗るか、全セグメントが直角か、図形を貫通しないか、
- * 直線経路を塞ぐと回り込んで折れ点が増えるか——は未検証だった。
+ * The existing connector specs (connector / connector-follow-* / connector-reconnect and so on)
+ * only check whether the points attribute changes; whether the rendered route is geometrically
+ * correct was untested — endpoints landing exactly on the edges of the connected shapes, every
+ * segment being at right angles, no penetration through shapes, and extra bends appearing when the
+ * straight route is blocked.
  *
- * routeOrthogonalConnector（packages/canvas）の出力が DOM の polyline points に
- * そのまま反映されることを、座標オフセットに依存しない不変条件で守る。アサーションは
- * すべて「図形のワールド AABB を実行時に読み取り、それと points を突き合わせる」形にして
- * いるため、content 座標とワールド座標のマッピングに依存しない。
+ * Guards that the output of routeOrthogonalConnector (packages/canvas) reaches the polyline points
+ * in the DOM unchanged, using invariants that do not depend on coordinate offsets. Every assertion
+ * reads the world AABB of the shapes at runtime and compares it against points, so it does not
+ * depend on the mapping between content and world coordinates.
  */
 
 type Vec = { x: number; y: number };
 type AABB = { minX: number; minY: number; maxX: number; maxY: number };
 
-// ルーティングの丸め（中点の Math.round 等）を吸収する許容誤差（px）。
+// Tolerance (px) absorbing the rounding in routing (Math.round on midpoints and the like).
 const EPS = 1.5;
 
-/** polyline の points 属性 "x1,y1 x2,y2 ..." を座標配列へパースする */
+/** Parses the polyline points attribute "x1,y1 x2,y2 ..." into an array of coordinates. */
 function parsePoints(attr: string | null): Vec[] {
 	if (!attr) {
-		throw new Error("points 属性が取得できない");
+		throw new Error("points attribute is missing");
 	}
 	return attr
 		.trim()
@@ -36,20 +37,21 @@ function parsePoints(attr: string | null): Vec[] {
 }
 
 /**
- * 図形（data-id）のワールド座標系での軸並行バウンディングボックスを返す。
- * コネクターの points と同じ SVG ユーザー座標系で比較するため、ローカル bbox の
- * 4 隅を getCTM で変換して min/max を取る（回転していなければ厳密な AABB になる）。
+ * Returns the axis-aligned bounding box of a shape (data-id) in world coordinates. To compare in
+ * the same SVG user coordinate system as the connector points, the four local bbox corners are
+ * transformed with getCTM and reduced to min/max (an exact AABB as long as the shape is not
+ * rotated).
  */
 async function worldAABB(canvas: CanvasDriver, id: string): Promise<AABB> {
 	return canvas.page.evaluate((targetId) => {
 		const el = document.querySelector(`[data-id="${targetId}"]`);
 		if (!(el instanceof SVGGraphicsElement)) {
-			throw new Error(`図形 ${targetId} が SVGGraphicsElement でない`);
+			throw new Error(`shape ${targetId} is not an SVGGraphicsElement`);
 		}
 		const bbox = el.getBBox();
 		const ctm = el.getCTM();
 		if (!ctm) {
-			throw new Error(`図形 ${targetId} の CTM が取得できない`);
+			throw new Error(`CTM of shape ${targetId} is not available`);
 		}
 		const corners = [
 			{ x: bbox.x, y: bbox.y },
@@ -74,12 +76,12 @@ async function worldAABB(canvas: CanvasDriver, id: string): Promise<AABB> {
 const centerX = (box: AABB): number => (box.minX + box.maxX) / 2;
 const centerY = (box: AABB): number => (box.minY + box.maxY) / 2;
 
-/** 2 点がほぼ一致するか（EPS 以内） */
+/** Whether two points nearly coincide (within EPS). */
 function near(a: Vec, b: Vec): boolean {
 	return Math.abs(a.x - b.x) <= EPS && Math.abs(a.y - b.y) <= EPS;
 }
 
-/** 点が box の周（いずれかの辺上）に EPS 以内で乗っているか */
+/** Whether a point lies within EPS of the perimeter of box (on any of its edges). */
 function onPerimeter(p: Vec, box: AABB): boolean {
 	const onVerticalEdge =
 		(Math.abs(p.x - box.minX) <= EPS || Math.abs(p.x - box.maxX) <= EPS) &&
@@ -93,9 +95,10 @@ function onPerimeter(p: Vec, box: AABB): boolean {
 }
 
 /**
- * 軸並行セグメント (a→b) が box の「内部」を通るか。
- * 辺ぴったり（端点が辺に乗る・margin 外を平行に走る）は貫通としないよう、box を EPS 縮めて
- * セグメントの AABB と重なるかで判定する（直交経路前提）。
+ * Whether the axis-aligned segment (a->b) passes through the *interior* of box. So that running
+ * exactly along an edge (an endpoint on the edge, or a parallel run outside the margin) does not
+ * count as penetration, box is shrunk by EPS and tested for overlap with the segment AABB
+ * (assuming an orthogonal route).
  */
 function penetratesInterior(a: Vec, b: Vec, box: AABB): boolean {
 	const inner = {
@@ -116,33 +119,34 @@ function penetratesInterior(a: Vec, b: Vec, box: AABB): boolean {
 	);
 }
 
-/** 隣り合う頂点ごとに、水平 or 垂直のどちらか一方だけが動く（=直角・退化なし）ことを検査する */
+/** Checks that between adjacent vertices only one of x or y moves (right angles, no degenerate segments). */
 function assertOrthogonalSegments(points: Vec[]) {
 	for (let i = 1; i < points.length; i++) {
 		const prev = points[i - 1];
 		const cur = points[i];
 		const horizontal = Math.abs(prev.y - cur.y) <= EPS;
 		const vertical = Math.abs(prev.x - cur.x) <= EPS;
-		// 直角: 「水平のみ」か「垂直のみ」。両方一致（重複点）も、どちらも不一致（斜め）も不可。
+		// Right angle: horizontal only or vertical only. Both matching (a duplicated point) and
+		// neither matching (a diagonal) are rejected.
 		expect(
 			horizontal !== vertical,
-			`セグメント ${i - 1}->${i} が直角でない（重複点 or 斜め）: ${JSON.stringify(prev)} -> ${JSON.stringify(cur)}`,
+			`segment ${i - 1}->${i} is not at a right angle (duplicated point or diagonal): ${JSON.stringify(prev)} -> ${JSON.stringify(cur)}`,
 		).toBe(true);
 		const length = horizontal
 			? Math.abs(cur.x - prev.x)
 			: Math.abs(cur.y - prev.y);
 		expect(
 			length,
-			`セグメント ${i - 1}->${i} の長さが 0（退化点）`,
+			`segment ${i - 1}->${i} has length 0 (degenerate point)`,
 		).toBeGreaterThan(EPS);
 	}
 }
 
-test.describe("コネクターのルーティング幾何", () => {
-	test("縦並びの図形を結ぶと端点が上下の辺中央に正確に乗る", async ({
+test.describe("connector routing geometry", () => {
+	test("endpoints sit exactly on the top and bottom edge centers when stacked shapes are joined", async ({
 		canvas,
 	}) => {
-		// 中心 x を揃えた上下 2 矩形。bottomCenter → topCenter の素直な縦接続になる。
+		// Two stacked rectangles sharing a center x, giving a plain bottomCenter -> topCenter link.
 		const sourceId = await canvas.drawShape(
 			"Rectangle",
 			{ x: 400, y: 150 },
@@ -169,19 +173,19 @@ test.describe("コネクターのルーティング幾何", () => {
 		const sourceBox = await worldAABB(canvas, sourceId);
 		const targetBox = await worldAABB(canvas, targetId);
 
-		// 始点は source の下辺中央、終点は target の上辺中央にぴたりと乗る。
 		const sourceBottomCenter = { x: centerX(sourceBox), y: sourceBox.maxY };
 		const targetTopCenter = { x: centerX(targetBox), y: targetBox.minY };
 		expect(
 			near(points[0], sourceBottomCenter),
-			`始点 ${JSON.stringify(points[0])} が source 下辺中央 ${JSON.stringify(sourceBottomCenter)} に乗ること`,
+			`start point ${JSON.stringify(points[0])} sits on the source bottom edge center ${JSON.stringify(sourceBottomCenter)}`,
 		).toBe(true);
 		expect(
 			near(points[points.length - 1], targetTopCenter),
-			`終点 ${JSON.stringify(points[points.length - 1])} が target 上辺中央 ${JSON.stringify(targetTopCenter)} に乗ること`,
+			`end point ${JSON.stringify(points[points.length - 1])} sits on the target top edge center ${JSON.stringify(targetTopCenter)}`,
 		).toBe(true);
 
-		// 中心が揃っているので一直線の縦コネクター: 全頂点が同じ x、上から下へ。
+		// The centers are aligned, so the connector is a straight vertical line: every vertex
+		// shares the same x, running top to bottom.
 		for (const p of points) {
 			expect(Math.abs(p.x - centerX(sourceBox))).toBeLessThanOrEqual(EPS);
 		}
@@ -189,10 +193,11 @@ test.describe("コネクターのルーティング幾何", () => {
 		assertOrthogonalSegments(points);
 	});
 
-	test("斜めに配置した図形では全セグメントが直角で端点が辺に乗り図形を貫通しない", async ({
+	test("keeps every segment at a right angle, endpoints on the edges and no penetration for diagonally placed shapes", async ({
 		canvas,
 	}) => {
-		// 左上の source と右下の target。直線では結べず必ずエルボ（折れ）が要る配置。
+		// A source at the top left and a target at the bottom right: a layout that cannot be joined
+		// by a straight line and always needs an elbow.
 		const sourceId = await canvas.drawShape(
 			"Rectangle",
 			{ x: 300, y: 180 },
@@ -206,8 +211,9 @@ test.describe("コネクターのルーティング幾何", () => {
 		);
 		await canvas.deselect();
 
-		// source の右辺アンカーから target の左辺中央へ接続する。辺アンカー同士なので
-		// 既定は orthogonal（中心へ落とすと center アンカーになり既定 straight になる）。
+		// Connect from the right edge anchor of the source to the left edge center of the target.
+		// Both ends are edge anchors, so the default is orthogonal (dropping on the center would
+		// give a center anchor, whose default is straight).
 		await canvas.selectAt({ x: 380, y: 230 });
 		const connectorId = await canvas.createConnector("rightCenter", {
 			x: 820,
@@ -221,46 +227,47 @@ test.describe("コネクターのルーティング幾何", () => {
 		const sourceBox = await worldAABB(canvas, sourceId);
 		const targetBox = await worldAABB(canvas, targetId);
 
-		// エルボが要る配置なので 3 頂点以上（=最低 1 回は折れる）。
+		// The layout needs an elbow, so there are at least 3 vertices (it bends at least once).
 		expect(points.length).toBeGreaterThanOrEqual(3);
 
-		// 始点は source の右辺中央に乗り、最初のセグメントは右向きに水平に出る（退出方向）。
+		// The start point sits on the right edge center of the source, and the first segment leaves
+		// horizontally to the right (the exit direction).
 		const sourceRightCenter = { x: sourceBox.maxX, y: centerY(sourceBox) };
 		expect(
 			near(points[0], sourceRightCenter),
-			`始点 ${JSON.stringify(points[0])} が source 右辺中央 ${JSON.stringify(sourceRightCenter)} に乗ること`,
+			`start point ${JSON.stringify(points[0])} sits on the source right edge center ${JSON.stringify(sourceRightCenter)}`,
 		).toBe(true);
 		expect(Math.abs(points[1].y - points[0].y)).toBeLessThanOrEqual(EPS);
 		expect(points[1].x).toBeGreaterThan(points[0].x + EPS);
 
-		// 終点は target のいずれかの辺上に乗る（どの辺に接続されても周上にあること）。
+		// The end point sits on one of the target edges, whichever edge it connects to.
 		expect(
 			onPerimeter(points[points.length - 1], targetBox),
-			`終点 ${JSON.stringify(points[points.length - 1])} が target の周上に乗ること`,
+			`end point ${JSON.stringify(points[points.length - 1])} sits on the target perimeter`,
 		).toBe(true);
 
-		// 全セグメントが直角・退化なし。
 		assertOrthogonalSegments(points);
 
-		// どのセグメントも source / target の内部を貫通しない。
+		// No segment penetrates the interior of the source or the target.
 		for (let i = 1; i < points.length; i++) {
 			const a = points[i - 1];
 			const b = points[i];
 			expect(
 				penetratesInterior(a, b, sourceBox),
-				`セグメント ${i - 1}->${i} が source を貫通しないこと`,
+				`segment ${i - 1}->${i} does not penetrate the source`,
 			).toBe(false);
 			expect(
 				penetratesInterior(a, b, targetBox),
-				`セグメント ${i - 1}->${i} が target を貫通しないこと`,
+				`segment ${i - 1}->${i} does not penetrate the target`,
 			).toBe(false);
 		}
 	});
 
-	test("直線経路を塞ぐ位置へ図形を動かすと回り込んで折れ点が増え、貫通しない", async ({
+	test("routes around with extra bends and no penetration when a shape is moved to block the straight route", async ({
 		canvas,
 	}) => {
-		// 同じ y で左右に並べる。右辺→左辺が正面で向かい合い、初期は一直線（2 頂点）になる。
+		// Placed side by side at the same y. The right edge and the left edge face each other, so
+		// the route is initially a straight line with 2 vertices.
 		const sourceId = await canvas.drawShape(
 			"Rectangle",
 			{ x: 300, y: 320 },
@@ -274,9 +281,10 @@ test.describe("コネクターのルーティング幾何", () => {
 		);
 		await canvas.deselect();
 
-		// target の左辺中央 (760, 370) へ接続 → leftCenter アンカー。辺アンカー同士なので
-		// 既定 orthogonal（obstacle 回避の折れ）を検証できる（中心 (840,370) だと center →
-		// 既定 straight になり、動かしても折れずに貫通してしまう）。
+		// Connect to the left edge center of the target (760, 370) -> a leftCenter anchor. Both ends
+		// being edge anchors, the default is orthogonal, which is what lets the obstacle-avoiding
+		// bends be verified (dropping on the center (840,370) would give a center anchor whose
+		// default is straight, and the line would penetrate instead of bending when moved).
 		await canvas.selectAt({ x: 380, y: 370 });
 		const connectorId = await canvas.createConnector("rightCenter", {
 			x: 760,
@@ -287,16 +295,16 @@ test.describe("コネクターのルーティング幾何", () => {
 		const beforePoints = parsePoints(
 			await canvas.objectById(connectorId).getAttribute("points"),
 		);
-		// 正面で向かい合うので初期は一直線（=2 頂点・折れなし）。
+		// Facing each other head on, the initial route is a straight line (2 vertices, no bends).
 		expect(beforePoints.length).toBe(2);
 		assertOrthogonalSegments(beforePoints);
 
-		// target を source の左側へ動かす。source は右へ退出するため、線は source を
-		// 回り込んで左の target に届く必要があり、折れ点が増える。
+		// Move the target to the left of the source. The source exits to the right, so the line has
+		// to route around the source to reach the target on the left, adding bends.
 		await canvas.drag({ x: 840, y: 370 }, { x: 180, y: 370 });
 		await expect
 			.poll(() => canvas.objectById(connectorId).getAttribute("points"), {
-				message: "target 移動でコネクターが再ルーティングされること",
+				message: "connector is re-routed when the target moves",
 			})
 			.not.toBe(beforePoints.map((p) => `${p.x},${p.y}`).join(" "));
 
@@ -306,22 +314,22 @@ test.describe("コネクターのルーティング幾何", () => {
 		const sourceBox = await worldAABB(canvas, sourceId);
 		const targetBox = await worldAABB(canvas, targetId);
 
-		// 回り込みで頂点が増える（直線 2 点 → 折れる）。U ターンには最低 4 頂点必要。
+		// Routing around adds vertices; a U-turn needs at least 4 of them.
 		expect(afterPoints.length).toBeGreaterThan(beforePoints.length);
 		expect(afterPoints.length).toBeGreaterThanOrEqual(4);
 
-		// 再ルーティング後も全セグメントが直角で、どの図形も貫通しない。
+		// After re-routing every segment is still at a right angle and no shape is penetrated.
 		assertOrthogonalSegments(afterPoints);
 		for (let i = 1; i < afterPoints.length; i++) {
 			const a = afterPoints[i - 1];
 			const b = afterPoints[i];
 			expect(
 				penetratesInterior(a, b, sourceBox),
-				`回り込み後: セグメント ${i - 1}->${i} が source を貫通しないこと`,
+				`after routing around: segment ${i - 1}->${i} does not penetrate the source`,
 			).toBe(false);
 			expect(
 				penetratesInterior(a, b, targetBox),
-				`回り込み後: セグメント ${i - 1}->${i} が target を貫通しないこと`,
+				`after routing around: segment ${i - 1}->${i} does not penetrate the target`,
 			).toBe(false);
 		}
 	});

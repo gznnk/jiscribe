@@ -2,14 +2,14 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * 接続元の図形を「回転」したときのコネクター追従。
+ * Connector following when the source shape is rotated.
  *
- * コネクターのエンドポイントは図形の辺アンカーに解決される。図形を回転するとアンカー位置も
- * 中心まわりに回るため、points が更新されるべき。回転×アンカー解決は複雑な経路で退行しやすいが
- * 未カバーだった。回転後に points が変わること、さらに移動でも追従し続けること（＝接続が生存）を守る。
+ * Connector endpoints resolve to an edge anchor on a shape. Rotating the shape turns the anchor
+ * positions around its center, so the points have to update. Guards that the points change after
+ * the rotation and keep following a subsequent move, which shows the connection survived.
  */
 
-/** 上下 2 矩形を縦コネクターで結び、コネクター ID を返す（接続後は選択解除済み） */
+/** Joins two stacked rectangles with a vertical connector and returns its ID (left deselected) */
 async function buildConnectedPair(canvas: CanvasDriver): Promise<string> {
 	await canvas.drawShape("Rectangle", { x: 400, y: 150 }, { x: 600, y: 250 });
 	await canvas.deselect();
@@ -25,25 +25,24 @@ async function buildConnectedPair(canvas: CanvasDriver): Promise<string> {
 	return connectorId;
 }
 
-test("接続元を回転してもコネクターが追従し、接続が生き続ける", async ({
+test("keeps the connector following and the connection alive when the source is rotated", async ({
 	canvas,
 }) => {
 	const connectorId = await buildConnectedPair(canvas);
 	const points = () => canvas.objectById(connectorId).getAttribute("points");
 	const initial = await points();
 
-	// 接続元（上の矩形・中心 500,200）を回転する → アンカーが回って points が変わる。
+	// Rotate the source (the upper rectangle, centered at 500,200).
 	await canvas.selectAt({ x: 500, y: 200 });
 	await canvas.dragTransformHandle("rotation", { x: 500, y: 120 });
 	await expect
-		.poll(points, { message: "回転でコネクターのアンカーが追従すること" })
+		.poll(points, { message: "the connector's anchor follows the rotation" })
 		.not.toBe(initial);
 	const afterRotate = await points();
 
-	// 回転後に接続元を動かしても追従し続ける（＝接続が壊れていない）。
-	// 中心 (500,200) は回転で動かないのでそこから掴んで右へ動かす。
+	// The center (500,200) does not move under rotation, so grab there and drag right.
 	await canvas.drag({ x: 500, y: 200 }, { x: 660, y: 200 });
 	await expect
-		.poll(points, { message: "回転後の移動でも追従し続けること" })
+		.poll(points, { message: "it keeps following a move after the rotation" })
 		.not.toBe(afterRotate);
 });

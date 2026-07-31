@@ -1,18 +1,20 @@
 import { test, expect } from "../../fixtures";
 
 /**
- * 複数選択のコピー＆ペーストが相対配置を保つことの検証。
+ * Guards that copy-pasting a multi-selection keeps the relative placement.
  *
- * clipboard.spec は単一図形のコピペを数で守るだけで、複数選択をまとめてコピペしたときに
- * 「図形どうしの位置関係が保たれるか」は未カバーだった。複数クローン（cloneObjects + 一律
- * オフセット）は、各図形を別々にずらして相対配置を崩す退行が起きやすい。ペーストされた 2 つが
- * それぞれ元から +20,+20 ずれ、かつ元の間隔（260px）を保つことを transform で守る。
+ * clipboard.spec guards single-shape copy-paste by object count only; whether
+ * the shapes keep their positions relative to each other when copy-pasted
+ * together was uncovered. Cloning several shapes (cloneObjects plus a uniform
+ * offset) is prone to a regression that shifts each shape separately and breaks
+ * the relative placement. Guarded through transform: both pasted shapes sit
+ * +20,+20 from their source and the original 260px gap is kept.
  */
-test.describe("複数選択のコピー＆ペースト", () => {
-	test("2 つまとめてコピペすると相対配置を保ったまま +20,+20 に複製される", async ({
+test.describe("multi-selection copy-paste", () => {
+	test("keeps the relative placement and offsets by +20,+20 when two shapes are copy-pasted together", async ({
 		canvas,
 	}) => {
-		// A: 中心 (370,260) / B: 中心 (630,260)（横に 260px 離れている）
+		// A: center (370,260) / B: center (630,260), 260px apart horizontally.
 		const a = await canvas.drawShape(
 			"Rectangle",
 			{ x: 300, y: 200 },
@@ -26,17 +28,15 @@ test.describe("複数選択のコピー＆ペースト", () => {
 		);
 		await canvas.deselect();
 
-		// 全選択してコピー＆ペースト → 4 つになる
 		await canvas.selectAll();
 		await canvas.copy();
 		await canvas.paste();
 		await expect
 			.poll(async () => (await canvas.captureObjects()).length, {
-				message: "コピペで 2 つ増えて合計 4 になること",
+				message: "copy-paste adds two shapes, for four in total",
 			})
 			.toBe(4);
 
-		// 元の 2 つは不動
 		expect(await canvas.objectById(a).getAttribute("transform")).toBe(
 			"matrix(1, 0, 0, 1, 370, 260)",
 		);
@@ -44,7 +44,7 @@ test.describe("複数選択のコピー＆ペースト", () => {
 			"matrix(1, 0, 0, 1, 630, 260)",
 		);
 
-		// ペーストされた 2 つは A・B からそれぞれ +20,+20。間隔 260px は保たれる。
+		// The two pasted shapes sit +20,+20 from A and B, keeping the 260px gap.
 		const pastedTransforms = (await canvas.captureObjects())
 			.filter((obj) => obj.id !== a && obj.id !== b)
 			.map((obj) => obj.transform)

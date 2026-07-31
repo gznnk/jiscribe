@@ -2,20 +2,22 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * コンテキストメニュー（右クリック）からの重なり順コマンドの dispatch を守る。
+ * Dispatch of stacking-order commands from the context menu (right click).
  *
- * 既存の driver-context-menu は duplicate / copy / paste の dispatch は見るが、
- * bringToFront / sendToBack といった arrange コマンドはコンテキストメニュー経由では未カバーだった。
- * （ObjectMenu の arrange は別途テスト済み。）DOM 順（後ろの要素ほど前面）で結果を守る。
+ * driver-context-menu covers the dispatch of duplicate / copy / paste, but arrange
+ * commands such as bringToFront / sendToBack had no coverage through the context menu.
+ * (ObjectMenu's arrange is tested separately.) The result is guarded in DOM order
+ * (later elements are in front).
  *
- * 注意: 右クリックは選択を変えず、現在の選択に対してメニューを開く。左クリックの直後に
- * 同じ図形を右クリックすると click レコグナイザが連続クリックとして合体させてしまうため、
- * 対象は「描画直後＝自動選択済み」の状態のまま右クリックする（selectAt を挟まない）。
+ * Note: right click does not change the selection; it opens the menu for the current
+ * selection. Right-clicking a shape immediately after left-clicking it would be
+ * coalesced by the click recognizer into consecutive clicks, so the target is
+ * right-clicked while still auto-selected from drawing (no selectAt in between).
  */
 
 const TARGET_CENTER = { x: 570, y: 250 };
 
-/** 背面の矩形 → 前面の矩形（自動選択済み）の順に描き、両 id を返す */
+/** Draws the back rectangle then the front one (left auto-selected), returning both ids */
 async function drawBackThenSelectedFront(
 	canvas: CanvasDriver,
 ): Promise<{ back: string; target: string }> {
@@ -25,7 +27,7 @@ async function drawBackThenSelectedFront(
 		{ x: 450, y: 300 },
 	);
 	await canvas.deselect();
-	// 2 枚目は描画直後で自動選択された状態のまま（= 右クリックの対象）。
+	// The second one stays auto-selected right after drawing (= the right-click target).
 	const target = await canvas.drawShape(
 		"Rectangle",
 		{ x: 520, y: 200 },
@@ -34,12 +36,12 @@ async function drawBackThenSelectedFront(
 	return { back, target };
 }
 
-test.describe("コンテキストメニューの重なり順", () => {
-	test("右クリック → 最背面へ で選択図形が最背面（DOM 先頭）に移動する", async ({
+test.describe("context menu stacking order", () => {
+	test("moves the selected shape to the back (first in DOM) on right click -> send to back", async ({
 		canvas,
 	}) => {
 		const { back, target } = await drawBackThenSelectedFront(canvas);
-		// 初期は target（後で描いた方）が前面。
+		// Initially target (drawn later) is in front.
 		expect(await canvas.objectIndex(target)).toBeGreaterThan(
 			await canvas.objectIndex(back),
 		);
@@ -53,12 +55,12 @@ test.describe("コンテキストメニューの重なり順", () => {
 			.toBeLessThan(await canvas.objectIndex(back));
 	});
 
-	test("右クリック → 最前面へ で背面に送った図形が再び最前面（DOM 末尾）になる", async ({
+	test("brings a shape sent to the back to the front again (last in DOM) on right click -> bring to front", async ({
 		canvas,
 	}) => {
 		const { back, target } = await drawBackThenSelectedFront(canvas);
 
-		// まず最背面へ送って、bringToFront が意味を持つ状態（前面でない）にする。
+		// Send to back first so that bringToFront has something to do.
 		await canvas.openContextMenu(TARGET_CENTER);
 		await canvas.clickContextMenuCommand("sendToBack");
 		await expect.poll(() => canvas.contextMenuVisible()).toBe(false);
@@ -66,7 +68,7 @@ test.describe("コンテキストメニューの重なり順", () => {
 			.poll(async () => await canvas.objectIndex(target))
 			.toBeLessThan(await canvas.objectIndex(back));
 
-		// 選択は維持されているので、もう一度右クリックして最前面へ。
+		// The selection is kept, so right-click again to bring it to the front.
 		await canvas.openContextMenu(TARGET_CENTER);
 		await canvas.clickContextMenuCommand("bringToFront");
 		await expect.poll(() => canvas.contextMenuVisible()).toBe(false);

@@ -1,7 +1,7 @@
 import { test, expect } from "../../fixtures";
 
-test.describe("テキスト編集", () => {
-	test("ダブルクリックで編集し、外側クリックで確定される", async ({
+test.describe("text editing", () => {
+	test("edits on double click and commits on an outside click", async ({
 		canvas,
 	}) => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
@@ -13,9 +13,7 @@ test.describe("テキスト編集", () => {
 		await expect(canvas.page.locator("body")).toContainText("Hello Canvas");
 	});
 
-	test("Escape はキャンセルでありテキストは保存されない", async ({
-		canvas,
-	}) => {
+	test("cancels on Escape and does not save the text", async ({ canvas }) => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
 		await canvas.deselect();
 
@@ -25,7 +23,7 @@ test.describe("テキスト編集", () => {
 		await expect(canvas.page.locator("body")).not.toContainText("Discarded");
 	});
 
-	test("複数行テキストを入力できる", async ({ canvas }) => {
+	test("accepts multi-line text", async ({ canvas }) => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 650, y: 360 });
 		await canvas.deselect();
 

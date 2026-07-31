@@ -1,27 +1,30 @@
 import { test, expect } from "../../fixtures";
 
 /**
- * 回転済みの図形に対するナッジ（矢印キー移動）が、
- *   ・world 軸（画面の上下左右）に沿って動く（図形ローカル軸ではない）
- *   ・移動量は world で一定（1px / Shift 10px）
- *   ・回転成分（matrix の a,b,c,d）は一切変わらない
- * ことを守る。
+ * Guards that nudging a rotated shape
+ *   - moves along the world axes (screen up/down/left/right), not the shape's
+ *     local axes
+ *   - moves by a constant world amount (1px, 10px with Shift)
+ *   - leaves the rotation components (a,b,c,d of the matrix) untouched.
  *
- * ナッジは moveSelection（moveByDelta）が world delta を中心へ足すだけの平行移動で、
- * 回転には触らない。もし誰かが「ローカル軸でナッジ」や「回転を考慮した移動」に
- * 変えてしまうと、回転図形だけ斜めに動いたり a,b,c,d が変わる退行になる。既存 nudge.spec /
- * rotated-resize は無回転ナッジ・回転リサイズを見るが、回転×ナッジの直交性は未カバー。
+ * Nudge is a pure translation: moveSelection (moveByDelta) adds the world delta
+ * to the center and never touches rotation. Changing it to "nudge along the
+ * local axes" or "movement that accounts for rotation" would make rotated shapes
+ * travel diagonally or change a,b,c,d. The existing nudge.spec / rotated-resize
+ * cover unrotated nudge and rotated resize, but not the orthogonality of
+ * rotation and nudge.
  *
- * createSvgTransform より無反転時 a=cosθ,b=sinθ,c=-sinθ,d=cosθ、e,f は中心。
- * 回転は中心周りなので回転後も中心 (e,f) は (500,260) のまま。
+ * From createSvgTransform, with no flip a=cosθ, b=sinθ, c=-sinθ, d=cosθ, and e,f
+ * is the center. Rotation is around the center, so (e,f) stays (500,260) after
+ * rotating.
  */
 
 const CENTER = { x: 500, y: 260 };
 const HALF_WIDTH = 100;
 const HALF_HEIGHT = 60;
-/** カーソルを置く中心からの距離（角度のみが効く） */
+/** Distance from the center at which the cursor is placed; only the angle matters. */
 const CURSOR_RADIUS = 150;
-/** 与える回転角（度）。無回転と区別できるよう斜めに倒す */
+/** Rotation to apply, in degrees. Tilted enough to tell apart from no rotation. */
 const ROTATE_DEG = 40;
 
 const toRadians = (deg: number): number => (deg * Math.PI) / 180;
@@ -29,12 +32,15 @@ const toRadians = (deg: number): number => (deg * Math.PI) / 180;
 const parseMatrix = (transform: string | null): number[] => {
 	const match = transform?.match(/^matrix\((.+)\)$/);
 	if (!match) {
-		throw new Error(`transform が matrix 形式でない: ${transform}`);
+		throw new Error(`transform is not in matrix form: ${transform}`);
 	}
 	return match[1].split(",").map((s) => Number(s.trim()));
 };
 
-/** 絶対回転角 N 度にするためカーソルを置くコンテンツ座標（右上コーナー方向から N 度） */
+/**
+ * Content coordinates to place the cursor at for an absolute rotation of the
+ * given angle, measured from the direction of the top-right corner.
+ */
 const cursorForRotation = (degrees: number): { x: number; y: number } => {
 	const refAngle = Math.atan2(-HALF_HEIGHT, HALF_WIDTH);
 	const target = refAngle + toRadians(degrees);
@@ -44,8 +50,8 @@ const cursorForRotation = (degrees: number): { x: number; y: number } => {
 	};
 };
 
-test.describe("回転図形のナッジ", () => {
-	test("回転していてもナッジは world 軸に沿って動き、回転成分は不変", async ({
+test.describe("nudging a rotated shape", () => {
+	test("moves along the world axes and leaves the rotation components unchanged", async ({
 		canvas,
 	}) => {
 		const id = await canvas.drawShape(
@@ -55,27 +61,27 @@ test.describe("回転図形のナッジ", () => {
 		);
 		const rect = canvas.objectById(id);
 
-		// 図形を約 40° 回転させる（中心周りなので中心は不動）。
+		// Rotate the shape by about 40 degrees.
 		await canvas.dragTransformHandle("rotation", cursorForRotation(ROTATE_DEG));
 		await expect
 			.poll(async () => parseMatrix(await rect.getAttribute("transform"))[1], {
-				message: "回転で b 成分（sinθ）が 0 から外れること",
+				message: "rotation moves the b component (sinθ) off 0",
 			})
 			.not.toBe(0);
 
 		const rotated = parseMatrix(await rect.getAttribute("transform"));
 		const [a0, b0, c0, d0, e0, f0] = rotated;
-		// 回転は中心周り。中心 (e,f) は描画時のまま。
+		// Rotation is around the center, so (e,f) is unchanged from drawing time.
 		expect(e0).toBeCloseTo(CENTER.x, 6);
 		expect(f0).toBeCloseTo(CENTER.y, 6);
-		// 実際に回転している（無回転 a=1,b=0 ではない）ことを確認。
+		// Confirm it really rotated, i.e. not the a=1,b=0 of no rotation.
 		expect(Math.abs(b0)).toBeGreaterThan(0.1);
 
-		// 右ナッジ: world x が +1。回転成分(a,b,c,d)と f は不変。
+		// Right nudge: world x +1. The rotation components (a,b,c,d) and f are unchanged.
 		await canvas.nudge("right");
 		await expect
 			.poll(async () => parseMatrix(await rect.getAttribute("transform"))[4], {
-				message: "右ナッジで world x が +1px",
+				message: "the right nudge moves world x by +1px",
 			})
 			.toBeCloseTo(e0 + 1, 6);
 		{
@@ -86,26 +92,26 @@ test.describe("回転図形のナッジ", () => {
 			expect(b).toBeCloseTo(b0, 10);
 			expect(c).toBeCloseTo(c0, 10);
 			expect(d).toBeCloseTo(d0, 10);
-			expect(f).toBeCloseTo(f0, 6); // y は動かない
+			expect(f).toBeCloseTo(f0, 6); // y does not move
 		}
 
-		// 下ナッジ: world y が +1。
+		// Down nudge: world y +1.
 		await canvas.nudge("down");
 		await expect
 			.poll(async () => parseMatrix(await rect.getAttribute("transform"))[5], {
-				message: "下ナッジで world y が +1px",
+				message: "the down nudge moves world y by +1px",
 			})
 			.toBeCloseTo(f0 + 1, 6);
 
-		// Shift+左ナッジ: world x が -10（合計 e0+1-10 = e0-9）。
+		// Shift+left nudge: world x -10, so e0+1-10 = e0-9 in total.
 		await canvas.nudge("left", { large: true });
 		await expect
 			.poll(async () => parseMatrix(await rect.getAttribute("transform"))[4], {
-				message: "Shift+左ナッジで world x が -10px",
+				message: "the Shift+left nudge moves world x by -10px",
 			})
 			.toBeCloseTo(e0 - 9, 6);
 
-		// 一連のナッジ後も回転成分は完全に保たれている。
+		// The rotation components survive the whole nudge sequence intact.
 		const [a, b, c, d] = parseMatrix(await rect.getAttribute("transform"));
 		expect(a).toBeCloseTo(a0, 10);
 		expect(b).toBeCloseTo(b0, 10);

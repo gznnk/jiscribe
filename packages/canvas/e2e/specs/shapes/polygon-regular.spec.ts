@@ -2,22 +2,25 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * 既定ポリゴン（正多角形）の頂点ジオメトリを精密に守る。
+ * Pins the vertex geometry of the default polygon (a regular polygon).
  *
- * polygon-vertex.spec は「頂点数が 5」までで、各頂点が正しい位置（外接楕円上に等角 72°
- * 間隔・先頭が真上）にあるかは未検証だった。実装（PolygonObjectFactory.buildPolygonPoints）は
- *   angle_i = 2π·i/5 − π/2、頂点 = (cx + rx·cosθ, cy + ry·sinθ)
- * で、描画 bbox の外接楕円に内接する正五角形を作る。ここでは描画矩形から決まる
- * cx,cy,rx,ry に対し、DOM の points 配列がこの式どおりかを 1 点ずつ照合して
- * 「等角配置・先頭真上・楕円内接」をまとめて固める。点の歪み・回転・個数変化で落ちる。
+ * polygon-vertex.spec goes as far as the vertex count (5). The implementation
+ * (PolygonObjectFactory.buildPolygonPoints) builds a regular pentagon inscribed
+ * in the circumscribing ellipse of the drawn bbox with
+ *   angle_i = 2pi*i/5 - pi/2, vertex = (cx + rx*cos(theta), cy + ry*sin(theta)).
+ * Matching the DOM points array against that formula point by point, for the
+ * cx,cy,rx,ry the drawn rect determines, pins the even spacing, the first vertex
+ * pointing straight up and the inscription at once. Distorted, rotated or
+ * miscounted points all fail here.
  *
- * Polygon 要素は transform を持たず points は絶対 world 座標（zoom=1）なので直接比較できる。
+ * A Polygon element has no transform and its points are absolute world
+ * coordinates (zoom=1), so they compare directly.
  */
 
 const SIDES = 5;
 const TOLERANCE_PX = 0.5;
 
-/** 外接楕円 (cx,cy,rx,ry) に内接する正多角形の頂点（factory と同式） */
+/** Vertices of the regular polygon inscribed in the ellipse (cx,cy,rx,ry), by the factory's formula. */
 function expectedPolygon(
 	cx: number,
 	cy: number,
@@ -36,7 +39,7 @@ async function readVertices(
 ): Promise<{ x: number; y: number }[]> {
 	const points = await canvas.objectById(id).getAttribute("points");
 	if (!points) {
-		throw new Error("polygon の points 属性が取得できない");
+		throw new Error("the polygon has no points attribute");
 	}
 	return points
 		.trim()
@@ -47,11 +50,11 @@ async function readVertices(
 		});
 }
 
-test.describe("既定ポリゴンの正多角形ジオメトリ", () => {
-	test("描画した五角形は外接楕円に等角 72° 間隔で内接し、先頭頂点は真上に来る", async ({
+test.describe("regular polygon geometry of the default polygon", () => {
+	test("inscribes the drawn pentagon in the ellipse at even 72 degree spacing with the first vertex straight up", async ({
 		canvas,
 	}) => {
-		// (400,200)-(600,360): 中心(500,280)・rx=100・ry=80。
+		// (400,200)-(600,360): center (500,280), rx=100, ry=80.
 		const id = await canvas.drawShape(
 			"Polygon",
 			{ x: 400, y: 200 },
@@ -62,19 +65,19 @@ test.describe("既定ポリゴンの正多角形ジオメトリ", () => {
 		expect(vertices).toHaveLength(SIDES);
 
 		const expected = expectedPolygon(500, 280, 100, 80);
-		// 先頭頂点は真上（中心の rx 方向には動かず ry 分だけ上）= (500,200)。
+		// The first vertex points straight up: no rx offset, ry above the center, so (500,200).
 		expect(Math.abs(vertices[0].x - 500)).toBeLessThanOrEqual(TOLERANCE_PX);
 		expect(Math.abs(vertices[0].y - 200)).toBeLessThanOrEqual(TOLERANCE_PX);
 
-		// 各頂点が式どおりの位置にある（等角配置・楕円内接を 1 点ずつ照合）。
+		// Every vertex sits where the formula puts it, checking spacing and inscription point by point.
 		for (let i = 0; i < SIDES; i++) {
 			expect(
 				Math.abs(vertices[i].x - expected[i].x),
-				`頂点${i} の x`,
+				`x of vertex ${i}`,
 			).toBeLessThanOrEqual(TOLERANCE_PX);
 			expect(
 				Math.abs(vertices[i].y - expected[i].y),
-				`頂点${i} の y`,
+				`y of vertex ${i}`,
 			).toBeLessThanOrEqual(TOLERANCE_PX);
 		}
 	});

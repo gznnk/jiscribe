@@ -2,24 +2,22 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * コネクターの「当たり判定の幅」を検証する spec。
+ * Checks the width of a connector's hit area.
  *
- * コネクターは細い視覚線（ConnectorElement, pointer-events: none）とは別に、太い透明な
- * 当たり判定線（ConnectorHitArea, stroke-width: 12, pointer-events: stroke）で描かれ、
- * 線そのものをピンポイントで狙わなくてもクリックで選択できるようになっている。
- * arrange/connector-hit-test.spec は z-order による選択優先度を守るが、この「線から少し
- * 外れていても当たり判定の帯（±6px）の内側なら選択でき、外側なら選択されない」という
- * 当たり判定幅そのものは未検証だった。
+ * Besides the thin visual line (ConnectorElement, pointer-events: none), a connector is drawn
+ * with a thick transparent hit-area line (ConnectorHitArea, stroke-width: 12, pointer-events:
+ * stroke) so a click can select it without hitting the line itself dead on.
  *
- * 当たり判定線の stroke-width は 12（中心線から半幅 6px）。zoom=1 ではワールド座標＝
- * コンテンツ座標なので、コネクターの points からクリック位置を相対的に作って検証する。
+ * The hit-area line's stroke-width is 12, i.e. a half width of 6px from the center line. At
+ * zoom=1 world coordinates equal content coordinates, so the click positions are built relative
+ * to the connector's points.
  */
 
 type Vec = { x: number; y: number };
 
 function parsePoints(attr: string | null): Vec[] {
 	if (!attr) {
-		throw new Error("points 属性が取得できない");
+		throw new Error("cannot read the points attribute");
 	}
 	return attr
 		.trim()
@@ -30,12 +28,12 @@ function parsePoints(attr: string | null): Vec[] {
 		});
 }
 
-/** コネクター選択時に出る ObjectMenu（線色トグル）のロケーター */
+/** Locator for the ObjectMenu line-color toggle that appears when a connector is selected */
 function lineColorToggle(canvas: CanvasDriver) {
 	return canvas.page.locator('[data-part="toggle:line-color"]');
 }
 
-/** 左右に並べた 2 矩形を rightCenter → leftCenter で結び、水平な直線コネクターを作る。 */
+/** Joins two side-by-side rectangles rightCenter → leftCenter into a horizontal straight connector. */
 async function buildHorizontalConnector(canvas: CanvasDriver): Promise<string> {
 	await canvas.drawShape("Rectangle", { x: 300, y: 200 }, { x: 460, y: 300 });
 	await canvas.deselect();
@@ -48,8 +46,8 @@ async function buildHorizontalConnector(canvas: CanvasDriver): Promise<string> {
 	return id;
 }
 
-test.describe("コネクターの当たり判定幅", () => {
-	test("線から少し外れたクリックでも帯の内側なら選択でき、外側なら選択されない", async ({
+test.describe("connector hit area width", () => {
+	test("selects on a click slightly off the line inside the band but not outside it", async ({
 		canvas,
 	}) => {
 		const connectorId = await buildHorizontalConnector(canvas);
@@ -57,38 +55,36 @@ test.describe("コネクターの当たり判定幅", () => {
 		const points = parsePoints(
 			await canvas.objectById(connectorId).getAttribute("points"),
 		);
-		// 一直線（2 頂点）なので中点で当たり判定を試す。
+		// The route is straight (2 vertices), so the hit area is probed at its midpoint.
 		expect(points.length).toBe(2);
 		const mid = {
 			x: (points[0].x + points[1].x) / 2,
 			y: (points[0].y + points[1].y) / 2,
 		};
 
-		// 帯の内側（中心線から 4px）をクリック → 線そのものを外していても選択される。
 		await canvas.clickAt({ x: mid.x, y: mid.y + 4 });
 		await expect(
 			lineColorToggle(canvas),
-			"中心線から 4px（当たり判定 ±6px の内側）で選択できること",
+			"a click 4px off the center line, inside the ±6px hit area, selects",
 		).toBeVisible();
 
 		await canvas.deselect();
 
-		// 帯の外側（中心線から 20px）をクリック → 何も選択されない。
 		await canvas.clickAt({ x: mid.x, y: mid.y + 20 });
 		await expect(
 			lineColorToggle(canvas),
-			"中心線から 20px（当たり判定の外側）では選択されないこと",
+			"a click 20px off the center line, outside the hit area, does not select",
 		).toHaveCount(0);
 		expect(
 			await canvas.hasAnyControl(),
-			"外側クリックで選択コントロールが出ないこと",
+			"the outside click brings up no selection control",
 		).toBe(false);
 
-		// 念のため、線上ど真ん中のクリックでは選択できる（当たり判定が生きている確認）。
+		// Confirms the hit area is live at all.
 		await canvas.clickAt({ x: mid.x, y: mid.y });
 		await expect(
 			lineColorToggle(canvas),
-			"線上のクリックで選択できること",
+			"a click on the line selects",
 		).toBeVisible();
 	});
 });

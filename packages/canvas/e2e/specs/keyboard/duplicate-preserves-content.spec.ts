@@ -1,16 +1,18 @@
 import { test, expect } from "../../fixtures";
 
 /**
- * 複製（Ctrl+D）が中身を引き継ぐことの検証。
+ * Guards that duplicate (Ctrl+D) carries the contents over.
  *
- * 既存の clipboard / duplicate-paste-offset は「数が増える」「位置が +20 ずれる」までは
- * 守るが、複製された図形が元のスタイル（背景色）やテキストを引き継ぐかは検証していない。
- * 複製は state の deep copy ＋ ID 振り直しで実装されており、コピー漏れ（色だけ・テキスト
- * だけ落ちる）はリファクタで起きやすく、かつ画面では一見動いて見えるため気づきにくい。
- * 観測可能な結果（両図形の computed fill 一致・テキストの 2 重化）で守る。
+ * The existing clipboard / duplicate-paste-offset specs guard "the count grows"
+ * and "the position shifts by +20", but not that the duplicate inherits the
+ * original's style (background color) and text. Duplicate is a deep copy of the
+ * state plus fresh IDs, so a missed field, where only the color or only the text
+ * drops, is easy to introduce in a refactor and hard to notice because the
+ * screen still looks right. Guarded through observable results: the computed
+ * fill matches on both shapes, and the text ends up rendered twice.
  */
-test.describe("複製が中身を引き継ぐ", () => {
-	test("複製は背景色を引き継ぐ", async ({ canvas }) => {
+test.describe("duplicate carries the contents over", () => {
+	test("carries the background color over on duplicate", async ({ canvas }) => {
 		const srcId = await canvas.drawShape(
 			"Rectangle",
 			{ x: 400, y: 200 },
@@ -22,11 +24,11 @@ test.describe("複製が中身を引き継ぐ", () => {
 			.poll(() => canvas.computedColor(srcId, "fill"))
 			.toBe(customFill);
 
-		// 色入力欄に残ったフォーカスをキャンバスへ戻す（Ctrl+D を入力欄が奪うと複製されない）。
-		// 図形をクリックし直すと選択は維持したままキャンバスにフォーカスが戻る。
+		// Hand focus back from the color input to the canvas; if the input takes
+		// Ctrl+D nothing is duplicated. Clicking the shape again keeps the
+		// selection and returns focus to the canvas.
 		await canvas.selectAt({ x: 500, y: 260 });
 
-		// 複製すると 2 つになり、クローンも同じ背景色を持つ
 		await canvas.duplicate();
 		await expect
 			.poll(async () => (await canvas.captureObjects()).length)
@@ -39,7 +41,7 @@ test.describe("複製が中身を引き継ぐ", () => {
 		expect(await canvas.computedColor(cloned!.id!, "fill")).toBe(customFill);
 	});
 
-	test("複製はテキストを引き継ぐ", async ({ canvas }) => {
+	test("carries the text over on duplicate", async ({ canvas }) => {
 		const text = "Duplicate Me";
 		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
 		await canvas.deselect();
@@ -48,7 +50,6 @@ test.describe("複製が中身を引き継ぐ", () => {
 		await canvas.commitText();
 		await expect(canvas.page.locator("body")).toContainText(text);
 
-		// 図形を選び直して複製すると、同じテキストが 2 つレンダリングされる
 		await canvas.selectAt({ x: 500, y: 260 });
 		await canvas.duplicate();
 		await expect
@@ -62,7 +63,7 @@ test.describe("複製が中身を引き継ぐ", () => {
 						const haystack = document.body.textContent ?? "";
 						return haystack.split(needle).length - 1;
 					}, text),
-				{ message: "複製後はテキストが 2 箇所に現れること" },
+				{ message: "the text appears in two places after duplicating" },
 			)
 			.toBe(2);
 	});

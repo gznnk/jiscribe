@@ -3,13 +3,14 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 import { selectors } from "../../support/selectors";
 
 /**
- * Sticky のプリセット色選択。
+ * Preset color selection for Sticky.
  *
- * Sticky は他図形と違い CSS 入力のない専用カラーメニュー（StickyColorMenu, プリセットのみ）を
- * 持つが、これだけ未カバーだった。プリセットのスウォッチを押すと本体の塗りが変わり、
- * 選択解除→再選択しても保持されることを守る。
+ * Unlike other shapes, Sticky has a dedicated color menu with no CSS input
+ * (StickyColorMenu, presets only), and it was the only one left uncovered. Pressing a
+ * preset swatch changes the body fill, and it survives deselect -> reselect.
  *
- * Sticky 本体は <g> 内の 2 つ目の polygon（1 つ目は影）で、塗りは SVG 属性 fill に乗る。
+ * The Sticky body is the second polygon inside the <g> (the first is the shadow), and
+ * the fill lands on the SVG fill attribute.
  */
 async function stickyFill(
 	canvas: CanvasDriver,
@@ -18,20 +19,20 @@ async function stickyFill(
 	return canvas.page.evaluate((stickyId) => {
 		const group = document.querySelector(`[data-id="${stickyId}"]`);
 		const polygons = group ? [...group.querySelectorAll("polygon")] : [];
-		// 1 つ目は影、2 つ目が本体。
+		// The first polygon is the shadow, the second one is the body.
 		const main = polygons[1] ?? polygons[0];
 		return main?.getAttribute("fill") ?? null;
 	}, id);
 }
 
-test.describe("Sticky のプリセット色", () => {
-	test("プリセットスウォッチで本体の塗りが変わり、選択解除後も保持される", async ({
+test.describe("Sticky preset colors", () => {
+	test("changes the body fill from a preset swatch and keeps it after deselecting", async ({
 		canvas,
 	}) => {
 		const id = await canvas.placeShape("Sticky");
 		const box = await canvas.objectById(id).boundingBox();
 		if (!box) {
-			throw new Error("Sticky の boundingBox が取得できない");
+			throw new Error("cannot get the boundingBox of the Sticky");
 		}
 		const center = canvas.toContent({
 			x: box.x + box.width / 2,
@@ -39,18 +40,18 @@ test.describe("Sticky のプリセット色", () => {
 		});
 		await canvas.selectAt(center);
 
-		// 既定は Yellow(#fef9c3)。Blue(#bfdbfe) のスウォッチに変える。
+		// The default is Yellow (#fef9c3); switch to the Blue (#bfdbfe) swatch.
 		expect(await stickyFill(canvas, id)).toBe("#fef9c3");
 
 		await canvas.openObjectMenu("sticky-color");
 		await canvas.page.click(selectors.objectMenuSet("fill", "#bfdbfe"));
 		await expect
 			.poll(() => stickyFill(canvas, id), {
-				message: "プリセット選択で本体の塗りが変わること",
+				message: "picking a preset changes the body fill",
 			})
 			.toBe("#bfdbfe");
 
-		// 選択解除→再選択しても保持される。
+		// Kept across deselect -> reselect.
 		await canvas.deselect();
 		await canvas.selectAt(center);
 		expect(await stickyFill(canvas, id)).toBe("#bfdbfe");

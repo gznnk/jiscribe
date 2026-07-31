@@ -3,49 +3,53 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 import { selectors } from "../../support/selectors";
 
 /**
- * StencilLibrary（上端ツールバー）からの D&D 開始時にエッジスクロールが暴発しないこと、
- * かつ一度エッジゾーン外へ出れば本来のエッジスクロールが効くことを守る（arm-on-leave）。
+ * Edge scrolling must not fire spuriously when a D&D starts from the StencilLibrary
+ * (the top toolbar), while still working once the pointer has left the edge zone
+ * (arm-on-leave).
  *
- * ツールバーは Canvas 上端に接しているため、ボタンを掴んでキャンバスへドラッグし始める
- * 時点でカーソルは必ず上端のエッジゾーン内（端から約 20px 以内）にいる。旧実装は
- * dragStart 直後からエッジスクロールを発火し、まだ内部へ入る前にキャンバスが勝手に
- * パンしていた。修正後は「ドラッグ中に一度エッジゾーン外へ出てから」武装するため、
- * 掴んだ直後の暴発だけが消える。
+ * The toolbar touches the top of the Canvas, so at the moment a button is grabbed and
+ * dragged toward the canvas the cursor is necessarily inside the top edge zone (within
+ * about 20px of the edge). The old implementation fired edge scrolling right from
+ * dragStart and panned the canvas before the pointer had even moved inside. Now it arms
+ * only after the pointer leaves the edge zone during the drag, so only the spurious
+ * scroll right after grabbing disappears.
  *
- * 観測は SVG の viewBox（`minX minY w h`）の minY。上方向スクロールでこの値が動く。
- * 既定ビューポート（zoom=1・SVG はコンテナにほぼ 1:1 で描画）では上端ゾーンは画面で
- * 約 20px なので、端から数 px の点はゾーン内、200px 下は明確にゾーン外になる。
+ * Observed through minY of the SVG viewBox (`minX minY w h`), which moves on upward
+ * scrolling. With the default viewport (zoom=1, the SVG drawn nearly 1:1 in its
+ * container) the top zone is about 20px on screen, so a point a few px from the edge is
+ * inside the zone and 200px below is clearly outside.
  */
 
-/** viewBox の minY（world 座標。垂直スクロールでこの値が動く）。 */
+/** minY of the viewBox (world coordinates; moves on vertical scrolling). */
 async function viewBoxMinY(canvas: CanvasDriver): Promise<number> {
 	const raw = await canvas.getViewBox();
 	if (!raw) {
-		throw new Error("viewBox が取得できない");
+		throw new Error("cannot get the viewBox");
 	}
 	return Number(raw.trim().split(/\s+/)[1]);
 }
 
-/** Rectangle ツールボタンの画面中心（boundingBox は画面座標を返す）。 */
+/** Screen center of the Rectangle tool button (boundingBox returns screen coordinates). */
 async function rectButtonCenter(
 	canvas: CanvasDriver,
 ): Promise<{ x: number; y: number }> {
 	const button = canvas.page.locator(selectors.toolButton("Rectangle"));
 	const box = await button.boundingBox();
 	if (!box) {
-		throw new Error("Rectangle ボタンの位置が取得できない");
+		throw new Error("cannot get the position of the Rectangle button");
 	}
 	return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 }
 
-test.describe("StencilLibrary D&D のエッジスクロール（arm-on-leave）", () => {
-	test("端から掴んで上端ゾーンに留まってもキャンバスはパンしない（暴発防止）", async ({
+test.describe("StencilLibrary D&D edge scrolling (arm-on-leave)", () => {
+	test("does not pan the canvas when grabbing from the edge and staying in the top zone", async ({
 		canvas,
 	}) => {
 		const minYBefore = await viewBoxMinY(canvas);
 
 		const from = await rectButtonCenter(canvas);
-		// 上端から数 px だけ下のゾーン内。横は中央寄りで左右エッジを避ける。
+		// A few px below the top edge, inside the zone. Horizontally near the center to
+		// stay clear of the side edges.
 		const holdX = canvas.toScreen({ x: 400, y: 0 }).x;
 		const topZoneY = canvas.toScreen({ x: 0, y: 0 }).y + 4;
 
@@ -54,8 +58,8 @@ test.describe("StencilLibrary D&D のエッジスクロール（arm-on-leave）"
 		try {
 			await canvas.page.mouse.move(holdX, topZoneY, { steps: 12 });
 
-			// 暴発していれば自走スクロールで minY が数フレーム内に動く。
-			// 「起きないこと」の検証のため、十分なフレーム数ぶん待ってから比較する。
+			// A spurious scroll would move minY on its own within a few frames. Since this
+			// asserts that nothing happens, wait for enough frames before comparing.
 			await canvas.page.waitForTimeout(400);
 
 			expect(await viewBoxMinY(canvas)).toBe(minYBefore);
@@ -64,7 +68,7 @@ test.describe("StencilLibrary D&D のエッジスクロール（arm-on-leave）"
 		}
 	});
 
-	test("一度内部へ出てから上端へ戻ると上方向にエッジスクロールする（武装後は有効）", async ({
+	test("edge-scrolls upward when returning to the top after leaving the zone once (armed)", async ({
 		canvas,
 	}) => {
 		const minYBefore = await viewBoxMinY(canvas);
@@ -76,15 +80,16 @@ test.describe("StencilLibrary D&D のエッジスクロール（arm-on-leave）"
 		await canvas.page.mouse.move(from.x, from.y);
 		await canvas.page.mouse.down();
 		try {
-			// 武装: 上端ゾーンの外（十分内部）まで下げる。
+			// Arm: move down past the top edge zone (well inside).
 			await canvas.page.mouse.move(holdX, topY + 220, { steps: 12 });
-			// 上端ゾーンへ戻して保持 → 武装済みなので上方向スクロールが始まる。
+			// Back into the top zone and hold: armed, so upward scrolling starts.
 			await canvas.page.mouse.move(holdX, topY + 4, { steps: 10 });
 
-			// 上方向スクロールで minY が減り続ける（自走）。状態待ちで同期する。
+			// Upward scrolling keeps decreasing minY on its own; sync by polling.
 			await expect
 				.poll(() => viewBoxMinY(canvas), {
-					message: "武装後は上端でエッジスクロール（minY 減少）が発生すること",
+					message:
+						"once armed, the top edge triggers edge scrolling (minY decreases)",
 				})
 				.toBeLessThan(minYBefore - 1);
 		} finally {

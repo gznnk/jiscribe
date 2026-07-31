@@ -1,18 +1,17 @@
 import { test, expect } from "../../fixtures";
 
 /**
- * 直交コネクターの bounding box に「曲がり点（waypoint）」が含まれることを、
- * Zoom to Fit のフレーミングで検証する spec（fix #77 の回帰ガード）。
+ * Checks through Zoom to Fit framing that an orthogonal connector's bounding box includes its
+ * bend points (waypoints) — a regression guard for fix #77.
  *
- * calcConnectorBoundingBox はかつて端点と手動 points だけで範囲を取り、直交ルーティングが
- * 描画時に算出する曲がり点を無視していた。その結果、回り込むコネクターは Zoom to Fit で
- * 折れ部分が画面外に見切れていた。この fix はユニットテスト（calcConnectorBoundingBox.test）で
- * 守られているが、Zoom to Fit が実際に折れ点まで枠に収める——という UI レベルの不変条件は
- * 未検証だった。
+ * calcConnectorBoundingBox used to take its extent from the endpoints and manual points only,
+ * ignoring the bend points that orthogonal routing computes at draw time, which left the bends
+ * of a connector that loops around clipped off screen after Zoom to Fit. The fix itself is
+ * guarded by a unit test (see calcConnectorBoundingBox.test).
  *
- * ここでは、端点の x スパンより外側へ張り出す U ターン経路を作り、Zoom to Fit 後に
- * すべての描画 points（曲がり点を含む）が viewBox 内に収まることを守る。bbox が曲がり点を
- * 落とすと、その点が viewBox の外（見切れ）になり落ちる。
+ * Builds a U-turn route that reaches beyond the x span of the endpoints and guards that after
+ * Zoom to Fit every drawn point, bends included, lies inside the viewBox. If the bbox drops the
+ * bend points, that point falls outside the viewBox and the test fails.
  */
 
 type Vec = { x: number; y: number };
@@ -20,7 +19,7 @@ type ViewBox = { minX: number; minY: number; width: number; height: number };
 
 function parsePoints(attr: string | null): Vec[] {
 	if (!attr) {
-		throw new Error("points 属性が取得できない");
+		throw new Error("cannot read the points attribute");
 	}
 	return attr
 		.trim()
@@ -33,27 +32,28 @@ function parsePoints(attr: string | null): Vec[] {
 
 function parseViewBox(raw: string | null): ViewBox {
 	if (!raw) {
-		throw new Error("viewBox が取得できない");
+		throw new Error("cannot read viewBox");
 	}
 	const [minX, minY, width, height] = raw.trim().split(/\s+/).map(Number);
 	return { minX, minY, width, height };
 }
 
-test.describe("コネクターの bounding box（曲がり点を含む）", () => {
-	test("回り込む直交コネクターの折れ点まで Zoom to Fit が枠に収める", async ({
+test.describe("connector bounding box including bend points", () => {
+	test("fits the bends of a looping orthogonal connector inside the frame on Zoom to Fit", async ({
 		canvas,
 	}) => {
-		// 横長・低背の配置にして Zoom to Fit の制約軸を横にする（縦に余白が出て、
-		// 横は内容ぴったり + 余白になるため、横方向の見切れを検出しやすい）。
-		// source を右、target を左に置き、source の rightCenter から出すと右へ退出してから
-		// U ターンして左の target へ回り込む。右へ張り出す折れ点が端点スパンの外側に来る。
+		// A wide, short layout makes width the constraining axis for Zoom to Fit, so horizontal
+		// clipping is easy to detect (vertical slack, horizontal fit plus padding).
+		// source on the right and target on the left: leaving source at rightCenter exits to the
+		// right, then U-turns back to the target, putting a bend outside the endpoint span.
 		await canvas.drawShape("Rectangle", { x: 520, y: 360 }, { x: 640, y: 440 });
 		await canvas.deselect();
 		await canvas.drawShape("Rectangle", { x: 260, y: 360 }, { x: 380, y: 440 });
 		await canvas.deselect();
 
-		// source の rightCenter から左の target 右辺中央 (380,400) へドロップして回り込みを作る。
-		// 辺アンカー同士なので既定 orthogonal（中心へ落とすと center → 既定 straight で折れなくなる）。
+		// Dropping from source rightCenter onto the target's right edge center (380,400) forces the
+		// loop. Both ends are edge anchors, so routing defaults to orthogonal (dropping on the
+		// center would give a center anchor, which defaults to straight and never bends).
 		await canvas.selectAt({ x: 580, y: 400 });
 		const connectorId = await canvas.createConnector("rightCenter", {
 			x: 380,
@@ -65,36 +65,36 @@ test.describe("コネクターの bounding box（曲がり点を含む）", () =
 			await canvas.objectById(connectorId).getAttribute("points"),
 		);
 
-		// 前提: U ターンで折れ点が端点の x スパンより右へ張り出している
-		// （bbox が曲がり点を無視すると見切れる構図であることをテスト自身で保証する）。
+		// Precondition: the U-turn pushes a bend to the right of the endpoints' x span, so the
+		// layout really is one that clips when the bbox ignores bend points.
 		const endpointMaxX = Math.max(points[0].x, points[points.length - 1].x);
 		const routeMaxX = Math.max(...points.map((p) => p.x));
 		expect(
 			routeMaxX,
-			`折れ点が端点スパンの外へ張り出すこと: endpointMaxX=${endpointMaxX} routeMaxX=${routeMaxX}`,
+			`a bend reaches beyond the endpoint span: endpointMaxX=${endpointMaxX} routeMaxX=${routeMaxX}`,
 		).toBeGreaterThan(endpointMaxX + 1);
 
 		const before = await canvas.getViewBox();
 		await canvas.zoomToFit();
 		await expect
 			.poll(() => canvas.getViewBox(), {
-				message: "Zoom to Fit で viewBox が変化すること",
+				message: "Zoom to Fit changes the viewBox",
 			})
 			.not.toBe(before);
 
 		const vb = parseViewBox(await canvas.getViewBox());
 
-		// Zoom to Fit 後、すべての描画 points（曲がり点を含む）が viewBox 内に収まる。
-		// 端点だけで bbox を取ると右の張り出し点が viewBox の右外になり、ここで落ちる。
-		const TOL = 1; // 丸め誤差
+		// Taking the bbox from the endpoints alone puts the right-hand bend outside the viewBox,
+		// which fails here.
+		const TOL = 1; // rounding error
 		for (const [i, p] of points.entries()) {
 			expect(
 				p.x >= vb.minX - TOL && p.x <= vb.minX + vb.width + TOL,
-				`点 ${i} ${JSON.stringify(p)} が viewBox 横範囲 [${vb.minX}, ${vb.minX + vb.width}] に収まること`,
+				`point ${i} ${JSON.stringify(p)} lies within the viewBox x range [${vb.minX}, ${vb.minX + vb.width}]`,
 			).toBe(true);
 			expect(
 				p.y >= vb.minY - TOL && p.y <= vb.minY + vb.height + TOL,
-				`点 ${i} ${JSON.stringify(p)} が viewBox 縦範囲 [${vb.minY}, ${vb.minY + vb.height}] に収まること`,
+				`point ${i} ${JSON.stringify(p)} lies within the viewBox y range [${vb.minY}, ${vb.minY + vb.height}]`,
 			).toBe(true);
 		}
 	});

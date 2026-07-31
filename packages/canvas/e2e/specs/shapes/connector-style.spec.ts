@@ -2,15 +2,15 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * コネクターのスタイル設定（線色・線種）の反映と永続。
+ * Applying and persisting connector style settings (line color and dash type).
  *
- * object-menu.spec は図形（ポリライン）の破線化を守るが、コネクター自身のスタイル設定は
- * 未カバーだった。コネクターは当たり判定用（透明・data-id 付き）と描画用（スタイル付き・
- * data-kind なし）の 2 要素で描かれ、スタイルは描画側にしか乗らない。設定が描画要素へ
- * 反映され、選択解除後も保持されることを computed style で守る。
+ * object-menu.spec covers making a shape (polyline) dashed, but styling the connector itself was
+ * uncovered. A connector is drawn as two elements — a hit target (transparent, with data-id) and a
+ * visual one (styled, without data-kind) — and the style only lands on the visual one. Guards
+ * through computed style that a setting reaches the visual element and survives deselection.
  */
 
-/** 上下 2 矩形を縦コネクターで結び、コネクター ID を返す（接続後は選択解除済み） */
+/** Joins two stacked rectangles with a vertical connector and returns its id (the selection is cleared afterwards). */
 async function buildConnector(canvas: CanvasDriver): Promise<string> {
 	await canvas.drawShape("Rectangle", { x: 400, y: 150 }, { x: 600, y: 250 });
 	await canvas.deselect();
@@ -27,11 +27,12 @@ async function buildConnector(canvas: CanvasDriver): Promise<string> {
 }
 
 /**
- * 描画用ポリライン（data-kind なし）の computed style を読む。
- * 描画要素は矢印分だけ端を inset するため当たり判定用とは points が一致しない。
- * キャンバス上のポリラインはコネクターの当たり判定用（data-kind 付き）と描画用のみだが、
- * ツールバーの図形アイコン（Polyline ツール等）も <polyline>（data-kind なし）で
- * 描かれDOM 上はキャンバス内容より前に並ぶため、ボタン内のアイコンを除外して描画要素を特定する。
+ * Reads the computed style of the visual polyline (the one without data-kind). Its points differ
+ * from the hit target because the visual element insets its ends by the arrow size. The only
+ * polylines on the canvas are the hit target (with data-kind) and the visual one, but the shape
+ * icons in the toolbar (the Polyline tool and so on) are also drawn as <polyline> without
+ * data-kind and come before the canvas content in the DOM, so icons inside buttons are excluded to
+ * pick the visual element.
  */
 async function visualStyle(
 	canvas: CanvasDriver,
@@ -45,7 +46,7 @@ async function visualStyle(
 	}, prop);
 }
 
-/** すべての描画用ポリライン（data-kind なし・ツールバーアイコン除く）の computed style 一覧 */
+/** Computed styles of every visual polyline (without data-kind, toolbar icons excluded). */
 async function allVisualStyles(
 	canvas: CanvasDriver,
 	prop: "stroke" | "stroke-dasharray",
@@ -59,13 +60,13 @@ async function allVisualStyles(
 	);
 }
 
-test.describe("コネクターのスタイル", () => {
-	test("線色を設定すると描画要素に反映され、選択解除後も保持される", async ({
+test.describe("connector style", () => {
+	test("applies a line color to the visual element and keeps it after deselection", async ({
 		canvas,
 	}) => {
 		await buildConnector(canvas);
 
-		// 線上をクリックして選択（コネクター用 ObjectMenu が出る）
+		// Click the line to select it; the connector ObjectMenu appears.
 		await canvas.clickAt({ x: 500, y: 350 });
 		await expect(
 			canvas.page.locator('[data-part="toggle:line-color"]'),
@@ -75,16 +76,16 @@ test.describe("コネクターのスタイル", () => {
 		await canvas.setColor("line-color", "#e11d48");
 		await expect
 			.poll(() => visualStyle(canvas, "stroke"), {
-				message: "描画用ポリラインに線色が乗ること",
+				message: "the line color lands on the visual polyline",
 			})
 			.toBe(customStroke);
 
-		// 選択を外しても色は残る
+		// The color survives deselection.
 		await canvas.deselect();
 		expect(await visualStyle(canvas, "stroke")).toBe(customStroke);
 	});
 
-	test("線種を破線にすると描画要素の dasharray が設定される", async ({
+	test("sets the dasharray of the visual element when the dash type is set to dashed", async ({
 		canvas,
 	}) => {
 		await buildConnector(canvas);
@@ -94,23 +95,23 @@ test.describe("コネクターのスタイル", () => {
 			canvas.page.locator('[data-part="toggle:line-style"]'),
 		).toBeVisible();
 
-		// 既定はソリッド（dasharray なし）
+		// The default is solid, with no dasharray.
 		expect(await visualStyle(canvas, "stroke-dasharray")).toBe("none");
 
 		await canvas.setStrokeDashType("line-style", "dashed");
 		await expect
 			.poll(() => visualStyle(canvas, "stroke-dasharray"), {
-				message: "破線化で dasharray が設定されること",
+				message: "dasharray is set when the line is made dashed",
 			})
 			.not.toBe("none");
 	});
 
-	test("線色はコピー＆ペーストで複製コネクターにも引き継がれる", async ({
+	test("carries the line color over to a connector duplicated by copy and paste", async ({
 		canvas,
 	}) => {
 		await buildConnector(canvas);
 
-		// コネクターを選択して線色を設定する。
+		// Select the connector and set its line color.
 		await canvas.clickAt({ x: 500, y: 350 });
 		await expect(
 			canvas.page.locator('[data-part="toggle:line-color"]'),
@@ -120,7 +121,7 @@ test.describe("コネクターのスタイル", () => {
 		await expect.poll(() => visualStyle(canvas, "stroke")).toBe(customStroke);
 		await canvas.deselect();
 
-		// 全選択してコピー＆ペースト → コネクターが 2 本になる。
+		// Select all, copy and paste -> there are two connectors.
 		await canvas.selectAll();
 		await canvas.copy();
 		await canvas.paste();
@@ -129,16 +130,17 @@ test.describe("コネクターのスタイル", () => {
 				async () =>
 					(await canvas.captureObjects()).filter((o) => o.tag === "polyline")
 						.length,
-				{ message: "コピペでコネクターが 2 本になること" },
+				{ message: "copy and paste gives two connectors" },
 			)
 			.toBe(2);
 
-		// 選択を外す（選択中コネクターのハイライト用ポリラインを描画から消す）。
+		// Deselect to remove the highlight polyline of the selected connector from the rendering.
 		await canvas.deselect();
 
-		// 設定した線色を持つ描画用ポリラインがちょうど 2 本（元＋複製）あること。
-		// 画面上には UI の装飾ポリライン（別色）も存在するため、全数ではなく
-		// 「設定色に一致する本数」で数える。クローンがスタイルを落とすと 1 本になり落ちる。
+		// Exactly two visual polylines (the original plus the copy) carry the configured line color.
+		// Decorative UI polylines in other colors are also on screen, so the count is taken over
+		// polylines matching the configured color rather than over all of them. If the clone drops
+		// the style, this becomes 1 and the test fails.
 		const strokes = await allVisualStyles(canvas, "stroke");
 		const styledCount = strokes.filter((s) => s === customStroke).length;
 		expect(styledCount).toBe(2);

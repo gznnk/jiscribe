@@ -1,8 +1,8 @@
 import { test, expect } from "../fixtures";
 import { selectors } from "../support/selectors";
 
-test.describe("スモーク", () => {
-	test("ツールバーが表示される", async ({ canvas }) => {
+test.describe("smoke", () => {
+	test("shows the toolbar", async ({ canvas }) => {
 		for (const tool of [
 			"Rectangle",
 			"Ellipse",
@@ -17,10 +17,12 @@ test.describe("スモーク", () => {
 		}
 	});
 
-	test("矩形を描くと図形が作成され自動選択される", async ({ canvas }) => {
+	test("creates a shape and auto-selects it when a rectangle is drawn", async ({
+		canvas,
+	}) => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
 
-		// 描画直後は選択状態（ハンドルと ObjectMenu が表示される）
+		// Selected right after drawing (handles and the ObjectMenu appear).
 		await expect(
 			canvas.page.locator(selectors.transformControl("bottomRight")),
 		).toBeVisible();

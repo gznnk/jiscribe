@@ -2,19 +2,19 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * コネクターの「少なくとも一方の端は owned」不変条件を、UI の端点ハンドル表示で守る spec。
+ * Spec guarding the "at least one end is owned" invariant of a connector through the endpoint
+ * handles shown in the UI.
  *
- * ConnectorControls は、片端が free のとき対になる owned 端のハンドルを隠す
- * （showSourceHandle = sourceIsFree || !targetIsFree）。隠さないと最後の owned 端を空中へ
- * ドラッグして「両端 free」を作れてしまうため。これは「両端 free を防ぐ」不変条件の
- * UI レベルでの実体（handleDragEnd の防御ガードはこのため通常到達しない）。
+ * ConnectorControls hides the handle of the owned end when the opposite end is free
+ * (showSourceHandle = sourceIsFree || !targetIsFree). Without hiding it, the last owned end could
+ * be dragged into empty space, producing a connector with both ends free. This is the UI-level
+ * embodiment of that invariant (which is why the defensive guard in handleDragEnd is normally
+ * unreachable).
  *
- * 観測契約:
- *   - 両端 owned のコネクター → source / target 両方の端点ハンドルが出る
- *   - 片端 free のコネクター → free 端のハンドルだけ出て、残る owned 端のハンドルは出ない
- *
- * これにより「最後の owned 端を free 化する操作」が UI 上できないこと＝不変条件が守られて
- * いることを担保する。
+ * Observed contract:
+ *   - connector with both ends owned -> both source and target endpoint handles appear
+ *   - connector with one free end -> only the free end's handle appears, the remaining owned end
+ *     has no handle
  */
 
 function sourceHandle(canvas: CanvasDriver, id: string) {
@@ -25,8 +25,9 @@ function targetHandle(canvas: CanvasDriver, id: string) {
 }
 
 /**
- * 水平コネクター（y=350）の中点をクリックして選択し、指定端点ハンドルの出現を待つ。
- * 単発クリックはまれに線を外すため、ハンドルが出るまでクリックを繰り返す（再選択は冪等）。
+ * Selects the horizontal connector (y=350) by clicking its midpoint and waits for the given
+ * endpoint handle. A single click occasionally misses the line, so it keeps clicking until the
+ * handle appears (re-selecting is idempotent).
  */
 async function selectUntilHandle(
 	canvas: CanvasDriver,
@@ -42,18 +43,18 @@ async function selectUntilHandle(
 					.count();
 			},
 			{
-				message: `${endpoint} ハンドルが出るまで線をクリックする`,
+				message: `click the line until the ${endpoint} handle appears`,
 				timeout: 8000,
 			},
 		)
 		.toBeGreaterThan(0);
 }
 
-test.describe("コネクター端点ハンドルの表示（owned/free）", () => {
-	test("両端 owned のコネクターは source / target 両方のハンドルが出る", async ({
+test.describe("endpoint handle visibility of a connector (owned/free)", () => {
+	test("shows both source and target handles when both ends are owned", async ({
 		canvas,
 	}) => {
-		// A.rightCenter → B.leftCenter（両端 owned の水平コネクター）。
+		// A.rightCenter -> B.leftCenter (a horizontal connector with both ends owned).
 		await canvas.drawShape("Rectangle", { x: 300, y: 300 }, { x: 460, y: 400 });
 		await canvas.deselect();
 		await canvas.drawShape("Rectangle", { x: 760, y: 300 }, { x: 920, y: 400 });
@@ -62,41 +63,39 @@ test.describe("コネクター端点ハンドルの表示（owned/free）", () =
 		const id = await canvas.createConnector("rightCenter", { x: 840, y: 350 });
 		await canvas.deselect();
 
-		// 線上をクリックして選択（source ハンドル出現で確定）。
+		// Click the line to select it; the source handle appearing confirms the selection.
 		await selectUntilHandle(canvas, id, "source");
 
-		// 両端 owned なので両方のハンドルが出る。
 		await expect(
 			sourceHandle(canvas, id),
-			"両端 owned では source ハンドルが出ること",
+			"source handle appears when both ends are owned",
 		).toBeVisible();
 		await expect(
 			targetHandle(canvas, id),
-			"両端 owned では target ハンドルが出ること",
+			"target handle appears when both ends are owned",
 		).toBeVisible();
 	});
 
-	test("片端 free のコネクターは owned 端のハンドルを隠し、free 端のみ出す", async ({
+	test("hides the owned end handle and shows only the free end when one end is free", async ({
 		canvas,
 	}) => {
-		// A.rightCenter → 空きスペース（target が free）。source A のみ owned。
+		// A.rightCenter -> empty space (target is free). Only source A is owned.
 		await canvas.drawShape("Rectangle", { x: 300, y: 300 }, { x: 460, y: 400 });
 		await canvas.deselect();
 		await canvas.selectAt({ x: 380, y: 350 });
 		const id = await canvas.createConnector("rightCenter", { x: 760, y: 350 });
 		await canvas.deselect();
 
-		// 線上をクリックして選択。free 端（target）のハンドル出現で選択完了を待つ。
+		// Click the line to select it, waiting for the free end (target) handle to appear.
 		await selectUntilHandle(canvas, id, "target");
 		await expect(
 			targetHandle(canvas, id),
-			"free 端（target）のハンドルは出ること",
+			"handle of the free end (target) appears",
 		).toBeVisible();
 
-		// 残る owned 端（source）のハンドルは隠れている＝最後の owned 端を free 化できない。
 		await expect(
 			sourceHandle(canvas, id),
-			"owned 端（source）のハンドルは隠れていること（最後の owned 端は free 化不可）",
+			"handle of the owned end (source) is hidden, so the last owned end cannot be freed",
 		).toHaveCount(0);
 	});
 });

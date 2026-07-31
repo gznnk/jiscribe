@@ -2,17 +2,20 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * ズームイン中にコネクターを「作成」したとき、端点が正しいワールド座標（図形の辺）に
- * 解決されることを検証する spec。
+ * Creating a connector while zoomed in must still resolve the endpoints to the
+ * correct world coordinates (the shape edges).
  *
- * コネクター作成のドラッグは画面座標で行われ、ハンドラ側で現在の viewBox に応じて
- * screen→world 変換される。zoom=1 では screen≒world で退行が隠れるが、ズーム中は変換が
- * 壊れると端点が辺からずれる。既存のコネクター spec は全て zoom=1 で作成しており、ズーム下の
- * アンカー解決は隙間だった。
+ * The creation drag happens in screen coordinates and the handler converts it
+ * screen->world against the current viewBox. At zoom=1 screen is nearly world,
+ * so a broken conversion hides; while zoomed the endpoints drift off the edge.
+ * Every other connector spec creates at zoom=1, leaving anchor resolution under
+ * zoom uncovered.
  *
- * 図形との対話は「現在の画面 boundingBox → toContent」で行い（ズームでも実画面位置に当たる）、
- * 端点の期待値は要素の transform 属性（モデル変換＝ズーム不変）由来のワールド AABB から作る。
- * getCTM は viewBox スケールを畳み込むためズーム下ではワールド座標とずれる点に注意。
+ * Shapes are addressed through their current screen boundingBox fed to
+ * toContent, so the interaction lands on the real on-screen position even when
+ * zoomed. Expected endpoints come from a world AABB derived from the element's
+ * transform attribute (the model transform, which zoom does not affect); getCTM
+ * folds in the viewBox scale and so disagrees with world coordinates.
  */
 
 type Vec = { x: number; y: number };
@@ -22,7 +25,7 @@ const EPS = 2;
 
 function parsePoints(attr: string | null): Vec[] {
 	if (!attr) {
-		throw new Error("points 属性が取得できない");
+		throw new Error("cannot read the points attribute");
 	}
 	return attr
 		.trim()
@@ -38,16 +41,17 @@ function distance(a: Vec, b: Vec): number {
 }
 
 /**
- * 図形のワールド AABB を、要素の `transform` 属性（モデル変換 local→world）で算出する。
- * getCTM は viewBox（ズーム）スケールを畳み込むため、ズーム中はワールド座標と一致しない。
- * コネクターの points が使うのと同じワールド空間で比較するため、ズーム不変な transform 属性
- * （matrix(...)）でローカル bbox を変換する。
+ * World AABB of a shape, computed from the element's `transform` attribute (the
+ * local->world model transform). getCTM folds in the viewBox (zoom) scale and
+ * therefore does not match world coordinates while zoomed, so the local bbox is
+ * transformed by the zoom-invariant `matrix(...)` instead — the same world space
+ * the connector's points live in.
  */
 async function worldAABB(canvas: CanvasDriver, id: string): Promise<AABB> {
 	return canvas.page.evaluate((targetId) => {
 		const el = document.querySelector(`[data-id="${targetId}"]`);
 		if (!(el instanceof SVGGraphicsElement)) {
-			throw new Error(`図形 ${targetId} が SVGGraphicsElement でない`);
+			throw new Error(`shape ${targetId} is not an SVGGraphicsElement`);
 		}
 		const bbox = el.getBBox();
 		const matched = (el.getAttribute("transform") ?? "").match(
@@ -78,7 +82,7 @@ async function worldAABB(canvas: CanvasDriver, id: string): Promise<AABB> {
 
 const centerX = (box: AABB): number => (box.minX + box.maxX) / 2;
 
-/** 点 p が box の周（いずれかの辺）に EPS 以内で乗っているか */
+/** Whether p sits within EPS of box's perimeter (any of its edges) */
 function onPerimeter(p: Vec, box: AABB): boolean {
 	const onVerticalEdge =
 		(Math.abs(p.x - box.minX) <= EPS || Math.abs(p.x - box.maxX) <= EPS) &&
@@ -91,11 +95,11 @@ function onPerimeter(p: Vec, box: AABB): boolean {
 	return onVerticalEdge || onHorizontalEdge;
 }
 
-/** 図形の中心コンテンツ座標（画面 boundingBox を toContent で変換。ズームでも実画面に当たる） */
+/** Shape center in content coordinates (screen boundingBox through toContent, so it lands on the real screen position even when zoomed) */
 async function contentCenter(canvas: CanvasDriver, id: string): Promise<Vec> {
 	const box = await canvas.objectById(id).boundingBox();
 	if (!box) {
-		throw new Error(`図形 ${id} の boundingBox が取得できない`);
+		throw new Error(`cannot read the boundingBox of shape ${id}`);
 	}
 	return canvas.toContent({
 		x: box.x + box.width / 2,
@@ -103,20 +107,20 @@ async function contentCenter(canvas: CanvasDriver, id: string): Promise<Vec> {
 	});
 }
 
-/** 図形の画面上の幅（ズーム適用待ちのシグナル） */
+/** On-screen width of a shape, used as the signal that a zoom has been applied */
 async function screenWidth(canvas: CanvasDriver, id: string): Promise<number> {
 	const box = await canvas.objectById(id).boundingBox();
 	if (!box) {
-		throw new Error(`図形 ${id} の boundingBox が取得できない`);
+		throw new Error(`cannot read the boundingBox of shape ${id}`);
 	}
 	return box.width;
 }
 
-/** 画面 1px が表すワールド長＝ viewBox 幅 ÷ SVG 画面幅。zoom=1 で 1、ズームインで < 1。 */
+/** World length one screen pixel spans = viewBox width / SVG screen width. 1 at zoom=1, < 1 when zoomed in. */
 async function worldPerScreenPixel(canvas: CanvasDriver): Promise<number> {
 	const raw = await canvas.getViewBox();
 	if (!raw) {
-		throw new Error("viewBox が取得できない");
+		throw new Error("cannot read the viewBox");
 	}
 	const vbWidth = Number(raw.trim().split(/\s+/)[2]);
 	const svgScreenWidth = await canvas.page.evaluate(() => {
@@ -136,11 +140,11 @@ async function worldPerScreenPixel(canvas: CanvasDriver): Promise<number> {
 	return vbWidth / svgScreenWidth;
 }
 
-test.describe("ズーム下でのコネクター作成", () => {
-	test("ズームイン中に作成しても端点が図形の辺に正確に解決される", async ({
+test.describe("connector creation under zoom", () => {
+	test("resolves endpoints exactly onto the shape edges when created while zoomed in", async ({
 		canvas,
 	}) => {
-		// 近接した上下 2 図形（ズームインしても両方が画面に収まるよう中央寄りに置く）。
+		// Two shapes close together, kept near the center so both stay on screen after zooming in.
 		const sourceId = await canvas.drawShape(
 			"Rectangle",
 			{ x: 400, y: 200 },
@@ -154,20 +158,20 @@ test.describe("ズーム下でのコネクター作成", () => {
 		);
 		await canvas.deselect();
 
-		// 2 図形の中間を基点にズームインする。
+		// Zoom in anchored at the midpoint between the two shapes.
 		const widthBefore = await screenWidth(canvas, sourceId);
 		await canvas.wheel({ x: 500, y: 375 }, { deltaY: -150, ctrl: true });
 		await expect
 			.poll(() => screenWidth(canvas, sourceId), {
-				message: "ズームインで図形が画面上で拡大すること",
+				message: "zooming in grows the shape on screen",
 			})
 			.toBeGreaterThan(widthBefore + 1);
 
 		const scale = await worldPerScreenPixel(canvas);
-		// ズームインしていること（zoom=1 と区別できないと無意味）。
+		// Pin down that we really zoomed in; indistinguishable from zoom=1 would make the rest vacuous.
 		expect(scale).toBeLessThan(1);
 
-		// ズーム中の現在の画面位置を使って source を選択し、bottomCenter から target へドラッグ。
+		// Select source at its current zoomed screen position, then drag from bottomCenter to target.
 		await canvas.selectAt(await contentCenter(canvas, sourceId));
 		const connectorId = await canvas.createConnector(
 			"bottomCenter",
@@ -181,25 +185,26 @@ test.describe("ズーム下でのコネクター作成", () => {
 		const sourceBox = await worldAABB(canvas, sourceId);
 		const targetBox = await worldAABB(canvas, targetId);
 
-		// 始点は source 下辺中央にワールド座標で正確に乗る（screen→world 変換が正しい）。
+		// The start point lands exactly on the middle of source's bottom edge in world
+		// coordinates, i.e. the screen->world conversion is right.
 		expect(
 			distance(points[0], { x: centerX(sourceBox), y: sourceBox.maxY }),
-			`始点 ${JSON.stringify(points[0])} が source 下辺中央に乗ること（ズーム下）`,
+			`start point ${JSON.stringify(points[0])} sits on the middle of source's bottom edge (under zoom)`,
 		).toBeLessThanOrEqual(EPS);
 
-		// 終点は target の輪郭（周）上に乗る（中心へドロップ→輪郭吸着でも周上）。
+		// Dropping on the center snaps to the outline, so the end point is on the perimeter.
 		expect(
 			onPerimeter(points[points.length - 1], targetBox),
-			`終点 ${JSON.stringify(points[points.length - 1])} が target の周上に乗ること（ズーム下）`,
+			`end point ${JSON.stringify(points[points.length - 1])} sits on target's perimeter (under zoom)`,
 		).toBe(true);
 
-		// 全セグメントが直角（経路もワールド空間で正しく計算されている）。
+		// Every segment is axis-aligned, i.e. the route was computed in world space too.
 		for (let i = 1; i < points.length; i++) {
 			const horizontal = Math.abs(points[i - 1].y - points[i].y) <= EPS;
 			const vertical = Math.abs(points[i - 1].x - points[i].x) <= EPS;
 			expect(
 				horizontal !== vertical,
-				`セグメント ${i - 1}->${i} が直角であること`,
+				`segment ${i - 1}->${i} is axis-aligned`,
 			).toBe(true);
 		}
 	});

@@ -2,17 +2,19 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * 同一図形へ接続する「自己ループ」コネクターを検証する spec。
+ * Spec for a self-loop connector, one that connects a shape to itself.
  *
- * 自己ループ（feat: コネクターの自己ループ対応）は、作成アンカーから同じ図形の本体へ
- * ドロップすると、固定側と別の辺へ接続するループを作る。描画は routeSelfLoop により
- * AABB+margin のリング外周を回る矩形ループ（直交専用）になる。既存のコネクター spec は
- * すべて「異なる 2 図形」を結ぶケースしか見ておらず、自己ループは未検証だった。
+ * Dropping from a creation anchor onto the body of the same shape creates a loop that connects to
+ * an edge other than the fixed one. It is drawn by routeSelfLoop as a rectangular loop running
+ * around the AABB+margin ring (orthogonal only). The existing connector specs only cover joining
+ * two *different* shapes, leaving self-loops untested.
  *
- * ここでは 1 つの矩形に対して自己ループを作り、(1) 両端が同じ図形の別々の辺に乗ること、
- * (2) 全セグメントが直角であること、(3) 図形を貫通せずに外周を回ること、(4) 自己ループは
- * orthogonal 専用のため RoutingMenu（routing 切替）が出ないこと、を守る。
- * アサーションはすべて図形の実描画 AABB から組み立て、座標オフセットに依存しない。
+ * A self-loop is created on a single rectangle, guarding that (1) both ends sit on separate edges
+ * of the same shape, (2) every segment is at a right angle, (3) the route goes around the outside
+ * without penetrating the shape, and (4) the RoutingMenu (routing switch) does not appear, because
+ * a self-loop is orthogonal only.
+ * Every assertion is built from the rendered AABB of the shape, so it does not depend on coordinate
+ * offsets.
  */
 
 type Vec = { x: number; y: number };
@@ -22,7 +24,7 @@ const EPS = 1.5;
 
 function parsePoints(attr: string | null): Vec[] {
 	if (!attr) {
-		throw new Error("points 属性が取得できない");
+		throw new Error("points attribute is missing");
 	}
 	return attr
 		.trim()
@@ -37,12 +39,12 @@ async function worldAABB(canvas: CanvasDriver, id: string): Promise<AABB> {
 	return canvas.page.evaluate((targetId) => {
 		const el = document.querySelector(`[data-id="${targetId}"]`);
 		if (!(el instanceof SVGGraphicsElement)) {
-			throw new Error(`図形 ${targetId} が SVGGraphicsElement でない`);
+			throw new Error(`shape ${targetId} is not an SVGGraphicsElement`);
 		}
 		const bbox = el.getBBox();
 		const ctm = el.getCTM();
 		if (!ctm) {
-			throw new Error(`図形 ${targetId} の CTM が取得できない`);
+			throw new Error(`CTM of shape ${targetId} is not available`);
 		}
 		const corners = [
 			{ x: bbox.x, y: bbox.y },
@@ -64,7 +66,7 @@ async function worldAABB(canvas: CanvasDriver, id: string): Promise<AABB> {
 	}, id);
 }
 
-/** 点が box のどの辺に乗っているか（複数辺=角の場合もあるので配列で返す） */
+/** Which edges of box a point lies on; an array, since a corner lies on two edges. */
 function edgesOf(
 	p: Vec,
 	box: AABB,
@@ -87,7 +89,7 @@ function edgesOf(
 	return edges;
 }
 
-/** 軸並行セグメント (a→b) が box の内部を通るか（辺ぴったりは貫通としない） */
+/** Whether the axis-aligned segment (a->b) passes through the interior of box; running exactly along an edge does not count. */
 function penetratesInterior(a: Vec, b: Vec, box: AABB): boolean {
 	const inner = {
 		minX: box.minX + EPS,
@@ -115,35 +117,35 @@ function assertOrthogonalSegments(points: Vec[]) {
 		const vertical = Math.abs(prev.x - cur.x) <= EPS;
 		expect(
 			horizontal !== vertical,
-			`セグメント ${i - 1}->${i} が直角でない（重複点 or 斜め）: ${JSON.stringify(prev)} -> ${JSON.stringify(cur)}`,
+			`segment ${i - 1}->${i} is not at a right angle (duplicated point or diagonal): ${JSON.stringify(prev)} -> ${JSON.stringify(cur)}`,
 		).toBe(true);
 	}
 }
 
-test.describe("コネクターの自己ループ（同一図形への接続）", () => {
-	test("作成アンカーから同じ図形へドロップすると、別の辺へ接続するループができる", async ({
+test.describe("self-loop connector (connecting a shape to itself)", () => {
+	test("creates a loop connected to another edge when dropped from a creation anchor onto the same shape", async ({
 		canvas,
 	}) => {
-		// 自己ループの周回が見えるよう、十分大きい単一矩形を 1 つ置く。
+		// Place a single rectangle large enough for the loop around it to be visible.
 		const shapeId = await canvas.drawShape(
 			"Rectangle",
 			{ x: 450, y: 300 },
 			{ x: 650, y: 460 },
 		);
 
-		// topCenter の作成アンカーから、同じ図形の本体（右辺寄りの内側）へドロップ。
-		// 固定側（topCenter）を除いた最近傍アンカー = rightCenter へ接続するので、別の辺になる。
+		// Drop from the topCenter creation anchor onto the body of the same shape, inside and near
+		// its right edge. The nearest anchor excluding the fixed one (topCenter) is rightCenter, so
+		// the connection lands on a different edge.
 		const connectorId = await canvas.createConnector("topCenter", {
 			x: 640,
 			y: 380,
 		});
 		await canvas.deselect();
 
-		// コネクターが 1 本だけ増えていること（=自己ループが作成された）。
 		const connectorCount = (await canvas.captureObjects()).filter(
 			(o) => o.tag === "polyline",
 		).length;
-		expect(connectorCount, "自己ループのコネクターが 1 本作成されること").toBe(
+		expect(connectorCount, "exactly one self-loop connector is created").toBe(
 			1,
 		);
 
@@ -152,43 +154,43 @@ test.describe("コネクターの自己ループ（同一図形への接続）",
 		);
 		const box = await worldAABB(canvas, shapeId);
 
-		// 端点はどちらも同じ図形の周上に乗る。
+		// Both endpoints sit on the perimeter of the same shape.
 		const startEdges = edgesOf(points[0], box);
 		const endEdges = edgesOf(points[points.length - 1], box);
 		expect(
 			startEdges.length,
-			`始点 ${JSON.stringify(points[0])} が図形の周上に乗ること`,
+			`start point ${JSON.stringify(points[0])} sits on the shape perimeter`,
 		).toBeGreaterThan(0);
 		expect(
 			endEdges.length,
-			`終点 ${JSON.stringify(points[points.length - 1])} が図形の周上に乗ること`,
+			`end point ${JSON.stringify(points[points.length - 1])} sits on the shape perimeter`,
 		).toBeGreaterThan(0);
 
-		// 両端は「別々の辺」に接続する（自己ループは固定側と同じアンカーを避ける）。
+		// The two ends connect to *separate* edges: a self-loop avoids the anchor of the fixed end.
 		const sharesEdge = startEdges.some((e) => endEdges.includes(e));
 		expect(
 			sharesEdge,
-			`両端が別の辺に接続すること: start=${startEdges} end=${endEdges}`,
+			`the two ends connect to different edges: start=${startEdges} end=${endEdges}`,
 		).toBe(false);
 
-		// ループなので折れ点を含み、最低 3 頂点ある。
+		// Being a loop, it has bends and at least 3 vertices.
 		expect(
 			points.length,
-			`ループは折れ点を含むこと: ${JSON.stringify(points)}`,
+			`the loop has bends: ${JSON.stringify(points)}`,
 		).toBeGreaterThanOrEqual(3);
 
-		// 全セグメントが直角（自己ループは routing 指定に関わらず直交ルート）。
+		// Every segment is at a right angle (a self-loop is orthogonal whatever routing is set).
 		assertOrthogonalSegments(points);
 
-		// どのセグメントも図形内部を貫通しない（外周を回る）。
+		// No segment penetrates the interior of the shape; the route goes around the outside.
 		for (let i = 1; i < points.length; i++) {
 			expect(
 				penetratesInterior(points[i - 1], points[i], box),
-				`セグメント ${i - 1}->${i} が図形を貫通しないこと`,
+				`segment ${i - 1}->${i} does not penetrate the shape`,
 			).toBe(false);
 		}
 
-		// 端点以外の中継頂点は図形 AABB の外側にある（リング外周を回る）。
+		// The intermediate vertices lie outside the shape AABB, running around the ring.
 		const interiorVertex = points
 			.slice(1, -1)
 			.find(
@@ -200,11 +202,11 @@ test.describe("コネクターの自己ループ（同一図形への接続）",
 			);
 		expect(
 			interiorVertex,
-			`中継頂点が図形内部に入らないこと: ${JSON.stringify(points)}`,
+			`no intermediate vertex falls inside the shape: ${JSON.stringify(points)}`,
 		).toBeUndefined();
 	});
 
-	test("自己ループは orthogonal 専用のため routing 切替メニューが出ない", async ({
+	test("shows no routing switch menu, since a self-loop is orthogonal only", async ({
 		canvas,
 	}) => {
 		await canvas.drawShape("Rectangle", { x: 450, y: 300 }, { x: 650, y: 460 });
@@ -214,7 +216,7 @@ test.describe("コネクターの自己ループ（同一図形への接続）",
 		});
 		await canvas.deselect();
 
-		// 自己ループの線上を選択する（最長セグメントの中点をクリック）。
+		// Select the self-loop by clicking the midpoint of its longest segment.
 		const points = parsePoints(
 			await canvas.objectById(connectorId).getAttribute("points"),
 		);
@@ -229,14 +231,15 @@ test.describe("コネクターの自己ループ（同一図形への接続）",
 		}
 		await canvas.clickAt(best.mid);
 
-		// コネクター用 ObjectMenu は出る（線色トグルで確認）が、routing 切替は隠れる。
+		// The connector ObjectMenu appears (checked through the line color toggle), but the routing
+		// switch is hidden.
 		await expect(
 			canvas.page.locator('[data-part="toggle:line-color"]'),
-			"コネクターの ObjectMenu が表示されること",
+			"the connector ObjectMenu is shown",
 		).toBeVisible();
 		await expect(
 			canvas.page.locator('[data-part="toggle:connector-routing"]'),
-			"自己ループでは routing 切替メニューが出ないこと",
+			"no routing switch menu appears for a self-loop",
 		).toHaveCount(0);
 	});
 });

@@ -6,28 +6,30 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 import { selectors } from "../../support/selectors";
 
 /**
- * 画像エクスポートの round-trip（#55）を検証する spec。
+ * Round-trip of the image export (#55).
  *
- * エクスポートはコンテキストメニューの Export… → ダイアログ（形式＋マージン＋
- * データ埋め込み有無）→ Export ボタンで実行する。
+ * Export runs through the context menu's Export... entry, the dialog (format,
+ * margin, whether to embed the data) and the Export button.
  *
- * - PNG: デフォルトマージン(16)のまま書き出し → ダウンロードされた PNG
- *   （iTXt に .jis.json 入り）をページへドロップ → 図形が復元されること
- * - SVG: マージンを 32 に変えて書き出し → <foreignObject> を含まず
- *   （GitHub 対応・taint 回避）、viewBox が指定マージンを反映し、
- *   <metadata> の .jis.json が parseCanvasText を通ること
- * - データ埋め込みなし: 拡張子が .jis なしの素の .svg になり、
- *   <metadata>（埋め込みソース）を含まないこと
- * - 透過背景: 背景 rect が敷かれないこと（デフォルトでは敷かれること）
- * - 複数スロット図形（record、#167）: 全スロットのテキストが <text> で出力されること
- * - コネクターラベル: foreignObject ではなく <text>＋箱の <rect> として
- *   書き出され（B1）、PNG でもラスタライズされること
+ * - PNG: exported with the default margin (16), then the downloaded PNG (with
+ *   the .jis.json in an iTXt chunk) is dropped onto the page and the shapes come
+ *   back
+ * - SVG: exported with the margin changed to 32, contains no <foreignObject>
+ *   (for GitHub, and to avoid canvas taint), has a viewBox reflecting the given
+ *   margin, and its <metadata> .jis.json passes parseCanvasText
+ * - Without embedded data: the name is a plain .svg with no .jis marker and the
+ *   file has no <metadata>
+ * - Transparent background: no background rect is laid down (the default does
+ *   lay one down)
+ * - Multi-slot shapes (record, #167): every slot's text is emitted as <text>
+ * - Connector labels: written as <text> plus a <rect> box rather than a
+ *   foreignObject (B1), and rasterized in PNG too
  */
 
 /**
- * コンテキストメニュー → Export… → ダイアログで形式（と任意でマージン・
- * データ埋め込み有無）を選んで書き出し、ダウンロードされたファイル内容を
- * base64 で返す
+ * Export through the context menu and dialog, picking the format (and
+ * optionally the margin and whether to embed the data), and return the
+ * downloaded file's contents as base64.
  */
 const downloadViaExportDialog = async (
 	page: Page,
@@ -69,7 +71,7 @@ const downloadViaExportDialog = async (
 	};
 };
 
-test("PNG エクスポート → ドロップで図形が復元される", async ({
+test("restores the shapes when the exported PNG is dropped back in", async ({
 	canvas,
 	page,
 }) => {
@@ -82,7 +84,7 @@ test("PNG エクスポート → ドロップで図形が復元される", async
 	const before = await canvas.captureObjects();
 	expect(before.length).toBe(2);
 
-	// 図形のない空き地を右クリックしてエクスポート（デフォルトマージン 16）
+	// Right-click empty space (no shape there) and export with the default margin of 16.
 	const png = await downloadViaExportDialog(
 		page,
 		canvas,
@@ -91,15 +93,15 @@ test("PNG エクスポート → ドロップで図形が復元される", async
 	);
 	expect(png.name).toMatch(/\.jis\.png$/);
 
-	// fit-to-content: 出力ピクセルは「コンテンツ境界＋余白16」× scale 2。
-	// bounds は rect(150..400 × 120..260) ∪ ellipse(480..640 × 300..420)。
+	// fit-to-content: output pixels are (content bounds + margin 16) x scale 2.
+	// The bounds are rect(150..400 x 120..260) union ellipse(480..640 x 300..420).
 	const pngBytes = Buffer.from(png.base64, "base64");
 	const ihdrWidth = pngBytes.readUInt32BE(16);
 	const ihdrHeight = pngBytes.readUInt32BE(20);
 	expect(Math.abs(ihdrWidth - (640 - 150 + 32) * 2)).toBeLessThanOrEqual(4);
 	expect(Math.abs(ihdrHeight - (420 - 120 + 32) * 2)).toBeLessThanOrEqual(4);
 
-	// まっさらな状態に戻してからドロップで復元する
+	// Get back to a blank state, then restore by dropping the file.
 	await page.reload();
 	await expect.poll(async () => (await canvas.captureObjects()).length).toBe(0);
 
@@ -120,7 +122,7 @@ test("PNG エクスポート → ドロップで図形が復元される", async
 		);
 	}, png.base64);
 
-	// 状態待ち: ドロップ復元で図形が現れる
+	// Wait for the state: the drop restore makes the shapes appear.
 	await expect.poll(async () => (await canvas.captureObjects()).length).toBe(2);
 
 	const after = await canvas.captureObjects();
@@ -132,7 +134,7 @@ test("PNG エクスポート → ドロップで図形が復元される", async
 	);
 });
 
-test("SVG エクスポートは foreignObject を含まず metadata から復元できる", async ({
+test("exports SVG without foreignObject and restorable from its metadata", async ({
 	canvas,
 	page,
 }) => {
@@ -141,11 +143,11 @@ test("SVG エクスポートは foreignObject を含まず metadata から復元
 	await canvas.commitText();
 	await canvas.deselect();
 
-	// エクスポート範囲が現在のビューに依存しないことを確認するため、
-	// 書き出し前にパンして視界をずらしておく
+	// Pan before exporting so the test shows the export range does not depend on
+	// the current view.
 	await canvas.middleDrag({ x: 700, y: 500 }, { x: 550, y: 380 });
 
-	// パン後も視界内にある空き地を右クリックし、マージンを 32 に変えて書き出す
+	// Right-click empty space that is still in view after the pan, and export with margin 32.
 	const svg = await downloadViaExportDialog(
 		page,
 		canvas,
@@ -158,14 +160,14 @@ test("SVG エクスポートは foreignObject を含まず metadata から復元
 	const svgText = Buffer.from(svg.base64, "base64").toString("utf-8");
 	expect(svgText).not.toContain("<foreignObject");
 	expect(svgText).toContain("svg export");
-	// スタンドアロンでは emotion クラスも --jiscribe-* カスタムプロパティも
-	// 解決できないため、描画スタイルは computed 値で焼き込まれていること
-	// （欠けると fill が初期値の黒になり図形が黒潰れする）
+	// Standalone, neither the emotion classes nor the --jiscribe-* custom properties
+	// resolve, so drawing styles must be baked in as computed values. Missing them
+	// leaves fill at its initial black and the shapes turn into black blobs.
 	expect(svgText).not.toContain("var(--");
 	expect(svgText).toMatch(/style="[^"]*stroke:/);
 
-	// fit-to-content: パンしていても viewBox はコンテンツ境界＋指定マージン32
-	// （rect は 150,120–400,260 に描画済み）
+	// fit-to-content: even after panning, the viewBox is the content bounds plus the
+	// given margin of 32 (the rect was drawn at 150,120-400,260).
 	const viewBoxMatch = svgText.match(/viewBox="([^"]+)"/);
 	expect(viewBoxMatch).not.toBeNull();
 	const [vbX, vbY, vbWidth, vbHeight] = viewBoxMatch![1]
@@ -176,9 +178,9 @@ test("SVG エクスポートは foreignObject を含まず metadata から復元
 	expect(Math.abs(vbWidth - (250 + 64))).toBeLessThanOrEqual(4);
 	expect(Math.abs(vbHeight - (140 + 64))).toBeLessThanOrEqual(4);
 
-	// metadata の .jis.json が Canvas の入力契約（parseCanvasText）を満たすこと
+	// The .jis.json in metadata satisfies Canvas's input contract (parseCanvasText).
 	const parsed = await page.evaluate(async (text) => {
-		// Vite dev サーバーは bare id を /@id/ 経由で解決する
+		// The Vite dev server resolves bare ids through /@id/.
 		const mod = (await import(
 			"/@id/@workspace/canvas" as string
 		)) as typeof CanvasModule;
@@ -195,7 +197,7 @@ test("SVG エクスポートは foreignObject を含まず metadata から復元
 	expect(parsed?.kind).toBe("ok");
 });
 
-test("データ埋め込みなしの SVG エクスポートは素の .svg で metadata を含まない", async ({
+test("exports a plain .svg with no metadata when data embedding is off", async ({
 	canvas,
 	page,
 }) => {
@@ -210,19 +212,19 @@ test("データ埋め込みなしの SVG エクスポートは素の .svg で me
 		{ includeSource: false },
 	);
 
-	// .jis マーカー（再編集可能の印）が付かない素の .svg であること
+	// A plain .svg without the .jis marker that signals "re-editable".
 	expect(svg.name).toMatch(/\.svg$/);
 	expect(svg.name).not.toMatch(/\.jis\.svg$/);
 
-	// 埋め込みソース（<metadata> と jiscribe 名前空間）を含まないこと。
-	// 画像自体は通常どおり描画されている（塗り焼き込みは source と無関係）
+	// No embedded source: neither <metadata> nor the jiscribe namespace. The image
+	// itself still draws normally; baking styles in is independent of the source.
 	const svgText = Buffer.from(svg.base64, "base64").toString("utf-8");
 	expect(svgText).not.toContain("<metadata");
 	expect(svgText).not.toContain("jiscribe.dev/ns/canvas");
 	expect(svgText).toMatch(/style="[^"]*stroke:/);
 });
 
-test("record（複数スロット）の SVG エクスポートは全スロットを <text> で出力する", async ({
+test("emits every slot of a record (multi-slot) shape as <text> in the SVG export", async ({
 	canvas,
 	page,
 }) => {
@@ -234,14 +236,14 @@ test("record（複数スロット）の SVG エクスポートは全スロット
 	);
 	await canvas.deselect();
 
-	// タイトル帯（上端 28px 内）= name スロット、その下 = attributes スロット
+	// The title band (within the top 28px) is the name slot; below it is the attributes slot.
 	await canvas.typeTextAt({ x: 410, y: 212 }, "Users");
 	await canvas.commitText();
 	await canvas.typeTextAt({ x: 410, y: 255 }, "id: string\nname: string");
 	await canvas.commitText();
 	await canvas.deselect();
 
-	// データ埋め込みを外し、本文一致 = 描画された <text> 由来と確定させる
+	// Turn data embedding off so a body match can only come from the rendered <text>.
 	const svg = await downloadViaExportDialog(
 		page,
 		canvas,
@@ -261,8 +263,9 @@ test("record（複数スロット）の SVG エクスポートは全スロット
 });
 
 /**
- * 背景 rect（viewBox 全面を fill 属性で覆う rect。buildExportSvg が敷く）が
- * あるかを判定する。図形の rect は transform/style ベースなのでマッチしない。
+ * Whether a background rect is present: the rect buildExportSvg lays down to
+ * cover the whole viewBox via a fill attribute. Shape rects are transform/style
+ * based, so they do not match.
  */
 const hasBackgroundRect = (svgText: string): boolean => {
 	const viewBoxMatch = svgText.match(/viewBox="([^"]+)"/);
@@ -273,15 +276,15 @@ const hasBackgroundRect = (svgText: string): boolean => {
 	).test(svgText);
 };
 
-test("透過背景の SVG エクスポートは背景 rect を敷かない", async ({
+test("lays down no background rect when the SVG is exported with a transparent background", async ({
 	canvas,
 	page,
 }) => {
 	await canvas.drawShape("Rectangle", { x: 150, y: 120 }, { x: 400, y: 260 });
 	await canvas.deselect();
 
-	// まず既定（背景あり）で「背景 rect が敷かれる」前提を固定してから、
-	// 透過指定で消えることを見る
+	// Pin down first that the default (opaque) really does lay a background rect
+	// down, then check that asking for transparency removes it.
 	const opaque = await downloadViaExportDialog(
 		page,
 		canvas,
@@ -302,25 +305,27 @@ test("透過背景の SVG エクスポートは背景 rect を敷かない", asy
 		"utf-8",
 	);
 	expect(hasBackgroundRect(transparentText)).toBe(false);
-	// 図形自体は描画されている
+	// The shape itself is still drawn.
 	expect(transparentText).toMatch(/style="[^"]*stroke:/);
 });
 
 type Box = { x: number; y: number; width: number; height: number };
 
-/** ラベルの背景色・枠線色（既定でない値であることが検証の前提）。 */
+/** Label background color; being different from the default is what makes the check meaningful. */
 const LABEL_FILL = "rgb(220, 38, 38)";
+/** Label border color; being different from the default is what makes the check meaningful. */
 const LABEL_STROKE = "rgb(59, 130, 246)";
+/** Label border width in px; different from the default. */
 const LABEL_STROKE_WIDTH = 2;
 
-/** ラベルボックス（foreignObject 内側の LabelBox div）のロケーター。 */
+/** Locator for the label box, i.e. the LabelBox div inside the foreignObject. */
 const labelBoxOf = (canvas: CanvasDriver) =>
 	canvas.page
 		.locator("foreignObject[data-kind=connector][data-part=label]")
 		.locator("div")
 		.first();
 
-/** ラベル foreignObject のジオメトリ属性（＝ワールド座標のラベル箱）。 */
+/** Geometry attributes of the label foreignObject, i.e. the label box in world coordinates. */
 const labelForeignObjectBox = async (canvas: CanvasDriver): Promise<Box> => {
 	const attributes = await canvas.page
 		.locator("foreignObject[data-kind=connector][data-part=label]")
@@ -339,8 +344,8 @@ const labelForeignObjectBox = async (canvas: CanvasDriver): Promise<Box> => {
 };
 
 /**
- * 2つの矩形をコネクターで結び、既定でないスタイル（赤背景・青枠 2px）の
- * ラベルを付けて、既定位置（作成時のアンカー）から動かす。
+ * Connect two rectangles, attach a label styled away from the defaults (red
+ * background, 2px blue border), and move it off its default position.
  */
 const setupStyledLabeledConnector = async (
 	canvas: CanvasDriver,
@@ -357,7 +362,7 @@ const setupStyledLabeledConnector = async (
 	});
 	await canvas.deselect();
 
-	// 線上（最初のセグメントの中点）をダブルクリックしてラベルを付ける。
+	// Double-click on the line (midpoint of the first segment) to attach a label.
 	const points = (await canvas.objectById(connectorId).getAttribute("points"))!
 		.trim()
 		.split(/\s+/)
@@ -372,7 +377,7 @@ const setupStyledLabeledConnector = async (
 	await canvas.typeTextAt(onLine, "Yes");
 	await canvas.commitText();
 
-	// 背景色・枠線を既定から変える（エクスポートに塗りと枠が出ることを見るため）。
+	// Move background and border off the defaults so the export can be checked for both.
 	await canvas.clickAt(onLine);
 	await canvas.openObjectMenu("label-bg-color");
 	await canvas.page.click(selectors.objectMenuSet("label.fill", "#dc2626"));
@@ -385,13 +390,14 @@ const setupStyledLabeledConnector = async (
 	await expect(labelBox).toHaveCSS("background-color", LABEL_FILL);
 	await expect(labelBox).toHaveCSS("border-top-color", LABEL_STROKE);
 
-	// 既定位置（label.position / label.offset 無指定の中点）から動かす。選択中は
-	// コントロールハンドルがラベルに重なるので解除してから掴む。
+	// Move it off the default position, the midpoint used when label.position and
+	// label.offset are unset. Deselect first: while selected the control handles
+	// overlap the label.
 	await canvas.deselect();
 	const before = await labelForeignObjectBox(canvas);
 	const screenBox = await labelBox.boundingBox();
 	if (!screenBox) {
-		throw new Error("ラベルボックスの位置が取得できない");
+		throw new Error("cannot read the position of the label box");
 	}
 	const grabPoint = canvas.toContent({
 		x: screenBox.x + screenBox.width / 2,
@@ -400,14 +406,14 @@ const setupStyledLabeledConnector = async (
 	await canvas.drag(grabPoint, { x: grabPoint.x, y: grabPoint.y - 40 }, 10);
 	await expect
 		.poll(async () => (await labelForeignObjectBox(canvas)).y, {
-			message: "ドラッグでラベルが既定位置から動くこと",
+			message: "the drag moves the label off its default position",
 		})
 		.toBeLessThan(before.y - 20);
 };
 
 type SvgAttributes = Record<string, string>;
 
-/** SVG テキストから指定タグの開始タグを拾い、属性を名前→値で返す。 */
+/** Collect the opening tags of the given tag name from SVG text and return their attributes by name. */
 const parseTagAttributes = (
 	svgText: string,
 	tagName: string,
@@ -420,7 +426,7 @@ const parseTagAttributes = (
 		return attributes;
 	});
 
-/** viewBox を数値 4 つに分解する。 */
+/** Split the viewBox into its four numbers. */
 const parseViewBox = (svgText: string): Box => {
 	const viewBoxMatch = svgText.match(/viewBox="([^"]+)"/);
 	expect(viewBoxMatch).not.toBeNull();
@@ -428,7 +434,7 @@ const parseViewBox = (svgText: string): Box => {
 	return { x, y, width, height };
 };
 
-test("コネクターラベルは foreignObject ではなく <text>＋箱の <rect> として書き出される", async ({
+test("writes connector labels as <text> plus a box <rect> rather than a foreignObject", async ({
 	canvas,
 	page,
 }) => {
@@ -444,15 +450,19 @@ test("コネクターラベルは foreignObject ではなく <text>＋箱の <re
 	);
 	const svgText = Buffer.from(svg.base64, "base64").toString("utf-8");
 
-	// foreignObject は残らない（残せば PNG が taint し GitHub でも消える）。
+	// No foreignObject survives; leaving one would taint the PNG and vanish on GitHub.
 	expect(svgText).not.toContain("<foreignObject");
 
-	// 箱: ラベル foreignObject と同じ位置・大きさの rect が塗りと枠付きで出る。
-	// CSS の枠線は内側に描かれるので、SVG の stroke は線幅の半分だけ内側に寄る。
+	// The box: a rect at the same position and size as the label foreignObject, with
+	// fill and border. CSS borders are drawn inside, so the SVG stroke sits inset by
+	// half the line width.
 	const labelRect = parseTagAttributes(svgText, "rect").find(
 		(attributes) => attributes.fill === LABEL_FILL,
 	);
-	expect(labelRect, "ラベル背景色の rect が出力されること").toBeDefined();
+	expect(
+		labelRect,
+		"a rect with the label background color is emitted",
+	).toBeDefined();
 	expect(labelRect!.stroke).toBe(LABEL_STROKE);
 	expect(Number(labelRect!["stroke-width"])).toBe(LABEL_STROKE_WIDTH);
 	const inset = LABEL_STROKE_WIDTH / 2;
@@ -465,14 +475,11 @@ test("コネクターラベルは foreignObject ではなく <text>＋箱の <re
 		Math.abs(Number(labelRect!.height) - (labelBox.height - inset * 2)),
 	).toBeLessThan(1);
 
-	// 文字: ネイティブの <text> になり、箱の中央に置かれる。
+	// The text: a native <text>, centered in the box.
 	const labelTextBlock = (svgText.match(/<text\b[\s\S]*?<\/text>/g) ?? []).find(
 		(block) => block.includes(">Yes<"),
 	);
-	expect(
-		labelTextBlock,
-		"ラベル文字列が <text> として出力されること",
-	).toBeDefined();
+	expect(labelTextBlock, "the label string is emitted as <text>").toBeDefined();
 	const tspan = parseTagAttributes(labelTextBlock!, "tspan")[0];
 	expect(
 		Math.abs(Number(tspan.x) - (labelBox.x + labelBox.width / 2)),
@@ -480,7 +487,7 @@ test("コネクターラベルは foreignObject ではなく <text>＋箱の <re
 	expect(Number(tspan.y)).toBeGreaterThan(labelBox.y);
 	expect(Number(tspan.y)).toBeLessThan(labelBox.y + labelBox.height);
 
-	// viewBox にラベル箱が収まる（ラベルはコネクターの extent の一部）。
+	// The label box fits inside the viewBox; the label is part of the connector's extent.
 	const viewBox = parseViewBox(svgText);
 	expect(viewBox.x).toBeLessThanOrEqual(labelBox.x);
 	expect(viewBox.y).toBeLessThanOrEqual(labelBox.y);
@@ -492,15 +499,15 @@ test("コネクターラベルは foreignObject ではなく <text>＋箱の <re
 	);
 });
 
-test("PNG エクスポートでもコネクターラベルがラスタライズされる", async ({
+test("rasterizes connector labels in the PNG export too", async ({
 	canvas,
 	page,
 }) => {
 	await setupStyledLabeledConnector(canvas);
 	const labelBox = await labelForeignObjectBox(canvas);
 
-	// ワールド座標→ピクセルの換算に使う viewBox は SVG 側から取る
-	// （どちらも同じマージンなので出力領域は一致する）。
+	// The viewBox used to convert world coordinates to pixels is taken from the SVG;
+	// both use the same margin, so the output regions coincide.
 	await canvas.deselect();
 	const svg = await downloadViaExportDialog(
 		page,
@@ -519,7 +526,8 @@ test("PNG エクスポートでもコネクターラベルがラスタライズ�
 		"png",
 	);
 
-	// ラベル箱の内側（枠線と文字を避けた塗りの領域）に背景色の画素があること。
+	// Pixels of the background color exist inside the label box, in the filled area
+	// away from the border and the text.
 	const fillPixelCount = await page.evaluate(
 		async ({ base64, region, color }) => {
 			const image = new Image();
@@ -555,7 +563,7 @@ test("PNG エクスポートでもコネクターラベルがラスタライズ�
 		},
 		{
 			base64: png.base64,
-			// 枠線（2）と余白を避け、箱の内側だけを見る
+			// Look only inside the box, clear of the 2px border and the padding.
 			region: {
 				x: labelBox.x + 4,
 				y: labelBox.y + 4,
@@ -572,7 +580,7 @@ test("PNG エクスポートでもコネクターラベルがラスタライズ�
 	expect(fillPixelCount).toBeGreaterThan(20);
 });
 
-test("Escape はダイアログを閉じるだけで、選択は解除されない", async ({
+test("closes the dialog on Escape without clearing the selection", async ({
 	canvas,
 	page,
 }) => {
@@ -580,13 +588,14 @@ test("Escape はダイアログを閉じるだけで、選択は解除されな�
 	await canvas.deselect();
 	await canvas.selectAt({ x: 275, y: 190 });
 
-	// コンテキストメニューは空きスペースの右クリックでのみ開く（選択は保持される）
+	// The context menu opens only on a right-click in empty space, which keeps the selection.
 	await canvas.openContextMenu({ x: 700, y: 500 });
 	await canvas.clickContextMenuItem("export");
 	await expect(page.getByTestId("export-dialog")).toBeVisible();
 
-	// フォーカスは Canvas コンテナ側に残っている（入力欄ではない）状態で Escape。
-	// bubble 段の DeselectAllCommand に奪われず、ダイアログだけが閉じること。
+	// Press Escape with focus still on the Canvas container rather than an input
+	// field: DeselectAllCommand on the bubble phase must not take it, so only the
+	// dialog closes.
 	await page.keyboard.press("Escape");
 	await expect(page.getByTestId("export-dialog")).toHaveCount(0);
 	await expect(page.locator("[data-kind=control]").first()).toBeVisible();

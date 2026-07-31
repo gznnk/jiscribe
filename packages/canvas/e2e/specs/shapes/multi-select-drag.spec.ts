@@ -1,21 +1,22 @@
 import { test, expect } from "../../fixtures";
 
 /**
- * 複数選択した図形を「ポインタドラッグ」でまとめて動かしたとき、全員が同じデルタだけ
- * 動き相対位置が保たれることを精密に守る。
+ * Pins that dragging a multi-selection with the pointer moves every member by
+ * the same delta and keeps their relative positions.
  *
- * multi-nudge は矢印キー（コマンド経路）でのまとめ移動を守るが、ポインタドラッグ
- * （ジェスチャー経路 / moveSelection）でのまとめ移動は未カバーだった。掴んだ図形だけ
- * 動く・相対位置が崩れる・カーソルへ飛びつく退行は別経路で起きうる。両図形の
- * transform をデルタ一致で固める。
+ * multi-nudge covers the bulk move through the arrow keys (the command path);
+ * the pointer drag (the gesture path / moveSelection) is a separate path where
+ * moving only the grabbed shape, losing the relative positions or jumping to the
+ * cursor can regress on their own. Both transforms are pinned to the same delta.
  *
- * 単一でないため掴んだ図形・他方ともスナップ候補から除外され、zoom=1 で移動量は厳密。
+ * The selection is not single, so the grabbed shape and the other one are both
+ * excluded from the snap candidates, and with zoom=1 the delta is exact.
  */
-test.describe("複数選択のドラッグ移動", () => {
-	test("複数選択をドラッグすると全員が同じ量だけ動き相対位置を保つ", async ({
+test.describe("multi-select drag move", () => {
+	test("moves every selected shape by the same amount and keeps their relative positions", async ({
 		canvas,
 	}) => {
-		// A: 中心 (370,260) / B: 中心 (630,260)
+		// A centered at (370,260), B at (630,260)
 		const a = await canvas.drawShape(
 			"Rectangle",
 			{ x: 300, y: 200 },
@@ -31,13 +32,13 @@ test.describe("複数選択のドラッグ移動", () => {
 
 		await canvas.selectAll();
 
-		// A の中心 (370,260) を掴んで (+100,+100) ドラッグ。
+		// Grab A's center (370,260) and drag (+100,+100).
 		await canvas.drag({ x: 370, y: 260 }, { x: 470, y: 360 });
 
-		// 両方が (+100,+100)。相対距離（中心間 260px）も保たれる。
+		// Both move (+100,+100), so the 260px gap between centers survives.
 		await expect
 			.poll(() => canvas.objectById(a).getAttribute("transform"), {
-				message: "A が (+100,+100) 動くこと",
+				message: "A moves by (+100,+100)",
 			})
 			.toBe("matrix(1, 0, 0, 1, 470, 360)");
 		expect(await canvas.objectById(b).getAttribute("transform")).toBe(

@@ -2,14 +2,14 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * 接続図形を「リサイズ」したときのコネクター追従。
+ * Connector following when a connected shape is resized.
  *
- * connector-follow-target は接続図形を「移動」したときの追従を守るが、リサイズで辺が動いた
- * ときの追従は未カバーだった。コネクターのエンドポイントは図形の辺（アンカー）に解決されるため、
- * リサイズで辺位置が変われば points も更新されるべき。source / target 双方のリサイズで守る。
+ * Connector endpoints resolve to an anchor on a shape's edge, so moving that edge by resizing
+ * has to update the points (see connector-follow-target for moves). Both the source and the
+ * target resize are covered.
  */
 
-/** 上下 2 矩形を縦コネクターで結び、コネクター ID を返す（接続後は選択解除済み） */
+/** Joins two stacked rectangles with a vertical connector and returns its ID (left deselected) */
 async function buildConnectedPair(canvas: CanvasDriver): Promise<string> {
 	await canvas.drawShape("Rectangle", { x: 400, y: 150 }, { x: 600, y: 250 });
 	await canvas.deselect();
@@ -25,14 +25,14 @@ async function buildConnectedPair(canvas: CanvasDriver): Promise<string> {
 	return connectorId;
 }
 
-test("接続図形をリサイズするとコネクターが両端で追従する", async ({
+test("follows at both ends when a connected shape is resized", async ({
 	canvas,
 }) => {
 	const connectorId = await buildConnectedPair(canvas);
 	const points = () => canvas.objectById(connectorId).getAttribute("points");
 	const initial = await points();
 
-	// source（上の矩形）の下辺を下へ伸ばす → コネクター始端が追従する。
+	// Stretch the source rectangle's bottom edge downward.
 	await canvas.selectAt({ x: 500, y: 200 });
 	await canvas.dragTransformHandle(
 		"bottomCenter",
@@ -40,11 +40,11 @@ test("接続図形をリサイズするとコネクターが両端で追従す�
 		{ ctrl: true },
 	);
 	await expect
-		.poll(points, { message: "source リサイズでコネクターが追従すること" })
+		.poll(points, { message: "the connector follows the source resize" })
 		.not.toBe(initial);
 	const afterSource = await points();
 
-	// target（下の矩形）の上辺を上へ伸ばす → コネクター終端が追従する。
+	// Stretch the target rectangle's top edge upward.
 	await canvas.deselect();
 	await canvas.selectAt({ x: 500, y: 500 });
 	await canvas.dragTransformHandle(
@@ -53,6 +53,6 @@ test("接続図形をリサイズするとコネクターが両端で追従す�
 		{ ctrl: true },
 	);
 	await expect
-		.poll(points, { message: "target リサイズでコネクターが追従すること" })
+		.poll(points, { message: "the connector follows the target resize" })
 		.not.toBe(afterSource);
 });

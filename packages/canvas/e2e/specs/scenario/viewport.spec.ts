@@ -2,41 +2,42 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * ビューポートのフレーミング操作（Zoom to Fit / Zoom to Selection）の検証。
+ * Viewport framing commands (Zoom to Fit / Zoom to Selection).
  *
- * これらはキーボードショートカット（Ctrl+0 / Ctrl+2）から実行され、
- * 内容や選択のバウンディングボックスを計算して viewBox を組み立てる。
- * バウンド計算は壊れても画面が真っ白にならず気づきにくいため、
- * 「対象が枠内に入る」という不変条件で守る。
+ * They run from keyboard shortcuts (Ctrl+0 / Ctrl+2) and build the viewBox from
+ * the bounding box of the content or of the selection. A broken bounds
+ * computation does not blank the screen, so it is easy to miss; the invariant
+ * guarded here is that the target ends up inside the frame.
  *
- * 図形の transform（matrix の e,f＝中心）も viewBox も同じ SVG 座標系なので、
- * zoom / pan の状態に関わらず中心座標を viewBox の範囲と直接比較できる。
+ * A shape's transform (e,f of the matrix = its center) and the viewBox live in
+ * the same SVG coordinate system, so the center can be compared against the
+ * viewBox range directly, whatever the zoom / pan state.
  */
 
 type ViewBox = { minX: number; minY: number; width: number; height: number };
 
-/** "minX minY width height" 形式の viewBox 文字列を数値に分解する */
+/** Split a viewBox string of the form "minX minY width height" into numbers */
 function parseViewBox(raw: string | null): ViewBox {
 	if (!raw) {
-		throw new Error("viewBox が取得できない");
+		throw new Error("cannot read the viewBox");
 	}
 	const [minX, minY, width, height] = raw.trim().split(/\s+/).map(Number);
 	return { minX, minY, width, height };
 }
 
-/** 図形の transform="matrix(1, 0, 0, 1, e, f)" から中心座標（e,f）を取り出す */
+/** Pull the center (e,f) out of a shape's transform="matrix(1, 0, 0, 1, e, f)" */
 function centerOf(transform: string | null): { x: number; y: number } {
 	if (!transform) {
-		throw new Error("transform が取得できない");
+		throw new Error("cannot read the transform");
 	}
 	const nums = transform.match(/-?\d+(?:\.\d+)?/g)?.map(Number);
 	if (!nums || nums.length < 6) {
-		throw new Error(`transform を解釈できない: ${transform}`);
+		throw new Error(`cannot parse transform: ${transform}`);
 	}
 	return { x: nums[4], y: nums[5] };
 }
 
-/** 点が viewBox の矩形内（境界含む）にあるか */
+/** Whether a point lies inside the viewBox rect, boundary included */
 function contains(box: ViewBox, point: { x: number; y: number }): boolean {
 	return (
 		point.x >= box.minX &&
@@ -46,22 +47,24 @@ function contains(box: ViewBox, point: { x: number; y: number }): boolean {
 	);
 }
 
-/** 指定 data-id の図形の中心座標を返す */
+/** Center of the shape with the given data-id */
 async function centerOfObject(
 	canvas: CanvasDriver,
 	id: string,
 ): Promise<{ x: number; y: number }> {
 	const obj = (await canvas.captureObjects()).find((o) => o.id === id);
 	if (!obj) {
-		throw new Error(`図形 ${id} が見つからない`);
+		throw new Error(`shape ${id} not found`);
 	}
 	return centerOf(obj.transform);
 }
 
-test.describe("ビューポートのフレーミング", () => {
-	test("Zoom to Fit は全図形を枠内に収める", async ({ canvas }) => {
-		// ビューポート（1440x900）より十分小さい範囲に散らして配置する。
-		// → fit ではズームインして viewBox 幅が初期より小さくなるはず。
+test.describe("viewport framing", () => {
+	test("fits every shape inside the frame on Zoom to Fit", async ({
+		canvas,
+	}) => {
+		// Spread the shapes over an area well under the viewport (1440x900), so the fit
+		// zooms in and the viewBox width ends up smaller than the initial one.
 		const leftId = await canvas.drawShape(
 			"Rectangle",
 			{ x: 200, y: 200 },
@@ -80,7 +83,7 @@ test.describe("ビューポートのフレーミング", () => {
 
 		await expect
 			.poll(() => canvas.getViewBox(), {
-				message: "Zoom to Fit で viewBox が変化すること",
+				message: "Zoom to Fit changes the viewBox",
 			})
 			.not.toBe(
 				`${before.minX} ${before.minY} ${before.width} ${before.height}`,
@@ -90,13 +93,19 @@ test.describe("ビューポートのフレーミング", () => {
 		const leftCenter = await centerOfObject(canvas, leftId);
 		const rightCenter = await centerOfObject(canvas, rightId);
 
-		expect(contains(after, leftCenter), "左図形が枠内に入ること").toBe(true);
-		expect(contains(after, rightCenter), "右図形が枠内に入ること").toBe(true);
-		// 内容がビューポートより小さいのでズームインして枠が狭くなる
+		expect(
+			contains(after, leftCenter),
+			"the left shape is inside the frame",
+		).toBe(true);
+		expect(
+			contains(after, rightCenter),
+			"the right shape is inside the frame",
+		).toBe(true);
+		// The content is smaller than the viewport, so the fit zooms in and narrows the frame.
 		expect(after.width).toBeLessThan(before.width);
 	});
 
-	test("Zoom to Selection は選択図形だけを枠に収める（非選択は枠外）", async ({
+	test("frames only the selected shape on Zoom to Selection, leaving unselected ones outside", async ({
 		canvas,
 	}) => {
 		const selectedId = await canvas.drawShape(
@@ -110,7 +119,7 @@ test.describe("ビューポートのフレーミング", () => {
 			{ x: 1160, y: 720 },
 		);
 
-		// 左の図形だけを選択する（drawShape 直後は右が選択されている）
+		// Select only the left shape; right after drawShape the right one is selected.
 		await canvas.selectAt({ x: 280, y: 250 });
 
 		const before = parseViewBox(await canvas.getViewBox());
@@ -119,7 +128,7 @@ test.describe("ビューポートのフレーミング", () => {
 
 		await expect
 			.poll(() => canvas.getViewBox(), {
-				message: "Zoom to Selection で viewBox が変化すること",
+				message: "Zoom to Selection changes the viewBox",
 			})
 			.not.toBe(
 				`${before.minX} ${before.minY} ${before.width} ${before.height}`,
@@ -128,30 +137,35 @@ test.describe("ビューポートのフレーミング", () => {
 		const after = parseViewBox(await canvas.getViewBox());
 		const selectedCenter = await centerOfObject(canvas, selectedId);
 
-		expect(contains(after, selectedCenter), "選択図形が枠内に入ること").toBe(
-			true,
-		);
-		// selection は内容全体ではなく選択範囲に寄せるので、離れた非選択図形は枠外になる。
-		// ビューポートカリング（#212）により枠外の図形は DOM から消えるため、
-		// 「DOM に存在しない」も枠外の成立として扱う
+		expect(
+			contains(after, selectedCenter),
+			"the selected shape is inside the frame",
+		).toBe(true);
+		// Selection frames the selection rather than the whole content, so a distant
+		// unselected shape falls outside. Viewport culling (#212) removes out-of-frame
+		// shapes from the DOM, so "absent from the DOM" counts as being outside too.
 		const other = (await canvas.captureObjects()).find((o) => o.id === otherId);
 		expect(
 			other === undefined || !contains(after, centerOf(other.transform)),
-			"非選択図形は枠外であること",
+			"the unselected shape is outside the frame",
 		).toBe(true);
 		expect(after.width).toBeLessThan(before.width);
 	});
 
-	test("図形がないとき Zoom to Fit は何もしない", async ({ canvas }) => {
+	test("does nothing on Zoom to Fit when there are no shapes", async ({
+		canvas,
+	}) => {
 		const before = await canvas.getViewBox();
 
 		await canvas.zoomToFit();
 
-		// canExecute が false（objects 0 件）なので viewBox は不変
+		// canExecute is false with 0 objects, so the viewBox is unchanged.
 		await expect.poll(() => canvas.getViewBox()).toBe(before);
 	});
 
-	test("選択がないとき Zoom to Selection は何もしない", async ({ canvas }) => {
+	test("does nothing on Zoom to Selection when nothing is selected", async ({
+		canvas,
+	}) => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
 		await canvas.deselect();
 
@@ -159,7 +173,7 @@ test.describe("ビューポートのフレーミング", () => {
 
 		await canvas.zoomToSelection();
 
-		// canExecute が false（selectedIds 0 件）なので viewBox は不変
+		// canExecute is false with 0 selectedIds, so the viewBox is unchanged.
 		await expect.poll(() => canvas.getViewBox()).toBe(before);
 	});
 });

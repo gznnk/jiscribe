@@ -3,18 +3,20 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 import { selectors } from "../../support/selectors";
 
 /**
- * 矩形の枠線の線種（border-style セクションの strokeDashType）を守る。
+ * Dash type of a rectangle's border (strokeDashType in the border-style section).
  *
- * object-menu.spec はポリラインの line-style（破線）を、connector-style はコネクターの線種を見るが、
- * 図形の枠線（border-style）の破線・点線は未カバーだった。RectElement は stroke-dasharray を
- * SVG 属性として描くため、属性値のパターンで線種を検証する
- * （dashed = 等値ペア "n n"、dotted = 1:2 ペア "n 2n"、solid = 属性なし）。
+ * object-menu.spec covers the line-style (dashed) of a polyline and connector-style
+ * covers the dash type of a connector, but dashed / dotted borders of a shape had no
+ * coverage. RectElement draws stroke-dasharray as an SVG attribute, so the dash type is
+ * verified through the attribute pattern
+ * (dashed = equal pair "n n", dotted = 1:2 pair "n 2n", solid = no attribute).
  *
- * 注意: border-style ドロップダウンは選択後も開いたままなので、ドライバの setStrokeDashType を
- * 連続で呼ぶとトグルが閉じてしまう。set ボタンが見えていなければ開く方式で複数回の変更に対応する。
+ * Note: the border-style dropdown stays open after a choice, so calling the driver's
+ * setStrokeDashType repeatedly would toggle it closed. Opening it only when the set
+ * button is not visible supports several changes in a row.
  */
 
-/** border-style の strokeDashType を設定する（必要時のみセクションを開く） */
+/** Sets strokeDashType in border-style, opening the section only when needed */
 async function setBorderDash(
 	canvas: CanvasDriver,
 	value: "solid" | "dashed" | "dotted",
@@ -28,7 +30,7 @@ async function setBorderDash(
 	await setButton.click();
 }
 
-/** rect の stroke-dasharray 属性（未設定なら null） */
+/** The rect's stroke-dasharray attribute (null when unset) */
 async function dashArray(
 	canvas: CanvasDriver,
 	id: string,
@@ -36,14 +38,14 @@ async function dashArray(
 	return canvas.objectById(id).getAttribute("stroke-dasharray");
 }
 
-/** "a b" を数値ペアに分解 */
+/** Splits "a b" into a numeric pair */
 function pair(value: string | null): [number, number] {
 	const [a, b] = (value ?? "").trim().split(/\s+/).map(Number);
 	return [a, b];
 }
 
-test.describe("矩形の枠線の線種（border-style）", () => {
-	test("破線・点線で stroke-dasharray のパターンが切り替わる", async ({
+test.describe("rectangle border dash type (border-style)", () => {
+	test("switches the stroke-dasharray pattern for dashed and dotted", async ({
 		canvas,
 	}) => {
 		const id = await canvas.drawShape(
@@ -55,7 +57,7 @@ test.describe("矩形の枠線の線種（border-style）", () => {
 		await setBorderDash(canvas, "dashed");
 		await expect.poll(() => dashArray(canvas, id)).not.toBeNull();
 		const [dashOn, dashOff] = pair(await dashArray(canvas, id));
-		// 破線は等値ペア（n n）。
+		// A dashed border is an equal pair (n n).
 		expect(dashOn).toBeGreaterThan(0);
 		expect(dashOn).toBe(dashOff);
 
@@ -68,7 +70,9 @@ test.describe("矩形の枠線の線種（border-style）", () => {
 			.toBe(true);
 	});
 
-	test("実線に戻すと stroke-dasharray が外れる", async ({ canvas }) => {
+	test("drops stroke-dasharray when switched back to solid", async ({
+		canvas,
+	}) => {
 		const id = await canvas.drawShape(
 			"Rectangle",
 			{ x: 400, y: 200 },

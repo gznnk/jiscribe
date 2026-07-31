@@ -1,15 +1,15 @@
 import { test, expect } from "../../fixtures";
 
 /**
- * 重なり順（z-order）。SVG では DOM 順が描画順で、後ろの要素ほど前面に出る。
- * ObjectMenu の重なり順セクション（bringToFront / sendToBack）で並びが変わることを
- * captureObjects() の DOM 順インデックスで検証する。
+ * Stacking order (z-order). In SVG, DOM order is paint order and later elements are in
+ * front. The stacking-order section of ObjectMenu (bringToFront / sendToBack) is
+ * verified through the DOM order index from captureObjects().
  */
-test.describe("重なり順", () => {
-	test("bringToFront で最背面の図形が最前面（DOM 末尾）へ移動する", async ({
+test.describe("stacking order", () => {
+	test("moves the backmost shape to the front (last in DOM) with bringToFront", async ({
 		canvas,
 	}) => {
-		// 作成順に DOM へ並ぶ: A(最背面) → B → C(最前面)
+		// DOM order follows creation order: A (backmost) -> B -> C (frontmost)
 		const a = await canvas.drawShape(
 			"Rectangle",
 			{ x: 300, y: 200 },
@@ -26,11 +26,11 @@ test.describe("重なり順", () => {
 		await canvas.selectAt({ x: 360, y: 250 });
 		await canvas.arrange("bringToFront");
 
-		// A が DOM 末尾（最前面）に来る
+		// A ends up last in DOM (frontmost)
 		await expect.poll(() => canvas.objectIndex(a)).toBe(2);
 	});
 
-	test("sendToBack で最前面の図形が最背面（DOM 先頭）へ移動する", async ({
+	test("moves the frontmost shape to the back (first in DOM) with sendToBack", async ({
 		canvas,
 	}) => {
 		await canvas.drawShape("Rectangle", { x: 300, y: 200 }, { x: 420, y: 300 });
@@ -52,8 +52,10 @@ test.describe("重なり順", () => {
 		await expect.poll(() => canvas.objectIndex(c)).toBe(0);
 	});
 
-	test("bringForward は1段だけ前面へ上げる", async ({ canvas }) => {
-		// A(0) → B(1) → C(2)
+	test("raises the shape by exactly one step with bringForward", async ({
+		canvas,
+	}) => {
+		// A(0) -> B(1) -> C(2)
 		const a = await canvas.drawShape(
 			"Rectangle",
 			{ x: 300, y: 200 },
@@ -73,7 +75,7 @@ test.describe("重なり順", () => {
 		);
 		await canvas.deselect();
 
-		// A を1段前へ → A と B が入れ替わる（最前面の C は動かない）
+		// Raise A one step: A and B swap (the frontmost C stays)
 		await canvas.selectAt({ x: 360, y: 250 });
 		await canvas.arrange("bringForward");
 
@@ -82,7 +84,9 @@ test.describe("重なり順", () => {
 		expect(await canvas.objectIndex(c)).toBe(2);
 	});
 
-	test("sendBackward は1段だけ背面へ下げる", async ({ canvas }) => {
+	test("lowers the shape by exactly one step with sendBackward", async ({
+		canvas,
+	}) => {
 		const a = await canvas.drawShape(
 			"Rectangle",
 			{ x: 300, y: 200 },
@@ -102,7 +106,7 @@ test.describe("重なり順", () => {
 		);
 		await canvas.deselect();
 
-		// C を1段後ろへ → C と B が入れ替わる（最背面の A は動かない）
+		// Lower C one step: C and B swap (the backmost A stays)
 		await canvas.selectAt({ x: 680, y: 250 });
 		await canvas.arrange("sendBackward");
 
@@ -111,7 +115,7 @@ test.describe("重なり順", () => {
 		expect(await canvas.objectIndex(a)).toBe(0);
 	});
 
-	test("最前面で bringForward しても順序は変わらない（クランプ）", async ({
+	test("leaves the order unchanged when bringForward is used on the frontmost shape (clamped)", async ({
 		canvas,
 	}) => {
 		await canvas.drawShape("Rectangle", { x: 300, y: 200 }, { x: 420, y: 300 });
@@ -128,11 +132,11 @@ test.describe("重なり順", () => {
 		await canvas.selectAt({ x: 680, y: 250 });
 		await canvas.arrange("bringForward");
 
-		// すでに最前面なので変わらない
+		// Already frontmost, so nothing changes
 		await expect.poll(() => canvas.objectIndex(c)).toBe(1);
 	});
 
-	test("最背面で sendBackward しても順序は変わらない（クランプ）", async ({
+	test("leaves the order unchanged when sendBackward is used on the backmost shape (clamped)", async ({
 		canvas,
 	}) => {
 		const a = await canvas.drawShape(
@@ -149,7 +153,7 @@ test.describe("重なり順", () => {
 		await canvas.selectAt({ x: 360, y: 250 });
 		await canvas.arrange("sendBackward");
 
-		// すでに最背面なので変わらない
+		// Already backmost, so nothing changes
 		await expect.poll(() => canvas.objectIndex(a)).toBe(0);
 	});
 });

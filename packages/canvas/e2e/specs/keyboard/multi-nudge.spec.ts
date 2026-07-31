@@ -1,16 +1,20 @@
 import { test, expect } from "../../fixtures";
 
 /**
- * 複数選択したオブジェクトのナッジ移動。
+ * Nudging a multi-selection.
  *
- * 既存の nudge.spec は単一図形の 1px / 10px 移動を守るが、複数選択した状態で矢印キーを
- * 押したとき「全員が同じだけ動くか」は検証されていなかった。ナッジは selectedIds 全体に
- * 同じデルタを加える実装で、単一選択しか動かさない・選択の一部しか動かない退行は
- * リファクタで起きやすい。両図形の transform 差分で守る。
+ * The existing nudge.spec guards 1px / 10px movement of a single shape, but
+ * whether everything moves by the same amount when an arrow key is pressed with
+ * several shapes selected was not checked. Nudge adds the same delta to every
+ * entry of selectedIds, and a regression that moves only a single selection, or
+ * only part of the selection, is easy to introduce in a refactor. Guarded by the
+ * transform of both shapes.
  */
-test.describe("複数選択のナッジ移動", () => {
-	test("複数選択した図形は矢印キーでまとめて 1px 動く", async ({ canvas }) => {
-		// A: 中心 (370,260) / B: 中心 (630,260)
+test.describe("multi-selection nudge", () => {
+	test("moves every selected shape by 1px on an arrow key", async ({
+		canvas,
+	}) => {
+		// A: center (370,260) / B: center (630,260)
 		const a = await canvas.drawShape(
 			"Rectangle",
 			{ x: 300, y: 200 },
@@ -24,13 +28,12 @@ test.describe("複数選択のナッジ移動", () => {
 		);
 		await canvas.deselect();
 
-		// 全選択して右に 1px ナッジ → 両方が +1,0 動く
 		await canvas.selectAll();
 		await canvas.nudge("right");
 
 		await expect
 			.poll(() => canvas.objectById(a).getAttribute("transform"), {
-				message: "A が +1px 動くこと",
+				message: "A moves by +1px",
 			})
 			.toBe("matrix(1, 0, 0, 1, 371, 260)");
 		expect(await canvas.objectById(b).getAttribute("transform")).toBe(
@@ -38,7 +41,7 @@ test.describe("複数選択のナッジ移動", () => {
 		);
 	});
 
-	test("複数選択した図形は Shift+矢印でまとめて 10px 動く", async ({
+	test("moves every selected shape by 10px on Shift+arrow", async ({
 		canvas,
 	}) => {
 		const a = await canvas.drawShape(
@@ -54,13 +57,12 @@ test.describe("複数選択のナッジ移動", () => {
 		);
 		await canvas.deselect();
 
-		// 全選択して下に Shift+10px ナッジ → 両方が 0,+10 動く
 		await canvas.selectAll();
 		await canvas.nudge("down", { large: true });
 
 		await expect
 			.poll(() => canvas.objectById(a).getAttribute("transform"), {
-				message: "A が +10px 動くこと",
+				message: "A moves by +10px",
 			})
 			.toBe("matrix(1, 0, 0, 1, 370, 270)");
 		expect(await canvas.objectById(b).getAttribute("transform")).toBe(

@@ -2,15 +2,17 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * 同じ図形の「別の辺」へ端点を張り替える（再アンカー）ことを検証する spec。
+ * Spec for re-anchoring an endpoint to a *different edge* of the same shape.
  *
- * connector-reconnect.spec は端点の owner（接続先の図形そのもの）を別の図形へ張り替える経路を
- * 守るが、owner は同じまま「接続する辺（アンカー）だけを変える」経路は未検証だった
- * （例: target を B の topCenter から rightCenter へ）。アンカー id の差し替えが効かないと、
- * 端点ハンドルを別の辺へ落としても古い辺に張り付いたままになる。
+ * connector-reconnect.spec covers swapping the owner of an endpoint (the connected shape itself)
+ * to another shape, but keeping the same owner and changing only the connected edge (anchor) was
+ * untested — for example moving target from topCenter to rightCenter of B. If replacing the anchor
+ * id does not take effect, dropping the endpoint handle on another edge leaves it stuck on the old
+ * edge.
  *
- * target 端点ハンドルを B の上辺中央から右辺中央へドラッグし、端点が B の右辺中央へ移ること、
- * かつ依然 B に接続して追従することを、図形の実ジオメトリと突き合わせて守る。
+ * Drags the target endpoint handle from the top edge center of B to its right edge center, and
+ * checks against the actual shape geometry that the endpoint moves to the right edge center and
+ * still follows B.
  */
 
 type Vec = { x: number; y: number };
@@ -20,7 +22,7 @@ const EPS = 2;
 
 function parsePoints(attr: string | null): Vec[] {
 	if (!attr) {
-		throw new Error("points 属性が取得できない");
+		throw new Error("points attribute is missing");
 	}
 	return attr
 		.trim()
@@ -39,12 +41,12 @@ async function worldAABB(canvas: CanvasDriver, id: string): Promise<AABB> {
 	return canvas.page.evaluate((targetId) => {
 		const el = document.querySelector(`[data-id="${targetId}"]`);
 		if (!(el instanceof SVGGraphicsElement)) {
-			throw new Error(`図形 ${targetId} が SVGGraphicsElement でない`);
+			throw new Error(`shape ${targetId} is not an SVGGraphicsElement`);
 		}
 		const bbox = el.getBBox();
 		const ctm = el.getCTM();
 		if (!ctm) {
-			throw new Error(`図形 ${targetId} の CTM が取得できない`);
+			throw new Error(`CTM of shape ${targetId} is not available`);
 		}
 		const corners = [
 			{ x: bbox.x, y: bbox.y },
@@ -82,7 +84,7 @@ async function endPoint(canvas: CanvasDriver, id: string): Promise<Vec> {
 	return points[points.length - 1];
 }
 
-/** コントロール（CSS セレクタ）の中心からコンテンツ座標 `to` へドラッグする */
+/** Drags from the center of the control (a CSS selector) to the content coordinate `to`. */
 async function dragControlTo(
 	canvas: CanvasDriver,
 	controlSelector: string,
@@ -92,7 +94,7 @@ async function dragControlTo(
 	await expect(control).toBeVisible();
 	const box = await control.boundingBox();
 	if (!box) {
-		throw new Error(`コントロール ${controlSelector} の位置が取得できない`);
+		throw new Error(`position of control ${controlSelector} is not available`);
 	}
 	await canvas.drag(
 		canvas.toContent({ x: box.x + box.width / 2, y: box.y + box.height / 2 }),
@@ -101,8 +103,8 @@ async function dragControlTo(
 	);
 }
 
-test.describe("同じ図形の別の辺への再アンカー", () => {
-	test("target 端点を B の上辺から右辺へ張り替えると、端点が右辺中央へ移る", async ({
+test.describe("re-anchoring to another edge of the same shape", () => {
+	test("moves the endpoint to the right edge center when the target endpoint is re-anchored from the top edge of B to its right edge", async ({
 		canvas,
 	}) => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 150 }, { x: 600, y: 250 });
@@ -114,25 +116,24 @@ test.describe("同じ図形の別の辺への再アンカー", () => {
 		);
 		await canvas.deselect();
 
-		// A.bottomCenter → B.topCenter（B 上辺中央へドロップ）。
+		// A.bottomCenter -> B.topCenter (dropped on the top edge center of B).
 		await canvas.selectAt({ x: 500, y: 200 });
 		const id = await canvas.createConnector("bottomCenter", { x: 500, y: 455 });
 		await canvas.deselect();
 
 		const bBox = await worldAABB(canvas, bId);
-		// 初期 target は B 上辺中央。
 		expect(
 			distance(await endPoint(canvas, id), topCenter(bBox)),
-			"初期 target が B 上辺中央に乗ること",
+			"initial target sits on the top edge center of B",
 		).toBeLessThanOrEqual(EPS);
 
-		// コネクター（両端 owned の縦線）を選択して target ハンドルを出す。
+		// Select the connector (a vertical line with both ends owned) to show the target handle.
 		await canvas.clickAt({ x: 500, y: 350 });
 		await expect(
 			canvas.page.locator(`[data-id="${id}"][data-part="endpoint:target"]`),
 		).toBeVisible();
 
-		// target ハンドルを B の右辺中央付近へドラッグ → rightCenter へ再アンカー。
+		// Drag the target handle near the right edge center of B -> re-anchors to rightCenter.
 		await dragControlTo(
 			canvas,
 			`[data-id="${id}"][data-part="endpoint:target"]`,
@@ -143,28 +144,27 @@ test.describe("同じ図形の別の辺への再アンカー", () => {
 		);
 		await canvas.deselect();
 
-		// target が B の右辺中央へ移った（上辺からは離れた）。
 		const movedEnd = await endPoint(canvas, id);
 		expect(
 			distance(movedEnd, rightCenter(bBox)),
-			`target ${JSON.stringify(movedEnd)} が B 右辺中央 ${JSON.stringify(rightCenter(bBox))} へ移ること`,
+			`target ${JSON.stringify(movedEnd)} moves to the right edge center of B ${JSON.stringify(rightCenter(bBox))}`,
 		).toBeLessThanOrEqual(EPS);
 		expect(
 			distance(movedEnd, topCenter(bBox)),
-			"target が元の上辺中央からは離れていること",
+			"target is away from the original top edge center",
 		).toBeGreaterThan(20);
 
-		// 依然 B に接続している: B を動かすと右辺中央のまま追従する。
+		// Still connected to B: it keeps following at the right edge center when B moves.
 		await canvas.drag({ x: 500, y: 500 }, { x: 760, y: 500 });
 		await expect
 			.poll(async () => (await endPoint(canvas, id)).x, {
-				message: "再アンカー後も B に追従すること",
+				message: "still follows B after re-anchoring",
 			})
 			.toBeGreaterThan(rightCenter(bBox).x + 100);
 		const bMoved = await worldAABB(canvas, bId);
 		expect(
 			distance(await endPoint(canvas, id), rightCenter(bMoved)),
-			"追従後も target が（移動後の）B 右辺中央に乗ること",
+			"target still sits on the right edge center of the moved B",
 		).toBeLessThanOrEqual(EPS);
 	});
 });

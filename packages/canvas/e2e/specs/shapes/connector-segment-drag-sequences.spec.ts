@@ -2,22 +2,24 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * セグメントドラッグの**操作列**を UI レベルで守る spec。
+ * Spec guarding *sequences* of segment-drag operations at the UI level.
  *
- * connector-segment-drag.spec は個々の操作を単発で守っているが、過去の退行は
- * 「単発では正しいのに、列で踏むと壊れる」形で出た（掃除の取りこぼし、undo 境界など）。
- * ここでは間に図形移動・undo/redo・routing 切替を挟んだ列で、
- * (1) セグメントドラッグが undo/redo で正確に往復すること、
- * (2) L字化した経路が図形移動・直線切替往復を経ても形と直角を保つこと、を守る。
+ * connector-segment-drag.spec guards each operation in isolation, but past regressions took the
+ * form of "correct on its own, broken when performed in a sequence" (missed cleanup, undo
+ * boundaries and the like). Here, with shape moves, undo/redo and routing switches interleaved,
+ * this guards that
+ * (1) segment drags round-trip exactly through undo/redo,
+ * (2) a route folded into an L keeps its shape and right angles across a shape move and a
+ *     straight-routing round trip.
  */
 
 type Vec = { x: number; y: number };
 const EPS = 1.5;
 
-/** polyline の points 属性 "x1,y1 x2,y2 ..." を座標配列へパースする */
+/** Parses the polyline points attribute "x1,y1 x2,y2 ..." into an array of coordinates. */
 function parsePoints(attr: string | null): Vec[] {
 	if (!attr) {
-		throw new Error("points 属性が取得できない");
+		throw new Error("points attribute is missing");
 	}
 	return attr
 		.trim()
@@ -28,19 +30,19 @@ function parsePoints(attr: string | null): Vec[] {
 		});
 }
 
-/** 隣り合う頂点がすべて水平 or 垂直（=直角・退化なし）であることを検査する */
+/** Checks that every pair of adjacent vertices is horizontal or vertical (right angles, no degenerate segments). */
 function assertOrthogonalSegments(points: Vec[], label: string) {
 	for (let i = 1; i < points.length; i++) {
 		const horizontal = Math.abs(points[i - 1].y - points[i].y) <= EPS;
 		const vertical = Math.abs(points[i - 1].x - points[i].x) <= EPS;
 		expect(
 			horizontal !== vertical,
-			`${label}: セグメント ${i - 1}->${i} が直角でない（重複点 or 斜め）: ${JSON.stringify(points)}`,
+			`${label}: segment ${i - 1}->${i} is not at a right angle (duplicated point or diagonal): ${JSON.stringify(points)}`,
 		).toBe(true);
 	}
 }
 
-/** コネクターの現在の描画 points を読む */
+/** Reads the currently rendered points of the connector. */
 async function readPoints(
 	canvas: CanvasDriver,
 	connectorId: string,
@@ -50,7 +52,7 @@ async function readPoints(
 	);
 }
 
-/** コネクターを最長セグメントの中点でクリックして選択する */
+/** Selects the connector by clicking the midpoint of its longest segment. */
 async function selectConnector(canvas: CanvasDriver, connectorId: string) {
 	const points = await readPoints(canvas, connectorId);
 	let best = { mid: points[0], length: -1 };
@@ -67,7 +69,7 @@ async function selectConnector(canvas: CanvasDriver, connectorId: string) {
 	).toBeVisible();
 }
 
-/** 斜めに離した 2 矩形を rightCenter → leftCenter でつなぐ（connector-segment-drag.spec と同配置） */
+/** Joins two rectangles placed diagonally apart from rightCenter to leftCenter (same layout as connector-segment-drag.spec). */
 async function buildDiagonalConnector(canvas: CanvasDriver): Promise<string> {
 	await canvas.drawShape("Rectangle", { x: 300, y: 180 }, { x: 460, y: 280 });
 	await canvas.deselect();
@@ -82,33 +84,33 @@ async function buildDiagonalConnector(canvas: CanvasDriver): Promise<string> {
 	return connectorId;
 }
 
-test.describe("セグメントドラッグの操作列", () => {
-	test("連続ドラッグは undo/redo で正確に往復し、リセットで自動経路へ戻る", async ({
+test.describe("sequences of segment-drag operations", () => {
+	test("round-trips consecutive drags exactly through undo/redo and returns to the automatic route on reset", async ({
 		canvas,
 	}) => {
 		const connectorId = await buildDiagonalConnector(canvas);
 		const initial = await readPoints(canvas, connectorId);
 		await selectConnector(canvas, connectorId);
 
-		// 1. 中間の走行を右へ
+		// 1. Move the middle run to the right
 		const mid = {
 			x: (initial[1].x + initial[2].x) / 2,
 			y: (initial[1].y + initial[2].y) / 2,
 		};
 		await canvas.drag(mid, { x: mid.x + 130, y: mid.y });
 		const afterRun = await readPoints(canvas, connectorId);
-		assertOrthogonalSegments(afterRun, "走行ドラッグ後");
+		assertOrthogonalSegments(afterRun, "after the run drag");
 
-		// 2. 先頭セグメントを下へ（垂直接続で折れ点が増える）
+		// 2. Pull the first segment down (a vertical link adds bends)
 		await canvas.drag(
 			{ x: (initial[0].x + afterRun[1].x) / 2, y: initial[0].y },
 			{ x: (initial[0].x + afterRun[1].x) / 2, y: initial[0].y + 110 },
 		);
 		const afterEnd = await readPoints(canvas, connectorId);
-		assertOrthogonalSegments(afterEnd, "端ドラッグ後");
+		assertOrthogonalSegments(afterEnd, "after the end drag");
 		expect(afterEnd.length).toBeGreaterThan(afterRun.length);
 
-		// 3. undo ×2 で自動経路まで正確に戻り、redo ×2 で完全に復帰する
+		// 3. Two undos return exactly to the automatic route, two redos restore it completely
 		await canvas.undo();
 		await expect
 			.poll(async () => (await readPoints(canvas, connectorId)).length)
@@ -123,7 +125,7 @@ test.describe("セグメントドラッグの操作列", () => {
 			.poll(async () => readPoints(canvas, connectorId))
 			.toEqual(afterEnd);
 
-		// 4. リセットで自動経路へ
+		// 4. Reset back to the automatic route
 		const onLine = await readPoints(canvas, connectorId);
 		await selectConnector(canvas, connectorId);
 		await canvas.openContextMenu({
@@ -136,14 +138,14 @@ test.describe("セグメントドラッグの操作列", () => {
 			.toEqual(initial);
 	});
 
-	test("L字化した経路は図形移動・直線切替往復・再移動を経ても形と直角を保つ", async ({
+	test("keeps the shape and right angles of an L-folded route across a shape move, a straight-routing round trip and another move", async ({
 		canvas,
 	}) => {
 		const connectorId = await buildDiagonalConnector(canvas);
 		const initial = await readPoints(canvas, connectorId);
 		await selectConnector(canvas, connectorId);
 
-		// 1. 縦の走行を接続先の面へ重ねて L 字（頂点1つ）に畳む
+		// 1. Overlay the vertical run on the face of the target to fold it into an L (one bend)
 		const mid = {
 			x: (initial[1].x + initial[2].x) / 2,
 			y: (initial[1].y + initial[2].y) / 2,
@@ -152,19 +154,22 @@ test.describe("セグメントドラッグの操作列", () => {
 		await expect
 			.poll(async () => (await readPoints(canvas, connectorId)).length)
 			.toBe(3);
-		assertOrthogonalSegments(await readPoints(canvas, connectorId), "L字化後");
+		assertOrthogonalSegments(
+			await readPoints(canvas, connectorId),
+			"after folding into an L",
+		);
 
-		// 2. 接続元を下げても L 字のまま直角
+		// 2. Lowering the source shape keeps the L and its right angles
 		await canvas.deselect();
 		await canvas.selectAt({ x: 380, y: 230 });
 		await canvas.drag({ x: 380, y: 230 }, { x: 380, y: 380 });
 		await canvas.deselect();
 		const afterMove = await readPoints(canvas, connectorId);
-		assertOrthogonalSegments(afterMove, "図形移動後");
+		assertOrthogonalSegments(afterMove, "after the shape move");
 		expect(afterMove.length).toBe(3);
 
-		// 3. 直線へ切替（焼き付け）→ 直角へ戻す。形は変わらない。
-		//    コマンド後もドロップダウンは開いたままなので、2回目はトグルを押さずに直接押す
+		// 3. Switch to straight (baking the route in) and back to orthogonal; the shape is unchanged.
+		//    The dropdown stays open after a command, so the second one is pressed without the toggle.
 		await selectConnector(canvas, connectorId);
 		await canvas.openObjectMenu("connector-routing");
 		await canvas.page.click('[data-part="command:setRoutingStraight"]');
@@ -176,14 +181,14 @@ test.describe("セグメントドラッグの操作列", () => {
 			.poll(async () => readPoints(canvas, connectorId))
 			.toEqual(afterMove);
 
-		// 4. さらに接続先を動かしても直角
+		// 4. Moving the target shape as well keeps the right angles
 		await canvas.deselect();
 		await canvas.selectAt({ x: 900, y: 490 });
 		await canvas.drag({ x: 900, y: 490 }, { x: 900, y: 600 });
 		await canvas.deselect();
 		assertOrthogonalSegments(
 			await readPoints(canvas, connectorId),
-			"接続先移動後",
+			"after the target move",
 		);
 	});
 });

@@ -1,15 +1,16 @@
 import { test, expect } from "../../fixtures";
 
 /**
- * コネクター選択時にも ObjectMenu の StackOrder（重なり順）が出て、
- * 最背面 / 最前面へ移動できることを実操作で検証する。
+ * ObjectMenu's StackOrder section is available for a selected connector too, and it can
+ * move the connector to the back / front.
  *
- * SVG では DOM 順が描画順（後ろの要素ほど前面）。captureObjects() は図形とコネクターを
- * DOM 順で返すので、その中でのコネクターと矩形の相対位置で z-order を確認する。
- * （objectIndex() は [data-kind=object] のみでコネクターを含まないため使わない）
+ * In SVG, DOM order is paint order (later elements are in front). captureObjects()
+ * returns shapes and connectors in DOM order, so the z-order is checked through the
+ * connector's position relative to the rectangles.
+ * (objectIndex() covers only [data-kind=object] and excludes connectors.)
  */
-test.describe("コネクターの重なり順（StackOrder メニュー）", () => {
-	test("コネクター選択で StackOrder が出て、最背面/最前面へ移動できる", async ({
+test.describe("connector stacking order (StackOrder menu)", () => {
+	test("shows StackOrder for a selected connector and moves it to the back / front", async ({
 		canvas,
 	}) => {
 		const rectA = await canvas.drawShape(
@@ -25,7 +26,7 @@ test.describe("コネクターの重なり順（StackOrder メニュー）", () 
 		);
 		await canvas.deselect();
 
-		// 上の矩形の bottomCenter から下の矩形へコネクターを作成
+		// Connector from the top rectangle's bottomCenter to the bottom one
 		await canvas.selectAt({ x: 500, y: 200 });
 		const connectorId = await canvas.createConnector("bottomCenter", {
 			x: 500,
@@ -33,9 +34,9 @@ test.describe("コネクターの重なり順（StackOrder メニュー）", () 
 		});
 		await canvas.deselect();
 
-		// zOrderIndex は図形 + コネクターを含む DOM 順（背面=小, 前面=大）
+		// zOrderIndex is DOM order over shapes + connectors (back = small, front = large)
 
-		// 新規コネクターは最前面（両矩形より後ろ＝上）
+		// A new connector is frontmost (after both rectangles)
 		await expect
 			.poll(
 				async () =>
@@ -44,15 +45,15 @@ test.describe("コネクターの重なり順（StackOrder メニュー）", () 
 			)
 			.toBe(true);
 
-		// 線上クリックでコネクターを選択
+		// Click on the line to select the connector
 		await canvas.selectAt({ x: 500, y: 350 });
 
-		// 修正点: コネクター選択でも StackOrder セクションが表示される
+		// The StackOrder section shows up for a connector selection too
 		await expect(
 			canvas.page.locator('[data-part="toggle:stack-order"]'),
 		).toBeVisible();
 
-		// 最背面へ → 両矩形より前（上）にいた状態から、両矩形より後ろ（下）へ
+		// Send to back: from in front of both rectangles to behind them
 		await canvas.arrange("sendToBack");
 		await expect
 			.poll(
@@ -62,12 +63,12 @@ test.describe("コネクターの重なり順（StackOrder メニュー）", () 
 			)
 			.toBe(true);
 
-		// 一度選択し直してメニュー状態をリセット（arrange はトグルで開くため、
-		// 連続呼び出しだと 2 回目のトグルで閉じてしまう）。
+		// Re-select to reset the menu state: arrange opens by toggle, so a second
+		// consecutive call would close it.
 		await canvas.deselect();
 		await canvas.selectAt({ x: 500, y: 350 });
 
-		// 最前面へ → 再び両矩形より前（上）へ
+		// Bring to front: in front of both rectangles again
 		await canvas.arrange("bringToFront");
 		await expect
 			.poll(

@@ -1,19 +1,19 @@
 import { test, expect } from "../../fixtures";
 
 /**
- * 外部同期（SYNC_EXTERNAL）が進行中のドラッグをキャンセルすることの検証（#78）。
+ * External sync (SYNC_EXTERNAL) must cancel a drag that is in progress (#78).
  *
- * useSyncExternalDoc は外部 doc の差し替え時に resetGestureState を呼び、
- * GestureRecognizer の進行中ドラッグを破棄する契約になっている。#78 では
- * StrictMode の setup→cleanup→setup で recognizer の ref が null のまま残り、
- * この reset が恒久 no-op になっていた（ハーネスは StrictMode + dev サーバーで
- * 動くため、この spec はその環境ごと回帰を検出する）。
+ * useSyncExternalDoc calls resetGestureState when the external doc is swapped,
+ * and that is contracted to discard the GestureRecognizer's in-flight drag. In
+ * #78 StrictMode's setup->cleanup->setup left the recognizer ref null, making
+ * the reset a permanent no-op; the harness runs on StrictMode plus the dev
+ * server, so this spec detects that regression together with its environment.
  *
- * 判別経路にパン（中ボタンドラッグ）を使う: パンの drag ハンドラは
- * eventStartSnapshot が消えても現在 viewport へフォールバックするため
- * （CanvasEventHandler）、reset が効いていないとき「同期後もパンが続く」という
- * 可視の差が出る。図形ドラッグは snapshot 消失で早期 return してしまい、
- * バグ有無で見た目が変わらないため判別に使えない。
+ * Pan (middle-button drag) is what makes the difference observable: the pan drag
+ * handler falls back to the current viewport even when eventStartSnapshot is
+ * gone (CanvasEventHandler), so a reset that does not take effect shows up as
+ * "panning continues after the sync". A shape drag returns early on the missing
+ * snapshot and looks identical either way, so it cannot tell the two apart.
  */
 
 const syncedDocText = JSON.stringify({
@@ -30,14 +30,14 @@ const syncedDocText = JSON.stringify({
 	],
 });
 
-test.describe("外部同期中のドラッグキャンセル（#78）", () => {
-	test("パン保持中に外部 doc が差し替わると、以後のポインタ移動でパンが続かない", async ({
+test.describe("drag cancellation on external sync (#78)", () => {
+	test("stops panning on later pointer moves when the external doc is swapped mid-pan", async ({
 		canvas,
 	}) => {
 		const { page } = canvas;
 
-		// ジェスチャー処理は RAF バッチなので、「動かない」ことの確認は時間待ちではなく
-		// フレームを 2 回明示的に流してから読むことで同期する。
+		// Gesture handling is batched on RAF, so "nothing moved" is checked by flushing
+		// two frames explicitly and then reading, rather than by waiting on a timer.
 		const flushFrames = () =>
 			page.evaluate(
 				() =>
@@ -46,21 +46,21 @@ test.describe("外部同期中のドラッグキャンセル（#78）", () => {
 					}),
 			);
 
-		// 中ボタンでパンを開始し、up せず保持する
+		// Start a middle-button pan and hold it without releasing.
 		const viewBoxBeforePan = await canvas.getViewBox();
 		const grabScreen = canvas.toScreen({ x: 500, y: 300 });
 		await page.mouse.move(grabScreen.x, grabScreen.y);
 		await page.mouse.down({ button: "middle" });
 		await page.mouse.move(grabScreen.x + 120, grabScreen.y + 80, { steps: 8 });
 
-		// 正の対照: パンが実際に始まっている（これが無いと後段が空検証になる）
+		// Positive control: the pan really started. Without it the rest is vacuous.
 		await expect
 			.poll(() => canvas.getViewBox(), {
-				message: "中ドラッグでパンが始まること",
+				message: "the middle drag starts a pan",
 			})
 			.not.toBe(viewBoxBeforePan);
 
-		// ドラッグ保持中に外部 doc を注入 → SYNC_EXTERNAL + resetGestureState
+		// Inject the external doc while the drag is held: SYNC_EXTERNAL + resetGestureState.
 		await page.evaluate((docText) => {
 			const hook = (
 				window as unknown as {
@@ -68,15 +68,17 @@ test.describe("外部同期中のドラッグキャンセル（#78）", () => {
 				}
 			).__setHarnessDoc;
 			if (!hook) {
-				throw new Error("__setHarnessDoc が未定義（ハーネスのフック未設定）");
+				throw new Error(
+					"__setHarnessDoc is undefined (harness hook not installed)",
+				);
 			}
 			hook(docText);
 		}, syncedDocText);
-		// 同期が適用された（注入した図形が現れた）ことを確認してから後段へ進む
+		// Only continue once the sync landed, i.e. the injected shape showed up.
 		await expect(canvas.objectById("synced-rect")).toHaveCount(1);
 
-		// ドラッグはキャンセル済みのはず: さらに大きくポインタを動かしても
-		// viewBox が動かない（reset が no-op だとパンが続いてここで落ちる）
+		// The drag should be cancelled: even a much larger pointer move leaves the
+		// viewBox alone. If the reset is a no-op the pan continues and this fails.
 		await flushFrames();
 		const viewBoxAfterSync = await canvas.getViewBox();
 		await page.mouse.move(grabScreen.x + 400, grabScreen.y + 300, {

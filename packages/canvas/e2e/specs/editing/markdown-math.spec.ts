@@ -2,14 +2,15 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * Markdown 内の数式（KaTeX）描画を守る。
+ * Guards the rendering of math (KaTeX) inside Markdown.
  *
- * renderMarkdown は `$...$`（インライン）/ `$$...$$`（ブロック）を KaTeX で描画し、
- * `.katex` / `.katex-display` 要素を生成する。この数式パイプラインは e2e 未カバーだったため、
- * 編集で数式を入力し、生テキストではなく KaTeX 要素として描画されることを守る。
+ * renderMarkdown renders `$...$` (inline) / `$$...$$` (block) with KaTeX and
+ * produces `.katex` / `.katex-display` elements. This math pipeline was
+ * uncovered by e2e, so these tests type math while editing and guard that it is
+ * rendered as KaTeX elements rather than as raw text.
  */
 
-/** Markdown 図形の TextOverlay 内で、セレクタにマッチする要素数を返す */
+/** Number of elements matching the selector inside a Markdown shape's TextOverlay. */
 async function renderedCount(
 	canvas: CanvasDriver,
 	id: string,
@@ -34,7 +35,7 @@ async function renderedCount(
 	);
 }
 
-/** Markdown 図形を描き、本文を replacement に置き換えて id を返す */
+/** Draws a Markdown shape, replaces its body with `replacement`, and returns its id. */
 async function drawMarkdownWith(
 	canvas: CanvasDriver,
 	replacement: string,
@@ -55,22 +56,18 @@ async function drawMarkdownWith(
 	return id;
 }
 
-test.describe("Markdown の数式（KaTeX）描画", () => {
-	test("インライン数式 $...$ は KaTeX 要素として描画される", async ({
-		canvas,
-	}) => {
+test.describe("Markdown math (KaTeX) rendering", () => {
+	test("renders inline math $...$ as KaTeX elements", async ({ canvas }) => {
 		const id = await drawMarkdownWith(canvas, "Mass energy: $E=mc^2$");
 
 		await expect
 			.poll(() => renderedCount(canvas, id, ".katex"))
 			.toBeGreaterThan(0);
-		// 通常テキストの段落も併存する（インライン混在）。
+		// A normal text paragraph coexists with it (inline mix).
 		expect(await renderedCount(canvas, id, "p")).toBeGreaterThan(0);
 	});
 
-	test("ブロック数式 $$...$$ は KaTeX ブロックとして描画される", async ({
-		canvas,
-	}) => {
+	test("renders block math $$...$$ as a KaTeX block", async ({ canvas }) => {
 		const id = await drawMarkdownWith(canvas, "$$\n\\sqrt{2}\n$$");
 
 		await expect

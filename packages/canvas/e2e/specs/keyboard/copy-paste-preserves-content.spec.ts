@@ -1,15 +1,19 @@
 import { test, expect } from "../../fixtures";
 
 /**
- * コピー＆ペースト（Ctrl+C → Ctrl+V）が中身を引き継ぐことの検証。
+ * Guards that copy-paste (Ctrl+C then Ctrl+V) carries the contents over.
  *
- * clipboard.spec は「ペーストで数が増える」までしか守らない。コピペは複製（Ctrl+D）とは
- * 別経路で、CopyCommand → ClipboardData へシリアライズ → ペーストで再構築するため、
- * シリアライズ時のスタイル・テキスト欠落は複製が無事でも独立に起き得る。元とペースト先の
- * computed fill 一致・テキストの 2 重化という観測可能な結果で守る。
+ * clipboard.spec only guards that pasting increases the object count.
+ * Copy-paste takes a different path from duplicate (Ctrl+D): CopyCommand
+ * serializes into ClipboardData and paste rebuilds from it, so style or text can
+ * be lost during serialization even when duplicate is fine. Guarded through
+ * observable results: the computed fill matches on source and paste, and the
+ * text ends up rendered twice.
  */
-test.describe("コピー＆ペーストが中身を引き継ぐ", () => {
-	test("コピー＆ペーストは背景色を引き継ぐ", async ({ canvas }) => {
+test.describe("copy-paste carries the contents over", () => {
+	test("carries the background color over on copy-paste", async ({
+		canvas,
+	}) => {
 		const srcId = await canvas.drawShape(
 			"Rectangle",
 			{ x: 400, y: 200 },
@@ -21,8 +25,8 @@ test.describe("コピー＆ペーストが中身を引き継ぐ", () => {
 			.poll(() => canvas.computedColor(srcId, "fill"))
 			.toBe(customFill);
 
-		// 色入力欄に残ったフォーカスをキャンバスへ戻してからコピペする
-		// （入力欄にフォーカスがあると Ctrl+C/V がそちらへ奪われる）。
+		// Hand focus back from the color input to the canvas before copy-pasting;
+		// focus in the input would steal Ctrl+C/V.
 		await canvas.selectAt({ x: 500, y: 260 });
 		await canvas.copy();
 		await canvas.paste();
@@ -38,7 +42,7 @@ test.describe("コピー＆ペーストが中身を引き継ぐ", () => {
 		expect(await canvas.computedColor(pasted!.id!, "fill")).toBe(customFill);
 	});
 
-	test("コピー＆ペーストはテキストを引き継ぐ", async ({ canvas }) => {
+	test("carries the text over on copy-paste", async ({ canvas }) => {
 		const text = "Copy Me";
 		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
 		await canvas.deselect();
@@ -61,7 +65,7 @@ test.describe("コピー＆ペーストが中身を引き継ぐ", () => {
 						const haystack = document.body.textContent ?? "";
 						return haystack.split(needle).length - 1;
 					}, text),
-				{ message: "ペースト後はテキストが 2 箇所に現れること" },
+				{ message: "the text appears in two places after pasting" },
 			)
 			.toBe(2);
 	});

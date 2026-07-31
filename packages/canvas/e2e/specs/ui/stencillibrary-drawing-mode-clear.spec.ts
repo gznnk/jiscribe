@@ -3,20 +3,21 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 import { selectors, type ToolTitle } from "../../support/selectors";
 
 /**
- * StencilLibrary の描画モードは、以下の 2 つの操作で解除されることを守る。
+ * The StencilLibrary drawing mode is cleared by the following two operations.
  *
- * 1. 描画非対応の図形（Sticky など bounds 描画を持たない図形）を押下したとき。
- *    これらは押下で即配置されるだけで描画モードに入らないため、直前の描画モードが
- *    残ったままになるのを防ぐ（クリックした瞬間に shapeDrawing を null にする）。
- * 2. いずれかの図形で D&D を開始したとき。ドラッグ配置は描画モードとは別経路のため、
- *    dragStart の時点で描画モードをクリアする。
+ * 1. Pressing a shape that does not support drawing (Sticky and other shapes without
+ *    bounds drawing). Those are placed immediately on press and never enter drawing
+ *    mode, so shapeDrawing is set to null on click to keep a previous drawing mode from
+ *    lingering.
+ * 2. Starting a D&D with any shape. Drag placement is a path of its own, so drawing
+ *    mode is cleared at dragStart.
  *
- * 描画モードの ON/OFF は各ツールボタンの cursor で観測する。描画中のプリセットの
- * ボタンだけが cursor: crosshair（isActive）になり、非アクティブは grab に戻る
- * （StencilLibraryStyled のスタイル契約）。
+ * Drawing mode on/off is observed through each tool button's cursor: only the button of
+ * the preset being drawn gets cursor: crosshair (isActive), inactive ones fall back to
+ * grab (the style contract of StencilLibraryStyled).
  */
 
-/** ツールボタンの computed cursor を返す。crosshair=描画モード ON / grab=OFF。 */
+/** Computed cursor of a tool button. crosshair = drawing mode on / grab = off. */
 async function toolCursor(
 	canvas: CanvasDriver,
 	tool: ToolTitle,
@@ -26,7 +27,7 @@ async function toolCursor(
 		.evaluate((el) => getComputedStyle(el).cursor);
 }
 
-/** ツールボタンの画面中心（boundingBox は画面座標を返す）。 */
+/** Screen center of a tool button (boundingBox returns screen coordinates). */
 async function toolButtonCenter(
 	canvas: CanvasDriver,
 	tool: ToolTitle,
@@ -35,52 +36,50 @@ async function toolButtonCenter(
 		.locator(selectors.toolButton(tool))
 		.boundingBox();
 	if (!box) {
-		throw new Error(`${tool} ボタンの位置が取得できない`);
+		throw new Error(`cannot get the position of the ${tool} button`);
 	}
 	return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 }
 
-/** ツールボタンをクリックして描画モードに入る（cursor: crosshair になるまで待つ）。 */
+/** Clicks a tool button to enter drawing mode (waits for cursor: crosshair). */
 async function enterDrawingMode(canvas: CanvasDriver, tool: ToolTitle) {
 	await canvas.page.click(selectors.toolButton(tool));
 	await expect
 		.poll(() => toolCursor(canvas, tool), {
-			message: `${tool} が描画モードになること`,
+			message: `${tool} enters drawing mode`,
 		})
 		.toBe("crosshair");
 }
 
-test.describe("StencilLibrary 描画モードの解除", () => {
-	test("描画モード中に描画非対応の図形（Sticky）を押下すると描画モードが解除される", async ({
+test.describe("StencilLibrary drawing mode clearing", () => {
+	test("clears drawing mode when a shape without drawing support (Sticky) is pressed while drawing", async ({
 		canvas,
 	}) => {
-		// Rectangle で描画モードに入る
 		await enterDrawingMode(canvas, "Rectangle");
 
-		// Sticky を押下 → 中央へ即配置され、描画モードは解除されるはず
+		// Pressing Sticky places it at the center immediately and should clear drawing mode
 		const stickyId = await canvas.placeShape("Sticky");
 		expect(stickyId).toBeTruthy();
 
-		// Rectangle の描画モードが解除されている（cursor が grab に戻る）
 		await expect
 			.poll(() => toolCursor(canvas, "Rectangle"), {
-				message: "Sticky 押下で Rectangle の描画モードが解除されること",
+				message: "pressing Sticky clears Rectangle's drawing mode",
 			})
 			.toBe("grab");
 	});
 
-	test("描画モード中に図形の D&D を開始すると描画モードが解除される", async ({
+	test("clears drawing mode when a shape D&D starts while drawing", async ({
 		canvas,
 	}) => {
-		// Rectangle で描画モードに入る
 		await enterDrawingMode(canvas, "Rectangle");
 
 		const before = (await canvas.captureObjects()).length;
 
-		// Ellipse ボタンを掴んでキャンバス内部へドラッグ開始する。
-		// dragStart の時点で描画モードが解除されることを、解放前に検証する。
+		// Grab the Ellipse button and start dragging into the canvas. The clearing at
+		// dragStart is checked before releasing.
 		const from = await toolButtonCenter(canvas, "Ellipse");
-		// 上端エッジゾーン（自動スクロール誘発）を避けて十分内部へ。横は中央寄り。
+		// Far enough inside to avoid the top edge zone (which triggers auto-scroll);
+		// horizontally near the center.
 		const to = canvas.toScreen({ x: 400, y: 260 });
 
 		await canvas.page.mouse.move(from.x, from.y);
@@ -88,20 +87,19 @@ test.describe("StencilLibrary 描画モードの解除", () => {
 		try {
 			await canvas.page.mouse.move(to.x, to.y, { steps: 12 });
 
-			// D&D 開始で描画モードが解除される（Rectangle が crosshair → grab）
 			await expect
 				.poll(() => toolCursor(canvas, "Rectangle"), {
-					message: "D&D 開始で Rectangle の描画モードが解除されること",
+					message: "starting a D&D clears Rectangle's drawing mode",
 				})
 				.toBe("grab");
 		} finally {
 			await canvas.page.mouse.up();
 		}
 
-		// D&D 完了で Ellipse が 1 つ配置され、描画モードは解除されたまま
+		// Completing the D&D places one Ellipse and leaves drawing mode cleared
 		await expect
 			.poll(async () => (await canvas.captureObjects()).length, {
-				message: "D&D で新規図形が配置されること",
+				message: "the D&D places a new shape",
 			})
 			.toBe(before + 1);
 		expect(await toolCursor(canvas, "Rectangle")).toBe("grab");

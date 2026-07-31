@@ -2,12 +2,13 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * リサイズハンドルを反対側の辺を越えてドラッグしたときの「反転（フリップ）」を守る。
+ * Guards the flip that happens when a resize handle is dragged past the opposite
+ * edge.
  *
- * 実装はフリップを「width/height は絶対値、符号は scaleX/scaleY」で表現する
- * （TransformControlHandler: width: Math.abs(newWidth), scaleX: sign(newWidth)）。
- * 既存スイートは通常方向のリサイズは見るが、反対側を越える反転は未カバーだった。
- * 反転後も図形が壊れず（幅・高さは正）、行列の符号だけが反転することを守る。
+ * The implementation expresses a flip as "width/height absolute, sign carried by
+ * scaleX/scaleY" (TransformControlHandler: width: Math.abs(newWidth),
+ * scaleX: sign(newWidth)). Guarded so a flipped shape stays intact, with width
+ * and height positive, and only the matrix signs flip.
  */
 
 type Matrix = {
@@ -22,7 +23,7 @@ type Matrix = {
 function parseMatrix(transform: string | null): Matrix {
 	const matched = (transform ?? "").match(/matrix\(([^)]+)\)/);
 	if (!matched) {
-		throw new Error(`matrix を解析できない: ${transform}`);
+		throw new Error(`cannot parse the matrix: ${transform}`);
 	}
 	const [a, b, c, d, e, f] = matched[1].split(",").map(Number);
 	return { a, b, c, d, e, f };
@@ -43,8 +44,8 @@ async function sizeAttr(
 	};
 }
 
-test.describe("リサイズの反転（フリップ）", () => {
-	test("右ハンドルを左辺の外まで引くと水平反転する（scaleX 符号反転・幅は正のまま）", async ({
+test.describe("resize flip", () => {
+	test("flips horizontally when the right handle is pulled past the left edge (scaleX sign flips, width stays positive)", async ({
 		canvas,
 	}) => {
 		const id = await canvas.drawShape(
@@ -52,10 +53,10 @@ test.describe("リサイズの反転（フリップ）", () => {
 			{ x: 400, y: 200 },
 			{ x: 560, y: 300 },
 		);
-		// 回転なしなので matrix.a = scaleX。初期は正。
+		// No rotation, so matrix.a = scaleX, positive to begin with.
 		expect((await matrixOf(canvas, id)).a).toBeGreaterThan(0);
 
-		// 右中央ハンドルを左辺（x=400）より左へ引く（ctrl でスナップ無効）。
+		// Pull the right-center handle left of the left edge (x=400) (ctrl: no snapping).
 		await canvas.dragTransformHandle(
 			"rightCenter",
 			{ x: 320, y: 250 },
@@ -64,12 +65,12 @@ test.describe("リサイズの反転（フリップ）", () => {
 
 		const matrix = await matrixOf(canvas, id);
 		const size = await sizeAttr(canvas, id);
-		expect(matrix.a).toBeLessThan(0); // 水平反転
-		expect(size.width).toBeGreaterThan(0); // 幅は正のまま（壊れていない）
+		expect(matrix.a).toBeLessThan(0); // horizontal flip
+		expect(size.width).toBeGreaterThan(0); // width stays positive, so the shape is intact
 		expect(size.height).toBeGreaterThan(0);
 	});
 
-	test("下ハンドルを上辺の外まで引くと垂直反転する（scaleY 符号反転・高さは正のまま）", async ({
+	test("flips vertically when the bottom handle is pulled past the top edge (scaleY sign flips, height stays positive)", async ({
 		canvas,
 	}) => {
 		const id = await canvas.drawShape(
@@ -77,10 +78,10 @@ test.describe("リサイズの反転（フリップ）", () => {
 			{ x: 400, y: 200 },
 			{ x: 560, y: 300 },
 		);
-		// 回転なしなので matrix.d = scaleY。初期は正。
+		// No rotation, so matrix.d = scaleY, positive to begin with.
 		expect((await matrixOf(canvas, id)).d).toBeGreaterThan(0);
 
-		// 下中央ハンドルを上辺（y=200）より上へ引く。
+		// Pull the bottom-center handle above the top edge (y=200).
 		await canvas.dragTransformHandle(
 			"bottomCenter",
 			{ x: 480, y: 140 },
@@ -89,17 +90,17 @@ test.describe("リサイズの反転（フリップ）", () => {
 
 		const matrix = await matrixOf(canvas, id);
 		const size = await sizeAttr(canvas, id);
-		expect(matrix.d).toBeLessThan(0); // 垂直反転
+		expect(matrix.d).toBeLessThan(0); // vertical flip
 		expect(size.width).toBeGreaterThan(0);
 		expect(size.height).toBeGreaterThan(0);
 	});
 
-	// 反転は scaleX/scaleY を行列の符号で表す経路で、Rectangle と同じだが既存テストは
-	// Rectangle のみだった。Ellipse でも非矩形の両軸反転が同じ経路で効くことを守る。
-	// Ellipse は width/height 属性を持たない（rx/ry）ため、「壊れていない」検証は
-	// boundingBox の面積で行う。（Polygon は scale を points 側へ畳み込むため別経路で、
-	// 行列符号では測れない。ここでは対象外とする。）
-	test("Ellipse: 右ハンドルを左辺の外まで引くと水平反転する（scaleX 符号反転）", async ({
+	// Ellipse runs the same matrix-sign path as Rectangle, so both axes must flip
+	// for a non-rectangular shape too. An Ellipse has no width/height attributes
+	// (rx/ry instead), so "intact" is checked through the boundingBox extent.
+	// (Polygon folds the scale into its points, a different path that matrix signs
+	// cannot measure, so it is out of scope here.)
+	test("Ellipse: flips horizontally when the right handle is pulled past the left edge (scaleX sign flips)", async ({
 		canvas,
 	}) => {
 		const id = await canvas.drawShape(
@@ -115,13 +116,13 @@ test.describe("リサイズの反転（フリップ）", () => {
 			{ ctrl: true },
 		);
 
-		expect((await matrixOf(canvas, id)).a).toBeLessThan(0); // 水平反転
+		expect((await matrixOf(canvas, id)).a).toBeLessThan(0); // horizontal flip
 		const box = await canvas.objectById(id).boundingBox();
-		expect(box?.width ?? 0).toBeGreaterThan(0); // 面積を保つ（壊れていない）
+		expect(box?.width ?? 0).toBeGreaterThan(0); // still has extent, so the shape is intact
 		expect(box?.height ?? 0).toBeGreaterThan(0);
 	});
 
-	test("Ellipse: 下ハンドルを上辺の外まで引くと垂直反転する（scaleY 符号反転）", async ({
+	test("Ellipse: flips vertically when the bottom handle is pulled past the top edge (scaleY sign flips)", async ({
 		canvas,
 	}) => {
 		const id = await canvas.drawShape(
@@ -137,7 +138,7 @@ test.describe("リサイズの反転（フリップ）", () => {
 			{ ctrl: true },
 		);
 
-		expect((await matrixOf(canvas, id)).d).toBeLessThan(0); // 垂直反転
+		expect((await matrixOf(canvas, id)).d).toBeLessThan(0); // vertical flip
 		const box = await canvas.objectById(id).boundingBox();
 		expect(box?.width ?? 0).toBeGreaterThan(0);
 		expect(box?.height ?? 0).toBeGreaterThan(0);

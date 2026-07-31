@@ -2,14 +2,16 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * グループを「移動してから」解除したとき、移動分がメンバーのワールド座標へ正しく焼き込まれ、
- * 解除後も位置が保たれて個別に動かせることを守る。
+ * Ungrouping a group that has been moved: the move is baked into the members' world
+ * coordinates, the positions hold after ungrouping, and the members move individually
+ * from then on.
  *
- * 既存の group.spec は「グループ移動」と「移動せず解除→個別移動」は見るが、
- * 「移動 → 解除」でグループ変換がメンバーへ合成（baking）される経路は未カバーだった。
+ * group.spec covers "move a group" and "ungroup without moving -> move individually",
+ * but the path where the group transform is baked into the members on "move ->
+ * ungroup" had no coverage.
  */
 
-/** 2 矩形を描き、マーキーで囲ってグループ化する（A 中心 370,260 / B 中心 630,260） */
+/** Draws two rectangles and marquee-groups them (A center 370,260 / B center 630,260) */
 async function groupTwoRects(
 	canvas: CanvasDriver,
 ): Promise<{ a: string; b: string }> {
@@ -31,12 +33,12 @@ async function groupTwoRects(
 	return { a, b };
 }
 
-test("グループを移動してから解除しても位置が保たれ、以後は個別に動く", async ({
+test("keeps the positions when a moved group is ungrouped and moves the members individually afterwards", async ({
 	canvas,
 }) => {
 	const { a, b } = await groupTwoRects(canvas);
 
-	// グループ全体を +100,+40 移動する。
+	// Move the whole group by +100,+40.
 	await canvas.deselect();
 	await canvas.selectAt({ x: 370, y: 260 });
 	await canvas.drag({ x: 370, y: 260 }, { x: 470, y: 300 });
@@ -47,7 +49,7 @@ test("グループを移動してから解除しても位置が保たれ、以�
 		"matrix(1, 0, 0, 1, 730, 300)",
 	);
 
-	// 解除しても、移動後のワールド座標がメンバーへ焼き込まれて保たれる。
+	// Ungrouping bakes the moved world coordinates into the members, so they hold.
 	await canvas.ungroup();
 	expect(await canvas.objectById(a).getAttribute("transform")).toBe(
 		"matrix(1, 0, 0, 1, 470, 300)",
@@ -56,7 +58,7 @@ test("グループを移動してから解除しても位置が保たれ、以�
 		"matrix(1, 0, 0, 1, 730, 300)",
 	);
 
-	// 解除後は個別に動く（A を動かしても B は不動）。
+	// After ungrouping they move individually (moving A leaves B put).
 	await canvas.deselect();
 	await canvas.selectAt({ x: 470, y: 300 });
 	await canvas.drag({ x: 470, y: 300 }, { x: 570, y: 300 });

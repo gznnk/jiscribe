@@ -3,14 +3,15 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 import { selectors } from "../../support/selectors";
 
 /**
- * ObjectMenu のテキストスタイル（フォントサイズ・文字色・太字・整列）を変えたとき、
- * 図形に重なって描かれる TextOverlay の描画結果が追従することを検証する。
+ * When the text styles of the ObjectMenu (font size, text color, bold, alignment)
+ * change, the rendering of the TextOverlay drawn on top of the shape follows.
  *
- * これらは「メニュー操作 → property 更新 → reducer → 再描画」という共通経路を通る。
- * 既存スイートは色・線種・角丸は見ているがフォント系は手付かずだったため、ここで埋める。
+ * These all run through the common path "menu operation -> property update -> reducer
+ * -> re-render". The existing suite watches colors, dash types and corner radius but
+ * never touched fonts, which is what this fills in.
  */
-test.describe("ObjectMenu によるテキストスタイル設定", () => {
-	/** rect を描いてテキストを入れ、選択状態に戻したうえで data-id を返す */
+test.describe("text styling through the ObjectMenu", () => {
+	/** Draws a rect with text in it, restores the selection and returns its data-id */
 	async function drawLabeledRect(canvas: CanvasDriver): Promise<string> {
 		const id = await canvas.drawShape(
 			"Rectangle",
@@ -19,21 +20,22 @@ test.describe("ObjectMenu によるテキストスタイル設定", () => {
 		);
 		await canvas.typeTextAt({ x: 520, y: 270 }, "Label");
 		await canvas.commitText();
-		// commitText は空きスペースをクリックして選択解除するので選択し直す
+		// commitText clicks empty space and deselects, so select again
 		await canvas.selectAt({ x: 520, y: 270 });
 		return id;
 	}
 
-	test("テキスト領域のオフセットは x/y ではなく transform に載る（リサイズ中の1pxちらつき対策）", async ({
+	test("puts the text area offset on transform instead of x/y (against the 1px flicker while resizing)", async ({
 		canvas,
 	}) => {
 		const id = await drawLabeledRect(canvas);
 
-		// Chromium は foreignObject の HTML を「箱の位置を整数に丸めた場所」へ
-		// ラスタライズする。領域オフセット(-height/2 ...)と図形の translate(中心)は
-		// どちらも height/2 を含み、和は一定なのに片方だけ丸められると打ち消しが
-		// 崩れ、リサイズ中にテキストが 1px 単位でちらつく。オフセットを transform に
-		// 畳んで和を丸め前に確定させるのが対策なので、x/y が 0 のままであることを守る。
+		// Chromium rasterizes the HTML of a foreignObject at "the box position rounded to
+		// integers". The area offset (-height/2 ...) and the shape's translate (center)
+		// both contain height/2 and their sum is constant, but rounding only one of them
+		// breaks the cancellation and makes the text flicker by 1px while resizing.
+		// Folding the offset into transform settles the sum before rounding, so x/y have
+		// to stay 0.
 		const box = await canvas.page.evaluate((objectId) => {
 			const fo = document
 				.querySelector(`[data-id="${objectId}"]`)
@@ -43,7 +45,7 @@ test.describe("ObjectMenu によるテキストスタイル設定", () => {
 		expect(box).toEqual({ x: "0", y: "0" });
 	});
 
-	test("フォントサイズを変えると描画テキストのサイズが追従する", async ({
+	test("follows the font size change in the rendered text", async ({
 		canvas,
 	}) => {
 		const id = await drawLabeledRect(canvas);
@@ -60,7 +62,9 @@ test.describe("ObjectMenu によるテキストスタイル設定", () => {
 			.toBe("40px");
 	});
 
-	test("文字色を変えると描画テキストの色が追従する", async ({ canvas }) => {
+	test("follows the text color change in the rendered text", async ({
+		canvas,
+	}) => {
 		const id = await drawLabeledRect(canvas);
 
 		await canvas.setColor("font-color", "#e11d48");
@@ -70,25 +74,25 @@ test.describe("ObjectMenu によるテキストスタイル設定", () => {
 			.toBe(await canvas.normalizeColor("#e11d48"));
 	});
 
-	test("Bold トグルで font-weight が bold になり、もう一度押すと normal に戻る", async ({
+	test("sets font-weight to bold with the Bold toggle and back to normal on a second press", async ({
 		canvas,
 	}) => {
 		const id = await drawLabeledRect(canvas);
 
-		// Bold は単独トグルボタン（ドロップダウンを開かず即時設定）。
+		// Bold is a standalone toggle button (applied immediately, no dropdown).
 		await canvas.page.click(selectors.objectMenuSet("fontWeight", "bold"));
 		await expect
 			.poll(async () => (await canvas.textStyleOf(id))?.fontWeight)
 			.toBe("700");
 
-		// もう一度押すとボタンの data-id が normal 側へ反転して解除できる。
+		// On a second press the button's data-id flips to the normal side, which clears it.
 		await canvas.page.click(selectors.objectMenuSet("fontWeight", "normal"));
 		await expect
 			.poll(async () => (await canvas.textStyleOf(id))?.fontWeight)
 			.toBe("400");
 	});
 
-	test("水平整列を right にすると text-align が追従する", async ({
+	test("follows text-align when the horizontal alignment is set to right", async ({
 		canvas,
 	}) => {
 		const id = await drawLabeledRect(canvas);
@@ -104,12 +108,12 @@ test.describe("ObjectMenu によるテキストスタイル設定", () => {
 			.toBe("right");
 	});
 
-	test("水平整列を left / center に切り替えると text-align が追従する", async ({
+	test("follows text-align when the horizontal alignment switches between left and center", async ({
 		canvas,
 	}) => {
 		const id = await drawLabeledRect(canvas);
 
-		// 既定の描画は center。まず left にして追従（center→left）を確認する。
+		// The default rendering is center. Set left first to check center->left.
 		expect((await canvas.textStyleOf(id))?.textAlign).toBe("center");
 
 		await canvas.openObjectMenu("alignment");
@@ -118,19 +122,19 @@ test.describe("ObjectMenu によるテキストスタイル設定", () => {
 			.poll(async () => (await canvas.textStyleOf(id))?.textAlign)
 			.toBe("left");
 
-		// セクションは開いたままなので、続けて center へ戻せる（left→center の遷移も検証）。
+		// The section stays open, so center can follow right away (checks left->center too).
 		await canvas.page.click(selectors.objectMenuSet("textAlign", "center"));
 		await expect
 			.poll(async () => (await canvas.textStyleOf(id))?.textAlign)
 			.toBe("center");
 	});
 
-	test("縦整列を top にすると wrapper の align-items が追従する", async ({
+	test("follows the wrapper's align-items when the vertical alignment is set to top", async ({
 		canvas,
 	}) => {
 		const id = await drawLabeledRect(canvas);
 
-		// 既定は middle（align-items: center）。
+		// The default is middle (align-items: center).
 		expect((await canvas.textStyleOf(id))?.verticalAlign).not.toBe(
 			"flex-start",
 		);
@@ -142,7 +146,7 @@ test.describe("ObjectMenu によるテキストスタイル設定", () => {
 			.toBe("flex-start");
 	});
 
-	test("縦整列を bottom にすると wrapper の align-items が追従する", async ({
+	test("follows the wrapper's align-items when the vertical alignment is set to bottom", async ({
 		canvas,
 	}) => {
 		const id = await drawLabeledRect(canvas);
@@ -156,7 +160,7 @@ test.describe("ObjectMenu によるテキストスタイル設定", () => {
 			.toBe("flex-end");
 	});
 
-	test("フォントサイズ変更は undo で戻り、redo で再適用される", async ({
+	test("reverts a font size change on undo and reapplies it on redo", async ({
 		canvas,
 	}) => {
 		const id = await drawLabeledRect(canvas);

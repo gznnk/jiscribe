@@ -1,22 +1,21 @@
 import { test, expect } from "../../fixtures";
 
 /**
- * 図形を「中心以外」を掴んでドラッグしたとき、掴んだ点とカーソルの相対位置（グラブ
- * オフセット）が保たれること＝図形はカーソル移動量ぶんだけ動き、カーソル位置へ
- * 飛びつかないことを守る。
+ * Guards that dragging a shape by a point other than its center keeps the grab
+ * offset: the shape moves by the cursor delta rather than jumping onto the cursor.
  *
- * draw.spec の移動テストは中心 (500,260) を掴んでいるためオフセット 0 で、
- * 「掴んだ点を無視してカーソル中心へスナップする」退行（ドラッグ開始で図形が
- * ピョンと跳ぶ）を検出できない。ここではオフセット付きで掴み、中心がカーソルの
- * 絶対位置ではなく「移動量ぶん」動くことを transform の e,f で固める。
+ * The move test in draw.spec grabs the center (500,260), so its offset is 0 and
+ * it cannot catch the regression where the grab point is ignored and the center
+ * snaps onto the cursor. Here the grab carries an offset, and the transform's
+ * e,f pin the center to the delta instead of the cursor's absolute position.
  *
- * zoom=1・他オブジェクト無し（スナップ候補なし）なので移動量は厳密に一致する。
+ * zoom=1 with no other objects (no snap candidates), so the delta matches exactly.
  */
-test.describe("ドラッグ移動のグラブオフセット保持", () => {
-	test("中心以外を掴んでも図形は移動量ぶんだけ動き、カーソルへ飛びつかない", async ({
+test.describe("grab offset kept while dragging", () => {
+	test("moves the shape by the drag delta without jumping to the cursor when grabbed off-center", async ({
 		canvas,
 	}) => {
-		// 中心 (500,260)・幅200×高さ120 の矩形（x:400-600, y:200-320）。
+		// 200 x 120 rect centered at (500,260) (x:400-600, y:200-320).
 		const id = await canvas.drawShape(
 			"Rectangle",
 			{ x: 400, y: 200 },
@@ -27,17 +26,17 @@ test.describe("ドラッグ移動のグラブオフセット保持", () => {
 			"matrix(1, 0, 0, 1, 500, 260)",
 		);
 
-		// 中心から (+60,+40) ずれた図形内部の点を掴み、(700,500) まで運ぶ。
-		// カーソル移動量は (700-560, 500-300) = (+140,+200)。
+		// Grab a point inside the shape offset (+60,+40) from the center, carry it to (700,500).
+		// The cursor delta is (700-560, 500-300) = (+140,+200).
 		const grab = { x: 560, y: 300 };
 		const drop = { x: 700, y: 500 };
 		await canvas.drag(grab, drop);
 
-		// 中心はカーソルの絶対位置 (700,500) ではなく、移動量ぶん動いた (640,460)。
-		// 飛びつき退行が起きると (700,500) になりここで落ちる。
+		// The center lands on the delta (640,460), not on the cursor's absolute (700,500).
+		// The jump-to-cursor regression would give (700,500) and fail here.
 		await expect
 			.poll(() => canvas.objectById(id).getAttribute("transform"), {
-				message: "中心が移動量ぶん (640,460) へ動くこと",
+				message: "the center moves by the delta to (640,460)",
 			})
 			.toBe("matrix(1, 0, 0, 1, 640, 460)");
 	});

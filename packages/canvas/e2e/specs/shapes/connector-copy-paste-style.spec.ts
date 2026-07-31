@@ -3,15 +3,14 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
 import { selectors } from "../../support/selectors";
 
 /**
- * コネクターのスタイル（矢印・線色）がコピー＆ペーストで引き継がれることを守る。
+ * Guards that a connector's style (arrows and line color) survives copy and paste.
  *
- * 既存の connector-copy-paste は端点リマップ（接続の追従）は見るが、矢印や線色といった
- * スタイルがクリップボード経由で保たれるかは未カバーだった。もしシリアライズから漏れていれば
- * 複製コネクターは既定（始端なし・既定色）に戻る。複製側の矢印数と矢印の塗り色で守る
- * （矢印の塗り = コネクターの stroke 色なので、線色の引き継ぎも同時に検証できる）。
+ * If either is dropped from the serialization through the clipboard, the copy falls back to the
+ * defaults: no start arrow and the default color. Checked through the copy's arrow count and
+ * arrow fill; the arrow fill is the connector's stroke color, so it covers the line color too.
  */
 
-/** data-kind=connector の polyline（本体）の id 一覧 */
+/** IDs of every data-kind=connector polyline (the connector bodies) */
 async function connectorIds(canvas: CanvasDriver): Promise<string[]> {
 	return canvas.page.evaluate(
 		(sel) =>
@@ -22,7 +21,7 @@ async function connectorIds(canvas: CanvasDriver): Promise<string[]> {
 	);
 }
 
-/** コネクター id の矢印 polygon 数 */
+/** Number of arrow polygons on the given connector */
 async function arrowCount(canvas: CanvasDriver, id: string): Promise<number> {
 	return canvas.page.evaluate(
 		(cid) =>
@@ -33,7 +32,7 @@ async function arrowCount(canvas: CanvasDriver, id: string): Promise<number> {
 	);
 }
 
-/** コネクター id の最初の矢印 polygon の computed fill */
+/** Computed fill of the given connector's first arrow polygon */
 async function arrowFill(canvas: CanvasDriver, id: string): Promise<string> {
 	return canvas.page.evaluate((cid) => {
 		const arrow = document.querySelector(
@@ -43,10 +42,10 @@ async function arrowFill(canvas: CanvasDriver, id: string): Promise<string> {
 	}, id);
 }
 
-test("コピー＆ペーストはコネクターの矢印（startArrow）と線色を引き継ぐ", async ({
+test("carries a connector's startArrow and line color through copy and paste", async ({
 	canvas,
 }) => {
-	// 上下 2 矩形を縦コネクターで接続。
+	// Join two stacked rectangles with a vertical connector.
 	await canvas.drawShape("Rectangle", { x: 400, y: 150 }, { x: 600, y: 250 });
 	await canvas.deselect();
 	await canvas.drawShape("Rectangle", { x: 400, y: 400 }, { x: 600, y: 500 });
@@ -58,7 +57,7 @@ test("コピー＆ペーストはコネクターの矢印（startArrow）と線�
 	});
 	await canvas.deselect();
 
-	// コネクターを選択して、既定にない始端矢印と線色を設定する。
+	// Set a start arrow and a line color, neither of which is the default.
 	await canvas.clickAt({ x: 500, y: 325 });
 	await expect(
 		canvas.page.locator(selectors.objectMenuToggle("arrow-head-start")),
@@ -69,15 +68,14 @@ test("コピー＆ペーストはコネクターの矢印（startArrow）と線�
 	);
 	await canvas.setColor("line-color", "#e11d48");
 
-	// 始端＋終端で矢印 2 つになっていること（設定が乗った確認）。
+	// Confirm the settings took effect: start + end gives 2 arrows.
 	await expect.poll(() => arrowCount(canvas, srcConnectorId)).toBe(2);
 	const expectedFill = await canvas.normalizeColor("#e11d48");
 
-	// 色入力欄にフォーカスが残ったままだと Ctrl+A/C/V が入力欄に吸われるため、
-	// 一度選択解除してメニューを閉じ、フォーカスをキャンバスへ戻してから全選択する。
+	// While the color input keeps focus it swallows Ctrl+A/C/V, so deselect first to close the
+	// menu and hand focus back to the canvas.
 	await canvas.deselect();
 
-	// 全選択してコピー＆ペースト。
 	await canvas.selectAll();
 	await canvas.copy();
 	await canvas.paste();
@@ -87,10 +85,9 @@ test("コピー＆ペーストはコネクターの矢印（startArrow）と線�
 		(id) => id !== srcConnectorId,
 	);
 	if (!clonedConnectorId) {
-		throw new Error("複製されたコネクターの data-id が取得できない");
+		throw new Error("cannot read the data-id of the cloned connector");
 	}
 
-	// 複製コネクターも始端矢印を保持（2 つ）し、線色（＝矢印塗り）も引き継ぐ。
 	expect(await arrowCount(canvas, clonedConnectorId)).toBe(2);
 	expect(await arrowFill(canvas, clonedConnectorId)).toBe(expectedFill);
 });

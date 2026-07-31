@@ -2,20 +2,22 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * ポリゴン（閉じた図形）の頂点追加。
+ * Adding vertices to a polygon (a closed shape).
  *
- * polyline-vertex.spec は開いたポリラインの中点挿入を守る。ポリゴンは閉じているため
- * VertexInsertControls が「最後の頂点→最初の頂点」を結ぶ閉合セグメントにも中点ハンドルを
- * 出す（closed 経路）。閉じた図形でも中点ドラッグで頂点が 1 つ増えることを points 属性で守る。
+ * polyline-vertex.spec covers midpoint insertion on an open polyline. A polygon
+ * is closed, so VertexInsertControls also puts a midpoint handle on the closing
+ * segment from the last vertex back to the first (the closed path). Guarded
+ * through the points attribute: a midpoint drag adds one vertex on a closed
+ * shape too.
  */
 
-/** points 属性から頂点数を数える（"x1,y1 x2,y2 ..." の空白区切り） */
+/** Counts vertices in the points attribute (space-separated "x1,y1 x2,y2 ..."). */
 async function vertexCount(canvas: CanvasDriver, id: string): Promise<number> {
 	const points = await canvas.objectById(id).getAttribute("points");
 	return points ? points.trim().split(/\s+/).length : 0;
 }
 
-/** コントロール（CSS セレクタ）の中心から相対量だけドラッグする */
+/** Drags by a relative amount from the center of the control matched by the CSS selector. */
 async function dragControlBy(
 	canvas: CanvasDriver,
 	controlSelector: string,
@@ -25,9 +27,9 @@ async function dragControlBy(
 	await expect(control).toBeVisible();
 	const box = await control.boundingBox();
 	if (!box) {
-		throw new Error(`コントロール ${controlSelector} の位置が取得できない`);
+		throw new Error(`cannot locate the control ${controlSelector}`);
 	}
-	// box は画面座標。コンテンツ座標へ変換してから相対量を足す。
+	// box is in screen coordinates, so convert to content coordinates before adding the delta.
 	const from = canvas.toContent({
 		x: box.x + box.width / 2,
 		y: box.y + box.height / 2,
@@ -35,20 +37,20 @@ async function dragControlBy(
 	await canvas.drag(from, { x: from.x + delta.dx, y: from.y + delta.dy }, 10);
 }
 
-test.describe("ポリゴンの頂点追加", () => {
-	test("セグメント中点ハンドルのドラッグで閉じた図形の頂点が増える", async ({
+test.describe("adding polygon vertices", () => {
+	test("adds a vertex to the closed shape when a segment midpoint handle is dragged", async ({
 		canvas,
 	}) => {
-		// 対角ドラッグでポリゴンを配置（描画直後は選択済みで頂点ハンドルが出る）
+		// Place a polygon with a diagonal drag (selected right after drawing, so the vertex handles show)
 		const id = await canvas.drawShape(
 			"Polygon",
 			{ x: 400, y: 200 },
 			{ x: 600, y: 360 },
 		);
 		const before = await vertexCount(canvas, id);
-		expect(before).toBeGreaterThanOrEqual(3); // 閉じた図形は最低 3 頂点
+		expect(before).toBeGreaterThanOrEqual(3); // a closed shape needs at least 3 vertices
 
-		// セグメント0の中点ハンドルを外側へドラッグ → 頂点が 1 つ挿入される
+		// Drag segment 0's midpoint handle outward to insert one vertex
 		await dragControlBy(
 			canvas,
 			`[data-id="${id}"][data-part="vertex-insert:0"]`,
@@ -57,18 +59,18 @@ test.describe("ポリゴンの頂点追加", () => {
 
 		await expect
 			.poll(() => vertexCount(canvas, id), {
-				message: "中点ドラッグで頂点が 1 つ増えること",
+				message: "the midpoint drag adds one vertex",
 			})
 			.toBe(before + 1);
-		// ポリゴンのまま（閉じた図形であり続ける）
+		// Still a polygon, so it stays closed
 		const created = (await canvas.captureObjects()).find((o) => o.id === id);
 		expect(created?.tag).toBe("polygon");
 	});
 
-	test("頂点ハンドルを選んで Delete すると頂点が 1 つ減り、undo で戻る", async ({
+	test("removes one vertex when a selected vertex handle is deleted and restores it with undo", async ({
 		canvas,
 	}) => {
-		// 既定のポリゴンは正五角形（5 頂点）。閉じた図形の最小頂点数は 3 なので 1 つは消せる。
+		// The default polygon is a regular pentagon (5 vertices), and a closed shape needs 3 at minimum, so one can go.
 		const id = await canvas.drawShape(
 			"Polygon",
 			{ x: 400, y: 200 },
@@ -77,8 +79,8 @@ test.describe("ポリゴンの頂点追加", () => {
 		const before = await vertexCount(canvas, id);
 		expect(before).toBe(5);
 
-		// 頂点 0（真上）ハンドルをクリックして選択。選択中ハンドルの塗りは選択色になる。
-		// この塗り変化（selectedVertex のコミット）を待ってから Delete する。
+		// Click the vertex 0 (straight up) handle to select it; a selected handle takes the selection fill.
+		// Delete only after that fill change lands, which is when selectedVertex is committed.
 		const selectedFill = await canvas.normalizeColor("#0d99ff");
 		await canvas.page.click(`[data-id="${id}"][data-part="vertex:0"]`);
 		await expect
@@ -87,15 +89,15 @@ test.describe("ポリゴンの頂点追加", () => {
 					canvas.page
 						.locator(`[data-id="${id}"][data-part="vertex:0"]`)
 						.evaluate((el) => getComputedStyle(el).fill),
-				{ message: "頂点が選択状態（塗りが選択色）になること" },
+				{ message: "the vertex is selected, showing the selection fill" },
 			)
 			.toBe(selectedFill);
 		await canvas.deleteSelection();
 
-		// 頂点が 1 つ減り、閉じた図形（polygon）であり続ける。
+		// One vertex fewer, and it stays a closed polygon.
 		await expect
 			.poll(() => vertexCount(canvas, id), {
-				message: "頂点削除で 4 つになること",
+				message: "deleting leaves 4 vertices",
 			})
 			.toBe(before - 1);
 		const afterDelete = (await canvas.captureObjects()).find(
@@ -103,11 +105,11 @@ test.describe("ポリゴンの頂点追加", () => {
 		);
 		expect(afterDelete?.tag).toBe("polygon");
 
-		// undo で頂点数が元へ戻る。
+		// undo brings the vertex count back.
 		await canvas.undo();
 		await expect
 			.poll(() => vertexCount(canvas, id), {
-				message: "undo で頂点が 5 つへ戻ること",
+				message: "undo restores 5 vertices",
 			})
 			.toBe(before);
 	});

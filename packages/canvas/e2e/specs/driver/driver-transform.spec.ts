@@ -1,10 +1,13 @@
 import { test, expect } from "../../fixtures";
 
 /**
- * CanvasDriver の変形ハンドル操作・Undo/Redo・スウォッチ選択の動作確認。
+ * Driver self-test for CanvasDriver's transform handle drags, undo/redo and
+ * swatch picking.
  */
-test.describe("ドライバ動作確認: 変形ハンドル・Undo", () => {
-	test("bottomRight ハンドルのドラッグでサイズが変わる", async ({ canvas }) => {
+test.describe("driver: transform handles and undo", () => {
+	test("changes the size when the bottomRight handle is dragged", async ({
+		canvas,
+	}) => {
 		const id = await canvas.drawShape(
 			"Rectangle",
 			{ x: 400, y: 200 },
@@ -17,12 +20,14 @@ test.describe("ドライバ動作確認: 変形ハンドル・Undo", () => {
 
 		await expect
 			.poll(() => rect.getAttribute("width"), {
-				message: "ハンドルドラッグで width が変化すること",
+				message: "width changes when the handle is dragged",
 			})
 			.not.toBe(before);
 	});
 
-	test("Undo でリサイズが元に戻り、Redo で再適用される", async ({ canvas }) => {
+	test("reverts a resize on undo and reapplies it on redo", async ({
+		canvas,
+	}) => {
 		const id = await canvas.drawShape(
 			"Rectangle",
 			{ x: 400, y: 200 },
@@ -42,17 +47,17 @@ test.describe("ドライバ動作確認: 変形ハンドル・Undo", () => {
 		await expect.poll(() => rect.getAttribute("width")).toBe(resized);
 	});
 
-	test("プリセットスウォッチで背景色を設定できる", async ({ canvas }) => {
+	test("sets the background color from a preset swatch", async ({ canvas }) => {
 		const id = await canvas.drawShape(
 			"Rectangle",
 			{ x: 400, y: 200 },
 			{ x: 600, y: 320 },
 		);
 
-		// bg-color セクションのプリセット白を選ぶ（fill プロパティ）
 		await canvas.pickColorSwatch("bg-color", "fill", "#ffffff");
 
-		// 色は SVG 属性ではなく emotion CSS で当たるため computed style で検証する
+		// The color lands through emotion CSS rather than an SVG attribute, so it
+		// has to be read from the computed style.
 		const expectedFill = await canvas.normalizeColor("#ffffff");
 		await expect
 			.poll(() => canvas.computedColor(id, "fill"))

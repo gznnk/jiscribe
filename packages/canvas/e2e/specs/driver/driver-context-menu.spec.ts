@@ -1,10 +1,10 @@
 import { test, expect } from "../../fixtures";
 
 /**
- * CanvasDriver のコンテキストメニュー操作の動作確認。
+ * Driver self-test for CanvasDriver's context menu operations.
  */
-test.describe("ドライバ動作確認: コンテキストメニュー", () => {
-	test("図形を右クリックするとコンテキストメニューが開く", async ({
+test.describe("driver: context menu", () => {
+	test("opens the context menu when a shape is right-clicked", async ({
 		canvas,
 	}) => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
@@ -14,7 +14,7 @@ test.describe("ドライバ動作確認: コンテキストメニュー", () => 
 		expect(await canvas.contextMenuVisible()).toBe(true);
 	});
 
-	test("command 項目（複製）でオブジェクトが増え、メニューが閉じる", async ({
+	test("adds an object and closes the menu on a command item (duplicate)", async ({
 		canvas,
 	}) => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
@@ -29,20 +29,19 @@ test.describe("ドライバ動作確認: コンテキストメニュー", () => 
 		await expect.poll(() => canvas.contextMenuVisible()).toBe(false);
 	});
 
-	// callback 項目（paste）はジェスチャーではなく React の onClick で動くが、
-	// PASTE が走ると handlePaste が contextMenuPosition を null にするためメニューは閉じる。
-	// copy→paste でオブジェクトが増え、かつメニューが閉じることを確認する。
-	test("callback 項目（paste）でオブジェクトが増え、メニューが閉じる", async ({
+	// The paste callback item runs through React's onClick rather than a gesture,
+	// but PASTE makes handlePaste set contextMenuPosition to null, so the menu closes.
+	test("adds an object and closes the menu on a callback item (paste)", async ({
 		canvas,
 	}) => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
 
-		// まず copy でクリップボードに載せる（command 経路、メニューは閉じる）
+		// Copy first (command path; this closes the menu).
 		await canvas.openContextMenu({ x: 500, y: 260 });
 		await canvas.clickContextMenuCommand("copy");
 		const afterCopy = (await canvas.captureObjects()).length;
 
-		// 次に paste（callback 経路）
+		// Then paste (callback path).
 		await canvas.openContextMenu({ x: 500, y: 260 });
 		await canvas.clickContextMenuItem("paste");
 
@@ -52,9 +51,9 @@ test.describe("ドライバ動作確認: コンテキストメニュー", () => 
 		await expect.poll(() => canvas.contextMenuVisible()).toBe(false);
 	});
 
-	// #34 の非回帰: ペースト対象が無くても Paste クリックでメニューは閉じる。
-	// コピーを一切行わない（OS クリップボード読み取りは権限なしで失敗し internalClipboard も null）。
-	test("callback 項目（paste）は対象が無くてもメニューを閉じる（#34）", async ({
+	// Nothing is copied first: the OS clipboard read fails without permission and
+	// internalClipboard is null too.
+	test("closes the menu when paste is clicked with nothing to paste (#34)", async ({
 		canvas,
 	}) => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
@@ -63,15 +62,13 @@ test.describe("ドライバ動作確認: コンテキストメニュー", () => 
 		await canvas.openContextMenu({ x: 500, y: 260 });
 		await canvas.clickContextMenuItem("paste");
 
-		// 対象が無いのでオブジェクトは増えない
 		await expect
 			.poll(async () => (await canvas.captureObjects()).length)
 			.toBe(before);
-		// それでもメニューは閉じる
 		await expect.poll(() => canvas.contextMenuVisible()).toBe(false);
 	});
 
-	test("メニュー外をクリックすると閉じる", async ({ canvas }) => {
+	test("closes the menu when clicking outside it", async ({ canvas }) => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
 
 		await canvas.openContextMenu({ x: 500, y: 260 });

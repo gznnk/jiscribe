@@ -2,14 +2,17 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * ポリラインの中点ハンドルによる頂点挿入が「正しい位置・正しい順序」に入ることを守る。
+ * Pins that a midpoint handle inserts a polyline vertex at the right position
+ * and in the right order.
  *
- * polyline-vertex.spec は挿入後の頂点数（3）までで、新頂点がどこに・何番目に入るかは
- * 未検証だった。セグメント0（端点0と端点1の間）の中点ハンドルをドラッグすると、新頂点は
- * その 2 点の「間」（index 1）に、ドロップ位置の座標で入るべき。順序を取り違える
- * （末尾に足す等）／座標がドロップ位置に一致しない退行は数の検証では捕まらない。
+ * polyline-vertex.spec goes as far as the vertex count after insertion (3).
+ * Dragging the midpoint handle of segment 0 (between endpoint 0 and endpoint 1)
+ * must put the new vertex *between* those two (index 1), at the drop position.
+ * A wrong order (appending, say) or a coordinate off the drop position survives
+ * a check on the count alone.
  *
- * zoom=1 で points は絶対座標。挿入後の配列を 1 点ずつ照合して固める。
+ * zoom=1, so points are absolute coordinates and the resulting array is matched
+ * point by point.
  */
 
 const TOLERANCE_PX = 1.5;
@@ -20,7 +23,7 @@ async function readVertices(
 ): Promise<{ x: number; y: number }[]> {
 	const points = await canvas.objectById(id).getAttribute("points");
 	if (!points) {
-		throw new Error("polyline の points 属性が取得できない");
+		throw new Error("the polyline has no points attribute");
 	}
 	return points
 		.trim()
@@ -31,7 +34,7 @@ async function readVertices(
 		});
 }
 
-/** data-id コントロールの中心からコンテンツ座標 to へドラッグする */
+/** Drags from the center of the data-id control to the given content coordinates. */
 async function dragControl(
 	canvas: CanvasDriver,
 	controlSelector: string,
@@ -41,7 +44,7 @@ async function dragControl(
 	await expect(control).toBeVisible();
 	const box = await control.boundingBox();
 	if (!box) {
-		throw new Error(`コントロール ${controlSelector} の位置が取得できない`);
+		throw new Error(`cannot locate the control ${controlSelector}`);
 	}
 	await canvas.drag(
 		canvas.toContent({ x: box.x + box.width / 2, y: box.y + box.height / 2 }),
@@ -55,19 +58,19 @@ function expectPointClose(
 	expected: { x: number; y: number },
 	label: string,
 ): void {
-	expect(Math.abs(actual.x - expected.x), `${label} の x`).toBeLessThanOrEqual(
+	expect(Math.abs(actual.x - expected.x), `x of ${label}`).toBeLessThanOrEqual(
 		TOLERANCE_PX,
 	);
-	expect(Math.abs(actual.y - expected.y), `${label} の y`).toBeLessThanOrEqual(
+	expect(Math.abs(actual.y - expected.y), `y of ${label}`).toBeLessThanOrEqual(
 		TOLERANCE_PX,
 	);
 }
 
-test.describe("ポリライン頂点挿入の位置と順序", () => {
-	test("セグメント0の中点ドラッグは端点の「間」(index 1) にドロップ位置の頂点を入れる", async ({
+test.describe("position and order of a polyline vertex insertion", () => {
+	test("inserts a vertex at the drop position between the endpoints (index 1) when segment 0's midpoint is dragged", async ({
 		canvas,
 	}) => {
-		// 水平 2 点ポリライン: [(300,300), (600,300)]、セグメント0の中点は (450,300)。
+		// Horizontal 2-point polyline [(300,300), (600,300)]; segment 0's midpoint is (450,300).
 		const id = await canvas.drawShape(
 			"Polyline",
 			{ x: 300, y: 300 },
@@ -76,7 +79,7 @@ test.describe("ポリライン頂点挿入の位置と順序", () => {
 		const before = await readVertices(canvas, id);
 		expect(before).toHaveLength(2);
 
-		// 中点ハンドルを (450,420) へドラッグして頂点を挿入する。
+		// Drag the midpoint handle to (450,420) to insert a vertex.
 		await dragControl(
 			canvas,
 			`[data-id="${id}"][data-part="vertex-insert:0"]`,
@@ -88,9 +91,9 @@ test.describe("ポリライン頂点挿入の位置と順序", () => {
 			.toBe(3);
 
 		const after = await readVertices(canvas, id);
-		// 端点は不変、新頂点は中央(index 1)にドロップ位置で入る。
-		expectPointClose(after[0], { x: 300, y: 300 }, "端点0");
-		expectPointClose(after[1], { x: 450, y: 420 }, "挿入頂点");
-		expectPointClose(after[2], { x: 600, y: 300 }, "端点1");
+		// The endpoints stay put and the new vertex lands in the middle (index 1) at the drop position.
+		expectPointClose(after[0], { x: 300, y: 300 }, "endpoint 0");
+		expectPointClose(after[1], { x: 450, y: 420 }, "the inserted vertex");
+		expectPointClose(after[2], { x: 600, y: 300 }, "endpoint 1");
 	});
 });

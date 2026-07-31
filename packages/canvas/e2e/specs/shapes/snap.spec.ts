@@ -2,30 +2,33 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * スナップ（吸着）の非回帰。
+ * Non-regression for snapping.
  *
- * 既定ビューポート（zoom=1・パンなし）では画面座標＝SVG 座標で、
- * スナップ閾値は 8（SNAP_THRESHOLD_PX）。
- * transform の e,f が図形の中心座標なので、整列結果は transform で直接検証できる。
+ * In the default viewport (zoom=1, no panning) screen coordinates are SVG
+ * coordinates and the snap threshold is 8 (SNAP_THRESHOLD_PX). The transform's
+ * e,f are the shape's center, so the alignment result is read straight off the
+ * transform.
  *
- * スナップ候補は各図形の left/right/hCenter（X軸）と top/bottom/vCenter（Y軸）。
- * 動かす図形側も left/center/right・top/center/bottom が比較され、
- * スナップ後にエッジが候補と一致した軸に青破線ガイド（snap-guide:x = 縦線 /
- * snap-guide:y = 横線）が出る。中央スナップ単独・エッジスナップ単独を隔離するため、
- * 相手図形と動かす図形の幅・高さをあえて変える（同寸だと別のエッジも同時に整列して
- * しまい、狙ったスナップ単独の検証にならない）。
+ * The snap candidates are each shape's left/right/hCenter (X axis) and
+ * top/bottom/vCenter (Y axis). The moving shape offers its own left/center/right
+ * and top/center/bottom, and after the snap a blue dashed guide appears on the
+ * axis where an edge met a candidate (snap-guide:x = a vertical line,
+ * snap-guide:y = a horizontal one). To isolate a center snap from an edge snap,
+ * the other shape and the moving shape are deliberately given different widths
+ * and heights; at equal sizes another edge would align at the same time and the
+ * test would no longer check the intended snap on its own.
  */
 
-// A: 幅200・高さ100、中心 (500, 200)。left=400 right=600 top=150 bottom=250 centerX=500 centerY=200
+// A: 200 x 100 centered at (500, 200). left=400 right=600 top=150 bottom=250 centerX=500 centerY=200
 const drawWideA = (canvas: CanvasDriver) =>
 	canvas.drawShape("Rectangle", { x: 400, y: 150 }, { x: 600, y: 250 });
 
-test.describe("中央スナップ（X軸・縦ガイド）", () => {
-	test("中央↔中央: 動かす図形の中心が相手の中心Xへ吸着し、縦ガイドが出る", async ({
+test.describe("center snapping (X axis, vertical guide)", () => {
+	test("center to center: snaps the moving shape's center onto the other's center X and shows a vertical guide", async ({
 		canvas,
 	}) => {
 		await drawWideA(canvas);
-		// B: 幅100・高さ100、中心 (400, 450)
+		// B: 100 x 100 centered at (400, 450)
 		const bId = await canvas.drawShape(
 			"Rectangle",
 			{ x: 350, y: 400 },
@@ -33,8 +36,8 @@ test.describe("中央スナップ（X軸・縦ガイド）", () => {
 		);
 		await canvas.deselect();
 
-		// B 中心(400,450) → (497,450): 中心X 497 は A 中心X 500 の閾値内（距離3）。
-		// 幅が違うため B の left/right(447/547) はどの候補にも当たらず、中央のみ整列する。
+		// B's center (400,450) -> (497,450): center X 497 is within the threshold of A's center X 500 (distance 3).
+		// The widths differ, so B's left/right (447/547) hit no candidate and only the centers align.
 		await canvas.dragInspecting(
 			{ x: 400, y: 450 },
 			{ x: 497, y: 450 },
@@ -45,7 +48,7 @@ test.describe("中央スナップ（X軸・縦ガイド）", () => {
 			},
 		);
 
-		// 解放後: B の中心Xが 500 へ吸着（Y は 450 のまま）
+		// After release B's center X snaps to 500 while Y stays 450
 		await expect
 			.poll(async () => {
 				const b = (await canvas.captureObjects()).find((o) => o.id === bId);
@@ -54,11 +57,11 @@ test.describe("中央スナップ（X軸・縦ガイド）", () => {
 			.toBe("matrix(1, 0, 0, 1, 500, 450)");
 	});
 
-	test("中央↔エッジ: 動かす図形の中心が相手の左辺へ吸着する", async ({
+	test("center to edge: snaps the moving shape's center onto the other's left edge", async ({
 		canvas,
 	}) => {
-		await drawWideA(canvas); // A の left = 400
-		// B: 幅100・高さ100、中心 (300, 450)
+		await drawWideA(canvas); // A's left = 400
+		// B: 100 x 100 centered at (300, 450)
 		const bId = await canvas.drawShape(
 			"Rectangle",
 			{ x: 250, y: 400 },
@@ -66,7 +69,7 @@ test.describe("中央スナップ（X軸・縦ガイド）", () => {
 		);
 		await canvas.deselect();
 
-		// B 中心(300,450) → (403,450): 中心X 403 は A の left=400 の閾値内（距離3）。
+		// B's center (300,450) -> (403,450): center X 403 is within the threshold of A's left=400 (distance 3).
 		await canvas.dragInspecting(
 			{ x: 300, y: 450 },
 			{ x: 403, y: 450 },
@@ -84,7 +87,7 @@ test.describe("中央スナップ（X軸・縦ガイド）", () => {
 			.toBe("matrix(1, 0, 0, 1, 400, 450)");
 	});
 
-	test("Ctrl 押下中はスナップしない（ガイドも出ず、位置も吸着しない）", async ({
+	test("does not snap while Ctrl is held, showing no guide and moving nothing", async ({
 		canvas,
 	}) => {
 		await drawWideA(canvas);
@@ -95,7 +98,7 @@ test.describe("中央スナップ（X軸・縦ガイド）", () => {
 		);
 		await canvas.deselect();
 
-		// 中央↔中央 と同じ操作を Ctrl 押下で行う → 吸着せず生の位置(497)のまま
+		// The same center-to-center gesture with Ctrl held keeps the raw position (497)
 		await canvas.dragInspecting(
 			{ x: 400, y: 450 },
 			{ x: 497, y: 450 },
@@ -114,12 +117,12 @@ test.describe("中央スナップ（X軸・縦ガイド）", () => {
 	});
 });
 
-test.describe("中央スナップ（Y軸・横ガイド）", () => {
-	test("中央↔中央: 動かす図形の中心が相手の中心Yへ吸着し、横ガイドが出る", async ({
+test.describe("center snapping (Y axis, horizontal guide)", () => {
+	test("center to center: snaps the moving shape's center onto the other's center Y and shows a horizontal guide", async ({
 		canvas,
 	}) => {
-		await drawWideA(canvas); // A 中心Y = 200
-		// B: 幅100・高さ50、中心 (200, 300)。X は A(400/500/600) から十分離す（横方向は当てない）
+		await drawWideA(canvas); // A's center Y = 200
+		// B: 100 x 50 centered at (200, 300). X is kept well away from A's (400/500/600) so nothing aligns horizontally
 		const bId = await canvas.drawShape(
 			"Rectangle",
 			{ x: 150, y: 275 },
@@ -127,8 +130,8 @@ test.describe("中央スナップ（Y軸・横ガイド）", () => {
 		);
 		await canvas.deselect();
 
-		// B 中心(200,300) → (200,203): 中心Y 203 は A 中心Y 200 の閾値内（距離3）。
-		// 高さが違うため B の top/bottom(178/228) はどの候補にも当たらず、中央のみ整列する。
+		// B's center (200,300) -> (200,203): center Y 203 is within the threshold of A's center Y 200 (distance 3).
+		// The heights differ, so B's top/bottom (178/228) hit no candidate and only the centers align.
 		await canvas.dragInspecting(
 			{ x: 200, y: 300 },
 			{ x: 200, y: 203 },
@@ -139,7 +142,7 @@ test.describe("中央スナップ（Y軸・横ガイド）", () => {
 			},
 		);
 
-		// 解放後: B の中心Yが 200 へ吸着（X は 200 のまま）
+		// After release B's center Y snaps to 200 while X stays 200
 		await expect
 			.poll(async () => {
 				const b = (await canvas.captureObjects()).find((o) => o.id === bId);
@@ -148,10 +151,10 @@ test.describe("中央スナップ（Y軸・横ガイド）", () => {
 			.toBe("matrix(1, 0, 0, 1, 200, 200)");
 	});
 
-	test("中央↔エッジ: 動かす図形の中心が相手の上辺へ吸着する", async ({
+	test("center to edge: snaps the moving shape's center onto the other's top edge", async ({
 		canvas,
 	}) => {
-		await drawWideA(canvas); // A の top = 150
+		await drawWideA(canvas); // A's top = 150
 		const bId = await canvas.drawShape(
 			"Rectangle",
 			{ x: 150, y: 275 },
@@ -159,7 +162,7 @@ test.describe("中央スナップ（Y軸・横ガイド）", () => {
 		);
 		await canvas.deselect();
 
-		// B 中心(200,300) → (200,153): 中心Y 153 は A の top=150 の閾値内（距離3）。
+		// B's center (200,300) -> (200,153): center Y 153 is within the threshold of A's top=150 (distance 3).
 		await canvas.dragInspecting(
 			{ x: 200, y: 300 },
 			{ x: 200, y: 153 },
@@ -179,18 +182,19 @@ test.describe("中央スナップ（Y軸・横ガイド）", () => {
 });
 
 /**
- * 四隅（頂点）スナップ: 動かす図形の角が相手の角に吸着する。
- * 角は X エッジ（left/right）と Y エッジ（top/bottom）の同時スナップで成立し、
- * 縦ガイドと横ガイドが 1 本ずつ同時に出る。
- * 相手 A と動かす B の寸法を変え、狙った 1 エッジずつだけが当たるようにする。
+ * Corner (vertex) snapping: the moving shape's corner sticks to the other's
+ * corner. A corner needs an X edge (left/right) and a Y edge (top/bottom) to
+ * snap at once, so one vertical and one horizontal guide appear together.
+ * A and B are given different sizes so that only the intended edge lands on
+ * each axis.
  */
-test.describe("四隅（頂点）スナップ", () => {
-	test("B の左上の角が A の右下の角へ吸着し、縦横ガイドが 1 本ずつ出る", async ({
+test.describe("corner (vertex) snapping", () => {
+	test("snaps B's top left corner onto A's bottom right corner with one vertical and one horizontal guide", async ({
 		canvas,
 	}) => {
-		// A: 幅200・高さ100、中心 (400,300)。right=500 bottom=350
+		// A: 200 x 100 centered at (400,300). right=500 bottom=350
 		await canvas.drawShape("Rectangle", { x: 300, y: 250 }, { x: 500, y: 350 });
-		// B: 幅100・高さ100、中心 (650,500)
+		// B: 100 x 100 centered at (650,500)
 		const bId = await canvas.drawShape(
 			"Rectangle",
 			{ x: 600, y: 450 },
@@ -198,8 +202,8 @@ test.describe("四隅（頂点）スナップ", () => {
 		);
 		await canvas.deselect();
 
-		// B 中心(650,500) → (553,403): B left=503→A right=500、B top=353→A bottom=350（各距離3）。
-		// 寸法差により他のエッジは候補に当たらない。
+		// B's center (650,500) -> (553,403): B left=503 to A right=500, B top=353 to A bottom=350, each 3 away.
+		// The size difference keeps the other edges off every candidate.
 		await canvas.dragInspecting(
 			{ x: 650, y: 500 },
 			{ x: 553, y: 403 },
@@ -211,7 +215,7 @@ test.describe("四隅（頂点）スナップ", () => {
 			},
 		);
 
-		// 解放後: B の左上角(left,top)=(500,350) → 中心 (550,400)
+		// After release B's top left corner (left,top)=(500,350), so its center is (550,400)
 		await expect
 			.poll(async () => {
 				const b = (await canvas.captureObjects()).find((o) => o.id === bId);
@@ -220,12 +224,12 @@ test.describe("四隅（頂点）スナップ", () => {
 			.toBe("matrix(1, 0, 0, 1, 550, 400)");
 	});
 
-	test("B の右下の角が A の左上の角へ吸着し、縦横ガイドが 1 本ずつ出る", async ({
+	test("snaps B's bottom right corner onto A's top left corner with one vertical and one horizontal guide", async ({
 		canvas,
 	}) => {
-		// A: 幅200・高さ100、中心 (400,300)。left=300 top=250
+		// A: 200 x 100 centered at (400,300). left=300 top=250
 		await canvas.drawShape("Rectangle", { x: 300, y: 250 }, { x: 500, y: 350 });
-		// B: 幅100・高さ100、中心 (150,120)
+		// B: 100 x 100 centered at (150,120)
 		const bId = await canvas.drawShape(
 			"Rectangle",
 			{ x: 100, y: 70 },
@@ -233,7 +237,7 @@ test.describe("四隅（頂点）スナップ", () => {
 		);
 		await canvas.deselect();
 
-		// B 中心(150,120) → (253,203): B right=303→A left=300、B bottom=253→A top=250（各距離3）。
+		// B's center (150,120) -> (253,203): B right=303 to A left=300, B bottom=253 to A top=250, each 3 away.
 		await canvas.dragInspecting(
 			{ x: 150, y: 120 },
 			{ x: 253, y: 203 },
@@ -245,7 +249,7 @@ test.describe("四隅（頂点）スナップ", () => {
 			},
 		);
 
-		// 解放後: B の右下角(right,bottom)=(300,250) → 中心 (250,200)
+		// After release B's bottom right corner (right,bottom)=(300,250), so its center is (250,200)
 		await expect
 			.poll(async () => {
 				const b = (await canvas.captureObjects()).find((o) => o.id === bId);

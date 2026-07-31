@@ -2,16 +2,16 @@ import { test, expect } from "../../fixtures";
 import type { CanvasDriver } from "../../support/CanvasDriver";
 
 /**
- * 接続図形のグループ化→グループ解除（round-trip）でコネクターがずれず、接続が生き続けることを
- * 検証する spec。
+ * Checks that grouping and ungrouping connected shapes leaves the connector in place and the
+ * connection alive.
  *
- * グループ化は図形をグループ変換の下にネストし、解除でそれを畳み戻す。どちらも図形のワールド
- * 位置は変えないので、コネクター端点も動いてはならない。変換合成を取り違えると「グループ化
- * した瞬間に線が飛ぶ」「解除で接続が切れる」退行になる。connector-follow-group-move は
- * グループごと動かす経路を守るが、位置を変えない round-trip と解除後の追従は別の隙間だった。
+ * Grouping nests the shapes under the group transform and ungrouping folds it back. Neither
+ * changes the shapes' world positions, so the connector endpoints must not move either. Getting
+ * the transform composition wrong makes the line jump the moment the group forms, or breaks the
+ * connection on ungroup (see connector-follow-group-move for moving the group itself).
  *
- * A→B 接続で A を（無関係な C と）グループ化→解除し、各段階で端点が不動なこと、解除後に A を
- * 動かすと始点が追従することを守る。
+ * Groups A (with an unrelated C) and ungroups it while A→B is connected, guarding that the
+ * endpoints hold still at each stage and that the start follows again when A is moved afterward.
  */
 
 type Vec = { x: number; y: number };
@@ -21,7 +21,7 @@ const EPS = 2;
 
 function parsePoints(attr: string | null): Vec[] {
 	if (!attr) {
-		throw new Error("points 属性が取得できない");
+		throw new Error("cannot read the points attribute");
 	}
 	return attr
 		.trim()
@@ -40,12 +40,12 @@ async function worldAABB(canvas: CanvasDriver, id: string): Promise<AABB> {
 	return canvas.page.evaluate((targetId) => {
 		const el = document.querySelector(`[data-id="${targetId}"]`);
 		if (!(el instanceof SVGGraphicsElement)) {
-			throw new Error(`図形 ${targetId} が SVGGraphicsElement でない`);
+			throw new Error(`shape ${targetId} is not an SVGGraphicsElement`);
 		}
 		const bbox = el.getBBox();
 		const ctm = el.getCTM();
 		if (!ctm) {
-			throw new Error(`図形 ${targetId} の CTM が取得できない`);
+			throw new Error(`cannot read the CTM of shape ${targetId}`);
 		}
 		const corners = [
 			{ x: bbox.x, y: bbox.y },
@@ -82,8 +82,8 @@ async function endpoints(
 	return { start: points[0], end: points[points.length - 1] };
 }
 
-test.describe("グループ化 round-trip とコネクター", () => {
-	test("グループ化・解除で端点が動かず、解除後も追従する", async ({
+test.describe("connector across a group round trip", () => {
+	test("holds the endpoints still through grouping and ungrouping and still follows afterward", async ({
 		canvas,
 	}) => {
 		const aId = await canvas.drawShape(
@@ -106,44 +106,42 @@ test.describe("グループ化 round-trip とコネクター", () => {
 
 		const initial = await endpoints(canvas, connectorId);
 
-		// A と C をグループ化（A のワールド位置は変わらない）。
+		// Group A and C, which leaves A's world position unchanged.
 		await canvas.selectAt({ x: 380, y: 200 });
 		await canvas.ctrlClickAt({ x: 680, y: 200 });
 		await canvas.group();
 		await canvas.deselect();
 
-		// グループ化しても端点は動かない。
 		const afterGroup = await endpoints(canvas, connectorId);
 		expect(
 			distance(afterGroup.start, initial.start),
-			"グループ化で始点が動かないこと",
+			"the start point does not move on grouping",
 		).toBeLessThanOrEqual(EPS);
 		expect(
 			distance(afterGroup.end, initial.end),
-			"グループ化で終点が動かないこと",
+			"the end point does not move on grouping",
 		).toBeLessThanOrEqual(EPS);
 
-		// グループを選択して解除（A のワールド位置は変わらない）。
+		// Ungroup, which likewise leaves A's world position unchanged.
 		await canvas.selectAt({ x: 380, y: 200 });
 		await canvas.ungroup();
 		await canvas.deselect();
 
-		// 解除しても端点は動かない。
 		const afterUngroup = await endpoints(canvas, connectorId);
 		expect(
 			distance(afterUngroup.start, initial.start),
-			"グループ解除で始点が動かないこと",
+			"the start point does not move on ungrouping",
 		).toBeLessThanOrEqual(EPS);
 		expect(
 			distance(afterUngroup.end, initial.end),
-			"グループ解除で終点が動かないこと",
+			"the end point does not move on ungrouping",
 		).toBeLessThanOrEqual(EPS);
 
-		// 解除後に A を動かすと、接続が生きていて始点が追従する。
+		// The connection is still alive, so moving A afterward drags the start.
 		await canvas.drag({ x: 380, y: 200 }, { x: 580, y: 200 });
 		await expect
 			.poll(async () => (await endpoints(canvas, connectorId)).start.x, {
-				message: "解除後に A を動かすと始点が追従すること",
+				message: "the start point follows when A is moved after ungrouping",
 			})
 			.toBeGreaterThan(initial.start.x + 100);
 
@@ -151,7 +149,7 @@ test.describe("グループ化 round-trip とコネクター", () => {
 		const finalStart = (await endpoints(canvas, connectorId)).start;
 		expect(
 			distance(finalStart, bottomCenter(aAfter)),
-			"解除後の移動でも始点が A 下辺中央に乗ること",
+			"the start point still lies on A's bottom edge center after the post-ungroup move",
 		).toBeLessThanOrEqual(EPS);
 	});
 });

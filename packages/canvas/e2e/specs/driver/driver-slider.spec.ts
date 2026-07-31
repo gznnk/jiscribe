@@ -1,12 +1,12 @@
 import { test, expect } from "../../fixtures";
 
 /**
- * CanvasDriver の ObjectMenu スライダー操作の動作確認。
- * border-style セクションの strokeWidth / rx スライダーを対象にする
- * （rect の stroke-width / rx 属性で結果を観測できる）。
+ * Driver self-test for CanvasDriver's ObjectMenu slider operations.
+ * Targets the strokeWidth / rx sliders of the border-style section, whose
+ * results are observable on the rect's stroke-width / rx attributes.
  */
-test.describe("ドライバ動作確認: ObjectMenu スライダー", () => {
-	test("スライダーのドラッグで strokeWidth が変わり、選択は維持される", async ({
+test.describe("driver: ObjectMenu slider", () => {
+	test("changes strokeWidth and keeps the selection when the slider is dragged", async ({
 		canvas,
 	}) => {
 		const id = await canvas.drawShape(
@@ -22,13 +22,13 @@ test.describe("ドライバ動作確認: ObjectMenu スライダー", () => {
 
 		await expect
 			.poll(() => rect.getAttribute("stroke-width"), {
-				message: "スライダードラッグで stroke-width が変化すること",
+				message: "stroke-width changes when the slider is dragged",
 			})
 			.not.toBe(before);
 		expect(await canvas.hasAnyControl()).toBe(true);
 	});
 
-	test("数値入力で strokeWidth を確定でき、選択は維持される", async ({
+	test("commits strokeWidth and keeps the selection when typed as a number", async ({
 		canvas,
 	}) => {
 		const id = await canvas.drawShape(

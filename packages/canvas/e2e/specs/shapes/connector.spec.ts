@@ -1,13 +1,14 @@
 import { test, expect } from "../../fixtures";
 
-test.describe("コネクター", () => {
-	test("アンカードラッグで2つの図形を接続できる", async ({ canvas }) => {
+test.describe("connector", () => {
+	test("connects two shapes by dragging from an anchor", async ({ canvas }) => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 150 }, { x: 600, y: 250 });
 		await canvas.deselect();
 		await canvas.drawShape("Rectangle", { x: 400, y: 450 }, { x: 600, y: 550 });
 		await canvas.deselect();
 
-		// 上の矩形を選択し、下辺アンカーから下の矩形の上辺中点へドラッグ
+		// Select the upper rectangle and drag from its bottom anchor to the top edge midpoint of the
+		// lower one.
 		await canvas.selectAt({ x: 500, y: 200 });
 		const connectorId = await canvas.createConnector("bottomCenter", {
 			x: 500,
@@ -20,7 +21,7 @@ test.describe("コネクター", () => {
 		expect(created?.tag).toBe("polyline");
 	});
 
-	test("接続元の図形を動かすとコネクターが追従する", async ({ canvas }) => {
+	test("follows when the source shape is moved", async ({ canvas }) => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 150 }, { x: 600, y: 250 });
 		await canvas.deselect();
 		await canvas.drawShape("Rectangle", { x: 400, y: 450 }, { x: 600, y: 550 });
@@ -37,7 +38,7 @@ test.describe("コネクター", () => {
 			.objectById(connectorId)
 			.getAttribute("points");
 
-		// 上の矩形を右へ移動
+		// Move the upper rectangle to the right.
 		await canvas.drag({ x: 500, y: 200 }, { x: 800, y: 200 });
 
 		await expect
@@ -45,7 +46,7 @@ test.describe("コネクター", () => {
 			.not.toBe(pointsBefore);
 	});
 
-	test("作成直後のコネクターは選択されていない", async ({ canvas }) => {
+	test("leaves a newly created connector unselected", async ({ canvas }) => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 150 }, { x: 600, y: 250 });
 		await canvas.deselect();
 		await canvas.drawShape("Rectangle", { x: 400, y: 450 }, { x: 600, y: 550 });
@@ -54,13 +55,13 @@ test.describe("コネクター", () => {
 		await canvas.selectAt({ x: 500, y: 200 });
 		await canvas.createConnector("bottomCenter", { x: 500, y: 450 });
 
-		// コネクター用の ObjectMenu（線色）が出ていない = 選択されていない
+		// The connector ObjectMenu (line color) is absent, meaning nothing is selected.
 		await expect(
 			canvas.page.locator('[data-part="toggle:line-color"]'),
 		).toHaveCount(0);
 	});
 
-	test("線上のクリックでコネクターを選択できる", async ({ canvas }) => {
+	test("selects a connector by clicking on its line", async ({ canvas }) => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 150 }, { x: 600, y: 250 });
 		await canvas.deselect();
 		await canvas.drawShape("Rectangle", { x: 400, y: 450 }, { x: 600, y: 550 });
@@ -70,16 +71,16 @@ test.describe("コネクター", () => {
 		await canvas.createConnector("bottomCenter", { x: 500, y: 450 });
 		await canvas.deselect();
 
-		// 縦コネクター（x=500）の中点付近をクリックして選択
+		// Click near the midpoint of the vertical connector (x=500) to select it.
 		await canvas.clickAt({ x: 500, y: 350 });
 
-		// コネクター用の ObjectMenu（線色）が出る = 選択された
+		// The connector ObjectMenu (line color) appears, meaning it is selected.
 		await expect(
 			canvas.page.locator('[data-part="toggle:line-color"]'),
 		).toBeVisible();
 	});
 
-	test("選択したコネクターを Delete で削除できる", async ({ canvas }) => {
+	test("deletes a selected connector with Delete", async ({ canvas }) => {
 		await canvas.drawShape("Rectangle", { x: 400, y: 150 }, { x: 600, y: 250 });
 		await canvas.deselect();
 		await canvas.drawShape("Rectangle", { x: 400, y: 450 }, { x: 600, y: 550 });
@@ -95,14 +96,14 @@ test.describe("コネクター", () => {
 		await expect(connectorLocator).toHaveCount(1);
 
 		await canvas.clickAt({ x: 500, y: 350 });
-		// クリックによる選択が反映される（コネクター用 ObjectMenu が出る）のを待ってから
-		// 削除する。選択コミット前に Delete を押すと何も削除されずフレーキーになる。
+		// Wait until the click-based selection is applied (the connector ObjectMenu appears) before
+		// deleting. Pressing Delete before the selection commits deletes nothing and is flaky.
 		await expect(
 			canvas.page.locator('[data-part="toggle:line-color"]'),
 		).toBeVisible();
 		await canvas.deleteSelection();
 
-		// コネクターは消え、図形 2 つは残る
+		// The connector is gone and the two shapes remain.
 		await expect(connectorLocator).toHaveCount(0);
 		expect(
 			(await canvas.captureObjects()).filter((obj) => obj.tag === "rect")

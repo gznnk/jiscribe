@@ -1,12 +1,12 @@
 import { test, expect } from "../../fixtures";
 
 /**
- * リサイズハンドルの方向別挙動と Shift（アスペクト比固定）。
- * driver-transform.spec.ts は bottomRight の基本動作のみをカバーするため、
- * ここでは辺ハンドル（片軸のみ変化）と Shift 比率維持を補う。
+ * Per-direction behavior of the resize handles, plus Shift (locked aspect ratio).
+ * driver-transform.spec.ts only covers the basics of bottomRight, so the edge
+ * handles (single axis) and the Shift ratio lock are filled in here.
  */
-test.describe("リサイズ", () => {
-	test("bottomCenter ハンドルは高さだけを変え、幅は変わらない", async ({
+test.describe("resize", () => {
+	test("changes only the height with the bottomCenter handle, leaving the width alone", async ({
 		canvas,
 	}) => {
 		const id = await canvas.drawShape(
@@ -18,14 +18,16 @@ test.describe("リサイズ", () => {
 		const width = await rect.getAttribute("width");
 		const height = await rect.getAttribute("height");
 
-		// 下辺中央を 100px 下へ → 高さだけ増える
+		// Bottom-center 100px down grows only the height
 		await canvas.dragTransformHandle("bottomCenter", { x: 500, y: 420 });
 
 		await expect.poll(() => rect.getAttribute("height")).not.toBe(height);
 		expect(await rect.getAttribute("width")).toBe(width);
 	});
 
-	test("topLeft ハンドルのドラッグで幅・高さが変わる", async ({ canvas }) => {
+	test("changes both width and height when the topLeft handle is dragged", async ({
+		canvas,
+	}) => {
 		const id = await canvas.drawShape(
 			"Rectangle",
 			{ x: 400, y: 200 },
@@ -35,15 +37,15 @@ test.describe("リサイズ", () => {
 		const width = await rect.getAttribute("width");
 		const height = await rect.getAttribute("height");
 
-		// 左上を内側へ寄せる → 幅・高さとも減る
+		// Pulling the top left inward shrinks both width and height
 		await canvas.dragTransformHandle("topLeft", { x: 460, y: 240 });
 
 		await expect.poll(() => rect.getAttribute("width")).not.toBe(width);
 		expect(await rect.getAttribute("height")).not.toBe(height);
 	});
 
-	test("Shift+bottomRight はアスペクト比を保つ", async ({ canvas }) => {
-		// 200x120 の矩形（比 ≒ 1.667）
+	test("keeps the aspect ratio on Shift+bottomRight", async ({ canvas }) => {
+		// 200x120 rect (ratio ~= 1.667)
 		const id = await canvas.drawShape(
 			"Rectangle",
 			{ x: 400, y: 200 },
@@ -54,7 +56,7 @@ test.describe("リサイズ", () => {
 		const startHeight = Number(await rect.getAttribute("height"));
 		const startRatio = startWidth / startHeight;
 
-		// Shift を押しながら大きくする
+		// Enlarge while holding Shift
 		await canvas.dragTransformHandle(
 			"bottomRight",
 			{ x: 760, y: 360 },
@@ -67,7 +69,7 @@ test.describe("リサイズ", () => {
 
 		const endWidth = Number(await rect.getAttribute("width"));
 		const endHeight = Number(await rect.getAttribute("height"));
-		// 比率が維持される（丸め誤差を許容）
+		// The ratio survives, allowing for rounding error
 		expect(endWidth / endHeight).toBeCloseTo(startRatio, 1);
 	});
 });
