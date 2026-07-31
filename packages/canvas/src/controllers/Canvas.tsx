@@ -126,19 +126,30 @@ type CanvasProps = {
 	 */
 	theme?: CanvasTheme;
 	/**
-	 * Whether to render the background grid (default `true`). The grid is a
-	 * viewing aid only — it is already excluded from image export — so this
-	 * toggles the on-screen display without changing exported images. Live: can
-	 * be flipped at runtime.
+	 * Background grid settings. Omit for the default grid (shown, 25 world units);
+	 * each field is optional, so `{ show: false }` alone is valid. Live: can be
+	 * changed at runtime. Since an object literal breaks `<Canvas>`'s memo, a host
+	 * rendering this inline can `useMemo` it to avoid extra re-renders.
+	 *
+	 * The grid line color is not a setting here — it is derived from the effective
+	 * canvas surface (theme background, or the doc's `background`) so it stays
+	 * readable on any color.
 	 */
-	showGrid?: boolean;
-	/**
-	 * Base grid spacing in world units (default `25`). Sets the medium grid
-	 * interval; bold lines fall every 4× this value and the multi-level grid
-	 * adapts to zoom (see the canvas's grid layer). Ignored when `showGrid` is
-	 * `false`.
-	 */
-	gridSize?: number;
+	grid?: {
+		/**
+		 * Whether to render the grid (default `true`). The grid is a viewing aid
+		 * only — it is already excluded from image export — so this toggles the
+		 * on-screen display without changing exported images.
+		 */
+		show?: boolean;
+		/**
+		 * Base grid spacing in world units (default `25`). Sets the medium grid
+		 * interval; bold lines fall every 4× this value and the multi-level grid
+		 * adapts to zoom (see the canvas's grid layer). Ignored when `show` is
+		 * `false`.
+		 */
+		size?: number;
+	};
 	/**
 	 * Active locale (default `"en"`). Selects the canvas's built-in dictionary
 	 * (en / ja) and is exposed to plugins via `useCanvasLocale`. Resolution is
@@ -256,8 +267,7 @@ const CanvasComponent = ({
 	onSelectionChange,
 	onViewportChange,
 	theme = darkCanvasTheme,
-	showGrid = true,
-	gridSize = 25,
+	grid,
 	locale = "en",
 	messages,
 	onUndo,
@@ -519,8 +529,8 @@ const CanvasComponent = ({
 							}
 							isDrawMode={!!state.shapeDrawing}
 							visibleObjectIds={visibleObjectIds}
-							showGrid={showGrid}
-							gridSize={gridSize}
+							showGrid={grid?.show}
+							gridSize={grid?.size}
 							background={state.background}
 							surfaceColor={theme.tokens.canvasBg}
 						>
