@@ -40,7 +40,7 @@ const canSetStraight = (state: CanvasControllerState): boolean => {
  * (alignVertexPath), so a stored list the editor never committed — an AI-written doc — can lag
  * behind the endpoints; straight draws the stored list raw, and switching on the stale one would
  * jump to a route the user is not looking at. (Lists touched by editor operations already match:
- * commits write the aligned path back, reconcileConnectorVertices 参照.) Null when the path cannot
+ * commits write the aligned path back, see reconcileConnectorVertices.) Null when the path cannot
  * be resolved; the stored vertices are then kept as they are.
  */
 const bakeDrawnVertices = (
@@ -66,8 +66,8 @@ const bakeDrawnVertices = (
 /**
  * Replace the line shape of the selected connector.
  *
- * `points` keeps holding the route's own vertices across the switch (ConnectorDoc 参照); the only
- * write is that switching to straight bakes the drawn path into it (bakeDrawnVertices 参照), so
+ * `points` keeps holding the route's own vertices across the switch (see ConnectorDoc); the only
+ * write is that switching to straight bakes the drawn path into it (see bakeDrawnVertices), so
  * what is on screen is what the per-vertex handles pick up. A connector with no vertices keeps
  * none — straight then draws the single direct line, as before. Switching back to orthogonal
  * writes nothing. Only ResetConnectorRouteCommand discards vertices.

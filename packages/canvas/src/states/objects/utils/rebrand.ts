@@ -10,7 +10,7 @@ import type { Unbranded } from "@workspace/utility-types";
  * inferred from the argument, so the target type must always be written explicitly.
  *
  * @param value - An object carrying every field of `T` except the brand key. Placeholder
- *   values a later pass overwrites are fine (`groupToState` 参照); a missing key is not, and
+ *   values a later pass overwrites are fine (see `groupToState`); a missing key is not, and
  *   is what this catches.
  * @returns The same object reference, typed as the branded `T`.
  */

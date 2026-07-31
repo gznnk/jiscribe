@@ -278,47 +278,36 @@ const CanvasComponent = ({
 	initialConfig,
 	ref,
 }: CanvasProps) => {
-	// UI strings resolved from locale, then host overrides applied. Distributed
-	// via context along with the raw locale (plugins resolve their own strings).
 	const mergedMessages = useMemo(
 		() => resolveCanvasMessages(locale, messages),
 		[locale, messages],
 	);
 
-	// Appearance tokens as --jiscribe-* custom properties, injected on the root
-	// so every descendant style resolves the host-injected theme.
 	const themeCssVars = useMemo(() => buildThemeCssVars(theme.tokens), [theme]);
 
-	// Theme-derived defaults for newly created objects (read by gesture handlers
-	// via state.docDefaults).
 	const docDefaults = useMemo(
 		() => ({ fontFamily: theme.fontFamily }),
 		[theme.fontFamily],
 	);
 
-	// rootRef: the gesture surface (toolbar + canvas area). Attaches pointerHandlers
-	// and pointer capture. canvasRef: the canvas area only. Used for size measurement,
-	// wheel, and menu bounds, aligning edge scrolling to the area below the toolbar.
+	// rootRef spans toolbar + canvas area and carries pointer capture; canvasRef is the
+	// canvas area alone, which keeps edge scrolling aligned to the region below the toolbar.
 	const rootRef = useRef<HTMLDivElement>(null);
 	const canvasRef = useRef<HTMLDivElement>(null);
 	const svgRef = useRef<SVGSVGElement>(null);
 
-	// Per-canvas registry bundle: a configured set when `initialConfig` is given,
-	// otherwise the shared full default. Built once at mount (see the `initialConfig`
-	// prop doc); the stable instance is closed over by the reducer (pure tree) and
-	// provided via context (React tree), so the two can never desync. Canvas is the
-	// provider, so its own hooks cannot read the bundle back from context (they would
-	// get the default, missing any plugin types); they receive it as an explicit
-	// `registries` argument instead.
+	// The stable instance is both closed over by the reducer and provided via context, so
+	// the two can never desync. Canvas is the provider, so its own hooks must take
+	// `registries` as an explicit argument — reading context here yields the default,
+	// missing any plugin types.
 	const [registries] = useState(() =>
 		initialConfig
 			? createCanvasRegistries(initialConfig)
 			: defaultCanvasRegistries,
 	);
 
-	// Reducer for canvas state management with history. initialConfig.viewport
-	// (if any) seeds the initial viewport so the first paint is already at the
-	// host's pan/zoom — see useCanvasReducer for the mount handoff.
+	// initialConfig.viewport seeds the initial viewport so the first paint is already at
+	// the host's pan/zoom (see useCanvasReducer for the mount handoff).
 	const [state, dispatch] = useCanvasReducer(
 		doc,
 		registries,
@@ -326,19 +315,18 @@ const CanvasComponent = ({
 		initialConfig?.viewport,
 	);
 
-	// Keep the reducer-held docDefaults in sync when the host swaps themes at
-	// runtime (the reducer no-ops when the values are unchanged).
+	// Keeps docDefaults current when the host swaps themes at runtime; the reducer no-ops
+	// when the values are unchanged.
 	useEffect(() => {
 		dispatch({ type: "SET_DOC_DEFAULTS", docDefaults });
 	}, [docDefaults, dispatch]);
 
-	// Single error-toast slot shared by all error sources (clipboard, export)
+	// Single toast slot shared by every error source (clipboard, export).
 	const { errorNotification, notifyError } = useErrorNotification();
 
-	// Clipboard write side effect: fired whenever internalClipboard changes (Copy / Cut)
 	useClipboardWrite(state.internalClipboard, notifyError);
 
-	// Gesture handling — declared before useSyncExternalDoc so resetGestureState is available
+	// Declared before useSyncExternalDoc so resetGestureState is available to it.
 	const { pointerHandlers, wheelHandler, resetGestureState } =
 		useGestureRecognizer({
 			dispatch,
@@ -347,30 +335,23 @@ const CanvasComponent = ({
 			canvasState: state,
 		});
 
-	// Shared between the save-delivery and external-sync hooks: matches each
-	// delivered save against its fold-back so overlapping saves that fold back
-	// out of order are still recognized as self-saves (issue #29).
+	// Shared between the save-delivery and external-sync hooks so overlapping saves that
+	// fold back out of order are still recognized as self-saves (#29).
 	const selfSaveNonceTracker = useSelfSaveNonceTracker();
 
-	// Notify the host when the selection changes (external UI integration)
 	useNotifySelectionChange(
 		state.selectedIds,
 		state.selectedConnectorId,
 		onSelectionChange,
 	);
 
-	// Viewport integration: expose an imperative setter for programmatic pan/zoom
-	// (ref.current.viewport) and notify the host of camera changes
-	// (onViewportChange). The canvas stays authoritative for the live camera — the
-	// host reads it out and pushes changes in imperatively, with no controlled
-	// value prop that could feed back and fight continuous gestures.
+	// The canvas stays authoritative for the live camera: the host reads it out and pushes
+	// changes back imperatively, with no controlled prop that could fight a gesture.
 	const viewportHandle = useViewportHandle(dispatch);
 	useNotifyViewportChange(state.viewport, onViewportChange);
 
-	// Notify parent component when a save is required (after commit or undo/redo)
 	useNotifySaveRequest(state, onCommit, selfSaveNonceTracker, registries);
 
-	// Sync external doc changes
 	useSyncExternalDoc({
 		canvasDoc: doc,
 		syncNonce,
@@ -381,22 +362,19 @@ const CanvasComponent = ({
 		registries,
 	});
 
-	// Use wheel handler from GestureRecognizer.
-	// Scoped to canvasRef (the container element) so wheel events outside the canvas are not captured.
+	// Scoped to canvasRef so wheel events outside the canvas are not captured.
 	useCanvasWheel(canvasRef, wheelHandler);
 
-	// Container resize handling
 	useContainerResize(canvasRef, dispatch);
 
-	// Paste handling (keyboard shortcut + context menu)
 	const handlePaste = useClipboardPaste(
 		state.internalClipboard,
 		dispatch,
 		registries,
 	);
 
-	// Keyboard shortcuts handling — scoped to the focusable canvas root (rootRef),
-	// so with multiple Canvases on a page only the focused one handles shortcuts.
+	// Scoped to the focusable canvas root, so with several Canvases on a page only the
+	// focused one handles shortcuts.
 	useKeyboardShortcuts({
 		containerRef: rootRef,
 		canvasState: state,
@@ -405,8 +383,8 @@ const CanvasComponent = ({
 		registries,
 	});
 
-	// Focus management for the keyboard scope: initial focus (autoFocus) and
-	// reclaiming focus when it silently falls to body (focused element unmounted).
+	// Initial focus plus reclaiming it when it silently falls to body because the focused
+	// element unmounted.
 	useCanvasFocusScope(rootRef, autoFocus);
 
 	const handleMenuPropertyUpdate = useCallback(
@@ -416,11 +394,10 @@ const CanvasComponent = ({
 		[dispatch],
 	);
 
-	// Context menu handling
 	const handleContextMenu = useCallback(
 		(e: React.MouseEvent<HTMLDivElement>) => {
-			// For data-gesture="none" elements (e.g. the textarea during text editing),
-			// show the browser's native context menu.
+			// data-gesture="none" elements (e.g. the text-editing textarea) keep the
+			// browser's native context menu.
 			if (isGestureOptedOut(e.target)) {
 				return;
 			}
@@ -429,19 +406,16 @@ const CanvasComponent = ({
 		[],
 	);
 
-	// Objects as the view should show them *right now*: the slot being edited
-	// carries the uncommitted editor text, so geometry derived from it (the
-	// record's title band) follows every keystroke instead of jumping on commit.
-	// Rendering and editor placement only — the committed state.objects stays the
-	// input of hit testing, snapping and bboxes.
+	// The slot being edited carries the uncommitted editor text, so geometry derived from
+	// it follows every keystroke instead of jumping on commit. Rendering and editor
+	// placement only — hit testing, snapping and bboxes still read committed state.objects.
 	const draftObjects = useMemo(
 		() => graftTextEditDraft(state.objects, state.textEditState),
 		[state.objects, state.textEditState],
 	);
 
-	// Viewport culling (issue #212): only objects intersecting the visible
-	// world rect are rendered. Export clones the live SVG DOM, so it suspends
-	// culling for the duration of the snapshot via withCullingSuspended.
+	// Only objects intersecting the visible world rect are rendered (#212). Export clones
+	// the live SVG DOM, so it suspends culling for the snapshot via withCullingSuspended.
 	const { visibleObjectIds, withCullingSuspended } = useViewportCulling(
 		state.objects,
 		state.rootIds,
@@ -449,7 +423,6 @@ const CanvasComponent = ({
 		state.textEditState?.objectId ?? null,
 	);
 
-	// Image export: the imperative export handle and the export dialog
 	const {
 		exportHandle,
 		isExportDialogOpen,
@@ -466,8 +439,6 @@ const CanvasComponent = ({
 		withCullingSuspended,
 	});
 
-	// Single imperative Canvas handle: assemble the subsystem sub-handles into one
-	// namespaced object so the whole imperative surface is delivered through `ref`.
 	useImperativeHandle(
 		ref,
 		() => ({ viewport: viewportHandle, export: exportHandle }),
@@ -476,9 +447,8 @@ const CanvasComponent = ({
 
 	const { minX, minY, zoom } = state.viewport;
 
-	// Zoom button enabled/disabled state is delegated to the command's canExecute (single source of truth).
-	// Canvas provides the registries context, so it cannot read it back via a hook
-	// and uses the pure resolver against its directly-held bundle instead.
+	// Delegated to the command's canExecute as the single source of truth. Canvas provides
+	// the registries context, so it resolves against its directly-held bundle, not a hook.
 	const canZoomIn =
 		resolveCommandState(state, registries, "zoomIn")?.enabled ?? false;
 	const canZoomOut =
@@ -592,7 +562,7 @@ const CanvasComponent = ({
 								viewport={state.viewport}
 							/>
 						</CanvasView>
-						{/* Container for HTML elements that follow canvas scroll AND zoom (elements scale with zoom) */}
+						{/* HTML that follows scroll and scales with zoom */}
 						<ZoomScaledOverlay
 							style={{
 								left: -minX * zoom,
@@ -611,7 +581,7 @@ const CanvasComponent = ({
 								}
 							/>
 						</ZoomScaledOverlay>
-						{/* Container for HTML elements with fixed size (position follows zoom, but size does not) */}
+						{/* HTML whose position follows zoom but whose size does not */}
 						<ScrollSyncedOverlay
 							style={{ left: -minX * zoom, top: -minY * zoom }}
 						>

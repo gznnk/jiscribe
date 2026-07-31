@@ -23,7 +23,7 @@ export const CONNECTOR_LABEL_PADDING_Y = 2;
 export const CONNECTOR_LABEL_MIN_WIDTH = 16;
 export const CONNECTOR_LABEL_MAX_WIDTH = 240;
 
-/** The label's font, in the shape the shared measurement takes it (measureText 参照). */
+/** The label's font, in the shape the shared measurement takes it (see measureText). */
 export type ConnectorLabelFont = TextMeasureFont;
 
 export type ConnectorLabelBox = { width: number; height: number };
@@ -76,7 +76,7 @@ export const calcConnectorLabelBox = (
 
 /**
  * Label box dimensions for a stored label, resolving the style defaults the
- * renderer applies (CONNECTOR_LABEL_DEFAULTS 参照).
+ * renderer applies (see CONNECTOR_LABEL_DEFAULTS).
  *
  * The single derivation shared by the renderer (ConnectorLabel.tsx) and the
  * connector extent (calcConnectorBoundingBox), so the drawn box and the box the

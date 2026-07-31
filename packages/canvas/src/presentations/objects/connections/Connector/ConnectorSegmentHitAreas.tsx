@@ -36,7 +36,7 @@ type ConnectorSegmentHitAreasProps = {
  *
  * The band is as wide as the connector's own hit area, so picking up a segment feels the same as
  * clicking the line. Segments touching an endpoint are included: the endpoint stays pinned to its
- * face and joins the moved segment by a perpendicular instead (moveConnectorSegment 参照).
+ * face and joins the moved segment by a perpendicular instead (see moveConnectorSegment).
  *
  * The floor is the band's own width, not the length of the legs edits leave behind (a perpendicular
  * join, the router's stub): a short leg is a real target, and holding it back left a stretch of
@@ -90,7 +90,7 @@ const collectSegmentHitAreas = (
  *
  * There is no marker to aim at: the affordance is the cursor, which turns into the axis the segment
  * can move along as soon as the pointer is over it. A drag rewrites the connector's vertices
- * (ConnectorSegmentDragHandler 参照), and the first one is what turns the engine's route into
+ * (see ConnectorSegmentDragHandler), and the first one is what turns the engine's route into
  * vertices — so there is no separate "add a point here" gesture either.
  *
  * These live with the connector rather than in the selection controls for two reasons: hit geometry

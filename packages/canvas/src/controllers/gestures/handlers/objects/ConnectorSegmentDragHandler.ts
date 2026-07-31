@@ -147,12 +147,12 @@ const handleDrag = (
  * Handles dragging a segment of a right-angle connector across itself.
  *
  * Target: data-kind="connector", data-part="segment:<segmentIndex>", indexing the drawn path
- * `[source, ...vertices, target]` (ConnectorSegmentHitAreas 参照). It shares the connector
+ * `[source, ...vertices, target]` (see ConnectorSegmentHitAreas). It shares the connector
  * targetKind with ConnectorEventHandler and ConnectorLabelDragHandler, and stays exclusive of both:
  * this one takes drags whose part names a segment, the label handler takes drags on the label box,
  * and taps of any part go to ConnectorEventHandler (#110).
  *
- * The drag writes the connector's vertices (ConnectorDoc 参照). A connector still routed by the
+ * The drag writes the connector's vertices (see ConnectorDoc). A connector still routed by the
  * engine has none, so the first drag takes the corners it drew as the starting list — from then on
  * the stored vertices are the path, and the engine no longer has a say in it. No selection is
  * needed first, matching how the label already drags; the drag selects the connector on the way in.

@@ -11,25 +11,36 @@ import type {
 import type { ObjectDocDefinition } from "../schemas/plugin/ObjectDocDefinition";
 
 /**
- * 選択可能なアンカー位置。center は CenterAnchorSpec に、辺中点は connectPoint に変換する。
- * center は connectPoint の id にはならない。
+ * Selectable anchor position. "center" becomes a CenterAnchorSpec and an edge midpoint
+ * becomes a connectPoint; "center" is never a connectPoint id.
  */
 export type AnchorHandleId = "center" | ConnectPointId;
 
 export type ConnectParams = {
+	/** Id of the object the connector leaves; must exist in the root tree and be connectable. */
 	sourceId: string;
+	/** Id of the object the connector enters; must exist in the root tree and be connectable. */
 	targetId: string;
+	/** Where the connector leaves the source; omitted means "center". */
 	sourceAnchor?: AnchorHandleId;
+	/** Where the connector enters the target; omitted means "center". */
 	targetAnchor?: AnchorHandleId;
+	/** Arrowhead at the source end; omitted leaves the property off the doc entirely. */
 	startArrow?: ArrowType;
+	/** Arrowhead at the target end; omitted leaves the property off the doc entirely. */
 	endArrow?: ArrowType;
 };
 
 /**
- * 2 つのオブジェクトをコネクターで接続し、生成した id を返す（doc は破壊的に変更）。
+ * Connect two objects with a connector and return the generated id.
  *
- * source / target が root に存在し connectable であることを検証する。満たさない場合は
- * {@link DocOperationError}（利用者向けメッセージ付き）を投げる。
+ * @param doc - Mutated in place: the created connector is pushed onto `doc.root`
+ * @param params - Both endpoints, plus optional anchors and arrowheads; the anchor kinds decide
+ *   the default routing, so a center endpoint yields a straight line
+ * @param definitions - Type table whose `features.connectable` decides which endpoints are legal
+ * @returns The id assigned to the new connector, `connector-N` unique across the root tree
+ * @throws {@link DocOperationError} with a user-facing message when either endpoint is missing
+ *   from the root tree or is not connectable
  */
 export function connect(
 	doc: CanvasDoc,
@@ -42,7 +53,7 @@ export function connect(
 	const id = generateUniqueId(doc, "connector");
 	const source = buildEndpoint(sourceId, params.sourceAnchor);
 	const target = buildEndpoint(targetId, params.targetAnchor);
-	// center 接続は straight を既定にする（両端 connectPoint のときだけ orthogonal で省略）。
+	// A center endpoint defaults to straight; only two connectPoints leave routing omitted.
 	const routing = defaultRoutingForAnchors(source.anchor, target.anchor);
 	const connector = {
 		id,
@@ -60,14 +71,14 @@ export function connect(
 	return id;
 }
 
-/** root ツリーから id を探し、features.connectable なら id を返す。無ければ DocOperationError。 */
+/** Return `id` when the object exists in the root tree and is connectable, else throw. */
 function requireConnectable(
 	doc: CanvasDoc,
 	id: string,
 	definitions: ReadonlyMap<string, ObjectDocDefinition>,
 ): string {
-	// id の一意性は group children まで再帰で担保している（ids.ts）。接続対象の探索も同じく
-	// 再帰させないと、group 内オブジェクトへ connect できない非対称になる（#115）。
+	// ids.ts guarantees uniqueness by recursing into group children, so this lookup must
+	// recurse too — otherwise objects inside a group could not be connected (#115).
 	const found = findObjectById(doc.root, id);
 	if (found === undefined) {
 		throw new DocOperationError(`object not found: ${id}`);
@@ -84,7 +95,7 @@ function requireConnectable(
 	return id;
 }
 
-/** root ツリーを group children まで再帰して、id が一致する最初のオブジェクトを返す。 */
+/** First object matching `id`, searching the root tree recursively through group children. */
 function findObjectById(
 	objects: ObjectDoc[],
 	id: string,

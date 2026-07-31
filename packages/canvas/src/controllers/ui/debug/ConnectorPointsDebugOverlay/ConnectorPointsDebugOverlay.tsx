@@ -15,13 +15,13 @@ const MARKER_COLOR = "#e040fb";
  * Debug markers showing where each connector's **stored** vertices (`points`) actually are.
  *
  * The drawn route is not always the stored one: rendering re-aligns the vertices next to the
- * endpoints every frame (alignVertexPath 参照), so the two diverge while a connected shape is
- * mid-operation — until the commit writes the aligned list back (reconcileConnectorVertices 参照) —
+ * endpoints every frame (see alignVertexPath), so the two diverge while a connected shape is
+ * mid-operation — until the commit writes the aligned list back (see reconcileConnectorVertices) —
  * and stay diverged for stored lists the editor never committed (AI-written docs). This overlay
  * draws the raw list — a dot per stored vertex, its index in `points`, and a dashed line joining
  * them in source → target order — so that divergence is visible instead of inferred.
  *
- * Not mounted by default (DebugInfo と同様): when verifying vertex semantics by hand, mount it
+ * Not mounted by default like (DebugInfo): when verifying vertex semantics by hand, mount it
  * inside CanvasView after the guides. Sizes are zoom-compensated so the markers stay readable at
  * any zoom.
  */

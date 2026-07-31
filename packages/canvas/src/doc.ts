@@ -12,7 +12,7 @@
 // params (no zod; tool-input validation is the adapter's responsibility) and reuse the
 // same ObjectFactory as the canvas, producing correct ObjectDocs down to the style defaults.
 //
-// Import 例: `import { parseCanvasText, createDocOps } from "@workspace/canvas/doc";`
+// e.g. `import { parseCanvasText, createDocOps } from "@workspace/canvas/doc";`
 export type { CanvasDoc } from "./schemas/canvas/CanvasDoc";
 export type { ObjectDoc } from "./schemas/objects/base/ObjectDoc";
 export type { ObjectType } from "./schemas/objects/types/ObjectType";

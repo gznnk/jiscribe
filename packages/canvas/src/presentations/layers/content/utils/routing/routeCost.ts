@@ -7,28 +7,16 @@ import {
 	type Point,
 } from "@workspace/geometry";
 
-// Crossing / intrusion tests only ever read the four edges, so they take the lightweight
-// `BoundingBox` (`{ top, left, right, bottom }`) rather than a full `BoxFeatures` — a real
-// `BoxFeatures` is assignable to it, and the margin-band boxes are built without allocating corner
-// points.
-
 /**
  * Whether an axis-aligned segment passes through the interior of a box.
  *
- * Elbows in orthogonal routing are always horizontal/vertical segments, so this
- * decides without allocation instead of calling the general
- * `isLineIntersectingBox` (which allocates edge tuples and an inner vector each time).
- * This matters on the hot path (path recomputation while following a drag).
+ * Allocation-free fast path for the axis-aligned segments orthogonal routing produces;
+ * semantics match `isLineIntersectingBox`, which non-axis-aligned input falls back to.
  *
- * The semantics match `isLineIntersectingBox` (true edge crossings and touches are excluded):
- * a horizontal segment passes through when "y is inside the top/bottom edges" and
- * "the x range straddles the left or right edge". Merely lying on a boundary (touching)
- * is excluded via strict inequalities. If a non-axis-aligned segment comes in, delegate to the general version.
- *
- * @param p1 - Segment start point
- * @param p2 - Segment end point
- * @param box - The axis-aligned box edges to test against
- * @returns true if the segment passes through the box interior (touching an edge is false)
+ * @param p1 - One endpoint; the pair's order is irrelevant, as the span is normalized with min/max
+ * @param p2 - The other endpoint; equal x or equal y takes the fast path, anything else delegates
+ * @param box - Only the four edges are read, so the lighter `BoundingBox` suffices
+ * @returns true only for a true crossing; touching an edge is false
  */
 const segmentCrossesBox = (p1: Point, p2: Point, box: BoundingBox): boolean => {
 	if (p1.y === p2.y) {
@@ -59,12 +47,7 @@ const segmentCrossesBox = (p1: Point, p2: Point, box: BoundingBox): boolean => {
 	return isLineIntersectingBox(p1, p2, box);
 };
 
-/**
- * Total length of the full path (sum of Manhattan distances).
- *
- * @param points - The path's point sequence
- * @returns The sum of all segment lengths
- */
+/** Total length of the full path (sum of Manhattan distances). */
 export const pathLength = (points: Point[]): number => {
 	let total = 0;
 	for (let i = 1; i < points.length; i++) {
@@ -79,16 +62,10 @@ export const pathLength = (points: Point[]): number => {
 };
 
 /**
- * Counts the number of "reversal (backtrack)" corners in the full path.
+ * Counts "reversal (backtrack)" corners: midpoints where travel reverses on the same axis,
+ * i.e. the spikes a route makes by doubling back over its own stub.
  *
- * A midpoint where the direction of travel reverses on the same axis (a→b and b→c are
- * collinear and opposite) is treated as a reversal. This corresponds to a spike where the
- * path backtracks along the same segment right after emitting a stub (an unnatural route that
- * looks like a line sprouting from the shape's edge). Since `simplifyPath` preserves the exit
- * direction and keeps these backtrack points, the cost evaluation counts them explicitly and penalizes them.
- *
- * @param points - The full path's point sequence to evaluate
- * @returns The number of reversing (backtracking) intermediate corners
+ * @param points - The full path including stub legs; `simplifyPath` keeps these corners
  */
 export const countReversals = (points: Point[]): number => {
 	let reversals = 0;
@@ -108,12 +85,12 @@ export const countReversals = (points: Point[]): number => {
 };
 
 /**
- * The number of times the elbow (between stubs) passes through the shapes. Excludes the stub legs.
+ * How many times the elbow passes through the shapes, summed over both.
  *
- * @param elbow - The elbow point sequence between stubs (excludes the stub legs)
- * @param sourceBox - BoundingBox of the source shape (null for a free endpoint)
- * @param targetBox - BoundingBox of the target shape (null for a free endpoint)
- * @returns The total number of times the elbow passes through both shapes
+ * @param elbow - Point sequence between the stubs; the stub legs cross their own face by design
+ * @param sourceBox - Raw edges to score crossings, or the clearance band to score intrusions;
+ *   null for a free endpoint
+ * @param targetBox - Counterpart of `sourceBox`; null for a free endpoint
  */
 export const countBoxCrossings = (
 	elbow: Point[],
@@ -137,12 +114,8 @@ export const countBoxCrossings = (
 /**
  * Grows a box outward by `margin` on every side **except the endpoint's own exit face**.
  *
- * The wire necessarily leaves (and, at the far end, enters) through the margin band directly in
- * front of the exit face — that is the natural exit corridor, not an obstacle graze. Expanding every
- * side *but* that one means a segment running down the exit corridor stays outside the expanded box
- * (so it is not an intrusion), while a segment grazing any other side of the shape (a route squeezing
- * past it) still is. Without this, the exit corridor reads as an intrusion and the router adds an
- * ugly jog/staircase to avoid its own face.
+ * Leaving the exit face out keeps the wire's own exit corridor outside the band, so it does not
+ * score as an intrusion and the router does not jog to avoid its own face.
  */
 const expandBoxExceptExit = (
 	box: BoxFeatures,
@@ -156,30 +129,26 @@ const expandBoxExceptExit = (
 });
 
 /**
- * The obstacle geometry a route is scored against. Built **once per route** (not per candidate):
- * the raw shape edges for hard crossing detection, and the margin-band edges (each shape expanded on
- * every side but its own exit face) for intrusion scoring — the exit-corridor exclusion that keeps
- * the natural exit from reading as a graze. See {@link buildObstacleBoxes}.
+ * The obstacle geometry a route is scored against, built once per route rather than per
+ * candidate. See {@link buildObstacleBoxes}.
  */
 export type ObstacleBoxes = {
-	/** Raw source edges — a segment through here is a hard crossing (null for a free endpoint). */
+	/** Raw source edges; a segment through here is a crossing. null for a free endpoint. */
 	source: BoundingBox | null;
-	/** Raw target edges. */
+	/** Raw target edges; a segment through here is a crossing. null for a free endpoint. */
 	target: BoundingBox | null;
-	/** Source margin band minus its exit corridor — a segment through here is an intrusion. */
+	/** Source margin band minus its exit corridor; a segment through here is an intrusion. */
 	sourceClearance: BoundingBox | null;
-	/** Target margin band minus its exit corridor. */
+	/** Target margin band minus its exit corridor; a segment through here is an intrusion. */
 	targetClearance: BoundingBox | null;
 };
 
 /**
- * Precomputes the obstacle geometry for a route. The clearance boxes depend only on the shapes,
- * their exit directions, and the margin — all constant across candidates — so this is called once
- * and reused, instead of re-expanding the boxes inside every candidate's cost.
+ * Precomputes the obstacle geometry for a route.
  *
  * @param source - The source endpoint's AABB (null when free) and outward direction
  * @param target - The target endpoint's AABB (null when free) and outward direction
- * @param margin - The shape clearance distance (px)
+ * @param margin - Shape clearance distance in px
  */
 export const buildObstacleBoxes = (
 	source: { box: BoxFeatures | null; direction: OrthogonalDirection },
@@ -196,56 +165,35 @@ export const buildObstacleBoxes = (
 		: null,
 });
 
-// Weight for the soft trade-off of aesthetics — the only tuning knob left.
-// 1 turn is worth about a ~1000px detour.
+/** One turn is worth roughly a 1000px detour. */
 const TURN_WEIGHT = 1_000;
 
 /**
- * Route evaluation as a lexicographic tuple matching the routing spec's priority order:
- * shape **crossings** (hard) → **reversals** (S1) → margin **intrusions** (S2) → **aesthetic**
- * (S3 turns + S4 length). Each earlier key strictly dominates the later ones.
+ * Route evaluation as a lexicographic tuple; each key strictly dominates the later ones.
  *
- * - `reversals` (backtrack spikes that go back along the same segment) rank first among the soft
- *   keys, so the router always prefers wrapping around (more turns) over a spike — an endpoint on
- *   the far side of the exit direction goes straight out and around rather than backtracking. When
- *   a layout admits no spike-free route, all candidates tie here and it falls through.
- * - `intrusions` count segments grazing within a shape's margin band (excluding each endpoint's own
- *   exit corridor, see `expandBoxExceptExit`). Ranking them above the aesthetic keeps the full
- *   clearance from shapes the route passes whenever a clearance route exists — even at the cost of a
- *   couple of turns — so a route never dips inside the margin and pops back out as a shape is
- *   dragged. It does **not** force a detour for close, facing shapes: when they are nearer than
- *   2×margin their margin bands overlap, every candidate intrudes, and the tier cancels out.
- *
- * The preference for the symmetric (centered) S/Z crossover is intentionally **not** folded in here.
- * It is a tie-break in `compareRouteChoices` (see `symmetric`), applied only among cost-equal
- * candidates, so it can never override a route with fewer turns (e.g. it never turns a clean L into
- * an S).
+ * Ranking reversals above intrusions makes the router wrap around rather than spike, and
+ * intrusions above aesthetic makes it keep full clearance whenever a clearance route exists.
+ * Shapes closer than 2×margin overlap bands, so every candidate intrudes and the tier cancels out.
  */
 export type RouteCost = {
-	/** The number of shape crossings (hard constraint; we most want this to be 0). */
+	/** Segments passing through a shape's raw box; the hard constraint, 0 for a usable route. */
 	crossings: number;
-	/** The number of reversal (backtrack) spikes (S1; ranked above intrusions and aesthetic). */
+	/** Spikes where the path doubles back along the axis it just travelled. */
 	reversals: number;
-	/** The number of segments grazing within a shape's margin band (S2; ranked above aesthetic). */
+	/** Segments inside a margin band, excluding the endpoint's own exit corridor. */
 	intrusions: number;
-	/** turns×weight + path length (S3 + S4; smaller is better). */
+	/** turns × {@link TURN_WEIGHT} plus Manhattan length; smaller is better. */
 	aesthetic: number;
 };
 
 /**
  * Computes the cost of one candidate.
  *
- * - Crossing detection uses **only the elbow part** (the source→stub / stub→target legs always
- *   exit the face outward as legitimate crossings, so they are excluded). Pass `simplifiedElbow`.
- * - Turn count and length are measured on the "full path actually drawn (including stub legs)".
- *   With the elbow alone, corners added when the stub legs don't line up with the first/last
- *   direction are missed (e.g. an elbow that exits right and immediately bends down is 1 apparent
- *   corner but 2 corners on the full path). Pass `fullPath`.
- *
- * @param fullPath - The full path actually drawn (including stub legs). Used to measure turn count and length
- * @param simplifiedElbow - Only the elbow between stubs (excludes the legs). Used to detect shape crossings / margin intrusions
- * @param obstacles - Precomputed obstacle geometry (raw edges + margin-band edges), see {@link buildObstacleBoxes}
- * @returns The crossings / intrusions (hard tiers) and aesthetic score (soft)
+ * @param fullPath - Path as drawn, including stub legs; turns and length must be measured here
+ *   because legs not aligned with the elbow add corners the elbow alone does not show
+ * @param simplifiedElbow - Elbow between the stubs; crossings and intrusions must be measured here
+ *   because the legs legitimately cross their own face
+ * @param obstacles - Precomputed geometry from {@link buildObstacleBoxes}
  */
 export const calcRouteCost = (
 	fullPath: Point[],
@@ -260,16 +208,11 @@ export const calcRouteCost = (
 			obstacles.target,
 		),
 		reversals: countReversals(fullPath),
-		// An intrusion is a segment through a shape's margin band (its raw box grown by the margin on
-		// every side but the exit face); scored with the same edge-crossing test as `crossings`.
 		intrusions: countBoxCrossings(
 			simplifiedElbow,
 			obstacles.sourceClearance,
 			obstacles.targetClearance,
 		),
-		// Soft aesthetics: emphasize turn count (×weight), prefer shorter when comparable. Reversals
-		// and margin clearance are ranked ahead of this as their own tiers; centering the S/Z crossover
-		// is a tie-break after it (see compareRouteChoices), not folded in here.
 		aesthetic: turns * TURN_WEIGHT + pathLength(fullPath),
 	};
 };
@@ -277,9 +220,7 @@ export const calcRouteCost = (
 /**
  * Compares two costs lexicographically (crossings → reversals → intrusions → aesthetic).
  *
- * @param a - A cost to compare
- * @param b - A cost to compare
- * @returns negative: a is better / positive: b is better / 0: equal
+ * @returns negative when `a` is better, positive when `b` is, 0 when equal
  */
 export const compareCost = (a: RouteCost, b: RouteCost): number =>
 	a.crossings - b.crossings ||
@@ -292,13 +233,9 @@ export const compareCost = (a: RouteCost, b: RouteCost): number =>
  * tie-breaking keys (topology signature and the concrete path).
  */
 export type RouteChoice = {
-	/** The candidate's cost (crossings → reversals → intrusions → aesthetic, the primary keys). */
+	/** The primary comparison keys. */
 	cost: RouteCost;
-	/**
-	 * Whether the candidate bends at the center between the two shapes (the ideal S/Z crossover).
-	 * Used as a tie-break among cost-equal candidates so the jog sits at the midline rather than
-	 * hugging one shape's margin.
-	 */
+	/** Whether the candidate bends at the midline between the two shapes (the ideal S/Z crossover). */
 	symmetric: boolean;
 	/** The candidate's topology signature (`calcPathSignature` of the full path). */
 	signature: string;
@@ -308,12 +245,8 @@ export type RouteChoice = {
 
 /**
  * Compares two point sequences lexicographically (x → y per point, then length).
- * Used as the final tie-breaking key; it is visually continuous, because two same-topology
- * candidates can only swap the winner at the moment their paths coincide.
  *
- * @param a - A path to compare
- * @param b - A path to compare
- * @returns negative: a first / positive: b first / 0: identical paths
+ * @returns negative when `a` sorts first, positive when `b` does, 0 for identical paths
  */
 const comparePaths = (a: Point[], b: Point[]): number => {
 	const sharedLength = Math.min(a.length, b.length);
@@ -333,23 +266,11 @@ const comparePaths = (a: Point[], b: Point[]): number => {
  * symmetric (centered crossover first) → topology signature (alphabetical) → concrete path
  * (lexicographical).
  *
- * `symmetric` sits between the cost and the intrinsic keys: among cost-equal candidates it prefers
- * the one bending at the center between the two shapes, so an S/Z jogs at the midline rather than
- * hugging one shape's margin. Being a tie-break (not a cost term), it never overrides a cheaper
- * route — a clean L (fewer turns) still beats a centered S, because they differ on aesthetic first.
+ * Exact cost ties are common and can persist across a whole drag, so the trailing keys give route
+ * stability without memory: all of them are intrinsic to the route's shape and move continuously
+ * with the geometry, so the same candidate wins every frame inside a tie region.
  *
- * The point of the trailing keys is route **stability without memory**. Layouts with exact cost
- * ties are common and can persist across a whole drag (e.g. for equal-sized boxes, wrapping over
- * the top and under the bottom have identical Manhattan length for *every* vertical offset — the
- * constraining box swaps roles). If ties were left to candidate enumeration order, the winner
- * would flip arbitrarily while an owner moves, because the enumerated channel set shifts with the
- * boxes. Both the centered crossover and the signature are intrinsic to the route's shape and move
- * continuously with the geometry, so inside a tie region the same convention wins every frame, and
- * route changes happen only at genuine cost crossings.
- *
- * @param a - A candidate to compare
- * @param b - A candidate to compare
- * @returns negative: a is better / positive: b is better / 0: identical candidates
+ * @returns negative when `a` is better, positive when `b` is, 0 for identical candidates
  */
 export const compareRouteChoices = (a: RouteChoice, b: RouteChoice): number =>
 	compareCost(a.cost, b.cost) ||

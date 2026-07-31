@@ -24,18 +24,18 @@ import {
 import { createCanvasParser } from "../../src/doc";
 import "./harness.css";
 
-// flowchart / container / markdown 図形は core から削除され、それぞれ
+// The flowchart / container / markdown shapes were removed from core, leaving
 // @workspace/plugin-flowchart-shapes / @workspace/plugin-container-shapes /
-// @workspace/plugin-markdown-shape が唯一の供給元
-// (docs/05_extensibility/plugin-architecture-requirements.md)。e2e 専用の dev 限定
-// 循環依存として devDependencies に登録し、関連 spec を存続させる。
+// @workspace/plugin-markdown-shape as their only source
+// (docs/05_extensibility/plugin-architecture-requirements.md). They are registered in
+// devDependencies as a dev-only circular dependency for e2e, keeping the related specs alive.
 const plugins = [flowchartPlugin, containerPlugin, markdownPlugin, umlPlugin];
 
 const initialConfig: CanvasConfig = { plugins };
 
-// flowchart / container カテゴリと markdown プリセットは core の既定 layout に
-// 含まれない（プラグイン供給）。spec は両フライアウトボタンと Markdown プリセットに
-// 依存するため、従来どおりの並びの layout をハーネスから渡す。
+// The flowchart and container categories and the markdown preset come from plugins and are
+// not in core's default layout. The specs depend on both flyout buttons and the Markdown
+// preset, so the harness passes a layout with the original arrangement.
 const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "rect" },
 	{ kind: "preset", presetId: "ellipse" },
@@ -52,23 +52,23 @@ const toolbarLayout: ToolbarEntry[] = [
 
 const harnessParser = createCanvasParser({ plugins });
 
-// spec は demo アプリの既定だった dark テーマ前提で書かれているため、
-// ハーネスも dark で固定する（余白色もキャンバスに追従させる）。
+// The specs were written against the demo app's dark default, so the harness pins dark too,
+// letting the surrounding color follow the canvas.
 document.documentElement.style.colorScheme = "dark";
 document.body.style.backgroundColor = darkCanvasTheme.tokens.canvasBg;
 
 const emptyDoc: CanvasDoc = { version: 1, root: [] };
 
 /**
- * 単一 Canvas を空ドキュメントでマウントする既定ページ。?multi で 2 キャンバス構成に切り替わる。
- * jiscribe エクスポート PNG（iTXt に .jis.json 入り）のドロップ復元は spec
- * （scenario/image-export-roundtrip）が依存する契約なのでハーネスでも提供する。
+ * Default page mounting a single Canvas on an empty document; ?multi switches to the
+ * two-canvas setup. Restoring a dropped jiscribe export PNG (with .jis.json in its iTXt) is a
+ * contract scenario/image-export-roundtrip depends on, so the harness provides it too.
  */
 function HarnessApp() {
 	const [loadedDoc, setLoadedDoc] = useState<CanvasDoc>(emptyDoc);
 
-	// 外部同期（親からの doc 差し替え → SYNC_EXTERNAL）を spec から起こす操作口。
-	// scenario/external-sync-cancels-drag.spec が依存する。
+	// Hook for a spec to trigger external sync (a doc swap from the parent, SYNC_EXTERNAL).
+	// scenario/external-sync-cancels-drag.spec depends on it.
 	useEffect(() => {
 		(
 			window as unknown as {

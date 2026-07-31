@@ -6,16 +6,16 @@ import type { ObjectDocDefinition } from "../../schemas/plugin/ObjectDocDefiniti
 import { createDocOps } from "../createDocOps";
 import { DocOperationError } from "../errors";
 
-/** 空の CanvasDoc を毎回新規に作る（テスト間で共有しない）。 */
+/** Fresh empty CanvasDoc per call, never shared between tests. */
 const emptyDoc = () => ({ version: 1 as const, root: [] });
 
-/** doc をシリアライズして正検証を通し、valid であることを表明する。 */
+/** Serialize the doc, run it through validation, and assert it is valid. */
 const expectValid = (doc: { version: 1; root: unknown[] }) => {
 	const result = parseCanvasText(`${JSON.stringify(doc, null, "\t")}\n`);
 	expect(result.kind).toBe("ok");
 };
 
-/** 既定（組み込み定義のみ）の doc-ops。 */
+/** Default doc-ops, built-in definitions only. */
 const docOps = createDocOps();
 
 describe("addObject", () => {
@@ -66,7 +66,7 @@ describe("addObject", () => {
 
 	it("places a center-based ellipse from a top-left bounding box", () => {
 		const doc = emptyDoc();
-		// 左上 (320, 40) ＋ 160x100 の外接矩形 → 中心 (400, 90)・rx 80・ry 50。
+		// Top-left (320, 40) with a 160x100 box gives center (400, 90), rx 80, ry 50.
 		const id = docOps.addObject(doc, "ellipse", {
 			x: 320,
 			y: 40,
@@ -218,8 +218,8 @@ describe("connect", () => {
 });
 
 describe("createDocOps with a plugin definition", () => {
-	// 依存方向により canvas のテストから実プラグインは import できないので、
-	// createFrameObjectFactory でフェイクの connectable な図形 "star" を組み立てる。
+	// The dependency direction stops a canvas test from importing a real plugin, so build a
+	// fake connectable shape "star" with createFrameObjectFactory.
 	const starDefinition: ObjectDocDefinition = {
 		features: {
 			type: "star",

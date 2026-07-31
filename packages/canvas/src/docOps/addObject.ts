@@ -5,24 +5,34 @@ import type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
 import type { ObjectDocDefinition } from "../schemas/plugin/ObjectDocDefinition";
 
 export type AddObjectParams = {
-	/** 左上 x（px）。 */
+	/** Left edge in px; the bounding box is top-left based, not center based. */
 	x: number;
-	/** 左上 y（px）。 */
+	/** Top edge in px. */
 	y: number;
+	/** Bounding-box width in px; omitted falls back to the type's default dimensions. */
 	width?: number;
+	/** Bounding-box height in px; omitted falls back to the type's default dimensions. */
 	height?: number;
+	/** Body text; omitted leaves whatever text the factory defaults to. */
 	text?: string;
 };
 
 /**
- * `type` のオブジェクトを追加し、生成した id を返す（doc は破壊的に変更）。
+ * Add an object of `type` and return the generated id, mutating `doc` in place.
  *
- * 座標は左上基準（x/y）＋実効 width/height の外接矩形として扱う。factory が
- * `createDocFromBounds`（矩形系・楕円系ともに正しく寸法へ写す唯一の一様な入口）を
- * 持てばそれを、無ければ中心基準の `createDoc` へフォールバックする。width/height 省略時は
- * `calcDimensions` の既定寸法を使う。id は factory の UUID を `${type}-N` 連番へ差し替える。
+ * Position is the top-left of the bounding box, sized by the effective width/height.
+ * A factory with `createDocFromBounds` uses it — the one uniform entry that maps bounds
+ * correctly for both rect-like and ellipse-like shapes — otherwise this falls back to the
+ * center-based `createDoc`. The factory's UUID is replaced by a `${type}-N` sequence.
  *
- * 未知の type・factory を持たない type（group / connector / svg 等）は {@link DocOperationError}。
+ * @param doc - Mutated in place: the created object is pushed onto `doc.root`
+ * @param type - Object type name, which must be a key of `definitions` and carry a factory
+ * @param params - Top-left position and optional size/text; omitted width/height fall back to
+ *   `calcDimensions`' default size
+ * @param definitions - Type table the factory is looked up in; its keys bound what `type` accepts
+ * @returns The id assigned to the new object, `${type}-N` unique across the root tree
+ * @throws {@link DocOperationError} for an unknown type, for one without a factory
+ *   (group / connector / svg and the like), or when the factory rejects the given size
  */
 export const addObject = (
 	doc: CanvasDoc,
@@ -53,7 +63,7 @@ export const addObject = (
 
 	let created: ObjectDoc | null;
 	if (factory.createDocFromBounds !== undefined) {
-		// minSize 0: プログラム生成では対話ドラッグのような「小さすぎ＝誤操作」棄却は不要。
+		// minSize 0: programmatic creation has no misdrag to reject the way a drag does.
 		created = factory.createDocFromBounds(
 			params.x,
 			params.y,

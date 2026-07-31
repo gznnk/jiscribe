@@ -53,80 +53,53 @@ export type WheelInternalEvent = InternalEventBase & {
 export type InternalEvent = PointerInternalEvent | WheelInternalEvent;
 
 /**
- * Held state for an in-progress gesture (between pointerdown and pointerup).
- * Created on pointerdown and reset to null on pointerup / pointercancel / reset.
- * null = not dragging. The `start` fields retain the values fixed at gesture start.
+ * Held state for an in-progress gesture. Created on pointerdown and reset to null on
+ * pointerup / pointercancel / reset, so null means no gesture is in progress.
  */
 export type Pressed = {
 	pointerId: number;
-	start: Point; // start position (SVG / world coordinates)
-	last: Point; // most recent position (SVG / world coordinates)
-	clientStart: Point; // start position (client / screen coordinates)
-	clientLast: Point; // most recent position (client / screen coordinates)
+	/** SVG / world coordinates, fixed at gesture start */
+	start: Point;
+	/** SVG / world coordinates */
+	last: Point;
+	/** Client / screen coordinates, fixed at gesture start */
+	clientStart: Point;
+	/** Client / screen coordinates */
+	clientLast: Point;
 	time: number;
 	target: EventTarget | null;
 	targetId?: string;
 	targetKind?: string;
 	targetPart?: string;
 	mods: Mods;
-	dragging: boolean; // whether the move has exceeded DRAG_THRESHOLD and been confirmed as a drag
+	/** Whether the move has exceeded DRAG_THRESHOLD and been confirmed as a drag */
+	dragging: boolean;
 	button: number;
-	// Whether target is inside a data-gesture="native-pointer" element (slider etc.).
-	// Fixed at pointerdown and immutable for the gesture's lifetime, so the per-frame
-	// drag path reads this instead of re-walking closest() (#123). Governs both
-	// pointer-capture skipping and inputValue harvesting.
+	/**
+	 * Whether target is inside a `data-gesture="native-pointer"` element. Fixed at
+	 * pointerdown so the per-frame drag path never re-walks closest() (#123); governs both
+	 * pointer-capture skipping and inputValue harvesting.
+	 */
 	isNativePointerTarget: boolean;
-	// Whether edge scrolling has been armed. Becomes true once the cursor has
-	// left the edge zone during a drag. When grabbing from a UI touching the
-	// edge (e.g. StencilLibrary), the start point is always inside the edge zone,
-	// so this prevents scrolling from firing spuriously on the first frame.
+	/**
+	 * Set once the cursor has left the edge zone during a drag. Grabbing from UI that
+	 * touches the edge starts inside the zone, so scrolling must not fire until then.
+	 */
 	edgeScrollArmed: boolean;
 };
 
 /**
- * Converts raw DOM events (pointer / wheel) into meaningful gestures
- * (pressed / dragStart / drag / dragEnd / click / doubleClick / wheel)
- * and notifies them one at a time via gestureCallback.
+ * Converts raw DOM pointer / wheel events into gestures (pressed / dragStart / drag /
+ * dragEnd / click / doubleClick / wheel), delivered one at a time via gestureCallback.
  *
- * ## Processing pipeline
+ * Events are queued by `enqueue` and drained once per frame by a RAF scheduled in
+ * `schedule`, which thins consecutive pointermoves to one drag per frame while a single
+ * queue keeps down→move→up arriving in the same frame in chronological order.
  *
- *   DOM event
- *     → getHandlers() / getWheelHandler() call enqueue() (convert to internal type and push onto the queue)
- *     → schedule() sets up a "once per frame" requestAnimationFrame
- *     → the RAF callback drains the queue and processes each event via feed()
- *     → feed() advances the pressed state and passes the corresponding Gesture to gestureCallback
- *
- * Batching via RAF has two goals. (1) Coalesce consecutive pointermove events into
- * the latest one, thinning to one drag per frame (the coalescing logic in enqueue).
- * (2) Guarantee the ordering of down→move→up etc. arriving in the same frame
- * (a single queue preserves chronological order).
- *
- * ## State machine (centered on the pressed field)
- *
- *   pointerdown            : create pressed (dragging=false). Fire the pressed event.
- *   pointermove (not dragging): if the move exceeds DRAG_THRESHOLD, set dragging=true and fire dragStart
- *   pointermove (dragging) : fire drag (also applying scroll when needed; see below)
- *   pointerup              : dragEnd if dragging, otherwise click / doubleClick
- *   pointercancel          : if dragging, close out with dragEnd, then discard pressed
- *
- * ## Coordinate systems (two triples: world and screen)
- *
- * Each Gesture carries two sets of coordinates.
- *   - start / last / delta                   … SVG (world) coordinates. Used by nearly all shape-operation handlers.
- *   - clientStart / clientLast / clientDelta  … client (screen) coordinates
- * Screen coordinates are only needed in a few places where the reducer has no DOM.
- * Examples: the right-click context menu position (clientLast) and the pan amount
- * for grab scrolling (clientDelta). Since world coordinates shift during panning,
- * viewport-independent panning needs the screen delta — hence the split.
- * (clientStart is currently only used internally to compute clientDelta; no event reader consumes it.)
- *
- * ## Scrolling during a drag
- *
- * Wheel events during a drag (turned into pointermove by toWheelEvent) and edge
- * scrolling both merge into the drag path as scrollDelta. Since the viewport moves
- * only by scrollDelta/zoom, the /zoom-scaled amount is also added to last and delta
- * to keep them consistent (#72). Edge scrolling re-enqueues its own event for the
- * next frame via enqueue() so it keeps running even when the cursor is held still at the edge.
+ * Each Gesture carries world coordinates (start / last / delta) and screen coordinates
+ * (clientStart / clientLast / clientDelta). The screen triple exists for the few readers
+ * with no DOM available — the context menu position and the grab-scroll pan amount, which
+ * must be viewport-independent because world coordinates shift while panning.
  */
 export class GestureRecognizer {
 	private gestureCallback: GestureCallback;
@@ -134,21 +107,13 @@ export class GestureRecognizer {
 	private svgRef: React.RefObject<SVGSVGElement | null>;
 	private canvasStateRef: React.RefObject<CanvasControllerState>;
 
-	// State of the in-progress gesture (null when not dragging)
 	private pressed: Pressed | null = null;
 
-	// Used for double-click detection. Remembers a snapshot of the most recent single click.
-	// null = no single click has been recorded yet (no baseline for doubleClick).
-	// Since targetId can be undefined on a background click, representing "not recorded"
-	// with undefined would make the first click turn into a doubleClick via
-	// undefined===undefined. Distinguishing null from undefined ensures we never
-	// treat a click as a doubleClick when there is no baseline (isDoubleClick).
+	// Baseline for double-click detection; null means no single click has been recorded.
+	// The null/undefined distinction matters: targetId is undefined on a background click,
+	// so an undefined baseline would make the very first click match itself as a doubleClick.
 	private lastClick: ClickSnapshot | null = null;
 
-	// Queue for RAF batching.
-	// A single queue preserves chronological order. Consecutive pointermove events are
-	// coalesced while kept at the tail position, so they are always processed before any
-	// following non-move event (e.g. up).
 	private queue: InternalEvent[] = [];
 	private scheduled = false;
 	private rafId: number | null = null;
@@ -160,13 +125,10 @@ export class GestureRecognizer {
 		this.canvasStateRef = config.canvasStateRef;
 	}
 
-	/**
-	 * Add an event to the queue and schedule processing.
-	 */
+	/** Add an event to the queue and schedule processing. */
 	private enqueue(e: InternalEvent): void {
-		// Coalesce consecutive pointermove events into the latest one (to prevent the queue from bloating).
-		// Only replace when the tail is a pointermove for the same pointer, so ordering
-		// is preserved when a non-move event is interleaved.
+		// Replacing only a same-pointer pointermove tail keeps ordering intact when a
+		// non-move event is interleaved.
 		if (e.type === "pointermove") {
 			const tail = this.queue[this.queue.length - 1];
 			if (tail?.type === "pointermove" && tail.pointerId === e.pointerId) {
@@ -179,9 +141,7 @@ export class GestureRecognizer {
 		this.schedule();
 	}
 
-	/**
-	 * Schedule event processing using requestAnimationFrame.
-	 */
+	/** Schedule event processing using requestAnimationFrame. */
 	private schedule(): void {
 		if (this.scheduled) {
 			return;
@@ -191,8 +151,8 @@ export class GestureRecognizer {
 			this.scheduled = false;
 			this.rafId = null;
 
-			// Drain the queue before feeding. Any enqueue during feed (e.g. edge
-			// scrolling) is pushed onto a fresh queue for the next frame.
+			// Drain before feeding, so an enqueue during feed (edge scrolling) lands on a
+			// fresh queue for the next frame.
 			const batch = this.queue;
 			this.queue = [];
 			for (const e of batch) {
@@ -202,14 +162,10 @@ export class GestureRecognizer {
 	}
 
 	/**
-	 * Process one internal event taken from the queue.
-	 * First captures a coordinate snapshot (world / screen) and the modifier keys at
-	 * this event's moment, then branches by event type to fire the corresponding Gesture.
-	 * Branches: wheel (outside a drag) / pointerdown / pointermove / pointerup / pointercancel.
+	 * Process one internal event taken from the queue: snapshot the coordinates and
+	 * modifiers at this event's moment, then fire the Gesture its type calls for.
 	 */
 	private feed(e: InternalEvent): void {
-		// currentPos is world coordinates (getSvgPoint computes them reflecting the current viewBox).
-		// currentClientPos is the screen coordinates as-is.
 		const currentPos = getSvgPoint(this.svgRef.current, e.clientX, e.clientY);
 		const currentClientPos = { x: e.clientX, y: e.clientY };
 		const mods: Mods = {
@@ -220,12 +176,10 @@ export class GestureRecognizer {
 		};
 		const time = e.timeStamp;
 
-		// wheel: wheel event outside a drag
+		// Only reached outside a drag; toWheelEvent turns an in-drag wheel into pointermove.
 		if (e.type === "wheel") {
-			// The origin element only matters as the hover-exclusion key here
-			// (targetId/targetKind on the gesture are fixed to canvas below)
+			// Needed only as the hover-exclusion key — the gesture's target is fixed to canvas.
 			const target = getKindAndId(e.target as Element);
-			// During a drag it is handled as pointermove, so this only handles the non-drag case
 			const getHovered = createGetHovered(
 				e.clientX,
 				e.clientY,
@@ -233,8 +187,6 @@ export class GestureRecognizer {
 				this.containerRef.current,
 			);
 
-			// Since this is the non-drag case, fix targetId and targetKind to canvas.
-			// Change here if wheel operations over objects are supported in the future.
 			this.gestureCallback({
 				type: "wheel",
 				target: e.target,
@@ -259,11 +211,9 @@ export class GestureRecognizer {
 			return;
 		}
 
-		// pointerdown: start a new gesture
 		if (e.type === "pointerdown") {
-			// While a gesture is already active, ignore any second-or-later pointerdown.
-			// (Multi-touch is not supported. To avoid interrupting or mis-committing the
-			//  first drag, we skip overwriting pressed, setting pointer capture, and firing callbacks.)
+			// Multi-touch is not supported: a second pointerdown must not overwrite pressed,
+			// take capture, or fire, or it would interrupt or mis-commit the first drag.
 			if (this.pressed !== null) {
 				return;
 			}
@@ -274,13 +224,12 @@ export class GestureRecognizer {
 			const targetPart = target?.part;
 			const isNativePointer = isNativePointerTarget(e.target);
 
-			// Set pointer capture (not set on data-gesture="native-pointer" elements).
-			// Sliders and the like need to keep the browser's native drag behavior.
+			// Sliders and the like keep the browser's native drag behavior, so they are
+			// left uncaptured.
 			if (this.containerRef.current && !isNativePointer) {
 				this.containerRef.current.setPointerCapture(e.pointerId);
 			}
 
-			// Set the pressed state
 			this.pressed = {
 				pointerId: e.pointerId,
 				start: currentPos,
@@ -311,12 +260,10 @@ export class GestureRecognizer {
 			return;
 		}
 
-		// The remaining processing only applies when pressed and for the same pointer
 		if (!this.pressed || this.pressed.pointerId !== e.pointerId) {
 			return;
 		}
 
-		// Movement from the start position (world / screen). Shared across the branches after pressed is confirmed.
 		const delta = {
 			x: currentPos.x - this.pressed.start.x,
 			y: currentPos.y - this.pressed.start.y,
@@ -326,13 +273,11 @@ export class GestureRecognizer {
 			y: currentClientPos.y - this.pressed.clientStart.y,
 		};
 
-		// pointermove: drag detection and handling
 		if (e.type === "pointermove") {
 			this.pressed.last = currentPos;
 			this.pressed.clientLast = currentClientPos;
 
 			if (!this.pressed.dragging) {
-				// Drag-start detection
 				const distanceSquared = delta.x ** 2 + delta.y ** 2;
 				if (distanceSquared >= DRAG_THRESHOLD) {
 					this.pressed.dragging = true;
@@ -354,26 +299,21 @@ export class GestureRecognizer {
 
 				let scrollDelta: { deltaX: number; deltaY: number } | undefined;
 
-				// Check if this pointermove has deltaX/deltaY (converted from wheel event)
+				// deltaX/deltaY are present only on a pointermove converted from a wheel.
 				const isWheel = e.deltaX !== undefined || e.deltaY !== undefined;
 
-				// For a wheel event during a drag, obtain the scroll delta
 				if (isWheel) {
 					scrollDelta = {
 						deltaX: e.deltaX ?? 0,
 						deltaY: e.deltaY ?? 0,
 					};
 				} else if (canvasState.edgeScrollEnabled) {
-					// Detect edge proximity during drag
 					const edgeProximity = detectEdgeProximity(
 						canvasState.viewport,
 						currentPos.x,
 						currentPos.y,
 					);
 
-					// Arm once the cursor has left the edge zone at least once. This prevents
-					// spurious firing right after grabbing from a library etc. touching the
-					// edge (while still inside the edge zone).
 					if (!edgeProximity.isNearEdge) {
 						this.pressed.edgeScrollArmed = true;
 					}
@@ -384,21 +324,18 @@ export class GestureRecognizer {
 							edgeProximity.vertical,
 						);
 
-						// Since pointermove is coalesced with the tail move,
-						// the queue does not grow and becomes a steady tick of 1 per frame
+						// Keeps scrolling while the cursor is held still at the edge; move
+						// coalescing holds this to one tick per frame.
 						this.enqueue({
 							...e,
 						});
 					}
 				}
 
-				// Reflect the scroll amount into the current position (=last) and the movement (delta).
-				// scrollDelta is in raw pixels. The viewport moves only by scrollDelta/zoom
-				// (SVG units) (the scroll handling in CanvasEventHandler), so the /zoom-scaled
-				// amount is also added to currentPos(=last), the cursor's SVG coordinate, just like delta.
-				// Adding raw pixels would offset last by a factor of zoom when zoom≠1, causing
-				// Transform/Vertex/area-selection — which use last directly as the cursor position —
-				// to diverge from the cursor (#72).
+				// scrollDelta is raw pixels but the viewport moves by scrollDelta/zoom, so the
+				// scaled amount is what last and delta must absorb. Adding raw pixels would
+				// drift them by a factor of zoom and pull Transform / Vertex / area-selection
+				// away from the cursor (#72).
 				if (scrollDelta) {
 					const svgScrollDeltaX =
 						scrollDelta.deltaX / canvasState.viewport.zoom;
@@ -424,14 +361,11 @@ export class GestureRecognizer {
 			return;
 		}
 
-		// pointerup: gesture end
 		if (e.type === "pointerup") {
-			// Release pointer capture (does nothing on data-gesture="native-pointer" elements)
 			if (this.containerRef.current && !this.pressed.isNativePointerTarget) {
 				this.containerRef.current.releasePointerCapture(e.pointerId);
 			}
 
-			// Decide the end type: dragEnd if dragged, otherwise click / doubleClick.
 			let eventType: "dragEnd" | "doubleClick" | "click";
 			if (this.pressed.dragging) {
 				eventType = "dragEnd";
@@ -444,8 +378,7 @@ export class GestureRecognizer {
 
 				eventType = doubleClick ? "doubleClick" : "click";
 
-				// Update the last-click info only on a single click.
-				// Reset to null when a doubleClick occurs, to prevent a third rapid click from becoming another doubleClick.
+				// Clearing on a doubleClick stops a third rapid click from pairing again.
 				this.lastClick = doubleClick ? null : currentClick;
 			}
 
@@ -462,9 +395,7 @@ export class GestureRecognizer {
 			return;
 		}
 
-		// pointercancel: abort the gesture
 		if (e.type === "pointercancel") {
-			// Release pointer capture (does nothing on data-gesture="native-pointer" elements)
 			if (this.containerRef.current && !this.pressed.isNativePointerTarget) {
 				this.containerRef.current.releasePointerCapture(e.pointerId);
 			}
@@ -485,16 +416,12 @@ export class GestureRecognizer {
 	}
 
 	/**
-	 * Build and fire a Gesture whose identity fields (target / start / button etc.)
-	 * come from the pressed state. Shared by every branch after pointerdown — the
-	 * branches differ only in type, the current coordinate snapshot, and scrollDelta.
-	 * (The wheel branch is not covered: it has no pressed state and fixes its
-	 * target to canvas.)
+	 * Build and fire a Gesture whose identity fields (target / start / button) come from
+	 * the pressed state. Shared by every branch after pointerdown, which differ only in
+	 * type, coordinate snapshot and scrollDelta; the wheel branch has no pressed state.
 	 *
-	 * inputValue: the native-pointer qualification is fixed at pointerdown
-	 * (Pressed.isNativePointerTarget), so this only reads .value — no closest()
-	 * walk on the per-frame drag path (#123). Sliders and the like propagate
-	 * their value via gesture events (data-gesture="native-pointer").
+	 * `inputValue` only reads `.value` because the native-pointer qualification was fixed
+	 * at pointerdown, keeping closest() off the per-frame drag path (#123).
 	 */
 	private fireGestureFromPressed(
 		pressed: Pressed,
@@ -539,9 +466,7 @@ export class GestureRecognizer {
 		});
 	}
 
-	/**
-	 * Convert a React.PointerEvent into the internal type.
-	 */
+	/** Convert a React.PointerEvent into the internal type. */
 	private toPointerEvent(
 		e: React.PointerEvent<HTMLElement>,
 	): PointerInternalEvent {
@@ -561,11 +486,10 @@ export class GestureRecognizer {
 	}
 
 	/**
-	 * Convert a WheelEvent into the internal type.
-	 * During a drag it is converted to pointermove; otherwise it is converted to wheel.
+	 * Convert a WheelEvent into the internal type: pointermove carrying deltaX/deltaY
+	 * during a drag, so scrolling merges into the drag path, and wheel otherwise.
 	 */
 	private toWheelEvent(e: WheelEvent): InternalEvent {
-		// During a drag, convert to pointermove and retain deltaX/deltaY
 		if (this.pressed?.dragging) {
 			return {
 				type: "pointermove",
@@ -584,7 +508,6 @@ export class GestureRecognizer {
 			};
 		}
 
-		// Outside a drag, convert to wheel
 		return {
 			type: "wheel",
 			clientX: e.clientX,
@@ -602,20 +525,12 @@ export class GestureRecognizer {
 	}
 
 	/**
-	 * Abort the in-progress gesture: cancel the pending RAF batch, discard queued
-	 * events, release pointer capture, and clear pressed.
+	 * Abort the in-progress gesture: cancel the pending RAF batch, discard queued events,
+	 * release pointer capture, and clear pressed. Called on external state swaps
+	 * (SYNC_EXTERNAL) and from useGestureRecognizer's effect cleanup (#14).
 	 *
-	 * The single lifecycle operation shared by both callers:
-	 *   - external state swaps (SYNC_EXTERNAL via useSyncExternalDoc), so a held
-	 *     drag does not keep firing against the replaced state
-	 *   - useGestureRecognizer's effect cleanup, so the RAF callback does not fire
-	 *     after unmount (#14)
-	 *
-	 * NOT terminal: the instance stays fully functional afterwards — new events
-	 * re-schedule processing as usual. StrictMode's effect setup→cleanup→setup
-	 * relies on this to resume with the same instance (#78). Destruction is left
-	 * to GC; after a real unmount no events arrive because the handlers are
-	 * detached with the DOM.
+	 * NOT terminal — new events re-schedule processing as usual, which is what lets
+	 * StrictMode's setup→cleanup→setup resume on the same instance (#78).
 	 */
 	public cancelPendingGesture(): void {
 		if (this.rafId !== null) {
@@ -637,14 +552,13 @@ export class GestureRecognizer {
 	}
 
 	/**
-	 * The pipeline entry point. Returns the pointer event handlers to attach to a React element.
-	 * Each handler only converts the raw event to the internal type and enqueues it; recognition is done by feed after RAF.
+	 * Pointer event handlers to attach to a React element. Each only enqueues; recognition
+	 * happens in feed after the RAF.
 	 */
 	public getHandlers(): PointerEventHandlers {
 		return {
 			onPointerDown: (e) => {
-				// Events originating from data-gesture="none" elements do not start a gesture
-				// (e.g. a textarea during text editing or an input field inside a menu)
+				// e.g. a textarea during text editing, or an input inside a menu.
 				if (isGestureOptedOut(e.target)) {
 					return;
 				}
@@ -656,10 +570,7 @@ export class GestureRecognizer {
 		};
 	}
 
-	/**
-	 * The pipeline entry point (for wheel). Wire this to the container's wheel listener.
-	 * During a drag, toWheelEvent turns it into pointermove, so scrolling can also be handled via the drag path.
-	 */
+	/** Wheel listener to wire to the container. */
 	public getWheelHandler(): (e: WheelEvent) => void {
 		return (e: WheelEvent) => this.enqueue(this.toWheelEvent(e));
 	}

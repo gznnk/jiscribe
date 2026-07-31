@@ -17,7 +17,7 @@ export type ObjectFeatures = {
 	stroke?: boolean;
 	/** Fill/background styling (FillStyleDoc) */
 	fill?: boolean;
-	/** Text の形: "body" = 単一本文（doc はルート形）、"slots" = 名前付きスロット群（doc は keyed 形） */
+	/** Text shape: "body" is a single body (root-form doc), "slots" is named slots (keyed-form doc) */
 	text?: "body" | "slots";
 	/** Corner radius styling (for rect) */
 	radius?: boolean;

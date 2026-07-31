@@ -5,18 +5,27 @@ import type { DocDefinitionsConfig } from "../schemas/plugin/resolveDocDefinitio
 import { resolveDocDefinitions } from "../schemas/plugin/resolveDocDefinitions";
 
 /**
- * doc 定義駆動の doc-ops インスタンス。組み込み型もプラグイン型も、`createDocOps` に
- * 渡した定義（factory / features）に従って一様に扱う。
+ * Doc-ops instance driven by doc definitions. Built-in and plugin types alike are handled
+ * uniformly, following the factory / features passed to `createDocOps`.
  */
 export type DocOps = {
+	/**
+	 * Add an object of `type`, mutating `doc` in place and returning the new id.
+	 * Throws `DocOperationError` for a type this instance's definitions cannot create.
+	 */
 	addObject(doc: CanvasDoc, type: string, params: AddObjectParams): string;
+	/**
+	 * Join two objects with a connector, mutating `doc` in place and returning the new id.
+	 * Throws `DocOperationError` when an endpoint is missing or not connectable.
+	 */
 	connect(doc: CanvasDoc, params: ConnectParams): string;
 };
 
 /**
- * {@link DocOps} を構築する。`config` は {@link resolveDocDefinitions} で解決され
- * （preset/plugin のマージと重複 type 検出のセマンティクスは createCanvasParser と相似形）、
- * 既定では組み込み定義のみを扱う。
+ * Build a {@link DocOps}.
+ *
+ * @param config - Resolved by {@link resolveDocDefinitions}, whose preset/plugin merging and
+ *   duplicate-type detection mirror createCanvasParser. Omit to handle only built-in definitions
  */
 export const createDocOps = (config?: DocDefinitionsConfig): DocOps => {
 	const definitions = resolveDocDefinitions(config, "createDocOps");

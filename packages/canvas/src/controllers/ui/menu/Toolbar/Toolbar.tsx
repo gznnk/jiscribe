@@ -75,7 +75,7 @@ const ToolbarComponent: React.FC<ToolbarProps> = ({
 	// handlers/commands that clear it, so the Toolbar is stateless here and
 	// multiple <Canvas> instances stay independent.
 
-	// Escape での閉じ処理は ModalShell が担う。ここは「?」で開くだけ。
+	// ModalShell owns closing on Escape; this only opens on "?".
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
 			if (isHelpOpen) {

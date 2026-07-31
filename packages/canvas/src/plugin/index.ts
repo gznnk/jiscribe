@@ -1,7 +1,7 @@
-// プラグイン作者向けの語彙（#144 tier 1・安定エントリ）。
-// プラグインは `ObjectTypeDefinition<TDoc, TState>` を注釈した宣言だけで済み、
-// `CanvasPlugin.objects` に載せて host へ渡す。built-in レコードのみ
-// per-entry TState 推論のため `defineObject` を使う。
+// Vocabulary for plugin authors (#144 tier 1, stable entry).
+// A plugin needs only a declaration annotated `ObjectTypeDefinition<TDoc, TState>`, put on
+// `CanvasPlugin.objects` and handed to the host. Only built-in records use `defineObject`,
+// which exists for per-entry TState inference.
 export type { CanvasPlugin } from "./CanvasPlugin";
 export { defineObject } from "./ObjectTypeDefinition";
 export type {

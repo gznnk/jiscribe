@@ -82,10 +82,10 @@ export {
 	ALL_OBJECT_DEFINITIONS,
 } from "./controllers/registries";
 
-// 図形定義の語彙（プラグイン作者向け、#144 Stage 1・src/plugin）。
-// プラグインは `ObjectTypeDefinition<TDoc, TState>` を注釈した宣言だけで済む
-// （defineObject 呼び出しは不要）。built-in レコードのみ defineObject を使う。
-// 値 export は最小限（ObjectTypes / defineObject）に絞り、他はすべて型。
+// Shape-definition vocabulary for plugin authors (#144 Stage 1, src/plugin).
+// A plugin needs only a declaration annotated `ObjectTypeDefinition<TDoc, TState>` — no
+// defineObject call; only built-in records use it. Value exports are kept to the minimum
+// (ObjectTypes / defineObject) and everything else is a type.
 export { defineObject } from "./plugin";
 export type {
 	CanvasPlugin,

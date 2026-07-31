@@ -154,7 +154,7 @@ const countWrappedLines = (
  * Number of lines the text occupies once wrapped into a box of the given width,
  * counting authored newlines and automatic wrapping alike. Simulates the
  * `white-space: pre-wrap; word-break: break-word` the text boxes are drawn with
- * (TextOverlayFrameStyled / ConnectorLabelStyled 参照): lines break at spaces, a
+ * (TextOverlayFrameStyled / see ConnectorLabelStyled): lines break at spaces, a
  * word longer than the line breaks between characters, and CJK breaks between
  * characters. Multiply by `fontSize × line-height` for a box height that does
  * not clip the text.

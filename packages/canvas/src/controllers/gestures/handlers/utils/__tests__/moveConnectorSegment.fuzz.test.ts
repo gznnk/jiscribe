@@ -24,7 +24,7 @@ import {
  * exactly here). Invariants checked:
  *
  * - right after a drag, the stored path has no diagonal, no zero-length segment and no colinear
- *   adjacent segments (every stored corner is a real right angle — moveConnectorSegment 参照)
+ *   adjacent segments (every stored corner is a real right angle — see moveConnectorSegment)
  * - at any point, the drawn (aligned) path has no diagonal, whatever the shapes did
  */
 
@@ -66,7 +66,7 @@ describe("fuzz: drag/move/rotate operation sequences", () => {
 			};
 
 			// The commit that follows a shape operation persists the drawn (aligned) vertices,
-			// rounded, back into the store (reconcileConnectorVertices 相当).
+			// rounded, back into the store (the reconcileConnectorVertices equivalent).
 			const persistDrawnVertices = (stored: Point[]): Point[] => {
 				if (stored.length === 0) {
 					return stored;

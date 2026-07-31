@@ -108,7 +108,7 @@ const ConnectorLabelComponent: React.FC<ConnectorLabelProps> = ({
  * anchor on the path. Returns null for empty text.
  *
  * The DOM shape is load-bearing: image export reads the box style off the
- * single child of the foreignObject (connectorLabelToSvgGroup 参照), and the
+ * single child of the foreignObject (see connectorLabelToSvgGroup), and the
  * gesture layer resolves hits through the data attributes above.
  */
 export const ConnectorLabel = memo(ConnectorLabelComponent);

@@ -8,7 +8,7 @@ import { ALL_OBJECT_DEFINITIONS } from "../initializeObjectRegistry";
  *
  * The mapper factories assemble their result from a runtime allow-list, so the
  * Doc↔State boundary is the one place where the type system cannot check that
- * every declared field survives (`FrameMapper` / `PolyMapper` 参照). Driving this
+ * every declared field survives (`FrameMapper` / see `PolyMapper`). Driving this
  * off the definition table instead of a hand-written list means a type added
  * there is covered without touching this file.
  *
@@ -29,7 +29,7 @@ const withFactory = definitions.flatMap(([type, definition]) => {
 /**
  * An empty body text is the one default that legitimately does not come back:
  * the mapper normalizes it to an absent field, which expands to the same state
- * (`mapTextStateToDoc` 参照). Everything else must survive verbatim.
+ * (see `mapTextStateToDoc`). Everything else must survive verbatim.
  */
 const normalizeEmptyText = (doc: ObjectDoc): object => {
 	const { text, ...withoutText } = doc as ObjectDoc & { text?: unknown };

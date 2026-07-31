@@ -1,7 +1,7 @@
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
 
-/** root ツリー全体で重複しない id を `${prefix}-N` 形式で採番する。 */
+/** Allocate a `${prefix}-N` id unique across the whole root tree. */
 export function generateUniqueId(doc: CanvasDoc, prefix: string): string {
 	const usedIds = collectIds(doc.root);
 	let index = 1;
@@ -11,7 +11,7 @@ export function generateUniqueId(doc: CanvasDoc, prefix: string): string {
 	return `${prefix}-${index}`;
 }
 
-/** group の children まで再帰して既存 id を集める。 */
+/** Collect existing ids, recursing through group children. */
 function collectIds(objects: ObjectDoc[]): Set<string> {
 	const ids = new Set<string>();
 	const visit = (object: Record<string, unknown>): void => {

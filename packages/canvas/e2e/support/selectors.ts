@@ -1,9 +1,9 @@
 /**
- * canvas の DOM 契約（data-kind / data-id / data-part、テスト専用フックは data-testid）に基づくセレクタ定数。
- * 詳細は e2e/README.md の「DOM の構造とセレクタ」を参照。
+ * Selector constants built on the canvas DOM contract (data-kind / data-id / data-part, with
+ * data-testid for test-only hooks). See "DOM structure and selectors" in e2e/README.md.
  */
 
-/** 左ツールバーのツール名（button の title 属性） */
+/** Tool name in the left toolbar, matching the button's title attribute. */
 export type ToolTitle =
 	| "Rectangle"
 	| "Ellipse"
@@ -12,14 +12,14 @@ export type ToolTitle =
 	| "Sticky"
 	| "Markdown";
 
-/** コネクター接続アンカーの辺ID */
+/** Edge id of a connector attachment anchor. */
 export type AnchorId =
 	| "topCenter"
 	| "bottomCenter"
 	| "leftCenter"
 	| "rightCenter";
 
-/** ObjectMenu のカラーピッカーを開くセクションID */
+/** Section id that opens a color picker in the ObjectMenu. */
 export type ColorSectionId =
 	| "bg-color"
 	| "header-color"
@@ -28,37 +28,37 @@ export type ColorSectionId =
 	| "font-color";
 
 export const selectors = {
-	/** ツールバーのツールボタン */
+	/** Toolbar tool button. */
 	toolButton: (tool: ToolTitle) => `button[title="${tool}"]`,
 
-	/** StencilLibrary のカテゴリボタン（フライアウトを開くトグル） */
+	/** StencilLibrary category button; the toggle that opens a flyout. */
 	categoryButton: (categoryId: string) =>
 		`[data-id="stencil-category"][data-part="toggle:${categoryId}"]`,
 
-	/** カテゴリフライアウト（開いているときだけ存在） */
+	/** Category flyout, present only while open. */
 	categoryFlyout: (categoryId: string) =>
 		`[data-category-flyout="${categoryId}"]`,
 
-	/** StencilLibrary の図形項目（ピン留め・フライアウト内で共通の DOM 契約） */
+	/** StencilLibrary shape item; pinned and in-flyout share this DOM contract. */
 	shapeItem: (presetId: string) => `[data-part="item:${presetId}"]`,
 
-	/** キャンバス上の図形（rect / ellipse / polyline …） */
+	/** Shape on the canvas (rect / ellipse / polyline and so on). */
 	object: "[data-kind=object]",
 
 	/**
-	 * ドラッグ描画中のプレビュー（ゴースト）。図形本体コンポーネントを流用するため
-	 * data-kind=object を持つが、コミット済み図形ではない。オブジェクト列挙時に
-	 * この配下を除外して一時要素を数えないようにする。
+	 * Ghost preview shown while drag-drawing. It reuses the shape component, so it carries
+	 * data-kind=object despite not being a committed shape; exclude its subtree when
+	 * enumerating objects so the transient element is not counted.
 	 */
 	drawingPreview: '[data-testid="drawing-preview"]',
 
-	/** コネクター（本体の polyline。矢印の polygon も同じ data-kind を持つ） */
+	/** Connector body polyline; the arrowhead polygon carries the same data-kind. */
 	connectorPolyline: "polyline[data-kind=connector]",
 
-	/** 選択時のハンドル類すべて */
+	/** Every handle shown on selection. */
 	control: "[data-kind=control]",
 
-	/** リサイズ・回転ハンドル */
+	/** Resize and rotation handles. */
 	transformControl: (
 		handle:
 			| "topLeft"
@@ -75,38 +75,38 @@ export const selectors = {
 			? `[data-id="transform"][data-part="rotation"]`
 			: `[data-id="transform"][data-part="resize:${handle}"]`,
 
-	/** コネクター作成アンカー（辺の中点から 20px 外側に表示される） */
+	/** Connector creation anchor, drawn 20px outside the edge midpoint. */
 	createAnchor: (anchorId: AnchorId) => `[data-part="anchor:${anchorId}"]`,
 
-	/** ObjectMenu のドロップダウンを開くトグルボタン */
+	/** Toggle button that opens an ObjectMenu dropdown. */
 	objectMenuToggle: (sectionId: string) => `[data-part="toggle:${sectionId}"]`,
 
-	/** ObjectMenu の即時設定ボタン（プリセット色・線種など） */
+	/** ObjectMenu button that applies at once, such as a preset color or line style. */
 	objectMenuSet: (property: string, value: string) =>
 		`[data-part="set:${property}:${value}"]`,
 
-	/** ObjectMenu のコマンドボタン（重なり順の bringToFront など） */
+	/** ObjectMenu command button, such as bringToFront for z-order. */
 	objectMenuCommand: (commandId: string) =>
 		`[data-part="command:${commandId}"][data-id="object-menu"]`,
 
-	/** ObjectMenu のスライダー（range input、ドラッグで値を変える） */
+	/** ObjectMenu slider; a range input whose value changes by dragging. */
 	objectMenuSlider: (property: string) => `[data-part="slider:${property}"]`,
 
-	/** カラーピッカーの CSS カラーテキスト入力欄（Enter で確定） */
+	/** CSS color text input in the color picker, committed with Enter. */
 	cssColorInput: 'input[placeholder="CSS color"]',
 
-	/** テキスト編集中の TEXTAREA */
+	/** TEXTAREA shown while editing text. */
 	textEditor: '[data-testid="text-editor"]',
 
-	/** コンテキストメニューの項目すべて（command / callback）。出現判定に使う */
+	/** Every context-menu item, command and callback alike; used to test for appearance. */
 	contextMenuAny:
 		'[data-id="context-menu"], [data-testid^="context-menu-callback:"]',
 
-	/** コンテキストメニューの command 項目（最前面へ・複製など） */
+	/** Context-menu command item, such as bring-to-front or duplicate. */
 	contextMenuCommand: (commandId: string) =>
 		`[data-id="context-menu"][data-part="command:${commandId}"]`,
 
-	/** コンテキストメニューの callback 項目（paste など） */
+	/** Context-menu callback item, such as paste. */
 	contextMenuCallback: (id: string) =>
 		`[data-testid="context-menu-callback:${id}"]`,
 } as const;

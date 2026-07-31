@@ -3,7 +3,7 @@ import { test as base } from "@playwright/test";
 import { CanvasDriver } from "./support/CanvasDriver";
 
 type CanvasFixtures = {
-	/** アプリを開いてロード完了まで待った状態のキャンバスドライバ */
+	/** Canvas driver with the app opened and loading complete. */
 	canvas: CanvasDriver;
 };
 
@@ -11,9 +11,9 @@ export const test = base.extend<CanvasFixtures>({
 	canvas: async ({ page }, use) => {
 		const canvas = new CanvasDriver(page);
 		await canvas.goto();
-		// クリップボード権限を付与しているため readText() が実 OS クリップボードを
-		// 返す。テスト間の持ち越しを防ぐため、各テスト開始時に空にしておく
-		// （内部クリップボードのみに依存する前提を保つ）。
+		// Clipboard permission is granted, so readText() returns the real OS clipboard. Empty it
+		// at the start of each test to stop carry-over and keep tests resting only on the
+		// internal clipboard.
 		await page
 			.evaluate(() => navigator.clipboard.writeText(""))
 			.catch(() => {});
@@ -21,11 +21,10 @@ export const test = base.extend<CanvasFixtures>({
 	},
 });
 
-// headed 実行（--headed / --ui）の時だけ、各テスト完了後に少し待って
-// 最終状態を目視できるようにする。
-// 注意: process.argv はメインプロセス（config）でしか --headed を持たず、
-// env mutation はワーカー再生成（失敗時など）で伝わらないことがある。
-// ワーカー内で確実に取れる解決済み use.headless を見る（headed なら false）。
+// Pause briefly after each test under a headed run (--headed / --ui) so the final state can
+// be seen. Only the main process (config) has --headed on process.argv, and env mutation may
+// not survive a worker respawn after a failure, so this reads the resolved use.headless, which
+// a worker can always see and which is false when headed.
 test.afterEach(async ({ page }, testInfo) => {
 	if (testInfo.project.use.headless === false) {
 		await page.waitForTimeout(1000);

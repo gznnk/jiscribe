@@ -1,6 +1,6 @@
 /**
  * Implementation-detail layer of `@workspace/canvas`, exposed for plugin authors
- * (#144 tier 2: frame 系ベース実装). Unlike the stable API (`.`), this is NOT
+ * (#144 tier 2: frame-based implementations). Unlike the stable API (`.`), this is NOT
  * covered by semver compatibility guarantees and may change without notice.
  *
  * This entry carries state / presentation / controller dependencies (react /
@@ -23,16 +23,16 @@ export type {
 } from "./presentations/objects/base/createFrameObject";
 export type { TextEditable } from "./presentations/objects/base/TextOverlay/TextOverlay";
 
-// 本文がプレーンテキストでない図形(Markdown 等)向けの器。表示側とコア側の編集用
-// textarea が同じ視覚契約(line-height / padding / 配置 / 色・フォント解決)を共有する
-// ため、器は core 側に置いたまま中身だけを差し替える(createFrameObject の
-// renderTextOverlay と組で使う)。
+// Container for shapes whose body is not plain text (Markdown and the like). The display
+// side and the core editing textarea must share one visual contract (line-height / padding /
+// placement / color and font resolution), so the container stays in core and only its
+// contents are swapped. Use together with createFrameObject's renderTextOverlay.
 export { TextOverlayFrame } from "./presentations/objects/base/TextOverlay/TextOverlayFrame";
 export type { TextOverlayFrameProps } from "./presentations/objects/base/TextOverlay/TextOverlayFrame";
 
-// 本文はプレーンテキストのまま、スロットごとにタイポグラフィだけ差し替えたい図形
-// (record のタイトル帯など)向け。renderTextOverlay から受け取った props を
-// そのまま渡し、変えたいものだけ上書きする。
+// For shapes that keep plain-text bodies but vary typography per slot (a record's title
+// band, say). Pass the props from renderTextOverlay straight through and override only
+// what needs to change.
 export { TextOverlay } from "./presentations/objects/base/TextOverlay/TextOverlay";
 
 export { createFrameBehavior } from "./controllers/gestures/handlers/objects/base/FrameController";
@@ -45,12 +45,12 @@ export type { StateRecord } from "./states/objects/utils/validateStateUtils";
 export { resolveAutoColor } from "./presentations/objects/utils/resolveAutoColor";
 export type { AutoColorRole } from "./presentations/objects/utils/resolveAutoColor";
 
-// テキストを描く箱の高さを内容から導く図形(record のタイトル帯など)向け。表示側
-// CSS(pre-wrap + break-word)と同じ折り返しを再現して表示行数を数える。
+// For shapes deriving a text box's height from its content. Counts displayed lines by
+// reproducing the wrapping of the display-side CSS (pre-wrap + break-word).
 export { calcVisualLineCount } from "./presentations/objects/utils/measureText";
 export type { TextMeasureFont } from "./presentations/objects/utils/measureText";
 
-// Polygon/outline helpers for frame 系プラグイン図形の描画・connector 接続 outline。
+// Polygon/outline helpers for drawing frame-based plugin shapes and their connector outline.
 export { formatPolygonPoints } from "./presentations/objects/utils/formatPolygonPoints";
 export {
 	centeredPolygonOutline,
@@ -60,7 +60,7 @@ export {
 export { PRECISION } from "./constants/precision";
 
 // ---------------------------------------------------------------------------
-// Phase A: 型固有 selection control の部品(docs/05_extensibility/plugin-architecture-requirements.md §4)
+// Phase A: type-specific selection control parts (docs/05_extensibility/plugin-architecture-requirements.md §4)
 // ---------------------------------------------------------------------------
 
 export { ControlStrategy } from "./controllers/gestures/registry/ControlStrategy";
@@ -69,16 +69,16 @@ export { SelectionControlPill } from "./controllers/ui/controls/SelectionControl
 export { getResizeCursorForRotation } from "./controllers/ui/utils";
 
 // ---------------------------------------------------------------------------
-// ObjectMenu UI キット(docs/05_extensibility/plugin-architecture-requirements.md §4 UC1)
+// ObjectMenu UI kit (docs/05_extensibility/plugin-architecture-requirements.md §4 UC1)
 // ---------------------------------------------------------------------------
-// `data-kind="menu"` 配下の `data-part` は ObjectMenuHandler が解決する文法:
-//   - `toggle:{sectionId}`   → セクション(ドロップダウン等)の開閉
-//   - `set:{property}:{value}` → 選択オブジェクトのプロパティ更新(1回で確定)
-//   - `command:{commandId}`  → コマンド実行
-//   - `slider:{property}`    → スライダー操作(drag=プレビュー / dragEnd=確定)
-// 詳細は packages/canvas/docs/04-gesture-system.md 参照。プラグインへの推奨は
-// 下記の共有部材を組み合わせるか `onPropertyUpdate` を呼ぶことで、data-part の
-// 直書きは非推奨(内部実装への密結合になるため)。
+// Grammar ObjectMenuHandler resolves for `data-part` under `data-kind="menu"`:
+//   - `toggle:{sectionId}`     open/close a section
+//   - `set:{property}:{value}` update the selected object's property, committing at once
+//   - `command:{commandId}`    run a command
+//   - `slider:{property}`      slider (drag previews, dragEnd commits)
+// See packages/canvas/docs/04-gesture-system.md. Plugins should combine the shared parts
+// below or call `onPropertyUpdate`; writing `data-part` directly couples them to internals
+// and is discouraged.
 
 export {
 	ObjectMenuButton,
@@ -102,6 +102,7 @@ export {
 } from "./controllers/messages/resolveLocaleMessages";
 export type { LocaleMessages } from "./controllers/messages/resolveLocaleMessages";
 
-// `theme` は名前が汎用的すぎるため `canvasThemeCssVars` として re-export
-// (値は `--jiscribe-*` CSS 変数 + ダークテーマ fallback。theme/CanvasTheme.ts 参照)。
+// Re-exported as `canvasThemeCssVars` because `theme` alone is too generic a name.
+// The value is the `--jiscribe-*` CSS variables plus a dark-theme fallback
+// (see theme/CanvasTheme.ts).
 export { theme as canvasThemeCssVars } from "./constants/theme";

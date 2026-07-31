@@ -13,7 +13,7 @@ const preset = (id: string): Stencil => ({
 });
 
 describe("StencilRegistry", () => {
-	it("all は登録順で返す", () => {
+	it("returns presets from all in registration order", () => {
 		const registry = createStencilRegistry();
 		registry.register(preset("b"));
 		registry.register(preset("a"));
@@ -22,7 +22,7 @@ describe("StencilRegistry", () => {
 		expect(registry.all().map((p) => p.id)).toEqual(["b", "a", "c"]);
 	});
 
-	it("get は id で preset を引く。未登録は undefined", () => {
+	it("looks a preset up by id with get, returning undefined when unregistered", () => {
 		const registry = createStencilRegistry();
 		registry.register(preset("rect"));
 
@@ -30,7 +30,7 @@ describe("StencilRegistry", () => {
 		expect(registry.get("missing")).toBeUndefined();
 	});
 
-	it("clear は登録内容をすべて捨てる", () => {
+	it("discards every registration on clear", () => {
 		const registry = createStencilRegistry();
 		registry.register(preset("rect"));
 		registry.clear();

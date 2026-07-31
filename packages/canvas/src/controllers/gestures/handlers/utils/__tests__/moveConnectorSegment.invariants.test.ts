@@ -14,7 +14,7 @@ import {
 
 /**
  * Sweep of the promise "a route that was right-angled when stored stays right-angled, whatever the
- * endpoints do" (alignVertexPath 参照) over the configuration space, the way routingInvariants.test
+ * endpoints do" (see alignVertexPath) over the configuration space, the way routingInvariants.test
  * sweeps the engine's own routes. Each case pins a segment of an engine route (the first drag turns
  * the drawn corners into vertices), then moves and rotates the shapes over a grid and re-aligns —
  * the sequence in which the past diagonal-segment regressions appeared, which single-shot unit

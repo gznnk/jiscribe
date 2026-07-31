@@ -39,7 +39,7 @@ type ConnectorControlsProps = {
  * straight a point is a bend the user places and then moves freely; under orthogonal the vertices
  * have to stay axis-aligned, so they are only ever moved a whole segment at a time — which needs no
  * handle at all and is not offered here: the segment itself is the target, and its hit band lives
- * with the connector (ConnectorSegmentHitAreas 参照).
+ * with the connector (see ConnectorSegmentHitAreas).
  *
  * Placed in the controllers layer so selection visuals are decoupled from the connector itself.
  */

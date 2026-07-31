@@ -8,8 +8,8 @@ import {
 } from "./selectors";
 
 /**
- * キャンバス操作の状態スナップショット比較などに使う図形情報。
- * transform の e,f が図形の中心座標。
+ * Shape data used for snapshot comparison of canvas state.
+ * The `e` and `f` components of `transform` are the shape's center coordinates.
  */
 export type ObjectSnapshot = {
 	id: string | null;
@@ -20,32 +20,32 @@ export type ObjectSnapshot = {
 };
 
 /**
- * ビューポート端から 20px 以内のドラッグはキャンバスの自動スクロールを誘発する
- * （AUTO_SCROLL_THRESHOLD）。テスト座標はこのマージンの内側に収めること。
+ * Dragging within 20px of a viewport edge triggers canvas auto-scroll
+ * (AUTO_SCROLL_THRESHOLD). Keep test coordinates inside this margin.
  */
 export const AUTO_SCROLL_MARGIN = 25;
 
-/** 図形のない場所。選択解除やテキスト確定のクリックに使う（コンテンツ座標） */
+/** Empty spot in content coordinates, clicked to deselect or commit text. */
 const EMPTY_SPOT = { x: 70, y: 820 };
 
 /**
- * canvas を実ユーザーと同じ UI 操作で動かすドライバ。
+ * Drives the canvas through the same UI operations a real user performs.
  *
- * 方針: 失敗を隠すリトライは入れない。時間待ち（waitForTimeout）ではなく
- * 状態待ち（要素の出現・数の変化）で同期し、操作が効かなかった場合は
- * そのままテストを失敗させてプロダクトの問題として顕在化させる。
+ * No retries that would hide a failure: synchronization waits on state (an element appearing,
+ * a count changing) rather than on time (waitForTimeout), so an operation that did not take
+ * effect fails the test and surfaces as a product problem.
  */
 export class CanvasDriver {
 	/**
-	 * キャンバス領域（SVG）の画面上の原点（左上）。
+	 * Screen origin (top-left) of the canvas area (the SVG).
 	 *
-	 * テストはすべて「コンテンツ座標」（= 画面座標 − 原点）で記述する。上部の
-	 * ツールバーがレイアウト上の領域を占めるため、キャンバスは画面 y=ツールバー高さ
-	 * から始まり、画面座標 = コンテンツ座標 + 原点 で対応づく。pan / zoom は viewBox を
-	 * 変えるだけで SVG 要素自体の画面位置は動かさないため、この原点は一度測れば不変。
+	 * Every test is written in content coordinates, which are screen coordinates minus this
+	 * origin. The toolbar occupies layout space above, so the canvas starts at screen
+	 * y = toolbar height. Pan and zoom only change the viewBox and never move the SVG element
+	 * itself, so this origin is measured once and stays valid.
 	 *
-	 * boundingBox() 由来の座標は画面座標なので、ドライバへ渡す前に toContent() で
-	 * コンテンツ座標へ変換すること。
+	 * Coordinates from boundingBox() are screen coordinates — pass them through toContent()
+	 * before handing them to the driver.
 	 */
 	private originX = 0;
 	private originY = 0;
@@ -57,8 +57,8 @@ export class CanvasDriver {
 		await expect(
 			this.page.locator(selectors.toolButton("Rectangle")),
 		).toBeVisible();
-		// キャンバス領域（data-kind="canvas"）の画面オフセットを測る。flex 子なので
-		// マウント直後から実サイズを持ち、左上はツールバー高さ分だけ下にずれる。
+		// Measure the screen offset of the canvas area. As a flex child it has real size from
+		// mount, and its top-left sits one toolbar height down.
 		const origin = await this.page.evaluate(() => {
 			const el = document.querySelector('[data-kind="canvas"]');
 			const rect = el?.getBoundingClientRect();
@@ -69,21 +69,19 @@ export class CanvasDriver {
 	}
 
 	/**
-	 * コンテンツ座標 → 画面座標。ドライバ内部の入力系で使うほか、CDP で生の画面座標を
-	 * 送るテスト（マルチタッチ等）がコンテンツ座標を画面座標へ変換するのにも使う。
+	 * Content coordinates to screen coordinates. Used by the driver's own input methods, and by
+	 * tests that send raw screen coordinates over CDP (multi-touch and the like).
 	 */
 	toScreen(point: { x: number; y: number }): { x: number; y: number } {
 		return { x: point.x + this.originX, y: point.y + this.originY };
 	}
 
-	/**
-	 * 画面座標 → コンテンツ座標。boundingBox() で得た座標をドライバへ渡す前に通す。
-	 */
+	/** Screen coordinates to content coordinates; apply to anything from boundingBox(). */
 	toContent(point: { x: number; y: number }): { x: number; y: number } {
 		return { x: point.x - this.originX, y: point.y - this.originY };
 	}
 
-	/** 画面座標での中間イベント付きドラッグ（内部用・座標変換しない） */
+	/** Drag in screen coordinates with intermediate events; internal, applies no conversion. */
 	private async dragScreen(
 		fromScreen: { x: number; y: number },
 		toScreen: { x: number; y: number },
@@ -95,7 +93,7 @@ export class CanvasDriver {
 		await this.page.mouse.up();
 	}
 
-	/** 図形・コネクターのスナップショットを取得する */
+	/** Snapshot every shape and connector. */
 	async captureObjects(): Promise<ObjectSnapshot[]> {
 		return this.page.evaluate(
 			({ objectSelector, connectorSelector, previewSelector }) =>
@@ -104,11 +102,12 @@ export class CanvasDriver {
 						`${objectSelector}, ${connectorSelector}`,
 					),
 				]
-					// ドラッグ描画のゴーストは data-kind=object を持つが未コミットなので除く
+					// The drag-drawing ghost carries data-kind=object but is uncommitted, so drop it.
 					.filter((el) => !el.closest(previewSelector))
 					.map((el) => {
-						// 色は SVG 属性ではなく emotion CSS で当たるため computed style で読む
-						// （issue #38 / theme 追従）。値はブラウザ正規化済みの rgb(...) 形式。
+						// Colors come from emotion CSS rather than SVG attributes, so they
+						// must be read from computed style (#38 / theme following). Values
+						// are browser-normalized rgb(...).
 						const style = getComputedStyle(el);
 						return {
 							id: el.getAttribute("data-id"),
@@ -127,8 +126,8 @@ export class CanvasDriver {
 	}
 
 	/**
-	 * 中間イベント付きのドラッグ（コンテンツ座標）。ジェスチャー認識には steps が必要。
-	 * boundingBox 由来の座標を渡す場合は事前に toContent() で変換すること。
+	 * Drag in content coordinates with intermediate events; gesture recognition needs the steps.
+	 * Convert boundingBox-derived coordinates with toContent() first.
 	 */
 	async drag(
 		from: { x: number; y: number },
@@ -139,8 +138,8 @@ export class CanvasDriver {
 	}
 
 	/**
-	 * 指定座標でホイールを回す。ctrl=true でキャンバスズーム、それ以外はスクロール。
-	 * 先に move でポインタを置いてから wheel を送る（wheel の target を確定させるため）。
+	 * Turn the wheel at a point: ctrl zooms the canvas, otherwise it scrolls. The pointer is
+	 * moved into place first so the wheel event's target is settled.
 	 */
 	async wheel(
 		point: { x: number; y: number },
@@ -162,11 +161,16 @@ export class CanvasDriver {
 	}
 
 	/**
-	 * ドラッグを「押下→移動」まで進めて保持したまま inspect を実行し、その後に解放する。
-	 * スナップガイドは drag 中のみ DOM に存在し dragEnd でクリアされるため、
-	 * ガイドの検証は解放前のこのコールバック内で行う必要がある。
-	 * ctrl=true で Control を押しながらドラッグする（スナップ無効化の検証用）。
-	 * shift=true で Shift を押しながらドラッグする（軸固定の検証用）。
+	 * Drag as far as press-then-move, run `inspect` while still held, then release. Snap guides
+	 * exist in the DOM only during the drag and are cleared on dragEnd, so guide assertions have
+	 * to happen inside this callback.
+	 *
+	 * @param from - Start point in content coordinates, not screen coordinates
+	 * @param to - End point in content coordinates; the pointer is left held here
+	 * @param inspect - Runs with the button still down; the release happens even if it throws
+	 * @param options.steps - Intermediate pointer moves, which gesture recognition needs
+	 * @param options.ctrl - Hold Control through the drag, for verifying snap suppression
+	 * @param options.shift - Hold Shift through the drag, for verifying axis lock
 	 */
 	async dragInspecting(
 		from: { x: number; y: number },
@@ -202,15 +206,15 @@ export class CanvasDriver {
 		}
 	}
 
-	/** 表示中のスナップガイド（指定軸）のロケーター。x=縦ガイド / y=横ガイド */
+	/** Locator for the visible snap guides on an axis: x is vertical, y is horizontal. */
 	snapGuides(axis: "x" | "y") {
 		return this.page.getByTestId(`snap-guide:${axis}`);
 	}
 
 	/**
-	 * 表示中のスナップガイド（指定軸）の整列座標を返す。
-	 * x軸ガイド（縦線）は x1、y軸ガイド（横線）は y1 が整列座標そのもの。
-	 * 既定ビューポート（zoom=1・パンなし）では SVG 座標＝画面座標。
+	 * Alignment coordinates of the visible snap guides on an axis: x1 for a vertical x-axis
+	 * guide, y1 for a horizontal y-axis guide. At the default viewport (zoom 1, no pan) SVG
+	 * coordinates equal screen coordinates.
 	 */
 	async snapGuideCoordinates(axis: "x" | "y"): Promise<number[]> {
 		return this.page.evaluate((targetAxis) => {
@@ -223,15 +227,15 @@ export class CanvasDriver {
 		}, axis);
 	}
 
-	/** 表示中の軸固定ガイド（指定軸）のロケーター。x=縦ガイド / y=横ガイド */
+	/** Locator for the visible axis-lock guides on an axis: x is vertical, y is horizontal. */
 	axisLockGuides(axis: "x" | "y") {
 		return this.page.getByTestId(`axis-lock-guide:${axis}`);
 	}
 
 	/**
-	 * 表示中の軸固定ガイド（指定軸）の整列座標を返す。
-	 * x軸ガイド（縦線）は x1、y軸ガイド（横線）は y1 が固定軸の座標。
-	 * 既定ビューポート（zoom=1・パンなし）では SVG 座標＝画面座標。
+	 * Locked-axis coordinates of the visible axis-lock guides: x1 for a vertical x-axis guide,
+	 * y1 for a horizontal y-axis guide. At the default viewport (zoom 1, no pan) SVG coordinates
+	 * equal screen coordinates.
 	 */
 	async axisLockGuideCoordinates(axis: "x" | "y"): Promise<number[]> {
 		return this.page.evaluate((targetAxis) => {
@@ -244,7 +248,7 @@ export class CanvasDriver {
 		}, axis);
 	}
 
-	/** 右ボタンドラッグ（ビューポートのパンに使う） */
+	/** Right-button drag, used to pan the viewport. */
 	async rightDrag(
 		from: { x: number; y: number },
 		to: { x: number; y: number },
@@ -259,8 +263,8 @@ export class CanvasDriver {
 	}
 
 	/**
-	 * 中ボタンドラッグ（ビューポートのパンに使う / #159）。右ボタン同様に
-	 * CanvasEventHandler へルーティングされ、図形の上から始めてもパンになる。
+	 * Middle-button drag, used to pan the viewport (#159). Like the right button it routes to
+	 * CanvasEventHandler, so it pans even when started over a shape.
 	 */
 	async middleDrag(
 		from: { x: number; y: number },
@@ -275,15 +279,15 @@ export class CanvasDriver {
 		await this.page.mouse.up({ button: "middle" });
 	}
 
-	/** コンテンツ座標を中ボタンでクリックする（#159。選択のアサーションはしない） */
+	/** Middle-click a content coordinate (#159); asserts nothing about the selection. */
 	async middleClickAt(point: { x: number; y: number }) {
 		const screen = this.toScreen(point);
 		await this.page.mouse.click(screen.x, screen.y, { button: "middle" });
 	}
 
 	/**
-	 * いま表示されているコントロール（選択ハンドル・接続アンカー等）の data-id 一覧。
-	 * コントロールは表示中のみ DOM にマウントされるため、これがそのまま可視集合になる。
+	 * data-id list of the currently shown controls (selection handles, connection anchors).
+	 * Controls are mounted only while visible, so this is exactly the visible set.
 	 */
 	async visibleControlIds(): Promise<string[]> {
 		return this.page.evaluate(
@@ -299,19 +303,19 @@ export class CanvasDriver {
 		);
 	}
 
-	/** 特定のコントロールが表示されているか（記述子は "<data-id>/<data-part>"） */
+	/** Whether a specific control is shown; the descriptor is "<data-id>/<data-part>". */
 	async isControlVisible(controlDescriptor: string): Promise<boolean> {
 		return (await this.visibleControlIds()).includes(controlDescriptor);
 	}
 
-	/** いずれかのコントロールが表示されているか（選択状態の簡易判定） */
+	/** Whether any control is shown; a cheap check for something being selected. */
 	async hasAnyControl(): Promise<boolean> {
 		return (await this.visibleControlIds()).length > 0;
 	}
 
 	/**
-	 * ツールを選んでドラッグで図形を描き、新規図形の data-id を返す。
-	 * 描画直後は図形が自動選択され ObjectMenu が表示される。
+	 * Pick a tool, drag to draw a shape, and return the new shape's data-id. The shape is
+	 * auto-selected right after drawing and the ObjectMenu appears.
 	 */
 	async drawShape(
 		tool: ToolTitle,
@@ -323,41 +327,42 @@ export class CanvasDriver {
 
 		await this.page.click(selectors.toolButton(tool));
 
-		// ツールの click は描画モード（state.shapeDrawing）をセットするが、これは
-		// React の非同期な状態更新なので、armed になる前にキャンバスをドラッグすると
-		// CanvasEventHandler が shapeDrawing=null と判断し、描画ではなく範囲選択になる。
-		// armed なツールボタンは cursor: crosshair（非 armed は grab）になるため、
-		// これを状態待ちのシグナルにしてからドラッグする。
+		// Clicking the tool sets drawing mode (state.shapeDrawing), but that is an async React
+		// update: dragging the canvas before it arms leaves CanvasEventHandler seeing
+		// shapeDrawing=null, giving area selection instead of drawing. An armed tool button
+		// takes cursor: crosshair (grab when not armed), so wait on that before dragging.
 		await expect
 			.poll(
 				() =>
 					this.page
 						.locator(selectors.toolButton(tool))
 						.evaluate((el) => getComputedStyle(el).cursor),
-				{ message: `${tool} ツールが描画モードになること` },
+				{ message: `${tool} tool enters drawing mode` },
 			)
 			.toBe("crosshair");
 
 		await this.drag(from, to);
 
-		// 状態待ち: 新規オブジェクトの出現を待つ（出なければ操作が効いていない）
+		// Wait for the new object to appear; if it does not, the operation had no effect.
 		await expect
 			.poll(async () => (await this.captureObjects()).length, {
-				message: `${tool} で新規図形が作成されること`,
+				message: `${tool} creates a new shape`,
 			})
 			.toBe(before.length + 1);
 
 		const after = await this.captureObjects();
 		const created = after.find((obj) => !beforeIds.has(obj.id));
 		if (!created?.id) {
-			throw new Error(`${tool} で作成された図形の data-id が取得できない`);
+			throw new Error(
+				`cannot read the data-id of the shape created by ${tool}`,
+			);
 		}
 		return created.id;
 	}
 
 	/**
-	 * カテゴリフライアウトの図形（プラグイン提供の record 等）を選んでドラッグで
-	 * 描き、新規図形の data-id を返す。トップレベルツールは drawShape を使う。
+	 * Pick a shape from a category flyout (a plugin-provided record, say), drag to draw it, and
+	 * return the new shape's data-id. Use drawShape for top-level tools.
 	 */
 	async drawShapeFromFlyout(
 		categoryId: string,
@@ -373,40 +378,41 @@ export class CanvasDriver {
 		await expect(item).toBeVisible();
 		await item.click();
 
-		// フライアウト項目はツールボタンと違い armed 状態の cursor を持たないため、
-		// キャンバス側の cursor: crosshair を描画モード入りのシグナルにする
+		// Unlike a tool button a flyout item has no armed cursor of its own, so the canvas's
+		// cursor: crosshair is the signal that drawing mode was entered.
 		await expect
 			.poll(
 				() =>
 					this.page
 						.locator('[data-kind="canvas"]')
 						.evaluate((el) => getComputedStyle(el).cursor),
-				{ message: `${presetId} クリックで描画モードに入ること` },
+				{ message: `clicking ${presetId} enters drawing mode` },
 			)
 			.toBe("crosshair");
 
 		await this.drag(from, to);
 
-		// 状態待ち: 新規オブジェクトの出現を待つ（出なければ操作が効いていない）
+		// Wait for the new object to appear; if it does not, the operation had no effect.
 		await expect
 			.poll(async () => (await this.captureObjects()).length, {
-				message: `${presetId} で新規図形が作成されること`,
+				message: `${presetId} creates a new shape`,
 			})
 			.toBe(before.length + 1);
 
 		const after = await this.captureObjects();
 		const created = after.find((obj) => !beforeIds.has(obj.id));
 		if (!created?.id) {
-			throw new Error(`${presetId} で作成された図形の data-id が取得できない`);
+			throw new Error(
+				`cannot read the data-id of the shape created by ${presetId}`,
+			);
 		}
 		return created.id;
 	}
 
 	/**
-	 * クリックだけで配置される図形（Sticky）をツールボタンのクリックで
-	 * キャンバス中央へ即時追加し、新規 data-id を返す。
-	 * これらは対角ドラッグではなく StencilLibraryItemHandler が即配置するため、
-	 * crosshair 待ち＋ドラッグの drawShape ではなく本メソッドを使う。
+	 * Add a click-placed shape (Sticky) at the canvas center from its tool button and return the
+	 * new data-id. StencilLibraryItemHandler places these outright rather than by diagonal drag,
+	 * so they need this instead of drawShape's crosshair-wait-then-drag.
 	 */
 	async placeShape(tool: ToolTitle): Promise<string> {
 		const before = await this.captureObjects();
@@ -416,7 +422,7 @@ export class CanvasDriver {
 
 		await expect
 			.poll(async () => (await this.captureObjects()).length, {
-				message: `${tool} で新規図形が配置されること`,
+				message: `${tool} places a new shape`,
 			})
 			.toBe(before.length + 1);
 
@@ -424,12 +430,12 @@ export class CanvasDriver {
 			(obj) => !beforeIds.has(obj.id),
 		);
 		if (!created?.id) {
-			throw new Error(`${tool} で配置された図形の data-id が取得できない`);
+			throw new Error(`cannot read the data-id of the shape placed by ${tool}`);
 		}
 		return created.id;
 	}
 
-	/** 図形をクリックで選択し、ObjectMenu の表示を待つ */
+	/** Click a shape to select it and wait for the ObjectMenu. */
 	async selectAt(point: { x: number; y: number }) {
 		const screen = this.toScreen(point);
 		await this.page.mouse.click(screen.x, screen.y);
@@ -437,8 +443,8 @@ export class CanvasDriver {
 	}
 
 	/**
-	 * コンテンツ座標を左クリックする（選択状態のアサーションはしない）。
-	 * コネクターなど selectAt の制御ハンドル前提が当てはまらない対象の選択に使う。
+	 * Left-click a content coordinate, asserting nothing about the selection. For targets where
+	 * selectAt's assumption of a control handle does not hold, such as connectors.
 	 */
 	async clickAt(point: { x: number; y: number }) {
 		const screen = this.toScreen(point);
@@ -446,8 +452,8 @@ export class CanvasDriver {
 	}
 
 	/**
-	 * Ctrl を押しながらコンテンツ座標をクリックし、選択に追加／トグルする。
-	 * 生の page.mouse.click は座標変換を通らないため、追加選択はこのメソッドを使う。
+	 * Ctrl-click a content coordinate to add to or toggle the selection. A raw page.mouse.click
+	 * skips the coordinate conversion, so additive selection must go through this.
 	 */
 	async ctrlClickAt(point: { x: number; y: number }) {
 		const screen = this.toScreen(point);
@@ -456,7 +462,7 @@ export class CanvasDriver {
 		await this.page.keyboard.up("Control");
 	}
 
-	/** 空きスペースをクリックして選択解除（テキスト編集中なら確定）する */
+	/** Click empty space to deselect, committing any text edit in progress. */
 	async deselect() {
 		const screen = this.toScreen(EMPTY_SPOT);
 		await this.page.mouse.click(screen.x, screen.y);
@@ -464,17 +470,16 @@ export class CanvasDriver {
 	}
 
 	/**
-	 * テキストエディタが開き、textarea が入力を受け取れる状態になるまで待つ。
-	 * 受付前に打鍵するとその分がキャンバス側へ落ちる。打鍵内容に改行があると
-	 * その Enter 自体が編集を開始し直すため、値が空ではなく「途中から入った」
-	 * 紛らわしい形になる（issue #237）。打鍵前は必ずこれを通すこと。
+	 * Wait until the text editor is open and the textarea can accept input. Keystrokes sent
+	 * before then fall through to the canvas, and a newline among them restarts editing, so the
+	 * value ends up confusingly partial rather than empty (#237). Always call this before typing.
 	 */
 	async waitForTextEditor() {
 		await expect(this.page.locator(selectors.textEditor)).toBeVisible();
 		await expect(this.textArea()).toBeFocused();
 	}
 
-	/** ダブルクリックでテキストエディタを開き、タイプする。確定は commitText() */
+	/** Double-click to open the text editor and type; commit with commitText(). */
 	async typeTextAt(point: { x: number; y: number }, text: string) {
 		const screen = this.toScreen(point);
 		await this.page.mouse.dblclick(screen.x, screen.y);
@@ -482,25 +487,25 @@ export class CanvasDriver {
 		await this.page.keyboard.type(text);
 	}
 
-	/** テキスト編集を外側クリックで確定する（Escape はキャンセルなので使わない） */
+	/** Commit a text edit by clicking outside; Escape cancels, so it is not used here. */
 	async commitText() {
 		const screen = this.toScreen(EMPTY_SPOT);
 		await this.page.mouse.click(screen.x, screen.y);
 		await expect(this.page.locator(selectors.textEditor)).toHaveCount(0);
 	}
 
-	/** テキスト編集を Escape でキャンセルする */
+	/** Cancel a text edit with Escape. */
 	async cancelText() {
 		await this.page.keyboard.press("Escape");
 		await expect(this.page.locator(selectors.textEditor)).toHaveCount(0);
 	}
 
-	/** 編集中の textarea 要素のロケーター（data-kind ラッパーの内側） */
+	/** Locator for the textarea being edited, inside the data-kind wrapper. */
 	textArea() {
 		return this.page.locator(`${selectors.textEditor} textarea`);
 	}
 
-	/** 編集中の textarea にフォーカスが当たっているか */
+	/** Whether the textarea being edited has focus. */
 	async isTextEditorFocused(): Promise<boolean> {
 		return this.page.evaluate((sel) => {
 			const textarea = document.querySelector(`${sel} textarea`);
@@ -509,8 +514,8 @@ export class CanvasDriver {
 	}
 
 	/**
-	 * 編集中エディタの縦方向アライメントを top / middle / bottom で返す。
-	 * ラッパー（flex）の computed align-items から逆算する。
+	 * Vertical alignment of the editor being edited, derived from the flex wrapper's computed
+	 * align-items.
 	 */
 	async textEditorVerticalAlign(): Promise<"top" | "middle" | "bottom" | null> {
 		return this.page.evaluate((sel) => {
@@ -532,7 +537,7 @@ export class CanvasDriver {
 		}, selectors.textEditor);
 	}
 
-	/** 編集中 textarea のスクロール位置 */
+	/** Scroll position of the textarea being edited. */
 	async textEditorScrollTop(): Promise<number> {
 		return this.page.evaluate((sel) => {
 			const textarea = document.querySelector(`${sel} textarea`);
@@ -540,7 +545,7 @@ export class CanvasDriver {
 		}, selectors.textEditor);
 	}
 
-	/** 編集中 textarea の選択範囲（selectionStart / selectionEnd） */
+	/** Selection range (selectionStart / selectionEnd) of the textarea being edited. */
 	async textEditorSelection(): Promise<{ start: number; end: number } | null> {
 		return this.page.evaluate((sel) => {
 			const textarea = document.querySelector(`${sel} textarea`);
@@ -551,14 +556,14 @@ export class CanvasDriver {
 		}, selectors.textEditor);
 	}
 
-	/** ObjectMenu のセクション（ドロップダウン）をトグルで開く */
+	/** Toggle an ObjectMenu dropdown section open. */
 	async openObjectMenu(sectionId: string) {
 		await this.page.click(selectors.objectMenuToggle(sectionId));
 	}
 
 	/**
-	 * 選択中の図形の ObjectMenu からカラーピッカーを開き、CSS カラーを設定する。
-	 * プリセットにない色も hex や "transparent" で指定できる。
+	 * Open the color picker from the selected shape's ObjectMenu and set a CSS color. Colors
+	 * outside the presets can be given as hex or "transparent".
 	 */
 	async setColor(sectionId: ColorSectionId, cssColor: string) {
 		await this.openObjectMenu(sectionId);
@@ -568,8 +573,12 @@ export class CanvasDriver {
 	}
 
 	/**
-	 * カラーピッカーのプリセットスウォッチをクリックして色を設定する。
-	 * セクションはあらかじめ開いておくか、open=true で開いてから押す。
+	 * Set a color by clicking a preset swatch in the color picker.
+	 *
+	 * @param sectionId - Color section to open, ignored when `open` is false
+	 * @param property - Style property the swatch writes, as it appears in the `set:` data-part
+	 * @param value - Swatch value to click, matched exactly against the `set:` data-part
+	 * @param open - Open the section first; pass false when it is already open
 	 */
 	async pickColorSwatch(
 		sectionId: ColorSectionId,
@@ -584,27 +593,30 @@ export class CanvasDriver {
 	}
 
 	/**
-	 * ObjectMenu のスライダーを水平ドラッグして値を変える。
-	 * セクションは事前に開いておくこと。dx 正で右（増加）方向。
-	 * スライダーは gesture（native-pointer）経由で drag/dragEnd を発火させる必要があるため
-	 * 実際のポインタドラッグで操作する。
+	 * Change an ObjectMenu slider by dragging it horizontally. The section must already be open.
+	 * A real pointer drag is used because the slider has to fire drag/dragEnd through the
+	 * native-pointer gesture path.
+	 *
+	 * @param property - Style property the slider writes, as it appears in the `slider:` data-part
+	 * @param dx - Screen-pixel distance from the slider's center; positive moves right, raising
+	 *   the value
 	 */
 	async dragSliderBy(property: string, dx: number) {
 		const slider = this.page.locator(selectors.objectMenuSlider(property));
 		await expect(slider).toBeVisible();
 		const box = await slider.boundingBox();
 		if (!box) {
-			throw new Error(`スライダー ${property} の位置が取得できない`);
+			throw new Error(`cannot read the position of slider ${property}`);
 		}
-		// box は画面座標。dragScreen で画面座標のまま操作する。
+		// box is in screen coordinates, and dragScreen keeps them that way.
 		const startX = box.x + box.width / 2;
 		const y = box.y + box.height / 2;
 		await this.dragScreen({ x: startX, y }, { x: startX + dx, y }, 10);
 	}
 
 	/**
-	 * ObjectMenu スライダー横の数値入力欄に値を入れて Enter で確定する。
-	 * セクションは事前に開いておくこと。テスト専用フック data-testid で特定する。
+	 * Type a value into the number input beside an ObjectMenu slider and commit with Enter. The
+	 * section must already be open; the input is found by its test-only data-testid hook.
 	 */
 	async setNumberInput(property: string, value: number) {
 		const input = this.page.getByTestId(`menu-number-input:${property}`);
@@ -612,13 +624,13 @@ export class CanvasDriver {
 		await input.press("Enter");
 	}
 
-	/** 選択中の図形の縦方向アライメント（top / middle / bottom）を設定する */
+	/** Set the vertical alignment of the selected shape. */
 	async setVerticalAlign(value: "top" | "middle" | "bottom") {
 		await this.openObjectMenu("alignment");
 		await this.page.click(selectors.objectMenuSet("verticalAlign", value));
 	}
 
-	/** 選択中の線・コネクター・図形枠線の線種を設定する */
+	/** Set the dash style of the selected line, connector or shape border. */
 	async setStrokeDashType(
 		menuSectionId: "line-style" | "border-style",
 		dashType: "solid" | "dashed" | "dotted",
@@ -628,8 +640,8 @@ export class CanvasDriver {
 	}
 
 	/**
-	 * 選択中の図形の接続アンカーから指定座標へドラッグしてコネクターを作成し、
-	 * 新規コネクターの data-id を返す。接続元はあらかじめ選択しておくこと。
+	 * Create a connector by dragging from the selected shape's connection anchor to a point, and
+	 * return the new connector's data-id. The source shape must already be selected.
 	 */
 	async createConnector(
 		sourceAnchorId: AnchorId,
@@ -643,9 +655,9 @@ export class CanvasDriver {
 		await expect(anchor).toBeVisible();
 		const box = await anchor.boundingBox();
 		if (!box) {
-			throw new Error(`アンカー ${sourceAnchorId} の位置が取得できない`);
+			throw new Error(`cannot read the position of anchor ${sourceAnchorId}`);
 		}
-		// box は画面座標、dropPoint はコンテンツ座標。dragScreen に画面座標で揃える。
+		// box is screen coordinates and dropPoint is content coordinates; align on screen for dragScreen.
 		await this.dragScreen(
 			{ x: box.x + box.width / 2, y: box.y + box.height / 2 },
 			this.toScreen(dropPoint),
@@ -664,12 +676,12 @@ export class CanvasDriver {
 			(obj) => !beforeIds.has(obj.id),
 		);
 		if (!created?.id) {
-			throw new Error("作成されたコネクターの data-id が取得できない");
+			throw new Error("cannot read the data-id of the created connector");
 		}
 		return created.id;
 	}
 
-	/** 指定座標を右クリックして自前のコンテキストメニューを開く */
+	/** Right-click a point to open the canvas's own context menu. */
 	async openContextMenu(point: { x: number; y: number }) {
 		const screen = this.toScreen(point);
 		await this.page.mouse.click(screen.x, screen.y, { button: "right" });
@@ -678,24 +690,24 @@ export class CanvasDriver {
 		).toBeVisible();
 	}
 
-	/** 自前のコンテキストメニューが表示されているか */
+	/** Whether the canvas's own context menu is shown. */
 	async contextMenuVisible(): Promise<boolean> {
 		return (await this.page.locator(selectors.contextMenuAny).count()) > 0;
 	}
 
-	/** コンテキストメニューの command 項目をクリックする */
+	/** Click a context-menu command item. */
 	async clickContextMenuCommand(commandId: string) {
 		await this.page.click(selectors.contextMenuCommand(commandId));
 	}
 
-	/** コンテキストメニューの callback 項目をクリックする */
+	/** Click a context-menu callback item. */
 	async clickContextMenuItem(id: string) {
 		await this.page.click(selectors.contextMenuCallback(id));
 	}
 
 	/**
-	 * 変形ハンドル（リサイズ8方向 / 回転）をドラッグする。対象は選択済みであること。
-	 * handle は selectors.transformControl と同じ識別子。
+	 * Drag a transform handle (the eight resize directions or rotation). The target must already
+	 * be selected, and `handle` uses the same identifiers as selectors.transformControl.
 	 */
 	async dragTransformHandle(
 		handle:
@@ -715,18 +727,18 @@ export class CanvasDriver {
 		await expect(control).toBeVisible();
 		const box = await control.boundingBox();
 		if (!box) {
-			throw new Error(`変形ハンドル ${handle} の位置が取得できない`);
+			throw new Error(`cannot read the position of transform handle ${handle}`);
 		}
-		// box（ハンドル位置）は画面座標、to はコンテンツ座標。画面座標で揃える。
+		// The handle box is screen coordinates and `to` is content coordinates; align on screen.
 		const from = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 		const toScreen = this.toScreen(to);
 		if (!shift && !ctrl) {
 			await this.dragScreen(from, toScreen, 10);
 			return;
 		}
-		// Shift 押下中のリサイズはアスペクト比を保つ（event.mods.shift 経路）。
-		// Ctrl 押下中のリサイズはスナップを無効化する（event.mods.ctrl 経路）。
-		// 押下はドラッグ開始（mouse.down）後に行い、解放前まで保持する。
+		// Resizing with Shift held keeps the aspect ratio and with Ctrl held suppresses snapping
+		// (the event.mods.shift / event.mods.ctrl paths). Press after mouse.down and hold until
+		// the release.
 		await this.page.mouse.move(from.x, from.y);
 		await this.page.mouse.down();
 		if (shift) {
@@ -745,64 +757,67 @@ export class CanvasDriver {
 		}
 	}
 
-	/** 選択中のオブジェクトを Delete キーで削除する */
+	/** Delete the selection with the Delete key. */
 	async deleteSelection() {
 		await this.page.keyboard.press("Delete");
 	}
 
-	/** Undo（Ctrl+Z） */
+	/** Undo (Ctrl+Z). */
 	async undo() {
 		await this.page.keyboard.press("Control+z");
 	}
 
-	/** Redo（Ctrl+Shift+Z） */
+	/** Redo (Ctrl+Shift+Z). */
 	async redo() {
 		await this.page.keyboard.press("Control+Shift+z");
 	}
 
-	/** 選択をコピー（Ctrl+C）。内部クリップボードに載る */
+	/** Copy the selection (Ctrl+C), which lands in the internal clipboard. */
 	async copy() {
 		await this.page.keyboard.press("Control+c");
 	}
 
-	/** 選択を切り取り（Ctrl+X）。コピー＋削除 */
+	/** Cut the selection (Ctrl+X): copy plus delete. */
 	async cut() {
 		await this.page.keyboard.press("Control+x");
 	}
 
-	/** クリップボードから貼り付け（Ctrl+V） */
+	/** Paste from the clipboard (Ctrl+V). */
 	async paste() {
 		await this.page.keyboard.press("Control+v");
 	}
 
-	/** 選択を複製（Ctrl+D）。クリップボードを介さない */
+	/** Duplicate the selection (Ctrl+D), bypassing the clipboard. */
 	async duplicate() {
 		await this.page.keyboard.press("Control+d");
 	}
 
-	/** 全選択（Ctrl+A） */
+	/** Select all (Ctrl+A). */
 	async selectAll() {
 		await this.page.keyboard.press("Control+a");
 	}
 
-	/** Escape で選択解除（テキスト編集中でないこと） */
+	/** Deselect with Escape; must not be called while editing text. */
 	async pressEscape() {
 		await this.page.keyboard.press("Escape");
 	}
 
-	/** 選択をグループ化（Ctrl+G） */
+	/** Group the selection (Ctrl+G). */
 	async group() {
 		await this.page.keyboard.press("Control+g");
 	}
 
-	/** グループを解除（Ctrl+Shift+G） */
+	/** Ungroup (Ctrl+Shift+G). */
 	async ungroup() {
 		await this.page.keyboard.press("Control+Shift+g");
 	}
 
 	/**
-	 * 矢印キーで選択図形をナッジ移動する。
-	 * large=true（Shift 併用）で大きく移動する（通常 1px / 大 10px）。
+	 * Nudge the selected shapes with an arrow key.
+	 *
+	 * @param direction - Arrow key to press; the selection must already exist, as this asserts
+	 *   nothing about it
+	 * @param options.large - Hold Shift for the large step: 10px instead of 1px
 	 */
 	async nudge(
 		direction: "up" | "down" | "left" | "right",
@@ -817,30 +832,27 @@ export class CanvasDriver {
 		await this.page.keyboard.press(large ? `Shift+${arrowKey}` : arrowKey);
 	}
 
-	/** 全体をビューに合わせる（Ctrl+0） */
+	/** Fit everything to the view (Ctrl+0). */
 	async zoomToFit() {
 		await this.page.keyboard.press("Control+0");
 	}
 
-	/** 選択をビューに合わせる（Ctrl+2） */
+	/** Fit the selection to the view (Ctrl+2). */
 	async zoomToSelection() {
 		await this.page.keyboard.press("Control+2");
 	}
 
-	/** キーボードでズームイン（Ctrl+=）。ビューポート中心を基点に拡大する */
+	/** Zoom in from the keyboard (Ctrl+=), anchored at the viewport center. */
 	async zoomIn() {
 		await this.page.keyboard.press("Control+Equal");
 	}
 
-	/** キーボードでズームアウト（Ctrl+-）。ビューポート中心を基点に縮小する */
+	/** Zoom out from the keyboard (Ctrl+-), anchored at the viewport center. */
 	async zoomOut() {
 		await this.page.keyboard.press("Control+Minus");
 	}
 
-	/**
-	 * ObjectMenu の重なり順セクションを開いて arrange コマンドを実行する。
-	 * commandId は bringToFront / bringForward / sendBackward / sendToBack。
-	 */
+	/** Open the ObjectMenu z-order section and run an arrange command. */
 	async arrange(
 		commandId: "bringToFront" | "bringForward" | "sendBackward" | "sendToBack",
 	) {
@@ -848,13 +860,13 @@ export class CanvasDriver {
 		await this.page.click(selectors.objectMenuCommand(commandId));
 	}
 
-	/** 図形（コネクター除く）の DOM 順インデックス。SVG では後ろの要素ほど前面 */
+	/** DOM-order index among shapes, excluding connectors; later elements are in front in SVG. */
 	async objectIndex(id: string): Promise<number> {
 		return this.page.evaluate(
 			({ objectSelector, previewSelector, targetId }) => {
 				const objects = [
 					...document.querySelectorAll(objectSelector),
-					// ドラッグ描画のゴーストは data-kind=object を持つが未コミットなので除く
+					// The drag-drawing ghost carries data-kind=object but is uncommitted, so drop it.
 				].filter((el) => !el.closest(previewSelector));
 				return objects.findIndex(
 					(el) => el.getAttribute("data-id") === targetId,
@@ -869,9 +881,9 @@ export class CanvasDriver {
 	}
 
 	/**
-	 * z-order インデックス（図形 + コネクターを含む DOM 順）。SVG では後ろの要素ほど前面。
-	 * objectIndex は [data-kind=object] のみでコネクターを含まないため、コネクターの
-	 * 重なり順を確認するときはこちらを使う（複数要素で描かれるコネクターは最初の出現位置を返す）。
+	 * DOM-order index across shapes and connectors; later elements are in front in SVG. Use this
+	 * rather than objectIndex, which covers only [data-kind=object], when checking a connector's
+	 * z-order. A connector drawn from several elements reports its first occurrence.
 	 */
 	async zOrderIndex(id: string): Promise<number> {
 		return this.page.evaluate(
@@ -881,7 +893,7 @@ export class CanvasDriver {
 						`${objectSelector}, ${connectorSelector}`,
 					),
 				]
-					// ドラッグ描画のゴーストは data-kind=object を持つが未コミットなので除く
+					// The drag-drawing ghost carries data-kind=object but is uncommitted, so drop it.
 					.filter((el) => !el.closest(previewSelector))
 					.findIndex((el) => el.getAttribute("data-id") === targetId),
 			{
@@ -893,16 +905,17 @@ export class CanvasDriver {
 		);
 	}
 
-	/** data-id で図形のロケーターを取得する */
+	/** Locator for a shape by data-id. */
 	objectById(id: string) {
 		return this.page.locator(`[data-id="${id}"]`).first();
 	}
 
 	/**
-	 * 図形の描画色（fill / stroke）を computed style から取得する。
-	 * 色は SVG presentation 属性ではなく emotion CSS で当たるため、属性ではなく
-	 * getComputedStyle で検証する必要がある（issue #38 / theme 追従）。
-	 * 戻り値はブラウザ正規化済みの `rgb(...)` / `rgba(...)` 形式。
+	 * A shape's drawn fill or stroke, read from computed style. Colors come from emotion CSS
+	 * rather than SVG presentation attributes, so they must be verified through getComputedStyle
+	 * (#38 / theme following).
+	 *
+	 * @returns Browser-normalized `rgb(...)` or `rgba(...)`
 	 */
 	async computedColor(id: string, prop: "fill" | "stroke"): Promise<string> {
 		return this.objectById(id).evaluate(
@@ -912,8 +925,8 @@ export class CanvasDriver {
 	}
 
 	/**
-	 * CSS カラー文字列をブラウザの computed 形式（`rgb(...)` 等）へ正規化する。
-	 * computedColor の戻り値と比較するために使う（hex で書いたテストを保ちつつ照合できる）。
+	 * Normalize a CSS color string to the browser's computed form, for comparison against
+	 * computedColor while tests keep writing hex.
 	 */
 	async normalizeColor(cssColor: string): Promise<string> {
 		return this.page.evaluate((color) => {
@@ -927,14 +940,16 @@ export class CanvasDriver {
 	}
 
 	/**
-	 * 図形に重なって描画されたテキスト（TextOverlay）の computed スタイルを返す。
-	 * テキストは foreignObject > div(wrapper) > div(text) として描かれる。
-	 * rect / ellipse は図形要素（data-id）と foreignObject が fragment で「隣接」するが、
-	 * Sticky は `<g data-id>` の「子」として foreignObject を持つ。どちらでも拾えるよう、
-	 * まず data-id 要素の子孫から、無ければ後続兄弟から foreignObject を探す。
-	 * font-size / color / font-weight / text-align は text 側、縦アライメント（align-items）は
-	 * wrapper 側に当たるため両方を読む。テキストが無い・編集中で TextOverlay が
-	 * 描かれていないときは null を返す。
+	 * Computed style of the TextOverlay drawn over a shape, which renders as
+	 * foreignObject > div(wrapper) > div(text).
+	 *
+	 * For rect and ellipse the shape element and the foreignObject are siblings within a
+	 * fragment, while a Sticky holds the foreignObject as a child of its `<g data-id>`. To cover
+	 * both, this looks among the data-id element's descendants first and falls back to its
+	 * following siblings. font-size / color / font-weight / text-align live on the text element
+	 * and vertical alignment (align-items) on the wrapper, so both are read.
+	 *
+	 * @returns null when there is no text, or when editing has replaced the TextOverlay
 	 */
 	async textStyleOf(id: string): Promise<{
 		fontSize: string;
@@ -948,7 +963,8 @@ export class CanvasDriver {
 			if (!shape) {
 				return null;
 			}
-			// まず子孫（Sticky の `<g>` 配下）、無ければ後続兄弟（rect/ellipse の fragment）。
+			// Descendants first (under a Sticky's `<g>`), then following siblings (the
+			// rect/ellipse fragment).
 			let foreignObject: Element | null = shape.querySelector("foreignObject");
 			if (!foreignObject) {
 				let sibling = shape.nextElementSibling;
@@ -974,16 +990,16 @@ export class CanvasDriver {
 	}
 
 	/**
-	 * ポリラインの描画要素のロケーターを取得する。
-	 * ポリラインは当たり判定用（data-id 付き・透明）と描画用（stroke 等のスタイル付き）の
-	 * 2要素で構成されるため、スタイルの検証は描画側に対して行う必要がある。
+	 * Locator for a polyline's drawn element. A polyline is two elements — a transparent hit
+	 * target carrying the data-id and a styled visual — so style assertions must target the
+	 * visual one.
 	 */
 	async visualPolylineFor(id: string) {
 		const points = await this.objectById(id).getAttribute("points");
 		return this.page.locator(`polyline[points="${points}"]:not([data-kind])`);
 	}
 
-	/** キャンバスのパン/ズーム状態（メイン svg の viewBox）を取得する */
+	/** The canvas pan/zoom state, as the main svg's viewBox. */
 	async getViewBox(): Promise<string | null> {
 		return this.page.evaluate(() => {
 			const svgs = [...document.querySelectorAll("svg")];

@@ -170,7 +170,7 @@ function buildDeep(
 
 // --- benchmarks ---
 
-describe("sortObjectIdsByZOrder — フラット構造", () => {
+describe("sortObjectIdsByZOrder — flat structure", () => {
 	const small = buildFlat(50);
 	const medium = buildFlat(200);
 	const large = buildFlat(1000);
@@ -197,7 +197,7 @@ describe("sortObjectIdsByZOrder — フラット構造", () => {
 	});
 });
 
-describe("sortObjectIdsByZOrder — ネスト構造", () => {
+describe("sortObjectIdsByZOrder — nested structure", () => {
 	const small = buildNested(50);
 	const medium = buildNested(200);
 	const large = buildNested(1000);
@@ -224,30 +224,30 @@ describe("sortObjectIdsByZOrder — ネスト構造", () => {
 	});
 });
 
-describe("sortObjectIdsByZOrder — 深いネスト構造（パスキャッシュ効果）", () => {
+describe("sortObjectIdsByZOrder — deep nesting (path cache effect)", () => {
 	// The deeper the depth, the more getPathFromRoot costs, so the path cache pays off
 	const small = buildDeep(50, 10);
 	const medium = buildDeep(200, 10);
 	const large = buildDeep(1000, 10);
 
-	bench("Map(path再計算)  50 leaves / depth 10", () => {
+	bench("Map(path recomputed)  50 leaves / depth 10", () => {
 		sortObjectIdsByZOrderMapOnly(small.ids, small.objects, small.rootIds);
 	});
-	bench("Map(pathキャッシュ) 50 leaves / depth 10", () => {
+	bench("Map(path cached) 50 leaves / depth 10", () => {
 		sortObjectIdsByZOrder(small.ids, small.objects, small.rootIds);
 	});
 
-	bench("Map(path再計算)  200 leaves / depth 10", () => {
+	bench("Map(path recomputed)  200 leaves / depth 10", () => {
 		sortObjectIdsByZOrderMapOnly(medium.ids, medium.objects, medium.rootIds);
 	});
-	bench("Map(pathキャッシュ) 200 leaves / depth 10", () => {
+	bench("Map(path cached) 200 leaves / depth 10", () => {
 		sortObjectIdsByZOrder(medium.ids, medium.objects, medium.rootIds);
 	});
 
-	bench("Map(path再計算)  1000 leaves / depth 10", () => {
+	bench("Map(path recomputed)  1000 leaves / depth 10", () => {
 		sortObjectIdsByZOrderMapOnly(large.ids, large.objects, large.rootIds);
 	});
-	bench("Map(pathキャッシュ) 1000 leaves / depth 10", () => {
+	bench("Map(path cached) 1000 leaves / depth 10", () => {
 		sortObjectIdsByZOrder(large.ids, large.objects, large.rootIds);
 	});
 });

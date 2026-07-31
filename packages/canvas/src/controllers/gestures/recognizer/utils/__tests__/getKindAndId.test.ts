@@ -87,8 +87,8 @@ describe("getKindAndId", () => {
 	});
 
 	it("reads data-part from a descendant of the [data-kind] element", () => {
-		// 区画付き図形（record）は data-kind を1要素に保ったまま、区画ごとの
-		// ヒット要素に data-part を付ける。
+		// A compartmented shape (record) keeps data-kind on a single element and puts
+		// data-part on the per-compartment hit element.
 		const { partEl } = makeNestedPartEl("object", "obj-1", "rows");
 		expect(getKindAndId(partEl)).toEqual({
 			kind: "object",

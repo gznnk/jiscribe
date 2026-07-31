@@ -1,9 +1,9 @@
 import type { CanvasDoc } from "../../src";
 import { Canvas, parseCanvasText } from "../../src";
 
-// 2 キャンバス構成。キーボードスコープ（フォーカスされた Canvas だけが
-// ショートカットを処理する）の e2e 検証に使う。図形 ID はページ内で一意にして
-// セレクタの衝突を避ける。Canvas の契約どおり parseCanvasText を通した doc を渡す。
+// Two-canvas setup for verifying keyboard scoping, where only the focused Canvas handles
+// shortcuts. Shape IDs are unique across the page so selectors cannot collide, and the doc goes
+// through parseCanvasText as the Canvas contract requires.
 const parseMultiDoc = (rectId: string): CanvasDoc => {
 	const result = parseCanvasText(
 		JSON.stringify({
@@ -22,7 +22,7 @@ const parseMultiDoc = (rectId: string): CanvasDoc => {
 const multiDocA = parseMultiDoc("rect-a");
 const multiDocB = parseMultiDoc("rect-b");
 
-/** 複数 Canvas 埋め込みの検証ページ。ホストがフォーカスを管理する想定で autoFocus は切る。 */
+/** Page for verifying multiple embedded Canvases. autoFocus is off, as the host owns focus. */
 export function MultiCanvasApp() {
 	return (
 		<div className="app" style={{ display: "flex" }}>

@@ -151,7 +151,7 @@ export const resolveConnectorPoints = (
 	if (isOrthogonalRouting(connectorState.routing) || isSelfLoop) {
 		// With vertices, `points` **is** the path: the corners are drawn exactly as stored, with only
 		// the two next to the endpoints sliding along to keep their segment axis-aligned
-		// (alignVertexPath 参照). Nothing is routed, so nothing is avoided — a shape moved across the
+		// (see alignVertexPath). Nothing is routed, so nothing is avoided — a shape moved across the
 		// route is simply crossed.
 		if (waypoints.length > 0) {
 			return {

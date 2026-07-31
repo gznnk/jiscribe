@@ -66,7 +66,7 @@ export class ConnectorVertexInsertHandler extends ControlStrategy {
 
 		// The label box shares the connector's data-id with this handle, but the
 		// pressed control is excluded from the hover stack before the id-dedup
-		// (getHoveredElements 参照), so the box is visible here when hit.
+		// (see getHoveredElements), so the box is visible here when hit.
 		if (event.type === "doubleClick") {
 			const isLabelBoxHit = event
 				.getHovered()

@@ -42,10 +42,10 @@ const withoutRepeats = (vertices: Point[]): Point[] =>
  * Nothing here keeps the result tidy: dragged far enough the path doubles back over a shape, and it
  * is left that way, and a leg an earlier drag left behind can simply be grabbed and moved again.
  * What it does clean up are the corners its own move has degenerated: vertices that repeat their
- * neighbour (withoutRepeats 参照), vertices landing exactly on an endpoint, and vertices whose
+ * neighbour (see withoutRepeats), vertices landing exactly on an endpoint, and vertices whose
  * neighbouring segments have become colinear — a run landing on the line of an adjacent segment
  * leaves no corner between them, and an overshoot folding back on itself would freeze into a stub
- * nobody can edit (isNoCorner 参照). After every drag, each stored corner is a real right angle.
+ * nobody can edit (see isNoCorner). After every drag, each stored corner is a real right angle.
  *
  * @param path - The drawn path the drag started from, endpoints included
  * @param segmentIndex - The segment being dragged, spanning `path[i]` → `path[i + 1]`

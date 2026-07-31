@@ -135,11 +135,11 @@ const isValidTextSlotStyle = (slot: TextSlot): boolean => {
 /**
  * Whether the slot keys are the set `textShape` declares. A `"body"` type holds
  * exactly the one `body` slot: the mapper materializes it even for a doc with
- * neither text nor styling (TextSlotsMapper 参照), so a state missing it, or
+ * neither text nor styling (see TextSlotsMapper), so a state missing it, or
  * carrying a key beside it, never came through the mapper. Left unchecked, such
  * a key would be drawn and editable yet dropped on save, since `mapTextStateToDoc`
  * reads only `body`. A `"slots"` type's key set is the type's own to pin
- * (validateRecordState 参照), so it passes here.
+ * (see validateRecordState), so it passes here.
  */
 const hasDeclaredTextSlots = (
 	text: unknown,

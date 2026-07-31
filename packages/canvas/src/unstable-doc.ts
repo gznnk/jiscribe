@@ -25,7 +25,7 @@ export { AUTO_COLOR } from "./schemas/objects/utils/autoColor";
 
 export { DEFAULT_FONT_FAMILY } from "./constants/defaultFontFamily";
 
-// 表示(TextOverlayFrame)と編集(TextEditor)が共有する line-height。行単位の寸法を
-// 自前で持つ図形（record の行高など）は、描画される行の高さとずれないように
-// この値から行高を作る。
+// line-height shared by display (TextOverlayFrame) and editing (TextEditor). Shapes that
+// carry their own per-row dimensions must derive row height from this value, or their rows
+// drift from the rendered line height.
 export { TEXT_LINE_HEIGHT } from "./constants/textLineHeight";
