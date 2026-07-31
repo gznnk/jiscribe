@@ -56,7 +56,7 @@ Commands are split into directories by purpose (`controllers/commands/`).
 | `selection/` | SelectAll / DeselectAll / Delete / Cut / Copy / Duplicate                                                                                 |
 | `arrange/`   | `MoveCommands` (arrow-key nudge: up/down/left/right × normal/Shift, 8 commands) / BringToFront / BringForward / SendBackward / SendToBack |
 | `arrow/`     | SwapArrows (swap connector endpoints)                                                                                                     |
-| `connector/` | SetRoutingStraight / SetRoutingOrthogonal (switch connector routing)                                                                      |
+| `connector/` | SetRoutingStraight / SetRoutingOrthogonal (line shape) / ResetConnectorRoute (drop authored vertices)                                     |
 | `group/`     | Group / Ungroup                                                                                                                           |
 | `history/`   | Undo / Redo                                                                                                                               |
 | `text/`      | StartTextEdit                                                                                                                             |

@@ -748,34 +748,43 @@ A connector object placed in `root` (top level, mixed with the objects in z-orde
 }
 ```
 
-| Field        | Type                          | Required | Description                                                                 |
-| ------------ | ----------------------------- | -------- | --------------------------------------------------------------------------- |
-| `points`     | `Point[]`                     | ✅       | Intermediate waypoints; used only with `"routing": "straight"` (see below). |
-| `routing`    | `"straight"` / `"orthogonal"` | -        | How the path is computed. Omitted ⇒ `"orthogonal"` (default). See below.    |
-| `source`     | `EndpointRef`                 | ✅       | Start endpoint spec.                                                        |
-| `target`     | `EndpointRef`                 | ✅       | End endpoint spec.                                                          |
-| `startArrow` | `ArrowType`                   | -        | Arrowhead at the start.                                                     |
-| `endArrow`   | `ArrowType`                   | -        | Arrowhead at the end.                                                       |
-| `label`      | `ConnectorLabel`              | -        | Optional edge label drawn on the connector. See below.                      |
+| Field        | Type                          | Required | Description                                                           |
+| ------------ | ----------------------------- | -------- | --------------------------------------------------------------------- |
+| `points`     | `Point[]`                     | ✅       | The route's vertices; empty to let the engine route it (see below).   |
+| `routing`    | `"straight"` / `"orthogonal"` | -        | Shape of the segments. Omitted ⇒ `"orthogonal"` (default). See below. |
+| `source`     | `EndpointRef`                 | ✅       | Start endpoint spec.                                                  |
+| `target`     | `EndpointRef`                 | ✅       | End endpoint spec.                                                    |
+| `startArrow` | `ArrowType`                   | -        | Arrowhead at the start.                                               |
+| `endArrow`   | `ArrowType`                   | -        | Arrowhead at the end.                                                 |
+| `label`      | `ConnectorLabel`              | -        | Optional edge label drawn on the connector. See below.                |
 
 Do **not** include endpoint coordinates in `points`. The endpoints are authoritative via `source` / `target`
 (EndpointRef) and are resolved dynamically at render time as the connected objects move. `points` holds only the
-intermediate waypoints (world coordinates) in source → target order, and is empty for an orthogonal connector
-(its path is derived) or for a straight connector with no manual bends.
+intermediate vertices (world coordinates) in source → target order. **Empty is the normal case** — it lets the
+engine route the whole path.
 
-**Routing.** `routing` selects how the path between the endpoints is drawn:
+**Routing.** `routing` is the shape of the segments, and nothing else:
 
-- `"orthogonal"` (**the default when omitted**): a horizontal/vertical (right-angle) path auto-generated at
-  render time from the endpoint shapes. It follows the objects as they move and **ignores `points`** (keep
-  `points` empty). This is the recommended style for flowchart-style wiring — just omit `routing`.
-- `"straight"`: a straight line through the manual `points` waypoints. Set `"routing": "straight"` explicitly
-  when you want a straight line.
+- `"orthogonal"` (**the default when omitted**): every segment is axis-aligned, so the line bends only at right
+  angles. The recommended style for flowchart-style wiring — just omit `routing`.
+- `"straight"`: segments run at any angle — a single direct line, or a polyline through the vertices.
+
+**Vertices.** Who decides the path is a separate question, answered by `points`. Empty means the engine routes it
+end to end; non-empty means `points` **is** the path — the drawn corners are exactly the stored ones. Under
+`"orthogonal"` you must therefore keep it axis-aligned yourself: **consecutive points share x or y**, the first
+point shares the axis the line leaves the source on, and the last shares the target's. The engine avoids nothing
+and straightens nothing; only the vertex next to each endpoint slides along when a connected shape moves, so the
+segment touching it stays axis-aligned. Editor operations write that slid position back into `points` when they
+commit, so a stored list you read back always matches what is drawn.
+
+Prefer an empty `points`. Reach for vertices only when a specific route matters (steering a line clear of a
+crowded area, running several edges down a shared channel), and expect a big layout change to leave the route
+detouring — the engine will not re-route it.
 
 **Self-loops.** A connector may connect an object to itself — `source` and `target` whose `owner.id` is the
 same object (typically with different anchors, e.g. `topCenter` → `rightCenter`). This is useful for
-self-transitions in state machines. A self-loop is always rendered as a rectangular orthogonal loop around the
-object regardless of `routing`, so leave `routing` omitted and `points` empty (`"straight"` is ignored for
-self-loops).
+self-transitions in state machines. With `points` empty it is drawn as a rectangular loop around the object
+whatever `routing` says, so leave `routing` omitted and `points` empty.
 
 **Label (`label`).** A connector has **no** top-level `text` field — unlike shapes, its annotation lives in a
 nested `label` object (an "edge label" such as `"Yes"` / `"No"` on a decision branch). Omit `label` for no

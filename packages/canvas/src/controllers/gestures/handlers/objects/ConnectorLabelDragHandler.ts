@@ -208,8 +208,8 @@ const handleDragEnd = (
  * (path-length ratio) and `label.offset` (perpendicular distance).
  *
  * Only drag gestures land here; click / doubleClick on the same box stay with
- * ConnectorEventHandler, which keeps the two handlers' supports() mutually
- * exclusive (#110). The recognizer's 3px drag threshold is what keeps a sloppy
+ * ConnectorEventHandler, and to the label box rather than a segment band, which
+ * keeps the three connector handlers' supports() mutually exclusive (#110). The recognizer's 3px drag threshold is what keeps a sloppy
  * double click on the label from nudging it.
  *
  * While editing, the static label box is not rendered (ConnectorRenderer skips

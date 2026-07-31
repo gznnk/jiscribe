@@ -52,10 +52,13 @@ const ROUTING_OPTIONS: RoutingOption[] = [
 ];
 
 /**
- * Menu item for switching a connector's routing (straight / orthogonal).
- * The button on the bar shows the current routing icon, and clicking it expands the
- * options in a horizontal row. Each option fires `command:setRouting*`,
- * delegating to SetConnectorRoutingCommand.
+ * Menu item for a connector's line shape (straight / orthogonal).
+ * The button on the bar shows the current shape's icon, and clicking it expands the options in a
+ * horizontal row. Each option fires `command:setRouting*`, delegating to SetConnectorRoutingCommand.
+ *
+ * Only the shape lives here. Dropping the vertices a segment drag left behind is an action rather
+ * than a mode, so it sits in the context menu (ResetConnectorRouteCommand) instead of alongside two
+ * buttons that show which shape is active.
  *
  * Self-loops are fixed to orthogonal, so this returns null. An emptied section is
  * collapsed along with its divider via ObjectMenuSection's `:empty`.

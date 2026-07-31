@@ -117,7 +117,7 @@ Validation happens in two stages. If the structure does not hold, semantic valid
    traversing the entire document.
    - **Uniqueness of IDs**: IDs must not be duplicated across the root tree (including connectors).
      Because `CanvasDoc` is a nested tree, a "parent-child cycle" cannot occur structurally; any case that looks like a cycle is effectively "different objects sharing the same ID" — that is, nothing more than an ID duplication.
-   - **Referential integrity of connectors**: an owner's `id` must exist, and the referenced target must be of a connectable type (group / polyline / polygon / connector are not allowed). A self-loop where source and target point to the same object is permitted and is drawn as a rectangular loop via a dedicated orthogonal route (see `resolveConnectorPoints` / `routeSelfLoop`).
+   - **Referential integrity of connectors**: an owner's `id` must exist, and the referenced target must be of a connectable type (group / polyline / polygon / connector are not allowed). A self-loop where source and target point to the same object is permitted and, while its `points` are empty, is drawn as a rectangular loop via a dedicated orthogonal route (see `resolveConnectorPoints` / `routeSelfLoop`); vertices replace that fixed ring with the authored path.
 
 The `objectDocValidatorRegistry` used for validation is needed only at parse time, so `parseCanvasText`
 initializes it idempotently if it is uninitialized. This structurally lets callers avoid false positives caused by picking the wrong entry point.

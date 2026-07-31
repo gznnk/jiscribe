@@ -45,7 +45,6 @@ import { resolveCanvasMessages } from "./messages/CanvasMessages";
 import type { CanvasMessages } from "./messages/CanvasMessagesTypes";
 import { createCanvasRegistries, defaultCanvasRegistries } from "./registries";
 import type { CanvasConfig } from "./registries";
-import { graftTextEditDraft } from "./utils/graftTextEditDraft";
 import { CanvasView } from "../presentations/CanvasView";
 import type { CanvasTheme } from "../theme/CanvasTheme";
 import { buildThemeCssVars } from "../theme/themeCssVars";
@@ -68,6 +67,7 @@ import { ContextMenu } from "./ui/menu/ContextMenu";
 import { ObjectMenu } from "./ui/menu/ObjectMenu";
 import { Toolbar, type ToolbarEntry } from "./ui/menu/Toolbar";
 import { ExportDialog } from "./ui/modal/ExportDialog";
+import { graftTextEditDraft } from "./utils/graftTextEditDraft";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { Camera } from "../states/canvas/Viewport";
 
