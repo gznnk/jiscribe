@@ -59,7 +59,7 @@ export const moveConnectorSegment = (
 	axis: "x" | "y",
 	value: number,
 ): Point[] => {
-	const vertices = path.slice(1, -1).map((point) => ({ ...point }));
+	const vertices = path.slice(1, -1);
 	const moved = (point: Point): Point =>
 		axis === "y" ? { x: point.x, y: value } : { x: value, y: point.y };
 
@@ -135,32 +135,11 @@ export const moveConnectorSegment = (
 	const atSource = lo === 0;
 	const atTarget = hi === path.length - 2;
 
-	if (atSource && atTarget) {
-		// The whole path is one run joining the two endpoints: a perpendicular on each side.
-		return cleanedUp([moved(source), ...vertices.map(moved), moved(target)]);
-	}
-
-	if (atSource) {
-		// The run covers path[0] → path[hi + 1], whose interior is vertices[0..hi]. moved(source)
-		// is where the perpendicular from the source meets the moved run.
-		return cleanedUp([
-			moved(source),
-			...vertices.slice(0, hi + 1).map(moved),
-			...vertices.slice(hi + 1),
-		]);
-	}
-
-	if (atTarget) {
-		// The run covers path[lo] → path[path.length - 1], whose interior is vertices[lo - 1..].
-		return cleanedUp([
-			...vertices.slice(0, lo - 1),
-			...vertices.slice(lo - 1).map(moved),
-			moved(target),
-		]);
-	}
-
-	for (let i = lo - 1; i <= hi; i++) {
-		vertices[i] = moved(vertices[i]);
-	}
-	return cleanedUp(vertices);
+	// The run covers path[lo] → path[hi + 1], whose interior is vertices[lo - 1 .. hi] — all moved.
+	// A side where the run reaches an endpoint contributes moved(endpoint), the perpendicular's
+	// foot; the other side keeps its remaining vertices as they are.
+	const beforeRun = atSource ? [moved(source)] : vertices.slice(0, lo - 1);
+	const movedRun = vertices.slice(atSource ? 0 : lo - 1, hi + 1).map(moved);
+	const afterRun = atTarget ? [moved(target)] : vertices.slice(hi + 1);
+	return cleanedUp([...beforeRun, ...movedRun, ...afterRun]);
 };

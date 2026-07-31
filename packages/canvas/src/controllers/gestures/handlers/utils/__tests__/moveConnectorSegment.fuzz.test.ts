@@ -1,20 +1,17 @@
-import {
-	calcFrameBoxFeatures,
-	type Point,
-	type TransformedFrame,
-} from "@workspace/geometry";
+import type { Point } from "@workspace/geometry";
 import { describe, expect, it } from "vitest";
 
-import {
-	alignVertexPath,
-	routeOrthogonalConnector,
-} from "../../../../../presentations/layers/content/utils/routing";
-import type { OrthogonalConnectorEndpoint } from "../../../../../presentations/layers/content/utils/routing";
-import {
-	calcConnectPoint,
-	calcConnectPointDirection,
-} from "../../../../../presentations/objects/utils/calcConnectPoint";
+import { routeOrthogonalConnector } from "../../../../../presentations/layers/content/utils/routing";
 import { moveConnectorSegment } from "../moveConnectorSegment";
+import {
+	alignedDrawnPath,
+	endpointOf,
+	FACES,
+	findDiagonal,
+	findStoredDefect,
+	makeFrame,
+	segmentAxis,
+} from "./moveConnectorSegmentHarness";
 
 /**
  * Deterministic fuzz over operation *sequences*: seeded random chains of segment drags, shape
@@ -31,40 +28,6 @@ import { moveConnectorSegment } from "../moveConnectorSegment";
  * - at any point, the drawn (aligned) path has no diagonal, whatever the shapes did
  */
 
-type Face = "top" | "bottom" | "left" | "right";
-const FACES: Face[] = ["top", "bottom", "left", "right"];
-const FACE_KEY = {
-	top: "topCenter",
-	bottom: "bottomCenter",
-	left: "leftCenter",
-	right: "rightCenter",
-} as const;
-
-const makeFrame = (
-	cx: number,
-	cy: number,
-	rotation: number,
-): TransformedFrame => ({
-	cx,
-	cy,
-	width: 100,
-	height: 100,
-	rotation,
-	scaleX: 1,
-	scaleY: 1,
-});
-
-const endpointOf = (
-	frame: TransformedFrame,
-	face: Face,
-): OrthogonalConnectorEndpoint => ({
-	point: calcConnectPoint(frame, FACE_KEY[face]),
-	direction: calcConnectPointDirection(frame, FACE_KEY[face]),
-	box: calcFrameBoxFeatures(frame),
-});
-
-const EPS = 1e-6;
-
 /** Seeded LCG so every run replays the same sequences (failures stay reproducible). */
 const lcg = (seed: number) => {
 	let state = seed >>> 0;
@@ -72,57 +35,6 @@ const lcg = (seed: number) => {
 		state = (state * 1664525 + 1013904223) >>> 0;
 		return state / 0xffffffff;
 	};
-};
-
-const segmentAxis = (a: Point, b: Point): "x" | "y" | null => {
-	if (a.y === b.y && a.x !== b.x) {
-		return "y";
-	}
-	if (a.x === b.x && a.y !== b.y) {
-		return "x";
-	}
-	return null;
-};
-
-const describePath = (path: Point[]): string =>
-	path.map((p) => `(${p.x.toFixed(2)},${p.y.toFixed(2)})`).join(" ");
-
-const findDiagonal = (path: Point[]): string | null => {
-	for (let i = 1; i < path.length; i++) {
-		const dx = Math.abs(path[i].x - path[i - 1].x);
-		const dy = Math.abs(path[i].y - path[i - 1].y);
-		if (dx > EPS && dy > EPS) {
-			return `diagonal at ${i - 1}→${i}: ${describePath(path)}`;
-		}
-	}
-	return null;
-};
-
-/** Checked only right after a drag: zero-length and colinear-adjacent segments are defects too. */
-const findStoredDefect = (path: Point[]): string | null => {
-	const diagonal = findDiagonal(path);
-	if (diagonal) {
-		return diagonal;
-	}
-	for (let i = 1; i < path.length; i++) {
-		const dx = Math.abs(path[i].x - path[i - 1].x);
-		const dy = Math.abs(path[i].y - path[i - 1].y);
-		if (dx <= EPS && dy <= EPS) {
-			return `zero-length at ${i - 1}→${i}: ${describePath(path)}`;
-		}
-	}
-	for (let i = 1; i < path.length - 1; i++) {
-		const sameX =
-			Math.abs(path[i - 1].x - path[i].x) <= EPS &&
-			Math.abs(path[i + 1].x - path[i].x) <= EPS;
-		const sameY =
-			Math.abs(path[i - 1].y - path[i].y) <= EPS &&
-			Math.abs(path[i + 1].y - path[i].y) <= EPS;
-		if (sameX || sameY) {
-			return `colinear vertex at ${i}: ${describePath(path)}`;
-		}
-	}
-	return null;
 };
 
 describe("fuzz: drag/move/rotate operation sequences", () => {
@@ -144,30 +56,17 @@ describe("fuzz: drag/move/rotate operation sequences", () => {
 			);
 			let vertices: Point[] = [];
 
-			const drawnPath = (): Point[] | null => {
+			const drawnPath = (): Point[] => {
 				const source = endpointOf(sourceFrame, sourceFace);
 				const target = endpointOf(targetFrame, targetFace);
 				if (vertices.length === 0) {
 					return routeOrthogonalConnector(source, target);
 				}
-				return [
-					source.point,
-					...alignVertexPath(
-						vertices,
-						source.point,
-						target.point,
-						source.direction,
-						target.direction,
-					),
-					target.point,
-				];
+				return alignedDrawnPath(vertices, source, target);
 			};
 
 			for (let step = 0; step < 14; step++) {
 				const path = drawnPath();
-				if (!path) {
-					continue;
-				}
 				const label = `trial ${trial} step ${step} ${sourceFace}→${targetFace}`;
 
 				const operation = rand();
@@ -206,8 +105,11 @@ describe("fuzz: drag/move/rotate operation sequences", () => {
 					if (vertices.length > 0) {
 						const source = endpointOf(sourceFrame, sourceFace);
 						const target = endpointOf(targetFrame, targetFace);
-						const stored = [source.point, ...vertices, target.point];
-						const defect = findStoredDefect(stored);
+						const defect = findStoredDefect([
+							source.point,
+							...vertices,
+							target.point,
+						]);
 						if (defect) {
 							failures.push(
 								`${label} drag seg ${segmentIndex} ${axis}→${value.toFixed(2)}: ${defect}`,
@@ -241,9 +143,8 @@ describe("fuzz: drag/move/rotate operation sequences", () => {
 					}
 				}
 
-				const after = drawnPath();
-				if (after && vertices.length > 0) {
-					const diagonal = findDiagonal(after);
+				if (vertices.length > 0) {
+					const diagonal = findDiagonal(drawnPath());
 					if (diagonal) {
 						failures.push(`${label} (drawn): ${diagonal}`);
 					}

@@ -1,21 +1,16 @@
-import {
-	calcFrameBoxFeatures,
-	type Point,
-	type TransformedFrame,
-} from "@workspace/geometry";
+import type { Point } from "@workspace/geometry";
 import { describe, expect, it } from "vitest";
 
-import {
-	alignVertexPath,
-	routeOrthogonalConnector,
-} from "../../../../../presentations/layers/content/utils/routing";
-import type { OrthogonalConnectorEndpoint } from "../../../../../presentations/layers/content/utils/routing";
-import {
-	calcConnectPoint,
-	calcConnectPointDirection,
-} from "../../../../../presentations/objects/utils/calcConnectPoint";
-import type { ConnectPointId } from "../../../../../schemas/objects/types/EndpointRef";
+import { routeOrthogonalConnector } from "../../../../../presentations/layers/content/utils/routing";
 import { moveConnectorSegment } from "../moveConnectorSegment";
+import {
+	alignedDrawnPath,
+	endpointOf,
+	findDiagonal,
+	makeFrame,
+	segmentAxis,
+	type Face,
+} from "./moveConnectorSegmentHarness";
 
 /**
  * Sweep of the promise "a route that was right-angled when stored stays right-angled, whatever the
@@ -25,82 +20,6 @@ import { moveConnectorSegment } from "../moveConnectorSegment";
  * the sequence in which the past diagonal-segment regressions appeared, which single-shot unit
  * cases kept missing. A second drag on the re-aligned path covers edit-after-move sequences.
  */
-
-type Face = "top" | "bottom" | "left" | "right";
-
-const FACE_KEY: Record<Face, ConnectPointId> = {
-	top: "topCenter",
-	bottom: "bottomCenter",
-	left: "leftCenter",
-	right: "rightCenter",
-};
-
-const SIZE = 100;
-
-const makeFrame = (
-	cx: number,
-	cy: number,
-	rotation: number,
-): TransformedFrame => ({
-	cx,
-	cy,
-	width: SIZE,
-	height: SIZE,
-	rotation,
-	scaleX: 1,
-	scaleY: 1,
-});
-
-const endpointOf = (
-	frame: TransformedFrame,
-	face: Face,
-): OrthogonalConnectorEndpoint => ({
-	point: calcConnectPoint(frame, FACE_KEY[face]),
-	direction: calcConnectPointDirection(frame, FACE_KEY[face]),
-	box: calcFrameBoxFeatures(frame),
-});
-
-const EPS = 1e-6;
-
-/** The first diagonal segment of the path, or null when every segment is axis-aligned. */
-const findDiagonal = (path: Point[]): string | null => {
-	for (let i = 1; i < path.length; i++) {
-		const dx = Math.abs(path[i].x - path[i - 1].x);
-		const dy = Math.abs(path[i].y - path[i - 1].y);
-		if (dx > EPS && dy > EPS) {
-			return `segment ${i - 1}→${i} is diagonal: ${JSON.stringify(path)}`;
-		}
-	}
-	return null;
-};
-
-/** Segment orientation of the exactly axis-aligned drawn path, or null for degenerate segments. */
-const segmentAxis = (start: Point, end: Point): "x" | "y" | null => {
-	if (start.y === end.y && start.x !== end.x) {
-		return "y";
-	}
-	if (start.x === end.x && start.y !== end.y) {
-		return "x";
-	}
-	return null;
-};
-
-/** Re-aligns stored vertices to the current endpoints and returns the full drawn path. */
-const drawnPath = (
-	vertices: Point[],
-	source: OrthogonalConnectorEndpoint,
-	target: OrthogonalConnectorEndpoint,
-): Point[] => [
-	source.point,
-	...alignVertexPath(
-		vertices,
-		source.point,
-		target.point,
-		source.direction,
-		target.direction,
-	),
-	target.point,
-];
 
 const FACE_PAIRS: [Face, Face][] = [
 	["right", "left"],
@@ -167,8 +86,9 @@ describe("vertex-path invariants over the configuration space", () => {
 										makeFrame(300 + dx, 200 + dy, targetRotation),
 										targetFace,
 									);
-									const path = drawnPath(vertices, source, target);
-									const diagonal = findDiagonal(path);
+									const diagonal = findDiagonal(
+										alignedDrawnPath(vertices, source, target),
+									);
 									if (diagonal) {
 										failures.push(
 											`${sourceFace}(rot ${sourceRotation})→${targetFace}(rot ${targetRotation}) ` +
@@ -201,7 +121,7 @@ describe("vertex-path invariants over the configuration space", () => {
 			if (!firstAxis) {
 				continue;
 			}
-			const pinned = moveConnectorSegment(
+			const pinned: Point[] = moveConnectorSegment(
 				enginePath,
 				firstIndex,
 				firstAxis,
@@ -215,7 +135,7 @@ describe("vertex-path invariants over the configuration space", () => {
 						makeFrame(300 + dx, 200 + dy, 0),
 						targetFace,
 					);
-					const moved = drawnPath(pinned, source, target);
+					const moved = alignedDrawnPath(pinned, source, target);
 
 					// Drag every still-draggable segment of the re-aligned path in turn.
 					for (
@@ -239,7 +159,9 @@ describe("vertex-path invariants over the configuration space", () => {
 						if (redragged.length === 0) {
 							continue;
 						}
-						const diagonal = findDiagonal(drawnPath(redragged, source, target));
+						const diagonal = findDiagonal(
+							alignedDrawnPath(redragged, source, target),
+						);
 						if (diagonal) {
 							failures.push(
 								`${sourceFace}→${targetFace} target moved (${dx}, ${dy}), ` +
