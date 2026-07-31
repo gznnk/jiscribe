@@ -1,7 +1,5 @@
 import type { OrthogonalDirection, Point } from "@workspace/geometry";
 
-import { isHorizontalExit } from "./endpointDirection";
-
 /**
  * Whether the segment from an end vertex to its endpoint has to be horizontal.
  *
@@ -25,6 +23,10 @@ const alignToEndpoint = (
 	wantsHorizontal(vertex, neighbour)
 		? { x: vertex.x, y: endpoint.y }
 		: { x: endpoint.x, y: vertex.y };
+
+/** Whether the line leaves an endpoint along the x axis, so its first segment is horizontal. */
+const isHorizontalExit = (direction: OrthogonalDirection): boolean =>
+	direction === "left" || direction === "right";
 
 /**
  * A single vertex has exactly two right-angled positions: sharing y with the source and x with the

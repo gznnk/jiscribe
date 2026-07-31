@@ -34,7 +34,3 @@ export const calcEndpointDirection = (
 	}
 	return snapToDirection(toward.x - point.x, toward.y - point.y);
 };
-
-/** Whether the line leaves an endpoint along the x axis, so its first segment is horizontal. */
-export const isHorizontalExit = (direction: OrthogonalDirection): boolean =>
-	direction === "left" || direction === "right";
