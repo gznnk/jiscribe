@@ -1,10 +1,17 @@
 import { DocOperationError } from "./errors";
 import { generateUniqueId } from "./ids";
+import type { ObjectRecord } from "./objectAccess";
+import type { DocDefinitions } from "./objectGeometry";
+import { applyStyle, type StyleParams } from "./styleFields";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
-import type { ObjectDocDefinition } from "../schemas/plugin/ObjectDocDefinition";
 
-export type AddObjectParams = {
+/**
+ * Where and how big the new object is, plus any styling to give it on the spot. The
+ * styling is the same set {@link import("./setStyle").setStyle} takes, and a property the
+ * type has no place for is ignored the same way.
+ */
+export type AddObjectParams = StyleParams & {
 	/** Left edge in px; the bounding box is top-left based, not center based. */
 	x: number;
 	/** Top edge in px. */
@@ -27,8 +34,8 @@ export type AddObjectParams = {
  *
  * @param doc - Mutated in place: the created object is pushed onto `doc.root`
  * @param type - Object type name, which must be a key of `definitions` and carry a factory
- * @param params - Top-left position and optional size/text; omitted width/height fall back to
- *   `calcDimensions`' default size
+ * @param params - Top-left position and optional size/text/styling; omitted width/height fall
+ *   back to `calcDimensions`' default size, and styling the type cannot hold is ignored
  * @param definitions - Type table the factory is looked up in; its keys bound what `type` accepts
  * @returns The id assigned to the new object, `${type}-N` unique across the root tree
  * @throws {@link DocOperationError} for an unknown type, for one without a factory
@@ -38,7 +45,7 @@ export const addObject = (
 	doc: CanvasDoc,
 	type: string,
 	params: AddObjectParams,
-	definitions: ReadonlyMap<string, ObjectDocDefinition>,
+	definitions: DocDefinitions,
 ): string => {
 	const definition = definitions.get(type);
 	if (definition === undefined) {
@@ -85,6 +92,8 @@ export const addObject = (
 	}
 
 	created.id = generateUniqueId(doc, type);
+	// After the factory, so an explicit colour wins over the type's own defaults.
+	applyStyle(created as ObjectRecord, params, definition);
 	doc.root.push(created);
 	return created.id;
 };

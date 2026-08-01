@@ -1,20 +1,19 @@
-import { DocOperationError } from "./errors";
+import type { Point } from "@workspace/geometry";
+
+import {
+	type AnchorHandleId,
+	buildEndpoint,
+	requireConnectable,
+} from "./connectorEndpoints";
 import { generateUniqueId } from "./ids";
+import type { DocDefinitions } from "./objectGeometry";
 import type { CanvasDoc } from "../schemas/canvas/CanvasDoc";
 import type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
 import type { ArrowType } from "../schemas/objects/types/ArrowType";
-import { defaultRoutingForAnchors } from "../schemas/objects/types/ConnectorRouting";
-import type {
-	ConnectPointId,
-	OwnedEndpointRef,
-} from "../schemas/objects/types/EndpointRef";
-import type { ObjectDocDefinition } from "../schemas/plugin/ObjectDocDefinition";
-
-/**
- * Selectable anchor position. "center" becomes a CenterAnchorSpec and an edge midpoint
- * becomes a connectPoint; "center" is never a connectPoint id.
- */
-export type AnchorHandleId = "center" | ConnectPointId;
+import {
+	type ConnectorRouting,
+	defaultRoutingForAnchors,
+} from "../schemas/objects/types/ConnectorRouting";
 
 export type ConnectParams = {
 	/** Id of the object the connector leaves; must exist in the root tree and be connectable. */
@@ -29,14 +28,26 @@ export type ConnectParams = {
 	startArrow?: ArrowType;
 	/** Arrowhead at the target end; omitted leaves the property off the doc entirely. */
 	endArrow?: ArrowType;
+	/** Label drawn on the line; omitted or empty leaves the connector unlabelled. */
+	label?: string;
+	/**
+	 * Line shape; omitted derives it from the anchors, which is what makes a
+	 * centre-to-centre connector straight.
+	 */
+	routing?: ConnectorRouting;
+	/**
+	 * Corners the route bends at, in world coordinates, source → target; endpoint
+	 * coordinates are not included. Omitted or empty lets the engine route the whole path.
+	 */
+	points?: readonly Point[];
 };
 
 /**
  * Connect two objects with a connector and return the generated id.
  *
  * @param doc - Mutated in place: the created connector is pushed onto `doc.root`
- * @param params - Both endpoints, plus optional anchors and arrowheads; the anchor kinds decide
- *   the default routing, so a center endpoint yields a straight line
+ * @param params - Both endpoints, plus optional anchors, arrowheads, label and route; the
+ *   anchor kinds decide the default routing, so a center endpoint yields a straight line
  * @param definitions - Type table whose `features.connectable` decides which endpoints are legal
  * @returns The id assigned to the new connector, `connector-N` unique across the root tree
  * @throws {@link DocOperationError} with a user-facing message when either endpoint is missing
@@ -45,7 +56,7 @@ export type ConnectParams = {
 export function connect(
 	doc: CanvasDoc,
 	params: ConnectParams,
-	definitions: ReadonlyMap<string, ObjectDocDefinition>,
+	definitions: DocDefinitions,
 ): string {
 	const sourceId = requireConnectable(doc, params.sourceId, definitions);
 	const targetId = requireConnectable(doc, params.targetId, definitions);
@@ -54,74 +65,23 @@ export function connect(
 	const source = buildEndpoint(sourceId, params.sourceAnchor);
 	const target = buildEndpoint(targetId, params.targetAnchor);
 	// A center endpoint defaults to straight; only two connectPoints leave routing omitted.
-	const routing = defaultRoutingForAnchors(source.anchor, target.anchor);
+	const routing =
+		params.routing ?? defaultRoutingForAnchors(source.anchor, target.anchor);
 	const connector = {
 		id,
 		type: "connector",
 		source,
 		target,
-		points: [],
+		points: params.points !== undefined ? [...params.points] : [],
 		...(routing !== undefined ? { routing } : {}),
 		...(params.startArrow !== undefined
 			? { startArrow: params.startArrow }
 			: {}),
 		...(params.endArrow !== undefined ? { endArrow: params.endArrow } : {}),
+		...(params.label !== undefined && params.label !== ""
+			? { label: { text: params.label } }
+			: {}),
 	};
 	doc.root.push(connector as unknown as ObjectDoc);
 	return id;
-}
-
-/** Return `id` when the object exists in the root tree and is connectable, else throw. */
-function requireConnectable(
-	doc: CanvasDoc,
-	id: string,
-	definitions: ReadonlyMap<string, ObjectDocDefinition>,
-): string {
-	// ids.ts guarantees uniqueness by recursing into group children, so this lookup must
-	// recurse too — otherwise objects inside a group could not be connected (#115).
-	const found = findObjectById(doc.root, id);
-	if (found === undefined) {
-		throw new DocOperationError(`object not found: ${id}`);
-	}
-	const definition = definitions.get(found.type);
-	if (definition === undefined || definition.features.connectable !== true) {
-		const connectableTypes = [...definitions]
-			.filter(([, candidate]) => candidate.features.connectable === true)
-			.map(([candidateType]) => candidateType);
-		throw new DocOperationError(
-			`object ${id} is "${found.type}" which is not connectable (connectable: ${connectableTypes.join(" / ")}).`,
-		);
-	}
-	return id;
-}
-
-/** First object matching `id`, searching the root tree recursively through group children. */
-function findObjectById(
-	objects: ObjectDoc[],
-	id: string,
-): ObjectDoc | undefined {
-	for (const object of objects) {
-		if (object.id === id) {
-			return object;
-		}
-		const children = (object as { children?: unknown }).children;
-		if (Array.isArray(children)) {
-			const found = findObjectById(children as ObjectDoc[], id);
-			if (found !== undefined) {
-				return found;
-			}
-		}
-	}
-	return undefined;
-}
-
-function buildEndpoint(
-	ownerId: string,
-	anchorId: AnchorHandleId | undefined,
-): OwnedEndpointRef {
-	const anchor: OwnedEndpointRef["anchor"] =
-		anchorId === undefined || anchorId === "center"
-			? { kind: "center" }
-			: { kind: "connectPoint", id: anchorId };
-	return { owner: { id: ownerId }, anchor };
 }
