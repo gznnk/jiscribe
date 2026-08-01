@@ -32,6 +32,8 @@ const mockUtil = vi.hoisted(() => ({
 	} | null,
 	optedOut: false,
 	inputValue: undefined as string | undefined,
+	// world = client / zoom, letting tests verify screen-based decisions under zoom
+	zoom: 1,
 }));
 
 // Replace only the DOM/layout-dependent utilities with deterministic stubs; use the real
@@ -42,8 +44,8 @@ vi.mock("../utils", async (importActual) => {
 	return {
 		...actual,
 		getSvgPoint: (_svg: unknown, clientX: number, clientY: number) => ({
-			x: clientX,
-			y: clientY,
+			x: clientX / mockUtil.zoom,
+			y: clientY / mockUtil.zoom,
 		}),
 		getKindAndId: () => mockUtil.kindAndId,
 		createGetHovered: () => () => [],
@@ -73,6 +75,7 @@ beforeEach(() => {
 	mockUtil.kindAndId = { id: "obj-1", kind: "rect" };
 	mockUtil.optedOut = false;
 	mockUtil.inputValue = undefined;
+	mockUtil.zoom = 1;
 	vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback): number => {
 		rafCallbacks.push(cb);
 		return rafCallbacks.length;
@@ -97,6 +100,7 @@ type Mods = {
 type MockPointerEvent = {
 	type: string;
 	pointerId: number;
+	pointerType?: string;
 	clientX: number;
 	clientY: number;
 	shiftKey: boolean;
@@ -113,10 +117,16 @@ const makeEvent = (
 	clientX: number,
 	clientY: number,
 	timeStamp: number,
-	options: { pointerId?: number; button?: number; mods?: Mods } = {},
+	options: {
+		pointerId?: number;
+		pointerType?: string;
+		button?: number;
+		mods?: Mods;
+	} = {},
 ): MockPointerEvent => ({
 	type,
 	pointerId: options.pointerId ?? 1,
+	pointerType: options.pointerType,
 	clientX,
 	clientY,
 	shiftKey: options.mods?.shiftKey ?? false,
@@ -541,6 +551,59 @@ describe("GestureRecognizer lifecycle", () => {
 		flushRaf();
 
 		expect(types()).toEqual(["pressed", "dragStart", "drag", "dragEnd"]);
+	});
+});
+
+// The drag threshold is per pointerType (touch gets a wider slop than mouse/pen)
+// and measured in screen pixels, so the feel does not change with zoom.
+describe("GestureRecognizer drag threshold (per pointerType, screen px)", () => {
+	it("a touch move within the touch slop still resolves to a click", () => {
+		const { dispatch, types } = setup();
+
+		dispatch(makeEvent("pointerdown", 0, 0, 1000, { pointerType: "touch" }));
+		dispatch(makeEvent("pointermove", 9, 0, 1016, { pointerType: "touch" }));
+		dispatch(makeEvent("pointerup", 9, 0, 1032, { pointerType: "touch" }));
+		flushRaf();
+
+		expect(types()).toEqual(["pressed", "click"]);
+	});
+
+	it("a touch move beyond the touch slop confirms the drag", () => {
+		const { dispatch, types } = setup();
+
+		dispatch(makeEvent("pointerdown", 0, 0, 1000, { pointerType: "touch" }));
+		flushRaf();
+		dispatch(makeEvent("pointermove", 10, 0, 1016, { pointerType: "touch" }));
+		flushRaf();
+		dispatch(makeEvent("pointerup", 10, 0, 1032, { pointerType: "touch" }));
+		flushRaf();
+
+		expect(types()).toEqual(["pressed", "dragStart", "dragEnd"]);
+	});
+
+	it("a mouse move of the same size already drags (the narrow mouse threshold)", () => {
+		const { dispatch, types } = setup();
+
+		dispatch(makeEvent("pointerdown", 0, 0, 1000));
+		flushRaf();
+		dispatch(makeEvent("pointermove", 9, 0, 1016));
+		flushRaf();
+
+		expect(types()).toEqual(["pressed", "dragStart"]);
+	});
+
+	it("the decision is screen-based: a 4px screen move confirms even when zoom shrinks it to 1 world px", () => {
+		mockUtil.zoom = 4;
+		const { dispatch, types, events } = setup();
+
+		dispatch(makeEvent("pointerdown", 0, 0, 1000));
+		flushRaf();
+		dispatch(makeEvent("pointermove", 4, 0, 1016));
+		flushRaf();
+
+		expect(types()).toEqual(["pressed", "dragStart"]);
+		// World coordinates on the gesture still reflect the zoomed mapping
+		expect(events.at(-1)?.last).toEqual({ x: 1, y: 0 });
 	});
 });
 

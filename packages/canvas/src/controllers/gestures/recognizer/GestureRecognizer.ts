@@ -3,6 +3,7 @@ import type React from "react";
 
 import {
 	DRAG_THRESHOLD,
+	DRAG_THRESHOLD_TOUCH,
 	PINCH_MIN_DISTANCE,
 } from "./GestureRecognizerConstants";
 import type {
@@ -83,7 +84,7 @@ export type Pressed = {
 	targetKind?: string;
 	targetPart?: string;
 	mods: Mods;
-	/** Whether the move has exceeded DRAG_THRESHOLD and been confirmed as a drag */
+	/** Whether the move has exceeded the drag threshold (per pointerType, in screen px) and been confirmed as a drag */
 	dragging: boolean;
 	button: number;
 	/**
@@ -407,8 +408,14 @@ export class GestureRecognizer {
 			this.pressed.clientLast = currentClientPos;
 
 			if (!this.pressed.dragging) {
-				const distanceSquared = delta.x ** 2 + delta.y ** 2;
-				if (distanceSquared >= DRAG_THRESHOLD) {
+				// Screen-space distance: a world-based check would scale with zoom.
+				// Touch gets a wider slop — finger jitter easily exceeds the mouse value.
+				const distanceSquared = clientDelta.x ** 2 + clientDelta.y ** 2;
+				const dragThreshold =
+					this.pressed.pointerType === "touch"
+						? DRAG_THRESHOLD_TOUCH
+						: DRAG_THRESHOLD;
+				if (distanceSquared >= dragThreshold) {
 					this.pressed.dragging = true;
 					this.fireGestureFromPressed(this.pressed, {
 						type: "dragStart",

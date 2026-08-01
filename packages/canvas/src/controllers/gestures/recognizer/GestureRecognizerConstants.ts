@@ -1,5 +1,16 @@
-/** Threshold for detecting a drag (pixels squared) */
-export const DRAG_THRESHOLD = 3 * 3; // 3 pixels squared
+/**
+ * Threshold for detecting a drag with a mouse or pen (screen pixels, squared).
+ * Compared against clientDelta so the feel does not change with zoom
+ * (cf. DOUBLE_CLICK_DISTANCE_THRESHOLD).
+ */
+export const DRAG_THRESHOLD = 3 * 3;
+
+/**
+ * Threshold for detecting a drag with a touch pointer (screen pixels, squared).
+ * Wider than the mouse/pen value: finger jitter easily exceeds 3px, which would
+ * turn taps into accidental micro-drags (and will destabilize a long-press hold).
+ */
+export const DRAG_THRESHOLD_TOUCH = 10 * 10;
 
 /** Distance from the viewport edge that triggers edge scrolling (pixels) */
 export const AUTO_SCROLL_THRESHOLD = 20;
