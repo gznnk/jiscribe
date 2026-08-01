@@ -84,4 +84,20 @@ export type GestureRecognizerConfig = {
 	containerRef: React.RefObject<HTMLElement | null>;
 	svgRef: React.RefObject<SVGSVGElement | null>;
 	canvasStateRef: React.RefObject<CanvasControllerState>;
+	/**
+	 * Policy consulted when a second touch arrives during a confirmed drag:
+	 * return true to close the drag with dragEnd and convert it into a pinch
+	 * (viewport pans), false to keep ignoring the extra touch (object drags,
+	 * shape drawing — #25). Consulted only after dragStart; pinch entry before a
+	 * drag confirms is unconditional. Omitted = never convert mid-drag. Keeps
+	 * the consumer's routing knowledge ("which drags are pans") out of the
+	 * recognizer (the canvas injects handlers/canvas/utils/isViewportPanDrag).
+	 *
+	 * @param targetKind - The drag's target kind fixed at pointerdown.
+	 * @param canvasState - The current controller state at decision time.
+	 */
+	shouldPinchFromDrag?: (
+		targetKind: string | undefined,
+		canvasState: CanvasControllerState,
+	) => boolean;
 };

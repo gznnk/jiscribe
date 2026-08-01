@@ -2,6 +2,7 @@ import type React from "react";
 import { type Dispatch, useEffect, useMemo, useRef } from "react";
 
 import type { CanvasControllerState } from "../CanvasTypes";
+import { isViewportPanDrag } from "../gestures/handlers/canvas/utils/isViewportPanDrag";
 import { GestureRecognizer } from "../gestures/recognizer/GestureRecognizer";
 import type {
 	GestureCallback,
@@ -63,6 +64,9 @@ export const useGestureRecognizer = ({
 			containerRef,
 			svgRef,
 			canvasStateRef,
+			// Canvas pan drags may convert to a pinch on a second touch (the "which
+			// drags are pans" knowledge stays beside the routing, not the recognizer)
+			shouldPinchFromDrag: isViewportPanDrag,
 		});
 	}
 

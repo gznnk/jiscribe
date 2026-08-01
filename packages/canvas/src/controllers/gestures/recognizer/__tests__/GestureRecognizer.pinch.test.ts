@@ -12,9 +12,10 @@ import type * as RecognizerUtils from "../utils";
  *
  * State machine under test:
  *   - a second touch pointerdown before dragStart discards the press (no click)
- *     and enters pinch mode; during a canvas pan drag it closes the pan with
- *     dragEnd and enters the pinch; during an object drag or shape drawing it is
- *     ignored (#25 palm rejection)
+ *     and enters pinch mode; during a confirmed drag it converts (dragEnd, then
+ *     pinch) only when the injected shouldPinchFromDrag policy allows, and is
+ *     ignored otherwise (#25 palm rejection; which drags convert is the
+ *     consumer's knowledge — see isViewportPanDrag's own test)
  *   - pinch moves fire pinch gestures with zoomScale (finger-distance ratio) and
  *     scrollDelta (negated midpoint movement), both relative to the last fired event
  *   - either finger lifting ends the pinch; the survivor stays inert until re-pressed
@@ -114,7 +115,10 @@ const makeEvent = (
 });
 
 const setup = (
-	options: { container?: HTMLElement; shapeDrawing?: object } = {},
+	options: {
+		container?: HTMLElement;
+		shouldPinchFromDrag?: GestureRecognizerConfig["shouldPinchFromDrag"];
+	} = {},
 ) => {
 	const events: Gesture[] = [];
 	const config: GestureRecognizerConfig = {
@@ -125,9 +129,9 @@ const setup = (
 			current: {
 				edgeScrollEnabled: false,
 				viewport: { minX: 0, minY: 0, width: 800, height: 600, zoom: 1 },
-				shapeDrawing: options.shapeDrawing ?? null,
 			},
 		} as GestureRecognizerConfig["canvasStateRef"],
+		shouldPinchFromDrag: options.shouldPinchFromDrag,
 	};
 	const recognizer = new GestureRecognizer(config);
 	const handlers = recognizer.getHandlers();
@@ -182,9 +186,10 @@ describe("GestureRecognizer pinch entry", () => {
 		expect(types()).toEqual(["pressed"]);
 	});
 
-	it("a second touch during a canvas pan drag closes it with dragEnd and enters the pinch", () => {
+	it("a second touch during a drag the policy allows closes it with dragEnd and enters the pinch", () => {
 		mockUtil.kindAndId = { id: "canvas", kind: "canvas" };
-		const { dispatch, types, events } = setup();
+		const shouldPinchFromDrag = vi.fn(() => true);
+		const { dispatch, types, events } = setup({ shouldPinchFromDrag });
 
 		dispatch(makeEvent("pointerdown", 0, 0, 1000, { pointerId: 1 }));
 		flushRaf();
@@ -193,7 +198,13 @@ describe("GestureRecognizer pinch entry", () => {
 		dispatch(makeEvent("pointerdown", 120, 0, 1020, { pointerId: 2 }));
 		flushRaf();
 
-		// The pan drag is closed at its last position before the pinch takes over
+		// The policy is consulted with the drag's target kind and the current state
+		expect(shouldPinchFromDrag).toHaveBeenCalledWith(
+			"canvas",
+			expect.objectContaining({ edgeScrollEnabled: false }),
+		);
+
+		// The drag is closed at its last position before the pinch takes over
 		expect(types()).toEqual(["pressed", "dragStart", "dragEnd"]);
 		expect(events.at(-1)?.last).toEqual({ x: 20, y: 0 });
 
@@ -204,9 +215,9 @@ describe("GestureRecognizer pinch entry", () => {
 		expect(events.at(-1)?.zoomScale).toBe(2);
 	});
 
-	it("a second touch while drawing a shape is ignored (no pinch, no dragEnd)", () => {
+	it("a second touch during a drag the policy rejects is ignored (no pinch, no dragEnd)", () => {
 		mockUtil.kindAndId = { id: "canvas", kind: "canvas" };
-		const { dispatch, types } = setup({ shapeDrawing: {} });
+		const { dispatch, types } = setup({ shouldPinchFromDrag: () => false });
 
 		dispatch(makeEvent("pointerdown", 0, 0, 1000, { pointerId: 1 }));
 		flushRaf();
@@ -214,7 +225,7 @@ describe("GestureRecognizer pinch entry", () => {
 		flushRaf();
 		dispatch(makeEvent("pointerdown", 120, 0, 1020, { pointerId: 2 }));
 		flushRaf();
-		// The first finger keeps drawing
+		// The first finger keeps dragging
 		dispatch(makeEvent("pointermove", 40, 0, 1032, { pointerId: 1 }));
 		flushRaf();
 

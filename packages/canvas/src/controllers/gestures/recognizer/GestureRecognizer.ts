@@ -136,6 +136,7 @@ export class GestureRecognizer {
 	private containerRef: React.RefObject<HTMLElement | null>;
 	private svgRef: React.RefObject<SVGSVGElement | null>;
 	private canvasStateRef: React.RefObject<CanvasControllerState>;
+	private shouldPinchFromDrag: GestureRecognizerConfig["shouldPinchFromDrag"];
 
 	private pressed: Pressed | null = null;
 
@@ -167,6 +168,7 @@ export class GestureRecognizer {
 		this.containerRef = config.containerRef;
 		this.svgRef = config.svgRef;
 		this.canvasStateRef = config.canvasStateRef;
+		this.shouldPinchFromDrag = config.shouldPinchFromDrag;
 	}
 
 	/** Add an event to the queue and schedule processing. */
@@ -299,22 +301,25 @@ export class GestureRecognizer {
 
 			if (this.pressed !== null) {
 				// A second touch switches to a pinch (pan/zoom) when the press has not
-				// confirmed a drag yet, or when the confirmed drag is a canvas pan
-				// (adding a finger mid-pan to zoom is a natural touch motion). Not from
-				// a native-pointer press (a slider mid-manipulation keeps its native
-				// drag) and not while drawing a shape (converting would commit a
-				// half-drawn shape). During an object drag, and for any mouse/pen mix,
-				// the extra pointerdown is ignored so it cannot overwrite pressed, take
-				// capture, or fire — interrupting or mis-committing the drag (#25).
-				const isCanvasPanDrag =
-					this.pressed.dragging &&
-					this.pressed.targetKind === "canvas" &&
-					!this.canvasStateRef.current?.shapeDrawing;
+				// confirmed a drag yet, or when the injected shouldPinchFromDrag policy
+				// allows converting the confirmed drag (the canvas allows its viewport
+				// pans — adding a finger mid-pan to zoom is a natural touch motion).
+				// Not from a native-pointer press (a slider mid-manipulation keeps its
+				// native drag). Otherwise, and for any mouse/pen mix, the extra
+				// pointerdown is ignored so it cannot overwrite pressed, take capture,
+				// or fire — interrupting or mis-committing the drag (#25).
+				const canConvertDrag =
+					!this.pressed.dragging ||
+					(this.shouldPinchFromDrag?.(
+						this.pressed.targetKind,
+						this.canvasStateRef.current,
+					) ??
+						false);
 				if (
 					e.pointerType === "touch" &&
 					this.pressed.pointerType === "touch" &&
 					!this.pressed.isNativePointerTarget &&
-					(!this.pressed.dragging || isCanvasPanDrag)
+					canConvertDrag
 				) {
 					// Close the pan drag first so the eventStartSnapshot lifecycle
 					// completes (dragStart saved it; only dragEnd clears it). A pan
