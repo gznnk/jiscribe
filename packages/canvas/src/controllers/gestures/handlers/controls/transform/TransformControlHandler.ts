@@ -114,6 +114,7 @@ export class TransformControlHandler extends ControlStrategy {
 		return {
 			...state,
 			eventStartSnapshot,
+			activeDragKind: "transform",
 			edgeScrollEnabled: true,
 			objectMenuOpenId: null,
 			stencilLibraryOpenCategory: null,

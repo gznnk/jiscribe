@@ -6,6 +6,7 @@ import { useObjectAnchorRegionRegistry } from "../../../../presentations/objects
 import { useObjectOutlineRegistry } from "../../../../presentations/objects/registry/ObjectOutlineRegistryContext";
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
+import type { DragKind } from "../../../CanvasTypes";
 import { ConnectionAnchors } from "../ConnectionAnchors";
 import type { AnchorHandleId } from "../ConnectionAnchorTypes";
 import { ConnectionTargetAnchors } from "../ConnectionTargetAnchors";
@@ -31,6 +32,8 @@ type ConnectionAnchorsLayerProps = {
 	 */
 	editingEndpoint?: "source" | "target" | null;
 	isTextEditing: boolean;
+	/** Kind of the drag in progress; null when none is */
+	activeDragKind: DragKind | null;
 };
 
 /**
@@ -51,6 +54,7 @@ const ConnectionAnchorsLayerComponent: React.FC<
 	editingConnectorId,
 	editingEndpoint,
 	isTextEditing,
+	activeDragKind,
 }) => {
 	const outlineRegistry = useObjectOutlineRegistry();
 	const anchorRegionRegistry = useObjectAnchorRegionRegistry();
@@ -82,7 +86,13 @@ const ConnectionAnchorsLayerComponent: React.FC<
 	// --- Source anchors (shown on single-selected, frame-based, non-group objects) ---
 	const selectedId = selectedIds.length === 1 ? selectedIds[0] : null;
 	const selectedObject = selectedId ? objects[selectedId] : null;
+	// Hidden while the selection is moved or transformed: the dots would just ride along
+	// the geometry being changed. A connection drag ("other") keeps them, since the anchor
+	// being dragged from is one of them.
+	const isShapeBeingMovedOrTransformed =
+		activeDragKind === "move" || activeDragKind === "transform";
 	const showSourceAnchors =
+		!isShapeBeingMovedOrTransformed &&
 		selectedObject != null &&
 		selectedObject.type !== "group" &&
 		isTransformedFrame(selectedObject);

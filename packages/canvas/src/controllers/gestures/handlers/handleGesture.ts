@@ -35,7 +35,8 @@ const EVENT_END_TYPES: readonly EventType[] = ["dragEnd"] as const;
 /**
  * Main gesture router.
  * Converts low-level gestures to high-level canvas events and routes them to appropriate handlers.
- * Also manages eventStartSnapshot lifecycle (save on dragStart, clear on dragEnd).
+ * Also manages the eventStartSnapshot and activeDragKind lifecycle (set on dragStart,
+ * cleared on dragEnd).
  * Automatically records history when commitVersion changes.
  *
  * Routing uses the canvas's own gesture handler registry, passed in via
@@ -157,6 +158,10 @@ export const handleGesture = (
 			keyPointsCache: newCache,
 			snapCandidatesCache,
 			eventStartSnapshot,
+			// The default every drag starts from. A handler that gives its drag a
+			// meaning refines it in its own dragStart; anything else stays "other",
+			// which is what keeps "a drag is under way" true for all of them.
+			activeDragKind: "other",
 		};
 	}
 
@@ -187,7 +192,7 @@ export const handleGesture = (
 		nextState = registries.gestureHandler.handle(nextState, event, registries);
 	}
 
-	// Clear eventStartSnapshot on event end
+	// Clear eventStartSnapshot / activeDragKind on event end
 	if (EVENT_END_TYPES.includes(canvasEvent.type)) {
 		// Only commit if objects/rootIds actually changed.
 		// (connectors are also part of rootIds, so comparing rootIds detects them)
@@ -203,6 +208,7 @@ export const handleGesture = (
 			// gesture's snapshot only ever hold plain records (#213). No-op when plain.
 			objects: materializeObjects(nextState.objects),
 			eventStartSnapshot: null,
+			activeDragKind: null,
 			snapFeedback: null,
 			axisLockFeedback: null,
 			...(hasDocChanges ? { commitVersion: state.commitVersion + 1 } : {}),

@@ -306,6 +306,7 @@ function handleObjectDragStart(
 		...canvasState,
 		selectedIds,
 		multiSelectGroup: newMultiSelectGroup,
+		activeDragKind: "move" as const,
 		edgeScrollEnabled: true,
 		// Clear the connector selection to guarantee mutual exclusion
 		selectedConnectorId: null,

@@ -66,6 +66,12 @@ pressed | dragStart | drag | dragEnd | click | doubleClick | wheel | pinch | lon
 snapCandidates 等）を保存し、`dragEnd` でクリアする。`dragEnd` 時に doc が実際に変化していれば
 `commitVersion` を進め、履歴記録のトリガにする（詳細は [状態更新フロー](./06-state-update-flow.ja.md)）。
 
+`activeDragKind`（`"move"` / `"transform"` / `"other"`）も同じ `dragStart` / `dragEnd` の境界に従う。
+`handleGesture` が全ドラッグを `"other"` で始めて `dragEnd` でクリアするので、`!== null` は常に
+「ドラッグ中」を意味する。区別が必要なハンドラは自分の `dragStart` で上書きする
+（`ObjectEventHandler` が `"move"`、`TransformControlHandler` が `"transform"`）。UI はこれを見て、
+移動中は変形フレームと接続アンカーを、変形中は接続アンカーを隠し、ObjectMenu はドラッグ中すべてで隠す。
+
 ## 連携属性 `data-gesture` / `data-kind` / `data-id` / `data-part`
 
 キャンバス上の DOM 要素は `data-*` 属性でジェスチャーシステムと連携する。

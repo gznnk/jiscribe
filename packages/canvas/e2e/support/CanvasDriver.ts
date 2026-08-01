@@ -708,6 +708,9 @@ export class CanvasDriver {
 	/**
 	 * Drag a transform handle (the eight resize directions or rotation). The target must already
 	 * be selected, and `handle` uses the same identifiers as selectors.transformControl.
+	 *
+	 * @param options.inspect - Runs with the button still down, like dragInspecting; the release
+	 *   happens even if it throws
 	 */
 	async dragTransformHandle(
 		handle:
@@ -721,7 +724,15 @@ export class CanvasDriver {
 			| "bottomRight"
 			| "rotation",
 		to: { x: number; y: number },
-		{ shift = false, ctrl = false }: { shift?: boolean; ctrl?: boolean } = {},
+		{
+			shift = false,
+			ctrl = false,
+			inspect,
+		}: {
+			shift?: boolean;
+			ctrl?: boolean;
+			inspect?: () => Promise<void>;
+		} = {},
 	) {
 		const control = this.page.locator(selectors.transformControl(handle));
 		await expect(control).toBeVisible();
@@ -732,7 +743,7 @@ export class CanvasDriver {
 		// The handle box is screen coordinates and `to` is content coordinates; align on screen.
 		const from = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 		const toScreen = this.toScreen(to);
-		if (!shift && !ctrl) {
+		if (!shift && !ctrl && !inspect) {
 			await this.dragScreen(from, toScreen, 10);
 			return;
 		}
@@ -748,12 +759,16 @@ export class CanvasDriver {
 			await this.page.keyboard.down("Control");
 		}
 		await this.page.mouse.move(toScreen.x, toScreen.y, { steps: 10 });
-		await this.page.mouse.up();
-		if (shift) {
-			await this.page.keyboard.up("Shift");
-		}
-		if (ctrl) {
-			await this.page.keyboard.up("Control");
+		try {
+			await inspect?.();
+		} finally {
+			await this.page.mouse.up();
+			if (shift) {
+				await this.page.keyboard.up("Shift");
+			}
+			if (ctrl) {
+				await this.page.keyboard.up("Control");
+			}
 		}
 	}
 

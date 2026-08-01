@@ -525,6 +525,7 @@ const CanvasComponent = ({
 								multiSelectGroup={state.multiSelectGroup}
 								zoom={state.viewport.zoom}
 								isTextEditing={!!state.textEditState}
+								activeDragKind={state.activeDragKind}
 							/>
 							<ConnectionAnchorsLayer
 								selectedIds={state.selectedIds}
@@ -534,6 +535,7 @@ const CanvasComponent = ({
 								editingConnectorId={state.editingConnectorId}
 								editingEndpoint={state.editingEndpoint}
 								isTextEditing={!!state.textEditState}
+								activeDragKind={state.activeDragKind}
 							/>
 							<VertexControlsLayer
 								selectedIds={state.selectedIds}

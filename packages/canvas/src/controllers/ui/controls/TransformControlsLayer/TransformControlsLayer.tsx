@@ -3,6 +3,7 @@ import { memo } from "react";
 
 import type { ObjectState } from "../../../../states/objects/base/ObjectState";
 import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
+import type { DragKind } from "../../../CanvasTypes";
 import { TransformControls } from "../TransformControls";
 
 type TransformControlsLayerProps = {
@@ -11,6 +12,8 @@ type TransformControlsLayerProps = {
 	multiSelectGroup?: GroupState | null;
 	zoom?: number;
 	isTextEditing: boolean;
+	/** Kind of the drag in progress; null when none is */
+	activeDragKind: DragKind | null;
 };
 
 /**
@@ -20,9 +23,22 @@ type TransformControlsLayerProps = {
  */
 const TransformControlsLayerComponent: React.FC<
 	TransformControlsLayerProps
-> = ({ selectedIds, objects, multiSelectGroup, zoom = 1, isTextEditing }) => {
+> = ({
+	selectedIds,
+	objects,
+	multiSelectGroup,
+	zoom = 1,
+	isTextEditing,
+	activeDragKind,
+}) => {
 	// Do not render controls while text editing
 	if (isTextEditing) {
+		return null;
+	}
+
+	// Hidden while the selection is moved: the frame would only trail the shapes it
+	// belongs to. A transform drag keeps it — the handle being dragged is part of it.
+	if (activeDragKind === "move") {
 		return null;
 	}
 

@@ -36,7 +36,7 @@ export function useObjectMenuPosition(
 		viewport,
 		contextMenuPosition,
 		areaSelection,
-		eventStartSnapshot,
+		activeDragKind,
 		objectMenuOpenId,
 		textEditState,
 	} = state;
@@ -62,9 +62,9 @@ export function useObjectMenuPosition(
 		if (textEditState !== null) {
 			return false;
 		}
-		// Even when eventStartSnapshot is non-null, keep showing the menu if objectMenuOpenId is non-null
-		// (so the menu stays visible while dragging a slider)
-		if (eventStartSnapshot !== null && objectMenuOpenId === null) {
+		// Hidden for every kind of drag, except while an ObjectMenu dropdown is open
+		// (so the menu stays visible while dragging one of its sliders)
+		if (activeDragKind !== null && objectMenuOpenId === null) {
 			return false;
 		}
 		if (areaSelection !== null) {
@@ -75,7 +75,7 @@ export function useObjectMenuPosition(
 		selectedIds,
 		selectedConnectorId,
 		contextMenuPosition,
-		eventStartSnapshot,
+		activeDragKind,
 		areaSelection,
 		objectMenuOpenId,
 		textEditState,

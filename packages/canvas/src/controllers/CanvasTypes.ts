@@ -168,6 +168,18 @@ export type EventStartSnapshot = {
 };
 
 /**
+ * What an in-progress drag is doing. Only the distinctions the UI gates on are named;
+ * a handler that does not name its drag leaves it at the "other" every drag starts from.
+ */
+export type DragKind =
+	/** Moving objects: a shape, a group, or a multi-selection */
+	| "move"
+	/** Resizing or rotating through a transform handle */
+	| "transform"
+	/** Everything else: connectors, vertices, connection anchors, marquee, pan, menus */
+	| "other";
+
+/**
  * Canvas state extended with undo/redo history for the controller layer.
  *
  * Pure state only: the per-canvas registry bundle is a dependency rather than data, so it is
@@ -180,6 +192,14 @@ export type CanvasControllerState = CanvasState & {
 
 	/** null when no gesture is in progress */
 	eventStartSnapshot: EventStartSnapshot | null;
+
+	/**
+	 * Kind of the drag in progress; null when none is. handleGesture owns the lifecycle —
+	 * "other" on every dragStart, null on every dragEnd — so `!== null` is exactly "a drag
+	 * is under way" no matter which handler runs. Handlers own the meaning: one that wants
+	 * its drag distinguished overwrites the kind in its own dragStart.
+	 */
+	activeDragKind: DragKind | null;
 
 	/**
 	 * Persistent across gestures; each dragStart recomputes only the diff by reference

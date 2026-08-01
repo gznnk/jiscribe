@@ -67,6 +67,14 @@ On `dragStart`, `handleGesture` saves `eventStartSnapshot` (the objects / keyPoi
 snapCandidates, etc. at the start of the operation), and clears it on `dragEnd`. If the doc has actually changed
 on `dragEnd`, it advances `commitVersion`, triggering history recording (see [State Update Flow](./06-state-update-flow.md) for details).
 
+`activeDragKind` (`"move"` / `"transform"` / `"other"`) follows that same
+`dragStart` / `dragEnd` boundary: `handleGesture` starts every drag at `"other"` and clears it
+on `dragEnd`, so `!== null` always means "a drag is under way". A handler whose drag needs to be
+told apart overwrites the kind in its own `dragStart` — `ObjectEventHandler` sets `"move"` and
+`TransformControlHandler` sets `"transform"`. The UI reads it to hide the transform frame and the
+connection anchors while a selection is moved, the anchors while it is transformed, and the
+ObjectMenu for every kind of drag.
+
 ## Linking attributes `data-gesture` / `data-kind` / `data-id` / `data-part`
 
 DOM elements on the canvas interoperate with the gesture system through `data-*` attributes.
