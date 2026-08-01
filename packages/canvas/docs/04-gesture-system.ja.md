@@ -41,9 +41,11 @@ pressed | dragStart | drag | dragEnd | click | doubleClick | wheel | pinch | lon
   右クリック相当としてコンテキストメニューを開く。
 - **タッチのパン**: `Gesture` は `pointerType` を持ち、CanvasEventHandler がタッチの1本指
   背景ドラッグをエリア選択ではなくビューポートのパン（GrabScroll パス）へルーティングする。
-  タッチでのエリア選択は当面利用不可。またタッチでは背景の選択解除とテキスト編集のコミットを
-  `pressed` でなくタップ確定（`click`）まで遅延するため、パンやピンチでは選択・開いたメニュー・
-  編集中テキストが保持される。
+  タッチでのエリア選択は当面利用不可。またタッチでは背景の選択解除を `pressed` でなく
+  タップ確定（`click`）まで遅延し、per-target ハンドラもタッチの press ではテキスト編集の
+  コミットを同様に遅延する（`commitTextEditUnlessTouchPress`）。このためパンやピンチでは
+  選択・開いたメニュー・編集中テキストが保持される（ピンチの指がオブジェクトや
+  コントロールに乗っても同じ）。
 
 ## ハンドラ構成：canvas / controls / menu / objects
 

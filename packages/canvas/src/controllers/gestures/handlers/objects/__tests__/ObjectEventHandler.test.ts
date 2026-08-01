@@ -133,12 +133,14 @@ const makeEditState = (
 const makeTapEvent = (
 	type: "pressed" | "click" | "doubleClick",
 	targetId: string,
+	pointerType?: string,
 ): CanvasEvent =>
 	({
 		type,
 		targetKind: "object",
 		targetId,
 		button: 0,
+		pointerType,
 		mods: { shift: false, alt: false, ctrl: false, meta: false },
 	}) as unknown as CanvasEvent;
 
@@ -182,6 +184,36 @@ describe("ObjectEventHandler - text edit commit", () => {
 			registries,
 		);
 		// The edit is committed to rect-1 and the session is cleared.
+		expect(bodyTextOf(next, "rect-1")).toBe("new");
+		expect(next.textEditState).toBeNull();
+		expect(next.commitVersion).toBe(6);
+	});
+
+	it("a touch pressed defers the commit (the press may still become a pinch), while still closing the context menu", () => {
+		const state = makeEditState("rect-1", "old", "new");
+		const next = ObjectEventHandler.handle(
+			state,
+			makeTapEvent("pressed", "rect-2", "touch"),
+			registries,
+		);
+		expect(next.textEditState).toBe(state.textEditState);
+		expect(bodyTextOf(next, "rect-1")).toBe("old");
+		expect(next.commitVersion).toBe(5);
+		// The context-menu close on pressed is deliberately not deferred.
+		expect(next.contextMenuPosition).toBeNull();
+	});
+
+	it("the touch tap that resolves (click) commits the deferred edit", () => {
+		const afterPressed = ObjectEventHandler.handle(
+			makeEditState("rect-1", "old", "new"),
+			makeTapEvent("pressed", "rect-2", "touch"),
+			registries,
+		);
+		const next = ObjectEventHandler.handle(
+			afterPressed,
+			makeTapEvent("click", "rect-2", "touch"),
+			registries,
+		);
 		expect(bodyTextOf(next, "rect-1")).toBe("new");
 		expect(next.textEditState).toBeNull();
 		expect(next.commitVersion).toBe(6);

@@ -171,6 +171,61 @@ test.describe("two-finger pinch (pan + zoom)", () => {
 		).toBe(transform0);
 		expect(await canvas.hasAnyControl()).toBe(false);
 	});
+
+	test("a pinch whose first finger lands on another shape keeps an active text edit open", async ({
+		canvas,
+		page,
+	}) => {
+		// Edited rect at (500, 260); the pinch's first finger lands on the other rect at (800, 460)
+		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
+		await canvas.drawShape("Rectangle", { x: 700, y: 400 }, { x: 900, y: 520 });
+		await canvas.deselect();
+
+		const client = await enableTouch(page);
+		const tp = (p: TouchPoint): TouchPoint => ({ ...p, ...canvas.toScreen(p) });
+		const editor = canvas.page.locator("textarea");
+
+		// Double-tap the first shape to start text editing
+		for (let tap = 0; tap < 2; tap++) {
+			await dispatchTouch(client, "touchStart", [
+				tp({ x: 500, y: 260, id: FIRST_FINGER_ID }),
+			]);
+			await dispatchTouch(client, "touchEnd", []);
+			await flushFrames(page);
+		}
+		await expect(editor).toHaveCount(1);
+
+		const [, , width0] = parseViewBox(await canvas.getViewBox());
+
+		// First finger on the other shape; the second lands before it moves -> pinch
+		await dispatchTouch(client, "touchStart", [
+			tp({ x: 800, y: 460, id: FIRST_FINGER_ID }),
+		]);
+		await flushFrames(page);
+		await dispatchTouch(client, "touchStart", [
+			tp({ x: 800, y: 460, id: FIRST_FINGER_ID }),
+			tp({ x: 600, y: 460, id: SECOND_FINGER_ID }),
+		]);
+		await flushFrames(page);
+		await dispatchTouch(client, "touchMove", [
+			tp({ x: 800, y: 460, id: FIRST_FINGER_ID }),
+			tp({ x: 400, y: 460, id: SECOND_FINGER_ID }),
+		]);
+		await flushFrames(page);
+
+		// Finger distance 200 -> 400 = 2x zoom
+		await expect
+			.poll(async () => parseViewBox(await canvas.getViewBox())[2], {
+				message: "the pinch over the other shape still zooms",
+			})
+			.toBeCloseTo(width0 / 2, 3);
+
+		await dispatchTouch(client, "touchEnd", []);
+		await flushFrames(page);
+
+		// The press on the other shape never resolved to a tap, so the edit survives
+		await expect(editor).toHaveCount(1);
+	});
 });
 
 test.describe("multi-touch during an object drag (issue #25)", () => {

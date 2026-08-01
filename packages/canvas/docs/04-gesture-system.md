@@ -43,9 +43,10 @@ Key points:
   buttons — and opens the context menu, mirroring the right-button click.
 - **Touch panning**: Gestures carry `pointerType`, and CanvasEventHandler routes a one-finger touch drag on
   the canvas background to viewport panning (the GrabScroll path) instead of area selection. Area selection
-  is unavailable on touch for now. On touch, background deselection and the text-edit commit also wait for
-  the tap to resolve (`click`) instead of firing on `pressed`, so pans and pinches preserve the selection,
-  open menus, and an active edit.
+  is unavailable on touch for now. On touch, background deselection waits for the tap to resolve (`click`)
+  instead of firing on `pressed`, and the per-target handlers defer the text-edit commit for a touch press
+  the same way (`commitTextEditUnlessTouchPress`), so pans and pinches preserve the selection, open menus,
+  and an active edit — even when a pinch finger lands on an object or control.
 
 ## Handler composition: canvas / controls / menu / objects
 

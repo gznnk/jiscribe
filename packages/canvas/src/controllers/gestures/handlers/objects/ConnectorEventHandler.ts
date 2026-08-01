@@ -1,10 +1,10 @@
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
-import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
+import { commitTextEditUnlessTouchPress } from "../utils/commitTextEditUnlessTouchPress";
 import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 import { startConnectorLabelEdit } from "../utils/startConnectorLabelEdit";
 
@@ -23,7 +23,8 @@ import { startConnectorLabelEdit } from "../utils/startConnectorLabelEdit";
  *
  * While editing, the static label box is not rendered and the editor overlay
  * (data-gesture="none") sits in its place, so any tap that reaches this handler
- * is outside the editor and commits the pending edit like any other outside tap.
+ * is outside the editor and commits the pending edit like any other outside tap
+ * (deferred for a touch press — see commitTextEditUnlessTouchPress).
  */
 export const ConnectorEventHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {
@@ -45,7 +46,7 @@ export const ConnectorEventHandler: GestureHandler = {
 		registries: ICanvasRegistries,
 	): CanvasControllerState {
 		const connectorId = event.targetId;
-		let nextState = commitTextEditIfNeeded(state);
+		let nextState = commitTextEditUnlessTouchPress(state, event);
 
 		// A double click selects the connector, and starts label editing when it
 		// hits the edit target (see the doc comment above).

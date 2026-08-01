@@ -61,6 +61,7 @@ const makeEvent = (
 	targetId: string,
 	targetPart?: string,
 	last: Point = { x: 0, y: 0 },
+	pointerType?: string,
 ): CanvasEvent =>
 	({
 		type,
@@ -70,6 +71,7 @@ const makeEvent = (
 		start: last,
 		last,
 		button: 0,
+		pointerType,
 		mods: { shift: false, alt: false, ctrl: false, meta: false },
 	}) as unknown as CanvasEvent;
 
@@ -330,5 +332,35 @@ describe("ConnectorEventHandler - clears stale UI state on selection change", ()
 		expect(next.selectedVertex).toBeNull();
 		expect(next.objectMenuOpenId).toBeNull();
 		expect(next.stencilLibraryOpenCategory).toBeNull();
+	});
+});
+
+describe("ConnectorEventHandler - touch press defers the pending label commit", () => {
+	it("a touch pressed on another connector keeps the edit session (the press may still become a pinch)", () => {
+		const state = makeEditState("c1", "Yes", "pending");
+		const next = ConnectorEventHandler.handle(
+			state,
+			makeEvent("pressed", "c2", undefined, { x: 0, y: 0 }, "touch"),
+			registries,
+		);
+		expect(next.textEditState).toBe(state.textEditState);
+		expect(labelText(next, "c1")).toBe("Yes");
+		// The context-menu close on pressed is deliberately not deferred.
+		expect(next.contextMenuPosition).toBeNull();
+	});
+
+	it("the touch tap that resolves (click) commits the pending label", () => {
+		const afterPressed = ConnectorEventHandler.handle(
+			makeEditState("c1", "Yes", "pending"),
+			makeEvent("pressed", "c2", undefined, { x: 0, y: 0 }, "touch"),
+			registries,
+		);
+		const next = ConnectorEventHandler.handle(
+			afterPressed,
+			makeEvent("click", "c2", undefined, { x: 0, y: 0 }, "touch"),
+			registries,
+		);
+		expect(labelText(next, "c1")).toBe("pending");
+		expect(next.textEditState).toBeNull();
 	});
 });

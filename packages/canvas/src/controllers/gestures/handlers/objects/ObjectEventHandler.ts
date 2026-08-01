@@ -25,7 +25,6 @@ import type {
 } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import { buildSelectedIdsWithDescendants } from "../../../utils/buildSelectedIdsWithDescendants";
-import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { createMultiSelectGroup } from "../../../utils/createMultiSelectGroup";
 import { moveSelection } from "../../../utils/moveSelection";
 import { updateAffectedGroupBounds } from "../../../utils/updateAffectedGroupBounds";
@@ -34,6 +33,7 @@ import type {
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
 import type { Mods } from "../../registry/ObjectBehaviorTypes";
+import { commitTextEditUnlessTouchPress } from "../utils/commitTextEditUnlessTouchPress";
 import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 import {
 	buildSnapFeedback,
@@ -365,9 +365,10 @@ export const ObjectEventHandler: GestureHandler = {
 
 	handle(state, event, registries) {
 		// Any event that reaches this handler is outside the text-editing overlay
-		// (the overlay covers the edited shape's bbox and is gesture-excluded),
-		// so a pending edit is always committed first, like any outside tap.
-		let nextState = commitTextEditIfNeeded(state);
+		// (the overlay covers the edited shape's bbox and is gesture-excluded), so a
+		// pending edit is committed first, like any outside tap — deferred only for
+		// a touch press (see commitTextEditUnlessTouchPress).
+		let nextState = commitTextEditUnlessTouchPress(state, event);
 
 		const targetObjectId = event.targetId;
 		if (!targetObjectId) {
