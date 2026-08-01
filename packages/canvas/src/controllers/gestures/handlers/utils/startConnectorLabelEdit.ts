@@ -67,7 +67,7 @@ const calcPendingLabelPlacement = (
  * label present → editing starts only when the label box itself was hit,
  * otherwise the double click just selects.
  *
- * Reached from two targets: the connector itself (ConnectorEventHandler, label
+ * Reached from two targets: the connector itself (ConnectorClickHandler, label
  * hit = targetPart "label") and the waypoint-insert handle sitting on the path
  * (ConnectorVertexInsertHandler, label hit resolved from the hover stack — the
  * handle covers the box at the default midpoint placement, so the recognizer

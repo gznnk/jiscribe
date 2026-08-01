@@ -53,14 +53,16 @@ pressed | dragStart | drag | dragEnd | click | doubleClick | wheel | pinch | lon
 `Gesture` を `CanvasEvent` に変換し（`wheel` は `ctrl` の有無で `zoom` / `scroll` に分岐、
 `pinch` は `zoom` → `scroll` の順に分解）、
 `gestureHandlerRegistry` 経由で対象ハンドラへ渡す。各ハンドラは `targetKind` で
-自分が処理すべきイベントかを判定する。
+自分が処理すべきイベントかを判定する。registry には `targetKind` ごとに 1 ハンドラだけを
+登録する。さらに細かい分岐（`targetId` / `data-part` / イベント種）が要る kind では、
+そのハンドラがルーターになり、同じフォルダ内のサブハンドラへ委譲する。
 
-| ハンドラ群  | 対象                                                                       | 主なファイル                                                                                                                             |
-| ----------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `canvas/`   | キャンバス全体（空白ドラッグ＝範囲選択、パン、ズーム）                     | `CanvasEventHandler.ts`                                                                                                                  |
-| `controls/` | 変形コントロール（リサイズ・回転・頂点・接続）                             | `ControlEventHandler.ts`, `transform/`, `vertex/`, `connection/`                                                                         |
-| `menu/`     | コンテキストメニュー・オブジェクトメニュー・ツールバー・図形ライブラリ     | `ContextMenuHandler.ts`, `ObjectMenuHandler.ts`, `ToolbarHandler.ts`, `StencilLibraryItemHandler.ts`                                     |
-| `objects/`  | 図形・コネクター本体（移動・選択・テキスト編集起動・ラベル移動・線分移動） | `ObjectEventHandler.ts`, `ConnectorEventHandler.ts`, `ConnectorLabelDragHandler.ts`, `ConnectorSegmentDragHandler.ts`, 形状別 Controller |
+| ハンドラ群  | 対象                                                                       | 主なファイル                                                                                                                                                                     |
+| ----------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `canvas/`   | キャンバス全体（空白ドラッグ＝範囲選択、パン、ズーム）                     | `CanvasEventHandler.ts`                                                                                                                                                          |
+| `controls/` | 変形コントロール（リサイズ・回転・頂点・接続）                             | `ControlEventHandler.ts`, `transform/`, `vertex/`, `connection/`                                                                                                                 |
+| `menu/`     | コンテキストメニュー・オブジェクトメニュー・ツールバー・図形ライブラリ     | `MenuEventHandler.ts`（ルーター）, `ContextMenuHandler.ts`, `ObjectMenuHandler.ts`, `ToolbarHandler.ts`, `StencilLibraryItemHandler.ts`, `StencilCategoryToggleHandler.ts`       |
+| `objects/`  | 図形・コネクター本体（移動・選択・テキスト編集起動・ラベル移動・線分移動） | `ObjectEventHandler.ts`, `ConnectorEventHandler.ts`（ルーター）, `ConnectorClickHandler.ts`, `ConnectorLabelDragHandler.ts`, `ConnectorSegmentDragHandler.ts`, 形状別 Controller |
 
 `handleGesture` は `dragStart` で `eventStartSnapshot`（操作開始時の objects / keyPoints /
 snapCandidates 等）を保存し、`dragEnd` でクリアする。`dragEnd` 時に doc が実際に変化していれば

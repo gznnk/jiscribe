@@ -6,29 +6,23 @@ import { ControlEventHandler } from "../gestures/handlers/controls/ControlEventH
 import { TransformControlHandler } from "../gestures/handlers/controls/transform/TransformControlHandler";
 import { VertexControlHandler } from "../gestures/handlers/controls/vertex/VertexControlHandler";
 import { VertexInsertHandler } from "../gestures/handlers/controls/vertex/VertexInsertHandler";
-import { ContextMenuHandler } from "../gestures/handlers/menu/ContextMenuHandler";
-import { ObjectMenuHandler } from "../gestures/handlers/menu/ObjectMenuHandler";
-import { StencilCategoryToggleHandler } from "../gestures/handlers/menu/StencilCategoryToggleHandler";
-import { StencilLibraryItemHandler } from "../gestures/handlers/menu/StencilLibraryItemHandler";
-import { ToolbarHandler } from "../gestures/handlers/menu/ToolbarHandler";
+import { MenuEventHandler } from "../gestures/handlers/menu/MenuEventHandler";
 import { ConnectorEventHandler } from "../gestures/handlers/objects/ConnectorEventHandler";
-import { ConnectorLabelDragHandler } from "../gestures/handlers/objects/ConnectorLabelDragHandler";
-import { ConnectorSegmentDragHandler } from "../gestures/handlers/objects/ConnectorSegmentDragHandler";
 import { ObjectEventHandler } from "../gestures/handlers/objects/ObjectEventHandler";
 
 /**
  * Initialize the GestureHandlerRegistry with all gesture handlers.
- * Registers handlers for canvas, object, and control events.
+ * The registry holds one handler per targetKind: canvas, connector, object,
+ * control, and menu.
  *
- * The handlers' supports() are mutually exclusive: each requires its own
- * targetKind (and targetId for menus) plus isPerTargetInteraction (the left
- * button, tap/drag types), and only CanvasEventHandler takes right-button
- * events and touch long presses. The one shared targetKind is
- * "connector", split among three handlers by event type and data-part: taps go
- * to ConnectorEventHandler, drags on the label box to ConnectorLabelDragHandler,
- * and drags on a "segment:<i>" band to ConnectorSegmentDragHandler. Registration
- * order therefore never decides routing; the exclusivity is pinned by
- * initializeGestureHandlerRegistry.exclusivity.test.ts (#110).
+ * Every per-target router's supports() gates on its own targetKind plus
+ * isPerTargetInteraction (the left button, tap/drag types), and only
+ * CanvasEventHandler takes middle- and right-button events and touch long
+ * presses whatever they land on. Exclusivity at the registry level is therefore
+ * structural and registration order never decides routing; the invariant is
+ * pinned by initializeGestureHandlerRegistry.exclusivity.test.ts (#110).
+ * Sub-routing by targetId, data-part, or event type is each router's own
+ * concern.
  *
  * Gesture handlers are object-type independent, so `createCanvasRegistries`
  * always registers all of them regardless of the configured object types.
@@ -66,15 +60,9 @@ export const initializeGestureHandlerRegistry = (
 	);
 
 	gestureHandlerRegistry
-		.register("stencil-library-item-handler", StencilLibraryItemHandler)
-		.register("stencil-category-toggle-handler", StencilCategoryToggleHandler)
-		.register("toolbar-handler", ToolbarHandler)
-		.register("context-menu-handler", ContextMenuHandler)
-		.register("object-menu-handler", ObjectMenuHandler)
 		.register("canvas-handler", CanvasEventHandler)
-		.register("connector-label-drag-handler", ConnectorLabelDragHandler)
-		.register("connector-segment-drag-handler", ConnectorSegmentDragHandler)
 		.register("connector-handler", ConnectorEventHandler)
 		.register("object-handler", ObjectEventHandler)
-		.register("control-handler", controlEventHandler);
+		.register("control-handler", controlEventHandler)
+		.register("menu-handler", MenuEventHandler);
 };
