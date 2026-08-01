@@ -3,7 +3,7 @@ import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
-import { isLeftButton } from "../utils/isLeftButton";
+import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 
 /**
  * GestureHandler that processes ObjectMenu item interactions.
@@ -30,7 +30,7 @@ export const ObjectMenuHandler: GestureHandler = {
 		return (
 			event.targetKind === "menu" &&
 			event.targetId === "object-menu" &&
-			isLeftButton(event)
+			isPerTargetInteraction(event)
 		);
 	},
 

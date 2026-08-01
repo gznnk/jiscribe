@@ -2,7 +2,7 @@ import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
-import { isLeftButton } from "../utils/isLeftButton";
+import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 
 /**
  * GestureHandler for the StencilLibrary category toggle buttons in the toolbar.
@@ -23,7 +23,7 @@ export const StencilCategoryToggleHandler: GestureHandler = {
 		return (
 			event.targetKind === "menu" &&
 			event.targetId === "stencil-category" &&
-			isLeftButton(event)
+			isPerTargetInteraction(event)
 		);
 	},
 

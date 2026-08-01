@@ -20,7 +20,7 @@ import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
-import { isLeftButton } from "../utils/isLeftButton";
+import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 import { SNAP_THRESHOLD_PX } from "../utils/snap/findSnap";
 import { snapLabelOffsetToLine } from "../utils/snapLabelOffsetToLine";
 
@@ -219,7 +219,7 @@ const handleDragEnd = (
 export const ConnectorLabelDragHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {
 		return (
-			isLeftButton(event) &&
+			isPerTargetInteraction(event) &&
 			event.targetKind === "connector" &&
 			event.targetPart === "label" &&
 			(event.type === "dragStart" ||

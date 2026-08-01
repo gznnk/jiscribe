@@ -18,7 +18,10 @@ export type GestureType =
 	| "click"
 	| "doubleClick"
 	| "wheel"
-	| "pinch";
+	| "pinch"
+	// Touch only: a press held for LONG_PRESS_DURATION_MS within the drag slop.
+	// Ends the gesture — the pointerup that follows fires nothing (no click).
+	| "longPress";
 
 export type HoveredElement = {
 	id: string;

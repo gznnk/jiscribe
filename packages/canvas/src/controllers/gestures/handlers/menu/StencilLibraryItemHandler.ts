@@ -10,7 +10,7 @@ import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
-import { isLeftButton } from "../utils/isLeftButton";
+import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 import {
 	SNAP_THRESHOLD_PX,
 	buildSnapFeedback,
@@ -81,7 +81,7 @@ export const StencilLibraryItemHandler: GestureHandler = {
 		return (
 			event.targetKind === "menu" &&
 			event.targetId === "stencil-library" &&
-			isLeftButton(event)
+			isPerTargetInteraction(event)
 		);
 	},
 

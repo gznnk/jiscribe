@@ -21,8 +21,9 @@ import { ObjectEventHandler } from "../gestures/handlers/objects/ObjectEventHand
  * Registers handlers for canvas, object, and control events.
  *
  * The handlers' supports() are mutually exclusive: each requires its own
- * targetKind (and targetId for menus) plus the left button, and only
- * CanvasEventHandler takes right-button events. The one shared targetKind is
+ * targetKind (and targetId for menus) plus isPerTargetInteraction (the left
+ * button, tap/drag types), and only CanvasEventHandler takes right-button
+ * events and touch long presses. The one shared targetKind is
  * "connector", split among three handlers by event type and data-part: taps go
  * to ConnectorEventHandler, drags on the label box to ConnectorLabelDragHandler,
  * and drags on a "segment:<i>" band to ConnectorSegmentDragHandler. Registration

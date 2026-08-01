@@ -55,6 +55,7 @@ const TYPES: EventType[] = [
 	"dragEnd",
 	"scroll",
 	"zoom",
+	"longPress",
 ];
 
 const BUTTONS = [0, 1, 2];
@@ -116,6 +117,14 @@ describe("gesture handler routing exclusivity (#110)", () => {
 		expect(
 			supportingNames(makeEvent("click", 0, TARGETS[0])), // canvas
 		).toEqual(["canvas-handler"]);
+	});
+
+	it("routes longPress to the canvas handler wherever it lands (like right-button events)", () => {
+		for (const target of [TARGETS[0], TARGETS[1], TARGETS[2], TARGETS[5]]) {
+			expect(supportingNames(makeEvent("longPress", 0, target))).toEqual([
+				"canvas-handler",
+			]);
+		}
 	});
 
 	it("splits the connector label box between tap and drag handlers", () => {

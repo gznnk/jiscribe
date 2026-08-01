@@ -15,7 +15,7 @@ import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
-import { isLeftButton } from "../utils/isLeftButton";
+import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 import { moveConnectorSegment } from "../utils/moveConnectorSegment";
 import {
 	buildSnapFeedback,
@@ -160,7 +160,7 @@ const handleDrag = (
 export const ConnectorSegmentDragHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {
 		return (
-			isLeftButton(event) &&
+			isPerTargetInteraction(event) &&
 			event.targetKind === "connector" &&
 			!!event.targetPart?.startsWith(TARGET_PART_PREFIX) &&
 			(event.type === "dragStart" ||

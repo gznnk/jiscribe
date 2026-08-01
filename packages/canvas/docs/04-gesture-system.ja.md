@@ -10,10 +10,10 @@
 生の pointer / wheel イベントはキャンバスのルート（`Viewport`）に集約され、
 `GestureRecognizer`（`controllers/gestures/recognizer/`）が `Gesture` に変換する。
 
-`GestureType` は次の 8 種:
+`GestureType` は次の 9 種:
 
 ```
-pressed | dragStart | drag | dragEnd | click | doubleClick | wheel | pinch
+pressed | dragStart | drag | dragEnd | click | doubleClick | wheel | pinch | longPress
 ```
 
 `Gesture` は SVG 座標とクライアント座標の両方（`start` / `last` / `delta`）、修飾キー
@@ -35,6 +35,10 @@ pressed | dragStart | drag | dragEnd | click | doubleClick | wheel | pinch
   キャンバスのパンドラッグ中は2本目で `dragEnd` を発火してパンを閉じ、ピンチへ移行する。
   図形ドラッグ中・シェイプ描画中およびマウス／ペンでは追加の pointerdown を単に無視する
   （パーム耐性、issue #25）。
+- **タッチの長押し**: ドラッグ許容量内で `LONG_PRESS_DURATION_MS`（500ms）保持すると `longPress` が
+  発火し、ジェスチャーを消費する（離しても click は出ない）。着地点を問わず CanvasEventHandler に
+  ルーティングされ（per-target ハンドラは中/右ボタン同様 `isPerTargetInteraction` で拒否）、
+  右クリック相当としてコンテキストメニューを開く。
 - **タッチのパン**: `Gesture` は `pointerType` を持ち、CanvasEventHandler がタッチの1本指
   背景ドラッグをエリア選択ではなくビューポートのパン（GrabScroll パス）へルーティングする。
   タッチでのエリア選択は当面利用不可。またタッチでは背景の選択解除とテキスト編集のコミットを

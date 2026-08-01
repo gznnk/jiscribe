@@ -5,7 +5,7 @@ import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
-import { isLeftButton } from "../utils/isLeftButton";
+import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 import { startConnectorLabelEdit } from "../utils/startConnectorLabelEdit";
 
 /**
@@ -28,7 +28,7 @@ import { startConnectorLabelEdit } from "../utils/startConnectorLabelEdit";
 export const ConnectorEventHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {
 		return (
-			isLeftButton(event) &&
+			isPerTargetInteraction(event) &&
 			event.targetKind === "connector" &&
 			// Taps only, whatever part they land on. Drags belong to the two handlers that
 			// share this targetKind: the label box to ConnectorLabelDragHandler, a segment band

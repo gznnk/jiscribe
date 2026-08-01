@@ -10,10 +10,10 @@ For how the state changes triggered by gestures are reflected, see [State Update
 Raw pointer/wheel events are aggregated at the canvas root (`Viewport`), and
 the `GestureRecognizer` (`controllers/gestures/recognizer/`) converts them into a `Gesture`.
 
-There are eight `GestureType`s:
+There are nine `GestureType`s:
 
 ```
-pressed | dragStart | drag | dragEnd | click | doubleClick | wheel | pinch
+pressed | dragStart | drag | dragEnd | click | doubleClick | wheel | pinch | longPress
 ```
 
 A `Gesture` carries both SVG and client coordinates (`start` / `last` / `delta`), modifier keys
@@ -37,6 +37,10 @@ Key points:
   During a canvas pan drag the second touch closes the pan with `dragEnd` and enters the pinch; during an
   object drag or shape drawing — and for mouse/pen — an extra pointerdown is simply ignored (palm
   rejection, issue #25).
+- **Touch long press**: A touch press held for `LONG_PRESS_DURATION_MS` (500ms) within the touch drag slop
+  fires `longPress` and consumes the gesture (the lift fires no click). It routes to CanvasEventHandler
+  wherever it lands — per-target handlers reject it via `isPerTargetInteraction`, like middle/right
+  buttons — and opens the context menu, mirroring the right-button click.
 - **Touch panning**: Gestures carry `pointerType`, and CanvasEventHandler routes a one-finger touch drag on
   the canvas background to viewport panning (the GrabScroll path) instead of area selection. Area selection
   is unavailable on touch for now. On touch, background deselection and the text-edit commit also wait for

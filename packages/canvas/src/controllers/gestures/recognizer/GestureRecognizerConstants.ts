@@ -19,6 +19,12 @@ export const AUTO_SCROLL_THRESHOLD = 20;
 export const AUTO_SCROLL_STEP_SIZE = 10;
 
 /**
+ * Hold duration for a touch long press (milliseconds). The press must stay
+ * within the touch drag slop (DRAG_THRESHOLD_TOUCH) for the whole duration.
+ */
+export const LONG_PRESS_DURATION_MS = 500;
+
+/**
  * Minimum finger distance for computing a pinch zoom factor (screen pixels).
  * Below this the distance ratio degenerates (division by ~0), so the scale is
  * held at 1 and only the pan component is applied.

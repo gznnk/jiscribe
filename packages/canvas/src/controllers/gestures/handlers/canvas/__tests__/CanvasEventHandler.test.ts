@@ -192,6 +192,28 @@ describe("CanvasEventHandler", () => {
 		});
 	});
 
+	describe("touch long press", () => {
+		it("opens the context menu at the press position and commits the active edit", () => {
+			const state = makeState();
+			const event = makeEvent({
+				type: "longPress",
+				button: 0,
+				pointerType: "touch",
+				clientLast: { x: 320, y: 240 },
+			});
+
+			const nextState = CanvasEventHandler.handle(state, event, registries);
+
+			expect(nextState.contextMenuPosition).toEqual({
+				clientX: 320,
+				clientY: 240,
+			});
+			expect(nextState.textEditState).toBeNull();
+			// Selection stays, mirroring the right-button click
+			expect(nextState.selectedIds).toEqual(["a"]);
+		});
+	});
+
 	describe("area selection (marquee)", () => {
 		const bboxes = {
 			a: { left: 10, right: 20, top: 10, bottom: 20 },

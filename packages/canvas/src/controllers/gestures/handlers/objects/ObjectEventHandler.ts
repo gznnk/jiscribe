@@ -34,7 +34,7 @@ import type {
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
 import type { Mods } from "../../registry/ObjectBehaviorTypes";
-import { isLeftButton } from "../utils/isLeftButton";
+import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 import {
 	buildSnapFeedback,
 	findSnap,
@@ -360,7 +360,7 @@ function handleObjectDragEnd(
  */
 export const ObjectEventHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {
-		return event.targetKind === "object" && isLeftButton(event);
+		return event.targetKind === "object" && isPerTargetInteraction(event);
 	},
 
 	handle(state, event, registries) {

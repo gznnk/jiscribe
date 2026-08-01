@@ -4,6 +4,7 @@ import type React from "react";
 import {
 	DRAG_THRESHOLD,
 	DRAG_THRESHOLD_TOUCH,
+	LONG_PRESS_DURATION_MS,
 	PINCH_MIN_DISTANCE,
 } from "./GestureRecognizerConstants";
 import type {
@@ -44,7 +45,14 @@ type InternalEventBase = {
 };
 
 export type PointerInternalEvent = InternalEventBase & {
-	type: "pointerdown" | "pointermove" | "pointerup" | "pointercancel";
+	// "longpress" is synthesized by the long-press timer (not a DOM event); its
+	// coordinate/modifier fields are copied from the pressed state at fire time.
+	type:
+		| "pointerdown"
+		| "pointermove"
+		| "pointerup"
+		| "pointercancel"
+		| "longpress";
 	pointerId: number;
 	// "mouse" | "pen" | "touch". Absent on pointermove synthesized from a wheel
 	// event (toWheelEvent) — only real touch pointers can enter a pinch.
@@ -118,8 +126,8 @@ type Pinch = {
 
 /**
  * Converts raw DOM pointer / wheel events into gestures (pressed / dragStart / drag /
- * dragEnd / click / doubleClick / wheel / pinch), delivered one at a time via
- * gestureCallback.
+ * dragEnd / click / doubleClick / wheel / pinch / longPress), delivered one at a time
+ * via gestureCallback.
  *
  * Events are queued by `enqueue` and handled once per frame by `processBatch` (a RAF
  * scheduled in `schedule`): every event is fed in chronological order, then per-frame
@@ -154,6 +162,12 @@ export class GestureRecognizer {
 		time: number;
 		target: EventTarget | null;
 	} | null = null;
+
+	// Timer armed at a touch pointerdown; when it fires while the press is still
+	// within the drag slop, the press becomes a longPress instead of a tap/drag.
+	// Cleared wherever the press stops being a candidate (drag confirmed, lift,
+	// cancel, pinch entry, external abort).
+	private longPressTimer: ReturnType<typeof setTimeout> | null = null;
 
 	// Baseline for double-click detection; null means no single click has been recorded.
 	// The null/undefined distinction matters: targetId is undefined on a background click,
@@ -275,6 +289,38 @@ export class GestureRecognizer {
 			return;
 		}
 
+		// Long-press timer fired. The clears at every ending path make a stale fire
+		// unlikely, but one can still race into the same batch as the ending event —
+		// so the press is validated again here.
+		if (e.type === "longpress") {
+			if (
+				this.pressed !== null &&
+				this.pressed.pointerId === e.pointerId &&
+				!this.pressed.dragging
+			) {
+				this.fireGestureFromPressed(this.pressed, {
+					type: "longPress",
+					last: this.pressed.last,
+					clientLast: this.pressed.clientLast,
+					delta: {
+						x: this.pressed.last.x - this.pressed.start.x,
+						y: this.pressed.last.y - this.pressed.start.y,
+					},
+					clientDelta: {
+						x: this.pressed.clientLast.x - this.pressed.clientStart.x,
+						y: this.pressed.clientLast.y - this.pressed.clientStart.y,
+					},
+					mods: this.pressed.mods,
+					time,
+				});
+				// The long press consumes the gesture: the lift that follows must not
+				// become a click (which would immediately close the opened menu).
+				this.releasePointer(e.pointerId);
+				this.pressed = null;
+			}
+			return;
+		}
+
 		// Pinch in progress: events of the two participating pointers are consumed here.
 		// Events of any other pointer fall through and die at the pressed checks below
 		// (pressed is null while pinching), except pointerdown which is caught next.
@@ -378,6 +424,12 @@ export class GestureRecognizer {
 				isNativePointerTarget: isNativePointer,
 			};
 
+			// Touch only: mouse users have the right button, and a held mouse press
+			// (e.g. hesitating before a drag) must not sprout a menu.
+			if (e.pointerType === "touch" && !isNativePointer) {
+				this.armLongPress(this.pressed);
+			}
+
 			this.fireGestureFromPressed(this.pressed, {
 				type: "pressed",
 				last: currentPos,
@@ -417,6 +469,7 @@ export class GestureRecognizer {
 						: DRAG_THRESHOLD;
 				if (distanceSquared >= dragThreshold) {
 					this.pressed.dragging = true;
+					this.clearLongPress();
 					this.fireGestureFromPressed(this.pressed, {
 						type: "dragStart",
 						last: currentPos,
@@ -498,6 +551,7 @@ export class GestureRecognizer {
 		}
 
 		if (e.type === "pointerup") {
+			this.clearLongPress();
 			this.releasePointer(e.pointerId);
 
 			let eventType: "dragEnd" | "doubleClick" | "click";
@@ -530,6 +584,7 @@ export class GestureRecognizer {
 		}
 
 		if (e.type === "pointercancel") {
+			this.clearLongPress();
 			this.releasePointer(e.pointerId);
 
 			if (this.pressed.dragging) {
@@ -581,6 +636,40 @@ export class GestureRecognizer {
 	}
 
 	/**
+	 * Arm the long-press timer for a fresh touch press. The fire is delivered as a
+	 * synthetic "longpress" internal event through the queue, so recognition stays
+	 * inside processBatch and keeps its ordering guarantees; the coordinate and
+	 * modifier fields are read from the (mutable) pressed state at fire time.
+	 */
+	private armLongPress(pressed: Pressed): void {
+		this.longPressTimer = setTimeout(() => {
+			this.longPressTimer = null;
+			this.enqueue({
+				type: "longpress",
+				pointerId: pressed.pointerId,
+				pointerType: pressed.pointerType,
+				clientX: pressed.clientLast.x,
+				clientY: pressed.clientLast.y,
+				shiftKey: pressed.mods.shift,
+				altKey: pressed.mods.alt,
+				ctrlKey: pressed.mods.ctrl,
+				metaKey: pressed.mods.meta,
+				target: pressed.target,
+				timeStamp: performance.now(),
+				button: pressed.button,
+			});
+		}, LONG_PRESS_DURATION_MS);
+	}
+
+	/** Disarm the pending long press, if any. */
+	private clearLongPress(): void {
+		if (this.longPressTimer !== null) {
+			clearTimeout(this.longPressTimer);
+			this.longPressTimer = null;
+		}
+	}
+
+	/**
 	 * Enter pinch mode from a press plus a second touch: capture the second pointer
 	 * (the first was captured at its pointerdown) and discard the press without
 	 * firing. For a not-yet-dragging press the tap-or-drag it was waiting to become
@@ -592,6 +681,7 @@ export class GestureRecognizer {
 		e: PointerInternalEvent,
 		currentClientPos: Point,
 	): void {
+		this.clearLongPress();
 		this.capturePointer(e.pointerId);
 
 		const points = new Map([
@@ -803,6 +893,7 @@ export class GestureRecognizer {
 		}
 		this.scheduled = false;
 		this.queue = [];
+		this.clearLongPress();
 		if (this.pressed !== null) {
 			this.releasePointer(this.pressed.pointerId);
 			this.pressed = null;

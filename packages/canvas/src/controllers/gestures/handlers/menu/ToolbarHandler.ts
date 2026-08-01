@@ -3,7 +3,7 @@ import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
-import { isLeftButton } from "../utils/isLeftButton";
+import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 
 /**
  * GestureHandler that processes button interactions on the top toolbar.
@@ -28,7 +28,7 @@ export const ToolbarHandler: GestureHandler = {
 		return (
 			event.targetKind === "menu" &&
 			event.targetId === "toolbar" &&
-			isLeftButton(event)
+			isPerTargetInteraction(event)
 		);
 	},
 

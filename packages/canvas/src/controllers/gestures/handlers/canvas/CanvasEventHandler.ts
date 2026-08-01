@@ -27,7 +27,12 @@ import {
 export const CanvasEventHandler: GestureHandler = {
 	supports(event): boolean {
 		return (
-			event.targetKind === "canvas" || event.button === 1 || event.button === 2
+			event.targetKind === "canvas" ||
+			event.button === 1 ||
+			event.button === 2 ||
+			// Like right-button events, a long press is canvas-level wherever it
+			// lands (per-target handlers reject it via isPerTargetInteraction)
+			event.type === "longPress"
 		);
 	},
 
@@ -90,6 +95,23 @@ export const CanvasEventHandler: GestureHandler = {
 		// drags (starting to draw is a real edit-ending interaction).
 		const isTouch = event.pointerType === "touch";
 		let nextState = isTouch ? state : commitTextEditIfNeeded(state);
+
+		// Touch long press: open the context menu, mirroring the right-button click.
+		// The recognizer ends the gesture (the lift fires no click), so the touch
+		// tap-deferral does not apply — commit any active edit now, like the mouse
+		// path does.
+		if (event.type === "longPress") {
+			return {
+				...commitTextEditIfNeeded(nextState),
+				contextMenuPosition: {
+					clientX: event.clientLast.x,
+					clientY: event.clientLast.y,
+				},
+				// A new context menu supersedes any open ObjectMenu / category flyout.
+				objectMenuOpenId: null,
+				stencilLibraryOpenCategory: null,
+			};
+		}
 
 		// Middle-/right-button drag for viewport panning (GrabScroll).
 		// Middle button (1) pans only; right button (2) also opens the context

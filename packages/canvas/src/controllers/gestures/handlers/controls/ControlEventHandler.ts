@@ -9,7 +9,7 @@ import type {
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
 import { parseSelectionControlObjectType } from "../../registry/RegisteredSelectionControl";
-import { isLeftButton } from "../utils/isLeftButton";
+import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
 
 /**
  * Main handler for all control-level events.
@@ -36,7 +36,7 @@ export class ControlEventHandler implements GestureHandler {
 	}
 
 	supports(event: CanvasEvent): boolean {
-		return event.targetKind === "control" && isLeftButton(event);
+		return event.targetKind === "control" && isPerTargetInteraction(event);
 	}
 
 	handle(
