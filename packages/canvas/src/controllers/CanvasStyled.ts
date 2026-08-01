@@ -28,6 +28,23 @@ export const CanvasRoot = styled.div`
 	height: 100%;
 	overflow: hidden;
 	outline: none;
+
+	/* Touch foundation: without touch-action none, the browser claims touch moves
+	   for page pan/zoom and aborts in-progress drags with pointercancel. Scrollable
+	   descendants (textarea, help modal body) still pan natively — touch-action is
+	   consulted only up to the scrolling element itself. user-select / touch-callout
+	   suppress long-press text selection and the OS callout; both inherit, so
+	   editable fields opt back in below. */
+	touch-action: none;
+	user-select: none;
+	-webkit-user-select: none;
+	-webkit-touch-callout: none;
+
+	input,
+	textarea {
+		user-select: text;
+		-webkit-user-select: text;
+	}
 `;
 
 /**
