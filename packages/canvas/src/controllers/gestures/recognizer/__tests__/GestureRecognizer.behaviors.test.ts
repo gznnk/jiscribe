@@ -675,6 +675,20 @@ describe("GestureRecognizer doubleClick distance threshold (wiring)", () => {
 		expect(finalsOf(events)).toEqual(["click", "doubleClick"]);
 	});
 
+	it("two touch taps beyond the mouse distance threshold still pair (touch gets the wider threshold)", () => {
+		const { dispatch, events } = setup();
+
+		// 10px apart: outside the 5px mouse threshold, inside the 20px touch one.
+		dispatch(makeEvent("pointerdown", 0, 0, 1000, { pointerType: "touch" }));
+		dispatch(makeEvent("pointerup", 0, 0, 1000, { pointerType: "touch" }));
+		flushRaf();
+		dispatch(makeEvent("pointerdown", 10, 0, 1100, { pointerType: "touch" }));
+		dispatch(makeEvent("pointerup", 10, 0, 1100, { pointerType: "touch" }));
+		flushRaf();
+
+		expect(finalsOf(events)).toEqual(["click", "doubleClick"]);
+	});
+
 	it("regression: two consecutive background clicks at different positions do not coalesce into a doubleClick", () => {
 		const { dispatch, events } = setup();
 

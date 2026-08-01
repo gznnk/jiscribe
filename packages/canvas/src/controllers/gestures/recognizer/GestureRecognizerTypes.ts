@@ -43,6 +43,9 @@ export type ScrollDelta = {
 export type ClickSnapshot = {
 	time: number;
 	clientPos: Point;
+	// "mouse" | "pen" | "touch"; from the press that produced the click. Selects
+	// the double-click distance threshold (touch gets the wider one).
+	pointerType?: string;
 };
 
 export type Gesture = {

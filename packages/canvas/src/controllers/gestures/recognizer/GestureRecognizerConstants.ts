@@ -43,3 +43,13 @@ export const DOUBLE_CLICK_THRESHOLD = 300;
  * client (screen) coordinates.
  */
 export const DOUBLE_CLICK_DISTANCE_THRESHOLD = 5 * 5; // 5 pixels squared
+
+/**
+ * Distance threshold between two touch taps for treating them as a double tap
+ * (screen pixels squared).
+ * Wider than the mouse value for the same reason as DRAG_THRESHOLD_TOUCH: each
+ * tap lands anywhere within the touch slop, so two taps easily sit 5px+ apart
+ * and the mouse threshold would make double-tap (e.g. entering text edit)
+ * unreliable on devices.
+ */
+export const DOUBLE_CLICK_DISTANCE_THRESHOLD_TOUCH = 20 * 20;
