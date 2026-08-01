@@ -120,6 +120,78 @@ describe("CanvasEventHandler", () => {
 		});
 	});
 
+	describe("touch: deselection and edit commit wait for the tap to resolve", () => {
+		it("a touch press keeps the selection, menus, and the active edit", () => {
+			const state = makeState({
+				contextMenuPosition: { clientX: 10, clientY: 10 },
+			} as Partial<CanvasControllerState>);
+			const event = makeEvent({
+				type: "pressed",
+				button: 0,
+				pointerType: "touch",
+			});
+
+			const nextState = CanvasEventHandler.handle(state, event, registries);
+
+			expect(nextState.textEditState).not.toBeNull();
+			expect(nextState.selectedIds).toEqual(["a"]);
+			expect(nextState.contextMenuPosition).toEqual({
+				clientX: 10,
+				clientY: 10,
+			});
+		});
+
+		it("a touch pan drag pans while keeping the selection and the active edit", () => {
+			const state = makeState();
+			const event = makeEvent({
+				type: "drag",
+				button: 0,
+				pointerType: "touch",
+				clientDelta: { x: 100, y: 50 },
+			});
+
+			const nextState = CanvasEventHandler.handle(state, event, registries);
+
+			expect(nextState.textEditState).not.toBeNull();
+			expect(nextState.selectedIds).toEqual(["a"]);
+			expect(nextState.viewport.minX).toBeCloseTo(-100);
+			expect(nextState.viewport.minY).toBeCloseTo(-50);
+		});
+
+		it("a touch tap (click) commits the edit and clears the selection", () => {
+			const state = makeState();
+			const event = makeEvent({
+				type: "click",
+				button: 0,
+				pointerType: "touch",
+			});
+
+			const nextState = CanvasEventHandler.handle(state, event, registries);
+
+			expect(nextState.textEditState).toBeNull();
+			expect(
+				(
+					nextState.objects["a"] as ObjectState & {
+						text: { body: { text: string } };
+					}
+				).text.body.text,
+			).toBe("edited text");
+			expect(nextState.selectedIds).toEqual([]);
+		});
+
+		it("a mouse click after its press does not re-clear on click (unchanged mouse path)", () => {
+			const state = makeState({
+				textEditState: null,
+			} as Partial<CanvasControllerState>);
+			const event = makeEvent({ type: "click", button: 0 });
+
+			const nextState = CanvasEventHandler.handle(state, event, registries);
+
+			// Mouse clears on pressed, not click; the selection here is untouched
+			expect(nextState.selectedIds).toEqual(["a"]);
+		});
+	});
+
 	describe("area selection (marquee)", () => {
 		const bboxes = {
 			a: { left: 10, right: 20, top: 10, bottom: 20 },

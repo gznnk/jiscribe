@@ -112,6 +112,94 @@ test.describe("one-finger touch pan", () => {
 		await flushFrames(page);
 	});
 
+	test("panning keeps the selection; the tap that follows clears it", async ({
+		canvas,
+		page,
+	}) => {
+		// drawShape leaves the new shape selected (controls shown)
+		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
+		expect(await canvas.hasAnyControl()).toBe(true);
+
+		const client = await enableTouch(page);
+		const tp = (p: TouchPoint): TouchPoint => ({ ...p, ...canvas.toScreen(p) });
+
+		const [minX0] = parseViewBox(await canvas.getViewBox());
+
+		// Pan on empty background: the selection must survive
+		await dispatchTouch(client, "touchStart", [
+			tp({ x: 150, y: 600, id: FIRST_FINGER_ID }),
+		]);
+		await flushFrames(page);
+		await dispatchTouch(client, "touchMove", [
+			tp({ x: 250, y: 650, id: FIRST_FINGER_ID }),
+		]);
+		await flushFrames(page);
+		await dispatchTouch(client, "touchEnd", []);
+		await flushFrames(page);
+
+		await expect
+			.poll(async () => parseViewBox(await canvas.getViewBox())[0])
+			.toBeCloseTo(minX0 - 100, 3);
+		expect(await canvas.hasAnyControl()).toBe(true);
+
+		// A background tap resolves to a click and clears the selection
+		await dispatchTouch(client, "touchStart", [
+			tp({ x: 900, y: 700, id: FIRST_FINGER_ID }),
+		]);
+		await flushFrames(page);
+		await dispatchTouch(client, "touchEnd", []);
+		await flushFrames(page);
+
+		await expect
+			.poll(async () => canvas.hasAnyControl(), {
+				message: "the tap after the pan deselects",
+			})
+			.toBe(false);
+	});
+
+	test("panning keeps an active text edit open; the tap that follows commits it", async ({
+		canvas,
+		page,
+	}) => {
+		await canvas.drawShape("Rectangle", { x: 400, y: 200 }, { x: 600, y: 320 });
+
+		const client = await enableTouch(page);
+		const tp = (p: TouchPoint): TouchPoint => ({ ...p, ...canvas.toScreen(p) });
+		const editor = canvas.page.locator("textarea");
+
+		// Double-tap the shape to start text editing
+		for (let tap = 0; tap < 2; tap++) {
+			await dispatchTouch(client, "touchStart", [
+				tp({ x: 500, y: 260, id: FIRST_FINGER_ID }),
+			]);
+			await dispatchTouch(client, "touchEnd", []);
+			await flushFrames(page);
+		}
+		await expect(editor).toHaveCount(1);
+
+		// Pan on empty background: the editor must stay open
+		await dispatchTouch(client, "touchStart", [
+			tp({ x: 150, y: 600, id: FIRST_FINGER_ID }),
+		]);
+		await flushFrames(page);
+		await dispatchTouch(client, "touchMove", [
+			tp({ x: 250, y: 650, id: FIRST_FINGER_ID }),
+		]);
+		await flushFrames(page);
+		await dispatchTouch(client, "touchEnd", []);
+		await flushFrames(page);
+		await expect(editor).toHaveCount(1);
+
+		// A background tap commits and closes the editor
+		await dispatchTouch(client, "touchStart", [
+			tp({ x: 900, y: 700, id: FIRST_FINGER_ID }),
+		]);
+		await flushFrames(page);
+		await dispatchTouch(client, "touchEnd", []);
+		await flushFrames(page);
+		await expect(editor).toHaveCount(0);
+	});
+
 	test("a one-finger drag on a shape still moves the shape, not the viewport", async ({
 		canvas,
 		page,

@@ -83,8 +83,13 @@ export const CanvasEventHandler: GestureHandler = {
 			};
 		}
 
-		// Commit text editing if active
-		let nextState = commitTextEditIfNeeded(state);
+		// Commit text editing if active. On touch this waits for the tap to resolve
+		// (the click branch below): a background touch may become a pan or a pinch,
+		// and viewport navigation must not destroy an active edit the way it doesn't
+		// for wheel scroll. The draw-mode branch re-runs the commit for its touch
+		// drags (starting to draw is a real edit-ending interaction).
+		const isTouch = event.pointerType === "touch";
+		let nextState = isTouch ? state : commitTextEditIfNeeded(state);
 
 		// Middle-/right-button drag for viewport panning (GrabScroll).
 		// Middle button (1) pans only; right button (2) also opens the context
@@ -129,6 +134,9 @@ export const CanvasEventHandler: GestureHandler = {
 			shapeDrawing !== null &&
 			drawingObjectType !== null
 		) {
+			// No-op for mouse (already committed above); commits for touch draws.
+			nextState = commitTextEditIfNeeded(nextState);
+
 			// Starting to draw dismisses an open ObjectMenu / category flyout.
 			if (
 				nextState.objectMenuOpenId !== null ||
@@ -254,9 +262,9 @@ export const CanvasEventHandler: GestureHandler = {
 		// Touch: a one-finger drag on the canvas background pans instead of
 		// area-selecting (area selection is unavailable on touch for now; a
 		// multi-select alternative is a separate task). Scoped to drag events so a
-		// background tap still deselects via the pressed branch below.
+		// background tap still deselects via the click branch below.
 		if (
-			event.pointerType === "touch" &&
+			isTouch &&
 			event.button === 0 &&
 			(event.type === "dragStart" ||
 				event.type === "drag" ||
@@ -366,8 +374,15 @@ export const CanvasEventHandler: GestureHandler = {
 			}
 		}
 
-		// Clear selection on press (left-click only)
-		if (event.type === "pressed" && event.button === 0) {
+		// Clear selection and close menus on a left press — on touch, only once the
+		// tap resolves (click). A pan or pinch must not clear the selection, the open
+		// menus, or an active edit; pinch suppresses click, so two-finger gestures
+		// preserve them automatically.
+		if (event.button === 0 && event.type === (isTouch ? "click" : "pressed")) {
+			if (isTouch) {
+				// The deferred commit from the top of handle()
+				nextState = commitTextEditIfNeeded(nextState);
+			}
 			nextState = {
 				...nextState,
 				selectedIds: [],
