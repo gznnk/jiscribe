@@ -17,7 +17,8 @@ export type GestureType =
 	| "dragEnd"
 	| "click"
 	| "doubleClick"
-	| "wheel";
+	| "wheel"
+	| "pinch";
 
 export type HoveredElement = {
 	id: string;
@@ -43,6 +44,10 @@ export type ClickSnapshot = {
 
 export type Gesture = {
 	type: GestureType;
+	// "mouse" | "pen" | "touch"; fixed at pointerdown. Absent on wheel gestures.
+	// Consumers branch on it where an operation's meaning differs by input device
+	// (e.g. a touch canvas drag pans instead of area-selecting).
+	pointerType?: string;
 	target: EventTarget | null;
 	targetId?: string;
 	targetKind?: string;
@@ -60,8 +65,8 @@ export type Gesture = {
 	getHovered: () => HoveredElement[];
 	time: number;
 	button: number;
-	zoomDelta?: number; // Optional zoom delta (deltaY from wheel event, zoom events only)
-	scrollDelta?: ScrollDelta; // Optional scroll delta for edge scrolling
+	zoomScale?: number; // Optional multiplicative zoom factor (wheel: fixed step from the deltaY sign; pinch: distance ratio since the last pinch event)
+	scrollDelta?: ScrollDelta; // Optional scroll delta in screen px (wheel, edge scrolling, pinch pan)
 	inputValue?: string; // Optional input value from native-pointer elements (data-gesture="native-pointer")
 };
 

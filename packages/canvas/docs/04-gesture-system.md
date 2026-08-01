@@ -10,10 +10,10 @@ For how the state changes triggered by gestures are reflected, see [State Update
 Raw pointer/wheel events are aggregated at the canvas root (`Viewport`), and
 the `GestureRecognizer` (`controllers/gestures/recognizer/`) converts them into a `Gesture`.
 
-There are seven `GestureType`s:
+There are eight `GestureType`s:
 
 ```
-pressed | dragStart | drag | dragEnd | click | doubleClick | wheel
+pressed | dragStart | drag | dragEnd | click | doubleClick | wheel | pinch
 ```
 
 A `Gesture` carries both SVG and client coordinates (`start` / `last` / `delta`), modifier keys
@@ -31,11 +31,21 @@ Key points:
   the DOM-standard cumulative counting model would carry a large regression risk).
 - **RAF batching**: High-frequency pointermove events are batched into a single `drag` via `requestAnimationFrame`,
   so that no more than one state update per frame is triggered (see the performance priority in [Design Philosophy](./01-design-philosophy.md)).
+- **Two-finger pinch (touch)**: A second touch pointerdown arriving before the first touch confirms a drag
+  discards the pending press and enters pinch mode; `pinch` gestures carry `zoomScale` (finger-distance
+  ratio) and `scrollDelta` (midpoint movement), coalesced to one per frame (`settleBatch`).
+  During a canvas pan drag the second touch closes the pan with `dragEnd` and enters the pinch; during an
+  object drag or shape drawing — and for mouse/pen — an extra pointerdown is simply ignored (palm
+  rejection, issue #25).
+- **Touch panning**: Gestures carry `pointerType`, and CanvasEventHandler routes a one-finger touch drag on
+  the canvas background to viewport panning (the GrabScroll path) instead of area selection. Area selection
+  is unavailable on touch for now.
 
 ## Handler composition: canvas / controls / menu / objects
 
 `handleGesture` (`controllers/gestures/handlers/handleGesture.ts`) is the router.
-It converts a `Gesture` into a `CanvasEvent` (`wheel` branches into `zoom` / `scroll` depending on whether `ctrl` is held)
+It converts a `Gesture` into a `CanvasEvent` (`wheel` branches into `zoom` / `scroll` depending on whether `ctrl` is held;
+`pinch` decomposes into `zoom` followed by `scroll`)
 and passes it to the target handler via `gestureHandlerRegistry`. Each handler uses `targetKind` to
 determine whether it should process the event.
 

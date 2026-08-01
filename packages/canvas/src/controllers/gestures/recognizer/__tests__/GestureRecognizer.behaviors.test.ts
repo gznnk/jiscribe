@@ -13,7 +13,8 @@ import type * as RecognizerUtils from "../utils";
  *
  * Covers paths that the batchOrdering / edgeScroll tests do not:
  *   - click / doubleClick decisions (threshold, triple-tap suppression, target-independence)
- *   - multitouch (ignoring the second pointerdown)
+ *   - multitouch (ignoring a second non-touch pointerdown; the touch pinch path
+ *     is covered by GestureRecognizer.pinch.test.ts)
  *   - pointercancel (dragEnd while dragging / silent when not dragging)
  *   - turning a wheel outside a drag into a wheel gesture
  *   - propagation of mods / button / targetKind
@@ -297,6 +298,8 @@ describe("GestureRecognizer click / doubleClick", () => {
 	});
 });
 
+// Non-touch pointers (makeEvent leaves pointerType unset) never enter a pinch,
+// so a second pointerdown is simply ignored.
 describe("GestureRecognizer multitouch suppression", () => {
 	it("a second pointerdown during an ongoing gesture is ignored", () => {
 		const { dispatch, events, types } = setup();
@@ -494,6 +497,7 @@ describe("GestureRecognizer lifecycle", () => {
 		const released: number[] = [];
 		const container = {
 			setPointerCapture: (pointerId: number) => captured.push(pointerId),
+			hasPointerCapture: () => true,
 			releasePointerCapture: (pointerId: number) => released.push(pointerId),
 		} as unknown as HTMLElement;
 		const { dispatch, recognizer, types } = setup({ container });
@@ -537,6 +541,37 @@ describe("GestureRecognizer lifecycle", () => {
 		flushRaf();
 
 		expect(types()).toEqual(["pressed", "dragStart", "drag", "dragEnd"]);
+	});
+});
+
+// Processing is deferred to the RAF batch, so a quick touch tap can be fully over
+// before its pointerdown is processed; the DOM then rejects capture calls for the
+// no-longer-active pointer with NotFoundError. The recognizer must survive that
+// and still deliver the gesture.
+describe("GestureRecognizer pointer capture safety", () => {
+	it("a touch that lifted before the RAF batch ran still yields its tap (NotFoundError tolerated)", () => {
+		const container = {
+			setPointerCapture: () => {
+				throw new DOMException(
+					"No active pointer with the given id is found.",
+					"NotFoundError",
+				);
+			},
+			hasPointerCapture: () => false,
+			releasePointerCapture: () => {
+				throw new DOMException(
+					"No active pointer with the given id is found.",
+					"NotFoundError",
+				);
+			},
+		} as unknown as HTMLElement;
+		const { dispatch, types } = setup({ container });
+
+		dispatch(makeEvent("pointerdown", 0, 0, 1000));
+		dispatch(makeEvent("pointerup", 0, 0, 1010));
+		flushRaf();
+
+		expect(types()).toEqual(["pressed", "click"]);
 	});
 });
 

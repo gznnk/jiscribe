@@ -1,3 +1,5 @@
+export { calcPinchDist } from "./calcPinchDist";
+export { calcPinchMid } from "./calcPinchMid";
 export { calculateScrollDelta } from "./calculateScrollDelta";
 export { detectEdgeProximity, type EdgeProximity } from "./detectEdgeProximity";
 export { findGestureElement, type GestureToken } from "./findGestureElement";

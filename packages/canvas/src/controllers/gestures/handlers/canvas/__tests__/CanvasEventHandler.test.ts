@@ -85,7 +85,7 @@ describe("CanvasEventHandler", () => {
 			const state = makeState();
 			const event = makeEvent({
 				type: "zoom",
-				zoomDelta: -100,
+				zoomScale: 1.1,
 				last: { x: 0, y: 0 },
 			});
 

@@ -18,6 +18,7 @@ import { materializeObjects } from "../../utils/cowObjects";
 import type { Gesture } from "../recognizer/GestureRecognizerTypes";
 import type { CanvasEvent, EventType } from "../registry/GestureHandlerTypes";
 import { calcSnapCandidates } from "./utils/snap/calcSnapCandidates";
+import { ZOOM } from "../../../constants/zoom";
 
 /**
  * Event types that should trigger saving the current state as eventStartSnapshot.
@@ -48,19 +49,31 @@ export const handleGesture = (
 	let nextState = state;
 
 	// Convert Gesture to CanvasEvent
-	// wheel is converted to scroll/zoom, others are passed through
+	// wheel is converted to scroll/zoom, pinch to zoom (+ a derived scroll below),
+	// others are passed through
 	let canvasEvent: CanvasEvent;
 	if (gesture.type === "wheel") {
 		if (gesture.mods.ctrl) {
+			// One fixed-factor step per wheel event, from the deltaY sign alone
 			canvasEvent = {
 				...gesture,
 				type: "zoom",
-				zoomDelta: gesture.scrollDelta?.deltaY,
+				zoomScale:
+					(gesture.scrollDelta?.deltaY ?? 0) > 0
+						? ZOOM.OUT_FACTOR
+						: ZOOM.IN_FACTOR,
 				scrollDelta: undefined,
 			} as CanvasEvent;
 		} else {
 			canvasEvent = { ...gesture, type: "scroll" } as CanvasEvent;
 		}
+	} else if (gesture.type === "pinch") {
+		// zoomScale rides on the gesture; last (the finger midpoint) is the anchor
+		canvasEvent = {
+			...gesture,
+			type: "zoom",
+			scrollDelta: undefined,
+		} as CanvasEvent;
 	} else {
 		canvasEvent = gesture as CanvasEvent;
 	}
@@ -156,6 +169,16 @@ export const handleGesture = (
 			...canvasEvent,
 			type: "scroll",
 			targetKind: "canvas",
+		});
+	}
+
+	// Pinch: the pan component follows the zoom as a scroll event. Order matters —
+	// the zoom anchors at the midpoint first, then the pan applies at the new zoom.
+	if (gesture.type === "pinch" && gesture.scrollDelta) {
+		derivedEvents.push({
+			...canvasEvent,
+			type: "scroll",
+			scrollDelta: gesture.scrollDelta,
 		});
 	}
 

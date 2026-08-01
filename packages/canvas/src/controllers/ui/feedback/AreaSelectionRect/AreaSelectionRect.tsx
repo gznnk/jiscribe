@@ -29,6 +29,7 @@ const AreaSelectionRectComponent: React.FC<AreaSelectionRectProps> = ({
 
 	return (
 		<rect
+			data-testid="area-selection-rect"
 			x={x}
 			y={y}
 			width={width}

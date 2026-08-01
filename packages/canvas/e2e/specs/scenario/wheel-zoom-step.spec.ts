@@ -6,8 +6,8 @@ import { test, expect } from "../../fixtures";
  *
  * zoom-cursor-anchor.spec guards the anchoring and zoom-keyboard-factor.spec the
  * geometric progression on the keyboard path, but the factor on the wheel path
- * (the zoom branch of CanvasEventHandler) was unchecked. The implementation is
- *   zoomFactor = zoomDelta(=wheel deltaY) > 0 ? ZOOM.OUT_FACTOR : ZOOM.IN_FACTOR
+ * was unchecked. The wheel→zoom conversion in handleGesture maps the event to
+ *   zoomScale = (wheel deltaY) > 0 ? ZOOM.OUT_FACTOR : ZOOM.IN_FACTOR
  * so it looks only at the sign of deltaY and applies x1.1 / x0.9 once per event;
  * the magnitude of deltaY does not affect the factor. Making it proportional to
  * the magnitude, or turning it into several steps, fails here.

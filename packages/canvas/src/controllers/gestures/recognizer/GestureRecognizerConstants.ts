@@ -7,6 +7,13 @@ export const AUTO_SCROLL_THRESHOLD = 20;
 /** Scroll amount during edge scrolling (pixels) */
 export const AUTO_SCROLL_STEP_SIZE = 10;
 
+/**
+ * Minimum finger distance for computing a pinch zoom factor (screen pixels).
+ * Below this the distance ratio degenerates (division by ~0), so the scale is
+ * held at 1 and only the pan component is applied.
+ */
+export const PINCH_MIN_DISTANCE = 1;
+
 /** Time threshold for treating clicks as a double click (milliseconds) */
 export const DOUBLE_CLICK_THRESHOLD = 300;
 

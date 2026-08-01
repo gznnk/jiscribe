@@ -10,10 +10,10 @@
 生の pointer / wheel イベントはキャンバスのルート（`Viewport`）に集約され、
 `GestureRecognizer`（`controllers/gestures/recognizer/`）が `Gesture` に変換する。
 
-`GestureType` は次の 7 種:
+`GestureType` は次の 8 種:
 
 ```
-pressed | dragStart | drag | dragEnd | click | doubleClick | wheel
+pressed | dragStart | drag | dragEnd | click | doubleClick | wheel | pinch
 ```
 
 `Gesture` は SVG 座標とクライアント座標の両方（`start` / `last` / `delta`）、修飾キー
@@ -29,11 +29,21 @@ pressed | dragStart | drag | dragEnd | click | doubleClick | wheel
   オブジェクト／テキスト系ハンドラはこれに依存している（DOM 標準の加算式に変えると回帰リスクが大きい）。
 - **RAF バッチ**: 高頻度な pointermove は `requestAnimationFrame` でまとめて 1 つの `drag` に集約し、
   毎フレーム以上の状態更新が走らないようにする（[設計思想](./01-design-philosophy.ja.md) の性能優先）。
+- **2本指ピンチ（タッチ）**: 1本目のタッチがドラッグ確定する前に2本目の pointerdown が来ると、
+  保留中の press を破棄してピンチモードに入る。`pinch` は `zoomScale`（指間距離比）と
+  `scrollDelta`（中点移動）を載せ、1フレーム1発火に集約される（`settleBatch`）。
+  キャンバスのパンドラッグ中は2本目で `dragEnd` を発火してパンを閉じ、ピンチへ移行する。
+  図形ドラッグ中・シェイプ描画中およびマウス／ペンでは追加の pointerdown を単に無視する
+  （パーム耐性、issue #25）。
+- **タッチのパン**: `Gesture` は `pointerType` を持ち、CanvasEventHandler がタッチの1本指
+  背景ドラッグをエリア選択ではなくビューポートのパン（GrabScroll パス）へルーティングする。
+  タッチでのエリア選択は当面利用不可。
 
 ## ハンドラ構成：canvas / controls / menu / objects
 
 `handleGesture`（`controllers/gestures/handlers/handleGesture.ts`）がルーター。
-`Gesture` を `CanvasEvent` に変換し（`wheel` は `ctrl` の有無で `zoom` / `scroll` に分岐）、
+`Gesture` を `CanvasEvent` に変換し（`wheel` は `ctrl` の有無で `zoom` / `scroll` に分岐、
+`pinch` は `zoom` → `scroll` の順に分解）、
 `gestureHandlerRegistry` 経由で対象ハンドラへ渡す。各ハンドラは `targetKind` で
 自分が処理すべきイベントかを判定する。
 

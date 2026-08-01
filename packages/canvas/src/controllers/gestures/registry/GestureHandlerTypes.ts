@@ -9,11 +9,11 @@ import type {
 
 /**
  * Canvas event type.
- * Excludes "wheel" from GestureType (wheel is converted to scroll/zoom).
+ * Excludes "wheel" and "pinch" from GestureType (both are converted to scroll/zoom).
  * Adds canvas-specific events like dragOver, dragLeave, scroll, and zoom.
  */
 export type EventType =
-	| Exclude<GestureType, "wheel">
+	| Exclude<GestureType, "wheel" | "pinch">
 	| "dragOver"
 	| "dragLeave"
 	| "scroll"
