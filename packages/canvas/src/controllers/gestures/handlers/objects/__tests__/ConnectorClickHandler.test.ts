@@ -8,7 +8,7 @@ import type { CanvasControllerState } from "../../../../CanvasTypes";
 import { createTestRegistries } from "../../../../registries/createCanvasRegistries";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
 import { SNAP_THRESHOLD_PX } from "../../utils/snap/findSnap";
-import { ConnectorEventHandler } from "../ConnectorEventHandler";
+import { ConnectorClickHandler } from "../ConnectorClickHandler";
 
 const registries = createTestRegistries();
 
@@ -84,9 +84,9 @@ const pendingPlacement = (state: CanvasControllerState) =>
 		? state.textEditState.placement
 		: undefined;
 
-describe("ConnectorEventHandler - double click edit target", () => {
+describe("ConnectorClickHandler - double click edit target", () => {
 	it("with a committed label, a double click on the bare line selects without opening the editor", () => {
-		const next = ConnectorEventHandler.handle(
+		const next = ConnectorClickHandler.handle(
 			makeState("Yes"),
 			makeEvent("doubleClick", "c1"),
 			registries,
@@ -96,7 +96,7 @@ describe("ConnectorEventHandler - double click edit target", () => {
 	});
 
 	it("with a committed label, a double click on the label box opens the editor prefilled", () => {
-		const next = ConnectorEventHandler.handle(
+		const next = ConnectorClickHandler.handle(
 			makeState("Yes"),
 			makeEvent("doubleClick", "c1", "label"),
 			registries,
@@ -110,7 +110,7 @@ describe("ConnectorEventHandler - double click edit target", () => {
 	});
 
 	it("without a label, a double click anywhere on the line opens the editor empty", () => {
-		const next = ConnectorEventHandler.handle(
+		const next = ConnectorClickHandler.handle(
 			makeState(""),
 			makeEvent("doubleClick", "c1"),
 			registries,
@@ -124,7 +124,7 @@ describe("ConnectorEventHandler - double click edit target", () => {
 	});
 });
 
-describe("ConnectorEventHandler - placement of the label being created", () => {
+describe("ConnectorClickHandler - placement of the label being created", () => {
 	/**
 	 * A straight connector between two free endpoints, so the resolved path is
 	 * exactly (0,0)-(200,0) with no owner geometry involved.
@@ -151,7 +151,7 @@ describe("ConnectorEventHandler - placement of the label being created", () => {
 		last: Point,
 		targetPart?: string,
 	) =>
-		ConnectorEventHandler.handle(
+		ConnectorClickHandler.handle(
 			state,
 			makeEvent("doubleClick", "c1", targetPart, last),
 			registries,
@@ -257,9 +257,9 @@ describe("ConnectorEventHandler - placement of the label being created", () => {
 	});
 });
 
-describe("ConnectorEventHandler - taps while editing commit", () => {
+describe("ConnectorClickHandler - clicks while editing commit", () => {
 	it("a pressed on the edited connector's line commits the pending label (the label box itself is covered by the editor overlay)", () => {
-		const next = ConnectorEventHandler.handle(
+		const next = ConnectorClickHandler.handle(
 			makeEditState("c1", "old", "new"),
 			makeEvent("pressed", "c1"),
 			registries,
@@ -270,12 +270,12 @@ describe("ConnectorEventHandler - taps while editing commit", () => {
 	});
 
 	it("a double click on the edited connector's line commits once and does not re-open the editor", () => {
-		const afterPressed = ConnectorEventHandler.handle(
+		const afterPressed = ConnectorClickHandler.handle(
 			makeEditState("c1", "old", "new"),
 			makeEvent("pressed", "c1"),
 			registries,
 		);
-		const afterDouble = ConnectorEventHandler.handle(
+		const afterDouble = ConnectorClickHandler.handle(
 			afterPressed,
 			makeEvent("doubleClick", "c1"),
 			registries,
@@ -289,7 +289,7 @@ describe("ConnectorEventHandler - taps while editing commit", () => {
 	});
 
 	it("a pressed on a different connector commits the pending edit", () => {
-		const next = ConnectorEventHandler.handle(
+		const next = ConnectorClickHandler.handle(
 			makeEditState("c1", "old", "new"),
 			makeEvent("pressed", "c2"),
 			registries,
@@ -301,7 +301,7 @@ describe("ConnectorEventHandler - taps while editing commit", () => {
 	});
 });
 
-describe("ConnectorEventHandler - clears stale UI state on selection change", () => {
+describe("ConnectorClickHandler - clears stale UI state on selection change", () => {
 	const staleUiState = (): CanvasControllerState =>
 		({
 			...makeState("Yes"),
@@ -311,7 +311,7 @@ describe("ConnectorEventHandler - clears stale UI state on selection change", ()
 		}) as unknown as CanvasControllerState;
 
 	it("a click selecting a connector closes the menus and drops the vertex selection", () => {
-		const next = ConnectorEventHandler.handle(
+		const next = ConnectorClickHandler.handle(
 			staleUiState(),
 			makeEvent("click", "c1"),
 			registries,
@@ -323,7 +323,7 @@ describe("ConnectorEventHandler - clears stale UI state on selection change", ()
 	});
 
 	it("a double click selecting a connector also clears them", () => {
-		const next = ConnectorEventHandler.handle(
+		const next = ConnectorClickHandler.handle(
 			staleUiState(),
 			makeEvent("doubleClick", "c1"),
 			registries,
@@ -335,10 +335,10 @@ describe("ConnectorEventHandler - clears stale UI state on selection change", ()
 	});
 });
 
-describe("ConnectorEventHandler - touch press defers the pending label commit", () => {
+describe("ConnectorClickHandler - touch press defers the pending label commit", () => {
 	it("a touch pressed on another connector keeps the edit session (the press may still become a pinch)", () => {
 		const state = makeEditState("c1", "Yes", "pending");
-		const next = ConnectorEventHandler.handle(
+		const next = ConnectorClickHandler.handle(
 			state,
 			makeEvent("pressed", "c2", undefined, { x: 0, y: 0 }, "touch"),
 			registries,
@@ -350,12 +350,12 @@ describe("ConnectorEventHandler - touch press defers the pending label commit", 
 	});
 
 	it("the touch tap that resolves (click) commits the pending label", () => {
-		const afterPressed = ConnectorEventHandler.handle(
+		const afterPressed = ConnectorClickHandler.handle(
 			makeEditState("c1", "Yes", "pending"),
 			makeEvent("pressed", "c2", undefined, { x: 0, y: 0 }, "touch"),
 			registries,
 		);
-		const next = ConnectorEventHandler.handle(
+		const next = ConnectorClickHandler.handle(
 			afterPressed,
 			makeEvent("click", "c2", undefined, { x: 0, y: 0 }, "touch"),
 			registries,
