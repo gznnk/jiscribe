@@ -4,6 +4,7 @@ export type {
 	CanvasExportHandle,
 	CanvasExportImagePayload,
 	CanvasExportOptions,
+	CanvasPngExportOptions,
 } from "./controllers/hooks/useCanvasExport";
 export type { CanvasViewportHandle } from "./controllers/hooks/useViewportHandle";
 export { CanvasThumbnail } from "./controllers/CanvasThumbnail";
