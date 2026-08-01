@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
-import type { PolylineState } from "../../../../../../states/objects/primitives/polyline/PolylineState";
+import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
+import type { PolylineState } from "../../../../states/objects/primitives/polyline/PolylineState";
 import { rotatePolyByGroup, transformPolyByGroup } from "../PolyTransform";
 
 const makeGroup = (overrides: Partial<GroupState>): GroupState =>

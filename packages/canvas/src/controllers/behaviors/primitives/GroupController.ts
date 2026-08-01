@@ -1,16 +1,16 @@
 import type { Point } from "@workspace/geometry";
 
-import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
+import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import {
 	isGroupState,
 	type GroupState,
-} from "../../../../../states/objects/primitives/group/GroupState";
-import type { ObjectBehaviorRegistry } from "../../../registry/ObjectBehaviorRegistry";
+} from "../../../states/objects/primitives/group/GroupState";
+import type { ObjectBehaviorRegistry } from "../../gestures/registry/ObjectBehaviorRegistry";
 import type {
 	MoveByDeltaFunction,
 	RotateByGroupFunction,
 	TransformByGroupFunction,
-} from "../../../registry/ObjectBehaviorTypes";
+} from "../../gestures/registry/ObjectBehaviorTypes";
 import {
 	transformGroupByGroup,
 	rotateGroupByGroup,

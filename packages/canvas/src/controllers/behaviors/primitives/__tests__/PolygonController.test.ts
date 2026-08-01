@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
-import type { PolylineState } from "../../../../../../states/objects/primitives/polyline/PolylineState";
+import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
+import type { PolygonState } from "../../../../states/objects/primitives/polygon/PolygonState";
 import {
 	rotatePolyByGroup,
 	transformPolyByGroup,
@@ -10,14 +10,14 @@ import {
 	moveByDelta,
 	rotateByGroup,
 	transformByGroup,
-} from "../PolylineController";
+} from "../PolygonController";
 
-const makePolyline = (points: { x: number; y: number }[]): PolylineState =>
+const makePolygon = (points: { x: number; y: number }[]): PolygonState =>
 	({
-		id: "polyline-1",
-		type: "polyline",
+		id: "polygon-1",
+		type: "polygon",
 		points,
-	}) as unknown as PolylineState;
+	}) as unknown as PolygonState;
 
 const makeGroup = (overrides?: Partial<GroupState>): GroupState =>
 	({
@@ -34,43 +34,43 @@ const makeGroup = (overrides?: Partial<GroupState>): GroupState =>
 		...overrides,
 	}) as unknown as GroupState;
 
-describe("PolylineController.moveByDelta", () => {
+describe("PolygonController.moveByDelta", () => {
 	it("moves all vertices by delta", () => {
 		const result = moveByDelta(
-			makePolyline([
-				{ x: -80, y: 0 },
-				{ x: 80, y: 0 },
+			makePolygon([
+				{ x: 0, y: 0 },
+				{ x: 10, y: 20 },
 			]),
-			{ x: 0, y: 10 },
+			{ x: 5, y: -5 },
 		);
 		expect(result.points).toEqual([
-			{ x: -80, y: 10 },
-			{ x: 80, y: 10 },
+			{ x: 5, y: -5 },
+			{ x: 15, y: 15 },
 		]);
 	});
 
 	it("does not mutate the original state", () => {
-		const src = makePolyline([{ x: 0, y: 0 }]);
+		const src = makePolygon([{ x: 0, y: 0 }]);
 		moveByDelta(src, { x: 5, y: 5 });
 		expect(src.points[0]).toEqual({ x: 0, y: 0 });
 	});
 });
 
-describe("PolylineController delegation of group transforms", () => {
+describe("PolygonController delegation of group transforms", () => {
 	it("transformByGroup delegates to transformPolyByGroup", () => {
-		const polyline = makePolyline([{ x: 10, y: 0 }]);
+		const polygon = makePolygon([{ x: 10, y: 0 }]);
 		const start = makeGroup({ width: 100 });
 		const end = makeGroup({ width: 200 });
-		expect(transformByGroup(polyline, start, end)).toEqual(
-			transformPolyByGroup(polyline, start, end),
+		expect(transformByGroup(polygon, start, end)).toEqual(
+			transformPolyByGroup(polygon, start, end),
 		);
 	});
 
 	it("rotateByGroup delegates to rotatePolyByGroup", () => {
-		const polyline = makePolyline([{ x: 10, y: 0 }]);
+		const polygon = makePolygon([{ x: 10, y: 0 }]);
 		const group = makeGroup({ rotation: 0 });
-		expect(rotateByGroup(polyline, group, 90)).toEqual(
-			rotatePolyByGroup(polyline, group, 90),
+		expect(rotateByGroup(polygon, group, 90)).toEqual(
+			rotatePolyByGroup(polygon, group, 90),
 		);
 	});
 });

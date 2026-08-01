@@ -1,10 +1,10 @@
 import { roundToDecimal, type TransformedFrame } from "@workspace/geometry";
 
 import { rotateFrameByGroup, transformFrameByGroup } from "./FrameTransform";
-import { PRECISION } from "../../../../../constants/precision";
-import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
-import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
-import type { ObjectBehaviorEntry } from "../../../registry/ObjectBehaviorTypes";
+import { PRECISION } from "../../../constants/precision";
+import type { ObjectState } from "../../../states/objects/base/ObjectState";
+import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
+import type { ObjectBehaviorEntry } from "../../gestures/registry/ObjectBehaviorTypes";
 
 /**
  * Creates the shared behavior for Frame-based objects (rect / ellipse / diamond /

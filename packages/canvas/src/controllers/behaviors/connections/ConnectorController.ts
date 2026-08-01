@@ -1,9 +1,9 @@
-import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
+import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
 import type {
 	MoveByDeltaFunction,
 	RotateByGroupFunction,
 	TransformByGroupFunction,
-} from "../../../registry/ObjectBehaviorTypes";
+} from "../../gestures/registry/ObjectBehaviorTypes";
 
 /**
  * No-op: connectors are never in selectedIds (exclusive selection via

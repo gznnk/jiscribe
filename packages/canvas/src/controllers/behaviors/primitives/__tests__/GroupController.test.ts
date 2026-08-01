@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
-import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
-import { createTestRegistries } from "../../../../../registries/createCanvasRegistries";
+import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
+import { createTestRegistries } from "../../../registries/createCanvasRegistries";
 import {
 	rotateGroupByGroup,
 	transformGroupByGroup,

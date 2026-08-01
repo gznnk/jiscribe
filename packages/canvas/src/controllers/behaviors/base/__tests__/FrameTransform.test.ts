@@ -1,7 +1,7 @@
 import type { TransformedFrame } from "@workspace/geometry";
 import { describe, expect, it } from "vitest";
 
-import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
+import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 import { transformFrameByGroup } from "../FrameTransform";
 
 const makeGroup = (overrides: Partial<GroupState>): GroupState =>

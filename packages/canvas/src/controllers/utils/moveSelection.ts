@@ -3,7 +3,7 @@ import type { Point } from "@workspace/geometry";
 import { createCowObjects } from "./cowObjects";
 import type { ObjectState } from "../../states/objects/base/ObjectState";
 import type { GroupState } from "../../states/objects/primitives/group/GroupState";
-import { moveObjectTree } from "../gestures/handlers/objects/primitives/GroupController";
+import { moveObjectTree } from "../behaviors/primitives/GroupController";
 import type { ObjectBehaviorRegistry } from "../gestures/registry/ObjectBehaviorRegistry";
 
 export type MoveSelectionParams = {

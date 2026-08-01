@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import type { ConnectorState } from "../../../../../../states/objects/connections/connector/ConnectorState";
-import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
+import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
+import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 import {
 	moveByDelta,
 	rotateByGroup,

@@ -5,10 +5,10 @@ import {
 	roundToDecimal,
 } from "@workspace/geometry";
 
-import { PRECISION } from "../../../../../constants/precision";
-import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
-import { classifyChildRelativeRotation } from "../../../../utils/classifyChildRelativeRotation";
-import { normalizeRotation } from "../../../../utils/normalizeRotation";
+import { PRECISION } from "../../../constants/precision";
+import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
+import { classifyChildRelativeRotation } from "../../utils/classifyChildRelativeRotation";
+import { normalizeRotation } from "../../utils/normalizeRotation";
 
 /**
  * Group transform handling for Frame-based shapes (Rect, Ellipse, Group, etc.).

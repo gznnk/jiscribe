@@ -1,20 +1,20 @@
 import { roundToDecimal } from "@workspace/geometry";
 
-import { PRECISION } from "../../../../../constants/precision";
-import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
-import type { PolygonState } from "../../../../../states/objects/primitives/polygon/PolygonState";
+import { PRECISION } from "../../../constants/precision";
+import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
+import type { PolylineState } from "../../../states/objects/primitives/polyline/PolylineState";
 import type {
 	MoveByDeltaFunction,
 	RotateByGroupFunction,
 	TransformByGroupFunction,
-} from "../../../registry/ObjectBehaviorTypes";
+} from "../../gestures/registry/ObjectBehaviorTypes";
 import { rotatePolyByGroup, transformPolyByGroup } from "../base/PolyTransform";
 
 /**
- * Moves a Polygon object by a delta.
+ * Moves a Polyline object by a delta.
  * Updates all points in the points array.
  */
-export const moveByDelta: MoveByDeltaFunction<PolygonState> = (
+export const moveByDelta: MoveByDeltaFunction<PolylineState> = (
 	state,
 	delta,
 ) => {
@@ -28,9 +28,9 @@ export const moveByDelta: MoveByDeltaFunction<PolygonState> = (
 };
 
 /**
- * Transforms a Polygon object when its parent group is transformed.
+ * Transforms a Polyline object when its parent group is transformed.
  */
-export const transformByGroup: TransformByGroupFunction<PolygonState> = (
+export const transformByGroup: TransformByGroupFunction<PolylineState> = (
 	state,
 	groupStart,
 	groupEnd,
@@ -43,9 +43,9 @@ export const transformByGroup: TransformByGroupFunction<PolygonState> = (
 };
 
 /**
- * Rotates a Polygon object when its parent group is rotated.
+ * Rotates a Polyline object when its parent group is rotated.
  */
-export const rotateByGroup: RotateByGroupFunction<PolygonState> = (
+export const rotateByGroup: RotateByGroupFunction<PolylineState> = (
 	state,
 	rotationRootGroup,
 	endGroupRotation,

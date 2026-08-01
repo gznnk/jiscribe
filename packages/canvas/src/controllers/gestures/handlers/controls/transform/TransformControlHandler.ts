@@ -22,6 +22,7 @@ import { PRECISION } from "../../../../../constants/precision";
 import type { TransformState } from "../../../../../states/objects/base/TransformState";
 import { isTransformState } from "../../../../../states/objects/base/TransformState";
 import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
+import { transformChildren } from "../../../../behaviors/primitives/GroupController";
 import type {
 	CanvasControllerState,
 	SnapFeedback,
@@ -31,7 +32,6 @@ import { createCowObjects } from "../../../../utils/cowObjects";
 import { updateGroupBoundsFromRoot } from "../../../../utils/updateGroupBoundsFromRoot";
 import { ControlStrategy } from "../../../registry/ControlStrategy";
 import type { CanvasEvent } from "../../../registry/GestureHandlerTypes";
-import { transformChildren } from "../../objects/primitives/GroupController";
 
 /**
  * Handles transform-control operations (resize and rotation).

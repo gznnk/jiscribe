@@ -5,10 +5,10 @@ import {
 	roundToDecimal,
 } from "@workspace/geometry";
 
-import { PRECISION } from "../../../../../constants/precision";
-import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
-import type { PolygonState } from "../../../../../states/objects/primitives/polygon/PolygonState";
-import type { PolylineState } from "../../../../../states/objects/primitives/polyline/PolylineState";
+import { PRECISION } from "../../../constants/precision";
+import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
+import type { PolygonState } from "../../../states/objects/primitives/polygon/PolygonState";
+import type { PolylineState } from "../../../states/objects/primitives/polyline/PolylineState";
 
 /**
  * Group transform handling for Poly-family shapes (Polygon, Polyline).

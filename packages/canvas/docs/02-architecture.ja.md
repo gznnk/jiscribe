@@ -31,6 +31,7 @@ packages/canvas/src/
 ├── controllers/            # 状態管理 + ビジネスロジック
 │   ├── Canvas.tsx
 │   ├── gestures/           # recognizer（認識）+ handlers + registry/（GestureHandlerRegistry / ObjectBehaviorRegistry）
+│   ├── behaviors/          # ObjectBehavior 実装（moveByDelta / transformByGroup / rotateByGroup）
 │   ├── commands/           # Command パターン（selection/arrange/arrow/connector/group/history/text/view）+ CommandRegistry
 │   ├── reducer/            # canvasReducer + CanvasActions
 │   ├── hooks/              # useCanvasReducer / useSyncExternalDoc など
@@ -44,7 +45,7 @@ packages/canvas/src/
 ```
 
 形状ごと（rect / ellipse / diamond / group / polygon / polyline / connector / sticky / svg）に、
-`states/objects/.../<shape>/` と `controllers/gestures/handlers/objects/...`、
+`states/objects/.../<shape>/` と `controllers/behaviors/...`、
 `presentations/objects/...` が対応する。
 
 ## レイヤー構成と依存関係
@@ -58,7 +59,8 @@ packages/canvas/src/
 
 ### ロジック層（controllers）
 
-- **gestures/handlers/**: ジェスチャーを受けて `CanvasState` を更新する。`objects/` 配下に形状ごとの Controller（`moveByDelta` / `transformByGroup`）と EventHandler、`base/` に共通変形ロジック（FrameTransform / PolyTransform / GroupTransform）。
+- **gestures/handlers/**: ジェスチャーを受けて `CanvasState` を更新する。`objects/` と `controls/` の配下に対象ごとの EventHandler を置く。
+- **behaviors/**: `ObjectBehaviorRegistry` に登録される `ObjectBehavior` 実装（`moveByDelta` / `transformByGroup` / `rotateByGroup`）。形状ごとの Controller は `primitives/` と `connections/`、共通変形ロジックは `base/`（FrameTransform / PolyTransform / GroupTransform）。`gestures` / `commands` / `reducer` / `utils` からレジストリ経由で使われる。
 - **commands/**: ショートカット・メニュー・ツールバー共通の操作 → [コマンドシステム](./05-command-system.ja.md)。
 - **reducer/**: アクションを各ハンドラへ振り分ける → [状態更新フロー](./06-state-update-flow.ja.md)。
 - **ui/**: 変形コントロールやメニューなど UI 制御ロジック。
@@ -124,6 +126,7 @@ graph TD
     end
     subgraph Controllers["ロジック層 (controllers)"]
         Gestures["gestures/handlers (+ registry/)"]
+        Behaviors["behaviors（moveByDelta / transformByGroup / rotateByGroup）"]
         Commands["commands (+ CommandRegistry)"]
         Reducer["reducer"]
         UI["ui"]
@@ -138,6 +141,7 @@ graph TD
     PresentationComponents --> StatesTypes
     PresentationUtils --> StatesTypes
     Gestures --> StatesTypes
+    Behaviors --> StatesTypes
     Commands --> StatesTypes
     Reducer --> StatesTypes
     UI --> StatesTypes
@@ -177,7 +181,7 @@ Registry パターンにより、形状追加は「6 ステップ + 登録」で
 1. **Schema**: `schemas/objects/primitives/<Shape>Doc.ts`（+ `validate<Shape>Doc.ts`）
 2. **State**: `states/objects/primitives/<shape>/<Shape>State.ts`
 3. **Mapper**: `states/objects/primitives/<shape>/<Shape>Mapper.ts`（Doc ↔ State）
-4. **Controller**: `controllers/gestures/handlers/objects/primitives/<Shape>Controller.ts`（`moveByDelta` / `transformByGroup`）
+4. **Controller**: `controllers/behaviors/primitives/<Shape>Controller.ts`（`moveByDelta` / `transformByGroup`）
 5. **Component**: `presentations/objects/primitives/<Shape>/<Shape>.tsx`
 6. **登録**: 登録先レジストリが分かれているため、**2 箇所**に登録する。
    - `controllers/registries/initializeObjectRegistry.ts` — Mapper / Component / behavior / State バリデータ / menu（UI 側レジストリ群）

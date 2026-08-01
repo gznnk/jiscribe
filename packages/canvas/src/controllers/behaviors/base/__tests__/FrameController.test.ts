@@ -1,8 +1,8 @@
 import type { FlipScale } from "@workspace/geometry";
 import { describe, expect, it } from "vitest";
 
-import type { ObjectState } from "../../../../../../states/objects/base/ObjectState";
-import type { GroupState } from "../../../../../../states/objects/primitives/group/GroupState";
+import type { ObjectState } from "../../../../states/objects/base/ObjectState";
+import type { GroupState } from "../../../../states/objects/primitives/group/GroupState";
 import { createFrameBehavior } from "../FrameController";
 import { rotateFrameByGroup, transformFrameByGroup } from "../FrameTransform";
 

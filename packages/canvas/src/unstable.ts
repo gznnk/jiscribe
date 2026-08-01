@@ -35,7 +35,7 @@ export type { TextOverlayFrameProps } from "./presentations/objects/base/TextOve
 // what needs to change.
 export { TextOverlay } from "./presentations/objects/base/TextOverlay/TextOverlay";
 
-export { createFrameBehavior } from "./controllers/gestures/handlers/objects/base/FrameController";
+export { createFrameBehavior } from "./controllers/behaviors/base/FrameController";
 
 export { createFrameMapper } from "./states/objects/base/FrameMapper";
 

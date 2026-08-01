@@ -1,5 +1,5 @@
 import { transformFrameByGroup, rotateFrameByGroup } from "./FrameTransform";
-import type { GroupState } from "../../../../../states/objects/primitives/group/GroupState";
+import type { GroupState } from "../../../states/objects/primitives/group/GroupState";
 
 /**
  * Recursive group-driven transform for Group objects.

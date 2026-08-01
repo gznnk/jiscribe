@@ -93,28 +93,28 @@ import {
 } from "../../states/objects/primitives/svg/SvgMapper";
 import type { SvgState } from "../../states/objects/primitives/svg/SvgState";
 import { isValidSvgState } from "../../states/objects/primitives/svg/validateSvgState";
-import { handleCalloutTailTip } from "../gestures/handlers/controls/callout/handleCalloutTailTip";
-import { createFrameBehavior } from "../gestures/handlers/objects/base/FrameController";
+import { createFrameBehavior } from "../behaviors/base/FrameController";
 import {
 	moveByDelta as connectorMoveByDelta,
 	rotateByGroup as connectorRotateByGroup,
 	transformByGroup as connectorTransformByGroup,
-} from "../gestures/handlers/objects/connections/ConnectorController";
+} from "../behaviors/connections/ConnectorController";
 import {
 	moveByDelta as groupMoveByDelta,
 	rotateByGroup as groupRotateByGroup,
 	transformByGroup as groupTransformByGroup,
-} from "../gestures/handlers/objects/primitives/GroupController";
+} from "../behaviors/primitives/GroupController";
 import {
 	moveByDelta as polygonMoveByDelta,
 	rotateByGroup as polygonRotateByGroup,
 	transformByGroup as polygonTransformByGroup,
-} from "../gestures/handlers/objects/primitives/PolygonController";
+} from "../behaviors/primitives/PolygonController";
 import {
 	moveByDelta as polylineMoveByDelta,
 	rotateByGroup as polylineRotateByGroup,
 	transformByGroup as polylineTransformByGroup,
-} from "../gestures/handlers/objects/primitives/PolylineController";
+} from "../behaviors/primitives/PolylineController";
+import { handleCalloutTailTip } from "../gestures/handlers/controls/callout/handleCalloutTailTip";
 import { CalloutTailTipControl } from "../ui/controls/CalloutTailControls";
 import {
 	LabelBackgroundColorMenu,
