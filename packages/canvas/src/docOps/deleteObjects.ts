@@ -1,5 +1,6 @@
 import {
 	collectObjectIds,
+	dropEmptyGroups,
 	type ObjectRecord,
 	requireObjects,
 } from "./objectAccess";
@@ -45,17 +46,6 @@ const removeByIds = (siblings: ObjectDoc[], ids: ReadonlySet<string>): void => {
 	}
 };
 
-/** Ids of groups left without children, which have no frame of their own to draw. */
-const collectEmptyGroupIds = (doc: CanvasDoc): string[] => {
-	const ids: string[] = [];
-	visitObjects(doc.root, (object) => {
-		if (Array.isArray(object.children) && object.children.length === 0) {
-			ids.push(object.id);
-		}
-	});
-	return ids;
-};
-
 /**
  * Delete objects by id, mutating `doc` in place.
  *
@@ -96,16 +86,8 @@ export const deleteObjects = (
 	});
 
 	removeByIds(doc.root, new Set([...namedIds, ...cascadedIds]));
-
 	// Removing children can empty a group, and emptying that group can empty its parent.
-	for (
-		let emptyGroupIds = collectEmptyGroupIds(doc);
-		emptyGroupIds.length > 0;
-		emptyGroupIds = collectEmptyGroupIds(doc)
-	) {
-		cascadedIds.push(...emptyGroupIds);
-		removeByIds(doc.root, new Set(emptyGroupIds));
-	}
+	cascadedIds.push(...dropEmptyGroups(doc));
 
 	return { deletedIds: [...namedIds, ...cascadedIds], cascadedIds };
 };

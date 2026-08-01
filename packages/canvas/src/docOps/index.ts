@@ -5,6 +5,7 @@ export { type AlignEdge, type DistributeAxis } from "./arrangeObjects";
 export { type ConnectParams } from "./connect";
 export { type AnchorHandleId } from "./connectorEndpoints";
 export { type DeleteObjectsResult } from "./deleteObjects";
+export { type RemoveFromGroupResult } from "./groupObjects";
 export { type MoveObjectParams, type ResizeObjectParams } from "./placeObjects";
 export { type SetStyleResult } from "./setStyle";
 export { type StyleParams } from "./styleFields";

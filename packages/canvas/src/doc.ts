@@ -59,6 +59,7 @@ export {
 	type AnchorHandleId,
 	type DeleteObjectsResult,
 	type DistributeAxis,
+	type RemoveFromGroupResult,
 	type MoveObjectParams,
 	type ResizeObjectParams,
 	type SetStyleResult,

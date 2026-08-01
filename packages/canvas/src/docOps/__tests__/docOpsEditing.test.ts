@@ -603,3 +603,103 @@ describe("groupObjects / ungroupObject", () => {
 		);
 	});
 });
+
+describe("addObjectsToGroup / removeObjectsFromGroup", () => {
+	/** A group of two rects, with two more rects left outside it. */
+	const groupedPair = (): CanvasDoc => {
+		const doc = emptyDoc();
+		for (const x of [0, 200, 400, 600]) {
+			docOps.addObject(doc, "rect", { x, y: 0, width: 100, height: 100 });
+		}
+		docOps.groupObjects(doc, ["rect-1", "rect-2"]);
+		return doc;
+	};
+
+	const childIds = (doc: CanvasDoc, groupId: string): string[] =>
+		(readObject(doc, groupId).children as ObjectDoc[]).map((child) => child.id);
+
+	it("appends the newcomers to the group in the order given", () => {
+		const doc = groupedPair();
+
+		expect(
+			docOps.addObjectsToGroup(doc, "group-1", ["rect-4", "rect-3"]),
+		).toEqual([]);
+		expect(rootIds(doc)).toEqual(["group-1"]);
+		expect(childIds(doc, "group-1")).toEqual([
+			"rect-1",
+			"rect-2",
+			"rect-4",
+			"rect-3",
+		]);
+		expectValid(doc);
+	});
+
+	it("drops a group the move left empty", () => {
+		const doc = groupedPair();
+		docOps.groupObjects(doc, ["rect-3", "rect-4"]);
+
+		expect(
+			docOps.addObjectsToGroup(doc, "group-1", ["rect-3", "rect-4"]),
+		).toEqual(["group-2"]);
+		expect(rootIds(doc)).toEqual(["group-1"]);
+		expect(childIds(doc, "group-1")).toEqual([
+			"rect-1",
+			"rect-2",
+			"rect-3",
+			"rect-4",
+		]);
+		expectValid(doc);
+	});
+
+	it("refuses a connector, a move into itself, and an unknown id — without moving anything", () => {
+		const doc = twoConnectedRects();
+		docOps.addObject(doc, "rect", { x: 600, y: 0 });
+		docOps.groupObjects(doc, ["rect-1", "rect-2"]);
+
+		expect(() =>
+			docOps.addObjectsToGroup(doc, "group-1", ["connector-1"]),
+		).toThrow(/connector/);
+		expect(() => docOps.addObjectsToGroup(doc, "group-1", ["group-1"])).toThrow(
+			/inside itself/,
+		);
+		expect(() => docOps.addObjectsToGroup(doc, "group-1", ["rect-9"])).toThrow(
+			DocOperationError,
+		);
+		expect(() => docOps.addObjectsToGroup(doc, "rect-3", ["rect-3"])).toThrow(
+			/not a group/,
+		);
+		expect(childIds(doc, "group-1")).toEqual(["rect-1", "rect-2"]);
+	});
+
+	it("puts a member back right after its group, keeping the given order", () => {
+		const doc = groupedPair();
+		docOps.addObjectsToGroup(doc, "group-1", ["rect-3"]);
+
+		expect(docOps.removeObjectsFromGroup(doc, ["rect-1", "rect-3"])).toEqual({
+			releasedIds: ["rect-1", "rect-3"],
+			droppedGroupIds: [],
+		});
+		expect(rootIds(doc)).toEqual(["group-1", "rect-1", "rect-3", "rect-4"]);
+		expect(childIds(doc, "group-1")).toEqual(["rect-2"]);
+		expectValid(doc);
+	});
+
+	it("taking every member out is the same as ungrouping", () => {
+		const doc = groupedPair();
+
+		expect(
+			docOps.removeObjectsFromGroup(doc, ["rect-1", "rect-2"]).droppedGroupIds,
+		).toEqual(["group-1"]);
+		expect(rootIds(doc)).toEqual(["rect-1", "rect-2", "rect-3", "rect-4"]);
+		expectValid(doc);
+	});
+
+	it("refuses an object that is not in a group", () => {
+		const doc = groupedPair();
+
+		expect(() => docOps.removeObjectsFromGroup(doc, ["rect-3"])).toThrow(
+			/not inside a group/,
+		);
+		expect(rootIds(doc)).toEqual(["group-1", "rect-3", "rect-4"]);
+	});
+});

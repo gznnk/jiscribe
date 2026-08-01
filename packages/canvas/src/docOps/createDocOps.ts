@@ -7,7 +7,13 @@ import {
 } from "./arrangeObjects";
 import { connect, type ConnectParams } from "./connect";
 import { deleteObjects, type DeleteObjectsResult } from "./deleteObjects";
-import { groupObjects, ungroupObject } from "./groupObjects";
+import {
+	addObjectsToGroup,
+	groupObjects,
+	removeObjectsFromGroup,
+	type RemoveFromGroupResult,
+	ungroupObject,
+} from "./groupObjects";
 import {
 	moveObject,
 	type MoveObjectParams,
@@ -114,6 +120,25 @@ export type DocOps = {
 	 * Throws `DocOperationError` when the id is not a group, or names a rotated one.
 	 */
 	ungroupObject(doc: CanvasDoc, id: string): string[];
+	/**
+	 * Move objects already in the doc into an existing group, returning the groups they
+	 * left empty. Throws `DocOperationError` for a missing id, a connector, a rotated
+	 * target, or a move that would put the group inside itself.
+	 */
+	addObjectsToGroup(
+		doc: CanvasDoc,
+		groupId: string,
+		ids: readonly string[],
+	): string[];
+	/**
+	 * Take objects out of the group holding them, dropping a group left with nothing.
+	 * Throws `DocOperationError` for a missing id, an object outside any group, or one
+	 * held by a rotated group.
+	 */
+	removeObjectsFromGroup(
+		doc: CanvasDoc,
+		ids: readonly string[],
+	): RemoveFromGroupResult;
 };
 
 /**
@@ -142,5 +167,8 @@ export const createDocOps = (config?: DocDefinitionsConfig): DocOps => {
 			distributeObjects(doc, ids, axis, spacing, definitions),
 		groupObjects: (doc, ids) => groupObjects(doc, ids),
 		ungroupObject: (doc, id) => ungroupObject(doc, id),
+		addObjectsToGroup: (doc, groupId, ids) =>
+			addObjectsToGroup(doc, groupId, ids),
+		removeObjectsFromGroup: (doc, ids) => removeObjectsFromGroup(doc, ids),
 	};
 };

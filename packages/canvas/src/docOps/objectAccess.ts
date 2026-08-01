@@ -97,6 +97,34 @@ export const collectObjectIds = (object: ObjectDoc): string[] => {
 	return ids;
 };
 
+/**
+ * Remove every group left without children, which has no frame of its own to draw.
+ * Children are visited before their parent, so a group emptied by losing its last
+ * child group goes in the same pass.
+ *
+ * @param doc - Mutated in place
+ * @returns The ids removed, innermost first; empty when every group still holds something
+ */
+export const dropEmptyGroups = (doc: CanvasDoc): string[] => {
+	const droppedIds: string[] = [];
+	const visit = (siblings: ObjectDoc[]): void => {
+		// Back to front so a removal leaves the indexes still to visit untouched.
+		for (let index = siblings.length - 1; index >= 0; index -= 1) {
+			const children = (siblings[index] as ObjectRecord).children;
+			if (!Array.isArray(children)) {
+				continue;
+			}
+			visit(children as ObjectDoc[]);
+			if (children.length === 0) {
+				droppedIds.push(siblings[index].id);
+				siblings.splice(index, 1);
+			}
+		}
+	};
+	visit(doc.root);
+	return droppedIds;
+};
+
 /** Reject the ids the caller may not touch, with one message listing all of them. */
 export const rejectIds = (
 	ids: readonly string[],
