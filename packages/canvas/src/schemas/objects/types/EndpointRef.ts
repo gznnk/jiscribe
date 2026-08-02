@@ -56,6 +56,31 @@ export const isConnectPointId = (value: unknown): value is ConnectPointId =>
 	ConnectPointIds.includes(value as ConnectPointId);
 
 /**
+ * Every AnchorKind as a lookup table. Typed as a full Record so that adding a member
+ * to AnchorSpec without listing it here is a compile error: a missing member would
+ * make stripUnknownContent read a valid anchor as unknown and silently drop the
+ * connector carrying it.
+ */
+const anchorKindMembers: Record<AnchorKind, true> = {
+	center: true,
+	connectPoint: true,
+	free: true,
+};
+
+/**
+ * Determines whether the given value is an AnchorKind.
+ *
+ * Membership only: an owned endpoint still rejects "free" and a free endpoint still
+ * rejects "center" (see validateEndpointRef), so a true result does not mean the kind
+ * is usable in that endpoint's position.
+ *
+ * @param value The value to test
+ * @returns true if the value is one of the AnchorSpec kinds, false otherwise
+ */
+export const isAnchorKind = (value: unknown): value is AnchorKind =>
+	anchorKindMembers[value as AnchorKind] === true;
+
+/**
  * Determines whether the given value is an OwnedEndpointRef.
  *
  * @param value The value to test

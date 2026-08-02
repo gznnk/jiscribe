@@ -158,6 +158,78 @@ describe("stripUnknownContent", () => {
 		expect(result.warnings).toEqual([]);
 	});
 
+	describe("unknown anchor kinds", () => {
+		const anchoredRef = (ownerId: string, kind: unknown) => ({
+			owner: { id: ownerId },
+			anchor: { kind },
+		});
+
+		it("removes a connector whose source anchor names an unknown kind", () => {
+			const result = strip(
+				doc([
+					rect("r1"),
+					connector("c1", anchoredRef("r1", "magnetic"), freeRef(5, 5)),
+					connector("c2", ownedRef("r1"), freeRef(5, 5)),
+				]),
+			);
+			expect(rootIds(result.data)).toEqual(["r1", "c2"]);
+			expect(result.warnings).toHaveLength(1);
+			expect(result.warnings[0].path).toBe("root[1].source.anchor.kind");
+			expect(result.warnings[0].id).toBe("c1");
+			expect(result.warnings[0].message).toContain(
+				'Unknown anchor kind "magnetic"',
+			);
+		});
+
+		it("removes a connector whose target anchor names an unknown kind", () => {
+			const result = strip(
+				doc([
+					rect("r1"),
+					connector("c1", ownedRef("r1"), anchoredRef("r1", "magnetic")),
+				]),
+			);
+			expect(rootIds(result.data)).toEqual(["r1"]);
+			expect(result.warnings[0].path).toBe("root[1].target.anchor.kind");
+		});
+
+		it("keeps a known kind used in the wrong position (left to validateStructure)", () => {
+			// "free" on an owned endpoint is a mismatch, not an unknown value.
+			const result = strip(
+				doc([
+					rect("r1"),
+					connector("c1", anchoredRef("r1", "free"), freeRef(5, 5)),
+				]),
+			);
+			expect(rootIds(result.data)).toEqual(["r1", "c1"]);
+			expect(result.warnings).toEqual([]);
+		});
+
+		it("keeps a non-string kind (left to validateStructure)", () => {
+			const result = strip(
+				doc([
+					rect("r1"),
+					connector("c1", anchoredRef("r1", 42), freeRef(5, 5)),
+				]),
+			);
+			expect(rootIds(result.data)).toEqual(["r1", "c1"]);
+			expect(result.warnings).toEqual([]);
+		});
+
+		it("reports the connector removal instead of its own unknown enum fields", () => {
+			const result = strip(
+				doc([
+					rect("r1"),
+					{
+						...connector("c1", anchoredRef("r1", "magnetic"), freeRef(5, 5)),
+						routing: "curvy",
+					},
+				]),
+			);
+			expect(result.warnings).toHaveLength(1);
+			expect(result.warnings[0].path).toBe("root[1].source.anchor.kind");
+		});
+	});
+
 	describe("unknown pure-enum values", () => {
 		const rootObject = (result: { data: unknown }) =>
 			(result.data as { root: Record<string, unknown>[] }).root[0];

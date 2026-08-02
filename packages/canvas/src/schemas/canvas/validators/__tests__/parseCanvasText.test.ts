@@ -95,6 +95,30 @@ describe("parseCanvasText", () => {
 			}
 		});
 
+		it("returns ok with warnings for an unknown anchor kind (the connector is stripped)", () => {
+			const result = parseCanvasText(
+				text(
+					validDoc([
+						rect("r1"),
+						{
+							id: "c1",
+							type: "connector",
+							points: [],
+							source: { owner: { id: "r1" }, anchor: { kind: "magnetic" } },
+							target: { anchor: { kind: "free", point: { x: 5, y: 5 } } },
+						},
+					]),
+				),
+			);
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc.root.map((o) => o.id)).toEqual(["r1"]);
+				expect(result.warnings[0].message).toContain(
+					'Unknown anchor kind "magnetic"',
+				);
+			}
+		});
+
 		it("returns ok with an empty root when every entry has an unknown type", () => {
 			const result = parseCanvasText(
 				text(validDoc([{ id: "u1", type: "hexagram" }])),

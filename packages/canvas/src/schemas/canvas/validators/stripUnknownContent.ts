@@ -3,6 +3,7 @@ import { isArray, isObject, isString } from "@workspace/basic-validators";
 import type { SemanticDiagnostic } from "./types";
 import { isArrowType } from "../../objects/types/ArrowType";
 import { isConnectorRouting } from "../../objects/types/ConnectorRouting";
+import { isAnchorKind } from "../../objects/types/EndpointRef";
 import { isStrokeDashType } from "../../objects/types/StrokeDashType";
 import { isTextAlign } from "../../objects/types/TextAlign";
 import { isVerticalAlign } from "../../objects/types/VerticalAlign";
@@ -36,12 +37,40 @@ const pureEnumFields: ReadonlyMap<string, (value: unknown) => boolean> =
 	]);
 
 /**
+ * Finds the first endpoint of a connector doc whose anchor names a kind outside the
+ * known set. A missing anchor or a non-string kind is corruption rather than an
+ * unknown value, so it is passed over and left to validateConnectorDoc. A known kind
+ * in the wrong position (an owned endpoint anchored "free") is likewise not unknown.
+ */
+const findUnknownAnchorKind = (
+	connector: Record<string, unknown>,
+): { endpoint: "source" | "target"; kind: string } | undefined => {
+	for (const endpoint of ["source", "target"] as const) {
+		const ref = connector[endpoint];
+		if (!isObject(ref)) {
+			continue;
+		}
+		const anchor = (ref as Record<string, unknown>).anchor;
+		if (!isObject(anchor)) {
+			continue;
+		}
+		const kind = (anchor as Record<string, unknown>).kind;
+		if (isString(kind) && !isAnchorKind(kind)) {
+			return { endpoint, kind: kind as string };
+		}
+	}
+	return undefined;
+};
+
+/**
  * Removes unknown content from a candidate document before structure validation, so
  * the rest of the document still displays, and since saving re-serializes the
  * stripped doc, the removed content disappears on save. Unknown means:
  *   - objects whose `type` is not registered in the registry
  *   - pure-enum fields (see {@link pureEnumFields}) holding a value outside the
  *     known set, at any nesting depth (flat, connector label, text slots, …)
+ *   - connectors with an endpoint anchored to an unknown kind (see
+ *     {@link findUnknownAnchorKind}); the anchor is not droppable on its own
  *
  * Object removal cascades to keep the remaining doc valid:
  *   - a group whose children all get removed is removed with them (an empty group
@@ -194,6 +223,24 @@ export function stripUnknownContent(
 				...(isString(o.id) ? { id: o.id as string } : {}),
 			});
 			return undefined;
+		}
+
+		// An unknown anchor kind cannot be dropped field-wise the way a pure enum can:
+		// the anchor is what positions the endpoint (the free anchor even carries the
+		// coordinates), so an endpoint without a usable one has no meaning. The unit
+		// that gets removed is therefore the connector, matching the removed-owner
+		// cascade below. Checked before the enum strip so a connector on its way out
+		// does not also emit warnings about its own fields.
+		if (o.type === "connector") {
+			const unknownAnchor = findUnknownAnchorKind(o);
+			if (unknownAnchor !== undefined) {
+				warnings.push({
+					path: `${path}.${unknownAnchor.endpoint}.anchor.kind`,
+					message: `Unknown anchor kind "${unknownAnchor.kind}": the connector was ignored and will be dropped on save.`,
+					...(isString(o.id) ? { id: o.id as string } : {}),
+				});
+				return undefined;
+			}
 		}
 
 		const enumStripped = stripEnumFields(
