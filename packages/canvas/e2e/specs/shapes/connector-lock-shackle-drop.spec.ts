@@ -21,15 +21,15 @@ const LOCK_WIDTH = LOCK_TO.x - LOCK_FROM.x;
 const LOCK_HEIGHT = LOCK_TO.y - LOCK_FROM.y;
 
 /** Body block top (LOCK_BODY_TOP_RATIO) — everything above this is shackle only. */
-const BODY_TOP_Y = LOCK_FROM.y + LOCK_HEIGHT * 0.42;
+const BODY_TOP_Y = LOCK_FROM.y + LOCK_HEIGHT * 0.36;
 
 /**
- * Between the shackle's shoulders (0.3) and the body block (0.42), on the center
+ * Between the shackle's shoulders (0.22) and the body block (0.36), on the center
  * line: inside the shackle's hit path, outside every painted silhouette.
  */
 const SHACKLE_DROP = {
 	x: LOCK_FROM.x + LOCK_WIDTH / 2,
-	y: LOCK_FROM.y + LOCK_HEIGHT * 0.36,
+	y: LOCK_FROM.y + LOCK_HEIGHT * 0.3,
 };
 
 test.describe("dropping a connector on the lock's shackle", () => {

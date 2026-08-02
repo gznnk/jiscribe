@@ -2185,7 +2185,7 @@
 			}
 		},
 		"LockDoc": {
-			"description": "Padlock shape, typically used for authentication steps and protected resources. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is drawn as a label below the box, auto-sized to the text itself, so the box may be kept small without making the text unreadable. A portrait aspect ratio (e.g. 90x110) looks best. Prefer \"shield\" for a boundary that other things sit behind.",
+			"description": "Padlock shape, typically used for authentication steps and protected resources. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs. Text is drawn as a label below the box, auto-sized to the text itself, so the box may be kept small without making the text unreadable. A portrait aspect ratio (e.g. 80x100) looks best. Prefer \"shield\" for a boundary that other things sit behind.",
 			"type": "object",
 			"required": ["id", "type", "x", "y", "width", "height"],
 			"additionalProperties": false,
@@ -2211,12 +2211,12 @@
 					"type": "number"
 				},
 				"width": {
-					"description": "Bounding-box width in pixels. Default when created from the palette: 90",
+					"description": "Bounding-box width in pixels. Default when created from the palette: 80",
 					"type": "number",
 					"minimum": 0
 				},
 				"height": {
-					"description": "Bounding-box height in pixels. Default when created from the palette: 110",
+					"description": "Bounding-box height in pixels. Default when created from the palette: 100",
 					"type": "number",
 					"minimum": 0
 				},
