@@ -51,16 +51,16 @@ const labeledHorizontalConnector = (
 	});
 
 /**
- * A cloud 200x100 centered on the origin. Its outline is registered in the core
- * defaults, and the bump that the +x ray leaves through sits at x = 75 — inside
- * the box edge at x = 100, so the two resolutions are told apart by the endpoint
- * alone.
+ * A callout 200x100 centered on the origin. Its outline is registered in the
+ * core defaults, and with the default tail (bottom, 0.2) the bubble body the -y
+ * ray leaves through sits at y = 25 — inside the box edge at y = 50, so the two
+ * resolutions are told apart by the endpoint alone.
  */
-const cloudObjects = (): Record<string, ObjectState> => ({
-	cl1: {
-		id: "cl1",
-		type: "cloud",
-		features: { type: "cloud", geometry: "rect" },
+const calloutObjects = (): Record<string, ObjectState> => ({
+	co1: {
+		id: "co1",
+		type: "callout",
+		features: { type: "callout", geometry: "rect" },
 		cx: 0,
 		cy: 0,
 		width: 200,
@@ -71,12 +71,12 @@ const cloudObjects = (): Record<string, ObjectState> => ({
 	} as unknown as ObjectState,
 });
 
-/** Straight connector from the cloud's center anchor to a free point on its right. */
-const cloudCenteredConnector = (): ConnectorState =>
+/** Straight connector from the callout's center anchor to a free point below it. */
+const calloutCenteredConnector = (): ConnectorState =>
 	freeConnector({
 		routing: "straight",
-		source: { owner: { id: "cl1" }, anchor: { kind: "center" } },
-		target: { anchor: { kind: "free", point: { x: 500, y: 0 } } },
+		source: { owner: { id: "co1" }, anchor: { kind: "center" } },
+		target: { anchor: { kind: "free", point: { x: 0, y: 500 } } },
 	});
 
 // In a non-browser environment calcConnectorLabelBox falls back to a character
@@ -193,13 +193,13 @@ describe("calcConnectorBoundingBox", () => {
 
 	it("resolves the path without the registries, so an outline shape contributes its bounding box", () => {
 		const bbox = calcConnectorBoundingBox(
-			cloudCenteredConnector(),
-			cloudObjects(),
+			calloutCenteredConnector(),
+			calloutObjects(),
 		);
 
-		// The cloud's silhouette would put the endpoint at x = 75 (see the
-		// collectConnectorPoints suite); the box edge at 100 is what lands here.
-		expect(bbox).toEqual({ left: 100, right: 500, top: 0, bottom: 0 });
+		// The callout's silhouette would put the endpoint at y = 25 (see the
+		// collectConnectorPoints suite); the box edge at 50 is what lands here.
+		expect(bbox).toEqual({ left: 0, right: 0, top: 50, bottom: 500 });
 	});
 
 	it("returns null when an owned endpoint's referenced object does not exist", () => {
@@ -219,24 +219,24 @@ describe("collectConnectorPoints", () => {
 
 	it("attaches a center anchor to the drawn silhouette when the registries are passed", () => {
 		const points = collectConnectorPoints(
-			cloudCenteredConnector(),
-			cloudObjects(),
+			calloutCenteredConnector(),
+			calloutObjects(),
 			registries.objectOutline,
 			registries.objectAnchorRegion,
 		);
 
 		expect(points).not.toBeNull();
-		expect(points![0].x).toBeCloseTo(75, 5);
-		expect(points![0].y).toBeCloseTo(0, 5);
+		expect(points![0].x).toBeCloseTo(0, 5);
+		expect(points![0].y).toBeCloseTo(25, 5);
 	});
 
 	it("falls back to the bounding box when they are omitted", () => {
 		const points = collectConnectorPoints(
-			cloudCenteredConnector(),
-			cloudObjects(),
+			calloutCenteredConnector(),
+			calloutObjects(),
 		);
 
 		expect(points).not.toBeNull();
-		expect(points![0]).toEqual({ x: 100, y: 0 });
+		expect(points![0]).toEqual({ x: 0, y: 50 });
 	});
 });

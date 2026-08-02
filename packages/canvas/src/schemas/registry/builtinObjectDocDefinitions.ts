@@ -13,12 +13,6 @@ import { validateStickyDoc } from "../objects/annotations/sticky/validateStickyD
 import { ConnectorFeatures } from "../objects/connections/connector/ConnectorDoc";
 import { validateConnectorDoc } from "../objects/connections/connector/validateConnectorDoc";
 import {
-	CLOUD_DOC_DEFAULTS,
-	CloudFeatures,
-} from "../objects/general/cloud/CloudDoc";
-import { CloudObjectFactory } from "../objects/general/cloud/CloudObjectFactory";
-import { validateCloudDoc } from "../objects/general/cloud/validateCloudDoc";
-import {
 	ELLIPSE_DOC_DEFAULTS,
 	EllipseFeatures,
 } from "../objects/primitives/ellipse/EllipseDoc";
@@ -73,15 +67,6 @@ export const builtinObjectDocDefinitions = {
 		description: "Ellipse (oval) shape.",
 		summary: "ellipse / oval node (center-based geometry)",
 		defaults: ELLIPSE_DOC_DEFAULTS,
-	},
-	cloud: {
-		features: CloudFeatures,
-		validateDoc: validateCloudDoc,
-		factory: CloudObjectFactory,
-		description:
-			"Cloud shape, typically used for external systems/networks in architecture diagrams or fuzzy concepts in brainstorming. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a cloud. Text is laid out in a reduced central region inside the bumps, so give it generous width/height for longer text.",
-		summary: "external system, fuzzy concept",
-		defaults: CLOUD_DOC_DEFAULTS,
 	},
 	callout: {
 		features: CalloutFeatures,

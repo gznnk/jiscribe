@@ -1,7 +1,8 @@
-import { DEFAULT_FONT_FAMILY } from "../../../../constants/defaultFontFamily";
-import type { CreateObjectType } from "../../types/CreateObjectType";
-import type { ObjectFeatures } from "../../types/ObjectFeatures";
-import { AUTO_COLOR } from "../../utils/autoColor";
+import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas/doc";
+import {
+	AUTO_COLOR,
+	DEFAULT_FONT_FAMILY,
+} from "@workspace/canvas/unstable-doc";
 
 /**
  * A cloud used for external systems / networks in architecture diagrams and

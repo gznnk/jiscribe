@@ -1,7 +1,8 @@
+import { createFrameObject } from "@workspace/canvas/unstable";
+
 import { buildCloudPath } from "./buildCloudPath";
 import { CloudElement } from "./CloudStyled";
-import type { CloudState } from "../../../../states/objects/general/cloud/CloudState";
-import { createFrameObject } from "../../base/createFrameObject";
+import type { CloudState } from "../state/CloudState";
 
 /** Cloud presentation (shared Frame logic lives in createFrameObject; only the shape is swapped in). */
 export const Cloud = createFrameObject<CloudState>((state, shape) => (

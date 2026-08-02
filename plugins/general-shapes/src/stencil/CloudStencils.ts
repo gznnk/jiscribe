@@ -1,5 +1,6 @@
+import type { Stencil } from "@workspace/canvas";
+
 import { CloudIcon } from "./CloudIcon";
-import type { Stencil } from "../Stencil";
 
 export const CloudStencils: Stencil[] = [
 	{

@@ -1,5 +1,6 @@
-import type { CloudFeatures } from "../../../../schemas/objects/general/cloud/CloudDoc";
-import type { CreateObjectState } from "../../types/CreateObjectState";
+import type { CreateObjectState } from "@workspace/canvas";
+
+import type { CloudFeatures } from "../schema/CloudDoc";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare const CloudStateBrand: unique symbol;

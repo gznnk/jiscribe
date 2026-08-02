@@ -1,11 +1,10 @@
+import type { ObjectOutlineCalculator } from "@workspace/canvas";
+import { OUTLINE_CURVE_SEGMENTS } from "@workspace/canvas/unstable";
 import {
 	sampleCubicBezier,
 	type Dimensions,
 	type Point,
 } from "@workspace/geometry";
-
-import type { ObjectOutlineCalculator } from "../../registry/ObjectOutlineRegistry";
-import { OUTLINE_CURVE_SEGMENTS } from "../../utils/outlineHelpers";
 
 /**
  * Cloud outline (centered): six cubic Béziers over the unit box (bumpy

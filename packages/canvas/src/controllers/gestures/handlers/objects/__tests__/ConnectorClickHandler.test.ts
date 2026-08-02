@@ -198,13 +198,14 @@ describe("ConnectorClickHandler - placement of the label being created", () => {
 	});
 
 	it("measures the position along the same path the rendering resolves", () => {
-		// A cloud 200x100 centered on the origin: its registered outline puts the
-		// center-anchored endpoint on the bump at (75, 0), while the bounding-box
-		// fallback would put it at (100, 0) and read the click as position 0.5.
-		const cloud = {
-			id: "cl1",
-			type: "cloud",
-			features: { type: "cloud", geometry: "rect" },
+		// A callout 200x100 centered on the origin: its registered outline puts the
+		// center-anchored endpoint on the bubble body at (0, 25), while the
+		// bounding-box fallback would put it at (0, 50) and read the click as
+		// position 0.5.
+		const callout = {
+			id: "co1",
+			type: "callout",
+			features: { type: "callout", geometry: "rect" },
 			cx: 0,
 			cy: 0,
 			width: 200,
@@ -215,17 +216,17 @@ describe("ConnectorClickHandler - placement of the label being created", () => {
 		};
 		const attached = {
 			...freeConnector(),
-			source: { owner: { id: "cl1" }, anchor: { kind: "center" } },
-			target: { anchor: { kind: "free", point: { x: 500, y: 0 } } },
+			source: { owner: { id: "co1" }, anchor: { kind: "center" } },
+			target: { anchor: { kind: "free", point: { x: 0, y: 500 } } },
 		};
 		const state = {
 			...makeState(""),
-			objects: { cl1: cloud, c1: attached },
+			objects: { co1: callout, c1: attached },
 		} as unknown as CanvasControllerState;
 
-		const next = dblclickAt(state, { x: 300, y: 0 });
+		const next = dblclickAt(state, { x: 0, y: 275 });
 
-		expect(pendingPlacement(next)?.position).toBeCloseTo(225 / 425, 5);
+		expect(pendingPlacement(next)?.position).toBeCloseTo(250 / 475, 5);
 	});
 
 	it("writes nothing to the connector until the edit is committed", () => {

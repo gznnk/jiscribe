@@ -1,6 +1,6 @@
 import type { CanvasPlugin } from "@workspace/canvas";
 
-import { actorDefinition } from "./definition";
+import { actorDefinition, cloudDefinition } from "./definition";
 
 /**
  * `CanvasPlugin` declaration for the general shapes
@@ -11,5 +11,5 @@ import { actorDefinition } from "./definition";
  */
 export const generalPlugin: CanvasPlugin = {
 	id: "general-shapes",
-	objects: { actor: actorDefinition },
+	objects: { actor: actorDefinition, cloud: cloudDefinition },
 };

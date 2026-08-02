@@ -137,9 +137,8 @@ describe("resolveConnectorPoints — shape outline attachment", () => {
 describe("defaultCanvasRegistries outline registration", () => {
 	it("registers outline calculators for core outline shapes but not rect/ellipse", () => {
 		const registry = defaultCanvasRegistries.objectOutline;
-		// callout / cloud keep their outline registered in the core defaults.
+		// callout keeps its outline registered in the core defaults.
 		expect(registry.get("callout")).toBeTypeOf("function");
-		expect(registry.get("cloud")).toBeTypeOf("function");
 		// rect / ellipse keep their analytic handling — no polygon provider.
 		expect(registry.get("rect")).toBeUndefined();
 		expect(registry.get("ellipse")).toBeUndefined();

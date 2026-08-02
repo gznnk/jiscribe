@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 
-import { expectRectCloseTo } from "../../../__tests__/support/expectRectCloseTo";
 import { calcCloudTextRegion } from "../calcCloudTextRegion";
+import { expectRectCloseTo } from "./support/expectRectCloseTo";
 
 describe("calcCloudTextRegion", () => {
 	it("insets the box by the bump ratios and stays centered on the origin", () => {

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 
-import { parseSvgPathPoints } from "../../../__tests__/support/parseSvgPathPoints";
 import { buildCloudPath } from "../buildCloudPath";
+import { parseSvgPathPoints } from "./support/parseSvgPathPoints";
 
 describe("buildCloudPath", () => {
 	it("is a closed path made of cubic segments", () => {

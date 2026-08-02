@@ -66,9 +66,7 @@ export const basicToolbarEntry: ToolbarEntry = {
  * (preserving the classic direct-placement UX); annotation folds into a category
  * flyout. Only core presets and categories appear here — anything a plugin
  * supplies (the flowchart / container / general categories, the `markdown`
- * preset) is shown only when the host adds it via `toolbar.layout`. That leaves
- * `cloud`, a core preset listed by the plugin-owned general category, out of the
- * default bar.
+ * preset) is shown only when the host adds it via `toolbar.layout`.
  */
 export const DEFAULT_TOOLBAR_LAYOUT: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "rect" },

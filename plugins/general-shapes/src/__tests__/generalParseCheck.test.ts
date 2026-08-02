@@ -3,9 +3,9 @@ import { describe, expect, it } from "vitest";
 
 import { generalDocPlugin } from "../doc";
 
-// Parse through a plugin-aware parser so the actor is known to parse-time
-// structure/semantic validation (it no longer lives in the core built-in
-// definitions). The headless `generalDocPlugin` carries no React deps.
+// Parse through a plugin-aware parser so this package's shapes are known to
+// parse-time structure/semantic validation (they no longer live in the core
+// built-in definitions). The headless `generalDocPlugin` carries no React deps.
 const parser = createCanvasParser({ plugins: [generalDocPlugin] });
 
 const doc = {
@@ -19,6 +19,15 @@ const doc = {
 			width: 80,
 			height: 100,
 			text: "Customer",
+		},
+		{
+			id: "internet-1",
+			type: "cloud",
+			x: 0,
+			y: 200,
+			width: 160,
+			height: 100,
+			text: "Internet",
 		},
 		{
 			id: "system-1",
@@ -36,11 +45,18 @@ const doc = {
 			target: { owner: { id: "system-1" }, anchor: { kind: "center" } },
 			points: [],
 		},
+		{
+			id: "c-2",
+			type: "connector",
+			source: { owner: { id: "internet-1" }, anchor: { kind: "center" } },
+			target: { owner: { id: "system-1" }, anchor: { kind: "center" } },
+			points: [],
+		},
 	],
 };
 
-describe("actor", () => {
-	it("parses and accepts connector endpoints on the actor", () => {
+describe("general shapes", () => {
+	it("parses and accepts connector endpoints on the actor and the cloud", () => {
 		const result = parser.parse(JSON.stringify(doc));
 		expect("diagnostics" in result ? result.diagnostics : []).toEqual([]);
 		expect(result.kind).toBe("ok");

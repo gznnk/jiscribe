@@ -5,12 +5,7 @@ type CloudIconProps = {
 	height?: number;
 };
 
-/**
- * Glyph for the `general` category button. `cloud` itself is still a core shape
- * with its own copy of this icon; core exports no icon components, so the
- * category entry that lives here carries its own. The two copies merge when
- * cloud moves into this package.
- */
+/** Glyph shared by the `cloud` stencil and the `general` category button. */
 const CloudIconComponent: React.FC<CloudIconProps> = ({
 	width = 24,
 	height = 24,

@@ -9,7 +9,10 @@ import type {
 
 import { ACTOR_DOC_DEFAULTS, ActorFeatures } from "./schema/ActorDoc";
 import { ActorObjectFactory } from "./schema/ActorObjectFactory";
+import { CLOUD_DOC_DEFAULTS, CloudFeatures } from "./schema/CloudDoc";
+import { CloudObjectFactory } from "./schema/CloudObjectFactory";
 import { validateActorDoc } from "./schema/validateActorDoc";
+import { validateCloudDoc } from "./schema/validateCloudDoc";
 
 export const actorDocDefinition: ObjectDocDefinition = {
 	features: ActorFeatures,
@@ -21,6 +24,16 @@ export const actorDocDefinition: ObjectDocDefinition = {
 	defaults: ACTOR_DOC_DEFAULTS,
 };
 
+export const cloudDocDefinition: ObjectDocDefinition = {
+	features: CloudFeatures,
+	validateDoc: validateCloudDoc,
+	factory: CloudObjectFactory,
+	description:
+		"Cloud shape, typically used for external systems/networks in architecture diagrams or fuzzy concepts in brainstorming. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a cloud. Text is laid out in a reduced central region inside the bumps, so give it generous width/height for longer text.",
+	summary: "external system, fuzzy concept",
+	defaults: CLOUD_DOC_DEFAULTS,
+};
+
 /**
  * Headless `CanvasDocPlugin` for the general shapes: the doc-layer view of
  * `generalPlugin`, teaching `createCanvasParser` the types without loading any
@@ -28,5 +41,5 @@ export const actorDocDefinition: ObjectDocDefinition = {
  */
 export const generalDocPlugin: CanvasDocPlugin = {
 	id: "general-shapes",
-	objects: { actor: actorDocDefinition },
+	objects: { actor: actorDocDefinition, cloud: cloudDocDefinition },
 };

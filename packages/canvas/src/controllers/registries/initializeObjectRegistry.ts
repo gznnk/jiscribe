@@ -12,11 +12,6 @@ import {
 import { Sticky } from "../../presentations/objects/annotations/Sticky";
 import { Connector } from "../../presentations/objects/connections/Connector";
 import {
-	Cloud,
-	calcCloudTextRegion,
-	cloudOutline,
-} from "../../presentations/objects/general/Cloud";
-import {
 	Ellipse,
 	calcEllipseTextRegion,
 } from "../../presentations/objects/primitives/Ellipse";
@@ -44,12 +39,6 @@ import {
 	connectorToState,
 } from "../../states/objects/connections/connector/ConnectorMapper";
 import { isValidConnectorState } from "../../states/objects/connections/connector/validateConnectorState";
-import {
-	cloudToDoc,
-	cloudToState,
-} from "../../states/objects/general/cloud/CloudMapper";
-import type { CloudState } from "../../states/objects/general/cloud/CloudState";
-import { isValidCloudState } from "../../states/objects/general/cloud/validateCloudState";
 import {
 	ellipseToDoc,
 	ellipseToState,
@@ -119,7 +108,6 @@ import { StickyColorMenu } from "../ui/menu/ObjectMenu/items/StickyColorMenu";
 import { createDefaultMenu } from "../ui/menu/ObjectMenu/utils/createDefaultMenu";
 import { CalloutStencils } from "../ui/objects/annotations/CalloutStencils";
 import { StickyStencils } from "../ui/objects/annotations/StickyStencils";
-import { CloudStencils } from "../ui/objects/general/CloudStencils";
 import { EllipseStencils } from "../ui/objects/primitives/EllipseStencils";
 import { PolygonStencils } from "../ui/objects/primitives/PolygonStencils";
 import { PolylineStencils } from "../ui/objects/primitives/PolylineStencils";
@@ -149,17 +137,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			textRegion: calcEllipseTextRegion,
 			behavior: createFrameBehavior<EllipseState>(),
 			stencils: EllipseStencils,
-		}),
-
-		cloud: defineObject({
-			...builtinObjectDocDefinitions.cloud,
-			mapper: { toDoc: cloudToDoc, toState: cloudToState },
-			stateValidator: isValidCloudState,
-			component: Cloud,
-			textRegion: calcCloudTextRegion,
-			outline: cloudOutline,
-			behavior: createFrameBehavior<CloudState>(),
-			stencils: CloudStencils,
 		}),
 
 		callout: defineObject({

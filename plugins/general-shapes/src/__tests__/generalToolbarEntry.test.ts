@@ -6,10 +6,9 @@ import { generalToolbarEntry } from "../stencil/GeneralToolbarEntry";
 
 /**
  * A presetId naming no registered preset is silently skipped at render time, so
- * a stale id would only show up as a missing button. The entry mixes owners —
- * `cloud` is still core's, `actor` is this package's — which is exactly the case
- * a single-package check would miss, so the registries are built with the plugin
- * applied on top of the core defaults.
+ * a stale id would only show up as a missing button. The registries are built
+ * with the plugin applied on top of the core defaults, i.e. the same resolution
+ * a host performs — an id this package stops registering fails here.
  */
 describe("generalToolbarEntry", () => {
 	it("names only presets a canvas with this plugin applied registers", () => {

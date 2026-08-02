@@ -1,7 +1,8 @@
+import { createFrameMapper } from "@workspace/canvas/unstable";
+
 import type { CloudState } from "./CloudState";
-import type { CloudDoc } from "../../../../schemas/objects/general/cloud/CloudDoc";
-import { CloudFeatures } from "../../../../schemas/objects/general/cloud/CloudDoc";
-import { createFrameMapper } from "../../base/FrameMapper";
+import type { CloudDoc } from "../schema/CloudDoc";
+import { CloudFeatures } from "../schema/CloudDoc";
 
 /** CloudDoc ↔ CloudState conversion (Frame-family shared logic generated from features). */
 export const { toState: cloudToState, toDoc: cloudToDoc } = createFrameMapper<
