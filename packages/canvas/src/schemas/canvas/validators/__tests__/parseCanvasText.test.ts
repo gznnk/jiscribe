@@ -59,13 +59,38 @@ describe("parseCanvasText", () => {
 			}
 		});
 
-		it("returns structure-error for a structural error (unknown type)", () => {
+		it("returns structure-error for a structural error (missing required fields)", () => {
 			const result = parseCanvasText(
-				text(validDoc([{ id: "x", type: "rectangle" }])),
+				text(validDoc([{ id: "x", type: "rect" }])),
 			);
 			expect(result.kind).toBe("structure-error");
 			if (result.kind === "structure-error") {
 				expect(result.diagnostics.length).toBeGreaterThan(0);
+			}
+		});
+
+		it("returns ok with warnings for an unknown type (the object is stripped)", () => {
+			const result = parseCanvasText(
+				text(validDoc([rect("r1"), { id: "u", type: "rectangle" }])),
+			);
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc.root.map((o) => o.id)).toEqual(["r1"]);
+				expect(result.warnings).toHaveLength(1);
+				expect(result.warnings[0].message).toContain(
+					'Unknown object type "rectangle"',
+				);
+			}
+		});
+
+		it("returns ok with an empty root when every entry has an unknown type", () => {
+			const result = parseCanvasText(
+				text(validDoc([{ id: "u1", type: "hexagram" }])),
+			);
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc.root).toEqual([]);
+				expect(result.warnings).toHaveLength(1);
 			}
 		});
 
@@ -84,9 +109,9 @@ describe("parseCanvasText", () => {
 
 	describe("structure → semantics ordering (short-circuit)", () => {
 		it("returns only structure-error when both structural and semantic errors exist (semantics does not run)", () => {
-			// Combine an unknown type (structural) with a duplicate id (semantic)
+			// Combine a missing required field (structural) with a duplicate id (semantic)
 			const result = parseCanvasText(
-				text(validDoc([rect("dup"), rect("dup"), { id: "u", type: "nope" }])),
+				text(validDoc([rect("dup"), rect("dup"), { id: "u", type: "rect" }])),
 			);
 			expect(result.kind).toBe("structure-error");
 			if (result.kind === "structure-error") {

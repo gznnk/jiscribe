@@ -384,12 +384,10 @@ describe("validateTextStyleFields", () => {
 		).toEqual([]);
 	});
 
-	it("errors for the removed textType key, whatever its value", () => {
-		for (const removed of ["text", "markdown"]) {
-			const errors = validateTextStyleFields({ textType: removed }, "root");
-			expect(errors[0].path).toBe("root.textType");
-			expect(errors[0].message).toContain('type "markdown"');
-		}
+	it("ignores unknown keys, including the removed textType", () => {
+		expect(
+			validateTextStyleFields({ textType: "markdown", unknownKey: 1 }, "root"),
+		).toEqual([]);
 	});
 
 	it("errors when fontSize is not a number", () => {

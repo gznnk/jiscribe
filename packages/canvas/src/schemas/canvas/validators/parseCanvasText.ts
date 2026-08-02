@@ -6,8 +6,9 @@ import { objectDocValidatorRegistry } from "../../registry/ObjectDocValidatorReg
 export type { CanvasParseResult } from "./parseWithRegistry";
 
 /**
- * Validates a Canvas document string in two stages — JSON syntax → structure/semantics —
- * and returns the result as a {@link import("./parseWithRegistry").CanvasParseResult}.
+ * Validates a Canvas document string in stages — JSON syntax → unknown-type strip →
+ * structure/semantics — and returns the result as a
+ * {@link import("./parseWithRegistry").CanvasParseResult}.
  *
  * Since it returns a discriminated union instead of throwing, both the extension and the Webview
  * can share the same logic, and unexpected errors are also handled explicitly as `internal-error`
