@@ -58,12 +58,12 @@ describe("validateDiamondDoc", () => {
 		).toEqual([]);
 	});
 
-	it("is an error when the removed textType key is present", () => {
+	it("ignores unknown keys, including the removed textType", () => {
 		const errors = validateDiamondDoc(
 			{ ...validDiamond, textType: "markdown" },
 			"root",
 		);
-		expect(errors.some((e) => e.path === "root.textType")).toBe(true);
+		expect(errors).toEqual([]);
 	});
 
 	it("yields no error when optional fields are absent", () => {
