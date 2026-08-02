@@ -6,7 +6,7 @@ import { objectDocValidatorRegistry } from "../../registry/ObjectDocValidatorReg
 export type { CanvasParseResult } from "./parseWithRegistry";
 
 /**
- * Validates a Canvas document string in stages — JSON syntax → unknown-type strip →
+ * Validates a Canvas document string in stages — JSON syntax → unknown-content strip →
  * structure/semantics — and returns the result as a
  * {@link import("./parseWithRegistry").CanvasParseResult}.
  *

@@ -30,7 +30,7 @@ function validateObjectNode(
 
 	// Reject unregistered (unknown) types here. Letting one through makes validation
 	// return ok, but then mapper resolution in canvasToState throws and crashes the
-	// whole editor. In the parse pipeline stripUnknownObjects removes them (with a
+	// whole editor. In the parse pipeline stripUnknownContent removes them (with a
 	// warning) before this runs, so this check is a safety net for direct callers.
 	// A type is registered if the registry has features for it.
 	if (registry.getFeatures(o.type as string) === undefined) {

@@ -2,16 +2,16 @@ import { beforeAll, describe, expect, it } from "vitest";
 
 import { initializeObjectDocValidatorRegistry } from "../../../registry/initializeObjectDocValidatorRegistry";
 import { objectDocValidatorRegistry } from "../../../registry/ObjectDocValidatorRegistry";
-import { stripUnknownObjects } from "../stripUnknownObjects";
+import { stripUnknownContent } from "../stripUnknownContent";
 
-// stripUnknownObjects decides known/unknown via the registry, so set up the same
+// stripUnknownContent decides known/unknown via the registry, so set up the same
 // precondition as production (parseCanvasText guarantees initialization).
 beforeAll(() => {
 	initializeObjectDocValidatorRegistry();
 });
 
 const strip = (data: unknown) =>
-	stripUnknownObjects(data, objectDocValidatorRegistry);
+	stripUnknownContent(data, objectDocValidatorRegistry);
 
 // ─── Fixture helpers ─────────────────────────────────────────
 const rect = (id: string, over: Record<string, unknown> = {}) => ({
@@ -51,7 +51,7 @@ const doc = (root: unknown[]) => ({ version: 1, root });
 const rootIds = (data: unknown) =>
 	((data as { root: { id: string }[] }).root ?? []).map((o) => o.id);
 
-describe("stripUnknownObjects", () => {
+describe("stripUnknownContent", () => {
 	it("returns the input unchanged when every type is known", () => {
 		const input = doc([rect("r1"), group("g1", [rect("r2")])]);
 		const result = strip(input);
@@ -156,5 +156,86 @@ describe("stripUnknownObjects", () => {
 		);
 		expect((result.data as { root: unknown[] }).root).toHaveLength(3);
 		expect(result.warnings).toEqual([]);
+	});
+
+	describe("unknown pure-enum values", () => {
+		const rootObject = (result: { data: unknown }) =>
+			(result.data as { root: Record<string, unknown>[] }).root[0];
+
+		it("drops an unknown flat enum value and keeps valid siblings", () => {
+			const result = strip(
+				doc([
+					rect("r1", {
+						strokeDashType: "wavy",
+						textAlign: "left",
+						verticalAlign: "everywhere",
+					}),
+				]),
+			);
+			const stripped = rootObject(result);
+			expect("strokeDashType" in stripped).toBe(false);
+			expect("verticalAlign" in stripped).toBe(false);
+			expect(stripped.textAlign).toBe("left");
+			expect(result.warnings.map((w) => w.path)).toEqual([
+				"root[0].strokeDashType",
+				"root[0].verticalAlign",
+			]);
+			expect(result.warnings[0].id).toBe("r1");
+		});
+
+		it("drops unknown startArrow/endArrow and routing on a connector", () => {
+			const result = strip(
+				doc([
+					rect("r1"),
+					{
+						...connector("c1", ownedRef("r1"), freeRef(5, 5)),
+						startArrow: "harpoon",
+						endArrow: "OpenArrow",
+						routing: "curvy",
+					},
+				]),
+			);
+			const c = (result.data as { root: Record<string, unknown>[] }).root[1];
+			expect("startArrow" in c).toBe(false);
+			expect("routing" in c).toBe(false);
+			expect(c.endArrow).toBe("OpenArrow");
+		});
+
+		it("drops an unknown enum value in a nested object (connector label)", () => {
+			const result = strip(
+				doc([
+					rect("r1"),
+					{
+						...connector("c1", ownedRef("r1"), freeRef(5, 5)),
+						label: { text: "hello", strokeDashType: "wavy" },
+					},
+				]),
+			);
+			const c = (result.data as { root: Record<string, unknown>[] }).root[1];
+			const label = c.label as Record<string, unknown>;
+			expect("strokeDashType" in label).toBe(false);
+			expect(label.text).toBe("hello");
+			expect(result.warnings[0].path).toBe("root[1].label.strokeDashType");
+			expect(result.warnings[0].id).toBe("c1");
+		});
+
+		it("drops an unknown enum value inside a group child", () => {
+			const result = strip(
+				doc([group("g1", [rect("r1", { textAlign: "justify" })])]),
+			);
+			const g = rootObject(result);
+			const child = (g.children as Record<string, unknown>[])[0];
+			expect("textAlign" in child).toBe(false);
+			expect(result.warnings[0].path).toBe("root[0].children[0].textAlign");
+		});
+
+		it("returns the input unchanged when every enum value is valid", () => {
+			const input = doc([
+				rect("r1", { strokeDashType: "dashed", textAlign: "center" }),
+			]);
+			const result = strip(input);
+			expect(result.data).toBe(input);
+			expect(result.warnings).toEqual([]);
+		});
 	});
 });

@@ -1,5 +1,5 @@
 import type { CanvasDoc } from "../CanvasDoc";
-import { stripUnknownObjects } from "./stripUnknownObjects";
+import { stripUnknownContent } from "./stripUnknownContent";
 import type { SemanticDiagnostic } from "./types";
 import { validateSemantics } from "./validateSemantics";
 import { validateStructure } from "./validateStructure";
@@ -12,9 +12,10 @@ import type { createObjectDocValidatorRegistry } from "../../registry/ObjectDocV
  * as a discriminated union. Exceptions are not used for control flow, so callers can handle every
  * case exhaustively via `switch (result.kind)`.
  *
- * `ok.warnings` lists the objects removed by {@link stripUnknownObjects} (unknown
- * types and their cascade). Empty for a fully-known document. `ok.doc` is the
- * stripped doc, so serializing it is what makes the removal stick on save.
+ * `ok.warnings` lists what {@link stripUnknownContent} removed (unknown-type
+ * objects with their cascade, and unknown pure-enum values). Empty for a
+ * fully-known document. `ok.doc` is the stripped doc, so serializing it is what
+ * makes the removal stick on save.
  */
 export type CanvasParseResult =
 	| { kind: "ok"; doc: CanvasDoc; warnings: SemanticDiagnostic[] }
@@ -24,7 +25,7 @@ export type CanvasParseResult =
 	| { kind: "internal-error"; message: string };
 
 /**
- * Validates a Canvas document string in stages — JSON syntax → unknown-type strip →
+ * Validates a Canvas document string in stages — JSON syntax → unknown-content strip →
  * structure/semantics — against the given registry, and returns the result as a
  * {@link CanvasParseResult}.
  *
@@ -47,10 +48,11 @@ export function parseWithRegistry(
 	}
 
 	try {
-		// Unknown object types are not errors: they are stripped here (with their cascade —
-		// emptied groups, connectors to removed owners) so the rest of the document still
-		// loads, and reported as ok.warnings. Everything past this point sees the stripped doc.
-		const { data: strippedData, warnings } = stripUnknownObjects(
+		// Unknown object types (with their cascade — emptied groups, connectors to removed
+		// owners) and unknown pure-enum values are not errors: they are stripped here so the
+		// rest of the document still loads, and reported as ok.warnings. Everything past
+		// this point sees the stripped doc.
+		const { data: strippedData, warnings } = stripUnknownContent(
 			data,
 			registry,
 		);

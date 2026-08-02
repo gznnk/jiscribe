@@ -83,6 +83,18 @@ describe("parseCanvasText", () => {
 			}
 		});
 
+		it("returns ok with warnings for an unknown enum value (the field is stripped)", () => {
+			const result = parseCanvasText(
+				text(validDoc([rect("r1", { strokeDashType: "wavy" })])),
+			);
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect("strokeDashType" in result.doc.root[0]).toBe(false);
+				expect(result.warnings).toHaveLength(1);
+				expect(result.warnings[0].path).toBe("root[0].strokeDashType");
+			}
+		});
+
 		it("returns ok with an empty root when every entry has an unknown type", () => {
 			const result = parseCanvasText(
 				text(validDoc([{ id: "u1", type: "hexagram" }])),
