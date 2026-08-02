@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 
-import { parseSvgPathPoints } from "../../../__tests__/support/parseSvgPathPoints";
 import { buildActorFigure } from "../buildActorFigure";
+import { parseSvgPathPoints } from "./support/parseSvgPathPoints";
 
 describe("buildActorFigure", () => {
 	it("centers the head horizontally and seats it at the top of the box", () => {

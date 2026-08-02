@@ -34,7 +34,6 @@ export type {
 // (e.g. `containerToolbarEntry`).
 export {
 	DEFAULT_TOOLBAR_LAYOUT,
-	generalToolbarEntry,
 	annotationToolbarEntry,
 	basicToolbarEntry,
 	type ToolbarEntry,
@@ -140,6 +139,9 @@ export type {
 	SelectionControlProps,
 } from "./controllers/ui/controls/SelectionControlTypes";
 export type { Mods } from "./controllers/gestures/recognizer/GestureRecognizerTypes";
+// The slot id every single-text shape (`features.text: "body"`) holds, i.e. the
+// key its `state.text` carries. A shape with several slots names its own instead.
+export { BODY_TEXT_SLOT_ID } from "./constants/textSlotId";
 export type { ObjectTextRegionCalculator } from "./presentations/objects/registry/ObjectTextRegionRegistry";
 export type {
 	ObjectTextEditOverflowResolver,

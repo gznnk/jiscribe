@@ -42,6 +42,12 @@ export { createFrameMapper } from "./states/objects/base/FrameMapper";
 export { createFrameStateValidator } from "./states/objects/utils/createFrameStateValidator";
 export type { StateRecord } from "./states/objects/utils/validateStateUtils";
 
+// Reading a shape's own text off its state, for a renderer or a bounds calculator
+// that has to branch on whether a slot is empty. The keys of `TextSlots` are the
+// authority on the slots a shape has (there is no separate declaration).
+export { readTextSlot } from "./states/objects/types/TextSlots";
+export type { TextSlots } from "./states/objects/types/TextSlots";
+
 export { resolveAutoColor } from "./presentations/objects/utils/resolveAutoColor";
 export type { AutoColorRole } from "./presentations/objects/utils/resolveAutoColor";
 

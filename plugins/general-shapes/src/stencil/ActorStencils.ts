@@ -1,5 +1,6 @@
+import type { Stencil } from "@workspace/canvas";
+
 import { ActorIcon } from "./ActorIcon";
-import type { Stencil } from "../Stencil";
 
 export const ActorStencils: Stencil[] = [
 	{

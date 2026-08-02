@@ -1,5 +1,6 @@
-import type { ActorFeatures } from "../../../../schemas/objects/general/actor/ActorDoc";
-import type { CreateObjectState } from "../../types/CreateObjectState";
+import type { CreateObjectState } from "@workspace/canvas";
+
+import type { ActorFeatures } from "../schema/ActorDoc";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare const ActorStateBrand: unique symbol;

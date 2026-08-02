@@ -49,6 +49,7 @@
 		"@vitest/ui": "^2.1.8",
 		"@workspace/plugin-container-shapes": "workspace:*",
 		"@workspace/plugin-flowchart-shapes": "workspace:*",
+		"@workspace/plugin-general-shapes": "workspace:*",
 		"@workspace/plugin-markdown-shape": "workspace:*",
 		"@workspace/plugin-uml-shapes": "workspace:*",
 		"katex": "catalog:",

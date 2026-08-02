@@ -2,7 +2,6 @@ import type { ComponentType } from "react";
 
 import type { LocaleMessages } from "../../../messages/resolveLocaleMessages";
 import { CalloutIcon } from "../../objects/annotations/CalloutIcon";
-import { CloudIcon } from "../../objects/general/CloudIcon";
 import { RectIcon } from "../../objects/primitives/RectIcon";
 import type { StencilIconProps } from "../../objects/Stencil";
 
@@ -39,16 +38,8 @@ export type ToolbarEntry =
  * Built-in category entries. The category icon reuses a representative shape icon
  * (a dedicated glyph set can replace these later without touching callers). Hosts
  * compose these into a `toolbar.layout`; plugins export their own entries (e.g.
- * `flowchartToolbarEntry`, `containerToolbarEntry`).
+ * `flowchartToolbarEntry`, `containerToolbarEntry`, `generalToolbarEntry`).
  */
-export const generalToolbarEntry: ToolbarEntry = {
-	kind: "category",
-	id: "general",
-	label: { en: "General", ja: "一般" },
-	icon: CloudIcon,
-	presetIds: ["cloud", "actor"],
-};
-
 export const annotationToolbarEntry: ToolbarEntry = {
 	kind: "category",
 	id: "annotation",
@@ -72,10 +63,12 @@ export const basicToolbarEntry: ToolbarEntry = {
 
 /**
  * Default toolbar layout: the basic primitives and sticky stay pinned directly
- * (preserving the classic direct-placement UX); general / annotation fold into
- * category flyouts. Only core presets and categories appear here — anything a
- * plugin supplies (the flowchart / container categories, the `markdown` preset)
- * is shown only when the host adds it via `toolbar.layout`.
+ * (preserving the classic direct-placement UX); annotation folds into a category
+ * flyout. Only core presets and categories appear here — anything a plugin
+ * supplies (the flowchart / container / general categories, the `markdown`
+ * preset) is shown only when the host adds it via `toolbar.layout`. That leaves
+ * `cloud`, a core preset listed by the plugin-owned general category, out of the
+ * default bar.
  */
 export const DEFAULT_TOOLBAR_LAYOUT: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "rect" },
@@ -83,6 +76,5 @@ export const DEFAULT_TOOLBAR_LAYOUT: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "polyline" },
 	{ kind: "preset", presetId: "polygon" },
 	{ kind: "preset", presetId: "sticky" },
-	generalToolbarEntry,
 	annotationToolbarEntry,
 ];

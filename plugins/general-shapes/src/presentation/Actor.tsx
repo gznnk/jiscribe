@@ -1,10 +1,10 @@
+import { BODY_TEXT_SLOT_ID } from "@workspace/canvas";
+import { createFrameObject, readTextSlot } from "@workspace/canvas/unstable";
+
 import { ActorHead, ActorHitArea, ActorLimbs } from "./ActorStyled";
 import { buildActorFigure } from "./buildActorFigure";
 import { calcActorTextRegion } from "./calcActorTextRegion";
-import { BODY_TEXT_SLOT_ID } from "../../../../constants/textSlotId";
-import type { ActorState } from "../../../../states/objects/general/actor/ActorState";
-import { readTextSlot } from "../../../../states/objects/types/TextSlots";
-import { createFrameObject } from "../../base/createFrameObject";
+import type { ActorState } from "../state/ActorState";
 
 /** Renders an Actor stick figure (Frame-family shared logic lives in createFrameObject; only the shape is swapped in). */
 export const Actor = createFrameObject<ActorState>((state, shape) => {

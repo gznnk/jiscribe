@@ -6,6 +6,10 @@ import {
 	flowchartPlugin,
 	flowchartToolbarEntry,
 } from "@workspace/plugin-flowchart-shapes";
+import {
+	generalPlugin,
+	generalToolbarEntry,
+} from "@workspace/plugin-general-shapes";
 import { markdownPlugin } from "@workspace/plugin-markdown-shape";
 import { umlPlugin, umlToolbarEntry } from "@workspace/plugin-uml-shapes";
 import React, { useCallback, useEffect, useState } from "react";
@@ -19,22 +23,27 @@ import {
 	annotationToolbarEntry,
 	darkCanvasTheme,
 	extractCanvasSourceFromPng,
-	generalToolbarEntry,
 } from "../../src";
 import { createCanvasParser } from "../../src/doc";
 import "./harness.css";
 
-// The flowchart / container / markdown shapes were removed from core, leaving
+// The flowchart / container / markdown / general shapes were removed from core, leaving
 // @workspace/plugin-flowchart-shapes / @workspace/plugin-container-shapes /
-// @workspace/plugin-markdown-shape as their only source
+// @workspace/plugin-markdown-shape / @workspace/plugin-general-shapes as their only source
 // (docs/05_extensibility/plugin-architecture-requirements.md). They are registered in
 // devDependencies as a dev-only circular dependency for e2e, keeping the related specs alive.
-const plugins = [flowchartPlugin, containerPlugin, markdownPlugin, umlPlugin];
+const plugins = [
+	flowchartPlugin,
+	containerPlugin,
+	markdownPlugin,
+	umlPlugin,
+	generalPlugin,
+];
 
 const initialConfig: CanvasConfig = { plugins };
 
-// The flowchart and container categories and the markdown preset come from plugins and are
-// not in core's default layout. The specs depend on both flyout buttons and the Markdown
+// The flowchart / container / general categories and the markdown preset come from plugins
+// and are not in core's default layout. The specs depend on both flyout buttons and the Markdown
 // preset, so the harness passes a layout with the original arrangement.
 const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "rect" },

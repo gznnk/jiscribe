@@ -1,10 +1,13 @@
+import type { ObjectTextRegionCalculator } from "@workspace/canvas";
+import type { TextSlot } from "@workspace/canvas/doc";
+import {
+	calcVisualLineCount,
+	measureTextWidth,
+} from "@workspace/canvas/unstable";
+import { TEXT_LINE_HEIGHT } from "@workspace/canvas/unstable-doc";
 import type { Dimensions } from "@workspace/geometry";
 
-import { TEXT_LINE_HEIGHT } from "../../../../constants/textLineHeight";
-import { ACTOR_LABEL_STYLE_DEFAULTS } from "../../../../schemas/objects/general/actor/ActorDoc";
-import type { TextSlot } from "../../../../schemas/objects/types/TextSlot";
-import type { ObjectTextRegionCalculator } from "../../registry/ObjectTextRegionRegistry";
-import { calcVisualLineCount, measureTextWidth } from "../../utils/measureText";
+import { ACTOR_LABEL_STYLE_DEFAULTS } from "../schema/ActorDoc";
 
 /** Empty band between the bottom edge of the box and the top of the label. */
 export const ACTOR_LABEL_GAP = 4;

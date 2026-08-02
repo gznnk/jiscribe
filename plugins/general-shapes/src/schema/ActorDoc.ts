@@ -1,8 +1,12 @@
-import { DEFAULT_FONT_FAMILY } from "../../../../constants/defaultFontFamily";
-import type { CreateObjectType } from "../../types/CreateObjectType";
-import type { ObjectFeatures } from "../../types/ObjectFeatures";
-import type { TextSlot } from "../../types/TextSlot";
-import { AUTO_COLOR } from "../../utils/autoColor";
+import type {
+	CreateObjectType,
+	ObjectFeatures,
+	TextSlot,
+} from "@workspace/canvas/doc";
+import {
+	AUTO_COLOR,
+	DEFAULT_FONT_FAMILY,
+} from "@workspace/canvas/unstable-doc";
 
 /**
  * Typography the label falls back to for a field the slot leaves out. Spread

@@ -2,7 +2,7 @@
 // component). This keeps UI deps (react / @emotion / katex) out of the Node bundle
 // (extension.js) so activation stays light.
 //
-// The flowchart / container / markdown plugins are wired in through their own headless
+// The flowchart / container / markdown / general plugins are wired in through their own headless
 // `./doc` entries: those import only `@workspace/canvas/doc` / `@workspace/canvas/unstable-doc`
 // (no React, and for markdown no markdown-it / KaTeX either — rendering lives in its
 // presentation), so esbuild keeps the Node bundle small even though it now validates
@@ -14,18 +14,21 @@ import {
 } from "@workspace/canvas/doc";
 import { containerDocPlugin } from "@workspace/plugin-container-shapes/doc";
 import { flowchartDocPlugin } from "@workspace/plugin-flowchart-shapes/doc";
+import { generalDocPlugin } from "@workspace/plugin-general-shapes/doc";
 import { markdownDocPlugin } from "@workspace/plugin-markdown-shape/doc";
 import { umlDocPlugin } from "@workspace/plugin-uml-shapes/doc";
 import * as vscode from "vscode";
 
-// Plugin-aware parser: built-in types plus the flowchart / container / markdown plugin
-// shapes, so .jis.json files using those shapes validate instead of reporting them unknown.
+// Plugin-aware parser: built-in types plus the flowchart / container / markdown / general
+// plugin shapes, so .jis.json files using those shapes validate instead of reporting them
+// unknown.
 const canvasParser = createCanvasParser({
 	plugins: [
 		flowchartDocPlugin,
 		containerDocPlugin,
 		markdownDocPlugin,
 		umlDocPlugin,
+		generalDocPlugin,
 	],
 });
 

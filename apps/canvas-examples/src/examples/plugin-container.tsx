@@ -1,9 +1,5 @@
 import type { CanvasConfig, CanvasDoc, ToolbarEntry } from "@workspace/canvas";
-import {
-	Canvas,
-	annotationToolbarEntry,
-	generalToolbarEntry,
-} from "@workspace/canvas";
+import { Canvas, annotationToolbarEntry } from "@workspace/canvas";
 import { createCanvasParser } from "@workspace/canvas/doc";
 import {
 	containerPlugin,
@@ -13,20 +9,30 @@ import {
 	flowchartPlugin,
 	flowchartToolbarEntry,
 } from "@workspace/plugin-flowchart-shapes";
+import {
+	generalPlugin,
+	generalToolbarEntry,
+} from "@workspace/plugin-general-shapes";
 import { markdownPlugin } from "@workspace/plugin-markdown-shape";
 import { umlPlugin, umlToolbarEntry } from "@workspace/plugin-uml-shapes";
 
-// flowchart / container / markdown 図形は core から削除され、それぞれ
+// flowchart / container / markdown / general 図形は core から削除され、それぞれ
 // @workspace/plugin-flowchart-shapes / @workspace/plugin-container-shapes /
-// @workspace/plugin-markdown-shape が唯一の供給元
+// @workspace/plugin-markdown-shape / @workspace/plugin-general-shapes が唯一の供給元
 // （docs/05_extensibility/plugin-architecture-requirements.md）。この example は
 // 「外部プラグイン図形の追加」の実証: `CanvasPlugin` 宣言を createCanvasParser と
 // Canvas の initialConfig の両方に渡すだけで、doc の検証と図形一式の登録が揃う。
-const plugins = [flowchartPlugin, containerPlugin, markdownPlugin, umlPlugin];
+const plugins = [
+	flowchartPlugin,
+	containerPlugin,
+	markdownPlugin,
+	umlPlugin,
+	generalPlugin,
+];
 
 const initialConfig: CanvasConfig = { plugins };
 
-// flowchart / container カテゴリと markdown プリセットは core の既定 layout に
+// flowchart / container / general カテゴリと markdown プリセットは core の既定 layout に
 // 含まれない（プラグイン供給）。従来どおりの並びで出すため、ホスト側で差し込む。
 const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "rect" },

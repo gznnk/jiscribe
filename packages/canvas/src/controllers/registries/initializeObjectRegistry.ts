@@ -12,11 +12,6 @@ import {
 import { Sticky } from "../../presentations/objects/annotations/Sticky";
 import { Connector } from "../../presentations/objects/connections/Connector";
 import {
-	Actor,
-	calcActorTextRegion,
-	calcActorVisualBounds,
-} from "../../presentations/objects/general/Actor";
-import {
 	Cloud,
 	calcCloudTextRegion,
 	cloudOutline,
@@ -49,12 +44,6 @@ import {
 	connectorToState,
 } from "../../states/objects/connections/connector/ConnectorMapper";
 import { isValidConnectorState } from "../../states/objects/connections/connector/validateConnectorState";
-import {
-	actorToDoc,
-	actorToState,
-} from "../../states/objects/general/actor/ActorMapper";
-import type { ActorState } from "../../states/objects/general/actor/ActorState";
-import { isValidActorState } from "../../states/objects/general/actor/validateActorState";
 import {
 	cloudToDoc,
 	cloudToState,
@@ -130,7 +119,6 @@ import { StickyColorMenu } from "../ui/menu/ObjectMenu/items/StickyColorMenu";
 import { createDefaultMenu } from "../ui/menu/ObjectMenu/utils/createDefaultMenu";
 import { CalloutStencils } from "../ui/objects/annotations/CalloutStencils";
 import { StickyStencils } from "../ui/objects/annotations/StickyStencils";
-import { ActorStencils } from "../ui/objects/general/ActorStencils";
 import { CloudStencils } from "../ui/objects/general/CloudStencils";
 import { EllipseStencils } from "../ui/objects/primitives/EllipseStencils";
 import { PolygonStencils } from "../ui/objects/primitives/PolygonStencils";
@@ -172,17 +160,6 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			outline: cloudOutline,
 			behavior: createFrameBehavior<CloudState>(),
 			stencils: CloudStencils,
-		}),
-
-		actor: defineObject({
-			...builtinObjectDocDefinitions.actor,
-			mapper: { toDoc: actorToDoc, toState: actorToState },
-			stateValidator: isValidActorState,
-			component: Actor,
-			textRegion: calcActorTextRegion,
-			visualBounds: calcActorVisualBounds,
-			behavior: createFrameBehavior<ActorState>(),
-			stencils: ActorStencils,
 		}),
 
 		callout: defineObject({

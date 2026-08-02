@@ -1,10 +1,10 @@
+import { BODY_TEXT_SLOT_ID } from "@workspace/canvas";
+import type { TextSlot } from "@workspace/canvas/doc";
 import { describe, it, expect } from "vitest";
 
-import { BODY_TEXT_SLOT_ID } from "../../../../../constants/textSlotId";
-import type { TextSlot } from "../../../../../schemas/objects/types/TextSlot";
-import { expectRectCloseTo } from "../../../__tests__/support/expectRectCloseTo";
 import { ACTOR_LABEL_GAP, calcActorTextRegion } from "../calcActorTextRegion";
 import { calcActorVisualBounds } from "../calcActorVisualBounds";
+import { expectRectCloseTo } from "./support/expectRectCloseTo";
 
 const actor = (
 	width: number,

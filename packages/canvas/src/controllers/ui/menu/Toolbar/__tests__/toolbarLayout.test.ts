@@ -5,7 +5,6 @@ import {
 	DEFAULT_TOOLBAR_LAYOUT,
 	annotationToolbarEntry,
 	basicToolbarEntry,
-	generalToolbarEntry,
 	type ToolbarEntry,
 } from "../toolbarLayout";
 
@@ -77,11 +76,11 @@ describe("DEFAULT_TOOLBAR_LAYOUT", () => {
 		]);
 	});
 
-	it("folds general and annotation into category flyouts, in that order", () => {
+	it("folds annotation into a category flyout", () => {
 		const categories = DEFAULT_TOOLBAR_LAYOUT.filter(
 			(entry) => entry.kind === "category",
 		).map((entry) => entry.id);
-		expect(categories).toEqual(["general", "annotation"]);
+		expect(categories).toEqual(["annotation"]);
 	});
 
 	it("excludes the basic category, whose members are pinned instead", () => {
@@ -94,12 +93,12 @@ describe("DEFAULT_TOOLBAR_LAYOUT", () => {
 		).map((entry) => entry.id);
 		expect(categoryIds).not.toContain("flowchart");
 		expect(categoryIds).not.toContain("container");
+		expect(categoryIds).not.toContain("general");
 	});
 });
 
 describe("toolbar category entries", () => {
 	it.each([
-		["general", generalToolbarEntry],
 		["annotation", annotationToolbarEntry],
 		["basic", basicToolbarEntry],
 	] as [string, ToolbarEntry][])(
@@ -117,11 +116,7 @@ describe("toolbar category entries", () => {
 	);
 
 	it("carries an English and Japanese label for every built-in category", () => {
-		for (const entry of [
-			generalToolbarEntry,
-			annotationToolbarEntry,
-			basicToolbarEntry,
-		]) {
+		for (const entry of [annotationToolbarEntry, basicToolbarEntry]) {
 			if (entry.kind !== "category") {
 				continue;
 			}
