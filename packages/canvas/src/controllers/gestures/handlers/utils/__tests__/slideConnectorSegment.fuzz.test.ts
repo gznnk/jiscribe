@@ -2,7 +2,7 @@ import type { Point } from "@workspace/geometry";
 import { describe, expect, it } from "vitest";
 
 import { routeOrthogonalConnector } from "../../../../../presentations/layers/content/utils/routing";
-import { moveConnectorSegment } from "../moveConnectorSegment";
+import { slideConnectorSegment } from "../slideConnectorSegment";
 import {
 	alignedDrawnPath,
 	endpointOf,
@@ -11,7 +11,7 @@ import {
 	findStoredDefect,
 	makeFrame,
 	segmentAxis,
-} from "./moveConnectorSegmentHarness";
+} from "./slideConnectorSegmentHarness";
 
 /**
  * Deterministic fuzz over operation *sequences*: seeded random chains of segment drags, shape
@@ -24,7 +24,7 @@ import {
  * exactly here). Invariants checked:
  *
  * - right after a drag, the stored path has no diagonal, no zero-length segment and no colinear
- *   adjacent segments (every stored corner is a real right angle — see moveConnectorSegment)
+ *   adjacent segments (every stored corner is a real right angle — see slideConnectorSegment)
  * - at any point, the drawn (aligned) path has no diagonal, whatever the shapes did
  */
 
@@ -115,7 +115,7 @@ describe("fuzz: drag/move/rotate operation sequences", () => {
 						}
 					}
 					const value = pick(valuePool);
-					vertices = moveConnectorSegment(path, segmentIndex, axis, value);
+					vertices = slideConnectorSegment(path, segmentIndex, axis, value);
 					if (vertices.length > 0) {
 						const source = endpointOf(sourceFrame, sourceFace);
 						const target = endpointOf(targetFrame, targetFace);

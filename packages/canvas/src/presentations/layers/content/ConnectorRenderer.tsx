@@ -7,7 +7,8 @@ import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
 import {
 	Connector,
-	ConnectorSegmentHitAreas,
+	ConnectorSegmentMoveHitAreas,
+	ConnectorSegmentSlideHitAreas,
 } from "../../objects/connections/Connector";
 import { ConnectorLabel } from "../../objects/connections/ConnectorLabel";
 
@@ -71,10 +72,18 @@ const ConnectorRendererComponent: React.FC<ConnectorRendererProps> = ({
 				disablePointerEvents={disablePointerEvents}
 			/>
 			{/* Drawn between the line and the label, so the label keeps the pointer over itself. */}
-			{isOrthogonalRouting(connectorState.routing) && (
-				<ConnectorSegmentHitAreas
+			{isOrthogonalRouting(connectorState.routing) ? (
+				<ConnectorSegmentSlideHitAreas
 					id={connectorState.id}
 					points={resolved.points}
+					disablePointerEvents={disablePointerEvents}
+				/>
+			) : (
+				<ConnectorSegmentMoveHitAreas
+					id={connectorState.id}
+					points={resolved.points}
+					sourceIsFree={!connectorState.source.owner}
+					targetIsFree={!connectorState.target.owner}
 					disablePointerEvents={disablePointerEvents}
 				/>
 			)}

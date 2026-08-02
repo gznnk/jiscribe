@@ -13,7 +13,7 @@ import {
 import type { ConnectPointId } from "../../../../../schemas/objects/types/EndpointRef";
 
 /**
- * Shared harness for the moveConnectorSegment property tests: the .invariants sweep over the
+ * Shared harness for the slideConnectorSegment property tests: the .invariants sweep over the
  * configuration space and the .fuzz run over operation sequences (the same role routingHarness plays).
  *
  * Endpoints are built the way the app resolves them: point and outward direction come from the
@@ -93,7 +93,7 @@ export const findDiagonal = (path: Point[]): string | null => {
 /**
  * The stricter check for a freshly stored path (right after a drag): on top of no diagonals,
  * zero-length segments and colinear adjacent segments are defects too — every stored corner has
- * to be a real right angle (see moveConnectorSegment).
+ * to be a real right angle (see slideConnectorSegment).
  */
 export const findStoredDefect = (path: Point[]): string | null => {
 	const diagonal = findDiagonal(path);

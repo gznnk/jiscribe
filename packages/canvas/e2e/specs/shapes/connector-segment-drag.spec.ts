@@ -131,7 +131,7 @@ test.describe("segment drag on an orthogonal connector", () => {
 		await selectConnector(canvas, connectorId);
 		await expect(
 			canvas.page.locator(
-				`[data-kind="connector"][data-id="${connectorId}"][data-part="segment:1"]`,
+				`[data-kind="connector"][data-id="${connectorId}"][data-part="segment-slide:1"]`,
 			),
 		).toBeVisible();
 
@@ -361,7 +361,7 @@ test.describe("segment drag on an orthogonal connector", () => {
 		await canvas.page.click('[data-part="command:setRoutingStraight"]');
 		await expect(
 			canvas.page.locator(
-				`[data-kind="connector"][data-id="${connectorId}"][data-part^="segment:"]`,
+				`[data-kind="connector"][data-id="${connectorId}"][data-part^="segment-slide:"]`,
 			),
 		).toHaveCount(0);
 
@@ -376,9 +376,10 @@ test.describe("segment drag on an orthogonal connector", () => {
 		});
 	});
 
-	test("shows no segment hit areas for straight routing", async ({
-		canvas,
-	}) => {
+	// Straight has bands of its own, for the segments it can move freely
+	// (connector-straight-segment-drag.spec); what it must never carry is the one-axis slide band,
+	// whose drag would take the whole run across itself.
+	test("shows no slide hit areas for straight routing", async ({ canvas }) => {
 		const connectorId = await buildDiagonalConnector(canvas);
 		await selectConnector(canvas, connectorId);
 
@@ -392,7 +393,7 @@ test.describe("segment drag on an orthogonal connector", () => {
 			.toBe(2);
 		await expect(
 			canvas.page.locator(
-				`[data-kind="connector"][data-id="${connectorId}"][data-part^="segment:"]`,
+				`[data-kind="connector"][data-id="${connectorId}"][data-part^="segment-slide:"]`,
 			),
 		).toHaveCount(0);
 	});

@@ -9,21 +9,21 @@ import {
 import type { CanvasControllerState, SnapFeedback } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import { collectConnectorPoints } from "../../../utils/calcConnectorBoundingBox";
-import { commitTextEditIfNeeded } from "../../../utils/commitTextEditIfNeeded";
 import { createCowObjects } from "../../../utils/cowObjects";
 import type {
 	CanvasEvent,
 	GestureHandler,
 } from "../../registry/GestureHandlerTypes";
+import { beginConnectorReshape } from "../utils/beginConnectorReshape";
 import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
-import { moveConnectorSegment } from "../utils/moveConnectorSegment";
+import { slideConnectorSegment } from "../utils/slideConnectorSegment";
 import {
 	buildSnapFeedback,
 	findSnap,
 	SNAP_THRESHOLD_PX,
 } from "../utils/snap/findSnap";
 
-const TARGET_PART_PREFIX = "segment:";
+const TARGET_PART_PREFIX = "segment-slide:";
 
 /** The segment being dragged, resolved from the drag-start snapshot. */
 type DraggedSegment = {
@@ -121,7 +121,7 @@ const handleDrag = (
 
 	const updatedConnector: ConnectorState = {
 		...segment.connector,
-		points: moveConnectorSegment(
+		points: slideConnectorSegment(
 			segment.path,
 			segmentIndex,
 			segment.axis,
@@ -146,18 +146,17 @@ const handleDrag = (
 /**
  * Handles dragging a segment of a right-angle connector across itself.
  *
- * Target: data-kind="connector", data-part="segment:<segmentIndex>", indexing the drawn path
- * `[source, ...vertices, target]` (see ConnectorSegmentHitAreas). It shares the connector
- * targetKind with ConnectorClickHandler and ConnectorLabelDragHandler, and stays exclusive of both:
- * this one takes drags whose part names a segment, the label handler takes drags on the label box,
+ * Target: data-kind="connector", data-part="segment-slide:<segmentIndex>", indexing the drawn path
+ * `[source, ...vertices, target]` (see ConnectorSegmentSlideHitAreas). It stays exclusive of its siblings
+ * on the connector targetKind by the part it answers to: "segment-slide:" here, "segment-move:" for
+ * the free straight drag (ConnectorSegmentMoveHandler), "label" for ConnectorLabelDragHandler,
  * and clicks on any part go to ConnectorClickHandler (#110).
  *
  * The drag writes the connector's vertices (see ConnectorDoc). A connector still routed by the
  * engine has none, so the first drag takes the corners it drew as the starting list — from then on
- * the stored vertices are the path, and the engine no longer has a say in it. No selection is
- * needed first, matching how the label already drags; the drag selects the connector on the way in.
+ * the stored vertices are the path, and the engine no longer has a say in it.
  */
-export const ConnectorSegmentDragHandler: GestureHandler = {
+export const ConnectorSegmentSlideHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {
 		return (
 			isPerTargetInteraction(event) &&
@@ -189,25 +188,7 @@ export const ConnectorSegmentDragHandler: GestureHandler = {
 		}
 
 		if (event.type === "dragStart") {
-			// Reshaping a connector selects it, the same way grabbing its label does — otherwise the
-			// route changes under the pointer with nothing to show which connector was touched.
-			const nextState = commitTextEditIfNeeded(state);
-			if (!isConnectorState(nextState.objects[connectorId])) {
-				return nextState;
-			}
-			return {
-				...nextState,
-				selectedConnectorId: connectorId,
-				selectedIds: [],
-				// Without clearing it, an invisible vertex selection lingers and the Delete key deletes an unintended vertex
-				selectedVertex: null,
-				multiSelectGroup: null,
-				// Close the submenu / category flyout on selection change
-				objectMenuOpenId: null,
-				stencilLibraryOpenCategory: null,
-				contextMenuPosition: null,
-				edgeScrollEnabled: true,
-			};
+			return beginConnectorReshape(state, connectorId);
 		}
 		if (event.type === "dragEnd") {
 			return {

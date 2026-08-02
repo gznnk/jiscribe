@@ -1,6 +1,7 @@
 import { ConnectorClickHandler } from "./ConnectorClickHandler";
 import { ConnectorLabelDragHandler } from "./ConnectorLabelDragHandler";
-import { ConnectorSegmentDragHandler } from "./ConnectorSegmentDragHandler";
+import { ConnectorSegmentMoveHandler } from "./ConnectorSegmentMoveHandler";
+import { ConnectorSegmentSlideHandler } from "./ConnectorSegmentSlideHandler";
 import type { CanvasControllerState } from "../../../CanvasTypes";
 import type { ICanvasRegistries } from "../../../registries/ICanvasRegistries";
 import type {
@@ -14,7 +15,8 @@ import { isPerTargetInteraction } from "../utils/isPerTargetInteraction";
  */
 export const CONNECTOR_HANDLERS: readonly GestureHandler[] = [
 	ConnectorLabelDragHandler,
-	ConnectorSegmentDragHandler,
+	ConnectorSegmentSlideHandler,
+	ConnectorSegmentMoveHandler,
 	ConnectorClickHandler,
 ];
 
@@ -22,9 +24,10 @@ export const CONNECTOR_HANDLERS: readonly GestureHandler[] = [
  * Main handler for all connector-level events.
  * Routes each event to the first sub-handler whose supports() accepts it:
  * clicks (click / pressed / doubleClick) to ConnectorClickHandler, drags on the
- * label box to ConnectorLabelDragHandler, drags on a "segment:<i>" band to
- * ConnectorSegmentDragHandler. Their supports() are mutually exclusive, so the
- * array order never decides routing.
+ * label box to ConnectorLabelDragHandler, drags on a "segment-slide:<i>" band to
+ * ConnectorSegmentSlideHandler, and on a "segment-move:<i>" band to
+ * ConnectorSegmentMoveHandler. Their supports() are mutually exclusive, so
+ * the array order never decides routing.
  */
 export const ConnectorEventHandler: GestureHandler = {
 	supports(event: CanvasEvent): boolean {

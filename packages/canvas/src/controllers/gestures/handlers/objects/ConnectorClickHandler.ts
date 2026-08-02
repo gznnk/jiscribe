@@ -31,9 +31,10 @@ export const ConnectorClickHandler: GestureHandler = {
 		return (
 			isPerTargetInteraction(event) &&
 			event.targetKind === "connector" &&
-			// Clicks only, whatever part they land on. Drags belong to the two sibling
-			// handlers: the label box to ConnectorLabelDragHandler, a segment band
-			// to ConnectorSegmentDragHandler (see ConnectorEventHandler).
+			// Clicks only, whatever part they land on. Drags belong to the sibling
+			// handlers: the label box to ConnectorLabelDragHandler, a segment band to
+			// ConnectorSegmentSlideHandler or ConnectorSegmentMoveHandler depending
+			// on which one it is (see ConnectorEventHandler).
 			(event.type === "click" ||
 				event.type === "pressed" ||
 				event.type === "doubleClick")

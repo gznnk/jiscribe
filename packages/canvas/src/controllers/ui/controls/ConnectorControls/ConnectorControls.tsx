@@ -36,10 +36,14 @@ type ConnectorControlsProps = {
  *   (data-id=<id> + data-part="waypoint-insert:<segment>" → ConnectorVertexInsertHandler)
  *
  * The two shapes are edited differently because a point means a different thing in each. Under
- * straight a point is a bend the user places and then moves freely; under orthogonal the vertices
- * have to stay axis-aligned, so they are only ever moved a whole segment at a time — which needs no
- * handle at all and is not offered here: the segment itself is the target, and its hit band lives
- * with the connector (see ConnectorSegmentHitAreas).
+ * straight a point is a bend the user places and then moves freely, so it gets a handle; under
+ * orthogonal the vertices have to stay axis-aligned and are only ever moved a whole segment at a
+ * time, which needs no handle at all.
+ *
+ * Both routings also let a segment be grabbed along its whole length, but that hit band lives with
+ * the connector rather than here (ConnectorSegmentSlideHitAreas / ConnectorSegmentMoveHitAreas), so it
+ * works without selecting first. The insert handles sit on top of those bands at the segment
+ * midpoints: the middle of a straight segment adds a vertex, the rest of it moves the segment.
  *
  * Placed in the controllers layer so selection visuals are decoupled from the connector itself.
  */
