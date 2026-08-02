@@ -184,7 +184,7 @@ export const lockDocDefinition: ObjectDocDefinition = {
 	features: LockFeatures,
 	validateDoc: validateLockDoc,
 	factory: LockObjectFactory,
-	description: `Padlock shape, typically used for authentication steps and protected resources. ${RECT_GEOMETRY_NOTE} ${BELOW_LABEL_NOTE} A portrait aspect ratio (e.g. 90x110) looks best. Prefer "shield" for a boundary that other things sit behind.`,
+	description: `Padlock shape, typically used for authentication steps and protected resources. ${RECT_GEOMETRY_NOTE} ${BELOW_LABEL_NOTE} A portrait aspect ratio (e.g. 80x100) looks best. Prefer "shield" for a boundary that other things sit behind.`,
 	summary: "authentication, protected resource",
 	defaults: LOCK_DOC_DEFAULTS,
 };

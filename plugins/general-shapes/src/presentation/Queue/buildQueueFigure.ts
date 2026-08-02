@@ -1,3 +1,4 @@
+import { QUEUE_CORNER_RATIO } from "../../schema/queue/QueueDoc";
 import type { PictogramFigureBuilder } from "../shared/PictogramFigure";
 import {
 	buildRoundedRectPath,
@@ -6,9 +7,6 @@ import {
 
 /** Cells the row is divided into; the dividers between them are what reads as a queue. */
 const QUEUE_CELL_COUNT = 4;
-
-/** Corner radius as a fraction of the shorter side. */
-const QUEUE_CORNER_RATIO = 0.12;
 
 /**
  * Lays out a queue over the bounding box whose top-left corner is at (x, y): one

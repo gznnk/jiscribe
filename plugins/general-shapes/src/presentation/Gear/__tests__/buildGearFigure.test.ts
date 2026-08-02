@@ -15,6 +15,14 @@ describe("buildGearFigure", () => {
 		expect(buildGearFigure(-50, -50, 100, 100).detail).toBeUndefined();
 	});
 
+	it("repeats the punched-out bore as a hit path, so the center is not dead", () => {
+		const figure = buildGearFigure(-50, -50, 100, 100);
+		expect(figure.hit).toHaveLength(1);
+		// The very same subpath the body punches out: the hole cannot be hit-tested
+		// where it is not painted, and the center is where a pointer aims.
+		expect(figure.body[0]).toContain(figure.hit![0]);
+	});
+
 	it("places the teeth on the box's inscribed ellipse, so a stretched box gives a stretched gear", () => {
 		const wide = buildGearFigure(-100, -25, 200, 50);
 		const coordinates = [...wide.body[0].matchAll(/-?\d+(\.\d+)?/g)].map(

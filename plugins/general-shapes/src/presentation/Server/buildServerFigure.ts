@@ -1,3 +1,4 @@
+import { SERVER_CORNER_RATIO } from "../../schema/server/ServerDoc";
 import type { PictogramFigureBuilder } from "../shared/PictogramFigure";
 import {
 	buildEllipsePath,
@@ -7,9 +8,6 @@ import {
 
 /** Rack units stacked in the box; the dividers between them are what reads as a rack. */
 const SERVER_UNIT_COUNT = 3;
-
-/** Corner radius as a fraction of the shorter side. */
-const SERVER_CORNER_RATIO = 0.07;
 
 /** Status light: radius as a fraction of the shorter side, x as a fraction of the width. */
 const SERVER_LIGHT_RADIUS_RATIO = 0.045;

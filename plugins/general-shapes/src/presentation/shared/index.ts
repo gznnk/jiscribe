@@ -19,4 +19,5 @@ export {
 	PictogramBodyPath,
 	PictogramDetailPath,
 	PictogramHitArea,
+	PictogramHitPath,
 } from "./PictogramStyled";

@@ -2,7 +2,11 @@ import type { FrameShapeProps } from "@workspace/canvas/unstable";
 import type { ReactNode } from "react";
 
 import type { PictogramFigure } from "./PictogramFigure";
-import { PictogramBodyPath, PictogramDetailPath } from "./PictogramStyled";
+import {
+	PictogramBodyPath,
+	PictogramDetailPath,
+	PictogramHitPath,
+} from "./PictogramStyled";
 
 type PictogramProps = {
 	/** The paths to draw, already laid out in the shape's local coordinates. */
@@ -14,9 +18,10 @@ type PictogramProps = {
 };
 
 /**
- * Draws a pictogram as one object group: body silhouettes first, then the detail
- * lines over them. The group is the single `data-kind="object"` element the DOM
- * contract requires, so its parts carry none themselves.
+ * Draws a pictogram as one object group: the invisible hit paths underneath, then
+ * the body silhouettes, then the detail lines over them. The group is the single
+ * `data-kind="object"` element the DOM contract requires, so its parts carry none
+ * themselves.
  */
 export const Pictogram: React.FC<PictogramProps> = ({
 	figure,
@@ -29,6 +34,9 @@ export const Pictogram: React.FC<PictogramProps> = ({
 		transform={shape.transform}
 	>
 		{children}
+		{figure.hit?.map((d, index) => (
+			<PictogramHitPath key={index} d={d} />
+		))}
 		{figure.body.map((d, index) => (
 			<PictogramBodyPath
 				key={index}

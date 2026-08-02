@@ -1,8 +1,6 @@
+import { ENVELOPE_CORNER_RATIO } from "../../schema/envelope/EnvelopeDoc";
 import type { PictogramFigureBuilder } from "../shared/PictogramFigure";
 import { buildRoundedRectPath } from "../shared/pictogramPaths";
-
-/** Corner radius as a fraction of the shorter side. */
-const ENVELOPE_CORNER_RATIO = 0.05;
 
 /** How far the flap's crease dips below the top edge, as a fraction of the height. */
 const ENVELOPE_FLAP_DEPTH_RATIO = 0.56;
