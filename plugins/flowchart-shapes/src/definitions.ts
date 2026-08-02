@@ -1,5 +1,9 @@
 import type { ObjectTypeDefinition } from "@workspace/canvas";
-import { createFrameBehavior } from "@workspace/canvas/unstable";
+import {
+	calcBelowLabelTextRegion,
+	calcBelowLabelVisualBounds,
+	createFrameBehavior,
+} from "@workspace/canvas/unstable";
 
 import {
 	cardDocDefinition,
@@ -228,11 +232,18 @@ export const cardDefinition: ObjectTypeDefinition<CardDoc, CardState> = {
 	stencils: CardStencils,
 };
 
+/**
+ * The arms fill the box, so the label hangs below the geometry box and
+ * `visualBounds` is what keeps zoom-to-fit and the export viewBox from cropping
+ * it (calcBelowLabelVisualBounds).
+ */
 export const crossDefinition: ObjectTypeDefinition<CrossDoc, CrossState> = {
 	...crossDocDefinition,
 	mapper: { toDoc: crossToDoc, toState: crossToState },
 	stateValidator: isValidCrossState,
 	component: Cross,
+	textRegion: calcBelowLabelTextRegion,
+	visualBounds: calcBelowLabelVisualBounds,
 	outline: crossOutline,
 	behavior: createFrameBehavior<CrossState>(),
 	stencils: CrossStencils,
@@ -298,12 +309,19 @@ export const documentDefinition: ObjectTypeDefinition<
 	stencils: DocumentStencils,
 };
 
+/**
+ * The triangle narrows to a point, so the label hangs below the geometry box and
+ * `visualBounds` is what keeps zoom-to-fit and the export viewBox from cropping
+ * it (calcBelowLabelVisualBounds).
+ */
 export const extractDefinition: ObjectTypeDefinition<ExtractDoc, ExtractState> =
 	{
 		...extractDocDefinition,
 		mapper: { toDoc: extractToDoc, toState: extractToState },
 		stateValidator: isValidExtractState,
 		component: Extract,
+		textRegion: calcBelowLabelTextRegion,
+		visualBounds: calcBelowLabelVisualBounds,
 		outline: extractOutline,
 		behavior: createFrameBehavior<ExtractState>(),
 		stencils: ExtractStencils,

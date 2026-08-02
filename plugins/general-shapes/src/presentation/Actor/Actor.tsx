@@ -1,10 +1,11 @@
-import { BODY_TEXT_SLOT_ID } from "@workspace/canvas";
-import { createFrameObject, readTextSlot } from "@workspace/canvas/unstable";
+import {
+	BelowLabelHitArea,
+	createFrameObject,
+} from "@workspace/canvas/unstable";
 
 import { ActorHead, ActorLimbs } from "./ActorStyled";
 import { buildActorFigure } from "./buildActorFigure";
 import type { ActorState } from "../../state/actor/ActorState";
-import { calcBelowLabelTextRegion } from "../shared/calcBelowLabelTextRegion";
 import { PictogramHitArea } from "../shared/PictogramStyled";
 
 /**
@@ -20,12 +21,6 @@ export const Actor = createFrameObject<ActorState>((state, shape) => {
 		state.width,
 		state.height,
 	);
-	// The label hangs outside the box, so the box-wide hit area does not cover it.
-	// data-part names the slot a double-click on the label opens (resolveTextSlotId).
-	const label =
-		readTextSlot(state.text, BODY_TEXT_SLOT_ID) === ""
-			? null
-			: calcBelowLabelTextRegion(state, BODY_TEXT_SLOT_ID);
 	return (
 		<g
 			data-kind="object"
@@ -39,15 +34,8 @@ export const Actor = createFrameObject<ActorState>((state, shape) => {
 				width={state.width}
 				height={state.height}
 			/>
-			{label && (
-				<PictogramHitArea
-					data-part={BODY_TEXT_SLOT_ID}
-					x={label.x}
-					y={label.y}
-					width={label.width}
-					height={label.height}
-				/>
-			)}
+			{/* The label hangs outside the box, so the box-wide hit area misses it. */}
+			<BelowLabelHitArea state={state} />
 			<ActorHead
 				cx={headCx}
 				cy={headCy}

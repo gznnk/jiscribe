@@ -31,6 +31,12 @@ export type { ObjectDocValidateFn } from "./schemas/registry/ObjectDocValidatorR
 
 export { AUTO_COLOR } from "./schemas/objects/utils/autoColor";
 
+// Typography defaults for a shape whose drawing fills its box and so hangs its
+// label underneath (calcBelowLabelTextRegion in `./unstable`). Spread into that
+// shape's doc defaults: the layout measures the label with these, so a shape
+// that draws with different ones gets a box that does not fit its text.
+export { BELOW_LABEL_STYLE_DEFAULTS } from "./schemas/objects/utils/belowLabelStyleDefaults";
+
 export { DEFAULT_FONT_FAMILY } from "./constants/defaultFontFamily";
 
 // line-height shared by display (TextOverlayFrame) and editing (TextEditor). Shapes that

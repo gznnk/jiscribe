@@ -1,7 +1,8 @@
 import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas/doc";
-import { AUTO_COLOR } from "@workspace/canvas/unstable-doc";
-
-import { BELOW_LABEL_STYLE_DEFAULTS } from "../shared/BelowLabelStyleDefaults";
+import {
+	AUTO_COLOR,
+	BELOW_LABEL_STYLE_DEFAULTS,
+} from "@workspace/canvas/unstable-doc";
 
 /**
  * A closed envelope, used for a single message or event.

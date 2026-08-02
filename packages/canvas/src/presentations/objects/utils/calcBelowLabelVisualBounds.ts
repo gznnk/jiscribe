@@ -1,10 +1,10 @@
-import type { ObjectVisualBoundsCalculator } from "@workspace/canvas";
-import { BODY_TEXT_SLOT_ID } from "@workspace/canvas";
-import type { TextSlot } from "@workspace/canvas/doc";
-import { readTextSlot } from "@workspace/canvas/unstable";
 import type { Dimensions } from "@workspace/geometry";
 
 import { calcBelowLabelTextRegion } from "./calcBelowLabelTextRegion";
+import { BODY_TEXT_SLOT_ID } from "../../../constants/textSlotId";
+import type { TextSlot } from "../../../schemas/objects/types/TextSlot";
+import { readTextSlot } from "../../../states/objects/types/TextSlots";
+import type { ObjectVisualBoundsCalculator } from "../registry/ObjectVisualBoundsRegistry";
 
 /** The box the drawing fills, plus the slot the label is derived from. */
 type BelowLabelVisualBoundsState = Dimensions & {
@@ -13,8 +13,8 @@ type BelowLabelVisualBoundsState = Dimensions & {
 };
 
 /**
- * The drawn extent of a below-label pictogram: the box its drawing fills,
- * widened downwards by the label hung under it (calcBelowLabelTextRegion). An
+ * The drawn extent of a shape that hangs its label below the box: the box its
+ * drawing fills, widened downwards by the label (calcBelowLabelTextRegion). An
  * empty label draws nothing, so it contributes no extent — otherwise every such
  * shape would reserve a band of empty space below itself in zoom-to-fit and the
  * export viewBox.

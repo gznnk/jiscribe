@@ -286,13 +286,20 @@ function buildGroupedSection(
 	}
 	const textless = types.filter((type) => !manifest.get(type)!.features.text);
 	const heading = `### Flowchart box shapes (${types.map((type) => `\`${type}\``).join(" / ")})`;
-	const textlessList = textless.map((type) => `\`${type}\``).join(" and ");
+	// The exception clause is dropped entirely once every type takes text, rather
+	// than left to render as an empty list.
+	const textNote =
+		textless.length === 0
+			? "They all take Text like `rect`. "
+			: `${types.length - textless.length} of them also take Text like \`rect\`; ` +
+				`**${textless.map((type) => `\`${type}\``).join(" and ")} hold no text** ` +
+				"(they are markers — omit `text` and the font fields). ";
 	const intro =
 		`All ${types.length} use the **same rect-based geometry** (top-left \`x\`,\`y\` + \`width\`,\`height\`) ` +
-		"and the same Stroke / Fill / Transform styles as `rect`; only the drawn outline differs. " +
-		`${types.length - textless.length} of them also take Text like \`rect\`; **${textlessList} hold no text** ` +
-		"(they are markers — omit `text` and the font fields). They are all **connectable** like `rect` " +
-		"and have **no Radius** (`rx`). Set `type` to the value below and give a bounding box.";
+		`and the same Stroke / Fill / Transform styles as \`rect\`; only the drawn outline differs. ${
+			textNote
+		}They are all **connectable** like \`rect\` ` +
+		`and have **no Radius** (\`rx\`). Set \`type\` to the value below and give a bounding box.`;
 	const table = [
 		"| `type` | Outline | Typical use |",
 		"| ------ | ------- | ----------- |",

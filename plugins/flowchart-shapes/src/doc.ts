@@ -122,9 +122,9 @@ export const crossDocDefinition: ObjectDocDefinition = {
 	validateDoc: validateCrossDoc,
 	factory: CrossObjectFactory,
 	description:
-		"Cross (plus) marker, used to mark junctions and for emphasis. Uses the same rect-based geometry (x/y/width/height) as RectDoc. Holds no text (it is a marker, not a labeled box).",
-	summary: "junction / emphasis marker (no text)",
-	outlineDescription: "Plus sign (no text)",
+		"Cross (plus) marker, used to mark junctions and for emphasis. Uses the same rect-based geometry (x/y/width/height) as RectDoc. The arms fill the whole box and the text is drawn as a label below it, auto-sized to the text itself — so the box does not need to be widened for a long note, and leaving the text out keeps a bare marker.",
+	summary: "junction / emphasis marker",
+	outlineDescription: "Plus sign, label below",
 	defaults: CROSS_DOC_DEFAULTS,
 };
 
@@ -185,9 +185,9 @@ export const extractDocDefinition: ObjectDocDefinition = {
 	validateDoc: validateExtractDoc,
 	factory: ExtractObjectFactory,
 	description:
-		'The flowchart "extract" symbol — an upward triangle (apex at the top), used for extract/merge/marker nodes. Uses the same rect-based geometry (x/y/width/height) as RectDoc. Holds no text (it is a marker, not a labeled box).',
-	summary: "extract / merge marker (no text)",
-	outlineDescription: "Upward triangle, apex at the top (no text)",
+		'The flowchart "extract" symbol — an upward triangle (apex at the top), used for extract/merge/marker nodes. Uses the same rect-based geometry (x/y/width/height) as RectDoc. The triangle fills the whole box and the text is drawn as a label below it, auto-sized to the text itself — so the box does not need to be widened for a long name, and leaving the text out keeps a bare marker.',
+	summary: "extract / merge marker",
+	outlineDescription: "Upward triangle, apex at the top, label below",
 	defaults: EXTRACT_DOC_DEFAULTS,
 };
 

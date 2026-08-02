@@ -1,9 +1,9 @@
-import { BODY_TEXT_SLOT_ID } from "@workspace/canvas";
-import type { TextSlot } from "@workspace/canvas/doc";
-import { TEXT_LINE_HEIGHT } from "@workspace/canvas/unstable-doc";
 import { describe, it, expect } from "vitest";
 
-import { BELOW_LABEL_STYLE_DEFAULTS } from "../../../schema/shared/BelowLabelStyleDefaults";
+import { TEXT_LINE_HEIGHT } from "../../../../constants/textLineHeight";
+import { BODY_TEXT_SLOT_ID } from "../../../../constants/textSlotId";
+import type { TextSlot } from "../../../../schemas/objects/types/TextSlot";
+import { BELOW_LABEL_STYLE_DEFAULTS } from "../../../../schemas/objects/utils/belowLabelStyleDefaults";
 import {
 	BELOW_LABEL_GAP,
 	calcBelowLabelTextRegion,

@@ -1,13 +1,10 @@
-import type { ObjectTextRegionCalculator } from "@workspace/canvas";
-import type { TextSlot } from "@workspace/canvas/doc";
-import {
-	calcVisualLineCount,
-	measureTextWidth,
-} from "@workspace/canvas/unstable";
-import { TEXT_LINE_HEIGHT } from "@workspace/canvas/unstable-doc";
 import type { Dimensions } from "@workspace/geometry";
 
-import { BELOW_LABEL_STYLE_DEFAULTS } from "../../schema/shared/BelowLabelStyleDefaults";
+import { calcVisualLineCount, measureTextWidth } from "./measureText";
+import { TEXT_LINE_HEIGHT } from "../../../constants/textLineHeight";
+import type { TextSlot } from "../../../schemas/objects/types/TextSlot";
+import { BELOW_LABEL_STYLE_DEFAULTS } from "../../../schemas/objects/utils/belowLabelStyleDefaults";
+import type { ObjectTextRegionCalculator } from "../registry/ObjectTextRegionRegistry";
 
 /** Empty band between the bottom edge of the box and the top of the label. */
 export const BELOW_LABEL_GAP = 4;
@@ -36,16 +33,17 @@ type BelowLabelState = Dimensions & {
 };
 
 /**
- * Places the label of a pictogram whose box is fully taken by its drawing: a box
+ * Places the label of a shape whose box is fully taken by its drawing: a box
  * sized from its own text, centered under the bounding box. Sizing the label from
- * the text instead of from the box is what keeps it legible when the pictogram is
+ * the text instead of from the box is what keeps it legible when the drawing is
  * scaled down — the two are independent, exactly as a connector's label is
  * independent of its path.
  *
- * Registered as those shapes' text region, so the drawn label (TextOverlay) and
+ * Register as such a shape's `textRegion`, so the drawn label (TextOverlay) and
  * the in-place editor resolve the same rectangle; while editing, the grafted
  * draft text (graftTextEditDraft) reaches here, so the box follows every
- * keystroke.
+ * keystroke. Pair it with `calcBelowLabelVisualBounds`, or zoom-to-fit and the
+ * export viewBox crop the label away.
  *
  * @param state The shape's box (width/height) and its text slots.
  * @param slotId Which slot to place; a shape with no such slot lays out an empty label.

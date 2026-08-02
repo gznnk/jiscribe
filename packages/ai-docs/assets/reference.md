@@ -89,8 +89,8 @@ In addition to `name` and `description`, `meta` may hold any custom keys.
 | `delay`            | Wait / delay                                          | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `loopLimit`        | Loop start (`"flipY": true` for the end)              | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `display`          | Output to a display                                   | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `extract`          | Extract / merge marker (no text)                      | `x`, `y`, `width`, `height`             | Stroke, Fill, Transform (no text)     |
-| `cross`            | Junction / emphasis marker (no text)                  | `x`, `y`, `width`, `height`             | Stroke, Fill, Transform (no text)     |
+| `extract`          | Extract / merge marker                                | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `cross`            | Junction / emphasis marker                            | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `offPageConnector` | Off-page connector (jump to another page)             | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `record`           | Titled box + row compartments (UML class / ER entity) | `x`, `y`, `width`, `height`             | Stroke, Fill, Text (keyed), Transform |
 | `polyline`         | Open line                                             | `points`                                | Stroke                                |
@@ -409,22 +409,22 @@ Database cylinder shape, typically used for data stores in architecture or ER di
 
 ### Flowchart box shapes (`multiDocument` / `storedData` / `subroutine` / `trapezoid` / `manualInput` / `card` / `delay` / `loopLimit` / `display` / `extract` / `cross` / `offPageConnector`)
 
-All 12 use the **same rect-based geometry** (top-left `x`,`y` + `width`,`height`) and the same Stroke / Fill / Transform styles as `rect`; only the drawn outline differs. 10 of them also take Text like `rect`; **`extract` and `cross` hold no text** (they are markers — omit `text` and the font fields). They are all **connectable** like `rect` and have **no Radius** (`rx`). Set `type` to the value below and give a bounding box.
+All 12 use the **same rect-based geometry** (top-left `x`,`y` + `width`,`height`) and the same Stroke / Fill / Transform styles as `rect`; only the drawn outline differs. They all take Text like `rect`. They are all **connectable** like `rect` and have **no Radius** (`rx`). Set `type` to the value below and give a bounding box.
 
-| `type`             | Outline                                      | Typical use                               |
-| ------------------ | -------------------------------------------- | ----------------------------------------- |
-| `multiDocument`    | Three stacked wavy-bottom sheets             | Report batch / file set                   |
-| `storedData`       | Rectangle with both side edges bowed left    | Generic stored data (file / cache)        |
-| `subroutine`       | Rectangle with a vertical bar near each side | Predefined process / call                 |
-| `trapezoid`        | Wide top, narrow bottom                      | Manual operation                          |
-| `manualInput`      | Top edge slopes up toward the right          | Manual / keyed input                      |
-| `card`             | Rectangle with the top-left corner cut off   | Punched-card style data                   |
-| `delay`            | Rectangle whose right edge is a semicircle   | Wait / delay                              |
-| `loopLimit`        | Rectangle with both top corners cut off      | Loop start (`"flipY": true` for the end)  |
-| `display`          | Pointed left edge, rounded right cap         | Output to a display                       |
-| `extract`          | Upward triangle, apex at the top (no text)   | Extract / merge marker (no text)          |
-| `cross`            | Plus sign (no text)                          | Junction / emphasis marker (no text)      |
-| `offPageConnector` | Home-plate pentagon pointing down            | Off-page connector (jump to another page) |
+| `type`             | Outline                                       | Typical use                               |
+| ------------------ | --------------------------------------------- | ----------------------------------------- |
+| `multiDocument`    | Three stacked wavy-bottom sheets              | Report batch / file set                   |
+| `storedData`       | Rectangle with both side edges bowed left     | Generic stored data (file / cache)        |
+| `subroutine`       | Rectangle with a vertical bar near each side  | Predefined process / call                 |
+| `trapezoid`        | Wide top, narrow bottom                       | Manual operation                          |
+| `manualInput`      | Top edge slopes up toward the right           | Manual / keyed input                      |
+| `card`             | Rectangle with the top-left corner cut off    | Punched-card style data                   |
+| `delay`            | Rectangle whose right edge is a semicircle    | Wait / delay                              |
+| `loopLimit`        | Rectangle with both top corners cut off       | Loop start (`"flipY": true` for the end)  |
+| `display`          | Pointed left edge, rounded right cap          | Output to a display                       |
+| `extract`          | Upward triangle, apex at the top, label below | Extract / merge marker                    |
+| `cross`            | Plus sign, label below                        | Junction / emphasis marker                |
+| `offPageConnector` | Home-plate pentagon pointing down             | Off-page connector (jump to another page) |
 
 ```json
 {
@@ -886,7 +886,7 @@ Applies to every box shape, plus `polygon`. For `actor`, the fill paints the hea
 
 ### Text style
 
-Applies to every box shape except `extract` and `cross` (which hold no text). A `record` holds text too, but has none of these shape-wide fields — its typography lives inside each slot (see its section).
+Applies to every box shape. A `record` holds text too, but has none of these shape-wide fields — its typography lives inside each slot (see its section).
 
 | Field           | Type            | Default          | Description                                                                       |
 | --------------- | --------------- | ---------------- | --------------------------------------------------------------------------------- |

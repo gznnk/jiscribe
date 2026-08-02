@@ -132,8 +132,8 @@ export const createFrameObject = <TState extends FrameRenderState>(
 		const textRegionCalculator = useObjectTextRegionRegistry().get(type);
 		const transformAttr = createSvgTransform(scaleX, scaleY, rotation, cx, cy);
 		// The features.text gate matches the one used by the text-edit gesture and
-		// property-update side: unset (cross / extract) draws no overlay, "body"
-		// draws its one named slot, "slots" enumerates state.text.
+		// property-update side: unset draws no overlay, "body" draws its one named
+		// slot, "slots" enumerates state.text.
 		const textShape = props.features?.text;
 
 		const shape: FrameShapeProps = {

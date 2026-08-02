@@ -1,11 +1,6 @@
 export { BelowLabelPictogram } from "./BelowLabelPictogram";
 export { buildWindowFrame, WINDOW_TITLE_BAR_RATIO } from "./buildWindowFrame";
 export type { WindowFrame } from "./buildWindowFrame";
-export {
-	BELOW_LABEL_GAP,
-	calcBelowLabelTextRegion,
-} from "./calcBelowLabelTextRegion";
-export { calcBelowLabelVisualBounds } from "./calcBelowLabelVisualBounds";
 export { calcWindowTextRegion } from "./calcWindowTextRegion";
 export { Pictogram } from "./Pictogram";
 export type {

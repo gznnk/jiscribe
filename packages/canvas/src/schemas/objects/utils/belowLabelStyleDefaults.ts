@@ -1,12 +1,10 @@
-import type { TextSlot } from "@workspace/canvas/doc";
-import {
-	AUTO_COLOR,
-	DEFAULT_FONT_FAMILY,
-} from "@workspace/canvas/unstable-doc";
+import { AUTO_COLOR } from "./autoColor";
+import { DEFAULT_FONT_FAMILY } from "../../../constants/defaultFontFamily";
+import type { TextSlot } from "../types/TextSlot";
 
 /**
  * Typography the label falls back to for a field its slot leaves out, shared by
- * every pictogram that hangs its label under the box (calcBelowLabelTextRegion).
+ * every shape that hangs its label under the box (calcBelowLabelTextRegion).
  * Spread into each shape's `*_DOC_DEFAULTS`, so the font the label box is
  * measured with cannot differ from the one it is drawn with. Smaller than the
  * in-shape default (16) because an outside label reads as a caption.

@@ -36,9 +36,9 @@ export const PictogramDetailPath = styled.path<PictogramStrokeProps>`
 `;
 
 /**
- * Transparent grab area over the label a below-label pictogram hangs outside its
- * box; the label's own foreignObject is `pointer-events: none`, so without this
- * the label could neither be dragged nor double-clicked into the editor.
+ * Transparent grab area for a pictogram whose own strokes are too thin to hit
+ * (the actor's limbs), laid over the whole box. The label a shape hangs below
+ * its box has its own area in core (BelowLabelHitArea).
  */
 export const PictogramHitArea = styled.rect`
 	fill: transparent;

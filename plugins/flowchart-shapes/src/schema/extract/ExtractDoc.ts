@@ -1,9 +1,14 @@
 import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas/doc";
-import { AUTO_COLOR } from "@workspace/canvas/unstable-doc";
+import {
+	AUTO_COLOR,
+	BELOW_LABEL_STYLE_DEFAULTS,
+} from "@workspace/canvas/unstable-doc";
 
 /**
  * The flowchart "extract" symbol — an upward triangle (apex at the top), used
- * for extract/merge/marker nodes. It holds no text (no `text` feature).
+ * for extract/merge/marker nodes. The triangle narrows to a point at the top, so
+ * its text is drawn as a label below the box, auto-sized to the text itself
+ * (calcBelowLabelTextRegion) rather than squeezed into the interior.
  *
  * It adopts rect geometry (x/y/width/height) and only swaps the rendering. This
  * lets it reuse Frame-based transforms and connector outline connections with
@@ -15,6 +20,7 @@ export const ExtractFeatures = {
 	transform: true,
 	stroke: true,
 	fill: true,
+	text: "body",
 	connectable: true,
 } as const satisfies ObjectFeatures;
 
@@ -35,4 +41,6 @@ export const EXTRACT_DOC_DEFAULTS: Omit<ExtractDoc, "id"> = {
 	fill: "transparent",
 	stroke: AUTO_COLOR,
 	strokeWidth: 2,
+	text: "",
+	...BELOW_LABEL_STYLE_DEFAULTS,
 } as const as ExtractDoc;

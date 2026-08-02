@@ -56,7 +56,6 @@ export { validateSmartphoneDoc } from "./schema/smartphone/validateSmartphoneDoc
 export * from "./schema/terminalWindow/TerminalWindowDoc";
 export { TerminalWindowObjectFactory } from "./schema/terminalWindow/TerminalWindowObjectFactory";
 export { validateTerminalWindowDoc } from "./schema/terminalWindow/validateTerminalWindowDoc";
-export { BELOW_LABEL_STYLE_DEFAULTS } from "./schema/shared/BelowLabelStyleDefaults";
 
 export * from "./state/actor/ActorState";
 export { actorToDoc, actorToState } from "./state/actor/ActorMapper";

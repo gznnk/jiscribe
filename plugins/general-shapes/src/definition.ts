@@ -1,5 +1,9 @@
 import type { ObjectTypeDefinition } from "@workspace/canvas";
-import { createFrameBehavior } from "@workspace/canvas/unstable";
+import {
+	calcBelowLabelTextRegion,
+	calcBelowLabelVisualBounds,
+	createFrameBehavior,
+} from "@workspace/canvas/unstable";
 
 import {
 	actorDocDefinition,
@@ -34,11 +38,7 @@ import { Lock } from "./presentation/Lock";
 import { Package, packageOutline } from "./presentation/Package";
 import { Queue } from "./presentation/Queue";
 import { Server } from "./presentation/Server";
-import {
-	calcBelowLabelTextRegion,
-	calcBelowLabelVisualBounds,
-	calcWindowTextRegion,
-} from "./presentation/shared";
+import { calcWindowTextRegion } from "./presentation/shared";
 import {
 	Shield,
 	calcShieldTextRegion,

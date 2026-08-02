@@ -72,3 +72,40 @@ describe("new flowchart shapes (multiDocument / storedData / loopLimit)", () => 
 		expect(result.kind).toBe("ok");
 	});
 });
+
+/** The two marker shapes, whose text is drawn as a label below the box. */
+const markerDoc = (
+	extra: Record<string, unknown>,
+): Record<string, unknown> => ({
+	version: 1,
+	root: [
+		{ id: "x-1", type: "cross", x: 0, y: 0, width: 100, height: 100, ...extra },
+		{
+			id: "e-1",
+			type: "extract",
+			x: 200,
+			y: 0,
+			width: 120,
+			height: 100,
+			...extra,
+		},
+	],
+});
+
+describe("marker shapes (cross / extract)", () => {
+	it("accepts a label and its typography like any other box shape", () => {
+		const result = parser.parse(
+			JSON.stringify(
+				markerDoc({ text: "join", fontSize: 12, textAlign: "center" }),
+			),
+		);
+		expect("diagnostics" in result ? result.diagnostics : []).toEqual([]);
+		expect(result.kind).toBe("ok");
+	});
+
+	it("still parses with no text at all, staying a bare marker", () => {
+		const result = parser.parse(JSON.stringify(markerDoc({})));
+		expect("diagnostics" in result ? result.diagnostics : []).toEqual([]);
+		expect(result.kind).toBe("ok");
+	});
+});
