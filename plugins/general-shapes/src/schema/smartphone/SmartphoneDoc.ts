@@ -30,6 +30,12 @@ export const SMARTPHONE_SCREEN_Y_RATIO = 0.09;
 export const SMARTPHONE_SCREEN_WIDTH_RATIO = 0.8;
 export const SMARTPHONE_SCREEN_HEIGHT_RATIO = 0.8;
 
+/**
+ * Corner radius of the case, as a fraction of the shorter side. Shared by the
+ * silhouette and the outline, which rounds the same corners the drawing does.
+ */
+export const SMARTPHONE_CORNER_RATIO = 0.13;
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare const SmartphoneDocBrand: unique symbol;
 

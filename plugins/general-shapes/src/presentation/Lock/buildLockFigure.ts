@@ -1,19 +1,17 @@
+import {
+	LOCK_BODY_CORNER_RATIO,
+	LOCK_BODY_TOP_RATIO,
+	LOCK_BODY_X_RATIO,
+	LOCK_SHACKLE_ARCH_RATIO,
+	LOCK_SHACKLE_HALF_WIDTH_RATIO,
+	LOCK_SHACKLE_SHOULDER_RATIO,
+} from "../../schema/lock/LockDoc";
 import type { PictogramFigureBuilder } from "../shared/PictogramFigure";
 import {
 	buildEllipsePath,
 	buildRoundedRectPath,
 	buildVerticalLinePath,
 } from "../shared/pictogramPaths";
-
-/** The body block, as fractions of the box. */
-const LOCK_BODY_TOP_RATIO = 0.42;
-const LOCK_BODY_X_RATIO = 0.06;
-const LOCK_BODY_CORNER_RATIO = 0.09;
-
-/** The shackle: half its span as a fraction of the width, its shoulders and arch as fractions of the height. */
-const LOCK_SHACKLE_HALF_WIDTH_RATIO = 0.24;
-const LOCK_SHACKLE_SHOULDER_RATIO = 0.3;
-const LOCK_SHACKLE_ARCH_RATIO = 0.2;
 
 /** The keyhole, as fractions of the body block. */
 const LOCK_KEYHOLE_Y_RATIO = 0.4;

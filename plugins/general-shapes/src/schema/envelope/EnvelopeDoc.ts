@@ -20,6 +20,12 @@ export const EnvelopeFeatures = {
 	connectable: true,
 } as const satisfies ObjectFeatures;
 
+/**
+ * Corner radius as a fraction of the shorter side. Shared by the silhouette
+ * and the outline, which rounds the same corners the drawing does.
+ */
+export const ENVELOPE_CORNER_RATIO = 0.05;
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare const EnvelopeDocBrand: unique symbol;
 

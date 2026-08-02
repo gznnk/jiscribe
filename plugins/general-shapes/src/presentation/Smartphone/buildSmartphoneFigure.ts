@@ -1,4 +1,5 @@
 import {
+	SMARTPHONE_CORNER_RATIO,
 	SMARTPHONE_SCREEN_HEIGHT_RATIO,
 	SMARTPHONE_SCREEN_WIDTH_RATIO,
 	SMARTPHONE_SCREEN_X_RATIO,
@@ -9,9 +10,6 @@ import {
 	buildHorizontalLinePath,
 	buildRoundedRectPath,
 } from "../shared/pictogramPaths";
-
-/** Corner radius of the case, as a fraction of the shorter side. */
-const SMARTPHONE_CORNER_RATIO = 0.13;
 
 /** Corner radius of the screen, as a fraction of the case's. */
 const SMARTPHONE_SCREEN_CORNER_RATIO = 0.4;

@@ -10,8 +10,11 @@ import {
  */
 export const WINDOW_TITLE_BAR_RATIO = 0.24;
 
-/** Corner radius as a fraction of the shorter side. */
-const WINDOW_CORNER_RATIO = 0.07;
+/**
+ * Corner radius as a fraction of the shorter side. Exported because both window
+ * shapes' outlines round the same corners the frame does.
+ */
+export const WINDOW_CORNER_RATIO = 0.07;
 
 export type WindowFrame = {
 	/** The whole window silhouette: the only filled, hit-tested part. */

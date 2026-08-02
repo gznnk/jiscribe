@@ -20,6 +20,16 @@ export const GearFeatures = {
 	connectable: true,
 } as const satisfies ObjectFeatures;
 
+/**
+ * Rim geometry, shared by the silhouette (calcGearPoints) and the outline.
+ * Teeth ride the box's inscribed ellipse; the root radius is a fraction of that,
+ * and the two half-angles are fractions of one tooth's angular pitch.
+ */
+export const GEAR_TOOTH_COUNT = 8;
+export const GEAR_ROOT_RADIUS_RATIO = 0.74;
+export const GEAR_TIP_HALF_ANGLE_RATIO = 0.2;
+export const GEAR_ROOT_HALF_ANGLE_RATIO = 0.3;
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare const GearDocBrand: unique symbol;
 

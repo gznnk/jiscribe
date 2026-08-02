@@ -20,6 +20,25 @@ export const LockFeatures = {
 	connectable: true,
 } as const satisfies ObjectFeatures;
 
+/**
+ * Body block geometry, as fractions of the box: where its top edge sits, how far
+ * its sides are inset, and its corner radius (a fraction of the shorter side).
+ * Shared by the silhouette and the outline.
+ */
+export const LOCK_BODY_TOP_RATIO = 0.42;
+export const LOCK_BODY_X_RATIO = 0.06;
+export const LOCK_BODY_CORNER_RATIO = 0.09;
+
+/**
+ * Shackle geometry: half its span as a fraction of the width, and where its
+ * shoulders sit plus how far it arches above them as fractions of the height.
+ * Shared by the silhouette and the outline, which traces the arch as the shape's
+ * visible upper edge even though the shackle encloses nothing on its own.
+ */
+export const LOCK_SHACKLE_HALF_WIDTH_RATIO = 0.24;
+export const LOCK_SHACKLE_SHOULDER_RATIO = 0.3;
+export const LOCK_SHACKLE_ARCH_RATIO = 0.2;
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare const LockDocBrand: unique symbol;
 

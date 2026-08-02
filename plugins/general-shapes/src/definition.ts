@@ -19,21 +19,28 @@ import {
 	terminalWindowDocDefinition,
 } from "./doc";
 import { Actor } from "./presentation/Actor";
-import { BrowserWindow } from "./presentation/BrowserWindow";
+import {
+	BrowserWindow,
+	browserWindowOutline,
+} from "./presentation/BrowserWindow";
 import { Cloud, calcCloudTextRegion, cloudOutline } from "./presentation/Cloud";
-import { Envelope } from "./presentation/Envelope";
+import { Envelope, envelopeOutline } from "./presentation/Envelope";
 import { File, calcFileTextRegion, fileOutline } from "./presentation/File";
 import {
 	Folder,
 	calcFolderTextRegion,
 	folderOutline,
 } from "./presentation/Folder";
-import { Gear } from "./presentation/Gear";
-import { Laptop, calcLaptopTextRegion } from "./presentation/Laptop";
-import { Lock } from "./presentation/Lock";
+import { Gear, gearOutline } from "./presentation/Gear";
+import {
+	Laptop,
+	calcLaptopTextRegion,
+	laptopOutline,
+} from "./presentation/Laptop";
+import { Lock, lockOutline } from "./presentation/Lock";
 import { Package, packageOutline } from "./presentation/Package";
-import { Queue } from "./presentation/Queue";
-import { Server } from "./presentation/Server";
+import { Queue, queueOutline } from "./presentation/Queue";
+import { Server, serverOutline } from "./presentation/Server";
 import {
 	calcBelowLabelTextRegion,
 	calcBelowLabelVisualBounds,
@@ -47,8 +54,12 @@ import {
 import {
 	Smartphone,
 	calcSmartphoneTextRegion,
+	smartphoneOutline,
 } from "./presentation/Smartphone";
-import { TerminalWindow } from "./presentation/TerminalWindow";
+import {
+	TerminalWindow,
+	terminalWindowOutline,
+} from "./presentation/TerminalWindow";
 import type { ActorDoc } from "./schema/actor/ActorDoc";
 import type { BrowserWindowDoc } from "./schema/browserWindow/BrowserWindowDoc";
 import type { CloudDoc } from "./schema/cloud/CloudDoc";
@@ -169,11 +180,7 @@ export const cloudDefinition: ObjectTypeDefinition<CloudDoc, CloudState> = {
 	stencils: CloudStencils,
 };
 
-/**
- * Rack units fill the box, so the label hangs below it. No `outline`: the
- * silhouette is a rounded rectangle, which the bounding-box default already
- * approximates to within the corner radius.
- */
+/** Rack units fill the box, so the label hangs below it; `outline` rounds its corners. */
 export const serverDefinition: ObjectTypeDefinition<ServerDoc, ServerState> = {
 	...serverDocDefinition,
 	mapper: { toDoc: serverToDoc, toState: serverToState },
@@ -181,6 +188,7 @@ export const serverDefinition: ObjectTypeDefinition<ServerDoc, ServerState> = {
 	component: Server,
 	textRegion: calcBelowLabelTextRegion,
 	visualBounds: calcBelowLabelVisualBounds,
+	outline: serverOutline,
 	behavior: createFrameBehavior<ServerState>(),
 	stencils: ServerStencils,
 };
@@ -195,6 +203,7 @@ export const browserWindowDefinition: ObjectTypeDefinition<
 	stateValidator: isValidBrowserWindowState,
 	component: BrowserWindow,
 	textRegion: calcWindowTextRegion,
+	outline: browserWindowOutline,
 	behavior: createFrameBehavior<BrowserWindowState>(),
 	stencils: BrowserWindowStencils,
 };
@@ -209,6 +218,7 @@ export const terminalWindowDefinition: ObjectTypeDefinition<
 	stateValidator: isValidTerminalWindowState,
 	component: TerminalWindow,
 	textRegion: calcWindowTextRegion,
+	outline: terminalWindowOutline,
 	behavior: createFrameBehavior<TerminalWindowState>(),
 	stencils: TerminalWindowStencils,
 };
@@ -265,6 +275,7 @@ export const envelopeDefinition: ObjectTypeDefinition<
 	component: Envelope,
 	textRegion: calcBelowLabelTextRegion,
 	visualBounds: calcBelowLabelVisualBounds,
+	outline: envelopeOutline,
 	behavior: createFrameBehavior<EnvelopeState>(),
 	stencils: EnvelopeStencils,
 };
@@ -277,14 +288,14 @@ export const queueDefinition: ObjectTypeDefinition<QueueDoc, QueueState> = {
 	component: Queue,
 	textRegion: calcBelowLabelTextRegion,
 	visualBounds: calcBelowLabelVisualBounds,
+	outline: queueOutline,
 	behavior: createFrameBehavior<QueueState>(),
 	stencils: QueueStencils,
 };
 
 /**
- * No `outline`: anchoring to the teeth would make a connector's endpoint jump
- * between a tip and a gap for a movement of a pixel, so the bounding-box default
- * (the ellipse the teeth are placed on, squared off) is the steadier target.
+ * `outline` follows the teeth: the gear never reaches a corner of its box, so the
+ * bounding box overshoots it by more than 40% on the diagonals (gearOutline).
  */
 export const gearDefinition: ObjectTypeDefinition<GearDoc, GearState> = {
 	...gearDocDefinition,
@@ -293,14 +304,15 @@ export const gearDefinition: ObjectTypeDefinition<GearDoc, GearState> = {
 	component: Gear,
 	textRegion: calcBelowLabelTextRegion,
 	visualBounds: calcBelowLabelVisualBounds,
+	outline: gearOutline,
 	behavior: createFrameBehavior<GearState>(),
 	stencils: GearStencils,
 };
 
 /**
- * No `outline`: the shackle is an open arc that encloses nothing, so the
- * silhouette would only describe the body block and connectors coming from above
- * would stop inside the shackle. The bounding box covers the whole drawing.
+ * The shackle encloses nothing, so there is no silhouette to copy; `outline`
+ * traces the visible envelope instead — the body block with the arch on it
+ * (lockOutline).
  */
 export const lockDefinition: ObjectTypeDefinition<LockDoc, LockState> = {
 	...lockDocDefinition,
@@ -309,6 +321,7 @@ export const lockDefinition: ObjectTypeDefinition<LockDoc, LockState> = {
 	component: Lock,
 	textRegion: calcBelowLabelTextRegion,
 	visualBounds: calcBelowLabelVisualBounds,
+	outline: lockOutline,
 	behavior: createFrameBehavior<LockState>(),
 	stencils: LockStencils,
 };
@@ -335,14 +348,15 @@ export const smartphoneDefinition: ObjectTypeDefinition<
 	stateValidator: isValidSmartphoneState,
 	component: Smartphone,
 	textRegion: calcSmartphoneTextRegion,
+	outline: smartphoneOutline,
 	behavior: createFrameBehavior<SmartphoneState>(),
 	stencils: SmartphoneStencils,
 };
 
 /**
- * Text sits on the screen (calcLaptopTextRegion). No `outline`: the drawing is
- * two pieces whose union is not a single closed silhouette, and the base already
- * reaches both bottom corners of the box.
+ * Text sits on the screen (calcLaptopTextRegion). The drawing is two pieces, but
+ * their union is one closed polygon and only the base spans the full width, so
+ * `outline` is what keeps a connector off the empty top corners (laptopOutline).
  */
 export const laptopDefinition: ObjectTypeDefinition<LaptopDoc, LaptopState> = {
 	...laptopDocDefinition,
@@ -350,6 +364,7 @@ export const laptopDefinition: ObjectTypeDefinition<LaptopDoc, LaptopState> = {
 	stateValidator: isValidLaptopState,
 	component: Laptop,
 	textRegion: calcLaptopTextRegion,
+	outline: laptopOutline,
 	behavior: createFrameBehavior<LaptopState>(),
 	stencils: LaptopStencils,
 };
