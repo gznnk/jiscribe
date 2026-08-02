@@ -82,13 +82,13 @@ const webviewConfig = {
 };
 
 // ── AI アセットのコピー ──────────────────────────────────────────────────
-// canvas パッケージの配布アセット（ai/）を dist/ に配置する。
+// ai-docs パッケージの配布アセット（assets/）を dist/ に配置する。
 // - jiscribe.schema.json: VSCode の jsonValidation が参照し、.jis.json の補完・検証を提供する。
 // - ai-guide.md: 「Set up AI」がワークスペースへ配置する AI オーサリングガイド（入口）。
 // - reference.md: ai-guide が参照する詳細リファレンス（同じ .jiscribe/ に置くためリンクが解決する）。
-// 配布元は packages/canvas/ai/（配布アセット正本）。
+// 配布元は packages/ai-docs/assets/（配布アセット正本。pnpm generate:ai の生成物）。
 function copyAiAssets() {
-	const aiDir = join(__dirname, "../../packages/canvas/ai");
+	const aiDir = join(__dirname, "../../packages/ai-docs/assets");
 	const distDir = join(__dirname, "dist");
 	mkdirSync(distDir, { recursive: true });
 

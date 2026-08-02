@@ -15,6 +15,10 @@ export const markdownDocDefinition: ObjectDocDefinition = {
 	features: MarkdownFeatures,
 	validateDoc: validateMarkdownDoc,
 	factory: MarkdownObjectFactory,
+	// The schema $def is a handwritten template (nearly every property description
+	// is Markdown-specific), so only summary is consumed — it fills the generated
+	// doc tables.
+	summary: "Markdown-rendered document card",
 };
 
 /**

@@ -125,6 +125,7 @@
 		"@types/react-dom": "catalog:",
 		"@types/vscode": "^1.85.0",
 		"@vscode/vsce": "^3.4.2",
+		"@workspace/ai-docs": "workspace:*",
 		"@workspace/canvas": "workspace:*",
 		"@workspace/plugin-container-shapes": "workspace:*",
 		"@workspace/plugin-flowchart-shapes": "workspace:*",
