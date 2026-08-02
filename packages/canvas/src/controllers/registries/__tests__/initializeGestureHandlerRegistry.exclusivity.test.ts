@@ -9,7 +9,8 @@ import { ToolbarHandler } from "../../gestures/handlers/menu/ToolbarHandler";
 import { ConnectorClickHandler } from "../../gestures/handlers/objects/ConnectorClickHandler";
 import { CONNECTOR_HANDLERS } from "../../gestures/handlers/objects/ConnectorEventHandler";
 import { ConnectorLabelDragHandler } from "../../gestures/handlers/objects/ConnectorLabelDragHandler";
-import { ConnectorSegmentDragHandler } from "../../gestures/handlers/objects/ConnectorSegmentDragHandler";
+import { ConnectorSegmentMoveHandler } from "../../gestures/handlers/objects/ConnectorSegmentMoveHandler";
+import { ConnectorSegmentSlideHandler } from "../../gestures/handlers/objects/ConnectorSegmentSlideHandler";
 import type {
 	CanvasEvent,
 	EventType,
@@ -55,16 +56,18 @@ const TARGETS: Target[] = [
 	{ targetKind: "menu", targetId: "stencil-library", targetPart: "item:rect" },
 	// Appended so the indices used below stay put.
 	{ targetKind: "connector", targetId: "c", targetPart: "label" },
-	{ targetKind: "connector", targetId: "c", targetPart: "segment:1" },
+	{ targetKind: "connector", targetId: "c", targetPart: "segment-slide:1" },
 	{
 		targetKind: "menu",
 		targetId: "stencil-category",
 		targetPart: "toggle:basic",
 	},
+	{ targetKind: "connector", targetId: "c", targetPart: "segment-move:1" },
 ];
 
 const LABEL_BOX = TARGETS[9];
-const SEGMENT_BAND = TARGETS[10];
+const SLIDE_BAND = TARGETS[10];
+const MOVE_BAND = TARGETS[12];
 
 const TYPES: EventType[] = [
 	"pressed",
@@ -147,7 +150,7 @@ describe("gesture handler routing exclusivity (#110)", () => {
 	});
 
 	it("routes both clicks and drags on connector parts to the connector handler", () => {
-		for (const target of [LABEL_BOX, SEGMENT_BAND]) {
+		for (const target of [LABEL_BOX, SLIDE_BAND, MOVE_BAND]) {
 			for (const type of ["click", "doubleClick", "dragStart"] as const) {
 				expect(supportingNames(makeEvent(type, 0, target))).toEqual([
 					"connector-handler",
@@ -231,21 +234,32 @@ describe("connector sub-handler routing", () => {
 
 	it("splits a segment band between the drag and the click handler", () => {
 		// Clicks on a segment select the connector or edit its label like any other part of the line;
-		// only the drag belongs to the segment handler.
+		// only the drag belongs to the slide handler.
 		expect(
-			routedHandler(
-				CONNECTOR_HANDLERS,
-				makeEvent("dragStart", 0, SEGMENT_BAND),
-			),
-		).toBe(ConnectorSegmentDragHandler);
+			routedHandler(CONNECTOR_HANDLERS, makeEvent("dragStart", 0, SLIDE_BAND)),
+		).toBe(ConnectorSegmentSlideHandler);
 		expect(
-			routedHandler(CONNECTOR_HANDLERS, makeEvent("click", 0, SEGMENT_BAND)),
+			routedHandler(CONNECTOR_HANDLERS, makeEvent("click", 0, SLIDE_BAND)),
 		).toBe(ConnectorClickHandler);
 		expect(
 			routedHandler(
 				CONNECTOR_HANDLERS,
-				makeEvent("doubleClick", 0, SEGMENT_BAND),
+				makeEvent("doubleClick", 0, SLIDE_BAND),
 			),
+		).toBe(ConnectorClickHandler);
+	});
+
+	it("sends the two kinds of segment drag to their own handler", () => {
+		// The part name, not the connector's routing, is what separates them — supports() only ever
+		// sees the event, so the band the renderer drew is the whole decision.
+		expect(
+			routedHandler(CONNECTOR_HANDLERS, makeEvent("dragStart", 0, SLIDE_BAND)),
+		).toBe(ConnectorSegmentSlideHandler);
+		expect(
+			routedHandler(CONNECTOR_HANDLERS, makeEvent("dragStart", 0, MOVE_BAND)),
+		).toBe(ConnectorSegmentMoveHandler);
+		expect(
+			routedHandler(CONNECTOR_HANDLERS, makeEvent("click", 0, MOVE_BAND)),
 		).toBe(ConnectorClickHandler);
 	});
 

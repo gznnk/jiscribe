@@ -2,7 +2,7 @@ import { isTransformedFrame, type Point, type Rect } from "@workspace/geometry";
 
 import { adjustToOutline } from "./adjustToOutline";
 import { resolveEndpoint } from "./resolveEndpoint";
-import { isOrthogonalRouting } from "../../../../../schemas/objects/types/ConnectorRouting";
+import { isConnectorDrawnOrthogonal } from "../../../../../schemas/objects/connections/connector/isConnectorDrawnOrthogonal";
 import type { ObjectState } from "../../../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
 import type { ObjectAnchorRegionRegistry } from "../../../../objects/registry/ObjectAnchorRegionRegistry";
@@ -142,13 +142,11 @@ export const resolveConnectorPoints = (
 		}
 	}
 
-	// A self-loop (both endpoints on the same shape) degenerates as a straight line, so with no
-	// vertices of its own it uses the dedicated rectangular loop route regardless of the routing
-	// setting. Vertices override that: a route the author shaped by hand is no longer degenerate.
-	const isSelfLoop =
-		!!sourceObj && !!targetObj && sourceObj.id === targetObj.id;
-
-	if (isOrthogonalRouting(connectorState.routing) || isSelfLoop) {
+	// A self-loop (both endpoints on the same shape) degenerates as a straight line, so it uses the
+	// dedicated rectangular loop route regardless of the routing setting — which is why the branch
+	// asks how the line is drawn, not what `routing` says (see isConnectorDrawnOrthogonal). Vertices
+	// override the route itself: a path the author shaped by hand is no longer degenerate.
+	if (isConnectorDrawnOrthogonal(connectorState)) {
 		// With vertices, `points` **is** the path: the corners are drawn exactly as stored, with only
 		// the two next to the endpoints sliding along to keep their segment axis-aligned
 		// (see alignVertexPath). Nothing is routed, so nothing is avoided — a shape moved across the

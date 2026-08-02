@@ -25,7 +25,8 @@ const withoutRepeats = (vertices: Point[]): Point[] =>
 	);
 
 /**
- * Moves a segment of an orthogonal connector across itself and returns the connector's new vertices.
+ * Slides a segment of an orthogonal connector across itself and returns the connector's new
+ * vertices. Straight routing moves a segment in both axes instead (see translateConnectorSegment).
  *
  * The drawn path is `[source, ...vertices, target]`, so the vertices are `path.slice(1, -1)` — which
  * is also how a route the engine chose becomes editable: the corners it drew are taken as the
@@ -53,7 +54,7 @@ const withoutRepeats = (vertices: Point[]): Point[] =>
  * @param value - Where that coordinate lands
  * @returns The connector's new vertices, in source → target order
  */
-export const moveConnectorSegment = (
+export const slideConnectorSegment = (
 	path: readonly Point[],
 	segmentIndex: number,
 	axis: "x" | "y",

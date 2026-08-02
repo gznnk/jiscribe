@@ -2,7 +2,7 @@ import type { Point } from "@workspace/geometry";
 import { describe, expect, it } from "vitest";
 
 import { routeOrthogonalConnector } from "../../../../../presentations/layers/content/utils/routing";
-import { moveConnectorSegment } from "../moveConnectorSegment";
+import { slideConnectorSegment } from "../slideConnectorSegment";
 import {
 	alignedDrawnPath,
 	endpointOf,
@@ -10,7 +10,7 @@ import {
 	makeFrame,
 	segmentAxis,
 	type Face,
-} from "./moveConnectorSegmentHarness";
+} from "./slideConnectorSegmentHarness";
 
 /**
  * Sweep of the promise "a route that was right-angled when stored stays right-angled, whatever the
@@ -64,7 +64,7 @@ describe("vertex-path invariants over the configuration space", () => {
 					initialTarget.point[axis],
 				]);
 				for (const dragValue of dragValues) {
-					const vertices = moveConnectorSegment(
+					const vertices = slideConnectorSegment(
 						enginePath,
 						segmentIndex,
 						axis,
@@ -121,7 +121,7 @@ describe("vertex-path invariants over the configuration space", () => {
 			if (!firstAxis) {
 				continue;
 			}
-			const pinned: Point[] = moveConnectorSegment(
+			const pinned: Point[] = slideConnectorSegment(
 				enginePath,
 				firstIndex,
 				firstAxis,
@@ -150,7 +150,7 @@ describe("vertex-path invariants over the configuration space", () => {
 						if (!axis) {
 							continue;
 						}
-						const redragged = moveConnectorSegment(
+						const redragged = slideConnectorSegment(
 							moved,
 							segmentIndex,
 							axis,

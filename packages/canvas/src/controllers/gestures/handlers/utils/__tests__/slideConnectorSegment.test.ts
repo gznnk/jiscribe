@@ -1,7 +1,7 @@
 import type { Point } from "@workspace/geometry";
 import { describe, expect, it } from "vitest";
 
-import { moveConnectorSegment } from "../moveConnectorSegment";
+import { slideConnectorSegment } from "../slideConnectorSegment";
 
 // The two-corner route the engine draws between a right face at (160, 90) and a left face at
 // (420, 270). Its corners become the connector's vertices the first time a segment is dragged.
@@ -29,9 +29,9 @@ const expectOrthogonal = (
 	}
 };
 
-describe("moveConnectorSegment", () => {
+describe("slideConnectorSegment", () => {
 	it("takes both vertices of a middle segment along, freezing the engine's corners", () => {
-		const vertices = moveConnectorSegment(autoPath, 1, "x", 350);
+		const vertices = slideConnectorSegment(autoPath, 1, "x", 350);
 
 		expect(vertices).toEqual([
 			{ x: 350, y: 90 },
@@ -41,7 +41,7 @@ describe("moveConnectorSegment", () => {
 	});
 
 	it("keeps the dragged end segment whole and joins the endpoint with a perpendicular", () => {
-		const vertices = moveConnectorSegment(autoPath, 0, "y", 140);
+		const vertices = slideConnectorSegment(autoPath, 0, "y", 140);
 
 		// The segment keeps its full extent at the new y; the source joins it straight down.
 		expect(vertices).toEqual([
@@ -53,7 +53,7 @@ describe("moveConnectorSegment", () => {
 	});
 
 	it("joins with a perpendicular on the target side when the last segment is dragged", () => {
-		const vertices = moveConnectorSegment(autoPath, 2, "y", 320);
+		const vertices = slideConnectorSegment(autoPath, 2, "y", 320);
 
 		expect(vertices).toEqual([
 			{ x: 290, y: 90 },
@@ -69,7 +69,7 @@ describe("moveConnectorSegment", () => {
 			{ x: 420, y: 90 },
 		];
 
-		const vertices = moveConnectorSegment(straightPath, 0, "y", 160);
+		const vertices = slideConnectorSegment(straightPath, 0, "y", 160);
 
 		expect(vertices).toEqual([
 			{ x: 160, y: 160 },
@@ -79,7 +79,7 @@ describe("moveConnectorSegment", () => {
 	});
 
 	it("pins the corners as they are when the drag ends where it started", () => {
-		const vertices = moveConnectorSegment(autoPath, 0, "y", 90);
+		const vertices = slideConnectorSegment(autoPath, 0, "y", 90);
 
 		// The degenerate perpendicular (source to itself) is dropped, not stored.
 		expect(vertices).toEqual([
@@ -90,7 +90,7 @@ describe("moveConnectorSegment", () => {
 	});
 
 	it("leaves a single corner when a run is dropped onto the far endpoint's face line", () => {
-		const vertices = moveConnectorSegment(autoPath, 1, "x", 420);
+		const vertices = slideConnectorSegment(autoPath, 1, "x", 420);
 
 		// The lower vertex lands on the target and is dropped; the upper one is the whole corner.
 		expect(vertices).toEqual([{ x: 420, y: 90 }]);
@@ -105,7 +105,7 @@ describe("moveConnectorSegment", () => {
 			{ x: 420, y: 90 },
 		];
 
-		const vertices = moveConnectorSegment(detourPath, 1, "y", 90);
+		const vertices = slideConnectorSegment(detourPath, 1, "y", 90);
 
 		// Both moved vertices land on the endpoints: nothing is left to store.
 		expect(vertices).toEqual([]);
@@ -124,7 +124,7 @@ describe("moveConnectorSegment", () => {
 			{ x: 120, y: 110 },
 		];
 
-		const vertices = moveConnectorSegment(foldedPath, 2, "y", 90);
+		const vertices = slideConnectorSegment(foldedPath, 2, "y", 90);
 
 		expect(vertices).toEqual([
 			{ x: 0, y: 90 },
@@ -143,7 +143,7 @@ describe("moveConnectorSegment", () => {
 			{ x: 200, y: 0 },
 		];
 
-		const vertices = moveConnectorSegment(uPath, 2, "y", 0);
+		const vertices = slideConnectorSegment(uPath, 2, "y", 0);
 
 		// The whole path has become the endpoints' own line: back to the engine's route.
 		expect(vertices).toEqual([]);
@@ -157,7 +157,7 @@ describe("moveConnectorSegment", () => {
 			{ x: 200, y: 0 },
 		];
 
-		const vertices = moveConnectorSegment(mergedPath, 1, "y", 70);
+		const vertices = slideConnectorSegment(mergedPath, 1, "y", 70);
 
 		// The interior fold remnants are passed straight through at the new y and dropped.
 		expect(vertices).toEqual([
@@ -176,7 +176,7 @@ describe("moveConnectorSegment", () => {
 			{ x: 40, y: 120 },
 		];
 
-		const vertices = moveConnectorSegment(overshootPath, 2, "y", 0);
+		const vertices = slideConnectorSegment(overshootPath, 2, "y", 0);
 
 		// Keeping the turnaround at x=100 would freeze an overshoot stub with no perpendicular
 		// segment to grab; the fold dissolves into a plain corner instead.
@@ -197,7 +197,7 @@ describe("moveConnectorSegment", () => {
 			{ x: 390, y: 150 },
 		];
 
-		const vertices = moveConnectorSegment(detourPath, 1, "x", 300);
+		const vertices = slideConnectorSegment(detourPath, 1, "x", 300);
 
 		expect(vertices).toEqual([{ x: 390, y: 0 }]);
 		expectOrthogonal(vertices, detourPath[0], detourPath[6]);
@@ -213,7 +213,7 @@ describe("moveConnectorSegment", () => {
 			{ x: 420, y: 270 },
 		];
 
-		const vertices = moveConnectorSegment(longPath, 2, "y", 210);
+		const vertices = slideConnectorSegment(longPath, 2, "y", 210);
 
 		expect(vertices).toEqual([
 			{ x: 220, y: 90 },
