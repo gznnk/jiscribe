@@ -66,16 +66,18 @@ const star = (id: string, over: Record<string, unknown> = {}) => ({
 
 describe("createCanvasParser", () => {
 	describe("without the plugin definition registered", () => {
-		it("rejects a doc containing the plugin type (Unknown object type, structure-error)", () => {
+		it("strips the plugin-type object and reports it as an ok warning", () => {
 			const parser = createCanvasParser();
-			const result = parser.parse(text({ version: 1, root: [star("s1")] }));
-			expect(result.kind).toBe("structure-error");
-			if (result.kind === "structure-error") {
-				expect(
-					result.diagnostics.some((d) =>
-						d.message.includes('Unknown object type "star"'),
-					),
-				).toBe(true);
+			const result = parser.parse(
+				text({ version: 1, root: [rect("r1"), star("s1")] }),
+			);
+			expect(result.kind).toBe("ok");
+			if (result.kind === "ok") {
+				expect(result.doc.root.map((o) => o.id)).toEqual(["r1"]);
+				expect(result.warnings).toHaveLength(1);
+				expect(result.warnings[0].message).toContain(
+					'Unknown object type "star"',
+				);
 			}
 		});
 	});

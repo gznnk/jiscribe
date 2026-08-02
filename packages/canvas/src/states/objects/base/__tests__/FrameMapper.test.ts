@@ -44,6 +44,26 @@ describe("FrameMapper pass-through: does not leak runtime-only fields into the D
 		expect(roundTripped.rx).toBe(12);
 	});
 
+	it("drops unknown doc keys through a doc→state→doc round-trip", () => {
+		// 未知プロパティは「表示では無視・保存時に消える」仕様。その保存側の実体が
+		// この allow-list による脱落なので、往復で消えることを仕様として固定する。
+		const doc = {
+			id: "rect-1",
+			type: "rect",
+			x: 0,
+			y: 0,
+			width: 100,
+			height: 100,
+			unknownKey: "keep-out",
+		} as unknown as Parameters<typeof rectToState>[0];
+
+		const state = rectToState(doc) as Record<string, unknown>;
+		expect("unknownKey" in state).toBe(false);
+
+		const roundTripped = rectToDoc(state as never) as Record<string, unknown>;
+		expect("unknownKey" in roundTripped).toBe(false);
+	});
+
 	it("rectToDoc does not include parentId in the Doc", () => {
 		const state = {
 			id: "rect-1",
