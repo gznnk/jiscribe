@@ -3,7 +3,7 @@ import { memo } from "react";
 import { theme } from "../../../../constants/theme";
 import { useResolvedConnectorPoints } from "../../../../presentations/layers/content/hooks/useResolvedConnectorPoints";
 import { resolveEndpointOwner } from "../../../../presentations/layers/content/utils/endpoints";
-import { isOrthogonalRouting } from "../../../../schemas/objects/types/ConnectorRouting";
+import { isConnectorDrawnOrthogonal } from "../../../../schemas/objects/connections/connector/isConnectorDrawnOrthogonal";
 import { isFreeEndpointRef } from "../../../../schemas/objects/types/EndpointRef";
 import type { CanvasState } from "../../../../states/canvas/CanvasState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
@@ -32,7 +32,7 @@ type ConnectorControlsProps = {
  *   (data-id=<id> + data-part="endpoint:source|target" → ConnectionAnchorEventHandler)
  * - Waypoint move handles: move existing waypoints
  *   (data-id=<id> + data-part="vertex:<i>" → reuses VertexControlHandler)
- * - Waypoint insert handles (straight only): the midpoint of each segment of the resolved path
+ * - Waypoint insert handles (lines drawn straight only): the midpoint of each segment of the resolved path
  *   [source, ...waypoints, target]. Drag to add a new waypoint
  *   (data-id=<id> + data-part="waypoint-insert:<segment>" → ConnectorVertexInsertHandler)
  *
@@ -79,9 +79,10 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 	const showTargetHandle = targetIsFree || !sourceIsFree;
 
 	// Straight gets per-vertex move and insert handles; orthogonal makes each segment grabbable
-	// along its whole length instead.
-	// When routing is omitted, orthogonal is the default.
-	const isOrthogonal = isOrthogonalRouting(connectorState.routing);
+	// along its whole length instead. What decides is how the line is drawn, not the routing field:
+	// a self-loop is drawn as a rectangular loop even carrying "straight", and the insert handles
+	// index the drawn path, so offering them there would hand out handles nothing answers to.
+	const isOrthogonal = isConnectorDrawnOrthogonal(connectorState);
 	const waypoints = connectorState.points;
 	const selectedVertexIndex =
 		selectedVertex?.objectId === connectorState.id

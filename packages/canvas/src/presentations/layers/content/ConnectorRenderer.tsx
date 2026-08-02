@@ -2,7 +2,7 @@ import { memo, useMemo } from "react";
 
 import { useResolvedConnectorPoints } from "./hooks/useResolvedConnectorPoints";
 import { calcConnectorLabelAnchor } from "./utils/label/calcConnectorLabelAnchor";
-import { isOrthogonalRouting } from "../../../schemas/objects/types/ConnectorRouting";
+import { isConnectorDrawnOrthogonal } from "../../../schemas/objects/connections/connector/isConnectorDrawnOrthogonal";
 import { isFreeEndpointRef } from "../../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
@@ -73,7 +73,7 @@ const ConnectorRendererComponent: React.FC<ConnectorRendererProps> = ({
 				disablePointerEvents={disablePointerEvents}
 			/>
 			{/* Drawn between the line and the label, so the label keeps the pointer over itself. */}
-			{isOrthogonalRouting(connectorState.routing) ? (
+			{isConnectorDrawnOrthogonal(connectorState) ? (
 				<ConnectorSegmentSlideHitAreas
 					id={connectorState.id}
 					points={resolved.points}

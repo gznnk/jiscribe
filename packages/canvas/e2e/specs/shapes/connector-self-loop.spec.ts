@@ -109,6 +109,53 @@ function penetratesInterior(a: Vec, b: Vec, box: AABB): boolean {
 	);
 }
 
+/** Reads the currently rendered points of the connector. */
+async function readPoints(
+	canvas: CanvasDriver,
+	connectorId: string,
+): Promise<Vec[]> {
+	return parsePoints(
+		await canvas.objectById(connectorId).getAttribute("points"),
+	);
+}
+
+/** Center of a control handle, in content coordinates. */
+async function controlContentCenter(
+	canvas: CanvasDriver,
+	controlSelector: string,
+): Promise<Vec> {
+	const loc = canvas.page.locator(controlSelector);
+	await expect(loc).toBeVisible();
+	const box = await loc.boundingBox();
+	if (!box) {
+		throw new Error(`cannot read the position of control ${controlSelector}`);
+	}
+	return canvas.toContent({
+		x: box.x + box.width / 2,
+		y: box.y + box.height / 2,
+	});
+}
+
+/**
+ * Selects the connector by clicking the midpoint of its longest segment. Waits on the line color
+ * toggle rather than the routing one, which a self-loop deliberately hides.
+ */
+async function selectConnector(canvas: CanvasDriver, connectorId: string) {
+	const points = await readPoints(canvas, connectorId);
+	let best = { mid: points[0], length: -1 };
+	for (let i = 1; i < points.length; i++) {
+		const [a, b] = [points[i - 1], points[i]];
+		const length = Math.hypot(b.x - a.x, b.y - a.y);
+		if (length > best.length) {
+			best = { mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, length };
+		}
+	}
+	await canvas.clickAt(best.mid);
+	await expect(
+		canvas.page.locator('[data-part="toggle:line-color"]'),
+	).toBeVisible();
+}
+
 function assertOrthogonalSegments(points: Vec[]) {
 	for (let i = 1; i < points.length; i++) {
 		const prev = points[i - 1];
@@ -240,6 +287,82 @@ test.describe("self-loop connector (connecting a shape to itself)", () => {
 		await expect(
 			canvas.page.locator('[data-part="toggle:connector-routing"]'),
 			"no routing switch menu appears for a self-loop",
+		).toHaveCount(0);
+	});
+	test("keeps a straight routing set before the loop was formed drawn and edited as right angles", async ({
+		canvas,
+	}) => {
+		// routing survives a re-anchor once it has been set explicitly (see
+		// ConnectionAnchorEventHandler.withAnchorDerivedRouting), so a connector made straight between
+		// two shapes still says "straight" after one end is dragged onto the other's shape. The loop
+		// is drawn at right angles regardless, and the editing affordances have to follow the drawn
+		// line rather than the field — a straight-only band or handle here answers to nothing (#229).
+		const shapeId = await canvas.drawShape(
+			"Rectangle",
+			{ x: 300, y: 180 },
+			{ x: 500, y: 340 },
+		);
+		await canvas.deselect();
+		await canvas.drawShape("Rectangle", { x: 760, y: 180 }, { x: 920, y: 340 });
+		await canvas.deselect();
+
+		await canvas.selectAt({ x: 400, y: 260 });
+		const connectorId = await canvas.createConnector("rightCenter", {
+			x: 760,
+			y: 260,
+		});
+		await canvas.deselect();
+
+		await selectConnector(canvas, connectorId);
+		await canvas.openObjectMenu("connector-routing");
+		await canvas.page.click('[data-part="command:setRoutingStraight"]');
+		await expect
+			.poll(async () => (await readPoints(canvas, connectorId)).length, {
+				message: "straight routing draws a single direct line",
+			})
+			.toBe(2);
+
+		// Drag the target end onto the source's own shape, turning it into a self-loop.
+		const targetHandle = await controlContentCenter(
+			canvas,
+			`[data-id="${connectorId}"][data-part="endpoint:target"]`,
+		);
+		await canvas.drag(targetHandle, { x: 400, y: 260 });
+		await expect
+			.poll(async () => (await readPoints(canvas, connectorId)).length, {
+				message: "the loop route replaces the direct line",
+			})
+			.toBeGreaterThan(2);
+
+		const points = await readPoints(canvas, connectorId);
+		assertOrthogonalSegments(points);
+		const box = await worldAABB(canvas, shapeId);
+		expect(
+			edgesOf(points[0], box).length,
+			`the source end stays on an edge of the shape: ${JSON.stringify(points[0])}`,
+		).toBeGreaterThan(0);
+
+		// The editing affordances are the orthogonal ones: segments slide on one axis, and no
+		// straight-only band or vertex-insert handle is offered.
+		await expect(
+			canvas.page.locator(
+				`[data-kind="connector"][data-id="${connectorId}"][data-part^="segment-move:"]`,
+			),
+			"no free-move band on a line drawn at right angles",
+		).toHaveCount(0);
+		await expect(
+			canvas.page.locator(
+				`[data-kind="connector"][data-id="${connectorId}"][data-part^="segment-slide:"]`,
+			),
+			"the one-axis slide bands are there instead",
+		).not.toHaveCount(0);
+
+		await selectConnector(canvas, connectorId);
+		await expect(
+			canvas.page.locator(
+				`[data-kind="control"][data-id="${connectorId}"][data-part^="waypoint-insert:"]`,
+			),
+			"no vertex-insert handles, which index a path the stored points do not describe",
 		).toHaveCount(0);
 	});
 });
