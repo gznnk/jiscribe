@@ -33,9 +33,11 @@ export type ObjectFactory = {
 
 	/**
 	 * Create an ObjectDoc from a two-point bounds. Returns null if below the minimum size.
+	 * Implementations that draw inside an axis-aligned box get that normalize+reject
+	 * step from `calcDrawBounds`.
 	 *
 	 * The presence of this method indicates whether the shape can be drag-drawn.
-	 * Shapes without it (sticky / polygon, etc.) are center-placed on click.
+	 * Shapes without it (sticky, etc.) are center-placed on click.
 	 */
 	createDocFromBounds?(
 		x1: number,

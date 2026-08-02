@@ -1,3 +1,4 @@
+import { DEFAULT_MIN_DRAW_SIZE } from "./calcDrawBounds";
 import type { ObjectFactoryRegistry } from "../../registry/ObjectFactoryRegistry";
 import type { ObjectDoc } from "../base/ObjectDoc";
 import type { DocCreationDefaults } from "../types/DocCreationDefaults";
@@ -19,7 +20,7 @@ export const createObjectDocFromBounds = (
 	y2: number,
 	objectFactory: ObjectFactoryRegistry,
 	overrides?: Record<string, unknown>,
-	minSize = 5,
+	minSize = DEFAULT_MIN_DRAW_SIZE,
 	docDefaults?: DocCreationDefaults,
 ): ObjectDoc | null => {
 	const factory = objectFactory.get(type);

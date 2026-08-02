@@ -12,6 +12,14 @@
 
 export { createFrameObjectFactory } from "./schemas/objects/utils/createFrameObjectFactory";
 
+// The bounds+minSize guard every `createDocFromBounds` needs, for shapes that
+// cannot use createFrameObjectFactory (center origin, vertex lists).
+export {
+	calcDrawBounds,
+	DEFAULT_MIN_DRAW_SIZE,
+} from "./schemas/objects/utils/calcDrawBounds";
+export type { DrawBounds } from "./schemas/objects/utils/calcDrawBounds";
+
 export { createFrameDocValidator } from "./schemas/objects/utils/createFrameDocValidator";
 export {
 	validateOptionalNumber,

@@ -4,6 +4,7 @@ import type { Point } from "@workspace/geometry";
 import type { ObjectDoc } from "../../base/ObjectDoc";
 import type { ObjectFactory } from "../../types/ObjectFactory";
 import { AUTO_COLOR } from "../../utils/autoColor";
+import { calcDrawBounds } from "../../utils/calcDrawBounds";
 
 const POLY_STROKE = AUTO_COLOR;
 const POLY_STROKE_WIDTH = 2;
@@ -57,12 +58,13 @@ export const PolygonObjectFactory: ObjectFactory = {
 		return { halfWidth: POLYGON_RADIUS, halfHeight: POLYGON_RADIUS };
 	},
 
-	createDocFromBounds(x1, y1, x2, y2, overrides, minSize = 5) {
-		const width = Math.abs(x2 - x1);
-		const height = Math.abs(y2 - y1);
-		if (width < minSize || height < minSize) {
+	createDocFromBounds(x1, y1, x2, y2, overrides, minSize) {
+		const bounds = calcDrawBounds(x1, y1, x2, y2, minSize);
+		if (bounds === null) {
 			return null;
 		}
+		const rx = bounds.width / 2;
+		const ry = bounds.height / 2;
 		return {
 			type: "polygon",
 			stroke: POLY_STROKE,
@@ -71,12 +73,7 @@ export const PolygonObjectFactory: ObjectFactory = {
 			...overrides,
 			// The id and geometry (points) are decided by the factory; not overridable via overrides.
 			id: crypto.randomUUID(),
-			points: buildPolygonPoints(
-				(x1 + x2) / 2,
-				(y1 + y2) / 2,
-				width / 2,
-				height / 2,
-			),
+			points: buildPolygonPoints(bounds.left + rx, bounds.top + ry, rx, ry),
 		} as ObjectDoc;
 	},
 };

@@ -1,3 +1,4 @@
+import { calcDrawBounds } from "./calcDrawBounds";
 import type { ObjectDoc } from "../base/ObjectDoc";
 import type { ObjectFactory } from "../types/ObjectFactory";
 import {
@@ -68,12 +69,11 @@ export const createFrameObjectFactory = (
 			x2,
 			y2,
 			overrides,
-			minSize = 5,
+			minSize,
 			docDefaults,
 		) => {
-			const width = Math.abs(x2 - x1);
-			const height = Math.abs(y2 - y1);
-			if (width < minSize || height < minSize) {
+			const bounds = calcDrawBounds(x1, y1, x2, y2, minSize);
+			if (bounds === null) {
 				return null;
 			}
 			return {
@@ -81,10 +81,10 @@ export const createFrameObjectFactory = (
 				...pickSupportedDocDefaults(defaults, docDefaults),
 				...overrides,
 				id: crypto.randomUUID(),
-				x: Math.min(x1, x2),
-				y: Math.min(y1, y2),
-				width,
-				height,
+				x: bounds.left,
+				y: bounds.top,
+				width: bounds.width,
+				height: bounds.height,
 			};
 		};
 	}
