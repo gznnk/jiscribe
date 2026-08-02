@@ -66,6 +66,19 @@ The top level must always have `version` / `root` (the array may be empty).
 | `document`              | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | report, file                                          |
 | `multiDocument`         | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | report batch / file set                               |
 | `actor`                 | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | user, role, stakeholder                               |
+| `browserWindow`         | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | web UI, screen                                        |
+| `terminalWindow`        | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | CLI, shell session                                    |
+| `smartphone`            | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | mobile client                                         |
+| `laptop`                | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | desktop client, web client                            |
+| `server`                | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | host, node, running process                           |
+| `gear`                  | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | service, batch job, daemon                            |
+| `package`               | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | library, artifact, deployment unit                    |
+| `folder`                | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | directory, grouping                                   |
+| `file`                  | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | source file, configuration                            |
+| `envelope`              | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | message, event                                        |
+| `queue`                 | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | job queue, message queue                              |
+| `lock`                  | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | authentication, protected resource                    |
+| `shield`                | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | security boundary, trust zone                         |
 | `callout`               | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | annotation bubble                                     |
 | `db`                    | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | data store                                            |
 | `storedData`            | `x`,`y`,`width`,`height`             | stroke / fill / text / rotation                  | generic stored data (file / cache)                    |

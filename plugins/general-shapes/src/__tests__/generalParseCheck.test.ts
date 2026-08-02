@@ -8,6 +8,9 @@ import { generalDocPlugin } from "../doc";
 // built-in definitions). The headless `generalDocPlugin` carries no React deps.
 const parser = createCanvasParser({ plugins: [generalDocPlugin] });
 
+/** Every type this package registers, so a new one cannot be added unparsed. */
+const SHAPE_TYPES = Object.keys(generalDocPlugin.objects ?? {});
+
 const doc = {
 	version: 1,
 	root: [
@@ -55,9 +58,42 @@ const doc = {
 	],
 };
 
+/** One object of every registered type, laid out in a row, plus a chain of connectors. */
+const everyShapeDoc = {
+	version: 1,
+	root: [
+		...SHAPE_TYPES.map((type, index) => ({
+			id: `shape-${index}`,
+			type,
+			x: index * 200,
+			y: 0,
+			width: 120,
+			height: 100,
+			text: type,
+		})),
+		...SHAPE_TYPES.slice(1).map((_, index) => ({
+			id: `link-${index}`,
+			type: "connector",
+			source: { owner: { id: `shape-${index}` }, anchor: { kind: "center" } },
+			target: {
+				owner: { id: `shape-${index + 1}` },
+				anchor: { kind: "center" },
+			},
+			points: [],
+		})),
+	],
+};
+
 describe("general shapes", () => {
 	it("parses and accepts connector endpoints on the actor and the cloud", () => {
 		const result = parser.parse(JSON.stringify(doc));
+		expect("diagnostics" in result ? result.diagnostics : []).toEqual([]);
+		expect(result.kind).toBe("ok");
+	});
+
+	it("parses every registered type and accepts connectors between them", () => {
+		expect(SHAPE_TYPES.length).toBeGreaterThan(1);
+		const result = parser.parse(JSON.stringify(everyShapeDoc));
 		expect("diagnostics" in result ? result.diagnostics : []).toEqual([]);
 		expect(result.kind).toBe("ok");
 	});

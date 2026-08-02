@@ -66,6 +66,19 @@ In addition to `name` and `description`, `meta` may hold any custom keys.
 | `document`         | Report, file                                          | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `multiDocument`    | Report batch / file set                               | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `actor`            | User, role, stakeholder                               | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `browserWindow`    | Web UI, screen                                        | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `terminalWindow`   | CLI, shell session                                    | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `smartphone`       | Mobile client                                         | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `laptop`           | Desktop client, web client                            | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `server`           | Host, node, running process                           | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `gear`             | Service, batch job, daemon                            | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `package`          | Library, artifact, deployment unit                    | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `folder`           | Directory, grouping                                   | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `file`             | Source file, configuration                            | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `envelope`         | Message, event                                        | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `queue`            | Job queue, message queue                              | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `lock`             | Authentication, protected resource                    | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `shield`           | Security boundary, trust zone                         | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `callout`          | Annotation bubble                                     | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `db`               | Data store                                            | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `storedData`       | Generic stored data (file / cache)                    | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
@@ -320,7 +333,7 @@ Document shape (rect with a wavy bottom edge), typically used for reports/files 
 
 ### `actor`
 
-Actor (stick figure) shape, typically used for users/roles in use-case diagrams or stakeholders in business diagrams. Uses the same rect-based geometry (x/y/width/height) as `rect`; only the rendering is a stick figure. The stick figure fills the whole box, and the text is drawn as a label below the box, auto-sized to the text itself (so it stays readable at any box size and does not need the box widened for it). A portrait aspect ratio (e.g. 80x100) looks best. It is **connectable** like `rect`. It has **no Radius** (`rx`).
+Actor (stick figure) shape, typically used for users/roles in use-case diagrams or stakeholders in business diagrams. Uses the same rect-based geometry (x/y/width/height) as `rect`; only the rendering differs. The stick figure fills the whole box. Text is drawn as a label below the box, auto-sized to the text itself, so the box may be kept small without making the text unreadable. A portrait aspect ratio (e.g. 80x100) looks best. It is **connectable** like `rect`. It has **no Radius** (`rx`).
 
 ```json
 {

@@ -7,19 +7,84 @@ import type {
 	ObjectDocDefinition,
 } from "@workspace/canvas/doc";
 
-import { ACTOR_DOC_DEFAULTS, ActorFeatures } from "./schema/ActorDoc";
-import { ActorObjectFactory } from "./schema/ActorObjectFactory";
-import { CLOUD_DOC_DEFAULTS, CloudFeatures } from "./schema/CloudDoc";
-import { CloudObjectFactory } from "./schema/CloudObjectFactory";
-import { validateActorDoc } from "./schema/validateActorDoc";
-import { validateCloudDoc } from "./schema/validateCloudDoc";
+import { ACTOR_DOC_DEFAULTS, ActorFeatures } from "./schema/actor/ActorDoc";
+import { ActorObjectFactory } from "./schema/actor/ActorObjectFactory";
+import { validateActorDoc } from "./schema/actor/validateActorDoc";
+import {
+	BROWSER_WINDOW_DOC_DEFAULTS,
+	BrowserWindowFeatures,
+} from "./schema/browserWindow/BrowserWindowDoc";
+import { BrowserWindowObjectFactory } from "./schema/browserWindow/BrowserWindowObjectFactory";
+import { validateBrowserWindowDoc } from "./schema/browserWindow/validateBrowserWindowDoc";
+import { CLOUD_DOC_DEFAULTS, CloudFeatures } from "./schema/cloud/CloudDoc";
+import { CloudObjectFactory } from "./schema/cloud/CloudObjectFactory";
+import { validateCloudDoc } from "./schema/cloud/validateCloudDoc";
+import {
+	ENVELOPE_DOC_DEFAULTS,
+	EnvelopeFeatures,
+} from "./schema/envelope/EnvelopeDoc";
+import { EnvelopeObjectFactory } from "./schema/envelope/EnvelopeObjectFactory";
+import { validateEnvelopeDoc } from "./schema/envelope/validateEnvelopeDoc";
+import { FILE_DOC_DEFAULTS, FileFeatures } from "./schema/file/FileDoc";
+import { FileObjectFactory } from "./schema/file/FileObjectFactory";
+import { validateFileDoc } from "./schema/file/validateFileDoc";
+import { FOLDER_DOC_DEFAULTS, FolderFeatures } from "./schema/folder/FolderDoc";
+import { FolderObjectFactory } from "./schema/folder/FolderObjectFactory";
+import { validateFolderDoc } from "./schema/folder/validateFolderDoc";
+import { GEAR_DOC_DEFAULTS, GearFeatures } from "./schema/gear/GearDoc";
+import { GearObjectFactory } from "./schema/gear/GearObjectFactory";
+import { validateGearDoc } from "./schema/gear/validateGearDoc";
+import { LAPTOP_DOC_DEFAULTS, LaptopFeatures } from "./schema/laptop/LaptopDoc";
+import { LaptopObjectFactory } from "./schema/laptop/LaptopObjectFactory";
+import { validateLaptopDoc } from "./schema/laptop/validateLaptopDoc";
+import { LOCK_DOC_DEFAULTS, LockFeatures } from "./schema/lock/LockDoc";
+import { LockObjectFactory } from "./schema/lock/LockObjectFactory";
+import { validateLockDoc } from "./schema/lock/validateLockDoc";
+import {
+	PACKAGE_DOC_DEFAULTS,
+	PackageFeatures,
+} from "./schema/package/PackageDoc";
+import { PackageObjectFactory } from "./schema/package/PackageObjectFactory";
+import { validatePackageDoc } from "./schema/package/validatePackageDoc";
+import { QUEUE_DOC_DEFAULTS, QueueFeatures } from "./schema/queue/QueueDoc";
+import { QueueObjectFactory } from "./schema/queue/QueueObjectFactory";
+import { validateQueueDoc } from "./schema/queue/validateQueueDoc";
+import { SERVER_DOC_DEFAULTS, ServerFeatures } from "./schema/server/ServerDoc";
+import { ServerObjectFactory } from "./schema/server/ServerObjectFactory";
+import { validateServerDoc } from "./schema/server/validateServerDoc";
+import { SHIELD_DOC_DEFAULTS, ShieldFeatures } from "./schema/shield/ShieldDoc";
+import { ShieldObjectFactory } from "./schema/shield/ShieldObjectFactory";
+import { validateShieldDoc } from "./schema/shield/validateShieldDoc";
+import {
+	SMARTPHONE_DOC_DEFAULTS,
+	SmartphoneFeatures,
+} from "./schema/smartphone/SmartphoneDoc";
+import { SmartphoneObjectFactory } from "./schema/smartphone/SmartphoneObjectFactory";
+import { validateSmartphoneDoc } from "./schema/smartphone/validateSmartphoneDoc";
+import {
+	TERMINAL_WINDOW_DOC_DEFAULTS,
+	TerminalWindowFeatures,
+} from "./schema/terminalWindow/TerminalWindowDoc";
+import { TerminalWindowObjectFactory } from "./schema/terminalWindow/TerminalWindowObjectFactory";
+import { validateTerminalWindowDoc } from "./schema/terminalWindow/validateTerminalWindowDoc";
+
+/**
+ * Every shape here shares the rect geometry (x/y/width/height) of RectDoc and
+ * only swaps the rendering, so the sentence saying so is factored out of the 15
+ * descriptions rather than repeated in each.
+ */
+const RECT_GEOMETRY_NOTE =
+	"Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering differs.";
+
+/** Suffix for the shapes whose drawing takes the whole box and whose text becomes a caption. */
+const BELOW_LABEL_NOTE =
+	"Text is drawn as a label below the box, auto-sized to the text itself, so the box may be kept small without making the text unreadable.";
 
 export const actorDocDefinition: ObjectDocDefinition = {
 	features: ActorFeatures,
 	validateDoc: validateActorDoc,
 	factory: ActorObjectFactory,
-	description:
-		"Actor (stick figure) shape, typically used for users/roles in use-case diagrams or stakeholders in business diagrams. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a stick figure. The stick figure fills the whole box, and the text is drawn as a label below the box, auto-sized to the text itself (so it stays readable at any box size and does not need the box widened for it). A portrait aspect ratio (e.g. 80x100) looks best.",
+	description: `Actor (stick figure) shape, typically used for users/roles in use-case diagrams or stakeholders in business diagrams. ${RECT_GEOMETRY_NOTE} The stick figure fills the whole box. ${BELOW_LABEL_NOTE} A portrait aspect ratio (e.g. 80x100) looks best.`,
 	summary: "user, role, stakeholder",
 	defaults: ACTOR_DOC_DEFAULTS,
 };
@@ -34,6 +99,123 @@ export const cloudDocDefinition: ObjectDocDefinition = {
 	defaults: CLOUD_DOC_DEFAULTS,
 };
 
+export const serverDocDefinition: ObjectDocDefinition = {
+	features: ServerFeatures,
+	validateDoc: validateServerDoc,
+	factory: ServerObjectFactory,
+	description: `Server rack shape (a box divided into stacked units, each with a status light), typically used for hosts, nodes and long-running processes in architecture diagrams. ${RECT_GEOMETRY_NOTE} ${BELOW_LABEL_NOTE} A portrait aspect ratio (e.g. 90x110) looks best. Prefer "package" for something that is deployed rather than something that runs.`,
+	summary: "host, node, running process",
+	defaults: SERVER_DOC_DEFAULTS,
+};
+
+export const browserWindowDocDefinition: ObjectDocDefinition = {
+	features: BrowserWindowFeatures,
+	validateDoc: validateBrowserWindowDoc,
+	factory: BrowserWindowObjectFactory,
+	description: `Browser window shape (a frame with a title bar carrying three window buttons), typically used for web UIs and screens, e.g. to show which screen calls which service. ${RECT_GEOMETRY_NOTE} Text is laid out in the content area below the title bar, so a landscape aspect ratio (e.g. 160x110) suits it.`,
+	summary: "web UI, screen",
+	defaults: BROWSER_WINDOW_DOC_DEFAULTS,
+};
+
+export const terminalWindowDocDefinition: ObjectDocDefinition = {
+	features: TerminalWindowFeatures,
+	validateDoc: validateTerminalWindowDoc,
+	factory: TerminalWindowObjectFactory,
+	description: `Terminal window shape (the same frame as browserWindow, with a shell prompt in the title bar instead of the window buttons), typically used for CLIs, shell sessions and scripts. ${RECT_GEOMETRY_NOTE} Text is laid out in the content area below the title bar, so a landscape aspect ratio (e.g. 160x110) suits it.`,
+	summary: "CLI, shell session",
+	defaults: TERMINAL_WINDOW_DOC_DEFAULTS,
+};
+
+export const folderDocDefinition: ObjectDocDefinition = {
+	features: FolderFeatures,
+	validateDoc: validateFolderDoc,
+	factory: FolderObjectFactory,
+	description: `Folder shape (a tab on the top-left corner), typically used for directories and for grouping. ${RECT_GEOMETRY_NOTE} Text is laid out below the tab. For a frame that other objects are placed inside, use a container shape instead — this one is a plain icon and does not hold children.`,
+	summary: "directory, grouping",
+	defaults: FOLDER_DOC_DEFAULTS,
+};
+
+export const fileDocDefinition: ObjectDocDefinition = {
+	features: FileFeatures,
+	validateDoc: validateFileDoc,
+	factory: FileObjectFactory,
+	description: `File shape (a folded top-right corner), typically used for source files and configuration. ${RECT_GEOMETRY_NOTE} Text is laid out below the fold, so a portrait aspect ratio (e.g. 100x120) looks best. Distinct from the flowchart "document" (wavy bottom edge, a flowchart step) and "card" (clipped top-left corner).`,
+	summary: "source file, configuration",
+	defaults: FILE_DOC_DEFAULTS,
+};
+
+export const packageDocDefinition: ObjectDocDefinition = {
+	features: PackageFeatures,
+	validateDoc: validatePackageDoc,
+	factory: PackageObjectFactory,
+	description: `Isometric box shape, typically used for libraries, build artifacts and deployment units. ${RECT_GEOMETRY_NOTE} ${BELOW_LABEL_NOTE} A square aspect ratio (e.g. 110x110) looks best. Prefer "server" for something that runs rather than something that is deployed.`,
+	summary: "library, artifact, deployment unit",
+	defaults: PACKAGE_DOC_DEFAULTS,
+};
+
+export const envelopeDocDefinition: ObjectDocDefinition = {
+	features: EnvelopeFeatures,
+	validateDoc: validateEnvelopeDoc,
+	factory: EnvelopeObjectFactory,
+	description: `Closed envelope shape, typically used for a single message or event. ${RECT_GEOMETRY_NOTE} ${BELOW_LABEL_NOTE} A landscape aspect ratio (e.g. 120x84) looks best. Prefer "queue" for the buffer messages sit in rather than for one message.`,
+	summary: "message, event",
+	defaults: ENVELOPE_DOC_DEFAULTS,
+};
+
+export const queueDocDefinition: ObjectDocDefinition = {
+	features: QueueFeatures,
+	validateDoc: validateQueueDoc,
+	factory: QueueObjectFactory,
+	description: `Queue shape (a row of cells), typically used for job queues, message queues and topics. ${RECT_GEOMETRY_NOTE} ${BELOW_LABEL_NOTE} It carries no direction mark, so which end is the head is whatever the connectors say. A wide, short aspect ratio (e.g. 160x70) looks best.`,
+	summary: "job queue, message queue",
+	defaults: QUEUE_DOC_DEFAULTS,
+};
+
+export const gearDocDefinition: ObjectDocDefinition = {
+	features: GearFeatures,
+	validateDoc: validateGearDoc,
+	factory: GearObjectFactory,
+	description: `Gear shape, typically used for services, batch jobs and daemons — work that runs on its own rather than being called through a UI. ${RECT_GEOMETRY_NOTE} ${BELOW_LABEL_NOTE} A square aspect ratio (e.g. 100x100) looks best; a stretched box gives a stretched gear.`,
+	summary: "service, batch job, daemon",
+	defaults: GEAR_DOC_DEFAULTS,
+};
+
+export const lockDocDefinition: ObjectDocDefinition = {
+	features: LockFeatures,
+	validateDoc: validateLockDoc,
+	factory: LockObjectFactory,
+	description: `Padlock shape, typically used for authentication steps and protected resources. ${RECT_GEOMETRY_NOTE} ${BELOW_LABEL_NOTE} A portrait aspect ratio (e.g. 90x110) looks best. Prefer "shield" for a boundary that other things sit behind.`,
+	summary: "authentication, protected resource",
+	defaults: LOCK_DOC_DEFAULTS,
+};
+
+export const shieldDocDefinition: ObjectDocDefinition = {
+	features: ShieldFeatures,
+	validateDoc: validateShieldDoc,
+	factory: ShieldObjectFactory,
+	description: `Shield shape, typically used for security boundaries and trust zones. ${RECT_GEOMETRY_NOTE} Text is laid out in the straight-sided upper part only, since the lower part tapers to a point — keep it short, or give the shape more height. Prefer "lock" for a single protected resource.`,
+	summary: "security boundary, trust zone",
+	defaults: SHIELD_DOC_DEFAULTS,
+};
+
+export const smartphoneDocDefinition: ObjectDocDefinition = {
+	features: SmartphoneFeatures,
+	validateDoc: validateSmartphoneDoc,
+	factory: SmartphoneObjectFactory,
+	description: `Smartphone shape, typically used for mobile clients. ${RECT_GEOMETRY_NOTE} Text is laid out on the screen, which is narrow — keep it to a word or two, or widen the box. A portrait aspect ratio (e.g. 70x120) looks best.`,
+	summary: "mobile client",
+	defaults: SMARTPHONE_DOC_DEFAULTS,
+};
+
+export const laptopDocDefinition: ObjectDocDefinition = {
+	features: LaptopFeatures,
+	validateDoc: validateLaptopDoc,
+	factory: LaptopObjectFactory,
+	description: `Laptop shape (screen over a splayed base), typically used for desktop and web clients. ${RECT_GEOMETRY_NOTE} Text is laid out on the screen, so the base band at the bottom of the box stays clear. A landscape aspect ratio (e.g. 140x100) looks best.`,
+	summary: "desktop client, web client",
+	defaults: LAPTOP_DOC_DEFAULTS,
+};
+
 /**
  * Headless `CanvasDocPlugin` for the general shapes: the doc-layer view of
  * `generalPlugin`, teaching `createCanvasParser` the types without loading any
@@ -41,5 +223,21 @@ export const cloudDocDefinition: ObjectDocDefinition = {
  */
 export const generalDocPlugin: CanvasDocPlugin = {
 	id: "general-shapes",
-	objects: { actor: actorDocDefinition, cloud: cloudDocDefinition },
+	objects: {
+		actor: actorDocDefinition,
+		browserWindow: browserWindowDocDefinition,
+		cloud: cloudDocDefinition,
+		envelope: envelopeDocDefinition,
+		file: fileDocDefinition,
+		folder: folderDocDefinition,
+		gear: gearDocDefinition,
+		laptop: laptopDocDefinition,
+		lock: lockDocDefinition,
+		package: packageDocDefinition,
+		queue: queueDocDefinition,
+		server: serverDocDefinition,
+		shield: shieldDocDefinition,
+		smartphone: smartphoneDocDefinition,
+		terminalWindow: terminalWindowDocDefinition,
+	},
 };

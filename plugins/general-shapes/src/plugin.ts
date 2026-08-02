@@ -1,6 +1,22 @@
 import type { CanvasPlugin } from "@workspace/canvas";
 
-import { actorDefinition, cloudDefinition } from "./definition";
+import {
+	actorDefinition,
+	browserWindowDefinition,
+	cloudDefinition,
+	envelopeDefinition,
+	fileDefinition,
+	folderDefinition,
+	gearDefinition,
+	laptopDefinition,
+	lockDefinition,
+	packageDefinition,
+	queueDefinition,
+	serverDefinition,
+	shieldDefinition,
+	smartphoneDefinition,
+	terminalWindowDefinition,
+} from "./definition";
 
 /**
  * `CanvasPlugin` declaration for the general shapes
@@ -11,5 +27,21 @@ import { actorDefinition, cloudDefinition } from "./definition";
  */
 export const generalPlugin: CanvasPlugin = {
 	id: "general-shapes",
-	objects: { actor: actorDefinition, cloud: cloudDefinition },
+	objects: {
+		actor: actorDefinition,
+		browserWindow: browserWindowDefinition,
+		cloud: cloudDefinition,
+		envelope: envelopeDefinition,
+		file: fileDefinition,
+		folder: folderDefinition,
+		gear: gearDefinition,
+		laptop: laptopDefinition,
+		lock: lockDefinition,
+		package: packageDefinition,
+		queue: queueDefinition,
+		server: serverDefinition,
+		shield: shieldDefinition,
+		smartphone: smartphoneDefinition,
+		terminalWindow: terminalWindowDefinition,
+	},
 };
