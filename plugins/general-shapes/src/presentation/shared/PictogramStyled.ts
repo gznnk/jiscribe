@@ -36,6 +36,22 @@ export const PictogramDetailPath = styled.path<PictogramStrokeProps>`
 `;
 
 /**
+ * Invisible grab area for a part of the drawing the body paths leave unpainted
+ * (PictogramFigure.hit). `transparent` still counts as painted, so this is
+ * hit-tested; `none` would not be.
+ */
+export const PictogramHitPath = styled.path`
+	fill: transparent;
+	stroke: none;
+	pointer-events: auto;
+	cursor: grab;
+
+	&:focus {
+		outline: none;
+	}
+`;
+
+/**
  * Transparent grab area over the label a below-label pictogram hangs outside its
  * box; the label's own foreignObject is `pointer-events: none`, so without this
  * the label could neither be dragged nor double-clicked into the editor.

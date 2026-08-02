@@ -21,6 +21,18 @@ export type PictogramFigure = {
 	 * gear's bore), so the fill is punched out instead of painted over.
 	 */
 	fillRule?: "evenodd";
+	/**
+	 * Invisible closed paths that are hit-tested as part of the shape, for the
+	 * places the drawing occupies but does not paint: the gear's punched-out bore,
+	 * the area the lock's open shackle encloses.
+	 *
+	 * These are not cosmetic. Hover and connector drop targets are resolved with
+	 * `document.elementsFromPoint` (getHoveredElements), and the anchors a
+	 * connector snaps to are drawn `pointer-events: none` — so a region the shape
+	 * does not paint is a region no connector can be dropped on, however close the
+	 * anchor is.
+	 */
+	hit?: string[];
 };
 
 /**
