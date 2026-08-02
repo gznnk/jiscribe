@@ -15,6 +15,9 @@ export const recordDocDefinition: ObjectDocDefinition = {
 	features: RecordFeatures,
 	validateDoc: validateRecordDoc,
 	factory: RecordObjectFactory,
+	// The schema $def is a handwritten template (text is a slotted object), so
+	// only summary is consumed — it fills the generated doc tables.
+	summary: "titled box + row compartments (UML class / ER entity)",
 };
 
 /**

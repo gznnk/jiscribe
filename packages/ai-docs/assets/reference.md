@@ -51,45 +51,57 @@ In addition to `name` and `description`, `meta` may hold any custom keys.
 
 ## Object types
 
-| `type`             | Description                        | Geometry                                | Styles                                |
-| ------------------ | ---------------------------------- | --------------------------------------- | ------------------------------------- |
-| `rect`             | Rectangle                          | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform, Radius |
-| `markdown`         | Markdown card (rendered as HTML)   | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform, Radius |
-| `ellipse`          | Ellipse                            | `cx`, `cy`, `rx`, `ry`                  | Stroke, Fill, Text, Transform         |
-| `diamond`          | Diamond (decision/branch)          | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `stadium`          | Stadium/pill (start/end)           | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `parallelogram`    | Parallelogram (input/output)       | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `hexagon`          | Hexagon (preparation)              | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `cloud`            | Cloud (external/fuzzy)             | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `document`         | Document (wavy bottom)             | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `multiDocument`    | Multi-document (stacked sheets)    | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `actor`            | Actor (stick figure)               | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `callout`          | Speech-bubble callout              | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `db`               | Database cylinder                  | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `storedData`       | Stored data (bowed sides)          | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `subroutine`       | Predefined process (subroutine)    | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `trapezoid`        | Trapezoid (manual operation)       | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `manualInput`      | Manual input (sloped top)          | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `card`             | Card (cut top-left corner)         | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `delay`            | Delay (D-shape)                    | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `loopLimit`        | Loop limit (cut top corners)       | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `display`          | Display (pointed left/round right) | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `extract`          | Extract (apex up)                  | `x`, `y`, `width`, `height`             | Stroke, Fill, Transform (no text)     |
-| `cross`            | Cross / plus                       | `x`, `y`, `width`, `height`             | Stroke, Fill, Transform (no text)     |
-| `offPageConnector` | Off-page connector (pentagon)      | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
-| `record`           | Titled box with row compartments   | `x`, `y`, `width`, `height`             | Stroke, Fill, Text (keyed), Transform |
-| `polyline`         | Polyline (open path)               | `points`                                | Stroke                                |
-| `polygon`          | Polygon (closed path)              | `points`                                | Stroke, Fill                          |
-| `group`            | Group (contains children)          | none                                    | Transform                             |
-| `connector`        | Connector (placed in `root`)       | `points`                                | Stroke                                |
-| `sticky`           | Sticky note                        | `x`, `y`, `width`, `height`             | Fill, Text, Transform (no Stroke)     |
-| `svg`              | Raw inline SVG (opaque box)        | `x`, `y`, `width`, `height` + `svgText` | Transform only (rotation/flip)        |
+<!-- AUTOGEN:BEGIN object-types -->
+
+| `type`             | Description                                           | Geometry                                | Styles                                |
+| ------------------ | ----------------------------------------------------- | --------------------------------------- | ------------------------------------- |
+| `rect`             | General-purpose node / label box                      | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform, Radius |
+| `markdown`         | Markdown-rendered document card                       | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform, Radius |
+| `ellipse`          | Ellipse / oval node (center-based geometry)           | `cx`, `cy`, `rx`, `ry`                  | Stroke, Fill, Text, Transform         |
+| `diamond`          | Decision / branch node                                | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `stadium`          | Start / end terminator                                | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `parallelogram`    | Input / output                                        | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `hexagon`          | Preparation                                           | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `cloud`            | External system, fuzzy concept                        | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `document`         | Report, file                                          | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `multiDocument`    | Report batch / file set                               | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `actor`            | User, role, stakeholder                               | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `callout`          | Annotation bubble                                     | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `db`               | Data store                                            | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `storedData`       | Generic stored data (file / cache)                    | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `subroutine`       | Predefined process / call                             | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `trapezoid`        | Manual operation                                      | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `manualInput`      | Manual / keyed input                                  | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `card`             | Punched-card style data                               | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `delay`            | Wait / delay                                          | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `loopLimit`        | Loop start (`"flipY": true` for the end)              | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `display`          | Output to a display                                   | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `extract`          | Extract / merge marker (no text)                      | `x`, `y`, `width`, `height`             | Stroke, Fill, Transform (no text)     |
+| `cross`            | Junction / emphasis marker (no text)                  | `x`, `y`, `width`, `height`             | Stroke, Fill, Transform (no text)     |
+| `offPageConnector` | Off-page connector (jump to another page)             | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
+| `record`           | Titled box + row compartments (UML class / ER entity) | `x`, `y`, `width`, `height`             | Stroke, Fill, Text (keyed), Transform |
+| `polyline`         | Open line                                             | `points`                                | Stroke                                |
+| `polygon`          | Closed shape from points                              | `points`                                | Stroke, Fill                          |
+| `group`            | Container of child objects                            | none                                    | Transform                             |
+| `sticky`           | Sticky note (no stroke or `rx`)                       | `x`, `y`, `width`, `height`             | Fill, Text, Transform (no Stroke)     |
+| `svg`              | Raw SVG escape hatch (opaque box)                     | `x`, `y`, `width`, `height` + `svgText` | Transform only (rotation/flip)        |
+| `connector`        | Edge / arrow between objects                          | `points`                                | Stroke                                |
+
+<!-- AUTOGEN:END object-types -->
+
+**Box shape** below means every object type except `polyline`, `polygon`, `group`,
+`svg`, and `connector` — the types that take a bounding box and can own connector
+endpoints (the box shapes are exactly the connectable types).
 
 ---
 
 ## Object details
 
-### `rect` (rectangle)
+<!-- AUTOGEN:BEGIN object-details -->
+
+### `rect`
+
+Rectangle shape. It is **connectable** (see `connector`).
 
 ```json
 {
@@ -114,19 +126,21 @@ In addition to `name` and `description`, `meta` may hold any custom keys.
 }
 ```
 
-| Field    | Type     | Default | Description               |
-| -------- | -------- | ------- | ------------------------- |
-| `x`      | `number` | `0`     | X of the top-left corner. |
-| `y`      | `number` | `0`     | Y of the top-left corner. |
-| `width`  | `number` | `100`   | Width (px).               |
-| `height` | `number` | `100`   | Height (px).              |
-| `rx`     | `number` | `0`     | Corner radius (SVG `rx`). |
+| Field    | Type     | Default | Description                       |
+| -------- | -------- | ------- | --------------------------------- |
+| `x`      | `number` | `0`     | X of the bounding box's top-left. |
+| `y`      | `number` | `0`     | Y of the bounding box's top-left. |
+| `width`  | `number` | `100`   | Bounding-box width (px).          |
+| `height` | `number` | `100`   | Bounding-box height (px).         |
+| `rx`     | `number` | `0`     | Corner radius (SVG `rx`).         |
 
 For style fields, see [Stroke style](#stroke-style), [Fill style](#fill-style), [Text style](#text-style), and [Transform style](#transform-style).
 
 ---
 
 ### `ellipse`
+
+Ellipse (oval) shape. It is **connectable** like `rect`.
 
 ```json
 {
@@ -153,11 +167,7 @@ For style fields, see [Stroke style](#stroke-style), [Fill style](#fill-style), 
 
 ### `diamond`
 
-A diamond (rhombus), typically used for **decision / branch nodes in flowcharts**.
-Uses the same rect-based geometry (top-left `x`,`y` + `width`,`height`) as `rect`;
-only the rendering is a diamond. Text is laid out within the full bounding box
-(not clipped to the diamond interior), and it is **connectable** like `rect`.
-It has **no Radius** (`rx`).
+Diamond (rhombus) shape, typically used for decision/branch nodes in flowcharts. Uses the same rect-based geometry (x/y/width/height) as `rect`; only the rendering is a diamond. Text is laid out within the full bounding box (not clipped to the diamond interior). It is **connectable** like `rect`. It has **no Radius** (`rx`).
 
 ```json
 {
@@ -185,11 +195,7 @@ It has **no Radius** (`rx`).
 
 ### `stadium`
 
-A stadium (pill) with fully rounded ends, typically used for **start / end
-terminators in flowcharts**. Uses the same rect-based geometry (top-left
-`x`,`y` + `width`,`height`) as `rect`; the corner radius is always half the
-short side (no `rx` field). Text is laid out within the full bounding box, and
-it is **connectable** like `rect`.
+Stadium (pill) shape with fully rounded ends, typically used for start/end terminators in flowcharts. Uses the same rect-based geometry (x/y/width/height) as `rect`; only the rendering is a stadium. Text is laid out within the full bounding box. It is **connectable** like `rect`. It has **no Radius** (`rx`).
 
 ```json
 {
@@ -214,11 +220,7 @@ it is **connectable** like `rect`.
 
 ### `parallelogram`
 
-A parallelogram (top edge shifted right), typically used for **input / output
-steps in flowcharts**. Uses the same rect-based geometry (top-left `x`,`y` +
-`width`,`height`) as `rect`; only the rendering is slanted. Text is laid out
-with a small horizontal inset to stay inside the slanted sides, and it is
-**connectable** like `rect`. It has **no Radius** (`rx`).
+Parallelogram shape (top edge shifted right), typically used for input/output steps in flowcharts. Uses the same rect-based geometry (x/y/width/height) as `rect`; only the rendering is a parallelogram. Text is laid out with a small horizontal inset to stay inside the slanted sides. It is **connectable** like `rect`. It has **no Radius** (`rx`).
 
 ```json
 {
@@ -243,11 +245,7 @@ with a small horizontal inset to stay inside the slanted sides, and it is
 
 ### `hexagon`
 
-A hexagon with pointed left/right caps, typically used for **preparation steps
-in flowcharts** or emphasis nodes. Uses the same rect-based geometry (top-left
-`x`,`y` + `width`,`height`) as `rect`. Text is laid out with a small horizontal
-inset to stay inside the caps, and it is **connectable** like `rect`. It has
-**no Radius** (`rx`).
+Hexagon shape with pointed left/right caps, typically used for preparation steps in flowcharts or emphasis nodes. Uses the same rect-based geometry (x/y/width/height) as `rect`; only the rendering is a hexagon. Text is laid out with a small horizontal inset to stay inside the caps. It is **connectable** like `rect`. It has **no Radius** (`rx`).
 
 ```json
 {
@@ -272,12 +270,7 @@ inset to stay inside the caps, and it is **connectable** like `rect`. It has
 
 ### `cloud`
 
-A cloud, typically used for **external systems / networks in architecture
-diagrams** or fuzzy concepts in brainstorming. Uses the same rect-based
-geometry (top-left `x`,`y` + `width`,`height`) as `rect`. The bumps eat into
-the bounding box, so text is laid out in a **reduced central region** — give
-the shape generous width/height for longer text. It is **connectable** like
-`rect`, and has **no Radius** (`rx`).
+Cloud shape, typically used for external systems/networks in architecture diagrams or fuzzy concepts in brainstorming. Uses the same rect-based geometry (x/y/width/height) as `rect`; only the rendering is a cloud. Text is laid out in a reduced central region inside the bumps, so give it generous width/height for longer text. It is **connectable** like `rect`. It has **no Radius** (`rx`).
 
 ```json
 {
@@ -302,11 +295,7 @@ the shape generous width/height for longer text. It is **connectable** like
 
 ### `document`
 
-A document (rect with a wavy bottom edge), typically used for **reports / files
-in flowcharts** or deliverables in business diagrams. Uses the same rect-based
-geometry (top-left `x`,`y` + `width`,`height`) as `rect`. Text is laid out
-**above the bottom wave band**, and it is **connectable** like `rect`. It has
-**no Radius** (`rx`).
+Document shape (rect with a wavy bottom edge), typically used for reports/files in flowcharts or deliverables in business diagrams. Uses the same rect-based geometry (x/y/width/height) as `rect`; only the rendering is a document. Text is laid out above the bottom wave band. It is **connectable** like `rect`. It has **no Radius** (`rx`).
 
 ```json
 {
@@ -331,12 +320,7 @@ geometry (top-left `x`,`y` + `width`,`height`) as `rect`. Text is laid out
 
 ### `actor`
 
-An actor (stick figure), typically used for **users / roles in use-case
-diagrams** or stakeholders in business diagrams. Uses the same rect-based
-geometry (top-left `x`,`y` + `width`,`height`) as `rect`. The figure fills the
-upper part of the bounding box and text is laid out in the **label band below
-the figure** — keep labels short. A portrait aspect ratio (e.g. 80x100) looks
-best. It is **connectable** like `rect`, and has **no Radius** (`rx`).
+Actor (stick figure) shape, typically used for users/roles in use-case diagrams or stakeholders in business diagrams. Uses the same rect-based geometry (x/y/width/height) as `rect`; only the rendering is a stick figure. Text is laid out in the label band below the figure, so keep labels short. A portrait aspect ratio (e.g. 80x100) looks best. It is **connectable** like `rect`. It has **no Radius** (`rx`).
 
 ```json
 {
@@ -361,12 +345,7 @@ best. It is **connectable** like `rect`, and has **no Radius** (`rx`).
 
 ### `callout`
 
-A speech-bubble callout with a fixed tail pointing down-left, typically used
-for **annotations and explanatory comments**. Uses the same rect-based geometry
-(top-left `x`,`y` + `width`,`height`) as `rect`; the tail occupies the bottom
-quarter of the bounding box, so place the shape so the tail tip lands near what
-it annotates. Text is laid out in the **bubble body above the tail band**. It
-is **connectable** like `rect`, and has **no Radius** (`rx`).
+Speech-bubble callout, typically used for annotations and explanatory comments. Uses the same rect-based geometry (x/y/width/height) as `rect`; only the rendering is a bubble. The tail stays inside the bounding box, occupying a quarter of it on its side; text is laid out in the bubble body beside it. Point the tail at the annotated object via `tail` (default: bottom edge, position 0.2). It is **connectable** like `rect`. It has **no Radius** (`rx`).
 
 ```json
 {
@@ -380,22 +359,19 @@ is **connectable** like `rect`, and has **no Radius** (`rx`).
 }
 ```
 
-| Field    | Type     | Default | Description                       |
-| -------- | -------- | ------- | --------------------------------- |
-| `x`      | `number` | `0`     | X of the bounding box's top-left. |
-| `y`      | `number` | `0`     | Y of the bounding box's top-left. |
-| `width`  | `number` | `160`   | Bounding-box width (px).          |
-| `height` | `number` | `110`   | Bounding-box height (px).         |
+| Field    | Type     | Default         | Description                                                                                                                                                                                                    |
+| -------- | -------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `x`      | `number` | `0`             | X of the bounding box's top-left.                                                                                                                                                                              |
+| `y`      | `number` | `0`             | Y of the bounding box's top-left.                                                                                                                                                                              |
+| `width`  | `number` | `160`           | Bounding-box width (px).                                                                                                                                                                                       |
+| `height` | `number` | `110`           | Bounding-box height (px).                                                                                                                                                                                      |
+| `tail`   | `object` | bottom at `0.2` | Tail tip placement: `{ "side": ..., "position": ... }`. `side` is the edge the tip sits on (`"top"` / `"right"` / `"bottom"` / `"left"`), `position` is 0–1 along that edge. Point it at the annotated object. |
 
 ---
 
 ### `db`
 
-A database cylinder, typically used for **data stores in architecture or ER diagrams**.
-Uses the same rect-based geometry (top-left `x`,`y` + `width`,`height`) as `rect`;
-only the rendering is a cylinder. Text is laid out in the **body region below the
-top cap ellipse** (not the full bounding box), and it is **connectable** like `rect`.
-It has **no Radius** (`rx`).
+Database cylinder shape, typically used for data stores in architecture or ER diagrams. Uses the same rect-based geometry (x/y/width/height) as `rect`; only the rendering is a cylinder. Text is laid out in the body region below the top cap ellipse (not the full bounding box). It is **connectable** like `rect`. It has **no Radius** (`rx`).
 
 ```json
 {
@@ -420,12 +396,7 @@ It has **no Radius** (`rx`).
 
 ### Flowchart box shapes (`multiDocument` / `storedData` / `subroutine` / `trapezoid` / `manualInput` / `card` / `delay` / `loopLimit` / `display` / `extract` / `cross` / `offPageConnector`)
 
-All twelve use the **same rect-based geometry** (top-left `x`,`y` + `width`,`height`)
-and the same Stroke / Fill / Transform styles as `rect`; only the drawn outline
-differs. Ten of them also take Text like `rect`; **`extract` and `cross` hold no
-text** (they are markers — omit `text` and the font fields). They are all
-**connectable** like `rect` and have **no Radius** (`rx`). Set `type` to the value
-below and give a bounding box.
+All 12 use the **same rect-based geometry** (top-left `x`,`y` + `width`,`height`) and the same Stroke / Fill / Transform styles as `rect`; only the drawn outline differs. 10 of them also take Text like `rect`; **`extract` and `cross` hold no text** (they are markers — omit `text` and the font fields). They are all **connectable** like `rect` and have **no Radius** (`rx`). Set `type` to the value below and give a bounding box.
 
 | `type`             | Outline                                      | Typical use                               |
 | ------------------ | -------------------------------------------- | ----------------------------------------- |
@@ -438,8 +409,8 @@ below and give a bounding box.
 | `delay`            | Rectangle whose right edge is a semicircle   | Wait / delay                              |
 | `loopLimit`        | Rectangle with both top corners cut off      | Loop start (`"flipY": true` for the end)  |
 | `display`          | Pointed left edge, rounded right cap         | Output to a display                       |
-| `extract`          | Upward triangle, apex at the top (no text)   | Extract / merge / marker                  |
-| `cross`            | Plus sign (no text)                          | Junction / emphasis marker                |
+| `extract`          | Upward triangle, apex at the top (no text)   | Extract / merge marker (no text)          |
+| `cross`            | Plus sign (no text)                          | Junction / emphasis marker (no text)      |
 | `offPageConnector` | Home-plate pentagon pointing down            | Off-page connector (jump to another page) |
 
 ```json
@@ -453,6 +424,8 @@ below and give a bounding box.
 	"text": "loadUser()"
 }
 ```
+
+<!-- AUTOGEN:END object-details -->
 
 ---
 
@@ -843,12 +816,10 @@ Options for `anchor.kind`:
 
 `ConnectPointId` options: `"topCenter"` / `"rightCenter"` / `"bottomCenter"` / `"leftCenter"`. For the center, use `{ "kind": "center" }` (not a `connectPoint`).
 
-The object referenced by `owner.id` may be **only a box shape (`rect`, `markdown`, `ellipse`, `diamond`,
-`stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `multiDocument`, `actor`, `callout`, `db`, `storedData`,
-`subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `loopLimit`, `display`, `extract`, `cross`, `offPageConnector`, `record`, or
-`sticky`)** — these are the connectable types. A `polyline`, `polygon`, `group`, `svg`, or `connector`
-**cannot** be an endpoint owner; the document is rejected if one is referenced. To
-anchor a connector near such a shape, use a `FreeEndpointRef` instead.
+The object referenced by `owner.id` may be **only a box shape** — every object type
+except `polyline`, `polygon`, `group`, `svg`, and `connector` is connectable. Those
+five **cannot** be an endpoint owner; the document is rejected if one is referenced.
+To anchor a connector near such a shape, use a `FreeEndpointRef` instead.
 
 #### FreeEndpointRef (free point)
 
@@ -880,7 +851,7 @@ diagram adapts to light/dark themes.
 
 ### Stroke style
 
-Applies to every box shape except `sticky` (`rect`, `markdown`, `ellipse`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `multiDocument`, `actor`, `callout`, `db`, `storedData`, `subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `loopLimit`, `display`, `extract`, `cross`, `offPageConnector`, `record`), plus `polyline`, `polygon`, `connector`.
+Applies to every box shape except `sticky`, plus `polyline`, `polygon`, `connector`.
 
 | Field            | Type             | Default   | Description                                              |
 | ---------------- | ---------------- | --------- | -------------------------------------------------------- |
@@ -894,7 +865,7 @@ See [Color values](#color-values-stroke--fontcolor--fill) for `"auto"`.
 
 ### Fill style
 
-Applies to every box shape (`rect`, `markdown`, `ellipse`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `multiDocument`, `actor`, `callout`, `db`, `storedData`, `subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `loopLimit`, `display`, `extract`, `cross`, `offPageConnector`, `record`, `sticky`), plus `polygon`. For `actor`, the fill paints the head circle only. For `record`, the default is `"auto"` rather than `"transparent"` (see its section).
+Applies to every box shape, plus `polygon`. For `actor`, the fill paints the head circle only. For `record` and `markdown`, the default is `"auto"` rather than `"transparent"` (see their sections).
 
 | Field  | Type     | Default         | Description                                              |
 | ------ | -------- | --------------- | -------------------------------------------------------- |
@@ -902,7 +873,7 @@ Applies to every box shape (`rect`, `markdown`, `ellipse`, `diamond`, `stadium`,
 
 ### Text style
 
-Applies to every box shape except `extract` and `cross` (which hold no text): `rect`, `markdown`, `ellipse`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `multiDocument`, `actor`, `callout`, `db`, `storedData`, `subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `loopLimit`, `display`, `offPageConnector`, `sticky`. A `record` holds text too, but has none of these shape-wide fields — its typography lives inside each slot (see its section).
+Applies to every box shape except `extract` and `cross` (which hold no text). A `record` holds text too, but has none of these shape-wide fields — its typography lives inside each slot (see its section).
 
 | Field           | Type            | Default          | Description                                                                       |
 | --------------- | --------------- | ---------------- | --------------------------------------------------------------------------------- |
@@ -920,7 +891,7 @@ Applies to every box shape except `extract` and `cross` (which hold no text): `r
 
 ### Transform style
 
-Applies to every box shape (`rect`, `markdown`, `ellipse`, `diamond`, `stadium`, `parallelogram`, `hexagon`, `cloud`, `document`, `multiDocument`, `actor`, `callout`, `db`, `storedData`, `subroutine`, `trapezoid`, `manualInput`, `card`, `delay`, `loopLimit`, `display`, `extract`, `cross`, `offPageConnector`, `record`, `sticky`) and `group`. All optional.
+Applies to every box shape and `group`. All optional.
 
 | Field             | Type      | Default | Description                        |
 | ----------------- | --------- | ------- | ---------------------------------- |

@@ -41,5 +41,5 @@ pnpm --filter @workspace/canvas lint
 
 AI 向けリファレンス:
 
-- [Canvas Doc リファレンス](./ai/reference.md)
-- [AI オーサリングガイド](./ai/ai-guide.md)
+- [Canvas Doc リファレンス](../ai-docs/assets/reference.md)
+- [AI オーサリングガイド](../ai-docs/assets/ai-guide.md)
