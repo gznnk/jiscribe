@@ -45,9 +45,13 @@ export type { StateRecord } from "./states/objects/utils/validateStateUtils";
 export { resolveAutoColor } from "./presentations/objects/utils/resolveAutoColor";
 export type { AutoColorRole } from "./presentations/objects/utils/resolveAutoColor";
 
-// For shapes deriving a text box's height from its content. Counts displayed lines by
-// reproducing the wrapping of the display-side CSS (pre-wrap + break-word).
-export { calcVisualLineCount } from "./presentations/objects/utils/measureText";
+// For shapes deriving a text box's size from its content: measureTextWidth gives the
+// width of one line, calcVisualLineCount the number of lines by reproducing the
+// wrapping of the display-side CSS (pre-wrap + break-word).
+export {
+	calcVisualLineCount,
+	measureTextWidth,
+} from "./presentations/objects/utils/measureText";
 export type { TextMeasureFont } from "./presentations/objects/utils/measureText";
 
 // Polygon/outline helpers for drawing frame-based plugin shapes and their connector outline.

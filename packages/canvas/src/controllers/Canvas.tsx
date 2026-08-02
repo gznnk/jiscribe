@@ -421,6 +421,7 @@ const CanvasComponent = ({
 		state.rootIds,
 		state.viewport,
 		state.textEditState?.objectId ?? null,
+		registries.objectVisualBounds,
 	);
 
 	const {

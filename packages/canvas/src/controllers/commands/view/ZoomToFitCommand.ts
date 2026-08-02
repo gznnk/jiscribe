@@ -15,12 +15,16 @@ export const ZoomToFitCommand: ExecutableCommand = {
 
 	canExecute: (state) => Object.keys(state.objects).length > 0,
 
-	execute: (state) => {
-		const fitted = calcFitViewport(state.objects, {
-			width: state.viewport.width,
-			height: state.viewport.height,
-			padding: PADDING_PX,
-		});
+	execute: (state, registries) => {
+		const fitted = calcFitViewport(
+			state.objects,
+			{
+				width: state.viewport.width,
+				height: state.viewport.height,
+				padding: PADDING_PX,
+			},
+			registries.objectVisualBounds,
+		);
 		// For degenerate targets (no extent to fit to), keep the current viewport
 		// (consistent with the "no targets" no-op guard).
 		if (!fitted) {

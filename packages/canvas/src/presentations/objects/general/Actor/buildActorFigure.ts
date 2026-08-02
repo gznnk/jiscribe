@@ -1,5 +1,3 @@
-import { ACTOR_FIGURE_RATIO } from "../../../../schemas/objects/general/actor/ActorDoc";
-
 export type ActorFigure = {
 	headCx: number;
 	headCy: number;
@@ -9,10 +7,11 @@ export type ActorFigure = {
 };
 
 /**
- * Lays out the stick figure inside the figure band (top ACTOR_FIGURE_RATIO of
- * the bounding box whose top-left corner is at (x, y)), leaving the band below
- * for the label. Shared by the object renderer (centered origin) and the
- * draw-drag preview.
+ * Lays out the stick figure over the whole bounding box whose top-left corner is
+ * at (x, y): the head sits on the top edge and the feet reach the bottom one. The
+ * label is not part of the box (it hangs below it — calcActorTextRegion), so
+ * nothing here has to be left free for it. Shared by the object renderer
+ * (centered origin) and the draw-drag preview, which reuses that renderer.
  */
 export const buildActorFigure = (
 	x: number,
@@ -20,15 +19,14 @@ export const buildActorFigure = (
 	width: number,
 	height: number,
 ): ActorFigure => {
-	const figureHeight = height * ACTOR_FIGURE_RATIO;
 	const centerX = x + width / 2;
-	const headR = figureHeight * 0.14;
+	const headR = height * 0.14;
 	const neckY = y + headR * 2;
-	const armY = y + figureHeight * 0.36;
-	const hipY = y + figureHeight * 0.62;
-	const footY = y + figureHeight;
-	const armHalf = Math.min(width * 0.3, figureHeight * 0.32);
-	const legHalf = Math.min(width * 0.24, figureHeight * 0.28);
+	const armY = y + height * 0.36;
+	const hipY = y + height * 0.62;
+	const footY = y + height;
+	const armHalf = Math.min(width * 0.3, height * 0.32);
+	const legHalf = Math.min(width * 0.24, height * 0.28);
 	return {
 		headCx: centerX,
 		headCy: y + headR,

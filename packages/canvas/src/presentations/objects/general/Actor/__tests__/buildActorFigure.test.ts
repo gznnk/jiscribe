@@ -1,23 +1,20 @@
 import { describe, it, expect } from "vitest";
 
-import { ACTOR_FIGURE_RATIO } from "../../../../../schemas/objects/general/actor/ActorDoc";
 import { parseSvgPathPoints } from "../../../__tests__/support/parseSvgPathPoints";
 import { buildActorFigure } from "../buildActorFigure";
 
 describe("buildActorFigure", () => {
-	it("centers the head horizontally and seats it at the top of the band", () => {
+	it("centers the head horizontally and seats it at the top of the box", () => {
 		const figure = buildActorFigure(0, 0, 80, 100);
 		expect(figure.headCx).toBe(40);
 		expect(figure.headCy).toBeCloseTo(figure.headR);
 	});
 
-	it("keeps the whole figure inside the top ACTOR_FIGURE_RATIO band, leaving the caption band free", () => {
+	it("fills the whole box, with the feet on its bottom edge", () => {
 		const [x, y, width, height] = [10, 20, 80, 100];
-		const bandBottom = y + height * ACTOR_FIGURE_RATIO;
 		const figure = buildActorFigure(x, y, width, height);
 
 		expect(figure.headCy - figure.headR).toBeGreaterThanOrEqual(y);
-		expect(figure.headCy + figure.headR).toBeLessThanOrEqual(bandBottom);
 
 		const points = parseSvgPathPoints(figure.limbsPath);
 		expect(points).toHaveLength(8);
@@ -25,8 +22,11 @@ describe("buildActorFigure", () => {
 			expect(point.x).toBeGreaterThanOrEqual(x);
 			expect(point.x).toBeLessThanOrEqual(x + width);
 			expect(point.y).toBeGreaterThanOrEqual(y);
-			expect(point.y).toBeLessThanOrEqual(bandBottom);
+			expect(point.y).toBeLessThanOrEqual(y + height);
 		}
+
+		const lowestPoint = Math.max(...points.map((point) => point.y));
+		expect(lowestPoint).toBeCloseTo(y + height);
 	});
 
 	it("hangs the torso below the head and the legs below the torso", () => {
@@ -63,13 +63,13 @@ describe("buildActorFigure", () => {
 	});
 
 	it("caps the arm span on the narrow axis so a wide box does not stretch the limbs", () => {
-		const figureHeight = 100 * ACTOR_FIGURE_RATIO;
-		const wide = buildActorFigure(0, 0, 1000, 100);
+		const height = 100;
+		const wide = buildActorFigure(0, 0, 1000, height);
 		const spanFromCenter = Math.max(
 			...parseSvgPathPoints(wide.limbsPath).map((p) => Math.abs(p.x - 500)),
 		);
-		// figureHeight bounds the span, not the 1000px width.
-		expect(spanFromCenter).toBeCloseTo(figureHeight * 0.32);
+		// height bounds the span, not the 1000px width.
+		expect(spanFromCenter).toBeCloseTo(height * 0.32);
 	});
 
 	it("collapses to a degenerate figure for a zero-sized box rather than producing NaN", () => {

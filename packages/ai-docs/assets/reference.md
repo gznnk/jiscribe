@@ -320,7 +320,7 @@ Document shape (rect with a wavy bottom edge), typically used for reports/files 
 
 ### `actor`
 
-Actor (stick figure) shape, typically used for users/roles in use-case diagrams or stakeholders in business diagrams. Uses the same rect-based geometry (x/y/width/height) as `rect`; only the rendering is a stick figure. Text is laid out in the label band below the figure, so keep labels short. A portrait aspect ratio (e.g. 80x100) looks best. It is **connectable** like `rect`. It has **no Radius** (`rx`).
+Actor (stick figure) shape, typically used for users/roles in use-case diagrams or stakeholders in business diagrams. Uses the same rect-based geometry (x/y/width/height) as `rect`; only the rendering is a stick figure. The stick figure fills the whole box, and the text is drawn as a label below the box, auto-sized to the text itself (so it stays readable at any box size and does not need the box widened for it). A portrait aspect ratio (e.g. 80x100) looks best. It is **connectable** like `rect`. It has **no Radius** (`rx`).
 
 ```json
 {

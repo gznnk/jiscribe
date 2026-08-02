@@ -3,6 +3,7 @@ import type { ObjectAnchorRegionRegistry } from "../../presentations/objects/reg
 import type { ObjectComponentRegistry } from "../../presentations/objects/registry/ObjectComponentRegistry";
 import type { ObjectOutlineRegistry } from "../../presentations/objects/registry/ObjectOutlineRegistry";
 import type { ObjectTextRegionRegistry } from "../../presentations/objects/registry/ObjectTextRegionRegistry";
+import type { ObjectVisualBoundsRegistry } from "../../presentations/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
 import type { ObjectFactoryRegistry } from "../../schemas/registry/ObjectFactoryRegistry";
 import type { Camera } from "../../states/canvas/Viewport";
@@ -38,6 +39,7 @@ export type CanvasRegistries = {
 	objectTextEditOverflow: ObjectTextEditOverflowRegistry;
 	objectOutline: ObjectOutlineRegistry;
 	objectAnchorRegion: ObjectAnchorRegionRegistry;
+	objectVisualBounds: ObjectVisualBoundsRegistry;
 	objectBehavior: ObjectBehaviorRegistry;
 	selectionControl: SelectionControlRegistry;
 	gestureHandler: GestureHandlerRegistry;

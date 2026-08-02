@@ -15,6 +15,7 @@ import {
 	rasterizeSvgToPngBlob,
 } from "../../export";
 import type { BuildExportSvgOptions } from "../../export";
+import type { ObjectVisualBoundsRegistry } from "../../presentations/objects/registry/ObjectVisualBoundsRegistry";
 import { canvasToDoc } from "../../states/canvas/CanvasMapper";
 import type { CanvasState } from "../../states/canvas/CanvasState";
 import type { ObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
@@ -94,17 +95,26 @@ export type CanvasExportImagePayload = {
  * fit-to-content viewBox (content bounds + margin), so the image is
  * independent of the current pan/zoom and window size. An empty canvas
  * falls back to exporting the current view.
+ *
+ * @param state - The objects to export and their z-order
+ * @param objectMapper - Per-canvas ObjectMapperRegistry, used to serialize the
+ *   embedded `.jis.json` source
+ * @param visualBounds - Per-canvas ObjectVisualBoundsRegistry; without it the
+ *   viewBox is fitted to the geometry boxes and the default 16px margin is all
+ *   that keeps a shape's outside decoration from being cropped
+ * @param options - Margin / source embedding / background overrides
  */
 export const resolveExportOptions = (
 	state: Pick<CanvasState, "objects" | "rootIds">,
 	objectMapper: ObjectMapperRegistry,
+	visualBounds?: Pick<ObjectVisualBoundsRegistry, "get"> | null,
 	{
 		margin = EXPORT_FIT_PADDING,
 		includeSource = true,
 		transparentBackground = false,
 	}: CanvasExportOptions = {},
 ): BuildExportSvgOptions => {
-	const bounds = calcContentBounds(state.objects);
+	const bounds = calcContentBounds(state.objects, visualBounds);
 	// Content that is only a horizontal or vertical line degenerates to zero width or height,
 	// and with margin 0 the viewBox would collapse and export an empty image. Guarantee at
 	// least 1 world px, centering the content in the band it gains.
@@ -238,6 +248,7 @@ export const useCanvasExport = ({
 			resolveExportOptions(
 				canvasStateRef.current,
 				registries.objectMapper,
+				registries.objectVisualBounds,
 				options,
 			),
 		[registries],

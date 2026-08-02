@@ -8,6 +8,7 @@ import type { Stencil } from "../controllers/ui/objects/Stencil";
 import type { ObjectAnchorRegionCalculator } from "../presentations/objects/registry/ObjectAnchorRegionRegistry";
 import type { ObjectOutlineCalculator } from "../presentations/objects/registry/ObjectOutlineRegistry";
 import type { ObjectTextRegionCalculator } from "../presentations/objects/registry/ObjectTextRegionRegistry";
+import type { ObjectVisualBoundsCalculator } from "../presentations/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectDoc } from "../schemas/objects/base/ObjectDoc";
 import type { ExtraStylePropertyDescriptor } from "../schemas/objects/types/ExtraStyleProperty";
 import type { ObjectDocDefinition } from "../schemas/plugin/ObjectDocDefinition";
@@ -63,6 +64,14 @@ export type ObjectTypeDefinition<
 
 	/** Band the edge connect points are centered on. Omitted = full bbox (see ObjectAnchorRegionRegistry). */
 	anchorRegion?: ObjectAnchorRegionCalculator;
+
+	/**
+	 * Everything the type draws, including what falls outside its geometry box.
+	 * Read by the visual-extent consumers only (zoom-to-fit, export viewBox,
+	 * culling, menu placement) — selection and snapping keep using the geometry
+	 * box. Omitted = geometry box (see ObjectVisualBoundsRegistry).
+	 */
+	visualBounds?: ObjectVisualBoundsCalculator;
 
 	// --- Interaction (controllers) ---
 

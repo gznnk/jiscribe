@@ -10,6 +10,7 @@ import { createObjectAnchorRegionRegistry } from "../../presentations/objects/re
 import { createObjectComponentRegistry } from "../../presentations/objects/registry/ObjectComponentRegistry";
 import { createObjectOutlineRegistry } from "../../presentations/objects/registry/ObjectOutlineRegistry";
 import { createObjectTextRegionRegistry } from "../../presentations/objects/registry/ObjectTextRegionRegistry";
+import { createObjectVisualBoundsRegistry } from "../../presentations/objects/registry/ObjectVisualBoundsRegistry";
 import { createObjectFactoryRegistry } from "../../schemas/registry/ObjectFactoryRegistry";
 import { createObjectMapperRegistry } from "../../states/registry/ObjectMapperRegistry";
 import { createObjectStateValidatorRegistry } from "../../states/registry/ObjectStateValidatorRegistry";
@@ -48,6 +49,7 @@ export const createCanvasRegistries = (
 		objectTextEditOverflow: createObjectTextEditOverflowRegistry(),
 		objectOutline: createObjectOutlineRegistry(),
 		objectAnchorRegion: createObjectAnchorRegionRegistry(),
+		objectVisualBounds: createObjectVisualBoundsRegistry(),
 		objectBehavior: createObjectBehaviorRegistry(),
 		selectionControl: createSelectionControlRegistry(),
 		gestureHandler: createGestureHandlerRegistry(),

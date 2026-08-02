@@ -18,7 +18,7 @@ export const ZoomToSelectionCommand: ExecutableCommand = {
 
 	canExecute: (state) => state.selectedIds.length > 0,
 
-	execute: (state) => {
+	execute: (state, registries) => {
 		const { viewport } = state;
 
 		const targetIds = buildSelectedIdsWithDescendants(
@@ -40,7 +40,11 @@ export const ZoomToSelectionCommand: ExecutableCommand = {
 				continue;
 			}
 
-			const bbox = calcObjectBoundingBox(obj, state.objects);
+			const bbox = calcObjectBoundingBox(
+				obj,
+				state.objects,
+				registries.objectVisualBounds,
+			);
 			if (!bbox) {
 				continue;
 			}

@@ -14,6 +14,7 @@ import { Connector } from "../../presentations/objects/connections/Connector";
 import {
 	Actor,
 	calcActorTextRegion,
+	calcActorVisualBounds,
 } from "../../presentations/objects/general/Actor";
 import {
 	Cloud,
@@ -179,6 +180,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			stateValidator: isValidActorState,
 			component: Actor,
 			textRegion: calcActorTextRegion,
+			visualBounds: calcActorVisualBounds,
 			behavior: createFrameBehavior<ActorState>(),
 			stencils: ActorStencils,
 		}),
@@ -376,6 +378,9 @@ export const applyObjectDefinition = (
 	if (definition.anchorRegion) {
 		registries.objectAnchorRegion.register(type, definition.anchorRegion);
 	}
+	if (definition.visualBounds) {
+		registries.objectVisualBounds.register(type, definition.visualBounds);
+	}
 	registries.objectBehavior.register(type, definition.behavior);
 	registries.objectStateValidator.register(type, definition.stateValidator);
 	registries.objectMenu.register(
@@ -423,6 +428,7 @@ export const initializeObjectRegistry = (
 	registries.objectTextEditOverflow.clear();
 	registries.objectOutline.clear();
 	registries.objectAnchorRegion.clear();
+	registries.objectVisualBounds.clear();
 	registries.objectBehavior.clear();
 	registries.objectStateValidator.clear();
 	registries.objectMenu.clear();

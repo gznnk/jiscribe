@@ -1,14 +1,22 @@
 import { DEFAULT_FONT_FAMILY } from "../../../../constants/defaultFontFamily";
 import type { CreateObjectType } from "../../types/CreateObjectType";
 import type { ObjectFeatures } from "../../types/ObjectFeatures";
+import type { TextSlot } from "../../types/TextSlot";
 import { AUTO_COLOR } from "../../utils/autoColor";
 
 /**
- * Height of the stick figure as a fraction of the height; the band below it
- * holds the label. Shared by the renderer (figure layout) and the text region
- * inset so the figure and the label band can never drift apart.
+ * Typography the label falls back to for a field the slot leaves out. Spread
+ * into ACTOR_DOC_DEFAULTS, so the font the label box is measured with
+ * (calcActorTextRegion) cannot differ from the one it is drawn with.
  */
-export const ACTOR_FIGURE_RATIO = 0.72;
+export const ACTOR_LABEL_STYLE_DEFAULTS = {
+	textAlign: "center",
+	verticalAlign: "middle",
+	fontColor: AUTO_COLOR,
+	fontSize: 14,
+	fontFamily: DEFAULT_FONT_FAMILY,
+	fontWeight: "normal",
+} as const satisfies Omit<TextSlot, "text">;
 
 /**
  * An actor (stick figure) used for users / roles in use-case diagrams and for
@@ -17,7 +25,9 @@ export const ACTOR_FIGURE_RATIO = 0.72;
  * It adopts rect geometry (x/y/width/height) and only swaps the rendering for a
  * stick figure with a full-bbox transparent hit area (thin limbs alone would be
  * hard to grab). This lets it reuse Frame-based transforms and connector
- * outline connections with the same mechanism as Rect.
+ * outline connections with the same mechanism as Rect. The figure fills the
+ * whole box; the label is sized from its own text and hung below the box
+ * (calcActorTextRegion), so it stays legible however small the box gets.
  */
 export const ActorFeatures = {
 	type: "actor",
@@ -47,10 +57,5 @@ export const ACTOR_DOC_DEFAULTS: Omit<ActorDoc, "id"> = {
 	stroke: AUTO_COLOR,
 	strokeWidth: 2,
 	text: "",
-	textAlign: "center",
-	verticalAlign: "middle",
-	fontColor: AUTO_COLOR,
-	fontSize: 14,
-	fontFamily: DEFAULT_FONT_FAMILY,
-	fontWeight: "normal",
+	...ACTOR_LABEL_STYLE_DEFAULTS,
 } as const as ActorDoc;

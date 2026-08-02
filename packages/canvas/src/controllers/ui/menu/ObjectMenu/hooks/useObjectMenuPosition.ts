@@ -1,6 +1,7 @@
 import { type RefObject, useLayoutEffect, useMemo, useState } from "react";
 
 import type { CanvasControllerState } from "../../../../CanvasTypes";
+import { useCanvasRegistries } from "../../../../registries/CanvasRegistriesContext";
 import { calcObjectsBoundingBox } from "../../../../utils/calcObjectBoundingBox";
 
 /** Distance between the ObjectMenu and the object (px) */
@@ -40,6 +41,10 @@ export function useObjectMenuPosition(
 		objectMenuOpenId,
 		textEditState,
 	} = state;
+
+	// The menu sits below the selection's drawn extent, so a shape whose label
+	// hangs outside its geometry box must not have the menu land on the label.
+	const { objectVisualBounds } = useCanvasRegistries();
 
 	const [menuDimensions, setMenuDimensions] = useState({
 		width: 0,
@@ -98,7 +103,11 @@ export function useObjectMenuPosition(
 			selectedConnectorId !== null
 				? [selectedConnectorId, ...selectedIds]
 				: selectedIds;
-		const bounds = calcObjectsBoundingBox(targetIds, objects);
+		const bounds = calcObjectsBoundingBox(
+			targetIds,
+			objects,
+			objectVisualBounds,
+		);
 
 		if (!bounds) {
 			return { shouldRender: false, x: 0, y: 0 };
@@ -173,5 +182,6 @@ export function useObjectMenuPosition(
 		objects,
 		viewport,
 		menuDimensions,
+		objectVisualBounds,
 	]);
 }

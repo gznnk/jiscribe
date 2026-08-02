@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 
+import type { ObjectVisualBoundsRegistry } from "../../../presentations/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import { calcContentBounds } from "../calcContentBounds";
 
@@ -127,6 +128,35 @@ describe("calcContentBounds", () => {
 			top: 10,
 			right: 10,
 			bottom: 10,
+		});
+	});
+
+	describe("visual bounds", () => {
+		/** Stands in for a type drawing a 10px-tall strip below its box. */
+		const stripBelowBox: Pick<ObjectVisualBoundsRegistry, "get"> = {
+			get: () => (state) => ({
+				x: -state.width / 2,
+				y: -state.height / 2,
+				width: state.width,
+				height: state.height + 10,
+			}),
+		};
+
+		it("includes what a type draws outside its box, so a fit cannot crop it", () => {
+			const objects = toRecord([rect("a", 50, 50, 100, 60)]);
+			expect(calcContentBounds(objects, stripBelowBox)).toEqual({
+				left: 0,
+				top: 20,
+				right: 100,
+				bottom: 90,
+			});
+		});
+
+		it("reproduces the geometry-only result when the registry is omitted", () => {
+			const objects = toRecord([rect("a", 50, 50, 100, 60)]);
+			expect(calcContentBounds(objects, null)).toEqual(
+				calcContentBounds(objects),
+			);
 		});
 	});
 });
