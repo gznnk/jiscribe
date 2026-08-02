@@ -89,15 +89,46 @@ export function stripUnknownContent(
 		}
 	};
 
+	// Allocation-free detection of an unknown pure-enum value anywhere in the
+	// subtree (`children` excluded — stripNode scans each child itself). Parsing
+	// runs per text edit in the VSCode host, so the common all-valid document must
+	// not pay the copying walk below; this scan is what lets it exit with reads only.
+	const containsUnknownEnumValue = (value: unknown): boolean => {
+		if (isArray(value)) {
+			return (value as unknown[]).some(containsUnknownEnumValue);
+		}
+		if (!isObject(value)) {
+			return false;
+		}
+		const o = value as Record<string, unknown>;
+		for (const key in o) {
+			if (key === "children") {
+				continue;
+			}
+			const isKnownEnumValue = pureEnumFields.get(key);
+			if (isKnownEnumValue !== undefined && !isKnownEnumValue(o[key])) {
+				return true;
+			}
+			if (containsUnknownEnumValue(o[key])) {
+				return true;
+			}
+		}
+		return false;
+	};
+
 	// Removes unknown pure-enum values at any depth of a node (flat fields, the
 	// connector label, text slots, …). Structural recursion into group children is
 	// owned by stripNode, so `children` is passed through untouched here. Returns
-	// the input itself when nothing was removed.
+	// the input itself when nothing was removed; subtrees are copied only along
+	// paths where the scan above found something to drop.
 	const stripEnumFields = (
 		value: unknown,
 		path: string,
 		ownerId: string | undefined,
 	): unknown => {
+		if (!containsUnknownEnumValue(value)) {
+			return value;
+		}
 		if (isArray(value)) {
 			let changed = false;
 			const strippedElements = (value as unknown[]).map((element, i) => {
