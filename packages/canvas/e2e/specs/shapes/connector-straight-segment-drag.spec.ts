@@ -11,12 +11,14 @@ import type { CanvasDriver } from "../../support/CanvasDriver";
  * segments with it. A segment with an end pinned to a shape is not draggable at all, and must not
  * pretend to be: it carries no band, so the cursor over it stays the line's own.
  *
- * Four things are guarded. (1) A plain two-point straight connector offers no drag band, since its
+ * Five things are guarded. (1) A plain two-point straight connector offers no drag band, since its
  * single segment always has a pinned end. (2) With two vertices, the middle segment carries a band
  * and translates both of them by the same offset while the endpoints stay on their shapes. (3) The
  * band covers the whole length, so the segment can be grabbed away from the midpoint (where the
  * insert handle sits). (4) The cursors say which is which: `move` over a draggable segment,
- * `pointer` over the bare line.
+ * `pointer` over the bare line. (5) A free endpoint moves with the segment like a vertex does, and
+ * Undo takes the whole drag back — that is the path rewriting `source` / `target` rather than
+ * `points`, which the other cases never exercise.
  */
 
 type Vec = { x: number; y: number };
@@ -157,6 +159,36 @@ async function buildBentStraightConnector(
 	return connectorId;
 }
 
+/**
+ * Runs one rectangle's rightCenter out to empty space, switches to straight and bends it once,
+ * leaving the path [owned source, v0, free target]. Segment 1 is then the movable one, and moving
+ * it rewrites the target endpoint's own coordinate rather than a vertex.
+ */
+async function buildFreeEndConnector(canvas: CanvasDriver): Promise<string> {
+	await canvas.drawShape("Rectangle", { x: 300, y: 180 }, { x: 460, y: 280 });
+	await canvas.deselect();
+
+	await canvas.selectAt({ x: 380, y: 230 });
+	// Dropped on empty canvas, so the target end stays free (no owner shape).
+	const connectorId = await canvas.createConnector("rightCenter", {
+		x: 800,
+		y: 400,
+	});
+	await canvas.deselect();
+
+	await selectConnector(canvas, connectorId);
+	await canvas.openObjectMenu("connector-routing");
+	await canvas.page.click('[data-part="command:setRoutingStraight"]');
+	await expect
+		.poll(async () => (await readPoints(canvas, connectorId)).length, {
+			message: "straight routing draws a single direct line",
+		})
+		.toBe(2);
+
+	await insertVertex(canvas, connectorId, 0, { x: 560, y: 480 });
+	return connectorId;
+}
+
 test.describe("segment drag on a straight connector", () => {
 	test("offers no drag band while both ends of every segment are pinned to a shape", async ({
 		canvas,
@@ -235,5 +267,67 @@ test.describe("segment drag on a straight connector", () => {
 				),
 			),
 		).toBe("pointer");
+	});
+
+	test("carries a free endpoint along with the vertex, and Undo puts both back", async ({
+		canvas,
+	}) => {
+		const connectorId = await buildFreeEndConnector(canvas);
+		const initial = await readPoints(canvas, connectorId);
+		expect(initial).toHaveLength(3);
+
+		// Segment 1 runs vertex -> free target, so it moves; segment 0 hangs off the shape.
+		await expect(segmentBand(canvas, connectorId, 1)).toHaveCount(1);
+		await expect(segmentBand(canvas, connectorId, 0)).toHaveCount(0);
+
+		const grab = along(initial[1], initial[2], 0.25);
+		const requested = { x: 60, y: 90 };
+		await canvas.drag(grab, {
+			x: grab.x + requested.x,
+			y: grab.y + requested.y,
+		});
+
+		await expect
+			.poll(
+				async () => {
+					const moved = await readPoints(canvas, connectorId);
+					return Math.hypot(
+						moved[2].x - initial[2].x,
+						moved[2].y - initial[2].y,
+					);
+				},
+				{ message: "the free endpoint has moved with the segment" },
+			)
+			.toBeGreaterThan(50);
+
+		const moved = await readPoints(canvas, connectorId);
+		// The free endpoint carries its own coordinate, so it moves by the same offset as the vertex
+		// — this is the path that rewrites `target.anchor.point` rather than an entry of `points`.
+		expect(moved[2].x - initial[2].x).toBeCloseTo(moved[1].x - initial[1].x, 1);
+		expect(moved[2].y - initial[2].y).toBeCloseTo(moved[1].y - initial[1].y, 1);
+		expect(moved[2].x - initial[2].x).toBeCloseTo(requested.x, -1);
+		expect(moved[2].y - initial[2].y).toBeCloseTo(requested.y, -1);
+
+		// The owned source stays on its shape.
+		expect(Math.abs(moved[0].x - initial[0].x)).toBeLessThan(EPS);
+		expect(Math.abs(moved[0].y - initial[0].y)).toBeLessThan(EPS);
+
+		// One drag is one history entry, endpoint rewrite included.
+		await canvas.undo();
+		await expect
+			.poll(
+				async () => {
+					const undone = await readPoints(canvas, connectorId);
+					return Math.hypot(
+						undone[2].x - initial[2].x,
+						undone[2].y - initial[2].y,
+					);
+				},
+				{ message: "Undo returns the free endpoint to where it was" },
+			)
+			.toBeLessThan(EPS);
+		const undone = await readPoints(canvas, connectorId);
+		expect(Math.abs(undone[1].x - initial[1].x)).toBeLessThan(EPS);
+		expect(Math.abs(undone[1].y - initial[1].y)).toBeLessThan(EPS);
 	});
 });

@@ -2,7 +2,10 @@ import { roundToDecimal } from "@workspace/geometry";
 import type { Point } from "@workspace/geometry";
 
 import { PRECISION } from "../../../../constants/precision";
-import type { EndpointRef } from "../../../../schemas/objects/types/EndpointRef";
+import {
+	isFreeEndpointRef,
+	type EndpointRef,
+} from "../../../../schemas/objects/types/EndpointRef";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
 import { isConnectorSegmentFreelyMovable } from "../../../../states/objects/connections/connector/isConnectorSegmentFreelyMovable";
 
@@ -23,12 +26,12 @@ const readPathPoint = (
 	pathIndex: number,
 ): Point | null => {
 	if (pathIndex === 0) {
-		return connector.source.anchor.kind === "free"
+		return isFreeEndpointRef(connector.source)
 			? connector.source.anchor.point
 			: null;
 	}
 	if (pathIndex === connector.points.length + 1) {
-		return connector.target.anchor.kind === "free"
+		return isFreeEndpointRef(connector.target)
 			? connector.target.anchor.point
 			: null;
 	}
@@ -55,8 +58,8 @@ export const getConnectorSegmentEnds = (
 		!isConnectorSegmentFreelyMovable(
 			segmentIndex,
 			pathLength,
-			connector.source.anchor.kind === "free",
-			connector.target.anchor.kind === "free",
+			isFreeEndpointRef(connector.source),
+			isFreeEndpointRef(connector.target),
 		)
 	) {
 		return null;
@@ -97,7 +100,7 @@ export const translateConnectorSegment = (
 	// A free endpoint is rebuilt rather than spread, so the result is a FreeEndpointRef by
 	// construction and cannot carry an owner over.
 	const movedEndpoint = (endpoint: EndpointRef): EndpointRef =>
-		endpoint.anchor.kind === "free"
+		isFreeEndpointRef(endpoint)
 			? { anchor: { kind: "free", point: moved(endpoint.anchor.point) } }
 			: endpoint;
 

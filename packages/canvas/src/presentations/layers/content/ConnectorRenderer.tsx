@@ -3,6 +3,7 @@ import { memo, useMemo } from "react";
 import { useResolvedConnectorPoints } from "./hooks/useResolvedConnectorPoints";
 import { calcConnectorLabelAnchor } from "./utils/label/calcConnectorLabelAnchor";
 import { isOrthogonalRouting } from "../../../schemas/objects/types/ConnectorRouting";
+import { isFreeEndpointRef } from "../../../schemas/objects/types/EndpointRef";
 import type { ObjectState } from "../../../states/objects/base/ObjectState";
 import type { ConnectorState } from "../../../states/objects/connections/connector/ConnectorState";
 import {
@@ -82,8 +83,8 @@ const ConnectorRendererComponent: React.FC<ConnectorRendererProps> = ({
 				<ConnectorSegmentMoveHitAreas
 					id={connectorState.id}
 					points={resolved.points}
-					sourceIsFree={!connectorState.source.owner}
-					targetIsFree={!connectorState.target.owner}
+					sourceIsFree={isFreeEndpointRef(connectorState.source)}
+					targetIsFree={isFreeEndpointRef(connectorState.target)}
 					disablePointerEvents={disablePointerEvents}
 				/>
 			)}

@@ -8,7 +8,10 @@ import { snapFreeEndpointStraight } from "./utils/snapFreeEndpointStraight";
 import { resolveEndpointOwner } from "../../../../../presentations/layers/content/utils/endpoints/resolveEndpointOwner";
 import { ConnectorFeatures } from "../../../../../schemas/objects/connections/connector/ConnectorDoc";
 import { defaultRoutingForAnchors } from "../../../../../schemas/objects/types/ConnectorRouting";
-import { isSameEndpoint } from "../../../../../schemas/objects/types/EndpointRef";
+import {
+	isFreeEndpointRef,
+	isSameEndpoint,
+} from "../../../../../schemas/objects/types/EndpointRef";
 import { AUTO_COLOR } from "../../../../../schemas/objects/utils/autoColor";
 import type { ConnectorState } from "../../../../../states/objects/connections/connector/ConnectorState";
 import type { CanvasControllerState } from "../../../../CanvasTypes";
@@ -334,8 +337,8 @@ export class ConnectionAnchorEventHandler extends ControlStrategy {
 			// defensively guarantees a connector always has "at least one owned end".
 			if (
 				finalConnector?.type === "connector" &&
-				!(finalConnector as ConnectorState).source.owner &&
-				!(finalConnector as ConnectorState).target.owner
+				isFreeEndpointRef((finalConnector as ConnectorState).source) &&
+				isFreeEndpointRef((finalConnector as ConnectorState).target)
 			) {
 				return {
 					...state,

@@ -4,6 +4,7 @@ import { theme } from "../../../../constants/theme";
 import { useResolvedConnectorPoints } from "../../../../presentations/layers/content/hooks/useResolvedConnectorPoints";
 import { resolveEndpointOwner } from "../../../../presentations/layers/content/utils/endpoints";
 import { isOrthogonalRouting } from "../../../../schemas/objects/types/ConnectorRouting";
+import { isFreeEndpointRef } from "../../../../schemas/objects/types/EndpointRef";
 import type { CanvasState } from "../../../../states/canvas/CanvasState";
 import type { ConnectorState } from "../../../../states/objects/connections/connector/ConnectorState";
 import { useCanvasTheme } from "../../../../theme/CanvasThemeContext";
@@ -72,8 +73,8 @@ const ConnectorControlsComponent: React.FC<ConnectorControlsProps> = ({
 	// When one endpoint is free, hide the handle of the paired owned endpoint.
 	// Otherwise the owned endpoint could be dragged into empty space (free), creating a free-free connector.
 	// The free endpoint's handle is always shown (for repositioning and reconnecting to a shape).
-	const sourceIsFree = !connectorState.source.owner;
-	const targetIsFree = !connectorState.target.owner;
+	const sourceIsFree = isFreeEndpointRef(connectorState.source);
+	const targetIsFree = isFreeEndpointRef(connectorState.target);
 	const showSourceHandle = sourceIsFree || !targetIsFree;
 	const showTargetHandle = targetIsFree || !sourceIsFree;
 
