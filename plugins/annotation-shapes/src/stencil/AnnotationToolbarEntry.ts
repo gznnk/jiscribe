@@ -1,6 +1,6 @@
 import type { ToolbarEntry } from "@workspace/canvas";
 
-import { BraceIcon } from "./BraceIcon";
+import { CalloutIcon } from "./CalloutIcon";
 
 /**
  * Toolbar category entry for the annotation shapes. The annotation category is
@@ -19,6 +19,6 @@ export const annotationToolbarEntry: ToolbarEntry = {
 	kind: "category",
 	id: "annotation",
 	label: { en: "Annotation", ja: "注釈" },
-	icon: BraceIcon,
+	icon: CalloutIcon,
 	presetIds: ["callout", "note", "brace", "bracketWithStem", "bracket"],
 };

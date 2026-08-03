@@ -29,7 +29,7 @@ import type {
 const initialConfig: CanvasConfig = { plugins };
 
 // annotation / flowchart / container / general カテゴリと markdown プリセットは core の既定
-// layout に含まれない（プラグイン供給）。従来どおりの並びで出すため、ホスト側で差し込む。
+// layout に含まれない（プラグイン供給）。ホスト側で並び順を決めて差し込む。
 const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "rect" },
 	{ kind: "preset", presetId: "ellipse" },
@@ -37,11 +37,11 @@ const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "polygon" },
 	{ kind: "preset", presetId: "sticky" },
 	{ kind: "preset", presetId: "markdown" },
-	annotationToolbarEntry,
 	flowchartToolbarEntry,
-	containerToolbarEntry,
 	umlToolbarEntry,
+	containerToolbarEntry,
 	generalToolbarEntry,
+	annotationToolbarEntry,
 ];
 
 /**

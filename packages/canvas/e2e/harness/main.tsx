@@ -47,7 +47,7 @@ const initialConfig: CanvasConfig = { plugins };
 
 // The annotation / flowchart / container / general categories and the markdown / sticky presets
 // come from plugins and are not in core's default layout. The specs depend on the flyout buttons
-// and on the presets, so the harness passes a layout with the original arrangement.
+// and on the presets, so the harness passes a layout mirroring the apps' arrangement.
 const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "rect" },
 	{ kind: "preset", presetId: "ellipse" },
@@ -55,11 +55,11 @@ const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "polygon" },
 	{ kind: "preset", presetId: "sticky" },
 	{ kind: "preset", presetId: "markdown" },
-	annotationToolbarEntry,
 	flowchartToolbarEntry,
-	containerToolbarEntry,
 	umlToolbarEntry,
+	containerToolbarEntry,
 	generalToolbarEntry,
+	annotationToolbarEntry,
 ];
 
 const harnessParser = createCanvasParser({ plugins });
