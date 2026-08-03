@@ -20,8 +20,8 @@ const SERVER_SLOT_RIGHT_RATIO = 0.84;
 /**
  * Lays out a server rack over the bounding box whose top-left corner is at
  * (x, y): one rounded silhouette, divided into equal units that each carry a
- * status light and a vent slot. Shared by the object renderer (centered origin),
- * the draw-drag preview that reuses it, and the stencil icon.
+ * status light and a vent slot. Shared by the object renderer (centered origin)
+ * and the draw-drag preview that reuses it.
  */
 export const buildServerFigure: PictogramFigureBuilder = (
 	x,

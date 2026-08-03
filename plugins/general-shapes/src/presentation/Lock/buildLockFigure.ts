@@ -27,8 +27,8 @@ const LOCK_KEYHOLE_SLOT_END_RATIO = 0.68;
  * upper part of the box unable to receive a connector at all (PictogramFigure.hit).
  * It gets a hit path of its own: the same arc, closed across the bottom.
  *
- * Shared by the object renderer (centered origin), the draw-drag preview that
- * reuses it, and the stencil icon.
+ * Shared by the object renderer (centered origin) and the draw-drag preview
+ * that reuses it.
  */
 export const buildLockFigure: PictogramFigureBuilder = (
 	x,

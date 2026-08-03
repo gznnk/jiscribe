@@ -1,8 +1,8 @@
 /**
  * A pictogram's drawing, split by how it is painted. Builders return this for a
  * bounding box whose top-left corner is at (x, y), so the same builder serves
- * the object renderer (centered origin), the draw-drag preview that reuses it,
- * and the stencil icon (createPictogramIcon).
+ * both the object renderer (centered origin) and the draw-drag preview that
+ * reuses it.
  */
 export type PictogramFigure = {
 	/**

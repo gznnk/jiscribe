@@ -12,8 +12,8 @@ const QUEUE_CELL_COUNT = 4;
  * Lays out a queue over the bounding box whose top-left corner is at (x, y): one
  * rounded silhouette divided into equal cells. It carries no direction mark —
  * which end is the head is whatever the connectors say, so the shape stays usable
- * either way round. Shared by the object renderer (centered origin), the
- * draw-drag preview that reuses it, and the stencil icon.
+ * either way round. Shared by the object renderer (centered origin) and the
+ * draw-drag preview that reuses it.
  */
 export const buildQueueFigure: PictogramFigureBuilder = (
 	x,

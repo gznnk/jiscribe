@@ -14,7 +14,7 @@ const LAPTOP_CORNER_RATIO = 0.05;
  * two silhouettes — the screen, and the base splaying out below it to the full
  * width of the box. Both are bodies rather than one being detail, so a fill set
  * on the shape reaches the base too. Shared by the object renderer (centered
- * origin), the draw-drag preview that reuses it, and the stencil icon.
+ * origin) and the draw-drag preview that reuses it.
  */
 export const buildLaptopFigure: PictogramFigureBuilder = (
 	x,

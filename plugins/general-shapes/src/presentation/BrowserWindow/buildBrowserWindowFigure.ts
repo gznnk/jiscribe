@@ -12,7 +12,7 @@ const BROWSER_BUTTON_PITCH_RATIO = 0.42;
  * Lays out a browser window over the bounding box whose top-left corner is at
  * (x, y): the frame shared with the terminal (buildWindowFrame), with the three
  * window buttons in the title bar. Shared by the object renderer (centered
- * origin), the draw-drag preview that reuses it, and the stencil icon.
+ * origin) and the draw-drag preview that reuses it.
  */
 export const buildBrowserWindowFigure: PictogramFigureBuilder = (
 	x,

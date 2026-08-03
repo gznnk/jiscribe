@@ -25,8 +25,8 @@ const SMARTPHONE_HOME_BAR_Y_RATIO = 0.945;
  * (x, y): the case as the silhouette, with the screen, the speaker slit and the
  * home bar as detail. The screen is detail rather than a second silhouette so
  * that a fill set on the shape does not paint over the text sitting on it.
- * Shared by the object renderer (centered origin), the draw-drag preview that
- * reuses it, and the stencil icon.
+ * Shared by the object renderer (centered origin) and the draw-drag preview
+ * that reuses it.
  */
 export const buildSmartphoneFigure: PictogramFigureBuilder = (
 	x,

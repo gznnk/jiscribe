@@ -17,7 +17,7 @@ const TERMINAL_CARET_WIDTH_RATIO = 0.44;
  * (x, y): the frame shared with the browser (buildWindowFrame), with a shell
  * prompt where the browser puts its buttons — the two read as one family and
  * both leave the content area clear for text. Shared by the object renderer
- * (centered origin), the draw-drag preview that reuses it, and the stencil icon.
+ * (centered origin) and the draw-drag preview that reuses it.
  */
 export const buildTerminalWindowFigure: PictogramFigureBuilder = (
 	x,

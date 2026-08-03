@@ -8,8 +8,8 @@ const ENVELOPE_FLAP_DEPTH_RATIO = 0.56;
 /**
  * Lays out a closed envelope over the bounding box whose top-left corner is at
  * (x, y): the body, plus the flap folded down to a crease below its center.
- * Shared by the object renderer (centered origin), the draw-drag preview that
- * reuses it, and the stencil icon.
+ * Shared by the object renderer (centered origin) and the draw-drag preview
+ * that reuses it.
  */
 export const buildEnvelopeFigure: PictogramFigureBuilder = (
 	x,

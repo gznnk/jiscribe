@@ -4,7 +4,7 @@ import type { PictogramFigureBuilder } from "../shared/PictogramFigure";
 /**
  * Lays out a shield over the bounding box whose top-left corner is at (x, y):
  * one closed silhouette, no detail lines. Shared by the object renderer
- * (centered origin), the draw-drag preview that reuses it, and the stencil icon.
+ * (centered origin) and the draw-drag preview that reuses it.
  */
 export const buildShieldFigure: PictogramFigureBuilder = (
 	x,

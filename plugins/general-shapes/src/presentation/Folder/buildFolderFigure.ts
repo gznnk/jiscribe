@@ -5,8 +5,8 @@ import { buildPolygonPath } from "../shared/pictogramPaths";
 /**
  * Lays out a folder over the bounding box whose top-left corner is at (x, y).
  * One closed silhouette and no detail lines — the tab alone carries the meaning.
- * Shared by the object renderer (centered origin), the draw-drag preview that
- * reuses it, and the stencil icon.
+ * Shared by the object renderer (centered origin) and the draw-drag preview
+ * that reuses it.
  */
 export const buildFolderFigure: PictogramFigureBuilder = (
 	x,

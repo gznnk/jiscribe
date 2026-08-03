@@ -7,8 +7,7 @@ import { buildPolygonPath } from "../shared/pictogramPaths";
  * Lays out an isometric box over the bounding box whose top-left corner is at
  * (x, y): the hexagonal silhouette, plus the three edges meeting at its center
  * that separate the top face from the two side faces. Shared by the object
- * renderer (centered origin), the draw-drag preview that reuses it, and the
- * stencil icon.
+ * renderer (centered origin) and the draw-drag preview that reuses it.
  */
 export const buildPackageFigure: PictogramFigureBuilder = (
 	x,

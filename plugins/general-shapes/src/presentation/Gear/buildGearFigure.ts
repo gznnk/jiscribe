@@ -15,8 +15,8 @@ const GEAR_BORE_RATIO = 0.3;
  * (PictogramFigure.hit): otherwise the shape's own visual center — where a
  * pointer naturally aims — would select nothing.
  *
- * Shared by the object renderer (centered origin), the draw-drag preview that
- * reuses it, and the stencil icon.
+ * Shared by the object renderer (centered origin) and the draw-drag preview
+ * that reuses it.
  */
 export const buildGearFigure: PictogramFigureBuilder = (
 	x,
