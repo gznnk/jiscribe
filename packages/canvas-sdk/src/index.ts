@@ -34,6 +34,11 @@ export {
 } from "./presentation/outlineHelpers";
 export { calcRoundedRectOutline } from "./presentation/calcRoundedRectOutline";
 
+// For shapes whose text region is nothing but a fixed ratio inset of the box
+// (most non-below-label shapes): pass the ratios in place of a hand-written
+// calc*TextRegion.ts. A shape whose inset depends on width/height keeps its own.
+export { createInsetTextRegion } from "./presentation/createInsetTextRegion";
+
 // The shape's own silhouette: stroked, filled and grabbable. Takes the
 // FrameShapeProps createFrameObject hands its draw function, so spreading them
 // makes it the object's single `data-kind` element.

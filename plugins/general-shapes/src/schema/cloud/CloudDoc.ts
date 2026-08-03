@@ -9,6 +9,14 @@ import { AUTO_COLOR, DEFAULT_FONT_FAMILY } from "@workspace/canvas-sdk/doc";
  * bumpy cloud path. This lets it reuse Frame-based transforms and connector
  * outline connections with the same mechanism as Rect.
  */
+/** Ratio insets that keep text clear of the bumps eating into the bounding box. */
+export const CLOUD_TEXT_INSETS = {
+	top: 0.2,
+	right: 0.15,
+	bottom: 0.2,
+	left: 0.15,
+};
+
 export const CloudFeatures = {
 	type: "cloud",
 	geometry: "rect",

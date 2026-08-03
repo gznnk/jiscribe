@@ -1,8 +1,5 @@
 import type { CreateObjectState } from "@workspace/canvas";
-import type {
-	CreateObjectType,
-	ObjectFeatures,
-} from "@workspace/canvas/doc";
+import type { CreateObjectType, ObjectFeatures } from "@workspace/canvas/doc";
 import { AUTO_COLOR } from "@workspace/canvas/unstable-doc";
 import { describe, it, expect } from "vitest";
 

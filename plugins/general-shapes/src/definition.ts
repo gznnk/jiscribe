@@ -3,6 +3,7 @@ import {
 	calcBelowLabelTextRegion,
 	calcBelowLabelVisualBounds,
 	createFrameObjectDefinition,
+	createInsetTextRegion,
 	createTypeStencils,
 } from "@workspace/canvas-sdk";
 
@@ -28,52 +29,48 @@ import {
 	BrowserWindow,
 	browserWindowOutline,
 } from "./presentation/BrowserWindow";
-import { Cloud, calcCloudTextRegion, cloudOutline } from "./presentation/Cloud";
+import { Cloud, cloudOutline } from "./presentation/Cloud";
 import { Envelope, envelopeOutline } from "./presentation/Envelope";
 import { File, calcFileTextRegion, fileOutline } from "./presentation/File";
-import {
-	Folder,
-	calcFolderTextRegion,
-	folderOutline,
-} from "./presentation/Folder";
+import { Folder, folderOutline } from "./presentation/Folder";
 import { Gear, gearOutline } from "./presentation/Gear";
-import {
-	Laptop,
-	calcLaptopTextRegion,
-	laptopOutline,
-} from "./presentation/Laptop";
+import { Laptop, laptopOutline } from "./presentation/Laptop";
 import { Lock, lockOutline } from "./presentation/Lock";
 import { Package, packageOutline } from "./presentation/Package";
 import { Queue, queueOutline } from "./presentation/Queue";
 import { Server, serverOutline } from "./presentation/Server";
 import { calcWindowTextRegion } from "./presentation/shared";
-import {
-	Shield,
-	calcShieldTextRegion,
-	shieldOutline,
-} from "./presentation/Shield";
-import {
-	Smartphone,
-	calcSmartphoneTextRegion,
-	smartphoneOutline,
-} from "./presentation/Smartphone";
+import { Shield, shieldOutline } from "./presentation/Shield";
+import { Smartphone, smartphoneOutline } from "./presentation/Smartphone";
 import {
 	TerminalWindow,
 	terminalWindowOutline,
 } from "./presentation/TerminalWindow";
 import type { ActorDoc } from "./schema/actor/ActorDoc";
 import type { BrowserWindowDoc } from "./schema/browserWindow/BrowserWindowDoc";
+import { CLOUD_TEXT_INSETS } from "./schema/cloud/CloudDoc";
 import type { CloudDoc } from "./schema/cloud/CloudDoc";
 import type { EnvelopeDoc } from "./schema/envelope/EnvelopeDoc";
 import type { FileDoc } from "./schema/file/FileDoc";
+import { FOLDER_TAB_HEIGHT_RATIO } from "./schema/folder/FolderDoc";
 import type { FolderDoc } from "./schema/folder/FolderDoc";
 import type { GearDoc } from "./schema/gear/GearDoc";
+import {
+	LAPTOP_SCREEN_HEIGHT_RATIO,
+	LAPTOP_SCREEN_X_RATIO,
+} from "./schema/laptop/LaptopDoc";
 import type { LaptopDoc } from "./schema/laptop/LaptopDoc";
 import type { LockDoc } from "./schema/lock/LockDoc";
 import type { PackageDoc } from "./schema/package/PackageDoc";
 import type { QueueDoc } from "./schema/queue/QueueDoc";
 import type { ServerDoc } from "./schema/server/ServerDoc";
+import { SHIELD_SHOULDER_RATIO } from "./schema/shield/ShieldDoc";
 import type { ShieldDoc } from "./schema/shield/ShieldDoc";
+import {
+	SMARTPHONE_SCREEN_HEIGHT_RATIO,
+	SMARTPHONE_SCREEN_X_RATIO,
+	SMARTPHONE_SCREEN_Y_RATIO,
+} from "./schema/smartphone/SmartphoneDoc";
 import type { SmartphoneDoc } from "./schema/smartphone/SmartphoneDoc";
 import type { TerminalWindowDoc } from "./schema/terminalWindow/TerminalWindowDoc";
 import type { ActorState } from "./state/actor/ActorState";
@@ -134,7 +131,7 @@ export const cloudDefinition: ObjectTypeDefinition<CloudDoc, CloudState> =
 	createFrameObjectDefinition<CloudDoc, CloudState>({
 		doc: cloudDocDefinition,
 		component: Cloud,
-		textRegion: calcCloudTextRegion,
+		textRegion: createInsetTextRegion(CLOUD_TEXT_INSETS),
 		outline: cloudOutline,
 		stencils: createTypeStencils({
 			objectType: "cloud",
@@ -190,12 +187,24 @@ export const terminalWindowDefinition: ObjectTypeDefinition<
 	}),
 });
 
-/** `outline` puts a connector's center anchor on the tab's slanted edge. */
+/** Gap between the silhouette and the text, as a ratio of the box. */
+const FOLDER_TEXT_PADDING_RATIO = 0.06;
+
+/**
+ * `outline` puts a connector's center anchor on the tab's slanted edge.
+ * `textRegion` places the text in the body below the tab, so a first line
+ * cannot run into the notch the tab leaves on the top-right.
+ */
 export const folderDefinition: ObjectTypeDefinition<FolderDoc, FolderState> =
 	createFrameObjectDefinition<FolderDoc, FolderState>({
 		doc: folderDocDefinition,
 		component: Folder,
-		textRegion: calcFolderTextRegion,
+		textRegion: createInsetTextRegion({
+			top: FOLDER_TAB_HEIGHT_RATIO + FOLDER_TEXT_PADDING_RATIO,
+			right: FOLDER_TEXT_PADDING_RATIO,
+			bottom: FOLDER_TEXT_PADDING_RATIO,
+			left: FOLDER_TEXT_PADDING_RATIO,
+		}),
 		outline: folderOutline,
 		stencils: createTypeStencils({
 			objectType: "folder",
@@ -305,12 +314,26 @@ export const lockDefinition: ObjectTypeDefinition<LockDoc, LockState> =
 		}),
 	});
 
-/** `outline` follows the taper, which leaves the bottom corners of the box empty. */
+/** Gap between the silhouette and the text, as a ratio of the box. */
+const SHIELD_TEXT_PADDING_RATIO = 0.07;
+
+/**
+ * `outline` follows the taper, which leaves the bottom corners of the box empty.
+ * `textRegion` keeps the text in the shield's straight-sided upper part, above
+ * the shoulders where the flanks start closing in on the tip. The lower part is
+ * left empty on purpose: a centered line there would sit in the taper and clip
+ * on both sides.
+ */
 export const shieldDefinition: ObjectTypeDefinition<ShieldDoc, ShieldState> =
 	createFrameObjectDefinition<ShieldDoc, ShieldState>({
 		doc: shieldDocDefinition,
 		component: Shield,
-		textRegion: calcShieldTextRegion,
+		textRegion: createInsetTextRegion({
+			top: SHIELD_TEXT_PADDING_RATIO,
+			right: SHIELD_TEXT_PADDING_RATIO,
+			bottom: 1 - SHIELD_SHOULDER_RATIO,
+			left: SHIELD_TEXT_PADDING_RATIO,
+		}),
 		outline: shieldOutline,
 		stencils: createTypeStencils({
 			objectType: "shield",
@@ -319,14 +342,28 @@ export const shieldDefinition: ObjectTypeDefinition<ShieldDoc, ShieldState> =
 		}),
 	});
 
-/** Text sits on the screen (calcSmartphoneTextRegion), inside the case. */
+/** Gap between the screen edge and the text, as a ratio of the box. */
+const SMARTPHONE_TEXT_PADDING_RATIO = 0.04;
+
+/**
+ * Text sits on the screen, clear of the case, the speaker slit and the home bar.
+ */
 export const smartphoneDefinition: ObjectTypeDefinition<
 	SmartphoneDoc,
 	SmartphoneState
 > = createFrameObjectDefinition<SmartphoneDoc, SmartphoneState>({
 	doc: smartphoneDocDefinition,
 	component: Smartphone,
-	textRegion: calcSmartphoneTextRegion,
+	textRegion: createInsetTextRegion({
+		top: SMARTPHONE_SCREEN_Y_RATIO + SMARTPHONE_TEXT_PADDING_RATIO,
+		right: SMARTPHONE_SCREEN_X_RATIO + SMARTPHONE_TEXT_PADDING_RATIO,
+		bottom:
+			1 -
+			SMARTPHONE_SCREEN_Y_RATIO -
+			SMARTPHONE_SCREEN_HEIGHT_RATIO +
+			SMARTPHONE_TEXT_PADDING_RATIO,
+		left: SMARTPHONE_SCREEN_X_RATIO + SMARTPHONE_TEXT_PADDING_RATIO,
+	}),
 	outline: smartphoneOutline,
 	stencils: createTypeStencils({
 		objectType: "smartphone",
@@ -335,16 +372,25 @@ export const smartphoneDefinition: ObjectTypeDefinition<
 	}),
 });
 
+/** Gap between the screen edge and the text, as a ratio of the box. */
+const LAPTOP_TEXT_PADDING_RATIO = 0.05;
+
 /**
- * Text sits on the screen (calcLaptopTextRegion). The drawing is two pieces, but
- * their union is one closed polygon and only the base spans the full width, so
- * `outline` is what keeps a connector off the empty top corners (laptopOutline).
+ * Text sits on the screen, so it stays clear of the base below it. The drawing
+ * is two pieces, but their union is one closed polygon and only the base spans
+ * the full width, so `outline` is what keeps a connector off the empty top
+ * corners (laptopOutline).
  */
 export const laptopDefinition: ObjectTypeDefinition<LaptopDoc, LaptopState> =
 	createFrameObjectDefinition<LaptopDoc, LaptopState>({
 		doc: laptopDocDefinition,
 		component: Laptop,
-		textRegion: calcLaptopTextRegion,
+		textRegion: createInsetTextRegion({
+			top: LAPTOP_TEXT_PADDING_RATIO,
+			right: LAPTOP_SCREEN_X_RATIO + LAPTOP_TEXT_PADDING_RATIO,
+			bottom: 1 - LAPTOP_SCREEN_HEIGHT_RATIO + LAPTOP_TEXT_PADDING_RATIO,
+			left: LAPTOP_SCREEN_X_RATIO + LAPTOP_TEXT_PADDING_RATIO,
+		}),
 		outline: laptopOutline,
 		stencils: createTypeStencils({
 			objectType: "laptop",

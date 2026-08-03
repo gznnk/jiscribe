@@ -1,9 +1,12 @@
+import { createInsetTextRegion } from "@workspace/canvas-sdk";
 import { describe, it, expect } from "vitest";
 
+import { CLOUD_TEXT_INSETS } from "../../../schema/cloud/CloudDoc";
 import { expectRectCloseTo } from "../../__tests__/support/expectRectCloseTo";
-import { calcCloudTextRegion } from "../calcCloudTextRegion";
 
-describe("calcCloudTextRegion", () => {
+const calcCloudTextRegion = createInsetTextRegion(CLOUD_TEXT_INSETS);
+
+describe("cloud textRegion", () => {
 	it("insets the box by the bump ratios and stays centered on the origin", () => {
 		const region = calcCloudTextRegion({ width: 200, height: 100 }, "body");
 		expectRectCloseTo(region, { x: -70, y: -30, width: 140, height: 60 });
