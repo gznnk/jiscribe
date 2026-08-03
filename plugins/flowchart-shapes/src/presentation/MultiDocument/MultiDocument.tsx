@@ -1,7 +1,6 @@
-import { createFrameObject } from "@workspace/canvas-sdk";
+import { ShapeBodyPath, createFrameObject } from "@workspace/canvas-sdk";
 
 import { calcMultiDocumentSheets } from "./calcMultiDocumentSheets";
-import { MultiDocumentElement } from "./MultiDocumentStyled";
 import type { MultiDocumentState } from "../../state/multiDocument/MultiDocumentState";
 import { buildDocumentPath } from "../Document/buildDocumentPath";
 
@@ -21,7 +20,7 @@ export const MultiDocument = createFrameObject<MultiDocumentState>(
 		return (
 			<g data-kind="object" data-id={state.id} style={{ cursor: "grab" }}>
 				{sheets.map((sheet, index) => (
-					<MultiDocumentElement
+					<ShapeBodyPath
 						key={index}
 						d={buildDocumentPath(sheet.x, sheet.y, sheet.width, sheet.height)}
 						transform={shape.transform}

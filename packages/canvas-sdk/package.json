@@ -7,7 +7,8 @@
 	"types": "src/index.ts",
 	"exports": {
 		".": "./src/index.ts",
-		"./doc": "./src/doc.ts"
+		"./doc": "./src/doc.ts",
+		"./testing": "./src/testing.ts"
 	},
 	"scripts": {
 		"lint": "eslint .",

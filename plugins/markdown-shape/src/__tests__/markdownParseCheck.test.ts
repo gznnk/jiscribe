@@ -1,30 +1,30 @@
 import { createParseCheckSuite } from "@workspace/canvas-sdk/testing";
 
-import { stickyDocPlugin } from "../doc";
+import { markdownDocPlugin } from "../doc";
 
 // Parse through a plugin-aware parser so this package's shape is known to
-// parse-time structure/semantic validation (it no longer lives in the core
-// built-in definitions). The headless `stickyDocPlugin` carries no React deps.
+// parse-time structure/semantic validation (it does not live in the core
+// built-in definitions). The headless `markdownDocPlugin` carries no React deps.
 createParseCheckSuite({
-	name: "sticky shape",
-	plugin: stickyDocPlugin,
+	name: "markdown shape",
+	plugin: markdownDocPlugin,
 	sampleDoc: {
 		version: 1,
 		root: [
 			{
-				id: "note-1",
-				type: "sticky",
+				id: "doc-1",
+				type: "markdown",
 				x: 0,
 				y: 0,
-				width: 200,
-				height: 150,
-				fill: "#fef9c3",
-				text: "外から編集できる",
+				width: 300,
+				height: 200,
+				rx: 8,
+				text: "# Title\n\nBody with **bold**.",
 			},
 			{
 				id: "task-1",
 				type: "rect",
-				x: 300,
+				x: 400,
 				y: 0,
 				width: 140,
 				height: 80,
@@ -33,7 +33,7 @@ createParseCheckSuite({
 			{
 				id: "c-1",
 				type: "connector",
-				source: { owner: { id: "note-1" }, anchor: { kind: "center" } },
+				source: { owner: { id: "doc-1" }, anchor: { kind: "center" } },
 				target: { owner: { id: "task-1" }, anchor: { kind: "center" } },
 				points: [],
 			},

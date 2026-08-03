@@ -1,8 +1,8 @@
 import type { ObjectOutlineCalculator } from "@workspace/canvas";
+import { calcRoundedRectOutline } from "@workspace/canvas-sdk";
 import type { Dimensions } from "@workspace/geometry";
 
 import { SMARTPHONE_CORNER_RATIO } from "../../schema/smartphone/SmartphoneDoc";
-import { calcRoundedRectOutline } from "../shared/calcRoundedRectOutline";
 
 /**
  * Smartphone outline (centered): the case's rounded box. The corner radius is

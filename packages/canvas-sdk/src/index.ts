@@ -32,3 +32,12 @@ export {
 	centeredPolygonOutline,
 	OUTLINE_CURVE_SEGMENTS,
 } from "./presentation/outlineHelpers";
+export { calcRoundedRectOutline } from "./presentation/calcRoundedRectOutline";
+
+// The shape's own silhouette: stroked, filled and grabbable. Takes the
+// FrameShapeProps createFrameObject hands its draw function, so spreading them
+// makes it the object's single `data-kind` element.
+export {
+	ShapeBodyPath,
+	ShapeBodyPolygon,
+} from "./presentation/ShapeBodyStyled";

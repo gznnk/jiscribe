@@ -1,8 +1,8 @@
 import type { ObjectOutlineCalculator } from "@workspace/canvas";
+import { calcRoundedRectOutline } from "@workspace/canvas-sdk";
 import type { Dimensions } from "@workspace/geometry";
 
 import { WINDOW_CORNER_RATIO } from "../shared/buildWindowFrame";
-import { calcRoundedRectOutline } from "../shared/calcRoundedRectOutline";
 
 /**
  * Browser window outline (centered): the frame's rounded box, shared in shape

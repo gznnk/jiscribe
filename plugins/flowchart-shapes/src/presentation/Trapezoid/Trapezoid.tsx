@@ -1,12 +1,11 @@
-import { createFrameObject } from "@workspace/canvas-sdk";
+import { ShapeBodyPolygon, createFrameObject } from "@workspace/canvas-sdk";
 
 import { buildTrapezoidPoints } from "./buildTrapezoidPoints";
-import { TrapezoidElement } from "./TrapezoidStyled";
 import type { TrapezoidState } from "../../state/trapezoid/TrapezoidState";
 
 /** Trapezoid presentation (shared Frame logic lives in createFrameObject; only the shape is swapped in). */
 export const Trapezoid = createFrameObject<TrapezoidState>((state, shape) => (
-	<TrapezoidElement
+	<ShapeBodyPolygon
 		{...shape}
 		points={buildTrapezoidPoints(
 			-state.width / 2,

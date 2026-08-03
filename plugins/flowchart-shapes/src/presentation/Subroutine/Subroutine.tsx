@@ -1,12 +1,11 @@
-import { createFrameObject } from "@workspace/canvas-sdk";
+import { ShapeBodyPath, createFrameObject } from "@workspace/canvas-sdk";
 
 import { buildSubroutinePath } from "./buildSubroutinePath";
-import { SubroutineElement } from "./SubroutineStyled";
 import type { SubroutineState } from "../../state/subroutine/SubroutineState";
 
 /** Subroutine presentation (shared Frame logic lives in createFrameObject; only the shape is swapped in). */
 export const Subroutine = createFrameObject<SubroutineState>((state, shape) => (
-	<SubroutineElement
+	<ShapeBodyPath
 		{...shape}
 		d={buildSubroutinePath(
 			-state.width / 2,

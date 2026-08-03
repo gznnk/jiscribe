@@ -1,6 +1,5 @@
-import { createFrameObject } from "@workspace/canvas-sdk";
+import { ShapeBodyPath, createFrameObject } from "@workspace/canvas-sdk";
 
-import { DbElement } from "./DbStyled";
 import { DB_CAP_RATIO } from "../../schema/db/DbDoc";
 import type { DbState } from "../../state/db/DbState";
 
@@ -33,7 +32,7 @@ export const Db = createFrameObject<DbState>((state, shape) => {
 	const { bodyPath, capEdgePath } = buildDbPaths(state.width, state.height);
 	return (
 		<g data-kind="object" data-id={state.id} style={{ cursor: "grab" }}>
-			<DbElement
+			<ShapeBodyPath
 				d={bodyPath}
 				transform={shape.transform}
 				strokeColor={shape.strokeColor}
@@ -42,7 +41,7 @@ export const Db = createFrameObject<DbState>((state, shape) => {
 				strokeDasharray={shape.strokeDasharray}
 			/>
 			{/* Cap edge is decoration only; the body silhouette handles hit testing */}
-			<DbElement
+			<ShapeBodyPath
 				d={capEdgePath}
 				transform={shape.transform}
 				strokeColor={shape.strokeColor}

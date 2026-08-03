@@ -22,7 +22,7 @@ describe("calcRoundedRectOutline", () => {
 		expect(corner).toBeLessThan(Math.hypot(50, 30));
 	});
 
-	it("clamps the radius to half the shorter side, matching buildRoundedRectPath", () => {
+	it("clamps the radius to half the shorter side", () => {
 		expect(calcRoundedRectOutline(100, 60, 999)).toEqual(
 			calcRoundedRectOutline(100, 60, 30),
 		);

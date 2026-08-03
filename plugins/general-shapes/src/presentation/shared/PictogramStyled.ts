@@ -1,29 +1,14 @@
 import styled from "@emotion/styled";
+import { ShapeBodyPath } from "@workspace/canvas-sdk";
 
 type PictogramStrokeProps = {
 	/** Resolved stroke color (auto is resolved to the theme foreground). */
 	strokeColor: string;
 };
 
-type PictogramBodyProps = PictogramStrokeProps & {
-	/** Resolved fill color (auto is resolved to the theme surface). */
-	fillColor: string;
-};
-
-/**
- * A silhouette of the pictogram. `pointer-events: auto` keeps a `transparent`
- * fill grabbable — the interior is still painted, unlike `fill: none`.
- */
-export const PictogramBodyPath = styled.path<PictogramBodyProps>`
-	stroke: ${({ strokeColor }) => strokeColor};
-	fill: ${({ fillColor }) => fillColor};
+/** A silhouette of the pictogram; rounded joins keep its many corners soft. */
+export const PictogramBodyPath = styled(ShapeBodyPath)`
 	stroke-linejoin: round;
-	pointer-events: auto;
-	cursor: grab;
-
-	&:focus {
-		outline: none;
-	}
 `;
 
 /** Detail lines. Never hit-tested, so they may cross the body freely. */
@@ -54,7 +39,7 @@ export const PictogramHitPath = styled.path`
 /**
  * Transparent grab area for a pictogram whose own strokes are too thin to hit
  * (the actor's limbs), laid over the whole box. The label a shape hangs below
- * its box has its own area in core (BelowLabelHitArea).
+ * its box has its own area in the sdk (BelowLabelHitArea).
  */
 export const PictogramHitArea = styled.rect`
 	fill: transparent;

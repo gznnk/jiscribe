@@ -1,13 +1,12 @@
-import { createFrameObject } from "@workspace/canvas-sdk";
+import { ShapeBodyPolygon, createFrameObject } from "@workspace/canvas-sdk";
 
 import { buildManualInputPoints } from "./buildManualInputPoints";
-import { ManualInputElement } from "./ManualInputStyled";
 import type { ManualInputState } from "../../state/manualInput/ManualInputState";
 
 /** ManualInput presentation (shared Frame logic lives in createFrameObject; only the shape is swapped in). */
 export const ManualInput = createFrameObject<ManualInputState>(
 	(state, shape) => (
-		<ManualInputElement
+		<ShapeBodyPolygon
 			{...shape}
 			points={buildManualInputPoints(
 				-state.width / 2,

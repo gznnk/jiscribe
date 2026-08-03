@@ -1,20 +1,17 @@
-import { OUTLINE_CURVE_SEGMENTS } from "@workspace/canvas-sdk";
 import type { Point } from "@workspace/geometry";
 import { sampleEllipseArc } from "@workspace/geometry";
+
+import { OUTLINE_CURVE_SEGMENTS } from "./outlineHelpers";
 
 /**
  * Outline of a rounded rectangle, centered on the origin: the four corner arcs
  * in clockwise order, with the straight edges between them left implicit as the
  * polygon edges joining consecutive arcs.
  *
- * Shared by every pictogram whose silhouette is a rounded box. Without it those
- * shapes fall back to the bounding box, which cuts the corner off by about 29%
- * of the radius — small, but it is the corners a diagonal connector aims at.
- *
  * @param width Box width; the outline spans -width/2 .. width/2.
- * @param height Box height.
- * @param radius Corner radius in local px, clamped to half the shorter side to match buildRoundedRectPath.
- * @returns Points in clockwise order starting at the top-right arc; a radius of 0 degenerates to the four corners.
+ * @param height Box height; the outline spans -height/2 .. height/2.
+ * @param radius Corner radius in local px, clamped to half the shorter side (pass that half for a stadium).
+ * @returns Points in clockwise order starting at the top-right arc; a radius of 0 degenerates to the four box corners, each repeated.
  */
 export const calcRoundedRectOutline = (
 	width: number,

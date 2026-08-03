@@ -1,13 +1,12 @@
-import { createFrameObject } from "@workspace/canvas-sdk";
+import { ShapeBodyPolygon, createFrameObject } from "@workspace/canvas-sdk";
 
 import { buildParallelogramPoints } from "./buildParallelogramPoints";
-import { ParallelogramElement } from "./ParallelogramStyled";
 import type { ParallelogramState } from "../../state/parallelogram/ParallelogramState";
 
 /** Parallelogram presentation (shared Frame logic lives in createFrameObject; only the shape is swapped in). */
 export const Parallelogram = createFrameObject<ParallelogramState>(
 	(state, shape) => (
-		<ParallelogramElement
+		<ShapeBodyPolygon
 			{...shape}
 			points={buildParallelogramPoints(
 				-state.width / 2,

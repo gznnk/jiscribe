@@ -1,12 +1,11 @@
-import { createFrameObject } from "@workspace/canvas-sdk";
+import { ShapeBodyPath, createFrameObject } from "@workspace/canvas-sdk";
 
 import { buildDisplayPath } from "./buildDisplayPath";
-import { DisplayElement } from "./DisplayStyled";
 import type { DisplayState } from "../../state/display/DisplayState";
 
 /** Display presentation (shared Frame logic lives in createFrameObject; only the shape is swapped in). */
 export const Display = createFrameObject<DisplayState>((state, shape) => (
-	<DisplayElement
+	<ShapeBodyPath
 		{...shape}
 		d={buildDisplayPath(
 			-state.width / 2,

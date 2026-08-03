@@ -1,8 +1,8 @@
 import type { ObjectOutlineCalculator } from "@workspace/canvas";
+import { calcRoundedRectOutline } from "@workspace/canvas-sdk";
 import type { Dimensions } from "@workspace/geometry";
 
 import { ENVELOPE_CORNER_RATIO } from "../../schema/envelope/EnvelopeDoc";
-import { calcRoundedRectOutline } from "../shared/calcRoundedRectOutline";
 
 /**
  * Envelope outline (centered): the body's rounded box. The flap is a detail

@@ -1,7 +1,10 @@
-import { BelowLabelHitArea, createFrameObject } from "@workspace/canvas-sdk";
+import {
+	BelowLabelHitArea,
+	ShapeBodyPolygon,
+	createFrameObject,
+} from "@workspace/canvas-sdk";
 
 import { buildCrossPoints } from "./buildCrossPoints";
-import { CrossElement } from "./CrossStyled";
 import type { CrossState } from "../../state/cross/CrossState";
 
 /**
@@ -18,7 +21,7 @@ export const Cross = createFrameObject<CrossState>((state, shape) => (
 		transform={shape.transform}
 	>
 		<BelowLabelHitArea state={state} />
-		<CrossElement
+		<ShapeBodyPolygon
 			strokeColor={shape.strokeColor}
 			fillColor={shape.fillColor}
 			strokeWidth={shape.strokeWidth}

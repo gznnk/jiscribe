@@ -1,8 +1,8 @@
 import type { ObjectOutlineCalculator } from "@workspace/canvas";
+import { calcRoundedRectOutline } from "@workspace/canvas-sdk";
 import type { Dimensions } from "@workspace/geometry";
 
 import { QUEUE_CORNER_RATIO } from "../../schema/queue/QueueDoc";
-import { calcRoundedRectOutline } from "../shared/calcRoundedRectOutline";
 
 /**
  * Queue outline (centered): the row's rounded box. The cell dividers are detail
