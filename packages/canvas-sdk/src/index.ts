@@ -5,6 +5,11 @@
 
 export * from "@workspace/canvas/unstable";
 
+// One call per Frame-family shape in place of its mapper / state-validator files.
+// Takes the ObjectDocDefinition built by createFrameObjectDoc in `./doc`.
+export { createFrameObjectDefinition } from "./definition/createFrameObjectDefinition";
+export type { FrameObjectDefinitionParams } from "./definition/createFrameObjectDefinition";
+
 // ---------------------------------------------------------------------------
 // Below-label shapes: the box is fully taken by the drawing, so the text hangs
 // under it as a caption sized from itself (server / actor / cross …).

@@ -28,7 +28,7 @@ const BELOW_LABEL_MAX_WIDTH = 240;
  * What the label layout reads off the state: the untransformed box size plus the
  * text slots, whose content sizes the label. Typed as the open slot map every
  * text-bearing state carries rather than one shape's own single slot, so the
- * registry's calculator type still accepts it (ObjectTextRegionCalculator 参照).
+ * registry's calculator type still accepts it (see ObjectTextRegionCalculator).
  */
 type BelowLabelState = Dimensions & {
 	/** The shape's text slots, keyed by slot id; an absent slot reads as empty. */

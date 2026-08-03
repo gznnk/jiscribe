@@ -3,6 +3,7 @@ import {
 	calcBelowLabelTextRegion,
 	calcBelowLabelVisualBounds,
 	createFrameBehavior,
+	createFrameObjectDefinition,
 } from "@workspace/canvas-sdk";
 
 import {
@@ -114,9 +115,7 @@ import type { StadiumDoc } from "./schema/stadium/StadiumDoc";
 import type { StoredDataDoc } from "./schema/storedData/StoredDataDoc";
 import type { SubroutineDoc } from "./schema/subroutine/SubroutineDoc";
 import type { TrapezoidDoc } from "./schema/trapezoid/TrapezoidDoc";
-import { cardToDoc, cardToState } from "./state/card/CardMapper";
 import type { CardState } from "./state/card/CardState";
-import { isValidCardState } from "./state/card/validateCardState";
 import { crossToDoc, crossToState } from "./state/cross/CrossMapper";
 import type { CrossState } from "./state/cross/CrossState";
 import { isValidCrossState } from "./state/cross/validateCrossState";
@@ -216,21 +215,19 @@ import { TrapezoidStencils } from "./stencil/TrapezoidStencils";
 
 /**
  * flowchart 18 図形の `ObjectTypeDefinition` 群。各定義は `./doc` の headless doc 定義
- * (features / validateDoc / factory) を spread し、render / interaction / editor UI 部を
- * 足して合成する。core の登録エントリ (initializeObjectRegistry.ts の
+ * (features / validateDoc / factory) に render / interaction / editor UI 部を足して
+ * 合成する (card は createFrameObjectDefinition 経由、他は spread + 手書き)。core の登録エントリ (initializeObjectRegistry.ts の
  * ALL_OBJECT_DEFINITIONS) と 1:1 で、意図的除外はない。menu は未宣言なので features から
  * 既定メニューが導出される (docs/05_extensibility/plugin-architecture-requirements.md)。
  */
-export const cardDefinition: ObjectTypeDefinition<CardDoc, CardState> = {
-	...cardDocDefinition,
-	mapper: { toDoc: cardToDoc, toState: cardToState },
-	stateValidator: isValidCardState,
-	component: Card,
-	textRegion: calcCardTextRegion,
-	outline: cardOutline,
-	behavior: createFrameBehavior<CardState>(),
-	stencils: CardStencils,
-};
+export const cardDefinition: ObjectTypeDefinition<CardDoc, CardState> =
+	createFrameObjectDefinition<CardDoc, CardState>({
+		doc: cardDocDefinition,
+		component: Card,
+		textRegion: calcCardTextRegion,
+		outline: cardOutline,
+		stencils: CardStencils,
+	});
 
 /**
  * The arms fill the box, so the label hangs below the geometry box and

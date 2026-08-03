@@ -8,10 +8,9 @@ import type {
 	CanvasDocPlugin,
 	ObjectDocDefinition,
 } from "@workspace/canvas/doc";
+import { createFrameObjectDoc } from "@workspace/canvas-sdk/doc";
 
 import { CARD_DOC_DEFAULTS, CardFeatures } from "./schema/card/CardDoc";
-import { CardObjectFactory } from "./schema/card/CardObjectFactory";
-import { validateCardDoc } from "./schema/card/validateCardDoc";
 import { CROSS_DOC_DEFAULTS, CrossFeatures } from "./schema/cross/CrossDoc";
 import { CrossObjectFactory } from "./schema/cross/CrossObjectFactory";
 import { validateCrossDoc } from "./schema/cross/validateCrossDoc";
@@ -106,16 +105,14 @@ import {
 import { TrapezoidObjectFactory } from "./schema/trapezoid/TrapezoidObjectFactory";
 import { validateTrapezoidDoc } from "./schema/trapezoid/validateTrapezoidDoc";
 
-export const cardDocDefinition: ObjectDocDefinition = {
+export const cardDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: CardFeatures,
-	validateDoc: validateCardDoc,
-	factory: CardObjectFactory,
+	defaults: CARD_DOC_DEFAULTS,
 	description:
 		"Card: a rectangle with the top-left corner cut off, used for punched-card style data in flowcharts. Uses the same rect-based geometry (x/y/width/height) as RectDoc.",
 	summary: "punched-card style data",
 	outlineDescription: "Rectangle with the top-left corner cut off",
-	defaults: CARD_DOC_DEFAULTS,
-};
+});
 
 export const crossDocDefinition: ObjectDocDefinition = {
 	features: CrossFeatures,
