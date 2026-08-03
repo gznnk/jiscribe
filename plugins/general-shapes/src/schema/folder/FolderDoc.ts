@@ -24,7 +24,16 @@ export const FolderFeatures = {
 /**
  * Tab geometry, shared by the silhouette (calcFolderPoints) and the text region.
  * Height and width are fractions of the box; the slope is the horizontal run of
- * the tab's slanted right edge, as a fraction of the tab height.
+ * the tab's slanted right edge, as a fraction of the tab height the *shorter*
+ * side would give it.
+ *
+ * The run is taken from the shorter side rather than from the height because it
+ * is a horizontal length: derived from the height alone it grows with a tall box
+ * while the tab's left edge stays at FOLDER_TAB_WIDTH_RATIO of the width, so
+ * past roughly 1:4.8 the slant runs out past the right edge of the box and the
+ * drawing escapes its own selection frame (a 100x600 box overshot by 15.6px).
+ * On a box at least as wide as it is tall — every default size included — the
+ * shorter side is the height, so nothing changes.
  */
 export const FOLDER_TAB_HEIGHT_RATIO = 0.18;
 export const FOLDER_TAB_WIDTH_RATIO = 0.4;

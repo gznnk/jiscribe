@@ -27,10 +27,15 @@ export const calcFolderPoints = (
 ): Point[] => {
 	const tabHeight = height * FOLDER_TAB_HEIGHT_RATIO;
 	const tabWidth = width * FOLDER_TAB_WIDTH_RATIO;
+	// Off the shorter side, so the slant cannot run past the right edge of a tall
+	// box (FOLDER_TAB_SLOPE_RATIO 参照). Bounded by 0.126 * width, which leaves it
+	// clear of the tab's own left edge at 0.4 * width whatever the box.
+	const tabSlantRun =
+		Math.min(width, height) * FOLDER_TAB_HEIGHT_RATIO * FOLDER_TAB_SLOPE_RATIO;
 	return [
 		{ x, y },
 		{ x: x + tabWidth, y },
-		{ x: x + tabWidth + tabHeight * FOLDER_TAB_SLOPE_RATIO, y: y + tabHeight },
+		{ x: x + tabWidth + tabSlantRun, y: y + tabHeight },
 		{ x: x + width, y: y + tabHeight },
 		{ x: x + width, y: y + height },
 		{ x, y: y + height },
