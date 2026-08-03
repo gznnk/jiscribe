@@ -1,6 +1,10 @@
 import type { CanvasPlugin } from "@workspace/canvas";
 
-import { braceDefinition } from "./definitions";
+import {
+	braceDefinition,
+	bracketDefinition,
+	bracketWithStemDefinition,
+} from "./definitions";
 
 /**
  * `CanvasPlugin` declaration for the annotation shapes
@@ -13,5 +17,7 @@ export const annotationPlugin: CanvasPlugin = {
 	id: "annotation-shapes",
 	objects: {
 		brace: braceDefinition,
+		bracket: bracketDefinition,
+		bracketWithStem: bracketWithStemDefinition,
 	},
 };

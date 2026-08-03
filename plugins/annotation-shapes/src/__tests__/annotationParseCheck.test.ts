@@ -23,6 +23,27 @@ const doc = {
 			text: "doc 層",
 		},
 		{
+			id: "bracket-1",
+			type: "bracket",
+			x: 0,
+			y: 200,
+			width: 24,
+			height: 160,
+			direction: "left",
+			text: "state 層",
+		},
+		{
+			id: "bracket-with-stem-1",
+			type: "bracketWithStem",
+			x: 0,
+			y: 400,
+			width: 24,
+			height: 160,
+			direction: "left",
+			tipPosition: 0.25,
+			text: "presentation 層",
+		},
+		{
 			id: "task-1",
 			type: "rect",
 			x: 60,
@@ -50,17 +71,20 @@ describe("annotation shapes", () => {
 
 	/**
 	 * The counterpart of the above: a host that forgets to wire the plugin does
-	 * not get an error, it silently loses the braces — unknown types parse to a
+	 * not get an error, it silently loses the markers — unknown types parse to a
 	 * warning and are dropped from the doc. Pinned here so the cost of missing the
 	 * wiring stays visible.
 	 */
-	it("drops the brace with a warning when the plugin is not wired", () => {
+	it("drops the annotation shapes with a warning when the plugin is not wired", () => {
 		const result = createCanvasParser().parse(JSON.stringify(doc));
 		expect(result.kind).toBe("ok");
 		if (result.kind !== "ok") {
 			return;
 		}
-		expect(result.doc.root.map((object) => object.id)).not.toContain("brace-1");
+		const ids = result.doc.root.map((object) => object.id);
+		expect(ids).not.toContain("brace-1");
+		expect(ids).not.toContain("bracket-1");
+		expect(ids).not.toContain("bracket-with-stem-1");
 		expect(result.warnings?.map((warning) => warning.path)).toContain(
 			"root[0].type",
 		);

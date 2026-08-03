@@ -2,7 +2,7 @@
 	"name": "@workspace/plugin-annotation-shapes",
 	"version": "0.0.0",
 	"private": true,
-	"description": "記法に属さない汎用注釈図形（brace ほか）を canvas 公開 API のみで外部パッケージとして提供する（docs/05_extensibility/annotation-plugin-plan.md）",
+	"description": "記法に属さない汎用注釈図形（brace / bracket / bracketWithStem ほか）を canvas 公開 API のみで外部パッケージとして提供する（docs/05_extensibility/annotation-plugin-plan.md）",
 	"main": "src/index.ts",
 	"types": "src/index.ts",
 	"exports": {

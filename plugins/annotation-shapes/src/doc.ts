@@ -10,6 +10,18 @@ import type {
 import { BRACE_DOC_DEFAULTS, BraceFeatures } from "./schema/brace/BraceDoc";
 import { BraceObjectFactory } from "./schema/brace/BraceObjectFactory";
 import { validateBraceDoc } from "./schema/brace/validateBraceDoc";
+import {
+	BRACKET_DOC_DEFAULTS,
+	BracketFeatures,
+} from "./schema/bracket/BracketDoc";
+import { BracketObjectFactory } from "./schema/bracket/BracketObjectFactory";
+import { validateBracketDoc } from "./schema/bracket/validateBracketDoc";
+import {
+	BRACKET_WITH_STEM_DOC_DEFAULTS,
+	BracketWithStemFeatures,
+} from "./schema/bracketWithStem/BracketWithStemDoc";
+import { BracketWithStemObjectFactory } from "./schema/bracketWithStem/BracketWithStemObjectFactory";
+import { validateBracketWithStemDoc } from "./schema/bracketWithStem/validateBracketWithStemDoc";
 
 export const braceDocDefinition: ObjectDocDefinition = {
 	features: BraceFeatures,
@@ -21,6 +33,26 @@ export const braceDocDefinition: ObjectDocDefinition = {
 	defaults: BRACE_DOC_DEFAULTS,
 };
 
+export const bracketDocDefinition: ObjectDocDefinition = {
+	features: BracketFeatures,
+	validateDoc: validateBracketDoc,
+	factory: BracketObjectFactory,
+	description:
+		'Square bracket shape, used to mark a run of shapes as one group and name it. Same box and same "direction" as BraceDoc — a "left" bracket is the typographic "[" and groups what is to its right — but it is drawn with straight lines only: a spine along the outer edge with a foot at each end, reaching towards the grouped shapes. It has no "tipPosition", because nothing on it singles out a place along the spine; the label always sits just beyond the middle of the spine, auto-sized to the text itself and outside the box. Use BracketWithStemDoc instead when the label should point at one particular place in the run. The bracket has no fill.',
+	summary: "group marker, grouping annotation",
+	defaults: BRACKET_DOC_DEFAULTS,
+};
+
+export const bracketWithStemDocDefinition: ObjectDocDefinition = {
+	features: BracketWithStemFeatures,
+	validateDoc: validateBracketWithStemDoc,
+	factory: BracketWithStemObjectFactory,
+	description:
+		'Square bracket with a stem, used to mark a run of shapes as one group and name it at a chosen point. Same box and same "direction" as BracketDoc, except that the spine sits half way into the box and a straight stem runs out of it, at right angles, to the outer edge. "tipPosition" (0..1) moves the stem along the span, from the top for a left/right bracket and from the left for an up/down one, and the label hangs off the stem\'s end, auto-sized to the text itself and outside the box. Use BracketDoc instead when the label needs to point at nothing in particular. It has no fill.',
+	summary: "group marker with a pointer, grouping annotation",
+	defaults: BRACKET_WITH_STEM_DOC_DEFAULTS,
+};
+
 /**
  * Headless `CanvasDocPlugin` for the annotation shapes: the doc-layer view of
  * `annotationPlugin`, teaching `createCanvasParser` the types without loading any
@@ -30,5 +62,7 @@ export const annotationDocPlugin: CanvasDocPlugin = {
 	id: "annotation-shapes",
 	objects: {
 		brace: braceDocDefinition,
+		bracket: bracketDocDefinition,
+		bracketWithStem: bracketWithStemDocDefinition,
 	},
 };

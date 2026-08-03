@@ -112,6 +112,12 @@
 					"$ref": "#/$defs/BraceDoc"
 				},
 				{
+					"$ref": "#/$defs/BracketWithStemDoc"
+				},
+				{
+					"$ref": "#/$defs/BracketDoc"
+				},
+				{
 					"$ref": "#/$defs/DbDoc"
 				},
 				{
@@ -251,6 +257,12 @@
 				},
 				{
 					"$ref": "#/$defs/BraceDoc"
+				},
+				{
+					"$ref": "#/$defs/BracketWithStemDoc"
+				},
+				{
+					"$ref": "#/$defs/BracketDoc"
 				},
 				{
 					"$ref": "#/$defs/DbDoc"
@@ -2558,6 +2570,188 @@
 				}
 			}
 		},
+		"BracketWithStemDoc": {
+			"description": "Square bracket with a stem, used to mark a run of shapes as one group and name it at a chosen point. Same box and same \"direction\" as BracketDoc, except that the spine sits half way into the box and a straight stem runs out of it, at right angles, to the outer edge. \"tipPosition\" (0..1) moves the stem along the span, from the top for a left/right bracket and from the left for an up/down one, and the label hangs off the stem's end, auto-sized to the text itself and outside the box. Use BracketDoc instead when the label needs to point at nothing in particular. It has no fill.",
+			"type": "object",
+			"required": ["id", "type", "x", "y", "width", "height"],
+			"additionalProperties": false,
+			"properties": {
+				"id": {
+					"description": "Unique identifier.",
+					"type": "string"
+				},
+				"type": {
+					"description": "Must be \"bracketWithStem\".",
+					"type": "string",
+					"const": "bracketWithStem"
+				},
+				"meta": {
+					"$ref": "#/$defs/MetaDoc"
+				},
+				"direction": {
+					"description": "Which way the stem points, away from the shapes being grouped: the feet reach the opposite edge, where those shapes are. \"left\" is the typographic \"[\" and groups what is to its right; \"down\" sits under a row and groups what is above it. Must match the box's proportions — use \"left\"/\"right\" for a tall box and \"up\"/\"down\" for a wide one. Omitted = \"left\".",
+					"type": "string",
+					"enum": ["left", "right", "up", "down"]
+				},
+				"tipPosition": {
+					"description": "Where the stem leaves the spine, along the span (the box's long side): 0 = top end for a left/right bracket and left end for an up/down one, 1 = the other end. The label hangs off the stem's end, so this is also what moves the label. Omitted = 0.5.",
+					"type": "number",
+					"minimum": 0,
+					"maximum": 1
+				},
+				"x": {
+					"description": "Left-edge X coordinate of the bounding box.",
+					"type": "number"
+				},
+				"y": {
+					"description": "Top-edge Y coordinate of the bounding box.",
+					"type": "number"
+				},
+				"width": {
+					"description": "Bounding-box width in pixels. Default when created from the palette: 24",
+					"type": "number",
+					"minimum": 0
+				},
+				"height": {
+					"description": "Bounding-box height in pixels. Default when created from the palette: 160",
+					"type": "number",
+					"minimum": 0
+				},
+				"stroke": {
+					"$ref": "#/$defs/StrokeStyle/properties/stroke"
+				},
+				"strokeWidth": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
+				},
+				"strokeDashType": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+				},
+				"text": {
+					"$ref": "#/$defs/TextStyle/properties/text"
+				},
+				"textAlign": {
+					"$ref": "#/$defs/TextStyle/properties/textAlign"
+				},
+				"verticalAlign": {
+					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
+				},
+				"fontColor": {
+					"$ref": "#/$defs/TextStyle/properties/fontColor"
+				},
+				"fontSize": {
+					"description": "Font size in pixels. Default: 14 (overrides the shared default 16).",
+					"type": "number",
+					"minimum": 1,
+					"default": 14
+				},
+				"fontFamily": {
+					"$ref": "#/$defs/TextStyle/properties/fontFamily"
+				},
+				"fontWeight": {
+					"$ref": "#/$defs/TextStyle/properties/fontWeight"
+				},
+				"rotation": {
+					"$ref": "#/$defs/TransformStyle/properties/rotation"
+				},
+				"flipX": {
+					"$ref": "#/$defs/TransformStyle/properties/flipX"
+				},
+				"flipY": {
+					"$ref": "#/$defs/TransformStyle/properties/flipY"
+				},
+				"lockAspectRatio": {
+					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				}
+			}
+		},
+		"BracketDoc": {
+			"description": "Square bracket shape, used to mark a run of shapes as one group and name it. Same box and same \"direction\" as BraceDoc — a \"left\" bracket is the typographic \"[\" and groups what is to its right — but it is drawn with straight lines only: a spine along the outer edge with a foot at each end, reaching towards the grouped shapes. It has no \"tipPosition\", because nothing on it singles out a place along the spine; the label always sits just beyond the middle of the spine, auto-sized to the text itself and outside the box. Use BracketWithStemDoc instead when the label should point at one particular place in the run. The bracket has no fill.",
+			"type": "object",
+			"required": ["id", "type", "x", "y", "width", "height"],
+			"additionalProperties": false,
+			"properties": {
+				"id": {
+					"description": "Unique identifier.",
+					"type": "string"
+				},
+				"type": {
+					"description": "Must be \"bracket\".",
+					"type": "string",
+					"const": "bracket"
+				},
+				"meta": {
+					"$ref": "#/$defs/MetaDoc"
+				},
+				"direction": {
+					"description": "Which side the spine sits on, away from the shapes being grouped: the feet reach the opposite edge, where those shapes are. \"left\" is the typographic \"[\" and groups what is to its right; \"down\" sits under a row and groups what is above it. Must match the box's proportions — use \"left\"/\"right\" for a tall box and \"up\"/\"down\" for a wide one. Omitted = \"left\".",
+					"type": "string",
+					"enum": ["left", "right", "up", "down"]
+				},
+				"x": {
+					"description": "Left-edge X coordinate of the bounding box.",
+					"type": "number"
+				},
+				"y": {
+					"description": "Top-edge Y coordinate of the bounding box.",
+					"type": "number"
+				},
+				"width": {
+					"description": "Bounding-box width in pixels. Default when created from the palette: 24",
+					"type": "number",
+					"minimum": 0
+				},
+				"height": {
+					"description": "Bounding-box height in pixels. Default when created from the palette: 160",
+					"type": "number",
+					"minimum": 0
+				},
+				"stroke": {
+					"$ref": "#/$defs/StrokeStyle/properties/stroke"
+				},
+				"strokeWidth": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeWidth"
+				},
+				"strokeDashType": {
+					"$ref": "#/$defs/StrokeStyle/properties/strokeDashType"
+				},
+				"text": {
+					"$ref": "#/$defs/TextStyle/properties/text"
+				},
+				"textAlign": {
+					"$ref": "#/$defs/TextStyle/properties/textAlign"
+				},
+				"verticalAlign": {
+					"$ref": "#/$defs/TextStyle/properties/verticalAlign"
+				},
+				"fontColor": {
+					"$ref": "#/$defs/TextStyle/properties/fontColor"
+				},
+				"fontSize": {
+					"description": "Font size in pixels. Default: 14 (overrides the shared default 16).",
+					"type": "number",
+					"minimum": 1,
+					"default": 14
+				},
+				"fontFamily": {
+					"$ref": "#/$defs/TextStyle/properties/fontFamily"
+				},
+				"fontWeight": {
+					"$ref": "#/$defs/TextStyle/properties/fontWeight"
+				},
+				"rotation": {
+					"$ref": "#/$defs/TransformStyle/properties/rotation"
+				},
+				"flipX": {
+					"$ref": "#/$defs/TransformStyle/properties/flipX"
+				},
+				"flipY": {
+					"$ref": "#/$defs/TransformStyle/properties/flipY"
+				},
+				"lockAspectRatio": {
+					"$ref": "#/$defs/TransformStyle/properties/lockAspectRatio"
+				}
+			}
+		},
 		"DbDoc": {
 			"description": "Database cylinder shape, typically used for data stores in architecture or ER diagrams. Uses the same rect-based geometry (x/y/width/height) as RectDoc; only the rendering is a cylinder. Text is laid out in the body region below the top cap ellipse (not the full bounding box).",
 			"type": "object",
@@ -4200,7 +4394,7 @@
 			}
 		},
 		"OwnerRef": {
-			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / markdown / ellipse / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / browserWindow / terminalWindow / smartphone / laptop / server / gear / package / folder / file / envelope / queue / lock / shield / callout / brace / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / extract / cross / offPageConnector / record / sticky (NOT polyline / polygon / group / svg / connector).",
+			"description": "Reference to an object on the canvas by ID. The referenced object must be connectable: rect / markdown / ellipse / diamond / stadium / parallelogram / hexagon / cloud / document / multiDocument / actor / browserWindow / terminalWindow / smartphone / laptop / server / gear / package / folder / file / envelope / queue / lock / shield / callout / brace / bracketWithStem / bracket / db / storedData / subroutine / trapezoid / manualInput / card / delay / loopLimit / display / extract / cross / offPageConnector / record / sticky (NOT polyline / polygon / group / svg / connector).",
 			"type": "object",
 			"required": ["id"],
 			"additionalProperties": false,

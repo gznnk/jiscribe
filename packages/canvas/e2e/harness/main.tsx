@@ -1,4 +1,7 @@
-import { annotationPlugin } from "@workspace/plugin-annotation-shapes";
+import {
+	annotationPlugin,
+	annotationToolbarEntry,
+} from "@workspace/plugin-annotation-shapes";
 import {
 	containerPlugin,
 	containerToolbarEntry,
@@ -43,18 +46,18 @@ const plugins = [
 
 const initialConfig: CanvasConfig = { plugins };
 
-// The flowchart / container / general categories and the markdown / sticky / brace presets come
-// from plugins and are not in core's default layout. The specs depend on the flyout buttons and
-// on the presets, so the harness passes a layout with the original arrangement.
+// The annotation / flowchart / container / general categories and the markdown / sticky presets
+// come from plugins and are not in core's default layout. The specs depend on the flyout buttons
+// and on the presets, so the harness passes a layout with the original arrangement.
 const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "rect" },
 	{ kind: "preset", presetId: "ellipse" },
 	{ kind: "preset", presetId: "polyline" },
 	{ kind: "preset", presetId: "polygon" },
 	{ kind: "preset", presetId: "callout" },
-	{ kind: "preset", presetId: "brace" },
 	{ kind: "preset", presetId: "sticky" },
 	{ kind: "preset", presetId: "markdown" },
+	annotationToolbarEntry,
 	flowchartToolbarEntry,
 	containerToolbarEntry,
 	umlToolbarEntry,

@@ -1,16 +1,16 @@
 import styled from "@emotion/styled";
 
-type BraceCurveProps = {
+type GroupMarkerPathProps = {
 	/** Resolved stroke color (auto is resolved to the theme foreground). */
 	strokeColor: string;
 };
 
 /**
- * The bracket itself. Never filled: the path is open, so a fill would paint the
+ * The marker itself. Never filled: the path is open, so a fill would paint the
  * region between the arms rather than the shape. Hit-testing is left to the
- * box-wide grab area, so a thin curve is no harder to grab than a wide one.
+ * box-wide grab area, so a thin line is no harder to grab than a wide one.
  */
-export const BraceCurve = styled.path<BraceCurveProps>`
+export const GroupMarkerPath = styled.path<GroupMarkerPathProps>`
 	stroke: ${({ strokeColor }) => strokeColor};
 	fill: none;
 	stroke-linecap: round;
@@ -23,7 +23,7 @@ export const BraceCurve = styled.path<BraceCurveProps>`
  * so without this it could neither be dragged nor double-clicked into the
  * editor).
  */
-export const BraceHitArea = styled.rect`
+export const GroupMarkerHitArea = styled.rect`
 	fill: transparent;
 	stroke: none;
 	pointer-events: auto;

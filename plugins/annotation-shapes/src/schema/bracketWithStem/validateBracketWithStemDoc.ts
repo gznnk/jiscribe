@@ -1,0 +1,12 @@
+import type { ObjectDocValidateFn } from "@workspace/canvas/unstable-doc";
+import { createFrameDocValidator } from "@workspace/canvas/unstable-doc";
+
+import { BracketWithStemFeatures } from "./BracketWithStemDoc";
+import { validateGroupMarkerTipFields } from "../shared/validateGroupMarkerFields";
+
+/** Validates a BracketWithStemDoc (Frame-family shared logic + direction / tipPosition). */
+export const validateBracketWithStemDoc: ObjectDocValidateFn =
+	createFrameDocValidator(
+		BracketWithStemFeatures,
+		validateGroupMarkerTipFields,
+	);

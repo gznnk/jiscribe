@@ -7,6 +7,7 @@ import {
 	type CanvasHandle,
 	type ToolbarEntry,
 } from "@workspace/canvas";
+import { annotationToolbarEntry } from "@workspace/plugin-annotation-shapes";
 import { containerToolbarEntry } from "@workspace/plugin-container-shapes";
 import { flowchartToolbarEntry } from "@workspace/plugin-flowchart-shapes";
 import { generalToolbarEntry } from "@workspace/plugin-general-shapes";
@@ -27,17 +28,17 @@ import type {
 // (docs/05_extensibility/plugin-architecture-requirements.md)。
 const initialConfig: CanvasConfig = { plugins };
 
-// flowchart / container / general カテゴリと markdown / brace プリセットは core の既定 layout に
-// 含まれない（プラグイン供給）。従来どおりの並びで出すため、ホスト側で差し込む。
+// annotation / flowchart / container / general カテゴリと markdown プリセットは core の既定
+// layout に含まれない（プラグイン供給）。従来どおりの並びで出すため、ホスト側で差し込む。
 const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "rect" },
 	{ kind: "preset", presetId: "ellipse" },
 	{ kind: "preset", presetId: "polyline" },
 	{ kind: "preset", presetId: "polygon" },
 	{ kind: "preset", presetId: "callout" },
-	{ kind: "preset", presetId: "brace" },
 	{ kind: "preset", presetId: "sticky" },
 	{ kind: "preset", presetId: "markdown" },
+	annotationToolbarEntry,
 	flowchartToolbarEntry,
 	containerToolbarEntry,
 	umlToolbarEntry,

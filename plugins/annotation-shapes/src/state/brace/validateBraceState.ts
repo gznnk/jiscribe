@@ -1,17 +1,9 @@
 import type { ObjectStateValidator } from "@workspace/canvas";
 import { createFrameStateValidator } from "@workspace/canvas/unstable";
 
-import {
-	BraceFeatures,
-	isBraceDirection,
-	isBraceTipPosition,
-} from "../../schema/brace/BraceDoc";
+import { BraceFeatures } from "../../schema/brace/BraceDoc";
+import { isValidGroupMarkerTipFields } from "../shared/isValidGroupMarkerFields";
 
 /** Validates BraceState (Frame-family common logic + optional direction / tipPosition). */
 export const isValidBraceState: ObjectStateValidator =
-	createFrameStateValidator(
-		BraceFeatures,
-		(o) =>
-			(o.direction === undefined || isBraceDirection(o.direction)) &&
-			(o.tipPosition === undefined || isBraceTipPosition(o.tipPosition)),
-	);
+	createFrameStateValidator(BraceFeatures, isValidGroupMarkerTipFields);

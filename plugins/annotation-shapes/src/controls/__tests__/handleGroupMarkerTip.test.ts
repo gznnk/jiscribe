@@ -2,7 +2,9 @@ import type { SelectionControlEvent } from "@workspace/canvas";
 import { describe, expect, it } from "vitest";
 
 import type { BraceState } from "../../state/brace/BraceState";
-import { handleBraceTip } from "../handleBraceTip";
+import type { BracketState } from "../../state/bracket/BracketState";
+import { handleGroupMarkerDirection } from "../handleGroupMarkerDirection";
+import { handleGroupMarkerTip } from "../handleGroupMarkerTip";
 
 /** A 24x160 left brace centered at (100, 100): local x = [-12, 12], y = [-80, 80]. */
 const braceState = (overrides: Partial<BraceState> = {}): BraceState =>
@@ -21,6 +23,22 @@ const braceState = (overrides: Partial<BraceState> = {}): BraceState =>
 		...overrides,
 	}) as BraceState;
 
+/** The same box as a bracket, which carries no tipPosition at all. */
+const bracketState = (overrides: Partial<BracketState> = {}): BracketState =>
+	({
+		id: "bracket-1",
+		type: "bracket",
+		cx: 100,
+		cy: 100,
+		width: 24,
+		height: 160,
+		rotation: 0,
+		scaleX: 1,
+		scaleY: 1,
+		direction: "left",
+		...overrides,
+	}) as BracketState;
+
 const dragTo = (x: number, y: number): SelectionControlEvent => ({
 	type: "drag",
 	start: { x: 88, y: 100 },
@@ -30,9 +48,9 @@ const dragTo = (x: number, y: number): SelectionControlEvent => ({
 });
 
 const drag = (state: BraceState, x: number, y: number): BraceState =>
-	handleBraceTip({ object: state, startObject: state }, dragTo(x, y));
+	handleGroupMarkerTip({ object: state, startObject: state }, dragTo(x, y));
 
-describe("handleBraceTip", () => {
+describe("handleGroupMarkerTip", () => {
 	it("moves the tip along the edge it is already on", () => {
 		const moved = drag(braceState(), 88, 60);
 		expect(moved.direction).toBe("left");
@@ -80,5 +98,25 @@ describe("handleBraceTip", () => {
 		// the center's left — the unrotated answer — resolves to "down".
 		expect(drag(braceState({ rotation: 90 }), 100, 88).direction).toBe("left");
 		expect(drag(braceState({ rotation: 90 }), 88, 100).direction).toBe("down");
+	});
+});
+
+describe("handleGroupMarkerDirection", () => {
+	const dragBracket = (x: number, y: number): BracketState => {
+		const state = bracketState();
+		return handleGroupMarkerDirection(
+			{ object: state, startObject: state },
+			dragTo(x, y),
+		);
+	};
+
+	it("re-attaches the marker to the edge the dominant axis picks", () => {
+		expect(dragBracket(130, 100).direction).toBe("right");
+		expect(dragBracket(100, 200).direction).toBe("down");
+	});
+
+	it("writes back no position, so nothing moves along the edge", () => {
+		// The same drag that would put a brace's tip a quarter down its edge.
+		expect(dragBracket(88, 60)).toEqual(bracketState());
 	});
 });

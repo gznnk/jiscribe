@@ -157,6 +157,13 @@ const EXTRA_FIELD_ROWS: Readonly<Record<string, string[]>> = {
 		'| `direction` | `string` | `"left"` | Which way the tip points, away from the grouped shapes (`"left"` / `"right"` / `"up"` / `"down"`). `"left"` is the typographic `{`. Use `"left"`/`"right"` for a tall box, `"up"`/`"down"` for a wide one. |',
 		"| `tipPosition` | `number` | `0.5` | Where the tip sits along the long side, 0–1 from the top (`left`/`right`) or from the left (`up`/`down`). The label hangs off the tip, so this moves the label too. |",
 	],
+	bracketWithStem: [
+		'| `direction` | `string` | `"left"` | Which way the stem points, away from the grouped shapes (`"left"` / `"right"` / `"up"` / `"down"`). `"left"` is the typographic `[`. Use `"left"`/`"right"` for a tall box, `"up"`/`"down"` for a wide one. |',
+		"| `tipPosition` | `number` | `0.5` | Where the stem leaves the spine, 0–1 from the top (`left`/`right`) or from the left (`up`/`down`). The label hangs off the stem's end, so this moves the label too. |",
+	],
+	bracket: [
+		'| `direction` | `string` | `"left"` | Which side the spine sits on, away from the grouped shapes (`"left"` / `"right"` / `"up"` / `"down"`). `"left"` is the typographic `[`. Use `"left"`/`"right"` for a tall box, `"up"`/`"down"` for a wide one. |',
+	],
 };
 
 /** Convert a schema-style description (XxxDoc names) to reference style (`xxx`). */

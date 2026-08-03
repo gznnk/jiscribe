@@ -1,7 +1,10 @@
 import type { CanvasConfig, CanvasDoc, ToolbarEntry } from "@workspace/canvas";
 import { Canvas } from "@workspace/canvas";
 import { createCanvasParser } from "@workspace/canvas/doc";
-import { annotationPlugin } from "@workspace/plugin-annotation-shapes";
+import {
+	annotationPlugin,
+	annotationToolbarEntry,
+} from "@workspace/plugin-annotation-shapes";
 import {
 	containerPlugin,
 	containerToolbarEntry,
@@ -38,17 +41,17 @@ const plugins = [
 
 const initialConfig: CanvasConfig = { plugins };
 
-// flowchart / container / general カテゴリと markdown / sticky / brace プリセットは core の既定
-// layout に含まれない（プラグイン供給）。従来どおりの並びで出すため、ホスト側で差し込む。
+// annotation / flowchart / container / general カテゴリと markdown / sticky プリセットは core の
+// 既定 layout に含まれない（プラグイン供給）。従来どおりの並びで出すため、ホスト側で差し込む。
 const toolbarLayout: ToolbarEntry[] = [
 	{ kind: "preset", presetId: "rect" },
 	{ kind: "preset", presetId: "ellipse" },
 	{ kind: "preset", presetId: "polyline" },
 	{ kind: "preset", presetId: "polygon" },
 	{ kind: "preset", presetId: "callout" },
-	{ kind: "preset", presetId: "brace" },
 	{ kind: "preset", presetId: "sticky" },
 	{ kind: "preset", presetId: "markdown" },
+	annotationToolbarEntry,
 	flowchartToolbarEntry,
 	containerToolbarEntry,
 	umlToolbarEntry,

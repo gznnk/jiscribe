@@ -81,6 +81,8 @@ In addition to `name` and `description`, `meta` may hold any custom keys.
 | `shield`           | Security boundary, trust zone                         | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `callout`          | Annotation bubble                                     | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `brace`            | Group marker, grouping annotation                     | `x`, `y`, `width`, `height`             | Stroke, Text, Transform               |
+| `bracketWithStem`  | Group marker with a pointer, grouping annotation      | `x`, `y`, `width`, `height`             | Stroke, Text, Transform               |
+| `bracket`          | Group marker, grouping annotation                     | `x`, `y`, `width`, `height`             | Stroke, Text, Transform               |
 | `db`               | Data store                                            | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `storedData`       | Generic stored data (file / cache)                    | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
 | `subroutine`       | Predefined process / call                             | `x`, `y`, `width`, `height`             | Stroke, Fill, Text, Transform         |
@@ -407,6 +409,59 @@ Curly brace shape, used to mark a run of shapes as one group and name it. Uses t
 | `height`      | `number` | `160`    | Bounding-box height (px).                                                                                                                                                                                  |
 | `direction`   | `string` | `"left"` | Which way the tip points, away from the grouped shapes (`"left"` / `"right"` / `"up"` / `"down"`). `"left"` is the typographic `{`. Use `"left"`/`"right"` for a tall box, `"up"`/`"down"` for a wide one. |
 | `tipPosition` | `number` | `0.5`    | Where the tip sits along the long side, 0–1 from the top (`left`/`right`) or from the left (`up`/`down`). The label hangs off the tip, so this moves the label too.                                        |
+
+---
+
+### `bracketWithStem`
+
+Square bracket with a stem, used to mark a run of shapes as one group and name it at a chosen point. Same box and same "direction" as `bracket`, except that the spine sits half way into the box and a straight stem runs out of it, at right angles, to the outer edge. "tipPosition" (0..1) moves the stem along the span, from the top for a left/right bracket and from the left for an up/down one, and the label hangs off the stem's end, auto-sized to the text itself and outside the box. Use `bracket` instead when the label needs to point at nothing in particular. It has no fill. It is **connectable** like `rect`. It has **no Radius** (`rx`).
+
+```json
+{
+	"id": "bracketWithStem-1",
+	"type": "bracketWithStem",
+	"x": 200,
+	"y": 150,
+	"width": 24,
+	"height": 160,
+	"text": "Label"
+}
+```
+
+| Field         | Type     | Default  | Description                                                                                                                                                                                                 |
+| ------------- | -------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `x`           | `number` | `0`      | X of the bounding box's top-left.                                                                                                                                                                           |
+| `y`           | `number` | `0`      | Y of the bounding box's top-left.                                                                                                                                                                           |
+| `width`       | `number` | `24`     | Bounding-box width (px).                                                                                                                                                                                    |
+| `height`      | `number` | `160`    | Bounding-box height (px).                                                                                                                                                                                   |
+| `direction`   | `string` | `"left"` | Which way the stem points, away from the grouped shapes (`"left"` / `"right"` / `"up"` / `"down"`). `"left"` is the typographic `[`. Use `"left"`/`"right"` for a tall box, `"up"`/`"down"` for a wide one. |
+| `tipPosition` | `number` | `0.5`    | Where the stem leaves the spine, 0–1 from the top (`left`/`right`) or from the left (`up`/`down`). The label hangs off the stem's end, so this moves the label too.                                         |
+
+---
+
+### `bracket`
+
+Square bracket shape, used to mark a run of shapes as one group and name it. Same box and same "direction" as `brace` — a "left" bracket is the typographic "[" and groups what is to its right — but it is drawn with straight lines only: a spine along the outer edge with a foot at each end, reaching towards the grouped shapes. It has no "tipPosition", because nothing on it singles out a place along the spine; the label always sits just beyond the middle of the spine, auto-sized to the text itself and outside the box. Use `bracketWithStem` instead when the label should point at one particular place in the run. The bracket has no fill. It is **connectable** like `rect`. It has **no Radius** (`rx`).
+
+```json
+{
+	"id": "bracket-1",
+	"type": "bracket",
+	"x": 200,
+	"y": 150,
+	"width": 24,
+	"height": 160,
+	"text": "Label"
+}
+```
+
+| Field       | Type     | Default  | Description                                                                                                                                                                                                    |
+| ----------- | -------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `x`         | `number` | `0`      | X of the bounding box's top-left.                                                                                                                                                                              |
+| `y`         | `number` | `0`      | Y of the bounding box's top-left.                                                                                                                                                                              |
+| `width`     | `number` | `24`     | Bounding-box width (px).                                                                                                                                                                                       |
+| `height`    | `number` | `160`    | Bounding-box height (px).                                                                                                                                                                                      |
+| `direction` | `string` | `"left"` | Which side the spine sits on, away from the grouped shapes (`"left"` / `"right"` / `"up"` / `"down"`). `"left"` is the typographic `[`. Use `"left"`/`"right"` for a tall box, `"up"`/`"down"` for a wide one. |
 
 ---
 

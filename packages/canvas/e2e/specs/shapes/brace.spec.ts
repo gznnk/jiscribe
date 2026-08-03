@@ -17,14 +17,15 @@ async function bracePathD(
 /**
  * Two seams end to end:
  * - the label is sized from its own text and placed *outside* the geometry box
- *   (calcBraceTextRegion), which no other shipped shape does
+ *   (calcGroupMarkerTextRegion), which no other shipped shape does
  * - the tip handle (selection:brace:tip) moves the tip along its edge and
  *   re-attaches it to another one, changing direction and tipPosition together
  */
 test.describe("brace", () => {
 	test("creates a g element from a drag", async ({ canvas }) => {
-		const id = await canvas.drawShape(
-			"Brace",
+		const id = await canvas.drawShapeFromFlyout(
+			"annotation",
+			"brace",
 			{ x: 400, y: 200 },
 			{ x: 430, y: 400 },
 		);
@@ -38,7 +39,12 @@ test.describe("brace", () => {
 	test("draws the label beyond the tip, outside the box", async ({
 		canvas,
 	}) => {
-		await canvas.drawShape("Brace", { x: 400, y: 200 }, { x: 430, y: 400 });
+		await canvas.drawShapeFromFlyout(
+			"annotation",
+			"brace",
+			{ x: 400, y: 200 },
+			{ x: 430, y: 400 },
+		);
 		await canvas.deselect();
 
 		// The tip of a left brace sits mid-way down the left edge; double-clicking
@@ -56,8 +62,9 @@ test.describe("brace", () => {
 	}) => {
 		// 30x200 brace (content coordinates x=[400,430], y=[200,400]), so the
 		// default left tip sits at (400, 300).
-		const id = await canvas.drawShape(
-			"Brace",
+		const id = await canvas.drawShapeFromFlyout(
+			"annotation",
+			"brace",
 			{ x: 400, y: 200 },
 			{ x: 430, y: 400 },
 		);
@@ -82,8 +89,9 @@ test.describe("brace", () => {
 	test("re-attaches the tip to another edge when dragged across the axis", async ({
 		canvas,
 	}) => {
-		const id = await canvas.drawShape(
-			"Brace",
+		const id = await canvas.drawShapeFromFlyout(
+			"annotation",
+			"brace",
 			{ x: 400, y: 200 },
 			{ x: 430, y: 400 },
 		);
