@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest";
 
+import { bracketDocDefinition } from "../../../doc";
 import { BRACKET_DOC_DEFAULTS } from "../BracketDoc";
-import { BracketObjectFactory } from "../BracketObjectFactory";
-import { validateBracketDoc } from "../validateBracketDoc";
+
+const validateBracketDoc = bracketDocDefinition.validateDoc;
+// A group marker always drag-draws (createGroupMarkerObjectFactory), and its
+// factory is what bracketDocDefinition carries.
+const createBracketDocFromBounds =
+	bracketDocDefinition.factory!.createDocFromBounds!;
 
 const baseDoc = { ...BRACKET_DOC_DEFAULTS, id: "bracket-1" } as Record<
 	string,
@@ -46,21 +51,21 @@ describe("validateBracketDoc", () => {
 
 describe("BracketObjectFactory", () => {
 	it("draws a tall drag as the typographic bracket", () => {
-		const doc = BracketObjectFactory.createDocFromBounds(0, 0, 24, 160) as {
+		const doc = createBracketDocFromBounds(0, 0, 24, 160) as {
 			direction: string;
 		} | null;
 		expect(doc?.direction).toBe("left");
 	});
 
 	it("draws a wide drag along the horizontal axis instead", () => {
-		const doc = BracketObjectFactory.createDocFromBounds(0, 0, 300, 30) as {
+		const doc = createBracketDocFromBounds(0, 0, 300, 30) as {
 			direction: string;
 		} | null;
 		expect(doc?.direction).toBe("down");
 	});
 
 	it("keeps an explicit direction override", () => {
-		const doc = BracketObjectFactory.createDocFromBounds(0, 0, 300, 30, {
+		const doc = createBracketDocFromBounds(0, 0, 300, 30, {
 			direction: "up",
 		}) as { direction: string } | null;
 		expect(doc?.direction).toBe("up");

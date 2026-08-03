@@ -4,7 +4,7 @@ import { BraceIcon } from "./BraceIcon";
 
 /**
  * One stencil, not one per direction: drag-drawing already picks the axis from
- * the drawn proportions (BraceObjectFactory), so four palette entries would be
+ * the drawn proportions (createGroupMarkerObjectFactory), so four palette entries would be
  * four ways to reach the same shape.
  */
 export const BraceStencils: Stencil[] = [

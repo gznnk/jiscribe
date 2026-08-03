@@ -6,19 +6,18 @@ import type {
 	CanvasDocPlugin,
 	ObjectDocDefinition,
 } from "@workspace/canvas/doc";
+import { createFrameObjectDoc } from "@workspace/canvas-sdk/doc";
 
 import { STICKY_DOC_DEFAULTS, StickyFeatures } from "./schema/StickyDoc";
-import { StickyObjectFactory } from "./schema/StickyObjectFactory";
-import { validateStickyDoc } from "./schema/validateStickyDoc";
 
-export const stickyDocDefinition: ObjectDocDefinition = {
+export const stickyDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: StickyFeatures,
-	validateDoc: validateStickyDoc,
-	factory: StickyObjectFactory,
+	defaults: STICKY_DOC_DEFAULTS,
 	description: "Sticky note annotation.",
 	summary: "sticky note (no stroke or `rx`)",
-	defaults: STICKY_DOC_DEFAULTS,
-};
+	// Stickies are only center-placed on click (no bounds drawing).
+	supportsBounds: false,
+});
 
 /**
  * Headless `CanvasDocPlugin` for the sticky shape: the doc-layer view of

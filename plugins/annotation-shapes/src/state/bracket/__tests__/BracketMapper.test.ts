@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 
+import { bracketDefinition } from "../../../definitions";
 import { BRACKET_DOC_DEFAULTS } from "../../../schema/bracket/BracketDoc";
-import { bracketToState } from "../BracketMapper";
+
+const { toState: bracketToState } = bracketDefinition.mapper;
 
 describe("bracketToState", () => {
 	/**

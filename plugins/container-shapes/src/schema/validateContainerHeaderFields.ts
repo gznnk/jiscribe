@@ -1,11 +1,6 @@
 import { isCssSafeValue } from "@workspace/basic-validators";
 import type { ObjectDocValidateFn } from "@workspace/canvas-sdk/doc";
-import {
-	createFrameDocValidator,
-	validateOptionalNumber,
-} from "@workspace/canvas-sdk/doc";
-
-import { ContainerFeatures } from "./ContainerDoc";
+import { validateOptionalNumber } from "@workspace/canvas-sdk/doc";
 
 /**
  * Validates the container-specific header fields (both optional). `headerFill`
@@ -13,7 +8,7 @@ import { ContainerFeatures } from "./ContainerDoc";
  * `headerHeight` must be a positive number. Frame-family validation only covers
  * the standard style groups, so these fields need their own checks.
  */
-const validateHeaderFields: ObjectDocValidateFn = (o, path) => [
+export const validateContainerHeaderFields: ObjectDocValidateFn = (o, path) => [
 	...(!("headerFill" in o) || isCssSafeValue(o.headerFill)
 		? []
 		: [
@@ -25,7 +20,3 @@ const validateHeaderFields: ObjectDocValidateFn = (o, path) => [
 			]),
 	...validateOptionalNumber(o, path, "headerHeight", 1),
 ];
-
-/** Validates a ContainerDoc (Frame-family shared logic + header fields). */
-export const validateContainerDoc: ObjectDocValidateFn =
-	createFrameDocValidator(ContainerFeatures, validateHeaderFields);

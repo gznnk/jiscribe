@@ -1,5 +1,6 @@
+import { isNumber } from "@workspace/basic-validators";
 import type { ObjectTypeDefinition } from "@workspace/canvas";
-import { createFrameBehavior } from "@workspace/canvas-sdk";
+import { createFrameObjectDefinition } from "@workspace/canvas-sdk";
 
 import { ContainerHeaderHeightControl } from "./controls/ContainerHeaderHeightControl";
 import { handleContainerHeaderHeight } from "./controls/handleContainerHeaderHeight";
@@ -9,9 +10,7 @@ import { calcContainerTextRegion } from "./presentation/calcContainerTextRegion"
 import { Container } from "./presentation/Container";
 import type { ContainerDoc } from "./schema/ContainerDoc";
 import { ContainerExtraStyleProperties } from "./schema/ContainerDoc";
-import { containerToDoc, containerToState } from "./state/ContainerMapper";
 import type { ContainerState } from "./state/ContainerState";
-import { isValidContainerState } from "./state/validateContainerState";
 import { ContainerStencils } from "./stencil/ContainerStencils";
 
 /**
@@ -27,13 +26,16 @@ import { ContainerStencils } from "./stencil/ContainerStencils";
 export const containerDefinition: ObjectTypeDefinition<
 	ContainerDoc,
 	ContainerState
-> = {
-	...containerDocDefinition,
-	mapper: { toDoc: containerToDoc, toState: containerToState },
-	stateValidator: isValidContainerState,
+> = createFrameObjectDefinition<ContainerDoc, ContainerState>({
+	doc: containerDocDefinition,
 	component: Container,
 	textRegion: calcContainerTextRegion,
-	behavior: createFrameBehavior<ContainerState>(),
+	extraKeys: ["headerFill", "headerHeight"],
+	// The headerHeight bound (>= 1) matches validateContainerHeaderFields and the
+	// JSON schema.
+	isExtraStateValid: (state) =>
+		state.headerHeight === undefined ||
+		(isNumber(state.headerHeight) && state.headerHeight >= 1),
 	selectionControls: [
 		{
 			name: "headerHeight",
@@ -62,4 +64,4 @@ export const containerDefinition: ObjectTypeDefinition<
 			items: [{ type: "aspectRatio" }],
 		},
 	],
-};
+});

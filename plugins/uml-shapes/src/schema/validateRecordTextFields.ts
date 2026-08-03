@@ -2,16 +2,9 @@ import { isObject, isString } from "@workspace/basic-validators";
 import type { SemanticDiagnostic } from "@workspace/canvas/doc";
 import { TEXT_SLOT_STYLE_KEYS } from "@workspace/canvas/doc";
 import type { ObjectDocValidateFn } from "@workspace/canvas-sdk/doc";
-import {
-	createFrameDocValidator,
-	validateTextSlotStyleFields,
-} from "@workspace/canvas-sdk/doc";
+import { validateTextSlotStyleFields } from "@workspace/canvas-sdk/doc";
 
-import {
-	RECORD_NAME_SLOT_ID,
-	RECORD_SLOT_IDS,
-	RecordFeatures,
-} from "./RecordDoc";
+import { RECORD_NAME_SLOT_ID, RECORD_SLOT_IDS } from "./RecordDoc";
 
 /** The slot ids spelled out for a diagnostic, e.g. `"name" / "attributes" / "operations"`. */
 const RECORD_SLOT_ID_LIST = RECORD_SLOT_IDS.map((id) => `"${id}"`).join(" / ");
@@ -128,11 +121,12 @@ const validateNoRootTextStyle: ObjectDocValidateFn = (o, path) =>
 		message: `is not a field of a record: set it on one of ${RECORD_SLOT_ID_LIST} under "text" instead`,
 	}));
 
-/** Validates a RecordDoc (Frame-family shared logic + the closed keyed `text`). */
-export const validateRecordDoc: ObjectDocValidateFn = createFrameDocValidator(
-	RecordFeatures,
-	(o, path) => [
-		...validateRecordText(o, path),
-		...validateNoRootTextStyle(o, path),
-	],
-);
+/**
+ * Validates what the record declares on top of the Frame family: the closed
+ * keyed `text`, and the absence of the shape-wide text styling a single-body
+ * type would take.
+ */
+export const validateRecordTextFields: ObjectDocValidateFn = (o, path) => [
+	...validateRecordText(o, path),
+	...validateNoRootTextStyle(o, path),
+];

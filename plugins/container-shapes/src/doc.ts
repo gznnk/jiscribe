@@ -6,16 +6,21 @@ import type {
 	CanvasDocPlugin,
 	ObjectDocDefinition,
 } from "@workspace/canvas/doc";
+import { createFrameObjectDoc } from "@workspace/canvas-sdk/doc";
 
-import { ContainerFeatures } from "./schema/ContainerDoc";
-import { ContainerObjectFactory } from "./schema/ContainerObjectFactory";
-import { validateContainerDoc } from "./schema/validateContainerDoc";
+import {
+	CONTAINER_DOC_DEFAULTS,
+	ContainerFeatures,
+} from "./schema/ContainerDoc";
+import { validateContainerHeaderFields } from "./schema/validateContainerHeaderFields";
 
-export const containerDocDefinition: ObjectDocDefinition = {
-	features: ContainerFeatures,
-	validateDoc: validateContainerDoc,
-	factory: ContainerObjectFactory,
-};
+export const containerDocDefinition: ObjectDocDefinition = createFrameObjectDoc(
+	{
+		features: ContainerFeatures,
+		defaults: CONTAINER_DOC_DEFAULTS,
+		validateExtra: validateContainerHeaderFields,
+	},
+);
 
 /**
  * Headless `CanvasDocPlugin` for the container shape: the doc-layer view of

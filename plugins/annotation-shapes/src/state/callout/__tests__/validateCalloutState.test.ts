@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 
+import { calloutDefinition } from "../../../definitions";
 import type { CalloutDoc } from "../../../schema/callout/CalloutDoc";
 import { CALLOUT_DOC_DEFAULTS } from "../../../schema/callout/CalloutDoc";
-import { calloutToState } from "../CalloutMapper";
-import { isValidCalloutState } from "../validateCalloutState";
+
+const { toState: calloutToState } = calloutDefinition.mapper;
+const isValidCalloutState = calloutDefinition.stateValidator;
 
 const baseState = calloutToState({
 	...CALLOUT_DOC_DEFAULTS,

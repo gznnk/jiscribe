@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 
-import { validateStickyDoc } from "../validateStickyDoc";
+import { stickyDocDefinition } from "../../doc";
+
+const validateStickyDoc = stickyDocDefinition.validateDoc;
 
 const validSticky = {
 	x: 0,

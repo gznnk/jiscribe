@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 
+import { noteDocDefinition } from "../../../doc";
 import { NOTE_DOC_DEFAULTS } from "../NoteDoc";
-import { NoteObjectFactory } from "../NoteObjectFactory";
-import { validateNoteDoc } from "../validateNoteDoc";
+
+const validateNoteDoc = noteDocDefinition.validateDoc;
+// noteDocDefinition.factory is always set here (createFrameObjectDoc supplies it).
+const NoteObjectFactory = noteDocDefinition.factory!;
 
 const baseDoc = { ...NOTE_DOC_DEFAULTS, id: "note-1" } as Record<
 	string,

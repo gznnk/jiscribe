@@ -33,6 +33,10 @@ const resolveRecordTextEditOverflow: ObjectTextEditOverflowResolver = (
  * The `text` menu section keeps fontStyle / textAlignment: a menu edit writes
  * into every slot at once (TextSlotStyleProperty), so the title band and the
  * rows — the bulk of the box — change together.
+ *
+ * `createFrameObjectDefinition` is not used here: it derives the mapper from
+ * features, and the record's is the derived one wrapped in the slot normal form
+ * (RecordMapper 参照).
  */
 export const recordDefinition: ObjectTypeDefinition<RecordDoc, RecordState> = {
 	...recordDocDefinition,

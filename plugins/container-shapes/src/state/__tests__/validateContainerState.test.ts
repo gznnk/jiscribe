@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 
+import { containerDefinition } from "../../definition";
 import type { ContainerDoc } from "../../schema/ContainerDoc";
 import { CONTAINER_DOC_DEFAULTS } from "../../schema/ContainerDoc";
-import { containerToState } from "../ContainerMapper";
-import { isValidContainerState } from "../validateContainerState";
+
+const { toState: containerToState } = containerDefinition.mapper;
+const isValidContainerState = containerDefinition.stateValidator;
 
 const baseState = containerToState({
 	...CONTAINER_DOC_DEFAULTS,

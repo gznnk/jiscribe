@@ -1,8 +1,11 @@
 import { describe, it, expect } from "vitest";
 
+import { markdownDocDefinition } from "../../doc";
 import { MARKDOWN_DOC_DEFAULTS } from "../MarkdownDoc";
-import { MarkdownObjectFactory } from "../MarkdownObjectFactory";
-import { validateMarkdownDoc } from "../validateMarkdownDoc";
+
+const validateMarkdownDoc = markdownDocDefinition.validateDoc;
+// markdownDocDefinition.factory is always set here (createFrameObjectDoc supplies it).
+const MarkdownObjectFactory = markdownDocDefinition.factory!;
 
 const validMarkdown = {
 	x: 10,

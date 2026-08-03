@@ -6,20 +6,18 @@ import type {
 	CanvasDocPlugin,
 	ObjectDocDefinition,
 } from "@workspace/canvas/doc";
+import { createFrameObjectDoc } from "@workspace/canvas-sdk/doc";
 
-import { MarkdownFeatures } from "./schema/MarkdownDoc";
-import { MarkdownObjectFactory } from "./schema/MarkdownObjectFactory";
-import { validateMarkdownDoc } from "./schema/validateMarkdownDoc";
+import { MARKDOWN_DOC_DEFAULTS, MarkdownFeatures } from "./schema/MarkdownDoc";
 
-export const markdownDocDefinition: ObjectDocDefinition = {
+export const markdownDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: MarkdownFeatures,
-	validateDoc: validateMarkdownDoc,
-	factory: MarkdownObjectFactory,
+	defaults: MARKDOWN_DOC_DEFAULTS,
 	// The schema $def is a handwritten template (nearly every property description
 	// is Markdown-specific), so only summary is consumed — it fills the generated
 	// doc tables.
 	summary: "Markdown-rendered document card",
-};
+});
 
 /**
  * Headless `CanvasDocPlugin` for the markdown shape: the doc-layer view of

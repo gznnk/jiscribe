@@ -6,19 +6,19 @@ import type {
 	CanvasDocPlugin,
 	ObjectDocDefinition,
 } from "@workspace/canvas/doc";
+import { createFrameObjectDoc } from "@workspace/canvas-sdk/doc";
 
-import { RecordFeatures } from "./schema/RecordDoc";
-import { RecordObjectFactory } from "./schema/RecordObjectFactory";
-import { validateRecordDoc } from "./schema/validateRecordDoc";
+import { RECORD_DOC_DEFAULTS, RecordFeatures } from "./schema/RecordDoc";
+import { validateRecordTextFields } from "./schema/validateRecordTextFields";
 
-export const recordDocDefinition: ObjectDocDefinition = {
+export const recordDocDefinition: ObjectDocDefinition = createFrameObjectDoc({
 	features: RecordFeatures,
-	validateDoc: validateRecordDoc,
-	factory: RecordObjectFactory,
+	defaults: RECORD_DOC_DEFAULTS,
 	// The schema $def is a handwritten template (text is a slotted object), so
 	// only summary is consumed — it fills the generated doc tables.
 	summary: "titled box + row compartments (UML class / ER entity)",
-};
+	validateExtra: validateRecordTextFields,
+});
 
 /**
  * Headless `CanvasDocPlugin` for the UML shapes: the doc-layer view of

@@ -1,16 +1,11 @@
 import { isNumber, isObject } from "@workspace/basic-validators";
 import type { SemanticDiagnostic } from "@workspace/canvas/doc";
 import type { ObjectDocValidateFn } from "@workspace/canvas-sdk/doc";
-import { createFrameDocValidator } from "@workspace/canvas-sdk/doc";
 
-import {
-	CALLOUT_TAIL_SIDES,
-	CalloutFeatures,
-	isCalloutTailSide,
-} from "./CalloutDoc";
+import { CALLOUT_TAIL_SIDES, isCalloutTailSide } from "./CalloutDoc";
 
 /** Validates the callout-specific `tail` (optional): side enum + position in [0, 1]. */
-const validateTail: ObjectDocValidateFn = (o, path) => {
+export const validateCalloutTail: ObjectDocValidateFn = (o, path) => {
 	if (!("tail" in o) || o.tail === undefined) {
 		return [];
 	}
@@ -33,9 +28,3 @@ const validateTail: ObjectDocValidateFn = (o, path) => {
 	}
 	return errors;
 };
-
-/** Validates a CalloutDoc (Frame-family shared logic + tail). */
-export const validateCalloutDoc: ObjectDocValidateFn = createFrameDocValidator(
-	CalloutFeatures,
-	validateTail,
-);

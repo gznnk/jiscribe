@@ -2,7 +2,7 @@ import type { Stencil } from "@workspace/canvas";
 
 import { BracketWithStemIcon } from "./BracketWithStemIcon";
 
-/** One stencil; the drawn proportions pick the axis (BracketWithStemObjectFactory). */
+/** One stencil; the drawn proportions pick the axis (createGroupMarkerObjectFactory). */
 export const BracketWithStemStencils: Stencil[] = [
 	{
 		id: "bracketWithStem",

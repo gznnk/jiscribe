@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest";
 
+import { bracketWithStemDocDefinition } from "../../../doc";
 import { BRACKET_WITH_STEM_DOC_DEFAULTS } from "../BracketWithStemDoc";
-import { BracketWithStemObjectFactory } from "../BracketWithStemObjectFactory";
-import { validateBracketWithStemDoc } from "../validateBracketWithStemDoc";
+
+const validateBracketWithStemDoc = bracketWithStemDocDefinition.validateDoc;
+// A group marker always drag-draws (createGroupMarkerObjectFactory), and its
+// factory is what bracketWithStemDocDefinition carries.
+const createBracketWithStemDocFromBounds =
+	bracketWithStemDocDefinition.factory!.createDocFromBounds!;
 
 const baseDoc = {
 	...BRACKET_WITH_STEM_DOC_DEFAULTS,
@@ -42,22 +47,16 @@ describe("validateBracketWithStemDoc", () => {
 
 describe("BracketWithStemObjectFactory", () => {
 	it("draws a tall drag as the typographic bracket", () => {
-		const doc = BracketWithStemObjectFactory.createDocFromBounds(
-			0,
-			0,
-			24,
-			160,
-		) as { direction: string } | null;
+		const doc = createBracketWithStemDocFromBounds(0, 0, 24, 160) as {
+			direction: string;
+		} | null;
 		expect(doc?.direction).toBe("left");
 	});
 
 	it("draws a wide drag along the horizontal axis instead", () => {
-		const doc = BracketWithStemObjectFactory.createDocFromBounds(
-			0,
-			0,
-			300,
-			30,
-		) as { direction: string } | null;
+		const doc = createBracketWithStemDocFromBounds(0, 0, 300, 30) as {
+			direction: string;
+		} | null;
 		expect(doc?.direction).toBe("down");
 	});
 });

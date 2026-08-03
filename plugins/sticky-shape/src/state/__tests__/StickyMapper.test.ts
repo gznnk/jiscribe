@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 
+import { stickyDefinition } from "../../definition";
 import type { StickyDoc } from "../../schema/StickyDoc";
-import { stickyToDoc, stickyToState } from "../StickyMapper";
 import type { StickyState } from "../StickyState";
+
+const { toDoc: stickyToDoc, toState: stickyToState } = stickyDefinition.mapper;
 
 describe("StickyMapper", () => {
 	describe("stickyToState", () => {

@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 
+import { stickyDocDefinition } from "../../doc";
 import { STICKY_DOC_DEFAULTS } from "../StickyDoc";
-import { StickyObjectFactory } from "../StickyObjectFactory";
+
+// stickyDocDefinition.factory is always set here (createFrameObjectDoc supplies it).
+const StickyObjectFactory = stickyDocDefinition.factory!;
 
 describe("StickyObjectFactory", () => {
 	describe("createDoc", () => {

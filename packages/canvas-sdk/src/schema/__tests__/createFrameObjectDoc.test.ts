@@ -1,4 +1,4 @@
-import type { ObjectFeatures } from "@workspace/canvas/doc";
+import type { ObjectDoc, ObjectFeatures } from "@workspace/canvas/doc";
 import { describe, it, expect } from "vitest";
 
 import { createFrameObjectDoc } from "../createFrameObjectDoc";
@@ -99,6 +99,22 @@ describe("createFrameObjectDoc", () => {
 			supportsBounds: false,
 		});
 
+		expect(factory?.createDocFromBounds).toBeUndefined();
+	});
+
+	it("registers a given factory as-is instead of deriving one", () => {
+		const ownFactory = {
+			createDoc: () => ({ ...DEMO_DOC_DEFAULTS, id: "own" }) as ObjectDoc,
+			calcDimensions: () => ({ halfWidth: 1, halfHeight: 1 }),
+		};
+
+		const { factory } = createFrameObjectDoc({
+			features: DemoFeatures,
+			defaults: DEMO_DOC_DEFAULTS,
+			factory: ownFactory,
+		});
+
+		expect(factory).toBe(ownFactory);
 		expect(factory?.createDocFromBounds).toBeUndefined();
 	});
 });
