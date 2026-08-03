@@ -10,7 +10,10 @@ import {
 	calloutGeometryKey,
 	calloutOutline,
 } from "../../presentations/objects/annotations/Callout";
-import { Sticky } from "../../presentations/objects/annotations/Sticky";
+import {
+	Sticky,
+	StickyDefs,
+} from "../../presentations/objects/annotations/Sticky";
 import { Connector } from "../../presentations/objects/connections/Connector";
 import {
 	Ellipse,
@@ -272,6 +275,7 @@ export const ALL_OBJECT_DEFINITIONS: Record<ObjectType, ObjectTypeDefinition> =
 			mapper: { toDoc: stickyToDoc, toState: stickyToState },
 			stateValidator: isValidStickyState,
 			component: Sticky,
+			svgDefs: StickyDefs,
 			behavior: createFrameBehavior<StickyState>(),
 			stencils: StickyStencils,
 			menu: [
@@ -319,6 +323,9 @@ export const applyObjectDefinition = (
 		definition.features,
 	);
 	registries.objectComponent.register(type, definition.component);
+	if (definition.svgDefs) {
+		registries.objectSvgDefs.register(type, definition.svgDefs);
+	}
 	if (definition.textRegion) {
 		registries.objectTextRegion.register(type, definition.textRegion);
 	}
@@ -383,6 +390,7 @@ export const initializeObjectRegistry = (
 ): void => {
 	registries.objectMapper.clear();
 	registries.objectComponent.clear();
+	registries.objectSvgDefs.clear();
 	registries.objectTextRegion.clear();
 	registries.objectTextEditOverflow.clear();
 	registries.objectOutline.clear();

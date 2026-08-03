@@ -8,6 +8,8 @@ import type { ObjectGeometryKeyRegistry } from "./ObjectGeometryKeyRegistry";
 import { ObjectGeometryKeyRegistryContext } from "./ObjectGeometryKeyRegistryContext";
 import type { ObjectOutlineRegistry } from "./ObjectOutlineRegistry";
 import { ObjectOutlineRegistryContext } from "./ObjectOutlineRegistryContext";
+import type { ObjectSvgDefsRegistry } from "./ObjectSvgDefsRegistry";
+import { ObjectSvgDefsRegistryContext } from "./ObjectSvgDefsRegistryContext";
 import type { ObjectTextRegionRegistry } from "./ObjectTextRegionRegistry";
 import { ObjectTextRegionRegistryContext } from "./ObjectTextRegionRegistryContext";
 
@@ -17,6 +19,7 @@ type PresentationRegistriesProviderProps = {
 	objectOutline: ObjectOutlineRegistry;
 	objectAnchorRegion: ObjectAnchorRegionRegistry;
 	objectGeometryKey: ObjectGeometryKeyRegistry;
+	objectSvgDefs: ObjectSvgDefsRegistry;
 	children: ReactNode;
 };
 
@@ -32,6 +35,7 @@ export function PresentationRegistriesProvider({
 	objectOutline,
 	objectAnchorRegion,
 	objectGeometryKey,
+	objectSvgDefs,
 	children,
 }: PresentationRegistriesProviderProps) {
 	return (
@@ -40,7 +44,9 @@ export function PresentationRegistriesProvider({
 				<ObjectOutlineRegistryContext value={objectOutline}>
 					<ObjectAnchorRegionRegistryContext value={objectAnchorRegion}>
 						<ObjectGeometryKeyRegistryContext value={objectGeometryKey}>
-							{children}
+							<ObjectSvgDefsRegistryContext value={objectSvgDefs}>
+								{children}
+							</ObjectSvgDefsRegistryContext>
 						</ObjectGeometryKeyRegistryContext>
 					</ObjectAnchorRegionRegistryContext>
 				</ObjectOutlineRegistryContext>

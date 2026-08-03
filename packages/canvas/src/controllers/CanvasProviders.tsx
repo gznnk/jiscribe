@@ -44,6 +44,7 @@ export function CanvasProviders({
 							objectOutline={registries.objectOutline}
 							objectAnchorRegion={registries.objectAnchorRegion}
 							objectGeometryKey={registries.objectGeometryKey}
+							objectSvgDefs={registries.objectSvgDefs}
 						>
 							<CanvasViewportElementRefContext value={viewportElementRef}>
 								{children}

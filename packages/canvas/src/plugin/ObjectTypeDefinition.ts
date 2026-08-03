@@ -49,6 +49,16 @@ export type ObjectTypeDefinition<
 	/** SVG renderer for the shape. Editable types read `isEditing` by self-declaring `FC<TState & TextEditable>`. */
 	component: FC<TState>;
 
+	/**
+	 * Shared SVG resources (filter / gradient / marker / …) that `component`
+	 * references by `url(#…)`. Rendered once per canvas inside the canvas-wide
+	 * `<defs>`, regardless of how many objects of this type exist — including
+	 * zero, so a reference never outlives its target. Element ids are
+	 * document-global, so prefix them with this type's name (`sticky-blur`) to
+	 * stay clear of other types (see ObjectSvgDefsRegistry).
+	 */
+	svgDefs?: FC;
+
 	/** Editable-text region. Omitted = full bbox (see ObjectTextRegionRegistry). */
 	textRegion?: ObjectTextRegionCalculator;
 

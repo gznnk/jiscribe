@@ -3,6 +3,7 @@ import type { ObjectAnchorRegionRegistry } from "../../presentations/objects/reg
 import type { ObjectComponentRegistry } from "../../presentations/objects/registry/ObjectComponentRegistry";
 import type { ObjectGeometryKeyRegistry } from "../../presentations/objects/registry/ObjectGeometryKeyRegistry";
 import type { ObjectOutlineRegistry } from "../../presentations/objects/registry/ObjectOutlineRegistry";
+import type { ObjectSvgDefsRegistry } from "../../presentations/objects/registry/ObjectSvgDefsRegistry";
 import type { ObjectTextRegionRegistry } from "../../presentations/objects/registry/ObjectTextRegionRegistry";
 import type { ObjectVisualBoundsRegistry } from "../../presentations/objects/registry/ObjectVisualBoundsRegistry";
 import type { ObjectType } from "../../schemas/objects/types/ObjectType";
@@ -42,6 +43,7 @@ export type CanvasRegistries = {
 	objectAnchorRegion: ObjectAnchorRegionRegistry;
 	objectGeometryKey: ObjectGeometryKeyRegistry;
 	objectVisualBounds: ObjectVisualBoundsRegistry;
+	objectSvgDefs: ObjectSvgDefsRegistry;
 	objectBehavior: ObjectBehaviorRegistry;
 	selectionControl: SelectionControlRegistry;
 	gestureHandler: GestureHandlerRegistry;

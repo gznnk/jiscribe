@@ -67,6 +67,12 @@ describe("createCanvasRegistries", () => {
 			expect(presetTypes.has("ellipse")).toBe(false);
 		});
 
+		it("drops the svgDefs of the types left out", () => {
+			const registries = createCanvasRegistries({ objectTypes: ["rect"] });
+			// sticky is the only built-in contributing to <defs>, and it is not enabled.
+			expect(registries.objectSvgDefs.all()).toHaveLength(0);
+		});
+
 		it("still registers all gesture handlers (type-independent)", () => {
 			const registries = createCanvasRegistries({ objectTypes: ["rect"] });
 			expect(
@@ -116,6 +122,31 @@ describe("createCanvasRegistries", () => {
 			// A type that declares nothing stays on the default (scroll), which the
 			// editor applies via resolveTextEditOverflow.
 			expect(registries.objectTextEditOverflow.get("rect")).toBeUndefined();
+		});
+
+		it("registers a plugin's svgDefs, alongside the built-in contributions", () => {
+			const HaloDefs = () => null;
+			const haloPlugin: CanvasPlugin = {
+				id: "halo-plugin",
+				objects: {
+					halo: defineObject({
+						...buildFakeDefinition("halo"),
+						svgDefs: HaloDefs,
+					}),
+				},
+			};
+			const registries = createCanvasRegistries({ plugins: [haloPlugin] });
+			const contributions = registries.objectSvgDefs.all();
+			expect(contributions).toContainEqual({
+				type: "halo",
+				Component: HaloDefs,
+			});
+			// The sticky filter is a built-in contribution through the same seam, and
+			// plugins are applied after the built-ins.
+			expect(contributions.map((entry) => entry.type)).toEqual([
+				"sticky",
+				"halo",
+			]);
 		});
 
 		it("derives menu sections from features when menu is omitted", () => {

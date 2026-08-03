@@ -94,6 +94,7 @@ const CanvasThumbnailComponent: React.FC<CanvasThumbnailProps> = ({
 				objectOutline={registries.objectOutline}
 				objectAnchorRegion={registries.objectAnchorRegion}
 				objectGeometryKey={registries.objectGeometryKey}
+				objectSvgDefs={registries.objectSvgDefs}
 			>
 				<div style={themeCssVars}>
 					<CanvasView
